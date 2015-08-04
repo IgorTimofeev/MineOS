@@ -2,6 +2,7 @@
 	{
 		["name"]="Home.lua",
 		["url"]="IgorTimofeev/OpenComputers/master/Home.lua",
+		["type"]="Application",
 		["icon"]="",
 		["resources"]={
 		},
