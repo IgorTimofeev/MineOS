@@ -30,6 +30,11 @@
     ["type"]="Script",
   },
   {
+    ["name"]="bin/github.lua",
+    ["url"]="IgorTimofeev/OpenComputers/master/Applications/github.lua",
+    ["type"]="Script",
+  },
+  {
     ["name"]="bin/event.lua",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/event.lua",
     ["type"]="Script",
