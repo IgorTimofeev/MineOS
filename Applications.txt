@@ -1,0 +1,11 @@
+{
+	["Akuukis' programs"]={
+		repo="Akuukis/RobotColorWars",
+	},
+	["Altenius' programs"]={
+		repo="OpenPrograms/Altenius-Programs",
+	},
+	["ds84182's programs"]={
+		repo="OpenPrograms/ds84182-Programs",
+	},
+}
