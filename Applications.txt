@@ -1,7 +1,7 @@
 {
 	{
 		["name"]="Home.lua",
-		["url"]="IgorTimofeev/OpenComputers/master/Home.lua",
+		["url"]="Home.lua",
 		["type"]="Script",
 		["icon"]="",
 		["resources"]={
