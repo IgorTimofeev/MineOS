@@ -3,5 +3,5 @@
     ["name"]="Home.lua",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/Home.lua",
     ["type"]="Script",
-  },
+  }
 }
