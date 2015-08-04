@@ -1,24 +1,24 @@
 {
 	{
 		["name"]="Home.lua",
-		["url"]="Applications/Home.lua",
+		["url"]="IgorTimofeev/OpenComputers/master/Applications/Home.lua",
 		["type"]="Script",
 		["icon"]="",
 		["resources"]={
 		},
 	{
 		["name"]="MineCode",
-		["url"]="Applications/MineCode/MineCode.lua",
+		["url"]="IgorTimofeev/OpenComputers/master/Applications/MineCode/MineCode.lua",
 		["type"]="Application",
 		["icon"]="Applications/MineCode/Icon.png",
 		["resources"]={
 			{
 				["name"]="English.lang",
-				["url]="Applications/MineCode/English.lang",
+				["url]="IgorTimofeev/OpenComputers/master/Applications/MineCode/English.lang",
 			},
 			{
 				["name"]="Russian.lang",
-				["url]="Applications/MineCode/Russian.lang",
+				["url]="IgorTimofeev/OpenComputers/master/Applications/MineCode/Russian.lang",
 			},
 		},
 	},
