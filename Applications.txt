@@ -1,6 +1,6 @@
 {
 	{
-		["name"]="Home.lua",
+		["name"]="Home",
 		["url"]="IgorTimofeev/OpenComputers/master/Home.lua",
 		["type"]="Application",
 		["icon"]="",
