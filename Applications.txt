@@ -6,20 +6,4 @@
     ["icon"]="",
     ["resources"]={
   },
-  {
-    ["name"]="MineCode",
-    ["url"]="IgorTimofeev/OpenComputers/master/Applications/MineCode/MineCode.lua",
-    ["type"]="Application",
-    ["icon"]="Applications/MineCode/Icon.png",
-    ["resources"]={
-      {
-        ["name"]="English.lang",
-        ["url]="IgorTimofeev/OpenComputers/master/Applications/MineCode/English.lang",
-      },
-      {
-        ["name"]="Russian.lang",
-        ["url"]="IgorTimofeev/OpenComputers/master/Applications/MineCode/Russian.lang",
-      },
-    },
-  },
 }
