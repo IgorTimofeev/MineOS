@@ -18,7 +18,7 @@
       },
       {
         ["name"]="Russian.lang",
-        ["url]="IgorTimofeev/OpenComputers/master/Applications/MineCode/Russian.lang",
+        ["url"]="IgorTimofeev/OpenComputers/master/Applications/MineCode/Russian.lang",
       },
     },
   },
