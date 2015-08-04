@@ -1,10 +1,25 @@
 {
 	{
 		["name"]="Home.lua",
-		["url"]="Home.lua",
+		["url"]="Applications/Home.lua",
 		["type"]="Script",
 		["icon"]="",
 		["resources"]={
+		},
+	{
+		["name"]="MineCode",
+		["url"]="Applications/MineCode/MineCode.lua",
+		["type"]="Application",
+		["icon"]="Applications/MineCode/Icon.png",
+		["resources"]={
+			{
+				["name"]="English.lang",
+				["url]="Applications/MineCode/English.lang",
+			},
+			{
+				["name"]="Russian.lang",
+				["url]="Applications/MineCode/Russian.lang",
+			},
 		},
 	},
 }
