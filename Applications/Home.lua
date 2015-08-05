@@ -147,7 +147,7 @@ local function main(info)
 
   gpu.setBackground(0xffffff)
   gpu.setForeground(0x444444)
-  ecs.centerText("x", ySize - 3, info)
+  ecs.centerText("x", ySize - 2, info)
 end
 
 local function redstoneRecontrol()
@@ -176,7 +176,7 @@ local function switchButton(key, buttonColor)
     buttons[key][2] = 0x444444
   else
     buttons[key][1] = true
-    buttons[key][2] = buttonColor or ecs.colors.green
+    buttons[key][2] = ecs.colors.green
   end
 end
 
@@ -200,7 +200,9 @@ while true do
     if e[2] == primaryScreen then
       for key, val in pairs(obj["buttons"]) do
         if ecs.clickedAtArea(e[3], e[4], obj["buttons"][key][1], obj["buttons"][key][2], obj["buttons"][key][3], obj["buttons"][key][4]) then
-	  switchButton(key)
+	  local color
+	  if key == 2 then color = ecs.colors.red end
+	  switchButton(key, color)
           main("Изменен параметр кнопки "..tostring(key).." на "..tostring(buttons[key][1]))
           if key == 1 then
             openAllDoors(buttons[key][1])
