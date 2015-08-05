@@ -222,7 +222,9 @@ while true do
         main(e[6].." вернулся в нашу скромную обитель!")
       else
         clearMonitor(0xff0000, 0xffffff, "Недостойным дороги нет.")
+        bind()
         killThemAll()
+        bind(e[2)
         os.sleep(doorTimer)
         mini()
         bind()
@@ -234,8 +236,8 @@ while true do
       killThemAll()
     elseif e[6] == "openAllDoors" then
         switchButton(1)
-	openAllDoors(buttons[1][1])
-	main("Двери открыты!")
+		openAllDoors(buttons[1][1])
+		main("Двери открыты!")
     end
   elseif e[1] == "key_down" then
     if e[4] == 28 then
