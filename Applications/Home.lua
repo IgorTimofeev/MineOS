@@ -224,7 +224,7 @@ while true do
         clearMonitor(0xff0000, 0xffffff, "Недостойным дороги нет.")
         bind()
         killThemAll()
-        bind(e[2)
+        bind(e[2])
         os.sleep(doorTimer)
         mini()
         bind()
