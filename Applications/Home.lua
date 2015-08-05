@@ -121,9 +121,9 @@ local function openAllDoors(open)
   for key, val in pairs(doors) do
     color = val
     if open then
-      rs.setBundledOutput(redstoneSide, color, 100)
+      rs.setBundledOutput(redstoneSide, tonumber(color), 100)
     else
-      rs.setBundledOutput(redstoneSide, color, 100)
+      rs.setBundledOutput(redstoneSide, tonumber(color), 100)
     end
   end
 end
