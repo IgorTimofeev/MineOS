@@ -18,6 +18,7 @@ local function readFile()
   local file = io.open("System/OS/Applications.txt", "r")
   readedFile = file:read("*a")
   readedFile = seri.unserialize(readedFile)
+  file:close()
   return readedFile
 end
 
