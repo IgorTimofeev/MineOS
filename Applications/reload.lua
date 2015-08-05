@@ -42,6 +42,6 @@ end
 
 if #args < 1 then printUsage(); return end
 local url = getGitHubUrl(args[1])
-if not url then io.stderr:write("На GitHub автора отсутствует указанный файл.") end
+if not url then print(" "); io.stderr:write("На GitHub автора отсутствует указанный файл."); print(" ") end
 
 reloadFromGitHub(url, args[1])
