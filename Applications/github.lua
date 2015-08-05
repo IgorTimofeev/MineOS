@@ -86,7 +86,9 @@ if args[1] == "set" then
 	fs.makeDirectory(fs.path(pathToConfig))
 	config.write(pathToConfig, "currentRepository", args[2])
 	currentRepository = args[2]
+	info(" ")
 	info("Текущий репозиторий изменен на "..currentRepository)
+	info(" ")
 elseif args[1] == "get" then
 	if not fs.exists(pathToConfig) then
 		io.write("\nТекущий репозиторий не установлен. Используйте \"github set <путь к репозиторию>\".\n\n")
