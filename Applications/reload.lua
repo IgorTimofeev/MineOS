@@ -8,8 +8,8 @@ local args = {...}
 
 local function printUsage()
   print(" ")
-  print("Использование:")
-  print("reload <путь к файлу> - перезагружает файл с GitHub автора")
+  print(" Использование:")
+  print(" reload <путь к файлу> - перезагружает файл с GitHub автора")
   print(" ")
 end
 
@@ -42,6 +42,6 @@ end
 
 if #args < 1 then printUsage(); return end
 local url = getGitHubUrl(args[1])
-if not url then error("На GitHub автора отсутствует указанный файл.") end
+if not url then io.stderr:write("На GitHub автора отсутствует указанный файл.") end
 
 reloadFromGitHub(url, args[1])
