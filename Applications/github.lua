@@ -6,10 +6,15 @@ local shell = require("shell")
 
 local args, options = shell.parse(...)
 
-if #args < 3 then
-  io.write("\nИспользование: github get <ссылка> <путь сохранения>\n")
-  io.write("  -q: Тихий режим, текстовая информация об успехе не выводится.\n\n")
-  io.write("  Пример: github  get  IgorTimofeev/OpenComputers/master/Applications.txt  Applications.txt\n")
+if #args < 3 or string.lower(tostring(args[1])) == "help" then
+  io.write("\nИспользование:")
+  io.write("github set <ссылка на репозиторий> - установить текущий репозиторий\n")
+  io.write("github get <ссылка> <путь сохранения> - загрузить указанный файл из текущего репозитория\n")
+  io.write("github fast <ссылка на raw файл> <путь сохранения>- скачать файл без ебли мозгов\n\n")
+  io.write(" Примеры:")
+  io.write(" github set <IgorTimofeev/OpenComputers> <путь сохранения> - загрузить указанный файл из текущего репозитория\n")
+  io.write(" github get Applications/Home.lua Home.lua\n")
+  io.write(" github fast Applications/Home.lua Home.lua\n")
   return
 end
 
