@@ -1,4 +1,3 @@
-
 local internet = require("internet")
 local fs = require("filesystem")
 local seri = require("serialization")
@@ -8,17 +7,17 @@ local config = require("config")
 local args, options = shell.parse(...)
 
 local function printUsage()
-  io.write("\nИспользование:")
-  io.write("github set <ссылка на репозиторий> - установить указанный репозиторий в качестве постоянного\n")
-  io.write("github get <ссылка> <путь сохранения> - загрузить указанный файл из текущего репозитория\n")
-  io.write("github fast <ссылка на raw файл> <путь сохранения>- скачать файл без ебли мозгов\n\n")
-  io.write(" Примеры:")
+  io.write("\n Использование:\n")
+  io.write(" github set <ссылка на репозиторий> - установить указанный репозиторий в качестве постоянного\n")
+  io.write(" github get <ссылка> <путь сохранения> - загрузить указанный файл из текущего репозитория\n")
+  io.write(" github fast <ссылка на raw файл> <путь сохранения>- скачать файл без ебли мозгов\n\n")
+  io.write(" Примеры:\n")
   io.write(" github set IgorTimofeev/OpenComputers\n")
   io.write(" github get Applications/Home.lua Home.lua\n")
-  io.write(" github fast IgorTimofeev/OpenComputers/master/Applications/Home.lua Home.lua\n")	
+  io.write(" github fast IgorTimofeev/OpenComputers/master/Applications/Home.lua Home.lua\n\n")	
 end
 
-if #args < 3 or string.lower(tostring(args[1])) == "help" then
+if #args < 2 or string.lower(tostring(args[1])) == "help" then
   printUsage()
   return
 end
@@ -90,7 +89,7 @@ if args[1] == "set" then
 	info("Текущий репозиторий изменен на "..currentRepository)
 elseif args[1] == "get" then
 	if not fs.exists(pathToConfig) then
-		io.stderr:write("Текущий репозиторий не установлен. Используйте \"github set <путь>\".")
+		io.write("\nТекущий репозиторий не установлен. Используйте \"github set <путь к репозиторию>\".\n\n")
 	else
 		currentRepository = config.readAll(pathToConfig).currentRepository
 		getFromGitHubSafely(userUrl .. currentRepository .. "/master/" .. args[2], args[3])
@@ -101,5 +100,3 @@ else
 	printUsage()
 	return
 end
-
-
