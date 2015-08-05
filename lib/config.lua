@@ -37,12 +37,9 @@ function config.write(path, key, value)
 
 	if fs.exists(path) then fs.remove(path) end
 	local file = io.open(path, "w")
-	print(" ")
 	for key1, value1 in pairs(readedConfig) do
 		file:write(key1, " = ", value1, "\n")
-		print("Записано "..key1.." = ".. value1)
 	end
-	print(" ")
 	file:close()
 end
 
