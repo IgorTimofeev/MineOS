@@ -3,25 +3,31 @@ local internet = require("internet")
 local fs = require("filesystem")
 local seri = require("serialization")
 local shell = require("shell")
+local config = require("config")
 
 local args, options = shell.parse(...)
 
-if #args < 3 or string.lower(tostring(args[1])) == "help" then
+local function printUsage()
   io.write("\nИспользование:")
-  io.write("github set <ссылка на репозиторий> - установить текущий репозиторий\n")
+  io.write("github set <ссылка на репозиторий> - установить указанный репозиторий в качестве постоянного\n")
   io.write("github get <ссылка> <путь сохранения> - загрузить указанный файл из текущего репозитория\n")
   io.write("github fast <ссылка на raw файл> <путь сохранения>- скачать файл без ебли мозгов\n\n")
   io.write(" Примеры:")
-  io.write(" github set <IgorTimofeev/OpenComputers> <путь сохранения> - загрузить указанный файл из текущего репозитория\n")
+  io.write(" github set IgorTimofeev/OpenComputers\n")
   io.write(" github get Applications/Home.lua Home.lua\n")
-  io.write(" github fast Applications/Home.lua Home.lua\n")
+  io.write(" github fast IgorTimofeev/OpenComputers/master/Applications/Home.lua Home.lua\n")	
+end
+
+if #args < 3 or string.lower(tostring(args[1])) == "help" then
+  printUsage()
   return
 end
 
 local quiet = false
-local ssilka, put = args[2], args[3]
-if args[1] == "quiet" then quiet = true end
+if args[1] == "fast" then quiet = true end
 
+local pathToConfig = "System/GitHub/Repository.cfg"
+local currentRepository
 local userUrl = "https://raw.githubusercontent.com/"
 
 --pastebin run SthviZvU IgorTimofeev/OpenComputers/master/Applications.txt hehe.txt
@@ -44,8 +50,6 @@ local function getFromGitHub(url, path)
 		return nil
 	end
 
-	info(" ")
-	info("Успех!")
 	info(" ")
 
 	if result == "" or result == " " or result == "\n" then info("Файл пустой, либо ссылка неверная."); return end
@@ -76,6 +80,26 @@ local function getFromGitHubSafely(url, path)
 		return nil
 	end
 	return sRepos
+end
+
+if args[1] == "set" then
+	if fs.exists(pathToConfig) then fs.remove(pathToConfig) end
+	fs.makeDirectory(fs.path(pathToConfig))
+	config.write(pathToConfig, "currentRepository", args[2])
+	currentRepository = args[2]
+	info("Текущий репозиторий изменен на "..currentRepository)
+elseif args[1] == "get" then
+	if not fs.exists(pathToConfig) then
+		io.stderr:write("Текущий репозиторий не установлен. Используйте \"github set <путь>\".")
+	else
+		currentRepository = config.readAll(pathToConfig).currentRepository
+		getFromGitHubSafely(userUrl .. "/" .. currentRepository .. "/master/" .. args[2], args[3])
+	end
+elseif args[1] == "fast" then
+	
+else
+	printUsage()
+	return
 end
 
 getFromGitHub(userUrl..ssilka, put)
