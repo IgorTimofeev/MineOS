@@ -93,15 +93,13 @@ elseif args[1] == "get" then
 		io.stderr:write("Текущий репозиторий не установлен. Используйте \"github set <путь>\".")
 	else
 		currentRepository = config.readAll(pathToConfig).currentRepository
-		getFromGitHubSafely(userUrl .. "/" .. currentRepository .. "/master/" .. args[2], args[3])
+		getFromGitHubSafely(userUrl .. currentRepository .. "/master/" .. args[2], args[3])
 	end
 elseif args[1] == "fast" then
-	
+	getFromGitHubSafely(userUrl .. args[2], args[3])
 else
 	printUsage()
 	return
 end
-
-getFromGitHub(userUrl..ssilka, put)
 
 
