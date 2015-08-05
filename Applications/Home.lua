@@ -137,13 +137,13 @@ local function main(info)
   gpu.fill(1, 1, xSize, ySize, " ")
   
   local yCenter = math.floor(ySize / 2)
-  local yPos = yCenter - 9
+  local yPos = yCenter - 11
   newObj("buttons", 1, ecs.drawAdaptiveButton("auto", yPos, 3, 1, "Открыть двери", buttons[1][2] or 0x444444, 0xffffff)); yPos = yPos + 4
   newObj("buttons", 2, ecs.drawAdaptiveButton("auto", yPos, 3, 1, "Фабрика материи", buttons[2][2] or 0x444444, 0xffffff)); yPos = yPos + 4
-  newObj("buttons", 3, ecs.drawAdaptiveButton("auto", yPos, 3, 1, "Управление реактором", buttons[2][2] or 0x444444, 0xffffff)); yPos = yPos + 4
-  newObj("buttons", 4, ecs.drawAdaptiveButton("auto", yPos, 3, 1, "Свет на втором этаже", buttons[3][2] or 0x444444, 0xffffff)); yPos = yPos + 4
-  newObj("buttons", 5, ecs.drawAdaptiveButton("auto", yPos, 3, 1, "Свет на первом этаже", buttons[4][2] or 0x444444, 0xffffff)); yPos = yPos + 4
-  newObj("buttons", 6, ecs.drawAdaptiveButton("auto", yPos, 3, 1, "Свет в шахте", buttons[5][2] or 0x444444, 0xffffff)); yPos = yPos + 4
+  newObj("buttons", 3, ecs.drawAdaptiveButton("auto", yPos, 3, 1, "Управление реактором", buttons[3][2] or 0x444444, 0xffffff)); yPos = yPos + 4
+  newObj("buttons", 4, ecs.drawAdaptiveButton("auto", yPos, 3, 1, "Свет на втором этаже", buttons[4][2] or 0x444444, 0xffffff)); yPos = yPos + 4
+  newObj("buttons", 5, ecs.drawAdaptiveButton("auto", yPos, 3, 1, "Свет на первом этаже", buttons[5][2] or 0x444444, 0xffffff)); yPos = yPos + 4
+  newObj("buttons", 6, ecs.drawAdaptiveButton("auto", yPos, 3, 1, "Свет в шахте", buttons[6][2] or 0x444444, 0xffffff)); yPos = yPos + 4
 
   gpu.setBackground(0xffffff)
   gpu.setForeground(0x444444)
