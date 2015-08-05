@@ -123,7 +123,7 @@ local function openAllDoors(open)
     if open then
       rs.setBundledOutput(redstoneSide, tonumber(color), 100)
     else
-      rs.setBundledOutput(redstoneSide, tonumber(color), 100)
+      rs.setBundledOutput(redstoneSide, tonumber(color), 0)
     end
   end
 end
@@ -169,6 +169,16 @@ local function killThemAll()
   main("Помещение очищено от всего живого.")
 end
 
+local function switchButton(key)
+          if buttons[key][1] then
+            buttons[key][1] = false
+            buttons[key][2] = 0x444444
+          else
+            buttons[key][1] = true
+            buttons[key][2] = ecs.colors.green
+          end
+end
+
 -----------------------------------------
 
 main("Ничего интересного.")
@@ -188,13 +198,7 @@ while true do
     if e[2] == primaryScreen then
       for key, val in pairs(obj["buttons"]) do
         if ecs.clickedAtArea(e[3], e[4], obj["buttons"][key][1], obj["buttons"][key][2], obj["buttons"][key][3], obj["buttons"][key][4]) then
-          if buttons[key][1] then
-            buttons[key][1] = false
-            buttons[key][2] = 0x444444
-          else
-            buttons[key][1] = true
-            buttons[key][2] = ecs.colors.green
-          end
+	  switchButton(key)
           main("Изменен параметр кнопки "..tostring(key).." на "..tostring(buttons[key][1]))
           if key == 1 then
             openAllDoors(buttons[key][1])
@@ -228,6 +232,10 @@ while true do
   elseif e[1] == "modem_message" then
     if e[6] == "killThemAll!" then
       killThemAll()
+    elseif e[6] == "openAllDoors" then
+        switchButton(1)
+	openAllDoors(buttons[1][1])
+	main("Двери открыты!")
     end
   elseif e[1] == "key_down" then
     if e[4] == 28 then
