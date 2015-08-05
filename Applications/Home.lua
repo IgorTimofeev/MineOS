@@ -43,7 +43,7 @@ local xSize, ySize = gpu.getResolution()
 
 local doorTimer = 3
 
-local buttons = {{false, 0x444444, colors.lightblue}, {false, 0x444444, colors.black}, {true, ecs.colors.green, colors.pink}, {true, ecs.colors.green, colors.red}, {true, ecs.colors.green, colors.orange}}
+local buttons = {{false, 0x444444, colors.lightblue}, {false, 0x444444, colors.black}, {true, ecs.colors.green, colors.pink}, {true, ecs.colors.green, colors.red}, {true, ecs.colors.green, colors.orange}, {true, ecs.colors.green, colors.red}}
 
 local killWireColor = colors.blue
 
@@ -116,6 +116,18 @@ local function door(which, open)
   end
 end
 
+local function openAllDoors(open)
+  local color
+  for key, val in pairs(doors) do
+    color = val
+    if open then
+      rs.setBundledOutput(redstoneSide, color, 100)
+    else
+      rs.setBundledOutput(redstoneSide, color, 100)
+    end
+  end
+end
+
 local function mini()
   clearMonitor(0xffffff, 0x444444, "Приложите палец для идентификации")
 end
@@ -184,7 +196,11 @@ while true do
             buttons[key][2] = ecs.colors.green
           end
           main("Изменен параметр кнопки "..tostring(key).." на "..tostring(buttons[key][1]))
-          redstoneRecontrol()
+          if key == 1 then
+            openAllDoors(buttons[key][1])
+          else
+            redstoneRecontrol()
+          end
           break
         end
       end
