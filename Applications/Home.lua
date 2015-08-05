@@ -43,7 +43,7 @@ local xSize, ySize = gpu.getResolution()
 
 local doorTimer = 3
 
-local buttons = {{false, 0x444444, colors.lightblue}, {false, 0x444444, colors.black}, {true, ecs.colors.green, colors.pink}, {true, ecs.colors.green, colors.red}, {true, ecs.colors.green, colors.orange}, {true, ecs.colors.green, colors.red}}
+local buttons = {{false, 0x444444, colors.lightblue}, {false, 0x444444, colors.black}, {true, ecs.colors.red, colors.brown}, {true, ecs.colors.green, colors.pink}, {true, ecs.colors.green, colors.red}, {true, ecs.colors.green, colors.orange}}
 
 local killWireColor = colors.blue
 
@@ -140,9 +140,10 @@ local function main(info)
   local yPos = yCenter - 9
   newObj("buttons", 1, ecs.drawAdaptiveButton("auto", yPos, 3, 1, "Открыть двери", buttons[1][2] or 0x444444, 0xffffff)); yPos = yPos + 4
   newObj("buttons", 2, ecs.drawAdaptiveButton("auto", yPos, 3, 1, "Фабрика материи", buttons[2][2] or 0x444444, 0xffffff)); yPos = yPos + 4
-  newObj("buttons", 3, ecs.drawAdaptiveButton("auto", yPos, 3, 1, "Свет на втором этаже", buttons[3][2] or 0x444444, 0xffffff)); yPos = yPos + 4
-  newObj("buttons", 4, ecs.drawAdaptiveButton("auto", yPos, 3, 1, "Свет на первом этаже", buttons[4][2] or 0x444444, 0xffffff)); yPos = yPos + 4
-  newObj("buttons", 5, ecs.drawAdaptiveButton("auto", yPos, 3, 1, "Свет в шахте", buttons[5][2] or 0x444444, 0xffffff)); yPos = yPos + 4
+  newObj("buttons", 3, ecs.drawAdaptiveButton("auto", yPos, 3, 1, "Управление реактором", buttons[2][2] or 0x444444, 0xffffff)); yPos = yPos + 4
+  newObj("buttons", 4, ecs.drawAdaptiveButton("auto", yPos, 3, 1, "Свет на втором этаже", buttons[3][2] or 0x444444, 0xffffff)); yPos = yPos + 4
+  newObj("buttons", 5, ecs.drawAdaptiveButton("auto", yPos, 3, 1, "Свет на первом этаже", buttons[4][2] or 0x444444, 0xffffff)); yPos = yPos + 4
+  newObj("buttons", 6, ecs.drawAdaptiveButton("auto", yPos, 3, 1, "Свет в шахте", buttons[5][2] or 0x444444, 0xffffff)); yPos = yPos + 4
 
   gpu.setBackground(0xffffff)
   gpu.setForeground(0x444444)
@@ -169,14 +170,14 @@ local function killThemAll()
   main("Помещение очищено от всего живого.")
 end
 
-local function switchButton(key)
-          if buttons[key][1] then
-            buttons[key][1] = false
-            buttons[key][2] = 0x444444
-          else
-            buttons[key][1] = true
-            buttons[key][2] = ecs.colors.green
-          end
+local function switchButton(key, buttonColor)
+  if buttons[key][1] then
+    buttons[key][1] = false
+    buttons[key][2] = 0x444444
+  else
+    buttons[key][1] = true
+    buttons[key][2] = buttonColor or ecs.colors.green
+  end
 end
 
 -----------------------------------------
@@ -194,7 +195,8 @@ end
 while true do
   local e = {event.pull()}
   if e[1] == "touch" then
-
+	
+    --ЕСЛИ КЛИКНУТО НА ГЛАВНОМ МОНИКЕ
     if e[2] == primaryScreen then
       for key, val in pairs(obj["buttons"]) do
         if ecs.clickedAtArea(e[3], e[4], obj["buttons"][key][1], obj["buttons"][key][2], obj["buttons"][key][3], obj["buttons"][key][4]) then
@@ -209,6 +211,7 @@ while true do
         end
       end
 
+    --ЕСЛИ КЛИКНУТО НА КАКОМ-ТО ЛЕВОМ МОНИКЕ
     else
       bind(e[2])
 
