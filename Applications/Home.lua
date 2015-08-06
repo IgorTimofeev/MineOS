@@ -43,7 +43,7 @@ local xSize, ySize = gpu.getResolution()
 
 local doorTimer = 3
 
-local buttons = {{false, 0x444444, colors.lightblue}, {false, 0x444444, colors.black}, {false, ecs.colors.red, colors.brown}, {true, ecs.colors.green, colors.pink}, {true, ecs.colors.green, colors.red}, {true, ecs.colors.green, colors.orange}}
+local buttons = {{false, 0x444444, colors.lightblue}, {false, 0x444444, colors.black}, {false, 0x444444, colors.brown}, {true, ecs.colors.green, colors.pink}, {true, ecs.colors.green, colors.red}, {true, ecs.colors.green, colors.orange}}
 
 local killWireColor = colors.blue
 
@@ -119,11 +119,11 @@ end
 local function openAllDoors(open)
   local color
   for key, val in pairs(doors) do
-    color = val
+    color = tonumber(val)
     if open then
-      rs.setBundledOutput(redstoneSide, tonumber(color), 100)
+      rs.setBundledOutput(redstoneSide, color, 100)
     else
-      rs.setBundledOutput(redstoneSide, tonumber(color), 0)
+      rs.setBundledOutput(redstoneSide, color, 0)
     end
   end
 end
@@ -132,12 +132,22 @@ local function mini()
   clearMonitor(0xffffff, 0x444444, "Приложите палец для идентификации")
 end
 
-local function main(info)
+local function infa()
+  gpu.setBackground(0xffffff)
+  gpu.setForeground(0x444444)
+
+  local yPos = ySize - 3
+  if c.isAvailable("mfsu") then ecs.centerText("x", yPos, "Заряд МФСУ: "..c.mfsu.getStored()); yPos = yPos + 1 end
+  if c.isAvailable("reactor") then ecs.centerText("x", yPos, "Нагрев реактора: "..math.ceil(c.reactor.getHeat() / c.reactor.getMaxHeat() * 100).."%"); yPos = yPos + 1 end
+  if c.isAvailable("reactor_chamber") then ecs.centerText("x", yPos, "Нагрев реактора: "..math.ceil(c.reactor_chamber.getHeat() / c.reactor_chamber.getMaxHeat() * 100).."%"); yPos = yPos + 1 end
+end
+
+local function main()
   gpu.setBackground(0xffffff)
   gpu.fill(1, 1, xSize, ySize, " ")
   
   local yCenter = math.floor(ySize / 2)
-  local yPos = yCenter - 11
+  local yPos = yCenter - 12
   newObj("buttons", 1, ecs.drawAdaptiveButton("auto", yPos, 3, 1, "Открыть двери", buttons[1][2] or 0x444444, 0xffffff)); yPos = yPos + 4
   newObj("buttons", 2, ecs.drawAdaptiveButton("auto", yPos, 3, 1, "Фабрика материи", buttons[2][2] or 0x444444, 0xffffff)); yPos = yPos + 4
   newObj("buttons", 3, ecs.drawAdaptiveButton("auto", yPos, 3, 1, "Управление реактором", buttons[3][2] or 0x444444, 0xffffff)); yPos = yPos + 4
@@ -145,9 +155,7 @@ local function main(info)
   newObj("buttons", 5, ecs.drawAdaptiveButton("auto", yPos, 3, 1, "Свет на первом этаже", buttons[5][2] or 0x444444, 0xffffff)); yPos = yPos + 4
   newObj("buttons", 6, ecs.drawAdaptiveButton("auto", yPos, 3, 1, "Свет в шахте", buttons[6][2] or 0x444444, 0xffffff)); yPos = yPos + 4
 
-  gpu.setBackground(0xffffff)
-  gpu.setForeground(0x444444)
-  ecs.centerText("x", ySize - 2, info)
+  infa()
 end
 
 local function redstoneRecontrol()
@@ -195,13 +203,13 @@ end
 while true do
   local e = {event.pull()}
   if e[1] == "touch" then
-	
+
     --ЕСЛИ КЛИКНУТО НА ГЛАВНОМ МОНИКЕ
     if e[2] == primaryScreen then
       for key, val in pairs(obj["buttons"]) do
         if ecs.clickedAtArea(e[3], e[4], obj["buttons"][key][1], obj["buttons"][key][2], obj["buttons"][key][3], obj["buttons"][key][4]) then
 	  local color
-	  if key == 2 then color = ecs.colors.red end
+	  if key == 3 then color = ecs.colors.red end
 	  switchButton(key, color)
           main("Изменен параметр кнопки "..tostring(key).." на "..tostring(buttons[key][1]))
           if key == 1 then
@@ -236,13 +244,15 @@ while true do
         main(e[6].." попытался зайти в дом. Убей его. Убей чужака!")
       end
     end
+
+    infa()
   elseif e[1] == "modem_message" then
     if e[6] == "killThemAll!" then
       killThemAll()
     elseif e[6] == "openAllDoors" then
         switchButton(1)
-		openAllDoors(buttons[1][1])
-		main("Двери открыты!")
+	openAllDoors(buttons[1][1])
+	main("Двери открыты!")
     end
   elseif e[1] == "key_down" then
     if e[4] == 28 then
