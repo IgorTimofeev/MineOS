@@ -43,7 +43,7 @@ local xSize, ySize = gpu.getResolution()
 
 local doorTimer = 3
 
-local buttons = {{false, 0x444444, colors.lightblue}, {false, 0x444444, colors.black}, {true, ecs.colors.red, colors.brown}, {true, ecs.colors.green, colors.pink}, {true, ecs.colors.green, colors.red}, {true, ecs.colors.green, colors.orange}}
+local buttons = {{false, 0x444444, colors.lightblue}, {false, 0x444444, colors.black}, {false, ecs.colors.red, colors.brown}, {true, ecs.colors.green, colors.pink}, {true, ecs.colors.green, colors.red}, {true, ecs.colors.green, colors.orange}}
 
 local killWireColor = colors.blue
 
@@ -176,7 +176,7 @@ local function switchButton(key, buttonColor)
     buttons[key][2] = 0x444444
   else
     buttons[key][1] = true
-    buttons[key][2] = ecs.colors.green
+    buttons[key][2] = buttonColor or ecs.colors.green
   end
 end
 
