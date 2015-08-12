@@ -120,6 +120,26 @@
     ["type"]="Script",
   },
   {
+    ["name"]="System/OS/Dock/MineCode.lnk",
+    ["url"]="IgorTimofeev/OpenComputers/master/MineOS/Shortcuts/MineCode.lnk",
+    ["type"]="Script",
+  },
+  {
+    ["name"]="System/OS/Dock/Geoscan.lnk",
+    ["url"]="IgorTimofeev/OpenComputers/master/MineOS/Shortcuts/Geoscan.lnk",
+    ["type"]="Script",
+  },
+  {
+    ["name"]="System/OS/Dock/Photoshop.lnk",
+    ["url"]="IgorTimofeev/OpenComputers/master/MineOS/Shortcuts/Photoshop.lnk",
+    ["type"]="Script",
+  },
+  {
+    ["name"]="System/OS/Dock/Crossword.lnk",
+    ["url"]="IgorTimofeev/OpenComputers/master/MineOS/Shortcuts/Crossword.lnk",
+    ["type"]="Script",
+  },
+  {
     ["name"]="MineCode",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/MineCode/MineCode.lua",
     ["type"]="Application",
