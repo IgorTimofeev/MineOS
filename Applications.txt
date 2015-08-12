@@ -15,11 +15,6 @@
     ["type"]="Script",
   },
   {
-    ["name"]="Photoshop.lua",
-    ["url"]="IgorTimofeev/OpenComputers/master/Applications/Photoshop.lua",
-    ["type"]="Script",
-  },
-  {
     ["name"]="autorun.lua",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/autorun.lua",
     ["type"]="Script",
@@ -151,5 +146,11 @@
         ["url"]="IgorTimofeev/OpenComputers/master/Applications/Crossword/CrosswordFile.txt",
       },
     },
+  },
+  {
+    ["name"]="Photoshop",
+    ["url"]="IgorTimofeev/OpenComputers/master/Applications/Photoshop/Photoshop.lua",
+    ["type"]="Application",
+    ["icon"]="IgorTimofeev/OpenComputers/master/Applications/Photoshop/Icon.png",
   },
 }
