@@ -782,6 +782,10 @@ elseif arg[1] == "-n" or arg[1] == "new" then
 	imageWidth = arg[2]
 	imageHeight = arg[3]
 	newFile()
+else
+	imageWidth = 51
+	imageHeight = 19
+	newFile()	
 end
 
 --ecs.palette(5,5,0xff0000)
