@@ -65,6 +65,11 @@
     ["type"]="Script",
   },
   {
+    ["name"]="System/OS/Icons/Script.png",
+    ["url"]="IgorTimofeev/OpenComputers/master/MineOS/Icons/Script.png",
+    ["type"]="Script",
+  },
+  {
     ["name"]="lib/ECSAPI.lua",
     ["url"]="IgorTimofeev/OpenComputers/master/lib/ECSAPI.lua",
     ["type"]="Script",
