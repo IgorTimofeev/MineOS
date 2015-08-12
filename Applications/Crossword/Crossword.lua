@@ -278,7 +278,7 @@ end
 
 ecs.clearScreen(0x262626)
 
-local vvod = ecs.input("auto", "auto", 20, "Кроссворд", {"input", "Путь к файлу кроссворда", "CrosswordFile.txt"}, {"select", "Как решить", "Быстро", {"Быстро", "Красиво"}})
+local vvod = ecs.input("auto", "auto", 20, "Кроссворд", {"input", "Путь к файлу кроссворда", "Crossword.app/Resources/CrosswordFile.txt"}, {"select", "Как решить", "Быстро", {"Быстро", "Красиво"}})
 local pathToCrossword = vvod[1]
 local mode = vvod[2]
 
