@@ -436,8 +436,8 @@ end
 ---------------------------------------
 
 local args = {...}
-local scale = tonumber(args[1]) or 1
-local height = tonumber(args[2]) or 10
+local scale = tonumber(args[1]) or 2
+local height = tonumber(args[2]) or 15
 
 local date
 
