@@ -448,7 +448,7 @@ holo.setScale(scale)
 while true do
   holo.clear()
   date = string.sub(os.date("%T"), 1, -4)
-  hologram.text(1, height, 24, date, 2)
+  hologram.text(5, height, 24, date, 2)
   
   term.clear()
   gpu.set(2, 2, "Текущее время: " .. date)
