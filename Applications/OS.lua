@@ -18,7 +18,10 @@ local xSize, ySize = gpu.getResolution()
 
 local icons = {}
 local workPath = ""
+local workPathHistory = {}
 local currentFileList
+local currentDesktop = 1
+local countOfDesktops
 
 --ЗАГРУЗКА ИКОНОК
 icons["folder"] = image.load("System/OS/Icons/Folder.png")
@@ -92,7 +95,7 @@ local function drawIcon(xIcons, yIcons, path)
 		elseif fileFormat == ".txt" or fileFormat == ".rtf" then
 			icon = "text"
 		elseif fileFormat == ".lua" then
-			icon = "lua"
+		--	icon = "lua"
 		else
 			icon = "script"
 		end
@@ -135,13 +138,39 @@ end
 local function drawDesktop(x, y)
 
 	currentFileList = ecs.getFileList(workPath)
-
 	currentFileList = ecs.reorganizeFilesAndFolders(currentFileList)
 
+	--ОЧИСТКА СТОЛА
+	ecs.square(1, y, xSize, yCountOfIcons * (heightOfIcon + ySpaceBetweenIcons) - ySpaceBetweenIcons, background)
+
+	--ОЧИСТКА ОБЪЕКТОВ ИКОНОК
 	obj["DesktopIcons"] = {}
 
+	--ОТРИСОВКА КНОПОЧЕК ПЕРЕМЕЩЕНИЯ
+	countOfDesktops = math.ceil(#currentFileList / totalCountOfIcons)
+	local xButtons, yButtons = math.floor(xSize / 2 - ((countOfDesktops + 1) * 3 - 3) / 2), ySize - heightOfDock - 3
+	ecs.square(1, yButtons, xSize, 1, background)
+	for i = 1, countOfDesktops do
+		local color = 0xffffff
+		if i == 1 then
+			if #workPathHistory == 0 then color = color - 0x444444 end
+			ecs.colorTextWithBack(xButtons, yButtons, 0x262626, color, " <")
+			newObj("DesktopButtons", 0, xButtons, yButtons, xButtons + 1, yButtons)
+			xButtons = xButtons + 3
+		end
+
+		if i == currentDesktop then
+			color = ecs.colors.green
+		end
+		ecs.colorTextWithBack(xButtons, yButtons, 0x000000, color, "  ")
+		newObj("DesktopButtons", i, xButtons, yButtons, xButtons + 1, yButtons)
+
+		xButtons = xButtons + 3
+	end
+
+	--ОТРИСОВКА ИКОНОК ПО ФАЙЛ ЛИСТУ
+	local counter = currentDesktop * totalCountOfIcons - totalCountOfIcons + 1
 	local xIcons, yIcons = x, y
-	local counter = 1
 	for i = 1, yCountOfIcons do
 		for j = 1, xCountOfIcons do
 			if not currentFileList[counter] then break end
@@ -266,9 +295,6 @@ local function launchIcon(path, arguments)
 		local cyka = path .. ecs.hideFileFormat(fs.name(path)) .. ".lua"
 		local s, r = shell.execute(cyka)
 		--if not s then ecs.error(r) end
-	elseif fs.isDirectory(path) then
-		workPath = path
-		return
 	elseif fileFormat == ".lua" or fileFormat == nil then
 		ecs.prepareToExit()
 		local success, reason = shell.execute(path .. arguments)
@@ -300,32 +326,67 @@ drawAll()
 while true do
 	local eventData = { event.pull() }
 	if eventData[1] == "touch" then
+
+		--ПРОСЧЕТ КЛИКА НА ИКОНОЧКИ РАБОЧЕГО СТОЛА
 		for key, value in pairs(obj["DesktopIcons"]) do
 			if ecs.clickedAtArea(eventData[3], eventData[4], obj["DesktopIcons"][key][1], obj["DesktopIcons"][key][2], obj["DesktopIcons"][key][3], obj["DesktopIcons"][key][4]) then
-				if eventData[5] == 0 then
+				
+				--ЕСЛИ ЛЕВАЯ КНОПА МЫШИ
+				if (eventData[5] == 0 and not keyboard.isControlDown()) or (eventData[5] == 1 and keyboard.isControlDown()) then
+					
+					--ЕСЛИ НЕ ВЫБРАНА, ТО ВЫБРАТЬ СНАЧАЛА
 					if not obj["DesktopIcons"][key][6] then
 						selectIcon(key)
-					else
-						deselectAll(true)
-						launchIcon(obj["DesktopIcons"][key][5])
-						drawAll()
-					end
-				else
-					selectIcon(key)
-
-					local action 
 					
-					if ecs.getFileFormat(obj["DesktopIcons"][key][5]) == ".app" and fs.isDirectory(obj["DesktopIcons"][key][5]) then
-						action = context.menu(eventData[3], eventData[4], {"Показать содержимое"}, "-", {"Вырезать", false, "^X"}, {"Копировать", false, "^C"}, {"Вставить", true, "^V"}, "-", {"Удалить", false, "⌫"})
+					--А ЕСЛИ ВЫБРАНА УЖЕ, ТО ЗАПУСТИТЬ ПРОЖКУ ИЛИ ОТКРЫТЬ ПАПКУ
 					else
-						action = context.menu(eventData[3], eventData[4], {"Редактировать"}, "-", {"Вырезать", false, "^X"}, {"Копировать", false, "^C"}, {"Вставить", true, "^V"}, "-", {"Удалить", false, "⌫"})
+						if fs.isDirectory(obj["DesktopIcons"][key][5]) then
+							table.insert(workPathHistory, workPath)							
+							workPath = obj["DesktopIcons"][key][5]
+							drawDesktop(xPosOfIcons, yPosOfIcons)
+						else
+							deselectAll(true)
+							launchIcon(obj["DesktopIcons"][key][5])
+							drawAll()
+						end
+					end
+
+				--ЕСЛИ ПРАВАЯ КНОПА МЫШИ
+				elseif eventData[5] == 1 and not keyboard.isControlDown() then
+					--selectIcon(key)
+					obj["DesktopIcons"][key][6] = true
+					redrawSelectedIcons()
+
+					local action
+					local fileFormat = ecs.getFileFormat(obj["DesktopIcons"][key][5])
+
+					local function getSelectedIcons()
+						local selectedIcons = {}
+						for key, val in pairs(obj["DesktopIcons"]) do
+							if obj["DesktopIcons"][key][6] then
+								table.insert(selectedIcons, { ["id"] = key })
+							end
+						end
+						return selectedIcons
 					end
 
 					deselectAll(true)
 
+					--РАЗНЫЕ КОНТЕКСТНЫЕ МЕНЮ
+					if #getSelectedIcons() > 1 then
+						action = context.menu(eventData[3], eventData[4], {"Вырезать", false, "^X"}, {"Копировать", false, "^C"}, {"Вставить", true, "^V"}, "-", {"Добавить в архив"}, "-", {"Удалить", false, "⌫"})
+					elseif fileFormat == ".app" and fs.isDirectory(obj["DesktopIcons"][key][5]) then
+						action = context.menu(eventData[3], eventData[4], {"Показать содержимое"}, "-", {"Вырезать", false, "^X"}, {"Копировать", false, "^C"}, {"Вставить", true, "^V"}, "-", {"Переименовать"}, {"Создать ярлык"}, {"Добавить в архив"}, "-", {"Удалить", false, "⌫"})
+					elseif fileFormat ~= ".app" and fs.isDirectory(obj["DesktopIcons"][key][5]) then
+						action = context.menu(eventData[3], eventData[4], {"Вырезать", false, "^X"}, {"Копировать", false, "^C"}, {"Вставить", true, "^V"}, "-", {"Переименовать"}, {"Создать ярлык"}, {"Добавить в архив"}, "-", {"Удалить", false, "⌫"})
+					else
+						action = context.menu(eventData[3], eventData[4], {"Редактировать"}, "-", {"Вырезать", false, "^X"}, {"Копировать", false, "^C"}, {"Вставить", true, "^V"}, "-", {"Переименовать"}, {"Создать ярлык"}, {"Добавить в архив"}, "-", {"Удалить", false, "⌫"})
+					end
+
 					if action == "Показать содержимое" then
+						table.insert(workPathHistory, workPath)	
 						workPath = obj["DesktopIcons"][key][5]
-						drawAll()
+						drawDesktop(xPosOfIcons, yPosOfIcons)
 					elseif action == "Редактировать" then
 						ecs.prepareToExit()
 						shell.execute("edit "..obj["DesktopIcons"][key][5])
@@ -337,6 +398,35 @@ while true do
 				break
 			end	
 		end
+
+		--ПРОСЧЕТ КЛИКА НА КНОПОЧКИ ПЕРЕКЛЮЧЕНИЯ РАБОЧИХ СТОЛОВ
+		for key, value in pairs(obj["DesktopButtons"]) do
+			if ecs.clickedAtArea(eventData[3], eventData[4], obj["DesktopButtons"][key][1], obj["DesktopButtons"][key][2], obj["DesktopButtons"][key][3], obj["DesktopButtons"][key][4]) then
+				if key == 0 then 
+					if #workPathHistory > 0 then
+						ecs.colorTextWithBack(obj["DesktopButtons"][key][1], obj["DesktopButtons"][key][2], 0xffffff, ecs.colors.green, " <")
+						os.sleep(0.2)
+						workPath = workPathHistory[#workPathHistory]
+						workPathHistory[#workPathHistory] = nil
+						currentDesktop = 1
+
+						drawDesktop(xPosOfIcons, yPosOfIcons)
+					end
+				else
+					currentDesktop = key
+					drawDesktop(xPosOfIcons, yPosOfIcons)
+				end
+			end
+		end
+
+	--ПРОКРУТКА РАБОЧИХ СТОЛОВ
+	elseif eventData[1] == "scroll" then
+		if eventData[5] == -1 then
+			if currentDesktop > 1 then currentDesktop = currentDesktop - 1; drawDesktop(xPosOfIcons, yPosOfIcons) end
+		else
+			if currentDesktop < countOfDesktops then currentDesktop = currentDesktop + 1; drawDesktop(xPosOfIcons, yPosOfIcons) end
+		end
+
 	elseif eventData[1] == "key_down" then
 
 	end
