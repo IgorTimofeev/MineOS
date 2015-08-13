@@ -759,6 +759,8 @@ function ECSAPI.input(x, y, limit, title, ...)
 	--ПО ЦЕНТРУ ЭКРАНА, А ТО МАЛО ЛИ ЧЕ
 	x, y = ECSAPI.correctStartCoords(x, y, width, height)
 
+	local oldPixels = ECSAPI.rememberOldPixels(x, y, x + width + 1, y + height)
+
 	ECSAPI.emptyWindow(x, y, width, height, title)
 
 	local xPos, yPos
@@ -803,10 +805,13 @@ function ECSAPI.input(x, y, limit, title, ...)
 		for i = 1, #data do
 			drawElement(i, true)
 		end
-		if activeData > #data then pressButton(ECSAPI.colors.blue, 0xffffff) else pressButton(false) end
-	end
 
-	drawAll()
+		if activeData > #data then
+			pressButton(ECSAPI.colors.blue, 0xffffff)
+		else
+			pressButton(false)
+		end
+	end
 
 	local function getMassiv()
 		local massiv = {}
@@ -816,41 +821,70 @@ function ECSAPI.input(x, y, limit, title, ...)
 		return massiv
 	end
 
+	local function drawKaro4()
+		if activeData ~= -1 then data[activeData][3] = drawElement(activeData, false) end
+	end
+
+	------------------------------------------------------------------------------------------------
+
+	drawAll()
+	drawKaro4()
+	activeData = activeData + 1
+	drawAll()
+
 	while true do
+
 		local e = {event.pull()}
 		if e[1] == "key_down" then
 
-			if e[4] == 28 and activeData > #data then pressButton(false); os.sleep(0.2); pressButton(ECSAPI.colors.blue, 0xffffff) return getMassiv() end
+			if e[4] == 28 and activeData > #data then pressButton(false); os.sleep(0.2); pressButton(ECSAPI.colors.blue, 0xffffff); break end
 
-			if e[4] == 200 and activeData > 1 then activeData = activeData - 1 end
-			if e[4] == 208 and activeData <= #data then activeData = activeData + 1 end
-			if e[4] == 28 then data[activeData][3] = drawElement(activeData, false); if activeData <= #data then activeData = activeData + 1 end end
+			if e[4] == 200 and activeData > 1 then activeData = activeData - 1; drawAll() end
+			if e[4] == 208 and activeData ~= -1 and activeData <= #data then activeData = activeData + 1; drawAll() end
 
-			drawAll()
+			if e[4] == 28 then
+				drawKaro4()
+				if activeData <= #data and activeData ~= -1 then activeData = activeData + 1 end
+				drawAll()
+			end
 
-			-- for key, val in pairs(obj["elements"]) do
-			-- 	if ECSAPI.clickedAtArea(e[3], e[4], obj["elements"][key][1], obj["elements"][key][2], obj["elements"][key][3], obj["elements"][key][2]) then
-			-- 		drawElement(key, false)
-			-- 	end
-			-- end
+
+			
+
 		elseif e[1] == "touch" then
 			for key, val in pairs(obj["elements"]) do
 				if ECSAPI.clickedAtArea(e[3], e[4], obj["elements"][key][1], obj["elements"][key][2], obj["elements"][key][3], obj["elements"][key][2]) then
-					if key ~= activeData then activeData = key else data[activeData][3] = drawElement(activeData, false); if activeData <= #data then activeData = activeData + 1 end end
+					
+					if key ~= activeData then activeData = key else drawKaro4(); if activeData <= #data then activeData = activeData + 1 end end
+
 					drawAll()
+					--activeData = key
+
+					--activeData = -1
+
+					--if activeData <= #data then activeData = activeData + 1 end
+					
 					break
 				end
 			end
 
 			if ECSAPI.clickedAtArea(e[3], e[4], obj["OK"]["OK"][1], obj["OK"]["OK"][2], obj["OK"]["OK"][3], obj["OK"]["OK"][2]) then
 				
-				pressButton(ECSAPI.colors.blue, 0xffffff)
-				os.sleep(0.3)
-				return getMassiv()
+				if activeData > #data then
+					pressButton(false); os.sleep(0.2); pressButton(ECSAPI.colors.blue, 0xffffff)
+				else
+					pressButton(ECSAPI.colors.blue, 0xffffff)
+					os.sleep(0.3)
+				end
 
+				break
 			end
 		end
 	end
+
+	ECSAPI.drawOldPixels(oldPixels)
+
+	return getMassiv()
 end
 
 function ECSAPI.getHDDs()
@@ -869,6 +903,6 @@ end
 ----------------------------------------------------------------------------------------------------
 
 --ECSAPI.clearScreen(0x262626)
---ECSAPI.input(10, 5, 20, "Сохранить как", {"input", "Имя", "pidor"}, {"select", "Формат", ".PNG", {".PNG", ".PSD", ".JPG", ".GIF"}})
+--ECSAPI.input("auto", "auto", 20, "Сохранить как", {"input", "Имя", "pidor"}, {"input", "Пароль", ""}, {"input", "Заебал!", ""}, {"select", "Формат", ".PNG", {".PNG", ".PSD", ".JPG", ".GIF"}})
 
 return ECSAPI
