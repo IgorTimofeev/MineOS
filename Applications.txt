@@ -10,6 +10,11 @@
     ["type"]="Script",
   },
   {
+    ["name"]="HoloClock.lua",
+    ["url"]="IgorTimofeev/OpenComputers/master/Applications/HoloClock.lua",
+    ["type"]="Script",
+  },
+  {
     ["name"]="OS.lua",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/OS.lua",
     ["type"]="Script",
