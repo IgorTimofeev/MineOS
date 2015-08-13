@@ -25,9 +25,9 @@ function xml.collect(s)
       table.insert(top, text)
     end
     if empty == "/" then  -- empty element tag
-      table.insert(top, {label=label, xarg=parseargs(xarg), empty=1})
+      table.insert(top, {label=label, xarg=xml.parseargs(xarg), empty=1})
     elseif c == "" then   -- start tag
-      top = {label=label, xarg=parseargs(xarg)}
+      top = {label=label, xarg=xml.parseargs(xarg)}
       table.insert(stack, top)   -- new level
     else  -- end tag
       local toclose = table.remove(stack)  -- remove top
