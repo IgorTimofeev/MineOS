@@ -159,7 +159,7 @@
     ["name"]="Crossword",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/Crossword/Crossword.lua",
     ["type"]="Application",
-    ["icon"]="IgorTimofeev/OpenComputers/master/Applications/MineCode/Icon.png",
+    ["icon"]="IgorTimofeev/OpenComputers/master/Applications/Crossword/Icon.png",
     ["resources"]={
       {
         ["name"]="CrosswordFile.txt",
