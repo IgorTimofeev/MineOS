@@ -289,3 +289,6 @@ reshitCrossword()
 
 event.pull("key_down")
 drawCrossword(2, 2, 0xeeeeee, 0x333333, 3, 1)
+
+os.sleep(1)
+event.pull("key_down")
