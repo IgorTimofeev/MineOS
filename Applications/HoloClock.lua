@@ -1,6 +1,8 @@
 local c = require("component")
 local unicode = require("unicode")
+local term = require("term")
 local holo = c.hologram
+local gpu = c.gpu
 
 if not holo then error("This program reqiures holoram projector.") end
 
@@ -445,8 +447,12 @@ holo.setScale(scale)
 
 while true do
   holo.clear()
-  date = os.date("%T")
+  date = string.sub(os.date("%T"), 1, -4)
   hologram.text(1, height, 24, date, 2)
+  
+  term.clear()
+  gpu.set(2, 2, "Текущее время: " .. date)
+  
   os.sleep(1)
 end
 
