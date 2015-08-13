@@ -70,6 +70,21 @@
     ["type"]="Script",
   },
   {
+    ["name"]="System/OS/Icons/Text.png",
+    ["url"]="IgorTimofeev/OpenComputers/master/MineOS/Icons/Text.png",
+    ["type"]="Script",
+  },
+  {
+    ["name"]="System/OS/Icons/Config.png",
+    ["url"]="IgorTimofeev/OpenComputers/master/MineOS/Icons/Config.png",
+    ["type"]="Script",
+  },
+  {
+    ["name"]="System/OS/Icons/Lua.png",
+    ["url"]="IgorTimofeev/OpenComputers/master/MineOS/Icons/Lua.png",
+    ["type"]="Script",
+  },
+  {
     ["name"]="lib/ECSAPI.lua",
     ["url"]="IgorTimofeev/OpenComputers/master/lib/ECSAPI.lua",
     ["type"]="Script",
@@ -107,6 +122,11 @@
   {
     ["name"]="lib/zip.lua",
     ["url"]="IgorTimofeev/OpenComputers/master/lib/zip.lua",
+    ["type"]="Script",
+  },
+  {
+    ["name"]="lib/xmlParser.lua",
+    ["url"]="IgorTimofeev/OpenComputers/master/lib/xmlParser.lua",
     ["type"]="Script",
   },
   {
