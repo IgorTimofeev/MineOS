@@ -41,11 +41,13 @@ local heightOfIcon = 6
 local xSpaceBetweenIcons = 2
 local ySpaceBetweenIcons = 1
 local xCountOfIcons = math.floor(xSize / (widthOfIcon + xSpaceBetweenIcons))
-local yCountOfIcons = math.floor((ySize - heightOfDock) / (heightOfIcon + ySpaceBetweenIcons))
+local yCountOfIcons = math.floor((ySize - (heightOfDock + 3)) / (heightOfIcon + ySpaceBetweenIcons))
 local totalCountOfIcons = xCountOfIcons * yCountOfIcons
 local iconsSelectionColor = ecs.colors.lightBlue
-local yPosOfIcons = math.floor((ySize - heightOfDock - 2) / 2 - (yCountOfIcons * (heightOfIcon + ySpaceBetweenIcons) - ySpaceBetweenIcons * 2) / 2)
+--local yPosOfIcons = math.floor((ySize - heightOfDock - 2) / 2 - (yCountOfIcons * (heightOfIcon + ySpaceBetweenIcons) - ySpaceBetweenIcons * 2) / 2)
+local yPosOfIcons = 3
 local xPosOfIcons = math.floor(xSize / 2 - (xCountOfIcons * (widthOfIcon + xSpaceBetweenIcons) - xSpaceBetweenIcons*4) / 2)
+
 
 --ПЕРЕМЕННЫЕ ДЛЯ ТОП БАРА
 local topBarColor = 0xeeeeee
@@ -69,6 +71,14 @@ local function readShortcut(path)
 	end
 end
 
+--ОТРИСОВКА ТЕКСТА ПОД ИКОНКОЙ
+local function drawIconText(xIcons, yIcons, path)
+	local text = ecs.stringLimit("end", fs.name(path), widthOfIcon)
+	local textPos = xIcons + math.floor(widthOfIcon / 2 - unicode.len(text) / 2) - 2
+
+	ecs.adaptiveText(textPos, yIcons + heightOfIcon - 1, text, 0xffffff)
+end
+
 --ОТРИСОВКА КОНКРЕТНОЙ ОДНОЙ ИКОНКИ
 local function drawIcon(xIcons, yIcons, path)
 	--НАЗНАЧЕНИЕ ВЕРНОЙ ИКОНКИ
@@ -88,14 +98,14 @@ local function drawIcon(xIcons, yIcons, path)
 			local shortcutLink = readShortcut(path)
 			drawIcon(xIcons, yIcons, shortcutLink)
 			ecs.colorTextWithBack(xIcons + widthOfIcon - 6, yIcons + heightOfIcon - 3, 0x000000, 0xffffff, "⤶")
-
+			drawIconText(xIcons, yIcons, path)
 			return 0
 		elseif fileFormat == ".cfg" or fileFormat == ".config" then
 			icon = "config"
 		elseif fileFormat == ".txt" or fileFormat == ".rtf" then
 			icon = "text"
-		elseif fileFormat == ".lua" then
-		--	icon = "lua"
+		-- elseif fileFormat == ".lua" then
+		-- 	icon = "lua"
 		else
 			icon = "script"
 		end
@@ -104,11 +114,9 @@ local function drawIcon(xIcons, yIcons, path)
 	--ОТРИСОВКА ИКОНКИ
 	image.draw(xIcons, yIcons, icons[icon] or icons["script"])
 
-	--ОТРИСОВКА ТЕКСТА ПОД ИКОНКОЙ
-	local text = ecs.stringLimit("end", fs.name(path), widthOfIcon)
-	local textPos = xIcons + math.floor(widthOfIcon / 2 - unicode.len(text) / 2) - 2
+	--ОТРИСОВКА ТЕКСТА
+	drawIconText(xIcons, yIcons, path)
 
-	ecs.adaptiveText(textPos, yIcons + heightOfIcon - 1, text, 0xffffff)
 end
 
 --НАРИСОВАТЬ ВЫДЕЛЕНИЕ ИКОНКИ
@@ -134,11 +142,47 @@ local function deselectAll(mode)
 	end
 end
 
+------------------------------------------------------------------------------------------------
+
+local function reorganizeFilesAndFolders(massivSudaPihay, showHiddenFiles, showSystemFiles)
+
+	local massiv = {}
+
+	for i = 1, #massivSudaPihay do
+		if ecs.isFileHidden(massivSudaPihay[i]) and showHiddenFiles then
+			table.insert(massiv, massivSudaPihay[i])
+		end
+	end
+
+	for i = 1, #massivSudaPihay do
+		local cyka = massivSudaPihay[i]
+		if fs.isDirectory(cyka) and not ecs.isFileHidden(cyka) and ecs.getFileFormat(cyka) ~= ".app" then
+			table.insert(massiv, cyka)
+		end
+		cyka = nil
+	end
+
+	for i = 1, #massivSudaPihay do
+		local cyka = massivSudaPihay[i]
+		if (not fs.isDirectory(cyka) and not ecs.isFileHidden(cyka)) or (fs.isDirectory(cyka) and not ecs.isFileHidden(cyka) and ecs.getFileFormat(cyka) == ".app") then
+			table.insert(massiv, cyka)
+		end
+		cyka = nil
+	end
+
+	return massiv
+end
+
+------------------------------------------------------------------------------------------------
+
+showHiddenFiles = false
+showSystemFiles = true
+
 --ОТРИСОВКА ИКОНОК НА РАБОЧЕМ СТОЛЕ ПО ТЕКУЩЕЙ ПАПКЕ
 local function drawDesktop(x, y)
 
 	currentFileList = ecs.getFileList(workPath)
-	currentFileList = ecs.reorganizeFilesAndFolders(currentFileList)
+	currentFileList = reorganizeFilesAndFolders(currentFileList, showHiddenFiles, showSystemFiles)
 
 	--ОЧИСТКА СТОЛА
 	ecs.square(1, y, xSize, yCountOfIcons * (heightOfIcon + ySpaceBetweenIcons) - ySpaceBetweenIcons, background)
@@ -289,10 +333,8 @@ local function launchIcon(path, arguments)
 	if arguments then arguments = " " .. arguments else arguments = "" end
 	local fileFormat = ecs.getFileFormat(path)
 
-
-
 	if fileFormat == ".app" then
-		local cyka = path .. ecs.hideFileFormat(fs.name(path)) .. ".lua"
+		local cyka = path .. "/" .. ecs.hideFileFormat(fs.name(path)) .. ".lua"
 		local s, r = shell.execute(cyka)
 		--if not s then ecs.error(r) end
 	elseif fileFormat == ".lua" or fileFormat == nil then
@@ -313,6 +355,13 @@ local function launchIcon(path, arguments)
 		shell.execute("Photoshop.app/Photoshop.lua open "..path)
 	elseif fileFormat == ".txt" or fileFormat == ".cfg" or fileFormat == ".lang" then
 		shell.execute("edit "..path)
+	elseif fileFormat == ".lnk" then
+		local shortcutLink = readShortcut(path)
+		if fs.exists(shortcutLink) then
+			launchIcon(shortcutLink)
+		else
+			ecs.error("Ярлык ссылается на несуществующий файл.")
+		end
 	end
 end
 
@@ -340,7 +389,7 @@ while true do
 					
 					--А ЕСЛИ ВЫБРАНА УЖЕ, ТО ЗАПУСТИТЬ ПРОЖКУ ИЛИ ОТКРЫТЬ ПАПКУ
 					else
-						if fs.isDirectory(obj["DesktopIcons"][key][5]) then
+						if fs.isDirectory(obj["DesktopIcons"][key][5]) and ecs.getFileFormat(obj["DesktopIcons"][key][5]) ~= ".app" then
 							table.insert(workPathHistory, workPath)							
 							workPath = obj["DesktopIcons"][key][5]
 							drawDesktop(xPosOfIcons, yPosOfIcons)
@@ -370,7 +419,6 @@ while true do
 						return selectedIcons
 					end
 
-					deselectAll(true)
 
 					--РАЗНЫЕ КОНТЕКСТНЫЕ МЕНЮ
 					if #getSelectedIcons() > 1 then
@@ -383,6 +431,10 @@ while true do
 						action = context.menu(eventData[3], eventData[4], {"Редактировать"}, "-", {"Вырезать", false, "^X"}, {"Копировать", false, "^C"}, {"Вставить", true, "^V"}, "-", {"Переименовать"}, {"Создать ярлык"}, {"Добавить в архив"}, "-", {"Удалить", false, "⌫"})
 					end
 
+					--ecs.error(#getSelectedIcons())
+					deselectAll()
+					--ecs.error(#getSelectedIcons())
+
 					if action == "Показать содержимое" then
 						table.insert(workPathHistory, workPath)	
 						workPath = obj["DesktopIcons"][key][5]
@@ -391,6 +443,9 @@ while true do
 						ecs.prepareToExit()
 						shell.execute("edit "..obj["DesktopIcons"][key][5])
 						drawAll()
+					else
+						redrawSelectedIcons()
+						deselectAll(true)
 					end
 					
 				end
@@ -431,18 +486,3 @@ while true do
 
 	end
 end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
