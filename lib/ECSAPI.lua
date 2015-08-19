@@ -18,6 +18,7 @@ local ECSAPI = {}
 ECSAPI.windowColors = {
 	background = 0xdddddd,
 	usualText = 0x444444,
+	subText = 0x888888,
 	tab = 0xaaaaaa,
 	title = 0xffffff,
 	shadow = 0x444444,
@@ -998,11 +999,91 @@ function ECSAPI.displayCompileMessage(y, reason, translate)
 	ECSAPI.drawOldPixels(oldPixels)
 end
 
+function ECSAPI.select(x, y, title, textLines, buttons)
+
+	--Ну обжекты, хули
+	local obj = {}
+	local function newObj(class, name, ...)
+		obj[class] = obj[class] or {}
+		obj[class][name] = {...}
+	end
+
+	--Вычисление ширны на основе текста
+	local sizeOfTheLongestElement = 0
+	for i = 1, #textLines do
+		sizeOfTheLongestElement = math.max(sizeOfTheLongestElement, unicode.len(textLines[i][1]))
+	end
+
+	local width = sizeOfTheLongestElement + 4
+
+	--Вычисление ширины на основе размера кнопок
+	local buttonOffset = 2
+	local spaceBetweenButtons = 2
+
+	local sizeOfButtons = 0
+	for i = 1, #buttons do
+		sizeOfButtons = sizeOfButtons + unicode.len(buttons[i][1]) + buttonOffset * 2 + spaceBetweenButtons
+	end
+
+	--Финальное задание ширины и высоты
+	width = math.max(width, sizeOfButtons + 2)
+	local height = #textLines + 5
+
+	--Рисуем окно
+	x, y = ECSAPI.correctStartCoords(x, y, width, height)
+	local oldPixels = ECSAPI.emptyWindow(x, y, width, height, title)
+
+	--Рисуем текст
+	local xPos, yPos = x + 2, y + 2
+	gpu.setBackground(ECSAPI.windowColors.background)
+	for i = 1, #textLines do
+		ECSAPI.colorText(xPos, yPos, textLines[i][2] or ECSAPI.windowColors.usualText, textLines[i][1] or "Ну ты че, текст-то введи!")
+		yPos = yPos + 1
+	end
+
+	--Рисуем кнопочки
+	xPos, yPos = x + width - sizeOfButtons, y + height - 2
+	for i = 1, #buttons do
+		newObj("Buttons", buttons[i][1], ECSAPI.drawAdaptiveButton(xPos, yPos, buttonOffset, 0, buttons[i][1], buttons[i][2] or ECSAPI.colors.lightBlue, buttons[i][3] or 0xffffff))
+		xPos = xPos + buttonOffset * 2 + spaceBetweenButtons + unicode.len(buttons[i][1])
+	end
+
+	--Жмякаем на кнопочки
+	local action
+
+	while true do
+		if action then break end
+		local e = {event.pull()}
+		if e[1] == "touch" then
+			for key, val in pairs(obj["Buttons"]) do
+				if ECSAPI.clickedAtArea(e[3], e[4], obj["Buttons"][key][1], obj["Buttons"][key][2], obj["Buttons"][key][3], obj["Buttons"][key][4]) then
+					ECSAPI.drawAdaptiveButton(obj["Buttons"][key][1], obj["Buttons"][key][2], buttonOffset, 0, key, ECSAPI.colors.blue, 0xffffff)
+					os.sleep(0.3)
+					action = key
+					break
+				end
+			end
+		elseif e[1] == "key_down" then
+			if e[4] == 28 then
+				action = buttons[#buttons][1]
+				ECSAPI.drawAdaptiveButton(obj["Buttons"][action][1], obj["Buttons"][action][2], buttonOffset, 0, action, ECSAPI.colors.blue, 0xffffff)
+				os.sleep(0.3)
+				break
+			end
+		end
+	end
+
+	ECSAPI.drawOldPixels(oldPixels)
+
+	return action
+end
+
 ----------------------------------------------------------------------------------------------------
 
 --ECSAPI.clearScreen(0x262626)
 --ECSAPI.input("auto", "auto", 20, "Сохранить как", {"input", "Имя", "pidor"}, {"input", "Пароль", ""}, {"input", "Заебал!", ""}, {"select", "Формат", ".PNG", {".PNG", ".PSD", ".JPG", ".GIF"}})
-
 -- if not success then ECSAPI.displayCompileMessage(1, reason, true) end
+-- ECSAPI.select("auto", "auto", " ", {{"С твоим компом опять хуйня!"}}, {{"Блядь!"}})
+
 
 return ECSAPI
