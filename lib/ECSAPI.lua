@@ -3,6 +3,7 @@ local term = require("term")
 local unicode = require("unicode")
 local event = require("event")
 local fs = require("filesystem")
+local shell = require("shell")
 local keyboard = require("keyboard")
 local computer = require("computer")
 local fs = require("filesystem")
@@ -408,7 +409,7 @@ function ECSAPI.reorganizeFilesAndFolders(massivSudaPihay, showHiddenFiles)
 	return massiv
 end
 
-
+--Бесполезна теперь, используй string.gsub()
 function ECSAPI.stringReplace(stroka, chto, nachto)
 	local searchFrom = 1
 	while true do
@@ -422,6 +423,14 @@ function ECSAPI.stringReplace(stroka, chto, nachto)
 	end
 
 	return stroka
+end
+
+--Ожидание клика либо нажатия какой-либо клавиши
+function ECSAPI.waitForTouchOrClick()
+	while true do
+		local e = {event.pull()}
+		if e[1] == "key_down" or e[1] == "touch" then break end
+	end
 end
 
 ----------------------------ОКОШЕЧКИ, СУКА--------------------------------------------------
@@ -456,6 +465,7 @@ function ECSAPI.windowShadow(x,y,width,height)
 	gpu.fill(x+1,y+height,width,1," ")
 end
 
+--Просто белое окошко безо всего
 function ECSAPI.blankWindow(x,y,width,height)
 	local oldPixels = ECSAPI.rememberOldPixels(x,y,x+width+1,y+height)
 
@@ -552,54 +562,12 @@ function ECSAPI.error(...)
 
 end
 
-function ECSAPI.parseErrorMessage(error, translate)
-
-	local parsedError = {}
-
-	--ВСТАВКА ВСЕГО ГОВНА ДО ПЕРВОГО ЭНТЕРА
-	local starting, ending = string.find(error, "\n", 1)
-	table.insert(parsedError, unicode.sub(error, 1, ending or #error))
-	--ПОИСК ЭНТЕРОВ
-	starting, searchFrom = 1, 1
-	for i = 1, unicode.len(error) do
-		starting, ending = string.find(error, "\n", searchFrom)
-		if starting then
-			table.insert(parsedError, unicode.sub(error, searchFrom, starting - 1))
-			searchFrom = ending + 1
-		else
-			break
-		end
-	end
-
-	if translate then
-		for i = 1, #parsedError do
-			parsedError[i] = ECSAPI.stringReplace(parsedError[i], "	", "  ")
-			parsedError[i] = ECSAPI.stringReplace(parsedError[i], "interrupted", "Выполнение программы прервано пользователем")
-			parsedError[i] = ECSAPI.stringReplace(parsedError[i], " got ", " получена ")
-			parsedError[i] = ECSAPI.stringReplace(parsedError[i], " expected,", " ожидается,")
-			parsedError[i] = ECSAPI.stringReplace(parsedError[i], "bad argument #", "Неверный аргумент №")
-			parsedError[i] = ECSAPI.stringReplace(parsedError[i], "stack traceback", "Отслеживание ошибки")
-			parsedError[i] = ECSAPI.stringReplace(parsedError[i], "tail calls", "Дочерние функции")
-			parsedError[i] = ECSAPI.stringReplace(parsedError[i], "in function", "в функции")
-			parsedError[i] = ECSAPI.stringReplace(parsedError[i], "in main chunk", "в основной программе")
-			parsedError[i] = ECSAPI.stringReplace(parsedError[i], "unexpected symbol near", "неожиданный символ рядом с")
-			parsedError[i] = ECSAPI.stringReplace(parsedError[i], "attempt to index", "несуществующий индекс")
-			parsedError[i] = ECSAPI.stringReplace(parsedError[i], "attempt to get length of", "не удается получить длину")
-			parsedError[i] = ECSAPI.stringReplace(parsedError[i], ": ", ", ")
-		end
-	end
-
-	starting, ending = nil, nil
-
-	return parsedError
-end
 
 function ECSAPI.prepareToExit(color1, color2)
 	ECSAPI.clearScreen(color1 or 0x333333)
 	gpu.setForeground(color2 or 0xffffff)
 	gpu.set(1, 1, "")
 end
-
 
 --А ЭТО КАРОЧ ИЗ ЮНИКОДА В СИМВОЛ - ВРОДЕ РАБОТАЕТ, НО ВСЯКОЕ БЫВАЕТ
 function ECSAPI.convertCodeToSymbol(code)
@@ -898,11 +866,138 @@ function ECSAPI.getHDDs()
 	return candidates
 end
 
+function ECSAPI.parseErrorMessage(error, translate)
 
+	local parsedError = {}
+
+	-- --ВСТАВКА ВСЕГО ГОВНА ДО ПЕРВОГО ЭНТЕРА
+	-- local starting, ending = string.find(error, "\n", 1)
+	-- table.insert(parsedError, unicode.sub(error, 1, ending or #error))
+
+	--ПОИСК ЭНТЕРОВ
+	local starting, ending, searchFrom = nil, nil, 1
+	for i = 1, unicode.len(error) do
+		starting, ending = string.find(error, "\n", searchFrom)
+		if starting then
+			table.insert(parsedError, unicode.sub(error, searchFrom, starting - 1))
+			searchFrom = ending + 1
+		else
+			break
+		end
+	end
+
+	--Замена /r/n и табсов
+	for i = 1, #parsedError do
+		parsedError[i] = string.gsub(parsedError[i], "\r\n", "\n")
+		parsedError[i] = string.gsub(parsedError[i], "	", "    ")
+	end
+
+	if translate then
+		for i = 1, #parsedError do
+			parsedError[i] = string.gsub(parsedError[i], "interrupted", "Выполнение программы прервано пользователем")
+			parsedError[i] = string.gsub(parsedError[i], " got ", " получена ")
+			parsedError[i] = string.gsub(parsedError[i], " expected,", " ожидается,")
+			parsedError[i] = string.gsub(parsedError[i], "bad argument #", "Неверный аргумент №")
+			parsedError[i] = string.gsub(parsedError[i], "stack traceback", "Отслеживание ошибки")
+			parsedError[i] = string.gsub(parsedError[i], "tail calls", "Дочерние функции")
+			parsedError[i] = string.gsub(parsedError[i], "in function", "в функции")
+			parsedError[i] = string.gsub(parsedError[i], "in main chunk", "в основной программе")
+			parsedError[i] = string.gsub(parsedError[i], "unexpected symbol near", "неожиданный символ рядом с")
+			parsedError[i] = string.gsub(parsedError[i], "attempt to index", "несуществующий индекс")
+			parsedError[i] = string.gsub(parsedError[i], "attempt to get length of", "не удается получить длину")
+			parsedError[i] = string.gsub(parsedError[i], ": ", ", ")
+			parsedError[i] = string.gsub(parsedError[i], " module ", " модуль ")
+			parsedError[i] = string.gsub(parsedError[i], "not found", "не найден")
+			parsedError[i] = string.gsub(parsedError[i], "no field package.preload", "не найдена библиотека")
+			parsedError[i] = string.gsub(parsedError[i], "no file", "нет файла")
+			parsedError[i] = string.gsub(parsedError[i], "local", "локальной")
+			parsedError[i] = string.gsub(parsedError[i], "global", "глобальной")
+		end
+	end
+
+	starting, ending = nil, nil
+
+	return parsedError
+end
+
+function ECSAPI.displayCompileMessage(y, reason, translate)
+
+	local xSize, ySize = gpu.getResolution()
+
+	--Переводим причину в массив
+	reason = ECSAPI.parseErrorMessage(reason, translate)
+
+	--Получаем ширину и высоту окошка
+	local width = math.floor(xSize * 3 / 5)
+	local height = #reason + 6
+	local textWidth = width - 11
+
+	--Просчет вот этой хуйни, аааахаахах
+	local difference = ySize - (height + y)
+	if difference < 0 then
+		for i = 1, (math.abs(difference) + 1) do
+			table.remove(reason, 1)
+		end
+		table.insert(reason, 1, "…")
+		height = #reason + 6
+	end
+
+	local x = math.floor(xSize / 2 - width / 2)
+
+	--Иконочка воскл знака на красном фоне
+	local errorImage = {
+		{{0xff0000,0xffffff,"#"},{0xff0000,0xffffff,"#"},{0xff0000,0xffffff," "},{0xff0000,0xffffff,"#"},{0xff0000,0xffffff,"#"}},
+		{{0xff0000,0xffffff,"#"},{0xff0000,0xffffff," "},{0xff0000,0xffffff,"!"},{0xff0000,0xffffff," "},{0xff0000,0xffffff,"#"}},
+		{{0xff0000,0xffffff," "},{0xff0000,0xffffff," "},{0xff0000,0xffffff," "},{0xff0000,0xffffff," "},{0xff0000,0xffffff," "}}
+	}
+
+	--Запоминаем, че было отображено
+	local oldPixels = ECSAPI.rememberOldPixels(x, y, x + width + 1, y + height)
+
+	--Типа анимация, ога
+	for i = 1, height, 1 do
+		ECSAPI.square(x, y, width, i, ECSAPI.windowColors.background)
+		ECSAPI.windowShadow(x, y, width, i)
+		os.sleep(0.01)
+	end
+
+	--Рисуем воскл знак
+	ECSAPI.drawCustomImage(x + 2, y + 1, errorImage)
+
+	--Рисуем текст
+	local yPos = y + 1
+	local xPos = x + 9
+	gpu.setBackground(ECSAPI.windowColors.background)
+
+	ECSAPI.colorText(xPos, yPos, ECSAPI.windowColors.usualText, "Код ошибки:")
+	yPos = yPos + 2
+
+	gpu.setForeground( 0xcc0000 )
+	for i = 1, #reason do
+		gpu.set(xPos, yPos, ECSAPI.stringLimit("end", reason[i], textWidth))
+		yPos = yPos + 1
+	end
+
+	yPos = yPos + 1
+	ECSAPI.colorText(xPos, yPos, ECSAPI.windowColors.usualText, ECSAPI.stringLimit("end", "Нажмите любую клавишу, чтобы продолжить", textWidth))
+
+	--Пикаем звуком кароч
+	for i = 1, 3 do
+		computer.beep(1000)
+	end
+
+	--Ждем сам знаешь чего
+	ECSAPI.waitForTouchOrClick()
+
+	--Рисуем, че было нарисовано
+	ECSAPI.drawOldPixels(oldPixels)
+end
 
 ----------------------------------------------------------------------------------------------------
 
 --ECSAPI.clearScreen(0x262626)
 --ECSAPI.input("auto", "auto", 20, "Сохранить как", {"input", "Имя", "pidor"}, {"input", "Пароль", ""}, {"input", "Заебал!", ""}, {"select", "Формат", ".PNG", {".PNG", ".PSD", ".JPG", ".GIF"}})
+
+-- if not success then ECSAPI.displayCompileMessage(1, reason, true) end
 
 return ECSAPI
