@@ -933,7 +933,7 @@ function ECSAPI.displayCompileMessage(y, reason, translate)
 	reason = ECSAPI.parseErrorMessage(reason, translate)
 
 	--Получаем ширину и высоту окошка
-	local width = math.floor(xSize * 4 / 5)
+	local width = math.floor(xSize * 7 / 10)
 	local height = #reason + 6
 	local textWidth = width - 11
 
