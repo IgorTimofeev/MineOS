@@ -886,6 +886,11 @@ function ECSAPI.parseErrorMessage(error, translate)
 		end
 	end
 
+	--На всякий случай, если сообщение об ошибке без энтеров вообще, т.е. однострочное
+	if #parsedError == 0 and error ~= "" and error ~= nil and error ~= " " then
+		table.insert(parsedError, error)
+	end
+
 	--Замена /r/n и табсов
 	for i = 1, #parsedError do
 		parsedError[i] = string.gsub(parsedError[i], "\r\n", "\n")
