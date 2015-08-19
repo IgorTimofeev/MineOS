@@ -778,6 +778,7 @@ local function compile()
 		--ecs.error("reason = "..reason)
 		if toolbarsToShow.top then drawInfoPanel({" ", "Ошибка!", " "}, errorColor, errorTextColor) end
 		--drawErrorMessage(yStartOfText, reason, xSize - 20)
+		--ecs.error(reason)
 		ecs.displayCompileMessage(yStartOfText, reason, true)
 	else
 		if toolbarsToShow.top then drawInfoPanel({" ", "Программа выполнена!", " "}, successColor, successTextColor) end
