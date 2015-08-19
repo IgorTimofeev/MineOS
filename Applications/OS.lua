@@ -41,7 +41,7 @@ local heightOfIcon = 6
 local xSpaceBetweenIcons = 2
 local ySpaceBetweenIcons = 1
 local xCountOfIcons = math.floor(xSize / (widthOfIcon + xSpaceBetweenIcons))
-local yCountOfIcons = math.floor((ySize - (heightOfDock + 3)) / (heightOfIcon + ySpaceBetweenIcons))
+local yCountOfIcons = math.floor((ySize - (heightOfDock + 6)) / (heightOfIcon + ySpaceBetweenIcons))
 local totalCountOfIcons = xCountOfIcons * yCountOfIcons
 local iconsSelectionColor = ecs.colors.lightBlue
 --local yPosOfIcons = math.floor((ySize - heightOfDock - 2) / 2 - (yCountOfIcons * (heightOfIcon + ySpaceBetweenIcons) - ySpaceBetweenIcons * 2) / 2)
@@ -486,3 +486,18 @@ while true do
 
 	end
 end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
