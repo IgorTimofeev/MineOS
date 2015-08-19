@@ -1078,8 +1078,42 @@ function ECSAPI.select(x, y, title, textLines, buttons)
 	return action
 end
 
+function ECSAPI.askForReplaceFile(path)
+	if fs.exists(path) then
+		action = ECSAPI.select("auto", "auto", " ", {{"Файл \"".. fs.name(path) .. "\" уже имеется в этом месте."}, {"Заменить его перемещаемым объектом?"}}, {{"Оставить оба", 0xffffff, 0x000000}, {"Отмена", 0xffffff, 0x000000}, {"Заменить"}})
+		if action == "Оставить оба" then
+			return "keepBoth"
+		elseif action == "Отмена" then
+			return "cancel"
+		else
+			return "replace"
+		end
+	end
+end
+
+function ECSAPI.copy(from, to)
+	local name = fs.name(from)
+	local toName = to.."/"..name
+	local action = ECSAPI.askForReplaceFile(toName)
+	if action == nil or action == "replace" then
+		fs.remove(toName)
+		if fs.isDirectory(from) then
+			ECSAPI.error("Копирование папок отключено во избежание перегрузки файловой системы. Мод говно, смирись.")
+		else
+			fs.copy(from, toName)
+		end
+	elseif action == "keepBoth" then
+		if fs.isDirectory(from) then
+			ECSAPI.error("Копирование папок отключено во избежание перегрузки файловой системы. Мод говно, смирись.")
+		else
+			fs.copy(from, "(copy)" .. toName)
+		end	
+	end
+end
+
 ----------------------------------------------------------------------------------------------------
 
+--ECSAPI.copy("t", "System/OS")
 --ECSAPI.clearScreen(0x262626)
 --ECSAPI.input("auto", "auto", 20, "Сохранить как", {"input", "Имя", "pidor"}, {"input", "Пароль", ""}, {"input", "Заебал!", ""}, {"select", "Формат", ".PNG", {".PNG", ".PSD", ".JPG", ".GIF"}})
 -- if not success then ECSAPI.displayCompileMessage(1, reason, true) end
