@@ -1106,7 +1106,7 @@ function ECSAPI.copy(from, to)
 		if fs.isDirectory(from) then
 			ECSAPI.error("Копирование папок отключено во избежание перегрузки файловой системы. Мод говно, смирись.")
 		else
-			fs.copy(from, "(copy)" .. toName)
+			fs.copy(from, fs.path(toName) .. "/(copy)"..fs.name(toName))
 		end	
 	end
 end
