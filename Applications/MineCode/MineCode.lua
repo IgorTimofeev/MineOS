@@ -770,86 +770,6 @@ local function open(path)
 	selectedStrings = {}
 end
 
-local function drawErrorMessage(yPos, message, textLimit)
-	local error = ecs.parseErrorMessage(message, false)
-
-	for i = 1, #error do
-		error[i] = ecs.stringLimit("end", error[i], textLimit)
-	end
-
-	local press = "Нажмите любую клавишу, чтобы продолжить."
-	table.insert(error, 1, "Код ошибки:")
-	table.insert(error, 2, " ")
-	table.insert(error, " ")
-	table.insert(error, press)
-
-	-------------------------------------
-
-	local theLongestElement = unicode.len(press)
-	for i = 1, #error do
-		local size = unicode.len(error[i])
-		if size > theLongestElement then theLongestElement = size end
-	end
-
-	---------------------------------
-
-	local height = 2 + #error
-	local width = theLongestElement + 11
-	local xPos = math.floor(xSize / 2 - width / 2)
-
-	local image = {
-		{{errorColor,0xffffff,"#"},{errorColor,0xffffff,"#"},{errorColor,0xffffff," "},{errorColor,0xffffff,"#"},{errorColor,0xffffff,"#"}},
-		{{errorColor,0xffffff,"#"},{errorColor,0xffffff," "},{errorColor,0xffffff,"!"},{errorColor,0xffffff," "},{errorColor,0xffffff,"#"}},
-		{{errorColor,0xffffff," "},{errorColor,0xffffff," "},{errorColor,0xffffff," "},{errorColor,0xffffff," "},{errorColor,0xffffff," "}}
-	}
-
-	--ОКНО
-	local oldPixels = ecs.rememberOldPixels(xPos, yPos, xPos + width + 1, yPos + height)
-
-	if useAnimations then
-		for i = 1, (height - 1) do
-			ecs.square(xPos, yPos, width, i, leftToolbarColor)
-			ecs.windowShadow(xPos, yPos, width, i)
-			os.sleep(0.01)
-		end
-	end
-	ecs.square(xPos, yPos, width, height, leftToolbarColor)
-	ecs.windowShadow(xPos, yPos, width, height)
-
-	--ecs.square(xPos, yPos, width, height, leftToolbarColor)
-	--ecs.windowShadow(xPos, yPos, width, height)
-
-	--ФОТОЧКА
-	ecs.drawCustomImage(xPos + 2, yPos + 1, image)
-	xPos = xPos + 7
-
-	--ТЕКСТ
-	gpu.setBackground(leftToolbarColor)
-	gpu.setForeground(leftToolbarFileColor)
-	gpu.set(xPos + 2, yPos + 1, error[1])
-	gpu.setForeground(errorColor)
-	for i = 2, #error do
-		gpu.set(xPos + 2, yPos + i, error[i])
-	end
-	gpu.setForeground(leftToolbarFileColor)
-	gpu.set(xPos + 2, yPos + #error, error[#error])
-
-	------------------------------
-
-	for i = 1, 3 do
-		computer.beep(1000)
-	end
-
-	while true do
-		local e = event.pull()
-		if e == "touch" or e == "key_down" then
-			break
-		end
-	end
-
-	drawInfoPanel()
-	ecs.drawOldPixels(oldPixels)
-end
 
 local function compile()
 	local success, reason = shell.execute(projectPath)
@@ -857,7 +777,8 @@ local function compile()
 	if not success then
 		--ecs.error("reason = "..reason)
 		if toolbarsToShow.top then drawInfoPanel({" ", "Ошибка!", " "}, errorColor, errorTextColor) end
-		drawErrorMessage(yStartOfText, reason, xSize - 20)
+		--drawErrorMessage(yStartOfText, reason, xSize - 20)
+		displayCompileMessage(yStartOfText, reason, true)
 	else
 		if toolbarsToShow.top then drawInfoPanel({" ", "Программа выполнена!", " "}, successColor, successTextColor) end
 	end
@@ -1079,3 +1000,4 @@ while true do
 		end
 	end
 end
+
