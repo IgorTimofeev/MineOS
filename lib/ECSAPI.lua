@@ -79,10 +79,10 @@ function ECSAPI.setScale(scale, debug)
 	local newWidth, newHeight
 
 	if proportion >= 1 then
-		newWidth = math.floor(xMax * percent)
+		newWidth = math.floor(xMax * scale)
 		newHeight = math.floor(newWidth / proportion / 2)
 	else
-		newHeight = math.floor(yMax * percent)
+		newHeight = math.floor(yMax * scale)
 		newWidth = math.floor(newHeight * proportion * 2)
 	end
 
@@ -1123,7 +1123,7 @@ end
 -- if not success then ECSAPI.displayCompileMessage(1, reason, true) end
 -- ECSAPI.select("auto", "auto", " ", {{"С твоим компом опять хуйня!"}}, {{"Блядь!"}})
 -- ECSAPI.error("Да иди ты на хуй, чмо, я мать твою на хую")
-ECSAPI.setScale(1)
+-- ECSAPI.setScale(1)
 
 
 return ECSAPI
