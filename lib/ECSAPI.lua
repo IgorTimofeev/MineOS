@@ -54,55 +54,48 @@ function ECSAPI.setScale(scale, debug)
 		scale = 0.1
 	end
 
-	--ПОЛУЧЕНИЕ ИНФОРМАЦИИ О РАЗРЕШЕНИИ ВИДЕОКАРТЫ И КОЛ-ВЕ МОНИТОРОВ
-	local maxWidth, maxHeight = gpu.maxResolution()
-	maxWidth = maxHeight * 2
-	local screensWidth, screensHeight = screen.getAspectRatio()
+	--Просчет пикселей в блоках кароч - забей, так надо
+	local function calculateAspect(screens)
+	  local abc = 12
 
-	--РАСЧЕТ МНИМОГО РАЗРЕШЕНИЯ
-	local MNIMAYA_WIDTH = 12
-	local MNIMAYA_HEIGHT = 5
-	local MNIMAYA_WIDTH_CONST = 12
-	local MNIMAYA_HEIGHT_CONST = 5
+	  if screens == 2 then
+	    abc = 28
+	  elseif screens > 2 then
+	    abc = 28 + (screens - 2) * 16
+	  end
 
-	if screensWidth == 2 then
-		MNIMAYA_WIDTH = (MNIMAYA_WIDTH_CONST + 2) * 2
-	elseif screensWidth > 2 then
-		MNIMAYA_WIDTH = (MNIMAYA_WIDTH_CONST + 2) * 2 + (screensWidth - 2) * 16
+	  return abc
 	end
 
-	if screensHeight == 2 then
-		MNIMAYA_HEIGHT = (MNIMAYA_HEIGHT_CONST + 1) * 2
-	elseif screensHeight > 2 then
-		MNIMAYA_HEIGHT = (MNIMAYA_HEIGHT_CONST + 1) * 2 + (screensHeight - 2) * 8
-	end	
+	--Собсна, арсчет масштаба
+	local xScreens, yScreens = screen.getAspectRatio()
 
-	local newHeight = (maxHeight * MNIMAYA_HEIGHT) / MNIMAYA_HEIGHT_CONST
-	local newWidth = (maxWidth * MNIMAYA_WIDTH) / MNIMAYA_WIDTH_CONST
+	local xPixels, yPixels = calculateAspect(xScreens), calculateAspect(yScreens)
 
-	local proportion = newWidth / newHeight
-	local optimizedWidth = math.ceil(100 * scale)
-	local optimizedHeight = math.ceil(optimizedWidth / proportion) - screensHeight + math.floor((10 - scale * 10 ) / 2)
+	local proportion = xPixels / yPixels
 
-	local function printDebug()
-		if debug then
-			term.clear()
-			print("Максимальное разрешение: "..maxWidth.."x"..maxHeight)
-			print("Размер монитора в блоках: "..screensWidth.."x"..screensHeight)
-			print("Мнимое разрешение: "..MNIMAYA_WIDTH.."x"..MNIMAYA_HEIGHT)
-			print("Физическое идеальное разрешение: ".. newWidth.."x"..newHeight)
-			print("Пропорция идеала: "..proportion)
-			print("Оптимизированное разрешение: "..optimizedWidth.."x"..optimizedHeight)
-		end
+	local xMax, yMax  = 100, 50
+
+	local newWidth, newHeight
+
+	if proportion >= 1 then
+		newWidth = math.floor(xMax * percent)
+		newHeight = math.floor(newWidth / proportion / 2)
+	else
+		newHeight = math.floor(yMax * percent)
+		newWidth = math.floor(newHeight * proportion * 2)
 	end
 
-	printDebug()
+	if debug then
+		print(" ")
+		print("Максимальное разрешение: "..xMax.."x"..yMax)
+		print("Пропорция монитора: "..xPixels.."x"..yPixels)
+		print(" ")
+		print("Новое разрешение: "..newWidth.."x"..newHeight)
+		print(" ")
+	end
 
-	--------------------------------------------------
-
-	gpu.setResolution(optimizedWidth, optimizedHeight)
-
-	printDebug()
+	gpu.setResolution(newWidth, newHeight)
 end
 
 --ИЗ ДЕСЯТИЧНОЙ В ШЕСТНАДЦАТИРИЧНУЮ
@@ -507,58 +500,69 @@ function ECSAPI.error(...)
 	local text = arg[1] or "С твоим компом опять хуйня"
 	local buttonText = arg[2] or "ОК"
 	local sText = unicode.len(text)
-	local xSize,ySize = gpu.getResolution()
-	local offset = 26
-	local width = xSize - offset
+	local xSize, ySize = gpu.getResolution()
+	local width = math.ceil(xSize * 3 / 5)
 	if (width - 11) > (sText) then width = 11 + sText end
 	local textLimit = width - 11
 
+	--Восклицательный знак
 	local image = {
 		{{0xff0000,0xffffff,"#"},{0xff0000,0xffffff,"#"},{0xff0000,0xffffff," "},{0xff0000,0xffffff,"#"},{0xff0000,0xffffff,"#"}},
 		{{0xff0000,0xffffff,"#"},{0xff0000,0xffffff," "},{0xff0000,0xffffff,"!"},{0xff0000,0xffffff," "},{0xff0000,0xffffff,"#"}},
 		{{0xff0000,0xffffff," "},{0xff0000,0xffffff," "},{0xff0000,0xffffff," "},{0xff0000,0xffffff," "},{0xff0000,0xffffff," "}}
 	}
 
+	--Парсинг строки ошибки
 	local parsedErr = {}
-	local countOfStrings = math.ceil(sText/textLimit)
-	for i=1,countOfStrings do
+	local countOfStrings = math.ceil(sText / textLimit)
+	for i=1, countOfStrings do
 		parsedErr[i] = unicode.sub(text, i * textLimit - textLimit + 1, i * textLimit)
 	end
 
-	local height = 2 + 3 + #parsedErr + 1
-	if (#parsedErr < 2) then height = height - 1 end
+	--Расчет высоты
+	local height = 6
+	if #parsedErr > 1 then height = height + #parsedErr - 1 end
 
+	--Расчет позиции окна
 	local xStart,yStart = ECSAPI.correctStartCoords("auto","auto",width,height)
 	local xEnd,yEnd = xStart + width - 1, yStart + height - 1
 
+	--Рисуем окно
 	local oldPixels = ECSAPI.emptyWindow(xStart,yStart,width,height," ")
 
+	--Рисуем воскл знак
 	ECSAPI.drawCustomImage(xStart + 2,yStart + 2,image)
 
+	--Рисуем текст ошибки
 	gpu.setBackground(ECSAPI.windowColors.background)
 	gpu.setForeground(ECSAPI.windowColors.usualText)
-	for i=1,#parsedErr do
-		gpu.set(xStart+9,yStart+3+i*2-3,parsedErr[i])
+	local xPos, yPos = xStart + 9, yStart + 2
+	for i=1, #parsedErr do
+		gpu.set(xPos, yPos, parsedErr[i])
+		yPos = yPos + 1
 	end
 
-	local xButton = xEnd - unicode.len(buttonText) - 5
-	local button = {ECSAPI.drawAdaptiveButton(xButton,yEnd - 1,2,0,buttonText,ECSAPI.colors.lightBlue,0xffffff)}
+	--Рисуем кнопу
+	local xButton = xEnd - unicode.len(buttonText) - 7
+	local button = {ECSAPI.drawAdaptiveButton(xButton,yEnd - 1,3,0,buttonText,ECSAPI.colors.lightBlue,0xffffff)}
 
+	--Ждем
 	while true do
 		local e = {event.pull()}
 		if e[1] == "touch" then
 			if ECSAPI.clickedAtArea(e[3],e[4],button[1],button[2],button[3],button[4]) then
-				ECSAPI.drawAdaptiveButton(button[1],button[2],2,0,buttonText,ECSAPI.colors.blue,0xffffff)
+				ECSAPI.drawAdaptiveButton(button[1],button[2],3,0,buttonText,ECSAPI.colors.blue,0xffffff)
 				os.sleep(0.4)
 				break
 			end
 		elseif e[1] == "key_down" and e[4] == 28 then
-			ECSAPI.drawAdaptiveButton(button[1],button[2],2,0,buttonText,ECSAPI.colors.blue,0xffffff)
+			ECSAPI.drawAdaptiveButton(button[1],button[2],3,0,buttonText,ECSAPI.colors.blue,0xffffff)
 			os.sleep(0.4)
 			break	
 		end
 	end
 
+	--Профит
 	ECSAPI.drawOldPixels(oldPixels)
 
 end
@@ -1113,11 +1117,11 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
---ECSAPI.copy("t", "System/OS")
---ECSAPI.clearScreen(0x262626)
---ECSAPI.input("auto", "auto", 20, "Сохранить как", {"input", "Имя", "pidor"}, {"input", "Пароль", ""}, {"input", "Заебал!", ""}, {"select", "Формат", ".PNG", {".PNG", ".PSD", ".JPG", ".GIF"}})
+-- ECSAPI.copy("t", "System/OS")
+-- ECSAPI.clearScreen(0x262626)
+-- ECSAPI.input("auto", "auto", 20, "Сохранить как", {"input", "Имя", "pidor"}, {"input", "Пароль", ""}, {"input", "Заебал!", ""}, {"select", "Формат", ".PNG", {".PNG", ".PSD", ".JPG", ".GIF"}})
 -- if not success then ECSAPI.displayCompileMessage(1, reason, true) end
 -- ECSAPI.select("auto", "auto", " ", {{"С твоим компом опять хуйня!"}}, {{"Блядь!"}})
-
+-- ECSAPI.error("Да иди ты на хуй, чмо, я мать твою на хую")
 
 return ECSAPI
