@@ -13,5 +13,5 @@ if arg[1] == "get" or arg[1] == "show" or arg[1] == "print" or arg[1] == "write"
   print("Масштаб: "..scale.."%")
   print(" ")
 else
-  ecs.setScale(tonumber(arg[1]) or 1)
+  ecs.setScale(tonumber(arg[1]) or 1, true)
 end
