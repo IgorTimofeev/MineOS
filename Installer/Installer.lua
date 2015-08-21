@@ -5,64 +5,59 @@ local unicode = require("unicode")
 local event = require("event")
 local fs = require("filesystem")
 local internet = require("internet")
+local seri = require("serialization")
 local gpu = component.gpu
 
 ------------------------------------------------------------------------------
-
-local data = {
-	{ paste = "9dxXHREX", path = "autorun.lua", type = "API", information = "Sasi hui" },
-	--{ paste = "87QETLA4", path = "lib/ECSAPI.lua", type = "API", information = "Sasi hui"},
-	{ paste = "3MvVCqyS", path = "lib/colorlib.lua", type = "API", information = "Sasi hui"},
-	{ paste = "JDPHPKHq", path = "lib/palette.lua", type = "API", information = "Sasi hui" },
-	{ paste = "6UR8xkHX", path = "lib/thread.lua", type = "API", information = "Sasi hui" },
-	{ paste = "tUgyRS9f", path = "lib/context.lua", type = "API", information = "Sasi hui" },
-	{ paste = "8PUQ0teG", path = "lib/zip.lua", type = "API", information = "Sasi hui" },
-	{ paste = "Weqcf4SR", path = "lib/config.lua", type = "API", information = "Sasi hui" },
-
-	{ paste = "zmnDb2Zs", path = "PS.lua", type = "Proga", information = "Sasi hui" },
-	{ paste = "XLsiyXAw", path = "OS.lua", type = "Proga", information = "Sasi hui" },
-	{ paste = "7xGNZNQs", path = "System/OS/Icons/Folder.png", type = "Proga", information = "Sasi hui" },
-	{ paste = "7xGNZNQs", path = "System/OS/Icons/Script.png", type = "Proga", information = "Sasi hui" },
-	{ paste = "aNWCcdtD", path = "init.lua", type = "Proga", information = "Sasi hui" },
-	{ paste = "1Hxri8iv", path = "Crossword.lua", type = "Proga", information = "Sasi hui" },
-	{ paste = "SSyX4p8X", path = "CrosswordFile.txt", type = "Proga", information = "Sasi hui" },
-	{ paste = "3XfLNdm0", path = "Home.lua", type = "Proga", information = "Sasi hui" },
-	{ paste = "TJHGfhEj", path = "Geoscan.lua", type = "Proga", information = "Sasi hui" },
-
-	{ paste = "YiT3nNVr", path = "bin/event.lua", type = "Proga", information = "Sasi hui" },
-	{ paste = "pQRSyrV6", path = "bin/memory.lua", type = "Proga", information = "Sasi hui" },
-	{ paste = "WFsvgaEm", path = "bin/scale.lua", type = "Proga", information = "Sasi hui" },
-	{ paste = "YbbAVJ4V", path = "bin/ls.lua", type = "Proga", information = "Sasi hui" },
-	{ paste = "7yHp6Fjw", path = "etc/motd", type = "Proga", information = "Sasi hui" },
-	{ paste = "diDyYvzV", path = "usr/misc/greetings/English.txt", type = "Proga", information = "Sasi hui" },
-	{ paste = "dgm5eC6v", path = "usr/misc/greetings/Russian.txt", type = "Proga", information = "Sasi hui" },
-
-	{
-		type = "Application",
-		path = "MineCode.app",
-		paste = "DBGEWnLc",
-		icon = "nrSeV3mS",
-		resources = {
-			{ name = "English.lang", paste = "G9yP8mTd" },
-			{ name = "Russian.lang", paste = "gevPpGDr" },
-		}
-	},
-}
 
 local lang = {
 	
 }
 
+local applications
+
 local padColor = 0x262626
 local installerScale = 1
 
-local sData = #data
 local timing = 0.2
 
 -----------------------------СТАДИЯ ПОДГОТОВКИ-------------------------------------------
 
+--ЗАГРУЗОЧКА С ГИТХАБА
+local function getFromGitHub(url, path)
+	local sContent = ""
+	local result, response = pcall(internet.request, url)
+	if not result then
+		return nil
+	end
+
+	if fs.exists(path) then fs.remove(path) end
+	fs.makeDirectory(fs.path(path))
+	local file = io.open(path, "w")
+
+	for chunk in response do
+		file:write(chunk)
+		sContent = sContent .. chunk
+	end
+
+	file:close()
+
+	return sContent
+end
+
+--БЕЗОПАСНАЯ ЗАГРУЗОЧКА
+local function getFromGitHubSafely(url, path)
+	local success, sRepos = pcall(getFromGitHub, url, path)
+	if not success then
+		io.stderr:write("Could not connect to the Internet. Please ensure you have an Internet connection.")
+		return -1
+	end
+	return sRepos
+end
+
 --ЗАГРУЗОЧКА С ПАСТЕБИНА
-local function get(paste, filename)
+local function getFromPastebin(paste, filename)
+	local cyka = ""
 	local f, reason = io.open(filename, "w")
 	if not f then
 		io.stderr:write("Failed opening file for writing: " .. reason)
@@ -78,6 +73,7 @@ local function get(paste, filename)
 				--string.gsub(chunk, "\r\n", "\n")
 			--end
 			f:write(chunk)
+			cyka = cyka .. chunk
 		end
 		f:close()
 		--io.write("Saved data to " .. filename .. "\n")
@@ -86,16 +82,21 @@ local function get(paste, filename)
 		fs.remove(filename)
 		io.stderr:write("HTTP request failed: " .. response .. "\n")
 	end
+
+	return cyka
 end
 
-get("87QETLA4", "lib/ECSAPI.lua")
+local GitHubUserUrl = "https://raw.githubusercontent.com/"
+
+getFromGitHubSafely(GitHubUserUrl .. "IgorTimofeev/OpenComputers/master/lib/ECSAPI.lua", "lib/ECSAPI.lua")
+
 local ecs = require("ECSAPI")
 
---ecs.setScale(installerScale)
+ecs.setScale(installerScale)
 
 local xSize, ySize = gpu.getResolution()
-local windowWidth = xSize - 20
-local windowHeight = ySize - 6
+local windowWidth = 80
+local windowHeight = 2 + 16 + 2 + 3 + 2
 local xWindow, yWindow = math.floor(xSize / 2 - windowWidth / 2), math.floor(ySize / 2 - windowHeight / 2)
 local xWindowEnd, yWindowEnd = xWindow + windowWidth - 1, yWindow + windowHeight - 1
 
@@ -138,39 +139,9 @@ local function waitForClickOnButton(buttonName)
 	end
 end
 
-
-local function download(i)
-	--ЕСЛИ ЭТО ПРИЛОЖЕНИЕ
-	if data[i]["type"] == "Application" then
-		local path = data[i]["path"]
-		--ЕСЛИ ЭТА ХУЙНЯ СУЩЕСТВУЕТ, ТО УДАЛИТЬ ЕЕ
-		if fs.exists(path) then fs.remove(path) end
-		--СОЗДАТЬ ПУТЬ, А ТО МАЛО ЛИ ЕГО НЕТ
-		fs.makeDirectory(path .. "/" .. "Resources")
-		--СКАЧАТЬ ПРОГУ
-		get(data[i]["paste"], path .. "/" .. ecs.hideFileFormat(fs.name(path)))
-		--СКАЧАТЬ ИКОНКУ
-		get(data[i]["icon"], path .. "/Resources/Icon.png")
-		--СКАЧАТЬ РЕСУРСЫ
-		if data[i]["resources"] then
-			for j = 1, #data[i]["resources"] do
-				get(data[i]["resources"][j]["paste"], path .. "/Resources/" .. data[i]["resources"][j]["name"])
-			end
-		end
-	--ЕСЛИ НЕ ПРИЛОЖЕНИЕ
-	else
-		--ЕСЛИ ЭТА ХУЙНЯ СУЩЕСТВУЕТ, ТО УДАЛИТЬ ЕЕ
-		if fs.exists(data[i]["path"]) then fs.remove(data[i]["path"]) end
-		--СОЗДАТЬ ПУТЬ, А ТО МАЛО ЛИ ЕГО НЕТ
-		fs.makeDirectory(fs.path(data[i]["path"]))
-		--СКАЧАТЬ
-		get(data[i]["paste"], data[i]["path"])
-	end
-end
-
 --------------------------СТАДИЯ ЗАГРУЗКИ НУЖНЫХ ПАКЕТОВ-----------------------
 	
-do
+if not fs.exists("System/OS/Installer/Languages.png") then
 
 	local barWidth = math.floor(windowWidth / 2)
 	local xBar = math.floor(xSize/2-barWidth/2)
@@ -188,28 +159,32 @@ do
 	ecs.progressBar(xBar, yBar, barWidth, 1, 0xcccccc, ecs.colors.blue, 0)
 	os.sleep(timing)
 
+	--local response = getSafe(GitHubUserUrl .. "IgorTimofeev/OpenComputers/master/Applications.txt", "System/OS/Applications.txt")
+	
 	local preLoadApi = {
-		{ paste = "n09xYPTr", path = "lib/image.lua" },
-		{ paste = "Dx5mjgWP", path = "System/OS/Installer/Languages.png" },
-		{ paste = "KWkyHKnx", path = "System/OS/Installer/OK.png" },
-		{ paste = "f2ZgseWs", path = "System/OS/Installer/Downloading.png" },
-		{ paste = "PUBh4vdh", path = "System/OS/Installer/OS_Logo.png" },
+		{ paste = "IgorTimofeev/OpenComputers/master/lib/image.lua", path = "lib/image.lua" },
+		{ paste = "IgorTimofeev/OpenComputers/master/Installer/Languages.png", path = "System/OS/Installer/Languages.png" },
+		{ paste = "IgorTimofeev/OpenComputers/master/Installer/OK.png", path = "System/OS/Installer/OK.png" },
+		{ paste = "IgorTimofeev/OpenComputers/master/Installer/Downloading.png", path = "System/OS/Installer/Downloading.png" },
+		{ paste = "IgorTimofeev/OpenComputers/master/Installer/OS_Logo.png", path = "System/OS/Installer/OS_Logo.png" },
 	}
 
-	for i = 1, #preLoadApi do
+	local countOfAll = #preLoadApi
 
-		local percent = i / #preLoadApi * 100
+	for i = 1, countOfAll do
+
+		local percent = i / countOfAll * 100
 		ecs.progressBar(xBar, yBar, barWidth, 1, 0xcccccc, ecs.colors.blue, percent)
 
 		if fs.exists(preLoadApi[i]["path"]) then fs.remove(preLoadApi[i]["path"]) end
 		fs.makeDirectory(fs.path(preLoadApi[i]["path"]))
-		get(preLoadApi[i]["paste"], preLoadApi[i]["path"])
+		getFromGitHubSafely(GitHubUserUrl .. preLoadApi[i]["paste"], preLoadApi[i]["path"])
 
-		os.sleep(timing)
 	end
 
-	os.sleep(timing)
 end
+
+applications = seri.unserialize(getFromPastebin("3j2x4dDn", "System/OS/Applications.txt"))
 
 local image = require("image")
 
@@ -221,10 +196,10 @@ local imageOK = image.load("System/OS/Installer/OK.png")
 ------------------------------СТАВИТЬ ЛИ ОСЬ------------------------------------
 
 do
-
+	ecs.clearScreen(padColor)
 	clear()
 
-	image.draw(math.ceil(xSize / 2 - 15), math.ceil(ySize / 2 - 11), imageOS)
+	image.draw(math.ceil(xSize / 2 - 15), yWindow + 2, imageOS)
 
 	--Текстик по центру
 	gpu.setBackground(ecs.windowColors.background)
@@ -252,7 +227,7 @@ do
 
 	clear()
 	
-	image.draw(math.ceil(xSize / 2 - 30), math.ceil(ySize / 2 - 10), imageLanguages)
+	image.draw(math.ceil(xSize / 2 - 30), yWindow + 2, imageLanguages)
 
 	ecs.selector(math.floor(xSize / 2 - 10), yWindowEnd - 5, 20, "Russian", {"English", "Russian"}, 0xffffff, 0x000000, true)
 
@@ -277,21 +252,32 @@ do
 
 	ecs.blankWindow(xWindow,yWindow,windowWidth,windowHeight)
 
-	image.draw(math.floor(xSize/2 - 33), math.floor(ySize/2-10), imageDownloading)
+	image.draw(math.floor(xSize/2 - 33), yWindow + 2, imageDownloading)
 
 	ecs.colorTextWithBack(xBar, yBar - 1, ecs.colors.gray, ecs.windowColors.background, "Установка OS")
 	ecs.progressBar(xBar, yBar, barWidth, 1, 0xcccccc, ecs.colors.blue, 0)
 	os.sleep(timing)
 
-	for i = 1, sData do
-
-		drawInfo(xBar, yBar + 1, "Загрузка "..data[i]["path"])
-
-		download(i)
-
-		local percent = i / sData * 100
+	for app = 1, #applications do
+		--ВСЕ ДЛЯ ГРАФОНА
+		drawInfo(xBar, yBar + 1, "Загрузка "..applications[app]["name"])
+		local percent = app / #applications * 100
 		ecs.progressBar(xBar, yBar, barWidth, 1, 0xcccccc, ecs.colors.blue, percent)
 
+		--ВСЕ ДЛЯ ЗАГРУЗКИ
+		local path = applications[app]["name"]
+		if fs.exists(path) then fs.remove(path) end
+
+		if applications[app]["type"] == "Application" then
+			fs.makeDirectory(path..".app/Resources")
+			getFromGitHubSafely(GitHubUserUrl .. applications[app]["url"], path..".app/"..fs.name(applications[app]["name"]))
+			getFromGitHubSafely(GitHubUserUrl .. applications[app]["icon"], path..".app/Resources/Icon.png")
+			for i = 1, #applications[app]["resources"] do
+				getFromGitHubSafely(GitHubUserUrl .. applications[app]["resources"][i]["url"], path..".app/Resources/"..applications[app]["resources"][i]["name"])
+			end
+		else
+			getFromGitHubSafely(GitHubUserUrl .. applications[app]["url"], path)
+		end
 	end
 
 	os.sleep(timing)
