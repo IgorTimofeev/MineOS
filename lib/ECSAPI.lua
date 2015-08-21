@@ -68,7 +68,7 @@ function ECSAPI.setScale(scale, debug)
 	end
 
 	--Собсна, арсчет масштаба
-	local xScreens, yScreens = screen.getAspectRatio()
+	local xScreens, yScreens = component.screen.getAspectRatio()
 
 	local xPixels, yPixels = calculateAspect(xScreens), calculateAspect(yScreens)
 
@@ -1123,5 +1123,7 @@ end
 -- if not success then ECSAPI.displayCompileMessage(1, reason, true) end
 -- ECSAPI.select("auto", "auto", " ", {{"С твоим компом опять хуйня!"}}, {{"Блядь!"}})
 -- ECSAPI.error("Да иди ты на хуй, чмо, я мать твою на хую")
+ECSAPI.setScale(1)
+
 
 return ECSAPI
