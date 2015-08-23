@@ -856,6 +856,7 @@ while true do
 				if ecs.clickedAtArea(eventData[3],eventData[4],obj["colors"][key]["x1"],obj["colors"][key]["y1"],obj["colors"][key]["x2"],obj["colors"][key]["y2"]) then
 					local CYKA = {gpu.get(eventData[3],eventData[4])}
 					local chosenColor = palette.draw("auto","auto", CYKA[3])
+					--ecs.error("ЦВЕТ ИЗМЕНИЛСЯ НА "..tostring(chosenColor))
 					if chosenColor then
 						if key == 1 then
 							background = chosenColor
@@ -865,9 +866,10 @@ while true do
 							consoleText = "Вторичный цвет изменен на 0x"..string.format("%x",chosenColor)
 						end
 					end
-					drawRightToolbar()
+					drawLeftToolbar()
 
 					breakLags = true
+					break
 				end
 			end
 
