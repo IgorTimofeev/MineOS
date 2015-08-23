@@ -145,7 +145,7 @@ local function drawMishen()
 	end
 	SetPixel(xCenter, yCenter, 0xff0000)
 
-	newObj("Buttons", "Выйти", ecs.drawAdaptiveButton(xScore, 50, 2, 1, "Выйти", 0xffffff, 0x000000))
+	newObj("Buttons", "Выйти", ecs.drawAdaptiveButton(xScore, 37, 6, 1, "Выйти", ecs.colors.blue, 0x000000))
 end
 
 local function AddPlayer(name)
