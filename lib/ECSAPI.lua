@@ -922,6 +922,8 @@ function ECSAPI.parseErrorMessage(error, translate)
 			parsedError[i] = string.gsub(parsedError[i], "no file", "нет файла")
 			parsedError[i] = string.gsub(parsedError[i], "local", "локальной")
 			parsedError[i] = string.gsub(parsedError[i], "global", "глобальной")
+			parsedError[i] = string.gsub(parsedError[i], "no primary", "не найден компонент")
+			parsedError[i] = string.gsub(parsedError[i], "available", "в доступе")
 		end
 	end
 
