@@ -9,7 +9,7 @@ local xOld, yOld = gpu.getResolution()
 gpu.setResolution(160, 50)
 local xSize, ySize = 160, 50
 
-local players = {...}
+local players = {}
 local xCenter, yCenter = math.floor(xSize/4 - 15), math.floor(ySize/2)
 
 local xScore, yScore = 106, 5
@@ -107,12 +107,11 @@ local symbols = {
   }
 }
 
---ОБЪЕКТЫ
+--OBJECTS, CYKA
 local obj = {}
-local function newObj(class,name,key,value)
+local function newObj(class, name, ...)
 	obj[class] = obj[class] or {}
-	obj[class][name] = obj[class][name] or {}
-	obj[class][name][key] = value
+	obj[class][name] = {...}
 end
 
 local function SetPixel(x, y, color)
@@ -179,7 +178,7 @@ local function showPlayers(x, y)
 	local stro4ka = string.rep(" ", nicknameLimit).."│"..string.rep(" ", width - nicknameLimit)
 	ecs.colorTextWithBack(x, y, 0xffffff, ecs.colors.blue, stro4ka)
 	gpu.set(x + 1, y, "Имя игрока")
-	gpu.set(x + nicknameLimit + 1, y, "Очки")
+	gpu.set(x + nicknameLimit + 2, y, "Очки")
 
 	for key, val in pairs(players) do
 		local color = 0xffffff
@@ -192,7 +191,7 @@ local function showPlayers(x, y)
 		gpu.setBackground(color)
 		gpu.set(x, y + counter, stro4ka)
 		gpu.set(x + 3, y + counter, ecs.stringLimit("end", key, nicknameLimit - 4))
-		gpu.set(x + nicknameLimit + 1, y + counter, tostring(players[key][1]))
+		gpu.set(x + nicknameLimit + 2, y + counter, tostring(players[key][1]))
 		ecs.colorTextWithBack(x + 1, y + counter, players[key][2], color, "●")
 
 		counter = counter + 1
@@ -232,7 +231,10 @@ local function drawLastScore(x, y, score, color)
 	drawKrug(x + 3, y + 3, 3, color)
 	drawText(x + 9, y, score, 0xffffff)
 
-	newObj("Buttons", "Выйти", ecs.drawAdaptiveButton(xScore, 37, 14, 1, "Выйти", ecs.colors.blue, 0xffffff))
+	local yPos = 33
+	newObj("Buttons", "Заново", ecs.drawAdaptiveButton(xScore, yPos, 18, 1, "Заново", ecs.colors.blue, 0xffffff))
+	yPos = yPos + 4
+	newObj("Buttons", "Выйти ", ecs.drawAdaptiveButton(xScore, yPos, 18, 1, "Выйти ", ecs.colors.blue, 0xffffff))
 
 end
 
@@ -246,20 +248,25 @@ local function Tir()
 	while true do
 		local e = {event.pull()}
 		if e[1] == "touch" then
-			e[3] = e[3]/2
-			if isIn(70, 45, 78, 48, e[3], e[4]) then
-				users = {}
-				return 0
+			for key, val in pairs(obj["Buttons"]) do
+				if ecs.clickedAtArea(e[3], e[4], obj["Buttons"][key][1], obj["Buttons"][key][2], obj["Buttons"][key][3], obj["Buttons"][key][4]) then
+					ecs.drawAdaptiveButton(obj["Buttons"][key][1], obj["Buttons"][key][2], 18, 1, key, 0xffffff, 0x000000)
+					os.sleep(0.5)
+
+					if key == "Выйти " then
+						return "exit"
+					else
+						players = {}
+						return 0
+					end
+				end
 			end
+			e[3] = e[3]/2
 			AddPlayer(e[6])
 			AddScore(e[6], GetScore(e[3], e[4]))
 			SetPixel(e[3], e[4], players[e[6]][2])
 			showPlayers(xScore, yScore)
 			drawLastScore(xScore / 2, 22, GetScore(e[3], e[4]),players[e[6]][2])
-		elseif e[1] == "key_down" then
-			if e[4] == 28 then
-				return "exit"	
-			end
 		end
 	end
 end
