@@ -30,6 +30,7 @@ icons["script"] = image.load("System/OS/Icons/Script.png")
 icons["text"] = image.load("System/OS/Icons/Text.png")
 icons["config"] = image.load("System/OS/Icons/Config.png")
 icons["lua"] = image.load("System/OS/Icons/Lua.png")
+icons["image"] = image.load("System/OS/Icons/Image.png")
 
 --ПЕРЕМЕННЫЕ ДЛЯ ДОКА
 local dockColor = 0xcccccc
@@ -120,6 +121,8 @@ local function drawIcon(xIcons, yIcons, path)
 			icon = "text"
 		elseif fileFormat == ".lua" then
 		 	icon = "lua"
+		elseif fileFormat == ".png" then
+		 	icon = "image"
 		else
 			icon = "script"
 		end
