@@ -330,13 +330,22 @@ end
 
 --ЗАПУСТИТЬ ПРОГУ
 local function launchIcon(path, arguments)
+
+	--Создаем нормальные аргументы для Шелла
 	if arguments then arguments = " " .. arguments else arguments = "" end
+
+	--Получаем файл формат заранее
 	local fileFormat = ecs.getFileFormat(path)
 
+	--Если это приложение
 	if fileFormat == ".app" then
+		ecs.prepareToExit()
 		local cyka = path .. "/" .. ecs.hideFileFormat(fs.name(path)) .. ".lua"
-		local s, r = shell.execute(cyka)
-		--if not s then ecs.error(r) end
+		local success, reason = shell.execute(cyka)
+		ecs.prepareToExit()
+		if not success then displayCompileMessage(1, reason, true) end
+		
+	--Если это обычный луа файл - т.е. скрипт
 	elseif fileFormat == ".lua" or fileFormat == nil then
 		ecs.prepareToExit()
 		local success, reason = shell.execute(path .. arguments)
@@ -344,13 +353,9 @@ local function launchIcon(path, arguments)
 		if success then
 			print("Программа выполнена успешно! Нажмите любую клавишу, чтобы продолжить.")
 		else
-			print("Ошибка при выполнении программы.")
-			print("")
-			gpu.setForeground(0xff5555)
-			print("Код: " .. reason)
-			gpu.setForeground(0xcccccc)
+			displayCompileMessage(1, reason, true)
 		end
-		event.pull("key_down")
+
 	elseif fileFormat == ".png" then
 		shell.execute("Photoshop.app/Photoshop.lua open "..path)
 	elseif fileFormat == ".txt" or fileFormat == ".cfg" or fileFormat == ".lang" then
