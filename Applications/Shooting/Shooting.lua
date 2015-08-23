@@ -11,6 +11,9 @@ local xSize, ySize = 160, 50
 
 local players = {...}
 local xCenter, yCenter = math.floor(xSize/4 - 15), math.floor(ySize/2)
+
+local xScore, yScore = 106, 5
+
 local symbols = {
    ["1"] = {
     {0, 0, 1, 0, 0},
@@ -104,6 +107,14 @@ local symbols = {
   }
 }
 
+--ОБЪЕКТЫ
+local obj = {}
+local function newObj(class,name,key,value)
+	obj[class] = obj[class] or {}
+	obj[class][name] = obj[class][name] or {}
+	obj[class][name][key] = value
+end
+
 local function SetPixel(x, y, color)
   ecs.square(x*2, y, 2, 1, color)
 end
@@ -133,6 +144,8 @@ local function drawMishen()
 		drawKrug(xCenter, yCenter, 20 - i*2, color)
 	end
 	SetPixel(xCenter, yCenter, 0xff0000)
+
+	newObj("Buttons", "Выйти", ecs.drawAdaptiveButton(xScore, 50, 2, 1, "Выйти", 0xffffff, 0x000000))
 end
 
 local function AddPlayer(name)
@@ -224,8 +237,8 @@ end
 local function Tir()
 	ecs.prepareToExit()
 
-	showPlayers(106, 6)
-	drawLastScore(53, 22, 0, 0xffffff)
+	showPlayers(xScore, yScore)
+	drawLastScore(xScore / 2, 22, 0, 0xffffff)
 
 	drawMishen()
 	while true do
@@ -233,13 +246,14 @@ local function Tir()
 		if e[1] == "touch" then
 			e[3] = e[3]/2
 			if isIn(70, 45, 78, 48, e[3], e[4]) then
+				users = {}
 				return 0
 			end
 			AddPlayer(e[6])
 			AddScore(e[6], GetScore(e[3], e[4]))
 			SetPixel(e[3], e[4], players[e[6]][2])
-			showPlayers(106, 6)
-			drawLastScore(53, 22, GetScore(e[3], e[4]),players[e[6]][2])
+			showPlayers(xScore, yScore)
+			drawLastScore(xScore / 2, 22, GetScore(e[3], e[4]),players[e[6]][2])
 		elseif e[1] == "key_down" then
 			if e[4] == 28 then
 				return "exit"	
