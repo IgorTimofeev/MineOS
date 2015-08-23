@@ -144,8 +144,6 @@ local function drawMishen()
 		drawKrug(xCenter, yCenter, 20 - i*2, color)
 	end
 	SetPixel(xCenter, yCenter, 0xff0000)
-
-	newObj("Buttons", "Выйти", ecs.drawAdaptiveButton(xScore, 37, 14, 1, "Выйти", ecs.colors.blue, 0xffffff))
 end
 
 local function AddPlayer(name)
@@ -233,7 +231,11 @@ local function drawLastScore(x, y, score, color)
 	ecs.square((x + 6) * 2, y, 35, 7, 0x262626)
 	drawKrug(x + 3, y + 3, 3, color)
 	drawText(x + 9, y, score, 0xffffff)
+
+	newObj("Buttons", "Выйти", ecs.drawAdaptiveButton(xScore, 37, 14, 1, "Выйти", ecs.colors.blue, 0xffffff))
+
 end
+
 local function Tir()
 	ecs.prepareToExit()
 
