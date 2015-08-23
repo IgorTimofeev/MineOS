@@ -4,6 +4,7 @@ local geo = c.geolyzer
 local holo = c.hologram
 local gpu = c.gpu
 local ecs = require("ECSAPI")
+local palette = require("palette")
 
 local args = {...}
 
@@ -11,6 +12,7 @@ local args = {...}
 if not c.isAvailable("geolyzer") or not c.isAvailable("hologram") then
   error("Подключите геоанализатор и голографический проектор 2-ого уровня")
 end
+
 -------------------------
 
 local xScanFrom, xScanTo = -24, 23
@@ -111,14 +113,23 @@ local function newObj(class, name, ...)
   obj[class][name] = {...}
 end
 
+local currentHoloColor = 0xff00ff
+
+local function changeColorTo(color)
+  currentHoloColor = color
+  holo.setPaletteColor(1, color)
+end
+
+
 local function main()
   ecs.clearScreen(0xffffff)
-  local yPos = yCenter - 10
+  local yPos = yCenter - 12
   newObj("buttons", "Сканировать местность", ecs.drawAdaptiveButton("auto", yPos, 3, 1, "Сканировать местность", 0x444444, 0xffffff)); yPos = yPos + 4
-  newObj("buttons", "Перерисовать голограмму", ecs.drawAdaptiveButton("auto", yPos, 3, 1, "Перерисовать голограмму", 0x444444, 0xffffff)); yPos = yPos + 4
   newObj("buttons", "Масштаб", ecs.drawAdaptiveButton("auto", yPos, 3, 1, "Масштаб", 0x444444, 0xffffff)); yPos = yPos + 4
+  newObj("buttons", "Перерисовать голограмму", ecs.drawAdaptiveButton("auto", yPos, 3, 1, "Перерисовать голограмму", 0x444444, 0xffffff)); yPos = yPos + 4
   newObj("buttons", "+ 10 блоков", ecs.drawAdaptiveButton("auto", yPos, 3, 1, "+ 10 блоков", 0x444444, 0xffffff)); yPos = yPos + 4
   newObj("buttons", "- 10 блоков", ecs.drawAdaptiveButton("auto", yPos, 3, 1, "- 10 блоков", 0x444444, 0xffffff)); yPos = yPos + 4
+  newObj("buttons", "Изменить цвет", ecs.drawAdaptiveButton("auto", yPos, 3, 1, "Изменить цвет", currentHoloColor, 0xffffff - currentHoloColor)); yPos = yPos + 4
   newObj("buttons", "Выйти", ecs.drawAdaptiveButton("auto", yPos, 3, 1, "Выйти", 0x666666, 0xffffff)); yPos = yPos + 4
   gpu.setBackground(0xffffff)
   gpu.setForeground(0x444444)
@@ -144,12 +155,17 @@ while true do
         elseif key == "Перерисовать голограмму" then
           displayAllRows()
         elseif key == "+ 10 блоков" then
-          yModifyer = yModifyer + 10
-        elseif key == "- 10 блоков" then
           yModifyer = yModifyer - 10
+        elseif key == "- 10 блоков" then
+          yModifyer = yModifyer + 10
         elseif key == "Выйти" then
           ecs.prepareToExit()
           return 0
+        elseif key == "Изменить цвет" then
+          local color = palette.draw("auto", "auto", currentHoloColor)
+          if color ~= nil then
+            changeColorTo(color)
+          end
         end
         main()
         break
