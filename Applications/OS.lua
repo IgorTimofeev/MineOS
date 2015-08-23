@@ -343,7 +343,7 @@ local function launchIcon(path, arguments)
 		local cyka = path .. "/" .. ecs.hideFileFormat(fs.name(path)) .. ".lua"
 		local success, reason = shell.execute(cyka)
 		ecs.prepareToExit()
-		if not success then displayCompileMessage(1, reason, true) end
+		if not success then ecs.displayCompileMessage(1, reason, true) end
 		
 	--Если это обычный луа файл - т.е. скрипт
 	elseif fileFormat == ".lua" or fileFormat == nil then
@@ -353,7 +353,7 @@ local function launchIcon(path, arguments)
 		if success then
 			print("Программа выполнена успешно! Нажмите любую клавишу, чтобы продолжить.")
 		else
-			displayCompileMessage(1, reason, true)
+			ecs.displayCompileMessage(1, reason, true)
 		end
 
 	elseif fileFormat == ".png" then
