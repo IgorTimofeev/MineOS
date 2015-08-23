@@ -224,7 +224,7 @@ end
 local function Tir()
 	ecs.prepareToExit()
 
-	showPlayers(107, 6)
+	showPlayers(106, 6)
 	drawLastScore(53, 22, 0, 0xffffff)
 
 	drawMishen()
@@ -238,11 +238,11 @@ local function Tir()
 			AddPlayer(e[6])
 			AddScore(e[6], GetScore(e[3], e[4]))
 			SetPixel(e[3], e[4], players[e[6]][2])
-			showPlayers(107, 6)
+			showPlayers(106, 6)
 			drawLastScore(53, 22, GetScore(e[3], e[4]),players[e[6]][2])
 		elseif e[1] == "key_down" then
 			if e[4] == 28 then
-				return true	
+				return "exit"	
 			end
 		end
 	end
@@ -252,7 +252,7 @@ end
 
 while true do
 	local exit = Tir()
-	if exit then break end
+	if exit == "exit" then break end
 end
 
 gpu.setResolution(xOld, yOld)
