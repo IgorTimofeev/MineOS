@@ -223,6 +223,10 @@ local function drawLastScore(x, y, score, color)
 end
 local function Tir()
 	ecs.prepareToExit()
+
+	showPlayers(108, 6)
+	drawLastScore(53, 22, 0, 0xffffff)
+
 	drawMishen()
 	while true do
 		local e = {event.pull()}
@@ -234,8 +238,8 @@ local function Tir()
 			AddPlayer(e[6])
 			AddScore(e[6], GetScore(e[3], e[4]))
 			SetPixel(e[3], e[4], players[e[6]][2])
-			showPlayers(111, 6)
-			drawLastScore(50, 22, GetScore(e[3], e[4]),players[e[6]][2])
+			showPlayers(108, 6)
+			drawLastScore(53, 22, GetScore(e[3], e[4]),players[e[6]][2])
 		elseif e[1] == "key_down" then
 			if e[4] == 28 then
 				return true	
@@ -245,9 +249,6 @@ local function Tir()
 end
 
 --------------------------
-
-showPlayers(111, 6)
-drawLastScore(50, 22, 0, 0xffffff)
 
 while true do
 	local exit = Tir()
