@@ -219,13 +219,13 @@ end
 local function drawLastScore(x, y, score, color)
 	ecs.square((x + 6) * 2, y, 35, 7, 0x262626)
 	drawKrug(x + 3, y + 3, 3, color)
-	drawText(x + 8, y, score, 0xffffff)
+	drawText(x + 9, y, score, 0xffffff)
 end
 local function Tir()
 	ecs.prepareToExit()
 
 	showPlayers(108, 6)
-	drawLastScore(53, 22, 0, 0xffffff)
+	drawLastScore(54, 22, 0, 0xffffff)
 
 	drawMishen()
 	while true do
@@ -239,7 +239,7 @@ local function Tir()
 			AddScore(e[6], GetScore(e[3], e[4]))
 			SetPixel(e[3], e[4], players[e[6]][2])
 			showPlayers(108, 6)
-			drawLastScore(53, 22, GetScore(e[3], e[4]),players[e[6]][2])
+			drawLastScore(54, 22, GetScore(e[3], e[4]),players[e[6]][2])
 		elseif e[1] == "key_down" then
 			if e[4] == 28 then
 				return true	
