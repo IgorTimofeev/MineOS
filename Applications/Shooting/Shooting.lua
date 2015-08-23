@@ -5,7 +5,10 @@ local ecs = require("ECSAPI")
 local colorlib = require("colorlib")
 
 ---------------------------
-local xSize, ySize = gpu.getResolution()
+local xOld, yOld = gpu.getResolution()
+gpu.setResolution(160, 50)
+local xSize, ySize = 160, 50
+
 local players = {...}
 local xCenter, yCenter = math.floor(xSize/4 - 15), math.floor(ySize/2)
 local symbols = {
@@ -232,6 +235,10 @@ local function Tir()
 			AddScore(e[6], GetScore(e[3], e[4]))
 			SetPixel(e[3], e[4], players[e[6]][2])
 			showPlayers(111, 6)
+		elseif e[1] == "key_down" then
+			if e[4] == 28 then
+				return true	
+			end
 		end
 		drawLastScore(50, 22, GetScore(e[3], e[4]),players[e[6]][2])
 	end
@@ -243,5 +250,10 @@ showPlayers(111, 6)
 drawLastScore(50, 22, 0, 0xffffff)
 
 while true do
-	Tir()
+	local exit = Tir()
+	if exit then break end
 end
+
+gpu.setResolution(xOld, yOld)
+ecs.prepareToExit()
+
