@@ -5,6 +5,7 @@ local holo = c.hologram
 local gpu = c.gpu
 local ecs = require("ECSAPI")
 local palette = require("palette")
+local computer = require("computer")
 
 local args = {...}
 
@@ -15,9 +16,6 @@ end
 
 -------------------------
 
-local xScanFrom, xScanTo = -24, 23
-local zScanFrom, zScanTo = xScanFrom, xScanTo
-
 local massiv = {}
 
 local yModifyer = -20
@@ -25,9 +23,9 @@ local scales = {0.33, 0.75, 1, 1.5, 2, 2.5, 3}
 local currentScale = 1
 local countOfScales = #scales
 
-local command = args[1] or "scan"
-local argument1 = args[2] or -24
-local argument2 = args[3] or 23
+local xScanFrom = tonumber(args[1]) or -24
+local xScanTo = tonumber(args[2]) or 23
+local zScanFrom, zScanTo = xScanFrom, xScanTo
 
 local xSize, ySize = gpu.getResolution()
 local yCenter = math.floor(ySize / 2)
@@ -36,6 +34,18 @@ local yCenter = math.floor(ySize / 2)
 
 local function clear()
   holo.clear()
+end
+
+local function getMemory()
+  local totalMemory = computer.totalMemory() /  1024
+  local freeMemory = computer.freeMemory() / 1024
+  local usedMemory = totalMemory - freeMemory
+
+  local stro4ka = math.ceil(usedMemory).."/"..math.floor(totalMemory).."KB"
+
+  totalMemory, freeMemory, usedMemory = nil, nil, nil
+
+  return stro4ka
 end
 
 local function changeScale()
@@ -49,18 +59,14 @@ local function changeScale()
 end
 
 local function displayRow(x, yModifyer, z,  tablica)
-  local color = 1
+  local color
   for i = 1, #tablica do
-    if tablica[i] > 0.5 then
+    if tablica[i] > 0 then
       
       color = 1
 
-      if tablica[i] < 2 then
+      if tablica[i] > 4 then
         color = 2
-      elseif tablica[i] >= 2 and tablica[i] < 3 then
-        color = 1
-      elseif tablica[i] >= 3 and tablica[i] then
-        color = 3
       end
 
       if tablica[i + yModifyer] then
@@ -68,6 +74,8 @@ local function displayRow(x, yModifyer, z,  tablica)
       end
     end
   end
+  color = nil
+  tablica = nil
 end
 
 local function displayAllRows()
@@ -101,6 +109,8 @@ local function scan()
       gpu.setForeground(0x444444)
       gpu.setBackground(0xffffff)
       ecs.centerText("x", yBar + 1, "   Сканирование стека на x = "..x..", z = "..z.."   ")
+      ecs.centerText("x", yBar + 3, "   "..math.floor(percent).."% завершено   ")
+      ecs.centerText("x", yBar + 2, "   "..getMemory().." RAM   ")
       counter = counter + 1
 
     end
@@ -113,23 +123,24 @@ local function newObj(class, name, ...)
   obj[class][name] = {...}
 end
 
-local currentHoloColor = 0xff00ff
+local currentHoloColor = ecs.colors.lime
 
 local function changeColorTo(color)
   currentHoloColor = color
   holo.setPaletteColor(1, color)
+  holo.setPaletteColor(2, 0xffffff - color)
 end
 
 
 local function main()
   ecs.clearScreen(0xffffff)
-  local yPos = yCenter - 12
+  local yPos = yCenter - 14
   newObj("buttons", "Сканировать местность", ecs.drawAdaptiveButton("auto", yPos, 3, 1, "Сканировать местность", 0x444444, 0xffffff)); yPos = yPos + 4
   newObj("buttons", "Масштаб", ecs.drawAdaptiveButton("auto", yPos, 3, 1, "Масштаб", 0x444444, 0xffffff)); yPos = yPos + 4
   newObj("buttons", "Перерисовать голограмму", ecs.drawAdaptiveButton("auto", yPos, 3, 1, "Перерисовать голограмму", 0x444444, 0xffffff)); yPos = yPos + 4
   newObj("buttons", "+ 10 блоков", ecs.drawAdaptiveButton("auto", yPos, 3, 1, "+ 10 блоков", 0x444444, 0xffffff)); yPos = yPos + 4
   newObj("buttons", "- 10 блоков", ecs.drawAdaptiveButton("auto", yPos, 3, 1, "- 10 блоков", 0x444444, 0xffffff)); yPos = yPos + 4
-  newObj("buttons", "Изменить цвет", ecs.drawAdaptiveButton("auto", yPos, 3, 1, "Изменить цвет", currentHoloColor, 0xffffff - currentHoloColor)); yPos = yPos + 4
+  newObj("buttons", "Изменить цвет", ecs.drawAdaptiveButton("auto", yPos, 3, 1, "Изменить цвет", currentHoloColor, 0xffffff)); yPos = yPos + 4
   newObj("buttons", "Выйти", ecs.drawAdaptiveButton("auto", yPos, 3, 1, "Выйти", 0x666666, 0xffffff)); yPos = yPos + 4
   gpu.setBackground(0xffffff)
   gpu.setForeground(0x444444)
@@ -138,6 +149,7 @@ end
 
 ----------------------------
 
+changeColorTo(0x009900)
 changeScale()
 main()
 
