@@ -76,7 +76,7 @@ function context.menu(x, y, ...)
 			--Рисуем сокращение
 			if data[i][3] then gpu.set(x + width - 2 - unicode.len(data[i][3]), yPos, data[i][3]) end
 
-			newObj("Elements", i, x, yPos, x + width - 1, yPos)
+			if not data[i][2] then newObj("Elements", i, x, yPos, x + width - 1, yPos) end
 		end
 	end
 
