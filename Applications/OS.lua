@@ -19,6 +19,7 @@ local xSize, ySize = gpu.getResolution()
 local icons = {}
 local workPath = ""
 local workPathHistory = {}
+local clipboard
 local currentFileList
 local currentDesktop = 1
 local countOfDesktops
@@ -50,7 +51,10 @@ local xPosOfIcons = math.floor(xSize / 2 - (xCountOfIcons * (widthOfIcon + xSpac
 
 
 --ПЕРЕМЕННЫЕ ДЛЯ ТОП БАРА
-local topBarColor = 0xeeeeee
+local topBarColor = 0xdddddd
+local showHiddenFiles = false
+local showSystemFiles = true
+local showFileFormat = false
 
 ------------------------------------------------------------------------------------------------------------------------
 
@@ -73,7 +77,17 @@ end
 
 --ОТРИСОВКА ТЕКСТА ПОД ИКОНКОЙ
 local function drawIconText(xIcons, yIcons, path)
-	local text = ecs.stringLimit("end", fs.name(path), widthOfIcon)
+
+	local text = fs.name(path)
+
+	if not showFileFormat then
+		local fileFormat = ecs.getFileFormat(text)
+		if fileFormat then
+			text = unicode.sub(text, 1, -(unicode.len(fileFormat) + 1))
+		end
+	end
+
+	text = ecs.stringLimit("end", text, widthOfIcon)
 	local textPos = xIcons + math.floor(widthOfIcon / 2 - unicode.len(text) / 2) - 2
 
 	ecs.adaptiveText(textPos, yIcons + heightOfIcon - 1, text, 0xffffff)
@@ -104,8 +118,8 @@ local function drawIcon(xIcons, yIcons, path)
 			icon = "config"
 		elseif fileFormat == ".txt" or fileFormat == ".rtf" then
 			icon = "text"
-		-- elseif fileFormat == ".lua" then
-		-- 	icon = "lua"
+		elseif fileFormat == ".lua" then
+		 	icon = "lua"
 		else
 			icon = "script"
 		end
@@ -211,9 +225,6 @@ end
 
 ------------------------------------------------------------------------------------------------
 
-showHiddenFiles = false
-showSystemFiles = false
-
 --ОТРИСОВКА ИКОНОК НА РАБОЧЕМ СТОЛЕ ПО ТЕКУЩЕЙ ПАПКЕ
 local function drawDesktop(x, y)
 
@@ -241,7 +252,10 @@ local function drawDesktop(x, y)
 
 		if i == currentDesktop then
 			color = ecs.colors.green
+		else
+			color = 0xffffff
 		end
+
 		ecs.colorTextWithBack(xButtons, yButtons, 0x000000, color, "  ")
 		newObj("DesktopButtons", i, xButtons, yButtons, xButtons + 1, yButtons)
 
@@ -309,16 +323,34 @@ end
 local function drawTime()
 	local time = " " .. unicode.sub(os.date("%T"), 1, -4) .. " "
 	local sTime = unicode.len(time)
-	ecs.colorTextWithBack(xSize - sTime - 2, 1, 0x000000, topBarColor, time)
+	ecs.colorTextWithBack(xSize - sTime, 1, 0x000000, topBarColor, time)
 end
 
 --РИСОВАТЬ ВЕСЬ ТОПБАР
 local function drawTopBar()
-	local time = unicode.sub(os.date("%T"), 1, -4)
+
+	--Элементы топбара
+	local topBarElements = { "MineOS", "Вид" }
+
+	--Белая горизонтальная линия
 	ecs.square(1, 1, xSize, 1, topBarColor)
 
-	ecs.colorTextWithBack(2, 1, 0x000000, topBarColor, "/"..workPath)
+	--Рисуем элементы и создаем объекты
+	local xPos = 2
+	gpu.setForeground(0x000000)
+	for i = 1, #topBarElements do
 
+		if i > 1 then gpu.setForeground(0x666666) end
+
+		local length = unicode.len(topBarElements[i])
+		gpu.set(xPos + 1, 1, topBarElements[i])
+
+		newObj("TopBarButtons", topBarElements[i], xPos, 1, xPos + length + 1, 1)
+
+		xPos = xPos + length + 2
+	end
+
+	--Рисуем время
 	drawTime()
 end
 
@@ -463,13 +495,13 @@ while true do
 
 					--РАЗНЫЕ КОНТЕКСТНЫЕ МЕНЮ
 					if #getSelectedIcons() > 1 then
-						action = context.menu(eventData[3], eventData[4], {"Вырезать", false, "^X"}, {"Копировать", false, "^C"}, {"Вставить", true, "^V"}, "-", {"Добавить в архив"}, "-", {"Удалить", false, "⌫"})
+						action = context.menu(eventData[3], eventData[4], {"Вырезать", false, "^X"}, {"Копировать", false, "^C"}, {"Вставить", not clipboard, "^V"}, "-", {"Добавить в архив"}, "-", {"Удалить", false, "⌫"})
 					elseif fileFormat == ".app" and fs.isDirectory(obj["DesktopIcons"][key][5]) then
-						action = context.menu(eventData[3], eventData[4], {"Показать содержимое"}, "-", {"Вырезать", false, "^X"}, {"Копировать", false, "^C"}, {"Вставить", true, "^V"}, "-", {"Переименовать"}, {"Создать ярлык"}, {"Добавить в архив"}, "-", {"Удалить", false, "⌫"})
+						action = context.menu(eventData[3], eventData[4], {"Показать содержимое"}, "-", {"Вырезать", false, "^X"}, {"Копировать", false, "^C"}, {"Вставить", not clipboard, "^V"}, "-", {"Переименовать"}, {"Создать ярлык"}, {"Добавить в архив"}, "-", {"Удалить", false, "⌫"})
 					elseif fileFormat ~= ".app" and fs.isDirectory(obj["DesktopIcons"][key][5]) then
-						action = context.menu(eventData[3], eventData[4], {"Вырезать", false, "^X"}, {"Копировать", false, "^C"}, {"Вставить", true, "^V"}, "-", {"Переименовать"}, {"Создать ярлык"}, {"Добавить в архив"}, "-", {"Удалить", false, "⌫"})
+						action = context.menu(eventData[3], eventData[4], {"Вырезать", false, "^X"}, {"Копировать", false, "^C"}, {"Вставить", not clipboard, "^V"}, "-", {"Переименовать"}, {"Создать ярлык"}, {"Добавить в архив"}, "-", {"Удалить", false, "⌫"})
 					else
-						action = context.menu(eventData[3], eventData[4], {"Редактировать"}, "-", {"Вырезать", false, "^X"}, {"Копировать", false, "^C"}, {"Вставить", true, "^V"}, "-", {"Переименовать"}, {"Создать ярлык"}, {"Добавить в архив"}, "-", {"Удалить", false, "⌫"})
+						action = context.menu(eventData[3], eventData[4], {"Редактировать"}, "-", {"Вырезать", false, "^X"}, {"Копировать", false, "^C"}, {"Вставить", not clipboard, "^V"}, "-", {"Переименовать"}, {"Создать ярлык"}, {"Добавить в архив"}, "-", {"Удалить", false, "⌫"})
 					end
 
 					--ecs.error(#getSelectedIcons())
@@ -484,6 +516,14 @@ while true do
 						ecs.prepareToExit()
 						shell.execute("edit "..obj["DesktopIcons"][key][5])
 						drawAll()
+					elseif action == "Удалить" then
+						fs.remove(workPath .. "/" .. obj["DesktopIcons"][key][5])
+						drawDesktop(xPosOfIcons, yPosOfIcons)
+					elseif action == "Копировать" then
+						clipboard = workPath .. "/" .. obj["DesktopIcons"][key][5]
+					elseif action == "Вставить" then
+						ecs.copy(clipboard, workPath)
+						drawDesktop(xPosOfIcons, yPosOfIcons)
 					else
 						redrawSelectedIcons()
 						deselectAll(true)
@@ -512,6 +552,52 @@ while true do
 					currentDesktop = key
 					drawDesktop(xPosOfIcons, yPosOfIcons)
 				end
+			end
+		end
+
+		for key, val in pairs(obj["TopBarButtons"]) do
+			if ecs.clickedAtArea(eventData[3], eventData[4], obj["TopBarButtons"][key][1], obj["TopBarButtons"][key][2], obj["TopBarButtons"][key][3], obj["TopBarButtons"][key][4]) then
+				ecs.colorTextWithBack(obj["TopBarButtons"][key][1], obj["TopBarButtons"][key][2], 0xffffff, ecs.colors.blue, " "..key.." ")
+
+				if key == "Вид" then
+
+					local action = context.menu(obj["TopBarButtons"][key][1], obj["TopBarButtons"][key][2] + 1, {(function() if showHiddenFiles then return "Скрывать скрытые файлы" else return "Показывать скрытые файлы" end end)()}, {(function() if showSystemFiles then return "Скрывать системные файлы" else return "Показывать системные файлы" end end)()}, "-", {(function() if showFileFormat then return "Скрывать формат файлов" else return "Показывать формат файлов" end end)()})
+					
+					if action == "Скрывать скрытые файлы" then
+						showHiddenFiles = false
+					elseif action == "Показывать скрытые файлы" then
+						showHiddenFiles = true
+					elseif action == "Показывать системные файлы" then
+						showSystemFiles = true
+					elseif action == "Скрывать системные файлы" then
+						showSystemFiles = false
+					elseif action == "Показывать формат файлов" then
+						showFileFormat = true
+					elseif action == "Скрывать формат файлов" then
+						showFileFormat = false
+					end
+
+					drawTopBar()
+					drawDesktop(xPosOfIcons, yPosOfIcons)
+
+				elseif key == "MineOS" then
+					local action = context.menu(obj["TopBarButtons"][key][1], obj["TopBarButtons"][key][2] + 1, {"Обновления"}, "-", {"Перезагрузить"}, {"Выключить"}, "-", {"Вернуться в Shell"})
+				
+					if action == "Вернуться в Shell" then
+						ecs.prepareToExit()
+						return 0
+					elseif action == "Выключить" then
+						shell.execute("shutdown")
+					elseif action == "Перезагрузить" then
+						shell.execute("reboot")
+					elseif
+						action == "Обновления" then
+						shell.execute("pastebin run 0nm5b1ju")
+						ecs.prepareToExit()
+						return 0
+					end
+				end
+
 			end
 		end
 
