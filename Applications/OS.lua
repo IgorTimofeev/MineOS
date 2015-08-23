@@ -144,6 +144,20 @@ end
 
 ------------------------------------------------------------------------------------------------
 
+local systemFiles = {
+	"bin/",
+	"lib/",
+	"OS.lua",
+	"autorun.lua",
+	"init.lua",
+	"tmp/",
+	"usr/",
+	"mnt/",
+	"etc/",
+	"boot/",
+	--"System/",
+}
+
 local function reorganizeFilesAndFolders(massivSudaPihay, showHiddenFiles, showSystemFiles)
 
 	local massiv = {}
@@ -170,13 +184,35 @@ local function reorganizeFilesAndFolders(massivSudaPihay, showHiddenFiles, showS
 		cyka = nil
 	end
 
+
+	if not showSystemFiles then
+		if workPath == "" or workPath == "/" then
+			--ecs.error("Сработало!")
+			local i = 1
+			while i <= #massiv do
+				for j = 1, #systemFiles do
+					--ecs.error("massiv[i] = " .. massiv[i] .. ", systemFiles[j] = "..systemFiles[j])
+					if massiv[i] == systemFiles[j] then
+						--ecs.error("Удалено! massiv[i] = " .. massiv[i] .. ", systemFiles[j] = "..systemFiles[j])
+						table.remove(massiv, i)
+						i = i - 1
+						break
+					end
+
+				end
+
+				i = i + 1
+			end
+		end
+	end
+
 	return massiv
 end
 
 ------------------------------------------------------------------------------------------------
 
 showHiddenFiles = false
-showSystemFiles = true
+showSystemFiles = false
 
 --ОТРИСОВКА ИКОНОК НА РАБОЧЕМ СТОЛЕ ПО ТЕКУЩЕЙ ПАПКЕ
 local function drawDesktop(x, y)
