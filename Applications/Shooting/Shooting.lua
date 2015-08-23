@@ -231,7 +231,7 @@ local function drawLastScore(x, y, score, color)
 	drawKrug(x + 3, y + 3, 3, color)
 	drawText(x + 9, y, score, 0xffffff)
 
-	local yPos = 33
+	local yPos = 34
 	newObj("Buttons", "Заново", ecs.drawAdaptiveButton(xScore, yPos, 18, 1, "Заново", ecs.colors.blue, 0xffffff))
 	yPos = yPos + 4
 	newObj("Buttons", "Выйти ", ecs.drawAdaptiveButton(xScore, yPos, 18, 1, "Выйти ", ecs.colors.blue, 0xffffff))
