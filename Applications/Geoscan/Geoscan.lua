@@ -9,7 +9,7 @@ local palette = require("palette")
 local args = {...}
 
 
-if not c.isAvailable("geolyzer") or not c.isAvailable("hologram") then
+if not geo or not holo then
   error("Подключите геоанализатор и голографический проектор 2-ого уровня")
 end
 
