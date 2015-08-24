@@ -1142,6 +1142,21 @@ function ECSAPI.rename(mainPath)
 	end
 end
 
+--Простое информационное окошечко
+function ECSAPI.info(x, y, title, text)
+	x = x or "auto"
+	y = y or "auto"
+	title = title or " "
+	text = text or "Sample text"
+
+	local width = unicode.len(text) + 4
+	local height = 4
+	x, y = ECSAPI.correctStartCoords(x, y, width, height)
+
+	ECSAPI.emptyWindow(x, y, width, height, title)
+	ECSAPI.colorTextWithBack(x + 2, y + 2, ECSAPI.windowColors.usualText, ECSAPI.windowColors.background, text)
+end
+
 ----------------------------------------------------------------------------------------------------
 
 -- ECSAPI.copy("t", "System/OS")
@@ -1151,6 +1166,7 @@ end
 -- ECSAPI.select("auto", "auto", " ", {{"С твоим компом опять хуйня!"}}, {{"Блядь!"}})
 -- ECSAPI.error("Да иди ты на хуй, чмо, я мать твою на хую")
 -- ECSAPI.setScale(1)
+-- ECSAPI.info("auto", "auto", "Сука мать ебал", "Лалалал инфа хуй пизда джигурда")
 
 
 return ECSAPI
