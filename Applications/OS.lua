@@ -611,10 +611,7 @@ while true do
 						ecs.prepareToExit()
 						return 0
 					elseif action == "О системе" then
-						ecs.prepareToExit()
-						print(copyright)
-						ecs.waitForTouchOrClick()
-						drawAll()
+						ecs.displayCompileMessage(1, copyright, false)
 					end
 				end
 
