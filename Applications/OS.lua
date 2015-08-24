@@ -22,6 +22,7 @@ local context = require("context")
 local computer = require("computer")
 local keyboard = require("keyboard")
 local image = require("image")
+local fonfig = require("config")
 
 local gpu = component.gpu
 
@@ -490,10 +491,68 @@ local function changePath(path)
 	drawDesktop(xPosOfIcons, yPosOfIcons)
 end
 
+--Биометрический сканер
+local function biometry()
+	local users
+	local path = "System/OS/Users.cfg"
+
+	if fs.exists(path) then
+		users = config.readFile(path)
+
+		local width = 80
+		local height = 25
+
+		local x, y = math.floor(xSize / 2 - width / 2), math.floor(ySize / 2 - height / 2)
+
+		local oldPixels = ecs.rememberOldPixels(x, y, x + width + 1, y + height)
+
+		local Finger = image.load("System/OS/Icons/Finger.png")
+
+		local function okno(color, textColor, text)
+			ecs.square(x, y, width, height, color)
+			ecs.windowShadow(x, y, width, height)
+
+			image.draw(math.floor(xSize / 2 - 8), y + 2, Finger)
+
+			gpu.setBackground(color)
+			gpu.setForeground(textColor)
+			ecs.centerText("x", y + height - 5, text)
+		end
+
+		local exit
+		while true do
+			if exit then break end
+
+			okno(ecs.windowColors.background, ecs.windowColors.usualText, "Прислоните палец для идентификации")
+			
+			local e = {event.pull()}
+			if e[1] == "touch" then
+				for _, val in pairs(users) do
+					if e[6] == val then
+						exit = true
+						break
+					end
+				end
+
+				if not exit then
+					okno(0x770000, 0xffffff, "Доступ запрещен!")
+					os.sleep(1)
+				end
+			end
+		end
+
+		ecs.drawOldPixels(oldPixels)
+		
+		Finger = nil
+		users = nil
+	end
+end
+
 
 ------------------------------------------------------------------------------------------------------------------------
 
 drawAll()
+biometry()
 
 ------------------------------------------------------------------------------------------------------------------------
 
