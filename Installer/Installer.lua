@@ -97,7 +97,7 @@ ecs.setScale(installerScale)
 local xSize, ySize = gpu.getResolution()
 local windowWidth = 80
 local windowHeight = 2 + 16 + 2 + 3 + 2
-local xWindow, yWindow = math.floor(xSize / 2 - windowWidth / 2), math.floor(ySize / 2 - windowHeight / 2)
+local xWindow, yWindow = math.floor(xSize / 2 - windowWidth / 2), math.ceil(ySize / 2 - windowHeight / 2)
 local xWindowEnd, yWindowEnd = xWindow + windowWidth - 1, yWindow + windowHeight - 1
 
 
@@ -163,10 +163,11 @@ if not fs.exists("System/OS/Installer/Languages.png") then
 	
 	local preLoadApi = {
 		{ paste = "IgorTimofeev/OpenComputers/master/lib/image.lua", path = "lib/image.lua" },
-		{ paste = "IgorTimofeev/OpenComputers/master/Installer/Languages.png", path = "System/OS/Installer/Languages.png" },
+		--{ paste = "IgorTimofeev/OpenComputers/master/Installer/Languages.png", path = "System/OS/Installer/Languages.png" },
 		{ paste = "IgorTimofeev/OpenComputers/master/Installer/OK.png", path = "System/OS/Installer/OK.png" },
 		{ paste = "IgorTimofeev/OpenComputers/master/Installer/Downloading.png", path = "System/OS/Installer/Downloading.png" },
 		{ paste = "IgorTimofeev/OpenComputers/master/Installer/OS_Logo.png", path = "System/OS/Installer/OS_Logo.png" },
+		{ paste = "IgorTimofeev/OpenComputers/master/MineOS/License.txt", path = "System/OS/License.txt" },
 	}
 
 	local countOfAll = #preLoadApi
@@ -227,21 +228,53 @@ do
 
 	clear()
 	
-	image.draw(math.ceil(xSize / 2 - 30), yWindow + 2, imageLanguages)
+	--Откуда рисовать условия согл
+	local from = 1
+	local xText, yText, TextWidth, TextHeight = xWindow + 4, yWindow + 2, windowWidth - 8, windowHeight - 10
 
-	ecs.selector(math.floor(xSize / 2 - 10), yWindowEnd - 5, 20, "Russian", {"English", "Russian"}, 0xffffff, 0x000000, true)
+	--Читаем файл с лиц соглл
+	local lines = {}
+	local file = io.open("System/OS/License.txt", "r")
+	for line in file:lines() do
+		table.insert(lines, line)
+	end
+	file:close()
+
+	--image.draw(math.ceil(xSize / 2 - 30), yWindow + 2, imageLanguages)
+	--ecs.selector(math.floor(xSize / 2 - 10), yWindowEnd - 5, 20, "Russian", {"English", "Russian"}, 0xffffff, 0x000000, true)
+
+	--Штуку рисуем
+	ECSAPI.textField(xText, yText, TextWidth, TextHeight, lines, from)
+
+	--Инфо рисуем
+	ecs.centerText("x", yWindowEnd - 5 ,"Принимаете ли вы условия лицензионного соглашения?")
 
 	--кнопа
-	drawButton("->",false)
+	drawButton("Принимаю",false)
 
-	waitForClickOnButton("->")
+	while true do
+		local e = { event.pull() }
+		if e[1] == "touch" then
+			if ecs.clickedAtArea(e[3], e[4], obj["buttons"]["Принимаю"][1], obj["buttons"]["Принимаю"][2], obj["buttons"]["Принимаю"][3], obj["buttons"]["Принимаю"][4]) then
+				drawButton("Принимаю", true)
+				os.sleep(timing)
+				break
+			end
+		elseif e[1] == "scroll" then
+			if e[5] == -1 then
+				if from < #lines then from = from + 1; ECSAPI.textField(xText, yText, TextWidth, TextHeight, lines, from) end
+			else
+				if from > 1 then from = from - 1; ECSAPI.textField(xText, yText, TextWidth, TextHeight, lines, from) end
+			end
+		end
+	end
 end
 
 --------------------------СТАДИЯ ЗАГРУЗКИ-----------------------------------
 
 do
 
-	local barWidth = math.floor(windowWidth / 2)
+	local barWidth = math.floor(windowWidth * 2 / 3)
 	local xBar = math.floor(xSize/2-barWidth/2)
 	local yBar = yWindowEnd - 3
 
@@ -268,13 +301,24 @@ do
 		local path = applications[app]["name"]
 		if fs.exists(path) then fs.remove(path) end
 
+		--Если тип = приложение
 		if applications[app]["type"] == "Application" then
 			fs.makeDirectory(path..".app/Resources")
-			getFromGitHubSafely(GitHubUserUrl .. applications[app]["url"], path..".app/"..fs.name(applications[app]["name"]))
+			getFromGitHubSafely(GitHubUserUrl .. applications[app]["url"], path..".app/"..fs.name(applications[app]["name"]..".lua"))
 			getFromGitHubSafely(GitHubUserUrl .. applications[app]["icon"], path..".app/Resources/Icon.png")
-			for i = 1, #applications[app]["resources"] do
-				getFromGitHubSafely(GitHubUserUrl .. applications[app]["resources"][i]["url"], path..".app/Resources/"..applications[app]["resources"][i]["name"])
+			if applications[app]["resources"] then
+				for i = 1, #applications[app]["resources"] do
+					getFromGitHubSafely(GitHubUserUrl .. applications[app]["resources"][i]["url"], path..".app/Resources/"..applications[app]["resources"][i]["name"])
+				end
 			end
+
+		--Если тип = другой, чужой, а мб и свой пастебин
+		elseif applications[app]["type"] == "Pastebin" then
+			fs.remove(applications[app]["name"])
+			fs.makeDirectory(fs.path(applications[app]["name"]))
+			getFromPastebin(applications[app]["url"], applications[app]["name"])
+
+		--А если че-то другое
 		else
 			getFromGitHubSafely(GitHubUserUrl .. applications[app]["url"], path)
 		end
