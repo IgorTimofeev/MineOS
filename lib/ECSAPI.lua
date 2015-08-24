@@ -1157,6 +1157,46 @@ function ECSAPI.info(x, y, title, text)
 	ECSAPI.colorTextWithBack(x + 2, y + 2, ECSAPI.windowColors.usualText, ECSAPI.windowColors.background, text)
 end
 
+--Скроллбар вертикальный
+function ECSAPI.srollBar(x, y, width, height, countOfAllElements, currentElement, backColor, frontColor)
+	local sizeOfScrollBar = math.ceil(1 / countOfAllElements * height)
+	local displayBarFrom = math.floor(y + height * ((currentElement - 1) / countOfAllElements))
+
+	ECSAPI.square(x, y, width, height, backColor)
+	ECSAPI.square(x, displayBarFrom, width, sizeOfScrollBar, frontColor)
+
+	sizeOfScrollBar, displayBarFrom = nil, nil
+end
+
+--Поле с текстом. Сюда пихать массив вида {"строка1", "строка2", "строка3", ...}
+function ECSAPI.textField(x, y, width, height, lines, displayFrom)
+	x, y = ECSAPI.correctStartCoords(x, y, width, height)
+
+	local sLines = #lines
+
+	--ECSAPI.square(x, y, width - 1, height, 0xffffff)
+	ECSAPI.srollBar(x + width - 1, y, 1, height, sLines, displayFrom, ECSAPI.windowColors.usualText, ECSAPI.colors.lightBlue)
+
+	gpu.setBackground(0xffffff)
+	gpu.setForeground(ECSAPI.windowColors.usualText)
+	local yPos = y
+	for i = displayFrom, (displayFrom + height - 1) do
+		local line
+		if lines[i] then
+			local cuttedText = ECSAPI.stringLimit("end", lines[i], width - 3)
+			line = " " .. cuttedText .. string.rep(" ", width - unicode.len(cuttedText) - 2)
+		else
+			line = string.rep(" ", width - 1)
+		end
+
+		gpu.set(x, yPos, line)
+
+		yPos = yPos + 1
+	end
+
+	return sLines
+end
+
 ----------------------------------------------------------------------------------------------------
 
 -- ECSAPI.copy("t", "System/OS")
@@ -1167,6 +1207,28 @@ end
 -- ECSAPI.error("Да иди ты на хуй, чмо, я мать твою на хую")
 -- ECSAPI.setScale(1)
 -- ECSAPI.info("auto", "auto", "Сука мать ебал", "Лалалал инфа хуй пизда джигурда")
+
+--[[
+local lines = {}
+for i = 1, 200 do
+	table.insert(lines, "Хуй пизда джигурда рандом i = "..i)
+end
+
+local from = 1
+ECSAPI.textField(2, 2, 50, 10, lines, from)
+
+while true do
+	local e ={event.pull()}
+	if e[1] == "scroll" then
+		if e[5] == -1 then
+			if from < #lines then from = from + 1 end
+		else
+			if from > 1 then from = from - 1 end
+		end
+		ECSAPI.textField(2, 2, 50, 10, lines, from)
+	end
+end
+]]
 
 
 return ECSAPI
