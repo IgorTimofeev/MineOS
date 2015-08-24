@@ -529,14 +529,14 @@ local function biometry()
 			if e[1] == "touch" then
 				for _, val in pairs(users) do
 					if e[6] == val then
-						okno(0xccffcc, 0xffffff, "Доступ разрешен!")
+						--okno(0xccffcc, 0xffffff, "Доступ разрешен!")
 						exit = true
 						break
 					end
 				end
 
 				if not exit then
-					okno(0x770000, 0xffffff, "Доступ запрещен!")
+					okno(0xaa0000, 0xffffff, "Доступ запрещен!")
 					os.sleep(1)
 					okno(ecs.windowColors.background, ecs.windowColors.usualText, "Прислоните палец для идентификации")
 				end
