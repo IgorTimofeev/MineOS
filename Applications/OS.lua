@@ -549,18 +549,24 @@ end
 --Запустить конфигуратор ОС, если еще не запускался
 local function launchConfigurator(force)
 	if not fs.exists("System/OS/Users.cfg") or force then
-		while true do
-			local success, reason = shell.execute("System/OS/Configurator.lua")
-			if success then break end
-		end
+		shell.execute("System/OS/Configurator.lua")
 		return true
+	end
+end
+
+--Аккуратно запускаем биометрию - а то мало ли ctrl alt c
+local function safeBiometry()
+	while true do
+		local s, r = pcall(biometry)
+		if not s then ecs.error("Умный что  ли?") else break end
 	end
 end
 
 
 ------------------------------------------------------------------------------------------------------------------------
 
-if not launchConfigurator() then biometry(); drawAll() end
+ecs.clearScreen()
+if not launchConfigurator() then safeBiometry(); drawAll() end
 
 ------------------------------------------------------------------------------------------------------------------------
 
