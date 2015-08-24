@@ -1,80 +1,32 @@
 
-local copyright = [[
-	
-	Тут можно было бы написать кучу текста, мол,
-	вы не имеете прав на использование этой хуйни в
-	коммерческих целях и прочую чушь, навеянную нам
-	западной культурой. Но я же не пидор какой-то, верно?
-	 
-	Просто помни, сука, что эту ОСь накодил Тимофеев Игорь,
-	ссылка на ВК: vk.com/id7799889
-
-]]
-
 local component = require("component")
-local event = require("event")
-local term = require("term")
-local unicode = require("unicode")
+local gpu = component.gpu
 local ecs = require("ECSAPI")
-local fs = require("filesystem")
-local shell = require("shell")
-local context = require("context")
-local computer = require("computer")
-local keyboard = require("keyboard")
 local image = require("image")
+local unicode = require("unicode")
+local event = require("event")
+local palette = require("palette")
 local config = require("config")
 
-local gpu = component.gpu
-
-------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------
 
 local xSize, ySize = gpu.getResolution()
 
-local icons = {}
-local workPath = ""
-local workPathHistory = {}
-local clipboard
-local currentFileList
-local currentDesktop = 1
-local countOfDesktops
+local width, height = 80, 25
+local x, y = math.floor(xSize /2 - width / 2), math.floor(ySize / 2 - height / 2)
+local xCenter, yCenter = math.floor(xSize / 2), math.floor(ySize / 2)
 
---ЗАГРУЗКА ИКОНОК
-icons["folder"] = image.load("System/OS/Icons/Folder.png")
-icons["script"] = image.load("System/OS/Icons/Script.png")
-icons["text"] = image.load("System/OS/Icons/Text.png")
-icons["config"] = image.load("System/OS/Icons/Config.png")
-icons["lua"] = image.load("System/OS/Icons/Lua.png")
-icons["image"] = image.load("System/OS/Icons/Image.png")
+local oldPixels = ecs.rememberOldPixels(x, y, x + width + 1, y + height)
 
---ПЕРЕМЕННЫЕ ДЛЯ ДОКА
-local dockColor = 0xcccccc
-local heightOfDock = 4
-local background = 0x262626
-local currentCountOfIconsInDock = 4
-local pathOfDockShortcuts = "System/OS/Dock/"
+local OS_Logo = image.load("System/OS/Installer/OS_Logo.png")
+local Love = image.load("System/OS/Icons/Love.png")
 
---ПЕРЕМЕННЫЕ, КАСАЮЩИЕСЯ ИКОНОК
-local widthOfIcon = 12
-local heightOfIcon = 6
-local xSpaceBetweenIcons = 2
-local ySpaceBetweenIcons = 1
-local xCountOfIcons = math.floor(xSize / (widthOfIcon + xSpaceBetweenIcons))
-local yCountOfIcons = math.floor((ySize - (heightOfDock + 6)) / (heightOfIcon + ySpaceBetweenIcons))
-local totalCountOfIcons = xCountOfIcons * yCountOfIcons
-local iconsSelectionColor = ecs.colors.lightBlue
---local yPosOfIcons = math.floor((ySize - heightOfDock - 2) / 2 - (yCountOfIcons * (heightOfIcon + ySpaceBetweenIcons) - ySpaceBetweenIcons * 2) / 2)
-local yPosOfIcons = 3
-local xPosOfIcons = math.floor(xSize / 2 - (xCountOfIcons * (widthOfIcon + xSpaceBetweenIcons) - xSpaceBetweenIcons*4) / 2)
+local offset = 3
 
-local dockCountOfIcons = xCountOfIcons - 1
+local buttonColor = 0x888888
+local buttonPressColor = ecs.colors.blue
 
---ПЕРЕМЕННЫЕ ДЛЯ ТОП БАРА
-local topBarColor = 0xdddddd
-local showHiddenFiles = false
-local showSystemFiles = false
-local showFileFormat = false
-
-------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------
 
 --СОЗДАНИЕ ОБЪЕКТОВ
 local obj = {}
@@ -83,727 +35,197 @@ local function newObj(class, name, ...)
 	obj[class][name] = {...}
 end
 
---Создать ярлык для конкретной проги
-local function createShortCut(path, pathToProgram)
-	fs.remove(path)
-	fs.makeDirectory(fs.path(path))
-	local file = io.open(path, "w")
-	file:write("return ", "\"", pathToProgram, "\"")
-	file:close()
+local function clear()
+	obj = {}
+	ecs.blankWindow(x, y, width, height)
 end
 
---ПОЛУЧИТЬ ДАННЫЕ О ФАЙЛЕ ИЗ ЯРЛЫКА
-local function readShortcut(path)
-	local success, filename = pcall(loadfile(path))
-	if success then
-		return filename
-	else
-		error("Ошибка чтения файла ярлыка. Вероятно, он создан криво, либо не существует в папке " .. path)
-	end
-end
+local function drawTablicu(y, users)
+	local width = 40
+	local limit = 7
 
---ОТРИСОВКА ТЕКСТА ПОД ИКОНКОЙ
-local function drawIconText(xIcons, yIcons, path)
+	local x = math.ceil(xCenter - width / 2)
 
-	local text = fs.name(path)
+	local yPos = y
+	ecs.square(x, yPos, width, 1, ecs.colors.blue)
+	ecs.colorText(x + 1, yPos, 0xffffff, "Пользователи ("..#users.." из "..limit..")")
 
-	if not showFileFormat then
-		local fileFormat = ecs.getFileFormat(text)
-		if fileFormat then
-			text = unicode.sub(text, 1, -(unicode.len(fileFormat) + 1))
+	yPos = yPos + 1
+	ecs.square(x, yPos, width, limit * 2 - 1, 0xffffff)
+
+	for i = 1, limit do
+		if users[i] then
+			ecs.colorText(x + 1, yPos, 0x000000, ecs.stringLimit("end", users[i], width - 2))
 		end
-	end
-
-	text = ecs.stringLimit("end", text, widthOfIcon)
-	local textPos = xIcons + math.floor(widthOfIcon / 2 - unicode.len(text) / 2) - 2
-
-	ecs.adaptiveText(textPos, yIcons + heightOfIcon - 1, text, 0xffffff)
-end
-
---ОТРИСОВКА КОНКРЕТНОЙ ОДНОЙ ИКОНКИ
-local function drawIcon(xIcons, yIcons, path)
-	--НАЗНАЧЕНИЕ ВЕРНОЙ ИКОНКИ
-	local icon
-
-	local fileFormat = ecs.getFileFormat(path)
-
-	if fs.isDirectory(path) then
-		if fileFormat == ".app" then
-			icon = path .. "/Resources/Icon.png" 
-			icons[icon] = image.load(icon)
-		else
-			icon = "folder"
+		if i < limit then
+			ecs.colorText(x, yPos + 1, 0xaaaaaa, string.rep("─", width))
 		end
-	else
-		if fileFormat == ".lnk" then
-			local shortcutLink = readShortcut(path)
-			drawIcon(xIcons, yIcons, shortcutLink)
-			ecs.colorTextWithBack(xIcons + widthOfIcon - 6, yIcons + heightOfIcon - 3, 0x000000, 0xffffff, "⤶")
-			drawIconText(xIcons, yIcons, path)
-			return 0
-		elseif fileFormat == ".cfg" or fileFormat == ".config" then
-			icon = "config"
-		elseif fileFormat == ".txt" or fileFormat == ".rtf" then
-			icon = "text"
-		elseif fileFormat == ".lua" then
-		 	icon = "lua"
-		elseif fileFormat == ".png" then
-		 	icon = "image"
-		else
-			icon = "script"
-		end
-	end
 
-	--ОТРИСОВКА ИКОНКИ
-	image.draw(xIcons, yIcons, icons[icon] or icons["script"])
-
-	--ОТРИСОВКА ТЕКСТА
-	drawIconText(xIcons, yIcons, path)
-
-end
-
---НАРИСОВАТЬ ВЫДЕЛЕНИЕ ИКОНКИ
-local function drawIconSelection(x, y, nomer)
-	if obj["DesktopIcons"][nomer][6] == true then
-		ecs.square(x - 2, y, widthOfIcon, heightOfIcon, iconsSelectionColor)
-	elseif obj["DesktopIcons"][nomer][6] == false then
-		ecs.square(x - 2, y, widthOfIcon, heightOfIcon, background)
-	end
-end
-
-local function deselectAll(mode)
-	for key, val in pairs(obj["DesktopIcons"]) do
-		if not mode then
-			if obj["DesktopIcons"][key][6] == true then
-				obj["DesktopIcons"][key][6] = false
-			end
-		else
-			if obj["DesktopIcons"][key][6] == false then
-				obj["DesktopIcons"][key][6] = nil
-			end
-		end
+		yPos = yPos + 2
 	end
 end
 
 ------------------------------------------------------------------------------------------------
 
-local systemFiles = {
-	"bin/",
-	"lib/",
-	"OS.lua",
-	"autorun.lua",
-	"init.lua",
-	"tmp/",
-	"usr/",
-	"mnt/",
-	"etc/",
-	"boot/",
-	--"System/",
-}
+local function stage1()
+	clear()
+	image.draw(math.ceil(xSize / 2 - 15), y + 2, OS_Logo)
 
-local function reorganizeFilesAndFolders(massivSudaPihay, showHiddenFiles, showSystemFiles)
+	local yPos = y + height - 6
+	gpu.setForeground(ecs.windowColors.usualText); gpu.setBackground(ecs.windowColors.background); ecs.centerText("x", yPos, "Добро пожаловать в программу настройки MineOS!")
+	yPos = yPos + 2
 
-	local massiv = {}
+	local name
+	name = "Далее"; newObj("Buttons", name, ecs.drawAdaptiveButton("auto", yPos, offset, 1, name, buttonColor, 0xffffff))
 
-	for i = 1, #massivSudaPihay do
-		if ecs.isFileHidden(massivSudaPihay[i]) and showHiddenFiles then
-			table.insert(massiv, massivSudaPihay[i])
-		end
-	end
-
-	for i = 1, #massivSudaPihay do
-		local cyka = massivSudaPihay[i]
-		if fs.isDirectory(cyka) and not ecs.isFileHidden(cyka) and ecs.getFileFormat(cyka) ~= ".app" then
-			table.insert(massiv, cyka)
-		end
-		cyka = nil
-	end
-
-	for i = 1, #massivSudaPihay do
-		local cyka = massivSudaPihay[i]
-		if (not fs.isDirectory(cyka) and not ecs.isFileHidden(cyka)) or (fs.isDirectory(cyka) and not ecs.isFileHidden(cyka) and ecs.getFileFormat(cyka) == ".app") then
-			table.insert(massiv, cyka)
-		end
-		cyka = nil
-	end
-
-
-	if not showSystemFiles then
-		if workPath == "" or workPath == "/" then
-			--ecs.error("Сработало!")
-			local i = 1
-			while i <= #massiv do
-				for j = 1, #systemFiles do
-					--ecs.error("massiv[i] = " .. massiv[i] .. ", systemFiles[j] = "..systemFiles[j])
-					if massiv[i] == systemFiles[j] then
-						--ecs.error("Удалено! massiv[i] = " .. massiv[i] .. ", systemFiles[j] = "..systemFiles[j])
-						table.remove(massiv, i)
-						i = i - 1
-						break
-					end
-
-				end
-
-				i = i + 1
+	while true do
+		local e = {event.pull()}
+		if e[1] == "touch" then
+			if ecs.clickedAtArea(e[3], e[4], obj["Buttons"][name][1], obj["Buttons"][name][2], obj["Buttons"][name][3], obj["Buttons"][name][4] ) then
+				ecs.drawAdaptiveButton(obj["Buttons"][name][1], obj["Buttons"][name][2], offset, 1, name, buttonPressColor, 0xffffff)
+				os.sleep(0.3)
+				return
 			end
 		end
 	end
-
-	return massiv
 end
 
-------------------------------------------------------------------------------------------------
+local function stage2()
+	clear()
+	local users = {}
+	drawTablicu(y + 2, users)
 
---ОТРИСОВКА ИКОНОК НА РАБОЧЕМ СТОЛЕ ПО ТЕКУЩЕЙ ПАПКЕ
-local function drawDesktop(x, y)
-
-	currentFileList = ecs.getFileList(workPath)
-	currentFileList = reorganizeFilesAndFolders(currentFileList, showHiddenFiles, showSystemFiles)
-
-	--ОЧИСТКА СТОЛА
-	ecs.square(1, y, xSize, yCountOfIcons * (heightOfIcon + ySpaceBetweenIcons) - ySpaceBetweenIcons, background)
-
-	--ОЧИСТКА ОБЪЕКТОВ ИКОНОК
-	obj["DesktopIcons"] = {}
-
-	--ОТРИСОВКА КНОПОЧЕК ПЕРЕМЕЩЕНИЯ
-	countOfDesktops = math.ceil(#currentFileList / totalCountOfIcons)
-	local xButtons, yButtons = math.floor(xSize / 2 - ((countOfDesktops + 1) * 3 - 3) / 2), ySize - heightOfDock - 3
-	ecs.square(1, yButtons, xSize, 1, background)
-	for i = 1, countOfDesktops do
-		local color = 0xffffff
-		if i == 1 then
-			if #workPathHistory == 0 then color = color - 0x444444 end
-			ecs.colorTextWithBack(xButtons, yButtons, 0x262626, color, " <")
-			newObj("DesktopButtons", 0, xButtons, yButtons, xButtons + 1, yButtons)
-			xButtons = xButtons + 3
-		end
-
-		if i == currentDesktop then
-			color = ecs.colors.green
-		else
-			color = 0xffffff
-		end
-
-		ecs.colorTextWithBack(xButtons, yButtons, 0x000000, color, "  ")
-		newObj("DesktopButtons", i, xButtons, yButtons, xButtons + 1, yButtons)
-
-		xButtons = xButtons + 3
-	end
-
-	--ОТРИСОВКА ИКОНОК ПО ФАЙЛ ЛИСТУ
-	local counter = currentDesktop * totalCountOfIcons - totalCountOfIcons + 1
-	local xIcons, yIcons = x, y
-	for i = 1, yCountOfIcons do
-		for j = 1, xCountOfIcons do
-			if not currentFileList[counter] then break end
-
-			--ОТРИСОВКА КОНКРЕТНОЙ ИКОНКИ
-			local path = workPath .. currentFileList[counter]
-			--drawIconSelection(xIcons, yIcons, counter)
-			drawIcon(xIcons, yIcons, path)
-
-			--СОЗДАНИЕ ОБЪЕКТА ИКОНКИ
-			newObj("DesktopIcons", counter, xIcons, yIcons, xIcons + widthOfIcon - 1, yIcons + heightOfIcon - 1, path, nil)
-
-			xIcons = xIcons + widthOfIcon + xSpaceBetweenIcons
-			counter = counter + 1
-		end
-
-		xIcons = x
-		yIcons = yIcons + heightOfIcon + ySpaceBetweenIcons
-	end
-end
-
---ОТРИСОВКА ДОКА
-local function drawDock()
-
-	--Очистка объектов дока
-	obj["DockIcons"] = {}
-
-	--ПОЛУЧИТЬ СПИСОК ЯРЛЫКОВ НА ДОКЕ
-	local dockShortcuts = ecs.getFileList(pathOfDockShortcuts)
-	currentCountOfIconsInDock = #dockShortcuts
-
-	--ПОДСЧИТАТЬ РАЗМЕР ДОКА И ПРОЧЕЕ
-	local widthOfDock = (currentCountOfIconsInDock * (widthOfIcon + xSpaceBetweenIcons) - xSpaceBetweenIcons) + heightOfDock * 2 + 2
-	local xDock, yDock = math.floor(xSize / 2 - widthOfDock / 2) + 1, ySize - heightOfDock
-
-	--Закрасить все фоном
-	ecs.square(1, yDock - 1, xSize, heightOfDock + 2, background)
-
-	--НАРИСОВАТЬ ПОДЛОЖКУ
-	local color = dockColor
-	for i = 1, heightOfDock do
-		ecs.square(xDock + i, ySize - i + 1, widthOfDock - i * 2, 1, color)
-		color = color - 0x181818
-	end
-
-	--НАРИСОВАТЬ ЯРЛЫКИ НА ДОКЕ
-	if currentCountOfIconsInDock > 0 then
-		local xIcons = math.floor(xSize / 2 - ((widthOfIcon + xSpaceBetweenIcons) * currentCountOfIconsInDock - xSpaceBetweenIcons * 4) / 2 )
-		local yIcons = ySize - heightOfDock - 1
-
-		for i = 1, currentCountOfIconsInDock do
-			drawIcon(xIcons, yIcons, pathOfDockShortcuts..dockShortcuts[i])
-			newObj("DockIcons", dockShortcuts[i], xIcons - 2, yIcons, xIcons + widthOfIcon - 1, yIcons + heightOfIcon - 1)
-			xIcons = xIcons + xSpaceBetweenIcons + widthOfIcon
-		end
-	end
-end
-
---РИСОВАТЬ ВРЕМЯ СПРАВА
-local function drawTime()
-	local time = " " .. unicode.sub(os.date("%T"), 1, -4) .. " "
-	local sTime = unicode.len(time)
-	ecs.colorTextWithBack(xSize - sTime, 1, 0x000000, topBarColor, time)
-end
-
---РИСОВАТЬ ВЕСЬ ТОПБАР
-local function drawTopBar()
-
-	--Элементы топбара
-	local topBarElements = { "MineOS", "Вид" }
-
-	--Белая горизонтальная линия
-	ecs.square(1, 1, xSize, 1, topBarColor)
-
-	--Рисуем элементы и создаем объекты
-	local xPos = 2
-	gpu.setForeground(0x000000)
-	for i = 1, #topBarElements do
-
-		if i > 1 then gpu.setForeground(0x666666) end
-
-		local length = unicode.len(topBarElements[i])
-		gpu.set(xPos + 1, 1, topBarElements[i])
-
-		newObj("TopBarButtons", topBarElements[i], xPos, 1, xPos + length + 1, 1)
-
-		xPos = xPos + length + 2
-	end
-
-	--Рисуем время
-	drawTime()
-end
-
---РИСОВАТЬ ВАЩЕ ВСЕ СРАЗУ
-local function drawAll()
-	ecs.clearScreen(background)
-	drawTopBar()
-	drawDock()
-	drawDesktop(xPosOfIcons, yPosOfIcons)
-end
-
---ПЕРЕРИСОВАТЬ ВЫДЕЛЕННЫЕ ИКОНКИ
-local function redrawSelectedIcons()
-
-	for key, value in pairs(obj["DesktopIcons"]) do
-
-		if obj["DesktopIcons"][key][6] ~= nil then
-
-			local path = currentFileList[key]
-			local x = obj["DesktopIcons"][key][1]
-			local y = obj["DesktopIcons"][key][2]
-
-			drawIconSelection(x, y, key)
-			drawIcon(x, y, obj["DesktopIcons"][key][5])
-
-		end
-	end
-end
-
---ВЫБРАТЬ ИКОНКУ И ВЫДЕЛИТЬ ЕЕ
-local function selectIcon(nomer)
-	if keyboard.isControlDown() and not obj["DesktopIcons"][nomer][6] then
-		obj["DesktopIcons"][nomer][6] = true
-		redrawSelectedIcons()
-	elseif keyboard.isControlDown() and obj["DesktopIcons"][nomer][6] then
-		obj["DesktopIcons"][nomer][6] = false
-		redrawSelectedIcons()
-	elseif not keyboard.isControlDown() then
-		deselectAll()
-		obj["DesktopIcons"][nomer][6] = true
-		redrawSelectedIcons()
-		deselectAll(true)
-	end
-end
-
---ЗАПУСТИТЬ ПРОГУ
-local function launchIcon(path, arguments)
-
-	--Запоминаем, какое разрешение было
-	local oldWidth, oldHeight = gpu.getResolution()
-
-	--Создаем нормальные аргументы для Шелла
-	if arguments then arguments = " " .. arguments else arguments = "" end
-
-	--Получаем файл формат заранее
-	local fileFormat = ecs.getFileFormat(path)
-
-	--Если это приложение
-	if fileFormat == ".app" then
-		ecs.prepareToExit()
-		local cyka = path .. "/" .. ecs.hideFileFormat(fs.name(path)) .. ".lua"
-		local success, reason = shell.execute(cyka)
-		ecs.prepareToExit()
-		if not success then ecs.displayCompileMessage(1, reason, true) end
-		
-	--Если это обычный луа файл - т.е. скрипт
-	elseif fileFormat == ".lua" or fileFormat == nil then
-		ecs.prepareToExit()
-		local success, reason = shell.execute(path .. arguments)
-		ecs.prepareToExit()
-		if success then
-			print("Программа выполнена успешно! Нажмите любую клавишу, чтобы продолжить.")
-		else
-			ecs.displayCompileMessage(1, reason, true)
-		end
-
-	--Если это фоточка
-	elseif fileFormat == ".png" then
-		shell.execute("Photoshop.app/Photoshop.lua open "..path)
+	local yPos = y + height - 7
+	gpu.setForeground(ecs.windowColors.usualText); gpu.setBackground(ecs.windowColors.background)
+	ecs.centerText("x", yPos, "Это биометрическая защита компьютера."); yPos = yPos + 1
+	ecs.centerText("x", yPos, "Прикоснитесь к экрану - и система зарегистрирует вас."); yPos = yPos + 1
 	
-	--Если это текст или конфиг или языковой
-	elseif fileFormat == ".txt" or fileFormat == ".cfg" or fileFormat == ".lang" then
-		ecs.prepareToExit()
-		shell.execute("edit "..path)
+	local yPos = yPos + 1
+	local name = "Далее"; newObj("Buttons", name, ecs.drawAdaptiveButton("auto", yPos, offset, 1, name, buttonColor, 0xffffff))
 
-	--Если это ярлык
-	elseif fileFormat == ".lnk" then
-		local shortcutLink = readShortcut(path)
-		if fs.exists(shortcutLink) then
-			launchIcon(shortcutLink)
-		else
-			ecs.error("Ярлык ссылается на несуществующий файл.")
+	while true do
+		local e = {event.pull()}
+		if e[1] == "touch" then
+			if ecs.clickedAtArea(e[3], e[4], obj["Buttons"][name][1], obj["Buttons"][name][2], obj["Buttons"][name][3], obj["Buttons"][name][4] ) then
+				ecs.drawAdaptiveButton(obj["Buttons"][name][1], obj["Buttons"][name][2], offset, 1, name, buttonPressColor, 0xffffff)
+				if #users == 0 then table.insert(users, e[6]) end
+				drawTablicu(y + 2, users)
+				os.sleep(0.3)
+				return users
+			else
+				if #users < 7 then
+					local exists
+					for key, val in pairs(users) do
+						if e[6] == val then exists = true; break end
+					end
+					if not exists then
+						table.insert(users, e[6])
+						drawTablicu(y + 2, users)
+					end
+				end
+			end
 		end
 	end
-
-	--Ставим старое разрешение
-	gpu.setResolution(oldWidth, oldHeight)
 end
 
---Перейти в какую-то папку
-local function changePath(path)
-	table.insert(workPathHistory, workPath)	
-	workPath = path
-	currentDesktop = 1
-	drawDesktop(xPosOfIcons, yPosOfIcons)
+local function drawSampleCode(y, background, foreground)
+	local shirina = width - 10
+	local visota = 14
+	local x = math.floor(xCenter - shirina / 2)
+	ecs.square(x, y, shirina, visota, background)
+	ecs.colorText(x + 1, y + 1, 0xff0000, "/#")
+	ecs.colorText(x + 4, y + 1, foreground, "Hello world!")
 end
 
---Биометрический сканер
-local function biometry()
-	local users
-	local path = "System/OS/Users.cfg"
+local function stage3()
 
-	if fs.exists(path) then
-		users = config.readFile(path)
+	local background, foreground = 0x262626, 0xffffff
 
-		local width = 80
-		local height = 25
+	clear()
 
-		local x, y = math.floor(xSize / 2 - width / 2), math.floor(ySize / 2 - height / 2)
+	while true do
+		drawSampleCode(y + 2, background, foreground)
 
-		local oldPixels = ecs.rememberOldPixels(x, y, x + width + 1, y + height)
+		local yPos = y + height - 7
+		gpu.setForeground(ecs.windowColors.usualText); gpu.setBackground(ecs.windowColors.background)
+		ecs.centerText("x", yPos, "Вы можете выбрать цвет текста и фона консоли."); yPos = yPos + 1
+		ecs.centerText("x", yPos, "Пример кода выше."); yPos = yPos + 1
+		yPos = yPos + 1
 
-		local Finger = image.load("System/OS/Icons/Finger.png")
-
-		local function okno(color, textColor, text)
-			ecs.square(x, y, width, height, color)
-			ecs.windowShadow(x, y, width, height)
-
-			image.draw(math.floor(xSize / 2 - 8), y + 2, Finger)
-
-			gpu.setBackground(color)
-			gpu.setForeground(textColor)
-			ecs.centerText("x", y + height - 5, text)
-		end
-
-		okno(ecs.windowColors.background, ecs.windowColors.usualText, "Прислоните палец для идентификации")
+		obj = {}
+		local xPos = xCenter - 28
+		local name = "Изменить текст"; newObj("Buttons", name, ecs.drawAdaptiveButton(xPos, yPos, offset, 1, name, foreground, 0xffffff - foreground)); xPos = xPos + unicode.len(name) + offset * 3
+		name = "Изменить фон"; newObj("Buttons", name, ecs.drawAdaptiveButton(xPos, yPos, offset, 1, name, background, 0xffffff - background)); xPos = xPos + unicode.len(name) + offset * 3
+		name = "Далее"; newObj("Buttons", name, ecs.drawAdaptiveButton(xPos, yPos, offset, 1, name, buttonColor, 0xffffff)); xPos = xPos + unicode.len(name) + offset * 3
 
 		local exit
 		while true do
 			if exit then break end
-
 			local e = {event.pull()}
 			if e[1] == "touch" then
-				for _, val in pairs(users) do
-					if e[6] == val then
-						okno(0xccffcc, 0xffffff, "Доступ разрешен!")
-						exit = true
-						break
-					end
-				end
-
-				if not exit then
-					okno(0x770000, 0xffffff, "Доступ запрещен!")
-					os.sleep(1)
-					okno(ecs.windowColors.background, ecs.windowColors.usualText, "Прислоните палец для идентификации")
-				end
-			end
-		end
-
-		ecs.drawOldPixels(oldPixels)
-
-		Finger = nil
-		users = nil
-	end
-end
-
-local function launchConfigurator()
-	if not fs.exists("System/OS/Users.cfg") then
-		shell.execute("System/OS/Configurator.lua")
-		return true
-	end
-end
-
-
-------------------------------------------------------------------------------------------------------------------------
-
-drawAll()
-if not launchConfigurator() then biometry() end
-
-------------------------------------------------------------------------------------------------------------------------
-
-while true do
-	local eventData = { event.pull() }
-	if eventData[1] == "touch" then
-
-		--ПРОСЧЕТ КЛИКА НА ИКОНОЧКИ РАБОЧЕГО СТОЛА
-		for key, value in pairs(obj["DesktopIcons"]) do
-			if ecs.clickedAtArea(eventData[3], eventData[4], obj["DesktopIcons"][key][1], obj["DesktopIcons"][key][2], obj["DesktopIcons"][key][3], obj["DesktopIcons"][key][4]) then
-				
-				--ЕСЛИ ЛЕВАЯ КНОПА МЫШИ
-				if (eventData[5] == 0 and not keyboard.isControlDown()) or (eventData[5] == 1 and keyboard.isControlDown()) then
-					
-					--ЕСЛИ НЕ ВЫБРАНА, ТО ВЫБРАТЬ СНАЧАЛА
-					if not obj["DesktopIcons"][key][6] then
-						selectIcon(key)
-					
-					--А ЕСЛИ ВЫБРАНА УЖЕ, ТО ЗАПУСТИТЬ ПРОЖКУ ИЛИ ОТКРЫТЬ ПАПКУ
-					else
-						if fs.isDirectory(obj["DesktopIcons"][key][5]) and ecs.getFileFormat(obj["DesktopIcons"][key][5]) ~= ".app" then
-							changePath(obj["DesktopIcons"][key][5])
+				for name, val in pairs(obj["Buttons"]) do
+					if ecs.clickedAtArea(e[3], e[4], obj["Buttons"][name][1], obj["Buttons"][name][2], obj["Buttons"][name][3], obj["Buttons"][name][4] ) then
+						ecs.drawAdaptiveButton(obj["Buttons"][name][1], obj["Buttons"][name][2], offset, 1, name, buttonPressColor, 0xffffff)
+						os.sleep(0.3)
+						
+						if name == "Изменить текст" then
+							local color = palette.draw("auto", "auto", foreground)
+							if color then foreground = color end
+							exit = true
+							break
+						elseif name == "Изменить фон" then
+							local color = palette.draw("auto", "auto", background)
+							if color then background = color end
+							exit = true
+							break
 						else
-							deselectAll(true)
-							launchIcon(obj["DesktopIcons"][key][5])
-							drawAll()
+							return background, foreground
 						end
 					end
-
-				--ЕСЛИ ПРАВАЯ КНОПА МЫШИ
-				elseif eventData[5] == 1 and not keyboard.isControlDown() then
-					--selectIcon(key)
-					obj["DesktopIcons"][key][6] = true
-					redrawSelectedIcons()
-
-					local action
-					local fileFormat = ecs.getFileFormat(obj["DesktopIcons"][key][5])
-
-					local function getSelectedIcons()
-						local selectedIcons = {}
-						for key, val in pairs(obj["DesktopIcons"]) do
-							if obj["DesktopIcons"][key][6] then
-								table.insert(selectedIcons, { ["id"] = key })
-							end
-						end
-						return selectedIcons
-					end
-
-
-					--РАЗНЫЕ КОНТЕКСТНЫЕ МЕНЮ
-					if #getSelectedIcons() > 1 then
-						action = context.menu(eventData[3], eventData[4], {"Вырезать", false, "^X"}, {"Копировать", false, "^C"}, {"Вставить", not clipboard, "^V"}, "-", {"Добавить в архив", true}, "-", {"Удалить", false, "⌫"})
-					elseif fileFormat == ".app" and fs.isDirectory(obj["DesktopIcons"][key][5]) then
-						action = context.menu(eventData[3], eventData[4], {"Показать содержимое"}, "-", {"Вырезать", false, "^X"}, {"Копировать", false, "^C"}, {"Вставить", not clipboard, "^V"}, "-", {"Переименовать"}, {"Создать ярлык"}, "-", {"Добавить в архив", true}, {"Загузить на Pastebin", true}, "-", {"Добавить в Dock", not (currentCountOfIconsInDock < dockCountOfIcons and workPath ~= "System/OS/Dock/")}, {"Удалить", false, "⌫"})
-					elseif fileFormat ~= ".app" and fs.isDirectory(obj["DesktopIcons"][key][5]) then
-						action = context.menu(eventData[3], eventData[4], {"Вырезать", false, "^X"}, {"Копировать", false, "^C"}, {"Вставить", not clipboard, "^V"}, "-", {"Переименовать"}, {"Создать ярлык"}, "-", {"Добавить в архив", true}, {"Загузить на Pastebin", true}, "-", {"Добавить в Dock", not (currentCountOfIconsInDock < dockCountOfIcons and workPath ~= "System/OS/Dock/")}, {"Удалить", false, "⌫"})
-					else
-						action = context.menu(eventData[3], eventData[4], {"Редактировать"}, "-", {"Вырезать", false, "^X"}, {"Копировать", false, "^C"}, {"Вставить", not clipboard, "^V"}, "-", {"Переименовать"}, {"Создать ярлык"}, "-", {"Добавить в архив", true}, {"Загузить на Pastebin", true}, "-", {"Добавить в Dock", not (currentCountOfIconsInDock < dockCountOfIcons and workPath ~= "System/OS/Dock/")}, {"Удалить", false, "⌫"})
-					end
-
-					--ecs.error(#getSelectedIcons())
-					deselectAll()
-					--ecs.error(#getSelectedIcons())
-
-					--ecs.error("workPath = "..workPath..", obj = "..obj["DesktopIcons"][key][5])
-
-					if action == "Показать содержимое" then
-						changePath(obj["DesktopIcons"][key][5])
-					elseif action == "Редактировать" then
-						ecs.prepareToExit()
-						shell.execute("edit "..obj["DesktopIcons"][key][5])
-						drawAll()
-					elseif action == "Удалить" then
-						fs.remove(obj["DesktopIcons"][key][5])
-						drawDesktop(xPosOfIcons, yPosOfIcons)
-						drawDock()
-					elseif action == "Копировать" then
-						clipboard = obj["DesktopIcons"][key][5]
-					elseif action == "Вставить" then
-						if fs.exists(clipboard) then
-							ecs.copy(clipboard, workPath)
-							drawDesktop(xPosOfIcons, yPosOfIcons)
-							drawDock()
-						else
-							ecs.error("Файл из буфера обмена более не существует.")
-						end
-					elseif action == "Переименовать" then
-						local success = ecs.rename(obj["DesktopIcons"][key][5])
-						success = true
-						if success then drawDesktop(xPosOfIcons, yPosOfIcons) end
-						drawDesktop(xPosOfIcons, yPosOfIcons)
-					elseif action == "Создать ярлык" then
-						createShortCut(workPath .. ecs.hideFileFormat(obj["DesktopIcons"][key][5]) .. ".lnk", obj["DesktopIcons"][key][5])
-						drawDesktop(xPosOfIcons, yPosOfIcons)
-					elseif action == "Добавить в Dock" then
-						createShortCut("System/OS/Dock/" .. ecs.hideFileFormat(obj["DesktopIcons"][key][5]) .. ".lnk", obj["DesktopIcons"][key][5])
-						drawDock()
-					else
-						redrawSelectedIcons()
-						deselectAll(true)
-					end
-					
-				end
-				
-				break
-			end	
-		end
-
-		--ПРОСЧЕТ КЛИКА НА КНОПОЧКИ ПЕРЕКЛЮЧЕНИЯ РАБОЧИХ СТОЛОВ
-		for key, value in pairs(obj["DesktopButtons"]) do
-			if ecs.clickedAtArea(eventData[3], eventData[4], obj["DesktopButtons"][key][1], obj["DesktopButtons"][key][2], obj["DesktopButtons"][key][3], obj["DesktopButtons"][key][4]) then
-				if key == 0 then 
-					if #workPathHistory > 0 then
-						ecs.colorTextWithBack(obj["DesktopButtons"][key][1], obj["DesktopButtons"][key][2], 0xffffff, ecs.colors.green, " <")
-						os.sleep(0.2)
-						workPath = workPathHistory[#workPathHistory]
-						workPathHistory[#workPathHistory] = nil
-						currentDesktop = 1
-
-						drawDesktop(xPosOfIcons, yPosOfIcons)
-					end
-				else
-					currentDesktop = key
-					drawDesktop(xPosOfIcons, yPosOfIcons)
 				end
 			end
 		end
-
-		--Клик на Доковские иконки
-		for key, value in pairs(obj["DockIcons"]) do
-			if ecs.clickedAtArea(eventData[3], eventData[4], obj["DockIcons"][key][1], obj["DockIcons"][key][2], obj["DockIcons"][key][3], obj["DockIcons"][key][4]) then
-				ecs.square(obj["DockIcons"][key][1], obj["DockIcons"][key][2], widthOfIcon, heightOfIcon, iconsSelectionColor)
-				drawIcon(obj["DockIcons"][key][1] + 2, obj["DockIcons"][key][2], pathOfDockShortcuts..key)
-				
-				if eventData[5] == 0 then 
-					os.sleep(0.2)
-					launchIcon(pathOfDockShortcuts..key)
-					drawAll()
-				else
-					local content = readShortcut(pathOfDockShortcuts..key)
-					
-					action = context.menu(eventData[3], eventData[4], {"Открыть папку Dock"}, {"Открыть содержащую папку", (fs.path(workPath) == fs.path(content))}, "-", {"Удалить из Dock", not (currentCountOfIconsInDock > 1)})
-
-					if action == "Открыть содержащую папку" then
-						drawDock()	
-						if content then
-							changePath(fs.path(content))
-						end
-					elseif action == "Удалить из Dock" then
-						fs.remove(pathOfDockShortcuts..key)
-						drawDock()
-					elseif action == "Открыть папку Dock" then
-						drawDock()
-						changePath(pathOfDockShortcuts)
-					else
-						drawDock()
-					end
-
-					break
-
-				end
-			end
-		end
-
-		--Обработка верхних кнопок - ну, вид там, и проч
-		for key, val in pairs(obj["TopBarButtons"]) do
-			if ecs.clickedAtArea(eventData[3], eventData[4], obj["TopBarButtons"][key][1], obj["TopBarButtons"][key][2], obj["TopBarButtons"][key][3], obj["TopBarButtons"][key][4]) then
-				ecs.colorTextWithBack(obj["TopBarButtons"][key][1], obj["TopBarButtons"][key][2], 0xffffff, ecs.colors.blue, " "..key.." ")
-
-				if key == "Вид" then
-
-					local action = context.menu(obj["TopBarButtons"][key][1], obj["TopBarButtons"][key][2] + 1, {(function() if showHiddenFiles then return "Скрывать скрытые файлы" else return "Показывать скрытые файлы" end end)()}, {(function() if showSystemFiles then return "Скрывать системные файлы" else return "Показывать системные файлы" end end)()}, "-", {(function() if showFileFormat then return "Скрывать формат файлов" else return "Показывать формат файлов" end end)()})
-					
-					if action == "Скрывать скрытые файлы" then
-						showHiddenFiles = false
-					elseif action == "Показывать скрытые файлы" then
-						showHiddenFiles = true
-					elseif action == "Показывать системные файлы" then
-						showSystemFiles = true
-					elseif action == "Скрывать системные файлы" then
-						showSystemFiles = false
-					elseif action == "Показывать формат файлов" then
-						showFileFormat = true
-					elseif action == "Скрывать формат файлов" then
-						showFileFormat = false
-					end
-
-					drawTopBar()
-					drawDesktop(xPosOfIcons, yPosOfIcons)
-
-				elseif key == "MineOS" then
-					local action = context.menu(obj["TopBarButtons"][key][1], obj["TopBarButtons"][key][2] + 1, {"О системе"}, {"Обновления"}, "-", {"Перезагрузить"}, {"Выключить"}, "-", {"Вернуться в Shell"})
-				
-					if action == "Вернуться в Shell" then
-						ecs.prepareToExit()
-						return 0
-					elseif action == "Выключить" then
-						shell.execute("shutdown")
-					elseif action == "Перезагрузить" then
-						shell.execute("reboot")
-					elseif action == "Обновления" then
-						shell.execute("pastebin run 0nm5b1ju")
-						ecs.prepareToExit()
-						return 0
-					elseif action == "О системе" then
-						ecs.prepareToExit()
-						print(copyright)
-						print("	А теперь жмякай любую кнопку и продолжай работу с ОС.")
-						ecs.waitForTouchOrClick()
-						drawAll()
-					end
-				end
-
-				drawTopBar()
-
-			end
-		end
-
-	--ПРОКРУТКА РАБОЧИХ СТОЛОВ
-	elseif eventData[1] == "scroll" then
-		if eventData[5] == -1 then
-			if currentDesktop > 1 then currentDesktop = currentDesktop - 1; drawDesktop(xPosOfIcons, yPosOfIcons) end
-		else
-			if currentDesktop < countOfDesktops then currentDesktop = currentDesktop + 1; drawDesktop(xPosOfIcons, yPosOfIcons) end
-		end
-
-	elseif eventData[1] == "key_down" then
-
 	end
 end
 
+local function stage5()
+	clear()
+	image.draw(xCenter - 17, y + 2, Love)
 
+	local yPos = y + height - 6
+	--gpu.setForeground(ecs.windowColors.usualText); gpu.setBackground(ecs.windowColors.background); ecs.centerText("x", yPos, "Все готово!")
+	yPos = yPos + 2
 
+	local name
+	name = "Начать использование OC"; newObj("Buttons", name, ecs.drawAdaptiveButton("auto", yPos, offset, 1, name, buttonColor, 0xffffff))
 
+	while true do
+		local e = {event.pull()}
+		if e[1] == "touch" then
+			if ecs.clickedAtArea(e[3], e[4], obj["Buttons"][name][1], obj["Buttons"][name][2], obj["Buttons"][name][3], obj["Buttons"][name][4] ) then
+				ecs.drawAdaptiveButton(obj["Buttons"][name][1], obj["Buttons"][name][2], offset, 1, name, buttonPressColor, 0xffffff)
+				os.sleep(0.3)
+				return
+			end
+		end
+	end
+end
 
+------------------------------------------------------------------------------------------------
 
+--Рисуем стадии
+stage1()
+local users = stage2()
+local background, foreground = stage3()
+stage5()
 
+--Сохраняем юзверей в файл
+config.append("System/OS/Users.cfg", table.unpack(users))
 
+--Сохраняем цвета в конфиг ОС
+config.append("System/OS/OS.cfg", background, foreground)
 
-
-
-
-
+--Рисуем старые пиксели
+ecs.drawOldPixels(oldPixels)
 
 
