@@ -505,19 +505,21 @@ local function biometry()
 		local x, y = math.floor(xSize / 2 - width / 2), math.floor(ySize / 2 - height / 2)
 
 		local Finger = image.load("System/OS/Icons/Finger.png")
+		local OK = image.load("System/OS/Installer/OK.png")
+		local OC
 
-		local function okno(color, textColor, text)
+		local function okno(color, textColor, text, images)
 			ecs.square(x, y, width, height, color)
 			ecs.windowShadow(x, y, width, height)
 
-			image.draw(math.floor(xSize / 2 - 12), y + 2, Finger)
+			image.draw(math.floor(xSize / 2 - 15), y + 2, images)
 
 			gpu.setBackground(color)
 			gpu.setForeground(textColor)
 			ecs.centerText("x", y + height - 5, text)
 		end
 
-		okno(ecs.windowColors.background, ecs.windowColors.usualText, "Прислоните палец для идентификации")
+		okno(ecs.windowColors.background, ecs.windowColors.usualText, "Прислоните палец для идентификации", Finger)
 
 		local exit
 		while true do
@@ -527,16 +529,17 @@ local function biometry()
 			if e[1] == "touch" then
 				for _, val in pairs(users) do
 					if e[6] == val then
-						--okno(0xccffcc, 0xffffff, "Доступ разрешен!")
+						okno(ecs.windowColors.background, ecs.windowColors.usualText, "С возвращением, "..e[6], OK)
+						os.sleep(1.5)
 						exit = true
 						break
 					end
 				end
 
 				if not exit then
-					okno(0xaa0000, 0xffffff, "Доступ запрещен!")
-					os.sleep(1)
-					okno(ecs.windowColors.background, ecs.windowColors.usualText, "Прислоните палец для идентификации")
+					okno(0xaa0000, 0xffffff, "Доступ запрещен!", Finger)
+					os.sleep(1.5)
+					okno(ecs.windowColors.background, ecs.windowColors.usualText, "Прислоните палец для идентификации", Finger)
 				end
 			end
 		end
@@ -549,6 +552,7 @@ end
 --Запустить конфигуратор ОС, если еще не запускался
 local function launchConfigurator(force)
 	if not fs.exists("System/OS/Users.cfg") or force then
+		drawAll()
 		shell.execute("System/OS/Configurator.lua")
 		return true
 	end
@@ -556,17 +560,17 @@ end
 
 --Аккуратно запускаем биометрию - а то мало ли ctrl alt c
 local function safeBiometry()
+	ecs.prepareToExit()
 	while true do
 		local s, r = pcall(biometry)
-		if not s then ecs.error("Умный что  ли?") else break end
+		if not s then ecs.error("Умный что ли?") else break end
 	end
 end
 
 
 ------------------------------------------------------------------------------------------------------------------------
 
-ecs.clearScreen()
-if not launchConfigurator(true) then safeBiometry(); drawAll() end
+if not launchConfigurator(false) then safeBiometry(); drawAll() end
 
 ------------------------------------------------------------------------------------------------------------------------
 
