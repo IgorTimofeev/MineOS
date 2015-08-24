@@ -17,7 +17,7 @@ local width, height = 80, 25
 local x, y = math.floor(xSize /2 - width / 2), math.floor(ySize / 2 - height / 2)
 local xCenter, yCenter = math.floor(xSize / 2), math.floor(ySize / 2)
 
-local oldPixels = ecs.rememberOldPixels(x, y, x + width + 1, y + height)
+--local oldPixels = ecs.rememberOldPixels(x, y, x + width + 1, y + height)
 
 local OS_Logo = image.load("System/OS/Installer/OS_Logo.png")
 local Love = image.load("System/OS/Icons/Love.png")
