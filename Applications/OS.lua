@@ -22,7 +22,7 @@ local context = require("context")
 local computer = require("computer")
 local keyboard = require("keyboard")
 local image = require("image")
-local fonfig = require("config")
+local config = require("config")
 
 local gpu = component.gpu
 
