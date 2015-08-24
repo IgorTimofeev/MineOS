@@ -945,10 +945,22 @@ while true do
 							consoleText = "Файл сохранен как "..currentFile
 							console(7, ySize)
 						elseif action == "Открыть" then
-							local fileName = "icon.png"
-							open(fileName)
-							consoleText = "Открыт файл "..fileName
-							console(7, ySize)
+							local data = ecs.input("auto", "auto", 20, "Сохранить как", {"input", "Путь", ""})
+							if data[1] ~= "" and data[1] ~= " " then
+								if fs.exists(data[1]) then
+									if ecs.getFileFormat(data[1]) == ".png" then
+										open(data[1])
+										consoleText = "Открыт файл "..fileName
+										console(7, ySize)
+									else
+										ecs.error("Формат файла не распознан.")
+									end
+								else
+									ecs.error("Файл "..data[1].." не существует.")
+								end
+							else
+								ecs.error("Что за хуйню ты ввел?")
+							end						
 						elseif action == "Сохранить" then
 							save(currentFile)
 							consoleText = "Файл перезаписан как "..currentFile
