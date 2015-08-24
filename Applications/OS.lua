@@ -49,6 +49,8 @@ icons["image"] = image.load("System/OS/Icons/Image.png")
 local dockColor = 0xcccccc
 local heightOfDock = 4
 local background = 0x262626
+local currentCountOfIconsInDock = 4
+local pathOfDockShortcuts = "System/OS/Dock/"
 
 --ПЕРЕМЕННЫЕ, КАСАЮЩИЕСЯ ИКОНОК
 local widthOfIcon = 12
@@ -63,11 +65,12 @@ local iconsSelectionColor = ecs.colors.lightBlue
 local yPosOfIcons = 3
 local xPosOfIcons = math.floor(xSize / 2 - (xCountOfIcons * (widthOfIcon + xSpaceBetweenIcons) - xSpaceBetweenIcons*4) / 2)
 
+local dockCountOfIcons = xCountOfIcons - 1
 
 --ПЕРЕМЕННЫЕ ДЛЯ ТОП БАРА
 local topBarColor = 0xdddddd
 local showHiddenFiles = false
-local showSystemFiles = true
+local showSystemFiles = false
 local showFileFormat = false
 
 ------------------------------------------------------------------------------------------------------------------------
@@ -314,16 +317,19 @@ end
 --ОТРИСОВКА ДОКА
 local function drawDock()
 
-	--ПУСТЬ К ЯРЛЫКАМ НА ДОКЕ
-	local pathOfDockShortcuts = "System/OS/Dock"
+	--Очистка объектов дока
+	obj["DockIcons"] = {}
 
 	--ПОЛУЧИТЬ СПИСОК ЯРЛЫКОВ НА ДОКЕ
 	local dockShortcuts = ecs.getFileList(pathOfDockShortcuts)
-	local sDockShortcuts = #dockShortcuts
+	currentCountOfIconsInDock = #dockShortcuts
 
 	--ПОДСЧИТАТЬ РАЗМЕР ДОКА И ПРОЧЕЕ
-	local widthOfDock = (sDockShortcuts * (widthOfIcon + xSpaceBetweenIcons) - xSpaceBetweenIcons) + heightOfDock * 2 + 2
+	local widthOfDock = (currentCountOfIconsInDock * (widthOfIcon + xSpaceBetweenIcons) - xSpaceBetweenIcons) + heightOfDock * 2 + 2
 	local xDock, yDock = math.floor(xSize / 2 - widthOfDock / 2) + 1, ySize - heightOfDock
+
+	--Закрасить все фоном
+	ecs.square(1, yDock - 1, xSize, heightOfDock + 2, background)
 
 	--НАРИСОВАТЬ ПОДЛОЖКУ
 	local color = dockColor
@@ -333,12 +339,13 @@ local function drawDock()
 	end
 
 	--НАРИСОВАТЬ ЯРЛЫКИ НА ДОКЕ
-	if sDockShortcuts > 0 then
-		local xIcons = math.floor(xSize / 2 - ((widthOfIcon + xSpaceBetweenIcons) * sDockShortcuts - xSpaceBetweenIcons * 4) / 2 )
+	if currentCountOfIconsInDock > 0 then
+		local xIcons = math.floor(xSize / 2 - ((widthOfIcon + xSpaceBetweenIcons) * currentCountOfIconsInDock - xSpaceBetweenIcons * 4) / 2 )
 		local yIcons = ySize - heightOfDock - 1
 
-		for i = 1, sDockShortcuts do
-			drawIcon(xIcons, yIcons, pathOfDockShortcuts.."/"..dockShortcuts[i])
+		for i = 1, currentCountOfIconsInDock do
+			drawIcon(xIcons, yIcons, pathOfDockShortcuts..dockShortcuts[i])
+			newObj("DockIcons", dockShortcuts[i], xIcons - 2, yIcons, xIcons + widthOfIcon - 1, yIcons + heightOfIcon - 1)
 			xIcons = xIcons + xSpaceBetweenIcons + widthOfIcon
 		end
 	end
@@ -424,6 +431,9 @@ end
 --ЗАПУСТИТЬ ПРОГУ
 local function launchIcon(path, arguments)
 
+	--Запоминаем, какое разрешение было
+	local oldWidth, oldHeight = gpu.getResolution()
+
 	--Создаем нормальные аргументы для Шелла
 	if arguments then arguments = " " .. arguments else arguments = "" end
 
@@ -449,10 +459,16 @@ local function launchIcon(path, arguments)
 			ecs.displayCompileMessage(1, reason, true)
 		end
 
+	--Если это фоточка
 	elseif fileFormat == ".png" then
 		shell.execute("Photoshop.app/Photoshop.lua open "..path)
+	
+	--Если это текст или конфиг или языковой
 	elseif fileFormat == ".txt" or fileFormat == ".cfg" or fileFormat == ".lang" then
+		ecs.prepareToExit()
 		shell.execute("edit "..path)
+
+	--Если это ярлык
 	elseif fileFormat == ".lnk" then
 		local shortcutLink = readShortcut(path)
 		if fs.exists(shortcutLink) then
@@ -461,6 +477,17 @@ local function launchIcon(path, arguments)
 			ecs.error("Ярлык ссылается на несуществующий файл.")
 		end
 	end
+
+	--Ставим старое разрешение
+	gpu.setResolution(oldWidth, oldHeight)
+end
+
+--Перейти в какую-то папку
+local function changePath(path)
+	table.insert(workPathHistory, workPath)	
+	workPath = path
+	currentDesktop = 1
+	drawDesktop(xPosOfIcons, yPosOfIcons)
 end
 
 
@@ -488,9 +515,7 @@ while true do
 					--А ЕСЛИ ВЫБРАНА УЖЕ, ТО ЗАПУСТИТЬ ПРОЖКУ ИЛИ ОТКРЫТЬ ПАПКУ
 					else
 						if fs.isDirectory(obj["DesktopIcons"][key][5]) and ecs.getFileFormat(obj["DesktopIcons"][key][5]) ~= ".app" then
-							table.insert(workPathHistory, workPath)							
-							workPath = obj["DesktopIcons"][key][5]
-							drawDesktop(xPosOfIcons, yPosOfIcons)
+							changePath(obj["DesktopIcons"][key][5])
 						else
 							deselectAll(true)
 							launchIcon(obj["DesktopIcons"][key][5])
@@ -520,42 +545,52 @@ while true do
 
 					--РАЗНЫЕ КОНТЕКСТНЫЕ МЕНЮ
 					if #getSelectedIcons() > 1 then
-						action = context.menu(eventData[3], eventData[4], {"Вырезать", false, "^X"}, {"Копировать", false, "^C"}, {"Вставить", not clipboard, "^V"}, "-", {"Добавить в архив"}, "-", {"Удалить", false, "⌫"})
+						action = context.menu(eventData[3], eventData[4], {"Вырезать", false, "^X"}, {"Копировать", false, "^C"}, {"Вставить", not clipboard, "^V"}, "-", {"Добавить в архив", true}, "-", {"Удалить", false, "⌫"})
 					elseif fileFormat == ".app" and fs.isDirectory(obj["DesktopIcons"][key][5]) then
-						action = context.menu(eventData[3], eventData[4], {"Показать содержимое"}, "-", {"Вырезать", false, "^X"}, {"Копировать", false, "^C"}, {"Вставить", not clipboard, "^V"}, "-", {"Переименовать"}, {"Создать ярлык"}, {"Добавить в архив"}, "-", {"Удалить", false, "⌫"})
+						action = context.menu(eventData[3], eventData[4], {"Показать содержимое"}, "-", {"Вырезать", false, "^X"}, {"Копировать", false, "^C"}, {"Вставить", not clipboard, "^V"}, "-", {"Переименовать"}, {"Создать ярлык"}, "-", {"Добавить в архив", true}, {"Загузить на Pastebin", true}, "-", {"Добавить в Dock", not (currentCountOfIconsInDock < dockCountOfIcons and workPath ~= "System/OS/Dock/")}, {"Удалить", false, "⌫"})
 					elseif fileFormat ~= ".app" and fs.isDirectory(obj["DesktopIcons"][key][5]) then
-						action = context.menu(eventData[3], eventData[4], {"Вырезать", false, "^X"}, {"Копировать", false, "^C"}, {"Вставить", not clipboard, "^V"}, "-", {"Переименовать"}, {"Создать ярлык"}, {"Добавить в архив"}, "-", {"Удалить", false, "⌫"})
+						action = context.menu(eventData[3], eventData[4], {"Вырезать", false, "^X"}, {"Копировать", false, "^C"}, {"Вставить", not clipboard, "^V"}, "-", {"Переименовать"}, {"Создать ярлык"}, "-", {"Добавить в архив", true}, {"Загузить на Pastebin", true}, "-", {"Добавить в Dock", not (currentCountOfIconsInDock < dockCountOfIcons and workPath ~= "System/OS/Dock/")}, {"Удалить", false, "⌫"})
 					else
-						action = context.menu(eventData[3], eventData[4], {"Редактировать"}, "-", {"Вырезать", false, "^X"}, {"Копировать", false, "^C"}, {"Вставить", not clipboard, "^V"}, "-", {"Переименовать"}, {"Создать ярлык"}, {"Добавить в архив"}, "-", {"Удалить", false, "⌫"})
+						action = context.menu(eventData[3], eventData[4], {"Редактировать"}, "-", {"Вырезать", false, "^X"}, {"Копировать", false, "^C"}, {"Вставить", not clipboard, "^V"}, "-", {"Переименовать"}, {"Создать ярлык"}, "-", {"Добавить в архив", true}, {"Загузить на Pastebin", true}, "-", {"Добавить в Dock", not (currentCountOfIconsInDock < dockCountOfIcons and workPath ~= "System/OS/Dock/")}, {"Удалить", false, "⌫"})
 					end
 
 					--ecs.error(#getSelectedIcons())
 					deselectAll()
 					--ecs.error(#getSelectedIcons())
 
+					--ecs.error("workPath = "..workPath..", obj = "..obj["DesktopIcons"][key][5])
+
 					if action == "Показать содержимое" then
-						table.insert(workPathHistory, workPath)	
-						workPath = obj["DesktopIcons"][key][5]
-						drawDesktop(xPosOfIcons, yPosOfIcons)
+						changePath(obj["DesktopIcons"][key][5])
 					elseif action == "Редактировать" then
 						ecs.prepareToExit()
 						shell.execute("edit "..obj["DesktopIcons"][key][5])
 						drawAll()
 					elseif action == "Удалить" then
-						fs.remove(workPath .. obj["DesktopIcons"][key][5])
+						fs.remove(obj["DesktopIcons"][key][5])
 						drawDesktop(xPosOfIcons, yPosOfIcons)
+						drawDock()
 					elseif action == "Копировать" then
-						clipboard = workPath .. obj["DesktopIcons"][key][5]
+						clipboard = obj["DesktopIcons"][key][5]
 					elseif action == "Вставить" then
-						ecs.copy(clipboard, workPath)
-						drawDesktop(xPosOfIcons, yPosOfIcons)
+						if fs.exists(clipboard) then
+							ecs.copy(clipboard, workPath)
+							drawDesktop(xPosOfIcons, yPosOfIcons)
+							drawDock()
+						else
+							ecs.error("Файл из буфера обмена более не существует.")
+						end
 					elseif action == "Переименовать" then
-						local success = ecs.rename(workPath .. obj["DesktopIcons"][key][5])
+						local success = ecs.rename(obj["DesktopIcons"][key][5])
+						success = true
 						if success then drawDesktop(xPosOfIcons, yPosOfIcons) end
 						drawDesktop(xPosOfIcons, yPosOfIcons)
 					elseif action == "Создать ярлык" then
-						createShortCut(workPath .. ecs.hideFileFormat(obj["DesktopIcons"][key][5]) .. ".lnk", workPath .. obj["DesktopIcons"][key][5])
+						createShortCut(workPath .. ecs.hideFileFormat(obj["DesktopIcons"][key][5]) .. ".lnk", obj["DesktopIcons"][key][5])
 						drawDesktop(xPosOfIcons, yPosOfIcons)
+					elseif action == "Добавить в Dock" then
+						createShortCut("System/OS/Dock/" .. ecs.hideFileFormat(obj["DesktopIcons"][key][5]) .. ".lnk", obj["DesktopIcons"][key][5])
+						drawDock()
 					else
 						redrawSelectedIcons()
 						deselectAll(true)
@@ -587,6 +622,43 @@ while true do
 			end
 		end
 
+		--Клик на Доковские иконки
+		for key, value in pairs(obj["DockIcons"]) do
+			if ecs.clickedAtArea(eventData[3], eventData[4], obj["DockIcons"][key][1], obj["DockIcons"][key][2], obj["DockIcons"][key][3], obj["DockIcons"][key][4]) then
+				ecs.square(obj["DockIcons"][key][1], obj["DockIcons"][key][2], widthOfIcon, heightOfIcon, iconsSelectionColor)
+				drawIcon(obj["DockIcons"][key][1] + 2, obj["DockIcons"][key][2], pathOfDockShortcuts..key)
+				
+				if eventData[5] == 0 then 
+					os.sleep(0.2)
+					launchIcon(pathOfDockShortcuts..key)
+					drawAll()
+				else
+					local content = readShortcut(pathOfDockShortcuts..key)
+					
+					action = context.menu(eventData[3], eventData[4], {"Открыть папку Dock"}, {"Открыть содержащую папку", (fs.path(workPath) == fs.path(content))}, "-", {"Удалить из Dock", not (currentCountOfIconsInDock > 1)})
+
+					if action == "Открыть содержащую папку" then
+						drawDock()	
+						if content then
+							changePath(fs.path(content))
+						end
+					elseif action == "Удалить из Dock" then
+						fs.remove(pathOfDockShortcuts..key)
+						drawDock()
+					elseif action == "Открыть папку Dock" then
+						drawDock()
+						changePath(pathOfDockShortcuts)
+					else
+						drawDock()
+					end
+
+					break
+
+				end
+			end
+		end
+
+		--Обработка верхних кнопок - ну, вид там, и проч
 		for key, val in pairs(obj["TopBarButtons"]) do
 			if ecs.clickedAtArea(eventData[3], eventData[4], obj["TopBarButtons"][key][1], obj["TopBarButtons"][key][2], obj["TopBarButtons"][key][3], obj["TopBarButtons"][key][4]) then
 				ecs.colorTextWithBack(obj["TopBarButtons"][key][1], obj["TopBarButtons"][key][2], 0xffffff, ecs.colors.blue, " "..key.." ")
