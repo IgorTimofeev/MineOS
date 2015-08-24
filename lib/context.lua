@@ -51,13 +51,8 @@ function context.menu(x, y, ...)
 	ecs.windowShadow(x, y, width, height)
 	gpu.setBackground(0xffffff)
 
-
-	--Рисуем все элементы
-	local counter = 0
-	local yPos
-
 	--Нарисовать конкретный элемент
-	local function drawElement(i, background, foreground)
+	local function drawElement(i, background, foreground, yPos)
 
 		if background then ecs.square(x, yPos, width, 1, background) end
 
@@ -80,11 +75,13 @@ function context.menu(x, y, ...)
 		end
 	end
 
-	--Вообще все
+	--Рисуем все элементы
+	local counter = 0
+	local yPos
 	for i = 1, sData do
 		yPos = y + counter
 
-		drawElement(i)
+		drawElement(i, nil, nil, yPos)
 
 		counter = counter + 1
 	end
@@ -94,9 +91,10 @@ function context.menu(x, y, ...)
 	local e = {event.pull("touch")}
 	for key, val in pairs(obj["Elements"]) do
 		if ecs.clickedAtArea(e[3], e[4], obj["Elements"][key][1], obj["Elements"][key][2], obj["Elements"][key][3], obj["Elements"][key][4]) then
-			yPos = e[4]
-			counter = 0
-			drawElement(key, ecs.colors.blue, 0xffffff)
+			
+			--ecs.error("Кол-во объектов: "..#obj["Elements"])
+
+			drawElement(key, ecs.colors.blue, 0xffffff, e[4])
 			os.sleep(0.3)
 			action = data[key][1]
 			break
@@ -120,6 +118,9 @@ end
 -- 	ecs.prepareToExit()
 -- 	print("Ты выбрал = "..tostring(action))
 -- end
+
+--local action = context.menu(6, 2, {(function() if showHiddenFiles then return "Скрывать скрытые файлы" else return "Показывать скрытые файлы" end end)()}, {(function() if showSystemFiles then return "Скрывать системные файлы" else return "Показывать системные файлы" end end)()}, "-", {(function() if showFileFormat then return "Скрывать формат файлов" else return "Показывать формат файлов" end end)()})
+
 
 return context
 
