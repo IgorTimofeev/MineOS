@@ -8,7 +8,7 @@ local copyright = [[
 	 
 	Просто помни, сука, что эту ОСь накодил Тимофеев Игорь,
 	ссылка на ВК: vk.com/id7799889
-	
+
 ]]
 
 local component = require("component")
@@ -77,6 +77,15 @@ local obj = {}
 local function newObj(class, name, ...)
 	obj[class] = obj[class] or {}
 	obj[class][name] = {...}
+end
+
+--Создать ярлык для конкретной проги
+local function createShortCut(path, pathToProgram)
+	fs.remove(path)
+	fs.makeDirectory(fs.path(path))
+	local file = io.open(path, "w")
+	file:write("return ", "\"", pathToProgram, "\"")
+	file:close()
 end
 
 --ПОЛУЧИТЬ ДАННЫЕ О ФАЙЛЕ ИЗ ЯРЛЫКА
@@ -533,12 +542,19 @@ while true do
 						shell.execute("edit "..obj["DesktopIcons"][key][5])
 						drawAll()
 					elseif action == "Удалить" then
-						fs.remove(workPath .. "/" .. obj["DesktopIcons"][key][5])
+						fs.remove(workPath .. obj["DesktopIcons"][key][5])
 						drawDesktop(xPosOfIcons, yPosOfIcons)
 					elseif action == "Копировать" then
-						clipboard = workPath .. "/" .. obj["DesktopIcons"][key][5]
+						clipboard = workPath .. obj["DesktopIcons"][key][5]
 					elseif action == "Вставить" then
 						ecs.copy(clipboard, workPath)
+						drawDesktop(xPosOfIcons, yPosOfIcons)
+					elseif action == "Переименовать" then
+						local success = ecs.rename(workPath .. obj["DesktopIcons"][key][5])
+						if success then drawDesktop(xPosOfIcons, yPosOfIcons) end
+						drawDesktop(xPosOfIcons, yPosOfIcons)
+					elseif action == "Создать ярлык" then
+						createShortCut(workPath .. ecs.hideFileFormat(obj["DesktopIcons"][key][5]) .. ".lnk", workPath .. obj["DesktopIcons"][key][5])
 						drawDesktop(xPosOfIcons, yPosOfIcons)
 					else
 						redrawSelectedIcons()
@@ -613,6 +629,7 @@ while true do
 					elseif action == "О системе" then
 						ecs.prepareToExit()
 						print(copyright)
+						print("	А теперь жмякай любую кнопку и продолжай работу с ОС.")
 						ecs.waitForTouchOrClick()
 						drawAll()
 					end
