@@ -549,8 +549,7 @@ local function biometry()
 end
 
 local function launchConfigurator()
-	local path = "System/OS/Users.cfg"
-	if not fs.exists(path) then
+	if not fs.exists("System/OS/Users.cfg") then
 		shell.execute("System/OS/Configurator.lua")
 		return true
 	end
