@@ -18,6 +18,7 @@ local xCenter, yCenter = math.floor(xSize / 2), math.floor(ySize / 2)
 local oldPixels = ecs.rememberOldPixels(x, y, x + width + 1, y + height)
 
 local OS_Logo = image.load("System/OS/Installer/OS_Logo.png")
+local Love = image.load("System/OS/Icons/Love.png")
 
 local offset = 3
 
@@ -80,12 +81,6 @@ local function stage1()
 		local e = {event.pull()}
 		if e[1] == "touch" then
 			if ecs.clickedAtArea(e[3], e[4], obj["Buttons"][name][1], obj["Buttons"][name][2], obj["Buttons"][name][3], obj["Buttons"][name][4] ) then
-				ecs.drawAdaptiveButton(obj["Buttons"][name][1], obj["Buttons"][name][2], offset, 1, name, buttonPressColor, 0xffffff)
-				os.sleep(0.3)
-				return
-			end
-		elseif e[1] == "key_down" then
-			if e[4] == 28 then
 				ecs.drawAdaptiveButton(obj["Buttons"][name][1], obj["Buttons"][name][2], offset, 1, name, buttonPressColor, 0xffffff)
 				os.sleep(0.3)
 				return
@@ -192,10 +187,45 @@ local function stage3()
 	end
 end
 
+local function stage5()
+	clear()
+	image.draw(xCenter - 17, y + 2, Love)
+
+	local yPos = y + height - 6
+	--gpu.setForeground(ecs.windowColors.usualText); gpu.setBackground(ecs.windowColors.background); ecs.centerText("x", yPos, "Все готово!")
+	yPos = yPos + 2
+
+	local name
+	name = "Начать использование OC"; newObj("Buttons", name, ecs.drawAdaptiveButton("auto", yPos, offset, 1, name, buttonColor, 0xffffff))
+
+	while true do
+		local e = {event.pull()}
+		if e[1] == "touch" then
+			if ecs.clickedAtArea(e[3], e[4], obj["Buttons"][name][1], obj["Buttons"][name][2], obj["Buttons"][name][3], obj["Buttons"][name][4] ) then
+				ecs.drawAdaptiveButton(obj["Buttons"][name][1], obj["Buttons"][name][2], offset, 1, name, buttonPressColor, 0xffffff)
+				os.sleep(0.3)
+				return
+			end
+		end
+	end
+end
+
 ------------------------------------------------------------------------------------------------
 
 stage1()
-stage2()
-stage3()
+local users = stage2()
+local background, foreground = stage3()
+stage5()
+
+local path = "System/OS/Users.cfg"
+fs.remove(path)
+fs.makeDirectory(fs.path(path))
+local file = io.open(path, "w")
+for _,val in pairs(users) do
+	file:write(val, "\n")
+end
+file:close()
+
+ecs.drawOldPixels(oldPixels)
 
 
