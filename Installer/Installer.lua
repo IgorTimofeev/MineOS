@@ -88,7 +88,7 @@ end
 
 local GitHubUserUrl = "https://raw.githubusercontent.com/"
 
-getFromGitHubSafely(GitHubUserUrl .. "IgorTimofeev/OpenComputers/master/lib/ECSAPI.lua", "lib/ECSAPI.lua")
+getFromGitHubSafely(GitHubUserUrl .. "IgorTimofeev/OpenComputers/master/lib/ecs.lua", "lib/ecs.lua")
 
 local ecs = require("ECSAPI")
 
@@ -141,7 +141,7 @@ end
 
 --------------------------СТАДИЯ ЗАГРУЗКИ НУЖНЫХ ПАКЕТОВ-----------------------
 	
-if not fs.exists("System/OS/Installer/Languages.png") then
+if not fs.exists("System/OS/Installer/OK.png") then
 
 	local barWidth = math.floor(windowWidth / 2)
 	local xBar = math.floor(xSize/2-barWidth/2)
@@ -190,7 +190,7 @@ applications = seri.unserialize(getFromPastebin("3j2x4dDn", "System/OS/Applicati
 local image = require("image")
 
 local imageOS = image.load("System/OS/Installer/OS_Logo.png")
-local imageLanguages = image.load("System/OS/Installer/Languages.png")
+--local imageLanguages = image.load("System/OS/Installer/Languages.png")
 local imageDownloading = image.load("System/OS/Installer/Downloading.png")
 local imageOK = image.load("System/OS/Installer/OK.png")
 
@@ -244,7 +244,7 @@ do
 	--ecs.selector(math.floor(xSize / 2 - 10), yWindowEnd - 5, 20, "Russian", {"English", "Russian"}, 0xffffff, 0x000000, true)
 
 	--Штуку рисуем
-	ECSAPI.textField(xText, yText, TextWidth, TextHeight, lines, from)
+	ecs.textField(xText, yText, TextWidth, TextHeight, lines, from)
 
 	--Инфо рисуем
 	ecs.centerText("x", yWindowEnd - 5 ,"Принимаете ли вы условия лицензионного соглашения?")
@@ -262,9 +262,9 @@ do
 			end
 		elseif e[1] == "scroll" then
 			if e[5] == -1 then
-				if from < #lines then from = from + 1; ECSAPI.textField(xText, yText, TextWidth, TextHeight, lines, from) end
+				if from < #lines then from = from + 1; ecs.textField(xText, yText, TextWidth, TextHeight, lines, from) end
 			else
-				if from > 1 then from = from - 1; ECSAPI.textField(xText, yText, TextWidth, TextHeight, lines, from) end
+				if from > 1 then from = from - 1; ecs.textField(xText, yText, TextWidth, TextHeight, lines, from) end
 			end
 		end
 	end
