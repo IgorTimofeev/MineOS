@@ -504,7 +504,7 @@ local function biometry()
 
 		local x, y = math.floor(xSize / 2 - width / 2), math.floor(ySize / 2 - height / 2)
 
-		local oldPixels = ecs.rememberOldPixels(x, y, x + width + 1, y + height)
+		--local oldPixels = ecs.rememberOldPixels(x, y, x + width + 1, y + height)
 
 		local Finger = image.load("System/OS/Icons/Finger.png")
 
@@ -512,23 +512,24 @@ local function biometry()
 			ecs.square(x, y, width, height, color)
 			ecs.windowShadow(x, y, width, height)
 
-			image.draw(math.floor(xSize / 2 - 8), y + 2, Finger)
+			image.draw(math.floor(xSize / 2 - 12), y + 2, Finger)
 
 			gpu.setBackground(color)
 			gpu.setForeground(textColor)
 			ecs.centerText("x", y + height - 5, text)
 		end
 
+		okno(ecs.windowColors.background, ecs.windowColors.usualText, "Прислоните палец для идентификации")
+
 		local exit
 		while true do
 			if exit then break end
 
-			okno(ecs.windowColors.background, ecs.windowColors.usualText, "Прислоните палец для идентификации")
-			
 			local e = {event.pull()}
 			if e[1] == "touch" then
 				for _, val in pairs(users) do
 					if e[6] == val then
+						okno(0xccffcc, 0xffffff, "Доступ разрешен!")
 						exit = true
 						break
 					end
@@ -537,11 +538,12 @@ local function biometry()
 				if not exit then
 					okno(0x770000, 0xffffff, "Доступ запрещен!")
 					os.sleep(1)
+					okno(ecs.windowColors.background, ecs.windowColors.usualText, "Прислоните палец для идентификации")
 				end
 			end
 		end
 
-		ecs.drawOldPixels(oldPixels)
+		--ecs.drawOldPixels(oldPixels)
 
 		Finger = nil
 		users = nil
@@ -558,8 +560,7 @@ end
 
 ------------------------------------------------------------------------------------------------------------------------
 
-drawAll()
-if not launchConfigurator() then biometry() end
+if not launchConfigurator() then biometry(); drawAll() end
 
 ------------------------------------------------------------------------------------------------------------------------
 
