@@ -1,3 +1,16 @@
+
+local copyright = [[
+
+	Тут можно было бы написать кучу текста, мол,
+	вы не имеете прав на использование этой хуйни в
+	коммерческих целях и прочую чушь, навеянную нам
+	западной культурой. Но я же не пидор какой-то, верно?
+
+	Просто помни, сука, что эту ОСь накодил Тимофеев Игорь,
+	ссылка на ВК: vk.com/id7799889
+
+]]
+
 local component = require("component")
 local event = require("event")
 local term = require("term")
@@ -584,7 +597,7 @@ while true do
 					drawDesktop(xPosOfIcons, yPosOfIcons)
 
 				elseif key == "MineOS" then
-					local action = context.menu(obj["TopBarButtons"][key][1], obj["TopBarButtons"][key][2] + 1, {"Обновления"}, "-", {"Перезагрузить"}, {"Выключить"}, "-", {"Вернуться в Shell"})
+					local action = context.menu(obj["TopBarButtons"][key][1], obj["TopBarButtons"][key][2] + 1, {"О системе"}, {"Обновления"}, "-", {"Перезагрузить"}, {"Выключить"}, "-", {"Вернуться в Shell"})
 				
 					if action == "Вернуться в Shell" then
 						ecs.prepareToExit()
@@ -593,11 +606,16 @@ while true do
 						shell.execute("shutdown")
 					elseif action == "Перезагрузить" then
 						shell.execute("reboot")
-					elseif
+					elseif action == "Обновления" then
 						action == "Обновления" then
 						shell.execute("pastebin run 0nm5b1ju")
 						ecs.prepareToExit()
 						return 0
+					elseif action == "О системе" then
+						ecs.prepareToExit()
+						print(copyright)
+						ecs.waitForTouchOrClick()
+						drawAll()
 					end
 				end
 
