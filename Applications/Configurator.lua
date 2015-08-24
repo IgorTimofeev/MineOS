@@ -6,6 +6,7 @@ local image = require("image")
 local unicode = require("unicode")
 local event = require("event")
 local palette = require("palette")
+local config = require("config")
 
 ------------------------------------------------------------------------------------------------
 
