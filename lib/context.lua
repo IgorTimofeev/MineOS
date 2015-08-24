@@ -95,6 +95,7 @@ function context.menu(x, y, ...)
 	for key, val in pairs(obj["Elements"]) do
 		if ecs.clickedAtArea(e[3], e[4], obj["Elements"][key][1], obj["Elements"][key][2], obj["Elements"][key][3], obj["Elements"][key][4]) then
 			yPos = e[4]
+			counter = 0
 			drawElement(key, ecs.colors.blue, 0xffffff)
 			os.sleep(0.3)
 			action = data[key][1]
