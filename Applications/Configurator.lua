@@ -212,20 +212,19 @@ end
 
 ------------------------------------------------------------------------------------------------
 
+--Рисуем стадии
 stage1()
 local users = stage2()
 local background, foreground = stage3()
 stage5()
 
-local path = "System/OS/Users.cfg"
-fs.remove(path)
-fs.makeDirectory(fs.path(path))
-local file = io.open(path, "w")
-for _,val in pairs(users) do
-	file:write(val, "\n")
-end
-file:close()
+--Сохраняем юзверей в файл
+config.append("System/OS/Users.cfg", table.unpack(users))
 
+--Сохраняем цвета в конфиг ОС
+config.append("System/OS/OS.cfg", background, foreground)
+
+--Рисуем старые пиксели
 ecs.drawOldPixels(oldPixels)
 
 
