@@ -7,6 +7,7 @@ local unicode = require("unicode")
 local event = require("event")
 local palette = require("palette")
 local config = require("config")
+local fs = require("filesystem")
 
 ------------------------------------------------------------------------------------------------
 
@@ -227,6 +228,6 @@ config.append("System/OS/Users.cfg", table.unpack(users))
 config.append("System/OS/OS.cfg", background, foreground)
 
 --Рисуем старые пиксели
-ecs.drawOldPixels(oldPixels)
+--ecs.drawOldPixels(oldPixels)
 
 
