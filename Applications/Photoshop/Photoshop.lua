@@ -41,18 +41,17 @@ local toolbarPressColor = 0x3d3d3d
 local consoleColor1 = 0x3d3d3d
 local consoleColor2 = 0x999999
 
-local historyLimit = 30
-local historyDisplayLimit = 13
-local drawHistoryFrom = 1
-local currentHistoryElement = 1
+
 local historyY = 2
 local rightToolbarWidth = 18
 local xRightToolbar = xSize - rightToolbarWidth + 1
 
+local currentFile
+
 local rightToolbarWidthTextLimit = rightToolbarWidth - 2
 
 local currentLayer = 1
-local layersY = historyY + historyDisplayLimit + 1
+local layersY = historyY + math.floor(ySize / 2) - 2
 local layersDisplayLimit = math.floor((ySize - layersY - 1) / 2)
 local drawLayersFrom = 1
 local layersIsVisibleSymbol = "●"
@@ -62,17 +61,15 @@ local layersLimit = 20
 
 local currentInstrument = 2
 local instruments={
-	{"Move","M"},
+	{"Pipette","P"},
 	{"Brush","B"},
 	{"Eraser","E"},
-	{"Fill","F"},
 	{"Text","T"},
 }
 local topButtons = {
 	{"Файл"},
-	{"Редактировать"},
-	{"Слои"},
-	{"О программе"}
+	{"Инструменты"},
+	{"Фильтры"},
 }
 
 local buttons = {"▲","▼","D","J","N","R"}
@@ -217,38 +214,6 @@ local function drawFromMassiv(clearScreenOrNot)
 		end
 	end
 end
-
---[[local function drawFromMassiv()
-	local x = drawImageFromX - 1
-	local y = drawImageFromY - 1
-
-	mergeLayersToMasterPixels()
-
-	for i=1,imageHeight do
-		for j=1,imageWidth do
-
-			if MasterPixels[i][j][3] ~= transparentSymbol then
-
-				gpu.setBackground(MasterPixels[i][j][1])
-				gpu.setForeground(MasterPixels[i][j][2])
-				gpu.set(x+j, y+i, MasterPixels[i][j][3])
-			
-
-			else
-
-				gpu.setBackground(transparentBackground)
-				gpu.setForeground(transparentForeground)
-				gpu.set(x+j, y+i, transparentSymbol)
-
-			end
-		end
-	end
-
-	--ОТРИСОВКА ТЕНИ
-	gpu.setBackground(shadowColor)
-	gpu.fill(drawImageFromX+imageWidth,drawImageFromY+1,2,imageHeight," ")
-	gpu.fill(drawImageFromX+1,drawImageFromY+imageHeight,imageWidth+1,1," ")
-end]]
 
 local function changePixelInMassiv(x,y,layer,background,foreground,symbol)
 	pixels[layer][2][y] = pixels[layer][2][y] or {}
@@ -502,7 +467,7 @@ local function drawRightToolbar()
 	ecs.square(xRightToolbar,2,rightToolbarWidth,ySize-1,toolbarColor)
 
 	ecs.square(xRightToolbar,historyY,rightToolbarWidth,1,toolbarPressColor)
-	ecs.colorText(xRightToolbar+1,historyY,toolbarTextColor,"Хуйня какая-то")
+	ecs.colorText(xRightToolbar+1,historyY,toolbarTextColor,"Тут будут пар-ры кисти")
 
 	ecs.square(xRightToolbar,layersY,rightToolbarWidth,1,toolbarPressColor)
 	ecs.colorText(xRightToolbar+1,layersY,toolbarTextColor,"Слои")
@@ -622,7 +587,8 @@ end
 local function save(path)
 	mergeLayersToMasterPixels()
 	if fs.exists(path) then fs.remove(path) end
-	local f = io.open(path,"w")
+	fs.makeDirectory(fs.path(path))
+	local f = io.open(path, "w")
 
 	for j=1,imageHeight do
 		for i=1,imageWidth do
@@ -767,25 +733,63 @@ local function saveTextToPixels(x,y,text)
 end
 
 local function newFile()
-	consoleText = "Новое изображение"
+	imageWidth = 0
+	imageHeight = 0
+
 	createMassiv()
 	currentLayer = 1
 	drawAll()
+
+	local data = ecs.input("auto", "auto", 20, "Новый документ", {"input", "Ширина", ""}, {"input", "Высота", ""})
+	if data[1] == "" or data[1] == nil or data[1] == " " then data[1] = 51 end
+	if data[2] == "" or data[2] == nil or data[2] == " " then data[2] = 19 end
+
+	imageWidth = tonumber(data[1])
+	imageHeight = tonumber(data[2])
+
+	createMassiv()
+	drawAll()
+end
+
+local function filter(mode)
+
+	for y = 1, imageHeight do
+		if pixels[currentLayer][2][y] then
+			for x =1 ,imageWidth do
+				if pixels[currentLayer][2][y][x] then
+					if mode == "invert" then
+						pixels[currentLayer][2][y][x] = {0xffffff - pixels[currentLayer][2][y][x][1], 0xffffff - pixels[currentLayer][2][y][x][2], pixels[currentLayer][2][y][x][3]}
+					else
+						local hex1 = pixels[currentLayer][2][y][x][1]
+						local hex2 = pixels[currentLayer][2][y][x][2]
+						local h, s, b = colorlib.HEXtoHSB(hex1); s = 0
+						hex1 = colorlib.HSBtoHEX(h, s, b)
+
+						h, s, b = colorlib.HEXtoHSB(hex2); s = 0
+						hex2 = colorlib.HSBtoHEX(h, s, b)
+
+						pixels[currentLayer][2][y][x] = {hex1, hex2, pixels[currentLayer][2][y][x][3]}
+					end
+				end
+			end
+		end
+	end
 end
 
 --------------------------------------ПРОЖКА-------------------------------------------------------
 
 if arg[1] == "-o" or arg[1] == "open" then
 	open(arg[2])
+	currentFile = arg[2]
 	drawAll()
 elseif arg[1] == "-n" or arg[1] == "new" then
 	imageWidth = arg[2]
 	imageHeight = arg[3]
-	newFile()
+	createMassiv()
+	currentLayer = 1
+	drawAll()
 else
-	imageWidth = 51
-	imageHeight = 19
-	newFile()	
+	newFile()
 end
 
 --ecs.palette(5,5,0xff0000)
@@ -820,7 +824,7 @@ while true do
 						ecs.colorTextWithBack(eventData[3],eventData[4],transparentForeground,transparentBackground,transparentSymbol)
 						
 						changePixelInMassiv(coordInMassivX,coordInMassivY,currentLayer,transparentBackground,transparentForeground,transparentSymbol)
-					elseif currentInstrument == 5 then
+					elseif currentInstrument == 4 then
 
 						local limit = imageWidth - coordInMassivX + 1
 						local text = inputText(eventData[3],eventData[4],limit)
@@ -831,11 +835,17 @@ while true do
 
 						saveTextToPixels(coordInMassivX,coordInMassivY,text)
 						drawFromMassiv()
+					elseif currentInstrument == 1 then
+						local symbol, _, back = gpu.get(eventData[3], eventData[4])
+						if symbol ~= transparentSymbol then
+							background = back
+							drawLeftToolbar()
+						end
 					end
 
 					breakLags = true
 				else
-					ecs.error("Каким раком я те буду рисовать на слое, который выключен, тупая ты блядина?")
+					ecs.error("Каким раком я тебе буду рисовать на выключенном слое, тупой ты сын спидозной шлюхи?")
 				end
 
 			end
@@ -924,25 +934,56 @@ while true do
 					---------------------------------------------
 
 					if obj["top"][key]["name"] == "Файл" then
-						local action = context.menu(obj["top"][key]["x1"],obj["top"][key]["y1"]+1,{"Новый",false,"^N"},{"Открыть",false,"^O"},"-",{"Сохранить",true,"^S"},{"Сохранить как",false,"^!S"},"-",{"Выйти"})
+						local action = context.menu(obj["top"][key]["x1"],obj["top"][key]["y1"]+1,{"Новый",false,"^N"},{"Открыть",false,"^O"},"-",{"Сохранить",not currentFile,"^S"},{"Сохранить как",false,"^!S"},"-",{"Выйти"})
 						if action == "Сохранить как" then
-							local fileName = "icon.png"
-							save(fileName)
-							consoleText = "Файл сохранен как "..fileName
-							console(7,ySize)
+							local data = ecs.input("auto", "auto", 20, "Сохранить как", {"input", "Путь", ""})
+							if data[1] == "" or data[1] == " " then data[1] = "NewImage" end
+							data[1] = data[1]..".png"
+
+							currentFile = data[1]
+							save(currentFile)
+							consoleText = "Файл сохранен как "..currentFile
+							console(7, ySize)
 						elseif action == "Открыть" then
 							local fileName = "icon.png"
 							open(fileName)
 							consoleText = "Открыт файл "..fileName
-							console(7,ySize)
+							console(7, ySize)
+						elseif action == "Сохранить" then
+							save(currentFile)
+							consoleText = "Файл перезаписан как "..currentFile
+							console(7, ySize)
 						elseif action == "Выйти" then
 							ecs.clearScreen(0x000000)
 							gpu.setForeground(0xffffff)
-							gpu.set(1,1,"")
+							gpu.set(1, 1, "")
 							return 0
 						elseif action == "Новый" then
 							newFile()
 						end
+
+					elseif obj["top"][key]["name"] == "Фильтры" then
+						local action = context.menu(obj["top"][key]["x1"],obj["top"][key]["y1"]+1, {"Инверсия цвета"}, {"Черно-белый фильтр"})
+						if action == "Инверсия цвета" then
+							filter("invert")
+						elseif action == "Черно-белый фильтр" then
+							filter("b&w")
+						end
+						drawFromMassiv()
+					elseif obj["top"][key]["name"] == "Инструменты" then
+						local action = context.menu(obj["top"][key]["x1"],obj["top"][key]["y1"]+1, {"Пипетка", false, "Alt"}, {"Кисть", false, "B"}, {"Ластик", false, "E"}, {"Текст", false, "T"})
+						
+						if action == "Пипетка" then
+							currentInstrument = 1
+						elseif action == "Кисть" then
+							currentInstrument = 2
+						elseif action == "Ластик" then
+							currentInstrument = 3
+						elseif action == "Текст" then
+							currentInstrument = 4
+						end
+
+						drawLeftToolbar()
 					end
 
 					---------------------------------------------
@@ -1007,15 +1048,19 @@ while true do
 			drawLeftToolbar()
 		--КЛАВИША T
 		elseif eventData[4] == 20 then
-			currentInstrument = 5
+			currentInstrument = 4
 			drawLeftToolbar()
-		--КЛАВИША T
+		--КЛАВИША B
 		elseif eventData[4] == 48 then
 			currentInstrument = 2
 			drawLeftToolbar()
-		--КЛАВИША T
+		--КЛАВИША E
 		elseif eventData[4] == 18 then
 			currentInstrument = 3
+			drawLeftToolbar()
+		--Клавиша ALT
+		elseif eventData[4] == 56 then
+			currentInstrument = 1
 			drawLeftToolbar()
 		elseif eventData[4] == 200 then
 			drawImageFromY = drawImageFromY - 1
