@@ -504,8 +504,6 @@ local function biometry()
 
 		local x, y = math.floor(xSize / 2 - width / 2), math.floor(ySize / 2 - height / 2)
 
-		--local oldPixels = ecs.rememberOldPixels(x, y, x + width + 1, y + height)
-
 		local Finger = image.load("System/OS/Icons/Finger.png")
 
 		local function okno(color, textColor, text)
@@ -543,16 +541,18 @@ local function biometry()
 			end
 		end
 
-		--ecs.drawOldPixels(oldPixels)
-
 		Finger = nil
 		users = nil
 	end
 end
 
-local function launchConfigurator()
-	if not fs.exists("System/OS/Users.cfg") then
-		shell.execute("System/OS/Configurator.lua")
+--Запустить конфигуратор ОС, если еще не запускался
+local function launchConfigurator(force)
+	if not fs.exists("System/OS/Users.cfg") or force then
+		while true do
+			local success, reason = shell.execute("System/OS/Configurator.lua")
+			if success then break end
+		end
 		return true
 	end
 end
