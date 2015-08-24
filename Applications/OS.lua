@@ -542,9 +542,17 @@ local function biometry()
 		end
 
 		ecs.drawOldPixels(oldPixels)
-		
+
 		Finger = nil
 		users = nil
+	end
+end
+
+local function launchConfigurator()
+	local path = "System/OS/Users.cfg"
+	if not fs.exists(path) then
+		shell.execute("System/OS/Configurator.lua")
+		return true
 	end
 end
 
@@ -552,7 +560,7 @@ end
 ------------------------------------------------------------------------------------------------------------------------
 
 drawAll()
-biometry()
+if not launchConfigurator() then biometry() end
 
 ------------------------------------------------------------------------------------------------------------------------
 
