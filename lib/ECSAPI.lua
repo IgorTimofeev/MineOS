@@ -1,1165 +1,655 @@
+
+local copyright = [[
+	
+	Тут можно было бы написать кучу текста, мол,
+	вы не имеете прав на использование этой хуйни в
+	коммерческих целях и прочую чушь, навеянную нам
+	западной культурой. Но я же не пидор какой-то, верно?
+	 
+	Просто помни, сука, что эту ОСь накодил Тимофеев Игорь,
+	ссылка на ВК: vk.com/id7799889
+
+]]
+
 local component = require("component")
+local event = require("event")
 local term = require("term")
 local unicode = require("unicode")
-local event = require("event")
+local ecs = require("ECSAPI")
 local fs = require("filesystem")
 local shell = require("shell")
-local keyboard = require("keyboard")
+local context = require("context")
 local computer = require("computer")
-local fs = require("filesystem")
---local thread = require("thread")
+local keyboard = require("keyboard")
+local image = require("image")
+
 local gpu = component.gpu
-local screen = component.screen
 
-local ECSAPI = {}
+------------------------------------------------------------------------------------------------------------------------
 
-----------------------------------------------------------------------------------------------------
+local xSize, ySize = gpu.getResolution()
 
-ECSAPI.windowColors = {
-	background = 0xdddddd,
-	usualText = 0x444444,
-	subText = 0x888888,
-	tab = 0xaaaaaa,
-	title = 0xffffff,
-	shadow = 0x444444,
-}
+local icons = {}
+local workPath = ""
+local workPathHistory = {}
+local clipboard
+local currentFileList
+local currentDesktop = 1
+local countOfDesktops
 
-ECSAPI.colors = {
-	white = 0xF0F0F0,
-	orange = 0xF2B233,
-	magenta = 0xE57FD8,
-	lightBlue = 0x99B2F2,
-	yellow = 0xDEDE6C,
-	lime = 0x7FCC19,
-	pink = 0xF2B2CC,
-	gray = 0x4C4C4C,
-	lightGray = 0x999999,
-	cyan = 0x4C99B2,
-	purple = 0xB266E5,
-	blue = 0x3366CC,
-	brown = 0x7F664C,
-	green = 0x57A64E,
-	red = 0xCC4C4C,
-    black = 0x000000
-}
+--ЗАГРУЗКА ИКОНОК
+icons["folder"] = image.load("System/OS/Icons/Folder.png")
+icons["script"] = image.load("System/OS/Icons/Script.png")
+icons["text"] = image.load("System/OS/Icons/Text.png")
+icons["config"] = image.load("System/OS/Icons/Config.png")
+icons["lua"] = image.load("System/OS/Icons/Lua.png")
+icons["image"] = image.load("System/OS/Icons/Image.png")
 
-----------------------------------------------------------------------------------------------------
+--ПЕРЕМЕННЫЕ ДЛЯ ДОКА
+local dockColor = 0xcccccc
+local heightOfDock = 4
+local background = 0x262626
 
---МАСШТАБ МОНИТОРА
-function ECSAPI.setScale(scale, debug)
-	--КОРРЕКЦИЯ МАСШТАБА, ЧТОБЫ ВСЯКИЕ ДАУНЫ НЕ ДЕЛАЛИ ТОГО, ЧЕГО НЕ СЛЕДУЕТ
-	if scale > 1 then
-		scale = 1
-	elseif scale < 0.1 then
-		scale = 0.1
-	end
+--ПЕРЕМЕННЫЕ, КАСАЮЩИЕСЯ ИКОНОК
+local widthOfIcon = 12
+local heightOfIcon = 6
+local xSpaceBetweenIcons = 2
+local ySpaceBetweenIcons = 1
+local xCountOfIcons = math.floor(xSize / (widthOfIcon + xSpaceBetweenIcons))
+local yCountOfIcons = math.floor((ySize - (heightOfDock + 6)) / (heightOfIcon + ySpaceBetweenIcons))
+local totalCountOfIcons = xCountOfIcons * yCountOfIcons
+local iconsSelectionColor = ecs.colors.lightBlue
+--local yPosOfIcons = math.floor((ySize - heightOfDock - 2) / 2 - (yCountOfIcons * (heightOfIcon + ySpaceBetweenIcons) - ySpaceBetweenIcons * 2) / 2)
+local yPosOfIcons = 3
+local xPosOfIcons = math.floor(xSize / 2 - (xCountOfIcons * (widthOfIcon + xSpaceBetweenIcons) - xSpaceBetweenIcons*4) / 2)
 
-	--Просчет пикселей в блоках кароч - забей, так надо
-	local function calculateAspect(screens)
-	  local abc = 12
 
-	  if screens == 2 then
-	    abc = 28
-	  elseif screens > 2 then
-	    abc = 28 + (screens - 2) * 16
-	  end
+--ПЕРЕМЕННЫЕ ДЛЯ ТОП БАРА
+local topBarColor = 0xdddddd
+local showHiddenFiles = false
+local showSystemFiles = true
+local showFileFormat = false
 
-	  return abc
-	end
+------------------------------------------------------------------------------------------------------------------------
 
-	--Собсна, арсчет масштаба
-	local xScreens, yScreens = component.screen.getAspectRatio()
+--СОЗДАНИЕ ОБЪЕКТОВ
+local obj = {}
+local function newObj(class, name, ...)
+	obj[class] = obj[class] or {}
+	obj[class][name] = {...}
+end
 
-	local xPixels, yPixels = calculateAspect(xScreens), calculateAspect(yScreens)
-
-	local proportion = xPixels / yPixels
-
-	local xMax, yMax  = 100, 50
-
-	local newWidth, newHeight
-
-	if proportion >= 1 then
-		newWidth = math.floor(xMax * scale)
-		newHeight = math.floor(newWidth / proportion / 2)
+--ПОЛУЧИТЬ ДАННЫЕ О ФАЙЛЕ ИЗ ЯРЛЫКА
+local function readShortcut(path)
+	local success, filename = pcall(loadfile(path))
+	if success then
+		return filename
 	else
-		newHeight = math.floor(yMax * scale)
-		newWidth = math.floor(newHeight * proportion * 2)
+		error("Ошибка чтения файла ярлыка. Вероятно, он создан криво, либо не существует в папке " .. path)
+	end
+end
+
+--ОТРИСОВКА ТЕКСТА ПОД ИКОНКОЙ
+local function drawIconText(xIcons, yIcons, path)
+
+	local text = fs.name(path)
+
+	if not showFileFormat then
+		local fileFormat = ecs.getFileFormat(text)
+		if fileFormat then
+			text = unicode.sub(text, 1, -(unicode.len(fileFormat) + 1))
+		end
 	end
 
-	if debug then
-		print(" ")
-		print("Максимальное разрешение: "..xMax.."x"..yMax)
-		print("Пропорция монитора: "..xPixels.."x"..yPixels)
-		print(" ")
-		print("Новое разрешение: "..newWidth.."x"..newHeight)
-		print(" ")
-	end
+	text = ecs.stringLimit("end", text, widthOfIcon)
+	local textPos = xIcons + math.floor(widthOfIcon / 2 - unicode.len(text) / 2) - 2
 
-	gpu.setResolution(newWidth, newHeight)
+	ecs.adaptiveText(textPos, yIcons + heightOfIcon - 1, text, 0xffffff)
 end
 
---ИЗ ДЕСЯТИЧНОЙ В ШЕСТНАДЦАТИРИЧНУЮ
-function ECSAPI.decToBase(IN,BASE)
-    local hexCode = "0123456789ABCDEFGHIJKLMNOPQRSTUVW"
-    OUT = ""
-    local ostatok = 0
-    while IN>0 do
-        ostatok = math.fmod(IN,BASE) + 1
-        IN = math.floor(IN/BASE)
-        OUT = string.sub(hexCode,ostatok,ostatok)..OUT
-    end
-    if #OUT == 1 then OUT = "0"..OUT end
-    if OUT == "" then OUT = "00" end
-    return OUT
-end
+--ОТРИСОВКА КОНКРЕТНОЙ ОДНОЙ ИКОНКИ
+local function drawIcon(xIcons, yIcons, path)
+	--НАЗНАЧЕНИЕ ВЕРНОЙ ИКОНКИ
+	local icon
 
---ИЗ 16 В РГБ
-function ECSAPI.HEXtoRGB(color)
-  color = math.ceil(color)
+	local fileFormat = ecs.getFileFormat(path)
 
-  local rr = bit32.rshift( color, 16 )
-  local gg = bit32.rshift( bit32.band(color, 0x00ff00), 8 )
-  local bb = bit32.band(color, 0x0000ff)
-
-  return rr, gg, bb
-end
-
---ИЗ РГБ В 16
-function ECSAPI.RGBtoHEX(rr, gg, bb)
-  return bit32.lshift(rr, 16) + bit32.lshift(gg, 8) + bb
-end
-
---ИЗ ХСБ В РГБ
-function ECSAPI.HSBtoRGB(h, s, v)
-  local rr, gg, bb = 0, 0, 0
-  local const = 255
-
-  s = s/100
-  v = v/100
-  
-  local i = math.floor(h/60)
-  local f = h/60 - i
-  
-  local p = v*(1-s)
-  local q = v*(1-s*f)
-  local t = v*(1-(1-f)*s)
-
-  if ( i == 0 ) then rr, gg, bb = v, t, p end
-  if ( i == 1 ) then rr, gg, bb = q, v, p end
-  if ( i == 2 ) then rr, gg, bb = p, v, t end
-  if ( i == 3 ) then rr, gg, bb = p, q, v end
-  if ( i == 4 ) then rr, gg, bb = t, p, v end
-  if ( i == 5 ) then rr, gg, bb = v, p, q end
-
-  return rr*const, gg*const, bb*const
-end
-
---КЛИКНУЛИ ЛИ В ЗОНУ
-function ECSAPI.clickedAtArea(x,y,sx,sy,ex,ey)
-  if (x >= sx) and (x <= ex) and (y >= sy) and (y <= ey) then return true end    
-  return false
-end
-
---ОЧИСТКА ЭКРАНА ЦВЕТОМ
-function ECSAPI.clearScreen(color)
-  if color then gpu.setBackground(color) end
-  term.clear()
-end
-
---ПРОСТОЙ СЕТПИКСЕЛЬ, ИБО ЗАЕБАЛО
-function ECSAPI.setPixel(x,y,color)
-  gpu.setBackground(color)
-  gpu.set(x,y," ")
-end
-
---ЦВЕТНОЙ ТЕКСТ
-function ECSAPI.colorText(x,y,textColor,text)
-  gpu.setForeground(textColor)
-  gpu.set(x,y,text)
-end
-
---ЦВЕТНОЙ ТЕКСТ С ЖОПКОЙ!
-function ECSAPI.colorTextWithBack(x,y,textColor,backColor,text)
-  gpu.setForeground(textColor)
-  gpu.setBackground(backColor)
-  gpu.set(x,y,text)
-end
-
---ИНВЕРСИЯ HEX-ЦВЕТА
-function ECSAPI.invertColor(color)
-  return 0xffffff - color
-end
-
---АДАПТИВНЫЙ ТЕКСТ, ПОДСТРАИВАЮЩИЙСЯ ПОД ФОН
-function ECSAPI.adaptiveText(x,y,text,textColor)
-  gpu.setForeground(textColor)
-  x = x - 1
-  for i=1,unicode.len(text) do
-    local info = {gpu.get(x+i,y)}
-    gpu.setBackground(info[3])
-    gpu.set(x+i,y,unicode.sub(text,i,i))
-  end
-end
-
---ИНВЕРТИРОВАННЫЙ ПО ЦВЕТУ ТЕКСТ НА ОСНОВЕ ФОНА
-function ECSAPI.invertedText(x,y,symbol)
-  local info = {gpu.get(x,y)}
-  ECSAPI.adaptiveText(x,y,symbol,ECSAPI.invertColor(info[3]))
-end
-
---АДАПТИВНОЕ ОКРУГЛЕНИЕ ЧИСЛА
-function ECSAPI.adaptiveRound(chislo)
-  local celaya,drobnaya = math.modf(chislo)
-  if drobnaya >= 0.5 then
-    return (celaya + 1)
-  else
-    return celaya
-  end
-end
-
-function ECSAPI.square(x,y,width,height,color)
-  gpu.setBackground(color)
-  gpu.fill(x,y,width,height," ")
-end
-
---АВТОМАТИЧЕСКОЕ ЦЕНТРИРОВАНИЕ ТЕКСТА ПО КООРДИНАТЕ
-function ECSAPI.centerText(mode,coord,text)
-	local dlina = unicode.len(text)
-	local xSize,ySize = gpu.getResolution()
-
-	if mode == "x" then
-		gpu.set(math.floor(xSize/2-dlina/2),coord,text)
-	elseif mode == "y" then
-		gpu.set(coord,math.floor(ySize/2),text)
+	if fs.isDirectory(path) then
+		if fileFormat == ".app" then
+			icon = path .. "/Resources/Icon.png" 
+			icons[icon] = image.load(icon)
+		else
+			icon = "folder"
+		end
 	else
-		gpu.set(math.floor(xSize/2-dlina/2),math.floor(ySize/2),text)
+		if fileFormat == ".lnk" then
+			local shortcutLink = readShortcut(path)
+			drawIcon(xIcons, yIcons, shortcutLink)
+			ecs.colorTextWithBack(xIcons + widthOfIcon - 6, yIcons + heightOfIcon - 3, 0x000000, 0xffffff, "⤶")
+			drawIconText(xIcons, yIcons, path)
+			return 0
+		elseif fileFormat == ".cfg" or fileFormat == ".config" then
+			icon = "config"
+		elseif fileFormat == ".txt" or fileFormat == ".rtf" then
+			icon = "text"
+		elseif fileFormat == ".lua" then
+		 	icon = "lua"
+		elseif fileFormat == ".png" then
+		 	icon = "image"
+		else
+			icon = "script"
+		end
+	end
+
+	--ОТРИСОВКА ИКОНКИ
+	image.draw(xIcons, yIcons, icons[icon] or icons["script"])
+
+	--ОТРИСОВКА ТЕКСТА
+	drawIconText(xIcons, yIcons, path)
+
+end
+
+--НАРИСОВАТЬ ВЫДЕЛЕНИЕ ИКОНКИ
+local function drawIconSelection(x, y, nomer)
+	if obj["DesktopIcons"][nomer][6] == true then
+		ecs.square(x - 2, y, widthOfIcon, heightOfIcon, iconsSelectionColor)
+	elseif obj["DesktopIcons"][nomer][6] == false then
+		ecs.square(x - 2, y, widthOfIcon, heightOfIcon, background)
 	end
 end
 
---
-function ECSAPI.drawCustomImage(x,y,pixels)
-	x = x - 1
-	y = y - 1
-	local pixelsWidth = #pixels[1]
-	local pixelsHeight = #pixels
-	local xEnd = x + pixelsWidth
-	local yEnd = y + pixelsHeight
-
-	for i=1,pixelsHeight do
-		for j=1,pixelsWidth do
-			if pixels[i][j][3] ~= "#" then
-				gpu.setBackground(pixels[i][j][1])
-				gpu.setForeground(pixels[i][j][2])
-				gpu.set(x+j,y+i,pixels[i][j][3])
+local function deselectAll(mode)
+	for key, val in pairs(obj["DesktopIcons"]) do
+		if not mode then
+			if obj["DesktopIcons"][key][6] == true then
+				obj["DesktopIcons"][key][6] = false
+			end
+		else
+			if obj["DesktopIcons"][key][6] == false then
+				obj["DesktopIcons"][key][6] = nil
 			end
 		end
 	end
-
-	return (x+1),(y+1),xEnd,yEnd
 end
 
---КОРРЕКТИРОВКА СТАРТОВЫХ КООРДИНАТ
-function ECSAPI.correctStartCoords(xStart,yStart,xWindowSize,yWindowSize)
-	local xSize,ySize = gpu.getResolution()
-	if xStart == "auto" then
-		xStart = math.floor(xSize/2 - xWindowSize/2)
-	end
-	if yStart == "auto" then
-		yStart = math.floor(ySize/2 - yWindowSize/2)
-	end
-	return xStart,yStart
-end
+------------------------------------------------------------------------------------------------
 
---ЗАПОМНИТЬ ОБЛАСТЬ ПИКСЕЛЕЙ
-function ECSAPI.rememberOldPixels(fromX,fromY,toX,toY)
-	local oldPixels = {}
-	local counterX, counterY = 1, 1
-	for j = fromY, toY do
-		oldPixels[counterY] = {}
-		counterX = 1
-		for i = fromX, toX do
-			oldPixels[counterY][counterX] = {i, j, {gpu.get(i,j)}}
-			counterX = counterX + 1
-		end
-		counterY = counterY + 1
-	end
-	return oldPixels
-end
+local systemFiles = {
+	"bin/",
+	"lib/",
+	"OS.lua",
+	"autorun.lua",
+	"init.lua",
+	"tmp/",
+	"usr/",
+	"mnt/",
+	"etc/",
+	"boot/",
+	--"System/",
+}
 
---НАРИСОВАТЬ ЗАПОМНЕННЫЕ ПИКСЕЛИ ИЗ МАССИВА
-function ECSAPI.drawOldPixels(oldPixels)
-	for j=1,#oldPixels do
-		for i=1,#oldPixels[j] do
-			ECSAPI.colorTextWithBack(oldPixels[j][i][1],oldPixels[j][i][2],oldPixels[j][i][3][2],oldPixels[j][i][3][3],oldPixels[j][i][3][1])
-		end
-	end
-end
+local function reorganizeFilesAndFolders(massivSudaPihay, showHiddenFiles, showSystemFiles)
 
---ОГРАНИЧЕНИЕ ДЛИНЫ СТРОКИ
-function ECSAPI.stringLimit(mode, text, size, noDots)
-	if unicode.len(text) <= size then return text end
-	local length = unicode.len(text)
-	if mode == "start" then
-		if noDots then
-			return unicode.sub(text, length - size + 1, -1)
-		else
-			return "…" .. unicode.sub(text, length - size + 2, -1)
-		end
-	else
-		if noDots then
-			return unicode.sub(text, 1, size)
-		else
-			return unicode.sub(text, 1, size - 1) .. "…"
-		end
-	end
-end
-
---ПОЛУЧИТЬ СПИСОК ФАЙЛОВ ИЗ КОНКРЕТНОЙ ДИРЕКТОРИИ
-function ECSAPI.getFileList(path)
-	local list = fs.list(path)
 	local massiv = {}
-	for file in list do
-		--if string.find(file, "%/$") then file = unicode.sub(file, 1, -2) end
-		table.insert(massiv, file)
-	end
-	list = nil
-	return massiv
-end
 
---ПОЛУЧИТЬ ВСЕ ДРЕВО ФАЙЛОВ
-function ECSAPI.getFileTree(path)
-	local massiv = {}
-	local list = ECSAPI.getFileList(path)
-	for key, file in pairs(list) do
-		if fs.isDirectory(path.."/"..file) then
-			table.insert(massiv, getFileTree(path.."/"..file))
-		else
-			table.insert(massiv, file)
-		end
-	end
-	list = nil
-
-	return massiv
-end
-
---ПОЛУЧЕНИЕ ФОРМАТА ФАЙЛА
-function ECSAPI.getFileFormat(path)
-	local name = fs.name(path)
-	local starting, ending = string.find(name, "(.)%.[%d%w]*$")
-	if starting == nil then
-		return nil
-	else
-		return unicode.sub(name,starting + 1, -1)
-	end
-	name, starting, ending = nil, nil, nil
-end
-
---ПРОВЕРКА, СКРЫТЫЙ ЛИ ФАЙЛ
-function ECSAPI.isFileHidden(path)
-	local name = fs.name(path)
-	local starting, ending = string.find(name, "^%.(.*)$")
-	if starting == nil then
-		return false
-	else
-		return true
-	end
-	name, starting, ending = nil, nil, nil
-end
-
---СКРЫТЬ РАСШИРЕНИЕ ФАЙЛА
-function ECSAPI.hideFileFormat(path)
-	local name = fs.name(path)
-	local fileFormat = ECSAPI.getFileFormat(name)
-	if fileFormat == nil then
-		return name
-	else
-		return unicode.sub(name, 1, unicode.len(name) - unicode.len(fileFormat))
-	end
-end
-
-function ECSAPI.reorganizeFilesAndFolders(massivSudaPihay, showHiddenFiles)
-	showHiddenFiles = showHiddenFiles or true
-	local massiv = {}
 	for i = 1, #massivSudaPihay do
-		if ECSAPI.isFileHidden(massivSudaPihay[i]) then
+		if ecs.isFileHidden(massivSudaPihay[i]) and showHiddenFiles then
 			table.insert(massiv, massivSudaPihay[i])
 		end
 	end
+
 	for i = 1, #massivSudaPihay do
 		local cyka = massivSudaPihay[i]
-		if fs.isDirectory(cyka) and not ECSAPI.isFileHidden(cyka) and ECSAPI.getFileFormat(massivSudaPihay[i]) ~= ".app" then
-			table.insert(massiv, massivSudaPihay[i])
-		end
-		cyka = nil
-	end
-	for i = 1, #massivSudaPihay do
-		local cyka = massivSudaPihay[i]
-		if (not fs.isDirectory(cyka) and not ECSAPI.isFileHidden(cyka)) or (fs.isDirectory(cyka) and not ECSAPI.isFileHidden(cyka) and ECSAPI.getFileFormat(massivSudaPihay[i]) == ".app") then
-			table.insert(massiv, massivSudaPihay[i])
+		if fs.isDirectory(cyka) and not ecs.isFileHidden(cyka) and ecs.getFileFormat(cyka) ~= ".app" then
+			table.insert(massiv, cyka)
 		end
 		cyka = nil
 	end
 
+	for i = 1, #massivSudaPihay do
+		local cyka = massivSudaPihay[i]
+		if (not fs.isDirectory(cyka) and not ecs.isFileHidden(cyka)) or (fs.isDirectory(cyka) and not ecs.isFileHidden(cyka) and ecs.getFileFormat(cyka) == ".app") then
+			table.insert(massiv, cyka)
+		end
+		cyka = nil
+	end
+
+
+	if not showSystemFiles then
+		if workPath == "" or workPath == "/" then
+			--ecs.error("Сработало!")
+			local i = 1
+			while i <= #massiv do
+				for j = 1, #systemFiles do
+					--ecs.error("massiv[i] = " .. massiv[i] .. ", systemFiles[j] = "..systemFiles[j])
+					if massiv[i] == systemFiles[j] then
+						--ecs.error("Удалено! massiv[i] = " .. massiv[i] .. ", systemFiles[j] = "..systemFiles[j])
+						table.remove(massiv, i)
+						i = i - 1
+						break
+					end
+
+				end
+
+				i = i + 1
+			end
+		end
+	end
+
 	return massiv
 end
 
---Бесполезна теперь, используй string.gsub()
-function ECSAPI.stringReplace(stroka, chto, nachto)
-	local searchFrom = 1
-	while true do
-		local starting, ending = string.find(stroka, chto, searchFrom)
-		if starting then
-			stroka = unicode.sub(stroka, 1, starting - 1) .. nachto .. unicode.sub(stroka, ending + 1, -1)
-			searchFrom = ending + unicode.len(nachto) + 1
+------------------------------------------------------------------------------------------------
+
+--ОТРИСОВКА ИКОНОК НА РАБОЧЕМ СТОЛЕ ПО ТЕКУЩЕЙ ПАПКЕ
+local function drawDesktop(x, y)
+
+	currentFileList = ecs.getFileList(workPath)
+	currentFileList = reorganizeFilesAndFolders(currentFileList, showHiddenFiles, showSystemFiles)
+
+	--ОЧИСТКА СТОЛА
+	ecs.square(1, y, xSize, yCountOfIcons * (heightOfIcon + ySpaceBetweenIcons) - ySpaceBetweenIcons, background)
+
+	--ОЧИСТКА ОБЪЕКТОВ ИКОНОК
+	obj["DesktopIcons"] = {}
+
+	--ОТРИСОВКА КНОПОЧЕК ПЕРЕМЕЩЕНИЯ
+	countOfDesktops = math.ceil(#currentFileList / totalCountOfIcons)
+	local xButtons, yButtons = math.floor(xSize / 2 - ((countOfDesktops + 1) * 3 - 3) / 2), ySize - heightOfDock - 3
+	ecs.square(1, yButtons, xSize, 1, background)
+	for i = 1, countOfDesktops do
+		local color = 0xffffff
+		if i == 1 then
+			if #workPathHistory == 0 then color = color - 0x444444 end
+			ecs.colorTextWithBack(xButtons, yButtons, 0x262626, color, " <")
+			newObj("DesktopButtons", 0, xButtons, yButtons, xButtons + 1, yButtons)
+			xButtons = xButtons + 3
+		end
+
+		if i == currentDesktop then
+			color = ecs.colors.green
 		else
-			break
+			color = 0xffffff
 		end
+
+		ecs.colorTextWithBack(xButtons, yButtons, 0x000000, color, "  ")
+		newObj("DesktopButtons", i, xButtons, yButtons, xButtons + 1, yButtons)
+
+		xButtons = xButtons + 3
 	end
 
-	return stroka
-end
+	--ОТРИСОВКА ИКОНОК ПО ФАЙЛ ЛИСТУ
+	local counter = currentDesktop * totalCountOfIcons - totalCountOfIcons + 1
+	local xIcons, yIcons = x, y
+	for i = 1, yCountOfIcons do
+		for j = 1, xCountOfIcons do
+			if not currentFileList[counter] then break end
 
---Ожидание клика либо нажатия какой-либо клавиши
-function ECSAPI.waitForTouchOrClick()
-	while true do
-		local e = {event.pull()}
-		if e[1] == "key_down" or e[1] == "touch" then break end
-	end
-end
+			--ОТРИСОВКА КОНКРЕТНОЙ ИКОНКИ
+			local path = workPath .. currentFileList[counter]
+			--drawIconSelection(xIcons, yIcons, counter)
+			drawIcon(xIcons, yIcons, path)
 
-----------------------------ОКОШЕЧКИ, СУКА--------------------------------------------------
+			--СОЗДАНИЕ ОБЪЕКТА ИКОНКИ
+			newObj("DesktopIcons", counter, xIcons, yIcons, xIcons + widthOfIcon - 1, yIcons + heightOfIcon - 1, path, nil)
 
---ECSAPI.windows = {}
-
-function ECSAPI.drawButton(x,y,width,height,text,backColor,textColor)
-	x,y = ECSAPI.correctStartCoords(x,y,width,height)
-
-	local textPosX = math.floor(x + width / 2 - unicode.len(text) / 2)
-	local textPosY = math.floor(y + height / 2)
-	ECSAPI.square(x,y,width,height,backColor)
-	ECSAPI.colorText(textPosX,textPosY,textColor,text)
-end
-
-function ECSAPI.drawAdaptiveButton(x,y,offsetX,offsetY,text,backColor,textColor)
-	local length = unicode.len(text)
-	local width = offsetX*2 + length
-	local height = offsetY*2 + 1
-
-	x,y = ECSAPI.correctStartCoords(x,y,width,height)
-
-	ECSAPI.square(x,y,width,height,backColor)
-	ECSAPI.colorText(x+offsetX,y+offsetY,textColor,text)
-
-	return x,y,(x+width-1),(y+height-1)
-end
-
-function ECSAPI.windowShadow(x,y,width,height)
-	gpu.setBackground(ECSAPI.windowColors.shadow)
-	gpu.fill(x+width,y+1,2,height," ")
-	gpu.fill(x+1,y+height,width,1," ")
-end
-
---Просто белое окошко безо всего
-function ECSAPI.blankWindow(x,y,width,height)
-	local oldPixels = ECSAPI.rememberOldPixels(x,y,x+width+1,y+height)
-
-	ECSAPI.square(x,y,width,height,ECSAPI.windowColors.background)
-
-	ECSAPI.windowShadow(x,y,width,height)
-
-	return oldPixels
-end
-
-function ECSAPI.emptyWindow(x,y,width,height,title)
-
-	local oldPixels = ECSAPI.rememberOldPixels(x,y,x+width+1,y+height)
-
-	--ОКНО
-	gpu.setBackground(ECSAPI.windowColors.background)
-	gpu.fill(x,y+1,width,height-1," ")
-
-	--ТАБ СВЕРХУ
-	gpu.setBackground(ECSAPI.windowColors.tab)
-	gpu.fill(x,y,width,1," ")
-
-	--ТИТЛ
-	gpu.setForeground(ECSAPI.windowColors.title)
-	local textPosX = x + math.floor(width/2-unicode.len(title)/2) -1
-	gpu.set(textPosX,y,title)
-
-	--ТЕНЬ
-	ECSAPI.windowShadow(x,y,width,height)
-
-	return oldPixels
-
-end
-
-function ECSAPI.error(...)
-
-	local arg = {...}
-	local text = arg[1] or "С твоим компом опять хуйня"
-	local buttonText = arg[2] or "ОК"
-	local sText = unicode.len(text)
-	local xSize, ySize = gpu.getResolution()
-	local width = math.ceil(xSize * 3 / 5)
-	if (width - 11) > (sText) then width = 11 + sText end
-	local textLimit = width - 11
-
-	--Восклицательный знак
-	local image = {
-		{{0xff0000,0xffffff,"#"},{0xff0000,0xffffff,"#"},{0xff0000,0xffffff," "},{0xff0000,0xffffff,"#"},{0xff0000,0xffffff,"#"}},
-		{{0xff0000,0xffffff,"#"},{0xff0000,0xffffff," "},{0xff0000,0xffffff,"!"},{0xff0000,0xffffff," "},{0xff0000,0xffffff,"#"}},
-		{{0xff0000,0xffffff," "},{0xff0000,0xffffff," "},{0xff0000,0xffffff," "},{0xff0000,0xffffff," "},{0xff0000,0xffffff," "}}
-	}
-
-	--Парсинг строки ошибки
-	local parsedErr = {}
-	local countOfStrings = math.ceil(sText / textLimit)
-	for i=1, countOfStrings do
-		parsedErr[i] = unicode.sub(text, i * textLimit - textLimit + 1, i * textLimit)
-	end
-
-	--Расчет высоты
-	local height = 6
-	if #parsedErr > 1 then height = height + #parsedErr - 1 end
-
-	--Расчет позиции окна
-	local xStart,yStart = ECSAPI.correctStartCoords("auto","auto",width,height)
-	local xEnd,yEnd = xStart + width - 1, yStart + height - 1
-
-	--Рисуем окно
-	local oldPixels = ECSAPI.emptyWindow(xStart,yStart,width,height," ")
-
-	--Рисуем воскл знак
-	ECSAPI.drawCustomImage(xStart + 2,yStart + 2,image)
-
-	--Рисуем текст ошибки
-	gpu.setBackground(ECSAPI.windowColors.background)
-	gpu.setForeground(ECSAPI.windowColors.usualText)
-	local xPos, yPos = xStart + 9, yStart + 2
-	for i=1, #parsedErr do
-		gpu.set(xPos, yPos, parsedErr[i])
-		yPos = yPos + 1
-	end
-
-	--Рисуем кнопу
-	local xButton = xEnd - unicode.len(buttonText) - 7
-	local button = {ECSAPI.drawAdaptiveButton(xButton,yEnd - 1,3,0,buttonText,ECSAPI.colors.lightBlue,0xffffff)}
-
-	--Ждем
-	while true do
-		local e = {event.pull()}
-		if e[1] == "touch" then
-			if ECSAPI.clickedAtArea(e[3],e[4],button[1],button[2],button[3],button[4]) then
-				ECSAPI.drawAdaptiveButton(button[1],button[2],3,0,buttonText,ECSAPI.colors.blue,0xffffff)
-				os.sleep(0.4)
-				break
-			end
-		elseif e[1] == "key_down" and e[4] == 28 then
-			ECSAPI.drawAdaptiveButton(button[1],button[2],3,0,buttonText,ECSAPI.colors.blue,0xffffff)
-			os.sleep(0.4)
-			break	
+			xIcons = xIcons + widthOfIcon + xSpaceBetweenIcons
+			counter = counter + 1
 		end
+
+		xIcons = x
+		yIcons = yIcons + heightOfIcon + ySpaceBetweenIcons
+	end
+end
+
+--ОТРИСОВКА ДОКА
+local function drawDock()
+
+	--ПУСТЬ К ЯРЛЫКАМ НА ДОКЕ
+	local pathOfDockShortcuts = "System/OS/Dock"
+
+	--ПОЛУЧИТЬ СПИСОК ЯРЛЫКОВ НА ДОКЕ
+	local dockShortcuts = ecs.getFileList(pathOfDockShortcuts)
+	local sDockShortcuts = #dockShortcuts
+
+	--ПОДСЧИТАТЬ РАЗМЕР ДОКА И ПРОЧЕЕ
+	local widthOfDock = (sDockShortcuts * (widthOfIcon + xSpaceBetweenIcons) - xSpaceBetweenIcons) + heightOfDock * 2 + 2
+	local xDock, yDock = math.floor(xSize / 2 - widthOfDock / 2) + 1, ySize - heightOfDock
+
+	--НАРИСОВАТЬ ПОДЛОЖКУ
+	local color = dockColor
+	for i = 1, heightOfDock do
+		ecs.square(xDock + i, ySize - i + 1, widthOfDock - i * 2, 1, color)
+		color = color - 0x181818
 	end
 
-	--Профит
-	ECSAPI.drawOldPixels(oldPixels)
+	--НАРИСОВАТЬ ЯРЛЫКИ НА ДОКЕ
+	if sDockShortcuts > 0 then
+		local xIcons = math.floor(xSize / 2 - ((widthOfIcon + xSpaceBetweenIcons) * sDockShortcuts - xSpaceBetweenIcons * 4) / 2 )
+		local yIcons = ySize - heightOfDock - 1
 
-end
-
-
-function ECSAPI.prepareToExit(color1, color2)
-	ECSAPI.clearScreen(color1 or 0x333333)
-	gpu.setForeground(color2 or 0xffffff)
-	gpu.set(1, 1, "")
-end
-
---А ЭТО КАРОЧ ИЗ ЮНИКОДА В СИМВОЛ - ВРОДЕ РАБОТАЕТ, НО ВСЯКОЕ БЫВАЕТ
-function ECSAPI.convertCodeToSymbol(code)
-	local symbol
-	if code ~= 0 and code ~= 13 and code ~= 8 and code ~= 9 and not keyboard.isControlDown() then
-		symbol = unicode.char(code)
-		if keyboard.isShiftPressed then symbol = unicode.upper(symbol) end
-	end
-	return symbol
-end
-
-function ECSAPI.progressBar(x, y, width, height, background, foreground, percent)
-	local activeWidth = math.ceil(width * percent / 100)
-	ECSAPI.square(x, y, width, height, background)
-	ECSAPI.square(x, y, activeWidth, height, foreground)
-end
-
---ВВОД ТЕКСТА ПО ЛИМИТУ ВО ВСЯКИЕ ПОЛЯ - УДОБНАЯ ШТУКА КАРОЧ
-function ECSAPI.inputText(x, y, limit, cheBiloVvedeno, background, foreground, justDrawNotEvent)
-	limit = limit or 10
-	cheBiloVvedeno = cheBiloVvedeno or ""
-	background = background or 0xffffff
-	foreground = foreground or 0x000000
-
-	gpu.setBackground(background)
-	gpu.setForeground(foreground)
-	gpu.fill(x, y, limit, 1, " ")
-
-	local text = cheBiloVvedeno
-
-	local function draw()
-		term.setCursorBlink(false)
-
-		local dlina = unicode.len(text)
-		local xCursor = x + dlina
-		if xCursor > (x + limit - 1) then xCursor = (x + limit - 1) end
-
-		gpu.set(x, y, ECSAPI.stringLimit("start", text, limit))
-		term.setCursor(xCursor, y)
-
-		term.setCursorBlink(true)
-	end
-
-	draw()
-
-	if justDrawNotEvent then term.setCursorBlink(false); return cheBiloVvedeno end
-
-	while true do
-		local e = {event.pull()}
-		if e[1] == "key_down" then
-			if e[4] == 14 then
-				term.setCursorBlink(false)
-				text = unicode.sub(text, 1, -2)
-				if unicode.len(text) < limit then gpu.set(x + unicode.len(text), y, " ") end
-				draw()
-			elseif e[4] == 28 then
-				term.setCursorBlink(false)
-				return text
-			else
-				local symbol = ECSAPI.convertCodeToSymbol(e[3])
-				if symbol then
-					text = text..symbol
-					draw()
-				end
-			end
-		elseif e[1] == "touch" then
-			term.setCursorBlink(false)
-			return text
+		for i = 1, sDockShortcuts do
+			drawIcon(xIcons, yIcons, pathOfDockShortcuts.."/"..dockShortcuts[i])
+			xIcons = xIcons + xSpaceBetweenIcons + widthOfIcon
 		end
 	end
 end
 
-function ECSAPI.selector(x, y, limit, cheBiloVvedeno, varianti, background, foreground, justDrawNotEvent)
-	
-	local selectionHeight = #varianti
-	local oldPixels
+--РИСОВАТЬ ВРЕМЯ СПРАВА
+local function drawTime()
+	local time = " " .. unicode.sub(os.date("%T"), 1, -4) .. " "
+	local sTime = unicode.len(time)
+	ecs.colorTextWithBack(xSize - sTime, 1, 0x000000, topBarColor, time)
+end
 
+--РИСОВАТЬ ВЕСЬ ТОПБАР
+local function drawTopBar()
 
-	local obj = {}
-	local function newObj(class, name, ...)
-		obj[class] = obj[class] or {}
-		obj[class][name] = {...}
+	--Элементы топбара
+	local topBarElements = { "MineOS", "Вид" }
+
+	--Белая горизонтальная линия
+	ecs.square(1, 1, xSize, 1, topBarColor)
+
+	--Рисуем элементы и создаем объекты
+	local xPos = 2
+	gpu.setForeground(0x000000)
+	for i = 1, #topBarElements do
+
+		if i > 1 then gpu.setForeground(0x666666) end
+
+		local length = unicode.len(topBarElements[i])
+		gpu.set(xPos + 1, 1, topBarElements[i])
+
+		newObj("TopBarButtons", topBarElements[i], xPos, 1, xPos + length + 1, 1)
+
+		xPos = xPos + length + 2
 	end
 
-	local function drawPimpo4ka(color)
-		ECSAPI.colorTextWithBack(x + limit - 1, y, color, 0xffffff - color, "▼")
-	end
+	--Рисуем время
+	drawTime()
+end
 
-	local function drawText(color)
-		gpu.setForeground(color)
-		gpu.set(x, y, ECSAPI.stringLimit("start", cheBiloVvedeno, limit - 1))
-	end
+--РИСОВАТЬ ВАЩЕ ВСЕ СРАЗУ
+local function drawAll()
+	ecs.clearScreen(background)
+	drawTopBar()
+	drawDock()
+	drawDesktop(xPosOfIcons, yPosOfIcons)
+end
 
-	local function drawSelection()
-		local yPos = y + 1
-		oldPixels = ECSAPI.rememberOldPixels(x, yPos, x + limit + 1, yPos + selectionHeight + 1)
-		ECSAPI.windowShadow(x, yPos, limit, selectionHeight)
-		ECSAPI.square(x, yPos, limit, selectionHeight, background)
+--ПЕРЕРИСОВАТЬ ВЫДЕЛЕННЫЕ ИКОНКИ
+local function redrawSelectedIcons()
 
-		gpu.setForeground(foreground)
-		for i = 1, #varianti do
-			gpu.set(x, y + i, varianti[i])
-			newObj("selector", varianti[i], x, y + i, x + limit - 1)
-		end
-	end
+	for key, value in pairs(obj["DesktopIcons"]) do
 
-	ECSAPI.square(x, y, limit, 1, background)
-	drawText(foreground)
-	drawPimpo4ka(background - 0x555555)
+		if obj["DesktopIcons"][key][6] ~= nil then
 
-	if justDrawNotEvent then return cheBiloVvedeno end
+			local path = currentFileList[key]
+			local x = obj["DesktopIcons"][key][1]
+			local y = obj["DesktopIcons"][key][2]
 
-	drawPimpo4ka(0xffffff)
-	drawSelection()
+			drawIconSelection(x, y, key)
+			drawIcon(x, y, obj["DesktopIcons"][key][5])
 
-	while true do
-		local e = {event.pull()}
-		if e[1] == "touch" then
-			for key, val in pairs(obj["selector"]) do
-				if obj["selector"] and ECSAPI.clickedAtArea(e[3], e[4], obj["selector"][key][1], obj["selector"][key][2], obj["selector"][key][3], obj["selector"][key][2]) then
-					ECSAPI.square(x, obj["selector"][key][2], limit, 1, ECSAPI.colors.blue)
-					gpu.setForeground(0xffffff)
-					gpu.set(x, obj["selector"][key][2], key)
-					os.sleep(0.3)
-					ECSAPI.drawOldPixels(oldPixels)
-					cheBiloVvedeno = key
-					drawPimpo4ka(background - 0x555555)
-					ECSAPI.square(x, y, limit - 1, 1, background)
-					drawText(foreground)
-
-					return cheBiloVvedeno
-				end
-			end
 		end
 	end
 end
 
-function ECSAPI.input(x, y, limit, title, ...)
-
-	local obj = {}
-	local function newObj(class, name, ...)
-		obj[class] = obj[class] or {}
-		obj[class][name] = {...}
+--ВЫБРАТЬ ИКОНКУ И ВЫДЕЛИТЬ ЕЕ
+local function selectIcon(nomer)
+	if keyboard.isControlDown() and not obj["DesktopIcons"][nomer][6] then
+		obj["DesktopIcons"][nomer][6] = true
+		redrawSelectedIcons()
+	elseif keyboard.isControlDown() and obj["DesktopIcons"][nomer][6] then
+		obj["DesktopIcons"][nomer][6] = false
+		redrawSelectedIcons()
+	elseif not keyboard.isControlDown() then
+		deselectAll()
+		obj["DesktopIcons"][nomer][6] = true
+		redrawSelectedIcons()
+		deselectAll(true)
 	end
+end
 
-	local activeData = 1
-	local data = {...}
+--ЗАПУСТИТЬ ПРОГУ
+local function launchIcon(path, arguments)
 
-	local sizeOfTheLongestElement = 1
-	for i = 1, #data do
-		sizeOfTheLongestElement = math.max(sizeOfTheLongestElement, unicode.len(data[i][2]))
-	end
+	--Создаем нормальные аргументы для Шелла
+	if arguments then arguments = " " .. arguments else arguments = "" end
 
-	local width = 2 + sizeOfTheLongestElement + 2 + limit + 2
-	local height = 2 + #data * 2 + 2
+	--Получаем файл формат заранее
+	local fileFormat = ecs.getFileFormat(path)
 
-	--ПО ЦЕНТРУ ЭКРАНА, А ТО МАЛО ЛИ ЧЕ
-	x, y = ECSAPI.correctStartCoords(x, y, width, height)
-
-	local oldPixels = ECSAPI.rememberOldPixels(x, y, x + width + 1, y + height)
-
-	ECSAPI.emptyWindow(x, y, width, height, title)
-
-	local xPos, yPos
-
-	local function drawElement(i, justDrawNotEvent)
-		xPos = x + 2
-		yPos = y + i * 2
-		local color = 0x666666
-		if i == activeData then color = 0x000000 end
-
-		gpu.setBackground(ECSAPI.windowColors.background)
-		ECSAPI.colorText(xPos, yPos, color, data[i][2])
-
-		xPos = (x + width - 2 - limit)
-
-		local data1
-
-		if data[i][1] == "select" or data[i][1] == "selector" or data[i][1] == "selecttion" then
-			data1 = ECSAPI.selector(xPos, yPos, limit, data[i][3] or "", data[i][4] or {"What?", "Bad API use :("}, 0xffffff, color, justDrawNotEvent)
+	--Если это приложение
+	if fileFormat == ".app" then
+		ecs.prepareToExit()
+		local cyka = path .. "/" .. ecs.hideFileFormat(fs.name(path)) .. ".lua"
+		local success, reason = shell.execute(cyka)
+		ecs.prepareToExit()
+		if not success then ecs.displayCompileMessage(1, reason, true) end
+		
+	--Если это обычный луа файл - т.е. скрипт
+	elseif fileFormat == ".lua" or fileFormat == nil then
+		ecs.prepareToExit()
+		local success, reason = shell.execute(path .. arguments)
+		ecs.prepareToExit()
+		if success then
+			print("Программа выполнена успешно! Нажмите любую клавишу, чтобы продолжить.")
 		else
-			data1 = ECSAPI.inputText(xPos, yPos, limit, data[i][3] or "", 0xffffff, color, justDrawNotEvent)
+			ecs.displayCompileMessage(1, reason, true)
 		end
 
-		newObj("elements", i, xPos, yPos, xPos + limit - 1)
-
-		return data1
-	end
-
-	local coodrs = { ECSAPI.drawAdaptiveButton(x + width - 10, y + height - 2, 3, 0, "OK", ECSAPI.colors.lightBlue, 0xffffff) }
-	newObj("OK", "OK", coodrs[1], coodrs[2], coodrs[3])
-
-	local function pressButton(press, press2)
-		if press then
-			ECSAPI.drawAdaptiveButton(obj["OK"]["OK"][1], obj["OK"]["OK"][2], 3, 0, "OK", press, press2)
+	elseif fileFormat == ".png" then
+		shell.execute("Photoshop.app/Photoshop.lua open "..path)
+	elseif fileFormat == ".txt" or fileFormat == ".cfg" or fileFormat == ".lang" then
+		shell.execute("edit "..path)
+	elseif fileFormat == ".lnk" then
+		local shortcutLink = readShortcut(path)
+		if fs.exists(shortcutLink) then
+			launchIcon(shortcutLink)
 		else
-			ECSAPI.drawAdaptiveButton(obj["OK"]["OK"][1], obj["OK"]["OK"][2], 3, 0, "OK", ECSAPI.colors.lightBlue, 0xffffff)
+			ecs.error("Ярлык ссылается на несуществующий файл.")
 		end
 	end
-
-	local function drawAll()
-		gpu.setBackground(ECSAPI.windowColors.background)
-		for i = 1, #data do
-			drawElement(i, true)
-		end
-
-		if activeData > #data then
-			pressButton(ECSAPI.colors.blue, 0xffffff)
-		else
-			pressButton(false)
-		end
-	end
-
-	local function getMassiv()
-		local massiv = {}
-		for i = 1, #data do
-			table.insert(massiv, data[i][3])
-		end
-		return massiv
-	end
-
-	local function drawKaro4()
-		if activeData ~= -1 then data[activeData][3] = drawElement(activeData, false) end
-	end
-
-	------------------------------------------------------------------------------------------------
-
-	drawAll()
-	drawKaro4()
-	activeData = activeData + 1
-	drawAll()
-
-	while true do
-
-		local e = {event.pull()}
-		if e[1] == "key_down" then
-
-			if e[4] == 28 and activeData > #data then pressButton(false); os.sleep(0.2); pressButton(ECSAPI.colors.blue, 0xffffff); break end
-
-			if e[4] == 200 and activeData > 1 then activeData = activeData - 1; drawAll() end
-			if e[4] == 208 and activeData ~= -1 and activeData <= #data then activeData = activeData + 1; drawAll() end
-
-			if e[4] == 28 then
-				drawKaro4()
-				if activeData <= #data and activeData ~= -1 then activeData = activeData + 1 end
-				drawAll()
-			end
+end
 
 
-			
+------------------------------------------------------------------------------------------------------------------------
 
-		elseif e[1] == "touch" then
-			for key, val in pairs(obj["elements"]) do
-				if ECSAPI.clickedAtArea(e[3], e[4], obj["elements"][key][1], obj["elements"][key][2], obj["elements"][key][3], obj["elements"][key][2]) then
-					
-					if key ~= activeData then activeData = key else drawKaro4(); if activeData <= #data then activeData = activeData + 1 end end
+drawAll()
 
-					drawAll()
-					--activeData = key
+------------------------------------------------------------------------------------------------------------------------
 
-					--activeData = -1
+while true do
+	local eventData = { event.pull() }
+	if eventData[1] == "touch" then
 
-					--if activeData <= #data then activeData = activeData + 1 end
-					
-					break
-				end
-			end
-
-			if ECSAPI.clickedAtArea(e[3], e[4], obj["OK"]["OK"][1], obj["OK"]["OK"][2], obj["OK"]["OK"][3], obj["OK"]["OK"][2]) then
+		--ПРОСЧЕТ КЛИКА НА ИКОНОЧКИ РАБОЧЕГО СТОЛА
+		for key, value in pairs(obj["DesktopIcons"]) do
+			if ecs.clickedAtArea(eventData[3], eventData[4], obj["DesktopIcons"][key][1], obj["DesktopIcons"][key][2], obj["DesktopIcons"][key][3], obj["DesktopIcons"][key][4]) then
 				
-				if activeData > #data then
-					pressButton(false); os.sleep(0.2); pressButton(ECSAPI.colors.blue, 0xffffff)
+				--ЕСЛИ ЛЕВАЯ КНОПА МЫШИ
+				if (eventData[5] == 0 and not keyboard.isControlDown()) or (eventData[5] == 1 and keyboard.isControlDown()) then
+					
+					--ЕСЛИ НЕ ВЫБРАНА, ТО ВЫБРАТЬ СНАЧАЛА
+					if not obj["DesktopIcons"][key][6] then
+						selectIcon(key)
+					
+					--А ЕСЛИ ВЫБРАНА УЖЕ, ТО ЗАПУСТИТЬ ПРОЖКУ ИЛИ ОТКРЫТЬ ПАПКУ
+					else
+						if fs.isDirectory(obj["DesktopIcons"][key][5]) and ecs.getFileFormat(obj["DesktopIcons"][key][5]) ~= ".app" then
+							table.insert(workPathHistory, workPath)							
+							workPath = obj["DesktopIcons"][key][5]
+							drawDesktop(xPosOfIcons, yPosOfIcons)
+						else
+							deselectAll(true)
+							launchIcon(obj["DesktopIcons"][key][5])
+							drawAll()
+						end
+					end
+
+				--ЕСЛИ ПРАВАЯ КНОПА МЫШИ
+				elseif eventData[5] == 1 and not keyboard.isControlDown() then
+					--selectIcon(key)
+					obj["DesktopIcons"][key][6] = true
+					redrawSelectedIcons()
+
+					local action
+					local fileFormat = ecs.getFileFormat(obj["DesktopIcons"][key][5])
+
+					local function getSelectedIcons()
+						local selectedIcons = {}
+						for key, val in pairs(obj["DesktopIcons"]) do
+							if obj["DesktopIcons"][key][6] then
+								table.insert(selectedIcons, { ["id"] = key })
+							end
+						end
+						return selectedIcons
+					end
+
+
+					--РАЗНЫЕ КОНТЕКСТНЫЕ МЕНЮ
+					if #getSelectedIcons() > 1 then
+						action = context.menu(eventData[3], eventData[4], {"Вырезать", false, "^X"}, {"Копировать", false, "^C"}, {"Вставить", not clipboard, "^V"}, "-", {"Добавить в архив"}, "-", {"Удалить", false, "⌫"})
+					elseif fileFormat == ".app" and fs.isDirectory(obj["DesktopIcons"][key][5]) then
+						action = context.menu(eventData[3], eventData[4], {"Показать содержимое"}, "-", {"Вырезать", false, "^X"}, {"Копировать", false, "^C"}, {"Вставить", not clipboard, "^V"}, "-", {"Переименовать"}, {"Создать ярлык"}, {"Добавить в архив"}, "-", {"Удалить", false, "⌫"})
+					elseif fileFormat ~= ".app" and fs.isDirectory(obj["DesktopIcons"][key][5]) then
+						action = context.menu(eventData[3], eventData[4], {"Вырезать", false, "^X"}, {"Копировать", false, "^C"}, {"Вставить", not clipboard, "^V"}, "-", {"Переименовать"}, {"Создать ярлык"}, {"Добавить в архив"}, "-", {"Удалить", false, "⌫"})
+					else
+						action = context.menu(eventData[3], eventData[4], {"Редактировать"}, "-", {"Вырезать", false, "^X"}, {"Копировать", false, "^C"}, {"Вставить", not clipboard, "^V"}, "-", {"Переименовать"}, {"Создать ярлык"}, {"Добавить в архив"}, "-", {"Удалить", false, "⌫"})
+					end
+
+					--ecs.error(#getSelectedIcons())
+					deselectAll()
+					--ecs.error(#getSelectedIcons())
+
+					if action == "Показать содержимое" then
+						table.insert(workPathHistory, workPath)	
+						workPath = obj["DesktopIcons"][key][5]
+						drawDesktop(xPosOfIcons, yPosOfIcons)
+					elseif action == "Редактировать" then
+						ecs.prepareToExit()
+						shell.execute("edit "..obj["DesktopIcons"][key][5])
+						drawAll()
+					elseif action == "Удалить" then
+						fs.remove(workPath .. obj["DesktopIcons"][key][5])
+						drawDesktop(xPosOfIcons, yPosOfIcons)
+					elseif action == "Копировать" then
+						clipboard = workPath .. obj["DesktopIcons"][key][5]
+					elseif action == "Вставить" then
+						ecs.copy(clipboard, workPath)
+						drawDesktop(xPosOfIcons, yPosOfIcons)
+					elseif action == "Переименовать" then
+						local success = ecs.rename(workPath ..obj["DesktopIcons"][key][5])
+						if success then drawDesktop(xPosOfIcons, yPosOfIcons) end
+					else
+						redrawSelectedIcons()
+						deselectAll(true)
+					end
+					
+				end
+				
+				break
+			end	
+		end
+
+		--ПРОСЧЕТ КЛИКА НА КНОПОЧКИ ПЕРЕКЛЮЧЕНИЯ РАБОЧИХ СТОЛОВ
+		for key, value in pairs(obj["DesktopButtons"]) do
+			if ecs.clickedAtArea(eventData[3], eventData[4], obj["DesktopButtons"][key][1], obj["DesktopButtons"][key][2], obj["DesktopButtons"][key][3], obj["DesktopButtons"][key][4]) then
+				if key == 0 then 
+					if #workPathHistory > 0 then
+						ecs.colorTextWithBack(obj["DesktopButtons"][key][1], obj["DesktopButtons"][key][2], 0xffffff, ecs.colors.green, " <")
+						os.sleep(0.2)
+						workPath = workPathHistory[#workPathHistory]
+						workPathHistory[#workPathHistory] = nil
+						currentDesktop = 1
+
+						drawDesktop(xPosOfIcons, yPosOfIcons)
+					end
 				else
-					pressButton(ECSAPI.colors.blue, 0xffffff)
-					os.sleep(0.3)
-				end
-
-				break
-			end
-		end
-	end
-
-	ECSAPI.drawOldPixels(oldPixels)
-
-	return getMassiv()
-end
-
-function ECSAPI.getHDDs()
-	local candidates = {}
-	for address in component.list("filesystem") do
-	  local dev = component.proxy(address)
-	  if not dev.isReadOnly() and dev.address ~= computer.tmpAddress() and fs.get(os.getenv("_")).address then
-	    table.insert(candidates, dev)
-	  end
-	end
-	return candidates
-end
-
-function ECSAPI.parseErrorMessage(error, translate)
-
-	local parsedError = {}
-
-	-- --ВСТАВКА ВСЕГО ГОВНА ДО ПЕРВОГО ЭНТЕРА
-	-- local starting, ending = string.find(error, "\n", 1)
-	-- table.insert(parsedError, unicode.sub(error, 1, ending or #error))
-
-	--ПОИСК ЭНТЕРОВ
-	local starting, ending, searchFrom = nil, nil, 1
-	for i = 1, unicode.len(error) do
-		starting, ending = string.find(error, "\n", searchFrom)
-		if starting then
-			table.insert(parsedError, unicode.sub(error, searchFrom, starting - 1))
-			searchFrom = ending + 1
-		else
-			break
-		end
-	end
-
-	--На всякий случай, если сообщение об ошибке без энтеров вообще, т.е. однострочное
-	if #parsedError == 0 and error ~= "" and error ~= nil and error ~= " " then
-		table.insert(parsedError, error)
-	end
-
-	--Замена /r/n и табсов
-	for i = 1, #parsedError do
-		parsedError[i] = string.gsub(parsedError[i], "\r\n", "\n")
-		parsedError[i] = string.gsub(parsedError[i], "	", "    ")
-	end
-
-	if translate then
-		for i = 1, #parsedError do
-			parsedError[i] = string.gsub(parsedError[i], "interrupted", "Выполнение программы прервано пользователем")
-			parsedError[i] = string.gsub(parsedError[i], " got ", " получена ")
-			parsedError[i] = string.gsub(parsedError[i], " expected,", " ожидается,")
-			parsedError[i] = string.gsub(parsedError[i], "bad argument #", "Неверный аргумент №")
-			parsedError[i] = string.gsub(parsedError[i], "stack traceback", "Отслеживание ошибки")
-			parsedError[i] = string.gsub(parsedError[i], "tail calls", "Дочерние функции")
-			parsedError[i] = string.gsub(parsedError[i], "in function", "в функции")
-			parsedError[i] = string.gsub(parsedError[i], "in main chunk", "в основной программе")
-			parsedError[i] = string.gsub(parsedError[i], "unexpected symbol near", "неожиданный символ рядом с")
-			parsedError[i] = string.gsub(parsedError[i], "attempt to index", "несуществующий индекс")
-			parsedError[i] = string.gsub(parsedError[i], "attempt to get length of", "не удается получить длину")
-			parsedError[i] = string.gsub(parsedError[i], ": ", ", ")
-			parsedError[i] = string.gsub(parsedError[i], " module ", " модуль ")
-			parsedError[i] = string.gsub(parsedError[i], "not found", "не найден")
-			parsedError[i] = string.gsub(parsedError[i], "no field package.preload", "не найдена библиотека")
-			parsedError[i] = string.gsub(parsedError[i], "no file", "нет файла")
-			parsedError[i] = string.gsub(parsedError[i], "local", "локальной")
-			parsedError[i] = string.gsub(parsedError[i], "global", "глобальной")
-			parsedError[i] = string.gsub(parsedError[i], "no primary", "не найден компонент")
-			parsedError[i] = string.gsub(parsedError[i], "available", "в доступе")
-		end
-	end
-
-	starting, ending = nil, nil
-
-	return parsedError
-end
-
-function ECSAPI.displayCompileMessage(y, reason, translate)
-
-	local xSize, ySize = gpu.getResolution()
-
-	--Переводим причину в массив
-	reason = ECSAPI.parseErrorMessage(reason, translate)
-
-	--Получаем ширину и высоту окошка
-	local width = math.floor(xSize * 7 / 10)
-	local height = #reason + 6
-	local textWidth = width - 11
-
-	--Просчет вот этой хуйни, аааахаахах
-	local difference = ySize - (height + y)
-	if difference < 0 then
-		for i = 1, (math.abs(difference) + 1) do
-			table.remove(reason, 1)
-		end
-		table.insert(reason, 1, "…")
-		height = #reason + 6
-	end
-
-	local x = math.floor(xSize / 2 - width / 2)
-
-	--Иконочка воскл знака на красном фоне
-	local errorImage = {
-		{{0xff0000,0xffffff,"#"},{0xff0000,0xffffff,"#"},{0xff0000,0xffffff," "},{0xff0000,0xffffff,"#"},{0xff0000,0xffffff,"#"}},
-		{{0xff0000,0xffffff,"#"},{0xff0000,0xffffff," "},{0xff0000,0xffffff,"!"},{0xff0000,0xffffff," "},{0xff0000,0xffffff,"#"}},
-		{{0xff0000,0xffffff," "},{0xff0000,0xffffff," "},{0xff0000,0xffffff," "},{0xff0000,0xffffff," "},{0xff0000,0xffffff," "}}
-	}
-
-	--Запоминаем, че было отображено
-	local oldPixels = ECSAPI.rememberOldPixels(x, y, x + width + 1, y + height)
-
-	--Типа анимация, ога
-	for i = 1, height, 1 do
-		ECSAPI.square(x, y, width, i, ECSAPI.windowColors.background)
-		ECSAPI.windowShadow(x, y, width, i)
-		os.sleep(0.01)
-	end
-
-	--Рисуем воскл знак
-	ECSAPI.drawCustomImage(x + 2, y + 1, errorImage)
-
-	--Рисуем текст
-	local yPos = y + 1
-	local xPos = x + 9
-	gpu.setBackground(ECSAPI.windowColors.background)
-
-	ECSAPI.colorText(xPos, yPos, ECSAPI.windowColors.usualText, "Код ошибки:")
-	yPos = yPos + 2
-
-	gpu.setForeground( 0xcc0000 )
-	for i = 1, #reason do
-		gpu.set(xPos, yPos, ECSAPI.stringLimit("end", reason[i], textWidth))
-		yPos = yPos + 1
-	end
-
-	yPos = yPos + 1
-	ECSAPI.colorText(xPos, yPos, ECSAPI.windowColors.usualText, ECSAPI.stringLimit("end", "Нажмите любую клавишу, чтобы продолжить", textWidth))
-
-	--Пикаем звуком кароч
-	for i = 1, 3 do
-		computer.beep(1000)
-	end
-
-	--Ждем сам знаешь чего
-	ECSAPI.waitForTouchOrClick()
-
-	--Рисуем, че было нарисовано
-	ECSAPI.drawOldPixels(oldPixels)
-end
-
-function ECSAPI.select(x, y, title, textLines, buttons)
-
-	--Ну обжекты, хули
-	local obj = {}
-	local function newObj(class, name, ...)
-		obj[class] = obj[class] or {}
-		obj[class][name] = {...}
-	end
-
-	--Вычисление ширны на основе текста
-	local sizeOfTheLongestElement = 0
-	for i = 1, #textLines do
-		sizeOfTheLongestElement = math.max(sizeOfTheLongestElement, unicode.len(textLines[i][1]))
-	end
-
-	local width = sizeOfTheLongestElement + 4
-
-	--Вычисление ширины на основе размера кнопок
-	local buttonOffset = 2
-	local spaceBetweenButtons = 2
-
-	local sizeOfButtons = 0
-	for i = 1, #buttons do
-		sizeOfButtons = sizeOfButtons + unicode.len(buttons[i][1]) + buttonOffset * 2 + spaceBetweenButtons
-	end
-
-	--Финальное задание ширины и высоты
-	width = math.max(width, sizeOfButtons + 2)
-	local height = #textLines + 5
-
-	--Рисуем окно
-	x, y = ECSAPI.correctStartCoords(x, y, width, height)
-	local oldPixels = ECSAPI.emptyWindow(x, y, width, height, title)
-
-	--Рисуем текст
-	local xPos, yPos = x + 2, y + 2
-	gpu.setBackground(ECSAPI.windowColors.background)
-	for i = 1, #textLines do
-		ECSAPI.colorText(xPos, yPos, textLines[i][2] or ECSAPI.windowColors.usualText, textLines[i][1] or "Ну ты че, текст-то введи!")
-		yPos = yPos + 1
-	end
-
-	--Рисуем кнопочки
-	xPos, yPos = x + width - sizeOfButtons, y + height - 2
-	for i = 1, #buttons do
-		newObj("Buttons", buttons[i][1], ECSAPI.drawAdaptiveButton(xPos, yPos, buttonOffset, 0, buttons[i][1], buttons[i][2] or ECSAPI.colors.lightBlue, buttons[i][3] or 0xffffff))
-		xPos = xPos + buttonOffset * 2 + spaceBetweenButtons + unicode.len(buttons[i][1])
-	end
-
-	--Жмякаем на кнопочки
-	local action
-
-	while true do
-		if action then break end
-		local e = {event.pull()}
-		if e[1] == "touch" then
-			for key, val in pairs(obj["Buttons"]) do
-				if ECSAPI.clickedAtArea(e[3], e[4], obj["Buttons"][key][1], obj["Buttons"][key][2], obj["Buttons"][key][3], obj["Buttons"][key][4]) then
-					ECSAPI.drawAdaptiveButton(obj["Buttons"][key][1], obj["Buttons"][key][2], buttonOffset, 0, key, ECSAPI.colors.blue, 0xffffff)
-					os.sleep(0.3)
-					action = key
-					break
+					currentDesktop = key
+					drawDesktop(xPosOfIcons, yPosOfIcons)
 				end
 			end
-		elseif e[1] == "key_down" then
-			if e[4] == 28 then
-				action = buttons[#buttons][1]
-				ECSAPI.drawAdaptiveButton(obj["Buttons"][action][1], obj["Buttons"][action][2], buttonOffset, 0, action, ECSAPI.colors.blue, 0xffffff)
-				os.sleep(0.3)
-				break
+		end
+
+		for key, val in pairs(obj["TopBarButtons"]) do
+			if ecs.clickedAtArea(eventData[3], eventData[4], obj["TopBarButtons"][key][1], obj["TopBarButtons"][key][2], obj["TopBarButtons"][key][3], obj["TopBarButtons"][key][4]) then
+				ecs.colorTextWithBack(obj["TopBarButtons"][key][1], obj["TopBarButtons"][key][2], 0xffffff, ecs.colors.blue, " "..key.." ")
+
+				if key == "Вид" then
+
+					local action = context.menu(obj["TopBarButtons"][key][1], obj["TopBarButtons"][key][2] + 1, {(function() if showHiddenFiles then return "Скрывать скрытые файлы" else return "Показывать скрытые файлы" end end)()}, {(function() if showSystemFiles then return "Скрывать системные файлы" else return "Показывать системные файлы" end end)()}, "-", {(function() if showFileFormat then return "Скрывать формат файлов" else return "Показывать формат файлов" end end)()})
+					
+					if action == "Скрывать скрытые файлы" then
+						showHiddenFiles = false
+					elseif action == "Показывать скрытые файлы" then
+						showHiddenFiles = true
+					elseif action == "Показывать системные файлы" then
+						showSystemFiles = true
+					elseif action == "Скрывать системные файлы" then
+						showSystemFiles = false
+					elseif action == "Показывать формат файлов" then
+						showFileFormat = true
+					elseif action == "Скрывать формат файлов" then
+						showFileFormat = false
+					end
+
+					drawTopBar()
+					drawDesktop(xPosOfIcons, yPosOfIcons)
+
+				elseif key == "MineOS" then
+					local action = context.menu(obj["TopBarButtons"][key][1], obj["TopBarButtons"][key][2] + 1, {"О системе"}, {"Обновления"}, "-", {"Перезагрузить"}, {"Выключить"}, "-", {"Вернуться в Shell"})
+				
+					if action == "Вернуться в Shell" then
+						ecs.prepareToExit()
+						return 0
+					elseif action == "Выключить" then
+						shell.execute("shutdown")
+					elseif action == "Перезагрузить" then
+						shell.execute("reboot")
+					elseif action == "Обновления" then
+						shell.execute("pastebin run 0nm5b1ju")
+						ecs.prepareToExit()
+						return 0
+					elseif action == "О системе" then
+						ecs.prepareToExit()
+						print(copyright)
+						print("	А теперь жмякай любую кнопку и продолжай работу с ОС.")
+						ecs.waitForTouchOrClick()
+						drawAll()
+					end
+				end
+
+				drawTopBar()
+
 			end
 		end
-	end
 
-	ECSAPI.drawOldPixels(oldPixels)
-
-	return action
-end
-
-function ECSAPI.askForReplaceFile(path)
-	if fs.exists(path) then
-		action = ECSAPI.select("auto", "auto", " ", {{"Файл \"".. fs.name(path) .. "\" уже имеется в этом месте."}, {"Заменить его перемещаемым объектом?"}}, {{"Оставить оба", 0xffffff, 0x000000}, {"Отмена", 0xffffff, 0x000000}, {"Заменить"}})
-		if action == "Оставить оба" then
-			return "keepBoth"
-		elseif action == "Отмена" then
-			return "cancel"
+	--ПРОКРУТКА РАБОЧИХ СТОЛОВ
+	elseif eventData[1] == "scroll" then
+		if eventData[5] == -1 then
+			if currentDesktop > 1 then currentDesktop = currentDesktop - 1; drawDesktop(xPosOfIcons, yPosOfIcons) end
 		else
-			return "replace"
+			if currentDesktop < countOfDesktops then currentDesktop = currentDesktop + 1; drawDesktop(xPosOfIcons, yPosOfIcons) end
 		end
+
+	elseif eventData[1] == "key_down" then
+
 	end
 end
 
---Копирование файлов для операционки
-function ECSAPI.copy(from, to)
-	local name = fs.name(from)
-	local toName = to.."/"..name
-	local action = ECSAPI.askForReplaceFile(toName)
-	if action == nil or action == "replace" then
-		fs.remove(toName)
-		if fs.isDirectory(from) then
-			ECSAPI.error("Копирование папок отключено во избежание перегрузки файловой системы. Мод говно, смирись.")
-		else
-			fs.copy(from, toName)
-		end
-	elseif action == "keepBoth" then
-		if fs.isDirectory(from) then
-			ECSAPI.error("Копирование папок отключено во избежание перегрузки файловой системы. Мод говно, смирись.")
-		else
-			fs.copy(from, fs.path(toName) .. "/(copy)"..fs.name(toName))
-		end	
-	end
-end
-
---Переименование файлов для операционки
-function ECSAPI.rename(mainPath)
-	local name = fs.name(mainPath)
-	path = fs.path(mainPath)
-
-	--Рисуем окошко ввода нового имени файла
-	local inputs = ECSAPI.input("auto", "auto", 20, " ", {"input", "Новое имя", name})
-	
-	--Если ввели в окошко хуйню какую-то
-	if inputs[1] == "" or inputs[1] == " " or inputs[1] == nil then
-		ECSAPI.error("Неверное имя файла.")
-	else
-		--Получаем новый путь к новому файлу
-		local newPath = path.."/"..inputs[1]
-		--Если новый путь = старому пути
-		if newPath == mainPath then
-			return
-		else
-			ECSAPI.error("newPath = "..newPath..", mainPath = "..mainPath)
-			--Если файл с новым путем уже существует
-			if fs.exists(newPath) then
-				ECSAPI.error("Файл \"".. name .. "\" уже имеется в этом месте.")
-				return
-			else
-				fs.rename(mainPath, newPath)
-			end
-		end
-	end
-end
-
-----------------------------------------------------------------------------------------------------
-
--- ECSAPI.copy("t", "System/OS")
--- ECSAPI.clearScreen(0x262626)
--- ECSAPI.input("auto", "auto", 20, "Сохранить как", {"input", "Имя", "pidor"}, {"input", "Пароль", ""}, {"input", "Заебал!", ""}, {"select", "Формат", ".PNG", {".PNG", ".PSD", ".JPG", ".GIF"}})
--- if not success then ECSAPI.displayCompileMessage(1, reason, true) end
--- ECSAPI.select("auto", "auto", " ", {{"С твоим компом опять хуйня!"}}, {{"Блядь!"}})
--- ECSAPI.error("Да иди ты на хуй, чмо, я мать твою на хую")
--- ECSAPI.setScale(1)
 
 
-return ECSAPI
+
+
+
+
+
+
+
+
 
 
 
