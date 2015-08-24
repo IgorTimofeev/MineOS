@@ -1097,6 +1097,7 @@ function ECSAPI.askForReplaceFile(path)
 	end
 end
 
+--Копирование файлов для операционки
 function ECSAPI.copy(from, to)
 	local name = fs.name(from)
 	local toName = to.."/"..name
@@ -1117,6 +1118,35 @@ function ECSAPI.copy(from, to)
 	end
 end
 
+--Переименование файлов для операционки
+function ECSAPI.rename(mainPath)
+	local name = fs.name(mainPath)
+	path = fs.path(mainPath)
+
+	--Рисуем окошко ввода нового имени файла
+	local inputs = ECSAPI.input("auto", "auto", 20, " ", {"input", "Новое имя", name})
+	
+	--Если ввели в окошко хуйню какую-то
+	if inputs[1] == "" or inputs[1] == " " or inputs[1] == nil then
+		ECSAPI.error("Неверное имя файла.")
+	else
+		--Получаем новый путь к новому файлу
+		local newPath = path.."/"..inputs[1]
+		--Если новый путь = старому пути
+		if newPath == mainPath then
+			return
+		else
+			--Если файл с новым путем уже существует
+			if fs.exists(newPath) then
+				ECSAPI.error("Файл \"".. name .. "\" уже имеется в этом месте.")
+				return
+			else
+				fs.rename(mainPath, newPath)
+			end
+		end
+	end
+end
+
 ----------------------------------------------------------------------------------------------------
 
 -- ECSAPI.copy("t", "System/OS")
@@ -1129,3 +1159,7 @@ end
 
 
 return ECSAPI
+
+
+
+
