@@ -949,6 +949,10 @@ while true do
 							if data[1] ~= "" and data[1] ~= " " then
 								if fs.exists(data[1]) then
 									if ecs.getFileFormat(data[1]) == ".png" then
+										clearScreen(padColor)
+										drawLeftToolbar()
+										drawTopToolbar()
+										drawRightToolbar()
 										open(data[1])
 										consoleText = "Открыт файл "..data[1]
 										console(7, ySize)
