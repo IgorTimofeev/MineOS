@@ -607,7 +607,6 @@ while true do
 					elseif action == "Перезагрузить" then
 						shell.execute("reboot")
 					elseif action == "Обновления" then
-						action == "Обновления" then
 						shell.execute("pastebin run 0nm5b1ju")
 						ecs.prepareToExit()
 						return 0
