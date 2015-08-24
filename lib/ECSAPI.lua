@@ -1132,18 +1132,12 @@ function ECSAPI.rename(mainPath)
 	else
 		--Получаем новый путь к новому файлу
 		local newPath = path..inputs[1]
-		--Если новый путь = старому пути
-		if newPath == mainPath then
+		--Если файл с новым путем уже существует
+		if fs.exists(newPath) then
+			ECSAPI.error("Файл \"".. name .. "\" уже имеется в этом месте.")
 			return
 		else
-			ECSAPI.error("newPath = "..newPath..", mainPath = "..mainPath)
-			--Если файл с новым путем уже существует
-			if fs.exists(newPath) then
-				ECSAPI.error("Файл \"".. name .. "\" уже имеется в этом месте.")
-				return
-			else
-				fs.rename(mainPath, newPath)
-			end
+			fs.rename(mainPath, newPath)
 		end
 	end
 end
