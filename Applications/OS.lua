@@ -554,6 +554,7 @@ local function launchConfigurator(force)
 	if not fs.exists("System/OS/Users.cfg") or force then
 		drawAll()
 		shell.execute("System/OS/Configurator.lua")
+		drawAll()
 		return true
 	end
 end
