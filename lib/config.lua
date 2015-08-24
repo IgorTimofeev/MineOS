@@ -44,6 +44,7 @@ function config.write(path, key, value)
 end
 
 function config.append(path, ...)
+	fs.makeDirectory(fs.path(path))
 	local file = io.open(path, "a")
 	local data = {...}
 	for i = 1, #data do
