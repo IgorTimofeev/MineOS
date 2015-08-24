@@ -3,7 +3,7 @@ local fs = require("filesystem")
 
 ---------------------------------------------------------------
 
-local function readFile(path)
+function config.readFile(path)
 	local massiv = {}
 	
 	if not fs.exists(path) then return {} end
@@ -19,7 +19,7 @@ end
 
 function config.readAll(path)
 	local massiv = {}
-	local lines = readFile(path)
+	local lines = config.readFile(path)
 
 	for _, stro4ka in pairs(lines) do
 		local key, value = string.match(stro4ka, "(.*)%s=%s(.*)")
