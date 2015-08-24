@@ -43,6 +43,15 @@ function config.write(path, key, value)
 	file:close()
 end
 
+function config.append(path, ...)
+	local file = io.open(path, "a")
+	local data = {...}
+	for i = 1, #data do
+		file:write(data[i], "\n")
+	end
+	file:close()
+end
+
 ---------------------------------------------------------------
 
 return config
