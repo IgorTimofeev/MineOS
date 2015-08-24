@@ -950,7 +950,7 @@ while true do
 								if fs.exists(data[1]) then
 									if ecs.getFileFormat(data[1]) == ".png" then
 										open(data[1])
-										consoleText = "Открыт файл "..fileName
+										consoleText = "Открыт файл "..data[1]
 										console(7, ySize)
 									else
 										ecs.error("Формат файла не распознан.")
