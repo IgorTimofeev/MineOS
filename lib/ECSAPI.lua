@@ -1131,7 +1131,7 @@ function ECSAPI.rename(mainPath)
 		ECSAPI.error("Неверное имя файла.")
 	else
 		--Получаем новый путь к новому файлу
-		local newPath = path.."/"..inputs[1]
+		local newPath = path..inputs[1]
 		--Если новый путь = старому пути
 		if newPath == mainPath then
 			return
