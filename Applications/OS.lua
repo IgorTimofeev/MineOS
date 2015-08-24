@@ -566,7 +566,7 @@ end
 ------------------------------------------------------------------------------------------------------------------------
 
 ecs.clearScreen()
-if not launchConfigurator() then safeBiometry(); drawAll() end
+if not launchConfigurator(true) then safeBiometry(); drawAll() end
 
 ------------------------------------------------------------------------------------------------------------------------
 
