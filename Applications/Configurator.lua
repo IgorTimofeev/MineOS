@@ -220,6 +220,7 @@ local background, foreground = stage3()
 stage5()
 
 --Сохраняем юзверей в файл
+fs.remove("System/OS/Users.cfg")
 config.append("System/OS/Users.cfg", table.unpack(users))
 
 --Сохраняем цвета в конфиг ОС
