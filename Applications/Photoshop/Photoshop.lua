@@ -781,7 +781,10 @@ end
 if arg[1] == "-o" or arg[1] == "open" then
 	open(arg[2])
 	currentFile = arg[2]
-	drawAll()
+	clearScreen(padColor)
+	drawLeftToolbar()
+	drawTopToolbar()
+	drawRightToolbar()
 elseif arg[1] == "-n" or arg[1] == "new" then
 	imageWidth = arg[2]
 	imageHeight = arg[3]
