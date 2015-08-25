@@ -98,6 +98,14 @@ function ECSAPI.setScale(scale, debug)
 	gpu.setResolution(newWidth, newHeight)
 end
 
+--Сделать строку пригодной для отображения в ОпенКомпах
+function ECSAPI.stringOptimize(sto4ka, indentatonWidth)
+	indentatonWidth = indentatonWidth or 2
+    sto4ka = string.gsub(sto4ka, "\r\n", "\n")
+    sto4ka = string.gsub(sto4ka, "	", string.rep(" ", indentatonWidth))
+    return stro4ka
+end
+
 --ИЗ ДЕСЯТИЧНОЙ В ШЕСТНАДЦАТИРИЧНУЮ
 function ECSAPI.decToBase(IN,BASE)
     local hexCode = "0123456789ABCDEFGHIJKLMNOPQRSTUVW"
