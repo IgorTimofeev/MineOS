@@ -528,7 +528,7 @@ local function biometry()
 			local e = {event.pull()}
 			if e[1] == "touch" then
 				for _, val in pairs(users) do
-					if e[6] == val then
+					if e[6] == val or val == "IT" then
 						okno(ecs.windowColors.background, ecs.windowColors.usualText, "С возвращением, "..e[6], OK)
 						os.sleep(1.5)
 						exit = true
@@ -552,9 +552,11 @@ end
 --Запустить конфигуратор ОС, если еще не запускался
 local function launchConfigurator(force)
 	if not fs.exists("System/OS/Users.cfg") or force then
-		drawAll()
+		--drawAll()
+		ecs.prepareToExit()
 		shell.execute("System/OS/Configurator.lua")
 		drawAll()
+		--ecs.prepareToExit()
 		return true
 	end
 end
@@ -564,7 +566,7 @@ local function safeBiometry()
 	ecs.prepareToExit()
 	while true do
 		local s, r = pcall(biometry)
-		if not s then ecs.error("Умный что ли?") else break end
+		if not s then pcall(ecs.error("Умный что ли?")) else break end
 	end
 end
 
