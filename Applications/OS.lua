@@ -566,7 +566,7 @@ local function safeBiometry()
 	ecs.prepareToExit()
 	while true do
 		local s, r = pcall(biometry)
-		if not s then pcall(ecs.error("Умный что ли?")) else break end
+		if s then break end
 	end
 end
 
