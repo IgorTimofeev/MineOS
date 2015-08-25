@@ -16,7 +16,7 @@ local ECSAPI = {}
 ----------------------------------------------------------------------------------------------------
 
 ECSAPI.windowColors = {
-	background = 0xdddddd,
+	background = 0xeeeeee,
 	usualText = 0x444444,
 	subText = 0x888888,
 	tab = 0xaaaaaa,
@@ -637,7 +637,7 @@ function ECSAPI.inputText(x, y, limit, cheBiloVvedeno, background, foreground, j
 		else
 			gpu.set(x, y, ECSAPI.stringLimit("start", text, limit))
 		end
-		
+
 		term.setCursor(xCursor, y)
 
 		term.setCursorBlink(true)
