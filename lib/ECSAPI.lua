@@ -1228,88 +1228,88 @@ function ECSAPI.textField(x, y, width, height, lines, displayFrom)
 	return sLines
 end
 
-function ECSAPI.inputLoginAndPassword(x, y, width, back, fore, otherColor)
+function ECSAPI.beautifulInput(x, y, width, title, buttonText, back, fore, otherColor, autoRedraw, ...)
 
-	local login, password
-	local height = 10
 	if not width or width < 30 then width = 30 end
-	x = x or "auto"
-	y = y or "auto"
-	back = back or 0x262626
-	fore = fore or 0xffffff
-	otherColor = otherColor or 0x33db80
+	data = {...}
+	local sData = #data
+	local height = 3 + sData * 3 + 1
 
 	x, y = ECSAPI.correctStartCoords(x, y, width, height)
 	local xCenter = math.floor(x + width / 2 - 1)
+
+	local oldPixels = ECSAPI.rememberOldPixels(x, y, x + width - 1, y + height + 2)
 	
 	--Рисуем фон
 	ECSAPI.square(x, y, width, height, back)
 	--ECSAPI.windowShadow(x, y, width, height)
 
-	local yPos = y
 	local xText = x + 3
 	local inputLimit = width - 6
 
 	--Авторизация
-	ECSAPI.drawButton(x, yPos, width, 3, "Авторизация", back, fore)
+	ECSAPI.drawButton(x, y, width, 3, title, back, fore)
 
-	yPos = yPos + 3
+	local fields
 
-	local function drawLandP()
+	local function drawData()
 		local i = y + 4
 
-		ECSAPI.inputText(xText, i, inputLimit, login, back, fore, true)
-		ECSAPI.inputText(xText, i + 3, inputLimit, password, back, fore, true)
+		fields = {}
+
+		for j = 1, sData do
+			ECSAPI.border(x + 1, i - 1, width - 2, 3, back, fore)
+
+			if data[j][2] == "" or not data[j][2] or data[j][2] == " " then
+				ECSAPI.colorTextWithBack(xText, i, fore, back, data[j][1])
+			else
+				ECSAPI.inputText(xText, i, inputLimit, data[j][2], back, fore, true)
+			end
+
+			table.insert(fields, { x + 1, i - 1, x + inputLimit - 1, i + 1 })
+
+			i = i + 3
+		end
 	end
 
-	--Первая рамка
-	ECSAPI.border(x + 1, yPos, width - 2, 3, back, fore)
-	if not login or login == "" or login == " " then
-		ECSAPI.colorTextWithBack(xText, yPos + 1, fore, back, "Логин")
-	else
-		drawLandP()
+	local function getData()
+		local massiv = {}
+		for i = 1, sData do
+			table.insert(massiv, data[i][2])
+		end
+		return massiv
 	end
 
-	local field1 = {x + 1, yPos, x + inputLimit - 1, yPos + 2}
-
-	yPos = yPos + 3
-
-	--Вторая рамка
-	ECSAPI.border(x + 1, yPos, width - 2, 3, back, fore)
-	if not password or password == "" or password == " " then
-		ECSAPI.colorTextWithBack(xText, yPos + 1, fore, back, "Пароль")
-	else
-		drawLandP()
-	end
-
-	local field2 = {x + 1, yPos, x + inputLimit - 1, yPos + 2}
-
-	yPos = yPos + 4
+	drawData()
 
 	--Нижняя кнопа
-	local button = { ECSAPI.drawButton(x, yPos, width, 3, "Войти", otherColor, fore) }
+	local button = { ECSAPI.drawButton(x, y + sData * 3 + 4, width, 3, buttonText, otherColor, fore) }
 
 	while true do
 		local e = {event.pull()}
 		if e[1] == "touch" then
 			if ECSAPI.clickedAtArea(e[3], e[4], button[1], button[2], button[3], button[4]) then
-				ECSAPI.drawButton(button[1], button[2], width, 3, "Войти", ECSAPI.colors.blue, 0xffffff)
+				ECSAPI.drawButton(button[1], button[2], width, 3, buttonText, ECSAPI.colors.blue, 0xffffff)
 				os.sleep(0.3)
-				return login, password
-			elseif ECSAPI.clickedAtArea(e[3], e[4], field1[1], field1[2], field1[3], field1[4]) then
-				ECSAPI.border(x + 1, field1[2], width - 2, 3, back, otherColor)
-				login = ECSAPI.inputText(field1[1] + 2, field1[2] + 1, inputLimit, login, back, fore, false)
-				ECSAPI.border(x + 1, field1[2], width - 2, 3, back, fore)
-			elseif ECSAPI.clickedAtArea(e[3], e[4], field2[1], field2[2], field2[3], field2[4]) then
-				ECSAPI.border(x + 1, field2[2], width - 2, 3, back, otherColor)
-				password = ECSAPI.inputText(field2[1] + 2, field2[2] + 1, inputLimit, password, back, fore, false)
-				ECSAPI.border(x + 1, field2[2], width - 2, 3, back, fore)
+				if autoRedraw then ECSAPI.drawOldPixels(oldPixels) end
+				return getData()
+			end
+
+			for key, val in pairs(fields) do
+				if ECSAPI.clickedAtArea(e[3], e[4], fields[key][1], fields[key][2], fields[key][3], fields[key][4]) then
+					ECSAPI.border(fields[key][1], fields[key][2], width - 2, 3, back, otherColor)
+					data[key][2] = ECSAPI.inputText(xText, fields[key][2] + 1, inputLimit, "", back, fore, false)
+					--ECSAPI.border(fields[key][1], fields[key][2], width - 2, 3, back, fore)
+					drawData()
+					break
+				end
 			end
 		elseif e[1] == "key_down" then
 			if e[4] == 28 then
-				ECSAPI.drawButton(button[1], button[2], width, 3, "Войти", ECSAPI.colors.blue, 0xffffff)
+				ECSAPI.drawButton(button[1], button[2], width, 3, buttonText, ECSAPI.colors.blue, 0xffffff)
 				os.sleep(0.3)
-				return login, password
+				if autoRedraw then ECSAPI.drawOldPixels(oldPixels) end
+				return getData()
 			end
 		end
 	end
@@ -1318,7 +1318,10 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
--- ECSAPI.inputLoginAndPassword(2, 2)
+-- ECSAPI.clearScreen(0xffffff)
+-- ECSAPI.beautifulInput("auto", "auto", 30, "Сохранить как", "Ок", 0x262626, 0xffffff, 0x33db80, true, {"Имя файла"}, {"Формат"})
+
+-- 0x33db80
 
 -- ECSAPI.copy("t", "System/OS")
 -- ECSAPI.clearScreen(0x262626)
