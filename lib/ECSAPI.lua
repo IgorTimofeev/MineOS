@@ -1153,8 +1153,12 @@ function ECSAPI.info(x, y, title, text)
 	local height = 4
 	x, y = ECSAPI.correctStartCoords(x, y, width, height)
 
+	local oldPixels = ECSAPI.rememberOldPixels(x, y, x + width + 1, y + height)
+
 	ECSAPI.emptyWindow(x, y, width, height, title)
 	ECSAPI.colorTextWithBack(x + 2, y + 2, ECSAPI.windowColors.usualText, ECSAPI.windowColors.background, text)
+
+	return oldPixels
 end
 
 --Скроллбар вертикальный
