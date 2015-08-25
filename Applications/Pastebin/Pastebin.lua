@@ -9,6 +9,7 @@ local internet = require("internet")
 local context = require("context")
 local xml = require("xmlParser")
 local config = require("config")
+local unixtime = require("unixtime")
 -- local computer = require("computer")
 -- local keyboard = require("keyboard")
 -- local image = require("image")
@@ -37,37 +38,49 @@ local pathToConfig = "System/Pastebin/Login.cfg"
 local MyMassivWithPastes = {}
 local drawPastesFrom = 1
 
+local tabColor1 = 0x103258
+local tabColor2 = 0x034879
+local tabTextColor = 0xffffff
+
 --------------------------------------------------------------------------------------------------------------------------
 
--- --ЗАГРУЗИТЬ ФАЙЛ С ПАСТЕБИНА
--- local function get(pasteId, filename)
---   local f, reason = io.open(filename, "w")
---   if not f then
---     io.stderr:write("Failed opening file for writing: " .. reason)
---     return
---   end
+--СОЗДАНИЕ ОБЪЕКТОВ
+local obj = {}
+local function newObj(class, name, ...)
+	obj[class] = obj[class] or {}
+	obj[class][name] = {...}
+end
 
---   --io.write("Downloading from pastebin.com... ")
---   local url = "http://pastebin.com/raw.php?i=" .. pasteId
---   local result, response = pcall(internet.request, url)
---   if result then
---     --io.write("success.\n")
---     for chunk in response do
---       --if not options.k then
---         string.gsub(chunk, "\r\n", "\n")
---       --end
---       f:write(chunk)
---     end
+--ЗАГРУЗИТЬ ФАЙЛ С ПАСТЕБИНА
+local function get(pasteId, filename)
+  local f, reason = io.open(filename, "w")
+  if not f then
+    io.stderr:write("Failed opening file for writing: " .. reason)
+    return
+  end
 
---     f:close()
---     --io.write("Saved data to " .. filename .. "\n")
---   else
---     --io.write("failed.\n")
---     f:close()
---     fs.remove(filename)
---     io.stderr:write("HTTP request failed: " .. response .. "\n")
---   end
--- end
+  --io.write("Downloading from pastebin.com... ")
+  local url = "http://pastebin.com/raw.php?i=" .. pasteId
+  local result, response = pcall(internet.request, url)
+  if result then
+    --io.write("success.\n")
+    for chunk in response do
+      --if not options.k then
+        chunk = string.gsub(chunk, "\r\n", "\n")
+        chunk = string.gsub(chunk, "	", "  ")
+      --end
+      f:write(chunk)
+    end
+
+    f:close()
+    --io.write("Saved data to " .. filename .. "\n")
+  else
+    --io.write("failed.\n")
+    f:close()
+    fs.remove(filename)
+    io.stderr:write("HTTP request failed: " .. response .. "\n")
+  end
+end
 
 -- This makes a string safe for being used in a URL.
 local function encode(code)
@@ -205,24 +218,18 @@ local function getFileListFromPastebin(countOfFilesToShow)
 	end
 end
 
-local function convertUnixTime(time)
-    local govno = time + 62167144220
-    local year = math.floor(govno/31556926)
-    local ostatok = govno % 31556926
-    local month = math.ceil(ostatok/2629743)
-    ostatok = ostatok % 2629743
-    local day = math.ceil(ostatok/86400)+2
-    return day,month,year
-end
-
 local xPos, yPos
 local widthTitle
 local widthOthers
 local xDate
 local xDownloads
 local xSyntax
+local maxPastesCountToShow = math.floor((ySize - 7) / 2)
 
-local function displayPaste(i, background)
+local function displayPaste(i, background, foreground)
+
+	ecs.square(1, yPos, xSize - 2, 1, background)
+
 	--Нарисовать цветной кружочек
 	local color = ecs.colors.green
 	if tonumber(MyMassivWithPastes[i]["paste_private"]) == 1 then
@@ -232,11 +239,11 @@ local function displayPaste(i, background)
 	color = nil
 
 	--Нарисовать имя пасты
-	ecs.colorText(xPos + 2, yPos, 0x000000, ecs.stringLimit("end", MyMassivWithPastes[i]["paste_title"], widthTitle - 3))
+	ecs.colorText(xPos + 2, yPos, foreground, ecs.stringLimit("end", MyMassivWithPastes[i]["paste_title"], widthTitle - 3))
 	
 	--Нарисовать дату пасты
-	local day, month, year = convertUnixTime(tonumber(MyMassivWithPastes[i]["paste_date"]))
-	gpu.set(xDate, yPos, day.."."..month.."."..year)
+	local date = unixtime.convert(tonumber(MyMassivWithPastes[i]["paste_date"]))
+	gpu.set(xDate, yPos, date)
 
 	--Нарисовать Хитсы
 	gpu.set(xDownloads, yPos, MyMassivWithPastes[i]["paste_hits"])
@@ -246,13 +253,15 @@ local function displayPaste(i, background)
 end
 
 --Нарисовать пасты
-local function displayPastes(from, to)
+local function displayPastes(from)
+
+	obj["Pastes"] = nil
 
 	--Стартовые коорды
 	xPos, yPos = 2, 6
 
 	--Размеры таблицы
-	widthTitle = math.floor((xSize - 2) / 2)
+	widthTitle = math.floor((xSize - 2) / 2) + 5
 	widthOthers = math.floor((xSize - 2 - widthTitle) / 3)
 	xDate = xPos + widthTitle
 	xDownloads = xDate + widthOthers
@@ -270,13 +279,21 @@ local function displayPastes(from, to)
 	ecs.colorText(1, yPos + 1, 0x990000, string.rep("─", xSize - 2))
 	yPos = yPos + 2
 
+	ecs.srollBar(xSize - 1, 6, 2, ySize - 5, #MyMassivWithPastes, from, 0xcccccc, ecs.colors.blue)
+
 	--Все пасты рисуем
-	for i = from, to do
+	for i = from, (from + maxPastesCountToShow - 1) do
 
-		displayPaste(i, 0xffffff)
+		if MyMassivWithPastes[i] then
+			displayPaste(i, 0xffffff, 0x000000)
 
-		--Нарисовать разделитель
-		ecs.colorText(1, yPos + 1, 0x999999, string.rep("─", xSize - 2))
+			newObj("Pastes", i, 1, yPos, xSize - 2, yPos)
+
+			--Нарисовать разделитель
+			if i ~= (from + maxPastesCountToShow - 1) then ecs.colorText(1, yPos + 1, 0xcccccc, string.rep("─", xSize - 2)) end
+		else
+			ecs.square(1, yPos, xSize - 2, 2, 0xffffff)
+		end
 
 		yPos = yPos + 2
 	end
@@ -291,16 +308,13 @@ local function getRandomCifri(length)
 end
 
 local function drawTopBar()
-	local tabColor1 = 0x103258
-	local tabColor2 = 0x034879
-	local tabTextColor = 0xffffff
 
 	--Полосочки
 	ecs.square(1, 1, xSize, 1, tabColor1)
 
 	gpu.setBackground(tabColor2)
-	gpu.setForeground( 0x023a61 )
-	gpu.fill(1, 2, xSize, 3, "⁕")
+	gpu.setForeground( tabColor1 )
+	gpu.fill(1, 2, xSize, 3, "░")
 
 	ecs.square(1, 5, xSize, 1, tabColor1)
 
@@ -314,15 +328,29 @@ local function drawTopBar()
 	gpu.set(4, 4, getRandomCifri(sheetWidth))
 
 	--Надписи всякие
-	ecs.colorTextWithBack(2, 1, tabTextColor - 0x333333, tabColor1, "#1 paste tool since 2002")
+	ecs.colorTextWithBack(2, 1, tabColor2, tabColor1, "#1 paste tool since 2002")
 	ecs.colorTextWithBack(11, 3, tabTextColor, tabColor2, "PASTEBIN")
+	local name = "⛨Загрузить новый файл"; newObj("TopButtons", name, ecs.drawAdaptiveButton(1, 5, 1, 0, name, tabColor1, tabTextColor))
+	
+	--local xPos = xSize - 9
+	--local name = "Logout"; newObj("TopButtons", name, ecs.drawAdaptiveButton(xPos, 5, 1, 0, name, tabColor1, tabTextColor)); xPos = xPos + unicode.len(name) + 3
 
+	--Никнейм
+	if username then
+		ecs.colorTextWithBack(xSize - 2 - unicode.len(username), 3, tabTextColor, tabColor2, username)
+	end
+end
+
+local function clear()
+	ecs.square(1, 6, xSize, ySize, 0xffffff)
 end
 
 local function inputPassword()
-	local massiv = ecs.input("auto", "auto", 20, "Войти в Pastebin", {"input", "Логин", ""},  {"input", "Пароль", ""})
-	username = massiv[1]
-	password = massiv[2]
+	--local massiv = ecs.input("auto", "auto", 20, "Войти в Pastebin", {"input", "Логин", ""},  {"input", "Пароль", ""})
+	local data = ecs.beautifulInput("auto", "auto", 30, "Авторизация", "Войти", tabColor1, 0xffffff, tabColor2, false, {"Логин"}, {"Пароль"})
+	username = data[1] or ""
+	password = data[2] or ""
+	clear()
 end
 
 local function analyseConfig()
@@ -343,6 +371,7 @@ local function waitForSuccessLogin()
 	while true do
 
 		analyseConfig()
+		ecs.info("auto", "auto", " ", "Захожу в аккаунт...")
 		local success, reason = loginToAccount(username, password)
 
 		if success then
@@ -352,7 +381,7 @@ local function waitForSuccessLogin()
 				reason = string.sub(reason, 18, -1)
 			end
 
-			if reason == "invalid login" then fs.remove(pathToConfig); ecs.error("Неверное сочетание логин/пароль!") end
+			if reason == "invalid login" then fs.remove(pathToConfig); ecs.error("Неверное сочетание логин/пароль!"); clear() end
 		end
 		
 	end
@@ -363,16 +392,146 @@ local function drawAll()
 	drawTopBar()
 end
 
+local function viewPaste(i)
+	local id = MyMassivWithPastes[i]["paste_key"]
+	local tmp = os.tmpname()
+	ecs.info("auto", "auto", " ", "Загружаю файл...")
+	get(id, tmp)
+
+	local file = io.open(tmp, "r")
+	local lines = {}
+	for line in file:lines() do
+		table.insert(lines, line)
+	end
+	file:close()
+
+	ecs.clearScreen(0xffffff)
+
+	local from = 1
+
+	local back = 0xbbbbbb
+
+	ecs.square(1, 1, xSize, 1, back)
+	gpu.setForeground(0xffffff)
+	ecs.centerText("x", 1, "Просмотр "..id)
+	ecs.colorTextWithBack(xSize, 1, 0x000000, back, "X")
+
+	fs.remove(tmp)
+
+	ecs.textField(1, 2, xSize, ySize - 1, lines, from)
+
+	while true do
+		local e = {event.pull()}
+		if e[1] == "scroll" then
+			if e[5] == 1 then
+				if from > 1 then from = from - 1; ecs.textField(1, 2, xSize, ySize - 1, lines, from) end
+			else
+				if from < #lines then from = from + 1; ecs.textField(1, 2, xSize, ySize - 1, lines, from) end
+			end
+		elseif e[1] == "touch" then
+			if e[3] == (xSize) and e[4] == 1 then
+				ecs.colorTextWithBack(xSize, 1, 0xffffff, back, "X")
+				os.sleep(0.3)
+				return
+			end
+		end
+	end
+end
+
+local function launch(i)
+	local tmp = os.tmpname()
+	ecs.info("auto", "auto", " ", "Загружаю файл...")
+	get(MyMassivWithPastes[i]["paste_key"], tmp)
+
+	ecs.prepareToExit()
+	local s, r = shell.execute(tmp)
+	if not s then
+		ECSAPI.displayCompileMessage(1, r, true, false)
+	end
+
+	ecs.prepareToExit()
+	print("Программа выполнена успешно. Нажмите любую клавишу, чтобы продолжить.")
+	ecs.waitForTouchOrClick()
+end
+
 
 --------------------------------------------------------------------------------------------------------------------------
 
 drawAll()
 waitForSuccessLogin()
+drawTopBar()
 
-getFileListFromPastebin(10)
 
-displayPastes(1, 10)
+local pasteLoadLimit = 50
 
-event.pull("key_down")
+ecs.info("auto", "auto", " ", "Получаю список файлов...")
+getFileListFromPastebin(pasteLoadLimit)
+clear()
+
+displayPastes(drawPastesFrom)
+
+while true do
+	local e = {event.pull()}
+	if e[1] == "scroll" then
+		if e[5] == 1 then
+			if drawPastesFrom > 1 then drawPastesFrom = drawPastesFrom - 1; displayPastes(drawPastesFrom) end
+		else
+			if drawPastesFrom < pasteLoadLimit then drawPastesFrom = drawPastesFrom + 1; displayPastes(drawPastesFrom) end
+		end
+	elseif e[1] == "touch" then
+		for key, val in pairs(obj["Pastes"]) do
+			if ecs.clickedAtArea(e[3], e[4], obj["Pastes"][key][1], obj["Pastes"][key][2], obj["Pastes"][key][3], obj["Pastes"][key][4] ) then
+				--ecs.error("key = "..key)
+				yPos = obj["Pastes"][key][2]
+				displayPaste(key, ecs.colors.blue, 0xffffff)
+
+				if e[5] == 1 then
+					local action = context.menu(e[3], e[4], {"Просмотр"}, "-", {"Запустить"}, {"Сохранить как"}, "-",{"Удалить"})
+
+					if action == "Сохранить как" then
+						local data = ecs.beautifulInput("auto", "auto", 30, "Сохранить как", "Ок", tabColor1, 0xffffff, tabColor2, true, {"Введите путь"}) 
+						local path = data[1]
+						if path ~= nil or path ~= "" or path ~= " " then
+							fs.makeDirectory(fs.path(path))
+							local action2 = ecs.askForReplaceFile(path)
+							if action2 == nil or action2 == "replace" then
+								fs.remove(path)
+								get(MyMassivWithPastes[key]["paste_key"], path)
+							elseif action2 == "keepBoth" then
+								get(MyMassivWithPastes[key]["paste_key"], fs.path(path).."(copy)"..fs.name(path))
+							end
+						else
+							ecs.error("Сохранение не удалось: не указан путь.")
+						end
+					elseif action == "Удалить" then
+
+					elseif action == "Просмотр" then
+						viewPaste(key)
+						drawAll()
+						displayPastes(drawPastesFrom)
+					elseif action == "Запустить" then
+						launch(i)
+						drawAll()
+						displayPastes(drawPastesFrom)
+					end
+
+					displayPaste(key, 0xffffff, 0x000000)
+				else
+					os.sleep(0.3)
+					viewPaste(key)
+					drawAll()
+					displayPastes(drawPastesFrom)
+				end
+
+				break
+			end
+		end
+	end
+end
+
+
+
+
+
 
 --------------------------------------------------------------------------------------------------------------------------
