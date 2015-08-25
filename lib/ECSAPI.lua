@@ -222,6 +222,26 @@ function ECSAPI.square(x,y,width,height,color)
   gpu.fill(x,y,width,height," ")
 end
 
+function ECSAPI.border(x, y, width, height, back, fore)
+	local stringUp = "┌"..string.rep("─", width - 2).."┐"
+	local stringDown = "└"..string.rep("─", width - 2).."┘"
+	gpu.setForeground(fore)
+	gpu.setBackground(back)
+	gpu.set(x, y, stringUp)
+	gpu.set(x, y + height - 1, stringDown)
+
+	local yPos = 1
+	for i = 1, (height - 2) do
+		gpu.set(x, y + yPos, "│")
+		gpu.set(x + width - 1, y + yPos, "│")
+		yPos = yPos + 1
+	end
+end
+
+function ECSAPI.separator(x, y, width, back, fore)
+	ECSAPI.colorTextWithBack(x, y, fore, back, string.rep("─", width))
+end
+
 --АВТОМАТИЧЕСКОЕ ЦЕНТРИРОВАНИЕ ТЕКСТА ПО КООРДИНАТЕ
 function ECSAPI.centerText(mode,coord,text)
 	local dlina = unicode.len(text)
@@ -438,6 +458,8 @@ function ECSAPI.drawButton(x,y,width,height,text,backColor,textColor)
 	local textPosY = math.floor(y + height / 2)
 	ECSAPI.square(x,y,width,height,backColor)
 	ECSAPI.colorText(textPosX,textPosY,textColor,text)
+
+	return x, y, (x + width - 1), (y + height - 1)
 end
 
 function ECSAPI.drawAdaptiveButton(x,y,offsetX,offsetY,text,backColor,textColor)
@@ -577,7 +599,7 @@ end
 --А ЭТО КАРОЧ ИЗ ЮНИКОДА В СИМВОЛ - ВРОДЕ РАБОТАЕТ, НО ВСЯКОЕ БЫВАЕТ
 function ECSAPI.convertCodeToSymbol(code)
 	local symbol
-	if code ~= 0 and code ~= 13 and code ~= 8 and code ~= 9 and not keyboard.isControlDown() then
+	if code ~= 0 and code ~= 13 and code ~= 8 and code ~= 9 and code ~= 200 and code ~= 208 and code ~= 203 and code ~= 205 and not keyboard.isControlDown() then
 		symbol = unicode.char(code)
 		if keyboard.isShiftPressed then symbol = unicode.upper(symbol) end
 	end
@@ -1201,7 +1223,97 @@ function ECSAPI.textField(x, y, width, height, lines, displayFrom)
 	return sLines
 end
 
+function ECSAPI.inputLoginAndPassword(x, y, width, back, fore, otherColor)
+
+	local login, password
+	local height = 10
+	if not width or width < 30 then width = 30 end
+	x = x or "auto"
+	y = y or "auto"
+	back = back or 0x262626
+	fore = fore or 0xffffff
+	otherColor = otherColor or 0x33db80
+
+	x, y = ECSAPI.correctStartCoords(x, y, width, height)
+	local xCenter = math.floor(x + width / 2 - 1)
+	
+	--Рисуем фон
+	ECSAPI.square(x, y, width, height, back)
+	--ECSAPI.windowShadow(x, y, width, height)
+
+	local yPos = y
+	local xText = x + 3
+	local inputLimit = width - 6
+
+	--Авторизация
+	ECSAPI.drawButton(x, yPos, width, 3, "Авторизация", back, fore)
+
+	yPos = yPos + 3
+
+	local function drawLandP()
+		local i = y + 4
+
+		ECSAPI.inputText(xText, i, inputLimit, login, back, fore, true)
+		ECSAPI.inputText(xText, i + 3, inputLimit, password, back, fore, true)
+	end
+
+	--Первая рамка
+	ECSAPI.border(x + 1, yPos, width - 2, 3, back, fore)
+	if not login or login == "" or login == " " then
+		ECSAPI.colorTextWithBack(xText, yPos + 1, fore, back, "Логин")
+	else
+		drawLandP()
+	end
+
+	local field1 = {x + 1, yPos, x + inputLimit - 1, yPos + 2}
+
+	yPos = yPos + 3
+
+	--Вторая рамка
+	ECSAPI.border(x + 1, yPos, width - 2, 3, back, fore)
+	if not password or password == "" or password == " " then
+		ECSAPI.colorTextWithBack(xText, yPos + 1, fore, back, "Пароль")
+	else
+		drawLandP()
+	end
+
+	local field2 = {x + 1, yPos, x + inputLimit - 1, yPos + 2}
+
+	yPos = yPos + 4
+
+	--Нижняя кнопа
+	local button = { ECSAPI.drawButton(x, yPos, width, 3, "Войти", otherColor, fore) }
+
+	while true do
+		local e = {event.pull()}
+		if e[1] == "touch" then
+			if ECSAPI.clickedAtArea(e[3], e[4], button[1], button[2], button[3], button[4]) then
+				ECSAPI.drawButton(button[1], button[2], width, 3, "Войти", ECSAPI.colors.blue, 0xffffff)
+				os.sleep(0.3)
+				return login, password
+			elseif ECSAPI.clickedAtArea(e[3], e[4], field1[1], field1[2], field1[3], field1[4]) then
+				ECSAPI.border(x + 1, field1[2], width - 2, 3, back, otherColor)
+				login = ECSAPI.inputText(field1[1] + 2, field1[2] + 1, inputLimit, login, back, fore, false)
+				ECSAPI.border(x + 1, field1[2], width - 2, 3, back, fore)
+			elseif ECSAPI.clickedAtArea(e[3], e[4], field2[1], field2[2], field2[3], field2[4]) then
+				ECSAPI.border(x + 1, field2[2], width - 2, 3, back, otherColor)
+				password = ECSAPI.inputText(field2[1] + 2, field2[2] + 1, inputLimit, password, back, fore, false)
+				ECSAPI.border(x + 1, field2[2], width - 2, 3, back, fore)
+			end
+		elseif e[1] == "key_down" then
+			if e[4] == 28 then
+				ECSAPI.drawButton(button[1], button[2], width, 3, "Войти", ECSAPI.colors.blue, 0xffffff)
+				os.sleep(0.3)
+				return login, password
+			end
+		end
+	end
+
+end
+
 ----------------------------------------------------------------------------------------------------
+
+-- ECSAPI.inputLoginAndPassword(2, 2)
 
 -- ECSAPI.copy("t", "System/OS")
 -- ECSAPI.clearScreen(0x262626)
