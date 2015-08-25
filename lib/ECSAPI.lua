@@ -967,7 +967,7 @@ function ECSAPI.parseErrorMessage(error, translate)
 	return parsedError
 end
 
-function ECSAPI.displayCompileMessage(y, reason, translate)
+function ECSAPI.displayCompileMessage(y, reason, translate, withAnimation)
 
 	local xSize, ySize = gpu.getResolution()
 
@@ -1002,10 +1002,15 @@ function ECSAPI.displayCompileMessage(y, reason, translate)
 	local oldPixels = ECSAPI.rememberOldPixels(x, y, x + width + 1, y + height)
 
 	--Типа анимация, ога
-	for i = 1, height, 1 do
-		ECSAPI.square(x, y, width, i, ECSAPI.windowColors.background)
-		ECSAPI.windowShadow(x, y, width, i)
-		os.sleep(0.01)
+	if withAnimation then
+		for i = 1, height, 1 do
+			ECSAPI.square(x, y, width, i, ECSAPI.windowColors.background)
+			ECSAPI.windowShadow(x, y, width, i)
+			os.sleep(0.01)
+		end
+	else
+		ECSAPI.square(x, y, width, height, ECSAPI.windowColors.background)
+		ECSAPI.windowShadow(x, y, width, height)
 	end
 
 	--Рисуем воскл знак
