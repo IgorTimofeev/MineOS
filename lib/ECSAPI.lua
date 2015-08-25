@@ -613,7 +613,7 @@ function ECSAPI.progressBar(x, y, width, height, background, foreground, percent
 end
 
 --ВВОД ТЕКСТА ПО ЛИМИТУ ВО ВСЯКИЕ ПОЛЯ - УДОБНАЯ ШТУКА КАРОЧ
-function ECSAPI.inputText(x, y, limit, cheBiloVvedeno, background, foreground, justDrawNotEvent)
+function ECSAPI.inputText(x, y, limit, cheBiloVvedeno, background, foreground, justDrawNotEvent, maskTextWith)
 	limit = limit or 10
 	cheBiloVvedeno = cheBiloVvedeno or ""
 	background = background or 0xffffff
@@ -632,7 +632,12 @@ function ECSAPI.inputText(x, y, limit, cheBiloVvedeno, background, foreground, j
 		local xCursor = x + dlina
 		if xCursor > (x + limit - 1) then xCursor = (x + limit - 1) end
 
-		gpu.set(x, y, ECSAPI.stringLimit("start", text, limit))
+		if maskTextWith then
+			gpu.set(x, y, ECSAPI.stringLimit("start", string.rep(maskTextWith, dlina), limit))
+		else
+			gpu.set(x, y, ECSAPI.stringLimit("start", text, limit))
+		end
+		
 		term.setCursor(xCursor, y)
 
 		term.setCursorBlink(true)
