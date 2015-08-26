@@ -641,7 +641,7 @@ function ECSAPI.inputText(x, y, limit, cheBiloVvedeno, background, foreground, j
 		if xCursor > (x + limit - 1) then xCursor = (x + limit - 1) end
 
 		if maskTextWith then
-			gpu.set(x, y, ECSAPI.stringLimit("start", string.rep(maskTextWith, dlina), limit))
+			gpu.set(x, y, ECSAPI.stringLimit("start", string.rep("●", dlina), limit))
 		else
 			gpu.set(x, y, ECSAPI.stringLimit("start", text, limit))
 		end
@@ -959,6 +959,7 @@ function ECSAPI.parseErrorMessage(error, translate)
 			parsedError[i] = string.gsub(parsedError[i], "global", "глобальной")
 			parsedError[i] = string.gsub(parsedError[i], "no primary", "не найден компонент")
 			parsedError[i] = string.gsub(parsedError[i], "available", "в доступе")
+			parsedError[i] = string.gsub(parsedError[i], "attempt to concatenate", "не могу присоединить")
 		end
 	end
 
@@ -1273,10 +1274,14 @@ function ECSAPI.beautifulInput(x, y, width, title, buttonText, back, fore, other
 		for j = 1, sData do
 			ECSAPI.border(x + 1, i - 1, width - 2, 3, back, fore)
 
-			if data[j][2] == "" or not data[j][2] or data[j][2] == " " then
+			if data[j][3] == "" or not data[j][3] or data[j][3] == " " then
 				ECSAPI.colorTextWithBack(xText, i, fore, back, data[j][1])
 			else
-				ECSAPI.inputText(xText, i, inputLimit, data[j][2], back, fore, true)
+				if data[j][2] then
+					ECSAPI.inputText(xText, i, inputLimit, data[j][3], back, fore, true, true)
+				else
+					ECSAPI.inputText(xText, i, inputLimit, data[j][3], back, fore, true)
+				end
 			end
 
 			table.insert(fields, { x + 1, i - 1, x + inputLimit - 1, i + 1 })
@@ -1288,7 +1293,7 @@ function ECSAPI.beautifulInput(x, y, width, title, buttonText, back, fore, other
 	local function getData()
 		local massiv = {}
 		for i = 1, sData do
-			table.insert(massiv, data[i][2])
+			table.insert(massiv, data[i][3])
 		end
 		return massiv
 	end
@@ -1311,7 +1316,7 @@ function ECSAPI.beautifulInput(x, y, width, title, buttonText, back, fore, other
 			for key, val in pairs(fields) do
 				if ECSAPI.clickedAtArea(e[3], e[4], fields[key][1], fields[key][2], fields[key][3], fields[key][4]) then
 					ECSAPI.border(fields[key][1], fields[key][2], width - 2, 3, back, otherColor)
-					data[key][2] = ECSAPI.inputText(xText, fields[key][2] + 1, inputLimit, "", back, fore, false)
+					data[key][3] = ECSAPI.inputText(xText, fields[key][2] + 1, inputLimit, "", back, fore, false, data[key][2])
 					--ECSAPI.border(fields[key][1], fields[key][2], width - 2, 3, back, fore)
 					drawData()
 					break
@@ -1332,7 +1337,7 @@ end
 ----------------------------------------------------------------------------------------------------
 
 -- ECSAPI.clearScreen(0xffffff)
--- ECSAPI.beautifulInput("auto", "auto", 30, "Сохранить как", "Ок", 0x262626, 0xffffff, 0x33db80, true, {"Имя файла"}, {"Формат"})
+-- ECSAPI.beautifulInput("auto", "auto", 30, "Сохранить как", "Ок", 0x262626, 0xffffff, 0x33db80, true, {"Имя файла"}, {"Формат", true})
 
 -- 0x33db80
 
