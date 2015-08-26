@@ -1138,26 +1138,26 @@ function ECSAPI.askForReplaceFile(path)
 	end
 end
 
---Копирование файлов для операционки
-function ECSAPI.copy(from, to)
-	local name = fs.name(from)
-	local toName = to.."/"..name
-	local action = ECSAPI.askForReplaceFile(toName)
-	if action == nil or action == "replace" then
-		fs.remove(toName)
-		if fs.isDirectory(from) then
-			ECSAPI.error("Копирование папок отключено во избежание перегрузки файловой системы. Мод говно, смирись.")
-		else
-			fs.copy(from, toName)
-		end
-	elseif action == "keepBoth" then
-		if fs.isDirectory(from) then
-			ECSAPI.error("Копирование папок отключено во избежание перегрузки файловой системы. Мод говно, смирись.")
-		else
-			fs.copy(from, fs.path(toName) .. "/(copy)"..fs.name(toName))
-		end	
-	end
-end
+-- --Копирование файлов для операционки
+-- function ECSAPI.copy(from, to)
+-- 	local name = fs.name(from)
+-- 	local toName = to.."/"..name
+-- 	local action = ECSAPI.askForReplaceFile(toName)
+-- 	if action == nil or action == "replace" then
+-- 		fs.remove(toName)
+-- 		if fs.isDirectory(from) then
+-- 			ECSAPI.error("Копирование папок отключено во избежание перегрузки файловой системы. Мод говно, смирись.")
+-- 		else
+-- 			fs.copy(from, toName)
+-- 		end
+-- 	elseif action == "keepBoth" then
+-- 		if fs.isDirectory(from) then
+-- 			ECSAPI.error("Копирование папок отключено во избежание перегрузки файловой системы. Мод говно, смирись.")
+-- 		else
+-- 			fs.copy(from, fs.path(toName) .. "/(copy)"..fs.name(toName))
+-- 		end	
+-- 	end
+-- end
 
 --Переименование файлов для операционки
 function ECSAPI.rename(mainPath)
@@ -1334,9 +1334,94 @@ function ECSAPI.beautifulInput(x, y, width, title, buttonText, back, fore, other
 
 end
 
+function ECSAPI.beautifulSelect(x, y, width, title, buttonText, back, fore, otherColor, autoRedraw, ...)
+	if not width or width < 30 then width = 30 end
+	data = {...}
+	local sData = #data
+	local height = 3 + sData * 3 + 1
+
+	x, y = ECSAPI.correctStartCoords(x, y, width, height)
+	local xCenter = math.floor(x + width / 2 - 1)
+
+	local oldPixels = ECSAPI.rememberOldPixels(x, y, x + width - 1, y + height + 2)
+
+	--Рисуем фон
+	ECSAPI.square(x, y, width, height, back)
+
+	local xText = x + 3
+	local inputLimit = width - 9
+
+	--Первая кнопа
+	ECSAPI.drawButton(x, y, width, 3, title, back, fore)
+
+	--Нижняя кнопа
+	local button = { ECSAPI.drawButton(x, y + sData * 3 + 4, width, 3, buttonText, otherColor, fore) }
+
+	local fields
+
+	local selectedData = 1
+	local symbol = "✔"
+
+	--Рисуем данные
+	local function drawData()
+		local i = y + 4
+
+		fields = {}
+
+		for j = 1, sData do
+
+			--Квадратик для галочки
+			ECSAPI.border(x + 1, i - 1, 5, 3, back, fore)
+
+			--Галочку рисуем или снимаем
+			local text = "  "
+			if j == selectedData then text = symbol end
+			ECSAPI.colorText(x + 3, i, otherColor, text)
+
+			ECSAPI.colorText(x + 7, i, fore, ECSAPI.stringLimit("end", data[j], inputLimit))
+
+			table.insert(fields, { x + 1, i - 1, x + inputLimit - 1, i + 1 })
+
+			i = i + 3
+		end
+	end
+
+	drawData()
+
+	while true do
+		local e = {event.pull()}
+		if e[1] == "touch" then
+			if ECSAPI.clickedAtArea(e[3], e[4], button[1], button[2], button[3], button[4]) then
+				ECSAPI.drawButton(button[1], button[2], width, 3, buttonText, ECSAPI.colors.blue, 0xffffff)
+				os.sleep(0.3)
+				if autoRedraw then ECSAPI.drawOldPixels(oldPixels) end
+				return data[selectedData]
+			end
+
+			for key, val in pairs(fields) do
+				if ECSAPI.clickedAtArea(e[3], e[4], fields[key][1], fields[key][2], fields[key][3], fields[key][4]) then
+					selectedData = key
+					drawData()
+					break
+				end
+			end
+		elseif e[1] == "key_down" then
+			if e[4] == 28 then
+				ECSAPI.drawButton(button[1], button[2], width, 3, buttonText, ECSAPI.colors.blue, 0xffffff)
+				os.sleep(0.3)
+				if autoRedraw then ECSAPI.drawOldPixels(oldPixels) end
+				return data[selectedData]
+			end
+		end
+	end
+
+
+end
+
 ----------------------------------------------------------------------------------------------------
 
 -- ECSAPI.clearScreen(0xffffff)
+-- ECSAPI.beautifulSelect("auto", "auto", 30, "Сохранить как", "Ок", 0x262626, 0xffffff, 0x33db80, true, "Выбор1", "Выбор22323232424242424242", "Выбор3")
 -- ECSAPI.beautifulInput("auto", "auto", 30, "Сохранить как", "Ок", 0x262626, 0xffffff, 0x33db80, true, {"Имя файла"}, {"Формат", true})
 
 -- 0x33db80
