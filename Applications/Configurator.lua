@@ -282,6 +282,8 @@ if protectionMethod == "Биометрическая" then
 elseif protectionMethod == "Защита паролем" then
 	local password = stagePasswordProtection()
 	config.append("System/OS/Password.cfg", password)
+else
+	config.append("System/OS/WithoutProtection.cfg", "true")
 end
 
 local background, foreground = stage3()
