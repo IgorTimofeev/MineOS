@@ -21,6 +21,7 @@ local xCenter, yCenter = math.floor(xSize / 2), math.floor(ySize / 2)
 
 local OS_Logo = image.load("System/OS/Installer/OS_Logo.png")
 local Love = image.load("System/OS/Icons/Love.png")
+local Security = image.load("System/OS/Icons/Security.png")
 
 local offset = 3
 
@@ -212,17 +213,81 @@ local function stage5()
 	end
 end
 
+local function stageChooseProtectionMethod()
+	clear()
+	image.draw(xCenter - 17, y + 1, Security)
+
+	local yPos = y + height - 6
+	gpu.setForeground(ecs.windowColors.usualText); gpu.setBackground(ecs.windowColors.background)
+	ecs.centerText("x", yPos, "Выберите способ защиты компьютера.")
+	yPos = yPos + 2
+
+	obj = {}
+	local xPos = xCenter - 32
+	local name = "Биометрическая"; newObj("Buttons", name, ecs.drawAdaptiveButton(xPos, yPos, offset, 1, name, buttonColor, 0xffffff)); xPos = xPos + unicode.len(name) + offset * 3
+	name = "Без защиты"; newObj("Buttons", name, ecs.drawAdaptiveButton(xPos, yPos, offset, 1, name, buttonColor, 0xffffff)); xPos = xPos + unicode.len(name) + offset * 3
+	name = "Защита паролем"; newObj("Buttons", name, ecs.drawAdaptiveButton(xPos, yPos, offset, 1, name, buttonColor, 0xffffff)); xPos = xPos + unicode.len(name) + offset * 3
+
+	while true do
+		local e = {event.pull()}
+		if e[1] == "touch" then
+			for name, val in pairs(obj["Buttons"]) do
+				if ecs.clickedAtArea(e[3], e[4], obj["Buttons"][name][1], obj["Buttons"][name][2], obj["Buttons"][name][3], obj["Buttons"][name][4] ) then
+					ecs.drawAdaptiveButton(obj["Buttons"][name][1], obj["Buttons"][name][2], offset, 1, name, buttonPressColor, 0xffffff)
+					os.sleep(0.3)
+					
+					if name == "Биометрическая" then
+						return "Биометрическая"
+					elseif name == "Защита паролем" then
+						return "Защита паролем"
+					else
+						return "Без защиты"
+					end
+
+					break
+				end
+			end
+		end
+	end
+end
+
+local function stagePasswordProtection()
+	--clear()
+	while true do
+		local password = ecs.beautifulInput("auto", "auto", 30, "Защита паролем", "Ок", 0x262626, 0xffffff, 0x33db80, false, {"Введите пароль", true}, {"Подтвердите пароль", true})
+		if password[1] == password[2] then
+			if password[1] ~= nil then
+				return password[1]
+			else
+				ecs.error("Пароль должен состоять хотя бы из одного символа.")
+			end
+		else
+			ecs.error("Пароли различаются!")
+		end
+	end
+end
+
 ------------------------------------------------------------------------------------------------
 
 --Рисуем стадии
 stage1()
-local users = stage2()
+local protectionMethod = stageChooseProtectionMethod()
+
+fs.remove("System/OS/Users.cfg")
+fs.remove("System/OS/Password.cfg")
+if protectionMethod == "Биометрическая" then
+	--Сохраняем юзверей в файл
+	local users = stage2()
+	config.append("System/OS/Users.cfg", table.unpack(users))
+elseif protectionMethod == "Защита паролем" then
+	local password = stagePasswordProtection()
+	config.append("System/OS/Users.cfg", password)
+end
+
 local background, foreground = stage3()
 stage5()
 
---Сохраняем юзверей в файл
-fs.remove("System/OS/Users.cfg")
-config.append("System/OS/Users.cfg", table.unpack(users))
+
 
 --Сохраняем цвета в конфиг ОС
 config.append("System/OS/OS.cfg", background, foreground)
