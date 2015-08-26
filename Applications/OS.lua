@@ -650,7 +650,7 @@ end
 local function login()
 	local readedPassword = config.readFile("System/OS/Password.cfg")[1]
 	while true do
-		local password = ecs.beautifulInput("auto", "auto", 30, "Войти в систему", "Ок", 0x262626, 0xffffff, 0x33db80, false, {"Пароль", true})[1]
+		local password = ecs.beautifulInput("auto", "auto", 30, "Войти в систему", "Ок", ecs.windowColors.background, ecs.windowColors.usualText, ecs.colors.blue, false, {"Пароль", true})[1]
 		if password == readedPassword then
 			return
 		else
@@ -661,9 +661,10 @@ end
 
 --Безопасный ввод пароля, чтоб всякие дауны не крашнули прогу
 local function safeLogin()
+	drawAll()
 	while true do
 		local s, r = pcall(login)
-		if s then break end
+		if s then return true end
 	end
 end
 
