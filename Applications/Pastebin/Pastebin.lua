@@ -17,7 +17,7 @@ local unixtime = require("unixtime")
 local gpu = component.gpu
 
 --//replace 1,3,12,11,13,7,16,15,14,582,56,73,166,165,21,167,168,228,229,10,11 0
-
+--
 --------------------------------------------------------------------------------------------------------------------------
 
 local xSize, ySize = gpu.getResolution()
@@ -317,7 +317,7 @@ end
 
 local function inputPassword()
 	--local massiv = ecs.input("auto", "auto", 20, "Войти в Pastebin", {"input", "Логин", ""},  {"input", "Пароль", ""})
-	local data = ecs.beautifulInput("auto", "auto", 30, "Авторизация", "Войти", tabColor1, 0xffffff, tabColor2, false, {"Логин"}, {"Пароль"})
+	local data = ecs.beautifulInput("auto", "auto", 30, "Авторизация", "Войти", tabColor1, 0xffffff, tabColor2, false, {"Логин"}, {"Пароль", true})
 	username = data[1] or ""
 	password = data[2] or ""
 	clear()
