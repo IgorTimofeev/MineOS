@@ -1,28 +1,20 @@
+Carefully read the terms of this license agreement
+before installing this operating system.
 
-TEST OF ENGLISH
-
-Внимательно прочтите условия данного лицензионного соглашения
-перед установкой операционной системы.
-
-Нажимая кнопку "принимаю", Вы соглашаетесь с нижеследующим:
-  ● Вы незамедлительно поступаете в анальное рабство к автору
-    данной ОС.
-  ● Некоторые Ваши персональные данные (логины, пароли для 
-    сайта Pastebin) могут быть прочитаны другими людьми и
-    использованы в корыстных целях.
-  ● Ваш компьютер может быть удаленно заблокирован автором
-    данной ОС, если он сочтет данную операцию необходимой.
-  ● Данные, вводимые с клавиатуры вашего компьютера, могут быть
-    прочитаны автором данной ОС по защищенным сетевым протоколам.
-  ● Ваши личные файлы могут быть переданы автору данной ОС,
-    если он изъявит на это желание.
-  ● Вы обязуетесь не распространять данную ОС, а также ее
-    отдельные компоненты под своим авторским знаком без указания
-    копирайта.
-  ● Вы принимаете тот факт, что автор ОС не несет юридической
-    ответственности за любой физический и моральный ущерб,
-    который Вы можете понести, используя данную ОС.
+By clicking "Accept", you agree to the following:
+  ● You immediately enters into the anal slavery to the author
+    of this operating system.
+  ● Some of your personal data (logins, passwords to
+    Pastebin.com) can be read by other people and
+    used for personal gain.
+  ● Your computer can be remotely locked by the author
+    of this OS.
+  ● You must not distribute this OS, as well as its
+    individual components
+  ● You accept the fact that the author of this OS
+    is not legally responsible for any physical or
+    mental injury that you may get by using this OS.
     
-В случае несогласия с любым из вышеперечисленных пунктов,
-вы обязаны нажать сочетание клавиш Ctrl+Alt+C, чтобы завершить
-программу установки.
+If you disagree with any term above, you must press
+the key combination Ctrl + Alt + C to quit
+Setup program.
