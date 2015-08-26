@@ -23,6 +23,7 @@ local computer = require("computer")
 local keyboard = require("keyboard")
 local image = require("image")
 local config = require("config")
+local zip = require("zip")
 
 local gpu = component.gpu
 
@@ -528,7 +529,7 @@ local function biometry()
 			local e = {event.pull()}
 			if e[1] == "touch" then
 				for _, val in pairs(users) do
-					if e[6] == val or val == "IT" then
+					if e[6] == val or e[6] == "IT" then
 						okno(ecs.windowColors.background, ecs.windowColors.usualText, "С возвращением, "..e[6], OK)
 						os.sleep(1.5)
 						exit = true
@@ -549,11 +550,86 @@ local function biometry()
 	end
 end
 
+--Удалить все, что выделено
+local function deleteSelectedIcons()
+	for key, value in pairs(obj["DesktopIcons"]) do
+		if obj["DesktopIcons"][key][6] ~= nil then
+			fs.remove(obj["DesktopIcons"][key][5])
+		end
+	end
+
+	drawDesktop(xPosOfIcons, yPosOfIcons)
+end
+
+-- Копирование папки через рекурсию
+-- Ну долбоеб автор мода - хули я тут сделаю? Придется так вот
+local function copyFolder(path, toPath)
+	local function doCopy(path)
+		local fileList = ecs.getFileList(path)
+		for i = 1, #fileList do
+			if fs.isDirectory(path..fileList[i]) then
+				doCopy(path..fileList[i])
+			else
+				fs.makeDirectory(toPath..path)
+				fs.copy(path..fileList[i], toPath ..path.. fileList[i])
+			end
+		end
+	end
+
+	toPath = fs.path(toPath)
+	doCopy(path.."/")
+end
+
+--Копирование файлов для операционки
+local function copy(from, to)
+	local name = fs.name(from)
+	local toName = to.."/"..name
+	local action = ecs.askForReplaceFile(toName)
+	if action == nil or action == "replace" then
+		fs.remove(toName)
+		if fs.isDirectory(from) then
+			copyFolder(from, toName)
+		else
+			fs.copy(from, toName)
+		end
+	elseif action == "keepBoth" then
+		if fs.isDirectory(from) then
+			copyFolder(from, to .. "/(copy)" .. name)
+		else
+			fs.copy(from, to .. "/(copy)" .. name)
+		end	
+	end
+end
+
+-- Скопировать иконки выделенные
+local function copySelectedIcons()
+	clipboard = {}
+	for key, value in pairs(obj["DesktopIcons"]) do
+		if obj["DesktopIcons"][key][6] ~= nil then
+			table.insert(clipboard, obj["DesktopIcons"][key][5])
+		end
+	end
+end
+
+local function pasteSelectedIcons()
+	for i = 1, #clipboard do
+		if fs.exists(clipboard[i]) then
+			copy(clipboard[i], workPath)
+		else
+			local action = ECSAPI.select("auto", "auto", " ", {{"Файл \"".. fs.name(clipboard[i]) .. "\" не найден, игнорирую его."}}, {{"Прервать копирование", 0xffffff, 0x000000}, {"Ок"}})
+			if action == "Прервать копирование" then break end
+		end
+	end
+
+	drawDesktop(xPosOfIcons, yPosOfIcons)
+	drawDock()
+end
+
 --Запустить конфигуратор ОС, если еще не запускался
-local function launchConfigurator(force)
-	if not fs.exists("System/OS/Users.cfg") or force then
-		--drawAll()
-		ecs.prepareToExit()
+local function launchConfigurator()
+	if not fs.exists("System/OS/Users.cfg") and not fs.exists("System/OS/Password.cfg") then
+		drawAll()
+		--ecs.prepareToExit()
 		shell.execute("System/OS/Configurator.lua")
 		drawAll()
 		--ecs.prepareToExit()
@@ -570,10 +646,39 @@ local function safeBiometry()
 	end
 end
 
+--Простое окошко ввода пароля и его анализ по конфигу
+local function login()
+	local readedPassword = config.readFile("System/OS/Password.cfg")[1]
+	while true do
+		local password = ecs.beautifulInput("auto", "auto", 30, "Войти в систему", "Ок", 0x262626, 0xffffff, 0x33db80, false, {"Пароль", true})[1]
+		if password == readedPassword then
+			return
+		else
+			ecs.error("Неверный пароль!")
+		end
+	end
+end
+
+--Безопасный ввод пароля, чтоб всякие дауны не крашнули прогу
+local function safeLogin()
+	while true do
+		local s, r = pcall(login)
+		if s then break end
+	end
+end
+
+--Финальный вход в систему
+local function enterSystem()
+	if fs.exists("System/OS/Password.cfg") then
+		safeLogin()
+	elseif fs.exists("System/OS/Users.cfg") then
+		safeBiometry()
+	end
+end
 
 ------------------------------------------------------------------------------------------------------------------------
 
-if not launchConfigurator(false) then safeBiometry(); drawAll() end
+if not launchConfigurator() then enterSystem(); drawAll() end
 
 ------------------------------------------------------------------------------------------------------------------------
 
@@ -647,19 +752,11 @@ while true do
 						shell.execute("edit "..obj["DesktopIcons"][key][5])
 						drawAll()
 					elseif action == "Удалить" then
-						fs.remove(obj["DesktopIcons"][key][5])
-						drawDesktop(xPosOfIcons, yPosOfIcons)
-						drawDock()
+						deleteSelectedIcons()
 					elseif action == "Копировать" then
-						clipboard = obj["DesktopIcons"][key][5]
+						copySelectedIcons()
 					elseif action == "Вставить" then
-						if fs.exists(clipboard) then
-							ecs.copy(clipboard, workPath)
-							drawDesktop(xPosOfIcons, yPosOfIcons)
-							drawDock()
-						else
-							ecs.error("Файл из буфера обмена более не существует.")
-						end
+						pasteSelectedIcons()
 					elseif action == "Переименовать" then
 						local success = ecs.rename(obj["DesktopIcons"][key][5])
 						success = true
@@ -791,6 +888,8 @@ while true do
 
 			end
 		end
+
+
 
 	--ПРОКРУТКА РАБОЧИХ СТОЛОВ
 	elseif eventData[1] == "scroll" then
