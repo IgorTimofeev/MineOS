@@ -281,7 +281,7 @@ if protectionMethod == "Биометрическая" then
 	config.append("System/OS/Users.cfg", table.unpack(users))
 elseif protectionMethod == "Защита паролем" then
 	local password = stagePasswordProtection()
-	config.append("System/OS/Users.cfg", password)
+	config.append("System/OS/Password.cfg", password)
 end
 
 local background, foreground = stage3()
