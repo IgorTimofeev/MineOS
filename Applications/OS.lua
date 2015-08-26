@@ -627,7 +627,7 @@ end
 
 --Запустить конфигуратор ОС, если еще не запускался
 local function launchConfigurator()
-	if not fs.exists("System/OS/Users.cfg") and not fs.exists("System/OS/Password.cfg") then
+	if not fs.exists("System/OS/Users.cfg") and not fs.exists("System/OS/Password.cfg") and not fs.exists("System/OS/WithoutProtection.cfg") then
 		drawAll()
 		--ecs.prepareToExit()
 		shell.execute("System/OS/Configurator.lua")
@@ -650,7 +650,7 @@ end
 local function login()
 	local readedPassword = config.readFile("System/OS/Password.cfg")[1]
 	while true do
-		local password = ecs.beautifulInput("auto", "auto", 30, "Войти в систему", "Ок", ecs.windowColors.background, ecs.windowColors.usualText, ecs.colors.blue, false, {"Пароль", true})[1]
+		local password = ecs.beautifulInput("auto", "auto", 30, "Войти в систему", "Ок", ecs.windowColors.background, ecs.windowColors.usualText, 0xcccccc, false, {"Пароль", true})[1]
 		if password == readedPassword then
 			return
 		else
