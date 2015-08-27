@@ -24,3 +24,6 @@ contextDelete = Delete
 contextOpenDockFolder = Open Dock folder
 contextOpenDockElementFolder = Open this file's folder
 contextRemoveFromDock = Remove from Dock
+contextNewFile = New file
+contextNewFolder = New folder
+contextRunFromPastebin = Run from Pastebin
