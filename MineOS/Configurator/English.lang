@@ -11,3 +11,5 @@ enterPassword = Enter password
 confirmPassword = Confirm password
 hereIsExample = Code sample is above.
 beginOSUsage = Start using OS!
+changeText = Text
+changeBack = Background
