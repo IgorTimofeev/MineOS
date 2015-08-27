@@ -1,5 +1,6 @@
 viewTab = View
 name = Enter name
+pressAnyKeyToContinue = Press any key to continue
 showSystemFiles = Show system files
 hideSystemFiles = Hide system files
 showHiddenFiles = Show hidden files
