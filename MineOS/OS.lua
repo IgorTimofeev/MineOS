@@ -11,21 +11,24 @@ local copyright = [[
 
 ]]
 
-local component = require("component")
-local event = require("event")
+--local component = require("component")
+--local event = require("event")
 local term = require("term")
 local unicode = require("unicode")
-local ecs = require("ECSAPI")
-local fs = require("filesystem")
-local shell = require("shell")
+--local ecs = require("ECSAPI")
+--local fs = require("filesystem")
+--local shell = require("shell")
 local context = require("context")
 local computer = require("computer")
 local keyboard = require("keyboard")
 local image = require("image")
-local config = require("config")
+--local config = require("config")
 local zip = require("zip")
 
 local gpu = component.gpu
+
+local pathToOSLanguages = "System/OS/Languages/".._G._OSLANGUAGE..".lang"
+local lang = {}
 
 ------------------------------------------------------------------------------------------------------------------------
 
