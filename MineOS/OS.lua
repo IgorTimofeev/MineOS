@@ -28,7 +28,7 @@ local zip = require("zip")
 local gpu = component.gpu
 
 local pathToOSLanguages = "System/OS/Languages/".._G._OSLANGUAGE..".lang"
-local lang = {}
+local lang = config.readAll(pathToOSLanguages)
 
 ------------------------------------------------------------------------------------------------------------------------
 
@@ -367,7 +367,7 @@ end
 local function drawTopBar()
 
 	--Элементы топбара
-	local topBarElements = { "MineOS", "Вид" }
+	local topBarElements = { "MineOS", lang.viewTab }
 
 	--Белая горизонтальная линия
 	ecs.square(1, 1, xSize, 1, topBarColor)
@@ -844,21 +844,21 @@ while true do
 			if ecs.clickedAtArea(eventData[3], eventData[4], obj["TopBarButtons"][key][1], obj["TopBarButtons"][key][2], obj["TopBarButtons"][key][3], obj["TopBarButtons"][key][4]) then
 				ecs.colorTextWithBack(obj["TopBarButtons"][key][1], obj["TopBarButtons"][key][2], 0xffffff, ecs.colors.blue, " "..key.." ")
 
-				if key == "Вид" then
+				if key == lang.viewTab then
 
-					local action = context.menu(obj["TopBarButtons"][key][1], obj["TopBarButtons"][key][2] + 1, {(function() if showHiddenFiles then return "Скрывать скрытые файлы" else return "Показывать скрытые файлы" end end)()}, {(function() if showSystemFiles then return "Скрывать системные файлы" else return "Показывать системные файлы" end end)()}, "-", {(function() if showFileFormat then return "Скрывать формат файлов" else return "Показывать формат файлов" end end)()})
+					local action = context.menu(obj["TopBarButtons"][key][1], obj["TopBarButtons"][key][2] + 1, {(function() if showHiddenFiles then return lang.hideHiddenFiles else return lang.showHiddenFiles end end)()}, {(function() if showSystemFiles then return lang.hideSystemFiles else return lang.showSystemFiles end end)()}, "-", {(function() if showFileFormat then return lang.hideFileFormat else return lang.showFileFormat end end)()})
 					
-					if action == "Скрывать скрытые файлы" then
+					if action == lang.hideHiddenFiles then
 						showHiddenFiles = false
-					elseif action == "Показывать скрытые файлы" then
+					elseif action == lang.showHiddenFiles then
 						showHiddenFiles = true
-					elseif action == "Показывать системные файлы" then
+					elseif action == lang.showSystemFiles then
 						showSystemFiles = true
-					elseif action == "Скрывать системные файлы" then
+					elseif action == lang.hideSystemFiles then
 						showSystemFiles = false
-					elseif action == "Показывать формат файлов" then
+					elseif action == lang.showFileFormat then
 						showFileFormat = true
-					elseif action == "Скрывать формат файлов" then
+					elseif action == lang.hideFileFormat then
 						showFileFormat = false
 					end
 
@@ -866,20 +866,20 @@ while true do
 					drawDesktop(xPosOfIcons, yPosOfIcons)
 
 				elseif key == "MineOS" then
-					local action = context.menu(obj["TopBarButtons"][key][1], obj["TopBarButtons"][key][2] + 1, {"О системе"}, {"Обновления"}, "-", {"Перезагрузить"}, {"Выключить"}, "-", {"Вернуться в Shell"})
+					local action = context.menu(obj["TopBarButtons"][key][1], obj["TopBarButtons"][key][2] + 1, {lang.aboutSystem}, {lang.updateSystem}, "-", {lang.restart}, {lang.shutdown}, "-", {lang.backToShell})
 				
-					if action == "Вернуться в Shell" then
+					if action == lang.backToShell then
 						ecs.prepareToExit()
 						return 0
-					elseif action == "Выключить" then
+					elseif action == lang.shutdown then
 						shell.execute("shutdown")
-					elseif action == "Перезагрузить" then
+					elseif action == lang.restart then
 						shell.execute("reboot")
-					elseif action == "Обновления" then
+					elseif action == lang.updateSystem then
 						shell.execute("pastebin run 0nm5b1ju")
 						ecs.prepareToExit()
 						return 0
-					elseif action == "О системе" then
+					elseif action == lang.aboutSystem then
 						ecs.prepareToExit()
 						print(copyright)
 						print("	А теперь жмякай любую кнопку и продолжай работу с ОС.")
