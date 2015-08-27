@@ -278,6 +278,7 @@ local protectionMethod = stageChooseProtectionMethod()
 fs.remove("System/OS/Colors.cfg")
 fs.remove("System/OS/Users.cfg")
 fs.remove("System/OS/Password.cfg")
+fs.remove("System/OS/WithoutProtection.cfg")
 if protectionMethod == lang.methodBiometric then
 	--Сохраняем юзверей в файл
 	local users = stage2()
