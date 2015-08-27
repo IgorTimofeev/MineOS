@@ -24,16 +24,17 @@ local keyboard = require("keyboard")
 local image = require("image")
 --local config = require("config")
 local zip = require("zip")
-
 local gpu = component.gpu
 
-local pathToOSLanguages = "System/OS/Languages/".._G._OSLANGUAGE..".lang"
-local lang = config.readAll(pathToOSLanguages)
+--Загружаем языковой пакетик чайный
+local lang = config.readAll("System/OS/Languages/".._G._OSLANGUAGE..".lang")
 
 ------------------------------------------------------------------------------------------------------------------------
 
+-- Ну, тут ваще изи все
 local xSize, ySize = gpu.getResolution()
 
+-- Это все для раб стола
 local icons = {}
 local workPath = ""
 local workPathHistory = {}
@@ -166,7 +167,7 @@ local function drawIcon(xIcons, yIcons, path)
 
 end
 
---НАРИСОВАТЬ ВЫДЕЛЕНИЕ ИКОНКИ
+-- НАРИСОВАТЬ ВЫДЕЛЕНИЕ ИКОНКИ
 local function drawIconSelection(x, y, nomer)
 	if obj["DesktopIcons"][nomer][6] == true then
 		ecs.square(x - 2, y, widthOfIcon, heightOfIcon, iconsSelectionColor)
@@ -175,6 +176,7 @@ local function drawIconSelection(x, y, nomer)
 	end
 end
 
+-- Развидеть все
 local function deselectAll(mode)
 	for key, val in pairs(obj["DesktopIcons"]) do
 		if not mode then
@@ -191,6 +193,7 @@ end
 
 ------------------------------------------------------------------------------------------------
 
+--То, что не нужно отрисовывать
 local systemFiles = {
 	"bin/",
 	"lib/",
@@ -205,6 +208,7 @@ local systemFiles = {
 	--"System/",
 }
 
+-- Потная штучка, надо будет перекодить - а то странно выглядит, да и условия идиотские
 local function reorganizeFilesAndFolders(massivSudaPihay, showHiddenFiles, showSystemFiles)
 
 	local massiv = {}
@@ -569,8 +573,9 @@ local function deleteSelectedIcons()
 	drawDesktop(xPosOfIcons, yPosOfIcons)
 end
 
--- Копирование папки через рекурсию
+-- Копирование папки через рекурсию, т.к. fs.copy() не поддерживает папки
 -- Ну долбоеб автор мода - хули я тут сделаю? Придется так вот
+-- swg2you, привет маме ;)
 local function copyFolder(path, toPath)
 	local function doCopy(path)
 		local fileList = ecs.getFileList(path)
@@ -619,6 +624,7 @@ local function copySelectedIcons()
 	end
 end
 
+-- Вставить иконки выделенные
 local function pasteSelectedIcons()
 	for i = 1, #clipboard do
 		if fs.exists(clipboard[i]) then
@@ -696,23 +702,22 @@ local function isNameCorrect(name)
 	end
 end
 
+--А вот и системка стартует
 ------------------------------------------------------------------------------------------------------------------------
-
-newObj("Zones", "Desktop", 1, 2, xSize, ySize - heightOfDock - 3)
-newObj("Zones", "Dock", 1, ySize - heightOfDock - 1, xSize, ySize)
 
 if not launchConfigurator() then enterSystem() end
 
 ------------------------------------------------------------------------------------------------------------------------
 
+-- Понеслась моча по трубам
 while true do
 	local eventData = { event.pull() }
 	if eventData[1] == "touch" then
 
-		--Переменная, становящаяся ложью только в случа клика на какой-либо элемент, не суть какой
+		--Переменная, становящаяся ложью только в случае клика на какой-либо элемент, не суть какой
 		local clickedOnEmptySpace = true
 
-		--ПРОСЧЕТ КЛИКА НА ИКОНОЧКИ РАБОЧЕГО СТОЛА
+		--Клик на иконочки раб стола
 		for key, value in pairs(obj["DesktopIcons"]) do
 			if ecs.clickedAtArea(eventData[3], eventData[4], obj["DesktopIcons"][key][1], obj["DesktopIcons"][key][2], obj["DesktopIcons"][key][3], obj["DesktopIcons"][key][4]) then
 
