@@ -1,0 +1,12 @@
+viewTab = View
+showSystemFiles = Show system files
+hideSystemFiles = Hide system files
+showHiddenFiles = Show hidden files
+hideHiddenFiles = Hide hidden files
+showFileFormat = Show file format
+hideFileFormat = Hide file format
+aboutSystem = About OS
+shutdown = Shutdown
+restart = Restart
+backToShell = Return to Shell
+updateSystem = Update
