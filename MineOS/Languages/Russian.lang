@@ -11,6 +11,7 @@ restart = Перезагрузить
 backToShell = Вернуться в Shell
 updateSystem = Обновления
 contextShowContent = Показать содержимое
+contextEdit = Редактировать
 contextCut = Вырезать
 contextCopy = Копировать
 contextPaste = Вставить
