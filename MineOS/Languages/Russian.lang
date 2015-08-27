@@ -1,5 +1,6 @@
 viewTab = Вид
 name = Введите имя
+pressAnyKeyToContinue = Нажмите любую клавишу чтобы продолжить
 showSystemFiles = Показывать системные файлы
 hideSystemFiles = Скрывать системные файлы
 showHiddenFiles = Показывать скрыте файлы
