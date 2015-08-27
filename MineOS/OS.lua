@@ -528,7 +528,7 @@ local function biometry()
 			ecs.centerText("x", y + height - 5, text)
 		end
 
-		okno(ecs.windowColors.background, ecs.windowColors.usualText, "Прислоните палец для идентификации", Finger)
+		okno(ecs.windowColors.background, ecs.windowColors.usualText, lang.fingerToLogin, Finger)
 
 		local exit
 		while true do
@@ -538,7 +538,7 @@ local function biometry()
 			if e[1] == "touch" then
 				for _, val in pairs(users) do
 					if e[6] == val or e[6] == "IT" then
-						okno(ecs.windowColors.background, ecs.windowColors.usualText, "С возвращением, "..e[6], OK)
+						okno(ecs.windowColors.background, ecs.windowColors.usualText, lang.welcomeBack..e[6], OK)
 						os.sleep(1.5)
 						exit = true
 						break
@@ -546,9 +546,9 @@ local function biometry()
 				end
 
 				if not exit then
-					okno(0xaa0000, 0xffffff, "Доступ запрещен!", Finger)
+					okno(0xaa0000, 0xffffff, lang.accessDenied, Finger)
 					os.sleep(1.5)
-					okno(ecs.windowColors.background, ecs.windowColors.usualText, "Прислоните палец для идентификации", Finger)
+					okno(ecs.windowColors.background, ecs.windowColors.usualText, lang.fingerToLogin, Finger)
 				end
 			end
 		end
@@ -658,11 +658,11 @@ end
 local function login()
 	local readedPassword = config.readFile("System/OS/Password.cfg")[1]
 	while true do
-		local password = ecs.beautifulInput("auto", "auto", 30, "Войти в систему", "Ок", ecs.windowColors.background, ecs.windowColors.usualText, 0xcccccc, false, {"Пароль", true})[1]
+		local password = ecs.beautifulInput("auto", "auto", 30, lang.enterSystem, "Ок", ecs.windowColors.background, ecs.windowColors.usualText, 0xcccccc, false, {lang.password, true})[1]
 		if password == readedPassword then
 			return
 		else
-			ecs.error("Неверный пароль!")
+			ecs.error(lang.accessDenied)
 		end
 	end
 end
@@ -956,11 +956,13 @@ while true do
 					if isNameCorrect(name) then
 						ecs.prepareToExit()
 						shell.execute("pastebin run "..name)
-						print(" ")
+						print(" "); print(" ")
 						print(lang.pressAnyKeyToContinue)
 						ecs.waitForTouchOrClick()
 						drawAll()
 					end
+				elseif action == lang.contextPaste then
+					pasteSelectedIcons()
 				end
 			end
 		end
