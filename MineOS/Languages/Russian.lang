@@ -1,5 +1,10 @@
 viewTab = Вид
 name = Введите имя
+enterSystem = Войти в систему
+password = Пароль
+fingerToLogin = Прислоните палец для идентификации.
+welcomeBack = С возвращением, 
+accessDenied = Доступ запрещен!
 pressAnyKeyToContinue = Нажмите любую клавишу чтобы продолжить
 showSystemFiles = Показывать системные файлы
 hideSystemFiles = Скрывать системные файлы
