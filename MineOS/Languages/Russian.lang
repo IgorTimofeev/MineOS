@@ -9,3 +9,4 @@ aboutSystem = О системе
 shutdown = Выключить
 restart = Перезагрузить
 backToShell = Вернуться в Shell
+updateSystem = Обновления
