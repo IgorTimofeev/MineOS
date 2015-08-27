@@ -1,6 +1,11 @@
 viewTab = View
 name = Enter name
-pressAnyKeyToContinue = Press any key to continue
+enterSystem = Login to system
+password = Password
+fingerToLogin = Press finger here to ident yourself.
+welcomeBack = Welcome back, 
+accessDenied = Access denied!
+pressAnyKeyToContinue = Press any key to continue.
 showSystemFiles = Show system files
 hideSystemFiles = Hide system files
 showHiddenFiles = Show hidden files
