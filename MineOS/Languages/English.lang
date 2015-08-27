@@ -11,6 +11,7 @@ restart = Restart
 backToShell = Return to Shell
 updateSystem = Update
 contextShowContent = Show package content
+contextEdit = Edit
 contextCut = Cut
 contextCopy = Copy
 contextPaste = Paste
