@@ -740,7 +740,7 @@ while true do
 					elseif fileFormat ~= ".app" and fs.isDirectory(obj["DesktopIcons"][key][5]) then
 						action = context.menu(eventData[3], eventData[4], {lang.contextCut, false, "^X"}, {lang.contextCopy, false, "^C"}, {lang.contextPaste, not clipboard, "^V"}, "-", {"Переименовать"}, {lang.contextCreateShortcut}, "-", {lang.contextArchive, true}, {lang.contextUploadToPastebin, true}, "-", {lang.contextAddToDock, not (currentCountOfIconsInDock < dockCountOfIcons and workPath ~= "System/OS/Dock/")}, {lang.contextDelete, false, "⌫"})
 					else
-						action = context.menu(eventData[3], eventData[4], {"Редактировать"}, "-", {lang.contextCut, false, "^X"}, {lang.contextCopy, false, "^C"}, {lang.contextPaste, not clipboard, "^V"}, "-", {"Переименовать"}, {lang.contextCreateShortcut}, "-", {lang.contextArchive, true}, {lang.contextUploadToPastebin, true}, "-", {lang.contextAddToDock, not (currentCountOfIconsInDock < dockCountOfIcons and workPath ~= "System/OS/Dock/")}, {lang.contextDelete, false, "⌫"})
+						action = context.menu(eventData[3], eventData[4], {lang.contextEdit}, "-", {lang.contextCut, false, "^X"}, {lang.contextCopy, false, "^C"}, {lang.contextPaste, not clipboard, "^V"}, "-", {"Переименовать"}, {lang.contextCreateShortcut}, "-", {lang.contextArchive, true}, {lang.contextUploadToPastebin, true}, "-", {lang.contextAddToDock, not (currentCountOfIconsInDock < dockCountOfIcons and workPath ~= "System/OS/Dock/")}, {lang.contextDelete, false, "⌫"})
 					end
 
 					--ecs.error(#getSelectedIcons())
@@ -751,7 +751,7 @@ while true do
 
 					if action == lang.contextShowContent then
 						changePath(obj["DesktopIcons"][key][5])
-					elseif action == "Редактировать" then
+					elseif action == lang.contextEdit then
 						ecs.prepareToExit()
 						shell.execute("edit "..obj["DesktopIcons"][key][5])
 						drawAll()
