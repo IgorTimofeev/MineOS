@@ -680,7 +680,20 @@ local function enterSystem()
 	end
 end
 
+--Проверка имени файла для всяких полей ввода, а то заебался писать это везде
+local function isNameCorrect(name)
+	if name ~= "" and name ~= " " and name ~= nil then
+		return true
+	else
+		ecs.error("Имя введено некорректно.")
+		return false
+	end
+end
+
 ------------------------------------------------------------------------------------------------------------------------
+
+newObj("Zones", "Desktop", 1, 2, xSize, ySize - heightOfDock - 3)
+newObj("Zones", "Dock", 1, ySize - heightOfDock - 1, xSize, ySize)
 
 if not launchConfigurator() then enterSystem(); drawAll() end
 
@@ -690,10 +703,16 @@ while true do
 	local eventData = { event.pull() }
 	if eventData[1] == "touch" then
 
+		--Переменная, становящаяся ложью только в случа клика на какой-либо элемент, не суть какой
+		local clickedOnEmptySpace = true
+
 		--ПРОСЧЕТ КЛИКА НА ИКОНОЧКИ РАБОЧЕГО СТОЛА
 		for key, value in pairs(obj["DesktopIcons"]) do
 			if ecs.clickedAtArea(eventData[3], eventData[4], obj["DesktopIcons"][key][1], obj["DesktopIcons"][key][2], obj["DesktopIcons"][key][3], obj["DesktopIcons"][key][4]) then
-				
+
+				--Кликнули на элемент, а не в очко какое-то
+				clickedOnEmptySpace = false
+
 				--ЕСЛИ ЛЕВАЯ КНОПА МЫШИ
 				if (eventData[5] == 0 and not keyboard.isControlDown()) or (eventData[5] == 1 and keyboard.isControlDown()) then
 					
@@ -778,7 +797,7 @@ while true do
 					end
 					
 				end
-				
+
 				break
 			end	
 		end
@@ -786,6 +805,10 @@ while true do
 		--ПРОСЧЕТ КЛИКА НА КНОПОЧКИ ПЕРЕКЛЮЧЕНИЯ РАБОЧИХ СТОЛОВ
 		for key, value in pairs(obj["DesktopButtons"]) do
 			if ecs.clickedAtArea(eventData[3], eventData[4], obj["DesktopButtons"][key][1], obj["DesktopButtons"][key][2], obj["DesktopButtons"][key][3], obj["DesktopButtons"][key][4]) then
+			
+				--Кликнули на элемент, а не в очко какое-то
+				clickedOnEmptySpace = false
+
 				if key == 0 then 
 					if #workPathHistory > 0 then
 						ecs.colorTextWithBack(obj["DesktopButtons"][key][1], obj["DesktopButtons"][key][2], 0xffffff, ecs.colors.green, " <")
@@ -800,12 +823,18 @@ while true do
 					currentDesktop = key
 					drawDesktop(xPosOfIcons, yPosOfIcons)
 				end
+
+				break
 			end
 		end
 
 		--Клик на Доковские иконки
 		for key, value in pairs(obj["DockIcons"]) do
 			if ecs.clickedAtArea(eventData[3], eventData[4], obj["DockIcons"][key][1], obj["DockIcons"][key][2], obj["DockIcons"][key][3], obj["DockIcons"][key][4]) then
+			
+				--Кликнули на элемент, а не в очко какое-то
+				clickedOnEmptySpace = false
+
 				ecs.square(obj["DockIcons"][key][1], obj["DockIcons"][key][2], widthOfIcon, heightOfIcon, iconsSelectionColor)
 				drawIcon(obj["DockIcons"][key][1] + 2, obj["DockIcons"][key][2], pathOfDockShortcuts..key)
 				
@@ -842,6 +871,10 @@ while true do
 		--Обработка верхних кнопок - ну, вид там, и проч
 		for key, val in pairs(obj["TopBarButtons"]) do
 			if ecs.clickedAtArea(eventData[3], eventData[4], obj["TopBarButtons"][key][1], obj["TopBarButtons"][key][2], obj["TopBarButtons"][key][3], obj["TopBarButtons"][key][4]) then
+		
+				--Кликнули на элемент, а не в очко какое-то
+				clickedOnEmptySpace = false
+
 				ecs.colorTextWithBack(obj["TopBarButtons"][key][1], obj["TopBarButtons"][key][2], 0xffffff, ecs.colors.blue, " "..key.." ")
 
 				if key == lang.viewTab then
@@ -890,9 +923,33 @@ while true do
 
 				drawTopBar()
 
+				break
+
 			end
 		end
 
+		--А если все-таки кликнулось в очко какое-то, то вот че делать
+		if clickedOnEmptySpace then
+			if eventData[5] == 1 then
+				local action = context.menu(eventData[3], eventData[4], {lang.contextNewFile}, {lang.contextNewFolder}, "-", {lang.contextPaste}, {lang.contextRunFromPastebin, true})
+				
+				if action == lang.contextNewFile then
+					local name = ecs.beautifulInput("auto", "auto", 30, lang.contextNewFile, "Ок", ecs.windowColors.background, ecs.windowColors.usualText, 0xcccccc, false, {lang.name})[1]
+					if isNameCorrect(name) then
+						shell.execute("edit " .. workPath .. name)
+						drawAll()
+					end
+				elseif action == lang.contextNewFolder then
+					local name = ecs.beautifulInput("auto", "auto", 30, lang.contextNewFolder, "Ок", ecs.windowColors.background, ecs.windowColors.usualText, 0xcccccc, false, {lang.name})[1]
+					if isNameCorrect(name) then
+						fs.makeDirectory(workPath .. name)
+						drawDesktop()
+					end
+				elseif action == lang.contextRunFromPastebin then
+
+				end
+			end
+		end
 
 
 	--ПРОКРУТКА РАБОЧИХ СТОЛОВ
