@@ -1,9 +1,9 @@
-local component = require("component")
+--local component = require("component")
 local event = require("event")
 local term = require("term")
 local unicode = require("unicode")
-local ecs = require("ECSAPI")
-local fs = require("filesystem")
+--local ecs = require("ECSAPI")
+--local fs = require("filesystem")
 local context = require("context")
 --local colorlib = require("colorlib")
 --local palette = require("palette")
@@ -17,6 +17,7 @@ local lang = config.readAll("MineCode.app/Resources/".._OSLANGUAGE..".lang")
 local gpu = component.gpu
 
 -------------------------------------ПЕРЕМЕННЫЕ------------------------------------------------------
+
 
 local args = {...}
 
@@ -802,6 +803,9 @@ leftToolbarHistory = {""}
 recalculateTo4toNuzhno()
 analyseStrings(1, #strings)
 drawAll()
+
+ecs.error("MineCode вообще в стадии разработки. Так что не думай, что тут что-то можно делать. Можно только файлики открывать.")
+
 
 while true do
 	local e = {event.pull()}
