@@ -1,7 +1,11 @@
-local ecs = require("ECSAPI")
-local shell = require("shell")
+
+--Загружаем самые нужные апишки
+_G.component = require("component")
+_G.ecs = require("ECSAPI")
+_G.config = require("config")
+_G.shell = require("shell")
+_G.fs = require("filesystem")
 
 ecs.clearScreen()
 ecs.setScale(1)
-ecs = nil
 shell.execute("OS.lua")
