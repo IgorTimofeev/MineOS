@@ -273,6 +273,7 @@ end
 stage1()
 local protectionMethod = stageChooseProtectionMethod()
 
+fs.remove("System/OS/Colors.cfg")
 fs.remove("System/OS/Users.cfg")
 fs.remove("System/OS/Password.cfg")
 if protectionMethod == "Биометрическая" then
@@ -292,7 +293,7 @@ stage5()
 
 
 --Сохраняем цвета в конфиг ОС
-config.append("System/OS/OS.cfg", background, foreground)
+config.append("System/OS/Colors.cfg", background, foreground)
 
 --Рисуем старые пиксели
 --ecs.drawOldPixels(oldPixels)
