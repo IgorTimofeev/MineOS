@@ -28,6 +28,8 @@ local offset = 3
 local buttonColor = 0x888888
 local buttonPressColor = ecs.colors.blue
 
+local lang = config.readAll("System/OS/Configurator/".._OSLANGUAGE..".lang")
+
 ------------------------------------------------------------------------------------------------
 
 --СОЗДАНИЕ ОБЪЕКТОВ
@@ -74,11 +76,11 @@ local function stage1()
 	image.draw(math.ceil(xSize / 2 - 15), y + 2, OS_Logo)
 
 	local yPos = y + height - 6
-	gpu.setForeground(ecs.windowColors.usualText); gpu.setBackground(ecs.windowColors.background); ecs.centerText("x", yPos, "Добро пожаловать в программу настройки MineOS!")
+	gpu.setForeground(ecs.windowColors.usualText); gpu.setBackground(ecs.windowColors.background); ecs.centerText("x", yPos, lang.welcome)
 	yPos = yPos + 2
 
 	local name
-	name = "Далее"; newObj("Buttons", name, ecs.drawAdaptiveButton("auto", yPos, offset, 1, name, buttonColor, 0xffffff))
+	name = lang.next; newObj("Buttons", name, ecs.drawAdaptiveButton("auto", yPos, offset, 1, name, buttonColor, 0xffffff))
 
 	while true do
 		local e = {event.pull()}
@@ -99,11 +101,11 @@ local function stage2()
 
 	local yPos = y + height - 7
 	gpu.setForeground(ecs.windowColors.usualText); gpu.setBackground(ecs.windowColors.background)
-	ecs.centerText("x", yPos, "Это биометрическая защита компьютера."); yPos = yPos + 1
-	ecs.centerText("x", yPos, "Прикоснитесь к экрану - и система зарегистрирует вас."); yPos = yPos + 1
+	ecs.centerText("x", yPos, lang.thisIsBiometric); yPos = yPos + 1
+	ecs.centerText("x", yPos, lang.touchToRegister); yPos = yPos + 1
 	
 	local yPos = yPos + 1
-	local name = "Далее"; newObj("Buttons", name, ecs.drawAdaptiveButton("auto", yPos, offset, 1, name, buttonColor, 0xffffff))
+	local name = lang.next; newObj("Buttons", name, ecs.drawAdaptiveButton("auto", yPos, offset, 1, name, buttonColor, 0xffffff))
 
 	while true do
 		local e = {event.pull()}
@@ -150,15 +152,15 @@ local function stage3()
 
 		local yPos = y + height - 7
 		gpu.setForeground(ecs.windowColors.usualText); gpu.setBackground(ecs.windowColors.background)
-		ecs.centerText("x", yPos, "Вы можете выбрать цвет текста и фона консоли."); yPos = yPos + 1
-		ecs.centerText("x", yPos, "Пример кода выше."); yPos = yPos + 1
+		ecs.centerText("x", yPos, lang.youCanChoose); yPos = yPos + 1
+		ecs.centerText("x", yPos, lang.hereIsExample); yPos = yPos + 1
 		yPos = yPos + 1
 
 		obj = {}
 		local xPos = xCenter - 28
-		local name = "Изменить текст"; newObj("Buttons", name, ecs.drawAdaptiveButton(xPos, yPos, offset, 1, name, foreground, 0xffffff - foreground)); xPos = xPos + unicode.len(name) + offset * 3
-		name = "Изменить фон"; newObj("Buttons", name, ecs.drawAdaptiveButton(xPos, yPos, offset, 1, name, background, 0xffffff - background)); xPos = xPos + unicode.len(name) + offset * 3
-		name = "Далее"; newObj("Buttons", name, ecs.drawAdaptiveButton(xPos, yPos, offset, 1, name, buttonColor, 0xffffff)); xPos = xPos + unicode.len(name) + offset * 3
+		local name = lang.changeText; newObj("Buttons", name, ecs.drawAdaptiveButton(xPos, yPos, offset, 1, name, foreground, 0xffffff - foreground)); xPos = xPos + unicode.len(name) + offset * 3
+		name = lang.changeBack; newObj("Buttons", name, ecs.drawAdaptiveButton(xPos, yPos, offset, 1, name, background, 0xffffff - background)); xPos = xPos + unicode.len(name) + offset * 3
+		name = lang.next; newObj("Buttons", name, ecs.drawAdaptiveButton(xPos, yPos, offset, 1, name, buttonColor, 0xffffff)); xPos = xPos + unicode.len(name) + offset * 3
 
 		local exit
 		while true do
@@ -170,12 +172,12 @@ local function stage3()
 						ecs.drawAdaptiveButton(obj["Buttons"][name][1], obj["Buttons"][name][2], offset, 1, name, buttonPressColor, 0xffffff)
 						os.sleep(0.3)
 						
-						if name == "Изменить текст" then
+						if name == lang.changeText then
 							local color = palette.draw("auto", "auto", foreground)
 							if color then foreground = color end
 							exit = true
 							break
-						elseif name == "Изменить фон" then
+						elseif name == lang.changeBack then
 							local color = palette.draw("auto", "auto", background)
 							if color then background = color end
 							exit = true
@@ -199,7 +201,7 @@ local function stage5()
 	yPos = yPos + 2
 
 	local name
-	name = "Начать использование OC"; newObj("Buttons", name, ecs.drawAdaptiveButton("auto", yPos, offset, 1, name, buttonColor, 0xffffff))
+	name = lang.beginOSUsage; newObj("Buttons", name, ecs.drawAdaptiveButton("auto", yPos, offset, 1, name, buttonColor, 0xffffff))
 
 	while true do
 		local e = {event.pull()}
@@ -219,14 +221,14 @@ local function stageChooseProtectionMethod()
 
 	local yPos = y + height - 6
 	gpu.setForeground(ecs.windowColors.usualText); gpu.setBackground(ecs.windowColors.background)
-	ecs.centerText("x", yPos, "Выберите способ защиты компьютера.")
+	ecs.centerText("x", yPos, lang.chooseProtectionMethod)
 	yPos = yPos + 2
 
 	obj = {}
 	local xPos = xCenter - 32
-	local name = "Биометрическая"; newObj("Buttons", name, ecs.drawAdaptiveButton(xPos, yPos, offset, 1, name, buttonColor, 0xffffff)); xPos = xPos + unicode.len(name) + offset * 3
-	name = "Без защиты"; newObj("Buttons", name, ecs.drawAdaptiveButton(xPos, yPos, offset, 1, name, buttonColor, 0xffffff)); xPos = xPos + unicode.len(name) + offset * 3
-	name = "Защита паролем"; newObj("Buttons", name, ecs.drawAdaptiveButton(xPos, yPos, offset, 1, name, buttonColor, 0xffffff)); xPos = xPos + unicode.len(name) + offset * 3
+	local name = lang.methodBiometric; newObj("Buttons", name, ecs.drawAdaptiveButton(xPos, yPos, offset, 1, name, buttonColor, 0xffffff)); xPos = xPos + unicode.len(name) + offset * 3
+	name = lang.methodWithout; newObj("Buttons", name, ecs.drawAdaptiveButton(xPos, yPos, offset, 1, name, buttonColor, 0xffffff)); xPos = xPos + unicode.len(name) + offset * 3
+	name = lang.methodPassword; newObj("Buttons", name, ecs.drawAdaptiveButton(xPos, yPos, offset, 1, name, buttonColor, 0xffffff)); xPos = xPos + unicode.len(name) + offset * 3
 
 	while true do
 		local e = {event.pull()}
@@ -236,12 +238,12 @@ local function stageChooseProtectionMethod()
 					ecs.drawAdaptiveButton(obj["Buttons"][name][1], obj["Buttons"][name][2], offset, 1, name, buttonPressColor, 0xffffff)
 					os.sleep(0.3)
 					
-					if name == "Биометрическая" then
-						return "Биометрическая"
-					elseif name == "Защита паролем" then
-						return "Защита паролем"
+					if name == lang.methodBiometric then
+						return lang.methodBiometric
+					elseif name == lang.methodPassword then
+						return lang.methodPassword
 					else
-						return "Без защиты"
+						return lang.methodWithout
 					end
 
 					break
@@ -254,7 +256,7 @@ end
 local function stagePasswordProtection()
 	--clear()
 	while true do
-		local password = ecs.beautifulInput("auto", "auto", 30, "Защита паролем", "Ок", 0x262626, 0xffffff, 0x33db80, false, {"Введите пароль", true}, {"Подтвердите пароль", true})
+		local password = ecs.beautifulInput("auto", "auto", 30, lang.methodPassword, "Ок", 0x262626, 0xffffff, 0x33db80, false, {lang.enterPassword, true}, {lang.confirmPassword, true})
 		if password[1] == password[2] then
 			if password[1] ~= nil then
 				return password[1]
@@ -276,11 +278,11 @@ local protectionMethod = stageChooseProtectionMethod()
 fs.remove("System/OS/Colors.cfg")
 fs.remove("System/OS/Users.cfg")
 fs.remove("System/OS/Password.cfg")
-if protectionMethod == "Биометрическая" then
+if protectionMethod == lang.methodBiometric then
 	--Сохраняем юзверей в файл
 	local users = stage2()
 	config.append("System/OS/Users.cfg", table.unpack(users))
-elseif protectionMethod == "Защита паролем" then
+elseif protectionMethod == lang.methodPassword then
 	local password = stagePasswordProtection()
 	config.append("System/OS/Password.cfg", password)
 else
