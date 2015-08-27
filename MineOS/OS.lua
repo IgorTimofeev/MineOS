@@ -757,7 +757,7 @@ while true do
 					elseif fileFormat == ".app" and fs.isDirectory(obj["DesktopIcons"][key][5]) then
 						action = context.menu(eventData[3], eventData[4], {lang.contextShowContent}, "-", {lang.contextCut, false, "^X"}, {lang.contextCopy, false, "^C"}, {lang.contextPaste, not clipboard, "^V"}, "-", {lang.contextRename}, {lang.contextCreateShortcut}, "-", {lang.contextArchive, true}, {lang.contextUploadToPastebin, true}, "-", {lang.contextAddToDock, not (currentCountOfIconsInDock < dockCountOfIcons and workPath ~= "System/OS/Dock/")}, {lang.contextDelete, false, "⌫"})
 					elseif fileFormat ~= ".app" and fs.isDirectory(obj["DesktopIcons"][key][5]) then
-						action = context.menu(eventData[3], eventData[4], {lang.contextCut, false, "^X"}, {lang.contextCopy, false, "^C"}, {lang.contextPaste, not clipboard, "^V"}, "-", {lang.contextRename}, {lang.contextCreateShortcut}, "-", {lang.contextArchive, true}, {lang.contextUploadToPastebin, true}, "-", {lang.contextAddToDock, not (currentCountOfIconsInDock < dockCountOfIcons and workPath ~= "System/OS/Dock/")}, {lang.contextDelete, false, "⌫"})
+						action = context.menu(eventData[3], eventData[4], {lang.contextCut, false, "^X"}, {lang.contextCopy, false, "^C"}, {lang.contextPaste, not clipboard, "^V"}, "-", {lang.contextRename}, {lang.contextCreateShortcut}, "-", {lang.contextArchive, true}, {lang.contextUploadToPastebin, true}, "-", {lang.contextDelete, false, "⌫"})
 					else
 						action = context.menu(eventData[3], eventData[4], {lang.contextEdit}, "-", {lang.contextCut, false, "^X"}, {lang.contextCopy, false, "^C"}, {lang.contextPaste, not clipboard, "^V"}, "-", {lang.contextRename}, {lang.contextCreateShortcut}, "-", {lang.contextArchive, true}, {lang.contextUploadToPastebin, true}, "-", {lang.contextAddToDock, not (currentCountOfIconsInDock < dockCountOfIcons and workPath ~= "System/OS/Dock/")}, {lang.contextDelete, false, "⌫"})
 					end
@@ -931,11 +931,12 @@ while true do
 		--А если все-таки кликнулось в очко какое-то, то вот че делать
 		if clickedOnEmptySpace then
 			if eventData[5] == 1 then
-				local action = context.menu(eventData[3], eventData[4], {lang.contextNewFile}, {lang.contextNewFolder}, "-", {lang.contextPaste}, {lang.contextRunFromPastebin, true})
-				
+				local action = context.menu(eventData[3], eventData[4], {lang.contextNewFile}, {lang.contextNewFolder}, "-", {lang.contextPaste, not clipboard, "^V"}, {lang.contextRunFromPastebin, true})
+
 				if action == lang.contextNewFile then
 					local name = ecs.beautifulInput("auto", "auto", 30, lang.contextNewFile, "Ок", ecs.windowColors.background, ecs.windowColors.usualText, 0xcccccc, false, {lang.name})[1]
 					if isNameCorrect(name) then
+						ecs.prepareToExit()
 						shell.execute("edit " .. workPath .. name)
 						drawAll()
 					end
@@ -943,7 +944,7 @@ while true do
 					local name = ecs.beautifulInput("auto", "auto", 30, lang.contextNewFolder, "Ок", ecs.windowColors.background, ecs.windowColors.usualText, 0xcccccc, false, {lang.name})[1]
 					if isNameCorrect(name) then
 						fs.makeDirectory(workPath .. name)
-						drawDesktop()
+						drawDesktop(xPosOfIcons, yPosOfIcons)
 					end
 				elseif action == lang.contextRunFromPastebin then
 
