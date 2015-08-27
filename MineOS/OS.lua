@@ -682,6 +682,7 @@ local function enterSystem()
 		safeLogin()
 	elseif fs.exists("System/OS/Users.cfg") then
 		safeBiometry()
+		drawAll()
 	end
 end
 
@@ -700,7 +701,7 @@ end
 newObj("Zones", "Desktop", 1, 2, xSize, ySize - heightOfDock - 3)
 newObj("Zones", "Dock", 1, ySize - heightOfDock - 1, xSize, ySize)
 
-if not launchConfigurator() then enterSystem(); drawAll() end
+if not launchConfigurator() then enterSystem() end
 
 ------------------------------------------------------------------------------------------------------------------------
 
