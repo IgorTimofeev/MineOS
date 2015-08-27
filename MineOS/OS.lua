@@ -273,15 +273,20 @@ local function drawDesktop(x, y)
 	--ОТРИСОВКА КНОПОЧЕК ПЕРЕМЕЩЕНИЯ
 	countOfDesktops = math.ceil(#currentFileList / totalCountOfIcons)
 	local xButtons, yButtons = math.floor(xSize / 2 - ((countOfDesktops + 1) * 3 - 3) / 2), ySize - heightOfDock - 3
+	
+	--Очистка серым фоном всех кнопочек
 	ecs.square(1, yButtons, xSize, 1, background)
+	
+	--Отрисовка кнопки "Назад"
+	if #workPathHistory > 0 then
+		ecs.colorTextWithBack(xButtons, yButtons, 0x262626, 0xffffff, " <")
+		newObj("DesktopButtons", 0, xButtons, yButtons, xButtons + 1, yButtons)
+		xButtons = xButtons + 3
+	end
+
+	--Отрисовка остальных кнопочек
 	for i = 1, countOfDesktops do
 		local color = 0xffffff
-		if i == 1 then
-			if #workPathHistory == 0 then color = color - 0x444444 end
-			ecs.colorTextWithBack(xButtons, yButtons, 0x262626, color, " <")
-			newObj("DesktopButtons", 0, xButtons, yButtons, xButtons + 1, yButtons)
-			xButtons = xButtons + 3
-		end
 
 		if i == currentDesktop then
 			color = ecs.colors.green
@@ -931,7 +936,7 @@ while true do
 		--А если все-таки кликнулось в очко какое-то, то вот че делать
 		if clickedOnEmptySpace then
 			if eventData[5] == 1 then
-				local action = context.menu(eventData[3], eventData[4], {lang.contextNewFile}, {lang.contextNewFolder}, "-", {lang.contextPaste, not clipboard, "^V"}, {lang.contextRunFromPastebin, true})
+				local action = context.menu(eventData[3], eventData[4], {lang.contextNewFile}, {lang.contextNewFolder}, "-", {lang.contextPaste, not clipboard, "^V"}, {lang.contextRunFromPastebin})
 
 				if action == lang.contextNewFile then
 					local name = ecs.beautifulInput("auto", "auto", 30, lang.contextNewFile, "Ок", ecs.windowColors.background, ecs.windowColors.usualText, 0xcccccc, false, {lang.name})[1]
@@ -947,7 +952,15 @@ while true do
 						drawDesktop(xPosOfIcons, yPosOfIcons)
 					end
 				elseif action == lang.contextRunFromPastebin then
-
+					local name = ecs.beautifulInput("auto", "auto", 30, lang.contextRunFromPastebin, "Ок", ecs.windowColors.background, ecs.windowColors.usualText, 0xcccccc, false, {lang.name})[1]
+					if isNameCorrect(name) then
+						ecs.prepareToExit()
+						shell.execute("pastebin run "..name)
+						print(" ")
+						print(lang.pressAnyKeyToContinue)
+						ecs.waitForTouchOrClick()
+						drawAll()
+					end
 				end
 			end
 		end
