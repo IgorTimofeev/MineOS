@@ -1,4 +1,5 @@
 viewTab = View
+name = Name
 showSystemFiles = Show system files
 hideSystemFiles = Hide system files
 showHiddenFiles = Show hidden files
