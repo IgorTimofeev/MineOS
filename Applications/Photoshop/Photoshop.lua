@@ -189,34 +189,26 @@ local function drawFromMassiv(clearScreenOrNot)
 				if MasterPixels[i][j][3] ~= transparentSymbol then
 
 					--Оптимизация
-					if j > 1 then
-						if MasterPixels[i][j - 1][1] ~= MasterPixels[i][j][1] then
-							gpu.setBackground(MasterPixels[i][j][1])
-						end
-						if MasterPixels[i][j - 1][2] ~= MasterPixels[i][j][2] then
-							gpu.setForeground(MasterPixels[i][j][2])
-						end
-					else
+
+					if MasterPixels[i][j][1] ~= gpu.getBackground() then
 						gpu.setBackground(MasterPixels[i][j][1])
-						gpu.setForeground(MasterPixels[i][j][2])
 					end
+
+					if MasterPixels[i][j][2] ~= gpu.getForeground() then
+						gpu.setForeground(MasterPixels[i][j][1])
+					end					
 
 					gpu.set(x+j, y+i, MasterPixels[i][j][3])
 				
 				else
 
-					--Оптимизация
-					if j > 1 then
-						if MasterPixels[i][j - 1][1] ~= MasterPixels[i][j][1] then
-							gpu.setBackground(transparentBackground)
-						end
-						if MasterPixels[i][j - 1][2] ~= MasterPixels[i][j][2] then
-							gpu.setForeground(transparentForeground)
-						end
-					else
+					if transparentBackground ~= gpu.getBackground() then
 						gpu.setBackground(transparentBackground)
-						gpu.setForeground(transparentForeground)
 					end
+
+					if transparentForeground ~= gpu.getForeground() then
+						gpu.setForeground(transparentForeground)
+					end					
 
 					gpu.set(x+j, y+i, transparentSymbol)
 
