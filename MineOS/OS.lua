@@ -138,7 +138,7 @@ end
 local function createPastebinShortcut(path, pastebinLink)
 	fs.remove(path)
 	fs.makeDirectory(fs.path(path))
-	local file = io.open(path, "w")
+	local file = io.open(path .. pastebinLink, "w")
 	file:write("return ", "\"", pastebinLink, "\"")
 	file:close()
 end
@@ -516,7 +516,7 @@ local function launchIcon(path, arguments)
 		local success, reason = shell.execute(path .. arguments)
 		ecs.prepareToExit()
 		if success then
-			print("Программа выполнена успешно! Нажмите любую клавишу, чтобы продолжить.")
+			print(lang.programSuccessfullyExecuted)
 		else
 			ecs.displayCompileMessage(1, reason, true)
 		end
@@ -537,6 +537,19 @@ local function launchIcon(path, arguments)
 			launchIcon(shortcutLink)
 		else
 			ecs.error(lang.badShortcut)
+		end
+
+	--Если это ссылка на пастебин
+	elseif fileFormat == ".paste" then
+		local shortcutLink = readShortcut(path)
+			ecs.prepareToExit()
+			local success, reason = shell.execute("pastebin run "..shortcutLink)
+			ecs.prepareToExit()
+			if success then
+				print(lang.programSuccessfullyExecuted)
+			else
+				ecs.displayCompileMessage(1, reason, true)
+			end
 		end
 	end
 
@@ -1068,6 +1081,7 @@ while true do
 			if eventData[5] == 1 then
 				local action = context.menu(eventData[3], eventData[4], {lang.contextNewFile}, {lang.contextNewFolder}, "-", {lang.contextPaste, not clipboard, "^V"}, {lang.contextRunFromPastebin}, {lang.contextCreatePastebinShortcut})
 
+				--Создать новый файл
 				if action == lang.contextNewFile then
 					local name = ecs.beautifulInput("auto", "auto", 30, lang.contextNewFile, "Ок", ecs.windowColors.background, ecs.windowColors.usualText, 0xcccccc, true, {lang.name})[1]
 					if isNameCorrect(name) then
@@ -1075,12 +1089,16 @@ while true do
 						shell.execute("edit " .. workPath .. name)
 						drawAll()
 					end
+
+				--Создать новую папку
 				elseif action == lang.contextNewFolder then
 					local name = ecs.beautifulInput("auto", "auto", 30, lang.contextNewFolder, "Ок", ecs.windowColors.background, ecs.windowColors.usualText, 0xcccccc, true, {lang.name})[1]
 					if isNameCorrect(name) then
 						fs.makeDirectory(workPath .. name)
 						drawDesktop(xPosOfIcons, yPosOfIcons)
 					end
+
+				--Запустить файл из пастебина
 				elseif action == lang.contextRunFromPastebin then
 					local name = ecs.beautifulInput("auto", "auto", 30, lang.contextRunFromPastebin, "Ок", ecs.windowColors.background, ecs.windowColors.usualText, 0xcccccc, true, {lang.name})[1]
 					if isNameCorrect(name) then
@@ -1091,12 +1109,16 @@ while true do
 						ecs.waitForTouchOrClick()
 						drawAll()
 					end
+
+				--Создать ссылку на файл из пастебина
 				elseif action == lang.contextCreatePastebinShortcut then
 					local name = ecs.beautifulInput("auto", "auto", 40, lang.contextCreatePastebinShortcut, "Ок", ecs.windowColors.background, ecs.windowColors.usualText, 0xcccccc, true, {lang.name})[1]
 					if isNameCorrect(name) then
 						createPastebinShortcut(workPath, name)
 						drawDesktop(xPosOfIcons, yPosOfIcons)
 					end
+
+				--Вставить файл
 				elseif action == lang.contextPaste then
 					pasteSelectedIcons()
 				end
@@ -1112,6 +1134,7 @@ while true do
 			if currentDesktop < countOfDesktops then currentDesktop = currentDesktop + 1; drawDesktop(xPosOfIcons, yPosOfIcons) end
 		end
 
+	--Сочетания клавищ, пока не реализовано
 	elseif eventData[1] == "key_down" then
 
 	end
