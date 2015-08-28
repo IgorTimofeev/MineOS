@@ -824,7 +824,7 @@ while true do
 	if eventData[1] == "touch" then
 
 		--Удаляем нотификацию, если имеется
-		if notificationOldPixels then ecs.drawOldPixels(notificationOldPixels); notificationOldPixels = nil end
+		if notificationOldPixels then ecs.drawOldPixels(notificationOldPixels); notificationOldPixels = false end
 
 		--Переменная, становящаяся ложью только в случае клика на какой-либо элемент, не суть какой
 		local clickedOnEmptySpace = true
