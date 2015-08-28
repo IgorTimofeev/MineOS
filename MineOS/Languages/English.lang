@@ -1,6 +1,7 @@
 viewTab = View
 updatesAvailable = Доступны обновления ОС!
 name = Enter name
+invalidName = Invalid name.
 enterSystem = Login to system
 password = Password
 fingerToLogin = Press finger here to ident yourself.
