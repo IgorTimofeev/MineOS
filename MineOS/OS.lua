@@ -796,7 +796,7 @@ local function checkForUpdates()
 
 			--Выводим нотификацию вон в таком случае
 			if oldVersion <= newVersion then
-				return notification("Доступны обновления ОС!")
+				return notification(lang.updatesAvailable)
 			end
 		end
 	end
