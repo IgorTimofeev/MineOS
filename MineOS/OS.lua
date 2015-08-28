@@ -804,8 +804,7 @@ end
 
 if not launchConfigurator() then enterSystem() end
 
-checkForUpdates()
-
+--checkForUpdates()
 
 ------------------------------------------------------------------------------------------------------------------------
 
