@@ -109,7 +109,6 @@ local function getFromGitHub(url, path)
 		sContent = sContent .. chunk
 	end
 
-	response:close()
 	file:close()
 
 	return sContent
@@ -119,8 +118,8 @@ end
 local function getFromGitHubSafely(url, path)
 	local success, sRepos = pcall(getFromGitHub, url, path)
 	if not success then
-		ecs.error("Could not connect to the Internet. Please ensure you have an Internet connection.")
-		return -1
+		--ecs.error("Could not connect to the Internet. Please ensure you have an Internet connection.")
+		return false, sRepos
 	end
 	return sRepos
 end
@@ -756,7 +755,7 @@ local function notification(text)
 	ecs.colorText(x + 4, y + 1, ecs.windowColors.usualText, ecs.stringLimit("end", text, width - 5))
 	ecs.colorTextWithBack(x + 1, y + 1, 0xffffff, ecs.colors.blue, "❕")
 	--Крестик
-	ecs.colorTextWithBack(x + width - 1, y, 0x000000, "x")
+	ecs.colorTextWithBack(x + width - 1, y, 0x000000, 0xffffff, "x")
 
 	newObj("Notification", "Exit", x + width - 1, y, x + width - 1, y)
 	newObj("Notification", "Show", x, y, x + width - 2, y + height - 1)
@@ -782,23 +781,30 @@ local function checkForUpdates()
 	if fs.exists(pathToWhatsNew) then oldVersion = getVersion() end
 
 	--Качаем новую версию с заменой
-	getFromGitHubSafely("https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/MineOS/Whats-new/" .. _OSLANGUAGE .. ".lang", pathToWhatsNew)
+	local success, reason = getFromGitHubSafely("https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/MineOS/Whats-new/" .. _OSLANGUAGE .. ".lang", pathToWhatsNew)
 	
-	--И нового
-	local newVersion = getVersion()
+	--Если скачалось все нормально, то
+	if success then
+		-- И если есть старая версия, то
+		if oldVersion then
+			-- Получаем новую версию заместо старой
+			local newVersion = getVersion()
 
-	--Выводим нотификацию вон в таком случае
-	if oldVersion <= newVersion then
-		notification("Доступны обновления ОС!")
+			--Выводим нотификацию вон в таком случае
+			if oldVersion <= newVersion then
+				notification("Доступны обновления ОС!")
+			end
+		end
 	end
 end
+
 
 --А вот и системка стартует
 ------------------------------------------------------------------------------------------------------------------------
 
 if not launchConfigurator() then enterSystem() end
 
---checkForUpdates()
+checkForUpdates()
 
 
 ------------------------------------------------------------------------------------------------------------------------
