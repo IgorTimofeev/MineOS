@@ -777,7 +777,8 @@ local function checkForUpdates()
 	end
 
 	--Получаем версию старого Ватс-нев
-	local oldVersion = getVersion()
+	local oldVersion
+	if fs.exists(pathToWhatsNew) then oldVersion = getVersion() end
 
 	--Качаем новую версию с заменой
 	getFromGitHubSafely("https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/MineOS/Whats-new/" .. _OSLANGUAGE .. ".lang", pathToWhatsNew)
