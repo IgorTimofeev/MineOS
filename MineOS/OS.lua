@@ -664,7 +664,7 @@ end
 local function login()
 	local readedPassword = config.readFile("System/OS/Password.cfg")[1]
 	while true do
-		local password = ecs.beautifulInput("auto", "auto", 30, lang.enterSystem, "Ок", ecs.windowColors.background, ecs.windowColors.usualText, 0xcccccc, false, {lang.password, true})[1]
+		local password = ecs.beautifulInput("auto", "auto", 30, lang.enterSystem, "Ок", ecs.windowColors.background, ecs.windowColors.usualText, 0xcccccc, true, {lang.password, true})[1]
 		if password == readedPassword then
 			return
 		else
