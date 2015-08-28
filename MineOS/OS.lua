@@ -88,6 +88,42 @@ local function newObj(class, name, ...)
 	obj[class][name] = {...}
 end
 
+
+-- Не забудь потом сделат общее апи для гитхаба - а то что за копипаста?
+-- Непорядок!
+-- ЗАГРУЗОЧКА С ГИТХАБА
+local function getFromGitHub(url, path)
+	local sContent = ""
+	local result, response = pcall(internet.request, url)
+	if not result then
+		return nil
+	end
+
+	fs.remove(path)
+	fs.makeDirectory(fs.path(path))
+	local file = io.open(path, "w")
+
+	for chunk in response do
+		file:write(chunk)
+		sContent = sContent .. chunk
+	end
+
+	response:close()
+	file:close()
+
+	return sContent
+end
+
+--БЕЗОПАСНАЯ ЗАГРУЗОЧКА
+local function getFromGitHubSafely(url, path)
+	local success, sRepos = pcall(getFromGitHub, url, path)
+	if not success then
+		ecs.error("Could not connect to the Internet. Please ensure you have an Internet connection.")
+		return -1
+	end
+	return sRepos
+end
+
 --Создать ярлык для конкретной проги
 local function createShortCut(path, pathToProgram)
 	fs.remove(path)
@@ -702,10 +738,66 @@ local function isNameCorrect(name)
 	end
 end
 
+--Рисуем маленькую полоску оповещений
+local function notification(text)
+	local maxWidth = math.floor(xSize * 2 / 3)
+	local height = 3
+	local width = unicode.len(text) + 5
+	width = math.min(maxWidth, width)
+	local x = math.floor(xSize / 2 - width / 2)
+	local y = 1
+
+	--Запоминаем, что было нарисовано
+	local oldPixels = ecs.rememberOldPixels(x, y, x + width - 1, y + height - 1)
+
+	--Рисуем саму полосочку
+	ecs.square(x, y, width, height, 0xffffff)
+	ecs.colorText(x + 4, y + 1, ecs.windowColors.usualText, ecs.stringLimit("end", text, width - 5))
+	ecs.colorTextWithBack(x + 1, y + 1, 0xffffff, ecs.colors.blue, "❕")
+	--Крестик
+	ecs.colorTextWithBack(x + width - 1, y, 0x000000, "x")
+
+	newObj("Notification", "Exit", x + width - 1, y, x + width - 1, y)
+	newObj("Notification", "Show", x, y, x + width - 2, y + height - 1)
+end
+
+--Проверка наличия новых версий
+local function checkForUpdates()
+	
+	--Путь к Ватс-нев
+	local pathToWhatsNew = "System/OS/Whats-new.txt"
+
+	--Получить версию текущего Ватс-нев, епта
+	local function getVersion()
+		local lines = config.readFile(pathToWhatsNew)
+		if unicode.sub(lines[1], 1, 7) == "Version" then
+			local version = tonumber(unicode.sub(lines[1], 8, -1))
+			return version
+		end
+	end
+
+	--Получаем версию старого Ватс-нев
+	local oldVersion = getVersion()
+
+	--Качаем новую версию с заменой
+	getFromGitHubSafely("https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/MineOS/Whats-new/" .. _OSLANGUAGE .. ".lang", pathToWhatsNew)
+	
+	--И нового
+	local newVersion = getVersion()
+
+	--Выводим нотификацию вон в таком случае
+	if oldVersion <= newVersion then
+		notification("Доступны обновления ОС!")
+	end
+end
+
 --А вот и системка стартует
 ------------------------------------------------------------------------------------------------------------------------
 
 if not launchConfigurator() then enterSystem() end
+
+checkForUpdates()
+
 
 ------------------------------------------------------------------------------------------------------------------------
 
