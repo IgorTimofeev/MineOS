@@ -245,6 +245,28 @@ function image.PNGtoJPG(PNGMassiv)
 	return JPGMassiv
 end
 
+--Конвертер из JPG в PNG
+function image.JPGtoPNG(JPGMassiv)
+	local PNGMassiv = {}
+	local width, height = 0, 0
+
+	--Сохраняем пиксели
+	for j = 1, #JPGMassiv do
+		PNGMassiv[j] = {}
+		width = 0
+		for i = 1, #JPGMassiv[j] do
+			PNGMassiv[j][i] = {}
+			PNGMassiv[j][i][1] = JPGMassiv[j][i]["bg"]
+			PNGMassiv[j][i][2] = JPGMassiv[j][i]["fg"]
+			PNGMassiv[j][i][3] = JPGMassiv[j][i]["char"]
+			width = width + 1
+		end
+		height = height + 1
+	end
+
+	return PNGMassiv
+end
+
 -- Просканировать файловую систему на наличие .PNG
 -- И сохранить рядом с ними аналогичную копию в формате .JPG
 -- Осторожно, функция для дебага и знающих людей
