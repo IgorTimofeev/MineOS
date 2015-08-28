@@ -51,6 +51,7 @@ icons["text"] = image.load("System/OS/Icons/Text.png")
 icons["config"] = image.load("System/OS/Icons/Config.png")
 icons["lua"] = image.load("System/OS/Icons/Lua.png")
 icons["image"] = image.load("System/OS/Icons/Image.png")
+icons["imageJPG"] = image.load("System/OS/Icons/ImageJPG.png")
 icons["pastebin"] = image.load("System/OS/Icons/Pastebin.png")
 
 --ПЕРЕМЕННЫЕ ДЛЯ ДОКА
@@ -201,7 +202,7 @@ local function drawIcon(xIcons, yIcons, path)
 		elseif fileFormat == ".png" then
 		 	icon = "image"
 		elseif fileFormat == ".jpg" then
-		 	icon = "image"
+		 	icon = "imageJPG"
 		elseif fileFormat == ".paste" then
 			icon = "pastebin"
 		else
@@ -546,11 +547,11 @@ local function launchIcon(path, arguments)
 		local shortcutLink = readShortcut(path)
 		ecs.prepareToExit()
 		local success, reason = shell.execute("pastebin run " .. shortcutLink)
-		ecs.prepareToExit()
 		if success then
 			print(lang.programSuccessfullyExecuted)
+			ecs.waitForTouchOrClick()
 		else
-			ecs.displayCompileMessage(1, reason, true)
+			ecs.displayCompileMessage(1, reason, false)
 		end
 	end
 
