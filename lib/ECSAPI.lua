@@ -306,7 +306,7 @@ function ECSAPI.rememberOldPixels(fromX,fromY,toX,toY)
 		oldPixels[counterY] = {}
 		counterX = 1
 		for i = fromX, toX do
-			oldPixels[counterY][counterX] = {i, j, {gpu.get(i,j)}}
+			oldPixels[counterY][counterX] = {i, j, gpu.get(i, j)}
 			counterX = counterX + 1
 		end
 		counterY = counterY + 1
@@ -318,7 +318,16 @@ end
 function ECSAPI.drawOldPixels(oldPixels)
 	for j=1,#oldPixels do
 		for i=1,#oldPixels[j] do
-			ECSAPI.colorTextWithBack(oldPixels[j][i][1],oldPixels[j][i][2],oldPixels[j][i][3][2],oldPixels[j][i][3][3],oldPixels[j][i][3][1])
+
+			if oldPixels[j][i][4] ~= gpu.getForeground() then
+				gpu.setForeground(oldPixels[j][i][4])
+			end
+
+			if oldPixels[j][i][5] ~= gpu.getBackground() then
+				gpu.setBackground(oldPixels[j][i][5])
+			end
+
+			gpu.set(oldPixels[j][i][1], oldPixels[j][i][2], oldPixels[j][i][3])
 		end
 	end
 end
