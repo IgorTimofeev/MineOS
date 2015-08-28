@@ -2,7 +2,7 @@ local component = require("component")
 local event = require("event")
 local term = require("term")
 local unicode = require("unicode")
-local ecs = require("ECSAPI")
+--local ecs = require("ECSAPI")
 local fs = require("filesystem")
 local context = require("context")
 local colorlib = require("colorlib")
@@ -10,6 +10,7 @@ local palette = require("palette")
 local computer = require("computer")
 local seri = require("serialization")
 local keyboard = require("keyboard")
+local image = require("image")
 
 local gpu = component.gpu
 
@@ -584,60 +585,43 @@ local function swapColors()
 	drawLeftToolbar()
 end
 
-local function save(path)
+--Сохранение изображения в нужном формате
+local function save(path, format)
 	mergeLayersToMasterPixels()
-	if fs.exists(path) then fs.remove(path) end
-	fs.makeDirectory(fs.path(path))
-	local f = io.open(path, "w")
-
-	for j=1,imageHeight do
-		for i=1,imageWidth do
-			f:write(HEXtoSTRING(MasterPixels[j][i][1])," ",HEXtoSTRING(MasterPixels[j][i][2])," ",MasterPixels[j][i][3]," ")
-			--f:write(MasterPixels[j][i][1], " ", MasterPixels[j][i][2], " ", MasterPixels[j][i][3], " ")
-		
-		end
-		f:write("\n")
+	if format == ".png" then
+		image.savePNG(path, MasterPixels)
+	elseif format == ".jpg" then
+		image.saveJPG(path, image.PNGtoJPG(MasterPixels))
 	end
-
-	f:close()
 end
 
 local function open(path)
-	local f = io.open(path,"r")
-	local lines = {}
-	while true do
-		local line = f:read("*l")
-		if not line then
-			break
-		else
-			lines[#lines+1] = line
-		end 
-	end
-	f:close()
 
-	local loadedImageWidth = unicode.len(lines[1])
-	local loadedImageHeight = #lines
+	--Загружаем картинку и получаем все, что нужно о ней
+	local loadedImage = image.load(path)
+	local kartinka = loadedImage.image
+	local format = loadedImage["format"]
+
+	--Всякие вещи
+	local loadedImageWidth
+	local loadedImageHeight
 	createMassiv()
 
-	for i = 1, #lines do
-		pixels[1][2][i] = {}
-		local counter = 1
-		for j = 1, loadedImageWidth, 16 do
-			local loadedBackground = unicode.sub(lines[i], j, j + 5)
-			local loadedForeground = unicode.sub(lines[i], j + 7, j + 12)
-			local loadedSymbol = unicode.sub(lines[i], j + 14, j + 14)
-			pixels[1][2][i][counter] = {tonumber("0x"..loadedBackground), tonumber("0x"..loadedForeground), loadedSymbol}
-			
-			counter = counter + 1
-
-			loadedBackground, loadedForeground, loadedSymbol = nil, nil, nil
-		end
-		counter = nil
+	if format == ".png" then
+		loadedImageHeight = #kartinka
+		loadedImageWidth = #kartinka[1]
+		pixels[1][2] = kartinka
+	elseif format == ".jpg" then
+		local PNGKartinka = image.JPGtoPNG(kartinka)
+		loadedImageHeight = #PNGKartinka
+		loadedImageWidth = #PNGKartinka[1]
+		pixels[1][2] = PNGKartinka
+	else
+		ecs.error("Ошибка чтения формата файла!")
+		return
 	end
 
-	lines = nil
-
-	imageWidth, imageHeight = loadedImageWidth / 16, loadedImageHeight
+	imageWidth, imageHeight = loadedImageWidth, loadedImageHeight
 	drawFromMassiv()
 end
 
@@ -740,7 +724,7 @@ local function newFile()
 	currentLayer = 1
 	drawAll()
 
-	local data = ecs.input("auto", "auto", 20, "Новый документ", {"input", "Ширина", ""}, {"input", "Высота", ""})
+	local data = ecs.beautifulInput("auto", "auto", 30, "Новый документ", "Ок", ecs.windowColors.background, ecs.windowColors.usualText, 0xcccccc, true, {"Ширина"}, {"Высота"})
 	if data[1] == "" or data[1] == nil or data[1] == " " then data[1] = 51 end
 	if data[2] == "" or data[2] == nil or data[2] == " " then data[2] = 19 end
 
@@ -779,12 +763,12 @@ end
 --------------------------------------ПРОЖКА-------------------------------------------------------
 
 if arg[1] == "-o" or arg[1] == "open" then
-	open(arg[2])
 	currentFile = arg[2]
 	clearScreen(padColor)
 	drawLeftToolbar()
 	drawTopToolbar()
 	drawRightToolbar()
+	open(arg[2])
 elseif arg[1] == "-n" or arg[1] == "new" then
 	imageWidth = arg[2]
 	imageHeight = arg[3]
@@ -939,19 +923,21 @@ while true do
 					if obj["top"][key]["name"] == "Файл" then
 						local action = context.menu(obj["top"][key]["x1"],obj["top"][key]["y1"]+1,{"Новый",false,"^N"},{"Открыть",false,"^O"},"-",{"Сохранить",not currentFile,"^S"},{"Сохранить как",false,"^!S"},"-",{"Выйти"})
 						if action == "Сохранить как" then
-							local data = ecs.input("auto", "auto", 20, "Сохранить как", {"input", "Путь", ""})
-							if data[1] == "" or data[1] == " " then data[1] = "NewImage" end
-							data[1] = data[1]..".png"
+							local data = ecs.beautifulInput("auto", "auto", 30, "Сохранить как", "Ок", ecs.windowColors.background, ecs.windowColors.usualText, 0xcccccc, true, {"Путь"}, {"Формат"})
+							if data[1] == "" or data[1] == " " or data[1] == nil then data[1] = "NewImage" end
+							if data[2] == "" or data[2] == " " or data[2] == nil then data[2] = ".jpg" end
+							data[1] = data[1]..data[2]
 
 							currentFile = data[1]
-							save(currentFile)
+							save(currentFile, data[2])
 							consoleText = "Файл сохранен как "..currentFile
 							console(7, ySize)
 						elseif action == "Открыть" then
-							local data = ecs.input("auto", "auto", 20, "Сохранить как", {"input", "Путь", ""})
-							if data[1] ~= "" and data[1] ~= " " then
+							local data = ecs.beautifulInput("auto", "auto", 30, "Открыть", "Ок", ecs.windowColors.background, ecs.windowColors.usualText, 0xcccccc, true, {"Путь к файлу"})
+							if data[1] ~= "" and data[1] ~= " " and data[1] ~= nil then
 								if fs.exists(data[1]) then
-									if ecs.getFileFormat(data[1]) == ".png" then
+									local fileFormat = ecs.getFileFormat(data[1])
+									if fileFormat == ".png" or fileFormat == ".jpg" then
 										clearScreen(padColor)
 										drawLeftToolbar()
 										drawTopToolbar()
@@ -969,7 +955,8 @@ while true do
 								ecs.error("Что за хуйню ты ввел?")
 							end						
 						elseif action == "Сохранить" then
-							save(currentFile)
+							local fileFormat = ecs.getFileFormat(currentFile)
+							save(currentFile, fileFormat)
 							consoleText = "Файл перезаписан как "..currentFile
 							console(7, ySize)
 						elseif action == "Выйти" then
