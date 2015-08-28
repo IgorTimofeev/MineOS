@@ -51,6 +51,7 @@ icons["text"] = image.load("System/OS/Icons/Text.png")
 icons["config"] = image.load("System/OS/Icons/Config.png")
 icons["lua"] = image.load("System/OS/Icons/Lua.png")
 icons["image"] = image.load("System/OS/Icons/Image.png")
+icons["pastebin"] = image.load("System/OS/Icons/Pastebin.png")
 
 --ПЕРЕМЕННЫЕ ДЛЯ ДОКА
 local dockColor = 0xcccccc
@@ -133,6 +134,15 @@ local function createShortCut(path, pathToProgram)
 	file:close()
 end
 
+--Создать ярлык для конкретной пасты
+local function createPastebinShortcut(path, pastebinLink)
+	fs.remove(path)
+	fs.makeDirectory(fs.path(path))
+	local file = io.open(path, "w")
+	file:write("return ", "\"", pastebinLink, "\"")
+	file:close()
+end
+
 --ПОЛУЧИТЬ ДАННЫЕ О ФАЙЛЕ ИЗ ЯРЛЫКА
 local function readShortcut(path)
 	local success, filename = pcall(loadfile(path))
@@ -190,6 +200,8 @@ local function drawIcon(xIcons, yIcons, path)
 		 	icon = "lua"
 		elseif fileFormat == ".png" then
 		 	icon = "image"
+		elseif fileFormat == ".paste" then
+			icon = "pastebin"
 		else
 			icon = "script"
 		end
@@ -524,7 +536,7 @@ local function launchIcon(path, arguments)
 		if fs.exists(shortcutLink) then
 			launchIcon(shortcutLink)
 		else
-			ecs.error("Ярлык ссылается на несуществующий файл.")
+			ecs.error(lang.badShortcut)
 		end
 	end
 
@@ -735,7 +747,7 @@ local function isNameCorrect(name)
 	if name ~= "" and name ~= " " and name ~= nil then
 		return true
 	else
-		ecs.error("Имя введено некорректно.")
+		ecs.error(lang.invalidName)
 		return false
 	end
 end
@@ -1054,17 +1066,17 @@ while true do
 		--А если все-таки кликнулось в очко какое-то, то вот че делать
 		if clickedOnEmptySpace then
 			if eventData[5] == 1 then
-				local action = context.menu(eventData[3], eventData[4], {lang.contextNewFile}, {lang.contextNewFolder}, "-", {lang.contextPaste, not clipboard, "^V"}, {lang.contextRunFromPastebin})
+				local action = context.menu(eventData[3], eventData[4], {lang.contextNewFile}, {lang.contextNewFolder}, "-", {lang.contextPaste, not clipboard, "^V"}, {lang.contextRunFromPastebin}, {lang.contextCreatePastebinShortcut})
 
 				if action == lang.contextNewFile then
-					local name = ecs.beautifulInput("auto", "auto", 30, lang.contextNewFile, "Ок", ecs.windowColors.background, ecs.windowColors.usualText, 0xcccccc, false, {lang.name})[1]
+					local name = ecs.beautifulInput("auto", "auto", 30, lang.contextNewFile, "Ок", ecs.windowColors.background, ecs.windowColors.usualText, 0xcccccc, true, {lang.name})[1]
 					if isNameCorrect(name) then
 						ecs.prepareToExit()
 						shell.execute("edit " .. workPath .. name)
 						drawAll()
 					end
 				elseif action == lang.contextNewFolder then
-					local name = ecs.beautifulInput("auto", "auto", 30, lang.contextNewFolder, "Ок", ecs.windowColors.background, ecs.windowColors.usualText, 0xcccccc, false, {lang.name})[1]
+					local name = ecs.beautifulInput("auto", "auto", 30, lang.contextNewFolder, "Ок", ecs.windowColors.background, ecs.windowColors.usualText, 0xcccccc, true, {lang.name})[1]
 					if isNameCorrect(name) then
 						fs.makeDirectory(workPath .. name)
 						drawDesktop(xPosOfIcons, yPosOfIcons)
@@ -1078,6 +1090,12 @@ while true do
 						print(lang.pressAnyKeyToContinue)
 						ecs.waitForTouchOrClick()
 						drawAll()
+					end
+				elseif action == lang.contextCreatePastebinShortcut then
+					local name = ecs.beautifulInput("auto", "auto", 40, lang.contextCreatePastebinShortcut, "Ок", ecs.windowColors.background, ecs.windowColors.usualText, 0xcccccc, true, {lang.name})[1]
+					if isNameCorrect(name) then
+						createPastebinShortcut(workPath, name)
+						drawDesktop(xPosOfIcons, yPosOfIcons)
 					end
 				elseif action == lang.contextPaste then
 					pasteSelectedIcons()
