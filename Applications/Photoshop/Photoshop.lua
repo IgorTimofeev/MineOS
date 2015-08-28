@@ -622,7 +622,6 @@ local function open(path)
 	end
 
 	imageWidth, imageHeight = loadedImageWidth, loadedImageHeight
-	drawFromMassiv()
 end
 
 --ОТРИСОВАТЬ ВАЩЕ ВСЕ ЧТО ТОЛЬКО МОЖНО
@@ -763,12 +762,9 @@ end
 --------------------------------------ПРОЖКА-------------------------------------------------------
 
 if arg[1] == "-o" or arg[1] == "open" then
-	currentFile = arg[2]
-	clearScreen(padColor)
-	drawLeftToolbar()
-	drawTopToolbar()
-	drawRightToolbar()
 	open(arg[2])
+	currentFile = arg[2]
+	drawAll()
 elseif arg[1] == "-n" or arg[1] == "new" then
 	imageWidth = arg[2]
 	imageHeight = arg[3]
@@ -943,6 +939,7 @@ while true do
 										drawTopToolbar()
 										drawRightToolbar()
 										open(data[1])
+										drawFromMassiv()
 										consoleText = "Открыт файл "..data[1]
 										console(7, ySize)
 									else
