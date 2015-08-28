@@ -542,14 +542,13 @@ local function launchIcon(path, arguments)
 	--Если это ссылка на пастебин
 	elseif fileFormat == ".paste" then
 		local shortcutLink = readShortcut(path)
-			ecs.prepareToExit()
-			local success, reason = shell.execute("pastebin run "..shortcutLink)
-			ecs.prepareToExit()
-			if success then
-				print(lang.programSuccessfullyExecuted)
-			else
-				ecs.displayCompileMessage(1, reason, true)
-			end
+		ecs.prepareToExit()
+		local success, reason = shell.execute("pastebin run " .. shortcutLink)
+		ecs.prepareToExit()
+		if success then
+			print(lang.programSuccessfullyExecuted)
+		else
+			ecs.displayCompileMessage(1, reason, true)
 		end
 	end
 
