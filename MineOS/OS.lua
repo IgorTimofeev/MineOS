@@ -138,7 +138,7 @@ end
 local function createPastebinShortcut(path, pastebinLink)
 	fs.remove(path)
 	fs.makeDirectory(fs.path(path))
-	local file = io.open(path .. pastebinLink, "w")
+	local file = io.open(path .. pastebinLink .. ".paste", "w")
 	file:write("return ", "\"", pastebinLink, "\"")
 	file:close()
 end
@@ -199,6 +199,8 @@ local function drawIcon(xIcons, yIcons, path)
 		elseif fileFormat == ".lua" then
 		 	icon = "lua"
 		elseif fileFormat == ".png" then
+		 	icon = "image"
+		elseif fileFormat == ".jpg" then
 		 	icon = "image"
 		elseif fileFormat == ".paste" then
 			icon = "pastebin"
