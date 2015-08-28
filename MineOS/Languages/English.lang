@@ -1,6 +1,7 @@
 viewTab = View
 updatesAvailable = New updates for OS available!
 badShortcut = Shortcut refers to nonexistent file!
+programSuccessfullyExecuted = Programm sucessfully executed. Press any key to continue.
 name = Enter name
 invalidName = Invalid name.
 enterSystem = Login to system
