@@ -1414,8 +1414,23 @@ function ECSAPI.beautifulSelect(x, y, width, title, buttonText, back, fore, othe
 			end
 		end
 	end
+end
 
+--Чтение правильного языкового файла. Просто для безопасности.
+function ECSAPI.readCorrectLangFile(pathToLangs)
+	local lang
+	local language = _OSLANGUAGE .. ".lang"
+	
+	if not fs.exists(pathToLangs .. "/" .. language) then
+		language = "English.lang"
+	end
 
+	lang = config.readAll(pathToLangs .. "/" .. language)	
+
+	config = nil
+	language = nil
+
+	return lang
 end
 
 ----------------------------------------------------------------------------------------------------
