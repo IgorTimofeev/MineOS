@@ -195,7 +195,7 @@ local function drawFromMassiv(clearScreenOrNot)
 					end
 
 					if MasterPixels[i][j][2] ~= gpu.getForeground() then
-						gpu.setForeground(MasterPixels[i][j][1])
+						gpu.setForeground(MasterPixels[i][j][2])
 					end					
 
 					gpu.set(x+j, y+i, MasterPixels[i][j][3])
