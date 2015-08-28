@@ -25,6 +25,7 @@ local image = require("image")
 --local config = require("config")
 local zip = require("zip")
 local gpu = component.gpu
+local internet = require("internet")
 
 --Загружаем языковой пакетик чайный
 local lang = config.readAll("System/OS/Languages/".._G._OSLANGUAGE..".lang")
@@ -797,7 +798,7 @@ end
 
 if not launchConfigurator() then enterSystem() end
 
-checkForUpdates()
+--checkForUpdates()
 
 
 ------------------------------------------------------------------------------------------------------------------------
