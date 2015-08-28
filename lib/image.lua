@@ -96,17 +96,14 @@ local function drawJPG(x, y, image2)
 		for i = 1, image2.width, 1 do
 
 			if image2[j][i].char ~= transparentSymbol then
-				-- if i > 1 then
-				-- 	if image2[j][i - 1].bg ~= image2[j][i].bg then
-				-- 		gpu.setBackground(image2[j][i].bg)
-				-- 	end
-				-- 	if image2[j][i - 1].fg ~= image2[j][i].fg then
-				-- 		gpu.setBackground(image2[j][i].bg)
-				-- 	end
-				-- else
+
+				if image2[j][i].bg ~= gpu.getBackground() then
 					gpu.setBackground(image2[j][i].bg)
-					gpu.setForeground(image2[j][i].fg)
-				-- end
+				end
+
+				if image2[j][i].fg ~= gpu.getForeground() then
+					gpu.setBackground(image2[j][i].fg)
+				end
 
 				gpu.set(x + i, y + j, image2[j][i].char)
 			end
@@ -181,21 +178,13 @@ local function drawPNG(x, y, massivSudaPihay)
 		for i = 1, #massivSudaPihay[j] do
 			if massivSudaPihay[j][i][1] and massivSudaPihay[j][i][2] and massivSudaPihay[j][i][3] ~= transparentSymbol then
 				
-				-- if i > 1 then
-				-- 	if massivSudaPihay[j][i - 1][1] ~= massivSudaPihay[j][i][1] then
-				-- 		gpu.setBackground(massivSudaPihay[j][i][1])
-				-- 	end
-				-- 	if massivSudaPihay[j][i - 1][2] ~= massivSudaPihay[j][i][2] then
-				-- 		gpu.setForeground(massivSudaPihay[j][i][2])
-				-- 	end
-				-- else
 				if massivSudaPihay[j][i][1] ~= gpu.getBackground() then
 					gpu.setBackground(massivSudaPihay[j][i][1])
 				end
+				
 				if massivSudaPihay[j][i][2] ~= gpu.getForeground() then
 					gpu.setForeground(massivSudaPihay[j][i][2])	
 				end
-				-- end
 
 				gpu.set(x + i, y + j, massivSudaPihay[j][i][3])
 			end
