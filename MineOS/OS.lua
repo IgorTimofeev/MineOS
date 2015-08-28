@@ -795,7 +795,7 @@ local function checkForUpdates()
 			local newVersion = getVersion()
 
 			--Выводим нотификацию вон в таком случае
-			if oldVersion <= newVersion then
+			if oldVersion < newVersion then
 				return notification(lang.updatesAvailable)
 			end
 		end
@@ -1070,7 +1070,7 @@ while true do
 						drawDesktop(xPosOfIcons, yPosOfIcons)
 					end
 				elseif action == lang.contextRunFromPastebin then
-					local name = ecs.beautifulInput("auto", "auto", 30, lang.contextRunFromPastebin, "Ок", ecs.windowColors.background, ecs.windowColors.usualText, 0xcccccc, false, {lang.name})[1]
+					local name = ecs.beautifulInput("auto", "auto", 30, lang.contextRunFromPastebin, "Ок", ecs.windowColors.background, ecs.windowColors.usualText, 0xcccccc, true, {lang.name})[1]
 					if isNameCorrect(name) then
 						ecs.prepareToExit()
 						shell.execute("pastebin run "..name)
