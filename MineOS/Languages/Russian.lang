@@ -1,6 +1,7 @@
 viewTab = Вид
 updatesAvailable = Доступны обновления ОС!
 badShortcut = Ярлык ссылается на несуществующий файл!
+programSuccessfullyExecuted = Программа выполнена успешно! Нажмите любую клавишу, чтобы продолжить.
 name = Введите имя
 invalidName = Имя введено некоректно.
 enterSystem = Войти в систему
