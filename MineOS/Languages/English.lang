@@ -1,5 +1,6 @@
 viewTab = View
-updatesAvailable = Доступны обновления ОС!
+updatesAvailable = New updates for OS available!
+badShortcut = Shortcut refers to nonexistent file!
 name = Enter name
 invalidName = Invalid name.
 enterSystem = Login to system
