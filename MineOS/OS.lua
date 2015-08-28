@@ -138,7 +138,7 @@ end
 local function createPastebinShortcut(path, pastebinLink)
 	fs.remove(path)
 	fs.makeDirectory(fs.path(path))
-	local file = io.open(path .. pastebinLink .. ".paste", "w")
+	local file = io.open(path .. "/"..pastebinLink .. ".paste", "w")
 	file:write("return ", "\"", pastebinLink, "\"")
 	file:close()
 end
@@ -1113,7 +1113,7 @@ while true do
 
 				--Создать ссылку на файл из пастебина
 				elseif action == lang.contextCreatePastebinShortcut then
-					local name = ecs.beautifulInput("auto", "auto", 40, lang.contextCreatePastebinShortcut, "Ок", ecs.windowColors.background, ecs.windowColors.usualText, 0xcccccc, true, {lang.name})[1]
+					local name = ecs.beautifulInput("auto", "auto", 30, lang.contextCreatePastebinShortcut, "Ок", ecs.windowColors.background, ecs.windowColors.usualText, 0xcccccc, true, {lang.name})[1]
 					if isNameCorrect(name) then
 						createPastebinShortcut(workPath, name)
 						drawDesktop(xPosOfIcons, yPosOfIcons)
