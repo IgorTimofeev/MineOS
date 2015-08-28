@@ -192,6 +192,22 @@ local function drawPNG(x, y, massivSudaPihay)
 	end
 end
 
+--Забыл, что эта поебота делает, но вроде нужна для сохранки
+--Пнгшников в нужном формате
+--Короч, оставь, заебал
+local function HEXtoSTRING(color,withNull)
+	local stro4ka = string.format("%x",color)
+	local sStro4ka = unicode.len(stro4ka)
+
+	if sStro4ka < 6 then
+		for i=1,(6-sStro4ka) do
+			stro4ka = "0"..stro4ka
+		end
+	end
+
+	if withNull then return "0x"..stro4ka else return stro4ka end
+end
+
 -- Сохранение существующего массива ПНГ в файл
 function image.savePNG(path, MasterPixels)
 	-- Удаляем файл, если есть
