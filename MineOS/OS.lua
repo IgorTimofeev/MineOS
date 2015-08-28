@@ -725,6 +725,8 @@ local function enterSystem()
 	elseif fs.exists("System/OS/Users.cfg") then
 		safeBiometry()
 		drawAll()
+	elseif fs.exists("System/OS/WithoutProtection.cfg") then
+		drawAll()
 	end
 end
 
@@ -759,6 +761,8 @@ local function notification(text)
 
 	newObj("Notification", "Exit", x + width - 1, y, x + width - 1, y)
 	newObj("Notification", "Show", x, y, x + width - 2, y + height - 1)
+
+	return oldPixels
 end
 
 --Проверка наличия новых версий
@@ -792,10 +796,14 @@ local function checkForUpdates()
 
 			--Выводим нотификацию вон в таком случае
 			if oldVersion <= newVersion then
-				notification("Доступны обновления ОС!")
+				return notification("Доступны обновления ОС!")
 			end
 		end
 	end
+end
+
+local function displayInfoAboutUpdate()
+
 end
 
 
@@ -804,14 +812,19 @@ end
 
 if not launchConfigurator() then enterSystem() end
 
---checkForUpdates()
+local notificationOldPixels = checkForUpdates()
 
 ------------------------------------------------------------------------------------------------------------------------
 
 -- Понеслась моча по трубам
 while true do
+
+
 	local eventData = { event.pull() }
 	if eventData[1] == "touch" then
+
+		--Удаляем нотификацию, если имеется
+		if notificationOldPixels then ecs.drawOldPixels(notificationOldPixels); notificationOldPixels = nil end
 
 		--Переменная, становящаяся ложью только в случае клика на какой-либо элемент, не суть какой
 		local clickedOnEmptySpace = true
