@@ -35,3 +35,4 @@ contextRemoveFromDock = Remove from Dock
 contextNewFile = New file
 contextNewFolder = New folder
 contextRunFromPastebin = Run from Pastebin
+contextCreatePastebinShortcut = Create link to Pastebin file
