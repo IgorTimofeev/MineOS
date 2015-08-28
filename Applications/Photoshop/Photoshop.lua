@@ -576,19 +576,6 @@ local function deleteLayer(layer)
 	drawFromMassiv()
 end
 
-local function HEXtoSTRING(color,withNull)
-	local stro4ka = string.format("%x",color)
-	local sStro4ka = unicode.len(stro4ka)
-
-	if sStro4ka < 6 then
-		for i=1,(6-sStro4ka) do
-			stro4ka = "0"..stro4ka
-		end
-	end
-
-	if withNull then return "0x"..stro4ka else return stro4ka end
-end
-
 local function swapColors()
 	local tempColor = foreground
 	foreground = background
