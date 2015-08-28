@@ -37,4 +37,4 @@ contextRemoveFromDock = Удалить из Dock
 contextNewFile = Новый файл
 contextNewFolder = Новая папка
 contextRunFromPastebin = Запустить из Pastebin
-contextCreatePastebinShortcut = Создать ссылку на файл из Pastebin
+contextCreatePastebinShortcut = Создать ссылку на Pastebin
