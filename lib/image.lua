@@ -189,8 +189,12 @@ local function drawPNG(x, y, massivSudaPihay)
 				-- 		gpu.setForeground(massivSudaPihay[j][i][2])
 				-- 	end
 				-- else
+				if massivSudaPihay[j][i][1] ~= gpu.getBackground() then
 					gpu.setBackground(massivSudaPihay[j][i][1])
+				end
+				if gpu.setBackground(massivSudaPihay[j][i][2]) ~= gpu.getForeground() then
 					gpu.setForeground(massivSudaPihay[j][i][2])	
+				end
 				-- end
 
 				gpu.set(x + i, y + j, massivSudaPihay[j][i][3])
