@@ -207,8 +207,8 @@ function image.savePNG(path, MasterPixels)
 	fs.makeDirectory(fs.path(path))
 	local f = io.open(path, "w")
 
-	for j=1,imageHeight do
-		for i=1,imageWidth do
+	for j=1, #MasterPixels do
+		for i=1,#MasterPixels[j] do
 			f:write(HEXtoSTRING(MasterPixels[j][i][1])," ",HEXtoSTRING(MasterPixels[j][i][2])," ",MasterPixels[j][i][3]," ")
 		end
 		f:write("\n")
