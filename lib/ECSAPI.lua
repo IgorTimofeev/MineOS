@@ -316,6 +316,7 @@ end
 
 --НАРИСОВАТЬ ЗАПОМНЕННЫЕ ПИКСЕЛИ ИЗ МАССИВА
 function ECSAPI.drawOldPixels(oldPixels)
+	if not _G.image then _G.image = require("image") end
 	image.drawPNG(1, 1, image.convertImagetoGroupedImage(oldPixels))
 end
 
