@@ -102,6 +102,7 @@ local function scan()
 
       massiv[x][z] = geo.scan(x, z, true)
       for i = 1, #massiv[x][z] do
+        massiv[x][z] = math.floor(massiv[x][z])
         displayRow(x, yModifyer, z, massiv[x][z])
       end
       percent = counter / countOfAll * 100
