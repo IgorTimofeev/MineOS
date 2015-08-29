@@ -61,6 +61,9 @@ end
 local function displayRow(x, yModifyer, z,  tablica)
   local color
   for i = 1, #tablica do
+    
+    massiv[x][z][i] = math.ceil(massiv[x][z][i])
+      
     if tablica[i] > 0 then
       
       color = 1
@@ -102,7 +105,6 @@ local function scan()
 
       massiv[x][z] = geo.scan(x, z, true)
       for i = 1, #massiv[x][z] do
-        massiv[x][z] = math.floor(massiv[x][z])
         displayRow(x, yModifyer, z, massiv[x][z])
       end
       percent = counter / countOfAll * 100
