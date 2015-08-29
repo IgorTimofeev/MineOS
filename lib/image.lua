@@ -170,7 +170,7 @@ local function loadPNG(path)
 	local file = io.open(path, "r")
 	local newPNGMassiv = { ["backgrounds"] = {} }
 
-	local pixelCounter, lineCounter
+	local pixelCounter, lineCounter = 1, 1
 	for line in file:lines() do
 		local dlinaStroki = unicode.len(line)
 		pixelCounter = 1
