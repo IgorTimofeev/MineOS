@@ -168,29 +168,34 @@ end
 --Загрузка ПНГ
 local function loadPNG(path)
 	local file = io.open(path, "r")
-	local massiv = {}
+	local newPNGMassiv = { ["backgrounds"] = {} }
 
+	local pixelCounter, lineCounter
 	for line in file:lines() do
 		local dlinaStroki = unicode.len(line)
-		local lineNumber = #massiv + 1
+		pixelCounter = 1
 
-		if dlinaStroki > 14 then
-			local pixelCounter = 1
-			massiv[lineNumber] = {}
-			for i = 1, dlinaStroki, 16 do
-				local loadedBackground = unicode.sub(line, i, i + 5)
-				local loadedForeground = unicode.sub(line, i + 7, i + 12)
-				local loadedSymbol = unicode.sub(line, i + 14, i + 14)
+		for i = 1, dlinaStroki, 16 do
+			local back = unicode.sub(line, i, i + 5)
+			local fore = unicode.sub(line, i + 7, i + 12)
+			local symbol = unicode.sub(line, i + 14, i + 14)
 
-				massiv[lineNumber][pixelCounter] = { tonumber("0x" .. loadedBackground), tonumber("0x" .. loadedForeground), loadedSymbol }
+			newPNGMassiv["backgrounds"][back] = newPNGMassiv["backgrounds"][back] or {}
+			newPNGMassiv["backgrounds"][back][fore] = newPNGMassiv["backgrounds"][back][fore] or {}
 
-				pixelCounter = pixelCounter + 1
-			end
+			table.insert(newPNGMassiv["backgrounds"][back][fore], {pixelCounter, lineCounter, symbol} )
+
+			pixelCounter = pixelCounter + 1
+			back, fore, symbol = nil, nil, nil
 		end
+
+		lineCounter = lineCounter + 1
 	end
 
 	file:close()
-	return massiv
+	pixelCounter, lineCounter = nil, nil
+
+	return newPNGMassiv
 end
 
 -- Перевод HEX-цвета из файла (из 00ff00 делает 0x00ff00)
@@ -232,7 +237,9 @@ function image.drawPNG(x, y, massivSudaPihay2)
 	y = y - 1
 
 	--Конвертируем "сырой" формат PNG в оптимизированный и сгруппированный по цветам
-	local massivSudaPihay = convertImagetoGroupedImage(massivSudaPihay2)
+	--local massivSudaPihay = convertImagetoGroupedImage(massivSudaPihay2)
+	--Более не требуется, встроил конвертер в загрузчик файлов, по сути
+	--конвертации теперь вообще нет.
 
 	--Перебираем массив с фонами
 	for back, backValue in pairs(massivSudaPihay["backgrounds"]) do
