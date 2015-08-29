@@ -7,7 +7,6 @@ local shell = require("shell")
 local keyboard = require("keyboard")
 local computer = require("computer")
 local fs = require("filesystem")
-local image = require("image")
 --local thread = require("thread")
 local gpu = component.gpu
 local screen = component.screen
