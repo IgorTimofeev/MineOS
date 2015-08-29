@@ -195,7 +195,17 @@ local function motd()
   end
 end
 
+--Загружаем самые нужные апишки
 _G._OSLANGUAGE = require("System/OS/Language")
+_G.ecs = require("ECSAPI")
+_G.config = require("config")
+_G.image = require("image")
+_G.fs = require("filesystem")
+
+--Очищаем экран и запускаем ОС
+ecs.clearScreen()
+ecs.setScale(1)
+shell.execute("OS.lua")
 
 while true do
   local component = require("component")
