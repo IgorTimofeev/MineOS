@@ -7,6 +7,7 @@ local shell = require("shell")
 local keyboard = require("keyboard")
 local computer = require("computer")
 local fs = require("filesystem")
+local image = require("image")
 --local thread = require("thread")
 local gpu = component.gpu
 local screen = component.screen
@@ -316,20 +317,7 @@ end
 
 --НАРИСОВАТЬ ЗАПОМНЕННЫЕ ПИКСЕЛИ ИЗ МАССИВА
 function ECSAPI.drawOldPixels(oldPixels)
-	for j=1,#oldPixels do
-		for i=1,#oldPixels[j] do
-
-			if oldPixels[j][i][4] ~= gpu.getForeground() then
-				gpu.setForeground(oldPixels[j][i][4])
-			end
-
-			if oldPixels[j][i][5] ~= gpu.getBackground() then
-				gpu.setBackground(oldPixels[j][i][5])
-			end
-
-			gpu.set(oldPixels[j][i][1], oldPixels[j][i][2], oldPixels[j][i][3])
-		end
-	end
+	image.drawPNG(1, 1, image.convertImagetoGroupedImage(oldPixels))
 end
 
 --ОГРАНИЧЕНИЕ ДЛИНЫ СТРОКИ
