@@ -201,6 +201,7 @@ _G.ecs = require("ECSAPI")
 _G.config = require("config")
 _G.image = require("image")
 _G.fs = require("filesystem")
+_G.shell = require("shell")
 
 --Очищаем экран и запускаем ОС
 ecs.clearScreen()
