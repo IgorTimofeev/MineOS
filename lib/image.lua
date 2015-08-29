@@ -352,6 +352,34 @@ function image.draw(x, y, kartinka)
 	end
 end
 
+function image.rememberOldPixels(x, y, x2, y2)
+	local oldPixels = {}
+	oldPixels.x = x
+	oldPixels.y = y
+	oldPixels.image = {}
+
+	local xCounter, yCounter = 1, 1
+	for j = y, y2 do
+		xCounter = 1
+		oldPixels.image[j] = {}
+		for i = x, x2 do
+			local symbol, fore, back = gpu.get(xCounter, yCounter)
+			oldPixels.image[j][i] = { back, fore, symbol }
+			symbol, fore, back = nil, nil, nil
+			xCounter = xCounter + 1
+		end
+		yCounter = yCounter + 1
+	end
+
+	xCounter, yCounter = nil, nil
+
+	return oldPixels
+end
+
+function image.drawOldPixels(oldPixels)
+	drawPNG(oldPixels.x, oldPixels.y, convertImagetoGroupedImage(oldPixels.image))
+end
+
 ---------------------------------------------------------------------------------------------------------------------
 
 -- ecs.prepareToExit()
