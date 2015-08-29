@@ -300,14 +300,49 @@ end
 
 --ЗАПОМНИТЬ ОБЛАСТЬ ПИКСЕЛЕЙ
 function ECSAPI.rememberOldPixels(x, y, x2, y2)
-	if not _G.image then _G.image = require("image") end
-	image.rememberOldPixels(x, y, x2, y2)
+	local newPNGMassiv = { ["backgrounds"] = {} }
+	newPNGMassiv.x, newPNGMassiv.y = x, y
+
+	--Перебираем весь массив стандартного PNG-вида по высоте
+	local xCounter, yCounter = 1, 1
+	for j = y, y2 do
+		xCounter = 1
+		for i = x, x2 do
+			local symbol, fore, back = gpu.get(i, j)
+
+			newPNGMassiv["backgrounds"][back] = newPNGMassiv["backgrounds"][back] or {}
+			newPNGMassiv["backgrounds"][back][fore] = newPNGMassiv["backgrounds"][back][fore] or {}
+
+			table.insert(newPNGMassiv["backgrounds"][back][fore], {xCounter, yCounter, symbol} )
+
+			xCounter = xCounter + 1
+			back, fore, symbol = nil, nil, nil
+		end
+
+		yCounter = yCounter + 1
+	end
+
+	return newPNGMassiv
 end
 
 --НАРИСОВАТЬ ЗАПОМНЕННЫЕ ПИКСЕЛИ ИЗ МАССИВА
-function ECSAPI.drawOldPixels(oldPixels)
-	if not _G.image then _G.image = require("image") end
-	image.drawOldPixels(oldPixels)
+function ECSAPI.drawOldPixels(massivSudaPihay)
+
+	--Отнимаем разок
+	massivSudaPihay.x, massivSudaPihay.y = massivSudaPihay.x - 1, massivSudaPihay.y - 1
+
+	--Перебираем массив с фонами
+	for back, backValue in pairs(massivSudaPihay["backgrounds"]) do
+		gpu.setBackground(back)
+		for fore, foreValue in pairs(massivSudaPihay["backgrounds"][back]) do
+			gpu.setForeground(fore)
+			for pixel = 1, #massivSudaPihay["backgrounds"][back][fore] do
+				if massivSudaPihay["backgrounds"][back][fore][pixel][3] ~= transparentSymbol then
+					gpu.set(massivSudaPihay.x + massivSudaPihay["backgrounds"][back][fore][pixel][1], massivSudaPihay.y + massivSudaPihay["backgrounds"][back][fore][pixel][2], massivSudaPihay["backgrounds"][back][fore][pixel][3])
+				end
+			end
+		end
+	end
 end
 
 --ОГРАНИЧЕНИЕ ДЛИНЫ СТРОКИ
