@@ -165,6 +165,18 @@ end
 
 ---------------------------Все, что касается несжатого формата (у нас он назван "PNG")-------------------------------------------------------
 
+-- Перевод HEX-цвета из файла (из 00ff00 делает 0x00ff00)
+local function HEXtoSTRING(color,withNull)
+	local stro4ka = string.format("%x",color)
+	local sStro4ka = unicode.len(stro4ka)
+
+	if sStro4ka < 6 then
+		stro4ka = string.rep("0", 6 - sStro4ka) .. stro4ka
+	end
+
+	if withNull then return "0x"..stro4ka else return stro4ka end
+end
+
 --Загрузка ПНГ
 local function loadPNG(path)
 	local file = io.open(path, "r")
@@ -176,8 +188,8 @@ local function loadPNG(path)
 		pixelCounter = 1
 
 		for i = 1, dlinaStroki, 16 do
-			local back = unicode.sub(line, i, i + 5)
-			local fore = unicode.sub(line, i + 7, i + 12)
+			local back = tonumber("0x"..unicode.sub(line, i, i + 5))
+			local fore = tonumber("0x"..unicode.sub(line, i + 7, i + 12))
 			local symbol = unicode.sub(line, i + 14, i + 14)
 
 			newPNGMassiv["backgrounds"][back] = newPNGMassiv["backgrounds"][back] or {}
@@ -196,20 +208,6 @@ local function loadPNG(path)
 	pixelCounter, lineCounter = nil, nil
 
 	return newPNGMassiv
-end
-
--- Перевод HEX-цвета из файла (из 00ff00 делает 0x00ff00)
-local function HEXtoSTRING(color,withNull)
-	local stro4ka = string.format("%x",color)
-	local sStro4ka = unicode.len(stro4ka)
-
-	if sStro4ka < 6 then
-		for i=1,(6-sStro4ka) do
-			stro4ka = "0"..stro4ka
-		end
-	end
-
-	if withNull then return "0x"..stro4ka else return stro4ka end
 end
 
 -- Сохранение существующего массива ПНГ в файл
@@ -358,8 +356,7 @@ end
 
 -- ecs.prepareToExit()
 -- local cyka1 = image.load("System/OS/Icons/Love.png")
--- local cyka2 = image.load("test.jpg")
--- --local cyka2 = image.load("Pastebin.app/Resources/Icon.png")
+-- local cyka2 = image.load("Pastebin.app/Resources/Icon.png")
 -- image.draw(2, 2, cyka1)
 -- image.draw(40, 2, cyka2)
 
