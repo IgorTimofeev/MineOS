@@ -6,9 +6,11 @@ local image = {}
 
 local transparentSymbol = "#"
 
---------------------Все, что касается сжатого формата изображений----------------------------------------------------------------------------------
+--------------------Все, что касается сжатого формата изображений (у нас он назван "JPG")----------------------------------------------------------------------------------
 
---OC image format .ocif by Pirnogion
+-- OC image format .ocif by Pirnogion
+-- Спасибо, Пир
+-- Охуенный форматик
 local ocif_signature1 = 0x896F6369
 local ocif_signature2 = 0x00661A0A --7 bytes: 89 6F 63 69 66 1A 0A
 local ocif_signature_expand = { string.char(0x89), string.char(0x6F), string.char(0x63), string.char(0x69), string.char(0x66), string.char(0x1A), string.char(0x0A) }
@@ -58,6 +60,29 @@ local function decodeChar(char1, char2)
 	end
 end
 
+--Конвертируем массив классического "сырого" формата в сжатый и оптимизированный
+function image.convertImagetoGroupedImage(PNGMassiv)
+	local newPNGMassiv = { ["backgrounds"] = {} }
+
+	--Перебираем весь массив стандартного PNG-вида по высоте
+	for j = 1, #PNGMassiv do
+		for i = 1, #PNGMassiv[j] do
+			local back = PNGMassiv[j][i][1]
+			local fore = PNGMassiv[j][i][2]
+			local symbol = PNGMassiv[j][i][3]
+
+			newPNGMassiv["backgrounds"][back] = newPNGMassiv["backgrounds"][back] or {}
+			newPNGMassiv["backgrounds"][back][fore] = newPNGMassiv["backgrounds"][back][fore] or {}
+
+			table.insert(newPNGMassiv["backgrounds"][back][fore], {i, j, symbol} )
+
+			back, fore, symbol = nil, nil, nil
+		end
+	end
+
+	return newPNGMassiv
+end
+
 --Чтение сжатого формата
 local function loadJPG(path)
 	local image = {}
@@ -77,9 +102,9 @@ local function loadJPG(path)
 		table.insert( image, {} )
 		for x = 1, image.width, 1 do
 			table.insert( image[y], {} )
-			image[y][x].fg = readBytes(file, 3)
-			image[y][x].bg = readBytes(file, 3)
-			image[y][x].char = decodeChar(readBytes(file, 1), readBytes(file, 1))
+			image[y][x][2] = readBytes(file, 3)
+			image[y][x][1] = readBytes(file, 3)
+			image[y][x][3] = decodeChar(readBytes(file, 1), readBytes(file, 1))
 		end
 	end
 
@@ -89,29 +114,27 @@ local function loadJPG(path)
 end
 
 --Рисование сжатого формата
-local function drawJPG(x, y, image2)
+function image.drawJPG(x, y, image)
 	x = x - 1
 	y = y - 1
-	for j = 1, image2.height, 1 do
-		for i = 1, image2.width, 1 do
 
-			if image2[j][i].char ~= transparentSymbol then
+	local image2 = convertImagetoGroupedImage(image)
 
-				if image2[j][i].bg ~= gpu.getBackground() then
-					gpu.setBackground(image2[j][i].bg)
+	--Перебираем массив с фонами
+	for back, backValue in pairs(image2["backgrounds"]) do
+		gpu.setBackground(back)
+		for fore, foreValue in pairs(image2["backgrounds"][back]) do
+			gpu.setForeground(fore)
+			for pixel = 1, #image2["backgrounds"][back][fore] do
+				if image2["backgrounds"][back][fore][pixel][3] ~= transparentSymbol then
+					gpu.set(x + image2["backgrounds"][back][fore][pixel][1], y + image2["backgrounds"][back][fore][pixel][2], image2["backgrounds"][back][fore][pixel][3])
 				end
-
-				if image2[j][i].fg ~= gpu.getForeground() then
-					gpu.setBackground(image2[j][i].fg)
-				end
-
-				gpu.set(x + i, y + j, image2[j][i].char)
 			end
 		end
 	end
 end
-
---Сохранение ДЖПГ в файл из существующего массива
+   
+--Сохранение JPG в файл из существующего массива
 function image.saveJPG(path, image)
 
 	-- Удаляем файл, если есть
@@ -130,7 +153,7 @@ function image.saveJPG(path, image)
 
 	for y = 1, image.height, 1 do
 		for x = 1, image.width, 1 do
-			local encodedPixel = { encodePixel( image[y][x].fg, image[y][x].bg, image[y][x].char ) }
+			local encodedPixel = { encodePixel( image[y][x][2], image[y][x][1], image[y][x][3] ) }
 			for i = 1, #encodedPixel do
 				file:write( string.char( encodedPixel[i] ) )
 			end
@@ -140,7 +163,7 @@ function image.saveJPG(path, image)
 	file:close()
 end
 
----------------------------Все, что касается несжатого формата-------------------------------------------------------
+---------------------------Все, что касается несжатого формата (у нас он назван "PNG")-------------------------------------------------------
 
 --Загрузка ПНГ
 local function loadPNG(path)
@@ -170,31 +193,7 @@ local function loadPNG(path)
 	return massiv
 end
 
---Отрисовка ПНГ
-local function drawPNG(x, y, massivSudaPihay)
-	x = x - 1
-	y = y - 1
-	for j = 1, #massivSudaPihay do
-		for i = 1, #massivSudaPihay[j] do
-			if massivSudaPihay[j][i][1] and massivSudaPihay[j][i][2] and massivSudaPihay[j][i][3] ~= transparentSymbol then
-				
-				if massivSudaPihay[j][i][1] ~= gpu.getBackground() then
-					gpu.setBackground(massivSudaPihay[j][i][1])
-				end
-				
-				if massivSudaPihay[j][i][2] ~= gpu.getForeground() then
-					gpu.setForeground(massivSudaPihay[j][i][2])	
-				end
-
-				gpu.set(x + i, y + j, massivSudaPihay[j][i][3])
-			end
-		end
-	end
-end
-
---Забыл, что эта поебота делает, но вроде нужна для сохранки
---Пнгшников в нужном формате
---Короч, оставь, заебал
+-- Перевод HEX-цвета из файла (из 00ff00 делает 0x00ff00)
 local function HEXtoSTRING(color,withNull)
 	local stro4ka = string.format("%x",color)
 	local sStro4ka = unicode.len(stro4ka)
@@ -226,7 +225,30 @@ function image.savePNG(path, MasterPixels)
 	f:close()
 end
 
----------------------Глобальные функции отрисовки---------------------------------------------------------
+--Отрисовка ПНГ
+function image.drawPNG(x, y, massivSudaPihay2)
+	--Уменьшаем значения кординат на 1, т.к. циклы начинаются с единицы
+	x = x - 1
+	y = y - 1
+
+	--Конвертируем "сырой" формат PNG в оптимизированный и сгруппированный по цветам
+	local massivSudaPihay = convertImagetoGroupedImage(massivSudaPihay2)
+
+	--Перебираем массив с фонами
+	for back, backValue in pairs(massivSudaPihay["backgrounds"]) do
+		gpu.setBackground(back)
+		for fore, foreValue in pairs(massivSudaPihay["backgrounds"][back]) do
+			gpu.setForeground(fore)
+			for pixel = 1, #massivSudaPihay["backgrounds"][back][fore] do
+				if massivSudaPihay["backgrounds"][back][fore][pixel][3] ~= transparentSymbol then
+					gpu.set(x + massivSudaPihay["backgrounds"][back][fore][pixel][1], y + massivSudaPihay["backgrounds"][back][fore][pixel][2], massivSudaPihay["backgrounds"][back][fore][pixel][3])
+				end
+			end
+		end
+	end
+end
+
+---------------------Глобальные функции данного API, с ними мы и работаем---------------------------------------------------------
 
 --Конвертер из PNG в JPG
 function image.PNGtoJPG(PNGMassiv)
@@ -238,10 +260,7 @@ function image.PNGtoJPG(PNGMassiv)
 		JPGMassiv[j] = {}
 		width = 0
 		for i = 1, #PNGMassiv[j] do
-			JPGMassiv[j][i] = {}
-			JPGMassiv[j][i]["bg"] = PNGMassiv[j][i][1]
-			JPGMassiv[j][i]["fg"] = PNGMassiv[j][i][2]
-			JPGMassiv[j][i]["char"] = PNGMassiv[j][i][3]
+			JPGMassiv[j][i] = { table.unpack(PNGMassiv[j][i]) }
 			width = width + 1
 		end
 		height = height + 1
@@ -264,10 +283,7 @@ function image.JPGtoPNG(JPGMassiv)
 		PNGMassiv[j] = {}
 		width = 0
 		for i = 1, #JPGMassiv[j] do
-			PNGMassiv[j][i] = {}
-			PNGMassiv[j][i][1] = JPGMassiv[j][i]["bg"]
-			PNGMassiv[j][i][2] = JPGMassiv[j][i]["fg"]
-			PNGMassiv[j][i][3] = JPGMassiv[j][i]["char"]
+			PNGMassiv[j][i] = { table.unpack(JPGMassiv[j][i]) }
 			width = width + 1
 		end
 		height = height + 1
@@ -325,82 +341,20 @@ end
 --Отрисовка этого изображения
 function image.draw(x, y, kartinka)
 	if kartinka.format == ".jpg" then
-		drawJPG(x, y, kartinka["image"])
+		image.drawJPG(x, y, kartinka["image"])
 	elseif kartinka.format == ".png" then
-		drawPNG(x, y, kartinka["image"])
+		image.drawPNG(x, y, kartinka["image"])
 	end
 end
 
 ---------------------------------------------------------------------------------------------------------------------
 
---image.convertAllPNGtoJPG("")
-
--- local test = image.load("System/OS/Icons/Love.jpg")
--- image.draw(2, 2, test)
-
--- local cyyyyka = image.load("1.png.png")
--- image.draw(2, 2, cyyyyka)
-
-
-
-
--- function imageAPI.initGlobal()
--- 	local prev = _G.global_images
--- 	_G.global_images = {}
-
--- 	return _G.global_images, prev
--- end
-
--- local test = {
--- 	["format"] = ".jpg",
--- 	["image"] ={
--- 		["width"] = 8,
--- 		["height"] = 4,
--- 		["depth"] = 8,
--- 		{ 
--- 			{["fg"]=0x000000, ["bg"]=0xFFFFFF, ["char"]='1'},
--- 			{["fg"]=0x000000, ["bg"]=0xFFFFFF, ["char"]='0'}, 
--- 			{["fg"]=0x000000, ["bg"]=0xFFFFFF, ["char"]='1'},
--- 			{["fg"]=0x000000, ["bg"]=0xFFFFFF, ["char"]='0'},
--- 			{["fg"]=0x000000, ["bg"]=0xFFFFFF, ["char"]='1'},
--- 			{["fg"]=0x000000, ["bg"]=0x004980, ["char"]=' '}, 
--- 			{["fg"]=0x000000, ["bg"]=0x004980, ["char"]=' '},
--- 			{["fg"]=0x000000, ["bg"]=0x004980, ["char"]=' '}
--- 		},
--- 		{ 
--- 			{["fg"]=0x000000, ["bg"]=0x004980, ["char"]=' '},
--- 			{["fg"]=0x000000, ["bg"]=0xFFFFFF, ["char"]='1'}, 
--- 			{["fg"]=0x000000, ["bg"]=0xFFFFFF, ["char"]='0'},
--- 			{["fg"]=0x000000, ["bg"]=0xFFFFFF, ["char"]='1'},
--- 			{["fg"]=0x000000, ["bg"]=0xFFFFFF, ["char"]='0'},
--- 			{["fg"]=0x000000, ["bg"]=0xFFFFFF, ["char"]='1'}, 
--- 			{["fg"]=0x000000, ["bg"]=0x004980, ["char"]=' '},
--- 			{["fg"]=0x000000, ["bg"]=0x004980, ["char"]=' '}
--- 		},
--- 		{ 
--- 			{["fg"]=0x000000, ["bg"]=0x004980, ["char"]=' '},
--- 			{["fg"]=0x000000, ["bg"]=0x004980, ["char"]=' '}, 
--- 			{["fg"]=0x000000, ["bg"]=0xFFFFFF, ["char"]='1'},
--- 			{["fg"]=0x000000, ["bg"]=0xFFFFFF, ["char"]='0'},
--- 			{["fg"]=0x000000, ["bg"]=0xFFFFFF, ["char"]='1'},
--- 			{["fg"]=0x000000, ["bg"]=0xFFFFFF, ["char"]='0'}, 
--- 			{["fg"]=0x000000, ["bg"]=0xFFFFFF, ["char"]='1'},
--- 			{["fg"]=0x000000, ["bg"]=0x004980, ["char"]=' '}
--- 		},
--- 		{ 
--- 			{["fg"]=0x000000, ["bg"]=0xFFFFFF, ["char"]='P'},
--- 			{["fg"]=0x000000, ["bg"]=0xFFFFFF, ["char"]='A'}, 
--- 			{["fg"]=0x000000, ["bg"]=0xFFFFFF, ["char"]='S'},
--- 			{["fg"]=0x000000, ["bg"]=0xFFFFFF, ["char"]='T'},
--- 			{["fg"]=0x000000, ["bg"]=0xFFFFFF, ["char"]='Ж'},
--- 			{["fg"]=0x000000, ["bg"]=0xFFFFFF, ["char"]='B'}, 
--- 			{["fg"]=0x000000, ["bg"]=0xFFFFFF, ["char"]='I'},
--- 			{["fg"]=0x000000, ["bg"]=0xFFFFFF, ["char"]='N'}
--- 		},
--- 	}
--- }
-
--- image.draw(20, 2, test)
+-- ecs.prepareToExit()
+-- local cyka1 = image.load("System/OS/Icons/Love.png")
+-- local cyka2 = image.load("test.jpg")
+-- --local cyka2 = image.load("Pastebin.app/Resources/Icon.png")
+-- image.draw(2, 2, cyka1)
+-- image.draw(40, 2, cyka2)
 
 
 return image
