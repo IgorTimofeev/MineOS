@@ -299,25 +299,15 @@ function ECSAPI.correctStartCoords(xStart,yStart,xWindowSize,yWindowSize)
 end
 
 --ЗАПОМНИТЬ ОБЛАСТЬ ПИКСЕЛЕЙ
-function ECSAPI.rememberOldPixels(fromX,fromY,toX,toY)
-	local oldPixels = {}
-	local counterX, counterY = 1, 1
-	for j = fromY, toY do
-		oldPixels[counterY] = {}
-		counterX = 1
-		for i = fromX, toX do
-			oldPixels[counterY][counterX] = {i, j, gpu.get(i, j)}
-			counterX = counterX + 1
-		end
-		counterY = counterY + 1
-	end
-	return oldPixels
+function ECSAPI.rememberOldPixels(x, y, x2, y2)
+	if not _G.image then _G.image = require("image") end
+	image.rememberOldPixels(x, y, x2, y2)
 end
 
 --НАРИСОВАТЬ ЗАПОМНЕННЫЕ ПИКСЕЛИ ИЗ МАССИВА
 function ECSAPI.drawOldPixels(oldPixels)
 	if not _G.image then _G.image = require("image") end
-	image.drawPNG(1, 1, image.convertImagetoGroupedImage(oldPixels))
+	image.drawOldPixels(oldPixels)
 end
 
 --ОГРАНИЧЕНИЕ ДЛИНЫ СТРОКИ
