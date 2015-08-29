@@ -11,8 +11,8 @@ local copyright = [[
 
 ]]
 
---local component = require("component")
---local event = require("event")
+local component = require("component")
+local event = require("event")
 local term = require("term")
 local unicode = require("unicode")
 --local ecs = require("ECSAPI")
@@ -21,7 +21,7 @@ local unicode = require("unicode")
 local context = require("context")
 local computer = require("computer")
 local keyboard = require("keyboard")
-local image = require("image")
+--local image = require("image")
 --local config = require("config")
 local zip = require("zip")
 local gpu = component.gpu
