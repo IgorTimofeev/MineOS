@@ -231,7 +231,7 @@ function image.savePNG(path, MasterPixels)
 end
 
 --Отрисовка ПНГ
-function image.drawPNG(x, y, massivSudaPihay2)
+function image.drawPNG(x, y, massivSudaPihay)
 	--Уменьшаем значения кординат на 1, т.к. циклы начинаются с единицы
 	x = x - 1
 	y = y - 1
