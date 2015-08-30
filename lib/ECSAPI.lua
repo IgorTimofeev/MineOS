@@ -1528,8 +1528,8 @@ function ECSAPI.universalWindow(x, y, width, background, closeWindowAfter, ...)
 	displayAllObjects()
 end
 
-ECSAPI.prepareToExit()
-ECSAPI.universalWindow("auto", "auto", 30, ECSAPI.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Хелло пидар!"}, {"EmptyLine"}, {"Input", 0x880000, 0x000000, "Суда вводи"}, {"EmptyLine"}, {"Button", 0xbbbbbb, 0xffffff, "Ok!"})
+--ECSAPI.prepareToExit()
+--ECSAPI.universalWindow("auto", "auto", 30, ECSAPI.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Хелло пидар!"}, {"EmptyLine"}, {"Input", 0x880000, 0x000000, "Суда вводи"}, {"EmptyLine"}, {"Button", 0xbbbbbb, 0xffffff, "Ok!"})
 
 --[[
 Функция universalWindow(x, y, width, background, closeWindowAfter, ...)
