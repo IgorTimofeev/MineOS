@@ -1503,7 +1503,7 @@ function ECSAPI.universalWindow(x, y, width, background, closeWindowAfter, ...)
 		local objectType = string.lower(objects[number][1])
 		if objectType == "button" then
 			local back, fore, text = objects[number][2], objects[number][3], objects[number][4]
-			newObj("Buttons", text, ecs.drawButton(x, objects[number].y, width, objectsHeights.button, text, back, fore))
+			newObj("Buttons", text, ECSAPI.drawButton(x, objects[number].y, width, objectsHeights.button, text, back, fore))
 		elseif objectType == "centertext" then
 			local xPos = x + math.floor(width / 2 - unicode.len(objects[number][3]) / 2)
 			gpu.setForeground(objects[number][2])
@@ -1524,7 +1524,7 @@ function ECSAPI.universalWindow(x, y, width, background, closeWindowAfter, ...)
 	end
 
 	--Рисуем окно
-	ecs.square(x, y, width, height, background)
+	ECSAPI.square(x, y, width, height, background)
 	displayAllObjects()
 end
 
