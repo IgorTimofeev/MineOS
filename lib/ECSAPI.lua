@@ -329,7 +329,7 @@ end
 function ECSAPI.drawOldPixels(massivSudaPihay)
 
 	--Отнимаем разок
-	massivSudaPihay.x, massivSudaPihay.y = massivSudaPihay.x - 1, massivSudaPihay.y - 1
+	--massivSudaPihay.x, massivSudaPihay.y = massivSudaPihay.x - 1, massivSudaPihay.y - 1
 
 	--Перебираем массив с фонами
 	for back, backValue in pairs(massivSudaPihay["backgrounds"]) do
@@ -338,7 +338,7 @@ function ECSAPI.drawOldPixels(massivSudaPihay)
 			gpu.setForeground(fore)
 			for pixel = 1, #massivSudaPihay["backgrounds"][back][fore] do
 				if massivSudaPihay["backgrounds"][back][fore][pixel][3] ~= transparentSymbol then
-					gpu.set(massivSudaPihay.x + massivSudaPihay["backgrounds"][back][fore][pixel][1], massivSudaPihay.y + massivSudaPihay["backgrounds"][back][fore][pixel][2], massivSudaPihay["backgrounds"][back][fore][pixel][3])
+					gpu.set(massivSudaPihay.x + massivSudaPihay["backgrounds"][back][fore][pixel][1] - 1, massivSudaPihay.y + massivSudaPihay["backgrounds"][back][fore][pixel][2] - 1, massivSudaPihay["backgrounds"][back][fore][pixel][3])
 				end
 			end
 		end
@@ -1458,6 +1458,138 @@ function ECSAPI.readCorrectLangFile(pathToLangs)
 	return lang
 end
 
+--Описание ниже, ебана
+function ECSAPI.universalWindow(x, y, width, background, closeWindowAfter, ...)
+	local objects = {...}
+	local countOfObjects = #objects
+
+	--Задаем высотные константы для объектов
+	local objectsHeights = {
+		["button"] = 3,
+		["centertext"] = 1,
+		["emptyline"] = 1,
+		["input"] = 3,
+	}
+
+	--Считаем высоту этой хуйни
+	local height = 0
+	for i = 1, countOfObjects do
+		local objectType = string.lower(objects[i][1])
+		height = height + objectsHeights[objectType]
+	end
+
+	--Нужные стартовые прелесссти
+	x, y = ECSAPI.correctStartCoords(x, y, width, height)
+	local oldPixels = ECSAPI.rememberOldPixels(x, y, x + width - 1, y + height - 1)
+
+	--Считаем все координаты объектов
+	objects[1].y = y
+	if countOfObjects > 1 then
+		for i = 2, countOfObjects do
+			local objectType = string.lower(objects[i - 1][1])
+			objects[i].y = objects[i - 1].y + objectsHeights[objectType]
+		end
+	end
+
+	--Объекты для тача
+	local obj = {}
+	local function newObj(class, name, ...)
+		obj[class] = obj[class] or {}
+		obj[class][name] = {...}
+	end
+
+	--Отображение объекта по номеру
+	local function displayObject(number)
+		local objectType = string.lower(objects[number][1])
+		if objectType == "button" then
+			local back, fore, text = objects[number][2], objects[number][3], objects[number][4]
+			newObj("Buttons", text, ecs.drawButton(x, objects[number].y, width, objectsHeights.button, text, back, fore))
+		elseif objectType == "centertext" then
+			local xPos = x + math.floor(width / 2 - unicode.len(objects[number][3]) / 2)
+			gpu.setForeground(objects[number][2])
+			gpu.set(xPos, objects[number].y, objects[number][3])
+		elseif objectType == "input" then
+			--Рамочка
+			ECSAPI.border(x + 1, objects[number].y, width - 2, objectsHeights.input, background, objects[number][2])
+			--Текстик
+			gpu.set(x + 2, objects[number].y + 1, objects[number][4])
+		end
+	end
+
+	--Отображение всех объектов
+	local function displayAllObjects()
+		for i = 1, countOfObjects do
+			displayObject(i)
+		end
+	end
+
+	--Рисуем окно
+	ecs.square(x, y, width, height, background)
+	displayAllObjects()
+end
+
+ECSAPI.prepareToExit()
+ECSAPI.universalWindow("auto", "auto", 30, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Хелло пидар!"}, {"EmptyLine"}, {"Input", 0x880000, 0x000000, "Суда вводи"}, {"EmptyLine"}, {"Button", 0xbbbbbb, 0xffffff, "Ok!"})
+
+--[[
+Функция universalWindow(x, y, width, background, closeWindowAfter, ...)
+	Это универсальная модульная функция для максимально удобного и быстрого
+	отображения необходимой вам информации. С ее помощью вводить данные
+	с клавиатуры, осуществлять выбор из предложенных вариантов, рисовать
+	красивые кнопки, отрисовывать обычный текст, отрисовывать текстовые
+	поля с возможностью прокрутки, рисовать разделители и прочее.
+	Любой объект выделяется с помощью клика мыши, после чего функция
+	приступает к работе с этим объектом.
+
+	Аргументы функции:
+		x и y:
+			Это числа, обозначающие стартовые координаты левого верхнего угла
+			данного окна.
+			Вместо цифр вы также можете написать "auto" - и программа
+			автоматически разместит окно по центру экрана по выбранной
+			координате. Или по обеим координатам, если вам угодно.
+		
+		width:
+			Это ширина окна, которую вы можете задать по собственному желанию. 
+			Если некторые объекты требуют расширения окна, то окно будет 
+			автоматически расширено до нужной ширины. Да, вот такая вот тавтология ;)
+		
+		background:
+			Базовый цвет окна (цвет фона, кому как понятнее).
+		
+		closeWindowAfter:
+			Если true, то окно по завершению функции будет выгружено, а на его месте отрисуются пиксели,
+			которые имелись на экране до выполнения функции. Удобно, если не хочешь париться
+			с перерисовкой интерфейса.
+
+		...:
+			Многоточием тут является перечень объектов, указанных через запятую.
+			Каждый объект является массивом и имеет собственный формат.
+			Ниже перечислены все типы объектов:
+				{"Button", background, foreground, text}
+				{"Selector", background, foreground, variant1, variant2, variant3...}
+				{"Input", usualColor, selectionColor, textOnStart, maskTextBySymbol}
+				{"Select", usualColor, selectionColor, variant1, variant2, variant3...}
+				{"TextField", background, foreground, scrollBackColor, scrollFrontColor, strings}
+				{"CenterText", textColor, text}
+				{"Separator", separatorColor}
+				{"EmptyLine"}
+			Каждый из объектов рисуется по порядку сверху вниз. Каждый объект автоматически
+			увеличивает высоту окна до необходимого значения.
+
+	Что возвращает функция:
+		Возвратом является массив, пронумерованный от 1 до <количества объектов>.
+		К примеру, 1 индекс данного массива соответствует 1 указанному объекту.
+		Каждый индекс данного массива несет в себе какие-то данные, которые вы
+		внесли в объект во время работы функции.
+		Например, если в 1-ый объект типа "Input" вы ввели фразу "Hello world",
+		то первый индекс в возвращенном массиве будет равен "Hello world".
+		Конкретнее это будет вот так: massiv[1] = "Hello world".
+
+	Готовые примеры использования функции:
+]]
+
+
 ----------------------------------------------------------------------------------------------------
 
 -- ECSAPI.clearScreen(0xffffff)
@@ -1475,28 +1607,25 @@ end
 -- ECSAPI.setScale(1)
 -- ECSAPI.info("auto", "auto", "Сука мать ебал", "Лалалал инфа хуй пизда джигурда")
 
---[[
-local lines = {}
-for i = 1, 200 do
-	table.insert(lines, "Хуй пизда джигурда рандом i = "..i)
-end
+-- local lines = {}
+-- for i = 1, 200 do
+-- 	table.insert(lines, "Хуй пизда джигурда рандом i = "..i)
+-- end
 
-local from = 1
-ECSAPI.textField(2, 2, 50, 10, lines, from)
+-- local from = 1
+-- ECSAPI.textField(2, 2, 50, 10, lines, from)
 
-while true do
-	local e ={event.pull()}
-	if e[1] == "scroll" then
-		if e[5] == -1 then
-			if from < #lines then from = from + 1 end
-		else
-			if from > 1 then from = from - 1 end
-		end
-		ECSAPI.textField(2, 2, 50, 10, lines, from)
-	end
-end
-]]
-
+-- while true do
+-- 	local e ={event.pull()}
+-- 	if e[1] == "scroll" then
+-- 		if e[5] == -1 then
+-- 			if from < #lines then from = from + 1 end
+-- 		else
+-- 			if from > 1 then from = from - 1 end
+-- 		end
+-- 		ECSAPI.textField(2, 2, 50, 10, lines, from)
+-- 	end
+-- end
 
 return ECSAPI
 
