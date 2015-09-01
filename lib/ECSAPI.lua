@@ -74,7 +74,9 @@ function ECSAPI.setScale(scale, debug)
 
 	local proportion = xPixels / yPixels
 
-	local xMax, yMax  = 100, 50
+	--Костыль
+	local xMax, yMax  = gpu.maxResolution()
+	xMax = yMax * 2
 
 	local newWidth, newHeight
 
@@ -1236,29 +1238,43 @@ function ECSAPI.srollBar(x, y, width, height, countOfAllElements, currentElement
 end
 
 --Поле с текстом. Сюда пихать массив вида {"строка1", "строка2", "строка3", ...}
-function ECSAPI.textField(x, y, width, height, lines, displayFrom)
+function ECSAPI.textField(x, y, width, height, lines, displayFrom, background, foreground, scrollbarBackground, scrollbarForeground)
 	x, y = ECSAPI.correctStartCoords(x, y, width, height)
 
+	background = background or 0xffffff
+	foreground = foreground or ECSAPI.windowColors.usualText
+
 	local sLines = #lines
+	local lineLimit = width - 3
 
-	--ECSAPI.square(x, y, width - 1, height, 0xffffff)
-	ECSAPI.srollBar(x + width - 1, y, 1, height, sLines, displayFrom, ECSAPI.windowColors.usualText, ECSAPI.colors.lightBlue)
+	--Парсим строки
+	local line = 1
+	while lines[line] do
+		local sLine = unicode.len(lines[line])
+		if sLine > lineLimit then
+			local part1, part2 = unicode.sub(lines[line], 1, lineLimit), unicode.sub(lines[line], lineLimit + 1, -1)
+			lines[line] = part1
+			table.insert(lines, line + 1, part2)
+			part1, part2 = nil, nil
+		end
+		line = line + 1
+		sLine = nil
+	end
+	line = nil
 
-	gpu.setBackground(0xffffff)
-	gpu.setForeground(ECSAPI.windowColors.usualText)
+	ECSAPI.square(x, y, width - 1, height, background)
+	ECSAPI.srollBar(x + width - 1, y, 1, height, sLines, displayFrom, scrollbarBackground, scrollbarForeground)
+
+	gpu.setBackground(background)
+	gpu.setForeground(foreground)
 	local yPos = y
 	for i = displayFrom, (displayFrom + height - 1) do
-		local line
 		if lines[i] then
-			local cuttedText = ECSAPI.stringLimit("end", lines[i], width - 3)
-			line = " " .. cuttedText .. string.rep(" ", width - unicode.len(cuttedText) - 2)
+			gpu.set(x + 1, yPos, lines[i])
+			yPos = yPos + 1
 		else
-			line = string.rep(" ", width - 1)
+			break
 		end
-
-		gpu.set(x, yPos, line)
-
-		yPos = yPos + 1
 	end
 
 	return sLines
@@ -1469,13 +1485,23 @@ function ECSAPI.universalWindow(x, y, width, background, closeWindowAfter, ...)
 		["centertext"] = 1,
 		["emptyline"] = 1,
 		["input"] = 3,
+		["slider"] = 3,
+		["select"] = 3,
+		["selector"] = 3,
+		["separator"] = 1,
 	}
 
 	--Считаем высоту этой хуйни
 	local height = 0
 	for i = 1, countOfObjects do
 		local objectType = string.lower(objects[i][1])
-		height = height + objectsHeights[objectType]
+		if objectType == "select" then
+			height = height + (objectsHeights[objectType] * (#objects[i] - 3))
+		elseif objectType == "textfield" then
+			height = height + objects[i][2]
+		else
+			height = height + objectsHeights[objectType]
+		end
 	end
 
 	--Нужные стартовые прелесссти
@@ -1487,7 +1513,13 @@ function ECSAPI.universalWindow(x, y, width, background, closeWindowAfter, ...)
 	if countOfObjects > 1 then
 		for i = 2, countOfObjects do
 			local objectType = string.lower(objects[i - 1][1])
-			objects[i].y = objects[i - 1].y + objectsHeights[objectType]
+			if objectType == "select" then
+				objects[i].y = objects[i - 1].y + (objectsHeights[objectType] * (#objects[i - 1] - 3))
+			elseif objectType == "textfield" then
+				objects[i].y = objects[i - 1].y + objects[i - 1][2]
+			else
+				objects[i].y = objects[i - 1].y + objectsHeights[objectType]
+			end
 		end
 	end
 
@@ -1501,18 +1533,84 @@ function ECSAPI.universalWindow(x, y, width, background, closeWindowAfter, ...)
 	--Отображение объекта по номеру
 	local function displayObject(number)
 		local objectType = string.lower(objects[number][1])
+		
 		if objectType == "button" then
 			local back, fore, text = objects[number][2], objects[number][3], objects[number][4]
 			newObj("Buttons", text, ECSAPI.drawButton(x, objects[number].y, width, objectsHeights.button, text, back, fore))
+		
 		elseif objectType == "centertext" then
 			local xPos = x + math.floor(width / 2 - unicode.len(objects[number][3]) / 2)
 			gpu.setForeground(objects[number][2])
 			gpu.set(xPos, objects[number].y, objects[number][3])
+		
 		elseif objectType == "input" then
 			--Рамочка
 			ECSAPI.border(x + 1, objects[number].y, width - 2, objectsHeights.input, background, objects[number][2])
 			--Текстик
-			gpu.set(x + 2, objects[number].y + 1, objects[number][4])
+			gpu.set(x + 3, objects[number].y + 1, objects[number][4])
+		
+		elseif objectType == "slider" then
+			local widthOfSlider = width - 4
+			local xOfSlider = x + 2
+			local yOfSlider = objects[number].y + 1
+			local countOfSliderThings = objects[number][5] - objects[number][4]
+
+			local dolya = widthOfSlider / countOfSliderThings
+			local position = math.floor(dolya * objects[number][6]) - 1
+
+			ECSAPI.separator(xOfSlider, yOfSlider, position, background, objects[number][3])
+			ECSAPI.separator(xOfSlider + position, yOfSlider, widthOfSlider - position, background, objects[number][2])
+			ECSAPI.square(xOfSlider + position, yOfSlider, 2, 1, objects[number][3])
+
+		elseif objectType == "select" then
+			local usualColor = objects[number][2]
+			local selectionColor = objects[number][3]
+
+			objects[number].selectedData = objects[number].selectedData or 1
+
+			local symbol = "✔"
+			local yPos = objects[number].y
+			for i = 4, #objects[number] do
+				--Коробка для галочки
+				ecs.border(x + 1, yPos, 5, 3, background, usualColor)
+				--Текст
+				gpu.set(x + 7, yPos + 1, objects[number][i])
+				--Галочка
+				if objects[number].selectedData == (i - 3) then
+					ecs.colorText(x + 3, yPos + 1, selectionColor, symbol)
+				end
+
+				yPos = yPos + objectsHeights.select
+			end
+
+		elseif objectType == "selector" then
+			local borderColor = objects[number][2]
+			local arrowColor = objects[number][3]
+			local selectorWidth = width - 2
+			objects[number].selectedElement = objects[number].selectedElement or objects[number][4] or "Blah"
+
+			local topLine = "┌" .. string.rep("─", selectorWidth - 6) .. "┬───┐"
+			local midLine = "│" .. string.rep(" ", selectorWidth - 6) .. "│   │"
+			local botLine = "└" .. string.rep("─", selectorWidth - 6) .. "┴───┘"
+
+			local yPos = objects[number].y
+
+			gpu.setBackground(background)
+			gpu.setForeground(borderColor)
+
+			gpu.set(x + 1, yPos, topLine)
+			gpu.set(x + 1, yPos + 1, midLine)
+			gpu.set(x + 1, yPos + 2, botLine)
+			gpu.set(x + 3, yPos + 1, objects[number].selectedElement)
+
+			ecs.colorText(x + width - 4, yPos + 1, arrowColor, "▼")
+		
+		elseif objectType == "separator" then
+			ECSAPI.separator(x, objects[number].y, width, background, objects[number][2])
+		
+		elseif objectType == "textfield" then
+			objects[number].displayFrom = objects[number].displayFrom or 1
+			ECSAPI.textField(x + 1, objects[number].y, width - 2, objects[number][2], objects[number][7], objects[number].displayFrom, objects[number][3], objects[number][4], objects[number][5], objects[number][6])
 		end
 	end
 
@@ -1528,8 +1626,10 @@ function ECSAPI.universalWindow(x, y, width, background, closeWindowAfter, ...)
 	displayAllObjects()
 end
 
---ECSAPI.prepareToExit()
---ECSAPI.universalWindow("auto", "auto", 30, ECSAPI.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Хелло пидар!"}, {"EmptyLine"}, {"Input", 0x880000, 0x000000, "Суда вводи"}, {"EmptyLine"}, {"Button", 0xbbbbbb, 0xffffff, "Ok!"})
+local strings = {"Hello world! This is a test string and I'm so happy to show it!", "Awesome! It works!", "Cool!"}
+
+-- ECSAPI.prepareToExit()
+-- ECSAPI.universalWindow("auto", "auto", 30, ECSAPI.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Хелло пидар!"}, {"EmptyLine"}, {"Input", 0x262626, 0x000000, "Суда вводи"}, {"Selector", 0x262626, 0x880000, "PNG", "JPG", "PSD"}, {"Slider", 0x262626, 0x880000, 0, 100, 50}, {"Select", 0x262626, 0x880000, "Выбор1", "Выбор2"}, {"EmptyLine"}, {"TextField", 7, 0xffffff, 0x000000, 0x777777, 0x880000, strings}, {"EmptyLine"}, {"Button", 0xbbbbbb, 0xffffff, "Ok!"})
 
 --[[
 Функция universalWindow(x, y, width, background, closeWindowAfter, ...)
@@ -1566,13 +1666,15 @@ end
 			Многоточием тут является перечень объектов, указанных через запятую.
 			Каждый объект является массивом и имеет собственный формат.
 			Ниже перечислены все типы объектов:
-				{"Button", background, foreground, text}
-				{"Selector", background, foreground, variant1, variant2, variant3...}
-				{"Input", usualColor, selectionColor, textOnStart, maskTextBySymbol}
-				{"Select", usualColor, selectionColor, variant1, variant2, variant3...}
-				{"TextField", background, foreground, scrollBackColor, scrollFrontColor, strings}
-				{"CenterText", textColor, text}
-				{"Separator", separatorColor}
+				{"Button", Цвет кнопки, Цвет текста на кнопке, Сам текст}
+				{"Selector", Цвет рамки, Цвет стрелки, Выбор 1, Выбор 2, Выбор 3 ...}
+				{"Input", Цвет рамки и текста, Цвет при выделении, Стартовый текст, Маскировать символом}
+				{"Select", Цвет рамки, Цвет галочки, Выбор 1, Выбор 2, Выбор 3 ...}
+				{"TextField", Высота, Цвет фона, Цвет текста, Цвет скроллбара, Цвет пимпочки скроллбара, Массив со строками}
+				{"CenterText", Цвет текста, Сам текст}
+				{"Separator", Цвет разделителя}
+				{"Slider", Цвет линии слайдера, Цвет пимпочки слайдера, Значения слайдера ОТ, Значения слайдера ДО, Текущее значение}
+				{"Switch", Цвет актива, Цвет пассива, Цвет текста, Текст, Изначальное состояние}
 				{"EmptyLine"}
 			Каждый из объектов рисуется по порядку сверху вниз. Каждый объект автоматически
 			увеличивает высоту окна до необходимого значения.
