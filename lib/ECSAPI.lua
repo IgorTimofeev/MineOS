@@ -1626,7 +1626,7 @@ function ECSAPI.universalWindow(x, y, width, background, closeWindowAfter, ...)
 	displayAllObjects()
 end
 
-local strings = {"Hello world! This is a test string and I'm so happy to show it!", "Awesome! It works!", "Cool!"}
+-- local strings = {"Hello world! This is a test string and I'm so happy to show it!", "Awesome! It works!", "Cool!"}
 
 -- ECSAPI.prepareToExit()
 -- ECSAPI.universalWindow("auto", "auto", 30, ECSAPI.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Хелло пидар!"}, {"EmptyLine"}, {"Input", 0x262626, 0x000000, "Суда вводи"}, {"Selector", 0x262626, 0x880000, "PNG", "JPG", "PSD"}, {"Slider", 0x262626, 0x880000, 0, 100, 50}, {"Select", 0x262626, 0x880000, "Выбор1", "Выбор2"}, {"EmptyLine"}, {"TextField", 7, 0xffffff, 0x000000, 0x777777, 0x880000, strings}, {"EmptyLine"}, {"Button", 0xbbbbbb, 0xffffff, "Ok!"})
