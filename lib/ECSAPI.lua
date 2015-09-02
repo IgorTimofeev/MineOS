@@ -1479,6 +1479,8 @@ function ECSAPI.universalWindow(x, y, width, background, closeWindowAfter, ...)
 	local objects = {...}
 	local countOfObjects = #objects
 
+	local pressedButton
+
 	--Задаем высотные константы для объектов
 	local objectsHeights = {
 		["button"] = 3,
@@ -1531,36 +1533,64 @@ function ECSAPI.universalWindow(x, y, width, background, closeWindowAfter, ...)
 	end
 
 	--Отображение объекта по номеру
-	local function displayObject(number)
+	local function displayObject(number, active)
 		local objectType = string.lower(objects[number][1])
 		
 		if objectType == "button" then
 			local back, fore, text = objects[number][2], objects[number][3], objects[number][4]
-			newObj("Buttons", text, ECSAPI.drawButton(x, objects[number].y, width, objectsHeights.button, text, back, fore))
-		
+			if active then
+				newObj("Buttons", number, ECSAPI.drawButton(x, objects[number].y, width, objectsHeights.button, text, fore, back))
+			else
+				newObj("Buttons", number, ECSAPI.drawButton(x, objects[number].y, width, objectsHeights.button, text, back, fore))
+			end
 		elseif objectType == "centertext" then
 			local xPos = x + math.floor(width / 2 - unicode.len(objects[number][3]) / 2)
 			gpu.setForeground(objects[number][2])
 			gpu.set(xPos, objects[number].y, objects[number][3])
 		
 		elseif objectType == "input" then
-			--Рамочка
-			ECSAPI.border(x + 1, objects[number].y, width - 2, objectsHeights.input, background, objects[number][2])
-			--Текстик
-			gpu.set(x + 3, objects[number].y + 1, objects[number][4])
-		
+
+			if active then
+				--Рамочка
+				ECSAPI.border(x + 1, objects[number].y, width - 2, objectsHeights.input, background, objects[number][3])
+				--Тестик
+				objects[number][4] = ECSAPI.inputText(x + 3, objects[number].y + 1, width - 6, "", background, objects[number][3], false, objects[number][5])
+			else
+				--Рамочка
+				ECSAPI.border(x + 1, objects[number].y, width - 2, objectsHeights.input, background, objects[number][2])
+				--Текстик
+				gpu.set(x + 3, objects[number].y + 1, ECSAPI.stringLimit("start", objects[number][4], width - 6))
+			end
+
+			newObj("Inputs", number, x + 1, objects[number].y, x + width - 2, objects[number].y + 2)
+
 		elseif objectType == "slider" then
-			local widthOfSlider = width - 4
-			local xOfSlider = x + 2
+			local widthOfSlider = width - 2
+			local xOfSlider = x + 1
 			local yOfSlider = objects[number].y + 1
 			local countOfSliderThings = objects[number][5] - objects[number][4]
+			local showSliderValue = objects[number][7]
 
 			local dolya = widthOfSlider / countOfSliderThings
-			local position = math.floor(dolya * objects[number][6]) - 1
+			local position = math.floor(dolya * objects[number][6])
+			--Костыль
+			if (xOfSlider + position) > (xOfSlider + widthOfSlider - 1)	then position = widthOfSlider - 2 end
 
+			--Две линии
 			ECSAPI.separator(xOfSlider, yOfSlider, position, background, objects[number][3])
 			ECSAPI.separator(xOfSlider + position, yOfSlider, widthOfSlider - position, background, objects[number][2])
+			--Слудир
 			ECSAPI.square(xOfSlider + position, yOfSlider, 2, 1, objects[number][3])
+
+			--Текстик под слудиром
+			if showSliderValue then
+				local text = showSliderValue .. tostring(objects[number][6])
+				local textPos = (xOfSlider + widthOfSlider / 2 - unicode.len(text) / 2)
+				ECSAPI.square(x, yOfSlider + 1, width, 1, background)
+				ECSAPI.colorText(textPos, yOfSlider + 1, objects[number][2], text)
+			end
+
+			newObj("Sliders", number, xOfSlider, yOfSlider, x + widthOfSlider, yOfSlider, dolya)
 
 		elseif objectType == "select" then
 			local usualColor = objects[number][2]
@@ -1572,13 +1602,19 @@ function ECSAPI.universalWindow(x, y, width, background, closeWindowAfter, ...)
 			local yPos = objects[number].y
 			for i = 4, #objects[number] do
 				--Коробка для галочки
-				ecs.border(x + 1, yPos, 5, 3, background, usualColor)
+				ECSAPI.border(x + 1, yPos, 5, 3, background, usualColor)
 				--Текст
 				gpu.set(x + 7, yPos + 1, objects[number][i])
 				--Галочка
 				if objects[number].selectedData == (i - 3) then
-					ecs.colorText(x + 3, yPos + 1, selectionColor, symbol)
+					ECSAPI.colorText(x + 3, yPos + 1, selectionColor, symbol)
+				else
+					gpu.set(x + 3, yPos + 1, "  ")
 				end
+
+				obj["Selects"] = obj["Selects"] or {}
+				obj["Selects"][number] = obj["Selects"][number] or {}
+				obj["Selects"][number][i - 3] = { x + 1, yPos, x + width - 2, yPos + 2 }
 
 				yPos = yPos + objectsHeights.select
 			end
@@ -1587,7 +1623,7 @@ function ECSAPI.universalWindow(x, y, width, background, closeWindowAfter, ...)
 			local borderColor = objects[number][2]
 			local arrowColor = objects[number][3]
 			local selectorWidth = width - 2
-			objects[number].selectedElement = objects[number].selectedElement or objects[number][4] or "Blah"
+			objects[number].selectedElement = objects[number].selectedElement or objects[number][4]
 
 			local topLine = "┌" .. string.rep("─", selectorWidth - 6) .. "┬───┐"
 			local midLine = "│" .. string.rep(" ", selectorWidth - 6) .. "│   │"
@@ -1595,16 +1631,63 @@ function ECSAPI.universalWindow(x, y, width, background, closeWindowAfter, ...)
 
 			local yPos = objects[number].y
 
-			gpu.setBackground(background)
-			gpu.setForeground(borderColor)
+			local function bordak(borderColor)
+				gpu.setBackground(background)
+				gpu.setForeground(borderColor)
+				gpu.set(x + 1, objects[number].y, topLine)
+				gpu.set(x + 1, objects[number].y + 1, midLine)
+				gpu.set(x + 1, objects[number].y + 2, botLine)
+				gpu.set(x + 3, objects[number].y + 1, ECSAPI.stringLimit("start", objects[number].selectedElement, width - 6))
+				ECSAPI.colorText(x + width - 4, objects[number].y + 1, arrowColor, "▼")
+			end
 
-			gpu.set(x + 1, yPos, topLine)
-			gpu.set(x + 1, yPos + 1, midLine)
-			gpu.set(x + 1, yPos + 2, botLine)
-			gpu.set(x + 3, yPos + 1, objects[number].selectedElement)
-
-			ecs.colorText(x + width - 4, yPos + 1, arrowColor, "▼")
+			bordak(borderColor)
 		
+			--Выпадающий список, самый гемор, блядь
+			if active then
+				local xPos, yPos = x + 2, objects[number].y + 3
+				local spisokWidth = width - 4
+				local countOfElements = #objects[number] - 3
+				local spisokHeight = countOfElements
+				local oldPixels = ECSAPI.rememberOldPixels( xPos, yPos, xPos + spisokWidth - 1, yPos + spisokHeight - 1)
+
+				local coords = {}
+
+				bordak(arrowColor)
+
+				--Белый фоник рисуем-с
+				ECSAPI.square( xPos, yPos, spisokWidth, spisokHeight, 0xffffff )
+				xPos = xPos + 1
+				for i = 1, countOfElements do
+					ECSAPI.colorText(xPos, yPos, 0x000000, ECSAPI.stringLimit("start", objects[number][i + 3], spisokWidth - 2))
+					coords[i] = {xPos - 1, yPos, xPos + spisokWidth - 1, yPos}
+					yPos = yPos + 1
+				end
+
+				--Обработка
+				local exit
+				while true do
+					if exit then break end
+					local e = {event.pull()}
+					if e[1] == "touch" then
+						for i = 1, #coords do
+							if ECSAPI.clickedAtArea(e[3], e[4], coords[i][1], coords[i][2], coords[i][3], coords[i][4]) then
+								ECSAPI.square(coords[i][1], coords[i][2], spisokWidth, 1, ECSAPI.colors.blue)
+								ECSAPI.colorText(coords[i][1] + 1, coords[i][2], 0xffffff, objects[number][i + 3])
+								os.sleep(0.3)
+								objects[number].selectedElement = objects[number][i + 3]
+								exit = true
+								break
+							end
+						end
+					end
+				end
+
+				ECSAPI.drawOldPixels(oldPixels)
+			end
+
+			newObj("Selectors", number, x + 1, objects[number].y, x + width - 2, objects[number].y + 2)
+
 		elseif objectType == "separator" then
 			ECSAPI.separator(x, objects[number].y, width, background, objects[number][2])
 		
@@ -1621,15 +1704,106 @@ function ECSAPI.universalWindow(x, y, width, background, closeWindowAfter, ...)
 		end
 	end
 
+	--Подготовить массив возвращаемый
+	local function getReturn()
+		local massiv = {}
+
+		for i = 1, countOfObjects do
+			local type = string.lower(objects[i][1])
+
+			if type == "button" then
+				table.insert(massiv, pressedButton)
+			elseif type == "input" then
+				table.insert(massiv, objects[i][4])
+			elseif type == "select" then
+				table.insert(massiv, objects[i].selectedData)
+			elseif type == "selector" then
+				table.insert(massiv, objects[i].selectedElement)
+			elseif type == "slider" then
+				table.insert(massiv, objects[i][6])
+			else
+				table.insert(massiv, nil)
+			end
+		end
+
+		return massiv
+	end
+
 	--Рисуем окно
 	ECSAPI.square(x, y, width, height, background)
 	displayAllObjects()
+
+	while true do
+		local e = {event.pull()}
+		if e[1] == "touch" or event == "drag" then
+
+			--ECSAPI.error("x1 = "..obj["Buttons"][3][1]..", y1 = "..obj["Buttons"][3][2]..", e3 = "..e[3]..", e4 = "..e[4])
+
+			--Анализируем клик на кнопки
+			for key in pairs(obj["Buttons"]) do
+				if ECSAPI.clickedAtArea(e[3], e[4], obj["Buttons"][key][1], obj["Buttons"][key][2], obj["Buttons"][key][3], obj["Buttons"][key][4]) then
+					displayObject(key, true)
+					os.sleep(0.3)
+					pressedButton = objects[key][4]
+					if closeWindowAfter then ECSAPI.drawOldPixels(oldPixels) end
+					return getReturn()
+				end
+			end
+
+			--А теперь клик на инпуты!
+			for key in pairs(obj["Inputs"]) do
+				if ECSAPI.clickedAtArea(e[3], e[4], obj["Inputs"][key][1], obj["Inputs"][key][2], obj["Inputs"][key][3], obj["Inputs"][key][4]) then
+					displayObject(key, true)
+					displayObject(key)
+					break
+				end
+			end
+
+			--А теперь галочковыбор!
+			for key in pairs(obj["Selects"]) do
+				for i in pairs(obj["Selects"][key]) do
+					if ECSAPI.clickedAtArea(e[3], e[4], obj["Selects"][key][i][1], obj["Selects"][key][i][2], obj["Selects"][key][i][3], obj["Selects"][key][i][4]) then
+						objects[key].selectedData = i
+						displayObject(key)
+						break
+					end
+				end
+			end
+
+			--Хм, а вот и селектор подъехал!
+			for key in pairs(obj["Selectors"]) do
+				if ECSAPI.clickedAtArea(e[3], e[4], obj["Selectors"][key][1], obj["Selectors"][key][2], obj["Selectors"][key][3], obj["Selectors"][key][4]) then
+					displayObject(key, true)
+					displayObject(key)
+					break
+				end
+			end
+
+			--Слайдеры, епта! "Потный матан", все делы
+			for key in pairs(obj["Sliders"]) do
+				if ECSAPI.clickedAtArea(e[3], e[4], obj["Sliders"][key][1], obj["Sliders"][key][2], obj["Sliders"][key][3], obj["Sliders"][key][4]) then
+					local xOfSlider, dolya = obj["Sliders"][key][1], obj["Sliders"][key][5]
+					local currentPixels = e[3] - xOfSlider
+					local currentValue = math.floor(currentPixels / dolya)
+					--Костыль
+					if e[3] == obj["Sliders"][key][3] then currentValue = objects[key][5] end
+					objects[key][6] = currentValue
+					displayObject(key)
+					break
+				end
+			end
+		end
+	end
 end
 
--- local strings = {"Hello world! This is a test string and I'm so happy to show it!", "Awesome! It works!", "Cool!"}
+--local strings = {"Hello world! This is a test string and I'm so happy to show it!", "Awesome! It works!", "Cool!"}
 
 -- ECSAPI.prepareToExit()
--- ECSAPI.universalWindow("auto", "auto", 30, ECSAPI.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Хелло пидар!"}, {"EmptyLine"}, {"Input", 0x262626, 0x000000, "Суда вводи"}, {"Selector", 0x262626, 0x880000, "PNG", "JPG", "PSD"}, {"Slider", 0x262626, 0x880000, 0, 100, 50}, {"Select", 0x262626, 0x880000, "Выбор1", "Выбор2"}, {"EmptyLine"}, {"TextField", 7, 0xffffff, 0x000000, 0x777777, 0x880000, strings}, {"EmptyLine"}, {"Button", 0xbbbbbb, 0xffffff, "Ok!"})
+-- --ECSAPI.universalWindow("auto", "auto", 30, ECSAPI.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Хелло пидар!"}, {"EmptyLine"}, {"Input", 0x262626, 0x000000, "Суда вводи"}, {"Selector", 0x262626, 0x880000, "PNG", "JPG", "PSD"}, {"Slider", 0x262626, 0x880000, 0, 100, 50}, {"Select", 0x262626, 0x880000, "Выбор1", "Выбор2"}, {"EmptyLine"}, {"Button", 0xbbbbbb, 0xffffff, "Ok!"})
+-- local data = ECSAPI.universalWindow("auto", "auto", 30, ECSAPI.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Хелло пидар!"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, "Суда вводи"}, {"Selector", 0x262626, 0x880000, "PNG", "JPG", "PSD"}, {"Slider", 0x262626, 0x880000, 0, 100, 50, "Количество: "}, {"Select", 0x262626, 0x880000, "Выбор1", "Выбор2"}, {"EmptyLine"}, {"Button", 0xbbbbbb, 0xffffff, "Ok!"})
+-- ECSAPI.prepareToExit()
+-- print(table.unpack(data))
+
 
 --[[
 Функция universalWindow(x, y, width, background, closeWindowAfter, ...)
@@ -1673,7 +1847,7 @@ end
 				{"TextField", Высота, Цвет фона, Цвет текста, Цвет скроллбара, Цвет пимпочки скроллбара, Массив со строками}
 				{"CenterText", Цвет текста, Сам текст}
 				{"Separator", Цвет разделителя}
-				{"Slider", Цвет линии слайдера, Цвет пимпочки слайдера, Значения слайдера ОТ, Значения слайдера ДО, Текущее значение}
+				{"Slider", Цвет линии слайдера, Цвет пимпочки слайдера, Значения слайдера ОТ, Значения слайдера ДО, Текущее значение, Текст-подсказка}
 				{"Switch", Цвет актива, Цвет пассива, Цвет текста, Текст, Изначальное состояние}
 				{"EmptyLine"}
 			Каждый из объектов рисуется по порядку сверху вниз. Каждый объект автоматически
@@ -1687,6 +1861,9 @@ end
 		Например, если в 1-ый объект типа "Input" вы ввели фразу "Hello world",
 		то первый индекс в возвращенном массиве будет равен "Hello world".
 		Конкретнее это будет вот так: massiv[1] = "Hello world".
+
+		Если взаимодействие с объектом невозможно - например, как с EmptyLine или
+		CenterText, то в возвращенном массиве этот элемент будет равен nil.
 
 	Готовые примеры использования функции:
 ]]
