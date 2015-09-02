@@ -1740,56 +1740,66 @@ function ECSAPI.universalWindow(x, y, width, background, closeWindowAfter, ...)
 			--ECSAPI.error("x1 = "..obj["Buttons"][3][1]..", y1 = "..obj["Buttons"][3][2]..", e3 = "..e[3]..", e4 = "..e[4])
 
 			--Анализируем клик на кнопки
-			for key in pairs(obj["Buttons"]) do
-				if ECSAPI.clickedAtArea(e[3], e[4], obj["Buttons"][key][1], obj["Buttons"][key][2], obj["Buttons"][key][3], obj["Buttons"][key][4]) then
-					displayObject(key, true)
-					os.sleep(0.3)
-					pressedButton = objects[key][4]
-					if closeWindowAfter then ECSAPI.drawOldPixels(oldPixels) end
-					return getReturn()
+			if obj["Buttons"] then
+				for key in pairs(obj["Buttons"]) do
+					if ECSAPI.clickedAtArea(e[3], e[4], obj["Buttons"][key][1], obj["Buttons"][key][2], obj["Buttons"][key][3], obj["Buttons"][key][4]) then
+						displayObject(key, true)
+						os.sleep(0.3)
+						pressedButton = objects[key][4]
+						if closeWindowAfter then ECSAPI.drawOldPixels(oldPixels) end
+						return getReturn()
+					end
 				end
 			end
 
 			--А теперь клик на инпуты!
-			for key in pairs(obj["Inputs"]) do
-				if ECSAPI.clickedAtArea(e[3], e[4], obj["Inputs"][key][1], obj["Inputs"][key][2], obj["Inputs"][key][3], obj["Inputs"][key][4]) then
-					displayObject(key, true)
-					displayObject(key)
-					break
-				end
-			end
-
-			--А теперь галочковыбор!
-			for key in pairs(obj["Selects"]) do
-				for i in pairs(obj["Selects"][key]) do
-					if ECSAPI.clickedAtArea(e[3], e[4], obj["Selects"][key][i][1], obj["Selects"][key][i][2], obj["Selects"][key][i][3], obj["Selects"][key][i][4]) then
-						objects[key].selectedData = i
+			if obj["Inputs"] then
+				for key in pairs(obj["Inputs"]) do
+					if ECSAPI.clickedAtArea(e[3], e[4], obj["Inputs"][key][1], obj["Inputs"][key][2], obj["Inputs"][key][3], obj["Inputs"][key][4]) then
+						displayObject(key, true)
 						displayObject(key)
 						break
 					end
 				end
 			end
 
+			--А теперь галочковыбор!
+			if obj["Selects"] then
+				for key in pairs(obj["Selects"]) do
+					for i in pairs(obj["Selects"][key]) do
+						if ECSAPI.clickedAtArea(e[3], e[4], obj["Selects"][key][i][1], obj["Selects"][key][i][2], obj["Selects"][key][i][3], obj["Selects"][key][i][4]) then
+							objects[key].selectedData = i
+							displayObject(key)
+							break
+						end
+					end
+				end
+			end
+
 			--Хм, а вот и селектор подъехал!
-			for key in pairs(obj["Selectors"]) do
-				if ECSAPI.clickedAtArea(e[3], e[4], obj["Selectors"][key][1], obj["Selectors"][key][2], obj["Selectors"][key][3], obj["Selectors"][key][4]) then
-					displayObject(key, true)
-					displayObject(key)
-					break
+			if obj["Selectors"] then
+				for key in pairs(obj["Selectors"]) do
+					if ECSAPI.clickedAtArea(e[3], e[4], obj["Selectors"][key][1], obj["Selectors"][key][2], obj["Selectors"][key][3], obj["Selectors"][key][4]) then
+						displayObject(key, true)
+						displayObject(key)
+						break
+					end
 				end
 			end
 
 			--Слайдеры, епта! "Потный матан", все делы
-			for key in pairs(obj["Sliders"]) do
-				if ECSAPI.clickedAtArea(e[3], e[4], obj["Sliders"][key][1], obj["Sliders"][key][2], obj["Sliders"][key][3], obj["Sliders"][key][4]) then
-					local xOfSlider, dolya = obj["Sliders"][key][1], obj["Sliders"][key][5]
-					local currentPixels = e[3] - xOfSlider
-					local currentValue = math.floor(currentPixels / dolya)
-					--Костыль
-					if e[3] == obj["Sliders"][key][3] then currentValue = objects[key][5] end
-					objects[key][6] = currentValue
-					displayObject(key)
-					break
+			if obj["Sliders"] then
+				for key in pairs(obj["Sliders"]) do
+					if ECSAPI.clickedAtArea(e[3], e[4], obj["Sliders"][key][1], obj["Sliders"][key][2], obj["Sliders"][key][3], obj["Sliders"][key][4]) then
+						local xOfSlider, dolya = obj["Sliders"][key][1], obj["Sliders"][key][5]
+						local currentPixels = e[3] - xOfSlider
+						local currentValue = math.floor(currentPixels / dolya)
+						--Костыль
+						if e[3] == obj["Sliders"][key][3] then currentValue = objects[key][5] end
+						objects[key][6] = currentValue
+						displayObject(key)
+						break
+					end
 				end
 			end
 		end
@@ -1871,40 +1881,6 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
--- ECSAPI.clearScreen(0xffffff)
--- ECSAPI.beautifulSelect("auto", "auto", 30, "Сохранить как", "Ок", 0x262626, 0xffffff, 0x33db80, true, "Выбор1", "Выбор22323232424242424242", "Выбор3")
--- ECSAPI.beautifulInput("auto", "auto", 30, "Сохранить как", "Ок", 0x262626, 0xffffff, 0x33db80, true, {"Имя файла"}, {"Формат", true})
-
--- 0x33db80
-
--- ECSAPI.copy("t", "System/OS")
--- ECSAPI.clearScreen(0x262626)
--- ECSAPI.input("auto", "auto", 20, "Сохранить как", {"input", "Имя", "pidor"}, {"input", "Пароль", ""}, {"input", "Заебал!", ""}, {"select", "Формат", ".PNG", {".PNG", ".PSD", ".JPG", ".GIF"}})
--- if not success then ECSAPI.displayCompileMessage(1, reason, true) end
--- ECSAPI.select("auto", "auto", " ", {{"С твоим компом опять хуйня!"}}, {{"Блядь!"}})
--- ECSAPI.error("Да иди ты на хуй, чмо, я мать твою на хую")
--- ECSAPI.setScale(1)
--- ECSAPI.info("auto", "auto", "Сука мать ебал", "Лалалал инфа хуй пизда джигурда")
-
--- local lines = {}
--- for i = 1, 200 do
--- 	table.insert(lines, "Хуй пизда джигурда рандом i = "..i)
--- end
-
--- local from = 1
--- ECSAPI.textField(2, 2, 50, 10, lines, from)
-
--- while true do
--- 	local e ={event.pull()}
--- 	if e[1] == "scroll" then
--- 		if e[5] == -1 then
--- 			if from < #lines then from = from + 1 end
--- 		else
--- 			if from > 1 then from = from - 1 end
--- 		end
--- 		ECSAPI.textField(2, 2, 50, 10, lines, from)
--- 	end
--- end
 
 return ECSAPI
 
