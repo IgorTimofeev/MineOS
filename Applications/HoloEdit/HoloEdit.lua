@@ -9,6 +9,9 @@ local fs = require('filesystem')
 local com = require('component')
 local gpu = com.gpu
 
+local config = require("config")
+local lang = config.readAll("HoloEdit.app/Resources/" .. _OSLANGUAGE .. ".lang")
+
 --   Константы   --
 HOLOH = 32
 HOLOW = 48
