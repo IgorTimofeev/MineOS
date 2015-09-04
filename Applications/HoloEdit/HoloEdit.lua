@@ -114,7 +114,7 @@ end
 OLDWIDTH, OLDHEIGHT = gpu.getResolution()
 WIDTH, HEIGHT = gpu.maxResolution()
 if HEIGHT < HOLOW+2 then
-  error("[ОШИБКА] Ваш монитор/видеокарта не поддерживает требуемое разрешение.")
+  error(lang.badGPU)
 else
   WIDTH = HOLOW*2+40
   HEIGHT = HOLOW+2
@@ -177,7 +177,7 @@ BUTTONW = 12
 
 -- рисуем меню выбора "кисти"
 function drawColorSelector()
-  frame(MENUX, 3, WIDTH-2, 16, "[ Палитра ]")
+  frame(MENUX, 3, WIDTH-2, 16, lang.palette)
   for i=0, 3 do
     drawRect(MENUX+1+i*8, 5, hexcolortable[i])
   end
@@ -195,12 +195,12 @@ function drawColorCursor(force)
   end
 end
 function drawLayerSelector()
-  frame(MENUX, 16, WIDTH-2, 28, "[ Слой ]")
-  gpu.set(MENUX+13, 18, "Уровень голограммы:")
-  gpu.set(MENUX+1, 23, "Направляющий уровень:")
+  frame(MENUX, 16, WIDTH-2, 28, lang.layer)
+  gpu.set(MENUX+13, 18, lang.level)
+  gpu.set(MENUX+1, 23, lang.mainLevel)
 end
 function drawButtonsPanel()
-  frame(MENUX, 28, WIDTH-2, 36, "[ Управление ]")
+  frame(MENUX, 28, WIDTH-2, 36, lang.control)
 end
 
 function mainScreen()
@@ -220,14 +220,14 @@ function mainScreen()
   gpu.set(MENUX+3, HEIGHT-11, " Hologram Editor v0.60 Beta  ")
   gpu.setForeground(forecolor)
   gpu.set(MENUX+3, HEIGHT-10, "            * * *            ")
-  gpu.set(MENUX+3, HEIGHT-9,  " Программисты:               ")
+  gpu.set(MENUX+3, HEIGHT-9,  lang.developers)
   gpu.set(MENUX+3, HEIGHT-8,  "         NEO, Totoro         ")
   gpu.set(MENUX+3, HEIGHT-7,  "            * * *            ")
-  gpu.set(MENUX+3, HEIGHT-6,  " Контакт:                    ")
+  gpu.set(MENUX+3, HEIGHT-6,  lang.contact)
   gpu.set(MENUX+3, HEIGHT-5,  "   computercraft.ru/forum    ")
   gpu.setBackground(backcolor)
   -- выход
-  gpu.set(MENUX, HEIGHT-2, "Выход: 'Q' или ")
+  gpu.set(MENUX, HEIGHT-2, lang.quit)
 end
 
 
@@ -549,7 +549,7 @@ function saveHologram()
   local filename = tb_file:getValue()
   if filename ~= FILE_REQUEST then
     -- выводим предупреждение
-    showMessage('Файл сохраняется...', '[ Внимание ]', goldcolor)
+    showMessage(lang.savingFile, lang.attention, goldcolor)
     -- добавляем фирменное расширение =)
     if string.sub(filename, -3) ~= '.3d' then
       filename = filename..'.3d'
@@ -557,7 +557,7 @@ function saveHologram()
     -- сохраняем
     save(filename)
     -- выводим предупреждение
-    showMessage('   Файл сохранен!  ', '[ Завершено ]', goldcolor)
+    showMessage(lang.complete, lang.attention, goldcolor)
     repaint = true
   end
 end
@@ -566,7 +566,7 @@ function loadHologram()
   local filename = tb_file:getValue()
   if filename ~= FILE_REQUEST then
     -- выводим предупреждение
-    showMessage('Файл загружается...', '[ Внимание ]', goldcolor)
+    showMessage(lang.loadingFile, lang.attention, goldcolor)
     -- добавляем фирменное расширение =)
     if string.sub(filename, -3) ~= '.3d' then
       filename = filename..'.3d'
