@@ -682,31 +682,31 @@ layer = 1
 view = 0
 running = true
 
-buttonsNew(exit, WIDTH-BUTTONW-2, HEIGHT-2, 'Выход', errorcolor, BUTTONW)
-buttonsNew(drawLayer, MENUX+10, 14, 'Обновить', goldcolor, BUTTONW)
+buttonsNew(exit, WIDTH-BUTTONW-2, HEIGHT-2, lang.exit, errorcolor, BUTTONW)
+buttonsNew(drawLayer, MENUX+10, 14, lang.refresh, goldcolor, BUTTONW)
 buttonsNew(prevLayer, MENUX+1, 19, '-', infocolor, 5)
 buttonsNew(nextLayer, MENUX+7, 19, '+', infocolor, 5)
-buttonsNew(setTopView, MENUX+1, 21, 'Сверху', infocolor, 10)
-buttonsNew(setFrontView, MENUX+12, 21, 'Спереди', infocolor, 10)
-buttonsNew(setSideView, MENUX+24, 21, 'Сбоку', infocolor, 9)
+buttonsNew(setTopView, MENUX+1, 21, lang.fromUp, infocolor, 10)
+buttonsNew(setFrontView, MENUX+12, 21, lang.fromFront, infocolor, 10)
+buttonsNew(setSideView, MENUX+24, 21, lang.fromSide, infocolor, 9)
 
-buttonsNew(prevGhost, MENUX+1, 24, 'Ниже', infocolor, 6)
-buttonsNew(nextGhost, MENUX+10, 24, 'Выше', infocolor, 6)
+buttonsNew(prevGhost, MENUX+1, 24, lang.lower, infocolor, 6)
+buttonsNew(nextGhost, MENUX+10, 24, lang.upper, infocolor, 6)
 
-buttonsNew(clearLayer, MENUX+1, 26, 'Очистить', infocolor, BUTTONW)
-buttonsNew(fillLayer, MENUX+2+BUTTONW, 26, 'Залить', infocolor, BUTTONW)
+buttonsNew(clearLayer, MENUX+1, 26, lang.clear, infocolor, BUTTONW)
+buttonsNew(fillLayer, MENUX+2+BUTTONW, 26, lang.fill, infocolor, BUTTONW)
 
-buttonsNew(drawHologram, MENUX+8, 30, 'На проектор', goldcolor, 16)
-buttonsNew(saveHologram, MENUX+1, 33, 'Сохранить', helpcolor, BUTTONW)
-buttonsNew(loadHologram, MENUX+8+BUTTONW, 33, 'Загрузить', infocolor, BUTTONW)
-buttonsNew(newHologram, MENUX+1, 35, 'Новый файл', infocolor, BUTTONW)
+buttonsNew(drawHologram, MENUX+8, 30, lang.toProjector, goldcolor, 16)
+buttonsNew(saveHologram, MENUX+1, 33, lang.save, helpcolor, BUTTONW)
+buttonsNew(loadHologram, MENUX+8+BUTTONW, 33, lang.load, infocolor, BUTTONW)
+buttonsNew(newHologram, MENUX+1, 35, lang.new, infocolor, BUTTONW)
 
 tb_red = textboxesNew(changeRed, MENUX+5, 10, '255', WIDTH-MENUX-7)
 tb_green = textboxesNew(changeGreen, MENUX+5, 11, '0', WIDTH-MENUX-7)
 tb_blue = textboxesNew(changeBlue, MENUX+5, 12, '0', WIDTH-MENUX-7)
 tb_layer = textboxesNew(setLayer, MENUX+13, 19, '1', WIDTH-MENUX-15)
 tb_ghostlayer = textboxesNew(setGhostLayer, MENUX+19, 24, ' ', WIDTH-MENUX-21)
-FILE_REQUEST = 'Введите сюда имя файла'
+FILE_REQUEST = lang.enterFileName
 tb_file = textboxesNew(setFilename, MENUX+1, 32, FILE_REQUEST, WIDTH-MENUX-3)
 mainScreen()
 
