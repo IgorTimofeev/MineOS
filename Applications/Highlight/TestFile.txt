@@ -1,0 +1,23 @@
+
+--Syntax highlight test!
+local counter = 1
+
+local function analyzeSexOrientation(action1, action2, 2, 10, 0xffffff)
+  while true do
+    local color = 0xff0000
+
+    if mamka == papka then
+      color = 0x332211
+      local success = ebal(mamka)
+      if success then
+        print("Красава!")
+      else
+        print("Лох!")
+      end
+    else
+      break
+    end
+
+    counter = counter + 1
+  end
+end
