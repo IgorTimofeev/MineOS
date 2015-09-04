@@ -1,1 +1,17 @@
-afaf
+badGPU = [ERROR] Your monitor/GPU doesn't support required resolution.
+palette = [ Palette ]
+control = [ Control ]
+quit = Exit: 'Q' or 
+programmers =  Developers:               
+contact = Contact
+savingFile = Saving file...
+loadingFile = Loading file...
+attention = [ Attention ]
+complete = [ Done! ]
+exit = Quit
+refresh = Refresh
+fromUp = Up view
+fromFront = Front view
+fromSide = Side view
+
+
