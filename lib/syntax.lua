@@ -18,6 +18,18 @@ local colorSchemes = {
 		["functions"] = 0xffcc66,
 		["compares"] = 0xffff98,
 	},
+	["sunrise"] = {
+		["recommendedBackground"] = 0xffffff,
+		["text"] = 0x262626,
+		["strings"] = 0x880000,
+		["loops"] = 0x24c0ff,
+		["comments"] = 0xa2ffb7,
+		["boolean"] = 0x19c0cc,
+		["logic"] = 0x880000,
+		["numbers"] = 0x24c0ff,
+		["functions"] = 0x24c0ff,
+		["compares"] = 0x880000,
+	},
 }
 
 --Текущая цветовая схема
@@ -64,7 +76,7 @@ local function definePatterns()
 		{ ["pattern"] = "nil", ["color"] = currentColorScheme.boolean, ["cutFromLeft"] = 0, ["cutFromRight"] = 0 },
 				
 		--Функции
-		--{ ["pattern"] = "%s([%a%d%_%-%.])*%(", ["color"] = currentColorScheme.functions, ["cutFromLeft"] = 0, ["cutFromRight"] = 1 },
+		{ ["pattern"] = "%s([%a%d%_%-%.]*)%(", ["color"] = currentColorScheme.functions, ["cutFromLeft"] = 0, ["cutFromRight"] = 1 },
 		
 		--And, or, not, break
 		{ ["pattern"] = " and ", ["color"] = currentColorScheme.logic, ["cutFromLeft"] = 0, ["cutFromRight"] = 1 },
@@ -203,17 +215,32 @@ function syntax.highlightAndDraw(x, y, limit, text)
 	local currentColor = currentColorScheme.text
 	gpu.setForeground(currentColor)
 	--Перебираем все элементы полученного массива
-	for symbol = 1, limit do
-		--Если такой символ в массиве вообще существует, то
-		if massiv[symbol] then
-			--Легкая оптимизация. Меняет цвет текста только в случае несоответствия текущего цвета и цвета из массива
-			if currentColor ~= massiv[symbol].color then currentColor = massiv[symbol].color; gpu.setForeground(massiv[symbol].color) end
-			--Рисуем символ на экране
-			gpu.set(x + symbol, y, massiv[symbol].symbol)
-		--А если не существует, то разорвать цикл и закончить рисование строки
-		else
-			break
-		end	
+	local symbol = 1
+	while symbol <= #massiv do
+		--Легкая оптимизация. Меняет цвет текста только в случае несоответствия текущего цвета и цвета из массива
+		if currentColor ~= massiv[symbol].color then currentColor = massiv[symbol].color; gpu.setForeground(massiv[symbol].color) end
+		--Жирная оптимизация. Анализирует ближайшие цвета создает одну строку из массы символов вместо одного символа
+		local stro4ka = massiv[symbol].symbol
+		--Считаем кол-во последующих символов с таким же цветом, как и у этого
+		local counter = 1
+		--Перебираем все символы с последующего и до конца
+		for nextSymbol = (symbol + 1), #massiv do
+			--Если цвет последующего равен текущему
+			if massiv[nextSymbol].color == massiv[symbol].color then
+				--То прибавить к строчке следующий символ
+				stro4ka = stro4ka .. massiv[nextSymbol].symbol
+				--Записать в counter, что символы совпали, значит, +1 к нему
+				counter = counter + 1
+			else
+				break
+			end
+		end
+		--Отрисовываем целую строку сразу одним цветом
+		gpu.set(x + symbol, y, stro4ka)
+		--Прибавляем к символу столько, сколько схожего цвета насчитало
+		symbol = symbol + counter
+		--Очищаем память
+		stro4ka, counter = nil, nil
 	end
 end
 
@@ -247,7 +274,7 @@ end
 --Стартовое объявление цветовой схемы при загрузке библиотеки
 syntax.setColorScheme(colorSchemes.midnight)
 
---syntax.highlightFileForDebug("highlightText", midnight)
+--syntax.highlightFileForDebug("highlightText", "midnight")
 
 return syntax
 
