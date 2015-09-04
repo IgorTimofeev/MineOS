@@ -13,5 +13,12 @@ refresh = Refresh
 fromUp = Up view
 fromFront = Front view
 fromSide = Side view
-
+upper = Upper
+lower = Lower
+clear = Clear
+fill = Fill
+toProjector = To projector
+save = Save
+load = Load
+new = New file
 
