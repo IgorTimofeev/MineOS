@@ -1,6 +1,8 @@
 badGPU = [ERROR] Your monitor/GPU doesn't support required resolution.
 palette = [ Palette ]
 control = [ Control ]
+level = Hologram level:
+mainLevel = Main level:
 quit = Exit: 'Q' or 
 programmers =  Developers:               
 contact = Contact
