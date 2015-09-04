@@ -37,7 +37,7 @@ local function definePatterns()
 		{ ["pattern"] = "%-%-.*", ["color"] = currentColorScheme.comments, ["cutFromLeft"] = 0, ["cutFromRight"] = 0 },
 		
 		--Строки
-		{ ["pattern"] = "\".-[^\"\"]\"", ["color"] = currentColorScheme.strings, ["cutFromLeft"] = 0, ["cutFromRight"] = 0 },
+		{ ["pattern"] = "\"[^\"\"]*\"", ["color"] = currentColorScheme.strings, ["cutFromLeft"] = 0, ["cutFromRight"] = 0 },
 		
 		--Циклы, условия, объявления
 		{ ["pattern"] = "while ", ["color"] = currentColorScheme.loops, ["cutFromLeft"] = 0, ["cutFromRight"] = 1 },
@@ -46,6 +46,7 @@ local function definePatterns()
 		{ ["pattern"] = "end$", ["color"] = currentColorScheme.loops, ["cutFromLeft"] = 0, ["cutFromRight"] = 0 },
 		{ ["pattern"] = "end ", ["color"] = currentColorScheme.loops, ["cutFromLeft"] = 0, ["cutFromRight"] = 1 },
 		{ ["pattern"] = "for ", ["color"] = currentColorScheme.loops, ["cutFromLeft"] = 0, ["cutFromRight"] = 1 },
+		{ ["pattern"] = " in ", ["color"] = currentColorScheme.loops, ["cutFromLeft"] = 0, ["cutFromRight"] = 1 },
 		{ ["pattern"] = "repeat ", ["color"] = currentColorScheme.loops, ["cutFromLeft"] = 0, ["cutFromRight"] = 1 },
 		{ ["pattern"] = "if ", ["color"] = currentColorScheme.loops, ["cutFromLeft"] = 0, ["cutFromRight"] = 1 },
 		{ ["pattern"] = "then", ["color"] = currentColorScheme.loops, ["cutFromLeft"] = 0, ["cutFromRight"] = 0 },
@@ -63,13 +64,15 @@ local function definePatterns()
 		{ ["pattern"] = "nil", ["color"] = currentColorScheme.boolean, ["cutFromLeft"] = 0, ["cutFromRight"] = 0 },
 				
 		--Функции
-		{ ["pattern"] = "%s([%a%d%_%-%.])*%(", ["color"] = currentColorScheme.functions, ["cutFromLeft"] = 0, ["cutFromRight"] = 1 },
+		--{ ["pattern"] = "%s([%a%d%_%-%.])*%(", ["color"] = currentColorScheme.functions, ["cutFromLeft"] = 0, ["cutFromRight"] = 1 },
 		
 		--And, or, not, break
-		{ ["pattern"] = "and ", ["color"] = currentColorScheme.logic, ["cutFromLeft"] = 0, ["cutFromRight"] = 1 },
-		{ ["pattern"] = "or ", ["color"] = currentColorScheme.logic, ["cutFromLeft"] = 0, ["cutFromRight"] = 1 },
-		{ ["pattern"] = "not ", ["color"] = currentColorScheme.logic, ["cutFromLeft"] = 0, ["cutFromRight"] = 1 },
-		{ ["pattern"] = "break", ["color"] = currentColorScheme.logic, ["cutFromLeft"] = 0, ["cutFromRight"] = 0 },
+		{ ["pattern"] = " and ", ["color"] = currentColorScheme.logic, ["cutFromLeft"] = 0, ["cutFromRight"] = 1 },
+		{ ["pattern"] = " or ", ["color"] = currentColorScheme.logic, ["cutFromLeft"] = 0, ["cutFromRight"] = 1 },
+		{ ["pattern"] = " not ", ["color"] = currentColorScheme.logic, ["cutFromLeft"] = 0, ["cutFromRight"] = 1 },
+		{ ["pattern"] = " break$", ["color"] = currentColorScheme.logic, ["cutFromLeft"] = 0, ["cutFromRight"] = 0 },
+		{ ["pattern"] = "^break", ["color"] = currentColorScheme.logic, ["cutFromLeft"] = 0, ["cutFromRight"] = 0 },
+		{ ["pattern"] = " break ", ["color"] = currentColorScheme.logic, ["cutFromLeft"] = 0, ["cutFromRight"] = 0 },
 
 		--Числа
 		{ ["pattern"] = "%s(0x)(%w*)", ["color"] = currentColorScheme.numbers, ["cutFromLeft"] = 0, ["cutFromRight"] = 0 },
@@ -96,17 +99,40 @@ local function definePatterns()
 	sPatterns = #patterns
 end
 
+--Костыльная замена обычному string.find()
+--Работает медленнее, но хотя бы поддерживает юникод
+function unicode.find(str, pattern, init, plain)
+	-- checkArg(1, str, "string")
+	-- checkArg(2, pattern, "string")
+	-- checkArg(3, init, "number", "nil")
+	if init then
+		if init < 0 then
+			init = -#unicode.sub(str,init)
+		elseif init > 0 then
+			init = #unicode.sub(str,1,init-1)+1
+		end
+	end
+	
+	a, b = string.find(str, pattern, init, plain)
+	
+	if a then
+		local ap,bp = str:sub(1,a-1), str:sub(a,b)
+		a = unicode.len(ap)+1
+		b = a + unicode.len(bp)-1
+		return a,b
+	else
+		return a
+	end
+end
+
 --Проанализировать строку и создать на ее основе цветовую карту
 function syntax.highlight(text)
 	--Массив символов и их цветов
 	local massiv = {}
 	--Длина текста
 	local sText = unicode.len(text)
-
 	--Базовый цвет текста
 	local currentColor = currentColorScheme.text
-
-
 	--Откуда будем искать совпадения шаблонов
 	local searchFrom = 1
 	--Переменная успешного поиска
@@ -116,11 +142,10 @@ function syntax.highlight(text)
 	while symbol <= sText do
 		--Обнуляем успех поиска, ибо хуй знает, найдет ли оно что-то
 		sucessfullyFound = false
-		
 		--Перебираем все шаблоны
 		for i = 1, sPatterns do
 			--Ищем совпадения
-			local starting, ending = string.find(text, patterns[i].pattern, searchFrom)
+			local starting, ending = unicode.find(text, patterns[i].pattern, searchFrom)
 			--Если старт совпадения совпадает с номером символа, то
 			if starting and starting == symbol then
 				--Ставим цвет для текущего и последующих символов
@@ -138,7 +163,6 @@ function syntax.highlight(text)
 				--Разрываем цикл, ибо нехуй больше искать
 				break
 			end
-
 			--Обнуляем переменные, ибо я так люблю
 			starting, ending = nil, nil
 		end
