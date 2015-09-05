@@ -229,10 +229,10 @@ end
 
 function event.takeScreenshot()
   if keyboard.isKeyDown(100) then
-    computer.beep(200)
+    computer.beep(1500)
     image.screenshot("screenshot.png")
-    computer.beep(500)
-    computer.beep(500)
+    computer.beep(2000)
+    computer.beep(2000)
   end
 end
 
