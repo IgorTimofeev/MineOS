@@ -16,7 +16,7 @@ local colorSchemes = {
 		["logic"] = 0xffcc66,
 		["numbers"] = 0x24c0ff,
 		["functions"] = 0xffcc66,
-		["compares"] = 0xffff98,
+		["compares"] = 0xff2024,
 	},
 	["sunrise"] = {
 		["recommendedBackground"] = 0xffffff,
