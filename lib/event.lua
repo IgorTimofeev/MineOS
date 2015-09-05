@@ -230,9 +230,11 @@ end
 function event.takeScreenshot()
   if keyboard.isKeyDown(100) then
     computer.beep(1500)
-    image.screenshot("screenshot.png")
+    local screenshotPath = "screenshot.png"
+    image.screenshot(screenshotPath)
     computer.beep(2000)
     computer.beep(2000)
+    computer.pushSignal("screenshot", screenshotPath)
   end
 end
 
