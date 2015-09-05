@@ -588,11 +588,12 @@ end
 --Сохранение изображения в нужном формате
 local function save(path, format)
 	mergeLayersToMasterPixels()
-	if format == ".png" then
-		image.savePNG(path, MasterPixels)
-	elseif format == ".jpg" then
-		image.saveJPG(path, image.PNGtoJPG(MasterPixels))
-	end
+	image.save(path, MasterPixels)
+	-- if format == ".png" then
+	-- 	image.savePNG(path, MasterPixels)
+	-- elseif format == ".jpg" then
+	-- 	image.saveJPG(path, image.PNGtoJPG(MasterPixels))
+	-- end
 end
 
 local function open(path)
@@ -612,10 +613,10 @@ local function open(path)
 		loadedImageWidth = #kartinka[1]
 		pixels[1][2] = kartinka
 	elseif format == ".jpg" then
-		local PNGKartinka = image.JPGtoPNG(kartinka)
+		--local PNGKartinka = image.JPGtoPNG(kartinka)
 		loadedImageHeight = #PNGKartinka
 		loadedImageWidth = #PNGKartinka[1]
-		pixels[1][2] = PNGKartinka
+		pixels[1][2] = kartinka
 	else
 		ecs.error("Ошибка чтения формата файла!")
 		return
