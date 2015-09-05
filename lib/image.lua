@@ -85,7 +85,7 @@ end
 
 --Чтение сжатого формата
 local function loadJPG(path)
-	local image = {}
+	local kartinka = {}
 	local file = io.open(path, "rb")
 
 	local signature1, signature2 = readBytes(file, 4), readBytes(file, 3)
@@ -94,31 +94,31 @@ local function loadJPG(path)
 		return nil
 	end
 
-	image.width = readBytes(file, 1)
-	image.height = readBytes(file, 1)
-	image.depth = readBytes(file, 1)
+	kartinka.width = readBytes(file, 1)
+	kartinka.height = readBytes(file, 1)
+	kartinka.depth = readBytes(file, 1)
 
-	for y = 1, image.height, 1 do
-		table.insert( image, {} )
-		for x = 1, image.width, 1 do
-			table.insert( image[y], {} )
-			image[y][x][2] = readBytes(file, 3)
-			image[y][x][1] = readBytes(file, 3)
-			image[y][x][3] = decodeChar(readBytes(file, 1), readBytes(file, 1))
+	for y = 1, kartinka.height, 1 do
+		table.insert( kartinka, {} )
+		for x = 1, kartinka.width, 1 do
+			table.insert( kartinka[y], {} )
+			kartinka[y][x][2] = readBytes(file, 3)
+			kartinka[y][x][1] = readBytes(file, 3)
+			kartinka[y][x][3] = decodeChar(readBytes(file, 1), readBytes(file, 1))
 		end
 	end
 
 	file:close()
 
-	return image
+	return kartinka
 end
 
 --Рисование сжатого формата
-function image.drawJPG(x, y, image)
+function image.drawJPG(x, y, image1)
 	x = x - 1
 	y = y - 1
 
-	local image2 = convertImagetoGroupedImage(image)
+	local image2 = image.convertImageToGroupedImage(image1)
 
 	--Перебираем массив с фонами
 	for back, backValue in pairs(image2["backgrounds"]) do
@@ -135,8 +135,7 @@ function image.drawJPG(x, y, image)
 end
    
 --Сохранение JPG в файл из существующего массива
-function image.saveJPG(path, image)
-
+function image.saveJPG(path, kartinka)
 	-- Удаляем файл, если есть
 	-- И делаем папку к нему
 	fs.remove(path)
@@ -144,19 +143,18 @@ function image.saveJPG(path, image)
 
 	local file = io.open(path, "w")
 
-	--print("width = ", image.width)
-
 	file:write( table.unpack(ocif_signature_expand) )
-	file:write( string.char( image.width ) )
-	file:write( string.char( image.height ) )
-	file:write( string.char( image.depth ) )
+	file:write( string.char( kartinka.width ) )
+	file:write( string.char( kartinka.height ) )
+	file:write( string.char( kartinka.depth ) )
 
-	for y = 1, image.height, 1 do
-		for x = 1, image.width, 1 do
-			local encodedPixel = { encodePixel( image[y][x][2], image[y][x][1], image[y][x][3] ) }
+	for y = 1, kartinka.height do
+		for x = 1, kartinka.width do
+			local encodedPixel = { encodePixel( kartinka[y][x][2], kartinka[y][x][1], kartinka[y][x][3] ) }
 			for i = 1, #encodedPixel do
 				file:write( string.char( encodedPixel[i] ) )
 			end
+			encodedPixel = {nil, nil, nil}; encodedPixel = nil
 		end
 	end
 
@@ -180,32 +178,37 @@ end
 --Загрузка ПНГ
 local function loadPNG(path)
 	local file = io.open(path, "r")
-	local newPNGMassiv = { ["backgrounds"] = {} }
+	local newPNGMassiv = {}
 
-	local pixelCounter, lineCounter = 1, 1
+	local pixelCounter, lineCounter, dlinaStroki = 1, 1, nil
 	for line in file:lines() do
-		local dlinaStroki = unicode.len(line)
+		--Получаем длину строки
+		dlinaStroki = unicode.len(line)
+		--Сбрасываем счетчик пикселей
 		pixelCounter = 1
-
+		--Создаем новую строку
+		newPNGMassiv[lineCounter] = {}
+		--Перебираем пиксели
 		for i = 1, dlinaStroki, 16 do
+			--Транслируем всю хуйню в более понятную хуйню
 			local back = tonumber("0x"..unicode.sub(line, i, i + 5))
 			local fore = tonumber("0x"..unicode.sub(line, i + 7, i + 12))
 			local symbol = unicode.sub(line, i + 14, i + 14)
-
-			newPNGMassiv["backgrounds"][back] = newPNGMassiv["backgrounds"][back] or {}
-			newPNGMassiv["backgrounds"][back][fore] = newPNGMassiv["backgrounds"][back][fore] or {}
-
-			table.insert(newPNGMassiv["backgrounds"][back][fore], {pixelCounter, lineCounter, symbol} )
-
+			--Создаем новый пиксельс
+			newPNGMassiv[lineCounter][pixelCounter] = { back, fore, symbol }
+			--Увеличиваем пиксельсы
 			pixelCounter = pixelCounter + 1
+			--Очищаем оперативку
 			back, fore, symbol = nil, nil, nil
 		end
 
 		lineCounter = lineCounter + 1
 	end
 
+	--Закрываем файл
 	file:close()
-	pixelCounter, lineCounter = nil, nil
+	--Очищаем оперативку
+	pixelCounter, lineCounter, dlinaStroki = nil, nil, nil
 
 	return newPNGMassiv
 end
@@ -229,15 +232,13 @@ function image.savePNG(path, MasterPixels)
 end
 
 --Отрисовка ПНГ
-function image.drawPNG(x, y, massivSudaPihay)
+function image.drawPNG(x, y, massivSudaPihay2)
 	--Уменьшаем значения кординат на 1, т.к. циклы начинаются с единицы
 	x = x - 1
 	y = y - 1
 
 	--Конвертируем "сырой" формат PNG в оптимизированный и сгруппированный по цветам
-	--local massivSudaPihay = convertImagetoGroupedImage(massivSudaPihay2)
-	--Более не требуется, встроил конвертер в загрузчик файлов, по сути
-	--конвертации теперь вообще нет.
+	local massivSudaPihay = image.convertImageToGroupedImage(massivSudaPihay2)
 
 	--Перебираем массив с фонами
 	for back, backValue in pairs(massivSudaPihay["backgrounds"]) do
@@ -255,46 +256,30 @@ end
 
 ---------------------Глобальные функции данного API, с ними мы и работаем---------------------------------------------------------
 
---Конвертер из PNG в JPG
-function image.PNGtoJPG(PNGMassiv)
-	local JPGMassiv = {}
-	local width, height = 0, 0
-
-	--Сохраняем пиксели
+--Конвертируем массив классического "сырого" формата в сжатый и оптимизированный для более быстрой отрисовки
+function image.convertImageToGroupedImage(PNGMassiv)
+	local newPNGMassiv = { ["backgrounds"] = {} }
+	--Перебираем весь массив стандартного PNG-вида по высоте
 	for j = 1, #PNGMassiv do
-		JPGMassiv[j] = {}
-		width = 0
 		for i = 1, #PNGMassiv[j] do
-			JPGMassiv[j][i] = { table.unpack(PNGMassiv[j][i]) }
-			width = width + 1
+			newPNGMassiv["backgrounds"][PNGMassiv[j][i][1]] = newPNGMassiv["backgrounds"][PNGMassiv[j][i][1]] or {}
+			newPNGMassiv["backgrounds"][PNGMassiv[j][i][1]][PNGMassiv[j][i][2]] = newPNGMassiv["backgrounds"][PNGMassiv[j][i][1]][PNGMassiv[j][i][2]] or {}
+			table.insert(newPNGMassiv["backgrounds"][PNGMassiv[j][i][1]][PNGMassiv[j][i][2]], {i, j, PNGMassiv[j][i][3]} )
 		end
-		height = height + 1
 	end
-
-	JPGMassiv["width"] = width
-	JPGMassiv["height"] = height
-	JPGMassiv["depth"] = 8
-
-	return JPGMassiv
+	return newPNGMassiv
 end
 
---Конвертер из JPG в PNG
-function image.JPGtoPNG(JPGMassiv)
-	local PNGMassiv = {}
-	local width, height = 0, 0
+--Конвертер из PNG в JPG
+function image.PNGtoJPG(PNGMassiv)
+	local JPGMassiv = PNGMassiv
+	local width, height = #PNGMassiv[1][1], #PNGMassiv[1]
 
-	--Сохраняем пиксели
-	for j = 1, #JPGMassiv do
-		PNGMassiv[j] = {}
-		width = 0
-		for i = 1, #JPGMassiv[j] do
-			PNGMassiv[j][i] = { table.unpack(JPGMassiv[j][i]) }
-			width = width + 1
-		end
-		height = height + 1
-	end
+	JPGMassiv.width = width
+	JPGMassiv.height = height
+	JPGMassiv.depth = 8
 
-	return PNGMassiv
+	return JPGMassiv
 end
 
 -- Просканировать файловую систему на наличие .PNG
@@ -324,12 +309,12 @@ function image.convertAllPNGtoJPG(path)
 	end
 end
 
+---------------------------------------------------------------------------------------------------------------------
+
 --Загрузка любого изображения из доступных типов
 function image.load(path)
-
 	local kartinka = {}
 	local fileFormat = ecs.getFileFormat(path)
-
 	if string.lower(fileFormat) == ".jpg" then
 		kartinka["format"] = ".jpg"
 		kartinka["image"] = loadJPG(path)
@@ -337,10 +322,22 @@ function image.load(path)
 		kartinka["format"] = ".png"
 		kartinka["image"] = loadPNG(path)
 	else
-		ecs.error("Wrong file format! (not .png or .jpg)")
+		error("Wrong file format! (not .png or .jpg)")
 	end
-
 	return kartinka
+end
+
+--Сохранение любого формата в нужном месте
+function image.save(path, kartinka)
+	local fileFormat = ecs.getFileFormat(path)
+
+	if string.lower(fileFormat) == ".jpg" then
+		image.saveJPG(path, kartinka)
+	elseif  string.lower(fileFormat) == ".png" then
+		image.savePNG(path, kartinka)
+	else
+		error("Wrong file format! (not .png or .jpg)")
+	end
 end
 
 --Отрисовка этого изображения
@@ -352,14 +349,44 @@ function image.draw(x, y, kartinka)
 	end
 end
 
+function image.screenshot(path)
+	--Вычисляем размер скрина
+	local xSize, ySize = gpu.getResolution()
+
+	local rawImage = {}
+	for y = 1, ySize do
+		rawImage[y] = {}
+		for x = 1, xSize do
+			local symbol, fore, back = gpu.get(x, y)
+			rawImage[y][x] = { back, fore, symbol }
+			symbol, fore, back = nil, nil, nil
+		end
+	end
+
+	rawImage.width = #rawImage[1]
+	rawImage.height = #rawImage
+	rawImage.depth = 8
+
+	image.save(path, rawImage)
+end
+
 ---------------------------------------------------------------------------------------------------------------------
 
 -- ecs.prepareToExit()
--- local cyka1 = image.load("System/OS/Icons/Love.png")
--- local cyka2 = image.load("Pastebin.app/Resources/Icon.png")
--- image.draw(2, 2, cyka1)
--- image.draw(40, 2, cyka2)
+-- for i = 1, 30 do
+-- 	print("Hello world bitches! " .. string.rep(tostring(math.random(100, 1000)) .. " ", 10))
+-- end
 
+-- image.draw(10, 2, image.load("System/OS/Icons/Love.png"))
+
+-- local pathToScreen = "screenshot.jpg"
+
+-- image.screenshot(pathToScreen)
+-- ecs.prepareToExit()
+-- ecs.centerText("xy", 0, "Сохранил скрин. Ща загружу фотку и нарисую его. Внимание!")
+-- os.sleep(2)
+-- ecs.prepareToExit()
+-- image.draw(2, 2, image.load(pathToScreen))
 
 return image
 
