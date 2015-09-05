@@ -1096,9 +1096,9 @@ while true do
 			if currentDesktop < countOfDesktops then currentDesktop = currentDesktop + 1; drawDesktop(xPosOfIcons, yPosOfIcons) end
 		end
 
+	--Если скрин делаем
 	elseif eventData[1] == "screenshot" then
 		drawDesktop(xPosOfIcons, yPosOfIcons)
-	end
 
 	--Сочетания клавищ, пока не реализовано
 	elseif eventData[1] == "key_down" then
