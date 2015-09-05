@@ -204,9 +204,9 @@ _G.fs = require("filesystem")
 _G.shell = require("shell")
 
 --Очищаем экран и запускаем ОС
-pcall(ecs.clearScreen)
-pcall(ecs.setScale, 1)
-pcall(shell.execute, "OS.lua")
+ecs.clearScreen()
+ecs.setScale(1)
+shell.execute("OS.lua")
 
 while true do
   local component = require("component")
