@@ -527,6 +527,10 @@ local function launchIcon(path, arguments)
 	--Если это фоточка
 	elseif fileFormat == ".png" then
 		shell.execute("Photoshop.app/Photoshop.lua open "..path)
+
+	--Если это фоточка
+	elseif fileFormat == ".jpg" then
+		shell.execute("Photoshop.app/Photoshop.lua open "..path)
 	
 	--Если это текст или конфиг или языковой
 	elseif fileFormat == ".txt" or fileFormat == ".cfg" or fileFormat == ".lang" then
@@ -792,54 +796,11 @@ local function notification(text)
 	return oldPixels
 end
 
---Проверка наличия новых версий
-local function checkForUpdates()
-	
-	--Путь к Ватс-нев
-	local pathToWhatsNew = "System/OS/Whats-new.txt"
-
-	--Получить версию текущего Ватс-нев, епта
-	local function getVersion()
-		local lines = config.readFile(pathToWhatsNew)
-		if unicode.sub(lines[1], 1, 7) == "Version" then
-			local version = tonumber(unicode.sub(lines[1], 8, -1))
-			return version
-		end
-	end
-
-	--Получаем версию старого Ватс-нев
-	local oldVersion
-	if fs.exists(pathToWhatsNew) then oldVersion = getVersion() end
-
-	--Качаем новую версию с заменой
-	local success, reason = getFromGitHubSafely("https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/MineOS/Whats-new/" .. _OSLANGUAGE .. ".lang", pathToWhatsNew)
-	
-	--Если скачалось все нормально, то
-	if success then
-		-- И если есть старая версия, то
-		if oldVersion then
-			-- Получаем новую версию заместо старой
-			local newVersion = getVersion()
-
-			--Выводим нотификацию вон в таком случае
-			if oldVersion < newVersion then
-				return notification(lang.updatesAvailable)
-			end
-		end
-	end
-end
-
-local function displayInfoAboutUpdate()
-
-end
-
 
 --А вот и системка стартует
 ------------------------------------------------------------------------------------------------------------------------
 
 if not launchConfigurator() then enterSystem() end
-
-local notificationOldPixels = checkForUpdates()
 
 ------------------------------------------------------------------------------------------------------------------------
 
