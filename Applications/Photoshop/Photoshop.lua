@@ -614,8 +614,8 @@ local function open(path)
 		pixels[1][2] = kartinka
 	elseif format == ".jpg" then
 		--local PNGKartinka = image.JPGtoPNG(kartinka)
-		loadedImageHeight = #PNGKartinka
-		loadedImageWidth = #PNGKartinka[1]
+		loadedImageHeight = #kartinka
+		loadedImageWidth = #kartinka[1]
 		pixels[1][2] = kartinka
 	else
 		ecs.error("Ошибка чтения формата файла!")
