@@ -466,7 +466,6 @@ local function redrawSelectedIcons()
 
 		if obj["DesktopIcons"][key][6] ~= nil then
 
-			local path = currentFileList[key]
 			local x = obj["DesktopIcons"][key][1]
 			local y = obj["DesktopIcons"][key][2]
 
@@ -1096,6 +1095,10 @@ while true do
 		else
 			if currentDesktop < countOfDesktops then currentDesktop = currentDesktop + 1; drawDesktop(xPosOfIcons, yPosOfIcons) end
 		end
+
+	elseif eventData[1] == "screenshot" then
+		drawDesktop(xPosOfIcons, yPosOfIcons)
+	end
 
 	--Сочетания клавищ, пока не реализовано
 	elseif eventData[1] == "key_down" then
