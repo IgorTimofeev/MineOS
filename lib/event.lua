@@ -228,7 +228,7 @@ function event.shouldSoftInterrupt()
 end
 
 function event.takeScreenshot()
-  if keyboard.isControlDown and keyboard.isShiftDown and keyboard.isKeyDown(keyboard.keys.1) then
+  if keyboard.isControlDown() and keyboard.isShiftDown() and keyboard.isKeyDown(keyboard.keys["1"]) then
     computer.beep(500)
     image.screenshot("screenshot.jpg")
     computer.beep(1200)
