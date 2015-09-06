@@ -144,80 +144,6 @@ local function createPastebinShortcut(path, pastebinLink)
 	file:close()
 end
 
---ПОЛУЧИТЬ ДАННЫЕ О ФАЙЛЕ ИЗ ЯРЛЫКА
-local function readShortcut(path)
-	local success, filename = pcall(loadfile(path))
-	if success then
-		return filename
-	else
-		error("Ошибка чтения файла ярлыка. Вероятно, он создан криво, либо не существует в папке " .. path)
-	end
-end
-
---ОТРИСОВКА ТЕКСТА ПОД ИКОНКОЙ
-local function drawIconText(xIcons, yIcons, path)
-
-	local text = fs.name(path)
-
-	if not showFileFormat then
-		local fileFormat = ecs.getFileFormat(text)
-		if fileFormat then
-			text = unicode.sub(text, 1, -(unicode.len(fileFormat) + 1))
-		end
-	end
-
-	text = ecs.stringLimit("end", text, widthOfIcon)
-	local textPos = xIcons + math.floor(widthOfIcon / 2 - unicode.len(text) / 2) - 2
-
-	ecs.adaptiveText(textPos, yIcons + heightOfIcon - 1, text, 0xffffff)
-end
-
---ОТРИСОВКА КОНКРЕТНОЙ ОДНОЙ ИКОНКИ
-local function drawIcon(xIcons, yIcons, path)
-	--НАЗНАЧЕНИЕ ВЕРНОЙ ИКОНКИ
-	local icon
-
-	local fileFormat = ecs.getFileFormat(path)
-
-	if fs.isDirectory(path) then
-		if fileFormat == ".app" then
-			icon = path .. "/Resources/Icon.png" 
-			icons[icon] = image.load(icon)
-		else
-			icon = "folder"
-		end
-	else
-		if fileFormat == ".lnk" then
-			local shortcutLink = readShortcut(path)
-			drawIcon(xIcons, yIcons, shortcutLink)
-			ecs.colorTextWithBack(xIcons + widthOfIcon - 6, yIcons + heightOfIcon - 3, 0x000000, 0xffffff, "⤶")
-			drawIconText(xIcons, yIcons, path)
-			return 0
-		elseif fileFormat == ".cfg" or fileFormat == ".config" then
-			icon = "config"
-		elseif fileFormat == ".txt" or fileFormat == ".rtf" then
-			icon = "text"
-		elseif fileFormat == ".lua" then
-		 	icon = "lua"
-		elseif fileFormat == ".png" then
-		 	icon = "image"
-		elseif fileFormat == ".jpg" then
-		 	icon = "imageJPG"
-		elseif fileFormat == ".paste" then
-			icon = "pastebin"
-		else
-			icon = "script"
-		end
-	end
-
-	--ОТРИСОВКА ИКОНКИ
-	image.draw(xIcons, yIcons, icons[icon] or icons["script"])
-
-	--ОТРИСОВКА ТЕКСТА
-	drawIconText(xIcons, yIcons, path)
-
-end
-
 -- НАРИСОВАТЬ ВЫДЕЛЕНИЕ ИКОНКИ
 local function drawIconSelection(x, y, nomer)
 	if obj["DesktopIcons"][nomer][6] == true then
@@ -365,7 +291,7 @@ local function drawDesktop(x, y)
 			--ОТРИСОВКА КОНКРЕТНОЙ ИКОНКИ
 			local path = workPath .. currentFileList[counter]
 			--drawIconSelection(xIcons, yIcons, counter)
-			drawIcon(xIcons, yIcons, path)
+			ecs.drawOSIcon(xIcons, yIcons, path, showFileFormat)
 
 			--СОЗДАНИЕ ОБЪЕКТА ИКОНКИ
 			newObj("DesktopIcons", counter, xIcons, yIcons, xIcons + widthOfIcon - 1, yIcons + heightOfIcon - 1, path, nil)
@@ -409,7 +335,7 @@ local function drawDock()
 		local yIcons = ySize - heightOfDock - 1
 
 		for i = 1, currentCountOfIconsInDock do
-			drawIcon(xIcons, yIcons, pathOfDockShortcuts..dockShortcuts[i])
+			ecs.drawOSIcon(xIcons, yIcons, pathOfDockShortcuts..dockShortcuts[i], showFileFormat)
 			newObj("DockIcons", dockShortcuts[i], xIcons - 2, yIcons, xIcons + widthOfIcon - 1, yIcons + heightOfIcon - 1)
 			xIcons = xIcons + xSpaceBetweenIcons + widthOfIcon
 		end
@@ -470,7 +396,7 @@ local function redrawSelectedIcons()
 			local y = obj["DesktopIcons"][key][2]
 
 			drawIconSelection(x, y, key)
-			drawIcon(x, y, obj["DesktopIcons"][key][5])
+			ecs.drawOSIcon(x, y, obj["DesktopIcons"][key][5], showFileFormat)
 
 		end
 	end
@@ -538,7 +464,7 @@ local function launchIcon(path, arguments)
 
 	--Если это ярлык
 	elseif fileFormat == ".lnk" then
-		local shortcutLink = readShortcut(path)
+		local shortcutLink = ecs.readShortcut(path)
 		if fs.exists(shortcutLink) then
 			launchIcon(shortcutLink)
 		else
@@ -547,7 +473,7 @@ local function launchIcon(path, arguments)
 
 	--Если это ссылка на пастебин
 	elseif fileFormat == ".paste" then
-		local shortcutLink = readShortcut(path)
+		local shortcutLink = ecs.readShortcut(path)
 		ecs.prepareToExit()
 		local success, reason = shell.execute("pastebin run " .. shortcutLink)
 		if success then
@@ -946,14 +872,14 @@ while true do
 				clickedOnEmptySpace = false
 
 				ecs.square(obj["DockIcons"][key][1], obj["DockIcons"][key][2], widthOfIcon, heightOfIcon, iconsSelectionColor)
-				drawIcon(obj["DockIcons"][key][1] + 2, obj["DockIcons"][key][2], pathOfDockShortcuts..key)
+				ecs.drawOSIcon(obj["DockIcons"][key][1] + 2, obj["DockIcons"][key][2], pathOfDockShortcuts..key, showFileFormat)
 				
 				if eventData[5] == 0 then 
 					os.sleep(0.2)
 					launchIcon(pathOfDockShortcuts..key)
 					drawAll()
 				else
-					local content = readShortcut(pathOfDockShortcuts..key)
+					local content = ecs.readShortcut(pathOfDockShortcuts..key)
 					
 					action = context.menu(eventData[3], eventData[4], {lang.contextOpenDockFolder}, {lang.contextOpenDockElementFolder, (fs.path(workPath) == fs.path(content))}, "-", {lang.contextRemoveFromDock, not (currentCountOfIconsInDock > 1)})
 
