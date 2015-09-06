@@ -1534,6 +1534,7 @@ function ECSAPI.drawOSIcon(x, y, path, showFileFormat)
 			icon = path .. "/Resources/Icon.png"
 			--Если данной иконки еще нет в оперативке, то загрузить ее
 			if not ECSAPI.OSIcons[icon] then
+				ECSAPI.error("Создаю иконку "..fs.name(path))
 				ECSAPI.OSIcons[icon] = image.load(icon)
 			end
 		else
@@ -1543,7 +1544,7 @@ function ECSAPI.drawOSIcon(x, y, path, showFileFormat)
 		if fileFormat == ".lnk" then
 			local shortcutLink = ECSAPI.readShortcut(path)
 			ECSAPI.drawOSIcon(x, y, shortcutLink)
-			ECSAPI.colorTextWithBack(x + ECSAPI.OSIconsWidth- 6, y + ECSAPI.OSIconsHeight - 3, 0x000000, 0xffffff, "⤶")
+			ECSAPI.colorTextWithBack(x + ECSAPI.OSIconsWidth - 4, y + ECSAPI.OSIconsHeight - 3, 0x000000, 0xffffff, "⤶")
 			return 0
 		elseif fileFormat == ".cfg" or fileFormat == ".config" then
 			icon = "config"
@@ -1576,9 +1577,9 @@ function ECSAPI.drawOSIcon(x, y, path, showFileFormat)
 	end
 	text = ECSAPI.stringLimit("end", text, ECSAPI.OSIconsWidth)
 	--Рассчитываем позицию текста
-	local textPos = x + math.floor(ECSAPI.OSIconsWidth / 2 - unicode.len(text) / 2) + 1
+	local textPos = x + math.floor(ECSAPI.OSIconsWidth / 2 - unicode.len(text) / 2) - 1
 	--Рисуем текст под иконкой
-	ECSAPI.adaptiveText(x, y + ECSAPI.OSIconsHeight - 1, text, 0xffffff)
+	ECSAPI.adaptiveText(textPos, y + ECSAPI.OSIconsHeight - 1, text, 0xffffff)
 
 end
 
