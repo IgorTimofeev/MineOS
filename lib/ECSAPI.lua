@@ -1541,7 +1541,7 @@ function ECSAPI.drawOSIcon(x, y, path, showFileFormat)
 		end
 	else
 		if fileFormat == ".lnk" then
-			local shortcutLink = readShortcut(path)
+			local shortcutLink = ECSAPI.readShortcut(path)
 			drawIcon(x, y, shortcutLink)
 			ECSAPI.colorTextWithBack(x + ECSAPI.OSIconsWidth- 6, y + ECSAPI.OSIconsHeight - 3, 0x000000, 0xffffff, "⤶")
 			return 0
