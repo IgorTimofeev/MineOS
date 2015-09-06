@@ -1585,9 +1585,78 @@ function ECSAPI.drawOSIcon(x, y, path, showFileFormat, nameColor)
 
 end
 
+--ЗАПУСТИТЬ ПРОГУ
+function ECSAPI.launchIcon(path, arguments)
+	--Запоминаем, какое разрешение было
+	local oldWidth, oldHeight = gpu.getResolution()
+	--Создаем нормальные аргументы для Шелла
+	if arguments then arguments = " " .. arguments else arguments = "" end
+	--Получаем файл формат заранее
+	local fileFormat = ECSAPI.getFileFormat(path)
+	--Если это приложение
+	if fileFormat == ".app" then
+		ECSAPI.prepareToExit()
+		local cyka = path .. "/" .. ECSAPI.hideFileFormat(fs.name(path)) .. ".lua"
+		local success, reason = shell.execute(cyka)
+		ECSAPI.prepareToExit()
+		if not success then ECSAPI.displayCompileMessage(1, reason, true) end
+	--Если это обычный луа файл - т.е. скрипт
+	elseif fileFormat == ".lua" or fileFormat == nil then
+		ECSAPI.prepareToExit()
+		local success, reason = shell.execute(path .. arguments)
+		ECSAPI.prepareToExit()
+		if success then
+			print("Program sucessfully executed. Press any key to continue.")
+		else
+			ECSAPI.displayCompileMessage(1, reason, true)
+		end
+	--Если это фоточка
+	elseif fileFormat == ".png" then
+		shell.execute("Photoshop.app/Photoshop.lua open "..path)
+	--Если это фоточка
+	elseif fileFormat == ".jpg" then
+		shell.execute("Photoshop.app/Photoshop.lua open "..path)
+	--Если это текст или конфиг или языковой
+	elseif fileFormat == ".txt" or fileFormat == ".cfg" or fileFormat == ".lang" then
+		ECSAPI.prepareToExit()
+		shell.execute("edit "..path)
+	--Если это ярлык
+	elseif fileFormat == ".lnk" then
+		local shortcutLink = ECSAPI.readShortcut(path)
+		if fs.exists(shortcutLink) then
+			launchIcon(shortcutLink)
+		else
+			ECSAPI.error("File from shortcut link doesn't exists.")
+		end
+	--Если это ссылка на пастебин
+	elseif fileFormat == ".paste" then
+		local shortcutLink = ECSAPI.readShortcut(path)
+		ECSAPI.prepareToExit()
+		local success, reason = shell.execute("pastebin run " .. shortcutLink)
+		if success then
+			print(" ")
+			print("Program sucessfully executed. Press any key to continue.")
+			ECSAPI.waitForTouchOrClick()
+		else
+			ECSAPI.displayCompileMessage(1, reason, false)
+		end
+	end
+	--Ставим старое разрешение
+	gpu.setResolution(oldWidth, oldHeight)
+end
+
 --ECSAPI.drawOSIcon(2, 2, "Pastebin1.app", true)
 
+
+
+
 ----------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+
 
 
 --Описание ниже, ебана
