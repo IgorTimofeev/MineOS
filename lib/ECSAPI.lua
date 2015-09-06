@@ -1499,14 +1499,16 @@ function ECSAPI.readShortcut(path)
 	end
 end
 
+ECSAPI.OSIconsWidth = 12
+ECSAPI.OSIconsHeight = 6
+
 --Вся необходимая информация для иконок
 local function OSIconsInit()
 	if not ECSAPI.OSIcons then
 		--Константы для иконок
 		ECSAPI.OSIcons = {}
 		ECSAPI.pathToIcons = "System/OS/Icons/"
-		ECSAPI.OSIconsWidth = 12
-		ECSAPI.OSIconsHeight = 6
+
 		--Иконки
 		ECSAPI.OSIcons.folder = image.load(ECSAPI.pathToIcons .. "Folder.png")
 		ECSAPI.OSIcons.script = image.load(ECSAPI.pathToIcons .. "Script.png")
@@ -1521,7 +1523,7 @@ local function OSIconsInit()
 end
 
 --Отрисовка одной иконки
-function ECSAPI.drawOSIcon(x, y, path, showFileFormat)
+function ECSAPI.drawOSIcon(x, y, path, showFileFormat, nameColor)
 	--Инициализируем переменные иконок. Чисто для уменьшения расхода оперативки.
 	OSIconsInit()
 	--Получаем формат файла
@@ -1579,7 +1581,7 @@ function ECSAPI.drawOSIcon(x, y, path, showFileFormat)
 	--Рассчитываем позицию текста
 	local textPos = x + math.floor(ECSAPI.OSIconsWidth / 2 - unicode.len(text) / 2)
 	--Рисуем текст под иконкой
-	ECSAPI.adaptiveText(textPos, y + ECSAPI.OSIconsHeight - 1, text, 0xffffff)
+	ECSAPI.adaptiveText(textPos, y + ECSAPI.OSIconsHeight - 1, text, nameColor or 0xffffff)
 
 end
 
