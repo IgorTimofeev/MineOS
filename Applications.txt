@@ -1,22 +1,32 @@
 {
   {
-    ["name"]="Home.lua",
-    ["url"]="IgorTimofeev/OpenComputers/master/Applications/Home.lua",
-    ["type"]="Script",
-  },
-  {
-    ["name"]="Geoscan.lua",
-    ["url"]="IgorTimofeev/OpenComputers/master/Applications/Geoscan.lua",
-    ["type"]="Script",
-  },
-  {
-    ["name"]="HoloClock.lua",
-    ["url"]="IgorTimofeev/OpenComputers/master/Applications/HoloClock.lua",
-    ["type"]="Script",
-  },
-  {
     ["name"]="OS.lua",
-    ["url"]="IgorTimofeev/OpenComputers/master/Applications/OS.lua",
+    ["url"]="IgorTimofeev/OpenComputers/master/MineOS/OS.lua",
+    ["type"]="Script",
+  },
+  {
+    ["name"]="System/OS/Languages/Russian.lang",
+    ["url"]="IgorTimofeev/OpenComputers/master/MineOS/Languages/Russian.lang",
+    ["type"]="Script",
+  },
+  {
+    ["name"]="System/OS/Languages/English.lang",
+    ["url"]="IgorTimofeev/OpenComputers/master/MineOS/Languages/English.lang",
+    ["type"]="Script",
+  },
+  {
+    ["name"]="System/OS/Configurator/Configurator.lua",
+    ["url"]="IgorTimofeev/OpenComputers/master/MineOS/Configurator/Configurator.lua",
+    ["type"]="Script",
+  },
+  {
+    ["name"]="System/OS/Configurator/Russian.lang",
+    ["url"]="IgorTimofeev/OpenComputers/master/MineOS/Configurator/Russian.lang",
+    ["type"]="Script",
+  },
+  {
+    ["name"]="System/OS/Configurator/English.lang",
+    ["url"]="IgorTimofeev/OpenComputers/master/MineOS/Configurator/English.lang",
     ["type"]="Script",
   },
   {
@@ -30,6 +40,16 @@
     ["type"]="Script",
   },
   {
+    ["name"]="Update.paste",
+    ["url"]="IgorTimofeev/OpenComputers/master/Applications/Update.paste",
+    ["type"]="Script",
+  },
+  {
+    ["name"]="bin/palette.lua",
+    ["url"]="IgorTimofeev/OpenComputers/master/Applications/palette.lua",
+    ["type"]="Script",
+  },
+  {
     ["name"]="bin/github.lua",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/github.lua",
     ["type"]="Script",
@@ -37,6 +57,11 @@
   {
     ["name"]="bin/event.lua",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/event.lua",
+    ["type"]="Script",
+  },
+  {
+    ["name"]="bin/clear.lua",
+    ["url"]="IgorTimofeev/OpenComputers/master/Applications/clear.lua",
     ["type"]="Script",
   },
   {
@@ -60,8 +85,28 @@
     ["type"]="Script",
   },
   {
+    ["name"]="System/OS/Icons/Pastebin.png",
+    ["url"]="IgorTimofeev/OpenComputers/master/MineOS/Icons/Pastebin.png",
+    ["type"]="Script",
+  },
+  {
+    ["name"]="System/OS/Icons/Love.png",
+    ["url"]="IgorTimofeev/OpenComputers/master/MineOS/Icons/Love.png",
+    ["type"]="Script",
+  },
+  {
     ["name"]="System/OS/Icons/Folder.png",
     ["url"]="IgorTimofeev/OpenComputers/master/MineOS/Icons/Folder.png",
+    ["type"]="Script",
+  },
+  {
+    ["name"]="System/OS/Icons/Finger.png",
+    ["url"]="IgorTimofeev/OpenComputers/master/MineOS/Icons/Finger.png",
+    ["type"]="Script",
+  },
+  {
+    ["name"]="System/OS/Icons/FileNotExists.png",
+    ["url"]="IgorTimofeev/OpenComputers/master/MineOS/Icons/FileNotExists.png",
     ["type"]="Script",
   },
   {
@@ -75,8 +120,23 @@
     ["type"]="Script",
   },
   {
+    ["name"]="System/OS/Icons/Security.png",
+    ["url"]="IgorTimofeev/OpenComputers/master/MineOS/Icons/Security.png",
+    ["type"]="Script",
+  },
+  {
     ["name"]="System/OS/Icons/Config.png",
     ["url"]="IgorTimofeev/OpenComputers/master/MineOS/Icons/Config.png",
+    ["type"]="Script",
+  },
+  {
+    ["name"]="System/OS/Icons/Image.png",
+    ["url"]="IgorTimofeev/OpenComputers/master/MineOS/Icons/Image.png",
+    ["type"]="Script",
+  },
+  {
+    ["name"]="System/OS/Icons/ImageJPG.png",
+    ["url"]="IgorTimofeev/OpenComputers/master/MineOS/Icons/ImageJPG.png",
     ["type"]="Script",
   },
   {
@@ -100,8 +160,28 @@
     ["type"]="Script",
   },
   {
+    ["name"]="lib/event.lua",
+    ["url"]="IgorTimofeev/OpenComputers/master/lib/event.lua",
+    ["type"]="Script",
+  },
+  {
+    ["name"]="lib/unixtime.lua",
+    ["url"]="IgorTimofeev/OpenComputers/master/lib/unixtime.lua",
+    ["type"]="Script",
+  },
+  {
     ["name"]="lib/context.lua",
     ["url"]="IgorTimofeev/OpenComputers/master/lib/context.lua",
+    ["type"]="Script",
+  },
+  {
+    ["name"]="lib/syntax.lua",
+    ["url"]="IgorTimofeev/OpenComputers/master/lib/syntax.lua",
+    ["type"]="Script",
+  },
+  {
+    ["name"]="lib/qrcode.lua",
+    ["url"]="IgorTimofeev/OpenComputers/master/lib/qrcode.lua",
     ["type"]="Script",
   },
   {
@@ -130,6 +210,11 @@
     ["type"]="Script",
   },
   {
+    ["name"]="lib/checkSystemRequirements.lua",
+    ["url"]="IgorTimofeev/OpenComputers/master/lib/checkSystemRequirements.lua",
+    ["type"]="Script",
+  },
+  {
     ["name"]="usr/misc/greetings/English.txt",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/Motd/English.txt",
     ["type"]="Script",
@@ -145,8 +230,8 @@
     ["type"]="Script",
   },
   {
-    ["name"]="System/OS/Dock/MineCode.lnk",
-    ["url"]="IgorTimofeev/OpenComputers/master/MineOS/Shortcuts/MineCode.lnk",
+    ["name"]="System/OS/Dock/Shooting.lnk",
+    ["url"]="IgorTimofeev/OpenComputers/master/MineOS/Shortcuts/Shooting.lnk",
     ["type"]="Script",
   },
   {
@@ -160,8 +245,8 @@
     ["type"]="Script",
   },
   {
-    ["name"]="System/OS/Dock/Crossword.lnk",
-    ["url"]="IgorTimofeev/OpenComputers/master/MineOS/Shortcuts/Crossword.lnk",
+    ["name"]="System/OS/Dock/Pastebin.lnk",
+    ["url"]="IgorTimofeev/OpenComputers/master/MineOS/Shortcuts/Pastebin.lnk",
     ["type"]="Script",
   },
   {
@@ -197,5 +282,64 @@
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/Photoshop/Photoshop.lua",
     ["type"]="Application",
     ["icon"]="IgorTimofeev/OpenComputers/master/Applications/Photoshop/Icon.png",
+  },
+  {
+    ["name"]="Shooting",
+    ["url"]="IgorTimofeev/OpenComputers/master/Applications/Shooting/Shooting.lua",
+    ["type"]="Application",
+    ["icon"]="IgorTimofeev/OpenComputers/master/Applications/Shooting/Icon.png",
+  },
+  {
+    ["name"]="Geoscan",
+    ["url"]="IgorTimofeev/OpenComputers/master/Applications/Geoscan/Geoscan.lua",
+    ["type"]="Application",
+    ["icon"]="IgorTimofeev/OpenComputers/master/Applications/Geoscan/Icon.png",
+  },
+  {
+    ["name"]="HoloClock",
+    ["url"]="IgorTimofeev/OpenComputers/master/Applications/HoloClock/HoloClock.lua",
+    ["type"]="Application",
+    ["icon"]="IgorTimofeev/OpenComputers/master/Applications/HoloClock/Icon.png",
+  },
+  {
+    ["name"]="Pastebin",
+    ["url"]="IgorTimofeev/OpenComputers/master/Applications/Pastebin/Pastebin.lua",
+    ["type"]="Application",
+    ["icon"]="IgorTimofeev/OpenComputers/master/Applications/Pastebin/Icon.png",
+  },
+  {
+    ["name"]="Shop",
+    ["url"]="IgorTimofeev/OpenComputers/master/Applications/Shop/Shop.lua",
+    ["type"]="Application",
+    ["icon"]="IgorTimofeev/OpenComputers/master/Applications/Shop/Icon.png",
+  },
+  {
+    ["name"]="Highlight",
+    ["url"]="IgorTimofeev/OpenComputers/master/Applications/Highlight/Highlight.lua",
+    ["type"]="Application",
+    ["icon"]="IgorTimofeev/OpenComputers/master/Applications/Highlight/Icon.png",
+    ["resources"]={
+      {
+        ["name"]="TestFile.txt",
+        ["url"]="IgorTimofeev/OpenComputers/master/Applications/Highlight/TestFile.txt",
+      },
+    },
+  },
+
+  {
+    ["name"]="HoloEdit",
+    ["url"]="IgorTimofeev/OpenComputers/master/Applications/HoloEdit/HoloEdit.lua",
+    ["type"]="Application",
+    ["icon"]="IgorTimofeev/OpenComputers/master/Applications/HoloEdit/Icon.png",
+    ["resources"]={
+      {
+        ["name"]="Russian.lang",
+        ["url"]="IgorTimofeev/OpenComputers/master/Applications/HoloEdit/Russian.lang",
+      },
+      {
+        ["name"]="English.lang",
+        ["url"]="IgorTimofeev/OpenComputers/master/Applications/HoloEdit/English.lang",
+      },
+    },
   },
 }
