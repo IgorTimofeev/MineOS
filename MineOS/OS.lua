@@ -44,16 +44,6 @@ local currentFileList
 local currentDesktop = 1
 local countOfDesktops
 
---ЗАГРУЗКА ИКОНОК
-icons["folder"] = image.load("System/OS/Icons/Folder.png")
-icons["script"] = image.load("System/OS/Icons/Script.png")
-icons["text"] = image.load("System/OS/Icons/Text.png")
-icons["config"] = image.load("System/OS/Icons/Config.png")
-icons["lua"] = image.load("System/OS/Icons/Lua.png")
-icons["image"] = image.load("System/OS/Icons/Image.png")
-icons["imageJPG"] = image.load("System/OS/Icons/ImageJPG.png")
-icons["pastebin"] = image.load("System/OS/Icons/Pastebin.png")
-
 --ПЕРЕМЕННЫЕ ДЛЯ ДОКА
 local dockColor = 0xcccccc
 local heightOfDock = 4
@@ -72,7 +62,7 @@ local totalCountOfIcons = xCountOfIcons * yCountOfIcons
 local iconsSelectionColor = ecs.colors.lightBlue
 --local yPosOfIcons = math.floor((ySize - heightOfDock - 2) / 2 - (yCountOfIcons * (heightOfIcon + ySpaceBetweenIcons) - ySpaceBetweenIcons * 2) / 2)
 local yPosOfIcons = 3
-local xPosOfIcons = math.floor(xSize / 2 - (xCountOfIcons * (widthOfIcon + xSpaceBetweenIcons) - xSpaceBetweenIcons*4) / 2)
+local xPosOfIcons = math.floor(xSize / 2 - (xCountOfIcons * (widthOfIcon + xSpaceBetweenIcons) - xSpaceBetweenIcons) / 2)
 
 local dockCountOfIcons = xCountOfIcons - 1
 
