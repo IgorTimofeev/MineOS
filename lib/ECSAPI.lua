@@ -1517,6 +1517,8 @@ local function OSIconsInit()
 		ECSAPI.OSIcons.imageJPG = image.load(ECSAPI.pathToIcons .. "ImageJPG.png")
 		ECSAPI.OSIcons.pastebin = image.load(ECSAPI.pathToIcons .. "Pastebin.png")
 		ECSAPI.OSIcons.fileNotExists = image.load(ECSAPI.pathToIcons .. "FileNotExists.png")
+
+		ECSAPI.error("Инициализирую иконки!")
 	end
 end
 
@@ -1544,7 +1546,7 @@ function ECSAPI.drawOSIcon(x, y, path, showFileFormat)
 		if fileFormat == ".lnk" then
 			local shortcutLink = ECSAPI.readShortcut(path)
 			ECSAPI.error("Создаю иконку ярлыка "..shortcutLink)
-			ECSAPI.drawOSIcon(x, y, shortcutLink)
+			ECSAPI.drawOSIcon(x, y, shortcutLink, showFileFormat)
 			ECSAPI.colorTextWithBack(x + ECSAPI.OSIconsWidth - 4, y + ECSAPI.OSIconsHeight - 3, 0x000000, 0xffffff, "⤶")
 			return 0
 		elseif fileFormat == ".cfg" or fileFormat == ".config" then
