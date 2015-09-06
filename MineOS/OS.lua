@@ -408,76 +408,6 @@ local function selectIcon(nomer)
 	end
 end
 
---ЗАПУСТИТЬ ПРОГУ
-local function launchIcon(path, arguments)
-
-	--Запоминаем, какое разрешение было
-	local oldWidth, oldHeight = gpu.getResolution()
-
-	--Создаем нормальные аргументы для Шелла
-	if arguments then arguments = " " .. arguments else arguments = "" end
-
-	--Получаем файл формат заранее
-	local fileFormat = ecs.getFileFormat(path)
-
-	--Если это приложение
-	if fileFormat == ".app" then
-		ecs.prepareToExit()
-		local cyka = path .. "/" .. ecs.hideFileFormat(fs.name(path)) .. ".lua"
-		local success, reason = shell.execute(cyka)
-		ecs.prepareToExit()
-		if not success then ecs.displayCompileMessage(1, reason, true) end
-		
-	--Если это обычный луа файл - т.е. скрипт
-	elseif fileFormat == ".lua" or fileFormat == nil then
-		ecs.prepareToExit()
-		local success, reason = shell.execute(path .. arguments)
-		ecs.prepareToExit()
-		if success then
-			print(lang.programSuccessfullyExecuted)
-		else
-			ecs.displayCompileMessage(1, reason, true)
-		end
-
-	--Если это фоточка
-	elseif fileFormat == ".png" then
-		shell.execute("Photoshop.app/Photoshop.lua open "..path)
-
-	--Если это фоточка
-	elseif fileFormat == ".jpg" then
-		shell.execute("Photoshop.app/Photoshop.lua open "..path)
-	
-	--Если это текст или конфиг или языковой
-	elseif fileFormat == ".txt" or fileFormat == ".cfg" or fileFormat == ".lang" then
-		ecs.prepareToExit()
-		shell.execute("edit "..path)
-
-	--Если это ярлык
-	elseif fileFormat == ".lnk" then
-		local shortcutLink = ecs.readShortcut(path)
-		if fs.exists(shortcutLink) then
-			launchIcon(shortcutLink)
-		else
-			ecs.error(lang.badShortcut)
-		end
-
-	--Если это ссылка на пастебин
-	elseif fileFormat == ".paste" then
-		local shortcutLink = ecs.readShortcut(path)
-		ecs.prepareToExit()
-		local success, reason = shell.execute("pastebin run " .. shortcutLink)
-		if success then
-			print(lang.programSuccessfullyExecuted)
-			ecs.waitForTouchOrClick()
-		else
-			ecs.displayCompileMessage(1, reason, false)
-		end
-	end
-
-	--Ставим старое разрешение
-	gpu.setResolution(oldWidth, oldHeight)
-end
-
 --Перейти в какую-то папку
 local function changePath(path)
 	table.insert(workPathHistory, workPath)	
@@ -752,7 +682,7 @@ while true do
 							changePath(obj["DesktopIcons"][key][5])
 						else
 							deselectAll(true)
-							launchIcon(obj["DesktopIcons"][key][5])
+							ecs.launchIcon(obj["DesktopIcons"][key][5])
 							drawAll()
 						end
 					end
@@ -866,7 +796,7 @@ while true do
 				
 				if eventData[5] == 0 then 
 					os.sleep(0.2)
-					launchIcon(pathOfDockShortcuts..key)
+					ecs.launchIcon(pathOfDockShortcuts..key)
 					drawAll()
 				else
 					local content = ecs.readShortcut(pathOfDockShortcuts..key)
