@@ -227,6 +227,12 @@ function ECSAPI.adaptiveRound(chislo)
   end
 end
 
+--Округление до опред. кол-ва знаков после запятой
+function ECSAPI.round(num, idp)
+	local mult = 10^(idp or 0)
+	return math.floor(num * mult + 0.5) / mult
+end
+
 function ECSAPI.square(x,y,width,height,color)
   gpu.setBackground(color)
   gpu.fill(x,y,width,height," ")
@@ -1473,6 +1479,113 @@ function ECSAPI.readCorrectLangFile(pathToLangs)
 
 	return lang
 end
+
+
+
+
+
+
+
+
+----------------------------------------------------------------------------------------------------------------
+
+--Получить данные о файле из ярлыка
+function ECSAPI.readShortcut(path)
+	local success, filename = pcall(loadfile(path))
+	if success then
+		return filename
+	else
+		error("Ошибка чтения файла ярлыка. Вероятно, он создан криво, либо не существует в папке " .. path)
+	end
+end
+
+--Вся необходимая информация для иконок
+local function OSIconsInit()
+	if not ECSAPI.OSIcons then
+		--Константы для иконок
+		ECSAPI.OSIcons = {}
+		ECSAPI.pathToIcons = "System/OS/Icons/"
+		ECSAPI.OSIconsWidth = 12
+		ECSAPI.OSIconsHeight = 6
+		--Иконки
+		ECSAPI.OSIcons.folder = image.load(ECSAPI.pathToIcons .. "Folder.png")
+		ECSAPI.OSIcons.script = image.load(ECSAPI.pathToIcons .. "Script.png")
+		ECSAPI.OSIcons.text = image.load(ECSAPI.pathToIcons .. "Text.png")
+		ECSAPI.OSIcons.config = image.load(ECSAPI.pathToIcons .. "Config.png")
+		ECSAPI.OSIcons.lua = image.load(ECSAPI.pathToIcons .. "Lua.png")
+		ECSAPI.OSIcons.image = image.load(ECSAPI.pathToIcons .. "Image.png")
+		ECSAPI.OSIcons.imageJPG = image.load(ECSAPI.pathToIcons .. "ImageJPG.png")
+		ECSAPI.OSIcons.pastebin = image.load(ECSAPI.pathToIcons .. "Pastebin.png")
+		ECSAPI.OSIcons.fileNotExists = image.load(ECSAPI.pathToIcons .. "FileNotExists.png")
+	end
+end
+
+--Отрисовка одной иконки
+function ECSAPI.drawOSIcon(x, y, path, showFileFormat)
+	--Инициализируем переменные иконок. Чисто для уменьшения расхода оперативки.
+	OSIconsInit()
+	--Получаем формат файла
+	local fileFormat = ECSAPI.getFileFormat(path)
+	--Создаем пустую переменную для конкретной иконки, для ее типа
+	local icon
+	--Если данный файл является папкой, то
+	if fs.isDirectory(path) then
+		if fileFormat == ".app" then
+			icon = path .. "/Resources/Icon.png"
+			--Если данной иконки еще нет в оперативке, то загрузить ее
+			if not ECSAPI.OSIcons[icon] then
+				ECSAPI.OSIcons[icon] = image.load(icon)
+			end
+		else
+			icon = "folder"
+		end
+	else
+		if fileFormat == ".lnk" then
+			local shortcutLink = readShortcut(path)
+			drawIcon(x, y, shortcutLink)
+			ECSAPI.colorTextWithBack(x + ECSAPI.OSIconsWidth- 6, y + ECSAPI.OSIconsHeight - 3, 0x000000, 0xffffff, "⤶")
+			return 0
+		elseif fileFormat == ".cfg" or fileFormat == ".config" then
+			icon = "config"
+		elseif fileFormat == ".txt" or fileFormat == ".rtf" then
+			icon = "text"
+		elseif fileFormat == ".lua" then
+		 	icon = "lua"
+		elseif fileFormat == ".png" then
+		 	icon = "image"
+		elseif fileFormat == ".jpg" then
+		 	icon = "imageJPG"
+		elseif fileFormat == ".paste" then
+			icon = "pastebin"
+		elseif not fs.exists(path) then
+			icon = "fileNotExists"
+		else
+			icon = "script"
+		end
+	end
+
+	--Рисуем иконку
+	image.draw(x + 2, y, ECSAPI.OSIcons[icon])
+
+	--Делаем текст для иконки
+	local text = fs.name(path)
+	if not showFileFormat then
+		if fileFormat then
+			text = unicode.sub(text, 1, -(unicode.len(fileFormat) + 1))
+		end
+	end
+	text = ECSAPI.stringLimit("end", text, ECSAPI.OSIconsWidth)
+	--Рассчитываем позицию текста
+	local textPos = x + math.floor(ECSAPI.OSIconsWidth / 2 - unicode.len(text) / 2) + 1
+	--Рисуем текст под иконкой
+	ECSAPI.adaptiveText(x, y + ECSAPI.OSIconsHeight - 1, text, 0xffffff)
+
+end
+
+--ECSAPI.drawOSIcon(2, 2, "Pastebin1.app", true)
+
+----------------------------------------------------------------------------------------------------------------
+
 
 --Описание ниже, ебана
 function ECSAPI.universalWindow(x, y, width, background, closeWindowAfter, ...)
