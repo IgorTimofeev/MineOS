@@ -8,9 +8,7 @@ local transparentSymbol = "#"
 
 --------------------Все, что касается сжатого формата изображений (у нас он назван "JPG")----------------------------------------------------------------------------------
 
--- OC image format .ocif by Pirnogion
--- Спасибо, Пир
--- Охуенный форматик
+--OC image format .ocif by Pirnogion
 local ocif_signature1 = 0x896F6369
 local ocif_signature2 = 0x00661A0A --7 bytes: 89 6F 63 69 66 1A 0A
 local ocif_signature_expand = { string.char(0x89), string.char(0x6F), string.char(0x63), string.char(0x69), string.char(0x66), string.char(0x1A), string.char(0x0A) }
@@ -20,6 +18,20 @@ local NULL_CHAR = 0
 
 local imageAPI = {}
 
+--Выделить бит-терминатор в первом байте utf8 символа: 1100 0010 --> 0010 0000
+local function selectTerminateBit( byte )
+	local x = bit32.band( bit32.bnot(byte), 0x000000FF )
+
+	x = bit32.bor( x, bit32.rshift(x, 1) )
+	x = bit32.bor( x, bit32.rshift(x, 2) )
+	x = bit32.bor( x, bit32.rshift(x, 4) )
+	x = bit32.bor( x, bit32.rshift(x, 8) )
+	x = bit32.bor( x, bit32.rshift(x, 16) )
+
+	return x - bit32.rshift(x, 1)
+end
+
+--Прочитать n байтов из файла, возвращает прочитанные байты как число, если не удалось прочитать, то возвращает 0
 local function readBytes(file, bytes)
   local readedByte = 0
   local readedNumber = 0
@@ -31,7 +43,8 @@ local function readBytes(file, bytes)
   return readedNumber
 end
 
-local function HEXtoRGB(color)
+--Преобразует цвет в hex записи в rgb запись
+function HEXtoRGB(color)
   local rr = bit32.rshift( color, 16 )
   local gg = bit32.rshift( bit32.band(color, 0x00ff00), 8 )
   local bb = bit32.band(color, 0x0000ff)
@@ -39,51 +52,44 @@ local function HEXtoRGB(color)
   return rr, gg, bb
 end
 
+--Подготавливает цвета и символ для записи в файл
 local function encodePixel(hexcolor_fg, hexcolor_bg, char)
 	local rr_fg, gg_fg, bb_fg = HEXtoRGB( hexcolor_fg )
 	local rr_bg, gg_bg, bb_bg = HEXtoRGB( hexcolor_bg )
-	local ascii_char1, ascii_char2 = string.byte( char, 1, 2 )
+	local ascii_char1, ascii_char2, ascii_char3, ascii_char4, ascii_char5, ascii_char6 = string.byte( char, 1, 6 )
 
 	ascii_char1 = ascii_char1 or NULL_CHAR
-	ascii_char2 = ascii_char2 or NULL_CHAR
 
-	return rr_fg, gg_fg, bb_fg, rr_bg, gg_bg, bb_bg, ascii_char1, ascii_char2
+	return rr_fg, gg_fg, bb_fg, rr_bg, gg_bg, bb_bg, ascii_char1, ascii_char2, ascii_char3, ascii_char4, ascii_char5, ascii_char6
 end
 
-local function decodeChar(char1, char2)
-	if ( char1 ~= 0 and char2 ~= 0 ) then
-		return string.char( char1, char2 )
-	elseif ( char1 ~= 0) then
-		return string.char( char1 )
-	elseif ( char2 ~= 0 ) then
-		return string.char( char2 )
-	end
-end
+--Декодирование utf8 символа
+local function decodeChar(file)
+	local first_byte = readBytes(file, 1)
+	local charcode_array = {first_byte}
+	local len = 1
 
---Конвертируем массив классического "сырого" формата в сжатый и оптимизированный
-function image.convertImagetoGroupedImage(PNGMassiv)
-	local newPNGMassiv = { ["backgrounds"] = {} }
-
-	--Перебираем весь массив стандартного PNG-вида по высоте
-	for j = 1, #PNGMassiv do
-		for i = 1, #PNGMassiv[j] do
-			local back = PNGMassiv[j][i][1]
-			local fore = PNGMassiv[j][i][2]
-			local symbol = PNGMassiv[j][i][3]
-
-			newPNGMassiv["backgrounds"][back] = newPNGMassiv["backgrounds"][back] or {}
-			newPNGMassiv["backgrounds"][back][fore] = newPNGMassiv["backgrounds"][back][fore] or {}
-
-			table.insert(newPNGMassiv["backgrounds"][back][fore], {i, j, symbol} )
-
-			back, fore, symbol = nil, nil, nil
-		end
+	local middle = selectTerminateBit(first_byte)
+	if ( middle == 32 ) then
+		len = 2
+	elseif ( middle == 16 ) then 
+		len = 3
+	elseif ( middle == 8 ) then
+		len = 4
+	elseif ( middle == 4 ) then
+		len = 5
+	elseif ( middle == 2 ) then
+		len = 6
 	end
 
-	return newPNGMassiv
+	for i = 1, len-1 do
+		table.insert( charcode_array, readBytes(file, 1) )
+	end
+
+	return string.char( table.unpack( charcode_array ) )
 end
 
---Чтение сжатого формата
+--Чтение из файла, возвращет массив изображения
 local function loadJPG(path)
 	local kartinka = {}
 	local file = io.open(path, "rb")
@@ -104,7 +110,7 @@ local function loadJPG(path)
 			table.insert( kartinka[y], {} )
 			kartinka[y][x][2] = readBytes(file, 3)
 			kartinka[y][x][1] = readBytes(file, 3)
-			kartinka[y][x][3] = decodeChar(readBytes(file, 1), readBytes(file, 1))
+			kartinka[y][x][3] = decodeChar( file )
 		end
 	end
 
@@ -148,8 +154,8 @@ function image.saveJPG(path, kartinka)
 	file:write( string.char( kartinka.height ) )
 	file:write( string.char( kartinka.depth ) )
 
-	for y = 1, kartinka.height do
-		for x = 1, kartinka.width do
+	for y = 1, kartinka.height, 1 do
+		for x = 1, kartinka.width, 1 do
 			local encodedPixel = { encodePixel( kartinka[y][x][2], kartinka[y][x][1], kartinka[y][x][3] ) }
 			for i = 1, #encodedPixel do
 				file:write( string.char( encodedPixel[i] ) )
@@ -273,7 +279,7 @@ end
 --Конвертер из PNG в JPG
 function image.PNGtoJPG(PNGMassiv)
 	local JPGMassiv = PNGMassiv
-	local width, height = #PNGMassiv[1][1], #PNGMassiv[1]
+	local width, height = #PNGMassiv[1], #PNGMassiv
 
 	JPGMassiv.width = width
 	JPGMassiv.height = height
@@ -318,7 +324,7 @@ function image.load(path)
 	if string.lower(fileFormat) == ".jpg" then
 		kartinka["format"] = ".jpg"
 		kartinka["image"] = loadJPG(path)
-	elseif  string.lower(fileFormat) == ".png" then
+	elseif string.lower(fileFormat) == ".png" then
 		kartinka["format"] = ".png"
 		kartinka["image"] = loadPNG(path)
 	else
