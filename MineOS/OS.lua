@@ -137,9 +137,9 @@ end
 -- НАРИСОВАТЬ ВЫДЕЛЕНИЕ ИКОНКИ
 local function drawIconSelection(x, y, nomer)
 	if obj["DesktopIcons"][nomer][6] == true then
-		ecs.square(x - 2, y, widthOfIcon, heightOfIcon, iconsSelectionColor)
+		ecs.square(x, y, widthOfIcon, heightOfIcon, iconsSelectionColor)
 	elseif obj["DesktopIcons"][nomer][6] == false then
-		ecs.square(x - 2, y, widthOfIcon, heightOfIcon, background)
+		ecs.square(x, y, widthOfIcon, heightOfIcon, background)
 	end
 end
 
