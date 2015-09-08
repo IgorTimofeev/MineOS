@@ -214,9 +214,11 @@ function syntax.highlightAndDraw(x, y, limit, text)
 	--Задаем стартовый цвет
 	local currentColor = currentColorScheme.text
 	gpu.setForeground(currentColor)
+	--Небольшой костыль. Зачем нам перебирать кучу символов?
+	if limit >= #massiv then limit = #massiv end
 	--Перебираем все элементы полученного массива
 	local symbol = 1
-	while symbol <= #massiv do
+	while symbol <= limit do
 		--Легкая оптимизация. Меняет цвет текста только в случае несоответствия текущего цвета и цвета из массива
 		if currentColor ~= massiv[symbol].color then currentColor = massiv[symbol].color; gpu.setForeground(massiv[symbol].color) end
 		--Жирная оптимизация. Анализирует ближайшие цвета создает одну строку из массы символов вместо одного символа
@@ -224,7 +226,7 @@ function syntax.highlightAndDraw(x, y, limit, text)
 		--Считаем кол-во последующих символов с таким же цветом, как и у этого
 		local counter = 1
 		--Перебираем все символы с последующего и до конца
-		for nextSymbol = (symbol + 1), #massiv do
+		for nextSymbol = (symbol + 1), limit do
 			--Если цвет последующего равен текущему
 			if massiv[nextSymbol].color == massiv[symbol].color then
 				--То прибавить к строчке следующий символ
@@ -275,6 +277,7 @@ end
 syntax.setColorScheme(colorSchemes.midnight)
 
 --syntax.highlightFileForDebug("highlightText", "midnight")
+syntax.highlightAndDraw(5, 10, 8, "while true do test print() zebal end")
 
 return syntax
 
