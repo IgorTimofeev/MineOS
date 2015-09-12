@@ -1467,7 +1467,22 @@ end
 
 
 
-----------------------------------------------------------------------------------------------------------------
+-------------------------ВСЕ ДЛЯ ОСКИ-------------------------------------------------------------------------------
+
+--То, что не нужно отрисовывать
+local systemFiles = {
+	"bin/",
+	"lib/",
+	"OS.lua",
+	"autorun.lua",
+	"init.lua",
+	"tmp/",
+	"usr/",
+	"mnt/",
+	"etc/",
+	"boot/",
+	--"System/",
+}
 
 -- Потная штучка, надо будет перекодить - а то странно выглядит, да и условия идиотские
 function ECSAPI.reorganizeFilesAndFolders(massivSudaPihay, showHiddenFiles, showSystemFiles)
@@ -1475,14 +1490,14 @@ function ECSAPI.reorganizeFilesAndFolders(massivSudaPihay, showHiddenFiles, show
 	local massiv = {}
 
 	for i = 1, #massivSudaPihay do
-		if ecs.isFileHidden(massivSudaPihay[i]) and showHiddenFiles then
+		if ECSAPI.isFileHidden(massivSudaPihay[i]) and showHiddenFiles then
 			table.insert(massiv, massivSudaPihay[i])
 		end
 	end
 
 	for i = 1, #massivSudaPihay do
 		local cyka = massivSudaPihay[i]
-		if fs.isDirectory(cyka) and not ecs.isFileHidden(cyka) and ecs.getFileFormat(cyka) ~= ".app" then
+		if fs.isDirectory(cyka) and not ECSAPI.isFileHidden(cyka) and ECSAPI.getFileFormat(cyka) ~= ".app" then
 			table.insert(massiv, cyka)
 		end
 		cyka = nil
@@ -1490,7 +1505,7 @@ function ECSAPI.reorganizeFilesAndFolders(massivSudaPihay, showHiddenFiles, show
 
 	for i = 1, #massivSudaPihay do
 		local cyka = massivSudaPihay[i]
-		if (not fs.isDirectory(cyka) and not ecs.isFileHidden(cyka)) or (fs.isDirectory(cyka) and not ecs.isFileHidden(cyka) and ecs.getFileFormat(cyka) == ".app") then
+		if (not fs.isDirectory(cyka) and not ECSAPI.isFileHidden(cyka)) or (fs.isDirectory(cyka) and not ECSAPI.isFileHidden(cyka) and ECSAPI.getFileFormat(cyka) == ".app") then
 			table.insert(massiv, cyka)
 		end
 		cyka = nil
@@ -1499,13 +1514,13 @@ function ECSAPI.reorganizeFilesAndFolders(massivSudaPihay, showHiddenFiles, show
 
 	if not showSystemFiles then
 		if workPath == "" or workPath == "/" then
-			--ecs.error("Сработало!")
+			--ECSAPI.error("Сработало!")
 			local i = 1
 			while i <= #massiv do
 				for j = 1, #systemFiles do
-					--ecs.error("massiv[i] = " .. massiv[i] .. ", systemFiles[j] = "..systemFiles[j])
+					--ECSAPI.error("massiv[i] = " .. massiv[i] .. ", systemFiles[j] = "..systemFiles[j])
 					if massiv[i] == systemFiles[j] then
-						--ecs.error("Удалено! massiv[i] = " .. massiv[i] .. ", systemFiles[j] = "..systemFiles[j])
+						--ECSAPI.error("Удалено! massiv[i] = " .. massiv[i] .. ", systemFiles[j] = "..systemFiles[j])
 						table.remove(massiv, i)
 						i = i - 1
 						break
