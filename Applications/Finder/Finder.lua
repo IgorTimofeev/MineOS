@@ -3,6 +3,7 @@ local event = require("event")
 local fs = require("filesystem")
 local context = require("context")
 local unicode = require("unicode")
+local seri = require("serialization")
 local gpu = c.gpu
 
 local filemanager = {}
@@ -26,8 +27,9 @@ local colors = {
 local leftBar = {
 	{"Title", "Избранное"},
 	{"Element", "Root", ""},
-	{"Element", "Icons", "System/OS/Icons"},
-	{"Element", "Pastebin", "System/Pastebin"},
+	{"Element", "Libraries", "lib/"},
+	{"Element", "Applications", "bin/"},
+	{"Element", "System", "System/"},
 	{"Title", "", ""},
 	{"Title", "Диски"},
 }
@@ -39,7 +41,8 @@ local currentWorkPathHistoryElement = 1
 
 local x, y, width, height, yEnd, xEnd, heightOfTopBar, widthOfLeftBar, heightOfLeftBar, yLeftBar, widthOfMain, xMain
 local widthOfBottom, widthOfIcon, heightOfIcon, xSpaceBetweenIcons, ySpaceBetweenIcons, xCountOfIcons, yCountOfIcons
-local fileList, fromLine
+local fileList, fromLine, fromLineLeftBar = nil, 1, 1
+local clipboard
 
 ------------------------------------------------------------------------------------------------------------------
 
@@ -72,7 +75,14 @@ local function chkdsk()
 		if leftBar[position][1] == "Title" then break end
 	end
 
+	fromLineLeftBar = 1
 	createDisks()
+end
+
+--Получить файловый список
+local function getFileList(path)
+	fileList = ecs.getFileList(path)
+	fileList = ecs.reorganizeFilesAndFolders(fileList, true, true)
 end
 
 --Перейти в какую-то папку
@@ -88,7 +98,7 @@ local function changePath(path)
 	--Текущий элемент равен последнему
 	currentWorkPathHistoryElement = #workPathHistory
 	--Получаем список файлов текущей директории
-	fileList = ecs.getFileList(workPathHistory[currentWorkPathHistoryElement])
+	getFileList(workPathHistory[currentWorkPathHistoryElement])
 end
 
 --Считаем размеры всего
@@ -208,32 +218,36 @@ end
 local function drawLeftBar()
 	obj["Favorites"] = {}
 	--Рисуем подложку лефтбара
-	ecs.square(x, yLeftBar, widthOfLeftBar, heightOfLeftBar, colors.leftBar)
+	ecs.srollBar(x + widthOfLeftBar - 1, yLeftBar, 1, heightOfLeftBar, #leftBar, fromLineLeftBar, colors.topBar, ecs.colors.blue)
+	ecs.square(x, yLeftBar, widthOfLeftBar - 1, heightOfLeftBar, colors.leftBar)
 	--Коорды
 	local xPos, yPos, limit = x + 1, yLeftBar, widthOfLeftBar - 3
 
 	--Перебираем массив лефтбара
-	for i = 1, #leftBar do
-		--Рисуем заголовок
-		if leftBar[i][1] == "Title" then
-			ecs.colorText(xPos, yPos, colors.leftBarHeader, leftBar[i][2])
-		else
-			--Делаем сразу строку
-			local text = ecs.stringLimit("end", leftBar[i][2], limit)
-			--Если текущий путь сопадает с путем фаворитса
-			if leftBar[i][3] == workPathHistory[currentWorkPathHistoryElement] then
-				ecs.square(x, yPos, widthOfLeftBar, 1, colors.leftBarSelection)
-				ecs.colorText(xPos + 1, yPos, 0xffffff, text )
-				gpu.setBackground(colors.leftBar)
+	for i = fromLineLeftBar, (heightOfLeftBar + fromLineLeftBar - 1) do
+		--Если в лефтбаре такой вообще существует вещ
+		if leftBar[i] then
+			--Рисуем заголовок
+			if leftBar[i][1] == "Title" then
+				ecs.colorText(xPos, yPos, colors.leftBarHeader, leftBar[i][2])
 			else
-				ecs.colorText(xPos + 1, yPos,  colors.leftBarList,text )
+				--Делаем сразу строку
+				local text = ecs.stringLimit("end", leftBar[i][2], limit)
+				--Если текущий путь сопадает с путем фаворитса
+				if leftBar[i][3] == workPathHistory[currentWorkPathHistoryElement] then
+					ecs.square(x, yPos, widthOfLeftBar - 1, 1, colors.leftBarSelection)
+					ecs.colorText(xPos + 1, yPos, 0xffffff, text )
+					gpu.setBackground(colors.leftBar)
+				else
+					ecs.colorText(xPos + 1, yPos,  colors.leftBarList,text )
+				end
+
+				newObj("Favorites", i, x, yPos, x + widthOfLeftBar - 1, yPos, leftBar[i][3])
+				
 			end
 
-			newObj("Favorites", i, x, yPos, x + widthOfLeftBar - 1, yPos, leftBar[i][3])
-			
+			yPos = yPos + 1
 		end
-
-		yPos = yPos + 1
 	end
 end
 
@@ -330,12 +344,12 @@ function filemanager.draw(xStart, yStart, widthOfManager, heightOfManager, start
 					else
 						if fs.isDirectory(path) then
 							if fileFormat ~= ".app" then
-								action = context.menu(e[3], e[4], {"Добавить в избранное"},"-", {"Вырезать", false, "^X"}, {"Копировать", false, "^C"}, {"Вставить", true, "^V"}, "-", {"Переименовать"}, {"Создать ярлык"}, "-", {"Добавить в архив", true}, "-", {"Удалить", false, "⌫"})
+								action = context.menu(e[3], e[4], {"Добавить в избранное"},"-", {"Вырезать", false, "^X"}, {"Копировать", false, "^C"}, {"Вставить", (clipboard == nil), "^V"}, "-", {"Переименовать"}, {"Создать ярлык"}, "-", {"Добавить в архив", true}, "-", {"Удалить", false, "⌫"})
 							else
-								action = context.menu(e[3], e[4], {"Показать содержимое"}, {"Добавить в избранное"},"-", {"Вырезать", false, "^X"}, {"Копировать", false, "^C"}, {"Вставить", true, "^V"}, "-", {"Переименовать"}, {"Создать ярлык"}, "-", {"Добавить в архив", true}, "-", {"Удалить", false, "⌫"})
+								action = context.menu(e[3], e[4], {"Показать содержимое"}, {"Добавить в избранное"},"-", {"Вырезать", false, "^X"}, {"Копировать", false, "^C"}, {"Вставить", (clipboard == nil), "^V"}, "-", {"Переименовать"}, {"Создать ярлык"}, "-", {"Добавить в архив", true}, "-", {"Удалить", false, "⌫"})
 							end
 						else
-							action = context.menu(e[3], e[4], {"Вырезать", false, "^X"}, {"Копировать", false, "^C"}, {"Вставить", true, "^V"}, "-", {"Переименовать"}, {"Создать ярлык"}, "-", {"Добавить в архив", true}, {"Загрузить на Pastebin", true}, "-", {"Удалить", false, "⌫"})
+							action = context.menu(e[3], e[4], {"Вырезать", false, "^X"}, {"Копировать", false, "^C"}, {"Вставить", (clipboard == nil), "^V"}, "-", {"Переименовать"}, {"Создать ярлык"}, "-", {"Добавить в архив", true}, {"Загрузить на Pastebin", true}, "-", {"Удалить", false, "⌫"})
 						end
 
 						--АналИз действия
@@ -345,6 +359,25 @@ function filemanager.draw(xStart, yStart, widthOfManager, heightOfManager, start
 							drawMain(fromLine)
 						elseif action == "Показать содержимое" then
 							changePath(path)
+							drawAll()
+						elseif action == "Копировать" then
+							clipboard = path
+							drawAll()
+						elseif action == "Вставить" then
+							ecs.copy(clipboard, fs.path(path) or "")
+							getFileList(fs.path(path) or "")
+							drawAll()
+						elseif action == "Удалить" then
+							fs.remove(path)
+							getFileList(fs.path(path) or "")
+							drawAll()
+						elseif action == "Переименовать" then
+							ecs.rename(path)
+							getFileList(fs.path(path) or "")
+							drawAll()
+						elseif action == "Создать ярлык" then
+							ecs.createShortCut(fs.path(path).."/"..ecs.hideFileFormat(fs.name(path))..".lnk", path)
+							getFileList(fs.path(path) or "")
 							drawAll()
 						else
 							drawAll()
@@ -447,15 +480,32 @@ function filemanager.draw(xStart, yStart, widthOfManager, heightOfManager, start
 			drawAll()
 
 		elseif e[1] == "scroll" then
-			if e[5] == 1 then
-				if fromLine > 1 then
-					fromLine = fromLine - 1 
-					drawMain(fromLine)
+			--Если скроллим в зоне иконок
+			if ecs.clickedAtArea(e[3], e[4], xMain, yLeftBar, xEnd, yEnd - 1) then
+				if e[5] == 1 then
+					if fromLine > 1 then
+						fromLine = fromLine - 1 
+						drawMain(fromLine)
+					end
+				else
+					if fromLine < (math.ceil(#fileList / xCountOfIcons)) then
+						fromLine = fromLine + 1 
+						drawMain(fromLine)
+					end
 				end
-			else
-				if fromLine < (math.ceil(#fileList / xCountOfIcons)) then
-					fromLine = fromLine + 1 
-					drawMain(fromLine)
+
+			--А если в зоне лефтбара
+			elseif ecs.clickedAtArea(e[3], e[4], x, yLeftBar, x + widthOfLeftBar - 1, yEnd) then
+				if e[5] == 1 then
+					if fromLineLeftBar > 1 then
+						fromLineLeftBar = fromLineLeftBar - 1 
+						drawLeftBar()
+					end
+				else
+					if fromLineLeftBar < #leftBar then
+						fromLineLeftBar = fromLineLeftBar  + 1 
+						drawLeftBar()
+					end
 				end
 			end
 		end
@@ -465,7 +515,7 @@ end
 ------------------------------------------------------------------------------------------------------------------
 
 ecs.prepareToExit()
-filemanager.draw("auto", "auto", 84, 28, "System/OS/Icons")
+filemanager.draw("auto", "auto", 84, 28, "")
 -- local xSize, ySize = gpu.getResolution()
 -- filemanager.draw(1, 1, xSize, ySize, "")
 
