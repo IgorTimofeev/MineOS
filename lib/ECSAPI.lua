@@ -200,6 +200,7 @@ function ECSAPI.invertColor(color)
   return 0xffffff - color
 end
 
+--
 --АДАПТИВНЫЙ ТЕКСТ, ПОДСТРАИВАЮЩИЙСЯ ПОД ФОН
 function ECSAPI.adaptiveText(x,y,text,textColor)
   gpu.setForeground(textColor)
@@ -1489,6 +1490,15 @@ end
 
 ----------------------------------------------------------------------------------------------------------------
 
+--Создать ярлык для конкретной проги
+function ECSAPI.createShortCut(path, pathToProgram)
+	fs.remove(path)
+	fs.makeDirectory(fs.path(path))
+	local file = io.open(path, "w")
+	file:write("return ", "\"", pathToProgram, "\"")
+	file:close()
+end
+
 --Получить данные о файле из ярлыка
 function ECSAPI.readShortcut(path)
 	local success, filename = pcall(loadfile(path))
@@ -1496,6 +1506,47 @@ function ECSAPI.readShortcut(path)
 		return filename
 	else
 		error("Ошибка чтения файла ярлыка. Вероятно, он создан криво, либо не существует в папке " .. path)
+	end
+end
+
+-- Копирование папки через рекурсию, т.к. fs.copy() не поддерживает папки
+-- Ну долбоеб автор мода - хули я тут сделаю? Придется так вот
+-- swg2you, привет маме ;)
+function ECSAPI.copyFolder(path, toPath)
+	local function doCopy(path)
+		local fileList = ecs.getFileList(path)
+		for i = 1, #fileList do
+			if fs.isDirectory(path..fileList[i]) then
+				doCopy(path..fileList[i])
+			else
+				fs.makeDirectory(toPath..path)
+				fs.copy(path..fileList[i], toPath ..path.. fileList[i])
+			end
+		end
+	end
+
+	toPath = fs.path(toPath)
+	doCopy(path.."/")
+end
+
+--Копирование файлов для операционки
+function ECSAPI.copy(from, to)
+	local name = fs.name(from)
+	local toName = to .. "/" .. name
+	local action = ECSAPI.askForReplaceFile(toName)
+	if action == nil or action == "replace" then
+		fs.remove(toName)
+		if fs.isDirectory(from) then
+			ECSAPI.copyFolder(from, toName)
+		else
+			fs.copy(from, toName)
+		end
+	elseif action == "keepBoth" then
+		if fs.isDirectory(from) then
+			ECSAPI.copyFolder(from, to .. "/(copy)" .. name)
+		else
+			fs.copy(from, to .. "/(copy)" .. name)
+		end	
 	end
 end
 
@@ -1624,7 +1675,7 @@ function ECSAPI.launchIcon(path, arguments)
 	elseif fileFormat == ".lnk" then
 		local shortcutLink = ECSAPI.readShortcut(path)
 		if fs.exists(shortcutLink) then
-			launchIcon(shortcutLink)
+			ECSAPI.launchIcon(shortcutLink)
 		else
 			ECSAPI.error("File from shortcut link doesn't exists.")
 		end
