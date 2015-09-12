@@ -1493,7 +1493,7 @@ end
 -- swg2you, привет маме ;)
 function ECSAPI.copyFolder(path, toPath)
 	local function doCopy(path)
-		local fileList = ecs.getFileList(path)
+		local fileList = ECSAPI.getFileList(path)
 		for i = 1, #fileList do
 			if fs.isDirectory(path..fileList[i]) then
 				doCopy(path..fileList[i])
