@@ -1169,27 +1169,6 @@ function ECSAPI.askForReplaceFile(path)
 	end
 end
 
--- --Копирование файлов для операционки
--- function ECSAPI.copy(from, to)
--- 	local name = fs.name(from)
--- 	local toName = to.."/"..name
--- 	local action = ECSAPI.askForReplaceFile(toName)
--- 	if action == nil or action == "replace" then
--- 		fs.remove(toName)
--- 		if fs.isDirectory(from) then
--- 			ECSAPI.error("Копирование папок отключено во избежание перегрузки файловой системы. Мод говно, смирись.")
--- 		else
--- 			fs.copy(from, toName)
--- 		end
--- 	elseif action == "keepBoth" then
--- 		if fs.isDirectory(from) then
--- 			ECSAPI.error("Копирование папок отключено во избежание перегрузки файловой системы. Мод говно, смирись.")
--- 		else
--- 			fs.copy(from, fs.path(toName) .. "/(copy)"..fs.name(toName))
--- 		end	
--- 	end
--- end
-
 --Переименование файлов для операционки
 function ECSAPI.rename(mainPath)
 	local name = fs.name(mainPath)
