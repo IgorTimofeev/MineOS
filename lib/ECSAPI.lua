@@ -1175,7 +1175,7 @@ function ECSAPI.rename(mainPath)
 	path = fs.path(mainPath)
 
 	--Рисуем окошко ввода нового имени файла
-	local inputs = ECSAPI.input("auto", "auto", 20, " ", {"input", "Новое имя", name})
+	local inputs = ECSAPI.universalWindow("auto", "auto", 30, ECSAPI.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Переименовать"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, name}, {"EmptyLine"}, {"Button", 0xbbbbbb, 0xffffff, "Ok!"})
 	
 	--Если ввели в окошко хуйню какую-то
 	if inputs[1] == "" or inputs[1] == " " or inputs[1] == nil then
