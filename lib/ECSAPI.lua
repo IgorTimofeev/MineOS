@@ -1225,6 +1225,45 @@ function ECSAPI.rename(mainPath)
 	end
 end
 
+--Создать новую папку
+function ECSAPI.newFolder(path)
+	--Рисуем окошко ввода нового имени файла
+	local inputs = ECSAPI.universalWindow("auto", "auto", 30, ECSAPI.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Новая папка"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, name}, {"EmptyLine"}, {"Button", 0xbbbbbb, 0xffffff, "Ok!"})
+
+	--Если ввели в окошко хуйню какую-то
+	if inputs[1] == "" or inputs[1] == " " or inputs[1] == nil then
+		ECSAPI.error("Неверное имя файла.")
+	else
+		--Если файл с новым путем уже существует
+		if fs.exists(path.."/"..inputs[1]) then
+			ECSAPI.error("Файл \"".. inputs[1] .. "\" уже имеется в этом месте.")
+			return
+		else
+			fs.makeDirectory(path.."/"..inputs[1])
+		end
+	end
+end
+
+--Создать новый файл
+function ECSAPI.newFile(path)
+	--Рисуем окошко ввода нового имени файла
+	local inputs = ECSAPI.universalWindow("auto", "auto", 30, ECSAPI.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Новый файл"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, name}, {"EmptyLine"}, {"Button", 0xbbbbbb, 0xffffff, "Ok!"})
+
+	--Если ввели в окошко хуйню какую-то
+	if inputs[1] == "" or inputs[1] == " " or inputs[1] == nil then
+		ECSAPI.error("Неверное имя файла.")
+	else
+		--Если файл с новым путем уже существует
+		if fs.exists(path.."/"..inputs[1]) then
+			ECSAPI.error("Файл \"".. inputs[1] .. "\" уже имеется в этом месте.")
+			return
+		else
+			ECSAPI.prepareToExit()
+			ECSAPI.editFile(path.."/"..inputs[1])
+		end
+	end
+end
+
 --Простое информационное окошечко
 function ECSAPI.info(x, y, title, text)
 	x = x or "auto"
