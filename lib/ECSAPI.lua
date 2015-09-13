@@ -1228,7 +1228,7 @@ end
 --Создать новую папку
 function ECSAPI.newFolder(path)
 	--Рисуем окошко ввода нового имени файла
-	local inputs = ECSAPI.universalWindow("auto", "auto", 30, ECSAPI.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Новая папка"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, name}, {"EmptyLine"}, {"Button", 0xbbbbbb, 0xffffff, "Ok!"})
+	local inputs = ECSAPI.universalWindow("auto", "auto", 30, ECSAPI.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Новая папка"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, ""}, {"EmptyLine"}, {"Button", 0xbbbbbb, 0xffffff, "Ok!"})
 
 	--Если ввели в окошко хуйню какую-то
 	if inputs[1] == "" or inputs[1] == " " or inputs[1] == nil then
@@ -1247,7 +1247,7 @@ end
 --Создать новый файл
 function ECSAPI.newFile(path)
 	--Рисуем окошко ввода нового имени файла
-	local inputs = ECSAPI.universalWindow("auto", "auto", 30, ECSAPI.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Новый файл"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, name}, {"EmptyLine"}, {"Button", 0xbbbbbb, 0xffffff, "Ok!"})
+	local inputs = ECSAPI.universalWindow("auto", "auto", 30, ECSAPI.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Новый файл"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, ""}, {"EmptyLine"}, {"Button", 0xbbbbbb, 0xffffff, "Ok!"})
 
 	--Если ввели в окошко хуйню какую-то
 	if inputs[1] == "" or inputs[1] == " " or inputs[1] == nil then
