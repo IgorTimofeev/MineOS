@@ -401,6 +401,38 @@ function ECSAPI.getFileTree(path)
 	return massiv
 end
 
+--Поиск по файловой системе
+function ECSAPI.find(path, cheBudemIskat)
+	--Массив, в котором будут находиться все найденные соответствия
+	local massivNaydennogoGovna = {}
+	--Костыль, но удобный
+	local function dofind(path, cheBudemIskat)
+		--Получаем список файлов в директории
+		local list = ecs.getFileList(path)
+		--Перебираем все элементы файл листа
+		for key, file in pairs(list) do
+			--Путь к файлу
+			local pathToFile = path..file
+			--Если нашло совпадение в имени файла, то выдает путь к этому файлу
+			if string.find(unicode.lower(file), unicode.lower(cheBudemIskat)) then
+				table.insert(massivNaydennogoGovna, pathToFile)
+			end
+			--Анализ, что делать дальше
+			if fs.isDirectory(pathToFile) then
+				dofind(pathToFile, cheBudemIskat)
+			end
+			--Очищаем оперативку
+			pathToFile = nil
+		end
+		--Очищаем оперативку
+		list = nil
+	end
+	--Выполняем функцию
+	dofind(path, cheBudemIskat)
+	--Возвращаем, че нашло
+	return massivNaydennogoGovna
+end
+
 --ПОЛУЧЕНИЕ ФОРМАТА ФАЙЛА
 function ECSAPI.getFileFormat(path)
 	local name = fs.name(path)
