@@ -24,15 +24,8 @@ local colors = {
 	selection = 0x555555,
 }
 
-local leftBar = {
-	{"Title", "Избранное"},
-	{"Element", "Root", ""},
-	{"Element", "Libraries", "lib/"},
-	{"Element", "Applications", "bin/"},
-	{"Element", "System", "System/"},
-	{"Title", "", ""},
-	{"Title", "Диски"},
-}
+local leftBar
+local pathToConfig = "System/Finder/Config.cfg"
 
 local lang = {}
 
@@ -42,9 +35,45 @@ local currentWorkPathHistoryElement = 1
 local x, y, width, height, yEnd, xEnd, heightOfTopBar, widthOfLeftBar, heightOfLeftBar, yLeftBar, widthOfMain, xMain
 local widthOfBottom, widthOfIcon, heightOfIcon, xSpaceBetweenIcons, ySpaceBetweenIcons, xCountOfIcons, yCountOfIcons
 local fileList, fromLine, fromLineLeftBar = nil, 1, 1
-local clipboard
+local clipboard, showSystemFiles, showHiddenFiles, showFileFormat
 
 ------------------------------------------------------------------------------------------------------------------
+
+--Сохраняем все настроечки вот тут вот
+local function saveConfig()
+	fs.makeDirectory(fs.path(pathToConfig))
+	local file = io.open(pathToConfig, "w")
+	file:write(seri.serialize( { ["leftBar"] = leftBar, ["showHiddenFiles"] = showHiddenFiles, ["showSystemFiles"] = showSystemFiles, ["showFileFormat"] = showFileFormat }))
+	file:close()
+end
+
+--Загрузка конфига
+local function loadConfig()
+	if fs.exists(pathToConfig) then
+		local file = io.open(pathToConfig, "r")
+		local readedConfig = file:read("*a")
+		file:close()
+		readedConfig = seri.unserialize(readedConfig)
+		leftBar = readedConfig.leftBar
+		showFileFormat = readedConfig.showFileFormat
+		showSystemFiles = readedConfig.showSystemFiles
+		showHiddenFiles = readedConfig.showHiddenFiles
+	else
+		leftBar = {
+			{"Title", "Избранное"},
+			{"Element", "Root", ""},
+			{"Element", "Libraries", "lib/"},
+			{"Element", "Applications", "bin/"},
+			{"Element", "System", "System/"},
+			{"Title", "", ""},
+			{"Title", "Диски"},
+		}
+		showFileFormat = true
+		showSystemFiles = true
+		showHiddenFiles = true
+		saveConfig()
+	end
+end
 
 --СОЗДАНИЕ ОБЪЕКТОВ
 local obj = {}
@@ -61,7 +90,6 @@ local function createDisks()
 		table.insert(leftBar, #leftBar + 1, {"Element", fileList[i], path .. fileList[i]})
 	end
 end
-createDisks()
 
 --Короч такая хуйня, смари. Сюда пихаешь ID диска. И если в файл листе дисков
 --такой уже имеется, то удаляется старый, а если не имеется, то добавляется новый
@@ -298,6 +326,11 @@ end
 
 --Главная функция
 function filemanager.draw(xStart, yStart, widthOfManager, heightOfManager, startPath)
+	--Загружаем конфигурационный файл
+	loadConfig()
+	--Создаем дисковую парашу там вон
+	chkdsk()
+	--Задаем стартовые размеры
 	width = widthOfManager
 	height = heightOfManager
 	--Задаем стартовый путь
@@ -437,6 +470,7 @@ function filemanager.draw(xStart, yStart, widthOfManager, heightOfManager, start
 					if key == 1 then
 						ecs.colorTextWithBack(obj["Closes"][key][1], obj["Closes"][key][2], ecs.colors.blue, colors.topBar, "⮾")
 						os.sleep(0.2)
+						saveConfig()
 						if isFullScreen then
 							ecs.drawOldPixels(oldPixelsOfFullScreen)
 						else
