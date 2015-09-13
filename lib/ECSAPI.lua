@@ -1587,6 +1587,11 @@ function ECSAPI.readShortcut(path)
 	end
 end
 
+--Редактирование файла
+function ECSAPI.editFile(path)
+	shell.execute("edit "..path)
+end
+
 -- Копирование папки через рекурсию, т.к. fs.copy() не поддерживает папки
 -- Ну долбоеб автор мода - хули я тут сделаю? Придется так вот
 -- swg2you, привет маме ;)
