@@ -926,13 +926,10 @@ while true do
 							local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Сохранить как"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, "Путь"}, {"Selector", 0x262626, 0x880000, "PNG", "JPG"}, {"EmptyLine"}, {"Button", 0xbbbbbb, 0xffffff, "OK!"})
 
 							if data[1] == "" or data[1] == " " or data[1] == nil then data[1] = "NewImage" end
-							if data[2] == "" or data[2] == " " or data[2] == nil then data[2] = ".png" end
-							
-							ecs.error("data1 = "..data[1]..", data2 = "..data[2])
+								
+							data[2] = "."..string.lower(data[2])
 
 							data[1] = data[1]..data[2]
-
-
 
 							currentFile = data[1]
 							save(currentFile, data[2])
