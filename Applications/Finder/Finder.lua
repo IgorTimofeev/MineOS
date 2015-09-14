@@ -569,7 +569,7 @@ end
 
 ------------------------------------------------------------------------------------------------------------------
 
-ecs.prepareToExit()
+--ecs.prepareToExit()
 filemanager.draw("auto", "auto", 84, 28, "")
 -- local xSize, ySize = gpu.getResolution()
 -- filemanager.draw(1, 1, xSize, ySize, "")
