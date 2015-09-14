@@ -1664,6 +1664,22 @@ function ECSAPI.editFile(path)
 	shell.execute("edit "..path)
 end
 
+--Форматировать диск
+function ECSAPI.formatHDD(address)
+	local proxy = component.proxy(address)
+	local list = proxy.list(path)
+	for file in list do
+		if not proxy.isReadOnly(file) then proxy.remove(file) end
+	end
+	list = nil
+end
+
+--Установить имя жесткого диска
+function ECSAPI.setLabelToHDD(address, label)
+	local proxy = component.proxy(address)
+	proxy.setLabel(label or "Untitled")
+end
+
 -- Копирование папки через рекурсию, т.к. fs.copy() не поддерживает папки
 -- Ну долбоеб автор мода - хули я тут сделаю? Придется так вот
 -- swg2you, привет маме ;)
