@@ -1667,7 +1667,7 @@ end
 --Форматировать диск
 function ECSAPI.formatHDD(address)
 	local proxy = component.proxy(address)
-	local list = proxy.list(path)
+	local list = proxy.list("")
 	for file in list do
 		if not proxy.isReadOnly(file) then proxy.remove(file) end
 	end
@@ -1675,7 +1675,7 @@ function ECSAPI.formatHDD(address)
 end
 
 --Установить имя жесткого диска
-function ECSAPI.setLabelToHDD(address, label)
+function ECSAPI.setHDDLabel(address, label)
 	local proxy = component.proxy(address)
 	proxy.setLabel(label or "Untitled")
 end
