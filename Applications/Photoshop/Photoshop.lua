@@ -927,7 +927,12 @@ while true do
 
 							if data[1] == "" or data[1] == " " or data[1] == nil then data[1] = "NewImage" end
 							if data[2] == "" or data[2] == " " or data[2] == nil then data[2] = ".png" end
+							
+							ecs.error("data1 = "..data[1]..", data2 = "..data[2])
+
 							data[1] = data[1]..data[2]
+
+
 
 							currentFile = data[1]
 							save(currentFile, data[2])
