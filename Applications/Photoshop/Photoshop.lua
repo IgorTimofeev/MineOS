@@ -923,7 +923,7 @@ while true do
 						
 						if action == "Сохранить как" then
 							
-							local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Сохранить как"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, "Путь"}, {"Selector", 0x262626, 0x880000, "PNG", "JPG"}, {"Button", 0xbbbbbb, 0xffffff, "OK!"})
+							local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Сохранить как"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, "Путь"}, {"Selector", 0x262626, 0x880000, "PNG", "JPG"}, {"EmptyLine"}, {"Button", 0xbbbbbb, 0xffffff, "OK!"})
 
 							if data[1] == "" or data[1] == " " or data[1] == nil then data[1] = "NewImage" end
 							if data[2] == "" or data[2] == " " or data[2] == nil then data[2] = ".png" end
@@ -933,9 +933,10 @@ while true do
 							save(currentFile, data[2])
 							consoleText = "Файл сохранен как "..currentFile
 							console(7, ySize)
+						
 						elseif action == "Открыть" then
 
-							local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Открыть"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, "Путь"}, {"Button", 0xbbbbbb, 0xffffff, "OK!"})
+							local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Открыть"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, "Путь"}, {"EmptyLine"}, {"Button", 0xbbbbbb, 0xffffff, "OK!"})
 
 							if data[1] ~= "" and data[1] ~= " " and data[1] ~= nil then
 								if fs.exists(data[1]) then
