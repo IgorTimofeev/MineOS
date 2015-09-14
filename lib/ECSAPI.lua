@@ -1668,8 +1668,11 @@ end
 function ECSAPI.formatHDD(address)
 	local proxy = component.proxy(address)
 	local list = proxy.list("")
+	ECSAPI.info("auto", "auto", "", "Formatting disk...")
 	for _, file in pairs(list) do
-		if not proxy.isReadOnly(file) then proxy.remove(file) end
+		if type(file) == "string" then
+			if not proxy.isReadOnly(file) then proxy.remove(file) end
+		end
 	end
 	list = nil
 end
