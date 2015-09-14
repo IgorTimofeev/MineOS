@@ -70,6 +70,24 @@ function ECSAPI.getInfoAboutRAM()
 	return free, total, used
 end
 
+--Получить информацию о жестких дисках
+function ECSAPI.getHDDs()
+	local candidates = {}
+	for address in component.list("filesystem") do
+	  local proxy = component.proxy(address)
+	  if proxy.address ~= computer.tmpAddress() and proxy.getLabel() ~= "internet" then
+	    table.insert(candidates, {
+	    	["spaceTotal"] = math.floor(proxy.spaceTotal() / 1024),
+	    	["spaceUsed"] = math.ceil(proxy.spaceUsed() / 1024),
+	    	["label"] = proxy.getLabel(),
+	    	["address"] = address,
+	    	["isReadOnly"] = proxy.isReadOnly,
+	    })
+	  end
+	end
+	return candidates
+end
+
 --МАСШТАБ МОНИТОРА
 function ECSAPI.setScale(scale, debug)
 	--КОРРЕКЦИЯ МАСШТАБА, ЧТОБЫ ВСЯКИЕ ДАУНЫ НЕ ДЕЛАЛИ ТОГО, ЧЕГО НЕ СЛЕДУЕТ
@@ -979,17 +997,6 @@ function ECSAPI.input(x, y, limit, title, ...)
 	ECSAPI.drawOldPixels(oldPixels)
 
 	return getMassiv()
-end
-
-function ECSAPI.getHDDs()
-	local candidates = {}
-	for address in component.list("filesystem") do
-	  local dev = component.proxy(address)
-	  if not dev.isReadOnly() and dev.address ~= computer.tmpAddress() and fs.get(os.getenv("_")).address then
-	    table.insert(candidates, dev)
-	  end
-	end
-	return candidates
 end
 
 function ECSAPI.parseErrorMessage(error, translate)
