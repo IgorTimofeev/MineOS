@@ -80,7 +80,7 @@ function ECSAPI.getHDDs()
 	    	["spaceTotal"] = math.floor(proxy.spaceTotal() / 1024),
 	    	["spaceUsed"] = math.ceil(proxy.spaceUsed() / 1024),
 	    	["label"] = proxy.getLabel(),
-	    	["address"] = address,
+	    	["address"] = proxy.address,
 	    	["isReadOnly"] = proxy.isReadOnly,
 	    })
 	  end
