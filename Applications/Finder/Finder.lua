@@ -96,11 +96,11 @@ end
 local function chkdsk()
 	local position = #leftBar
 	while true do
+		if leftBar[position][1] == "Title" then break end
 		--Анализ
 		table.remove(leftBar, position)
 		--Постанализ
 		position = position - 1
-		if leftBar[position][1] == "Title" then break end
 	end
 
 	fromLineLeftBar = 1
@@ -347,11 +347,13 @@ function filemanager.draw(xStart, yStart, widthOfManager, heightOfManager, start
 	--Рисуем вообще все
 	drawAll()
 
+	local clickedOnEmptySpace
 	while true do
 		local e = {event.pull()}
 		if e[1] == "touch" then
 			--Переменная, становящаяся ложью только в случае клика на какой-либо элемент, не суть какой
-			local clickedOnEmptySpace = true
+			clickedOnEmptySpace = true
+			
 			--Перебираем иконки
 			for key in pairs(obj["Icons"]) do
 				if ecs.clickedAtArea(e[3], e[4], obj["Icons"][key][1], obj["Icons"][key][2], obj["Icons"][key][3], obj["Icons"][key][4]) then
@@ -421,6 +423,25 @@ function filemanager.draw(xStart, yStart, widthOfManager, heightOfManager, start
 					--Кликнули не в жопу!
 					clickedOnEmptySpace = false
 					break
+				end
+			end
+
+			--ВНИМАНИЕ: ЖОПА!!!!
+			--КЛИКНУЛИ В ЖОПУ!!!!!!
+			if ecs.clickedAtArea(e[3], e[4], xMain, yLeftBar, xEnd, yEnd - 1) and clickedOnEmptySpace and e[5] == 1 then
+				action = context.menu(e[3], e[4], {"Новый файл"}, {"Новая папка"}, "-", {"Вставить", (clipboard == nil), "^V"})
+				if action == "Новый файл" then
+					ecs.newFile(workPathHistory[currentWorkPathHistoryElement])
+					getFileList(workPathHistory[currentWorkPathHistoryElement])
+					drawAll()
+				elseif action == "Новая папка" then
+					ecs.newFolder(workPathHistory[currentWorkPathHistoryElement])
+					getFileList(workPathHistory[currentWorkPathHistoryElement])
+					drawAll()
+				elseif action == "Вставить" then
+					ecs.copy(clipboard, workPathHistory[currentWorkPathHistoryElement])
+					getFileList(workPathHistory[currentWorkPathHistoryElement])
+					drawAll()
 				end
 			end
 
