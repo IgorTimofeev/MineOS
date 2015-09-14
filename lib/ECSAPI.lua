@@ -376,7 +376,7 @@ function ECSAPI.correctStartCoords(xStart,yStart,xWindowSize,yWindowSize)
 		xStart = math.floor(xSize/2 - xWindowSize/2)
 	end
 	if yStart == "auto" then
-		yStart = math.floor(ySize/2 - yWindowSize/2)
+		yStart = math.ceil(ySize/2 - yWindowSize/2)
 	end
 	return xStart,yStart
 end
