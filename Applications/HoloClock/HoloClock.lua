@@ -1,11 +1,16 @@
 local c = require("component")
 local unicode = require("unicode")
 local term = require("term")
-local holo = c.hologram
+local holo
 local gpu = c.gpu
 
-if not holo then error("This program reqiures holoram projector.") end
-
+--Проверка на наличие нужных устройств
+if not c.isAvailable("hologram") then
+  ecs.error("Подключите голографический проектор 2-ого уровня")
+  return
+else
+  holo = c.hologram
+end
 
 local hologram = {}
 
