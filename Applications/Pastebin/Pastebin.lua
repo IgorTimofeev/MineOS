@@ -317,10 +317,16 @@ end
 
 local function inputPassword()
 	--local massiv = ecs.input("auto", "auto", 20, "Войти в Pastebin", {"input", "Логин", ""},  {"input", "Пароль", ""})
-	local data = ecs.beautifulInput("auto", "auto", 30, "Авторизация", "Войти", tabColor1, 0xffffff, tabColor2, false, {"Логин"}, {"Пароль", true})
+
+	local data = ecs.universalWindow("auto", "auto", 30, tabColor1, true, {"EmptyLine"}, {"CenterText", 0xffffff, "Авторизация"}, {"EmptyLine"}, {"Input", 0xffffff, tabColor2, "Логин"}, {"Input", 0xffffff, tabColor2, "Пароль", "●"}, {"EmptyLine"}, {"Button", tabColor2, 0xffffff, "Войти в аккаунт"}, {"Button", 0x006dbf, 0xffffff, "Отмена"})
+
+	if data[3] == "Отмена" then return false end
+
 	username = data[1] or ""
 	password = data[2] or ""
 	clear()
+
+	return true
 end
 
 local function analyseConfig()
@@ -331,16 +337,20 @@ local function analyseConfig()
 		massiv = nil
 	else
 		fs.makeDirectory(fs.path(pathToConfig))
-		inputPassword()
+		local success = inputPassword()
+		if not success then return false end
 		config.write(pathToConfig, "username", username)
 		config.write(pathToConfig, "password", password)
 	end
+
+	return true
 end
 
 local function waitForSuccessLogin()
 	while true do
 
-		analyseConfig()
+		local success = analyseConfig()
+		if not success then return false end
 		ecs.info("auto", "auto", " ", "Захожу в аккаунт...")
 		local success, reason = loginToAccount(username, password)
 
@@ -355,6 +365,8 @@ local function waitForSuccessLogin()
 		end
 		
 	end
+
+	return true
 end
 
 local function drawAll()
@@ -464,7 +476,7 @@ local pasteLoadLimit = 50
 local args = {...}
 
 drawAll()
-waitForSuccessLogin()
+if not waitForSuccessLogin() then return end
 drawTopBar()
 
 if #args > 1 then
