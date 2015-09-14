@@ -729,8 +729,8 @@ local function newFile()
 	if data[1] == "" or data[1] == nil or data[1] == " " then data[1] = 51 end
 	if data[2] == "" or data[2] == nil or data[2] == " " then data[2] = 19 end
 
-	imageWidth = tonumber(data[1])
-	imageHeight = tonumber(data[2])
+	imageWidth = tonumber(data[1]) or 51
+	imageHeight = tonumber(data[2]) or 19
 
 	createMassiv()
 	drawAll()
