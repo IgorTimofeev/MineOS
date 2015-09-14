@@ -1685,8 +1685,8 @@ end
 
 --Найти монтированный путь конкретного адреса диска
 function ECSAPI.findMount(address)
-  for fs, path in filesystem.mounts() do
-    if fs.address == component.get(address) then
+  for fs1, path in fs.mounts() do
+    if fs1.address == component.get(address) then
       return path
     end
   end
