@@ -61,6 +61,15 @@ ECSAPI.colors = {
 
 ----------------------------------------------------------------------------------------------------
 
+--Получаем всю инфу об оперативку в килобайтах
+function ECSAPI.getInfoAboutRAM()
+	local free = math.floor(computer.freeMemory() / 1024)
+	local total = math.floor(computer.totalMemory() / 1024)
+	local used = total - free
+
+	return free, total, used
+end
+
 --МАСШТАБ МОНИТОРА
 function ECSAPI.setScale(scale, debug)
 	--КОРРЕКЦИЯ МАСШТАБА, ЧТОБЫ ВСЯКИЕ ДАУНЫ НЕ ДЕЛАЛИ ТОГО, ЧЕГО НЕ СЛЕДУЕТ
