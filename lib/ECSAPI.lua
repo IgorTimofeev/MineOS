@@ -25,7 +25,7 @@ ECSAPI.windowColors = {
 }
 
 ECSAPI.colors = {
-	white = 0xF0F0F0,
+	white = 0xffffff,
 	orange = 0xF2B233,
 	magenta = 0xE57FD8,
 	lightBlue = 0x99B2F2,
@@ -40,7 +40,23 @@ ECSAPI.colors = {
 	brown = 0x7F664C,
 	green = 0x57A64E,
 	red = 0xCC4C4C,
-    black = 0x000000
+    black = 0x000000,
+	["0"] = 0xffffff,
+	["1"] = 0xF2B233,
+	["2"] = 0xE57FD8,
+	["3"] = 0x99B2F2,
+	["4"] = 0xDEDE6C,
+	["5"] = 0x7FCC19,
+	["6"] = 0xF2B2CC,
+	["7"] = 0x4C4C4C,
+	["8"] = 0x999999,
+	["9"] = 0x4C99B2,
+	["a"] = 0xB266E5,
+	["b"] = 0x3366CC,
+	["c"] = 0x7F664C,
+	["d"] = 0x57A64E,
+	["e"] = 0xCC4C4C,
+	["f"] = 0x000000
 }
 
 ----------------------------------------------------------------------------------------------------
@@ -210,6 +226,55 @@ function ECSAPI.adaptiveText(x,y,text,textColor)
     gpu.setBackground(info[3])
     gpu.set(x+i,y,unicode.sub(text,i,i))
   end
+end
+
+--Костыльная замена обычному string.find()
+--Работает медленнее, но хотя бы поддерживает юникод
+function unicode.find(str, pattern, init, plain)
+	if init then
+		if init < 0 then
+			init = -#unicode.sub(str,init)
+		elseif init > 0 then
+			init = #unicode.sub(str,1,init-1)+1
+		end
+	end
+	
+	a, b = string.find(str, pattern, init, plain)
+	
+	if a then
+		local ap,bp = str:sub(1,a-1), str:sub(a,b)
+		a = unicode.len(ap)+1
+		b = a + unicode.len(bp)-1
+		return a,b
+	else
+		return a
+	end
+end
+
+--Умный текст по аналогии с майнчатовским. Ставишь символ параграфа, указываешь хуйню - и обана!
+function ECSAPI.smartText(x, y, text)
+	local sText = unicode.len(text)
+	local specialSymbol = "§"
+	--Разбираем по кусочкам строку и получаем цвета
+	local massiv = {}
+	local iterator = 1
+	local currentColor = gpu.getForeground()
+	while iterator <= sText do
+		local symbol = unicode.sub(text, iterator, iterator)
+		if symbol == specialSymbol then
+			currentColor = ECSAPI.colors[unicode.sub(text, iterator + 1, iterator + 1) or "f"]
+			iterator = iterator + 1
+		else
+			table.insert(massiv, {symbol, currentColor})
+		end
+		symbol = nil
+		iterator = iterator + 1
+	end
+	x = x - 1
+	for i = 1, #massiv do
+		if currentColor ~= massiv[i][2] then currentColor = massiv[i][2]; gpu.setForeground(massiv[i][2]) end
+		gpu.set(x + i, y, massiv[i][1])
+	end
 end
 
 --ИНВЕРТИРОВАННЫЙ ПО ЦВЕТУ ТЕКСТ НА ОСНОВЕ ФОНА
@@ -2125,6 +2190,9 @@ function ECSAPI.universalWindow(x, y, width, background, closeWindowAfter, ...)
 		end
 	end
 end
+
+-- ECSAPI.prepareToExit()
+-- ECSAPI.smartText(2, 2, "Hello wor§3ld §6pidar§1 mamu ebal §0atvi4ayu", limit)
 
 --local strings = {"Hello world! This is a test string and I'm so happy to show it!", "Awesome! It works!", "Cool!"}
 
