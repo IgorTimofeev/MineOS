@@ -84,7 +84,7 @@ function ECSAPI.getHDDs()
 	    	["label"] = proxy.getLabel(),
 	    	["address"] = proxy.address,
 	    	["isReadOnly"] = proxy.isReadOnly(),
-	    	["isFloppy"] = proxy.isReadOnly(),
+	    	["isFloppy"] = isFloppy,
 	    })
 	  end
 	end
