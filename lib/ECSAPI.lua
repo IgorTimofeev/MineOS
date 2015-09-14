@@ -587,79 +587,28 @@ function ECSAPI.emptyWindow(x,y,width,height,title)
 
 end
 
-function ECSAPI.error(...)
-
-	local arg = {...}
-	local text = arg[1] or "С твоим компом опять хуйня"
-	local buttonText = arg[2] or "ОК"
+--Функция по переносу слов на новую строку в зависимости от ограничения по ширине
+function ECSAPI.stringWrap(text, limit)
+	--Получаем длину текста
 	local sText = unicode.len(text)
-	local xSize, ySize = gpu.getResolution()
-	local width = math.ceil(xSize * 3 / 5)
-	if (width - 11) > (sText) then width = 11 + sText end
-	local textLimit = width - 11
-
-	--Восклицательный знак
-	local image = {
-		{{0xff0000,0xffffff,"#"},{0xff0000,0xffffff,"#"},{0xff0000,0xffffff," "},{0xff0000,0xffffff,"#"},{0xff0000,0xffffff,"#"}},
-		{{0xff0000,0xffffff,"#"},{0xff0000,0xffffff," "},{0xff0000,0xffffff,"!"},{0xff0000,0xffffff," "},{0xff0000,0xffffff,"#"}},
-		{{0xff0000,0xffffff," "},{0xff0000,0xffffff," "},{0xff0000,0xffffff," "},{0xff0000,0xffffff," "},{0xff0000,0xffffff," "}}
-	}
-
-	--Парсинг строки ошибки
-	local parsedErr = {}
-	local countOfStrings = math.ceil(sText / textLimit)
-	for i=1, countOfStrings do
-		parsedErr[i] = unicode.sub(text, i * textLimit - textLimit + 1, i * textLimit)
+	--Считаем количество строк, которое будет после парсинга
+	local repeats = math.ceil(sText / limit)
+	--Создаем массив этих строк
+	local massiv = {}
+	local counter
+	--Парсим строки
+	for i = 1, repeats do
+		counter = i * limit - limit + 1
+		table.insert(massiv, unicode.sub(text, counter, counter + limit - 1))
 	end
-
-	--Расчет высоты
-	local height = 6
-	if #parsedErr > 1 then height = height + #parsedErr - 1 end
-
-	--Расчет позиции окна
-	local xStart,yStart = ECSAPI.correctStartCoords("auto","auto",width,height)
-	local xEnd,yEnd = xStart + width - 1, yStart + height - 1
-
-	--Рисуем окно
-	local oldPixels = ECSAPI.emptyWindow(xStart,yStart,width,height," ")
-
-	--Рисуем воскл знак
-	ECSAPI.drawCustomImage(xStart + 2,yStart + 2,image)
-
-	--Рисуем текст ошибки
-	gpu.setBackground(ECSAPI.windowColors.background)
-	gpu.setForeground(ECSAPI.windowColors.usualText)
-	local xPos, yPos = xStart + 9, yStart + 2
-	for i=1, #parsedErr do
-		gpu.set(xPos, yPos, parsedErr[i])
-		yPos = yPos + 1
-	end
-
-	--Рисуем кнопу
-	local xButton = xEnd - unicode.len(buttonText) - 7
-	local button = {ECSAPI.drawAdaptiveButton(xButton,yEnd - 1,3,0,buttonText,ECSAPI.colors.lightBlue,0xffffff)}
-
-	--Ждем
-	while true do
-		local e = {event.pull()}
-		if e[1] == "touch" then
-			if ECSAPI.clickedAtArea(e[3],e[4],button[1],button[2],button[3],button[4]) then
-				ECSAPI.drawAdaptiveButton(button[1],button[2],3,0,buttonText,ECSAPI.colors.blue,0xffffff)
-				os.sleep(0.4)
-				break
-			end
-		elseif e[1] == "key_down" and e[4] == 28 then
-			ECSAPI.drawAdaptiveButton(button[1],button[2],3,0,buttonText,ECSAPI.colors.blue,0xffffff)
-			os.sleep(0.4)
-			break	
-		end
-	end
-
-	--Профит
-	ECSAPI.drawOldPixels(oldPixels)
-
+	--Возвращаем массив строк
+	return massiv
 end
 
+--Моя любимая функция ошибки C:
+function ECSAPI.error(text)
+	ECSAPI.universalWindow("auto", "auto", math.ceil(gpu.getResolution() * 0.45), ECSAPI.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x880000, "Ошибка!"}, {"EmptyLine"}, {"WrappedText", 0x262626, text}, {"EmptyLine"}, {"Button", 0x880000, 0xffffff, "OK!"})
+end
 
 function ECSAPI.prepareToExit(color1, color2)
 	ECSAPI.clearScreen(color1 or 0x333333)
@@ -1858,6 +1807,11 @@ function ECSAPI.universalWindow(x, y, width, background, closeWindowAfter, ...)
 			height = height + (objectsHeights[objectType] * (#objects[i] - 3))
 		elseif objectType == "textfield" then
 			height = height + objects[i][2]
+		elseif objectType == "wrappedtext" then
+			--Заранее парсим текст перенесенный
+			objects[i].wrapped = ECSAPI.stringWrap(objects[i][3], width - 4)
+			objects[i].height = #objects[i].wrapped
+			height = height + objects[i].height
 		else
 			height = height + objectsHeights[objectType]
 		end
@@ -1876,6 +1830,8 @@ function ECSAPI.universalWindow(x, y, width, background, closeWindowAfter, ...)
 				objects[i].y = objects[i - 1].y + (objectsHeights[objectType] * (#objects[i - 1] - 3))
 			elseif objectType == "textfield" then
 				objects[i].y = objects[i - 1].y + objects[i - 1][2]
+			elseif objectType == "wrappedtext" then
+				objects[i].y = objects[i - 1].y + objects[i - 1].height
 			else
 				objects[i].y = objects[i - 1].y + objectsHeights[objectType]
 			end
@@ -2051,6 +2007,13 @@ function ECSAPI.universalWindow(x, y, width, background, closeWindowAfter, ...)
 		elseif objectType == "textfield" then
 			objects[number].displayFrom = objects[number].displayFrom or 1
 			ECSAPI.textField(x + 1, objects[number].y, width - 2, objects[number][2], objects[number][7], objects[number].displayFrom, objects[number][3], objects[number][4], objects[number][5], objects[number][6])
+		
+		elseif objectType == "wrappedtext" then
+			gpu.setBackground(background)
+			gpu.setForeground(objects[number][2])
+			for i = 1, #objects[number].wrapped do
+				gpu.set(x + 2, objects[number].y + i - 1, objects[number].wrapped[i])
+			end
 		end
 	end
 
@@ -2166,11 +2129,10 @@ end
 --local strings = {"Hello world! This is a test string and I'm so happy to show it!", "Awesome! It works!", "Cool!"}
 
 -- ECSAPI.prepareToExit()
--- --ECSAPI.universalWindow("auto", "auto", 30, ECSAPI.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Хелло пидар!"}, {"EmptyLine"}, {"Input", 0x262626, 0x000000, "Суда вводи"}, {"Selector", 0x262626, 0x880000, "PNG", "JPG", "PSD"}, {"Slider", 0x262626, 0x880000, 0, 100, 50}, {"Select", 0x262626, 0x880000, "Выбор1", "Выбор2"}, {"EmptyLine"}, {"Button", 0xbbbbbb, 0xffffff, "Ok!"})
+-- ECSAPI.universalWindow("auto", "auto", 30, ECSAPI.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Хелло пидар!"}, {"EmptyLine"}, {"Input", 0x262626, 0x000000, "Суда вводи"}, {"Selector", 0x262626, 0x880000, "PNG", "JPG", "PSD"}, {"Slider", 0x262626, 0x880000, 0, 100, 50}, {"Select", 0x262626, 0x880000, "Выбор1", "Выбор2"}, {"EmptyLine"}, {"Button", 0xbbbbbb, 0xffffff, "Ok!"})
 -- local data = ECSAPI.universalWindow("auto", "auto", 30, ECSAPI.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Хелло пидар!"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, "Суда вводи"}, {"Selector", 0x262626, 0x880000, "PNG", "JPG", "PSD"}, {"Slider", 0x262626, 0x880000, 0, 100, 50, "Количество: "}, {"Select", 0x262626, 0x880000, "Выбор1", "Выбор2"}, {"EmptyLine"}, {"Button", 0xbbbbbb, 0xffffff, "Ok!"})
 -- ECSAPI.prepareToExit()
 -- print(table.unpack(data))
-
 
 --[[
 Функция universalWindow(x, y, width, background, closeWindowAfter, ...)
@@ -2216,6 +2178,7 @@ end
 				{"Separator", Цвет разделителя}
 				{"Slider", Цвет линии слайдера, Цвет пимпочки слайдера, Значения слайдера ОТ, Значения слайдера ДО, Текущее значение, Текст-подсказка}
 				{"Switch", Цвет актива, Цвет пассива, Цвет текста, Текст, Изначальное состояние}
+				{"WrappedText", Цвет текста, Текст}
 				{"EmptyLine"}
 			Каждый из объектов рисуется по порядку сверху вниз. Каждый объект автоматически
 			увеличивает высоту окна до необходимого значения.
