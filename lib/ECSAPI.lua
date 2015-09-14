@@ -78,7 +78,7 @@ function ECSAPI.getHDDs()
 	  if proxy.address ~= computer.tmpAddress() and proxy.getLabel() ~= "internet" then
 	    table.insert(candidates, {
 	    	["spaceTotal"] = math.floor(proxy.spaceTotal() / 1024),
-	    	["spaceUsed"] = math.ceil(proxy.spaceUsed() / 1024),
+	    	["spaceUsed"] = math.floor(proxy.spaceUsed() / 1024),
 	    	["label"] = proxy.getLabel(),
 	    	["address"] = proxy.address,
 	    	["isReadOnly"] = proxy.isReadOnly(),
