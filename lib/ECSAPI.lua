@@ -1683,6 +1683,22 @@ function ECSAPI.setHDDLabel(address, label)
 	proxy.setLabel(label or "Untitled")
 end
 
+--Найти монтированный путь конкретного адреса диска
+function ECSAPI.findMount(address)
+  for fs, path in filesystem.mounts() do
+    if fs.address == component.get(address) then
+      return path
+    end
+  end
+end
+
+--Скопировать файлы с одного диска на другой с заменой
+function ECSAPI.duplicateFileSystem(fromAddress, toAddress)
+	local source, destination = ECSAPI.findMount(fromAddress), ECSAPI.findMount(toAddress)
+	ECSAPI.info("auto", "auto", "", "Copying file system...")
+	shell.execute("bin/cp -rxu "..source.." "..destination)
+end
+
 -- Копирование папки через рекурсию, т.к. fs.copy() не поддерживает папки
 -- Ну долбоеб автор мода - хули я тут сделаю? Придется так вот
 -- swg2you, привет маме ;)
