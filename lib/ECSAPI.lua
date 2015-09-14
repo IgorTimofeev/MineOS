@@ -77,7 +77,7 @@ function ECSAPI.getHDDs()
 	  local proxy = component.proxy(address)
 	  if proxy.address ~= computer.tmpAddress() and proxy.getLabel() ~= "internet" then
 	    local isFloppy, spaceTotal = false, math.floor(proxy.spaceTotal() / 1024)
-	    if spaceTotal < 300 then isFloppy = true end
+	    if spaceTotal < 600 then isFloppy = true end
 	    table.insert(candidates, {
 	    	["spaceTotal"] = spaceTotal,
 	    	["spaceUsed"] = math.floor(proxy.spaceUsed() / 1024),
