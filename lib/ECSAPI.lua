@@ -408,7 +408,7 @@ function ECSAPI.find(path, cheBudemIskat)
 	--Костыль, но удобный
 	local function dofind(path, cheBudemIskat)
 		--Получаем список файлов в директории
-		local list = ecs.getFileList(path)
+		local list = ECSAPI.getFileList(path)
 		--Перебираем все элементы файл листа
 		for key, file in pairs(list) do
 			--Путь к файлу
@@ -1768,11 +1768,10 @@ function ECSAPI.launchIcon(path, arguments)
 	local fileFormat = ECSAPI.getFileFormat(path)
 	--Если это приложение
 	if fileFormat == ".app" then
-		ECSAPI.prepareToExit()
 		local cyka = path .. "/" .. ECSAPI.hideFileFormat(fs.name(path)) .. ".lua"
 		local success, reason = shell.execute(cyka)
 		ECSAPI.prepareToExit()
-		if not success then ECSAPI.displayCompileMessage(1, reason, true) end
+		if not success then ECSAPI.prepareToExit(); ECSAPI.displayCompileMessage(1, reason, true) end
 	--Если это обычный луа файл - т.е. скрипт
 	elseif fileFormat == ".lua" or fileFormat == nil then
 		ECSAPI.prepareToExit()
