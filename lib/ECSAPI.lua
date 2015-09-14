@@ -1696,7 +1696,7 @@ end
 function ECSAPI.duplicateFileSystem(fromAddress, toAddress)
 	local source, destination = ECSAPI.findMount(fromAddress), ECSAPI.findMount(toAddress)
 	ECSAPI.info("auto", "auto", "", "Copying file system...")
-	shell.execute("bin/cp -rxu "..source.." "..destination)
+	shell.execute("bin/cp -rx "..source.."* "..destination)
 end
 
 -- Копирование папки через рекурсию, т.к. fs.copy() не поддерживает папки
