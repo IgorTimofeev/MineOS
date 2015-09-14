@@ -1,7 +1,6 @@
 local c = require("component")
 local event = require("event")
-local geo = c.geolyzer
-local holo = c.hologram
+local geo, holo
 local gpu = c.gpu
 local ecs = require("ECSAPI")
 local palette = require("palette")
@@ -9,9 +8,13 @@ local computer = require("computer")
 
 local args = {...}
 
-
-if not geo or not holo then
-  error("Подключите геоанализатор и голографический проектор 2-ого уровня")
+--Проверка на наличие нужных устройств
+if not c.isAvailable("geolyzer") or not c.isAvailable("hologram") then
+  ecs.error("Подключите геоанализатор и голографический проектор 2-ого уровня")
+  return
+else
+  geo = c.geolyzer
+  holo = c.hologram
 end
 
 -------------------------
