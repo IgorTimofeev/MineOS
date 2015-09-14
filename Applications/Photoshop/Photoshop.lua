@@ -724,7 +724,8 @@ local function newFile()
 	currentLayer = 1
 	drawAll()
 
-	local data = ecs.beautifulInput("auto", "auto", 30, "Новый документ", "Ок", ecs.windowColors.background, ecs.windowColors.usualText, 0xcccccc, true, {"Ширина"}, {"Высота"})
+	local data = ECSAPI.universalWindow("auto", "auto", 30, ECSAPI.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Новый документ"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, "Ширина"}, {"Input", 0x262626, 0x880000, "Высота"}, {"EmptyLine"}, {"Button", 0xbbbbbb, 0xffffff, "Ok!"})
+
 	if data[1] == "" or data[1] == nil or data[1] == " " then data[1] = 51 end
 	if data[2] == "" or data[2] == nil or data[2] == " " then data[2] = 19 end
 
@@ -919,10 +920,13 @@ while true do
 
 					if obj["top"][key]["name"] == "Файл" then
 						local action = context.menu(obj["top"][key]["x1"],obj["top"][key]["y1"]+1,{"Новый",false,"^N"},{"Открыть",false,"^O"},"-",{"Сохранить",not currentFile,"^S"},{"Сохранить как",false,"^!S"},"-",{"Выйти"})
+						
 						if action == "Сохранить как" then
-							local data = ecs.beautifulInput("auto", "auto", 30, "Сохранить как", "Ок", ecs.windowColors.background, ecs.windowColors.usualText, 0xcccccc, true, {"Путь"}, {"Формат"})
+							
+							local data = ECSAPI.universalWindow("auto", "auto", 30, ECSAPI.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Сохранить как"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, "Путь"}, {"Selector", 0x262626, 0x880000, "PNG", "JPG"}, {"Button", 0xbbbbbb, 0xffffff, "OK!"})
+
 							if data[1] == "" or data[1] == " " or data[1] == nil then data[1] = "NewImage" end
-							if data[2] == "" or data[2] == " " or data[2] == nil then data[2] = ".jpg" end
+							if data[2] == "" or data[2] == " " or data[2] == nil then data[2] = ".png" end
 							data[1] = data[1]..data[2]
 
 							currentFile = data[1]
@@ -930,7 +934,9 @@ while true do
 							consoleText = "Файл сохранен как "..currentFile
 							console(7, ySize)
 						elseif action == "Открыть" then
-							local data = ecs.beautifulInput("auto", "auto", 30, "Открыть", "Ок", ecs.windowColors.background, ecs.windowColors.usualText, 0xcccccc, true, {"Путь к файлу"})
+
+							local data = ECSAPI.universalWindow("auto", "auto", 30, ECSAPI.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Открыть"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, "Путь"}, {"Button", 0xbbbbbb, 0xffffff, "OK!"})
+
 							if data[1] ~= "" and data[1] ~= " " and data[1] ~= nil then
 								if fs.exists(data[1]) then
 									local fileFormat = ecs.getFileFormat(data[1])
