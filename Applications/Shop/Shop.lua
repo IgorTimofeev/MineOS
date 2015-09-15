@@ -8,6 +8,7 @@ local chestSide = sides.up
 
 if not c.isAvailable("inventory_controller") then
 	ecs.error("Данная программа требует подключенный Адаптер с вставленным в него улучшением \"Контроллер инвентаря\", при этом на сам адаптер сверху необходимо поставить сундук.")
+	return
 else
 	inv = c.inventory_controller
 end
