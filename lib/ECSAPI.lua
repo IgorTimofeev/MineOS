@@ -170,8 +170,7 @@ function ECSAPI.getAppsToUpdate(debug)
 	local applications2 = serialization.unserialize(file:read("*a"))
 	file:close()
 
-	--Массив с аппсами, суда мы будем пихать те аппсы, которые обновить надо!
-	local appsToUpdate = {}
+	local countOfUpdates = 0
 
 	--Просматриваем свеженький файлик и анализируем, че в нем нового, все старое удаляем
 	local i = 1
@@ -188,13 +187,17 @@ function ECSAPI.getAppsToUpdate(debug)
 			end
 		end
 		--Если новая версия новее, чем старая, то добавить в массив то, что нужно обновить
-		if newVersion > oldVersion then table.insert(appsToUpdate, applications2[i]) end
+		if newVersion > oldVersion then
+			applications2[i].needToUpdate = true
+			countOfUpdates = countOfUpdates + 1
+		end
+
 		i = i + 1
 	end
 	--Если чет рисовалось, то стереть на хер
 	if oldPixels then ECSAPI.drawOldPixels(oldPixels) end
 	--Возвращаем массив с тем, че нужно обновить и просто старый аппликашнс на всякий случай
-	return appsToUpdate, applications
+	return applications2, countOfUpdates
 end
 
 --МАСШТАБ МОНИТОРА
