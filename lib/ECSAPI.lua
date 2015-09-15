@@ -158,11 +158,11 @@ function ECSAPI.getAppsToUpdate()
 
 	--Читаем оба файла
 	local file = io.open(pathToApplicationsFile, "r")
-	local applications = seri.unserialize(file:read("*a"))
+	local applications = serialization.unserialize(file:read("*a"))
 	file:close()
 
 	local file = io.open(pathToSecondApplicationsFile, "r")
-	local applications2 = seri.unserialize(file:read("*a"))
+	local applications2 = serialization.unserialize(file:read("*a"))
 	file:close()
 
 	--Просматриваем свеженький файлик и анализируем, че в нем нового
