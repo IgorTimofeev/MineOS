@@ -97,27 +97,33 @@ local block = string.char(226, 150, 136)
 local trans = string.char(226, 150, 145)
 
 
-gpu.setResolution(imgW, imgH)
+gpu.setResolution(maxresW, maxresH)
 gpu.setBackground(0x000000, false)
 
-for x = 0, imgW-1 do
-	for y = 0, imgH-1 do
-		local r, g, b, a = pngi:getPixel(x, y)
-		
-		if a > 0 then
-			gpu.setForeground(bit.bor(bit.lshift(r, 16), bit.bor(bit.lshift(g, 8), b)), false)
-			gpu.set(x+1, y+1, block)
-			--print(x, y, r, g, b, a, bit.bor(bit.lshift(r, 16), bit.bor(bit.lshift(g, 8), b)))
-		else
-			gpu.setForeground(0x888888, false)
-			gpu.set(x+1, y+1, trans)
-			--print(x, y, r, g, b, a, 'tr')
+local function drawPngImage(x, y)
+	for j = 0, imgW-1 do
+		for i = 0, imgH-1 do
+			local r, g, b, a = pngi:getPixel(i, j)
+			
+			if a > 0 then
+				gpu.setForeground(bit.bor(bit.lshift(r, 16), bit.bor(bit.lshift(g, 8), b)), false)
+				--gpu.set(x+1, y+1, block)
+				gpu.fill(x + i * 2, y + j, 2, 1, block)
+				--print(x, y, r, g, b, a, bit.bor(bit.lshift(r, 16), bit.bor(bit.lshift(g, 8), b)))
+			--[[else
+				gpu.setForeground(0x888888, false)
+				gpu.set(x+1, y+1, trans)
+				--print(x, y, r, g, b, a, 'tr')
+			]]
+			end
+			--print(x, y, r, g, b, a)
 		end
-		--print(x, y, r, g, b, a)
 	end
 end
 
-os.sleep(3)
+drawPngImage(2, 2)
+
+ecs.waitForTouchOrClick()
 
 gpu.setResolution(oldResW, oldResH)
 gpu.setForeground(oldForeN, oldForeB)
