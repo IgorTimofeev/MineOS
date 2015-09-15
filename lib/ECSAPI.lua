@@ -166,6 +166,10 @@ function ECSAPI.getAppsToUpdate()
 	local file = io.open(pathToSecondApplicationsFile, "r")
 	local applications2 = serialization.unserialize(file:read("*a"))
 	file:close()
+
+	--Массив с аппсами, суда мы будем пихать те аппсы, которые обновить надо!
+	local appsToUpdate = {}
+
 	--Просматриваем свеженький файлик и анализируем, че в нем нового, все старое удаляем
 	local i = 1
 	while true do
@@ -179,10 +183,10 @@ function ECSAPI.getAppsToUpdate()
 				break
 			end
 		end
-		if newVersion <= oldVersion then table.remove(applications2, i) else i = i + 1 end
+		if newVersion <= oldVersion then table.insert(appsToUpdate, applications2[i]) else i = i + 1 end
 	end
 	--Возвращаем массив с тем, че нужно обновить и просто старый аппликашнс на всякий случай
-	return applications2, applications
+	return appsToUpdate, applications
 end
 
 --МАСШТАБ МОНИТОРА
