@@ -151,22 +151,22 @@ end
 
 --Получить список приложений, которые требуется обновить
 function ECSAPI.getAppsToUpdate()
+	--Задаем стартовые пути
 	local pathToApplicationsFile = "System/OS/Applications.txt"
 	local pathToSecondApplicationsFile = "System/OS/Applications2.txt"
+	--Путь к файл-листу на пастебине
 	local paste = "3j2x4dDn"
+	--Получаем свеженький файл
 	ECSAPI.getFromPastebin(paste, pathToSecondApplicationsFile)
-
 	--Читаем оба файла
 	local file = io.open(pathToApplicationsFile, "r")
 	local applications = serialization.unserialize(file:read("*a"))
 	file:close()
-
+	--И второй
 	local file = io.open(pathToSecondApplicationsFile, "r")
 	local applications2 = serialization.unserialize(file:read("*a"))
 	file:close()
-
-	--Просматриваем свеженький файлик и анализируем, че в нем нового
-	--Все старое удаляем
+	--Просматриваем свеженький файлик и анализируем, че в нем нового, все старое удаляем
 	local i = 1
 	while true do
 		--Разрыв цикла
@@ -181,7 +181,7 @@ function ECSAPI.getAppsToUpdate()
 		end
 		if newVersion <= oldVersion then table.remove(applications2, i) else i = i + 1 end
 	end
-
+	--Возвращаем массив с тем, че нужно обновить и просто старый аппликашнс на всякий случай
 	return applications2, applications
 end
 
