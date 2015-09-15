@@ -21,13 +21,14 @@ local colors = {
 	topButtonsText = 0x262626,
 }
 
-local topButtons = {"О системе", "Диски", "Экран", "Память"}
+local topButtons = {"О системе", "Диски", "Экран", "Обновления"}
 local spaceBetweenTopButtons, offsetTopButtons = 2, 2
 local currentMode = 1
 
 local osIcon = image.load("System/OS/Installer/OS_Logo.png")
 local hddIcon = image.load("System/OS/Icons/HDD.png")
 local floppyIcon = image.load("System/OS/Icons/Floppy.png")
+local updateIcon = image.load("System/OS/Icons/Update.png")
 
 local x, y = "auto", "auto"
 local width, height = 84, 26
@@ -40,6 +41,11 @@ ram.free, ram.total, ram.used = ecs.getInfoAboutRAM()
 local drawHDDFrom = 1
 local HDDs
 local bootAddress = computer.getBootAddress()
+
+local updates, oldApps
+local drawUpdatesFrom = 1
+local xUpdatesList, yUpdatesList
+local countOfChoses
 
 -------------------------------------------------------------------------------------------------------------------------------
 
@@ -85,6 +91,37 @@ local function drawTopBar()
 		xPos = xPos + unicode.len(topButtons[i]) + spaceBetweenTopButtons + offsetTopButtons * 2
 		color1, color2 = nil, nil
 	end
+end
+
+local function drawUpdatesList()
+
+	local selectSymbol, nonSelectSymbol = "✔", "  "
+	local limit = 40
+	local xPos, yPos = xUpdatesList, yUpdatesList
+
+	--ОЧИЩАЕМ ЭТУ ПИЗДУ, ЗАЕБАЛО, БЛЯДЬ
+	ecs.square(xPos, yPos, limit + 2, 15, colors.main)
+
+	for i = drawUpdatesFrom, (drawUpdatesFrom + 4) do
+		if not updates[i] then break end
+		--Коробка для галочки
+		ecs.border(xPos, yPos, 5, 3, colors.main, 0x262626)
+		--Галочка
+		if updates[i].needToUpdate then
+			ecs.colorText(xPos + 2, yPos + 1, 0x880000, selectSymbol)
+			countOfChoses = countOfChoses + 1
+		end
+		--Имя проги
+		local text = "§f" .. (fs.name(updates[i].name) or updates[i].name) .. (function() if updates[i].needToUpdate then return "§e, версия ".. updates[i].version .." (новее)" else return "§8, версия ".. updates[i].version end end)()
+		ecs.smartText(xPos + 6, yPos + 1, ecs.stringLimit("end", text, limit))
+		text = nil
+
+		yPos = yPos + 3
+	end
+
+	--Скроллбар
+	ecs.srollBar(x + width - 3, y + heightOfTopBar + 2, 1, 15, #updates, drawUpdatesFrom, 0xdddddd, ecs.colors.blue)
+
 end
 
 local function drawMain()
@@ -138,15 +175,53 @@ local function drawMain()
 		--Скроллбар
 		ecs.srollBar(x + width - 1, y + heightOfTopBar, 1, height - heightOfTopBar, #HDDs, drawHDDFrom, 0xdddddd, ecs.colors.blue)
 	
-	elseif currentMode == 3 then
+	elseif currentMode == 4 then
 
-	else
+		obj["Updates"] = {}
 
+		xPos, yPos = x + 3, y + heightOfTopBar + 3
+		image.draw(xPos, yPos, updateIcon)
+
+		yPos = yPos - 1
+		xPos = xPos + 35
+		countOfChoses = 0
+
+		--Если нет еще апдейтов, то получить новые апдейты
+		if not updates then updates, countOfUpdates = ecs.getAppsToUpdate(true) end
+
+		--Рисуем выборы
+		if countOfUpdates > 0 then 
+			
+			xUpdatesList, yUpdatesList = xPos, yPos
+			drawUpdatesList(xPos, yPos)
+
+			--Кнопы
+			yPos = yPos + 16
+			if countOfChoses > 0 then
+				local _, _, xEnd, _ = ecs.drawAdaptiveButton(xPos, yPos, 2, 1, "Обновить", ecs.colors.blue, 0xffffff)
+				xPos = xEnd + 2
+			end
+
+			local _, _, xEnd, _ = ecs.drawAdaptiveButton(xPos, yPos, 2, 1, "Выбрать все", ecs.colors.blue, 0xffffff)
+			xPos = xEnd + 2
+
+			_, _, xEnd, _ = ecs.drawAdaptiveButton(xPos, yPos, 2, 1, "Снять выбор", ecs.colors.blue, 0xffffff)
+			xPos = xEnd + 2
+
+		else
+			yPos = yPos + 8
+			ecs.colorTextWithBack(xPos, yPos, 0x000000, colors.main, "Обновлений не обнаружено!")
+			ecs.colorText(xPos, yPos + 1, 0xaaaaaa, "У вас самое новое ПО.")
+		end
+		
 	end
 end
 
 
 -------------------------------------------------------------------------------------------------------------------------------
+
+ecs.prepareToExit()
+
 local oldPixels = ecs.rememberOldPixels(x, y, x + width - 1, y + height - 1)
 drawTopBar()
 drawMain()
@@ -229,6 +304,12 @@ while true do
 				if drawHDDFrom > 1 then drawHDDFrom = drawHDDFrom - 1; drawMain() end
 			else
 				if drawHDDFrom < #HDDs then drawHDDFrom = drawHDDFrom + 1; drawMain() end
+			end
+		elseif currentMode == 4 then
+			if e[5] == 1 then
+				if drawUpdatesFrom > 1 then drawUpdatesFrom = drawUpdatesFrom - 1; drawUpdatesList() end
+			else
+				if drawUpdatesFrom < #updates then drawUpdatesFrom = drawUpdatesFrom + 1; drawUpdatesList() end
 			end
 		end
 
