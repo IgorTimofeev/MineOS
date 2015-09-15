@@ -150,12 +150,15 @@ function ECSAPI.getOSApplication(elementFromMassiv)
 end
 
 --Получить список приложений, которые требуется обновить
-function ECSAPI.getAppsToUpdate()
+function ECSAPI.getAppsToUpdate(debug)
 	--Задаем стартовые пути
 	local pathToApplicationsFile = "System/OS/Applications.txt"
 	local pathToSecondApplicationsFile = "System/OS/Applications2.txt"
 	--Путь к файл-листу на пастебине
 	local paste = "3j2x4dDn"
+	--Выводим инфу
+	local oldPixels
+	if debug then oldPixels = ECSAPI.info("auto", "auto", " ", "Checking for updates...") end
 	--Получаем свеженький файл
 	ECSAPI.getFromPastebin(paste, pathToSecondApplicationsFile)
 	--Читаем оба файла
@@ -185,6 +188,8 @@ function ECSAPI.getAppsToUpdate()
 		end
 		if newVersion <= oldVersion then table.insert(appsToUpdate, applications2[i]) else i = i + 1 end
 	end
+	--Если чет рисовалось, то стереть на хер
+	if oldPixels then ECSAPI.drawOldPixels(oldPixels) end
 	--Возвращаем массив с тем, че нужно обновить и просто старый аппликашнс на всякий случай
 	return appsToUpdate, applications
 end
