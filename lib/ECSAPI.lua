@@ -187,7 +187,8 @@ function ECSAPI.getAppsToUpdate(debug)
 				break
 			end
 		end
-		if newVersion <= oldVersion then table.insert(appsToUpdate, applications2[i]) end
+		--Если новая версия новее, чем старая, то добавить в массив то, что нужно обновить
+		if newVersion > oldVersion then table.insert(appsToUpdate, applications2[i]) end
 		i = i + 1
 	end
 	--Если чет рисовалось, то стереть на хер
