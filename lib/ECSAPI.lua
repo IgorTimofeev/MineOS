@@ -6,6 +6,7 @@ local fs = require("filesystem")
 local shell = require("shell")
 local keyboard = require("keyboard")
 local computer = require("computer")
+local serialization = require("serialization")
 local fs = require("filesystem")
 local internet = require("internet")
 --local thread = require("thread")
@@ -146,6 +147,42 @@ function ECSAPI.getOSApplication(elementFromMassiv)
 	else
 		ECSAPI.getFromGitHub(elementFromMassiv.url, path)
 	end
+end
+
+--Получить список приложений, которые требуется обновить
+function ECSAPI.getAppsToUpdate()
+	local pathToApplicationsFile = "System/OS/Applications.txt"
+	local pathToSecondApplicationsFile = "System/OS/Applications2.txt"
+	local paste = "3j2x4dDn"
+	ECSAPI.getFromPastebin(paste, pathToSecondApplicationsFile)
+
+	--Читаем оба файла
+	local file = io.open(pathToApplicationsFile, "r")
+	local applications = seri.unserialize(file:read("*a"))
+	file:close()
+
+	local file = io.open(pathToSecondApplicationsFile, "r")
+	local applications2 = seri.unserialize(file:read("*a"))
+	file:close()
+
+	--Просматриваем свеженький файлик и анализируем, че в нем нового
+	--Все старое удаляем
+	local i = 1
+	while true do
+		--Разрыв цикла
+		if i > #applications2 then break end
+		local newVersion, oldVersion = applications2[i].version, 0
+		--Получаем старую версию этого файла
+		for j = 1, #applications do
+			if applications2[i].name == applications[j].name then
+				oldVersion = applications[j].version or 0
+				break
+			end
+		end
+		if newVersion <= oldVersion then table.remove(applications2, i) else i = i + 1 end
+	end
+
+	return applications2, applications
 end
 
 --МАСШТАБ МОНИТОРА
@@ -2382,7 +2419,6 @@ end
 
 
 return ECSAPI
-
 
 
 
