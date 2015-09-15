@@ -3,8 +3,14 @@ local c = require("component")
 local unicode = require("unicode")
 local sides = require("sides")
 local gpu = c.gpu
-local inv = c.inventory_controller
+local inv
 local chestSide = sides.up
+
+if not c.isAvailable("inventory_controller") then
+	ecs.error("Данная программа требует подключенный Адаптер с вставленным в него улучшением \"Контроллер инвентаря\", при этом на сам адаптер сверху необходимо поставить сундук.")
+else
+	inv = c.inventory_controller
+end
 
 --------------------------------------------------------------------------------------------------------
 
@@ -39,78 +45,103 @@ local colors = {
 
 local moneySymbol = "€"
 local adminSellMultiplyer = 0.5
+local comissionMultiplyer = 0.04
+
+local currentUser
 
 local widthOfOneItemElement = 12
 local heightOfOneItemElement = widthOfOneItemElement / 2
 
 --------------------------------------------------------------------------------------------------------
 
+--Массив админшопа с базовой информацией о блоках
 local adminShop = {
 	["minecraft:stone"] = {
-		["data"] = 0,
-		["price"] = 4,
-		["rarity"] = "Uncommon",
+		[0] = {
+			["price"] = 4,
+			["rarity"] = "Uncommon",
+		},
 	},
 	["minecraft:diamond"] = {
-		["data"] = 0,
-		["price"] = 200,
-		["rarity"] = "Legendary",
+		[0] = {
+			["price"] = 200,
+			["rarity"] = "Legendary",
+		},
 	},
 	["minecraft:grass"] = {
-		["data"] = 0,
-		["price"] = 4,
-		["rarity"] = "Uncommon",
+		[0] = {
+			["price"] = 4,
+			["rarity"] = "Uncommon",
+		},
 	},
 	["minecraft:cobblestone"] = {
-		["data"] = 0,
-		["price"] = 2,
-		["rarity"] = "Common",
+		[0] = {
+			["price"] = 2,
+			["rarity"] = "Common",
+		},
 	},
 	["minecraft:dirt"] = {
-		["data"] = 0,
-		["price"] = 2,
-		["rarity"] = "Common",
+		[0] = {
+			["price"] = 2,
+			["rarity"] = "Common",
+		},
 	},
 	["minecraft:iron_ore"] = {
-		["data"] = 0,
-		["price"] = 20,
-		["rarity"] = "Rare",
+		[0] = {
+			["price"] = 20,
+			["rarity"] = "Rare",
+		},
 	},
 	["minecraft:gold_ore"] = {
-		["data"] = 0,
-		["price"] = 40,
-		["rarity"] = "Mythical",
+		[0] = {
+			["price"] = 40,
+			["rarity"] = "Mythical",
+		},
 	},
 	["minecraft:coal_ore"] = {
-		["data"] = 0,
-		["price"] = 5,
-		["rarity"] = "Uncommon",
+		[0] = {
+			["price"] = 5,
+			["rarity"] = "Uncommon",
+		},
 	},
 	["minecraft:wool"] = {
-		["data"] = 0,
-		["price"] = 10,
-		["rarity"] = "Uncommon",
+		[0] = {
+			["price"] = 10,
+			["rarity"] = "Uncommon",
+		},
+		[15] = {
+			["price"] = 15,
+			["rarity"] = "Uncommon",
+		},
+		[14] = {
+			["price"] = 15,
+			["rarity"] = "Uncommon",
+		},
 	},
 	["minecraft:redstone"] = {
-		["data"] = 0,
-		["price"] = 10,
-		["rarity"] = "Rare",
+		[0] = {
+			["price"] = 10,
+			["rarity"] = "Rare",
+		},
 	},
 	["minecraft:log"] = {
-		["data"] = 0,
-		["price"] = 3,
-		["rarity"] = "Common",
+		[0] = {
+			["price"] = 3,
+			["rarity"] = "Common",
+		},
 	},
 	["IC2:itemOreIridium"] = {
-		["data"] = 0,
-		["price"] = 50000,
-		["rarity"] = "Arcana",
+		[0] = {
+			["price"] = 50000,
+			["rarity"] = "Arcana",
+		},
 	},
 }
 
+--Массив инвентаря конкретного игрока
 local massivWithProfile = {
-	["name"] = "IT",
-	["money"] = 1000000,
+	["nickname"] = "IT",
+	["money"] = 322,
 	["inventory"] = {
 		{
 			["id"] = "minecraft:stone",
@@ -181,6 +212,24 @@ local massivWithProfile = {
 	},
 }
 
+--Массив торговой площадки
+local market = {
+	["minecraft:diamond"] = {
+		[0] = {
+			{
+				["nickname"] = "Daun228",
+				["count"] = 228,
+				["price"] = 150,
+			},
+			{
+				["nickname"] = "Lololoshka",
+				["count"] = 15,
+				["price"] = 90,
+			},
+		},
+	},
+}
+
 --Обжекты
 local obj = {}
 local function newObj(class, name, ...)
@@ -194,6 +243,22 @@ local function prettyItemCount(count)
 		return tostring(math.floor(count / 1000)) .. "K"
 	end
 	return tostring(count)
+end
+
+--Округление до опред. кол-ва знаков после запятой
+local function round(num, idp)
+	local mult = 10^(idp or 0)
+	return math.floor(num * mult + 0.5) / mult
+end
+
+--Фиксим число до 2-х знаков после запятой
+local function fixMoney(money)
+	return round(money, 2)
+end
+
+--Взымаем комиссию с купли/продажи
+local function comission(money)
+	return fixMoney(money - money * comissionMultiplyer)
 end
 
 --Добавление предмета в инвентарь
@@ -247,12 +312,69 @@ end
 local function sellToAdmins(numberOfItemInInventory, skoka)
 	local item = massivWithProfile.inventory[numberOfItemInInventory]
 	if adminShop[item.id] then
-		local price = math.floor(adminShop[item.id].price * adminSellMultiplyer)
-		removeItemFromInventory(numberOfItemInInventory, skoka)
-		massivWithProfile.money = massivWithProfile.money + price * skoka
-		return (price * skoka)
+		if adminShop[item.id][item.data] then
+			local price = fixMoney(adminShop[item.id][item.data].price * adminSellMultiplyer)
+			removeItemFromInventory(numberOfItemInInventory, skoka)
+			massivWithProfile.money = massivWithProfile.money + price * skoka
+			return (price * skoka)
+		else
+			ecs.error("У админов нет даты "..tostring(item.data)..", ищи ошибку!")
+			return 0
+		end
+	else
+		ecs.error("У админов нет ид"..tostring(item.id)..", ищи ошибку!")
+		return 0
 	end
-	return 0
+end
+
+--Продать шмотку игрокам на ТП
+local function sellToPlayers(number, count, priceForOneItem, nameOfSeller)
+	--Получаем инфо о шмотке
+	local item = massivWithProfile.inventory[number]
+	--Удаляем шмотку
+	removeItemFromInventory(number, count)
+	--Че будем добавлять на ТП
+	local govno = { ["nickname"] = nameOfSeller, ["count"] = count, ["price"] = priceForOneItem }
+	--Добавляем ее на ТП
+	if market[item.id] then
+		if market[item.id][item.data] then
+			table.insert(market[item.id][item.data], govno)
+		else
+			market[item.id][item.data] = { govno }
+		end
+	else
+		market[item.id] = { [item.data] = { govno } }
+	end
+end
+
+--Анализ торговой площадки
+--Выдает успех, если предмет найден
+--А также самую лучшую цену, количество предмета на торг. площадке и никнейм самого дешевого
+local function getInfoAboutItemOnMarket(id, data)
+	local price, count, success, nickname = nil, 0, false, nil
+	--Если в маркете есть такой ид
+	if market[id] then
+		--И такая дата
+		if market[id][data] then
+			--Перебираем все айтемы на маркете
+			for i = 1, #market[id][data] do
+				--Если данных таких нет, то создать стартовые
+				price = price or market[id][data][i].price
+				nickname = nickname or market[id][data][i].nickname
+
+				--Если цена меньше, чем другие, то новая цена = этой
+				if market[id][data][i].price < price then
+					price = market[id][data][i].price
+					nickname = market[id][data][i].nickname
+				end
+
+				--Прибавляем кол-во предметов
+				count = count + market[id][data][i].count
+			end
+			success = true
+		end
+	end
+	return success, price, count, nickname
 end
 
 --Нарисовать конкретный айтем
@@ -271,18 +393,20 @@ local function drawItem(xPos, yPos, back, fore, text1, text2)
 end
 
 --Показ инвентаря
-local function showInventory(x, y, massivOfInventory, page, currentItem)
+local function showInventory(x, y, page, currentItem)
 	obj["SellItems"] = nil
 	obj["SellButtons"] = nil
+
+	currentUser = massivWithProfile.nickname
 
 	local widthOfItemInfoPanel = 26
 	local width = math.floor((xSize - widthOfItemInfoPanel - 4) / (widthOfOneItemElement))
 	local height = math.floor((ySize - 8) / (heightOfOneItemElement))
-	local countOfItems = #massivOfInventory.inventory
-	local countOfPages = math.ceil(countOfItems / (width * height))
+	local countOfItems = #massivWithProfile.inventory
+	local countOfItemsOnOnePage = width * height
+	local countOfPages = math.ceil(countOfItems / countOfItemsOnOnePage)
 	local widthOfAllElements = width * widthOfOneItemElement
 	local heightOfAllElements = height * heightOfOneItemElement
-	currentItem = currentItem or 1
 
 	--Очищаем фоном
 	ecs.square(x, y, widthOfAllElements, heightOfAllElements, colors.background)
@@ -293,7 +417,7 @@ local function showInventory(x, y, massivOfInventory, page, currentItem)
 		xPos = x
 		for i = 1, width do
 			--Если такой предмет вообще существует
-			if massivOfInventory.inventory[itemCounter] then
+			if massivWithProfile.inventory[itemCounter] then
 				--Делаем цвет рамки
 				if itemCounter == currentItem then
 					borderColor = colors.inventoryBorderSelect
@@ -319,7 +443,7 @@ local function showInventory(x, y, massivOfInventory, page, currentItem)
 				end
 
 				--Рисуем итем
-				drawItem(xPos, yPos, borderColor, textColor, massivOfInventory.inventory[itemCounter].label, massivOfInventory.inventory[itemCounter].count)
+				drawItem(xPos, yPos, borderColor, textColor, massivWithProfile.inventory[itemCounter].label, massivWithProfile.inventory[itemCounter].count)
 			
 				newObj("SellItems", itemCounter, xPos, yPos, xPos + widthOfOneItemElement - 1, yPos + heightOfOneItemElement - 1)
 			else
@@ -344,30 +468,44 @@ local function showInventory(x, y, massivOfInventory, page, currentItem)
 	xPos = xPos + 2
 	
 	--Инфа о блоке
-	local currentRarity = adminShop[massivOfInventory.inventory[currentItem].id]
-	if not currentRarity then currentRarity = "Common" else currentRarity = currentRarity.rarity end
-	ecs.colorText(xPos, yPos, colors.inventoryText, massivOfInventory.inventory[currentItem].label); yPos = yPos + 1
+	local currentRarity = "Common"
+	if adminShop[massivWithProfile.inventory[currentItem].id] then
+		if adminShop[massivWithProfile.inventory[currentItem].id][massivWithProfile.inventory[currentItem].data] then
+			currentRarity = adminShop[massivWithProfile.inventory[currentItem].id][massivWithProfile.inventory[currentItem].data].rarity
+		end
+	end
+	ecs.colorText(xPos, yPos, colors.inventoryText, massivWithProfile.inventory[currentItem].label); yPos = yPos + 1
 	ecs.colorText(xPos, yPos, rarityColors[currentRarity], currentRarity); yPos = yPos + 1
-	ecs.colorText(xPos, yPos, colors.inventoryTextDarker, massivOfInventory.inventory[currentItem].id); yPos = yPos + 1
-	ecs.colorText(xPos, yPos, colors.inventoryTextDarker, "Цвет: " .. massivOfInventory.inventory[currentItem].data); yPos = yPos + 1
-	ecs.colorText(xPos, yPos, colors.inventoryTextDarker, "Количество: " .. massivOfInventory.inventory[currentItem].count); yPos = yPos + 1
+	ecs.colorText(xPos, yPos, colors.inventoryTextDarker, massivWithProfile.inventory[currentItem].id); yPos = yPos + 1
+	ecs.colorText(xPos, yPos, colors.inventoryTextDarker, "Цвет: " .. massivWithProfile.inventory[currentItem].data); yPos = yPos + 1
+	ecs.colorText(xPos, yPos, colors.inventoryTextDarker, "Количество: " .. massivWithProfile.inventory[currentItem].count); yPos = yPos + 1
 
 	--Твой бабос
 	yPos = yPos + 1
-	ecs.colorText(xPos, yPos, colors.inventoryText, "Твой капитал:"); yPos = yPos + 1
-	ecs.colorText(xPos, yPos, colors.inventoryTextDarker, massivOfInventory.money .. moneySymbol); yPos = yPos + 1
+	ecs.colorText(xPos, yPos, colors.inventoryText, "Ваш капитал:"); yPos = yPos + 1
+	ecs.colorText(xPos, yPos, colors.inventoryTextDarker, massivWithProfile.money .. moneySymbol); yPos = yPos + 1
 	
 	--Цена админов
 	yPos = yPos + 1
-	local adminPrice = adminShop[massivOfInventory.inventory[currentItem].id]
-	if adminPrice then adminPrice = math.floor(adminPrice.price * adminSellMultiplyer) .. moneySymbol else adminPrice = "Отсутствует" end
+	local adminPrice = "Отсутствует"
+	if adminShop[massivWithProfile.inventory[currentItem].id] then
+		if adminShop[massivWithProfile.inventory[currentItem].id][massivWithProfile.inventory[currentItem].data] then
+			adminPrice = fixMoney(adminShop[massivWithProfile.inventory[currentItem].id][massivWithProfile.inventory[currentItem].data].price * adminSellMultiplyer)
+		end
+	end
 	ecs.colorText(xPos, yPos, colors.inventoryText, "Цена у админов:"); yPos = yPos + 1
-	ecs.colorText(xPos, yPos, colors.inventoryTextDarker, adminPrice)
+	ecs.colorText(xPos, yPos, colors.inventoryTextDarker, tostring(adminPrice)..moneySymbol)
 
 	--Цена на ТП
 	yPos = yPos + 2
+	local success, price, count = getInfoAboutItemOnMarket(massivWithProfile.inventory[currentItem].id, massivWithProfile.inventory[currentItem].data)
 	ecs.colorText(xPos, yPos, colors.inventoryText, "Цена на Торговой Площадке:"); yPos = yPos + 1
-	ecs.colorText(xPos, yPos, colors.inventoryTextDarker, "От 130.27"..moneySymbol); yPos = yPos + 1
+	if success then
+		ecs.colorText(xPos, yPos, colors.inventoryTextDarker, "Продается " .. prettyItemCount(count) .. " штук"); yPos = yPos + 1
+		ecs.colorText(xPos, yPos, colors.inventoryTextDarker, "Цена стартует от " .. prettyItemCount(price) .. moneySymbol); yPos = yPos + 1
+	else
+		ecs.colorText(xPos, yPos, colors.inventoryTextDarker, "Отсутствует"); yPos = yPos + 1
+	end
 
 	--Кнопы
 	xPos = xPos - 2
@@ -393,64 +531,122 @@ local function showInventory(x, y, massivOfInventory, page, currentItem)
 end
 
 local function sell()
+
+	--Если в инвентаре ни хуя нет, то сасируй
+	local inventoryNotEmpty = true
+	if #massivWithProfile.inventory == 0 then
+		ecs.centerText("xy", 0, "Ваш инвентарь пуст.")
+		inventoryNotEmpty = false
+	end
+
 	--Показываем инвентарь
 	local xInventory, yInventory, currentPage, currentItem = 3, 5, 1, 1
-	local countOfPages = showInventory(xInventory, yInventory, massivWithProfile, currentPage, currentItem)
-
-ecs.error("Программа разрабатывается. По сути это будет некий аналог Торговой Площадки Стима с разными доп. фичами.")
-
+	local countOfPages
+	if inventoryNotEmpty then
+		countOfPages = showInventory(xInventory, yInventory, currentPage, currentItem)
+	end
 
 	while true do
 		local e = {event.pull()}
 		if e[1] == "touch" then
-			for key in pairs(obj["SellItems"])do
-				if ecs.clickedAtArea(e[3], e[4], obj["SellItems"][key][1], obj["SellItems"][key][2], obj["SellItems"][key][3], obj["SellItems"][key][4]) then
-					currentItem = key
-					showInventory(xInventory, yInventory, massivWithProfile, currentPage, currentItem)
-					break
+
+			if inventoryNotEmpty then
+				for key in pairs(obj["SellItems"])do
+					if ecs.clickedAtArea(e[3], e[4], obj["SellItems"][key][1], obj["SellItems"][key][2], obj["SellItems"][key][3], obj["SellItems"][key][4]) then
+						currentItem = key
+						showInventory(xInventory, yInventory, currentPage, currentItem)
+						break
+					end
+				end
+
+				for key in pairs(obj["SellButtons"])do
+					if ecs.clickedAtArea(e[3], e[4], obj["SellButtons"][key][1], obj["SellButtons"][key][2], obj["SellButtons"][key][3], obj["SellButtons"][key][4]) then
+						ecs.drawButton(obj["SellButtons"][key][1], obj["SellButtons"][key][2], obj["SellButtons"][key][5], 3, key, ecs.colors.green, 0xffffff)
+						os.sleep(0.3)
+
+						if key == ">" then
+							if currentPage < countOfPages then currentPage = currentPage + 1 end
+						
+						elseif key == "<" then
+							if currentPage > 1 then currentPage = currentPage - 1 end
+						
+						elseif key == "Пополнить инвентарь" then
+							ecs.error("Пихай предметы в сундук и жми ок, епта!")
+							local addedCount = addToInventoryFromChest()
+							ecs.error("Добавлено "..addedCount.." предметов.")
+						
+						elseif key == "Продать админам" then
+							local maxToSell = massivWithProfile.inventory[currentItem].count
+							local data = ecs.universalWindow("auto", "auto", 40, 0x444444, true, {"EmptyLine"}, {"CenterText", 0xffffff, "Сколько продаем?"}, {"EmptyLine"}, {"Slider", 0xffffff, 0x33db80, 1, maxToSell, math.floor(maxToSell / 2), "Количество: "}, {"EmptyLine"}, {"Button", 0x33db80, 0xffffff, "Продать"})
+							local count = data[1]
+							if count then
+								local money = sellToAdmins(currentItem, count)
+								ecs.universalWindow("auto", "auto", 40, 0x444444, true, {"EmptyLine"}, {"CenterText", 0xffffff, "Успешно продано!"}, {"CenterText", 0xffffff, "Ты заработал "..money..moneySymbol}, {"EmptyLine"}, {"Button", 0x33db80, 0xffffff, "Ok"})
+							else
+								ecs.error("Ошибка при продаже! Дебажь!")
+							end
+						
+						elseif key == "Продать игрокам" then
+							local maxToSell = massivWithProfile.inventory[currentItem].count
+							local data = ecs.universalWindow("auto", "auto", 36, 0x444444, true, {"EmptyLine"}, {"CenterText", 0xffffff, "Продать игрокам"}, {"EmptyLine"}, {"Input", 0xffffff, 0x33db80, "Цена за штуку"}, {"EmptyLine"}, {"CenterText", 0xffffff, "Количество:"}, {"Slider", 0xffffff, 0x33db80, 1, maxToSell, math.floor(maxToSell / 2), ""}, {"EmptyLine"}, {"CenterText", 0xffffff, "При каждой продаже с вас"}, {"CenterText", 0xffffff, "взымается комиссия в 4%"}, {"EmptyLine"}, {"Button", 0x33db80, 0xffffff, "Продать"})
+							local price, count = tonumber(data[1]), data[2]
+							if price then
+								sellToPlayers(currentItem, count, price, currentUser)
+								ecs.universalWindow("auto", "auto", 36, 0x444444, true, {"EmptyLine"}, {"CenterText", 0xffffff, "Ваш предмет выставлен на продажу!"}, {"EmptyLine"}, {"Button", 0x33db80, 0xffffff, "Ok"})
+							else
+								ecs.error("Ошибка! Неверно указана цена продажи!")
+							end
+						end
+
+						countOfPages = showInventory(xInventory, yInventory, currentPage, currentItem) 
+
+						break
+					end
 				end
 			end
 
-			for key in pairs(obj["SellButtons"])do
-				if ecs.clickedAtArea(e[3], e[4], obj["SellButtons"][key][1], obj["SellButtons"][key][2], obj["SellButtons"][key][3], obj["SellButtons"][key][4]) then
-					ecs.drawButton(obj["SellButtons"][key][1], obj["SellButtons"][key][2], obj["SellButtons"][key][5], 3, key, ecs.colors.green, 0xffffff)
-					os.sleep(0.3)
-
-					if key == ">" then
-						if currentPage < countOfPages then currentPage = currentPage + 1 end
-					
-					elseif key == "<" then
-						if currentPage > 1 then currentPage = currentPage - 1 end
-					
-					elseif key == "Пополнить инвентарь" then
-						ecs.error("Пихай предметы в сундук и жми ок, епта!")
-						local addedCount = addToInventoryFromChest()
-						ecs.error("Добавлено "..addedCount.." предметов.")
-					
-					elseif key == "Продать админам" then
-						local maxToSell = massivWithProfile.inventory[currentItem].count
-						local data = ecs.universalWindow("auto", "auto", 40, 0x444444, true, {"EmptyLine"}, {"CenterText", 0xffffff, "Сколько продаем?"}, {"EmptyLine"}, {"Slider", 0xffffff, 0x33db80, 1, maxToSell, math.floor(maxToSell / 2), "Количество: "}, {"EmptyLine"}, {"Button", 0x33db80, 0xffffff, "Продать"})
-						local count = data[1] or nil
-						if count then
-							local money = sellToAdmins(currentItem, count)
-							ecs.universalWindow("auto", "auto", 40, 0x444444, true, {"EmptyLine"}, {"CenterText", 0xffffff, "Успешно продано!"}, {"CenterText", 0xffffff, "Ты заработал "..money..moneySymbol}, {"EmptyLine"}, {"Button", 0x33db80, 0xffffff, "Ok"})
-						else
-							ecs.error("Ошибка при продаже! Дебажь!")
-						end
-					end
-
-					countOfPages = showInventory(xInventory, yInventory, massivWithProfile, currentPage, currentItem) 
-
-					break
+			for key in pairs(obj["TopButtons"])do
+				if ecs.clickedAtArea(e[3], e[4], obj["TopButtons"][key][1], obj["TopButtons"][key][2], obj["TopButtons"][key][3], obj["TopButtons"][key][4]) then
+					currentMode = key
+					return
 				end
 			end
 		end
 	end
 end
 
+
+local function showMarket()
+
+end
+
+--Окно покупки
+local function buy()
+	
+end
+
+
 local function main()
-	--Кнопы
-	local topButtons = {{"🏠", "Главная"}, {"⟱", "Купить"}, {"⟰", "Продать"}, {"☯", "Лотерея"},{"€", "Мой профиль"}}
+	--Верхние кнопы
+	local topButtons = {{"🏠", "Главная"}, {"⟱", "Купить"}, {"⟰", "Продать"}, {"☯", "Лотерея"}, {moneySymbol, "Мой профиль"}}
+	
+	--Отрисовка одной кнопки
+	local function drawTopButton(i, x)
+		local back, fore
+		if i == currentMode then
+			back = colors.topbarButton
+			fore = colors.topbarButtonText
+		else
+			back = colors.topbar
+			fore = colors.topbarText
+		end	
+
+		ecs.drawButton(x, 1, topButtons[i][3], 2, topButtons[i][1], back, fore)
+		ecs.drawButton(x, 3, topButtons[i][3], 1, topButtons[i][2], back, fore)
+		newObj("TopButtons", i, x, 1, x + topButtons[i][3] - 1, 3)
+
+	end
+
 	--Расстояние между кнопами
 	local spaceBetweenTopButtons = 2
 	--Считаем ширину
@@ -468,38 +664,28 @@ local function main()
 	--Рисуем белую подложку
 	ecs.square(1, 4, xSize, ySize - 3, colors.background)
 
-	--Отрисовка одной кнопки
-	local function drawButton(i, x)
-		local back, fore
-		if i == currentMode then
-			back = colors.topbarButton
-			fore = colors.topbarButtonText
-		else
-			back = colors.topbar
-			fore = colors.topbarText
-		end	
-
-		ecs.drawButton(x, 1, topButtons[i][3], 2, topButtons[i][1], back, fore)
-		ecs.drawButton(x, 3, topButtons[i][3], 1, topButtons[i][2], back, fore)
-	end
-
 	--Рисуем топ кнопочки
 	for i = 1, #topButtons do
-		drawButton(i, xStartOfTopButtons)
+		drawTopButton(i, xStartOfTopButtons)
 		xStartOfTopButtons = xStartOfTopButtons + topButtons[i][3] + spaceBetweenTopButtons
-	end
-
-	--Запускаем нужный режим работы проги
-	if currentMode == 3 then
-		
-		sell()
 	end
 end
 
-main()
+while true do
+	main()
 
-
-
+	if currentMode == 1 then
+		--about()
+	elseif currentMode == 2 then
+		buy()
+	elseif currentMode == 3 then
+		sell()
+	elseif currentMode == 4 then
+		--fortune()
+	else
+		--user()
+	end
+end
 
 
 
