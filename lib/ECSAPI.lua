@@ -7,6 +7,7 @@ local shell = require("shell")
 local keyboard = require("keyboard")
 local computer = require("computer")
 local fs = require("filesystem")
+local internet = require("internet")
 --local thread = require("thread")
 local gpu = component.gpu
 local screen = component.screen
@@ -89,6 +90,62 @@ function ECSAPI.getHDDs()
 	  end
 	end
 	return candidates
+end
+
+--Загрузка файла с инета
+function ECSAPI.getFileFromUrl(url, path)
+	local sContent = ""
+	local result, response = pcall(internet.request, url)
+	if not result then
+		ECSAPI.error("Could not connect to this Url.")
+		return
+	end
+
+	fs.remove(path)
+	fs.makeDirectory(fs.path(path))
+	local file = io.open(path, "w")
+
+	for chunk in response do
+		file:write(chunk)
+		sContent = sContent .. chunk
+	end
+
+	file:close()
+
+	return sContent
+end
+
+--Загрузка файла с пастебина
+function ECSAPI.getFromPastebin(paste, path)
+	local url = "http://pastebin.com/raw.php?i=" .. paste
+	ECSAPI.getFileFromUrl(url, path)
+end
+
+--Загрузка файла с гитхаба
+function ECSAPI.getFromGitHub(url, path)
+	url = "https://raw.githubusercontent.com/" .. url
+	ECSAPI.getFileFromUrl(url, path)
+end
+
+--Загрузить ОС-приложение
+function ECSAPI.getOSApplication(elementFromMassiv)
+	--Удаляем старый файл и получаем путь
+	local path = elementFromMassiv.name
+	fs.remove(path)
+	--Если тип = приложение
+	if elementFromMassiv.type == "Application" then
+		fs.makeDirectory(path .. ".app/Resources")
+		ECSAPI.getFromGitHub(elementFromMassiv.url, path .. ".app/" .. fs.name(elementFromMassiv.name .. ".lua"))
+		ECSAPI.getFromGitHub(elementFromMassiv.icon, path .. ".app/Resources/Icon.png")
+		if elementFromMassiv.resources then
+			for i = 1, #elementFromMassiv.resources do
+				ECSAPI.getFromGitHub(elementFromMassiv.resources[i].url, path .. ".app/Resources/" .. elementFromMassiv.resources[i].name)
+			end
+		end
+	--А если че-то другое
+	else
+		ECSAPI.getFromGitHub(elementFromMassiv.url, path)
+	end
 end
 
 --МАСШТАБ МОНИТОРА
