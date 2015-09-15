@@ -121,6 +121,8 @@ local function drawPngImage(x, y)
 	end
 end
 
+ecs.prepareToExit()
+
 drawPngImage(2, 2)
 
 ecs.waitForTouchOrClick()
