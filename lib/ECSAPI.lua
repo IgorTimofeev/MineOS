@@ -166,7 +166,7 @@ function ECSAPI.getAppsToUpdate(debug)
 	local applications = serialization.unserialize(file:read("*a"))
 	file:close()
 	--И второй
-	local file = io.open(pathToSecondApplicationsFile, "r")
+	file = io.open(pathToSecondApplicationsFile, "r")
 	local applications2 = serialization.unserialize(file:read("*a"))
 	file:close()
 
@@ -178,6 +178,7 @@ function ECSAPI.getAppsToUpdate(debug)
 	while true do
 		--Разрыв цикла
 		if i > #applications2 then break end
+		--Новая версия файла
 		local newVersion, oldVersion = applications2[i].version, 0
 		--Получаем старую версию этого файла
 		for j = 1, #applications do
@@ -186,7 +187,8 @@ function ECSAPI.getAppsToUpdate(debug)
 				break
 			end
 		end
-		if newVersion <= oldVersion then table.insert(appsToUpdate, applications2[i]) else i = i + 1 end
+		if newVersion <= oldVersion then table.insert(appsToUpdate, applications2[i]) end
+		i = i + 1
 	end
 	--Если чет рисовалось, то стереть на хер
 	if oldPixels then ECSAPI.drawOldPixels(oldPixels) end
