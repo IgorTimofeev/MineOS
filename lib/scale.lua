@@ -1,7 +1,8 @@
-local c = require("component")
-local gpu, screen = c.gpu, c.screen
+local component = require("component")
+local gpu, screen = component.gpu, component.screen
 
 local scale = {}
+
 ------------------------------------------------------------------------------------------
 
 --Изменить масштаб монитора
@@ -81,6 +82,3 @@ function scale.set(scale, debug)
 end
 
 --scale.set(1, true)
-
-
-
