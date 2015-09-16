@@ -11,7 +11,6 @@ local fs = require("filesystem")
 local internet = require("internet")
 --local thread = require("thread")
 local gpu = component.gpu
-local screen = component.screen
 
 local ECSAPI = {}
 
