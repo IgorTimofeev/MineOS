@@ -229,30 +229,57 @@ function ECSAPI.setScale(scale, debug)
 
 	local proportion = xPixels / yPixels
 
-	--Костыль
-	local xMax, yMax  = gpu.maxResolution()
-	xMax = yMax * 2
+	--Получаем максимально возможное разрешение данной видеокарты
+	local xMax, yMax = gpu.maxResolution()
 
+	--Получаем теоретическое максимальное разрешение с учетом пропорции монитора
 	local newWidth, newHeight
-
 	if proportion >= 1 then
-		newWidth = math.floor(xMax * scale)
+		newWidth = math.floor(xMax)
 		newHeight = math.floor(newWidth / proportion / 2)
 	else
-		newHeight = math.floor(yMax * scale)
+		newHeight = math.floor(yMax)
 		newWidth = math.floor(newHeight * proportion * 2)
 	end
+
+	local optimalNewWidth, optimalNewHeight = newWidth, newHeight
+	if optimalNewWidth > xMax then
+		local difference = optimalNewWidth - xMax
+		optimalNewWidth = optimalNewWidth - difference
+		optimalNewHeight = optimalNewHeight - math.ceil(difference/2)
+	end
+
+	if optimalNewHeight > yMax then
+		local difference = optimalNewHeight - yMax
+		optimalNewHeight = optimalNewHeight - difference
+		optimalNewWidth = optimalNewWidth - difference * 2
+	end
+
+	--Корректируем идеальное разрешение по заданному масштабу
+	local finalNewWidth, finalNewHeight = math.floor(optimalNewWidth * scale), math.floor(optimalNewHeight * scale)
 
 	if debug then
 		print(" ")
 		print("Максимальное разрешение: "..xMax.."x"..yMax)
 		print("Пропорция монитора: "..xPixels.."x"..yPixels)
+		print("Коэффициент пропорции: "..proportion)
 		print(" ")
-		print("Новое разрешение: "..newWidth.."x"..newHeight)
+		print("Теоретическое разрешение: "..newWidth.."x"..newHeight)
+		print("Оптимизированное разрешение: "..optimalNewWidth.."x"..optimalNewHeight)
+		print(" ")
+		print("Новое разрешение: "..finalNewWidth.."x"..finalNewHeight)
 		print(" ")
 	end
 
-	gpu.setResolution(newWidth, newHeight)
+	gpu.setResolution(finalNewWidth, finalNewHeight)
+end
+
+--Сделать строку пригодной для отображения в ОпенКомпах
+function ECSAPI.stringOptimize(sto4ka, indentatonWidth)
+	indentatonWidth = indentatonWidth or 2
+    sto4ka = string.gsub(sto4ka, "\r\n", "\n")
+    sto4ka = string.gsub(sto4ka, "	", string.rep(" ", indentatonWidth))
+    return stro4ka
 end
 
 --Сделать строку пригодной для отображения в ОпенКомпах
