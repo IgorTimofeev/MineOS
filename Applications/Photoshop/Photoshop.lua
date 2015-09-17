@@ -690,6 +690,14 @@ local function inputText(x,y,limit,textColor)
 					drawThisShit()
 				end
 			end
+		elseif e[1] == "clipboard" then
+			if e[3] then
+				text = text .. e[3]
+				if unicode.len(text) < limit then
+					inputPos = inputPos + 1
+				end
+				drawThisShit()
+			end
 		end
 	end
 
