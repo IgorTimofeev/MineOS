@@ -210,7 +210,7 @@ function event.pullFiltered(...)
       local localAddress, remoteAddress, port, distance, protocol, command = signal[2], signal[3], signal[4], signal[5], signal[6], signal[7]
       if protocol == "RCON" and port == 512 then
         if command == "iWantToControl" then
-          local data = ecs.universalWindow("auto", "auto", 40, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x880000, "RCON"}, {"EmptyLine"}, {"CenterText", 0x262626, "Копьютер "..ecs.stringLimit("end", remoteAddress, 8).." запрашивает управление"}, {"EmptyLine"}, {"Button", 0x880000, 0xffffff, "Разрешить"}, {"Button", 0xbbbbbb, 0xffffff, "Отклонить"})
+          local data = ecs.universalWindow("auto", "auto", 46, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x880000, "RCON"}, {"EmptyLine"}, {"CenterText", 0x262626, "Копьютер "..ecs.stringLimit("end", remoteAddress, 8).." запрашивает управление"}, {"EmptyLine"}, {"Button", 0x880000, 0xffffff, "Разрешить"}, {"Button", 0xbbbbbb, 0xffffff, "Отклонить"})
           if data[1] == "Разрешить" then
             component.modem.send(remoteAddress, port, "RCON", "acceptControl")
           else
