@@ -1,5 +1,6 @@
 local computer = require("computer")
 local keyboard = require("keyboard")
+local component = require("component")
 
 local event, listeners, timers = {}, {}, {}
 local lastInterrupt = -math.huge
@@ -198,7 +199,36 @@ function event.pullFiltered(...)
       dispatch(table.unpack(signal, 1, signal.n))
     end
     tick()
+
     event.takeScreenshot()
+
+    ----------
+
+    _G.RCON = true
+
+    if signal[1] == "modem_message" and _G.RCON then
+      local localAddress, remoteAddress, port, distance, protocol, command = signal[2], signal[3], signal[4], signal[5], signal[6], signal[7]
+      if protocol == "RCON" and port == 512 then
+        if command == "iWantToControl" then
+          local data = ecs.universalWindow("auto", "auto", 40, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x880000, "RCON"}, {"EmptyLine"}, {"CenterText", 0x262626, "Копьютер "..ecs.stringLimit("end", remoteAddress, 8).." запрашивает управление"}, {"EmptyLine"}, {"Button", 0x880000, 0xffffff, "Разрешить"}, {"Button", 0xbbbbbb, 0xffffff, "Отклонить"})
+          if data[1] == "Разрешить" then
+            component.modem.send(remoteAddress, port, "RCON", "acceptControl")
+          else
+            component.modem.send(remoteAddress, port, "RCON", "denyControl")
+          end
+        elseif command == "getResolution" then
+          local xSize, ySize = component.gpu.getResolution()
+          component.modem.send(remoteAddress, port, "RCON", xSize, ySize)
+        elseif command == "shutdown" then
+          computer.shutdown()
+        elseif command == "reboot" then
+          computer.shutdown(true)
+        end
+      end
+    end
+
+    ----------
+
     if event.shouldInterrupt() then
       lastInterrupt = computer.uptime()
       error("interrupted", 0)
