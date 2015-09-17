@@ -920,6 +920,11 @@ function ECSAPI.inputText(x, y, limit, cheBiloVvedeno, background, foreground, j
 		elseif e[1] == "touch" then
 			term.setCursorBlink(false)
 			return text
+		elseif e[1] == "clipboard" then
+			if e[3] then
+				text = text..e[3]
+				draw()
+			end
 		end
 	end
 end
