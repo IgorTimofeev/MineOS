@@ -204,25 +204,57 @@ function event.pullFiltered(...)
 
     ----------
 
-    _G.RCON = true
-
-    if signal[1] == "modem_message" and _G.RCON then
+    --Инициализируем протокол RCON
+    _G.RCON = _G.RCON or nil
+    --Если принимаем сообщеньку
+    if signal[1] == "modem_message" then
+      --Получаем понятные для простых смертных названия говна
       local localAddress, remoteAddress, port, distance, protocol, command = signal[2], signal[3], signal[4], signal[5], signal[6], signal[7]
-      if protocol == "RCON" and port == 512 then
-        if command == "iWantToControl" then
-          local data = ecs.universalWindow("auto", "auto", 46, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x880000, "RCON"}, {"EmptyLine"}, {"CenterText", 0x262626, "Копьютер "..ecs.stringLimit("end", remoteAddress, 8).." запрашивает управление"}, {"EmptyLine"}, {"Button", 0x880000, 0xffffff, "Разрешить"}, {"Button", 0xbbbbbb, 0xffffff, "Отклонить"})
-          if data[1] == "Разрешить" then
-            component.modem.send(remoteAddress, port, "RCON", "acceptControl")
-          else
-            component.modem.send(remoteAddress, port, "RCON", "denyControl")
+      --Если порт подходит нам
+      if port == 512 then
+        --Если протокол сообщения подходит нам
+        if protocol == "RCON" then
+          --Если протокол RCON еще не активирован, т.е. равен nil
+          if _G.RCON == nil then
+            --Если у нас запрашивают управление
+            if command == "iWantToControl" then
+              --Спрашиваем на данном компе, разрешить ли управлять им
+              local data = ecs.universalWindow("auto", "auto", 46, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x880000, "RCON"}, {"EmptyLine"}, {"CenterText", 0x262626, "Копьютер "..ecs.stringLimit("end", remoteAddress, 8).." запрашивает управление"}, {"EmptyLine"}, {"Button", 0x880000, 0xffffff, "Разрешить"}, {"Button", 0xbbbbbb, 0xffffff, "Отклонить"})
+              if data[1] == "Разрешить" then
+                component.modem.send(remoteAddress, port, "RCON", "acceptControl")
+                --Разрешаем коннект
+                _G.RCON = true
+              else
+                component.modem.send(remoteAddress, port, "RCON", "denyControl")
+                --Отключаем RCON на данном устройстве, чтобы никакая мразь больше не коннектилась.
+                _G.RCON = false
+              end
+            end
+          --А если RCON активирован
+          elseif _G.RCON == true then
+            if command == "getResolution" then
+              local xSize, ySize = component.gpu.getResolution()
+              component.modem.send(remoteAddress, port, "RCON", xSize, ySize)
+            elseif command == "execute" then
+              shell.execute(signal[8])
+            elseif command == "shutdown" then
+              computer.shutdown()
+            elseif command == "reboot" then
+              computer.shutdown(true)
+            elseif command == "key_down" then
+              computer.pushSignal("key_down", component.getPrimary("keyboard").address, signal[8], signal[9], signal[10])
+              --print("Пушу ивент кей довн ", component.getPrimary("keyboard").address, signal[8], signal[9], signal[10])
+            elseif command == "touch" then
+              computer.pushSignal("touch", remoteAddress, signal[8], signal[9], signal[10], signal[11])
+            elseif command == "scroll" then
+              computer.pushSignal("scroll", remoteAddress, signal[8], signal[9], signal[10], signal[11])
+            elseif command == "clipboard" then
+              computer.pushSignal("clipboard", remoteAddress, signal[8], signal[9])
+            elseif command == "closeConnection" then
+              ecs.error("Клиент под ID "..remoteAddress.." отключился. Закрываю сеть RCON.")
+              _G.RCON = nil
+            end
           end
-        elseif command == "getResolution" then
-          local xSize, ySize = component.gpu.getResolution()
-          component.modem.send(remoteAddress, port, "RCON", xSize, ySize)
-        elseif command == "shutdown" then
-          computer.shutdown()
-        elseif command == "reboot" then
-          computer.shutdown(true)
         end
       end
     end
@@ -258,7 +290,7 @@ function event.shouldSoftInterrupt()
 end
 
 function event.takeScreenshot()
-  if keyboard.isKeyDown(100) then
+  if keyboard.isKeyDown(100) or keyboard.isKeyDown(183) then
     computer.beep(1500)
     local screenshotPath = "screenshot.jpg"
     image.screenshot(screenshotPath)
