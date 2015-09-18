@@ -251,7 +251,8 @@ function ECSAPI.setScale(scale, debug)
 	if optimalNewHeight > yMax then
 		local difference = optimalNewHeight - yMax
 		optimalNewHeight = yMax
-		optimalNewWidth = optimalNewWidth - difference * 2 - math.ceil(difference / 2)
+		--optimalNewWidth = optimalNewWidth - difference * 2 - math.ceil(difference / 2)
+		optimalNewWidth = optimalNewWidth - difference * 2
 	end
 
 	--Корректируем идеальное разрешение по заданному масштабу
