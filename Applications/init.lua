@@ -202,6 +202,10 @@ _G.config = require("config")
 _G.image = require("image")
 _G.fs = require("filesystem")
 _G.shell = require("shell")
+local component = require("component")
+
+--Oткрываем порт для беспороводных MineOS-соединений
+if component.isAvailable("modem") then component.modem.open(512) end
 
 --Очищаем экран и запускаем ОС
 ecs.clearScreen()
@@ -209,7 +213,6 @@ ecs.setScale(1)
 shell.execute("OS.lua")
 
 while true do
-  local component = require("component")
   component.gpu.setBackground(backgroundColor)
   component.gpu.setForeground(foregroundColor)
   local w, h = component.gpu.getResolution()
