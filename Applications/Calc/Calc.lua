@@ -58,3 +58,4 @@ end
 
 --ecs.prepareToExit()
 drawCalc(2, 2)
+ecs.waitForTouchOrClick()
