@@ -9,7 +9,6 @@ local computer = require("computer")
 local serialization = require("serialization")
 local fs = require("filesystem")
 local internet = require("internet")
---local thread = require("thread")
 local gpu = component.gpu
 
 local ECSAPI = {}
@@ -62,6 +61,83 @@ ECSAPI.colors = {
 
 ----------------------------------------------------------------------------------------------------
 
+--Установка масштаба монитора
+function ECSAPI.setScale(scale, debug)
+	--Базовая коррекция масштаба, чтобы всякие умники не писали своими погаными ручонками, чего не следует
+	if scale > 1 then
+		scale = 1
+	elseif scale < 0.1 then
+		scale = 0.1
+	end
+
+	--Просчет монитора в псевдопикселях - забей, даже объяснять не буду, работает как часы
+	local function calculateAspect(screens)
+	  local abc = 12
+
+	  if screens == 2 then
+	    abc = 28
+	  elseif screens > 2 then
+	    abc = 28 + (screens - 2) * 16
+	  end
+
+	  return abc
+	end
+
+	--Рассчитываем пропорцию монитора в псевдопикселях
+	local xScreens, yScreens = component.screen.getAspectRatio()
+	local xPixels, yPixels = calculateAspect(xScreens), calculateAspect(yScreens)
+	local proportion = xPixels / yPixels
+
+	--Получаем максимально возможное разрешение данной видеокарты
+	local xMax, yMax = gpu.maxResolution()
+
+	--Получаем теоретическое максимальное разрешение монитора с учетом его пропорции, но без учета лимита видеокарты
+	local newWidth, newHeight
+	if proportion >= 1 then
+		newWidth = math.floor(xMax)
+		newHeight = math.floor(newWidth / proportion / 2)
+	else
+		newHeight = math.floor(yMax)
+		newWidth = math.floor(newHeight * proportion * 2)
+	end
+
+	--Получаем оптимальное разрешение для данного монитора с поддержкой видеокарты
+	local optimalNewWidth, optimalNewHeight = newWidth, newHeight
+
+	if optimalNewWidth > xMax then
+		local difference = optimalNewWidth - xMax
+		optimalNewWidth = xMax
+		optimalNewHeight = optimalNewHeight - math.ceil(difference / 2 )
+	end
+
+	if optimalNewHeight > yMax then
+		local difference = optimalNewHeight - yMax
+		optimalNewHeight = yMax
+		--optimalNewWidth = optimalNewWidth - difference * 2 - math.ceil(difference / 2)
+		optimalNewWidth = optimalNewWidth - difference * 2
+	end
+
+	--Корректируем идеальное разрешение по заданному масштабу
+	local finalNewWidth, finalNewHeight = math.floor(optimalNewWidth * scale), math.floor(optimalNewHeight * scale)
+
+	--Выводим инфу, если нужно
+	if debug then
+		print(" ")
+		print("Максимальное разрешение: "..xMax.."x"..yMax)
+		print("Пропорция монитора: "..xPixels.."x"..yPixels)
+		print("Коэффициент пропорции: "..proportion)
+		print(" ")
+		print("Теоретическое разрешение: "..newWidth.."x"..newHeight)
+		print("Оптимизированное разрешение: "..optimalNewWidth.."x"..optimalNewHeight)
+		print(" ")
+		print("Новое разрешение: "..finalNewWidth.."x"..finalNewHeight)
+		print(" ")
+	end
+
+	--Устанавливаем выбранное разрешение
+	gpu.setResolution(finalNewWidth, finalNewHeight)
+end
+
 --Получаем всю инфу об оперативку в килобайтах
 function ECSAPI.getInfoAboutRAM()
 	local free = math.floor(computer.freeMemory() / 1024)
@@ -90,6 +166,41 @@ function ECSAPI.getHDDs()
 	  end
 	end
 	return candidates
+end
+
+--Форматировать диск
+function ECSAPI.formatHDD(address)
+	local proxy = component.proxy(address)
+	local list = proxy.list("")
+	ECSAPI.info("auto", "auto", "", "Formatting disk...")
+	for _, file in pairs(list) do
+		if type(file) == "string" then
+			if not proxy.isReadOnly(file) then proxy.remove(file) end
+		end
+	end
+	list = nil
+end
+
+--Установить имя жесткого диска
+function ECSAPI.setHDDLabel(address, label)
+	local proxy = component.proxy(address)
+	proxy.setLabel(label or "Untitled")
+end
+
+--Найти монтированный путь конкретного адреса диска
+function ECSAPI.findMount(address)
+  for fs1, path in fs.mounts() do
+    if fs1.address == component.get(address) then
+      return path
+    end
+  end
+end
+
+--Скопировать файлы с одного диска на другой с заменой
+function ECSAPI.duplicateFileSystem(fromAddress, toAddress)
+	local source, destination = ECSAPI.findMount(fromAddress), ECSAPI.findMount(toAddress)
+	ECSAPI.info("auto", "auto", "", "Copying file system...")
+	shell.execute("bin/cp -rx "..source.."* "..destination)
 end
 
 --Загрузка файла с инета
@@ -199,83 +310,6 @@ function ECSAPI.getAppsToUpdate(debug)
 	return applications2, countOfUpdates
 end
 
---МАСШТАБ МОНИТОРА
-function ECSAPI.setScale(scale, debug)
-	--Базовая коррекция масштаба, чтобы всякие умники не писали своими погаными ручонками, чего не следует
-	if scale > 1 then
-		scale = 1
-	elseif scale < 0.1 then
-		scale = 0.1
-	end
-
-	--Просчет монитора в псевдопикселях - забей, даже объяснять не буду, работает как часы
-	local function calculateAspect(screens)
-	  local abc = 12
-
-	  if screens == 2 then
-	    abc = 28
-	  elseif screens > 2 then
-	    abc = 28 + (screens - 2) * 16
-	  end
-
-	  return abc
-	end
-
-	--Рассчитываем пропорцию монитора в псевдопикселях
-	local xScreens, yScreens = component.screen.getAspectRatio()
-	local xPixels, yPixels = calculateAspect(xScreens), calculateAspect(yScreens)
-	local proportion = xPixels / yPixels
-
-	--Получаем максимально возможное разрешение данной видеокарты
-	local xMax, yMax = gpu.maxResolution()
-
-	--Получаем теоретическое максимальное разрешение монитора с учетом его пропорции, но без учета лимита видеокарты
-	local newWidth, newHeight
-	if proportion >= 1 then
-		newWidth = math.floor(xMax)
-		newHeight = math.floor(newWidth / proportion / 2)
-	else
-		newHeight = math.floor(yMax)
-		newWidth = math.floor(newHeight * proportion * 2)
-	end
-
-	--Получаем оптимальное разрешение для данного монитора с поддержкой видеокарты
-	local optimalNewWidth, optimalNewHeight = newWidth, newHeight
-
-	if optimalNewWidth > xMax then
-		local difference = optimalNewWidth - xMax
-		optimalNewWidth = xMax
-		optimalNewHeight = optimalNewHeight - math.ceil(difference / 2 )
-	end
-
-	if optimalNewHeight > yMax then
-		local difference = optimalNewHeight - yMax
-		optimalNewHeight = yMax
-		--optimalNewWidth = optimalNewWidth - difference * 2 - math.ceil(difference / 2)
-		optimalNewWidth = optimalNewWidth - difference * 2
-	end
-
-	--Корректируем идеальное разрешение по заданному масштабу
-	local finalNewWidth, finalNewHeight = math.floor(optimalNewWidth * scale), math.floor(optimalNewHeight * scale)
-
-	--Выводим инфу, если нужно
-	if debug then
-		print(" ")
-		print("Максимальное разрешение: "..xMax.."x"..yMax)
-		print("Пропорция монитора: "..xPixels.."x"..yPixels)
-		print("Коэффициент пропорции: "..proportion)
-		print(" ")
-		print("Теоретическое разрешение: "..newWidth.."x"..newHeight)
-		print("Оптимизированное разрешение: "..optimalNewWidth.."x"..optimalNewHeight)
-		print(" ")
-		print("Новое разрешение: "..finalNewWidth.."x"..finalNewHeight)
-		print(" ")
-	end
-
-	--Устанавливаем выбранное разрешение
-	gpu.setResolution(finalNewWidth, finalNewHeight)
-end
-
 --Сделать строку пригодной для отображения в ОпенКомпах
 function ECSAPI.stringOptimize(sto4ka, indentatonWidth)
 	indentatonWidth = indentatonWidth or 2
@@ -354,38 +388,43 @@ function ECSAPI.clickedAtArea(x,y,sx,sy,ex,ey)
   return false
 end
 
---ОЧИСТКА ЭКРАНА ЦВЕТОМ
+--Заливка всего экрана указанным цветом
 function ECSAPI.clearScreen(color)
   if color then gpu.setBackground(color) end
   term.clear()
 end
 
---ПРОСТОЙ СЕТПИКСЕЛЬ, ИБО ЗАЕБАЛО
+--Установка пикселя нужного цвета
 function ECSAPI.setPixel(x,y,color)
   gpu.setBackground(color)
   gpu.set(x,y," ")
 end
 
---ЦВЕТНОЙ ТЕКСТ
+--Простая установка цветов в одну строку, ибо я ленивый
+function ECSAPI.setColor(background, foreground)
+	gpu.setBackground(background)
+	gpu.setForeground(foreground)
+end
+
+--Цветной текст
 function ECSAPI.colorText(x,y,textColor,text)
   gpu.setForeground(textColor)
   gpu.set(x,y,text)
 end
 
---ЦВЕТНОЙ ТЕКСТ С ЖОПКОЙ!
+--Цветной текст с жопкой!
 function ECSAPI.colorTextWithBack(x,y,textColor,backColor,text)
   gpu.setForeground(textColor)
   gpu.setBackground(backColor)
   gpu.set(x,y,text)
 end
 
---ИНВЕРСИЯ HEX-ЦВЕТА
+--Инверсия цвета
 function ECSAPI.invertColor(color)
   return 0xffffff - color
 end
 
---
---АДАПТИВНЫЙ ТЕКСТ, ПОДСТРАИВАЮЩИЙСЯ ПОД ФОН
+--Адаптивный текст, подстраивающийся под фон
 function ECSAPI.adaptiveText(x,y,text,textColor)
   gpu.setForeground(textColor)
   x = x - 1
@@ -419,7 +458,7 @@ function unicode.find(str, pattern, init, plain)
 	end
 end
 
---Умный текст по аналогии с майнчатовским. Ставишь символ параграфа, указываешь хуйню - и обана!
+--Умный текст по аналогии с майнчатовским. Ставишь символ параграфа, указываешь хуйню - и хуякс! Работает!
 function ECSAPI.smartText(x, y, text)
 	local sText = unicode.len(text)
 	local specialSymbol = "§"
@@ -445,13 +484,13 @@ function ECSAPI.smartText(x, y, text)
 	end
 end
 
---ИНВЕРТИРОВАННЫЙ ПО ЦВЕТУ ТЕКСТ НА ОСНОВЕ ФОНА
+--Инвертированный текст на основе цвета фона
 function ECSAPI.invertedText(x,y,symbol)
   local info = {gpu.get(x,y)}
   ECSAPI.adaptiveText(x,y,symbol,ECSAPI.invertColor(info[3]))
 end
 
---АДАПТИВНОЕ ОКРУГЛЕНИЕ ЧИСЛА
+--Адаптивное округление числа
 function ECSAPI.adaptiveRound(chislo)
   local celaya,drobnaya = math.modf(chislo)
   if drobnaya >= 0.5 then
@@ -467,11 +506,13 @@ function ECSAPI.round(num, idp)
 	return math.floor(num * mult + 0.5) / mult
 end
 
+--Обычный квадрат указанного цвета
 function ECSAPI.square(x,y,width,height,color)
   gpu.setBackground(color)
   gpu.fill(x,y,width,height," ")
 end
 
+--Юникодовская рамка
 function ECSAPI.border(x, y, width, height, back, fore)
 	local stringUp = "┌"..string.rep("─", width - 2).."┐"
 	local stringDown = "└"..string.rep("─", width - 2).."┘"
@@ -488,11 +529,12 @@ function ECSAPI.border(x, y, width, height, back, fore)
 	end
 end
 
+--Юникодовский разделитель
 function ECSAPI.separator(x, y, width, back, fore)
 	ECSAPI.colorTextWithBack(x, y, fore, back, string.rep("─", width))
 end
 
---АВТОМАТИЧЕСКОЕ ЦЕНТРИРОВАНИЕ ТЕКСТА ПО КООРДИНАТЕ
+--Автоматическое центрирование текста по указанной координате (x, y, xy)
 function ECSAPI.centerText(mode,coord,text)
 	local dlina = unicode.len(text)
 	local xSize,ySize = gpu.getResolution()
@@ -506,7 +548,7 @@ function ECSAPI.centerText(mode,coord,text)
 	end
 end
 
---
+--Отрисовка "изображения" по указанному массиву
 function ECSAPI.drawCustomImage(x,y,pixels)
 	x = x - 1
 	y = y - 1
@@ -528,7 +570,7 @@ function ECSAPI.drawCustomImage(x,y,pixels)
 	return (x+1),(y+1),xEnd,yEnd
 end
 
---КОРРЕКТИРОВКА СТАРТОВЫХ КООРДИНАТ
+--Корректировка стартовых координат. Core-функция для всех моих программ
 function ECSAPI.correctStartCoords(xStart,yStart,xWindowSize,yWindowSize)
 	local xSize,ySize = gpu.getResolution()
 	if xStart == "auto" then
@@ -540,7 +582,7 @@ function ECSAPI.correctStartCoords(xStart,yStart,xWindowSize,yWindowSize)
 	return xStart,yStart
 end
 
---ЗАПОМНИТЬ ОБЛАСТЬ ПИКСЕЛЕЙ
+--Запомнить область пикселей и возвратить ее в виде массива
 function ECSAPI.rememberOldPixels(x, y, x2, y2)
 	local newPNGMassiv = { ["backgrounds"] = {} }
 	newPNGMassiv.x, newPNGMassiv.y = x, y
@@ -567,12 +609,8 @@ function ECSAPI.rememberOldPixels(x, y, x2, y2)
 	return newPNGMassiv
 end
 
---НАРИСОВАТЬ ЗАПОМНЕННЫЕ ПИКСЕЛИ ИЗ МАССИВА
+--Нарисовать запомненные ранее пиксели из массива
 function ECSAPI.drawOldPixels(massivSudaPihay)
-
-	--Отнимаем разок
-	--massivSudaPihay.x, massivSudaPihay.y = massivSudaPihay.x - 1, massivSudaPihay.y - 1
-
 	--Перебираем массив с фонами
 	for back, backValue in pairs(massivSudaPihay["backgrounds"]) do
 		gpu.setBackground(back)
@@ -587,7 +625,7 @@ function ECSAPI.drawOldPixels(massivSudaPihay)
 	end
 end
 
---ОГРАНИЧЕНИЕ ДЛИНЫ СТРОКИ
+--Ограничение длины строки. Маст-хев функция.
 function ECSAPI.stringLimit(mode, text, size, noDots)
 	if unicode.len(text) <= size then return text end
 	local length = unicode.len(text)
@@ -606,7 +644,7 @@ function ECSAPI.stringLimit(mode, text, size, noDots)
 	end
 end
 
---ПОЛУЧИТЬ СПИСОК ФАЙЛОВ ИЗ КОНКРЕТНОЙ ДИРЕКТОРИИ
+--Получить спискок файлов из конкретной директории, костыль
 function ECSAPI.getFileList(path)
 	local list = fs.list(path)
 	local massiv = {}
@@ -618,7 +656,7 @@ function ECSAPI.getFileList(path)
 	return massiv
 end
 
---ПОЛУЧИТЬ ВСЕ ДРЕВО ФАЙЛОВ
+--Получить файловое древо. Сильно нагружает систему, только для дебага!
 function ECSAPI.getFileTree(path)
 	local massiv = {}
 	local list = ECSAPI.getFileList(path)
@@ -666,7 +704,7 @@ function ECSAPI.find(path, cheBudemIskat)
 	return massivNaydennogoGovna
 end
 
---ПОЛУЧЕНИЕ ФОРМАТА ФАЙЛА
+--Получение формата файла
 function ECSAPI.getFileFormat(path)
 	local name = fs.name(path)
 	local starting, ending = string.find(name, "(.)%.[%d%w]*$")
@@ -678,7 +716,7 @@ function ECSAPI.getFileFormat(path)
 	name, starting, ending = nil, nil, nil
 end
 
---ПРОВЕРКА, СКРЫТЫЙ ЛИ ФАЙЛ
+--Проверить, скрытый ли файл (.пидор, .хуй = true; пидор, хуй = false)
 function ECSAPI.isFileHidden(path)
 	local name = fs.name(path)
 	local starting, ending = string.find(name, "^%.(.*)$")
@@ -690,7 +728,7 @@ function ECSAPI.isFileHidden(path)
 	name, starting, ending = nil, nil, nil
 end
 
---СКРЫТЬ РАСШИРЕНИЕ ФАЙЛА
+--Скрыть формат файла
 function ECSAPI.hideFileFormat(path)
 	local name = fs.name(path)
 	local fileFormat = ECSAPI.getFileFormat(name)
@@ -701,48 +739,6 @@ function ECSAPI.hideFileFormat(path)
 	end
 end
 
-function ECSAPI.reorganizeFilesAndFolders(massivSudaPihay, showHiddenFiles)
-	showHiddenFiles = showHiddenFiles or true
-	local massiv = {}
-	for i = 1, #massivSudaPihay do
-		if ECSAPI.isFileHidden(massivSudaPihay[i]) then
-			table.insert(massiv, massivSudaPihay[i])
-		end
-	end
-	for i = 1, #massivSudaPihay do
-		local cyka = massivSudaPihay[i]
-		if fs.isDirectory(cyka) and not ECSAPI.isFileHidden(cyka) and ECSAPI.getFileFormat(massivSudaPihay[i]) ~= ".app" then
-			table.insert(massiv, massivSudaPihay[i])
-		end
-		cyka = nil
-	end
-	for i = 1, #massivSudaPihay do
-		local cyka = massivSudaPihay[i]
-		if (not fs.isDirectory(cyka) and not ECSAPI.isFileHidden(cyka)) or (fs.isDirectory(cyka) and not ECSAPI.isFileHidden(cyka) and ECSAPI.getFileFormat(massivSudaPihay[i]) == ".app") then
-			table.insert(massiv, massivSudaPihay[i])
-		end
-		cyka = nil
-	end
-
-	return massiv
-end
-
---Бесполезна теперь, используй string.gsub()
-function ECSAPI.stringReplace(stroka, chto, nachto)
-	local searchFrom = 1
-	while true do
-		local starting, ending = string.find(stroka, chto, searchFrom)
-		if starting then
-			stroka = unicode.sub(stroka, 1, starting - 1) .. nachto .. unicode.sub(stroka, ending + 1, -1)
-			searchFrom = ending + unicode.len(nachto) + 1
-		else
-			break
-		end
-	end
-
-	return stroka
-end
-
 --Ожидание клика либо нажатия какой-либо клавиши
 function ECSAPI.waitForTouchOrClick()
 	while true do
@@ -751,10 +747,7 @@ function ECSAPI.waitForTouchOrClick()
 	end
 end
 
-----------------------------ОКОШЕЧКИ, СУКА--------------------------------------------------
-
---ECSAPI.windows = {}
-
+--Функция отрисовки кнопки указанной ширины
 function ECSAPI.drawButton(x,y,width,height,text,backColor,textColor)
 	x,y = ECSAPI.correctStartCoords(x,y,width,height)
 
@@ -766,6 +759,7 @@ function ECSAPI.drawButton(x,y,width,height,text,backColor,textColor)
 	return x, y, (x + width - 1), (y + height - 1)
 end
 
+--Отрисовка кнопки с указанными отступами от текста
 function ECSAPI.drawAdaptiveButton(x,y,offsetX,offsetY,text,backColor,textColor)
 	local length = unicode.len(text)
 	local width = offsetX*2 + length
@@ -779,13 +773,14 @@ function ECSAPI.drawAdaptiveButton(x,y,offsetX,offsetY,text,backColor,textColor)
 	return x,y,(x+width-1),(y+height-1)
 end
 
+--Отрисовка оконной "тени"
 function ECSAPI.windowShadow(x,y,width,height)
 	gpu.setBackground(ECSAPI.windowColors.shadow)
 	gpu.fill(x+width,y+1,2,height," ")
 	gpu.fill(x+1,y+height,width,1," ")
 end
 
---Просто белое окошко безо всего
+--Просто белое окошко с тенью
 function ECSAPI.blankWindow(x,y,width,height)
 	local oldPixels = ECSAPI.rememberOldPixels(x,y,x+width+1,y+height)
 
@@ -796,6 +791,7 @@ function ECSAPI.blankWindow(x,y,width,height)
 	return oldPixels
 end
 
+--Белое окошко, но уже с титлом вверху!
 function ECSAPI.emptyWindow(x,y,width,height,title)
 
 	local oldPixels = ECSAPI.rememberOldPixels(x,y,x+width+1,y+height)
@@ -840,16 +836,17 @@ end
 
 --Моя любимая функция ошибки C:
 function ECSAPI.error(text)
-	ECSAPI.universalWindow("auto", "auto", math.ceil(gpu.getResolution() * 0.45), ECSAPI.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x880000, "Ошибка!"}, {"EmptyLine"}, {"WrappedText", 0x262626, text}, {"EmptyLine"}, {"Button", 0x880000, 0xffffff, "OK!"})
+	ECSAPI.universalWindow("auto", "auto", math.ceil(gpu.getResolution() * 0.45), ECSAPI.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x880000, "Ошибка!"}, {"EmptyLine"}, {"WrappedText", 0x262626, text}, {"EmptyLine"}, {"Button", {0x880000, 0xffffff, "OK!"}})
 end
 
+--Очистить экран, установить комфортные цвета и поставить курсок на 1, 1
 function ECSAPI.prepareToExit(color1, color2)
 	ECSAPI.clearScreen(color1 or 0x333333)
 	gpu.setForeground(color2 or 0xffffff)
 	gpu.set(1, 1, "")
 end
 
---А ЭТО КАРОЧ ИЗ ЮНИКОДА В СИМВОЛ - ВРОДЕ РАБОТАЕТ, НО ВСЯКОЕ БЫВАЕТ
+--Конвертация из юникода в символ. Вроде норм, а вроде и не норм. Но полезно.
 function ECSAPI.convertCodeToSymbol(code)
 	local symbol
 	if code ~= 0 and code ~= 13 and code ~= 8 and code ~= 9 and code ~= 200 and code ~= 208 and code ~= 203 and code ~= 205 and not keyboard.isControlDown() then
@@ -859,13 +856,14 @@ function ECSAPI.convertCodeToSymbol(code)
 	return symbol
 end
 
+--Шкала прогресса - маст-хев!
 function ECSAPI.progressBar(x, y, width, height, background, foreground, percent)
 	local activeWidth = math.ceil(width * percent / 100)
 	ECSAPI.square(x, y, width, height, background)
 	ECSAPI.square(x, y, activeWidth, height, foreground)
 end
 
---ВВОД ТЕКСТА ПО ЛИМИТУ ВО ВСЯКИЕ ПОЛЯ - УДОБНАЯ ШТУКА КАРОЧ
+--Функция для ввода текста в мини-поле.
 function ECSAPI.inputText(x, y, limit, cheBiloVvedeno, background, foreground, justDrawNotEvent, maskTextWith)
 	limit = limit or 10
 	cheBiloVvedeno = cheBiloVvedeno or ""
@@ -930,228 +928,10 @@ function ECSAPI.inputText(x, y, limit, cheBiloVvedeno, background, foreground, j
 	end
 end
 
-function ECSAPI.selector(x, y, limit, cheBiloVvedeno, varianti, background, foreground, justDrawNotEvent)
-	
-	local selectionHeight = #varianti
-	local oldPixels
-
-
-	local obj = {}
-	local function newObj(class, name, ...)
-		obj[class] = obj[class] or {}
-		obj[class][name] = {...}
-	end
-
-	local function drawPimpo4ka(color)
-		ECSAPI.colorTextWithBack(x + limit - 1, y, color, 0xffffff - color, "▼")
-	end
-
-	local function drawText(color)
-		gpu.setForeground(color)
-		gpu.set(x, y, ECSAPI.stringLimit("start", cheBiloVvedeno, limit - 1))
-	end
-
-	local function drawSelection()
-		local yPos = y + 1
-		oldPixels = ECSAPI.rememberOldPixels(x, yPos, x + limit + 1, yPos + selectionHeight + 1)
-		ECSAPI.windowShadow(x, yPos, limit, selectionHeight)
-		ECSAPI.square(x, yPos, limit, selectionHeight, background)
-
-		gpu.setForeground(foreground)
-		for i = 1, #varianti do
-			gpu.set(x, y + i, varianti[i])
-			newObj("selector", varianti[i], x, y + i, x + limit - 1)
-		end
-	end
-
-	ECSAPI.square(x, y, limit, 1, background)
-	drawText(foreground)
-	drawPimpo4ka(background - 0x555555)
-
-	if justDrawNotEvent then return cheBiloVvedeno end
-
-	drawPimpo4ka(0xffffff)
-	drawSelection()
-
-	while true do
-		local e = {event.pull()}
-		if e[1] == "touch" then
-			for key, val in pairs(obj["selector"]) do
-				if obj["selector"] and ECSAPI.clickedAtArea(e[3], e[4], obj["selector"][key][1], obj["selector"][key][2], obj["selector"][key][3], obj["selector"][key][2]) then
-					ECSAPI.square(x, obj["selector"][key][2], limit, 1, ECSAPI.colors.blue)
-					gpu.setForeground(0xffffff)
-					gpu.set(x, obj["selector"][key][2], key)
-					os.sleep(0.3)
-					ECSAPI.drawOldPixels(oldPixels)
-					cheBiloVvedeno = key
-					drawPimpo4ka(background - 0x555555)
-					ECSAPI.square(x, y, limit - 1, 1, background)
-					drawText(foreground)
-
-					return cheBiloVvedeno
-				end
-			end
-		end
-	end
-end
-
-function ECSAPI.input(x, y, limit, title, ...)
-
-	local obj = {}
-	local function newObj(class, name, ...)
-		obj[class] = obj[class] or {}
-		obj[class][name] = {...}
-	end
-
-	local activeData = 1
-	local data = {...}
-
-	local sizeOfTheLongestElement = 1
-	for i = 1, #data do
-		sizeOfTheLongestElement = math.max(sizeOfTheLongestElement, unicode.len(data[i][2]))
-	end
-
-	local width = 2 + sizeOfTheLongestElement + 2 + limit + 2
-	local height = 2 + #data * 2 + 2
-
-	--ПО ЦЕНТРУ ЭКРАНА, А ТО МАЛО ЛИ ЧЕ
-	x, y = ECSAPI.correctStartCoords(x, y, width, height)
-
-	local oldPixels = ECSAPI.rememberOldPixels(x, y, x + width + 1, y + height)
-
-	ECSAPI.emptyWindow(x, y, width, height, title)
-
-	local xPos, yPos
-
-	local function drawElement(i, justDrawNotEvent)
-		xPos = x + 2
-		yPos = y + i * 2
-		local color = 0x666666
-		if i == activeData then color = 0x000000 end
-
-		gpu.setBackground(ECSAPI.windowColors.background)
-		ECSAPI.colorText(xPos, yPos, color, data[i][2])
-
-		xPos = (x + width - 2 - limit)
-
-		local data1
-
-		if data[i][1] == "select" or data[i][1] == "selector" or data[i][1] == "selecttion" then
-			data1 = ECSAPI.selector(xPos, yPos, limit, data[i][3] or "", data[i][4] or {"What?", "Bad API use :("}, 0xffffff, color, justDrawNotEvent)
-		else
-			data1 = ECSAPI.inputText(xPos, yPos, limit, data[i][3] or "", 0xffffff, color, justDrawNotEvent)
-		end
-
-		newObj("elements", i, xPos, yPos, xPos + limit - 1)
-
-		return data1
-	end
-
-	local coodrs = { ECSAPI.drawAdaptiveButton(x + width - 10, y + height - 2, 3, 0, "OK", ECSAPI.colors.lightBlue, 0xffffff) }
-	newObj("OK", "OK", coodrs[1], coodrs[2], coodrs[3])
-
-	local function pressButton(press, press2)
-		if press then
-			ECSAPI.drawAdaptiveButton(obj["OK"]["OK"][1], obj["OK"]["OK"][2], 3, 0, "OK", press, press2)
-		else
-			ECSAPI.drawAdaptiveButton(obj["OK"]["OK"][1], obj["OK"]["OK"][2], 3, 0, "OK", ECSAPI.colors.lightBlue, 0xffffff)
-		end
-	end
-
-	local function drawAll()
-		gpu.setBackground(ECSAPI.windowColors.background)
-		for i = 1, #data do
-			drawElement(i, true)
-		end
-
-		if activeData > #data then
-			pressButton(ECSAPI.colors.blue, 0xffffff)
-		else
-			pressButton(false)
-		end
-	end
-
-	local function getMassiv()
-		local massiv = {}
-		for i = 1, #data do
-			table.insert(massiv, data[i][3])
-		end
-		return massiv
-	end
-
-	local function drawKaro4()
-		if activeData ~= -1 then data[activeData][3] = drawElement(activeData, false) end
-	end
-
-	------------------------------------------------------------------------------------------------
-
-	drawAll()
-	drawKaro4()
-	activeData = activeData + 1
-	drawAll()
-
-	while true do
-
-		local e = {event.pull()}
-		if e[1] == "key_down" then
-
-			if e[4] == 28 and activeData > #data then pressButton(false); os.sleep(0.2); pressButton(ECSAPI.colors.blue, 0xffffff); break end
-
-			if e[4] == 200 and activeData > 1 then activeData = activeData - 1; drawAll() end
-			if e[4] == 208 and activeData ~= -1 and activeData <= #data then activeData = activeData + 1; drawAll() end
-
-			if e[4] == 28 then
-				drawKaro4()
-				if activeData <= #data and activeData ~= -1 then activeData = activeData + 1 end
-				drawAll()
-			end
-
-
-			
-
-		elseif e[1] == "touch" then
-			for key, val in pairs(obj["elements"]) do
-				if ECSAPI.clickedAtArea(e[3], e[4], obj["elements"][key][1], obj["elements"][key][2], obj["elements"][key][3], obj["elements"][key][2]) then
-					
-					if key ~= activeData then activeData = key else drawKaro4(); if activeData <= #data then activeData = activeData + 1 end end
-
-					drawAll()
-					--activeData = key
-
-					--activeData = -1
-
-					--if activeData <= #data then activeData = activeData + 1 end
-					
-					break
-				end
-			end
-
-			if ECSAPI.clickedAtArea(e[3], e[4], obj["OK"]["OK"][1], obj["OK"]["OK"][2], obj["OK"]["OK"][3], obj["OK"]["OK"][2]) then
-				
-				if activeData > #data then
-					pressButton(false); os.sleep(0.2); pressButton(ECSAPI.colors.blue, 0xffffff)
-				else
-					pressButton(ECSAPI.colors.blue, 0xffffff)
-					os.sleep(0.3)
-				end
-
-				break
-			end
-		end
-	end
-
-	ECSAPI.drawOldPixels(oldPixels)
-
-	return getMassiv()
-end
-
+--Функция парсинга сообщения об ошибке. Конвертирует из строки в массив и переводит на русский.
 function ECSAPI.parseErrorMessage(error, translate)
 
 	local parsedError = {}
-
-	-- --ВСТАВКА ВСЕГО ГОВНА ДО ПЕРВОГО ЭНТЕРА
-	-- local starting, ending = string.find(error, "\n", 1)
-	-- table.insert(parsedError, unicode.sub(error, 1, ending or #error))
 
 	--ПОИСК ЭНТЕРОВ
 	local starting, ending, searchFrom = nil, nil, 1
@@ -1207,6 +987,7 @@ function ECSAPI.parseErrorMessage(error, translate)
 	return parsedError
 end
 
+--Отображение сообщения об ошибке компиляции скрипта в красивом окошке.
 function ECSAPI.displayCompileMessage(y, reason, translate, withAnimation)
 
 	local xSize, ySize = gpu.getResolution()
@@ -1285,91 +1066,13 @@ function ECSAPI.displayCompileMessage(y, reason, translate, withAnimation)
 	ECSAPI.drawOldPixels(oldPixels)
 end
 
-function ECSAPI.select(x, y, title, textLines, buttons)
-
-	--Ну обжекты, хули
-	local obj = {}
-	local function newObj(class, name, ...)
-		obj[class] = obj[class] or {}
-		obj[class][name] = {...}
-	end
-
-	--Вычисление ширны на основе текста
-	local sizeOfTheLongestElement = 0
-	for i = 1, #textLines do
-		sizeOfTheLongestElement = math.max(sizeOfTheLongestElement, unicode.len(textLines[i][1]))
-	end
-
-	local width = sizeOfTheLongestElement + 4
-
-	--Вычисление ширины на основе размера кнопок
-	local buttonOffset = 2
-	local spaceBetweenButtons = 2
-
-	local sizeOfButtons = 0
-	for i = 1, #buttons do
-		sizeOfButtons = sizeOfButtons + unicode.len(buttons[i][1]) + buttonOffset * 2 + spaceBetweenButtons
-	end
-
-	--Финальное задание ширины и высоты
-	width = math.max(width, sizeOfButtons + 2)
-	local height = #textLines + 5
-
-	--Рисуем окно
-	x, y = ECSAPI.correctStartCoords(x, y, width, height)
-	local oldPixels = ECSAPI.emptyWindow(x, y, width, height, title)
-
-	--Рисуем текст
-	local xPos, yPos = x + 2, y + 2
-	gpu.setBackground(ECSAPI.windowColors.background)
-	for i = 1, #textLines do
-		ECSAPI.colorText(xPos, yPos, textLines[i][2] or ECSAPI.windowColors.usualText, textLines[i][1] or "Ну ты че, текст-то введи!")
-		yPos = yPos + 1
-	end
-
-	--Рисуем кнопочки
-	xPos, yPos = x + width - sizeOfButtons, y + height - 2
-	for i = 1, #buttons do
-		newObj("Buttons", buttons[i][1], ECSAPI.drawAdaptiveButton(xPos, yPos, buttonOffset, 0, buttons[i][1], buttons[i][2] or ECSAPI.colors.lightBlue, buttons[i][3] or 0xffffff))
-		xPos = xPos + buttonOffset * 2 + spaceBetweenButtons + unicode.len(buttons[i][1])
-	end
-
-	--Жмякаем на кнопочки
-	local action
-
-	while true do
-		if action then break end
-		local e = {event.pull()}
-		if e[1] == "touch" then
-			for key, val in pairs(obj["Buttons"]) do
-				if ECSAPI.clickedAtArea(e[3], e[4], obj["Buttons"][key][1], obj["Buttons"][key][2], obj["Buttons"][key][3], obj["Buttons"][key][4]) then
-					ECSAPI.drawAdaptiveButton(obj["Buttons"][key][1], obj["Buttons"][key][2], buttonOffset, 0, key, ECSAPI.colors.blue, 0xffffff)
-					os.sleep(0.3)
-					action = key
-					break
-				end
-			end
-		elseif e[1] == "key_down" then
-			if e[4] == 28 then
-				action = buttons[#buttons][1]
-				ECSAPI.drawAdaptiveButton(obj["Buttons"][action][1], obj["Buttons"][action][2], buttonOffset, 0, action, ECSAPI.colors.blue, 0xffffff)
-				os.sleep(0.3)
-				break
-			end
-		end
-	end
-
-	ECSAPI.drawOldPixels(oldPixels)
-
-	return action
-end
-
+--Спросить, заменять ли файл (если таковой уже имеется)
 function ECSAPI.askForReplaceFile(path)
 	if fs.exists(path) then
-		action = ECSAPI.select("auto", "auto", " ", {{"Файл \"".. fs.name(path) .. "\" уже имеется в этом месте."}, {"Заменить его перемещаемым объектом?"}}, {{"Оставить оба", 0xffffff, 0x000000}, {"Отмена", 0xffffff, 0x000000}, {"Заменить"}})
-		if action == "Оставить оба" then
+		local action = ECSAPI.universalWindow("auto", "auto", 46, ECSAPI.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Файл \"".. fs.name(path) .. "\" уже имеется в этом месте."}, {"CenterText", 0x262626, "Заменить его перемещаемым объектом?"}, {"EmptyLine"}, {"Button", {0xdddddd, 0x262626, "Оставить оба"}, {0xffffff, 0x262626, "Отмена"}, {ECSAPI.colors.lightBlue, 0xffffff, "Заменить"}})
+		if action[1] == "Оставить оба" then
 			return "keepBoth"
-		elseif action == "Отмена" then
+		elseif action[2] == "Отмена" then
 			return "cancel"
 		else
 			return "replace"
@@ -1377,13 +1080,13 @@ function ECSAPI.askForReplaceFile(path)
 	end
 end
 
---Переименование файлов для операционки
+--Переименование файлов (для операционки)
 function ECSAPI.rename(mainPath)
 	local name = fs.name(mainPath)
 	path = fs.path(mainPath)
 
 	--Рисуем окошко ввода нового имени файла
-	local inputs = ECSAPI.universalWindow("auto", "auto", 30, ECSAPI.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Переименовать"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, name}, {"EmptyLine"}, {"Button", 0xbbbbbb, 0xffffff, "Ok!"})
+	local inputs = ECSAPI.universalWindow("auto", "auto", 30, ECSAPI.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Переименовать"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, name}, {"EmptyLine"}, {"Button", {0xbbbbbb, 0xffffff, "Ok!"}})
 	
 	--Если ввели в окошко хуйню какую-то
 	if inputs[1] == "" or inputs[1] == " " or inputs[1] == nil then
@@ -1401,10 +1104,10 @@ function ECSAPI.rename(mainPath)
 	end
 end
 
---Создать новую папку
+--Создать новую папку (для операционки)
 function ECSAPI.newFolder(path)
 	--Рисуем окошко ввода нового имени файла
-	local inputs = ECSAPI.universalWindow("auto", "auto", 30, ECSAPI.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Новая папка"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, ""}, {"EmptyLine"}, {"Button", 0xbbbbbb, 0xffffff, "Ok!"})
+	local inputs = ECSAPI.universalWindow("auto", "auto", 30, ECSAPI.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Новая папка"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, ""}, {"EmptyLine"}, {"Button", {0xbbbbbb, 0xffffff, "Ok!"}})
 
 	--Если ввели в окошко хуйню какую-то
 	if inputs[1] == "" or inputs[1] == " " or inputs[1] == nil then
@@ -1420,10 +1123,10 @@ function ECSAPI.newFolder(path)
 	end
 end
 
---Создать новый файл
+--Создать новый файл (для операционки)
 function ECSAPI.newFile(path)
 	--Рисуем окошко ввода нового имени файла
-	local inputs = ECSAPI.universalWindow("auto", "auto", 30, ECSAPI.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Новый файл"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, ""}, {"EmptyLine"}, {"Button", 0xbbbbbb, 0xffffff, "Ok!"})
+	local inputs = ECSAPI.universalWindow("auto", "auto", 30, ECSAPI.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Новый файл"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, ""}, {"EmptyLine"}, {"Button", {0xbbbbbb, 0xffffff, "Ok!"}})
 
 	--Если ввели в окошко хуйню какую-то
 	if inputs[1] == "" or inputs[1] == " " or inputs[1] == nil then
@@ -1440,7 +1143,7 @@ function ECSAPI.newFile(path)
 	end
 end
 
---Простое информационное окошечко
+--Простое информационное окошечко. Возвращает старые пиксели - мало ли понадобится.
 function ECSAPI.info(x, y, title, text)
 	x = x or "auto"
 	y = y or "auto"
@@ -1459,7 +1162,7 @@ function ECSAPI.info(x, y, title, text)
 	return oldPixels
 end
 
---Скроллбар вертикальный
+--Вертикальный скроллбар. Маст-хев!
 function ECSAPI.srollBar(x, y, width, height, countOfAllElements, currentElement, backColor, frontColor)
 	local sizeOfScrollBar = math.ceil(1 / countOfAllElements * height)
 	local displayBarFrom = math.floor(y + height * ((currentElement - 1) / countOfAllElements))
@@ -1470,7 +1173,7 @@ function ECSAPI.srollBar(x, y, width, height, countOfAllElements, currentElement
 	sizeOfScrollBar, displayBarFrom = nil, nil
 end
 
---Поле с текстом. Сюда пихать массив вида {"строка1", "строка2", "строка3", ...}
+--Отрисовка поля с текстом. Сюда пихать массив вида {"строка1", "строка2", "строка3", ...}
 function ECSAPI.textField(x, y, width, height, lines, displayFrom, background, foreground, scrollbarBackground, scrollbarForeground)
 	x, y = ECSAPI.correctStartCoords(x, y, width, height)
 
@@ -1513,181 +1216,7 @@ function ECSAPI.textField(x, y, width, height, lines, displayFrom, background, f
 	return sLines
 end
 
-function ECSAPI.beautifulInput(x, y, width, title, buttonText, back, fore, otherColor, autoRedraw, ...)
-
-	if not width or width < 30 then width = 30 end
-	data = {...}
-	local sData = #data
-	local height = 3 + sData * 3 + 1
-
-	x, y = ECSAPI.correctStartCoords(x, y, width, height)
-	local xCenter = math.floor(x + width / 2 - 1)
-
-	local oldPixels = ECSAPI.rememberOldPixels(x, y, x + width - 1, y + height + 2)
-	
-	--Рисуем фон
-	ECSAPI.square(x, y, width, height, back)
-	--ECSAPI.windowShadow(x, y, width, height)
-
-	local xText = x + 3
-	local inputLimit = width - 6
-
-	--Авторизация
-	ECSAPI.drawButton(x, y, width, 3, title, back, fore)
-
-	local fields
-
-	local function drawData()
-		local i = y + 4
-
-		fields = {}
-
-		for j = 1, sData do
-			ECSAPI.border(x + 1, i - 1, width - 2, 3, back, fore)
-
-			if data[j][3] == "" or not data[j][3] or data[j][3] == " " then
-				ECSAPI.colorTextWithBack(xText, i, fore, back, data[j][1])
-			else
-				if data[j][2] then
-					ECSAPI.inputText(xText, i, inputLimit, data[j][3], back, fore, true, true)
-				else
-					ECSAPI.inputText(xText, i, inputLimit, data[j][3], back, fore, true)
-				end
-			end
-
-			table.insert(fields, { x + 1, i - 1, x + inputLimit - 1, i + 1 })
-
-			i = i + 3
-		end
-	end
-
-	local function getData()
-		local massiv = {}
-		for i = 1, sData do
-			table.insert(massiv, data[i][3])
-		end
-		return massiv
-	end
-
-	drawData()
-
-	--Нижняя кнопа
-	local button = { ECSAPI.drawButton(x, y + sData * 3 + 4, width, 3, buttonText, otherColor, fore) }
-
-	while true do
-		local e = {event.pull()}
-		if e[1] == "touch" then
-			if ECSAPI.clickedAtArea(e[3], e[4], button[1], button[2], button[3], button[4]) then
-				ECSAPI.drawButton(button[1], button[2], width, 3, buttonText, ECSAPI.colors.blue, 0xffffff)
-				os.sleep(0.3)
-				if autoRedraw then ECSAPI.drawOldPixels(oldPixels) end
-				return getData()
-			end
-
-			for key, val in pairs(fields) do
-				if ECSAPI.clickedAtArea(e[3], e[4], fields[key][1], fields[key][2], fields[key][3], fields[key][4]) then
-					ECSAPI.border(fields[key][1], fields[key][2], width - 2, 3, back, otherColor)
-					data[key][3] = ECSAPI.inputText(xText, fields[key][2] + 1, inputLimit, "", back, fore, false, data[key][2])
-					--ECSAPI.border(fields[key][1], fields[key][2], width - 2, 3, back, fore)
-					drawData()
-					break
-				end
-			end
-		elseif e[1] == "key_down" then
-			if e[4] == 28 then
-				ECSAPI.drawButton(button[1], button[2], width, 3, buttonText, ECSAPI.colors.blue, 0xffffff)
-				os.sleep(0.3)
-				if autoRedraw then ECSAPI.drawOldPixels(oldPixels) end
-				return getData()
-			end
-		end
-	end
-
-end
-
-function ECSAPI.beautifulSelect(x, y, width, title, buttonText, back, fore, otherColor, autoRedraw, ...)
-	if not width or width < 30 then width = 30 end
-	data = {...}
-	local sData = #data
-	local height = 3 + sData * 3 + 1
-
-	x, y = ECSAPI.correctStartCoords(x, y, width, height)
-	local xCenter = math.floor(x + width / 2 - 1)
-
-	local oldPixels = ECSAPI.rememberOldPixels(x, y, x + width - 1, y + height + 2)
-
-	--Рисуем фон
-	ECSAPI.square(x, y, width, height, back)
-
-	local xText = x + 3
-	local inputLimit = width - 9
-
-	--Первая кнопа
-	ECSAPI.drawButton(x, y, width, 3, title, back, fore)
-
-	--Нижняя кнопа
-	local button = { ECSAPI.drawButton(x, y + sData * 3 + 4, width, 3, buttonText, otherColor, fore) }
-
-	local fields
-
-	local selectedData = 1
-	local symbol = "✔"
-
-	--Рисуем данные
-	local function drawData()
-		local i = y + 4
-
-		fields = {}
-
-		for j = 1, sData do
-
-			--Квадратик для галочки
-			ECSAPI.border(x + 1, i - 1, 5, 3, back, fore)
-
-			--Галочку рисуем или снимаем
-			local text = "  "
-			if j == selectedData then text = symbol end
-			ECSAPI.colorText(x + 3, i, otherColor, text)
-
-			ECSAPI.colorText(x + 7, i, fore, ECSAPI.stringLimit("end", data[j], inputLimit))
-
-			table.insert(fields, { x + 1, i - 1, x + inputLimit - 1, i + 1 })
-
-			i = i + 3
-		end
-	end
-
-	drawData()
-
-	while true do
-		local e = {event.pull()}
-		if e[1] == "touch" then
-			if ECSAPI.clickedAtArea(e[3], e[4], button[1], button[2], button[3], button[4]) then
-				ECSAPI.drawButton(button[1], button[2], width, 3, buttonText, ECSAPI.colors.blue, 0xffffff)
-				os.sleep(0.3)
-				if autoRedraw then ECSAPI.drawOldPixels(oldPixels) end
-				return data[selectedData]
-			end
-
-			for key, val in pairs(fields) do
-				if ECSAPI.clickedAtArea(e[3], e[4], fields[key][1], fields[key][2], fields[key][3], fields[key][4]) then
-					selectedData = key
-					drawData()
-					break
-				end
-			end
-		elseif e[1] == "key_down" then
-			if e[4] == 28 then
-				ECSAPI.drawButton(button[1], button[2], width, 3, buttonText, ECSAPI.colors.blue, 0xffffff)
-				os.sleep(0.3)
-				if autoRedraw then ECSAPI.drawOldPixels(oldPixels) end
-				return data[selectedData]
-			end
-		end
-	end
-end
-
---Получение верного имени языка. Просто для безопасности.
+--Получение верного имени языка. Просто для безопасности. (для операционки)
 function ECSAPI.getCorrectLangName(pathToLangs)
 	local language = _OSLANGUAGE .. ".lang"
 	if not fs.exists(pathToLangs .. "/" .. language) then
@@ -1696,7 +1225,7 @@ function ECSAPI.getCorrectLangName(pathToLangs)
 	return language
 end
 
---Чтение языкового файла
+--Чтение языкового файла  (для операционки)
 function ECSAPI.readCorrectLangFile(pathToLangs)
 	local lang
 	
@@ -1707,16 +1236,9 @@ function ECSAPI.readCorrectLangFile(pathToLangs)
 	return lang
 end
 
-
-
-
-
-
-
-
 -------------------------ВСЕ ДЛЯ ОСКИ-------------------------------------------------------------------------------
 
---То, что не нужно отрисовывать
+--Список файлов, не требующих отрисовки
 local systemFiles = {
 	"bin/",
 	"lib/",
@@ -1731,7 +1253,7 @@ local systemFiles = {
 	--"System/",
 }
 
--- Потная штучка, надо будет перекодить - а то странно выглядит, да и условия идиотские
+--Перехуяривалка файлового порядка для операционки. Говнокод, переделать!
 function ECSAPI.reorganizeFilesAndFolders(massivSudaPihay, showHiddenFiles, showSystemFiles)
 
 	local massiv = {}
@@ -1783,7 +1305,7 @@ function ECSAPI.reorganizeFilesAndFolders(massivSudaPihay, showHiddenFiles, show
 	return massiv
 end
 
---Создать ярлык для конкретной проги
+--Создать ярлык для конкретной проги (для операционки)
 function ECSAPI.createShortCut(path, pathToProgram)
 	fs.remove(path)
 	fs.makeDirectory(fs.path(path))
@@ -1792,7 +1314,7 @@ function ECSAPI.createShortCut(path, pathToProgram)
 	file:close()
 end
 
---Получить данные о файле из ярлыка
+--Получить данные о файле из ярлыка (для операционки)
 function ECSAPI.readShortcut(path)
 	local success, filename = pcall(loadfile(path))
 	if success then
@@ -1802,49 +1324,14 @@ function ECSAPI.readShortcut(path)
 	end
 end
 
---Редактирование файла
+--Редактирование файла (для операционки)
 function ECSAPI.editFile(path)
 	shell.execute("edit "..path)
 end
 
---Форматировать диск
-function ECSAPI.formatHDD(address)
-	local proxy = component.proxy(address)
-	local list = proxy.list("")
-	ECSAPI.info("auto", "auto", "", "Formatting disk...")
-	for _, file in pairs(list) do
-		if type(file) == "string" then
-			if not proxy.isReadOnly(file) then proxy.remove(file) end
-		end
-	end
-	list = nil
-end
-
---Установить имя жесткого диска
-function ECSAPI.setHDDLabel(address, label)
-	local proxy = component.proxy(address)
-	proxy.setLabel(label or "Untitled")
-end
-
---Найти монтированный путь конкретного адреса диска
-function ECSAPI.findMount(address)
-  for fs1, path in fs.mounts() do
-    if fs1.address == component.get(address) then
-      return path
-    end
-  end
-end
-
---Скопировать файлы с одного диска на другой с заменой
-function ECSAPI.duplicateFileSystem(fromAddress, toAddress)
-	local source, destination = ECSAPI.findMount(fromAddress), ECSAPI.findMount(toAddress)
-	ECSAPI.info("auto", "auto", "", "Copying file system...")
-	shell.execute("bin/cp -rx "..source.."* "..destination)
-end
-
 -- Копирование папки через рекурсию, т.к. fs.copy() не поддерживает папки
 -- Ну долбоеб автор мода - хули я тут сделаю? Придется так вот
--- swg2you, привет маме ;)
+-- Хотя можно юзать обычный bin/cp, как это сделано в дисковом дубляже. Надо перекодить, короч
 function ECSAPI.copyFolder(path, toPath)
 	local function doCopy(path)
 		local fileList = ECSAPI.getFileList(path)
@@ -2028,12 +1515,6 @@ function ECSAPI.launchIcon(path, arguments)
 	gpu.setResolution(oldWidth, oldHeight)
 end
 
---ECSAPI.drawOSIcon(2, 2, "Pastebin1.app", true)
-
-
-
-
-----------------------------------------------------------------------------------------------------------------
 
 
 
@@ -2041,13 +1522,16 @@ end
 
 
 
+---------------------------------------------ОКОШЕЧКИ------------------------------------------------------------
 
---Описание ниже, ебана
+
+--Описание ниже, ебана. Ниже - это значит в самой жопе кода!
 function ECSAPI.universalWindow(x, y, width, background, closeWindowAfter, ...)
 	local objects = {...}
 	local countOfObjects = #objects
 
 	local pressedButton
+	local pressedMultiButton
 
 	--Задаем высотные константы для объектов
 	local objectsHeights = {
@@ -2060,6 +1544,43 @@ function ECSAPI.universalWindow(x, y, width, background, closeWindowAfter, ...)
 		["selector"] = 3,
 		["separator"] = 1,
 	}
+
+	--Скорректировать ширину, если нужно
+	local function correctWidth(newWidthForAnalyse)
+		width = math.max(width, newWidthForAnalyse)
+	end
+
+	--Корректируем ширину
+	for i = 1, countOfObjects do
+		local objectType = string.lower(objects[i][1])
+		
+		if objectType == "centertext" then
+			correctWidth(unicode.len(objects[i][3]) + 2)
+		elseif objectType == "slider" then --!!!!!!!!!!!!!!!!!! ВОТ ТУТ НЕ ЗАБУДЬ ФИКСАНУТЬ
+			correctWidth(unicode.len(objects[i][7]..tostring(objects[i][5].." ")) + 2)
+		elseif objectType == "select" then
+			for j = 4, #objects[i] do
+				correctWidth(unicode.len(objects[i][j]) + 2)
+			end
+		--elseif objectType == "selector" then
+			
+		--elseif objectType == "separator" then
+			
+		elseif objectType == "textfield" then
+			correctWidth(7)
+		elseif objectType == "wrappedtext" then
+			correctWidth(6)
+		elseif objectType == "button" then
+			--Корректируем ширину
+			local widthOfButtons = 0
+			local maxButton = 0
+			for j = 2, #objects[i] do
+				maxButton = math.max(maxButton, unicode.len(objects[i][j][3]) + 2)
+			end
+			widthOfButtons = maxButton * #objects[i]
+			correctWidth(widthOfButtons)
+		end
+	end
 
 	--Считаем высоту этой хуйни
 	local height = 0
@@ -2079,10 +1600,15 @@ function ECSAPI.universalWindow(x, y, width, background, closeWindowAfter, ...)
 		end
 	end
 
-	--Нужные стартовые прелесссти
+	--Коорректируем стартовые координаты
 	x, y = ECSAPI.correctStartCoords(x, y, width, height)
-	local oldPixels = ECSAPI.rememberOldPixels(x, y, x + width - 1, y + height - 1)
-
+	--Запоминаем инфу о том, что было нарисовано, если это необходимо
+	local oldPixels, oldBackground, oldForeground
+	if closeWindowAfter then
+		oldBackground = gpu.getBackground()
+		oldForeground = gpu.getForeground()
+		oldPixels = ECSAPI.rememberOldPixels(x, y, x + width - 1, y + height - 1)
+	end
 	--Считаем все координаты объектов
 	objects[1].y = y
 	if countOfObjects > 1 then
@@ -2110,15 +1636,8 @@ function ECSAPI.universalWindow(x, y, width, background, closeWindowAfter, ...)
 	--Отображение объекта по номеру
 	local function displayObject(number, active)
 		local objectType = string.lower(objects[number][1])
-		
-		if objectType == "button" then
-			local back, fore, text = objects[number][2], objects[number][3], objects[number][4]
-			if active then
-				newObj("Buttons", number, ECSAPI.drawButton(x, objects[number].y, width, objectsHeights.button, text, fore, back))
-			else
-				newObj("Buttons", number, ECSAPI.drawButton(x, objects[number].y, width, objectsHeights.button, text, back, fore))
-			end
-		elseif objectType == "centertext" then
+				
+		if objectType == "centertext" then
 			local xPos = x + math.floor(width / 2 - unicode.len(objects[number][3]) / 2)
 			gpu.setForeground(objects[number][2])
 			gpu.set(xPos, objects[number].y, objects[number][3])
@@ -2144,7 +1663,7 @@ function ECSAPI.universalWindow(x, y, width, background, closeWindowAfter, ...)
 			local xOfSlider = x + 1
 			local yOfSlider = objects[number].y + 1
 			local countOfSliderThings = objects[number][5] - objects[number][4]
-			local showSliderValue = objects[number][7]
+			local showSliderValue= objects[number][7]
 
 			local dolya = widthOfSlider / countOfSliderThings
 			local position = math.floor(dolya * objects[number][6])
@@ -2159,7 +1678,7 @@ function ECSAPI.universalWindow(x, y, width, background, closeWindowAfter, ...)
 
 			--Текстик под слудиром
 			if showSliderValue then
-				local text = showSliderValue .. tostring(objects[number][6])
+				local text = showSliderValue .. tostring(objects[number][6]) .. (objects[number][8] or "")
 				local textPos = (xOfSlider + widthOfSlider / 2 - unicode.len(text) / 2)
 				ECSAPI.square(x, yOfSlider + 1, width, 1, background)
 				ECSAPI.colorText(textPos, yOfSlider + 1, objects[number][2], text)
@@ -2220,22 +1739,31 @@ function ECSAPI.universalWindow(x, y, width, background, closeWindowAfter, ...)
 		
 			--Выпадающий список, самый гемор, блядь
 			if active then
-				local xPos, yPos = x + 2, objects[number].y + 3
-				local spisokWidth = width - 4
+				local xPos, yPos = x + 1, objects[number].y + 3
+				local spisokWidth = width - 2
 				local countOfElements = #objects[number] - 3
-				local spisokHeight = countOfElements
+				local spisokHeight = countOfElements + 1
 				local oldPixels = ECSAPI.rememberOldPixels( xPos, yPos, xPos + spisokWidth - 1, yPos + spisokHeight - 1)
 
 				local coords = {}
 
 				bordak(arrowColor)
 
-				--Белый фоник рисуем-с
-				ECSAPI.square( xPos, yPos, spisokWidth, spisokHeight, 0xffffff )
-				xPos = xPos + 1
+				--Рамку рисуем поверх фоника
+				local topLine = "├"..string.rep("─", spisokWidth - 6).."┴───┤"
+				local midLine = "│"..string.rep(" ", spisokWidth - 2).."│"
+				local botLine = "└"..string.rep("─", selectorWidth - 2) .. "┘"
+				ECSAPI.colorTextWithBack(xPos, yPos - 1, arrowColor, background, topLine)
+				for i = 1, spisokHeight - 1 do
+					gpu.set(xPos, yPos + i - 1, midLine)
+				end
+				gpu.set(xPos, yPos + spisokHeight - 1, botLine)
+
+				--Элементы рисуем
+				xPos = xPos + 2
 				for i = 1, countOfElements do
-					ECSAPI.colorText(xPos, yPos, 0x000000, ECSAPI.stringLimit("start", objects[number][i + 3], spisokWidth - 2))
-					coords[i] = {xPos - 1, yPos, xPos + spisokWidth - 1, yPos}
+					ECSAPI.colorText(xPos, yPos, 0x000000, ECSAPI.stringLimit("start", objects[number][i + 3], spisokWidth - 4))
+					coords[i] = {xPos - 1, yPos, xPos + spisokWidth - 4, yPos}
 					yPos = yPos + 1
 				end
 
@@ -2247,7 +1775,7 @@ function ECSAPI.universalWindow(x, y, width, background, closeWindowAfter, ...)
 					if e[1] == "touch" then
 						for i = 1, #coords do
 							if ECSAPI.clickedAtArea(e[3], e[4], coords[i][1], coords[i][2], coords[i][3], coords[i][4]) then
-								ECSAPI.square(coords[i][1], coords[i][2], spisokWidth, 1, ECSAPI.colors.blue)
+								ECSAPI.square(coords[i][1], coords[i][2], spisokWidth - 2, 1, ECSAPI.colors.blue)
 								ECSAPI.colorText(coords[i][1] + 1, coords[i][2], 0xffffff, objects[number][i + 3])
 								os.sleep(0.3)
 								objects[number].selectedElement = objects[number][i + 3]
@@ -2267,8 +1795,10 @@ function ECSAPI.universalWindow(x, y, width, background, closeWindowAfter, ...)
 			ECSAPI.separator(x, objects[number].y, width, background, objects[number][2])
 		
 		elseif objectType == "textfield" then
+			newObj("TextFields", number, x + 1, objects[number].y, x + width - 2, objects[number].y + objects[number][2] - 1)
+			if not objects[number].strings then objects[number].strings = ECSAPI.stringWrap(objects[number][7], width - 5) end
 			objects[number].displayFrom = objects[number].displayFrom or 1
-			ECSAPI.textField(x + 1, objects[number].y, width - 2, objects[number][2], objects[number][7], objects[number].displayFrom, objects[number][3], objects[number][4], objects[number][5], objects[number][6])
+			ECSAPI.textField(x + 1, objects[number].y, width - 2, objects[number][2], objects[number].strings, objects[number].displayFrom, objects[number][3], objects[number][4], objects[number][5], objects[number][6])
 		
 		elseif objectType == "wrappedtext" then
 			gpu.setBackground(background)
@@ -2276,6 +1806,30 @@ function ECSAPI.universalWindow(x, y, width, background, closeWindowAfter, ...)
 			for i = 1, #objects[number].wrapped do
 				gpu.set(x + 2, objects[number].y + i - 1, objects[number].wrapped[i])
 			end
+
+		elseif objectType == "button" then
+
+			obj["MultiButtons"] = obj["MultiButtons"] or {}
+			obj["MultiButtons"][number] = {}
+
+			local widthOfButton = math.floor(width / (#objects[number] - 1))
+
+			local xPos, yPos = x, objects[number].y
+			for i = 1, #objects[number] do
+				if type(objects[number][i]) == "table" then
+					local x1, y1, x2, y2 = ECSAPI.drawButton(xPos, yPos, widthOfButton, 3, objects[number][i][3], objects[number][i][1], objects[number][i][2])
+					table.insert(obj["MultiButtons"][number], {x1, y1, x2, y2, widthOfButton})
+					xPos = x2 + 1
+
+					if i == #objects[number] then
+						ECSAPI.square(xPos, yPos, x + width - xPos, 3, objects[number][i][1])
+						obj["MultiButtons"][number][i - 1][5] = obj["MultiButtons"][number][i - 1][5] + x + width - xPos
+					end
+
+					x1, y1, x2, y2 = nil, nil, nil, nil
+				end
+			end
+
 		end
 	end
 
@@ -2298,7 +1852,7 @@ function ECSAPI.universalWindow(x, y, width, background, closeWindowAfter, ...)
 			elseif type == "input" then
 				table.insert(massiv, objects[i][4])
 			elseif type == "select" then
-				table.insert(massiv, objects[i].selectedData)
+				table.insert(massiv, objects[i][objects[i].selectedData + 3])
 			elseif type == "selector" then
 				table.insert(massiv, objects[i].selectedElement)
 			elseif type == "slider" then
@@ -2311,25 +1865,33 @@ function ECSAPI.universalWindow(x, y, width, background, closeWindowAfter, ...)
 		return massiv
 	end
 
+	local function redrawBeforeClose()
+		if closeWindowAfter then
+			ECSAPI.drawOldPixels(oldPixels)
+			gpu.setBackground(oldBackground)
+			gpu.setForeground(oldForeground)
+		end
+	end
+
 	--Рисуем окно
 	ECSAPI.square(x, y, width, height, background)
 	displayAllObjects()
 
 	while true do
 		local e = {event.pull()}
-		if e[1] == "touch" or event == "drag" then
-
-			--ECSAPI.error("x1 = "..obj["Buttons"][3][1]..", y1 = "..obj["Buttons"][3][2]..", e3 = "..e[3]..", e4 = "..e[4])
+		if e[1] == "touch" or e[1] == "drag" then
 
 			--Анализируем клик на кнопки
-			if obj["Buttons"] then
-				for key in pairs(obj["Buttons"]) do
-					if ECSAPI.clickedAtArea(e[3], e[4], obj["Buttons"][key][1], obj["Buttons"][key][2], obj["Buttons"][key][3], obj["Buttons"][key][4]) then
-						displayObject(key, true)
-						os.sleep(0.3)
-						pressedButton = objects[key][4]
-						if closeWindowAfter then ECSAPI.drawOldPixels(oldPixels) end
-						return getReturn()
+			if obj["MultiButtons"] then
+				for key in pairs(obj["MultiButtons"]) do
+					for i = 1, #obj["MultiButtons"][key] do
+						if ECSAPI.clickedAtArea(e[3], e[4], obj["MultiButtons"][key][i][1], obj["MultiButtons"][key][i][2], obj["MultiButtons"][key][i][3], obj["MultiButtons"][key][i][4]) then
+							ECSAPI.drawButton(obj["MultiButtons"][key][i][1], obj["MultiButtons"][key][i][2], obj["MultiButtons"][key][i][5], 3, objects[key][i + 1][3], objects[key][i + 1][2], objects[key][i + 1][1])
+							os.sleep(0.3)
+							pressedButton = objects[key][i + 1][3]
+							redrawBeforeClose()
+							return getReturn()
+						end
 					end
 				end
 			end
@@ -2384,20 +1946,39 @@ function ECSAPI.universalWindow(x, y, width, background, closeWindowAfter, ...)
 					end
 				end
 			end
+		elseif e[1] == "scroll" then
+			for key in pairs(obj["TextFields"]) do
+				if ECSAPI.clickedAtArea(e[3], e[4], obj["TextFields"][key][1], obj["TextFields"][key][2], obj["TextFields"][key][3], obj["TextFields"][key][4]) then
+					if e[5] == 1 then
+						if objects[key].displayFrom > 1 then objects[key].displayFrom = objects[key].displayFrom - 1; displayObject(key) end
+					else
+						if objects[key].displayFrom < #objects[key].strings then objects[key].displayFrom = objects[key].displayFrom + 1; displayObject(key) end
+					end
+				end
+			end
+		elseif e[1] == "key_down" then
+			if e[4] == 28 then
+				redrawBeforeClose()
+				return getReturn()
+			end
 		end
 	end
 end
 
--- ECSAPI.prepareToExit()
--- ECSAPI.smartText(2, 2, "Hello wor§3ld §6pidar§1 mamu ebal §0atvi4ayu", limit)
-
---local strings = {"Hello world! This is a test string and I'm so happy to show it!", "Awesome! It works!", "Cool!"}
-
--- ECSAPI.prepareToExit()
--- ECSAPI.universalWindow("auto", "auto", 30, ECSAPI.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Хелло пидар!"}, {"EmptyLine"}, {"Input", 0x262626, 0x000000, "Суда вводи"}, {"Selector", 0x262626, 0x880000, "PNG", "JPG", "PSD"}, {"Slider", 0x262626, 0x880000, 0, 100, 50}, {"Select", 0x262626, 0x880000, "Выбор1", "Выбор2"}, {"EmptyLine"}, {"Button", 0xbbbbbb, 0xffffff, "Ok!"})
--- local data = ECSAPI.universalWindow("auto", "auto", 30, ECSAPI.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Хелло пидар!"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, "Суда вводи"}, {"Selector", 0x262626, 0x880000, "PNG", "JPG", "PSD"}, {"Slider", 0x262626, 0x880000, 0, 100, 50, "Количество: "}, {"Select", 0x262626, 0x880000, "Выбор1", "Выбор2"}, {"EmptyLine"}, {"Button", 0xbbbbbb, 0xffffff, "Ok!"})
--- ECSAPI.prepareToExit()
--- print(table.unpack(data))
+--Демонстрационное окно, показывающее всю мощь universalWindow
+function ECSAPI.demoWindow()
+	--Очищаем экран перед юзанием окна и ставим курсор на 1, 1
+	ECSAPI.prepareToExit()
+	--Рисуем окно и получаем данные после взаимодействия с ним
+	local data = ECSAPI.universalWindow("auto", "auto", 36, ECSAPI.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x880000, "Здорово, ебана!"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, "Сюда вводить можно"}, {"Selector", 0x262626, 0x880000, "Выбор формата", "PNG", "JPG", "GIF", "PSD"}, {"EmptyLine"}, {"WrappedText", 0x262626, "Тест автоматического переноса букв в зависимости от ширины данного окна. Пока что тупо режет на куски, не особо красиво."}, {"EmptyLine"}, {"Select", 0x262626, 0x880000, "Я пидор", "Я не пидор"}, {"Slider", 0x262626, 0x880000, 1, 100, 50, "Убито ", " младенцев"}, {"EmptyLine"}, {"TextField", 5, 0xffffff, 0x262626, 0xcccccc, ECSAPI.colors.blue, "Тест текстового информационного поля. По сути это тот же самый WrappedText, разве что эта хрень ограничена по высоте, и ее можно скроллить. Ну же, поскролль меня! Скролль меня полностью! Моя жадная пизда жаждет твой хуй!"}, {"EmptyLine"}, {"Button", {ECSAPI.colors.green, 0xffffff, "Да"}, {ECSAPI.colors.orange, 0xffffff, "Нет"}, {ECSAPI.colors.red, 0xffffff, "Отмена"}})
+	--Еще разок
+	ECSAPI.prepareToExit()
+	--Выводим данные
+	print(" ")
+	print("Вывод данных из окна:")
+	for i = 1, #data do print("["..i.."] = "..tostring(data[i])) end
+	print(" ")
+end
 
 --[[
 Функция universalWindow(x, y, width, background, closeWindowAfter, ...)
@@ -2433,20 +2014,21 @@ end
 		...:
 			Многоточием тут является перечень объектов, указанных через запятую.
 			Каждый объект является массивом и имеет собственный формат.
-			Ниже перечислены все типы объектов:
-				{"Button", Цвет кнопки, Цвет текста на кнопке, Сам текст}
-				{"Selector", Цвет рамки, Цвет стрелки, Выбор 1, Выбор 2, Выбор 3 ...}
+			Ниже перечислены все возиожные типы объектов:
+				{"Button", {Цвет кнопки1, Цвет текста на кнопке1, Сам текст1}, {Цвет кнопки2, Цвет текста на кнопке2, Сам текст2}, ...}
 				{"Input", Цвет рамки и текста, Цвет при выделении, Стартовый текст, Маскировать символом}
+				{"Selector", Цвет рамки, Цвет при выделении, Выбор 1, Выбор 2, Выбор 3 ...}
 				{"Select", Цвет рамки, Цвет галочки, Выбор 1, Выбор 2, Выбор 3 ...}
-				{"TextField", Высота, Цвет фона, Цвет текста, Цвет скроллбара, Цвет пимпочки скроллбара, Массив со строками}
+				{"TextField", Высота, Цвет фона, Цвет текста, Цвет скроллбара, Цвет пимпочки скроллбара, Сам текст}
 				{"CenterText", Цвет текста, Сам текст}
 				{"Separator", Цвет разделителя}
-				{"Slider", Цвет линии слайдера, Цвет пимпочки слайдера, Значения слайдера ОТ, Значения слайдера ДО, Текущее значение, Текст-подсказка}
-				{"Switch", Цвет актива, Цвет пассива, Цвет текста, Текст, Изначальное состояние}
+				{"Slider", Цвет линии слайдера, Цвет пимпочки слайдера, Значения слайдера ОТ, Значения слайдера ДО, Текущее значение, Текст-подсказка ДО, Текст-подсказка ПОСЛЕ}
 				{"WrappedText", Цвет текста, Текст}
 				{"EmptyLine"}
 			Каждый из объектов рисуется по порядку сверху вниз. Каждый объект автоматически
-			увеличивает высоту окна до необходимого значения.
+			увеличивает высоту окна до необходимого значения. Каждому объекту требуется
+			определенная ширина экрана, и если указанной при старте функции ширины не хватает,
+			то объект автоматически расширяет окно до необходимого значения.
 
 	Что возвращает функция:
 		Возвратом является массив, пронумерованный от 1 до <количества объектов>.
@@ -2457,11 +2039,22 @@ end
 		то первый индекс в возвращенном массиве будет равен "Hello world".
 		Конкретнее это будет вот так: massiv[1] = "Hello world".
 
-		Если взаимодействие с объектом невозможно - например, как с EmptyLine или
-		CenterText, то в возвращенном массиве этот элемент будет равен nil.
+		Если взаимодействие с объектом невозможно - например, как в случае
+		с EmptyLine, CenterText, TextField или Separator, то в возвращенном
+		массиве этот объект указываться не будет.
 
-	Готовые примеры использования функции:
+	Готовые примеры использования функции указаны ниже и закомментированы.
+	Выбирайте нужный и раскомментируйте.
 ]]
+
+--Функция-демонстратор, показывающая все возможные объекты в одном окне. Код окна находится выше.
+--ECSAPI.demoWindow()
+
+--Функция-отладчик, выдающая окно с указанным сообщением об ошибке. Полезна при дебаге.
+--ECSAPI.error("Это сообщение об ошибке! Hello world!")
+
+--Функция-вопросник, спрашивающая, стоит ли заменять указанный файл, если он уже имеется
+--ECSAPI.askForReplaceFile("lib/unicode.lua")
 
 
 ----------------------------------------------------------------------------------------------------
