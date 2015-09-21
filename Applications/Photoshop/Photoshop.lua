@@ -732,7 +732,7 @@ local function newFile()
 	currentLayer = 1
 	drawAll()
 
-	local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Новый документ"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, "Ширина"}, {"Input", 0x262626, 0x880000, "Высота"}, {"EmptyLine"}, {"Button", 0xbbbbbb, 0xffffff, "Ok!"})
+	local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Новый документ"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, "Ширина"}, {"Input", 0x262626, 0x880000, "Высота"}, {"EmptyLine"}, {"Button", {0xbbbbbb, 0xffffff, "Ok!"}})
 
 	if data[1] == "" or data[1] == nil or data[1] == " " then data[1] = 51 end
 	if data[2] == "" or data[2] == nil or data[2] == " " then data[2] = 19 end
@@ -931,7 +931,7 @@ while true do
 						
 						if action == "Сохранить как" then
 							
-							local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Сохранить как"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, "Путь"}, {"Selector", 0x262626, 0x880000, "PNG", "JPG"}, {"EmptyLine"}, {"Button", 0xbbbbbb, 0xffffff, "OK!"})
+							local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Сохранить как"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, "Путь"}, {"Selector", 0x262626, 0x880000, "PNG", "JPG"}, {"EmptyLine"}, {"Button", {0xbbbbbb, 0xffffff, "OK!"}})
 
 							if data[1] == "" or data[1] == " " or data[1] == nil then data[1] = "NewImage" end
 								
