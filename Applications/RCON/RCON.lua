@@ -12,7 +12,7 @@ modem.open(port)
 
 --Запрашиваем адрес клиента
 local clientAddress = "3659a020-b21d-4993-aa79-1d8acd5110f3"
-local data = ecs.universalWindow("auto", "auto", 40, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x880000, "RCON"}, {"EmptyLine"}, {"CenterText", 0x262626, "Введите адрес удаленного компьютера:"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, clientAddress}, {"EmptyLine"}, {"Button", 0xbbbbbb, 0xffffff, "Далее"})
+local data = ecs.universalWindow("auto", "auto", 40, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x880000, "RCON"}, {"EmptyLine"}, {"CenterText", 0x262626, "Введите адрес удаленного компьютера:"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, clientAddress}, {"EmptyLine"}, {"Button", {0xbbbbbb, 0xffffff, "Далее"}})
 clientAddress = data[1]
 
 local oldPixels = ecs.info("auto", "auto", " ", "Connecting to client...")
