@@ -576,6 +576,7 @@ end
 --Запомнить область пикселей и возвратить ее в виде массива
 function ECSAPI.rememberOldPixels(x, y, x2, y2)
 	local newPNGMassiv = { ["backgrounds"] = {} }
+	local xSize, ySize = gpu.getResolution()
 	newPNGMassiv.x, newPNGMassiv.y = x, y
 
 	--Перебираем весь массив стандартного PNG-вида по высоте
@@ -583,6 +584,11 @@ function ECSAPI.rememberOldPixels(x, y, x2, y2)
 	for j = y, y2 do
 		xCounter = 1
 		for i = x, x2 do
+
+			if (i > xSize or i < 0) or (j > ySize or j < 0) then
+				error("Can't remember pixel, because it's located behind the screen: x("..i.."), y("..j..") out of xSize("..xSize.."), ySize("..ySize..")\n")
+			end
+
 			local symbol, fore, back = gpu.get(i, j)
 
 			newPNGMassiv["backgrounds"][back] = newPNGMassiv["backgrounds"][back] or {}
@@ -597,6 +603,7 @@ function ECSAPI.rememberOldPixels(x, y, x2, y2)
 		yCounter = yCounter + 1
 	end
 
+	xSize, ySize = nil, nil
 	return newPNGMassiv
 end
 
