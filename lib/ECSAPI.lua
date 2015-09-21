@@ -7,7 +7,6 @@ local shell = require("shell")
 local keyboard = require("keyboard")
 local computer = require("computer")
 local serialization = require("serialization")
-local fs = require("filesystem")
 local internet = require("internet")
 local gpu = component.gpu
 
@@ -308,14 +307,6 @@ function ECSAPI.getAppsToUpdate(debug)
 	if oldPixels then ECSAPI.drawOldPixels(oldPixels) end
 	--Возвращаем массив с тем, че нужно обновить и просто старый аппликашнс на всякий случай
 	return applications2, countOfUpdates
-end
-
---Сделать строку пригодной для отображения в ОпенКомпах
-function ECSAPI.stringOptimize(sto4ka, indentatonWidth)
-	indentatonWidth = indentatonWidth or 2
-    sto4ka = string.gsub(sto4ka, "\r\n", "\n")
-    sto4ka = string.gsub(sto4ka, "	", string.rep(" ", indentatonWidth))
-    return stro4ka
 end
 
 --Сделать строку пригодной для отображения в ОпенКомпах
