@@ -219,7 +219,7 @@ function event.pullFiltered(...)
             --Если у нас запрашивают управление
             if command == "iWantToControl" then
               --Спрашиваем на данном компе, разрешить ли управлять им
-              local data = ecs.universalWindow("auto", "auto", 46, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x880000, "RCON"}, {"EmptyLine"}, {"CenterText", 0x262626, "Копьютер "..ecs.stringLimit("end", remoteAddress, 8).." запрашивает управление"}, {"EmptyLine"}, {"Button", 0x880000, 0xffffff, "Разрешить"}, {"Button", 0xbbbbbb, 0xffffff, "Отклонить"})
+              local data = ecs.universalWindow("auto", "auto", 46, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x880000, "RCON"}, {"EmptyLine"}, {"CenterText", 0x262626, "Копьютер "..ecs.stringLimit("end", remoteAddress, 8).." запрашивает управление"}, {"EmptyLine"}, {"Button", {0x880000, 0xffffff, "Разрешить"}, {0xbbbbbb, 0xffffff, "Отклонить"}})
               if data[1] == "Разрешить" then
                 component.modem.send(remoteAddress, port, "RCON", "acceptControl")
                 --Разрешаем коннект
