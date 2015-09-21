@@ -1947,12 +1947,14 @@ function ECSAPI.universalWindow(x, y, width, background, closeWindowAfter, ...)
 				end
 			end
 		elseif e[1] == "scroll" then
-			for key in pairs(obj["TextFields"]) do
-				if ECSAPI.clickedAtArea(e[3], e[4], obj["TextFields"][key][1], obj["TextFields"][key][2], obj["TextFields"][key][3], obj["TextFields"][key][4]) then
-					if e[5] == 1 then
-						if objects[key].displayFrom > 1 then objects[key].displayFrom = objects[key].displayFrom - 1; displayObject(key) end
-					else
-						if objects[key].displayFrom < #objects[key].strings then objects[key].displayFrom = objects[key].displayFrom + 1; displayObject(key) end
+			if obj["TextFields"] then
+				for key in pairs(obj["TextFields"]) do
+					if ECSAPI.clickedAtArea(e[3], e[4], obj["TextFields"][key][1], obj["TextFields"][key][2], obj["TextFields"][key][3], obj["TextFields"][key][4]) then
+						if e[5] == 1 then
+							if objects[key].displayFrom > 1 then objects[key].displayFrom = objects[key].displayFrom - 1; displayObject(key) end
+						else
+							if objects[key].displayFrom < #objects[key].strings then objects[key].displayFrom = objects[key].displayFrom + 1; displayObject(key) end
+						end
 					end
 				end
 			end
@@ -2053,8 +2055,11 @@ end
 --Функция-отладчик, выдающая окно с указанным сообщением об ошибке. Полезна при дебаге.
 --ECSAPI.error("Это сообщение об ошибке! Hello world!")
 
---Функция-вопросник, спрашивающая, стоит ли заменять указанный файл, если он уже имеется
---ECSAPI.askForReplaceFile("lib/unicode.lua")
+--Функция, спрашивающая, стоит ли заменять указанный файл, если он уже имеется
+--ECSAPI.askForReplaceFile("OS.lua")
+
+--Функция, предлагающая сохранить файл в нужном месте в нужном формате.
+--ECSAPI.universalWindow("auto", "auto", 30, ECSAPI.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Сохранить как"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, "Путь"}, {"Selector", 0x262626, 0x880000, "PNG", "JPG", "PSD"}, {"EmptyLine"}, {"Button", {0xbbbbbb, 0xffffff, "OK!"}})
 
 
 ----------------------------------------------------------------------------------------------------
