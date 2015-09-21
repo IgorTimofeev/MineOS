@@ -578,7 +578,7 @@ local function sell()
 						
 						elseif key == "Продать админам" then
 							local maxToSell = massivWithProfile.inventory[currentItem].count
-							local data = ecs.universalWindow("auto", "auto", 40, 0x444444, true, {"EmptyLine"}, {"CenterText", 0xffffff, "Сколько продаем?"}, {"EmptyLine"}, {"Slider", 0xffffff, 0x33db80, 1, maxToSell, math.floor(maxToSell / 2), "Количество: "}, {"EmptyLine"}, {"Button", {0x33db80, 0xffffff, "Продать"}})
+							local data = ecs.universalWindow("auto", "auto", 40, 0x444444, true, {"EmptyLine"}, {"CenterText", 0xffffff, "Сколько продаем?"}, {"EmptyLine"}, {"Slider", 0xffffff, 0x33db80, 1, maxToSell, math.floor(maxToSell / 2), "", " шт."}, {"EmptyLine"}, {"Button", {0x33db80, 0xffffff, "Продать"}})
 							local count = data[1]
 							if count then
 								local money = sellToAdmins(currentItem, count)
@@ -589,7 +589,7 @@ local function sell()
 						
 						elseif key == "Продать игрокам" then
 							local maxToSell = massivWithProfile.inventory[currentItem].count
-							local data = ecs.universalWindow("auto", "auto", 36, 0x444444, true, {"EmptyLine"}, {"CenterText", 0xffffff, "Продать игрокам"}, {"EmptyLine"}, {"Input", 0xffffff, 0x33db80, "Цена за штуку"}, {"EmptyLine"}, {"CenterText", 0xffffff, "Количество:"}, {"Slider", 0xffffff, 0x33db80, 1, maxToSell, math.floor(maxToSell / 2), ""}, {"EmptyLine"}, {"CenterText", 0xffffff, "При каждой продаже с вас"}, {"CenterText", 0xffffff, "взымается комиссия в 4%"}, {"EmptyLine"}, {"Button", {0x33db80, 0xffffff, "Продать"}})
+							local data = ecs.universalWindow("auto", "auto", 36, 0x444444, true, {"EmptyLine"}, {"CenterText", 0xffffff, "Продать игрокам"}, {"EmptyLine"}, {"Input", 0xffffff, 0x33db80, "Цена за штуку"}, {"EmptyLine"}, {"CenterText", 0xffffff, "Количество:"}, {"Slider", 0xffffff, 0x33db80, 1, maxToSell, math.floor(maxToSell / 2), "", " шт."}, {"EmptyLine"}, {"CenterText", 0xffffff, "При каждой продаже с вас"}, {"CenterText", 0xffffff, "взымается комиссия в 4%"}, {"EmptyLine"}, {"Button", {0x33db80, 0xffffff, "Продать"}})
 							local price, count = tonumber(data[1]), data[2]
 							if price then
 								sellToPlayers(currentItem, count, price, currentUser)
