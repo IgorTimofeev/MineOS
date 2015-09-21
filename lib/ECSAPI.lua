@@ -1831,17 +1831,17 @@ function ECSAPI.universalWindow(x, y, width, background, closeWindowAfter, ...)
 			local xPos, yPos = x + 2, objects[number].y
 			local activeColor, passiveColor, textColor, text, state = objects[number][2], objects[number][3], objects[number][4], objects[number][5], objects[number][6]
 			local switchWidth = 10
-			ecs.colorTextWithBack(xPos, yPos, textColor, background, text)
+			ECSAPI.colorTextWithBack(xPos, yPos, textColor, background, text)
 
 			xPos = x + width - switchWidth - 2
 			if state then
-				ecs.square(xPos, yPos, switchWidth, 1, activeColor)
-				ecs.square(xPos + switchWidth - 2, yPos, 2, 1, passiveColor)
-				ecs.colorTextWithBack(xPos + 4, yPos, passiveColor, activeColor, "ON")
+				ECSAPI.square(xPos, yPos, switchWidth, 1, activeColor)
+				ECSAPI.square(xPos + switchWidth - 2, yPos, 2, 1, passiveColor)
+				ECSAPI.colorTextWithBack(xPos + 4, yPos, passiveColor, activeColor, "ON")
 			else
-				ecs.square(xPos, yPos, switchWidth, 1, passiveColor - 0x444444)
-				ecs.square(xPos, yPos, 2, 1, passiveColor)
-				ecs.colorTextWithBack(xPos + 4, yPos, passiveColor, passiveColor - 0x444444, "OFF")
+				ECSAPI.square(xPos, yPos, switchWidth, 1, passiveColor - 0x444444)
+				ECSAPI.square(xPos, yPos, 2, 1, passiveColor)
+				ECSAPI.colorTextWithBack(xPos + 4, yPos, passiveColor, passiveColor - 0x444444, "OFF")
 			end
 			newObj("Switches", number, xPos, yPos, xPos + switchWidth - 1, yPos)
 		end
