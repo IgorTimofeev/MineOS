@@ -236,13 +236,13 @@ while true do
 					ecs.drawButton(obj["HDDControls"][key][1], obj["HDDControls"][key][2], 14, 3, "Управление", 0xdddddd, ecs.colors.blue)
 					local action = context.menu(obj["HDDControls"][key][1], obj["HDDControls"][key][2] + 3, {"Форматировать"}, {"Изменить имя"}, {"Установить как загрузочный"}, "-", {"Сдублировать OS на этот диск"})
 					if action == "Форматировать" then
-						local data = ecs.universalWindow("auto", "auto", 38, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x880000, "Внимание!"}, {"EmptyLine"}, {"CenterText", 0x262626, "Данное действие очистит весь диск."}, {"CenterText", 0x262626, "Продолжить?"}, {"EmptyLine"}, {"Button", 0xbbbbbb, 0xffffff, "Да"}, {"Button", 0x999999, 0xffffff, "Нет"})
+						local data = ecs.universalWindow("auto", "auto", 38, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x880000, "Внимание!"}, {"EmptyLine"}, {"CenterText", 0x262626, "Данное действие очистит весь диск."}, {"CenterText", 0x262626, "Продолжить?"}, {"EmptyLine"}, {"Button", {0xbbbbbb, 0xffffff, "Да"}, {0x999999, 0xffffff, "Нет"}})
 						if data[1] ~= "Нет" then
 							ecs.formatHDD(HDDs[key].address)
 							drawMain()
 						end
 					elseif action == "Изменить имя" then
-						local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Изменить имя диска"}, {"EmptyLine"}, {"Input", 0x262626, 0x000000, HDDs[key].label or "Имя"}, {"EmptyLine"}, {"Button", 0xbbbbbb, 0xffffff, "OK!"})
+						local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Изменить имя диска"}, {"EmptyLine"}, {"Input", 0x262626, 0x000000, HDDs[key].label or "Имя"}, {"EmptyLine"}, {"Button", {0xbbbbbb, 0xffffff, "OK!"})
 						if data[1] == "" or data[1] == " " then data[1] = "Untitled" end
 						ecs.setHDDLabel(HDDs[key].address, data[1])
 						drawMain()
