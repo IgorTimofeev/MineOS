@@ -1534,6 +1534,7 @@ function ECSAPI.universalWindow(x, y, width, background, closeWindowAfter, ...)
 		["select"] = 3,
 		["selector"] = 3,
 		["separator"] = 1,
+		["switch"] = 1,
 	}
 
 	--Скорректировать ширину, если нужно
@@ -1570,6 +1571,9 @@ function ECSAPI.universalWindow(x, y, width, background, closeWindowAfter, ...)
 			end
 			widthOfButtons = maxButton * #objects[i]
 			correctWidth(widthOfButtons)
+		elseif objectType == "switch" then
+			local dlina = unicode.len(objects[i][5]) + 2 + 10 + 4
+			correctWidth(dlina)
 		end
 	end
 
@@ -1822,6 +1826,24 @@ function ECSAPI.universalWindow(x, y, width, background, closeWindowAfter, ...)
 				end
 			end
 
+		elseif objectType == "switch" then
+
+			local xPos, yPos = x + 2, objects[number].y
+			local activeColor, passiveColor, textColor, text, state = objects[number][2], objects[number][3], objects[number][4], objects[number][5], objects[number][6]
+			local switchWidth = 10
+			ecs.colorTextWithBack(xPos, yPos, textColor, background, text)
+
+			xPos = x + width - switchWidth - 2
+			if state then
+				ecs.square(xPos, yPos, switchWidth, 1, activeColor)
+				ecs.square(xPos + switchWidth - 2, yPos, 2, 1, passiveColor)
+				ecs.colorTextWithBack(xPos + 4, yPos, passiveColor, activeColor, "ON")
+			else
+				ecs.square(xPos, yPos, switchWidth, 1, passiveColor - 0x444444)
+				ecs.square(xPos, yPos, 2, 1, passiveColor)
+				ecs.colorTextWithBack(xPos + 4, yPos, passiveColor, passiveColor - 0x444444, "OFF")
+			end
+			newObj("Switches", number, xPos, yPos, xPos + switchWidth - 1, yPos)
 		end
 	end
 
@@ -1848,6 +1870,8 @@ function ECSAPI.universalWindow(x, y, width, background, closeWindowAfter, ...)
 			elseif type == "selector" then
 				table.insert(massiv, objects[i].selectedElement)
 			elseif type == "slider" then
+				table.insert(massiv, objects[i][6])
+			elseif type == "switch" then
 				table.insert(massiv, objects[i][6])
 			else
 				table.insert(massiv, nil)
@@ -1938,6 +1962,17 @@ function ECSAPI.universalWindow(x, y, width, background, closeWindowAfter, ...)
 					end
 				end
 			end
+
+			if obj["Switches"] then
+				for key in pairs(obj["Switches"]) do
+					if ECSAPI.clickedAtArea(e[3], e[4], obj["Switches"][key][1], obj["Switches"][key][2], obj["Switches"][key][3], obj["Switches"][key][4]) then
+						objects[key][6] = not objects[key][6]
+						displayObject(key)
+						break
+					end
+				end
+			end
+
 		elseif e[1] == "scroll" then
 			if obj["TextFields"] then
 				for key in pairs(obj["TextFields"]) do
@@ -1964,7 +1999,7 @@ function ECSAPI.demoWindow()
 	--Очищаем экран перед юзанием окна и ставим курсор на 1, 1
 	ECSAPI.prepareToExit()
 	--Рисуем окно и получаем данные после взаимодействия с ним
-	local data = ECSAPI.universalWindow("auto", "auto", 36, ECSAPI.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x880000, "Здорово, ебана!"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, "Сюда вводить можно"}, {"Selector", 0x262626, 0x880000, "Выбор формата", "PNG", "JPG", "GIF", "PSD"}, {"EmptyLine"}, {"WrappedText", 0x262626, "Тест автоматического переноса букв в зависимости от ширины данного окна. Пока что тупо режет на куски, не особо красиво."}, {"EmptyLine"}, {"Select", 0x262626, 0x880000, "Я пидор", "Я не пидор"}, {"Slider", 0x262626, 0x880000, 1, 100, 50, "Убито ", " младенцев"}, {"EmptyLine"}, {"TextField", 5, 0xffffff, 0x262626, 0xcccccc, ECSAPI.colors.blue, "Тест текстового информационного поля. По сути это тот же самый WrappedText, разве что эта хрень ограничена по высоте, и ее можно скроллить. Ну же, поскролль меня! Скролль меня полностью! Моя жадная пизда жаждет твой хуй!"}, {"EmptyLine"}, {"Button", {ECSAPI.colors.green, 0xffffff, "Да"}, {ECSAPI.colors.orange, 0xffffff, "Нет"}, {ECSAPI.colors.red, 0xffffff, "Отмена"}})
+	local data = ECSAPI.universalWindow("auto", "auto", 36, 0xeeeeee, true, {"EmptyLine"}, {"CenterText", 0x880000, "Здорово, ебана!"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, "Сюда вводить можно"}, {"Selector", 0x262626, 0x880000, "Выбор формата", "PNG", "JPG", "GIF", "PSD"}, {"EmptyLine"}, {"WrappedText", 0x262626, "Тест автоматического переноса букв в зависимости от ширины данного окна. Пока что тупо режет на куски, не особо красиво."}, {"EmptyLine"}, {"Select", 0x262626, 0x880000, "Я пидор", "Я не пидор"}, {"Slider", 0x262626, 0x880000, 1, 100, 50, "Убито ", " младенцев"}, {"EmptyLine"}, {"Separator", 0xaaaaaa}, {"Switch", 0xF2B233, 0xffffff, 0x262626, "✈ Авиарежим", false}, {"EmptyLine"}, {"Switch", 0x3366CC, 0xffffff, 0x262626, "☾  Не беспокоить", true}, {"Separator", 0xaaaaaa},  {"EmptyLine"}, {"TextField", 5, 0xffffff, 0x262626, 0xcccccc, 0x3366CC, "Тест текстового информационного поля. По сути это тот же самый WrappedText, разве что эта хрень ограничена по высоте, и ее можно скроллить. Ну же, поскролль меня! Скролль меня полностью! Моя жадная пизда жаждет твой хуй!"}, {"EmptyLine"}, {"Button", {0x57A64E, 0xffffff, "Да"}, {0xF2B233, 0xffffff, "Нет"}, {0xCC4C4C, 0xffffff, "Отмена"}})
 	--Еще разок
 	ECSAPI.prepareToExit()
 	--Выводим данные
@@ -2042,6 +2077,13 @@ end
 			будет равен " яблок", а значение слайдера будет равно 50, то на экране будет написано "Съедено 50 яблок".
 
 			Интерактивный объект.
+
+		{"Switch", Активный цвет, Пассивный цвет, Цвет текста, Текст, Состояние}
+
+			 Переключатель, принимающий два состояния: true или false. Текст - это всего лишь информация, некое
+			 название данного переключателя.
+
+			 Интерактивный объект.  
 
 		{"CenterText", Цвет текста, Сам текст}
 
