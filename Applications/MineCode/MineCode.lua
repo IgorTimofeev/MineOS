@@ -345,7 +345,7 @@ local function analyseStrings(from, to)
 	for i = from, to do
 
 		--УБИРАЕМ ТАБСЫ НА ХЕР, ЗАМЕНЯЕМ ИХ ПРОБЕЛАМИ
-		strings[i][1] = ecs.stringReplace(strings[i][1], "	", string.rep(" ", indentationWidth))
+		strings[i][1] = string.gsub(strings[i][1], "	", string.rep(" ", indentationWidth))
 
 		--ВСЯКИЕ ТАМ КОММЕНТАРИИ И ПРОЧЕЕ
 		local isCommentet = false
