@@ -17,10 +17,12 @@ local copyright = [[
 --Не требующиеся для ОС
 --local ecs = require("ECSAPI")
 --local fs = require("filesystem")
+--local unicode = require("unicode")
 
 --Обязательные
 local colorlib = require("colorlib")
 local palette = require("palette")
+local event = require("event")
 local gpu = component.gpu
 
 ------------------------------------------------ Переменные --------------------------------------------------------------
@@ -49,8 +51,8 @@ sizes.xStartOfDrawingArea = sizes.widthOfLeftBar + 1
 sizes.xEndOfDrawingArea = sizes.xSize - sizes.widthOfRightBar
 sizes.yStartOfDrawingArea = 2
 sizes.yEndOfDrawingArea = sizes.ySize
-sizes.widthOfDrawingArea = sizes.xEndOfDrawingArea - sizes.xStartOfDrawingArea
-sizes.heightOfDrawingArea = sizes.yEndOfDrawingArea - sizes.yStartOfDrawingArea
+sizes.widthOfDrawingArea = sizes.xEndOfDrawingArea - sizes.xStartOfDrawingArea + 1
+sizes.heightOfDrawingArea = sizes.yEndOfDrawingArea - sizes.yStartOfDrawingArea + 1
 sizes.heightOfLeftBar = sizes.ySize - 1
 
 --Для правого тулбара
@@ -59,8 +61,8 @@ sizes.xStartOfRightBar = sizes.xSize - sizes.widthOfRightBar + 1
 sizes.yStartOfRightBar = 2
 
 --Для изображения
-sizes.widthOfImage = 33
-sizes.heightOfImage = 16
+sizes.widthOfImage = 8
+sizes.heightOfImage = 4
 sizes.xStartOfImage = 9
 sizes.yStartOfImage = 3
 
@@ -77,9 +79,9 @@ local instruments = {
 local currentInstrument = 1
 
 --Верхний тулбар
-local topToolbar = {"Файл", "Изображение", "Инструменты", "Фильтры"}
+local topToolbar = {{"PS", 0xaaaaff}, {"Файл"}, {"Изображение"}, {"Инструменты"}, {"Фильтры"}}
 
------------------------------------------------- Функции --------------------------------------------------------------
+------------------------------------------------ Функции отрисовки --------------------------------------------------------------
 
 local function drawTransparentPixel(xPos, yPos, i, j)
 	if j % 2 == 0 then
@@ -153,15 +155,19 @@ end
 
 local function drawTopBar()
 	ecs.square(1, 1, sizes.xSize, 1, colors.toolbar)
-	local xPos = 2
+	local xPos = 3
 	local spaceBetween = 2
-	gpu.setForeground(0xffffff)
 
 	for i = 1, #topToolbar do
-		gpu.set(xPos, 1, topToolbar[i])
-		xPos = xPos + unicode.len(topToolbar[i]) + spaceBetween
+		ecs.colorText(xPos, 1, topToolbar[i][2] or 0xffffff, topToolbar[i][1])
+		xPos = xPos + unicode.len(topToolbar[i][1]) + spaceBetween
 	end
 
+end
+
+local function drawImage()
+	drawBackground()
+	drawTransparency()
 end
 
 local function drawAll()
@@ -170,13 +176,43 @@ local function drawAll()
 	drawLeftBar()
 	drawRightBar()
 	drawTopBar()
-	drawTransparency()
+	drawImage()
+end
+
+------------------------------------------------ Функции расчета --------------------------------------------------------------
+
+local function move(direction)
+	if direction == "up" then
+		sizes.yStartOfImage = sizes.yStartOfImage - 2
+	elseif direction == "down" then
+		sizes.yStartOfImage = sizes.yStartOfImage + 2
+	elseif direction == "left" then
+		sizes.xStartOfImage = sizes.xStartOfImage - 2
+	elseif direction == "right" then
+		sizes.xStartOfImage = sizes.xStartOfImage + 2
+	end
+
+	drawImage()
 end
 
 ------------------------------------------------ Старт программы --------------------------------------------------------------
 
 drawAll()
-ecs.waitForTouchOrClick()
+
+while true do
+	local e = {event.pull()}
+	if e[1] == "key_down" then
+		if e[4] == 200 then
+			move("up")
+		elseif e[4] == 208 then
+			move("down")
+		elseif e[4] == 203 then
+			move("left")
+		elseif e[4] == 205 then
+			move("right")
+		end
+	end
+end
 
 ------------------------------------------------ Выход из программы --------------------------------------------------------------
 
