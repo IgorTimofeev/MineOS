@@ -195,14 +195,18 @@ local function motd()
   end
 end
 
---Загружаем самые нужные апишки
+--Загружаем необходимые библиотеки, дабы избежать потерей памяти
 _G._OSLANGUAGE = require("System/OS/Language")
 _G.ecs = require("ECSAPI")
 _G.config = require("config")
+_G.context = require("context")
 _G.image = require("image")
 _G.fs = require("filesystem")
 _G.shell = require("shell")
-local component = require("component")
+_G.component = require("component")
+_G.unicode = require("unicode")
+_G.keyboard = require("keyboard")
+_G.computer = require("computer")
 
 --Oткрываем порт для беспороводных MineOS-соединений
 if component.isAvailable("modem") then component.modem.open(512) end
