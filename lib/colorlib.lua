@@ -85,4 +85,20 @@ function colorlib.HSBtoHEX(h, s, b)
   return color
 end
 
+--Смешивание двух цветов на основе альфа-канала второго
+function colorlib.alphaBlend(back_color, front_color, alpha_channel)
+	local INVERTED_ALPHA_CHANNEL = 255 - alpha_channel
+
+	local back_color_rr, back_color_gg, back_color_bb    = colorlib.HEXtoRGB(back_color)
+	local front_color_rr, front_color_gg, front_color_bb = colorlib.HEXtoRGB(front_color)
+
+	local blended_rr = front_color_rr * INVERTED_ALPHA_CHANNEL / 255 + back_color_rr * alpha_channel / 255
+	local blended_gg = front_color_gg * INVERTED_ALPHA_CHANNEL / 255 + back_color_gg * alpha_channel / 255
+	local blended_bb = front_color_bb * INVERTED_ALPHA_CHANNEL / 255 + back_color_bb * alpha_channel / 255
+
+	INVERTED_ALPHA_CHANNEL, back_color_rr, back_color_gg, back_color_bb, front_color_rr, front_color_gg, front_color_bb = nil, nil, nil, nil, nil, nil, nil
+
+	return colorlib.RGBtoHEX( blended_rr, blended_gg, blended_bb )
+end
+
 return colorlib
