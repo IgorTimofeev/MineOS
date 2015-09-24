@@ -378,6 +378,51 @@ function image.drawRandomImage(x, y, width, height)
 	image.draw(x, y, optimizedPicture)
 end
 
+--Отладочная функция для наглядного составления сжатой цветовой палитры
+function image.createCompressedColorPalette(iterator)
+	iterator = iterator or 64
+	local file = io.open("colors.lua", "w")
+	ecs.prepareToExit()
+	local massiv = {}
+	local xSize, ySize = gpu.getResolution()
+	local _,_,first,second,color,compressed,decompressed,strColor,strCompressed
+	local i = 0x0
+	local yPos, xPos = 8, 2
+	while i <= 0xffffff do
+		color = i
+		compressed = convert24bitTo8bit(color)
+		decompressed = convert8bitTo24bit(compressed)
+
+		strColor = HEXtoSTRING(color, 6, true)
+		strCompressed = HEXtoSTRING(compressed, 2, true)
+
+		ecs.drawButton(2, 2, 10, 3, strColor, color, 0xffffff - color)
+		ecs.drawButton(14, 2, 10, 3, strCompressed, decompressed, 0xffffff - decompressed)
+
+		ecs.colorTextWithBack(2, 6, 0xffffff, 0x262626, "Идет сравнение цветов, ".. math.floor(i / 0xffffff * 100).."% завершено. Ниже выводится список соответствий.")
+
+		_,_,first = gpu.get(2,2)
+		_,_,second = gpu.get(14,2)
+
+		if first == second then
+			if not massiv[compressed] then
+				massiv[compressed] = color
+				ecs.colorTextWithBack(xPos, yPos, color, 0x262626, strCompressed.." = "..strColor)
+				yPos = yPos + 1
+				if yPos >= ySize then yPos = 8; xPos = xPos + 16 end
+			end
+		end
+		i = i + iterator
+	end
+
+	for key, val in pairs(massiv) do
+		file:write("[", HEXtoSTRING(key, 2, true), "] = ", HEXtoSTRING(val, 6, true), ",\n")
+	end
+
+	file:close()
+	ecs.prepareToExit()
+end
+
 
 ----------------------------------------- Основные функции программы -------------------------------------------------------------------
 
@@ -462,66 +507,37 @@ end
 ------------------------------------------ Примеры работы с библиотекой ------------------------------------------------
 
 
--- local event = require("event")
+ecs.prepareToExit()
 
--- local file = io.open("colors.lua", "w")
-
--- ecs.prepareToExit()
-
--- local massiv = {}
-
+-- image.createCompressedColorPalette(iterator)
+-- local full = 0x0
+-- local xPos, yPos = 2, 2
 -- local xSize, ySize = gpu.getResolution()
-
--- local i = 0
--- local yPos = 8
--- while i <= 0xffffff do
--- 	local color = i
--- 	local compressed = convert24bitTo8bit(color)
--- 	local decompressed = convert8bitTo24bit(compressed)
-
--- 	local strColor = HEXtoSTRING(color, 6, true)
--- 	local strCompressed = HEXtoSTRING(compressed, 2, true)
-
--- 	ecs.drawButton(2, 2, 10, 3, strColor, color, 0xffffff - color)
--- 	ecs.drawButton(14, 2, 10, 3, strCompressed, decompressed, 0xffffff - decompressed)
-
--- 	ecs.colorTextWithBack(2, 6, 0xffffff, 0x262626, "Идет сравнение цветов, ".. math.floor(i / 0xffffff * 100).."% завершено")
-
--- 	local _,_,first = gpu.get(2,2)
--- 	local _,_,second = gpu.get(14,2)
-
--- 	if first == second then
--- 		if not massiv[compressed] then
--- 			massiv[compressed] = color
--- 			file:write("[", strCompressed, "] = ", strColor, "\n")
--- 			ecs.colorTextWithBack(2, yPos, color, 0x262626, "Найдено соответствие: "..strCompressed.." = "..strColor)
--- 			yPos = yPos + 1
--- 			if yPos >= ySize then yPos = 8; ecs.prepareToExit() end
+-- local compressed = 0x0
+-- local function printColors()
+-- 	ecs.colorTextWithBack(xPos, yPos, full, 0x262626, HEXtoSTRING(compressed, 2, true).." = "..HEXtoSTRING(full, 6, true))
+-- 	yPos = yPos + 1
+-- 	if yPos >= ySize then yPos = 2; xPos = xPos + 16 end
+-- end
+-- while compressed <= 0xff do
+-- 	for i = 1, 8 do
+-- 		for j = 1, 4 do
+-- 			printColors()
+-- 			full = full + 0x40
+-- 			compressed = compressed + 0x1
 -- 		end
+-- 		full = full + 0x1F00
 -- 	end
-
--- 	i = i + 60
-
--- 	--os.sleep(0.1)
-
+-- 	full = full + 0x1F0000
 -- end
 
--- file:close()
--- ecs.prepareToExit()
+-- local function formula(shortColor)
+-- 	local fullColor = shortColor * (8 * ( 4 * (0x40) + 0x1F00) + 0x1F0000)
+	
+-- 	ecs.colorTextWithBack(2, 2, fullColor, 0x262626, HEXtoSTRING(shortColor, 2, true).." = "..HEXtoSTRING(fullColor, 6, true))
+-- end
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+-- formula(0xA0)
 
 
 -- --Пример изображения типа 1 (подробнее о типах см. конец файла)
