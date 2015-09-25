@@ -52,7 +52,6 @@ local masterPixels = {}
 local colorlib = require("colorlib")
 local palette = require("palette")
 local event = require("event")
-local gpu = component.gpu
 
 ------------------------------------------------ Переменные --------------------------------------------------------------
 
@@ -90,10 +89,13 @@ sizes.xStartOfRightBar = sizes.xSize - sizes.widthOfRightBar + 1
 sizes.yStartOfRightBar = 2
 
 --Для изображения
+sizes.widthOfImage = 40
+sizes.heightOfImage = 17
+sizes.sizeOfPixelData = 4
 sizes.xStartOfImage = 9
 sizes.yStartOfImage = 3
-sizes.widthOfImage = 40
-sizes.heightOfImage = 18
+sizes.xEndOfImage = sizes.xStartOfImage + sizes.widthOfImage - 1
+sizes.yEndOfImage = sizes.yStartOfImage + sizes.heightOfImage - 1
 
 --Инструменты
 sizes.heightOfInstrument = 3
@@ -208,12 +210,26 @@ local function mergeAllLayersToMasterPixels()
 	end
 end
 
-local function convertIteratorToPixelData(iterator)
-	local x, y, background, foreground, alpha, symbol
+--Формула конвертации итератора массива в абсолютные координаты пикселя изображения
+local function convertIteratorToCoords(iterator)
+	--Приводим итератор к корректному виду (1 = 1, 5 = 2, 9 = 3, 13 = 4, 17 = 5, ...)
+	iterator = (iterator + sizes.sizeOfPixelData - 1) / sizes.sizeOfPixelData
+	--Получаем остаток от деления итератора на ширину изображения
+	local ostatok = iterator % sizes.widthOfImage
+	--Если остаток равен 0, то х равен ширине изображения, а если нет, то х равен остатку
+	local x = (ostatok == 0) and sizes.widthOfImage or ostatok
+	--А теперь как два пальца получаем координату по Y
+	local y = math.ceil(iterator / sizes.widthOfImage)
+	--Очищаем остаток из оперативки
+	ostatok = nil
+	--Возвращаем координаты
+	return x, y
+end
 
-	local cyka = sizes.heightOfImage * sizes.widthOfImage * 4 / iterator
-
-	return x, y, background, foreground, alpha, symbol
+--Формула конвертации абсолютных координат пикселя изображения в итератор для массива
+local function convertCoordsToIterator(x, y)
+	--Конвертируем координаты в итератор
+	return (sizes.widthOfImage * (y - 1) + x) * sizes.sizeOfPixelData - sizes.sizeOfPixelData + 1
 end
 
 local function drawImage()
@@ -291,7 +307,15 @@ drawAll()
 
 while true do
 	local e = {event.pull()}
-	if e[1] == "key_down" then
+	if e[1] == "touch" then
+		--Если кликнули на рисовабельную зонку
+		if ecs.clickedAtArea(e[3], e[4], sizes.xStartOfImage, sizes.yStartOfImage, sizes.xEndOfImage, sizes.yEndOfImage) then
+			--Если выбран инструмент "Кисть"
+			if currentInstrument == 3 then
+
+			end
+		end
+	elseif e[1] == "key_down" then
 		if e[4] == 200 then
 			move("up")
 		elseif e[4] == 208 then
