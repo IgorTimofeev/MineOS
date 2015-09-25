@@ -120,6 +120,13 @@ local topToolbar = {{"PS", 0xaaaaff}, {"Файл"}, {"Изображение"}, 
 
 ------------------------------------------------ Функции отрисовки --------------------------------------------------------------
 
+--Объекты для тача
+local obj = {}
+local function newObj(class, name, ...)
+	obj[class] = obj[class] or {}
+	obj[class][name] = {...}
+end
+
 local function drawTransparentPixel(xPos, yPos, i, j)
 	if j % 2 == 0 then
 		if i % 2 == 0 then
@@ -152,13 +159,30 @@ local function drawInstruments()
 			ecs.square(1, yPos, sizes.widthOfLeftBar, sizes.heightOfInstrument, colors.toolbar)
 		end
 		ecs.colorText(3, yPos + 1, colors.toolbarButtonText, instruments[i][1])
+
+		newObj("Instruments", i, 1, yPos, sizes.widthOfLeftBar, yPos + sizes.heightOfInstrument - 1)
+
 		yPos = yPos + sizes.heightOfInstrument
 	end
+end
+
+local function drawColors()
+	local xPos, yPos = 2, sizes.ySize - 4
+	ecs.square(xPos, yPos, 3, 2, currentBackground)
+	ecs.square(xPos + 3, yPos + 1, 1, 2, currentForeground)
+	ecs.square(xPos + 1, yPos + 2, 2, 1, currentForeground)
+	ecs.colorTextWithBack(xPos + 1, yPos + 3, 0xaaaaaa, colors.toolbar, "←→")
+
+	newObj("Colors", 1, xPos, yPos, xPos + 2, yPos + 1)
+	newObj("Colors", 2, xPos + 3, yPos + 1, xPos + 3, yPos + 2)
+	newObj("Colors", 3, xPos + 1, yPos + 2, xPos + 3, yPos + 2)
+	newObj("Colors", 4, xPos + 1, yPos + 3, xPos + 2, yPos + 3)
 end
 
 local function drawLeftBar()
 	ecs.square(1, 2, sizes.widthOfLeftBar, sizes.heightOfLeftBar, colors.toolbar)
 	drawInstruments()
+	drawColors()
 end
 
 local function drawRightBar()
@@ -241,7 +265,7 @@ end
 local function console(text)
 	ecs.square(sizes.xStartOfDrawingArea, sizes.ySize, sizes.widthOfDrawingArea, 1, colors.console)
 	local _, total, used = ecs.getInfoAboutRAM()
-	ecs.colorText(sizes.xEndOfDrawingArea - 14, sizes.ySize, colors.consoleText, used.."/"..total.."KB RAM")
+	ecs.colorText(sizes.xEndOfDrawingArea - 15, sizes.ySize, colors.consoleText, used.."/"..total.." KB RAM")
 	gpu.set(sizes.xStartOfDrawingArea + 1, sizes.ySize, text)
 	_, total, used = nil, nil, nil
 end
@@ -316,6 +340,91 @@ local function move(direction)
 	drawBackgroundAndImage()
 end
 
+local function setPixel(iterator, background, foreground, alpha, symbol)
+	layers[currentLayer][iterator] = background
+	layers[currentLayer][iterator + 1] = foreground
+	layers[currentLayer][iterator + 2] = alpha
+	layers[currentLayer][iterator + 3] = symbol
+end
+
+local function swapColors()
+	local tempColor = currentForeground
+	currentForeground = currentBackground
+	currentBackground = tempColor
+	tempColor = nil
+	drawColors()
+	console("Цвета поменяны местами.")
+end
+
+local function inputText(x, y, limit)
+	local oldPixels = ecs.rememberOldPixels(x,y-1,x+limit-1,y+1)
+
+	local text = ""
+	local inputPos = 1
+
+	local function drawThisShit()
+		for i=1,inputPos do
+			ecs.invertedText(x + i - 1, y + 1, "─")
+			ecs.adaptiveText(x + i - 1, y - 1, " ", currentBackground)
+		end
+		ecs.invertedText(x + inputPos - 1, y + 1, "▲")--"▲","▼"
+		ecs.invertedText(x + inputPos - 1, y - 1, "▼")
+		ecs.adaptiveText(x, y, ecs.stringLimit("start", text, limit, false), currentForeground)
+	end
+
+	drawThisShit()
+
+	while true do
+		local e = {event.pull()}
+		if e[1] == "key_down" then
+			if e[4] == 14 then
+				if unicode.len(text) >= 1 then
+					text = unicode.sub(text, 1, -2)
+					if unicode.len(text) < (limit - 1) then
+						inputPos = inputPos - 1
+					end
+					ecs.drawOldPixels(oldPixels)
+					drawThisShit()
+				end
+			elseif e[4] == 28 then
+				break
+			else
+				local symbol = ecs.convertCodeToSymbol(e[3])
+				if symbol ~= nil then
+					text = text .. symbol
+					if unicode.len(text) < limit then
+						inputPos = inputPos + 1
+					end
+					drawThisShit()
+				end
+			end
+		elseif e[1] == "clipboard" then
+			if e[3] then
+				text = text .. e[3]
+				if unicode.len(text) < limit then
+					inputPos = inputPos + unicode.len(e[3])
+				end
+				drawThisShit()
+			end
+		end
+	end
+
+	ecs.drawOldPixels(oldPixels)
+	if text == "" then text = " " end
+	return text
+end
+
+local function saveTextToPixels(x, y, text)
+	local sText = unicode.len(text)
+	local iterator
+	x = x - 1
+	for i = 1, sText do
+		if x + i > sizes.widthOfImage then break end
+		iterator = convertCoordsToIterator(x + i, y)
+		setPixel(iterator, layers[currentLayer][iterator], currentForeground, currentAlpha, unicode.sub(text, i, i))
+	end
+end
+
 ------------------------------------------------ Старт программы --------------------------------------------------------------
 
 --Создаем пустой мастерпиксельс
@@ -329,23 +438,73 @@ while true do
 	if e[1] == "touch" or e[1] == "drag" then
 		--Если кликнули на рисовабельную зонку
 		if ecs.clickedAtArea(e[3], e[4], sizes.xStartOfImage, sizes.yStartOfImage, sizes.xEndOfImage, sizes.yEndOfImage) then
-			--Если выбран инструмент "Кисть"
+			
+			local x, y = e[3] - sizes.xStartOfImage + 1, e[4] - sizes.yStartOfImage + 1
+			local iterator = convertCoordsToIterator(x, y)
+
+			--Кисть
 			if currentInstrument == 3 then
-				if gpu.getBackground() ~= currentBackground then gpu.setBackground(currentBackground) end
-				if gpu.getForeground() ~= currentForeground then gpu.setForeground(currentForeground) end
-				gpu.set(e[3], e[4], currentSymbol)
-				local x, y = e[3] - sizes.xStartOfImage + 1, e[4] - sizes.yStartOfImage + 1
-				local iterator = convertCoordsToIterator(x, y)
-				layers[currentLayer][iterator] = currentBackground
-				layers[currentLayer][iterator + 1] = currentForeground
-				layers[currentLayer][iterator + 2] = currentAlpha
-				layers[currentLayer][iterator + 3] = currentSymbol
+				--Если нажата клавиша альт
+				if keyboard.isKeyDown(56) then
+					local _, _, background = gpu.get(e[3], e[4])
+					currentBackground = background
+					drawColors()
+				else
+					if gpu.getBackground() ~= currentBackground then gpu.setBackground(currentBackground) end
+					if gpu.getForeground() ~= currentForeground then gpu.setForeground(currentForeground) end
+					local x, y = e[3] - sizes.xStartOfImage + 1, e[4] - sizes.yStartOfImage + 1
+					local iterator = convertCoordsToIterator(x, y)
+					
+					gpu.set(e[3], e[4], currentSymbol)
+					setPixel(iterator, currentBackground, currentForeground, currentAlpha, currentSymbol)
 
-				console("Кисть: клик на точку "..e[3].."x"..e[4]..", координаты в изображении: "..x.."x"..y..", индекс массива изображения: "..iterator)
+					console("Кисть: клик на точку "..e[3].."x"..e[4]..", координаты в изображении: "..x.."x"..y..", индекс массива изображения: "..iterator)
+				end
+			--Ластик
+			elseif currentInstrument == 4 then
+				drawTransparentPixel(e[3], e[4], x, y)
+				setPixel(iterator, 0x000000, 0x000000, 0xFF, " ")
 
-				iterator, x, y = nil, nil, nil
+				console("Ластик: клик на точку "..e[3].."x"..e[4]..", координаты в изображении: "..x.."x"..y..", индекс массива изображения: "..iterator)
+
+			--Текст
+			elseif currentInstrument == 5 then
+				local limit = sizes.widthOfImage - x + 1
+				local text = inputText(e[3], e[4], limit)
+				saveTextToPixels(x, y, text)
+				mergeAllLayersToMasterPixels()
+				drawImage()
+			end
+
+			iterator, x, y = nil, nil, nil
+
+		end
+
+		for key in pairs(obj["Colors"]) do
+			if ecs.clickedAtArea(e[3], e[4], obj["Colors"][key][1], obj["Colors"][key][2], obj["Colors"][key][3], obj["Colors"][key][4]) then
+				if key == 1 then
+					currentBackground = palette.draw("auto", "auto", currentBackground) or currentBackground
+					drawColors()
+				elseif key == 2 or key == 3 then
+					currentForeground = palette.draw("auto", "auto", currentForeground) or currentForeground
+					drawColors()
+				elseif key == 4 then
+					ecs.colorTextWithBack(obj["Colors"][key][1], obj["Colors"][key][2], 0xFF0000, colors.toolbar, "←→")
+					os.sleep(0.2)
+					swapColors()
+				end
+				break
+			end	
+		end
+
+		for key in pairs(obj["Instruments"]) do
+			if ecs.clickedAtArea(e[3], e[4], obj["Instruments"][key][1], obj["Instruments"][key][2], obj["Instruments"][key][3], obj["Instruments"][key][4]) then
+				currentInstrument = key
+				drawInstruments()
+				break
 			end
 		end
+
 	elseif e[1] == "key_down" then
 		--Стрелки
 		if e[4] == 200 then
@@ -359,6 +518,13 @@ while true do
 		--Пробел
 		elseif e[4] == 57 then
 			drawAll()
+		--X
+		elseif e[4] == 45 then
+			swapColors()
+		--1
+		elseif e[4] == 2 or e[4] == 3 or e[4] == 4 or e[4] == 5 or e[4] == 6 then
+			currentInstrument = e[4] - 1
+			drawInstruments()
 		end
 	end
 end
