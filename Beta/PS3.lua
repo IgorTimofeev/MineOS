@@ -52,6 +52,7 @@ local masterPixels = {}
 local colorlib = require("colorlib")
 local palette = require("palette")
 local event = require("event")
+local gpu = component.gpu
 
 ------------------------------------------------ Переменные --------------------------------------------------------------
 
@@ -107,7 +108,12 @@ local instruments = {
 	{"❎", "Eraser"},
 	{"Ⓣ", "Text"},
 }
-local currentInstrument = 1
+local currentInstrument = 3
+local currentLayer = 1
+local currentBackground = 0x000000
+local currentForeground = 0xFFFFFF
+local currentAlpha = 0x00
+local currentSymbol = " "
 
 --Верхний тулбар
 local topToolbar = {{"PS", 0xaaaaff}, {"Файл"}, {"Изображение"}, {"Инструменты"}, {"Фильтры"}}
@@ -232,6 +238,14 @@ local function convertCoordsToIterator(x, y)
 	return (sizes.widthOfImage * (y - 1) + x) * sizes.sizeOfPixelData - sizes.sizeOfPixelData + 1
 end
 
+local function console(text)
+	ecs.square(sizes.xStartOfDrawingArea, sizes.ySize, sizes.widthOfDrawingArea, 1, colors.console)
+	local _, total, used = ecs.getInfoAboutRAM()
+	ecs.colorText(sizes.xEndOfDrawingArea - 14, sizes.ySize, colors.consoleText, used.."/"..total.."KB RAM")
+	gpu.set(sizes.xStartOfDrawingArea + 1, sizes.ySize, text)
+	_, total, used = nil, nil, nil
+end
+
 local function drawImage()
 	--Стартовые нужности
 	local background, foreground, alpha, symbol = 0x000000, 0x000000, 0xFF, " "
@@ -277,12 +291,18 @@ local function drawAll()
 	drawLeftBar()
 	drawRightBar()
 	drawTopBar()
+	--Создаем картинку
+	mergeAllLayersToMasterPixels()
+	--Рисуем картинку
 	drawBackgroundAndImage()
+	console("Весь интерфейс перерисован!")
 end
 
 ------------------------------------------------ Функции расчета --------------------------------------------------------------
 
 local function move(direction)
+	mergeAllLayersToMasterPixels()
+
 	if direction == "up" then
 		sizes.yStartOfImage = sizes.yStartOfImage - 2
 	elseif direction == "down" then
@@ -300,22 +320,34 @@ end
 
 --Создаем пустой мастерпиксельс
 createEmptyMasterPixels()
---Создаем картинку
-mergeAllLayersToMasterPixels()
+
 --Рисуем весь интерфейс
 drawAll()
 
 while true do
 	local e = {event.pull()}
-	if e[1] == "touch" then
+	if e[1] == "touch" or e[1] == "drag" then
 		--Если кликнули на рисовабельную зонку
 		if ecs.clickedAtArea(e[3], e[4], sizes.xStartOfImage, sizes.yStartOfImage, sizes.xEndOfImage, sizes.yEndOfImage) then
 			--Если выбран инструмент "Кисть"
 			if currentInstrument == 3 then
+				if gpu.getBackground() ~= currentBackground then gpu.setBackground(currentBackground) end
+				if gpu.getForeground() ~= currentForeground then gpu.setForeground(currentForeground) end
+				gpu.set(e[3], e[4], currentSymbol)
+				local x, y = e[3] - sizes.xStartOfImage + 1, e[4] - sizes.yStartOfImage + 1
+				local iterator = convertCoordsToIterator(x, y)
+				layers[currentLayer][iterator] = currentBackground
+				layers[currentLayer][iterator + 1] = currentForeground
+				layers[currentLayer][iterator + 2] = currentAlpha
+				layers[currentLayer][iterator + 3] = currentSymbol
 
+				console("Кисть: клик на точку "..e[3].."x"..e[4]..", координаты в изображении: "..x.."x"..y..", индекс массива изображения: "..iterator)
+
+				iterator, x, y = nil, nil, nil
 			end
 		end
 	elseif e[1] == "key_down" then
+		--Стрелки
 		if e[4] == 200 then
 			move("up")
 		elseif e[4] == 208 then
@@ -324,6 +356,9 @@ while true do
 			move("left")
 		elseif e[4] == 205 then
 			move("right")
+		--Пробел
+		elseif e[4] == 57 then
+			drawAll()
 		end
 	end
 end
