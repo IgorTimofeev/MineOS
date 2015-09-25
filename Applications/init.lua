@@ -207,6 +207,7 @@ _G.component = require("component")
 _G.unicode = require("unicode")
 _G.keyboard = require("keyboard")
 _G.computer = require("computer")
+_G.gpu = _G.component.gpu
 
 --Oткрываем порт для беспороводных MineOS-соединений
 if component.isAvailable("modem") then component.modem.open(512) end
