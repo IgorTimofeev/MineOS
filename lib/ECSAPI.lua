@@ -1274,6 +1274,7 @@ local systemFiles = {
 function ECSAPI.reorganizeFilesAndFolders(massivSudaPihay, showHiddenFiles, showSystemFiles)
 
 	local massiv = {}
+	local workPath = fs.path(massiv[1])
 
 	for i = 1, #massivSudaPihay do
 		if ECSAPI.isFileHidden(massivSudaPihay[i]) and showHiddenFiles then
