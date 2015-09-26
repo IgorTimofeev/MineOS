@@ -643,14 +643,21 @@ function ECSAPI.stringLimit(mode, text, size, noDots)
 end
 
 --Получить текущее реальное время компьютера, хостящего сервер майна
-function ECSAPI.getHostTime()
+function ECSAPI.getHostTime(timezone)
+	timezone = timezone or 0
+	--Создаем файл с записанной в него парашей
     local file = io.open("System/HostTime.tmp", "w")
     file:write("")
     file:close()
-    local lastModified = tonumber(string.sub(fs.lastModified("System/HostTime.tmp"), 1, -4))
+    --Коррекция времени на основе часового пояса
+    local timeCorrection = timezone * 3600
+    --Получаем дату изменения файла в юникс-виде
+    local lastModified = tonumber(string.sub(fs.lastModified("System/HostTime.tmp"), 1, -4)) + timeCorrection
+    --Удаляем файл, ибо на хуй он нам не нужен
     fs.remove("System/HostTime.tmp")
-    local day, month, year, hour, minute, second = os.date("%Y", lastmod), os.date("%m", lastmod), os.date("%d", lastmod), os.date("%H", lastmod), os.date("%M", lastmod), os.date("%S", lastmod)
-    --local dt = os.date('%Y.%m.%d %H:%M:%S', lastmod)
+    --Конвертируем юникс-время в норм время
+    local day, month, year, hour, minute, second = os.date("%Y", lastModified), os.date("%m", lastModified), os.date("%d", lastModified), os.date("%H", lastModified), os.date("%M", lastModified), os.date("%S", lastModified)
+    --Возвращаем все
     return day, month, year, hour, minute, second
 end
 
