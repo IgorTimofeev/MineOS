@@ -1162,7 +1162,7 @@ function ECSAPI.newApplication(path, startName)
 		fs.makeDirectory(name)
 		fs.copy("System/OS/Icons/SampleIcon.png", name)
 		local file = io.open(path .. "/" .. inputs[1] .. ".app/" .. inputs[1] .. ".lua", "w")
-		file:write("local ecs = require(\"ECSAPI\")"), "\n")
+		file:write("local ecs = require(\"ECSAPI\")", "\n")
 		file:write("ecs.universalWindow(\"auto\", \"auto\", 30, 0xeeeeee, true, {\"EmptyLine\"}, {\"CenterText\", 0x262626, \"Hello world!\"}, {\"EmptyLine\"}, {\"Button\", {0xffdb80, 0xffffff, \"Hello!\"}})", "\n")
 		file:close()
 	end
