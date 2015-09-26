@@ -644,7 +644,7 @@ end
 
 --Получить текущее реальное время компьютера, хостящего сервер майна
 function ECSAPI.getHostTime(timezone)
-	timezone = timezone or 0
+	timezone = timezone or 2
 	--Создаем файл с записанной в него парашей
     local file = io.open("System/HostTime.tmp", "w")
     file:write("")
