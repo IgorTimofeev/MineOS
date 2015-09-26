@@ -1539,6 +1539,9 @@ function ECSAPI.launchIcon(path, arguments)
 		else
 			ECSAPI.displayCompileMessage(1, reason, false)
 		end
+	--Если это архив
+	elseif fileFormat == ".paste" then
+		zip.unarchive(path, (fs.path(path) or ""))
 	end
 	--Ставим старое разрешение
 	gpu.setResolution(oldWidth, oldHeight)
