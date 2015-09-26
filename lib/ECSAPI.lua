@@ -1275,6 +1275,7 @@ local systemFiles = {
 	"mnt/",
 	"etc/",
 	"boot/",
+	"Finder.app/"
 	--"System/",
 }
 
