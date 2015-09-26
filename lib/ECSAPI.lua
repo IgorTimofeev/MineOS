@@ -1416,6 +1416,7 @@ local function OSIconsInit()
 		ECSAPI.OSIcons.imageJPG = image.load(ECSAPI.pathToIcons .. "ImageJPG.png")
 		ECSAPI.OSIcons.pastebin = image.load(ECSAPI.pathToIcons .. "Pastebin.png")
 		ECSAPI.OSIcons.fileNotExists = image.load(ECSAPI.pathToIcons .. "FileNotExists.png")
+		ECSAPI.OSIcons.archive = image.load(ECSAPI.pathToIcons .. "archive.png")
 	end
 end
 
@@ -1457,6 +1458,8 @@ function ECSAPI.drawOSIcon(x, y, path, showFileFormat, nameColor)
 		 	icon = "imageJPG"
 		elseif fileFormat == ".paste" then
 			icon = "pastebin"
+		elseif fileFormat == ".zip" then
+			icon = "archive"
 		elseif not fs.exists(path) then
 			icon = "fileNotExists"
 		else
