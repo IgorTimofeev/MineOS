@@ -644,7 +644,7 @@ end
 
 --Получить текущее реальное время компьютера, хостящего сервер майна
 function ECSAPI.getHostTime()
-    local file = io.open("System/HostTime.tmp")
+    local file = io.open("System/HostTime.tmp", "w")
     file:write("")
     file:close()
     local lastModified = tonumber(string.sub(fs.lastModified("System/HostTime.tmp"), 1, -4))
