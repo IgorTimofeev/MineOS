@@ -515,7 +515,7 @@ while true do
 					local action = context.menu(e[3], e[4], {"Просмотр"}, "-", {"Запустить"}, {"Сохранить как"}, "-",{"Удалить"})
 
 					if action == "Сохранить как" then
-						local data = ecs.unversalWindow("auto", "auto", 36, tabColor1, true, {"EmptyLine"}, {"CenterText", 0xffffff, "Загрузить на Pastebin"}, {"EmptyLine"}, {"Input", tabColor2, 0xffffff, "Имя"}, {"Button", {tabColor2, 0xffffff, "OK"}} ) 
+						local data = ecs.universalWindow("auto", "auto", 36, tabColor1, true, {"EmptyLine"}, {"CenterText", 0xffffff, "Сохранить как"}, {"EmptyLine"}, {"Input", tabColor2, 0xffffff, "Имя"}, {"Button", {tabColor2, 0xffffff, "OK"}} ) 
 						local path = data[1]
 						if path ~= nil or path ~= "" or path ~= " " then
 							fs.makeDirectory(fs.path(path))
@@ -579,7 +579,7 @@ while true do
 					drawAll()
 					displayPastes(drawPastesFrom)
 				elseif key == "⛨Загрузить новый файл" then
-					local data = ecs.unversalWindow("auto", "auto", 36, tabColor1, true, {"EmptyLine"}, {"CenterText", 0xffffff, "Загрузить на Pastebin"}, {"EmptyLine"}, {"Input", tabColor2, 0xffffff, "Путь к файлу"}, {"Input", tabColor2, 0xffffff, "Имя на Pastebin"}, {"Button", {tabColor2, 0xffffff, "OK"}}) 
+					local data = ecs.universalWindow("auto", "auto", 36, tabColor1, true, {"EmptyLine"}, {"CenterText", 0xffffff, "Загрузить на Pastebin"}, {"EmptyLine"}, {"Input", tabColor2, 0xffffff, "Путь к файлу"}, {"Input", tabColor2, 0xffffff, "Имя на Pastebin"}, {"Button", {tabColor2, 0xffffff, "OK"}}) 
 					if fs.exists(data[1]) then
 						if not fs.isDirectory(data[1]) then
 							upload(data[1], data[2] or "Untitled")
