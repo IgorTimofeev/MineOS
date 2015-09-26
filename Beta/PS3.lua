@@ -18,6 +18,8 @@ local copyright = [[
 --Массив слоев
 local layers = {
 	{
+		show = true,
+		name = "Mamu ebal",
 		0x003f49, 0x338592, 0x00, " ", 0x003f49, 0x338592, 0x00, " ", 0x003f49, 0x338592, 0x00, " ", 0x003f49, 0x338592, 0x00, " ", 0x003f49, 0x338592, 0x00, " ", 0x003f49, 0x338592, 0x00, " ", 0x003f49, 0x338592, 0x00, " ", 0x003f49, 0x338592, 0x00, " ", 0x003f49, 0x338592, 0x00, " ", 0x003f49, 0x338592, 0x00, " ", 0x003f49, 0x338592, 0x00, " ", 0x003f49, 0x338592, 0x00, " ", 0x003f49, 0x338592, 0x00, " ", 0x003f49, 0x338592, 0x00, " ", 0x003f49, 0xffffff, 0x00, " ", 0x003f49, 0xffffff, 0x00, " ", 0x003f49, 0xffffff, 0x00, " ", 0x003f49, 0xffffff, 0x00, " ", 0x003f49, 0xffffff, 0x00, " ", 0x003f49, 0xffffff, 0x00, " ", 0x003f49, 0xffffff, 0x00, " ", 0x003f49, 0xffffff, 0x00, " ", 0x003f49, 0xffffff, 0x00, " ", 0x003f49, 0xffffff, 0x00, " ", 0x003f49, 0xffffff, 0x00, " ", 0x003f49, 0xffffff, 0x00, " ", 0x003f49, 0xffffff, 0x00, " ", 0x003f49, 0xffffff, 0x00, " ", 0x003f49, 0xffffff, 0x00, " ", 0x003f49, 0xffffff, 0x00, " ", 0x003f49, 0xffffff, 0x00, " ", 0x003f49, 0xffffff, 0x00, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 
 		0x003f49, 0x338592, 0x00, " ", 0x003f49, 0x338592, 0x00, " ", 0x338592, 0x003f49, 0x00, " ", 0x338592, 0x003f49, 0x00, " ", 0x003f49, 0x338592, 0x00, " ", 0x003f49, 0x338592, 0x00, " ", 0x338592, 0x003f49, 0x00, " ", 0x338592, 0x003f49, 0x00, " ", 0x003f49, 0x338592, 0x00, " ", 0x003f49, 0x338592, 0x00, " ", 0x33ff66, 0x0092ff, 0x00, " ", 0x33ff66, 0x0092ff, 0x00, " ", 0x33ff66, 0x0092ff, 0x00, " ", 0x33ff66, 0x0092ff, 0x00, " ", 0x33ff66, 0x0092ff, 0x00, " ", 0x33ff66, 0x0092ff, 0x00, " ", 0x003f49, 0x338592, 0x00, " ", 0x003f49, 0x338592, 0x00, " ", 0x338592, 0x003f49, 0x00, " ", 0x338592, 0x003f49, 0x00, " ", 0x003f49, 0x338592, 0x00, " ", 0x003f49, 0x338592, 0x00, " ", 0x336d3f, 0x004936, 0x00, " ", 0x336d3f, 0x004936, 0x00, " ", 0x336d3f, 0x004936, 0x00, " ", 0x336d3f, 0x004936, 0x00, " ", 0x003f49, 0x338592, 0x00, " ", 0x003f49, 0x338592, 0x00, " ", 0x338592, 0x003f49, 0x00, " ", 0x338592, 0x003f49, 0x00, " ", 0x003f49, 0xffffff, 0x00, " ", 0x003f49, 0xffffff, 0x00, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 
 		0x003f49, 0x338592, 0x00, " ", 0x003f49, 0x338592, 0x00, " ", 0x338592, 0x003f49, 0x00, " ", 0x338592, 0x003f49, 0x00, " ", 0x003f49, 0x338592, 0x00, " ", 0x003f49, 0x338592, 0x00, " ", 0x338592, 0x003f49, 0x00, " ", 0x338592, 0x003f49, 0x00, " ", 0x003f49, 0x338592, 0x00, " ", 0x003f49, 0x338592, 0x00, " ", 0x003f49, 0x338592, 0x00, " ", 0x003f49, 0x338592, 0x00, " ", 0x003f49, 0x338592, 0x00, " ", 0x003f49, 0x338592, 0x00, " ", 0x003f49, 0x338592, 0x00, " ", 0x003f49, 0x338592, 0x00, " ", 0x003f49, 0x338592, 0x00, " ", 0x003f49, 0x338592, 0x00, " ", 0x338592, 0x003f49, 0x00, " ", 0x338592, 0x003f49, 0x00, " ", 0x003f49, 0x338592, 0x00, " ", 0x003f49, 0x338592, 0x00, " ", 0x003f49, 0x338592, 0x00, " ", 0x003f49, 0x338592, 0x00, " ", 0x003f49, 0x338592, 0x00, " ", 0x003f49, 0x338592, 0x00, " ", 0x003f49, 0x338592, 0x00, " ", 0x003f49, 0x338592, 0x00, " ", 0x338592, 0x003f49, 0x00, " ", 0x338592, 0x003f49, 0x00, " ", 0x003f49, 0xffffff, 0x00, " ", 0x003f49, 0xffffff, 0x00, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 
@@ -37,6 +39,10 @@ local layers = {
 		0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0x660000, 0x004940, 0x00, " ", 0x660000, 0x004940, 0x00, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 
 	},
 }
+
+-- for i = 1, 10 do
+-- 	table.insert(layers, {show = true, name = "Ahaha"..tostring(math.random(1, 9)), 0x00FFFF, 0xFF0000, 0x00, "B"})
+-- end
 
 --Массив главного изображения
 local masterPixels = {}
@@ -59,6 +65,7 @@ local gpu = component.gpu
 --Базовая цветовая схема программы
 local colors = {
 	toolbar = 0x535353,
+	layersToolbar = 0x4b4b4b,
 	toolbarInfo = 0x3d3d3d,
 	toolbarButton = 0x3d3d3d,
 	toolbarButtonText = 0xeeeeee,
@@ -88,6 +95,10 @@ sizes.heightOfLeftBar = sizes.ySize - 1
 sizes.heightOfRightBar = sizes.heightOfLeftBar
 sizes.xStartOfRightBar = sizes.xSize - sizes.widthOfRightBar + 1
 sizes.yStartOfRightBar = 2
+sizes.yStartOfLayers = sizes.yStartOfRightBar
+sizes.heightOfLayers = sizes.ySize - sizes.yStartOfLayers - 1
+sizes.heightOfOneLayer = 3
+sizes.countOfLayers = math.floor(sizes.heightOfLayers / sizes.heightOfOneLayer)
 
 --Для изображения
 sizes.widthOfImage = 40
@@ -114,6 +125,8 @@ local currentBackground = 0x000000
 local currentForeground = 0xFFFFFF
 local currentAlpha = 0x00
 local currentSymbol = " "
+local drawLayersFrom = 1
+local currentBrushSize = 1
 
 --Верхний тулбар
 local topToolbar = {{"PS", 0xaaaaff}, {"Файл"}, {"Изображение"}, {"Инструменты"}, {"Фильтры"}}
@@ -185,16 +198,72 @@ local function drawLeftBar()
 	drawColors()
 end
 
-local function drawRightBar()
-	local yPos = sizes.yStartOfRightBar
-	ecs.square(sizes.xStartOfRightBar, yPos, sizes.widthOfRightBar, sizes.heightOfRightBar, colors.toolbar)
-	
-	ecs.square(sizes.xStartOfRightBar, yPos, sizes.widthOfRightBar, 1, colors.toolbarInfo)
-	ecs.colorText(sizes.xStartOfRightBar + 1, yPos, 0xffffff, "Параметры кисти")
+local function drawLayers()
 
-	yPos = yPos + 10
+	obj["Layers"] = {}
+
+	--Рисуем надпись "слои"
+	yPos = sizes.yStartOfLayers
 	ecs.square(sizes.xStartOfRightBar, yPos, sizes.widthOfRightBar, 1, colors.toolbarInfo)
-	ecs.colorText(sizes.xStartOfRightBar + 1, yPos, 0xffffff, "Слои")
+	ecs.colorText(sizes.xStartOfRightBar + 1, yPos, 0xffffff, "Слои ("..currentLayer.." из "..#layers..")")
+	yPos = yPos + 1
+
+	--Очищаем панель слоев
+	ecs.square(sizes.xStartOfRightBar, yPos, sizes.widthOfRightBar - 1, sizes.heightOfLayers, colors.toolbar)
+
+	--Рисуем скроллбар слоев
+	ecs.srollBar(sizes.xSize, yPos, 1, sizes.heightOfLayers, #layers, drawLayersFrom, 0xFFFFFF, ecs.colors.blue)
+
+	--Рисуем кнопочки слоев
+	local button1, button2, button3, button4, button5, button6 = "▲","▼","D","J","N","R"
+	local xPos = sizes.xStartOfRightBar + 2
+	local color = 0x000000
+	ecs.square(sizes.xStartOfRightBar, sizes.ySize, sizes.widthOfRightBar, 1, colors.layersToolbar)
+	if currentLayer > 1 then ecs.colorText(xPos, sizes.ySize, colors.toolbarButtonText, button1) else ecs.colorText(xPos, sizes.ySize, color, button1) end; xPos = xPos + 3
+	if currentLayer < #layers then ecs.colorText(xPos, sizes.ySize, colors.toolbarButtonText, button2) else ecs.colorText(xPos, sizes.ySize, color, button2) end; xPos = xPos + 3
+	ecs.colorText(xPos, sizes.ySize, colors.toolbarButtonText, button3); xPos = xPos + 3
+	if #layers > 1 then ecs.colorText(xPos, sizes.ySize, colors.toolbarButtonText, button4) else ecs.colorText(xPos, sizes.ySize, color, button4) end; xPos = xPos + 3
+	ecs.colorText(xPos, sizes.ySize, colors.toolbarButtonText, button5); xPos = xPos + 3
+	if #layers > 1 then ecs.colorText(xPos, sizes.ySize, colors.toolbarButtonText, button6) else ecs.colorText(xPos, sizes.ySize, color, button6) end; xPos = xPos + 3
+
+	--Рисуем сами слои
+	local color = colors.toolbar
+	gpu.setForeground(colors.toolbarButtonText)
+	local counter = 1
+	for i = drawLayersFrom, #layers do
+		if counter > sizes.countOfLayers then break end
+		--Если это текущий слой
+		if i == currentLayer then
+			color = 0x66b6ff
+			ecs.square(sizes.xStartOfRightBar, yPos, sizes.widthOfRightBar - 1, 3, color)
+		else
+			if i % 2 == 0 then
+				color = 0x666666
+				ecs.square(sizes.xStartOfRightBar, yPos, sizes.widthOfRightBar - 1, 3, color)
+			else
+				color = colors.toolbar
+				gpu.setBackground(color)
+			end
+		end
+		gpu.set(sizes.xStartOfRightBar + 1, yPos + 1, (function() if layers[i].show then return "⬤" else return "⭕" end end)())
+		gpu.set(sizes.xStartOfRightBar + 4, yPos + 1, ecs.stringLimit("end", layers[i].name, sizes.widthOfRightBar - 6))
+
+		newObj("Layers", i, sizes.xStartOfRightBar, yPos, sizes.xSize - 1, yPos + 2)
+
+		counter = counter + 1
+		yPos = yPos + 3
+	end
+end
+
+local function drawRightBar()
+	ecs.square(sizes.xStartOfRightBar, sizes.yStartOfRightBar, sizes.widthOfRightBar, sizes.heightOfRightBar, colors.toolbar)
+	
+	-- --Рисуем надпись "Кисть"
+	-- ecs.square(sizes.xStartOfRightBar, yPos, sizes.widthOfRightBar, 1, colors.toolbarInfo)
+	-- ecs.colorText(sizes.xStartOfRightBar + 1, yPos, 0xffffff, "Параметры кисти")
+
+	--Рисуем слои
+	drawLayers()
 end
 
 local function drawTopBar()
@@ -227,16 +296,20 @@ end
 
 local function mergeAllLayersToMasterPixels()
 	--Перебираем все слои
-	for layer = 1, #layers do
-		--Перебираем все пиксели в слоях
-		for iterator = 1, sizes.widthOfImage * sizes.heightOfImage * 4, 4 do
-			--Если в данном слое существует такой элемент по итератору, то заменить мастерпикселевский им, а если нет, то похуй
-			masterPixels[iterator] = layers[layer][iterator] or masterPixels[iterator]
-			masterPixels[iterator + 1] = layers[layer][iterator + 1] or masterPixels[iterator + 1]
-			masterPixels[iterator + 2] = layers[layer][iterator + 2] or masterPixels[iterator + 2]
-			masterPixels[iterator + 3] = layers[layer][iterator + 3] or masterPixels[iterator + 3]
-
+	local layer = #layers
+	while layer >= 1 do
+		--Если слой не скрыт
+		if layers[layer].show then
+			--Перебираем все пиксели в слоях
+			for iterator = 1, sizes.widthOfImage * sizes.heightOfImage * 4, 4 do
+				--Если в данном слое существует такой элемент по итератору, то заменить мастерпикселевский им, а если нет, то похуй
+				masterPixels[iterator] = layers[layer][iterator] or masterPixels[iterator]
+				masterPixels[iterator + 1] = layers[layer][iterator + 1] or masterPixels[iterator + 1]
+				masterPixels[iterator + 2] = layers[layer][iterator + 2] or masterPixels[iterator + 2]
+				masterPixels[iterator + 3] = layers[layer][iterator + 3] or masterPixels[iterator + 3]
+			end
 		end
+		layer = layer - 1
 	end
 end
 
@@ -425,6 +498,11 @@ local function saveTextToPixels(x, y, text)
 	end
 end
 
+local function newLayer(name)
+	name = name or "Новый слой"
+	table.insert(layers, currentLayer, {["name"] = name, show = true})
+end
+
 ------------------------------------------------ Старт программы --------------------------------------------------------------
 
 --Создаем пустой мастерпиксельс
@@ -436,73 +514,89 @@ drawAll()
 while true do
 	local e = {event.pull()}
 	if e[1] == "touch" or e[1] == "drag" then
-		--Если кликнули на рисовабельную зонку
-		if ecs.clickedAtArea(e[3], e[4], sizes.xStartOfImage, sizes.yStartOfImage, sizes.xEndOfImage, sizes.yEndOfImage) then
-			
-			local x, y = e[3] - sizes.xStartOfImage + 1, e[4] - sizes.yStartOfImage + 1
-			local iterator = convertCoordsToIterator(x, y)
+		--Левый клик
+		if e[5] == 0 then
+			--Если кликнули на рисовабельную зонку
+			if ecs.clickedAtArea(e[3], e[4], sizes.xStartOfImage, sizes.yStartOfImage, sizes.xEndOfImage, sizes.yEndOfImage) then
+				
+				local x, y = e[3] - sizes.xStartOfImage + 1, e[4] - sizes.yStartOfImage + 1
+				local iterator = convertCoordsToIterator(x, y)
 
-			--Кисть
-			if currentInstrument == 3 then
-				--Если нажата клавиша альт
-				if keyboard.isKeyDown(56) then
-					local _, _, background = gpu.get(e[3], e[4])
-					currentBackground = background
-					drawColors()
-				else
-					if gpu.getBackground() ~= currentBackground then gpu.setBackground(currentBackground) end
-					if gpu.getForeground() ~= currentForeground then gpu.setForeground(currentForeground) end
-					local x, y = e[3] - sizes.xStartOfImage + 1, e[4] - sizes.yStartOfImage + 1
-					local iterator = convertCoordsToIterator(x, y)
-					
-					gpu.set(e[3], e[4], currentSymbol)
-					setPixel(iterator, currentBackground, currentForeground, currentAlpha, currentSymbol)
+				--Кисть
+				if currentInstrument == 3 then
+					--Если нажата клавиша альт
+					if keyboard.isKeyDown(56) then
+						local _, _, background = gpu.get(e[3], e[4])
+						currentBackground = background
+						drawColors()
+					else
+						if gpu.getBackground() ~= currentBackground then gpu.setBackground(currentBackground) end
+						if gpu.getForeground() ~= currentForeground then gpu.setForeground(currentForeground) end
+						local x, y = e[3] - sizes.xStartOfImage + 1, e[4] - sizes.yStartOfImage + 1
+						local iterator = convertCoordsToIterator(x, y)
+						
+						gpu.set(e[3], e[4], currentSymbol)
+						setPixel(iterator, currentBackground, currentForeground, currentAlpha, currentSymbol)
 
-					console("Кисть: клик на точку "..e[3].."x"..e[4]..", координаты в изображении: "..x.."x"..y..", индекс массива изображения: "..iterator)
+						console("Кисть: клик на точку "..e[3].."x"..e[4]..", координаты в изображении: "..x.."x"..y..", индекс массива изображения: "..iterator)
+					end
+				--Ластик
+				elseif currentInstrument == 4 then
+					drawTransparentPixel(e[3], e[4], x, y)
+					setPixel(iterator, 0x000000, 0x000000, 0xFF, " ")
+
+					console("Ластик: клик на точку "..e[3].."x"..e[4]..", координаты в изображении: "..x.."x"..y..", индекс массива изображения: "..iterator)
+
+				--Текст
+				elseif currentInstrument == 5 then
+					local limit = sizes.widthOfImage - x + 1
+					local text = inputText(e[3], e[4], limit)
+					saveTextToPixels(x, y, text)
+					mergeAllLayersToMasterPixels()
+					drawImage()
 				end
-			--Ластик
-			elseif currentInstrument == 4 then
-				drawTransparentPixel(e[3], e[4], x, y)
-				setPixel(iterator, 0x000000, 0x000000, 0xFF, " ")
 
-				console("Ластик: клик на точку "..e[3].."x"..e[4]..", координаты в изображении: "..x.."x"..y..", индекс массива изображения: "..iterator)
+				iterator, x, y = nil, nil, nil
 
-			--Текст
-			elseif currentInstrument == 5 then
-				local limit = sizes.widthOfImage - x + 1
-				local text = inputText(e[3], e[4], limit)
-				saveTextToPixels(x, y, text)
-				mergeAllLayersToMasterPixels()
-				drawImage()
 			end
 
-			iterator, x, y = nil, nil, nil
-
-		end
-
-		for key in pairs(obj["Colors"]) do
-			if ecs.clickedAtArea(e[3], e[4], obj["Colors"][key][1], obj["Colors"][key][2], obj["Colors"][key][3], obj["Colors"][key][4]) then
-				if key == 1 then
-					currentBackground = palette.draw("auto", "auto", currentBackground) or currentBackground
-					drawColors()
-				elseif key == 2 or key == 3 then
-					currentForeground = palette.draw("auto", "auto", currentForeground) or currentForeground
-					drawColors()
-				elseif key == 4 then
-					ecs.colorTextWithBack(obj["Colors"][key][1], obj["Colors"][key][2], 0xFF0000, colors.toolbar, "←→")
-					os.sleep(0.2)
-					swapColors()
-				end
-				break
-			end	
-		end
-
-		for key in pairs(obj["Instruments"]) do
-			if ecs.clickedAtArea(e[3], e[4], obj["Instruments"][key][1], obj["Instruments"][key][2], obj["Instruments"][key][3], obj["Instruments"][key][4]) then
-				currentInstrument = key
-				drawInstruments()
-				break
+			for key in pairs(obj["Colors"]) do
+				if ecs.clickedAtArea(e[3], e[4], obj["Colors"][key][1], obj["Colors"][key][2], obj["Colors"][key][3], obj["Colors"][key][4]) then
+					if key == 1 then
+						currentBackground = palette.draw("auto", "auto", currentBackground) or currentBackground
+						drawColors()
+					elseif key == 2 or key == 3 then
+						currentForeground = palette.draw("auto", "auto", currentForeground) or currentForeground
+						drawColors()
+					elseif key == 4 then
+						ecs.colorTextWithBack(obj["Colors"][key][1], obj["Colors"][key][2], 0xFF0000, colors.toolbar, "←→")
+						os.sleep(0.2)
+						swapColors()
+					end
+					break
+				end	
 			end
+
+			for key in pairs(obj["Instruments"]) do
+				if ecs.clickedAtArea(e[3], e[4], obj["Instruments"][key][1], obj["Instruments"][key][2], obj["Instruments"][key][3], obj["Instruments"][key][4]) then
+					currentInstrument = key
+					drawInstruments()
+					break
+				end
+			end
+
+			for key in pairs(obj["Layers"]) do
+				if ecs.clickedAtArea(e[3], e[4], obj["Layers"][key][1], obj["Layers"][key][2], obj["Layers"][key][3], obj["Layers"][key][4]) then
+					if ecs.clickedAtArea(e[3], e[4], obj["Layers"][key][1] + 1, obj["Layers"][key][2] + 1, obj["Layers"][key][1] + 2, obj["Layers"][key][4] + 1) then
+						layers[key].show = not layers[key].show
+					end
+					currentLayer = key
+					drawLayers()
+					break
+				end
+			end
+		else
+			ecs.universalWindow(e[3], e[4], 30, 0xeeeeee, true, {"EmptyLine"}, {"CenterText", 0x880000, "Параметры кисти"}, {"Slider", 0x262626, 0x880000, 1, 10, currentBrushSize, "Размер: ", " px"}, {"Slider", 0x262626, 0x880000, 1, 100, 50, "Прозрачность: ", "%"}, {"EmptyLine"}, {"Button", {0xbbbbbb, 0xffffff, "OK"}})
 		end
 
 	elseif e[1] == "key_down" then
@@ -521,10 +615,28 @@ while true do
 		--X
 		elseif e[4] == 45 then
 			swapColors()
+		--N
+		elseif e[4] == 49 then
+			newLayer()
+			drawLayers()
+		elseif e[4] == 32 then
+			currentBackground = 0x000000
+			currentForeground = 0xFFFFFF
+			currentAlpha = 0x00
+			drawColors()
 		--1
 		elseif e[4] == 2 or e[4] == 3 or e[4] == 4 or e[4] == 5 or e[4] == 6 then
 			currentInstrument = e[4] - 1
 			drawInstruments()
+		end
+	elseif e[1] == "scroll" then
+
+		if ecs.clickedAtArea(e[3], e[4], sizes.xStartOfRightBar, sizes.yStartOfLayers, sizes.xSize, sizes.ySize - 1) then
+			if e[5] == 1 then
+				if drawLayersFrom > 1 then drawLayersFrom = drawLayersFrom - 1; drawLayers() end
+			else
+				if drawLayersFrom < #layers then drawLayersFrom = drawLayersFrom + 1; drawLayers() end
+			end
 		end
 	end
 end
