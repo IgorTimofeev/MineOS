@@ -1150,9 +1150,12 @@ function ECSAPI.newFile(path)
 end
 
 --Создать новое приложение (для операционки)
-function ECSAPI.newApplication(path)
+function ECSAPI.newApplication(path, startName)
 	--Рисуем окошко ввода нового имени файла
-	local inputs = ECSAPI.universalWindow("auto", "auto", 30, ECSAPI.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Новое приложение"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, "Введите имя"}, {"EmptyLine"}, {"Button", {0xbbbbbb, 0xffffff, "OK"}})
+	local inputs
+	if not startName then
+		inputs = ECSAPI.universalWindow("auto", "auto", 30, ECSAPI.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Новое приложение"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, "Введите имя"}, {"EmptyLine"}, {"Button", {0xbbbbbb, 0xffffff, "OK"}})
+	end
 	
 	if ECSAPI.checkName(inputs[1], path) then
 		local name = path .. inputs[1] .. ".app/Resources"
