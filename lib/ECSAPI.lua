@@ -646,15 +646,15 @@ end
 function ECSAPI.getHostTime(timezone)
 	timezone = timezone or 2
 	--Создаем файл с записанной в него парашей
-    local file = io.open("System/HostTime.tmp", "w")
+    local file = io.open("HostTime.tmp", "w")
     file:write("")
     file:close()
     --Коррекция времени на основе часового пояса
     local timeCorrection = timezone * 3600
     --Получаем дату изменения файла в юникс-виде
-    local lastModified = tonumber(string.sub(fs.lastModified("System/HostTime.tmp"), 1, -4)) + timeCorrection
+    local lastModified = tonumber(string.sub(fs.lastModified("HostTime.tmp"), 1, -4)) + timeCorrection
     --Удаляем файл, ибо на хуй он нам не нужен
-    fs.remove("System/HostTime.tmp")
+    fs.remove("HostTime.tmp")
     --Конвертируем юникс-время в норм время
     local year, month, day, hour, minute, second = os.date("%Y", lastModified), os.date("%m", lastModified), os.date("%d", lastModified), os.date("%H", lastModified), os.date("%M", lastModified), os.date("%S", lastModified)
     --Возвращаем все
