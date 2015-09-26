@@ -401,7 +401,7 @@ local function viewPaste(i)
 
 	--ecs.error("#lines = ".. #lines)
 
-	ecs.textField(1, 2, xSize, ySize - 1, lines, from)
+	ecs.textField(1, 2, xSize, ySize - 1, lines, from, 0xffffff, 0x262626, 0xdddddd, ecs.colors.blue)
 
 	fs.remove(tmp)
 
@@ -409,9 +409,9 @@ local function viewPaste(i)
 		local e = {event.pull()}
 		if e[1] == "scroll" then
 			if e[5] == 1 then
-				if from > 1 then from = from - 1; ecs.textField(1, 2, xSize, ySize - 1, lines, from) end
+				if from > 1 then from = from - 1; ecs.textField(1, 2, xSize, ySize - 1, lines, from, 0xffffff, 0x262626, 0xdddddd, ecs.colors.blue) end
 			else
-				if from < #lines then from = from + 1; ecs.textField(1, 2, xSize, ySize - 1, lines, from) end
+				if from < #lines then from = from + 1; ecs.textField(1, 2, xSize, ySize - 1, lines, from, 0xffffff, 0x262626, 0xdddddd, ecs.colors.blue) end
 			end
 		elseif e[1] == "touch" then
 			if e[3] == (xSize) and e[4] == 1 then
