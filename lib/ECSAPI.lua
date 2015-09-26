@@ -642,6 +642,18 @@ function ECSAPI.stringLimit(mode, text, size, noDots)
 	end
 end
 
+--Получить текущее реальное время компьютера, хостящего сервер майна
+function ECSAPI.getHostTime()
+    local file = io.open("System/HostTime.tmp")
+    file:write("")
+    file:close()
+    local lastModified = tonumber(string.sub(fs.lastModified("System/HostTime.tmp"), 1, -4))
+    fs.remove("System/HostTime.tmp")
+    local day, month, year, hour, minute, second = os.date("%Y", lastmod), os.date("%m", lastmod), os.date("%d", lastmod), os.date("%H", lastmod), os.date("%M", lastmod), os.date("%S", lastmod)
+    --local dt = os.date('%Y.%m.%d %H:%M:%S', lastmod)
+    return day, month, year, hour, minute, second
+end
+
 --Получить спискок файлов из конкретной директории, костыль
 function ECSAPI.getFileList(path)
 	local list = fs.list(path)
