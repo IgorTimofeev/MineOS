@@ -1,6 +1,7 @@
 local ecs = require("ECSAPI")
 local fs = require("filesystem")
 local event = require("event")
+local component = require("component")
 local gpu = component.gpu
 
 --Список месяцев
