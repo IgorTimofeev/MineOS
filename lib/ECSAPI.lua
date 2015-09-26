@@ -1158,12 +1158,12 @@ function ECSAPI.newApplication(path, startName)
 	end
 
 	if ECSAPI.checkName(inputs[1], path) then
-		local name = path .. inputs[1] .. ".app/Resources"
+		local name = path .. inputs[1] .. ".app/Resources/"
 		fs.makeDirectory(name)
-		fs.copy("System/OS/Icons/SampleIcon.png", name)
-		local file = io.open(path .. "/" .. inputs[1] .. ".app/" .. inputs[1] .. ".lua", "w")
+		fs.copy("System/OS/Icons/SampleIcon.png", name .. "Icon.png")
+		local file = io.open(path .. inputs[1] .. ".app/" .. inputs[1] .. ".lua", "w")
 		file:write("local ecs = require(\"ECSAPI\")", "\n")
-		file:write("ecs.universalWindow(\"auto\", \"auto\", 30, 0xeeeeee, true, {\"EmptyLine\"}, {\"CenterText\", 0x262626, \"Hello world!\"}, {\"EmptyLine\"}, {\"Button\", {0xffdb80, 0xffffff, \"Hello!\"}})", "\n")
+		file:write("ecs.universalWindow(\"auto\", \"auto\", 30, 0xeeeeee, true, {\"EmptyLine\"}, {\"CenterText\", 0x262626, \"Hello world!\"}, {\"EmptyLine\"}, {\"Button\", {0x880000, 0xffffff, \"Hello!\"}})", "\n")
 		file:close()
 	end
 end
