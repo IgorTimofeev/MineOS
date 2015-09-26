@@ -656,7 +656,7 @@ function ECSAPI.getHostTime(timezone)
     --Удаляем файл, ибо на хуй он нам не нужен
     fs.remove("System/HostTime.tmp")
     --Конвертируем юникс-время в норм время
-    local day, month, year, hour, minute, second = os.date("%Y", lastModified), os.date("%m", lastModified), os.date("%d", lastModified), os.date("%H", lastModified), os.date("%M", lastModified), os.date("%S", lastModified)
+    local year, month, day, hour, minute, second = os.date("%Y", lastModified), os.date("%m", lastModified), os.date("%d", lastModified), os.date("%H", lastModified), os.date("%M", lastModified), os.date("%S", lastModified)
     --Возвращаем все
     return day, month, year, hour, minute, second
 end
