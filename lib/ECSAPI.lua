@@ -1097,66 +1097,71 @@ function ECSAPI.askForReplaceFile(path)
 	end
 end
 
+--Проверить имя файла на соответствие критериям
+function ECSAPI.checkName(name, path)
+	--Если ввели хуйню какую-то, то
+	if name == "" or name == " " or name == nil then
+		ECSAPI.error("Неверное имя файла.")
+		return false
+	else
+		--Если файл с новым путем уже существует, то
+		if fs.exists(path .. name) then
+			ECSAPI.error("Файл \"".. name .. "\" уже имеется в этом месте.")
+			return false
+		--А если все заебок, то
+		else
+			return true
+		end
+	end
+end
+
 --Переименование файлов (для операционки)
 function ECSAPI.rename(mainPath)
+	--Задаем стартовую щнягу
 	local name = fs.name(mainPath)
 	path = fs.path(mainPath)
-
 	--Рисуем окошко ввода нового имени файла
-	local inputs = ECSAPI.universalWindow("auto", "auto", 30, ECSAPI.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Переименовать"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, name}, {"EmptyLine"}, {"Button", {0xbbbbbb, 0xffffff, "Ok!"}})
-	
-	--Если ввели в окошко хуйню какую-то
-	if inputs[1] == "" or inputs[1] == " " or inputs[1] == nil then
-		ECSAPI.error("Неверное имя файла.")
-	else
-		--Получаем новый путь к новому файлу
-		local newPath = path..inputs[1]
-		--Если файл с новым путем уже существует
-		if fs.exists(newPath) then
-			ECSAPI.error("Файл \"".. name .. "\" уже имеется в этом месте.")
-			return
-		else
-			fs.rename(mainPath, newPath)
-		end
+	local inputs = ECSAPI.universalWindow("auto", "auto", 30, ECSAPI.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Переименовать"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, name}, {"EmptyLine"}, {"Button", {0xbbbbbb, 0xffffff, "OK"}})
+	--Переименовываем
+	if ECSAPI.checkName(inputs[1], path) then
+		fs.rename(mainPath, path .. inputs[1])
 	end
 end
 
 --Создать новую папку (для операционки)
 function ECSAPI.newFolder(path)
 	--Рисуем окошко ввода нового имени файла
-	local inputs = ECSAPI.universalWindow("auto", "auto", 30, ECSAPI.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Новая папка"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, ""}, {"EmptyLine"}, {"Button", {0xbbbbbb, 0xffffff, "Ok!"}})
+	local inputs = ECSAPI.universalWindow("auto", "auto", 30, ECSAPI.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Новая папка"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, ""}, {"EmptyLine"}, {"Button", {0xbbbbbb, 0xffffff, "OK"}})
 
-	--Если ввели в окошко хуйню какую-то
-	if inputs[1] == "" or inputs[1] == " " or inputs[1] == nil then
-		ECSAPI.error("Неверное имя файла.")
-	else
-		--Если файл с новым путем уже существует
-		if fs.exists(path.."/"..inputs[1]) then
-			ECSAPI.error("Файл \"".. inputs[1] .. "\" уже имеется в этом месте.")
-			return
-		else
-			fs.makeDirectory(path.."/"..inputs[1])
-		end
+	if ECSAPI.checkName(inputs[1], path) then
+		fs.makeDirectory(path .. inputs[1])
 	end
 end
 
 --Создать новый файл (для операционки)
 function ECSAPI.newFile(path)
 	--Рисуем окошко ввода нового имени файла
-	local inputs = ECSAPI.universalWindow("auto", "auto", 30, ECSAPI.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Новый файл"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, ""}, {"EmptyLine"}, {"Button", {0xbbbbbb, 0xffffff, "Ok!"}})
+	local inputs = ECSAPI.universalWindow("auto", "auto", 30, ECSAPI.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Новый файл"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, ""}, {"EmptyLine"}, {"Button", {0xbbbbbb, 0xffffff, "OK"}})
 
-	--Если ввели в окошко хуйню какую-то
-	if inputs[1] == "" or inputs[1] == " " or inputs[1] == nil then
-		ECSAPI.error("Неверное имя файла.")
-	else
-		--Если файл с новым путем уже существует
-		if fs.exists(path.."/"..inputs[1]) then
-			ECSAPI.error("Файл \"".. inputs[1] .. "\" уже имеется в этом месте.")
-			return
-		else
-			ECSAPI.prepareToExit()
-			ECSAPI.editFile(path.."/"..inputs[1])
-		end
+	if ECSAPI.checkName(inputs[1], path) then
+		ECSAPI.prepareToExit()
+		ECSAPI.editFile(path .. inputs[1])
+	end
+end
+
+--Создать новое приложение (для операционки)
+function ECSAPI.newApplication(path)
+	--Рисуем окошко ввода нового имени файла
+	local inputs = ECSAPI.universalWindow("auto", "auto", 30, ECSAPI.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Новое приложение"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, "Введите имя"}, {"EmptyLine"}, {"Button", {0xbbbbbb, 0xffffff, "OK"}})
+	
+	if ECSAPI.checkName(inputs[1], path) then
+		local name = path .. inputs[1] .. ".app/Resources"
+		fs.makeDirectory(name)
+		fs.copy("System/OS/Icons/SampleIcon.png", name)
+		local file = io.open(path .. "/" .. inputs[1] .. ".app/" .. inputs[1]. . ".lua", "w")
+		file:write("local ecs = require(\"ECSAPI\")"), "\n")
+		file:write("ecs.universalWindow(\"auto\", \"auto\", 30, 0xeeeeee, true, {\"EmptyLine\"}, {\"CenterText\", 0x262626, \"Hello world!\"}, {\"EmptyLine\"}, {\"Button\", {0xffdb80, 0xffffff, \"Hello!\"}})", "\n")
+		file:close()
 	end
 end
 
@@ -1433,7 +1438,7 @@ function ECSAPI.drawOSIcon(x, y, path, showFileFormat, nameColor)
 	else
 		if fileFormat == ".lnk" then
 			local shortcutLink = ECSAPI.readShortcut(path)
-			ECSAPI.drawOSIcon(x, y, shortcutLink, showFileFormat)
+			ECSAPI.drawOSIcon(x, y, shortcutLink, showFileFormat, nameColor)
 			--Стрелочка
 			ECSAPI.colorTextWithBack(x + ECSAPI.OSIconsWidth - 4, y + ECSAPI.OSIconsHeight - 3, 0x000000, 0xffffff, "⤶")
 			return 0
