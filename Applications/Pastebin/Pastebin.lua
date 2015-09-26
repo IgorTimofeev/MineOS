@@ -476,7 +476,7 @@ local pasteLoadLimit = 50
 local args = {...}
 
 drawAll()
-if not waitForSuccessLogin() then return end
+if not waitForSuccessLogin() then ecs.prepareToExit(); return true end
 drawTopBar()
 
 if #args > 1 then
