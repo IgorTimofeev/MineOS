@@ -47,7 +47,7 @@ function zip.archive(path, kudaSohranit, debug)
 	}
 
 	--ПОЛУЧАЕМ ЖИРНЫЙ ПИДОРСКИЙ МАССИВ
-	getFileStringsMassiv(path.."/", "", debug)
+	getFileStringsMassiv(path.."/", fs.name(path).."/", debug)
 
 	--СОХРАНЯЕМ ЖИРНЫЙ ПИДОРСКИЙ МАССИВ
 	fs.makeDirectory(fs.path(kudaSohranit))
