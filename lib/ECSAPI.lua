@@ -1157,7 +1157,7 @@ function ECSAPI.newApplication(path, startName)
 		inputs = ECSAPI.universalWindow("auto", "auto", 30, ECSAPI.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Новое приложение"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, "Введите имя"}, {"EmptyLine"}, {"Button", {0xbbbbbb, 0xffffff, "OK"}})
 	end
 
-	if ECSAPI.checkName(inputs[1], path) then
+	if ECSAPI.checkName(inputs[1] .. ".app", path) then
 		local name = path .. inputs[1] .. ".app/Resources/"
 		fs.makeDirectory(name)
 		fs.copy("System/OS/Icons/SampleIcon.png", name .. "Icon.png")
