@@ -658,7 +658,7 @@ function ECSAPI.getHostTime(timezone)
     --Конвертируем юникс-время в норм время
     local year, month, day, hour, minute, second = os.date("%Y", lastModified), os.date("%m", lastModified), os.date("%d", lastModified), os.date("%H", lastModified), os.date("%M", lastModified), os.date("%S", lastModified)
     --Возвращаем все
-    return day, month, year, hour, minute, second
+    return tonumber(day), tonumber(month), tonumber(year), tonumber(hour), tonumber(minute), tonumber(second)
 end
 
 --Получить спискок файлов из конкретной директории, костыль
