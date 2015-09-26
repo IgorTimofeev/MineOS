@@ -14,16 +14,6 @@ local copyright = [[
 local component = require("component")
 local event = require("event")
 local term = require("term")
-local unicode = require("unicode")
---local ecs = require("ECSAPI")
---local fs = require("filesystem")
---local shell = require("shell")
-local context = require("context")
-local computer = require("computer")
-local keyboard = require("keyboard")
---local image = require("image")
---local config = require("config")
-local zip = require("zip")
 local gpu = component.gpu
 local internet = require("internet")
 
@@ -158,82 +148,11 @@ local function deselectAll(mode)
 	end
 end
 
-------------------------------------------------------------------------------------------------
-
---То, что не нужно отрисовывать
-local systemFiles = {
-	"bin/",
-	"lib/",
-	"OS.lua",
-	"autorun.lua",
-	"init.lua",
-	"tmp/",
-	"usr/",
-	"mnt/",
-	"etc/",
-	"boot/",
-	--"System/",
-}
-
--- Потная штучка, надо будет перекодить - а то странно выглядит, да и условия идиотские
-local function reorganizeFilesAndFolders(massivSudaPihay, showHiddenFiles, showSystemFiles)
-
-	local massiv = {}
-
-	for i = 1, #massivSudaPihay do
-		if ecs.isFileHidden(massivSudaPihay[i]) and showHiddenFiles then
-			table.insert(massiv, massivSudaPihay[i])
-		end
-	end
-
-	for i = 1, #massivSudaPihay do
-		local cyka = massivSudaPihay[i]
-		if fs.isDirectory(cyka) and not ecs.isFileHidden(cyka) and ecs.getFileFormat(cyka) ~= ".app" then
-			table.insert(massiv, cyka)
-		end
-		cyka = nil
-	end
-
-	for i = 1, #massivSudaPihay do
-		local cyka = massivSudaPihay[i]
-		if (not fs.isDirectory(cyka) and not ecs.isFileHidden(cyka)) or (fs.isDirectory(cyka) and not ecs.isFileHidden(cyka) and ecs.getFileFormat(cyka) == ".app") then
-			table.insert(massiv, cyka)
-		end
-		cyka = nil
-	end
-
-
-	if not showSystemFiles then
-		if workPath == "" or workPath == "/" then
-			--ecs.error("Сработало!")
-			local i = 1
-			while i <= #massiv do
-				for j = 1, #systemFiles do
-					--ecs.error("massiv[i] = " .. massiv[i] .. ", systemFiles[j] = "..systemFiles[j])
-					if massiv[i] == systemFiles[j] then
-						--ecs.error("Удалено! massiv[i] = " .. massiv[i] .. ", systemFiles[j] = "..systemFiles[j])
-						table.remove(massiv, i)
-						i = i - 1
-						break
-					end
-
-				end
-
-				i = i + 1
-			end
-		end
-	end
-
-	return massiv
-end
-
-------------------------------------------------------------------------------------------------
-
 --ОТРИСОВКА ИКОНОК НА РАБОЧЕМ СТОЛЕ ПО ТЕКУЩЕЙ ПАПКЕ
 local function drawDesktop(x, y)
 
 	currentFileList = ecs.getFileList(workPath)
-	currentFileList = reorganizeFilesAndFolders(currentFileList, showHiddenFiles, showSystemFiles)
+	currentFileList = ecs.reorganizeFilesAndFolders(currentFileList, showHiddenFiles, showSystemFiles)
 
 	--ОЧИСТКА СТОЛА
 	ecs.square(1, y, xSize, yCountOfIcons * (heightOfIcon + ySpaceBetweenIcons) - ySpaceBetweenIcons, background)
