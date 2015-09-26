@@ -318,7 +318,7 @@ end
 local function inputPassword()
 	--local massiv = ecs.input("auto", "auto", 20, "Войти в Pastebin", {"input", "Логин", ""},  {"input", "Пароль", ""})
 
-	local data = ecs.universalWindow("auto", "auto", 30, tabColor1, true, {"EmptyLine"}, {"CenterText", 0xffffff, "Авторизация"}, {"EmptyLine"}, {"Input", 0xffffff, tabColor2, "Логин"}, {"Input", 0xffffff, tabColor2, "Пароль", "●"}, {"EmptyLine"}, {"Button", {tabColor2, 0xffffff, "Войти в аккаунт"}, {0x006dbf, 0xffffff, "Отмена"}})
+	local data = ecs.universalWindow("auto", "auto", 24, tabColor1, true, {"EmptyLine"}, {"CenterText", 0xffffff, "Авторизация"}, {"EmptyLine"}, {"Input", 0xffffff, tabColor2, "Логин"}, {"Input", 0xffffff, tabColor2, "Пароль", "●"}, {"EmptyLine"}, {"Button", {tabColor2, 0xffffff, "Войти в аккаунт"}, {0x006dbf, 0xffffff, "Отмена"}})
 
 	if data[3] == "Отмена" then return false end
 
@@ -572,7 +572,10 @@ while true do
 				if key == "Разлогиниться" then
 					fs.remove("System/Pastebin/Login.cfg")
 					drawAll()
-					waitForSuccessLogin()
+					if not waitForSuccessLogin() then
+						ecs.prepareToExit()
+						return true		
+					end
 					drawTopBar()
 					ecs.info("auto", "auto", " ", "Получаю список файлов...")
 					getFileListFromPastebin(pasteLoadLimit)
