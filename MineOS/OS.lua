@@ -466,9 +466,12 @@ while true do
 						drawDesktop(xPosOfIcons, yPosOfIcons)
 						drawDock()
 					else
-						ecs.square(obj["DesktopIcons"][key][1], obj["DesktopIcons"][key][2], widthOfIcon, heightOfIcon, background)
-						ecs.drawOSIcon(obj["DesktopIcons"][key][1], obj["DesktopIcons"][key][2], obj["DesktopIcons"][key][5], true, 0xffffff)
+					
 					end
+
+					ecs.square(obj["DesktopIcons"][key][1], obj["DesktopIcons"][key][2], widthOfIcon, heightOfIcon, background)
+					ecs.drawOSIcon(obj["DesktopIcons"][key][1], obj["DesktopIcons"][key][2], obj["DesktopIcons"][key][5], true, 0xffffff)
+
 
 				end
 
