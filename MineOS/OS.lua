@@ -27,12 +27,9 @@ local xSize, ySize = gpu.getResolution()
 
 -- Это все для раб стола
 local icons = {}
-local workPath = ""
-local workPathHistory = {}
+local workPath = "System/OS/Desktop/"
 local clipboard
 local currentFileList
-local currentDesktop = 1
-local countOfDesktops
 
 --ПЕРЕМЕННЫЕ ДЛЯ ДОКА
 local dockColor = 0xcccccc
@@ -58,9 +55,6 @@ local dockCountOfIcons = xCountOfIcons - 1
 
 --ПЕРЕМЕННЫЕ ДЛЯ ТОП БАРА
 local topBarColor = 0xdddddd
-local showHiddenFiles = false
-local showSystemFiles = false
-local showFileFormat = false
 
 ------------------------------------------------------------------------------------------------------------------------
 
@@ -72,87 +66,10 @@ local function newObj(class, name, ...)
 end
 
 
--- Не забудь потом сделат общее апи для гитхаба - а то что за копипаста?
--- Непорядок!
--- ЗАГРУЗОЧКА С ГИТХАБА
-local function getFromGitHub(url, path)
-	local sContent = ""
-	local result, response = pcall(internet.request, url)
-	if not result then
-		return nil
-	end
-
-	fs.remove(path)
-	fs.makeDirectory(fs.path(path))
-	local file = io.open(path, "w")
-
-	for chunk in response do
-		file:write(chunk)
-		sContent = sContent .. chunk
-	end
-
-	file:close()
-
-	return sContent
-end
-
---БЕЗОПАСНАЯ ЗАГРУЗОЧКА
-local function getFromGitHubSafely(url, path)
-	local success, sRepos = pcall(getFromGitHub, url, path)
-	if not success then
-		--ecs.error("Could not connect to the Internet. Please ensure you have an Internet connection.")
-		return false, sRepos
-	end
-	return sRepos
-end
-
---Создать ярлык для конкретной проги
-local function createShortCut(path, pathToProgram)
-	fs.remove(path)
-	fs.makeDirectory(fs.path(path))
-	local file = io.open(path, "w")
-	file:write("return ", "\"", pathToProgram, "\"")
-	file:close()
-end
-
---Создать ярлык для конкретной пасты
-local function createPastebinShortcut(path, pastebinLink)
-	fs.remove(path)
-	fs.makeDirectory(fs.path(path))
-	local file = io.open(path .. "/"..pastebinLink .. ".paste", "w")
-	file:write("return ", "\"", pastebinLink, "\"")
-	file:close()
-end
-
--- НАРИСОВАТЬ ВЫДЕЛЕНИЕ ИКОНКИ
-local function drawIconSelection(x, y, nomer)
-	if obj["DesktopIcons"][nomer][6] == true then
-		ecs.square(x, y, widthOfIcon, heightOfIcon, iconsSelectionColor)
-	elseif obj["DesktopIcons"][nomer][6] == false then
-		ecs.square(x, y, widthOfIcon, heightOfIcon, background)
-	end
-end
-
--- Развидеть все
-local function deselectAll(mode)
-	for key, val in pairs(obj["DesktopIcons"]) do
-		if not mode then
-			if obj["DesktopIcons"][key][6] == true then
-				obj["DesktopIcons"][key][6] = false
-			end
-		else
-			if obj["DesktopIcons"][key][6] == false then
-				obj["DesktopIcons"][key][6] = nil
-			end
-		end
-	end
-end
-
 --ОТРИСОВКА ИКОНОК НА РАБОЧЕМ СТОЛЕ ПО ТЕКУЩЕЙ ПАПКЕ
 local function drawDesktop(x, y)
 
 	currentFileList = ecs.getFileList(workPath)
-	currentFileList = ecs.reorganizeFilesAndFolders(currentFileList, showHiddenFiles, showSystemFiles)
 
 	--ОЧИСТКА СТОЛА
 	ecs.square(1, y, xSize, yCountOfIcons * (heightOfIcon + ySpaceBetweenIcons) - ySpaceBetweenIcons, background)
@@ -160,38 +77,8 @@ local function drawDesktop(x, y)
 	--ОЧИСТКА ОБЪЕКТОВ ИКОНОК
 	obj["DesktopIcons"] = {}
 
-	--ОТРИСОВКА КНОПОЧЕК ПЕРЕМЕЩЕНИЯ
-	countOfDesktops = math.ceil(#currentFileList / totalCountOfIcons)
-	local xButtons, yButtons = math.floor(xSize / 2 - ((countOfDesktops + 1) * 3 - 3) / 2), ySize - heightOfDock - 3
-	
-	--Очистка серым фоном всех кнопочек
-	ecs.square(1, yButtons, xSize, 1, background)
-	
-	--Отрисовка кнопки "Назад"
-	if #workPathHistory > 0 then
-		ecs.colorTextWithBack(xButtons, yButtons, 0x262626, 0xffffff, " <")
-		newObj("DesktopButtons", 0, xButtons, yButtons, xButtons + 1, yButtons)
-		xButtons = xButtons + 3
-	end
-
-	--Отрисовка остальных кнопочек
-	for i = 1, countOfDesktops do
-		local color = 0xffffff
-
-		if i == currentDesktop then
-			color = ecs.colors.green
-		else
-			color = 0xffffff
-		end
-
-		ecs.colorTextWithBack(xButtons, yButtons, 0x000000, color, "  ")
-		newObj("DesktopButtons", i, xButtons, yButtons, xButtons + 1, yButtons)
-
-		xButtons = xButtons + 3
-	end
-
 	--ОТРИСОВКА ИКОНОК ПО ФАЙЛ ЛИСТУ
-	local counter = currentDesktop * totalCountOfIcons - totalCountOfIcons + 1
+	local counter = 1
 	local xIcons, yIcons = x, y
 	for i = 1, yCountOfIcons do
 		for j = 1, xCountOfIcons do
@@ -200,7 +87,7 @@ local function drawDesktop(x, y)
 			--ОТРИСОВКА КОНКРЕТНОЙ ИКОНКИ
 			local path = workPath .. currentFileList[counter]
 			--drawIconSelection(xIcons, yIcons, counter)
-			ecs.drawOSIcon(xIcons, yIcons, path, showFileFormat)
+			ecs.drawOSIcon(xIcons, yIcons, path, true, 0xffffff)
 
 			--СОЗДАНИЕ ОБЪЕКТА ИКОНКИ
 			newObj("DesktopIcons", counter, xIcons, yIcons, xIcons + widthOfIcon - 1, yIcons + heightOfIcon - 1, path, nil)
@@ -244,8 +131,8 @@ local function drawDock()
 		local yIcons = ySize - heightOfDock - 1
 
 		for i = 1, currentCountOfIconsInDock do
-			ecs.drawOSIcon(xIcons, yIcons, pathOfDockShortcuts..dockShortcuts[i], showFileFormat)
-			newObj("DockIcons", dockShortcuts[i], xIcons - 2, yIcons, xIcons + widthOfIcon - 1, yIcons + heightOfIcon - 1)
+			ecs.drawOSIcon(xIcons, yIcons, pathOfDockShortcuts..dockShortcuts[i], false, 0x000000)
+			newObj("DockIcons", dockShortcuts[i], xIcons, yIcons, xIcons + widthOfIcon - 1, yIcons + heightOfIcon - 1)
 			xIcons = xIcons + xSpaceBetweenIcons + widthOfIcon
 		end
 	end
@@ -262,7 +149,7 @@ end
 local function drawTopBar()
 
 	--Элементы топбара
-	local topBarElements = { "MineOS", lang.viewTab }
+	local topBarElements = { "MineOS" }
 
 	--Белая горизонтальная линия
 	ecs.square(1, 1, xSize, 1, topBarColor)
@@ -294,46 +181,6 @@ local function drawAll()
 	drawDesktop(xPosOfIcons, yPosOfIcons)
 end
 
---ПЕРЕРИСОВАТЬ ВЫДЕЛЕННЫЕ ИКОНКИ
-local function redrawSelectedIcons()
-
-	for key, value in pairs(obj["DesktopIcons"]) do
-
-		if obj["DesktopIcons"][key][6] ~= nil then
-
-			local x = obj["DesktopIcons"][key][1]
-			local y = obj["DesktopIcons"][key][2]
-
-			drawIconSelection(x, y, key)
-			ecs.drawOSIcon(x, y, obj["DesktopIcons"][key][5], showFileFormat)
-
-		end
-	end
-end
-
---ВЫБРАТЬ ИКОНКУ И ВЫДЕЛИТЬ ЕЕ
-local function selectIcon(nomer)
-	if keyboard.isControlDown() and not obj["DesktopIcons"][nomer][6] then
-		obj["DesktopIcons"][nomer][6] = true
-		redrawSelectedIcons()
-	elseif keyboard.isControlDown() and obj["DesktopIcons"][nomer][6] then
-		obj["DesktopIcons"][nomer][6] = false
-		redrawSelectedIcons()
-	elseif not keyboard.isControlDown() then
-		deselectAll()
-		obj["DesktopIcons"][nomer][6] = true
-		redrawSelectedIcons()
-		deselectAll(true)
-	end
-end
-
---Перейти в какую-то папку
-local function changePath(path)
-	table.insert(workPathHistory, workPath)	
-	workPath = path
-	currentDesktop = 1
-	drawDesktop(xPosOfIcons, yPosOfIcons)
-end
 
 --Биометрический сканер
 local function biometry()
@@ -391,83 +238,6 @@ local function biometry()
 		Finger = nil
 		users = nil
 	end
-end
-
---Удалить все, что выделено
-local function deleteSelectedIcons()
-	for key, value in pairs(obj["DesktopIcons"]) do
-		if obj["DesktopIcons"][key][6] ~= nil then
-			fs.remove(obj["DesktopIcons"][key][5])
-		end
-	end
-
-	drawDesktop(xPosOfIcons, yPosOfIcons)
-end
-
--- Копирование папки через рекурсию, т.к. fs.copy() не поддерживает папки
--- Ну долбоеб автор мода - хули я тут сделаю? Придется так вот
--- swg2you, привет маме ;)
-local function copyFolder(path, toPath)
-	local function doCopy(path)
-		local fileList = ecs.getFileList(path)
-		for i = 1, #fileList do
-			if fs.isDirectory(path..fileList[i]) then
-				doCopy(path..fileList[i])
-			else
-				fs.makeDirectory(toPath..path)
-				fs.copy(path..fileList[i], toPath ..path.. fileList[i])
-			end
-		end
-	end
-
-	toPath = fs.path(toPath)
-	doCopy(path.."/")
-end
-
---Копирование файлов для операционки
-local function copy(from, to)
-	local name = fs.name(from)
-	local toName = to.."/"..name
-	local action = ecs.askForReplaceFile(toName)
-	if action == nil or action == "replace" then
-		fs.remove(toName)
-		if fs.isDirectory(from) then
-			copyFolder(from, toName)
-		else
-			fs.copy(from, toName)
-		end
-	elseif action == "keepBoth" then
-		if fs.isDirectory(from) then
-			copyFolder(from, to .. "/(copy)" .. name)
-		else
-			fs.copy(from, to .. "/(copy)" .. name)
-		end	
-	end
-end
-
--- Скопировать иконки выделенные
-local function copySelectedIcons()
-	clipboard = {}
-	for key, value in pairs(obj["DesktopIcons"]) do
-		if obj["DesktopIcons"][key][6] ~= nil then
-			table.insert(clipboard, obj["DesktopIcons"][key][5])
-		end
-	end
-end
-
--- Вставить иконки выделенные
-local function pasteSelectedIcons()
-	for i = 1, #clipboard do
-		if fs.exists(clipboard[i]) then
-			copy(clipboard[i], workPath)
-		else
-			local action = ECSAPI.select("auto", "auto", " ", {{"Файл \"".. fs.name(clipboard[i]) .. "\" не найден, игнорирую его."}}, {{"Прервать копирование", 0xffffff, 0x000000}, {"Ок"}})
-			if action == "Прервать копирование" then break end
-		end
-	end
-
-	drawDesktop(xPosOfIcons, yPosOfIcons)
-	drawDock()
 end
 
 --Запустить конфигуратор ОС, если еще не запускался
@@ -560,17 +330,62 @@ local function notification(text)
 	return oldPixels
 end
 
+local function createDesktopShortCuts()
+	local apps = {
+		"Calc.app",
+		"Calendar.app",
+		"Control.app",
+		"Crossword.app",
+		"Finder.app",
+		"Geoscan.app",
+		"Highlight.app",
+		"HoloClock.app",
+		"HoloEdit.app",
+		"MineCode.app",
+		"Pastebin.app",
+		"Photoshop.app",
+		"Piano.app",
+		"RCON.app",
+		"Robot.app",
+		"Shooting.app",
+		"Shop.app",
+	}
+
+	local dockApps = {
+		"Finder.app",
+		"Calendar.app",
+		"Photoshop.app",
+		"Pastebin.app",
+	}
+
+	local desktopPath = "System/OS/Desktop/"
+	local dockPath = "System/OS/Dock/"
+	if not fs.exists(desktopPath) then
+		fs.makeDirectory(desktopPath)
+		for i = 1, #apps do
+			ecs.createShortCut(desktopPath..ecs.hideFileFormat(apps[i])..".lnk", apps[i])
+		end
+
+		fs.remove(dockPath)
+		fs.makeDirectory(dockPath)
+
+		for i = 1, #dockApps do
+			ecs.createShortCut(dockPath..ecs.hideFileFormat(dockApps[i])..".lnk", dockApps[i])
+		end
+	end
+end
+
 
 --А вот и системка стартует
 ------------------------------------------------------------------------------------------------------------------------
 
+createDesktopShortCuts()
 if not launchConfigurator() then enterSystem() end
 
 ------------------------------------------------------------------------------------------------------------------------
 
 -- Понеслась моча по трубам
 while true do
-
 
 	local eventData = { event.pull() }
 	if eventData[1] == "touch" then
@@ -588,120 +403,78 @@ while true do
 				--Кликнули на элемент, а не в очко какое-то
 				clickedOnEmptySpace = false
 
+				ecs.square(obj["DesktopIcons"][key][1], obj["DesktopIcons"][key][2], widthOfIcon, heightOfIcon, iconsSelectionColor)
+				ecs.drawOSIcon(obj["DesktopIcons"][key][1], obj["DesktopIcons"][key][2], obj["DesktopIcons"][key][5], true, 0xffffff)
+
+				local fileFormat = ecs.getFileFormat(obj["DesktopIcons"][key][5])
+
 				--ЕСЛИ ЛЕВАЯ КНОПА МЫШИ
-				if (eventData[5] == 0 and not keyboard.isControlDown()) or (eventData[5] == 1 and keyboard.isControlDown()) then
+				if eventData[5] == 0 then
 					
-					--ЕСЛИ НЕ ВЫБРАНА, ТО ВЫБРАТЬ СНАЧАЛА
-					if not obj["DesktopIcons"][key][6] then
-						selectIcon(key)
+					os.sleep(0.2)
 					
-					--А ЕСЛИ ВЫБРАНА УЖЕ, ТО ЗАПУСТИТЬ ПРОЖКУ ИЛИ ОТКРЫТЬ ПАПКУ
-					else
-						if fs.isDirectory(obj["DesktopIcons"][key][5]) and ecs.getFileFormat(obj["DesktopIcons"][key][5]) ~= ".app" then
-							changePath(obj["DesktopIcons"][key][5])
-						else
-							deselectAll(true)
+					if fs.isDirectory(obj["DesktopIcons"][key][5])	then
+						if fileFormat == ".app" then
 							ecs.launchIcon(obj["DesktopIcons"][key][5])
 							drawAll()
+						else
+							shell.execute("Finder.app/Finder.lua "..obj["DesktopIcons"][key][5])
 						end
+					else
+						ecs.launchIcon(obj["DesktopIcons"][key][5])
+						drawAll()
 					end
+					
 
 				--ЕСЛИ ПРАВАЯ КНОПА МЫШИ
 				elseif eventData[5] == 1 and not keyboard.isControlDown() then
-					--selectIcon(key)
-					obj["DesktopIcons"][key][6] = true
-					redrawSelectedIcons()
 
 					local action
 					local fileFormat = ecs.getFileFormat(obj["DesktopIcons"][key][5])
 
-					local function getSelectedIcons()
-						local selectedIcons = {}
-						for key, val in pairs(obj["DesktopIcons"]) do
-							if obj["DesktopIcons"][key][6] then
-								table.insert(selectedIcons, { ["id"] = key })
-							end
-						end
-						return selectedIcons
-					end
-
-
 					--РАЗНЫЕ КОНТЕКСТНЫЕ МЕНЮ
-					if #getSelectedIcons() > 1 then
-						action = context.menu(eventData[3], eventData[4], {lang.contextCut, false, "^X"}, {lang.contextCopy, false, "^C"}, {lang.contextPaste, not clipboard, "^V"}, "-", {lang.contextArchive, true}, "-", {lang.contextDelete, false, "⌫"})
-					elseif fileFormat == ".app" and fs.isDirectory(obj["DesktopIcons"][key][5]) then
-						action = context.menu(eventData[3], eventData[4], {lang.contextShowContent}, "-", {lang.contextCut, false, "^X"}, {lang.contextCopy, false, "^C"}, {lang.contextPaste, not clipboard, "^V"}, "-", {lang.contextRename}, {lang.contextCreateShortcut}, "-", {lang.contextArchive, true}, {lang.contextUploadToPastebin, true}, "-", {lang.contextAddToDock, not (currentCountOfIconsInDock < dockCountOfIcons and workPath ~= "System/OS/Dock/")}, {lang.contextDelete, false, "⌫"})
+					if fileFormat == ".app" and fs.isDirectory(obj["DesktopIcons"][key][5]) then
+						action = context.menu(eventData[3], eventData[4], {lang.contextShowContent}, "-", {lang.contextCopy, false, "^C"}, {lang.contextPaste, not clipboard, "^V"}, "-", {lang.contextRename}, {lang.contextCreateShortcut}, "-",  {lang.contextUploadToPastebin, true}, "-", {lang.contextAddToDock, not (currentCountOfIconsInDock < dockCountOfIcons and workPath ~= "System/OS/Dock/")}, {lang.contextDelete, false, "⌫"})
 					elseif fileFormat ~= ".app" and fs.isDirectory(obj["DesktopIcons"][key][5]) then
-						action = context.menu(eventData[3], eventData[4], {lang.contextCut, false, "^X"}, {lang.contextCopy, false, "^C"}, {lang.contextPaste, not clipboard, "^V"}, "-", {lang.contextRename}, {lang.contextCreateShortcut}, "-", {lang.contextArchive, true}, {lang.contextUploadToPastebin, true}, "-", {lang.contextDelete, false, "⌫"})
+						action = context.menu(eventData[3], eventData[4], {lang.contextCopy, false, "^C"}, {lang.contextPaste, not clipboard, "^V"}, "-", {lang.contextRename}, {lang.contextCreateShortcut}, "-", {lang.contextUploadToPastebin, true}, "-", {lang.contextDelete, false, "⌫"})
 					else
-						action = context.menu(eventData[3], eventData[4], {lang.contextEdit}, "-", {lang.contextCut, false, "^X"}, {lang.contextCopy, false, "^C"}, {lang.contextPaste, not clipboard, "^V"}, "-", {lang.contextRename}, {lang.contextCreateShortcut}, "-", {lang.contextArchive, true}, {lang.contextUploadToPastebin, true}, "-", {lang.contextAddToDock, not (currentCountOfIconsInDock < dockCountOfIcons and workPath ~= "System/OS/Dock/")}, {lang.contextDelete, false, "⌫"})
+						action = context.menu(eventData[3], eventData[4], {lang.contextEdit}, "-", {lang.contextCopy, false, "^C"}, {lang.contextPaste, not clipboard, "^V"}, "-", {lang.contextRename}, {lang.contextCreateShortcut}, "-", {lang.contextUploadToPastebin, true}, "-", {lang.contextAddToDock, not (currentCountOfIconsInDock < dockCountOfIcons and workPath ~= "System/OS/Dock/")}, {lang.contextDelete, false, "⌫"})
 					end
 
-					--ecs.error(#getSelectedIcons())
-					deselectAll()
-					--ecs.error(#getSelectedIcons())
-
-					--ecs.error("workPath = "..workPath..", obj = "..obj["DesktopIcons"][key][5])
-
+					--Анализ действия контекстного меню
 					if action == lang.contextShowContent then
-						changePath(obj["DesktopIcons"][key][5])
+						shell.execute("Finder.app/Finder.lua "..obj["DesktopIcons"][key][5])
 					elseif action == lang.contextEdit then
-						ecs.prepareToExit()
-						shell.execute("edit "..obj["DesktopIcons"][key][5])
+						ecs.editFile(obj["DesktopIcons"][key][5])
 						drawAll()
 					elseif action == lang.contextDelete then
-						deleteSelectedIcons()
+						fs.remove(obj["DesktopIcons"][key][5])
+						drawDesktop(xPosOfIcons, yPosOfIcons)
 					elseif action == lang.contextCopy then
-						copySelectedIcons()
+						clipboard = obj["DesktopIcons"][key][5]
 					elseif action == lang.contextPaste then
-						pasteSelectedIcons()
+						ecs.copy(clipboard, workPath)
+						drawDesktop(xPosOfIcons, yPosOfIcons)
 					elseif action == lang.contextRename then
-						local success = ecs.rename(obj["DesktopIcons"][key][5])
-						success = true
-						if success then drawDesktop(xPosOfIcons, yPosOfIcons) end
+						ecs.rename(obj["DesktopIcons"][key][5])
 						drawDesktop(xPosOfIcons, yPosOfIcons)
 					elseif action == lang.contextCreateShortcut then
-						createShortCut(workPath .. ecs.hideFileFormat(obj["DesktopIcons"][key][5]) .. ".lnk", obj["DesktopIcons"][key][5])
+						ecs.createShortCut(workPath .. ecs.hideFileFormat(obj["DesktopIcons"][key][5]) .. ".lnk", obj["DesktopIcons"][key][5])
 						drawDesktop(xPosOfIcons, yPosOfIcons)
 					elseif action == lang.contextAddToDock then
-						createShortCut("System/OS/Dock/" .. ecs.hideFileFormat(obj["DesktopIcons"][key][5]) .. ".lnk", obj["DesktopIcons"][key][5])
+						ecs.createShortCut("System/OS/Dock/" .. ecs.hideFileFormat(obj["DesktopIcons"][key][5]) .. ".lnk", obj["DesktopIcons"][key][5])
 						drawDock()
 					else
-						redrawSelectedIcons()
-						deselectAll(true)
+						ecs.square(obj["DesktopIcons"][key][1], obj["DesktopIcons"][key][2], widthOfIcon, heightOfIcon, background)
+						ecs.drawOSIcon(obj["DesktopIcons"][key][1], obj["DesktopIcons"][key][2], obj["DesktopIcons"][key][5], true, 0xffffff)
 					end
-					
+
 				end
 
 				break
 			end	
 		end
 
-		--ПРОСЧЕТ КЛИКА НА КНОПОЧКИ ПЕРЕКЛЮЧЕНИЯ РАБОЧИХ СТОЛОВ
-		for key, value in pairs(obj["DesktopButtons"]) do
-			if ecs.clickedAtArea(eventData[3], eventData[4], obj["DesktopButtons"][key][1], obj["DesktopButtons"][key][2], obj["DesktopButtons"][key][3], obj["DesktopButtons"][key][4]) then
-			
-				--Кликнули на элемент, а не в очко какое-то
-				clickedOnEmptySpace = false
-
-				if key == 0 then 
-					if #workPathHistory > 0 then
-						ecs.colorTextWithBack(obj["DesktopButtons"][key][1], obj["DesktopButtons"][key][2], 0xffffff, ecs.colors.green, " <")
-						os.sleep(0.2)
-						workPath = workPathHistory[#workPathHistory]
-						workPathHistory[#workPathHistory] = nil
-						currentDesktop = 1
-
-						drawDesktop(xPosOfIcons, yPosOfIcons)
-					end
-				else
-					currentDesktop = key
-					drawDesktop(xPosOfIcons, yPosOfIcons)
-				end
-
-				break
-			end
-		end
 
 		--Клик на Доковские иконки
 		for key, value in pairs(obj["DockIcons"]) do
@@ -711,7 +484,7 @@ while true do
 				clickedOnEmptySpace = false
 
 				ecs.square(obj["DockIcons"][key][1], obj["DockIcons"][key][2], widthOfIcon, heightOfIcon, iconsSelectionColor)
-				ecs.drawOSIcon(obj["DockIcons"][key][1] + 2, obj["DockIcons"][key][2], pathOfDockShortcuts..key, showFileFormat)
+				ecs.drawOSIcon(obj["DockIcons"][key][1], obj["DockIcons"][key][2], pathOfDockShortcuts..key, showFileFormat)
 				
 				if eventData[5] == 0 then 
 					os.sleep(0.2)
@@ -720,19 +493,11 @@ while true do
 				else
 					local content = ecs.readShortcut(pathOfDockShortcuts..key)
 					
-					action = context.menu(eventData[3], eventData[4], {lang.contextOpenDockFolder}, {lang.contextOpenDockElementFolder, (fs.path(workPath) == fs.path(content))}, "-", {lang.contextRemoveFromDock, not (currentCountOfIconsInDock > 1)})
+					action = context.menu(eventData[3], eventData[4], {lang.contextRemoveFromDock, not (currentCountOfIconsInDock > 1)})
 
-					if action == lang.contextOpenDockElementFolder then
-						drawDock()	
-						if content then
-							changePath(fs.path(content))
-						end
-					elseif action == lang.contextRemoveFromDock then
+					if action == lang.contextRemoveFromDock then
 						fs.remove(pathOfDockShortcuts..key)
 						drawDock()
-					elseif action == lang.contextOpenDockFolder then
-						drawDock()
-						changePath(pathOfDockShortcuts)
 					else
 						drawDock()
 					end
@@ -752,28 +517,7 @@ while true do
 
 				ecs.colorTextWithBack(obj["TopBarButtons"][key][1], obj["TopBarButtons"][key][2], 0xffffff, ecs.colors.blue, " "..key.." ")
 
-				if key == lang.viewTab then
-
-					local action = context.menu(obj["TopBarButtons"][key][1], obj["TopBarButtons"][key][2] + 1, {(function() if showHiddenFiles then return lang.hideHiddenFiles else return lang.showHiddenFiles end end)()}, {(function() if showSystemFiles then return lang.hideSystemFiles else return lang.showSystemFiles end end)()}, "-", {(function() if showFileFormat then return lang.hideFileFormat else return lang.showFileFormat end end)()})
-					
-					if action == lang.hideHiddenFiles then
-						showHiddenFiles = false
-					elseif action == lang.showHiddenFiles then
-						showHiddenFiles = true
-					elseif action == lang.showSystemFiles then
-						showSystemFiles = true
-					elseif action == lang.hideSystemFiles then
-						showSystemFiles = false
-					elseif action == lang.showFileFormat then
-						showFileFormat = true
-					elseif action == lang.hideFileFormat then
-						showFileFormat = false
-					end
-
-					drawTopBar()
-					drawDesktop(xPosOfIcons, yPosOfIcons)
-
-				elseif key == "MineOS" then
+				if key == "MineOS" then
 					local action = context.menu(obj["TopBarButtons"][key][1], obj["TopBarButtons"][key][2] + 1, {lang.aboutSystem}, {lang.updateSystem}, "-", {lang.restart}, {lang.shutdown}, "-", {lang.backToShell})
 				
 					if action == lang.backToShell then
@@ -806,59 +550,22 @@ while true do
 		--А если все-таки кликнулось в очко какое-то, то вот че делать
 		if clickedOnEmptySpace then
 			if eventData[5] == 1 then
-				local action = context.menu(eventData[3], eventData[4], {lang.contextNewFile}, {lang.contextNewFolder}, "-", {lang.contextPaste, not clipboard, "^V"}, {lang.contextRunFromPastebin}, {lang.contextCreatePastebinShortcut})
+				local action = context.menu(eventData[3], eventData[4], {lang.contextNewFile}, {lang.contextNewFolder}, "-", {lang.contextPaste, not clipboard, "^V"})
 
 				--Создать новый файл
 				if action == lang.contextNewFile then
-					local name = ecs.beautifulInput("auto", "auto", 30, lang.contextNewFile, "Ок", ecs.windowColors.background, ecs.windowColors.usualText, 0xcccccc, true, {lang.name})[1]
-					if isNameCorrect(name) then
-						ecs.prepareToExit()
-						shell.execute("edit " .. workPath .. name)
-						drawAll()
-					end
-
+					ecs.newFile(workPath)
+					drawAll()
 				--Создать новую папку
 				elseif action == lang.contextNewFolder then
-					local name = ecs.beautifulInput("auto", "auto", 30, lang.contextNewFolder, "Ок", ecs.windowColors.background, ecs.windowColors.usualText, 0xcccccc, true, {lang.name})[1]
-					if isNameCorrect(name) then
-						fs.makeDirectory(workPath .. name)
-						drawDesktop(xPosOfIcons, yPosOfIcons)
-					end
-
-				--Запустить файл из пастебина
-				elseif action == lang.contextRunFromPastebin then
-					local name = ecs.beautifulInput("auto", "auto", 30, lang.contextRunFromPastebin, "Ок", ecs.windowColors.background, ecs.windowColors.usualText, 0xcccccc, true, {lang.name})[1]
-					if isNameCorrect(name) then
-						ecs.prepareToExit()
-						shell.execute("pastebin run "..name)
-						print(" "); print(" ")
-						print(lang.pressAnyKeyToContinue)
-						ecs.waitForTouchOrClick()
-						drawAll()
-					end
-
-				--Создать ссылку на файл из пастебина
-				elseif action == lang.contextCreatePastebinShortcut then
-					local name = ecs.beautifulInput("auto", "auto", 30, lang.contextCreatePastebinShortcut, "Ок", ecs.windowColors.background, ecs.windowColors.usualText, 0xcccccc, true, {lang.name})[1]
-					if isNameCorrect(name) then
-						createPastebinShortcut(workPath, name)
-						drawDesktop(xPosOfIcons, yPosOfIcons)
-					end
-
+					ecs.newFolder(workPath)
+					drawDesktop(xPosOfIcons, yPosOfIcons)
 				--Вставить файл
 				elseif action == lang.contextPaste then
-					pasteSelectedIcons()
+
 				end
+				
 			end
-		end
-
-
-	--ПРОКРУТКА РАБОЧИХ СТОЛОВ
-	elseif eventData[1] == "scroll" then
-		if eventData[5] == -1 then
-			if currentDesktop > 1 then currentDesktop = currentDesktop - 1; drawDesktop(xPosOfIcons, yPosOfIcons) end
-		else
-			if currentDesktop < countOfDesktops then currentDesktop = currentDesktop + 1; drawDesktop(xPosOfIcons, yPosOfIcons) end
 		end
 
 	--Если скрин делаем
