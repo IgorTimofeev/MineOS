@@ -28,7 +28,6 @@ local xSize, ySize = gpu.getResolution()
 -- Это все для раб стола
 local icons = {}
 local workPath = "System/OS/Desktop/"
-local clipboard
 local currentFileList
 
 --ПЕРЕМЕННЫЕ ДЛЯ ДОКА
@@ -354,6 +353,7 @@ local function createDesktopShortCuts()
 	local dockApps = {
 		"Finder.app",
 		"Calendar.app",
+		"Control.app"
 		"Photoshop.app",
 		"Pastebin.app",
 	}
@@ -434,11 +434,11 @@ while true do
 
 					--РАЗНЫЕ КОНТЕКСТНЫЕ МЕНЮ
 					if fileFormat == ".app" and fs.isDirectory(obj["DesktopIcons"][key][5]) then
-						action = context.menu(eventData[3], eventData[4], {lang.contextShowContent}, "-", {lang.contextCopy, false, "^C"}, {lang.contextPaste, not clipboard, "^V"}, "-", {lang.contextRename}, {lang.contextCreateShortcut}, "-",  {lang.contextUploadToPastebin, true}, "-", {lang.contextAddToDock, not (currentCountOfIconsInDock < dockCountOfIcons and workPath ~= "System/OS/Dock/")}, {lang.contextDelete, false, "⌫"})
+						action = context.menu(eventData[3], eventData[4], {lang.contextShowContent}, "-", {lang.contextCopy, false, "^C"}, {lang.contextPaste, not _G.clipboard, "^V"}, "-", {lang.contextRename}, {lang.contextCreateShortcut}, "-",  {lang.contextUploadToPastebin, true}, "-", {lang.contextAddToDock, not (currentCountOfIconsInDock < dockCountOfIcons and workPath ~= "System/OS/Dock/")}, {lang.contextDelete, false, "⌫"})
 					elseif fileFormat ~= ".app" and fs.isDirectory(obj["DesktopIcons"][key][5]) then
-						action = context.menu(eventData[3], eventData[4], {lang.contextCopy, false, "^C"}, {lang.contextPaste, not clipboard, "^V"}, "-", {lang.contextRename}, {lang.contextCreateShortcut}, "-", {lang.contextUploadToPastebin, true}, "-", {lang.contextDelete, false, "⌫"})
+						action = context.menu(eventData[3], eventData[4], {lang.contextCopy, false, "^C"}, {lang.contextPaste, not _G.clipboard, "^V"}, "-", {lang.contextRename}, {lang.contextCreateShortcut}, "-", {lang.contextUploadToPastebin, true}, "-", {lang.contextDelete, false, "⌫"})
 					else
-						action = context.menu(eventData[3], eventData[4], {lang.contextEdit}, "-", {lang.contextCopy, false, "^C"}, {lang.contextPaste, not clipboard, "^V"}, "-", {lang.contextRename}, {lang.contextCreateShortcut}, "-", {lang.contextUploadToPastebin, true}, "-", {lang.contextAddToDock, not (currentCountOfIconsInDock < dockCountOfIcons and workPath ~= "System/OS/Dock/")}, {lang.contextDelete, false, "⌫"})
+						action = context.menu(eventData[3], eventData[4], {lang.contextEdit}, "-", {lang.contextCopy, false, "^C"}, {lang.contextPaste, not _G.clipboard, "^V"}, "-", {lang.contextRename}, {lang.contextCreateShortcut}, "-", {lang.contextUploadToPastebin, true}, "-", {lang.contextAddToDock, not (currentCountOfIconsInDock < dockCountOfIcons and workPath ~= "System/OS/Dock/")}, {lang.contextDelete, false, "⌫"})
 					end
 
 					--Анализ действия контекстного меню
@@ -451,9 +451,9 @@ while true do
 						fs.remove(obj["DesktopIcons"][key][5])
 						drawDesktop(xPosOfIcons, yPosOfIcons)
 					elseif action == lang.contextCopy then
-						clipboard = obj["DesktopIcons"][key][5]
+						_G.clipboard = obj["DesktopIcons"][key][5]
 					elseif action == lang.contextPaste then
-						ecs.copy(clipboard, workPath)
+						ecs.copy(_G.clipboard, workPath)
 						drawDesktop(xPosOfIcons, yPosOfIcons)
 					elseif action == lang.contextRename then
 						ecs.rename(obj["DesktopIcons"][key][5])
@@ -463,6 +463,7 @@ while true do
 						drawDesktop(xPosOfIcons, yPosOfIcons)
 					elseif action == lang.contextAddToDock then
 						ecs.createShortCut("System/OS/Dock/" .. ecs.hideFileFormat(obj["DesktopIcons"][key][5]) .. ".lnk", obj["DesktopIcons"][key][5])
+						drawDesktop(xPosOfIcons, yPosOfIcons)
 						drawDock()
 					else
 						ecs.square(obj["DesktopIcons"][key][1], obj["DesktopIcons"][key][2], widthOfIcon, heightOfIcon, background)
@@ -550,7 +551,7 @@ while true do
 		--А если все-таки кликнулось в очко какое-то, то вот че делать
 		if clickedOnEmptySpace then
 			if eventData[5] == 1 then
-				local action = context.menu(eventData[3], eventData[4], {lang.contextNewFile}, {lang.contextNewFolder}, "-", {lang.contextPaste, not clipboard, "^V"})
+				local action = context.menu(eventData[3], eventData[4], {lang.contextNewFile}, {lang.contextNewFolder}, "-", {lang.contextPaste, not _G.clipboard, "^V"})
 
 				--Создать новый файл
 				if action == lang.contextNewFile then
