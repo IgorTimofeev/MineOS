@@ -242,7 +242,7 @@ while true do
 							drawMain()
 						end
 					elseif action == "Изменить имя" then
-						local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Изменить имя диска"}, {"EmptyLine"}, {"Input", 0x262626, 0x000000, HDDs[key].label or "Имя"}, {"EmptyLine"}, {"Button", {0xbbbbbb, 0xffffff, "OK!"}})
+						local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Изменить имя диска"}, {"EmptyLine"}, {"Input", 0x262626, 0x000000, HDDs[key].label or "Имя"}, {"EmptyLine"}, {"Button", {0xbbbbbb, 0xffffff, "OK!"})
 						if data[1] == "" or data[1] == " " then data[1] = "Untitled" end
 						ecs.setHDDLabel(HDDs[key].address, data[1])
 						drawMain()
