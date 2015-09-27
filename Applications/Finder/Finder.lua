@@ -33,7 +33,7 @@ local currentWorkPathHistoryElement = 1
 local x, y, width, height, yEnd, xEnd, heightOfTopBar, widthOfLeftBar, heightOfLeftBar, yLeftBar, widthOfMain, xMain
 local widthOfBottom, widthOfIcon, heightOfIcon, xSpaceBetweenIcons, ySpaceBetweenIcons, xCountOfIcons, yCountOfIcons
 local fileList, fromLine, fromLineLeftBar = nil, 1, 1
-local clipboard, showSystemFiles, showHiddenFiles, showFileFormat
+local showSystemFiles, showHiddenFiles, showFileFormat
 
 ------------------------------------------------------------------------------------------------------------------
 
@@ -401,12 +401,12 @@ local function drawManager(xStart, yStart, widthOfManager, heightOfManager, star
 					else
 						if fs.isDirectory(path) then
 							if fileFormat ~= ".app" then
-								action = context.menu(e[3], e[4], {"Добавить в избранное"},"-", {"Копировать", false, "^C"}, {"Вставить", (clipboard == nil), "^V"}, "-", {"Переименовать"}, {"Создать ярлык"}, "-", {"Добавить в архив"}, "-", {"Удалить", false, "⌫"})
+								action = context.menu(e[3], e[4], {"Добавить в избранное"},"-", {"Копировать", false, "^C"}, {"Вставить", (_G.clipboard == nil), "^V"}, "-", {"Переименовать"}, {"Создать ярлык"}, "-", {"Добавить в архив"}, "-", {"Удалить", false, "⌫"})
 							else
-								action = context.menu(e[3], e[4], {"Показать содержимое"}, {"Добавить в избранное"},"-", {"Копировать", false, "^C"}, {"Вставить", (clipboard == nil), "^V"}, "-", {"Переименовать"}, {"Создать ярлык"}, "-", {"Добавить в архив"}, "-", {"Удалить", false, "⌫"})
+								action = context.menu(e[3], e[4], {"Показать содержимое"}, {"Добавить в избранное"},"-", {"Копировать", false, "^C"}, {"Вставить", (_G.clipboard == nil), "^V"}, "-", {"Переименовать"}, {"Создать ярлык"}, "-", {"Добавить в архив"}, "-", {"Удалить", false, "⌫"})
 							end
 						else
-							action = context.menu(e[3], e[4], {"Редактировать"}, "-", {"Копировать", false, "^C"}, {"Вставить", (clipboard == nil), "^V"}, "-", {"Переименовать"}, {"Создать ярлык"}, "-", {"Добавить в архив"}, {"Загрузить на Pastebin"}, "-", {"Удалить", false, "⌫"})
+							action = context.menu(e[3], e[4], {"Редактировать"}, "-", {"Копировать", false, "^C"}, {"Вставить", (not _G.clipboard), "^V"}, "-", {"Переименовать"}, {"Создать ярлык"}, "-", {"Добавить в архив"}, {"Загрузить на Pastebin"}, "-", {"Удалить", false, "⌫"})
 						end
 
 						--АналИз действия
@@ -423,10 +423,10 @@ local function drawManager(xStart, yStart, widthOfManager, heightOfManager, star
 							changePath(path)
 							drawAll()
 						elseif action == "Копировать" then
-							clipboard = path
+							_G.clipboard = path
 							drawAll()
 						elseif action == "Вставить" then
-							ecs.copy(clipboard, fs.path(path) or "")
+							ecs.copy(_G.clipboard, fs.path(path) or "")
 							getFileList(workPathHistory[currentWorkPathHistoryElement])
 							drawAll()
 						elseif action == "Удалить" then
@@ -465,7 +465,7 @@ local function drawManager(xStart, yStart, widthOfManager, heightOfManager, star
 			--ВНИМАНИЕ: ЖОПА!!!!
 			--КЛИКНУЛИ В ЖОПУ!!!!!!
 			if ecs.clickedAtArea(e[3], e[4], xMain, yLeftBar, xEnd, yEnd - 1) and clickedOnEmptySpace and e[5] == 1 then
-				action = context.menu(e[3], e[4], {"Новый файл"}, {"Новая папка"}, {"Новое приложение"}, "-", {"Вставить", (clipboard == nil), "^V"})
+				action = context.menu(e[3], e[4], {"Новый файл"}, {"Новая папка"}, {"Новое приложение"}, "-", {"Вставить", (_G.clipboard == nil), "^V"})
 				if action == "Новый файл" then
 					ecs.newFile(workPathHistory[currentWorkPathHistoryElement])
 					getFileList(workPathHistory[currentWorkPathHistoryElement])
@@ -476,7 +476,7 @@ local function drawManager(xStart, yStart, widthOfManager, heightOfManager, star
 					getFileList(workPathHistory[currentWorkPathHistoryElement])
 					drawAll()
 				elseif action == "Вставить" then
-					ecs.copy(clipboard, workPathHistory[currentWorkPathHistoryElement])
+					ecs.copy(_G.clipboard, workPathHistory[currentWorkPathHistoryElement])
 					getFileList(workPathHistory[currentWorkPathHistoryElement])
 					drawAll()
 				elseif action == "Новое приложение" then
