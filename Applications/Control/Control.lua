@@ -21,7 +21,7 @@ local colors = {
 	topButtonsText = 0x262626,
 }
 
-local topButtons = {"О системе", "Диски", "Экран", "Обновления"}
+local topButtons = {"О системе", "Диски", "Обновления"}
 local spaceBetweenTopButtons, offsetTopButtons = 2, 2
 local currentMode = 1
 
@@ -175,7 +175,7 @@ local function drawMain()
 		--Скроллбар
 		ecs.srollBar(x + width - 1, y + heightOfTopBar, 1, height - heightOfTopBar, #HDDs, drawHDDFrom, 0xdddddd, ecs.colors.blue)
 	
-	elseif currentMode == 4 then
+	elseif currentMode == 3 then
 
 		obj["Updates"] = {}
 
@@ -305,7 +305,7 @@ while true do
 			else
 				if drawHDDFrom < #HDDs then drawHDDFrom = drawHDDFrom + 1; drawMain() end
 			end
-		elseif currentMode == 4 then
+		elseif currentMode == 3 then
 			if e[5] == 1 then
 				if drawUpdatesFrom > 1 then drawUpdatesFrom = drawUpdatesFrom - 1; drawUpdatesList() end
 			else
