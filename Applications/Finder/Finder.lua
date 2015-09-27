@@ -233,7 +233,8 @@ local function drawMain(fromLine)
 	--Рисуем белую подложку
 	ecs.square(xMain, yLeftBar, widthOfMain, heightOfMain, colors.main)
 	--Рисуем скроллбарчик, епты бля!
-	ecs.srollBar(xEnd, yLeftBar, 1, heightOfMain, math.ceil(#fileList / xCountOfIcons), fromLine, colors.topBar, ecs.colors.blue)
+	local scrollHeight = math.ceil(#fileList / xCountOfIcons); if scrollHeight == 0 then scrollHeight = 1 end
+	ecs.srollBar(xEnd, yLeftBar, 1, heightOfMain, scrollHeight, fromLine, colors.topBar, ecs.colors.blue)
 	--Позиции отрисовки иконок
 	local xPos, yPos = xMain + 1, yLeftBar + 1
 	--С какой иконки начинать отрисовку
