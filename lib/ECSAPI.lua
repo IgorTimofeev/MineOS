@@ -1353,6 +1353,7 @@ end
 
 --Редактирование файла (для операционки)
 function ECSAPI.editFile(path)
+	ECSAPI.prepareToExit()
 	shell.execute("edit "..path)
 end
 
