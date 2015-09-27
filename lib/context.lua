@@ -91,15 +91,17 @@ function context.menu(x, y, ...)
 	--Проверка нажатия
 	local action
 	local e = {event.pull("touch")}
-	for key, val in pairs(obj["Elements"]) do
-		if ecs.clickedAtArea(e[3], e[4], obj["Elements"][key][1], obj["Elements"][key][2], obj["Elements"][key][3], obj["Elements"][key][4]) then
-			
-			--ecs.error("Кол-во объектов: "..#obj["Elements"]..", кликнули на объект номер = "..tostring(key)..", #Data = "..#data..", sData ="..sData)
-
-			drawElement(key, ecs.colors.blue, 0xffffff, e[4])
-			os.sleep(0.3)
-			action = data[key][1]
-			break
+	if obj["Elements"] then
+		for key, val in pairs(obj["Elements"]) do
+			if ecs.clickedAtArea(e[3], e[4], obj["Elements"][key][1], obj["Elements"][key][2], obj["Elements"][key][3], obj["Elements"][key][4]) then
+				
+				--ecs.error("Кол-во объектов: "..#obj["Elements"]..", кликнули на объект номер = "..tostring(key)..", #Data = "..#data..", sData ="..sData)
+	
+				drawElement(key, ecs.colors.blue, 0xffffff, e[4])
+				os.sleep(0.3)
+				action = data[key][1]
+				break
+			end
 		end
 	end
 
