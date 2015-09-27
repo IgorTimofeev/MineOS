@@ -6,8 +6,6 @@ local unicode = require("unicode")
 local seri = require("serialization")
 local gpu = c.gpu
 
-local filemanager = {}
-
 ------------------------------------------------------------------------------------------------------------------
 
 local colors = {
@@ -68,9 +66,9 @@ local function loadConfig()
 			{"Title", "", ""},
 			{"Title", "Диски"},
 		}
-		showFileFormat = true
-		showSystemFiles = true
-		showHiddenFiles = true
+		showFileFormat = false
+		showSystemFiles = false
+		showHiddenFiles = false
 		saveConfig()
 	end
 end
@@ -84,15 +82,20 @@ end
 
 --Создание дисков для лефтбара
 local function createDisks()
-	local path = "mnt/"
-	local fileList = ecs.getFileList(path)
-	for i = 1, #fileList do
-		table.insert(leftBar, #leftBar + 1, {"Element", fileList[i], path .. fileList[i]})
+	local HDDs = ecs.getHDDs()
+
+	for proxy, path in fs.mounts() do
+		for i = 1, #HDDs do
+			if proxy.address == HDDs[i].address and path ~= "/" then
+				table.insert(leftBar, {"Element", fs.name(path), unicode.sub(path, 2, -1)})
+				--ecs.error("path = "..path)
+			end
+		end
 	end
 end
 
---Короч такая хуйня, смари. Сюда пихаешь ID диска. И если в файл листе дисков
---такой уже имеется, то удаляется старый, а если не имеется, то добавляется новый
+--Короч такая хуйня, смари. Сначала оно удаляет все диски
+--А затем их создает заново
 local function chkdsk()
 	local position = #leftBar
 	while true do
@@ -110,7 +113,7 @@ end
 --Получить файловый список
 local function getFileList(path)
 	fileList = ecs.getFileList(path)
-	fileList = ecs.reorganizeFilesAndFolders(fileList, true, true)
+	fileList = ecs.reorganizeFilesAndFolders(fileList, showHiddenFiles, showSystemFiles)
 end
 
 --Перейти в какую-то папку
@@ -169,6 +172,20 @@ local function drawSearch()
 	ecs.inputText(x + width - limit - 1, y + 1, limit, " Поиск", colors.topButtons, 0x999999, true)
 end
 
+local function drawFsControl()
+	obj["FSButtons"] = {}
+	local xPos, yPos = xMain, y + 1
+	local name
+
+	local function getColors(cyka)
+		if cyka then return 0x262626, 0xffffff else return 0xffffff, 0x262626 end
+	end
+
+	name = "Формат"; newObj("FSButtons", 1, ecs.drawAdaptiveButton(xPos, yPos, 1, 0, name, getColors(showFileFormat))); xPos = xPos + unicode.len(name) + 3
+	name = "Скрытые"; newObj("FSButtons", 2, ecs.drawAdaptiveButton(xPos, yPos, 1, 0, name, getColors(showHiddenFiles))); xPos = xPos + unicode.len(name) + 3
+	name = "Системные"; newObj("FSButtons", 3, ecs.drawAdaptiveButton(xPos, yPos, 1, 0, name, getColors(showSystemFiles))); xPos = xPos + unicode.len(name) + 3
+end
+
 --Рисуем верхнюю часть
 local function drawTopBar()
 	--Рисуем сам бар
@@ -176,15 +193,17 @@ local function drawTopBar()
 	--Рисуем кнопочки
 	drawCloses()
 	--Рисуем титл
-	local text = fs.name(workPathHistory[currentWorkPathHistoryElement]) or "Root"
-	ecs.colorText(x + math.floor(width / 2 - unicode.len(text) / 2), y, colors.topText, text)
+	-- local text = workPathHistory[currentWorkPathHistoryElement] or "Root"
+	-- ecs.colorText(x + math.floor(width / 2 - unicode.len(text) / 2), y, colors.topText, text)
 	--Рисуем кнопочки влево-вправо
 	local xPos, yPos = x + 1, y + 1
 	name = "<"; newObj("TopButtons", name, ecs.drawButton(xPos, yPos, 3, 1, name, colors.topButtons, colors.topButtonsText))
 	xPos = xPos + 4
 	name = ">"; newObj("TopButtons", name, ecs.drawButton(xPos, yPos, 3, 1, name, colors.topButtons, colors.topButtonsText))
 	--Поиск рисуем
-	drawSearch()
+	--drawSearch()
+	--Кнопочки контроля файловой системы рисуем
+	drawFsControl()
 end
 
 --Рисуем нижнюю полосочку с путем
@@ -198,7 +217,7 @@ local function drawBottomBar()
 	else
 		historyString = string.gsub(historyString, "/", " ► ")
 		if unicode.sub(historyString, -3, -1) == " ► " then
-			historyString = unicode.sub(historyString, 1, -4)
+			historyString = "Root ► " .. unicode.sub(historyString, 1, -4)
 		end
 	end
 	--Рисуем ее
@@ -227,7 +246,7 @@ local function drawMain(fromLine)
 			--Получаем путь к файлу для иконки
 			local path = workPathHistory[currentWorkPathHistoryElement] .. fileList[counter]
 			--Рисуем иконку
-			ecs.drawOSIcon(xPos, yPos, path, true, 0x000000)
+			ecs.drawOSIcon(xPos, yPos, path, showFileFormat, 0x000000)
 			--Создаем объект иконки
 			newObj("Icons", counter, xPos, yPos, xPos + widthOfIcon - 1, yPos + heightOfIcon - 1, path)
 			--Очищаем оперативку
@@ -293,8 +312,9 @@ local function backToPast()
 		--Го!
 		currentWorkPathHistoryElement = currentWorkPathHistoryElement - 1
 		--Получаем список файлов текущей директории
-		fileList = ecs.getFileList(workPathHistory[currentWorkPathHistoryElement])
+		getFileList(workPathHistory[currentWorkPathHistoryElement])
 		--Раб стол перерисовываем, блеа!
+		fromLine = 1
 		drawMain(fromLine)
 		drawBottomBar()
 		drawLeftBar()
@@ -309,8 +329,9 @@ local function backToFuture()
 		--Го!
 		currentWorkPathHistoryElement = currentWorkPathHistoryElement + 1
 		--Получаем список файлов текущей директории
-		fileList = ecs.getFileList(workPathHistory[currentWorkPathHistoryElement])
+		getFileList(workPathHistory[currentWorkPathHistoryElement])
 		--Раб стол перерисовываем, блеа!
+		fromLine = 1
 		drawMain(fromLine)
 		drawBottomBar()
 		drawLeftBar()
@@ -325,7 +346,7 @@ local function addToFavourites(name, path)
 end
 
 --Главная функция
-function filemanager.draw(xStart, yStart, widthOfManager, heightOfManager, startPath)
+local function drawManager(xStart, yStart, widthOfManager, heightOfManager, startPath)
 	--Загружаем конфигурационный файл
 	loadConfig()
 	--Создаем дисковую парашу там вон
@@ -379,16 +400,21 @@ function filemanager.draw(xStart, yStart, widthOfManager, heightOfManager, start
 					else
 						if fs.isDirectory(path) then
 							if fileFormat ~= ".app" then
-								action = context.menu(e[3], e[4], {"Добавить в избранное"},"-", {"Вырезать", false, "^X"}, {"Копировать", false, "^C"}, {"Вставить", (clipboard == nil), "^V"}, "-", {"Переименовать"}, {"Создать ярлык"}, "-", {"Добавить в архив", true}, "-", {"Удалить", false, "⌫"})
+								action = context.menu(e[3], e[4], {"Добавить в избранное"},"-", {"Копировать", false, "^C"}, {"Вставить", (clipboard == nil), "^V"}, "-", {"Переименовать"}, {"Создать ярлык"}, "-", {"Добавить в архив"}, "-", {"Удалить", false, "⌫"})
 							else
-								action = context.menu(e[3], e[4], {"Показать содержимое"}, {"Добавить в избранное"},"-", {"Вырезать", false, "^X"}, {"Копировать", false, "^C"}, {"Вставить", (clipboard == nil), "^V"}, "-", {"Переименовать"}, {"Создать ярлык"}, "-", {"Добавить в архив", true}, "-", {"Удалить", false, "⌫"})
+								action = context.menu(e[3], e[4], {"Показать содержимое"}, {"Добавить в избранное"},"-", {"Копировать", false, "^C"}, {"Вставить", (clipboard == nil), "^V"}, "-", {"Переименовать"}, {"Создать ярлык"}, "-", {"Добавить в архив"}, "-", {"Удалить", false, "⌫"})
 							end
 						else
-							action = context.menu(e[3], e[4], {"Вырезать", false, "^X"}, {"Копировать", false, "^C"}, {"Вставить", (clipboard == nil), "^V"}, "-", {"Переименовать"}, {"Создать ярлык"}, "-", {"Добавить в архив", true}, {"Загрузить на Pastebin", true}, "-", {"Удалить", false, "⌫"})
+							action = context.menu(e[3], e[4], {"Редактировать"}, "-", {"Копировать", false, "^C"}, {"Вставить", (clipboard == nil), "^V"}, "-", {"Переименовать"}, {"Создать ярлык"}, "-", {"Добавить в архив"}, {"Загрузить на Pastebin"}, "-", {"Удалить", false, "⌫"})
 						end
 
 						--АналИз действия
-						if action == "Добавить в избранное" then
+						if action == "Редактировать" then
+							ecs.prepareToExit()
+							shell.execute("edit "..path)
+							ecs.drawOldPixels(oldPixelsOfFullScreen)
+							drawAll()
+						elseif action == "Добавить в избранное" then
 							addToFavourites(fs.name(path), path)
 							drawLeftBar()
 							drawMain(fromLine)
@@ -400,22 +426,31 @@ function filemanager.draw(xStart, yStart, widthOfManager, heightOfManager, start
 							drawAll()
 						elseif action == "Вставить" then
 							ecs.copy(clipboard, fs.path(path) or "")
-							getFileList(fs.path(path) or "")
+							getFileList(workPathHistory[currentWorkPathHistoryElement])
 							drawAll()
 						elseif action == "Удалить" then
 							fs.remove(path)
-							getFileList(fs.path(path) or "")
+							getFileList(workPathHistory[currentWorkPathHistoryElement])
 							drawAll()
 						elseif action == "Переименовать" then
 							ecs.rename(path)
-							getFileList(fs.path(path) or "")
+							getFileList(workPathHistory[currentWorkPathHistoryElement])
 							drawAll()
 						elseif action == "Создать ярлык" then
 							ecs.createShortCut(fs.path(path).."/"..ecs.hideFileFormat(fs.name(path))..".lnk", path)
-							getFileList(fs.path(path) or "")
+							getFileList(workPathHistory[currentWorkPathHistoryElement])
 							drawAll()
+						elseif action == "Добавить в архив" then
+							ecs.info("auto", "auto", "", "Архивация файлов...")
+							zip.archive(path, ecs.hideFileFormat(fs.name(path))..".zip")
+							getFileList(workPathHistory[currentWorkPathHistoryElement])
+							drawAll()
+						elseif action == "Загрузить на Pastebin" then
+							shell.execute("Pastebin.app/Pastebin.lua upload " .. path)
 						else
-							drawAll()
+							--Рисуем иконку выделенную
+							ecs.square(obj["Icons"][key][1], obj["Icons"][key][2], widthOfIcon, heightOfIcon, colors.main)
+							ecs.drawOSIcon(obj["Icons"][key][1], obj["Icons"][key][2], obj["Icons"][key][5], true, 0x000000)
 						end
 					end
 
@@ -429,10 +464,11 @@ function filemanager.draw(xStart, yStart, widthOfManager, heightOfManager, start
 			--ВНИМАНИЕ: ЖОПА!!!!
 			--КЛИКНУЛИ В ЖОПУ!!!!!!
 			if ecs.clickedAtArea(e[3], e[4], xMain, yLeftBar, xEnd, yEnd - 1) and clickedOnEmptySpace and e[5] == 1 then
-				action = context.menu(e[3], e[4], {"Новый файл"}, {"Новая папка"}, "-", {"Вставить", (clipboard == nil), "^V"})
+				action = context.menu(e[3], e[4], {"Новый файл"}, {"Новая папка"}, {"Новое приложение"}, "-", {"Вставить", (clipboard == nil), "^V"})
 				if action == "Новый файл" then
 					ecs.newFile(workPathHistory[currentWorkPathHistoryElement])
 					getFileList(workPathHistory[currentWorkPathHistoryElement])
+					ecs.drawOldPixels(oldPixelsOfFullScreen)
 					drawAll()
 				elseif action == "Новая папка" then
 					ecs.newFolder(workPathHistory[currentWorkPathHistoryElement])
@@ -440,6 +476,10 @@ function filemanager.draw(xStart, yStart, widthOfManager, heightOfManager, start
 					drawAll()
 				elseif action == "Вставить" then
 					ecs.copy(clipboard, workPathHistory[currentWorkPathHistoryElement])
+					getFileList(workPathHistory[currentWorkPathHistoryElement])
+					drawAll()
+				elseif action == "Новое приложение" then
+					ecs.newApplication(workPathHistory[currentWorkPathHistoryElement])
 					getFileList(workPathHistory[currentWorkPathHistoryElement])
 					drawAll()
 				end
@@ -473,7 +513,7 @@ function filemanager.draw(xStart, yStart, widthOfManager, heightOfManager, start
 							table.remove(leftBar, key)
 							drawLeftBar()
 						else
-							changePath(leftBar[key][3])
+							changePath(fs.path(leftBar[key][3]) or "")
 							drawAll()
 						end
 					end
@@ -483,7 +523,7 @@ function filemanager.draw(xStart, yStart, widthOfManager, heightOfManager, start
 			end
 
 			--Кнопочки красивые наверху слева круглые кароч вот хыыы
-			for key, val in pairs(obj["Closes"]) do
+			for key in pairs(obj["Closes"]) do
 				if ecs.clickedAtArea(e[3], e[4], obj["Closes"][key][1], obj["Closes"][key][2], obj["Closes"][key][3], obj["Closes"][key][4]) then
 					
 
@@ -530,10 +570,30 @@ function filemanager.draw(xStart, yStart, widthOfManager, heightOfManager, start
 				end
 			end
 
-		elseif (e[1] == "component_added" or e[1] == "component_removed") and e[3] == "filesystem" then
-			chkdsk()
-			drawAll()
+			for key in pairs(obj["FSButtons"]) do
+				if ecs.clickedAtArea(e[3], e[4], obj["FSButtons"][key][1], obj["FSButtons"][key][2], obj["FSButtons"][key][3], obj["FSButtons"][key][4]) then
+					if key == 1 then
+						showFileFormat = not showFileFormat
+					elseif key == 2 then
+						showHiddenFiles = not showHiddenFiles
+					else
+						showSystemFiles = not showSystemFiles
+					end
+					fromLine = 1
+					getFileList(workPathHistory[currentWorkPathHistoryElement])
+					drawAll()
 
+					break
+				end
+			end
+
+		elseif e[1] == "component_added" and e[3] == "filesystem" then
+			chkdsk()
+			drawLeftBar()
+		elseif e[1] == "component_removed" and e[3] == "filesystem" then
+			chkdsk()
+			changePath("")
+			drawAll()
 		elseif e[1] == "scroll" then
 			--Если скроллим в зоне иконок
 			if ecs.clickedAtArea(e[3], e[4], xMain, yLeftBar, xEnd, yEnd - 1) then
@@ -569,12 +629,8 @@ end
 
 ------------------------------------------------------------------------------------------------------------------
 
---ecs.prepareToExit()
-filemanager.draw("auto", "auto", 84, 28, "")
--- local xSize, ySize = gpu.getResolution()
--- filemanager.draw(1, 1, xSize, ySize, "")
-
-return filemanager
+local args = {...}
+drawManager("auto", "auto", 84, 28, args[1] or "")
 
 
 
