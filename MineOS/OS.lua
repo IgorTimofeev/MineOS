@@ -353,7 +353,7 @@ local function createDesktopShortCuts()
 	local dockApps = {
 		"Finder.app",
 		"Calendar.app",
-		"Control.app"
+		"Control.app",
 		"Photoshop.app",
 		"Pastebin.app",
 	}
