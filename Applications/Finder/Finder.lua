@@ -60,6 +60,7 @@ local function loadConfig()
 		leftBar = {
 			{"Title", "Избранное"},
 			{"Element", "Root", ""},
+			{"Element", "Desktop", "System/OS/Desktop/"}
 			{"Element", "Libraries", "lib/"},
 			{"Element", "Applications", "bin/"},
 			{"Element", "System", "System/"},
