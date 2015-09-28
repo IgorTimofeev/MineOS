@@ -333,7 +333,7 @@ function ECSAPI.decToBase(IN,BASE)
 end
 
 --Правильное конвертирование HEX-переменной в строковую
-function ECSAPI.HEXtoSTRING(color, bitCount, withNull)
+function ECSAPI.HEXtoString(color, bitCount, withNull)
 	local stro4ka = string.format("%X",color)
 	local sStro4ka = unicode.len(stro4ka)
 	if sStro4ka < bitCount then
