@@ -103,9 +103,9 @@ local instruments = {
 	{"Ⓣ", "Text"},
 }
 local currentInstrument = 1
-local currentBackground = 0x000000
-local currentForeground = 0xFF0000
-local currentAlpha = 0x88
+local currentBackground = 0x6649ff
+local currentForeground = 0x3ff80
+local currentAlpha = 0x00
 local currentSymbol = " "
 local currentBrushSize = 1
 
@@ -481,6 +481,41 @@ local function doFlip(horizontal)
 	drawImage()
 end
 
+local function invertColors()
+	for i = 1, #masterPixels, 4 do
+		masterPixels[i] = 0xFFFFFF - masterPixels[i]
+		masterPixels[i + 1] = 0xFFFFFF - masterPixels[i + 1]
+	end
+	drawImage()
+end
+
+local function blackAndWhite()
+	for i = 1, #masterPixels, 4 do
+		local hh, ss, bb = colorlib.HEXtoHSB(masterPixels[i]); ss = 0
+		masterPixels[i] = colorlib.HSBtoHEX(hh, ss, bb)
+		
+		hh, ss, bb = colorlib.HEXtoHSB(masterPixels[i + 1]); ss = 0
+		masterPixels[i + 1] = colorlib.HSBtoHEX(hh, ss, bb)
+	end
+	drawImage()
+end
+
+local function new()
+	local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, false, {"EmptyLine"}, {"CenterText", 0x262626, "Новый документ"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, "Ширина"}, {"Input", 0x262626, 0x880000, "Высота"}, {"EmptyLine"}, {"Button", {0xbbbbbb, 0xffffff, "Ok!"}})
+
+	data[1] = tonumber(data[1]) or 51
+	data[2] = tonumber(data[2]) or 19
+
+	sizes.widthOfImage, sizes.heightOfImage = data[1], data[2]
+	sizes.xStartOfImage = 9
+	sizes.yStartOfImage = 6
+	sizes.xEndOfImage = sizes.xStartOfImage + sizes.widthOfImage - 1
+	sizes.yEndOfImage = sizes.yStartOfImage + sizes.heightOfImage - 1
+
+	createEmptyMasterPixels()
+	drawAll()
+end
+
 ------------------------------------------------ Старт программы --------------------------------------------------------------
 
 --Создаем пустой мастерпиксельс
@@ -488,6 +523,7 @@ end
 
 --Рисуем весь интерфейс
 drawAll()
+new()
 
 while true do
 	local e = {event.pull()}
@@ -593,11 +629,11 @@ while true do
 					if key == "Файл" then
 						action = context.menu(obj["TopMenu"][key][1] - 1, obj["TopMenu"][key][2] + 1, {"Новый"}, {"Открыть"}, "-", {"Сохранить"}, {"Сохранить как"}, "-", {"Выход"})
 					elseif key == "Изображение" then
-						action = context.menu(obj["TopMenu"][key][1] - 1, obj["TopMenu"][key][2] + 1, {"Отразить по горизонтали"}, {"Отразить по вертикали"}, {"Инвертировать цвета"}, {"Черно-белый фильтр"})
+						action = context.menu(obj["TopMenu"][key][1] - 1, obj["TopMenu"][key][2] + 1, {"Отразить по горизонтали"}, {"Отразить по вертикали"}, "-", {"Инвертировать цвета"}, {"Черно-белый фильтр"})
 					elseif key == "Инструменты" then
 						action = context.menu(obj["TopMenu"][key][1] - 1, obj["TopMenu"][key][2] + 1, {"Кисть"}, {"Ластик"}, {"Текст"})
 					elseif key == "О программе" then
-						ecs.universalWindow("auto", "auto", 36, 0xeeeeee, true, {"EmptyLine"}, {"CenterText", 0x880000, "Photoshop v3.0 (public beta)"}, {"EmptyLine"}, {"CenterText", 0x262626, "Авторы:"}, {"CenterText", 0x555555, "Тимофеев Игорь"}, {"CenterText", 0x656565, "vk.com/id7799889"}, {"CenterText", 0x656565, "Трифонов Глеб"}, {"CenterText", 0x656565, "vk.com/id88323331"}, {"EmptyLine"}, {"CenterText", 0x262626, "Тестеры:"}, {"CenterText", 0x656565, "Шестаков Тимофей"}, {"CenterText", 0x656565, "Вечтомов Роман"}, {"CenterText", 0x656565, "Омалаенко Максим"}, {"EmptyLine"},{"Button", {0xbbbbbb, 0xffffff, "OK"}})
+						ecs.universalWindow("auto", "auto", 36, 0xeeeeee, true, {"EmptyLine"}, {"CenterText", 0x880000, "Photoshop v3.0 (public beta)"}, {"EmptyLine"}, {"CenterText", 0x262626, "Авторы:"}, {"CenterText", 0x555555, "Тимофеев Игорь"}, {"CenterText", 0x656565, "vk.com/id7799889"}, {"CenterText", 0x656565, "Трифонов Глеб"}, {"CenterText", 0x656565, "vk.com/id88323331"}, {"EmptyLine"}, {"CenterText", 0x262626, "Тестеры:"}, {"CenterText", 0x656565, "Шестаков Тимофей"}, {"CenterText", 0x656565, "vk.com/id113499693"}, {"CenterText", 0x656565, "Вечтомов Роман"}, {"CenterText", 0x656565, "vk.com/id83715030"}, {"CenterText", 0x656565, "Омелаенко Максим"},  {"CenterText", 0x656565, "vk.com/paladincvm"}, {"EmptyLine"},{"Button", {0xbbbbbb, 0xffffff, "OK"}})
 					end
 
 					if action == "Выход" then
@@ -607,6 +643,21 @@ while true do
 						doFlip(true)
 					elseif action == "Отразить по вертикали" then
 						doFlip(false)
+					elseif action == "Инвертировать цвета" then
+						invertColors()
+					elseif action == "Черно-белый фильтр" then
+						blackAndWhite()
+					elseif action == "Ластик" then
+						currentInstrument = 2
+						drawInstruments()
+					elseif action == "Кисть" then
+						currentInstrument = 1
+						drawInstruments()
+					elseif action == "Текст" then
+						currentInstrument = 3
+						drawInstruments()
+					elseif action == "Новый" then
+						new()
 					end
 
 					drawTopMenu()
