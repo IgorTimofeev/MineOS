@@ -295,6 +295,7 @@ local function createEmptyMasterPixels()
 end
 
 local function mergeAllLayersToMasterPixels()
+	createEmptyMasterPixels()
 	--Перебираем все слои
 	local layer = #layers
 	while layer >= 1 do
@@ -302,11 +303,14 @@ local function mergeAllLayersToMasterPixels()
 		if layers[layer].show then
 			--Перебираем все пиксели в слоях
 			for iterator = 1, sizes.widthOfImage * sizes.heightOfImage * 4, 4 do
-				--Если в данном слое существует такой элемент по итератору, то заменить мастерпикселевский им, а если нет, то похуй
-				masterPixels[iterator] = layers[layer][iterator] or masterPixels[iterator]
-				masterPixels[iterator + 1] = layers[layer][iterator + 1] or masterPixels[iterator + 1]
-				masterPixels[iterator + 2] = layers[layer][iterator + 2] or masterPixels[iterator + 2]
-				masterPixels[iterator + 3] = layers[layer][iterator + 3] or masterPixels[iterator + 3]
+				--Если альфа-канал в слое вообще существует, и если он меньше 0xFF, то смержить пиксель
+				if layers[layer][iterator + 2] ~= nil and layers[layer][iterator + 2] < 0xFF then
+					--Если в данном слое существует такой элемент по итератору, то заменить мастерпикселевский им, а если нет, то похуй
+					masterPixels[iterator] = layers[layer][iterator] or masterPixels[iterator]
+					masterPixels[iterator + 1] = layers[layer][iterator + 1] or masterPixels[iterator + 1]
+					masterPixels[iterator + 2] = layers[layer][iterator + 2] or masterPixels[iterator + 2]
+					masterPixels[iterator + 3] = layers[layer][iterator + 3] or masterPixels[iterator + 3]
+				end
 			end
 		end
 		layer = layer - 1
@@ -356,14 +360,22 @@ local function drawImage()
 			--Получаем данные о пикселе
 			background, foreground, alpha, symbol = masterPixels[i], masterPixels[i + 1], masterPixels[i + 2], masterPixels[i + 3]
 			--Если пиксель не прозрачный
-			if alpha < 0xFF then
+			if alpha == 0x00 then
 				--Если новый фон не равен старому, то сменить его
 				if background ~= oldBackground then oldBackground = background; gpu.setBackground(background) end
 				if foreground ~= oldForeground then oldForeground = foreground; gpu.setForeground(foreground) end
-				gpu.setBackground(background)
-				gpu.setForeground(foreground)
+				-- gpu.setBackground(background)
+				-- gpu.setForeground(foreground)
 				gpu.set(xPos, yPos, symbol)
-			--Если пиксель прозрачный
+			--Если пиксель прозрачнее непрозрачного, но не настолько прозрачный, как совсем прозрачный
+			elseif alpha > 0x00 and alpha < 0xFF then
+				drawTransparentPixel(xPos, yPos, xPixel, yPixel)
+				--Ебать я красавчик! Даже без гпу.гет() сделал!
+				oldBackground = colorlib.alphaBlend(colors.transparencyVariable, background, alpha)
+				gpu.setBackground(oldBackground)
+				if foreground ~= oldForeground then oldForeground = foreground; gpu.setForeground(foreground) end
+				gpu.set(xPos, yPos, symbol)
+			--Если пиксель совсем прозрачный
 			else
 				drawTransparentPixel(xPos, yPos, xPixel, yPixel)
 				oldBackground = colors.transparencyVariable
@@ -526,18 +538,38 @@ while true do
 				if currentInstrument == 3 then
 					--Если нажата клавиша альт
 					if keyboard.isKeyDown(56) then
-						local _, _, background = gpu.get(e[3], e[4])
-						currentBackground = background
+						local _, _, gettedBackground = gpu.get(e[3], e[4])
+						currentBackground = gettedBackground
 						drawColors()
+					--Если обычная кисть, просто кисть, вообще всем кистям кисть
 					else
-						if gpu.getBackground() ~= currentBackground then gpu.setBackground(currentBackground) end
-						if gpu.getForeground() ~= currentForeground then gpu.setForeground(currentForeground) end
-						local x, y = e[3] - sizes.xStartOfImage + 1, e[4] - sizes.yStartOfImage + 1
-						local iterator = convertCoordsToIterator(x, y)
+						--Если у нас указан альфа-канал, то меняем фон на альфаБлендированный
+						if currentAlpha > 0x00 then
+							local _, _, gettedBackground = gpu.get(e[3], e[4])
+							gettedBackground = colorlib.alphaBlend(gettedBackground, currentBackground, currentAlpha)
+							gpu.setBackground(gettedBackground)
+						else
+							gpu.setBackground(currentBackground)
+						end
 						
+						--Ставим также цвет текста
+						gpu.setForeground(currentForeground)
+						--Ставим пиксель на экране
 						gpu.set(e[3], e[4], currentSymbol)
-						setPixel(iterator, currentBackground, currentForeground, currentAlpha, currentSymbol)
-
+						--Если пиксель в массиве ни хуя не прозрачный, то оставляем его таким же, разве что цвет меняем на сблендированный
+						if layers[currentLayer][iterator + 2] == 0x00 then
+							setPixel(iterator, gpu.getBackground(), currentForeground, 0x00, currentSymbol)
+						--А если прозрачный, то
+						else
+							if layers[currentLayer][iterator + 2] == 0xFF then
+								setPixel(iterator, currentBackground, currentForeground, currentAlpha, currentSymbol)
+							else
+								local alpha = layers[currentLayer][iterator + 2] - currentAlpha
+								if alpha < 0x00 then alpha = 0x00 end
+								setPixel(iterator, currentBackground, currentForeground, alpha, currentSymbol)
+							end
+						end
+						--Пишем что-то в консоли
 						console("Кисть: клик на точку "..e[3].."x"..e[4]..", координаты в изображении: "..x.."x"..y..", индекс массива изображения: "..iterator)
 					end
 				--Ластик
@@ -587,16 +619,23 @@ while true do
 
 			for key in pairs(obj["Layers"]) do
 				if ecs.clickedAtArea(e[3], e[4], obj["Layers"][key][1], obj["Layers"][key][2], obj["Layers"][key][3], obj["Layers"][key][4]) then
-					if ecs.clickedAtArea(e[3], e[4], obj["Layers"][key][1] + 1, obj["Layers"][key][2] + 1, obj["Layers"][key][1] + 2, obj["Layers"][key][4] + 1) then
-						layers[key].show = not layers[key].show
-					end
 					currentLayer = key
 					drawLayers()
+					--Если кликнули на глазик отключения слоя
+					if ecs.clickedAtArea(e[3], e[4], obj["Layers"][key][1] + 1, obj["Layers"][key][2] + 1, obj["Layers"][key][1] + 2, obj["Layers"][key][4] + 1) then
+						layers[key].show = not layers[key].show
+						mergeAllLayersToMasterPixels()
+						drawLayers()
+						drawImage()
+					end
 					break
 				end
 			end
 		else
-			ecs.universalWindow(e[3], e[4], 30, 0xeeeeee, true, {"EmptyLine"}, {"CenterText", 0x880000, "Параметры кисти"}, {"Slider", 0x262626, 0x880000, 1, 10, currentBrushSize, "Размер: ", " px"}, {"Slider", 0x262626, 0x880000, 1, 100, 50, "Прозрачность: ", "%"}, {"EmptyLine"}, {"Button", {0xbbbbbb, 0xffffff, "OK"}})
+			--Если кликнули на рисовабельную зонку
+			if ecs.clickedAtArea(e[3], e[4], sizes.xStartOfImage, sizes.yStartOfImage, sizes.xEndOfImage, sizes.yEndOfImage) then
+				currentBrushSize, currentAlpha = table.unpack(ecs.universalWindow(e[3], e[4], 30, 0xeeeeee, true, {"EmptyLine"}, {"CenterText", 0x880000, "Параметры кисти"}, {"Slider", 0x262626, 0x880000, 1, 10, currentBrushSize, "Размер: ", " px"}, {"Slider", 0x262626, 0x880000, 0, 255, currentAlpha, "Прозрачность: ", ""}, {"EmptyLine"}, {"Button", {0xbbbbbb, 0xffffff, "OK"}}))
+			end
 		end
 
 	elseif e[1] == "key_down" then
