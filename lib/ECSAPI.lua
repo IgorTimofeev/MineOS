@@ -332,45 +332,15 @@ function ECSAPI.decToBase(IN,BASE)
     return OUT
 end
 
---ИЗ 16 В РГБ
-function ECSAPI.HEXtoRGB(color)
-  color = math.ceil(color)
-
-  local rr = bit32.rshift( color, 16 )
-  local gg = bit32.rshift( bit32.band(color, 0x00ff00), 8 )
-  local bb = bit32.band(color, 0x0000ff)
-
-  return rr, gg, bb
-end
-
---ИЗ РГБ В 16
-function ECSAPI.RGBtoHEX(rr, gg, bb)
-  return bit32.lshift(rr, 16) + bit32.lshift(gg, 8) + bb
-end
-
---ИЗ ХСБ В РГБ
-function ECSAPI.HSBtoRGB(h, s, v)
-  local rr, gg, bb = 0, 0, 0
-  local const = 255
-
-  s = s/100
-  v = v/100
-  
-  local i = math.floor(h/60)
-  local f = h/60 - i
-  
-  local p = v*(1-s)
-  local q = v*(1-s*f)
-  local t = v*(1-(1-f)*s)
-
-  if ( i == 0 ) then rr, gg, bb = v, t, p end
-  if ( i == 1 ) then rr, gg, bb = q, v, p end
-  if ( i == 2 ) then rr, gg, bb = p, v, t end
-  if ( i == 3 ) then rr, gg, bb = p, q, v end
-  if ( i == 4 ) then rr, gg, bb = t, p, v end
-  if ( i == 5 ) then rr, gg, bb = v, p, q end
-
-  return rr*const, gg*const, bb*const
+--Правильное конвертирование HEX-переменной в строковую
+function ECSAPI.HEXtoSTRING(color, bitCount, withNull)
+	local stro4ka = string.format("%X",color)
+	local sStro4ka = unicode.len(stro4ka)
+	if sStro4ka < bitCount then
+		stro4ka = string.rep("0", bitCount - sStro4ka) .. stro4ka
+	end
+	sStro4ka = nil
+	if withNull then return "0x"..stro4ka else return stro4ka end
 end
 
 --КЛИКНУЛИ ЛИ В ЗОНУ
