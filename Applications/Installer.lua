@@ -70,6 +70,25 @@ local function drawOldPixels(massivSudaPihay)
 	end
 end
 
+--Ограничение длины строки
+local function stringLimit(mode, text, size, noDots)
+	if unicode.len(text) <= size then return text end
+	local length = unicode.len(text)
+	if mode == "start" then
+		if noDots then
+			return unicode.sub(text, length - size + 1, -1)
+		else
+			return "…" .. unicode.sub(text, length - size + 2, -1)
+		end
+	else
+		if noDots then
+			return unicode.sub(text, 1, size)
+		else
+			return unicode.sub(text, 1, size - 1) .. "…"
+		end
+	end
+end
+
 --Шкала прогресса
 local function progressBar(x, y, width, height, background, foreground, percent)
 	local activeWidth = math.ceil(width * percent / 100)
@@ -101,7 +120,7 @@ local function downloadWindow()
 		progressBar(xPos, yPos, progressBarWidth, 1, 0xcccccc, 0x3366CC, percent)
 		square(xPos, yPos + 1, progressBarWidth, 1, 0xeeeeee)
 		gpu.setForeground(0x262626)
-		gpu.set(xPos, yPos + 1, "Устанавливаю " .. applications[i][2])
+		gpu.set(xPos, yPos + 1, stringLimit("end", "Устанавливаю " .. applications[i][2], progressBarWidth))
 		shell.execute("wget " .. applications[i][1] .. " " .. applications[i][2] .. " -fQ")
 		percent = math.floor(100 * i / #applications)
 	end
