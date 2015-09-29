@@ -14,6 +14,7 @@ local applications = {
 	{ "https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/lib/ECSAPI.lua", "lib/ECSAPI.lua" },
 	{ "https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/lib/context.lua", "lib/context.lua" },
 	{ "https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/lib/palette.lua", "lib/palette.lua" },
+	{ "https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/lib/image.lua", "lib/image.lua" },
 	{ "https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/Applications/Photoshop/Photoshop.lua", "Photoshop.lua" },
 }
 
