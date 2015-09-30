@@ -12,6 +12,22 @@ local copyright = [[
 	
 ]]
 
+------------------------------------------------ Библиотеки --------------------------------------------------------------
+
+--Не требующиеся для MineOS
+--local ecs = require("ECSAPI")
+--local fs = require("filesystem")
+--local unicode = require("unicode")
+--local context = require("context")
+
+--Обязательные
+local colorlib = require("colorlib")
+local palette = require("palette")
+local event = require("event")
+local image = require("image")
+local gpu = component.gpu
+
+------------------------------------------------ Переменные --------------------------------------------------------------
 
 --Массив главного изображения
 local masterPixels = {
@@ -35,21 +51,6 @@ local masterPixels = {
 	0x003f49, 0x338592, 0x00, " ", 0x003f49, 0x338592, 0x00, " ", 0x003f49, 0x338592, 0x00, " ", 0x003f49, 0x338592, 0x00, " ", 0x003f49, 0x338592, 0x00, " ", 0x003f49, 0x338592, 0x00, " ", 0x003f49, 0x338592, 0x00, " ", 0x003f49, 0x338592, 0x00, " ", 0x003f49, 0x338592, 0x00, " ", 0x003f49, 0x338592, 0x00, " ", 0x003f49, 0x338592, 0x00, " ", 0x003f49, 0x338592, 0x00, " ", 0x003f49, 0x338592, 0x00, " ", 0x003f49, 0x338592, 0x00, " ", 0x003f49, 0x338592, 0x00, " ", 0x003f49, 0x338592, 0x00, " ", 0x003f49, 0x338592, 0x00, " ", 0x003f49, 0x338592, 0x00, " ", 0x003f49, 0xffffff, 0x00, " ", 0x003f49, 0xffffff, 0x00, " ", 0x003f49, 0xffffff, 0x00, " ", 0x003f49, 0x338592, 0x00, " ", 0x003f49, 0x338592, 0x00, " ", 0x003f49, 0xffffff, 0x00, " ", 0x003f49, 0xffffff, 0x00, " ", 0x004940, 0xffffff, 0x00, " ", 0x004940, 0xffffff, 0x00, " ", 0xcc0000, 0x004940, 0x00, " ", 0xcc0000, 0x004940, 0x00, " ", 0x990000, 0x004940, 0x00, " ", 0x990000, 0x004940, 0x00, " ", 0x660000, 0x004940, 0x00, " ", 0x660000, 0x004940, 0x00, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 
 	0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0x660000, 0x004940, 0x00, " ", 0x660000, 0x004940, 0x00, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 0xffffff, 0xcccccc, 0xff, " ", 
 }
-
------------------------------------------------- Библиотеки --------------------------------------------------------------
-
---Не требующиеся для ОС
---local ecs = require("ECSAPI")
---local fs = require("filesystem")
---local unicode = require("unicode")
-
---Обязательные
-local colorlib = require("colorlib")
-local palette = require("palette")
-local event = require("event")
-local gpu = component.gpu
-
------------------------------------------------- Переменные --------------------------------------------------------------
 
 --Базовая цветовая схема программы
 local colors = {
@@ -84,13 +85,16 @@ sizes.heightOfDrawingArea = sizes.yEndOfDrawingArea - sizes.yStartOfDrawingArea 
 sizes.heightOfLeftBar = sizes.ySize - 1
 
 --Для изображения
-sizes.widthOfImage = 40
-sizes.heightOfImage = 17
-sizes.sizeOfPixelData = 4
-sizes.xStartOfImage = 9
-sizes.yStartOfImage = 6
-sizes.xEndOfImage = sizes.xStartOfImage + sizes.widthOfImage - 1
-sizes.yEndOfImage = sizes.yStartOfImage + sizes.heightOfImage - 1
+local function reCalculateImageSizes()
+	sizes.widthOfImage = masterPixels.width
+	sizes.heightOfImage = masterPixels.height
+	sizes.sizeOfPixelData = 4
+	sizes.xStartOfImage = 9
+	sizes.yStartOfImage = 6
+	sizes.xEndOfImage = sizes.xStartOfImage + sizes.widthOfImage - 1
+	sizes.yEndOfImage = sizes.yStartOfImage + sizes.heightOfImage - 1
+end
+reCalculateImageSizes()
 
 --Инструменты
 sizes.heightOfInstrument = 3
@@ -108,6 +112,7 @@ local currentForeground = 0x3ff80
 local currentAlpha = 0x00
 local currentSymbol = " "
 local currentBrushSize = 1
+local savePath
 
 --Верхний тулбар
 local topToolbar = {{"PS", ecs.colors.blue}, {"Файл"}, {"Изображение"}, {"Инструменты"}, {"О программе"}}
@@ -193,8 +198,10 @@ local function drawTopMenu()
 	end
 end
 
-local topBarInputs = { {"Размер кисти", currentBrushSize}, {"Прозрачность", math.floor(currentAlpha / 2.55)}}
 local function drawTopBar()
+
+	local topBarInputs = { {"Размер кисти", currentBrushSize}, {"Прозрачность", math.floor(currentAlpha / 2.55)}}
+
 	ecs.square(1, 2, sizes.xSize, sizes.heightOfTopBar, colors.toolbar)
 	local xPos, yPos = 3, 3
 	local limit = 8
@@ -306,6 +313,8 @@ end
 local function drawAll()
 	--Очищаем экран
 	ecs.prepareToExit()
+	--И консольку!
+	console("Весь интерфейс перерисован!")
 	--Рисуем тулбары
 	drawBackground()
 	drawLeftBar()
@@ -313,8 +322,6 @@ local function drawAll()
 	drawTopMenu()
 	--Рисуем картинку
 	drawBackgroundAndImage()
-	--И консольку!
-	console("Весь интерфейс перерисован!")
 end
 
 ------------------------------------------------ Функции расчета --------------------------------------------------------------
@@ -560,7 +567,7 @@ while true do
 							--Если его прозоачность максимальная
 							if masterPixels[iterator + 2] == 0xFF then
 								setPixel(iterator, currentBackground, currentForeground, currentAlpha, currentSymbol)
-							--Если не максимальная или ЕЕ ВООБЩЕ НЕТ
+							--Если не максимальная
 							else
 								local alpha = masterPixels[iterator + 2] - currentAlpha
 								if alpha < 0x00 then alpha = 0x00 end
@@ -627,7 +634,7 @@ while true do
 					local action
 					
 					if key == "Файл" then
-						action = context.menu(obj["TopMenu"][key][1] - 1, obj["TopMenu"][key][2] + 1, {"Новый"}, {"Открыть"}, "-", {"Сохранить"}, {"Сохранить как"}, "-", {"Выход"})
+						action = context.menu(obj["TopMenu"][key][1] - 1, obj["TopMenu"][key][2] + 1, {"Новый"}, {"Открыть"}, "-", {"Сохранить", (savePath == nil)}, {"Сохранить как"}, "-", {"Выход"})
 					elseif key == "Изображение" then
 						action = context.menu(obj["TopMenu"][key][1] - 1, obj["TopMenu"][key][2] + 1, {"Отразить по горизонтали"}, {"Отразить по вертикали"}, "-", {"Инвертировать цвета"}, {"Черно-белый фильтр"})
 					elseif key == "Инструменты" then
@@ -658,6 +665,33 @@ while true do
 						drawInstruments()
 					elseif action == "Новый" then
 						new()
+
+					elseif action == "Сохранить как" then
+						local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Сохранить как"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, "Путь"}, {"Selector", 0x262626, 0x880000, "PIC", "RAWPIC"}, {"EmptyLine"}, {"Button", {0xbbbbbb, 0xffffff, "OK"}})
+						data[1] = data[1] or "Untitled"
+						data[2] = unicode.lower(data[2] or "PIC")
+						local fileName = data[1].."."..data[2]
+						image.save(fileName, masterPixels)
+						savePath = fileName
+
+					elseif action == "Сохранить" then
+						image.save(savePath, masterPixels)
+
+					elseif action == "Открыть" then
+						local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Открыть"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, "Путь"}, {"EmptyLine"}, {"Button", {0xbbbbbb, 0xffffff, "OK"}})
+						local fileFormat = ecs.getFileFormat(data[1])
+					
+						if not data[1] then
+							ecs.error("Некорректное имя файла!")
+						elseif not fs.exists(data[1]) then
+							ecs.error("Файл\""..data[1].."\" не существует!")
+						elseif fileFormat ~= ".pic" and fileFormat ~= ".rawpic" then 
+							ecs.error("Формат файла \""..fileFormat.."\" не поддерживается!")
+						else
+							masterPixels = image.load(data[1])
+							reCalculateImageSizes()
+							drawImage()
+						end
 					end
 
 					drawTopMenu()
@@ -688,6 +722,7 @@ while true do
 			if ecs.clickedAtArea(e[3], e[4], sizes.xStartOfImage, sizes.yStartOfImage, sizes.xEndOfImage, sizes.yEndOfImage) then
 				currentBrushSize, currentAlpha = table.unpack(ecs.universalWindow(e[3], e[4], 30, 0xeeeeee, true, {"EmptyLine"}, {"CenterText", 0x880000, "Параметры кисти"}, {"Slider", 0x262626, 0x880000, 1, 10, currentBrushSize, "Размер: ", " px"}, {"Slider", 0x262626, 0x880000, 0, 100, currentAlpha / 2.55, "Прозрачность: ", "%"}, {"EmptyLine"}, {"Button", {0xbbbbbb, 0xffffff, "OK"}}))
 				currentAlpha = currentAlpha * 2.55
+				drawTopBar()
 			end
 		end
 
