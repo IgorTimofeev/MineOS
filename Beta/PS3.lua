@@ -200,7 +200,7 @@ end
 
 local function drawTopBar()
 
-	local topBarInputs = { {"Размер кисти", currentBrushSize}, {"Прозрачность", math.floor(currentAlpha / 2.55)}}
+	local topBarInputs = { {"Размер кисти", currentBrushSize}, {"Прозрачность", math.floor(currentAlpha)}}
 
 	ecs.square(1, 2, sizes.xSize, sizes.heightOfTopBar, colors.toolbar)
 	local xPos, yPos = 3, 3
@@ -562,14 +562,14 @@ while true do
 							local _, _, gettedBackground = gpu.get(e[3], e[4])
 							gettedBackground = colorlib.alphaBlend(gettedBackground, currentBackground, currentAlpha)
 							setPixel(iterator, gettedBackground, currentForeground, 0x00, currentSymbol)
-						--А если прозрачный ИЛИ ЕГО ВООБЩЕ НЕТ, то
+						--А если прозрачный
 						else
 							--Если его прозоачность максимальная
 							if masterPixels[iterator + 2] == 0xFF then
 								setPixel(iterator, currentBackground, currentForeground, currentAlpha, currentSymbol)
 							--Если не максимальная
 							else
-								local alpha = masterPixels[iterator + 2] - currentAlpha
+								local alpha = masterPixels[iterator + 2] - (0xFF - currentAlpha)
 								if alpha < 0x00 then alpha = 0x00 end
 								setPixel(iterator, currentBackground, currentForeground, alpha, currentSymbol)
 							end
@@ -708,7 +708,7 @@ while true do
 						if key == 1 then
 							if input > 0 and input < 6 then currentBrushSize = input; topBarInputs[key][2] = input end
 						elseif key == 2 then
-							if input > 0 and input <= 100 then currentAlpha = input * 2.55; topBarInputs[key][2] = input end
+							if input > 0 and input <= 255 then currentAlpha = input; topBarInputs[key][2] = input end
 						end
 					end
 
@@ -720,8 +720,7 @@ while true do
 		else
 			--Если кликнули на рисовабельную зонку
 			if ecs.clickedAtArea(e[3], e[4], sizes.xStartOfImage, sizes.yStartOfImage, sizes.xEndOfImage, sizes.yEndOfImage) then
-				currentBrushSize, currentAlpha = table.unpack(ecs.universalWindow(e[3], e[4], 30, 0xeeeeee, true, {"EmptyLine"}, {"CenterText", 0x880000, "Параметры кисти"}, {"Slider", 0x262626, 0x880000, 1, 10, currentBrushSize, "Размер: ", " px"}, {"Slider", 0x262626, 0x880000, 0, 100, currentAlpha / 2.55, "Прозрачность: ", "%"}, {"EmptyLine"}, {"Button", {0xbbbbbb, 0xffffff, "OK"}}))
-				currentAlpha = currentAlpha * 2.55
+				currentBrushSize, currentAlpha = table.unpack(ecs.universalWindow(e[3], e[4], 30, 0xeeeeee, true, {"EmptyLine"}, {"CenterText", 0x880000, "Параметры кисти"}, {"Slider", 0x262626, 0x880000, 1, 10, currentBrushSize, "Размер: ", " px"}, {"Slider", 0x262626, 0x880000, 0, 255, currentAlpha, "Прозрачность: ", ""}, {"EmptyLine"}, {"Button", {0xbbbbbb, 0xffffff, "OK"}}))
 				drawTopBar()
 			end
 		end
