@@ -19,12 +19,12 @@ local copyright = [[
 --local fs = require("filesystem")
 --local unicode = require("unicode")
 --local context = require("context")
+--local image = require("image")
 
 --Обязательные
 local colorlib = require("colorlib")
 local palette = require("palette")
 local event = require("event")
-local image = require("image")
 local gpu = component.gpu
 
 ------------------------------------------------ Переменные --------------------------------------------------------------
@@ -589,6 +589,7 @@ drawAll()
 
 if args[1] == "o" or args[1] == "open" or args[1] == "-o" or args[1] == "load" then
 	masterPixels = image.load(args[2])
+	savePath = args[2]
 	reCalculateImageSizes()
 	drawBackgroundAndImage()
 else
