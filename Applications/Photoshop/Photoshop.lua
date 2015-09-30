@@ -15,11 +15,11 @@ local copyright = [[
 ------------------------------------------------ Библиотеки --------------------------------------------------------------
 
 --Не требующиеся для MineOS
---local ecs = require("ECSAPI")
---local fs = require("filesystem")
---local unicode = require("unicode")
---local context = require("context")
---local image = require("image")
+local ecs = require("ECSAPI")
+local fs = require("filesystem")
+local unicode = require("unicode")
+local context = require("context")
+local image = require("image")
 
 --Обязательные
 local colorlib = require("colorlib")
