@@ -103,31 +103,31 @@ local function alphaBlend(back_color, front_color, alpha_channel)
 	return RGBtoHEX( blended_rr, blended_gg, blended_bb )
 end
 
---Конвертация 24-битной палитры в 8-битную
-local function convert24bitTo8bit( hexcolor24 )
-	local rr, gg, bb = HEXtoRGB( hexcolor24 )
+-- --Конвертация 24-битной палитры в 8-битную
+-- local function convert24bitTo8bit( hexcolor24 )
+-- 	local rr, gg, bb = HEXtoRGB( hexcolor24 )
 
-	return bit32.lshift( bit32.rshift(rr, 5), 5 ) + bit32.lshift( bit32.rshift(gg, 5), 2 ) + bit32.rshift(bb, 6)
-end
+-- 	return bit32.lshift( bit32.rshift(rr, 5), 5 ) + bit32.lshift( bit32.rshift(gg, 5), 2 ) + bit32.rshift(bb, 6)
+-- end
 
---Конвертация 8-битной палитры в 24-битную
-local function convert8bitTo24bit( hexcolor8 )
-	local rr = bit32.lshift( bit32.rshift( hexcolor8, 5 ), 5 )
-	local gg = bit32.lshift( bit32.rshift( bit32.band( hexcolor8, 28 ), 2 ), 5 )
-	local bb = bit32.lshift( bit32.band( hexcolor8, 3 ), 6 )
+-- --Конвертация 8-битной палитры в 24-битную
+-- local function convert8bitTo24bit( hexcolor8 )
+-- 	local rr = bit32.lshift( bit32.rshift( hexcolor8, 5 ), 5 )
+-- 	local gg = bit32.lshift( bit32.rshift( bit32.band( hexcolor8, 28 ), 2 ), 5 )
+-- 	local bb = bit32.lshift( bit32.band( hexcolor8, 3 ), 6 )
 
-	return RGBtoHEX( rr, gg, bb )
-end
+-- 	return RGBtoHEX( rr, gg, bb )
+-- end
 
---Сжимает два цвета и альфа-канал в одную переменную вида 0xaabbcc (aa - первый цвет, bb - второй, cc - альфа-канал)
-local function compressPixel(foreground, background, alpha)
-	return bit32.lshift( foreground, constants.byteSize * 2 ) + bit32.lshift( background, constants.byteSize ) + alpha
-end
+-- --Сжимает два цвета и альфа-канал в одную переменную вида 0xaabbcc (aa - первый цвет, bb - второй, cc - альфа-канал)
+-- local function compressPixel(foreground, background, alpha)
+-- 	return bit32.lshift( foreground, constants.byteSize * 2 ) + bit32.lshift( background, constants.byteSize ) + alpha
+-- end
 
---Разжимает сжатую переменную в два цвета и один альфа-канал
-local function decompressPixel( compressed_pixel )
-	return bit32.rshift( compressed_pixel, constants.byteSize * 2 ), bit32.rshift( bit32.band( compressed_pixel, 0x00FF00 ), constants.byteSize ), bit32.band( compressed_pixel, 0x0000FF )
-end
+-- --Разжимает сжатую переменную в два цвета и один альфа-канал
+-- local function decompressPixel( compressed_pixel )
+-- 	return bit32.rshift( compressed_pixel, constants.byteSize * 2 ), bit32.rshift( bit32.band( compressed_pixel, 0x00FF00 ), constants.byteSize ), bit32.band( compressed_pixel, 0x0000FF )
+-- end
 
 --Подготавливает цвета и символ для записи в файл сжатого формата
 local function encodePixel(compressed_pixel, char)
@@ -509,35 +509,6 @@ end
 
 ecs.prepareToExit()
 
--- image.createCompressedColorPalette(iterator)
--- local full = 0x0
--- local xPos, yPos = 2, 2
--- local xSize, ySize = gpu.getResolution()
--- local compressed = 0x0
--- local function printColors()
--- 	ecs.colorTextWithBack(xPos, yPos, full, 0x262626, HEXtoSTRING(compressed, 2, true).." = "..HEXtoSTRING(full, 6, true))
--- 	yPos = yPos + 1
--- 	if yPos >= ySize then yPos = 2; xPos = xPos + 16 end
--- end
--- while compressed <= 0xff do
--- 	for i = 1, 8 do
--- 		for j = 1, 4 do
--- 			printColors()
--- 			full = full + 0x40
--- 			compressed = compressed + 0x1
--- 		end
--- 		full = full + 0x1F00
--- 	end
--- 	full = full + 0x1F0000
--- end
-
--- local function formula(shortColor)
--- 	local fullColor = shortColor * (8 * ( 4 * (0x40) + 0x1F00) + 0x1F0000)
-	
--- 	ecs.colorTextWithBack(2, 2, fullColor, 0x262626, HEXtoSTRING(shortColor, 2, true).." = "..HEXtoSTRING(fullColor, 6, true))
--- end
-
--- formula(0xA0)
 
 
 -- --Пример изображения типа 1 (подробнее о типах см. конец файла)
