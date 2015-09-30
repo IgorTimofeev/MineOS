@@ -436,7 +436,7 @@ end
 local function convertAllPngToPic()
 	local counter = 0
 	local function doConvert(path)
-		local fileList = ecs.getFileList()
+		local fileList = ecs.getFileList(path)
 		for file = 1, #fileList do
 			if fs.isDirectory(path..file) then
 				doConvert(path..file)
@@ -458,7 +458,7 @@ local function convertAllPngToPic()
 	end
 
 	print(" ")
-	doConvert("")
+	doConvert("/")
 	print("Всего сконвертировано "..counter.." файлов.")
 	print(" ")
 end
