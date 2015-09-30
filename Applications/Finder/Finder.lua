@@ -382,7 +382,7 @@ local function drawManager(xStart, yStart, widthOfManager, heightOfManager, star
 				if ecs.clickedAtArea(e[3], e[4], obj["Icons"][key][1], obj["Icons"][key][2], obj["Icons"][key][3], obj["Icons"][key][4]) then
 					--Рисуем иконку выделенную
 					ecs.square(obj["Icons"][key][1], obj["Icons"][key][2], widthOfIcon, heightOfIcon, colors.selection)
-					ecs.drawOSIcon(obj["Icons"][key][1], obj["Icons"][key][2], obj["Icons"][key][5], true, 0xffffff)
+					ecs.drawOSIcon(obj["Icons"][key][1], obj["Icons"][key][2], obj["Icons"][key][5], showFileFormat, 0xffffff)
 					--Получаем путь иконки и ее формат
 					local path = obj["Icons"][key][5]
 					local fileFormat = ecs.getFileFormat(path)
@@ -453,7 +453,7 @@ local function drawManager(xStart, yStart, widthOfManager, heightOfManager, star
 						else
 							--Рисуем иконку выделенную
 							ecs.square(obj["Icons"][key][1], obj["Icons"][key][2], widthOfIcon, heightOfIcon, colors.main)
-							ecs.drawOSIcon(obj["Icons"][key][1], obj["Icons"][key][2], obj["Icons"][key][5], true, 0x000000)
+							ecs.drawOSIcon(obj["Icons"][key][1], obj["Icons"][key][2], obj["Icons"][key][5], showFileFormat, 0x000000)
 						end
 					end
 
