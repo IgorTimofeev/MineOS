@@ -396,6 +396,7 @@ local function drawManager(xStart, yStart, widthOfManager, heightOfManager, star
 							changePath(path)
 						else
 							ecs.launchIcon(path)
+							if not isFullScreen then ecs.drawOldPixels(oldPixelsOfFullScreen) end
 						end
 						drawAll()
 					--А если правая

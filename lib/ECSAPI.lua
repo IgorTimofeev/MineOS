@@ -1469,15 +1469,15 @@ function ECSAPI.launchIcon(path, arguments)
 	if fileFormat == ".app" then
 		local cyka = path .. "/" .. ECSAPI.hideFileFormat(fs.name(path)) .. ".lua"
 		local success, reason = shell.execute(cyka)
-		ECSAPI.prepareToExit()
-		if not success then ECSAPI.prepareToExit(); ECSAPI.displayCompileMessage(1, reason, true) end
+		if not success then ECSAPI.displayCompileMessage(1, reason, true) end
 	--Если это обычный луа файл - т.е. скрипт
 	elseif fileFormat == ".lua" or fileFormat == nil then
 		ECSAPI.prepareToExit()
 		local success, reason = shell.execute(path .. arguments)
-		ECSAPI.prepareToExit()
 		if success then
+			print(" ")
 			print("Program sucessfully executed. Press any key to continue.")
+			print(" ")
 		else
 			ECSAPI.displayCompileMessage(1, reason, true)
 		end
@@ -1512,7 +1512,7 @@ function ECSAPI.launchIcon(path, arguments)
 			ECSAPI.displayCompileMessage(1, reason, false)
 		end
 	--Если это архив
-	elseif fileFormat == ".paste" then
+	elseif fileFormat == ".zip" then
 		zip.unarchive(path, (fs.path(path) or ""))
 	end
 	--Ставим старое разрешение
