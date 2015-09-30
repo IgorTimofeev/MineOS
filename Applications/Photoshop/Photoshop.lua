@@ -20,6 +20,7 @@ local fs = require("filesystem")
 local unicode = require("unicode")
 local context = require("context")
 local image = require("image")
+local component = require("component")
 
 --Обязательные
 local colorlib = require("colorlib")
