@@ -1,69 +1,121 @@
-local fs = require("filesystem")
+
+-------------------------------------------- OCIF Image Format -----------------------------------------------------------
+
+local copyright = [[
+	
+	Автор: Pirnogion
+		VK: https://vk.com/id88323331
+	Соавтор: IT
+		VK: https://vk.com/id7799889
+
+]]
+
+--------------------------------------- Подгрузка библиотек --------------------------------------------------------------
+
+local component = require("component")
 local unicode = require("unicode")
-local gpu = require("component").gpu
+local fs = require("filesystem")
+local gpu = component.gpu
 
 local image = {}
 
-local transparentSymbol = "#"
+-------------------------------------------- Переменные -------------------------------------------------------------------
 
---------------------Все, что касается сжатого формата изображений (у нас он назван "JPG")----------------------------------------------------------------------------------
-
---OC image format .ocif by Pirnogion
+--Cигнатура OCIF-файла
 local ocif_signature1 = 0x896F6369
 local ocif_signature2 = 0x00661A0A --7 bytes: 89 6F 63 69 66 1A 0A
 local ocif_signature_expand = { string.char(0x89), string.char(0x6F), string.char(0x63), string.char(0x69), string.char(0x66), string.char(0x1A), string.char(0x0A) }
 
-local BYTE = 8
-local NULL_CHAR = 0
+--Константы программы
+local constants = {
+	elementCount = 4,
+	byteSize = 8,
+	nullChar = 0,
+	rawImageLoadStep = 19,
+	fileOpenError = "Can't open file",
+	compressedFileFormat = ".pic",
+	rawFileFormat = ".rawpic",
+}
 
-local imageAPI = {}
+---------------------------------------- Локальные функции -------------------------------------------------------------------
 
---Выделить бит-терминатор в первом байте utf8 символа: 1100 0010 --> 0010 0000
-local function selectTerminateBit( byte )
-	local x = bit32.band( bit32.bnot(byte), 0x000000FF )
+--Выделить бит-терминатор в первом байте UTF-8 символа: 1100 0010 --> 0010 0000
+local function selectTerminateBit_l()
+	local prevByte = nil
+	local prevTerminateBit = nil
 
-	x = bit32.bor( x, bit32.rshift(x, 1) )
-	x = bit32.bor( x, bit32.rshift(x, 2) )
-	x = bit32.bor( x, bit32.rshift(x, 4) )
-	x = bit32.bor( x, bit32.rshift(x, 8) )
-	x = bit32.bor( x, bit32.rshift(x, 16) )
+	return function( byte )
+		local x, terminateBit = nil
+		if ( prevByte == byte ) then
+			return prevTerminateBit
+		end
 
-	return x - bit32.rshift(x, 1)
+		x = bit32.band( bit32.bnot(byte), 0x000000FF )
+		x = bit32.bor( x, bit32.rshift(x, 1) )
+		x = bit32.bor( x, bit32.rshift(x, 2) )
+		x = bit32.bor( x, bit32.rshift(x, 4) )
+		x = bit32.bor( x, bit32.rshift(x, 8) )
+		x = bit32.bor( x, bit32.rshift(x, 16) )
+
+		terminateBit = x - bit32.rshift(x, 1)
+
+		prevByte = byte
+		prevTerminateBit = terminateBit
+
+		return terminateBit
+	end
 end
+local selectTerminateBit = selectTerminateBit_l()
 
 --Прочитать n байтов из файла, возвращает прочитанные байты как число, если не удалось прочитать, то возвращает 0
 local function readBytes(file, bytes)
   local readedByte = 0
   local readedNumber = 0
   for i = bytes, 1, -1 do
-    readedByte = string.byte( file:read(1) or NULL_CHAR )
-    readedNumber = readedNumber + bit32.lshift(readedByte, i*8-8)
+    readedByte = string.byte( file:read(1) or constants.nullChar )
+    readedNumber = readedNumber + bit32.lshift(readedByte, i * constants.byteSize - constants.byteSize)
   end
 
   return readedNumber
 end
 
---Преобразует цвет в hex записи в rgb запись
-function HEXtoRGB(color)
-  local rr = bit32.rshift( color, 16 )
-  local gg = bit32.rshift( bit32.band(color, 0x00ff00), 8 )
-  local bb = bit32.band(color, 0x0000ff)
- 
-  return rr, gg, bb
+--Преобразует цвет из HEX-записи в RGB-запись
+local function HEXtoRGB(color)
+  return bit32.rshift( color, 16 ), bit32.rshift( bit32.band(color, 0x00ff00), 8 ), bit32.band(color, 0x0000ff)
 end
 
---Подготавливает цвета и символ для записи в файл
-local function encodePixel(hexcolor_fg, hexcolor_bg, char)
-	local rr_fg, gg_fg, bb_fg = HEXtoRGB( hexcolor_fg )
-	local rr_bg, gg_bg, bb_bg = HEXtoRGB( hexcolor_bg )
+--Аналогично, но из RGB в HEX
+local function RGBtoHEX(rr, gg, bb)
+  return bit32.lshift(rr, 16) + bit32.lshift(gg, 8) + bb
+end
+
+--Смешивание двух цветов на основе альфа-канала второго
+local function alphaBlend(back_color, front_color, alpha_channel)
+	local INVERTED_ALPHA_CHANNEL = 255 - alpha_channel
+
+	local back_color_rr, back_color_gg, back_color_bb    = HEXtoRGB(back_color)
+	local front_color_rr, front_color_gg, front_color_bb = HEXtoRGB(front_color)
+
+	local blended_rr = front_color_rr * INVERTED_ALPHA_CHANNEL / 255 + back_color_rr * alpha_channel / 255
+	local blended_gg = front_color_gg * INVERTED_ALPHA_CHANNEL / 255 + back_color_gg * alpha_channel / 255
+	local blended_bb = front_color_bb * INVERTED_ALPHA_CHANNEL / 255 + back_color_bb * alpha_channel / 255
+
+	return RGBtoHEX( blended_rr, blended_gg, blended_bb )
+end
+
+--Подготавливает цвета и символ для записи в файл сжатого формата
+local function encodePixel(background, foreground, alpha, char)
+	--Расхерачиваем жирные цвета в компактные цвета
+	local ascii_background1, ascii_background2, ascii_background3 = HEXtoRGB(background)
+	local ascii_foreground1, ascii_foreground2, ascii_foreground3 = HEXtoRGB(foreground)
+	--Расхерачиваем жирный код юникод-символа в несколько миленьких ascii-кодов
 	local ascii_char1, ascii_char2, ascii_char3, ascii_char4, ascii_char5, ascii_char6 = string.byte( char, 1, 6 )
-
-	ascii_char1 = ascii_char1 or NULL_CHAR
-
-	return rr_fg, gg_fg, bb_fg, rr_bg, gg_bg, bb_bg, ascii_char1, ascii_char2, ascii_char3, ascii_char4, ascii_char5, ascii_char6
+	ascii_char1 = ascii_char1 or constants.nullChar
+	--Возвращаем все расхераченное
+	return ascii_background1, ascii_background2, ascii_background3, ascii_foreground1, ascii_foreground2, ascii_foreground3, alpha, ascii_char1, ascii_char2, ascii_char3, ascii_char4, ascii_char5, ascii_char6
 end
 
---Декодирование utf8 символа
+--Декодирование UTF-8 символа
 local function decodeChar(file)
 	local first_byte = readBytes(file, 1)
 	local charcode_array = {first_byte}
@@ -89,316 +141,468 @@ local function decodeChar(file)
 	return string.char( table.unpack( charcode_array ) )
 end
 
---Чтение из файла, возвращет массив изображения
-local function loadJPG(path)
-	local kartinka = {}
-	local file = io.open(path, "rb")
+--Правильное конвертирование HEX-переменной в строковую
+local function HEXtoSTRING(color, bitCount, withNull)
+	local stro4ka = string.format("%X",color)
+	local sStro4ka = unicode.len(stro4ka)
 
+	if sStro4ka < bitCount then
+		stro4ka = string.rep("0", bitCount - sStro4ka) .. stro4ka
+	end
+
+	sStro4ka = nil
+
+	if withNull then return "0x"..stro4ka else return stro4ka end
+end
+
+--Получение формата файла
+local function getFileFormat(path)
+	local name = fs.name(path)
+	local starting, ending = string.find(name, "(.)%.[%d%w]*$")
+	if starting == nil then
+		return nil
+	else
+		return unicode.sub(name,starting + 1, -1)
+	end
+	name, starting, ending = nil, nil, nil
+end
+
+------------------------------ Все, что касается сжатого формата ------------------------------------------------------------
+
+-- Запись в файл сжатого OCIF-формата изображения
+function image.saveCompressed(path, picture)
+	local encodedPixel
+	local file = assert( io.open(path, "w"), constants.fileOpenError )
+
+	file:write( table.unpack( ocif_signature_expand ) )
+	file:write( string.char( picture.width  ) )
+	file:write( string.char( picture.height ) )
+	
+	for i = 1, picture.width * picture.height * constants.elementCount, constants.elementCount do
+		encodedPixel =
+		{
+			encodePixel(picture[i], picture[i + 1], picture[i + 2], picture[i + 3])
+		}
+		for j = 1, #encodedPixel do
+			file:write( string.char( encodedPixel[j] ) )
+		end
+	end
+
+	file:close()
+end
+
+--Чтение из файла сжатого OCIF-формата изображения, возвращает массив типа 2 (подробнее о типах см. конец файла)
+function image.loadCompressed(path)
+	local picture = {}
+	local file = assert( io.open(path, "rb"), constants.fileOpenError )
+
+	--Проверка файла на соответствие сигнатуры
 	local signature1, signature2 = readBytes(file, 4), readBytes(file, 3)
 	if ( signature1 ~= ocif_signature1 or signature2 ~= ocif_signature2 ) then
 		file:close()
 		return nil
 	end
 
-	kartinka.width = readBytes(file, 1)
-	kartinka.height = readBytes(file, 1)
-	kartinka.depth = readBytes(file, 1)
+	--Читаем ширину и высоту файла
+	picture.width = readBytes(file, 1)
+	picture.height = readBytes(file, 1)
 
-	for y = 1, kartinka.height, 1 do
-		table.insert( kartinka, {} )
-		for x = 1, kartinka.width, 1 do
-			table.insert( kartinka[y], {} )
-			kartinka[y][x][2] = readBytes(file, 3)
-			kartinka[y][x][1] = readBytes(file, 3)
-			kartinka[y][x][3] = decodeChar( file )
-		end
+	for i = 1, picture.width * picture.height do
+		--Читаем бекграунд
+		table.insert(picture, readBytes(file, 3))
+		--Читаем форграунд
+		table.insert(picture, readBytes(file, 3))
+		--Читаем альфу
+		table.insert(picture, readBytes(file, 1))
+		--Читаем символ
+		table.insert(picture, decodeChar( file ))
 	end
 
 	file:close()
 
-	return kartinka
+	return picture
 end
 
---Рисование сжатого формата
-function image.drawJPG(x, y, image1)
-	x = x - 1
-	y = y - 1
+------------------------------ Все, что касается сырого формата ------------------------------------------------------------
 
-	local image2 = image.convertImageToGroupedImage(image1)
+--Сохранение в файл сырого формата изображения типа 2 (подробнее о типах см. конец файла)
+function image.saveRaw(path, picture)
+	local file = assert( io.open(path, "w"), constants.fileOpenError )
 
-	--Перебираем массив с фонами
-	for back, backValue in pairs(image2["backgrounds"]) do
-		gpu.setBackground(back)
-		for fore, foreValue in pairs(image2["backgrounds"][back]) do
-			gpu.setForeground(fore)
-			for pixel = 1, #image2["backgrounds"][back][fore] do
-				if image2["backgrounds"][back][fore][pixel][3] ~= transparentSymbol then
-					gpu.set(x + image2["backgrounds"][back][fore][pixel][1], y + image2["backgrounds"][back][fore][pixel][2], image2["backgrounds"][back][fore][pixel][3])
-				end
-			end
-		end
-	end
-end
-   
---Сохранение JPG в файл из существующего массива
-function image.saveJPG(path, kartinka)
-	-- Удаляем файл, если есть
-	-- И делаем папку к нему
-	fs.remove(path)
-	fs.makeDirectory(fs.path(path))
+	local xPos, yPos = 1, 1
+	for i = 1, picture.width * picture.height * constants.elementCount, constants.elementCount do
+		file:write( HEXtoSTRING(picture[i], 6), " ", HEXtoSTRING(picture[i + 1], 6), " ", HEXtoSTRING(picture[i + 2], 2), " ", picture[i + 3], " ")
 
-	local file = io.open(path, "w")
-
-	file:write( table.unpack(ocif_signature_expand) )
-	file:write( string.char( kartinka.width ) )
-	file:write( string.char( kartinka.height ) )
-	file:write( string.char( kartinka.depth ) )
-
-	for y = 1, kartinka.height, 1 do
-		for x = 1, kartinka.width, 1 do
-			local encodedPixel = { encodePixel( kartinka[y][x][2], kartinka[y][x][1], kartinka[y][x][3] ) }
-			for i = 1, #encodedPixel do
-				file:write( string.char( encodedPixel[i] ) )
-			end
-			encodedPixel = {nil, nil, nil}; encodedPixel = nil
+		xPos = xPos + 1
+		if xPos > picture.width then
+			xPos = 1
+			yPos = yPos + 1
+			file:write("\n")
 		end
 	end
 
 	file:close()
 end
 
----------------------------Все, что касается несжатого формата (у нас он назван "PNG")-------------------------------------------------------
+--Загрузка из файла сырого формата изображения типа 2 (подробнее о типах см. конец файла)
+function image.loadRaw(path)
+	local file = assert( io.open(path, "r"), constants.fileOpenError )
+	local picture = {}
 
--- Перевод HEX-цвета из файла (из 00ff00 делает 0x00ff00)
-local function HEXtoSTRING(color,withNull)
-	local stro4ka = string.format("%x",color)
-	local sStro4ka = unicode.len(stro4ka)
-
-	if sStro4ka < 6 then
-		stro4ka = string.rep("0", 6 - sStro4ka) .. stro4ka
-	end
-
-	if withNull then return "0x"..stro4ka else return stro4ka end
-end
-
---Загрузка ПНГ
-local function loadPNG(path)
-	local file = io.open(path, "r")
-	local newPNGMassiv = {}
-
-	local pixelCounter, lineCounter, dlinaStroki = 1, 1, nil
+	local background, foreground, alpha, symbol, sLine
+	local lineCounter = 0
 	for line in file:lines() do
-		--Получаем длину строки
-		dlinaStroki = unicode.len(line)
-		--Сбрасываем счетчик пикселей
-		pixelCounter = 1
-		--Создаем новую строку
-		newPNGMassiv[lineCounter] = {}
-		--Перебираем пиксели
-		for i = 1, dlinaStroki, 16 do
-			--Транслируем всю хуйню в более понятную хуйню
-			local back = tonumber("0x"..unicode.sub(line, i, i + 5))
-			local fore = tonumber("0x"..unicode.sub(line, i + 7, i + 12))
-			local symbol = unicode.sub(line, i + 14, i + 14)
-			--Создаем новый пиксельс
-			newPNGMassiv[lineCounter][pixelCounter] = { back, fore, symbol }
-			--Увеличиваем пиксельсы
-			pixelCounter = pixelCounter + 1
-			--Очищаем оперативку
-			back, fore, symbol = nil, nil, nil
+		sLine = unicode.len(line)
+		for i = 1, sLine, constants.rawImageLoadStep do
+			background = "0x" .. unicode.sub(line, i, i + 5)
+			foreground = "0x" .. unicode.sub(line, i + 7, i + 12)
+			alpha = "0x" .. unicode.sub(line, i + 14, i + 15)
+			symbol = unicode.sub(line, i + 17, i + 17)
+
+			table.insert(picture, tonumber(background))
+			table.insert(picture, tonumber(foreground))
+			table.insert(picture, tonumber(alpha))
+			table.insert(picture, symbol)
+		end
+		lineCounter = lineCounter + 1
+	end
+
+	picture.width = sLine / constants.rawImageLoadStep
+	picture.height = lineCounter
+
+	file:close()
+
+	return picture
+end
+
+----------------------------------- Вспомогательные функции программы ------------------------------------------------------------
+
+--Оптимизировать и сгруппировать по цветам картинку типа 2 (подробнее о типах см. конец файла)
+function image.convertToGroupedImage(picture)
+	--Создаем массив оптимизированной картинки
+	local optimizedPicture = {}
+	--Задаем константы
+	local xPos, yPos, background, foreground, alpha, symbol = 1, 1, nil, nil, nil, nil
+	--Перебираем все элементы массива
+	for i = 1, picture.width * picture.height * constants.elementCount, constants.elementCount do
+		--Получаем символ из неоптимизированного массива
+		background, foreground, alpha, symbol = picture[i], picture[i + 1], picture[i + 2], picture[i + 3]
+		--Группируем картинку по цветам
+		optimizedPicture[background] = optimizedPicture[background] or {}
+		optimizedPicture[background][foreground] = optimizedPicture[background][foreground] or {}
+		table.insert(optimizedPicture[background][foreground], xPos)
+		table.insert(optimizedPicture[background][foreground], yPos)
+		table.insert(optimizedPicture[background][foreground], alpha)
+		table.insert(optimizedPicture[background][foreground], symbol)
+		--Если xPos достигает width изображения, то сбросить на 1, иначе xPos++
+		xPos = (xPos == picture.width) and 1 or xPos + 1
+		--Если xPos равняется 1, то yPos++, а если нет, то похуй
+		yPos = (xPos == 1) and yPos + 1 or yPos
+	end
+	--Возвращаем оптимизированный массив
+	return optimizedPicture
+end
+
+--Нарисовать по указанным координатам картинку указанной ширины и высоты для теста
+function image.drawRandomImage(x, y, width, height)
+	local picture = {}
+	local symbolArray = {"A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "А", "Б", "В", "Г", "Д", "Е", "Ж", "З", "И", "Й", "К", "Л", "И", "Н", "О", "П", "Р", "С", "Т", "У", "Ф", "Х", "Ц", "Ч", "Ш", "Щ", "Ъ", "Ы", "Ь", "Э", "Ю", "Я"}
+	picture.width = width
+	picture.height = height
+	local background, foreground, symbol
+	for j = 1, height do
+		for i = 1, width do
+			background = math.random(0x000000, 0xffffff)
+			foreground = math.random(0x000000, 0xffffff)
+			symbol = symbolArray[math.random(1, #symbolArray)]
+
+			table.insert(picture, background)
+			table.insert(picture, foreground)
+			table.insert(picture, 0x00)
+			table.insert(picture, symbol)
+		end
+	end
+	image.draw(x, y, picture)
+	return picture
+end
+
+----------------------------------------- Основные функции программы -------------------------------------------------------------------
+
+--Сохранить изображение любого поддерживаемого формата
+function image.save(path, picture)
+	--Создать папку под файл, если ее нет
+	fs.makeDirectory(fs.path(path))
+	--Получаем формат указанного файла
+	local fileFormat = getFileFormat(path)
+	--Проверяем соответствие формата файла
+	if fileFormat == constants.compressedFileFormat then
+		image.saveCompressed(path, picture)
+	elseif fileFormat == constants.rawFileFormat then
+		image.saveRaw(path, picture)
+	else
+		error("Unsupported file format.\n")
+	end
+end
+
+--Загрузить изображение любого поддерживаемого формата
+function image.load(path)
+	--Кинуть ошибку, если такого файла не существует
+	if not fs.exists(path) then error("File \""..path.."\" does not exists.\n") end
+	--Получаем формат указанного файла
+	local fileFormat = getFileFormat(path)
+	--Проверяем соответствие формата файла
+	if fileFormat == constants.compressedFileFormat then
+		return image.loadCompressed(path)
+	elseif fileFormat == constants.rawFileFormat then
+		return image.loadRaw(path)
+	else
+		error("Unsupported file format.\n")
+	end
+end
+
+--Отрисовка изображения типа 3 (подробнее о типах см. конец файла)
+function image.draw(x, y, rawPicture)
+	--Конвертируем в групповое изображение
+	local picture = image.convertToGroupedImage(rawPicture)
+	--Все как обычно
+	x, y = x - 1, y - 1
+	--Переменные, чтобы в цикле эту парашу не создавать
+	local currentBackground, xPos, yPos, alpha, symbol
+	local _, _
+	--Перебираем все цвета фона
+	for background in pairs(picture) do
+		--Заранее ставим корректный цвет фона
+		gpu.setBackground(background)
+		--Перебираем все цвета текста
+		for foreground in pairs(picture[background]) do
+			--Ставим сразу и корректный цвет текста
+			gpu.setForeground(foreground)
+			--Перебираем все пиксели
+			for i = 1, #picture[background][foreground], 4 do
+				--Получаем временную репрезентацию
+				xPos, yPos, alpha, symbol = picture[background][foreground][i], picture[background][foreground][i + 1], picture[background][foreground][i + 2], picture[background][foreground][i + 3]
+				--Если альфа имеется, но она не совсем прозрачна
+				if alpha > 0x00 and alpha < 0xFF then
+					_, _, currentBackground = gpu.get(x + xPos, y + yPos)
+					currentBackground = alphaBlend(currentBackground, background, alpha)
+					gpu.setBackground(currentBackground)
+					--Рисуем символ на экране
+					gpu.set(x + xPos, y + yPos, symbol)
+				--Если альфа отсутствует
+				elseif alpha == 0x00 then
+					if currentBackground ~= background then
+						currentBackground = background
+						gpu.setBackground(currentBackground)
+					end
+					--Рисуем символ на экране
+					gpu.set(x + xPos, y + yPos, symbol)
+				end	
+				
+				--Выгружаем сгруппированное изображение из памяти
+				picture[background][foreground][i], picture[background][foreground][i + 1], picture[background][foreground][i + 2], picture[background][foreground][i + 3] = nil, nil, nil, nil
+			end
+			--Выгружаем данные о текущем цвете текста из памяти
+			picture[background][foreground] = nil
+		end
+		--Выгружаем данные о текущем фоне из памяти
+		picture[background] = nil
+	end
+end
+
+local function loadOldPng(path)
+	local massiv = {}
+	local file = io.open(path, "r")
+	local lineCounter = 0
+	local sLine = 0
+	for line in file:lines() do
+		sLine = unicode.len(line)
+
+		for i = 1, sLine, 16 do
+			table.insert(massiv, tonumber("0x" .. unicode.sub(line, i, i + 5)))
+			table.insert(massiv, tonumber("0x" .. unicode.sub(line, i + 7, i + 12)))
+			table.insert(massiv, 0x00)
+			table.insert(massiv, tonumber("0x" .. unicode.sub(line, i + 14, i + 14)))
 		end
 
 		lineCounter = lineCounter + 1
 	end
 
-	--Закрываем файл
-	file:close()
-	--Очищаем оперативку
-	pixelCounter, lineCounter, dlinaStroki = nil, nil, nil
+	massiv.width = sLine / 16
+	massiv.height = lineCounter
 
-	return newPNGMassiv
+	return massiv
 end
 
--- Сохранение существующего массива ПНГ в файл
-function image.savePNG(path, MasterPixels)
-	-- Удаляем файл, если есть
-	-- И делаем папку к нему
-	fs.remove(path)
-	fs.makeDirectory(fs.path(path))
-	local f = io.open(path, "w")
-
-	for j=1, #MasterPixels do
-		for i=1,#MasterPixels[j] do
-			f:write(HEXtoSTRING(MasterPixels[j][i][1])," ",HEXtoSTRING(MasterPixels[j][i][2])," ",MasterPixels[j][i][3]," ")
-		end
-		f:write("\n")
-	end
-
-	f:close()
-end
-
---Отрисовка ПНГ
-function image.drawPNG(x, y, massivSudaPihay2)
-	--Уменьшаем значения кординат на 1, т.к. циклы начинаются с единицы
-	x = x - 1
-	y = y - 1
-
-	--Конвертируем "сырой" формат PNG в оптимизированный и сгруппированный по цветам
-	local massivSudaPihay = image.convertImageToGroupedImage(massivSudaPihay2)
-
-	--Перебираем массив с фонами
-	for back, backValue in pairs(massivSudaPihay["backgrounds"]) do
-		gpu.setBackground(back)
-		for fore, foreValue in pairs(massivSudaPihay["backgrounds"][back]) do
-			gpu.setForeground(fore)
-			for pixel = 1, #massivSudaPihay["backgrounds"][back][fore] do
-				if massivSudaPihay["backgrounds"][back][fore][pixel][3] ~= transparentSymbol then
-					gpu.set(x + massivSudaPihay["backgrounds"][back][fore][pixel][1], y + massivSudaPihay["backgrounds"][back][fore][pixel][2], massivSudaPihay["backgrounds"][back][fore][pixel][3])
-				end
-			end
-		end
-	end
-end
-
----------------------Глобальные функции данного API, с ними мы и работаем---------------------------------------------------------
-
---Конвертируем массив классического "сырого" формата в сжатый и оптимизированный для более быстрой отрисовки
-function image.convertImageToGroupedImage(PNGMassiv)
-	local newPNGMassiv = { ["backgrounds"] = {} }
-	--Перебираем весь массив стандартного PNG-вида по высоте
-	for j = 1, #PNGMassiv do
-		for i = 1, #PNGMassiv[j] do
-			newPNGMassiv["backgrounds"][PNGMassiv[j][i][1]] = newPNGMassiv["backgrounds"][PNGMassiv[j][i][1]] or {}
-			newPNGMassiv["backgrounds"][PNGMassiv[j][i][1]][PNGMassiv[j][i][2]] = newPNGMassiv["backgrounds"][PNGMassiv[j][i][1]][PNGMassiv[j][i][2]] or {}
-			table.insert(newPNGMassiv["backgrounds"][PNGMassiv[j][i][1]][PNGMassiv[j][i][2]], {i, j, PNGMassiv[j][i][3]} )
-		end
-	end
-	return newPNGMassiv
-end
-
---Конвертер из PNG в JPG
-function image.PNGtoJPG(PNGMassiv)
-	local JPGMassiv = PNGMassiv
-	local width, height = #PNGMassiv[1], #PNGMassiv
-
-	JPGMassiv.width = width
-	JPGMassiv.height = height
-	JPGMassiv.depth = 8
-
-	return JPGMassiv
-end
-
--- Просканировать файловую систему на наличие .PNG
--- И сохранить рядом с ними аналогичную копию в формате .JPG
--- Осторожно, функция для дебага и знающих людей
--- С кривыми ручками сюда не лезь
-function image.convertAllPNGtoJPG(path)
-	local list = ecs.getFileList(path)
-	for key, file in pairs(list) do
-		if fs.isDirectory(path.."/"..file) then
-			image.convertAllPNGtoJPG(path.."/"..file)
-		else
-			if ecs.getFileFormat(file) == ".png" or ecs.getFileFormat(file) == ".PNG" then
-				print("Найден .PNG в директории \""..path.."/"..file.."\"")
-				print("Загружаю этот файл...")
-				PNGFile = loadPNG(path.."/"..file)
-				print("Загрузка завершена!")
-				print("Конвертация в JPG начата...")
-				JPGFile = image.PNGtoJPG(PNGFile)
-				print("Ковертация завершена!")
-				print("Сохраняю .JPG в той же папке...")
-				image.saveJPG(path.."/"..ecs.hideFileFormat(file)..".jpg", JPGFile)
-				print("Сохранение завершено!")
-				print(" ")
-			end
-		end
-	end
-end
-
----------------------------------------------------------------------------------------------------------------------
-
---Загрузка любого изображения из доступных типов
-function image.load(path)
-	local kartinka = {}
-	local fileFormat = ecs.getFileFormat(path)
-	if string.lower(fileFormat) == ".jpg" then
-		kartinka["format"] = ".jpg"
-		kartinka["image"] = loadJPG(path)
-	elseif string.lower(fileFormat) == ".png" then
-		kartinka["format"] = ".png"
-		kartinka["image"] = loadPNG(path)
-	else
-		error("Wrong file format! (not .png or .jpg)")
-	end
-	return kartinka
-end
-
---Сохранение любого формата в нужном месте
-function image.save(path, kartinka)
-	local fileFormat = ecs.getFileFormat(path)
-
-	if string.lower(fileFormat) == ".jpg" then
-		image.saveJPG(path, kartinka)
-	elseif  string.lower(fileFormat) == ".png" then
-		image.savePNG(path, kartinka)
-	else
-		error("Wrong file format! (not .png or .jpg)")
-	end
-end
-
---Отрисовка этого изображения
-function image.draw(x, y, kartinka)
-	if kartinka.format == ".jpg" then
-		image.drawJPG(x, y, kartinka["image"])
-	elseif kartinka.format == ".png" then
-		image.drawPNG(x, y, kartinka["image"])
-	end
-end
-
-function image.screenshot(path)
-	--Вычисляем размер скрина
-	local xSize, ySize = gpu.getResolution()
-
-	local rawImage = {}
-	for y = 1, ySize do
-		rawImage[y] = {}
-		for x = 1, xSize do
-			local symbol, fore, back = gpu.get(x, y)
-			rawImage[y][x] = { back, fore, symbol }
-			symbol, fore, back = nil, nil, nil
-		end
-	end
-
-	rawImage.width = #rawImage[1]
-	rawImage.height = #rawImage
-	rawImage.depth = 8
-
-	image.save(path, rawImage)
-end
-
----------------------------------------------------------------------------------------------------------------------
+------------------------------------------ Примеры работы с библиотекой ------------------------------------------------
 
 -- ecs.prepareToExit()
--- for i = 1, 30 do
--- 	print("Hello world bitches! " .. string.rep(tostring(math.random(100, 1000)) .. " ", 10))
--- end
-
--- image.draw(10, 2, image.load("System/OS/Icons/Love.png"))
-
--- local pathToScreen = "screenshot.jpg"
-
--- image.screenshot(pathToScreen)
+-- ecs.error("Создаю и рисую картинку!")
+-- local generatedPic = image.drawRandomImage(1, 1, 160, 50)
+-- ecs.error("Сохраняю созданную картинку в формате .pic!")
 -- ecs.prepareToExit()
--- ecs.centerText("xy", 0, "Сохранил скрин. Ща загружу фотку и нарисую его. Внимание!")
--- os.sleep(2)
+-- image.save("1.pic", generatedPic)
+-- ecs.error("Сохраняю созданную картинку в формате .rawpic!")
 -- ecs.prepareToExit()
--- image.draw(2, 2, image.load(pathToScreen))
+-- image.save("1.rawpic", generatedPic)
+-- ecs.error("Загружаю сохраненную картинку в формате .pic!")
+-- ecs.prepareToExit()
+-- local loadedPic = image.load("1.pic")
+-- image.draw(1, 1, loadedPic)
+-- ecs.error("Загружаю сохраненную картинку в формате .rawpic!")
+-- ecs.prepareToExit()
+-- local loadedPic = image.load("1.rawpic")
+-- image.draw(1, 1, loadedPic)
+
+------------------------------------------ Типы массивов изображений ---------------------------------------------------
+
+
+--[[
+
+	Тип 1:
+
+		Основной формат изображения, линейная запись данных о пикселях,
+		сжатие двух цветов и альфа-канала в одно число. Минимальный расход
+		оперативной памяти, однако для изменения цвета требует декомпрессию.
+
+			Структура:
+
+				local picture = {
+					width = ширина изображения,
+					height = высота изображения,
+					Сжатые цвета и альфа-канал,
+					Символ,
+					Сжатые цвета и альфа-канал,
+					Символ,
+					...
+				}
+
+			Пример:
+
+				local picture = {
+					width = 2,
+					height = 2,
+					0xff00aa,
+					"Q",
+					0x88aacc,
+					"W",
+					0xff00aa,
+					"E",
+					0x88aacc,
+					"R"
+				}
+
+		Тип 2 конвертируется только в тип 3 и только для отрисовки на экране:
+		Изображение типа 3 = image.convertToGroupedImage( Сюда кидаем массив изображения типа 2 )
+
+	Тип 2 (сгруппированный по цветам формат, ипользуется только для отрисовки изображения):
+	
+			Структура:
+			local picture = {
+				Цвет фона 1 = {
+					Цвет текста 1 = {
+						Координата по X,
+						Координата по Y,
+						Альфа-канал,
+						Символ,
+						Координата по X,
+						Координата по Y,
+						Альфа-канал,
+						Символ,
+						...
+					},
+					Цвет текста 2 = {
+						Координата по X,
+						Координата по Y,
+						Альфа-канал,
+						Символ,
+						Координата по X,
+						Координата по Y,
+						Альфа-канал,
+						Символ,
+						...
+					},
+					...
+				},
+				Цвет фона 2 = {
+					Цвет текста 1 = {
+						Координата по X,
+						Координата по Y,
+						Альфа-канал,
+						Символ,
+						Координата по X,
+						Координата по Y,
+						Альфа-канал,
+						Символ,
+						...
+					},
+					Цвет текста 2 = {
+						Координата по X,
+						Координата по Y,
+						Альфа-канал,
+						Символ,
+						Координата по X,
+						Координата по Y,
+						Альфа-канал,
+						Символ,
+						...
+					},
+					...
+				},
+			}
+
+			Пример:
+			local picture = {
+				0xffffff = {
+					0xaabbcc = {
+						1,
+						1,
+						0x00,
+						"Q",
+						12,
+						12,
+						0xaa,
+						"W"
+					},
+					0x88aa44 = {
+						5,
+						5,
+						0xcc,
+						"E",
+						12,
+						12,
+						0x00,
+						"R"
+					}
+				},
+				0x444444 = {
+					0x112233 = {
+						40,
+						20,
+						0x00,
+						"T",
+						12,
+						12,
+						0xaa,
+						"Y"
+					},
+					0x88aa44 = {
+						5,
+						5,
+						0xcc,
+						"U",
+						12,
+						12,
+						0x00,
+						"I"
+					}
+				}
+			}
+
+]]
+
+------------------------------------------------------------------------------------------------------------------------
 
 return image
-
-
-
-
 
 
 
