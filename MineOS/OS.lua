@@ -69,6 +69,7 @@ end
 local function drawDesktop(x, y)
 
 	currentFileList = ecs.getFileList(workPath)
+	currentFileList = ecs.reorganizeFilesAndFolders(currentFileList, false, false)
 
 	--ОЧИСТКА СТОЛА
 	ecs.square(1, y, xSize, yCountOfIcons * (heightOfIcon + ySpaceBetweenIcons) - ySpaceBetweenIcons, background)
@@ -361,7 +362,7 @@ local function createDesktopShortCuts()
 	local desktopPath = "System/OS/Desktop/"
 	local dockPath = "System/OS/Dock/"
 	if not fs.exists(desktopPath) then
-		fs.makeDirectory(desktopPath)
+		fs.makeDirectory(desktopPath.."My files")
 		for i = 1, #apps do
 			ecs.createShortCut(desktopPath..ecs.hideFileFormat(apps[i])..".lnk", apps[i])
 		end
@@ -465,8 +466,6 @@ while true do
 						ecs.createShortCut("System/OS/Dock/" .. ecs.hideFileFormat(obj["DesktopIcons"][key][5]) .. ".lnk", obj["DesktopIcons"][key][5])
 						drawDesktop(xPosOfIcons, yPosOfIcons)
 						drawDock()
-					else
-					
 					end
 
 					ecs.square(obj["DesktopIcons"][key][1], obj["DesktopIcons"][key][2], widthOfIcon, heightOfIcon, background)
