@@ -246,7 +246,7 @@ function ECSAPI.getOSApplication(elementFromMassiv)
 	if elementFromMassiv.type == "Application" then
 		fs.makeDirectory(path .. ".app/Resources")
 		ECSAPI.getFromGitHub(elementFromMassiv.url, path .. ".app/" .. fs.name(elementFromMassiv.name .. ".lua"))
-		ECSAPI.getFromGitHub(elementFromMassiv.icon, path .. ".app/Resources/Icon.png")
+		ECSAPI.getFromGitHub(elementFromMassiv.icon, path .. ".app/Resources/Icon.pic")
 		if elementFromMassiv.resources then
 			for i = 1, #elementFromMassiv.resources do
 				ECSAPI.getFromGitHub(elementFromMassiv.resources[i].url, path .. ".app/Resources/" .. elementFromMassiv.resources[i].name)
@@ -1130,7 +1130,7 @@ function ECSAPI.newApplication(path, startName)
 	if ECSAPI.checkName(inputs[1] .. ".app", path) then
 		local name = path .. inputs[1] .. ".app/Resources/"
 		fs.makeDirectory(name)
-		fs.copy("System/OS/Icons/SampleIcon.png", name .. "Icon.png")
+		fs.copy("System/OS/Icons/SampleIcon.pic", name .. "Icon.pic")
 		local file = io.open(path .. inputs[1] .. ".app/" .. inputs[1] .. ".lua", "w")
 		file:write("local ecs = require(\"ECSAPI\")", "\n")
 		file:write("ecs.universalWindow(\"auto\", \"auto\", 30, 0xeeeeee, true, {\"EmptyLine\"}, {\"CenterText\", 0x262626, \"Hello world!\"}, {\"EmptyLine\"}, {\"Button\", {0x880000, 0xffffff, \"Hello!\"}})", "\n")
@@ -1379,16 +1379,16 @@ local function OSIconsInit()
 		ECSAPI.pathToIcons = "System/OS/Icons/"
 
 		--Иконки
-		ECSAPI.OSIcons.folder = image.load(ECSAPI.pathToIcons .. "Folder.png")
-		ECSAPI.OSIcons.script = image.load(ECSAPI.pathToIcons .. "Script.png")
-		ECSAPI.OSIcons.text = image.load(ECSAPI.pathToIcons .. "Text.png")
-		ECSAPI.OSIcons.config = image.load(ECSAPI.pathToIcons .. "Config.png")
-		ECSAPI.OSIcons.lua = image.load(ECSAPI.pathToIcons .. "Lua.png")
-		ECSAPI.OSIcons.image = image.load(ECSAPI.pathToIcons .. "Image.png")
-		ECSAPI.OSIcons.imageJPG = image.load(ECSAPI.pathToIcons .. "ImageJPG.png")
-		ECSAPI.OSIcons.pastebin = image.load(ECSAPI.pathToIcons .. "Pastebin.png")
-		ECSAPI.OSIcons.fileNotExists = image.load(ECSAPI.pathToIcons .. "FileNotExists.png")
-		ECSAPI.OSIcons.archive = image.load(ECSAPI.pathToIcons .. "archive.png")
+		ECSAPI.OSIcons.folder = image.load(ECSAPI.pathToIcons .. "Folder.pic")
+		ECSAPI.OSIcons.script = image.load(ECSAPI.pathToIcons .. "Script.pic")
+		ECSAPI.OSIcons.text = image.load(ECSAPI.pathToIcons .. "Text.pic")
+		ECSAPI.OSIcons.config = image.load(ECSAPI.pathToIcons .. "Config.pic")
+		ECSAPI.OSIcons.lua = image.load(ECSAPI.pathToIcons .. "Lua.pic")
+		ECSAPI.OSIcons.image = image.load(ECSAPI.pathToIcons .. "Image.pic")
+		ECSAPI.OSIcons.imageJPG = image.load(ECSAPI.pathToIcons .. "ImageJPG.pic")
+		ECSAPI.OSIcons.pastebin = image.load(ECSAPI.pathToIcons .. "Pastebin.pic")
+		ECSAPI.OSIcons.fileNotExists = image.load(ECSAPI.pathToIcons .. "FileNotExists.pic")
+		ECSAPI.OSIcons.archive = image.load(ECSAPI.pathToIcons .. "archive.pic")
 	end
 end
 
@@ -1403,7 +1403,7 @@ function ECSAPI.drawOSIcon(x, y, path, showFileFormat, nameColor)
 	--Если данный файл является папкой, то
 	if fs.isDirectory(path) then
 		if fileFormat == ".app" then
-			icon = path .. "/Resources/Icon.png"
+			icon = path .. "/Resources/Icon.pic"
 			--Если данной иконки еще нет в оперативке, то загрузить ее
 			if not ECSAPI.OSIcons[icon] then
 				ECSAPI.OSIcons[icon] = image.load(icon)
@@ -1424,9 +1424,9 @@ function ECSAPI.drawOSIcon(x, y, path, showFileFormat, nameColor)
 			icon = "text"
 		elseif fileFormat == ".lua" then
 		 	icon = "lua"
-		elseif fileFormat == ".png" then
+		elseif fileFormat == ".pic" then
 		 	icon = "image"
-		elseif fileFormat == ".jpg" then
+		elseif fileFormat == ".rawpic" then
 		 	icon = "imageJPG"
 		elseif fileFormat == ".paste" then
 			icon = "pastebin"
@@ -1482,7 +1482,7 @@ function ECSAPI.launchIcon(path, arguments)
 			ECSAPI.displayCompileMessage(1, reason, true)
 		end
 	--Если это фоточка
-	elseif fileFormat == ".png" then
+	elseif fileFormat == ".pic" then
 		shell.execute("Photoshop.app/Photoshop.lua open "..path)
 	--Если это фоточка
 	elseif fileFormat == ".jpg" then

@@ -141,7 +141,7 @@ end
 
 --------------------------СТАДИЯ ЗАГРУЗКИ НУЖНЫХ ПАКЕТОВ-----------------------
 	
-if not fs.exists("System/OS/Installer/OK.png") then
+if not fs.exists("System/OS/Installer/OK.pic") then
 
 	local barWidth = math.floor(windowWidth / 2)
 	local xBar = math.floor(xSize/2-barWidth/2)
@@ -163,10 +163,10 @@ if not fs.exists("System/OS/Installer/OK.png") then
 	
 	local preLoadApi = {
 		{ paste = "IgorTimofeev/OpenComputers/master/lib/image.lua", path = "lib/image.lua" },
-		--{ paste = "IgorTimofeev/OpenComputers/master/Installer/Languages.png", path = "System/OS/Installer/Languages.png" },
-		{ paste = "IgorTimofeev/OpenComputers/master/Installer/OK.png", path = "System/OS/Installer/OK.png" },
-		{ paste = "IgorTimofeev/OpenComputers/master/Installer/Downloading.png", path = "System/OS/Installer/Downloading.png" },
-		{ paste = "IgorTimofeev/OpenComputers/master/Installer/OS_Logo.png", path = "System/OS/Installer/OS_Logo.png" },
+		--{ paste = "IgorTimofeev/OpenComputers/master/Installer/Languages.pic", path = "System/OS/Installer/Languages.pic" },
+		{ paste = "IgorTimofeev/OpenComputers/master/Installer/OK.pic", path = "System/OS/Installer/OK.pic" },
+		{ paste = "IgorTimofeev/OpenComputers/master/Installer/Downloading.pic", path = "System/OS/Installer/Downloading.pic" },
+		{ paste = "IgorTimofeev/OpenComputers/master/Installer/OS_Logo.pic", path = "System/OS/Installer/OS_Logo.pic" },
 		{ paste = "IgorTimofeev/OpenComputers/master/MineOS/License.txt", path = "System/OS/License.txt" },
 	}
 
@@ -189,10 +189,10 @@ applications = seri.unserialize(getFromPastebin("3j2x4dDn", "System/OS/Applicati
 
 local image = require("image")
 
-local imageOS = image.load("System/OS/Installer/OS_Logo.png")
---local imageLanguages = image.load("System/OS/Installer/Languages.png")
-local imageDownloading = image.load("System/OS/Installer/Downloading.png")
-local imageOK = image.load("System/OS/Installer/OK.png")
+local imageOS = image.load("System/OS/Installer/OS_Logo.pic")
+--local imageLanguages = image.load("System/OS/Installer/Languages.pic")
+local imageDownloading = image.load("System/OS/Installer/Downloading.pic")
+local imageOK = image.load("System/OS/Installer/OK.pic")
 
 ------------------------------СТАВИТЬ ЛИ ОСЬ------------------------------------
 
@@ -305,7 +305,7 @@ do
 		if applications[app]["type"] == "Application" then
 			fs.makeDirectory(path..".app/Resources")
 			getFromGitHubSafely(GitHubUserUrl .. applications[app]["url"], path..".app/"..fs.name(applications[app]["name"]..".lua"))
-			getFromGitHubSafely(GitHubUserUrl .. applications[app]["icon"], path..".app/Resources/Icon.png")
+			getFromGitHubSafely(GitHubUserUrl .. applications[app]["icon"], path..".app/Resources/Icon.pic")
 			if applications[app]["resources"] then
 				for i = 1, #applications[app]["resources"] do
 					getFromGitHubSafely(GitHubUserUrl .. applications[app]["resources"][i]["url"], path..".app/Resources/"..applications[app]["resources"][i]["name"])
