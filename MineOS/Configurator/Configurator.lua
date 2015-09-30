@@ -19,9 +19,9 @@ local xCenter, yCenter = math.floor(xSize / 2), math.floor(ySize / 2)
 
 --local oldPixels = ecs.rememberOldPixels(x, y, x + width + 1, y + height)
 
-local OS_Logo = image.load("System/OS/Installer/OS_Logo.png")
-local Love = image.load("System/OS/Icons/Love.png")
-local Security = image.load("System/OS/Icons/Security.png")
+local OS_Logo = image.load("System/OS/Installer/OS_Logo.pic")
+local Love = image.load("System/OS/Icons/Love.pic")
+local Security = image.load("System/OS/Icons/Security.pic")
 
 local offset = 3
 
