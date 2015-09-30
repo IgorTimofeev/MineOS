@@ -21,6 +21,7 @@ local unicode = require("unicode")
 local context = require("context")
 local image = require("image")
 local component = require("component")
+local keyboard = require("keyboard")
 
 --Обязательные
 local colorlib = require("colorlib")
