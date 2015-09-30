@@ -458,7 +458,7 @@ local function convertAllPngToPic()
 	end
 
 	print(" ")
-	doConvert("/")
+	doConvert("")
 	print("Всего сконвертировано "..counter.." файлов.")
 	print(" ")
 end
