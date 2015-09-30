@@ -8,11 +8,39 @@ local internet = require("internet")
 local seri = require("serialization")
 local gpu = component.gpu
 
-------------------------------------------------------------------------------
+-----------------Проверка компа на соответствие сис. требованиям--------------------------
 
-local lang = {
-	
-}
+--Создаем массив говна
+local govno = {}
+
+--Проверяем GPU
+if gpu.maxResolution() < 150 then table.insert(govno, "Bad GPU - this OS requires Tier 3 GPU.") end
+
+--Проверяем экран
+if gpu.getDepth() < 8 and gpu.maxResolution() < 150 then table.insert(govno, "Bad Screen - this OS requires Tier 3 screen.") end
+
+--Проверяем оперативку
+if math.floor(computer.totalMemory() / 1024 ) < 2048 then table.insert(govno, "Not enough RAM - this OS requires at least 2048 KB RAM.") end
+
+if fs.get("bin/edit.lua") == nil or fs.get("bin/edit.lua").isReadOnly() then table.insert(govno, "You can't install MineOS on floppy disk. Run \"install\" in command line and install OpenOS from floppy to HDD first. After that you're be able to install MineOS from Pastebin.") end
+
+
+
+--Если нашло какое-то несоответствие сис. требованиям, то написать, что именно не так
+if #govno > 0 then
+	print(" ")
+	print("Analyzing computer for matching system requirements.")
+	print(" ")
+	for i = 1, #govno do
+		print(govno[i])
+	end
+	print(" ")
+	return
+end
+
+------------------------------------------------------------------------------------------
+
+local lang
 
 local applications
 
@@ -22,6 +50,7 @@ local installerScale = 1
 local timing = 0.2
 
 -----------------------------СТАДИЯ ПОДГОТОВКИ-------------------------------------------
+
 
 --ЗАГРУЗОЧКА С ГИТХАБА
 local function getFromGitHub(url, path)
@@ -88,9 +117,10 @@ end
 
 local GitHubUserUrl = "https://raw.githubusercontent.com/"
 
-getFromGitHubSafely(GitHubUserUrl .. "IgorTimofeev/OpenComputers/master/lib/ecs.lua", "lib/ecs.lua")
+getFromGitHubSafely(GitHubUserUrl .. "IgorTimofeev/OpenComputers/master/lib/ECSAPI.lua", "lib/ECSAPI.lua")
 
-local ecs = require("ECSAPI")
+--Вот тут такой пиздец был!
+_G.ecs = require("ECSAPI")
 
 ecs.setScale(installerScale)
 
@@ -112,11 +142,6 @@ local obj = {}
 local function newObj(class, name, ...)
 	obj[class] = obj[class] or {}
 	obj[class][name] = {...}
-end
-
-if not component.isAvailable("internet") then
-	io.stderr:write("This program requires an internet card to run.")
-	return
 end
 
 local function drawButton(name, isPressed)
@@ -141,14 +166,15 @@ end
 
 --------------------------СТАДИЯ ЗАГРУЗКИ НУЖНЫХ ПАКЕТОВ-----------------------
 	
-if not fs.exists("System/OS/Installer/OK.pic") then
+ecs.clearScreen(padColor)
+
+if not fs.exists("System/OS/Installer/OK.pic") or not fs.exists("System/OS/Installer/Downloading.pic") or not fs.exists("System/OS/Installer/OS_Logo.pic") or not fs.exists("System/OS/Installer/Languages.pic") then
 
 	local barWidth = math.floor(windowWidth / 2)
 	local xBar = math.floor(xSize/2-barWidth/2)
 	local yBar = math.floor(ySize/2) + 1
 
 	--создание первичного экрана чистенького
-	ecs.clearScreen(padColor)
 
 	clear()
 
@@ -163,11 +189,12 @@ if not fs.exists("System/OS/Installer/OK.pic") then
 	
 	local preLoadApi = {
 		{ paste = "IgorTimofeev/OpenComputers/master/lib/image.lua", path = "lib/image.lua" },
-		--{ paste = "IgorTimofeev/OpenComputers/master/Installer/Languages.pic", path = "System/OS/Installer/Languages.pic" },
+		{ paste = "IgorTimofeev/OpenComputers/master/lib/config.lua", path = "lib/config.lua" },
+		{ paste = "IgorTimofeev/OpenComputers/master/Installer/Languages.pic", path = "System/OS/Installer/Languages.pic" },
 		{ paste = "IgorTimofeev/OpenComputers/master/Installer/OK.pic", path = "System/OS/Installer/OK.pic" },
 		{ paste = "IgorTimofeev/OpenComputers/master/Installer/Downloading.pic", path = "System/OS/Installer/Downloading.pic" },
 		{ paste = "IgorTimofeev/OpenComputers/master/Installer/OS_Logo.pic", path = "System/OS/Installer/OS_Logo.pic" },
-		{ paste = "IgorTimofeev/OpenComputers/master/MineOS/License.txt", path = "System/OS/License.txt" },
+		--{ paste = "IgorTimofeev/OpenComputers/master/MineOS/License.txt", path = "System/OS/License.txt" },
 	}
 
 	local countOfAll = #preLoadApi
@@ -187,17 +214,55 @@ end
 
 applications = seri.unserialize(getFromPastebin("3j2x4dDn", "System/OS/Applications.txt"))
 
-local image = require("image")
+_G.image = require("image")
+local config = require("config")
 
 local imageOS = image.load("System/OS/Installer/OS_Logo.pic")
---local imageLanguages = image.load("System/OS/Installer/Languages.pic")
+local imageLanguages = image.load("System/OS/Installer/Languages.pic")
 local imageDownloading = image.load("System/OS/Installer/Downloading.pic")
 local imageOK = image.load("System/OS/Installer/OK.pic")
+
+------------------------------ВЫБОР ЯЗЫКА------------------------------------
+
+
+do
+
+	clear()
+
+	image.draw(math.ceil(xSize / 2 - 30), yWindow + 2, imageLanguages)
+
+	--кнопа
+	drawButton("Select language",false)
+
+	waitForClickOnButton("Select language")
+
+	local language = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Select language"}, {"Select", 0x262626, 0x880000, "Russian", "English"}, {"Button", {0xffffff, 0x262626, "OK"}})
+	language = language[1]
+	--УСТАНАВЛИВАЕМ НУЖНЫЙ ЯЗЫК
+	local path = "System/OS/Language.lua"
+	fs.remove(path)
+	fs.makeDirectory(fs.path(path))
+	local file = io.open(path, "w")
+	file:write("return \"" .. language .. "\"")
+	file:close()
+	_G._OSLANGUAGE = language
+
+	--Качаем язык
+	ecs.info("auto", "auto", " ", " Installing language packages...")
+	local pathToLang = "System/OS/Installer/Language.lang"
+	getFromGitHubSafely(GitHubUserUrl .. "IgorTimofeev/OpenComputers/master/Installer/" .. _G._OSLANGUAGE .. ".lang", pathToLang)
+	getFromGitHubSafely(GitHubUserUrl .. "IgorTimofeev/OpenComputers/master/MineOS/License/" .. _G._OSLANGUAGE .. ".txt", "System/OS/License.txt")
+	
+	--Ставим язык
+	lang = config.readAll(pathToLang)
+
+end
+
+
 
 ------------------------------СТАВИТЬ ЛИ ОСЬ------------------------------------
 
 do
-	ecs.clearScreen(padColor)
 	clear()
 
 	image.draw(math.ceil(xSize / 2 - 15), yWindow + 2, imageOS)
@@ -205,32 +270,23 @@ do
 	--Текстик по центру
 	gpu.setBackground(ecs.windowColors.background)
 	gpu.setForeground(ecs.colors.gray)
-	ecs.centerText("x", yWindowEnd - 5 ,"Чтобы начать установку OS, нажмите Далее")
+	ecs.centerText("x", yWindowEnd - 5 , lang.beginOsInstall)
 
 	--кнопа
 	drawButton("->",false)
 
 	waitForClickOnButton("->")
 
-	--УСТАНАВЛИВАЕМ НУЖНЫЙ ЯЗЫК
-	local path = "System/OS/Language.lua"
-	if fs.exists(path) then fs.remove(path) end
-	fs.makeDirectory(fs.path(path))
-	local file = io.open(path, "w")
-	file:write("return \"Russian\"")
-	file:close()
-
 end
 
-------------------------------СТАДИЯ ВЫБОРА ЯЗЫКА------------------------------------------
+------------------------------ЛИЦ СОГЛАЩЕНЬКА------------------------------------------
 
 do
-
 	clear()
 	
 	--Откуда рисовать условия согл
 	local from = 1
-	local xText, yText, TextWidth, TextHeight = xWindow + 4, yWindow + 2, windowWidth - 8, windowHeight - 10
+	local xText, yText, TextWidth, TextHeight = xWindow + 4, yWindow + 2, windowWidth - 8, windowHeight - 7
 
 	--Читаем файл с лиц соглл
 	local lines = {}
@@ -240,31 +296,28 @@ do
 	end
 	file:close()
 
-	--image.draw(math.ceil(xSize / 2 - 30), yWindow + 2, imageLanguages)
-	--ecs.selector(math.floor(xSize / 2 - 10), yWindowEnd - 5, 20, "Russian", {"English", "Russian"}, 0xffffff, 0x000000, true)
-
 	--Штуку рисуем
-	ecs.textField(xText, yText, TextWidth, TextHeight, lines, from)
+	ecs.textField(xText, yText, TextWidth, TextHeight, lines, from, 0xffffff, 0x262626, 0x888888, ecs.colors.blue)
 
 	--Инфо рисуем
-	ecs.centerText("x", yWindowEnd - 5 ,"Принимаете ли вы условия лицензионного соглашения?")
+	--ecs.centerText("x", yWindowEnd - 5 ,"Принимаете ли вы условия лицензионного соглашения?")
 
 	--кнопа
-	drawButton("Принимаю",false)
+	drawButton(lang.acceptLicense, false)
 
 	while true do
 		local e = { event.pull() }
 		if e[1] == "touch" then
-			if ecs.clickedAtArea(e[3], e[4], obj["buttons"]["Принимаю"][1], obj["buttons"]["Принимаю"][2], obj["buttons"]["Принимаю"][3], obj["buttons"]["Принимаю"][4]) then
-				drawButton("Принимаю", true)
+			if ecs.clickedAtArea(e[3], e[4], obj["buttons"][lang.acceptLicense][1], obj["buttons"][lang.acceptLicense][2], obj["buttons"][lang.acceptLicense][3], obj["buttons"][lang.acceptLicense][4]) then
+				drawButton(lang.acceptLicense, true)
 				os.sleep(timing)
 				break
 			end
 		elseif e[1] == "scroll" then
 			if e[5] == -1 then
-				if from < #lines then from = from + 1; ecs.textField(xText, yText, TextWidth, TextHeight, lines, from) end
+				if from < #lines then from = from + 1; ecs.textField(xText, yText, TextWidth, TextHeight, lines, from, 0xffffff, 0x262626, 0x888888, ecs.colors.blue) end
 			else
-				if from > 1 then from = from - 1; ecs.textField(xText, yText, TextWidth, TextHeight, lines, from) end
+				if from > 1 then from = from - 1; ecs.textField(xText, yText, TextWidth, TextHeight, lines, from, 0xffffff, 0x262626, 0x888888, ecs.colors.blue) end
 			end
 		end
 	end
@@ -287,13 +340,13 @@ do
 
 	image.draw(math.floor(xSize/2 - 33), yWindow + 2, imageDownloading)
 
-	ecs.colorTextWithBack(xBar, yBar - 1, ecs.colors.gray, ecs.windowColors.background, "Установка OS")
+	ecs.colorTextWithBack(xBar, yBar - 1, ecs.colors.gray, ecs.windowColors.background, lang.osInstallation)
 	ecs.progressBar(xBar, yBar, barWidth, 1, 0xcccccc, ecs.colors.blue, 0)
 	os.sleep(timing)
 
 	for app = 1, #applications do
 		--ВСЕ ДЛЯ ГРАФОНА
-		drawInfo(xBar, yBar + 1, "Загрузка "..applications[app]["name"])
+		drawInfo(xBar, yBar + 1, lang.downloading .. " " .. applications[app]["name"])
 		local percent = app / #applications * 100
 		ecs.progressBar(xBar, yBar, barWidth, 1, 0xcccccc, ecs.colors.blue, percent)
 
@@ -336,11 +389,15 @@ image.draw(math.floor(xSize/2 - 16), math.floor(ySize/2 - 11), imageOK)
 --Текстик по центру
 gpu.setBackground(ecs.windowColors.background)
 gpu.setForeground(ecs.colors.gray)
-ecs.centerText("x",yWindowEnd - 5, "Система установлена, необходима перезагрузка")
+ecs.centerText("x",yWindowEnd - 5, lang.needToRestart)
 
 --Кнопа
-drawButton("Перезагрузить",false)
+drawButton(lang.restart, false)
 
-waitForClickOnButton("Перезагрузить")
+fs.remove("System/OS/Users.cfg")
+fs.remove("System/OS/Password.cfg")
+fs.remove("System/OS/WithoutProtection.cfg")
+
+waitForClickOnButton(lang.restart)
 
 computer.shutdown(true)
