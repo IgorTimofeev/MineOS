@@ -589,6 +589,7 @@ drawAll()
 
 if args[1] == "o" or args[1] == "open" or args[1] == "-o" or args[1] == "load" then
 	masterPixels = image.load(args[2])
+	reCalculateImageSizes()
 	drawBackgroundAndImage()
 else
 	new()
