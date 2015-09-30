@@ -582,12 +582,16 @@ end
 
 ------------------------------------------------ Старт программы --------------------------------------------------------------
 
---Создаем пустой мастерпиксельс
---createEmptyMasterPixels()
+local args = {...}
 
 --Рисуем весь интерфейс
 drawAll()
-new()
+
+if args[1] == "o" or args[1] == "open" or args[1] == "-o" or args[1] == "load" then
+	masterPixels = image.load(args[2])
+else
+	new()
+end
 
 while true do
 	local e = {event.pull()}
@@ -738,7 +742,7 @@ while true do
 						else
 							masterPixels = image.load(data[1])
 							reCalculateImageSizes()
-							drawImage()
+							drawBackgroundAndImage()
 						end
 					end
 
