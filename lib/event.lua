@@ -292,7 +292,7 @@ end
 function event.takeScreenshot()
   if keyboard.isKeyDown(100) or keyboard.isKeyDown(183) then
     computer.beep(1500)
-    local screenshotPath = "screenshot.jpg"
+    local screenshotPath = "screenshot.pic"
     image.screenshot(screenshotPath)
     computer.beep(2000)
     computer.beep(2000)

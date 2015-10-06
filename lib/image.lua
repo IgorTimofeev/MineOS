@@ -433,6 +433,25 @@ local function loadOldPng(path)
 	return massiv
 end
 
+--Сделать скриншот экрана и сохранить его по указанному пути
+function image.screenshot(path)
+	local picture = {}
+	local foreground, background, symbol
+	picture.width, picture.height = gpu.getResolution()
+	
+	for j = 1, picture.height do
+		for i = 1, picture.width do
+			foreground, background, symbol = gpu.get(i, j)
+			table.insert(picture, background)
+			table.insert(picture, foreground)
+			table.insert(picture, 0x00)
+			table.insert(picture, symbol)
+		end
+	end
+
+	image.save(path, picture)
+end
+
 ------------------------------------------ Примеры работы с библиотекой ------------------------------------------------
 
 -- ecs.prepareToExit()
