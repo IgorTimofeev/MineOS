@@ -441,7 +441,7 @@ function image.screenshot(path)
 	
 	for j = 1, picture.height do
 		for i = 1, picture.width do
-			foreground, background, symbol = gpu.get(i, j)
+			symbol, foreground, background = gpu.get(i, j)
 			table.insert(picture, background)
 			table.insert(picture, foreground)
 			table.insert(picture, 0x00)
