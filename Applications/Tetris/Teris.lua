@@ -240,12 +240,14 @@ end
 
 -------------------------------------------- Программа -------------------------------------------------------------
 
-ecs.prepareToExit()
+--ecs.prepareToExit()
 
 tetris.changeColors(0x008800, 0xFFFF00)
 tetris.draw(10, 5, 27, 20, false)
 tetris.changeColors(0xFF5555, 0xFFFF00)
 tetris.draw(80, 5, 10, 20, true)
+
+ecs.waitForTouchOrClick()
 
 
 

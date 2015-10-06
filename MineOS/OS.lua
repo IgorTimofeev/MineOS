@@ -349,6 +349,7 @@ local function createDesktopShortCuts()
 		"Robot.app",
 		"Shooting.app",
 		"Shop.app",
+		"TetrisAlpha.app"
 	}
 
 	local dockApps = {
@@ -356,7 +357,6 @@ local function createDesktopShortCuts()
 		"Calendar.app",
 		"Control.app",
 		"Photoshop.app",
-		"Pastebin.app",
 	}
 
 	local desktopPath = "System/OS/Desktop/"
