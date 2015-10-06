@@ -490,6 +490,15 @@ function ECSAPI.border(x, y, width, height, back, fore)
 	end
 end
 
+--Кнопка в виде текста в рамке
+function ECSAPI.drawFramedButton(x, y, width, height, text, color)
+	ECSAPI.border(x, y, width, height, gpu.getBackground(), color)
+	gpu.fill(x + 1, y + 1, width - 2, height - 2, " ")
+	x = x + math.floor(width / 2 - unicode.len(text) / 2)
+	y = y + math.floor(width / 2 - 1)
+	gpu.set(x, y, text)
+end
+
 --Юникодовский разделитель
 function ECSAPI.separator(x, y, width, back, fore)
 	ECSAPI.colorTextWithBack(x, y, fore, back, string.rep("─", width))

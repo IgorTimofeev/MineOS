@@ -349,7 +349,8 @@ local function createDesktopShortCuts()
 		"Robot.app",
 		"Shooting.app",
 		"Shop.app",
-		"TetrisAlpha.app"
+		"TetrisAlpha.app",
+		"CodeDoor.app",
 	}
 
 	local dockApps = {
