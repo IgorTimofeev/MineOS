@@ -1,6 +1,7 @@
 local rs
 local component = require("component")
 local gpu = component.gpu
+local unicode = require("unicode")
 local ecs = require("ECSAPI")
 local sides = require("sides")
 local event = require("event")
