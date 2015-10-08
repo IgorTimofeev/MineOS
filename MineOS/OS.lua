@@ -351,6 +351,7 @@ local function createDesktopShortCuts()
 		"Shop.app",
 		"TetrisAlpha.app",
 		"CodeDoor.app",
+		"Snake.app",
 	}
 
 	local dockApps = {
@@ -362,17 +363,21 @@ local function createDesktopShortCuts()
 
 	local desktopPath = "System/OS/Desktop/"
 	local dockPath = "System/OS/Dock/"
-	if not fs.exists(desktopPath) then
-		fs.makeDirectory(desktopPath.."My files")
-		for i = 1, #apps do
-			ecs.createShortCut(desktopPath..ecs.hideFileFormat(apps[i])..".lnk", apps[i])
+
+	fs.makeDirectory(desktopPath .. "My files")
+	for i = 1, #apps do
+		local pathToShortcut = desktopPath .. ecs.hideFileFormat(apps[i]) .. ".lnk"
+		if not fs.exists(pathToShortcut) then
+			ecs.createShortCut(pathToShortcut, apps[i])
 		end
+	end
 
-		fs.remove(dockPath)
-		fs.makeDirectory(dockPath)
+	fs.makeDirectory(dockPath)
 
-		for i = 1, #dockApps do
-			ecs.createShortCut(dockPath..ecs.hideFileFormat(dockApps[i])..".lnk", dockApps[i])
+	for i = 1, #dockApps do
+		local pathToShortcut = dockPath .. ecs.hideFileFormat(dockApps[i]) .. ".lnk"
+		if not fs.exists(pathToShortcut) then
+			ecs.createShortCut(pathToShortcut, dockApps[i])
 		end
 	end
 end
