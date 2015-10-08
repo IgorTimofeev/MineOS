@@ -1,6 +1,4 @@
 
-
-
 -------------------------------------------- Библиотеки -------------------------------------------------------------
 
 local component = require("component")
@@ -13,35 +11,35 @@ local tetris = {}
 
 tetris.screen = {
 	main = {
-		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		{{false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}},
+		{{false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}},
+		{{false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}},
+		{{false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}},
+		{{false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}},
+		{{false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}},
+		{{false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}},
+		{{false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}},
+		{{false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}},
+		{{false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}},
+		{{false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}},
+		{{false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}},
+		{{false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}},
+		{{false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}},
+		{{false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}},
+		{{false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}},
+		{{false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}},
+		{{false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}},
+		{{false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}},
+		{{false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}},
 	},
 	mini = {
-		{0, 0, 0, 0},
-		{0, 0, 0, 0},
-		{0, 0, 0, 0},
-		{0, 0, 0, 0},
+		{{false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}},
+		{{false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}},
+		{{false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}},
+		{{false, 0xF}, {false, 0xF}, {false, 0xF}, {false, 0xF}},
 	},
-	score = 538,
-	highScore = 1000,
+	score = 0,
+	highScore = 0,
 	speed = 1,
 	level = 1,
 }
@@ -49,10 +47,36 @@ tetris.screen = {
 tetris.colors = {
 	tetrisColor = 0xFF5555,
 	screen = 0xCCDBBF,
-	pixel = 0x000000,
+	pixel = {},
 	button = 0xFFFF00,
 }
 
+local sizes = {}
+sizes.xScreenOffset = 4
+sizes.yScreenOffset = 3
+
+--⬛⬜
+
+-------------------------------------------- Функции -------------------------------------------------------------
+
+--Пересчитать размеры корпуса экрана в зависимости от указанного размера массива
+function tetris.recalculateSizes()
+	sizes.widthOfScreen = #tetris.screen.main[1] * 2 + (function() if tetris.showInfoPanel then return 10 else return 0 end end)()
+	sizes.heightOfScreen = #tetris.screen.main
+end
+
+--Сгенерировать новый пустой массив указанного экрана. Экран будет как бы выключенным
+function tetris.generateScreenArray(width, height, whichScreen)
+	tetris.screen[whichScreen or "main"] = {}
+	for j = 1, height do
+		tetris.screen[whichScreen or "main"][j] = {}
+		for i = 1, width do
+			tetris.screen[whichScreen or "main"][j][i] = {false, 0xF}
+		end
+	end
+end
+
+--Рассчитать более темный вариант указанного цвета
 local function calculateBrightness(color1, brightness)
 	local color
 	if brightness < 0 then color = 0x000000 else color = 0xFFFFFF end
@@ -60,6 +84,7 @@ local function calculateBrightness(color1, brightness)
 	return colorlib.alphaBlend(color1, color, brightness)
 end
 
+--Перерассчитать все цвета
 local function recalculateColors()
 	--Всякие тени, света для корпуса
 	tetris.colors.light1 = calculateBrightness(tetris.colors.tetrisColor, 0xCC)
@@ -68,63 +93,53 @@ local function recalculateColors()
 	tetris.colors.shadow1 = calculateBrightness(tetris.colors.tetrisColor, -(0xCC))
 	tetris.colors.shadow2 = calculateBrightness(tetris.colors.tetrisColor, -(0xAA))
 	tetris.colors.shadow3 = calculateBrightness(tetris.colors.tetrisColor, -(0x77))
+	
 	--Для кнопочек
 	if tetris.colors.button > 0x777777 then
 		tetris.colors.buttonText = calculateBrightness(tetris.colors.button, -(0x77))
 	else
 		tetris.colors.buttonText = calculateBrightness(tetris.colors.button, 0x77)
 	end
-end
 
-local sizes = {}
-sizes.xScreenOffset = 4
-sizes.yScreenOffset = 3
+	--Просчитываем массив интенсивности цветов пикселя
+	tetris.colors.pixel = {}
 
--------------------------------------------- Функции -------------------------------------------------------------
-
-function tetris.recalculateSizes()
-	sizes.widthOfScreen = #tetris.screen.main[1] * 2 + (function() if tetris.showInfoPanel then return 10 else return 0 end end)()
-	sizes.heightOfScreen = #tetris.screen.main
-end
-
-function tetris.generateScreenArray(width, height)
-	tetris.screen.main = {}
-	for j = 1, height do
-		tetris.screen.main[j] = {}
-		for i = 1, width do
-			tetris.screen.main[j][i] = false
-		end
+	for i = 0, 15 do
+		tetris.colors.pixel[i] = colorlib.alphaBlend(tetris.colors.screen, 0x000000, (0xFF - i * 16))
 	end
+
+	-- ecs.square(2, 2, 10, 5, tetris.colors.pixel[0x0])
+
+	-- ecs.waitForTouchOrClick()
+
+	-- local str = ""
+	-- for i = 0, #tetris.colors.pixel do
+	-- 	str = str .. ecs.HEXtoString(tetris.colors.pixel[i], 6, true) .. " "
+	-- end
+
+	-- ecs.error(str)
 end
 
-function tetris.drawOnlyMainScreen()
-	local xPos, yPos = tetris.xScreen, tetris.yScreen
-	for j = 1, #tetris.screen.main do
-		xPos = tetris.xScreen
-		for i = 1, #tetris.screen.main[j] do
-			if tetris.screen.main[j][i] == true then
-				gpu.set(xPos, yPos, "⬛")
-			else
-				gpu.set(xPos, yPos, "⬜")
-			end
-
-			xPos = xPos + 2
-		end
-		yPos = yPos + 1
-	end
-	xPos, yPos = nil, nil
-end
-
-function tetris.drawOnlyMiniScreen(x, y)
+--Нарисовать пиксели указанного экрана (main или mini)
+function tetris.drawPixels(x, y, whichScreen)
+	--Задаем стартовое значение
+	whichScreen = whichScreen or "main"
+	--Задаем стартовые координаты
 	local xPos, yPos = x, y
-	for j = 1, #tetris.screen.mini do
-		xPos = x	
-		for i = 1, #tetris.screen.mini[j] do
-			if tetris.screen.mini[j][i] == true then
+	--Перебираем массив указанного экрана
+	for j = 1, #tetris.screen[whichScreen] do
+		xPos = x
+		for i = 1, #tetris.screen[whichScreen][j] do
+			
+			if gpu.getForeground() ~= tetris.colors.pixel[tetris.screen[whichScreen][j][i][2]] then
+				gpu.setForeground(tetris.colors.pixel[tetris.screen[whichScreen][j][i][2]])
+			end
+
+			if tetris.screen[whichScreen][j][i][1] == true then
 				gpu.set(xPos, yPos, "⬛")
 			else
 				gpu.set(xPos, yPos, "⬜")
-			end
+			end			
 
 			xPos = xPos + 2
 		end
@@ -133,47 +148,28 @@ function tetris.drawOnlyMiniScreen(x, y)
 	xPos, yPos = nil, nil
 end
 
-function tetris.getPixel(x, y, whichScreen)
-	return tetris.screen[whichScreen or "main"][y][x]
-end
-
-function tetris.setPixel(x, y, state, whichScreen)
-	tetris.screen[whichScreen or "main"][y][x] = state
-	if state == true then
-		gpu.set(tetris.xScreen + x * 2 - 2, tetris.yScreen + y - 1, "⬛")
-	else
-		gpu.set(tetris.xScreen + x * 2 - 2, tetris.yScreen + y - 1, "⬜")
-	end
-end
-
-function tetris.changeColors(caseColor, buttonsColor, screenColor, pixelsColor)
-	tetris.colors.tetrisColor = caseColor or tetris.colors.tetrisColor
-	tetris.colors.button = buttonsColor or tetris.colors.button
-	tetris.colors.screen = screenColor or tetris.colors.screen
-	tetris.colors.pixel = pixelsColor or tetris.colors.pixel
-end
-
-function tetris.drawScreen()
-	local xPos, yPos = tetris.xScreen, tetris.yScreen
-	--Рисуем квадрат экрана
-	ecs.square(xPos, yPos, sizes.widthOfScreen, sizes.heightOfScreen, tetris.colors.screen)
-	--Делаем цвет пикселей
-	gpu.setForeground(tetris.colors.pixel)
-	tetris.drawOnlyMainScreen()
-	
+--Нарисовать инфопанель
+function tetris.drawInfoPanel()
 	--Если показывать инфопанель = труе, то показать, хули
 	if tetris.showInfoPanel then
-		xPos, yPos = xPos + sizes.widthOfScreen - 9, yPos + 1
+		local xPos, yPos = tetris.xScreen + sizes.widthOfScreen - 9, tetris.yScreen + 1
+
+		--Ставим максимально интенсивный цвет из возможных
+		gpu.setForeground(tetris.colors.pixel[0xF])
 
 		gpu.set(xPos + 1, yPos, "Score:"); yPos = yPos + 1
-		gpu.set(xPos + 2, yPos, tostring(tetris.screen.score)); yPos = yPos + 2
+		gpu.set(xPos + 3, yPos, tostring(tetris.screen.score)); yPos = yPos + 2
 
 		gpu.set(xPos, yPos, "HiScore:"); yPos = yPos + 1
-		gpu.set(xPos + 1, yPos, tostring(tetris.screen.highScore)); yPos = yPos + 2
+		gpu.set(xPos + 3, yPos, tostring(tetris.screen.highScore)); yPos = yPos + 2
 
 		gpu.set(xPos + 2, yPos, "Next:"); yPos = yPos + 1
 
-		tetris.drawOnlyMiniScreen(xPos, yPos); yPos = yPos + 5
+		--Рисуем мини-экран
+		tetris.drawPixels(xPos, yPos, "mini"); yPos = yPos + 5
+
+		--Ставим максимально интенсивный цвет из возможных
+		gpu.setForeground(tetris.colors.pixel[0xF])
 
 		gpu.set(xPos + 1, yPos, "Speed:"); yPos = yPos + 1
 		gpu.set(xPos + 3, yPos, tostring(tetris.screen.speed)); yPos = yPos + 2
@@ -181,6 +177,43 @@ function tetris.drawScreen()
 		gpu.set(xPos + 1, yPos, "Level:"); yPos = yPos + 1
 		gpu.set(xPos + 3, yPos, tostring(tetris.screen.level)); yPos = yPos + 2
 	end
+end
+
+function tetris.getPixel(x, y, whichScreen)
+	return tetris.screen[whichScreen or "main"][y][x]
+end
+
+--Нарисовать пиксель по указанным координатам (экрана!) указанной яркости на указанном экране
+function tetris.setPixel(x, y, state, intensivity, whichScreen)
+	intensivity = intensivity or 0xF
+	whichScreen = whichScreen or "main"
+	tetris.screen[whichScreen][y][x][1] = state
+	tetris.screen[whichScreen][y][x][2] = intensivity
+
+	if gpu.getForeground() ~= tetris.colors.pixel[tetris.screen[whichScreen][y][x][2]] then
+		gpu.setForeground(tetris.colors.pixel[tetris.screen[whichScreen][y][x][2]])
+	end
+
+	if tetris.screen[whichScreen][y][x][1] == true then
+		gpu.set(tetris.xScreen + x * 2 - 2, tetris.yScreen + y - 1, "⬛")
+	else
+		gpu.set(tetris.xScreen + x * 2 - 2, tetris.yScreen + y - 1, "⬜")
+	end
+end
+
+function tetris.changeColors(caseColor, buttonsColor, screenColor)
+	tetris.colors.tetrisColor = caseColor or tetris.colors.tetrisColor
+	tetris.colors.button = buttonsColor or tetris.colors.button
+	tetris.colors.screen = screenColor or tetris.colors.screen
+end
+
+function tetris.drawScreen()
+	--Рисуем квадрат экрана
+	ecs.square(tetris.xScreen, tetris.yScreen, sizes.widthOfScreen, sizes.heightOfScreen, tetris.colors.screen)
+	--Рисуем большой экран
+	tetris.drawPixels(tetris.xScreen, tetris.yScreen, "main")
+	--Рисуем инфопанель
+	tetris.drawInfoPanel()
 end
 
 function tetris.drawButtons()
@@ -250,15 +283,21 @@ end
 
 -- ecs.prepareToExit()
 
--- tetris.draw(2, 2, 10, 20, true)
+-- tetris.draw(2, 3, 10, 20, true)
 
 -- gpu.setBackground(tetris.colors.screen)
--- gpu.setForeground(tetris.colors.pixel)
 
--- tetris.setPixel(2, 2, true)
--- tetris.setPixel(5, 2, true)
--- tetris.setPixel(1, 6, true)
+-- local intensivity = 0x0
+-- local xPos, yPos = 1, 1
+-- for i = 1, 16 do
+-- 	if xPos > 10 then xPos = 1; yPos = yPos + 1 end
+-- 	tetris.setPixel(xPos, yPos, true, intensivity)
+-- 	tetris.setPixel(xPos, yPos + 3, false, intensivity)
+-- 	xPos = xPos + 1
+-- 	intensivity = intensivity + 0x1
+-- end
 
+return tetris
 
 
 
