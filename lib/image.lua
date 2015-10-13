@@ -382,7 +382,7 @@ function image.draw(x, y, rawPicture)
 				--Получаем временную репрезентацию
 				xPos, yPos, alpha, symbol = picture[background][foreground][i], picture[background][foreground][i + 1], picture[background][foreground][i + 2], picture[background][foreground][i + 3]
 				--Если альфа имеется, но она не совсем прозрачна
-				if alpha > 0x00 and alpha < 0xFF then
+				if (alpha > 0x00 and alpha < 0xFF) or (alpha == 0xFF and symbol ~= " ")then
 					_, _, currentBackground = gpu.get(x + xPos, y + yPos)
 					currentBackground = alphaBlend(currentBackground, background, alpha)
 					gpu.setBackground(currentBackground)
