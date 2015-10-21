@@ -207,6 +207,7 @@ local massivWithProfile = {
 local market = {
 	["minecraft:diamond"] = {
 		[0] = {
+			["label"] = "Diamond",
 			{
 				["nickname"] = "Daun228",
 				["count"] = 228,
@@ -216,6 +217,7 @@ local market = {
 	},
 	["minecraft:log"] = {
 		[0] = {
+			["label"] = "Log",
 			{
 				["nickname"] = "CykaRotEbal",
 				["count"] = 121304,
@@ -225,6 +227,7 @@ local market = {
 	},
 	["minecraft:iron_ore"] = {
 		[0] = {
+			["label"] = "Iron Ore",
 			{
 				["nickname"] = "Blyad",
 				["count"] = 2424194,
@@ -233,23 +236,24 @@ local market = {
 		},
 	},
 	["minecraft:gold_ore"] = {
-	[0] = {
-		{
-			["nickname"] = "EEOneGuy",
-			["count"] = 5,
-			["price"] = 5,
+		[0] = {
+			["label"] = "Gold Ore",
+			{
+				["nickname"] = "EEOneGuy",
+				["count"] = 5,
+				["price"] = 5,
+			},
+			{
+				["nickname"] = "Pidar",
+				["count"] = 10,
+				["price"] = 10,
+			},
+			{
+				["nickname"] = "Mamoeb",
+				["count"] = 15,
+				["price"] = 15,
+			},
 		},
-		{
-			["nickname"] = "Pidar",
-			["count"] = 10,
-			["price"] = 10,
-		},
-		{
-			["nickname"] = "Mamoeb",
-			["count"] = 15,
-			["price"] = 15,
-		},
-	},
 	},
 }
 
@@ -272,13 +276,15 @@ local shopPath = "System/Shop/"
 local databasePath = shopPath .. "Users/"
 local marketPath = shopPath .. "Market.txt"
 local adminShopPath = shopPath .. "AdminShop.txt"
+local adminMoneyPath = shopPath .. "AdminMoney.txt"
+local logPath = shopPath .. "Shop.log"
 
 local function init()
 	fs.makeDirectory(databasePath)
 end
 
-local function saveUser(nickname, massiv)
-	local file = io.open(databasePath .. nickname .. ".txt", "w")
+local function saveUser(massiv)
+	local file = io.open(databasePath .. massiv.nickname .. ".txt", "w")
 	file:write(serialization.serialize(massiv))
 	file:close()
 end
@@ -296,18 +302,18 @@ local function createNewUser(nickname)
 			},
 		},
 	}
-	saveUser(nickname, massiv)
+	saveUser(massiv)
 	return massiv
 end
 
 local function loadUser(nickname)
 	if not fs.exists(databasePath .. nickname .. ".txt") then
-		massivWithProfile = createNewUser(nickname)
+		return createNewUser(nickname)
 	else
 		local file = io.open(databasePath .. nickname .. ".txt", "r")
 		local text = file:read("*a")
 		file:close()
-		massivWithProfile = serialization.unserialize(text)
+		return serialization.unserialize(text)
 	end
 end
 
@@ -339,6 +345,36 @@ local function loadAdminShop()
 		file:close()
 		adminShop = serialization.unserialize(text)
 	end
+end
+
+local function saveAdminMoney(money)
+	local file = io.open(adminMoneyPath, "w")
+	file:write(tostring(money))
+	file:close()
+end
+
+local function loadAdminMoney()
+	if not fs.exists(adminMoneyPath) then
+		saveAdminMoney(0)
+		return 0
+	else
+		local file = io.open(adminMoneyPath, "r")
+		local text = file:read("*a")
+		file:close()
+		return tonumber(text)
+	end
+end
+
+local function addMoneyToAdmins(money)
+	local currentAdminsMoney = loadAdminMoney()
+	currentAdminsMoney = currentAdminsMoney + money
+	saveAdminMoney(currentAdminsMoney)
+end
+
+local function log(text)
+	local file = io.open(logPath, "a")
+	file:write(text, "\n")
+	file:close()
 end
 
 ------------------------------------------ Функции -----------------------------------------------------------------
@@ -454,14 +490,16 @@ local function sellToPlayers(number, count, priceForOneItem, nameOfSeller)
 	--Че будем добавлять на ТП
 	local govno = { ["nickname"] = nameOfSeller, ["count"] = count, ["price"] = priceForOneItem}
 	--Добавляем ее на ТП
+	--Если есть такой ид
 	if market[item.id] then
+		--И если есть такая дата
 		if market[item.id][item.data] then
 			table.insert(market[item.id][item.data], govno)
 		else
-			market[item.id][item.data] = { govno }
+			market[item.id][item.data] = { ["label"] = item.label, govno }
 		end
 	else
-		market[item.id] = { [item.data] = { govno } }
+		market[item.id] = { [item.data] = { ["label"] = item.label, govno } }
 	end
 end
 
@@ -469,7 +507,7 @@ end
 --Выдает успех, если предмет найден
 --А также самую лучшую цену, количество предмета на торг. площадке и никнейм самого дешевого
 local function getInfoAboutItemOnMarket(id, data)
-	local price, count, success, nickname = nil, 0, false, nil
+	local price, count, success, nickname, label = nil, 0, false, nil, "CYKA"
 	--Если в маркете есть такой ид
 	if market[id] then
 		--И такая дата
@@ -489,10 +527,11 @@ local function getInfoAboutItemOnMarket(id, data)
 				--Прибавляем кол-во предметов
 				count = count + market[id][data][i].count
 			end
+			label = market[id][data].label
 			success = true
 		end
 	end
-	return success, price, count, nickname
+	return success, price, count, nickname, label
 end
 
 
@@ -734,8 +773,36 @@ local function sell()
 	end
 end
 
+--Купить указанное количество указанного предмета у указанного продавца
 local function buyFromSeller(id, data, sellerNumber, count)
-
+	--Считаем, сколько бабок будет у нас в обиходе
+	local moneyToWork = count * market[id][data][sellerNumber].price
+	--Считаем, сколько админы наварят с этого обихода
+	local moneyForAdmins = round(moneyToWork * comissionMultiplyer, 2)
+	--Отнимаем бабки у нас с учетом навара админов
+	massivWithProfile.money = massivWithProfile.money - (moneyToWork + moneyForAdmins)
+	--Загружаем профиль продавца
+	local massivWithSellerProfile = loadUser(market[id][data][sellerNumber].nickname)
+	--Добавляем бабки продавцу
+	massivWithSellerProfile.money = massivWithSellerProfile.money + comission(moneyToWork)
+	--Добавляем бабки админам
+	addMoneyToAdmins(moneyForAdmins)
+	--Добавляем предметы нам
+	addItemToInventory(id, data, market[id][data].label, count)
+	--Удаляем указанное количество предметов с торговой площадки
+	market[id][data][sellerNumber].count = market[id][data][sellerNumber].count - count
+	--Сохраняем в лог данные о трансакции
+	log("Игрок " .. massivWithProfile.nickname .. " приобрел " .. count .. " штук товара \"" .. market[id][data].label .. " (" .. id .. " " .. data .. ")\" у игрока " .. market[id][data][sellerNumber].nickname .. " по цене " .. market[id][data][sellerNumber].price .. moneySymbol .. " за штуку. Сумма трансакции составляет " .. moneyToWork .. moneySymbol .. ", администрация магазина получила " .. moneyForAdmins .. moneySymbol)
+	--Если количество предметов стало 0, то удалить запись продавца об этом предмете
+	if market[id][data][sellerNumber].count <= 0 then market[id][data][sellerNumber] = nil end
+	--Если не существует более продавцов данной Даты, то удалить запись о дате
+	if #market[id][data] <= 0 then market[id][data] = nil end
+	--Сохраняем базу данных торговой площадки
+	saveMarket()
+	--Сохраняем свой профиль
+	saveUser(massivWithProfile)
+	--Сохраняем профиль продавца
+	saveUser(massivWithSellerProfile)
 end
 
 --Окно покупки
@@ -757,21 +824,23 @@ local function buy()
 	local currentFilter
 	local marketSellersList = false
 
+	local currentID, currentData, currentSeller
+
 	local function filter(makretFilter)
 		filteredMakretArray = {}
 
-		local success, price, count, nickname
+		local success, price, count, nickname, label
 		for id in pairs(market) do
 			for data in pairs(market[id]) do
 
-				success, price, count, nickname = getInfoAboutItemOnMarket(id, data)
+				success, price, count, nickname, label = getInfoAboutItemOnMarket(id, data)
 
 				if makretFilter then
 					if string.find(string.lower(id), string.lower(makretFilter)) then
-						table.insert(filteredMakretArray, {["id"] = id, ["data"] = data, ["count"] = count, ["price"] = price})
+						table.insert(filteredMakretArray, {["id"] = id, ["data"] = data, ["count"] = count, ["price"] = price, ["label"] = label})
 					end
 				else
-					table.insert(filteredMakretArray, {["id"] = id, ["data"] = data, ["count"] = count, ["price"] = price})
+					table.insert(filteredMakretArray, {["id"] = id, ["data"] = data, ["count"] = count, ["price"] = price, ["label"] = label})
 				end
 
 			end
@@ -821,6 +890,10 @@ local function buy()
 
 		if marketSellersList then
 
+			gpu.setForeground(0xFFFFFF)
+			ecs.centerText("x", yPos, "Список продавцов предмета \"" .. currentID .. " " .. currentData .. "\"")
+			yPos = yPos + 2
+
 			yPos = infoPanel(yPos)
 
 			countOfItemsOfMarketToShop = math.floor((ySize - yPos - 1) / 4)
@@ -855,7 +928,7 @@ local function buy()
 			for i = itemOfMarketToShow, (itemOfMarketToShow + countOfItemsOfMarketToShop - 1) do
 				if filteredMakretArray[i] then
 					ecs.square(xPos, yPos, xSize - 7, 3, 0xFFFFFF)
-					ecs.colorText(xPos + 2, yPos + 1, 0x000000, filteredMakretArray[i].id .. " " .. filteredMakretArray[i].data)
+					ecs.colorText(xPos + 2, yPos + 1, 0x000000, filteredMakretArray[i].label)
 					gpu.set(xCountOrSeller, yPos + 1, tostring(filteredMakretArray[i].count) .. " шт.")
 					gpu.set(xPrice, yPos + 1, "От " .. tostring(filteredMakretArray[i].price) .. moneySymbol ..  " за шт.")
 
@@ -883,6 +956,9 @@ local function buy()
 						ecs.square(obj["BuyItems"][key][1], obj["BuyItems"][key][2], obj["BuyItems"][key][3] - obj["BuyItems"][key][1], 3, ecs.colors.blue)
 						os.sleep(0.2)
 						--Рисуем
+						currentID = filteredMakretArray[key].id
+						currentData = filteredMakretArray[key].data
+
 						marketSellersList = true
 						getItemSellers(filteredMakretArray[key].id, filteredMakretArray[key].data)
 						itemOfMarketToShow = 1
@@ -898,7 +974,7 @@ local function buy()
 					if ecs.clickedAtArea(e[3], e[4], obj["BuyButtons"][key][1], obj["BuyButtons"][key][2], obj["BuyButtons"][key][3], obj["BuyButtons"][key][4]) then
 						ecs.drawAdaptiveButton(obj["BuyButtons"][key][1], obj["BuyButtons"][key][2], 2, 1, "Купить", 0xFF4940, 0xFFFFFF)
 						
-						local skokaMozhnaKupit = math.min(itemMarketArray[key].count, math.floor(massivWithProfile.money / itemMarketArray[key].price))
+						local skokaMozhnaKupit = math.min(itemMarketArray[key].count, math.floor(massivWithProfile.money / (itemMarketArray[key].price + round(itemMarketArray[key].price * comissionMultiplyer))))
 
 						local text = "Сводка по покупке: вы можете купить максимум " .. skokaMozhnaKupit .. " штук. Правила пользовательского соглашения: нажимая кнопку \"Купить\", вы получаете указанное количество предметов по оптимально подобранной цене. Система автоматически найдет наиболее выгодные лоты и перечислит ваши деньги продавцам. Затем указанное количество предметов будет немедленно передано вам в цифровой инвентарь. Автор программы не несет ответственности за утерю наличности из-за любых внешних воздействий на компьютер. Вы сами решаете, доверять подобным сервисам или нет."
 
@@ -907,7 +983,7 @@ local function buy()
 						if not data[2] then
 							ecs.universalWindow("auto", "auto", 40, 0xDDDDDD, true, {"EmptyLine"}, {"CenterText", 0x262626, "Для покупки необходимо принять"}, {"CenterText", 0x262626, "условия пользовательского соглашения."}, {"EmptyLine"}, {"Button", {0x33db80, 0xffffff, "OK"}})
 						else
-							buyFromSeller()
+							buyFromSeller(currentID, currentData, key, data[1])
 						end
 
 						--Рефрешим список айтемов ТП
@@ -944,7 +1020,6 @@ local function buy()
 	end
 end
 
-
 local function main()
 	--Рисуем топбар
 	ecs.drawTopBar(1, 1, xSize, currentMode, colors.topbar, colors.topbarText, {"Главная", "🏠"}, {"Купить", "⟱"}, {"Продать", "⟰"}, {"Лотерея", "☯"}, {"Мой профиль", moneySymbol})
@@ -966,7 +1041,7 @@ init()
 --Загрузка файла магазина админов
 loadAdminShop()
 
-loadUser("IT")
+massivWithProfile = loadUser("IT")
 
 while true do
 	main()
