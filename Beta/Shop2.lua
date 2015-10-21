@@ -794,9 +794,9 @@ local function buyFromSeller(id, data, sellerNumber, count)
 	--Сохраняем в лог данные о трансакции
 	log("Игрок " .. massivWithProfile.nickname .. " приобрел " .. count .. " штук товара \"" .. market[id][data].label .. " (" .. id .. " " .. data .. ")\" у игрока " .. market[id][data][sellerNumber].nickname .. " по цене " .. market[id][data][sellerNumber].price .. moneySymbol .. " за штуку. Сумма трансакции составляет " .. moneyToWork .. moneySymbol .. ", администрация магазина получила " .. moneyForAdmins .. moneySymbol)
 	--Если количество предметов стало 0, то удалить запись продавца об этом предмете
-	if market[id][data][sellerNumber].count <= 0 then market[id][data][sellerNumber] = nil end
+	if market[id][data][sellerNumber].count <= 0 then table.remove(market[id][data], sellerNumber) end
 	--Если не существует более продавцов данной Даты, то удалить запись о дате
-	if #market[id][data] <= 0 then market[id][data] = nil end
+	if #market[id][data] <= 0 then market[id] = nil end
 	--Сохраняем базу данных торговой площадки
 	saveMarket()
 	--Сохраняем свой профиль
