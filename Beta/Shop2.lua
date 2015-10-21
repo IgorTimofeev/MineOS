@@ -734,18 +734,9 @@ local function sell()
 	end
 end
 
-local function findBestSeller(id, data)
-	local bestprice = math.huge
-	local bestSeller
-	for i = 1, #market[id][data] do
-		if market[id][data][i].price < bestprice then
-			bestprice = market[id][data][i].price
-			bestSeller = i
-		end
-	end
-	return bestSeller
-end
+local function buyFromSeller(id, data, sellerNumber, count)
 
+end
 
 --Окно покупки
 local function buy()
@@ -843,8 +834,12 @@ local function buy()
 					gpu.set(xCountOrSeller, yPos + 1, tostring(itemMarketArray[i].count) .. " шт.")
 					gpu.set(xPrice, yPos + 1, tostring(itemMarketArray[i].price) .. moneySymbol ..  " за шт.")
 
-					newObj("BuyButtons", i, ecs.drawAdaptiveButton(xSize - 13, yPos, 2, 1, "Купить", 0x66b6ff, 0xFFFFFF))
-					
+					if itemMarketArray[i].price > massivWithProfile.money then
+						ecs.drawAdaptiveButton(xSize - 13, yPos, 2, 1, "Купить", 0xBBBBBB, 0xFFFFFF)
+					else
+						newObj("BuyButtons", i, ecs.drawAdaptiveButton(xSize - 13, yPos, 2, 1, "Купить", 0x66b6ff, 0xFFFFFF))
+					end
+
 					yPos = yPos + 4
 				end
 			end
@@ -903,15 +898,16 @@ local function buy()
 					if ecs.clickedAtArea(e[3], e[4], obj["BuyButtons"][key][1], obj["BuyButtons"][key][2], obj["BuyButtons"][key][3], obj["BuyButtons"][key][4]) then
 						ecs.drawAdaptiveButton(obj["BuyButtons"][key][1], obj["BuyButtons"][key][2], 2, 1, "Купить", 0xFF4940, 0xFFFFFF)
 						
+						local skokaMozhnaKupit = math.min(itemMarketArray[key].count, math.floor(massivWithProfile.money / itemMarketArray[key].price))
 
-						local text = "Правила пользовательского соглашения: нажимая кнопку \"Купить\", вы получаете указанное количество предметов по оптимально подобранной цене. Система автоматически найдет наиболее выгодные лоты и перечислит ваши деньги продавцам. Затем указанное количество предметов будет немедленно передано вам в цифровой инвентарь. Автор программы не несет ответственности за утерю наличности из-за любых внешних воздействий на компьютер. Вы сами решаете, доверять подобным сервисам или нет."
+						local text = "Сводка по покупке: вы можете купить максимум " .. skokaMozhnaKupit .. " штук. Правила пользовательского соглашения: нажимая кнопку \"Купить\", вы получаете указанное количество предметов по оптимально подобранной цене. Система автоматически найдет наиболее выгодные лоты и перечислит ваши деньги продавцам. Затем указанное количество предметов будет немедленно передано вам в цифровой инвентарь. Автор программы не несет ответственности за утерю наличности из-за любых внешних воздействий на компьютер. Вы сами решаете, доверять подобным сервисам или нет."
 
-						local data = ecs.universalWindow("auto", "auto", 40, 0xDDDDDD, true, {"EmptyLine"}, {"CenterText", 0x262626, "Сколько вы желаете купить?"}, {"EmptyLine"}, {"Slider", 0x262626, 0x880000, 1, math.min(100, filteredMakretArray[key].count), 1, "", " шт."}, {"EmptyLine"}, {"TextField", 6, 0xFFFFFF, 0x262626, 0xBBBBBB, ecs.colors.blue, text}, {"EmptyLine"}, {"Switch", 0x3366CC, 0xffffff, 0x262626, "С условиями выше согласен", true}, {"EmptyLine"}, {"Button", {0x33db80, 0xffffff, "Купить"}})
+						local data = ecs.universalWindow("auto", "auto", 40, 0xDDDDDD, true, {"EmptyLine"}, {"CenterText", 0x262626, "Сколько вы желаете купить?"}, {"EmptyLine"}, {"Slider", 0x262626, 0x880000, 1, skokaMozhnaKupit, 1, "", " шт."}, {"EmptyLine"}, {"TextField", 6, 0xFFFFFF, 0x262626, 0xBBBBBB, ecs.colors.blue, text}, {"EmptyLine"}, {"Switch", 0x3366CC, 0xffffff, 0x262626, "С условиями выше согласен", true}, {"EmptyLine"}, {"Button", {0x33db80, 0xffffff, "Купить"}})
 
 						if not data[2] then
 							ecs.universalWindow("auto", "auto", 40, 0xDDDDDD, true, {"EmptyLine"}, {"CenterText", 0x262626, "Для покупки необходимо принять"}, {"CenterText", 0x262626, "условия пользовательского соглашения."}, {"EmptyLine"}, {"Button", {0x33db80, 0xffffff, "OK"}})
 						else
-							buyBestItems(filteredMakretArray[key].id, filteredMakretArray[key].data, data[1])
+							buyFromSeller()
 						end
 
 						--Рефрешим список айтемов ТП
