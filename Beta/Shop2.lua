@@ -4,7 +4,9 @@
 local event = require("event")
 local component = require("component")
 local unicode = require("unicode")
+local fs = require("filesystem")
 local sides = require("sides")
+local serialization = require("serialization")
 local chestSide = sides.up
 local gpu = component.gpu
 local inventoryController
@@ -129,76 +131,76 @@ local adminShop = {
 
 --Массив инвентаря конкретного игрока
 local massivWithProfile = {
-	["nickname"] = "IT",
-	["money"] = 100,
-	["inventory"] = {
-		{
-			["id"] = "minecraft:stone",
-			["label"] = "Stone",
-			["data"] = 0,
-			["count"] = 64,
-		},
-		-- {
-		-- 	["id"] = "minecraft:grass",
-		-- 	["data"] = 0,
-		-- 	["label"] = "Grass",
-		-- 	["count"] = 32,
-		-- },
-		-- {
-		-- 	["id"] = "minecraft:wool",
-		-- 	["data"] = 0,
-		-- 	["label"] = "Red wool",
-		-- 	["count"] = 12,
-		-- },
-		-- {
-		-- 	["id"] = "minecraft:diamond",
-		-- 	["data"] = 0,
-		-- 	["label"] = "Diamond",
-		-- 	["count"] = 999,
-		-- },
-		-- {
-		-- 	["id"] = "minecraft:cobblestone",
-		-- 	["data"] = 0,
-		-- 	["label"] = "Cobblestone",
-		-- 	["count"] = 47000,
-		-- },
-		-- {
-		-- 	["id"] = "minecraft:redstone",
-		-- 	["data"] = 0,
-		-- 	["label"] = "Redstone",
-		-- 	["count"] = 12000,
-		-- },
-		-- {
-		-- 	["id"] = "minecraft:iron_ore",
-		-- 	["data"] = 0,
-		-- 	["label"] = "Iron ore",
-		-- 	["count"] = 572,
-		-- },
-		-- {
-		-- 	["id"] = "minecraft:gold_ore",
-		-- 	["data"] = 0,
-		-- 	["label"] = "Gold ore",
-		-- 	["count"] = 246,
-		-- },
-		-- {
-		-- 	["id"] = "minecraft:coal_ore",
-		-- 	["data"] = 0,
-		-- 	["label"] = "Coal ore",
-		-- 	["count"] = 11,
-		-- },
-		-- {
-		-- 	["id"] = "IC2:itemOreIridium",
-		-- 	["data"] = 0,
-		-- 	["label"] = "Iridium Ore",
-		-- 	["count"] = 5,
-		-- },
-		-- {
-		-- 	["id"] = "minecraft:log",
-		-- 	["data"] = 0,
-		-- 	["label"] = "Log",
-		-- 	["count"] = 124782,
-		-- },
-	},
+	-- ["nickname"] = "IT",
+	-- ["money"] = 100,
+	-- ["inventory"] = {
+	-- 	{
+	-- 		["id"] = "minecraft:stone",
+	-- 		["label"] = "Stone",
+	-- 		["data"] = 0,
+	-- 		["count"] = 64,
+	-- 	},
+	-- 	{
+	-- 		["id"] = "minecraft:grass",
+	-- 		["data"] = 0,
+	-- 		["label"] = "Grass",
+	-- 		["count"] = 32,
+	-- 	},
+	-- 	{
+	-- 		["id"] = "minecraft:wool",
+	-- 		["data"] = 0,
+	-- 		["label"] = "Red wool",
+	-- 		["count"] = 12,
+	-- 	},
+	-- 	{
+	-- 		["id"] = "minecraft:diamond",
+	-- 		["data"] = 0,
+	-- 		["label"] = "Diamond",
+	-- 		["count"] = 999,
+	-- 	},
+	-- 	{
+	-- 		["id"] = "minecraft:cobblestone",
+	-- 		["data"] = 0,
+	-- 		["label"] = "Cobblestone",
+	-- 		["count"] = 47000,
+	-- 	},
+	-- 	{
+	-- 		["id"] = "minecraft:redstone",
+	-- 		["data"] = 0,
+	-- 		["label"] = "Redstone",
+	-- 		["count"] = 12000,
+	-- 	},
+	-- 	{
+	-- 		["id"] = "minecraft:iron_ore",
+	-- 		["data"] = 0,
+	-- 		["label"] = "Iron ore",
+	-- 		["count"] = 572,
+	-- 	},
+	-- 	{
+	-- 		["id"] = "minecraft:gold_ore",
+	-- 		["data"] = 0,
+	-- 		["label"] = "Gold ore",
+	-- 		["count"] = 246,
+	-- 	},
+	-- 	{
+	-- 		["id"] = "minecraft:coal_ore",
+	-- 		["data"] = 0,
+	-- 		["label"] = "Coal ore",
+	-- 		["count"] = 11,
+	-- 	},
+	-- 	{
+	-- 		["id"] = "IC2:itemOreIridium",
+	-- 		["data"] = 0,
+	-- 		["label"] = "Iridium Ore",
+	-- 		["count"] = 5,
+	-- 	},
+	-- 	{
+	-- 		["id"] = "minecraft:log",
+	-- 		["data"] = 0,
+	-- 		["label"] = "Log",
+	-- 		["count"] = 124782,
+	-- 	},
+	-- },
 }
 
 --Массив торговой площадки
@@ -210,49 +212,44 @@ local market = {
 				["count"] = 228,
 				["price"] = 150,
 			},
-			{
-				["nickname"] = "Lololoshka",
-				["count"] = 15,
-				["price"] = 90,
-			},
 		},
 	},
 	["minecraft:log"] = {
 		[0] = {
 			{
-				["nickname"] = "EEOneGuy",
+				["nickname"] = "CykaRotEbal",
 				["count"] = 121304,
 				["price"] = 21.8,
-			},
-		},
-	},
-	["minecraft:gold_ore"] = {
-		[0] = {
-			{
-				["nickname"] = "EEOneGuy",
-				["count"] = 5,
-				["price"] = 5,
-			},
-			{
-				["nickname"] = "Pidar",
-				["count"] = 10,
-				["price"] = 10,
-			},
-			{
-				["nickname"] = "Mamoeb",
-				["count"] = 15,
-				["price"] = 15,
 			},
 		},
 	},
 	["minecraft:iron_ore"] = {
 		[0] = {
 			{
-				["nickname"] = "EEOneGuy",
+				["nickname"] = "Blyad",
 				["count"] = 2424194,
-				["price"] = 1000.12,
+				["price"] = 20,
 			},
 		},
+	},
+	["minecraft:gold_ore"] = {
+	[0] = {
+		{
+			["nickname"] = "EEOneGuy",
+			["count"] = 5,
+			["price"] = 5,
+		},
+		{
+			["nickname"] = "Pidar",
+			["count"] = 10,
+			["price"] = 10,
+		},
+		{
+			["nickname"] = "Mamoeb",
+			["count"] = 15,
+			["price"] = 15,
+		},
+	},
 	},
 }
 
@@ -269,6 +266,80 @@ local xSize, ySize = gpu.getResolution()
 local widthOfOneItemElement = 12
 local heightOfOneItemElement = widthOfOneItemElement / 2
 
+------------------------------------------ Функции сохранения -----------------------------------------------------------------
+
+local shopPath = "System/Shop/"
+local databasePath = shopPath .. "Users/"
+local marketPath = shopPath .. "Market.txt"
+local adminShopPath = shopPath .. "AdminShop.txt"
+
+local function init()
+	fs.makeDirectory(databasePath)
+end
+
+local function saveUser(nickname, massiv)
+	local file = io.open(databasePath .. nickname .. ".txt", "w")
+	file:write(serialization.serialize(massiv))
+	file:close()
+end
+
+local function createNewUser(nickname)
+	local massiv = {
+		["nickname"] = nickname,
+		["money"] = 0,
+		["inventory"] = {
+			{
+				["id"] = "minecraft:cobblestone",
+				["label"] = "Stone",
+				["data"] = 0,
+				["count"] = 1,
+			},
+		},
+	}
+	saveUser(nickname, massiv)
+	return massiv
+end
+
+local function loadUser(nickname)
+	if not fs.exists(databasePath .. nickname .. ".txt") then
+		massivWithProfile = createNewUser(nickname)
+	else
+		local file = io.open(databasePath .. nickname .. ".txt", "r")
+		local text = file:read("*a")
+		file:close()
+		massivWithProfile = serialization.unserialize(text)
+	end
+end
+
+local function saveMarket()
+	local file = io.open(marketPath, "w")
+	file:write(serialization.serialize(market))
+	file:close()
+end
+
+local function loadMarket()
+	if not fs.exists(marketPath) then
+		saveMarket()
+	else
+		local file = io.open(marketPath, "r")
+		local text = file:read("*a")
+		file:close()
+		market = serialization.unserialize(text)
+	end
+end
+
+local function loadAdminShop()
+	if not fs.exists(adminShopPath) then
+		local file = io.open(adminShopPath, "w")
+		file:write(serialization.serialize(adminShop))
+		file:close()
+	else
+		local file = io.open(adminShopPath, "r")
+		local text = file:read("*a")
+		file:close()
+		adminShop = serialization.unserialize(text)
+	end
+end
 
 ------------------------------------------ Функции -----------------------------------------------------------------
 
@@ -445,8 +516,6 @@ end
 local function showInventory(x, y, page, currentItem)
 	obj["SellItems"] = nil
 	obj["SellButtons"] = nil
-
-	currentUser = massivWithProfile.nickname
 
 	local widthOfItemInfoPanel = 26
 	local width = math.floor((xSize - widthOfItemInfoPanel - 4) / (widthOfOneItemElement))
@@ -636,7 +705,7 @@ local function sell()
 						local data = ecs.universalWindow("auto", "auto", 36, 0x444444, true, {"EmptyLine"}, {"CenterText", 0xffffff, "Продать игрокам"}, {"EmptyLine"}, {"Input", 0xffffff, 0x33db80, "Цена за штуку"}, {"EmptyLine"}, {"CenterText", 0xffffff, "Количество:"}, {"Slider", 0xffffff, 0x33db80, 1, maxToSell, math.floor(maxToSell / 2), "", " шт."}, {"EmptyLine"}, {"CenterText", 0xffffff, "При каждой продаже с вас"}, {"CenterText", 0xffffff, "взымается комиссия в 4%"}, {"EmptyLine"}, {"Button", {0x33db80, 0xffffff, "Продать"}})
 						local price, count = tonumber(data[1]), data[2]
 						if price then
-							sellToPlayers(currentItem, count, price, currentUser)
+							sellToPlayers(currentItem, count, price, massivWithProfile.nickname)
 							ecs.universalWindow("auto", "auto", 36, 0x444444, true, {"EmptyLine"}, {"CenterText", 0xffffff, "Ваш предмет выставлен на продажу!"}, {"EmptyLine"}, {"Button", {0x33db80, 0xffffff, "Ok"}})
 						else
 							ecs.error("Ошибка! Неверно указана цена продажи!")
@@ -677,86 +746,6 @@ local function findBestSeller(id, data)
 	return bestSeller
 end
 
-local function buyBestItems(id, data, count)
-	local remainingToBuy, currentCost, bestSeller, outOfMoney = count, 0, nil, false
-
-	local log = ""
-
-	--Шмонаем торговую площадку на наличие шмота для шмона
-	for i = 1, #market[id][data] do
-		bestSeller = findBestSeller(id, data)
-
-		local CYKA = math.min(market[id][data][bestSeller].count, remainingToBuy)
-
-		currentCost = market[id][data][bestSeller].price * CYKA
-
-
-		--Если бабок хватает
-		if massivWithProfile.money >= currentCost then
-			--Уменьшаем себе бабки
-			massivWithProfile.money = massivWithProfile.money - currentCost
-			--Добавляем шмот в инвентарь себе
-			addItemToInventory(id, data, "Bought", CYKA)
-
-			log = log .. "Покупаю ".. CYKA .. " штук по цене " .. market[id][data][bestSeller].price .. "за штуку. "
-			
-			--Удаляем шмот с ТП
-			market[id][data][bestSeller].count = market[id][data][bestSeller].count - CYKA
-
-			--А ЕЩЕ НАДО ДОБАВЛЯТЬ БАБКИ ЧЕЛУ
-
-			--Уменьшаем оставшийся шмот для покупки
-			remainingToBuy = remainingToBuy - CYKA
-		--А если не хватает
-		else
-			local skokaMozhnaKupit = math.floor(massivWithProfile.money / market[id][data][bestSeller].price)
-			--Уменьшаем себе бабки
-			massivWithProfile.money = massivWithProfile.money - skokaMozhnaKupit * market[id][data][bestSeller].price
-			--Добавляем шмот в инвентарь себе
-			addItemToInventory(id, data, "Bought", skokaMozhnaKupit)
-
-			log = log .. "Покупаю ".. skokaMozhnaKupit .. " штук по цене " .. market[id][data][bestSeller].price .. " за штуку. При этом бабок не хватило! "
-
-
-			--Удаляем шмот с ТП
-			market[id][data][bestSeller].count = market[id][data][bestSeller].count - skokaMozhnaKupit
-			--Уменьшаем оставшийся шмот для покупки
-			remainingToBuy = remainingToBuy - skokaMozhnaKupit
-
-			--Бабок не хватило!
-			outOfMoney = true
-			break
-		end
-
-		--Если у продавца кончился шмот, то обнулить его записи на ТП
-		if market[id][data][bestSeller].count == 0 then table.remove(market[id][data], bestSeller) end
-		--Разорвать цикл, если все куплено уже
-		if remainingToBuy <= 0 then break end
-	end
-
-	--Если все предметы этой даты были проданы, то очистить лист
-	if #market[id][data] == 0 then
-		table.remove(market[id], data)
-	end
-
-	-- if #market[id] == 0 then
-	-- 	market[id] = nil
-	-- end
-
-	if remainingToBuy > 0 then
-		if outOfMoney then
-			ecs.error("На покупку указанного количества денег не хватило, куплено " .. count - remainingToBuy .. " шт., при этом на счету осталось " .. massivWithProfile.money .. moneySymbol)
-			--ecs.error(log)
-		else
-			ecs.error("НЕВОЗМОЖНАЯ ОШИБКА! ДЕБАЖЬ ПРОГУ, СУКА! Куплено не все, так как у продавцов нет столько шмота! Куплено вон скока: " .. count - remainingToBuy)
-			--ecs.error(log)
-		end
-	else
-		ecs.error("Покупка успешно завершена без осложнений!")
-	end
-
-	
-end
 
 --Окно покупки
 local function buy()
@@ -773,73 +762,117 @@ local function buy()
 	local countOfItemsOfMarketToShop = math.floor((ySize - 12) / 4)
 	local itemOfMarketToShow = 1
 	local filteredMakretArray = {}
+	local itemMarketArray = {}
 	local currentFilter
+	local marketSellersList = false
 
 	local function filter(makretFilter)
 		filteredMakretArray = {}
 
-			local success, price, count, nickname
-			for id in pairs(market) do
-				for data in pairs(market[id]) do
+		local success, price, count, nickname
+		for id in pairs(market) do
+			for data in pairs(market[id]) do
 
-					success, price, count, nickname = getInfoAboutItemOnMarket(id, data)
+				success, price, count, nickname = getInfoAboutItemOnMarket(id, data)
 
-					if makretFilter then
-						if string.find(string.lower(id), string.lower(makretFilter)) then
-							table.insert(filteredMakretArray, {["id"] = id, ["data"] = data, ["count"] = count, ["price"] = price})
-						end
-					else
+				if makretFilter then
+					if string.find(string.lower(id), string.lower(makretFilter)) then
 						table.insert(filteredMakretArray, {["id"] = id, ["data"] = data, ["count"] = count, ["price"] = price})
 					end
-
+				else
+					table.insert(filteredMakretArray, {["id"] = id, ["data"] = data, ["count"] = count, ["price"] = price})
 				end
-			end
 
-	end
-
-	local xName, xCountOrSeller, xPrice = 6, math.floor(xSize * 3/7), math.floor(xSize * 4/6)
-
-	local function infoPanel()
-		local yPos = 5
-
-		local width = 40
-		local xPos = math.floor(xSize / 2 - width / 2)
-		ecs.border(xPos, yPos, width, 3, 0x262626, 0xFFFFFF)
-		gpu.set(xPos + 2, yPos + 1, "Поиск по предметам")
-
-		yPos = yPos + 4
-
-		local background, foreground = ecs.colors.blue, 0xFFFFFF
-		ecs.square(4, yPos, xSize - 7, 1, background)
-		ecs.colorText(xName, yPos, foreground, "ИМЯ")
-		ecs.colorText(xCountOrSeller, yPos, foreground, "КОЛИЧЕСТВО")
-		ecs.colorText(xPrice, yPos, foreground, "ЦЕНА")
-	end
-
-	local function showItemsList()
-		local xPos, yPos = 4, 11
-
-		obj["BuyButtons"] = {}
-
-		ecs.square(1, yPos, xSize, countOfItemsOfMarketToShop * 4, 0x262626)
-
-		ecs.srollBar(xSize - 1, yPos, 2, countOfItemsOfMarketToShop * 4, #filteredMakretArray, itemOfMarketToShow, 0xFFFFFF, ecs.colors.blue)
-
-		for i = itemOfMarketToShow, (itemOfMarketToShow + countOfItemsOfMarketToShop - 1) do
-			if filteredMakretArray[i] then
-				ecs.square(xPos, yPos, xSize - 7, 3, 0xFFFFFF)
-				ecs.colorText(xPos + 2, yPos + 1, 0x000000, filteredMakretArray[i].id .. " " .. filteredMakretArray[i].data)
-				gpu.set(xCountOrSeller, yPos + 1, tostring(filteredMakretArray[i].count) .. " шт.")
-				gpu.set(xPrice, yPos + 1, "От " .. tostring(filteredMakretArray[i].price) .. moneySymbol ..  " за шт.")
-
-				newObj("BuyButtons", i, ecs.drawAdaptiveButton(xSize - 13, yPos, 2, 1, "Купить", 0x66b6ff, 0xFFFFFF))
-				
-				yPos = yPos + 4
 			end
 		end
 	end
 
-	infoPanel()
+	local function getItemSellers(id, data)
+		itemMarketArray = {}
+		for i = 1, #market[id][data] do
+			table.insert(itemMarketArray, {["nickname"] = market[id][data][i].nickname, ["count"] = market[id][data][i].count, ["price"] = market[id][data][i].price})
+		end
+	end
+
+	local xName, xCountOrSeller, xPrice = 6, math.floor(xSize * 3/7), math.floor(xSize * 4/6)
+
+	local function infoPanel(yPos)
+
+		local width = 40
+		local xPos = math.floor(xSize / 2 - width / 2)
+
+		if not marketSellersList then
+			ecs.border(xPos, yPos, width, 3, 0x262626, 0xFFFFFF)
+			gpu.set(xPos + 2, yPos + 1, "Поиск по предметам")
+
+			yPos = yPos + 4
+		end
+
+		local background, foreground = ecs.colors.blue, 0xFFFFFF
+		ecs.square(4, yPos, xSize - 7, 1, background)
+		ecs.colorText(xName, yPos, foreground, (function () if marketSellersList then return "ПРОДАВЕЦ" else return "ПРЕДМЕТ" end end)())
+		ecs.colorText(xCountOrSeller, yPos, foreground, "КОЛИЧЕСТВО")
+		ecs.colorText(xPrice, yPos, foreground, "ЦЕНА")
+
+		yPos = yPos + 2
+
+		return yPos
+	end
+
+	local function showItemsList()
+		
+		obj["BuyButtons"] = nil
+		obj["BuyItems"] = nil
+
+		local xPos, yPos = 4, 5
+
+		ecs.square(1, yPos, xSize, ySize - yPos, 0x262626)
+
+		if marketSellersList then
+
+			yPos = infoPanel(yPos)
+
+			countOfItemsOfMarketToShop = math.floor((ySize - yPos - 1) / 4)
+
+			ecs.srollBar(xSize - 1, yPos, 2, countOfItemsOfMarketToShop * 4, #itemMarketArray, itemOfMarketToShow, 0xFFFFFF, ecs.colors.blue)
+
+			for i = itemOfMarketToShow, (itemOfMarketToShow + countOfItemsOfMarketToShop - 1) do
+				if itemMarketArray[i] then
+					ecs.square(xPos, yPos, xSize - 7, 3, 0xFFFFFF)
+					ecs.colorText(xPos + 2, yPos + 1, 0x000000, itemMarketArray[i].nickname )
+					gpu.set(xCountOrSeller, yPos + 1, tostring(itemMarketArray[i].count) .. " шт.")
+					gpu.set(xPrice, yPos + 1, tostring(itemMarketArray[i].price) .. moneySymbol ..  " за шт.")
+
+					newObj("BuyButtons", i, ecs.drawAdaptiveButton(xSize - 13, yPos, 2, 1, "Купить", 0x66b6ff, 0xFFFFFF))
+					
+					yPos = yPos + 4
+				end
+			end
+
+		else
+
+			yPos = infoPanel(yPos)
+
+			countOfItemsOfMarketToShop = math.floor((ySize - yPos - 1) / 4)
+
+			ecs.srollBar(xSize - 1, yPos, 2, countOfItemsOfMarketToShop * 4, #filteredMakretArray, itemOfMarketToShow, 0xFFFFFF, ecs.colors.blue)
+
+			for i = itemOfMarketToShow, (itemOfMarketToShow + countOfItemsOfMarketToShop - 1) do
+				if filteredMakretArray[i] then
+					ecs.square(xPos, yPos, xSize - 7, 3, 0xFFFFFF)
+					ecs.colorText(xPos + 2, yPos + 1, 0x000000, filteredMakretArray[i].id .. " " .. filteredMakretArray[i].data)
+					gpu.set(xCountOrSeller, yPos + 1, tostring(filteredMakretArray[i].count) .. " шт.")
+					gpu.set(xPrice, yPos + 1, "От " .. tostring(filteredMakretArray[i].price) .. moneySymbol ..  " за шт.")
+
+					newObj("BuyItems", i, xPos, yPos, xPos + xSize - 7 , yPos + 2)
+
+					yPos = yPos + 4
+				end
+			end
+		end
+
+	end
+
 	filter(currentFilter)
 	showItemsList()
 
@@ -848,36 +881,63 @@ local function buy()
 		
 		if e[1] == "touch" then
 
-			for key in pairs(obj["BuyButtons"]) do
-				if ecs.clickedAtArea(e[3], e[4], obj["BuyButtons"][key][1], obj["BuyButtons"][key][2], obj["BuyButtons"][key][3], obj["BuyButtons"][key][4]) then
-					ecs.drawAdaptiveButton(obj["BuyButtons"][key][1], obj["BuyButtons"][key][2], 2, 1, "Купить", 0xFF4940, 0xFFFFFF)
-					
-					-- local id, dataCYKA, count, price = filteredMakretArray[key].
-
-					local text = "Правила пользовательского соглашения: нажимая кнопку \"Купить\", вы получаете указанное количество предметов по оптимально подобранной цене. Система автоматически найдет наиболее выгодные лоты и перечислит ваши деньги продавцам. Затем указанное количество предметов будет немедленно передано вам в цифровой инвентарь. Автор программы не несет ответственности за утерю наличности из-за любых внешних воздействий на компьютер. Вы сами решаете, доверять подобным сервисам или нет."
-
-					local data = ecs.universalWindow("auto", "auto", 40, 0xDDDDDD, true, {"EmptyLine"}, {"CenterText", 0x262626, "Сколько вы желаете купить?"}, {"EmptyLine"}, {"Slider", 0x262626, 0x880000, 1, math.min(100, filteredMakretArray[key].count), 1, "", " шт."}, {"EmptyLine"}, {"TextField", 6, 0xFFFFFF, 0x262626, 0xBBBBBB, ecs.colors.blue, text}, {"EmptyLine"}, {"Switch", 0x3366CC, 0xffffff, 0x262626, "С условиями выше согласен", true}, {"EmptyLine"}, {"Button", {0x33db80, 0xffffff, "Купить"}})
-
-					if not data[2] then
-						ecs.universalWindow("auto", "auto", 40, 0xDDDDDD, true, {"EmptyLine"}, {"CenterText", 0x262626, "Для покупки необходимо принять"}, {"CenterText", 0x262626, "условия пользовательского соглашения."}, {"EmptyLine"}, {"Button", {0x33db80, 0xffffff, "OK"}})
-					else
-						buyBestItems(filteredMakretArray[key].id, filteredMakretArray[key].data, data[1])
+			--Клик на конкретный айтем
+			if obj["BuyItems"] then
+				for key in pairs(obj["BuyItems"]) do
+					if ecs.clickedAtArea(e[3], e[4], obj["BuyItems"][key][1], obj["BuyItems"][key][2], obj["BuyItems"][key][3], obj["BuyItems"][key][4]) then
+						ecs.square(obj["BuyItems"][key][1], obj["BuyItems"][key][2], obj["BuyItems"][key][3] - obj["BuyItems"][key][1], 3, ecs.colors.blue)
+						os.sleep(0.2)
+						--Рисуем
+						marketSellersList = true
+						getItemSellers(filteredMakretArray[key].id, filteredMakretArray[key].data)
+						itemOfMarketToShow = 1
+						showItemsList()
+						break
 					end
+				end
+			end
 
-					--Рефрешим список айтемов ТП
-					filter(currentFilter)
-					itemOfMarketToShow = 1
-					showItemsList()
+			--Клики на кнопочки "Купить"
+			if obj["BuyButtons"] then
+				for key in pairs(obj["BuyButtons"]) do
+					if ecs.clickedAtArea(e[3], e[4], obj["BuyButtons"][key][1], obj["BuyButtons"][key][2], obj["BuyButtons"][key][3], obj["BuyButtons"][key][4]) then
+						ecs.drawAdaptiveButton(obj["BuyButtons"][key][1], obj["BuyButtons"][key][2], 2, 1, "Купить", 0xFF4940, 0xFFFFFF)
+						
 
-					break
+						local text = "Правила пользовательского соглашения: нажимая кнопку \"Купить\", вы получаете указанное количество предметов по оптимально подобранной цене. Система автоматически найдет наиболее выгодные лоты и перечислит ваши деньги продавцам. Затем указанное количество предметов будет немедленно передано вам в цифровой инвентарь. Автор программы не несет ответственности за утерю наличности из-за любых внешних воздействий на компьютер. Вы сами решаете, доверять подобным сервисам или нет."
+
+						local data = ecs.universalWindow("auto", "auto", 40, 0xDDDDDD, true, {"EmptyLine"}, {"CenterText", 0x262626, "Сколько вы желаете купить?"}, {"EmptyLine"}, {"Slider", 0x262626, 0x880000, 1, math.min(100, filteredMakretArray[key].count), 1, "", " шт."}, {"EmptyLine"}, {"TextField", 6, 0xFFFFFF, 0x262626, 0xBBBBBB, ecs.colors.blue, text}, {"EmptyLine"}, {"Switch", 0x3366CC, 0xffffff, 0x262626, "С условиями выше согласен", true}, {"EmptyLine"}, {"Button", {0x33db80, 0xffffff, "Купить"}})
+
+						if not data[2] then
+							ecs.universalWindow("auto", "auto", 40, 0xDDDDDD, true, {"EmptyLine"}, {"CenterText", 0x262626, "Для покупки необходимо принять"}, {"CenterText", 0x262626, "условия пользовательского соглашения."}, {"EmptyLine"}, {"Button", {0x33db80, 0xffffff, "OK"}})
+						else
+							buyBestItems(filteredMakretArray[key].id, filteredMakretArray[key].data, data[1])
+						end
+
+						--Рефрешим список айтемов ТП
+						marketSellersList = false
+						filter(currentFilter)
+						itemOfMarketToShow = 1
+						showItemsList()
+
+						break
+					end
 				end
 			end
 
 		elseif e[1] == "scroll" then
-			if e[5] == 1 then
-				if itemOfMarketToShow > 1 then itemOfMarketToShow = itemOfMarketToShow - 1; showItemsList() end
+			if not marketSellersList then
+				if e[5] == 1 then
+					if itemOfMarketToShow > 1 then itemOfMarketToShow = itemOfMarketToShow - 1; showItemsList() end
+				else
+					if itemOfMarketToShow < #filteredMakretArray then itemOfMarketToShow = itemOfMarketToShow + 1; showItemsList() end
+				end
 			else
-				if itemOfMarketToShow < #filteredMakretArray then itemOfMarketToShow = itemOfMarketToShow + 1; showItemsList() end
+				if e[5] == 1 then
+					if itemOfMarketToShow > 1 then itemOfMarketToShow = itemOfMarketToShow - 1; showItemsList() end
+				else
+					if itemOfMarketToShow < #itemMarketArray then itemOfMarketToShow = itemOfMarketToShow + 1; showItemsList() end
+				end
 			end
 		elseif e[1] == "key_down" then
 			if e[4] >= 2 and e[4] <= 5 then
@@ -892,14 +952,25 @@ end
 local function main()
 	--Рисуем топбар
 	ecs.drawTopBar(1, 1, xSize, currentMode, colors.topbar, colors.topbarText, {"Главная", "🏠"}, {"Купить", "⟱"}, {"Продать", "⟰"}, {"Лотерея", "☯"}, {"Мой профиль", moneySymbol})
+	--Рисуем данные о юзере справа вверху
+	local text = "§f" .. massivWithProfile.nickname .. "§7, " .. massivWithProfile.money .. moneySymbol
+	ecs.smartText(xSize - unicode.len(text) + 3, 2, text)
 	--Рисуем серый фон
 	ecs.square(1, 4, xSize, ySize - 3, colors.background)
 end
 
-
 ------------------------------------------ Программа -----------------------------------------------------------------
 
+--Очищаем экран
 ecs.prepareToExit()
+--Создание папок, если их нет
+init()
+--Загрузка файла торговой площадки
+--loadMarket()
+--Загрузка файла магазина админов
+loadAdminShop()
+
+loadUser("IT")
 
 while true do
 	main()
