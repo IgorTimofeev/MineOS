@@ -3,13 +3,13 @@ local event = require("event")
 local image = require("image")
 local ecs = require("ECSAPI")
 
-if not component.isAvailable("modem") then ecs.error("Этой программе требуется плата беспроводной сети."); return end
+if not component.isAvailable("modem") then error("Этой программе требуется плата беспроводной сети."); return end
 
 local modem = component.modem
-local port1 = 512
+local port1 = 1
 modem.open(port1)
 
-modem.broadcast(port1, "nanomachines", "setResponseport1", port1)
+modem.broadcast(1, "nanomachines", "setResponsePort", 1)
 
 local oldX, oldY = gpu.getResolution()
 gpu.setResolution(80, 25)
