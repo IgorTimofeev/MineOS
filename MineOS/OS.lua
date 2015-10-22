@@ -352,6 +352,7 @@ local function createDesktopShortCuts()
 		"CodeDoor.app",
 		"Snake.app",
 		"Keyboard.app",
+		"Nano.app",
 	}
 
 	local dockApps = {
