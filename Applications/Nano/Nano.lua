@@ -16,6 +16,7 @@ gpu.setResolution(80, 25)
 ecs.prepareToExit(0xFFFFFF)
 
 local name, minHealth, maxHealth, minHunger, maxHunger, minPower, maxPower, experience
+local effects = "Эффекты: недоступно"
 
 local timing = 1
 
@@ -44,6 +45,9 @@ local function listener(_, _, _, _, _, header, command, ...)
 	elseif command == "power" then
 		minPower = data[1]
 		maxPower = data[2]
+	elseif command == "effects" then
+		local cyka = data[1]
+		effects = "Эффекты: " .. cyka
 	end
 end
 event.listen("modem_message", listener)
@@ -61,6 +65,7 @@ local function request()
 	modem.broadcast(port1, "nanomachines", "getHealth"); os.sleep(timing)
 	modem.broadcast(port1, "nanomachines", "getHunger"); os.sleep(timing)
 	modem.broadcast(port1, "nanomachines", "getPowerState"); os.sleep(timing)
+	modem.broadcast(port1, "nanomachines", "getActiveEffects"); os.sleep(timing)
 	ecs.drawOldPixels(oldPixels)
 end
 
@@ -82,9 +87,14 @@ local function redraw(x, y)
 	xPos, yPos = xFace, yFace + 9
 	ecs.separator(1, yPos, 80, 0xFFFFFF, 0xCCCCCC)
 	yPos = yPos + 1
-	gpu.setForeground(0x000000)
-	ecs.centerText("x", yPos, "Контакты нанороботов")
-	yPos = yPos + 2
+	
+	if effects then
+		gpu.setForeground(0x000000)
+		ecs.centerText("x", yPos, string.rep(" ", 40) .. effects .. string.rep(" ", 40))
+		yPos = yPos + 1
+	end
+	yPos = yPos + 1
+	
 	xPos = 14
 	for i = 1, #contacts do
 		contacts[i][2], contacts[i][3], contacts[i][4], contacts[i][5] = ecs.drawButton(xPos, yPos, 5, 3, tostring(i), (function() if contacts[i][1] then return ecs.colors.blue else return 0xBBBBBB end end)(), 0xFFFFFF)
@@ -96,6 +106,7 @@ local function redraw(x, y)
 	scan = {ecs.drawAdaptiveButton(xPos, yPos, 2, 1, "Сканирование", 0x444444, 0xFFFFFF)}
 	toggle = {ecs.drawAdaptiveButton(scan[3] + 3, yPos, 2, 1, "Переключить контакты", 0x444444, 0xFFFFFF)}
 	exit = {ecs.drawAdaptiveButton(toggle[3] + 3, yPos, 2, 1, "Выйти", 0x444444, 0xFFFFFF)}
+
 end
 
 local function switchContacts()
@@ -124,7 +135,9 @@ while true do
 		ecs.drawAdaptiveButton(scan[1], scan[2], 2, 1, "Сканирование", ecs.colors.red, 0xFFFFFF)
 		--os.sleep(0.3)
 		request()
+		ecs.prepareToExit(0xFFFFFF)
 		redraw(xInfo, yInfo)
+		image.draw(xFace, yFace, imageCyka)
 	elseif ecs.clickedAtArea(e[3], e[4], toggle[1], toggle[2], toggle[3], toggle[4]) then
 		ecs.drawAdaptiveButton(toggle[1], toggle[2], 2, 1, "Переключить контакты", ecs.colors.red, 0xFFFFFF)
 		--os.sleep(0.3)
