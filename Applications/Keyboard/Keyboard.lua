@@ -252,6 +252,9 @@ local xPos, yPos = math.floor(xSize / 2 - width / 2), ySize
 local oldPixels = rememberOldPixels(xPos, ySize - height + 1, xPos + width - 1, ySize)
 
 if args[1] == "-a" then
+	yPos = ySize - height + 1
+	drawKeyboard(xPos, yPos)
+else
 	for i = 1, height do
 		if i == height then animation = true end
 		drawKeyboard(xPos, yPos)
@@ -260,9 +263,6 @@ if args[1] == "-a" then
 	end
 	yPos = yPos + 1
 	animation = true
-else
-	yPos = ySize - height + 1
-	drawKeyboard(xPos, yPos)
 end
 
 while true do
