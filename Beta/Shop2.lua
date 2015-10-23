@@ -907,7 +907,7 @@ local function buy()
 					gpu.set(xCountOrSeller, yPos + 1, tostring(itemMarketArray[i].count) .. " шт.")
 					gpu.set(xPrice, yPos + 1, tostring(itemMarketArray[i].price) .. moneySymbol ..  " за шт.")
 
-					if itemMarketArray[i].price > massivWithProfile.money then
+					if itemMarketArray[i].price > massivWithProfile.money or itemMarketArray[i].nickname == massivWithProfile.nickname then
 						ecs.drawAdaptiveButton(xSize - 13, yPos, 2, 1, "Купить", 0xBBBBBB, 0xFFFFFF)
 					else
 						newObj("BuyButtons", i, ecs.drawAdaptiveButton(xSize - 13, yPos, 2, 1, "Купить", 0x66b6ff, 0xFFFFFF))
