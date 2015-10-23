@@ -195,7 +195,7 @@ local function motd()
   end
 end
 
---Загружаем необходимые библиотеки, дабы избежать потерей памяти
+--Загружаем необходимые библиотеки, дабы избежать потерь памяти
 _G._OSLANGUAGE = require("System/OS/Language")
 _G.ecs = require("ECSAPI")
 _G.config = require("config")
