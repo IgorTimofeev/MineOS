@@ -751,9 +751,9 @@ end
 --Нарисовать кнопочки закрытия окна
 function ECSAPI.drawCloses(x, y, active)
 	local symbol = "⮾"
-	ecs.colorText(x, y , (active == 1 and ECSAPI.colors.blue) or 0xCC4C4C, symbol)
-	ecs.colorText(x + 2, y , (active == 2 and ECSAPI.colors.blue) or 0xDEDE6C, symbol)
-	ecs.colorText(x + 4, y , (active == 3 and ECSAPI.colors.blue) or 0x57A64E, symbol)
+	ECSAPI.colorText(x, y , (active == 1 and ECSAPI.colors.blue) or 0xCC4C4C, symbol)
+	ECSAPI.colorText(x + 2, y , (active == 2 and ECSAPI.colors.blue) or 0xDEDE6C, symbol)
+	ECSAPI.colorText(x + 4, y , (active == 3 and ECSAPI.colors.blue) or 0x57A64E, symbol)
 end
 
 --Нарисовать верхнюю оконную панель с выбором объектов
@@ -768,7 +768,7 @@ function ECSAPI.drawTopBar(x, y, width, selectedObject, background, foreground, 
 	local xPos = x + math.floor(width / 2 - widthOfObjects / 2)
 	for i = 1, #objects do
 		if i == selectedObject then
-			ECSAPI.square(xPos, y, unicode.len(objects[i][1]) + spaceBetween, 3, ecs.colors.blue)
+			ECSAPI.square(xPos, y, unicode.len(objects[i][1]) + spaceBetween, 3, ECSAPI.colors.blue)
 			gpu.setForeground(0xffffff)
 		else
 			gpu.setBackground(background)
@@ -777,6 +777,27 @@ function ECSAPI.drawTopBar(x, y, width, selectedObject, background, foreground, 
 		gpu.set(xPos + spaceBetween / 2, y + 2, objects[i][1])
 		gpu.set(xPos + math.ceil(unicode.len(objects[i][1]) / 2), y + 1, objects[i][2])
 
+		xPos = xPos + unicode.len(objects[i][1]) + spaceBetween
+	end
+end
+
+--Нарисовать топ-меню, горизонтальная полоска такая с текстами
+function ECSAPI.drawTopMenu(x, y, width, color, selectedObject, ...)
+	local objects = { ... }
+	local xPos = x + 2
+	local spaceBetween = 2
+	ECSAPI.square(x, y, width, 1, color)
+	for i = 1, #objects do
+		if i == selectedObject then
+			ECSAPI.square(xPos - 1, y, unicode.len(objects[i][1]) + spaceBetween, 1, ECSAPI.colors.blue)
+			gpu.setForeground(0xffffff)
+			gpu.set(xPos, y, objects[i][1])
+			gpu.setForeground(objects[i][2])
+			gpu.setBackground(color)
+		else
+			if gpu.getForeground() ~= objects[i][2] then gpu.setForeground(objects[i][2]) end
+			gpu.set(xPos, y, objects[i][1])
+		end
 		xPos = xPos + unicode.len(objects[i][1]) + spaceBetween
 	end
 end
