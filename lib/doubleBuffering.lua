@@ -48,14 +48,20 @@ end
 
 function buffer.get(x, y)
 	local xPos = x * 3
-	return buffer.screen.current[y][xPos - 2], buffer.screen.current[y][xPos - 2], buffer.screen.current[y][xPos]
+	if buffer.screen.new[y] and buffer.screen.new[y][xPos] then
+		return buffer.screen.current[y][xPos - 2], buffer.screen.current[y][xPos - 2], buffer.screen.current[y][xPos]
+	else
+		error("Невозможно получить указанные значения, так как указанные координаты лежат за пределами экрана.\n")
+	end
 end
 
 function buffer.set(x, y, background, foreground, symbol)
 	local xPos = x * 3
-	buffer.screen.new[y][xPos - 2] = background
-	buffer.screen.new[y][xPos - 1] = foreground
-	buffer.screen.new[y][xPos] = symbol
+	if buffer.screen.new[y] and buffer.screen.new[y][xPos] then
+		buffer.screen.new[y][xPos - 2] = background
+		buffer.screen.new[y][xPos - 1] = foreground
+		buffer.screen.new[y][xPos] = symbol
+	end
 end
 
 function buffer.fill(x, y, width, height, background, foreground, symbol)
@@ -63,9 +69,11 @@ function buffer.fill(x, y, width, height, background, foreground, symbol)
 	for j = y, (y + height - 1) do
 		for i = x, (x + width - 1) do
 			xPos = i * 3
-			buffer.screen.new[j][xPos] = symbol; xPos = xPos - 1
-			buffer.screen.new[j][xPos] = foreground; xPos = xPos - 1
-			buffer.screen.new[j][xPos] = background
+			if buffer.screen.new[y] and buffer.screen.new[y][xPos] then
+				buffer.screen.new[j][xPos] = symbol; xPos = xPos - 1
+				buffer.screen.new[j][xPos] = foreground; xPos = xPos - 1
+				buffer.screen.new[j][xPos] = background
+			end
 		end
 	end
 end
