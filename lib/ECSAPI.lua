@@ -799,7 +799,7 @@ function ECSAPI.drawTopMenu(x, y, width, color, selectedObject, ...)
 			if gpu.getForeground() ~= objects[i][2] then gpu.setForeground(objects[i][2]) end
 			gpu.set(xPos, y, objects[i][1])
 		end
-		table.insert(objectsToReturn, {xPos, yPos, xPos + unicode.len(objects[i][1]) - 1, yPos})
+		objectsToReturn[objects[i][1]] = { xPos, yPos, xPos + unicode.len(objects[i][1]) - 1, yPos }
 		xPos = xPos + unicode.len(objects[i][1]) + spaceBetween
 	end
 	return objectsToReturn
