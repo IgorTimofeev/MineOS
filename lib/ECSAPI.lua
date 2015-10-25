@@ -784,6 +784,7 @@ end
 --Нарисовать топ-меню, горизонтальная полоска такая с текстами
 function ECSAPI.drawTopMenu(x, y, width, color, selectedObject, ...)
 	local objects = { ... }
+	local objectsToReturn = {}
 	local xPos = x + 2
 	local spaceBetween = 2
 	ECSAPI.square(x, y, width, 1, color)
@@ -798,8 +799,10 @@ function ECSAPI.drawTopMenu(x, y, width, color, selectedObject, ...)
 			if gpu.getForeground() ~= objects[i][2] then gpu.setForeground(objects[i][2]) end
 			gpu.set(xPos, y, objects[i][1])
 		end
+		table.insert(objectsToReturn, {xPos, yPos, xPos + unicode.len(objects[i][1]) - 1, yPos})
 		xPos = xPos + unicode.len(objects[i][1]) + spaceBetween
 	end
+	return objectsToReturn
 end
 
 --Функция отрисовки кнопки указанной ширины
