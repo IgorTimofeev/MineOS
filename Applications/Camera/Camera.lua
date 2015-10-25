@@ -1,7 +1,14 @@
 local component = require("component")
 local buffer = require("doubleBuffering")
 local event = require("event")
-local camera = component.camera
+local camera
+
+if not component.isAvailable("camera") then
+	ecs.error("Этой программе требуется камера из мода Computronix.")
+	return
+else
+	camera = component.camera
+end
 
 local step = 0.04
 local from = step * 25
