@@ -921,6 +921,18 @@ function ECSAPI.progressBar(x, y, width, height, background, foreground, percent
 	ECSAPI.square(x, y, activeWidth, height, foreground)
 end
 
+--Окошко с прогрессбаром! Давно хотел
+function ECSAPI.progressWindow(x, y, width, percent, text)
+	local height = 6
+	local barWidth = width - 6
+
+	x, y = ECSAPI.correctStartCoords(x, y, width, height)
+
+	ECSAPI.emptyWindow(x, y, width, height, " ")
+	ECSAPI.colorTextWithBack(x + math.floor(width / 2 - unicode.len(text) / 2), y + 4, 0x000000, ECSAPI.windowColors.background, text)
+	ECSAPI.progressBar(x + 3, y + 2, barWidth, 1, 0xCCCCCC, ECSAPI.colors.blue, percent)
+end
+
 --Функция для ввода текста в мини-поле.
 function ECSAPI.inputText(x, y, limit, cheBiloVvedeno, background, foreground, justDrawNotEvent, maskTextWith)
 	limit = limit or 10
@@ -2227,7 +2239,6 @@ end
 
 
 ----------------------------------------------------------------------------------------------------
-
 
 return ECSAPI
 
