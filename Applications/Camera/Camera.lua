@@ -108,11 +108,11 @@ end
 local function drawDistanceMeter()
 	local width = 4
 	local xPos, yPos = widthOfImage - 3 - width, 3
-	buffer.fill(xPos, yPos, width + 2, #currentPalette * 2 + 2, 0x000000, 0x000000, " ")
+	buffer.square(xPos, yPos, width + 2, #currentPalette * 2 + 2, 0x000000, 0x000000, " ")
 	yPos = yPos + 1
 	xPos = xPos + 1
 	for i = #currentPalette, 1, -1 do
-		buffer.fill(xPos, yPos, width, 2, currentPalette[i], 0x000000, " ")
+		buffer.square(xPos, yPos, width, 2, currentPalette[i], 0x000000, " ")
 		yPos = yPos + 2
 	end
 end
@@ -123,7 +123,7 @@ buffer.start()
 
 gui()
 ecs.square(1, 2, widthOfImage, heightOfImage - 1, 0x000000)
-buffer.fill(1, 2, widthOfImage, heightOfImage - 1, 0x000000, 0x000000, " ")
+buffer.square(1, 2, widthOfImage, heightOfImage - 1, 0x000000, 0x000000, " ")
 capture(1, 1)
 drawDistanceMeter()
 buffer.draw()
