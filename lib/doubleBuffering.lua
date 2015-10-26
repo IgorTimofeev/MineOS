@@ -55,6 +55,9 @@ function buffer.createArray()
 end
 
 function buffer.start()
+
+	countOfGPUOperations = 0
+
 	buffer.screen = {
 		current = {},
 		new = {},
@@ -311,7 +314,7 @@ function buffer.draw()
 
 			local backgroundIsChanged, foregroundIsChanged, symbolIsChanged = buffer.calculateDifference(x, y)
 
-			if backgroundIsChanged and currentBackground ~= buffer.screen.current[index] then
+			if currentBackground ~= buffer.screen.current[index] then
 				gpu.setBackground(buffer.screen.current[index])
 				currentBackground = buffer.screen.current[index]
 				countOfGPUOperations = countOfGPUOperations + 1
@@ -319,7 +322,7 @@ function buffer.draw()
 
 			index = index + 1
 
-			if foregroundIsChanged and currentForeground ~= buffer.screen.current[index] then
+			if currentForeground ~= buffer.screen.current[index] then
 				gpu.setForeground(buffer.screen.current[index])
 				currentForeground = buffer.screen.current[index]
 				countOfGPUOperations = countOfGPUOperations + 1
@@ -329,7 +332,7 @@ function buffer.draw()
 
 			--Если были найдены какие-то отличия нового экрана от старого, то корректируем эти отличия через gpu.set()
 			if backgroundIsChanged or foregroundIsChanged or symbolIsChanged then
-				
+
 				--ecs.error("coordx = " .. x .. "x" .. y .. ", index = " ..index .. ", index1 = "..buffer.screen.current[index] .. ", index2 = "..buffer.screen.current[index + 1].. ", index3 = "..buffer.screen.current[index + 2] )
 
 				local countOfSameSymbols = 1
@@ -364,55 +367,6 @@ end
 ------------------------------------------------------------------------------------------------------
 
 buffer.start()
-
-------------------------------------------------------------------------------------------------------
-
--- --Создаем переменные с координатами начала и размерами нашего окна
--- local x, y, width, height = 6, 3, 82, 25
-
--- --Заполним весь наш экран цветом фона 0x262626, цветом текста 0xFFFFFF и символом " "
--- buffer.square(1, 1, buffer.screen.width, buffer.screen.height, 0x262626, 0xFFFFFF, " ")
-
--- --Нарисуем изображение из буфера. По сути, сейчас отобразился серый экран.
--- buffer.draw()
-
--- --Создаем прозрачную часть окна, где отображается "Избранное"
--- buffer.square(x, y, 20, height, 0xEEEEEE, 0xFFFFFF, " ", 10)
--- --Создаем непрозрачную часть окна для отображения всяких файлов и т.п.
--- buffer.square(x + 20, y, width - 20, height, 0xEEEEEE, 0xFFFFFF, " ")
--- --Создаем три более темных полоски вверху окна, имитируя объем
--- buffer.square(x, y, width, 1, 0xDDDDDD, 0xFFFFFF, " ")
--- buffer.square(x, y + 1, width, 1, 0xCCCCCC, 0xFFFFFF, " ")
--- buffer.square(x, y + 2, width, 1, 0xBBBBBB, 0xFFFFFF, " ")
--- --Рисуем заголовок нашего окошка
--- buffer.text(x + 30, y, 0x000000, "Тестовое окно")
--- --Создаем три кнопки в левом верхнем углу для закрытия, разворачивания и сворачивания окна
--- buffer.set(x + 1, y, 0xDDDDDD, 0xFF4940, "⬤")
--- buffer.set(x + 3, y, 0xDDDDDD, 0xFFB640, "⬤")
--- buffer.set(x + 5, y, 0xDDDDDD, 0x00B640, "⬤")
--- --Рисуем элементы "Избранного" чисто для демонстрации
--- buffer.text(x + 1, y + 3, 0x000000, "Избранное")
--- for i = 1, 6 do buffer.text(x + 2, y + 3 + i, 0x555555, "Вариант " .. i) end
--- --Рисуем "Файлы" в виде желтых квадратиков. Нам без разницы, а выглядит красиво
--- for j = 1, 3 do
--- 	for i = 1, 5 do
--- 		local xPos, yPos = x + 22 + i*12 - 12, y + 4 + j*7 - 7
--- 		buffer.square(xPos, yPos, 8, 4, 0xFFFF80, 0xFFFFFF, " ")
--- 		buffer.text(xPos, yPos + 5, 0x262626, "Файл " .. i .. "x" .. j)
--- 	end
--- end
--- --Ну, и наконец рисуем голубой скроллбар справа
--- buffer.square(x + width - 1, y + 3, 1, height - 3, 0xBBBBBB, 0xFFFFFF, " ")
--- buffer.square(x + width - 1, y + 3, 1, 4, 0x3366CC, 0xFFFFFF, " ")
-
--- --А теперь скопируем наше окно в переменную copyOfWindow
--- local copyOfWindow = buffer.copy(x, y, width, height)
-
--- --И вставим эту копию правее и ниже
--- buffer.paste(74, 22, copyOfWindow)
-
--- --Рисуем содержимое буфера
--- buffer.draw()
 
 ------------------------------------------------------------------------------------------------------
 
