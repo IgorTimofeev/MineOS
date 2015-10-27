@@ -18,8 +18,8 @@ buffer.draw()
 --Создаем переменные с координатами начала и размерами нашего окна
 local width, height = 82, 25
 
-local cykaPicture = image.load("System/OS/Icons/Steve.pic")
-local cykaPicture2 = image.load("System/OS/Icons/Love.pic")
+-- local cykaPicture = image.load("System/OS/Icons/Steve.pic")
+-- local cykaPicture2 = image.load("System/OS/Icons/Love.pic")
 
 local function drawWindow(x, y)
 
