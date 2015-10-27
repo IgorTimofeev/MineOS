@@ -305,6 +305,7 @@ end
 function buffer.draw()
 	local currentBackground, currentForeground = -math.huge, -math.huge
 	local index
+	local massiv
 	
 	for y = 1, buffer.screen.height do
 		local x = 1
@@ -333,26 +334,31 @@ function buffer.draw()
 			--Если были найдены какие-то отличия нового экрана от старого, то корректируем эти отличия через gpu.set()
 			if backgroundIsChanged or foregroundIsChanged or symbolIsChanged then
 
-				--ecs.error("coordx = " .. x .. "x" .. y .. ", index = " ..index .. ", index1 = "..buffer.screen.current[index] .. ", index2 = "..buffer.screen.current[index + 1].. ", index3 = "..buffer.screen.current[index + 2] )
+				massiv = { buffer.screen.current[index + 2] }
 
-				local countOfSameSymbols = 1
-
+				--Отрисовка линиями. Не трожь, сука!
 				local iIndex
 				for i = (x + 1), buffer.screen.width do
 					iIndex = convertCoordsToIndex(i, y)
-					if buffer.screen.current[index] == buffer.screen.new[iIndex] and buffer.screen.current[index + 1] == buffer.screen.new[iIndex + 1] and buffer.screen.current[index + 2] == buffer.screen.new[iIndex + 2] then
-					 	countOfSameSymbols = countOfSameSymbols + 1
+					if	
+						buffer.screen.current[index] == buffer.screen.new[iIndex] and
+						(
+						buffer.screen.new[iIndex + 2] == " "
+						or
+						buffer.screen.current[index + 1] == buffer.screen.new[iIndex + 1]
+						)
+					then
 					 	buffer.calculateDifference(i, y)
+					 	table.insert(massiv, buffer.screen.current[iIndex + 2])
 					else
 						break
 					end
 				end
 
-				--ecs.error(countOfSameSymbols)
-
-				gpu.set(x, y, string.rep(buffer.screen.current[index + 2], countOfSameSymbols))
+				--os.sleep(0.2)
+				gpu.set(x, y, table.concat(massiv))
 				
-				x = x + countOfSameSymbols - 1
+				x = x + #massiv - 1
 
 				countOfGPUOperations = countOfGPUOperations + 1
 			end
