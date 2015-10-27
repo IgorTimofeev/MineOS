@@ -180,8 +180,6 @@ do
   runlevel = 1
 end
 
-status("Initializing custom libraries...")
-
 --Загружаем необходимые библиотеки, дабы избежать потерь памяти
 _G._OSLANGUAGE = require("System/OS/Language")
 _G.ecs = require("ECSAPI")
@@ -203,12 +201,7 @@ if component.isAvailable("modem") then component.modem.open(512) end
 --Сообщаем системе, что все прогружено и готово к работе
 --Хз, так надо просто. Не ебись
 computer.pushSignal("init")
-os.sleel(0.2)
-
---Очищаем экран и запускаем ОС
--- ecs.clearScreen()
--- ecs.setScale(1)
--- shell.execute("OS.lua")
+os.sleep(0.2)
 
 local function motd()
   local f = io.open("/etc/motd")
@@ -224,7 +217,6 @@ local function motd()
     f:close()
   end
 end
-
 
 while true do
   component.gpu.setBackground(backgroundColor)
