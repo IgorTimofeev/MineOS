@@ -1,11 +1,12 @@
 local component = require("component")
 local colorlib = require("colorlib")
 local unicode = require("unicode")
+local image
 local gpu = component.gpu
 
 local buffer = {}
 local countOfGPUOperations = 0
-local debug = false
+local debug = true
 local sizeOfPixelData = 3
 
 ------------------------------------------------------------------------------------------------------
@@ -264,9 +265,33 @@ function buffer.text(x, y, color, text)
 	local index
 	local sText = unicode.len(text)
 	for i = 1, sText do
-		index = convertCoordsToIndex(x + i - 1, y)
-		buffer.screen.new[index + 1] = color
-		buffer.screen.new[index + 2] = unicode.sub(text, i, i)
+		if (x + i - 1) >= 1 and y >= 1 and (x + i - 1) <= buffer.screen.width and y <= buffer.screen.height then
+			index = convertCoordsToIndex(x + i - 1, y)
+			buffer.screen.new[index + 1] = color
+			buffer.screen.new[index + 2] = unicode.sub(text, i, i)
+		end
+	end
+end
+
+function buffer.image(x, y, picture)
+	if not image then image = require("image") end
+	local index, imageIndex
+	for j = y, (y + picture.height - 1) do
+		for i = x, (x + picture.width - 1) do
+			if i >= 1 and j >= 1 and i <= buffer.screen.width and j <= buffer.screen.height then
+				index = convertCoordsToIndex(i, j)
+				--Копипаст формулы!
+				imageIndex = (picture.width * ((j - y + 1) - 1) + (i - x + 1)) * 4 - 4 + 1
+
+				if picture[imageIndex + 2] ~= 0x00 then
+					buffer.screen.new[index] = colorlib.alphaBlend(buffer.screen.new[index], picture[imageIndex], picture[imageIndex + 2])
+				else
+					buffer.screen.new[index] = picture[imageIndex]
+				end
+				buffer.screen.new[index + 1] = picture[imageIndex + 1]
+				buffer.screen.new[index + 2] = picture[imageIndex + 3]
+			end
+		end
 	end
 end
 
