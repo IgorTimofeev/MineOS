@@ -1,6 +1,7 @@
 
 local buffer = require("doubleBuffering")
 local event = require("event")
+local image = require("image")
 
 local currentBackground = 0x990000
 local transparency = 25
