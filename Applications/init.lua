@@ -198,6 +198,9 @@ _G.gpu = _G.component.gpu
 --Oткрываем порт для беспороводных MineOS-соединений
 if component.isAvailable("modem") then component.modem.open(512) end
 
+--Масштаб
+ecs.setScale(1)
+
 --Сообщаем системе, что все прогружено и готово к работе
 --Хз, так надо просто. Не ебись
 computer.pushSignal("init")
