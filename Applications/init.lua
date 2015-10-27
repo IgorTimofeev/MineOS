@@ -172,7 +172,7 @@ do
     component.setPrimary(t, c.address)
   end
   os.sleep(0.5) -- Allow signal processing by libraries.
-  computer.pushSignal("init") -- so libs know components are initialized.
+  --computer.pushSignal("init") -- so libs know components are initialized.
 
  -- status("Initializing system...")
   --require("term").clear()
@@ -180,20 +180,7 @@ do
   runlevel = 1
 end
 
-local function motd()
-  local f = io.open("/etc/motd")
-  if not f then
-    return
-  end
-  if f:read(2) == "#!" then
-    f:close()
-    os.execute("/etc/motd")
-  else
-    f:seek("set", 0)
-    io.write(f:read("*a") .. "\n")
-    f:close()
-  end
-end
+status("Initializing custom libraries...")
 
 --Загружаем необходимые библиотеки, дабы избежать потерь памяти
 _G._OSLANGUAGE = require("System/OS/Language")
@@ -213,18 +200,37 @@ _G.gpu = _G.component.gpu
 --Oткрываем порт для беспороводных MineOS-соединений
 if component.isAvailable("modem") then component.modem.open(512) end
 
+--Сообщаем системе, что все прогружено и готово к работе
+--Хз, так надо просто. Не ебись
+computer.pushSignal("init")
+os.sleel(0.2)
+
 --Очищаем экран и запускаем ОС
-ecs.clearScreen()
-ecs.setScale(1)
-shell.execute("OS.lua")
+-- ecs.clearScreen()
+-- ecs.setScale(1)
+-- shell.execute("OS.lua")
+
+local function motd()
+  local f = io.open("/etc/motd")
+  if not f then
+    return
+  end
+  if f:read(2) == "#!" then
+    f:close()
+    os.execute("/etc/motd")
+  else
+    f:seek("set", 0)
+    io.write(f:read("*a") .. "\n")
+    f:close()
+  end
+end
+
 
 while true do
   component.gpu.setBackground(backgroundColor)
   component.gpu.setForeground(foregroundColor)
   local w, h = component.gpu.getResolution()
   component.gpu.fill(1, 1, w, h, " ")
-
-
 
   motd()
   local result, reason = os.execute(os.getenv("SHELL"))
