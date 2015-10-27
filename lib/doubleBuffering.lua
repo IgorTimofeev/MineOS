@@ -5,8 +5,7 @@ local image
 local gpu = component.gpu
 
 local buffer = {}
-local countOfGPUOperations = 0
-local debug = true
+local debug = false
 local sizeOfPixelData = 3
 
 ------------------------------------------------------------------------------------------------------
@@ -33,8 +32,9 @@ local function convertCoordsToIndex(x, y)
 end
 
 local function printDebug(line, text)
-	if debug then 
-		ecs.colorTextWithBack(1, line, 0xFFFFFF, 0x262626, text)
+	if debug then
+		ecs.square(1, line, buffer.screen.width, 1, 0x262626)
+		ecs.colorText(2, line, 0xFFFFFF, text)
 	end
 end
 
@@ -57,7 +57,8 @@ end
 
 function buffer.start()
 
-	countOfGPUOperations = 0
+	buffer.totalCountOfGPUOperations = 0
+	buffer.localCountOfGPUOperations = 0
 
 	buffer.screen = {
 		current = {},
@@ -314,6 +315,7 @@ function buffer.calculateDifference(x, y)
 	if buffer.screen.new[index] ~= buffer.screen.current[index] then
 		buffer.screen.current[index] = buffer.screen.new[index]
 		foregroundIsChanged = true
+		--if _G.cyka then ecs.error("new = \"" .. ecs.HEXtoString(buffer.screen.new[index], 6) .."\", current = \"" .. ecs.HEXtoString(buffer.screen.current[index], 6) .."\"") end
 	end
 
 	index = index + 1
@@ -329,8 +331,10 @@ end
 
 function buffer.draw()
 	local currentBackground, currentForeground = -math.huge, -math.huge
+	local backgroundIsChanged, foregroundIsChanged, symbolIsChanged 
 	local index
 	local massiv
+	buffer.localCountOfGPUOperations = 0
 	
 	for y = 1, buffer.screen.height do
 		local x = 1
@@ -338,27 +342,31 @@ function buffer.draw()
 
 			index = convertCoordsToIndex(x, y)
 
-			local backgroundIsChanged, foregroundIsChanged, symbolIsChanged = buffer.calculateDifference(x, y)
+			backgroundIsChanged, foregroundIsChanged, symbolIsChanged = buffer.calculateDifference(x, y)
 
-			if currentBackground ~= buffer.screen.current[index] then
-				gpu.setBackground(buffer.screen.current[index])
-				currentBackground = buffer.screen.current[index]
-				countOfGPUOperations = countOfGPUOperations + 1
-			end
-
-			index = index + 1
-
-			if currentForeground ~= buffer.screen.current[index] then
-				gpu.setForeground(buffer.screen.current[index])
-				currentForeground = buffer.screen.current[index]
-				countOfGPUOperations = countOfGPUOperations + 1
-			end
-
-			index = index - 1
-
+			--Оптимизация by me
+			--Ну, скорее, жесткий багфикс
+			--Но "оптимизация" звучит красивее
 			--Если были найдены какие-то отличия нового экрана от старого, то корректируем эти отличия через gpu.set()
 			if backgroundIsChanged or foregroundIsChanged or symbolIsChanged then
 
+				if currentBackground ~= buffer.screen.current[index] then
+					gpu.setBackground(buffer.screen.current[index])
+					currentBackground = buffer.screen.current[index]
+					buffer.localCountOfGPUOperations = buffer.localCountOfGPUOperations + 1
+				end
+
+				index = index + 1
+
+				if currentForeground ~= buffer.screen.current[index] then
+					gpu.setForeground(buffer.screen.current[index])
+					currentForeground = buffer.screen.current[index]
+					buffer.localCountOfGPUOperations = buffer.localCountOfGPUOperations + 1
+				end
+
+				index = index - 1
+
+				--Оптимизация by Krutoy
 				massiv = { buffer.screen.current[index + 2] }
 
 				--Отрисовка линиями. Не трожь, сука!
@@ -385,14 +393,15 @@ function buffer.draw()
 				
 				x = x + #massiv - 1
 
-				countOfGPUOperations = countOfGPUOperations + 1
+				buffer.localCountOfGPUOperations = buffer.localCountOfGPUOperations + 1
 			end
 
 			x = x + 1
 		end
 	end
 
-	printDebug(50, "Количество GPU-операций: " .. countOfGPUOperations)
+	buffer.totalCountOfGPUOperations = buffer.totalCountOfGPUOperations + buffer.localCountOfGPUOperations
+	printDebug(50, "Общее число GPU-операций: " .. buffer.totalCountOfGPUOperations .. ", число операций при последнем рендере: " .. buffer.localCountOfGPUOperations)
 end
 
 ------------------------------------------------------------------------------------------------------
