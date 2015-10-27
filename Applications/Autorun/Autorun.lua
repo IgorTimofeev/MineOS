@@ -37,10 +37,10 @@ end
 
 local function saveAutorun()
 	local file = io.open("autorun.lua", "w")
-	file:write("local shell = require(\"shell\")\n")
+	file:write("local success, reason\n")
 	for i = 1, #autorunObjects do
 		if autorunObjects[i].enabled then
-			file:write("pcall(loadfile(\"" .. autorunObjects[i].path .. "\"))\n")
+			file:write("success, reason = pcall(loadfile(\"" .. autorunObjects[i].path .. "\")); if not success then print(\"Ошибка: \" .. tostring(reason)) end\n")
 		end
 	end
 	file:close()
