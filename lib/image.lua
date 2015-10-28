@@ -15,6 +15,9 @@ local copyright = [[
 local component = require("component")
 local unicode = require("unicode")
 local fs = require("filesystem")
+local bit = require("bit32")
+local libPNGImage = require("libPNGImage")
+local colorlib = require('colorlib')
 local gpu = component.gpu
 
 local image = {}
@@ -35,6 +38,7 @@ local constants = {
 	fileOpenError = "Can't open file",
 	compressedFileFormat = ".pic",
 	rawFileFormat = ".rawpic",
+	pngFileFormat = ".png",
 }
 
 ---------------------------------------- Локальные функции -------------------------------------------------------------------
@@ -79,35 +83,11 @@ local function readBytes(file, bytes)
   return readedNumber
 end
 
---Преобразует цвет из HEX-записи в RGB-запись
-local function HEXtoRGB(color)
-  return bit32.rshift( color, 16 ), bit32.rshift( bit32.band(color, 0x00ff00), 8 ), bit32.band(color, 0x0000ff)
-end
-
---Аналогично, но из RGB в HEX
-local function RGBtoHEX(rr, gg, bb)
-  return bit32.lshift(rr, 16) + bit32.lshift(gg, 8) + bb
-end
-
---Смешивание двух цветов на основе альфа-канала второго
-local function alphaBlend(back_color, front_color, alpha_channel)
-	local INVERTED_ALPHA_CHANNEL = 255 - alpha_channel
-
-	local back_color_rr, back_color_gg, back_color_bb    = HEXtoRGB(back_color)
-	local front_color_rr, front_color_gg, front_color_bb = HEXtoRGB(front_color)
-
-	local blended_rr = front_color_rr * INVERTED_ALPHA_CHANNEL / 255 + back_color_rr * alpha_channel / 255
-	local blended_gg = front_color_gg * INVERTED_ALPHA_CHANNEL / 255 + back_color_gg * alpha_channel / 255
-	local blended_bb = front_color_bb * INVERTED_ALPHA_CHANNEL / 255 + back_color_bb * alpha_channel / 255
-
-	return RGBtoHEX( blended_rr, blended_gg, blended_bb )
-end
-
 --Подготавливает цвета и символ для записи в файл сжатого формата
 local function encodePixel(background, foreground, alpha, char)
 	--Расхерачиваем жирные цвета в компактные цвета
-	local ascii_background1, ascii_background2, ascii_background3 = HEXtoRGB(background)
-	local ascii_foreground1, ascii_foreground2, ascii_foreground3 = HEXtoRGB(foreground)
+	local ascii_background1, ascii_background2, ascii_background3 = colorlib.HEXtoRGB(background)
+	local ascii_foreground1, ascii_foreground2, ascii_foreground3 = colorlib.HEXtoRGB(foreground)
 	--Расхерачиваем жирный код юникод-символа в несколько миленьких ascii-кодов
 	local ascii_char1, ascii_char2, ascii_char3, ascii_char4, ascii_char5, ascii_char6 = string.byte( char, 1, 6 )
 	ascii_char1 = ascii_char1 or constants.nullChar
@@ -275,6 +255,40 @@ function image.loadRaw(path)
 	return picture
 end
 
+----------------------------------- Все, что касается реального PNG-формата ------------------------------------------------------------
+
+function image.loadPng(path)
+	local success, pngImageOrErrorMessage = pcall(libPNGImage.newFromFile, path)
+
+	if not success then
+		io.stderr:write(" * PNGView: PNG Loading Error *\n")
+		io.stderr:write("While attempting to load '" .. path .. "' as PNG, libPNGImage erred:\n")
+		io.stderr:write(pngImageOrErrorMessage)
+		return
+	end
+
+	local picture = {}
+	picture.width, picture.height = pngImageOrErrorMessage:getSize()
+
+	local r, g, b, a, hex
+	for j = 0, picture.height - 1 do
+		for i = 0, picture.width - 1 do
+			r, g, b, a = pngImageOrErrorMessage:getPixel(i, j)
+
+			if r and g and b and a and a > 0 then
+				hex = colorlib.RGBtoHEX(r, g, b)
+				table.insert(picture, hex)
+				table.insert(picture, 0x000000)
+				table.insert(picture, 0x00)
+				table.insert(picture, " ")
+			end
+
+		end
+	end
+
+	return picture
+end
+
 ----------------------------------- Вспомогательные функции программы ------------------------------------------------------------
 
 --Оптимизировать и сгруппировать по цветам картинку типа 2 (подробнее о типах см. конец файла)
@@ -355,6 +369,8 @@ function image.load(path)
 		return image.loadCompressed(path)
 	elseif fileFormat == constants.rawFileFormat then
 		return image.loadRaw(path)
+	elseif fileFormat == constants.pngFileFormat then
+		return image.loadPng(path)
 	else
 		error("Unsupported file format.\n")
 	end
@@ -384,7 +400,7 @@ function image.draw(x, y, rawPicture)
 				--Если альфа имеется, но она не совсем прозрачна
 				if (alpha > 0x00 and alpha < 0xFF) or (alpha == 0xFF and symbol ~= " ")then
 					_, _, currentBackground = gpu.get(x + xPos, y + yPos)
-					currentBackground = alphaBlend(currentBackground, background, alpha)
+					currentBackground = colorlib.alphaBlend(currentBackground, background, alpha)
 					gpu.setBackground(currentBackground)
 					--Рисуем символ на экране
 					gpu.set(x + xPos, y + yPos, symbol)

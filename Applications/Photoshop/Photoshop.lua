@@ -742,7 +742,7 @@ while true do
 							ecs.error("Некорректное имя файла!")
 						elseif not fs.exists(data[1]) then
 							ecs.error("Файл\""..data[1].."\" не существует!")
-						elseif fileFormat ~= ".pic" and fileFormat ~= ".rawpic" then 
+						elseif fileFormat ~= ".pic" and fileFormat ~= ".rawpic" and fileFormat ~= ".png" then 
 							ecs.error("Формат файла \""..fileFormat.."\" не поддерживается!")
 						else
 							masterPixels = image.load(data[1])
