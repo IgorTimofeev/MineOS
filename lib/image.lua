@@ -16,7 +16,7 @@ local component = require("component")
 local unicode = require("unicode")
 local fs = require("filesystem")
 local bit = require("bit32")
-local libPNGImage = require("libPNGImage")
+local libPNGImage
 local colorlib = require('colorlib')
 local gpu = component.gpu
 
@@ -258,6 +258,9 @@ end
 ----------------------------------- Все, что касается реального PNG-формата ------------------------------------------------------------
 
 function image.loadPng(path)
+
+	if not libPNGImage then libPNGImage = require("libPNGImage") end
+
 	local success, pngImageOrErrorMessage = pcall(libPNGImage.newFromFile, path)
 
 	if not success then
