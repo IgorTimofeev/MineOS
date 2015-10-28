@@ -4,16 +4,23 @@ local event = require("event")
 local image = require("image")
 
 local currentBackground = 0x990000
+local risovatKartinku = true
+local showPanel = true
 local transparency = 25
 local xWindow, yWindow = 5, 5
 
+local fon = image.load("Fon.pic")
+
 buffer.start()
 
---Заполним весь наш экран цветом фона 0x262626, цветом текста 0xFFFFFF и символом " "
-buffer.square(1, 1, buffer.screen.width, buffer.screen.height, currentBackground, 0xFFFFFF, " ")
-
---Нарисуем изображение из буфера. По сути, сейчас отобразился серый экран.
-buffer.draw()
+local function drawBackground()
+	--Заполним весь наш экран цветом фона 0x262626, цветом текста 0xFFFFFF и символом " "
+	if not risovatKartinku then
+		buffer.square(1, 1, buffer.screen.width, buffer.screen.height, currentBackground, 0xFFFFFF, " ")
+	else
+		buffer.image(1, 1, fon)
+	end
+end
 
 --Создаем переменные с координатами начала и размерами нашего окна
 local width, height = 82, 25
@@ -68,25 +75,35 @@ local function drawWindow(x, y)
 	-- buffer.image(x + 23, y + 6, cykaPicture)
 	-- buffer.image(x + 33, y + 12, cykaPicture2)
 
-	xPos, yPos = x, y + height + 2
-	buffer.square(xPos, yPos, width, 8, 0xFFFFFF, 0xFFFFFF, " ", transparency)
-	yPos = yPos + 1
-	xPos = xPos + 2
-	buffer.text(xPos + 2, yPos, 0x262626, "Кликай на экран левой кнопкой, чтобы изменить позицию окошка"); yPos = yPos + 1
-	buffer.text(xPos + 2, yPos, 0x262626, "Или правой кнопкой, чтобы нарисовать еще одно такое же окошко"); yPos = yPos + 1
-	buffer.text(xPos + 2, yPos, 0x262626, "А еще крути колесико, чтобы изменять прозрачность"); yPos = yPos + 2
-	buffer.text(xPos + 2, yPos, 0x262626, "Можешь жать пробел, чтобы сменить фон на рандомный"); yPos = yPos + 1
-	buffer.text(xPos + 2, yPos, 0x262626, "Или жми энтер, чтобы выйти отсудова на хер"); yPos = yPos + 1
+	if showPanel then
+		xPos, yPos = x, y + height + 2
+		buffer.square(xPos, yPos, width, 10, 0xFFFFFF, 0xFFFFFF, " ", transparency)
+
+		--Тень
+		buffer.square(xPos + width, yPos + 1, 2, 10, 0x000000, 0xFFFFFF, " ", shadowTransparency)
+		buffer.square(xPos + 2, yPos + 10, width - 2, 1, 0x000000, 0xFFFFFF, " ", shadowTransparency)
+
+		yPos = yPos + 1
+		xPos = xPos + 2
+		buffer.text(xPos + 2, yPos, 0x262626, "Клик левой кнопкой мыши: изменить позицию окошка"); yPos = yPos + 1
+		buffer.text(xPos + 2, yPos, 0x262626, "Клик правой кнопкой: нарисовать еще одно такое же окошко"); yPos = yPos + 1
+		buffer.text(xPos + 2, yPos, 0x262626, "Колесо мыши: изменить прозрачность окна"); yPos = yPos + 2
+		buffer.text(xPos + 2, yPos, 0x262626, "Space: переключить фон между картинкой и статичным цветом"); yPos = yPos + 1
+		buffer.text(xPos + 2, yPos, 0x262626, "Shift: изменить цвет фона на рандомный"); yPos = yPos + 1
+		buffer.text(xPos + 2, yPos, 0x262626, "Tab: включить или отключить данную информационную панель"); yPos = yPos + 1
+		buffer.text(xPos + 2, yPos, 0x262626, "Enter: выйти отсудова на хер"); yPos = yPos + 1
+	end
 end
 
+drawBackground()
 drawWindow(xWindow, yWindow)
 buffer.draw()
 
 while true do
 	local e = {event.pull()}
-	if e[1] == "touch" or e[1] == "drag" then
+	if e[1] == "touch" then
 		if e[5] == 0 then
-			buffer.square(1, 1, buffer.screen.width, buffer.screen.height, currentBackground, 0xFFFFFF, " ")
+			drawBackground()
 			xWindow, yWindow = e[3], e[4]
 			drawWindow(xWindow, yWindow)
 			buffer.draw()
@@ -96,28 +113,38 @@ while true do
 			buffer.draw()
 		end
 	elseif e[1] == "key_down" then
-		if e[4] == 57 then
+		if e[4] == 42 then
 			currentBackground = math.random(0x000000, 0xFFFFFF)
-			buffer.square(1, 1, buffer.screen.width, buffer.screen.height, currentBackground, 0xFFFFFF, " ")
+			drawBackground()
 			drawWindow(xWindow, yWindow)
 			buffer.draw()
 		elseif e[4] == 28 then
 			buffer.square(1, 1, buffer.screen.width, buffer.screen.height, 0x262626, 0xFFFFFF, " ")
 			buffer.draw()
 			return
+		elseif e[4] == 57 then
+			risovatKartinku = not risovatKartinku
+			drawBackground()
+			drawWindow(xWindow, yWindow)
+			buffer.draw()
+		elseif e[4] == 15 then
+			showPanel = not showPanel
+			drawBackground()
+			drawWindow(xWindow, yWindow)
+			buffer.draw()
 		end
 	elseif e[1] == "scroll" then
 		if e[5] == 1 then
 			if transparency > 5 then
 				transparency = transparency - 5
-				buffer.square(1, 1, buffer.screen.width, buffer.screen.height, currentBackground, 0xFFFFFF, " ")
+				drawBackground()
 				drawWindow(xWindow, yWindow)
 				buffer.draw()
 			end
 		else
 			if transparency < 100 then
 				transparency = transparency + 5
-				buffer.square(1, 1, buffer.screen.width, buffer.screen.height, currentBackground, 0xFFFFFF, " ")
+				drawBackground()
 				drawWindow(xWindow, yWindow)
 				buffer.draw()
 			end
