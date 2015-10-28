@@ -355,6 +355,7 @@ local function createDesktopShortCuts()
 		"Nano.app",
 		"Camera.app",
 		"Autorun.app",
+		"BufferDemo.app",
 	}
 
 	local dockApps = {
