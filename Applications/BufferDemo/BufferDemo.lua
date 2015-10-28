@@ -9,7 +9,7 @@ local showPanel = true
 local transparency = 25
 local xWindow, yWindow = 5, 5
 
-local fon = image.load("Fon.pic")
+local fon = image.load("Wallpaper.pic")
 
 buffer.start()
 
