@@ -19,7 +19,6 @@ local libraries = {
 	["component"] = "component",
 	["unicode"] = "unicode",
 	["fs"] = "filesystem",
-	["libPNGImage"] = "libPNGImage",
 	["colorlib"] = "colorlib",
 }
 
@@ -269,6 +268,8 @@ end
 ----------------------------------- Все, что касается реального PNG-формата ------------------------------------------------------------
 
 function image.loadPng(path)
+	if not _G.libPNGImage then _G.libPNGImage = require("libPNGImage") end
+
 	local success, pngImageOrErrorMessage = pcall(libPNGImage.newFromFile, path)
 
 	if not success then
