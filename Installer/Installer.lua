@@ -457,7 +457,7 @@ for i = 1, #dockApps do
   ecs.createShortCut(dockPath .. ecs.hideFileFormat(dockApps[i]) .. ".lnk", applicationsPath .. dockApps[i])
 end
 
-ecs.createShortCut(desktopPath .. "Puctures.lnk", picturesPath)
+ecs.createShortCut(desktopPath .. "Pictures.lnk", picturesPath)
 ecs.createShortCut("MineOS/System/OS/Wallpaper.lnk", picturesPath .. "AhsokaTano.pic")
 
 computer.shutdown(true)
