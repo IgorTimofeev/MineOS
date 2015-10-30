@@ -11,7 +11,6 @@ local libraries = {
 	["computer"] = "computer",
 	["serialization"] = "serialization",
 	["internet"] = "internet",
-	["buffer"] = "doubleBuffering",
 }
 
 local components = {
@@ -1469,6 +1468,7 @@ ECSAPI.OSIconsHeight = 6
 --Вся необходимая информация для иконок
 local function OSIconsInit()
 	if not _G.image then _G.image = require("image") end
+	if not _G.buffer then _G.buffer = require("doubleBuffering") end
 	if not ECSAPI.OSIcons then
 		--Константы для иконок
 		ECSAPI.OSIcons = {}
