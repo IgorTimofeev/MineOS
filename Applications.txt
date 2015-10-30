@@ -6,7 +6,7 @@
     ["name"]="OS.lua",
     ["url"]="IgorTimofeev/OpenComputers/master/MineOS/OS.lua",
     ["type"]="Script",
-    ["version"]=1.0,
+    ["version"]=3.0,
   },
   {
     ["name"]="MineOS/Pictures/Liara.pic",
