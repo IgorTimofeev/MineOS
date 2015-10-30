@@ -273,8 +273,8 @@ end
 --Получить список приложений, которые требуется обновить
 function ECSAPI.getAppsToUpdate(debug)
 	--Задаем стартовые пути
-	local pathToApplicationsFile = "System/OS/Applications.txt"
-	local pathToSecondApplicationsFile = "System/OS/Applications2.txt"
+	local pathToApplicationsFile = "MineOS/System/OS/Applications.txt"
+	local pathToSecondApplicationsFile = "MineOS/System/OS/Applications2.txt"
 	--Путь к файл-листу на пастебине
 	local paste = "3j2x4dDn"
 	--Выводим инфу
@@ -1225,7 +1225,7 @@ function ECSAPI.newApplication(path, startName)
 	if ECSAPI.checkName(inputs[1] .. ".app", path) then
 		local name = path .. inputs[1] .. ".app/Resources/"
 		fs.makeDirectory(name)
-		fs.copy("System/OS/Icons/SampleIcon.pic", name .. "Icon.pic")
+		fs.copy("MineOS/System/OS/Icons/SampleIcon.pic", name .. "Icon.pic")
 		local file = io.open(path .. inputs[1] .. ".app/" .. inputs[1] .. ".lua", "w")
 		file:write("local ecs = require(\"ECSAPI\")", "\n")
 		file:write("ecs.universalWindow(\"auto\", \"auto\", 30, 0xeeeeee, true, {\"EmptyLine\"}, {\"CenterText\", 0x262626, \"Hello world!\"}, {\"EmptyLine\"}, {\"Button\", {0x880000, 0xffffff, \"Hello!\"}})", "\n")
@@ -1341,7 +1341,7 @@ local systemFiles = {
 	"etc/",
 	"boot/",
 	"Finder.app/"
-	--"System/",
+	--"MineOS/System/",
 }
 
 --Перехуяривалка файлового порядка для операционки. Говнокод, переделать!
@@ -1472,7 +1472,7 @@ local function OSIconsInit()
 	if not ECSAPI.OSIcons then
 		--Константы для иконок
 		ECSAPI.OSIcons = {}
-		ECSAPI.pathToIcons = "System/OS/Icons/"
+		ECSAPI.pathToIcons = "MineOS/System/OS/Icons/"
 
 		--Иконки
 		ECSAPI.OSIcons.folder = image.load(ECSAPI.pathToIcons .. "Folder.pic")
