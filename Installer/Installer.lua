@@ -195,10 +195,10 @@ if not fs.exists("MineOS/System/OS/Installer/OK.pic") or not fs.exists("MineOS/S
   
   local preLoadApi = {
     { paste = "IgorTimofeev/OpenComputers/master/lib/config.lua", path = "lib/config.lua" },
-    { paste = "IgorTimofeev/OpenComputers/master/Installer/Languages.pic", path = "MineOS/System/OS/Icons/Languages.pic" },
-    { paste = "IgorTimofeev/OpenComputers/master/Installer/OK.pic", path = "MineOS/System/OS/Icons/OK.pic" },
-    { paste = "IgorTimofeev/OpenComputers/master/Installer/Downloading.pic", path = "MineOS/System/OS/Icons/Downloading.pic" },
-    { paste = "IgorTimofeev/OpenComputers/master/Installer/OS_Logo.pic", path = "MineOS/System/OS/Icons/OS_Logo.pic" },
+    { paste = "IgorTimofeev/OpenComputers/master/MineOS/Icons/Languages.pic", path = "MineOS/System/OS/Icons/Languages.pic" },
+    { paste = "IgorTimofeev/OpenComputers/master/MineOS/Icons/OK.pic", path = "MineOS/System/OS/Icons/OK.pic" },
+    { paste = "IgorTimofeev/OpenComputers/master/MineOS/Icons/Downloading.pic", path = "MineOS/System/OS/Icons/Downloading.pic" },
+    { paste = "IgorTimofeev/OpenComputers/master/MineOS/Icons/OS_Logo.pic", path = "MineOS/System/OS/Icons/OS_Logo.pic" },
   }
 
   local countOfAll = #preLoadApi
