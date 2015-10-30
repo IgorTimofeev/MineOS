@@ -444,10 +444,9 @@ local dockApps = {
 local desktopPath = "MineOS/System/OS/Desktop/"
 local dockPath = "MineOS/System/OS/Dock/"
 local applicationsPath = "MineOS/Applications/"
+local picturesPath = "MineOS/Pictures/"
 
 fs.makeDirectory(desktopPath .. "My files")
-
-ecs.createShortCut(desktopPath, "MineOS/Pictures/")
 
 for i = 1, #apps do
   local pathToShortcut = desktopPath .. ecs.hideFileFormat(apps[i]) .. ".lnk"
@@ -464,6 +463,9 @@ for i = 1, #dockApps do
     ecs.createShortCut(pathToShortcut, applicationsPath .. dockApps[i])
   end
 end
+
+ecs.createShortCut(desktopPath, picturesPath)
+ecs.createShortCut("MineOS/System/OS/Wallpaper.lnk", picturesPath .. "AhsokaTano.pic")
 
 computer.shutdown(true)
 
