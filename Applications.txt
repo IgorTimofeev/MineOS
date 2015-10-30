@@ -1,4 +1,7 @@
 {
+
+  ----------------------------------------------------- Все для ОС --------------------------------------------------------------------------
+
   {
     ["name"]="OS.lua",
     ["url"]="IgorTimofeev/OpenComputers/master/MineOS/OS.lua",
@@ -59,36 +62,9 @@
     ["type"]="Script",
     ["version"]=1.0,
   },
-  {
-    ["name"]="init.lua",
-    ["url"]="IgorTimofeev/OpenComputers/master/Applications/init.lua",
-    ["type"]="Script",
-    ["version"]=1.0,
-  },
-  {
-    ["name"]="bin/event.lua",
-    ["url"]="IgorTimofeev/OpenComputers/master/Applications/event.lua",
-    ["type"]="Script",
-    ["version"]=1.0,
-  },
-  {
-    ["name"]="bin/clear.lua",
-    ["url"]="IgorTimofeev/OpenComputers/master/Applications/clear.lua",
-    ["type"]="Script",
-    ["version"]=1.0,
-  },
-  {
-    ["name"]="bin/ls.lua",
-    ["url"]="IgorTimofeev/OpenComputers/master/Applications/ls.lua",
-    ["type"]="Script",
-    ["version"]=1.0,
-  },
-  {
-    ["name"]="bin/scale.lua",
-    ["url"]="IgorTimofeev/OpenComputers/master/Applications/scale.lua",
-    ["type"]="Script",
-    ["version"]=1.0,
-  },
+
+  ----------------------------------------------------- Системные иконки --------------------------------------------------------------------------
+
   {
     ["name"]="MineOS/System/OS/Icons/Pastebin.pic",
     ["url"]="IgorTimofeev/OpenComputers/master/MineOS/Icons/Pastebin.pic",
@@ -197,6 +173,60 @@
     ["type"]="Script",
     ["version"]=1.0,
   },
+
+  ----------------------------------------------------- Скрипты и дополнения к ним --------------------------------------------------------------------------
+
+  {
+    ["name"]="init.lua",
+    ["url"]="IgorTimofeev/OpenComputers/master/Applications/init.lua",
+    ["type"]="Script",
+    ["version"]=1.0,
+  },
+  {
+    ["name"]="bin/event.lua",
+    ["url"]="IgorTimofeev/OpenComputers/master/Applications/event.lua",
+    ["type"]="Script",
+    ["version"]=1.0,
+  },
+  {
+    ["name"]="bin/clear.lua",
+    ["url"]="IgorTimofeev/OpenComputers/master/Applications/clear.lua",
+    ["type"]="Script",
+    ["version"]=1.0,
+  },
+  {
+    ["name"]="bin/ls.lua",
+    ["url"]="IgorTimofeev/OpenComputers/master/Applications/ls.lua",
+    ["type"]="Script",
+    ["version"]=1.0,
+  },
+  {
+    ["name"]="bin/scale.lua",
+    ["url"]="IgorTimofeev/OpenComputers/master/Applications/scale.lua",
+    ["type"]="Script",
+    ["version"]=1.0,
+  },
+  {
+    ["name"]="usr/misc/greetings/English.txt",
+    ["url"]="IgorTimofeev/OpenComputers/master/Applications/Motd/English.txt",
+    ["type"]="Script",
+    ["version"]=1.0,
+  },
+  {
+    ["name"]="usr/misc/greetings/Russian.txt",
+    ["url"]="IgorTimofeev/OpenComputers/master/Applications/Motd/Russian.txt",
+    ["type"]="Script",
+    ["version"]=1.0,
+  },
+  {
+    ["name"]="etc/motd",
+    ["url"]="IgorTimofeev/OpenComputers/master/Applications/Motd/motd.lua",
+    ["type"]="Script",
+    ["version"]=1.0,
+  },
+
+  ----------------------------------------------------- Библиотеки --------------------------------------------------------------------------
+
   {
     ["name"]="lib/libPNGImage.lua",
     ["url"]="IgorTimofeev/OpenComputers/master/lib/libPNGImage.lua",
@@ -275,30 +305,9 @@
     ["type"]="Script",
     ["version"]=1.0,
   },
-  {
-    ["name"]="lib/checkSystemRequirements.lua",
-    ["url"]="IgorTimofeev/OpenComputers/master/lib/checkSystemRequirements.lua",
-    ["type"]="Script",
-    ["version"]=1.0,
-  },
-  {
-    ["name"]="usr/misc/greetings/English.txt",
-    ["url"]="IgorTimofeev/OpenComputers/master/Applications/Motd/English.txt",
-    ["type"]="Script",
-    ["version"]=1.0,
-  },
-  {
-    ["name"]="usr/misc/greetings/Russian.txt",
-    ["url"]="IgorTimofeev/OpenComputers/master/Applications/Motd/Russian.txt",
-    ["type"]="Script",
-    ["version"]=1.0,
-  },
-  {
-    ["name"]="etc/motd",
-    ["url"]="IgorTimofeev/OpenComputers/master/Applications/Motd/motd.lua",
-    ["type"]="Script",
-    ["version"]=1.0,
-  },
+
+  ----------------------------------------------------- Приложения без ресурсов --------------------------------------------------------------------------
+
   {
     ["name"]="MineOS/Applications/Photoshop",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/Photoshop/Photoshop.lua",
@@ -432,6 +441,9 @@
     ["icon"]="IgorTimofeev/OpenComputers/master/Applications/Autorun/Icon.pic",
     ["version"]=1.0,
   },
+
+  ----------------------------------------------------- Приложения с ресурсами --------------------------------------------------------------------------
+
   {
     ["name"]="MineOS/Applications/MineCode",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/MineCode/MineCode.lua",
