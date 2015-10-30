@@ -243,7 +243,7 @@ do
   local language = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Select language"}, {"Select", 0x262626, 0x880000, "Russian", "English"}, {"Button", {0xffffff, 0x262626, "OK"}})
   language = language[1]
   --УСТАНАВЛИВАЕМ НУЖНЫЙ ЯЗЫК
-  local path = "MineOS/System/OS/Language.txt"
+  local path = "MineOS/System/OS/Language.lua"
   fs.remove(path)
   fs.makeDirectory(fs.path(path))
   local file = io.open(path, "w")
