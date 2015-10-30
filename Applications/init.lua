@@ -181,7 +181,7 @@ do
 end
 
 --Загружаем необходимые библиотеки, дабы избежать потерь памяти
-_G._OSLANGUAGE = require("MineOS/SystemOS/Language")
+_G._OSLANGUAGE = require("MineOS/System/OS/Language")
 _G.computer = require("computer")
 _G.ecs = require("ECSAPI")
 _G.component = require("component")
