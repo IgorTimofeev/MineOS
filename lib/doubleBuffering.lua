@@ -55,12 +55,12 @@ function buffer.createArray()
 
 	for y = 1, buffer.screen.height do
 		for x = 1, buffer.screen.width do
-			table.insert(buffer.screen.current, -1)
-			table.insert(buffer.screen.current, -1)
+			table.insert(buffer.screen.current, 0x010101)
+			table.insert(buffer.screen.current, 0xFEFEFE)
 			table.insert(buffer.screen.current, " ")
 
-			table.insert(buffer.screen.new, -1)
-			table.insert(buffer.screen.new, -1)
+			table.insert(buffer.screen.new, 0x010101)
+			table.insert(buffer.screen.new, 0xFEFEFE)
 			table.insert(buffer.screen.new, " ")
 		end
 	end
@@ -305,6 +305,35 @@ function buffer.image(x, y, picture)
 			end
 		end
 	end
+end
+
+function buffer.button(x, y, width, height, background, foreground, text)
+	local textPosX = math.floor(x + width / 2 - unicode.len(text) / 2)
+	local textPosY = math.floor(y + height / 2)
+	buffer.square(x, y, width, height, background, 0xFFFFFF, " ")
+	buffer.text(textPosX, textPosY, foreground, text)
+
+	return x, y, (x + width - 1), (y + height - 1)
+end
+
+function buffer.adaptiveButton(x, y, xOffset, yOffset, background, foreground, text)
+	local width = xOffset * 2 + unicode.len(text)
+	local height = yOffset * 2 + 1
+
+	buffer.square(x, y, width, height, background, 0xFFFFFF, " ")
+	buffer.text(x + xOffset, y + yOffset, foreground, text)
+
+	return x, y, (x + width - 1), (y + height - 1)
+end
+
+function buffer.scrollBar(x, y, width, height, countOfAllElements, currentElement, backColor, frontColor)
+	local sizeOfScrollBar = math.ceil(1 / countOfAllElements * height)
+	local displayBarFrom = math.floor(y + height * ((currentElement - 1) / countOfAllElements))
+
+	buffer.square(x, y, width, height, backColor, 0xFFFFFF, " ")
+	buffer.square(x, displayBarFrom, width, sizeOfScrollBar, frontColor, 0xFFFFFF, " ")
+
+	sizeOfScrollBar, displayBarFrom = nil, nil
 end
 
 function buffer.calculateDifference(x, y)

@@ -1481,10 +1481,10 @@ local function OSIconsInit()
 		ECSAPI.OSIcons.config = image.load(ECSAPI.pathToIcons .. "Config.pic")
 		ECSAPI.OSIcons.lua = image.load(ECSAPI.pathToIcons .. "Lua.pic")
 		ECSAPI.OSIcons.image = image.load(ECSAPI.pathToIcons .. "Image.pic")
-		ECSAPI.OSIcons.imageJPG = image.load(ECSAPI.pathToIcons .. "ImageJPG.pic")
+		ECSAPI.OSIcons.imageJPG = image.load(ECSAPI.pathToIcons .. "RawImage.pic")
 		ECSAPI.OSIcons.pastebin = image.load(ECSAPI.pathToIcons .. "Pastebin.pic")
 		ECSAPI.OSIcons.fileNotExists = image.load(ECSAPI.pathToIcons .. "FileNotExists.pic")
-		ECSAPI.OSIcons.archive = image.load(ECSAPI.pathToIcons .. "archive.pic")
+		ECSAPI.OSIcons.archive = image.load(ECSAPI.pathToIcons .. "Archive.pic")
 	end
 end
 
@@ -1559,11 +1559,15 @@ function ECSAPI.launchIcon(path, arguments)
 	if arguments then arguments = " " .. arguments else arguments = "" end
 	--Получаем файл формат заранее
 	local fileFormat = ECSAPI.getFileFormat(path)
+	local isDirectory = fs.isDirectory(path)
 	--Если это приложение
 	if fileFormat == ".app" then
 		local cyka = path .. "/" .. ECSAPI.hideFileFormat(fs.name(path)) .. ".lua"
 		local success, reason = shell.execute(cyka)
 		if not success then ECSAPI.displayCompileMessage(1, reason, true) end
+	--Если это папка
+	elseif (fileFormat == "" or fileFormat == nil) and isDirectory then
+		shell.execute("MineOS/Applications/Finder.app/Finder.lua " .. path)
 	--Если это обычный луа файл - т.е. скрипт
 	elseif fileFormat == ".lua" or fileFormat == nil then
 		ECSAPI.prepareToExit()
@@ -1577,10 +1581,10 @@ function ECSAPI.launchIcon(path, arguments)
 		end
 	--Если это фоточка
 	elseif fileFormat == ".pic" then
-		shell.execute("MineOS/Applications/Photoshop.app/Photoshop.lua open "..path)
+		shell.execute("MineOS/Applications/Photoshop.app/Photoshop.lua open " .. path)
 	--Если это фоточка
-	elseif fileFormat == ".jpg" then
-		shell.execute("MineOS/Applications/Photoshop.app/Photoshop.lua open "..path)
+	elseif fileFormat == ".raw" then
+		shell.execute("MineOS/Applications/Photoshop.app/Photoshop.lua open " .. path)
 	--Если это текст или конфиг или языковой
 	elseif fileFormat == ".txt" or fileFormat == ".cfg" or fileFormat == ".lang" then
 		ECSAPI.prepareToExit()
