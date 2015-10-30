@@ -228,6 +228,12 @@
   ----------------------------------------------------- Библиотеки --------------------------------------------------------------------------
 
   {
+    ["name"]="lib/zones.lua",
+    ["url"]="IgorTimofeev/OpenComputers/master/lib/zones.lua",
+    ["type"]="Script",
+    ["version"]=1.0,
+  },
+  {
     ["name"]="lib/libPNGImage.lua",
     ["url"]="IgorTimofeev/OpenComputers/master/lib/libPNGImage.lua",
     ["type"]="Script",
