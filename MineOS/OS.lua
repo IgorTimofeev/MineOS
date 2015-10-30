@@ -234,7 +234,7 @@ while true do
 							buffer.start()
 							drawAll()
 						else
-							shell.execute("Finder.app/Finder.lua "..path)
+							shell.execute("MineOS/Applications/Finder.app/Finder.lua "..path)
 						end
 					else
 						ecs.launchIcon(path)
@@ -263,7 +263,7 @@ while true do
 
 					--Анализ действия контекстного меню
 					if action == lang.contextShowContent then
-						shell.execute("Finder.app/Finder.lua "..path)
+						shell.execute("MineOS/Applications/Finder.app/Finder.lua "..path)
 					elseif action == lang.contextEdit then
 						ecs.editFile(path)
 						drawAll(true)
