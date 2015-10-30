@@ -366,6 +366,10 @@ while true do
 
 			end
 		end
+
+	elseif eventData[1] == "OSWallpaperChanged" then
+		changeWallpaper()
+		drawAll(true)
 	end
 	--Если пустая глобал зона
 	-- if eventData[1] == "touch" then

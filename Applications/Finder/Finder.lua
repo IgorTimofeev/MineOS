@@ -2,6 +2,7 @@
 -- Адаптивная загрузка необходимых библиотек и компонентов
 local libraries = {
 	["component"] = "component",
+	["computer"] = "computer",
 	["event"] = "event",
 	["fs"] = "filesystem",
 	["context"] = "context",
@@ -53,7 +54,7 @@ local sortingMethods = {
 	{name = "name", symbol = "По имени"},
 	{name = "date", symbol = "По дате"},
 }
-local currentSortingMethod = 2
+local currentSortingMethod = 1
 
 ------------------------------------------------------------------------------------------------------------------
 
@@ -85,7 +86,7 @@ local function loadConfig()
 			{"Element", "Scripts", "bin/"},
 			{"Element", "Desktop", "MineOS/Desktop/"},
 			{"Element", "Applications", "MineOS/Applications/"},
-			{"Element", "Pictures", "MineOS/Pictures"},
+			{"Element", "Pictures", "MineOS/Pictures/"},
 			{"Title", "", ""},
 			{"Title", "Диски"},
 		}
@@ -448,15 +449,19 @@ while true do
 							action = context.menu(e[3], e[4], {"Показать содержимое"}, {"Добавить в избранное"},"-", {"Копировать", false, "^C"}, {"Вставить", (_G.clipboard == nil), "^V"}, "-", {"Переименовать"}, {"Создать ярлык"}, "-", {"Добавить в архив"}, "-", {"Удалить", false, "⌫"})
 						end
 					else
-						action = context.menu(e[3], e[4], {"Редактировать"}, "-", {"Копировать", false, "^C"}, {"Вставить", (not _G.clipboard), "^V"}, "-", {"Переименовать"}, {"Создать ярлык"}, "-", {"Добавить в архив"}, {"Загрузить на Pastebin"}, "-", {"Удалить", false, "⌫"})
+						if fileFormat == ".pic" then
+							action = context.menu(e[3], e[4], {"Редактировать"}, {"Установить как обои"}, "-", {"Копировать", false, "^C"}, {"Вставить", (not _G.clipboard), "^V"}, "-", {"Переименовать"}, {"Создать ярлык"}, "-", {"Загрузить на Pastebin"}, "-", {"Удалить", false, "⌫"})
+						else
+							action = context.menu(e[3], e[4], {"Редактировать"}, "-", {"Копировать", false, "^C"}, {"Вставить", (not _G.clipboard), "^V"}, "-", {"Переименовать"}, {"Создать ярлык"}, "-", {"Загрузить на Pastebin"}, "-", {"Удалить", false, "⌫"})
+						end
 					end
 
 					--АналИз действия
 					if action == "Редактировать" then
 						ecs.prepareToExit()
 						shell.execute("edit "..path)
-						ecs.drawOldPixels(oldPixelsOfFullScreen)
-						drawAll()
+						buffer.paste(1, 1, oldPixelsOfFullScreen)
+						drawAll(true)
 					elseif action == "Добавить в избранное" then
 						addToFavourites(fs.name(path), path)
 						drawAll()
@@ -489,6 +494,13 @@ while true do
 						drawAll()
 					elseif action == "Загрузить на Pastebin" then
 						shell.execute("System/Applications/Pastebin.app/Pastebin.lua upload " .. path)
+					elseif action == "Установить как обои" then
+						ecs.error(path)
+						ecs.createShortCut("MineOS/System/OS/Wallpaper.lnk", path)
+						computer.pushSignal("OSWallpaperChanged")
+						buffer.paste(1, 1, oldPixelsOfFullScreen)
+						buffer.draw()
+						return
 					else
 						--Рисуем иконку выделенную
 						buffer.square(obj["Icons"][key][1], obj["Icons"][key][2], widthOfIcon, heightOfIcon, colors.main, 0xffffff, " ")
