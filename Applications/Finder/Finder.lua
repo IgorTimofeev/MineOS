@@ -1,10 +1,22 @@
-local c = require("component")
-local event = require("event")
-local fs = require("filesystem")
-local context = require("context")
-local unicode = require("unicode")
-local seri = require("serialization")
-local gpu = c.gpu
+
+-- Адаптивная загрузка необходимых библиотек и компонентов
+local libraries = {
+	["component"] = "component",
+	["event"] = "event",
+	["fs"] = "filesystem",
+	["context"] = "context",
+	["unicode"] = "unicode",
+	["buffer"] = "doubleBuffering",
+	["serialization"] = "serialization",
+}
+
+local components = {
+	["gpu"] = "gpu",
+}
+
+for library in pairs(libraries) do if not _G[library] then _G[library] = require(libraries[library]) end end
+for comp in pairs(components) do if not _G[comp] then _G[comp] = _G.component[components[comp]] end end
+libraries, components = nil, nil
 
 ------------------------------------------------------------------------------------------------------------------
 
@@ -41,7 +53,7 @@ local showSystemFiles, showHiddenFiles, showFileFormat
 local function saveConfig()
 	fs.makeDirectory(fs.path(pathToConfig))
 	local file = io.open(pathToConfig, "w")
-	file:write(seri.serialize( { ["leftBar"] = leftBar, ["showHiddenFiles"] = showHiddenFiles, ["showSystemFiles"] = showSystemFiles, ["showFileFormat"] = showFileFormat }))
+	file:write(serialization.serialize( { ["leftBar"] = leftBar, ["showHiddenFiles"] = showHiddenFiles, ["showSystemFiles"] = showSystemFiles, ["showFileFormat"] = showFileFormat }))
 	file:close()
 end
 
@@ -51,7 +63,7 @@ local function loadConfig()
 		local file = io.open(pathToConfig, "r")
 		local readedConfig = file:read("*a")
 		file:close()
-		readedConfig = seri.unserialize(readedConfig)
+		readedConfig = serialization.unserialize(readedConfig)
 		leftBar = readedConfig.leftBar
 		showFileFormat = readedConfig.showFileFormat
 		showSystemFiles = readedConfig.showSystemFiles
@@ -261,6 +273,7 @@ local function drawMain(fromLine)
 		xPos = xMain + 1
 		yPos = yPos + heightOfIcon + ySpaceBetweenIcons
 	end
+	buffer.draw()
 end
 
 --Рисуем левую часть
