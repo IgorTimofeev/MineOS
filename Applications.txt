@@ -150,8 +150,8 @@
     ["version"]=1.0,
   },
   {
-    ["name"]="MineOS/System/OS/Icons/ImageJPG.pic",
-    ["url"]="IgorTimofeev/OpenComputers/master/MineOS/Icons/ImageJPG.pic",
+    ["name"]="MineOS/System/OS/Icons/RawImage.pic",
+    ["url"]="IgorTimofeev/OpenComputers/master/MineOS/Icons/RawImage.pic",
     ["type"]="Script",
     ["version"]=1.0,
   },
