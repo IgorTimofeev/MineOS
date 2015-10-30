@@ -12,13 +12,24 @@ local copyright = [[
 
 --------------------------------------- Подгрузка библиотек --------------------------------------------------------------
 
-local component = require("component")
-local unicode = require("unicode")
-local fs = require("filesystem")
 local bit = require("bit32")
-local libPNGImage
-local colorlib = require('colorlib')
-local gpu = component.gpu
+
+-- Адаптивная загрузка необходимых библиотек и компонентов
+local libraries = {
+	["component"] = "component",
+	["unicode"] = "unicode",
+	["fs"] = "filesystem",
+	["libPNGImage"] = "libPNGImage",
+	["colorlib"] = "colorlib",
+}
+
+local components = {
+	["gpu"] = "gpu",
+}
+
+for library in pairs(libraries) do if not _G[library] then _G[library] = require(libraries[library]) end end
+for comp in pairs(components) do if not _G[comp] then _G[comp] = _G.component[components[comp]] end end
+libraries, components = nil, nil
 
 local image = {}
 
@@ -258,9 +269,6 @@ end
 ----------------------------------- Все, что касается реального PNG-формата ------------------------------------------------------------
 
 function image.loadPng(path)
-
-	if not libPNGImage then libPNGImage = require("libPNGImage") end
-
 	local success, pngImageOrErrorMessage = pcall(libPNGImage.newFromFile, path)
 
 	if not success then

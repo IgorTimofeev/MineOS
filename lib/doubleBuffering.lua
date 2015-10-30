@@ -1,8 +1,19 @@
-local component = require("component")
-local colorlib = require("colorlib")
-local unicode = require("unicode")
-local image
-local gpu = component.gpu
+
+-- Адаптивная загрузка необходимых библиотек и компонентов
+local libraries = {
+	["component"] = "component",
+	["unicode"] = "unicode",
+	["image"] = "image",
+	["colorlib"] = "colorlib",
+}
+
+local components = {
+	["gpu"] = "gpu",
+}
+
+for library in pairs(libraries) do if not _G[library] then _G[library] = require(libraries[library]) end end
+for comp in pairs(components) do if not _G[comp] then _G[comp] = _G.component[components[comp]] end end
+libraries, components = nil, nil
 
 local buffer = {}
 local debug = false
@@ -329,7 +340,7 @@ function buffer.calculateDifference(x, y)
 	return backgroundIsChanged, foregroundIsChanged, symbolIsChanged
 end
 
-function buffer.draw()
+function buffer.draw(force)
 	local currentBackground, currentForeground = -math.huge, -math.huge
 	local backgroundIsChanged, foregroundIsChanged, symbolIsChanged 
 	local index
@@ -348,7 +359,7 @@ function buffer.draw()
 			--Ну, скорее, жесткий багфикс
 			--Но "оптимизация" звучит красивее
 			--Если были найдены какие-то отличия нового экрана от старого, то корректируем эти отличия через gpu.set()
-			if backgroundIsChanged or foregroundIsChanged or symbolIsChanged then
+			if backgroundIsChanged or foregroundIsChanged or symbolIsChanged or force then
 
 				if currentBackground ~= buffer.screen.current[index] then
 					gpu.setBackground(buffer.screen.current[index])

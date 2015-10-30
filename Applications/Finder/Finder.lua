@@ -244,7 +244,7 @@ local function drawMain(fromLine)
 	--Очищаем объекты
 	obj["Icons"] = {}
 	--Рисуем белую подложку
-	ecs.square(xMain, yLeftBar, widthOfMain, heightOfMain, colors.main)
+	buffer.square(xMain, yLeftBar, widthOfMain, heightOfMain, colors.main, 0xffffff, " ")
 	--Рисуем скроллбарчик, епты бля!
 	local scrollHeight = math.ceil(#fileList / xCountOfIcons); if scrollHeight == 0 then scrollHeight = 1 end
 	ecs.srollBar(xEnd, yLeftBar, 1, heightOfMain, scrollHeight, fromLine, colors.topBar, ecs.colors.blue)
@@ -394,8 +394,10 @@ local function drawManager(xStart, yStart, widthOfManager, heightOfManager, star
 			for key in pairs(obj["Icons"]) do
 				if ecs.clickedAtArea(e[3], e[4], obj["Icons"][key][1], obj["Icons"][key][2], obj["Icons"][key][3], obj["Icons"][key][4]) then
 					--Рисуем иконку выделенную
-					ecs.square(obj["Icons"][key][1], obj["Icons"][key][2], widthOfIcon, heightOfIcon, colors.selection)
+					buffer.square(obj["Icons"][key][1], obj["Icons"][key][2], widthOfIcon, heightOfIcon, colors.selection, 0xffffff, " ")
 					ecs.drawOSIcon(obj["Icons"][key][1], obj["Icons"][key][2], obj["Icons"][key][5], showFileFormat, 0xffffff)
+					buffer.draw()
+
 					--Получаем путь иконки и ее формат
 					local path = obj["Icons"][key][5]
 					local fileFormat = ecs.getFileFormat(path)
@@ -465,8 +467,9 @@ local function drawManager(xStart, yStart, widthOfManager, heightOfManager, star
 							shell.execute("Pastebin.app/Pastebin.lua upload " .. path)
 						else
 							--Рисуем иконку выделенную
-							ecs.square(obj["Icons"][key][1], obj["Icons"][key][2], widthOfIcon, heightOfIcon, colors.main)
+							buffer.square(obj["Icons"][key][1], obj["Icons"][key][2], widthOfIcon, heightOfIcon, colors.main, 0xffffff, " ")
 							ecs.drawOSIcon(obj["Icons"][key][1], obj["Icons"][key][2], obj["Icons"][key][5], showFileFormat, 0x000000)
+							buffer.draw()
 						end
 					end
 

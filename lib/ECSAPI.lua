@@ -1,14 +1,27 @@
-local component = require("component")
-local term = require("term")
-local unicode = require("unicode")
-local event = require("event")
-local fs = require("filesystem")
-local shell = require("shell")
-local keyboard = require("keyboard")
-local computer = require("computer")
-local serialization = require("serialization")
-local internet = require("internet")
-local gpu = component.gpu
+
+-- Адаптивная загрузка необходимых библиотек и компонентов
+local libraries = {
+	["component"] = "component",
+	["term"] = "term",
+	["unicode"] = "unicode",
+	["event"] = "event",
+	["fs"] = "filesystem",
+	["shell"] = "shell",
+	["keyboard"] = "keyboard",
+	["computer"] = "computer",
+	["serialization"] = "serialization",
+	["internet"] = "internet",
+	["buffer"] = "doubleBuffering",
+	["image"] = "image",
+}
+
+local components = {
+	["gpu"] = "gpu",
+}
+
+for library in pairs(libraries) do if not _G[library] then _G[library] = require(libraries[library]) end end
+for comp in pairs(components) do if not _G[comp] then _G[comp] = _G.component[components[comp]] end end
+libraries, components = nil, nil
 
 local ECSAPI = {}
 
@@ -1499,7 +1512,7 @@ function ECSAPI.drawOSIcon(x, y, path, showFileFormat, nameColor)
 			local shortcutLink = ECSAPI.readShortcut(path)
 			ECSAPI.drawOSIcon(x, y, shortcutLink, showFileFormat, nameColor)
 			--Стрелочка
-			ECSAPI.colorTextWithBack(x + ECSAPI.OSIconsWidth - 4, y + ECSAPI.OSIconsHeight - 3, 0x000000, 0xffffff, "⤶")
+			buffer.set(x + ECSAPI.OSIconsWidth - 3, y + ECSAPI.OSIconsHeight - 3, 0xFFFFFF, 0x000000, "<")
 			return 0
 		elseif fileFormat == ".cfg" or fileFormat == ".config" then
 			icon = "config"
@@ -1523,20 +1536,18 @@ function ECSAPI.drawOSIcon(x, y, path, showFileFormat, nameColor)
 	end
 
 	--Рисуем иконку
-	image.draw(x + 2, y, ECSAPI.OSIcons[icon])
+	buffer.image(x + 2, y, ECSAPI.OSIcons[icon])
 
 	--Делаем текст для иконки
 	local text = fs.name(path)
-	if not showFileFormat then
-		if fileFormat then
-			text = unicode.sub(text, 1, -(unicode.len(fileFormat) + 1))
-		end
+	if not showFileFormat and fileFormat then
+		text = unicode.sub(text, 1, -(unicode.len(fileFormat) + 1))
 	end
 	text = ECSAPI.stringLimit("end", text, ECSAPI.OSIconsWidth)
 	--Рассчитываем позицию текста
 	local textPos = x + math.floor(ECSAPI.OSIconsWidth / 2 - unicode.len(text) / 2)
 	--Рисуем текст под иконкой
-	ECSAPI.adaptiveText(textPos, y + ECSAPI.OSIconsHeight - 1, text, nameColor or 0xffffff)
+	buffer.text(textPos, y + ECSAPI.OSIconsHeight - 1, nameColor or 0xffffff, text)
 
 end
 

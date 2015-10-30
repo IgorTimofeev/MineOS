@@ -181,18 +181,10 @@ do
 end
 
 --Загружаем необходимые библиотеки, дабы избежать потерь памяти
-_G._OSLANGUAGE = require("System/OS/Language")
-_G.ecs = require("ECSAPI")
-_G.config = require("config")
-_G.context = require("context")
-_G.image = require("image")
-_G.zip = require("zip")
-_G.fs = require("filesystem")
-_G.shell = require("shell")
-_G.component = require("component")
-_G.unicode = require("unicode")
-_G.keyboard = require("keyboard")
+_G._OSLANGUAGE = require("MineOS/SystemOS/Language")
 _G.computer = require("computer")
+_G.ecs = require("ECSAPI")
+_G.component = require("component")
 _G.gpu = _G.component.gpu
 
 --Oткрываем порт для беспороводных MineOS-соединений
