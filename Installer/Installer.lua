@@ -398,10 +398,79 @@ ecs.centerText("x",yWindowEnd - 5, lang.needToRestart)
 --Кнопа
 drawButton(lang.restart, false)
 
+waitForClickOnButton(lang.restart)
+
+--Постподготовка
 fs.remove("MineOS/System/OS/Users.cfg")
 fs.remove("MineOS/System/OS/Password.cfg")
 fs.remove("MineOS/System/OS/WithoutProtection.cfg")
+fs.remove("MineOS/System/OS/Desktop")
+fs.remove("MineOS/System/OS/Dock")
 
-waitForClickOnButton(lang.restart)
+local apps = {
+  "Calc.app",
+  "Calendar.app",
+  "Control.app",
+  "Crossword.app",
+  "Finder.app",
+  "Geoscan.app",
+  "Highlight.app",
+  "HoloClock.app",
+  "HoloEdit.app",
+  "MineCode.app",
+  "Pastebin.app",
+  "Photoshop.app",
+  "Piano.app",
+  "RCON.app",
+  "Robot.app",
+  "Shooting.app",
+  "Shop.app",
+  "CodeDoor.app",
+  "Snake.app",
+  "Keyboard.app",
+  "Nano.app",
+  "Camera.app",
+  "Autorun.app",
+  "BufferDemo.app",
+}
+
+local dockApps = {
+  "Finder.app",
+  "Calendar.app",
+  "Control.app",
+  "Photoshop.app",
+}
+
+local desktopPath = "MineOS/System/OS/Desktop/"
+local dockPath = "MineOS/System/OS/Dock/"
+local applicationsPath = "MineOS/Applications/"
+
+fs.makeDirectory(desktopPath .. "My files")
+
+ecs.createShortCut(desktopPath, "MineOS/Pictures/")
+
+for i = 1, #apps do
+  local pathToShortcut = desktopPath .. ecs.hideFileFormat(apps[i]) .. ".lnk"
+  if not fs.exists(pathToShortcut) then
+    ecs.createShortCut(pathToShortcut, applicationsPath .. apps[i])
+  end
+end
+
+fs.makeDirectory(dockPath)
+
+for i = 1, #dockApps do
+  local pathToShortcut = dockPath .. ecs.hideFileFormat(dockApps[i]) .. ".lnk"
+  if not fs.exists(pathToShortcut) then
+    ecs.createShortCut(pathToShortcut, applicationsPath .. dockApps[i])
+  end
+end
 
 computer.shutdown(true)
+
+
+
+
+
+
+
+

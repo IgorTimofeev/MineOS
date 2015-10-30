@@ -188,62 +188,6 @@ local function drawTopBar()
 	drawTime()
 end
 
-local function createDesktopShortCuts()
-	local apps = {
-		"Calc.app",
-		"Calendar.app",
-		"Control.app",
-		"Crossword.app",
-		"Finder.app",
-		"Geoscan.app",
-		"Highlight.app",
-		"HoloClock.app",
-		"HoloEdit.app",
-		"MineCode.app",
-		"Pastebin.app",
-		"Photoshop.app",
-		"Piano.app",
-		"RCON.app",
-		"Robot.app",
-		"Shooting.app",
-		"Shop.app",
-		"CodeDoor.app",
-		"Snake.app",
-		"Keyboard.app",
-		"Nano.app",
-		"Camera.app",
-		"Autorun.app",
-		"BufferDemo.app",
-	}
-
-	local dockApps = {
-		"Finder.app",
-		"Calendar.app",
-		"Control.app",
-		"Photoshop.app",
-	}
-
-	local desktopPath = "MineOS/System/OS/Desktop/"
-	local dockPath = "MineOS/System/OS/Dock/"
-
-	fs.makeDirectory(desktopPath .. "My files")
-	for i = 1, #apps do
-		local pathToShortcut = desktopPath .. ecs.hideFileFormat(apps[i]) .. ".lnk"
-		if not fs.exists(pathToShortcut) then
-			ecs.createShortCut(pathToShortcut, apps[i])
-		end
-	end
-
-	fs.makeDirectory(dockPath)
-
-	for i = 1, #dockApps do
-		local pathToShortcut = dockPath .. ecs.hideFileFormat(dockApps[i]) .. ".lnk"
-		if not fs.exists(pathToShortcut) then
-			ecs.createShortCut(pathToShortcut, dockApps[i])
-		end
-	end
-end
-
 local function drawAll(force)
 	drawDesktop()
 	drawDock()
@@ -259,7 +203,7 @@ zones.remove("OS")
 buffer.start()
 
 --zones.add("OS", "Global", "Global", 1, 1, sizes.xSize, sizes.ySize)
-createDesktopShortCuts()
+--createDesktopShortCuts()
 drawAll(true)
 
 --------------------------------------------------------------------------------------------------------------------------------
