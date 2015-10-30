@@ -40,7 +40,7 @@ local lang = config.readAll("MineOS/System/OS/Languages/".._G._OSLANGUAGE..".lan
 
 ---------------------------------------------- Переменные ------------------------------------------------------------------------
 
-local workPath = "MineOS/System/OS/Desktop/"
+local workPath = "MineOS/Desktop/"
 local pathOfDockShortcuts = "MineOS/System/OS/Dock/"
 local pathToWallpaper = "MineOS/System/OS/Wallpaper.lnk"
 local currentFileList

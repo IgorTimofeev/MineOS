@@ -404,7 +404,7 @@ waitForClickOnButton(lang.restart)
 fs.remove("MineOS/System/OS/Users.cfg")
 fs.remove("MineOS/System/OS/Password.cfg")
 fs.remove("MineOS/System/OS/WithoutProtection.cfg")
-fs.remove("MineOS/System/OS/Desktop")
+fs.remove("MineOS/Desktop")
 fs.remove("MineOS/System/OS/Dock")
 
 local apps = {
@@ -441,7 +441,7 @@ local dockApps = {
   "Photoshop.app",
 }
 
-local desktopPath = "MineOS/System/OS/Desktop/"
+local desktopPath = "MineOS/Desktop/"
 local dockPath = "MineOS/System/OS/Dock/"
 local applicationsPath = "MineOS/Applications/"
 local picturesPath = "MineOS/Pictures/"
