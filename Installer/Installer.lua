@@ -400,10 +400,9 @@ drawButton(lang.restart, false)
 
 waitForClickOnButton(lang.restart)
 
+ecs.prepareToExit()
+
 --Постподготовка
-fs.remove("MineOS/System/OS/Users.cfg")
-fs.remove("MineOS/System/OS/Password.cfg")
-fs.remove("MineOS/System/OS/WithoutProtection.cfg")
 fs.remove("MineOS/Desktop")
 fs.remove("MineOS/System/OS/Dock")
 
@@ -450,18 +449,14 @@ fs.makeDirectory(desktopPath .. "My files")
 
 for i = 1, #apps do
   local pathToShortcut = desktopPath .. ecs.hideFileFormat(apps[i]) .. ".lnk"
-  if not fs.exists(pathToShortcut) then
-    ecs.createShortCut(pathToShortcut, applicationsPath .. apps[i])
-  end
+   ecs.createShortCut(pathToShortcut, applicationsPath .. apps[i])
 end
 
 fs.makeDirectory(dockPath)
 
 for i = 1, #dockApps do
   local pathToShortcut = dockPath .. ecs.hideFileFormat(dockApps[i]) .. ".lnk"
-  if not fs.exists(pathToShortcut) then
-    ecs.createShortCut(pathToShortcut, applicationsPath .. dockApps[i])
-  end
+  ecs.createShortCut(pathToShortcut, applicationsPath .. dockApps[i])
 end
 
 ecs.createShortCut(desktopPath, picturesPath)
