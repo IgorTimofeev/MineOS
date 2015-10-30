@@ -48,6 +48,12 @@ local fileList, fromLine, fromLineLeftBar = nil, 1, 1
 local showSystemFiles, showHiddenFiles, showFileFormat
 local oldPixelsOfMini, oldPixelsOfFullScreen
 local isFullScreen
+local sortingMethods = {
+	{name = "type", symbol = "По типу"},
+	{name = "name", symbol = "По имени"},
+	{name = "date", symbol = "По дате"},
+}
+local currentSortingMethod = 2
 
 ------------------------------------------------------------------------------------------------------------------
 
@@ -130,7 +136,7 @@ end
 --Получить файловый список
 local function getFileList(path)
 	fileList = ecs.getFileList(path)
-	fileList = ecs.reorganizeFilesAndFolders(fileList, showHiddenFiles, showSystemFiles)
+	fileList = ecs.sortFiles(path, fileList, sortingMethods[currentSortingMethod].name, showHiddenFiles)
 end
 
 --Перейти в какую-то папку
@@ -190,11 +196,18 @@ end
 local function drawFsControl()
 	obj["FSButtons"] = {}
 	local xPos, yPos = xMain, y + 1
-	local name
+	local name, fg, bg
 
 	local function getColors(cyka)
 		if cyka then return 0x262626, 0xffffff else return 0xffffff, 0x262626 end
 	end
+
+	for i = 1, #sortingMethods do
+		name = sortingMethods[i].symbol; bg, fg = getColors(currentSortingMethod == i); newObj("FSButtons", i, buffer.button(xPos, yPos, unicode.len(name) + 2, 1, bg, fg, name)); xPos = xPos + unicode.len(name) + 3
+	end
+	xPos = xPos + 2
+	name = "Скрытые"; bg, fg = getColors(showHiddenFiles); newObj("FSButtons",  #sortingMethods + 1, buffer.button(xPos, yPos, unicode.len(name) + 2, 1, bg, fg, name)); xPos = xPos + 5
+
 
 	-- name = "Формат"; newObj("FSButtons", 1, buffer.adaptiveButton(xPos, yPos, 1, 0, getColors(showFileFormat), name)); xPos = xPos + unicode.len(name) + 3
 	-- name = "Скрытые"; newObj("FSButtons", 2, buffer.adaptiveButton(xPos, yPos, 1, 0, getColors(showHiddenFiles), name)); xPos = xPos + unicode.len(name) + 3
@@ -603,22 +616,24 @@ while true do
 			end
 		end
 
-		-- for key in pairs(obj["FSButtons"]) do
-		-- 	if ecs.clickedAtArea(e[3], e[4], obj["FSButtons"][key][1], obj["FSButtons"][key][2], obj["FSButtons"][key][3], obj["FSButtons"][key][4]) then
-		-- 		if key == 1 then
-		-- 			showFileFormat = not showFileFormat
-		-- 		elseif key == 2 then
-		-- 			showHiddenFiles = not showHiddenFiles
-		-- 		else
-		-- 			showSystemFiles = not showSystemFiles
-		-- 		end
-		-- 		fromLine = 1
-		-- 		getFileList(workPathHistory[currentWorkPathHistoryElement])
-		-- 		drawAll()
+		for key in pairs(obj["FSButtons"]) do
+			if ecs.clickedAtArea(e[3], e[4], obj["FSButtons"][key][1], obj["FSButtons"][key][2], obj["FSButtons"][key][3], obj["FSButtons"][key][4]) then
+				if key == 1 then
+					currentSortingMethod = 1
+				elseif key == 2 then
+					currentSortingMethod = 2
+				elseif key == 3 then
+					currentSortingMethod = 3
+				elseif key == 4 then
+					showHiddenFiles = not showHiddenFiles
+				end
+				fromLine = 1
+				getFileList(workPathHistory[currentWorkPathHistoryElement])
+				drawAll()
 
-		-- 		break
-		-- 	end
-		-- end
+				break
+			end
+		end
 
 	elseif e[1] == "component_added" and e[3] == "filesystem" then
 		chkdsk()

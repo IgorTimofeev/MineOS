@@ -1344,6 +1344,63 @@ local systemFiles = {
 	--"MineOS/System/",
 }
 
+function ECSAPI.sortFiles(path, fileList, sortingMethod, showHiddenFiles)
+	local sortedFileList = {}
+	if sortingMethod == "type" then
+		local typeList = {}
+		for i = 1, #fileList do
+			local fileFormat = ECSAPI.getFileFormat(fileList[i]) or "Script"
+			if fs.isDirectory(path .. fileList[i]) and fileFormat ~= ".app" then fileFormat = "Folder" end
+			typeList[fileFormat] = typeList[fileFormat] or {}
+			table.insert(typeList[fileFormat], fileList[i])
+		end
+
+		if typeList["Folder"] then
+			for i = 1, #typeList["Folder"] do
+				table.insert(sortedFileList, typeList["Folder"][i])
+			end
+			typeList["Folder"] = nil
+		end
+
+		for fileFormat in pairs(typeList) do
+			for i = 1, #typeList[fileFormat] do
+				table.insert(sortedFileList, typeList[fileFormat][i])
+			end
+		end
+	elseif sortingMethod == "name" then
+		sortedFileList = fileList
+	elseif sortingMethod == "date" then
+		for i = 1, #fileList do
+			fileList[i] = {fileList[i], fs.lastModified(path .. fileList[i])}
+		end
+		table.sort(fileList, function(a,b) return a[2] > b[2] end)
+		for i = 1, #fileList do
+			table.insert(sortedFileList, fileList[i][1])
+		end
+	else
+		error("Unknown sorting method")
+	end
+
+	local i = 1
+	while i <= #sortedFileList do
+		if not showHiddenFiles and ECSAPI.isFileHidden(sortedFileList[i]) then
+			table.remove(sortedFileList, i)
+		else
+			i = i + 1
+		end
+	end
+
+	return sortedFileList
+end
+
+-- local fileList1 = ECSAPI.getFileList("MineOS/System/OS/")
+
+-- local fileList2 = ECSAPI.sortFiles("MineOS/System/OS/", fileList1, "date", true)
+
+-- for i = 1, #fileList1 do
+-- 	print(tostring(fileList1[i]) .. " -> "..tostring(fileList2[i]))
+-- end
+
 --Перехуяривалка файлового порядка для операционки. Говнокод, переделать!
 function ECSAPI.reorganizeFilesAndFolders(massivSudaPihay, showHiddenFiles, showSystemFiles)
 

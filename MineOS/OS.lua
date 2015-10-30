@@ -100,7 +100,7 @@ end
 --ОТРИСОВКА ИКОНОК НА РАБОЧЕМ СТОЛЕ ПО ТЕКУЩЕЙ ПАПКЕ
 local function drawDesktop()
 	currentFileList = ecs.getFileList(workPath)
-	currentFileList = ecs.reorganizeFilesAndFolders(currentFileList, false, false)
+	currentFileList = ecs.sortFiles(workPath, currentFileList, "type", false)
 
 	drawWallpaper()
 
