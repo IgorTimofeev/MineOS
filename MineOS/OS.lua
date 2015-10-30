@@ -36,12 +36,13 @@ for comp in pairs(components) do if not _G[comp] then _G[comp] = _G.component[co
 libraries, components = nil, nil
 
 -- Загрузка языкового пакета
-local lang = config.readAll("System/OS/Languages/".._G._OSLANGUAGE..".lang")
+local lang = config.readAll("MineOS/System/OS/Languages/".._G._OSLANGUAGE..".lang")
 
 ---------------------------------------------- Переменные ------------------------------------------------------------------------
 
-local workPath = "System/OS/Desktop/"
-local pathOfDockShortcuts = "System/OS/Dock/"
+local workPath = "MineOS/System/OS/Desktop/"
+local pathOfDockShortcuts = "MineOS/System/OS/Dock/"
+local pathToWallpaper = "MineOS/System/OS/Wallpaper.lnk"
 local currentFileList
 local wallpaper
 local currentCountOfIconsInDock
@@ -77,9 +78,12 @@ sizes.dockCountOfIcons = sizes.xCountOfIcons - 1
 
 --Изменение обоев из файла обоев
 local function changeWallpaper()
-	local pathToWallpaper = "System/OS/Wallpaper.pic"
+	wallpaper = nil
 	if fs.exists(pathToWallpaper) then
-		wallpaper = image.load(pathToWallpaper)
+		local path = ecs.readShortcut(pathToWallpaper)
+		if fs.exists(path) then
+			wallpaper = image.load(path)
+		end
 	end
 end
 changeWallpaper()
@@ -219,8 +223,8 @@ local function createDesktopShortCuts()
 		"Photoshop.app",
 	}
 
-	local desktopPath = "System/OS/Desktop/"
-	local dockPath = "System/OS/Dock/"
+	local desktopPath = "MineOS/System/OS/Desktop/"
+	local dockPath = "MineOS/System/OS/Dock/"
 
 	fs.makeDirectory(desktopPath .. "My files")
 	for i = 1, #apps do
@@ -302,14 +306,14 @@ while true do
 
 					-- Разные контекстные меню
 					if fileFormat == ".app" and fs.isDirectory(path) then
-						action = context.menu(x, y, {lang.contextShowContent}, "-", {lang.contextCopy, false, "^C"}, {lang.contextPaste, not _G.clipboard, "^V"}, "-", {lang.contextRename}, {lang.contextCreateShortcut}, "-",  {lang.contextUploadToPastebin, true}, "-", {lang.contextAddToDock, not (currentCountOfIconsInDock < sizes.dockCountOfIcons and workPath ~= "System/OS/Dock/")}, {lang.contextDelete, false, "⌫"})
+						action = context.menu(x, y, {lang.contextShowContent}, "-", {lang.contextCopy, false, "^C"}, {lang.contextPaste, not _G.clipboard, "^V"}, "-", {lang.contextRename}, {lang.contextCreateShortcut}, "-",  {lang.contextUploadToPastebin, true}, "-", {lang.contextAddToDock, not (currentCountOfIconsInDock < sizes.dockCountOfIcons and workPath ~= "MineOS/System/OS/Dock/")}, {lang.contextDelete, false, "⌫"})
 					elseif fileFormat ~= ".app" and fs.isDirectory(path) then
 						action = context.menu(x, y, {lang.contextCopy, false, "^C"}, {lang.contextPaste, not _G.clipboard, "^V"}, "-", {lang.contextRename}, {lang.contextCreateShortcut}, "-", {lang.contextUploadToPastebin, true}, "-", {lang.contextDelete, false, "⌫"})
 					else
 						if fileFormat == ".pic" then
-							action = context.menu(x, y, {lang.contextEdit}, {"Установить как обои"},"-", {lang.contextCopy, false, "^C"}, {lang.contextPaste, not _G.clipboard, "^V"}, "-", {lang.contextRename}, {lang.contextCreateShortcut}, "-", {lang.contextUploadToPastebin, true}, "-", {lang.contextAddToDock, not (currentCountOfIconsInDock < sizes.dockCountOfIcons and workPath ~= "System/OS/Dock/")}, {lang.contextDelete, false, "⌫"})
+							action = context.menu(x, y, {lang.contextEdit}, {"Установить как обои"},"-", {lang.contextCopy, false, "^C"}, {lang.contextPaste, not _G.clipboard, "^V"}, "-", {lang.contextRename}, {lang.contextCreateShortcut}, "-", {lang.contextUploadToPastebin, true}, "-", {lang.contextAddToDock, not (currentCountOfIconsInDock < sizes.dockCountOfIcons and workPath ~= "MineOS/System/OS/Dock/")}, {lang.contextDelete, false, "⌫"})
 						else
-							action = context.menu(x, y, {lang.contextEdit}, "-", {lang.contextCopy, false, "^C"}, {lang.contextPaste, not _G.clipboard, "^V"}, "-", {lang.contextRename}, {lang.contextCreateShortcut}, "-", {lang.contextUploadToPastebin, true}, "-", {lang.contextAddToDock, not (currentCountOfIconsInDock < sizes.dockCountOfIcons and workPath ~= "System/OS/Dock/")}, {lang.contextDelete, false, "⌫"})
+							action = context.menu(x, y, {lang.contextEdit}, "-", {lang.contextCopy, false, "^C"}, {lang.contextPaste, not _G.clipboard, "^V"}, "-", {lang.contextRename}, {lang.contextCreateShortcut}, "-", {lang.contextUploadToPastebin, true}, "-", {lang.contextAddToDock, not (currentCountOfIconsInDock < sizes.dockCountOfIcons and workPath ~= "MineOS/System/OS/Dock/")}, {lang.contextDelete, false, "⌫"})
 						end
 					end
 
@@ -334,11 +338,10 @@ while true do
 						ecs.createShortCut(workPath .. ecs.hideFileFormat(path) .. ".lnk", path)
 						drawAll()
 					elseif action == lang.contextAddToDock then
-						ecs.createShortCut("System/OS/Dock/" .. ecs.hideFileFormat(path) .. ".lnk", path)
+						ecs.createShortCut("MineOS/System/OS/Dock/" .. ecs.hideFileFormat(path) .. ".lnk", path)
 						drawAll()
 					elseif action == "Установить как обои" then
-						fs.remove("System/OS/Wallpaper.pic")
-						fs.copy(path, "System/OS/Wallpaper.pic")
+						ecs.createShortCut(pathToWallpaper, path)
 						changeWallpaper()
 						drawAll(true)
 					else
@@ -404,10 +407,10 @@ while true do
 					end
 				
 				elseif eventData[4] == lang.viewTab then
-					local action = context.menu(xZone, yZone + 1, {"Скрыть обои", not wallpaper}, {"Показать обои", wallpaper or not fs.exists("System/OS/Wallpaper.pic")})
+					local action = context.menu(xZone, yZone + 1, {"Скрыть обои", not wallpaper}, {"Показать обои", wallpaper or not fs.exists(pathToWallpaper)})
 					if action == "Скрыть обои" then
 						wallpaper = nil
-						fs.remove("System/OS/Wallpaper.pic")
+						fs.remove(pathToWallpaper)
 						drawAll(true)
 					elseif action == "Показать обои" then
 						changeWallpaper()
@@ -438,7 +441,7 @@ while true do
 
 	-- 		elseif action == "Убрать обои" then
 	-- 			wallpaper = nil
-	-- 			fs.remove("System/OS/Wallpaper.pic")
+	-- 			fs.remove(pathToWallpaper)
 	-- 			drawAll()
 	-- 		end
 	-- 	end
