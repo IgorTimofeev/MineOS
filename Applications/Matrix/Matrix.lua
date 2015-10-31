@@ -3,6 +3,7 @@
 local event = require("event")
 local gpu = require("component").gpu
 if not _G.buffer then _G.buffer = require("doubleBuffering") end
+local ecs = require("ECSAPI")
 
 local xOld, yOld = gpu.getResolution()
 local xSize, ySize = 80, 25
@@ -17,7 +18,7 @@ local lines = {
 	{x = 2, y = 3},
 }
 
-local chars = { "%", "!", "@", "#", ":", "<", ">", "&", "?", "~", "/", "+", "=", "-", "*"}
+local chars = { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "%", "!", "@", "#", ":", "<", ">", "&", "?", "~", "/", "+", "=", "-", "*"}
 
 local function generateLines()
 	for i = 1, countOfLinesToGenerate do
