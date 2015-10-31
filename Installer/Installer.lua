@@ -431,6 +431,8 @@ local apps = {
   "Camera.app",
   "Autorun.app",
   "BufferDemo.app",
+  "Matrix.app",
+  "AppStore.app",
 }
 
 local dockApps = {
