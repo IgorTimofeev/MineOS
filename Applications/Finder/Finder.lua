@@ -543,7 +543,8 @@ while true do
 		--Перебираем всякую шнягу наверху
 		for key in pairs(obj["TopButtons"]) do
 			if ecs.clickedAtArea(e[3], e[4], obj["TopButtons"][key][1], obj["TopButtons"][key][2], obj["TopButtons"][key][3], obj["TopButtons"][key][4]) then
-				ecs.drawButton(obj["TopButtons"][key][1], obj["TopButtons"][key][2], 3, 1, key, colors.topButtonsText, colors.topButtons)
+				buffer.button(obj["TopButtons"][key][1], obj["TopButtons"][key][2], 3, 1, colors.topButtonsText, colors.topButtons, key)
+				buffer.draw()
 				os.sleep(0.2)
 				if key == ">" then
 					backToFuture()
