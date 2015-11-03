@@ -7,7 +7,7 @@ local robotAPI = {}
 ---------------------------------------------------------------------------------------------------------------------------------------
 
 local countOfTries = 20
-local sleepDelay = 0.08
+local sleepDelay = 0.06
 
 local itemsToDrop = {
 	"minecraft:cobblestone",
