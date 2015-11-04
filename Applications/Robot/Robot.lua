@@ -16,6 +16,7 @@ local xScreen, yScreen = 0, 0
 local points = {
 }
 
+
 local homePoint = {x = xPos, y = yPos}
 
 local function checkRange(xCoord, yCoord)
