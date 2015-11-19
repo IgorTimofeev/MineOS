@@ -29,7 +29,7 @@ local currentFile = 1
 local fileList
 local stroki = {}
 local currentString = 1
-local scrollValue = 4
+local scrollValue = 6
 local stringsHeightLimit = ySize - 2
 local stringsWidthLimit = xSize - config.leftBarWidth - 4
 
