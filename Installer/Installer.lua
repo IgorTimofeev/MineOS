@@ -20,7 +20,7 @@ if gpu.maxResolution() < 150 then table.insert(govno, "Bad GPU - this OS require
 if gpu.getDepth() < 8 and gpu.maxResolution() < 150 then table.insert(govno, "Bad Screen - this OS requires Tier 3 screen.") end
 
 --Проверяем оперативку
---if math.floor(computer.totalMemory() / 1024 ) < 2048 then table.insert(govno, "Not enough RAM - this OS requires at least 2048 KB RAM.") end
+if math.floor(computer.totalMemory() / 1024 ) < 2048 then table.insert(govno, "Not enough RAM - this OS requires at least 2048 KB RAM.") end
 
 if fs.get("bin/edit.lua") == nil or fs.get("bin/edit.lua").isReadOnly() then table.insert(govno, "You can't install MineOS on floppy disk. Run \"install\" in command line and install OpenOS from floppy to HDD first. After that you're be able to install MineOS from Pastebin.") end
 
@@ -432,7 +432,7 @@ local apps = {
   "Autorun.app",
   "BufferDemo.app",
   "Matrix.app",
-  "AppStore.app",
+  "InfoPanel.app",
 }
 
 local dockApps = {
@@ -462,7 +462,16 @@ end
 ecs.createShortCut(desktopPath .. "Pictures.lnk", picturesPath)
 ecs.createShortCut("MineOS/System/OS/Wallpaper.lnk", picturesPath .. "AhsokaTano.pic")
 
+--Автозагрузка
+local file = io.open("autorun.lua", "w")
+file:write("local success, reason = pcall(loadfile(\"OS.lua\")); if not success then print(\"Ошибка: \" .. tostring(reason)) end")
+file:close()
+
 computer.shutdown(true)
+
+
+
+
 
 
 

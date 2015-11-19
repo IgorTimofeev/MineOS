@@ -183,7 +183,7 @@ end
 --Загружаем необходимые библиотеки, дабы избежать потерь памяти
 _G._OSLANGUAGE = require("MineOS/System/OS/Language")
 _G.computer = require("computer")
---_G.ecs = require("ECSAPI")
+_G.ecs = require("ECSAPI")
 _G.component = require("component")
 _G.gpu = _G.component.gpu
 
@@ -191,7 +191,7 @@ _G.gpu = _G.component.gpu
 if component.isAvailable("modem") then component.modem.open(512) end
 
 --Масштаб
---ecs.setScale(1)
+ecs.setScale(1)
 
 --Сообщаем системе, что все прогружено и готово к работе
 --Хз, так надо просто. Не ебись
