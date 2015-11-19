@@ -25,10 +25,10 @@ local topButtons = {"О системе", "Диски", "Обновления"}
 local spaceBetweenTopButtons, offsetTopButtons = 2, 2
 local currentMode = 1
 
-local osIcon = image.load("System/OS/Installer/OS_Logo.pic")
-local hddIcon = image.load("System/OS/Icons/HDD.pic")
-local floppyIcon = image.load("System/OS/Icons/Floppy.pic")
-local updateIcon = image.load("System/OS/Icons/Update.pic")
+local osIcon = image.load("MineOS/System/OS/Icons/OS_Logo.pic")
+local hddIcon = image.load("MineOS/System/OS/Icons/HDD.pic")
+local floppyIcon = image.load("MineOS/System/OS/Icons/Floppy.pic")
+local updateIcon = image.load("MineOS/System/OS/Icons/Update.pic")
 
 local x, y = "auto", "auto"
 local width, height = 84, 26
