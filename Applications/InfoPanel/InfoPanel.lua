@@ -23,7 +23,7 @@ local xOld, yOld = gpu.getResolution()
 ecs.setScale(config.scale)
 local xSize, ySize = gpu.getResolution()
 
-local pathToFiles = "Infopanel/"
+local pathToFiles = "InfoPanel/"
 fs.makeDirectory(pathToFiles)
 local currentFile = 1
 local fileList
@@ -62,6 +62,7 @@ local function drawLeftBar()
 end
 
 local function loadFile()
+	currentString = 1
 	stroki = {}
 	local file = io.open(pathToFiles .. fileList[currentFile], "r")
 	for line in file:lines() do table.insert(stroki, line) end
