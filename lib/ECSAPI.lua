@@ -11,7 +11,7 @@ local libraries = {
 	["computer"] = "computer",
 	["serialization"] = "serialization",
 	["internet"] = "internet",
-	["image"] = "image",
+	--["image"] = "image",
 }
 
 local components = {
@@ -454,6 +454,35 @@ function ECSAPI.smartText(x, y, text)
 	for i = 1, #massiv do
 		if currentColor ~= massiv[i][2] then currentColor = massiv[i][2]; gpu.setForeground(massiv[i][2]) end
 		gpu.set(x + i, y, massiv[i][1])
+	end
+end
+
+--Аналог умного текста, но использующий HEX-цвета для кодировки
+function ECSAPI.formattedText(x, y, text, limit)
+	--Ограничение длины строки
+	limit = limit or math.huge
+	--Стартовая позиция курсора для отрисовки
+	local xPos = x
+	--Создаем массив символов данной строки
+	local symbols = {}
+	for i = 1, unicode.len(text) do table.insert(symbols, unicode.sub(text, i, i)) end
+	--Перебираем все символы строки, пока не переберем все или не достигнем указанного лимита
+	local i = 1
+	while i <= #symbols and i <= limit do
+		--Если находим символ параграфа, то
+		if symbols[i] == "§" then
+			--Меняем цвет текста на указанный
+			gpu.setForeground(tonumber("0x" .. symbols[i+1] .. symbols[i+2] .. symbols[i+3] .. symbols[i+4] .. symbols[i+5] .. symbols[i+6]))
+			--Увеличиваем лимит на 7, т.к.
+			limit = limit + 7
+			--Сдвигаем итератор цикла на 7
+			i = i + 7
+		end
+		--Рисуем символ на нужной позиции
+		gpu.set(xPos, y, symbols[i])
+		--Увеличиваем позицию курсора и итератор на 1
+		xPos = xPos + 1
+		i = i + 1
 	end
 end
 
@@ -1525,6 +1554,7 @@ ECSAPI.OSIconsHeight = 6
 
 --Вся необходимая информация для иконок
 local function OSIconsInit()
+	if not _G.image then _G.image = require("image") end
 	if not _G.buffer then _G.buffer = require("doubleBuffering") end
 	if not ECSAPI.OSIcons then
 		--Константы для иконок
