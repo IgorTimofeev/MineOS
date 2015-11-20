@@ -16,7 +16,7 @@ local oldPixels = ecs.rememberOldPixels(x, y, x + width - 1, y + height - 1)
 local dataWidth, dataHeight = width - 6, height - 14
 local drawListFrom = 1
 local selectedObject = 3
-local pathToList = "System/AutorunManager/Filelist.txt"
+local pathToList = "MineOS/System/AutorunManager/Filelist.txt"
 local autorunObjects = {
 	-- { path = "OS.lua", enabled = true, size = 30 },
 	-- { path = "Cyka/Home.lua", enabled = true, size = 30 },

@@ -488,19 +488,19 @@
     ["version"]=1.0,
   },
   {
-    ["name"]="MineOS/System/OS/InfoPanel/Правила",
+    ["name"]="MineOS/System/InfoPanel/Правила",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/InfoPanel/Rules.txt",
     ["type"]="Script",
     ["version"]=1.0,
   },
   {
-    ["name"]="MineOS/System/OS/InfoPanel/Главная",
+    ["name"]="MineOS/System/InfoPanel/Главная",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/InfoPanel/Main.txt",
     ["type"]="Script",
     ["version"]=1.0,
   },
   {
-    ["name"]="MineOS/System/OS/InfoPanel/ССПИ",
+    ["name"]="MineOS/System/InfoPanel/ССПИ",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/InfoPanel/SSPI.txt",
     ["type"]="Script",
     ["version"]=1.0,
