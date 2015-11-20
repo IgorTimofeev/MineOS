@@ -1,12 +1,18 @@
 local ecs = require("ECSAPI")
+local xml = require("xmlParser")
+local image = require("image")
 local event = require("event")
 local unicode = require("unicode")
 local fs = require("filesystem")
 local gpu = require("component").gpu
 
+------------------------------------------------------------------------------------------------------------------
+
 local config = {
 	scale = 0.63,
 	leftBarWidth = 20,
+	scrollSpeed = 6,
+	pathToInfoPanelFolder = "MineOS/System/InfoPanel/",
 	colors = {
 		leftBar = 0xEEEEEE,
 		leftBarText = 0x262626,
@@ -23,13 +29,11 @@ local xOld, yOld = gpu.getResolution()
 ecs.setScale(config.scale)
 local xSize, ySize = gpu.getResolution()
 
-local pathToFiles = "InfoPanel/"
-fs.makeDirectory(pathToFiles)
+fs.makeDirectory(config.pathToInfoPanelFolder)
 local currentFile = 1
 local fileList
 local stroki = {}
 local currentString = 1
-local scrollValue = 6
 local stringsHeightLimit = ySize - 2
 local stringsWidthLimit = xSize - config.leftBarWidth - 4
 
@@ -43,7 +47,7 @@ end
 
 local function drawLeftBar()
 	--ecs.square(1, 1, config.leftBarWidth, ySize, config.colors.leftBar)
-	fileList = ecs.getFileList(pathToFiles)
+	fileList = ecs.getFileList(config.pathToInfoPanelFolder)
 	obj["Files"] = {}
 	local yPos = 1, 1
 	for i = 1, #fileList do
@@ -64,26 +68,44 @@ end
 local function loadFile()
 	currentString = 1
 	stroki = {}
-	local file = io.open(pathToFiles .. fileList[currentFile], "r")
-	for line in file:lines() do table.insert(stroki, line) end
+	local file = io.open(config.pathToInfoPanelFolder .. fileList[currentFile], "r")
+	for line in file:lines() do table.insert(stroki, xml.collect(line)) end
 	file:close()
 end
 
 local function drawMain()
-	local xPos, yPos = config.leftBarWidth + 3, 2
+	local x, y = config.leftBarWidth + 3, 2
+	local xPos, yPos = x, y
 
 	ecs.square(xPos, yPos, xSize - config.leftBarWidth - 5, ySize, config.colors.background)
-
 	gpu.setForeground(config.colors.text)
 
-	for i = currentString, (stringsHeightLimit + currentString - 1) do
-		if stroki[i] then
-			ecs.formattedText(xPos, yPos, stroki[i], stringsWidthLimit)
+	for line = currentString, (stringsHeightLimit + currentString - 1) do
+		if stroki[line] then
+			for i = 1, #stroki[line] do
+				if type(stroki[line][i]) == "table" then
+					if stroki[line][i].label == "color" then
+						gpu.setForeground(tonumber(stroki[line][i][1]))
+					elseif stroki[line][i].label == "image" then
+						local bg, fg = gpu.getBackground(), gpu.getForeground()
+						local picture = image.load(stroki[line][i][1])
+						image.draw(xPos, yPos, picture)
+						yPos = yPos + picture.height - 1
+						gpu.setForeground(fg)
+						gpu.setBackground(bg)
+					end
+				else
+					gpu.set(xPos, yPos, stroki[line][i])
+					xPos = xPos + unicode.len(stroki[line][i])
+				end
+			end
 			yPos = yPos + 1
+			xPos = x
 		else
 			break
 		end
 	end
+
 end
 
 local function drawScrollBar()
@@ -123,14 +145,14 @@ while true do
 				ecs.drawButton(obj["Scroll"][key][1], obj["Scroll"][key][2], 3, 3, key, config.colors.leftBarSelection, config.colors.leftBarSelectionText)
 
 				if key == "⬆" then
-					if currentString > scrollValue then
-						currentString = currentString - scrollValue
+					if currentString > config.scrollSpeed then
+						currentString = currentString - config.scrollSpeed
 						drawMain()
 						drawScrollBar()
 					end
 				else
-					if currentString < (#stroki - scrollValue + 1) then
-						currentString = currentString + scrollValue
+					if currentString < (#stroki - config.scrollSpeed + 1) then
+						currentString = currentString + config.scrollSpeed
 						drawMain()
 						drawScrollBar()
 					end
