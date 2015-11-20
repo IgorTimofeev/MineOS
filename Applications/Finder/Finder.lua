@@ -523,8 +523,8 @@ while true do
 			if action == "Новый файл" then
 				ecs.newFile(workPathHistory[currentWorkPathHistoryElement])
 				getFileList(workPathHistory[currentWorkPathHistoryElement])
-				ecs.drawOldPixels(oldPixelsOfFullScreen)
-				drawAll()
+				buffer.paste(1, 1, oldPixelsOfFullScreen)
+				buffer.draw()
 			elseif action == "Новая папка" then
 				ecs.newFolder(workPathHistory[currentWorkPathHistoryElement])
 				getFileList(workPathHistory[currentWorkPathHistoryElement])
