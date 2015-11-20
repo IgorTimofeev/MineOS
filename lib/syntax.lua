@@ -1,0 +1,217 @@
+local gpu = require("component").gpu
+local buffer = require("doubleBuffering")
+local unicode = require("unicode")
+local syntax = {}
+
+----------------------------------------------------------------------------------------------------------------
+
+--Стандартные цветовые схемы
+syntax.colorSchemes = {
+	midnight = {
+		recommendedBackground = 0x262626,
+		text = 0xffffff,
+		strings = 0xff2024,
+		loops = 0xffff98,
+		comments = 0xa2ffb7,
+		boolean = 0xffcc66,
+		logic = 0xffcc66,
+		numbers = 0x24c0ff,
+		functions = 0xffcc66,
+		compares = 0xffff98,
+	},
+	sunrise = {
+		recommendedBackground = 0xffffff,
+		text = 0x262626,
+		strings = 0x880000,
+		loops = 0x24c0ff,
+		comments = 0xa2ffb7,
+		boolean = 0x19c0cc,
+		logic = 0x880000,
+		numbers = 0x24c0ff,
+		functions = 0x24c0ff,
+		compares = 0x880000,
+	},
+}
+
+--Текущая цветовая схема
+local currentColorScheme = {}
+--Шаблоны поиска
+local patterns
+--Размер массива шаблонов поиска
+local sPatterns
+
+----------------------------------------------------------------------------------------------------------------
+
+--Пересчитать цвета шаблонов
+--Приоритет поиска шаблонов снижается сверху вниз
+local function definePatterns()
+	patterns = {
+		--Комментарии
+		{ pattern = "%-%-.*", color = currentColorScheme.comments, cutFromLeft = 0, cutFromRight = 0 },
+		
+		--Строки
+		{ pattern = "\"[^\"\"]*\"", color = currentColorScheme.strings, cutFromLeft = 0, cutFromRight = 0 },
+		
+		--Циклы, условия, объявления
+		{ pattern = "while ", color = currentColorScheme.loops, cutFromLeft = 0, cutFromRight = 1 },
+		{ pattern = "do$", color = currentColorScheme.loops, cutFromLeft = 0, cutFromRight = 0 },
+		{ pattern = "do ", color = currentColorScheme.loops, cutFromLeft = 0, cutFromRight = 1 },
+		{ pattern = "end$", color = currentColorScheme.loops, cutFromLeft = 0, cutFromRight = 0 },
+		{ pattern = "end ", color = currentColorScheme.loops, cutFromLeft = 0, cutFromRight = 1 },
+		{ pattern = "for ", color = currentColorScheme.loops, cutFromLeft = 0, cutFromRight = 1 },
+		{ pattern = " in ", color = currentColorScheme.loops, cutFromLeft = 0, cutFromRight = 1 },
+		{ pattern = "repeat ", color = currentColorScheme.loops, cutFromLeft = 0, cutFromRight = 1 },
+		{ pattern = "if ", color = currentColorScheme.loops, cutFromLeft = 0, cutFromRight = 1 },
+		{ pattern = "then", color = currentColorScheme.loops, cutFromLeft = 0, cutFromRight = 0 },
+		{ pattern = "until ", color = currentColorScheme.loops, cutFromLeft = 0, cutFromRight = 1 },
+		{ pattern = "return", color = currentColorScheme.loops, cutFromLeft = 0, cutFromRight = 0 },
+		{ pattern = "local ", color = currentColorScheme.loops, cutFromLeft = 0, cutFromRight = 1 },
+		{ pattern = "function ", color = currentColorScheme.loops, cutFromLeft = 0, cutFromRight = 1 },
+		{ pattern = "else$", color = currentColorScheme.loops, cutFromLeft = 0, cutFromRight = 0 },
+		{ pattern = "else ", color = currentColorScheme.loops, cutFromLeft = 0, cutFromRight = 1 },
+		{ pattern = "elseif ", color = currentColorScheme.loops, cutFromLeft = 0, cutFromRight = 1 },
+
+		--Состояния переменной
+		{ pattern = "true", color = currentColorScheme.boolean, cutFromLeft = 0, cutFromRight = 0 },
+		{ pattern = "false", color = currentColorScheme.boolean, cutFromLeft = 0, cutFromRight = 0 },
+		{ pattern = "nil", color = currentColorScheme.boolean, cutFromLeft = 0, cutFromRight = 0 },
+				
+		--Функции
+		{ pattern = "%s([%a%d%_%-%.]*)%(", color = currentColorScheme.functions, cutFromLeft = 0, cutFromRight = 1 },
+		
+		--And, or, not, break
+		{ pattern = " and ", color = currentColorScheme.logic, cutFromLeft = 0, cutFromRight = 1 },
+		{ pattern = " or ", color = currentColorScheme.logic, cutFromLeft = 0, cutFromRight = 1 },
+		{ pattern = " not ", color = currentColorScheme.logic, cutFromLeft = 0, cutFromRight = 1 },
+		{ pattern = " break$", color = currentColorScheme.logic, cutFromLeft = 0, cutFromRight = 0 },
+		{ pattern = "^break", color = currentColorScheme.logic, cutFromLeft = 0, cutFromRight = 0 },
+		{ pattern = " break ", color = currentColorScheme.logic, cutFromLeft = 0, cutFromRight = 0 },
+
+		--Числа
+		{ pattern = "%s(0x)(%w*)", color = currentColorScheme.numbers, cutFromLeft = 0, cutFromRight = 0 },
+		{ pattern = "(%s)([%d%.]*)", color = currentColorScheme.numbers, cutFromLeft = 0, cutFromRight = 0 },
+		
+		--Сравнения и мат. операции
+		{ pattern = "<=", color = currentColorScheme.compares, cutFromLeft = 0, cutFromRight = 0 },
+		{ pattern = ">=", color = currentColorScheme.compares, cutFromLeft = 0, cutFromRight = 0 },
+		{ pattern = "<", color = currentColorScheme.compares, cutFromLeft = 0, cutFromRight = 0 },
+		{ pattern = ">", color = currentColorScheme.compares, cutFromLeft = 0, cutFromRight = 0 },
+		{ pattern = "==", color = currentColorScheme.compares, cutFromLeft = 0, cutFromRight = 0 },
+		{ pattern = "~=", color = currentColorScheme.compares, cutFromLeft = 0, cutFromRight = 0 },
+		{ pattern = "=", color = currentColorScheme.compares, cutFromLeft = 0, cutFromRight = 0 },
+		{ pattern = "%+", color = currentColorScheme.compares, cutFromLeft = 0, cutFromRight = 0 },
+		{ pattern = "%-", color = currentColorScheme.compares, cutFromLeft = 0, cutFromRight = 0 },
+		{ pattern = "%*", color = currentColorScheme.compares, cutFromLeft = 0, cutFromRight = 0 },
+		{ pattern = "%/", color = currentColorScheme.compares, cutFromLeft = 0, cutFromRight = 0 },
+		{ pattern = "%.%.", color = currentColorScheme.compares, cutFromLeft = 0, cutFromRight = 0 },
+		{ pattern = "%#", color = currentColorScheme.compares, cutFromLeft = 0, cutFromRight = 0 },
+		{ pattern = "#^", color = currentColorScheme.compares, cutFromLeft = 0, cutFromRight = 0 },
+	}
+
+	--Ну, и размер массива шаблонов тоже
+	sPatterns = #patterns
+end
+
+--Костыльная замена обычному string.find()
+--Работает медленнее, но хотя бы поддерживает юникод
+function unicode.find(str, pattern, init, plain)
+	-- checkArg(1, str, "string")
+	-- checkArg(2, pattern, "string")
+	-- checkArg(3, init, "number", "nil")
+	if init then
+		if init < 0 then
+			init = -#unicode.sub(str,init)
+		elseif init > 0 then
+			init = #unicode.sub(str,1,init-1)+1
+		end
+	end
+	
+	a, b = string.find(str, pattern, init, plain)
+	
+	if a then
+		local ap,bp = str:sub(1,a-1), str:sub(a,b)
+		a = unicode.len(ap)+1
+		b = a + unicode.len(bp)-1
+		return a,b
+	else
+		return a
+	end
+end
+
+--Проанализировать строку и создать на ее основе цветовую карту
+function syntax.highlight(x, y, text, limit)
+	--Кароч вооот, хыыы
+	local searchFrom, starting, ending
+	--Загоняем в буффер всю строку базового цвета
+	buffer.text(x, y, currentColorScheme.text, limit and unicode.sub(text, 1, limit) or text)
+	limit = limit or math.huge
+
+	--Перебираем шаблоны
+	for i = #patterns, 1, -1 do
+		searchFrom = 1
+		--Перебираем весь текст, а то мало ли шаблон дохуя раз встречается
+		while true do
+			starting, ending = unicode.find(text, patterns[i].pattern, searchFrom)
+			if starting and ending then
+				if ending <= limit then
+					buffer.text(x + starting - 1, y, patterns[i].color, unicode.sub(text, starting, ending - patterns[i].cutFromRight))
+					searchFrom = ending + 1
+				else
+					buffer.text(x + starting - 1, y, patterns[i].color, unicode.sub(text, starting, limit))
+					break
+				end
+			else
+				break
+			end
+		end
+	end
+end
+
+--Объявить новую цветовую схему
+function syntax.setColorScheme(colorScheme)
+	--Выбранная цветовая схема
+	currentColorScheme = colorScheme
+	--Пересчитываем шаблоны
+	definePatterns()
+end
+
+--Открыть файл для чтения и отобразить первые строки из него, чтобы чекнуть, как работает подсветка
+function syntax.highlightFileForDebug(pathToFile)
+	--Получаем размер экрана
+	local xSize, ySize = gpu.getResolution()
+	--Очищаем экран рекомендуемым цветом
+	buffer.square(1, 1, xSize, ySize, currentColorScheme.recommendedBackground, currentColorScheme.text, " ")
+	buffer.draw(true)
+	--Открываем файлик
+	local file = io.open(pathToFile, "r")
+	--Счетчик строк
+	local lineCounter = 1
+	--Читаем строки
+	for line in file:lines() do
+		--Подсвечиваем строку и рисуем
+		syntax.highlight(2, lineCounter + 1, line)
+		--Счетчик в плюс
+		lineCounter = lineCounter + 1
+		--Разрываем цикл, если кол-во строк превысило высоту экрана
+		if lineCounter > ySize then break end
+		--ecs.wait()
+	end
+	--Закрываем файл
+	file:close()
+
+	buffer.draw()
+end
+
+----------------------------------------------------------------------------------------------------------------
+
+--Стартовое объявление цветовой схемы при загрузке библиотеки
+syntax.setColorScheme(syntax.colorSchemes.midnight)
+
+--Епты бля!
+syntax.highlightFileForDebug("MineOS/Applications/Highlight.app/Resources/TestFile.txt", "midnight")
+
+return syntax
+
+
+
+
