@@ -208,7 +208,9 @@ end
 syntax.setColorScheme(syntax.colorSchemes.midnight)
 
 --Епты бля!
-syntax.highlightFileForDebug("MineOS/Applications/Highlight.app/Resources/TestFile.txt", "midnight")
+--syntax.highlightFileForDebug("MineOS/Applications/Highlight.app/Resources/TestFile.txt", "midnight")
+
+----------------------------------------------------------------------------------------------------------------
 
 return syntax
 
