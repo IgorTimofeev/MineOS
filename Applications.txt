@@ -396,20 +396,6 @@
     ["version"]=1.0,
   },
   {
-    ["name"]="MineOS/Applications/Robot",
-    ["url"]="IgorTimofeev/OpenComputers/master/Applications/Robot/Robot.lua",
-    ["type"]="Application",
-    ["icon"]="IgorTimofeev/OpenComputers/master/Applications/Robot/Icon.pic",
-    ["version"]=1.0,
-  },
-  {
-    ["name"]="MineOS/Applications/RCON",
-    ["url"]="IgorTimofeev/OpenComputers/master/Applications/RCON/RCON.lua",
-    ["type"]="Application",
-    ["icon"]="IgorTimofeev/OpenComputers/master/Applications/RCON/Icon.pic",
-    ["version"]=1.0,
-  },
-  {
     ["name"]="MineOS/Applications/Calc",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/Calc/Calc.lua",
     ["type"]="Application",
