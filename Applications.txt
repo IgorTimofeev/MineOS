@@ -429,6 +429,7 @@
   {
     ["name"]="MineOS/Applications/CodeDoor",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/CodeDoor/CodeDoor.lua",
+    ["about"]="IgorTimofeev/OpenComputers/master/Applications/CodeDoor/About.txt",
     ["type"]="Application",
     ["icon"]="IgorTimofeev/OpenComputers/master/Applications/CodeDoor/Icon.pic",
     ["version"]=1.0,
@@ -436,6 +437,7 @@
   {
     ["name"]="MineOS/Applications/Keyboard",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/Keyboard/Keyboard.lua",
+    ["about"]="IgorTimofeev/OpenComputers/master/Applications/Keyboard/About.txt",
     ["type"]="Application",
     ["icon"]="IgorTimofeev/OpenComputers/master/Applications/Keyboard/Icon.pic",
     ["version"]=1.0,
@@ -443,6 +445,7 @@
   {
     ["name"]="MineOS/Applications/Nano",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/Nano/Nano.lua",
+    ["about"]="IgorTimofeev/OpenComputers/master/Applications/Nano/About.txt",
     ["type"]="Application",
     ["icon"]="IgorTimofeev/OpenComputers/master/Applications/Nano/Icon.pic",
     ["version"]=1.0,
@@ -450,6 +453,7 @@
   {
     ["name"]="MineOS/Applications/Camera",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/Camera/Camera.lua",
+    ["about"]="IgorTimofeev/OpenComputers/master/Applications/Camera/About.txt",
     ["type"]="Application",
     ["icon"]="IgorTimofeev/OpenComputers/master/Applications/Camera/Icon.pic",
     ["version"]=1.0,
@@ -457,6 +461,7 @@
   {
     ["name"]="MineOS/Applications/Autorun",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/Autorun/Autorun.lua",
+    ["about"]="IgorTimofeev/OpenComputers/master/Applications/Autorun/About.txt",
     ["type"]="Application",
     ["icon"]="IgorTimofeev/OpenComputers/master/Applications/Autorun/Icon.pic",
     ["version"]=1.0,
@@ -471,6 +476,7 @@
   {
     ["name"]="MineOS/Applications/Matrix",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/Matrix/Matrix.lua",
+    ["about"]="IgorTimofeev/OpenComputers/master/Applications/Matrix/About.txt",
     ["type"]="Application",
     ["icon"]="IgorTimofeev/OpenComputers/master/Applications/Matrix/Icon.pic",
     ["version"]=1.0,
@@ -531,6 +537,7 @@
   {
     ["name"]="MineOS/Applications/Crossword",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/Crossword/Crossword.lua",
+    ["about"]="IgorTimofeev/OpenComputers/master/Applications/Crossword/About.txt",
     ["type"]="Application",
     ["icon"]="IgorTimofeev/OpenComputers/master/Applications/Crossword/Icon.pic",
     ["version"]=1.0,
@@ -574,6 +581,7 @@
   {
     ["name"]="MineOS/Applications/BufferDemo",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/BufferDemo/BufferDemo.lua",
+    ["about"]="IgorTimofeev/OpenComputers/master/Applications/BufferDemo/About.txt",
     ["type"]="Application",
     ["icon"]="IgorTimofeev/OpenComputers/master/Applications/BufferDemo/Icon.pic",
     ["version"]=1.0,
