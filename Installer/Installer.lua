@@ -13,6 +13,9 @@ local gpu = component.gpu
 --Создаем массив говна
 local govno = {}
 
+print(" ")
+print("Analyzing computer for matching system requirements...")
+
 --Проверяем GPU
 if gpu.maxResolution() < 150 then table.insert(govno, "Bad GPU - this OS requires Tier 3 GPU.") end
 
@@ -24,18 +27,17 @@ if math.floor(computer.totalMemory() / 1024 ) < 2048 then table.insert(govno, "N
 
 if fs.get("bin/edit.lua") == nil or fs.get("bin/edit.lua").isReadOnly() then table.insert(govno, "You can't install MineOS on floppy disk. Run \"install\" in command line and install OpenOS from floppy to HDD first. After that you're be able to install MineOS from Pastebin.") end
 
-
-
 --Если нашло какое-то несоответствие сис. требованиям, то написать, что именно не так
 if #govno > 0 then
-  print(" ")
-  print("Analyzing computer for matching system requirements.")
   print(" ")
   for i = 1, #govno do
     print(govno[i])
   end
   print(" ")
   return
+else
+  print("Done, everything's good. Proceed to downloading.")
+  print(" ")
 end
 
 ------------------------------------------------------------------------------------------
@@ -132,8 +134,6 @@ local preLoadApi = {
   { paste = "IgorTimofeev/OpenComputers/master/MineOS/Icons/OS_Logo.pic", path = "MineOS/System/OS/Icons/OS_Logo.pic" },
 }
 
-
-print(" ")
 print("Downloading file list")
 applications = seri.unserialize(getFromGitHubSafely(GitHubUserUrl .. "IgorTimofeev/OpenComputers/master/Applications.txt", "MineOS/System/OS/Applications.txt"))
 print(" ")
@@ -201,7 +201,7 @@ end
 
 ecs.prepareToExit()
 
-local downloadWallpapers, showHelpTips
+local downloadWallpapers, showHelpTips = false, false
 
 do
 
@@ -214,24 +214,18 @@ do
 
   waitForClickOnButton("Select language")
 
-  local data = ecs.universalWindow("auto", "auto", 36, 0x262626, true, {"EmptyLine"}, {"CenterText", 0xFFFFFF, "Select language"}, {"EmptyLine"}, {"Select", 0xFFFFFF, 0x880000, "Russian", "English"}, {"EmptyLine"}, {"Switch", 0xF2B233, 0xffffff, 0xFFFFFF, "Download wallpapers", true}, {"EmptyLine"}, {"Switch", 0xF2B233, 0xffffff, 0xFFFFFF, "Show help tips in OS", true}, {"EmptyLine"}, {"Button", {ecs.colors.green, 0xffffff, "OK"}})
+  local data = ecs.universalWindow("auto", "auto", 36, 0x262626, true, {"EmptyLine"}, {"CenterText", ecs.colors.orange, "Select language"}, {"EmptyLine"}, {"Select", 0xFFFFFF, ecs.colors.green, "Russian", "English"}, {"EmptyLine"}, {"CenterText", ecs.colors.orange, "Change some OS properties"}, {"EmptyLine"}, {"Switch", 0xF2B233, 0xffffff, 0xFFFFFF, "Download wallpapers", true}, {"EmptyLine"}, {"Switch", 0xF2B233, 0xffffff, 0xFFFFFF, "Show help tips in OS", true}, {"EmptyLine"}, {"Button", {ecs.colors.green, 0xffffff, "OK"}})
   downloadWallpapers, showHelpTips = data[2], data[3]
 
-  language = data[1]
   --УСТАНАВЛИВАЕМ НУЖНЫЙ ЯЗЫК
-  local path = "MineOS/System/OS/Language.lua"
-  fs.remove(path)
-  fs.makeDirectory(fs.path(path))
-  local file = io.open(path, "w")
-  file:write("return \"" .. language .. "\"")
-  file:close()
-  _G._OSLANGUAGE = language
+  _G.OSSettings = { showHelpOnApplicationStart = showHelpTips, language = data[1] }
+  ecs.saveOSSettings()
 
   --Качаем язык
   ecs.info("auto", "auto", " ", " Installing language packages...")
   local pathToLang = "MineOS/System/OS/Installer/Language.lang"
-  getFromGitHubSafely(GitHubUserUrl .. "IgorTimofeev/OpenComputers/master/Installer/" .. _G._OSLANGUAGE .. ".lang", pathToLang)
-  getFromGitHubSafely(GitHubUserUrl .. "IgorTimofeev/OpenComputers/master/MineOS/License/" .. _G._OSLANGUAGE .. ".txt", "MineOS/System/OS/License.txt")
+  getFromGitHubSafely(GitHubUserUrl .. "IgorTimofeev/OpenComputers/master/Installer/" .. _G.OSSettings.language .. ".lang", pathToLang)
+  getFromGitHubSafely(GitHubUserUrl .. "IgorTimofeev/OpenComputers/master/MineOS/License/" .. _G.OSSettings.language .. ".txt", "MineOS/System/OS/License.txt")
   
   --Ставим язык
   lang = config.readAll(pathToLang)
@@ -350,6 +344,11 @@ do
       fs.makeDirectory(fs.path(applications[app]["name"]))
       getFromPastebin(applications[app]["url"], applications[app]["name"])
 
+    --Если обои
+    elseif applications[app]["type"] == "Wallpaper" then
+      if downloadWallpapers then
+        getFromGitHubSafely(GitHubUserUrl .. applications[app]["url"], path)
+      end
     --А если че-то другое
     else
       getFromGitHubSafely(GitHubUserUrl .. applications[app]["url"], path)
@@ -421,6 +420,7 @@ local applicationsPath = "MineOS/Applications/"
 local picturesPath = "MineOS/Pictures/"
 
 fs.makeDirectory(desktopPath .. "My files")
+fs.makeDirectory(picturesPath)
 
 for i = 1, #apps do
    ecs.createShortCut(desktopPath .. ecs.hideFileFormat(apps[i]) .. ".lnk", applicationsPath .. apps[i])
@@ -433,7 +433,8 @@ for i = 1, #dockApps do
 end
 
 ecs.createShortCut(desktopPath .. "Pictures.lnk", picturesPath)
-ecs.createShortCut("MineOS/System/OS/Wallpaper.lnk", picturesPath .. "AhsokaTano.pic")
+
+if downloadWallpapers then ecs.createShortCut("MineOS/System/OS/Wallpaper.lnk", picturesPath .. "AhsokaTano.pic") end
 
 --Автозагрузка
 local file = io.open("autorun.lua", "w")
