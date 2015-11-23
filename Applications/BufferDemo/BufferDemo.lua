@@ -9,7 +9,7 @@ local showPanel = true
 local transparency = 25
 local xWindow, yWindow = 5, 5
 
-local fon = image.load("BufferDemo.app/Resources/Wallpaper.pic")
+local fon = image.load("MineOS/Applications/BufferDemo.app/Resources/Wallpaper.pic")
 
 buffer.start()
 
