@@ -491,6 +491,12 @@
     ["type"]="Script",
     ["version"]=1.0,
   },
+  {
+    ["name"]="MineOS/System/InfoPanel/Приват",
+    ["url"]="IgorTimofeev/OpenComputers/master/Applications/InfoPanel/Claims.txt",
+    ["type"]="Script",
+    ["version"]=1.0,
+  },
 
   ----------------------------------------------------- Приложения с ресурсами --------------------------------------------------------------------------
 

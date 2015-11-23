@@ -36,7 +36,7 @@ for comp in pairs(components) do if not _G[comp] then _G[comp] = _G.component[co
 libraries, components = nil, nil
 
 -- Загрузка языкового пакета
-local lang = config.readAll("MineOS/System/OS/Languages/".._G._OSLANGUAGE..".lang")
+local lang = config.readAll("MineOS/System/OS/Languages/" .. _G.OSSettings.language .. ".lang")
 
 ---------------------------------------------- Переменные ------------------------------------------------------------------------
 

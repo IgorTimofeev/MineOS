@@ -10,7 +10,7 @@ local libraries = {
 	["keyboard"] = "keyboard",
 	["computer"] = "computer",
 	["serialization"] = "serialization",
-	--["internet"] = "internet",
+	["internet"] = "internet",
 	--["image"] = "image",
 }
 
@@ -216,7 +216,6 @@ end
 
 --Загрузка файла с инета
 function ECSAPI.getFileFromUrl(url, path)
-	if not _G.internet then _G.internet = require("internet") end
 	local sContent = ""
 	local result, response = pcall(internet.request, url)
 	if not result then
@@ -917,21 +916,41 @@ function ECSAPI.emptyWindow(x,y,width,height,title)
 end
 
 --Функция по переносу слов на новую строку в зависимости от ограничения по ширине
-function ECSAPI.stringWrap(text, limit)
-	--Получаем длину текста
-	local sText = unicode.len(text)
-	--Считаем количество строк, которое будет после парсинга
-	local repeats = math.ceil(sText / limit)
-	--Создаем массив этих строк
+function ECSAPI.stringWrap(strings, limit)
 	local massiv = {}
-	local counter
-	--Парсим строки
-	for i = 1, repeats do
-		counter = i * limit - limit + 1
-		table.insert(massiv, unicode.sub(text, counter, counter + limit - 1))
-	end
-	--Возвращаем массив строк
-	return massiv
+
+    --Перебираем все указанные строки
+    for i = 1, #strings do
+       
+        --Создаем массив слов данной строки
+        local words = {}
+        for match in string.gmatch(strings[i], "[^%s]+") do table.insert(words, match) end
+
+        --Если длина слов не превышает лимита
+        if unicode.len(strings[i]) <= limit then
+            table.insert(massiv, table.concat(words, " "))
+        else
+            --Перебираем все слова данной строки с 1 до конца
+            local from = 1
+            local to = 1
+            while to <= #words do
+                --Если длина соединенных слов превышает лимит, то
+                if unicode.len(table.concat(words, " ", from, to)) > limit then
+                    --Вставить в новый массив строк 
+                    table.insert(massiv, table.concat(words, " ", from, to - 1))
+                    from = to
+                else
+                    if to == #words then
+                        table.insert(massiv, table.concat(words, " ", from, to))
+                    end
+                end
+
+                to = to + 1
+            end
+        end
+    end
+
+    return massiv
 end
 
 --Моя любимая функция ошибки C:
@@ -1338,7 +1357,7 @@ end
 
 --Получение верного имени языка. Просто для безопасности. (для операционки)
 function ECSAPI.getCorrectLangName(pathToLangs)
-	local language = _OSLANGUAGE .. ".lang"
+	local language = _G.OSSettings.language .. ".lang"
 	if not fs.exists(pathToLangs .. "/" .. language) then
 		language = "English.lang"
 	end
@@ -1357,22 +1376,6 @@ function ECSAPI.readCorrectLangFile(pathToLangs)
 end
 
 -------------------------ВСЕ ДЛЯ ОСКИ-------------------------------------------------------------------------------
-
---Список файлов, не требующих отрисовки
-local systemFiles = {
-	"bin/",
-	"lib/",
-	"OS.lua",
-	"autorun.lua",
-	"init.lua",
-	"tmp/",
-	"usr/",
-	"mnt/",
-	"etc/",
-	"boot/",
-	"Finder.app/"
-	--"MineOS/System/",
-}
 
 function ECSAPI.sortFiles(path, fileList, sortingMethod, showHiddenFiles)
 	local sortedFileList = {}
@@ -1423,65 +1426,45 @@ function ECSAPI.sortFiles(path, fileList, sortingMethod, showHiddenFiles)
 	return sortedFileList
 end
 
--- local fileList1 = ECSAPI.getFileList("MineOS/System/OS/")
+--Сохранить файл конфигурации ОС
+function ECSAPI.saveOSSettings()
+	local pathToOSSettings = "MineOS/System/OS/OSSettings.cfg"
+	if not _G.OSSettings then error("Массив настроек ОС отсутствует в памяти!") end
+	fs.makeDirectory(fs.path(pathToOSSettings))
+	local file = io.open(pathToOSSettings, "w")
+	file:write(serialization.serialize(_G.OSSettings))
+	file:close()
+end
 
--- local fileList2 = ECSAPI.sortFiles("MineOS/System/OS/", fileList1, "date", true)
+--Загрузить файл конфигурации ОС, а если его не существует, то создать
+function ECSAPI.loadOSSettings()
+	local pathToOSSettings = "MineOS/System/OS/OSSettings.cfg"
+	if fs.exists(pathToOSSettings) then
+		local file = io.open(pathToOSSettings, "r")
+		_G.OSSettings = serialization.unserialize(file:read("*a"))
+		file:close()
+	else
+		_G.OSSettings = { showHelpOnApplicationStart = true, language = "Russian" }
+		ECSAPI.saveOSSettings()
+	end
+end
 
--- for i = 1, #fileList1 do
--- 	print(tostring(fileList1[i]) .. " -> "..tostring(fileList2[i]))
--- end
+--Отобразить окно с содержимым файла информации о приложении
+function ECSAPI.applicationHelp(pathToApplication)
+	local pathToAboutFile = pathToApplication .. "/resources/About.txt"
+	if fs.exists(pathToAboutFile) and _G.OSSettings and _G.OSSettings.showHelpOnApplicationStart then
+		local applicationName = fs.name(pathToApplication)
+		local file = io.open(pathToAboutFile, "r")
+		local text = ""
+		for line in file:lines() do text = text .. line .. " " end
+		file:close()
 
---Перехуяривалка файлового порядка для операционки. Говнокод, переделать!
-function ECSAPI.reorganizeFilesAndFolders(massivSudaPihay, showHiddenFiles, showSystemFiles)
-
-	local massiv = {}
-	local workPath = fs.path(massivSudaPihay[1] or "/") or ""
-
-	for i = 1, #massivSudaPihay do
-		if ECSAPI.isFileHidden(massivSudaPihay[i]) and showHiddenFiles then
-			table.insert(massiv, massivSudaPihay[i])
+		local data = ECSAPI.universalWindow("auto", "auto", 52, 0xeeeeee, true, {"EmptyLine"}, {"CenterText", 0x262626, "О приложении " .. applicationName}, {"EmptyLine"}, {"TextField", 14, 0xffffff, 0x262626, 0xcccccc, 0x3366CC, text}, {"EmptyLine"}, {"Switch", 0x3366CC, 0xffffff, 0x262626, "Показывать информацию о приложениях", true}, {"EmptyLine"}, {"Button", {ECSAPI.colors.green, 0xffffff, "OK"}})
+		if data[1] == false then
+			_G.OSSettings.showHelpOnApplicationStart = false
+			ECSAPI.saveOSSettings()
 		end
 	end
-
-	for i = 1, #massivSudaPihay do
-		local cyka = massivSudaPihay[i]
-		if fs.isDirectory(cyka) and not ECSAPI.isFileHidden(cyka) and ECSAPI.getFileFormat(cyka) ~= ".app" then
-			table.insert(massiv, cyka)
-		end
-		cyka = nil
-	end
-
-	for i = 1, #massivSudaPihay do
-		local cyka = massivSudaPihay[i]
-		if (not fs.isDirectory(cyka) and not ECSAPI.isFileHidden(cyka)) or (fs.isDirectory(cyka) and not ECSAPI.isFileHidden(cyka) and ECSAPI.getFileFormat(cyka) == ".app") then
-			table.insert(massiv, cyka)
-		end
-		cyka = nil
-	end
-
-
-	if not showSystemFiles then
-		if workPath == "" or workPath == "/" then
-			--ECSAPI.error("Сработало!")
-			local i = 1
-			while i <= #massiv do
-				for j = 1, #systemFiles do
-					--ECSAPI.error("massiv[i] = " .. massiv[i] .. ", systemFiles[j] = "..systemFiles[j])
-					if massiv[i] == systemFiles[j] then
-						--ECSAPI.error("Удалено! massiv[i] = " .. massiv[i] .. ", systemFiles[j] = "..systemFiles[j])
-						table.remove(massiv, i)
-						i = i - 1
-						break
-					end
-
-				end
-
-				i = i + 1
-			end
-		end
-	end
-
-	return massiv
 end
 
 --Создать ярлык для конкретной проги (для операционки)
@@ -1650,6 +1633,7 @@ function ECSAPI.launchIcon(path, arguments)
 	local isDirectory = fs.isDirectory(path)
 	--Если это приложение
 	if fileFormat == ".app" then
+		ECSAPI.applicationHelp(path)
 		local cyka = path .. "/" .. ECSAPI.hideFileFormat(fs.name(path)) .. ".lua"
 		local success, reason = shell.execute(cyka)
 		if not success then ECSAPI.displayCompileMessage(1, reason, true) end
@@ -1704,10 +1688,6 @@ function ECSAPI.launchIcon(path, arguments)
 	--Ставим старое разрешение
 	gpu.setResolution(oldWidth, oldHeight)
 end
-
-
-
-
 
 
 
@@ -1786,7 +1766,7 @@ function ECSAPI.universalWindow(x, y, width, background, closeWindowAfter, ...)
 			height = height + objects[i][2]
 		elseif objectType == "wrappedtext" then
 			--Заранее парсим текст перенесенный
-			objects[i].wrapped = ECSAPI.stringWrap(objects[i][3], width - 4)
+			objects[i].wrapped = ECSAPI.stringWrap({objects[i][3]}, width - 4)
 			objects[i].height = #objects[i].wrapped
 			height = height + objects[i].height
 		else
@@ -1991,9 +1971,9 @@ function ECSAPI.universalWindow(x, y, width, background, closeWindowAfter, ...)
 		
 		elseif objectType == "textfield" then
 			newObj("TextFields", number, x + 1, objects[number].y, x + width - 2, objects[number].y + objects[number][2] - 1)
-			if not objects[number].strings then objects[number].strings = ECSAPI.stringWrap(objects[number][7], width - 5) end
+			if not objects[number].strings then objects[number].strings = ECSAPI.stringWrap({objects[number][7]}, width - 7) end
 			objects[number].displayFrom = objects[number].displayFrom or 1
-			ECSAPI.textField(x + 1, objects[number].y, width - 2, objects[number][2], objects[number].strings, objects[number].displayFrom, objects[number][3], objects[number][4], objects[number][5], objects[number][6])
+			ECSAPI.textField(x + 2, objects[number].y, width - 4, objects[number][2], objects[number].strings, objects[number].displayFrom, objects[number][3], objects[number][4], objects[number][5], objects[number][6])
 		
 		elseif objectType == "wrappedtext" then
 			gpu.setBackground(background)
@@ -2029,18 +2009,18 @@ function ECSAPI.universalWindow(x, y, width, background, closeWindowAfter, ...)
 
 			local xPos, yPos = x + 2, objects[number].y
 			local activeColor, passiveColor, textColor, text, state = objects[number][2], objects[number][3], objects[number][4], objects[number][5], objects[number][6]
-			local switchWidth = 10
+			local switchWidth = 8
 			ECSAPI.colorTextWithBack(xPos, yPos, textColor, background, text)
 
 			xPos = x + width - switchWidth - 2
 			if state then
 				ECSAPI.square(xPos, yPos, switchWidth, 1, activeColor)
 				ECSAPI.square(xPos + switchWidth - 2, yPos, 2, 1, passiveColor)
-				ECSAPI.colorTextWithBack(xPos + 4, yPos, passiveColor, activeColor, "ON")
+				--ECSAPI.colorTextWithBack(xPos + 4, yPos, passiveColor, activeColor, "ON")
 			else
 				ECSAPI.square(xPos, yPos, switchWidth, 1, passiveColor - 0x444444)
 				ECSAPI.square(xPos, yPos, 2, 1, passiveColor)
-				ECSAPI.colorTextWithBack(xPos + 4, yPos, passiveColor, passiveColor - 0x444444, "OFF")
+				--ECSAPI.colorTextWithBack(xPos + 4, yPos, passiveColor, passiveColor - 0x444444, "OFF")
 			end
 			newObj("Switches", number, xPos, yPos, xPos + switchWidth - 1, yPos)
 		end
@@ -2342,6 +2322,8 @@ end
 
 
 ----------------------------------------------------------------------------------------------------
+
+ECSAPI.applicationHelp("MineOS/Applications/InfoPanel.app")
 
 return ECSAPI
 

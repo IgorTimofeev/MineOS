@@ -181,16 +181,16 @@ do
 end
 
 --Загружаем необходимые библиотеки, дабы избежать потерь памяти
-_G._OSLANGUAGE = require("MineOS/System/OS/Language")
 _G.computer = require("computer")
 _G.ecs = require("ECSAPI")
 _G.component = require("component")
 _G.gpu = _G.component.gpu
 
---Oткрываем порт для беспороводных MineOS-соединений
-if component.isAvailable("modem") then component.modem.open(512) end
+--Загружаем параметры ОС
+ecs.loadOSSettings()
+_G._OSLANGUAGE = _G.OSSettings.language
 
---Масштаб
+--Выставляем адекватный масштаб монитора
 ecs.setScale(1)
 
 --Сообщаем системе, что все прогружено и готово к работе

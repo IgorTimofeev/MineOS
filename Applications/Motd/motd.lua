@@ -9,11 +9,13 @@ if not component.isAvailable("gpu") then
 	return
 end
 
+ecs.prepareToExit()
+
 local gpu = component.gpu
 
-local lines = {_OSVERSION .. ", " .. math.floor(computer.totalMemory() / 1024) .. "KB RAM"}
+local lines = { "OpenOS (customized by ECS), " .. math.floor(computer.totalMemory() / 1024) .. "KB RAM"}
 local maxWidth = unicode.len(lines[1])
-local f = io.open("/usr/misc/greetings/".._OSLANGUAGE..".txt")
+local f = io.open("/usr/misc/greetings/" .. _G.OSSettings.language .. ".txt")
 if f then
 	local greetings = {}
 	pcall(function()
