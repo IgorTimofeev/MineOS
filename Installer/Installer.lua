@@ -338,6 +338,10 @@ do
         end
       end
 
+      if applications[app].about then
+        getFromGitHubSafely(GitHubUserUrl .. applications[app].about, path .. ".app/Resources/About.txt")
+      end 
+
     --Если тип = другой, чужой, а мб и свой пастебин
     elseif applications[app]["type"] == "Pastebin" then
       fs.remove(applications[app]["name"])
