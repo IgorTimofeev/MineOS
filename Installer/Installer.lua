@@ -117,16 +117,39 @@ end
 
 local GitHubUserUrl = "https://raw.githubusercontent.com/"
 
-local cyka
+
+--------------------------------- Стадия стартовой загрузки всего необходимого ---------------------------------
+
+
+local preLoadApi = {
+  { paste = "IgorTimofeev/OpenComputers/master/lib/ECSAPI.lua", path = "lib/ECSAPI.lua" },
+  { paste = "IgorTimofeev/OpenComputers/master/lib/colorlib.lua", path = "lib/colorlib.lua" },
+  { paste = "IgorTimofeev/OpenComputers/master/lib/image.lua", path = "lib/image.lua" },
+  { paste = "IgorTimofeev/OpenComputers/master/lib/config.lua", path = "lib/config.lua" },
+  { paste = "IgorTimofeev/OpenComputers/master/MineOS/Icons/Languages.pic", path = "MineOS/System/OS/Icons/Languages.pic" },
+  { paste = "IgorTimofeev/OpenComputers/master/MineOS/Icons/OK.pic", path = "MineOS/System/OS/Icons/OK.pic" },
+  { paste = "IgorTimofeev/OpenComputers/master/MineOS/Icons/Downloading.pic", path = "MineOS/System/OS/Icons/Downloading.pic" },
+  { paste = "IgorTimofeev/OpenComputers/master/MineOS/Icons/OS_Logo.pic", path = "MineOS/System/OS/Icons/OS_Logo.pic" },
+}
+
+for i = 1, #preLoadApi do
+  print("Downloading must-have libraries (" .. fs.name(preLoadApi[i].path) .. ")")
+  getFromGitHubSafely(GitHubUserUrl .. preLoadApi[i].paste, preLoadApi[i].path)
+end
+
 print(" ")
-cyka = "colorlib.lua"; print("Downloading must-have libraries (" .. cyka .. ")"); getFromGitHubSafely(GitHubUserUrl .. "IgorTimofeev/OpenComputers/master/lib/" .. cyka, "lib/" .. cyka)
-cyka = "image.lua"; print("Downloading must-have libraries (" .. cyka .. ")"); getFromGitHubSafely(GitHubUserUrl .. "IgorTimofeev/OpenComputers/master/lib/" .. cyka, "lib/" .. cyka)
-cyka = "ECSAPI.lua"; print("Downloading must-have libraries (" .. cyka .. ")"); getFromGitHubSafely(GitHubUserUrl .. "IgorTimofeev/OpenComputers/master/lib/" .. cyka, "lib/" .. cyka)
-print(" ")
-print("Initialising libraries")
+print("Downloading file list")
+applications = seri.unserialize(getFromGitHubSafely(GitHubUserUrl .. "IgorTimofeev/OpenComputers/master/Applications.txt", "MineOS/System/OS/Applications.txt"))
 print(" ")
 
 _G.ecs = require("ECSAPI")
+_G.image = require("image")
+_G.config = require("config")
+
+local imageOS = image.load("MineOS/System/OS/Icons/OS_Logo.pic")
+local imageLanguages = image.load("MineOS/System/OS/Icons/Languages.pic")
+local imageDownloading = image.load("MineOS/System/OS/Icons/Downloading.pic")
+local imageOK = image.load("MineOS/System/OS/Icons/OK.pic")
 
 ecs.setScale(installerScale)
 
@@ -153,7 +176,7 @@ end
 local function drawButton(name, isPressed)
   local buttonColor = 0x888888
   if isPressed then buttonColor = ecs.colors.blue end
-  local d = {ecs.drawAdaptiveButton("auto", yWindowEnd - 3, 2, 1, name, buttonColor, 0xffffff)}
+  local d = { ecs.drawAdaptiveButton("auto", yWindowEnd - 3, 2, 1, name, buttonColor, 0xffffff) }
   newObj("buttons", name, d[1], d[2], d[3], d[4])
 end
 
@@ -170,61 +193,6 @@ local function waitForClickOnButton(buttonName)
   end
 end
 
---------------------------СТАДИЯ ЗАГРУЗКИ НУЖНЫХ ПАКЕТОВ-----------------------
-  
-ecs.clearScreen(padColor)
-
-if not fs.exists("MineOS/System/OS/Installer/OK.pic") or not fs.exists("MineOS/System/OS/Installer/Downloading.pic") or not fs.exists("MineOS/System/OS/Installer/OS_Logo.pic") or not fs.exists("MineOS/System/OS/Installer/Languages.pic") then
-
-  local barWidth = math.floor(windowWidth / 2)
-  local xBar = math.floor(xSize/2-barWidth/2)
-  local yBar = math.floor(ySize/2) + 1
-
-  --создание первичного экрана чистенького
-
-  clear()
-
-  gpu.setBackground(ecs.windowColors.background)
-  gpu.setForeground(ecs.colors.gray)
-  ecs.centerText("x", yBar - 2, "Loading installer data")
-
-  ecs.progressBar(xBar, yBar, barWidth, 1, 0xcccccc, ecs.colors.blue, 0)
-  os.sleep(timing)
-
-  --local response = getSafe(GitHubUserUrl .. "IgorTimofeev/OpenComputers/master/Applications.txt", "MineOS/System/OS/Applications.txt")
-  
-  local preLoadApi = {
-    { paste = "IgorTimofeev/OpenComputers/master/lib/config.lua", path = "lib/config.lua" },
-    { paste = "IgorTimofeev/OpenComputers/master/MineOS/Icons/Languages.pic", path = "MineOS/System/OS/Icons/Languages.pic" },
-    { paste = "IgorTimofeev/OpenComputers/master/MineOS/Icons/OK.pic", path = "MineOS/System/OS/Icons/OK.pic" },
-    { paste = "IgorTimofeev/OpenComputers/master/MineOS/Icons/Downloading.pic", path = "MineOS/System/OS/Icons/Downloading.pic" },
-    { paste = "IgorTimofeev/OpenComputers/master/MineOS/Icons/OS_Logo.pic", path = "MineOS/System/OS/Icons/OS_Logo.pic" },
-  }
-
-  local countOfAll = #preLoadApi
-
-  for i = 1, countOfAll do
-
-    local percent = i / countOfAll * 100
-    ecs.progressBar(xBar, yBar, barWidth, 1, 0xcccccc, ecs.colors.blue, percent)
-
-    if fs.exists(preLoadApi[i]["path"]) then fs.remove(preLoadApi[i]["path"]) end
-    fs.makeDirectory(fs.path(preLoadApi[i]["path"]))
-    getFromGitHubSafely(GitHubUserUrl .. preLoadApi[i]["paste"], preLoadApi[i]["path"])
-
-  end
-
-end
-
-applications = seri.unserialize(getFromGitHubSafely(GitHubUserUrl .. "IgorTimofeev/OpenComputers/master/Applications.txt", "MineOS/System/OS/Applications.txt"))
-
-_G.image = require("image")
-local config = require("config")
-
-local imageOS = image.load("MineOS/System/OS/Icons/OS_Logo.pic")
-local imageLanguages = image.load("MineOS/System/OS/Icons/Languages.pic")
-local imageDownloading = image.load("MineOS/System/OS/Icons/Downloading.pic")
-local imageOK = image.load("MineOS/System/OS/Icons/OK.pic")
 
 ------------------------------ВЫБОР ЯЗЫКА------------------------------------
 
@@ -420,8 +388,6 @@ local apps = {
   "Pastebin.app",
   "Photoshop.app",
   "Piano.app",
-  "RCON.app",
-  "Robot.app",
   "Shooting.app",
   "Shop.app",
   "CodeDoor.app",
@@ -468,15 +434,3 @@ file:write("local success, reason = pcall(loadfile(\"OS.lua\")); if not success 
 file:close()
 
 computer.shutdown(true)
-
-
-
-
-
-
-
-
-
-
-
-
