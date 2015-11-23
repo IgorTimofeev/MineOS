@@ -341,6 +341,7 @@
   {
     ["name"]="MineOS/Applications/Photoshop",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/Photoshop/Photoshop.lua",
+    ["about"]="IgorTimofeev/OpenComputers/master/Applications/Photoshop/About.txt",
     ["type"]="Application",
     ["icon"]="IgorTimofeev/OpenComputers/master/Applications/Photoshop/Icon.pic",
     ["version"]=1.0,
@@ -383,6 +384,7 @@
   {
     ["name"]="MineOS/Applications/Finder",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/Finder/Finder.lua",
+    ["about"]="IgorTimofeev/OpenComputers/master/Applications/Finder/About.txt",
     ["type"]="Application",
     ["icon"]="IgorTimofeev/OpenComputers/master/Applications/Finder/Icon.pic",
     ["version"]=1.0,
@@ -390,6 +392,7 @@
   {
     ["name"]="MineOS/Applications/Control",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/Control/Control.lua",
+    ["about"]="IgorTimofeev/OpenComputers/master/Applications/Control/About.txt",
     ["type"]="Application",
     ["icon"]="IgorTimofeev/OpenComputers/master/Applications/Control/Icon.pic",
     ["version"]=1.0,
@@ -411,6 +414,7 @@
   {
     ["name"]="MineOS/Applications/Calendar",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/Calendar/Calendar.lua",
+    ["about"]="IgorTimofeev/OpenComputers/master/Applications/Calendar/About.txt",
     ["type"]="Application",
     ["icon"]="IgorTimofeev/OpenComputers/master/Applications/Calendar/Icon.pic",
     ["version"]=1.0,
