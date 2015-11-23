@@ -476,6 +476,7 @@
     ["name"]="MineOS/Applications/InfoPanel",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/InfoPanel/InfoPanel.lua",
     ["type"]="Application",
+    ["about"]="IgorTimofeev/OpenComputers/master/Applications/InfoPanel/About.txt",
     ["icon"]="IgorTimofeev/OpenComputers/master/Applications/InfoPanel/Icon.pic",
     ["version"]=1.0,
   },
