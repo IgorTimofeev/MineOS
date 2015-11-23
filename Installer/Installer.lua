@@ -132,14 +132,17 @@ local preLoadApi = {
   { paste = "IgorTimofeev/OpenComputers/master/MineOS/Icons/OS_Logo.pic", path = "MineOS/System/OS/Icons/OS_Logo.pic" },
 }
 
-for i = 1, #preLoadApi do
-  print("Downloading must-have libraries (" .. fs.name(preLoadApi[i].path) .. ")")
-  getFromGitHubSafely(GitHubUserUrl .. preLoadApi[i].paste, preLoadApi[i].path)
-end
 
 print(" ")
 print("Downloading file list")
 applications = seri.unserialize(getFromGitHubSafely(GitHubUserUrl .. "IgorTimofeev/OpenComputers/master/Applications.txt", "MineOS/System/OS/Applications.txt"))
+print(" ")
+
+for i = 1, #preLoadApi do
+  print("Downloading must-have files (" .. fs.name(preLoadApi[i].path) .. ")")
+  getFromGitHubSafely(GitHubUserUrl .. preLoadApi[i].paste, preLoadApi[i].path)
+end
+
 print(" ")
 
 _G.ecs = require("ECSAPI")
@@ -196,6 +199,9 @@ end
 
 ------------------------------ВЫБОР ЯЗЫКА------------------------------------
 
+ecs.prepareToExit()
+
+local downloadWallpapers, showHelpTips
 
 do
 
@@ -208,8 +214,10 @@ do
 
   waitForClickOnButton("Select language")
 
-  local language = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Select language"}, {"Select", 0x262626, 0x880000, "Russian", "English"}, {"Button", {0xffffff, 0x262626, "OK"}})
-  language = language[1]
+  local data = ecs.universalWindow("auto", "auto", 36, 0x262626, true, {"EmptyLine"}, {"CenterText", 0xFFFFFF, "Select language"}, {"EmptyLine"}, {"Select", 0xFFFFFF, 0x880000, "Russian", "English"}, {"EmptyLine"}, {"Switch", 0xF2B233, 0xffffff, 0xFFFFFF, "Download wallpapers", true}, {"EmptyLine"}, {"Switch", 0xF2B233, 0xffffff, 0xFFFFFF, "Show help tips in OS", true}, {"EmptyLine"}, {"Button", {ecs.colors.green, 0xffffff, "OK"}})
+  downloadWallpapers, showHelpTips = data[2], data[3]
+
+  language = data[1]
   --УСТАНАВЛИВАЕМ НУЖНЫЙ ЯЗЫК
   local path = "MineOS/System/OS/Language.lua"
   fs.remove(path)
@@ -229,7 +237,6 @@ do
   lang = config.readAll(pathToLang)
 
 end
-
 
 
 ------------------------------СТАВИТЬ ЛИ ОСЬ------------------------------------
