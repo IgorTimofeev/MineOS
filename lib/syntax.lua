@@ -3,12 +3,12 @@ local buffer = require("doubleBuffering")
 local unicode = require("unicode")
 local syntax = {}
 
-----------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------------
 
 --Стандартные цветовые схемы
 syntax.colorSchemes = {
 	midnight = {
-		recommendedBackground = 0x262626,
+		background = 0x262626,
 		text = 0xffffff,
 		strings = 0xff2024,
 		loops = 0xffff98,
@@ -18,9 +18,14 @@ syntax.colorSchemes = {
 		numbers = 0x24c0ff,
 		functions = 0xffcc66,
 		compares = 0xffff98,
+		lineNumbers = 0x444444,
+		lineNumbersText = 0xDDDDDD,
+		scrollBar = 0x444444,
+		scrollBarPipe = 0x24c0ff,
+		selection = 0x99B2F2,
 	},
 	sunrise = {
-		recommendedBackground = 0xffffff,
+		background = 0xffffff,
 		text = 0x262626,
 		strings = 0x880000,
 		loops = 0x24c0ff,
@@ -30,6 +35,11 @@ syntax.colorSchemes = {
 		numbers = 0x24c0ff,
 		functions = 0x24c0ff,
 		compares = 0x880000,
+		lineNumbers = 0x444444,
+		lineNumbersText = 0xDDDDDD,
+		scrollBar = 0x444444,
+		scrollBarPipe = 0x24c0ff,
+		selection = 0x99B2F2,
 	},
 }
 
@@ -37,10 +47,8 @@ syntax.colorSchemes = {
 local currentColorScheme = {}
 --Шаблоны поиска
 local patterns
---Размер массива шаблонов поиска
-local sPatterns
 
-----------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------------
 
 --Пересчитать цвета шаблонов
 --Приоритет поиска шаблонов снижается сверху вниз
@@ -87,10 +95,6 @@ local function definePatterns()
 		{ pattern = "^break", color = currentColorScheme.logic, cutFromLeft = 0, cutFromRight = 0 },
 		{ pattern = " break ", color = currentColorScheme.logic, cutFromLeft = 0, cutFromRight = 0 },
 
-		--Числа
-		{ pattern = "%s(0x)(%w*)", color = currentColorScheme.numbers, cutFromLeft = 0, cutFromRight = 0 },
-		{ pattern = "(%s)([%d%.]*)", color = currentColorScheme.numbers, cutFromLeft = 0, cutFromRight = 0 },
-		
 		--Сравнения и мат. операции
 		{ pattern = "<=", color = currentColorScheme.compares, cutFromLeft = 0, cutFromRight = 0 },
 		{ pattern = ">=", color = currentColorScheme.compares, cutFromLeft = 0, cutFromRight = 0 },
@@ -106,10 +110,11 @@ local function definePatterns()
 		{ pattern = "%.%.", color = currentColorScheme.compares, cutFromLeft = 0, cutFromRight = 0 },
 		{ pattern = "%#", color = currentColorScheme.compares, cutFromLeft = 0, cutFromRight = 0 },
 		{ pattern = "#^", color = currentColorScheme.compares, cutFromLeft = 0, cutFromRight = 0 },
-	}
 
-	--Ну, и размер массива шаблонов тоже
-	sPatterns = #patterns
+		--Числа
+		{ pattern = "%s(0x)(%w*)", color = currentColorScheme.numbers, cutFromLeft = 0, cutFromRight = 0 },
+		{ pattern = "(%s)([%d%.]*)", color = currentColorScheme.numbers, cutFromLeft = 0, cutFromRight = 0 },	
+	}
 end
 
 --Костыльная замена обычному string.find()
@@ -138,14 +143,23 @@ function unicode.find(str, pattern, init, plain)
 	end
 end
 
+--Объявить новую цветовую схему
+function syntax.setColorScheme(colorScheme)
+	--Выбранная цветовая схема
+	currentColorScheme = colorScheme
+	--Пересчитываем шаблоны
+	definePatterns()
+end
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
 --Проанализировать строку и создать на ее основе цветовую карту
 function syntax.highlight(x, y, text, limit)
 	--Кароч вооот, хыыы
 	local searchFrom, starting, ending
-	--Загоняем в буффер всю строку базового цвета
+	--Загоняем в буфер всю строку базового цвета
 	buffer.text(x, y, currentColorScheme.text, limit and unicode.sub(text, 1, limit) or text)
 	limit = limit or math.huge
-
 	--Перебираем шаблоны
 	for i = #patterns, 1, -1 do
 		searchFrom = 1
@@ -167,38 +181,84 @@ function syntax.highlight(x, y, text, limit)
 	end
 end
 
---Объявить новую цветовую схему
-function syntax.setColorScheme(colorScheme)
-	--Выбранная цветовая схема
-	currentColorScheme = colorScheme
-	--Пересчитываем шаблоны
-	definePatterns()
+function syntax.convertFileToStrings(path)
+	local array = {}
+	local file = io.open(path, "r")
+	for line in file:lines() do table.insert(array, line) end
+	file:close()
+	return array
 end
 
---Открыть файл для чтения и отобразить первые строки из него, чтобы чекнуть, как работает подсветка
-function syntax.highlightFileForDebug(pathToFile)
-	--Получаем размер экрана
-	local xSize, ySize = gpu.getResolution()
-	--Очищаем экран рекомендуемым цветом
-	buffer.square(1, 1, xSize, ySize, currentColorScheme.recommendedBackground, currentColorScheme.text, " ")
-	buffer.draw(true)
-	--Открываем файлик
-	local file = io.open(pathToFile, "r")
-	--Счетчик строк
-	local lineCounter = 1
-	--Читаем строки
-	for line in file:lines() do
-		--Подсвечиваем строку и рисуем
-		syntax.highlight(2, lineCounter + 1, line)
-		--Счетчик в плюс
-		lineCounter = lineCounter + 1
-		--Разрываем цикл, если кол-во строк превысило высоту экрана
-		if lineCounter > ySize then break end
-		--ecs.wait()
-	end
-	--Закрываем файл
-	file:close()
+-- Открыть окно-просмотрщик кода
+function syntax.viewCode(x, y, width, height, strings, fromSymbol, fromString, highlightLuaSyntax, selection)
 
+	--Рассчитываем максимальное количество строк, которое мы будем отображать
+	local maximumNumberOfAvailableStrings
+	if strings[fromString + height - 1] then
+		maximumNumberOfAvailableStrings = fromString + height - 1
+	else
+		maximumNumberOfAvailableStrings = #strings
+	end
+	--Рассчитываем ширину полоски с номерами строк
+	local widthOfStringCounter = unicode.len(maximumNumberOfAvailableStrings) + 2
+
+	--Рисуем номера строк
+	buffer.square(x, y, widthOfStringCounter, height, currentColorScheme.lineNumbers, 0xFFFFFF, " ")
+	local yPos = y
+	for i = fromString, maximumNumberOfAvailableStrings do
+		buffer.text(x + widthOfStringCounter - unicode.len(i) - 1, yPos, currentColorScheme.text, tostring(i))
+		yPos = yPos + 1
+	end
+
+	--Рассчитываем стратовую позицию текстового поля
+	local textFieldPosition = x + widthOfStringCounter
+	local widthOfText = width - widthOfStringCounter - 3
+
+	--Рисуем подложку под текст
+	buffer.square(textFieldPosition, y, width - widthOfStringCounter - 1, height, currentColorScheme.background, 0xFFFFFF, " ")
+
+	--Рисуем выделение, если оно имеется
+	if selection then
+		if selection.to.y < selection.from.y then
+			local temp = selection.from.y
+			selection.from.y = selection.to.y
+			selection.to.y = temp
+		end
+
+		local heightOfSelection = selection.to.y - selection.from.y + 1
+
+		local function selectString(number, from, to)
+			if number >= fromString and number <= fromString + height then
+
+			end
+		end
+
+		if heightOfSelection == 1 then
+
+		elseif heightOfSelection == 2 then
+
+		else
+
+		end
+	end
+
+	--Рисуем текст
+	yPos = y
+	for i = fromString, maximumNumberOfAvailableStrings do
+		--Учитываем опциональную подсветку ситнаксиса
+		if highlightLuaSyntax then
+			syntax.highlight(textFieldPosition + 1, yPos, strings[i], widthOfText)
+		else
+			buffer.text(textFieldPosition + 1, yPos, currentColorScheme.text, unicode.sub(strings[i], 1, widthOfText))
+		end
+
+		yPos = yPos + 1
+	end
+	
+	--Рисуем скроллбар
+	buffer.scrollBar(x + width - 1, y, 1, height, #strings, fromString, currentColorScheme.scrollBar, currentColorScheme.scrollBarPipe)
+
+	--Рисуем изменения из буфера
 	buffer.draw()
 end
 
@@ -208,7 +268,13 @@ end
 syntax.setColorScheme(syntax.colorSchemes.midnight)
 
 --Епты бля!
---syntax.highlightFileForDebug("MineOS/Applications/Highlight.app/Resources/TestFile.txt", "midnight")
+local strings = syntax.convertFileToStrings("MineOS/Applications/Highlight.app/Resources/TestFile.txt")
+
+local xSize, ySize = gpu.getResolution()
+buffer.square(1, 1, xSize, ySize, ecs.colors.green, 0xFFFFFF, " ")
+buffer.draw(true)
+
+syntax.viewCode(2, 2, 70, 20, strings, 1, 1, true, {from = {x = 6, y = 2}, to = {x = 3, y = 8}})
 
 ----------------------------------------------------------------------------------------------------------------
 
