@@ -204,10 +204,58 @@ local function drawAll(force)
 	buffer.draw(force)
 end
 
+---------------------------------------------- Система логина ------------------------------------------------------------------------
+
+local function requestPassword()
+	if not _G.OSSettings.protectionMethod then
+		while true do
+			local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x000000, "Защитите ваш комьютер!"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, "Пароль"}, {"Input", 0x262626, 0x880000, "Подтвердить пароль"}, {"EmptyLine"}, {"Button", {0xbbbbbb, 0xffffff, "OK"}, {0x999999, 0xffffff, "Без защиты"}})
+			if data[3] == "OK" then
+				if data[1] == data[2] then
+					
+					_G.OSSettings.protectionMethod = "password"
+					_G.OSSettings.passwordHash = SHA2.hash(data[1])
+					break
+				else
+					ecs.error("Пароли различаются. Повторите ввод.")
+				end
+			else
+				_G.OSSettings.protectionMethod = "withoutProtection"
+				break
+			end
+		end
+		ecs.saveOSSettings()
+		return true
+	elseif _G.OSSettings.protectionMethod == "password" then
+		while true do
+			local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x000000, "Вход в систему"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, "Пароль"}, {"EmptyLine"}, {"Button", {0xbbbbbb, 0xffffff, "OK"}})
+			if SHA2.hash(data[1]) == _G.OSSettings.passwordHash then
+				return true
+			else
+				ecs.error("Неверный пароль!")
+			end
+		end
+	else
+		return true
+	end
+end
+
+local function login()
+	while true do
+		local success, reason = pcall(requestPassword)
+		if success then
+			break
+		else
+			pcall(ecs.error, "Самый умный что ли?")
+		end
+	end
+end
+
 ---------------------------------------------- Сама ОС ------------------------------------------------------------------------
 
 buffer.start()
 drawAll(true)
+login()
 
 --------------------------------------------------------------------------------------------------------------------------------
 
