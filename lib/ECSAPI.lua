@@ -1282,6 +1282,23 @@ function ECSAPI.newApplication(path, startName)
 	end
 end
 
+--Создать приложение на основе существующего ЛУА-файла
+function ECSAPI.newApplicationFromLuaFile(pathToLuaFile, pathWhereToCreateApplication)
+	local data = ECSAPI.universalWindow("auto", "auto", 30, ECSAPI.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x000000, "Новое приложение"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, "Имя приложения"}, {"Input", 0x262626, 0x880000, "Путь к иконке приложения"}, {"EmptyLine"}, {"Button", {0xbbbbbb, 0xffffff, "OK"}})
+	data[1] = data[1] or "MyApplication"
+	data[2] = data[2] or "MineOS/System/OS/Icons/SampleIcon.pic"
+	if fs.exists(data[2]) then
+		fs.makeDirectory(pathWhereToCreateApplication .. "/" .. data[1] .. ".app/Resources")
+		fs.copy(pathToLuaFile, pathWhereToCreateApplication .. "/" .. data[1] .. ".app/" .. data[1] .. ".lua")
+		fs.copy(data[2], pathWhereToCreateApplication .. "/" .. data[1] .. ".app/Resources/Icon.pic")
+
+		--ECSAPI.universalWindow("auto", "auto", 30, ECSAPI.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x000000, "Приложение создано!"}, {"EmptyLine"}, {"Button", {ecs.colors.green, 0xffffff, "OK"}})
+	else
+		ecs.error("Указанный файл иконки не существует.")
+		return
+	end
+end
+
 --Простое информационное окошечко. Возвращает старые пиксели - мало ли понадобится.
 function ECSAPI.info(x, y, title, text)
 	x = x or "auto"

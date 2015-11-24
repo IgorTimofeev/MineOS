@@ -161,6 +161,13 @@ while true do
 				break
 			end
 		end
+
+	elseif e[1] == "key_down" then
+		if e[4] == 28 then
+			gpu.setResolution(xOld, yOld)
+			ecs.prepareToExit()
+			return
+		end
 	end
 end
 

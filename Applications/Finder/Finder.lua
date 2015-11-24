@@ -8,6 +8,7 @@ local libraries = {
 	["context"] = "context",
 	["unicode"] = "unicode",
 	["buffer"] = "doubleBuffering",
+	["zip"] = "zip",
 	["serialization"] = "serialization",
 }
 
@@ -62,7 +63,7 @@ local currentSortingMethod = 1
 local function saveConfig()
 	fs.makeDirectory(fs.path(pathToConfig))
 	local file = io.open(pathToConfig, "w")
-	file:write(serialization.serialize( { ["leftBar"] = leftBar, ["showHiddenFiles"] = showHiddenFiles, ["showSystemFiles"] = showSystemFiles, ["showFileFormat"] = showFileFormat }))
+	file:write(serialization.serialize( { ["leftBar"] = leftBar, ["showHiddenFiles"] = showHiddenFiles, ["showSystemFiles"] = showSystemFiles, ["showFileFormat"] = showFileFormat, ["currentSortingMethod"] = currentSortingMethod }))
 	file:close()
 end
 
@@ -77,6 +78,7 @@ local function loadConfig()
 		showFileFormat = readedConfig.showFileFormat
 		showSystemFiles = readedConfig.showSystemFiles
 		showHiddenFiles = readedConfig.showHiddenFiles
+		currentSortingMethod = readedConfig.currentSortingMethod
 	else
 		leftBar = {
 			{"Title", "Избранное"},
@@ -93,6 +95,7 @@ local function loadConfig()
 		showFileFormat = false
 		showSystemFiles = false
 		showHiddenFiles = false
+		currentSortingMethod = 1
 		saveConfig()
 	end
 end
@@ -183,9 +186,9 @@ local function drawCloses()
 	buffer.set(x + 1, y, colors.topBar, colors.closes.cross, symbol)
 	buffer.set(x + 3, y, colors.topBar, colors.closes.hide, symbol)
 	buffer.set(x + 5, y, colors.topBar, colors.closes.full, symbol)
-	newObj("Closes", 1, x + 1, y, x + 1, y)
-	newObj("Closes", 2, x + 3, y, x + 3, y)
-	newObj("Closes", 3, x + 5, y, x + 5, y)
+	newObj("Closes", 1, x + 1, y, x + 2, y)
+	newObj("Closes", 2, x + 3, y, x + 4, y)
+	newObj("Closes", 3, x + 5, y, x + 6, y)
 end
 
 --Рисуем строку поиска
@@ -206,9 +209,9 @@ local function drawFsControl()
 	for i = 1, #sortingMethods do
 		name = sortingMethods[i].symbol; bg, fg = getColors(currentSortingMethod == i); newObj("FSButtons", i, buffer.button(xPos, yPos, unicode.len(name) + 2, 1, bg, fg, name)); xPos = xPos + unicode.len(name) + 3
 	end
-	xPos = xPos + 2
-	name = "Скрытые"; bg, fg = getColors(showHiddenFiles); newObj("FSButtons",  #sortingMethods + 1, buffer.button(xPos, yPos, unicode.len(name) + 2, 1, bg, fg, name)); xPos = xPos + 5
-
+	--xPos = xPos + 4
+	name = "Формат"; bg, fg = getColors(showFileFormat); newObj("FSButtons",  #sortingMethods + 1, buffer.button(xPos, yPos, unicode.len(name) + 2, 1, bg, fg, name)); xPos = xPos + unicode.len(name) + 3	
+	name = "Скрытые"; bg, fg = getColors(showHiddenFiles); newObj("FSButtons",  #sortingMethods + 2, buffer.button(xPos, yPos, unicode.len(name) + 2, 1, bg, fg, name)); xPos = xPos + unicode.len(name) + 3
 
 	-- name = "Формат"; newObj("FSButtons", 1, buffer.adaptiveButton(xPos, yPos, 1, 0, getColors(showFileFormat), name)); xPos = xPos + unicode.len(name) + 3
 	-- name = "Скрытые"; newObj("FSButtons", 2, buffer.adaptiveButton(xPos, yPos, 1, 0, getColors(showHiddenFiles), name)); xPos = xPos + unicode.len(name) + 3
@@ -444,15 +447,17 @@ while true do
 				else
 					if fs.isDirectory(path) then
 						if fileFormat ~= ".app" then
-							action = context.menu(e[3], e[4], {"Добавить в избранное"},"-", {"Копировать", false, "^C"}, {"Вставить", (_G.clipboard == nil), "^V"}, "-", {"Переименовать"}, {"Создать ярлык"}, "-", {"Добавить в архив"}, "-", {"Удалить", false, "⌫"})
+							action = context.menu(e[3], e[4], {"Добавить в избранное"},"-", {"Копировать", false, "^C"},  {"Переименовать"}, {"Создать ярлык"}, "-", {"Добавить в архив"}, "-", {"Удалить", false, "⌫"})
 						else
-							action = context.menu(e[3], e[4], {"Показать содержимое"}, {"Добавить в избранное"},"-", {"Копировать", false, "^C"}, {"Вставить", (_G.clipboard == nil), "^V"}, "-", {"Переименовать"}, {"Создать ярлык"}, "-", {"Добавить в архив"}, "-", {"Удалить", false, "⌫"})
+							action = context.menu(e[3], e[4], {"Показать содержимое"}, {"Добавить в избранное"},"-", {"Копировать", false, "^C"}, {"Переименовать"}, {"Создать ярлык"}, "-", {"Добавить в архив"}, "-", {"Удалить", false, "⌫"})
 						end
 					else
 						if fileFormat == ".pic" then
-							action = context.menu(e[3], e[4], {"Редактировать"}, {"Установить как обои"}, "-", {"Копировать", false, "^C"}, {"Вставить", (not _G.clipboard), "^V"}, "-", {"Переименовать"}, {"Создать ярлык"}, "-", {"Загрузить на Pastebin"}, "-", {"Удалить", false, "⌫"})
+							action = context.menu(e[3], e[4], {"Редактировать"}, {"Установить как обои"}, "-", {"Копировать", false, "^C"}, "-", {"Переименовать"}, {"Создать ярлык"}, "-", {"Загрузить на Pastebin"}, "-", {"Удалить", false, "⌫"})
+						elseif fileFormat == ".lua" then
+							action = context.menu(e[3], e[4], {"Редактировать"}, {"Создать приложение"}, "-", {"Копировать", false, "^C"}, {"Переименовать"}, {"Создать ярлык"}, "-", {"Загрузить на Pastebin"}, "-", {"Удалить", false, "⌫"})
 						else
-							action = context.menu(e[3], e[4], {"Редактировать"}, "-", {"Копировать", false, "^C"}, {"Вставить", (not _G.clipboard), "^V"}, "-", {"Переименовать"}, {"Создать ярлык"}, "-", {"Загрузить на Pastebin"}, "-", {"Удалить", false, "⌫"})
+							action = context.menu(e[3], e[4], {"Редактировать"}, "-", {"Копировать", false, "^C"}, {"Переименовать"}, {"Создать ярлык"}, "-", {"Загрузить на Pastebin"}, "-", {"Удалить", false, "⌫"})
 						end
 					end
 
@@ -501,6 +506,10 @@ while true do
 						buffer.paste(1, 1, oldPixelsOfFullScreen)
 						buffer.draw()
 						return
+					elseif action == "Создать приложение" then
+						ecs.newApplicationFromLuaFile(path, workPathHistory[currentWorkPathHistoryElement])
+						getFileList(workPathHistory[currentWorkPathHistoryElement])
+						drawAll()
 					else
 						--Рисуем иконку выделенную
 						buffer.square(obj["Icons"][key][1], obj["Icons"][key][2], widthOfIcon, heightOfIcon, colors.main, 0xffffff, " ")
@@ -583,7 +592,6 @@ while true do
 		for key in pairs(obj["Closes"]) do
 			if ecs.clickedAtArea(e[3], e[4], obj["Closes"][key][1], obj["Closes"][key][2], obj["Closes"][key][3], obj["Closes"][key][4]) then
 				
-
 				--Закрыть прогу
 				if key == 1 then
 					ecs.colorTextWithBack(obj["Closes"][key][1], obj["Closes"][key][2], ecs.colors.blue, colors.topBar, "⮾")
@@ -638,6 +646,8 @@ while true do
 				elseif key == 3 then
 					currentSortingMethod = 3
 				elseif key == 4 then
+					showFileFormat = not showFileFormat
+				elseif key == 5 then
 					showHiddenFiles = not showHiddenFiles
 				end
 				fromLine = 1
@@ -655,6 +665,7 @@ while true do
 		chkdsk()
 		changePath("")
 		drawAll()
+
 	elseif e[1] == "scroll" then
 		--Если скроллим в зоне иконок
 		if ecs.clickedAtArea(e[3], e[4], xMain, yLeftBar, xEnd, yEnd - 1) then

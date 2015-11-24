@@ -15,20 +15,19 @@ local copyright = [[
 
 -- Адаптивная загрузка необходимых библиотек и компонентов
 local libraries = {
-	["ecs"] = "ECSAPI",
-	["component"] = "component",
-	["event"] = "event",
-	["term"] = "term",
-	["config"] = "config",
-	["context"] = "context",
-	["internet"] = "internet",
-	["buffer"] = "doubleBuffering",
-	["image"] = "image",
-	["zones"] = "zones",
+	ecs = "ECSAPI",
+	component = "component",
+	event = "event",
+	term = "term",
+	config = "config",
+	context = "context",
+	buffer = "doubleBuffering",
+	image = "image",
+	SHA2 = "SHA2",
 }
 
 local components = {
-	["gpu"] = "gpu",
+	gpu = "gpu",
 }
 
 for library in pairs(libraries) do if not _G[library] then _G[library] = require(libraries[library]) end end
@@ -44,6 +43,9 @@ local workPath = "MineOS/Desktop/"
 local pathOfDockShortcuts = "MineOS/System/OS/Dock/"
 local pathToWallpaper = "MineOS/System/OS/Wallpaper.lnk"
 local currentFileList
+local showHiddenFiles = false
+local showFileFormat = false
+local sortingMethod = "type"
 local wallpaper
 local currentCountOfIconsInDock
 
@@ -76,6 +78,13 @@ sizes.dockCountOfIcons = sizes.xCountOfIcons - 1
 
 ---------------------------------------------- Функции ------------------------------------------------------------------------
 
+--Объекты
+local obj = {}
+local function newObj(class, name, ...)
+	obj[class] = obj[class] or {}
+	obj[class][name] = {...}
+end
+
 --Изменение обоев из файла обоев
 local function changeWallpaper()
 	wallpaper = nil
@@ -100,7 +109,7 @@ end
 --ОТРИСОВКА ИКОНОК НА РАБОЧЕМ СТОЛЕ ПО ТЕКУЩЕЙ ПАПКЕ
 local function drawDesktop()
 	currentFileList = ecs.getFileList(workPath)
-	currentFileList = ecs.sortFiles(workPath, currentFileList, "type", false)
+	currentFileList = ecs.sortFiles(workPath, currentFileList, sortingMethod, showHiddenFiles)
 
 	drawWallpaper()
 
@@ -113,10 +122,10 @@ local function drawDesktop()
 
 			--Отрисовка конкретной иконки
 			local path = workPath .. currentFileList[counter]
-			ecs.drawOSIcon(xPos, yPos, path, false, 0xffffff)
+			ecs.drawOSIcon(xPos, yPos, path, showFileFormat, 0xffffff)
 
 			--Создание объекта иконки
-			zones.add("OS", "DesktopIcons", counter, xPos, yPos, sizes.widthOfIcon, sizes.heightOfIcon, path)
+			newObj("DesktopIcons", counter, xPos, yPos, xPos + sizes.widthOfIcon - 1, yPos + sizes.heightOfIcon - 1, path)
 
 			xPos = xPos + sizes.widthOfIcon + sizes.xSpaceBetweenIcons
 			counter = counter + 1
@@ -151,8 +160,8 @@ local function drawDock()
 		local yIcons = sizes.ySize - sizes.heightOfDock - 1
 
 		for i = 1, currentCountOfIconsInDock do
-			ecs.drawOSIcon(xIcons, yIcons, pathOfDockShortcuts .. dockShortcuts[i], false, 0x000000)
-			zones.add("OS", "DockIcons", dockShortcuts[i], xIcons, yIcons, sizes.widthOfIcon, sizes.heightOfIcon)
+			ecs.drawOSIcon(xIcons, yIcons, pathOfDockShortcuts .. dockShortcuts[i], showFileFormat, 0x000000)
+			newObj("DockIcons", dockShortcuts[i], xIcons, yIcons, xIcons + sizes.widthOfIcon - 1, yIcons + sizes.heightOfIcon - 1)
 			xIcons = xIcons + sizes.xSpaceBetweenIcons + sizes.widthOfIcon
 		end
 	end
@@ -181,7 +190,7 @@ local function drawTopBar()
 			buffer.text(xPos + 1, 1, 0x000000, topBarElements[i])
 		end
 		local length = unicode.len(topBarElements[i])
-		zones.add("OS", "TopBarButtons", topBarElements[i], xPos, 1, length + 2, 1)
+		newObj("TopBarButtons", topBarElements[i], xPos, 1, xPos + length + 1, 1)
 		xPos = xPos + length + 2
 	end
 	--Рисуем время
@@ -197,13 +206,7 @@ end
 
 ---------------------------------------------- Сама ОС ------------------------------------------------------------------------
 
-zones.stop()
-zones.start()
-zones.remove("OS")
 buffer.start()
-
---zones.add("OS", "Global", "Global", 1, 1, sizes.xSize, sizes.ySize)
---createDesktopShortCuts()
 drawAll(true)
 
 --------------------------------------------------------------------------------------------------------------------------------
@@ -211,22 +214,24 @@ drawAll(true)
 while true do
 	local eventData = { event.pull() }
 
-	if eventData[1] == "zone" then
+	if eventData[1] == "touch" then
 
-		local x, y, mouseKey, xZone, yZone, path = eventData[5], eventData[6], eventData[7], eventData[8], eventData[9], eventData[12]
+		local clickedAtEmptyArea = true
 
-		if eventData[2] == "OS" then
-			if eventData[3] == "DesktopIcons" then
+		for key in pairs(obj["DesktopIcons"]) do
+			if ecs.clickedAtArea(eventData[3], eventData[4], obj["DesktopIcons"][key][1], obj["DesktopIcons"][key][2], obj["DesktopIcons"][key][3], obj["DesktopIcons"][key][4]) then
+
+				local path = obj["DesktopIcons"][key][5]
 				local fileFormat = ecs.getFileFormat(path)
 
-				local oldPixelsOfIcon = buffer.copy(xZone, yZone, sizes.widthOfIcon, sizes.heightOfIcon)
+				local oldPixelsOfIcon = buffer.copy(obj["DesktopIcons"][key][1], obj["DesktopIcons"][key][2], sizes.widthOfIcon, sizes.heightOfIcon)
 
-				buffer.square(xZone, yZone, sizes.widthOfIcon, sizes.heightOfIcon, colors.iconsSelectionColor, 0xFFFFFF, " ", colors.iconsSelectionTransparency)
-				ecs.drawOSIcon(xZone, yZone, path, false, 0xffffff)
+				buffer.square(obj["DesktopIcons"][key][1], obj["DesktopIcons"][key][2], sizes.widthOfIcon, sizes.heightOfIcon, colors.iconsSelectionColor, 0xFFFFFF, " ", colors.iconsSelectionTransparency)
+				ecs.drawOSIcon(obj["DesktopIcons"][key][1], obj["DesktopIcons"][key][2], path, false, 0xffffff)
 				buffer.draw()
 
 				-- Левый клик
-				if mouseKey == 0 then
+				if eventData[5] == 0 then
 					os.sleep(0.2)
 					if fs.isDirectory(path)	then
 						if fileFormat == ".app" then
@@ -234,7 +239,7 @@ while true do
 							buffer.start()
 							drawAll()
 						else
-							shell.execute("MineOS/Applications/Finder.app/Finder.lua "..path)
+							shell.execute("MineOS/Applications/Finder.app/Finder.lua " .. path)
 						end
 					else
 						ecs.launchIcon(path)
@@ -243,21 +248,21 @@ while true do
 					end
 
 				-- Правый клик
-				elseif mouseKey == 1 then
+				elseif eventData[5] == 1 then
 
 					local action
 					local fileFormat = ecs.getFileFormat(path)
 
 					-- Разные контекстные меню
 					if fileFormat == ".app" and fs.isDirectory(path) then
-						action = context.menu(x, y, {lang.contextShowContent}, "-", {lang.contextCopy, false, "^C"}, {lang.contextPaste, not _G.clipboard, "^V"}, "-", {lang.contextRename}, {lang.contextCreateShortcut}, "-",  {lang.contextUploadToPastebin, true}, "-", {lang.contextAddToDock, not (currentCountOfIconsInDock < sizes.dockCountOfIcons and workPath ~= "MineOS/System/OS/Dock/")}, {lang.contextDelete, false, "⌫"})
+						action = context.menu(eventData[3], eventData[4], {lang.contextShowContent}, "-", {lang.contextCopy, false, "^C"}, {lang.contextPaste, not _G.clipboard, "^V"}, "-", {lang.contextRename}, {lang.contextCreateShortcut}, "-",  {lang.contextUploadToPastebin, true}, "-", {lang.contextAddToDock, not (currentCountOfIconsInDock < sizes.dockCountOfIcons and workPath ~= "MineOS/System/OS/Dock/")}, {lang.contextDelete, false, "⌫"})
 					elseif fileFormat ~= ".app" and fs.isDirectory(path) then
-						action = context.menu(x, y, {lang.contextCopy, false, "^C"}, {lang.contextPaste, not _G.clipboard, "^V"}, "-", {lang.contextRename}, {lang.contextCreateShortcut}, "-", {lang.contextUploadToPastebin, true}, "-", {lang.contextDelete, false, "⌫"})
+						action = context.menu(eventData[3], eventData[4], {lang.contextCopy, false, "^C"}, {lang.contextPaste, not _G.clipboard, "^V"}, "-", {lang.contextRename}, {lang.contextCreateShortcut}, "-", {lang.contextUploadToPastebin, true}, "-", {lang.contextDelete, false, "⌫"})
 					else
 						if fileFormat == ".pic" then
-							action = context.menu(x, y, {lang.contextEdit}, {"Установить как обои"},"-", {lang.contextCopy, false, "^C"}, {lang.contextPaste, not _G.clipboard, "^V"}, "-", {lang.contextRename}, {lang.contextCreateShortcut}, "-", {lang.contextUploadToPastebin, true}, "-", {lang.contextAddToDock, not (currentCountOfIconsInDock < sizes.dockCountOfIcons and workPath ~= "MineOS/System/OS/Dock/")}, {lang.contextDelete, false, "⌫"})
+							action = context.menu(eventData[3], eventData[4], {lang.contextEdit}, {"Установить как обои"},"-", {lang.contextCopy, false, "^C"}, {lang.contextPaste, not _G.clipboard, "^V"}, "-", {lang.contextRename}, {lang.contextCreateShortcut}, "-", {lang.contextUploadToPastebin, true}, "-", {lang.contextAddToDock, not (currentCountOfIconsInDock < sizes.dockCountOfIcons and workPath ~= "MineOS/System/OS/Dock/")}, {lang.contextDelete, false, "⌫"})
 						else
-							action = context.menu(x, y, {lang.contextEdit}, "-", {lang.contextCopy, false, "^C"}, {lang.contextPaste, not _G.clipboard, "^V"}, "-", {lang.contextRename}, {lang.contextCreateShortcut}, "-", {lang.contextUploadToPastebin, true}, "-", {lang.contextAddToDock, not (currentCountOfIconsInDock < sizes.dockCountOfIcons and workPath ~= "MineOS/System/OS/Dock/")}, {lang.contextDelete, false, "⌫"})
+							action = context.menu(eventData[3], eventData[4], {lang.contextEdit}, "-", {lang.contextCopy, false, "^C"}, {lang.contextPaste, not _G.clipboard, "^V"}, "-", {lang.contextRename}, {lang.contextCreateShortcut}, "-", {lang.contextUploadToPastebin, true}, "-", {lang.contextAddToDock, not (currentCountOfIconsInDock < sizes.dockCountOfIcons and workPath ~= "MineOS/System/OS/Dock/")}, {lang.contextDelete, false, "⌫"})
 						end
 					end
 
@@ -289,46 +294,60 @@ while true do
 						changeWallpaper()
 						drawAll(true)
 					else
-						buffer.paste(xZone, yZone, oldPixelsOfIcon)
+						buffer.paste(obj["DesktopIcons"][key][1], obj["DesktopIcons"][key][2], oldPixelsOfIcon)
 						buffer.draw()
 					end
 				end
 
-			elseif eventData[3] == "DockIcons" then
+				clickedAtEmptyArea = false
 
-				local oldPixelsOfIcon = buffer.copy(xZone, yZone, sizes.widthOfIcon, sizes.heightOfIcon)
+				break
+			end
+		end
 
-				buffer.square(xZone, yZone, sizes.widthOfIcon, sizes.heightOfIcon, colors.iconsSelectionColor, 0xFFFFFF, " ", colors.iconsSelectionTransparency)
-				ecs.drawOSIcon(xZone, yZone, pathOfDockShortcuts .. eventData[4], false, 0xffffff)
+		for key in pairs(obj["DockIcons"]) do
+			if ecs.clickedAtArea(eventData[3], eventData[4], obj["DockIcons"][key][1], obj["DockIcons"][key][2], obj["DockIcons"][key][3], obj["DockIcons"][key][4]) then
+
+				local oldPixelsOfIcon = buffer.copy(obj["DockIcons"][key][1], obj["DockIcons"][key][2], sizes.widthOfIcon, sizes.heightOfIcon)
+
+				buffer.square(obj["DockIcons"][key][1], obj["DockIcons"][key][2], sizes.widthOfIcon, sizes.heightOfIcon, colors.iconsSelectionColor, 0xFFFFFF, " ", colors.iconsSelectionTransparency)
+				ecs.drawOSIcon(obj["DockIcons"][key][1], obj["DockIcons"][key][2], pathOfDockShortcuts .. key, false, 0xffffff)
 				buffer.draw()
 
-				if mouseKey == 0 then 
+				if eventData[5] == 0 then 
 					os.sleep(0.2)
-					ecs.launchIcon(pathOfDockShortcuts..eventData[4])
+					ecs.launchIcon(pathOfDockShortcuts .. key)
 					drawAll(true)
 				else
-					local content = ecs.readShortcut(pathOfDockShortcuts .. eventData[4])
+					local content = ecs.readShortcut(pathOfDockShortcuts .. key)
 					
-					action = context.menu(x, y, {lang.contextRemoveFromDock, not (currentCountOfIconsInDock > 1)})
+					action = context.menu(eventData[3], eventData[4], {lang.contextRemoveFromDock, not (currentCountOfIconsInDock > 1)})
 
 					if action == lang.contextRemoveFromDock then
-						fs.remove(pathOfDockShortcuts..eventData[4])
+						fs.remove(pathOfDockShortcuts .. key)
 						drawAll()
 					else
-						buffer.paste(xZone, yZone, oldPixelsOfIcon)
+						buffer.paste(obj["DockIcons"][key][1], obj["DockIcons"][key][2], oldPixelsOfIcon)
 						buffer.draw()
 						oldPixelsOfIcon = nil
 					end
 				end
 
-			elseif eventData[3] == "TopBarButtons" then
+				clickedAtEmptyArea = false
 
-				buffer.square(xZone, yZone, unicode.len(eventData[4]) + 2, 1, ecs.colors.blue, 0xFFFFFF, " ")
-				buffer.text(xZone + 1, yZone, 0xffffff, eventData[4])
+				break
+			end
+		end
+
+		for key in pairs(obj["TopBarButtons"]) do
+			if ecs.clickedAtArea(eventData[3], eventData[4], obj["TopBarButtons"][key][1], obj["TopBarButtons"][key][2], obj["TopBarButtons"][key][3], obj["TopBarButtons"][key][4]) then
+
+				buffer.square(obj["TopBarButtons"][key][1], obj["TopBarButtons"][key][2], unicode.len(key) + 2, 1, ecs.colors.blue, 0xFFFFFF, " ")
+				buffer.text(obj["TopBarButtons"][key][1] + 1, obj["TopBarButtons"][key][2], 0xffffff, key)
 				buffer.draw()
 
-				if eventData[4] == "MineOS" then
-					local action = context.menu(xZone, yZone + 1, {lang.aboutSystem}, {lang.updateSystem}, "-", {lang.restart}, {lang.shutdown}, "-", {lang.backToShell})
+				if key == "MineOS" then
+					local action = context.menu(obj["TopBarButtons"][key][1], obj["TopBarButtons"][key][2] + 1, {lang.aboutSystem}, {lang.updateSystem}, "-", {lang.restart}, {lang.shutdown}, "-", {lang.backToShell})
 				
 					if action == lang.backToShell then
 						ecs.prepareToExit()
@@ -345,55 +364,71 @@ while true do
 					elseif action == lang.aboutSystem then
 						ecs.prepareToExit()
 						print(copyright)
-						print("	А теперь жмякай любую кнопку и продолжай работу с ОС.")
+						print("А теперь жмякай любую кнопку и продолжай работу с ОС.")
 						ecs.waitForTouchOrClick()
 						drawAll(true)
 					end
 				
-				elseif eventData[4] == lang.viewTab then
-					local action = context.menu(xZone, yZone + 1, {"Скрыть обои", not wallpaper}, {"Показать обои", wallpaper or not fs.exists(pathToWallpaper)})
-					if action == "Скрыть обои" then
+				elseif key == lang.viewTab then
+					local action = context.menu(obj["TopBarButtons"][key][1], obj["TopBarButtons"][key][2] + 1, {"Показывать формат файлов", showFileFormat}, {"Скрывать формат файлов", not showFileFormat}, "-", {"Показывать скрытые файлы", showHiddenFiles}, {"Скрывать скрытые файлы", not showHiddenFiles}, "-", {"Сортировать по имени"}, {"Сортировать по дате"}, {"Сортировать по типу"}, "-", {"Удалить обои", not wallpaper})
+					if action == "Показывать скрытые файлы" then
+						showHiddenFiles = true
+						drawAll()
+					elseif action == "Скрывать скрытые файлы" then
+						showHiddenFiles = false
+						drawAll()
+					elseif action == "Показывать формат файлов" then
+						showFileFormat = true
+						drawAll()
+					elseif action == "Скрывать формат файлов" then
+						showFileFormat = false
+						drawAll()
+					elseif action == "Сортировать по имени" then
+						sortingMethod = "name"
+						drawAll()
+					elseif action == "Сортировать по дате" then
+						sortingMethod = "date"
+						drawAll()
+					elseif action == "Сортировать по типу" then
+						sortingMethod = "type"
+						drawAll()
+					elseif action == "Удалить обои" then
 						wallpaper = nil
 						fs.remove(pathToWallpaper)
-						drawAll(true)
-					elseif action == "Показать обои" then
-						changeWallpaper()
 						drawAll(true)
 					end
 				end
 
 				drawAll()
 
+				clickedAtEmptyArea = false
+
+				break
 			end
 		end
 
-	elseif eventData[1] == "OSWallpaperChanged" then
-		changeWallpaper()
-		drawAll(true)
+		if clickedAtEmptyArea and eventData[5] == 1 then
+			local action = context.menu(eventData[3], eventData[4], {"Удалить обои", not wallpaper},"-", {lang.contextNewFile}, {lang.contextNewFolder}, "-", {lang.contextPaste, not _G.clipboard, "^V"})
+
+			--Создать новый файл
+			if action == lang.contextNewFile then
+				ecs.newFile(workPath)
+				drawAll(true)
+			--Создать новую папку
+			elseif action == lang.contextNewFolder then
+				ecs.newFolder(workPath)
+				drawAll()
+			--Вставить файл
+			elseif action == lang.contextPaste then
+				ecs.copy(_G.clipboard, workPath)
+				drawAll()
+			elseif action == "Удалить обои" then
+				wallpaper = nil
+				fs.remove(pathToWallpaper)
+				drawAll()
+			end
+		end
 	end
-	--Если пустая глобал зона
-	-- if eventData[1] == "touch" then
-	-- 	if eventData[5] == 1 then
-	-- 		local action = context.menu(eventData[3], eventData[4], {"Убрать обои", not wallpaper},"-", {lang.contextNewFile}, {lang.contextNewFolder}, "-", {lang.contextPaste, not _G.clipboard, "^V"})
-
-	-- 		--Создать новый файл
-	-- 		if action == lang.contextNewFile then
-	-- 			ecs.newFile(workPath)
-	-- 			drawAll(true)
-	-- 		--Создать новую папку
-	-- 		elseif action == lang.contextNewFolder then
-	-- 			ecs.newFolder(workPath)
-	-- 			drawAll()
-	-- 		--Вставить файл
-	-- 		elseif action == lang.contextPaste then
-
-	-- 		elseif action == "Убрать обои" then
-	-- 			wallpaper = nil
-	-- 			fs.remove(pathToWallpaper)
-	-- 			drawAll()
-	-- 		end
-	-- 	end
-	-- end
 end
  
 
