@@ -500,7 +500,7 @@ while true do
 					elseif action == "Загрузить на Pastebin" then
 						shell.execute("System/Applications/Pastebin.app/Pastebin.lua upload " .. path)
 					elseif action == "Установить как обои" then
-						ecs.error(path)
+						--ecs.error(path)
 						ecs.createShortCut("MineOS/System/OS/Wallpaper.lnk", path)
 						computer.pushSignal("OSWallpaperChanged")
 						buffer.paste(1, 1, oldPixelsOfFullScreen)
