@@ -10,7 +10,7 @@ local libraries = {
 	["keyboard"] = "keyboard",
 	["computer"] = "computer",
 	["serialization"] = "serialization",
-	["internet"] = "internet",
+	--["internet"] = "internet",
 	--["image"] = "image",
 }
 
@@ -216,6 +216,7 @@ end
 
 --Загрузка файла с инета
 function ECSAPI.getFileFromUrl(url, path)
+	if not _G.internet then _G.internet = require("internet") end
 	local sContent = ""
 	local result, response = pcall(internet.request, url)
 	if not result then
