@@ -149,6 +149,10 @@ function ECSAPI.setScale(scale, debug)
 	gpu.setResolution(finalNewWidth, finalNewHeight)
 end
 
+function ECSAPI.rebindGPU(address)
+	gpu.bind(address)
+end
+
 --Получаем всю инфу об оперативку в килобайтах
 function ECSAPI.getInfoAboutRAM()
 	local free = math.floor(computer.freeMemory() / 1024)
