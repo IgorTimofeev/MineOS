@@ -386,17 +386,13 @@ fs.remove("MineOS/System/OS/Dock")
 
 local apps = {
   "Calc.app",
-  "Calendar.app",
-  "Control.app",
   "Crossword.app",
-  "Finder.app",
   "Geoscan.app",
   "Highlight.app",
   "HoloClock.app",
   "HoloEdit.app",
   "MineCode.app",
   "Pastebin.app",
-  "Photoshop.app",
   "Piano.app",
   "Shooting.app",
   "Shop.app",
@@ -416,6 +412,7 @@ local dockApps = {
   "Calendar.app",
   "Control.app",
   "Photoshop.app",
+  "HEX.app"
 }
 
 local desktopPath = "MineOS/Desktop/"

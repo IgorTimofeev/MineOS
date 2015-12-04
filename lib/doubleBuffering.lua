@@ -67,7 +67,6 @@ function buffer.createArray()
 end
 
 function buffer.start()
-
 	buffer.totalCountOfGPUOperations = 0
 	buffer.localCountOfGPUOperations = 0
 
@@ -77,13 +76,7 @@ function buffer.start()
 	}
 
 	buffer.screen.width, buffer.screen.height = gpu.getResolution()
-
-	if debug then
-		local old = ecs.getInfoAboutRAM()
-		buffer.createArray()
-		local new = ecs.getInfoAboutRAM()
-		printDebug(49, "Схавалось " .. old - new .. " КБ оперативки")
-	end
+	buffer.createArray()
 end
 
 function buffer.get(x, y)
