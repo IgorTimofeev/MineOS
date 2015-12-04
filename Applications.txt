@@ -195,8 +195,8 @@
   ----------------------------------------------------- Библиотеки --------------------------------------------------------------------------
 
   {
-    ["name"]="lib/zones.lua",
-    ["url"]="IgorTimofeev/OpenComputers/master/lib/zones.lua",
+    ["name"]="lib/files.lua",
+    ["url"]="IgorTimofeev/OpenComputers/master/lib/files.lua",
     ["type"]="Script",
     ["version"]=1.0,
   },
