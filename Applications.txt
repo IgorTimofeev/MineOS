@@ -467,13 +467,6 @@
     ["version"]=1.0,
   },
   {
-    ["name"]="MineOS/Applications/AppStore",
-    ["url"]="IgorTimofeev/OpenComputers/master/Applications/AppStore/AppStore.lua",
-    ["type"]="Application",
-    ["icon"]="IgorTimofeev/OpenComputers/master/Applications/AppStore/Icon.pic",
-    ["version"]=1.0,
-  },
-  {
     ["name"]="MineOS/Applications/Matrix",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/Matrix/Matrix.lua",
     ["about"]="IgorTimofeev/OpenComputers/master/Applications/Matrix/About.txt",
