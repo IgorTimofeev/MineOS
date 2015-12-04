@@ -224,7 +224,7 @@ end
 local function editByte(xByte, yByte)
 	local index = convertCoordsToIndex(xByte, yByte)
 	local data = ecs.universalWindow("auto", "auto", 36, 0x262626, true, {"EmptyLine"}, {"CenterText", 0xffffff, "Редактировать байт"}, {"EmptyLine"}, {"Input", 0xffffff, 0xff5555, "Введите значение HEX"}, {"EmptyLine"}, {"Button", {0x880000, 0xffffff, "Принять"}, {0xaaaaaa, 0xffffff, "Отмена"}})
-	if data[2] == "Принять" and checkInput(data[1], "^[1234567890abcdef][1234567890abcdef]$") then
+	if data[2] == "Принять" and checkInput(data[1], "^[1234567890abcdefABCDEF][1234567890abcdefABCDEF]$") then
 		file[index] = data[1]
 	end
 end
@@ -240,7 +240,7 @@ end
 local function insertByte(xByte, yByte)
 	local index = convertCoordsToIndex(xByte, yByte)
 	local data = ecs.universalWindow("auto", "auto", 36, 0x262626, true, {"EmptyLine"}, {"CenterText", 0xffffff, "Вставить байт"}, {"EmptyLine"}, {"Input", 0xffffff, 0xff5555, "Введите значение HEX"}, {"EmptyLine"}, {"Button", {0x880000, 0xffffff, "Вставить"}, {0xaaaaaa, 0xffffff, "Отмена"}})
-	if data[2] == "Вставить" and checkInput(data[1], "^[1234567890abcdef][1234567890abcdef]$") then
+	if data[2] == "Вставить" and checkInput(data[1], "^[1234567890abcdefABCDEF][1234567890abcdefABCDEF]$") then
 		table.insert(file, index, data[1])
 	end
 end
