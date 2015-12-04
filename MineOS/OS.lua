@@ -477,7 +477,6 @@ while true do
 			end
 		end
 	elseif eventData[1] == "OSWallpaperChanged" then
-		ecs.createShortCut(pathToWallpaper, path)
 		changeWallpaper()
 		drawAll(true)
 	end

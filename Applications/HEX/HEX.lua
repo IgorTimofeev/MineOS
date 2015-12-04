@@ -22,7 +22,7 @@ local config = {
 	yCurrentByte = 1,
 	pathToFile = "bin/resolution.lua",
 	sizeOfFile = 1,
-	transparency = 40,
+	transparency = 30,
 	colors = {
 		background = 0xdddddd,
 		topBar = 0xdddddd,
@@ -203,8 +203,8 @@ local function drawAll(force)
 	drawTopBar()
 	drawHexAndText()
 	--Тень
-	buffer.square(config.x + config.width, config.y + 1, 2, config.height, 0x000000, 0xffffff, " ", config.transparency)
-	buffer.square(config.x + 2, config.y + config.height, config.width - 2, 1, 0x000000, 0xffffff, " ", config.transparency)
+	buffer.square(config.x + config.width, config.y + 1, 2, config.height, 0x000000, 0xffffff, " ", 50)
+	buffer.square(config.x + 2, config.y + config.height, config.width - 2, 1, 0x000000, 0xffffff, " ", 50)
 	buffer.draw(force)
 end
 
