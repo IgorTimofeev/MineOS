@@ -2,16 +2,21 @@
 ---------------------------------------------- Библиотеки ------------------------------------------------------------------------
 
 local copyright = [[
-	
+
 	Тут можно было бы написать кучу текста, мол,
 	вы не имеете прав на использование этой хуйни в
 	коммерческих целях и прочую чушь, навеянную нам
 	западной культурой. Но я же не пидор какой-то, верно?
-	 
+
 	Просто помни, сука, что эту ОСь накодил Тимофеев Игорь,
 	ссылка на ВК: vk.com/id7799889
 
 ]]
+
+-- Вычищаем копирайт из оперативки, ибо мы не можем тратить СТОЛЬКО памяти.
+-- Сколько тут, раз, два, три... 295 ASCII-символов!
+-- А это, между прочим, 59 слов "Пидор". Но один раз - не пидорас, поэтому очищаем.
+copyright = nil
 
 -- Адаптивная загрузка необходимых библиотек и компонентов
 local libraries = {
@@ -212,7 +217,7 @@ local function requestPassword()
 			local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x000000, "Защитите ваш комьютер!"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, "Пароль"}, {"Input", 0x262626, 0x880000, "Подтвердить пароль"}, {"EmptyLine"}, {"Button", {0xbbbbbb, 0xffffff, "OK"}, {0x999999, 0xffffff, "Без защиты"}})
 			if data[3] == "OK" then
 				if data[1] == data[2] then
-					
+
 					_G.OSSettings.protectionMethod = "password"
 					_G.OSSettings.passwordHash = SHA2.hash(data[1])
 					break
@@ -362,13 +367,13 @@ while true do
 				ecs.drawOSIcon(obj["DockIcons"][key][1], obj["DockIcons"][key][2], pathOfDockShortcuts .. key, false, 0xffffff)
 				buffer.draw()
 
-				if eventData[5] == 0 then 
+				if eventData[5] == 0 then
 					os.sleep(0.2)
 					ecs.launchIcon(pathOfDockShortcuts .. key)
 					drawAll(true)
 				else
 					local content = ecs.readShortcut(pathOfDockShortcuts .. key)
-					
+
 					action = context.menu(eventData[3], eventData[4], {lang.contextRemoveFromDock, not (currentCountOfIconsInDock > 1)})
 
 					if action == lang.contextRemoveFromDock then
@@ -396,7 +401,7 @@ while true do
 
 				if key == "MineOS" then
 					local action = context.menu(obj["TopBarButtons"][key][1], obj["TopBarButtons"][key][2] + 1, {lang.aboutSystem}, {lang.updateSystem}, "-", {lang.restart}, {lang.shutdown}, "-", {lang.backToShell})
-				
+
 					if action == lang.backToShell then
 						ecs.prepareToExit()
 						zones.remove("OS")
@@ -416,7 +421,7 @@ while true do
 						ecs.waitForTouchOrClick()
 						drawAll(true)
 					end
-				
+
 				elseif key == lang.viewTab then
 					local action = context.menu(obj["TopBarButtons"][key][1], obj["TopBarButtons"][key][2] + 1, {"Показывать формат файлов", showFileFormat}, {"Скрывать формат файлов", not showFileFormat}, "-", {"Показывать скрытые файлы", showHiddenFiles}, {"Скрывать скрытые файлы", not showHiddenFiles}, "-", {"Сортировать по имени"}, {"Сортировать по дате"}, {"Сортировать по типу"}, "-", {"Удалить обои", not wallpaper})
 					if action == "Показывать скрытые файлы" then
@@ -481,14 +486,3 @@ while true do
 		drawAll(true)
 	end
 end
- 
-
-
-
-
-
-
-
-
-
-
