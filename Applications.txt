@@ -69,6 +69,12 @@
     ["version"]=1.0,
   },
   {
+    ["name"]="MineOS/Pictures/ChristmasTree.pic",
+    ["url"]="IgorTimofeev/OpenComputers/master/MineOS/Wallpapers/ChristmasTree.pic",
+    ["type"]="Wallpaper",
+    ["version"]=1.0,
+  },
+  {
     ["name"]="MineOS/System/OS/Languages/Russian.lang",
     ["url"]="IgorTimofeev/OpenComputers/master/MineOS/Languages/Russian.lang",
     ["type"]="Script",
