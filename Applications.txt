@@ -344,6 +344,7 @@
     ["about"]="IgorTimofeev/OpenComputers/master/Applications/Photoshop/About.txt",
     ["type"]="Application",
     ["icon"]="IgorTimofeev/OpenComputers/master/Applications/Photoshop/Icon.pic",
+    ["createShortcut"] = "dock",
     ["version"]=1.0,
   },
   {
@@ -351,6 +352,7 @@
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/Shooting/Shooting.lua",
     ["type"]="Application",
     ["icon"]="IgorTimofeev/OpenComputers/master/Applications/Shooting/Icon.pic",
+    ["createShortcut"] = "desktop",
     ["version"]=1.0,
   },
   {
@@ -358,6 +360,7 @@
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/Geoscan/Geoscan.lua",
     ["type"]="Application",
     ["icon"]="IgorTimofeev/OpenComputers/master/Applications/Geoscan/Icon.pic",
+    ["createShortcut"] = "desktop",
     ["version"]=1.0,
   },
   {
@@ -365,6 +368,7 @@
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/HoloClock/HoloClock.lua",
     ["type"]="Application",
     ["icon"]="IgorTimofeev/OpenComputers/master/Applications/HoloClock/Icon.pic",
+    ["createShortcut"] = "desktop",
     ["version"]=1.0,
   },
   {
@@ -372,6 +376,7 @@
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/Pastebin/Pastebin.lua",
     ["type"]="Application",
     ["icon"]="IgorTimofeev/OpenComputers/master/Applications/Pastebin/Icon.pic",
+    ["createShortcut"] = "desktop",
     ["version"]=1.0,
   },
   {
@@ -379,6 +384,7 @@
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/Shop/Shop.lua",
     ["type"]="Application",
     ["icon"]="IgorTimofeev/OpenComputers/master/Applications/Shop/Icon.pic",
+    ["createShortcut"] = "desktop",
     ["version"]=1.0,
   },
   {
@@ -387,6 +393,7 @@
     ["about"]="IgorTimofeev/OpenComputers/master/Applications/Finder/About.txt",
     ["type"]="Application",
     ["icon"]="IgorTimofeev/OpenComputers/master/Applications/Finder/Icon.pic",
+    ["createShortcut"] = "dock",
     ["version"]=1.0,
   },
   {
@@ -395,6 +402,7 @@
     ["about"]="IgorTimofeev/OpenComputers/master/Applications/Control/About.txt",
     ["type"]="Application",
     ["icon"]="IgorTimofeev/OpenComputers/master/Applications/Control/Icon.pic",
+    ["createShortcut"] = "dock",
     ["version"]=1.0,
   },
   {
@@ -402,6 +410,7 @@
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/Piano/Piano.lua",
     ["type"]="Application",
     ["icon"]="IgorTimofeev/OpenComputers/master/Applications/Piano/Icon.pic",
+    ["createShortcut"] = "desktop",
     ["version"]=1.0,
   },
   {
@@ -409,6 +418,7 @@
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/Calc/Calc.lua",
     ["type"]="Application",
     ["icon"]="IgorTimofeev/OpenComputers/master/Applications/Calc/Icon.pic",
+    ["createShortcut"] = "desktop",
     ["version"]=1.0,
   },
   {
@@ -417,6 +427,7 @@
     ["about"]="IgorTimofeev/OpenComputers/master/Applications/Calendar/About.txt",
     ["type"]="Application",
     ["icon"]="IgorTimofeev/OpenComputers/master/Applications/Calendar/Icon.pic",
+    ["createShortcut"] = "dock",
     ["version"]=1.0,
   },
   {
@@ -424,6 +435,7 @@
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/Snake/Snake.lua",
     ["type"]="Application",
     ["icon"]="IgorTimofeev/OpenComputers/master/Applications/Snake/Icon.pic",
+    ["createShortcut"] = "desktop",
     ["version"]=1.0,
   },
   {
@@ -432,6 +444,7 @@
     ["about"]="IgorTimofeev/OpenComputers/master/Applications/CodeDoor/About.txt",
     ["type"]="Application",
     ["icon"]="IgorTimofeev/OpenComputers/master/Applications/CodeDoor/Icon.pic",
+    ["createShortcut"] = "desktop",
     ["version"]=1.0,
   },
   {
@@ -440,6 +453,7 @@
     ["about"]="IgorTimofeev/OpenComputers/master/Applications/Keyboard/About.txt",
     ["type"]="Application",
     ["icon"]="IgorTimofeev/OpenComputers/master/Applications/Keyboard/Icon.pic",
+    ["createShortcut"] = "desktop",
     ["version"]=1.0,
   },
   {
@@ -448,6 +462,7 @@
     ["about"]="IgorTimofeev/OpenComputers/master/Applications/Nano/About.txt",
     ["type"]="Application",
     ["icon"]="IgorTimofeev/OpenComputers/master/Applications/Nano/Icon.pic",
+    ["createShortcut"] = "desktop",
     ["version"]=1.0,
   },
   {
@@ -456,6 +471,7 @@
     ["about"]="IgorTimofeev/OpenComputers/master/Applications/Camera/About.txt",
     ["type"]="Application",
     ["icon"]="IgorTimofeev/OpenComputers/master/Applications/Camera/Icon.pic",
+    ["createShortcut"] = "desktop",
     ["version"]=1.0,
   },
   {
@@ -464,6 +480,7 @@
     ["about"]="IgorTimofeev/OpenComputers/master/Applications/Autorun/About.txt",
     ["type"]="Application",
     ["icon"]="IgorTimofeev/OpenComputers/master/Applications/Autorun/Icon.pic",
+    ["createShortcut"] = "desktop",
     ["version"]=1.0,
   },
   {
@@ -472,6 +489,7 @@
     ["about"]="IgorTimofeev/OpenComputers/master/Applications/Matrix/About.txt",
     ["type"]="Application",
     ["icon"]="IgorTimofeev/OpenComputers/master/Applications/Matrix/Icon.pic",
+    ["createShortcut"] = "desktop",
     ["version"]=1.0,
   },
   {
@@ -480,6 +498,16 @@
     ["about"]="IgorTimofeev/OpenComputers/master/Applications/HEX/About.txt",
     ["type"]="Application",
     ["icon"]="IgorTimofeev/OpenComputers/master/Applications/HEX/Icon.pic",
+    ["createShortcut"] = "dock",
+    ["version"]=1.0,
+  },
+  {
+    ["name"]="MineOS/Applications/ChristmasTree",
+    ["url"]="IgorTimofeev/OpenComputers/master/Applications/ChristmasTree/ChristmasTree.lua",
+    ["about"]="IgorTimofeev/OpenComputers/master/Applications/ChristmasTree/About.txt",
+    ["type"]="Application",
+    ["createShortcut"] = "desktop",
+    ["icon"]="IgorTimofeev/OpenComputers/master/Applications/ChristmasTree/Icon.pic",
     ["version"]=1.0,
   },
   -- Приложение InfoPanel
@@ -489,6 +517,7 @@
     ["type"]="Application",
     ["about"]="IgorTimofeev/OpenComputers/master/Applications/InfoPanel/About.txt",
     ["icon"]="IgorTimofeev/OpenComputers/master/Applications/InfoPanel/Icon.pic",
+    ["createShortcut"] = "desktop",
     ["version"]=1.0,
   },
   {
@@ -519,28 +548,12 @@
   ----------------------------------------------------- Приложения с ресурсами --------------------------------------------------------------------------
 
   {
-    ["name"]="MineOS/Applications/MineCode",
-    ["url"]="IgorTimofeev/OpenComputers/master/Applications/MineCode/MineCode.lua",
-    ["type"]="Application",
-    ["icon"]="IgorTimofeev/OpenComputers/master/Applications/MineCode/Icon.pic",
-    ["version"]=1.0,
-    ["resources"]={
-      {
-        ["name"]="English.lang",
-        ["url"]="IgorTimofeev/OpenComputers/master/Applications/MineCode/English.lang",
-      },
-      {
-        ["name"]="Russian.lang",
-        ["url"]="IgorTimofeev/OpenComputers/master/Applications/MineCode/Russian.lang",
-      },
-    },
-  },
-  {
     ["name"]="MineOS/Applications/Crossword",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/Crossword/Crossword.lua",
     ["about"]="IgorTimofeev/OpenComputers/master/Applications/Crossword/About.txt",
     ["type"]="Application",
     ["icon"]="IgorTimofeev/OpenComputers/master/Applications/Crossword/Icon.pic",
+    ["createShortcut"] = "desktop",
     ["version"]=1.0,
     ["resources"]={
       {
@@ -554,6 +567,7 @@
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/Highlight/Highlight.lua",
     ["type"]="Application",
     ["icon"]="IgorTimofeev/OpenComputers/master/Applications/Highlight/Icon.pic",
+    ["createShortcut"] = "desktop",
     ["version"]=1.0,
     ["resources"]={
       {
@@ -567,6 +581,7 @@
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/HoloEdit/HoloEdit.lua",
     ["type"]="Application",
     ["icon"]="IgorTimofeev/OpenComputers/master/Applications/HoloEdit/Icon.pic",
+    ["createShortcut"] = "desktop",
     ["version"]=1.0,
     ["resources"]={
       {
@@ -585,6 +600,7 @@
     ["about"]="IgorTimofeev/OpenComputers/master/Applications/BufferDemo/About.txt",
     ["type"]="Application",
     ["icon"]="IgorTimofeev/OpenComputers/master/Applications/BufferDemo/Icon.pic",
+    ["createShortcut"] = "desktop",
     ["version"]=1.0,
     ["resources"]={
       {

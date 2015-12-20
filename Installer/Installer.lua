@@ -296,6 +296,21 @@ do
   end
 end
 
+-------------------------- Подготавливаем файловую систему ----------------------------------
+
+--Создаем стартовые пути и прочие мелочи чисто для эстетики
+local desktopPath = "MineOS/Desktop/"
+local dockPath = "MineOS/System/OS/Dock/"
+local applicationsPath = "MineOS/Applications/"
+local picturesPath = "MineOS/Pictures/"
+
+fs.remove(desktopPath)
+fs.remove(dockPath)
+
+fs.makeDirectory(desktopPath .. "My files")
+fs.makeDirectory(picturesPath)
+fs.makeDirectory(dockPath)
+
 --------------------------СТАДИЯ ЗАГРУЗКИ-----------------------------------
 
 do
@@ -325,22 +340,34 @@ do
 
     --ВСЕ ДЛЯ ЗАГРУЗКИ
     local path = applications[app]["name"]
-    if fs.exists(path) then fs.remove(path) end
+    fs.remove(path .. ".app")
 
     --Если тип = приложение
     if applications[app]["type"] == "Application" then
       fs.makeDirectory(path..".app/Resources")
-      getFromGitHubSafely(GitHubUserUrl .. applications[app]["url"], path..".app/"..fs.name(applications[app]["name"]..".lua"))
-      getFromGitHubSafely(GitHubUserUrl .. applications[app]["icon"], path..".app/Resources/Icon.pic")
+      getFromGitHubSafely(GitHubUserUrl .. applications[app]["url"], path .. ".app/" .. fs.name(applications[app]["name"] .. ".lua"))
+      getFromGitHubSafely(GitHubUserUrl .. applications[app]["icon"], path .. ".app/Resources/Icon.pic")
+      
+      --Если есть ресурсы, то загружаем ресурсы
       if applications[app]["resources"] then
         for i = 1, #applications[app]["resources"] do
           getFromGitHubSafely(GitHubUserUrl .. applications[app]["resources"][i]["url"], path..".app/Resources/"..applications[app]["resources"][i]["name"])
         end
       end
 
+      --Если есть файл "о программе", то грузим и его
       if applications[app].about then
         getFromGitHubSafely(GitHubUserUrl .. applications[app].about, path .. ".app/Resources/About.txt")
       end 
+
+      --Если имеется режим создания ярлыка, то создаем его
+      if applications[app].createShortcut then
+        if applications[app].createShortcut == "dock" then
+          ecs.createShortCut(dockPath .. fs.name(applications[app].name) .. ".lnk", applications[app].name)
+        else
+          ecs.createShortCut(desktopPath .. fs.name(applications[app].name) .. ".lnk", applications[app].name)
+        end
+      end
 
     --Если тип = другой, чужой, а мб и свой пастебин
     elseif applications[app]["type"] == "Pastebin" then
@@ -375,66 +402,11 @@ ecs.centerText("x",yWindowEnd - 5, lang.needToRestart)
 
 --Кнопа
 drawButton(lang.restart, false)
-
 waitForClickOnButton(lang.restart)
-
 ecs.prepareToExit()
 
---Постподготовка
-fs.remove("MineOS/Desktop")
-fs.remove("MineOS/System/OS/Dock")
-
-local apps = {
-  "Calc.app",
-  "Crossword.app",
-  "Geoscan.app",
-  "Highlight.app",
-  "HoloClock.app",
-  "HoloEdit.app",
-  "MineCode.app",
-  "Pastebin.app",
-  "Piano.app",
-  "Shooting.app",
-  "Shop.app",
-  "CodeDoor.app",
-  "Snake.app",
-  "Keyboard.app",
-  "Nano.app",
-  "Camera.app",
-  "Autorun.app",
-  "BufferDemo.app",
-  "Matrix.app",
-  "InfoPanel.app",
-}
-
-local dockApps = {
-  "Finder.app",
-  "Calendar.app",
-  "Control.app",
-  "Photoshop.app",
-  "HEX.app"
-}
-
-local desktopPath = "MineOS/Desktop/"
-local dockPath = "MineOS/System/OS/Dock/"
-local applicationsPath = "MineOS/Applications/"
-local picturesPath = "MineOS/Pictures/"
-
-fs.makeDirectory(desktopPath .. "My files")
-fs.makeDirectory(picturesPath)
-
-for i = 1, #apps do
-   ecs.createShortCut(desktopPath .. ecs.hideFileFormat(apps[i]) .. ".lnk", applicationsPath .. apps[i])
-end
-
-fs.makeDirectory(dockPath)
-
-for i = 1, #dockApps do
-  ecs.createShortCut(dockPath .. ecs.hideFileFormat(dockApps[i]) .. ".lnk", applicationsPath .. dockApps[i])
-end
-
+--Создаем базовые обои рабочего стола
 ecs.createShortCut(desktopPath .. "Pictures.lnk", picturesPath)
-
 if downloadWallpapers then ecs.createShortCut("MineOS/System/OS/Wallpaper.lnk", picturesPath .. "AhsokaTano.pic") end
 
 --Автозагрузка
