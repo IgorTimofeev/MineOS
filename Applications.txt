@@ -273,8 +273,8 @@
     ["version"]=1.0,
   },
   {
-    ["name"]="lib/zip.lua",
-    ["url"]="IgorTimofeev/OpenComputers/master/lib/zip.lua",
+    ["name"]="lib/archive.lua",
+    ["url"]="IgorTimofeev/OpenComputers/master/lib/archive.lua",
     ["type"]="Script",
     ["version"]=1.0,
   },
@@ -338,6 +338,12 @@
   {
     ["name"]="etc/motd",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/Motd/motd.lua",
+    ["type"]="Script",
+    ["version"]=1.0,
+  },
+  {
+    ["name"]="bin/archive",
+    ["url"]="IgorTimofeev/OpenComputers/master/Applications/archive.lua",
     ["type"]="Script",
     ["version"]=1.0,
   },
