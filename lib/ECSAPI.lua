@@ -1613,13 +1613,13 @@ function ECSAPI.drawOSIcon(x, y, path, showFileFormat, nameColor)
 			icon = "text"
 		elseif fileFormat == ".lua" then
 		 	icon = "lua"
-		elseif fileFormat == ".pic" then
+		elseif fileFormat == ".pic" or fileFormat == ".png" then
 		 	icon = "image"
 		elseif fileFormat == ".rawpic" then
 		 	icon = "imageJPG"
 		elseif fileFormat == ".paste" then
 			icon = "pastebin"
-		elseif fileFormat == ".zip" then
+		elseif fileFormat == ".pkg" then
 			icon = "archive"
 		elseif not fs.exists(path) then
 			icon = "fileNotExists"
