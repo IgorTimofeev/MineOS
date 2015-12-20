@@ -389,6 +389,15 @@ do
   os.sleep(timing)
 end
 
+--Создаем базовые обои рабочего стола
+ecs.createShortCut(desktopPath .. "Pictures.lnk", picturesPath)
+if downloadWallpapers then ecs.createShortCut("MineOS/System/OS/Wallpaper.lnk", picturesPath .. "AhsokaTano.pic") end
+
+--Автозагрузка
+local file = io.open("autorun.lua", "w")
+file:write("local success, reason = pcall(loadfile(\"OS.lua\")); if not success then print(\"Ошибка: \" .. tostring(reason)) end")
+file:close()
+
 --------------------------СТАДИЯ ПЕРЕЗАГРУЗКИ КОМПА-----------------------------------
 
 ecs.blankWindow(xWindow,yWindow,windowWidth,windowHeight)
@@ -404,14 +413,5 @@ ecs.centerText("x",yWindowEnd - 5, lang.needToRestart)
 drawButton(lang.restart, false)
 waitForClickOnButton(lang.restart)
 ecs.prepareToExit()
-
---Создаем базовые обои рабочего стола
-ecs.createShortCut(desktopPath .. "Pictures.lnk", picturesPath)
-if downloadWallpapers then ecs.createShortCut("MineOS/System/OS/Wallpaper.lnk", picturesPath .. "AhsokaTano.pic") end
-
---Автозагрузка
-local file = io.open("autorun.lua", "w")
-file:write("local success, reason = pcall(loadfile(\"OS.lua\")); if not success then print(\"Ошибка: \" .. tostring(reason)) end")
-file:close()
 
 computer.shutdown(true)
