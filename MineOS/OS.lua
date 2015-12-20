@@ -418,7 +418,6 @@ while true do
 
 					if action == lang.backToShell then
 						ecs.prepareToExit()
-						zones.remove("OS")
 						return 0
 					elseif action == lang.shutdown then
 						shell.execute("shutdown")
