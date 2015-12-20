@@ -342,7 +342,7 @@
     ["version"]=1.0,
   },
   {
-    ["name"]="bin/archive",
+    ["name"]="bin/archive.lua",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/archive.lua",
     ["type"]="Script",
     ["version"]=1.0,
