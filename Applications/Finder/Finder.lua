@@ -503,8 +503,8 @@ while true do
 						--ecs.error(path)
 						ecs.createShortCut("MineOS/System/OS/Wallpaper.lnk", path)
 						computer.pushSignal("OSWallpaperChanged")
-						buffer.paste(1, 1, oldPixelsOfFullScreen)
-						buffer.draw()
+						-- buffer.paste(1, 1, oldPixelsOfFullScreen)
+						-- buffer.draw()
 						return
 					elseif action == "Создать приложение" then
 						ecs.newApplicationFromLuaFile(path, workPathHistory[currentWorkPathHistoryElement])
@@ -595,15 +595,16 @@ while true do
 				--Закрыть прогу
 				if key == 1 then
 					ecs.colorTextWithBack(obj["Closes"][key][1], obj["Closes"][key][2], ecs.colors.blue, colors.topBar, "⮾")
-					os.sleep(0.2)
+					
 					saveConfig()
-					if isFullScreen then
-						buffer.paste(1, 1, oldPixelsOfFullScreen)
-						buffer.draw()
-					else
-						buffer.paste(x, y, oldPixelsOfMini)
-						buffer.draw()
-					end
+					
+					-- if isFullScreen then
+					-- 	buffer.paste(1, 1, oldPixelsOfFullScreen)
+					-- 	buffer.draw()
+					-- else
+					-- 	buffer.paste(x, y, oldPixelsOfMini)
+					-- 	buffer.draw()
+					-- end
 					return
 
 				--Пока ниче не делать
