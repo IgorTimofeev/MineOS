@@ -363,9 +363,9 @@ do
       --Если имеется режим создания ярлыка, то создаем его
       if applications[app].createShortcut then
         if applications[app].createShortcut == "dock" then
-          ecs.createShortCut(dockPath .. fs.name(applications[app].name) .. ".lnk", applications[app].name)
+          ecs.createShortCut(dockPath .. fs.name(applications[app].name) .. ".lnk", applications[app].name .. ".app")
         else
-          ecs.createShortCut(desktopPath .. fs.name(applications[app].name) .. ".lnk", applications[app].name)
+          ecs.createShortCut(desktopPath .. fs.name(applications[app].name) .. ".lnk", applications[app].name .. ".app")
         end
       end
 
