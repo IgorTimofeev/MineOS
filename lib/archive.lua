@@ -40,25 +40,15 @@ end
 ------------------------------------------------------------------------------------------------------------------------------------
 
 function package.pack(whereToSavePackedPackage, pathThatContainsFilesToPack)
-	debug(" ")
-	debug("Упаковка пакета начата")
-	debug(" ")
 	local packageFileStream = io.open(whereToSavePackedPackage, "w")
 	packageFileStream:write(packageSignature, "\n")
 
 	doPack(packageFileStream, pathThatContainsFilesToPack .. "/", "", whereToSavePackedPackage)
 
 	packageFileStream:close()
-	debug(" ")
-	debug("Упаковка пакета завершена, файл сохранен как \"" .. whereToSavePackedPackage .. "\", его размер составил " .. math.ceil(fs.size(whereToSavePackedPackage) / 1024) .. "КБ")
-	debug(" ")
 end
 
 function package.unpack(pathToPackedPackage, whereToSaveUnpackedFiles)
-	debug(" ")
-	debug("Распаковка пакета начата")
-	debug(" ")
-
 	fs.makeDirectory(whereToSaveUnpackedFiles)
 
 	local packageFileStream = io.open(pathToPackedPackage, "r")
@@ -87,9 +77,6 @@ function package.unpack(pathToPackedPackage, whereToSaveUnpackedFiles)
 	end
 
 	packageFileStream:close()
-	debug(" ")
-	debug("Распаковка пакета \"" .. pathToPackedPackage .. "\" завершена")
-	debug(" ")
 end
 
 ------------------------------------------------------------------------------------------------------------------------------------
