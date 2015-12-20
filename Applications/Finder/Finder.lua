@@ -8,7 +8,7 @@ local libraries = {
 	["context"] = "context",
 	["unicode"] = "unicode",
 	["buffer"] = "doubleBuffering",
-	["zip"] = "zip",
+	["archive"] = "archive",
 	["serialization"] = "serialization",
 }
 
@@ -494,7 +494,7 @@ while true do
 						drawAll()
 					elseif action == "Добавить в архив" then
 						ecs.info("auto", "auto", "", "Архивация файлов...")
-						zip.archive(path, ecs.hideFileFormat(fs.name(path))..".zip")
+						archive.pack(ecs.hideFileFormat(fs.name(path))..".pkg", path)
 						getFileList(workPathHistory[currentWorkPathHistoryElement])
 						drawAll()
 					elseif action == "Загрузить на Pastebin" then
