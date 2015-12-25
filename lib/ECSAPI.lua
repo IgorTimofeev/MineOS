@@ -1959,7 +1959,7 @@ function ECSAPI.universalWindow(x, y, width, background, closeWindowAfter, ...)
 				--Элементы рисуем
 				xPos = xPos + 2
 				for i = 1, countOfElements do
-					ECSAPI.colorText(xPos, yPos, 0x000000, ECSAPI.stringLimit("start", objects[number][i + 3], spisokWidth - 4))
+					ECSAPI.colorText(xPos, yPos, borderColor, ECSAPI.stringLimit("start", objects[number][i + 3], spisokWidth - 4))
 					coords[i] = {xPos - 1, yPos, xPos + spisokWidth - 4, yPos}
 					yPos = yPos + 1
 				end
@@ -2200,7 +2200,7 @@ function ECSAPI.demoWindow()
 	--Очищаем экран перед юзанием окна и ставим курсор на 1, 1
 	ECSAPI.prepareToExit()
 	--Рисуем окно и получаем данные после взаимодействия с ним
-	local data = ECSAPI.universalWindow("auto", "auto", 36, 0xeeeeee, true, {"EmptyLine"}, {"CenterText", 0x880000, "Здорово, ебана!"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, "Сюда вводить можно"}, {"Selector", 0x262626, 0x880000, "Выбор формата", "PNG", "JPG", "GIF", "PSD"}, {"EmptyLine"}, {"WrappedText", 0x262626, "Тест автоматического переноса букв в зависимости от ширины данного окна. Пока что тупо режет на куски, не особо красиво."}, {"EmptyLine"}, {"Select", 0x262626, 0x880000, "Я пидор", "Я не пидор"}, {"Slider", 0x262626, 0x880000, 1, 100, 50, "Убито ", " младенцев"}, {"EmptyLine"}, {"Separator", 0xaaaaaa}, {"Switch", 0xF2B233, 0xffffff, 0x262626, "✈ Авиарежим", false}, {"EmptyLine"}, {"Switch", 0x3366CC, 0xffffff, 0x262626, "☾  Не беспокоить", true}, {"Separator", 0xaaaaaa},  {"EmptyLine"}, {"TextField", 5, 0xffffff, 0x262626, 0xcccccc, 0x3366CC, "Тест текстового информационного поля. По сути это тот же самый WrappedText, разве что эта хрень ограничена по высоте, и ее можно скроллить. Ну же, поскролль меня! Скролль меня полностью! Моя жадная пизда жаждет твой хуй!"}, {"EmptyLine"}, {"Button", {0x57A64E, 0xffffff, "Да"}, {0xF2B233, 0xffffff, "Нет"}, {0xCC4C4C, 0xffffff, "Отмена"}})
+	local data = ECSAPI.universalWindow("auto", "auto", 36, 0xeeeeee, true, {"EmptyLine"}, {"CenterText", 0x880000, "Здорово, ебана!"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, "Сюда вводить можно"}, {"Selector", ECSAPI.colors.green, 0x880000, "Выбор формата", "PNG", "JPG", "GIF", "PSD"}, {"EmptyLine"}, {"WrappedText", 0x262626, "Тест автоматического переноса букв в зависимости от ширины данного окна. Пока что тупо режет на куски, не особо красиво."}, {"EmptyLine"}, {"Select", 0x262626, 0x880000, "Я пидор", "Я не пидор"}, {"Slider", 0x262626, 0x880000, 1, 100, 50, "Убито ", " младенцев"}, {"EmptyLine"}, {"Separator", 0xaaaaaa}, {"Switch", 0xF2B233, 0xffffff, 0x262626, "✈ Авиарежим", false}, {"EmptyLine"}, {"Switch", 0x3366CC, 0xffffff, 0x262626, "☾  Не беспокоить", true}, {"Separator", 0xaaaaaa},  {"EmptyLine"}, {"TextField", 5, 0xffffff, 0x262626, 0xcccccc, 0x3366CC, "Тест текстового информационного поля. По сути это тот же самый WrappedText, разве что эта хрень ограничена по высоте, и ее можно скроллить. Ну же, поскролль меня! Скролль меня полностью! Моя жадная пизда жаждет твой хуй!"}, {"EmptyLine"}, {"Button", {0x57A64E, 0xffffff, "Да"}, {0xF2B233, 0xffffff, "Нет"}, {0xCC4C4C, 0xffffff, "Отмена"}})
 	--Еще разок
 	ECSAPI.prepareToExit()
 	--Выводим данные
@@ -2209,6 +2209,8 @@ function ECSAPI.demoWindow()
 	for i = 1, #data do print("["..i.."] = "..tostring(data[i])) end
 	print(" ")
 end
+
+-- ECSAPI.demoWindow()
 
 --[[
 Функция universalWindow(x, y, width, background, closeWindowAfter, ...)
