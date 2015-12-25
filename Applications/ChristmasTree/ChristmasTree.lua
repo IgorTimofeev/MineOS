@@ -138,7 +138,7 @@ end
 ecs.info("auto", "auto", "", "Счастливого нового года!")
 
 hologram.clear()
-hologram.setScale(20)
+hologram.setScale(scale)
 hologram.setRotationSpeed(rotationMode, 0, 23, 0)
 
 spruce()
