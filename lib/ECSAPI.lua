@@ -959,7 +959,19 @@ function ECSAPI.stringWrap(strings, limit)
 end
 
 --Моя любимая функция ошибки C:
-function ECSAPI.error(text)
+function ECSAPI.error(...)
+	local args = {...}
+	local text = ""
+	if #args > 1 then
+		for i = 1, #args do
+			--text = text .. "[" .. i .. "] = " .. tostring(args[i])
+			if type(args[i]) == "string" then args[i] = "\"" .. args[i] .. "\"" end 
+			text = text .. tostring(args[i])
+			if i ~= #args then text = text .. ", " end
+		end
+	else
+		text = tostring(args[1])
+	end
 	ECSAPI.universalWindow("auto", "auto", math.ceil(gpu.getResolution() * 0.45), ECSAPI.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x880000, "Ошибка!"}, {"EmptyLine"}, {"WrappedText", 0x262626, text}, {"EmptyLine"}, {"Button", {0x880000, 0xffffff, "OK!"}})
 end
 
@@ -1299,7 +1311,7 @@ function ECSAPI.newApplicationFromLuaFile(pathToLuaFile, pathWhereToCreateApplic
 
 		--ECSAPI.universalWindow("auto", "auto", 30, ECSAPI.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x000000, "Приложение создано!"}, {"EmptyLine"}, {"Button", {ecs.colors.green, 0xffffff, "OK"}})
 	else
-		ecs.error("Указанный файл иконки не существует.")
+		ECSAPI.error("Указанный файл иконки не существует.")
 		return
 	end
 end

@@ -1,18 +1,72 @@
 
--------------------------------------------- OCIF Image Format -----------------------------------------------------------
+---------------------------------------- OpenComputers Image Format (OCIF) -----------------------------------------------------------
 
-local copyright = [[
+--[[
 	
-	Автор: Pirnogion
+	Автор: Pornogion
 		VK: https://vk.com/id88323331
 	Соавтор: IT
 		VK: https://vk.com/id7799889
 
+	Основные функции:
+
+		image.load(string путь): table изображение
+			Загружает существующую картинку в одном из трех поддерживаемых форматов,
+			по умолчанию .pic, .rawpic или .png, и возвращает ее в качестве массива (таблицы)
+
+		image.draw(int x, int y, table изображение)
+			Рисует на экране загруженную ранее картинку по указанным координатам
+
+		image.save(string путь, table изображение)
+			Сохраняет указанную картинку в указанном в пути формате, крайне рекомендуется
+			использовать .pic для экономии места на диске.
+
+	Функции для работы с изображением:
+
+		image.expand(table картинка, string направление, int количество пикселей[, int цвет фона, int цвет текста, int прозрачность, char символ]): table картинка
+			Расширяет указанную картинку в указанном направлении (fromRight, fromLeft, fromTop, fromBottom),
+			создавая при этом пустые белые пиксели. Если указаны опциональные аргументы, то вместо пустых
+			пикселей могут быть вполне конкретные значения.
+
+		image.crop(table картинка, string направление, int количество пикселей): table картинка
+			Обрезает указанную картинку в указанном направлении (fromRight, fromLeft, fromTop, fromBottom),
+			удаляя лишние пиксели.
+
+		image.rotate(table картинка, int угол): table картинка
+			Поворачивает указанную картинку на указанный угол. Угол может иметь
+			значение 90, 180 и 270 градусов.
+
+		image.flipVertical(table картинка): table картинка
+			Отражает указанную картинку по вертикали.
+
+		image.flipHorizontal(table картинка): table картинка
+			Отражает указанную картинку по горизонтали.
+
+	Функции для работы с цветом:
+
+		image.hueSaturationBrightness(table картинка, int тон, int насыщенность, int яркость): table картинка
+			Корректирует цветовой тон, насыщенность и яркость указанной картинки.
+			Значения аргументов могут быть отрицательными для уменьшения параметра
+			и положительными для его увеличения. Если значение, к примеру, насыщенности
+			менять не требуется, просто указывайте 0.
+			
+			Для удобства вы можете использовать следующие сокращения:
+				image.hue(table картинка, int тон): table картинка
+				image.saturation(table картинка, int насыщенность): table картинка
+				image.brightness(table картинка, int яркость): table картинка
+				image.blackAndWhite(table картинка): table картинка
+
+		image.colorBalance(table картинка, int красный, int зеленый, int синий): table картинка
+			Корректирует цветовые каналы изображения указанной картинки. Аргументы цветовых
+			каналов могут принимать как отрицательные значения для уменьшения интенсивности канала,
+			так и положительные для увеличения.
+
+		image.invert(table картинка): table картинка
+			Инвертирует цвета в указанной картинке.
+
 ]]
 
 --------------------------------------- Подгрузка библиотек --------------------------------------------------------------
-
-local bit = require("bit32")
 
 -- Адаптивная загрузка необходимых библиотек и компонентов
 local libraries = {
@@ -20,6 +74,7 @@ local libraries = {
 	["unicode"] = "unicode",
 	["fs"] = "filesystem",
 	["colorlib"] = "colorlib",
+	["bit"] = "bit32",
 }
 
 local components = {
@@ -34,24 +89,40 @@ local image = {}
 
 -------------------------------------------- Переменные -------------------------------------------------------------------
 
---Cигнатура OCIF-файла
-local ocif_signature1 = 0x896F6369
-local ocif_signature2 = 0x00661A0A --7 bytes: 89 6F 63 69 66 1A 0A
-local ocif_signature_expand = { string.char(0x89), string.char(0x6F), string.char(0x63), string.char(0x69), string.char(0x66), string.char(0x1A), string.char(0x0A) }
-
 --Константы программы
 local constants = {
+	OCIFSignature = { string.char(0x89), string.char(0x6F), string.char(0x63), string.char(0x69), string.char(0x66), string.char(0x1A), string.char(0x0A) },
 	elementCount = 4,
 	byteSize = 8,
 	nullChar = 0,
 	rawImageLoadStep = 19,
-	fileOpenError = "Can't open file",
 	compressedFileFormat = ".pic",
 	rawFileFormat = ".rawpic",
 	pngFileFormat = ".png",
 }
 
 ---------------------------------------- Локальные функции -------------------------------------------------------------------
+
+--Формула конвертации индекса массива изображения в абсолютные координаты пикселя изображения
+local function convertIndexToCoords(index, width)
+	--Приводим индекс к корректному виду (1 = 1, 4 = 2, 7 = 3, 10 = 4, 13 = 5, ...)
+	index = (index + constants.elementCount - 1) / constants.elementCount
+	--Получаем остаток от деления индекса на ширину изображения
+	local ostatok = index % width
+	--Если остаток равен 0, то х равен ширине изображения, а если нет, то х равен остатку
+	local x = (ostatok == 0) and width or ostatok
+	--А теперь как два пальца получаем координату по Y
+	local y = math.ceil(index / width)
+	--Очищаем остаток из оперативки
+	ostatok = nil
+	--Возвращаем координаты
+	return x, y
+end
+
+--Формула конвертации абсолютных координат пикселя изображения в индекс для массива изображения
+local function convertCoordsToIndex(x, y, width)
+	return (width * (y - 1) + x) * constants.elementCount - constants.elementCount + 1
+end
 
 --Выделить бит-терминатор в первом байте UTF-8 символа: 1100 0010 --> 0010 0000
 local function selectTerminateBit_l()
@@ -152,7 +223,7 @@ local function getFileFormat(path)
 	if starting == nil then
 		return nil
 	else
-		return unicode.sub(name,starting + 1, -1)
+		return unicode.sub(name, starting + 1, -1)
 	end
 	name, starting, ending = nil, nil, nil
 end
@@ -162,9 +233,9 @@ end
 -- Запись в файл сжатого OCIF-формата изображения
 function image.saveCompressed(path, picture)
 	local encodedPixel
-	local file = assert( io.open(path, "w"), constants.fileOpenError )
+	local file = assert( io.open(path, "w"), "Can't open file: access denied!" )
 
-	file:write( table.unpack( ocif_signature_expand ) )
+	file:write( table.unpack( constants.OCIFSignature ) )
 	file:write( string.char( picture.width  ) )
 	file:write( string.char( picture.height ) )
 	
@@ -187,10 +258,10 @@ function image.loadCompressed(path)
 	local file = assert( io.open(path, "rb"), constants.fileOpenError )
 
 	--Проверка файла на соответствие сигнатуры
-	local signature1, signature2 = readBytes(file, 4), readBytes(file, 3)
-	if ( signature1 ~= ocif_signature1 or signature2 ~= ocif_signature2 ) then
+	local readedSignature = file:read(7)
+	if readedSignature ~= table.concat(constants.OCIFSignature) then
 		file:close()
-		return nil
+		error("Wrong OCIF file signature: " .. readedSignature .." != " .. table.concat(constants.OCIFSignatureExpand))
 	end
 
 	--Читаем ширину и высоту файла
@@ -314,12 +385,13 @@ function image.convertToGroupedImage(picture)
 		--Получаем символ из неоптимизированного массива
 		background, foreground, alpha, symbol = picture[i], picture[i + 1], picture[i + 2], picture[i + 3]
 		--Группируем картинку по цветам
-		optimizedPicture[background] = optimizedPicture[background] or {}
-		optimizedPicture[background][foreground] = optimizedPicture[background][foreground] or {}
-		table.insert(optimizedPicture[background][foreground], xPos)
-		table.insert(optimizedPicture[background][foreground], yPos)
-		table.insert(optimizedPicture[background][foreground], alpha)
-		table.insert(optimizedPicture[background][foreground], symbol)
+		optimizedPicture[alpha] = optimizedPicture[alpha] or {}
+		optimizedPicture[alpha][symbol] = optimizedPicture[alpha][symbol] or {}
+		optimizedPicture[alpha][symbol][foreground] = optimizedPicture[alpha][symbol][foreground] or {}
+		optimizedPicture[alpha][symbol][foreground][background] = optimizedPicture[alpha][symbol][foreground][background] or {}
+
+		table.insert(optimizedPicture[alpha][symbol][foreground][background], xPos)
+		table.insert(optimizedPicture[alpha][symbol][foreground][background], yPos)
 		--Если xPos достигает width изображения, то сбросить на 1, иначе xPos++
 		xPos = (xPos == picture.width) and 1 or xPos + 1
 		--Если xPos равняется 1, то yPos++, а если нет, то похуй
@@ -330,7 +402,7 @@ function image.convertToGroupedImage(picture)
 end
 
 --Нарисовать по указанным координатам картинку указанной ширины и высоты для теста
-function image.drawRandomImage(x, y, width, height)
+function image.createRandomImage(x, y, width, height)
 	local picture = {}
 	local symbolArray = {"A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "А", "Б", "В", "Г", "Д", "Е", "Ж", "З", "И", "Й", "К", "Л", "И", "Н", "О", "П", "Р", "С", "Т", "У", "Ф", "Х", "Ц", "Ч", "Ш", "Щ", "Ъ", "Ы", "Ь", "Э", "Ю", "Я"}
 	picture.width = width
@@ -348,7 +420,26 @@ function image.drawRandomImage(x, y, width, height)
 			table.insert(picture, symbol)
 		end
 	end
-	image.draw(x, y, picture)
+	-- image.draw(x, y, picture)
+	return picture
+end
+
+-- Функция оптимизации цвета текста у картинки, уменьшает число GPU-операций при отрисовке
+-- Вызывается только при сохранении файла, так что на быстродействии не сказывается,
+-- а в целом штука очень и очень полезная. Фиксит криворукость художников.
+function image.optimize(picture, showOptimizationProcess)
+	local currentForeground = 0x000000
+	local optimizationCounter = 0
+	for i = 1, #picture, constants.elementCount do
+		if picture[i + 3] == " " and picture[i + 1] ~= currentForeground then		
+			picture[i + 1] = currentForeground
+			if showOptimizationProcess then picture[i + 3] = "#" end
+			optimizationCounter = optimizationCounter + 1
+		else
+			currentForeground = picture[i + 1]
+		end
+	end
+	if showOptimizationProcess then ecs.error("Count of optimized pixels: " .. optimizationCounter) end
 	return picture
 end
 
@@ -360,6 +451,8 @@ function image.save(path, picture)
 	fs.makeDirectory(fs.path(path))
 	--Получаем формат указанного файла
 	local fileFormat = getFileFormat(path)
+	--Оптимизируем картинку
+	picture = image.optimize(picture)
 	--Проверяем соответствие формата файла
 	if fileFormat == constants.compressedFileFormat then
 		image.saveCompressed(path, picture)
@@ -389,77 +482,48 @@ function image.load(path)
 end
 
 --Отрисовка изображения типа 3 (подробнее о типах см. конец файла)
-function image.draw(x, y, rawPicture)
+function image.draw(x, y, picture)
 	--Конвертируем в групповое изображение
-	local picture = image.convertToGroupedImage(rawPicture)
+	picture = image.convertToGroupedImage(picture)
 	--Все как обычно
 	x, y = x - 1, y - 1
-	--Переменные, чтобы в цикле эту парашу не создавать
-	local currentBackground, xPos, yPos, alpha, symbol
-	local _, _
-	--Перебираем все цвета фона
-	for background in pairs(picture) do
-		--Заранее ставим корректный цвет фона
-		gpu.setBackground(background)
-		--Перебираем все цвета текста
-		for foreground in pairs(picture[background]) do
-			--Ставим сразу и корректный цвет текста
-			gpu.setForeground(foreground)
-			--Перебираем все пиксели
-			for i = 1, #picture[background][foreground], 4 do
-				--Получаем временную репрезентацию
-				xPos, yPos, alpha, symbol = picture[background][foreground][i], picture[background][foreground][i + 1], picture[background][foreground][i + 2], picture[background][foreground][i + 3]
-				--Если альфа имеется, но она не совсем прозрачна
-				if (alpha > 0x00 and alpha < 0xFF) or (alpha == 0xFF and symbol ~= " ")then
-					_, _, currentBackground = gpu.get(x + xPos, y + yPos)
-					currentBackground = colorlib.alphaBlend(currentBackground, background, alpha)
-					gpu.setBackground(currentBackground)
-					--Рисуем символ на экране
-					gpu.set(x + xPos, y + yPos, symbol)
-				--Если альфа отсутствует
-				elseif alpha == 0x00 then
-					if currentBackground ~= background then
-						currentBackground = background
-						gpu.setBackground(currentBackground)
+
+	local xPos, yPos, currentBackground
+	for alpha in pairs(picture) do
+		for symbol in pairs(picture[alpha]) do
+			for foreground in pairs(picture[alpha][symbol]) do
+				if gpu.getForeground ~= foreground then gpu.setForeground(foreground) end
+				for background in pairs(picture[alpha][symbol][foreground]) do
+					if gpu.getBackground ~= background then gpu.setBackground(background) end
+					currentBackground = background
+					for i = 1, #picture[alpha][symbol][foreground][background], 2 do	
+						xPos, yPos = x + picture[alpha][symbol][foreground][background][i], y + picture[alpha][symbol][foreground][background][i + 1]
+						
+						--Если альфа имеется, но она не совсем прозрачна
+						if (alpha > 0x00 and alpha < 0xFF) or (alpha == 0xFF and symbol ~= " ")then
+							_, _, currentBackground = gpu.get(xPos, yPos)
+							currentBackground = colorlib.alphaBlend(currentBackground, background, alpha)
+							gpu.setBackground(currentBackground)
+
+							gpu.set(xPos, yPos, symbol)
+
+						elseif alpha == 0x00 then
+							if currentBackground ~= background then
+								currentBackground = background
+								gpu.setBackground(currentBackground)
+							end
+
+							gpu.set(xPos, yPos, symbol)
+						end
+						--ecs.wait()
 					end
-					--Рисуем символ на экране
-					gpu.set(x + xPos, y + yPos, symbol)
-				end	
-				
-				--Выгружаем сгруппированное изображение из памяти
-				picture[background][foreground][i], picture[background][foreground][i + 1], picture[background][foreground][i + 2], picture[background][foreground][i + 3] = nil, nil, nil, nil
+				end
 			end
-			--Выгружаем данные о текущем цвете текста из памяти
-			picture[background][foreground] = nil
 		end
-		--Выгружаем данные о текущем фоне из памяти
-		picture[background] = nil
 	end
 end
 
-local function loadOldPng(path)
-	local massiv = {}
-	local file = io.open(path, "r")
-	local lineCounter = 0
-	local sLine = 0
-	for line in file:lines() do
-		sLine = unicode.len(line)
-
-		for i = 1, sLine, 16 do
-			table.insert(massiv, tonumber("0x" .. unicode.sub(line, i, i + 5)))
-			table.insert(massiv, tonumber("0x" .. unicode.sub(line, i + 7, i + 12)))
-			table.insert(massiv, 0x00)
-			table.insert(massiv, tonumber("0x" .. unicode.sub(line, i + 14, i + 14)))
-		end
-
-		lineCounter = lineCounter + 1
-	end
-
-	massiv.width = sLine / 16
-	massiv.height = lineCounter
-
-	return massiv
-end
+------------------------------------------ Функция снятия скриншота с экрана ------------------------------------------------
 
 --Сделать скриншот экрана и сохранить его по указанному пути
 function image.screenshot(path)
@@ -480,176 +544,248 @@ function image.screenshot(path)
 	image.save(path, picture)
 end
 
+------------------------------------------ Функции обработки изображения ------------------------------------------------
+
+function image.expand(picture, mode, countOfPixels, background, foreground, alpha, symbol)
+	background = background or 0xffffff
+	foreground = foreground or 0x000000
+	alpha = alpha or 0x00
+	symbol = symbol or " "
+	if mode == "fromRight" then
+		for j = 1, countOfPixels do
+			for i = 1, picture.height do		
+				local index = convertCoordsToIndex(picture.width + j, i, picture.width + j)
+				table.insert(picture, index, symbol); table.insert(picture, index, alpha); table.insert(picture, index, foreground); table.insert(picture, index, background)
+			end
+		end
+		picture.width = picture.width + countOfPixels
+	elseif mode == "fromLeft" then
+		for j = 1, countOfPixels do
+			for i = 1, picture.height do		
+				local index = convertCoordsToIndex(1, i, picture.width + j)
+				table.insert(picture, index, symbol); table.insert(picture, index, alpha); table.insert(picture, index, foreground); table.insert(picture, index, background)
+			end
+		end
+		picture.width = picture.width + countOfPixels
+	elseif mode == "fromTop" then
+		for i = 1, (countOfPixels * picture.width) do
+			table.insert(picture, 1, symbol); table.insert(picture, 1, alpha); table.insert(picture, 1, foreground); table.insert(picture, 1, background)
+		end
+		picture.height = picture.height + countOfPixels
+	elseif mode == "fromBottom" then
+		for i = 1, (countOfPixels * picture.width) do
+			table.insert(picture, background); table.insert(picture, foreground); table.insert(picture, alpha); table.insert(picture, symbol)
+		end
+		picture.height = picture.height + countOfPixels
+	else
+		error("Wrong image expanding mode: only 'fromRight', 'fromLeft', 'fromTop' and 'fromBottom' are supported.")
+	end
+	return picture
+end
+
+function image.crop(picture, mode, countOfPixels)
+	if mode == "fromRight" then
+		for j = 1, countOfPixels do
+			for i = 1, picture.height do
+				local index = convertCoordsToIndex(picture.width + 1 - j, i, picture.width - j)
+				for a = 1, constants.elementCount do table.remove(picture, index) end
+			end
+		end
+		picture.width = picture.width - countOfPixels
+	elseif mode == "fromLeft" then
+		for j = 1, countOfPixels do
+			for i = 1, picture.height do
+				local index = convertCoordsToIndex(1, i, picture.width - j)
+				for a = 1, constants.elementCount do table.remove(picture, index) end
+			end
+		end
+		picture.width = picture.width - countOfPixels
+	elseif mode == "fromTop" then
+		for i = 1, (countOfPixels * constants.elementCount * picture.width) do table.remove(picture, 1) end
+		picture.height = picture.height - countOfPixels
+	elseif mode == "fromBottom" then
+		for i = 1, (countOfPixels * constants.elementCount * picture.width) do table.remove(picture, #picture) end
+		picture.height = picture.height - countOfPixels
+	else
+		error("Wrong image cropping mode: only 'fromRight', 'fromLeft', 'fromTop' and 'fromBottom' are supported.")
+	end
+	return picture
+end
+
+function image.flipVertical(picture)
+	local newPicture = {}; newPicture.width = picture.width; newPicture.height = picture.height
+	for j = picture.height, 1, -1 do
+		for i = 1, picture.width do
+			local index = convertCoordsToIndex(i, j, picture.width)
+			table.insert(newPicture, picture[index]); table.insert(newPicture, picture[index + 1]); table.insert(newPicture, picture[index + 2]); table.insert(newPicture, picture[index + 3])
+			picture[index], picture[index + 1], picture[index + 2], picture[index + 3] = nil, nil, nil, nil
+		end
+	end
+	return newPicture
+end
+
+function image.flipHorizontal(picture)
+	local newPicture = {}; newPicture.width = picture.width; newPicture.height = picture.height
+	for j = 1, picture.height do
+		for i = picture.width, 1, -1 do
+			local index = convertCoordsToIndex(i, j, picture.width)
+			table.insert(newPicture, picture[index]); table.insert(newPicture, picture[index + 1]); table.insert(newPicture, picture[index + 2]); table.insert(newPicture, picture[index + 3])
+			picture[index], picture[index + 1], picture[index + 2], picture[index + 3] = nil, nil, nil, nil
+		end
+	end
+	return newPicture
+end
+
+function image.rotate(picture, angle)
+	local function rotateBy90(picture)
+		local newPicture = {}; newPicture.width = picture.height; newPicture.height = picture.width
+		for i = 1, picture.width do
+			for j = picture.height, 1, -1 do
+				local index = convertCoordsToIndex(i, j, picture.width)
+				table.insert(newPicture, picture[index]); table.insert(newPicture, picture[index + 1]); table.insert(newPicture, picture[index + 2]); table.insert(newPicture, picture[index + 3])
+				picture[index], picture[index + 1], picture[index + 2], picture[index + 3] = nil, nil, nil, nil
+			end
+		end
+		return newPicture
+	end
+
+	local function rotateBy180(picture)
+		local newPicture = {}; newPicture.width = picture.width; newPicture.height = picture.height
+		for j = picture.height, 1, -1 do
+				for i = picture.width, 1, -1 do
+				local index = convertCoordsToIndex(i, j, picture.width)
+				table.insert(newPicture, picture[index]); table.insert(newPicture, picture[index + 1]); table.insert(newPicture, picture[index + 2]); table.insert(newPicture, picture[index + 3])
+				picture[index], picture[index + 1], picture[index + 2], picture[index + 3] = nil, nil, nil, nil
+			end
+		end
+		return newPicture
+	end
+
+	local function rotateBy270(picture)
+		local newPicture = {}; newPicture.width = picture.height; newPicture.height = picture.width
+		for i = picture.width, 1, -1 do
+			for j = 1, picture.height do
+				local index = convertCoordsToIndex(i, j, picture.width)
+				table.insert(newPicture, picture[index]); table.insert(newPicture, picture[index + 1]); table.insert(newPicture, picture[index + 2]); table.insert(newPicture, picture[index + 3])
+				picture[index], picture[index + 1], picture[index + 2], picture[index + 3] = nil, nil, nil, nil
+			end
+		end
+		return newPicture
+	end
+
+	if angle == 90 then
+		return rotateBy90(picture)
+	elseif angle == 180 then
+		return rotateBy180(picture)
+	elseif angle == 270 then
+		return rotateBy270(picture)
+	else
+		error("Can't rotate image: angle must be 90, 180 or 270 degrees.")
+	end
+end
+
+------------------------------------------ Функции для работы с цветом -----------------------------------------------
+
+function image.hueSaturationBrigtness(picture, hue, saturation, brightness)
+	local function calculateBrightnessChanges(color)
+		local h, s, b = colorlib.HEXtoHSB(color)
+		b = b + brightness; if b < 0 then b = 0 elseif b > 100 then b = 100 end
+		s = s + saturation; if s < 0 then s = 0 elseif s > 100 then s = 100 end
+		h = h + hue; if h < 0 then h = 0 elseif h > 360 then h = 360 end
+		return colorlib.HSBtoHEX(h, s, b)
+	end
+
+	for i = 1, #picture, 4 do
+		picture[i] = calculateBrightnessChanges(picture[i])
+		picture[i + 1] = calculateBrightnessChanges(picture[i + 1])
+	end
+
+	return picture
+end
+
+function image.hue(picture, hue)
+	return image.hueSaturationBrigtness(picture, hue, 0, 0)
+end
+
+function image.saturation(picture, saturation)
+	return image.hueSaturationBrigtness(picture, 0, saturation, 0)
+end
+
+function image.brightness(picture, brightness)
+	return image.hueSaturationBrigtness(picture, 0, 0, brightness)
+end
+
+function image.blackAndWhite(picture)
+	return image.hueSaturationBrigtness(picture, 0, -100, 0)
+end
+
+function image.colorBalance(picture, r, g, b)
+	local function calculateRGBChanges(color)
+		local rr, gg, bb = colorlib.HEXtoRGB(color)
+		rr = rr + r; gg = gg + g; bb = bb + b
+		if rr < 0 then rr = 0 elseif rr > 255 then rr = 255 end
+		if gg < 0 then gg = 0 elseif gg > 255 then gg = 255 end
+		if bb < 0 then bb = 0 elseif bb > 255 then bb = 255 end
+		return colorlib.RGBtoHEX(rr, gg, bb)
+	end
+
+	for i = 1, #picture, 4 do
+		picture[i] = calculateRGBChanges(picture[i])
+		picture[i + 1] = calculateRGBChanges(picture[i + 1])
+	end
+
+	return picture
+end
+
+function image.invert(picture)
+	for i = 1, #picture, 4 do
+		picture[i] = 0xffffff - picture[i]
+		picture[i + 1] = 0xffffff - picture[i + 1]
+	end
+	return picture 
+end
+
+function image.photoFilter(picture, color, transparency)
+	if transparency < 0 then transparency = 0 elseif transparency > 255 then transparency = 255 end
+	for i = 1, #picture, 4 do
+		picture[i] = colorlib.alphaBlend(picture[i], color, transparency)
+		picture[i + 1] = colorlib.alphaBlend(picture[i + 1], color, transparency)
+	end
+	return picture
+end
+
+function image.replaceColor(picture, fromColor, toColor)
+	for i = 1, #picture, 4 do
+		if picture[i] == fromColor then picture[i] = toColor end
+	end
+	return picture
+end
+
 ------------------------------------------ Примеры работы с библиотекой ------------------------------------------------
 
 -- ecs.prepareToExit()
--- ecs.error("Создаю и рисую картинку!")
--- local generatedPic = image.drawRandomImage(1, 1, 160, 50)
--- ecs.error("Сохраняю созданную картинку в формате .pic!")
--- ecs.prepareToExit()
--- image.save("1.pic", generatedPic)
--- ecs.error("Сохраняю созданную картинку в формате .rawpic!")
--- ecs.prepareToExit()
--- image.save("1.rawpic", generatedPic)
--- ecs.error("Загружаю сохраненную картинку в формате .pic!")
--- ecs.prepareToExit()
--- local loadedPic = image.load("1.pic")
--- image.draw(1, 1, loadedPic)
--- ecs.error("Загружаю сохраненную картинку в формате .rawpic!")
--- ecs.prepareToExit()
--- local loadedPic = image.load("1.rawpic")
--- image.draw(1, 1, loadedPic)
 
------------------------------------------- Типы массивов изображений ---------------------------------------------------
+-- local cyka = image.load("MineOS/Applications/Nano.app/Resources/Icon.pic")
+-- local cyka = image.load("MineOS/System/OS/Icons/Folder.pic")
+-- local cyka = image.load("MineOS/System/OS/Icons/Love.pic")
 
-
---[[
-
-	Тип 1:
-
-		Основной формат изображения, линейная запись данных о пикселях,
-		сжатие двух цветов и альфа-канала в одно число. Минимальный расход
-		оперативной памяти, однако для изменения цвета требует декомпрессию.
-
-			Структура:
-
-				local picture = {
-					width = ширина изображения,
-					height = высота изображения,
-					Сжатые цвета и альфа-канал,
-					Символ,
-					Сжатые цвета и альфа-канал,
-					Символ,
-					...
-				}
-
-			Пример:
-
-				local picture = {
-					width = 2,
-					height = 2,
-					0xff00aa,
-					"Q",
-					0x88aacc,
-					"W",
-					0xff00aa,
-					"E",
-					0x88aacc,
-					"R"
-				}
-
-		Тип 2 конвертируется только в тип 3 и только для отрисовки на экране:
-		Изображение типа 3 = image.convertToGroupedImage( Сюда кидаем массив изображения типа 2 )
-
-	Тип 2 (сгруппированный по цветам формат, ипользуется только для отрисовки изображения):
-	
-			Структура:
-			local picture = {
-				Цвет фона 1 = {
-					Цвет текста 1 = {
-						Координата по X,
-						Координата по Y,
-						Альфа-канал,
-						Символ,
-						Координата по X,
-						Координата по Y,
-						Альфа-канал,
-						Символ,
-						...
-					},
-					Цвет текста 2 = {
-						Координата по X,
-						Координата по Y,
-						Альфа-канал,
-						Символ,
-						Координата по X,
-						Координата по Y,
-						Альфа-канал,
-						Символ,
-						...
-					},
-					...
-				},
-				Цвет фона 2 = {
-					Цвет текста 1 = {
-						Координата по X,
-						Координата по Y,
-						Альфа-канал,
-						Символ,
-						Координата по X,
-						Координата по Y,
-						Альфа-канал,
-						Символ,
-						...
-					},
-					Цвет текста 2 = {
-						Координата по X,
-						Координата по Y,
-						Альфа-канал,
-						Символ,
-						Координата по X,
-						Координата по Y,
-						Альфа-канал,
-						Символ,
-						...
-					},
-					...
-				},
-			}
-
-			Пример:
-			local picture = {
-				0xffffff = {
-					0xaabbcc = {
-						1,
-						1,
-						0x00,
-						"Q",
-						12,
-						12,
-						0xaa,
-						"W"
-					},
-					0x88aa44 = {
-						5,
-						5,
-						0xcc,
-						"E",
-						12,
-						12,
-						0x00,
-						"R"
-					}
-				},
-				0x444444 = {
-					0x112233 = {
-						40,
-						20,
-						0x00,
-						"T",
-						12,
-						12,
-						0xaa,
-						"Y"
-					},
-					0x88aa44 = {
-						5,
-						5,
-						0xcc,
-						"U",
-						12,
-						12,
-						0x00,
-						"I"
-					}
-				}
-			}
-
-]]
+-- image.draw(2, 2, cyka)
+-- cyka = image.hue(cyka, 200)
+-- cyka = image.brightness(cyka, -90)
+-- cyka = image.saturation(cyka, -30)
+-- cyka = image.colorBalance(cyka, 0, 0, 0)
+-- cyka = image.invert(cyka)
+-- cyka = image.flipVertical(cyka)
+-- cyka = image.flipHorizontal(cyka)
+-- cyka = image.rotate(cyka, 180)
+-- cyka = image.photoFilter(cyka, 0x0000FF, 0xab)
+-- image.draw(16, 2, cyka)
 
 ------------------------------------------------------------------------------------------------------------------------
 
 return image
+
+
 
 
 

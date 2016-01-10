@@ -6,7 +6,7 @@ local function check(tVal, tMaxVal, tMinVal, tType)
 end
 
 local function isNan(x)
-	return x~=x
+  return x~=x
 end
 
 --RGB model
@@ -87,18 +87,30 @@ end
 
 --Смешивание двух цветов на основе альфа-канала второго
 function colorlib.alphaBlend(back_color, front_color, alpha_channel)
-	local INVERTED_ALPHA_CHANNEL = 255 - alpha_channel
+  local INVERTED_ALPHA_CHANNEL = 255 - alpha_channel
 
-	local back_color_rr, back_color_gg, back_color_bb    = colorlib.HEXtoRGB(back_color)
-	local front_color_rr, front_color_gg, front_color_bb = colorlib.HEXtoRGB(front_color)
+  local back_color_rr, back_color_gg, back_color_bb    = colorlib.HEXtoRGB(back_color)
+  local front_color_rr, front_color_gg, front_color_bb = colorlib.HEXtoRGB(front_color)
 
-	local blended_rr = front_color_rr * INVERTED_ALPHA_CHANNEL / 255 + back_color_rr * alpha_channel / 255
-	local blended_gg = front_color_gg * INVERTED_ALPHA_CHANNEL / 255 + back_color_gg * alpha_channel / 255
-	local blended_bb = front_color_bb * INVERTED_ALPHA_CHANNEL / 255 + back_color_bb * alpha_channel / 255
+  local blended_rr = front_color_rr * INVERTED_ALPHA_CHANNEL / 255 + back_color_rr * alpha_channel / 255
+  local blended_gg = front_color_gg * INVERTED_ALPHA_CHANNEL / 255 + back_color_gg * alpha_channel / 255
+  local blended_bb = front_color_bb * INVERTED_ALPHA_CHANNEL / 255 + back_color_bb * alpha_channel / 255
 
-	INVERTED_ALPHA_CHANNEL, back_color_rr, back_color_gg, back_color_bb, front_color_rr, front_color_gg, front_color_bb = nil, nil, nil, nil, nil, nil, nil
+  INVERTED_ALPHA_CHANNEL, back_color_rr, back_color_gg, back_color_bb, front_color_rr, front_color_gg, front_color_bb = nil, nil, nil, nil, nil, nil, nil
 
-	return colorlib.RGBtoHEX( blended_rr, blended_gg, blended_bb )
+  return colorlib.RGBtoHEX( blended_rr, blended_gg, blended_bb )
+end
+
+function colorlib.convert24BitTo8Bit(hex24)
+  local red, green, blue = colorlib.HEXtoRGB(hex24)
+  return (bit32.lshift(math.floor((red / 32)), 5) + bit32.lshift(math.floor((green / 32)), 2) + math.floor((blue / 64)))
+end
+
+function colorlib.convert8BitTo24Bit(hex8)
+  local red = bit32.rshift(hex8, 5) * 32
+  local green = bit32.rshift(bit32.band(hex8, 28), 2) * 32
+  local blue = bit32.band(hex8, 3) * 64
+  return colorlib.RGBtoHEX(red, green, blue)
 end
 
 return colorlib
