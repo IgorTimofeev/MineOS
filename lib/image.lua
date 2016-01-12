@@ -850,7 +850,7 @@ end
 
 ------------------------------------------ Функции для работы с цветом -----------------------------------------------
 
-function image.hueSaturationBrigtness(picture, hue, saturation, brightness)
+function image.hueSaturationBrightness(picture, hue, saturation, brightness)
 	local function calculateBrightnessChanges(color)
 		local h, s, b = colorlib.HEXtoHSB(color)
 		b = b + brightness; if b < 0 then b = 0 elseif b > 100 then b = 100 end
