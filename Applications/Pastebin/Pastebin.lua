@@ -10,6 +10,7 @@ local context = require("context")
 local xml = require("xmlParser")
 local config = require("config")
 local unixtime = require("unixtime")
+local SHA2 = require("SHA2")
 -- local computer = require("computer")
 -- local keyboard = require("keyboard")
 -- local image = require("image")
@@ -318,7 +319,7 @@ end
 local function inputPassword()
 	--local massiv = ecs.input("auto", "auto", 20, "Войти в Pastebin", {"input", "Логин", ""},  {"input", "Пароль", ""})
 
-	local data = ecs.universalWindow("auto", "auto", 24, tabColor1, true, {"EmptyLine"}, {"CenterText", 0xffffff, "Авторизация"}, {"EmptyLine"}, {"Input", 0xffffff, tabColor2, "Логин"}, {"Input", 0xffffff, tabColor2, "Пароль", "●"}, {"EmptyLine"}, {"Button", {tabColor2, 0xffffff, "Войти в аккаунт"}, {0x006dbf, 0xffffff, "Отмена"}})
+	local data = ecs.universalWindow("auto", "auto", 24, tabColor1, true, {"EmptyLine"}, {"CenterText", 0xffffff, "Авторизация"}, {"EmptyLine"}, {"Input", 0xffffff, 0xccccff, "Логин"}, {"Input", 0xffffff, 0xccccff, "Пароль", "●"}, {"EmptyLine"}, {"Button", {tabColor2, 0xffffff, "Войти в аккаунт"}, {0x006dbf, 0xffffff, "Отмена"}})
 
 	if data[3] == "Отмена" then return false end
 
