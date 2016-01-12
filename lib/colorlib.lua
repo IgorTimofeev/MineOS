@@ -1,10 +1,5 @@
 local colorlib = {}
 
---utils
-local function check(tVal, tMaxVal, tMinVal, tType)
-  
-end
-
 local function isNan(x)
   return x~=x
 end
