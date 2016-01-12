@@ -97,7 +97,19 @@ local image = {}
 
 --Константы программы
 local constants = {
-	OCIFSignature = { string.char(0x89), string.char(0x6F), string.char(0x63), string.char(0x69), string.char(0x66), string.char(0x1A), string.char(0x0A) },
+	OCIFSignature = "OCIF",
+	encodingMethods = {
+		raw = 0,
+		OCIF1 = 1,
+		OCIF2 = 2,
+		OCIF3 = 3,
+	},
+	OCIF2Elements = {
+		alphaStart = "A",
+		symbolStart = "S",
+		backgroundStart = "B",
+		foregroundStart = "F",
+	},
 	elementCount = 4,
 	byteSize = 8,
 	nullChar = 0,
@@ -130,6 +142,55 @@ local function convertCoordsToIndex(x, y, width)
 	return (width * (y - 1) + x) * constants.elementCount - constants.elementCount + 1
 end
 
+--Костыльное получение размера массива, ибо автор луа не позволяет
+--подсчитывать ненумерические индексы через #massiv
+--мда, мда
+--...
+--мда
+local function getArraySize(array)
+	local size = 0
+	for key in pairs(array) do
+		size = size + 1
+	end
+	return size
+end
+
+--Получить количество байт, которое можно извлечь из указанного числа
+local function getCountOfBytes(number)
+	if number == 0 or number == 1 then return 1 end
+	return math.ceil(math.log(number, 256))
+end
+
+--Распидорасить число на составляющие байты
+local function extractBytesFromNumber(number, countOfBytesToExtract)
+	local bytes = {}
+	local byteCutter = 0xff
+	for i = 1, countOfBytesToExtract do
+		table.insert(bytes, 1, bit32.rshift(bit32.band(number, byteCutter), (i-1)*8))
+		byteCutter = bit32.lshift(byteCutter, 8)
+	end
+	return table.unpack(bytes)
+end
+
+--Склеить байты и создать из них число
+local function mergeBytesToNumber(...)
+	local bytes = {...}
+	local finalNumber = bytes[1]
+	for i = 2, #bytes do
+		finalNumber = bit32.bor(bit32.lshift(finalNumber, 8), bytes[i])
+	end
+	return finalNumber
+end
+
+-- Сконвертировать все переданные байты в строку
+local function convertBytesToString(...)
+	local bytes = {...}
+	for i = 1, #bytes do
+		bytes[i] = string.char(bytes[i])
+	end
+	return table.concat(bytes)
+end
+
 --Выделить бит-терминатор в первом байте UTF-8 символа: 1100 0010 --> 0010 0000
 local function selectTerminateBit_l()
 	local prevByte = nil
@@ -159,15 +220,9 @@ end
 local selectTerminateBit = selectTerminateBit_l()
 
 --Прочитать n байтов из файла, возвращает прочитанные байты как число, если не удалось прочитать, то возвращает 0
-local function readBytes(file, bytes)
-  local readedByte = 0
-  local readedNumber = 0
-  for i = bytes, 1, -1 do
-    readedByte = string.byte( file:read(1) or constants.nullChar )
-    readedNumber = readedNumber + bit32.lshift(readedByte, i * constants.byteSize - constants.byteSize)
-  end
-
-  return readedNumber
+local function readBytes(file, count)
+  local readedBytes = file:read(count)
+  return mergeBytesToNumber(string.byte(readedBytes, 1, count))
 end
 
 --Подготавливает цвета и символ для записи в файл сжатого формата
@@ -234,14 +289,35 @@ local function getFileFormat(path)
 	name, starting, ending = nil, nil, nil
 end
 
------------------------------- Все, что касается сжатого формата ------------------------------------------------------------
+--Прочесть сигнатуру файла и сравнить ее с константой
+local function readSignature(file)
+	local readedSignature = file:read(4)
+	if readedSignature ~= constants.OCIFSignature then
+		file:close()
+		error("Can't load file: wrong OCIF format signature (\""..readedSignature .. "\" ~= \"" ..constants.OCIFSignature .. "\")")
+	end
+end
+
+--Записать сигнатуру в файл
+local function writeSignature(file)
+	file:write(constants.OCIFSignature)
+end
+
+--Сжать все цвета в изображении в 8-битную палитру
+local function compressImageColorsTo8Bit(picture)
+	for i = 1, #picture, 4 do
+		picture[i] = colorlib.convert24BitTo8Bit(picture[i])
+		picture[i + 1] = colorlib.convert24BitTo8Bit(picture[i + 1])
+		if i % 505 == 0 then os.sleep(0) end
+	end
+	return picture
+end
+
+------------------------------ Все, что касается формата OCIF1 ------------------------------------------------------------
 
 -- Запись в файл сжатого OCIF-формата изображения
-function image.saveCompressed(path, picture)
+local function saveOCIF1(file, picture)
 	local encodedPixel
-	local file = assert( io.open(path, "w"), "Can't open file: access denied!" )
-
-	file:write( table.unpack( constants.OCIFSignature ) )
 	file:write( string.char( picture.width  ) )
 	file:write( string.char( picture.height ) )
 	
@@ -259,16 +335,8 @@ function image.saveCompressed(path, picture)
 end
 
 --Чтение из файла сжатого OCIF-формата изображения, возвращает массив типа 2 (подробнее о типах см. конец файла)
-function image.loadCompressed(path)
+local function loadOCIF1(file)
 	local picture = {}
-	local file = assert( io.open(path, "rb"), constants.fileOpenError )
-
-	--Проверка файла на соответствие сигнатуры
-	local readedSignature = file:read(7)
-	if readedSignature ~= table.concat(constants.OCIFSignature) then
-		file:close()
-		error("Wrong OCIF file signature: " .. readedSignature .." != " .. table.concat(constants.OCIFSignatureExpand))
-	end
 
 	--Читаем ширину и высоту файла
 	picture.width = readBytes(file, 1)
@@ -290,11 +358,173 @@ function image.loadCompressed(path)
 	return picture
 end
 
------------------------------- Все, что касается сырого формата ------------------------------------------------------------
+------------------------------------------ Все, что касается формата OCIF2 ------------------------------------------------
+
+local function saveOCIF2(file, picture, compressColors)
+	--Записываем ширину изображения
+	file:write(string.char(picture.width))
+	file:write(string.char(picture.height))
+
+	--Группируем картинку
+	local grouppedPucture = image.convertToGroupedImage(picture)
+
+	--Перебираем все альфы
+	for alpha in pairs(grouppedPucture) do
+		--Получаем размер массива, содержащего символы
+		local arraySize = getArraySize(grouppedPucture[alpha])
+		local countOfBytesForArraySize = getCountOfBytes(arraySize)
+		--Записываем в файл символ АльфаСтарта, размер массива альфы и само значение альфы
+		file:write(
+			constants.OCIF2Elements.alphaStart,
+			string.char(countOfBytesForArraySize),
+			convertBytesToString(extractBytesFromNumber(arraySize, countOfBytesForArraySize)),
+			string.char(alpha)
+		)
+		
+		for symbol in pairs(grouppedPucture[alpha]) do
+			--Записываем заголовок
+			file:write(constants.OCIF2Elements.symbolStart)
+			--Записываем количество всех цветов текста и символ
+			if compressColors then
+				file:write(
+					string.char(getArraySize(grouppedPucture[alpha][symbol])),
+					convertBytesToString(string.byte(symbol, 1, 6))
+				)
+			else
+				file:write(	
+					convertBytesToString(extractBytesFromNumber(getArraySize(grouppedPucture[alpha][symbol]), 3)),
+					convertBytesToString(string.byte(symbol, 1, 6))
+				)
+			end
+		
+			for foreground in pairs(grouppedPucture[alpha][symbol]) do
+				--Записываем заголовок
+				file:write(constants.OCIF2Elements.foregroundStart)
+				--Записываем количество цветов фона и цвет текста
+				if compressColors then
+					file:write(
+						string.char(getArraySize(grouppedPucture[alpha][symbol][foreground])),
+						string.char(foreground)
+					)
+				else
+					file:write(
+						convertBytesToString(extractBytesFromNumber(getArraySize(grouppedPucture[alpha][symbol][foreground]), 3)),
+						convertBytesToString(extractBytesFromNumber(foreground, 3))
+					)
+				end
+		
+				for background in pairs(grouppedPucture[alpha][symbol][foreground]) do
+					--Записываем заголовок и размер массива координат
+					file:write(
+							constants.OCIF2Elements.backgroundStart,
+							convertBytesToString(extractBytesFromNumber(getArraySize(grouppedPucture[alpha][symbol][foreground][background]), 2))
+					)
+					--Записываем цвет фона
+					if compressColors then
+						file:write(string.char(background))
+					else
+						file:write(convertBytesToString(extractBytesFromNumber(background, 3)))
+					end
+		
+					--Записываем координаты
+					for i = 1, #grouppedPucture[alpha][symbol][foreground][background], 2 do
+						file:write(
+							string.char(grouppedPucture[alpha][symbol][foreground][background][i]),
+							string.char(grouppedPucture[alpha][symbol][foreground][background][i + 1])
+						)
+					end
+				end
+			end
+		end
+	end
+
+	file:close()
+end
+
+local function loadOCIF2(file, decompressColors)
+	local picture = {}
+
+	--Читаем размер изображения
+	local readedWidth = string.byte(file:read(1))
+	local readedHeight = string.byte(file:read(1))
+	picture.width = readedWidth
+	picture.height = readedHeight
+
+	local header, alpha, symbol, foreground, background, alphaSize, symbolSize, foregroundSize, backgroundSize = ""
+	while true do
+		header = file:read(1)
+		if not header then break end
+		-- print("----------------------")
+		-- print("Заголовок: " .. header)
+
+		if header == "A" then
+			local countOfBytesForArraySize = string.byte(file:read(1))
+			alphaSize = string.byte(file:read(countOfBytesForArraySize))
+			alpha = string.byte(file:read(1))
+			-- print("Количество байт под размер массива символов: " .. countOfBytesForArraySize)
+			-- print("Размер массива символов: " .. alphaSize)
+			-- print("Альфа: " .. alpha)
+
+		elseif header == "S" then
+			if decompressColors then
+				symbolSize = string.byte(file:read(1))
+			else
+				symbolSize = mergeBytesToNumber(string.byte(file:read(3), 1, 3))
+			end
+			symbol = decodeChar(file)
+			-- print("Размер массива цвета текста: " .. symbolSize)
+			-- print("Символ: \"" .. symbol .. "\"")
+
+		elseif header == "F" then
+			if decompressColors then
+				foregroundSize = string.byte(file:read(1))
+				foreground = colorlib.convert8BitTo24Bit(string.byte(file:read(1)))
+			else
+				foregroundSize = mergeBytesToNumber(string.byte(file:read(3), 1, 3))
+				foreground = mergeBytesToNumber(string.byte(file:read(3), 1, 3))
+			end
+			-- print("Размер массива цвета фона: " .. foregroundSize)
+			-- print("Цвет текста: " .. foreground)
+
+		elseif header == "B" then
+			backgroundSize = mergeBytesToNumber(string.byte(file:read(2), 1, 2))
+			if decompressColors then
+				background = colorlib.convert8BitTo24Bit(string.byte(file:read(1)))
+			else
+				background = mergeBytesToNumber(string.byte(file:read(3), 1, 3))
+			end
+			-- print("Размер массива координат: " .. backgroundSize)
+			-- print("Цвет фона: " .. background)
+
+			--Читаем координаты
+			for i = 1, backgroundSize, 2 do
+				local x = string.byte(file:read(1))
+				local y = string.byte(file:read(1))
+				local index = convertCoordsToIndex(x, y, readedWidth)
+				-- print("Координата: " .. x .. "x" .. y .. ", индекс: "..index)
+
+				picture[index] = background
+				picture[index + 1] = foreground
+				picture[index + 2] = alpha
+				picture[index + 3] = symbol
+			end			
+		else
+			error("Ошибка чтения формата OCIF: неизвестный тип заголовка (" .. header .. ")")
+		end
+
+	end
+
+	file:close()
+
+	return picture
+end
+
+------------------------------ Все, что касается формата RAW ------------------------------------------------------------
 
 --Сохранение в файл сырого формата изображения типа 2 (подробнее о типах см. конец файла)
-function image.saveRaw(path, picture)
-	local file = assert( io.open(path, "w"), constants.fileOpenError )
+local function saveRaw(file, picture)
+
+	file:write("\n")
 
 	local xPos, yPos = 1, 1
 	for i = 1, picture.width * picture.height * constants.elementCount, constants.elementCount do
@@ -312,12 +542,14 @@ function image.saveRaw(path, picture)
 end
 
 --Загрузка из файла сырого формата изображения типа 2 (подробнее о типах см. конец файла)
-function image.loadRaw(path)
-	local file = assert( io.open(path, "r"), constants.fileOpenError )
-	local picture = {}
+local function loadRaw(file)
+	--Читаем один байт "прост так"
+	file:read(1)
 
+	local picture = {}
 	local background, foreground, alpha, symbol, sLine
 	local lineCounter = 0
+
 	for line in file:lines() do
 		sLine = unicode.len(line)
 		for i = 1, sLine, constants.rawImageLoadStep do
@@ -338,7 +570,6 @@ function image.loadRaw(path)
 	picture.height = lineCounter
 
 	file:close()
-
 	return picture
 end
 
@@ -408,7 +639,7 @@ function image.convertToGroupedImage(picture)
 end
 
 --Нарисовать по указанным координатам картинку указанной ширины и высоты для теста
-function image.createRandomImage(x, y, width, height)
+function image.createImage(width, height, random)
 	local picture = {}
 	local symbolArray = {"A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "А", "Б", "В", "Г", "Д", "Е", "Ж", "З", "И", "Й", "К", "Л", "И", "Н", "О", "П", "Р", "С", "Т", "У", "Ф", "Х", "Ц", "Ч", "Ш", "Щ", "Ъ", "Ы", "Ь", "Э", "Ю", "Я"}
 	picture.width = width
@@ -416,9 +647,15 @@ function image.createRandomImage(x, y, width, height)
 	local background, foreground, symbol
 	for j = 1, height do
 		for i = 1, width do
-			background = math.random(0x000000, 0xffffff)
-			foreground = math.random(0x000000, 0xffffff)
-			symbol = symbolArray[math.random(1, #symbolArray)]
+			if random then
+				background = math.random(0x000000, 0xffffff)
+				foreground = math.random(0x000000, 0xffffff)
+				symbol = symbolArray[math.random(1, #symbolArray)]
+			else
+				background = 0x880000
+				foreground = 0xffffff
+				symbol = "Q"
+			end
 
 			table.insert(picture, background)
 			table.insert(picture, foreground)
@@ -447,86 +684,6 @@ function image.optimize(picture, showOptimizationProcess)
 	end
 	if showOptimizationProcess then ecs.error("Count of optimized pixels: " .. optimizationCounter) end
 	return picture
-end
-
------------------------------------------ Основные функции программы -------------------------------------------------------------------
-
---Сохранить изображение любого поддерживаемого формата
-function image.save(path, picture)
-	--Создать папку под файл, если ее нет
-	fs.makeDirectory(fs.path(path))
-	--Получаем формат указанного файла
-	local fileFormat = getFileFormat(path)
-	--Оптимизируем картинку
-	picture = image.optimize(picture)
-	--Проверяем соответствие формата файла
-	if fileFormat == constants.compressedFileFormat then
-		image.saveCompressed(path, picture)
-	elseif fileFormat == constants.rawFileFormat then
-		image.saveRaw(path, picture)
-	else
-		error("Unsupported file format.\n")
-	end
-end
-
---Загрузить изображение любого поддерживаемого формата
-function image.load(path)
-	--Кинуть ошибку, если такого файла не существует
-	if not fs.exists(path) then error("File \""..path.."\" does not exists.\n") end
-	--Получаем формат указанного файла
-	local fileFormat = getFileFormat(path)
-	--Проверяем соответствие формата файла
-	if fileFormat == constants.compressedFileFormat then
-		return image.loadCompressed(path)
-	elseif fileFormat == constants.rawFileFormat then
-		return image.loadRaw(path)
-	elseif fileFormat == constants.pngFileFormat then
-		return image.loadPng(path)
-	else
-		error("Unsupported file format.\n")
-	end
-end
-
---Отрисовка изображения типа 3 (подробнее о типах см. конец файла)
-function image.draw(x, y, picture)
-	--Конвертируем в групповое изображение
-	picture = image.convertToGroupedImage(picture)
-	--Все как обычно
-	x, y = x - 1, y - 1
-
-	local xPos, yPos, currentBackground
-	for alpha in pairs(picture) do
-		for symbol in pairs(picture[alpha]) do
-			for foreground in pairs(picture[alpha][symbol]) do
-				if gpu.getForeground ~= foreground then gpu.setForeground(foreground) end
-				for background in pairs(picture[alpha][symbol][foreground]) do
-					if gpu.getBackground ~= background then gpu.setBackground(background) end
-					currentBackground = background
-					for i = 1, #picture[alpha][symbol][foreground][background], 2 do	
-						xPos, yPos = x + picture[alpha][symbol][foreground][background][i], y + picture[alpha][symbol][foreground][background][i + 1]
-						
-						--Если альфа имеется, но она не совсем прозрачна
-						if (alpha > 0x00 and alpha < 0xFF) or (alpha == 0xFF and symbol ~= " ")then
-							_, _, currentBackground = gpu.get(xPos, yPos)
-							currentBackground = colorlib.alphaBlend(currentBackground, background, alpha)
-							gpu.setBackground(currentBackground)
-
-							gpu.set(xPos, yPos, symbol)
-
-						elseif alpha == 0x00 then
-							if currentBackground ~= background then
-								currentBackground = background
-								gpu.setBackground(currentBackground)
-							end
-
-							gpu.set(xPos, yPos, symbol)
-						end
-						--ecs.wait()
-					end
-				end
-			end
-		end
-	end
 end
 
 ------------------------------------------ Функция снятия скриншота с экрана ------------------------------------------------
@@ -767,25 +924,155 @@ function image.replaceColor(picture, fromColor, toColor)
 	return picture
 end
 
------------------------------------------- Примеры работы с библиотекой ------------------------------------------------
+----------------------------------------- Основные функции программы -------------------------------------------------------------------
+
+--Сохранить изображение любого поддерживаемого формата
+function image.save(path, picture, encodingMethod)
+	encodingMethod = encodingMethod or 2
+	--Создать папку под файл, если ее нет
+	fs.makeDirectory(fs.path(path))
+	--Получаем формат указанного файла
+	local fileFormat = getFileFormat(path)
+	--Оптимизируем картинку
+	picture = image.optimize(picture)
+	--Открываем файл
+	local file = io.open(path, "w")
+	--Записываем сигнатуру
+	writeSignature(file)
+	--Проверяем соответствие формата файла
+	if fileFormat == constants.compressedFileFormat then
+		if encodingMethod == 0 or string.lower(encodingMethod) == "raw" then
+			file:write(string.char(encodingMethod))
+			saveRaw(file, picture)
+		elseif encodingMethod == 1 or string.lower(encodingMethod) == "ocif1" then
+			file:write(string.char(encodingMethod))
+			saveOCIF1(file, picture)
+		elseif encodingMethod == 2 or string.lower(encodingMethod) == "ocif2" then
+			file:write(string.char(encodingMethod))
+			saveOCIF2(file, picture)
+		elseif encodingMethod == 3 or string.lower(encodingMethod) == "ocif3" then
+			file:write(string.char(encodingMethod))
+			picture = compressImageColorsTo8Bit(picture)
+			saveOCIF2(file, picture, true)
+		else
+			file:close()
+			error("Unsupported encoding method.\n")
+		end
+	else
+		file:close()
+		error("Unsupported file format.\n")
+	end
+end
+
+--Загрузить изображение любого поддерживаемого формата
+function image.load(path)
+	--Кинуть ошибку, если такого файла не существует
+	if not fs.exists(path) then error("File \""..path.."\" does not exists.\n") end
+	--Получаем формат указанного файла
+	local fileFormat = getFileFormat(path)
+	--Проверяем соответствие формата файла
+	if fileFormat == constants.compressedFileFormat then
+		local file = io.open(path, "rb")
+		--Читаем сигнатуру файла
+		readSignature(file)
+		--Читаем метод обработки изображения
+		local encodingMethod = string.byte(file:read(1))
+		--Читаем файлы в зависимости от метода
+		--print("Загружаю файл типа " .. encodingMethod)
+		if encodingMethod == 0 then
+			return loadRaw(file)
+		elseif encodingMethod == 1 then
+			return loadOCIF1(file)
+		elseif encodingMethod == 2 then
+			return loadOCIF2(file)
+		elseif encodingMethod == 3 then
+			return loadOCIF2(file, true)
+		else
+			file:close()
+			error("Unsupported encoding method.\n")
+		end
+	else
+		file:close()
+		error("Unsupported file format.\n")
+	end
+end
+
+--Отрисовка изображения типа 3 (подробнее о типах см. конец файла)
+function image.draw(x, y, picture)
+	--Конвертируем в групповое изображение
+	picture = image.convertToGroupedImage(picture)
+	--Все как обычно
+	x, y = x - 1, y - 1
+
+	local xPos, yPos, currentBackground
+	for alpha in pairs(picture) do
+		for symbol in pairs(picture[alpha]) do
+			for foreground in pairs(picture[alpha][symbol]) do
+				if gpu.getForeground ~= foreground then gpu.setForeground(foreground) end
+				for background in pairs(picture[alpha][symbol][foreground]) do
+					if gpu.getBackground ~= background then gpu.setBackground(background) end
+					currentBackground = background
+					for i = 1, #picture[alpha][symbol][foreground][background], 2 do	
+						xPos, yPos = x + picture[alpha][symbol][foreground][background][i], y + picture[alpha][symbol][foreground][background][i + 1]
+						
+						--Если альфа имеется, но она не совсем прозрачна
+						if (alpha > 0x00 and alpha < 0xFF) or (alpha == 0xFF and symbol ~= " ")then
+							_, _, currentBackground = gpu.get(xPos, yPos)
+							currentBackground = colorlib.alphaBlend(currentBackground, background, alpha)
+							gpu.setBackground(currentBackground)
+
+							gpu.set(xPos, yPos, symbol)
+
+						elseif alpha == 0x00 then
+							if currentBackground ~= background then
+								currentBackground = background
+								gpu.setBackground(currentBackground)
+							end
+
+							gpu.set(xPos, yPos, symbol)
+						end
+						--ecs.wait()
+					end
+				end
+			end
+		end
+	end
+end
+
+local function createSaveAndLoadFiles()
+	ecs.prepareToExit()
+	ecs.error("Создаю/загружаю изображение")
+	local cyka = image.load("MineOS/System/OS/Icons/Love.pic")
+	--local cyka = image.createImage(4, 4)
+	ecs.error("Рисую загруженное изображение")
+	image.draw(2, 2, cyka)
+	ecs.error("Сохраняю его в 4 форматах")
+	image.save("0.pic", cyka, 0)
+	image.save("1.pic", cyka, 1)
+	image.save("2.pic", cyka, 2)
+	image.save("3.pic", cyka, 3)
+	ecs.prepareToExit()
+	ecs.error("Загружаю все 4 формата и рисую их")
+	local cyka0 = image.load("0.pic")
+	image.draw(2, 2, cyka0)
+	local cyka1 = image.load("1.pic")
+	image.draw(10, 2, cyka1)
+	local cyka2 = image.load("2.pic")
+	image.draw(18, 2, cyka2)
+	local cyka3 = image.load("3.pic")
+	image.draw(26, 2, cyka3)
+	ecs.error("Рисую все 3 формата")
+end
+
+------------------------------------------ Место для баловства ------------------------------------------------
 
 -- ecs.prepareToExit()
 
--- local cyka = image.load("MineOS/Applications/Nano.app/Resources/Icon.pic")
--- local cyka = image.load("MineOS/System/OS/Icons/Folder.pic")
--- local cyka = image.load("MineOS/System/OS/Icons/Love.pic")
-
+-- local cyka = image.load("MineOS/Applications/Piano.app/Resources/Icon.pic")
 -- image.draw(2, 2, cyka)
--- cyka = image.hue(cyka, 200)
--- cyka = image.brightness(cyka, -90)
--- cyka = image.saturation(cyka, -30)
--- cyka = image.colorBalance(cyka, 0, 0, 0)
--- cyka = image.invert(cyka)
--- cyka = image.flipVertical(cyka)
--- cyka = image.flipHorizontal(cyka)
--- cyka = image.rotate(cyka, 180)
--- cyka = image.photoFilter(cyka, 0x0000FF, 0xab)
--- image.draw(16, 2, cyka)
+-- ecs.error(HEXtoSTRING(cyka[1], 6, true))
+-- image.draw(8, 2, cyka)
+-- createSaveAndLoadFiles()
 
 ------------------------------------------------------------------------------------------------------------------------
 

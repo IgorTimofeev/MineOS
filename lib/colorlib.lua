@@ -1,5 +1,10 @@
 local colorlib = {}
 
+--utils
+local function check(tVal, tMaxVal, tMinVal, tType)
+  
+end
+
 local function isNan(x)
   return x~=x
 end
@@ -119,26 +124,24 @@ local palette = {
 
 -- Конвертер
 function colorlib.convert24BitTo8Bit(hex24)
-  local encodedIndex = nil
-  local colorMatchFactor = nil
-  local colorMatchFactor_min = math.huge
+ local encodedIndex = nil
+ local colorMatchFactor = nil
+ local colorMatchFactor_min = math.huge
 
-  local paletteTypeRed, paletteTypeGreen, paletteTypeBlue = 3, 3, 2
+ local red24, green24, blue24 = colorlib.HEXtoRGB(hex24)
 
-  local red24, green24, blue24 = colorlib.HEXtoRGB(hex24)
+ for colorIndex, colorPalette in ipairs(palette) do
+  local redPalette, greenPalette, bluePalette = colorlib.HEXtoRGB(colorPalette)
 
-  for colorIndex, colorPalette in ipairs(palette) do
-    local redPalette, greenPalette, bluePalette = colorlib.HEXtoRGB(colorPalette)
+  colorMatchFactor = (redPalette-red24)^2 + (greenPalette-green24)^2 + (bluePalette-blue24)^2
 
-    colorMatchFactor = paletteTypeRed*(redPalette-red24)^2 + paletteTypeGreen*(greenPalette-green24)^2 + paletteTypeBlue*(bluePalette-blue24)^2
-
-    if (colorMatchFactor < colorMatchFactor_min) then
-      encodedIndex = colorIndex
-      colorMatchFactor_min = colorMatchFactor
-    end
+  if (colorMatchFactor < colorMatchFactor_min) then
+   encodedIndex = colorIndex
+   colorMatchFactor_min = colorMatchFactor
   end
+ end
 
-  return encodedIndex - 1
+ return encodedIndex - 1
 end
 
 function colorlib.convert8BitTo24Bit(hex8)
