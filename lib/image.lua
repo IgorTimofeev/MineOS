@@ -868,19 +868,19 @@ function image.hueSaturationBrightness(picture, hue, saturation, brightness)
 end
 
 function image.hue(picture, hue)
-	return image.hueSaturationBrigtness(picture, hue, 0, 0)
+	return image.hueSaturationBrightness(picture, hue, 0, 0)
 end
 
 function image.saturation(picture, saturation)
-	return image.hueSaturationBrigtness(picture, 0, saturation, 0)
+	return image.hueSaturationBrightness(picture, 0, saturation, 0)
 end
 
 function image.brightness(picture, brightness)
-	return image.hueSaturationBrigtness(picture, 0, 0, brightness)
+	return image.hueSaturationBrightness(picture, 0, 0, brightness)
 end
 
 function image.blackAndWhite(picture)
-	return image.hueSaturationBrigtness(picture, 0, -100, 0)
+	return image.hueSaturationBrightness(picture, 0, -100, 0)
 end
 
 function image.colorBalance(picture, r, g, b)
