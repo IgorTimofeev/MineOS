@@ -928,7 +928,7 @@ end
 
 --Сохранить изображение любого поддерживаемого формата
 function image.save(path, picture, encodingMethod)
-	encodingMethod = encodingMethod or 2
+	encodingMethod = encodingMethod or 3
 	--Создать папку под файл, если ее нет
 	fs.makeDirectory(fs.path(path))
 	--Получаем формат указанного файла
