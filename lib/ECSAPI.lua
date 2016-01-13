@@ -10,6 +10,7 @@ local libraries = {
 	["keyboard"] = "keyboard",
 	["computer"] = "computer",
 	["serialization"] = "serialization",
+	["colorlib"] = "colorlib",
 	--["internet"] = "internet",
 	--["image"] = "image",
 }
@@ -1748,6 +1749,7 @@ function ECSAPI.universalWindow(x, y, width, background, closeWindowAfter, ...)
 		["selector"] = 3,
 		["separator"] = 1,
 		["switch"] = 1,
+		["color"] = 3,
 	}
 
 	--Скорректировать ширину, если нужно
@@ -1787,6 +1789,8 @@ function ECSAPI.universalWindow(x, y, width, background, closeWindowAfter, ...)
 		elseif objectType == "switch" then
 			local dlina = unicode.len(objects[i][5]) + 2 + 10 + 4
 			correctWidth(dlina)
+		elseif objectType == "color" then 
+			correctWidth(unicode.len(objects[i][2]) + 6)
 		end
 	end
 
@@ -1848,6 +1852,7 @@ function ECSAPI.universalWindow(x, y, width, background, closeWindowAfter, ...)
 		if objectType == "centertext" then
 			local xPos = x + math.floor(width / 2 - unicode.len(objects[number][3]) / 2)
 			gpu.setForeground(objects[number][2])
+			gpu.setBackground(background)
 			gpu.set(xPos, objects[number].y, objects[number][3])
 		
 		elseif objectType == "input" then
@@ -2007,7 +2012,7 @@ function ECSAPI.universalWindow(x, y, width, background, closeWindowAfter, ...)
 			newObj("TextFields", number, x + 1, objects[number].y, x + width - 2, objects[number].y + objects[number][2] - 1)
 			if not objects[number].strings then objects[number].strings = ECSAPI.stringWrap({objects[number][7]}, width - 7) end
 			objects[number].displayFrom = objects[number].displayFrom or 1
-			ECSAPI.textField(x + 2, objects[number].y, width - 4, objects[number][2], objects[number].strings, objects[number].displayFrom, objects[number][3], objects[number][4], objects[number][5], objects[number][6])
+			ECSAPI.textField(x + 1, objects[number].y, width - 2, objects[number][2], objects[number].strings, objects[number].displayFrom, objects[number][3], objects[number][4], objects[number][5], objects[number][6])
 		
 		elseif objectType == "wrappedtext" then
 			gpu.setBackground(background)
@@ -2057,6 +2062,18 @@ function ECSAPI.universalWindow(x, y, width, background, closeWindowAfter, ...)
 				--ECSAPI.colorTextWithBack(xPos + 4, yPos, passiveColor, passiveColor - 0x444444, "OFF")
 			end
 			newObj("Switches", number, xPos, yPos, xPos + switchWidth - 1, yPos)
+
+		elseif objectType == "color" then
+			local xPos, yPos = x + 1, objects[number].y
+			local blendedColor = colorlib.alphaBlend(objects[number][3], 0xFFFFFF, 180)
+			local w = width - 2
+
+			ECSAPI.colorTextWithBack(xPos, yPos + 2, blendedColor, background, string.rep("▀", w))
+			ECSAPI.colorText(xPos, yPos, objects[number][3], string.rep("▄", w))
+			ECSAPI.square(xPos, yPos + 1, w, 1, objects[number][3])		
+
+			ECSAPI.colorText(xPos + 1, yPos + 1, 0xffffff - objects[number][3], objects[number][2])
+			newObj("Colors", number, xPos, yPos, x + width - 2, yPos + 2)
 		end
 	end
 
@@ -2086,6 +2103,8 @@ function ECSAPI.universalWindow(x, y, width, background, closeWindowAfter, ...)
 				table.insert(massiv, objects[i][6])
 			elseif type == "switch" then
 				table.insert(massiv, objects[i][6])
+			elseif type == "color" then
+				table.insert(massiv, objects[i][3])	
 			else
 				table.insert(massiv, nil)
 			end
@@ -2169,7 +2188,7 @@ function ECSAPI.universalWindow(x, y, width, background, closeWindowAfter, ...)
 						local currentValue = math.floor(currentPixels / dolya)
 						--Костыль
 						if e[3] == obj["Sliders"][key][3] then currentValue = objects[key][5] end
-						objects[key][6] = currentValue
+						objects[key][6] = currentValue or objects[key][6]
 						displayObject(key)
 						break
 					end
@@ -2180,6 +2199,23 @@ function ECSAPI.universalWindow(x, y, width, background, closeWindowAfter, ...)
 				for key in pairs(obj["Switches"]) do
 					if ECSAPI.clickedAtArea(e[3], e[4], obj["Switches"][key][1], obj["Switches"][key][2], obj["Switches"][key][3], obj["Switches"][key][4]) then
 						objects[key][6] = not objects[key][6]
+						displayObject(key)
+						break
+					end
+				end
+			end
+
+			if obj["Colors"] then
+				for key in pairs(obj["Colors"]) do
+					if ECSAPI.clickedAtArea(e[3], e[4], obj["Colors"][key][1], obj["Colors"][key][2], obj["Colors"][key][3], obj["Colors"][key][4]) then
+						local oldColor = objects[key][3]
+						objects[key][3] = 0xffffff - objects[key][3]
+						displayObject(key)
+						os.sleep(0.3)
+						objects[key][3] = oldColor
+						displayObject(key)
+						local color = loadfile("lib/palette.lua")().draw("auto", "auto", objects[key][3])
+						objects[key][3] = color or oldColor
 						displayObject(key)
 						break
 					end
@@ -2212,7 +2248,29 @@ function ECSAPI.demoWindow()
 	--Очищаем экран перед юзанием окна и ставим курсор на 1, 1
 	ECSAPI.prepareToExit()
 	--Рисуем окно и получаем данные после взаимодействия с ним
-	local data = ECSAPI.universalWindow("auto", "auto", 36, 0xeeeeee, true, {"EmptyLine"}, {"CenterText", 0x880000, "Здорово, ебана!"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, "Сюда вводить можно"}, {"Selector", ECSAPI.colors.green, 0x880000, "Выбор формата", "PNG", "JPG", "GIF", "PSD"}, {"EmptyLine"}, {"WrappedText", 0x262626, "Тест автоматического переноса букв в зависимости от ширины данного окна. Пока что тупо режет на куски, не особо красиво."}, {"EmptyLine"}, {"Select", 0x262626, 0x880000, "Я пидор", "Я не пидор"}, {"Slider", 0x262626, 0x880000, 1, 100, 50, "Убито ", " младенцев"}, {"EmptyLine"}, {"Separator", 0xaaaaaa}, {"Switch", 0xF2B233, 0xffffff, 0x262626, "✈ Авиарежим", false}, {"EmptyLine"}, {"Switch", 0x3366CC, 0xffffff, 0x262626, "☾  Не беспокоить", true}, {"Separator", 0xaaaaaa},  {"EmptyLine"}, {"TextField", 5, 0xffffff, 0x262626, 0xcccccc, 0x3366CC, "Тест текстового информационного поля. По сути это тот же самый WrappedText, разве что эта хрень ограничена по высоте, и ее можно скроллить. Ну же, поскролль меня! Скролль меня полностью! Моя жадная пизда жаждет твой хуй!"}, {"EmptyLine"}, {"Button", {0x57A64E, 0xffffff, "Да"}, {0xF2B233, 0xffffff, "Нет"}, {0xCC4C4C, 0xffffff, "Отмена"}})
+	local data = ECSAPI.universalWindow("auto", "auto", 36, 0xeeeeee, true,
+		{"EmptyLine"},
+		{"CenterText", 0x880000, "Здорово, ебана!"},
+		{"EmptyLine"},
+		{"Input", 0x262626, 0x880000, "Сюда вводить можно"},
+		{"Selector", 0x262626, 0x880000, "Выбор формата", "PNG", "JPG", "GIF", "PSD"},
+		{"EmptyLine"},
+		{"WrappedText", 0x262626, "Тест автоматического переноса букв в зависимости от ширины данного окна. Пока что тупо режет на куски, не особо красиво."},
+		{"EmptyLine"},
+		{"Select", 0x262626, 0x880000, "Я пидор", "Я не пидор"},
+		{"Slider", 0x262626, 0x880000, 1, 100, 50, "Убито ", " младенцев"},
+		{"EmptyLine"},
+		{"Separator", 0xaaaaaa},
+		{"Switch", 0xF2B233, 0xffffff, 0x262626, "✈ Авиарежим", false},
+		{"EmptyLine"},
+		{"Switch", 0x3366CC, 0xffffff, 0x262626, "☾  Не беспокоить", true},
+		{"Separator", 0xaaaaaa},
+		{"EmptyLine"},
+		{"TextField", 5, 0xffffff, 0x262626, 0xcccccc, 0x3366CC, "Тест текстового информационного поля. По сути это тот же самый WrappedText, разве что эта хрень ограничена по высоте, и ее можно скроллить. Ну же, поскролль меня! Скролль меня полностью! Моя жадная пизда жаждет твой хуй!"},
+		{"Color", "Цвет фона", 0xFF0000},
+		{"EmptyLine"},
+		{"Button", {0x57A64E, 0xffffff, "Да"}, {0xF2B233, 0xffffff, "Нет"}, {0xCC4C4C, 0xffffff, "Отмена"}}
+	)
 	--Еще разок
 	ECSAPI.prepareToExit()
 	--Выводим данные
@@ -2362,7 +2420,5 @@ end
 ECSAPI.applicationHelp("MineOS/Applications/InfoPanel.app")
 
 return ECSAPI
-
-
 
 
