@@ -307,6 +307,7 @@ while true do
 							drawAll()
 						else
 							shell.execute("MineOS/Applications/Finder.app/Finder.lua " .. path)
+							drawAll()
 						end
 					else
 						ecs.launchIcon(path)
