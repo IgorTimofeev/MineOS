@@ -268,13 +268,13 @@ end
 syntax.setColorScheme(syntax.colorSchemes.midnight)
 
 --Епты бля!
-local strings = syntax.convertFileToStrings("MineOS/Applications/Highlight.app/Resources/TestFile.txt")
+-- local strings = syntax.convertFileToStrings("MineOS/Applications/Highlight.app/Resources/TestFile.txt")
 
-local xSize, ySize = gpu.getResolution()
-buffer.square(1, 1, xSize, ySize, ecs.colors.green, 0xFFFFFF, " ")
-buffer.draw(true)
+-- local xSize, ySize = gpu.getResolution()
+-- buffer.square(1, 1, xSize, ySize, ecs.colors.green, 0xFFFFFF, " ")
+-- buffer.draw(true)
 
-syntax.viewCode(2, 2, 70, 20, strings, 1, 1, true, {from = {x = 6, y = 2}, to = {x = 3, y = 8}})
+-- syntax.viewCode(2, 2, 70, 20, strings, 1, 1, true, {from = {x = 6, y = 2}, to = {x = 3, y = 8}})
 
 ----------------------------------------------------------------------------------------------------------------
 
