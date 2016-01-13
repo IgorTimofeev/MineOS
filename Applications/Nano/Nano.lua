@@ -54,7 +54,7 @@ event.listen("modem_message", listener)
 
 local xFace, yFace = 14, 2
 local xInfo, yInfo = xFace + 16 + 2, yFace
-local imageCyka = image.load("System/OS/Icons/Steve.pic")
+local imageCyka = image.load("MineOS/System/OS/Icons/Steve.pic")
 image.draw(xFace, yFace, imageCyka)
 
 local function request()
