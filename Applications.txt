@@ -349,7 +349,15 @@
   },
 
   ----------------------------------------------------- Приложения без ресурсов --------------------------------------------------------------------------
-
+  {
+    ["name"]="MineOS/Applications/RunningString",
+    ["url"]="IgorTimofeev/OpenComputers/master/Applications/RunningString/RunningString.lua",
+    ["about"]="IgorTimofeev/OpenComputers/master/Applications/RunningString/About.txt",
+    ["type"]="Application",
+    ["icon"]="IgorTimofeev/OpenComputers/master/Applications/RunningString/Icon.pic",
+    ["createShortcut"] = "desktop",
+    ["version"]=1.0,
+  },
   {
     ["name"]="MineOS/Applications/QuantumCube",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/QuantumCube/QuantumCube.lua",
