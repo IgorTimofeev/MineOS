@@ -349,6 +349,15 @@
   },
 
   ----------------------------------------------------- Приложения без ресурсов --------------------------------------------------------------------------
+   {
+    ["name"]="MineOS/Applications/DanceFloor",
+    ["url"]="IgorTimofeev/OpenComputers/master/Applications/DanceFloor/DanceFloor.lua",
+    ["about"]="IgorTimofeev/OpenComputers/master/Applications/DanceFloor/About.txt",
+    ["type"]="Application",
+    ["icon"]="IgorTimofeev/OpenComputers/master/Applications/DanceFloor/Icon.pic",
+    ["createShortcut"] = "desktop",
+    ["version"]=1.0,
+  },
   {
     ["name"]="MineOS/Applications/RunningString",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/RunningString/RunningString.lua",
