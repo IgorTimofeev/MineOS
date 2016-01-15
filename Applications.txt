@@ -349,7 +349,7 @@
   },
 
   ----------------------------------------------------- Приложения без ресурсов --------------------------------------------------------------------------
-   {
+  {
     ["name"]="MineOS/Applications/DanceFloor",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/DanceFloor/DanceFloor.lua",
     ["about"]="IgorTimofeev/OpenComputers/master/Applications/DanceFloor/About.txt",
