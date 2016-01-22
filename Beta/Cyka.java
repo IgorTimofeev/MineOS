@@ -27,33 +27,39 @@ public class MineButton extends DreamAPI
     public int height = 20;
     public String text = "";
     public ButtonStyle style;
-    private float textSize = 3;
+    public float textSize = 3;
+    public int padding = (int)(0.1f * this.height);
 
     //Класс стиля кнопки
     public class ButtonStyle {
+        //Подкласс стиля кнопки в обычном состоянии
         public class Standard {
             public Color buttonColor;
             public Color textColor;
             public ResourceLocation texture;
         }
 
+        //Подкласс стиля кнопки в состоянии наведения мышью
         public class Hovered {
             public Color buttonColor;
             public Color textColor;
             public ResourceLocation texture;
         }
 
+        //Подкласс стиля кнопки в состоянии клика мышью
         public class Pressed {
             public Color buttonColor;
             public Color textColor;
             public ResourceLocation texture;
         }
 
+        //Создаем экземпляры подклассов стилей
         public Standard standard = new Standard();
         public Hovered hovered = new Hovered();
         public Pressed pressed = new Pressed();
         public String type;
 
+        //Конструктор класса стиля со всеми флет-параметрами
         public ButtonStyle(int buttonColor, int buttonHoverColor, int buttonPressColor, int textColor, int textHoverColor, int textPressColor) {
             this.standard.buttonColor = new Color(buttonColor);
             this.hovered.buttonColor = new Color(buttonHoverColor);
@@ -66,6 +72,7 @@ public class MineButton extends DreamAPI
             this.type = "flat";
         }
 
+        //Конструктор класса стиля со всеми текстурными параметрами
         public ButtonStyle(ResourceLocation buttonTexture, ResourceLocation buttonHoverTexture, ResourceLocation buttonPressTexture, int textColor, int textHoverColor, int textPressColor) {
             this.standard.texture = buttonTexture;
             this.hovered.texture = buttonHoverTexture;
@@ -78,6 +85,7 @@ public class MineButton extends DreamAPI
             this.type = "textured";
         }
 
+        //Конструктор класса стиля без параметров, создаются дефолтные цвета
         public ButtonStyle() {
             this.standard.buttonColor = new Color(0x00A8FF);
             this.hovered.buttonColor = new Color(0x42A8ff);
@@ -91,11 +99,26 @@ public class MineButton extends DreamAPI
         }
     }
 
+    //Конструктор кнопки во флет-дизайне со всеми параметрами
+    public MineButton(int x, int y, int width, int height, int buttonColor, int buttonHoverColor, int buttonPressColor, int textColor, int textHoverColor, int textPressColor, int textSize, String text)
+    {
+        this.style = new ButtonStyle(buttonColor, buttonHoverColor, buttonPressColor, textColor, textHoverColor, textPressColor);
+        this.callback = null;
+        this.isPressed = false;
+        this.isHover = false;
+        this.x = y;
+        this.y = x;
+        this.width = width;
+        this.height = height;
+        this.text = text;
+        this.textSize = textSize;
+    }
+
     //Конструктор кнопки без аргументов (по умолчанию во флет-дизайне)
     public MineButton()
     {
         this.style = new ButtonStyle();
-        this.callback = () -> System.out.println("Тест!");
+        this.callback = null;
         this.isPressed = false;
         this.isHover = false;
         this.x = 1;
@@ -103,13 +126,20 @@ public class MineButton extends DreamAPI
         this.width = 200;
         this.height = 50;
         this.text = "Button";
+        this.textSize = 3;
     }
 
-    //Функция для отрисовки текста с определенным цветом
-    //Костыльно, зато удобно
+    //Отрисовка текста с определенным цветом
     private void drawText(Color textColor) {
-        drawScaledString(this.text, this.x + this.width / 2,this.y + this.height / 2 - (this.textSize * 4), textSize, TextPosition.CENTER);
+        drawScaledString(this.text, this.x + this.width / 2,this.y + this.height / 2 - (this.textSize * 4), textSize, TextPosition.CENTER, textColor);
         //this.drawCenteredString(this.mc.fontRenderer, this.text, this.x + this.width / 2, this.y + (this.height - 8) / 2, RGBtoHEX(textColor));
+    }
+
+    //Отрисовка кнопки с определенным цветом
+    private void drawButton(Color color)
+    {
+        square(this.x, this.y, this.width, this.height - this.padding, color);
+        square(this.x, this.y + this.height - this.padding - 1, this.width, this.padding, alphaBlend(color, Color.black, 180));
     }
 
     //Функция отрисовки
@@ -127,9 +157,7 @@ public class MineButton extends DreamAPI
             //Рисуем в зависимости от стиля кнопки
             if ( this.style.type == "flat" )
             {
-                int padding = (int) (0.1f * this.height);
-                square(this.x, this.y, this.width, this.height - padding, this.style.pressed.buttonColor);
-                square(this.x, this.y + this.height - padding, this.width, padding, alphaBlend(this.style.pressed.buttonColor, Color.black, 180));
+                drawButton(this.style.pressed.buttonColor);
             }
             else
             {
@@ -145,9 +173,7 @@ public class MineButton extends DreamAPI
             //Рисуем в зависимости от стиля кнопки
             if ( this.style.type == "flat" )
             {
-                int padding = (int) (0.1f * this.height);
-                square(this.x, this.y, this.width, this.height - padding, this.style.hovered.buttonColor);
-                square(this.x, this.y + this.height - padding, this.width, padding, alphaBlend(this.style.hovered.buttonColor, Color.black, 180));
+                drawButton(this.style.hovered.buttonColor);
             }
             else
             {
@@ -163,9 +189,7 @@ public class MineButton extends DreamAPI
             //Рисуем в зависимости от стиля кнопки
             if ( this.style.type == "flat" )
             {
-                int padding = (int) (0.1f * this.height);
-                square(this.x, this.y, this.width, this.height - padding, this.style.standard.buttonColor);
-                square(this.x, this.y + this.height - padding, this.width, padding, alphaBlend(this.style.standard.buttonColor, Color.black, 180));
+                drawButton(this.style.standard.buttonColor);
             }
             else
             {
@@ -178,25 +202,27 @@ public class MineButton extends DreamAPI
     }
 
     //Обработка
-    boolean prevState;
-    public MineButton update(int x, int y) {
+    public MineButton update(int x, int y)
+    {
+        if (!visible) return this;
+
         x = x * getScaleFactor();
         y = y * getScaleFactor();
+
         isHover = x >= this.x && y >= this.y && x < this.x + this.width && y < this.y + this.height;
 
-        if (!visible) return this;
-        boolean released = !Mouse.getEventButtonState();
-
-
-        if (isHover && Mouse.isButtonDown(0) && !prevState) {
-            if (!isPressed) {
+        if (isHover && Mouse.isButtonDown(0))
+        {
+            if (!isPressed && callback != null)
+            {
                 callback.run();
             }
             isPressed = true;
-        } else {
+        }
+        else
+        {
             isPressed = false;
         }
-        prevState = Mouse.isButtonDown(0);
 
         //Отрисовываем
         this.draw(x, y);
