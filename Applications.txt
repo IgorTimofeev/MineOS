@@ -350,6 +350,15 @@
 
   ----------------------------------------------------- Приложения без ресурсов --------------------------------------------------------------------------
   {
+    ["name"]="MineOS/Applications/ForceAdmin",
+    ["url"]="IgorTimofeev/OpenComputers/master/Applications/ForceAdmin/ForceAdmin.lua",
+    ["about"]="IgorTimofeev/OpenComputers/master/Applications/ForceAdmin/About.txt",
+    ["type"]="Application",
+    ["icon"]="IgorTimofeev/OpenComputers/master/Applications/ForceAdmin/Icon.pic",
+    ["createShortcut"] = "desktop",
+    ["version"]=1.0,
+  },
+  {
     ["name"]="MineOS/Applications/FlappyBlock",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/FlappyBlock/FlappyBlock.lua",
     ["about"]="IgorTimofeev/OpenComputers/master/Applications/FlappyBlock/About.txt",
