@@ -76,6 +76,7 @@ local function receive()
 end
 
 local function main()
+	print(" ")
 	print("Добро пожаловать в программу ECSGrief Receiver v1.0 alpha early access! Идет ожидание команд с беспроводного устройства.")
 	print(" ")
 	receive()
