@@ -56,6 +56,14 @@ local commands = {
 		messageToRobot = "redstone",
 		screenText = "Приказываю роботу включить/выключить редстоун вокруг себя",
 	},
+	[16] = {
+		messageToRobot = "drop",
+		screenText = "Приказываю роботу выкинуть предмет из выбранного слота",
+	},
+	[33] = {
+		messageToRobot = "changeToolUsingMode",
+		screenText = "Приказываю роботу изменить режим использования предмета, а именно swing() или use()",
+	},
 }
 
 local function send()
@@ -68,6 +76,14 @@ local function send()
 				if commands[eventData[4]].messageToRobot == "exit" then
 					return
 				end
+			end
+		elseif eventData[1] == "scroll" then
+			if eventData[5] == 1 then
+				print("Приказываю роботу увеличить режим использования предметов, т.е. useDown() изменится на use(), а use() на useUp()")
+				modem.broadcast(port, keyWord, "increaseToolUsingSide")
+			else
+				print("Приказываю роботу уменьшить режим использования предметов, т.е. useUp() изменится на use(), а use() на useDown()")
+				modem.broadcast(port, keyWord, "decreaseToolUsingSide")
 			end
 		end
 	end

@@ -8,6 +8,8 @@ local keyWord = "ECSGrief"
 local modem
 local redstone = component.redstone
 local redstoneState = false
+local toolUsingMode = false
+local toolUsingSide = 1
 
 if component.isAvailable("modem") then
 	modem = component.modem
@@ -26,6 +28,8 @@ local commands = {
 	turnLeft = robot.turnLeft,
 	up = robot.up,
 	down = robot.down,
+	swing = robot.swing,
+	drop = robot.drop
 }
 
 local function redstoneControl()
@@ -50,6 +54,8 @@ local function receive()
 		local eventData = { event.pull() }
 		if eventData[1] == "modem_message" and eventData[4] == port and eventData[6] == keyWord then
 			local message = eventData[7]
+			local message2 = eventData[8]
+
 			if commands[message] then
 				commands[message]()
 			else
@@ -62,13 +68,43 @@ local function receive()
 					require("term").clear()
 					require("computer").shutdown()
 				elseif message == "use" then
-					robot.use()
-					robot.useUp()
-					robot.useDown()
+					if toolUsingMode then
+						if toolUsingSide == 1 then
+							print("Использую экипированный предмет в режиме правого клика перед роботом")
+							robot.use()
+						elseif toolUsingSide == 0 then
+							print("Использую экипированный предмет в режиме правого клика под роботом")
+							robot.useDown()
+						elseif toolUsingSide == 2 then
+							print("Использую экипированный предмет в режиме правого клика над роботом")
+							robot.useUp()
+						end
+					else
+						if toolUsingSide == 1 then
+							print("Использую экипированный предмет в режиме левого клика перед роботом")
+							robot.swing()
+						elseif toolUsingSide == 0 then
+							print("Использую экипированный предмет в режиме левого клика под роботом")
+							robot.swingDown()
+						elseif toolUsingSide == 2 then
+							print("Использую экипированный предмет в режиме левого клика над роботом")
+							robot.swingUp()
+						end
+					end
 				elseif message == "exit" then
 					return
 				elseif message == "redstone" then
 					redstoneControl()
+				elseif message == "changeToolUsingMode" then
+					toolUsingMode = not toolUsingMode
+				elseif message == "increaseToolUsingSide" then
+					print("Изменяю режим использования вещи")
+					toolUsingSide = toolUsingSide + 1
+					if toolUsingSide > 2 then toolUsingSide = 2 end
+				elseif message == "decreaseToolUsingSide" then
+					print("Изменяю режим использования вещи")
+					toolUsingSide = toolUsingSide - 1
+					if toolUsingSide < 0 then toolUsingSide = 0 end
 				end
 			end
 		end
