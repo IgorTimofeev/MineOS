@@ -356,6 +356,15 @@
 
   ----------------------------------------------------- Приложения без ресурсов --------------------------------------------------------------------------
   {
+    ["name"]="MineOS/Applications/3DPrint",
+    ["url"]="IgorTimofeev/OpenComputers/master/Applications/3DPrint/3DPrint.lua",
+    ["about"]="IgorTimofeev/OpenComputers/master/Applications/3DPrint/About.txt",
+    ["type"]="Application",
+    ["icon"]="IgorTimofeev/OpenComputers/master/Applications/3DPrint/Icon.pic",
+    ["createShortcut"] = "desktop",
+    ["version"]=1.0,
+  },
+  {
     ["name"]="MineOS/Applications/ForceAdmin",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/ForceAdmin/ForceAdmin.lua",
     ["about"]="IgorTimofeev/OpenComputers/master/Applications/ForceAdmin/About.txt",

@@ -1,599 +1,619 @@
-local com = require("component")
-local gpu = com.gpu
-local shell = require("shell")
+
+local component = require("component")
 local event = require("event")
-local term = require("term")
 local unicode = require("unicode")
+local serialization = require("serialization")
+local fs = require("filesystem")
+
+local context = require("context")
+local bigLetters = require("bigLetters")
 local ecs = require("ECSAPI")
-local holo = require("component").hologram
- 
-------------------------------------------------------------------
-local printer = com.printer3d
-local xSize, ySize = 80, 50
-gpu.setResolution(xSize*2, ySize)
-local rightPartSize = 30
- 
-local userData = {
-        label = "Printered Block",
-        tooltip = "byShahar",
-        light = false,
-        emitRedstone = false,
-        buttonMode = false,
-}
- 
-local doingShapes = {}
-local onlineShape = 1
-local onlineLayer = 1
- 
-local mode = false
- 
-local startHolo = 16
- 
-local button = {
-        Name = {text = "Имя", x1, y1, x2, y2},
-        Clear = {text = "Очистить", x1, y1, x2, y2},
-        IsEmitRedstone = {text = "Излучает Redstone", x1, y1, x2, y2},
-        IsButtonMode = {text = "Режим кнопки", x1, y1, x2, y2},
-        Light = {text = "Свет", x1, y1, x2, y2},
-        Texture = {text = "Текстура", x1, y1, x2, y2},
-        State = {text = "Статус", x1, y1, x2, y2},
-        Print = {text = "Печать", x1, y1, x2, y2},
-}
- 
-local textures = {"sand", "grass_top", "grass_side", "dirt", "log_oak", "leaves_oak_opaque", "brick", "stone_slab_top"}
- 
+local palette = require("palette")
+
+local hologram
+local printer
+local gpu = component.gpu
+
+------------------------------------------------------------------------------------------------------------------------
+
+if component.isAvailable("hologram") then
+	hologram = component.hologram
+else
+	ecs.error("Этой программе требуется 3D-принтер и голографический проектор 2 уровня.")
+end
+
+if component.isAvailable("printer3d") then
+	printer = component.printer3d
+else
+	ecs.error("Этой программе требуется 3D-принтер и голографический проектор 2 уровня.")
+end
+
+------------------------------------------------------------------------------------------------------------------------
+
 local colors = {
-        [1] = 16711680,
-        [2] = 16725760,
-        [3] = 16739840,
-        [4] = 16754176,
-        [5] = 16768256,
-        [6] = 15400704,
-        [7] = 11730688,
-        [8] = 8126208,
-        [9] = 4521728,
-        [10] = 917248,
-        [11] = 6532.25,
-        [12] = 65377.75,
-        [13] = 65433,
-        [14] = 65488.25,
-        [15] = 63487,
-        [16] = 49151,
-        [17] = 35071,
-        [18] = 20991,
-        [19] = 6911,
-        [20] = 1966335,
-        [21] = 5570815,
-        [22] = 9175295,
-        [23] = 12779775,
-        [24] = 16449791
+	drawingZoneCYKA = 0xCCCCCC,
+	drawingZoneBackground = 0xFFFFFF,
+	drawingZoneStartPoint = 0x262626,
+	drawingZoneEndPoint = 0x555555,
+	drawingZoneSelection = 0xFF5555,
+	toolbarBackground = 0xEEEEEE,
+	toolbarText = 0x262626,
+	toolbarKeyText = 0x000000,
+	toolbarValueText = 0x666666,
+	toolbarBigLetters = 0x262626,
+	shapeNumbersText = 0xFFFFFF,
+	shapeNumbersBackground = 0xBBBBBB,
+	shapeNumbersActiveBackground = ecs.colors.blue,
+	shapeNumbersActiveText = 0xFFFFFF,
+	toolbarInfoBackground = 0x262626,
+	toolbarInfoText = 0xFFFFFF,
+	toolbarButtonBackground = 0xCCCCCC,
+	toolbarButtonText = 0x262626,
 }
- 
- 
--------------------------------------------------------------------------------------------------
- 
-local function Square(x, y, width, height, color)
-        ecs.square(x*2 - 1, y, width*2, height, color)
+
+local xSize, ySize = gpu.getResolution()
+local widthOfToolbar = 33
+local xToolbar = xSize - widthOfToolbar + 1
+local widthOfDrawingCYKA = xSize - widthOfToolbar
+
+local currentLayer = 1
+local currentShape = 1
+local maxShapeCount = 24
+local currentMode = 1
+local modes = {
+	"неактивная",
+	"активная"
+}
+local currentTexture = "planks_oak"
+local currentTint = ecs.colors.orange
+local useTint = false
+local showLayerOnHologram = true
+
+local pixelWidth = 6
+local pixelHeight = 3
+local drawingZoneWidth = pixelWidth * 16
+local drawingZoneHeight = pixelHeight * 16
+local xDrawingZone = math.floor(widthOfDrawingCYKA / 2 - drawingZoneWidth / 2)
+local yDrawingZone = 3
+
+local model = {}
+
+------------------------------------------------------------------------------------------------------------------------
+
+local function swap(a, b)
+	return b, a
 end
- 
-local function isIn(x1, y1, x2, y2, xClick, yClick)
-        if xClick >= x1 and xClick <= x2 and yClick >= y1 and yClick <= y2 then
-                return true
-        else
-                return false
-        end
+
+local function correctShapeCoords(shapeNumber)
+	if model.shapes[shapeNumber] then
+		if model.shapes[shapeNumber][1] > model.shapes[currentShape][4] then
+			model.shapes[shapeNumber][1], model.shapes[currentShape][4] = swap(model.shapes[currentShape][1], model.shapes[currentShape][4])
+			model.shapes[shapeNumber][1] = model.shapes[shapeNumber][1] - 1
+			model.shapes[shapeNumber][4] = model.shapes[shapeNumber][4] + 1
+		end
+		if model.shapes[shapeNumber][2] >= model.shapes[currentShape][5] then
+			model.shapes[shapeNumber][2], model.shapes[currentShape][5] = swap(model.shapes[currentShape][2], model.shapes[currentShape][5])
+			model.shapes[shapeNumber][2] = model.shapes[shapeNumber][2] - 1
+			model.shapes[shapeNumber][5] = model.shapes[shapeNumber][5] + 1
+		end
+		if model.shapes[shapeNumber][3] > model.shapes[currentShape][6] then
+			model.shapes[shapeNumber][3], model.shapes[currentShape][6] = swap(model.shapes[currentShape][3], model.shapes[currentShape][6])
+			model.shapes[shapeNumber][3] = model.shapes[shapeNumber][3] - 1
+			model.shapes[shapeNumber][6] = model.shapes[shapeNumber][6] + 1
+		end
+	end
 end
- 
-local function Text(x, y, text, colorBack, colorText)
-        gpu.setBackground(colorBack)
-        gpu.setForeground(colorText)
-        gpu.set(x, y, text)
+
+local function fixModelArray()
+	model.label = model.label or "Sample label"
+	model.tooltip = model.tooltip or "Sample tooltip"
+	model.lightLevel = model.lightLevel or 0
+	model.emitRedstone = model.emitRedstone or false
+	model.buttonMode = model.buttonMode or false
+	model.collidable = model.collidable or {true, true}
+	model.shapes = model.shapes or {}
 end
- 
-local function inDiapason(num1, num2, num)
-        if num >= num1 and num <= num2 then
-                return true
-        elseif num >= num2 and num <= num1 then
-                return true
-        else
-                return false
-        end
+
+--Объекты для тача
+local obj = {}
+local function newObj(class, name, ...)
+	obj[class] = obj[class] or {}
+	obj[class][name] = {...}
 end
- 
-local function completeWord(wrdPart, wrds)
-        for i = 1, #wrds do
-                local answer = unicode.sub(wrds[i], 1, unicode.len(wrdPart))
-                if answer == wrdPart then
-                        return wrds[i]
-                end
-        end
-        return "none"
+
+local function drawShapeNumbers(x, y)
+	local counter = 1
+	local xStart = x
+
+	for j = 1, 4 do
+		for i = 1, 6 do
+			if currentShape == counter then
+				newObj("ShapeNumbers", counter, ecs.drawButton(x, y, 4, 1, tostring(counter), colors.shapeNumbersActiveBackground, colors.shapeNumbersActiveText))
+			else
+				newObj("ShapeNumbers", counter, ecs.drawButton(x, y, 4, 1, tostring(counter), colors.shapeNumbersBackground, colors.shapeNumbersText))
+			end
+
+			x = x + 5
+			counter = counter + 1
+		end
+		x = xStart
+		y = y + 2
+	end
 end
- 
-local function whatsClickMain(x, y)
-        if x > 1 and x < 49 and y > 1 and y < 50 then
-                return math.floor((x+2)/ 3), math.floor((y + 1)/ 3)
-        else
-                return "fail", " "
-        end
+
+local function toolBarInfoLine(y, text)
+	ecs.square(xToolbar, y, widthOfToolbar, 1, colors.toolbarInfoBackground)
+	ecs.colorText(xToolbar + 1, y, colors.toolbarInfoText, text)
 end
- 
-local function whatsClickShape(x, y)
-        for i = 1, 24 do
-                if isIn(doingShapes[i].x, doingShapes[i].y, doingShapes[i].x + 4, doingShapes[i].y, x, y) then
-                        return "nofail", i
-                end
-        end
-        return "fail"
+
+local function centerText(y, color, text)
+	local x = math.floor(xToolbar + widthOfToolbar / 2 - unicode.len(text) / 2)
+	ecs.colorTextWithBack(x, y, color, colors.toolbarBackground, text)
 end
- 
-local function whatsClickButton(x, y)
-        if isIn(button.Name.x1, button.Name.y1, button.Name.x2, button.Name.y2, x, y) then
-                return "name"
-        elseif isIn(button.Clear.x1, button.Clear.y1, button.Clear.x2, button.Clear.y2, x, y) then
-                return "clear"
-        elseif isIn(button.IsEmitRedstone.x1, button.IsEmitRedstone.y1, button.IsEmitRedstone.x2, button.IsEmitRedstone.y2, x, y) then
-                return "redstone"
-        elseif isIn(button.IsButtonMode.x1, button.IsButtonMode.y1, button.IsButtonMode.x2, button.IsButtonMode.y2, x, y) then
-                return "buttonMode"
-        elseif isIn(button.Light.x1, button.Light.y1, button.Light.x2, button.Light.y2, x, y) then
-                return "light"
-        elseif isIn(button.Texture.x1, button.Texture.y1, button.Texture.x2, button.Texture.y2, x, y) then
-                return "texture"
-        elseif isIn(button.State.x1, button.State.y1, button.State.x2, button.State.y2, x, y) then
-                return "state"
-        elseif isIn(button.Print.x1, button.Print.y1, button.Print.x2, button.Print.y2, x, y) then
-                return "print"
-        else
-                return "fail"
-        end
+
+local function addButton(y, back, fore, text)
+	newObj("ToolbarButtons", text, ecs.drawButton(xToolbar + 2, y, widthOfToolbar - 4, 3, text, back, fore))
 end
- 
-local function whatsClick(x, y)
-        local mainScreenX, mainScreenY = whatsClickMain(x/2, y)
-        if mainScreenX ~= "fail" then
-                return "main", mainScreenX, mainScreenY
-        end
-        local shape = {whatsClickShape(x, y)}
-        if shape[1] ~= "fail" then
-                return "shape", shape[2]
-        end
- 
-        local button = whatsClickButton(x, y)
-        if button ~= "fail" then
-                return "button", button
-        end
+
+local function printKeyValue(x, y, keyColor, valueColor, key, value, limit)
+	local totalLength = unicode.len(key .. ": " .. value) 
+	if totalLength > limit then
+		value = unicode.sub(value, 1, limit - unicode.len(key .. ": ") - 1) .. "…"
+	end
+	gpu.setForeground(keyColor)
+	gpu.set(x, y, key .. ":")
+	gpu.setForeground(valueColor)
+	gpu.set(x + unicode.len(key) + 2, y, value)
 end
- 
-local function textInCount(text)
-        return
+
+local function getShapeCoords()
+	local coords = "элемент не создан"
+	if model.shapes[currentShape] then
+		coords = "(" .. model.shapes[currentShape][1] .. "," .. model.shapes[currentShape][2] .. "," .. model.shapes[currentShape][3] .. ");(" .. model.shapes[currentShape][4] .. "," .. model.shapes[currentShape][5] .. "," .. model.shapes[currentShape][6] .. ")"
+	end
+	return coords
 end
- 
-------------------------------Изичные функции-----------------------------------------
-local function getPosXForShapeButton(i)
-        local x
-        x = i % 6 * 5
-        return x
+
+local function fixNumber(number)
+	if number < 10 then number = "0" .. number end
+	return tostring(number)
 end
- 
-local function getPosYForShapeButton(i)
-        local y
-        y = math.floor(i / 6) * 3
-        return y
+
+local function drawToolbar()
+	ecs.square(xToolbar, 1, widthOfToolbar, ySize, colors.toolbarBackground)
+
+	local x = xToolbar + 8
+	local y = 3
+
+	--Текущий слой
+	bigLetters.drawString(x, y, colors.toolbarBigLetters, fixNumber(currentLayer))
+	y = y + 6
+	centerText(y, colors.toolbarText, "Текущая высота")
+
+	--Управление элементом
+	y = y + 2
+	x = xToolbar + 2
+	toolBarInfoLine(y, "Управление моделью"); y = y + 2
+	gpu.setBackground(colors.toolbarBackground)
+	printKeyValue(x, y, colors.toolbarKeyText, colors.toolbarValueText, "Имя", model.label, widthOfToolbar - 4); y = y + 1
+	printKeyValue(x, y, colors.toolbarKeyText, colors.toolbarValueText, "Описание", model.tooltip, widthOfToolbar - 4); y = y + 1
+	printKeyValue(x, y, colors.toolbarKeyText, colors.toolbarValueText, "Как кнопка", tostring(model.buttonMode), widthOfToolbar - 4); y = y + 1
+	printKeyValue(x, y, colors.toolbarKeyText, colors.toolbarValueText, "Редстоун-сигнал", tostring(model.emitRedstone), widthOfToolbar - 4); y = y + 1
+	printKeyValue(x, y, colors.toolbarKeyText, colors.toolbarValueText, "Коллизия", tostring(model.collidable[currentMode]), widthOfToolbar - 4); y = y + 1
+	printKeyValue(x, y, colors.toolbarKeyText, colors.toolbarValueText, "Уровень света", tostring(model.lightLevel), widthOfToolbar - 4); y = y + 1
+	y = y + 1
+	printKeyValue(x, y, ecs.colors.blue, colors.toolbarValueText, "Состояние", modes[currentMode], widthOfToolbar - 4); y = y + 1
+	y = y + 1
+	addButton(y, colors.toolbarButtonBackground, colors.toolbarButtonText, "Изменить параметры"); y = y + 4
+	addButton(y, colors.toolbarButtonBackground, colors.toolbarButtonText, "Напечатать"); y = y + 4
+	toolBarInfoLine(y, "Управление элементом " .. currentShape); y = y + 2
+	gpu.setBackground(colors.toolbarBackground)
+	printKeyValue(x, y, colors.toolbarKeyText, colors.toolbarValueText, "Текстура", tostring(currentTexture), widthOfToolbar - 4); y = y + 1
+	printKeyValue(x, y, colors.toolbarKeyText, colors.toolbarValueText, "Оттенок", ecs.HEXtoString(currentTint, 6, true), widthOfToolbar - 4); y = y + 1
+	printKeyValue(x, y, colors.toolbarKeyText, colors.toolbarValueText, "Использовать оттенок", tostring(useTint), widthOfToolbar - 4); y = y + 1
+	printKeyValue(x, y, colors.toolbarKeyText, colors.toolbarValueText, "Позиция", getShapeCoords(), widthOfToolbar - 4); y = y + 2
+	addButton(y, colors.toolbarButtonBackground, colors.toolbarButtonText, "Изменить параметры "); y = y + 4
+
+	--Элементы
+	toolBarInfoLine(y, "Выбор элемента"); y = y + 2
+	drawShapeNumbers(x, y)
+	y = y + 8
 end
-------------------------------------Прорисовка кнопок и окон---------------------
-local function drawLayerBar(x, y, number)
-        gpu.setBackground(0x111111)
-        gpu.setForeground(0xff0000)
-        gpu.set(x-7, y-1, "                 ")
-        gpu.set(x-7, y, " Слой:           ")
-        gpu.set(x-7, y+1, "                 ")
-        gpu.setBackground(0xffffff)
-        gpu.setForeground(0x000000)
-        if number < 10 then
-                gpu.set(x, y, "    "..tostring(number).."   ")
-        else
-                gpu.set(x, y, "   "..tostring(number).."   ")
-        end
+
+local function drawTopMenu(selected)
+	obj["TopMenu"] = ecs.drawTopMenu(1, 1, xSize - widthOfToolbar, colors.toolbarBackground, selected, {"Файл", 0x262626}, {"Проектор", 0x262626}, {"О программе", 0x262626})
 end
- 
-local function drawShapeButton(x, y, number)
-        if number ~= onlineShape then
-                gpu.setBackground(0x111111)
-                gpu.setForeground(0xffffff)
-        else
-                gpu.setBackground(colors[number])
-                gpu.setForeground(0xffffff)
-        end
-        if number < 10 then
-                gpu.set(x, y, "  "..tostring(number).." ")
-        else
-                gpu.set(x, y, " "..tostring(number).." ")
-        end    
+
+local function renderCurrentLayerOnHologram(xStart, yStart, zStart)
+	if showLayerOnHologram then
+		for i = xStart, xStart + 16 do
+			hologram.set(i, yStart + currentLayer - 1, zStart - 1, 3)
+			hologram.set(i, yStart + currentLayer - 1, zStart + 17, 3)
+		end
+
+		for i = (zStart-1), (zStart + 17) do
+			hologram.set(xStart - 1, yStart + currentLayer - 1, i, 3)
+			hologram.set(xStart + 17, yStart + currentLayer - 1, i, 3)
+		end
+	end
 end
- 
-local function calculateButtons(x, y)
-        x = x * 2
-        for i = 1, 24 do
-                doingShapes[i] = {
-                        x = x + getPosXForShapeButton(i - 1),
-                        y = y + getPosYForShapeButton(i - 1),
-                        isNil = true,
-                        texture = "quartz_block_top",
-                        state = false
-                }
-        end
+
+local function drawModelOnHologram()
+	local xStart, yStart, zStart = 16,4,16
+	hologram.clear()
+
+	for shape in pairs(model.shapes) do
+		if (currentMode == 2 and model.shapes[shape].state) or (currentMode == 1 and not model.shapes[shape].state) then
+			if model.shapes[shape] then
+				for x = model.shapes[shape][1], model.shapes[shape][4] do
+					for y = model.shapes[shape][2], (model.shapes[shape][5] - 1) do
+						for z = model.shapes[shape][3], model.shapes[shape][6] do
+							--Эта хуйня для того, чтобы в разных режимах не ебало мозг
+							if (model.shapes[shape].state and currentMode == 2) or (not model.shapes[shape].state and currentMode == 1) then
+								if shape == currentShape then
+									hologram.set(xStart + x, yStart + y, zStart + z, 2)
+								else
+									hologram.set(xStart + x, yStart + y, zStart + z, 1)
+								end
+							end
+						end
+					end
+				end
+			end
+		end
+	end
+
+	renderCurrentLayerOnHologram(xStart, yStart, zStart)
 end
- 
-local function drawShapeButtonsList()
-        for i = 1, 24 do
-                drawShapeButton(doingShapes[i].x, doingShapes[i].y, i)
-        end
+
+local function printModel()
+	printer.reset()
+	printer.setLabel(model.label)
+	printer.setTooltip(model.tooltip)
+	printer.setCollidable(model.collidable[1], model.collidable[2])
+	printer.setLightLevel(model.lightLevel)
+	printer.setRedstoneEmitter(model.emitRedstone)
+	printer.setButtonMode(model.buttonMode)
+	for i in pairs(model.shapes) do
+		printer.addShape(
+			model.shapes[i][1],
+			model.shapes[i][2],
+			model.shapes[i][3],
+			model.shapes[i][4],
+			model.shapes[i][5],
+			model.shapes[i][6], 
+			model.shapes[i].texture,
+			model.shapes[i].state,
+			model.shapes[i].tint
+		)
+	end
+	local success, reason = printer.commit(1)
+	if not success then
+		ecs.error("Ошибка печати: " .. reason)
+	end
 end
- 
-local function drawButtons(xN, yN, xC, yC, xR, yR, xB, yB, xL, yL, xT, yT, xS, yS, xP, yP)
-        local function takeColorFromBool(bool)
-                if bool == false then
-                        return 0x111111
-                else
-                        return 0x00dd00
-                end
-        end
-        button.Name.x1, button.Name.y1, button.Name.x2, button.Name.y2 = ecs.drawButton(xN, yN, 21, 3, button.Name.text, 0x111111, 0xffffff)
-        button.Clear.x1, button.Clear.y1, button.Clear.x2, button.Clear.y2 = ecs.drawButton(xC, yC, 21, 3, button.Clear.text, 0x111111, 0xffffff)
-        button.IsEmitRedstone.x1, button.IsEmitRedstone.y1, button.IsEmitRedstone.x2, button.IsEmitRedstone.y2 = ecs.drawButton(xR, yR, 21, 3, button.IsEmitRedstone.text, takeColorFromBool(userData.emitRedstone), 0xffffff)
-        button.IsButtonMode.x1, button.IsButtonMode.y1, button.IsButtonMode.x2, button.IsButtonMode.y2 = ecs.drawButton(xB, yB, 21, 3, button.IsButtonMode.text, takeColorFromBool(userData.buttonMode), 0xffffff)
-        button.Light.x1, button.Light.y1, button.Light.x2, button.Light.y2 = ecs.drawButton(xL, yL, 10, 7, button.Light.text, takeColorFromBool(userData.light), 0xffffff)
-        button.Texture.x1, button.Texture.y1, button.Texture.x2, button.Texture.y2 = ecs.drawButton(xT, yT, 21, 3, button.Texture.text, 0x111111, 0xffffff)
-        button.State.x1, button.State.y1, button.State.x2, button.State.y2 = ecs.drawButton(xS, yS, 21, 3, button.State.text, takeColorFromBool(doingShapes[onlineShape].state), 0xffffff)
-        button.Print.x1, button.Print.y1, button.Print.x2, button.Print.y2 = ecs.drawButton(xP, yP, 45, 3, button.Print.text, 0x111111, 0xffffff)
+
+local function drawPixel(x, y, width, height, color)
+	gpu.setBackground(color)
+	gpu.fill(xDrawingZone + x * pixelWidth - pixelWidth, yDrawingZone + y * pixelHeight - pixelHeight, width * pixelWidth, height * pixelHeight, " ")
 end
- 
-local function digitToText(numb)
-        if numb > 31 and numb < 127 then
-                return unicode.char(numb)
-        else
-                return ""
-        end
+
+local function drawDrawingZone()
+	ecs.square(xDrawingZone, yDrawingZone, drawingZoneWidth, drawingZoneHeight, colors.drawingZoneBackground)
+	
+	if model.shapes[currentShape] then
+
+		if not ((model.shapes[currentShape].state and currentMode == 2) or (not model.shapes[currentShape].state and currentMode == 1)) then
+			return
+		end
+
+		local selectionStartPoint = {}
+		local selectionEndPoint = {}
+
+		selectionStartPoint.x = model.shapes[currentShape][1] + 1
+		selectionStartPoint.y = model.shapes[currentShape][2] + 1
+		selectionStartPoint.z = model.shapes[currentShape][3] + 1
+		selectionEndPoint.x = model.shapes[currentShape][4]
+		selectionEndPoint.y = model.shapes[currentShape][5]
+		selectionEndPoint.z = model.shapes[currentShape][6]
+
+		if selectionStartPoint.y <= currentLayer and selectionEndPoint.y  >= currentLayer then
+			drawPixel(selectionStartPoint.x, selectionStartPoint.z, selectionEndPoint.x - selectionStartPoint.x + 1, selectionEndPoint.z - selectionStartPoint.z + 1, colors.drawingZoneSelection)
+		end
+
+		if selectionStartPoint.y == currentLayer then
+			drawPixel(selectionStartPoint.x, selectionStartPoint.z, 1, 1, colors.drawingZoneStartPoint)
+		end
+
+		if selectionEndPoint.y == currentLayer then
+			drawPixel(selectionEndPoint.x, selectionEndPoint.z, 1, 1, colors.drawingZoneEndPoint)
+		end
+	end
 end
- 
-local function updateState()
-        local color = 0x111111
-        if doingShapes[onlineShape].state == true then
-                color = 0x00dd00
-        end
-        ecs.drawButton(button.State.x1, button.State.y1, 21, 3, button.State.text, color, 0xffffff)
+
+local function drawAll()
+	ecs.square(1, 2, xSize, ySize, colors.drawingZoneCYKA)
+	drawDrawingZone()
+	drawToolbar()
+	drawTopMenu(0)
 end
- 
--------------------------------------------Главный экран-----------------------------------
-local function drawShapeScreen(numberShape, numberLayer)
-        for xShape = 1, 16 do
-                for yShape = 1, 16 do
-                        local color = 0x9f8f8f
-                        if doingShapes[numberShape].isNil == false then
-                                if doingShapes[numberShape].x1 == xShape and doingShapes[numberShape].y1 == yShape and doingShapes[numberShape].z1 == numberLayer then
-                                        color = 0xffffff
-                                elseif doingShapes[numberShape].x2 == xShape and doingShapes[numberShape].y2 == yShape and doingShapes[numberShape].z2 == numberLayer then
-                                        color = 0x000000
-                                elseif inDiapason(doingShapes[numberShape].x1, doingShapes[numberShape].x2, xShape) and inDiapason(doingShapes[numberShape].y1, doingShapes[numberShape].y2, yShape) and inDiapason(doingShapes[numberShape].z1, doingShapes[numberShape].z2, numberLayer) then
-                                        color = colors[numberShape]
-                                end
-                        end
-                        Square((xShape - 1) * 3 + 2, (yShape - 1) * 3 + 2, 3, 3, color)
-                end
-        end
-       
+
+local function save(path)
+	fs.makeDirectory(fs.path(path) or "")
+	local file = io.open(path, "w")
+	file:write(serialization.serialize(model))
+	file:close()
 end
----------------------------------------------Холограмма------------------------------------
-local function converForPrinter(oldShapes)
-        for i = 1, 24 do
-                if oldShapes[i].isNil == false then
-                        local x1 = math.min(oldShapes[i].x1, oldShapes[i].x2)
-                        local x2 = math.max(oldShapes[i].x1, oldShapes[i].x2)
-                        local y1 = math.min(oldShapes[i].y1, oldShapes[i].y2)
-                        local y2 = math.max(oldShapes[i].y1, oldShapes[i].y2)
-                        local z1 = math.min(oldShapes[i].z1, oldShapes[i].z2)
-                        local z2 = math.max(oldShapes[i].z1, oldShapes[i].z2)
-                        oldShapes[i].x1 = x1
-                        oldShapes[i].x2 = x2
-                        oldShapes[i].y1 = y1
-                        oldShapes[i].y2 = y2
-                        oldShapes[i].z1 = z1
-                        oldShapes[i].z2 = z2
-                end
-        end    
-        return oldShapes
+
+local function open(path)
+	if fs.exists(path) then
+		if ecs.getFileFormat(path) == ".3dm" then
+			local file = io.open(path, "r")
+			model = serialization.unserialize(file:read("*a"))
+			fixModelArray()
+			file:close()
+			drawAll()
+			drawModelOnHologram()
+		else
+			ecs.error("Файл имеет неизвестный формат. Поддерживаются только модели в формате .3dm.")
+		end
+	else
+		ecs.error("Файл \"" .. path .. "\" не существует")
+	end
 end
- 
-local function ShapeInHolo(numb, shapes)
-        if numb == onlineShape then
-                holo.setPaletteColor(3, colors[numb])
-                for zHolo = shapes[numb].z1, shapes[numb].z2 do
-                        for xHolo = shapes[numb].x1, shapes[numb].x2 do
-                                holo.fill(xHolo + startHolo, zHolo + startHolo, 32 - shapes[numb].y2, 32 - shapes[numb].y1, 3)
-                        end
-                end            
-        else
-                for zHolo = shapes[numb].z1, shapes[numb].z2 do
-                        for xHolo = shapes[numb].x1, shapes[numb].x2 do
-                                holo.fill(xHolo + startHolo, zHolo + startHolo, 32 - shapes[numb].y2, 32 - shapes[numb].y1, 1)
-                        end            
-                end    
-        end
-end
- 
-local function ShapeUgli(number)
-        holo.set(doingShapes[number].x1 + startHolo, 32 - doingShapes[number].y1, doingShapes[number].z1 + startHolo, 2)
-        holo.set(doingShapes[number].x2 + startHolo, 32 - doingShapes[number].y2, doingShapes[number].z2 + startHolo, 2)
-end
- 
-local function AllShapesInHolo(color, color2)
-        holo.clear()
-        holo.setPaletteColor(1, color)
-        holo.setPaletteColor(2, color2)
-        for numb = 1, 24 do
-                if doingShapes[numb].isNil == false then
-                        ShapeInHolo(numb, converForPrinter(doingShapes))
-                end
-        end
-        for numb = 1, 24 do
-                if doingShapes[numb].isNil == false then
-                        ShapeUgli(numb)
-                end
-        end
-end
----------------------------------------Принтер-------------------------------------------
- 
-local function inputData(newLabel, newTooltip, newEmitRedstone, newButtonMode, newLight, shapes)
-        printer.reset()
-        printer.setLabel(newLabel)
-        printer.setTooltip(newTooltip)
-        if newLight == true then
-                printer.setLightLevel(8)
-        else
-                printer.setLightLevel(0)
-        end
-        printer.setRedstoneEmitter(newEmitRedstone)
-        printer.setButtonMode(newButtonMode)
-        local normShapes = converForPrinter(shapes)
-        for i = 1, 24 do
-                if normShapes[i].isNil == false then
-                        printer.addShape(normShapes[i].x1 - 1, 16 - (normShapes[i].y1 - 1), 16 - normShapes[i].z1 - 1, normShapes[i].x2, 16 - normShapes[i].y2, 16 - normShapes[i].z2, normShapes[i].texture, normShapes[i].state, 0xffffff)
-                end
-        end
-end
- 
-local function print(count)
-        printer.commit(count)
-end
- 
------------------------------------------Функция для вызова окна с дописывающимся текстом---------------------------------------
- 
-local function WindowForIT(x, y, title, buttonText, arrayOfWords, countOfVars)
-        local mainColor = 0x0024ff
-        local gray1 = 0xa5a5a5
-        local gray2 = 0xf0f0f0
-        local width = 40
-        local height = 4
-       
-        local text = ""
-        local oldPixels = ecs.rememberOldPixels(x - width/2, y - height/2, x + width/2 + 1, y + height/2 + 1)
- 
-        ecs.square(x - width/2, y - height/2, width, height, 0xffffff)
-        ecs.colorTextWithBack(x - (width/2 - 2), y - height/2, mainColor, 0xffffff, title)
-        ecs.square(x - (width/2 - 3), y, width - 13, 1, gray1)
-        local button = {ecs.drawAdaptiveButton(x + (width/2 - 7), y, 2, 0, buttonText, mainColor, 0xffffff)}
-        ecs.windowShadow(x - width/2, y - height/2, width, height)
-       
-        local VariontsOldPixels = {}
-        for i = 1, countOfVars do
-                table.insert(VariontsOldPixels, i, ecs.rememberOldPixels(x - (width/2 - 3), y + i, x + width/2 - 11, y + i))
-        end
-       
-        local function completeText(wrdPart, wrds, count)
-                local massiv = {}
-                if wrdPart ~= "" then
-                        for i = 1, #wrds do
-                                if #massiv < count then
-                                        local answer = unicode.sub(wrds[i], 1, unicode.len(wrdPart))
-                                        if answer == wrdPart then
-                                                table.insert(massiv, wrds[i])
-                                        end
-                                end
-                        end
-                end
-                return massiv
-        end
- 
-        local function drawVariants(x, y, width, textPart, count)
-                local massivText = completeText(textPart, arrayOfWords, count)
-                for i = 1, count do
-                        if massivText[i] ~= nil then
-                                ecs.square(x, y + i - 1, width, 1, gray2)
-                                ecs.colorTextWithBack(x + 1, y + i - 1, 0x000000, gray2, massivText[i])
-                        end
-                end
-                if #massivText == 0 then
-                        for i = 1, count do
-                                ecs.drawOldPixels(VariontsOldPixels[i])
-                        end
-                elseif #massivText ~= count then
-                        for i = #massivText + 1, count do
-                                ecs.drawOldPixels(VariontsOldPixels[i])
-                        end
-                end
-        end
-       
-        while true do
-                local event = {event.pull()}
-                if event[1] == "key_down" then                         
-                        if event[4] == 28 then
-                                ecs.drawOldPixels(oldPixels)
-                                if text ~= "" and text ~= nil then
-                                        return text
-                                else
-                                        return nil
-                                end
-                        elseif event[4] == 14 then
-                                local dlina = unicode.len(text)
-                                if dlina ~= 0 then
-                                        text = unicode.sub(text, 1, unicode.len(text) - 1)
-                                        ecs.colorTextWithBack(x - (width/2 - 4) + unicode.len(text), y,
-0xffffff, gray1, "  ")                                 
-                                end
-                        elseif event[3] > 31 and event[3] < 127 then
-                                text = text..unicode.char(event[3])
-                        end
-                        ecs.colorTextWithBack(x - (width/2 - 4), y, 0x000000, gray1, text.."|")
-                        drawVariants(x - (width/2 - 3), y + 1, width - 13, text, countOfVars)
-                end
-                if event[1] == "touch" and ecs.clickedAtArea(event[3], event[4], button[1], button[2], button[3], button[4]) then
-                        ecs.drawOldPixels(oldPixels)
-                        if text ~= "" and text ~= nil then
-                                return text
-                        else
-                                return 0
-                        end
-                end
-        end
-end
- 
- 
- 
- 
------------------------------------------------Прога-----------------------------
-ecs.prepareToExit()
-Square(1, 1, xSize - rightPartSize, ySize, 0xffffff)
-ecs.colorTextWithBack(xSize*2 - 59, 3,0xffffff, 0x000000,   "   Для данной модели                                        ")
-ecs.colorTextWithBack(xSize*2 - 59, 13, 0xffffff, 0x000000, "   Для данного объекта                                      ")
-ecs.colorTextWithBack(xSize*2 - 59, 24, 0xffffff, 0x000000, "   Объекты                                                  ")
-calculateButtons(xSize - 21, ySize - 18)
-drawButtons(xSize*2 - 57, 5, xSize*2 - 33, 5, xSize*2 - 57, 9, xSize*2 - 33, 9, xSize*2 - 10, 5, xSize*2 - 57, 15, xSize*2 - 33, 15, xSize*2 - 57, 19)
-drawShapeButtonsList()
-drawShapeScreen(onlineShape, onlineLayer)
-drawLayerBar(xSize*2 - 30, 28, onlineLayer)
-holo.clear()
- 
+
+------------------------------------------------------------------------------------------------------------------------
+
+model = {}
+
+fixModelArray()
+drawAll()
+drawModelOnHologram()
+
+local startPointSelected = false
+local xShapeStart, yShapeStart, zShapeStart, xShapeEnd, yShapeEnd, zShapeEnd 
+
 while true do
-        local event = {event.pull()}
-        if event[1] == "touch" then
-                local case = {whatsClick(event[3], event[4])}
-                if case[1] == "main" then
-                        if mode == false then
-                                doingShapes[onlineShape].x1 = case[2]
-                                doingShapes[onlineShape].y1 = case[3]
-                                doingShapes[onlineShape].z1 = onlineLayer
-                                doingShapes[onlineShape].x2 = case[2]
-                                doingShapes[onlineShape].y2 = case[3]
-                                doingShapes[onlineShape].z2 = onlineLayer
-                                doingShapes[onlineShape].isNil = false
-                                mode = true
-                        else
-                                doingShapes[onlineShape].x2 = case[2]
-                                doingShapes[onlineShape].y2 = case[3]
-                                doingShapes[onlineShape].z2 = onlineLayer
-                                doingShapes[onlineShape].isNil = false
-                                mode = false
-                                AllShapesInHolo(0x00ff00, 0xffffff)
-                        end
-                        drawShapeScreen(onlineShape, onlineLayer)
-                elseif case[1] == "shape" then
-                        onlineShape = case[2]
-                        drawShapeButtonsList()
-                        updateState()
-                        AllShapesInHolo(0x00ff00, 0xffffff)
-                elseif case[1] == "button" then
-                        if case[2] == "name" then
-                                ecs.drawButton(button.Name.x1, button.Name.y1, 21, 3, button.Name.text, 0x00dd00, 0xffffff)
-                                local New = ecs.input("auto", "auto", 20, "Ок", {"input", "Имя", "Printered Block"}, {"input", "Описание", "byShahar"})
-                                if New[1] ~= "" and New[1] ~= nil then
-                                        userData.label = New[1]
-                                        Text(150, 1, completeWord(New[1], textures), 0xffffff, 0x000000)
-                                end
-                                if New[2] ~= "" and New[2] ~= nil then
-                                        userData.tooltip = New[2]
-                                end
-                                ecs.drawButton(button.Name.x1, button.Name.y1, 21, 3, button.Name.text, 0x111111, 0xffffff)
-                        elseif case[2] == "clear" then
-                                ecs.drawButton(button.Clear.x1, button.Clear.y1, 21, 3, button.Clear.text, 0x00dd00, 0xffffff)
-                                doingShapes = {}
-                                userData = {
-                                        label = "Printered Block",
-                                        tooltip = "byShahar",
-                                        light = false,
-                                        emitRedstone = false,
-                                        buttonMode = false,
-                                }
-                                local button = {
-                                        Name = {text = "Имя", x1, y1, x2, y2},
-                                        Clear = {text = "Очистить", x1, y1, x2, y2},
-                                        IsEmitRedstone = {text = "Излучает Redstone", x1, y1, x2, y2},
-                                        IsButtonMode = {text = "Режим кнопки", x1, y1, x2, y2},
-                                        Light = {text = "Свет", x1, y1, x2, y2},
-                                        Texture = {text = "Текстура", x1, y1, x2, y2},
-                                        State = {text = "Статус", x1, y1, x2, y2},
-                                        Print = {text = "Готово", x1, y1, x2, y2},
-                                }
-                                ecs.prepareToExit()
-                                Square(1, 1, xSize - rightPartSize, ySize, 0xffffff)
-                                ecs.colorTextWithBack(xSize*2 - 59, 3,0xffffff, 0x000000,   "   Для данной модели                                        ")
-                                ecs.colorTextWithBack(xSize*2 - 59, 13, 0xffffff, 0x000000, "   Для данного объекта                                      ")
-                                ecs.colorTextWithBack(xSize*2 - 59, 25, 0xffffff, 0x000000, "   Объекты                                                  ")
-                                calculateButtons(xSize - 21, ySize - 18)
-                                drawButtons(xSize*2 - 57, 5, xSize*2 - 33, 5, xSize*2 - 57, 9, xSize*2 - 33, 9, xSize*2 - 10, 5, xSize*2 - 57, 15, xSize*2 - 33, 15, xSize*2 - 57, 19)
-                                drawShapeButtonsList()
-                                drawShapeScreen(onlineShape, onlineLayer)
-                                drawLayerBar(xSize*2 - 30, 28, onlineLayer)
-                                holo.clear()
-                        elseif case[2] == "redstone" then
-                                if userData.emitRedstone == false then
-                                        userData.emitRedstone = true
-                                        ecs.drawButton(button.IsEmitRedstone.x1, button.IsEmitRedstone.y1, 21, 3, button.IsEmitRedstone.text, 0x00dd00, 0xffffff)
-                                else
-                                        userData.emitRedstone = false
-                                        ecs.drawButton(button.IsEmitRedstone.x1, button.IsEmitRedstone.y1, 21, 3, button.IsEmitRedstone.text, 0x111111, 0xffffff)
-                                end
-                        elseif case[2] == "buttonMode" then
-                                if userData.buttonMode == false then
-                                        userData.buttonMode = true
-                                        ecs.drawButton(button.IsButtonMode.x1, button.IsButtonMode.y1, 21, 3, button.IsButtonMode.text, 0x00dd00, 0xffffff)
-                                else
-                                        userData.buttonMode = false
-                                        ecs.drawButton(button.IsButtonMode.x1, button.IsButtonMode.y1, 21, 3, button.IsButtonMode.text, 0x111111, 0xffffff)
-                                end
-                        elseif case[2] == "texture" then
-                                doingShapes[onlineShape].texture = WindowForIT(xSize, ySize/2, "Введите название текстуры", "Ок", textures, 3)
-                        elseif case[2] == "light" then
-                                if userData.light == false then
-                                        userData.light = true
-                                        ecs.drawButton(button.Light.x1, button.Light.y1, 10, 7, button.Light.text, 0x00dd00, 0xffffff)
-                                else
-                                        userData.light = false
-                                        ecs.drawButton(button.Light.x1, button.Light.y1, 10, 7, button.Light.text, 0x111111, 0xffffff)
-                                end
-                        elseif case[2] == "state" then
-                                if doingShapes[onlineShape].state == true then
-                                        doingShapes[onlineShape].state = false
-                                else
-                                        doingShapes[onlineShape].state = true
-                                end
-                                updateState()
-                        elseif case[2] == "print" then
-                                ecs.drawButton(button.Print.x1, button.Print.y1, 45, 3, button.Print.text, 0x00dd00, 0xffffff)
-                                inputData(userData.label, userData.tooltip, userData.emitRedstone, userData.buttonMode, userData.light, doingShapes)
-                                print(1)
-                                ecs.drawButton(button.Print.x1, button.Print.y1, 45, 3, button.Print.text, 0x111111, 0xffffff)
-                        end
-                end
-        elseif event[1] == "scroll" then
-                onlineLayer = onlineLayer - event[5]
-                if onlineLayer < 1 then
-                        onlineLayer = 1
-                elseif onlineLayer > 16 then
-                        onlineLayer = 16
-                else
-                        drawShapeScreen(onlineShape, onlineLayer)
-                        drawLayerBar(xSize*2 - 30, 28, onlineLayer)
-                end
-        end
+	local e = { event.pull() }
+	if e[1] == "touch" then
+		--Если кликнули в зону рисования
+		if ecs.clickedAtArea(e[3], e[4], xDrawingZone, yDrawingZone, xDrawingZone + drawingZoneWidth - 1, yDrawingZone + drawingZoneHeight - 1) then
+			if not startPointSelected then
+				xShapeStart = math.ceil((e[3] - xDrawingZone + 1) / pixelWidth)
+				yShapeStart = currentLayer
+				zShapeStart = math.ceil((e[4] - yDrawingZone + 1) / pixelHeight)
+				
+				startPointSelected = true
+				model.shapes[currentShape] = nil
+				ecs.square(xDrawingZone, yDrawingZone, drawingZoneWidth, drawingZoneHeight, colors.drawingZoneBackground)
+			
+				drawPixel(xShapeStart, zShapeStart, 1, 1, colors.drawingZoneStartPoint)
+			else
+				xShapeEnd = math.ceil((e[3] - xDrawingZone + 1) / pixelWidth)
+				yShapeEnd = currentLayer
+				zShapeEnd = math.ceil((e[4] - yDrawingZone + 1) / pixelHeight)
+				
+				drawPixel(xShapeEnd, zShapeEnd, 1, 1, colors.drawingZoneEndPoint)
+				startPointSelected = false
+
+				model.shapes[currentShape] = {
+					xShapeStart - 1,
+					yShapeStart - 1,
+					zShapeStart - 1,
+					xShapeEnd,
+					yShapeEnd,
+					zShapeEnd,
+					texture = currentTexture,
+				}
+
+				if currentMode == 2 then model.shapes[currentShape].state = true end
+				if useTint then model.shapes[currentShape].tint = currentTint end
+
+				correctShapeCoords(currentShape)
+
+				drawAll()
+				drawModelOnHologram()
+			end
+		else
+			for key in pairs(obj.ShapeNumbers) do
+				if ecs.clickedAtArea(e[3], e[4], obj.ShapeNumbers[key][1], obj.ShapeNumbers[key][2], obj.ShapeNumbers[key][3], obj.ShapeNumbers[key][4]) then
+					currentShape = key
+					drawDrawingZone()
+					drawToolbar()
+					drawModelOnHologram()
+					break
+				end
+			end
+
+			for key in pairs(obj.ToolbarButtons) do
+				if ecs.clickedAtArea(e[3], e[4], obj.ToolbarButtons[key][1], obj.ToolbarButtons[key][2], obj.ToolbarButtons[key][3], obj.ToolbarButtons[key][4]) then
+					ecs.drawButton(obj.ToolbarButtons[key][1], obj.ToolbarButtons[key][2], widthOfToolbar - 4, 3, key, ecs.colors.blue, 0xFFFFFF)
+					os.sleep(0.2)
+
+					if key == "Напечатать" then
+						printModel()
+					elseif key == "Изменить параметры" then
+						local data = ecs.universalWindow("auto", "auto", 36, 0x262626, true,
+							{"EmptyLine"},
+							{"CenterText", ecs.colors.orange, "Параметры модели"},
+							{"EmptyLine"},
+							{"Input", 0xFFFFFF, ecs.colors.orange, model.label},
+							{"Input", 0xFFFFFF, ecs.colors.orange, model.tooltip},
+							{"Selector", 0xFFFFFF, ecs.colors.orange, "Неактивная", "Активная"},
+							{"EmptyLine"},
+							{"Switch", ecs.colors.orange, 0xffffff, 0xFFFFFF, "Как кнопка", model.buttonMode},
+							{"EmptyLine"},
+							{"Switch", ecs.colors.orange, 0xffffff, 0xFFFFFF, "Редстоун-сигнал", model.emitRedstone},
+							{"EmptyLine"},
+							{"Switch", ecs.colors.orange, 0xffffff, 0xFFFFFF, "Коллизия", model.collidable[currentMode]},
+							{"EmptyLine"},
+							{"Slider", 0xFFFFFF, ecs.colors.orange, 0, 15, model.lightLevel, "Уровень света: ", ""},
+							{"EmptyLine"},
+							{"Button", {ecs.colors.orange, 0xffffff, "OK"}, {0x999999, 0xffffff, "Отмена"}}
+						)
+
+						if data[8] == "OK" then
+							model.label = data[1] or "Sample label"
+							model.tooltip = data[2] or "Sample tooltip"
+							if data[3] == "Активная" then
+								currentMode = 2
+							else
+								currentMode = 1
+							end
+							model.buttonMode = data[4]
+							model.emitRedstone = data[5]
+							model.collidable[currentMode] = data[6]
+							model.lightLevel = data[7]
+						end
+
+					elseif key == "Изменить параметры " then
+						local data = ecs.universalWindow("auto", "auto", 36, 0x262626, true,
+							{"EmptyLine"},
+							{"CenterText", ecs.colors.orange, "Параметры элемента"},
+							{"EmptyLine"},
+							{"Input", 0xFFFFFF, ecs.colors.orange, currentTexture},
+							{"Color", "Оттенок", currentTint},
+							{"EmptyLine"},
+							{"Switch", ecs.colors.orange, 0xffffff, 0xFFFFFF, "Использовать оттенок", useTint},
+							{"EmptyLine"},
+							{"Button", {ecs.colors.orange, 0xffffff, "OK"}, {0x999999, 0xffffff, "Отмена"}}
+						)
+
+						if data[4] == "OK" then
+							currentTexture = data[1]
+							currentTint = data[2]
+							useTint = data[3]
+						end
+					end
+
+					drawAll()
+					drawModelOnHologram()	
+					break
+				end
+			end
+
+			for key in pairs(obj.TopMenu) do
+				if ecs.clickedAtArea(e[3], e[4], obj.TopMenu[key][1], obj.TopMenu[key][2], obj.TopMenu[key][3], obj.TopMenu[key][4]) then
+					ecs.drawButton(obj.TopMenu[key][1] - 1, obj.TopMenu[key][2], unicode.len(key) + 2, 1, key, ecs.colors.blue, 0xFFFFFF)
+
+					local action
+					if key == "Файл" then
+						action = context.menu(obj.TopMenu[key][1] - 1, obj.TopMenu[key][2] + 1, {"Новый"}, "-", {"Открыть"}, {"Сохранить"}, "-", {"Выход"})
+					elseif key == "Проектор" then
+						action = context.menu(obj.TopMenu[key][1] - 1, obj.TopMenu[key][2] + 1, {"Масштаб"}, {"Изменить палитру"}, "-", {"Включить показ слоя"}, {"Отключить показ слоя"}, "-", {"Включить вращение"}, {"Отключить вращение"})
+					elseif key == "О программе" then
+						ecs.universalWindow("auto", "auto", 36, 0x262626, true, 
+							{"EmptyLine"},
+							{"CenterText", ecs.colors.orange, "3DPrint v3.0"}, 
+							{"EmptyLine"},
+							{"CenterText", 0xFFFFFF, "Автор:"},
+							{"CenterText", 0xBBBBBB, "Тимофеев Игорь"},
+							{"CenterText", 0xBBBBBB, "vk.com/id7799889"},
+							{"EmptyLine"},
+							{"CenterText", 0xFFFFFF, "Тестеры:"},
+							{"CenterText", 0xBBBBBB, "Семёнов Сeмён"}, 
+							{"CenterText", 0xBBBBBB, "vk.com/day_z_utes"},
+							{"CenterText", 0xBBBBBB, "Бесфамильный Яков"},
+							{"CenterText", 0xBBBBBB, "vk.com/mathem"},
+							{"EmptyLine"},
+							{"Button", {ecs.colors.orange, 0xffffff, "OK"}}
+						)
+					end
+
+					if action == "Сохранить" then
+						local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Сохранить как"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, "Путь"}, {"Selector", 0x262626, 0x880000, ".3dm"}, {"EmptyLine"}, {"Button", {0x888888, 0xffffff, "OK"}, {0xaaaaaa, 0xffffff, "Отмена"}})
+						if data[3] == "OK" then
+							data[1] = data[1] or "Untitled"
+							local filename = data[1] .. data[2]
+							save(filename)
+						end
+					elseif action == "Открыть" then
+						local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Открыть"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, "Путь"}, {"EmptyLine"}, {"Button", {0xbbbbbb, 0xffffff, "OK"}})
+						open(data[1])
+					elseif action == "Новый" then
+						model = {}
+						currentLayer = 1
+						currentShape = 1
+						fixModelArray()
+						drawAll()
+						drawModelOnHologram()
+					elseif action == "Выход" then
+						ecs.prepareToExit()
+						return
+					elseif action == "Масштаб" then
+						local data = ecs.universalWindow("auto", "auto", 36, 0x262626, true, 
+							{"EmptyLine"},
+							{"CenterText", ecs.colors.orange, "Изменить масштаб"},
+							{"EmptyLine"}, 
+							{"Slider", ecs.colors.white, ecs.colors.orange, 1, 100, math.ceil(hologram.getScale() * 100 / 4), "", "%"},
+							{"EmptyLine"},
+							{"Button", {ecs.colors.orange, 0xffffff, "OK"}, {0x999999, 0xffffff, "Отмена"}}
+						)
+
+						if data[2] == "OK" then
+							hologram.setScale(data[1] * 4 / 100)
+						end
+					elseif action == "Изменить палитру" then
+						local data = ecs.universalWindow("auto", "auto", 36, 0x262626, true,
+							{"EmptyLine"},
+							{"CenterText", ecs.colors.orange, "Палитра проектора"},
+							{"EmptyLine"},
+							{"Color", "Цвет активного элемента", hologram.getPaletteColor(1)},
+							{"Color", "Цвет других элементов", hologram.getPaletteColor(2)},
+							{"Color", "Цвет рамки высоты", hologram.getPaletteColor(3)},
+							{"EmptyLine"},
+							{"Button", {ecs.colors.orange, 0xffffff, "OK"}, {0x999999, 0xffffff, "Отмена"}}
+						)
+
+						if data[4] == "OK" then
+							for i = 1, 3 do hologram.setPaletteColor(i, data[i]) end
+						end
+					elseif action == "Включить показ слоя" then
+						showLayerOnHologram = true
+						drawModelOnHologram()
+					elseif action == "Отключить показ слоя" then
+						showLayerOnHologram = false
+						drawModelOnHologram()
+					elseif action == "Включить вращение" then
+						hologram.setRotationSpeed(15, 0, 23, 0)
+					elseif action == "Отключить вращение" then
+						hologram.setRotationSpeed(0, 0, 0, 0)
+					end
+
+					drawTopMenu()
+				end
+			end
+		end
+	elseif e[1] == "scroll" then
+		if e[5] == 1 then
+			if currentLayer < 16 then
+				currentLayer = currentLayer + 1
+				drawAll()
+				drawModelOnHologram()
+			end
+		else
+			if currentLayer > 1 then
+				currentLayer = currentLayer - 1
+				drawAll()
+				drawModelOnHologram()
+			end
+		end
+	end
 end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
