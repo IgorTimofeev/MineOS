@@ -286,9 +286,9 @@ local function drawModelOnHologram()
 							--Эта хуйня для того, чтобы в разных режимах не ебало мозг
 							if (model.shapes[shape].state and currentMode == 2) or (not model.shapes[shape].state and currentMode == 1) then
 								if shape == currentShape then
-									hologram.set(xStart + x, yStart + 16 - z, zStart + y, 2)
+									hologram.set(xStart + x, yStart + 15 - z, zStart + y, 2)
 								else
-									hologram.set(xStart + x, yStart + 16 - z, zStart + y, 1)
+									hologram.set(xStart + x, yStart + 15 - z, zStart + y, 1)
 								end
 							end
 						end
@@ -315,9 +315,11 @@ local function printModel()
 			model.shapes[i][1],
 			(16-model.shapes[i][3]),
 			(16-model.shapes[i][2]),
+			
 			model.shapes[i][4],
 			(16-model.shapes[i][6]),
 			(16-model.shapes[i][5]),
+			
 			model.shapes[i].texture,
 			model.shapes[i].state,
 			model.shapes[i].tint
