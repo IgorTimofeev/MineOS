@@ -51,7 +51,9 @@ local colors = {
 	toolbarButtonText = 0x262626,
 }
 
-local xSize, ySize = gpu.getResolution()
+local xOld, yOld = gpu.getResolution()
+local xSize, ySize = 160, 50
+gpu.setResolution(xSize, ySize)
 local widthOfToolbar = 33
 local xToolbar = xSize - widthOfToolbar + 1
 local widthOfDrawingCYKA = xSize - widthOfToolbar
@@ -539,6 +541,7 @@ while true do
 						drawModelOnHologram()
 					elseif action == "Выход" then
 						ecs.prepareToExit()
+						gpu.setResolution(xOld, yOld)
 						return
 					elseif action == "Масштаб" then
 						local data = ecs.universalWindow("auto", "auto", 36, 0x262626, true, 
