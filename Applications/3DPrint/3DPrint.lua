@@ -435,7 +435,10 @@ end
 
 model = {}
 
--- open("xyu.3dm")
+local args = {...}
+if args[1] then
+	open(args[1])
+end
 
 fixModelArray()
 drawAll()
