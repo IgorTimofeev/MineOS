@@ -561,8 +561,8 @@ while true do
 							{"EmptyLine"},
 							{"CenterText", ecs.colors.orange, "Палитра проектора"},
 							{"EmptyLine"},
-							{"Color", "Цвет активного элемента", hologram.getPaletteColor(1)},
-							{"Color", "Цвет других элементов", hologram.getPaletteColor(2)},
+							{"Color", "Цвет активного элемента", hologram.getPaletteColor(2)},
+							{"Color", "Цвет других элементов", hologram.getPaletteColor(1)},
 							{"Color", "Цвет рамки высоты", hologram.getPaletteColor(3)},
 							{"EmptyLine"},
 							{"Button", {ecs.colors.orange, 0xffffff, "OK"}, {0x999999, 0xffffff, "Отмена"}}
