@@ -312,11 +312,13 @@ local function printModel()
 	for i in pairs(model.shapes) do
 		printer.addShape(
 			model.shapes[i][1],
-			model.shapes[i][3],
-			(16-model.shapes[i][2]),
+			(16-model.shapes[i][3]),
+			model.shapes[i][2],
+			
 			model.shapes[i][4],
-			model.shapes[i][6],
-			(16-model.shapes[i][5]), 
+			(16-model.shapes[i][6]),
+			model.shapes[i][5], 
+			
 			model.shapes[i].texture,
 			model.shapes[i].state,
 			model.shapes[i].tint
