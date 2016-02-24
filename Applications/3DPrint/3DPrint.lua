@@ -444,6 +444,8 @@ fixModelArray()
 drawAll()
 drawModelOnHologram()
 
+------------------------------------------------------------------------------------------------------------------------
+
 local startPointSelected = false
 local xShapeStart, yShapeStart, zShapeStart, xShapeEnd, yShapeEnd, zShapeEnd 
 
