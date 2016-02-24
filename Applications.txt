@@ -201,6 +201,12 @@
   ----------------------------------------------------- Библиотеки --------------------------------------------------------------------------
 
   {
+    ["name"]="lib/bigLetters.lua",
+    ["url"]="IgorTimofeev/OpenComputers/master/lib/bigLetters.lua",
+    ["type"]="Script",
+    ["version"]=1.0,
+  },
+  {
     ["name"]="lib/worldEdit.lua",
     ["url"]="IgorTimofeev/OpenComputers/master/lib/worldEdit.lua",
     ["type"]="Script",
