@@ -315,11 +315,9 @@ local function printModel()
 			model.shapes[i][1],
 			(16-model.shapes[i][3]),
 			(16-model.shapes[i][2]),
-			
 			model.shapes[i][4],
 			(16-model.shapes[i][6]),
-			(16-model.shapes[i][5]), 
-			
+			(16-model.shapes[i][5]),
 			model.shapes[i].texture,
 			model.shapes[i].state,
 			model.shapes[i].tint
