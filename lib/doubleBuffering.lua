@@ -49,9 +49,26 @@ local function printDebug(line, text)
 	end
 end
 
-function buffer.createArray()
+-- Установить ограниченную зону рисования. Все пиксели, не попадающие в эту зону, будут игнорироваться.
+function buffer.setDrawLimit(x, y, width, height)
+	buffer.drawLimit = { x1 = x, y1 = y, x2 = x + width - 1, y2 = y + height - 1 }
+end
+
+-- Удалить ограничение зоны рисования, по умолчанию она будет от 1х1 до координат размера экрана.
+function buffer.resetDrawLimit()
+	buffer.drawLimit = {x1 = 1, y1 = 1, x2 = buffer.screen.width, y2 = buffer.screen.height}
+end
+
+-- Создать массив буфера с базовыми переменными и базовыми цветами. Т.е. черный фон, белый текст.
+function buffer.start()	
+	buffer.screen = {}
 	buffer.screen.current = {}
 	buffer.screen.new = {}
+	buffer.screen.width, buffer.screen.height = gpu.getResolution()
+
+	buffer.totalCountOfGPUOperations = 0
+	buffer.localCountOfGPUOperations = 0
+	buffer.resetDrawLimit()
 
 	for y = 1, buffer.screen.height do
 		for x = 1, buffer.screen.width do
@@ -66,31 +83,20 @@ function buffer.createArray()
 	end
 end
 
-function buffer.start()
-	buffer.totalCountOfGPUOperations = 0
-	buffer.localCountOfGPUOperations = 0
-
-	buffer.screen = {
-		current = {},
-		new = {},
-	}
-
-	buffer.screen.width, buffer.screen.height = gpu.getResolution()
-	buffer.createArray()
-end
-
+-- Получить информацию о пикселе из буфера
 function buffer.get(x, y)
 	local index = convertCoordsToIndex(x, y)
-	if x >= 1 and y >= 1 and x <= buffer.screen.width and y <= buffer.screen.height then
+	if x >= buffer.drawLimit.x1 and y >= buffer.drawLimit.y1 and x <= buffer.drawLimit.x2 and y <= buffer.drawLimit.y2 then
 		return buffer.screen.current[index], buffer.screen.current[index + 1], buffer.screen.current[index + 2]
 	else
 		error("Невозможно получить указанные значения, так как указанные координаты лежат за пределами экрана.\n")
 	end
 end
 
+-- Установить пиксель в буфере
 function buffer.set(x, y, background, foreground, symbol)
 	local index = convertCoordsToIndex(x, y)
-	if x >= 1 and y >= 1 and x <= buffer.screen.width and y <= buffer.screen.height then
+	if x >= buffer.drawLimit.x1 and y >= buffer.drawLimit.y1 and x <= buffer.drawLimit.x2 and y <= buffer.drawLimit.y2 then
 		buffer.screen.new[index] = background
 		buffer.screen.new[index + 1] = foreground
 		buffer.screen.new[index + 2] = symbol
@@ -103,7 +109,7 @@ function buffer.square(x, y, width, height, background, foreground, symbol, tran
 	if transparency then transparency = transparency * 2.55 end
 	for j = y, (y + height - 1) do
 		for i = x, (x + width - 1) do
-			if i >= 1 and j >= 1 and i <= buffer.screen.width and j <= buffer.screen.height then
+			if i >= buffer.drawLimit.x1 and j >= buffer.drawLimit.y1 and i <= buffer.drawLimit.x2 and j <= buffer.drawLimit.y2 then
 				index = convertCoordsToIndex(i, j)
 				if transparency then
 					buffer.screen.new[index] = colorlib.alphaBlend(buffer.screen.new[index], background, transparency)
@@ -138,9 +144,11 @@ function buffer.fill(x, y, background, foreground, symbol)
 		end
 
 		--Заливаем в память
-		buffer.screen.new[index] = background
-		buffer.screen.new[index + 1] = foreground
-		buffer.screen.new[index + 2] = symbol
+		if xStart >= buffer.drawLimit.x1 and yStart >= buffer.drawLimit.y1 and xStart <= buffer.drawLimit.x2 and yStart <= buffer.drawLimit.y2 then
+			buffer.screen.new[index] = background
+			buffer.screen.new[index + 1] = foreground
+			buffer.screen.new[index + 2] = symbol
+		end
 
 		doFill(xStart + 1, yStart)
 		doFill(xStart - 1, yStart)
@@ -222,7 +230,7 @@ function buffer.paste(x, y, copyArray)
 
 	for j = y, (y + copyArray.height - 1) do
 		for i = x, (x + copyArray.width - 1) do
-			if i >= 1 and j >= 1 and i <= buffer.screen.width and j <= buffer.screen.height then
+			if i >= buffer.drawLimit.x1 and j >= buffer.drawLimit.y1 and i <= buffer.drawLimit.x2 and j <= buffer.drawLimit.y2 then
 				--Рассчитываем индекс массива основного изображения
 				index = convertCoordsToIndex(i, j)
 				--Копипаст формулы, аккуратнее!
@@ -270,7 +278,7 @@ function buffer.text(x, y, color, text)
 	local index
 	local sText = unicode.len(text)
 	for i = 1, sText do
-		if (x + i - 1) >= 1 and y >= 1 and (x + i - 1) <= buffer.screen.width and y <= buffer.screen.height then
+		if (x + i - 1) >= buffer.drawLimit.x1 and y >= buffer.drawLimit.y1 and (x + i - 1) <= buffer.drawLimit.x2 and y <= buffer.drawLimit.y2 then
 			index = convertCoordsToIndex(x + i - 1, y)
 			buffer.screen.new[index + 1] = color
 			buffer.screen.new[index + 2] = unicode.sub(text, i, i)
@@ -283,7 +291,7 @@ function buffer.image(x, y, picture)
 	local index, imageIndex
 	for j = y, (y + picture.height - 1) do
 		for i = x, (x + picture.width - 1) do
-			if i >= 1 and j >= 1 and i <= buffer.screen.width and j <= buffer.screen.height then
+			if i >= buffer.drawLimit.x1 and j >= buffer.drawLimit.y1 and i <= buffer.drawLimit.x2 and j <= buffer.drawLimit.y2 then
 				index = convertCoordsToIndex(i, j)
 				--Копипаст формулы!
 				imageIndex = (picture.width * ((j - y + 1) - 1) + (i - x + 1)) * 4 - 4 + 1
@@ -444,7 +452,6 @@ buffer.start()
 ------------------------------------------------------------------------------------------------------
 
 return buffer
-
 
 
 

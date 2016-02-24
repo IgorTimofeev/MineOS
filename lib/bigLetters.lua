@@ -1,7 +1,6 @@
 
-local component = require("component")
 local unicode = require("unicode")
-local gpu = component.gpu
+local buffer = require("doubleBuffering")
 local bigLetters = {}
 
 local pixelHeight = 5
@@ -108,12 +107,10 @@ function bigLetters.draw(x, y, color, symbol)
     error("Symbol \"" .. symbol .. "\" is not supported yet.")
   end
 
-  if gpu.getBackground() ~= color then gpu.setBackground(color) end
-
   for j = 1, #letters[symbol] do
     for i = 1, #letters[symbol][j] do
       if letters[symbol][j][i] == 1 then
-        gpu.set(x + i * 2 - 2, y + (pixelHeight - #letters[symbol]) + j - 1, "  ")
+        buffer.square(x + i * 2 - 2, y + (pixelHeight - #letters[symbol]) + j - 1, 2, 1, color, 0xFFFFFF, " ")
       end
     end
   end
@@ -121,7 +118,7 @@ function bigLetters.draw(x, y, color, symbol)
   return #letters[symbol][1]
 end
 
-function bigLetters.drawString(x, y, color, stroka)
+function bigLetters.drawText(x, y, color, stroka)
   checkArg(4, stroka, "string")
   for i = 1, unicode.len(stroka) do
     x = x + bigLetters.draw(x, y, color, unicode.sub(stroka, i, i)) * 2 + lettersInterval
