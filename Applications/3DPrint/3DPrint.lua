@@ -421,7 +421,7 @@ end
 
 model = {}
 
-open("xyu.3dm")
+-- open("xyu.3dm")
 
 fixModelArray()
 drawAll()
