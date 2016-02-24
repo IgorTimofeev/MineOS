@@ -309,6 +309,7 @@ local function printModel()
 	printer.setLightLevel(model.lightLevel)
 	printer.setRedstoneEmitter(model.emitRedstone)
 	printer.setButtonMode(model.buttonMode)
+	
 	for i in pairs(model.shapes) do
 		printer.addShape(
 			model.shapes[i][1],
@@ -324,6 +325,7 @@ local function printModel()
 			model.shapes[i].tint
 		)
 	end
+	
 	local success, reason = printer.commit(1)
 	if not success then
 		ecs.error("Ошибка печати: " .. reason)
