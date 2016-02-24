@@ -314,18 +314,18 @@ local function printModel()
 		printer.addShape(
 			model.shapes[i][1],
 			(16-model.shapes[i][3]),
-			model.shapes[i][2],
+			(16-model.shapes[i][2]),
 			
 			model.shapes[i][4],
 			(16-model.shapes[i][6]),
-			model.shapes[i][5], 
+			(16-model.shapes[i][5]), 
 			
 			model.shapes[i].texture,
 			model.shapes[i].state,
 			model.shapes[i].tint
 		)
 	end
-	
+
 	local success, reason = printer.commit(1)
 	if not success then
 		ecs.error("Ошибка печати: " .. reason)
