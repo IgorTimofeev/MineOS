@@ -124,6 +124,18 @@ local function correctShapeCoords(shapeNumber)
 	end
 end
 
+local function loadShapeParameters()
+	if model.shapes[currentShape] then
+		currentTexture = model.shapes[currentShape].texture
+		if model.shapes[currentShape].tint then
+			currentTint = model.shapes[currentShape].tint
+			useTint = true
+		else
+			useTint = false
+		end
+	end
+end
+
 local function fixModelArray()
 	model.label = model.label or "Sample label"
 	model.tooltip = model.tooltip or "Sample tooltip"
@@ -136,9 +148,7 @@ local function fixModelArray()
 	currentLayer = 1
 	currentShape = 1
 	currentMode = 1
-	if model.shapes[currentShape] then
-		currentTexture = model.shapes[currentShape].texture
-	end
+	loadShapeParameters()
 end
 
 --Объекты для тача
@@ -468,6 +478,7 @@ while true do
 				}
 
 				model.shapes[currentShape].state = nil
+				model.shapes[currentShape].tint = nil
 				if currentMode == 2 then model.shapes[currentShape].state = true end
 				if useTint then model.shapes[currentShape].tint = currentTint end
 
@@ -480,9 +491,7 @@ while true do
 			for key in pairs(obj.ShapeNumbers) do
 				if ecs.clickedAtArea(e[3], e[4], obj.ShapeNumbers[key][1], obj.ShapeNumbers[key][2], obj.ShapeNumbers[key][3], obj.ShapeNumbers[key][4]) then
 					currentShape = key
-					if model.shapes[currentShape] then
-						currentTexture = model.shapes[currentShape].texture
-					end
+					loadShapeParameters()
 					drawAll()
 					drawModelOnHologram()
 					break
