@@ -564,8 +564,9 @@ while true do
 
 			for key in pairs(obj.TopMenu) do
 				if ecs.clickedAtArea(e[3], e[4], obj.TopMenu[key][1], obj.TopMenu[key][2], obj.TopMenu[key][3], obj.TopMenu[key][4]) then
-					buffer.button(obj.TopMenu[key][1] - 1, obj.TopMenu[key][2], unicode.len(key) + 2, 1, ecs.colors.blue, 0xFFFFFF, key)
-					buffer.draw()
+					drawTopMenu(obj.TopMenu[key][5])
+					-- buffer.button(obj.TopMenu[key][1] - 1, obj.TopMenu[key][2], unicode.len(key) + 2, 1, ecs.colors.blue, 0xFFFFFF, key)
+					-- buffer.draw()
 
 					local action
 					if key == "Файл" then
