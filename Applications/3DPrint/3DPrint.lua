@@ -592,15 +592,32 @@ while true do
 					end
 
 					if action == "Сохранить" then
-						local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Сохранить как"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, "Путь"}, {"Selector", 0x262626, 0x880000, ".3dm"}, {"EmptyLine"}, {"Button", {0x888888, 0xffffff, "OK"}, {0xaaaaaa, 0xffffff, "Отмена"}})
+						local data = ecs.universalWindow("auto", "auto", 30, 0x262626, true, 
+							{"EmptyLine"},
+							{"CenterText", ecs.colors.orange, "Сохранить как"},
+							{"EmptyLine"},
+							{"Input", 0xFFFFFF, ecs.colors.orange, "Путь"},
+							{"Selector", 0xFFFFFF, ecs.colors.orange, ".3dm"},
+							{"EmptyLine"},
+							{"Button", {ecs.colors.orange, 0xffffff, "OK"}, {0x999999, 0xffffff, "Отмена"}}
+						)
 						if data[3] == "OK" then
 							data[1] = data[1] or "Untitled"
 							local filename = data[1] .. data[2]
 							save(filename)
 						end
 					elseif action == "Открыть" then
-						local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Открыть"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, "Путь"}, {"EmptyLine"}, {"Button", {0xbbbbbb, 0xffffff, "OK"}})
-						open(data[1])
+						local data = ecs.universalWindow("auto", "auto", 30, 0x262626, true,
+							{"EmptyLine"},
+							{"CenterText", ecs.colors.orange, "Открыть"},
+							{"EmptyLine"},
+							{"Input", 0xFFFFFF, ecs.colors.orange, "Путь"},
+							{"EmptyLine"},
+							{"Button", {ecs.colors.orange, 0xffffff, "OK"}, {0x999999, 0xffffff, "Отмена"}}
+						)
+						if data[2] == "OK" then
+							open(data[1])
+						end
 					elseif action == "Новый" then
 						model = {}
 						fixModelArray()
