@@ -560,7 +560,11 @@ while true do
 
 							if model.shapes[currentShape] then
 								model.shapes[currentShape].texture = currentTexture
-								model.shapes[currentShape].tint = currentTint
+								if useTint then
+									model.shapes[currentShape].tint = currentTint
+								else
+									model.shapes[currentShape].tint = nil
+								end
 							end
 						end
 					end
