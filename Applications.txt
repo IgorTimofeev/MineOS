@@ -1,7 +1,5 @@
 {
-
   ----------------------------------------------------- Все для ОС --------------------------------------------------------------------------
-
   {
     ["name"]="OS.lua",
     ["url"]="IgorTimofeev/OpenComputers/master/MineOS/OS.lua",
@@ -360,6 +358,15 @@
     ["version"]=1.0,
   },
   ----------------------------------------------------- Приложения без ресурсов --------------------------------------------------------------------------
+  {
+    ["name"]="MineOS/Applications/GuessWord",
+    ["url"]="IgorTimofeev/OpenComputers/master/Applications/GuessWord/GuessWord.lua",
+    ["about"]="IgorTimofeev/OpenComputers/master/Applications/GuessWord/About.txt",
+    ["type"]="Application",
+    ["icon"]="IgorTimofeev/OpenComputers/master/Applications/GuessWord/Icon.pic",
+    ["createShortcut"] = "desktop",
+    ["version"]=1.0,
+  },
   {
     ["name"]="MineOS/Applications/3DPrint",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/3DPrint/3DPrint.lua",
