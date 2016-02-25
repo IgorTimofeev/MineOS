@@ -19,13 +19,8 @@ local gpu = component.gpu
 
 ------------------------------------------------------------------------------------------------------------------------
 
-if component.isAvailable("hologram") then
+if component.isAvailable("hologram") and component.isAvailable("printer3d") then
 	hologram = component.hologram
-else
-	ecs.error("Этой программе требуется 3D-принтер и голографический проектор 2 уровня.")
-end
-
-if component.isAvailable("printer3d") then
 	printer = component.printer3d
 else
 	ecs.error("Этой программе требуется 3D-принтер и голографический проектор 2 уровня.")
