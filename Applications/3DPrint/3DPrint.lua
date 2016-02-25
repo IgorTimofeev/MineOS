@@ -225,7 +225,7 @@ local function drawToolbar()
 	--Текущий слой
 	bigLetters.drawText(x, y, colors.toolbarBigLetters, fixNumber(currentLayer))
 	y = y + 6
-	centerText(y, colors.toolbarText, "Текущая высота")
+	centerText(y, colors.toolbarText, "Текущий слой")
 
 	--Управление элементом
 	y = y + 2
