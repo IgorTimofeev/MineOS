@@ -359,6 +359,15 @@
   },
   ----------------------------------------------------- Приложения без ресурсов --------------------------------------------------------------------------
   {
+    ["name"]="MineOS/Applications/FuckTheRain",
+    ["url"]="IgorTimofeev/OpenComputers/master/Applications/FuckTheRain/FuckTheRain.lua",
+    ["about"]="IgorTimofeev/OpenComputers/master/Applications/FuckTheRain/About.txt",
+    ["type"]="Application",
+    ["icon"]="IgorTimofeev/OpenComputers/master/Applications/FuckTheRain/Icon.pic",
+    ["createShortcut"] = "desktop",
+    ["version"]=1.0,
+  },
+  {
     ["name"]="MineOS/Applications/GuessWord",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/GuessWord/GuessWord.lua",
     ["about"]="IgorTimofeev/OpenComputers/master/Applications/GuessWord/About.txt",

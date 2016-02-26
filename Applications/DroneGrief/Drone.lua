@@ -7,6 +7,8 @@ local moveSpeed = 1.0
 local suckSide = 0
 local direction = 0
 local acceleration = 0.5
+local autoDrop = true
+local leashed = false
 
 modem.open(port)
 
@@ -40,6 +42,15 @@ local function sendInfo()
   modem.broadcast(port, "ECSDrone", "DroneInfo", moveSpeed, acceleration, direction)
 end
 
+local function dropAll()
+  for i = 1, drone.inventorySize() do
+    drone.select(i)
+    drone.drop(1)
+  end
+  drone.select(1)
+  drone.setStatusText("DROPPED")
+end 
+
 drone.setStatusText("STARTED")
 
 while true do
@@ -72,14 +83,17 @@ while true do
           for i = 1, (inventory.getInventorySize(0) or 1) do
             inventory.suckFromSlot(0, i)
           end
-          for i = 1, (inventory.getInventorySize(1) or 1) do
-            inventory.suckFromSlot(1, i)
-          end
+          drone.setStatusText("SUCKED")
         elseif e[7] == "swing" then
-          drone.swing()
+          drone.swing(0)
+        elseif e[7] == "dropAll" then
+          dropAll()
+        elseif e[7] == "changeAutoDrop" then
+          changeAutoDrop = not changeAutoDrop
+          drone.setStatusText("DROP: " .. tostring(changeAutoDrop))
         elseif e[7] == "moveSpeedUp" then
           moveSpeed = moveSpeed + 0.1
-          if moveSpeed >= 3 then moveSpeed = 3 end
+          if moveSpeed >= 8 then moveSpeed = 8 end
           printSpeed()
           sendInfo()
         elseif e[7] == "moveSpeedDown" then
@@ -99,6 +113,14 @@ while true do
           drone.setAcceleration(acceleration)
           printAcceleration()
           sendInfo()
+        elseif e[7] == "toggleLeash" then
+          if leashed then
+            component.proxy(component.list("leash")()).unleash()
+            leashed = false
+          else 
+            component.proxy(component.list("leash")()).leash(suckSide)
+            leashed = true
+          end
         end
       end
     end
