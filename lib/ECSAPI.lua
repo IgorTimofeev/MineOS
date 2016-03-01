@@ -577,8 +577,8 @@ function ECSAPI.drawCustomImage(x,y,pixels)
 	for i=1,pixelsHeight do
 		for j=1,pixelsWidth do
 			if pixels[i][j][3] ~= "#" then
-				gpu.setBackground(pixels[i][j][1])
-				gpu.setForeground(pixels[i][j][2])
+				if gpu.getBackground() ~= pixels[i][j][1] then gpu.setBackground(pixels[i][j][1]) end
+				if gpu.getForeground() ~= pixels[i][j][2] then gpu.setForeground(pixels[i][j][2]) end
 				gpu.set(x+j,y+i,pixels[i][j][3])
 			end
 		end
@@ -923,40 +923,51 @@ end
 
 --Функция по переносу слов на новую строку в зависимости от ограничения по ширине
 function ECSAPI.stringWrap(strings, limit)
-	local massiv = {}
-
+	-- local massiv = {}
+	local firstSlice, secondSlice
     --Перебираем все указанные строки
-    for i = 1, #strings do
+    local i = 1
+    while i <= #strings do
        
-        --Создаем массив слов данной строки
-        local words = {}
-        for match in string.gmatch(strings[i], "[^%s]+") do table.insert(words, match) end
+    	if unicode.len(strings[i]) > limit then
+    		firstSlice = unicode.sub(strings[i], 1, limit)
+    		secondSlice = unicode.sub(strings[i], limit + 1, -1)
+    		
+    		strings[i] = firstSlice
+    		table.insert(strings, i + 1, secondSlice)
+    	end
 
-        --Если длина слов не превышает лимита
-        if unicode.len(strings[i]) <= limit then
-            table.insert(massiv, table.concat(words, " "))
-        else
-            --Перебираем все слова данной строки с 1 до конца
-            local from = 1
-            local to = 1
-            while to <= #words do
-                --Если длина соединенных слов превышает лимит, то
-                if unicode.len(table.concat(words, " ", from, to)) > limit then
-                    --Вставить в новый массив строк 
-                    table.insert(massiv, table.concat(words, " ", from, to - 1))
-                    from = to
-                else
-                    if to == #words then
-                        table.insert(massiv, table.concat(words, " ", from, to))
-                    end
-                end
+    	i = i + 1
 
-                to = to + 1
-            end
-        end
+        -- --Создаем массив слов данной строки
+        -- local words = {}
+        -- for match in string.gmatch(strings[i], "[^%s]+") do table.insert(words, match) end
+
+        -- --Если длина слов не превышает лимита
+        -- if unicode.len(strings[i]) <= limit then
+        --     table.insert(massiv, table.concat(words, " "))
+        -- else
+        --     --Перебираем все слова данной строки с 1 до конца
+        --     local from = 1
+        --     local to = 1
+        --     while to <= #words do
+        --         --Если длина соединенных слов превышает лимит, то
+        --         if unicode.len(table.concat(words, " ", from, to)) > limit then
+        --             --Вставить в новый массив строк 
+        --             table.insert(massiv, table.concat(words, " ", from, to - 1))
+        --             from = to
+        --         else
+        --             if to == #words then
+        --                 table.insert(massiv, table.concat(words, " ", from, to))
+        --             end
+        --         end
+
+        --         to = to + 1
+        --     end
+        -- end
     end
 
-    return massiv
+    return strings
 end
 
 --Моя любимая функция ошибки C:
@@ -1110,13 +1121,13 @@ function ECSAPI.parseErrorMessage(error, translate)
 			parsedError[i] = string.gsub(parsedError[i], "interrupted", "Выполнение программы прервано пользователем")
 			parsedError[i] = string.gsub(parsedError[i], " got ", " получена ")
 			parsedError[i] = string.gsub(parsedError[i], " expected,", " ожидается,")
-			parsedError[i] = string.gsub(parsedError[i], "bad argument #", "Неверный аргумент №")
+			parsedError[i] = string.gsub(parsedError[i], "bad argument #", "Неверный аргумент #")
 			parsedError[i] = string.gsub(parsedError[i], "stack traceback", "Отслеживание ошибки")
-			parsedError[i] = string.gsub(parsedError[i], "tail calls", "Дочерние функции")
+			parsedError[i] = string.gsub(parsedError[i], "tail calls", "Дочерние вызовы")
 			parsedError[i] = string.gsub(parsedError[i], "in function", "в функции")
 			parsedError[i] = string.gsub(parsedError[i], "in main chunk", "в основной программе")
 			parsedError[i] = string.gsub(parsedError[i], "unexpected symbol near", "неожиданный символ рядом с")
-			parsedError[i] = string.gsub(parsedError[i], "attempt to index", "несуществующий индекс")
+			parsedError[i] = string.gsub(parsedError[i], "attempt to index", "пытаюсь получить значение индекса массива")
 			parsedError[i] = string.gsub(parsedError[i], "attempt to get length of", "не удается получить длину")
 			parsedError[i] = string.gsub(parsedError[i], ": ", ", ")
 			parsedError[i] = string.gsub(parsedError[i], " module ", " модуль ")
@@ -1128,6 +1139,7 @@ function ECSAPI.parseErrorMessage(error, translate)
 			parsedError[i] = string.gsub(parsedError[i], "no primary", "не найден компонент")
 			parsedError[i] = string.gsub(parsedError[i], "available", "в доступе")
 			parsedError[i] = string.gsub(parsedError[i], "attempt to concatenate", "не могу присоединить")
+			parsedError[i] = string.gsub(parsedError[i], "a nil value", "переменная равна nil")
 		end
 	end
 
@@ -1146,16 +1158,17 @@ function ECSAPI.displayCompileMessage(y, reason, translate, withAnimation)
 
 	--Получаем ширину и высоту окошка
 	local width = math.floor(xSize * 7 / 10)
-	local height = #reason + 6
 	local textWidth = width - 11
+	reason = ECSAPI.stringWrap(reason, textWidth)
+	local height = #reason + 6
 
 	--Просчет вот этой хуйни, аааахаахах
 	local difference = ySize - (height + y)
 	if difference < 0 then
 		for i = 1, (math.abs(difference) + 1) do
-			table.remove(reason, 1)
+			table.remove(reason, #reason)
 		end
-		table.insert(reason, 1, "…")
+		table.insert(reason, "…")
 		height = #reason + 6
 	end
 
@@ -1169,48 +1182,50 @@ function ECSAPI.displayCompileMessage(y, reason, translate, withAnimation)
 	}
 
 	--Запоминаем, че было отображено
-	local oldPixels = ECSAPI.rememberOldPixels(x, y, x + width + 1, y + height)
+	local oldPixels
+
+	local function drawCompileMessage(y)
+		ECSAPI.square(x, y, width, height, ECSAPI.windowColors.background)
+		ECSAPI.windowShadow(x, y, width, height)
+			--Рисуем воскл знак
+		ECSAPI.drawCustomImage(x + 2, y + 1, errorImage)
+
+		--Рисуем текст
+		local yPos = y + 1
+		local xPos = x + 9
+		gpu.setBackground(ECSAPI.windowColors.background)
+
+		ECSAPI.colorText(xPos, yPos, ECSAPI.windowColors.usualText, "Код ошибки:")
+		yPos = yPos + 2
+
+		gpu.setForeground( 0xcc0000 )
+		for i = 1, #reason do
+			gpu.set(xPos, yPos, reason[i])
+			yPos = yPos + 1
+		end
+
+		yPos = yPos + 1
+		ECSAPI.colorText(xPos, yPos, ECSAPI.windowColors.usualText, ECSAPI.stringLimit("end", "Нажмите любую клавишу, чтобы продолжить", textWidth))
+	end
 
 	--Типа анимация, ога
 	if withAnimation then
-		for i = 1, height, 1 do
-			ECSAPI.square(x, y, width, i, ECSAPI.windowColors.background)
-			ECSAPI.windowShadow(x, y, width, i)
+		oldPixels = ECSAPI.rememberOldPixels(x, 1, x + width + 1, height + 1)
+		for i = -height, 1, 1 do
+			drawCompileMessage(i)
 			os.sleep(0.01)
 		end
 	else
-		ECSAPI.square(x, y, width, height, ECSAPI.windowColors.background)
-		ECSAPI.windowShadow(x, y, width, height)
+		oldPixels = ECSAPI.rememberOldPixels(x, y, x + width + 1, y + height)
+		drawCompileMessage(y)
 	end
-
-	--Рисуем воскл знак
-	ECSAPI.drawCustomImage(x + 2, y + 1, errorImage)
-
-	--Рисуем текст
-	local yPos = y + 1
-	local xPos = x + 9
-	gpu.setBackground(ECSAPI.windowColors.background)
-
-	ECSAPI.colorText(xPos, yPos, ECSAPI.windowColors.usualText, "Код ошибки:")
-	yPos = yPos + 2
-
-	gpu.setForeground( 0xcc0000 )
-	for i = 1, #reason do
-		gpu.set(xPos, yPos, ECSAPI.stringLimit("end", reason[i], textWidth))
-		yPos = yPos + 1
-	end
-
-	yPos = yPos + 1
-	ECSAPI.colorText(xPos, yPos, ECSAPI.windowColors.usualText, ECSAPI.stringLimit("end", "Нажмите любую клавишу, чтобы продолжить", textWidth))
 
 	--Пикаем звуком кароч
 	for i = 1, 3 do
 		computer.beep(1000)
 	end
-
 	--Ждем сам знаешь чего
-	ECSAPI.waitForTouchOrClick()
-
+	ECSAPI.wait()
 	--Рисуем, че было нарисовано
 	ECSAPI.drawOldPixels(oldPixels)
 end
@@ -1487,15 +1502,22 @@ end
 --Отобразить окно с содержимым файла информации о приложении
 function ECSAPI.applicationHelp(pathToApplication)
 	local pathToAboutFile = pathToApplication .. "/resources/About.txt"
-	if fs.exists(pathToAboutFile) and _G.OSSettings and _G.OSSettings.showHelpOnApplicationStart then
+	if _G.OSSettings and _G.OSSettings.showHelpOnApplicationStart and fs.exists(pathToAboutFile) then
 		local applicationName = fs.name(pathToApplication)
 		local file = io.open(pathToAboutFile, "r")
 		local text = ""
 		for line in file:lines() do text = text .. line .. " " end
 		file:close()
 
-		local data = ECSAPI.universalWindow("auto", "auto", 52, 0xeeeeee, true, {"EmptyLine"}, {"CenterText", 0x262626, "О приложении " .. applicationName}, {"EmptyLine"}, {"TextField", 14, 0xffffff, 0x262626, 0xcccccc, 0x3366CC, text}, {"EmptyLine"}, {"Switch", 0x3366CC, 0xffffff, 0x262626, "Показывать информацию о приложениях", true}, {"EmptyLine"}, {"Button", {ECSAPI.colors.green, 0xffffff, "OK"}})
-		if data[1] == false then
+		local data = ECSAPI.universalWindow("auto", "auto", 30, 0xeeeeee, true,
+			{"EmptyLine"},
+			{"CenterText", 0x000000, "О приложении " .. applicationName},
+			{"EmptyLine"},
+			{"TextField", 16, 0xFFFFFF, 0x262626, 0xcccccc, 0x353535, text},
+			{"EmptyLine"},
+			{"Button", {ECSAPI.colors.orange, 0x262626, "OK"}, {0x999999, 0xffffff, "Больше не показывать"}}
+		)
+		if data[1] ~= "OK" then
 			_G.OSSettings.showHelpOnApplicationStart = false
 			ECSAPI.saveOSSettings()
 		end
@@ -1659,6 +1681,8 @@ end
 
 --ЗАПУСТИТЬ ПРОГУ
 function ECSAPI.launchIcon(path, arguments)
+	local withAnimation = false
+	local translate = true
 	--Запоминаем, какое разрешение было
 	local oldWidth, oldHeight = gpu.getResolution()
 	--Создаем нормальные аргументы для Шелла
@@ -1671,7 +1695,7 @@ function ECSAPI.launchIcon(path, arguments)
 		ECSAPI.applicationHelp(path)
 		local cyka = path .. "/" .. ECSAPI.hideFileFormat(fs.name(path)) .. ".lua"
 		local success, reason = shell.execute(cyka)
-		if not success then ECSAPI.displayCompileMessage(1, reason, true) end
+		if not success then ECSAPI.displayCompileMessage(1, reason, translate, withAnimation) end
 	--Если это папка
 	elseif (fileFormat == "" or fileFormat == nil) and isDirectory then
 		shell.execute("MineOS/Applications/Finder.app/Finder.lua " .. path)
@@ -1684,7 +1708,7 @@ function ECSAPI.launchIcon(path, arguments)
 			print("Program sucessfully executed. Press any key to continue.")
 			print(" ")
 		else
-			ECSAPI.displayCompileMessage(1, reason, true)
+			ECSAPI.displayCompileMessage(1, reason, translate, withAnimation)
 		end
 	--Если это фоточка
 	elseif fileFormat == ".pic" then
@@ -1714,7 +1738,7 @@ function ECSAPI.launchIcon(path, arguments)
 			print("Program sucessfully executed. Press any key to continue.")
 			ECSAPI.waitForTouchOrClick()
 		else
-			ECSAPI.displayCompileMessage(1, reason, false)
+			ECSAPI.displayCompileMessage(1, reason, translate, withAnimation)
 		end
 	--Если это архив
 	elseif fileFormat == ".zip" then
@@ -1774,7 +1798,7 @@ function ECSAPI.universalWindow(x, y, width, background, closeWindowAfter, ...)
 		--elseif objectType == "separator" then
 			
 		elseif objectType == "textfield" then
-			correctWidth(7)
+			correctWidth(5)
 		elseif objectType == "wrappedtext" then
 			correctWidth(6)
 		elseif objectType == "button" then
@@ -2010,9 +2034,9 @@ function ECSAPI.universalWindow(x, y, width, background, closeWindowAfter, ...)
 		
 		elseif objectType == "textfield" then
 			newObj("TextFields", number, x + 1, objects[number].y, x + width - 2, objects[number].y + objects[number][2] - 1)
-			if not objects[number].strings then objects[number].strings = ECSAPI.stringWrap({objects[number][7]}, width - 7) end
+			if not objects[number].strings then objects[number].strings = ECSAPI.stringWrap({objects[number][7]}, width - 3) end
 			objects[number].displayFrom = objects[number].displayFrom or 1
-			ECSAPI.textField(x + 1, objects[number].y, width - 2, objects[number][2], objects[number].strings, objects[number].displayFrom, objects[number][3], objects[number][4], objects[number][5], objects[number][6])
+			ECSAPI.textField(x, objects[number].y, width, objects[number][2], objects[number].strings, objects[number].displayFrom, objects[number][3], objects[number][4], objects[number][5], objects[number][6])
 		
 		elseif objectType == "wrappedtext" then
 			gpu.setBackground(background)
@@ -2416,8 +2440,6 @@ end
 
 
 ----------------------------------------------------------------------------------------------------
-
-ECSAPI.applicationHelp("MineOS/Applications/InfoPanel.app")
 
 return ECSAPI
 
