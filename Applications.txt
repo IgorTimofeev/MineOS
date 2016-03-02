@@ -199,6 +199,12 @@
   ----------------------------------------------------- Библиотеки --------------------------------------------------------------------------
 
   {
+    ["name"]="lib/modemConnection.lua",
+    ["url"]="IgorTimofeev/OpenComputers/master/lib/modemConnection.lua",
+    ["type"]="Script",
+    ["version"]=1.0,
+  },
+  {
     ["name"]="lib/bigLetters.lua",
     ["url"]="IgorTimofeev/OpenComputers/master/lib/bigLetters.lua",
     ["type"]="Script",
