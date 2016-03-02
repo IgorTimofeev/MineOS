@@ -230,7 +230,7 @@ local function connectionGUI()
 	local step = 4
 	local currentRadius = minumumRadius
 
-	drawIconAndAddress(xCircle - 6, ySize - 6, 0xEEEEEE, 0x262626, {address = modemConnection.localAddress})
+	drawIconAndAddress(xCircle - 6, ySize - 6, 0xEEEEEE, 0x262626, modemConnection.dataToSend)
 
 	while true do
 		if ecs.getArraySize(modemConnection.availableUsers) > 0 then
@@ -244,7 +244,7 @@ local function connectionGUI()
 				if not oldPixels and needToUpdate then
 					if ecs.getArraySize(modemConnection.availableUsers) <= 0 then
 						ecs.square(1, 1, xSize, ySize, 0xEEEEEE)
-						drawIconAndAddress(xCircle - 6, ySize - 6, 0xEEEEEE, 0x262626, {address = modemConnection.localAddress})
+						drawIconAndAddress(xCircle - 6, ySize - 6, 0xEEEEEE, 0x262626, modemConnection.dataToSend)
 						currentRadius = minumumRadius
 						break
 					else
