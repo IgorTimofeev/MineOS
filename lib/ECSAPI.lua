@@ -10,7 +10,6 @@ local libraries = {
 	["keyboard"] = "keyboard",
 	["computer"] = "computer",
 	["serialization"] = "serialization",
-	["colorlib"] = "colorlib",
 	--["internet"] = "internet",
 	--["image"] = "image",
 }
@@ -210,6 +209,14 @@ function ECSAPI.findMount(address)
       return path
     end
   end
+end
+
+function ECSAPI.getArraySize(array)
+	local size = 0
+	for key in pairs(array) do
+		size = size + 1
+	end
+	return size
 end
 
 --Скопировать файлы с одного диска на другой с заменой
@@ -2089,7 +2096,7 @@ function ECSAPI.universalWindow(x, y, width, background, closeWindowAfter, ...)
 
 		elseif objectType == "color" then
 			local xPos, yPos = x + 1, objects[number].y
-			local blendedColor = colorlib.alphaBlend(objects[number][3], 0xFFFFFF, 180)
+			local blendedColor = require("colorlib").alphaBlend(objects[number][3], 0xFFFFFF, 180)
 			local w = width - 2
 
 			ECSAPI.colorTextWithBack(xPos, yPos + 2, blendedColor, background, string.rep("▀", w))
