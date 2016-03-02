@@ -7,7 +7,7 @@ local unicode = require("unicode")
 local ecs, image
 local modem = component.modem
 local gpu = component.gpu
-local wirelessConnection = {}
+local modemConnection = {}
 
 ----------------------------------------------------------------------------------------------------------------------------------
 
@@ -16,18 +16,22 @@ local infoMessages = {
 	noModem = "Этой библиотеке требуется сетевая карта для работы",
 }
 
-wirelessConnection.port = 322
-wirelessConnection.sendingDataDelay = 1.0
-wirelessConnection.receiveMessagesFromRobots = true
+modemConnection.port = 322
+modemConnection.sendingDataDelay = 1.0
+modemConnection.receiveMessagesFromRobots = true
+modemConnection.receiveMessagesFromTablets = true
+modemConnection.receiveMessagesFromComputers = true
 
 ----------------------------------------------------------------------------------------------------------------------------------
 
 local xSize, ySize = gpu.getResolution()
-local computerIcon
+local computerIcon, robotIcon, tabletIcon
 if not component.isAvailable("robot") then
 	image = require("image")
 	ecs = require("ECSAPI")
 	computerIcon = image.load("MineOS/System/OS/Icons/Script.pic")
+	robotIcon = image.load("MineOS/System/OS/Icons/Robot.pic")
+	tabletIcon = image.load("MineOS/System/OS/Icons/Tablet.pic")
 end
 
 ----------------------------------------------------------------------------------------------------------------------------------
@@ -55,21 +59,27 @@ end
 local function modemMessageHandler(_, localAddress, remoteAddress, port, distance, ...)
 	local messages = {...}
 	if #messages > 0 then
-		if port == wirelessConnection.port then
+		if port == modemConnection.port then
 			if messages[1] == "requestingPermissionToConnect" then
 				askForConnection(messages[2])
 			elseif messages[1] == "iAmHereAddMePlease" then
-				if not wirelessConnection.availableUsers[remoteAddress] then
+				if not modemConnection.availableUsers[remoteAddress] then
 					local userData = serialization.unserialize(messages[2])
-					if not userData.isRobot or (userData.isRobot and wirelessConnection.receiveMessagesFromRobots) then
-						wirelessConnection.availableUsers[userData.address] = userData
-						modem.send(remoteAddress, wirelessConnection.port, "iAmHereAddMePlease", wirelessConnection.dataToSend)
+					if 
+						(not userData.isRobot and not userData.isTablet and modemConnection.receiveMessagesFromComputers)
+						or
+						(userData.isRobot and modemConnection.receiveMessagesFromRobots)
+						or
+						(userData.isTablet and modemConnection.receiveMessagesFromTablets)
+					then
+						modemConnection.availableUsers[userData.address] = userData
+						modem.send(remoteAddress, modemConnection.port, "iAmHereAddMePlease", modemConnection.dataToSend)
 						computer.pushSignal("userlistChanged")
 					end
 				end
 			elseif messages[1] == "iAmDisconnecting" then
-				if wirelessConnection.availableUsers[remoteAddress] then
-					wirelessConnection.availableUsers[remoteAddress] = nil
+				if modemConnection.availableUsers[remoteAddress] then
+					modemConnection.availableUsers[remoteAddress] = nil
 					computer.pushSignal("userlistChanged")
 				end
 			end
@@ -78,25 +88,44 @@ local function modemMessageHandler(_, localAddress, remoteAddress, port, distanc
 end
 
 local function createSendingArray()
-	wirelessConnection.dataToSend = {}
-	wirelessConnection.dataToSend.address = wirelessConnection.localAddress
-	wirelessConnection.dataToSend.name = component.filesystem.getLabel()
+	modemConnection.dataToSend = {}
+	modemConnection.dataToSend.address = modemConnection.localAddress
+	modemConnection.dataToSend.name = component.filesystem.getLabel()
+	
 	if component.isAvailable("robot") then
-		wirelessConnection.dataToSend.isRobot = true
+		modemConnection.dataToSend.isRobot = true
 		if component.isAvailable("inventory_controller") then
-			wirelessConnection.dataToSend.inventoryController = true
+			modemConnection.dataToSend.inventoryController = true
 		end
+	
 		if component.isAvailable("tank_controller") then
-			wirelessConnection.dataToSend.tankController = true
+			modemConnection.dataToSend.tankController = true
 		end
+	
 		if component.isAvailable("crafting") then
-			wirelessConnection.dataToSend.crafting = true
+			modemConnection.dataToSend.crafting = true
 		end
+	
 		if component.isAvailable("redstone") then
-			wirelessConnection.dataToSend.redstone = true
+			modemConnection.dataToSend.redstone = true
 		end
 	end
-	wirelessConnection.dataToSend = serialization.serialize(wirelessConnection.dataToSend)
+	
+	if component.isAvailable("tablet") then
+		modemConnection.dataToSend.isTablet = true
+		if component.isAvailable("navigation") then
+			modemConnection.dataToSend.navigation = true
+		end
+	
+		if component.isAvailable("piston") then
+			modemConnection.dataToSend.piston = true
+		end
+	end
+	
+	if component.isAvailable("geolyzer") then
+		modemConnection.dataToSend.geolyzer = true
+	end
+	modemConnection.dataToSend = serialization.serialize(modemConnection.dataToSend)
 end
 
 --Нарисовать окружность, алгоритм спизжен с вики
@@ -142,9 +171,17 @@ local function drawCircles(xCircle, yCircle, minumumRadius, maximumRadius, step,
 	end
 end
 
-local function drawIconAndAddress(x, y, background, foreground, text)
-	image.draw(x + 3, y, computerIcon)
-	ecs.colorTextWithBack(x, y + 5, foreground, background, ecs.stringLimit("end", text, 14))
+local function drawIconAndAddress(x, y, background, foreground, userData)
+	if userData.isRobot then
+		image.draw(x + 3, y, robotIcon)
+	elseif userData.isTablet then
+		image.draw(x + 3, y, tabletIcon)
+	else
+		image.draw(x + 3, y, computerIcon)
+	end
+
+	ecs.colorTextWithBack(x, y + 5, foreground, background, ecs.stringLimit("end", userData.address, 14))
+	
 	return x, y, x + 13, y + 5
 end
 
@@ -156,7 +193,7 @@ local function drawHorizontalIcons()
 
 	local iconWidth = 14
 	local spaceBetween = 2
-	local totalWidth = ecs.getArraySize(wirelessConnection.availableUsers) * (iconWidth + spaceBetween) - spaceBetween
+	local totalWidth = ecs.getArraySize(modemConnection.availableUsers) * (iconWidth + spaceBetween) - spaceBetween
 	local x = math.floor(xSize / 2 - totalWidth / 2) + 1
 
 	obj.Users = {}
@@ -164,22 +201,23 @@ local function drawHorizontalIcons()
 	local counter = 0
 	local limit = math.floor(xSize / (iconWidth + spaceBetween))
 	y = y + 1
-	for address in pairs(wirelessConnection.availableUsers) do
+	for address in pairs(modemConnection.availableUsers) do
 		if counter < limit then
-			newObj("Users", address, drawIconAndAddress(x, y, background, 0xFFFFFF, address))
+			newObj("Users", address, drawIconAndAddress(x, y, background, 0xFFFFFF, modemConnection.availableUsers[address]))
 		end
 		x = x + iconWidth + spaceBetween
 		counter = counter + 1
 	end
 end
 
-local function drawSelectedIcon(x, y, background, foreground, text)
+local function drawSelectedIcon(x, y, background, foreground, userData)
 	local selectionWidth = 16
-	local oldPixels = ecs.rememberOldPixels(x - 1, y, x + selectionWidth - 2, y + 13)
-	ecs.square(x - 1, y, selectionWidth, 8, background)
-	drawIconAndAddress(x, y + 1, background, foreground, text)
-	obj.CykaKnopkaInfo = { ecs.drawButton(x - 1, y + 8, selectionWidth, 3, "Информация", 0xff6699, 0xFFFFFF) }
-	obj.CykaKnopkaConnect = { ecs.drawButton(x - 1, y + 11, selectionWidth, 3, "Подключиться", 0xff3333, 0xFFFFFF) }
+	local skokaOtnat = (selectionWidth - 14) / 2
+	local oldPixels = ecs.rememberOldPixels(x - skokaOtnat, y, x + selectionWidth - 2, y + 13)
+	ecs.square(x - skokaOtnat, y, selectionWidth, 8, background)
+	drawIconAndAddress(x, y + 1, background, foreground, userData)
+	obj.CykaKnopkaInfo = { ecs.drawButton(x - skokaOtnat, y + 8, selectionWidth, 3, "Информация", 0xff6699, 0xFFFFFF) }
+	obj.CykaKnopkaConnect = { ecs.drawButton(x - skokaOtnat, y + 11, selectionWidth, 3, "Подключиться", 0xff3333, 0xFFFFFF) }
 	return oldPixels
 end
 
@@ -191,10 +229,10 @@ local function connectionGUI()
 	local step = 4
 	local currentRadius = minumumRadius
 
-	drawIconAndAddress(xCircle - 6, ySize - 6, 0xEEEEEE, 0x262626, wirelessConnection.localAddress)
+	drawIconAndAddress(xCircle - 6, ySize - 6, 0xEEEEEE, 0x262626, {address = modemConnection.localAddress})
 
 	while true do
-		if ecs.getArraySize(wirelessConnection.availableUsers) > 0 then
+		if ecs.getArraySize(modemConnection.availableUsers) > 0 then
 			currentRadius = 0
 			drawCircles(xCircle, yCircle, minumumRadius, maximumRadius, step, currentRadius)
 			
@@ -203,9 +241,9 @@ local function connectionGUI()
 			local oldPixels, needToUpdate
 			while true do
 				if not oldPixels and needToUpdate then
-					if ecs.getArraySize(wirelessConnection.availableUsers) <= 0 then
+					if ecs.getArraySize(modemConnection.availableUsers) <= 0 then
 						ecs.square(1, 1, xSize, ySize, 0xEEEEEE)
-						drawIconAndAddress(xCircle - 6, ySize - 6, 0xEEEEEE, 0x262626, wirelessConnection.localAddress)
+						drawIconAndAddress(xCircle - 6, ySize - 6, 0xEEEEEE, 0x262626, {address = modemConnection.localAddress})
 						currentRadius = minumumRadius
 						break
 					else
@@ -219,7 +257,7 @@ local function connectionGUI()
 					if oldPixels then ecs.drawOldPixels(oldPixels); oldPixels = nil end
 					for address in pairs(obj.Users) do
 						if ecs.clickedAtArea(e[3], e[4], obj.Users[address][1], obj.Users[address][2], obj.Users[address][3], obj.Users[address][4]) then
-							oldPixels = drawSelectedIcon(obj.Users[address][1], obj.Users[address][2] - 1, 0xCCCCFF, 0x262626, address)
+							oldPixels = drawSelectedIcon(obj.Users[address][1], obj.Users[address][2] - 1, 0xCCCCFF, 0x262626, modemConnection.availableUsers[address])
 							break
 						end
 					end
@@ -238,43 +276,43 @@ end
 
 ----------------------------------------------------------------------------------------------------------------------------------
 
-function wirelessConnection.stopReceivingData()
+function modemConnection.stopReceivingData()
 	event.ignore("modem_message", modemMessageHandler)
 end
 
-function wirelessConnection.startReceivingData()
-	wirelessConnection.stopReceivingData()
+function modemConnection.startReceivingData()
+	modemConnection.stopReceivingData()
 	event.listen("modem_message", modemMessageHandler)
 end
 
-function wirelessConnection.disconnect()
-	modem.broadcast(wirelessConnection.port, "iAmDisconnecting")
+function modemConnection.disconnect()
+	modem.broadcast(modemConnection.port, "iAmDisconnecting")
 end
 
-function wirelessConnection.sendPersonalData()
-	wirelessConnection.disconnect()
-	modem.broadcast(wirelessConnection.port, "iAmHereAddMePlease", wirelessConnection.dataToSend)
+function modemConnection.sendPersonalData()
+	modemConnection.disconnect()
+	modem.broadcast(modemConnection.port, "iAmHereAddMePlease", modemConnection.dataToSend)
 end
 
-function wirelessConnection.changePort(newPort)
-	modem.close(wirelessConnection.port)
+function modemConnection.changePort(newPort)
+	modem.close(modemConnection.port)
 	modem.open(newPort)
-	wirelessConnection.port = newPort
-	wirelessConnection.remoteAddress = nil
-	wirelessConnection.localAddress = component.getPrimary("modem").address
-	wirelessConnection.availableUsers = {}
+	modemConnection.port = newPort
+	modemConnection.remoteAddress = nil
+	modemConnection.localAddress = component.getPrimary("modem").address
+	modemConnection.availableUsers = {}
 	createSendingArray()
 end
 
-function wirelessConnection.connect()
-	wirelessConnection.sendPersonalData()
+function modemConnection.search()
+	modemConnection.sendPersonalData()
 	connectionGUI()
 end
 
-function wirelessConnection.init()
+function modemConnection.init()
 	if component.isAvailable("modem") then
-		wirelessConnection.changePort(wirelessConnection.port)
-		wirelessConnection.startReceivingData()
+		modemConnection.changePort(modemConnection.port)
+		modemConnection.startReceivingData()
 	else
 		ecs.error(infoMessages.noModem)
 		return
@@ -283,11 +321,11 @@ end
 
 ----------------------------------------------------------------------------------------------------------------------------------
 
-wirelessConnection.init()
-wirelessConnection.sendPersonalData()
--- wirelessConnection.connect()
+modemConnection.init()
+modemConnection.sendPersonalData()
+modemConnection.search()
 
 ----------------------------------------------------------------------------------------------------------------------------------
 
-return wirelessConnection
+return modemConnection
 
