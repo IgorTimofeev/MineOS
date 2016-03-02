@@ -125,6 +125,7 @@ local function createSendingArray()
 	if component.isAvailable("geolyzer") then
 		modemConnection.dataToSend.geolyzer = true
 	end
+	
 	modemConnection.dataToSend = serialization.serialize(modemConnection.dataToSend)
 end
 
@@ -164,7 +165,7 @@ end
 local function drawCircles(xCircle, yCircle, minumumRadius, maximumRadius, step, currentRadius)
 	for radius = minumumRadius, maximumRadius, step do
 		if radius == currentRadius then
-			circle(xCircle, yCircle, radius, 0xAAAAAA)
+			circle(xCircle, yCircle, radius, 0x888888)
 		else
 			circle(xCircle, yCircle, radius, 0xDDDDDD)
 		end
@@ -254,7 +255,20 @@ local function connectionGUI()
 
 				local e = { event.pull() }
 				if e[1] == "touch" then
+					
+					if obj.CykaKnopkaInfo and obj.CykaKnopkaConnect then
+						if ecs.clickedAtArea(e[3], e[4], obj.CykaKnopkaInfo[1], obj.CykaKnopkaInfo[2], obj.CykaKnopkaInfo[3], obj.CykaKnopkaInfo[4]) then
+							ecs.drawButton(obj.CykaKnopkaInfo[1], obj.CykaKnopkaInfo[2], 16, 3, "Информация", 0x262626, 0xFFFFFF)
+							os.sleep(0.2)
+						elseif ecs.clickedAtArea(e[3], e[4], obj.CykaKnopkaConnect[1], obj.CykaKnopkaConnect[2], obj.CykaKnopkaConnect[3], obj.CykaKnopkaConnect[4]) then
+							ecs.drawButton(obj.CykaKnopkaConnect[1], obj.CykaKnopkaConnect[2], 16, 3, "Подключиться", 0x262626, 0xFFFFFF)
+							os.sleep(0.2)
+						end
+						obj.CykaKnopkaInfo, obj.CykaKnopkaConnect = nil, nil
+					end
+
 					if oldPixels then ecs.drawOldPixels(oldPixels); oldPixels = nil end
+
 					for address in pairs(obj.Users) do
 						if ecs.clickedAtArea(e[3], e[4], obj.Users[address][1], obj.Users[address][2], obj.Users[address][3], obj.Users[address][4]) then
 							oldPixels = drawSelectedIcon(obj.Users[address][1], obj.Users[address][2] - 1, 0xCCCCFF, 0x262626, modemConnection.availableUsers[address])
