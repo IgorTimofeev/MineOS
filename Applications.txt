@@ -86,7 +86,18 @@
   },
 
   ----------------------------------------------------- Системные иконки --------------------------------------------------------------------------
-
+  {
+    ["name"]="MineOS/System/OS/Icons/Robot.pic",
+    ["url"]="IgorTimofeev/OpenComputers/master/MineOS/Icons/Robot.pic",
+    ["type"]="Script",
+    ["version"]=1.0,
+  },
+  {
+    ["name"]="MineOS/System/OS/Icons/Tablet.pic",
+    ["url"]="IgorTimofeev/OpenComputers/master/MineOS/Icons/Tablet.pic",
+    ["type"]="Script",
+    ["version"]=1.0,
+  },
   {
     ["name"]="MineOS/System/OS/Icons/Pastebin.pic",
     ["url"]="IgorTimofeev/OpenComputers/master/MineOS/Icons/Pastebin.pic",
