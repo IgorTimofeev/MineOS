@@ -229,8 +229,9 @@ local function connectionGUI()
 	local minumumRadius, maximumRadius = 7, xCircle * 0.8
 	local step = 4
 	local currentRadius = minumumRadius
+	local unserializedDataToSend = serialization.unserialize(modemConnection.dataToSend)
 
-	drawIconAndAddress(xCircle - 6, ySize - 6, 0xEEEEEE, 0x262626, modemConnection.dataToSend)
+	drawIconAndAddress(xCircle - 6, ySize - 6, 0xEEEEEE, 0x262626, unserializedDataToSend)
 
 	while true do
 		if ecs.getArraySize(modemConnection.availableUsers) > 0 then
@@ -244,7 +245,7 @@ local function connectionGUI()
 				if not oldPixels and needToUpdate then
 					if ecs.getArraySize(modemConnection.availableUsers) <= 0 then
 						ecs.square(1, 1, xSize, ySize, 0xEEEEEE)
-						drawIconAndAddress(xCircle - 6, ySize - 6, 0xEEEEEE, 0x262626, modemConnection.dataToSend)
+						drawIconAndAddress(xCircle - 6, ySize - 6, 0xEEEEEE, 0x262626, unserializedDataToSend)
 						currentRadius = minumumRadius
 						break
 					else
