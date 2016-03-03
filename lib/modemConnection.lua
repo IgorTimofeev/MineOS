@@ -29,7 +29,7 @@ local computerIcon, robotIcon, tabletIcon
 if not component.isAvailable("robot") then
 	image = require("image")
 	ecs = require("ECSAPI")
-	computerIcon = image.load("MineOS/System/OS/Icons/Script.pic")
+	computerIcon = image.load("MineOS/System/OS/Icons/Computer.pic")
 	robotIcon = image.load("MineOS/System/OS/Icons/Robot.pic")
 	tabletIcon = image.load("MineOS/System/OS/Icons/Tablet.pic")
 end
