@@ -257,7 +257,6 @@ while true do
 					{"CenterText", ecs.colors.orange, "Добавить станцию"},
 					{"EmptyLine"},
 					{"Input", 0xFFFFFF, ecs.colors.orange, "Название станции"},
-					{"EmptyLine"},
 					{"Input", 0xFFFFFF, ecs.colors.orange, "URL-ссылка на стрим"},
 					{"EmptyLine"},
 					{"Button", {ecs.colors.orange, 0x262626, "OK"}, {0x999999, 0xffffff, "Отмена"}}
