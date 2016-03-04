@@ -19,7 +19,7 @@ modemConnection.receiveMessagesFromTablets = true
 modemConnection.receiveMessagesFromComputers = true
 
 local infoMessages = {
-	userTriesToConnectNoGUI = "Пользователь %s желает установить с вами соединение. Разрешить?",
+	userTriesToConnectNoGUI = "Пользователь %s желает установить с вами соединение. Разрешить? Y/N",
 	noModem = "Этой библиотеке требуется сетевая карта для работы",
 }
 

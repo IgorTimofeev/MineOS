@@ -337,6 +337,43 @@ function buffer.scrollBar(x, y, width, height, countOfAllElements, currentElemen
 	sizeOfScrollBar, displayBarFrom = nil, nil
 end
 
+function buffer.drawCustomImage(x, y, pixels)
+	x = x - 1
+	y = y - 1
+
+	for i=1, #pixels do
+		for j=1, #pixels[1] do
+			if pixels[i][j][3] ~= "#" then
+				buffer.set(x + j, y + i, pixels[i][j][1], pixels[i][j][2], pixels[i][j][3])
+			end
+		end
+	end
+
+	return (x + 1), (y + 1), (x + #pixels[1]), (y + #pixels)
+end
+
+--Нарисовать топ-меню, горизонтальная полоска такая с текстами
+function buffer.drawTopMenu(x, y, width, color, selectedObject, ...)
+	local objects = { ... }
+	local objectsToReturn = {}
+	local xPos = x + 2
+	local spaceBetween = 2
+	buffer.square(x, y, width, 1, color, 0xFFFFFF, " ")
+	for i = 1, #objects do
+		if i == selectedObject then
+			buffer.square(xPos - 1, y, unicode.len(objects[i][1]) + spaceBetween, 1, 0x3366CC, 0xFFFFFF, " ")
+			buffer.text(xPos, y, 0xFFFFFF, objects[i][1])
+		else
+			buffer.text(xPos, y, objects[i][2], objects[i][1])
+		end
+		objectsToReturn[objects[i][1]] = { xPos, y, xPos + unicode.len(objects[i][1]) - 1, y, i }
+		xPos = xPos + unicode.len(objects[i][1]) + spaceBetween
+	end
+	return objectsToReturn
+end
+
+------------------------------------------------------------------------------------------------------------------------
+
 function buffer.calculateDifference(x, y)
 	local index = convertCoordsToIndex(x, y)
 	local backgroundIsChanged, foregroundIsChanged, symbolIsChanged = false, false, false
