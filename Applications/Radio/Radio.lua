@@ -101,11 +101,11 @@ local function drawMenu()
 	local width = 36 + (3 * 2 + 2) * #radioStations
 	local x, y = math.floor(buffer.screen.width / 2 - width / 2), lineHeight + math.floor((buffer.screen.height - lineHeight) / 2 - 1)
 
-	obj.gromkostPlus = {x, y, x + 3, y + 3}
+	obj.gromkostPlus = {x, y, x + 4, y + 3}
 	x = bigLetters.drawText(x, y, config.colors.bottomToolBarDefaultColor, "+", "*") + 1
 	x = x + 1
 
-	obj.strelkaVlevo = {x, y, x + 3, y + 3}
+	obj.strelkaVlevo = {x, y, x + 4, y + 3}
 	drawLeftArrow(x, y, config.colors.bottomToolBarDefaultColor); x = x + 5
 	x = x + 3
 	
@@ -116,11 +116,11 @@ local function drawMenu()
 	end
 	
 	x = x + 2
-	obj.strelkaVpravo = {x, y, x + 3, y + 3}
+	obj.strelkaVpravo = {x, y, x + 4, y + 3}
 	drawRightArrow(x, y, config.colors.bottomToolBarDefaultColor)
 
 	x = x + 8
-	obj.gromkostMinus = {x, y, x + 3, y + 3}
+	obj.gromkostMinus = {x, y, x + 4, y + 3}
 	x = bigLetters.drawText(x, y, config.colors.bottomToolBarDefaultColor, "-", "*") + 1
 end
 
@@ -128,7 +128,7 @@ local function drawStations()
 	local prevWidth, currentWidth, nextWidth, name
 
 	-- Текущая станция
-	name = ecs.stringLimit("end", unicode.lower(radioStations[radioStations.currentStation].name), stationNameLimit)
+	name = ecs.stringLimit("end", unicode.lower(radioStations[radioStations.currentStation].name), stationNameLimit, true)
 	currentWidth = bigLetters.getTextSize(name)
 	local x, y = math.floor(buffer.screen.width / 2 - currentWidth / 2), math.floor(buffer.screen.height / 2 - 3)
 	drawStation(x, y, name, config.colors.activeStation)
@@ -188,6 +188,7 @@ local function switchStation(i)
 		if radioStations.currentStation < #radioStations then
 			radioStations.currentStation = radioStations.currentStation + 1
 			saveStations()
+			radio.stop()
 			radio.setURL(radioStations[radioStations.currentStation].url)
 			radio.start()
 		end
@@ -195,6 +196,7 @@ local function switchStation(i)
 		if radioStations.currentStation > 1 then
 			radioStations.currentStation = radioStations.currentStation - 1
 			saveStations()
+			radio.stop()
 			radio.setURL(radioStations[radioStations.currentStation].url)
 			radio.start()
 		end
@@ -213,6 +215,9 @@ end
 buffer.start()
 lineHeight = math.floor(buffer.screen.height * 0.7)
 loadStations()
+radio.stop()
+radio.setURL(radioStations[radioStations.currentStation].url)
+radio.start()
 drawAll()
 
 while true do
