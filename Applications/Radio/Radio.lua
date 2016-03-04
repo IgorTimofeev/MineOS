@@ -10,7 +10,7 @@ local serialization = require("serialization")
 local radio
 
 if not component.isAvailable("openfm_radio") then
-	ecs.error("Этой программе требется радио из мода OpenFM для работы.")
+	ecs.error("Этой программе требуется радио из мода OpenFM. Причем не на всех версиях еще работает, автор мода - пидор! Проверял на ноябрьской, полет нормальный.")
 	return
 else
 	radio = component.openfm_radio
