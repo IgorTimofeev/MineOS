@@ -1,7 +1,11 @@
 
 local event = require("event")
-local commandBlock = require("component").command_block
+local component = require("component")
+local commandBlock = component.command_block
+local chatBox = component.chat_box
+
 local nickname = "Pirnogion"
+local commanderNickname = "ECS"
 
 local function execute(command)
   commandBlock.setCommand(command)
@@ -13,11 +17,28 @@ local function tellraw(from, to, message)
   execute(text)
 end
 
-local function dro4er()
-  local message = "Удали меня из ЧС и сделай сердечко руками. Мур-мур-мур. Заходи в скайп и решай вопрос своей обиды через меня, а не через посредников, будь мужиком. Все претензии лично, все лично. Этот спам вечен. Защита от анти-спама активирована: "
-  --tellraw("Сообщение от Игоря", nickname, message .. math.random(1, 1000))
-
+local function spamDro4er()
+  local message = "Удали из ЧС в скайпе и позвони мне, мой сладкий!" .. math.random(1, 1000)
+  tellraw("Сообщение от Игоря", nickname, message)
   execute("/spawn @a[name=" .. nickname .. "]")
 end
 
-event.timer(1, dro4er, math.huge)
+local function chatDro4er(...)
+	local e = {...}
+	if e[3] == commanderNickname then
+		if e[4] == "активировать спам-бота" then
+			chatBox.say("Спам-бот активирован на цель \"" .. nickname .. "\". Версия 2.4a")
+			_G.spamDro4erID = event.timer(1, spamDro4er, math.huge)
+		elseif e[4] == "деактивировать спам-бота" and _G.spamDro4erID then
+			chatBox.say("Спам-бот деактивирован.")
+			event.cancel(_G.spamDro4erID)
+			_G.spamDro4erID = nil
+		end
+	end
+end
+
+event.listen("chat_message", chatDro4er)
+
+
+
+
