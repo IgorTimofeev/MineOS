@@ -57,13 +57,14 @@ end
 
 local function acceptingOrDecliningDialog(address, accepted)
 	local text1, text2
-	if accepted == true then
-		text1 = "Установлено соединение с пользователем"
-		text2 = "\"" .. ecs.stringLimit("end", address, 18) .. "\""
-	elseif accepted == false then
+	-- if accepted == true then
+	-- 	text1 = "Установлено соединение с пользователем"
+	-- 	text2 = "\"" .. ecs.stringLimit("end", address, 18) .. "\""
+	-- else
+	if accepted == false then
 		text1 = "Пользователь \"" .. ecs.stringLimit("end", address, 12) .. "\" отказался"
 		text2 = "установить с вами соединение."
-	else
+	elseif accepted == nil then
 		text1 = "Пользователь \"" .. ecs.stringLimit("end", address, 12) .. "\" не ответил"
 		text2 = "на ваш запрос"
 	end
@@ -402,7 +403,7 @@ local function connectionGUI()
 						
 							if e2[6] == "connectionAccepted" then
 								modemConnection.remoteAddress = e2[3]
-								acceptingOrDecliningDialog(obj.CykaKnopkaConnect.address, true)
+								-- acceptingOrDecliningDialog(obj.CykaKnopkaConnect.address, true)
 								computer.pushSignal("connectionEstabilishedExitFromGUI")
 							elseif e2[6] == "connectionDeclined" then
 								acceptingOrDecliningDialog(obj.CykaKnopkaConnect.address, false)
@@ -463,6 +464,7 @@ function modemConnection.changePort(newPort)
 	modem.open(newPort)
 	modemConnection.port = newPort
 	modemConnection.remoteAddress = nil
+	modemConnection.availableUsers = {}
 	modemConnection.localAddress = component.getPrimary("modem").address
 	modemConnection.availableUsers = {}
 	createSendingArray()
@@ -471,6 +473,8 @@ end
 function modemConnection.search()
 	modemConnection.availableUsers = {}
 	modemConnection.remoteAddress = nil
+	modemConnection.stopReceivingData()
+	modemConnection.startReceivingData()
 	modemConnection.sendPersonalData()
 	connectionGUI()
 end
@@ -478,7 +482,6 @@ end
 function modemConnection.init()
 	if component.isAvailable("modem") then
 		modemConnection.changePort(modemConnection.port)
-		modemConnection.startReceivingData()
 	else
 		ecs.error(infoMessages.noModem)
 		return
