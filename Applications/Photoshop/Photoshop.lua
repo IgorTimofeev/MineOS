@@ -762,6 +762,7 @@ while true do
 							ecs.error("Формат файла \""..fileFormat.."\" не поддерживается!")
 						else
 							masterPixels = image.load(data[1])
+							savePath = data[1]
 							reCalculateImageSizes()
 							drawBackgroundAndImage()
 						end
