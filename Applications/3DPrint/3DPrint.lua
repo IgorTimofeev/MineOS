@@ -13,17 +13,16 @@ local bigLetters = require("bigLetters")
 local ecs = require("ECSAPI")
 local palette = require("palette")
 
-local hologram
 local printer
 local gpu = component.gpu
+local hologramAvailable = component.isAvailable("hologram")
 
 ------------------------------------------------------------------------------------------------------------------------
 
-if component.isAvailable("hologram") and component.isAvailable("printer3d") then
-	hologram = component.hologram
+if component.isAvailable("printer3d") then
 	printer = component.printer3d
 else
-	ecs.error("Этой программе требуется 3D-принтер и голографический проектор 2 уровня.")
+	ecs.error("Этой программе требуется 3D-принтер для работы.")
 end
 
 ------------------------------------------------------------------------------------------------------------------------
@@ -257,33 +256,35 @@ end
 local function renderCurrentLayerOnHologram(xStart, yStart, zStart)
 	if showLayerOnHologram then
 		for i = yStart, yStart + 16 do
-			hologram.set(xStart - 1, i, zStart + currentLayer - 1, 3)
-			hologram.set(xStart + 16, i, zStart + currentLayer - 1, 3)
+			component.hologram.set(xStart - 1, i, zStart + currentLayer - 1, 3)
+			component.hologram.set(xStart + 16, i, zStart + currentLayer - 1, 3)
 		end
 
 		for i = (xStart-1), (xStart + 16) do
-			hologram.set(i, yStart - 1, zStart + currentLayer - 1, 3)
-			hologram.set(i, yStart + 16, zStart + currentLayer - 1, 3)
+			component.hologram.set(i, yStart - 1, zStart + currentLayer - 1, 3)
+			component.hologram.set(i, yStart + 16, zStart + currentLayer - 1, 3)
 		end
 	end
 end
 
 local function drawModelOnHologram()
-	local xStart, yStart, zStart = 16,4,16
-	hologram.clear()
+	if hologramAvailable then
+		local xStart, yStart, zStart = 16,4,16
+		component.hologram.clear()
 
-	for shape in pairs(model.shapes) do
-		if (currentMode == 2 and model.shapes[shape].state) or (currentMode == 1 and not model.shapes[shape].state) then
-			if model.shapes[shape] then
-				for x = model.shapes[shape][1], model.shapes[shape][4] - 1 do
-					for y = model.shapes[shape][2], model.shapes[shape][5] - 1 do
-						for z = model.shapes[shape][3], model.shapes[shape][6] - 1 do
-							--Эта хуйня для того, чтобы в разных режимах не ебало мозг
-							if (model.shapes[shape].state and currentMode == 2) or (not model.shapes[shape].state and currentMode == 1) then
-								if shape == currentShape then
-									hologram.set(xStart + x, yStart + 15 - z, zStart + y, 2)
-								else
-									hologram.set(xStart + x, yStart + 15 - z, zStart + y, 1)
+		for shape in pairs(model.shapes) do
+			if (currentMode == 2 and model.shapes[shape].state) or (currentMode == 1 and not model.shapes[shape].state) then
+				if model.shapes[shape] then
+					for x = model.shapes[shape][1], model.shapes[shape][4] - 1 do
+						for y = model.shapes[shape][2], model.shapes[shape][5] - 1 do
+							for z = model.shapes[shape][3], model.shapes[shape][6] - 1 do
+								--Эта хуйня для того, чтобы в разных режимах не ебало мозг
+								if (model.shapes[shape].state and currentMode == 2) or (not model.shapes[shape].state and currentMode == 1) then
+									if shape == currentShape then
+										component.hologram.set(xStart + x, yStart + 15 - z, zStart + y, 2)
+									else
+										component.hologram.set(xStart + x, yStart + 15 - z, zStart + y, 1)
+									end
 								end
 							end
 						end
@@ -291,12 +292,12 @@ local function drawModelOnHologram()
 				end
 			end
 		end
-	end
 
-	renderCurrentLayerOnHologram(xStart, yStart, zStart)
+		renderCurrentLayerOnHologram(xStart, yStart, zStart)
+	end
 end
 
-local function printModel()
+local function printModel(count)
 	printer.reset()
 	printer.setLabel(model.label)
 	printer.setTooltip(model.tooltip)
@@ -321,7 +322,7 @@ local function printModel()
 		)
 	end
 
-	local success, reason = printer.commit(1)
+	local success, reason = printer.commit(count)
 	if not success then
 		ecs.error("Ошибка печати: " .. reason)
 	end
@@ -509,7 +510,19 @@ while true do
 					os.sleep(0.2)
 
 					if key == "Напечатать" then
-						printModel()
+						local data = ecs.universalWindow("auto", "auto", 36, 0x262626, true,
+							{"EmptyLine"},
+							{"CenterText", ecs.colors.orange, "Напечатать"},
+							{"EmptyLine"},
+							{"Slider", 0xFFFFFF, ecs.colors.orange, 1, 64, 1, "", " штук"},
+							{"EmptyLine"},
+							{"Button", {ecs.colors.orange, 0xffffff, "OK"}, {0x999999, 0xffffff, "Отмена"}}
+						)
+
+						if data[2] == "OK" then
+							printModel(data[1])
+						end
+
 					elseif key == "Изменить параметры" then
 						local data = ecs.universalWindow("auto", "auto", 36, 0x262626, true,
 							{"EmptyLine"},
@@ -589,7 +602,7 @@ while true do
 					if key == "Файл" then
 						action = context.menu(obj.TopMenu[key][1] - 1, obj.TopMenu[key][2] + 1, {"Новый"}, "-", {"Открыть"}, {"Сохранить"}, "-", {"Выход"})
 					elseif key == "Проектор" then
-						action = context.menu(obj.TopMenu[key][1] - 1, obj.TopMenu[key][2] + 1, {"Масштаб"}, {"Изменить палитру"}, "-", {"Включить показ слоя"}, {"Отключить показ слоя"}, "-", {"Включить вращение"}, {"Отключить вращение"})
+						action = context.menu(obj.TopMenu[key][1] - 1, obj.TopMenu[key][2] + 1, {"Масштаб", not hologramAvailable}, {"Изменить палитру", not hologramAvailable}, "-", {"Включить показ слоя", not hologramAvailable}, {"Отключить показ слоя", not hologramAvailable}, "-", {"Включить вращение", not hologramAvailable}, {"Отключить вращение", not hologramAvailable})
 					elseif key == "О программе" then
 						ecs.universalWindow("auto", "auto", 36, 0x262626, true, 
 							{"EmptyLine"},
@@ -651,7 +664,7 @@ while true do
 							{"EmptyLine"},
 							{"CenterText", ecs.colors.orange, "Изменить масштаб"},
 							{"EmptyLine"}, 
-							{"Slider", ecs.colors.white, ecs.colors.orange, 1, 100, math.ceil(hologram.getScale() * 100 / 4), "", "%"},
+							{"Slider", ecs.colors.white, ecs.colors.orange, 1, 100, math.ceil(component.hologram.getScale() * 100 / 4), "", "%"},
 							{"EmptyLine"},
 							{"Button", {ecs.colors.orange, 0xffffff, "OK"}, {0x999999, 0xffffff, "Отмена"}}
 						)
@@ -664,17 +677,17 @@ while true do
 							{"EmptyLine"},
 							{"CenterText", ecs.colors.orange, "Палитра проектора"},
 							{"EmptyLine"},
-							{"Color", "Цвет активного элемента", hologram.getPaletteColor(2)},
-							{"Color", "Цвет других элементов", hologram.getPaletteColor(1)},
-							{"Color", "Цвет рамки высоты", hologram.getPaletteColor(3)},
+							{"Color", "Цвет активного элемента", component.hologram.getPaletteColor(2)},
+							{"Color", "Цвет других элементов", component.hologram.getPaletteColor(1)},
+							{"Color", "Цвет рамки высоты", component.hologram.getPaletteColor(3)},
 							{"EmptyLine"},
 							{"Button", {ecs.colors.orange, 0xffffff, "OK"}, {0x999999, 0xffffff, "Отмена"}}
 						)
 
 						if data[4] == "OK" then
-							hologram.setPaletteColor(2, data[1])
-							hologram.setPaletteColor(1, data[2])
-							hologram.setPaletteColor(3, data[3])
+							component.hologram.setPaletteColor(2, data[1])
+							component.hologram.setPaletteColor(1, data[2])
+							component.hologram.setPaletteColor(3, data[3])
 						end
 					elseif action == "Включить показ слоя" then
 						showLayerOnHologram = true
@@ -683,9 +696,9 @@ while true do
 						showLayerOnHologram = false
 						drawModelOnHologram()
 					elseif action == "Включить вращение" then
-						hologram.setRotationSpeed(15, 0, 23, 0)
+						component.hologram.setRotationSpeed(15, 0, 23, 0)
 					elseif action == "Отключить вращение" then
-						hologram.setRotationSpeed(0, 0, 0, 0)
+						component.hologram.setRotationSpeed(0, 0, 0, 0)
 					end
 
 					drawTopMenu(0)
