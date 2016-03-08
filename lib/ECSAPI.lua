@@ -1508,7 +1508,7 @@ end
 
 --Отобразить окно с содержимым файла информации о приложении
 function ECSAPI.applicationHelp(pathToApplication)
-	local pathToAboutFile = pathToApplication .. "/resources/About.txt"
+	local pathToAboutFile = pathToApplication .. "/Resources/About.txt"
 	if _G.OSSettings and _G.OSSettings.showHelpOnApplicationStart and fs.exists(pathToAboutFile) then
 		local applicationName = fs.name(pathToApplication)
 		local file = io.open(pathToAboutFile, "r")
