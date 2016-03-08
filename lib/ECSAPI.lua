@@ -1620,6 +1620,7 @@ local function OSIconsInit()
 		ECSAPI.OSIcons.pastebin = image.load(ECSAPI.pathToIcons .. "Pastebin.pic")
 		ECSAPI.OSIcons.fileNotExists = image.load(ECSAPI.pathToIcons .. "FileNotExists.pic")
 		ECSAPI.OSIcons.archive = image.load(ECSAPI.pathToIcons .. "Archive.pic")
+		ECSAPI.OSIcons.model3D = image.load(ECSAPI.pathToIcons .. "3DModel.pic")
 	end
 end
 
@@ -1663,6 +1664,8 @@ function ECSAPI.drawOSIcon(x, y, path, showFileFormat, nameColor)
 			icon = "pastebin"
 		elseif fileFormat == ".pkg" then
 			icon = "archive"
+		elseif fileFormat == ".3dm" then
+			icon = "model3D"
 		elseif not fs.exists(path) then
 			icon = "fileNotExists"
 		else
@@ -1720,6 +1723,9 @@ function ECSAPI.launchIcon(path, arguments)
 	--Если это фоточка
 	elseif fileFormat == ".pic" then
 		shell.execute("MineOS/Applications/Photoshop.app/Photoshop.lua open " .. path)
+	--Если это 3D-модель
+	elseif fileFormat == ".3dm" then
+		shell.execute("MineOS/Applications/3DPrint.app/3DPrint.lua open " .. path)
 	--Если это фоточка
 	elseif fileFormat == ".raw" then
 		shell.execute("MineOS/Applications/Photoshop.app/Photoshop.lua open " .. path)

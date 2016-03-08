@@ -114,6 +114,7 @@ end
 
 --ОТРИСОВКА ИКОНОК НА РАБОЧЕМ СТОЛЕ ПО ТЕКУЩЕЙ ПАПКЕ
 local function drawDesktop()
+	obj.DesktopIcons = {}
 	currentFileList = ecs.getFileList(workPath)
 	currentFileList = ecs.sortFiles(workPath, currentFileList, sortingMethod, showHiddenFiles)
 

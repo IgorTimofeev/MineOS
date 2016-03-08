@@ -87,6 +87,12 @@
 
   ----------------------------------------------------- Системные иконки --------------------------------------------------------------------------
   {
+    ["name"]="MineOS/System/OS/Icons/3DModel.pic",
+    ["url"]="IgorTimofeev/OpenComputers/master/MineOS/Icons/3DModel.pic",
+    ["type"]="Script",
+    ["version"]=1.0,
+  },
+  {
     ["name"]="MineOS/System/OS/Icons/Computer.pic",
     ["url"]="IgorTimofeev/OpenComputers/master/MineOS/Icons/Computer.pic",
     ["type"]="Script",
