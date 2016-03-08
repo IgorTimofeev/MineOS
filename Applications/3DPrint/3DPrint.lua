@@ -256,13 +256,13 @@ end
 local function renderCurrentLayerOnHologram(xStart, yStart, zStart)
 	if showLayerOnHologram then
 		for i = yStart, yStart + 16 do
-			component.hologram.set(xStart - 1, i, zStart + currentLayer - 1, 3)
-			component.hologram.set(xStart + 16, i, zStart + currentLayer - 1, 3)
+			component.hologram.set(xStart - 1, i, zStart + (16 - currentLayer), 3)
+			component.hologram.set(xStart + 16, i, zStart + (16 - currentLayer), 3)
 		end
 
 		for i = (xStart-1), (xStart + 16) do
-			component.hologram.set(i, yStart - 1, zStart + currentLayer - 1, 3)
-			component.hologram.set(i, yStart + 16, zStart + currentLayer - 1, 3)
+			component.hologram.set(i, yStart - 1, zStart + (16 - currentLayer), 3)
+			component.hologram.set(i, yStart + 16, zStart + (16 - currentLayer), 3)
 		end
 	end
 end
@@ -281,9 +281,9 @@ local function drawModelOnHologram()
 								--Эта хуйня для того, чтобы в разных режимах не ебало мозг
 								if (model.shapes[shape].state and currentMode == 2) or (not model.shapes[shape].state and currentMode == 1) then
 									if shape == currentShape then
-										component.hologram.set(xStart + x, yStart + 15 - z, zStart + y, 2)
+										component.hologram.set(xStart + x, yStart + y, zStart + 15 - z, 2)
 									else
-										component.hologram.set(xStart + x, yStart + 15 - z, zStart + y, 1)
+										component.hologram.set(xStart + x, yStart + y, zStart + 15 - z, 1)
 									end
 								end
 							end
@@ -309,12 +309,12 @@ local function printModel(count)
 	for i in pairs(model.shapes) do
 		printer.addShape(
 			model.shapes[i][1],
-			(16-model.shapes[i][3]),
-			(16-model.shapes[i][2]),
+			(model.shapes[i][2]),
+			(model.shapes[i][3]),
 			
 			model.shapes[i][4],
-			(16-model.shapes[i][6]),
-			(16-model.shapes[i][5]),
+			(model.shapes[i][5]),
+			(model.shapes[i][6]),
 			
 			model.shapes[i].texture,
 			model.shapes[i].state,
@@ -370,24 +370,25 @@ local function drawDrawingZone()
 			selectionEndPoint.x = model.shapes[shape][4]
 			selectionEndPoint.y = model.shapes[shape][5]
 			selectionEndPoint.z = model.shapes[shape][6]
+			local yDifference = selectionEndPoint.y - selectionStartPoint.y + 1
 
-			if currentLayer <= selectionEndPoint.y and currentLayer >= selectionStartPoint.y then
+			if currentLayer >= selectionStartPoint.z and currentLayer <= selectionEndPoint.z then
 				if shape ~= currentShape then
 					local h, s, b = colorlib.HEXtoHSB(shapeColors[shape])
 					s = 30
 					-- ecs.error("РИСУЮ")
-					drawPixel(selectionStartPoint.x, selectionStartPoint.z, selectionEndPoint.x - selectionStartPoint.x + 1, selectionEndPoint.z - selectionStartPoint.z + 1, colorlib.HSBtoHEX(h, s, b))
+					drawPixel(selectionStartPoint.x, 18 - selectionStartPoint.y - yDifference, selectionEndPoint.x - selectionStartPoint.x + 1, yDifference, colorlib.HSBtoHEX(h, s, b))
 					-- drawPixel(selectionStartPoint.x, selectionStartPoint.z, selectionEndPoint.x - selectionStartPoint.x + 1, selectionEndPoint.z - selectionStartPoint.z + 1, shapeColors[shape], trasparency)
 				else
-					drawPixel(selectionStartPoint.x, selectionStartPoint.z, selectionEndPoint.x - selectionStartPoint.x + 1, selectionEndPoint.z - selectionStartPoint.z + 1, shapeColors[shape])
+					drawPixel(selectionStartPoint.x, 18 - selectionStartPoint.y - yDifference, selectionEndPoint.x - selectionStartPoint.x + 1, yDifference, shapeColors[shape])
 				
 					--Точки
-					if selectionStartPoint.y == currentLayer then
-						drawPixel(selectionStartPoint.x, selectionStartPoint.z, 1, 1, colors.drawingZoneStartPoint)
+					if selectionStartPoint.z == currentLayer then
+						drawPixel(selectionStartPoint.x, 17 - selectionStartPoint.y, 1, 1, colors.drawingZoneStartPoint)
 					end
 
-					if selectionEndPoint.y == currentLayer then
-						drawPixel(selectionEndPoint.x, selectionEndPoint.z, 1, 1, colors.drawingZoneEndPoint)
+					if selectionEndPoint.z == currentLayer then
+						drawPixel(selectionEndPoint.x, 17 - selectionEndPoint.y, 1, 1, colors.drawingZoneEndPoint)
 					end
 				end
 			end
@@ -430,13 +431,13 @@ end
 ------------------------------------------------------------------------------------------------------------------------
 
 model = {}
+fixModelArray()
 
 local args = {...}
-if args[1] then
-	open(args[1])
+if args[1] == "open" or args[1] == "-o" then
+	open(args[2])
 end
 
-fixModelArray()
 drawAll()
 drawModelOnHologram()
 
@@ -452,22 +453,22 @@ while true do
 		if ecs.clickedAtArea(e[3], e[4], xDrawingZone, yDrawingZone, xDrawingZone + drawingZoneWidth - 1, yDrawingZone + drawingZoneHeight - 1) then
 			if not startPointSelected then
 				xShapeStart = math.ceil((e[3] - xDrawingZone + 1) / pixelWidth)
-				yShapeStart = currentLayer
-				zShapeStart = math.ceil((e[4] - yDrawingZone + 1) / pixelHeight)
+				yShapeStart = math.ceil((e[4] - yDrawingZone + 1) / pixelHeight)
+				zShapeStart = currentLayer
 				
 				startPointSelected = true
 				model.shapes[currentShape] = nil
 				-- buffer.square(xDrawingZone, yDrawingZone, drawingZoneWidth, drawingZoneHeight, colors.drawingZoneBackground, 0xFFFFFF, " ")
 			
-				drawPixel(xShapeStart, zShapeStart, 1, 1, colors.drawingZoneStartPoint)
+				drawPixel(xShapeStart, yShapeStart, 1, 1, colors.drawingZoneStartPoint)
 			
 				buffer.draw()
 			else
 				xShapeEnd = math.ceil((e[3] - xDrawingZone + 1) / pixelWidth)
-				yShapeEnd = currentLayer
-				zShapeEnd = math.ceil((e[4] - yDrawingZone + 1) / pixelHeight)
+				yShapeEnd = math.ceil((e[4] - yDrawingZone + 1) / pixelHeight)
+				zShapeEnd = currentLayer
 				
-				drawPixel(xShapeEnd, zShapeEnd, 1, 1, colors.drawingZoneEndPoint)
+				drawPixel(xShapeEnd, yShapeEnd, 1, 1, colors.drawingZoneEndPoint)
 				startPointSelected = false
 
 				model.shapes[currentShape] = {
@@ -602,7 +603,7 @@ while true do
 					if key == "Файл" then
 						action = context.menu(obj.TopMenu[key][1] - 1, obj.TopMenu[key][2] + 1, {"Новый"}, "-", {"Открыть"}, {"Сохранить"}, "-", {"Выход"})
 					elseif key == "Проектор" then
-						action = context.menu(obj.TopMenu[key][1] - 1, obj.TopMenu[key][2] + 1, {"Масштаб", not hologramAvailable}, {"Изменить палитру", not hologramAvailable}, "-", {"Включить показ слоя", not hologramAvailable}, {"Отключить показ слоя", not hologramAvailable}, "-", {"Включить вращение", not hologramAvailable}, {"Отключить вращение", not hologramAvailable})
+						action = context.menu(obj.TopMenu[key][1] - 1, obj.TopMenu[key][2] + 1, {"Масштаб", not hologramAvailable}, {"Отступ проекции", not hologramAvailable}, {"Изменить палитру", not hologramAvailable}, "-", {"Включить показ слоя", not hologramAvailable}, {"Отключить показ слоя", not hologramAvailable}, "-", {"Включить вращение", not hologramAvailable}, {"Отключить вращение", not hologramAvailable})
 					elseif key == "О программе" then
 						ecs.universalWindow("auto", "auto", 36, 0x262626, true, 
 							{"EmptyLine"},
@@ -658,6 +659,7 @@ while true do
 						gpu.setResolution(xOld, yOld)
 						buffer.start()	
 						buffer.draw(true)
+						if hologramAvailable then component.hologram.clear() end
 						return
 					elseif action == "Масштаб" then
 						local data = ecs.universalWindow("auto", "auto", 36, 0x262626, true, 
@@ -670,7 +672,28 @@ while true do
 						)
 
 						if data[2] == "OK" then
-							hologram.setScale(data[1] * 4 / 100)
+							component.hologram.setScale(data[1] * 4 / 100)
+						end
+					elseif action == "Отступ проекции" then
+						local translation = { component.hologram.getTranslation() }
+						local data = ecs.universalWindow("auto", "auto", 36, 0x262626, true, 
+							{"EmptyLine"},
+							{"CenterText", ecs.colors.orange, "Отступ проекции"},
+							{"EmptyLine"}, 
+							{"CenterText", 0xFFFFFF, "Эти параметры позволяют проецировать"},
+							{"CenterText", 0xFFFFFF, "голограмму на некотором расстоянии от"},
+							{"CenterText", 0xFFFFFF, "проектора. Удобно, если вы хотите спрятать"},
+							{"CenterText", 0xFFFFFF, "проектор от чужих глаз."},
+							{"EmptyLine"}, 
+							{"Slider", 0xFFFFFF, ecs.colors.orange, 1, 100, translation[1] * 100, "Ось X: ", "%"},
+							{"Slider", 0xFFFFFF, ecs.colors.orange, 1, 100, translation[2] * 100, "Ось Y: ", "%"},
+							{"Slider", 0xFFFFFF, ecs.colors.orange, 1, 100, translation[3] * 100, "Ось Z: ", "%"},
+							{"EmptyLine"},
+							{"Button", {ecs.colors.orange, 0xffffff, "OK"}, {0x999999, 0xffffff, "Отмена"}}
+						)
+
+						if data[4] == "OK" then
+							component.hologram.setTranslation(data[1] / 100, data[2] / 100, data[3] / 100)
 						end
 					elseif action == "Изменить палитру" then
 						local data = ecs.universalWindow("auto", "auto", 36, 0x262626, true,
