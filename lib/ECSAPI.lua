@@ -1516,9 +1516,9 @@ function ECSAPI.applicationHelp(pathToApplication)
 		for line in file:lines() do text = text .. line .. " " end
 		file:close()
 
-		local data = ECSAPI.universalWindow("auto", "auto", 30, 0xeeeeee, true,
+		local data = ECSAPI.universalWindow("auto", "auto", 36, 0xEEEEEE, true,
 			{"EmptyLine"},
-			{"CenterText", 0x000000, "О приложении " .. applicationName},
+			{"CenterText", 0x000000, "О приложении \"" .. ECSAPI.stringLimit("end", applicationName, 20) .. "\""},
 			{"EmptyLine"},
 			{"TextField", 16, 0xFFFFFF, 0x262626, 0xcccccc, 0x353535, text},
 			{"EmptyLine"},
