@@ -618,6 +618,8 @@ while true do
 							{"CenterText", 0xBBBBBB, "vk.com/day_z_utes"},
 							{"CenterText", 0xBBBBBB, "Бесфамильный Яков"},
 							{"CenterText", 0xBBBBBB, "vk.com/mathem"},
+							{"CenterText", 0xBBBBBB, "Егор Палиев"},
+							{"CenterText", 0xBBBBBB, "vk.com/mrherobrine"},
 							{"EmptyLine"},
 							{"Button", {ecs.colors.orange, 0xffffff, "OK"}}
 						)
