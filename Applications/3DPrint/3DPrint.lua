@@ -473,11 +473,11 @@ while true do
 
 				model.shapes[currentShape] = {
 					xShapeStart - 1,
-					yShapeStart - 1,
+					17 - yShapeStart - 1,
 					zShapeStart - 1,
 					
 					xShapeEnd,
-					yShapeEnd,
+					17 - yShapeEnd,
 					zShapeEnd,
 					
 					texture = currentTexture,
