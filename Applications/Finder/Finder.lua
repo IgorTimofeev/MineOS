@@ -441,6 +441,7 @@ while true do
 						drawAll()
 					else
 						ecs.launchIcon(path)
+						buffer.paste(1, 1, oldPixelsOfFullScreen)
 						drawAll(true)
 					end
 				--А если правая
