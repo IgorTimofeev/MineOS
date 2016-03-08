@@ -16,14 +16,14 @@ local govno = {}
 print(" ")
 print("Analyzing computer for matching system requirements...")
 
---Проверяем GPU
-if gpu.maxResolution() < 150 then table.insert(govno, "Bad GPU - this OS requires Tier 3 GPU.") end
+--Проверяем, не планшет ли это
+if component.isAvailable("tablet") then table.insert(govno, "Tablet PC detected - You can't install MineOS on tablet because of primitive GPU and Screen.") end
 
---Проверяем экран
-if gpu.getDepth() < 8 and gpu.maxResolution() < 150 then table.insert(govno, "Bad Screen - this OS requires Tier 3 screen.") end
+--Проверяем GPU
+if gpu.maxResolution() < 150 then table.insert(govno, "Bad GPU or Screen - MineOS requires Tier 3 GPU and Tier 3 Screen.") end
 
 --Проверяем оперативку
-if math.floor(computer.totalMemory() / 1024 ) < 2048 then table.insert(govno, "Not enough RAM - this OS requires at least 2048 KB RAM.") end
+if math.floor(computer.totalMemory() / 1024 ) < 1536 then table.insert(govno, "Not enough RAM - MineOS requires at least 1536 KB RAM.") end
 
 if fs.get("bin/edit.lua") == nil or fs.get("bin/edit.lua").isReadOnly() then table.insert(govno, "You can't install MineOS on floppy disk. Run \"install\" in command line and install OpenOS from floppy to HDD first. After that you're be able to install MineOS from Pastebin.") end
 
