@@ -1432,6 +1432,49 @@ function ECSAPI.readCorrectLangFile(pathToLangs)
 	return lang
 end
 
+-- Анимация затухания экрана
+function ECSAPI.fadeOut(startColor, targetColor, speed)
+	local xSize, ySize = gpu.getResolution()
+	while startColor >= targetColor do
+		gpu.setBackground(startColor)
+		gpu.fill(1, 1, xSize, ySize, " ")
+		startColor = startColor - 0x111111
+		os.sleep(speed or 0)
+	end
+end
+
+-- Анимация загорания экрана
+function ECSAPI.fadeIn(startColor, targetColor, speed)
+	local xSize, ySize = gpu.getResolution()
+	while startColor <= targetColor do
+		gpu.setBackground(startColor)
+		gpu.fill(1, 1, xSize, ySize, " ")
+		startColor = startColor + 0x111111
+		os.sleep(speed or 0)
+	end
+end
+
+-- Анимация выхода в олдскул-телевизионном стиле
+function ECSAPI.TV(speed, targetColor)
+	local xSize, ySize = gpu.getResolution()
+	local xCenter, yCenter = math.floor(xSize / 2), math.floor(ySize / 2)
+	gpu.setBackground(targetColor or 0x000000)
+	
+	for y = 1, yCenter do
+		gpu.fill(1, y - 1, xSize, 1, " ")
+		gpu.fill(1, ySize - y + 1, xSize, 1, " ")
+		os.sleep(speed or 0)
+	end
+	
+	for x = 1, xCenter - 1 do
+		gpu.fill(x, yCenter, 1, 1, " ")
+		gpu.fill(xSize - x + 1, yCenter, 1, 1, " ")
+		os.sleep(speed or 0)
+	end
+	os.sleep(0.3)
+	gpu.fill(1, yCenter, xSize, 1, " ")
+end
+
 -------------------------ВСЕ ДЛЯ ОСКИ-------------------------------------------------------------------------------
 
 function ECSAPI.sortFiles(path, fileList, sortingMethod, showHiddenFiles)

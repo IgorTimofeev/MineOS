@@ -422,12 +422,14 @@ while true do
 						ecs.prepareToExit()
 						return 0
 					elseif action == lang.shutdown then
+						ecs.TV(0)
 						shell.execute("shutdown")
 					elseif action == lang.restart then
+						ecs.TV(0)
 						shell.execute("reboot")
 					elseif action == lang.updateSystem then
-						shell.execute("pastebin run 0nm5b1ju")
 						ecs.prepareToExit()
+						shell.execute("pastebin run 0nm5b1ju")
 						return 0
 					elseif action == lang.aboutSystem then
 						ecs.prepareToExit()
