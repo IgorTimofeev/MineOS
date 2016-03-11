@@ -2,6 +2,8 @@
 local event = require("event")
 local modemConnection = require("modemConnection")
 local ecs = require("ECSAPI")
+local fs = require("filesystem")
+local serialization = require("serialization")
 local buffer = require("doubleBuffering")
 local context = require("context")
 local image = require("image")
@@ -27,88 +29,8 @@ local colors = {
 	systemMessageColor = 0x555555,
 }
 
-local chatHistory = {
-	{
-		address = "a3f0af-aef00baef-fae0aef0a",
-		name = "Вася Пупкин",
-		{
-			type = "systemMessage",
-			message = "Здесь будет выводиться история переписки"
-		},
-		{
-			fromYou = true,
-			message = "Привет! Сука, ты мой дом грифанул? Все, пизда тебе, гнида ебаная, готовь очко. Я еще не подошел просто, держи анус разогретым и растертым вазелином, блядь!"
-		},
-		{
-			fromYou = false,
-			message = "Ну здорово! Чо как?"
-		},
-		{
-			fromYou = true,
-			message = "Да ниче так, более-менее. Сам как?"
-		},
-		{
-			fromYou = false,
-			message = "Да живем потихоньку, дочку вон усыновил"
-		},
-		{
-			fromYou = false,
-			message = "Слышь, надо съебаться ща подальше, го анекдот расскажу: С рисованием повторяющихся узоров машины успешно справляются без участия человека — это лишь вопрос правильно составленного алгоритма. Если же добавить в этот процесс элемент непредсказуемости — прерогативу иррациональной человеческой натуры, то рутинная операция превращается в настоящее искусство."
-		},
-		{
-			type = "systemMessage",
-			message = "Пользователь покинул чат"
-		},
-		{
-			fromYou = true,
-			message = "Обидка!"
-		},
-		{
-			fromYou = true,
-			message = "Что за дела, сука?"
-		},
-		{
-			fromYou = false,
-			message = ")))"
-		},
-		{
-			fromYou = true,
-			message = "Ну ты чо((("
-		},
-		{
-			fromYou = false,
-			message = "Героям слава!"
-		},
-	},
-	{
-		address = "a3f0af-a14411414f00baef-fae0aef0a",
-		name = "Петя Васечкин",
-		{
-			fromYou = true,
-			message = "Сука!"
-		},
-		{
-			fromYou = false,
-			message = "Загрифил мою хату, пидорас! Пизда тебе, гнида"
-		},
-	},
-	{
-		address = "a3f0af-a14411414f00baef-fae0aef0a",
-		name = "Мамка Семена",
-		{
-			fromYou = false,
-			message = "Вчерашняя ночь была прекрасна, ты великолепен!"
-		},
-		{
-			fromYou = true,
-			message = ")))"
-		},
-	},
-}
-
-local avatars = {
-
-}
+local chatHistory = {}
+local avatars = {}
 
 -------------------------------------------------------------------------------------------------------------------------------
 
@@ -133,6 +55,24 @@ local cloudWidth = chatZoneWidth - 2 * (avatarWidthLimit + 9)
 local cloudTextWidth = cloudWidth - 4
 
 -------------------------------------------------------------------------------------------------------------------------------
+
+local function saveChatHistory()
+	fs.makeDirectory(fs.path(chatHistoryPath) or "")
+	local file = io.open(chatHistoryPath, "w")
+	file:write(serialization.serialize(chatHistoryPath))
+	file:close()
+end
+
+local function loadChatHistory()
+	if fs.exists(chatHistoryPath) then
+		local file = io.open(chatHistoryPath, "r")
+		chatHistory = serialization.unserialize(file:read("*a"))
+		file:close()
+	else
+		chatHistory = {}
+		saveChatHistory()
+	end
+end
 
 local function loadAvatarFromFile(path)
 	local avatar = 	image.load(personalAvatarPath)
@@ -189,7 +129,7 @@ local function drawTopBar()
 end
 
 local function drawTopMenu()
-	buffer.drawTopMenu(1, 1, buffer.screen.width, colors.topMenu, 0, {"Чат", 0x000099}, {"Настройки", 0x262626}, {"О программе", 0x262626})
+	buffer.menu(1, 1, buffer.screen.width, colors.topMenu, 0, {"Чат", 0x000099}, {"Настройки", 0x262626}, {"О программе", 0x262626})
 end
 
 local function drawCloud(x, y, cloudColor, textColor, fromYou, text)
@@ -286,7 +226,10 @@ end
 -------------------------------------------------------------------------------------------------------------------------------
 
 buffer.square(1, 1, buffer.screen.width, buffer.screen.height, 0x262626, 0xFFFFFF, " ")
+
+loadChatHistory()
 loadPersonalAvatar()
+
 drawAll()
 
 -------------------------------------------------------------------------------------------------------------------------------

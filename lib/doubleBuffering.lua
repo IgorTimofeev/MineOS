@@ -274,6 +274,7 @@ function buffer.line(x1, y1, x2, y2, background, foreground, symbol)
 	end
 end
 
+-- Отрисовка текста, подстраивающегося под текущий фон
 function buffer.text(x, y, color, text)
 	local index
 	local sText = unicode.len(text)
@@ -286,6 +287,7 @@ function buffer.text(x, y, color, text)
 	end
 end
 
+-- Отрисовка изображения
 function buffer.image(x, y, picture)
 	if not image then image = require("image") end
 	local index, imageIndex
@@ -308,6 +310,7 @@ function buffer.image(x, y, picture)
 	end
 end
 
+-- Кнопка фиксированных размеров
 function buffer.button(x, y, width, height, background, foreground, text)
 	local textPosX = math.floor(x + width / 2 - unicode.len(text) / 2)
 	local textPosY = math.floor(y + height / 2)
@@ -317,6 +320,7 @@ function buffer.button(x, y, width, height, background, foreground, text)
 	return x, y, (x + width - 1), (y + height - 1)
 end
 
+-- Кнопка, подстраивающаяся под длину текста
 function buffer.adaptiveButton(x, y, xOffset, yOffset, background, foreground, text)
 	local width = xOffset * 2 + unicode.len(text)
 	local height = yOffset * 2 + 1
@@ -327,6 +331,7 @@ function buffer.adaptiveButton(x, y, xOffset, yOffset, background, foreground, t
 	return x, y, (x + width - 1), (y + height - 1)
 end
 
+-- Вертикальный скролл-бар
 function buffer.scrollBar(x, y, width, height, countOfAllElements, currentElement, backColor, frontColor)
 	local sizeOfScrollBar = math.ceil(1 / countOfAllElements * height)
 	local displayBarFrom = math.floor(y + height * ((currentElement - 1) / countOfAllElements))
@@ -337,7 +342,8 @@ function buffer.scrollBar(x, y, width, height, countOfAllElements, currentElemen
 	sizeOfScrollBar, displayBarFrom = nil, nil
 end
 
-function buffer.drawCustomImage(x, y, pixels)
+-- Отрисовка любого изображения в виде трехмерного массива. Неоптимизированно, зато просто.
+function buffer.customImage(x, y, pixels)
 	x = x - 1
 	y = y - 1
 
@@ -353,7 +359,7 @@ function buffer.drawCustomImage(x, y, pixels)
 end
 
 --Нарисовать топ-меню, горизонтальная полоска такая с текстами
-function buffer.drawTopMenu(x, y, width, color, selectedObject, ...)
+function buffer.menu(x, y, width, color, selectedObject, ...)
 	local objects = { ... }
 	local objectsToReturn = {}
 	local xPos = x + 2
@@ -370,6 +376,33 @@ function buffer.drawTopMenu(x, y, width, color, selectedObject, ...)
 		xPos = xPos + unicode.len(objects[i][1]) + spaceBetween
 	end
 	return objectsToReturn
+end
+
+-- Прамоугольная рамочка
+function buffer.frame(x, y, width, height, color)
+	local stringUp = "┌" .. string.rep("─", width - 2) .. "┐"
+	local stringDown = "└" .. string.rep("─", width - 2) .. "┘"
+
+	buffer.text(x, y, color, stringUp)
+	buffer.text(x, y + height - 1, color, stringDown)
+
+	local yPos = 1
+	for i = 1, (height - 2) do
+		buffer.text(x, y + yPos, color, "│")
+		buffer.text(x + width - 1, y + yPos, color, "│")
+		yPos = yPos + 1
+	end
+end
+
+-- Кнопка в виде текста в рамке
+function buffer.framedButton(x, y, width, height, backColor, buttonColor, text)
+	buffer.square(x, y, width, height, backColor, buttonColor, " ")
+	buffer.frame(x, y, width, height, buttonColor)
+	
+	x = x + math.floor(width / 2 - unicode.len(text) / 2)
+	y = y + math.floor(width / 2 - 1)
+
+	buffer.text(x, y, buttonColor, text)
 end
 
 ------------------------------------------------------------------------------------------------------------------------

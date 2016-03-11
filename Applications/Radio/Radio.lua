@@ -82,7 +82,7 @@ local function drawLeftArrow(x, y, color)
 		{ {bg, fg, " "}, {bg, fg, "*"}, {bg, fg, " "} },
 		{ {bg, fg, " "}, {bg, fg, " "}, {bg, fg, "*"} },
 	}
-	buffer.drawCustomImage(x, y, arrow)
+	buffer.customImage(x, y, arrow)
 end
 
 local function drawRightArrow(x, y, color)
@@ -94,7 +94,7 @@ local function drawRightArrow(x, y, color)
 		{ {bg, fg, " "}, {bg, fg, "*"}, {bg, fg, " "} },
 		{ {bg, fg, "*"}, {bg, fg, " "}, {bg, fg, " "} },
 	}
-	buffer.drawCustomImage(x, y, arrow)
+	buffer.customImage(x, y, arrow)
 end
 
 local function drawMenu()
