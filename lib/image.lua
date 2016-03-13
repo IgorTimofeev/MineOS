@@ -405,7 +405,7 @@ local function saveOCIF2(file, picture, compressColors)
 				if compressColors then
 					file:write(
 						string.char(getArraySize(grouppedPucture[alpha][symbol][foreground])),
-						string.char(foreground)
+						string.char(colorlib.convert24BitTo8Bit(foreground))
 					)
 				else
 					file:write(
@@ -422,7 +422,7 @@ local function saveOCIF2(file, picture, compressColors)
 					)
 					--Записываем цвет фона
 					if compressColors then
-						file:write(string.char(background))
+						file:write(string.char(colorlib.convert24BitTo8Bit(background)))
 					else
 						file:write(convertBytesToString(extractBytesFromNumber(background, 3)))
 					end
@@ -953,7 +953,7 @@ function image.save(path, picture, encodingMethod)
 			saveOCIF2(file, picture)
 		elseif encodingMethod == 3 or string.lower(encodingMethod) == "ocif3" then
 			file:write(string.char(encodingMethod))
-			picture = compressImageColorsTo8Bit(picture)
+			-- picture = compressImageColorsTo8Bit(picture)
 			saveOCIF2(file, picture, true)
 		else
 			file:close()
