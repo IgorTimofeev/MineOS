@@ -109,7 +109,6 @@ local function askForAcceptConnection(address)
 		if string.sub(string.lower(answer), 1, 1) == "y" then
 			modemConnection.remoteAddress = address
 			sendAcceptingMessage(address)
-			modemConnection.stopReceivingData()
 			print(" ")
 			print("Соединение установлено.")
 			print(" ")
@@ -427,7 +426,6 @@ local function connectionGUI()
 					needToUpdate = true
 				elseif e[1] == "connectionEstabilishedExitFromGUI" then
 					ecs.prepareToExit()
-					modemConnection.stopReceivingData()
 					return
 				end
 			end
@@ -448,6 +446,7 @@ end
 
 function modemConnection.startReceivingData()
 	modemConnection.stopReceivingData()
+	modemConnection.remoteAddress = nil
 	event.listen("modem_message", modemMessageHandler)
 end
 
@@ -473,8 +472,6 @@ end
 function modemConnection.search()
 	modemConnection.availableUsers = {}
 	modemConnection.remoteAddress = nil
-	modemConnection.stopReceivingData()
-	modemConnection.startReceivingData()
 	modemConnection.sendPersonalData()
 	connectionGUI()
 end

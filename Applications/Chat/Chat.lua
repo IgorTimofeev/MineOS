@@ -22,6 +22,9 @@ local colors = {
 	leftBarSearchButton = 0x555555,
 	leftBarSearchButtonText = 0xFFFFFF,
 
+	scrollBar = 0xDDDDDD,
+	scrollBarPipe = 0x888888,
+
 	topBar = 0xEEEEEE,
 	topMenu = 0xFFFFFF,
 
@@ -33,13 +36,16 @@ local colors = {
 	systemMessageColor = 0x555555,
 
 	messageInputBarColor = 0xEEEEEE,
+	messageInputBarInputBackgroundColor = 0xFFFFFF,
 	messsageInputBarButtonColor = 0x3392FF,
 	messsageInputBarButtonTextColor = 0xFFFFFF,
-	messsageInputBarLineColor = 0x000000,
+	messsageInputBarTextColor = 0x262626,
 }
 
 local chatHistory = {}
 local avatars = {}
+local port = 899
+modem.open(port)
 
 -------------------------------------------------------------------------------------------------------------------------------
 
@@ -51,18 +57,22 @@ local avatarHeightLimit = 3
 
 local currentChatID = 1
 local currentChatMessage = 0
+-- local currentMessageText = "Сука блядь, рот твой ебал, пизда подзалупная, пидор ты обоссанный, хуй тебе в рот клал, под язык кончал месячной прогнившей кончей, ебаный петух!"
+local currentMessageText
 
 buffer.start()
+local messageInputHeight = 5
 local leftBarWidth = math.floor(buffer.screen.width * 0.2)
 local chatZoneWidth = buffer.screen.width - leftBarWidth
 local heightOfTopBar = 2 + avatarHeightLimit
 local yLeftBar = 2 + heightOfTopBar
 local chatZoneX = leftBarWidth + 1
 local bottom
-local chatZoneHeight = buffer.screen.height - yLeftBar + 1
+local chatZoneHeight = buffer.screen.height - yLeftBar - messageInputHeight + 1
 local cloudWidth = chatZoneWidth - 2 * (avatarWidthLimit + 9)
 local cloudTextWidth = cloudWidth - 4
-local messageInputHeight = 5
+local yMessageInput = buffer.screen.height - messageInputHeight + 1
+local messageInputWidth = chatZoneWidth - 19
 
 -------------------------------------------------------------------------------------------------------------------------------
 
@@ -76,7 +86,7 @@ end
 local function saveChatHistory()
 	fs.makeDirectory(fs.path(chatHistoryPath) or "")
 	local file = io.open(chatHistoryPath, "w")
-	file:write(serialization.serialize(chatHistoryPath))
+	file:write(serialization.serialize(chatHistory))
 	file:close()
 end
 
@@ -86,7 +96,7 @@ local function loadChatHistory()
 		chatHistory = serialization.unserialize(file:read("*a"))
 		file:close()
 	else
-		chatHistory = {}
+		chatHistory = {myName = "Аноним №" .. math.random(1, 1000)}
 		saveChatHistory()
 	end
 end
@@ -146,7 +156,7 @@ local function drawTopBar()
 	buffer.square(1, 2, buffer.screen.width, heightOfTopBar, colors.topBar, 0xFFFFFF, " ")
 
 	buffer.image(3, 3, avatars.personal)
-	-- buffer.text(chatZoneX, yLeftBar + avatarHeightLimit + 2, )
+	buffer.text(10, 3, 0x262626, chatHistory.myName)
 end
 
 local function drawTopMenu()
@@ -202,11 +212,17 @@ local function drawChat()
 	local x, y = chatZoneX, yLeftBar
 	buffer.square(x, y, chatZoneWidth, chatZoneHeight, colors.chatZone, 0xFFFFFF, " ")
 
+	if not chatHistory[currentChatID] then
+		local text = ecs.stringLimit("start", "Добавьте контакты с помощью кнопки \"Поиск\"", chatZoneWidth - 2)
+		local x, y = math.floor(chatZoneX + chatZoneWidth / 2 - unicode.len(text) / 2), math.floor(yLeftBar + chatZoneHeight / 2)
+		buffer.text(x, y, 0x555555, text)
+		return
+	end
+
 	-- Ставим ограничение отрисовки буфера, чтобы облачка сообщений не ебошили
 	-- За края верхней зоны чатзоны, ну ты понял, да?
 	buffer.setDrawLimit(x, y, chatZoneWidth, chatZoneHeight)
 
-	--ВОТ ТУТ НАЧИНАЕТСЯ ЕБОЛААААААА
 	-- Стартовая точка
 	y = buffer.screen.height - messageInputHeight - 1
 	local xYou, xSender = x + 2, buffer.screen.width - 9
@@ -240,25 +256,26 @@ local function drawChat()
 	-- Убираем ограничение отроисовки буфера
 	buffer.resetDrawLimit()
 
-	buffer.scrollBar(buffer.screen.width - 1, yLeftBar, 2, chatZoneHeight - messageInputHeight, #chatHistory[currentChatID], currentChatMessage, 0xDDDDDD, ecs.colors.blue)
+	buffer.scrollBar(buffer.screen.width - 1, yLeftBar, 2, chatZoneHeight, #chatHistory[currentChatID], currentChatMessage, colors.scrollBar, colors.scrollBarPipe)
 end
 
 local function drawMessageInputBar()
-	local x, y = chatZoneX, buffer.screen.height - messageInputHeight + 1
-	-- buffer.text(x, y, colors.messsageInputBarLineColor, string.rep("▄", chatZoneWidth - 2))
+	local x, y = chatZoneX, yMessageInput
 	buffer.square(x, y, chatZoneWidth, messageInputHeight, colors.messageInputBarColor, 0xFFFFFF, " ")
 	y = y + 1
-	buffer.frame(x + 2, y, chatZoneWidth - 18, 3, colors.messsageInputBarLineColor)
-	buffer.button(buffer.screen.width - 3 - 10, y, 12, 3, colors.messsageInputBarButtonColor, colors.messsageInputBarButtonTextColor, "Отправить")
+	buffer.square(x + 2, y, messageInputWidth, 3, colors.messageInputBarInputBackgroundColor, 0xFFFFFF, " ")
+	buffer.text(x + 3, y + 1, colors.messsageInputBarTextColor, ecs.stringLimit("start", currentMessageText or "Введите сообщение", messageInputWidth - 2))
+
+	obj.send = {buffer.button(chatZoneX + messageInputWidth + 4, y, 13, 3, colors.messsageInputBarButtonColor, colors.messsageInputBarButtonTextColor, "Отправить")}
 end
 
-local function drawAll()
+local function drawAll(force)
 	drawTopBar()
 	drawLeftBar()
 	drawTopMenu()
 	drawChat()
 	drawMessageInputBar()
-	buffer.draw()
+	buffer.draw(force)
 end
 
 local function scrollChat(direction)
@@ -266,26 +283,139 @@ local function scrollChat(direction)
 		if currentChatMessage > 1 then
 			currentChatMessage = currentChatMessage - 1
 			drawChat()
-			drawMessageInputBar(currentChatMessage)
+			drawMessageInputBar()
 			buffer.draw()
 		end
 	else
 		if currentChatMessage < #chatHistory[currentChatID] then
 			currentChatMessage = currentChatMessage + 1
 			drawChat()
-			drawMessageInputBar(currentChatMessage)
+			drawMessageInputBar()
 			buffer.draw()
 		end
 	end
 end
 
--------------------------------------------------------------------------------------------------------------------------------
+local function addTextToChatHistoryArray(text)
+	table.insert(chatHistory[currentChatID],
+	{
+		fromYou = true,
+		message = text
+	})
+end
 
--- buffer.square(1, 1, buffer.screen.width, buffer.screen.height, 0x262626, 0xFFFFFF, " ")
+local function sendMessage()
+	if chatHistory[currentChatID] and chatHistory[currentChatID].address and currentMessageText then
+		modem.send(chatHistory[currentChatID].address, port, "HereIsMessageToYou", currentMessageText)
+
+		addTextToChatHistoryArray(currentMessageText)
+
+		currentChatMessage = #chatHistory[currentChatID]
+		saveChatHistory()
+	end
+
+	currentMessageText = nil
+	drawMessageInputBar()
+	drawChat()
+
+	buffer.draw()
+end
+
+local function checkAddressExists(address)
+	local addressExists = false
+	for i = 1, #chatHistory do
+		if chatHistory[i].address == address then
+			addressExists = true
+			break
+		end
+	end
+	return addressExists
+end
+
+local function addNewContact(address, name)
+	if not checkAddressExists(address) then
+		table.insert(chatHistory, 
+		{
+			address = address,
+			name = name,
+			{
+				type = "system",
+				message = "Здесь будет показана история чата"
+			}
+		})
+		saveChatHistory()
+	end
+
+	drawAll(true)
+end
+
+local function askForAddToContacts(address)
+	--Загружаем авку
+	local file = io.open(personalAvatarPath, "r")
+	local avatarData = file:read("*a")
+	file:close()
+	--Отсылаем свое имечко и аватарку
+	modem.send(address, port, "AddMeToContactsPlease", chatHistory.myName, avatarData)
+end
+
+--Обработчик сообщений
+local function dro4er(_, localAddress, remoteAddress, remotePort, distance, ...)
+	local messages = { ... }
+	
+	if remotePort == port then
+		if messages[1] == "AddMeToContactsPlease" then
+			if modemConnection.remoteAddress then
+				--Добавляем пидорка к себе в контакты
+				addNewContact(modemConnection.remoteAddress, messages[2])
+				--Сохраняем историю чата, ники, авки, все, крч
+				saveChatHistory()
+				--Просим того пидорка, чтобы он добавил нас к себе в контакты
+				askForAddToContacts(modemConnection.remoteAddress)
+				--Чтобы не было всяких соблазнов!
+				modemConnection.remoteAddress = nil
+			end
+		elseif messages[1] == "HereIsMessageToYou" then
+			for i = 1, #chatHistory do
+				--Если в массиве истории чата найден юзер, отославший такое сообщение
+				if chatHistory[i].address == remoteAddress then
+					--То вставляем само сообщение в историю чата
+					table.insert(chatHistory[i], {fromYou = false, message = messages[2]})
+					saveChatHistory()
+					--Если текущая открытая история чата является именно вот этой, с этим отправителем
+					if currentChatID == i then
+						--Если мы никуда не скроллили и находимся в конце истории чата с этим юзером
+						if currentChatMessage == (#chatHistory[currentChatID] - 1) then
+							currentChatMessage = #chatHistory[currentChatID]
+						end
+						--Обязательно отрисовываем измененную историю чата с этим отправителем
+						drawChat()
+						buffer.draw()
+						component.gpu.setBackground(colors.messageInputBarInputBackgroundColor)
+						component.gpu.setForeground(colors.messsageInputBarTextColor)
+					end
+
+					break
+				end
+			end
+		end
+	end
+end
+
+local function enableDro4er()
+	event.listen("modem_message", dro4er)
+end
+
+local function disableDro4er()
+	event.ignore("modem_message", dro4er)
+end
+
+-------------------------------------------------------------------------------------------------------------------------------
 
 loadChatHistory()
 loadPersonalAvatar()
-currentChatMessage = #chatHistory[currentChatID]
+currentChatMessage = chatHistory[currentChatID] and #chatHistory[currentChatID] or 1
+modemConnection.startReceivingData()
+enableDro4er()
 
 drawAll()
 
@@ -294,10 +424,45 @@ drawAll()
 while true do
 	local e = { event.pull() }
 	if e[1] == "touch" then
+		-- Клик на поле ввода сообщения
+		if ecs.clickedAtArea(e[3], e[4], chatZoneX + 2, yMessageInput, chatZoneX + messageInputWidth + 2, yMessageInput + 3) then
+			local text = ecs.inputText(chatZoneX + 3, yMessageInput + 2, messageInputWidth - 2, currentMessageText, colors.messageInputBarInputBackgroundColor, colors.messsageInputBarTextColor)
+			if text and text ~= "" then
+				currentMessageText = text
+			end
+			buffer.square(chatZoneX + 2, yMessageInput + 2, messageInputWidth, 3, 0x000000, 0xFFFFFF, " ")
+			drawMessageInputBar()
+			buffer.draw()
+		-- Жмякаем на кнопочку "Отправить"
+		elseif ecs.clickedAtArea(e[3], e[4], obj.send[1], obj.send[2], obj.send[3], obj.send[4]) then
+			buffer.button(obj.send[1], obj.send[2], 13, 3, colors.messsageInputBarButtonTextColor, colors.messsageInputBarButtonColor, "Отправить")
+			buffer.draw()
+			os.sleep(0.2)
+			sendMessage()
+		-- Кнопа поиска
+		elseif ecs.clickedAtArea(e[3], e[4], obj.search[1], obj.search[2], obj.search[3], obj.search[4]) then
+			buffer.button(obj.search[1], obj.search[2], leftBarWidth, 3, colors.leftBarSearchButtonText, colors.leftBarSearchButton, "Поиск")
+			buffer.draw()
+			os.sleep(0.2)
 
+			modemConnection.search()
+
+			--Если после поиска мы подключились к какому-либо адресу
+			if modemConnection.remoteAddress then
+				--Просим адрес добавить нас в свой список контактов
+				askForAddToContacts(modemConnection.remoteAddress)
+			end
+		end
 	elseif e[1] == "scroll" then
 		if ecs.clickedAtArea(e[3], e[4], chatZoneX, yLeftBar, chatZoneX + chatZoneWidth - 1, yLeftBar + chatZoneHeight - 1) then
 			scrollChat(e[5])
+		end
+	elseif e[1] == "key_down" then
+		--Энтер, ага
+		if e[4] == 28 then
+			if currentMessageText then
+				sendMessage()
+			end
 		end
 	end
 end
