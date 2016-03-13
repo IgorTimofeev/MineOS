@@ -14,19 +14,28 @@ local modem = component.modem
 -------------------------------------------------------------------------------------------------------------------------------
 
 local colors = {
-	leftBar = 0xEEEEEE,
+	leftBar = 0x262626,
 	leftBarSelection = 0x00A8FF,
-	leftBarAlternative = 0xDDDDDD,
-	leftBarText = 0x262626,
+	leftBarAlternative = 0x383838,
+	leftBarText = 0xFFFFFF,
 	leftBarSelectionText = 0xFFFFFF,
+	leftBarSearchButton = 0x555555,
+	leftBarSearchButtonText = 0xFFFFFF,
+
 	topBar = 0xEEEEEE,
 	topMenu = 0xFFFFFF,
+
 	chatZone = 0xFFFFFF,
 	senderCloudColor = 0x3392FF,
 	senderCloudTextColor = 0xFFFFFF,
 	yourCloudColor = 0x55BBFF,
 	yourCloudTextColor = 0xFFFFFF,
 	systemMessageColor = 0x555555,
+
+	messageInputBarColor = 0xEEEEEE,
+	messsageInputBarButtonColor = 0x3392FF,
+	messsageInputBarButtonTextColor = 0xFFFFFF,
+	messsageInputBarLineColor = 0x000000,
 }
 
 local chatHistory = {}
@@ -41,7 +50,7 @@ local avatarWidthLimit = 6
 local avatarHeightLimit = 3
 
 local currentChatID = 1
-
+local currentChatMessage = 0
 
 buffer.start()
 local leftBarWidth = math.floor(buffer.screen.width * 0.2)
@@ -53,8 +62,16 @@ local bottom
 local chatZoneHeight = buffer.screen.height - yLeftBar + 1
 local cloudWidth = chatZoneWidth - 2 * (avatarWidthLimit + 9)
 local cloudTextWidth = cloudWidth - 4
+local messageInputHeight = 5
 
 -------------------------------------------------------------------------------------------------------------------------------
+
+--Объекты для тача
+local obj = {}
+local function newObj(class, name, ...)
+	obj[class] = obj[class] or {}
+	obj[class][name] = {...}
+end
 
 local function saveChatHistory()
 	fs.makeDirectory(fs.path(chatHistoryPath) or "")
@@ -120,10 +137,14 @@ local function drawLeftBar()
 		counter = counter + 1
 		if yPos > buffer.screen.height then break end
 	end
+
+	--Кнопочка поиска юзеров
+	obj.search = {buffer.button(1, buffer.screen.height - 2, leftBarWidth, 3, colors.leftBarSearchButton, colors.leftBarSearchButtonText, "Поиск")}
 end
 
 local function drawTopBar()
 	buffer.square(1, 2, buffer.screen.width, heightOfTopBar, colors.topBar, 0xFFFFFF, " ")
+
 	buffer.image(3, 3, avatars.personal)
 	-- buffer.text(chatZoneX, yLeftBar + avatarHeightLimit + 2, )
 end
@@ -177,17 +198,21 @@ local function stringWrap(text, limit)
 	return strings
 end
 
-local function drawChat(fromMessage)
+local function drawChat()
 	local x, y = chatZoneX, yLeftBar
 	buffer.square(x, y, chatZoneWidth, chatZoneHeight, colors.chatZone, 0xFFFFFF, " ")
 
-	-- buffer.setDrawLimit()
+	-- Ставим ограничение отрисовки буфера, чтобы облачка сообщений не ебошили
+	-- За края верхней зоны чатзоны, ну ты понял, да?
+	buffer.setDrawLimit(x, y, chatZoneWidth, chatZoneHeight)
+
+	--ВОТ ТУТ НАЧИНАЕТСЯ ЕБОЛААААААА
 	-- Стартовая точка
-	y = buffer.screen.height - 6
+	y = buffer.screen.height - messageInputHeight - 1
 	local xYou, xSender = x + 2, buffer.screen.width - 9
 	-- Отрисовка облачков
 	local cloudColor, textColor
-	for i = fromMessage, 1, -1 do
+	for i = currentChatMessage, 1, -1 do
 		--Если не указан тип сообщения, то ренедрим дефолтные облачка
 		if not chatHistory[currentChatID][i].type then
 			--Если сообщенька от тебя, то цвет меняем
@@ -212,28 +237,70 @@ local function drawChat(fromMessage)
 		if y <= yLeftBar then break end
 	end
 
-	buffer.scrollBar(buffer.screen.width - 1, yLeftBar, 2, chatZoneHeight, #chatHistory[currentChatID], fromMessage, 0xCCCCCC, ecs.colors.blue)
+	-- Убираем ограничение отроисовки буфера
+	buffer.resetDrawLimit()
+
+	buffer.scrollBar(buffer.screen.width - 1, yLeftBar, 2, chatZoneHeight - messageInputHeight, #chatHistory[currentChatID], currentChatMessage, 0xDDDDDD, ecs.colors.blue)
+end
+
+local function drawMessageInputBar()
+	local x, y = chatZoneX, buffer.screen.height - messageInputHeight + 1
+	-- buffer.text(x, y, colors.messsageInputBarLineColor, string.rep("▄", chatZoneWidth - 2))
+	buffer.square(x, y, chatZoneWidth, messageInputHeight, colors.messageInputBarColor, 0xFFFFFF, " ")
+	y = y + 1
+	buffer.frame(x + 2, y, chatZoneWidth - 18, 3, colors.messsageInputBarLineColor)
+	buffer.button(buffer.screen.width - 3 - 10, y, 12, 3, colors.messsageInputBarButtonColor, colors.messsageInputBarButtonTextColor, "Отправить")
 end
 
 local function drawAll()
 	drawTopBar()
 	drawLeftBar()
 	drawTopMenu()
-	drawChat(#chatHistory[currentChatID])
+	drawChat()
+	drawMessageInputBar()
 	buffer.draw()
+end
+
+local function scrollChat(direction)
+	if direction == 1 then
+		if currentChatMessage > 1 then
+			currentChatMessage = currentChatMessage - 1
+			drawChat()
+			drawMessageInputBar(currentChatMessage)
+			buffer.draw()
+		end
+	else
+		if currentChatMessage < #chatHistory[currentChatID] then
+			currentChatMessage = currentChatMessage + 1
+			drawChat()
+			drawMessageInputBar(currentChatMessage)
+			buffer.draw()
+		end
+	end
 end
 
 -------------------------------------------------------------------------------------------------------------------------------
 
-buffer.square(1, 1, buffer.screen.width, buffer.screen.height, 0x262626, 0xFFFFFF, " ")
+-- buffer.square(1, 1, buffer.screen.width, buffer.screen.height, 0x262626, 0xFFFFFF, " ")
 
 loadChatHistory()
 loadPersonalAvatar()
+currentChatMessage = #chatHistory[currentChatID]
 
 drawAll()
 
 -------------------------------------------------------------------------------------------------------------------------------
 
+while true do
+	local e = { event.pull() }
+	if e[1] == "touch" then
+
+	elseif e[1] == "scroll" then
+		if ecs.clickedAtArea(e[3], e[4], chatZoneX, yLeftBar, chatZoneX + chatZoneWidth - 1, yLeftBar + chatZoneHeight - 1) then
+			scrollChat(e[5])
+		end
+	end
+end
 
 
 
