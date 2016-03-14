@@ -17,7 +17,6 @@ local function loadApplications()
 end
 
 local function printUsage()
-	print(" ")
 	print("Использование:")
 	print("  get <Имя файла> - программа попытается найти указанный файл по имени и загрузить его")
 	print("  get all <Applications/Wallpapers/Scripts/Libraries> - программа загрузит все существующие файлы из указанной категории")
@@ -65,7 +64,9 @@ local function getEverything()
 end
 
 local function parseArguments()
-	if unicode.lower(arguments[1]) == "all" then
+	if not arguments[1] then
+		printUsage()
+	elseif unicode.lower(arguments[1]) == "all" then
 		if unicode.lower(arguments[2]) == "libraries" then
 			getCategory("Library")
 		elseif unicode.lower(arguments[2]) == "wallpapers" then
@@ -83,7 +84,7 @@ local function parseArguments()
 		local url = "IgorTimofeev/OpenComputers/master/Applications.txt"
 		print("Загружаю список приложений по адресу \"" .. url .. "\"")
 		ecs.getFromGitHub(url, "MineOS/System/OS/Applications.txt")
-	elseif arguments[1] then
+	else
 		local foundedID = searchFile(arguments[1])
 		if foundedID then
 			print("Файл \"" .. applications[foundedID].name .. "\" найден, загружаю по адресу \"" .. applications[foundedID].url .. "\"")
@@ -91,8 +92,6 @@ local function parseArguments()
 		else
 			print("Указанный файл не найден")
 		end
-	else
-		printUsage()
 	end
 end
 
