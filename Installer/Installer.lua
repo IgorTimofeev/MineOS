@@ -145,6 +145,8 @@ end
 
 print(" ")
 
+package.loaded.ecs = nil
+package.loaded.ECSAPI = nil
 _G.ecs = require("ECSAPI")
 _G.image = require("image")
 _G.config = require("config")
@@ -338,7 +340,7 @@ do
     local percent = app / #applications * 100
     ecs.progressBar(xBar, yBar, barWidth, 1, 0xcccccc, ecs.colors.blue, percent)
 
-    ecs.getOSApplication(applications[i], downloadWallpapers)
+    ecs.getOSApplication(applications[app], downloadWallpapers)
   end
 
   os.sleep(timing)
