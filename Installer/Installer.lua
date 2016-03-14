@@ -216,7 +216,7 @@ do
 
   waitForClickOnButton("Select language")
 
-  local data = ecs.universalWindow("auto", "auto", 36, 0x262626, true, {"EmptyLine"}, {"CenterText", ecs.colors.orange, "Select language"}, {"EmptyLine"}, {"Select", 0xFFFFFF, ecs.colors.green, "Russian", "English"}, {"EmptyLine"}, {"CenterText", ecs.colors.orange, "Change some OS properties"}, {"EmptyLine"}, {"Switch", 0xF2B233, 0xffffff, 0xFFFFFF, "Download wallpapers", true}, {"EmptyLine"}, {"Switch", 0xF2B233, 0xffffff, 0xFFFFFF, "Show help tips in OS", true}, {"EmptyLine"}, {"Button", {ecs.colors.green, 0xffffff, "OK"}})
+  local data = ecs.universalWindow("auto", "auto", 36, 0x262626, true, {"EmptyLine"}, {"CenterText", ecs.colors.orange, "Select language"}, {"EmptyLine"}, {"Select", 0xFFFFFF, ecs.colors.green, "Russian", "English"}, {"EmptyLine"}, {"CenterText", ecs.colors.orange, "Change some OS properties"}, {"EmptyLine"}, {"Switch", 0xF2B233, 0xffffff, 0xFFFFFF, "Download wallpapers", true}, {"EmptyLine"}, {"Switch", 0xF2B233, 0xffffff, 0xFFFFFF, "Show help tips in OS", true}, {"EmptyLine"}, {"Button", {ecs.colors.orange, 0x262626, "OK"}})
   downloadWallpapers, showHelpTips = data[2], data[3]
 
   --УСТАНАВЛИВАЕМ НУЖНЫЙ ЯЗЫК
