@@ -685,7 +685,21 @@
   },
 
   ----------------------------------------------------- Приложения с ресурсами --------------------------------------------------------------------------
-
+  {
+    ["name"]="MineOS/Applications/Chat",
+    ["url"]="IgorTimofeev/OpenComputers/master/Applications/Chat/Chat.lua",
+    ["about"]="IgorTimofeev/OpenComputers/master/Applications/Chat/About.txt",
+    ["type"]="Application",
+    ["icon"]="IgorTimofeev/OpenComputers/master/Applications/Chat/Icon.pic",
+    ["createShortcut"] = "desktop",
+    ["version"]=1.0,
+    ["resources"]={
+      {
+        ["name"]="MyAvatar.pic",
+        ["url"]="IgorTimofeev/OpenComputers/master/Applications/Chat/MyAvatar.pic",
+      },
+    },
+  },
   {
     ["name"]="MineOS/Applications/Crossword",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/Crossword/Crossword.lua",

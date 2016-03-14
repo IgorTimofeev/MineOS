@@ -49,7 +49,7 @@ modem.open(port)
 
 -------------------------------------------------------------------------------------------------------------------------------
 
-local personalAvatarPath = "sampleAvatar.pic"
+local personalAvatarPath = "MineOS/Applications/Chat.app/Resources/MyAvatar.pic"
 local chatHistoryPath = "ChatHistory.cfg"
 local friendAvatarPath = "FriendAvatar.pic"
 local avatarWidthLimit = 6

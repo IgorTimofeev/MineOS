@@ -123,21 +123,22 @@ function unicode.find(str, pattern, init, plain)
 	-- checkArg(1, str, "string")
 	-- checkArg(2, pattern, "string")
 	-- checkArg(3, init, "number", "nil")
+
 	if init then
 		if init < 0 then
 			init = -#unicode.sub(str,init)
 		elseif init > 0 then
-			init = #unicode.sub(str,1,init-1)+1
+			init = #unicode.sub(str, 1, init - 1) + 1
 		end
 	end
 	
 	a, b = string.find(str, pattern, init, plain)
 	
 	if a then
-		local ap,bp = str:sub(1,a-1), str:sub(a,b)
-		a = unicode.len(ap)+1
-		b = a + unicode.len(bp)-1
-		return a,b
+		local ap, bp = str:sub(1, a - 1), str:sub(a,b)
+		a = unicode.len(ap) + 1
+		b = a + unicode.len(bp) - 1
+		return a, b
 	else
 		return a
 	end
@@ -154,12 +155,11 @@ end
 ----------------------------------------------------------------------------------------------------------------------------------------
 
 --Проанализировать строку и создать на ее основе цветовую карту
-function syntax.highlight(x, y, text, limit)
+function syntax.highlight(x, y, text, fromSymbol, limit)
 	--Кароч вооот, хыыы
 	local searchFrom, starting, ending
 	--Загоняем в буфер всю строку базового цвета
-	buffer.text(x, y, currentColorScheme.text, limit and unicode.sub(text, 1, limit) or text)
-	limit = limit or math.huge
+	buffer.text(x - fromSymbol + 1, y, currentColorScheme.text, text)
 	--Перебираем шаблоны
 	for i = #patterns, 1, -1 do
 		searchFrom = 1
@@ -167,13 +167,9 @@ function syntax.highlight(x, y, text, limit)
 		while true do
 			starting, ending = unicode.find(text, patterns[i].pattern, searchFrom)
 			if starting and ending then
-				if ending <= limit then
-					buffer.text(x + starting - 1, y, patterns[i].color, unicode.sub(text, starting, ending - patterns[i].cutFromRight))
-					searchFrom = ending + 1
-				else
-					buffer.text(x + starting - 1, y, patterns[i].color, unicode.sub(text, starting, limit))
-					break
-				end
+				buffer.text(x + starting - fromSymbol, y, patterns[i].color, unicode.sub(text, starting, ending - patterns[i].cutFromRight))		
+				if ending > limit then break end
+				searchFrom = ending + 1
 			else
 				break
 			end
@@ -184,16 +180,18 @@ end
 function syntax.convertFileToStrings(path)
 	local array = {}
 	local file = io.open(path, "r")
-	for line in file:lines() do table.insert(array, line) end
+	for line in file:lines() do
+		line = string.gsub(line, "	", string.rep(" ", 4))
+		table.insert(array, line)
+	end
 	file:close()
 	return array
 end
 
 -- Открыть окно-просмотрщик кода
-function syntax.viewCode(x, y, width, height, strings, fromSymbol, fromString, highlightLuaSyntax, selection)
-
+function syntax.viewCode(x, y, width, height, strings, fromSymbol, fromString, highlightLuaSyntax, selection, highlightedStrings)
 	--Рассчитываем максимальное количество строк, которое мы будем отображать
-	local maximumNumberOfAvailableStrings
+	local maximumNumberOfAvailableStrings, yPos
 	if strings[fromString + height - 1] then
 		maximumNumberOfAvailableStrings = fromString + height - 1
 	else
@@ -201,80 +199,115 @@ function syntax.viewCode(x, y, width, height, strings, fromSymbol, fromString, h
 	end
 	--Рассчитываем ширину полоски с номерами строк
 	local widthOfStringCounter = unicode.len(maximumNumberOfAvailableStrings) + 2
-
-	--Рисуем номера строк
-	buffer.square(x, y, widthOfStringCounter, height, currentColorScheme.lineNumbers, 0xFFFFFF, " ")
-	local yPos = y
-	for i = fromString, maximumNumberOfAvailableStrings do
-		buffer.text(x + widthOfStringCounter - unicode.len(i) - 1, yPos, currentColorScheme.text, tostring(i))
-		yPos = yPos + 1
-	end
-
 	--Рассчитываем стратовую позицию текстового поля
 	local textFieldPosition = x + widthOfStringCounter
 	local widthOfText = width - widthOfStringCounter - 3
 
 	--Рисуем подложку под текст
 	buffer.square(textFieldPosition, y, width - widthOfStringCounter - 1, height, currentColorScheme.background, 0xFFFFFF, " ")
+	--Рисуем скроллбар
+	buffer.scrollBar(x + width - 1, y, 1, height, #strings, fromString, currentColorScheme.scrollBar, currentColorScheme.scrollBarPipe)
+	--Рисуем номера строк
+	buffer.square(x, y, widthOfStringCounter, height, currentColorScheme.lineNumbers, 0xFFFFFF, " ")
+	
+	--Подсвечиваем некоторые строки, если указано
+	if highlightedStrings then
+		for i = 1, #highlightedStrings do
+			if highlightedStrings[i].number >= fromString and highlightedStrings[i].number < fromString + height then
+				buffer.square(x, y + highlightedStrings[i].number - fromString, width - 1, 1, highlightedStrings[i].color, 0xFFFFFF, " ")
+				buffer.square(x, y + highlightedStrings[i].number - fromString, widthOfStringCounter, 1, currentColorScheme.lineNumbers, 0xFFFFFF, " ", 60)
+			end
+		end
+	end
+
+	yPos = y
+	for i = fromString, maximumNumberOfAvailableStrings do
+		buffer.text(x + widthOfStringCounter - unicode.len(i) - 1, yPos, currentColorScheme.text, tostring(i))
+		yPos = yPos + 1
+	end
 
 	--Рисуем выделение, если оно имеется
 	if selection then
-		if selection.to.y < selection.from.y then
-			local temp = selection.from.y
-			selection.from.y = selection.to.y
-			selection.to.y = temp
-		end
-
+		--Считаем высоту выделения
 		local heightOfSelection = selection.to.y - selection.from.y + 1
-
-		local function selectString(number, from, to)
-			if number >= fromString and number <= fromString + height then
-
+		--Если высота выделения > 1
+		if heightOfSelection > 1 then
+			--Верхнее выделение
+			if selection.from.x < fromSymbol + widthOfText and selection.from.y >= fromString and selection.from.y < fromString + height then
+				local cyka = textFieldPosition + selection.from.x - fromSymbol
+				if cyka < textFieldPosition then
+					cyka = textFieldPosition
+				end
+				buffer.square(cyka, y + selection.from.y - fromString, widthOfText - cyka + widthOfStringCounter + 2 + x, 1, currentColorScheme.selection, 0xFFFFFF, " ")
 			end
-		end
-
-		if heightOfSelection == 1 then
-
-		elseif heightOfSelection == 2 then
-
-		else
-
+			--Средние выделения
+			if heightOfSelection > 2 then
+				for i = 1, heightOfSelection - 2 do
+					if selection.from.y + i >= fromString and selection.from.y + i < fromString + height then
+						buffer.square(textFieldPosition, y + selection.from.y + i - fromString, widthOfText + 2, 1, currentColorScheme.selection, 0xFFFFFF, " ")
+					end
+				end
+			end
+			--Нижнее выделение
+			if selection.to.x >= fromSymbol and selection.to.y >= fromString and selection.to.y < fromString + height then
+				buffer.square(textFieldPosition, y + selection.to.y - fromString, selection.to.x - fromSymbol + 1, 1, currentColorScheme.selection, 0xFFFFFF, " ")
+			end
+		elseif heightOfSelection == 1 then
+			local cyka = selection.to.x
+			if cyka > fromSymbol + widthOfText - 1 then cyka = fromSymbol + widthOfText - 1 end
+			buffer.square(textFieldPosition + selection.from.x, selection.from.y, cyka - selection.from.x, 1, currentColorScheme.selection, 0xFFFFFF, " ")
 		end
 	end
+
+	--Выставляем ограничение прорисовки буфера
+	textFieldPosition = textFieldPosition + 1
+	buffer.setDrawLimit(textFieldPosition, y, widthOfText, height)
 
 	--Рисуем текст
 	yPos = y
 	for i = fromString, maximumNumberOfAvailableStrings do
 		--Учитываем опциональную подсветку ситнаксиса
 		if highlightLuaSyntax then
-			syntax.highlight(textFieldPosition + 1, yPos, strings[i], widthOfText)
+			syntax.highlight(textFieldPosition, yPos, strings[i], fromSymbol, widthOfText)
 		else
-			buffer.text(textFieldPosition + 1, yPos, currentColorScheme.text, unicode.sub(strings[i], 1, widthOfText))
+			buffer.text(textFieldPosition, yPos, currentColorScheme.text, unicode.sub(strings[i], fromSymbol, widthOfText))
 		end
 
 		yPos = yPos + 1
 	end
-	
-	--Рисуем скроллбар
-	buffer.scrollBar(x + width - 1, y, 1, height, #strings, fromString, currentColorScheme.scrollBar, currentColorScheme.scrollBarPipe)
 
 	--Рисуем изменения из буфера
 	buffer.draw()
+	--Убираем ограничение отрисовки
+	buffer.resetDrawLimit()
+
+	return textFieldPosition
 end
 
 ----------------------------------------------------------------------------------------------------------------
 
---Стартовое объявление цветовой схемы при загрузке библиотеки
+-- Стартовое объявление цветовой схемы при загрузке библиотеки
 syntax.setColorScheme(syntax.colorSchemes.midnight)
 
---Епты бля!
+-- -- Епты бля!
 -- local strings = syntax.convertFileToStrings("MineOS/Applications/Highlight.app/Resources/TestFile.txt")
+-- local strings = syntax.convertFileToStrings("OS.lua")
 
 -- local xSize, ySize = gpu.getResolution()
--- buffer.square(1, 1, xSize, ySize, ecs.colors.green, 0xFFFFFF, " ")
+-- buffer.square(1, 1, xSize, ySize, ecs.colors.red, 0xFFFFFF, " ")
 -- buffer.draw(true)
 
--- syntax.viewCode(2, 2, 70, 20, strings, 1, 1, true, {from = {x = 6, y = 2}, to = {x = 3, y = 8}})
+-- local selection = {
+-- 	from = {x = 8, y = 6}, 
+-- 	to = {x = 16, y = 12}
+-- }
+
+-- local highlightedStrings = {
+-- 	{number = 31, color = 0xFF4444},
+-- 	{number = 32, color = 0xFF4444},
+-- }
+
+-- syntax.viewCode(20, 5, 100, 40, strings, 1, 20, true, selection, highlightedStrings)
 
 ----------------------------------------------------------------------------------------------------------------
 
