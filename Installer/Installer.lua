@@ -51,10 +51,77 @@ local installerScale = 1
 
 local timing = 0.2
 
+-----------------------------СТАДИЯ ПОДГОТОВКИ-------------------------------------------
+
+
+--ЗАГРУЗОЧКА С ГИТХАБА
+local function getFromGitHub(url, path)
+  local sContent = ""
+  local result, response = pcall(internet.request, url)
+  if not result then
+    return nil
+  end
+
+  if fs.exists(path) then fs.remove(path) end
+  fs.makeDirectory(fs.path(path))
+  local file = io.open(path, "w")
+
+  for chunk in response do
+    file:write(chunk)
+    sContent = sContent .. chunk
+  end
+
+  file:close()
+
+  return sContent
+end
+
+--БЕЗОПАСНАЯ ЗАГРУЗОЧКА
+local function getFromGitHubSafely(url, path)
+  local success, sRepos = pcall(getFromGitHub, url, path)
+  if not success then
+    io.stderr:write("Can't download \"" .. url .. "\"!\n")
+    return -1
+  end
+  return sRepos
+end
+
+--ЗАГРУЗОЧКА С ПАСТЕБИНА
+local function getFromPastebin(paste, filename)
+  local cyka = ""
+  local f, reason = io.open(filename, "w")
+  if not f then
+    io.stderr:write("Failed opening file for writing: " .. reason)
+    return
+  end
+  --io.write("Downloading from pastebin.com... ")
+  local url = "http://pastebin.com/raw.php?i=" .. paste
+  local result, response = pcall(internet.request, url)
+  if result then
+    --io.write("success.\n")
+    for chunk in response do
+      --if not options.k then
+        --string.gsub(chunk, "\r\n", "\n")
+      --end
+      f:write(chunk)
+      cyka = cyka .. chunk
+    end
+    f:close()
+    --io.write("Saved data to " .. filename .. "\n")
+  else
+    f:close()
+    fs.remove(filename)
+    io.stderr:write("HTTP request failed: " .. response .. "\n")
+  end
+
+  return cyka
+end
+
+local GitHubUserUrl = "https://raw.githubusercontent.com/"
+
 
 --------------------------------- Стадия стартовой загрузки всего необходимого ---------------------------------
 
-local applicationsPath = "MineOS/System/OS/Applications.txt"
 
 local preLoadApi = {
   { paste = "IgorTimofeev/OpenComputers/master/lib/ECSAPI.lua", path = "lib/ECSAPI.lua" },
@@ -68,15 +135,12 @@ local preLoadApi = {
 }
 
 print("Downloading file list")
-ecs.getFromGitHub("IgorTimofeev/OpenComputers/master/Applications.txt", applicationsPath)
-local file = io.open(applicationsPath, "r")
-applications = seri.unserialize(file:read("*a"))
-file:close()
+applications = seri.unserialize(getFromGitHubSafely(GitHubUserUrl .. "IgorTimofeev/OpenComputers/master/Applications.txt", "MineOS/System/OS/Applications.txt"))
 print(" ")
 
 for i = 1, #preLoadApi do
   print("Downloading must-have files (" .. fs.name(preLoadApi[i].path) .. ")")
-  ecs.getFromGitHub(preLoadApi[i].paste, preLoadApi[i].path)
+  getFromGitHubSafely(GitHubUserUrl .. preLoadApi[i].paste, preLoadApi[i].path)
 end
 
 print(" ")
@@ -239,6 +303,7 @@ end
 --Создаем стартовые пути и прочие мелочи чисто для эстетики
 local desktopPath = "MineOS/Desktop/"
 local dockPath = "MineOS/System/OS/Dock/"
+local applicationsPath = "MineOS/Applications/"
 local picturesPath = "MineOS/Pictures/"
 
 fs.remove(desktopPath)
