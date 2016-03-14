@@ -229,7 +229,7 @@ end
 --Загрузка файла с инета
 function ECSAPI.getFileFromUrl(url, path)
 	if not _G.internet then _G.internet = require("internet") end
-	local sContent = ""
+
 	local result, response = pcall(internet.request, url)
 	if not result then
 		ECSAPI.error("Could not connect to to URL address \"" .. url .. "\"")
@@ -242,12 +242,9 @@ function ECSAPI.getFileFromUrl(url, path)
 
 	for chunk in response do
 		file:write(chunk)
-		sContent = sContent .. chunk
 	end
 
 	file:close()
-
-	return sContent
 end
 
 --Загрузка файла с пастебина
@@ -263,23 +260,59 @@ function ECSAPI.getFromGitHub(url, path)
 end
 
 --Загрузить ОС-приложение
-function ECSAPI.getOSApplication(elementFromMassiv)
-	--Удаляем старый файл и получаем путь
-	local path = elementFromMassiv.name
-	fs.remove(path)
-	--Если тип = приложение
-	if elementFromMassiv.type == "Application" then
-		fs.makeDirectory(path .. ".app/Resources")
-		ECSAPI.getFromGitHub(elementFromMassiv.url, path .. ".app/" .. fs.name(elementFromMassiv.name .. ".lua"))
-		ECSAPI.getFromGitHub(elementFromMassiv.icon, path .. ".app/Resources/Icon.pic")
-		if elementFromMassiv.resources then
-			for i = 1, #elementFromMassiv.resources do
-				ECSAPI.getFromGitHub(elementFromMassiv.resources[i].url, path .. ".app/Resources/" .. elementFromMassiv.resources[i].name)
+function ECSAPI.getOSApplication(application, downloadWallpapers)
+	downloadWallpapers = downloadWallpapers or true
+    --Если это приложение
+    if application.type == "Application" then
+		--Удаляем приложение, если оно уже существовало и создаем все нужные папочки
+		fs.remove(application.name .. ".app")
+		fs.makeDirectory(application.name .. ".app/Resources")
+		
+		--Загружаем основной исполняемый файл и иконку
+		ECSAPI.getFromGitHub(application.url, application.name .. ".app/" .. fs.name(application.name .. ".lua"))
+		ECSAPI.getFromGitHub(application.icon, application.name .. ".app/Resources/Icon.pic")
+
+		--Если есть ресурсы, то загружаем ресурсы
+		if application.resources then
+			for i = 1, #application.resources do
+				ECSAPI.getFromGitHub(application.resources[i].url, application.name .. ".app/Resources/" .. application.resources[i].name)
 			end
 		end
-	--А если че-то другое
+
+		--Если есть файл "о программе", то грузим и его
+		if application.about then
+			ECSAPI.getFromGitHub(application.about, application.name .. ".app/Resources/About.txt")
+		end 
+
+		--Если имеется режим создания ярлыка, то создаем его
+		if application.createShortcut then
+			local desktopPath = "MineOS/Desktop/"
+			local dockPath = "MineOS/System/OS/Dock/"
+			
+			if application.createShortcut == "dock" then
+				ECSAPI.createShortCut(dockPath .. fs.name(application.name) .. ".lnk", application.name .. ".app")
+			else
+				ECSAPI.createShortCut(desktopPath .. fs.name(application.name) .. ".lnk", application.name .. ".app")
+			end
+		end
+
+	--Если тип = другой, чужой, а мб и свой пастебин
+	elseif application.type == "Pastebin" then
+		ECSAPI.getFromPastebin(application.url, application.name)
+
+	--Если обои
+	elseif application.type == "Wallpaper" then
+		if downloadWallpapers then
+			ECSAPI.getFromGitHub(application.url, application.name)
+		end
+	
+	--Если просто какой-то скрипт
+	elseif application.type == "Script" or application.type == "Library" then
+		ECSAPI.getFromGitHub(application.url, application.name)
+	
+	--А если ваще какая-то абстрактная хуйня, либо ссылка на веб, то загружаем по УРЛ-ке
 	else
-		ECSAPI.getFromGitHub(elementFromMassiv.url, path)
+		ECSAPI.getFileFromUrl(application.url, application.name)
 	end
 end
 
@@ -335,10 +368,10 @@ function ECSAPI.getAppsToUpdate(debug)
 end
 
 --Сделать строку пригодной для отображения в ОпенКомпах
+--Заменяет табсы на пробелы и виндовый возврат каретки на человеческий UNIX-овский
 function ECSAPI.stringOptimize(sto4ka, indentatonWidth)
-	indentatonWidth = indentatonWidth or 2
     sto4ka = string.gsub(sto4ka, "\r\n", "\n")
-    sto4ka = string.gsub(sto4ka, "	", string.rep(" ", indentatonWidth))
+    sto4ka = string.gsub(sto4ka, "	", string.rep(" ", indentatonWidth or 2))
     return stro4ka
 end
 
@@ -1432,49 +1465,6 @@ function ECSAPI.readCorrectLangFile(pathToLangs)
 	return lang
 end
 
--- Анимация затухания экрана
-function ECSAPI.fadeOut(startColor, targetColor, speed)
-	local xSize, ySize = gpu.getResolution()
-	while startColor >= targetColor do
-		gpu.setBackground(startColor)
-		gpu.fill(1, 1, xSize, ySize, " ")
-		startColor = startColor - 0x111111
-		os.sleep(speed or 0)
-	end
-end
-
--- Анимация загорания экрана
-function ECSAPI.fadeIn(startColor, targetColor, speed)
-	local xSize, ySize = gpu.getResolution()
-	while startColor <= targetColor do
-		gpu.setBackground(startColor)
-		gpu.fill(1, 1, xSize, ySize, " ")
-		startColor = startColor + 0x111111
-		os.sleep(speed or 0)
-	end
-end
-
--- Анимация выхода в олдскул-телевизионном стиле
-function ECSAPI.TV(speed, targetColor)
-	local xSize, ySize = gpu.getResolution()
-	local xCenter, yCenter = math.floor(xSize / 2), math.floor(ySize / 2)
-	gpu.setBackground(targetColor or 0x000000)
-	
-	for y = 1, yCenter do
-		gpu.fill(1, y - 1, xSize, 1, " ")
-		gpu.fill(1, ySize - y + 1, xSize, 1, " ")
-		os.sleep(speed or 0)
-	end
-	
-	for x = 1, xCenter - 1 do
-		gpu.fill(x, yCenter, 1, 1, " ")
-		gpu.fill(xSize - x + 1, yCenter, 1, 1, " ")
-		os.sleep(speed or 0)
-	end
-	os.sleep(0.3)
-	gpu.fill(1, yCenter, xSize, 1, " ")
-end
-
 -------------------------ВСЕ ДЛЯ ОСКИ-------------------------------------------------------------------------------
 
 function ECSAPI.sortFiles(path, fileList, sortingMethod, showHiddenFiles)
@@ -1551,7 +1541,7 @@ end
 
 --Отобразить окно с содержимым файла информации о приложении
 function ECSAPI.applicationHelp(pathToApplication)
-	local pathToAboutFile = pathToApplication .. "/Resources/About.txt"
+	local pathToAboutFile = pathToApplication .. "/resources/About.txt"
 	if _G.OSSettings and _G.OSSettings.showHelpOnApplicationStart and fs.exists(pathToAboutFile) then
 		local applicationName = fs.name(pathToApplication)
 		local file = io.open(pathToAboutFile, "r")
@@ -1559,9 +1549,9 @@ function ECSAPI.applicationHelp(pathToApplication)
 		for line in file:lines() do text = text .. line .. " " end
 		file:close()
 
-		local data = ECSAPI.universalWindow("auto", "auto", 36, 0xEEEEEE, true,
+		local data = ECSAPI.universalWindow("auto", "auto", 30, 0xeeeeee, true,
 			{"EmptyLine"},
-			{"CenterText", 0x000000, "О приложении \"" .. ECSAPI.stringLimit("end", applicationName, 20) .. "\""},
+			{"CenterText", 0x000000, "О приложении " .. applicationName},
 			{"EmptyLine"},
 			{"TextField", 16, 0xFFFFFF, 0x262626, 0xcccccc, 0x353535, text},
 			{"EmptyLine"},

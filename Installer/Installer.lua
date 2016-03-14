@@ -338,52 +338,7 @@ do
     local percent = app / #applications * 100
     ecs.progressBar(xBar, yBar, barWidth, 1, 0xcccccc, ecs.colors.blue, percent)
 
-    --ВСЕ ДЛЯ ЗАГРУЗКИ
-    local path = applications[app]["name"]
-    fs.remove(path .. ".app")
-
-    --Если тип = приложение
-    if applications[app]["type"] == "Application" then
-      fs.makeDirectory(path..".app/Resources")
-      getFromGitHubSafely(GitHubUserUrl .. applications[app]["url"], path .. ".app/" .. fs.name(applications[app]["name"] .. ".lua"))
-      getFromGitHubSafely(GitHubUserUrl .. applications[app]["icon"], path .. ".app/Resources/Icon.pic")
-      
-      --Если есть ресурсы, то загружаем ресурсы
-      if applications[app]["resources"] then
-        for i = 1, #applications[app]["resources"] do
-          getFromGitHubSafely(GitHubUserUrl .. applications[app]["resources"][i]["url"], path..".app/Resources/"..applications[app]["resources"][i]["name"])
-        end
-      end
-
-      --Если есть файл "о программе", то грузим и его
-      if applications[app].about then
-        getFromGitHubSafely(GitHubUserUrl .. applications[app].about, path .. ".app/Resources/About.txt")
-      end 
-
-      --Если имеется режим создания ярлыка, то создаем его
-      if applications[app].createShortcut then
-        if applications[app].createShortcut == "dock" then
-          ecs.createShortCut(dockPath .. fs.name(applications[app].name) .. ".lnk", applications[app].name .. ".app")
-        else
-          ecs.createShortCut(desktopPath .. fs.name(applications[app].name) .. ".lnk", applications[app].name .. ".app")
-        end
-      end
-
-    --Если тип = другой, чужой, а мб и свой пастебин
-    elseif applications[app]["type"] == "Pastebin" then
-      fs.remove(applications[app]["name"])
-      fs.makeDirectory(fs.path(applications[app]["name"]))
-      getFromPastebin(applications[app]["url"], applications[app]["name"])
-
-    --Если обои
-    elseif applications[app]["type"] == "Wallpaper" then
-      if downloadWallpapers then
-        getFromGitHubSafely(GitHubUserUrl .. applications[app]["url"], path)
-      end
-    --А если че-то другое
-    else
-      getFromGitHubSafely(GitHubUserUrl .. applications[app]["url"], path)
-    end
+    ecs.getOSApplication(applications[i], downloadWallpapers)
   end
 
   os.sleep(timing)
