@@ -67,7 +67,9 @@ local function parseArguments()
 	if not arguments[1] then
 		printUsage()
 	elseif unicode.lower(arguments[1]) == "all" then
-		if unicode.lower(arguments[2]) == "libraries" then
+		if not arguments[2] then
+			printUsage()
+		elseif unicode.lower(arguments[2]) == "libraries" then
 			getCategory("Library")
 		elseif unicode.lower(arguments[2]) == "wallpapers" then
 			getCategory("Wallpaper")
