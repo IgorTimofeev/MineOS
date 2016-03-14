@@ -261,7 +261,7 @@ end
 
 --Загрузить ОС-приложение
 function ECSAPI.getOSApplication(application, downloadWallpapers)
-	downloadWallpapers = downloadWallpapers or true
+	if downloadWallpapers == nil then downloadWallpapers = true end
     --Если это приложение
     if application.type == "Application" then
 		--Удаляем приложение, если оно уже существовало и создаем все нужные папочки
