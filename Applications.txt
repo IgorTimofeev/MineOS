@@ -333,6 +333,12 @@
   ----------------------------------------------------- Скрипты и дополнения к ним --------------------------------------------------------------------------
 
   {
+    ["name"]="bin/get.lua",
+    ["url"]="IgorTimofeev/OpenComputers/master/Applications/get.lua",
+    ["type"]="Script",
+    ["version"]=1.0,
+  },
+  {
     ["name"]="init.lua",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/init.lua",
     ["type"]="Script",
