@@ -234,12 +234,6 @@
     ["version"]=1.0,
   },
   {
-    ["name"]="lib/worldEdit.lua",
-    ["url"]="IgorTimofeev/OpenComputers/master/lib/worldEdit.lua",
-    ["type"]="Library",
-    ["version"]=1.0,
-  },
-  {
     ["name"]="lib/files.lua",
     ["url"]="IgorTimofeev/OpenComputers/master/lib/files.lua",
     ["type"]="Library",
