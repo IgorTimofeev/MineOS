@@ -426,6 +426,7 @@ local function connectionGUI()
 					needToUpdate = true
 				elseif e[1] == "connectionEstabilishedExitFromGUI" then
 					ecs.prepareToExit()
+					modemConnection.disconnect()
 					return
 				end
 			end
@@ -465,13 +466,13 @@ function modemConnection.changePort(newPort)
 	modemConnection.remoteAddress = nil
 	modemConnection.availableUsers = {}
 	modemConnection.localAddress = component.getPrimary("modem").address
-	modemConnection.availableUsers = {}
 	createSendingArray()
 end
 
 function modemConnection.search()
 	modemConnection.availableUsers = {}
 	modemConnection.remoteAddress = nil
+	modemConnection.disconnect()
 	modemConnection.sendPersonalData()
 	connectionGUI()
 end

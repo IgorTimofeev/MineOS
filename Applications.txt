@@ -683,8 +683,7 @@
     ["type"]="Script",
     ["version"]=1.0,
   },
-
-  ----------------------------------------------------- Приложения с ресурсами --------------------------------------------------------------------------
+  --Приложение Чат
   {
     ["name"]="MineOS/Applications/Chat",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/Chat/Chat.lua",
@@ -693,13 +692,14 @@
     ["icon"]="IgorTimofeev/OpenComputers/master/Applications/Chat/Icon.pic",
     ["createShortcut"] = "desktop",
     ["version"]=1.0,
-    ["resources"]={
-      {
-        ["name"]="MyAvatar.pic",
-        ["url"]="IgorTimofeev/OpenComputers/master/Applications/Chat/MyAvatar.pic",
-      },
-    },
   },
+  {
+    ["name"]="MineOS/System/Chat/Avatars/MyAvatar.pic",
+    ["url"]="IgorTimofeev/OpenComputers/master/Applications/Chat/MyAvatar.pic",
+    ["type"]="Script",
+    ["version"]=1.0,
+  },
+  ----------------------------------------------------- Приложения с ресурсами --------------------------------------------------------------------------
   {
     ["name"]="MineOS/Applications/Crossword",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/Crossword/Crossword.lua",

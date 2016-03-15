@@ -9,6 +9,7 @@ local context = require("context")
 local image = require("image")
 local unicode = require("unicode")
 local component = require("component")
+local computer = require("computer")
 local modem = component.modem
 
 -------------------------------------------------------------------------------------------------------------------------------
@@ -49,19 +50,19 @@ modem.open(port)
 
 -------------------------------------------------------------------------------------------------------------------------------
 
-local personalAvatarPath = "MineOS/Applications/Chat.app/Resources/MyAvatar.pic"
-local chatHistoryPath = "ChatHistory.cfg"
-local friendAvatarPath = "FriendAvatar.pic"
+local contactsAvatarsPath = "MineOS/System/Chat/Avatars/"
+local personalAvatarPath = contactsAvatarsPath .. "MyAvatar.pic"
+local chatHistoryPath = "MineOS/System/Chat/History.cfg"
 local avatarWidthLimit = 6
 local avatarHeightLimit = 3
 
 local currentChatID = 1
 local currentChatMessage = 0
--- local currentMessageText = "Сука блядь, рот твой ебал, пизда подзалупная, пидор ты обоссанный, хуй тебе в рот клал, под язык кончал месячной прогнившей кончей, ебаный петух!"
 local currentMessageText
 
 buffer.start()
 local messageInputHeight = 5
+local leftBarHeight = buffer.screen.height - 9
 local leftBarWidth = math.floor(buffer.screen.width * 0.2)
 local chatZoneWidth = buffer.screen.width - leftBarWidth
 local heightOfTopBar = 2 + avatarHeightLimit
@@ -102,7 +103,7 @@ local function loadChatHistory()
 end
 
 local function loadAvatarFromFile(path)
-	local avatar = 	image.load(personalAvatarPath)
+	local avatar = 	image.load(path)
 	local widthDifference = avatar.width - avatarWidthLimit
 	local heightDifference = avatar.height - avatarHeightLimit
 
@@ -120,8 +121,28 @@ local function loadPersonalAvatar()
 	avatars.personal = loadAvatarFromFile(personalAvatarPath)
 end
 
+local function loadContactAvatar(ID)
+	avatars.contact = loadAvatarFromFile(contactsAvatarsPath .. ID .. ".pic")
+end
+
+local function saveContactAvatar(ID, data)
+	local file = io.open(contactsAvatarsPath .. ID .. ".pic", "w")
+	file:write(data)
+	file:close()
+end
+
+local function switchToContact(ID)
+	currentChatID = ID
+	currentChatMessage = #chatHistory[currentChatID]
+	loadContactAvatar(currentChatID)
+	chatHistory[currentChatID].unreadedMessages = nil
+end
+
 local function drawLeftBar()
-	buffer.square(1, yLeftBar, leftBarWidth, buffer.screen.height - 1, colors.leftBar, 0xFFFFFF, " ")
+	buffer.square(1, yLeftBar, leftBarWidth, leftBarHeight, colors.leftBar, 0xFFFFFF, " ")
+
+	local howMuchContactsCanBeShown = math.floor(leftBarHeight / 3)
+	obj.Contacts = {}
 
 	local yPos = yLeftBar
 	local counter = 1
@@ -130,6 +151,7 @@ local function drawLeftBar()
 	for i = 1, #chatHistory do
 		textColor = colors.leftBarText
 	
+		--Рисуем подложку
 		if i == currentChatID then
 			buffer.square(1, yPos, leftBarWidth, 3, colors.leftBarSelection, 0xFFFFFF, " ")
 			textColor = 0xFFFFFF
@@ -137,15 +159,31 @@ local function drawLeftBar()
 			buffer.square(1, yPos, leftBarWidth, 3, colors.leftBarAlternative, 0xFFFFFF, " ")
 		end
 
+		--Создаем объекты для клика
+		newObj("Contacts", i, 1, yPos, leftBarWidth, yPos + 2)
+
+		--Рендерим корректное имя
 		text = chatHistory[i].name or address
 		text = ecs.stringLimit("end", text, leftBarWidth - 4)
 
+		--Рисуем имя
 		yPos = yPos + 1
 		buffer.text(2, yPos, textColor, text)
 		
+		--Если имеются непрочитанные сообщения, то показать их
+		if chatHistory[i].unreadedMessages then
+			local stringCount = tostring(chatHistory[i].unreadedMessages)
+			local stringCountLength = unicode.len(stringCount)
+			local x = leftBarWidth - 3 - stringCountLength
+			buffer.square(x, yPos, stringCountLength + 2, 1, colors.leftBarText, 0xFFFFFF, " ")
+			buffer.text(x + 1, yPos, colors.leftBar, stringCount)
+		end
+
 		yPos = yPos + 2
 		counter = counter + 1
-		if yPos > buffer.screen.height then break end
+		if counter > howMuchContactsCanBeShown or yPos > buffer.screen.height then
+			break
+		end
 	end
 
 	--Кнопочка поиска юзеров
@@ -212,6 +250,7 @@ local function drawChat()
 	local x, y = chatZoneX, yLeftBar
 	buffer.square(x, y, chatZoneWidth, chatZoneHeight, colors.chatZone, 0xFFFFFF, " ")
 
+	--Если отстутствуют контакты, то отобразить стартовое сообщение
 	if not chatHistory[currentChatID] then
 		local text = ecs.stringLimit("start", "Добавьте контакты с помощью кнопки \"Поиск\"", chatZoneWidth - 2)
 		local x, y = math.floor(chatZoneX + chatZoneWidth / 2 - unicode.len(text) / 2), math.floor(yLeftBar + chatZoneHeight / 2)
@@ -239,7 +278,7 @@ local function drawChat()
 			else
 				cloudColor, textColor = colors.senderCloudColor, colors.senderCloudTextColor
 				y = drawCloud(xYou + 8, y, cloudColor, textColor, chatHistory[currentChatID][i].fromYou, stringWrap(chatHistory[currentChatID][i].message, cloudTextWidth))
-				buffer.image(xYou, y, avatars.personal)
+				buffer.image(xYou, y, avatars.contact)
 			end
 		else
 			for i = chatZoneX, buffer.screen.width - 2 do
@@ -332,7 +371,7 @@ local function checkAddressExists(address)
 	return addressExists
 end
 
-local function addNewContact(address, name)
+local function addNewContact(address, name, avatarData)
 	if not checkAddressExists(address) then
 		table.insert(chatHistory, 
 		{
@@ -344,9 +383,8 @@ local function addNewContact(address, name)
 			}
 		})
 		saveChatHistory()
+		saveContactAvatar(#chatHistory, avatarData)
 	end
-
-	drawAll(true)
 end
 
 local function askForAddToContacts(address)
@@ -364,15 +402,19 @@ local function dro4er(_, localAddress, remoteAddress, remotePort, distance, ...)
 	
 	if remotePort == port then
 		if messages[1] == "AddMeToContactsPlease" then
-			if modemConnection.remoteAddress then
+			if modemConnection.remoteAddress and modemConnection.remoteAddress == remoteAddress then
 				--Добавляем пидорка к себе в контакты
-				addNewContact(modemConnection.remoteAddress, messages[2])
+				addNewContact(modemConnection.remoteAddress, messages[2], messages[3])
 				--Сохраняем историю чата, ники, авки, все, крч
 				saveChatHistory()
 				--Просим того пидорка, чтобы он добавил нас к себе в контакты
 				askForAddToContacts(modemConnection.remoteAddress)
 				--Чтобы не было всяких соблазнов!
+				modemConnection.availableUsers = {}
 				modemConnection.remoteAddress = nil
+				--Переключаемся на добавленный контакт
+				switchToContact(#chatHistory)
+				drawAll()
 			end
 		elseif messages[1] == "HereIsMessageToYou" then
 			for i = 1, #chatHistory do
@@ -384,15 +426,23 @@ local function dro4er(_, localAddress, remoteAddress, remotePort, distance, ...)
 					--Если текущая открытая история чата является именно вот этой, с этим отправителем
 					if currentChatID == i then
 						--Если мы никуда не скроллили и находимся в конце истории чата с этим юзером
+						--То автоматически проскроллить на конец
 						if currentChatMessage == (#chatHistory[currentChatID] - 1) then
 							currentChatMessage = #chatHistory[currentChatID]
 						end
 						--Обязательно отрисовываем измененную историю чата с этим отправителем
 						drawChat()
 						buffer.draw()
-						component.gpu.setBackground(colors.messageInputBarInputBackgroundColor)
-						component.gpu.setForeground(colors.messsageInputBarTextColor)
+					--Увеличиваем количество непрочитанных сообщений от отправителя
+					else
+						chatHistory[i].unreadedMessages = chatHistory[i].unreadedMessages and chatHistory[i].unreadedMessages + 1 or 1
+						drawLeftBar()
+						buffer.draw()
 					end
+
+					--А это небольшой костыльчик, чтобы не сбивался цвет курсора Term API
+					component.gpu.setBackground(colors.messageInputBarInputBackgroundColor)
+					component.gpu.setForeground(colors.messsageInputBarTextColor)
 
 					break
 				end
@@ -413,8 +463,14 @@ end
 
 loadChatHistory()
 loadPersonalAvatar()
-currentChatMessage = chatHistory[currentChatID] and #chatHistory[currentChatID] or 1
+if chatHistory[currentChatID] then
+	switchToContact(1)
+else
+	currentChatID, currentChatMessage = 1, 1
+end
 modemConnection.startReceivingData()
+modemConnection.disconnect()
+modemConnection.sendPersonalData()
 enableDro4er()
 
 drawAll()
@@ -451,6 +507,16 @@ while true do
 			if modemConnection.remoteAddress then
 				--Просим адрес добавить нас в свой список контактов
 				askForAddToContacts(modemConnection.remoteAddress)
+			end
+
+			drawAll(true)
+		end
+
+		for key in pairs(obj.Contacts) do
+			if ecs.clickedAtArea(e[3], e[4], obj.Contacts[key][1], obj.Contacts[key][2], obj.Contacts[key][3], obj.Contacts[key][4]) then
+				switchToContact(key)
+				drawAll()
+				break
 			end
 		end
 	elseif e[1] == "scroll" then
