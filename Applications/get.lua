@@ -22,6 +22,7 @@ local function printUsage()
 	print("  get all <Applications/Wallpapers/Scripts/Libraries> - программа загрузит все существующие файлы из указанной категории")
 	print("  get everything - программа загрузит все файлы из списка")
 	print("  get list - программа обновит список приложений")
+	print("  get ecsapi - программа обновит главную библиотку автора MineOS")
 	-- print("Доступные категории:")
 	-- print("  Applications - приложения MineOS")
 	-- print("  Wallpapers - обои для MineOS")
@@ -65,18 +66,18 @@ local function getEverything()
 end
 
 local function getECSAPI()
-	if not fs.exists("lib/ECSAPI.lua") then
-		print("Загружаю библиотеку ECSAPI.lua")
-		shell.execute("wget -fQ https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/lib/ECSAPI.lua lib/ECSAPI.lua")
-		_G.ecs = require("ECSAPI")
-		print("Библиотека инициализирована")
-		print(" ")
-	end
+	print("Загружаю библиотеку ECSAPI.lua")
+	shell.execute("wget -fQ https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/lib/ECSAPI.lua lib/ECSAPI.lua")
+	package.loaded.ECSAPI = nil
+	package.loaded.ecs = nil
+	_G.ecs = require("ECSAPI")
+	print("Библиотека инициализирована")
 end
 
 local function getApplicationList()
 	print("Обновляю список приложений")
 	shell.execute("wget -fQ https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/Applications.txt MineOS/System/OS/Applications.txt")
+	print("Список приложений обновлен")
 end
 
 local function parseArguments()
@@ -84,6 +85,8 @@ local function parseArguments()
 		printUsage()
 	elseif unicode.lower(arguments[1]) == "list" then
 		getApplicationList()
+	elseif unicode.lower(arguments[1]) == "ecsapi" then
+		getECSAPI()
 	elseif unicode.lower(arguments[1]) == "all" then
 		if not arguments[2] then
 			printUsage()
@@ -119,7 +122,8 @@ if not component.isAvailable("internet") then
 end
 
 print(" ")
-getECSAPI()
+if not fs.exists("lib/ECSAPI.lua") then getECSAPI(); print(" ") end
+if not fs.exists("MineOS/System/OS/Applications.txt") then getApplicationList(); print(" ") end
 loadApplications()
 parseArguments()
 print(" ")
