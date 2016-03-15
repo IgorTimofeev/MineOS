@@ -194,11 +194,12 @@ local function drawTopBar()
 	buffer.square(1, 2, buffer.screen.width, heightOfTopBar, colors.topBar, 0xFFFFFF, " ")
 
 	buffer.image(3, 3, avatars.personal)
-	buffer.text(10, 3, 0x262626, chatHistory.myName)
+	buffer.text(11, 3, 0x262626, chatHistory.myName)
+	buffer.text(11, 4, 0x777777, modemConnection.localAddress)
 end
 
 local function drawTopMenu()
-	buffer.menu(1, 1, buffer.screen.width, colors.topMenu, 0, {"Чат", 0x000099}, {"Настройки", 0x262626}, {"О программе", 0x262626})
+	obj.TopMenu = buffer.menu(1, 1, buffer.screen.width, colors.topMenu, 0, {"Чат", 0x000099}, {"История", 0x000000}, {"О программе", 0x000000})
 end
 
 local function drawCloud(x, y, cloudColor, textColor, fromYou, text)
@@ -361,14 +362,12 @@ local function sendMessage()
 end
 
 local function checkAddressExists(address)
-	local addressExists = false
 	for i = 1, #chatHistory do
 		if chatHistory[i].address == address then
-			addressExists = true
-			break
+			return true
 		end
 	end
-	return addressExists
+	return false
 end
 
 local function addNewContact(address, name, avatarData)
@@ -403,10 +402,9 @@ local function dro4er(_, localAddress, remoteAddress, remotePort, distance, ...)
 	if remotePort == port then
 		if messages[1] == "AddMeToContactsPlease" then
 			if modemConnection.remoteAddress and modemConnection.remoteAddress == remoteAddress then
+				-- ecs.error("Сообщение о добавлении получил, адрес: " .. modemConnection.remoteAddress .. ", имя:" .. messages[2] .. ", авка: " .. type(messages[3]))
 				--Добавляем пидорка к себе в контакты
 				addNewContact(modemConnection.remoteAddress, messages[2], messages[3])
-				--Сохраняем историю чата, ники, авки, все, крч
-				saveChatHistory()
 				--Просим того пидорка, чтобы он добавил нас к себе в контакты
 				askForAddToContacts(modemConnection.remoteAddress)
 				--Чтобы не было всяких соблазнов!
@@ -462,7 +460,21 @@ local function disableDro4er()
 	event.ignore("modem_message", dro4er)
 end
 
+local function deleteAvatar(ID)
+	fs.remove(contactsAvatarsPath .. ID .. ".pic")
+end
+
+local function clearChatHistory()
+	for i = 1, #chatHistory do
+		deleteAvatar(i)
+		chatHistory[i] = nil
+	end
+	saveChatHistory()
+end
+
 -------------------------------------------------------------------------------------------------------------------------------
+
+ecs.disableInterrupting()
 
 loadChatHistory()
 loadPersonalAvatar()
@@ -522,6 +534,37 @@ while true do
 				break
 			end
 		end
+
+		for key in pairs(obj.TopMenu) do
+			if ecs.clickedAtArea(e[3], e[4], obj.TopMenu[key][1], obj.TopMenu[key][2], obj.TopMenu[key][3],obj.TopMenu[key][4]) then
+				buffer.button(obj.TopMenu[key][1] - 1, obj.TopMenu[key][2], unicode.len(key) + 2, 1, ecs.colors.blue, 0xFFFFFF, key)
+				buffer.draw()
+
+				local action
+				if key == "Чат" then
+					action = context.menu(obj.TopMenu[key][1] - 1, obj.TopMenu[key][2] + 1, {"Изменить имя"}, {"Изменить аватар"}, {"Очистить историю"},"-", {"Выход"})
+				end
+
+				if action == "Выход" then
+					disableDro4er()
+					modemConnection.stopReceivingData()
+					modemConnection.disconnect()
+					ecs.enableInterrupting()
+					buffer.clear()
+					ecs.prepareToExit()
+					return
+				elseif action == "Очистить историю" then
+					clearChatHistory()
+					drawAll()
+				end
+
+				drawTopMenu()
+				buffer.draw()
+
+				break
+			end
+		end
+
 	elseif e[1] == "scroll" then
 		if ecs.clickedAtArea(e[3], e[4], chatZoneX, yLeftBar, chatZoneX + chatZoneWidth - 1, yLeftBar + chatZoneHeight - 1) then
 			scrollChat(e[5])
