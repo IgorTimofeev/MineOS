@@ -440,6 +440,9 @@ local function dro4er(_, localAddress, remoteAddress, remotePort, distance, ...)
 						buffer.draw()
 					end
 
+					--Бип!
+					computer.beep(1700)
+
 					--А это небольшой костыльчик, чтобы не сбивался цвет курсора Term API
 					component.gpu.setBackground(colors.messageInputBarInputBackgroundColor)
 					component.gpu.setForeground(colors.messsageInputBarTextColor)
