@@ -1,8 +1,8 @@
 
 local component = require("component")
-local ecs = require("ECSAPI")
 local serialization = require("serialization")
 local unicode = require("unicode")
+local shell = require("shell")
 
 local pathToApplications = "MineOS/System/OS/Applications.txt"
 local applications = {}
@@ -21,7 +21,7 @@ local function printUsage()
 	print("  get <Имя файла> - программа попытается найти указанный файл по имени и загрузить его")
 	print("  get all <Applications/Wallpapers/Scripts/Libraries> - программа загрузит все существующие файлы из указанной категории")
 	print("  get everything - программа загрузит все файлы из списка")
-	print("  get ApplicationList - программа перезагрузит список файлов из GitHub")
+	print("  get list - программа обновит список приложений")
 	-- print("Доступные категории:")
 	-- print("  Applications - приложения MineOS")
 	-- print("  Wallpapers - обои для MineOS")
@@ -60,12 +60,30 @@ local function getEverything()
 		ecs.getOSApplication(applications[i])
 		counter = counter + 1
 	end
+	print(" ")
 	print("Количество загруженных файлов: " .. counter)
+end
+
+local function getECSAPI()
+	if not fs.exists("lib/ECSAPI.lua") then
+		print("Загружаю библиотеку ECSAPI.lua")
+		shell.execute("wget -fQ https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/lib/ECSAPI.lua lib/ECSAPI.lua")
+		_G.ecs = require("ECSAPI")
+		print("Библиотека инициализирована")
+		print(" ")
+	end
+end
+
+local function getApplicationList()
+	print("Обновляю список приложений")
+	shell.execute("wget -fQ https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/Applications.txt MineOS/System/OS/Applications.txt")
 end
 
 local function parseArguments()
 	if not arguments[1] then
 		printUsage()
+	elseif unicode.lower(arguments[1]) == "list" then
+		getApplicationList()
 	elseif unicode.lower(arguments[1]) == "all" then
 		if not arguments[2] then
 			printUsage()
@@ -82,10 +100,6 @@ local function parseArguments()
 		end
 	elseif unicode.lower(arguments[1]) == "everything" then
 		getEverything()
-	elseif unicode.lower(arguments[1]) == "applicationlist" then
-		local url = "IgorTimofeev/OpenComputers/master/Applications.txt"
-		print("Загружаю список приложений по адресу \"" .. url .. "\"")
-		ecs.getFromGitHub(url, "MineOS/System/OS/Applications.txt")
 	else
 		local foundedID = searchFile(arguments[1])
 		if foundedID then
@@ -104,8 +118,9 @@ if not component.isAvailable("internet") then
 	return
 end
 
-loadApplications()
 print(" ")
+getECSAPI()
+loadApplications()
 parseArguments()
 print(" ")
 
