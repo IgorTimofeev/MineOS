@@ -7,6 +7,7 @@ local shell = require("shell")
 local pathToApplications = "MineOS/System/OS/Applications.txt"
 local applications = {}
 local arguments = { ... }
+local initPhase = false
 
 --------------------------------------------------------------------------------------------------------------
 
@@ -66,18 +67,26 @@ local function getEverything()
 end
 
 local function getECSAPI()
-	print("Загружаю библиотеку ECSAPI.lua")
+	print("Загружаю библиотеку ECSAPI.lua...")
 	shell.execute("wget -fQ https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/lib/ECSAPI.lua lib/ECSAPI.lua")
 	package.loaded.ECSAPI = nil
 	package.loaded.ecs = nil
 	_G.ecs = require("ECSAPI")
-	print("Библиотека инициализирована")
+	print("Библиотека инициализирована.")
 end
 
 local function getApplicationList()
-	print("Обновляю список приложений")
+	print("Обновляю список приложений...")
 	shell.execute("wget -fQ https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/Applications.txt MineOS/System/OS/Applications.txt")
-	print("Список приложений обновлен")
+	print("Список приложений обновлен.")
+end
+
+local function separator(text)
+	text = " " .. text .. " "
+	local textLength = unicode.len(text)
+	local xSize, ySize = component.gpu.getResolution()
+	local widthOfEachLine = math.floor((xSize - textLength) / 2)
+	print(string.rep("─", widthOfEachLine) .. text .. string.rep("─", widthOfEachLine))
 end
 
 local function parseArguments()
@@ -85,7 +94,7 @@ local function parseArguments()
 		printUsage()
 	elseif unicode.lower(arguments[1]) == "list" then
 		getApplicationList()
-	elseif unicode.lower(arguments[1]) == "ecsapi" then
+	elseif unicode.lower(arguments[1]) == "ecsapi" or unicode.lower(arguments[1]) == "ecsapi.lua" then
 		getECSAPI()
 	elseif unicode.lower(arguments[1]) == "all" then
 		if not arguments[2] then
@@ -122,10 +131,35 @@ if not component.isAvailable("internet") then
 end
 
 print(" ")
-if not fs.exists("lib/ECSAPI.lua") then getECSAPI(); print(" ") end
-if not fs.exists("MineOS/System/OS/Applications.txt") then getApplicationList(); print(" ") end
+
+if not fs.exists("lib/ECSAPI.lua") then
+	if not initPhase then
+		separator("Инициализация")
+		print(" ")
+	end
+	getECSAPI()
+	print(" ")
+	initPhase = true
+end
+
+if not fs.exists("MineOS/System/OS/Applications.txt") then
+	if not initPhase then
+		separator("Инициализация")
+		print(" ")
+	end
+	getApplicationList()
+	print(" ")
+	initPhase = true
+end
+
+if initPhase then
+	separator("Инициализация завершена")
+	print(" ")
+end
+
 loadApplications()
 parseArguments()
+
 print(" ")
 
 
