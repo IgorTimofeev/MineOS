@@ -57,7 +57,7 @@ local avatarWidthLimit = 6
 local avatarHeightLimit = 3
 
 local currentChatID = 1
-local currentChatMessage = 0
+local currentChatMessage = 1
 local currentMessageText
 
 buffer.start()
@@ -474,20 +474,24 @@ end
 
 -------------------------------------------------------------------------------------------------------------------------------
 
+--Отключаем принудительное завершение программы
 ecs.disableInterrupting()
-
+--Загружаем историю чата и свою аватарку
 loadChatHistory()
 loadPersonalAvatar()
+--Если история не пуста, то переключаемся на указанный контакт
 if chatHistory[currentChatID] then
-	switchToContact(1)
-else
-	currentChatID, currentChatMessage = 1, 1
+	switchToContact(currentChatID)
 end
+--Включаем прием данных по модему для подключения
 modemConnection.startReceivingData()
+--Отсылаем всем модемам сигнал о том, чтобы они удалили нас из своего списка
 modemConnection.disconnect()
+--Отправляем свои данные, чтобы нас заново внесли в список
 modemConnection.sendPersonalData()
+--Активируем прием сообщений чата
 enableDro4er()
-
+--Рисуем весь интерфейс
 drawAll()
 
 -------------------------------------------------------------------------------------------------------------------------------
@@ -566,7 +570,7 @@ while true do
 		end
 
 	elseif e[1] == "scroll" then
-		if ecs.clickedAtArea(e[3], e[4], chatZoneX, yLeftBar, chatZoneX + chatZoneWidth - 1, yLeftBar + chatZoneHeight - 1) then
+		if #chatHistory > 0 and ecs.clickedAtArea(e[3], e[4], chatZoneX, yLeftBar, chatZoneX + chatZoneWidth - 1, yLeftBar + chatZoneHeight - 1) then
 			scrollChat(e[5])
 		end
 	elseif e[1] == "key_down" then
