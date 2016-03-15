@@ -992,8 +992,10 @@ function image.load(path)
 			file:close()
 			error("Unsupported encoding method.\n")
 		end
+	--Поддержка ПНГ-формата
+	elseif fileFormat == constants.pngFileFormat then
+		return image.loadPng(path)
 	else
-		file:close()
 		error("Unsupported file format.\n")
 	end
 end
