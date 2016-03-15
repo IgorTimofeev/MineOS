@@ -72,6 +72,25 @@ ECSAPI.colors = {
 
 ----------------------------------------------------------------------------------------------------
 
+--Отключение принудительного завершения программ
+function ECSAPI.disableInterrupting()
+	_G.eventInterruptBackup = package.loaded.event.shouldInterrupt 
+	_G.eventSoftInterruptBackup = package.loaded.event.shouldSoftInterrupt 
+	
+	package.loaded.event.shouldInterrupt = function () return false end
+	package.loaded.event.shouldSoftInterrupt = function () return false end
+end
+
+--Включение принудительного завершения программ
+function ECSAPI.enableInterrupting()
+	if _G.eventInterruptBackup then
+		package.loaded.event.shouldInterrupt = _G.eventInterruptBackup 
+		package.loaded.event.shouldSoftInterrupt = _G.eventSoftInterruptBackup
+	else
+		error("Cant't enable interrupting beacause of it's already enabled.")
+	end
+end
+
 --Установка масштаба монитора
 function ECSAPI.setScale(scale, debug)
 	--Базовая коррекция масштаба, чтобы всякие умники не писали своими погаными ручонками, чего не следует
