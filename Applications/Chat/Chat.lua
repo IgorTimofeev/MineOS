@@ -460,7 +460,7 @@ local function receiveFile(remoteAddress, fileName)
 				drawAll()
 
 				--Выдаем окошечко о том, что файл успешно передан
-				local data = ecs.universalWindow("auto", "auto", 30, 0x262626, true,
+				ecs.universalWindow("auto", "auto", 30, 0x262626, true,
 					{"EmptyLine"},
 					{"CenterText", ecs.colors.orange, "Прием данных завершен"},
 					{"EmptyLine"},
@@ -566,7 +566,7 @@ local function sendFile(path)
 		{"EmptyLine"},
 		{"Input", 0xFFFFFF, ecs.colors.orange, "Путь"},
 		{"EmptyLine"},
-		{"Button", {ecs.colors.orange, 0xffffff, "OK"}, {0x666666, 0xffffff, "Отмена"}}
+		{"Button", {ecs.colors.orange, 0x262626, "OK"}, {0x666666, 0xffffff, "Отмена"}}
 	)
 
 	if data[2] == "OK" then
@@ -603,6 +603,18 @@ local function sendFile(path)
 			ecs.error("Файл \"" .. data[1] .. "\" не существует.")
 		end
 	end
+end
+
+local function deleteContact(ID)
+	table.remove(chatHistory, ID)
+	deleteAvatar(ID)
+	if #chatHistory > 0 then
+		switchToContact(1)
+	else
+		currentChatID = 1
+		currentChatMessage = 1
+	end
+	saveChatHistory()
 end
 
 -------------------------------------------------------------------------------------------------------------------------------
@@ -669,10 +681,34 @@ while true do
 			drawAll(true)
 		end
 
+		--Клик на контакты
 		for key in pairs(obj.Contacts) do
 			if ecs.clickedAtArea(e[3], e[4], obj.Contacts[key][1], obj.Contacts[key][2], obj.Contacts[key][3], obj.Contacts[key][4]) then
-				switchToContact(key)
-				drawAll()
+				if e[5] == 0 then
+					switchToContact(key)
+					drawAll()
+				else
+					local action = context.menu(e[3], e[4], {"Переименовать"}, {"Удалить"})
+					if action == "Переименовать" then
+						local data = ecs.universalWindow("auto", "auto", 30, 0x262626, true,
+							{"EmptyLine"},
+							{"CenterText", ecs.colors.orange, "Переименовать контакт"},
+							{"EmptyLine"},
+							{"Input", 0xFFFFFF, ecs.colors.orange, chatHistory[key].name},
+							{"EmptyLine"},
+							{"Button", {ecs.colors.orange, 0x262626, "OK"}, {0x666666, 0xffffff, "Отмена"}}
+						)
+
+						if data[2] == "OK" then
+							chatHistory[key].name = data[1] or chatHistory[key].name
+							drawAll()
+						end
+					elseif action == "Удалить" then
+						deleteContact(key)
+						drawAll()
+					end
+				end
+
 				break
 			end
 		end
@@ -685,6 +721,23 @@ while true do
 				local action
 				if key == "Чат" then
 					action = context.menu(obj.TopMenu[key][1] - 1, obj.TopMenu[key][2] + 1, {"Изменить имя"}, {"Изменить аватар"}, {"Очистить историю"},"-", {"Выход"})
+				elseif key == "О программе" then
+					ecs.universalWindow("auto", "auto", 36, 0x262626, true, 
+						{"EmptyLine"},
+						{"CenterText", ecs.colors.orange, "Chat v1.0"}, 
+						{"EmptyLine"},
+						{"CenterText", 0xFFFFFF, "Автор:"},
+						{"CenterText", 0xBBBBBB, "Тимофеев Игорь"},
+						{"CenterText", 0xBBBBBB, "vk.com/id7799889"},
+						{"EmptyLine"},
+						{"CenterText", 0xFFFFFF, "Тестеры:"},
+						{"CenterText", 0xBBBBBB, "Егор Палиев"},
+						{"CenterText", 0xBBBBBB, "vk.com/mrherobrine"},
+						{"CenterText", 0xBBBBBB, "Максим Хлебников"},
+						{"CenterText", 0xBBBBBB, "vk.com/mskalash"},
+						{"EmptyLine"},
+						{"Button", {ecs.colors.orange, 0x262626, "OK"}}
+					)
 				end
 
 				if action == "Выход" then
