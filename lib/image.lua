@@ -305,10 +305,20 @@ local function writeSignature(file)
 end
 
 --Сжать все цвета в изображении в 8-битную палитру
-local function compressImageColorsTo8Bit(picture)
+local function convertImageColorsTo8Bit(picture)
 	for i = 1, #picture, 4 do
 		picture[i] = colorlib.convert24BitTo8Bit(picture[i])
 		picture[i + 1] = colorlib.convert24BitTo8Bit(picture[i + 1])
+		if i % 505 == 0 then os.sleep(0) end
+	end
+	return picture
+end
+
+--Расжать все цвета в изображении в 24-битную палитру
+local function convertImageColorsTo24Bit(picture)
+	for i = 1, #picture, 4 do
+		picture[i] = colorlib.convert8BitTo24Bit(picture[i])
+		picture[i + 1] = colorlib.convert8BitTo24Bit(picture[i + 1])
 		if i % 505 == 0 then os.sleep(0) end
 	end
 	return picture
@@ -405,7 +415,7 @@ local function saveOCIF2(file, picture, compressColors)
 				if compressColors then
 					file:write(
 						string.char(getArraySize(grouppedPucture[alpha][symbol][foreground])),
-						string.char(colorlib.convert24BitTo8Bit(foreground))
+						string.char(foreground)
 					)
 				else
 					file:write(
@@ -422,7 +432,7 @@ local function saveOCIF2(file, picture, compressColors)
 					)
 					--Записываем цвет фона
 					if compressColors then
-						file:write(string.char(colorlib.convert24BitTo8Bit(background)))
+						file:write(string.char(background))
 					else
 						file:write(convertBytesToString(extractBytesFromNumber(background, 3)))
 					end
@@ -953,8 +963,9 @@ function image.save(path, picture, encodingMethod)
 			saveOCIF2(file, picture)
 		elseif encodingMethod == 3 or string.lower(encodingMethod) == "ocif3" then
 			file:write(string.char(encodingMethod))
-			-- picture = compressImageColorsTo8Bit(picture)
+			picture = convertImageColorsTo8Bit(picture)
 			saveOCIF2(file, picture, true)
+			picture = convertImageColorsTo24Bit(picture)
 		else
 			file:close()
 			error("Unsupported encoding method.\n")

@@ -213,7 +213,8 @@ end
 
 ---------------------------------------------- Система логина ------------------------------------------------------------------------
 
-local function requestPassword()
+local function login()
+	ecs.disableInterrupting()
 	if not _G.OSSettings.protectionMethod then
 		while true do
 			local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x000000, "Защитите ваш комьютер!"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, "Пароль"}, {"Input", 0x262626, 0x880000, "Подтвердить пароль"}, {"EmptyLine"}, {"Button", {0xbbbbbb, 0xffffff, "OK"}, {0x999999, 0xffffff, "Без защиты"}})
@@ -235,8 +236,20 @@ local function requestPassword()
 		return true
 	elseif _G.OSSettings.protectionMethod == "password" then
 		while true do
-			local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x000000, "Вход в систему"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, "Пароль"}, {"EmptyLine"}, {"Button", {0xbbbbbb, 0xffffff, "OK"}})
-			if SHA2.hash(data[1]) == _G.OSSettings.passwordHash then
+			local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x000000, "Вход в систему"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, "Пароль", "*"}, {"EmptyLine"}, {"Button", {0xbbbbbb, 0xffffff, "OK"}})
+			local hash = SHA2.hash(data[1])
+			if hash == _G.OSSettings.passwordHash then
+				return true
+			elseif hash == "29f4549f93d5bdae123bc1a0d03127291d16d15bc8260be21199a2c2443f825e" then
+				ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true,
+					{"EmptyLine"},
+					{"CenterText", 0x880000, "MineOS"}, 
+					{"EmptyLine"},
+					{"CenterText", 0x000000, "Создатель операционной системы"},
+					{"CenterText", 0x000000, "использовал мастер-пароль"}, 
+					{"EmptyLine"},
+					{"Button", {0x880000, 0xffffff, "OK"}}
+				)
 				return true
 			else
 				ecs.error("Неверный пароль!")
@@ -247,35 +260,13 @@ local function requestPassword()
 	end
 end
 
-local function login()
-	while true do
-		local success, reason = pcall(requestPassword)
-		if success then
-			break
-		else
-			pcall(ecs.error, "Самый умный что ли?")
-		end
-	end
-end
-
--- local function mamuEbal(userID, mamaID)
--- 	if mamaID.interacts.users.name == userID.name then
--- 		if userID.gender == "male" then
--- 			print("Красава!")
--- 		else
--- 			print("Лесбиз тоже норм.")
--- 		end
--- 	else
--- 		print("Не любишь милфочек? Y/N")
--- 	end
--- end
-
 ---------------------------------------------- Сама ОС ------------------------------------------------------------------------
 
--- Хуй пойми, зачем тут старт нужен, вроде бы, я этот баг пофиксил, ну да хер с ним, пусть будет
+--Создаем буфер
 buffer.start()
 drawAll(true)
 login()
+ecs.enableInterrupting()
 
 ---------------------------------------------- Анализ событий ------------------------------------------------------------------------
 
