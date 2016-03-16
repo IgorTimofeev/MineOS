@@ -23,10 +23,13 @@ local colors = {
 	leftBarSearchButton = 0x555555,
 	leftBarSearchButtonText = 0xFFFFFF,
 
-	scrollBar = 0xDDDDDD,
-	scrollBarPipe = 0x888888,
+	scrollBar = 0xCCCCCC,
+	scrollBarPipe = 0x666666,
 
 	topBar = 0xEEEEEE,
+	topBarName = 0x000000,
+	topBarAddress = 0x555555,
+
 	topMenu = 0xFFFFFF,
 
 	chatZone = 0xFFFFFF,
@@ -35,6 +38,9 @@ local colors = {
 	yourCloudColor = 0x55BBFF,
 	yourCloudTextColor = 0xFFFFFF,
 	systemMessageColor = 0x555555,
+
+	sendButtonColor = 0x555555,
+	sendButtonTextColor = 0xFFFFFF,
 
 	messageInputBarColor = 0xEEEEEE,
 	messageInputBarInputBackgroundColor = 0xFFFFFF,
@@ -50,6 +56,7 @@ modem.open(port)
 
 -------------------------------------------------------------------------------------------------------------------------------
 
+local pathToSaveSendedFiles = "MineOS/Downloads/"
 local contactsAvatarsPath = "MineOS/System/Chat/Avatars/"
 local personalAvatarPath = contactsAvatarsPath .. "MyAvatar.pic"
 local chatHistoryPath = "MineOS/System/Chat/History.cfg"
@@ -73,7 +80,8 @@ local chatZoneHeight = buffer.screen.height - yLeftBar - messageInputHeight + 1
 local cloudWidth = chatZoneWidth - 2 * (avatarWidthLimit + 9)
 local cloudTextWidth = cloudWidth - 4
 local yMessageInput = buffer.screen.height - messageInputHeight + 1
-local messageInputWidth = chatZoneWidth - 19
+local sendButtonWidth = 7
+local messageInputWidth = chatZoneWidth - sendButtonWidth - 6
 
 -------------------------------------------------------------------------------------------------------------------------------
 
@@ -194,44 +202,57 @@ local function drawTopBar()
 	buffer.square(1, 2, buffer.screen.width, heightOfTopBar, colors.topBar, 0xFFFFFF, " ")
 
 	buffer.image(3, 3, avatars.personal)
-	buffer.text(11, 3, 0x262626, chatHistory.myName)
-	buffer.text(11, 4, 0x777777, modemConnection.localAddress)
+	buffer.text(11, 3, colors.topBarName, chatHistory.myName)
+	buffer.text(11, 4, colors.topBarAddress, modemConnection.localAddress)
 end
 
 local function drawTopMenu()
 	obj.TopMenu = buffer.menu(1, 1, buffer.screen.width, colors.topMenu, 0, {"Чат", 0x000099}, {"История", 0x000000}, {"О программе", 0x000000})
 end
 
-local function drawCloud(x, y, cloudColor, textColor, fromYou, text)
+local function drawEmptyCloud(x, y, cloudWidth, cloudHeight, cloudColor, fromYou)
 	local upperPixel = "▀"
 	local lowerPixel = "▄"
-	local cloudHeight = #text + 2
-	-- local cloudTextWidth = unicode.len(text[1])
 
+	--Рисуем финтифлюшечки
 	if not fromYou then
 		buffer.set(x, y - cloudHeight + 2, colors.chatZone, cloudColor, upperPixel)
 		buffer.set(x + 1, y - cloudHeight + 2, cloudColor, 0xFFFFFF, " ")
 		x = x + 2
 	else
-		buffer.set(x + cloudTextWidth + 3, y - cloudHeight + 2, colors.chatZone, cloudColor, upperPixel)
-		buffer.set(x + cloudTextWidth + 2, y - cloudHeight + 2, cloudColor, 0xFFFFFF, " ")
+		buffer.set(x + cloudWidth + 3, y - cloudHeight + 2, colors.chatZone, cloudColor, upperPixel)
+		buffer.set(x + cloudWidth + 2, y - cloudHeight + 2, cloudColor, 0xFFFFFF, " ")
 	end
 
-	buffer.square(x + 1, y - cloudHeight + 1, cloudTextWidth, cloudHeight, cloudColor, 0xFFFFFF, " ")
-	buffer.square(x, y - cloudHeight + 2, cloudTextWidth + 2, cloudHeight - 2, cloudColor, 0xFFFFFF, " ")
+	--Заполняшечки
+	buffer.square(x + 1, y - cloudHeight + 1, cloudWidth, cloudHeight, cloudColor, 0xFFFFFF, " ")
+	buffer.square(x, y - cloudHeight + 2, cloudWidth + 2, cloudHeight - 2, cloudColor, 0xFFFFFF, " ")
 	
+	--Сгругленные краешки
 	buffer.set(x, y - cloudHeight + 1, colors.chatZone, cloudColor, lowerPixel)
-	buffer.set(x + cloudTextWidth + 1, y - cloudHeight + 1, colors.chatZone, cloudColor, lowerPixel)
+	buffer.set(x + cloudWidth + 1, y - cloudHeight + 1, colors.chatZone, cloudColor, lowerPixel)
 	buffer.set(x, y, colors.chatZone, cloudColor, upperPixel)
-	buffer.set(x + cloudTextWidth + 1, y, colors.chatZone, cloudColor, upperPixel)
+	buffer.set(x + cloudWidth + 1, y, colors.chatZone, cloudColor, upperPixel)
 
-	x = x + 1
-	y = y - 1
+	return y - cloudHeight + 1
+end
 
-	for i = #text, 1, -1 do
-		buffer.text(x, y, textColor, text[i])
-		y = y - 1
+local function drawTextCloud(x, y, cloudColor, textColor, fromYou, text)
+	local y = drawEmptyCloud(x, y, cloudTextWidth, #text + 2, cloudColor, fromYou)
+	x = fromYou and x + 2 or x + 4
+
+	for i = 1, #text do
+		buffer.text(x, y + i, textColor, text[i])
 	end
+
+	return y
+end
+
+local function drawFileCloud(x, y, cloudColor, textColor, fromYou, fileName)
+	local y = drawEmptyCloud(x, y, 14, 8, cloudColor, fromYou)
+	x = fromYou and x + 2 or x + 4
+
+	ecs.drawOSIcon(x, y + 1, fileName, true, textColor)
 
 	return y
 end
@@ -248,6 +269,7 @@ local function stringWrap(text, limit)
 end
 
 local function drawChat()
+
 	local x, y = chatZoneX, yLeftBar
 	buffer.square(x, y, chatZoneWidth, chatZoneHeight, colors.chatZone, 0xFFFFFF, " ")
 
@@ -265,20 +287,26 @@ local function drawChat()
 
 	-- Стартовая точка
 	y = buffer.screen.height - messageInputHeight - 1
-	local xYou, xSender = x + 2, buffer.screen.width - 9
+	local xYou, xSender = x + 2, buffer.screen.width - 8
 	-- Отрисовка облачков
-	local cloudColor, textColor
 	for i = currentChatMessage, 1, -1 do
 		--Если не указан тип сообщения, то ренедрим дефолтные облачка
 		if not chatHistory[currentChatID][i].type then
 			--Если сообщенька от тебя, то цвет меняем
 			if chatHistory[currentChatID][i].fromYou then
-				cloudColor, textColor = colors.yourCloudColor, colors.yourCloudTextColor
-				y = drawCloud(xSender - cloudWidth - 2, y, cloudColor, textColor, chatHistory[currentChatID][i].fromYou, stringWrap(chatHistory[currentChatID][i].message, cloudTextWidth))
+				y = drawTextCloud(xSender - cloudWidth - 2, y, colors.yourCloudColor, colors.yourCloudTextColor, chatHistory[currentChatID][i].fromYou, stringWrap(chatHistory[currentChatID][i].message, cloudTextWidth - 2))
 				buffer.image(xSender, y, avatars.personal)
 			else
-				cloudColor, textColor = colors.senderCloudColor, colors.senderCloudTextColor
-				y = drawCloud(xYou + 8, y, cloudColor, textColor, chatHistory[currentChatID][i].fromYou, stringWrap(chatHistory[currentChatID][i].message, cloudTextWidth))
+				y = drawTextCloud(xYou + 8, y, colors.senderCloudColor, colors.senderCloudTextColor, chatHistory[currentChatID][i].fromYou, stringWrap(chatHistory[currentChatID][i].message, cloudTextWidth))
+				buffer.image(xYou, y, avatars.contact)
+			end
+		--Если сообщение имеет тип "Файл"
+		elseif chatHistory[currentChatID][i].type == "file" then
+			if chatHistory[currentChatID][i].fromYou then
+				y = drawFileCloud(xSender - 20, y, colors.yourCloudColor, colors.yourCloudTextColor, chatHistory[currentChatID][i].fromYou, chatHistory[currentChatID][i].message)
+				buffer.image(xSender, y, avatars.personal)
+			else
+				y = drawFileCloud(xYou + 8, y, colors.senderCloudColor, colors.senderCloudTextColor, chatHistory[currentChatID][i].fromYou, chatHistory[currentChatID][i].message)
 				buffer.image(xYou, y, avatars.contact)
 			end
 		else
@@ -296,7 +324,7 @@ local function drawChat()
 	-- Убираем ограничение отроисовки буфера
 	buffer.resetDrawLimit()
 
-	buffer.scrollBar(buffer.screen.width - 1, yLeftBar, 2, chatZoneHeight, #chatHistory[currentChatID], currentChatMessage, colors.scrollBar, colors.scrollBarPipe)
+	buffer.scrollBar(buffer.screen.width, yLeftBar, 1, chatZoneHeight, #chatHistory[currentChatID], currentChatMessage, colors.scrollBar, colors.scrollBarPipe)
 end
 
 local function drawMessageInputBar()
@@ -306,7 +334,7 @@ local function drawMessageInputBar()
 	buffer.square(x + 2, y, messageInputWidth, 3, colors.messageInputBarInputBackgroundColor, 0xFFFFFF, " ")
 	buffer.text(x + 3, y + 1, colors.messsageInputBarTextColor, ecs.stringLimit("start", currentMessageText or "Введите сообщение", messageInputWidth - 2))
 
-	obj.send = {buffer.button(chatZoneX + messageInputWidth + 4, y, 13, 3, colors.messsageInputBarButtonColor, colors.messsageInputBarButtonTextColor, "Отправить")}
+	obj.send = {buffer.button(chatZoneX + messageInputWidth + 4, y, sendButtonWidth, 3, colors.sendButtonColor, colors.sendButtonTextColor, "⇪")}
 end
 
 local function drawAll(force)
@@ -336,29 +364,18 @@ local function scrollChat(direction)
 	end
 end
 
-local function addTextToChatHistoryArray(text)
-	table.insert(chatHistory[currentChatID],
-	{
-		fromYou = true,
-		message = text
-	})
+local function addMessageToArray(ID, type, fromYou, message)
+	table.insert(chatHistory[ID], {type = type, fromYou = fromYou, message = message})
+	saveChatHistory()
 end
 
-local function sendMessage()
-	if chatHistory[currentChatID] and chatHistory[currentChatID].address and currentMessageText then
-		modem.send(chatHistory[currentChatID].address, port, "HereIsMessageToYou", currentMessageText)
+local function sendMessage(type, message)
+	modem.send(chatHistory[currentChatID].address, port, "HereIsMessageToYou", type, message)
 
-		addTextToChatHistoryArray(currentMessageText)
+	addMessageToArray(currentChatID, nil, true, currentMessageText)
 
-		currentChatMessage = #chatHistory[currentChatID]
-		saveChatHistory()
-	end
-
+	currentChatMessage = #chatHistory[currentChatID]
 	currentMessageText = nil
-	drawMessageInputBar()
-	drawChat()
-
-	buffer.draw()
 end
 
 local function checkAddressExists(address)
@@ -395,6 +412,78 @@ local function askForAddToContacts(address)
 	modem.send(address, port, "AddMeToContactsPlease", chatHistory.myName, avatarData)
 end
 
+local function getNameAndIDOfAddress(address)
+	for i = 1, #chatHistory do
+		if chatHistory[i].address == address then
+			return chatHistory[i].name, i
+		end
+	end
+	return nil, nil
+end
+
+local function autoScroll()
+	--Если мы никуда не скроллили и находимся в конце истории чата с этим юзером
+	--То автоматически проскроллить на конец
+	if currentChatMessage == (#chatHistory[currentChatID] - 1) then
+		currentChatMessage = #chatHistory[currentChatID]
+	end
+end
+
+local function receiveFile(remoteAddress, fileName)
+	--Чекаем, есть ли он в контактах
+	if checkAddressExists(remoteAddress) then
+		--Создаем директорию под файлики, а то мало ли
+		fs.makeDirectory(pathToSaveSendedFiles)
+		--Получаем имя отправителя из контактов
+		local senderName, senderID = getNameAndIDOfAddress(remoteAddress)
+		--Открываем файл для записи
+		local file = io.open(pathToSaveSendedFiles .. fileName, "w")
+		--Запоминаем пиксели под окошком прогресса
+		local oldPixels = ecs.progressWindow("auto", "auto", 40, 0, "Прием файла", true)
+		--Начинаем ожидать беспроводных сообщений в течение 10 секунд
+		while true do
+			local fileReceiveEvent = { event.pull(10, "modem_message") }
+			--Это сообщение несет в себе процентаж передачи и сами данные пакета
+			if fileReceiveEvent[6] == "FILESEND" then
+				--Рисуем окошко прогресса
+				ecs.progressWindow("auto", "auto", 40, fileReceiveEvent[7], "Прием файла")
+				file:write(fileReceiveEvent[8])
+			--Если нам присылают сообщение о завершении передачи, то закрываем файл
+			elseif fileReceiveEvent[6] == "FILESENDEND" then
+				ecs.progressWindow("auto", "auto", 40, 100, "Прием файла")
+				file:close()
+				ecs.drawOldPixels(oldPixels)
+
+				--Вставляем сообщение с файликом-иконочкой
+				addMessageToArray(senderID, "file", nil, fileName)
+				autoScroll()
+				drawAll()
+
+				--Выдаем окошечко о том, что файл успешно передан
+				local data = ecs.universalWindow("auto", "auto", 30, 0x262626, true,
+					{"EmptyLine"},
+					{"CenterText", ecs.colors.orange, "Прием данных завершен"},
+					{"EmptyLine"},
+					{"CenterText", 0xFFFFFF, "Файл от " .. senderName .. " сохранен как"},
+					{"CenterText", 0xFFFFFF, "\"" .. pathToSaveSendedFiles .. fileName .. "\""},
+					{"EmptyLine"},
+					{"Button", {ecs.colors.orange, 0x262626, "OK"}}
+				)
+
+				break
+			--Если не получали в течение указанного промежутка сообщений, то выдать сообщение об ошибке и удалить файл
+			elseif not fileReceiveEvent[1] then
+				file:close()
+				ecs.drawOldPixels(oldPixels)
+				fs.remove(pathToSaveSendedFiles .. fileName)
+				ecs.error("Ошибка при передаче файла: клиент не отвечает")
+				drawAll()
+				break
+			end
+		end
+	end
+end
+
 --Обработчик сообщений
 local function dro4er(_, localAddress, remoteAddress, remotePort, distance, ...)
 	local messages = { ... }
@@ -414,20 +503,18 @@ local function dro4er(_, localAddress, remoteAddress, remotePort, distance, ...)
 				switchToContact(#chatHistory)
 				drawAll()
 			end
+		--Если какой-то чувак просит нас принять файл
+		elseif messages[1] == "FAYLPRIMI" then
+			receiveFile(remoteAddress, messages[2])
 		elseif messages[1] == "HereIsMessageToYou" then
 			for i = 1, #chatHistory do
 				--Если в массиве истории чата найден юзер, отославший такое сообщение
 				if chatHistory[i].address == remoteAddress then
 					--То вставляем само сообщение в историю чата
-					table.insert(chatHistory[i], {fromYou = false, message = messages[2]})
-					saveChatHistory()
+					addMessageToArray(i, messages[2], nil, messages[3])
 					--Если текущая открытая история чата является именно вот этой, с этим отправителем
 					if currentChatID == i then
-						--Если мы никуда не скроллили и находимся в конце истории чата с этим юзером
-						--То автоматически проскроллить на конец
-						if currentChatMessage == (#chatHistory[currentChatID] - 1) then
-							currentChatMessage = #chatHistory[currentChatID]
-						end
+						autoScroll()
 						--Обязательно отрисовываем измененную историю чата с этим отправителем
 						drawChat()
 						buffer.draw()
@@ -472,6 +559,52 @@ local function clearChatHistory()
 	saveChatHistory()
 end
 
+local function sendFile(path)
+	local data = ecs.universalWindow("auto", "auto", 30, 0x262626, true,
+		{"EmptyLine"},
+		{"CenterText", ecs.colors.orange, "Отправить файл"},
+		{"EmptyLine"},
+		{"Input", 0xFFFFFF, ecs.colors.orange, "Путь"},
+		{"EmptyLine"},
+		{"Button", {ecs.colors.orange, 0xffffff, "OK"}, {0x666666, 0xffffff, "Отмена"}}
+	)
+
+	if data[2] == "OK" then
+		if fs.exists(data[1]) then
+			--Отправляем сообщение о том, что мы собираемся отправить файл
+			modem.send(chatHistory[currentChatID].address, port, "FAYLPRIMI", fs.name(data[1]))
+			--Открываем файл и отправляем его по количеству пакетов
+			local maxPacketSize = modem.maxPacketSize() - 32
+			local file = io.open(data[1], "rb")
+			local fileSize = fs.size(data[1])
+			local percent = 0
+			local sendedBytes = 0
+			local dataToSend
+		
+			while true do
+				dataToSend = file:read(maxPacketSize)
+				if dataToSend then
+					modem.send(chatHistory[currentChatID].address, port, "FILESEND", percent, dataToSend)
+					sendedBytes = sendedBytes + maxPacketSize
+					percent = math.floor(sendedBytes / fileSize * 100)
+				else
+					break
+				end
+			end
+		
+			file:close()
+			--Репортуем об окончании передачи файла
+			modem.send(chatHistory[currentChatID].address, port, "FILESENDEND")
+			--Вставляем в чат инфу об обтправленном файле
+			addMessageToArray(currentChatID, "file", true, fs.name(data[1]))
+			autoScroll()
+			drawAll()
+		else
+			ecs.error("Файл \"" .. data[1] .. "\" не существует.")
+		end
+	end
+end
+
 -------------------------------------------------------------------------------------------------------------------------------
 
 --Отключаем принудительное завершение программы
@@ -500,20 +633,25 @@ while true do
 	local e = { event.pull() }
 	if e[1] == "touch" then
 		-- Клик на поле ввода сообщения
-		if ecs.clickedAtArea(e[3], e[4], chatZoneX + 2, yMessageInput, chatZoneX + messageInputWidth + 2, yMessageInput + 3) then
+		if #chatHistory > 0 and ecs.clickedAtArea(e[3], e[4], chatZoneX + 2, yMessageInput, chatZoneX + messageInputWidth + 2, yMessageInput + 3) then
 			local text = ecs.inputText(chatZoneX + 3, yMessageInput + 2, messageInputWidth - 2, currentMessageText, colors.messageInputBarInputBackgroundColor, colors.messsageInputBarTextColor)
-			if text and text ~= "" then
+			if text ~= nil and text ~= "" then
 				currentMessageText = text
+				sendMessage(nil, currentMessageText)
+				buffer.square(chatZoneX + 2, yMessageInput + 1, messageInputWidth, 3, colors.messageInputBarInputBackgroundColor, 0xFFFFFF, " ")
+				buffer.draw()
+				drawMessageInputBar()
+				drawChat()
+				buffer.draw()
 			end
-			buffer.square(chatZoneX + 2, yMessageInput + 2, messageInputWidth, 3, 0x000000, 0xFFFFFF, " ")
-			drawMessageInputBar()
-			buffer.draw()
 		-- Жмякаем на кнопочку "Отправить"
-		elseif ecs.clickedAtArea(e[3], e[4], obj.send[1], obj.send[2], obj.send[3], obj.send[4]) then
-			buffer.button(obj.send[1], obj.send[2], 13, 3, colors.messsageInputBarButtonTextColor, colors.messsageInputBarButtonColor, "Отправить")
+		elseif #chatHistory > 0 and ecs.clickedAtArea(e[3], e[4], obj.send[1], obj.send[2], obj.send[3], obj.send[4]) then
+			buffer.button(obj.send[1], obj.send[2], sendButtonWidth, 3, colors.sendButtonTextColor, colors.sendButtonColor, "⇪")
 			buffer.draw()
 			os.sleep(0.2)
-			sendMessage()
+			drawMessageInputBar()
+			buffer.draw()
+			sendFile()
 		-- Кнопа поиска
 		elseif ecs.clickedAtArea(e[3], e[4], obj.search[1], obj.search[2], obj.search[3], obj.search[4]) then
 			buffer.button(obj.search[1], obj.search[2], leftBarWidth, 3, colors.leftBarSearchButtonText, colors.leftBarSearchButton, "Поиск")
@@ -554,6 +692,7 @@ while true do
 					modemConnection.stopReceivingData()
 					modemConnection.disconnect()
 					ecs.enableInterrupting()
+					modem.close(port)
 					buffer.clear()
 					ecs.prepareToExit()
 					return
@@ -572,13 +711,6 @@ while true do
 	elseif e[1] == "scroll" then
 		if #chatHistory > 0 and ecs.clickedAtArea(e[3], e[4], chatZoneX, yLeftBar, chatZoneX + chatZoneWidth - 1, yLeftBar + chatZoneHeight - 1) then
 			scrollChat(e[5])
-		end
-	elseif e[1] == "key_down" then
-		--Энтер, ага
-		if e[4] == 28 then
-			if currentMessageText then
-				sendMessage()
-			end
 		end
 	end
 end
