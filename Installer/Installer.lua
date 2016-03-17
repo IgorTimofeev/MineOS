@@ -348,7 +348,7 @@ end
 
 --Создаем базовые обои рабочего стола
 ecs.createShortCut(desktopPath .. "Pictures.lnk", picturesPath)
-if downloadWallpapers then ecs.createShortCut("MineOS/System/OS/Wallpaper.lnk", picturesPath .. "Ciri.pic") end
+if downloadWallpapers then ecs.createShortCut("MineOS/System/OS/Wallpaper.lnk", picturesPath .. "Girl.pic") end
 
 --Автозагрузка
 local file = io.open("autorun.lua", "w")
