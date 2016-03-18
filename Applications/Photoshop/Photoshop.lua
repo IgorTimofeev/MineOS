@@ -746,7 +746,7 @@ while true do
 							savePath = fileName
 						end
 					elseif action == "Сохранить" then
-						image.save(savePath, masterPixels, 3)
+						image.save(savePath, masterPixels)
 
 					elseif action == "Открыть" then
 						local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Открыть"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, "Путь"}, {"EmptyLine"}, {"Button", {0xbbbbbb, 0xffffff, "OK"}})
