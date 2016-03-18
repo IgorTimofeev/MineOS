@@ -774,4 +774,27 @@
       },
     },
   },
+  {
+    ["name"]="MineOS/Applications/Viewer",
+    ["url"]="IgorTimofeev/OpenComputers/master/Applications/Viewer/Viewer.lua",
+    ["about"]="IgorTimofeev/OpenComputers/master/Applications/Viewer/About.txt",
+    ["type"]="Application",
+    ["icon"]="IgorTimofeev/OpenComputers/master/Applications/Viewer/Icon.pic",
+    ["createShortcut"] = "desktop",
+    ["version"]=1.0,
+    ["resources"]={
+      {
+        ["name"]="arrowLeft.pic",
+        ["url"]="IgorTimofeev/OpenComputers/master/Applications/Viewer/arrowLeft.pic",
+      },
+      {
+        ["name"]="arrowRight.pic",
+        ["url"]="IgorTimofeev/OpenComputers/master/Applications/Viewer/arrowRight.pic",
+      },
+      {
+        ["name"]="play.pic",
+        ["url"]="IgorTimofeev/OpenComputers/master/Applications/Viewer/play.pic",
+      },
+    },
+  },
 }

@@ -1781,13 +1781,10 @@ function ECSAPI.launchIcon(path, arguments)
 		end
 	--Если это фоточка
 	elseif fileFormat == ".pic" then
-		shell.execute("MineOS/Applications/Photoshop.app/Photoshop.lua open " .. path)
+		shell.execute("MineOS/Applications/Viewer.app/Viewer.lua open " .. path)
 	--Если это 3D-модель
 	elseif fileFormat == ".3dm" then
 		shell.execute("MineOS/Applications/3DPrint.app/3DPrint.lua open " .. path)
-	--Если это фоточка
-	elseif fileFormat == ".raw" then
-		shell.execute("MineOS/Applications/Photoshop.app/Photoshop.lua open " .. path)
 	--Если это текст или конфиг или языковой
 	elseif fileFormat == ".txt" or fileFormat == ".cfg" or fileFormat == ".lang" then
 		ECSAPI.prepareToExit()
