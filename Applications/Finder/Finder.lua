@@ -454,7 +454,7 @@ while true do
 						end
 					else
 						if fileFormat == ".pic" then
-							action = context.menu(e[3], e[4], {"Редактировать"}, {"Установить как обои"}, "-", {"Копировать", false, "^C"}, "-", {"Переименовать"}, {"Создать ярлык"}, "-", {"Загрузить на Pastebin"}, "-", {"Удалить", false, "⌫"})
+							action = context.menu(e[3], e[4], {"Редактировать"}, "-", {"Установить как обои"}, {"Редактировать в Photoshop"}, "-", {"Копировать", false, "^C"}, "-", {"Переименовать"}, {"Создать ярлык"}, "-", {"Загрузить на Pastebin"}, "-", {"Удалить", false, "⌫"})
 						elseif fileFormat == ".lua" then
 							action = context.menu(e[3], e[4], {"Редактировать"}, {"Создать приложение"}, "-", {"Копировать", false, "^C"}, {"Переименовать"}, {"Создать ярлык"}, "-", {"Загрузить на Pastebin"}, "-", {"Удалить", false, "⌫"})
 						else
@@ -466,6 +466,10 @@ while true do
 					if action == "Редактировать" then
 						ecs.prepareToExit()
 						shell.execute("edit "..path)
+						buffer.paste(1, 1, oldPixelsOfFullScreen)
+						drawAll(true)
+					elseif action == "Редактировать в Photoshop" then
+						shell.execute("MineOS/Applications/Photoshop.app/Photoshop.lua open " .. path)
 						buffer.paste(1, 1, oldPixelsOfFullScreen)
 						drawAll(true)
 					elseif action == "Добавить в избранное" then
