@@ -37,10 +37,12 @@ end
 local function drawImage()
 	if #imageList > 0 then
 		local xImage, yImage = 1, 1   
-		-- if currentLoadedImage.width < buffer.screen.width then xImage = math.floor(buffer.screen.width / 2 - currentLoadedImage.width / 2) end
-		-- if currentLoadedImage.height < buffer.screen.height then yImage = math.floor(buffer.screen.height / 2 - currentLoadedImage.height / 2) end
+		local currentLoadedImage = image.load(imageList[currentImage])
 		
-		buffer.image(xImage, yImage, image.load(imageList[currentImage]))
+		if currentLoadedImage.width < buffer.screen.width then xImage = math.floor(buffer.screen.width / 2 - currentLoadedImage.width / 2) end
+		if currentLoadedImage.height < buffer.screen.height then yImage = math.floor(buffer.screen.height / 2 - currentLoadedImage.height / 2) end
+		
+		buffer.image(xImage, yImage, currentLoadedImage)
 	else
 		local text = "Изображения в директории \"" .. currentPath .. "\" не найдены"
 		buffer.text(math.floor(buffer.screen.width / 2 - unicode.len(text) / 2), math.floor(buffer.screen.height / 2), 0x000000, text)
