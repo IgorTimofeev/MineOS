@@ -83,7 +83,7 @@ local function drawGUI()
 	if showGUI then
 		--Верхний бар
 		buffer.square(1, 1, buffer.screen.width, 1, 0xFFFFFF, 0xFFFFFF, " ", 30)
-		local text = #imageList > 0 and fs.name(imageList[currentImage]) or "Viewer"
+		local text = #imageList > 0 and ecs.stringLimit("start", imageList[currentImage], 40) or "Viewer"
 		buffer.text(math.floor(buffer.screen.width / 2 - unicode.len(text) / 2), 1, 0x000000, text)
 		buffer.text(2, 1, ecs.colors.red, "⬤")
 		buffer.text(5, 1, ecs.colors.orange, "⬤")
@@ -175,7 +175,7 @@ while true do
 		if enableSlideShow then
 			showGUI = true
 			enableSlideShow = false
-			event.cancel(_G.imageViewerSlideShowTimer)
+			if _G.imageViewerSlideShowTimer then event.cancel(_G.imageViewerSlideShowTimer) end
 			drawAll()
 		end
 
