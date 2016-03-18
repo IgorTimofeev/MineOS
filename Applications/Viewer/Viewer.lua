@@ -14,7 +14,6 @@ local currentImage = 1
 local showGUI = true
 local slideShowInterval = 5
 local enableSlideShow = true
-local currentLoadedImage
 
 local arrowLeftImage = image.load(pathToApplicationResources .. "arrowLeft.pic")
 local arrowRightImage = image.load(pathToApplicationResources .. "arrowRight.pic")
@@ -35,19 +34,13 @@ local function loadImageList()
 	end
 end
 
-local function loadCurrentImage()
-	if #imageList > 0 then
-		currentLoadedImage = image.load(imageList[currentImage])
-	end
-end
-
 local function drawImage()
 	if #imageList > 0 then
 		local xImage, yImage = 1, 1   
-		if currentLoadedImage.width < buffer.screen.width then xImage = math.floor(buffer.screen.width / 2 - currentLoadedImage.width / 2) end
-		if currentLoadedImage.height < buffer.screen.height then yImage = math.floor(buffer.screen.height / 2 - currentLoadedImage.height / 2) end
+		-- if currentLoadedImage.width < buffer.screen.width then xImage = math.floor(buffer.screen.width / 2 - currentLoadedImage.width / 2) end
+		-- if currentLoadedImage.height < buffer.screen.height then yImage = math.floor(buffer.screen.height / 2 - currentLoadedImage.height / 2) end
 		
-		buffer.image(xImage, yImage, currentLoadedImage)
+		buffer.image(xImage, yImage, image.load(imageList[currentImage]))
 	else
 		local text = "Изображения в директории \"" .. currentPath .. "\" не найдены"
 		buffer.text(math.floor(buffer.screen.width / 2 - unicode.len(text) / 2), math.floor(buffer.screen.height / 2), 0x000000, text)
@@ -111,14 +104,12 @@ end
 local function prevImage()
 	currentImage = currentImage - 1
 	if currentImage < 1 then currentImage = #imageList end
-	loadCurrentImage()
 	drawAll()
 end
 
 local function nextImage()
 	currentImage = currentImage + 1
 	if currentImage > #imageList then currentImage = 1 end
-	loadCurrentImage()
 	drawAll()
 end
 
@@ -165,7 +156,6 @@ else
 	loadImageList()
 end
 
-loadCurrentImage()
 drawAll()
 
 while true do
