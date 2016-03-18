@@ -43,6 +43,7 @@ local function drawImage()
 		if currentLoadedImage.height < buffer.screen.height then yImage = math.floor(buffer.screen.height / 2 - currentLoadedImage.height / 2) end
 		
 		buffer.image(xImage, yImage, currentLoadedImage)
+		currentLoadedImage = nil
 	else
 		local text = "Изображения в директории \"" .. currentPath .. "\" не найдены"
 		buffer.text(math.floor(buffer.screen.width / 2 - unicode.len(text) / 2), math.floor(buffer.screen.height / 2), 0x000000, text)
