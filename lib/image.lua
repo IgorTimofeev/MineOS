@@ -436,13 +436,20 @@ local function saveOCIF2(file, picture, compressColors)
 					else
 						file:write(convertBytesToString(extractBytesFromNumber(background, 3)))
 					end
-		
-					--Записываем координаты
-					for i = 1, #grouppedPucture[alpha][symbol][foreground][background], 2 do
+			
+					--Перебираем координаты
+					for y in pairs(grouppedPucture[alpha][symbol][foreground][background]) do
+						--Записываем заголовок координат, размер массива y и само значение y
 						file:write(
-							string.char(grouppedPucture[alpha][symbol][foreground][background][i]),
-							string.char(grouppedPucture[alpha][symbol][foreground][background][i + 1])
+							"Y",
+							string.char(getArraySize(grouppedPucture[alpha][symbol][foreground][background][y])),
+							string.char(y)
 						)
+						--Записываем ИКСЫЫЫ
+						--Ы
+						for i = 1, #grouppedPucture[alpha][symbol][foreground][background][y] do
+							file:write(string.char(grouppedPucture[alpha][symbol][foreground][background][y][i]))
+						end
 					end
 				end
 			end
@@ -452,7 +459,7 @@ local function saveOCIF2(file, picture, compressColors)
 	file:close()
 end
 
-local function loadOCIF2(file, decompressColors)
+local function loadOCIF2(file, decompressColors, useOCIF4)
 	local picture = {}
 
 	--Читаем размер изображения
@@ -461,7 +468,7 @@ local function loadOCIF2(file, decompressColors)
 	picture.width = readedWidth
 	picture.height = readedHeight
 
-	local header, alpha, symbol, foreground, background, alphaSize, symbolSize, foregroundSize, backgroundSize = ""
+	local header, alpha, symbol, foreground, background, y, alphaSize, symbolSize, foregroundSize, backgroundSize, ySize = ""
 	while true do
 		header = file:read(1)
 		if not header then break end
@@ -507,10 +514,31 @@ local function loadOCIF2(file, decompressColors)
 			-- print("Размер массива координат: " .. backgroundSize)
 			-- print("Цвет фона: " .. background)
 
-			--Читаем координаты
-			for i = 1, backgroundSize, 2 do
+			--Поддержка загрузки формата OCIF3
+			if not useOCIF4 then
+				--Читаем координаты
+				for i = 1, backgroundSize, 2 do
+					local x = string.byte(file:read(1))
+					local y = string.byte(file:read(1))
+					local index = convertCoordsToIndex(x, y, readedWidth)
+					-- print("Координата: " .. x .. "x" .. y .. ", индекс: "..index)
+
+					picture[index] = background
+					picture[index + 1] = foreground
+					picture[index + 2] = alpha
+					picture[index + 3] = symbol
+				end	
+			end
+
+		--Новый формат OCIF4
+		elseif header == "Y" and useOCIF4 then
+			ySize = string.byte(file:read(1))
+			y = string.byte(file:read(1))
+			-- print("Размер массива Y: " .. ySize)
+			-- print("Текущий Y: " .. y)
+
+			for i = 1, ySize do
 				local x = string.byte(file:read(1))
-				local y = string.byte(file:read(1))
 				local index = convertCoordsToIndex(x, y, readedWidth)
 				-- print("Координата: " .. x .. "x" .. y .. ", индекс: "..index)
 
@@ -518,9 +546,9 @@ local function loadOCIF2(file, decompressColors)
 				picture[index + 1] = foreground
 				picture[index + 2] = alpha
 				picture[index + 3] = symbol
-			end			
+			end		
 		else
-			error("Ошибка чтения формата OCIF: неизвестный тип заголовка (" .. header .. ")")
+			error("Error while reading OCIF format: unknown Header type (" .. header .. ")")
 		end
 
 	end
@@ -637,9 +665,9 @@ function image.convertToGroupedImage(picture)
 		optimizedPicture[alpha][symbol] = optimizedPicture[alpha][symbol] or {}
 		optimizedPicture[alpha][symbol][foreground] = optimizedPicture[alpha][symbol][foreground] or {}
 		optimizedPicture[alpha][symbol][foreground][background] = optimizedPicture[alpha][symbol][foreground][background] or {}
+		optimizedPicture[alpha][symbol][foreground][background][yPos] = optimizedPicture[alpha][symbol][foreground][background][yPos] or {}
 
-		table.insert(optimizedPicture[alpha][symbol][foreground][background], xPos)
-		table.insert(optimizedPicture[alpha][symbol][foreground][background], yPos)
+		table.insert(optimizedPicture[alpha][symbol][foreground][background][yPos], xPos)
 		--Если xPos достигает width изображения, то сбросить на 1, иначе xPos++
 		xPos = (xPos == picture.width) and 1 or xPos + 1
 		--Если xPos равняется 1, то yPos++, а если нет, то похуй
@@ -939,7 +967,7 @@ end
 
 --Сохранить изображение любого поддерживаемого формата
 function image.save(path, picture, encodingMethod)
-	encodingMethod = encodingMethod or 3
+	encodingMethod = encodingMethod or 4
 	--Создать папку под файл, если ее нет
 	fs.makeDirectory(fs.path(path))
 	--Получаем формат указанного файла
@@ -962,6 +990,8 @@ function image.save(path, picture, encodingMethod)
 			file:write(string.char(encodingMethod))
 			saveOCIF2(file, picture)
 		elseif encodingMethod == 3 or string.lower(encodingMethod) == "ocif3" then
+			error("Encoding method 3 is deprecated and no longer supported. Use method 4 instead of it.")
+		elseif encodingMethod == 4 or string.lower(encodingMethod) == "ocif4" then
 			file:write(string.char(encodingMethod))
 			picture = convertImageColorsTo8Bit(picture)
 			saveOCIF2(file, picture, true)
@@ -999,15 +1029,17 @@ function image.load(path)
 			return loadOCIF2(file)
 		elseif encodingMethod == 3 then
 			return loadOCIF2(file, true)
+		elseif encodingMethod == 4 then
+			return loadOCIF2(file, true, true)
 		else
 			file:close()
-			error("Unsupported encoding method.\n")
+			error("Unsupported encoding method: " .. encodingMethod .. "\n")
 		end
 	--Поддержка ПНГ-формата
 	elseif fileFormat == constants.pngFileFormat then
 		return image.loadPng(path)
 	else
-		error("Unsupported file format.\n")
+		error("Unsupported file format: " .. fileFormat .. "\n")
 	end
 end
 
@@ -1026,26 +1058,29 @@ function image.draw(x, y, picture)
 				for background in pairs(picture[alpha][symbol][foreground]) do
 					if gpu.getBackground ~= background then gpu.setBackground(background) end
 					currentBackground = background
-					for i = 1, #picture[alpha][symbol][foreground][background], 2 do	
-						xPos, yPos = x + picture[alpha][symbol][foreground][background][i], y + picture[alpha][symbol][foreground][background][i + 1]
-						
-						--Если альфа имеется, но она не совсем прозрачна
-						if (alpha > 0x00 and alpha < 0xFF) or (alpha == 0xFF and symbol ~= " ")then
-							_, _, currentBackground = gpu.get(xPos, yPos)
-							currentBackground = colorlib.alphaBlend(currentBackground, background, alpha)
-							gpu.setBackground(currentBackground)
 
-							gpu.set(xPos, yPos, symbol)
-
-						elseif alpha == 0x00 then
-							if currentBackground ~= background then
-								currentBackground = background
+					for yArray in pairs(picture[alpha][symbol][foreground][background]) do
+						for xArray = 1, #picture[alpha][symbol][foreground][background][yArray] do
+							xPos, yPos = x + picture[alpha][symbol][foreground][background][yArray][xArray], y + yArray
+							
+							--Если альфа имеется, но она не совсем прозрачна
+							if (alpha > 0x00 and alpha < 0xFF) or (alpha == 0xFF and symbol ~= " ")then
+								_, _, currentBackground = gpu.get(xPos, yPos)
+								currentBackground = colorlib.alphaBlend(currentBackground, background, alpha)
 								gpu.setBackground(currentBackground)
-							end
 
-							gpu.set(xPos, yPos, symbol)
+								gpu.set(xPos, yPos, symbol)
+
+							elseif alpha == 0x00 then
+								if currentBackground ~= background then
+									currentBackground = background
+									gpu.setBackground(currentBackground)
+								end
+
+								gpu.set(xPos, yPos, symbol)
+							end
+							--ecs.wait()
 						end
-						--ecs.wait()
 					end
 				end
 			end
@@ -1056,33 +1091,29 @@ end
 local function createSaveAndLoadFiles()
 	ecs.prepareToExit()
 	ecs.error("Создаю/загружаю изображение")
-	local cyka = image.load("MineOS/System/OS/Icons/Love.pic")
-	--local cyka = image.createImage(4, 4)
+	-- local cyka = image.load("MineOS/System/OS/Icons/Love.pic")
+	local cyka = image.createImage(4, 4)
 	ecs.error("Рисую загруженное изображение")
 	image.draw(2, 2, cyka)
 	ecs.error("Сохраняю его в 4 форматах")
 	image.save("0.pic", cyka, 0)
 	image.save("1.pic", cyka, 1)
-	image.save("2.pic", cyka, 2)
-	image.save("3.pic", cyka, 3)
+	image.save("4.pic", cyka, 4)
 	ecs.prepareToExit()
 	ecs.error("Загружаю все 4 формата и рисую их")
 	local cyka0 = image.load("0.pic")
 	image.draw(2, 2, cyka0)
 	local cyka1 = image.load("1.pic")
 	image.draw(10, 2, cyka1)
-	local cyka2 = image.load("2.pic")
-	image.draw(18, 2, cyka2)
-	local cyka3 = image.load("3.pic")
-	image.draw(26, 2, cyka3)
-	ecs.error("Рисую все 3 формата")
+	local cyka4 = image.load("4.pic")
+	image.draw(34, 2, cyka4)
 end
 
 ------------------------------------------ Место для баловства ------------------------------------------------
 
 -- ecs.prepareToExit()
 
--- local cyka = image.load("MineOS/Applications/Piano.app/Resources/Icon.pic")
+-- local cyka = image.load("3.pic")
 -- image.draw(2, 2, cyka)
 -- ecs.error(HEXtoSTRING(cyka[1], 6, true))
 -- image.draw(8, 2, cyka)

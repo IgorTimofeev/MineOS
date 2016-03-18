@@ -724,21 +724,19 @@ while true do
 						new()
 
 					elseif action == "Сохранить как" then
-						local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Сохранить как"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, "Путь"}, {"Selector", 0x262626, 0x880000, "OCIF3", "OCIF2", "OCIF1", "RAW"}, {"CenterText", 0x262626, "Рекомендуется использовать"}, {"CenterText", 0x262626, "метод кодирования OCIF3"}, {"EmptyLine"}, {"Button", {0x888888, 0xffffff, "OK"}, {0xaaaaaa, 0xffffff, "Отмена"}})
+						local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Сохранить как"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, "Путь"}, {"Selector", 0x262626, 0x880000, "OCIF4", "OCIF1", "RAW"}, {"CenterText", 0x262626, "Рекомендуется использовать"}, {"CenterText", 0x262626, "метод кодирования OCIF4"}, {"EmptyLine"}, {"Button", {0x888888, 0xffffff, "OK"}, {0xaaaaaa, 0xffffff, "Отмена"}})
 						if data[3] == "OK" then
 							data[1] = data[1] or "Untitled"
-							data[2] = data[2] or "OCIF3"
+							data[2] = data[2] or "OCIF4"
 							
 							if data[2] == "RAW" then
 								data[2] = 0
 							elseif data[2] == "OCIF1" then
 								data[2] = 1
-							elseif data[2] == "OCIF1" then
-								data[2] = 2
-							elseif data[2] == "OCIF1" then
-								data[2] = 3
+							elseif data[2] == "OCIF4" then
+								data[2] = 4
 							else
-								data[2] = 3
+								data[2] = 4
 							end
 
 							local filename = data[1] .. ".pic"
