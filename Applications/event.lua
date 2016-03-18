@@ -1,10 +1,10 @@
 local event = require "event"
 
 while true do
-  local cyka = {event.pull()}
-  print("Ивент: "..cyka[1])
-  for i=2,#cyka do
-    print("Аргумент "..(i).." = "..cyka[i])
+  local eventData = { event.pull() }
+  print("Ивент: " .. tostring(eventData[1]))
+  for i = 2, #eventData do
+    print("Аргумент " .. (i) .. ": " .. tostring(eventData[i]))
   end
   print(" ")
 end
