@@ -224,7 +224,7 @@ local function login()
 	ecs.disableInterrupting()
 	if not _G.OSSettings.protectionMethod then
 		while true do
-			local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x000000, "Защитите ваш комьютер!"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, "Пароль"}, {"Input", 0x262626, 0x880000, "Подтвердить пароль"}, {"EmptyLine"}, {"Button", {0xbbbbbb, 0xffffff, "OK"}, {0x999999, 0xffffff, "Без защиты"}})
+			local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x000000, "Защитите ваш комьютер!"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, "Пароль"}, {"Input", 0x262626, 0x880000, "Подтвердить пароль"}, {"EmptyLine"}, {"Button", {0xAAAAAA, 0xffffff, "OK"}, {0x888888, 0xffffff, "Без защиты"}})
 			if data[3] == "OK" then
 				if data[1] == data[2] then
 
@@ -252,8 +252,8 @@ local function login()
 					{"EmptyLine"},
 					{"CenterText", 0x880000, "MineOS"}, 
 					{"EmptyLine"},
-					{"CenterText", 0x000000, "Создатель операционной системы"},
-					{"CenterText", 0x000000, "использовал мастер-пароль"}, 
+					{"CenterText", 0x000000, "  Создатель операционной системы  "},
+					{"CenterText", 0x000000, "  использовал мастер-пароль  "}, 
 					{"EmptyLine"},
 					{"Button", {0x880000, 0xffffff, "OK"}}
 				)
@@ -267,12 +267,75 @@ local function login()
 	end
 end
 
+---------------------------------------------- Система нотификаций ------------------------------------------------------------------------
+
+local function windows10()
+	if math.random(1, 100) > 15 or _G.OSSettings.showWindows10Upgrade == false then return end
+
+	local width = 44
+	local height = 12
+	local x = math.floor(buffer.screen.width / 2 - width / 2)
+	local y = 2
+
+	local function draw(background)
+		buffer.square(x, y, width, height, background, 0xFFFFFF, " ")
+		buffer.square(x, y + height - 2, width, 2, 0xFFFFFF, 0xFFFFFF, " ")
+		
+		buffer.text(x + 2, y + 1, 0xFFFFFF, "Get Windows 10")
+		buffer.text(x + width - 3, y + 1, 0xFFFFFF, "X")
+
+		buffer.image(x + 2, y + 4, image.load("MineOS/System/OS/Icons/Computer.pic"))
+
+		buffer.text(x + 12, y + 4, 0xFFFFFF, "Your MineOS is ready for your")
+		buffer.text(x + 12, y + 5, 0xFFFFFF, "free upgrade.")
+
+		buffer.text(x + 2, y + height - 2, 0x999999, "For a short time we're offering")
+		buffer.text(x + 2, y + height - 1, 0x999999, "a free upgrade to")
+		buffer.text(x + 20, y + height - 1, background, "Windows 10")
+
+		buffer.draw()
+	end
+
+	local function disableUpdates()
+		_G.OSSettings.showWindows10Upgrade = false
+		ecs.saveOSSettings()
+	end
+
+	draw(0x33B6FF)
+
+	while true do
+		local eventData = {event.pull("touch")}
+		if eventData[3] == x + width - 3 and eventData[4] == y + 1 then
+			buffer.text(eventData[3], eventData[4], ecs.colors.blue, "X")
+			buffer.draw()
+			os.sleep(0.2)
+			drawAll()
+			disableUpdates()
+
+			return
+		elseif ecs.clickedAtArea(eventData[3], eventData[4], x, y, x + width - 1, x + height - 1) then
+			draw(0x0092FF)
+			drawAll()
+
+			local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x000000, "  Да шучу я.  "}, {"CenterText", 0x000000, "  Но ведь достали же обновления, верно?  "}, {"EmptyLine"}, {"Button", {0xbbbbbb, 0xFFFFFF, "Да"}, {0x999999, 0xFFFFFF, "Нет"}})
+			if data[1] == "Да" then
+				disableUpdates()
+			else
+				ecs.error("Пидора ответ!")
+			end
+
+			return
+		end
+	end
+end
+
 ---------------------------------------------- Сама ОС ------------------------------------------------------------------------
 
 --Создаем буфер
 buffer.start()
 drawAll(true)
 login()
+windows10()
 ecs.enableInterrupting()
 
 ---------------------------------------------- Анализ событий ------------------------------------------------------------------------
