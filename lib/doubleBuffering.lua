@@ -280,13 +280,13 @@ function buffer.line(x1, y1, x2, y2, background, foreground, symbol)
 end
 
 -- Отрисовка текста, подстраивающегося под текущий фон
-function buffer.text(x, y, color, text)
+function buffer.text(x, y, color, text, transparency)
 	local index
 	local sText = unicode.len(text)
 	for i = 1, sText do
 		if (x + i - 1) >= buffer.drawLimit.x1 and y >= buffer.drawLimit.y1 and (x + i - 1) <= buffer.drawLimit.x2 and y <= buffer.drawLimit.y2 then
 			index = convertCoordsToIndex(x + i - 1, y)
-			buffer.screen.new[index + 1] = color
+			buffer.screen.new[index + 1] = not transparency and color or colorlib.alphaBlend(buffer.screen.new[index + 1], color, transparency)
 			buffer.screen.new[index + 2] = unicode.sub(text, i, i)
 		end
 	end
