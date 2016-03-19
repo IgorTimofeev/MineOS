@@ -152,7 +152,7 @@ local function drawDock()
 
 	--Рассчитываем размер и позицию дока на основе размера
 	local widthOfDock = (currentCountOfIconsInDock * (sizes.widthOfIcon + sizes.xSpaceBetweenIcons) - sizes.xSpaceBetweenIcons) + sizes.heightOfDock * 2 + 2
-	local xDock, yDock = math.floor(sizes.xSize / 2 - widthOfDock / 2), sizes.ySize - sizes.heightOfDock
+	local xDock, yDock = math.floor(sizes.xSize / 2 - widthOfDock / 2), sizes.ySize
 
 	--Рисуем сам док
 	local transparency = colors.dockBaseTransparency
@@ -160,17 +160,17 @@ local function drawDock()
 	for i = 1, sizes.heightOfDock do
 		buffer.text(xDock, yDock, 0xFFFFFF, "▟", transparency)
 		buffer.square(xDock + 1, yDock, currentDockWidth, 1, 0xFFFFFF, 0xFFFFFF, " ", transparency)
-		buffer.text(xDock + currentDockWidth, yDock, 0xFFFFFF, "▙", transparency)
+		buffer.text(xDock + currentDockWidth + 1, yDock, 0xFFFFFF, "▙", transparency)
 
 		transparency = transparency + colors.dockTransparencyAdder
-		currentDockWidth = currentDockWidth - 4
-		xDock = xDock + 2
+		currentDockWidth = currentDockWidth - 2
+		xDock = xDock + 1
 		yDock = yDock - 1
 	end
 
 	--Рисуем ярлыки на доке
 	if currentCountOfIconsInDock > 0 then
-		local xIcons = math.floor(sizes.xSize / 2 - ((sizes.widthOfIcon + sizes.xSpaceBetweenIcons) * currentCountOfIconsInDock - sizes.xSpaceBetweenIcons) / 2 ) + 1
+		local xIcons = math.floor(sizes.xSize / 2 - ((sizes.widthOfIcon + sizes.xSpaceBetweenIcons) * currentCountOfIconsInDock - sizes.xSpaceBetweenIcons) / 2 )
 		local yIcons = sizes.ySize - sizes.heightOfDock - 1
 
 		for i = 1, currentCountOfIconsInDock do
