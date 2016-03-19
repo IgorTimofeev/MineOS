@@ -270,7 +270,7 @@ end
 ---------------------------------------------- Система нотификаций ------------------------------------------------------------------------
 
 local function windows10()
-	if math.random(1, 100) > 15 or _G.OSSettings.showWindows10Upgrade == false then return end
+	if math.random(1, 100) > 25 or _G.OSSettings.showWindows10Upgrade == false then return end
 
 	local width = 44
 	local height = 12
