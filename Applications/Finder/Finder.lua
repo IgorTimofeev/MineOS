@@ -671,6 +671,10 @@ while true do
 		chkdsk()
 		changePath("")
 		drawAll()
+	--Ретранслируем сигнал в ОС
+	elseif e[1] == "OSWallpaperChanged" then
+		computer.pushSignal("OSWallpaperChanged")
+		return
 
 	elseif e[1] == "scroll" then
 		--Если скроллим в зоне иконок
