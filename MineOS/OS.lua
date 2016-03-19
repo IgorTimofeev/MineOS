@@ -159,7 +159,7 @@ local function drawDock()
 	local currentDockWidth = widthOfDock - 2
 	for i = 1, sizes.heightOfDock do
 		buffer.text(xDock, yDock, 0xFFFFFF, "▟", transparency)
-		buffer.square(xDock, yDock, currentDockWidth, 1, 0xFFFFFF, 0xFFFFFF, " ", transparency)
+		buffer.square(xDock + 1, yDock, currentDockWidth, 1, 0xFFFFFF, 0xFFFFFF, " ", transparency)
 		buffer.text(xDock + currentDockWidth, yDock, 0xFFFFFF, "▙", transparency)
 
 		transparency = transparency + colors.dockTransparencyAdder
