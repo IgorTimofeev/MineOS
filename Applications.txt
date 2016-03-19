@@ -400,6 +400,14 @@
   },
   ----------------------------------------------------- Приложения без ресурсов --------------------------------------------------------------------------
   {
+    ["name"]="MineOS/Applications/Palette",
+    ["url"]="IgorTimofeev/OpenComputers/master/Applications/Palette/Palette.lua",
+    ["type"]="Application",
+    ["icon"]="IgorTimofeev/OpenComputers/master/Applications/Palette/Icon.pic",
+    ["createShortcut"] = "desktop",
+    ["version"]=1.0,
+  },
+  {
     ["name"]="MineOS/Applications/Radio",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/Radio/Radio.lua",
     ["about"]="IgorTimofeev/OpenComputers/master/Applications/Radio/About.txt",

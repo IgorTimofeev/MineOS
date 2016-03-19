@@ -78,7 +78,7 @@ end
 local function drawGUI()
 	if showGUI then
 		--Верхний бар
-		buffer.square(1, 1, buffer.screen.width, 1, 0xFFFFFF, 0xFFFFFF, " ", 30)
+		buffer.square(1, 1, buffer.screen.width, 1, 0xDDDDDD, 0xFFFFFF, " ")
 		local text = #imageList > 0 and ecs.stringLimit("start", imageList[currentImage], 40) or "Viewer"
 		buffer.text(math.floor(buffer.screen.width / 2 - unicode.len(text) / 2), 1, 0x000000, text)
 		buffer.text(2, 1, ecs.colors.red, "⬤")
