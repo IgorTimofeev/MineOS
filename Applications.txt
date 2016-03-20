@@ -7,6 +7,24 @@
     ["version"]=3.0,
   },
   {
+    ["name"]="MineOS/Pictures/Catniss.pic",
+    ["url"]="IgorTimofeev/OpenComputers/master/MineOS/Wallpapers/Nocturnal.pic",
+    ["type"]="Wallpaper",
+    ["version"]=1.0,
+  },
+  {
+    ["name"]="MineOS/Pictures/Harp.pic",
+    ["url"]="IgorTimofeev/OpenComputers/master/MineOS/Wallpapers/Nocturnal.pic",
+    ["type"]="Wallpaper",
+    ["version"]=1.0,
+  },
+  {
+    ["name"]="MineOS/Pictures/Afterlife.pic",
+    ["url"]="IgorTimofeev/OpenComputers/master/MineOS/Wallpapers/Nocturnal.pic",
+    ["type"]="Wallpaper",
+    ["version"]=1.0,
+  },
+  {
     ["name"]="MineOS/Pictures/Nocturnal.pic",
     ["url"]="IgorTimofeev/OpenComputers/master/MineOS/Wallpapers/Nocturnal.pic",
     ["type"]="Wallpaper",
@@ -39,12 +57,6 @@
   {
     ["name"]="MineOS/Pictures/Girl.pic",
     ["url"]="IgorTimofeev/OpenComputers/master/MineOS/Wallpapers/Girl.pic",
-    ["type"]="Wallpaper",
-    ["version"]=1.0,
-  },
-  {
-    ["name"]="MineOS/Pictures/Lina.pic",
-    ["url"]="IgorTimofeev/OpenComputers/master/MineOS/Wallpapers/Lina.pic",
     ["type"]="Wallpaper",
     ["version"]=1.0,
   },
