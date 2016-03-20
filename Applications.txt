@@ -7,6 +7,12 @@
     ["version"]=3.0,
   },
   {
+    ["name"]="MineOS/Pictures/Dayeneris.pic",
+    ["url"]="IgorTimofeev/OpenComputers/master/MineOS/Wallpapers/Catniss.pic",
+    ["type"]="Wallpaper",
+    ["version"]=1.0,
+  },
+  {
     ["name"]="MineOS/Pictures/Catniss.pic",
     ["url"]="IgorTimofeev/OpenComputers/master/MineOS/Wallpapers/Catniss.pic",
     ["type"]="Wallpaper",
