@@ -706,22 +706,26 @@ function image.createImage(width, height, random)
 	return picture
 end
 
--- Функция оптимизации цвета текста у картинки, уменьшает число GPU-операций при отрисовке
+-- Функция оптимизации цвета текста и символов у картинки, уменьшает число GPU-операций при отрисовке из буфера
 -- Вызывается только при сохранении файла, так что на быстродействии не сказывается,
 -- а в целом штука очень и очень полезная. Фиксит криворукость художников.
-function image.optimize(picture, showOptimizationProcess)
-	local currentForeground = 0x000000
-	local optimizationCounter = 0
+function image.optimize(picture)
+	local currentForeground, i1, i2, i3 = 0x000000, 0, 0, 0
 	for i = 1, #picture, constants.elementCount do
-		if picture[i + 3] == " " and picture[i + 1] ~= currentForeground then		
-			picture[i + 1] = currentForeground
-			if showOptimizationProcess then picture[i + 3] = "#" end
-			optimizationCounter = optimizationCounter + 1
+		i1, i2, i3 = i + 1, i + 2, i + 3
+		--Если цвет фона равен цвету текста, и используется псевдографические полупиксели
+		if picture[i] == picture[i1] and (picture[i3] == "▄" or picture[i3] == "▀") then
+			picture[i3] = " "
+		end
+
+		--Если символ равен пролбелу, т.е. цвет текста не учитывается, и если цвет текст не равен предыдущему, то присвоить ему значение предыдущего
+		if picture[i3] == " " and picture[i1] ~= currentForeground then		
+			picture[i1] = currentForeground
 		else
-			currentForeground = picture[i + 1]
+			currentForeground = picture[i1]
 		end
 	end
-	if showOptimizationProcess then ecs.error("Count of optimized pixels: " .. optimizationCounter) end
+
 	return picture
 end
 
@@ -1022,15 +1026,15 @@ function image.load(path)
 		--Читаем файлы в зависимости от метода
 		--print("Загружаю файл типа " .. encodingMethod)
 		if encodingMethod == 0 then
-			return loadRaw(file)
+			return image.optimize(loadRaw(file))
 		elseif encodingMethod == 1 then
-			return loadOCIF1(file)
+			return image.optimize(loadOCIF1(file))
 		elseif encodingMethod == 2 then
-			return loadOCIF2(file)
+			return image.optimize(loadOCIF2(file))
 		elseif encodingMethod == 3 then
-			return loadOCIF2(file, true)
+			return image.optimize(loadOCIF2(file, true))
 		elseif encodingMethod == 4 then
-			return loadOCIF2(file, true, true)
+			return image.optimize(loadOCIF2(file, true, true))
 		else
 			file:close()
 			error("Unsupported encoding method: " .. encodingMethod .. "\n")
