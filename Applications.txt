@@ -8,7 +8,7 @@
   },
   {
     ["name"]="MineOS/Pictures/Dayeneris.pic",
-    ["url"]="IgorTimofeev/OpenComputers/master/MineOS/Wallpapers/Catniss.pic",
+    ["url"]="IgorTimofeev/OpenComputers/master/MineOS/Wallpapers/Dayeneris.pic",
     ["type"]="Wallpaper",
     ["version"]=1.0,
   },
