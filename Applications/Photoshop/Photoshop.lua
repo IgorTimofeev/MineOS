@@ -14,21 +14,27 @@ local copyright = [[
 
 ------------------------------------------------ Библиотеки --------------------------------------------------------------
 
---Не требующиеся для MineOS
-local ecs = require("ECSAPI")
-local fs = require("filesystem")
-local unicode = require("unicode")
-local context = require("context")
-local image = require("image")
-local component = require("component")
-local keyboard = require("keyboard")
-local buffer = require("doubleBuffering")
+local libraries = {
+	ecs = "ECSAPI",
+	fs = "filesystem",
+	unicode = "unicode",
+	context = "context",
+	image = "image",
+	component = "component",
+	keyboard = "keyboard",
+	buffer = "doubleBuffering",
+	colorlib = "colorlib",
+	palette = "palette",
+	event = "event",
+}
 
---Обязательные
-local colorlib = require("colorlib")
-local palette = require("palette")
-local event = require("event")
-local gpu = component.gpu
+local components = {
+	gpu = "gpu",
+}
+
+for library in pairs(libraries) do if not _G[library] then _G[library] = require(libraries[library]) end end
+for comp in pairs(components) do if not _G[comp] then _G[comp] = _G.component[components[comp]] end end
+libraries, components = nil, nil
 
 ------------------------------------------------ Переменные --------------------------------------------------------------
 
