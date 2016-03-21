@@ -486,6 +486,7 @@ function buffer.draw(force)
 				currentBackground, currentForeground = buffer.screen.current[index], buffer.screen.current[index + 1]
 				buffer.screen.changes[currentForeground] = buffer.screen.changes[currentForeground] or {}
 				buffer.screen.changes[currentForeground][currentBackground] = buffer.screen.changes[currentForeground][currentBackground] or {}
+				
 				table.insert(buffer.screen.changes[currentForeground][currentBackground], index)
 				table.insert(buffer.screen.changes[currentForeground][currentBackground], table.concat(massiv))
 			
@@ -505,11 +506,12 @@ function buffer.draw(force)
 		if currentForeground ~= foreground then gpu.setForeground(foreground); currentForeground = foreground end
 		for background in pairs(buffer.screen.changes[foreground]) do
 			if currentBackground ~= background then gpu.setBackground(background); currentBackground = background end
+			
 			for i = 1, #buffer.screen.changes[foreground][background], 2 do
 				--Конвертируем указанный индекс в координаты
 				x, y = convertIndexToCoords(buffer.screen.changes[foreground][background][i])
 				--Выставляем ту самую собранную строку из одинаковых цветов
-				gpu.set(x, y, buffer.screen.changes[foreground][background][i + 2])
+				gpu.set(x, y, buffer.screen.changes[foreground][background][i + 1])
 			end
 		end
 	end
