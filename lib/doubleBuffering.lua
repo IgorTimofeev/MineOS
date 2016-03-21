@@ -19,7 +19,7 @@ local buffer = {}
 local debug = false
 local sizeOfPixelData = 3
 
-------------------------------------------------------------------------------------------------------
+------------------------------------------------- Вспомогательные методы -----------------------------------------------------------------
 
 --Формула конвертации индекса массива изображения в абсолютные координаты пикселя изображения
 local function convertIndexToCoords(index)
@@ -80,6 +80,8 @@ function buffer.start()
 		end
 	end
 end
+
+------------------------------------------------- Методы отрисовки -----------------------------------------------------------------
 
 -- Получить информацию о пикселе из буфера
 function buffer.get(x, y)
@@ -413,14 +415,14 @@ end
 
 --Функция рассчитывает изменения и применяет их, возвращая то, что было изменено
 function buffer.calculateDifference(index)
-	local backgroundIsChanged, foregroundIsChanged, symbolIsChanged = false, false, false
+	local somethingIsChanged = false
 	
 	--Если цвет фона на новом экране отличается от цвета фона на текущем, то
 	if buffer.screen.new[index] ~= buffer.screen.current[index] then
 		--Присваиваем цвету фона на текущем экране значение цвета фона на новом экране
 		buffer.screen.current[index] = buffer.screen.new[index]
-		--Говорим системе, что что фон изменился
-		backgroundIsChanged = true
+		--Говорим системе, что что-то изменилось
+		somethingIsChanged = true
 	end
 
 	index = index + 1
@@ -428,7 +430,7 @@ function buffer.calculateDifference(index)
 	--Аналогично для цвета текста
 	if buffer.screen.new[index] ~= buffer.screen.current[index] then
 		buffer.screen.current[index] = buffer.screen.new[index]
-		foregroundIsChanged = true
+		somethingIsChanged = true
 	end
 
 	index = index + 1
@@ -436,16 +438,16 @@ function buffer.calculateDifference(index)
 	--И для символа
 	if buffer.screen.new[index] ~= buffer.screen.current[index] then
 		buffer.screen.current[index] = buffer.screen.new[index]
-		symbolIsChanged = true
+		somethingIsChanged = true
 	end
 
-	return backgroundIsChanged, foregroundIsChanged, symbolIsChanged
+	return somethingIsChanged
 end
 
 --Функция группировки изменений и их отрисовки на экран
 function buffer.draw(force)
 	--Необходимые переменные, дабы не создавать их в цикле и не генерировать конструкторы
-	local backgroundIsChanged, foregroundIsChanged, symbolIsChanged, index, massiv, currentBackground, currentForeground, x, y
+	local somethingIsChanged, index, indexPlus1, indexPlus2, massiv, x, y
 	--Массив третьего буфера, содержащий в себе измененные пиксели
 	buffer.screen.changes = {}
 	
@@ -453,26 +455,29 @@ function buffer.draw(force)
 	for y = 1, buffer.screen.height do
 		x = 1
 		while x <= buffer.screen.width do
-			--Получаем индекс массива из координат
+			--Получаем индекс массива из координат, уменьшая нагрузку на CPU
 			index = convertCoordsToIndex(x, y)
+			indexPlus1 = index + 1
+			indexPlus2 = index + 2
 			--Получаем изменения и применяем их
-			backgroundIsChanged, foregroundIsChanged, symbolIsChanged = buffer.calculateDifference(index)
+			somethingIsChanged = buffer.calculateDifference(index)
 
 			--Если хоть что-то изменилось, то начинаем работу
-			if backgroundIsChanged or foregroundIsChanged or symbolIsChanged or force then
+			if somethingIsChanged or force then
 
 				--Оптимизация by Krutoy, создаем массив, в который заносим чарсы. Работает быстрее, чем конкатенейт строк
-				massiv = { buffer.screen.current[index + 2] }
+				massiv = { buffer.screen.current[indexPlus2] }
 				--Загоняем в наш чарс-массив одинаковые пиксели справа, если таковые имеются
 				local iIndex
-				for i = (x + 1), buffer.screen.width do
+				local i = x + 1
+				while i <= buffer.screen.width do
 					iIndex = convertCoordsToIndex(i, y)
 					if	
 						buffer.screen.current[index] == buffer.screen.new[iIndex] and
 						(
 						buffer.screen.new[iIndex + 2] == " "
 						or
-						buffer.screen.current[index + 1] == buffer.screen.new[iIndex + 1]
+						buffer.screen.current[indexPlus1] == buffer.screen.new[iIndex + 1]
 						)
 					then
 					 	buffer.calculateDifference(iIndex)
@@ -480,15 +485,16 @@ function buffer.draw(force)
 					else
 						break
 					end
+
+					i = i + 1
 				end
 
 				--Заполняем третий буфер полученными данными
-				currentBackground, currentForeground = buffer.screen.current[index], buffer.screen.current[index + 1]
-				buffer.screen.changes[currentForeground] = buffer.screen.changes[currentForeground] or {}
-				buffer.screen.changes[currentForeground][currentBackground] = buffer.screen.changes[currentForeground][currentBackground] or {}
+				buffer.screen.changes[buffer.screen.current[indexPlus1]] = buffer.screen.changes[buffer.screen.current[indexPlus1]] or {}
+				buffer.screen.changes[buffer.screen.current[indexPlus1]][buffer.screen.current[index]] = buffer.screen.changes[buffer.screen.current[indexPlus1]][buffer.screen.current[index]] or {}
 				
-				table.insert(buffer.screen.changes[currentForeground][currentBackground], index)
-				table.insert(buffer.screen.changes[currentForeground][currentBackground], table.concat(massiv))
+				table.insert(buffer.screen.changes[buffer.screen.current[indexPlus1]][buffer.screen.current[index]], index)
+				table.insert(buffer.screen.changes[buffer.screen.current[indexPlus1]][buffer.screen.current[index]], table.concat(massiv))
 			
 				--Смещаемся по иксу вправо
 				x = x + #massiv - 1
@@ -499,13 +505,13 @@ function buffer.draw(force)
 	end
 
 	--Сбрасываем переменные на невозможное значение цвета, чтобы не багнуло
-	currentBackground, currentForeground = -math.huge, -math.huge
+	index, indexPlus1 = -math.huge, -math.huge
 
 	--Перебираем все цвета текста и фона, выполняя гпу-операции
 	for foreground in pairs(buffer.screen.changes) do
-		if currentForeground ~= foreground then gpu.setForeground(foreground); currentForeground = foreground end
+		if indexPlus1 ~= foreground then gpu.setForeground(foreground); indexPlus1 = foreground end
 		for background in pairs(buffer.screen.changes[foreground]) do
-			if currentBackground ~= background then gpu.setBackground(background); currentBackground = background end
+			if index ~= background then gpu.setBackground(background); index = background end
 			
 			for i = 1, #buffer.screen.changes[foreground][background], 2 do
 				--Конвертируем указанный индекс в координаты

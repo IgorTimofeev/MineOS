@@ -3,7 +3,7 @@
 
 local copyright = [[
 	
-	Photoshop v3.0 (закрытая бета)
+	Photoshop v4.0 (buffered)
 
 	Автор: IT
 		Контакты: https://vk.com/id7799889
@@ -22,6 +22,7 @@ local context = require("context")
 local image = require("image")
 local component = require("component")
 local keyboard = require("keyboard")
+local buffer = require("doubleBuffering")
 
 --Обязательные
 local colorlib = require("colorlib")
@@ -71,13 +72,11 @@ sizes.heightOfLeftBar = sizes.ySize - 1
 
 --Для изображения
 local function reCalculateImageSizes()
-	sizes.widthOfImage = masterPixels.width
-	sizes.heightOfImage = masterPixels.height
 	sizes.sizeOfPixelData = 4
 	sizes.xStartOfImage = 9
 	sizes.yStartOfImage = 6
-	sizes.xEndOfImage = sizes.xStartOfImage + sizes.widthOfImage - 1
-	sizes.yEndOfImage = sizes.yStartOfImage + sizes.heightOfImage - 1
+	sizes.xEndOfImage = sizes.xStartOfImage + masterPixels.width - 1
+	sizes.yEndOfImage = sizes.yStartOfImage + masterPixels.height - 1
 end
 reCalculateImageSizes()
 
@@ -87,10 +86,10 @@ sizes.yStartOfInstruments = 2 + sizes.heightOfTopBar
 local instruments = {
 	-- {"⮜", "Move"},
 	-- {"✄", "Crop"},
-	{"✎", "Brush"},
-	{"❎", "Eraser"},
-	{"⃟", "Fill"},
-	{"Ⓣ", "Text"},
+	{"B", "Brush"},
+	{"E", "Eraser"},
+	{"F", "Fill"},
+	{"T", "Text"},
 }
 local currentInstrument = 1
 local currentBackground = 0x6649ff
@@ -101,7 +100,7 @@ local currentBrushSize = 1
 local savePath
 
 --Верхний тулбар
-local topToolbar = {{"PS", ecs.colors.blue}, {"Файл"}, {"Изображение"}, {"Инструменты"}, {"О программе"}}
+local topToolbar = {{"PS", ecs.colors.blue}, {"Файл"}, {"Изображение"}, {"Редактировать"}, {"О программе"}}
 
 ------------------------------------------------ Функции отрисовки --------------------------------------------------------------
 
@@ -126,23 +125,23 @@ local function drawTransparentPixel(xPos, yPos, i, j)
 			colors.transparencyVariable = colors.transparencyWhite
 		end
 	end
-	gpu.setBackground(colors.transparencyVariable)
-	gpu.set(xPos, yPos, " ")
+
+	buffer.set(xPos, yPos, colors.transparencyVariable, 0xFFFFFF, " ")
 end
 
 local function drawBackground()
-	ecs.square(sizes.xStartOfDrawingArea, sizes.yStartOfDrawingArea, sizes.widthOfDrawingArea, sizes.heightOfDrawingArea, colors.drawingArea)
+	buffer.square(sizes.xStartOfDrawingArea, sizes.yStartOfDrawingArea, sizes.widthOfDrawingArea, sizes.heightOfDrawingArea, colors.drawingArea, 0xFFFFFF, " ")
 end
 
 local function drawInstruments()
 	local yPos = sizes.yStartOfInstruments
 	for i = 1, #instruments do
 		if currentInstrument == i then
-			ecs.square(1, yPos, sizes.widthOfLeftBar, sizes.heightOfInstrument, colors.toolbarButton)
+			buffer.square(1, yPos, sizes.widthOfLeftBar, sizes.heightOfInstrument, colors.toolbarButton, 0xFFFFFF, " ")
 		else
-			ecs.square(1, yPos, sizes.widthOfLeftBar, sizes.heightOfInstrument, colors.toolbar)
+			buffer.square(1, yPos, sizes.widthOfLeftBar, sizes.heightOfInstrument, colors.toolbar, 0xFFFFFF, " ")
 		end
-		ecs.colorText(3, yPos + 1, colors.toolbarButtonText, instruments[i][1])
+		buffer.text(3, yPos + 1, colors.toolbarButtonText, instruments[i][1])
 
 		newObj("Instruments", i, 1, yPos, sizes.widthOfLeftBar, yPos + sizes.heightOfInstrument - 1)
 
@@ -152,10 +151,10 @@ end
 
 local function drawColors()
 	local xPos, yPos = 2, sizes.ySize - 4
-	ecs.square(xPos, yPos, 3, 2, currentBackground)
-	ecs.square(xPos + 3, yPos + 1, 1, 2, currentForeground)
-	ecs.square(xPos + 1, yPos + 2, 2, 1, currentForeground)
-	ecs.colorTextWithBack(xPos + 1, yPos + 3, 0xaaaaaa, colors.toolbar, "←→")
+	buffer.square(xPos, yPos, 3, 2, currentBackground, 0xFFFFFF, " ")
+	buffer.square(xPos + 3, yPos + 1, 1, 2, currentForeground, 0xFFFFFF, " ")
+	buffer.square(xPos + 1, yPos + 2, 2, 1, currentForeground, 0xFFFFFF, " ")
+	buffer.text(xPos + 1, yPos + 3, 0xaaaaaa, "←→")
 
 	newObj("Colors", 1, xPos, yPos, xPos + 2, yPos + 1)
 	newObj("Colors", 2, xPos + 3, yPos + 1, xPos + 3, yPos + 2)
@@ -164,38 +163,33 @@ local function drawColors()
 end
 
 local function drawLeftBar()
-	ecs.square(1, 2, sizes.widthOfLeftBar, sizes.heightOfLeftBar, colors.toolbar)
+	buffer.square(1, 2, sizes.widthOfLeftBar, sizes.heightOfLeftBar, colors.toolbar, 0xFFFFFF, " ")
 	drawInstruments()
 	drawColors()
 end
 
 local function drawTopMenu()
-	ecs.square(1, 1, sizes.xSize, 1, colors.topMenu)
+	buffer.square(1, 1, sizes.xSize, 1, colors.topMenu, 0xFFFFFF, " ")
 	local xPos = 3
 
 	for i = 1, #topToolbar do
-		ecs.colorText(xPos, 1, topToolbar[i][2] or colors.topMenuText, topToolbar[i][1])
-
+		buffer.text(xPos, 1, topToolbar[i][2] or colors.topMenuText, topToolbar[i][1])
 		if i > 1 then
 			newObj("TopMenu", topToolbar[i][1], xPos, 1, xPos + unicode.len(topToolbar[i][1]) - 1, 1)
 		end
-
 		xPos = xPos + unicode.len(topToolbar[i][1]) + 2
 	end
 end
 
 local function drawTopBar()
-
 	local topBarInputs = { {"Размер кисти", currentBrushSize}, {"Прозрачность", math.floor(currentAlpha)}}
 
-	ecs.square(1, 2, sizes.xSize, sizes.heightOfTopBar, colors.toolbar)
+	buffer.square(1, 2, sizes.xSize, sizes.heightOfTopBar, colors.toolbar, 0xFFFFFF, " ")
 	local xPos, yPos = 3, 3
 	local limit = 8
 
-	--ecs.error("сукак")
-
 	for i = 1, #topBarInputs do
-		ecs.colorTextWithBack(xPos, yPos, 0xeeeeee, colors.toolbar, topBarInputs[i][1])
+		buffer.text(xPos, yPos, 0xeeeeee, topBarInputs[i][1])
 		
 		xPos = xPos + unicode.len(topBarInputs[i][1]) + 1
 		ecs.inputText(xPos, yPos, limit, tostring(topBarInputs[i][2]), 0xffffff, 0x262626, true)
@@ -210,12 +204,8 @@ local function drawTopBar()
 end
 
 local function createEmptyMasterPixels()
-	--Очищаем мастерпиксельс и задаем ширину с высотой
-	masterPixels = {}
-	masterPixels.width = sizes.widthOfImage
-	masterPixels.height = sizes.heightOfImage
 	--Создаем пустой мастерпиксельс
-	for j = 1, sizes.heightOfImage * sizes.widthOfImage do
+	for j = 1, masterPixels.height * masterPixels.width do
 		table.insert(masterPixels, 0x000000)
 		table.insert(masterPixels, 0x000000)
 		table.insert(masterPixels, 0xFF)
@@ -228,11 +218,11 @@ local function convertIteratorToCoords(iterator)
 	--Приводим итератор к корректному виду (1 = 1, 5 = 2, 9 = 3, 13 = 4, 17 = 5, ...)
 	iterator = (iterator + sizes.sizeOfPixelData - 1) / sizes.sizeOfPixelData
 	--Получаем остаток от деления итератора на ширину изображения
-	local ostatok = iterator % sizes.widthOfImage
+	local ostatok = iterator % masterPixels.width
 	--Если остаток равен 0, то х равен ширине изображения, а если нет, то х равен остатку
-	local x = (ostatok == 0) and sizes.widthOfImage or ostatok
+	local x = (ostatok == 0) and masterPixels.width or ostatok
 	--А теперь как два пальца получаем координату по Y
-	local y = math.ceil(iterator / sizes.widthOfImage)
+	local y = math.ceil(iterator / masterPixels.width)
 	--Очищаем остаток из оперативки
 	ostatok = nil
 	--Возвращаем координаты
@@ -242,14 +232,14 @@ end
 --Формула конвертации абсолютных координат пикселя изображения в итератор для массива
 local function convertCoordsToIterator(x, y)
 	--Конвертируем координаты в итератор
-	return (sizes.widthOfImage * (y - 1) + x) * sizes.sizeOfPixelData - sizes.sizeOfPixelData + 1
+	return (masterPixels.width * (y - 1) + x) * sizes.sizeOfPixelData - sizes.sizeOfPixelData + 1
 end
 
 local function console(text)
-	ecs.square(sizes.xStartOfDrawingArea, sizes.ySize, sizes.widthOfDrawingArea, 1, colors.console)
+	buffer.square(sizes.xStartOfDrawingArea, sizes.ySize, sizes.widthOfDrawingArea, 1, colors.console, 0xFFFFFF, " ")
 	local _, total, used = ecs.getInfoAboutRAM()
-	ecs.colorText(sizes.xEndOfDrawingArea - 15, sizes.ySize, colors.consoleText, used.."/"..total.." KB RAM")
-	gpu.set(sizes.xStartOfDrawingArea + 1, sizes.ySize, text)
+	buffer.text(sizes.xEndOfDrawingArea - 15, sizes.ySize, colors.consoleText, used.."/"..total.." KB RAM")
+	buffer.text(sizes.xStartOfDrawingArea + 1, sizes.ySize, colors.consoleText, text)
 	_, total, used = nil, nil, nil
 end
 
@@ -258,17 +248,12 @@ local function drawPixel(x, y, i, j, iterator)
 	local background, foreground, alpha, symbol = masterPixels[iterator], masterPixels[iterator + 1], masterPixels[iterator + 2], masterPixels[iterator + 3]
 	--Если пиксель не прозрачный
 	if alpha == 0x00 then
-		gpu.setBackground(background)
-		gpu.setForeground(foreground)
-		gpu.set(x, y, symbol)
+		buffer.set(x, y, background, foreground, symbol)
 	--Если пиксель прозрачнее непрозрачного
 	elseif alpha > 0x00 then
 		--Рисуем прозрачный пиксель
 		drawTransparentPixel(x, y, i, j)
-		--Ебать я красавчик! Даже без гпу.гет() сделал!
-		gpu.setBackground(colorlib.alphaBlend(colors.transparencyVariable, background, alpha))
-		gpu.setForeground(foreground)
-		gpu.set(x, y, symbol)
+		buffer.set(x, y, colorlib.alphaBlend(colors.transparencyVariable, background, alpha), foreground, symbol)
 	end
 	background, foreground, alpha, symbol = nil, nil, nil, nil
 end
@@ -287,7 +272,7 @@ local function drawImage()
 		--Всякие расчеты координат
 		xPixel = xPixel + 1
 		xPos = xPos + 1
-		if xPixel > sizes.widthOfImage then xPixel = 1; xPos = sizes.xStartOfImage; yPixel = yPixel + 1; yPos = yPos + 1 end
+		if xPixel > masterPixels.width then xPixel = 1; xPos = sizes.xStartOfImage; yPixel = yPixel + 1; yPos = yPos + 1 end
 	end
 end
 
@@ -297,32 +282,34 @@ local function drawBackgroundAndImage()
 end
 
 local function drawAll()
-	--Очищаем экран
-	ecs.prepareToExit()
-	--И консольку!
-	console("Весь интерфейс перерисован!")
-	--Рисуем тулбары
 	drawBackground()
 	drawLeftBar()
 	drawTopBar()
 	drawTopMenu()
-	--Рисуем картинку
 	drawBackgroundAndImage()
+
+	buffer.draw()
 end
 
 ------------------------------------------------ Функции расчета --------------------------------------------------------------
 
 local function move(direction)
+	local howMuch = 2
 	if direction == "up" then
-		sizes.yStartOfImage = sizes.yStartOfImage - 2
+		sizes.yStartOfImage = sizes.yStartOfImage - howMuch
+		sizes.yEndOfImage= sizes.yStartOfImage + masterPixels.height - 1
 	elseif direction == "down" then
-		sizes.yStartOfImage = sizes.yStartOfImage + 2
+		sizes.yStartOfImage = sizes.yStartOfImage + howMuch
+		sizes.yEndOfImage= sizes.yStartOfImage + masterPixels.height - 1
 	elseif direction == "left" then
-		sizes.xStartOfImage = sizes.xStartOfImage - 2
+		sizes.xStartOfImage = sizes.xStartOfImage - howMuch
+		sizes.xEndOfImage= sizes.xStartOfImage + masterPixels.width - 1
 	elseif direction == "right" then
-		sizes.xStartOfImage = sizes.xStartOfImage + 2
+		sizes.xStartOfImage = sizes.xStartOfImage + howMuch
+		sizes.xEndOfImage= sizes.xStartOfImage + masterPixels.width - 1
 	end
 	drawBackgroundAndImage()
+	buffer.draw()
 end
 
 local function setPixel(iterator, background, foreground, alpha, symbol)
@@ -343,7 +330,6 @@ end
 
 local function inputText(x, y, limit)
 	local oldPixels = ecs.rememberOldPixels(x,y-1,x+limit-1,y+1)
-
 	local text = ""
 	local inputPos = 1
 
@@ -404,106 +390,24 @@ local function saveTextToPixels(x, y, text)
 	local iterator
 	x = x - 1
 	for i = 1, sText do
-		if x + i > sizes.widthOfImage then break end
+		if x + i > masterPixels.width then break end
 		iterator = convertCoordsToIterator(x + i, y)
 		setPixel(iterator, masterPixels[iterator], currentBackground, masterPixels[iterator + 2], unicode.sub(text, i, i))
 	end
 end
 
-local function flipVertical(massiv)
-	local newMassiv = {}
-	newMassiv.width, newMassiv.height = massiv.width, massiv.height
-
-	local iterator = #masterPixels
-	while iterator >= 1 do
-		table.insert(newMassiv, masterPixels[iterator - 3])
-		table.insert(newMassiv, masterPixels[iterator - 2])
-		table.insert(newMassiv, masterPixels[iterator - 1])
-		table.insert(newMassiv, masterPixels[iterator])
-
-		masterPixels[iterator], masterPixels[iterator - 1], masterPixels[iterator - 2], masterPixels[iterator - 3] = nil, nil, nil, nil
-
-		iterator = iterator - 4
-	end
-
-	return newMassiv
-end
-
-local function flipHorizontal( picture )
-	local blockSize = picture.width * 4
-
-	local buffer = nil
-	local startBlock = nil
-	local endPixel = nil
-
-	for j=1, picture.height, 1 do
-		startBlock = picture.width * 4 * (j-1)
-		
-		for pixel=4, blockSize/2, 4 do
-			endPixel = blockSize-(pixel-4)
-
-			--Foreground
-			buffer = picture[pixel-3+startBlock]
-			picture[pixel-3+startBlock] = picture[endPixel-3+startBlock]
-			picture[endPixel-3+startBlock] = buffer
-
-			--Background
-			buffer = picture[pixel-2+startBlock]
-			picture[pixel-2+startBlock] = picture[endPixel-2+startBlock]
-			picture[endPixel-2+startBlock] = buffer
-
-			--Alpha
-			buffer = picture[pixel-1+startBlock]
-			picture[pixel-1+startBlock] = picture[endPixel-1+startBlock]
-			picture[endPixel-1+startBlock] = buffer
-
-			--Char
-			buffer = picture[pixel-0+startBlock]
-			picture[pixel-0+startBlock] = picture[endPixel-0+startBlock]
-			picture[endPixel-0+startBlock] = buffer
-		end
-	end
-end
-
-local function doFlip(horizontal)
-	if horizontal then
-		flipHorizontal(masterPixels)
-	else
-		masterPixels = flipVertical(masterPixels)
-	end
-	drawImage()
-end
-
-local function invertColors()
-	for i = 1, #masterPixels, 4 do
-		masterPixels[i] = 0xFFFFFF - masterPixels[i]
-		masterPixels[i + 1] = 0xFFFFFF - masterPixels[i + 1]
-	end
-	drawImage()
-end
-
-local function blackAndWhite()
-	for i = 1, #masterPixels, 4 do
-		local hh, ss, bb = colorlib.HEXtoHSB(masterPixels[i]); ss = 0
-		masterPixels[i] = colorlib.HSBtoHEX(hh, ss, bb)
-		
-		hh, ss, bb = colorlib.HEXtoHSB(masterPixels[i + 1]); ss = 0
-		masterPixels[i + 1] = colorlib.HSBtoHEX(hh, ss, bb)
-	end
-	drawImage()
-end
-
 local function new()
-	local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, false, {"EmptyLine"}, {"CenterText", 0x262626, "Новый документ"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, "Ширина"}, {"Input", 0x262626, 0x880000, "Высота"}, {"EmptyLine"}, {"Button", {0xbbbbbb, 0xffffff, "Ok!"}})
+	local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Новый документ"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, "Ширина"}, {"Input", 0x262626, 0x880000, "Высота"}, {"EmptyLine"}, {"Button", {0xbbbbbb, 0xffffff, "OK"}})
 
 	data[1] = tonumber(data[1]) or 51
 	data[2] = tonumber(data[2]) or 19
 
-	sizes.widthOfImage, sizes.heightOfImage = data[1], data[2]
+	masterPixels = {}
+	masterPixels.width, masterPixels.height = data[1], data[2]
 	sizes.xStartOfImage = 9
 	sizes.yStartOfImage = 6
-	sizes.xEndOfImage = sizes.xStartOfImage + sizes.widthOfImage - 1
-	sizes.yEndOfImage = sizes.yStartOfImage + sizes.heightOfImage - 1
+	sizes.xEndOfImage = sizes.xStartOfImage + masterPixels.width - 1
+	sizes.yEndOfImage = sizes.yStartOfImage + masterPixels.height - 1
 
 	createEmptyMasterPixels()
 	drawAll()
@@ -544,7 +448,7 @@ local function brush(x, y, background, foreground, alpha, symbol)
 	for cyka = 1, brushSize do
 		for pidor = 1, brushSize do
 			--Если этот кусочек входит в границы рисовабельной зоны, то
-			if x >= 1 and x <= sizes.widthOfImage and y >= 1 and y <= sizes.heightOfImage then
+			if x >= 1 and x <= masterPixels.width and y >= 1 and y <= masterPixels.height then
 				
 				--Считаем новый итератор для кусочка кисти
 				newIterator = convertCoordsToIterator(x, y)
@@ -582,21 +486,71 @@ local function brush(x, y, background, foreground, alpha, symbol)
 	end
 end
 
+local function cropOrExpand(text)
+	local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true,
+		{"EmptyLine"},
+		{"CenterText", 0x262626, text},
+		{"EmptyLine"},
+		{"Input", 0x262626, 0x880000, "Количество пикселей"},
+		{"Selector", 0x262626, 0x880000, "Снизу", "Сверху", "Слева", "Справа"},
+		{"EmptyLine"},
+		{"Button", {0xaaaaaa, 0xffffff, "OK"}, {0x888888, 0xffffff, "Отмена"}}
+	)
+
+	if data[3] == "OK" then
+		local countOfPixels = tonumber(data[1])
+		if countOfPixels then
+			local direction = ""
+			if data[2] == "Снизу" then
+				direction = "fromBottom"
+			elseif data[2] == "Сверху" then
+				direction = "fromTop"
+			elseif data[2] == "Слева" then
+				direction = "fromLeft"
+			else
+				direction = "fromRight"
+			end
+
+			return direction, countOfPixels
+		else
+			ecs.error("Введено некорректное количество пикселей")
+		end 
+	end
+end
+
+local function crop()
+	local direction, countOfPixels = cropOrExpand("Обрезать")
+	if direction then
+		masterPixels = image.crop(masterPixels, direction, countOfPixels)
+		drawAll()
+	end
+end
+
+local function expand()
+	local direction, countOfPixels = cropOrExpand("Обрезать")
+	if direction then
+		masterPixels = image.expand(masterPixels, direction, countOfPixels)
+		drawAll()
+	end
+end
+
 ------------------------------------------------ Старт программы --------------------------------------------------------------
 
 local args = {...}
 
 --Рисуем весь интерфейс
+buffer.start()
 drawAll()
 
 if args[1] == "o" or args[1] == "open" or args[1] == "-o" or args[1] == "load" then
 	masterPixels = image.load(args[2])
 	savePath = args[2]
 	reCalculateImageSizes()
-	drawBackgroundAndImage()
 else
 	new()
 end
+
+drawAll()
 
 while true do
 	local e = {event.pull()}
@@ -617,35 +571,34 @@ while true do
 						local _, _, gettedBackground = gpu.get(e[3], e[4])
 						currentBackground = gettedBackground
 						drawColors()
+						buffer.draw()
 					
 					--Если обычная кисть, просто кисть, вообще всем кистям кисть
 					else
-					
 						brush(x, y, currentBackground, currentForeground, currentAlpha, currentSymbol)
-
 						--Пишем что-то в консоли
 						console("Кисть: клик на точку "..e[3].."x"..e[4]..", координаты в изображении: "..x.."x"..y..", индекс массива изображения: "..iterator)
+						buffer.draw()
 					end
 				--Ластик
 				elseif currentInstrument == 2 then
-
 					brush(x, y, currentBackground, currentForeground, 0xFF, currentSymbol)
-
 					console("Ластик: клик на точку "..e[3].."x"..e[4]..", координаты в изображении: "..x.."x"..y..", индекс массива изображения: "..iterator)
-
+					buffer.draw()
 				--Текст
 				elseif currentInstrument == 4 then
-					local limit = sizes.widthOfImage - x + 1
+					local limit = masterPixels.width - x + 1
 					local text = inputText(e[3], e[4], limit)
 					saveTextToPixels(x, y, text)
 					drawImage()
+					buffer.draw()
 
 				--Заливка
 				elseif currentInstrument == 3 then
 
 					fill(x, y, masterPixels[iterator], currentBackground)
-
 					drawImage()
+					buffer.draw()
 
 				end
 
@@ -659,13 +612,16 @@ while true do
 					if key == 1 then
 						currentBackground = palette.draw("auto", "auto", currentBackground) or currentBackground
 						drawColors()
+						buffer.draw()
 					elseif key == 2 or key == 3 then
 						currentForeground = palette.draw("auto", "auto", currentForeground) or currentForeground
 						drawColors()
+						buffer.draw()
 					elseif key == 4 then
-						ecs.colorTextWithBack(obj["Colors"][key][1], obj["Colors"][key][2], 0xFF0000, colors.toolbar, "←→")
+						buffer.text(obj["Colors"][key][1], obj["Colors"][key][2], 0xFF0000, "←→")
 						os.sleep(0.2)
 						swapColors()
+						buffer.draw()
 					end
 					break
 				end	
@@ -676,6 +632,7 @@ while true do
 				if ecs.clickedAtArea(e[3], e[4], obj["Instruments"][key][1], obj["Instruments"][key][2], obj["Instruments"][key][3], obj["Instruments"][key][4]) then
 					currentInstrument = key
 					drawInstruments()
+					buffer.draw()
 					break
 				end
 			end
@@ -683,48 +640,96 @@ while true do
 			--Верхний меню-бар
 			for key in pairs(obj["TopMenu"]) do
 				if ecs.clickedAtArea(e[3], e[4], obj["TopMenu"][key][1], obj["TopMenu"][key][2], obj["TopMenu"][key][3], obj["TopMenu"][key][4]) then
-					ecs.square(obj["TopMenu"][key][1] - 1, obj["TopMenu"][key][2], unicode.len(key) + 2, 1, ecs.colors.blue)
-					ecs.colorText(obj["TopMenu"][key][1], obj["TopMenu"][key][2], 0xffffff, key)
+					buffer.square(obj["TopMenu"][key][1] - 1, obj["TopMenu"][key][2], unicode.len(key) + 2, 1, ecs.colors.blue, 0xFFFFFF, " ")
+					buffer.text(obj["TopMenu"][key][1], obj["TopMenu"][key][2], 0xffffff, key)
+					buffer.draw()
+
 					local action
 					
 					if key == "Файл" then
 						action = context.menu(obj["TopMenu"][key][1] - 1, obj["TopMenu"][key][2] + 1, {"Новый"}, {"Открыть"}, "-", {"Сохранить", (savePath == nil)}, {"Сохранить как"}, "-", {"Выход"})
 					elseif key == "Изображение" then
-						action = context.menu(obj["TopMenu"][key][1] - 1, obj["TopMenu"][key][2] + 1, {"Отразить по горизонтали"}, {"Отразить по вертикали"}, "-", {"Инвертировать цвета"}, {"Черно-белый фильтр"})
-					elseif key == "Инструменты" then
-						action = context.menu(obj["TopMenu"][key][1] - 1, obj["TopMenu"][key][2] + 1, {"Кисть"}, {"Ластик"}, {"Заливка"}, {"Текст"})
+						action = context.menu(obj["TopMenu"][key][1] - 1, obj["TopMenu"][key][2] + 1, {"Обрезать"}, {"Расширить"}, "-", {"Повернуть на 90 градусов"}, {"Повернуть на 180 градусов"}, "-", {"Отразить по горизонтали"}, {"Отразить по вертикали"})
+					elseif key == "Редактировать" then
+						action = context.menu(obj["TopMenu"][key][1] - 1, obj["TopMenu"][key][2] + 1, {"Цветовой тон/насыщенность"}, {"Цветовой баланс"}, {"Фотофильтр"}, "-", {"Инвертировать цвета"}, {"Черно-белый фильтр"})
 					elseif key == "О программе" then
-						ecs.universalWindow("auto", "auto", 36, 0xeeeeee, true, {"EmptyLine"}, {"CenterText", 0x880000, "Photoshop v3.0 (public beta)"}, {"EmptyLine"}, {"CenterText", 0x262626, "Авторы:"}, {"CenterText", 0x555555, "Тимофеев Игорь"}, {"CenterText", 0x656565, "vk.com/id7799889"}, {"CenterText", 0x656565, "Трифонов Глеб"}, {"CenterText", 0x656565, "vk.com/id88323331"}, {"EmptyLine"}, {"CenterText", 0x262626, "Тестеры:"}, {"CenterText", 0x656565, "Шестаков Тимофей"}, {"CenterText", 0x656565, "vk.com/id113499693"}, {"CenterText", 0x656565, "Вечтомов Роман"}, {"CenterText", 0x656565, "vk.com/id83715030"}, {"CenterText", 0x656565, "Омелаенко Максим"},  {"CenterText", 0x656565, "vk.com/paladincvm"}, {"EmptyLine"},{"Button", {0xbbbbbb, 0xffffff, "OK"}})
+						ecs.universalWindow("auto", "auto", 36, 0xeeeeee, true, {"EmptyLine"}, {"CenterText", 0x880000, "Photoshop v4.0 (buffered)"}, {"EmptyLine"}, {"CenterText", 0x262626, "Авторы:"}, {"CenterText", 0x555555, "Тимофеев Игорь"}, {"CenterText", 0x656565, "vk.com/id7799889"}, {"CenterText", 0x656565, "Трифонов Глеб"}, {"CenterText", 0x656565, "vk.com/id88323331"}, {"EmptyLine"}, {"CenterText", 0x262626, "Тестеры:"}, {"CenterText", 0x656565, "Шестаков Тимофей"}, {"CenterText", 0x656565, "vk.com/id113499693"}, {"CenterText", 0x656565, "Вечтомов Роман"}, {"CenterText", 0x656565, "vk.com/id83715030"}, {"CenterText", 0x656565, "Омелаенко Максим"},  {"CenterText", 0x656565, "vk.com/paladincvm"}, {"EmptyLine"},{"Button", {0xbbbbbb, 0xffffff, "OK"}})
 					end
 
 					if action == "Выход" then
 						ecs.prepareToExit()
 						return
-					elseif action == "Отразить по горизонтали" then
-						doFlip(true)
+					elseif action == "Цветовой тон/насыщенность" then
+						local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true,
+							{"EmptyLine"},
+							{"CenterText", 0x262626, "Цветовой тон/насыщенность"},
+							{"EmptyLine"},
+							{"Slider", 0x262626, 0x880000, 0, 100, 50, "Тон: ", ""},
+							{"Slider", 0x262626, ecs.colors.red, 0, 100, 50, "Насыщенность: ", ""},
+							{"Slider", 0x262626, 0x000000, 0, 100, 50, "Яркость: ", ""},
+							{"EmptyLine"}, 
+							{"Button", {0xaaaaaa, 0xffffff, "OK"}, {0x888888, 0xffffff, "Отмена"}}
+						)
+						if data[4] == "OK" then
+							masterPixels = image.hueSaturationBrightness(masterPixels, data[1] - 50, data[2] - 50, data[3] - 50)
+							drawAll()
+						end
+					elseif action == "Цветовой баланс" then
+						local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true,
+							{"EmptyLine"},
+							{"CenterText", 0x262626, "Цветовой баланс"},
+							{"EmptyLine"},
+							{"Slider", 0x262626, 0x880000, 0, 100, 50, "R: ", ""},
+							{"Slider", 0x262626, ecs.colors.green, 0, 100, 50, "G: ", ""},
+							{"Slider", 0x262626, ecs.colors.blue, 0, 100, 50, "B: ", ""},
+							{"EmptyLine"}, 
+							{"Button", {0xaaaaaa, 0xffffff, "OK"}, {0x888888, 0xffffff, "Отмена"}}
+						)
+						if data[4] == "OK" then
+							masterPixels = image.colorBalance(masterPixels, data[1] - 50, data[2] - 50, data[3] - 50)
+							drawAll()
+						end
+					elseif action == "Фотофильтр" then
+						local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true,
+							{"EmptyLine"},
+							{"CenterText", 0x262626, "Фотофильтр"},
+							{"EmptyLine"},
+							{"Color", "Цвет фильтра", 0x333333},
+							{"Slider", 0x262626, 0x880000, 0, 255, 100, "Прозрачность: ", ""},
+							{"EmptyLine"}, 
+							{"Button", {0xaaaaaa, 0xffffff, "OK"}, {0x888888, 0xffffff, "Отмена"}}
+						)
+						if data[3] == "OK" then
+							masterPixels = image.photoFilter(masterPixels, data[1], data[2])
+							drawAll()
+						end
+					elseif action == "Обрезать" then
+						crop()
+					elseif action == "Расширить" then
+						expand()
 					elseif action == "Отразить по вертикали" then
-						doFlip(false)
+						masterPixels = image.flipVertical(masterPixels)
+						drawAll()
+					elseif action == "Отразить по горизонтали" then
+						masterPixels = image.flipHorizontal(masterPixels)
+						drawAll()
 					elseif action == "Инвертировать цвета" then
-						invertColors()
+						masterPixels = image.invert(masterPixels)
+						drawAll()
 					elseif action == "Черно-белый фильтр" then
-						blackAndWhite()
-					elseif action == "Ластик" then
-						currentInstrument = 2
-						drawInstruments()
-					elseif action == "Кисть" then
-						currentInstrument = 1
-						drawInstruments()
-					elseif action == "Текст" then
-						currentInstrument = 4
-						drawInstruments()
-					elseif action == "Заливка" then
-						currentInstrument = 3
-						drawInstruments()
+						masterPixels = image.blackAndWhite(masterPixels)
+						drawAll()
+					elseif action == "Повернуть на 90 градусов" then
+						masterPixels = image.rotate(masterPixels, 90)
+						drawAll()
+					elseif action == "Повернуть на 180 градусов" then
+						masterPixels = image.rotate(masterPixels, 180)
+						drawAll()
 					elseif action == "Новый" then
 						new()
-
+						drawAll()
 					elseif action == "Сохранить как" then
-						local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Сохранить как"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, "Путь"}, {"Selector", 0x262626, 0x880000, "OCIF4", "OCIF1", "RAW"}, {"CenterText", 0x262626, "Рекомендуется использовать"}, {"CenterText", 0x262626, "метод кодирования OCIF4"}, {"EmptyLine"}, {"Button", {0x888888, 0xffffff, "OK"}, {0xaaaaaa, 0xffffff, "Отмена"}})
+						local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Сохранить как"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, "Путь"}, {"Selector", 0x262626, 0x880000, "OCIF4", "OCIF1", "RAW"}, {"CenterText", 0x262626, "Рекомендуется использовать"}, {"CenterText", 0x262626, "метод кодирования OCIF4"}, {"EmptyLine"}, {"Button", {0xaaaaaa, 0xffffff, "OK"}, {0x888888, 0xffffff, "Отмена"}})
 						if data[3] == "OK" then
 							data[1] = data[1] or "Untitled"
 							data[2] = data[2] or "OCIF4"
@@ -749,24 +754,28 @@ while true do
 						image.save(savePath, masterPixels)
 
 					elseif action == "Открыть" then
-						local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Открыть"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, "Путь"}, {"EmptyLine"}, {"Button", {0xbbbbbb, 0xffffff, "OK"}})
-						local fileFormat = ecs.getFileFormat(data[1])
-					
-						if not data[1] then
-							ecs.error("Некорректное имя файла!")
-						elseif not fs.exists(data[1]) then
-							ecs.error("Файл\""..data[1].."\" не существует!")
-						elseif fileFormat ~= ".pic" and fileFormat ~= ".rawpic" and fileFormat ~= ".png" then 
-							ecs.error("Формат файла \""..fileFormat.."\" не поддерживается!")
-						else
-							masterPixels = image.load(data[1])
-							savePath = data[1]
-							reCalculateImageSizes()
-							drawBackgroundAndImage()
+						local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Открыть"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, "Путь"}, {"EmptyLine"}, {"Button", {0xaaaaaa, 0xffffff, "OK"}, {0x888888, 0xffffff, "Отмена"}})
+						if data[2] == "OK" then
+							local fileFormat = ecs.getFileFormat(data[1])
+						
+							if not data[1] then
+								ecs.error("Некорректное имя файла!")
+							elseif not fs.exists(data[1]) then
+								ecs.error("Файл\""..data[1].."\" не существует!")
+							elseif fileFormat ~= ".pic" and fileFormat ~= ".rawpic" and fileFormat ~= ".png" then 
+								ecs.error("Формат файла \""..fileFormat.."\" не поддерживается!")
+							else
+								masterPixels = image.load(data[1])
+								savePath = data[1]
+								reCalculateImageSizes()
+								drawBackgroundAndImage()
+								drawAll()
+							end
 						end
 					end
 
 					drawTopMenu()
+					buffer.draw()
 					break
 				end
 			end
@@ -786,6 +795,7 @@ while true do
 					end
 
 					drawTopBar()
+					buffer.draw()
 
 					break
 				end
@@ -802,6 +812,7 @@ while true do
 
 				currentBrushSize, currentAlpha = table.unpack(ecs.universalWindow(x, y, width, 0xeeeeee, true, {"EmptyLine"}, {"CenterText", 0x880000, "Параметры кисти"}, {"Slider", 0x262626, 0x880000, 1, 10, currentBrushSize, "Размер: ", " px"}, {"Slider", 0x262626, 0x880000, 0, 255, currentAlpha, "Прозрачность: ", ""}, {"EmptyLine"}, {"Button", {0xbbbbbb, 0xffffff, "OK"}}))
 				drawTopBar()
+				buffer.draw()
 			end
 		end
 
@@ -821,32 +832,41 @@ while true do
 		--X
 		elseif e[4] == 45 then
 			swapColors()
+			buffer.draw()
 		--B
 		elseif e[4] == 48 then
 			currentInstrument = 1
 			drawInstruments()
+			buffer.draw()
 		--E
 		elseif e[4] == 18 then
 			currentInstrument = 2
 			drawInstruments()
+			buffer.draw()
 		--T
 		elseif e[4] == 20 then
 			currentInstrument = 4
 			drawInstruments()
-
+			buffer.draw()
 		--G
 		elseif e[4] == 34 then
 			currentInstrument = 3
 			drawInstruments()
+			buffer.draw()
 		--D
 		elseif e[4] == 32 then
 			currentBackground = 0x000000
 			currentForeground = 0xFFFFFF
 			currentAlpha = 0x00
 			drawColors()
+			buffer.draw()
 		end
 	elseif e[1] == "scroll" then
-
+		if e[5] == 1 then
+			move("up")
+		else
+			move("down")
+		end
 	end
 end
 
