@@ -66,8 +66,6 @@ function buffer.start()
 	buffer.screen.new = {}
 	buffer.screen.width, buffer.screen.height = gpu.getResolution()
 
-	buffer.totalCountOfGPUOperations = 0
-	buffer.localCountOfGPUOperations = 0
 	buffer.resetDrawLimit()
 
 	for y = 1, buffer.screen.height do
@@ -411,17 +409,16 @@ function buffer.framedButton(x, y, width, height, backColor, buttonColor, text)
 	buffer.text(x, y, buttonColor, text)
 end
 
-------------------------------------------------------------------------------------------------------------------------
+------------------------------------------- Просчет изменений и отрисовка ------------------------------------------------------------------------
 
-function buffer.calculateDifference(x, y)
-	local index = convertCoordsToIndex(x, y)
+--Функция рассчитывает изменения и применяет их, возвращая то, что было изменено
+function buffer.calculateDifference(index)
 	local backgroundIsChanged, foregroundIsChanged, symbolIsChanged = false, false, false
 	
 	--Если цвет фона на новом экране отличается от цвета фона на текущем, то
 	if buffer.screen.new[index] ~= buffer.screen.current[index] then
 		--Присваиваем цвету фона на текущем экране значение цвета фона на новом экране
 		buffer.screen.current[index] = buffer.screen.new[index]
-		
 		--Говорим системе, что что фон изменился
 		backgroundIsChanged = true
 	end
@@ -432,7 +429,6 @@ function buffer.calculateDifference(x, y)
 	if buffer.screen.new[index] ~= buffer.screen.current[index] then
 		buffer.screen.current[index] = buffer.screen.new[index]
 		foregroundIsChanged = true
-		--if _G.cyka then ecs.error("new = \"" .. ecs.HEXtoString(buffer.screen.new[index], 6) .."\", current = \"" .. ecs.HEXtoString(buffer.screen.current[index], 6) .."\"") end
 	end
 
 	index = index + 1
@@ -446,47 +442,28 @@ function buffer.calculateDifference(x, y)
 	return backgroundIsChanged, foregroundIsChanged, symbolIsChanged
 end
 
+--Функция группировки изменений и их отрисовки на экран
 function buffer.draw(force)
-	local currentBackground, currentForeground = -math.huge, -math.huge
-	local backgroundIsChanged, foregroundIsChanged, symbolIsChanged 
-	local index
-	local massiv
-	buffer.localCountOfGPUOperations = 0
+	--Необходимые переменные, дабы не создавать их в цикле и не генерировать конструкторы
+	local backgroundIsChanged, foregroundIsChanged, symbolIsChanged, index, massiv, currentBackground, currentForeground, x, y
+	--Массив третьего буфера, содержащий в себе измененные пиксели
+	buffer.screen.changes = {}
 	
+	--Перебираем содержимое нашего буфера по X и Y
 	for y = 1, buffer.screen.height do
-		local x = 1
+		x = 1
 		while x <= buffer.screen.width do
-
+			--Получаем индекс массива из координат
 			index = convertCoordsToIndex(x, y)
+			--Получаем изменения и применяем их
+			backgroundIsChanged, foregroundIsChanged, symbolIsChanged = buffer.calculateDifference(index)
 
-			backgroundIsChanged, foregroundIsChanged, symbolIsChanged = buffer.calculateDifference(x, y)
-
-			--Оптимизация by me
-			--Ну, скорее, жесткий багфикс
-			--Но "оптимизация" звучит красивее
-			--Если были найдены какие-то отличия нового экрана от старого, то корректируем эти отличия через gpu.set()
+			--Если хоть что-то изменилось, то начинаем работу
 			if backgroundIsChanged or foregroundIsChanged or symbolIsChanged or force then
 
-				if currentBackground ~= buffer.screen.current[index] then
-					gpu.setBackground(buffer.screen.current[index])
-					currentBackground = buffer.screen.current[index]
-					buffer.localCountOfGPUOperations = buffer.localCountOfGPUOperations + 1
-				end
-
-				index = index + 1
-
-				if currentForeground ~= buffer.screen.current[index] then
-					gpu.setForeground(buffer.screen.current[index])
-					currentForeground = buffer.screen.current[index]
-					buffer.localCountOfGPUOperations = buffer.localCountOfGPUOperations + 1
-				end
-
-				index = index - 1
-
-				--Оптимизация by Krutoy
+				--Оптимизация by Krutoy, создаем массив, в который заносим чарсы. Работает быстрее, чем конкатенейт строк
 				massiv = { buffer.screen.current[index + 2] }
-
-				--Отрисовка линиями. Не трожь, сука!
+				--Загоняем в наш чарс-массив одинаковые пиксели справа, если таковые имеются
 				local iIndex
 				for i = (x + 1), buffer.screen.width do
 					iIndex = convertCoordsToIndex(i, y)
@@ -498,27 +475,47 @@ function buffer.draw(force)
 						buffer.screen.current[index + 1] == buffer.screen.new[iIndex + 1]
 						)
 					then
-					 	buffer.calculateDifference(i, y)
+					 	buffer.calculateDifference(iIndex)
 					 	table.insert(massiv, buffer.screen.current[iIndex + 2])
 					else
 						break
 					end
 				end
 
-				--os.sleep(0.2)
-				gpu.set(x, y, table.concat(massiv))
-				
-				x = x + #massiv - 1
+				--Заполняем третий буфер полученными данными
+				currentBackground, currentForeground = buffer.screen.current[index], buffer.screen.current[index + 1]
+				buffer.screen.changes[currentForeground] = buffer.screen.changes[currentForeground] or {}
+				buffer.screen.changes[currentForeground][currentBackground] = buffer.screen.changes[currentForeground][currentBackground] or {}
+				table.insert(buffer.screen.changes[currentForeground][currentBackground], { index, table.concat(massiv) })
 
-				buffer.localCountOfGPUOperations = buffer.localCountOfGPUOperations + 1
+				--Смещаемся по иксу вправо
+				x = x + #massiv - 1
 			end
 
 			x = x + 1
 		end
 	end
 
-	buffer.totalCountOfGPUOperations = buffer.totalCountOfGPUOperations + buffer.localCountOfGPUOperations
-	printDebug(50, "Общее число GPU-операций: " .. buffer.totalCountOfGPUOperations .. ", число операций при последнем рендере: " .. buffer.localCountOfGPUOperations)
+	--Сбрасываем переменные на невозможное значение цвета, чтобы не багнуло
+	currentBackground, currentForeground = -math.huge, -math.huge
+
+	--Перебираем все цвета текста и фона, выполняя гпу-операции
+	for foreground in pairs(buffer.screen.changes) do
+		if currentForeground ~= foreground then gpu.setForeground(foreground); currentForeground = foreground end
+		for background in pairs(buffer.screen.changes[foreground]) do
+			if currentBackground ~= background then gpu.setBackground(background); currentBackground = background end
+			for i = 1, #buffer.screen.changes[foreground][background] do
+				--Конвертируем указанный индекс в координаты
+				x, y = convertIndexToCoords(buffer.screen.changes[foreground][background][i][1])
+				--Выставляем ту самую собранную строку из одинаковых цветов
+				gpu.set(x, y, buffer.screen.changes[foreground][background][i][2])
+			end
+		end
+	end
+
+	--Очищаем память, ибо незачем нам хранить третий буфер
+	buffer.screen.changes = {}
+	buffer.screen.changes = nil
 end
 
 ------------------------------------------------------------------------------------------------------
