@@ -418,6 +418,15 @@
   },
   ----------------------------------------------------- Приложения без ресурсов --------------------------------------------------------------------------
   {
+    ["name"]="MineOS/Applications/Battleship",
+    ["url"]="IgorTimofeev/OpenComputers/master/Applications/Battleship/Battleship.lua",
+    ["about"]="IgorTimofeev/OpenComputers/master/Applications/Battleship/About.txt",
+    ["type"]="Application",
+    ["icon"]="IgorTimofeev/OpenComputers/master/Applications/Battleship/Icon.pic",
+    ["createShortcut"] = "desktop",
+    ["version"]=1.0,
+  },
+  {
     ["name"]="MineOS/Applications/Palette",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/Palette/Palette.lua",
     ["type"]="Application",
