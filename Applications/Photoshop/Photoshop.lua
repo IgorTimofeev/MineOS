@@ -75,12 +75,11 @@ sizes.yEndOfDrawingArea = sizes.ySize
 sizes.widthOfDrawingArea = sizes.xEndOfDrawingArea - sizes.xStartOfDrawingArea + 1
 sizes.heightOfDrawingArea = sizes.yEndOfDrawingArea - sizes.yStartOfDrawingArea + 1
 sizes.heightOfLeftBar = sizes.ySize - 1
-
+sizes.sizeOfPixelData = 4
 --Для изображения
-local function reCalculateImageSizes()
-	sizes.sizeOfPixelData = 4
-	sizes.xStartOfImage = 9
-	sizes.yStartOfImage = 6
+local function reCalculateImageSizes(x, y)
+	sizes.xStartOfImage = x or 9
+	sizes.yStartOfImage = y or 6
 	sizes.xEndOfImage = sizes.xStartOfImage + masterPixels.width - 1
 	sizes.yEndOfImage = sizes.yStartOfImage + masterPixels.height - 1
 end
@@ -117,22 +116,28 @@ local function newObj(class, name, ...)
 	obj[class][name] = {...}
 end
 
-local function drawTransparentPixel(xPos, yPos, i, j)
-	if j % 2 == 0 then
-		if i % 2 == 0 then
-			colors.transparencyVariable = colors.transparencyWhite
-		else
-			colors.transparencyVariable = colors.transparencyGray
-		end
+local function drawTransparentZone(x, y)
+	y = y - 1
+
+	local stro4ka1 = ""
+	local stro4ka2 = ""
+	if masterPixels.width % 2 == 0 then
+		stro4ka1 = string.rep("█ ", masterPixels.width / 2)
+		stro4ka2 = stro4ka1
 	else
-		if i % 2 == 0 then
-			colors.transparencyVariable = colors.transparencyGray
-		else
-			colors.transparencyVariable = colors.transparencyWhite
-		end
+		stro4ka1 = string.rep("█ ", masterPixels.width / 2)
+		stro4ka2 = stro4ka1 .. "█"
 	end
 
-	buffer.set(xPos, yPos, colors.transparencyVariable, 0xFFFFFF, " ")
+	for i = 1, masterPixels.height do
+		if i % 2 == 0 then
+			buffer.square(x, y + i, masterPixels.width, 1, colors.transparencyWhite, colors.transparencyGray, " ")
+			buffer.text(x + 1, y + i, colors.transparencyGray, stro4ka1)
+		else
+			buffer.square(x, y + i, masterPixels.width, 1, colors.transparencyWhite, colors.transparencyGray)
+			buffer.text(x, y + i, colors.transparencyGray, stro4ka2)
+		end
+	end
 end
 
 local function drawBackground()
@@ -249,7 +254,7 @@ local function console(text)
 	_, total, used = nil, nil, nil
 end
 
-local function drawPixel(x, y, i, j, iterator)
+local function drawPixel(x, y, xPixel, yPixel, iterator)
 	--Получаем данные о пикселе
 	local background, foreground, alpha, symbol = masterPixels[iterator], masterPixels[iterator + 1], masterPixels[iterator + 2], masterPixels[iterator + 3]
 	--Если пиксель не прозрачный
@@ -257,9 +262,22 @@ local function drawPixel(x, y, i, j, iterator)
 		buffer.set(x, y, background, foreground, symbol)
 	--Если пиксель прозрачнее непрозрачного
 	elseif alpha > 0x00 then
-		--Рисуем прозрачный пиксель
-		drawTransparentPixel(x, y, i, j)
-		buffer.set(x, y, colorlib.alphaBlend(colors.transparencyVariable, background, alpha), foreground, symbol)
+		local blendColor
+		if xPixel % 2 == 0 then
+			if yPixel % 2 == 0 then
+				blendColor = colors.transparencyGray
+			else
+				blendColor = colors.transparencyWhite
+			end
+		else
+			if yPixel % 2 == 0 then
+				blendColor = colors.transparencyWhite
+			else
+				blendColor = colors.transparencyGray
+			end
+		end
+
+		buffer.set(x, y, colorlib.alphaBlend(blendColor, background, alpha), foreground, symbol)
 	end
 	background, foreground, alpha, symbol = nil, nil, nil, nil
 end
@@ -268,18 +286,22 @@ local function drawImage()
 	--Стартовые нужности
 	local xPixel, yPixel = 1, 1
 	local xPos, yPos = sizes.xStartOfImage, sizes.yStartOfImage
+
+	buffer.setDrawLimit(sizes.xStartOfDrawingArea, sizes.yStartOfDrawingArea, sizes.widthOfDrawingArea, sizes.heightOfDrawingArea)
+
+	drawTransparentZone(xPos, yPos)
+
 	--Перебираем массив мастерпиксельса
 	for i = 1, #masterPixels, 4 do
-		--Если пиксель входит в разрешенную зону рисования
-		if xPos >= sizes.xStartOfDrawingArea and xPos <= sizes.xEndOfDrawingArea and yPos >= sizes.yStartOfDrawingArea and yPos <= sizes.yEndOfDrawingArea then
-			--Рисуем пиксель
-			drawPixel(xPos, yPos, xPixel, yPixel, i)
-		end
+		--Рисуем пиксель
+		if masterPixels[i + 2] ~= 0xFF or masterPixels[i + 3] ~= " " then drawPixel(xPos, yPos, xPixel, yPixel, i) end
 		--Всякие расчеты координат
 		xPixel = xPixel + 1
 		xPos = xPos + 1
 		if xPixel > masterPixels.width then xPixel = 1; xPos = sizes.xStartOfImage; yPixel = yPixel + 1; yPos = yPos + 1 end
 	end
+
+	buffer.resetDrawLimit()
 end
 
 local function drawBackgroundAndImage()
@@ -300,22 +322,21 @@ end
 ------------------------------------------------ Функции расчета --------------------------------------------------------------
 
 local function move(direction)
-	local howMuch = 2
+	local howMuchUpDown = 2
+	local howMuchLeftRight = 4
 	if direction == "up" then
-		sizes.yStartOfImage = sizes.yStartOfImage - howMuch
-		sizes.yEndOfImage= sizes.yStartOfImage + masterPixels.height - 1
+		reCalculateImageSizes(sizes.xStartOfImage, sizes.yStartOfImage - howMuchUpDown)
 	elseif direction == "down" then
-		sizes.yStartOfImage = sizes.yStartOfImage + howMuch
-		sizes.yEndOfImage= sizes.yStartOfImage + masterPixels.height - 1
+		reCalculateImageSizes(sizes.xStartOfImage, sizes.yStartOfImage + howMuchUpDown)
 	elseif direction == "left" then
-		sizes.xStartOfImage = sizes.xStartOfImage - howMuch
-		sizes.xEndOfImage= sizes.xStartOfImage + masterPixels.width - 1
+		reCalculateImageSizes(sizes.xStartOfImage - howMuchLeftRight, sizes.yStartOfImage)
 	elseif direction == "right" then
-		sizes.xStartOfImage = sizes.xStartOfImage + howMuch
-		sizes.xEndOfImage= sizes.xStartOfImage + masterPixels.width - 1
+		reCalculateImageSizes(sizes.xStartOfImage + howMuchLeftRight, sizes.yStartOfImage)
 	end
 	drawBackgroundAndImage()
+	buffer.debugWait = true
 	buffer.draw()
+	buffer.debugWait = false
 end
 
 local function setPixel(iterator, background, foreground, alpha, symbol)
@@ -402,6 +423,21 @@ local function saveTextToPixels(x, y, text)
 	end
 end
 
+local function tryToFitImageOnCenterOfScreen()
+	reCalculateImageSizes()
+
+	local x, y = sizes.xStartOfImage, sizes.yStartOfImage
+	if masterPixels.width < sizes.widthOfDrawingArea then
+		x = math.floor(sizes.xStartOfDrawingArea + sizes.widthOfDrawingArea / 2 - masterPixels.width / 2) - 1
+	end
+
+	if masterPixels.height < sizes.heightOfDrawingArea then
+		y = math.floor(sizes.yStartOfDrawingArea + sizes.heightOfDrawingArea / 2 - masterPixels.height / 2)
+	end
+
+	reCalculateImageSizes(x, y)
+end
+
 local function new()
 	local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Новый документ"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, "Ширина"}, {"Input", 0x262626, 0x880000, "Высота"}, {"EmptyLine"}, {"Button", {0xbbbbbb, 0xffffff, "OK"}})
 
@@ -410,12 +446,8 @@ local function new()
 
 	masterPixels = {}
 	masterPixels.width, masterPixels.height = data[1], data[2]
-	sizes.xStartOfImage = 9
-	sizes.yStartOfImage = 6
-	sizes.xEndOfImage = sizes.xStartOfImage + masterPixels.width - 1
-	sizes.yEndOfImage = sizes.yStartOfImage + masterPixels.height - 1
-
 	createEmptyMasterPixels()
+	tryToFitImageOnCenterOfScreen()
 	drawAll()
 end
 
@@ -540,6 +572,16 @@ local function expand()
 	end
 end
 
+local function loadImageFromFile(path)
+	if fs.exists(path) then
+		masterPixels = image.load(path)
+		savePath = path
+		tryToFitImageOnCenterOfScreen()
+	else
+		ecs.error("Файл \"" .. path .. "\" не существует")
+	end
+end
+
 ------------------------------------------------ Старт программы --------------------------------------------------------------
 
 local args = {...}
@@ -549,9 +591,7 @@ buffer.start()
 drawAll()
 
 if args[1] == "o" or args[1] == "open" or args[1] == "-o" or args[1] == "load" then
-	masterPixels = image.load(args[2])
-	savePath = args[2]
-	reCalculateImageSizes()
+	loadImageFromFile(args[2])
 else
 	new()
 end
@@ -771,10 +811,7 @@ while true do
 							elseif fileFormat ~= ".pic" and fileFormat ~= ".rawpic" and fileFormat ~= ".png" then 
 								ecs.error("Формат файла \""..fileFormat.."\" не поддерживается!")
 							else
-								masterPixels = image.load(data[1])
-								savePath = data[1]
-								reCalculateImageSizes()
-								drawBackgroundAndImage()
+								loadImageFromFile(data[1])
 								drawAll()
 							end
 						end
