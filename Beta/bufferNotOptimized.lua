@@ -449,7 +449,7 @@ function buffer.draw(force)
 	--Необходимые переменные, дабы не создавать их в цикле и не генерировать конструкторы
 	local somethingIsChanged, index, indexPlus1, indexPlus2, massiv, x, y
 	--Массив третьего буфера, содержащий в себе измененные пиксели
-	buffer.screen.changes = {}
+	-- buffer.screen.changes = {}
 	
 	--Перебираем содержимое нашего буфера по X и Y
 	for y = 1, buffer.screen.height do
@@ -465,9 +465,9 @@ function buffer.draw(force)
 			--Если хоть что-то изменилось, то начинаем работу
 			if somethingIsChanged or force then
 
-				gpu.setBackground(index)
-				gpu.setForeground(indexPlus1)
-				gpu.set(x, y, indexPlus2)
+				gpu.setBackground(buffer.screen.current[index]])
+				gpu.setForeground(buffer.screen.current[indexPlus1])
+				gpu.set(x, y, buffer.screen.current[indexPlus2])
 
 				--Оптимизация by Krutoy, создаем массив, в который заносим чарсы. Работает быстрее, чем конкатенейт строк
 				-- massiv = { buffer.screen.current[indexPlus2] }
@@ -527,8 +527,8 @@ function buffer.draw(force)
 	-- end
 
 	--Очищаем память, ибо незачем нам хранить третий буфер
-	buffer.screen.changes = {}
-	buffer.screen.changes = nil
+	-- buffer.screen.changes = {}
+	-- buffer.screen.changes = nil
 end
 
 ------------------------------------------------------------------------------------------------------
