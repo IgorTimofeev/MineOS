@@ -710,19 +710,17 @@ end
 -- Вызывается только при сохранении файла, так что на быстродействии не сказывается,
 -- а в целом штука очень и очень полезная. Фиксит криворукость художников.
 function image.optimize(picture)
-	local currentForeground, i1, i2, i3 = 0x000000, 0, 0, 0
+	local i1, i2, i3 = 0, 0, 0
 	for i = 1, #picture, constants.elementCount do
+		--Уменьшаем нагрузку на ЦОПЕ
 		i1, i2, i3 = i + 1, i + 2, i + 3
 		--Если цвет фона равен цвету текста, и используется псевдографические полупиксели
 		if picture[i] == picture[i1] and (picture[i3] == "▄" or picture[i3] == "▀") then
 			picture[i3] = " "
 		end
-
-		--Если символ равен пролбелу, т.е. цвет текста не учитывается, и если цвет текст не равен предыдущему, то присвоить ему значение предыдущего
-		if picture[i3] == " " and picture[i1] ~= currentForeground then		
-			picture[i1] = currentForeground
-		else
-			currentForeground = picture[i1]
+		--Если символ равен пролбелу, т.е. цвет текста не учитывается
+		if picture[i3] == " " then		
+			picture[i1] = 0x000000
 		end
 	end
 

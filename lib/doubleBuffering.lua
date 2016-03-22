@@ -105,19 +105,25 @@ end
 
 --Нарисовать квадрат
 function buffer.square(x, y, width, height, background, foreground, symbol, transparency)
-	local index
+	local index, indexPlus1, indexPlus2
 	if transparency then transparency = transparency * 2.55 end
+	if not foreground then foreground = 0x000000 end
+	if symbol == " " then foreground = 0x000000 elseif not symbol then symbol = " " end
+	
 	for j = y, (y + height - 1) do
 		for i = x, (x + width - 1) do
 			if i >= buffer.drawLimit.x1 and j >= buffer.drawLimit.y1 and i <= buffer.drawLimit.x2 and j <= buffer.drawLimit.y2 then
 				index = convertCoordsToIndex(i, j)
+				indexPlus1 = index + 1
+				indexPlus2 = index + 2
+
 				if transparency then
 					buffer.screen.new[index] = colorlib.alphaBlend(buffer.screen.new[index], background, transparency)
-					buffer.screen.new[index + 1] = colorlib.alphaBlend(buffer.screen.new[index + 1], background, transparency)
+					buffer.screen.new[indexPlus1] = colorlib.alphaBlend(buffer.screen.new[indexPlus1], background, transparency)
 				else
 					buffer.screen.new[index] = background
-					buffer.screen.new[index + 1] = foreground
-					buffer.screen.new[index + 2] = symbol
+					buffer.screen.new[indexPlus1] = foreground
+					buffer.screen.new[indexPlus2] = symbol
 				end
 			end
 		end
@@ -126,7 +132,7 @@ end
 
 --Очистка экрана, по сути более короткая запись buffer.square
 function buffer.clear(color)
-	buffer.square(1, 1, buffer.screen.width, buffer.screen.height, color or 0x262626, 0xFFFFFF, " ")
+	buffer.square(1, 1, buffer.screen.width, buffer.screen.height, color or 0x262626)
 end
 
 --Заливка области изображения (рекурсивная, говно-метод)
@@ -240,7 +246,7 @@ function buffer.paste(x, y, copyArray)
 				index = convertCoordsToIndex(i, j)
 				--Копипаст формулы, аккуратнее!
 				--Рассчитываем индекс массива вставочного изображения
-				arrayIndex = (copyArray.width * ((j - y + 1) - 1) + (i - x + 1)) * sizeOfPixelData - sizeOfPixelData + 1
+				arrayIndex = (copyArray.width * (j - y) + (i - x + 1)) * sizeOfPixelData - sizeOfPixelData + 1
 				--Вставляем данные
 				buffer.screen.new[index] = copyArray[arrayIndex]
 				buffer.screen.new[index + 1] = copyArray[arrayIndex + 1]
@@ -295,22 +301,30 @@ end
 
 -- Отрисовка изображения
 function buffer.image(x, y, picture)
-	if not image then image = require("image") end
-	local index, imageIndex
+	if not _G.image then _G.image = require("image") end
+	local index, imageIndex, indexPlus1, indexPlus2, imageIndexPlus1, imageIndexPlus2, imageIndexPlus3
+
 	for j = y, (y + picture.height - 1) do
 		for i = x, (x + picture.width - 1) do
 			if i >= buffer.drawLimit.x1 and j >= buffer.drawLimit.y1 and i <= buffer.drawLimit.x2 and j <= buffer.drawLimit.y2 then
 				index = convertCoordsToIndex(i, j)
-				--Копипаст формулы!
-				imageIndex = (picture.width * ((j - y + 1) - 1) + (i - x + 1)) * 4 - 4 + 1
+				indexPlus1 = index + 1
+				indexPlus2 = index + 2
 
-				if picture[imageIndex + 2] ~= 0x00 then
-					buffer.screen.new[index] = colorlib.alphaBlend(buffer.screen.new[index], picture[imageIndex], picture[imageIndex + 2])
+				imageIndex = (picture.width * (j - y) + (i - x + 1)) * 4 - 3
+				imageIndexPlus1 = imageIndex + 1
+				imageIndexPlus2 = imageIndex + 2
+				imageIndexPlus3 = imageIndex + 3
+
+				if picture[imageIndexPlus2] ~= 0x00 then
+					buffer.screen.new[index] = colorlib.alphaBlend(buffer.screen.new[index], picture[imageIndex], picture[imageIndexPlus2])
 				else
 					buffer.screen.new[index] = picture[imageIndex]
 				end
-				buffer.screen.new[index + 1] = picture[imageIndex + 1]
-				buffer.screen.new[index + 2] = picture[imageIndex + 3]
+
+				--Если символ равен пробелу, то сбрасываем цвет текста на ноль
+				buffer.screen.new[indexPlus1] = picture[imageIndexPlus3] == " " and 0x000000 or picture[imageIndexPlus1]
+				buffer.screen.new[indexPlus2] = picture[imageIndexPlus3]
 			end
 		end
 	end
