@@ -262,7 +262,7 @@ while true do
 	if birdIsAlive and (e[1] == "touch" or e[1] == "key_down") then
 		yBird = yBird - config.birdFlyUpSpeed + (not birdIsAlive and 2 or 0)
 		somethingHappend = true
-		currentUser = e[6]
+		currentUser = e[1] == "touch" and e[6] or e[5]
 	end
 
 	moveColumns()
