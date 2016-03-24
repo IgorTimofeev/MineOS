@@ -3,7 +3,7 @@ local buffer = require("doubleBuffering")
 local keyboard = require("keyboard")
 local bigLetters = require("bigLetters")
 local fs = require("filesystem")
-local serializaion = require("serializaion")
+local serialization = require("serialization")
 local ecs = require("ECSAPI")
 
 buffer.start()
@@ -116,14 +116,14 @@ end
 local function saveHighScores()
 	fs.makeDirectory(fs.path(pathToHighScores))
 	local file = io.open(pathToHighScores, "w")
-	file:write(serializaion.serialize(scores))
+	file:write(serialization.serialize(scores))
 	file:close()
 end
 
 local function loadHighScores()
 	if fs.exists(pathToHighScores) then
 		local file = io.open(pathToHighScores, "r")
-		scores = serializaion.unserialize(file:read("*a"))
+		scores = serialization.unserialize(file:read("*a"))
 		file:close()
 	else
 		scores = {}
@@ -142,7 +142,7 @@ while true do
 	if birdIsAlive and e[1] == "touch" then
 		yBird = yBird - config.birdFlyUpSpeed + (not birdIsAlive and 2 or 0)
 		somethingHappend = true
-		currentUser = e[5]
+		currentUser = e[6]
 	-- elseif e[1] == "key_down" then
 	-- 	if e[4] == 200 then
 	-- 		yBird = yBird - 1
