@@ -480,15 +480,6 @@
     ["version"]=1.0,
   },
   {
-    ["name"]="MineOS/Applications/FlappyBlock",
-    ["url"]="IgorTimofeev/OpenComputers/master/Applications/FlappyBlock/FlappyBlock.lua",
-    ["about"]="IgorTimofeev/OpenComputers/master/Applications/FlappyBlock/About.txt",
-    ["type"]="Application",
-    ["icon"]="IgorTimofeev/OpenComputers/master/Applications/FlappyBlock/Icon.pic",
-    ["createShortcut"] = "desktop",
-    ["version"]=1.0,
-  },
-  {
     ["name"]="MineOS/Applications/MineSweeper",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/MineSweeper/MineSweeper.lua",
     ["about"]="IgorTimofeev/OpenComputers/master/Applications/MineSweeper/About.txt",
