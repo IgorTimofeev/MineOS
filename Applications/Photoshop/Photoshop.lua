@@ -386,6 +386,12 @@ local function inputText(x, y, limit)
 				end
 			elseif e[4] == 28 then
 				break
+			elseif e[4] == 200 then
+				text = "▀"
+				drawThisShit()
+			elseif e[4] == 208 then
+				text = "▄"
+				drawThisShit()
 			else
 				local symbol = ecs.convertCodeToSymbol(e[3])
 				if symbol ~= nil then
@@ -794,7 +800,7 @@ while true do
 							local encodingMethod = data[2]
 
 							image.save(filename, masterPixels, encodingMethod)
-							savePath = fileName
+							savePath = filename
 						end
 					elseif action == "Сохранить" then
 						image.save(savePath, masterPixels)
@@ -914,4 +920,3 @@ while true do
 end
 
 ------------------------------------------------ Выход из программы --------------------------------------------------------------
-
