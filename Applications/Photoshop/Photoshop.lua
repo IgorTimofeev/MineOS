@@ -361,7 +361,7 @@ local function inputText(x, y, limit)
 	local inputPos = 1
 
 	local function drawThisShit()
-		for i=1,inputPos do
+		for i = 1, inputPos do
 			ecs.invertedText(x + i - 1, y + 1, "─")
 			ecs.adaptiveText(x + i - 1, y - 1, " ", currentBackground)
 		end
@@ -388,9 +388,11 @@ local function inputText(x, y, limit)
 				break
 			elseif e[4] == 200 then
 				text = "▀"
+				inputPos = 1
 				drawThisShit()
 			elseif e[4] == 208 then
 				text = "▄"
+				inputPos = 1
 				drawThisShit()
 			else
 				local symbol = ecs.convertCodeToSymbol(e[3])
