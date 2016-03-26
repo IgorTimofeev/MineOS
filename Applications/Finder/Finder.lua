@@ -505,7 +505,7 @@ while true do
 					elseif action == "Загрузить на Pastebin" then
 						shell.execute("MineOS/Applications/Pastebin.app/Pastebin.lua upload " .. path)
 						getFileList(workPathHistory[currentWorkPathHistoryElement])
-						drawAll()
+						drawAll(true)
 					elseif action == "Установить как обои" then
 						--ecs.error(path)
 						ecs.createShortCut("MineOS/System/OS/Wallpaper.lnk", path)
