@@ -687,7 +687,7 @@ local function drawLeftToolBar()
 	obj["leftBarFiles"] = {}
 	local fileList = ecs.getFileList(path)
 	if #fileList > 0 then
-		leftToolbarFileList = ecs.reorganizeFilesAndFolders(fileList, true)
+		leftToolbarFileList = ecs.sortFiles(path, fileList, "name", false)
 		drawFileListOnLeftToolbar(path)
 	end
 
