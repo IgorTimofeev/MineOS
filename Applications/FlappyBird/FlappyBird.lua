@@ -15,7 +15,7 @@ local config = {
 	columnPipeHeight = 4,
 	columnPipeWidth = 17,
 	columnWidth = 15,
-	columnFreeSpace = 16,
+	columnFreeSpace = 17,
 	birdFlyForwardSpeed = 2,
 	spaceBetweenColumns = 51,
 }
@@ -227,17 +227,13 @@ local function finalGUI()
 			os.sleep(0.2)
 			currentScore = 0
 			birdIsAlive = true
+			scoreCanBeAdded = true
 			columns = {}
 			bird = image.load(pathToFlappyImage)
 			yBird = math.floor(buffer.screen.height / 2 - 3)
 			drawAll()
 			wait()
 			return
-		-- elseif clicked(e[3], e[4], obj.records) then
-		-- 	buffer.button(obj.records[1], obj.records[2], widthOfBoard, 3, 0xFFFFFF, 0x000000, "Таблица рекордов")
-		-- 	buffer.draw()
-		-- 	os.sleep(0.2)
-		-- 	draw()
 
 		elseif clicked(e[3], e[4], obj.exit) then
 			buffer.button(obj.exit[1], obj.exit[2], widthOfBoard, 3, 0xFFFFFF, 0x000000, "Выход")
