@@ -252,6 +252,12 @@
   ----------------------------------------------------- Библиотеки --------------------------------------------------------------------------
 
   {
+    ["name"]="lib/filemanager.lua",
+    ["url"]="IgorTimofeev/OpenComputers/master/lib/filemanager.lua",
+    ["type"]="Library",
+    ["version"]=1.0,
+  },
+  {
     ["name"]="lib/modemConnection.lua",
     ["url"]="IgorTimofeev/OpenComputers/master/lib/modemConnection.lua",
     ["type"]="Library",
@@ -752,18 +758,11 @@
     },
   },
   {
-    ["name"]="MineOS/Applications/Highlight",
-    ["url"]="IgorTimofeev/OpenComputers/master/Applications/Highlight/Highlight.lua",
-    ["type"]="Application",
-    ["icon"]="IgorTimofeev/OpenComputers/master/Applications/Highlight/Icon.pic",
+    ["name"]="MineOS/Applications/MineCode",
+    ["url"]="IgorTimofeev/OpenComputers/master/Applications/MineCode/MineCode.lua",
+    ["icon"]="IgorTimofeev/OpenComputers/master/Applications/MineCode/Icon.pic",
     ["createShortcut"] = "desktop",
     ["version"]=1.0,
-    ["resources"]={
-      {
-        ["name"]="TestFile.txt",
-        ["url"]="IgorTimofeev/OpenComputers/master/Applications/Highlight/TestFile.txt",
-      },
-    },
   },
   {
     ["name"]="MineOS/Applications/HoloEdit",

@@ -1,6 +1,6 @@
-local gpu = require("component").gpu
-local buffer = require("doubleBuffering")
-local unicode = require("unicode")
+_G.buffer = require("doubleBuffering")
+_G.unicode = require("unicode")
+
 local syntax = {}
 
 ----------------------------------------------------------------------------------------------------------------------------------------
@@ -179,36 +179,41 @@ end
 
 function syntax.convertFileToStrings(path)
 	local array = {}
+	local maximumStringWidth = 0
 	local file = io.open(path, "r")
 	for line in file:lines() do
 		line = string.gsub(line, "	", string.rep(" ", 4))
+		maximumStringWidth = math.max(maximumStringWidth, unicode.len(line))
 		table.insert(array, line)
 	end
 	file:close()
-	return array
+	return array, maximumStringWidth
 end
 
 -- Открыть окно-просмотрщик кода
-function syntax.viewCode(x, y, width, height, strings, fromSymbol, fromString, highlightLuaSyntax, selection, highlightedStrings)
+function syntax.viewCode(x, y, width, height, strings, maximumStringWidth, fromSymbol, fromString, highlightLuaSyntax, selection, highlightedStrings)
 	--Рассчитываем максимальное количество строк, которое мы будем отображать
 	local maximumNumberOfAvailableStrings, yPos
 	if strings[fromString + height - 1] then
-		maximumNumberOfAvailableStrings = fromString + height - 1
+		maximumNumberOfAvailableStrings = fromString + height - 2
 	else
-		maximumNumberOfAvailableStrings = #strings
+		maximumNumberOfAvailableStrings = #strings - 1
 	end
 	--Рассчитываем ширину полоски с номерами строк
 	local widthOfStringCounter = unicode.len(maximumNumberOfAvailableStrings) + 2
 	--Рассчитываем стратовую позицию текстового поля
 	local textFieldPosition = x + widthOfStringCounter
 	local widthOfText = width - widthOfStringCounter - 3
+	local xEnd, yEnd = x + width - 1, y + height - 1
 
 	--Рисуем подложку под текст
-	buffer.square(textFieldPosition, y, width - widthOfStringCounter - 1, height, currentColorScheme.background, 0xFFFFFF, " ")
-	--Рисуем скроллбар
-	buffer.scrollBar(x + width - 1, y, 1, height, #strings, fromString, currentColorScheme.scrollBar, currentColorScheme.scrollBarPipe)
-	--Рисуем номера строк
+	buffer.square(x, y, width, height, currentColorScheme.background, 0xFFFFFF, " ")
+	--Рисуем подложку под номера строк
 	buffer.square(x, y, widthOfStringCounter, height, currentColorScheme.lineNumbers, 0xFFFFFF, " ")
+	--Рисуем вертикальный скроллбар
+	buffer.scrollBar(xEnd, y, 1, height, #strings, fromString, currentColorScheme.scrollBar, currentColorScheme.scrollBarPipe)
+	--Рисуем горизонтальный скроллбар
+	buffer.horizontalScrollBar(x + widthOfStringCounter, yEnd, width - widthOfStringCounter - 1, maximumStringWidth, fromSymbol, currentColorScheme.scrollBar, currentColorScheme.scrollBarPipe)
 	
 	--Подсвечиваем некоторые строки, если указано
 	if highlightedStrings then
@@ -220,6 +225,7 @@ function syntax.viewCode(x, y, width, height, strings, fromSymbol, fromString, h
 		end
 	end
 
+	--Рисуем номера строк
 	yPos = y
 	for i = fromString, maximumNumberOfAvailableStrings do
 		buffer.text(x + widthOfStringCounter - unicode.len(i) - 1, yPos, currentColorScheme.text, tostring(i))
@@ -276,8 +282,6 @@ function syntax.viewCode(x, y, width, height, strings, fromSymbol, fromString, h
 		yPos = yPos + 1
 	end
 
-	--Рисуем изменения из буфера
-	buffer.draw()
 	--Убираем ограничение отрисовки
 	buffer.resetDrawLimit()
 
@@ -290,7 +294,7 @@ end
 syntax.setColorScheme(syntax.colorSchemes.midnight)
 
 -- -- Епты бля!
--- local strings = syntax.convertFileToStrings("MineOS/Applications/Highlight.app/Resources/TestFile.txt")
+-- local strings, maximumStringWidth = syntax.convertFileToStrings("MineOS/Applications/Highlight.app/Resources/TestFile.txt")
 -- local strings = syntax.convertFileToStrings("OS.lua")
 
 -- local xSize, ySize = gpu.getResolution()
@@ -307,7 +311,7 @@ syntax.setColorScheme(syntax.colorSchemes.midnight)
 -- 	{number = 32, color = 0xFF4444},
 -- }
 
--- syntax.viewCode(20, 5, 100, 40, strings, 1, 20, true, selection, highlightedStrings)
+-- syntax.viewCode(20, 5, 100, 40, strings, maximumStringWidth, 1, 20, true, selection, highlightedStrings)
 
 ----------------------------------------------------------------------------------------------------------------
 

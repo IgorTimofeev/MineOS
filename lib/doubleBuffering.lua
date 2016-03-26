@@ -108,7 +108,7 @@ function buffer.square(x, y, width, height, background, foreground, symbol, tran
 	local index, indexPlus1, indexPlus2
 	if transparency then transparency = transparency * 2.55 end
 	if not foreground then foreground = 0x000000 end
-	if symbol == " " then foreground = 0x000000 elseif not symbol then symbol = " " end
+	-- if symbol == " " then foreground = 0x000000 elseif not symbol then symbol = " " end
 	
 	for j = y, (y + height - 1) do
 		for i = x, (x + width - 1) do
@@ -323,7 +323,8 @@ function buffer.image(x, y, picture)
 				end
 
 				--Если символ равен пробелу, то сбрасываем цвет текста на ноль
-				buffer.screen.new[indexPlus1] = picture[imageIndexPlus3] == " " and 0x000000 or picture[imageIndexPlus1]
+				-- buffer.screen.new[indexPlus1] = picture[imageIndexPlus3] == " " and 0x000000 or picture[imageIndexPlus1]
+				buffer.screen.new[indexPlus1] = picture[imageIndexPlus1]
 				buffer.screen.new[indexPlus2] = picture[imageIndexPlus3]
 			end
 		end
@@ -353,13 +354,21 @@ end
 
 -- Вертикальный скролл-бар
 function buffer.scrollBar(x, y, width, height, countOfAllElements, currentElement, backColor, frontColor)
-	local sizeOfScrollBar = math.ceil(1 / countOfAllElements * height)
+	local sizeOfScrollBar = math.ceil(height / countOfAllElements)
 	local displayBarFrom = math.floor(y + height * ((currentElement - 1) / countOfAllElements))
 
 	buffer.square(x, y, width, height, backColor, 0xFFFFFF, " ")
 	buffer.square(x, displayBarFrom, width, sizeOfScrollBar, frontColor, 0xFFFFFF, " ")
 
 	sizeOfScrollBar, displayBarFrom = nil, nil
+end
+
+function buffer.horizontalScrollBar(x, y, width, countOfAllElements, currentElement, background, foreground)
+	local pipeSize = math.ceil(width / countOfAllElements)
+	local displayBarFrom = math.floor(x + width * ((currentElement - 1) / countOfAllElements))
+
+	buffer.text(x, y, background, string.rep("▄", width))
+	buffer.text(displayBarFrom, y, foreground, string.rep("▄", pipeSize))
 end
 
 -- Отрисовка любого изображения в виде трехмерного массива. Неоптимизированно, зато просто.

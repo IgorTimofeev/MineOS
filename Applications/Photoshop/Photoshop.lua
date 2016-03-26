@@ -387,12 +387,16 @@ local function inputText(x, y, limit)
 			elseif e[4] == 28 then
 				break
 			elseif e[4] == 200 then
-				text = "▀"
-				inputPos = 1
+				text = text .. "▀"
+				if unicode.len(text) < limit then
+					inputPos = inputPos + 1
+				end
 				drawThisShit()
 			elseif e[4] == 208 then
-				text = "▄"
-				inputPos = 1
+				text = text .. "▄"
+				if unicode.len(text) < limit then
+					inputPos = inputPos + 1
+				end
 				drawThisShit()
 			else
 				local symbol = ecs.convertCodeToSymbol(e[3])
