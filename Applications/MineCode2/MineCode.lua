@@ -1,10 +1,10 @@
 
-_G.syntax = nil
-_G.filemanager = nil
-_G.doubleBuffering = nil
-package.loaded.doubleBuffering = nil
-package.loaded.syntax = nil
-package.loaded.filemanager = nil
+-- _G.syntax = nil
+-- _G.filemanager = nil
+-- _G.doubleBuffering = nil
+-- package.loaded.doubleBuffering = nil
+-- package.loaded.syntax = nil
+-- package.loaded.filemanager = nil
 
 -- Адаптивная загрузка необходимых библиотек и компонентов
 local libraries = {
