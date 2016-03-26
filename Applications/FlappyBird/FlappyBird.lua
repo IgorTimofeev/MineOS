@@ -63,7 +63,7 @@ local function dieBirdDie()
 end
 
 local function generateColumn()
-	local yFreeZone = math.random(config.columnPipeHeight + 1, buffer.screen.height - config.columnPipeHeight - config.columnFreeSpace)
+	local yFreeZone = math.random(config.columnPipeHeight + 2, buffer.screen.height - config.columnPipeHeight - config.columnFreeSpace)
 	table.insert(columns, {x = buffer.screen.width - 1, yFreeZone = yFreeZone})
 end
 
