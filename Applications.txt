@@ -424,7 +424,7 @@
   },
   ----------------------------------------------------- Приложения без ресурсов --------------------------------------------------------------------------
   {
-    ["name"]="MineOS/Applications/MineCode2",
+    ["name"]="MineOS/Applications/MineCode",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/MineCode2/MineCode.lua",
     ["type"]="Application",
     ["icon"]="IgorTimofeev/OpenComputers/master/Applications/MineCode2/Icon.pic",
