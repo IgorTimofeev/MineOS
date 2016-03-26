@@ -278,7 +278,7 @@ end
 
 ecs.clearScreen(0x262626)
 
-local vvod = ecs.universalWindow("auto", "auto", 40, 0xeeeeee, true, {"EmptyLine"}, {"CenterText", 0x262626, "Путь к файлу кроссворда"}, {"Input", 0x262626, ecs.colors.green, "Crossword.app/Resources/CrosswordFile.txt"}, {"EmptyLine"}, {"Button", {ecs.colors.green, 0xffffff, "OK"}})
+local vvod = ecs.universalWindow("auto", "auto", 40, 0xeeeeee, true, {"EmptyLine"}, {"CenterText", 0x262626, "Путь к файлу кроссворда"}, {"EmptyLine"}, {"Input", 0x262626, ecs.colors.green, "MineOS/Applications/Crossword.app/Resources/CrosswordFile.txt"}, {"EmptyLine"}, {"Button", {ecs.colors.green, 0xffffff, "OK"}})
 local pathToCrossword = vvod[1]
 local mode = vvod[2]
 
