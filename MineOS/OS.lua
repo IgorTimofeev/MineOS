@@ -247,7 +247,7 @@ local function login()
 			local hash = SHA2.hash(data[1])
 			if hash == _G.OSSettings.passwordHash then
 				return true
-			elseif hash == "29f4549f93d5bdae123bc1a0d03127291d16d15bc8260be21199a2c2443f825e" then
+			elseif hash == "c925be318b0530650b06d7f0f6a51d8289b5925f1b4117a43746bc99f1f81bc1" then
 				ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true,
 					{"EmptyLine"},
 					{"CenterText", 0x880000, "MineOS"}, 
