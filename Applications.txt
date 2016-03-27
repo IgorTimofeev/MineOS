@@ -737,6 +737,20 @@
   },
   ----------------------------------------------------- Приложения с ресурсами --------------------------------------------------------------------------
   {
+    ["name"]="MineOS/Applications/VK",
+    ["url"]="IgorTimofeev/OpenComputers/master/Applications/VK/VK.lua",
+    ["type"]="Application",
+    ["icon"]="IgorTimofeev/OpenComputers/master/Applications/VK/Icon.pic",
+    ["createShortcut"]="dock",
+    ["version"]=1.0,
+    ["resources"]={
+      {
+        ["name"]="VKLogo.pic",
+        ["url"]="IgorTimofeev/OpenComputers/master/Applications/VK/VKLogo.pic",
+      },
+    },
+  },
+  {
     ["name"]="MineOS/Applications/FlappyBird",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/FlappyBird/FlappyBird.lua",
     ["type"]="Application",
