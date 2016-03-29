@@ -108,6 +108,7 @@ function buffer.square(x, y, width, height, background, foreground, symbol, tran
 	local index, indexPlus1, indexPlus2
 	if transparency then transparency = transparency * 2.55 end
 	if not foreground then foreground = 0x000000 end
+	if not symbol then symbol = " " end
 	-- if symbol == " " then foreground = 0x000000 elseif not symbol then symbol = " " end
 	
 	for j = y, (y + height - 1) do
