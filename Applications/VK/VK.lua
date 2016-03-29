@@ -724,7 +724,7 @@ end
 --Эх, что бы я делал, если б не накодил ее? 0.2 фпс на GPU мертвеца!
 buffer.start()
 --Активируем форму логина
-local loginData = loginGUI("cyka@yandex.com", "13131313")
+local loginData = loginGUI("Igor_Timofeev@me.com", "cykarotebaltvarissanie")
 access_token = loginData.access_token
 --Получаем персональные данные
 _, personalInfo = usersInformationRequest(loginData.user_id)
