@@ -465,7 +465,7 @@ function buffer.draw(force)
 			--Если хоть что-то изменилось, то начинаем работу
 			if somethingIsChanged or force then
 
-			    gpu.setBackground(buffer.screen.current[index]])
+			    gpu.setBackground(buffer.screen.current[index])
 				gpu.setForeground(buffer.screen.current[indexPlus1])
 				gpu.set(x, y, buffer.screen.current[indexPlus2])
 
