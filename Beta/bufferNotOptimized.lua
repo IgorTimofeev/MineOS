@@ -465,7 +465,7 @@ function buffer.draw(force)
 			--Если хоть что-то изменилось, то начинаем работу
 			if somethingIsChanged or force then
 
-				gpu.setBackground(buffer.screen.current[index]])
+			    gpu.setBackground(buffer.screen.current[index]])
 				gpu.setForeground(buffer.screen.current[indexPlus1])
 				gpu.set(x, y, buffer.screen.current[indexPlus2])
 
@@ -501,7 +501,7 @@ function buffer.draw(force)
 				-- table.insert(buffer.screen.changes[buffer.screen.current[indexPlus1]][buffer.screen.current[index]], table.concat(massiv))
 			
 				--Смещаемся по иксу вправо
-				x = x + #massiv - 1
+				-- x = x + #massiv - 1
 			end
 
 			x = x + 1
