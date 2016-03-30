@@ -51,7 +51,7 @@ local function paintWall()
 	gpu.setBackground(colors.player)
 	gpu.set(startXPosPlayer, tempPosPlayer, "  ")
 	gpu.setBackground(colors.bg)
-	os.sleep(0.1)
+	os.sleep(0.2)
 	end
 	tempPosPlayer = 10
 	while game do
@@ -118,7 +118,7 @@ local function paintWall()
 				gpu.setBackground(colors.player)
 				gpu.set(startXPosPlayer, tempPosPlayer, "  ")
 				gpu.setBackground(colors.bg)
-				os.sleep(0.2)
+				os.sleep(0.3)
 				event.listen("key_down", up)
 				if startXPosPlayer == a then
 					tCount = tCount + 1
@@ -244,7 +244,7 @@ local function printRecords()  --Выводим рекорды на экран
 		end
 	end
 	gpu.setForeground(colors.text)
-	os.sleep(10)
+	os.sleep(3)
 	floppyBlock()
 end
 function main()

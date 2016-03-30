@@ -430,6 +430,14 @@
   },
   ----------------------------------------------------- Приложения без ресурсов --------------------------------------------------------------------------
   {
+    ["name"]="MineOS/Applications/FlappyBlock",
+    ["url"]="IgorTimofeev/OpenComputers/master/Applications/FlappyBlock/FlappyBlock.lua",
+    ["type"]="Application",
+    ["icon"]="IgorTimofeev/OpenComputers/master/Applications/FlappyBlock/Icon.pic",
+    ["createShortcut"]="desktop",
+    ["version"]=1.0,
+  },
+  {
     ["name"]="MineOS/Applications/MineCode",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/MineCode2/MineCode.lua",
     ["type"]="Application",
