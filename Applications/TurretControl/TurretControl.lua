@@ -159,7 +159,7 @@ local function drawBottomBar()
 	newObj("BottomButtons", "AttacksPlayers", x, y, x + widthOfButton - 1, y + 2)
 	x = drawButtonWithState(x, y, widthOfButton, 3, "Атака игроков", turretConfig.attacksPlayers)
 	newObj("BottomButtons", "Exit", x, y, x + widthOfButton - 1, y + 2)
-	x = drawButtonWithState(x, y, widthOfButton, 3, "Выход", true)
+	x = drawButtonWithState(x, y, widthOfButton, 3, "Выход", false)
 end
 
 local function drawAll()
