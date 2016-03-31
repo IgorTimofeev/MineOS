@@ -87,6 +87,7 @@ local function drawTurrets(y)
 		local text = "Подключите турели из мода OpenModularTurrets"
 		local x = math.floor(buffer.screen.width / 2 - unicode.len(text) / 2)
 		buffer.text(x, math.floor(buffer.screen.height / 2 - 2), yellowColor, text)
+		return
 	end
 
 	for turret = 1, #turrets do
