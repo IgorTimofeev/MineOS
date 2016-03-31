@@ -158,6 +158,8 @@ local function drawBottomBar()
 	x = drawButtonWithState(x, y, widthOfButton, 3, "Атака нейтралов", turretConfig.attacksNeutrals)
 	newObj("BottomButtons", "AttacksPlayers", x, y, x + widthOfButton - 1, y + 2)
 	x = drawButtonWithState(x, y, widthOfButton, 3, "Атака игроков", turretConfig.attacksPlayers)
+	newObj("BottomButtons", "Exit", x, y, x + widthOfButton - 1, y + 2)
+	x = drawButtonWithState(x, y, widthOfButton, 3, "Выход", true)
 end
 
 local function drawAll()
@@ -231,6 +233,10 @@ while true do
 				elseif key == "AddPlayer" then
 					local data = ecs.universalWindow("auto", "auto", 30, 0x1e1e1e, true, {"EmptyLine"}, {"CenterText", ecs.colors.orange, "Добавить игрока"}, {"EmptyLine"}, {"Input", 0xFFFFFF, ecs.colors.orange, "Никнейм"}, {"EmptyLine"}, {"Button", {ecs.colors.orange, 0xffffff, "OK"}, {0x999999, 0xffffff, "Отмена"}} )
 					if data[2] == "OK" then for i = 1, #turrets do turrets[i].proxy.addTrustedPlayer(data[1]) end end
+				elseif key == "Exit" then
+					buffer.clear(0x262626)
+					ecs.prepareToExit()
+					return
 				end
 
 				break
