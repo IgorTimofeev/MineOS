@@ -7,15 +7,19 @@ local ecs = require("ECSAPI")
 local serialization = require("serialization")
 local unicode = require("unicode")
 
+-------------------------------------------------------------------------------------------------------------------------------------
+
 buffer.start()
-local pathToTurretPicture = "turret.pic"
+local pathToTurretPicture = "MineOS/Applications/TurretControl.app/Resources/Turret.pic"
 local turretImage = image.load(pathToTurretPicture)
 local turrets = {}
 local proxies = {}
+
 local turretConfig = {
-	attackPlayers = true,
-	attackNeutrals = false,
-	attackMobs = true,
+	turretsOn = false,
+	attacksNeutrals = false,
+	attacksPlayers = false,
+	attacksMobs = false,
 }
 
 local yTurrets = 2
@@ -27,6 +31,15 @@ local countOfTurretsCanBeShowByWidth = math.floor(buffer.screen.width / (turretW
 local xTurrets = math.floor(buffer.screen.width / 2 - (countOfTurretsCanBeShowByWidth * (turretWidth + spaceBetweenTurretsHorizontal)) / 2 ) + math.floor(spaceBetweenTurretsHorizontal / 2)
 
 local yellowColor = 0xFFDB40
+
+-------------------------------------------------------------------------------------------------------------------------------------
+
+--Объекты
+local obj = {}
+local function newObj(class, name, ...)
+	obj[class] = obj[class] or {}
+	obj[class][name] = {...}
+end
 
 local function getProxiesOfAllComponents(name)
 	for address in pairs(component.list(name)) do
@@ -41,13 +54,19 @@ local function getTurrets()
 	getProxiesOfAllComponents("tierFourTurretBase")
 	getProxiesOfAllComponents("tierFiveTurretBase")
 	for i = 1, #proxies do
+		-- print(proxies[i].type)
 		if type(proxies[i].getCurrentEnergyStorage()) ~= "string" then
 			local turret = {}
-			turret.address = proxies[i].address
 			turret.type = proxies[i].type
-			turret.isActive = proxies[i].getActive()
+			-- turret.isActive = (proxies[i].isAttacksPlayers() and proxies[i].isAttacksMobs()) and true or false
 			turret.energyPercent = math.ceil(proxies[i].getCurrentEnergyStorage() / proxies[i].getMaxEnergyStorage() * 100)
+			turret.proxy = proxies[i]
 			table.insert(turrets, turret)
+
+			turret.isActive = turretConfig.turretsOn
+			turret.proxy.setAttacksNeutrals(turretConfig.attacksNeutrals)
+			turret.proxy.setAttacksPlayers(turretConfig.attacksPlayers)
+			turret.proxy.setAttacksMobs(turretConfig.attacksMobs)
 		end
 	end
 end
@@ -60,27 +79,21 @@ local function progressBar(x, y, width, height, background, foreground, percent)
 	buffer.text(x + 1, y + 1, foreground, string.rep("▒", cykaWidth))
 end
 
-local function enableOrDisableEveryTurret(enable)
-	for turret = 1, #turrets do
-		turrets[turrets].setActive(enable)
-	end
-end
-
-local function changeUserListOnEveryTurret(userlist)
-	for i = 1, #userlist do
-
-	end
-end
-
 local function drawTurrets(y)
 	local counter = 0
 	local x = xTurrets
+
+	if #turrets <= 0 then 
+		local text = "Подключите турели из мода OpenModularTurrets"
+		local x = math.floor(buffer.screen.width / 2 - unicode.len(text) / 2)
+		buffer.text(x, math.floor(buffer.screen.height / 2 - 2), yellowColor, text)
+	end
 
 	for turret = 1, #turrets do
 		local yPos = y
 		buffer.frame(x, yPos, turretWidth, turretHeight, yellowColor)
 		yPos = yPos + 1
-		buffer.text(x + 2, yPos, yellowColor, ecs.stringLimit("end", "Турель " .. turrets[turret].address, turretWidth - 4))
+		buffer.text(x + 2, yPos, yellowColor, ecs.stringLimit("end", "Турель " .. turrets[turret].proxy.address, turretWidth - 4))
 		yPos = yPos + 2
 		buffer.image(x + 4, yPos, turretImage)
 		yPos = yPos + turretImage.height + 1
@@ -91,8 +104,9 @@ local function drawTurrets(y)
 		local widthOfButton = 13
 		-- local isActive = turrets[turret].getActive()
 		local isActive = turrets[turret].isActive
-		buffer.button(x + 2, yPos, widthOfButton, 1, isActive and yellowColor or 0x000000, isActive and 0x000000 or yellowColor, "ВКЛ")
-		buffer.button(x + 2 + widthOfButton + 2, yPos, widthOfButton, 1, not isActive and yellowColor or 0x000000, not isActive and 0x000000 or yellowColor, "ВЫКЛ")
+		newObj("TurretOn", turret, buffer.button(x + 2, yPos, widthOfButton, 1, isActive and yellowColor or 0x000000, isActive and 0x000000 or yellowColor, "ВКЛ"))
+		obj.TurretOn[turret].proxy = turrets[turret].proxy
+		newObj("TurretOff", turret, buffer.button(x + 2 + widthOfButton + 2, yPos, widthOfButton, 1, not isActive and yellowColor or 0x000000, not isActive and 0x000000 or yellowColor, "ВЫКЛ"))
 		yPos = yPos + 1
 
 		x = x + turretWidth + spaceBetweenTurretsHorizontal
@@ -108,6 +122,16 @@ local function drawSeparator(y)
 	buffer.text(1, y, yellowColor, string.rep("─", buffer.screen.width))
 end
 
+local function drawButtonWithState(x, y, width, height, text, state)
+	if state then
+		buffer.button(x, y, width, height, yellowColor, 0x000000, text)
+	else
+		buffer.framedButton(x, y, width, height, 0x000000, yellowColor, text)
+	end
+
+	return (x + width + 1)
+end
+
 local function drawBottomBar()
 	local height = 6
 	local y = buffer.screen.height - height + 1
@@ -119,28 +143,22 @@ local function drawBottomBar()
 
 	y = y + 2
 
-	local widthOfButton = 17
+	local widthOfButton = 19
 	local totalWidth = (widthOfButton + 2) * 6
 	local x = math.floor(buffer.screen.width / 2 - totalWidth / 2) + 1
 
-	buffer.button(x, y, widthOfButton, 3, yellowColor, 0x000000, "Турели ВКЛ"); x = x + widthOfButton + 2
-	buffer.button(x, y, widthOfButton, 3, yellowColor, 0x000000, "Турели ВЫКЛ"); x = x + widthOfButton + 2
-	buffer.button(x, y, widthOfButton, 3, yellowColor, 0x000000, "Добавить игрока"); x = x + widthOfButton + 2
-	if turretConfig.attackMobs then
-		buffer.button(x, y, widthOfButton, 3, yellowColor, 0x000000, "Атака мобов"); x = x + widthOfButton + 2
-	else
-		buffer.framedButton(x, y, widthOfButton, 3, 0x000000, yellowColor, "Атака мобов"); x = x + widthOfButton + 2
-	end
-	if turretConfig.attackNeutrals then
-		buffer.button(x, y, widthOfButton, 3, yellowColor, 0x000000, "Атака нейтралов"); x = x + widthOfButton + 2
-	else
-		buffer.framedButton(x, y, widthOfButton, 3, 0x000000, yellowColor, "Атака нейтралов"); x = x + widthOfButton + 2
-	end
-	if turretConfig.attackPlayers then
-		buffer.button(x, y, widthOfButton, 3, yellowColor, 0x000000, "Атака игроков"); x = x + widthOfButton + 2
-	else
-		buffer.framedButton(x, y, widthOfButton, 3, 0x000000, yellowColor, "Атака игроков"); x = x + widthOfButton + 2
-	end
+	newObj("BottomButtons", "On", x, y, x + widthOfButton - 1, y + 2)
+	x = drawButtonWithState(x, y, widthOfButton, 3, "Турели ВКЛ", turretConfig.turretsOn)
+	newObj("BottomButtons", "Off", x, y, x + widthOfButton - 1, y + 2)
+	x = drawButtonWithState(x, y, widthOfButton, 3, "Турели ВЫКЛ", not turretConfig.turretsOn)
+	newObj("BottomButtons", "AddPlayer", x, y, x + widthOfButton - 1, y + 2)
+	x = drawButtonWithState(x, y, widthOfButton, 3, "Добавить игрока", false)
+	newObj("BottomButtons", "AttacksMobs", x, y, x + widthOfButton - 1, y + 2)
+	x = drawButtonWithState(x, y, widthOfButton, 3, "Атака мобов", turretConfig.attacksMobs)
+	newObj("BottomButtons", "AttacksNeutrals", x, y, x + widthOfButton - 1, y + 2)
+	x = drawButtonWithState(x, y, widthOfButton, 3, "Атака нейтралов", turretConfig.attacksNeutrals)
+	newObj("BottomButtons", "AttacksPlayers", x, y, x + widthOfButton - 1, y + 2)
+	x = drawButtonWithState(x, y, widthOfButton, 3, "Атака игроков", turretConfig.attacksPlayers)
 end
 
 local function drawAll()
@@ -151,23 +169,90 @@ local function drawAll()
 end
 
 local function refresh()
+	turrets = {}
+	proxies = {}
 	getTurrets()
 	drawAll()
 end
+
+local function changeTurretState(i, state)
+	turrets[i].isActive = state
+	if state == true then
+		turrets[i].proxy.setAttacksNeutrals(turretConfig.attacksNeutrals)
+		turrets[i].proxy.setAttacksPlayers(turretConfig.attacksPlayers)
+		turrets[i].proxy.setAttacksMobs(turretConfig.attacksMobs)
+	else
+		turrets[i].proxy.setAttacksNeutrals(false)
+		turrets[i].proxy.setAttacksPlayers(false)
+		turrets[i].proxy.setAttacksMobs(false)
+	end
+end
+
+-------------------------------------------------------------------------------------------------------------------------------------
 
 refresh()
 
 while true do
 	local e = {event.pull()}
 	if e[1] == "touch" then
+		for key in pairs(obj.TurretOn) do
+			if ecs.clickedAtArea(e[3], e[4], obj.TurretOn[key][1], obj.TurretOn[key][2], obj.TurretOn[key][3], obj.TurretOn[key][4]) then
+				changeTurretState(key, true)
+				drawAll()
+				break
+			end
+		end
+
+		for key in pairs(obj.TurretOff) do
+			if ecs.clickedAtArea(e[3], e[4], obj.TurretOff[key][1], obj.TurretOff[key][2], obj.TurretOff[key][3], obj.TurretOff[key][4]) then
+				changeTurretState(key, false)
+				drawAll()
+				break
+			end
+		end
+
+		for key in pairs(obj.BottomButtons) do
+			if ecs.clickedAtArea(e[3], e[4], obj.BottomButtons[key][1], obj.BottomButtons[key][2], obj.BottomButtons[key][3], obj.BottomButtons[key][4]) then
+				if key == "On" then
+					turretConfig.turretsOn = true
+					for i = 1, #turrets do changeTurretState(i, true) end
+					drawAll()
+				elseif key == "Off" then
+					turretConfig.turretsOn = false
+					for i = 1, #turrets do changeTurretState(i, false) end
+					drawAll()
+				elseif key == "AttacksNeutrals" then
+					turretConfig.attacksNeutrals = not turretConfig.attacksNeutrals
+					for i = 1, #turrets do changeTurretState(i, turrets[i].isActive) end
+					drawAll()
+				elseif key == "AttacksMobs" then
+					turretConfig.attacksMobs = not turretConfig.attacksMobs
+					for i = 1, #turrets do changeTurretState(i, turrets[i].isActive) end
+					drawAll()
+				elseif key == "AttacksPlayers" then
+					turretConfig.attacksPlayers = not turretConfig.attacksPlayers
+					for i = 1, #turrets do changeTurretState(i, turrets[i].isActive) end
+					drawAll()
+				elseif key == "AddPlayer" then
+					local data = ecs.universalWindow("auto", "auto", 30, 0x1e1e1e, true, {"EmptyLine"}, {"CenterText", ecs.colors.orange, "Добавить игрока"}, {"EmptyLine"}, {"Input", 0xFFFFFF, ecs.colors.orange, "Никнейм"}, {"EmptyLine"}, {"Button", {ecs.colors.orange, 0xffffff, "OK"}, {0x999999, 0xffffff, "Отмена"}} )
+					if data[2] == "OK" then for i = 1, #turrets do turrets[i].proxy.addTrustedPlayer(data[1]) end end
+				end
+
+				break
+			end
+		end
 
 	elseif e[1] == "scroll" then
 		if e[5] == 1 then
-			yTurrets = yTurrets - 2
-		else
 			yTurrets = yTurrets + 2
+		else
+			yTurrets = yTurrets - 2
 		end
 		drawAll()
+	elseif e[1] == "component_added" or e[1] == "component_removed" then
+		if e[3] == "tierOneTurretBase" or e[3] == "tierTwoTurretBase" or e[3] == "tierThreeTurretBase" or e[3] == "tierFourTurretBase" or e[3] == "tierFiveTurretBase" then
+			refresh()
+		end
 	end
 end
 

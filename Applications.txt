@@ -765,6 +765,21 @@
   --   },
   -- },
   {
+    ["name"]="MineOS/Applications/TurretControl",
+    ["url"]="IgorTimofeev/OpenComputers/master/Applications/TurretControl/TurretControl.lua",
+    ["type"]="Application",
+    ["about"]="IgorTimofeev/OpenComputers/master/Applications/TurretControl/About.txt",
+    ["icon"]="IgorTimofeev/OpenComputers/master/Applications/TurretControl/Icon.pic",
+    ["createShortcut"]="desktop",
+    ["version"]=1.0,
+    ["resources"]={
+      {
+        ["name"]="Turret.pic",
+        ["url"]="IgorTimofeev/OpenComputers/master/Applications/TurretControl/Turret.pic",
+      },
+    },
+  },
+  {
     ["name"]="MineOS/Applications/FlappyBird",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/FlappyBird/FlappyBird.lua",
     ["type"]="Application",
