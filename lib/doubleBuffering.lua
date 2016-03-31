@@ -334,9 +334,12 @@ end
 
 -- Кнопка фиксированных размеров
 function buffer.button(x, y, width, height, background, foreground, text)
-	local textPosX = math.floor(x + width / 2 - unicode.len(text) / 2)
+	local textLength = unicode.len(text)
+	if textLength > width - 2 then text = unicode.sub(text, 1, width - 2) end
+	
+	local textPosX = math.floor(x + width / 2 - textLength / 2)
 	local textPosY = math.floor(y + height / 2)
-	buffer.square(x, y, width, height, background, 0xFFFFFF, " ")
+	buffer.square(x, y, width, height, background, foreground, " ")
 	buffer.text(textPosX, textPosY, foreground, text)
 
 	return x, y, (x + width - 1), (y + height - 1)
@@ -430,7 +433,7 @@ function buffer.framedButton(x, y, width, height, backColor, buttonColor, text)
 	buffer.frame(x, y, width, height, buttonColor)
 	
 	x = x + math.floor(width / 2 - unicode.len(text) / 2)
-	y = y + math.floor(width / 2 - 1)
+	y = y + math.floor(height / 2 - 1)
 
 	buffer.text(x, y, buttonColor, text)
 end

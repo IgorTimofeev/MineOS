@@ -1,134 +1,142 @@
-local event = require("event")
-local computer = require("computer")
 
-----------------------------------------------------------------------------------------------------------------
+if not _G.buffer then _G.buffer = require("doubleBuffering") end
+if not _G.unicode then _G.unicode = require("unicode") end
 
 local buttons = {}
+buttons.IDs = {}
 buttons.pressTime = 0.2
-buttons.objects = {}
 
-function buttons.setPressTime(time)
-	buttons.pressTime = time
+--------------------------------------------------------------------------------------------------------------------------------
+
+local function getRandomID()
+	local ID
+	repeat
+   		ID = math.floor(math.random(1, 0xFFFFFF))
+  	until not buttons.IDs[ID]
+  	return ID
 end
 
-function buttons.getPressTime()
-	return buttons.pressTime
-end
+local function drawButton(ID)
+	local state = buttons.IDs[ID].isPressed and "pressed" or "default"
 
-local function checkError(class, name)
-	if not buttons.objects[class] then error("Несуществующий класс кнопки \"" .. class .. "\"") end
-	if not buttons.objects[class][name] then error("Несуществующее имя кнопки \"" .. name .. "\" в классе \"" .. class .. "\"" ) end
-end
-
-function buttons.draw(class, name)
-	checkError(class, name)
-	if buttons.objects[class][name].visible then
-		if buttons.objects[class][name].pressed then
-			ecs.drawButton(buttons.objects[class][name].x, buttons.objects[class][name].y, buttons.objects[class][name].width, buttons.objects[class][name].height, name, buttons.objects[class][name].backgroundWhenPressed, buttons.objects[class][name].foregroundWhenPressed)
-		else
-			ecs.drawButton(buttons.objects[class][name].x, buttons.objects[class][name].y, buttons.objects[class][name].width, buttons.objects[class][name].height, name, buttons.objects[class][name].background, buttons.objects[class][name].foreground)
-		end
+	if buttons.IDs[ID] then
+		buffer.button(buttons.IDs[ID].x, buttons.IDs[ID].y, buttons.IDs[ID].width, buttons.IDs[ID].height, buttons.IDs[ID].style[state].buttonColor, buttons.IDs[ID].style[state].textColor, buttons.IDs[ID].text)
+	else
+		error("Button ID \"" .. ID .. "\" doesn't exists.\n")
 	end
 end
 
-function buttons.add(class, name, x, y, width, height, background, foreground, backgroundWhenPressed, foregroundWhenPressed, justAddNoDraw)
-	buttons.objects[class] = buttons.objects[class] or {}
-	buttons.objects[class][name] = {
-		["x"] = x,
-		["y"] = y,
-		["width"] = width,
-		["height"] = height,
-		["background"] = background,
-		["foreground"] = foreground,
-		["backgroundWhenPressed"] = backgroundWhenPressed,
-		["foregroundWhenPressed"] = foregroundWhenPressed,
-		["visible"] = not justAddNoDraw,
-		["pressed"] = false,
-	}
-	if not justAddNoDraw then
-		buttons.draw(class, name)
+local function clickedAtArea(x, y, x1, y1, x2, y2)
+	if x >= x1 and x <= x2 and y >= y1 and y <= y2 then
+		return true
 	end
 end
 
-function buttons.remove(class, name)
-	checkError(class, name)
-	buttons.objects[class][name] = nil
-end
+--------------------------------------------------------------------------------------------------------------------------------
 
-function buttons.setVisible(class, name, state)
-	checkError(class, name)
-	buttons.objects[class][name].visible = state
-end
-
-function buttons.press(class, name)
-	checkError(class, name)
-	buttons.objects[class][name].pressed = true
-	buttons.draw(class, name)
-	os.sleep(buttons.pressTime)
-	buttons.objects[class][name].pressed = false
-	buttons.draw(class, name)
-end
-
-function buttons.drawAll()
-	for class in pairs(buttons.objects) do
-		for name in pairs(buttons.objects[class]) do
-			buttons.draw(class, name)
-		end
-	end
-end
-
-local function listener(...)
-	local e = {...}
-	local exit = false
-	if e[1] == "touch" then
-		for class in pairs(buttons.objects) do
-			if exit then break end
-			for name in pairs(buttons.objects[class]) do
-				if ecs.clickedAtArea(e[3], e[4], buttons.objects[class][name].x, buttons.objects[class][name].y, buttons.objects[class][name].x + buttons.objects[class][name].width - 1, buttons.objects[class][name].y + buttons.objects[class][name].height - 1) then
-					if buttons.objects[class][name].visible then
-						buttons.press(class, name)
-						computer.pushSignal("button_pressed", class, name, buttons.objects[class][name].x, buttons.objects[class][name].y, buttons.objects[class][name].width, buttons.objects[class][name].height)
-					end
-					exit = true
-					break
+function buttons.checkEventData(eventData)
+	if eventData[1] == "touch" then
+		for ID in pairs(buttons.IDs) do
+			if clickedAtArea(eventData[3], eventData[4], buttons.IDs[ID].x, buttons.IDs[ID].y, buttons.IDs[ID].x2, buttons.IDs[ID].y2) then
+				buttons.IDs[ID].isPressed = true
+				drawButton(ID)
+				buffer.draw()
+				
+				os.sleep(buttons.pressTime or 0.2)
+				
+				buttons.IDs[ID].isPressed = nil
+				drawButton(ID)
+				buffer.draw()
+				
+				if buttons.IDs[ID].callback then
+					pcall(buttons.IDs[ID].callback)
 				end
 			end
 		end
 	end
 end
 
-function buttons.start()
-	event.listen("touch", listener)
+function buttons.newStyle(buttonColor, textColor, buttonColorWhenPressed, textColorWhenPressed)
+	return { 
+		default = { 
+			buttonColor = buttonColor,
+			textColor = textColor,
+		},
+		pressed = { 
+			buttonColor = buttonColorWhenPressed,
+			textColor = textColorWhenPressed,
+		}, 
+	}
 end
 
-function buttons.stop()
-	event.ignore("touch", listener)
+function buttons.draw(...)
+	local IDs = { ... }
+	if #IDs > 0 then
+		for ID in pairs(IDs) do
+			if buttons.IDs[ID] then
+				drawButton(ID)
+			else
+				error("Button ID \"" .. ID .. "\" doesn't exists.\n")
+			end
+		end
+		buffer.draw()
+	else
+		for ID in pairs(buttons.IDs) do
+			drawButton(ID)
+		end
+		buffer.draw()
+	end
 end
 
------------------------------------------- Тест программы -------------------------------------------------------------------
+function buttons.add(x, y, width, height, style, text, callback)
+	checkArg(1, x, "number")
+	checkArg(2, y, "number")
+	checkArg(3, width, "number")
+	checkArg(4, height, "number")
+	checkArg(5, style, "table")
+	checkArg(6, text, "string")
+	if callback then checkArg(7, callback, "function") end
 
--- ecs.prepareToExit()
--- buttons.start()
--- local xPos, yPos, width, height, counter = 2, 6, 6, 3, 1
--- for i = 1, 10 do
--- 	for j = 1, 20 do
--- 		buttons.add("Test", tostring(counter), xPos, yPos, width, height, ecs.colors.green, 0xFFFFFF, ecs.colors.red, 0xFFFFFF)
--- 		xPos = xPos + width + 2; counter = counter + 1
--- 	end
--- 	xPos = 2; yPos = yPos + height + 1
--- end
--- buttons.add("Test", "Выйти отсюдова", 2, 2, 30, 3, ecs.colors.orange, 0xFFFFFF, ecs.colors.red, 0xFFFFFF)
+	local ID = getRandomID()
 
--- while true do
--- 	local e = {event.pull()}
--- 	if e[1] == "button_pressed" then
--- 		if e[2] == "Test" and e[3] == "Выйти отсюдова" then
--- 			buttons.stop()
--- 			ecs.prepareToExit()
--- 			break
--- 		end
--- 	end
--- end
+	buttons.IDs[ID] = {
+		x = x,
+		y = y,
+		x2 = x + width - 1,
+		y2 = y + height - 1,
+		width = width,
+		height = height,
+		style = style,
+		text = text,
+		callback = callback
+	}
+
+	return ID
+end
+
+function buttons.remove( ... )
+	local IDs = { ... }
+	if #IDs > 0 then
+		for ID in pairs(IDs) do
+			if buttons.IDs[ID] then
+				buttons.IDs[ID] = nil
+			else
+				error("Button ID \"" .. ID .. "\" doesn't exists.\n")
+			end
+		end
+	else
+		buttons.IDs = {}
+	end
+end
+
+function buttons.setPressTime(time)
+	buttons.pressTime = time
+end
+
+--------------------------------------------------------------------------------------------------------------------------------
+
+return buttons
+
 
 
 
