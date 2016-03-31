@@ -4,6 +4,7 @@ local buffer = require("doubleBuffering")
 local image = require("image")
 local event = require("event")
 local ecs = require("ECSAPI")
+local serialization = require("serialization")
 local unicode = require("unicode")
 
 buffer.start()
@@ -11,6 +12,11 @@ local pathToTurretPicture = "turret.pic"
 local turretImage = image.load(pathToTurretPicture)
 local turrets = {}
 local proxies = {}
+local turretConfig = {
+	attackPlayers = true,
+	attackNeutrals = false,
+	attackMobs = true,
+}
 
 local yTurrets = 2
 local spaceBetweenTurretsHorizontal = 2
@@ -120,9 +126,21 @@ local function drawBottomBar()
 	buffer.button(x, y, widthOfButton, 3, yellowColor, 0x000000, "Турели ВКЛ"); x = x + widthOfButton + 2
 	buffer.button(x, y, widthOfButton, 3, yellowColor, 0x000000, "Турели ВЫКЛ"); x = x + widthOfButton + 2
 	buffer.button(x, y, widthOfButton, 3, yellowColor, 0x000000, "Добавить игрока"); x = x + widthOfButton + 2
-	buffer.button(x, y, widthOfButton, 3, yellowColor, 0x000000, "Атака мобов"); x = x + widthOfButton + 2
-	buffer.button(x, y, widthOfButton, 3, yellowColor, 0x000000, "Атака нейтралов"); x = x + widthOfButton + 2
-	buffer.button(x, y, widthOfButton, 3, yellowColor, 0x000000, "Атака игроков"); x = x + widthOfButton + 2
+	if turretConfig.attackMobs then
+		buffer.button(x, y, widthOfButton, 3, yellowColor, 0x000000, "Атака мобов"); x = x + widthOfButton + 2
+	else
+		buffer.framedButton(x, y, widthOfButton, 3, 0x000000, yellowColor, "Атака мобов"); x = x + widthOfButton + 2
+	end
+	if turretConfig.attackNeutrals then
+		buffer.button(x, y, widthOfButton, 3, yellowColor, 0x000000, "Атака нейтралов"); x = x + widthOfButton + 2
+	else
+		buffer.framedButton(x, y, widthOfButton, 3, 0x000000, yellowColor, "Атака нейтралов"); x = x + widthOfButton + 2
+	end
+	if turretConfig.attackPlayers then
+		buffer.button(x, y, widthOfButton, 3, yellowColor, 0x000000, "Атака игроков"); x = x + widthOfButton + 2
+	else
+		buffer.framedButton(x, y, widthOfButton, 3, 0x000000, yellowColor, "Атака игроков"); x = x + widthOfButton + 2
+	end
 end
 
 local function drawAll()

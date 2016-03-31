@@ -432,8 +432,8 @@ function buffer.framedButton(x, y, width, height, backColor, buttonColor, text)
 	buffer.square(x, y, width, height, backColor, buttonColor, " ")
 	buffer.frame(x, y, width, height, buttonColor)
 	
-	x = x + math.floor(width / 2 - unicode.len(text) / 2)
-	y = y + math.floor(height / 2 - 1)
+	x = math.floor(x + width / 2 - unicode.len(text) / 2)
+	y = math.floor(y + height / 2)
 
 	buffer.text(x, y, buttonColor, text)
 end
