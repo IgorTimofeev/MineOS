@@ -149,9 +149,7 @@ local function drawBottomBar()
 	local x = math.floor(buffer.screen.width / 2 - totalWidth / 2) + 1
 
 	newObj("BottomButtons", "On", x, y, x + widthOfButton - 1, y + 2)
-	x = drawButtonWithState(x, y, widthOfButton, 3, "Турели ВКЛ", turretConfig.turretsOn)
-	newObj("BottomButtons", "Off", x, y, x + widthOfButton - 1, y + 2)
-	x = drawButtonWithState(x, y, widthOfButton, 3, "Турели ВЫКЛ", not turretConfig.turretsOn)
+	x = drawButtonWithState(x, y, widthOfButton, 3, turretConfig.turretsOn and "Турели ВКЛ" or "Турели ВЫКЛ", turretConfig.turretsOn)
 	newObj("BottomButtons", "AddPlayer", x, y, x + widthOfButton - 1, y + 2)
 	x = drawButtonWithState(x, y, widthOfButton, 3, "Добавить игрока", false)
 	newObj("BottomButtons", "AttacksMobs", x, y, x + widthOfButton - 1, y + 2)
@@ -215,12 +213,8 @@ while true do
 		for key in pairs(obj.BottomButtons) do
 			if ecs.clickedAtArea(e[3], e[4], obj.BottomButtons[key][1], obj.BottomButtons[key][2], obj.BottomButtons[key][3], obj.BottomButtons[key][4]) then
 				if key == "On" then
-					turretConfig.turretsOn = true
-					for i = 1, #turrets do changeTurretState(i, true) end
-					drawAll()
-				elseif key == "Off" then
-					turretConfig.turretsOn = false
-					for i = 1, #turrets do changeTurretState(i, false) end
+					turretConfig.turretsOn = not turretConfig.turretsOn
+					for i = 1, #turrets do changeTurretState(i, turretConfig.turretsOn) end
 					drawAll()
 				elseif key == "AttacksNeutrals" then
 					turretConfig.attacksNeutrals = not turretConfig.attacksNeutrals
