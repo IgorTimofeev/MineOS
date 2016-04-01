@@ -48,11 +48,18 @@ local function getProxiesOfAllComponents(name)
 end
 
 local function getTurrets()
+
+	turretConfig.turretsOn = false
+	turretConfig.attacksNeutrals = false,
+	turretConfig.attacksPlayers = false,
+	turretConfig.attacksMobs = false,
+
 	getProxiesOfAllComponents("tierOneTurretBase")
 	getProxiesOfAllComponents("tierTwoTurretBase")
 	getProxiesOfAllComponents("tierThreeTurretBase")
 	getProxiesOfAllComponents("tierFourTurretBase")
 	getProxiesOfAllComponents("tierFiveTurretBase")
+	
 	for i = 1, #proxies do
 		-- print(proxies[i].type)
 		if type(proxies[i].getCurrentEnergyStorage()) ~= "string" then
@@ -64,7 +71,6 @@ local function getTurrets()
 			table.insert(turrets, turret)
 
 			turret.isActive = false
-			turretConfig.turretsOn = false
 			turret.proxy.setAttacksNeutrals(false)
 			turret.proxy.setAttacksPlayers(false)
 			turret.proxy.setAttacksMobs(false)
