@@ -50,16 +50,16 @@ end
 local function getTurrets()
 
 	turretConfig.turretsOn = false
-	turretConfig.attacksNeutrals = false,
-	turretConfig.attacksPlayers = false,
-	turretConfig.attacksMobs = false,
+	turretConfig.attacksNeutrals = false
+	turretConfig.attacksPlayers = false
+	turretConfig.attacksMobs = false
 
 	getProxiesOfAllComponents("tierOneTurretBase")
 	getProxiesOfAllComponents("tierTwoTurretBase")
 	getProxiesOfAllComponents("tierThreeTurretBase")
 	getProxiesOfAllComponents("tierFourTurretBase")
 	getProxiesOfAllComponents("tierFiveTurretBase")
-	
+
 	for i = 1, #proxies do
 		-- print(proxies[i].type)
 		if type(proxies[i].getCurrentEnergyStorage()) ~= "string" then
