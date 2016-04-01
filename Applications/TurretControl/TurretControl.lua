@@ -178,6 +178,7 @@ end
 
 local function changeTurretState(i, state)
 	turrets[i].isActive = state
+	turrets[i].energyPercent = math.ceil(turrets[i].proxy.getCurrentEnergyStorage() / turrets[i].proxy.getMaxEnergyStorage() * 100)
 	if state == true then
 		turrets[i].proxy.setAttacksNeutrals(turretConfig.attacksNeutrals)
 		turrets[i].proxy.setAttacksPlayers(turretConfig.attacksPlayers)
@@ -231,9 +232,16 @@ while true do
 					for i = 1, #turrets do changeTurretState(i, turrets[i].isActive) end
 					drawAll()
 				elseif key == "AddPlayer" then
+					buffer.button(obj.BottomButtons[key][1], obj.BottomButtons[key][2], 19, 3, yellowColor, 0x000000, "Добавить игрока")
+					buffer.draw()
+					os.sleep(0.2)
+					drawAll()
 					local data = ecs.universalWindow("auto", "auto", 30, 0x1e1e1e, true, {"EmptyLine"}, {"CenterText", ecs.colors.orange, "Добавить игрока"}, {"EmptyLine"}, {"Input", 0xFFFFFF, ecs.colors.orange, "Никнейм"}, {"EmptyLine"}, {"Button", {ecs.colors.orange, 0xffffff, "OK"}, {0x999999, 0xffffff, "Отмена"}} )
 					if data[2] == "OK" then for i = 1, #turrets do turrets[i].proxy.addTrustedPlayer(data[1]) end end
 				elseif key == "Exit" then
+					buffer.button(obj.BottomButtons[key][1], obj.BottomButtons[key][2], 19, 3, yellowColor, 0x000000, "Выход")
+					buffer.draw()
+					os.sleep(0.2)
 					buffer.clear(0x262626)
 					ecs.prepareToExit()
 					return
