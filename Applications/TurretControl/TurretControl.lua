@@ -64,6 +64,7 @@ local function getTurrets()
 			table.insert(turrets, turret)
 
 			turret.isActive = false
+			turretConfig.turretsOn = false
 			turret.proxy.setAttacksNeutrals(false)
 			turret.proxy.setAttacksPlayers(false)
 			turret.proxy.setAttacksMobs(false)
