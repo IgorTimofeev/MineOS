@@ -764,7 +764,7 @@
   --     },
   --   },
   -- },
-  -- {
+  {
     ["name"]="MineOS/Applications/TurretControl",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/TurretControl/TurretControl.lua",
     ["type"]="Application",
