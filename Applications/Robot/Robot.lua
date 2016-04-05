@@ -267,6 +267,8 @@ while true do
 				elseif e[7] == "inventoryInfo" then
 					map.robotInventory = serialization.unserialize(e[8])
 					drawAll()
+					print("ПРИШЛО СУКА СУКА СУКА")
+					print(e[8])
 				end
 			end
 		end 

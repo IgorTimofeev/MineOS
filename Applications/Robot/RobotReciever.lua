@@ -37,6 +37,7 @@ local function sendInventory()
 	end
 
 	sendMessage("inventoryInfo", serialization.serialize(inventory))
+	print("Отправляю информацию об инвентаре")
 end
 
 ------------------------------------------------------------------------------------------
