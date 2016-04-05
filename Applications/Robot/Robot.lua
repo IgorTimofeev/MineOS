@@ -195,7 +195,6 @@ end
 --------------------------------------------------------------------------------------------------------------------------------------
 
 drawAll()
-requestInventoryInfo()
 
 while true do
 	local e = { event.pull() }
@@ -228,10 +227,11 @@ while true do
 		--Q
 		elseif e[4] == 16 then
 			sendMessage("drop")
-		-- elseif e[4] == 28 then
-		-- 	if map.keyPoints and #map.keyPoints > 0 then
-		-- 		sendMessage("executeKeyPoints", serialization.serialize(map.keyPoints))
-		-- 	end
+		elseif e[4] == 28 then
+			-- if map.keyPoints and #map.keyPoints > 0 then
+			-- 	sendMessage("executeKeyPoints", serialization.serialize(map.keyPoints))
+			-- end
+			requestInventoryInfo()
 		end
 	elseif e[1] == "modem_message" then
 		if e[4] == port then
