@@ -140,7 +140,7 @@ local function drawMain()
 
 	if topBarElements[currentTopBarElement] == "Карта" then
 		drawMap()
-	elseif topBarElements[currentTopBarElement] == "Карта" then
+	elseif topBarElements[currentTopBarElement] == "Инвентарь" then
 		drawInventory()
 	end
 end
@@ -267,8 +267,6 @@ while true do
 				elseif e[7] == "inventoryInfo" then
 					map.robotInventory = serialization.unserialize(e[8])
 					drawAll()
-					print("ПРИШЛО СУКА СУКА СУКА")
-					print(e[8])
 				end
 			end
 		end 
