@@ -4,13 +4,13 @@ local serialization = require("serialization")
 local fs = require("filesystem")
 local event = require("event")
 local unicode = require("unicode")
-local image = require("image")
+local bit32 = require("bit32")
 
 package.loaded.libPNGImage = nil
 
 --------------------------------------------------------------------------------------------------------------------------------------------
 
-local pathToMultiScreenFolder = "MineOS/System/MultiScreen/"
+local pathToMultiScreenFolder = "MultiScreen/"
 local pathToConfigFile = pathToMultiScreenFolder .. "Config.cfg"
 
 local colors = {
@@ -244,63 +244,112 @@ function multiScreen.set(x, y, text)
   end
 end
 
-function multiScreen.image(x, y, picture)
-  local sizeOfPixelData = 4
-  
-  local function convertIndexToCoords(index)
-    index = (index + sizeOfPixelData - 1) / sizeOfPixelData
-    local ostatok = index % picture.width
-    local x = (ostatok == 0) and picture.width or ostatok
-    local y = math.ceil(index / picture.width)
-    ostatok = nil
-    return x, y
-  end
+--------------------------------------------------------------------------------------------------------------------------------------------
 
-  local function convertCoordsToIndex(x, y)
-    return (picture.width * (y - 1) + x) * sizeOfPixelData - sizeOfPixelData + 1
+--Склеить байты и создать из них число
+local function mergeBytesToNumber(...)
+  local bytes = {...}
+  local finalNumber = bytes[1]
+  for i = 2, #bytes do
+    finalNumber = bit32.bor(bit32.lshift(finalNumber, 8), bytes[i])
   end
+  return finalNumber
+end
 
-  local xPos, yPos
-  for i = 1, #picture, sizeOfPixelData do
-    xPos, yPos = convertIndexToCoords(i)
-    if picture[i + 2] ~= 0xff then
-      multiScreen.setBackground(picture[i])
-      multiScreen.setForeground(picture[i + 1])
-      multiScreen.set(x + xPos - 1, y + yPos - 1, picture[i + 3])
+--Прочитать n байтов из файла, возвращает прочитанные байты как число, если не удалось прочитать, то возвращает 0
+local function readBytes(file, count)
+  local readedBytes = file:read(count)
+  return mergeBytesToNumber(string.byte(readedBytes, 1, count))
+end
+
+local function selectTerminateBit_l()
+  local prevByte = nil
+  local prevTerminateBit = nil
+
+  return function( byte )
+    local x, terminateBit = nil
+    if ( prevByte == byte ) then
+      return prevTerminateBit
     end
+
+    x = bit32.band( bit32.bnot(byte), 0x000000FF )
+    x = bit32.bor( x, bit32.rshift(x, 1) )
+    x = bit32.bor( x, bit32.rshift(x, 2) )
+    x = bit32.bor( x, bit32.rshift(x, 4) )
+    x = bit32.bor( x, bit32.rshift(x, 8) )
+    x = bit32.bor( x, bit32.rshift(x, 16) )
+
+    terminateBit = x - bit32.rshift(x, 1)
+
+    prevByte = byte
+    prevTerminateBit = terminateBit
+
+    return terminateBit
   end
+end
+local selectTerminateBit = selectTerminateBit_l()
+
+--Декодирование UTF-8 символа
+local function decodeChar(file)
+  local first_byte = readBytes(file, 1)
+  local charcode_array = {first_byte}
+  local len = 1
+
+  local middle = selectTerminateBit(first_byte)
+  if ( middle == 32 ) then
+    len = 2
+  elseif ( middle == 16 ) then 
+    len = 3
+  elseif ( middle == 8 ) then
+    len = 4
+  elseif ( middle == 4 ) then
+    len = 5
+  elseif ( middle == 2 ) then
+    len = 6
+  end
+
+  for i = 1, len-1 do
+    table.insert( charcode_array, readBytes(file, 1) )
+  end
+
+  return string.char( table.unpack( charcode_array ) )
 end
 
 local function drawBigImageFromOCIFRawFile(x, y, path)
-  local file = io.open(path, "r")
-  file:lines()
+  local file = io.open(path, "rb")
+  print("Открываем файл " .. path)
+  --Читаем ширину и высоту файла
+  local signature = file:read(4)
+  print("Читаем сигнатуру файла: " .. signature)
+  local encodingMethod = string.byte(file:read(1))
+  print("Читаем метод кодирования: " .. encodingMethod)
 
-  local lineLength, background, foreground, alpha, symbol
-  local xPos, yPos = x, y
-  
-  for line in file:lines() do
-    local lineLength = unicode.len(line)
-    
-    for i = 1, lineLength, 19 do
-      background = tonumber("0x" .. unicode.sub(line, i, i + 5))
-      foreground = tonumber("0x" .. unicode.sub(line, i + 7, i + 12))
-      alpha = tonumber("0x" .. unicode.sub(line, i + 14, i + 15))
-      symbol = unicode.sub(line, i + 17, i + 17)
+  if encodingMethod ~= 5 then error("Неподдерживаемый метод кодирования: " .. encodingMethod) end
 
-      if alpha ~= 0xff then
-        multiScreen.setBackground(background)
-        multiScreen.setForeground(foreground)
-        multiScreen.set(xPos, yPos, symbol)
-      end
+  local width = readBytes(file, 2)
+  local height = readBytes(file, 2)
 
-      xPos = xPos + 1
+  print("Ширина пикчи: ", width )
+  print("Высота пикчи: ", height )
+
+  print("Начинаю отросовку пикчи...")
+
+  for j = 1, height do
+    for i = 1, width do
+      local background = readBytes(file, 3)
+      local foreground = readBytes(file, 3)
+      local alpha = readBytes(file, 1)
+      local symbol = decodeChar( file )
+
+      multiScreen.setBackground(background)
+      multiScreen.setForeground(foreground)
+      multiScreen.set(x + i - 1, y + j - 1, symbol)
     end
-
-    xPos = x
-    yPos = yPos + 1
   end
 
   file:close()
+
+  print("Отрисовка пикчи завершена")
 end
 
 --------------------------------------------------------------------------------------------------------------------------------------------
