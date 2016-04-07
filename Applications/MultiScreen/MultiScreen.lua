@@ -307,11 +307,15 @@ end
 
 loadConfig()
 
+local args = {...}
+
+if args[1] == "draw" and args[2] then
+  multiScreen.clear(0x000000)
+  drawBigImageFromOCIFRawFile(1, 1, args[2])
+end
+
 -- multiScreen.setBackground(ecs.colors.green)
 -- multiScreen.setForeground(ecs.colors.white)
-multiScreen.clear(0x000000)
-
-drawBigImageFromOCIFRawFile(1, 1, "Big.pic")
 
 -- local picture = image.load("Girl.pic")
 -- local x, y = 1, 1
