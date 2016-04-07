@@ -229,18 +229,19 @@ function multiScreen.set(x, y, text)
   for i = 1, unicode.len(text) do
     local xMonitor, yMonitor, xPos, yPos = getMonitorAndCoordinates(x + i - 1, y)
     
-    if currentAddress ~= monitors[xMonitor][yMonitor].address then
-      gpu.bind(monitors[xMonitor][yMonitor].address)
-      currentAddress = monitors[xMonitor][yMonitor].address
-      gpu.setResolution(monitors.screenResolutionByWidth, monitors.screenResolutionByHeight)
+    if monitors[xMonitor] and monitors[xMonitor][yMonitor] then
+      if currentAddress ~= monitors[xMonitor][yMonitor].address then
+        gpu.bind(monitors[xMonitor][yMonitor].address)
+        currentAddress = monitors[xMonitor][yMonitor].address
+        gpu.setResolution(monitors.screenResolutionByWidth, monitors.screenResolutionByHeight)
+      end
+      
+      if gpu.getBackground ~= currentBackground then gpu.setBackground(currentBackground) end
+      if gpu.getForeground ~= currentForeground then gpu.setForeground(currentForeground) end
+      
+      gpu.set(xPos, yPos, unicode.sub(text, i, i))
     end
-    
-    if gpu.getBackground ~= currentBackground then gpu.setBackground(currentBackground) end
-    if gpu.getForeground ~= currentForeground then gpu.setForeground(currentForeground) end
-    
-    gpu.set(xPos, yPos, unicode.sub(text, i, i))
   end
-  
 end
 
 function multiScreen.image(x, y, picture)
@@ -270,6 +271,38 @@ function multiScreen.image(x, y, picture)
   end
 end
 
+local function drawBigImageFromOCIFRawFile(x, y, path)
+  local file = io.open(path, "r")
+  file:lines()
+
+  local lineLength, background, foreground, alpha, symbol
+  local xPos, yPos = x, y
+  
+  for line in file:lines() do
+    local lineLength = unicode.len(line)
+    
+    for i = 1, lineLength, 19 do
+      background = tonumber("0x" .. unicode.sub(line, i, i + 5))
+      foreground = tonumber("0x" .. unicode.sub(line, i + 7, i + 12))
+      alpha = tonumber("0x" .. unicode.sub(line, i + 14, i + 15))
+      symbol = unicode.sub(line, i + 17, i + 17)
+
+      if alpha ~= 0xff then
+        multiScreen.setBackground(background)
+        multiScreen.setForeground(foreground)
+        multiScreen.set(xPos, yPos, symbol)
+      end
+
+      xPos = xPos + 1
+    end
+
+    xPos = x
+    yPos = yPos + 1
+  end
+
+  file:close()
+end
+
 --------------------------------------------------------------------------------------------------------------------------------------------
 
 loadConfig()
@@ -278,23 +311,25 @@ loadConfig()
 -- multiScreen.setForeground(ecs.colors.white)
 multiScreen.clear(0x000000)
 
+drawBigImageFromOCIFRawFile(1, 1, "Big.pic")
+
 -- local picture = image.load("Girl.pic")
-local x, y = 1, 1
-local w, h = 4, 4
+-- local x, y = 1, 1
+-- local w, h = 4, 4
 
-local picture
+-- local picture
 
-local counter = 1
-for j = 1, h do
-  for i = 1, w do
-    picture = image.load( counter .. ".pic")
-    multiScreen.image(x, y, picture)
-    x = x + 160
-    counter = counter + 1
-  end
-  x = 1
-  y = y + 50
-end
+-- local counter = 1
+-- for j = 1, h do
+--   for i = 1, w do
+--     picture = image.load( counter .. ".pic")
+--     multiScreen.image(x, y, picture)
+--     x = x + 160
+--     counter = counter + 1
+--   end
+--   x = 1
+--   y = y + 50
+-- end
 
 
 -- multiScreen.set(130, 2, "Сука мать ебал, пидор ты ебаный, хыыы!")
