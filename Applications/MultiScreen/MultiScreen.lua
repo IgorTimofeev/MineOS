@@ -329,8 +329,8 @@ local function drawBigImageFromOCIFRawFile(x, y, path)
   local width = readBytes(file, 2)
   local height = readBytes(file, 2)
 
-  print("Ширина пикчи: ", width )
-  print("Высота пикчи: ", height )
+  print("Ширина пикчи: " .. tostring(width))
+  print("Высота пикчи: " .. tostring(height))
 
   print("Начинаю отросовку пикчи...")
 
@@ -354,39 +354,16 @@ end
 
 --------------------------------------------------------------------------------------------------------------------------------------------
 
-loadConfig()
-
 local args = {...}
 
 if args[1] == "draw" and args[2] then
   multiScreen.clear(0x000000)
   drawBigImageFromOCIFRawFile(1, 1, args[2])
+elseif args[1] == "calibrate" then
+  fs.remove(pathToMultiScreenFolder)
 end
 
--- multiScreen.setBackground(ecs.colors.green)
--- multiScreen.setForeground(ecs.colors.white)
-
--- local picture = image.load("Girl.pic")
--- local x, y = 1, 1
--- local w, h = 4, 4
-
--- local picture
-
--- local counter = 1
--- for j = 1, h do
---   for i = 1, w do
---     picture = image.load( counter .. ".pic")
---     multiScreen.image(x, y, picture)
---     x = x + 160
---     counter = counter + 1
---   end
---   x = 1
---   y = y + 50
--- end
-
-
--- multiScreen.set(130, 2, "Сука мать ебал, пидор ты ебаный, хыыы!")
--- multiScreen.set(230, 4, "Сука мать ебал, пидор ты ебаный, хыыы!")
+loadConfig()
 
 --------------------------------------------------------------------------------------------------------------------------------------------
 
