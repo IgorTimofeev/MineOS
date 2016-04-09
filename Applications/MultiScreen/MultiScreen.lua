@@ -355,9 +355,9 @@ end
 --------------------------------------------------------------------------------------------------------------------------------------------
 
 local args = {...}
-loadConfig()
 
 if args[1] == "draw" and args[2] then
+  loadConfig()
   multiScreen.clear(0x000000)
   drawBigImageFromOCIFRawFile(1, 1, args[2])
 elseif args[1] == "calibrate" then
