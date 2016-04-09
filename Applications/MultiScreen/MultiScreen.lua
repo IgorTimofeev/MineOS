@@ -363,6 +363,10 @@ if args[1] == "draw" and args[2] then
 elseif args[1] == "calibrate" then
   fs.remove(pathToMultiScreenFolder)
   loadConfig()
+else
+  print("Использование программы:")
+  print("  MultiScreen draw <путь к изображению> - отобразить изображение из файла на мониторах")
+  print("  MultiScreen calibrate - перекалибровать мониторы")
 end
 
 --------------------------------------------------------------------------------------------------------------------------------------------
