@@ -122,26 +122,27 @@ local palette = {
   0xFF92FF, 0xFFB600, 0xFFB640, 0xFFB680, 0xFFB6BF, 0xFFB6FF, 0xFFDB00, 0xFFDB40, 0xFFDB80, 0xFFDBBF, 0xFFDBFF, 0xFFFF00, 0xFFFF40, 0xFFFF80, 0xFFFFBF, 0xFFFFFF, 
 }
 
--- Конвертер
-function colorlib.convert24BitTo8Bit(hex24)
- local encodedIndex = nil
- local colorMatchFactor = nil
- local colorMatchFactor_min = math.huge
+local function searchClosestColor(startIndex, endIndex, requestedColor)
+  local difference = endIndex - startIndex
+  local centerIndex = math.floor(difference / 2 + startIndex)
 
- local red24, green24, blue24 = colorlib.HEXtoRGB(hex24)
-
- for colorIndex, colorPalette in ipairs(palette) do
-  local redPalette, greenPalette, bluePalette = colorlib.HEXtoRGB(colorPalette)
-
-  colorMatchFactor = (redPalette-red24)^2 + (greenPalette-green24)^2 + (bluePalette-blue24)^2
-
-  if (colorMatchFactor < colorMatchFactor_min) then
-   encodedIndex = colorIndex
-   colorMatchFactor_min = colorMatchFactor
+  if difference > 1 then
+    if requestedColor >= palette[centerIndex] then
+      return searchClosestColor(centerIndex, endIndex, requestedColor)
+    else
+      return searchClosestColor(startIndex, centerIndex, requestedColor)
+    end
+  else
+    if math.abs(requestedColor - palette[startIndex]) > math.abs(palette[endIndex] - requestedColor) then
+      return endIndex - 1
+    else
+      return startIndex - 1
+    end
   end
- end
+end
 
- return encodedIndex - 1
+function colorlib.convert24BitTo8Bit(hex24)
+  return searchClosestColor(1, #palette, hex24)
 end
 
 function colorlib.convert8BitTo24Bit(hex8)
