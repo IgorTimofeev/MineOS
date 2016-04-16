@@ -3,7 +3,7 @@
 
 local copyright = [[
 	
-	Photoshop v4.0 (buffered)
+	Photoshop v5.0 (buffered)
 
 	Автор: IT
 		Контакты: https://vk.com/id7799889
@@ -31,6 +31,8 @@ local libraries = {
 local components = {
 	gpu = "gpu",
 }
+
+local selection
 
 for library in pairs(libraries) do if not _G[library] then _G[library] = require(libraries[library]) end end
 for comp in pairs(components) do if not _G[comp] then _G[comp] = _G.component[components[comp]] end end
@@ -89,14 +91,13 @@ reCalculateImageSizes()
 sizes.heightOfInstrument = 3
 sizes.yStartOfInstruments = 2 + sizes.heightOfTopBar
 local instruments = {
-	-- {"⮜", "Move"},
-	-- {"✄", "Crop"},
-	{"B", "Brush"},
-	{"E", "Eraser"},
-	{"F", "Fill"},
-	{"T", "Text"},
+	"M",
+	"B",
+	"E",
+	"F",
+	"T",
 }
-local currentInstrument = 1
+local currentInstrument = 2
 local currentBackground = 0x6649ff
 local currentForeground = 0x3ff80
 local currentAlpha = 0x00
@@ -105,7 +106,7 @@ local currentBrushSize = 1
 local savePath
 
 --Верхний тулбар
-local topToolbar = {{"PS", ecs.colors.blue}, {"Файл"}, {"Изображение"}, {"Редактировать"}, {"О программе"}}
+local topToolbar = {{"PS", ecs.colors.blue}, {"Файл"}, {"Изображение"}, {"Редактировать"}, {"Горячие клавиши"}, {"О программе"}}
 
 ------------------------------------------------ Функции отрисовки --------------------------------------------------------------
 
@@ -122,11 +123,11 @@ local function drawTransparentZone(x, y)
 	local stro4ka1 = ""
 	local stro4ka2 = ""
 	if masterPixels.width % 2 == 0 then
-		stro4ka1 = string.rep("█ ", masterPixels.width / 2)
+		stro4ka1 = string.rep("▒ ", masterPixels.width / 2)
 		stro4ka2 = stro4ka1
 	else
-		stro4ka1 = string.rep("█ ", masterPixels.width / 2)
-		stro4ka2 = stro4ka1 .. "█"
+		stro4ka1 = string.rep("▒ ", masterPixels.width / 2)
+		stro4ka2 = stro4ka1 .. "▒"
 	end
 
 	for i = 1, masterPixels.height do
@@ -152,7 +153,7 @@ local function drawInstruments()
 		else
 			buffer.square(1, yPos, sizes.widthOfLeftBar, sizes.heightOfInstrument, colors.toolbar, 0xFFFFFF, " ")
 		end
-		buffer.text(3, yPos + 1, colors.toolbarButtonText, instruments[i][1])
+		buffer.text(3, yPos + 1, colors.toolbarButtonText, instruments[i])
 
 		newObj("Instruments", i, 1, yPos, sizes.widthOfLeftBar, yPos + sizes.heightOfInstrument - 1)
 
@@ -282,6 +283,66 @@ local function drawPixel(x, y, xPixel, yPixel, iterator)
 	background, foreground, alpha, symbol = nil, nil, nil, nil
 end
 
+local function drawSelection()
+	if selection then
+		local color = 0x000000
+		local xStart, yStart = sizes.xStartOfImage + selection.x - 1, sizes.yStartOfImage + selection.y - 1
+		local xEnd = xStart + selection.width - 1
+		local yEnd = yStart + selection.height - 1
+		local currentBackground
+
+		local function nextColor()
+			if color == 0x000000 then color = 0xFFFFFF else color = 0x000000 end
+		end
+
+		--Опорные угловые точки
+		currentBackground = buffer.get(xStart, yStart)
+		buffer.set(xStart, yStart, currentBackground, color, "┏")
+
+		--Горизонтальные линии
+		local xPos, yPos = xStart + 1, yStart
+		for i = 1, selection.width - 2 do
+			nextColor()
+
+			currentBackground = buffer.get(xPos, yStart)
+			buffer.set(xPos, yStart, currentBackground, color, "━")
+			
+			currentBackground = buffer.get(xPos, yEnd)
+			buffer.set(xPos, yEnd, currentBackground, color, "━")
+			
+			xPos = xPos + 1
+		end
+
+		nextColor()
+		currentBackground = buffer.get(xEnd, yStart)
+		buffer.set(xEnd, yStart, currentBackground, color, "┓")
+
+		--Вертикальные
+		color = 0x000000
+		xPos, yPos = xStart, yStart + 1
+		for i = 1, selection.height - 2 do
+			nextColor()
+			
+			currentBackground = buffer.get(xStart, yPos)
+			buffer.set(xStart, yPos, currentBackground, color, "┃")
+			
+			currentBackground = buffer.get(xEnd, yPos)
+			buffer.set(xEnd, yPos, currentBackground, color, "┃")
+			
+			yPos = yPos + 1
+		end
+
+		nextColor()
+		currentBackground = buffer.get(xStart, yEnd)
+		buffer.set(xStart, yEnd, currentBackground, color, "┗")
+
+		currentBackground = buffer.get(xEnd, yEnd)
+		buffer.set(xEnd, yEnd, currentBackground, color, "┛")
+
+
+	end
+end
+
 local function drawImage()
 	--Стартовые нужности
 	local xPixel, yPixel = 1, 1
@@ -302,6 +363,8 @@ local function drawImage()
 	end
 
 	buffer.resetDrawLimit()
+
+	drawSelection()
 end
 
 local function drawBackgroundAndImage()
@@ -321,22 +384,42 @@ end
 
 ------------------------------------------------ Функции расчета --------------------------------------------------------------
 
+local function changeInstrumentTo(ID)
+	currentInstrument = ID
+	selection = nil
+	drawAll()
+end
+
 local function move(direction)
-	local howMuchUpDown = 2
-	local howMuchLeftRight = 4
-	if direction == "up" then
-		reCalculateImageSizes(sizes.xStartOfImage, sizes.yStartOfImage - howMuchUpDown)
-	elseif direction == "down" then
-		reCalculateImageSizes(sizes.xStartOfImage, sizes.yStartOfImage + howMuchUpDown)
-	elseif direction == "left" then
-		reCalculateImageSizes(sizes.xStartOfImage - howMuchLeftRight, sizes.yStartOfImage)
-	elseif direction == "right" then
-		reCalculateImageSizes(sizes.xStartOfImage + howMuchLeftRight, sizes.yStartOfImage)
+	if instruments[currentInstrument] == "M" and selection then
+		if direction == "up" then
+			selection.y = selection.y - 1
+			if selection.y < 1 then selection.y = 1 end
+		elseif direction == "down" then
+			selection.y = selection.y + 1
+			if selection.y + selection.height - 1 > masterPixels.height then selection.y = selection.y - 1 end
+		elseif direction == "left" then
+			selection.x = selection.x - 1
+			if selection.x < 1 then selection.x = 1 end
+		elseif direction == "right" then
+			selection.x = selection.x + 1
+			if selection.x + selection.width - 1 > masterPixels.width then selection.x = selection.x - 1 end
+		end
+	else
+		local howMuchUpDown = 2
+		local howMuchLeftRight = 4
+		if direction == "up" then
+			reCalculateImageSizes(sizes.xStartOfImage, sizes.yStartOfImage - howMuchUpDown)
+		elseif direction == "down" then
+			reCalculateImageSizes(sizes.xStartOfImage, sizes.yStartOfImage + howMuchUpDown)
+		elseif direction == "left" then
+			reCalculateImageSizes(sizes.xStartOfImage - howMuchLeftRight, sizes.yStartOfImage)
+		elseif direction == "right" then
+			reCalculateImageSizes(sizes.xStartOfImage + howMuchLeftRight, sizes.yStartOfImage)
+		end
 	end
 	drawBackgroundAndImage()
-	buffer.debugWait = true
 	buffer.draw()
-	buffer.debugWait = false
 end
 
 local function setPixel(iterator, background, foreground, alpha, symbol)
@@ -344,6 +427,10 @@ local function setPixel(iterator, background, foreground, alpha, symbol)
 	masterPixels[iterator + 1] = foreground
 	masterPixels[iterator + 2] = alpha
 	masterPixels[iterator + 3] = symbol
+end
+
+local function swap(a, b)
+	return b, a
 end
 
 local function swapColors()
@@ -451,6 +538,7 @@ local function tryToFitImageOnCenterOfScreen()
 end
 
 local function new()
+	selection = nil
 	local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Новый документ"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, "Ширина"}, {"Input", 0x262626, 0x880000, "Высота"}, {"EmptyLine"}, {"Button", {0xbbbbbb, 0xffffff, "OK"}})
 
 	data[1] = tonumber(data[1]) or 51
@@ -586,12 +674,62 @@ end
 
 local function loadImageFromFile(path)
 	if fs.exists(path) then
+		selection = nil
 		masterPixels = image.load(path)
 		savePath = path
 		tryToFitImageOnCenterOfScreen()
 	else
 		ecs.error("Файл \"" .. path .. "\" не существует")
 	end
+end
+
+local function askForColorSelection(title)
+	local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true,
+		{"EmptyLine"},
+		{"CenterText", 0x262626, title},
+		{"EmptyLine"},
+		{"Color", "Цвет", currentBackground},
+		{"EmptyLine"},
+		{"Button", {0xaaaaaa, 0xffffff, "OK"}, {0x888888, 0xffffff, "Отмена"}}
+	)
+
+	if data[2] == "OK" then
+		return data[1]
+	end
+end
+
+local function fillSelection(background, foreground, alpha, symbol)
+	for j = selection.y, selection.y + selection.height - 1 do
+		for i = selection.x, selection.x + selection.width - 1 do
+			local iterator = convertCoordsToIterator(i, j)
+			masterPixels[iterator] = background
+			masterPixels[iterator + 1] = foreground
+			masterPixels[iterator + 2] = alpha
+			masterPixels[iterator + 3] = symbol
+		end
+	end
+
+	drawAll()
+end
+
+local function stroke(color)
+	for i = selection.x, selection.x + selection.width - 1 do
+		local iterator = convertCoordsToIterator(i, selection.y)
+		masterPixels[iterator] = color; masterPixels[iterator + 1] = 0x0; masterPixels[iterator + 2] = 0x0; masterPixels[iterator + 3] = " "
+
+		local iterator = convertCoordsToIterator(i, selection.y + selection.height - 1)
+		masterPixels[iterator] = color; masterPixels[iterator + 1] = 0x0; masterPixels[iterator + 2] = 0x0; masterPixels[iterator + 3] = " "
+	end
+
+	for i = selection.y, selection.y + selection.height - 1 do
+		local iterator = convertCoordsToIterator(selection.x, i)
+		masterPixels[iterator] = color; masterPixels[iterator + 1] = 0x0; masterPixels[iterator + 2] = 0x0; masterPixels[iterator + 3] = " "
+
+		local iterator = convertCoordsToIterator(selection.x + selection.width - 1, i)
+		masterPixels[iterator] = color; masterPixels[iterator + 1] = 0x0; masterPixels[iterator + 2] = 0x0; masterPixels[iterator + 3] = " "
+	end
+
+	drawAll()
 end
 
 ------------------------------------------------ Старт программы --------------------------------------------------------------
@@ -622,7 +760,7 @@ while true do
 				local iterator = convertCoordsToIterator(x, y)
 
 				--Кисть
-				if currentInstrument == 1 then
+				if instruments[currentInstrument] == "B" then
 					
 					--Если нажата клавиша альт
 					if keyboard.isKeyDown(56) then
@@ -638,13 +776,42 @@ while true do
 						console("Кисть: клик на точку "..e[3].."x"..e[4]..", координаты в изображении: "..x.."x"..y..", индекс массива изображения: "..iterator)
 						buffer.draw()
 					end
+				--Выделение
+				elseif instruments[currentInstrument] == "M" then
+					if e[1] == "touch" then
+						selection = {}
+						selection.xStart, selection.yStart = x, y
+						selection.finished = false
+					elseif e[1] == "drag" then
+						selection.finished = true
+						
+						local x1, y1 = selection.xStart, selection.yStart
+						local x2, y2 = x, y
+
+						if x1 > x2 then
+							x1, x2 = swap(x1, x2)
+						end
+
+						if y1 > y2 then
+							y1, y2 = swap(y1, y2)
+						end
+
+						selection.x, selection.y = x1, y1
+						selection.width = x2 - x1 + 1
+						selection.height = y2 - y1 + 1
+
+						if selection.width > 1 and selection.height > 1 and selection.finished then
+							drawImage()
+							buffer.draw()
+						end
+					end
 				--Ластик
-				elseif currentInstrument == 2 then
+				elseif instruments[currentInstrument] == "E" then
 					brush(x, y, currentBackground, currentForeground, 0xFF, currentSymbol)
 					console("Ластик: клик на точку "..e[3].."x"..e[4]..", координаты в изображении: "..x.."x"..y..", индекс массива изображения: "..iterator)
 					buffer.draw()
 				--Текст
-				elseif currentInstrument == 4 then
+				elseif instruments[currentInstrument] == "T" then
 					local limit = masterPixels.width - x + 1
 					local text = inputText(e[3], e[4], limit)
 					saveTextToPixels(x, y, text)
@@ -652,7 +819,7 @@ while true do
 					buffer.draw()
 
 				--Заливка
-				elseif currentInstrument == 3 then
+				elseif instruments[currentInstrument] == "F" then
 
 					fill(x, y, masterPixels[iterator], currentBackground)
 					drawImage()
@@ -688,9 +855,9 @@ while true do
 			--Инструменты
 			for key in pairs(obj["Instruments"]) do
 				if ecs.clickedAtArea(e[3], e[4], obj["Instruments"][key][1], obj["Instruments"][key][2], obj["Instruments"][key][3], obj["Instruments"][key][4]) then
+					selection = nil
 					currentInstrument = key
-					drawInstruments()
-					buffer.draw()
+					drawAll()
 					break
 				end
 			end
@@ -712,6 +879,24 @@ while true do
 						action = context.menu(obj["TopMenu"][key][1] - 1, obj["TopMenu"][key][2] + 1, {"Цветовой тон/насыщенность"}, {"Цветовой баланс"}, {"Фотофильтр"}, "-", {"Инвертировать цвета"}, {"Черно-белый фильтр"})
 					elseif key == "О программе" then
 						ecs.universalWindow("auto", "auto", 36, 0xeeeeee, true, {"EmptyLine"}, {"CenterText", 0x880000, "Photoshop v4.0 (buffered)"}, {"EmptyLine"}, {"CenterText", 0x262626, "Авторы:"}, {"CenterText", 0x555555, "Тимофеев Игорь"}, {"CenterText", 0x656565, "vk.com/id7799889"}, {"CenterText", 0x656565, "Трифонов Глеб"}, {"CenterText", 0x656565, "vk.com/id88323331"}, {"EmptyLine"}, {"CenterText", 0x262626, "Тестеры:"}, {"CenterText", 0x656565, "Шестаков Тимофей"}, {"CenterText", 0x656565, "vk.com/id113499693"}, {"CenterText", 0x656565, "Вечтомов Роман"}, {"CenterText", 0x656565, "vk.com/id83715030"}, {"CenterText", 0x656565, "Омелаенко Максим"},  {"CenterText", 0x656565, "vk.com/paladincvm"}, {"EmptyLine"},{"Button", {0xbbbbbb, 0xffffff, "OK"}})
+					elseif key == "Горячие клавиши" then
+						ecs.universalWindow( "auto", "auto", 42, 0xeeeeee, true,
+							{"EmptyLine"},
+							{"CenterText", 0x880000, "Горячие клавиши"},
+							{"EmptyLine"},
+							{"CenterText", 0x000000, "B - кисть"},
+							{"CenterText", 0x000000, "E - ластик"},
+							{"CenterText", 0x000000, "T - текст"},
+							{"CenterText", 0x000000, "G - заливка"},
+							{"CenterText", 0x000000, "M - выделение"},
+							{"EmptyLine"},
+							{"WrappedText", 0x000000, "Стрелки - перемещение изображения"},
+							{"WrappedText", 0x000000, "X - поменять цвета местами"},
+							{"WrappedText", 0x000000, "D - установка черного и белого цвета"},
+							{"WrappedText", 0x000000, "Ctrl+D - отмена выделения"},
+							{"EmptyLine"},
+							{"Button", {0xbbbbbb, 0xffffff, "OK"}}
+						)				
 					end
 
 					if action == "Выход" then
@@ -859,15 +1044,34 @@ while true do
 			--Если кликнули на рисовабельную зонку
 			if ecs.clickedAtArea(e[3], e[4], sizes.xStartOfImage, sizes.yStartOfImage, sizes.xEndOfImage, sizes.yEndOfImage) then
 				
-				local x, y, width, height = e[3], e[4], 30, 12
+				if instruments[currentInstrument] == "M" and selection then
+					local action = context.menu(e[3], e[4], {"Убрать выделение"}, {"Обрезать", true}, "-", {"Залить цветом"}, {"Очистить"}, {"Обводка"})
+					if action == "Убрать выделение" then
+						selection = nil
+						drawAll()
+					elseif action == "Обводка" then
+						local color = askForColorSelection("Обводка")
+						if color then
+							stroke(color)
+						end
+					elseif action == "Очистить" then
+						fillSelection(0x0, 0x0, 0xFF, " ")
+					elseif action == "Залить цветом" then
+						local color = askForColorSelection("Залить цветом")
+						if color then
+							fillSelection(color, 0x0, 0x0, " ")
+						end
+					end
+				else
+					local x, y, width, height = e[3], e[4], 30, 12
+					--А это чтоб за края экрана не лезло
+					if y + height >= sizes.ySize then y = sizes.ySize - height end
+					if x + width + 1 >= sizes.xSize then x = sizes.xSize - width - 1 end
 
-				--А это чтоб за края экрана не лезло
-				if y + height >= sizes.ySize then y = sizes.ySize - height end
-				if x + width + 1 >= sizes.xSize then x = sizes.xSize - width - 1 end
-
-				currentBrushSize, currentAlpha = table.unpack(ecs.universalWindow(x, y, width, 0xeeeeee, true, {"EmptyLine"}, {"CenterText", 0x880000, "Параметры кисти"}, {"Slider", 0x262626, 0x880000, 1, 10, currentBrushSize, "Размер: ", " px"}, {"Slider", 0x262626, 0x880000, 0, 255, currentAlpha, "Прозрачность: ", ""}, {"EmptyLine"}, {"Button", {0xbbbbbb, 0xffffff, "OK"}}))
-				drawTopBar()
-				buffer.draw()
+					currentBrushSize, currentAlpha = table.unpack(ecs.universalWindow(x, y, width, 0xeeeeee, true, {"EmptyLine"}, {"CenterText", 0x880000, "Параметры кисти"}, {"Slider", 0x262626, 0x880000, 1, 10, currentBrushSize, "Размер: ", " px"}, {"Slider", 0x262626, 0x880000, 0, 255, currentAlpha, "Прозрачность: ", ""}, {"EmptyLine"}, {"Button", {0xbbbbbb, 0xffffff, "OK"}}))
+					drawTopBar()
+					buffer.draw()
+				end
 			end
 		end
 
@@ -881,40 +1085,40 @@ while true do
 			move("left")
 		elseif e[4] == 205 then
 			move("right")
-		--Пробел
-		elseif e[4] == 57 then
-			drawAll()
+		-- --Пробел
+		-- elseif e[4] == 57 then
+		-- 	drawAll()
 		--X
 		elseif e[4] == 45 then
 			swapColors()
 			buffer.draw()
 		--B
 		elseif e[4] == 48 then
-			currentInstrument = 1
-			drawInstruments()
-			buffer.draw()
+			changeInstrumentTo(2)
 		--E
 		elseif e[4] == 18 then
-			currentInstrument = 2
-			drawInstruments()
-			buffer.draw()
-		--T
-		elseif e[4] == 20 then
-			currentInstrument = 4
-			drawInstruments()
-			buffer.draw()
+			changeInstrumentTo(3)
 		--G
 		elseif e[4] == 34 then
-			currentInstrument = 3
-			drawInstruments()
-			buffer.draw()
+			changeInstrumentTo(4)
+		--T
+		elseif e[4] == 20 then
+			changeInstrumentTo(5)
+		--M
+		elseif e[4] == 50 then
+			changeInstrumentTo(1)
 		--D
 		elseif e[4] == 32 then
-			currentBackground = 0x000000
-			currentForeground = 0xFFFFFF
-			currentAlpha = 0x00
-			drawColors()
-			buffer.draw()
+			if keyboard.isControlDown() then
+				selection = nil
+				drawAll()
+			else
+				currentBackground = 0x000000
+				currentForeground = 0xFFFFFF
+				currentAlpha = 0x00
+				drawColors()
+				buffer.draw()
+			end
 		end
 	elseif e[1] == "scroll" then
 		if e[5] == 1 then
