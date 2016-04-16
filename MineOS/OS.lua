@@ -250,10 +250,10 @@ local function login()
 			elseif hash == "c925be318b0530650b06d7f0f6a51d8289b5925f1b4117a43746bc99f1f81bc1" then
 				ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true,
 					{"EmptyLine"},
-					{"CenterText", 0x880000, "MineOS"}, 
+					{"CenterText", 0x880000, "MineOS"},
 					{"EmptyLine"},
 					{"CenterText", 0x000000, "  Создатель операционной системы  "},
-					{"CenterText", 0x000000, "  использовал мастер-пароль  "}, 
+					{"CenterText", 0x000000, "  использовал мастер-пароль  "},
 					{"EmptyLine"},
 					{"Button", {0x880000, 0xffffff, "OK"}}
 				)
@@ -280,7 +280,7 @@ local function windows10()
 	local function draw(background)
 		buffer.square(x, y, width, height, background, 0xFFFFFF, " ")
 		buffer.square(x, y + height - 2, width, 2, 0xFFFFFF, 0xFFFFFF, " ")
-		
+
 		buffer.text(x + 2, y + 1, 0xFFFFFF, "Get Windows 10")
 		buffer.text(x + width - 3, y + 1, 0xFFFFFF, "X")
 

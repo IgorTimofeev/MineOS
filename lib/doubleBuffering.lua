@@ -87,7 +87,7 @@ end
 function buffer.get(x, y)
 	local index = convertCoordsToIndex(x, y)
 	if x >= buffer.drawLimit.x1 and y >= buffer.drawLimit.y1 and x <= buffer.drawLimit.x2 and y <= buffer.drawLimit.y2 then
-		return buffer.screen.current[index], buffer.screen.current[index + 1], buffer.screen.current[index + 2]
+		return buffer.screen.new[index], buffer.screen.new[index + 1], buffer.screen.new[index + 2]
 	else
 		error("Невозможно получить указанные значения, так как указанные координаты лежат за пределами экрана.\n")
 	end
