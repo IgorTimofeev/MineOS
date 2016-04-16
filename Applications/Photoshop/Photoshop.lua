@@ -339,7 +339,19 @@ local function drawSelection()
 		currentBackground = buffer.get(xEnd, yEnd)
 		buffer.set(xEnd, yEnd, currentBackground, color, "┛")
 
+		--Пиздюлинка, показывающая размер текста и тыпы
+		local texts = {
+			"Ш: " .. selection.width .. " px",
+			"В: " .. selection.height .. " px",
+		}
+		local maxWidth = 0; for i = 1, #texts do maxWidth = math.max(maxWidth, unicode.len(texts[i])) end
+		xPos, yPos = xEnd + 2, yEnd - #texts + 1
 
+		buffer.square(xPos, yPos, maxWidth + 2, #texts, 0x000000, 0xFFFFFF, " ", 69)
+		xPos = xPos + 1		
+		for i = 1, #texts do
+			buffer.text(xPos, yPos, 0xFFFFFF, texts[i]); yPos = yPos + 1
+		end
 	end
 end
 
@@ -782,7 +794,7 @@ while true do
 						selection = {}
 						selection.xStart, selection.yStart = x, y
 						selection.finished = false
-					elseif e[1] == "drag" then
+					elseif e[1] == "drag" and selection then
 						selection.finished = true
 						
 						local x1, y1 = selection.xStart, selection.yStart
@@ -801,7 +813,7 @@ while true do
 						selection.height = y2 - y1 + 1
 
 						if selection.width > 1 and selection.height > 1 and selection.finished then
-							drawImage()
+							drawBackgroundAndImage()
 							buffer.draw()
 						end
 					end
