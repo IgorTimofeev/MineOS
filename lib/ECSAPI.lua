@@ -92,7 +92,7 @@ function ECSAPI.enableInterrupting()
 end
 
 --Установка масштаба монитора
-local function setScale(scale, debug)
+function ECSAPI.setScale(scale, debug)
 	--Базовая коррекция масштаба, чтобы всякие умники не писали своими погаными ручонками, чего не следует
 	if scale > 1 then
 		scale = 1
