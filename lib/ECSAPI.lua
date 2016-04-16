@@ -92,7 +92,7 @@ function ECSAPI.enableInterrupting()
 end
 
 --Установка масштаба монитора
-function ECSAPI.setScale(scale, debug)
+local function setScale(scale, debug)
 	--Базовая коррекция масштаба, чтобы всякие умники не писали своими погаными ручонками, чего не следует
 	if scale > 1 then
 		scale = 1
@@ -114,7 +114,7 @@ function ECSAPI.setScale(scale, debug)
 	end
 
 	--Рассчитываем пропорцию монитора в псевдопикселях
-	local xScreens, yScreens = component.screen.getAspectRatio()
+	local xScreens, yScreens = component.proxy(component.gpu.getScreen()).getAspectRatio()
 	local xPixels, yPixels = calculateAspect(xScreens), calculateAspect(yScreens)
 	local proportion = xPixels / yPixels
 
@@ -124,10 +124,10 @@ function ECSAPI.setScale(scale, debug)
 	--Получаем теоретическое максимальное разрешение монитора с учетом его пропорции, но без учета лимита видеокарты
 	local newWidth, newHeight
 	if proportion >= 1 then
-		newWidth = math.floor(xMax)
+		newWidth = xMax
 		newHeight = math.floor(newWidth / proportion / 2)
 	else
-		newHeight = math.floor(yMax)
+		newHeight = yMax
 		newWidth = math.floor(newHeight * proportion * 2)
 	end
 
@@ -135,20 +135,22 @@ function ECSAPI.setScale(scale, debug)
 	local optimalNewWidth, optimalNewHeight = newWidth, newHeight
 
 	if optimalNewWidth > xMax then
-		local difference = optimalNewWidth - xMax
+		local difference = newWidth / xMax
 		optimalNewWidth = xMax
-		optimalNewHeight = optimalNewHeight - math.ceil(difference / 2 )
+		optimalNewHeight = math.ceil(newHeight / difference)
 	end
 
 	if optimalNewHeight > yMax then
-		local difference = optimalNewHeight - yMax
+		local difference = newHeight / yMax
 		optimalNewHeight = yMax
-		--optimalNewWidth = optimalNewWidth - difference * 2 - math.ceil(difference / 2)
-		optimalNewWidth = optimalNewWidth - difference * 2
+		optimalNewWidth = math.ceil(newWidth / difference)
 	end
 
 	--Корректируем идеальное разрешение по заданному масштабу
 	local finalNewWidth, finalNewHeight = math.floor(optimalNewWidth * scale), math.floor(optimalNewHeight * scale)
+
+	--Устанавливаем выбранное разрешение
+	gpu.setResolution(finalNewWidth, finalNewHeight)
 
 	--Выводим инфу, если нужно
 	if debug then
@@ -163,9 +165,6 @@ function ECSAPI.setScale(scale, debug)
 		print("Новое разрешение: "..finalNewWidth.."x"..finalNewHeight)
 		print(" ")
 	end
-
-	--Устанавливаем выбранное разрешение
-	gpu.setResolution(finalNewWidth, finalNewHeight)
 end
 
 function ECSAPI.rebindGPU(address)
