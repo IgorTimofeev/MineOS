@@ -737,6 +737,7 @@ local function crop()
 	local direction, countOfPixels = cropOrExpand("Обрезать")
 	if direction then
 		masterPixels = image.crop(masterPixels, direction, countOfPixels)
+		reCalculateImageSizes(sizes.xStartOfImage, sizes.yStartOfImage)
 		drawAll()
 	end
 end
@@ -745,7 +746,8 @@ end
 local function expand()
 	local direction, countOfPixels = cropOrExpand("Обрезать")
 	if direction then
-		masterPixels = image.expand(masterPixels, direction, countOfPixels)
+		masterPixels = image.expand(masterPixels, direction, countOfPixels, 0x010101, 0x010101, 0xFF, " ")
+		reCalculateImageSizes(sizes.xStartOfImage, sizes.yStartOfImage)
 		drawAll()
 	end
 end
