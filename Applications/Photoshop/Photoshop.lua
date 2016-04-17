@@ -13,6 +13,7 @@ local copyright = [[
 	Что нового в версии 5.1:
 		- Цветовая гамма программы изменена на более детальную
 		- Добавлена информационная мини-панель к инструменту "выделение"
+		- Добавлена информация о размере изображения, отображаемая под самим изображением
 		- Ускорен алгоритм рисования кистью и ластиком
 
 	Что нового в версии 5.0:
@@ -409,6 +410,12 @@ local function drawImage()
 		xPixel = xPixel + 1
 		xPos = xPos + 1
 		if xPixel > masterPixels.width then xPixel = 1; xPos = sizes.xStartOfImage; yPixel = yPixel + 1; yPos = yPos + 1 end
+	end
+
+	if masterPixels.width > 0 and masterPixels.height > 0 then
+		local text = "Размер: " .. masterPixels.width .. "x" .. masterPixels.height .. " px"
+		xPos = math.floor(sizes.xStartOfImage + masterPixels.width / 2 - unicode.len(text) / 2)
+		buffer.text(xPos, sizes.yEndOfImage + 1, 0xFFFFFF, text)
 	end
 
 	--Рисуем выделение
