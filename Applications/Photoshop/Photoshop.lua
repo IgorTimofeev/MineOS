@@ -3,14 +3,30 @@
 
 local copyright = [[
 	
-	Photoshop v5.0 (buffered)
+	Photoshop v5.1 для OpenComputers
 
-	Автор: IT
-		Контакты: https://vk.com/id7799889
+	Автор: ECS
+		Контактый адрес: https://vk.com/id7799889
 	Соавтор: Pornogion
-		Контакты: https://vk.com/id88323331
-	
+		Контактый адрес: https://vk.com/id88323331
+
+	Что нового в версии 5.1:
+		- Изменена цветовая гамма программы на более детальную
+		- Добавлена информационная мини-панель к инструменту "выделение"
+		- Ускорен алгоритм рисования кистью и ластиком
+
+	Что нового в версии 5.0:
+		- Добавлен инструмент "выделение" и несколько функций для работы с ним
+		- Добавлено меню "Горячие клавиши", подсказывающее, как можно удобнее работать с программой
+
+	Что нового в версии 4.0:
+		- Программа переведена на библиотеку тройного буфера, скорость работы увеличена в десятки раз
+		- Добавлены функции обрезки, расширения, поворота и отражения картинки
+		- Добавлены функции тона/насыщенности, цветового баланса и наложения фотофильтра
+
 ]]
+
+copyright = nil
 
 ------------------------------------------------ Библиотеки --------------------------------------------------------------
 
@@ -40,6 +56,12 @@ libraries, components = nil, nil
 
 ------------------------------------------------ Переменные --------------------------------------------------------------
 
+--Инициализируем библиотеку двойного буфера
+buffer.start()
+
+--Получаем аргументы программы
+local args = {...}
+
 --Массив главного изображения
 local masterPixels = {
 	width = 0,
@@ -48,12 +70,12 @@ local masterPixels = {
 
 --Базовая цветовая схема программы
 local colors = {
-	toolbar = 0x535353,
-	toolbarInfo = 0x3d3d3d,
-	toolbarButton = 0x3d3d3d,
-	toolbarButtonText = 0xeeeeee,
-	drawingArea = 0x262626,
-	console = 0x3d3d3d,
+	leftToolbar = 0x3c3c3c,
+	leftToolbarButton = 0x2d2d2d,
+	leftToolbarButtonText = 0xeeeeee,
+	topToolbar = 0x4b4b4b,
+	drawingArea = 0x1e1e1e,
+	console = 0x2d2d2d,
 	consoleText = 0x999999,
 	transparencyWhite = 0xffffff,
 	transparencyGray = 0xcccccc,
@@ -69,15 +91,15 @@ local sizes = {
 	widthOfLeftBar = 6,
 }
 sizes.heightOfTopBar = 3
-sizes.xSize, sizes.ySize = gpu.getResolution()
 sizes.xStartOfDrawingArea = sizes.widthOfLeftBar + 1
-sizes.xEndOfDrawingArea = sizes.xSize
-sizes.yStartOfDrawingArea = 2 + sizes.heightOfTopBar
-sizes.yEndOfDrawingArea = sizes.ySize
+sizes.xEndOfDrawingArea = buffer.screen.width
+sizes.yStartOfDrawingArea = sizes.heightOfTopBar + 2
+sizes.yEndOfDrawingArea = buffer.screen.height - 1
 sizes.widthOfDrawingArea = sizes.xEndOfDrawingArea - sizes.xStartOfDrawingArea + 1
 sizes.heightOfDrawingArea = sizes.yEndOfDrawingArea - sizes.yStartOfDrawingArea + 1
-sizes.heightOfLeftBar = sizes.ySize - 1
+sizes.heightOfLeftBar = buffer.screen.height - 1
 sizes.sizeOfPixelData = 4
+
 --Для изображения
 local function reCalculateImageSizes(x, y)
 	sizes.xStartOfImage = x or 9
@@ -88,8 +110,6 @@ end
 reCalculateImageSizes()
 
 --Инструменты
-sizes.heightOfInstrument = 3
-sizes.yStartOfInstruments = 2 + sizes.heightOfTopBar
 local instruments = {
 	"M",
 	"B",
@@ -97,9 +117,11 @@ local instruments = {
 	"F",
 	"T",
 }
+sizes.heightOfInstrument = 3
+sizes.yStartOfInstruments = sizes.heightOfTopBar + 2
 local currentInstrument = 2
-local currentBackground = 0x6649ff
-local currentForeground = 0x3ff80
+local currentBackground = 0x000000
+local currentForeground = 0xFFFFFF
 local currentAlpha = 0x00
 local currentSymbol = " "
 local currentBrushSize = 1
@@ -117,6 +139,7 @@ local function newObj(class, name, ...)
 	obj[class][name] = {...}
 end
 
+--Отрисовка "прозрачной зоны", этакая сеточка чередующаяся
 local function drawTransparentZone(x, y)
 	y = y - 1
 
@@ -141,28 +164,14 @@ local function drawTransparentZone(x, y)
 	end
 end
 
+--Банальная заливка фона
 local function drawBackground()
-	buffer.square(sizes.xStartOfDrawingArea, sizes.yStartOfDrawingArea, sizes.widthOfDrawingArea, sizes.heightOfDrawingArea, colors.drawingArea, 0xFFFFFF, " ")
+	buffer.square(sizes.xStartOfDrawingArea, sizes.yStartOfDrawingArea, sizes.widthOfDrawingArea, sizes.heightOfDrawingArea + 1, colors.drawingArea, 0xFFFFFF, " ")
 end
 
-local function drawInstruments()
-	local yPos = sizes.yStartOfInstruments
-	for i = 1, #instruments do
-		if currentInstrument == i then
-			buffer.square(1, yPos, sizes.widthOfLeftBar, sizes.heightOfInstrument, colors.toolbarButton, 0xFFFFFF, " ")
-		else
-			buffer.square(1, yPos, sizes.widthOfLeftBar, sizes.heightOfInstrument, colors.toolbar, 0xFFFFFF, " ")
-		end
-		buffer.text(3, yPos + 1, colors.toolbarButtonText, instruments[i])
-
-		newObj("Instruments", i, 1, yPos, sizes.widthOfLeftBar, yPos + sizes.heightOfInstrument - 1)
-
-		yPos = yPos + sizes.heightOfInstrument
-	end
-end
-
+--Отрисовка цветов
 local function drawColors()
-	local xPos, yPos = 2, sizes.ySize - 4
+	local xPos, yPos = 2, buffer.screen.height - 4
 	buffer.square(xPos, yPos, 3, 2, currentBackground, 0xFFFFFF, " ")
 	buffer.square(xPos + 3, yPos + 1, 1, 2, currentForeground, 0xFFFFFF, " ")
 	buffer.square(xPos + 1, yPos + 2, 2, 1, currentForeground, 0xFFFFFF, " ")
@@ -174,14 +183,31 @@ local function drawColors()
 	newObj("Colors", 4, xPos + 1, yPos + 3, xPos + 2, yPos + 3)
 end
 
+--Отрисовка панели инструментов слева
 local function drawLeftBar()
-	buffer.square(1, 2, sizes.widthOfLeftBar, sizes.heightOfLeftBar, colors.toolbar, 0xFFFFFF, " ")
-	drawInstruments()
+	--Рисуем подложечку
+	buffer.square(1, 2, sizes.widthOfLeftBar, sizes.heightOfLeftBar, colors.leftToolbar, 0xFFFFFF, " ")
+	--Рисуем инструменты
+	local yPos = sizes.yStartOfInstruments
+	for i = 1, #instruments do
+		if currentInstrument == i then
+			buffer.square(1, yPos, sizes.widthOfLeftBar, sizes.heightOfInstrument, colors.leftToolbarButton, 0xFFFFFF, " ")
+		else
+			buffer.square(1, yPos, sizes.widthOfLeftBar, sizes.heightOfInstrument, colors.leftToolbar, 0xFFFFFF, " ")
+		end
+		buffer.text(3, yPos + 1, colors.leftToolbarButtonText, instruments[i])
+
+		newObj("Instruments", i, 1, yPos, sizes.widthOfLeftBar, yPos + sizes.heightOfInstrument - 1)
+
+		yPos = yPos + sizes.heightOfInstrument
+	end
+	--И цвета
 	drawColors()
 end
 
+--Отрисовка верхнего меню
 local function drawTopMenu()
-	buffer.square(1, 1, sizes.xSize, 1, colors.topMenu, 0xFFFFFF, " ")
+	buffer.square(1, 1, buffer.screen.width, 1, colors.topMenu, 0xFFFFFF, " ")
 	local xPos = 3
 
 	for i = 1, #topToolbar do
@@ -193,10 +219,11 @@ local function drawTopMenu()
 	end
 end
 
+--Отрисовка верхней панели инструментов, пока что она не шибко-то полезна
 local function drawTopBar()
 	local topBarInputs = { {"Размер кисти", currentBrushSize}, {"Прозрачность", math.floor(currentAlpha)}}
 
-	buffer.square(1, 2, sizes.xSize, sizes.heightOfTopBar, colors.toolbar, 0xFFFFFF, " ")
+	buffer.square(1, 2, buffer.screen.width, sizes.heightOfTopBar, colors.topToolbar, 0xFFFFFF, " ")
 	local xPos, yPos = 3, 3
 	local limit = 8
 
@@ -215,11 +242,12 @@ local function drawTopBar()
 
 end
 
+--Функция, создающая пустой массив изображения на основе указанных ранее длины и ширины
 local function createEmptyMasterPixels()
 	--Создаем пустой мастерпиксельс
 	for j = 1, masterPixels.height * masterPixels.width do
-		table.insert(masterPixels, 0x000000)
-		table.insert(masterPixels, 0x000000)
+		table.insert(masterPixels, 0x010101)
+		table.insert(masterPixels, 0x010101)
 		table.insert(masterPixels, 0xFF)
 		table.insert(masterPixels, " ")
 	end
@@ -247,16 +275,21 @@ local function convertCoordsToIterator(x, y)
 	return (masterPixels.width * (y - 1) + x) * sizes.sizeOfPixelData - sizes.sizeOfPixelData + 1
 end
 
+--Мини-консолька для отладки, сообщающая снизу, че происходит ваще
 local function console(text)
-	buffer.square(sizes.xStartOfDrawingArea, sizes.ySize, sizes.widthOfDrawingArea, 1, colors.console, 0xFFFFFF, " ")
+	buffer.square(sizes.xStartOfDrawingArea, buffer.screen.height, sizes.widthOfDrawingArea, 1, colors.console, colors.consoleText, " ")
+	
 	local _, total, used = ecs.getInfoAboutRAM()
-	buffer.text(sizes.xEndOfDrawingArea - 15, sizes.ySize, colors.consoleText, used.."/"..total.." KB RAM")
-	buffer.text(sizes.xStartOfDrawingArea + 1, sizes.ySize, colors.consoleText, text)
-	_, total, used = nil, nil, nil
+	local RAMText = used .. "/" .. total .. " KB RAM"
+	buffer.text(sizes.xEndOfDrawingArea - unicode.len(RAMText), buffer.screen.height, colors.consoleText, RAMText)
+	
+	buffer.text(sizes.xStartOfDrawingArea + 1, buffer.screen.height, colors.consoleText, text)
 end
 
+--Функция, берущая указанный пиксель из массива изображения и рисующая его в буфере корректно,
+--т.е. с учетом прозрачности и т.п.
 local function drawPixel(x, y, xPixel, yPixel, iterator)
-	--Получаем данные о пикселе
+	--Получаем тукущие данные о пикселе
 	local background, foreground, alpha, symbol = masterPixels[iterator], masterPixels[iterator + 1], masterPixels[iterator + 2], masterPixels[iterator + 3]
 	--Если пиксель не прозрачный
 	if alpha == 0x00 then
@@ -283,6 +316,7 @@ local function drawPixel(x, y, xPixel, yPixel, iterator)
 	background, foreground, alpha, symbol = nil, nil, nil, nil
 end
 
+--Функция для отрисовки выделения соотв. инструментом
 local function drawSelection()
 	if selection then
 		local color = 0x000000
@@ -295,10 +329,6 @@ local function drawSelection()
 			if color == 0x000000 then color = 0xFFFFFF else color = 0x000000 end
 		end
 
-		--Опорные угловые точки
-		currentBackground = buffer.get(xStart, yStart)
-		buffer.set(xStart, yStart, currentBackground, color, "┏")
-
 		--Горизонтальные линии
 		local xPos, yPos = xStart + 1, yStart
 		for i = 1, selection.width - 2 do
@@ -306,16 +336,11 @@ local function drawSelection()
 
 			currentBackground = buffer.get(xPos, yStart)
 			buffer.set(xPos, yStart, currentBackground, color, "━")
-			
 			currentBackground = buffer.get(xPos, yEnd)
 			buffer.set(xPos, yEnd, currentBackground, color, "━")
 			
 			xPos = xPos + 1
 		end
-
-		nextColor()
-		currentBackground = buffer.get(xEnd, yStart)
-		buffer.set(xEnd, yStart, currentBackground, color, "┓")
 
 		--Вертикальные
 		color = 0x000000
@@ -332,7 +357,14 @@ local function drawSelection()
 			yPos = yPos + 1
 		end
 
-		nextColor()
+		--Опорные угловые точки
+		color = 0x000000
+		currentBackground = buffer.get(xStart, yStart)
+		buffer.set(xStart, yStart, currentBackground, color, "┏")
+
+		currentBackground = buffer.get(xEnd, yStart)
+		buffer.set(xEnd, yStart, currentBackground, color, "┓")
+
 		currentBackground = buffer.get(xStart, yEnd)
 		buffer.set(xStart, yEnd, currentBackground, color, "┗")
 
@@ -344,46 +376,54 @@ local function drawSelection()
 			"Ш: " .. selection.width .. " px",
 			"В: " .. selection.height .. " px",
 		}
+		--Рассчитываем ширину пиздюлинки
 		local maxWidth = 0; for i = 1, #texts do maxWidth = math.max(maxWidth, unicode.len(texts[i])) end
 		xPos, yPos = xEnd + 2, yEnd - #texts + 1
 
-		buffer.square(xPos, yPos, maxWidth + 2, #texts, 0x000000, 0xFFFFFF, " ", 69)
-		xPos = xPos + 1		
-		for i = 1, #texts do
-			buffer.text(xPos, yPos, 0xFFFFFF, texts[i]); yPos = yPos + 1
-		end
+		--Рисуем пиздюлинку
+		buffer.square(xPos, yPos, maxWidth + 2, #texts, 0x000000, 0xFFFFFF, " ", 69); xPos = xPos + 1		
+		for i = 1, #texts do buffer.text(xPos, yPos, 0xFFFFFF, texts[i]); yPos = yPos + 1 end
 	end
 end
 
+--Отрисовка изображения
 local function drawImage()
 	--Стартовые нужности
 	local xPixel, yPixel = 1, 1
 	local xPos, yPos = sizes.xStartOfImage, sizes.yStartOfImage
 
+	--Устанавливаем ограничение прорисовки, чтобы картинка не съебывала за дозволенную зону
 	buffer.setDrawLimit(sizes.xStartOfDrawingArea, sizes.yStartOfDrawingArea, sizes.widthOfDrawingArea, sizes.heightOfDrawingArea)
 
+	--Рисуем прозрачную зону
 	drawTransparentZone(xPos, yPos)
 
 	--Перебираем массив мастерпиксельса
 	for i = 1, #masterPixels, 4 do
-		--Рисуем пиксель
-		if masterPixels[i + 2] ~= 0xFF or masterPixels[i + 3] ~= " " then drawPixel(xPos, yPos, xPixel, yPixel, i) end
+		--Рисуем пиксель, если у него прозрачность не абсолютная, ЛИБО имеется какой-то символ
+		--Т.е. даже если прозрачность и охуела, но символ есть, то рисуем его
+		if masterPixels[i + 2] ~= 0xFF or masterPixels[i + 3] ~= " " then
+			drawPixel(xPos, yPos, xPixel, yPixel, i)
+		end
 		--Всякие расчеты координат
 		xPixel = xPixel + 1
 		xPos = xPos + 1
 		if xPixel > masterPixels.width then xPixel = 1; xPos = sizes.xStartOfImage; yPixel = yPixel + 1; yPos = yPos + 1 end
 	end
 
-	buffer.resetDrawLimit()
-
+	--Рисуем выделение
 	drawSelection()
+	--Убираем ограничение отрисовки
+	buffer.resetDrawLimit()
 end
 
+--Просто для удобства
 local function drawBackgroundAndImage()
 	drawBackground()
 	drawImage()
 end
 
+--Функция, рисующая ВСЕ, абсолютли, епта
 local function drawAll()
 	drawBackground()
 	drawLeftBar()
@@ -394,14 +434,16 @@ local function drawAll()
 	buffer.draw()
 end
 
------------------------------------------------- Функции расчета --------------------------------------------------------------
+------------------------------------------------ Вспомогательные функции для работы с изображением и прочим --------------------------------------------------------------
 
+--Смена инструмента на указанный номер
 local function changeInstrumentTo(ID)
 	currentInstrument = ID
 	selection = nil
 	drawAll()
 end
 
+--Перемещалка картинки в указанном направлении, поддерживающая все инструменты
 local function move(direction)
 	if instruments[currentInstrument] == "M" and selection then
 		if direction == "up" then
@@ -434,6 +476,7 @@ local function move(direction)
 	buffer.draw()
 end
 
+--Просто более удобная установка пикселя, а то все эти плюсы, минусы, бррр
 local function setPixel(iterator, background, foreground, alpha, symbol)
 	masterPixels[iterator] = background
 	masterPixels[iterator + 1] = foreground
@@ -441,19 +484,23 @@ local function setPixel(iterator, background, foreground, alpha, symbol)
 	masterPixels[iterator + 3] = symbol
 end
 
+--Функция-сваппер переменных, пока что юзается только в выделении
+--А, не, наебал!
+--Вон, ниже тоже юзается! Ха, удобненько
 local function swap(a, b)
 	return b, a
 end
 
+--Функция, меняющая цвета местами
 local function swapColors()
-	local tempColor = currentForeground
-	currentForeground = currentBackground
-	currentBackground = tempColor
-	tempColor = nil
+	currentBackground, currentForeground = swap(currentBackground, currentForeground)
 	drawColors()
-	console("Цвета поменяны местами.")
+	console("Цвета поменяны местами")
 end
 
+--Ух, сука! Функция для работы инструмента текста
+--Лютая дичь, спиздил со старого фш, но, вроде, пашет нормас
+--Правда, чет есть предчувствие, что костыльная и багованная она, ну да похуй
 local function inputText(x, y, limit)
 	local oldPixels = ecs.rememberOldPixels(x,y-1,x+limit-1,y+1)
 	local text = ""
@@ -523,6 +570,7 @@ local function inputText(x, y, limit)
 	return text
 end
 
+--Функция-применятор текста к массиву изображения
 local function saveTextToPixels(x, y, text)
 	local sText = unicode.len(text)
 	local iterator
@@ -534,6 +582,7 @@ local function saveTextToPixels(x, y, text)
 	end
 end
 
+--Функция-центратор картинки по центру моника
 local function tryToFitImageOnCenterOfScreen()
 	reCalculateImageSizes()
 
@@ -549,6 +598,7 @@ local function tryToFitImageOnCenterOfScreen()
 	reCalculateImageSizes(x, y)
 end
 
+--Функция, спрашивающая юзверя, какого размера пикчу он  хочет создать - ну, и создает ее
 local function new()
 	selection = nil
 	local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Новый документ"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, "Ширина"}, {"Input", 0x262626, 0x880000, "Высота"}, {"EmptyLine"}, {"Button", {0xbbbbbb, 0xffffff, "OK"}})
@@ -563,7 +613,8 @@ local function new()
 	drawAll()
 end
 
---Обычная рекурсивная заливка
+--Обычная рекурсивная заливка, алгоритм спизжен с вики
+--Есть инфа, что выжирает стек, но Луа, вроде, не особо ругается, так что заебок все
 local function fill(x, y, startColor, fillColor)
 	local function doFill(xStart, yStart)
 		local iterator = convertCoordsToIterator(xStart, yStart)
@@ -585,31 +636,35 @@ local function fill(x, y, startColor, fillColor)
 	doFill(x, y)
 end
 
---Кисть
+--Кисть, КИИИИСТЬ
 local function brush(x, y, background, foreground, alpha, symbol)
 	--Смещение влево и вправо относительно указанного центра кисти
+	--КОРОЧ, НЕ ТУПИ
+	--Чтобы кисточка была по центру мыши, ну
 	local position = math.floor(currentBrushSize / 2)
-	local newIterator
-	--Сдвигаем х и у на смещение
 	x, y = x - position, y - position
-	--Считаем ширину/высоту кисти
-	local brushSize = position * 2 + 1
+	--Хуевинка для рисования
+	local newIterator
 	--Перебираем кисть по ширине и высоте
-	for cyka = 1, brushSize do
-		for pidor = 1, brushSize do
+	for cyka = 1, currentBrushSize do
+		for pidor = 1, currentBrushSize do
 			--Если этот кусочек входит в границы рисовабельной зоны, то
 			if x >= 1 and x <= masterPixels.width and y >= 1 and y <= masterPixels.height then
 				
-				--Считаем новый итератор для кусочка кисти
+				--Считаем итератор для кусочка кисти
 				newIterator = convertCoordsToIterator(x, y)
 
-				--Если указанная прозрачность не максимальна
-				if alpha < 0xFF then
+				--Если прозрачности кисти ВАЩЕ НЕТ, то просто рисуем как обычненько все
+				if alpha == 0x00 then
+					setPixel(newIterator, background, foreground, alpha, symbol)
+				--Если прозрачности кисти есть какая-то, но она не абсолютная
+				elseif alpha < 0xFF and alpha > 0x00 then
 					--Если пиксель в массиве ни хуя не прозрачный, то оставляем его таким же, разве что цвет меняем на сблендированный
 					if masterPixels[newIterator + 2] == 0x00 then
 						local gettedBackground = colorlib.alphaBlend(masterPixels[newIterator], background, alpha)
 						setPixel(newIterator, gettedBackground, foreground, 0x00, symbol)
-					--А если прозрачный
+					--А если прозрачный, то смешиваем прозрачности
+					--Пиздануться вообще, сук
 					else
 						--Если его прозоачность максимальная
 						if masterPixels[newIterator + 2] == 0xFF then
@@ -625,17 +680,19 @@ local function brush(x, y, background, foreground, alpha, symbol)
 				else
 					setPixel(newIterator, 0x000000, 0x000000, 0xFF, " ")
 				end
+				
 				--Рисуем пиксель из мастерпиксельса
 				drawPixel(x + sizes.xStartOfImage - 1, y + sizes.yStartOfImage - 1, x, y, newIterator)
 			end
 
 			x = x + 1
 		end
-		x = x - brushSize
+		x = x - currentBrushSize
 		y = y + 1
 	end
 end
 
+--Диалоговое окно обрезки и расширения картинки
 local function cropOrExpand(text)
 	local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true,
 		{"EmptyLine"},
@@ -668,6 +725,7 @@ local function cropOrExpand(text)
 	end
 end
 
+--Функция-обрезчик картинки
 local function crop()
 	local direction, countOfPixels = cropOrExpand("Обрезать")
 	if direction then
@@ -676,6 +734,7 @@ local function crop()
 	end
 end
 
+--Функция-расширитель картинки
 local function expand()
 	local direction, countOfPixels = cropOrExpand("Обрезать")
 	if direction then
@@ -684,6 +743,7 @@ local function expand()
 	end
 end
 
+--Функция-загрузчик картинки из файла
 local function loadImageFromFile(path)
 	if fs.exists(path) then
 		selection = nil
@@ -695,6 +755,7 @@ local function loadImageFromFile(path)
 	end
 end
 
+--Диалоговое окно, спрашивающее цвет (пока что онли для выделения)
 local function askForColorSelection(title)
 	local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true,
 		{"EmptyLine"},
@@ -710,6 +771,7 @@ local function askForColorSelection(title)
 	end
 end
 
+--Функция-заполнитель выделенной зоны какими-либо данными
 local function fillSelection(background, foreground, alpha, symbol)
 	for j = selection.y, selection.y + selection.height - 1 do
 		for i = selection.x, selection.x + selection.width - 1 do
@@ -724,6 +786,7 @@ local function fillSelection(background, foreground, alpha, symbol)
 	drawAll()
 end
 
+--Функция для обводки выделенной зоны
 local function stroke(color)
 	for i = selection.x, selection.x + selection.width - 1 do
 		local iterator = convertCoordsToIterator(i, selection.y)
@@ -746,20 +809,20 @@ end
 
 ------------------------------------------------ Старт программы --------------------------------------------------------------
 
-local args = {...}
-
---Рисуем весь интерфейс
-buffer.start()
+--Рисуем весь интерфейс чисто для красоты
 drawAll()
 
+--Открываем файлы по аргументам программы
 if args[1] == "o" or args[1] == "open" or args[1] == "-o" or args[1] == "load" then
 	loadImageFromFile(args[2])
 else
 	new()
 end
 
+--Отрисовываем интерфейс снова, поскольку у нас либо создался новый документ, либо открылся имеющийся файл
 drawAll()
 
+--Анализируем ивенты
 while true do
 	local e = {event.pull()}
 	if e[1] == "touch" or e[1] == "drag" then
@@ -1077,8 +1140,8 @@ while true do
 				else
 					local x, y, width, height = e[3], e[4], 30, 12
 					--А это чтоб за края экрана не лезло
-					if y + height >= sizes.ySize then y = sizes.ySize - height end
-					if x + width + 1 >= sizes.xSize then x = sizes.xSize - width - 1 end
+					if y + height >= buffer.screen.height then y = buffer.screen.height - height end
+					if x + width + 1 >= buffer.screen.width then x = buffer.screen.width - width - 1 end
 
 					currentBrushSize, currentAlpha = table.unpack(ecs.universalWindow(x, y, width, 0xeeeeee, true, {"EmptyLine"}, {"CenterText", 0x880000, "Параметры кисти"}, {"Slider", 0x262626, 0x880000, 1, 10, currentBrushSize, "Размер: ", " px"}, {"Slider", 0x262626, 0x880000, 0, 255, currentAlpha, "Прозрачность: ", ""}, {"EmptyLine"}, {"Button", {0xbbbbbb, 0xffffff, "OK"}}))
 					drawTopBar()
