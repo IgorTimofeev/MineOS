@@ -59,23 +59,32 @@ local function limit(n)
 	if n > -300 and n < 300 then return true end
 end
 
-local function drawGraph()
+local keyPoints = {}
+local function calculateKeyPoints()
+	keyPoints = {}
 	local xOld, yOld, xNew, yNew = math.huge, math.huge
 	for x = -renderRange, renderRange, renderAccuracy do
 		local success, result = assertString(x, yDependencyString)
 		if success then
 			if not (result ~= result) then
-				xNew, yNew = math.floor(xGraph + x * graphScale), math.floor(yGraph - result * graphScale)
+				xNew, yNew = math.floor(x * graphScale), math.floor(result * graphScale)
 				
 				if limit(xOld) and limit(yOld) and limit(xNew) and limit(yNew) then
-					doubleHeight.line(xOld, yOld, xNew, yNew, graphColor)
+					table.insert(keyPoints, {x = xOld, y = yOld, x2 = xNew, y2 = yNew})
+					-- doubleHeight.line(xOld, yOld, xNew, yNew, graphColor)
 				end
 				
 				xOld, yOld = xNew, yNew
 			end
-		else
-			error(success, result)
+		-- else
+		-- 	error(result)
 		end
+	end
+end
+
+local function drawGraph()
+	for i = 1, #keyPoints do
+		doubleHeight.line(xGraph + keyPoints[i].x, yGraph + keyPoints[i].y, xGraph + keyPoints[i].x2, yGraph + keyPoints[i].y2, graphColor)
 	end
 end
 
@@ -127,6 +136,7 @@ end
 
 ------------------------------------------------------------------------------------------------------------------------------------------
 
+calculateKeyPoints()
 drawAll()
 
 local xMove, yMove
@@ -164,6 +174,7 @@ while true do
 							yDependencyString = data[1]
 							renderRange = tonumber(data[2])
 							renderAccuracy = tonumber(data[3]) / 100
+							calculateKeyPoints()
 							drawAll()
 						end
 					elseif key == "Масштаб" then
@@ -171,13 +182,14 @@ while true do
 							{"EmptyLine"},
 							{"CenterText", ecs.colors.orange, "Масштаб"},
 							{"EmptyLine"},
-							{"Slider", 0xFFFFFF, ecs.colors.orange, 1, 5000, math.floor(graphScale * 100), "", "%"},
+							{"Slider", 0xFFFFFF, ecs.colors.orange, 1, 3000, math.floor(graphScale * 100), "", "%"},
 							{"EmptyLine"},
 							{"Button", {ecs.colors.orange, 0xffffff, "OK"}, {0x999999, 0xffffff, "Отмена"}}
 						)
 
 						if data[2] == "OK" then
 							graphScale = data[1] / 100
+							calculateKeyPoints()
 							drawAll()
 						end
 					elseif key == "Очистить точки" then
@@ -203,9 +215,11 @@ while true do
 	elseif e[1] == "scroll" then
 		if e[5] == 1 then
 			graphScale = graphScale + graphResizeSpeed
+			calculateKeyPoints()
 		else
 			graphScale = graphScale - graphResizeSpeed
 			if graphScale < graphResizeSpeed then graphScale = graphResizeSpeed end
+			calculateKeyPoints()
 		end
 		drawAll()
 	elseif e[1] == "key_down" then
