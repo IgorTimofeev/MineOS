@@ -84,7 +84,7 @@ end
 
 local function drawGraph()
 	for i = 1, #keyPoints do
-		doubleHeight.line(xGraph + keyPoints[i].x, yGraph + keyPoints[i].y, xGraph + keyPoints[i].x2, yGraph + keyPoints[i].y2, graphColor)
+		doubleHeight.line(xGraph + keyPoints[i].x, yGraph - keyPoints[i].y, xGraph + keyPoints[i].x2, yGraph - keyPoints[i].y2, graphColor)
 	end
 end
 
