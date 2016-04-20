@@ -252,6 +252,12 @@
   ----------------------------------------------------- Библиотеки --------------------------------------------------------------------------
 
   {
+    ["name"]="lib/doubleHeight.lua",
+    ["url"]="IgorTimofeev/OpenComputers/master/lib/doubleHeight.lua",
+    ["type"]="Library",
+    ["version"]=1.0,
+  },
+  {
     ["name"]="lib/json.lua",
     ["url"]="IgorTimofeev/OpenComputers/master/lib/json.lua",
     ["type"]="Library",
@@ -429,6 +435,14 @@
     ["version"]=1.0,
   },
   ----------------------------------------------------- Приложения без ресурсов --------------------------------------------------------------------------
+  {
+    ["name"]="MineOS/Applications/Graph",
+    ["url"]="IgorTimofeev/OpenComputers/master/Applications/Graph/Graph.lua",
+    ["type"]="Application",
+    ["icon"]="IgorTimofeev/OpenComputers/master/Applications/Graph/Icon.pic",
+    ["createShortcut"]="desktop",
+    ["version"]=1.0,
+  },
   {
     ["name"]="MineOS/Applications/FlappyBlock",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/FlappyBlock/FlappyBlock.lua",
