@@ -22,6 +22,7 @@ local backgroundColor = 0x1b1b1b
 local buttonTextColor = 0x1b1b1b
 local buttonWidth = 20
 local selectedPoints = {{x = -5, y = 2}}
+local showCornerPoints = false
 
 ------------------------------------------------------------------------------------------------------------------------------------------
 local buttons = {}
@@ -56,7 +57,7 @@ local function drawAxis()
 end
 
 local function limit(n)
-	if n > -300 and n < 300 then return true end
+	if n > -500 and n < 500 then return true end
 end
 
 local keyPoints = {}
@@ -85,6 +86,7 @@ end
 local function drawGraph()
 	for i = 1, #keyPoints do
 		doubleHeight.line(xGraph + keyPoints[i].x, yGraph - keyPoints[i].y, xGraph + keyPoints[i].x2, yGraph - keyPoints[i].y2, graphColor)
+		if showCornerPoints then doubleHeight.set(xGraph + keyPoints[i].x, yGraph - keyPoints[i].y, 0x00A8FF) end
 	end
 end
 
@@ -166,14 +168,17 @@ while true do
 							{"EmptyLine"},
 							{"CenterText", ecs.colors.orange, "Параметры рендера"},
 							{"Slider", 0xFFFFFF, ecs.colors.orange, 1, 100, renderRange, "Диапазон: ", ""},
-							{"Slider", 0xFFFFFF, ecs.colors.orange, 1, 100, renderAccuracy * 100, "Точность: ", "/100"},
+							{"Slider", 0xFFFFFF, ecs.colors.orange, 1, 100, 101 - renderAccuracy * 100, "Точность: ", ""},
+							{"EmptyLine"},
+							{"Switch", ecs.colors.orange, 0xffffff, 0xFFFFFF, "Показывать квант-точки", showCornerPoints},
 							{"EmptyLine"},
 							{"Button", {ecs.colors.orange, 0xffffff, "OK"}, {0x999999, 0xffffff, "Отмена"}}
 						)
-						if data[4] == "OK" then
+						if data[5] == "OK" then
 							yDependencyString = data[1]
 							renderRange = tonumber(data[2])
-							renderAccuracy = tonumber(data[3]) / 100
+							renderAccuracy = (101 - tonumber(data[3])) / 100
+							showCornerPoints = data[4]
 							calculateKeyPoints()
 							drawAll()
 						end
