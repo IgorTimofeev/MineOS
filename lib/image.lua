@@ -1007,13 +1007,18 @@ function image.gaussianBlur(picture, radius, force)
 
 	--Функция для распределения стартового цвета на указанный пиксель на основе указанного значения матрицы
 	local function spreadPixelToSpecifiedCoordinates(picture, xCoordinate, yCoordinate, matrixValue, startBackground, startForeground, startAlpha, startSymbol)
-		local matrixBackground, matrixForeground = image.get(picture, xCoordinate, yCoordinate)
+		local matrixBackground, matrixForeground, matrixAlpha, matrixSymbol = image.get(picture, xCoordinate, yCoordinate)
 
 		if matrixBackground and matrixForeground then
 			local newBackground = colorlib.alphaBlend(startBackground, matrixBackground, matrixValue)
-			local newForeground = colorlib.alphaBlend(startForeground, matrixForeground, matrixValue)
-			
-			image.set(picture, xCoordinate, yCoordinate, newBackground, newForeground, 0x00, startSymbol)
+			--Пизданись оно все в жопу, ебанина
+			--Короч, смари. Если символ равен пробелу, то мы полюбэ не учитываем цвет текста, верно?
+			--Но в будущих итерациях это цвет будет учтен, поэтому возникали ссаные баги графические
+			--Поэтому даже для ебучего пробела мы присваиваем значение цвета текста, равному НОВОМУ цвету фона
+			--Т.е. вроде бы как они и равны, но потом охуенно все будет, угу
+			local newForeground = matrixSymbol == " " and newBackground or colorlib.alphaBlend(startForeground, matrixForeground, matrixValue)
+
+			image.set(picture, xCoordinate, yCoordinate, newBackground, newForeground, 0x00, matrixSymbol)
 		end
 	end
 

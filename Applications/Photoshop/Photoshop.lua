@@ -319,7 +319,7 @@ end
 
 --Функция для отрисовки выделения соотв. инструментом
 local function drawSelection()
-	if selection then
+	if selection and selection.finished == true then
 		local color = 0x000000
 		local xStart, yStart = sizes.xStartOfImage + selection.x - 1, sizes.yStartOfImage + selection.y - 1
 		local xEnd = xStart + selection.width - 1
@@ -452,7 +452,7 @@ end
 
 --Перемещалка картинки в указанном направлении, поддерживающая все инструменты
 local function move(direction)
-	if instruments[currentInstrument] == "M" and selection then
+	if instruments[currentInstrument] == "M" and selection and selection.finished == true then
 		if direction == "up" then
 			selection.y = selection.y - 1
 			if selection.y < 1 then selection.y = 1 end
@@ -866,6 +866,9 @@ while true do
 						selection = {}
 						selection.xStart, selection.yStart = x, y
 						selection.finished = false
+
+						drawBackgroundAndImage()
+						buffer.draw()
 					elseif e[1] == "drag" and selection then
 						selection.finished = true
 						
@@ -960,7 +963,7 @@ while true do
 					elseif key == "Изображение" then
 						action = context.menu(obj["TopMenu"][key][1] - 1, obj["TopMenu"][key][2] + 1, {"Обрезать"}, {"Расширить"}, "-", {"Повернуть на 90 градусов"}, {"Повернуть на 180 градусов"}, "-", {"Отразить по горизонтали"}, {"Отразить по вертикали"})
 					elseif key == "Редактировать" then
-						action = context.menu(obj["TopMenu"][key][1] - 1, obj["TopMenu"][key][2] + 1, {"Цветовой тон/насыщенность"}, {"Цветовой баланс"}, {"Фотофильтр"}, "-", {"Инвертировать цвета"}, {"Черно-белый фильтр"})
+						action = context.menu(obj["TopMenu"][key][1] - 1, obj["TopMenu"][key][2] + 1, {"Цветовой тон/насыщенность"}, {"Цветовой баланс"}, {"Фотофильтр"}, "-", {"Инвертировать цвета"}, {"Черно-белый фильтр"}, "-", {"Размытие по Гауссу"})
 					elseif key == "О программе" then
 						ecs.universalWindow("auto", "auto", 36, 0xeeeeee, true, {"EmptyLine"}, {"CenterText", 0x880000, "Photoshop v5.1"}, {"EmptyLine"}, {"CenterText", 0x262626, "Авторы:"}, {"CenterText", 0x555555, "Тимофеев Игорь"}, {"CenterText", 0x656565, "vk.com/id7799889"}, {"CenterText", 0x656565, "Трифонов Глеб"}, {"CenterText", 0x656565, "vk.com/id88323331"}, {"EmptyLine"}, {"CenterText", 0x262626, "Тестеры:"}, {"CenterText", 0x656565, "Шестаков Тимофей"}, {"CenterText", 0x656565, "vk.com/id113499693"}, {"CenterText", 0x656565, "Вечтомов Роман"}, {"CenterText", 0x656565, "vk.com/id83715030"}, {"CenterText", 0x656565, "Омелаенко Максим"},  {"CenterText", 0x656565, "vk.com/paladincvm"}, {"EmptyLine"},{"Button", {0xbbbbbb, 0xffffff, "OK"}})
 					elseif key == "Горячие клавиши" then
@@ -978,6 +981,7 @@ while true do
 							{"WrappedText", 0x000000, "X - поменять цвета местами"},
 							{"WrappedText", 0x000000, "D - установка черного и белого цвета"},
 							{"WrappedText", 0x000000, "Ctrl+D - отмена выделения"},
+							{"WrappedText", 0x000000, "Alt+Клик - выбор цвета (только для Кисти)"},
 							{"EmptyLine"},
 							{"Button", {0xbbbbbb, 0xffffff, "OK"}}
 						)				
@@ -999,6 +1003,20 @@ while true do
 						)
 						if data[4] == "OK" then
 							masterPixels = image.hueSaturationBrightness(masterPixels, data[1] - 50, data[2] - 50, data[3] - 50)
+							drawAll()
+						end
+					elseif action == "Размытие по Гауссу" then
+						local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true,
+							{"EmptyLine"},
+							{"CenterText", 0x262626, "Размытие по Гауссу"},
+							{"EmptyLine"},
+							{"Slider", 0x262626, 0x880000, 1, 5, 2, "Радиус: ", ""},
+							{"Slider", 0x262626, 0x880000, 1, 255, 0x88, "Сила: ", ""},
+							{"EmptyLine"}, 
+							{"Button", {0xaaaaaa, 0xffffff, "OK"}, {0x888888, 0xffffff, "Отмена"}}
+						)
+						if data[3] == "OK" then
+							masterPixels = image.gaussianBlur(masterPixels, tonumber(data[1]), tonumber(data[2]))
 							drawAll()
 						end
 					elseif action == "Цветовой баланс" then
