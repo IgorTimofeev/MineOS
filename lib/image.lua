@@ -727,6 +727,30 @@ function image.optimize(picture)
 	return picture
 end
 
+--Получить пиксель из изображения по указанным координатам
+function image.get(picture, x, y)
+	if x >= 1 and y >= 1 and x <= picture.width and y <= picture.height then
+		local index = convertCoordsToIndex(x, y, picture.width)
+		return picture[index], picture[index + 1], picture[index + 2], picture[index + 3] 
+	else
+		return nil
+	end
+end
+
+--Установить пиксель в изображении по указанным координа
+function image.set(picture, x, y, background, foreground, alpha, symbol)
+	if x >= 1 and y >= 1 and x <= picture.width and y <= picture.height then
+		local index = convertCoordsToIndex(x, y, picture.width)
+		picture[index] = background or 0xFF00FF
+		picture[index + 1] = foreground or 0xFF00FF
+		picture[index + 2] = alpha or 0x00
+		picture[index + 3] = symbol or " "
+		return picture
+	else
+		error("Can't set pixel because it's located out of image coordinates")
+	end
+end
+
 ------------------------------------------ Функция снятия скриншота с экрана ------------------------------------------------
 
 --Сделать скриншот экрана и сохранить его по указанному пути
@@ -961,6 +985,67 @@ end
 function image.replaceColor(picture, fromColor, toColor)
 	for i = 1, #picture, 4 do
 		if picture[i] == fromColor then picture[i] = toColor end
+	end
+	return picture
+end
+
+--Функция размытия по Гауссу
+function image.gaussianBlur(picture, radius, force)
+	--Функция для генерации матрицы размытия
+	local function createConvolutionMatrix(maximumValue, matrixSize)
+		local delta = maximumValue / matrixSize
+		local matrix = {}
+		for y = 1, matrixSize do
+			for x = 1, matrixSize do
+				local value = ((x - 1) * delta + (y - 1) * delta) / 2
+				matrix[y] = matrix[y] or {}
+				matrix[y][x] = value
+			end
+		end
+		return matrix
+	end
+
+	--Функция для распределения стартового цвета на указанный пиксель на основе указанного значения матрицы
+	local function spreadPixelToSpecifiedCoordinates(picture, xCoordinate, yCoordinate, matrixValue, startBackground, startForeground, startAlpha, startSymbol)
+		local matrixBackground, matrixForeground = image.get(picture, xCoordinate, yCoordinate)
+
+		if matrixBackground and matrixForeground then
+			local newBackground = colorlib.alphaBlend(startBackground, matrixBackground, matrixValue)
+			local newForeground = colorlib.alphaBlend(startForeground, matrixForeground, matrixValue)
+			
+			image.set(picture, xCoordinate, yCoordinate, newBackground, newForeground, 0x00, startSymbol)
+		end
+	end
+
+	--Функция, распределяющая указанный пиксель по соседним пикселям на основе матрицы
+	local function spreadColorToOtherPixels(picture, xStart, yStart, matrix)
+		--Получаем стартовые данные о пикселе
+		local startBackground, startForeground, startAlpha, startSymbol = image.get(picture, xStart, yStart)
+		local xCoordinate, yCoordinate
+		--Перебираем матрицу
+		for yMatrix = 1, #matrix do
+			for xMatrix = 1, #matrix[yMatrix] do
+				--Игнорируем стартовый пиксель, на кой хер его размывать-то?
+				if not (xMatrix == 1 and yMatrix == 1) then
+					--Получаем координаты новых пикселей в изображении
+					--И в обратном направлении матрицы
+					xCoordinate, yCoordinate = xStart - xMatrix + 1, yStart - yMatrix + 1
+					spreadPixelToSpecifiedCoordinates(picture, xCoordinate, yCoordinate, matrix[yMatrix][xMatrix], startBackground, startForeground, startAlpha, startSymbol)
+					--Для начала в правильную сторону матрицы
+					xCoordinate, yCoordinate = xStart + xMatrix - 1, yStart + yMatrix - 1
+					spreadPixelToSpecifiedCoordinates(picture, xCoordinate, yCoordinate, matrix[yMatrix][xMatrix], startBackground, startForeground, startAlpha, startSymbol)
+				end
+			end
+		end
+	end
+
+	--Генерируем матрицу
+	local matrix = createConvolutionMatrix(force or 0x55, radius)
+	--Распределяем все пиксели по изображению
+	for y = 1, picture.height do
+		for x = 1, picture.width do
+			spreadColorToOtherPixels(picture, x, y, matrix)
+		end
 	end
 	return picture
 end
