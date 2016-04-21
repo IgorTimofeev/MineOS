@@ -747,7 +747,7 @@ function image.set(picture, x, y, background, foreground, alpha, symbol)
 		picture[index + 3] = symbol or " "
 		return picture
 	else
-		error("Can't set pixel because it's located out of image coordinates")
+		error("Can't set pixel because it's located out of image coordinates: x = " .. x .. ", y = " .. y)
 	end
 end
 

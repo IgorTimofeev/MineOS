@@ -3,12 +3,17 @@
 
 local copyright = [[
 	
-	Photoshop v5.1 для OpenComputers
+	Photoshop v6.0 для OpenComputers
 
 	Автор: ECS
 		Контактый адрес: https://vk.com/id7799889
 	Соавтор: Pornogion
 		Контактый адрес: https://vk.com/id88323331
+
+	Что нового в версии 6.0:
+		- Добавлен иструмент "Фигура", включающий в себя линию, прямоугольник и рамку
+		- Добавлен фильтр размытия по Гауссу
+		- Переработана концепция работы с выделениями
 
 	Что нового в версии 5.1:
 		- Цветовая гамма программы изменена на более детальную
@@ -117,6 +122,7 @@ local instruments = {
 	"E",
 	"F",
 	"T",
+	"S",
 }
 sizes.heightOfInstrument = 3
 sizes.yStartOfInstruments = sizes.heightOfTopBar + 2
@@ -127,6 +133,7 @@ local currentAlpha = 0x00
 local currentSymbol = " "
 local currentBrushSize = 1
 local savePath
+local currentShape
 
 --Верхний тулбар
 local topToolbar = {{"PS", ecs.colors.blue}, {"Файл"}, {"Изображение"}, {"Редактировать"}, {"Горячие клавиши"}, {"О программе"}}
@@ -138,6 +145,13 @@ local obj = {}
 local function newObj(class, name, ...)
 	obj[class] = obj[class] or {}
 	obj[class][name] = {...}
+end
+
+--Функция-сваппер переменных, пока что юзается только в выделении
+--А, не, наебал!
+--Вон, ниже тоже юзается! Ха, удобненько
+local function swap(a, b)
+	return b, a
 end
 
 --Отрисовка "прозрачной зоны", этакая сеточка чередующаяся
@@ -317,73 +331,186 @@ local function drawPixel(x, y, xPixel, yPixel, iterator)
 	background, foreground, alpha, symbol = nil, nil, nil, nil
 end
 
+--Пиздюлинка, показывающая размер текста и тыпы
+local function drawTooltip(x, y, ...)
+	local texts = {...}
+	--Рассчитываем ширину пиздюлинки
+	local maxWidth = 0; for i = 1, #texts do maxWidth = math.max(maxWidth, unicode.len(texts[i])) end
+	--Рисуем пиздюлинку
+	buffer.square(x, y, maxWidth + 2, #texts, 0x000000, 0xFFFFFF, " ", 69); x = x + 1		
+	for i = 1, #texts do buffer.text(x, y, 0xFFFFFF, texts[i]); y = y + 1 end
+end
+
 --Функция для отрисовки выделения соотв. инструментом
 local function drawSelection()
+	local color = 0x000000
+	local xStart, yStart = sizes.xStartOfImage + selection.x - 1, sizes.yStartOfImage + selection.y - 1
+	local xEnd, yEnd = xStart + selection.width - 1, yStart + selection.height - 1
+	local currentBackground
+
+	local function nextColor()
+		if color == 0x000000 then color = 0xFFFFFF else color = 0x000000 end
+	end
+
+	--Горизонтальные линии
+	local xPos, yPos = xStart + 1, yStart
+	for i = 1, selection.width - 2 do
+		nextColor()
+
+		currentBackground = buffer.get(xPos, yStart)
+		buffer.set(xPos, yStart, currentBackground, color, "━")
+		currentBackground = buffer.get(xPos, yEnd)
+		buffer.set(xPos, yEnd, currentBackground, color, "━")
+		
+		xPos = xPos + 1
+	end
+
+	--Вертикальные
+	color = 0x000000
+	xPos, yPos = xStart, yStart + 1
+	for i = 1, selection.height - 2 do
+		nextColor()
+		
+		currentBackground = buffer.get(xStart, yPos)
+		buffer.set(xStart, yPos, currentBackground, color, "┃")
+		
+		currentBackground = buffer.get(xEnd, yPos)
+		buffer.set(xEnd, yPos, currentBackground, color, "┃")
+		
+		yPos = yPos + 1
+	end
+
+	--Опорные угловые точки
+	color = 0x000000
+	currentBackground = buffer.get(xStart, yStart)
+	buffer.set(xStart, yStart, currentBackground, color, "┏")
+
+	currentBackground = buffer.get(xEnd, yStart)
+	buffer.set(xEnd, yStart, currentBackground, color, "┓")
+
+	currentBackground = buffer.get(xStart, yEnd)
+	buffer.set(xStart, yEnd, currentBackground, color, "┗")
+
+	currentBackground = buffer.get(xEnd, yEnd)
+	buffer.set(xEnd, yEnd, currentBackground, color, "┛")
+
+	drawTooltip(xEnd + 2, yEnd - 1, "Ш: " .. selection.width .. " px", "В: " .. selection.height .. " px")
+	-- drawTooltip(xEnd + 2, yEnd - 1, "Ш: " .. selection.width .. " px", "В: " .. selection.height .. " px", "S: " .. xStart .. "x" .. yStart, "E: " .. xEnd .. "x" .. yEnd)
+end
+
+local function line(x0, y0, x1, y1, background, applyToMasterPixels)
+   	local steep = false;
+    
+    if math.abs(x0 - x1) < math.abs(y0 - y1 ) then
+        x0, y0 = swap(x0, y0)
+        x1, y1 = swap(x1, y1)
+        steep = true;
+    end
+
+    if (x0 > x1) then
+    	x0, x1 = swap(x0, x1)
+    	y0, y1 = swap(y0, y1)
+    end
+
+    local dx = x1 - x0;
+    local dy = y1 - y0;
+    local derror2 = math.abs(dy) * 2
+    local error2 = 0;
+    local y = y0;
+    
+    for x = x0, x1, 1 do
+        if steep then
+        	if applyToMasterPixels then
+        		image.set(masterPixels, y, x, background, 0x000000, 0x00, " ")
+        	else
+            	buffer.set(y, x, background, 0x000000, " ")
+            end
+        else
+        	if applyToMasterPixels then
+        		image.set(masterPixels, x, y, background, 0x000000, 0x00, " ")
+        	else
+            	buffer.set(x, y, background, 0x000000, " ")
+            end
+        end
+
+        error2 = error2 + derror2;
+
+        if error2 > dx then
+            y = y + (y1 > y0 and 1 or -1);
+            error2 = error2 - dx * 2;
+        end
+    end
+end
+
+local function drawShapeCornerPoints(xStart, yStart, xEnd, yEnd)
+	buffer.set(xStart, yStart, 0x99FF80, 0x000000, " ")
+	buffer.set(xEnd, yEnd, 0x99FF80, 0x000000, " ")
+end
+
+local function drawLineShape()
+	local xStart, yStart = sizes.xStartOfImage + selection.xStart - 1, sizes.yStartOfImage + selection.yStart - 1
+	local xEnd, yEnd = sizes.xStartOfImage + selection.xEnd - 1, sizes.yStartOfImage + selection.yEnd - 1
+
+	line(xStart, yStart, xEnd, yEnd, currentBackground)
+	drawShapeCornerPoints(xStart, yStart, xEnd, yEnd)
+	drawTooltip(xEnd + 2, yEnd - 3, "Ш: " .. selection.width .. " px", "В: " .. selection.height .. " px", " ", "Enter - применить")
+end
+
+--Функция для обводки выделенной зоны
+local function stroke(x, y, width, height, color, applyToMasterPixels)
+	if applyToMasterPixels then
+		local iterator
+		for i = x, x + width - 1 do
+			iterator = convertCoordsToIterator(i, y)
+			masterPixels[iterator] = color; masterPixels[iterator + 1] = 0x0; masterPixels[iterator + 2] = 0x0; masterPixels[iterator + 3] = " "
+
+			iterator = convertCoordsToIterator(i, y + height - 1)
+			masterPixels[iterator] = color; masterPixels[iterator + 1] = 0x0; masterPixels[iterator + 2] = 0x0; masterPixels[iterator + 3] = " "
+		end
+
+		for i = y, y + height - 1 do
+			iterator = convertCoordsToIterator(x, i)
+			masterPixels[iterator] = color; masterPixels[iterator + 1] = 0x0; masterPixels[iterator + 2] = 0x0; masterPixels[iterator + 3] = " "
+
+			iterator = convertCoordsToIterator(x + width - 1, i)
+			masterPixels[iterator] = color; masterPixels[iterator + 1] = 0x0; masterPixels[iterator + 2] = 0x0; masterPixels[iterator + 3] = " "
+		end
+	else
+		buffer.square(x, y, width, 1, color, 0x000000, " ")
+		buffer.square(x, y + height - 1, width, 1, color, 0x000000, " ")
+
+		buffer.square(x, y, 1, height, color, 0x000000, " ")
+		buffer.square(x + width - 1, y, 1, height, color, 0x000000, " ")
+	end
+end
+
+local function drawSquareShape(filled)
+	local xStart, yStart = sizes.xStartOfImage + selection.x - 1, sizes.yStartOfImage + selection.y - 1
+	local xEnd, yEnd = xStart + selection.width - 1, yStart + selection.height - 1
+	
+	if filled then
+		buffer.square(xStart, yStart, selection.width, selection.height, currentBackground, 0x000000, " ")
+	else
+		stroke(xStart, yStart, selection.width, selection.height, currentBackground, false)
+	end
+
+	drawShapeCornerPoints(xStart, yStart, xEnd, yEnd)
+	drawTooltip(xEnd + 2, yEnd - 3, "Ш: " .. selection.width .. " px", "В: " .. selection.height .. " px", " ", "Enter - применить")
+end
+
+local function drawMultiPointInstrument()
 	if selection and selection.finished == true then
-		local color = 0x000000
-		local xStart, yStart = sizes.xStartOfImage + selection.x - 1, sizes.yStartOfImage + selection.y - 1
-		local xEnd = xStart + selection.width - 1
-		local yEnd = yStart + selection.height - 1
-		local currentBackground
-
-		local function nextColor()
-			if color == 0x000000 then color = 0xFFFFFF else color = 0x000000 end
+		if instruments[currentInstrument] == "M" then
+			drawSelection()
+		elseif instruments[currentInstrument] == "S" then
+			if currentShape == "Линия" then
+				drawLineShape()
+			elseif currentShape == "Прямоугольник" then
+				drawSquareShape(true)
+			elseif currentShape == "Рамка" then
+				drawSquareShape(false)
+			end
 		end
-
-		--Горизонтальные линии
-		local xPos, yPos = xStart + 1, yStart
-		for i = 1, selection.width - 2 do
-			nextColor()
-
-			currentBackground = buffer.get(xPos, yStart)
-			buffer.set(xPos, yStart, currentBackground, color, "━")
-			currentBackground = buffer.get(xPos, yEnd)
-			buffer.set(xPos, yEnd, currentBackground, color, "━")
-			
-			xPos = xPos + 1
-		end
-
-		--Вертикальные
-		color = 0x000000
-		xPos, yPos = xStart, yStart + 1
-		for i = 1, selection.height - 2 do
-			nextColor()
-			
-			currentBackground = buffer.get(xStart, yPos)
-			buffer.set(xStart, yPos, currentBackground, color, "┃")
-			
-			currentBackground = buffer.get(xEnd, yPos)
-			buffer.set(xEnd, yPos, currentBackground, color, "┃")
-			
-			yPos = yPos + 1
-		end
-
-		--Опорные угловые точки
-		color = 0x000000
-		currentBackground = buffer.get(xStart, yStart)
-		buffer.set(xStart, yStart, currentBackground, color, "┏")
-
-		currentBackground = buffer.get(xEnd, yStart)
-		buffer.set(xEnd, yStart, currentBackground, color, "┓")
-
-		currentBackground = buffer.get(xStart, yEnd)
-		buffer.set(xStart, yEnd, currentBackground, color, "┗")
-
-		currentBackground = buffer.get(xEnd, yEnd)
-		buffer.set(xEnd, yEnd, currentBackground, color, "┛")
-
-		--Пиздюлинка, показывающая размер текста и тыпы
-		local texts = {
-			"Ш: " .. selection.width .. " px",
-			"В: " .. selection.height .. " px",
-		}
-		--Рассчитываем ширину пиздюлинки
-		local maxWidth = 0; for i = 1, #texts do maxWidth = math.max(maxWidth, unicode.len(texts[i])) end
-		xPos, yPos = xEnd + 2, yEnd - #texts + 1
-
-		--Рисуем пиздюлинку
-		buffer.square(xPos, yPos, maxWidth + 2, #texts, 0x000000, 0xFFFFFF, " ", 69); xPos = xPos + 1		
-		for i = 1, #texts do buffer.text(xPos, yPos, 0xFFFFFF, texts[i]); yPos = yPos + 1 end
 	end
 end
 
@@ -418,8 +545,8 @@ local function drawImage()
 		buffer.text(xPos, sizes.yEndOfImage + 1, 0xFFFFFF, text)
 	end
 
-	--Рисуем выделение
-	drawSelection()
+	--Рисуем мультиинструмент
+	drawMultiPointInstrument()
 	--Убираем ограничение отрисовки
 	buffer.resetDrawLimit()
 end
@@ -489,13 +616,6 @@ local function setPixel(iterator, background, foreground, alpha, symbol)
 	masterPixels[iterator + 1] = foreground
 	masterPixels[iterator + 2] = alpha
 	masterPixels[iterator + 3] = symbol
-end
-
---Функция-сваппер переменных, пока что юзается только в выделении
---А, не, наебал!
---Вон, ниже тоже юзается! Ха, удобненько
-local function swap(a, b)
-	return b, a
 end
 
 --Функция, меняющая цвета местами
@@ -764,22 +884,6 @@ local function loadImageFromFile(path)
 	end
 end
 
---Диалоговое окно, спрашивающее цвет (пока что онли для выделения)
-local function askForColorSelection(title)
-	local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true,
-		{"EmptyLine"},
-		{"CenterText", 0x262626, title},
-		{"EmptyLine"},
-		{"Color", "Цвет", currentBackground},
-		{"EmptyLine"},
-		{"Button", {0xaaaaaa, 0xffffff, "OK"}, {0x888888, 0xffffff, "Отмена"}}
-	)
-
-	if data[2] == "OK" then
-		return data[1]
-	end
-end
-
 --Функция-заполнитель выделенной зоны какими-либо данными
 local function fillSelection(background, foreground, alpha, symbol)
 	for j = selection.y, selection.y + selection.height - 1 do
@@ -795,25 +899,18 @@ local function fillSelection(background, foreground, alpha, symbol)
 	drawAll()
 end
 
---Функция для обводки выделенной зоны
-local function stroke(color)
-	for i = selection.x, selection.x + selection.width - 1 do
-		local iterator = convertCoordsToIterator(i, selection.y)
-		masterPixels[iterator] = color; masterPixels[iterator + 1] = 0x0; masterPixels[iterator + 2] = 0x0; masterPixels[iterator + 3] = " "
-
-		local iterator = convertCoordsToIterator(i, selection.y + selection.height - 1)
-		masterPixels[iterator] = color; masterPixels[iterator + 1] = 0x0; masterPixels[iterator + 2] = 0x0; masterPixels[iterator + 3] = " "
+local function applyShapeToMasterPixels()
+	if currentShape == "Линия" then
+		line(selection.xStart, selection.yStart, selection.xEnd, selection.yEnd, currentBackground, true)
+	elseif currentShape == "Прямоугольник" then
+		fillSelection(currentBackground, 0x00000, 0x00, " ")
+	elseif currentShape == "Рамка" then
+		stroke(selection.x, selection.y, selection.width, selection.height, currentBackground, true)
 	end
 
-	for i = selection.y, selection.y + selection.height - 1 do
-		local iterator = convertCoordsToIterator(selection.x, i)
-		masterPixels[iterator] = color; masterPixels[iterator + 1] = 0x0; masterPixels[iterator + 2] = 0x0; masterPixels[iterator + 3] = " "
-
-		local iterator = convertCoordsToIterator(selection.x + selection.width - 1, i)
-		masterPixels[iterator] = color; masterPixels[iterator + 1] = 0x0; masterPixels[iterator + 2] = 0x0; masterPixels[iterator + 3] = " "
-	end
-
-	drawAll()
+	selection = nil
+	drawBackgroundAndImage()
+	buffer.draw()
 end
 
 ------------------------------------------------ Старт программы --------------------------------------------------------------
@@ -834,17 +931,48 @@ drawAll()
 --Анализируем ивенты
 while true do
 	local e = {event.pull()}
-	if e[1] == "touch" or e[1] == "drag" then
+	if e[1] == "touch" or e[1] == "drag" or e[1] == "drop" then
 		--Левый клик
 		if e[5] == 0 then
 			--Если кликнули на рисовабельную зонку
 			if ecs.clickedAtArea(e[3], e[4], sizes.xStartOfImage, sizes.yStartOfImage, sizes.xEndOfImage, sizes.yEndOfImage) then
 				
+				--Получаем координаты в изображении и итератор
 				local x, y = e[3] - sizes.xStartOfImage + 1, e[4] - sizes.yStartOfImage + 1
 				local iterator = convertCoordsToIterator(x, y)
+				
+				--Все для инструментов мультиточечного рисования
+				if instruments[currentInstrument] == "M" or instruments[currentInstrument] == "S" then
+					if e[1] == "touch" then
+						selection = {}
+						selection.xStart, selection.yStart = x, y
 
+					elseif e[1] == "drag" and selection then
+						local x1, y1 = selection.xStart, selection.yStart
+						local x2, y2 = x, y
+						if x1 > x2 then
+							x1, x2 = swap(x1, x2)
+						end
+						if y1 > y2 then
+							y1, y2 = swap(y1, y2)
+						end
+
+						selection.x, selection.y = x1, y1
+						selection.x2, selection.y2 = x2, y2
+						selection.xEnd, selection.yEnd = x, y
+						selection.width = selection.x2 - selection.x + 1
+						selection.height = selection.y2 - selection.y + 1
+
+						selection.finished = true
+					end
+
+					--Если выделение полностью завершено, то отдаем контроль отрисовочным функциям
+					-- if instruments[currentInstrument] == "M" then
+						drawBackgroundAndImage()
+						buffer.draw()
+					-- end
 				--Кисть
-				if instruments[currentInstrument] == "B" then
+				elseif instruments[currentInstrument] == "B" then
 					
 					--Если нажата клавиша альт
 					if keyboard.isKeyDown(56) then
@@ -859,38 +987,6 @@ while true do
 						--Пишем что-то в консоли
 						console("Кисть: клик на точку "..e[3].."x"..e[4]..", координаты в изображении: "..x.."x"..y..", индекс массива изображения: "..iterator)
 						buffer.draw()
-					end
-				--Выделение
-				elseif instruments[currentInstrument] == "M" then
-					if e[1] == "touch" then
-						selection = {}
-						selection.xStart, selection.yStart = x, y
-						selection.finished = false
-
-						drawBackgroundAndImage()
-						buffer.draw()
-					elseif e[1] == "drag" and selection then
-						selection.finished = true
-						
-						local x1, y1 = selection.xStart, selection.yStart
-						local x2, y2 = x, y
-
-						if x1 > x2 then
-							x1, x2 = swap(x1, x2)
-						end
-
-						if y1 > y2 then
-							y1, y2 = swap(y1, y2)
-						end
-
-						selection.x, selection.y = x1, y1
-						selection.width = x2 - x1 + 1
-						selection.height = y2 - y1 + 1
-
-						if selection.width > 1 and selection.height > 1 and selection.finished then
-							drawBackgroundAndImage()
-							buffer.draw()
-						end
 					end
 				--Ластик
 				elseif instruments[currentInstrument] == "E" then
@@ -945,6 +1041,10 @@ while true do
 					selection = nil
 					currentInstrument = key
 					drawAll()
+					if instruments[currentInstrument] == "S" then
+						local action = context.menu(obj["Instruments"][key][3] + 1, obj["Instruments"][key][2], {"Линия"}, {"Прямоугольник"}, {"Рамка"})
+						currentShape = action or "Линия"
+					end
 					break
 				end
 			end
@@ -965,7 +1065,7 @@ while true do
 					elseif key == "Редактировать" then
 						action = context.menu(obj["TopMenu"][key][1] - 1, obj["TopMenu"][key][2] + 1, {"Цветовой тон/насыщенность"}, {"Цветовой баланс"}, {"Фотофильтр"}, "-", {"Инвертировать цвета"}, {"Черно-белый фильтр"}, "-", {"Размытие по Гауссу"})
 					elseif key == "О программе" then
-						ecs.universalWindow("auto", "auto", 36, 0xeeeeee, true, {"EmptyLine"}, {"CenterText", 0x880000, "Photoshop v5.1"}, {"EmptyLine"}, {"CenterText", 0x262626, "Авторы:"}, {"CenterText", 0x555555, "Тимофеев Игорь"}, {"CenterText", 0x656565, "vk.com/id7799889"}, {"CenterText", 0x656565, "Трифонов Глеб"}, {"CenterText", 0x656565, "vk.com/id88323331"}, {"EmptyLine"}, {"CenterText", 0x262626, "Тестеры:"}, {"CenterText", 0x656565, "Шестаков Тимофей"}, {"CenterText", 0x656565, "vk.com/id113499693"}, {"CenterText", 0x656565, "Вечтомов Роман"}, {"CenterText", 0x656565, "vk.com/id83715030"}, {"CenterText", 0x656565, "Омелаенко Максим"},  {"CenterText", 0x656565, "vk.com/paladincvm"}, {"EmptyLine"},{"Button", {0xbbbbbb, 0xffffff, "OK"}})
+						ecs.universalWindow("auto", "auto", 36, 0xeeeeee, true, {"EmptyLine"}, {"CenterText", 0x880000, "Photoshop v6.0"}, {"EmptyLine"}, {"CenterText", 0x262626, "Авторы:"}, {"CenterText", 0x555555, "Тимофеев Игорь"}, {"CenterText", 0x656565, "vk.com/id7799889"}, {"CenterText", 0x656565, "Трифонов Глеб"}, {"CenterText", 0x656565, "vk.com/id88323331"}, {"EmptyLine"}, {"CenterText", 0x262626, "Тестеры:"}, {"CenterText", 0x656565, "Шестаков Тимофей"}, {"CenterText", 0x656565, "vk.com/id113499693"}, {"CenterText", 0x656565, "Вечтомов Роман"}, {"CenterText", 0x656565, "vk.com/id83715030"}, {"CenterText", 0x656565, "Омелаенко Максим"},  {"CenterText", 0x656565, "vk.com/paladincvm"}, {"EmptyLine"},{"Button", {0xbbbbbb, 0xffffff, "OK"}})
 					elseif key == "Горячие клавиши" then
 						ecs.universalWindow( "auto", "auto", 42, 0xeeeeee, true,
 							{"EmptyLine"},
@@ -1147,22 +1247,17 @@ while true do
 			if ecs.clickedAtArea(e[3], e[4], sizes.xStartOfImage, sizes.yStartOfImage, sizes.xEndOfImage, sizes.yEndOfImage) then
 				
 				if instruments[currentInstrument] == "M" and selection then
-					local action = context.menu(e[3], e[4], {"Убрать выделение"}, {"Обрезать", true}, "-", {"Залить цветом"}, {"Очистить"}, {"Обводка"})
+					local action = context.menu(e[3], e[4], {"Убрать выделение"}, {"Обрезать", true}, "-", {"Заливка"}, {"Рамка"}, "-", {"Очистить"})
 					if action == "Убрать выделение" then
 						selection = nil
 						drawAll()
-					elseif action == "Обводка" then
-						local color = askForColorSelection("Обводка")
-						if color then
-							stroke(color)
-						end
 					elseif action == "Очистить" then
 						fillSelection(0x0, 0x0, 0xFF, " ")
-					elseif action == "Залить цветом" then
-						local color = askForColorSelection("Залить цветом")
-						if color then
-							fillSelection(color, 0x0, 0x0, " ")
-						end
+					elseif action == "Заливка" then
+						fillSelection(currentBackground, 0x0, 0x0, " ")
+					elseif action == "Рамка" then
+						stroke(selection.x, selection.y, selection.width, selection.height, currentBackground, true)
+						drawAll()
 					end
 				else
 					local x, y, width, height = e[3], e[4], 30, 12
@@ -1190,6 +1285,17 @@ while true do
 		-- --Пробел
 		-- elseif e[4] == 57 then
 		-- 	drawAll()
+		--ENTER
+		elseif e[4] == 28 then
+			if instruments[currentInstrument] == "S" and selection and selection.finished then
+				applyShapeToMasterPixels()
+			end
+		--BACKSPACE
+		elseif e[4] == 14 then
+			if selection and selection.finished then
+				fillSelection(0x000000, 0x000000, 0x00, " ")
+				drawAll()
+			end
 		--X
 		elseif e[4] == 45 then
 			swapColors()
