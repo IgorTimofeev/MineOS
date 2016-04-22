@@ -1,14 +1,17 @@
 
------------------------------------------------- Копирайт --------------------------------------------------------------
+------------------------------------------------ Информешйн, епта --------------------------------------------------------------
 
 local copyright = [[
 	
-	Photoshop v6.0 для OpenComputers
+	Photoshop v6.1 для OpenComputers
 
 	Автор: ECS
 		Контактый адрес: https://vk.com/id7799889
 	Соавтор: Pornogion
 		Контактый адрес: https://vk.com/id88323331
+
+	Что нового в версии 6.1:
+		- Добавлен суб-инструмент "Эллипс"
 
 	Что нового в версии 6.0:
 		- Добавлен иструмент "Фигура", включающий в себя линию, прямоугольник и рамку
@@ -484,14 +487,55 @@ local function stroke(x, y, width, height, color, applyToMasterPixels)
 	end
 end
 
-local function drawSquareShape(filled)
+local function ellipse(xStart, yStart, width, height, color, applyToMasterPixels)
+	--helper function, draws pixel and mirrors it
+	local function setpixel4(centerX, centerY, deltaX, deltaY, color)
+		if applyToMasterPixels then
+			image.set(masterPixels, centerX + deltaX, centerY + deltaY, color, 0x000000, 0x00, " ")
+			image.set(masterPixels, centerX - deltaX, centerY + deltaY, color, 0x000000, 0x00, " ")
+			image.set(masterPixels, centerX + deltaX, centerY - deltaY, color, 0x000000, 0x00, " ")
+			image.set(masterPixels, centerX - deltaX, centerY - deltaY, color, 0x000000, 0x00, " ")
+		else
+			buffer.set(centerX + deltaX, centerY + deltaY, color, 0x000000, " ")
+			buffer.set(centerX - deltaX, centerY + deltaY, color, 0x000000, " ")
+			buffer.set(centerX + deltaX, centerY - deltaY, color, 0x000000, " ")
+			buffer.set(centerX - deltaX, centerY - deltaY, color, 0x000000, " ")
+		end
+	end
+
+	--red ellipse, 2*10px border
+	local centerX = math.floor(xStart + width / 2)
+	local centerY = math.floor(yStart + height / 2)
+	local radiusX = math.floor(width / 2)
+	local radiusY = math.floor(height / 2)
+	local radiusX2 = radiusX ^ 2
+	local radiusY2 = radiusY ^ 2
+	
+	--upper and lower halves
+	local quarter = math.floor(radiusX2 / math.sqrt(radiusX2 + radiusY2))
+	for x = 0, quarter do
+		local y = radiusY * math.sqrt(1 - x^2 / radiusX2)
+		setpixel4(centerX, centerY, x, math.floor(y), color);
+	end
+
+	--right and left halves
+	quarter = math.floor(radiusY2 / math.sqrt(radiusX2 + radiusY2));
+	for y = 0, quarter do
+		x = radiusX * math.sqrt(1 - y^2 / radiusY2);
+		setpixel4(centerX, centerY, math.floor(x), y, color);
+	end
+end
+
+local function drawSquareShape(type)
 	local xStart, yStart = sizes.xStartOfImage + selection.x - 1, sizes.yStartOfImage + selection.y - 1
 	local xEnd, yEnd = xStart + selection.width - 1, yStart + selection.height - 1
 	
-	if filled then
+	if type == "filledSquare" then
 		buffer.square(xStart, yStart, selection.width, selection.height, currentBackground, 0x000000, " ")
-	else
+	elseif type == "frame" then
 		stroke(xStart, yStart, selection.width, selection.height, currentBackground, false)
+	elseif type == "ellipse" then
+		ellipse(xStart, yStart, selection.width, selection.height, currentBackground, false)
 	end
 
 	drawShapeCornerPoints(xStart, yStart, xEnd, yEnd)
@@ -505,10 +549,12 @@ local function drawMultiPointInstrument()
 		elseif instruments[currentInstrument] == "S" then
 			if currentShape == "Линия" then
 				drawLineShape()
+			elseif currentShape == "Эллипс" then
+				drawSquareShape("ellipse")
 			elseif currentShape == "Прямоугольник" then
-				drawSquareShape(true)
+				drawSquareShape("filledSquare")
 			elseif currentShape == "Рамка" then
-				drawSquareShape(false)
+				drawSquareShape("frame")
 			end
 		end
 	end
@@ -906,6 +952,8 @@ local function applyShapeToMasterPixels()
 		fillSelection(currentBackground, 0x00000, 0x00, " ")
 	elseif currentShape == "Рамка" then
 		stroke(selection.x, selection.y, selection.width, selection.height, currentBackground, true)
+	elseif currentShape == "Эллипс" then
+		ellipse(selection.x, selection.y, selection.width, selection.height, currentBackground, true)
 	end
 
 	selection = nil
@@ -1042,7 +1090,7 @@ while true do
 					currentInstrument = key
 					drawAll()
 					if instruments[currentInstrument] == "S" then
-						local action = context.menu(obj["Instruments"][key][3] + 1, obj["Instruments"][key][2], {"Линия"}, {"Прямоугольник"}, {"Рамка"})
+						local action = context.menu(obj["Instruments"][key][3] + 1, obj["Instruments"][key][2], {"Линия"}, {"Эллипс"}, {"Прямоугольник"}, {"Рамка"})
 						currentShape = action or "Линия"
 					end
 					break
@@ -1065,7 +1113,7 @@ while true do
 					elseif key == "Редактировать" then
 						action = context.menu(obj["TopMenu"][key][1] - 1, obj["TopMenu"][key][2] + 1, {"Цветовой тон/насыщенность"}, {"Цветовой баланс"}, {"Фотофильтр"}, "-", {"Инвертировать цвета"}, {"Черно-белый фильтр"}, "-", {"Размытие по Гауссу"})
 					elseif key == "О программе" then
-						ecs.universalWindow("auto", "auto", 36, 0xeeeeee, true, {"EmptyLine"}, {"CenterText", 0x880000, "Photoshop v6.0"}, {"EmptyLine"}, {"CenterText", 0x262626, "Авторы:"}, {"CenterText", 0x555555, "Тимофеев Игорь"}, {"CenterText", 0x656565, "vk.com/id7799889"}, {"CenterText", 0x656565, "Трифонов Глеб"}, {"CenterText", 0x656565, "vk.com/id88323331"}, {"EmptyLine"}, {"CenterText", 0x262626, "Тестеры:"}, {"CenterText", 0x656565, "Шестаков Тимофей"}, {"CenterText", 0x656565, "vk.com/id113499693"}, {"CenterText", 0x656565, "Вечтомов Роман"}, {"CenterText", 0x656565, "vk.com/id83715030"}, {"CenterText", 0x656565, "Омелаенко Максим"},  {"CenterText", 0x656565, "vk.com/paladincvm"}, {"EmptyLine"},{"Button", {0xbbbbbb, 0xffffff, "OK"}})
+						ecs.universalWindow("auto", "auto", 36, 0xeeeeee, true, {"EmptyLine"}, {"CenterText", 0x880000, "Photoshop v6.1"}, {"EmptyLine"}, {"CenterText", 0x262626, "Авторы:"}, {"CenterText", 0x555555, "Тимофеев Игорь"}, {"CenterText", 0x656565, "vk.com/id7799889"}, {"CenterText", 0x656565, "Трифонов Глеб"}, {"CenterText", 0x656565, "vk.com/id88323331"}, {"EmptyLine"}, {"CenterText", 0x262626, "Тестеры:"}, {"CenterText", 0x656565, "Шестаков Тимофей"}, {"CenterText", 0x656565, "vk.com/id113499693"}, {"CenterText", 0x656565, "Вечтомов Роман"}, {"CenterText", 0x656565, "vk.com/id83715030"}, {"CenterText", 0x656565, "Омелаенко Максим"},  {"CenterText", 0x656565, "vk.com/paladincvm"}, {"EmptyLine"},{"Button", {0xbbbbbb, 0xffffff, "OK"}})
 					elseif key == "Горячие клавиши" then
 						ecs.universalWindow( "auto", "auto", 42, 0xeeeeee, true,
 							{"EmptyLine"},
