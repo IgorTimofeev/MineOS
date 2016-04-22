@@ -3,12 +3,15 @@
 
 local copyright = [[
 	
-	Photoshop v6.1 для OpenComputers
+	Photoshop v6.2 для OpenComputers
 
 	Автор: ECS
 		Контактый адрес: https://vk.com/id7799889
 	Соавтор: Pornogion
 		Контактый адрес: https://vk.com/id88323331
+
+	Что нового в версии 6.2:
+		- Добавлен суб-инструмент "Многоугольник"
 
 	Что нового в версии 6.1:
 		- Добавлен суб-инструмент "Эллипс"
@@ -137,6 +140,7 @@ local currentSymbol = " "
 local currentBrushSize = 1
 local savePath
 local currentShape
+local currentPolygonCountOfEdges
 
 --Верхний тулбар
 local topToolbar = {{"PS", ecs.colors.blue}, {"Файл"}, {"Изображение"}, {"Редактировать"}, {"Горячие клавиши"}, {"О программе"}}
@@ -155,6 +159,15 @@ end
 --Вон, ниже тоже юзается! Ха, удобненько
 local function swap(a, b)
 	return b, a
+end
+
+--Адекватное округление, ибо в луашке нет такого, ХАХ
+local function round(num) 
+	if num >= 0 then
+		return math.floor(num + 0.5) 
+	else
+		return math.ceil(num - 0.5)
+	end
 end
 
 --Отрисовка "прозрачной зоны", этакая сеточка чередующаяся
@@ -204,7 +217,7 @@ end
 --Отрисовка панели инструментов слева
 local function drawLeftBar()
 	--Рисуем подложечку
-	buffer.square(1, 2, sizes.widthOfLeftBar, sizes.heightOfLeftBar, colors.leftToolbar, 0xFFFFFF, " ")
+	buffer.square(1, 5, sizes.widthOfLeftBar, sizes.heightOfLeftBar, colors.leftToolbar, 0xFFFFFF, " ")
 	--Рисуем инструменты
 	local yPos = sizes.yStartOfInstruments
 	for i = 1, #instruments do
@@ -355,47 +368,41 @@ local function drawSelection()
 		if color == 0x000000 then color = 0xFFFFFF else color = 0x000000 end
 	end
 
-	--Горизонтальные линии
-	local xPos, yPos = xStart + 1, yStart
-	for i = 1, selection.width - 2 do
-		nextColor()
+	--"━"
+	--"┃"
 
-		currentBackground = buffer.get(xPos, yStart)
-		buffer.set(xPos, yStart, currentBackground, color, "━")
-		currentBackground = buffer.get(xPos, yEnd)
-		buffer.set(xPos, yEnd, currentBackground, color, "━")
-		
-		xPos = xPos + 1
+	local function drawSelectionSquare(x1, y1, x2, y2, xStep, yStep, symbol)
+		for y = y1, y2, yStep do
+			for x = x1, x2, xStep do
+				local background = buffer.get(x, y)
+				buffer.set(x, y, background, color, symbol)
+				nextColor()
+			end
+		end
 	end
 
-	--Вертикальные
-	color = 0x000000
-	xPos, yPos = xStart, yStart + 1
-	for i = 1, selection.height - 2 do
+	local function drawCornerPoint(x, y, symbol)
+		local background = buffer.get(x, y)
+		buffer.set(x, y, background, color, symbol)
 		nextColor()
-		
-		currentBackground = buffer.get(xStart, yPos)
-		buffer.set(xStart, yPos, currentBackground, color, "┃")
-		
-		currentBackground = buffer.get(xEnd, yPos)
-		buffer.set(xEnd, yPos, currentBackground, color, "┃")
-		
-		yPos = yPos + 1
 	end
 
-	--Опорные угловые точки
-	color = 0x000000
-	currentBackground = buffer.get(xStart, yStart)
-	buffer.set(xStart, yStart, currentBackground, color, "┏")
-
-	currentBackground = buffer.get(xEnd, yStart)
-	buffer.set(xEnd, yStart, currentBackground, color, "┓")
-
-	currentBackground = buffer.get(xStart, yEnd)
-	buffer.set(xStart, yEnd, currentBackground, color, "┗")
-
-	currentBackground = buffer.get(xEnd, yEnd)
-	buffer.set(xEnd, yEnd, currentBackground, color, "┛")
+	if selection.width > 1 and selection.height > 1 then
+		drawCornerPoint(xStart, yStart, "┏")
+		drawSelectionSquare(xStart + 1, yStart, xEnd - 1, yStart, 1, 1, "━")
+		drawCornerPoint(xEnd, yStart, "┓")
+		drawSelectionSquare(xEnd, yStart + 1, xEnd, yEnd - 1, 1, 1, "┃")
+		drawCornerPoint(xEnd, yEnd, "┛")
+		drawSelectionSquare(xEnd - 1, yEnd, xStart + 1, yEnd, -1, 1, "━")
+		drawCornerPoint(xStart, yEnd, "┗")
+		drawSelectionSquare(xStart, yEnd - 1, xStart, yStart + 1, 1, -1, "┃")
+	else
+		if selection.width == 1 then
+			drawSelectionSquare(xStart, yStart, xStart, yEnd, 1, 1, "┃")
+		elseif selection.height == 1 then 
+			drawSelectionSquare(xStart, yStart, xEnd, yStart, 1, 1, "━")
+		end
+	end
 
 	drawTooltip(xEnd + 2, yEnd - 1, "Ш: " .. selection.width .. " px", "В: " .. selection.height .. " px")
 	-- drawTooltip(xEnd + 2, yEnd - 1, "Ш: " .. selection.width .. " px", "В: " .. selection.height .. " px", "S: " .. xStart .. "x" .. yStart, "E: " .. xEnd .. "x" .. yEnd)
@@ -526,6 +533,41 @@ local function ellipse(xStart, yStart, width, height, color, applyToMasterPixels
 	end
 end
 
+local function polygon(xCenter, yCenter, xStart, yStart, countOfEdges, color)
+	local degreeStep = 360 / countOfEdges
+
+	local deltaX, deltaY = xStart - xCenter, yStart - yCenter
+	local radius = math.sqrt(deltaX ^ 2 + deltaY ^ 2)
+	local halfRadius = radius / 2
+	local startDegree = math.deg(math.asin(deltaX / radius))
+
+	local function calculatePosition(degree)
+		local radDegree = math.rad(degree)
+		local deltaX2 = math.sin(radDegree) * radius
+		local deltaY2 = math.cos(radDegree) * radius
+		return round(xCenter + deltaX2), round(yCenter + (deltaY >= 0 and deltaY2 or -deltaY2))
+	end
+
+	local xOld, yOld, xNew, yNew = calculatePosition(startDegree)
+
+	for degree = (startDegree + degreeStep - 1), (startDegree + 360), degreeStep do
+		xNew, yNew = calculatePosition(degree)
+		buffer.line(xOld, yOld, xNew, yNew, color, 0x000000, " ")
+		xOld, yOld = xNew, yNew
+	end
+end
+
+local function drawPolygonShape()
+	local xStart, yStart = sizes.xStartOfImage + selection.xStart - 1, sizes.yStartOfImage + selection.yStart - 1
+	local xEnd, yEnd = sizes.xStartOfImage + selection.xEnd - 1, sizes.yStartOfImage + selection.yEnd - 1
+
+	local radius = math.floor(math.sqrt(selection.width ^ 2 + (selection.height*2) ^ 2))
+	polygon(xStart, yStart, xEnd, yEnd, currentPolygonCountOfEdges, currentBackground)
+
+	drawShapeCornerPoints(xStart, yStart, xEnd, yEnd)
+	drawTooltip(xEnd + 2, yEnd - 3, "Радиус: " .. radius .. " px", "Грани: " .. currentPolygonCountOfEdges, " ", "Enter - применить")
+end
+
 local function drawSquareShape(type)
 	local xStart, yStart = sizes.xStartOfImage + selection.x - 1, sizes.yStartOfImage + selection.y - 1
 	local xEnd, yEnd = xStart + selection.width - 1, yStart + selection.height - 1
@@ -535,7 +577,7 @@ local function drawSquareShape(type)
 	elseif type == "frame" then
 		stroke(xStart, yStart, selection.width, selection.height, currentBackground, false)
 	elseif type == "ellipse" then
-		ellipse(xStart, yStart, selection.width, selection.height, currentBackground, false)
+		ellipse(xStart, yStart, selection.width, selection.height, currentBackground, false)		
 	end
 
 	drawShapeCornerPoints(xStart, yStart, xEnd, yEnd)
@@ -555,6 +597,8 @@ local function drawMultiPointInstrument()
 				drawSquareShape("filledSquare")
 			elseif currentShape == "Рамка" then
 				drawSquareShape("frame")
+			elseif currentShape == "Многоугольник" then
+				drawPolygonShape()
 			end
 		end
 	end
@@ -1088,10 +1132,23 @@ while true do
 				if ecs.clickedAtArea(e[3], e[4], obj["Instruments"][key][1], obj["Instruments"][key][2], obj["Instruments"][key][3], obj["Instruments"][key][4]) then
 					selection = nil
 					currentInstrument = key
-					drawAll()
+					drawLeftBar(); buffer.draw()
 					if instruments[currentInstrument] == "S" then
-						local action = context.menu(obj["Instruments"][key][3] + 1, obj["Instruments"][key][2], {"Линия"}, {"Эллипс"}, {"Прямоугольник"}, {"Рамка"})
+						local action = context.menu(obj["Instruments"][key][3] + 1, obj["Instruments"][key][2], {"Линия"}, {"Эллипс"}, {"Прямоугольник"}, {"Многоугольник"}, {"Рамка"})
 						currentShape = action or "Линия"
+						
+						if currentShape == "Многоугольник" then
+							local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true,
+								{"EmptyLine"},
+								{"CenterText", 0x262626, "Количество граней"},
+								{"EmptyLine"},
+								{"Selector", 0x262626, 0x880000, "3", "4", "5", "6", "7", "8", "9", "10"},
+								{"EmptyLine"}, 
+								{"Button", {0xaaaaaa, 0xffffff, "OK"}}
+							)
+							currentPolygonCountOfEdges = tonumber(data[1])
+						end
+						drawAll()
 					end
 					break
 				end
@@ -1113,7 +1170,7 @@ while true do
 					elseif key == "Редактировать" then
 						action = context.menu(obj["TopMenu"][key][1] - 1, obj["TopMenu"][key][2] + 1, {"Цветовой тон/насыщенность"}, {"Цветовой баланс"}, {"Фотофильтр"}, "-", {"Инвертировать цвета"}, {"Черно-белый фильтр"}, "-", {"Размытие по Гауссу"})
 					elseif key == "О программе" then
-						ecs.universalWindow("auto", "auto", 36, 0xeeeeee, true, {"EmptyLine"}, {"CenterText", 0x880000, "Photoshop v6.1"}, {"EmptyLine"}, {"CenterText", 0x262626, "Авторы:"}, {"CenterText", 0x555555, "Тимофеев Игорь"}, {"CenterText", 0x656565, "vk.com/id7799889"}, {"CenterText", 0x656565, "Трифонов Глеб"}, {"CenterText", 0x656565, "vk.com/id88323331"}, {"EmptyLine"}, {"CenterText", 0x262626, "Тестеры:"}, {"CenterText", 0x656565, "Шестаков Тимофей"}, {"CenterText", 0x656565, "vk.com/id113499693"}, {"CenterText", 0x656565, "Вечтомов Роман"}, {"CenterText", 0x656565, "vk.com/id83715030"}, {"CenterText", 0x656565, "Омелаенко Максим"},  {"CenterText", 0x656565, "vk.com/paladincvm"}, {"EmptyLine"},{"Button", {0xbbbbbb, 0xffffff, "OK"}})
+						ecs.universalWindow("auto", "auto", 36, 0xeeeeee, true, {"EmptyLine"}, {"CenterText", 0x880000, "Photoshop v6.2"}, {"EmptyLine"}, {"CenterText", 0x262626, "Авторы:"}, {"CenterText", 0x555555, "Тимофеев Игорь"}, {"CenterText", 0x656565, "vk.com/id7799889"}, {"CenterText", 0x656565, "Трифонов Глеб"}, {"CenterText", 0x656565, "vk.com/id88323331"}, {"EmptyLine"}, {"CenterText", 0x262626, "Тестеры:"}, {"CenterText", 0x656565, "Шестаков Тимофей"}, {"CenterText", 0x656565, "vk.com/id113499693"}, {"CenterText", 0x656565, "Вечтомов Роман"}, {"CenterText", 0x656565, "vk.com/id83715030"}, {"CenterText", 0x656565, "Омелаенко Максим"},  {"CenterText", 0x656565, "vk.com/paladincvm"}, {"EmptyLine"},{"Button", {0xbbbbbb, 0xffffff, "OK"}})
 					elseif key == "Горячие клавиши" then
 						ecs.universalWindow( "auto", "auto", 42, 0xeeeeee, true,
 							{"EmptyLine"},
