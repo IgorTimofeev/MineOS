@@ -21,7 +21,7 @@ local colors = {
 	topButtonsText = 0x262626,
 }
 
-local topButtons = {"О системе", "Диски", "Обновления"}
+local topButtons = {"О системе", "Диски"}
 local spaceBetweenTopButtons, offsetTopButtons = 2, 2
 local currentMode = 1
 
@@ -173,47 +173,7 @@ local function drawMain()
 		end
 
 		--Скроллбар
-		ecs.srollBar(x + width - 1, y + heightOfTopBar, 1, height - heightOfTopBar, #HDDs, drawHDDFrom, 0xdddddd, ecs.colors.blue)
-	
-	elseif currentMode == 3 then
-
-		obj["Updates"] = {}
-
-		xPos, yPos = x + 3, y + heightOfTopBar + 3
-		image.draw(xPos, yPos, updateIcon)
-
-		yPos = yPos - 1
-		xPos = xPos + 35
-		countOfChoses = 0
-
-		--Если нет еще апдейтов, то получить новые апдейты
-		if not updates then updates, countOfUpdates = ecs.getAppsToUpdate(true) end
-
-		--Рисуем выборы
-		if countOfUpdates > 0 then 
-			
-			xUpdatesList, yUpdatesList = xPos, yPos
-			drawUpdatesList(xPos, yPos)
-
-			--Кнопы
-			yPos = yPos + 16
-			if countOfChoses > 0 then
-				local _, _, xEnd, _ = ecs.drawAdaptiveButton(xPos, yPos, 2, 1, "Обновить", ecs.colors.blue, 0xffffff)
-				xPos = xEnd + 2
-			end
-
-			local _, _, xEnd, _ = ecs.drawAdaptiveButton(xPos, yPos, 2, 1, "Выбрать все", ecs.colors.blue, 0xffffff)
-			xPos = xEnd + 2
-
-			_, _, xEnd, _ = ecs.drawAdaptiveButton(xPos, yPos, 2, 1, "Снять выбор", ecs.colors.blue, 0xffffff)
-			xPos = xEnd + 2
-
-		else
-			yPos = yPos + 8
-			ecs.colorTextWithBack(xPos, yPos, 0x000000, colors.main, "Обновлений не обнаружено!")
-			ecs.colorText(xPos, yPos + 1, 0xaaaaaa, "У вас самое новое ПО.")
-		end
-		
+		ecs.srollBar(x + width - 1, y + heightOfTopBar, 1, height - heightOfTopBar, #HDDs, drawHDDFrom, 0xdddddd, ecs.colors.blue)		
 	end
 end
 
