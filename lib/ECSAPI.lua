@@ -1754,7 +1754,14 @@ function ECSAPI.launchIcon(path)
 
 	local function safeLaunch(command, ...)
 		local success, reason = pcall(loadfile(command), ...)
-		if not success then ECSAPI.displayCompileMessage(1, reason, translate, withAnimation) end
+		--Ебал я автора мода в задницу, кусок ебанутого говна
+		--Какого хуя я должен вставлять кучу костылей в свой прекрасный код только потому, что эта ублюдочная
+		--Скотина захотела выдавать table из pcall? Что, блядь? Где это видано, сука?
+		--Почему тогда во всех случаях выдается string, а при os.exit выдается {reason = "terminated"}?
+		--Что за ебливая сучья логика? 
+		if not success and type(reason) ~= "table" then
+			ECSAPI.displayCompileMessage(1, reason, translate, withAnimation)
+		end
 	end
 
 	--Запоминаем, какое разрешение было
