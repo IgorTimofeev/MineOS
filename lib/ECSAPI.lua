@@ -1748,13 +1748,17 @@ function ECSAPI.drawOSIcon(x, y, path, showFileFormat, nameColor)
 end
 
 --ЗАПУСТИТЬ ПРОГУ
-function ECSAPI.launchIcon(path, arguments)
+function ECSAPI.launchIcon(path)
 	local withAnimation = false
 	local translate = true
+
+	local function safeLaunch(command, ...)
+		local success, reason = pcall(loadfile(command), ...)
+		if not success then ECSAPI.displayCompileMessage(1, reason, translate, withAnimation) end
+	end
+
 	--Запоминаем, какое разрешение было
 	local oldWidth, oldHeight = gpu.getResolution()
-	--Создаем нормальные аргументы для Шелла
-	if arguments then arguments = " " .. arguments else arguments = "" end
 	--Получаем файл формат заранее
 	local fileFormat = ECSAPI.getFileFormat(path)
 	local isDirectory = fs.isDirectory(path)
@@ -1762,15 +1766,16 @@ function ECSAPI.launchIcon(path, arguments)
 	if fileFormat == ".app" then
 		ECSAPI.applicationHelp(path)
 		local cyka = path .. "/" .. ECSAPI.hideFileFormat(fs.name(path)) .. ".lua"
-		local success, reason = shell.execute(cyka)
-		if not success then ECSAPI.displayCompileMessage(1, reason, translate, withAnimation) end
+		safeLaunch(cyka)
+	
 	--Если это папка
 	elseif (fileFormat == "" or fileFormat == nil) and isDirectory then
-		shell.execute("MineOS/Applications/Finder.app/Finder.lua " .. path)
+		safeLaunch("MineOS/Applications/Finder.app/Finder.lua " .. path)
+	
 	--Если это обычный луа файл - т.е. скрипт
 	elseif fileFormat == ".lua" or fileFormat == nil then
 		ECSAPI.prepareToExit()
-		local success, reason = shell.execute(path .. arguments)
+		local success, reason = pcall(loadfile(path))
 		if success then
 			print(" ")
 			print("Program sucessfully executed. Press any key to continue.")
@@ -1778,16 +1783,20 @@ function ECSAPI.launchIcon(path, arguments)
 		else
 			ECSAPI.displayCompileMessage(1, reason, translate, withAnimation)
 		end
+	
 	--Если это фоточка
 	elseif fileFormat == ".pic" then
-		shell.execute("MineOS/Applications/Viewer.app/Viewer.lua open " .. path)
+		safeLaunch("MineOS/Applications/Viewer.app/Viewer.lua", "open", path)
+	
 	--Если это 3D-модель
 	elseif fileFormat == ".3dm" then
-		shell.execute("MineOS/Applications/3DPrint.app/3DPrint.lua open " .. path)
+		safeLaunch("MineOS/Applications/3DPrint.app/3DPrint.lua open " .. path)
+	
 	--Если это текст или конфиг или языковой
 	elseif fileFormat == ".txt" or fileFormat == ".cfg" or fileFormat == ".lang" then
 		ECSAPI.prepareToExit()
-		shell.execute("edit "..path)
+		safeLaunch("bin/edit.lua", path)
+
 	--Если это ярлык
 	elseif fileFormat == ".lnk" then
 		local shortcutLink = ECSAPI.readShortcut(path)
@@ -1796,18 +1805,7 @@ function ECSAPI.launchIcon(path, arguments)
 		else
 			ECSAPI.error("File from shortcut link doesn't exists.")
 		end
-	--Если это ссылка на пастебин
-	elseif fileFormat == ".paste" then
-		local shortcutLink = ECSAPI.readShortcut(path)
-		ECSAPI.prepareToExit()
-		local success, reason = shell.execute("pastebin run " .. shortcutLink)
-		if success then
-			print(" ")
-			print("Program sucessfully executed. Press any key to continue.")
-			ECSAPI.waitForTouchOrClick()
-		else
-			ECSAPI.displayCompileMessage(1, reason, translate, withAnimation)
-		end
+	
 	--Если это архив
 	elseif fileFormat == ".zip" then
 		zip.unarchive(path, (fs.path(path) or ""))
@@ -2547,7 +2545,6 @@ end
 
 --Функция, предлагающая сохранить файл в нужном месте в нужном формате.
 --ECSAPI.universalWindow("auto", "auto", 30, ECSAPI.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Сохранить как"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, "Путь"}, {"Selector", 0x262626, 0x880000, "PNG", "JPG", "PSD"}, {"EmptyLine"}, {"Button", {0xbbbbbb, 0xffffff, "OK!"}})
-
 
 ----------------------------------------------------------------------------------------------------
 

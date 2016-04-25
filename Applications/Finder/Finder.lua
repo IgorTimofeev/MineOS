@@ -5,6 +5,7 @@ local libraries = {
 	["computer"] = "computer",
 	["event"] = "event",
 	["fs"] = "filesystem",
+	["files"] = "files",
 	["context"] = "context",
 	["unicode"] = "unicode",
 	["buffer"] = "doubleBuffering",
@@ -38,8 +39,7 @@ local colors = {
 
 local leftBar
 local pathToConfig = "MineOS/System/Finder/Config.cfg"
-
-local lang = {}
+local lang = files.loadTableFromFile("MineOS/System/OS/Languages/" .. _G.OSSettings.language .. ".lang")
 
 local workPathHistory = {}
 local currentWorkPathHistoryElement = 1
@@ -51,9 +51,9 @@ local showSystemFiles, showHiddenFiles, showFileFormat
 local oldPixelsOfMini, oldPixelsOfFullScreen
 local isFullScreen
 local sortingMethods = {
-	{name = "type", symbol = "По типу"},
-	{name = "name", symbol = "По имени"},
-	{name = "date", symbol = "По дате"},
+	{name = "type", symbol = lang.sortByTypeShort},
+	{name = "name", symbol = lang.sortByNameShort},
+	{name = "date", symbol = lang.sortByDateShort},
 }
 local currentSortingMethod = 1
 
@@ -210,11 +210,11 @@ local function drawFsControl()
 		name = sortingMethods[i].symbol; bg, fg = getColors(currentSortingMethod == i); newObj("FSButtons", i, buffer.button(xPos, yPos, unicode.len(name) + 2, 1, bg, fg, name)); xPos = xPos + unicode.len(name) + 3
 	end
 	--xPos = xPos + 4
-	name = "Формат"; bg, fg = getColors(showFileFormat); newObj("FSButtons",  #sortingMethods + 1, buffer.button(xPos, yPos, unicode.len(name) + 2, 1, bg, fg, name)); xPos = xPos + unicode.len(name) + 3	
-	name = "Скрытые"; bg, fg = getColors(showHiddenFiles); newObj("FSButtons",  #sortingMethods + 2, buffer.button(xPos, yPos, unicode.len(name) + 2, 1, bg, fg, name)); xPos = xPos + unicode.len(name) + 3
+	name = lang.showFileFormatShort; bg, fg = getColors(showFileFormat); newObj("FSButtons",  #sortingMethods + 1, buffer.button(xPos, yPos, unicode.len(name) + 2, 1, bg, fg, name)); xPos = xPos + unicode.len(name) + 3	
+	name = lang.showHiddenFilesShort; bg, fg = getColors(showHiddenFiles); newObj("FSButtons",  #sortingMethods + 2, buffer.button(xPos, yPos, unicode.len(name) + 2, 1, bg, fg, name)); xPos = xPos + unicode.len(name) + 3
 
-	-- name = "Формат"; newObj("FSButtons", 1, buffer.adaptiveButton(xPos, yPos, 1, 0, getColors(showFileFormat), name)); xPos = xPos + unicode.len(name) + 3
-	-- name = "Скрытые"; newObj("FSButtons", 2, buffer.adaptiveButton(xPos, yPos, 1, 0, getColors(showHiddenFiles), name)); xPos = xPos + unicode.len(name) + 3
+	-- name = lang.showFileFormatShort; newObj("FSButtons", 1, buffer.adaptiveButton(xPos, yPos, 1, 0, getColors(showFileFormat), name)); xPos = xPos + unicode.len(name) + 3
+	-- name = lang.showHiddenFilesShort; newObj("FSButtons", 2, buffer.adaptiveButton(xPos, yPos, 1, 0, getColors(showHiddenFiles), name)); xPos = xPos + unicode.len(name) + 3
 	-- name = "Системные"; newObj("FSButtons", 3, buffer.adaptiveButton(xPos, yPos, 1, 0, getColors(showSystemFiles), name)); xPos = xPos + unicode.len(name) + 3
 end
 
@@ -448,72 +448,72 @@ while true do
 				else
 					if fs.isDirectory(path) then
 						if fileFormat ~= ".app" then
-							action = context.menu(e[3], e[4], {"Добавить в избранное"},"-", {"Копировать", false, "^C"},  {"Переименовать"}, {"Создать ярлык"}, "-", {"Добавить в архив"}, "-", {"Удалить", false, "⌫"})
+							action = context.menu(e[3], e[4], {lang.contextMenuAddToFavourites},"-", {lang.contextMenuCopy, false, "^C"},  {lang.contextMenuRename}, {lang.contextMenuCreateShortcut}, "-", {lang.contextMenuArchive}, "-", {lang.contextMenuDelete, false, "⌫"})
 						else
-							action = context.menu(e[3], e[4], {"Показать содержимое"}, {"Добавить в избранное"},"-", {"Копировать", false, "^C"}, {"Переименовать"}, {"Создать ярлык"}, "-", {"Добавить в архив"}, "-", {"Удалить", false, "⌫"})
+							action = context.menu(e[3], e[4], {lang.contextMenuShowPackageContent}, {lang.contextMenuAddToFavourites},"-", {lang.contextMenuCopy, false, "^C"}, {lang.contextMenuRename}, {lang.contextMenuCreateShortcut}, "-", {lang.contextMenuArchive}, "-", {lang.contextMenuDelete, false, "⌫"})
 						end
 					else
 						if fileFormat == ".pic" then
-							action = context.menu(e[3], e[4], {"Редактировать"}, "-", {"Установить как обои"}, {"Редактировать в Photoshop"}, "-", {"Копировать", false, "^C"}, "-", {"Переименовать"}, {"Создать ярлык"}, "-", {"Загрузить на Pastebin"}, "-", {"Удалить", false, "⌫"})
+							action = context.menu(e[3], e[4], {lang.contextMenuEdit}, {lang.contextMenuEditInPhotoshop}, {lang.contextMenuSetAsWallpaper}, "-", {lang.contextMenuCopy, false, "^C"}, {lang.contextMenuRename}, {lang.contextMenuCreateShortcut}, "-", {lang.contextMenuUploadToPastebin}, "-", {lang.contextMenuDelete, false, "⌫"})
 						elseif fileFormat == ".lua" then
-							action = context.menu(e[3], e[4], {"Редактировать"}, {"Создать приложение"}, "-", {"Копировать", false, "^C"}, {"Переименовать"}, {"Создать ярлык"}, "-", {"Загрузить на Pastebin"}, "-", {"Удалить", false, "⌫"})
+							action = context.menu(e[3], e[4], {lang.contextMenuEdit}, {lang.contextMenuCreateApplication}, "-", {lang.contextMenuCopy, false, "^C"}, {lang.contextMenuRename}, {lang.contextMenuCreateShortcut}, "-", {lang.contextMenuUploadToPastebin}, "-", {lang.contextMenuDelete, false, "⌫"})
 						else
-							action = context.menu(e[3], e[4], {"Редактировать"}, "-", {"Копировать", false, "^C"}, {"Переименовать"}, {"Создать ярлык"}, "-", {"Загрузить на Pastebin"}, "-", {"Удалить", false, "⌫"})
+							action = context.menu(e[3], e[4], {lang.contextMenuEdit}, "-", {lang.contextMenuCopy, false, "^C"}, {lang.contextMenuRename}, {lang.contextMenuCreateShortcut}, "-", {lang.contextMenuUploadToPastebin}, "-", {lang.contextMenuDelete, false, "⌫"})
 						end
 					end
 
 					--АналИз действия
-					if action == "Редактировать" then
+					if action == lang.contextMenuEdit then
 						ecs.prepareToExit()
 						shell.execute("edit "..path)
 						buffer.paste(1, 1, oldPixelsOfFullScreen)
 						drawAll(true)
-					elseif action == "Редактировать в Photoshop" then
+					elseif action == lang.contextMenuEditInPhotoshop then
 						shell.execute("MineOS/Applications/Photoshop.app/Photoshop.lua open " .. path)
 						buffer.paste(1, 1, oldPixelsOfFullScreen)
 						drawAll(true)
-					elseif action == "Добавить в избранное" then
+					elseif action == lang.contextMenuAddToFavourites then
 						addToFavourites(fs.name(path), path)
 						drawAll()
-					elseif action == "Показать содержимое" then
+					elseif action == lang.contextMenuShowPackageContent then
 						changePath(path)
 						drawAll()
-					elseif action == "Копировать" then
+					elseif action == lang.contextMenuCopy then
 						_G.clipboard = path
 						drawAll()
-					elseif action == "Вставить" then
+					elseif action == lang.contextMenuPaste then
 						ecs.copy(_G.clipboard, fs.path(path) or "")
 						getFileList(workPathHistory[currentWorkPathHistoryElement])
 						drawAll()
-					elseif action == "Удалить" then
+					elseif action == lang.contextMenuDelete then
 						fs.remove(path)
 						getFileList(workPathHistory[currentWorkPathHistoryElement])
 						drawAll()
-					elseif action == "Переименовать" then
+					elseif action == lang.contextMenuRename then
 						ecs.rename(path)
 						getFileList(workPathHistory[currentWorkPathHistoryElement])
 						drawAll()
-					elseif action == "Создать ярлык" then
+					elseif action == lang.contextMenuCreateShortcut then
 						ecs.createShortCut(fs.path(path).."/"..ecs.hideFileFormat(fs.name(path))..".lnk", path)
 						getFileList(workPathHistory[currentWorkPathHistoryElement])
 						drawAll()
-					elseif action == "Добавить в архив" then
+					elseif action == lang.contextMenuArchive then
 						ecs.info("auto", "auto", "", "Архивация файлов...")
 						archive.pack(ecs.hideFileFormat(fs.name(path))..".pkg", path)
 						getFileList(workPathHistory[currentWorkPathHistoryElement])
 						drawAll()
-					elseif action == "Загрузить на Pastebin" then
+					elseif action == lang.contextMenuUploadToPastebin then
 						shell.execute("MineOS/Applications/Pastebin.app/Pastebin.lua upload " .. path)
 						getFileList(workPathHistory[currentWorkPathHistoryElement])
 						drawAll(true)
-					elseif action == "Установить как обои" then
+					elseif action == lang.contextMenuSetAsWallpaper then
 						--ecs.error(path)
 						ecs.createShortCut("MineOS/System/OS/Wallpaper.lnk", path)
 						computer.pushSignal("OSWallpaperChanged")
 						-- buffer.paste(1, 1, oldPixelsOfFullScreen)
 						-- buffer.draw()
 						return
-					elseif action == "Создать приложение" then
+					elseif action == lang.contextMenuCreateApplication then
 						ecs.newApplicationFromLuaFile(path, workPathHistory[currentWorkPathHistoryElement])
 						getFileList(workPathHistory[currentWorkPathHistoryElement])
 						drawAll()
@@ -535,21 +535,21 @@ while true do
 		--ВНИМАНИЕ: ЖОПА!!!!
 		--КЛИКНУЛИ В ЖОПУ!!!!!!
 		if ecs.clickedAtArea(e[3], e[4], xMain, yLeftBar, xEnd, yEnd - 1) and clickedOnEmptySpace and e[5] == 1 then
-			action = context.menu(e[3], e[4], {"Новый файл"}, {"Новая папка"}, {"Новое приложение"}, "-", {"Вставить", (_G.clipboard == nil), "^V"})
-			if action == "Новый файл" then
+			action = context.menu(e[3], e[4], {lang.contextMenuNewFile}, {lang.contextMenuNewFolder}, {lang.contextMenuNewApplication}, "-", {lang.contextMenuPaste, (_G.clipboard == nil), "^V"})
+			if action == lang.contextMenuNewFile then
 				ecs.newFile(workPathHistory[currentWorkPathHistoryElement])
 				getFileList(workPathHistory[currentWorkPathHistoryElement])
 				--buffer.paste(1, 1, oldPixelsOfFullScreen)
 				drawAll(true)
-			elseif action == "Новая папка" then
+			elseif action == lang.contextMenuNewFolder then
 				ecs.newFolder(workPathHistory[currentWorkPathHistoryElement])
 				getFileList(workPathHistory[currentWorkPathHistoryElement])
 				drawAll()
-			elseif action == "Вставить" then
+			elseif action == lang.contextMenuPaste then
 				ecs.copy(_G.clipboard, workPathHistory[currentWorkPathHistoryElement])
 				getFileList(workPathHistory[currentWorkPathHistoryElement])
 				drawAll()
-			elseif action == "Новое приложение" then
+			elseif action == lang.contextMenuNewApplication then
 				ecs.newApplication(workPathHistory[currentWorkPathHistoryElement])
 				getFileList(workPathHistory[currentWorkPathHistoryElement])
 				drawAll()
@@ -581,11 +581,11 @@ while true do
 
 				--Левая кнопка мыши
 				if e[5] == 1 then
-					local action = context.menu(e[3], e[4], {"Показать содержащую папку"}, "-",{"Удалить из избранного"})
-					if action == "Удалить из избранного" then
+					local action = context.menu(e[3], e[4], {lang.contextMenuShowContainingFolder}, "-",{lang.contextMenuRemoveFromFavourites})
+					if action == lang.contextMenuRemoveFromFavourites then
 						table.remove(leftBar, key)
 						drawAll()
-					elseif action == "Показать содержащую папку" then
+					elseif action == lang.contextMenuShowContainingFolder then
 						changePath(fs.path(leftBar[key][3]) or "")
 						drawAll()
 					end

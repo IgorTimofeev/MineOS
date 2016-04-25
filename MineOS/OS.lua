@@ -16,9 +16,12 @@ local copyright = [[
 -- Вычищаем копирайт из оперативки, ибо мы не можем тратить СТОЛЬКО памяти.
 -- Сколько тут, раз, два, три... 295 ASCII-символов!
 -- А это, между прочим, 59 раз по слову "Пидор". Но один раз - не пидорас, поэтому очищаем.
-copyright = nil
+-- copyright = nil
 
 ---------------------------------------------- Библиотеки ------------------------------------------------------------------------
+
+_G.files = nil
+package.loaded.files = nil
 
 -- Адаптивная загрузка необходимых библиотек и компонентов
 local libraries = {
@@ -26,7 +29,7 @@ local libraries = {
 	component = "component",
 	event = "event",
 	term = "term",
-	config = "config",
+	files = "files",
 	context = "context",
 	buffer = "doubleBuffering",
 	image = "image",
@@ -42,7 +45,7 @@ for comp in pairs(components) do if not _G[comp] then _G[comp] = _G.component[co
 libraries, components = nil, nil
 
 -- Загрузка языкового пакета
-local lang = config.readAll("MineOS/System/OS/Languages/" .. _G.OSSettings.language .. ".lang")
+local lang = files.loadTableFromFile("MineOS/System/OS/Languages/" .. _G.OSSettings.language .. ".lang")
 
 ---------------------------------------------- Переменные ------------------------------------------------------------------------
 
@@ -66,6 +69,9 @@ local colors = {
 	iconsSelectionColor = ecs.colors.lightBlue,
 	iconsSelectionTransparency = 20,
 }
+
+--Фиксим масштаб
+ecs.setScale(1)
 
 local sizes = {}
 sizes.xSize, sizes.ySize = gpu.getResolution()
@@ -192,7 +198,7 @@ end
 --РИСОВАТЬ ВЕСЬ ТОПБАР
 local function drawTopBar()
 	--Элементы топбара
-	local topBarElements = { "MineOS", "Вид" }
+	local topBarElements = { "MineOS", lang.viewTab }
 	--Белая горизонтальная линия
 	buffer.square(1, 1, sizes.xSize, 1, colors.topBarColor, 0xFFFFFF, " ", colors.topBarTransparency)
 	--Рисуем элементы и создаем объекты
@@ -331,8 +337,6 @@ end
 
 ---------------------------------------------- Сама ОС ------------------------------------------------------------------------
 
---Ставим корректный масштаб монитора
-ecs.setScale(1)
 --Создаем буфер
 buffer.start()
 drawAll(true)
@@ -386,46 +390,94 @@ while true do
 					local fileFormat = ecs.getFileFormat(path)
 
 					-- Разные контекстные меню
-					if fileFormat == ".app" and fs.isDirectory(path) then
-						action = context.menu(eventData[3], eventData[4], {lang.contextShowContent}, "-", {lang.contextCopy, false, "^C"}, {lang.contextPaste, not _G.clipboard, "^V"}, "-", {lang.contextRename}, {lang.contextCreateShortcut}, "-",  {lang.contextUploadToPastebin, true}, "-", {lang.contextAddToDock, not (currentCountOfIconsInDock < sizes.dockCountOfIcons and workPath ~= "MineOS/System/OS/Dock/")}, {lang.contextDelete, false, "⌫"})
-					elseif fileFormat ~= ".app" and fs.isDirectory(path) then
-						action = context.menu(eventData[3], eventData[4], {lang.contextCopy, false, "^C"}, {lang.contextPaste, not _G.clipboard, "^V"}, "-", {lang.contextRename}, {lang.contextCreateShortcut}, "-", {lang.contextUploadToPastebin, true}, "-", {lang.contextDelete, false, "⌫"})
+					if fs.isDirectory(path) then
+						if fileFormat == ".app" then
+							action = context.menu(eventData[3], eventData[4],
+								{lang.contextMenuShowPackageContent},
+								"-",
+								{lang.contextMenuCopy, false},
+								{lang.contextMenuPaste, not _G.clipboard},
+								"-",
+								{lang.contextMenuRename},
+								{lang.contextMenuCreateShortcut},
+								"-",
+								{lang.contextMenuUploadToPastebin, true},
+								"-",
+								{lang.contextMenuAddToDock, not (currentCountOfIconsInDock < sizes.dockCountOfIcons)},
+								{lang.contextMenuDelete, false}
+							)
+						else
+							action = context.menu(eventData[3], eventData[4],
+								{lang.contextMenuCopy, false},
+								{lang.contextMenuRename},
+								{lang.contextMenuCreateShortcut},
+								"-",
+								{lang.contextMenuArchive},
+								"-",
+								{lang.contextMenuDelete, false}
+							)
+						end
 					else
 						if fileFormat == ".pic" then
-							action = context.menu(eventData[3], eventData[4], {lang.contextEdit}, "-", {"Установить как обои"}, {"Редактировать в Photoshop"}, "-", {lang.contextCopy, false, "^C"}, {lang.contextPaste, not _G.clipboard, "^V"}, "-", {lang.contextRename}, {lang.contextCreateShortcut}, "-", {lang.contextUploadToPastebin, true}, "-", {lang.contextAddToDock, not (currentCountOfIconsInDock < sizes.dockCountOfIcons and workPath ~= "MineOS/System/OS/Dock/")}, {lang.contextDelete, false, "⌫"})
+							action = context.menu(eventData[3], eventData[4],
+								{lang.contextMenuEdit},
+								{lang.contextMenuEditInPhotoshop},
+								{lang.contextMenuSetAsWallpaper},
+								"-",
+								{lang.contextMenuCopy, false},
+								{lang.contextMenuRename},
+								{lang.contextMenuCreateShortcut},
+								"-",
+								{lang.contextMenuUploadToPastebin, true},
+								"-",
+								{lang.contextMenuAddToDock, not (currentCountOfIconsInDock < sizes.dockCountOfIcons)},
+								{lang.contextMenuDelete, false}
+							)
 						else
-							action = context.menu(eventData[3], eventData[4], {lang.contextEdit}, "-", {lang.contextCopy, false, "^C"}, {lang.contextPaste, not _G.clipboard, "^V"}, "-", {lang.contextRename}, {lang.contextCreateShortcut}, "-", {lang.contextUploadToPastebin, true}, "-", {lang.contextAddToDock, not (currentCountOfIconsInDock < sizes.dockCountOfIcons and workPath ~= "MineOS/System/OS/Dock/")}, {lang.contextDelete, false, "⌫"})
+							action = context.menu(eventData[3], eventData[4],
+								{lang.contextMenuEdit},
+								{lang.contextMenuCreateApplication},
+								"-",
+								{lang.contextMenuCopy, false},
+								{lang.contextMenuRename},
+								{lang.contextMenuCreateShortcut},
+								"-",
+								{lang.contextMenuUploadToPastebin, true},
+								"-",
+								{lang.contextMenuAddToDock, not (currentCountOfIconsInDock < sizes.dockCountOfIcons and workPath ~= "MineOS/System/OS/Dock/")},
+								{lang.contextMenuDelete, false}
+							)
 						end
 					end
 
 					--Анализ действия контекстного меню
-					if action == lang.contextShowContent then
+					if action == lang.contextMenuShowPackageContent then
 						shell.execute("MineOS/Applications/Finder.app/Finder.lua "..path)
-					elseif action == lang.contextEdit then
+					elseif action == lang.contextMenuEdit then
 						ecs.editFile(path)
 						drawAll(true)
-					elseif action == lang.contextDelete then
+					elseif action == lang.contextMenuDelete then
 						fs.remove(path)
 						drawAll()
-					elseif action == lang.contextCopy then
+					elseif action == lang.contextMenuCopy then
 						_G.clipboard = path
-					elseif action == lang.contextPaste then
+					elseif action == lang.contextMenuPaste then
 						ecs.copy(_G.clipboard, workPath)
 						drawAll()
-					elseif action == lang.contextRename then
+					elseif action == lang.contextMenuRename then
 						ecs.rename(path)
 						drawAll()
-					elseif action == lang.contextCreateShortcut then
+					elseif action == lang.contextMenuCreateShortcut then
 						ecs.createShortCut(workPath .. ecs.hideFileFormat(path) .. ".lnk", path)
 						drawAll()
-					elseif action == lang.contextAddToDock then
+					elseif action == lang.contextMenuAddToDock then
 						ecs.createShortCut("MineOS/System/OS/Dock/" .. ecs.hideFileFormat(path) .. ".lnk", path)
 						drawAll()
-					elseif action == "Установить как обои" then
+					elseif action == lang.contextMenuSetAsWallpaper then
 						ecs.createShortCut(pathToWallpaper, path)
 						changeWallpaper()
 						drawAll(true)
-					elseif action == "Редактировать в Photoshop" then
+					elseif action == lang.contextMenuEditInPhotoshop then
 						shell.execute("MineOS/Applications/Photoshop.app/Photoshop.lua open " .. path)
 						drawAll(true)
 					else
@@ -456,9 +508,9 @@ while true do
 				else
 					local content = ecs.readShortcut(pathOfDockShortcuts .. key)
 
-					action = context.menu(eventData[3], eventData[4], {lang.contextRemoveFromDock, not (currentCountOfIconsInDock > 1)})
+					action = context.menu(eventData[3], eventData[4],{lang.contextMenuRemoveFromDock, not (currentCountOfIconsInDock > 1)})
 
-					if action == lang.contextRemoveFromDock then
+					if action == lang.contextMenuRemoveFromDock then
 						fs.remove(pathOfDockShortcuts .. key)
 						drawAll()
 					else
@@ -482,18 +534,18 @@ while true do
 				buffer.draw()
 
 				if key == "MineOS" then
-					local action = context.menu(obj["TopBarButtons"][key][1], obj["TopBarButtons"][key][2] + 1, {lang.aboutSystem}, {lang.updateSystem}, "-", {lang.restart}, {lang.shutdown}, "-", {lang.backToShell})
+					local action = context.menu(obj["TopBarButtons"][key][1], obj["TopBarButtons"][key][2] + 1, {lang.aboutSystem}, {lang.updates}, "-", {lang.reboot}, {lang.shutdown}, "-", {lang.returnToShell})
 
-					if action == lang.backToShell then
+					if action == lang.returnToShell then
 						ecs.prepareToExit()
 						return 0
 					elseif action == lang.shutdown then
 						ecs.TV(0)
 						shell.execute("shutdown")
-					elseif action == lang.restart then
+					elseif action == lang.reboot then
 						ecs.TV(0)
 						shell.execute("reboot")
-					elseif action == lang.updateSystem then
+					elseif action == lang.updates then
 						ecs.prepareToExit()
 						shell.execute("pastebin run 0nm5b1ju")
 						return 0
@@ -506,7 +558,20 @@ while true do
 					end
 
 				elseif key == lang.viewTab then
-					local action = context.menu(obj["TopBarButtons"][key][1], obj["TopBarButtons"][key][2] + 1, {"Показывать формат файлов", showFileFormat}, {"Скрывать формат файлов", not showFileFormat}, "-", {"Показывать скрытые файлы", showHiddenFiles}, {"Скрывать скрытые файлы", not showHiddenFiles}, "-", {"Сортировать по имени"}, {"Сортировать по дате"}, {"Сортировать по типу"}, "-", {"Удалить обои", not wallpaper})
+					local action = context.menu(obj["TopBarButtons"][key][1], obj["TopBarButtons"][key][2] + 1,
+						{lang.showFileFormat, showFileFormat},
+						{lang.hideFileFormat, not showFileFormat},
+						"-",
+						{lang.showHiddenFiles, showHiddenFiles},
+						{lang.hideHiddenFiles, not showHiddenFiles},
+						"-",
+						{lang.sortByName},
+						{lang.sortByDate},
+						{lang.sortByType},
+						"-",
+						{lang.contextMenuRemoveWallpaper, not wallpaper}
+					)
+
 					if action == "Показывать скрытые файлы" then
 						showHiddenFiles = true
 						drawAll()
@@ -544,21 +609,28 @@ while true do
 		end
 
 		if clickedAtEmptyArea and eventData[5] == 1 then
-			local action = context.menu(eventData[3], eventData[4], {"Удалить обои", not wallpaper},"-", {lang.contextNewFile}, {lang.contextNewFolder}, "-", {lang.contextPaste, not _G.clipboard, "^V"})
+			local action = context.menu(eventData[3], eventData[4],
+				{lang.contextMenuRemoveWallpaper, not wallpaper},
+				"-",
+				{lang.contextMenuNewFile},
+				{lang.contextMenuNewFolder},
+				"-",
+				{lang.contextMenuPaste, not _G.clipboard}
+			)
 
 			--Создать новый файл
-			if action == lang.contextNewFile then
+			if action == lang.contextMenuNewFile then
 				ecs.newFile(workPath)
 				drawAll(true)
 			--Создать новую папку
-			elseif action == lang.contextNewFolder then
+			elseif action == lang.contextMenuNewFolder then
 				ecs.newFolder(workPath)
 				drawAll()
 			--Вставить файл
-			elseif action == lang.contextPaste then
+			elseif action == lang.contextMenuPaste then
 				ecs.copy(_G.clipboard, workPath)
 				drawAll()
-			elseif action == "Удалить обои" then
+			elseif action == lang.contextMenuRemoveWallpaper then
 				wallpaper = nil
 				fs.remove(pathToWallpaper)
 				drawAll()
