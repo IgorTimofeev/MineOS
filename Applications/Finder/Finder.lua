@@ -48,7 +48,7 @@ local x, y, width, height, yEnd, xEnd, heightOfTopBar, widthOfLeftBar, heightOfL
 local widthOfBottom, widthOfIcon, heightOfIcon, xSpaceBetweenIcons, ySpaceBetweenIcons, xCountOfIcons, yCountOfIcons
 local fileList, fromLine, fromLineLeftBar = nil, 1, 1
 local showSystemFiles, showHiddenFiles, showFileFormat
-local oldPixelsOfMini, oldPixelsOfFullScreen
+local oldPixelsOfFullScreen
 local isFullScreen
 local sortingMethods = {
 	{name = "type", symbol = lang.sortByTypeShort},
@@ -340,7 +340,9 @@ local function drawAll(force)
 	if isFullScreen then
 		buffer.paste(1, 1, oldPixelsOfFullScreen)
 	else
-		buffer.paste(x, y, oldPixelsOfMini)
+		buffer.setDrawLimit(x, y, width + 2, height + 1)
+		buffer.paste(1, 1, oldPixelsOfFullScreen)
+		buffer.resetDrawLimit()
 	end
 	drawTopBar()
 	drawBottomBar()
@@ -405,7 +407,7 @@ x, y = xStart, yStart
 --Пересчитываем все размеры
 calculateSizes()
 --Запоминаем старые пиксели, чтобы потом можно было отрисовать предыдущий интерфейс
-oldPixelsOfMini = buffer.copy(x, y, width + 2, height + 1)
+-- oldPixelsOfMini = buffer.copy(x, y, width + 2, height + 1)
 oldPixelsOfFullScreen = buffer.copy(1, 1, buffer.screen.width, buffer.screen.height)
 isFullScreen = false
 
@@ -605,13 +607,6 @@ while true do
 					
 					saveConfig()
 					
-					-- if isFullScreen then
-					-- 	buffer.paste(1, 1, oldPixelsOfFullScreen)
-					-- 	buffer.draw()
-					-- else
-					-- 	buffer.paste(x, y, oldPixelsOfMini)
-					-- 	buffer.draw()
-					-- end
 					return
 
 				--Пока ниче не делать
