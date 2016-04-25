@@ -230,7 +230,7 @@ local function login()
 	ecs.disableInterrupting()
 	if not _G.OSSettings.protectionMethod then
 		while true do
-			local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x000000, "Защитите ваш комьютер!"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, "Пароль"}, {"Input", 0x262626, 0x880000, "Подтвердить пароль"}, {"EmptyLine"}, {"Button", {0xAAAAAA, 0xffffff, "OK"}, {0x888888, 0xffffff, "Без защиты"}})
+			local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x000000, lang.protectYourComputer}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, lang.inputPassword}, {"Input", 0x262626, 0x880000, lang.confirmInputPassword}, {"EmptyLine"}, {"Button", {0xAAAAAA, 0xffffff, "OK"}, {0x888888, 0xffffff, lang.withoutProtection}})
 			if data[3] == "OK" then
 				if data[1] == data[2] then
 
@@ -238,7 +238,7 @@ local function login()
 					_G.OSSettings.passwordHash = SHA2.hash(data[1])
 					break
 				else
-					ecs.error("Пароли различаются. Повторите ввод.")
+					ecs.error(lang.passwordsAreDifferent )
 				end
 			else
 				_G.OSSettings.protectionMethod = "withoutProtection"
@@ -249,23 +249,15 @@ local function login()
 		return true
 	elseif _G.OSSettings.protectionMethod == "password" then
 		while true do
-			local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x000000, "Вход в систему"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, "Пароль", "*"}, {"EmptyLine"}, {"Button", {0xbbbbbb, 0xffffff, "OK"}})
+			local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x000000, lang.loginToSystem}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, lang.inputPassword, "*"}, {"EmptyLine"}, {"Button", {0xbbbbbb, 0xffffff, "OK"}})
 			local hash = SHA2.hash(data[1])
 			if hash == _G.OSSettings.passwordHash then
 				return true
 			elseif hash == "c925be318b0530650b06d7f0f6a51d8289b5925f1b4117a43746bc99f1f81bc1" then
-				ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true,
-					{"EmptyLine"},
-					{"CenterText", 0x880000, "MineOS"},
-					{"EmptyLine"},
-					{"CenterText", 0x000000, "  Создатель операционной системы  "},
-					{"CenterText", 0x000000, "  использовал мастер-пароль  "},
-					{"EmptyLine"},
-					{"Button", {0x880000, 0xffffff, "OK"}}
-				)
+				ecs.error(lang.mineOSCreatorUsedMasterPassword)
 				return true
 			else
-				ecs.error("Неверный пароль!")
+				ecs.error(lang.incorrectPassword)
 			end
 		end
 	else

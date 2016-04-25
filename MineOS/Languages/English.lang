@@ -42,5 +42,14 @@
 	reboot = "Reboot",
 	returnToShell = "Return to Shell",
 
+	protectYourComputer = "Protect your computer",
+	inputPassword = "Input password",
+	confirmInputPassword = "Confirm password",
+	withoutProtection = "No protection",
+	passwordsAreDifferent = "Passwords are different!",
+	incorrectPassword = "Incorrect password",
+	mineOSCreatorUsedMasterPassword = "The creator of this operating system have used Master-Password",
+	loginToSystem = "Login",
+
 	viewTab = "View",
 }

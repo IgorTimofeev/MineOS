@@ -42,5 +42,14 @@
 	reboot = "Перезагрузить",
 	returnToShell = "Вернуться в Shell",
 
+	protectYourComputer = "Защитите ваш компьютер",
+	inputPassword = "Введите пароль",
+	confirmInputPassword = "Подтвердите пароль",
+	withoutProtection = "Без защиты",
+	passwordsAreDifferent = "Пароли различаются",
+	incorrectPassword = "Неверный пароль",
+	mineOSCreatorUsedMasterPassword = "Создатель операционной системы использовал Мастер-Пароль",
+	loginToSystem = "Вход в систему",
+
 	viewTab = "Вид",
 }
