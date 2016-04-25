@@ -1,10 +1,5 @@
-
-local backgroundColor = 0x262626
-local foregroundColor = 0xcccccc
-
 do
-  
-  _G._OSVERSION = "OpenOS 1.5"
+  _G._OSVERSION = "OpenOS 1.6"
 
   local component = component
   local computer = computer
@@ -33,8 +28,8 @@ do
   function rom.inits() return ipairs(rom.invoke("list", "boot")) end
   function rom.isDirectory(path) return rom.invoke("isDirectory", path) end
 
-  local screen = component.list('screen',true)()
-  for address in component.list('screen',true) do
+  local screen = component.list('screen', true)()
+  for address in component.list('screen', true) do
     if #component.invoke(address, 'getKeyboards') > 0 then
       screen = address
     end
@@ -45,32 +40,23 @@ do
   local w, h
   if gpu and screen then
     component.invoke(gpu, "bind", screen)
-    w, h = component.invoke(gpu, "getResolution")
+    w, h = component.invoke(gpu, "maxResolution")
     component.invoke(gpu, "setResolution", w, h)
-    component.invoke(gpu, "setBackground", backgroundColor)
-    component.invoke(gpu, "setForeground", foregroundColor)
+    component.invoke(gpu, "setBackground", 0x000000)
+    component.invoke(gpu, "setForeground", 0xFFFFFF)
     component.invoke(gpu, "fill", 1, 1, w, h, " ")
   end
   local y = 1
   local function status(msg)
-
-
-    local yPos = math.floor(h / 2)
-    local length = #msg
-    local xPos = math.floor(w / 2 - length / 2)
-
-    component.invoke(gpu, "fill", 1, yPos, w, 1, " ")
-    component.invoke(gpu, "set", xPos, yPos, msg)
-
-    -- if gpu and screen then
-    --   component.invoke(gpu, "set", 1, y, msg)
-    --   if y == h then
-    --     component.invoke(gpu, "copy", 1, 2, w, h - 1, 0, -1)
-    --     component.invoke(gpu, "fill", 1, h, w, 1, " ")
-    --   else
-    --     y = y + 1
-    --   end
-    -- end
+    if gpu and screen then
+      component.invoke(gpu, "set", 1, y, msg)
+      if y == h then
+        component.invoke(gpu, "copy", 1, 2, w, h - 1, 0, -1)
+        component.invoke(gpu, "fill", 1, h, w, 1, " ")
+      else
+        y = y + 1
+      end
+    end
   end
 
   status("Booting " .. _OSVERSION .. "...")
@@ -117,31 +103,35 @@ do
 
   do
     -- Unclutter global namespace now that we have the package module.
-    --_G.component = nil
+    _G.component = nil
     _G.computer = nil
     _G.process = nil
     _G.unicode = nil
 
     -- Initialize the package module with some of our own APIs.
+    package.loaded.component = component
+    package.loaded.computer = computer
+    package.loaded.unicode = unicode
     package.preload["buffer"] = loadfile("/lib/buffer.lua")
-    package.preload["component"] = function() return component end
-    package.preload["computer"] = function() return computer end
     package.preload["filesystem"] = loadfile("/lib/filesystem.lua")
-    package.preload["io"] = loadfile("/lib/io.lua")
-    package.preload["unicode"] = function() return unicode end
 
     -- Inject the package and io modules into the global namespace, as in Lua.
     _G.package = package
-    _G.io = require("io")
-       
+    _G.io = loadfile("/lib/io.lua")()
+
+    --mark modules for delay loaded api
+    package.delayed["text"] = true
+    package.delayed["sh"] = true
+    package.delayed["transforms"] = true
+    package.delayed["term"] = true
   end
 
   status("Initializing file system...")
 
   -- Mount the ROM and temporary file systems to allow working on the file
   -- system module from this point on.
-  local filesystem = require("filesystem")
-  filesystem.mount(computer.getBootAddress(), "/")
+  require("filesystem").mount(computer.getBootAddress(), "/")
+  package.preload={}
 
   status("Running boot scripts...")
 
@@ -163,7 +153,7 @@ do
   local primaries = {}
   for c, t in component.list() do
     local s = component.slot(c)
-    if (not primaries[t] or (s >= 0 and s < primaries[t].slot)) and t ~= "screen" then
+    if not primaries[t] or (s >= 0 and s < primaries[t].slot) then
       primaries[t] = {address=c, slot=s}
     end
     computer.pushSignal("component_added", c, t)
@@ -171,61 +161,34 @@ do
   for t, c in pairs(primaries) do
     component.setPrimary(t, c.address)
   end
-  os.sleep(0.5) -- Allow signal processing by libraries.
-  --computer.pushSignal("init") -- so libs know components are initialized.
+end
 
- -- status("Initializing system...")
-  --require("term").clear()
+-- MineOS Init data
+do
+  -- Загружаем необходимые библиотеки, дабы избежать потерь памяти
+  _G.shell = require("shell"); shell.setWorkingDirectory("")
+  _G.ecs = require("ECSAPI")
+
+  -- Загружаем параметры ОС
+  ecs.loadOSSettings()
+  _G._OSLANGUAGE = _G.OSSettings.language
+
+  -- Выставляем адекватный масштаб монитора
+  ecs.setScale(1)
+
+  -- Завершаем работу с инициализацией
+  os.sleep(0.5) -- Allow signal processing by libraries.
+  require("computer").pushSignal("init")
   os.sleep(0.1) -- Allow init processing.
   runlevel = 1
 end
 
---Загружаем необходимые библиотеки, дабы избежать потерь памяти
-_G.computer = require("computer")
-_G.ecs = require("ECSAPI")
-_G.component = require("component")
-_G.gpu = _G.component.gpu
-
---Загружаем параметры ОС
-ecs.loadOSSettings()
-_G._OSLANGUAGE = _G.OSSettings.language
-
---Выставляем адекватный масштаб монитора
-ecs.setScale(1)
-
---Сообщаем системе, что все прогружено и готово к работе
---Хз, так надо просто. Не ебись
-computer.pushSignal("init")
-os.sleep(0.2)
-
-local function motd()
-  local f = io.open("/etc/motd")
-  if not f then
-    return
-  end
-  if f:read(2) == "#!" then
-    f:close()
-    os.execute("/etc/motd")
-  else
-    f:seek("set", 0)
-    io.write(f:read("*a") .. "\n")
-    f:close()
-  end
-end
-
 while true do
-  component.gpu.setBackground(backgroundColor)
-  component.gpu.setForeground(foregroundColor)
-  local w, h = component.gpu.getResolution()
-  component.gpu.fill(1, 1, w, h, " ")
-
-  motd()
-  local result, reason = os.execute(os.getenv("SHELL"))
+  local result, reason = pcall(loadfile("bin/sh.lua"))
   if not result then
-    io.stderr:write((tostring(reason) or "unknown error") .. "\n")
+    io.stderr:write((reason ~= nil and tostring(reason) or "unknown error") .. "\n")
     io.write("Press any key to continue.\n")
     os.sleep(0.5)
     require("event").pull("key")
   end
-  require("term").clear()
 end

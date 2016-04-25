@@ -312,12 +312,6 @@
     ["version"]=1.0,
   },
   {
-    ["name"]="lib/event.lua",
-    ["url"]="IgorTimofeev/OpenComputers/master/lib/event.lua",
-    ["type"]="Library",
-    ["version"]=1.0,
-  },
-  {
     ["name"]="lib/unixtime.lua",
     ["url"]="IgorTimofeev/OpenComputers/master/lib/unixtime.lua",
     ["type"]="Library",
@@ -375,14 +369,20 @@
   ----------------------------------------------------- Скрипты и дополнения к ним --------------------------------------------------------------------------
 
   {
-    ["name"]="bin/get.lua",
-    ["url"]="IgorTimofeev/OpenComputers/master/Applications/get.lua",
+    ["name"]="init.lua",
+    ["url"]="IgorTimofeev/OpenComputers/master/Applications/init.lua",
     ["type"]="Script",
     ["version"]=1.0,
   },
   {
-    ["name"]="init.lua",
-    ["url"]="IgorTimofeev/OpenComputers/master/Applications/init.lua",
+    ["name"]="etc/profile",
+    ["url"]="IgorTimofeev/OpenComputers/master/etc/profile",
+    ["type"]="Script",
+    ["version"]=1.0,
+  },
+  {
+    ["name"]="bin/get.lua",
+    ["url"]="IgorTimofeev/OpenComputers/master/Applications/get.lua",
     ["type"]="Script",
     ["version"]=1.0,
   },
@@ -395,12 +395,6 @@
   {
     ["name"]="bin/clear.lua",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/clear.lua",
-    ["type"]="Script",
-    ["version"]=1.0,
-  },
-  {
-    ["name"]="bin/ls.lua",
-    ["url"]="IgorTimofeev/OpenComputers/master/Applications/ls.lua",
     ["type"]="Script",
     ["version"]=1.0,
   },
