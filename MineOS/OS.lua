@@ -561,28 +561,28 @@ while true do
 						{lang.contextMenuRemoveWallpaper, not wallpaper}
 					)
 
-					if action == "Показывать скрытые файлы" then
+					if action == lang.showHiddenFiles then
 						showHiddenFiles = true
 						drawAll()
-					elseif action == "Скрывать скрытые файлы" then
+					elseif action == lang.hideHiddenFiles then
 						showHiddenFiles = false
 						drawAll()
-					elseif action == "Показывать формат файлов" then
+					elseif action == lang.showFileFormat then
 						showFileFormat = true
 						drawAll()
-					elseif action == "Скрывать формат файлов" then
+					elseif action == lang.hideFileFormat then
 						showFileFormat = false
 						drawAll()
-					elseif action == "Сортировать по имени" then
+					elseif action == lang.sortByName then
 						sortingMethod = "name"
 						drawAll()
-					elseif action == "Сортировать по дате" then
+					elseif action == lang.sortByDate then
 						sortingMethod = "date"
 						drawAll()
-					elseif action == "Сортировать по типу" then
+					elseif action == lang.sortByType then
 						sortingMethod = "type"
 						drawAll()
-					elseif action == "Удалить обои" then
+					elseif action == lang.contextMenuRemoveWallpaper then
 						wallpaper = nil
 						fs.remove(pathToWallpaper)
 						drawAll(true)
