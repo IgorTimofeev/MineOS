@@ -120,10 +120,10 @@ do
     _G.io = loadfile("/lib/io.lua")()
 
     --mark modules for delay loaded api
-    package.delayed["text"] = true
-    package.delayed["sh"] = true
-    package.delayed["transforms"] = true
-    package.delayed["term"] = true
+    -- package.delayed["text"] = true
+    -- package.delayed["sh"] = true
+    -- package.delayed["transforms"] = true
+    -- package.delayed["term"] = true
   end
 
   status("Initializing file system...")
