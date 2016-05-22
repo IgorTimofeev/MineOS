@@ -872,4 +872,42 @@
       },
     },
   },
+  {
+    ["name"]="MineOS/Applications/Weather",
+    ["url"]="IgorTimofeev/OpenComputers/master/Applications/Weather/Weather.lua",
+    ["type"]="Application",
+    ["icon"]="IgorTimofeev/OpenComputers/master/Applications/Weather/Icon.pic",
+    ["createShortcut"]="desktop",
+    ["version"]=1.0,
+    ["resources"]={
+      {
+        ["name"]="Cloudy.pic",
+        ["url"]="IgorTimofeev/OpenComputers/master/Applications/Weather/Cloudy.pic",
+      },
+      {
+        ["name"]="Cloudy.pic",
+        ["url"]="IgorTimofeev/OpenComputers/master/Applications/Weather/Cloudy.pic",
+      },
+      {
+        ["name"]="Rainy.pic",
+        ["url"]="IgorTimofeev/OpenComputers/master/Applications/Weather/Rainy.pic",
+      },
+      {
+        ["name"]="Snowy.pic",
+        ["url"]="IgorTimofeev/OpenComputers/master/Applications/Weather/Snowy.pic",
+      },
+      {
+        ["name"]="Stormy.pic",
+        ["url"]="IgorTimofeev/OpenComputers/master/Applications/Weather/Stormy.pic",
+      },
+      {
+        ["name"]="Sunny.pic",
+        ["url"]="IgorTimofeev/OpenComputers/master/Applications/Weather/Sunny.pic",
+      },
+      {
+        ["name"]="SunnyWithClouds.pic",
+        ["url"]="IgorTimofeev/OpenComputers/master/Applications/Weather/SunnyWithClouds.pic",
+      },
+    },
+  },
 }

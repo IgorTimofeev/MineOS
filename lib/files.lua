@@ -12,6 +12,7 @@ function files.loadTableFromFile(path)
 end
 
 function files.saveTableToFile(path, tableToSave)
+	filesystem.makeDirectory(filesystem.path(path) or "")
 	local file = io.open(path, "w")
 	file:write(serialization.serialize(tableToSave))
 	file:close()
