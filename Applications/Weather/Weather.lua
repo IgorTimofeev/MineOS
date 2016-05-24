@@ -162,11 +162,14 @@ local function getWindDirection(windAngle)
 	}
 
 	local step = 360 / #directions * 2
-	local currentDirection = 0
+	local currentDirection = 1
+
+	local windDirection = "N/A"
 
 	for i = 0, 360, step do
 		if windAngle >= i and windAngle <= (i + step) then
-			return directions[currentDirection]
+			windDirection = directions[currentDirection]
+			break
 		end
 		currentDirection = currentDirection + 1
 	end
@@ -299,8 +302,8 @@ while true do
 				tryToGetAndDrawWeather()
 			end
 		elseif clicked(e[3], e[4], exitButton) then
-			buffer.clear(0x262626)
-			ecs.prepareToExit()
+			-- buffer.clear(0x262626)
+			-- ecs.prepareToExit()
 			return
 		end
 	end
