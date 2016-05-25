@@ -103,6 +103,11 @@ local currentProfile
 
 local settings = {saveAuthData = false, addSendingInfo = true}
 
+local vip = {
+	[7799889] = {avatarColor = 0x000000, avatarTextColor = 0xCCCCCC, avatarBottomText = "DEV", avatarBottomTextColor = 0x1b1b1b},
+	[113499693] = {avatarColor = 0xFF99CC, avatarTextColor = 0x000000, avatarBottomText = "DEV", avatarBottomTextColor = 0xff6dbf},
+}
+
 ---------------------------------------------------- Веб-часть ----------------------------------------------------------------
 
 local function loadSettings()
@@ -232,6 +237,10 @@ local function userFriendsRequest(ID, count, offset, order, nameCase)
 	return VKAPIRequest("friends.get", "user_id=" .. ID, "count=" .. count, "offset=" .. offset, "order=" .. order, "name_case=" .. nameCase, "fields=domain,online,last_seen")
 end
 
+local function userFriendsListsRequest(ID) 
+	return VKAPIRequest("friends.getLists", "user_id=" .. ID, "return_system=1")
+end
+
 local function userWallRequest(ID, count, offset)
 	return VKAPIRequest("wall.get", "owner_id=" .. ID, "count=" .. count, "offset=" .. offset)
 end
@@ -248,10 +257,15 @@ local function drawAvatar(x, y, width, height, user_id, text)
 	local textColor = avatarColor > 8388607 and 0x000000 or 0xFFFFFF
 
 	--Хочу себе персональную авку, а то че за хуйня?
-	if user_id == 7799889 then avatarColor = 0x000000; textColor = 0xCCCCCC end
+	if vip[user_id] then
+		avatarColor = vip[user_id].avatarColor
+		textColor = vip[user_id].avatarTextColor
+	end
 
 	buffer.square(x, y, width, height, avatarColor, textColor, " ")
 	buffer.text(x + math.floor(width / 2) - math.floor(unicode.len(text) / 2), y + math.floor(height / 2), textColor, unicode.upper(text))
+
+	if vip[user_id] and vip[user_id].avatarBottomText then buffer.text(x + math.floor(width / 2) - math.floor(unicode.len(text) / 2), y + height - 1, vip[user_id].avatarBottomTextColor, vip[user_id].avatarBottomText) end
 end
 
 --Проверка клика в определенную область по "объекту". Кому на хуй вссалось ООП?
@@ -814,29 +828,62 @@ end
 local function friendsGUI()
 	status("Загружаю список друзей")
 	local success, friends = userFriendsRequest(personalInfo.id, countOfFriendsToGetOnFriendsTab, currentFriendsOffset, "hints", "nom")
-	if success and friends.response then
+	status("Загружаю список категорий друзей")
+	local successLists, friendsLists = userFriendsListsRequest(personalInfo.id)
+	if (success and friends.response) and (successLists and friendsLists.response) then
+		saveToFile("lastFriendsResponse.json", serialization.serialize(friends))
 		clearGUIZone()
 		currentFriends = {sendMessageButtons = {}, openProfileButtons = {}}
 		whatIsOnScreen = "friends"
 		drawTopBar("Друзья")
 		buffer.setDrawLimit(mainZoneX, mainZoneY, mainZoneWidth, mainZoneHeight)
 
-		local x, y = mainZoneX + 2, mainZoneY + 1
+		local function getListName(listID)
+			local name = "N/A"
+			for i = 1, #friendsLists.response.items do
+				if friendsLists.response.items[i].id == listID then
+					name = friendsLists.response.items[i].name
+					break
+				end
+			end
+			return name
+		end
+
+		local x, y = mainZoneX + 2, mainZoneY
 		for i = 1, #friends.response.items do
+			--Падложка
+			if i % 2 == 0 then buffer.square(mainZoneX, y, mainZoneWidth, 5 + (friends.response.items[i].lists and 1 or 0), 0xEEEEEE) end
+			--Юзер
+			y = y + 1
 			local subbedName = unicode.sub(friends.response.items[i].first_name, 1, 1) .. unicode.sub(friends.response.items[i].last_name, 1, 1)
 			drawAvatar(x, y, 6, 3, friends.response.items[i].id, subbedName)
 			local text = friends.response.items[i].first_name .. " " .. friends.response.items[i].last_name
 			buffer.text(x + 8, y, colors.topBar, text)
 			local text2 = friends.response.items[i].last_seen and (", " .. (friends.response.items[i].online == 1 and "онлайн" or "был(а) в сети " .. os.date("%d.%m.%y в %H:%M", friends.response.items[i].last_seen.time))) or " "
 			buffer.text(x + 8 + unicode.len(text), y, 0xAAAAAA, text2)
-			
-			buffer.text(x + 8, y + 1, 0x999999, "Написать сообщение")
-			buffer.text(x + 8, y + 2, 0x999999, "Открыть профиль")
 
-			currentFriends.sendMessageButtons[friends.response.items[i].id] = {x + 8, y + 1, x + 18, y + 1, subbedName}
-			currentFriends.openProfileButtons[friends.response.items[i].id] = {x + 8, y + 2, x + 18, y + 2, subbedName}
+			if friends.response.items[i].lists then
+				y = y + 1
+				local cykaX = x + 8
+				for listID = 1, #friends.response.items[i].lists do
+					local listName = getListName(friends.response.items[i].lists[listID])
+					local listWidth = unicode.len(listName) + 2
+					local listBackColor = math.floor(0xFFFFFF / friends.response.items[i].lists[listID])
+					local listTextColor = (listBackColor > 0x7FFFFF and 0x000000 or 0xFFFFFF)
+					buffer.square(cykaX, y, listWidth, 1, listBackColor, listTextColor, " ")
+					buffer.text(cykaX + 1, y, listTextColor, listName)
+					cykaX = cykaX + listWidth + 2
+				end
+			end
 
-			y = y + 4
+			y = y + 1
+			buffer.text(x + 8, y, 0x999999, "Написать сообщение")
+			currentFriends.sendMessageButtons[friends.response.items[i].id] = {x + 8, y, x + 18, y, subbedName}
+			y = y + 1
+			buffer.text(x + 8, y, 0x999999, "Открыть профиль")
+			currentFriends.openProfileButtons[friends.response.items[i].id] = {x + 8, y, x + 18, y, subbedName}
+
+			y = y + 2
 		end
 
 		buffer.resetDrawLimit()
@@ -948,10 +995,10 @@ while true do
 		if whatIsOnScreen == "audio" then
 			for key in pairs(obj.audio) do
 				if clickedAtZone(e[3], e[4], obj.audio[key]) then
-					buffer.button(obj.audio[key][1], obj.audio[key][2], 5, 3, 0x66FF80,  colors.audioPlayButton, "ᐅ")
+					buffer.button(obj.audio[key][1], obj.audio[key][2], 5, 3, 0x66FF80,  colors.audioPlayButton, ">")
 					buffer.draw()
 					os.sleep(0.2)
-					buffer.button(obj.audio[key][1], obj.audio[key][2], 5, 3, colors.audioPlayButton, colors.audioPlayButtonText, "ᐅ")
+					buffer.button(obj.audio[key][1], obj.audio[key][2], 5, 3, colors.audioPlayButton, colors.audioPlayButtonText, ">")
 					buffer.draw()
 
 					if component.isAvailable("openfm_radio") then
