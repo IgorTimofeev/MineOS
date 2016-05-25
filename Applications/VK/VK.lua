@@ -1,7 +1,6 @@
 
 ---------------------------------------------------- Библиотеки ----------------------------------------------------------------
 
-local internet = require("internet")
 local json = require("json")
 local serialization = require("serialization")
 local event = require("event")
