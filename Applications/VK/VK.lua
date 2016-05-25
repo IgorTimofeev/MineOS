@@ -69,7 +69,7 @@ local cloudWidth = math.floor(mainZoneWidth * 0.7)
 local settingsPath = "MineOS/System/VK/Settings.cfg"
 local VKLogoImagePath = "MineOS/Applications/VK.app/Resources/VKLogo.pic"
 -- local leftBarElements = {"Новости", "Друзья", "Сообщения", "Настройки", "Выход"}
-local leftBarElements = { "Моя страница", "Друзья", "Сообщения", "Аудиозаписи", "Настройки", "Выход" }
+local leftBarElements = { "Моя страница", "Друзья", "Сообщения", "Аудиозаписи", "Новости", "Настройки", "Выход" }
 local currentLeftBarElement = 3
 local personalInfo
 local access_token
@@ -106,6 +106,11 @@ local vip = {
 	[7799889] = {avatarColor = 0x000000, avatarTextColor = 0xCCCCCC, avatarBottomText = "DEV", avatarBottomTextColor = 0x1b1b1b},
 	[113499693] = {avatarColor = 0xFF99CC, avatarTextColor = 0x000000, avatarBottomText = "DEV", avatarBottomTextColor = 0xff6dbf},
 }
+
+local news
+local currentNews = 1
+local countOfNewsToShow = 10
+local countOfNewsToGet = 20
 
 ---------------------------------------------------- Веб-часть ----------------------------------------------------------------
 
@@ -246,6 +251,10 @@ end
 
 local function setCurrentAudioPlaying(ownerID, audioID)
 	return VKAPIRequest("audio.setBroadcast", "audio=" .. ownerID .. "_" .. audioID)
+end
+
+local function newsRequest(count)
+	return VKAPIRequest("newsfeed.get", "filters=post", "return_banned=1", "max_photos=0", "count=" .. count, "fields=name,first_name,last_name")
 end
 
 
@@ -471,7 +480,7 @@ local function messagesGUI()
 		clearGUIZone()
 		drawTopBar("Сообщения")
 
-		saveToFile("lastMessagesRequest.json", serialization.serialize(messages))
+		-- saveToFile("lastMessagesRequest.json", serialization.serialize(messages))
 
 		buffer.setDrawLimit(mainZoneX, mainZoneY, mainZoneWidth, mainZoneHeight)
 
@@ -625,12 +634,11 @@ end
 --Гуишка аудиозаписей
 --А-А-А-А!!!!! МОЙ КРАСИВЫЙ ТРЕУГОЛЬНИЧЕК PLAY, БЛЯДЬ!!!! ШТО ТЫ ДЕЛАЕШЬ, SANGAR, ПРЕКРАТИ!!!!
 local function audioGUI(ID)
+	status("Загружаю список аудиозаписей")
 	local success, audios = getAudioRequest(ID, audioToShowFrom - 1, countOfAudioToLoadFromServer)
 	if success and audios.response then
 		whatIsOnScreen = "audio"
-
 		obj.audio = {}
-
 		clearGUIZone()
 		drawTopBar("Аудиозаписи " .. audios.response.items[1].name_gen)
 
@@ -658,6 +666,8 @@ local function audioGUI(ID)
 
 			y = y + 5
 		end
+	else
+		buffer.error("Ошибка при получении списка аудиозаписей")
 	end
 end
 
@@ -715,7 +725,8 @@ local function userProfileGUI()
 	local avatarHeight = math.floor(avatarWidth / 2)
 
 	--Рисуем авку
-	drawAvatar(x, y, avatarWidth, avatarHeight, currentProfile.ID, unicode.sub(currentProfile.userProfile.response[1].first_name, 1, 1) .. unicode.sub(currentProfile.userProfile.response[1].last_name, 1, 1))
+	currentProfile.avatarText =  unicode.sub(currentProfile.userProfile.response[1].first_name, 1, 1) .. unicode.sub(currentProfile.userProfile.response[1].last_name, 1, 1)
+	drawAvatar(x, y, avatarWidth, avatarHeight, currentProfile.ID, currentProfile.avatarText)
 	--Рисуем имячко и статус
 	x = x + avatarWidth + 4
 	buffer.text(x, y, 0x000000, currentProfile.userProfile.response[1].first_name .. " " .. currentProfile.userProfile.response[1].last_name); y = y + 1
@@ -800,6 +811,12 @@ local function userProfileGUI()
 	x, y = xAvatar, yAvatar
 	y = y + avatarHeight + 1
 
+	currentProfile.avatarWidth = avatarWidth
+	currentProfile.sendMessageButton = {buffer.button(x, y, avatarWidth, 1, 0xCCCCCC, 0x000000, "Сообщение")}
+	y = y + 2
+	currentProfile.audiosButton = {buffer.button(x, y, avatarWidth, 1, 0xCCCCCC, 0x000000, "Аудиозаписи")}
+	y = y + 2
+
 	drawInfo(x, y, "Подписчики: ", currentProfile.userProfile.response[1].counters.followers)
 	drawInfo(x, y, "Фотографии: ", currentProfile.userProfile.response[1].counters.photos)
 	drawInfo(x, y, "Видеозаписи: ", currentProfile.userProfile.response[1].counters.videos)
@@ -834,7 +851,7 @@ local function friendsGUI()
 	status("Загружаю список категорий друзей")
 	local successLists, friendsLists = userFriendsListsRequest(personalInfo.id)
 	if (success and friends.response) and (successLists and friendsLists.response) then
-		saveToFile("lastFriendsResponse.json", serialization.serialize(friends))
+		-- saveToFile("lastFriendsResponse.json", serialization.serialize(friends))
 		clearGUIZone()
 		currentFriends = {sendMessageButtons = {}, openProfileButtons = {}}
 		whatIsOnScreen = "friends"
@@ -895,6 +912,83 @@ local function friendsGUI()
 	end
 end
 
+local function newsGUI()
+	clearGUIZone()
+	drawTopBar("Новости")
+	whatIsOnScreen = "news"
+	buffer.setDrawLimit(mainZoneX, mainZoneY, mainZoneWidth, mainZoneHeight)
+
+	local function getAvatarTextAndNameForNews(source_id)
+		local avatarText, name = "N/A", "N/A"
+		if source_id < 0 then
+			for i = 1, #news.response.groups do
+				if news.response.groups[i].id == math.abs(source_id) then
+					avatarText = unicode.sub(news.response.groups[i].name, 1, 2)
+					name = news.response.groups[i].name
+					break
+				end
+			end
+		else
+			for i = 1, #news.response.profiles do
+				if news.response.profiles[i].id == source_id then
+					avatarText = unicode.sub(news.response.profiles[i].first_name, 1, 1) .. unicode.sub(news.response.profiles[i].last_name, 1, 1)
+					name = news.response.profiles[i].first_name .. " " .. news.response.profiles[i].last_name
+					break
+				end
+			end
+		end
+		return avatarText, name
+	end
+
+	local x, y = mainZoneX + 2, mainZoneY
+	for item = currentNews, currentNews + countOfNewsToShow do
+		if news.response.items[item] then
+			--Делаем текст пиздатым
+			news.response.items[item].text = optimizeStringForWrongSymbols(news.response.items[item].text)
+			--Убираем говно из новостей
+			if news.response.items[item].text == "" then
+				if news.response.items[item].copy_history then
+					news.response.items[item].text = "Репост"
+				elseif news.response.items[item].attachments then
+					 news.response.items[item].text = getAttachments(news.response.items[item])
+				end
+			end
+			--Делаем его еще пизже
+			local text = {news.response.items[item].text}; text = ecs.stringWrap(text, buffer.screen.width - x - 10)
+			--Получаем инфу нужную
+			local avatarText, name = getAvatarTextAndNameForNews(news.response.items[item].source_id)
+			--Сместиться потом на стока вот
+			local yShift = 5
+			if #text > 2 then yShift = yShift + #text - 2 end
+			
+			--Рисуем авку и название хуйни
+			if item % 2 == 0 then buffer.square(mainZoneX, y, mainZoneWidth, yShift, 0xEEEEEE) end
+			drawAvatar(x, y + 1, 6, 3, math.abs(news.response.items[item].source_id), avatarText)
+			buffer.text(x + 7, y + 1, colors.topBar, name)
+			--Рисуем текст
+			for line = 1, #text do
+				buffer.text(x + 7, y + line + 1, 0x000000, text[line])
+			end
+
+			y = y + yShift
+		end
+	end
+
+	buffer.resetDrawLimit()
+end
+
+local function getAndShowNews()
+	status("Загружаю список новостей")
+	local success, news1 = newsRequest(countOfNewsToGet)
+	if success and news1.response then
+		news = news1
+		currentNews = 1
+		newsGUI()
+	else
+		buffer.error("Ошибка при получении списка новостей")
+	end
+end
+
 --Главное ГУИ с левтбаром и прочим
 local function mainGUI()
 	--Подложка под элементы
@@ -936,6 +1030,8 @@ local function mainGUI()
 		-- loadAndShowProfile(186860159)
 	elseif leftBarElements[currentLeftBarElement] == "Друзья" then
 		friendsGUI()
+	elseif leftBarElements[currentLeftBarElement] == "Новости" then
+		getAndShowNews()
 	end
 
 	buffer.draw()
@@ -1009,7 +1105,7 @@ while true do
 						component.openfm_radio.setURL(obj.audio[key][5].url)
 						component.openfm_radio.start()
 						status("Вывожу в статус играемую музыку")
-						setCurrentAudioPlaying(personalInfo.id, obj.audio[key][5].id)
+						setCurrentAudioPlaying(currentProfile.ID or personalInfo.id, obj.audio[key][5].id)
 					else
 						buffer.error("Эта функция доступна только при наличии установленного мода OpenFM, добавляющего полноценное интернет-радио")
 					end
@@ -1048,6 +1144,24 @@ while true do
 					messagesGUI()
 				end
 				drawMessageInputBar(" ")
+			end
+		end
+
+		if whatIsOnScreen == "userProfile" then
+			if clickedAtZone(e[3], e[4], currentProfile.audiosButton) then
+				buffer.button(currentProfile.audiosButton[1], currentProfile.audiosButton[2], currentProfile.avatarWidth, 1, 0x777777, 0xFFFFFF, "Аудиозаписи")
+				buffer.draw()
+				audioToShowFrom = 1
+				audioGUI(currentProfile.ID)
+				buffer.draw()
+			elseif clickedAtZone(e[3], e[4], currentProfile.sendMessageButton) then
+				buffer.button(currentProfile.sendMessageButton[1], currentProfile.sendMessageButton[2], currentProfile.avatarWidth, 1, 0x777777, 0xFFFFFF, "Сообщение")
+				buffer.draw()
+
+				currentMessagesPeerID = currentProfile.ID
+				messageToShowFrom = 1
+				currentMessagesAvatarText = currentProfile.avatarText
+				messagesGUI()
 			end
 		end
 
@@ -1141,7 +1255,7 @@ while true do
 				audioToShowFrom = audioToShowFrom - audioScrollSpeed
 				if audioToShowFrom < 1 then audioToShowFrom = 1 end
 				status("Прокручиваю аудозаписи, отправляю запрос на сервер")
-				audioGUI(personalInfo.id)
+				audioGUI(currentProfile.ID or personalInfo.id)
 				buffer.draw()
 			elseif whatIsOnScreen == "userProfile" then
 				currentProfileY = currentProfileY + profileScrollSpeed
@@ -1152,6 +1266,11 @@ while true do
 				currentFriendsOffset = currentFriendsOffset - friendsScrollSpeed
 				if currentFriendsOffset < 0 then currentFriendsOffset = 0 end
 				friendsGUI()
+				buffer.draw()
+			elseif whatIsOnScreen == "news" then
+				currentNews = currentNews - 1
+				if currentNews < 1 then currentNews = 1 end
+				newsGUI()
 				buffer.draw()
 			end
 		else
@@ -1169,7 +1288,7 @@ while true do
 			elseif whatIsOnScreen == "audio" then
 				audioToShowFrom = audioToShowFrom + audioScrollSpeed
 				status("Прокручиваю аудозаписи, отправляю запрос на сервер")
-				audioGUI(personalInfo.id)
+				audioGUI(currentProfile.ID or personalInfo.id)
 				buffer.draw()
 			elseif whatIsOnScreen == "userProfile" then
 				currentProfileY = currentProfileY - profileScrollSpeed
@@ -1178,6 +1297,10 @@ while true do
 			elseif whatIsOnScreen == "friends" then
 				currentFriendsOffset = currentFriendsOffset + friendsScrollSpeed
 				friendsGUI()
+				buffer.draw()
+			elseif whatIsOnScreen == "news" then
+				currentNews = currentNews + 1
+				newsGUI()
 				buffer.draw()
 			end
 		end
