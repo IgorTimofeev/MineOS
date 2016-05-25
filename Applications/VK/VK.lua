@@ -244,6 +244,10 @@ local function userWallRequest(ID, count, offset)
 	return VKAPIRequest("wall.get", "owner_id=" .. ID, "count=" .. count, "offset=" .. offset)
 end
 
+local function setCurrentAudioPlaying(ownerID, audioID)
+	return VKAPIRequest("audio.setBroadcast", "audio=" .. ownerID .. "_" .. audioID)
+end
+
 
 ---------------------------------------------------- GUI-часть ----------------------------------------------------------------
 
@@ -639,7 +643,7 @@ local function audioGUI(ID)
 			buffer.square(mainZoneX, y, mainZoneWidth, 5, color)
 			-- buffer.button(mainZoneX + 2, y + 1, 5, 3, colors.audioPlayButton, colors.audioPlayButtonText, "ᐅ")
 			buffer.button(mainZoneX + 2, y + 1, 5, 3, colors.audioPlayButton, colors.audioPlayButtonText, ">")
-			newObj("audio", i, mainZoneX + 2, y + 1, mainZoneX + 7, y + 3, audios.response.items[i].url)
+			newObj("audio", i, mainZoneX + 2, y + 1, mainZoneX + 7, y + 3, audios.response.items[i])
 
 			local x = mainZoneX + 9
 			buffer.text(x, y + 1, colors.audioPlayButton, audios.response.items[i].artist)
@@ -650,7 +654,7 @@ local function audioGUI(ID)
 			local hours = string.format("%02.f", math.floor(audios.response.items[i].duration / 3600))
 			local minutes = string.format("%02.f", math.floor(audios.response.items[i].duration / 60 - (hours * 60)))
 			local seconds = string.format("%02.f", math.floor(audios.response.items[i].duration - hours * 3600 - minutes * 60))
-			buffer.text(x, y + 2, 0x555555, "Длительность: " .. hours .. ":" .. minutes .. ":" .. seconds)
+			buffer.text(x, y + 2, 0x888888, "Длительность: " .. hours .. ":" .. minutes .. ":" .. seconds)
 
 			y = y + 5
 		end
@@ -1002,8 +1006,10 @@ while true do
 
 					if component.isAvailable("openfm_radio") then
 						component.openfm_radio.stop()
-						component.openfm_radio.setURL(obj.audio[key][5])
+						component.openfm_radio.setURL(obj.audio[key][5].url)
 						component.openfm_radio.start()
+						status("Вывожу в статус играемую музыку")
+						setCurrentAudioPlaying(personalInfo.id, obj.audio[key][5].id)
 					else
 						buffer.error("Эта функция доступна только при наличии установленного мода OpenFM, добавляющего полноценное интернет-радио")
 					end
