@@ -1115,9 +1115,10 @@ while true do
 							settings.password = nil
 						end
 						saveSettings()
+
+						currentLeftBarElement = oldLeftBarElement
+						mainGUI()
 					end
-					currentLeftBarElement = oldLeftBarElement
-					mainGUI()
 				end
 
 				break
