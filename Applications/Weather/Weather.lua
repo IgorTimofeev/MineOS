@@ -19,7 +19,7 @@ local weather = {}
 local changeCityButton = {}
 local exitButton = {}
 
-local pathToWeatherFile = "MineOS/System/OS/Weather/Forecast.cfg"
+local pathToWeatherFile = "MineOS/System/Weather/Forecast.cfg"
 local pathToWallpaper = "MineOS/System/OS/Wallpaper.lnk"
 
 local pathsToWeatherTypes = {
@@ -266,7 +266,7 @@ local function tryToGetAndDrawWeather()
 		--Сейвим погодку
 		saveWeatherData()
 	else
-		ecs.error(jsonWeatherResponse)
+		buffer.error(jsonWeatherResponse)
 	end
 end
 
