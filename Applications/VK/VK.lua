@@ -13,10 +13,11 @@ local image = require("image")
 local unicode = require("unicode")
 local component = require("component")
 local computer = require("computer")
+local files = require("files")
 
 ---------------------------------------------------- Константы ----------------------------------------------------------------
 
-local VKAPIVersion = "5.50"
+local VKAPIVersion = "5.52"
 
 local colors = {
 	leftBar = 0x262626,
@@ -41,7 +42,7 @@ local colors = {
 	topBar = 0x002440,
 	topBarText = 0xFFFFFF,
 
-	statusBar = 0x262626,
+	statusBar = 0x1b1b1b,
 	statusBarText = 0xAAAAAA,
 
 	audioPlayButton = 0x002440,
@@ -53,7 +54,7 @@ local colors = {
 }
 
 local leftBarHeight = buffer.screen.height - 9
-local leftBarWidth = math.floor(buffer.screen.width * 0.17)
+local leftBarWidth = math.floor(buffer.screen.width * 0.20)
 
 local topBarHeight = 3
 
@@ -66,10 +67,11 @@ local cloudWidth = math.floor(mainZoneWidth * 0.7)
 
 -------------------------------------------------------------------------------------------------------------------------------
 
+local settingsPath = "MineOS/System/VK/Settings.cfg"
 local VKLogoImagePath = "MineOS/Applications/VK.app/Resources/VKLogo.pic"
 -- local leftBarElements = {"Новости", "Друзья", "Сообщения", "Настройки", "Выход"}
-local leftBarElements = { "Сообщения", "Аудиозаписи", "Группы", "Выход" }
-local currentLeftBarElement = 1
+local leftBarElements = { "Моя страница", "Друзья", "Сообщения", "Аудиозаписи", "Настройки", "Выход" }
+local currentLeftBarElement = 3
 local personalInfo
 local access_token
 local whatIsOnScreen
@@ -85,11 +87,31 @@ local messageToShowFrom = 1
 local dialogScrollSpeed = 5
 local audioScrollSpeed = 5
 local messagesScrollSpeed = 5
+local profileScrollSpeed = 2
+local friendsScrollSpeed = 5
 
-local currentMessagesPeerID, currentMessagesAvatarText, currentMessagesFullName
+local countOfFriendsToGetOnFriendsTab = 12
+local currentFriendsOffset = 0
+local currentFriends = {}
+
+local countOfFriendsToDisplayInProfile = 16
+local currentProfileY = mainZoneY + 2
+
+local currentMessagesPeerID, currentMessagesAvatarText
 local dialogPreviewTextLimit = mainZoneWidth - 15
+local currentProfile
+
+local settings = {saveAuthData = false, addSendingInfo = true}
 
 ---------------------------------------------------- Веб-часть ----------------------------------------------------------------
+
+local function loadSettings()
+	if fs.exists(settingsPath) then settings = files.loadTableFromFile(settingsPath) end
+end
+
+local function saveSettings()
+	files.saveTableToFile(settingsPath, settings)
+end
 
 --Объекты
 local obj = {}
@@ -99,43 +121,17 @@ local function newObj(class, name, ...)
 end
 
 --Дебаг-функция на сохранение говна в файл, МАЛО ЛИ ЧО
-local function saveToFile(stro4ka)
-	local file = io.open("test.lua", "w")
+local function saveToFile(filename, stro4ka)
+	local file = io.open(filename, "w")
 	file:write(stro4ka)
 	file:close()
 end
 
---Модифицированная функция интернет-запросов, стандартная фу-фу-фу, ошибка на ошибке и HTTP Response Error погоняет!
---Заметка: переписать на компонетное API, в рот ебал автора либы. Хм, велосипеды?
+--Банальный URL-запрос, декодирующийся через ЖУСОН в случае успеха, епты
 local function request(url)
-	local data = ""
-	--Выполняем запрос на подключение
-	local success, response = pcall(internet.request, url)
-	--Если все ок, то делаем чтение из response, иначе выдаем ошибку, че не так с подключением 
-	--(скорее всего, ошибка будет связана с отстутствием инета или неверными URL, которые ТЫ, СУКА, лично и вбиваешь в код)
-	if success then
-		while true do
-			--Делаем запрос на чтение из response
-			local success, reason = pcall(response)
-			--Если все ок, то идем дальше, иначе кидаем ошибку 
-			--(скорее всего, это будет серверная ошибка, неверный пасс там, 404, бла-бла)
-			if success then
-				--Если конец response не достигнут, то записываем в data все, что пришло с сервака, иначе по съебкам!
-				if reason then
-					data = data .. reason
-				else
-					break
-				end
-			else
-				return false, reason
-			end
-		end
-		
-		--Если все охуенно, то возвращаем true и преобразованный JSON-ответ в таблицу Lua
-		return true, json:decode(data)
-	else
-		return false, response
-	end
+	local success, response = ecs.internetRequest(url)
+	if success then response = json:decode(response) end
+	return success, response
 end
 
 --Отправляем запрос на авторизацию по логину и паролю
@@ -229,8 +225,17 @@ local function sendMessageRequest(peerID, message)
 end
 
 local function usersInformationRequest(...)
-	return VKAPIRequest("users.get", "user_ids=" .. table.concat({...}, ","), "fields=city,bdate,online,status,last_seen,followers_count")
+	return VKAPIRequest("users.get", "user_ids=" .. table.concat({...}, ","), "fields=contacts,education,site,city,bdate,online,status,last_seen,quotes,about,games,books,counters,relatives,connections,blacklisted,activities,interests,music,movies,tv")
 end
+
+local function userFriendsRequest(ID, count, offset, order, nameCase)
+	return VKAPIRequest("friends.get", "user_id=" .. ID, "count=" .. count, "offset=" .. offset, "order=" .. order, "name_case=" .. nameCase, "fields=domain,online,last_seen")
+end
+
+local function userWallRequest(ID, count, offset)
+	return VKAPIRequest("wall.get", "owner_id=" .. ID, "count=" .. count, "offset=" .. offset)
+end
+
 
 ---------------------------------------------------- GUI-часть ----------------------------------------------------------------
 
@@ -238,12 +243,15 @@ local function createAvatarHashColor(hash)
 	return math.abs(hash % 0xFFFFFF)
 end
 
-local function drawAvatar(x, y, user_id, text)
+local function drawAvatar(x, y, width, height, user_id, text)
 	local avatarColor = createAvatarHashColor(user_id)
 	local textColor = avatarColor > 8388607 and 0x000000 or 0xFFFFFF
 
-	buffer.square(x, y, 6, 3, avatarColor, textColor, " ")
-	buffer.text(x + 2, y + 1, textColor, unicode.upper(text))
+	--Хочу себе персональную авку, а то че за хуйня?
+	if user_id == 7799889 then avatarColor = 0x000000; textColor = 0xCCCCCC end
+
+	buffer.square(x, y, width, height, avatarColor, textColor, " ")
+	buffer.text(x + math.floor(width / 2) - math.floor(unicode.len(text) / 2), y + math.floor(height / 2), textColor, unicode.upper(text))
 end
 
 --Проверка клика в определенную область по "объекту". Кому на хуй вссалось ООП?
@@ -264,7 +272,7 @@ local function loginGUI(startUsername, startPassword)
 
 	local textFieldWidth = 50
 	local textFieldHeight = 3
-	local x, y = math.floor(buffer.screen.width / 2 - textFieldWidth / 2), math.floor(buffer.screen.height / 2 - 3)
+	local x, y = math.floor(buffer.screen.width / 2 - textFieldWidth / 2), math.floor(buffer.screen.height / 2)
 
 	local obj = {}
 	obj.username = {x, y, x + textFieldWidth - 1, y + 2}; y = y + textFieldHeight + 1
@@ -307,9 +315,12 @@ local function loginGUI(startUsername, startPassword)
 				draw()
 				local success, loginData = getLoginDataRequest(username, password)
 				if success then 
+					if settings.saveAuthData then settings.username = username; settings.password = password; saveSettings() end
+					loginData.username = username
+					loginData.password = password
 					return loginData
 				else
-					ecs.error("Неверный пароль!" .. tostring(loginData))
+					buffer.error("Ошибка авторизации: " .. tostring(loginData))
 				end
 			end
 		end
@@ -318,8 +329,8 @@ end
 
 ---------------------------------------------------- GUI для взаимодействия с VK API ----------------------------------------------
 
-local function drawPersonalAvatar(x, y)
-	drawAvatar(x, y, personalInfo.id, unicode.sub(personalInfo.first_name, 1, 1) .. unicode.sub(personalInfo.last_name, 1, 1))
+local function drawPersonalAvatar(x, y, width, height)
+	drawAvatar(x, y, width, height, personalInfo.id, unicode.sub(personalInfo.first_name, 1, 1) .. unicode.sub(personalInfo.last_name, 1, 1))
 end
 
 local function status(text)
@@ -338,12 +349,6 @@ end
 local function clearGUIZone()
 	buffer.square(mainZoneX, mainZoneY, mainZoneWidth, mainZoneHeight, colors.mainZone)
 end
-
-
-
-
-
-
 
 local function drawEmptyCloud(x, y, cloudWidth, cloudHeight, cloudColor, fromYou)
 	local upperPixel = "▀"
@@ -370,17 +375,6 @@ local function drawEmptyCloud(x, y, cloudWidth, cloudHeight, cloudColor, fromYou
 	buffer.set(x + cloudWidth + 1, y, colors.mainZone, cloudColor, upperPixel)
 
 	return y - cloudHeight + 1
-end
-
-local function stringWrap(text, limit)
-	local strings = {}
-	local textLength = unicode.len(text)
-	local subFrom = 1
-	while subFrom <= textLength do
-		table.insert(strings, unicode.sub(text, subFrom, subFrom + limit - 1))
-		subFrom = subFrom + limit
-	end
-	return strings
 end
 
 local function drawTextCloud(x, y, cloudColor, textColor, fromYou, text)
@@ -422,33 +416,23 @@ local function drawMessageInputBar(currentText)
 	buffer.text(x + 4, y + 2, colors.messsageInputBarTextColor, ecs.stringLimit("start", currentText or "Введите сообщение", mainZoneWidth - 8))
 end
 
-local function getUserNamesFromMessagesArray(messagesArray)
-	local usersToGetNames = {}
-	for i = 1, #messagesArray do
-		if messagesArray[i].user_id and messagesArray[i].user_id > 0 then
-			table.insert(usersToGetNames, messagesArray[i].user_id)
-		end
-	end
-
-	local success, usersData = usersInformationRequest(table.unpack(usersToGetNames))
+local function getUserNamesFromTheirIDs(IDsArray)
+	local success, usersData = usersInformationRequest(table.unpack(IDsArray))
+	local userNames = {}
 	if success and usersData.response then
-		for i = 1, #messagesArray do
-			if messagesArray[i].user_id and messagesArray[i].user_id > 0 then
-				for j = 1, #usersData.response do
-					if usersData.response[j].id == messagesArray[i].user_id then
-						messagesArray[i].first_name = usersData.response[j].first_name
-						messagesArray[i].last_name = usersData.response[j].last_name
-					end
-				end
-			end
+		for i = 1, #usersData.response do
+			userNames[usersData.response[i].id] = {
+				first_name = usersData.response[i].first_name,
+				last_name = usersData.response[i].last_name,
+			}
 		end
 	end
-
-	return messagesArray
+	return success, userNames
 end
 
 local function messagesGUI()
 
+	status("Загружаю историю переписки")
 	local success, messages = getMessagesRequest(currentMessagesPeerID, messageToShowFrom - 1, countOfMessagesToLoadFromServer)
 	if success and messages.response then
 
@@ -456,13 +440,21 @@ local function messagesGUI()
 
 		if currentMessagesPeerID > 2000000000 then
 			status("Загружаю имена пользователей из переписки (актуально для конференций)")
-			messages.response.items = getUserNamesFromMessagesArray(messages.response.items)
+
+			local IDsArray = {};
+			for i = 1, #messages.response.items do table.insert(IDsArray, messages.response.items[i].user_id) end
+			local userNamesSuccess, userNames = getUserNamesFromTheirIDs(IDsArray)
+			for i = 1, #messages.response.items do 
+				messages.response.items[i].first_name = userNames[messages.response.items[i].user_id].first_name or "N/A"
+				messages.response.items[i].last_name = userNames[messages.response.items[i].user_id].last_name or "N/A"
+			end
+			IDsArray = nil
 		end
 
 		clearGUIZone()
-		drawTopBar("Диалог с \"" .. currentMessagesFullName .. "\"")
+		drawTopBar("Сообщения")
 
-		saveToFile(serialization.serialize(messages))
+		saveToFile("lastMessagesRequest.json", serialization.serialize(messages))
 
 		buffer.setDrawLimit(mainZoneX, mainZoneY, mainZoneWidth, mainZoneHeight)
 
@@ -487,11 +479,11 @@ local function messagesGUI()
 
 			if messages.response.items[i].out == 1 then
 				y = drawTextCloud(xYou - cloudWidth - 6, y, colors.yourCloudColor, colors.yourCloudTextColor, true, messageTextArray)
-				drawPersonalAvatar(xYou, y)
+				drawPersonalAvatar(xYou, y, 6, 3)
 				buffer.text(xYou - cloudWidth - unicode.len(messages.response.items[i].date) - 8, y + 1, colors.dateTime, messages.response.items[i].date)
 			else
 				y = drawTextCloud(xSender + 8, y, colors.senderCloudColor, colors.senderCloudTextColor, false, messageTextArray)
-				drawAvatar(xSender, y, peerID, messages.response.items[i].first_name and (unicode.sub(messages.response.items[i].first_name, 1, 1) .. unicode.sub(messages.response.items[i].last_name, 1, 1)) or currentMessagesAvatarText)
+				drawAvatar(xSender, y, 6, 3, peerID, messages.response.items[i].first_name and (unicode.sub(messages.response.items[i].first_name, 1, 1) .. unicode.sub(messages.response.items[i].last_name, 1, 1)) or currentMessagesAvatarText)
 				buffer.text(xSender + cloudWidth + 14, y + 1, colors.dateTime, messages.response.items[i].date)
 			end
 
@@ -509,47 +501,11 @@ local function messagesGUI()
 	end
 end
 
-
-
-
-
-
---У-у-у, господи, какие же уроды! Вроде такое охуенное вк апи, а пиздец!
---Крч, эта функция получает имена юзеров по их айдишникам и загоняет их
---в массив вместо title.
---Собсна, нахуя? ДА ПОТОМУ ЧТО dialogs возвращают только ID юзеров с историей
---сообщений, а не их имя. Ну, а имена КОНФ нормас пишутся. Что за бред?
---Идите на хуйЙ!!!!!! КОСТЫЛЕЕБСТВО
-local function getUserNamesFromDialogArray(dialogs)
-	local usersToGetNames = {}
-	
-	for i = 1, #dialogs.response.items do
-		if dialogs.response.items[i].message.user_id and dialogs.response.items[i].message.user_id > 0 then
-			table.insert(usersToGetNames, dialogs.response.items[i].message.user_id)
-		end
-	end
-
-	local success, usersData = usersInformationRequest(table.unpack(usersToGetNames))
-	if success and usersData.response then
-		for i = 1, #dialogs.response.items do
-			if not dialogs.response.items[i].message.chat_id then
-				for j = 1, #usersData.response do
-					if usersData.response[j].id == dialogs.response.items[i].message.user_id then
-						dialogs.response.items[i].message.title = usersData.response[j].first_name .. " " .. usersData.response[j].last_name
-					end
-				end
-			end
-		end
-	end
-
-	return dialogs
-end
-
 local function drawDialog(y, dialogBackground, avatarID, avatarText, text1, text2, text3)
 	--Рисуем подложку под диалог нужного цвета
 	buffer.square(mainZoneX, y, mainZoneWidth, 5, dialogBackground)
 	--Рисуем аватарку, чо уж
-	drawAvatar(mainZoneX + 2, y + 1, avatarID, avatarText)
+	drawAvatar(mainZoneX + 2, y + 1, 6, 3, avatarID, avatarText)
 	--Пишем все, что нужно
 	y = y + 1
 	if text1 then buffer.text(mainZoneX + 10, y, 0x000000, text1); y = y + 1 end
@@ -561,8 +517,6 @@ local function dialogsGUI()
 
 	local success, dialogs = getDialogsRequest(dialogToShowFrom - 1, countOfDialogsToLoadFromServer)
 	if success and dialogs.response then
-
-		-- saveToFile(serialization.serialize(dialogs))
 		
 		whatIsOnScreen = "dialogs"
 
@@ -574,7 +528,18 @@ local function dialogsGUI()
 
 		--НУ ТЫ ПОНЯЛ, АГА
 		status("Получаю имена пользователей по ID")
-		dialogs = getUserNamesFromDialogArray(dialogs)
+		local IDsArray = {}
+		for i = 1, #dialogs.response.items do
+			if not dialogs.response.items[i].message.chat_id and dialogs.response.items[i].message.user_id and dialogs.response.items[i].message.user_id > 0 then
+				table.insert(IDsArray, dialogs.response.items[i].message.user_id)
+			end
+		end
+		local userNamesSuccess, userNames = getUserNamesFromTheirIDs(IDsArray)
+		for i = 1, #dialogs.response.items do
+			if not dialogs.response.items[i].message.chat_id and dialogs.response.items[i].message.user_id and dialogs.response.items[i].message.user_id > 0 then
+				dialogs.response.items[i].message.title = userNames[dialogs.response.items[i].message.user_id].first_name or "N/A" .. " " .. userNames[dialogs.response.items[i].message.user_id].last_name or ""
+			end
+		end
 
 		local y = mainZoneY
 		local avatarText = ""
@@ -640,6 +605,8 @@ local function dialogsGUI()
 	status("Список диалогов получен")
 end
 
+--Гуишка аудиозаписей
+--А-А-А-А!!!!! МОЙ КРАСИВЫЙ ТРЕУГОЛЬНИЧЕК PLAY, БЛЯДЬ!!!! ШТО ТЫ ДЕЛАЕШЬ, SANGAR, ПРЕКРАТИ!!!!
 local function audioGUI(ID)
 	local success, audios = getAudioRequest(ID, audioToShowFrom - 1, countOfAudioToLoadFromServer)
 	if success and audios.response then
@@ -657,9 +624,8 @@ local function audioGUI(ID)
 			if i % 2 == 0 then color = 0xEEEEEE end
 
 			buffer.square(mainZoneX, y, mainZoneWidth, 5, color)
-
-			buffer.button(mainZoneX + 2, y + 1, 5, 3, colors.audioPlayButton, colors.audioPlayButtonText, "ᐅ")
-
+			-- buffer.button(mainZoneX + 2, y + 1, 5, 3, colors.audioPlayButton, colors.audioPlayButtonText, "ᐅ")
+			buffer.button(mainZoneX + 2, y + 1, 5, 3, colors.audioPlayButton, colors.audioPlayButtonText, ">")
 			newObj("audio", i, mainZoneX + 2, y + 1, mainZoneX + 7, y + 3, audios.response.items[i].url)
 
 			local x = mainZoneX + 9
@@ -678,13 +644,214 @@ local function audioGUI(ID)
 	end
 end
 
+local function checkField(field)
+	if field and field ~= "" and field ~= " " then return true end
+	return false
+end
+
+local function userProfileRequest()
+	--Ебашим основную инфу
+	status("Загружаю информацию о пользователе под ID " .. currentProfile.ID)
+	local profileSuccess, userProfile = usersInformationRequest(currentProfile.ID)
+	
+	--Ебашим стену
+	status("Загружаю содержимое стены пользователя " .. currentProfile.ID)
+	local wallSuccess, wall = userWallRequest(currentProfile.ID, 20, currentProfile.wallOffset)
+	--Получаем инфу о юзверях со стены
+	local userNamesSuccess, userNames
+	if wallSuccess and wall.response then
+		local IDsArray = {}
+		for i = 1, #wall.response.items do table.insert(IDsArray, wall.response.items[i].from_id) end
+		status("Загружаю имена людей, оставивших сообщения на стене пользователя " .. currentProfile.ID)
+		userNamesSuccess, userNames = getUserNamesFromTheirIDs(IDsArray)
+		IDsArray = nil
+	end
+
+	--Ебашим френдсов
+	status("Загружаю информацию о друзьях пользователя под ID " .. currentProfile.ID)
+	local friendsSuccess, friends = userFriendsRequest(currentProfile.ID, countOfFriendsToDisplayInProfile, 0, "random", "nom")
+
+	--Анализируем на пиздатость
+	if (profileSuccess and userProfile.response) and (wallSuccess and wall.response) and (userNamesSuccess) and (friendsSuccess and friends.response) then
+		-- saveToFile("lastUserProfileRequest.json", serialization.serialize(userProfile))
+		currentProfile.userProfile = userProfile
+		currentProfile.wall = wall
+		currentProfile.userNames = userNames
+		currentProfile.friends = friends
+		return true
+	else
+		buffer.error("Ошибка при загрузке информации о профиле")
+		return false
+	end
+end
+
+local function userProfileGUI()
+	clearGUIZone()
+	whatIsOnScreen = "userProfile"
+	drawTopBar("Страница пользователя " .. currentProfile.ID)
+
+	buffer.setDrawLimit(mainZoneX, mainZoneY, mainZoneWidth, mainZoneHeight)
+
+	local xAvatar, yAvatar = mainZoneX + 4, currentProfileY
+	local x, y = xAvatar, yAvatar
+	local avatarWidth = 18
+	local avatarHeight = math.floor(avatarWidth / 2)
+
+	--Рисуем авку
+	drawAvatar(x, y, avatarWidth, avatarHeight, currentProfile.ID, unicode.sub(currentProfile.userProfile.response[1].first_name, 1, 1) .. unicode.sub(currentProfile.userProfile.response[1].last_name, 1, 1))
+	--Рисуем имячко и статус
+	x = x + avatarWidth + 4
+	buffer.text(x, y, 0x000000, currentProfile.userProfile.response[1].first_name .. " " .. currentProfile.userProfile.response[1].last_name); y = y + 1
+	buffer.text(x, y, 0xAAAAAA, currentProfile.userProfile.response[1].status); y = y + 2
+
+	--Инфааааа
+	local informationOffset = 20
+	local informationKeyColor = 0x888888
+	local informationTitleColor = 0x000000
+	local informationValueColor = 0x002440
+	local informationSeparatorColor = 0xCCCCCC
+
+	local function drawInfo(x, y2, key, value)
+		if checkField(value) then
+			value = {value}
+			value = ecs.stringWrap(value, buffer.screen.width - x - 4 - informationOffset)
+			buffer.text(x, y2, informationKeyColor, key)
+			for i = 1, #value do
+				buffer.text(x + informationOffset, y2, informationValueColor, value[i])
+				y2 = y2 + 1
+			end
+			y = y2
+		end
+	end
+
+	local function drawSeparator(x, y2, text)
+		buffer.text(x, y2, informationTitleColor, text)
+		buffer.text(x + unicode.len(text) + 1, y2, informationSeparatorColor, string.rep("─", buffer.screen.width - x - unicode.len(text)))
+		y = y + 1
+	end
+
+	drawSeparator(x, y, "Основная информация"); y = y + 1
+
+	drawInfo(x, y, "Дата рождения:", currentProfile.userProfile.response[1].bdate)
+	if currentProfile.userProfile.response[1].city then drawInfo(x, y, "Город:", currentProfile.userProfile.response[1].city.title) end
+	drawInfo(x, y, "Образование:", currentProfile.userProfile.response[1].university_name)
+	drawInfo(x, y, "Веб-сайт", currentProfile.userProfile.response[1].site); y = y + 1
+
+	drawSeparator(x, y, "Контактная информация"); y = y + 1
+
+	drawInfo(x, y, "Мобильный телефон:", currentProfile.userProfile.response[1].mobile_phone)
+	drawInfo(x, y, "Домашний телефон:", currentProfile.userProfile.response[1].home_phone)
+	drawInfo(x, y, "Skype:", currentProfile.userProfile.response[1].skype); y = y + 1
+
+	drawSeparator(x, y, "Личная информация"); y = y + 1
+
+	drawInfo(x, y, "Интересы:", currentProfile.userProfile.response[1].interests)
+	drawInfo(x, y, "Деятельность:", currentProfile.userProfile.response[1].activities)
+	drawInfo(x, y, "Любимая музыка:", currentProfile.userProfile.response[1].music)
+	drawInfo(x, y, "Любимая фильмы:", currentProfile.userProfile.response[1].movies)
+	drawInfo(x, y, "Любимая телешоу:", currentProfile.userProfile.response[1].tv)
+	drawInfo(x, y, "Любимая книги:", currentProfile.userProfile.response[1].books)
+	drawInfo(x, y, "Любимая игры:", currentProfile.userProfile.response[1].games)
+	drawInfo(x, y, "О себе:", currentProfile.userProfile.response[1].about)
+
+	-- А ВОТ И СТЕНОЧКА ПОДЪЕХАЛА НА ПРАЗДНИК ДУШИ
+	y = y + 1
+	buffer.square(x, y, buffer.screen.width - x - 2, 1, 0xCCCCCC); buffer.text(x + 1, y, 0x262626, "Стена"); y = y + 2
+	--Перебираем всю стенку
+	for i = 1, #currentProfile.wall.response.items do
+		--Если это не репост или еще не хуйня какая-то
+		if currentProfile.wall.response.items[i].text ~= "" then
+			-- buffer.error(userNames)
+			drawAvatar(x, y, 6, 3, currentProfile.wall.response.items[i].from_id, unicode.sub(currentProfile.userNames[currentProfile.wall.response.items[i].from_id].first_name, 1, 1) .. unicode.sub(currentProfile.userNames[currentProfile.wall.response.items[i].from_id].last_name, 1, 1))
+			buffer.text(x + 8, y, informationValueColor, currentProfile.userNames[currentProfile.wall.response.items[i].from_id].first_name .. " " .. currentProfile.userNames[currentProfile.wall.response.items[i].from_id].last_name)
+			local date = os.date("%d.%m.%y в %H:%M", currentProfile.wall.response.items[i].date)
+			buffer.text(buffer.screen.width - unicode.len(date) - 2, y, 0xCCCCCC, date)
+			y = y + 1
+			local text = {currentProfile.wall.response.items[i].text}
+			text = ecs.stringWrap(text, buffer.screen.width - x - 10)
+			for i = 1, #text do
+				buffer.text(x + 8, y, 0x000000, text[i])
+				y = y + 1
+			end
+			y = y + 1
+			if #text == 1 then y = y + 1 end
+		end
+	end
+
+	--ПодАвочная параша
+	informationOffset = 13
+	x, y = xAvatar, yAvatar
+	y = y + avatarHeight + 1
+
+	drawInfo(x, y, "Подписчики: ", currentProfile.userProfile.response[1].counters.followers)
+	drawInfo(x, y, "Фотографии: ", currentProfile.userProfile.response[1].counters.photos)
+	drawInfo(x, y, "Видеозаписи: ", currentProfile.userProfile.response[1].counters.videos)
+	drawInfo(x, y, "Аудиозаписи: ", currentProfile.userProfile.response[1].counters.audios)
+
+	--Друзяшки, ЕПТАААААА, АХАХАХАХАХАХАХАХАХА		
+	y = y + 1
+	buffer.square(x, y, avatarWidth, 1, 0xCCCCCC); buffer.text(x + 1, y, 0x262626, "Друзья (" .. currentProfile.userProfile.response[1].counters.friends .. ")"); y = y + 2
+	local xPos, yPos = x + 1, y
+	local count = 1
+	for i = 1, #currentProfile.friends.response.items do
+		drawAvatar(xPos, yPos, 6, 3, currentProfile.friends.response.items[i].id, unicode.sub(currentProfile.friends.response.items[i].first_name, 1, 1) .. unicode.sub(currentProfile.friends.response.items[i].last_name, 1, 1))
+		buffer.text(xPos - 1, yPos + 3, 0x000000, ecs.stringLimit("end", currentProfile.friends.response.items[i].first_name .. " " .. currentProfile.friends.response.items[i].last_name, 8))
+		xPos = xPos + 10
+		if i % 2 == 0 then xPos = x + 1; yPos = yPos + 5 end
+		count = count + 1
+		if count > countOfFriendsToDisplayInProfile then break end
+	end
+
+	buffer.resetDrawLimit()
+end
+
+local function loadAndShowProfile(ID)
+	currentProfileY = mainZoneY + 2
+	currentProfile = {ID = ID, wallOffset = 0}
+	if userProfileRequest() then userProfileGUI(currentProfile.ID) end
+end
+
+local function friendsGUI()
+	status("Загружаю список друзей")
+	local success, friends = userFriendsRequest(personalInfo.id, countOfFriendsToGetOnFriendsTab, currentFriendsOffset, "hints", "nom")
+	if success and friends.response then
+		clearGUIZone()
+		currentFriends = {sendMessageButtons = {}, openProfileButtons = {}}
+		whatIsOnScreen = "friends"
+		drawTopBar("Друзья")
+		buffer.setDrawLimit(mainZoneX, mainZoneY, mainZoneWidth, mainZoneHeight)
+
+		local x, y = mainZoneX + 2, mainZoneY + 1
+		for i = 1, #friends.response.items do
+			local subbedName = unicode.sub(friends.response.items[i].first_name, 1, 1) .. unicode.sub(friends.response.items[i].last_name, 1, 1)
+			drawAvatar(x, y, 6, 3, friends.response.items[i].id, subbedName)
+			local text = friends.response.items[i].first_name .. " " .. friends.response.items[i].last_name
+			buffer.text(x + 8, y, colors.topBar, text)
+			local text2 = friends.response.items[i].last_seen and (", " .. (friends.response.items[i].online == 1 and "онлайн" or "был(а) в сети " .. os.date("%d.%m.%y в %H:%M", friends.response.items[i].last_seen.time))) or " "
+			buffer.text(x + 8 + unicode.len(text), y, 0xAAAAAA, text2)
+			
+			buffer.text(x + 8, y + 1, 0x999999, "Написать сообщение")
+			buffer.text(x + 8, y + 2, 0x999999, "Открыть профиль")
+
+			currentFriends.sendMessageButtons[friends.response.items[i].id] = {x + 8, y + 1, x + 18, y + 1, subbedName}
+			currentFriends.openProfileButtons[friends.response.items[i].id] = {x + 8, y + 2, x + 18, y + 2, subbedName}
+
+			y = y + 4
+		end
+
+		buffer.resetDrawLimit()
+	else
+		buffer.error("Ошибка при получении списка друзей пользователя")
+	end
+end
+
 --Главное ГУИ с левтбаром и прочим
 local function mainGUI()
 	--Подложка под элементы
 	buffer.square(1, 1, leftBarWidth, buffer.screen.height, colors.leftBar, 0xFFFFFF, " ")
 	
 	if personalInfo then
-		drawPersonalAvatar(3, 2)
+		drawPersonalAvatar(3, 2, 6, 3)
 		buffer.text(11, 3, 0xFFFFFF, ecs.stringLimit("end", personalInfo.first_name .. " " .. personalInfo.last_name, leftBarWidth - 11))
 	end
 
@@ -704,6 +871,7 @@ local function mainGUI()
 		y = y + 2
 	end
 
+	--Отображаем гую нужную выбранную
 	if leftBarElements[currentLeftBarElement] == "Сообщения" then
 		status("Получаю список диалогов")
 		messageToShowFrom = 1
@@ -713,22 +881,61 @@ local function mainGUI()
 		status("Получаю список аудозаписей")
 		audioToShowFrom = 1
 		audioGUI(personalInfo.id)
+	elseif leftBarElements[currentLeftBarElement] == "Моя страница" then
+		loadAndShowProfile(personalInfo.id)
+		-- loadAndShowProfile(186860159)
+	elseif leftBarElements[currentLeftBarElement] == "Друзья" then
+		friendsGUI()
 	end
 
 	buffer.draw()
 end
+
+local function spam(id)
+	while true do
+		local randomMessages = {
+			"Ты мое золотце",
+			"Ты никогда не сделаешь сайт",
+			"Ты ничтожество",
+			"Твоя жизнь ничего не значит",
+			"Ты ничего не добьешься",
+			"Ты завалишь экзамены",
+			"Ты никому не нужна",
+			"Ты не напишешь курсовую",
+			"Твое животное помрет завтра",
+			"Не добавляй в ЧС!",
+			"Передаем привет от Яши и Меня (а кто я?)",
+			"Хуй!",
+			"Пизда!",
+			"Залупа!",
+			"Пенис!",
+			"Хер!",
+			"Давалка!"
+		}
+		local text = randomMessages[math.random(1, #randomMessages)] .. " (с любовью, отправлено с OpenComputers)"
+		sendMessageRequest(tostring(id), text)
+		print("Отправляю сообщение: " .. text)
+		os.sleep(2)
+	end
+end
+
 
 ---------------------------------------------------- Старт скрипта ----------------------------------------------------------------
 
 --Инициализируем библиотеку двойного буффера
 --Эх, что бы я делал, если б не накодил ее? 0.2 фпс на GPU мертвеца!
 buffer.start()
+--Хуярим настррррроечки
+loadSettings()
 --Активируем форму логина
-local loginData = loginGUI("igor_timofeev@me.com", "13131313")
+local loginData = loginGUI(settings.username or "E-Mail", settings.password or "password")
 access_token = loginData.access_token
 --Получаем персональные данные
 _, personalInfo = usersInformationRequest(loginData.user_id)
 personalInfo = personalInfo.response[1]
+
+-- --Ебемся в попчанский
+-- spam(21321257)
 
 --Активируем главное GUI
 clearGUIZone()
@@ -752,7 +959,7 @@ while true do
 						component.openfm_radio.setURL(obj.audio[key][5])
 						component.openfm_radio.start()
 					else
-						ecs.error("Эта функция доступна только при наличии установленного мода OpenFM, добавляющего полноценное интернет-радио")
+						buffer.error("Эта функция доступна только при наличии установленного мода OpenFM, добавляющего полноценное интернет-радио")
 					end
 
 					break
@@ -769,7 +976,6 @@ while true do
 					status("Загружаю переписку с пользователем " .. obj.dialogList[key][7])
 					currentMessagesPeerID = obj.dialogList[key][5]
 					currentMessagesAvatarText = obj.dialogList[key][6]
-					currentMessagesFullName = obj.dialogList[key][7]
 					messagesGUI()
 					break
 				end
@@ -784,7 +990,7 @@ while true do
 				if newText and newText ~= " " then
 					computer.beep(1700)
 					status("Отправляю сообщение пользователю")
-					sendMessageRequest(currentMessagesPeerID, newText .. " (отправлено с OpenComputers)")
+					sendMessageRequest(currentMessagesPeerID, newText .. (settings.addSendingInfo and " (отправлено с OpenComputers)" or ""))
 					status("Обновляю историю переписки")
 					messageToShowFrom = 1
 					messagesGUI()
@@ -793,9 +999,34 @@ while true do
 			end
 		end
 
+		if whatIsOnScreen == "friends" then
+			for ID in pairs(currentFriends.sendMessageButtons) do
+				if clickedAtZone(e[3], e[4], currentFriends.sendMessageButtons[ID]) then
+					buffer.text(currentFriends.sendMessageButtons[ID][1], currentFriends.sendMessageButtons[ID][2], 0x000000, "Написать сообщение")
+					buffer.draw()
+					currentMessagesPeerID = ID
+					messageToShowFrom = 1
+					currentMessagesAvatarText = currentFriends.sendMessageButtons[ID][5]
+					messagesGUI()
+					break
+				end
+			end
+
+			for ID in pairs(currentFriends.openProfileButtons) do
+				if clickedAtZone(e[3], e[4], currentFriends.openProfileButtons[ID]) then
+					buffer.text(currentFriends.openProfileButtons[ID][1], currentFriends.openProfileButtons[ID][2], 0x000000, "Открыть профиль")
+					buffer.draw()
+					loadAndShowProfile(ID)
+					buffer.draw()
+					break
+				end
+			end
+		end
+
 		for key in pairs(obj.leftBar) do
 			if clickedAtZone(e[3], e[4], obj.leftBar[key]) then
-				-- ecs.error("Кликнули на лефт бар ээлемент")
+				-- buffer.error("Кликнули на лефт бар ээлемент")
+				local oldLeftBarElement = currentLeftBarElement
 				currentLeftBarElement = key
 				mainGUI()
 
@@ -804,6 +1035,37 @@ while true do
 					buffer.clear(0x262626)
 					ecs.prepareToExit()
 					return
+				elseif leftBarElements[currentLeftBarElement] == "Настройки" then
+					local data = ecs.universalWindow("auto", "auto", 36, 0x262626, true,
+						{"EmptyLine"},
+						{"CenterText", ecs.colors.orange, "Настройки"},
+						{"EmptyLine"},
+						{"Switch", ecs.colors.orange, 0xffffff, 0xFFFFFF, "Сохранять данные авторизации", settings.saveAuthData},
+						{"EmptyLine"},
+						{"Switch", ecs.colors.orange, 0xffffff, 0xFFFFFF, "Добавлять приписку \"Отправлено с ...\"", settings.addSendingInfo},
+						{"EmptyLine"},
+						{"CenterText", ecs.colors.orange, "OpenComputers VK Client v4.0"},
+						{"EmptyLine"},
+						{"CenterText", ecs.colors.white, "Автор: Игорь Тимофеев, vk.com/id7799889"},
+						{"CenterText", ecs.colors.white, "Все права защищены, епта! Попробуй только спиздить!"},
+						{"EmptyLine"},
+						{"Button", {ecs.colors.orange, 0xffffff, "OK"}, {0x999999, 0xffffff, "Отмена"}}
+					)
+					if data[3] == "OK" then
+						settings.saveAuthData = data[1]
+						settings.addSendingInfo = data[2]
+
+						if settings.saveAuthData then
+							settings.username = loginData.username
+							settings.password = loginData.password
+						else
+							settings.username = nil
+							settings.password = nil
+						end
+						saveSettings()
+					end
+					currentLeftBarElement = oldLeftBarElement
+					mainGUI()
 				end
 
 				break
@@ -828,6 +1090,16 @@ while true do
 				status("Прокручиваю аудозаписи, отправляю запрос на сервер")
 				audioGUI(personalInfo.id)
 				buffer.draw()
+			elseif whatIsOnScreen == "userProfile" then
+				currentProfileY = currentProfileY + profileScrollSpeed
+				if currentProfileY > mainZoneY + 2 then currentProfileY = mainZoneY + 2 end
+				userProfileGUI()
+				buffer.draw()
+			elseif whatIsOnScreen == "friends" then
+				currentFriendsOffset = currentFriendsOffset - friendsScrollSpeed
+				if currentFriendsOffset < 0 then currentFriendsOffset = 0 end
+				friendsGUI()
+				buffer.draw()
 			end
 		else
 			if whatIsOnScreen == "dialogs" then
@@ -845,6 +1117,14 @@ while true do
 				audioToShowFrom = audioToShowFrom + audioScrollSpeed
 				status("Прокручиваю аудозаписи, отправляю запрос на сервер")
 				audioGUI(personalInfo.id)
+				buffer.draw()
+			elseif whatIsOnScreen == "userProfile" then
+				currentProfileY = currentProfileY - profileScrollSpeed
+				userProfileGUI()
+				buffer.draw()
+			elseif whatIsOnScreen == "friends" then
+				currentFriendsOffset = currentFriendsOffset + friendsScrollSpeed
+				friendsGUI()
 				buffer.draw()
 			end
 		end

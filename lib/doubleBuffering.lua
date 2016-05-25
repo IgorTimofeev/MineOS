@@ -219,7 +219,7 @@ function buffer.copy(x, y, width, height)
 	}
 
 	if x < 1 or y < 1 or x + width - 1 > buffer.screen.width or y + height - 1 > buffer.screen.height then
-		errror("Область копирования выходит за пределы экрана.")
+		error("Область копирования выходит за пределы экрана.")
 	end
 
 	local index
@@ -436,6 +436,91 @@ function buffer.framedButton(x, y, width, height, backColor, buttonColor, text)
 	y = math.floor(y + height / 2)
 
 	buffer.text(x, y, buttonColor, text)
+end
+
+function buffer.error(text, errorWindowParameters)
+	--Всякие константы, бла-бла
+	local backgroundColor = (errorWindowParameters and errorWindowParameters.backgroundColor) and errorWindowParameters.backgroundColor or 0x1b1b1b
+	local textColor = (errorWindowParameters and errorWindowParameters.textColor) and errorWindowParameters.textColor or 0xFFFFFF
+	local errorPixMap = {
+		{ {0xffdb40,0xffffff,"#"}, {0xffdb40,0xffffff,"#"}, {backgroundColor,0xffdb40,"▟"}, {backgroundColor,0xffdb40,"▙"}, {0xffdb40,0xffffff,"#"}, {0xffdb40,0xffffff,"#"} },
+		{ {0xffdb40,0xffffff,"#"}, {backgroundColor,0xffdb40,"▟"}, {0xffdb40,0xffffff," "}, {0xffdb40,0xffffff," "}, {backgroundColor,0xffdb40,"▙"}, {0xffdb40,0xffffff,"#"} },
+		{ {backgroundColor,0xffdb40,"▟"}, {0xffdb40,0xffffff,"c"}, {0xffdb40,0xffffff,"y"}, {0xffdb40,0xffffff,"k"}, {0xffdb40,0xffffff,"a"}, {backgroundColor,0xffdb40,"▙"} },
+	}
+	local buttonWidth = 12
+	local verticalOffset = 2
+	local minimumHeight = verticalOffset * 2 + #errorPixMap
+	local height = 0
+	local widthOfText = math.floor(buffer.screen.width * 0.5)
+
+	--Ебемся с текстом, делаем его пиздатым во всех смыслах
+	if type(text) == "table" then text = serialization.serialize(text) end
+	text = tostring(text)
+	text = (errorWindowParameters and errorWindowParameters.truncate) and ecs.stringLimit("end", text, errorWindowParameters.truncate) or text
+	text = { text }
+	text = ecs.stringWrap(text, widthOfText)
+
+	--Ебашим высоту правильную
+	height = verticalOffset
+	height = height + #text
+	if errorWindowParameters and errorWindowParameters.title then height = height + 2 end
+	height = height + verticalOffset + 1
+	if height < minimumHeight then height = minimumHeight end
+
+	--Ебашим стартовые коорды отрисовки
+	local x, y = math.ceil(buffer.screen.width / 2 - widthOfText / 2), math.ceil(buffer.screen.height / 2 - height / 2)
+	local OKButton = {}
+	local oldPixels = buffer.copy(1, y, buffer.screen.width, height)
+
+	--Отрисовочка
+	local function draw()
+		local yPos = y
+		--Подложка
+		buffer.square(1, yPos, buffer.screen.width, height, backgroundColor, 0x000000); yPos = yPos + 2
+		buffer.customImage(x - #errorPixMap[1] - 3, yPos, errorPixMap)
+		--Титл, епта!
+		if errorWindowParameters and errorWindowParameters.title then buffer.text(x, yPos, errorWindowParameters.title.color, errorWindowParameters.title.text); yPos = yPos + 2 end
+		--Текстус
+		for i = 1, #text do buffer.text(x, yPos, textColor, text[i]); yPos = yPos + 1 end; yPos = yPos + 1
+		--Кнопачка
+		OKButton = {buffer.button(x + widthOfText - buttonWidth, y + height - 2, buttonWidth, 1, 0x3392FF, 0xFFFFFF, "OK")}
+		--Атрисовачка
+		buffer.draw()
+	end
+
+	--Онимацыя
+	for i = 1, height do
+		buffer.setDrawLimit(1, math.floor(buffer.screen.height / 2) - i, buffer.screen.width, i * 2)
+		draw()
+		os.sleep(0.05)
+	end
+	buffer.resetDrawLimit()
+	draw()
+
+	--Графонистый выход
+	local function quit()
+		buffer.button(x + widthOfText - buttonWidth, y + height - 2, buttonWidth, 1, 0xFFFFFF, 0x3392FF, "OK")
+		buffer.draw()
+		os.sleep(0.2)
+		buffer.paste(1, y, oldPixels)
+		buffer.draw()
+	end
+
+	--Анализ говнища
+	while true do
+		local e = {event.pull()}
+		if e[1] == "key_down" then
+			if e[4] == 28 then
+				quit()
+				return
+			end
+		elseif e[1] == "touch" then
+			if ecs.clickedAtArea(e[3], e[4], OKButton[1], OKButton[2], OKButton[3], OKButton[4]) then
+				quit()
+				return
+			end
+		end
+	end
 end
 
 ------------------------------------------- Просчет изменений и отрисовка ------------------------------------------------------------------------
