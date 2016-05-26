@@ -107,6 +107,8 @@ local vip = {
 	[113499693] = {avatarColor = 0xFF99CC, avatarTextColor = 0x000000, avatarBottomText = "DEV", avatarBottomTextColor = 0xff6dbf},
 }
 
+local messageEndAdderText = " (отправлено с MineOS VKClient)"
+
 local news
 local currentNews = 1
 local countOfNewsToShow = 10
@@ -256,6 +258,13 @@ end
 local function newsRequest(count)
 	return VKAPIRequest("newsfeed.get", "filters=post", "return_banned=1", "max_photos=0", "count=" .. count, "fields=name,first_name,last_name")
 end
+
+local function setCrazyTypingRequest(peer_id)
+	return VKAPIRequest("messages.setActivity", "type=typing", "peer_id=" .. peer_id)
+end
+
+
+
 
 
 ---------------------------------------------------- GUI-часть ----------------------------------------------------------------
@@ -492,9 +501,11 @@ local function messagesGUI()
 
 			local messageTextArray = {}
 
+			--Если строка пиздатая
 			if messages.response.items[i].body ~= "" then table.insert(messageTextArray, optimizeStringForWrongSymbols(messages.response.items[i].body)) end
 			if messages.response.items[i].fwd_messages then table.insert(messageTextArray, "Пересланные сообщения") end
 			if messages.response.items[i].attachments then table.insert(messageTextArray, getAttachments(messages.response.items[i])) end
+			if messages.response.items[i].action == "chat_invite_user" then table.insert(messageTextArray, "Пользователь под ID " .. messages.response.items[i].from_id .. " пригласил в беседу пользователя под ID " .. messages.response.items[i].action_mid) end
 
 			messageTextArray = ecs.stringWrap(messageTextArray, cloudWidth - 4)
 			local peerID = getPeerIDFromMessageArray(messages.response.items[i])
@@ -550,7 +561,10 @@ local function dialogsGUI()
 
 		clearGUIZone()
 		drawTopBar("Сообщения")
-		buffer.draw()
+
+		--Ебашим КНОПАЧКИ спама
+		obj.crazyTypingButton = {buffer.adaptiveButton(mainZoneX + 2, 2, 1, 0, 0xFFFFFF, colors.topBar, "CrazyTyping")}
+		-- obj.spamButton = {buffer.adaptiveButton(obj.crazyTypingButton[3] + 2, 2, 1, 0, 0xFFFFFF, colors.topBar, "Спам")}
 
 		--НУ ТЫ ПОНЯЛ, АГА
 		status("Получаю имена пользователей по ID")
@@ -588,16 +602,6 @@ local function dialogsGUI()
 				end
 			end
 			
-			--Рисуем пиздюлинку, показывающую кол-во непрочитанных сообщений
-			if dialogs.response.items[i].unread and dialogs.response.items[i].unread ~= 0 then
-				local cyka = tostring(dialogs.response.items[i].unread)
-				local cykaWidth = unicode.len(cyka) + 2
-				local cykaX = buffer.screen.width - cykaWidth - 4
-				buffer.square(cykaX, y + 2, cykaWidth, 1, ecs.colors.blue)
-				buffer.text(cykaX + 1, y + 2, 0xFFFFFF, cyka)
-			end
-
-			
 			avatarText = unicode.sub(dialogs.response.items[i].message.title, 1, 2)
 			peerID = getPeerIDFromMessageArray(dialogs.response.items[i].message)
 
@@ -621,6 +625,15 @@ local function dialogsGUI()
 
 			--Рисуем диалог
 			drawDialog(y, color, peerID, avatarText, text1, text2, text3)
+
+			--Рисуем пиздюлинку, показывающую кол-во непрочитанных сообщений
+			if dialogs.response.items[i].unread and dialogs.response.items[i].unread ~= 0 then
+				local cyka = tostring(dialogs.response.items[i].unread)
+				local cykaWidth = unicode.len(cyka) + 2
+				local cykaX = buffer.screen.width - cykaWidth - 2
+				buffer.square(cykaX, y + 2, cykaWidth, 1, ecs.colors.blue)
+				buffer.text(cykaX + 1, y + 2, 0xFFFFFF, cyka)
+			end
 
 			newObj("dialogList", i, mainZoneX, y, mainZoneX + mainZoneWidth - 1, y + 4, peerID, avatarText, text1, text2, text3)
 
@@ -1128,6 +1141,33 @@ while true do
 					break
 				end
 			end
+
+			if clickedAtZone(e[3], e[4], obj.crazyTypingButton) then
+				local data = ecs.universalWindow("auto", "auto", 36, 0x262626, true,
+					{"EmptyLine"},
+					{"CenterText", ecs.colors.orange, "CrazyTyping"},
+					{"EmptyLine"},
+					{"Slider", 0xFFFFFF, ecs.colors.orange, 1, 15, 5, "Количество диалогов: ", ""},
+					{"Slider", 0xFFFFFF, ecs.colors.orange, 1, 100, 5, "Количество запросов: ", ""},
+					{"Slider", 0xFFFFFF, ecs.colors.orange, 1, 5000, 500, "Задержка между запросами: ", " мс"},
+					{"EmptyLine"},
+					{"Button", {ecs.colors.orange, 0xffffff, "OK"}, {0x999999, 0xffffff, "Отмена"}}
+				)
+				if data[4] == "OK" then
+					for i = 1, data[2] do
+						local count = 1
+						for key in pairs(obj.dialogList) do
+							-- buffer.error("Ебашу спам диалогу под пиром: " .. obj.dialogList[key][5])
+							ecs.info("auto", "auto", "CrazyTyping", "Запрос: " .. i ..  " из " .. data[2] ..  ", диалог: " .. count .. " из ".. data[1] .. ", peerID: " .. obj.dialogList[key][5])
+							setCrazyTypingRequest(obj.dialogList[key][5])
+							count = count + 1
+							if count > data[1] then break end
+							os.sleep(data[3] / 1000)
+						end
+					end
+					buffer.draw(true)
+				end
+			end
 		end
 
 		if whatIsOnScreen == "messages" then
@@ -1138,7 +1178,7 @@ while true do
 				if newText and newText ~= " " then
 					computer.beep(1700)
 					status("Отправляю сообщение пользователю")
-					sendMessageRequest(currentMessagesPeerID, newText .. (settings.addSendingInfo and " (отправлено с OpenComputers)" or ""))
+					sendMessageRequest(currentMessagesPeerID, newText .. (settings.addSendingInfo and messageEndAdderText or ""))
 					status("Обновляю историю переписки")
 					messageToShowFrom = 1
 					messagesGUI()
