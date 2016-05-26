@@ -1118,7 +1118,7 @@ while true do
 						component.openfm_radio.setURL(obj.audio[key][5].url)
 						component.openfm_radio.start()
 						status("Вывожу в статус играемую музыку")
-						setCurrentAudioPlaying(currentProfile.ID or personalInfo.id, obj.audio[key][5].id)
+						setCurrentAudioPlaying(currentProfile and currentProfile.ID or personalInfo.id, obj.audio[key][5].id)
 					else
 						buffer.error("Эта функция доступна только при наличии установленного мода OpenFM, добавляющего полноценное интернет-радио")
 					end
@@ -1295,7 +1295,7 @@ while true do
 				audioToShowFrom = audioToShowFrom - audioScrollSpeed
 				if audioToShowFrom < 1 then audioToShowFrom = 1 end
 				status("Прокручиваю аудозаписи, отправляю запрос на сервер")
-				audioGUI(currentProfile.ID or personalInfo.id)
+				audioGUI(currentProfile and currentProfile.ID or personalInfo.id)
 				buffer.draw()
 			elseif whatIsOnScreen == "userProfile" then
 				currentProfileY = currentProfileY + profileScrollSpeed
@@ -1328,7 +1328,7 @@ while true do
 			elseif whatIsOnScreen == "audio" then
 				audioToShowFrom = audioToShowFrom + audioScrollSpeed
 				status("Прокручиваю аудозаписи, отправляю запрос на сервер")
-				audioGUI(currentProfile.ID or personalInfo.id)
+				audioGUI(currentProfile and currentProfile.ID or personalInfo.id)
 				buffer.draw()
 			elseif whatIsOnScreen == "userProfile" then
 				currentProfileY = currentProfileY - profileScrollSpeed
