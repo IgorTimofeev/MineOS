@@ -1,7 +1,7 @@
 
-if not _G.buffer and not package.loaded.doubleBuffering then _G.buffer = require("doubleBuffering") end
-if not _G.ecs and not package.loaded.ECSAPI then _G.ecs = require("ECSAPI") end
-if not _G.unicode and not package.loaded.unicode then _G.unicode = require("unicode") end
+if not _G.buffer then _G.buffer = require("doubleBuffering") end
+if not _G.ecs then _G.ecs = require("ECSAPI") end
+if not _G.unicode then _G.unicode = require("unicode") end
 local GUI = {}
 
 ---------------------------------------------------- Универсальные методы --------------------------------------------------------
