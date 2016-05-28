@@ -12,6 +12,7 @@ local image = require("image")
 local unicode = require("unicode")
 local files = require("files")
 local component = require("component")
+local GUI = require("GUI")
 
 ---------------------------------------------------- Константы ----------------------------------------------------------------
 
@@ -266,7 +267,7 @@ local function tryToGetAndDrawWeather()
 		--Сейвим погодку
 		saveWeatherData()
 	else
-		buffer.error(jsonWeatherResponse)
+		GUI.error(jsonWeatherResponse, {title = {color = 0xFF8888, text = "Ошибка"}})
 	end
 end
 

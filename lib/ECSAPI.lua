@@ -1001,53 +1001,70 @@ function ecs.emptyWindow(x,y,width,height,title)
 
 end
 
+function ecs.getWordsArrayFromString(s)
+	local words = {} 
+	for word in string.gmatch(s, "[^%s]+") do table.insert(words, word) end
+	return words
+end
+
 --Функция по переносу слов на новую строку в зависимости от ограничения по ширине
 function ecs.stringWrap(strings, limit)
-	-- local massiv = {}
-	local firstSlice, secondSlice
-    --Перебираем все указанные строки
-    local i = 1
-    while i <= #strings do
-       
-    	if unicode.len(strings[i]) > limit then
-    		firstSlice = unicode.sub(strings[i], 1, limit)
-    		secondSlice = unicode.sub(strings[i], limit + 1, -1)
-    		
-    		strings[i] = firstSlice
-    		table.insert(strings, i + 1, secondSlice)
-    	end
+		local currentString = 1
+	while currentString <= #strings do
+		local words = ecs.getWordsArrayFromString(strings[currentString])
 
-    	i = i + 1
+		local newStringThatFormedFromWords, oldStringThatFormedFromWords = "", ""
+		local word = 1
+		local overflow = false
+		while word <= #words do
+			oldStringThatFormedFromWords = oldStringThatFormedFromWords .. (word > 1 and " " or "") .. words[word]
+			if unicode.len(oldStringThatFormedFromWords) > limit then
+				--ЕБЛО
+				if unicode.len(words[word]) > limit then
+					local left = unicode.sub(oldStringThatFormedFromWords, 1, limit)
+					local right = unicode.sub(strings[currentString], unicode.len(left) + 1, -1)
+					overflow = true
+					strings[currentString] = left
+					if strings[currentString + 1] then
+						strings[currentString + 1] = right .. " " .. strings[currentString + 1]
+					else
+						strings[currentString + 1] = right
+					end 
+				end
+				break
+			else
+				newStringThatFormedFromWords = oldStringThatFormedFromWords
+			end
+			word = word + 1
+		end
 
-        -- --Создаем массив слов данной строки
-        -- local words = {}
-        -- for match in string.gmatch(strings[i], "[^%s]+") do table.insert(words, match) end
+		if word <= #words and not overflow then
+			local fuckToAdd = table.concat(words, " ", word, #words)
+			if strings[currentString + 1] then
+				strings[currentString + 1] = fuckToAdd .. " " .. strings[currentString + 1]
+			else
+				strings[currentString + 1] = fuckToAdd
+			end
+			strings[currentString] = newStringThatFormedFromWords
+		end
 
-        -- --Если длина слов не превышает лимита
-        -- if unicode.len(strings[i]) <= limit then
-        --     table.insert(massiv, table.concat(words, " "))
-        -- else
-        --     --Перебираем все слова данной строки с 1 до конца
-        --     local from = 1
-        --     local to = 1
-        --     while to <= #words do
-        --         --Если длина соединенных слов превышает лимит, то
-        --         if unicode.len(table.concat(words, " ", from, to)) > limit then
-        --             --Вставить в новый массив строк 
-        --             table.insert(massiv, table.concat(words, " ", from, to - 1))
-        --             from = to
-        --         else
-        --             if to == #words then
-        --                 table.insert(massiv, table.concat(words, " ", from, to))
-        --             end
-        --         end
+		currentString = currentString + 1
+	end
 
-        --         to = to + 1
-        --     end
-        -- end
-    end
-
-    return strings
+	return strings
+	-- local firstSlice, secondSlice
+	-- local i = 1
+	-- while i <= #strings do
+	-- 	if unicode.len(strings[i]) > limit then
+	-- 		firstSlice = unicode.sub(strings[i], 1, limit)
+	-- 		secondSlice = unicode.sub(strings[i], limit + 1, -1)
+			
+	-- 		strings[i] = firstSlice
+	-- 		table.insert(strings, i + 1, secondSlice)
+	-- 	end
+	-- 	i = i + 1
+	-- end
+	-- return strings
 end
 
 --Моя любимая функция ошибки C:

@@ -13,6 +13,7 @@ local unicode = require("unicode")
 local component = require("component")
 local computer = require("computer")
 local files = require("files")
+local GUI = require("GUI")
 
 ---------------------------------------------------- Константы ----------------------------------------------------------------
 
@@ -355,7 +356,7 @@ local function loginGUI(startUsername, startPassword)
 					loginData.password = password
 					return loginData
 				else
-					buffer.error("Ошибка авторизации: " .. tostring(loginData))
+					GUI.error("Ошибка авторизации: " .. tostring(loginData))
 				end
 			end
 		end
@@ -662,7 +663,6 @@ local function audioGUI(ID)
 			if i % 2 == 0 then color = 0xEEEEEE end
 
 			buffer.square(mainZoneX, y, mainZoneWidth, 5, color)
-			-- buffer.button(mainZoneX + 2, y + 1, 5, 3, colors.audioPlayButton, colors.audioPlayButtonText, "ᐅ")
 			buffer.button(mainZoneX + 2, y + 1, 5, 3, colors.audioPlayButton, colors.audioPlayButtonText, ">")
 			newObj("audio", i, mainZoneX + 2, y + 1, mainZoneX + 7, y + 3, audios.response.items[i])
 
@@ -680,7 +680,7 @@ local function audioGUI(ID)
 			y = y + 5
 		end
 	else
-		buffer.error("Ошибка при получении списка аудиозаписей")
+		GUI.error("Ошибка при получении списка аудиозаписей")
 	end
 end
 
@@ -720,7 +720,7 @@ local function userProfileRequest()
 		currentProfile.friends = friends
 		return true
 	else
-		buffer.error("Ошибка при загрузке информации о профиле")
+		GUI.error("Ошибка при загрузке информации о профиле")
 		return false
 	end
 end
@@ -802,7 +802,7 @@ local function userProfileGUI()
 	for i = 1, #currentProfile.wall.response.items do
 		--Если это не репост или еще не хуйня какая-то
 		if currentProfile.wall.response.items[i].text ~= "" then
-			-- buffer.error(userNames)
+			-- GUI.error(userNames)
 			drawAvatar(x, y, 6, 3, currentProfile.wall.response.items[i].from_id, unicode.sub(currentProfile.userNames[currentProfile.wall.response.items[i].from_id].first_name, 1, 1) .. unicode.sub(currentProfile.userNames[currentProfile.wall.response.items[i].from_id].last_name, 1, 1))
 			buffer.text(x + 8, y, informationValueColor, currentProfile.userNames[currentProfile.wall.response.items[i].from_id].first_name .. " " .. currentProfile.userNames[currentProfile.wall.response.items[i].from_id].last_name)
 			local date = os.date("%d.%m.%y в %H:%M", currentProfile.wall.response.items[i].date)
@@ -921,7 +921,7 @@ local function friendsGUI()
 
 		buffer.resetDrawLimit()
 	else
-		buffer.error("Ошибка при получении списка друзей пользователя")
+		GUI.error("Ошибка при получении списка друзей пользователя")
 	end
 end
 
@@ -998,7 +998,7 @@ local function getAndShowNews()
 		currentNews = 1
 		newsGUI()
 	else
-		buffer.error("Ошибка при получении списка новостей")
+		GUI.error("Ошибка при получении списка новостей")
 	end
 end
 
@@ -1120,7 +1120,7 @@ while true do
 						status("Вывожу в статус играемую музыку")
 						setCurrentAudioPlaying(currentProfile and currentProfile.ID or personalInfo.id, obj.audio[key][5].id)
 					else
-						buffer.error("Эта функция доступна только при наличии установленного мода OpenFM, добавляющего полноценное интернет-радио")
+						GUI.error("Эта функция доступна только при наличии установленного мода OpenFM, добавляющего полноценное интернет-радио")
 					end
 
 					break
@@ -1157,7 +1157,7 @@ while true do
 					for i = 1, data[2] do
 						local count = 1
 						for key in pairs(obj.dialogList) do
-							-- buffer.error("Ебашу спам диалогу под пиром: " .. obj.dialogList[key][5])
+							-- GUI.error("Ебашу спам диалогу под пиром: " .. obj.dialogList[key][5])
 							ecs.info("auto", "auto", "CrazyTyping", "Запрос: " .. i ..  " из " .. data[2] ..  ", диалог: " .. count .. " из ".. data[1] .. ", peerID: " .. obj.dialogList[key][5])
 							setCrazyTypingRequest(obj.dialogList[key][5])
 							count = count + 1
@@ -1231,7 +1231,7 @@ while true do
 
 		for key in pairs(obj.leftBar) do
 			if clickedAtZone(e[3], e[4], obj.leftBar[key]) then
-				-- buffer.error("Кликнули на лефт бар ээлемент")
+				-- GUI.error("Кликнули на лефт бар ээлемент")
 				local oldLeftBarElement = currentLeftBarElement
 				currentLeftBarElement = key
 				mainGUI()
