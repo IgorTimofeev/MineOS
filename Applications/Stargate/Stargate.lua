@@ -19,7 +19,7 @@ local sg = image.load("MineOS/Applications/Stargate.app/Resources/Gate.pic")
 local sgCore = image.load("MineOS/Applications/Stargate.app/Resources/GateCore.pic")
 local pathToContacts = "MineOS/System/Stargate/Contacts.cfg"
 local buttons = {}
-local contacts = {}
+local contacts = {addresses = {}}
 local chevrons = {
 	{x = 5, y = 26, isActivated = false},
 	{x = 1, y = 15, isActivated = false},
@@ -79,7 +79,11 @@ local function drawSG()
 	local toolbarHeight = 31
 	local x, y = math.floor((buffer.screen.width - toolbarWidth) / 2 - sg.width / 2), math.floor(buffer.screen.height / 2 - sg.height / 2)
 	buffer.image(x, y, sg)
+	
 	local stargateState = stargate.stargateState()
+	local irisState = stargate.irisState()
+	local remoteAddress = stargate.remoteAddress()
+	
 	if stargateState == "Connected" then
 		stateOfChevrons(true)
 		buffer.image(x, y, sgCore)
@@ -94,7 +98,9 @@ local function drawSG()
 	end
 
 	local lineColor = 0xFFFFFF
-	local pressColor = 0x888888
+	local pressColor = 0x6692FF
+	local buttonDisabledColor = 0xAAAAAA
+
 	local pizdos = math.floor(buffer.screen.height / 2)
 	x, y = x + sg.width + 5, pizdos
 	local width = buffer.screen.width - x - toolbarWidth
@@ -110,39 +116,31 @@ local function drawSG()
 	x = x + 3
 	local buttonWidth = buffer.screen.width - x - 1
 	centerText(y, lineColor, "Stargate " .. stargate.localAddress()); y = y + 1
+	centerText(y, 0x888888, stargateState == "Connected" and "(подключено к " .. remoteAddress .. ")" or "(не подключено)"); y = y + 1
 
-	if stargateState == "Connected" then
-		centerText(y, 0x888888, "(подключено к " .. stargate.remoteAddress() .. ")"); y = y + 1
-	end
-	
+
+
 	y = y + 1
-	buttons.connectButton = GUI.framedButton(x, y, buttonWidth, 3, lineColor, lineColor, pressColor, pressColor, "Прямое подключение"); y = y + 3
-	
-	if stargate.remoteAddress() ~= "" then
-		buttons.disconnectButton = GUI.framedButton(x, y, buttonWidth, 3, lineColor, lineColor, pressColor, pressColor, "Отключиться"); y = y + 3
-	end
-
-	local irisState = stargate.irisState()
-	if irisState ~= "Offline" then
-		buttons.closeIrisButton = GUI.framedButton(x, y, buttonWidth, 3, lineColor, lineColor, pressColor, pressColor, irisState == "Closed" and "Открыть Iris" or "Закрыть Iris"); y = y + 3
-	end
+	buttons.connectButton = GUI.framedButton(x, y, buttonWidth, 3, lineColor, lineColor, pressColor, pressColor, "Прямое подключение", stargateState == "Connected"); y = y + 3
+	buttons.disconnectButton = GUI.framedButton(x, y, buttonWidth, 3, lineColor, lineColor, pressColor, pressColor, "Отключиться", stargateState ~= "Connected"); y = y + 3
+	buttons.closeIrisButton = GUI.framedButton(x, y, buttonWidth, 3, lineColor, lineColor, pressColor, pressColor, irisState == "Closed" and "Открыть Iris" or "Закрыть Iris"); y = y + 3
 
 	y = y + 1
 	centerText(y, lineColor, "Контакты"); y = y + 2
-	local sizeOfContacts = getArraySize(contacts)
-	if sizeOfContacts > 0 then buttons.connectToContactButton = GUI.framedButton(x, y, buttonWidth, 3, lineColor, lineColor, pressColor, pressColor, "Соединиться"); y = y + 3 end
+	local sizeOfContacts = getArraySize(contacts.addresses)
 	buttons.addContactButton = GUI.framedButton(x, y, buttonWidth, 3, lineColor, lineColor, pressColor, pressColor, "Добавить"); y = y + 3
-	if sizeOfContacts > 0 then buttons.removeContactButton = GUI.framedButton(x, y, buttonWidth, 3, lineColor, lineColor, pressColor, pressColor, "Удалить"); y = y + 3 end
+	buttons.connectToContactButton = GUI.framedButton(x, y, buttonWidth, 3, lineColor, lineColor, pressColor, pressColor, "Соединиться", sizeOfContacts <= 0); y = y + 3
+	buttons.removeContactButton = GUI.framedButton(x, y, buttonWidth, 3, lineColor, lineColor, pressColor, pressColor, "Удалить", sizeOfContacts <= 0); y = y + 3
 
 	y = y + 1
-	centerText(y, lineColor, "Энергия"); y = y + 2
-	buffer.text(x, y, 0x000000, string.rep("━", buttonWidth))
+	centerText(y, lineColor, "Затраты на активацию"); y = y + 2
+	buffer.text(x, y, 0x228822, string.rep("━", buttonWidth))
 
-	local hyi = stargate.remoteAddress()
-	if hyi ~= "" then
-		local pidor = stargate.energyToDial(hyi)
+	if remoteAddress ~= "" then
+		local pidor = stargate.energyToDial(remoteAddress)
 		local cyka = stargate.energyAvailable()
 		local blyad = math.ceil(pidor * buttonWidth / cyka)
+		centerText(y, lineColor, tostring(blyad) .. "%")
 		buffer.text(x, y, 0x55FF55, string.rep("━", blyad))
 	end
 
@@ -157,8 +155,19 @@ local function drawAll(force)
 end
 
 local function connectSG(address)
-	local success, reason = stargate.dial(unicode.upper(address))
-	if not success then
+	address = unicode.upper(address)
+
+	if stargate.stargateState() == "Connected" then
+		stateOfChevrons(false)
+		stargate.disconnect()
+		os.sleep(2)
+	end
+
+	local success, reason = stargate.dial(address)
+	if success then
+		contacts.lastAddress = address
+		saveContacts()
+	else
 		GUI.error(reason, {title = {color = 0xFFDB40, text = "Ошибка подключения к Вратам"}, backgroundColor = 0x262626})
 	end
 end
@@ -186,11 +195,12 @@ while true do
 						{"EmptyLine"},
 						{"CenterText", ecs.colors.orange, "Прямое подключение"},
 						{"EmptyLine"},
-						{"Input", 0xFFFFFF, ecs.colors.orange, "ZFFBXP8SA"},
+						{"Input", 0xFFFFFF, ecs.colors.orange, contacts.lastAddress or "Введите адрес"},
 						{"EmptyLine"},
 						{"Button", {ecs.colors.orange, 0xffffff, "OK"}, {0x999999, 0xffffff, "Отмена"}}
 					)
 					if data[2] == "OK" then
+						os.sleep(2)
 						connectSG(data[1])
 					end
 				elseif button.text == "Открыть Iris" then
@@ -202,7 +212,7 @@ while true do
 						{"CenterText", ecs.colors.orange, "Добавить контакт"},
 						{"EmptyLine"},
 						{"Input", 0xFFFFFF, ecs.colors.orange, "Название"},
-						{"Input", 0xFFFFFF, ecs.colors.orange, "Адрес Звездных Врат"},
+						{"Input", 0xFFFFFF, ecs.colors.orange, contacts.lastAddress or "Адрес Звездных Врат"},
 						{"EmptyLine"},
 						remoteAddress ~= "" and
 						{"Button", {ecs.colors.orange, 0xffffff, "OK"}, {0x999999, 0xffffff, "Добавить текущий"}, {0x777777, 0xffffff, "Отмена"}}
@@ -210,16 +220,16 @@ while true do
 						{"Button", {ecs.colors.orange, 0xffffff, "OK"}, {0x777777, 0xffffff, "Отмена"}}
 					)
 					if data[3] == "OK" then
-						contacts[data[1]] = data[2]
+						contacts.addresses[data[1]] = data[2]
 						saveContacts()
 					elseif data[3] == "Добавить текущий" then
-						contacts[data[1]] = remoteAddress
+						contacts.addresses[data[1]] = remoteAddress
 						saveContacts()
 					end
 					drawAll()
 				elseif button.text == "Соединиться" or button.text == "Удалить" then
 					local isConnect = (button.text == "Соединиться")
-					local names = {}; for name in pairs(contacts) do table.insert(names, name) end
+					local names = {}; for name in pairs(contacts.addresses) do table.insert(names, name) end
 					local data = ecs.universalWindow("auto", "auto", 36, 0x262626, true,
 						{"EmptyLine"},
 						{"CenterText", ecs.colors.orange, isConnect and "Соединиться" or "Удалить контакт"},
@@ -230,10 +240,10 @@ while true do
 					)
 					if data[2] == "OK" then
 						if isConnect then
-							connectSG(contacts[data[1]])
+							connectSG(contacts.addresses[data[1]])
 						else
-							for name in pairs(contacts) do
-								if name == data[1] then contacts[name] = nil; break end
+							for name in pairs(contacts.addresses) do
+								if name == data[1] then contacts.addresses[name] = nil; break end
 							end
 							saveContacts()
 						end

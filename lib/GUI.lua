@@ -18,10 +18,18 @@ GUI.buttonTypes = {
 	framedAdaptive = 3,
 }
 
+GUI.colors = {
+	disabled = 0x888888,
+}
+
 -- Универсальный метод для проверки клика на прямоугольный объект
-local function clickedAtObject(object, x, y)
-	if x >= object.x and y >= object.y and x <= object.x + object.width - 1 and y <= object.y + object.height - 1 then return true end
+local function objectClicked(object, x, y)
+	if x >= object.x and y >= object.y and x <= object.x + object.width - 1 and y <= object.y + object.height - 1 and not object.disabled then return true end
 	return false
+end
+
+local function objectSetDisabled(object, state)
+	object.disabled = state
 end
 
 --Создание базового примитива-объекта
@@ -31,7 +39,7 @@ function GUI.object(x, y, width, height)
 		y = y,
 		width = width,
 		height = height,
-		isClicked = clickedAtObject,
+		isClicked = objectClicked,
 	}
 end
 
@@ -44,8 +52,8 @@ local function drawButton(buttonObject, isPressed)
 	
 	local xText = math.floor(buttonObject.x + buttonObject.width / 2 - textLength / 2)
 	local yText = math.floor(buttonObject.y + buttonObject.height / 2)
-	local buttonColor = isPressed and buttonObject.colors.pressed.button or buttonObject.colors.default.button
-	local textColor = isPressed and buttonObject.colors.pressed.text or buttonObject.colors.default.text
+	local buttonColor = buttonObject.disabled and buttonObject.colors.disabled.button or (isPressed and buttonObject.colors.pressed.button or buttonObject.colors.default.button)
+	local textColor = buttonObject.disabled and buttonObject.colors.disabled.text or (isPressed and buttonObject.colors.pressed.text or buttonObject.colors.default.text)
 
 	if buttonObject.type == GUI.buttonTypes.default or buttonObject.type == GUI.buttonTypes.adaptive then
 		buffer.square(buttonObject.x, buttonObject.y, buttonObject.width, buttonObject.height, buttonColor, textColor, " ")
@@ -66,7 +74,7 @@ local function pressButton(buttonObject, pressTime)
 end
 
 -- Создание таблицы кнопки со всеми необходимыми параметрами
-local function createButtonObject(buttonType, x, y, width, height, buttonColor, textColor, buttonPressedColor, textPressedColor, text)
+local function createButtonObject(buttonType, x, y, width, height, buttonColor, textColor, buttonPressedColor, textPressedColor, text, disabledState)
 	local buttonObject = GUI.object(x, y, width, height)
 	buttonObject.colors = {
 		default = {
@@ -77,7 +85,13 @@ local function createButtonObject(buttonType, x, y, width, height, buttonColor, 
 			button = buttonPressedColor,
 			text = textPressedColor
 		},
+		disabled = {
+			button = GUI.colors.disabled,
+			text = GUI.colors.disabled,
+		}
 	}
+	buttonObject.disabled = disabledState
+	buttonObject.setDisabled = objectSetDisabled
 	buttonObject.type = buttonType
 	buttonObject.text = text
 	buttonObject.press = pressButton
@@ -86,29 +100,29 @@ local function createButtonObject(buttonType, x, y, width, height, buttonColor, 
 end
 
 -- Кнопка фиксированных размеров
-function GUI.button(x, y, width, height, buttonColor, textColor, buttonPressedColor, textPressedColor, text)
-	local buttonObject = createButtonObject(GUI.buttonTypes.default, x, y, width, height, buttonColor, textColor, buttonPressedColor, textPressedColor, text)
+function GUI.button(x, y, width, height, buttonColor, textColor, buttonPressedColor, textPressedColor, text, disabledState)
+	local buttonObject = createButtonObject(GUI.buttonTypes.default, x, y, width, height, buttonColor, textColor, buttonPressedColor, textPressedColor, text, disabledState)
 	buttonObject:draw()
 	return buttonObject
 end
 
 -- Кнопка, подстраивающаяся под размер текста
-function GUI.adaptiveButton(x, y, xOffset, yOffset, buttonColor, textColor, buttonPressedColor, textPressedColor, text)
-	local buttonObject = createButtonObject(GUI.buttonTypes.adaptive, x, y, xOffset * 2 + unicode.len(text), yOffset * 2 + 1, buttonColor, textColor, buttonPressedColor, textPressedColor, text)
+function GUI.adaptiveButton(x, y, xOffset, yOffset, buttonColor, textColor, buttonPressedColor, textPressedColor, text, disabledState)
+	local buttonObject = createButtonObject(GUI.buttonTypes.adaptive, x, y, xOffset * 2 + unicode.len(text), yOffset * 2 + 1, buttonColor, textColor, buttonPressedColor, textPressedColor, text, disabledState)
 	buttonObject:draw()
 	return buttonObject
 end
 
 -- Кнопка в рамке
-function GUI.framedButton(x, y, width, height, buttonColor, textColor, buttonPressedColor, textPressedColor, text)
-	local buttonObject = createButtonObject(GUI.buttonTypes.framedDefault, x, y, width, height, buttonColor, textColor, buttonPressedColor, textPressedColor, text)
+function GUI.framedButton(x, y, width, height, buttonColor, textColor, buttonPressedColor, textPressedColor, text, disabledState)
+	local buttonObject = createButtonObject(GUI.buttonTypes.framedDefault, x, y, width, height, buttonColor, textColor, buttonPressedColor, textPressedColor, text, disabledState)
 	buttonObject:draw()
 	return buttonObject
 end
 
 -- Кнопка в рамке, подстраивающаяся под размер текста
-function GUI.adaptiveFramedButton(x, y, xOffset, yOffset, buttonColor, textColor, buttonPressedColor, textPressedColor, text)
-	local buttonObject = createButtonObject(GUI.buttonTypes.framedAdaptive, x, y, xOffset * 2 + unicode.len(text), yOffset * 2 + 1, buttonColor, textColor, buttonPressedColor, textPressedColor, text)
+function GUI.adaptiveFramedButton(x, y, xOffset, yOffset, buttonColor, textColor, buttonPressedColor, textPressedColor, text, disabledState)
+	local buttonObject = createButtonObject(GUI.buttonTypes.framedAdaptive, x, y, xOffset * 2 + unicode.len(text), yOffset * 2 + 1, buttonColor, textColor, buttonPressedColor, textPressedColor, text, disabledState)
 	buttonObject:draw()
 	return buttonObject
 end
