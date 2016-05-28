@@ -9,6 +9,7 @@ local stargate
 
 if not component.isAvailable("stargate") then
 	GUI.error("Этой программе требуются Звездные Врата из мода \"SGCraft\"", {title = {color = 0xFF8888, text = "Ошибка"}})
+	return
 else
 	stargate = component.stargate
 end
@@ -157,9 +158,9 @@ local function connectSG(address)
 end
 
 
-ecs.prepareToExit()
-for key, val in pairs(stargate) do print(key, val) end
-ecs.wait()
+-- ecs.prepareToExit()
+-- for key, val in pairs(stargate) do print(key, val) end
+-- ecs.wait()
 
 loadContacts()
 
