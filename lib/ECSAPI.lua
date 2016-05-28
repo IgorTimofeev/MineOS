@@ -1009,9 +1009,9 @@ end
 
 --Функция по переносу слов на новую строку в зависимости от ограничения по ширине
 function ecs.stringWrap(strings, limit)
-		local currentString = 1
+	local currentString = 1
 	while currentString <= #strings do
-		local words = ecs.getWordsArrayFromString(strings[currentString])
+		local words = ecs.getWordsArrayFromString(tostring(strings[currentString]))
 
 		local newStringThatFormedFromWords, oldStringThatFormedFromWords = "", ""
 		local word = 1
