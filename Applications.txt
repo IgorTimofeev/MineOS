@@ -765,6 +765,24 @@
   },
   ----------------------------------------------------- Приложения с ресурсами --------------------------------------------------------------------------
   {
+    ["name"]="MineOS/Applications/Stargate",
+    ["url"]="IgorTimofeev/OpenComputers/master/Applications/Stargate/Stargate.lua",
+    ["type"]="Application",
+    ["icon"]="IgorTimofeev/OpenComputers/master/Applications/Stargate/Icon.pic",
+    ["createShortcut"]="desktop",
+    ["version"]=1.0,
+    ["resources"]={
+      {
+        ["name"]="Gate.pic",
+        ["url"]="IgorTimofeev/OpenComputers/master/Applications/Stargate/Gate.pic",
+      },
+      {
+        ["name"]="GateCore.pic",
+        ["url"]="IgorTimofeev/OpenComputers/master/Applications/Stargate/GateCore.pic",
+      },
+    },
+  },
+  {
     ["name"]="MineOS/Applications/VK",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/VK/VK.lua",
     ["type"]="Application",

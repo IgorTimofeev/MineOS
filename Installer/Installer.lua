@@ -309,8 +309,8 @@ local picturesPath = "MineOS/Pictures/"
 fs.remove(desktopPath)
 fs.remove(dockPath)
 
-fs.makeDirectory(desktopPath .. "My files")
-fs.makeDirectory(picturesPath)
+-- fs.makeDirectory(desktopPath .. "My files")
+-- fs.makeDirectory(picturesPath)
 fs.makeDirectory(dockPath)
 
 --------------------------СТАДИЯ ЗАГРУЗКИ-----------------------------------
