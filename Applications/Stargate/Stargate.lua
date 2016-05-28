@@ -76,10 +76,11 @@ local function drawSG()
 
 	buttons = {}
 
-	local toolbarHeight = 30
+	local toolbarHeight = 31
 	local x, y = math.floor((buffer.screen.width - toolbarWidth) / 2 - sg.width / 2), math.floor(buffer.screen.height / 2 - sg.height / 2)
 	buffer.image(x, y, sg)
-	if stargate.stargateState() == "Connected" then
+	local stargateState = stargate.stargateState()
+	if stargateState == "Connected" then
 		stateOfChevrons(true)
 		buffer.image(x, y, sgCore)
 	end
@@ -108,8 +109,13 @@ local function drawSG()
 
 	x = x + 3
 	local buttonWidth = buffer.screen.width - x - 1
-	centerText(y, lineColor, "Stargate " .. stargate.localAddress()); y = y + 2
+	centerText(y, lineColor, "Stargate " .. stargate.localAddress()); y = y + 1
+
+	if stargateState == "Connected" then
+		centerText(y, 0x888888, "(подключено к " .. stargate.remoteAddress() .. ")"); y = y + 1
+	end
 	
+	y = y + 1
 	buttons.connectButton = GUI.framedButton(x, y, buttonWidth, 3, lineColor, lineColor, pressColor, pressColor, "Прямое подключение"); y = y + 3
 	
 	if stargate.remoteAddress() ~= "" then
@@ -190,6 +196,7 @@ while true do
 				elseif button.text == "Открыть Iris" then
 					stargate.openIris()
 				elseif button.text == "Добавить" then
+					local remoteAddress = stargate.remoteAddress()
 					local data = ecs.universalWindow("auto", "auto", 36, 0x262626, true,
 						{"EmptyLine"},
 						{"CenterText", ecs.colors.orange, "Добавить контакт"},
@@ -197,13 +204,16 @@ while true do
 						{"Input", 0xFFFFFF, ecs.colors.orange, "Название"},
 						{"Input", 0xFFFFFF, ecs.colors.orange, "Адрес Звездных Врат"},
 						{"EmptyLine"},
-						-- stargate.remoteAddress() ~= "" and
-						-- {"Button", {ecs.colors.orange, 0xffffff, "OK"}, {0x999999, 0xffffff, "Добавить текущий"}, {0x777777, 0xffffff, "Отмена"}}
-						-- or 
+						remoteAddress ~= "" and
+						{"Button", {ecs.colors.orange, 0xffffff, "OK"}, {0x999999, 0xffffff, "Добавить текущий"}, {0x777777, 0xffffff, "Отмена"}}
+						or 
 						{"Button", {ecs.colors.orange, 0xffffff, "OK"}, {0x777777, 0xffffff, "Отмена"}}
 					)
 					if data[3] == "OK" then
 						contacts[data[1]] = data[2]
+						saveContacts()
+					elseif data[3] == "Добавить текущий" then
+						contacts[data[1]] = remoteAddress
 						saveContacts()
 					end
 					drawAll()
