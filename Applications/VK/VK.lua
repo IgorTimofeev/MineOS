@@ -313,7 +313,7 @@ local function loginGUI(startUsername, startPassword)
 	local obj = {}
 	obj.username = {x, y, x + textFieldWidth - 1, y + 2}; y = y + textFieldHeight + 1
 	obj.password = {x, y, x + textFieldWidth - 1, y + 2}; y = y + textFieldHeight + 1
-	obj.button = {x, y, x + textFieldWidth - 1, y + 2}
+	obj.button = GUI.button(x, y, textFieldWidth, textFieldHeight, buttonColor, 0xFFFFFF, 0xFFFFFF, buttonColor, "Войти")
 
 	local VKLogoImage = image.load(VKLogoImagePath)
 
@@ -327,7 +327,7 @@ local function loginGUI(startUsername, startPassword)
 		buffer.text(x + 1, obj.username[2] + 1, textColor, ecs.stringLimit("end", username, textFieldWidth - 2))
 		buffer.text(x + 1, obj.password[2] + 1, textColor, ecs.stringLimit("end", string.rep("●", unicode.len(password)), textFieldWidth - 2))
 
-		buffer.button(x, obj.button[2], textFieldWidth, textFieldHeight, buttonColor, 0xFFFFFF, "Войти")
+		obj.button:draw()
 
 		buffer.draw()
 	end
@@ -344,10 +344,8 @@ local function loginGUI(startUsername, startPassword)
 				password = ""
 				password = ecs.inputText(x + 1, obj.password[2] + 1, textFieldWidth - 2, password, 0xFFFFFF, 0x262626, false, "*") or ""
 			
-			elseif clickedAtZone(e[3], e[4], obj.button) then
-				buffer.button(x, obj.button[2], textFieldWidth, textFieldHeight, 0xFFFFFF, buttonColor, "Войти")
-				buffer.draw()
-				os.sleep(0.2)
+			elseif obj.button:isClicked(e[3], e[4]) then
+				obj.button:press(0.2)
 				draw()
 				local success, loginData = getLoginDataRequest(username, password)
 				if success then 
@@ -446,7 +444,7 @@ end
 
 local function drawMessageInputBar(currentText)
 	local x, y = mainZoneX, buffer.screen.height - 5
-	obj.messageInputBar = { x, y, x + mainZoneWidth - 7, y + 2}
+	obj.messageInputBar = GUI.object(x, y, x + mainZoneWidth - 7, y + 2)
 	buffer.square(x, y, mainZoneWidth, 5, colors.messageInputBarColor)
 	buffer.square(x + 2, y + 1, mainZoneWidth - 4, 3, colors.messageInputBarTextBackgroundColor)
 	buffer.text(x + 4, y + 2, colors.messsageInputBarTextColor, ecs.stringLimit("start", currentText or "Введите сообщение", mainZoneWidth - 8))
@@ -564,7 +562,7 @@ local function dialogsGUI()
 		drawTopBar("Сообщения")
 
 		--Ебашим КНОПАЧКИ спама
-		obj.crazyTypingButton = {buffer.adaptiveButton(mainZoneX + 2, 2, 1, 0, 0xFFFFFF, colors.topBar, "CrazyTyping")}
+		obj.crazyTypingButton = GUI.adaptiveButton(mainZoneX + 2, 2, 1, 0, 0xFFFFFF, colors.topBar, 0xFFFFFF, 0x000000, "CrazyTyping")
 		-- obj.spamButton = {buffer.adaptiveButton(obj.crazyTypingButton[3] + 2, 2, 1, 0, 0xFFFFFF, colors.topBar, "Спам")}
 
 		--НУ ТЫ ПОНЯЛ, АГА
@@ -636,7 +634,8 @@ local function dialogsGUI()
 				buffer.text(cykaX + 1, y + 2, 0xFFFFFF, cyka)
 			end
 
-			newObj("dialogList", i, mainZoneX, y, mainZoneX + mainZoneWidth - 1, y + 4, peerID, avatarText, text1, text2, text3)
+			obj.dialogList[i] = GUI.object(mainZoneX, y, mainZoneX + mainZoneWidth - 1, y + 4)
+			obj.dialogList[i][5], obj.dialogList[i][6], obj.dialogList[i][7], obj.dialogList[i][8], obj.dialogList[i][9] = peerID, avatarText, text1, text2, text3
 
 			y = y + 5
 		end
@@ -663,8 +662,8 @@ local function audioGUI(ID)
 			if i % 2 == 0 then color = 0xEEEEEE end
 
 			buffer.square(mainZoneX, y, mainZoneWidth, 5, color)
-			buffer.button(mainZoneX + 2, y + 1, 5, 3, colors.audioPlayButton, colors.audioPlayButtonText, ">")
-			newObj("audio", i, mainZoneX + 2, y + 1, mainZoneX + 7, y + 3, audios.response.items[i])
+			obj.audio[i] = GUI.button(mainZoneX + 2, y + 1, 5, 3, colors.audioPlayButton, colors.audioPlayButtonText, 0x66FF80, colors.audioPlayButton, ">")
+			obj.audio[i][5] = audios.response.items[i]
 
 			local x = mainZoneX + 9
 			buffer.text(x, y + 1, colors.audioPlayButton, audios.response.items[i].artist)
@@ -825,9 +824,9 @@ local function userProfileGUI()
 	y = y + avatarHeight + 1
 
 	currentProfile.avatarWidth = avatarWidth
-	currentProfile.sendMessageButton = {buffer.button(x, y, avatarWidth, 1, 0xCCCCCC, 0x000000, "Сообщение")}
+	currentProfile.sendMessageButton = GUI.button(x, y, avatarWidth, 1, 0xCCCCCC, 0x000000, 0x888888, 0x000000,"Сообщение")
 	y = y + 2
-	currentProfile.audiosButton = {buffer.button(x, y, avatarWidth, 1, 0xCCCCCC, 0x000000, "Аудиозаписи")}
+	currentProfile.audiosButton = GUI.button(x, y, avatarWidth, 1, 0xCCCCCC, 0x000000, 0x888888, 0x000000, "Аудиозаписи")
 	y = y + 2
 
 	drawInfo(x, y, "Подписчики: ", currentProfile.userProfile.response[1].counters.followers)
@@ -1106,12 +1105,8 @@ while true do
 
 		if whatIsOnScreen == "audio" then
 			for key in pairs(obj.audio) do
-				if clickedAtZone(e[3], e[4], obj.audio[key]) then
-					buffer.button(obj.audio[key][1], obj.audio[key][2], 5, 3, 0x66FF80,  colors.audioPlayButton, ">")
-					buffer.draw()
-					os.sleep(0.2)
-					buffer.button(obj.audio[key][1], obj.audio[key][2], 5, 3, colors.audioPlayButton, colors.audioPlayButtonText, ">")
-					buffer.draw()
+				if obj.audio[key]:isClicked(e[3], e[4]) then
+					obj.audio[key]:press(0.2)
 
 					if component.isAvailable("openfm_radio") then
 						component.openfm_radio.stop()
@@ -1130,8 +1125,8 @@ while true do
 
 		if whatIsOnScreen == "dialogs" then
 			for key in pairs(obj.dialogList) do
-				if clickedAtZone(e[3], e[4], obj.dialogList[key]) then
-					drawDialog(obj.dialogList[key][2], 0xFF8888, obj.dialogList[key][5], obj.dialogList[key][6], obj.dialogList[key][7], obj.dialogList[key][8], obj.dialogList[key][9])
+				if obj.dialogList[key]:isClicked(e[3], e[4]) then
+					drawDialog(obj.dialogList[key].y, 0xFF8888, obj.dialogList[key][5], obj.dialogList[key][6], obj.dialogList[key][7], obj.dialogList[key][8], obj.dialogList[key][9])
 					buffer.draw()
 					os.sleep(0.2)
 					status("Загружаю переписку с пользователем " .. obj.dialogList[key][7])
@@ -1142,7 +1137,8 @@ while true do
 				end
 			end
 
-			if clickedAtZone(e[3], e[4], obj.crazyTypingButton) then
+			if obj.crazyTypingButton:isClicked(e[3], e[4]) then
+				obj.crazyTypingButton:press(0.2)
 				local data = ecs.universalWindow("auto", "auto", 36, 0x262626, true,
 					{"EmptyLine"},
 					{"CenterText", ecs.colors.orange, "CrazyTyping"},
@@ -1171,10 +1167,10 @@ while true do
 		end
 
 		if whatIsOnScreen == "messages" then
-			if clickedAtZone(e[3], e[4], obj.messageInputBar) then
+			if obj.messageInputBar:isClicked(e[3], e[4]) then
 				drawMessageInputBar(" ")
 				buffer.draw()
-				local newText = ecs.inputText(obj.messageInputBar[1] + 4, obj.messageInputBar[2] + 2, obj.messageInputBar[3] - obj.messageInputBar[1], "", colors.messageInputBarTextBackgroundColor, colors.messsageInputBarTextColor)
+				local newText = ecs.inputText(obj.messageInputBar.x + 4, obj.messageInputBar.y + 2, obj.messageInputBar.width, "", colors.messageInputBarTextBackgroundColor, colors.messsageInputBarTextColor)
 				if newText and newText ~= " " then
 					computer.beep(1700)
 					status("Отправляю сообщение пользователю")
@@ -1188,16 +1184,13 @@ while true do
 		end
 
 		if whatIsOnScreen == "userProfile" then
-			if clickedAtZone(e[3], e[4], currentProfile.audiosButton) then
-				buffer.button(currentProfile.audiosButton[1], currentProfile.audiosButton[2], currentProfile.avatarWidth, 1, 0x777777, 0xFFFFFF, "Аудиозаписи")
-				buffer.draw()
+			if currentProfile.audiosButton:isClicked(e[3], e[4]) then
+				currentProfile.audiosButton:press(0.2)
 				audioToShowFrom = 1
 				audioGUI(currentProfile.ID)
 				buffer.draw()
-			elseif clickedAtZone(e[3], e[4], currentProfile.sendMessageButton) then
-				buffer.button(currentProfile.sendMessageButton[1], currentProfile.sendMessageButton[2], currentProfile.avatarWidth, 1, 0x777777, 0xFFFFFF, "Сообщение")
-				buffer.draw()
-
+			elseif currentProfile.sendMessageButton:isClicked(e[3], e[4]) then
+				currentProfile.sendMessageButton:press(0.2)
 				currentMessagesPeerID = currentProfile.ID
 				messageToShowFrom = 1
 				currentMessagesAvatarText = currentProfile.avatarText

@@ -22,6 +22,17 @@ local function clickedAtObject(object, x, y)
 	return false
 end
 
+--Создание базового примитива-объекта
+function GUI.object(x, y, width, height)
+	return {
+		x = x,
+		y = y,
+		width = width,
+		height = height,
+		isClicked = clickedAtObject,
+	}
+end
+
 ---------------------------------------------------- Кнопки --------------------------------------------------------------------
 
 -- Метод-рисоватор кнопки
@@ -49,26 +60,21 @@ end
 
 -- Создание таблицы кнопки со всеми необходимыми параметрами
 local function createButtonObject(x, y, width, height, buttonColor, textColor, buttonPressedColor, textPressedColor, text)
-	return {
-		x = x,
-		y = y,
-		width = width,
-		height = height,
-		colors = {
-			default = {
-				button = buttonColor,
-				text = textColor
-			},
-			pressed = {
-				button = buttonPressedColor,
-				text = textPressedColor
-			},
+	local buttonObject = GUI.object(x, y, width, height)
+	buttonObject.colors = {
+		default = {
+			button = buttonColor,
+			text = textColor
 		},
-		text = text,
-		press = pressButton,
-		isClicked = clickedAtObject,
-		draw = drawButton,
+		pressed = {
+			button = buttonPressedColor,
+			text = textPressedColor
+		},
 	}
+	buttonObject.text = text
+	buttonObject.press = pressButton
+	buttonObject.draw = drawButton
+	return buttonObject
 end
 
 -- Кнопка фиксированных размеров
