@@ -6,9 +6,13 @@ local event = require("event")
 local fs = require("filesystem")
 local internet = require("internet")
 local seri = require("serialization")
+local shell = require("shell")
 local gpu = component.gpu
 
 -----------------Проверка компа на соответствие сис. требованиям--------------------------
+
+shell.execute("cd ..")
+shell.setWorkingDirectory("")
 
 --Создаем массив говна
 local govno = {}
