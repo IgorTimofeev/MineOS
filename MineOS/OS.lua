@@ -420,6 +420,7 @@ local function windows10()
 end
 
 local function changeResolution()
+	currentDesktop = 1
 	ecs.setScale(_G.OSSettings.screenScale or 1)
 	buffer.start()
 	calculateSizes()
@@ -708,7 +709,7 @@ while true do
 
 					if action == lang.screenResolution then
 						local possibleResolutions = {texts = {}, scales = {}}
-						local xSize, ySize = gpu.maxResolution()
+						local xSize, ySize = ecs.getScaledResolution(1)
 						local currentScale, decreaseStep = 1, 0.1
 						for i = 1, 5 do
 							local width, height = math.floor(xSize * currentScale), math.floor(ySize * currentScale)

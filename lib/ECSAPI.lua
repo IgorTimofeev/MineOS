@@ -113,8 +113,7 @@ function ecs.enableInterrupting()
 	end
 end
 
---Установка масштаба монитора
-function ecs.setScale(scale, debug)
+function ecs.getScaledResolution(scale, debug)
 	--Базовая коррекция масштаба, чтобы всякие умники не писали своими погаными ручонками, чего не следует
 	if scale > 1 then
 		scale = 1
@@ -171,9 +170,6 @@ function ecs.setScale(scale, debug)
 	--Корректируем идеальное разрешение по заданному масштабу
 	local finalNewWidth, finalNewHeight = math.floor(optimalNewWidth * scale), math.floor(optimalNewHeight * scale)
 
-	--Устанавливаем выбранное разрешение
-	gpu.setResolution(finalNewWidth, finalNewHeight)
-
 	--Выводим инфу, если нужно
 	if debug then
 		print(" ")
@@ -187,6 +183,14 @@ function ecs.setScale(scale, debug)
 		print("Новое разрешение: "..finalNewWidth.."x"..finalNewHeight)
 		print(" ")
 	end
+
+	return finalNewWidth, finalNewHeight
+end
+
+--Установка масштаба монитора
+function ecs.setScale(scale, debug)
+	--Устанавливаем выбранное разрешение
+	gpu.setResolution(ecs.getScaledResolution(scale, debug))
 end
 
 function ecs.rebindGPU(address)
