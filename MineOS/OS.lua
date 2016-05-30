@@ -31,6 +31,7 @@ local libraries = {
 	buffer = "doubleBuffering",
 	image = "image",
 	SHA2 = "SHA2",
+	GUI = "GUI"
 }
 
 local components = {
@@ -50,48 +51,45 @@ local workPath = "MineOS/Desktop/"
 local pathOfDockShortcuts = "MineOS/System/OS/Dock/"
 local pathToWallpaper = "MineOS/System/OS/Wallpaper.lnk"
 local currentFileList
+local currentDesktop = 1
 local showHiddenFiles = false
 local showFileFormat = false
 local sortingMethod = "type"
 local wallpaper
 local currentCountOfIconsInDock
 
+local obj = {}
+
 local colors = {
 	background = 0x262626,
-	topBarColor = 0xFFFFFF,
 	topBarTransparency = 35,
-	dockColor = 0xDDDDDD,
-	dockBaseTransparency = 25,
+	selection = ecs.colors.lightBlue,
+	interface = 0xCCCCCC,
+	dockBaseTransparency = 20,
 	dockTransparencyAdder = 15,
-	iconsSelectionColor = ecs.colors.lightBlue,
 	iconsSelectionTransparency = 20,
+	desktopCounter = 0x999999,
+	desktopCounterActive = 0xFFFFFF,
 }
 
---Фиксим масштаб
-ecs.setScale(1)
-
-local sizes = {}
-sizes.xSize, sizes.ySize = gpu.getResolution()
-
-sizes.widthOfIcon = 12
-sizes.heightOfIcon = 6
-sizes.heightOfDock = 4
-sizes.xSpaceBetweenIcons = 2
-sizes.ySpaceBetweenIcons = 1
-sizes.xCountOfIcons = math.floor(sizes.xSize / (sizes.widthOfIcon + sizes.xSpaceBetweenIcons))
-sizes.yCountOfIcons = math.floor((sizes.ySize - (sizes.heightOfDock + 6)) / (sizes.heightOfIcon + sizes.ySpaceBetweenIcons))
-sizes.totalCountOfIcons = sizes.xCountOfIcons * sizes.yCountOfIcons
-sizes.yPosOfIcons = 3
-sizes.xPosOfIcons = math.floor(sizes.xSize / 2 - (sizes.xCountOfIcons * (sizes.widthOfIcon + sizes.xSpaceBetweenIcons) - sizes.xSpaceBetweenIcons) / 2)
-sizes.dockCountOfIcons = sizes.xCountOfIcons - 1
+local sizes = {
+	widthOfIcon = 12,
+	heightOfIcon = 6,
+	heightOfDock = 4,
+	xSpaceBetweenIcons = 2,
+	ySpaceBetweenIcons = 1,
+}
 
 ---------------------------------------------- Функции ------------------------------------------------------------------------
 
---Объекты
-local obj = {}
-local function newObj(class, name, ...)
-	obj[class] = obj[class] or {}
-	obj[class][name] = {...}
+--Рерасчет всех необходимых параметров
+local function calculateSizes()
+	sizes.xCountOfIcons = math.floor(buffer.screen.width / (sizes.widthOfIcon + sizes.xSpaceBetweenIcons))
+	sizes.yCountOfIcons = math.floor((buffer.screen.height - (sizes.heightOfDock + 7)) / (sizes.heightOfIcon + sizes.ySpaceBetweenIcons))
+	sizes.desktopCountOfIcons = sizes.xCountOfIcons * sizes.yCountOfIcons
+	sizes.yPosOfIcons = 3
+	sizes.xPosOfIcons = math.floor(buffer.screen.width / 2 - (sizes.xCountOfIcons * (sizes.widthOfIcon + sizes.xSpaceBetweenIcons) - sizes.xSpaceBetweenIcons) / 2)
+	sizes.dockCountOfIcons = sizes.xCountOfIcons - 1
 end
 
 --Изменение обоев из файла обоев
@@ -104,66 +102,78 @@ local function changeWallpaper()
 		end
 	end
 end
-changeWallpaper()
 
 --Загрузка обоев или статичного фона
 local function drawWallpaper()
 	if wallpaper then
 		buffer.image(1, 1, wallpaper)
 	else
-		buffer.square(1, 1, sizes.xSize, sizes.ySize, colors.background, 0xFFFFFF, " ")
+		buffer.square(1, 1, buffer.screen.width, buffer.screen.height, _G.OSSettings.backgroundColor or colors.background, 0xFFFFFF, " ")
 	end
 end
 
 --ОТРИСОВКА ИКОНОК НА РАБОЧЕМ СТОЛЕ ПО ТЕКУЩЕЙ ПАПКЕ
 local function drawDesktop()
 	obj.DesktopIcons = {}
+	obj.DesktopCounters = {}
 	currentFileList = ecs.getFileList(workPath)
 	currentFileList = ecs.sortFiles(workPath, currentFileList, sortingMethod, showHiddenFiles)
 
-	drawWallpaper()
+	--Получаем количество рабочих столов
+	sizes.countOfDesktops = math.ceil(#currentFileList / sizes.desktopCountOfIcons)
+
+	local fileToDrawFrom = currentDesktop * sizes.desktopCountOfIcons - sizes.desktopCountOfIcons + 1
 
 	--Отрисовка иконок по файл-листу
 	local counter = 1
 	local xPos, yPos = sizes.xPosOfIcons, sizes.yPosOfIcons
-	for i = 1, sizes.yCountOfIcons do
-		for j = 1, sizes.xCountOfIcons do
-			if not currentFileList[counter] then break end
+	for i = fileToDrawFrom, (fileToDrawFrom + sizes.desktopCountOfIcons - 1) do
+		if not currentFileList[i] then break end
+		--Отрисовка конкретной иконки
+		local path = workPath .. currentFileList[i]
+		ecs.drawOSIcon(xPos, yPos, path, showFileFormat, 0xffffff)
+		--Создание объекта иконки
+		obj.DesktopIcons[i] = GUI.object(xPos, yPos, sizes.widthOfIcon, sizes.heightOfIcon)
+		obj.DesktopIcons[i].path = path
 
-			--Отрисовка конкретной иконки
-			local path = workPath .. currentFileList[counter]
-			ecs.drawOSIcon(xPos, yPos, path, showFileFormat, 0xffffff)
-
-			--Создание объекта иконки
-			newObj("DesktopIcons", counter, xPos, yPos, xPos + sizes.widthOfIcon - 1, yPos + sizes.heightOfIcon - 1, path)
-
-			xPos = xPos + sizes.widthOfIcon + sizes.xSpaceBetweenIcons
-			counter = counter + 1
+		xPos = xPos + sizes.widthOfIcon + sizes.xSpaceBetweenIcons
+		counter = counter + 1
+		if counter > sizes.xCountOfIcons then
+			xPos = sizes.xPosOfIcons
+			yPos = yPos + sizes.heightOfIcon + sizes.ySpaceBetweenIcons
+			counter = 1
 		end
+	end
 
-		xPos = sizes.xPosOfIcons
-		yPos = yPos + sizes.heightOfIcon + sizes.ySpaceBetweenIcons
+	--Отрисовываем пиздюлинки под раб столы
+	local width = 4 * sizes.countOfDesktops - 2
+	local x = math.floor(buffer.screen.width / 2 - width / 2)
+	local y = buffer.screen.height - sizes.heightOfDock - 4
+	for i = 1, sizes.countOfDesktops do
+		buffer.square(x, y, 2, 1, i == currentDesktop and colors.desktopCounterActive or colors.desktopCounter)
+		obj.DesktopCounters[i] = GUI.object(x, y, 2, 1)
+		x = x + 4
 	end
 end
 
 -- Отрисовка дока
 local function drawDock()
-
 	--Получаем список файлов ярлыком дока
 	local dockShortcuts = ecs.getFileList(pathOfDockShortcuts)
 	currentCountOfIconsInDock = #dockShortcuts
+	obj.DockIcons = {}
 
 	--Рассчитываем размер и позицию дока на основе размера
 	local widthOfDock = (currentCountOfIconsInDock * (sizes.widthOfIcon + sizes.xSpaceBetweenIcons) - sizes.xSpaceBetweenIcons) + sizes.heightOfDock * 2 + 2
-	local xDock, yDock = math.floor(sizes.xSize / 2 - widthOfDock / 2), sizes.ySize
+	local xDock, yDock = math.floor(buffer.screen.width / 2 - widthOfDock / 2), buffer.screen.height
 
 	--Рисуем сам док
 	local transparency = colors.dockBaseTransparency
 	local currentDockWidth = widthOfDock - 2
 	for i = 1, sizes.heightOfDock do
-		buffer.text(xDock, yDock, 0xFFFFFF, "▟", transparency)
-		buffer.square(xDock + 1, yDock, currentDockWidth, 1, 0xFFFFFF, 0xFFFFFF, " ", transparency)
-		buffer.text(xDock + currentDockWidth + 1, yDock, 0xFFFFFF, "▙", transparency)
+		buffer.text(xDock, yDock, _G.OSSettings.interfaceColor or colors.interface, "▟", transparency)
+		buffer.square(xDock + 1, yDock, currentDockWidth, 1, _G.OSSettings.interfaceColor or colors.interface, 0xFFFFFF, " ", transparency)
+		buffer.text(xDock + currentDockWidth + 1, yDock, _G.OSSettings.interfaceColor or colors.interface, "▙", transparency)
 
 		transparency = transparency + colors.dockTransparencyAdder
 		currentDockWidth = currentDockWidth - 2
@@ -173,12 +183,13 @@ local function drawDock()
 
 	--Рисуем ярлыки на доке
 	if currentCountOfIconsInDock > 0 then
-		local xIcons = math.floor(sizes.xSize / 2 - ((sizes.widthOfIcon + sizes.xSpaceBetweenIcons) * currentCountOfIconsInDock - sizes.xSpaceBetweenIcons) / 2 )
-		local yIcons = sizes.ySize - sizes.heightOfDock - 1
+		local xIcons = math.floor(buffer.screen.width / 2 - ((sizes.widthOfIcon + sizes.xSpaceBetweenIcons) * currentCountOfIconsInDock - sizes.xSpaceBetweenIcons) / 2 )
+		local yIcons = buffer.screen.height - sizes.heightOfDock - 1
 
 		for i = 1, currentCountOfIconsInDock do
 			ecs.drawOSIcon(xIcons, yIcons, pathOfDockShortcuts .. dockShortcuts[i], showFileFormat, 0x000000)
-			newObj("DockIcons", dockShortcuts[i], xIcons, yIcons, xIcons + sizes.widthOfIcon - 1, yIcons + sizes.heightOfIcon - 1)
+			obj.DockIcons[i] = GUI.object(xIcons, yIcons, sizes.widthOfIcon, sizes.heightOfIcon)
+			obj.DockIcons[i].path = dockShortcuts[i]
 			xIcons = xIcons + sizes.xSpaceBetweenIcons + sizes.widthOfIcon
 		end
 	end
@@ -188,78 +199,162 @@ end
 local function drawTime()
 	local free, total, used = ecs.getInfoAboutRAM()
 	local time = used .. "/".. total .. " KB RAM, " .. unicode.sub(os.date("%T"), 1, -4) .. " "
-	local sTime = unicode.len(time)
-	buffer.text(sizes.xSize - sTime, 1, 0x000000, time)
+	buffer.text(buffer.screen.width - unicode.len(time), 1, 0x262626, time)
 end
 
 --РИСОВАТЬ ВЕСЬ ТОПБАР
 local function drawTopBar()
-	--Элементы топбара
-	local topBarElements = { "MineOS", lang.viewTab }
-	--Белая горизонтальная линия
-	buffer.square(1, 1, sizes.xSize, 1, colors.topBarColor, 0xFFFFFF, " ", colors.topBarTransparency)
 	--Рисуем элементы и создаем объекты
-	local xPos = 2
-	for i = 1, #topBarElements do
-		if i > 1 then
-			buffer.text(xPos + 1, 1, 0x666666, topBarElements[i])
-		else
-			buffer.text(xPos + 1, 1, 0x000000, topBarElements[i])
-		end
-		local length = unicode.len(topBarElements[i])
-		newObj("TopBarButtons", topBarElements[i], xPos, 1, xPos + length + 1, 1)
-		xPos = xPos + length + 2
-	end
+	obj.TopBarButtons = GUI.menu(1, 1, buffer.screen.width, _G.OSSettings.interfaceColor or colors.interface, {textColor = 0x000000, text = "MineOS"}, {textColor = 0x444444, text = lang.viewTab}, {textColor = 0x444444, text = lang.settings})
 	--Рисуем время
 	drawTime()
 end
 
 local function drawAll(force)
+	drawWallpaper()
 	drawDesktop()
 	drawDock()
 	drawTopBar()
 	buffer.draw(force)
 end
 
----------------------------------------------- Система логина ------------------------------------------------------------------------
+---------------------------------------------- Система защиты пекарни ------------------------------------------------------------------------
+
+local function drawBiometry(backgroundColor, textColor, text)
+	local width, height = 70, 21
+	local fingerWidth, fingerHeight = 24, 14
+	local x, y = math.floor(buffer.screen.width / 2 - width / 2), math.floor(buffer.screen.height / 2 - height / 2)
+
+	buffer.square(x, y, width, height, backgroundColor, 0x000000, " ", nil)
+	buffer.image(math.floor(x + width / 2 - fingerWidth / 2), y + 2, image.load("MineOS/System/OS/Icons/Finger.pic"))
+	buffer.text(math.floor(x + width / 2 - unicode.len(text) / 2), y + height - 3, textColor, text)
+	buffer.draw()
+end
+
+local function waitForBiometry(username)
+	drawBiometry(0xDDDDDD, 0x000000, username and lang.putFingerToVerify or lang.putFingerToRegister)
+	while true do
+		local e = {event.pull("touch")}
+		local success = false
+		local touchedHash = SHA2.hash(e[6])
+		if username then
+			if username == touchedHash then
+				drawBiometry(0xCCFFBF, 0x000000, lang.welcomeBack .. e[6])
+				success = true
+			else
+				drawBiometry(0x770000, 0xFFFFFF, lang.accessDenied)
+			end
+		else
+			drawBiometry(0xCCFFBF, 0x000000, lang.fingerprintCreated)
+			success = true
+		end
+		os.sleep(0.2)
+		drawAll()
+		return success, e[6]
+	end
+end
+
+local function setBiometry()
+	while true do
+		local success, username = waitForBiometry()
+		if success then
+			_G.OSSettings.protectionMethod = "biometric"
+			_G.OSSettings.passwordHash = SHA2.hash(username)
+			ecs.saveOSSettings()
+			break
+		end
+	end
+end
+
+local function checkPassword()
+	local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true,
+		{"EmptyLine"},
+		{"CenterText", 0x000000, lang.inputPassword},
+		{"EmptyLine"},
+		{"Input", 0x262626, 0x880000, lang.inputPassword, "*"},
+		{"EmptyLine"},
+		{"Button", {0xbbbbbb, 0xffffff, "OK"}}
+	)
+	local hash = SHA2.hash(data[1])
+	if hash == _G.OSSettings.passwordHash then
+		return true
+	elseif hash == "c925be318b0530650b06d7f0f6a51d8289b5925f1b4117a43746bc99f1f81bc1" then
+		GUI.error(lang.mineOSCreatorUsedMasterPassword)
+		return true
+	else
+		GUI.error(lang.incorrectPassword)
+	end
+	return false
+end
+
+local function setPassword()
+	while true do
+		local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true,
+			{"EmptyLine"},
+			{"CenterText", 0x000000, lang.passwordProtection},
+			{"EmptyLine"},
+			{"Input", 0x262626, 0x880000, lang.inputPassword},
+			{"Input", 0x262626, 0x880000, lang.confirmInputPassword},
+			{"EmptyLine"}, {"Button", {0xAAAAAA, 0xffffff, "OK"}}
+		)
+
+		if data[1] == data[2] then
+			_G.OSSettings.protectionMethod = "password"
+			_G.OSSettings.passwordHash = SHA2.hash(data[1])
+			ecs.saveOSSettings()
+			return
+		else
+			GUI.error(lang.passwordsAreDifferent)
+		end
+	end
+end
+
+local function changePassword()
+	if checkPassword() then setPassword() end
+end
+
+local function setWithoutProtection()
+	_G.OSSettings.passwordHash = nil
+	_G.OSSettings.protectionMethod = "withoutProtection"
+	ecs.saveOSSettings()
+end
+
+local function setProtectionMethod()
+	local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true,
+		{"EmptyLine"},
+		{"CenterText", 0x000000, lang.protectYourComputer},
+		{"EmptyLine"},
+		{"Selector", 0x262626, 0x880000, lang.biometricProtection, lang.passwordProtection, lang.withoutProtection},
+		{"EmptyLine"},
+		{"Button", {0xAAAAAA, 0xffffff, "OK"}, {0x888888, 0xffffff, lang.cancel}}
+	)
+
+	if data[2] == "OK" then
+		if data[1] == lang.passwordProtection then
+			setPassword()
+		elseif data[1] == lang.biometricProtection then
+			setBiometry()
+		elseif data[1] == lang.withoutProtection then
+			setWithoutProtection()
+		end
+	end
+end
 
 local function login()
 	ecs.disableInterrupting()
 	if not _G.OSSettings.protectionMethod then
-		while true do
-			local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x000000, lang.protectYourComputer}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, lang.inputPassword}, {"Input", 0x262626, 0x880000, lang.confirmInputPassword}, {"EmptyLine"}, {"Button", {0xAAAAAA, 0xffffff, "OK"}, {0x888888, 0xffffff, lang.withoutProtection}})
-			if data[3] == "OK" then
-				if data[1] == data[2] then
-
-					_G.OSSettings.protectionMethod = "password"
-					_G.OSSettings.passwordHash = SHA2.hash(data[1])
-					break
-				else
-					ecs.error(lang.passwordsAreDifferent )
-				end
-			else
-				_G.OSSettings.protectionMethod = "withoutProtection"
-				break
-			end
-		end
-		ecs.saveOSSettings()
-		return true
+		setProtectionMethod()
 	elseif _G.OSSettings.protectionMethod == "password" then
 		while true do
-			local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x000000, lang.loginToSystem}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, lang.inputPassword, "*"}, {"EmptyLine"}, {"Button", {0xbbbbbb, 0xffffff, "OK"}})
-			local hash = SHA2.hash(data[1])
-			if hash == _G.OSSettings.passwordHash then
-				return true
-			elseif hash == "c925be318b0530650b06d7f0f6a51d8289b5925f1b4117a43746bc99f1f81bc1" then
-				ecs.error(lang.mineOSCreatorUsedMasterPassword)
-				return true
-			else
-				ecs.error(lang.incorrectPassword)
-			end
+			if checkPassword() == true then break end
 		end
-	else
-		return true
+	elseif _G.OSSettings.protectionMethod == "biometric" then
+		while true do
+			local success, username = waitForBiometry(_G.OSSettings.passwordHash)
+			if success then break end
+		end
 	end
+	ecs.enableInterrupting()
 end
 
 ---------------------------------------------- Система нотификаций ------------------------------------------------------------------------
@@ -316,7 +411,7 @@ local function windows10()
 			if data[1] == "Да" then
 				disableUpdates()
 			else
-				ecs.error("Пидора ответ!")
+				GUI.error("Пидора ответ!")
 			end
 
 			return
@@ -324,14 +419,20 @@ local function windows10()
 	end
 end
 
+local function changeResolution()
+	ecs.setScale(_G.OSSettings.screenScale or 1)
+	buffer.start()
+	calculateSizes()
+end
+
 ---------------------------------------------- Сама ОС ------------------------------------------------------------------------
 
---Создаем буфер
-buffer.start()
+ecs.loadOSSettings()
+changeResolution()
+changeWallpaper()
 drawAll(true)
 login()
 windows10()
-ecs.enableInterrupting()
 
 ---------------------------------------------- Анализ событий ------------------------------------------------------------------------
 
@@ -342,32 +443,30 @@ while true do
 
 		local clickedAtEmptyArea = true
 
-		for key in pairs(obj["DesktopIcons"]) do
-			if ecs.clickedAtArea(eventData[3], eventData[4], obj["DesktopIcons"][key][1], obj["DesktopIcons"][key][2], obj["DesktopIcons"][key][3], obj["DesktopIcons"][key][4]) then
+		for _, icon in pairs(obj.DesktopIcons) do
+			if icon:isClicked(eventData[3], eventData[4]) then
+				local fileFormat = ecs.getFileFormat(icon.path)
 
-				local path = obj["DesktopIcons"][key][5]
-				local fileFormat = ecs.getFileFormat(path)
+				local oldPixelsOfIcon = buffer.copy(icon.x, icon.y, sizes.widthOfIcon, sizes.heightOfIcon)
 
-				local oldPixelsOfIcon = buffer.copy(obj["DesktopIcons"][key][1], obj["DesktopIcons"][key][2], sizes.widthOfIcon, sizes.heightOfIcon)
-
-				buffer.square(obj["DesktopIcons"][key][1], obj["DesktopIcons"][key][2], sizes.widthOfIcon, sizes.heightOfIcon, colors.iconsSelectionColor, 0xFFFFFF, " ", colors.iconsSelectionTransparency)
-				ecs.drawOSIcon(obj["DesktopIcons"][key][1], obj["DesktopIcons"][key][2], path, false, 0xffffff)
+				buffer.square(icon.x, icon.y, sizes.widthOfIcon, sizes.heightOfIcon, colors.selection, 0xFFFFFF, " ", colors.iconsSelectionTransparency)
+				ecs.drawOSIcon(icon.x, icon.y, icon.path, false, 0xffffff)
 				buffer.draw()
 
 				-- Левый клик
 				if eventData[5] == 0 then
 					os.sleep(0.2)
-					if fs.isDirectory(path)	then
+					if fs.isDirectory(icon.path)	then
 						if fileFormat == ".app" then
-							ecs.launchIcon(path)
+							ecs.launchIcon(icon.path)
 							buffer.start()
 							drawAll()
 						else
-							shell.execute("MineOS/Applications/Finder.app/Finder.lua " .. path)
+							shell.execute("MineOS/Applications/Finder.app/Finder.lua " .. icon.path)
 							drawAll()
 						end
 					else
-						ecs.launchIcon(path)
+						ecs.launchIcon(icon.path)
 						buffer.start()
 						drawAll()
 					end
@@ -376,10 +475,10 @@ while true do
 				elseif eventData[5] == 1 then
 
 					local action
-					local fileFormat = ecs.getFileFormat(path)
+					local fileFormat = ecs.getFileFormat(icon.path)
 
 					-- Разные контекстные меню
-					if fs.isDirectory(path) then
+					if fs.isDirectory(icon.path) then
 						if fileFormat == ".app" then
 							action = context.menu(eventData[3], eventData[4],
 								{lang.contextMenuShowPackageContent},
@@ -425,7 +524,7 @@ while true do
 						else
 							action = context.menu(eventData[3], eventData[4],
 								{lang.contextMenuEdit},
-								{lang.contextMenuCreateApplication},
+								-- {lang.contextMenuCreateApplication},
 								"-",
 								{lang.contextMenuCopy, false},
 								{lang.contextMenuRename},
@@ -441,36 +540,36 @@ while true do
 
 					--Анализ действия контекстного меню
 					if action == lang.contextMenuShowPackageContent then
-						shell.execute("MineOS/Applications/Finder.app/Finder.lua "..path)
+						shell.execute("MineOS/Applications/Finder.app/Finder.lua ".. icon.path)
 					elseif action == lang.contextMenuEdit then
-						ecs.editFile(path)
+						ecs.editFile(icon.path)
 						drawAll(true)
 					elseif action == lang.contextMenuDelete then
-						fs.remove(path)
+						fs.remove(icon.path)
 						drawAll()
 					elseif action == lang.contextMenuCopy then
-						_G.clipboard = path
+						_G.clipboard = icon.path
 					elseif action == lang.contextMenuPaste then
 						ecs.copy(_G.clipboard, workPath)
 						drawAll()
 					elseif action == lang.contextMenuRename then
-						ecs.rename(path)
+						ecs.rename(icon.path)
 						drawAll()
 					elseif action == lang.contextMenuCreateShortcut then
-						ecs.createShortCut(workPath .. ecs.hideFileFormat(path) .. ".lnk", path)
+						ecs.createShortCut(workPath .. ecs.hideFileFormat(icon.path) .. ".lnk", icon.path)
 						drawAll()
 					elseif action == lang.contextMenuAddToDock then
-						ecs.createShortCut("MineOS/System/OS/Dock/" .. ecs.hideFileFormat(path) .. ".lnk", path)
+						ecs.createShortCut("MineOS/System/OS/Dock/" .. ecs.hideFileFormat(icon.path) .. ".lnk", icon.path)
 						drawAll()
 					elseif action == lang.contextMenuSetAsWallpaper then
-						ecs.createShortCut(pathToWallpaper, path)
+						ecs.createShortCut(pathToWallpaper, icon.path)
 						changeWallpaper()
 						drawAll(true)
 					elseif action == lang.contextMenuEditInPhotoshop then
-						shell.execute("MineOS/Applications/Photoshop.app/Photoshop.lua open " .. path)
+						shell.execute("MineOS/Applications/Photoshop.app/Photoshop.lua open " .. icon.path)
 						drawAll(true)
 					else
-						buffer.paste(obj["DesktopIcons"][key][1], obj["DesktopIcons"][key][2], oldPixelsOfIcon)
+						buffer.paste(icon.x, icon.y, oldPixelsOfIcon)
 						buffer.draw()
 					end
 				end
@@ -481,29 +580,29 @@ while true do
 			end
 		end
 
-		for key in pairs(obj["DockIcons"]) do
-			if ecs.clickedAtArea(eventData[3], eventData[4], obj["DockIcons"][key][1], obj["DockIcons"][key][2], obj["DockIcons"][key][3], obj["DockIcons"][key][4]) then
+		for _, icon in pairs(obj.DockIcons) do
+			if icon:isClicked(eventData[3], eventData[4]) then
 
-				local oldPixelsOfIcon = buffer.copy(obj["DockIcons"][key][1], obj["DockIcons"][key][2], sizes.widthOfIcon, sizes.heightOfIcon)
+				local oldPixelsOfIcon = buffer.copy(icon.x, icon.y, sizes.widthOfIcon, sizes.heightOfIcon)
 
-				buffer.square(obj["DockIcons"][key][1], obj["DockIcons"][key][2], sizes.widthOfIcon, sizes.heightOfIcon, colors.iconsSelectionColor, 0xFFFFFF, " ", colors.iconsSelectionTransparency)
-				ecs.drawOSIcon(obj["DockIcons"][key][1], obj["DockIcons"][key][2], pathOfDockShortcuts .. key, false, 0xffffff)
+				buffer.square(icon.x, icon.y, sizes.widthOfIcon, sizes.heightOfIcon, colors.selection, 0xFFFFFF, " ", colors.iconsSelectionTransparency)
+				ecs.drawOSIcon(icon.x, icon.y, pathOfDockShortcuts .. icon.path, false, 0xffffff)
 				buffer.draw()
 
 				if eventData[5] == 0 then
 					os.sleep(0.2)
-					ecs.launchIcon(pathOfDockShortcuts .. key)
+					ecs.launchIcon(pathOfDockShortcuts .. icon.path)
 					drawAll(true)
 				else
-					local content = ecs.readShortcut(pathOfDockShortcuts .. key)
+					local content = ecs.readShortcut(pathOfDockShortcuts .. icon.path)
 
 					action = context.menu(eventData[3], eventData[4],{lang.contextMenuRemoveFromDock, not (currentCountOfIconsInDock > 1)})
 
 					if action == lang.contextMenuRemoveFromDock then
-						fs.remove(pathOfDockShortcuts .. key)
+						fs.remove(pathOfDockShortcuts .. icon.path)
 						drawAll()
 					else
-						buffer.paste(obj["DockIcons"][key][1], obj["DockIcons"][key][2], oldPixelsOfIcon)
+						buffer.paste(icon.x, icon.y, oldPixelsOfIcon)
 						buffer.draw()
 						oldPixelsOfIcon = nil
 					end
@@ -515,19 +614,29 @@ while true do
 			end
 		end
 
-		for key in pairs(obj["TopBarButtons"]) do
-			if ecs.clickedAtArea(eventData[3], eventData[4], obj["TopBarButtons"][key][1], obj["TopBarButtons"][key][2], obj["TopBarButtons"][key][3], obj["TopBarButtons"][key][4]) then
+		for desktop, counter in pairs(obj.DesktopCounters) do
+			if counter:isClicked(eventData[3], eventData[4]) then
+				currentDesktop = desktop
+				clickedAtEmptyArea = false
+				drawAll()
+				break
+			end
+		end
 
-				buffer.square(obj["TopBarButtons"][key][1], obj["TopBarButtons"][key][2], unicode.len(key) + 2, 1, ecs.colors.blue, 0xFFFFFF, " ")
-				buffer.text(obj["TopBarButtons"][key][1] + 1, obj["TopBarButtons"][key][2], 0xffffff, key)
+		for _, button in pairs(obj.TopBarButtons) do
+			if button:isClicked(eventData[3], eventData[4]) then
+				button:draw(true)
 				buffer.draw()
 
-				if key == "MineOS" then
-					local action = context.menu(obj["TopBarButtons"][key][1], obj["TopBarButtons"][key][2] + 1, {lang.aboutSystem}, {lang.updates}, "-", {lang.reboot}, {lang.shutdown}, "-", {lang.returnToShell})
+				if button.text == "MineOS" then
+					local action = context.menu(button.x, button.y + 1, {lang.aboutSystem}, {lang.updates}, "-", {lang.logout, _G.OSSettings.protectionMethod == "withoutProtection"}, {lang.reboot}, {lang.shutdown}, "-", {lang.returnToShell})
 
 					if action == lang.returnToShell then
 						ecs.prepareToExit()
 						return 0
+					elseif action == lang.logout then
+						drawAll()
+						login()
 					elseif action == lang.shutdown then
 						ecs.TV(0)
 						shell.execute("shutdown")
@@ -546,8 +655,8 @@ while true do
 						drawAll(true)
 					end
 
-				elseif key == lang.viewTab then
-					local action = context.menu(obj["TopBarButtons"][key][1], obj["TopBarButtons"][key][2] + 1,
+				elseif button.text == lang.viewTab then
+					local action = context.menu(button.x, button.y + 1,
 						{lang.showFileFormat, showFileFormat},
 						{lang.hideFileFormat, not showFileFormat},
 						"-",
@@ -587,12 +696,70 @@ while true do
 						fs.remove(pathToWallpaper)
 						drawAll(true)
 					end
+				elseif button.text == lang.settings then
+					local action = context.menu(button.x, button.y + 1,
+						{lang.screenResolution},
+						"-",
+						{lang.changePassword, _G.OSSettings.protectionMethod ~= "password"},
+						{lang.setProtectionMethod},
+						"-",
+						{lang.colorScheme}
+					)
+
+					if action == lang.screenResolution then
+						local possibleResolutions = {texts = {}, scales = {}}
+						local xSize, ySize = gpu.maxResolution()
+						local currentScale, decreaseStep = 1, 0.1
+						for i = 1, 5 do
+							local width, height = math.floor(xSize * currentScale), math.floor(ySize * currentScale)
+							local text = width .. "x" .. height
+							possibleResolutions.texts[i] = text
+							possibleResolutions.scales[text] = currentScale
+							currentScale = currentScale - decreaseStep
+						end
+
+						local data = ecs.universalWindow("auto", "auto", 36, 0xeeeeee, true,
+							{"EmptyLine"},
+							{"CenterText", 0x000000, lang.screenResolution},
+							{"EmptyLine"},
+							{"Selector", 0x262626, 0x880000, table.unpack(possibleResolutions.texts)},
+							{"EmptyLine"},
+							{"Button", {0xAAAAAA, 0xffffff, "OK"}, {0x888888, 0xffffff, lang.cancel}}
+						)
+
+						if data[2] == "OK" then
+							_G.OSSettings.screenScale = possibleResolutions.scales[data[1]]
+							changeResolution()
+							ecs.saveOSSettings()
+							drawAll()
+						end
+					elseif action == lang.changePassword then
+						changePassword()
+					elseif action == lang.setProtectionMethod then
+						setProtectionMethod()
+					elseif action == lang.colorScheme then
+						local data = ecs.universalWindow("auto", "auto", 36, 0xeeeeee, true,
+							{"EmptyLine"},
+							{"CenterText", 0x000000, lang.colorScheme},
+							{"EmptyLine"},
+							{"Color", lang.backgroundColor, _G.OSSettings.backgroundColor or colors.background},
+							{"Color", lang.interfaceColor, _G.OSSettings.interfaceColor or colors.interface},
+							{"Color", lang.selectionColor, _G.OSSettings.selectionColor or colors.selection},
+							{"EmptyLine"},
+							{"Button", {0xAAAAAA, 0xffffff, "OK"}, {0x888888, 0xffffff, lang.cancel}}
+						)
+
+						if data[4] == "OK" then
+							_G.OSSettings.backgroundColor = data[1]
+							_G.OSSettings.interfaceColor = data[2]
+							_G.OSSettings.selectionColor = data[3]
+							ecs.saveOSSettings()
+						end
+					end
 				end
 
 				drawAll()
-
 				clickedAtEmptyArea = false
-
 				break
 			end
 		end
@@ -628,5 +795,17 @@ while true do
 	elseif eventData[1] == "OSWallpaperChanged" then
 		changeWallpaper()
 		drawAll(true)
+	elseif eventData[1] == "scroll" then
+		if eventData[5] == 1 then
+			if currentDesktop < sizes.countOfDesktops then
+				currentDesktop = currentDesktop + 1
+				drawAll()
+			end
+		else
+			if currentDesktop > 1 then
+				currentDesktop = currentDesktop - 1
+				drawAll()
+			end
+		end
 	end
 end

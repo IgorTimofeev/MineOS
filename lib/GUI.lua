@@ -162,6 +162,18 @@ function GUI.buttons(x, y, direction, spaceBetweenButtons, ...)
 	return buttonObjects
 end
 
+function GUI.menu(x, y, width, menuColor, ...)
+	local buttons = {...}
+	buffer.square(x, y, width, 1, menuColor)
+	x = x + 1
+	local menuObjects = {}
+	for i = 1, #buttons do
+		menuObjects[i] = GUI.adaptiveButton(x, y, 1, 0, menuColor, buttons[i].textColor, buttons[i].buttonPressedColor or 0x3366CC, buttons[i].textPressedColor or 0xFFFFFF, buttons[i].text)
+		x = x + menuObjects[i].width
+	end
+	return menuObjects
+end
+
 
 ------------------------------------------------- Окна -------------------------------------------------------------------
 
