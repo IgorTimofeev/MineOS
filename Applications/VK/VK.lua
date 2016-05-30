@@ -444,7 +444,7 @@ end
 
 local function drawMessageInputBar(currentText)
 	local x, y = mainZoneX, buffer.screen.height - 5
-	obj.messageInputBar = GUI.object(x, y, mainZoneWidth, 3)
+	obj.messageInputBar = GUI.object(x, y, mainZoneWidth - 4, 4)
 	buffer.square(x, y, mainZoneWidth, 5, colors.messageInputBarColor)
 	buffer.square(x + 2, y + 1, mainZoneWidth - 4, 3, colors.messageInputBarTextBackgroundColor)
 	buffer.text(x + 4, y + 2, colors.messsageInputBarTextColor, ecs.stringLimit("start", currentText or "Введите сообщение", mainZoneWidth - 8))
@@ -1001,8 +1001,7 @@ local function getAndShowNews()
 	end
 end
 
---Главное ГУИ с левтбаром и прочим
-local function mainGUI()
+local function drawLeftBar()
 	--Подложка под элементы
 	buffer.square(1, 1, leftBarWidth, buffer.screen.height, colors.leftBar, 0xFFFFFF, " ")
 	
@@ -1026,7 +1025,11 @@ local function mainGUI()
 		buffer.text(3, y, colors.leftBarText, ecs.stringLimit("end", leftBarElements[i], leftBarWidth - 4))
 		y = y + 2
 	end
+end
 
+--Главное ГУИ с левтбаром и прочим
+local function mainGUI()
+	drawLeftBar()
 	--Отображаем гую нужную выбранную
 	if leftBarElements[currentLeftBarElement] == "Сообщения" then
 		status("Получаю список диалогов")
@@ -1170,8 +1173,8 @@ while true do
 			if obj.messageInputBar:isClicked(e[3], e[4]) then
 				drawMessageInputBar(" ")
 				buffer.draw()
-				local newText = ecs.inputText(obj.messageInputBar.x + 4, obj.messageInputBar.y + 2, obj.messageInputBar.width, "", colors.messageInputBarTextBackgroundColor, colors.messsageInputBarTextColor)
-				if newText and newText ~= " " then
+				local newText = ecs.inputText(obj.messageInputBar.x + 4, obj.messageInputBar.y + 2, obj.messageInputBar.width - 4, "", colors.messageInputBarTextBackgroundColor, colors.messsageInputBarTextColor)
+				if newText and newText ~= " " and newText ~= "" then
 					computer.beep(1700)
 					status("Отправляю сообщение пользователю")
 					sendMessageRequest(currentMessagesPeerID, newText .. (settings.addSendingInfo and messageEndAdderText or ""))
@@ -1227,13 +1230,18 @@ while true do
 				-- GUI.error("Кликнули на лефт бар ээлемент")
 				local oldLeftBarElement = currentLeftBarElement
 				currentLeftBarElement = key
-				mainGUI()
+
+				drawLeftBar()
+				buffer.draw()
 
 				if leftBarElements[currentLeftBarElement] == "Выход" then
 					os.sleep(0.3)
 					buffer.clear(0x262626)
 					ecs.prepareToExit()
 					return
+				elseif leftBarElements[currentLeftBarElement] == "Аудиозаписи" then
+					currentProfile = currentProfile or {}
+					currentProfile.ID = personalInfo.id
 				elseif leftBarElements[currentLeftBarElement] == "Настройки" then
 					local data = ecs.universalWindow("auto", "auto", 36, 0x262626, true,
 						{"EmptyLine"},
@@ -1264,10 +1272,10 @@ while true do
 						saveSettings()
 
 						currentLeftBarElement = oldLeftBarElement
-						mainGUI()
 					end
 				end
 
+				mainGUI()
 				break
 			end
 		end
