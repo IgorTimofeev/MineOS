@@ -444,7 +444,7 @@ end
 
 local function drawMessageInputBar(currentText)
 	local x, y = mainZoneX, buffer.screen.height - 5
-	obj.messageInputBar = GUI.object(x, y, x + mainZoneWidth - 7, y + 2)
+	obj.messageInputBar = GUI.object(x, y, mainZoneWidth, 3)
 	buffer.square(x, y, mainZoneWidth, 5, colors.messageInputBarColor)
 	buffer.square(x + 2, y + 1, mainZoneWidth - 4, 3, colors.messageInputBarTextBackgroundColor)
 	buffer.text(x + 4, y + 2, colors.messsageInputBarTextColor, ecs.stringLimit("start", currentText or "Введите сообщение", mainZoneWidth - 8))
@@ -562,7 +562,7 @@ local function dialogsGUI()
 		drawTopBar("Сообщения")
 
 		--Ебашим КНОПАЧКИ спама
-		obj.crazyTypingButton = GUI.adaptiveButton(mainZoneX + 2, 2, 1, 0, 0xFFFFFF, colors.topBar, 0xFFFFFF, 0x000000, "CrazyTyping")
+		obj.crazyTypingButton = GUI.adaptiveButton(mainZoneX + 2, 2, 1, 0, 0xFFFFFF, colors.topBar, 0xAAAAAA, 0x000000, "CrazyTyping")
 		-- obj.spamButton = {buffer.adaptiveButton(obj.crazyTypingButton[3] + 2, 2, 1, 0, 0xFFFFFF, colors.topBar, "Спам")}
 
 		--НУ ТЫ ПОНЯЛ, АГА
@@ -634,7 +634,7 @@ local function dialogsGUI()
 				buffer.text(cykaX + 1, y + 2, 0xFFFFFF, cyka)
 			end
 
-			obj.dialogList[i] = GUI.object(mainZoneX, y, mainZoneX + mainZoneWidth - 1, y + 4)
+			obj.dialogList[i] = GUI.object(mainZoneX, y, mainZoneWidth, 5)
 			obj.dialogList[i][5], obj.dialogList[i][6], obj.dialogList[i][7], obj.dialogList[i][8], obj.dialogList[i][9] = peerID, avatarText, text1, text2, text3
 
 			y = y + 5
