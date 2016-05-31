@@ -1,7 +1,11 @@
 
-if not _G.buffer then _G.buffer = require("doubleBuffering") end
-if not _G.ecs then _G.ecs = require("ECSAPI") end
-if not _G.unicode then _G.unicode = require("unicode") end
+local libraries = {
+	buffer = "doubleBuffering",
+	ecs = "ECSAPI",
+	unicode = "unicode"
+}
+
+for library in pairs(libraries) do if not _G[library] then _G[library] = require(libraries[library]) end end; libraries = nil
 local GUI = {}
 
 ---------------------------------------------------- Универсальные методы --------------------------------------------------------
@@ -201,10 +205,11 @@ function GUI.error(text, errorWindowParameters)
 	local widthOfText = math.floor(buffer.screen.width * 0.5)
 
 	--Ебемся с текстом, делаем его пиздатым во всех смыслах
-	if type(text) == "table" then text = serialization.serialize(text) end
-	text = tostring(text)
-	text = (errorWindowParameters and errorWindowParameters.truncate) and ecs.stringLimit("end", text, errorWindowParameters.truncate) or text
-	text = { text }
+	if type(text) ~= "table" then
+		text = tostring(text)
+		text = (errorWindowParameters and errorWindowParameters.truncate) and ecs.stringLimit("end", text, errorWindowParameters.truncate) or text
+		text = { text }
+	end
 	text = ecs.stringWrap(text, widthOfText)
 
 
@@ -256,6 +261,121 @@ function GUI.error(text, errorWindowParameters)
 			if OKButton:isClicked(e[3], e[4]) then
 				quit(); return
 			end
+		end
+	end
+end
+
+--------------------------------------------------------------------------------------------------------------------------------
+
+-- local textFieldProperties = {
+-- 	--Регурярное выражение, которому должны соответствовать вводимые данные. При несоответствии на выходе из функции выдается первоначальный текст, поданынй на выход функции
+-- 	regex = "^%d+$",
+-- 	--Отключает символ многоточия при выходе за пределы текстового поля
+-- 	disableDots = true,
+-- 	--Попросту отрисовывает всю необходимую информацию без активации нажатия на клавиши
+-- 	justDrawNotEvent = true,
+-- 	--Задержка между миганимем курсора
+-- 	cursorBlinkDelay = 1.5,
+-- 	--Цвет курсора
+-- 	cursorColor = 0xFF7777,
+-- 	--Символ, используемый для отрисовки курсора
+-- 	cursorSymbol = "▌",
+-- 	--Символ-маскировщик, на который будет визуально заменен весь вводимый текст. Полезно для полей ввода пароля
+-- 	maskTextWithSymbol = "*",
+-- }
+
+function GUI.input(x, y, width, foreground, startText, textFieldProperties)
+	local text = startText
+	local textLength = unicode.len(text)
+	local cursorBlinkState = false
+	local cursorBlinkDelay = (textFieldProperties and textFieldProperties.cursorBlinkDelay) and textFieldProperties.cursorBlinkDelay or 0.5
+	local cursorColor = (textFieldProperties and textFieldProperties.cursorColor) and textFieldProperties.cursorColor or 0x00A8FF
+	local cursorSymbol = (textFieldProperties and textFieldProperties.cursorSymbol) and textFieldProperties.cursorSymbol or "┃"
+	
+	local oldPixels = {}; for i = x, x + width - 1 do table.insert(oldPixels, { buffer.get(i, y) }) end
+
+	local function drawOldPixels()
+		for i = 1, #oldPixels do buffer.set(x + i - 1, y, oldPixels[i][1], oldPixels[i][2], oldPixels[i][3]) end
+	end
+
+	local function getTextLength()
+		textLength = unicode.len(text)
+	end
+
+	local function textFormat()
+		local formattedText = text
+
+		if textFieldProperties and textFieldProperties.maskTextWithSymbol then
+			formattedText = string.rep(textFieldProperties.maskTextWithSymbol or "*", textLength)
+		end
+
+		if textLength > width then
+			if textFieldProperties and textFieldProperties.disableDots then
+				formattedText = unicode.sub(formattedText, -width, -1)
+			else
+				formattedText = "…" .. unicode.sub(formattedText, -width + 1, -1)
+			end
+		end
+
+		return formattedText
+	end
+
+	local function draw()
+		drawOldPixels()
+		buffer.text(x, y, foreground, textFormat())
+
+		if cursorBlinkState then
+			local cursorPosition = textLength < width and x + textLength or x + width - 1
+			local bg = buffer.get(cursorPosition, y)
+			buffer.set(cursorPosition, y, bg, cursorColor, cursorSymbol)
+		end
+
+		buffer.draw()
+	end
+
+	local function backspace()
+		if unicode.len(text) > 0 then text = unicode.sub(text, 1, -2); getTextLength(); draw() end
+	end
+
+	local function quit()
+		cursorBlinkState = false
+		if textFieldProperties and textFieldProperties.regex and not string.match(text, textFieldProperties.regex) then
+			text = startText
+			draw()
+			return startText
+		end
+		draw()
+		return text
+	end
+
+	draw()
+
+	if textFieldProperties and textFieldProperties.justDrawNotEvent then return startText end
+
+	while true do
+		local e = { event.pull(cursorBlinkDelay) }
+		if e[1] == "key_down" then
+			if e[4] == 14 then
+				backspace()
+			elseif e[4] == 28 then
+				return quit()
+			else
+				local symbol = unicode.char(e[3])
+				if not keyboard.isControl(e[3]) then
+					text = text .. symbol
+					getTextLength()
+					draw()
+				end
+			end
+		elseif e[1] == "clipboard" then
+			text = text .. e[3]
+			getTextLength()
+			draw()
+		elseif e[1] == "touch" then
+			return quit()
+		else
+			cursorBlinkState = not cursorBlinkState
+			draw()
 		end
 	end
 end

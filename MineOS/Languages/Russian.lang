@@ -11,7 +11,7 @@
 	contextMenuRename = "Переименовать",
 	contextMenuCreateShortcut = "Создать ярлык",
 	contextMenuUploadToPastebin = "Загрузить на Pastebin",
-	contextMenuAddToDock = "Добавит в Dock",
+	contextMenuAddToDock = "Добавить в Dock",
 	contextMenuRemoveFromDock = "Удалить из Dock",
 	contextMenuArchive = "Добавить в архив",
 	contextMenuDelete = "Удалить",
@@ -22,6 +22,10 @@
 	contextMenuShowContainingFolder = "Показать содержащую папку",
 	contextMenuRemoveFromFavourites = "Удалить из избранного",
 
+	favourites = "Избранное",
+	disks = "Диски",
+	network = "Сеть",
+	search = "Поиск",
 	sortByType = "Сортировать по типу",
 	sortByName = "Сортировать по имени",
 	sortByDate = "Сортировать по дате",
@@ -35,6 +39,7 @@
 	sortByDateShort = "По дате",
 	showFileFormatShort = "Формат",
 	showHiddenFilesShort = "Скрытые",
+	sortingMethod = "Упорядочить",
 
 	aboutSystem = "Об этом ПК",
 	updates = "Обновления",
@@ -72,6 +77,7 @@
 	settings = "Настройки",
 	changePassword = "Изменить пароль",
 	cancel = "Отмена",
+	shortcutIsCorrupted = "Файл ярлыка поврежден или имеет неизвестный формат",
 
 	viewTab = "Вид",
 }

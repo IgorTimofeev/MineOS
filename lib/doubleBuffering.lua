@@ -86,7 +86,7 @@ end
 -- Получить информацию о пикселе из буфера
 function buffer.get(x, y)
 	local index = convertCoordsToIndex(x, y)
-	if x >= buffer.drawLimit.x1 and y >= buffer.drawLimit.y1 and x <= buffer.drawLimit.x2 and y <= buffer.drawLimit.y2 then
+	if x >= 1 and y >= 1 and x <= buffer.screen.width and y <= buffer.screen.height then
 		return buffer.screen.new[index], buffer.screen.new[index + 1], buffer.screen.new[index + 2]
 	else
 		error("Невозможно получить указанные значения, так как указанные координаты лежат за пределами экрана.\n")

@@ -22,6 +22,10 @@
 	contextMenuShowContainingFolder = "Show containing folder",
 	contextMenuRemoveFromFavourites = "Remove from favourites",
 
+	favourites = "Favourites",
+	disks = "HDDs",
+	network = "Network",
+	search = "Search",
 	sortByType = "Sort by type",
 	sortByName = "Sort by name",
 	sortByDate = "Sort by date",
@@ -35,6 +39,7 @@
 	sortByDateShort = "By date",
 	showFileFormatShort = "Format",
 	showHiddenFilesShort = "Hidden",
+	sortingMethod = "Sorting method",
 
 	aboutSystem = "About this PC",
 	updates = "Updates",
@@ -71,7 +76,8 @@
 	screenResolution = "Screen resolution",
 	settings = "Preferences",
 	changePassword = "Change password",
-	cancel = "Отмена",
+	cancel = "Cancel",
+	shortcutIsCorrupted = "Shortcut file is corrupted",
 
 	viewTab = "View",
 }

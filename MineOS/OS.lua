@@ -1,3 +1,5 @@
+-- package.loaded.MineOSCore = nil
+-- _G.MineOSCore = nil
 
 ---------------------------------------------- Копирайт, епта ------------------------------------------------------------------------
 
@@ -22,14 +24,15 @@ local copyright = [[
 
 -- Адаптивная загрузка необходимых библиотек и компонентов
 local libraries = {
+	MineOSCore = "MineOSCore",
+	buffer = "doubleBuffering",
+	image = "image",
 	ecs = "ECSAPI",
 	component = "component",
 	event = "event",
 	term = "term",
 	files = "files",
 	context = "context",
-	buffer = "doubleBuffering",
-	image = "image",
 	SHA2 = "SHA2",
 	GUI = "GUI"
 }
@@ -50,7 +53,6 @@ local lang = files.loadTableFromFile("MineOS/System/OS/Languages/" .. _G.OSSetti
 local workPath = "MineOS/Desktop/"
 local pathOfDockShortcuts = "MineOS/System/OS/Dock/"
 local pathToWallpaper = "MineOS/System/OS/Wallpaper.lnk"
-local currentFileList
 local currentDesktop = 1
 local showHiddenFiles = false
 local showFileFormat = false
@@ -84,9 +86,7 @@ local sizes = {
 
 --Рерасчет всех необходимых параметров
 local function calculateSizes()
-	sizes.xCountOfIcons = math.floor(buffer.screen.width / (sizes.widthOfIcon + sizes.xSpaceBetweenIcons))
-	sizes.yCountOfIcons = math.floor((buffer.screen.height - (sizes.heightOfDock + 7)) / (sizes.heightOfIcon + sizes.ySpaceBetweenIcons))
-	sizes.desktopCountOfIcons = sizes.xCountOfIcons * sizes.yCountOfIcons
+	sizes.xCountOfIcons, sizes.yCountOfIcons, sizes.totalCountOfIcons =  MineOSCore.getParametersForDrawingIcons(buffer.screen.width, buffer.screen.height - sizes.heightOfDock - 6, sizes.xSpaceBetweenIcons, sizes.ySpaceBetweenIcons)
 	sizes.yPosOfIcons = 3
 	sizes.xPosOfIcons = math.floor(buffer.screen.width / 2 - (sizes.xCountOfIcons * (sizes.widthOfIcon + sizes.xSpaceBetweenIcons) - sizes.xSpaceBetweenIcons) / 2)
 	sizes.dockCountOfIcons = sizes.xCountOfIcons - 1
@@ -114,36 +114,14 @@ end
 
 --ОТРИСОВКА ИКОНОК НА РАБОЧЕМ СТОЛЕ ПО ТЕКУЩЕЙ ПАПКЕ
 local function drawDesktop()
-	obj.DesktopIcons = {}
 	obj.DesktopCounters = {}
-	currentFileList = ecs.getFileList(workPath)
-	currentFileList = ecs.sortFiles(workPath, currentFileList, sortingMethod, showHiddenFiles)
+	local fileList = ecs.getFileList(workPath)
+	fileList = ecs.sortFiles(workPath, fileList, sortingMethod, showHiddenFiles)
 
-	--Получаем количество рабочих столов
-	sizes.countOfDesktops = math.ceil(#currentFileList / sizes.desktopCountOfIcons)
-
-	local fileToDrawFrom = currentDesktop * sizes.desktopCountOfIcons - sizes.desktopCountOfIcons + 1
-
-	--Отрисовка иконок по файл-листу
-	local counter = 1
-	local xPos, yPos = sizes.xPosOfIcons, sizes.yPosOfIcons
-	for i = fileToDrawFrom, (fileToDrawFrom + sizes.desktopCountOfIcons - 1) do
-		if not currentFileList[i] then break end
-		--Отрисовка конкретной иконки
-		local path = workPath .. currentFileList[i]
-		ecs.drawOSIcon(xPos, yPos, path, showFileFormat, 0xffffff)
-		--Создание объекта иконки
-		obj.DesktopIcons[i] = GUI.object(xPos, yPos, sizes.widthOfIcon, sizes.heightOfIcon)
-		obj.DesktopIcons[i].path = path
-
-		xPos = xPos + sizes.widthOfIcon + sizes.xSpaceBetweenIcons
-		counter = counter + 1
-		if counter > sizes.xCountOfIcons then
-			xPos = sizes.xPosOfIcons
-			yPos = yPos + sizes.heightOfIcon + sizes.ySpaceBetweenIcons
-			counter = 1
-		end
-	end
+	--Ебашим раб стол
+	sizes.countOfDesktops = math.ceil(#fileList / sizes.totalCountOfIcons)
+	local fromIcon = currentDesktop * sizes.totalCountOfIcons - sizes.totalCountOfIcons + 1
+	obj.DesktopIcons = MineOSCore.drawIconField(sizes.xPosOfIcons, sizes.yPosOfIcons, sizes.xCountOfIcons, sizes.yCountOfIcons, fromIcon, sizes.totalCountOfIcons, sizes.xSpaceBetweenIcons, sizes.ySpaceBetweenIcons, workPath, fileList, showFileFormat, 0xFFFFFF)
 
 	--Отрисовываем пиздюлинки под раб столы
 	local width = 4 * sizes.countOfDesktops - 2
@@ -187,7 +165,7 @@ local function drawDock()
 		local yIcons = buffer.screen.height - sizes.heightOfDock - 1
 
 		for i = 1, currentCountOfIconsInDock do
-			ecs.drawOSIcon(xIcons, yIcons, pathOfDockShortcuts .. dockShortcuts[i], showFileFormat, 0x000000)
+			MineOSCore.drawIcon(xIcons, yIcons, pathOfDockShortcuts .. dockShortcuts[i], showFileFormat, 0x000000)
 			obj.DockIcons[i] = GUI.object(xIcons, yIcons, sizes.widthOfIcon, sizes.heightOfIcon)
 			obj.DockIcons[i].path = dockShortcuts[i]
 			xIcons = xIcons + sizes.xSpaceBetweenIcons + sizes.widthOfIcon
@@ -429,6 +407,8 @@ end
 ---------------------------------------------- Сама ОС ------------------------------------------------------------------------
 
 ecs.loadOSSettings()
+MineOSCore.setLocalization(lang)
+MineOSCore.loadIcons()
 changeResolution()
 changeWallpaper()
 drawAll(true)
@@ -446,158 +426,27 @@ while true do
 
 		for _, icon in pairs(obj.DesktopIcons) do
 			if icon:isClicked(eventData[3], eventData[4]) then
-				local fileFormat = ecs.getFileFormat(icon.path)
-
-				local oldPixelsOfIcon = buffer.copy(icon.x, icon.y, sizes.widthOfIcon, sizes.heightOfIcon)
-
-				buffer.square(icon.x, icon.y, sizes.widthOfIcon, sizes.heightOfIcon, colors.selection, 0xFFFFFF, " ", colors.iconsSelectionTransparency)
-				ecs.drawOSIcon(icon.x, icon.y, icon.path, false, 0xffffff)
-				buffer.draw()
-
-				-- Левый клик
-				if eventData[5] == 0 then
-					os.sleep(0.2)
-					if fs.isDirectory(icon.path)	then
-						if fileFormat == ".app" then
-							ecs.launchIcon(icon.path)
-							buffer.start()
-							drawAll()
-						else
-							shell.execute("MineOS/Applications/Finder.app/Finder.lua " .. icon.path)
-							drawAll()
-						end
-					else
-						ecs.launchIcon(icon.path)
-						buffer.start()
-						drawAll()
-					end
-
-				-- Правый клик
-				elseif eventData[5] == 1 then
-
-					local action
-					local fileFormat = ecs.getFileFormat(icon.path)
-
-					-- Разные контекстные меню
-					if fs.isDirectory(icon.path) then
-						if fileFormat == ".app" then
-							action = context.menu(eventData[3], eventData[4],
-								{lang.contextMenuShowPackageContent},
-								"-",
-								{lang.contextMenuCopy, false},
-								{lang.contextMenuPaste, not _G.clipboard},
-								"-",
-								{lang.contextMenuRename},
-								{lang.contextMenuCreateShortcut},
-								"-",
-								{lang.contextMenuUploadToPastebin, true},
-								"-",
-								{lang.contextMenuAddToDock, not (currentCountOfIconsInDock < sizes.dockCountOfIcons)},
-								{lang.contextMenuDelete, false}
-							)
-						else
-							action = context.menu(eventData[3], eventData[4],
-								{lang.contextMenuCopy, false},
-								{lang.contextMenuRename},
-								{lang.contextMenuCreateShortcut},
-								"-",
-								{lang.contextMenuArchive},
-								"-",
-								{lang.contextMenuDelete, false}
-							)
-						end
-					else
-						if fileFormat == ".pic" then
-							action = context.menu(eventData[3], eventData[4],
-								{lang.contextMenuEdit},
-								{lang.contextMenuEditInPhotoshop},
-								{lang.contextMenuSetAsWallpaper},
-								"-",
-								{lang.contextMenuCopy, false},
-								{lang.contextMenuRename},
-								{lang.contextMenuCreateShortcut},
-								"-",
-								{lang.contextMenuUploadToPastebin, true},
-								"-",
-								{lang.contextMenuAddToDock, not (currentCountOfIconsInDock < sizes.dockCountOfIcons)},
-								{lang.contextMenuDelete, false}
-							)
-						else
-							action = context.menu(eventData[3], eventData[4],
-								{lang.contextMenuEdit},
-								-- {lang.contextMenuCreateApplication},
-								"-",
-								{lang.contextMenuCopy, false},
-								{lang.contextMenuRename},
-								{lang.contextMenuCreateShortcut},
-								"-",
-								{lang.contextMenuUploadToPastebin, true},
-								"-",
-								{lang.contextMenuAddToDock, not (currentCountOfIconsInDock < sizes.dockCountOfIcons and workPath ~= "MineOS/System/OS/Dock/")},
-								{lang.contextMenuDelete, false}
-							)
-						end
-					end
-
-					--Анализ действия контекстного меню
-					if action == lang.contextMenuShowPackageContent then
-						shell.execute("MineOS/Applications/Finder.app/Finder.lua ".. icon.path)
-					elseif action == lang.contextMenuEdit then
-						ecs.editFile(icon.path)
-						drawAll(true)
-					elseif action == lang.contextMenuDelete then
-						fs.remove(icon.path)
-						drawAll()
-					elseif action == lang.contextMenuCopy then
-						_G.clipboard = icon.path
-					elseif action == lang.contextMenuPaste then
-						ecs.copy(_G.clipboard, workPath)
-						drawAll()
-					elseif action == lang.contextMenuRename then
-						ecs.rename(icon.path)
-						drawAll()
-					elseif action == lang.contextMenuCreateShortcut then
-						ecs.createShortCut(workPath .. ecs.hideFileFormat(icon.path) .. ".lnk", icon.path)
-						drawAll()
-					elseif action == lang.contextMenuAddToDock then
-						ecs.createShortCut("MineOS/System/OS/Dock/" .. ecs.hideFileFormat(icon.path) .. ".lnk", icon.path)
-						drawAll()
-					elseif action == lang.contextMenuSetAsWallpaper then
-						ecs.createShortCut(pathToWallpaper, icon.path)
-						changeWallpaper()
-						drawAll(true)
-					elseif action == lang.contextMenuEditInPhotoshop then
-						shell.execute("MineOS/Applications/Photoshop.app/Photoshop.lua open " .. icon.path)
-						drawAll(true)
-					else
-						buffer.paste(icon.x, icon.y, oldPixelsOfIcon)
-						buffer.draw()
-					end
-				end
-
+				if MineOSCore.iconClick(icon, eventData, colors.selection, colors.iconsSelectionTransparency, 0xFFFFFF, 0.2, showFileFormat, {method = drawAll, arguments = {}}, {method = drawAll, arguments = {}}, {method = function() MineOSCore.safeLaunch("Finder.lua", "open", icon.path) end, arguments = {icon.path}}) then return end
 				clickedAtEmptyArea = false
-
 				break
 			end
 		end
 
 		for _, icon in pairs(obj.DockIcons) do
 			if icon:isClicked(eventData[3], eventData[4]) then
-
 				local oldPixelsOfIcon = buffer.copy(icon.x, icon.y, sizes.widthOfIcon, sizes.heightOfIcon)
 
 				buffer.square(icon.x, icon.y, sizes.widthOfIcon, sizes.heightOfIcon, colors.selection, 0xFFFFFF, " ", colors.iconsSelectionTransparency)
-				ecs.drawOSIcon(icon.x, icon.y, pathOfDockShortcuts .. icon.path, false, 0xffffff)
+				MineOSCore.drawIcon(icon.x, icon.y, pathOfDockShortcuts .. icon.path, false, 0xffffff)
 				buffer.draw()
 
 				if eventData[5] == 0 then
 					os.sleep(0.2)
-					ecs.launchIcon(pathOfDockShortcuts .. icon.path)
+					MineOSCore.launchIcon(pathOfDockShortcuts .. icon.path)
 					drawAll(true)
 				else
 					local content = ecs.readShortcut(pathOfDockShortcuts .. icon.path)
-
-					action = context.menu(eventData[3], eventData[4],{lang.contextMenuRemoveFromDock, not (currentCountOfIconsInDock > 1)})
+					action = context.menu(eventData[3], eventData[4], {lang.contextMenuRemoveFromDock, not (currentCountOfIconsInDock > 1)})
 
 					if action == lang.contextMenuRemoveFromDock then
 						fs.remove(pathOfDockShortcuts .. icon.path)
@@ -610,7 +459,6 @@ while true do
 				end
 
 				clickedAtEmptyArea = false
-
 				break
 			end
 		end
@@ -766,32 +614,7 @@ while true do
 		end
 
 		if clickedAtEmptyArea and eventData[5] == 1 then
-			local action = context.menu(eventData[3], eventData[4],
-				{lang.contextMenuRemoveWallpaper, not wallpaper},
-				"-",
-				{lang.contextMenuNewFile},
-				{lang.contextMenuNewFolder},
-				"-",
-				{lang.contextMenuPaste, not _G.clipboard}
-			)
-
-			--Создать новый файл
-			if action == lang.contextMenuNewFile then
-				ecs.newFile(workPath)
-				drawAll(true)
-			--Создать новую папку
-			elseif action == lang.contextMenuNewFolder then
-				ecs.newFolder(workPath)
-				drawAll()
-			--Вставить файл
-			elseif action == lang.contextMenuPaste then
-				ecs.copy(_G.clipboard, workPath)
-				drawAll()
-			elseif action == lang.contextMenuRemoveWallpaper then
-				wallpaper = nil
-				fs.remove(pathToWallpaper)
-				drawAll()
-			end
+			MineOSCore.emptyZoneClick(eventData, workPath, {method = drawAll, arguments = {}})
 		end
 	elseif eventData[1] == "OSWallpaperChanged" then
 		changeWallpaper()
