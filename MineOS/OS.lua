@@ -614,7 +614,7 @@ while true do
 		end
 
 		if clickedAtEmptyArea and eventData[5] == 1 then
-			MineOSCore.emptyZoneClick(eventData, workPath, {method = drawAll, arguments = {}})
+			MineOSCore.emptyZoneClick(eventData, workPath, {method = drawAll, arguments = {}}, {method = drawAll, arguments = {true}})
 		end
 	elseif eventData[1] == "OSWallpaperChanged" then
 		changeWallpaper()

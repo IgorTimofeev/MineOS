@@ -386,11 +386,11 @@ function MineOSCore.iconClick(icon, eventData, selectionColor, selectionTranspar
 	return dataToReturn
 end
 
-function MineOSCore.emptyZoneClick(eventData, workPath, drawAllMethod)
+function MineOSCore.emptyZoneClick(eventData, workPath, drawAllMethod, fullRefreshMethod)
 	local action = context.menu(eventData[3], eventData[4], {lang.contextMenuNewFile}, {lang.contextMenuNewFolder}, {lang.contextMenuNewApplication}, "-", {lang.contextMenuPaste, (_G.clipboard == nil), "^V"})
 	if action == lang.contextMenuNewFile then
 		ecs.newFile(workPath)
-		executeMethod(drawAllMethod)
+		executeMethod(fullRefreshMethod)
 	elseif action == lang.contextMenuNewFolder then
 		ecs.newFolder(workPath)
 		executeMethod(drawAllMethod)
