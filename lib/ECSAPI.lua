@@ -1535,9 +1535,17 @@ end
 
 -------------------------ВСЕ ДЛЯ ОСКИ-------------------------------------------------------------------------------
 
+function ecs.searchInArray(array, textToSearch)
+	local newArray = {}
+	for i = 1, #array do
+		if string.find(unicode.lower(array[i]), unicode.lower(textToSearch)) then table.insert(newArray, array[i]) end
+	end
+	return newArray
+end
+
 function ecs.sortFiles(path, fileList, sortingMethod, showHiddenFiles)
 	local sortedFileList = {}
-	if sortingMethod == "type" then
+	if sortingMethod == "type" or sortingMethod == 0 then
 		local typeList = {}
 		for i = 1, #fileList do
 			local fileFormat = ecs.getFileFormat(fileList[i]) or "Script"
@@ -1558,9 +1566,9 @@ function ecs.sortFiles(path, fileList, sortingMethod, showHiddenFiles)
 				table.insert(sortedFileList, typeList[fileFormat][i])
 			end
 		end
-	elseif sortingMethod == "name" then
+	elseif sortingMethod == "name" or sortingMethod == 1 then
 		sortedFileList = fileList
-	elseif sortingMethod == "date" then
+	elseif sortingMethod == "date" or sortingMethod == 2 then
 		for i = 1, #fileList do
 			fileList[i] = {fileList[i], fs.lastModified(path .. fileList[i])}
 		end
@@ -1569,7 +1577,7 @@ function ecs.sortFiles(path, fileList, sortingMethod, showHiddenFiles)
 			table.insert(sortedFileList, fileList[i][1])
 		end
 	else
-		error("Unknown sorting method")
+		error("Unknown sorting method: " .. tostring(sortingMethod))
 	end
 
 	local i = 1
@@ -1696,172 +1704,6 @@ function ecs.copy(from, to)
 			fs.copy(from, to .. "/(copy)" .. name)
 		end	
 	end
-end
-
-ecs.OSIconsWidth = 12
-ecs.OSIconsHeight = 6
-
---Вся необходимая информация для иконок
-local function OSIconsInit()
-	if not _G.image then _G.image = require("image") end
-	if not _G.buffer then _G.buffer = require("doubleBuffering") end
-	if not ecs.OSIcons then
-		--Константы для иконок
-		ecs.OSIcons = {}
-		ecs.pathToIcons = "MineOS/System/OS/Icons/"
-
-		--Иконки
-		ecs.OSIcons.folder = image.load(ecs.pathToIcons .. "Folder.pic")
-		ecs.OSIcons.script = image.load(ecs.pathToIcons .. "Script.pic")
-		ecs.OSIcons.text = image.load(ecs.pathToIcons .. "Text.pic")
-		ecs.OSIcons.config = image.load(ecs.pathToIcons .. "Config.pic")
-		ecs.OSIcons.lua = image.load(ecs.pathToIcons .. "Lua.pic")
-		ecs.OSIcons.image = image.load(ecs.pathToIcons .. "Image.pic")
-		ecs.OSIcons.imageJPG = image.load(ecs.pathToIcons .. "RawImage.pic")
-		ecs.OSIcons.pastebin = image.load(ecs.pathToIcons .. "Pastebin.pic")
-		ecs.OSIcons.fileNotExists = image.load(ecs.pathToIcons .. "FileNotExists.pic")
-		ecs.OSIcons.archive = image.load(ecs.pathToIcons .. "Archive.pic")
-		ecs.OSIcons.model3D = image.load(ecs.pathToIcons .. "3DModel.pic")
-	end
-end
-
---Отрисовка одной иконки
-function ecs.drawOSIcon(x, y, path, showFileFormat, nameColor)
-	--Инициализируем переменные иконок. Чисто для уменьшения расхода оперативки.
-	OSIconsInit()
-	--Получаем формат файла
-	local fileFormat = ecs.getFileFormat(path)
-	--Создаем пустую переменную для конкретной иконки, для ее типа
-	local icon
-	--Если данный файл является папкой, то
-	if fs.isDirectory(path) then
-		if fileFormat == ".app" then
-			icon = path .. "/Resources/Icon.pic"
-			--Если данной иконки еще нет в оперативке, то загрузить ее
-			if not ecs.OSIcons[icon] then
-				ecs.OSIcons[icon] = image.load(icon)
-			end
-		else
-			icon = "folder"
-		end
-	else
-		if fileFormat == ".lnk" then
-			local shortcutLink = ecs.readShortcut(path)
-			ecs.drawOSIcon(x, y, shortcutLink, showFileFormat, nameColor)
-			--Стрелочка
-			buffer.set(x + ecs.OSIconsWidth - 3, y + ecs.OSIconsHeight - 3, 0xFFFFFF, 0x000000, "<")
-			return 0
-		elseif fileFormat == ".cfg" or fileFormat == ".config" then
-			icon = "config"
-		elseif fileFormat == ".txt" or fileFormat == ".rtf" then
-			icon = "text"
-		elseif fileFormat == ".lua" then
-		 	icon = "lua"
-		elseif fileFormat == ".pic" or fileFormat == ".png" then
-		 	icon = "image"
-		elseif fileFormat == ".rawpic" then
-		 	icon = "imageJPG"
-		elseif fileFormat == ".paste" then
-			icon = "pastebin"
-		elseif fileFormat == ".pkg" then
-			icon = "archive"
-		elseif fileFormat == ".3dm" then
-			icon = "model3D"
-		elseif not fs.exists(path) then
-			icon = "fileNotExists"
-		else
-			icon = "script"
-		end
-	end
-
-	--Рисуем иконку
-	buffer.image(x + 2, y, ecs.OSIcons[icon])
-
-	--Делаем текст для иконки
-	local text = fs.name(path)
-	if not showFileFormat and fileFormat then
-		text = unicode.sub(text, 1, -(unicode.len(fileFormat) + 1))
-	end
-	text = ecs.stringLimit("end", text, ecs.OSIconsWidth)
-	--Рассчитываем позицию текста
-	local textPos = x + math.floor(ecs.OSIconsWidth / 2 - unicode.len(text) / 2)
-	--Рисуем текст под иконкой
-	buffer.text(textPos, y + ecs.OSIconsHeight - 1, nameColor or 0xffffff, text)
-
-end
-
---ЗАПУСТИТЬ ПРОГУ
-function ecs.launchIcon(path)
-	local withAnimation = false
-	local translate = true
-
-	local function safeLaunch(command, ...)
-		local success, reason = pcall(loadfile(command), ...)
-		--Ебал я автора мода в задницу, кусок ебанутого говна
-		--Какого хуя я должен вставлять кучу костылей в свой прекрасный код только потому, что эта ублюдочная
-		--Скотина захотела выдавать table из pcall? Что, блядь? Где это видано, сука?
-		--Почему тогда во всех случаях выдается string, а при os.exit выдается {reason = "terminated"}?
-		--Что за ебливая сучья логика? 
-		if not success and type(reason) ~= "table" then
-			ecs.displayCompileMessage(1, reason, translate, withAnimation)
-		end
-	end
-
-	--Запоминаем, какое разрешение было
-	local oldWidth, oldHeight = gpu.getResolution()
-	--Получаем файл формат заранее
-	local fileFormat = ecs.getFileFormat(path)
-	local isDirectory = fs.isDirectory(path)
-	--Если это приложение
-	if fileFormat == ".app" then
-		ecs.applicationHelp(path)
-		local cyka = path .. "/" .. ecs.hideFileFormat(fs.name(path)) .. ".lua"
-		safeLaunch(cyka)
-	
-	--Если это папка
-	elseif (fileFormat == "" or fileFormat == nil) and isDirectory then
-		safeLaunch("MineOS/Applications/Finder.app/Finder.lua " .. path)
-	
-	--Если это обычный луа файл - т.е. скрипт
-	elseif fileFormat == ".lua" or fileFormat == nil then
-		ecs.prepareToExit()
-		local success, reason = pcall(loadfile(path))
-		if success then
-			print(" ")
-			print("Program sucessfully executed. Press any key to continue.")
-			print(" ")
-		else
-			ecs.displayCompileMessage(1, reason, translate, withAnimation)
-		end
-	
-	--Если это фоточка
-	elseif fileFormat == ".pic" then
-		safeLaunch("MineOS/Applications/Viewer.app/Viewer.lua", "open", path)
-	
-	--Если это 3D-модель
-	elseif fileFormat == ".3dm" then
-		safeLaunch("MineOS/Applications/3DPrint.app/3DPrint.lua open " .. path)
-	
-	--Если это текст или конфиг или языковой
-	elseif fileFormat == ".txt" or fileFormat == ".cfg" or fileFormat == ".lang" then
-		ecs.prepareToExit()
-		safeLaunch("bin/edit.lua", path)
-
-	--Если это ярлык
-	elseif fileFormat == ".lnk" then
-		local shortcutLink = ecs.readShortcut(path)
-		if fs.exists(shortcutLink) then
-			ecs.launchIcon(shortcutLink)
-		else
-			ecs.error("File from shortcut link doesn't exists.")
-		end
-	
-	--Если это архив
-	elseif fileFormat == ".zip" then
-		zip.unarchive(path, (fs.path(path) or ""))
-	end
-	--Ставим старое разрешение
-	gpu.setResolution(oldWidth, oldHeight)
 end
 
 -- Анимация затухания экрана
