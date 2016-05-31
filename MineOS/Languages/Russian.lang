@@ -80,4 +80,14 @@
 	shortcutIsCorrupted = "Файл ярлыка поврежден или имеет неизвестный формат",
 
 	viewTab = "Вид",
+
+	fileDoesntExists = "Файл не существует",
+	fileSuccessfullySent = "Файл успешно отправлен",
+	sendFile = "Отправить файл",
+	pathToFile = "Путь к файлу",
+	sendMessage = "Сообщение",
+	messageText = "Текст сообщения",
+	gotMessageFrom = "Сообщение от ",
+	gotFileFrom = "Принят файл от ",
+	pathToSave = "Путь для сохранения",
 }

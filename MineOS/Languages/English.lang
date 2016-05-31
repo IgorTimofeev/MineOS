@@ -80,4 +80,14 @@
 	shortcutIsCorrupted = "Shortcut file is corrupted",
 
 	viewTab = "View",
+
+	fileDoesntExists = "File doesn't exists",
+	fileSuccessfullySent = "File has been successfully sent",
+	sendFile = "Send file",
+	pathToFile = "Path to file",
+	sendMessage = "Send message",
+	messageText = "Message text",
+	gotMessageFrom = "Got message from ",
+	gotFileFrom = "Got file from ",
+	pathToSave = "Path to save file",
 }

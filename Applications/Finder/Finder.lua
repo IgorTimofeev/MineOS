@@ -44,6 +44,7 @@ local colors = {
 	mainScrollBarPipe = 0x999999,
 }
 
+local pathToComputerIcon = "MineOS/System/OS/Icons/Computer.pic"
 local pathToConfig = "MineOS/System/Finder/Config.cfg"
 local lang = files.loadTableFromFile("MineOS/System/OS/Languages/" .. _G.OSSettings.language .. ".lang")
 
@@ -54,7 +55,10 @@ local oldPixelsOfFullScreen, isFullScreen
 local scrollSpeed = 2
 local searchBarText
 
+local currentNetworkAddress
+local port = 322
 local disks = {}
+local network = {}
 local sizes = {}
 local fileList = {}
 local config = {}
@@ -92,15 +96,20 @@ end
 
 --Создание дисков для лефтбара
 local function createDisks()
-	local HDDs = ecs.getHDDs()
 	disks = {}
+	local HDDs = ecs.getHDDs()
 	for proxy, path in fs.mounts() do
 		for i = 1, #HDDs do
 			if proxy.address == HDDs[i].address and path ~= "/" then
-				table.insert(disks, {path = fs.name(path), name = unicode.sub(path, 2, -1)})
+				table.insert(disks, {path = path, name = unicode.sub(path, 2, -1)})
 			end
 		end
 	end
+	-- for proxy, path in fs.mounts() do
+	-- 	if path ~= "/" then
+	-- 		table.insert(disks, {path = path, name = path})
+	-- 	end
+	-- end
 end
 
 --Получить файловый список
@@ -194,6 +203,7 @@ end
 
 local function drawLeftBar()
 	obj.leftBarItems = {}
+	obj.network = {}
 	buffer.setDrawLimit(sizes.xFinder, sizes.yMain, sizes.leftBarWidth, sizes.mainHeight + 1)
 	buffer.paste(1, 1, oldPixelsOfFullScreen)
 	buffer.square(sizes.xFinder, sizes.yMain, sizes.leftBarWidth, sizes.mainHeight + 1, colors.leftBar, 0x000000, " ", colors.leftBarTransparency)
@@ -208,18 +218,43 @@ local function drawLeftBar()
 		end
 		y = y + 1
 	end
+	--Сеть
+	if (function() local count = 0; for key in pairs(network) do count = count + 1 end; return count end)() > 0 then
+		buffer.text(x, y, colors.leftBarHeader, lang.network); y = y + 1
+		for address in pairs(network) do
+			buffer.text(sizes.xFinder + 2, y, colors.leftBarList, unicode.sub(address, 1, sizes.leftBarWidth - 4))
+			obj.network[address] = GUI.object(sizes.xFinder + 2, y, sizes.leftBarWidth, 1)
+			y = y + 1
+		end
+		y = y + 1
+	end
 	--Диски
 	buffer.text(x, y, colors.leftBarHeader, lang.disks); y = y + 1
 	for i = 1, #disks do
 		drawAndHiglightPath(y, disks[i])
+		y = y + 1
 	end
 
 	buffer.resetDrawLimit()
 end
 
-local function drawMain()
-	buffer.square(sizes.xMain, sizes.yMain, sizes.mainWidth, sizes.mainHeight, colors.main)
+local function clearMainZone()
+	buffer.square(sizes.xMain, sizes.yMain, sizes.mainWidth + 1, sizes.mainHeight + 1, colors.main)
+end
 
+local function drawNetwork()
+	local x, y = math.floor(sizes.xMain + sizes.mainWidth / 2 - 4), math.floor(sizes.yMain + sizes.mainHeight / 2 - 4)
+	local buttonWidth = 22
+
+	buffer.image(x, y, image.load(pathToComputerIcon)); y = y + 5
+	local text = ecs.stringLimit("end", currentNetworkAddress, sizes.mainWidth - 4)
+	buffer.text(math.floor(sizes.xMain + sizes.mainWidth / 2 - unicode.len(text) / 2), y, 0xAAAAAA, text); y = y + 2
+	x = math.floor(sizes.xMain + sizes.mainWidth / 2 - buttonWidth / 2)
+	obj.networkFile = GUI.button(x, y, buttonWidth, 1, 0xdddddd, 0x262626, 0x262626, 0xEEEEEE, lang.sendFile); y = y + 2
+	obj.networkMessage = GUI.button(x, y, buttonWidth, 1, 0xdddddd, 0x262626, 0x262626, 0xEEEEEE, lang.sendMessage); y = y + 2
+end
+
+local function drawFiles()
 	--Ебашим раб стол
 	buffer.setDrawLimit(sizes.xMain, sizes.yMain, sizes.mainWidth, sizes.mainHeight)
 	local differenceByPixels = sizes.yFileListStartPoint - sizes.yFileList
@@ -229,9 +264,13 @@ local function drawMain()
 	local finalTotalCountOfIcons = sizes.totalCountOfIcons + 2 * sizes.xCountOfIcons
 	obj.DesktopIcons = MineOSCore.drawIconField(sizes.xMain + 2, finalY, sizes.xCountOfIcons, sizes.yCountOfIcons, sizes.fromIcon, finalTotalCountOfIcons, sizes.xSpaceBetweenIcons, sizes.ySpaceBetweenIcons, workPathHistory[currentWorkPathHistoryElement], fileList, config.showFileFormat, 0x262626)
 	buffer.resetDrawLimit()
-
 	--Ебашим скроллбар
 	buffer.scrollBar(sizes.xFinderEnd, sizes.yMain, 1, sizes.mainHeight, #fileList, sizes.fromIcon, 0xCCCCCC, 0x666666)
+end
+
+local function drawMain(cyka)
+	clearMainZone()
+	if cyka then drawNetwork() else drawFiles() end
 end
 
 --Рисуем нижнюю полосочку с путем
@@ -272,6 +311,51 @@ local function fullRefresh()
 	drawAll(true)
 end
 
+local function openModem()
+	if component.isAvailable("modem") then component.modem.open(port) end
+end
+
+local function sendPersonalInfo()
+	if component.isAvailable("modem") then component.modem.broadcast(port, "addMeToList") end
+end
+
+local function sendMessageOrFileWindow(text1, text2)
+	return ecs.universalWindow("auto", "auto", 36, 0x262626, true,
+		{"EmptyLine"},
+		{"CenterText", ecs.colors.orange, text1},
+		{"EmptyLine"},
+		{"Input", 0xFFFFFF, ecs.colors.orange, text2},
+		{"EmptyLine"},
+		{"Button", {ecs.colors.orange, 0xffffff, "OK"}, {0x999999, 0xffffff, lang.cancel}}
+	)
+end
+
+local function sendFile(path, address)
+	--Отправляем сообщение о том, что мы собираемся отправить файл
+	component.modem.send(address, port, "FILESTARTED", fs.name(path))
+	local maxPacketSize = component.modem.maxPacketSize() - 32
+	local file = io.open(path, "rb")
+	local fileSize = fs.size(path)
+	local percent = 0
+	local sendedBytes = 0
+	local dataToSend
+
+	while true do
+		dataToSend = file:read(maxPacketSize)
+		if dataToSend then
+			component.modem.send(address, port, "FILESEND", dataToSend, percent)
+			sendedBytes = sendedBytes + maxPacketSize
+			percent = math.floor(sendedBytes / fileSize * 100)
+		else
+			break
+		end
+	end
+
+	file:close()
+	component.modem.send(address, port, "FILESENDEND")
+	GUI.error(lang.fileSuccessfullySent)
+end
+
 ----------------------------------------------------------------------------------------------------------------------------------
 
 local args = {...}
@@ -286,6 +370,8 @@ loadConfig()
 createDisks()
 changePath(args[1] == "open" and (args[2] or "") or "")
 drawAll()
+openModem()
+sendPersonalInfo()
 
 while true do
 	local eventData = {event.pull()}
@@ -293,7 +379,25 @@ while true do
 		local clickedAtEmptyArea = true
 
 		if clickedAtEmptyArea then
-			if obj.search:isClicked(eventData[3], eventData[4]) then
+			if obj.networkMessage and obj.networkMessage:isClicked(eventData[3], eventData[4]) then
+				obj.networkMessage:press(0.2)
+				local data = sendMessageOrFileWindow(lang.sendMessage, lang.messageText)
+				if data[2] == "OK" then
+					component.modem.send(currentNetworkAddress, port, "hereIsMessage", data[1])
+				end
+				clickedAtEmptyArea = false
+			elseif obj.networkFile and obj.networkFile:isClicked(eventData[3], eventData[4]) then
+				obj.networkFile:press(0.2)
+				local data = sendMessageOrFileWindow(lang.sendFile, lang.pathToFile)
+				if data[2] == "OK" then
+					if fs.exists(data[1]) then
+						sendFile(data[1], currentNetworkAddress)
+					else
+						GUI.error("Файл не существует")
+					end
+				end
+				clickedAtEmptyArea = false
+			elseif obj.search:isClicked(eventData[3], eventData[4]) then
 				searchBarText = ""
 				searchBarText = drawSearchBar(false)
 				if searchBarText == "" then searchBarText = nil end
@@ -329,6 +433,7 @@ while true do
 					saveConfig()
 					getListAndDrawAll()
 				end
+				clickedAtEmptyArea = false
 			end
 		end
 
@@ -344,6 +449,19 @@ while true do
 		end
 
 		if clickedAtEmptyArea then
+			for address, item in pairs(obj.network) do
+				if item:isClicked(eventData[3], eventData[4]) then
+					currentNetworkAddress = address
+					drawMain(true)
+					buffer.draw()
+					obj.DesktopIcons = nil
+					clickedAtEmptyArea = false
+					break
+				end
+			end
+		end
+
+		if clickedAtEmptyArea and obj.DesktopIcons then
 			for _, icon in pairs(obj.DesktopIcons) do
 				if icon:isClicked(eventData[3], eventData[4]) then
 					buffer.setDrawLimit(sizes.xMain, sizes.yMain, sizes.mainWidth, sizes.mainHeight)
@@ -355,7 +473,7 @@ while true do
 			end
 		end
 
-		if clickedAtEmptyArea and obj.mainZone:isClicked(eventData[3], eventData[4]) then
+		if clickedAtEmptyArea and obj.DesktopIcons and obj.mainZone:isClicked(eventData[3], eventData[4]) then
 			MineOSCore.emptyZoneClick(eventData, workPathHistory[currentWorkPathHistoryElement], {method = getListAndDrawAll, arguments = {}})
 		end
 	elseif eventData[1] == "scroll" then
@@ -370,6 +488,26 @@ while true do
 					sizes.yFileList = sizes.yFileList - scrollSpeed
 					drawMain(); buffer.draw()
 				end
+			end
+		end
+	elseif eventData[1] == "modem_message" then
+		local localAddress, remoteAddress, remotePort, distance, message1, message2 = eventData[2], eventData[3], eventData[4], eventData[5], eventData[6], eventData[7]
+		local truncatedRemoteAddress = unicode.sub(remoteAddress, 1, 5)
+		if remotePort == port then
+			if message1 == "addMeToList" and not network[remoteAddress] then
+				network[remoteAddress] = true
+				sendPersonalInfo()
+				drawAll()
+			elseif message1 == "hereIsMessage" then
+				GUI.error(message2, {title = {color = 0xFFDB40, text = lang.gotMessageFrom .. truncatedRemoteAddress}})
+			elseif message1 == "FILESTARTED" then
+				_G.finderFileReceiver = io.open("MineOS/System/Finder/tempFile.lua", "wb")
+			elseif message1 == "FILESEND" then
+				_G.finderFileReceiver:write(message2)
+			elseif message1 == "FILESENDEND" then
+				_G.finderFileReceiver:close()
+				local data = sendMessageOrFileWindow(lang.gotFileFrom .. truncatedRemoteAddress, lang.pathToSave)
+				if data[2] == "OK" and data[1] ~= "" then fs.rename("MineOS/System/Finder/tempFile.lua", data[1]); getListAndDrawAll() end
 			end
 		end
 	end
