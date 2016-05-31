@@ -175,7 +175,11 @@ local function drawTopBar()
 	drawCloses()
 	local x, y = sizes.xFinder + 2, sizes.yFinder + 1
 	obj.historyBack = GUI.button(x, y, 3, 1, 0xffffff, 0x262626, 0xAAAAAA, 0x000000, "<"); x = x + obj.historyBack.width + 1
+	obj.historyBack.colors.disabled.button, obj.historyBack.colors.disabled.text = 0xFFFFFF, 0xdddddd
+	if currentWorkPathHistoryElement == 1 then obj.historyBack.disabled = true; obj.historyBack:draw() end
 	obj.historyForward = GUI.button(x, y, 3, 1, 0xffffff, 0x262626, 0xAAAAAA, 0x000000, ">"); x = x + obj.historyForward.width + 2
+	obj.historyForward.colors.disabled.button, obj.historyForward.colors.disabled.text = 0xFFFFFF, 0xdddddd
+	if currentWorkPathHistoryElement == #workPathHistory then obj.historyForward.disabled = true; obj.historyForward:draw() end
 
 	local cyka = {
 		{objName = "sortingMethod", text = sortingMethods[config.currentSortingMethod], active = false},
@@ -396,6 +400,16 @@ while true do
 						GUI.error("Файл не существует")
 					end
 				end
+				clickedAtEmptyArea = false
+			elseif obj.historyBack:isClicked(eventData[3], eventData[4]) then
+				obj.historyBack:press(0.2)
+				currentWorkPathHistoryElement = currentWorkPathHistoryElement - 1
+				getListAndDrawAll()
+				clickedAtEmptyArea = false
+			elseif obj.historyForward:isClicked(eventData[3], eventData[4]) then
+				obj.historyForward:press(0.2)
+				currentWorkPathHistoryElement = currentWorkPathHistoryElement + 1
+				getListAndDrawAll()
 				clickedAtEmptyArea = false
 			elseif obj.search:isClicked(eventData[3], eventData[4]) then
 				searchBarText = ""
