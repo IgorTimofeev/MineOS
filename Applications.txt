@@ -252,6 +252,12 @@
   ----------------------------------------------------- Библиотеки --------------------------------------------------------------------------
 
   {
+    ["name"]="lib/MineOSCore.lua",
+    ["url"]="IgorTimofeev/OpenComputers/master/lib/MineOSCore.lua",
+    ["type"]="Library",
+    ["version"]=1.0,
+  },
+  {
     ["name"]="lib/GUI.lua",
     ["url"]="IgorTimofeev/OpenComputers/master/lib/GUI.lua",
     ["type"]="Library",
