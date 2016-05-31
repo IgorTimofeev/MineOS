@@ -426,7 +426,7 @@ while true do
 
 		for _, icon in pairs(obj.DesktopIcons) do
 			if icon:isClicked(eventData[3], eventData[4]) then
-				if MineOSCore.iconClick(icon, eventData, colors.selection, colors.iconsSelectionTransparency, 0xFFFFFF, 0.2, showFileFormat, {method = drawAll, arguments = {}}, {method = drawAll, arguments = {}}, {method = function() MineOSCore.safeLaunch("Finder.lua", "open", icon.path) end, arguments = {icon.path}}) then return end
+				if MineOSCore.iconClick(icon, eventData, colors.selection, colors.iconsSelectionTransparency, 0xFFFFFF, 0.2, showFileFormat, {method = drawAll, arguments = {}}, {method = drawAll, arguments = {true}}, {method = function() MineOSCore.safeLaunch("Finder.lua", "open", icon.path) end, arguments = {icon.path}}) then return end
 				clickedAtEmptyArea = false
 				break
 			end
