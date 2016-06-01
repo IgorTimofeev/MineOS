@@ -147,6 +147,8 @@ local constants = {
   bigNumberColor = 0x262626,
 }
 
+local xMax, yMax = gpu.maxResolution()
+
 --Объекты для тача
 local obj = {}
 local function newObj(class, name, ...)
@@ -321,7 +323,7 @@ end
 
 local function drawAll()
   --Очищаем экран
-  ecs.prepareToExit(constants.backgroundColor)
+  ecs.square(1, 1, xMax, yMax, constants.backgroundColor)
   --Рисуем календарик
   drawCalendar(2, 2, constants.programYear)
   --Рисуем парашу
@@ -330,8 +332,6 @@ end
 
 --------------------------------------------------------------------------------------------------------------------
 
---Проверяем соответствие системным требованиям
-local xMax, yMax = gpu.maxResolution()
 if xMax < 150 then error("This program requires Tier 3 GPU and Tier 3 Screen.") end
 --Запоминаем старое разрешение экрана
 local xOld, yOld = gpu.getResolution()
