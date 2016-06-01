@@ -53,6 +53,7 @@ local wallpaper
 local currentCountOfIconsInDock
 local controlDown = false
 local fileList
+local paintArray
 
 local obj = {}
 
@@ -66,6 +67,7 @@ local colors = {
 	iconsSelectionTransparency = 20,
 	desktopCounter = 0x999999,
 	desktopCounterActive = 0xFFFFFF,
+	desktopPainting = 0xFFDB40
 }
 
 local sizes = {
@@ -404,6 +406,19 @@ local function changeResolution()
 	calculateSizes()
 end
 
+local function paint(x, y)
+	table.insert(paintArray, x)
+	table.insert(paintArray, y)
+		
+	for i = 1, #paintArray, 2 do
+		buffer.square(paintArray[i], paintArray[i + 1], 2, 2, 0x000000)
+	end
+
+	for i = 1, #paintArray, 2 do
+		buffer.square(paintArray[i], paintArray[i + 1], 1, 1, _G.OSSettings.desktopPaintingColor or colors.desktopPainting)
+	end
+end
+
 ---------------------------------------------- Сама ОС ------------------------------------------------------------------------
 
 buffer.start()
@@ -419,195 +434,209 @@ while true do
 	local eventData = { event.pull() }
 	local clickedAtEmptyArea = true
 	-- Рисовалочка
-	if eventData[1] == "touch" or eventData[1] == "drag" then if controlDown then buffer.set(eventData[3], eventData[4], 0xFF8888, 0x000000, " "); buffer.draw(); clickedAtEmptyArea = false end end
+	if (eventData[1] == "touch" or eventData[1] == "drag") and controlDown then
+		paint(eventData[3], eventData[4])
+		buffer.draw()
+		clickedAtEmptyArea = false
+	end
 
 	if eventData[1] == "touch" then
-		for _, icon in pairs(obj.DesktopIcons) do
-			if icon:isClicked(eventData[3], eventData[4]) then
-				if MineOSCore.iconClick(icon, eventData, colors.selection, colors.iconsSelectionTransparency, 0xFFFFFF, 0.2, showFileFormat, {method = getFileListAndDrawAll, arguments = {}}, {method = getFileListAndDrawAll, arguments = {true}}, {method = function() MineOSCore.safeLaunch("Finder.lua", "open", icon.path) end, arguments = {icon.path}}) then return end
-				clickedAtEmptyArea = false
-				break
+		if clickedAtEmptyArea then
+			for _, icon in pairs(obj.DesktopIcons) do
+				if icon:isClicked(eventData[3], eventData[4]) then
+					if MineOSCore.iconClick(icon, eventData, colors.selection, colors.iconsSelectionTransparency, 0xFFFFFF, 0.2, showFileFormat, {method = getFileListAndDrawAll, arguments = {}}, {method = getFileListAndDrawAll, arguments = {true}}, {method = function() MineOSCore.safeLaunch("Finder.lua", "open", icon.path) end, arguments = {icon.path}}) then return end
+					clickedAtEmptyArea = false
+					break
+				end
 			end
 		end
 
-		for _, icon in pairs(obj.DockIcons) do
-			if icon:isClicked(eventData[3], eventData[4]) then
-				local oldPixelsOfIcon = buffer.copy(icon.x, icon.y, sizes.widthOfIcon, sizes.heightOfIcon)
+		if clickedAtEmptyArea then
+			for _, icon in pairs(obj.DockIcons) do
+				if icon:isClicked(eventData[3], eventData[4]) then
+					local oldPixelsOfIcon = buffer.copy(icon.x, icon.y, sizes.widthOfIcon, sizes.heightOfIcon)
 
-				buffer.square(icon.x, icon.y, sizes.widthOfIcon, sizes.heightOfIcon, colors.selection, 0xFFFFFF, " ", colors.iconsSelectionTransparency)
-				MineOSCore.drawIcon(icon.x, icon.y, pathOfDockShortcuts .. icon.path, false, 0xffffff)
-				buffer.draw()
+					buffer.square(icon.x, icon.y, sizes.widthOfIcon, sizes.heightOfIcon, colors.selection, 0xFFFFFF, " ", colors.iconsSelectionTransparency)
+					MineOSCore.drawIcon(icon.x, icon.y, pathOfDockShortcuts .. icon.path, false, 0xffffff)
+					buffer.draw()
 
-				if eventData[5] == 0 then
-					os.sleep(0.2)
-					MineOSCore.launchIcon(pathOfDockShortcuts .. icon.path)
-					drawAll(true)
-				else
-					local content = ecs.readShortcut(pathOfDockShortcuts .. icon.path)
-					action = context.menu(eventData[3], eventData[4], {MineOSCore.localization.contextMenuRemoveFromDock, not (currentCountOfIconsInDock > 1)})
-
-					if action == MineOSCore.localization.contextMenuRemoveFromDock then
-						fs.remove(pathOfDockShortcuts .. icon.path)
-						drawAll()
+					if eventData[5] == 0 then
+						os.sleep(0.2)
+						MineOSCore.launchIcon(pathOfDockShortcuts .. icon.path)
+						drawAll(true)
 					else
-						buffer.paste(icon.x, icon.y, oldPixelsOfIcon)
-						buffer.draw()
-						oldPixelsOfIcon = nil
-					end
-				end
+						local content = ecs.readShortcut(pathOfDockShortcuts .. icon.path)
+						action = context.menu(eventData[3], eventData[4], {MineOSCore.localization.contextMenuRemoveFromDock, not (currentCountOfIconsInDock > 1)})
 
-				clickedAtEmptyArea = false
-				break
-			end
-		end
-
-		for desktop, counter in pairs(obj.DesktopCounters) do
-			if counter:isClicked(eventData[3], eventData[4]) then
-				currentDesktop = desktop
-				clickedAtEmptyArea = false
-				drawAll()
-				break
-			end
-		end
-
-		for _, button in pairs(obj.TopBarButtons) do
-			if button:isClicked(eventData[3], eventData[4]) then
-				button:draw(true)
-				buffer.draw()
-
-				if button.text == "MineOS" then
-					local action = context.menu(button.x, button.y + 1, {MineOSCore.localization.aboutSystem}, {MineOSCore.localization.updates}, "-", {MineOSCore.localization.logout, _G.OSSettings.protectionMethod == "withoutProtection"}, {MineOSCore.localization.reboot}, {MineOSCore.localization.shutdown}, "-", {MineOSCore.localization.returnToShell})
-
-					if action == MineOSCore.localization.returnToShell then
-						ecs.prepareToExit()
-						return 0
-					elseif action == MineOSCore.localization.logout then
-						drawAll()
-						login()
-					elseif action == MineOSCore.localization.shutdown then
-						ecs.TV(0)
-						shell.execute("shutdown")
-					elseif action == MineOSCore.localization.reboot then
-						ecs.TV(0)
-						shell.execute("reboot")
-					elseif action == MineOSCore.localization.updates then
-						ecs.prepareToExit()
-						shell.execute("pastebin run 0nm5b1ju")
-						return 0
-					elseif action == MineOSCore.localization.aboutSystem then
-						ecs.prepareToExit()
-						print(copyright)
-						print("А теперь жмякай любую кнопку и продолжай работу с ОС.")
-						ecs.waitForTouchOrClick()
-						drawAll(true)
-					end
-
-				elseif button.text == MineOSCore.localization.viewTab then
-					local action = context.menu(button.x, button.y + 1,
-						{MineOSCore.localization.showFileFormat, showFileFormat},
-						{MineOSCore.localization.hideFileFormat, not showFileFormat},
-						"-",
-						{MineOSCore.localization.showHiddenFiles, showHiddenFiles},
-						{MineOSCore.localization.hideHiddenFiles, not showHiddenFiles},
-						"-",
-						{MineOSCore.localization.sortByName},
-						{MineOSCore.localization.sortByDate},
-						{MineOSCore.localization.sortByType},
-						"-",
-						{MineOSCore.localization.contextMenuRemoveWallpaper, not wallpaper}
-					)
-
-					if action == MineOSCore.localization.showHiddenFiles then
-						showHiddenFiles = true
-						drawAll()
-					elseif action == MineOSCore.localization.hideHiddenFiles then
-						showHiddenFiles = false
-						drawAll()
-					elseif action == MineOSCore.localization.showFileFormat then
-						showFileFormat = true
-						drawAll()
-					elseif action == MineOSCore.localization.hideFileFormat then
-						showFileFormat = false
-						drawAll()
-					elseif action == MineOSCore.localization.sortByName then
-						sortingMethod = "name"
-						drawAll()
-					elseif action == MineOSCore.localization.sortByDate then
-						sortingMethod = "date"
-						drawAll()
-					elseif action == MineOSCore.localization.sortByType then
-						sortingMethod = "type"
-						drawAll()
-					elseif action == MineOSCore.localization.contextMenuRemoveWallpaper then
-						wallpaper = nil
-						fs.remove(pathToWallpaper)
-						drawAll(true)
-					end
-				elseif button.text == MineOSCore.localization.settings then
-					local action = context.menu(button.x, button.y + 1,
-						{MineOSCore.localization.screenResolution},
-						"-",
-						{MineOSCore.localization.changePassword, _G.OSSettings.protectionMethod ~= "password"},
-						{MineOSCore.localization.setProtectionMethod},
-						"-",
-						{MineOSCore.localization.colorScheme}
-					)
-
-					if action == MineOSCore.localization.screenResolution then
-						local possibleResolutions = {texts = {}, scales = {}}
-						local xSize, ySize = ecs.getScaledResolution(1)
-						local currentScale, decreaseStep = 1, 0.1
-						for i = 1, 5 do
-							local width, height = math.floor(xSize * currentScale), math.floor(ySize * currentScale)
-							local text = width .. "x" .. height
-							possibleResolutions.texts[i] = text
-							possibleResolutions.scales[text] = currentScale
-							currentScale = currentScale - decreaseStep
-						end
-
-						local data = ecs.universalWindow("auto", "auto", 36, 0xeeeeee, true,
-							{"EmptyLine"},
-							{"CenterText", 0x000000, MineOSCore.localization.screenResolution},
-							{"EmptyLine"},
-							{"Selector", 0x262626, 0x880000, table.unpack(possibleResolutions.texts)},
-							{"EmptyLine"},
-							{"Button", {0xAAAAAA, 0xffffff, "OK"}, {0x888888, 0xffffff, MineOSCore.localization.cancel}}
-						)
-
-						if data[2] == "OK" then
-							_G.OSSettings.screenScale = possibleResolutions.scales[data[1]]
-							changeResolution()
-							ecs.saveOSSettings()
+						if action == MineOSCore.localization.contextMenuRemoveFromDock then
+							fs.remove(pathOfDockShortcuts .. icon.path)
 							drawAll()
-						end
-					elseif action == MineOSCore.localization.changePassword then
-						changePassword()
-					elseif action == MineOSCore.localization.setProtectionMethod then
-						setProtectionMethod()
-					elseif action == MineOSCore.localization.colorScheme then
-						local data = ecs.universalWindow("auto", "auto", 36, 0xeeeeee, true,
-							{"EmptyLine"},
-							{"CenterText", 0x000000, MineOSCore.localization.colorScheme},
-							{"EmptyLine"},
-							{"Color", MineOSCore.localization.backgroundColor, _G.OSSettings.backgroundColor or colors.background},
-							{"Color", MineOSCore.localization.interfaceColor, _G.OSSettings.interfaceColor or colors.interface},
-							{"Color", MineOSCore.localization.selectionColor, _G.OSSettings.selectionColor or colors.selection},
-							{"EmptyLine"},
-							{"Button", {0xAAAAAA, 0xffffff, "OK"}, {0x888888, 0xffffff, MineOSCore.localization.cancel}}
-						)
-
-						if data[4] == "OK" then
-							_G.OSSettings.backgroundColor = data[1]
-							_G.OSSettings.interfaceColor = data[2]
-							_G.OSSettings.selectionColor = data[3]
-							ecs.saveOSSettings()
+						else
+							buffer.paste(icon.x, icon.y, oldPixelsOfIcon)
+							buffer.draw()
+							oldPixelsOfIcon = nil
 						end
 					end
-				end
 
-				drawAll()
-				clickedAtEmptyArea = false
-				break
+					clickedAtEmptyArea = false
+					break
+				end
+			end
+		end
+
+		if clickedAtEmptyArea then
+			for desktop, counter in pairs(obj.DesktopCounters) do
+				if counter:isClicked(eventData[3], eventData[4]) then
+					currentDesktop = desktop
+					drawAll()
+					clickedAtEmptyArea = false
+					break
+				end
+			end
+		end
+
+		if clickedAtEmptyArea then
+			for _, button in pairs(obj.TopBarButtons) do
+				if button:isClicked(eventData[3], eventData[4]) then
+					button:draw(true)
+					buffer.draw()
+
+					if button.text == "MineOS" then
+						local action = context.menu(button.x, button.y + 1, {MineOSCore.localization.aboutSystem}, {MineOSCore.localization.updates}, "-", {MineOSCore.localization.logout, _G.OSSettings.protectionMethod == "withoutProtection"}, {MineOSCore.localization.reboot}, {MineOSCore.localization.shutdown}, "-", {MineOSCore.localization.returnToShell})
+
+						if action == MineOSCore.localization.returnToShell then
+							ecs.prepareToExit()
+							return 0
+						elseif action == MineOSCore.localization.logout then
+							drawAll()
+							login()
+						elseif action == MineOSCore.localization.shutdown then
+							ecs.TV(0)
+							shell.execute("shutdown")
+						elseif action == MineOSCore.localization.reboot then
+							ecs.TV(0)
+							shell.execute("reboot")
+						elseif action == MineOSCore.localization.updates then
+							ecs.prepareToExit()
+							shell.execute("pastebin run 0nm5b1ju")
+							return 0
+						elseif action == MineOSCore.localization.aboutSystem then
+							ecs.prepareToExit()
+							print(copyright)
+							print("А теперь жмякай любую кнопку и продолжай работу с ОС.")
+							ecs.waitForTouchOrClick()
+							drawAll(true)
+						end
+
+					elseif button.text == MineOSCore.localization.viewTab then
+						local action = context.menu(button.x, button.y + 1,
+							{MineOSCore.localization.showFileFormat, showFileFormat},
+							{MineOSCore.localization.hideFileFormat, not showFileFormat},
+							"-",
+							{MineOSCore.localization.showHiddenFiles, showHiddenFiles},
+							{MineOSCore.localization.hideHiddenFiles, not showHiddenFiles},
+							"-",
+							{MineOSCore.localization.sortByName},
+							{MineOSCore.localization.sortByDate},
+							{MineOSCore.localization.sortByType},
+							"-",
+							{MineOSCore.localization.contextMenuRemoveWallpaper, not wallpaper}
+						)
+
+						if action == MineOSCore.localization.showHiddenFiles then
+							showHiddenFiles = true
+							drawAll()
+						elseif action == MineOSCore.localization.hideHiddenFiles then
+							showHiddenFiles = false
+							drawAll()
+						elseif action == MineOSCore.localization.showFileFormat then
+							showFileFormat = true
+							drawAll()
+						elseif action == MineOSCore.localization.hideFileFormat then
+							showFileFormat = false
+							drawAll()
+						elseif action == MineOSCore.localization.sortByName then
+							sortingMethod = "name"
+							drawAll()
+						elseif action == MineOSCore.localization.sortByDate then
+							sortingMethod = "date"
+							drawAll()
+						elseif action == MineOSCore.localization.sortByType then
+							sortingMethod = "type"
+							drawAll()
+						elseif action == MineOSCore.localization.contextMenuRemoveWallpaper then
+							wallpaper = nil
+							fs.remove(pathToWallpaper)
+							drawAll(true)
+						end
+					elseif button.text == MineOSCore.localization.settings then
+						local action = context.menu(button.x, button.y + 1,
+							{MineOSCore.localization.screenResolution},
+							"-",
+							{MineOSCore.localization.changePassword, _G.OSSettings.protectionMethod ~= "password"},
+							{MineOSCore.localization.setProtectionMethod},
+							"-",
+							{MineOSCore.localization.colorScheme}
+						)
+
+						if action == MineOSCore.localization.screenResolution then
+							local possibleResolutions = {texts = {}, scales = {}}
+							local xSize, ySize = ecs.getScaledResolution(1)
+							local currentScale, decreaseStep = 1, 0.1
+							for i = 1, 5 do
+								local width, height = math.floor(xSize * currentScale), math.floor(ySize * currentScale)
+								local text = width .. "x" .. height
+								possibleResolutions.texts[i] = text
+								possibleResolutions.scales[text] = currentScale
+								currentScale = currentScale - decreaseStep
+							end
+
+							local data = ecs.universalWindow("auto", "auto", 36, 0xeeeeee, true,
+								{"EmptyLine"},
+								{"CenterText", 0x000000, MineOSCore.localization.screenResolution},
+								{"EmptyLine"},
+								{"Selector", 0x262626, 0x880000, table.unpack(possibleResolutions.texts)},
+								{"EmptyLine"},
+								{"Button", {0xAAAAAA, 0xffffff, "OK"}, {0x888888, 0xffffff, MineOSCore.localization.cancel}}
+							)
+
+							if data[2] == "OK" then
+								_G.OSSettings.screenScale = possibleResolutions.scales[data[1]]
+								changeResolution()
+								ecs.saveOSSettings()
+								drawAll()
+							end
+						elseif action == MineOSCore.localization.changePassword then
+							changePassword()
+						elseif action == MineOSCore.localization.setProtectionMethod then
+							setProtectionMethod()
+						elseif action == MineOSCore.localization.colorScheme then
+							local data = ecs.universalWindow("auto", "auto", 36, 0xeeeeee, true,
+								{"EmptyLine"},
+								{"CenterText", 0x000000, MineOSCore.localization.colorScheme},
+								{"EmptyLine"},
+								{"Color", MineOSCore.localization.backgroundColor, _G.OSSettings.backgroundColor or colors.background},
+								{"Color", MineOSCore.localization.interfaceColor, _G.OSSettings.interfaceColor or colors.interface},
+								{"Color", MineOSCore.localization.selectionColor, _G.OSSettings.selectionColor or colors.selection},
+								{"Color", MineOSCore.localization.desktopPaintingColor, _G.OSSettings.desktopPaintingColor or colors.desktopPainting},
+								{"EmptyLine"},
+								{"Button", {0xAAAAAA, 0xffffff, "OK"}, {0x888888, 0xffffff, MineOSCore.localization.cancel}}
+							)
+
+							if data[5] == "OK" then
+								_G.OSSettings.backgroundColor = data[1]
+								_G.OSSettings.interfaceColor = data[2]
+								_G.OSSettings.selectionColor = data[3]
+								_G.OSSettings.desktopPaintingColor = data[4]
+								ecs.saveOSSettings()
+							end
+						end
+					end
+
+					drawAll()
+					clickedAtEmptyArea = false
+					break
+				end
 			end
 		end
 
@@ -630,13 +659,14 @@ while true do
 			end
 		end
 	elseif eventData[1] == "key_down" then
-		-- CTRL
 		if eventData[4] == 29 then
+			paintArray = {}
 			controlDown = true
 		end
 	elseif eventData[1] == "key_up" then
 		if eventData[4] == 29 then
 			controlDown = false
+			paintArray = nil
 			drawAll()
 		end
 	end
