@@ -67,7 +67,7 @@ local colors = {
 	iconsSelectionTransparency = 20,
 	desktopCounter = 0x999999,
 	desktopCounterActive = 0xFFFFFF,
-	desktopPainting = 0xFFDB40
+	desktopPainting = 0xEEEEEE,
 }
 
 local sizes = {
