@@ -187,7 +187,8 @@ do
   runlevel = 1
 
   -- Выставляем адекватный масштаб монитора
-  component.gpu.setBackground(background)
+  ecs.fadeOut(background, 0x1b1b1b, 0.05)
+  -- component.gpu.setBackground(background)
   component.gpu.fill(1, 1, 160, 50, " ")
   ecs.setScale(1)
 end
