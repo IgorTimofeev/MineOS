@@ -9,7 +9,9 @@ if not component.isAvailable("gpu") then
 	return
 end
 
-ecs.prepareToExit()
+local xSize, ySize = gpu.getResolution()
+local oldBackground = gpu.getBackground()
+local oldForeground = gpu.getForeground()
 
 local gpu = component.gpu
 
@@ -35,9 +37,6 @@ local borders = {{unicode.char(0x2552), unicode.char(0x2550), unicode.char(0x255
 								 {unicode.char(0x2502), nil, unicode.char(0x2502)},
 								 {unicode.char(0x2514), unicode.char(0x2500), unicode.char(0x2518)}}
 
-local xSize, ySize = gpu.getResolution()
-local oldBackground = gpu.getBackground()
-local oldForeground = gpu.getForeground()
 
 gpu.setBackground(0xcccccc)
 gpu.fill(1, 1, xSize, #lines + 2, " ")

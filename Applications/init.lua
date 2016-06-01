@@ -1,3 +1,5 @@
+local background, foreground, logoColor = 0xCCCCCC, 0x666666, 0x262626
+
 do
   _G._OSVERSION = "OpenOS 1.6"
 
@@ -42,28 +44,33 @@ do
     component.invoke(gpu, "bind", screen)
     w, h = component.invoke(gpu, "maxResolution")
     component.invoke(gpu, "setResolution", w, h)
-    component.invoke(gpu, "setBackground", 0x000000)
-    component.invoke(gpu, "setForeground", 0xFFFFFF)
+    component.invoke(gpu, "setBackground", background)
+    component.invoke(gpu, "setForeground", foreground)
     component.invoke(gpu, "fill", 1, 1, w, h, " ")
   end
-  local y = 1
-  local function status(msg)
+
+  local function centerText(y, text, color)
     if gpu and screen then
-      component.invoke(gpu, "set", 1, y, msg)
-      if y == h then
-        component.invoke(gpu, "copy", 1, 2, w, h - 1, 0, -1)
-        component.invoke(gpu, "fill", 1, h, w, 1, " ")
-      else
-        y = y + 1
-      end
+      local msgWidth = unicode.len(text)
+      local x = math.floor(w / 2 - msgWidth / 2)
+      component.invoke(gpu, "fill", 1, y, w, 1, " ")
+      component.invoke(gpu, "setForeground", color)
+      component.invoke(gpu, "set", x, y, text)
     end
+  end
+
+  local y = math.floor(h / 2)
+
+  local function status(text)
+    centerText(y - 2, "MineOS", logoColor)
+    centerText(y, text, foreground)
   end
 
   status("Booting " .. _OSVERSION .. "...")
 
   -- Custom low-level loadfile/dofile implementation reading from our ROM.
   local function loadfile(file)
-    status("> " .. file)
+    status("Loading " .. file)
     local handle, reason = rom.open(file)
     if not handle then
       error(reason)
@@ -94,7 +101,7 @@ do
     end
   end
 
-  status("Initializing package management...")
+  status("Initializing package management")
 
   -- Load file system related libraries we need to load other stuff moree
   -- comfortably. This is basically wrapper stuff for the file streams
@@ -126,14 +133,14 @@ do
     -- package.delayed["term"] = true
   end
 
-  status("Initializing file system...")
+  status("Initializing file system")
 
   -- Mount the ROM and temporary file systems to allow working on the file
   -- system module from this point on.
   require("filesystem").mount(computer.getBootAddress(), "/")
   package.preload={}
 
-  status("Running boot scripts...")
+  status("Running boot scripts")
 
   -- Run library startup scripts. These mostly initialize event handlers.
   local scripts = {}
@@ -148,7 +155,7 @@ do
     dofile(scripts[i])
   end
 
-  status("Initializing components...")
+  status("Initializing components")
 
   local primaries = {}
   for c, t in component.list() do
@@ -180,6 +187,8 @@ do
   runlevel = 1
 
   -- Выставляем адекватный масштаб монитора
+  component.gpu.setBackground(background)
+  component.gpu.fill(1, 1, 160, 50, " ")
   ecs.setScale(1)
 end
 
