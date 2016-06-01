@@ -330,7 +330,7 @@ function GUI.input(x, y, width, foreground, startText, textFieldProperties)
 			buffer.set(cursorPosition, y, bg, cursorColor, cursorSymbol)
 		end
 
-		buffer.draw()
+		if not (textFieldProperties and textFieldProperties.justDrawNotEvent) then buffer.draw() end
 	end
 
 	local function backspace()

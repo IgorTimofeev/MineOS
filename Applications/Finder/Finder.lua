@@ -135,13 +135,13 @@ local function changePath(path)
 end
 
 --Считаем размеры всего
-local function calculateSizes()
+local function calculateSizes(notPersistentXFinder, notPersistentYFinder)
 	sizes.xSpaceBetweenIcons, sizes.ySpaceBetweenIcons = 2, 1
 	sizes.finderWidth, sizes.finderHeight = math.floor(buffer.screen.width * 0.585), math.floor(buffer.screen.height * 0.52)
 	sizes.leftBarWidth = math.floor(sizes.finderWidth * 0.22)
 	sizes.topBarHeight = 3
 	sizes.mainWidth, sizes.mainHeight = sizes.finderWidth - sizes.leftBarWidth - 1, sizes.finderHeight - sizes.topBarHeight - 1
-	sizes.xFinder, sizes.yFinder = math.floor(buffer.screen.width / 2 - sizes.finderWidth / 2), math.floor(buffer.screen.height / 2 - sizes.finderHeight / 2)
+	sizes.xFinder, sizes.yFinder = notPersistentXFinder or math.floor(buffer.screen.width / 2 - sizes.finderWidth / 2), notPersistentYFinder or math.floor(buffer.screen.height / 2 - sizes.finderHeight / 2)
 	sizes.xFinderEnd, sizes.yFinderEnd = sizes.xFinder + sizes.finderWidth - 1, sizes.yFinder + sizes.finderHeight - 1
 	sizes.xMain, sizes.yMain = sizes.xFinder + sizes.leftBarWidth, sizes.yFinder + sizes.topBarHeight
 	sizes.xCountOfIcons, sizes.yCountOfIcons, sizes.totalCountOfIcons = MineOSCore.getParametersForDrawingIcons(sizes.mainWidth - 4, sizes.mainHeight, sizes.xSpaceBetweenIcons, sizes.ySpaceBetweenIcons)
@@ -151,6 +151,7 @@ local function calculateSizes()
 	sizes.searchBarWidth = math.floor(sizes.finderWidth * 0.21)
 	sizes.xSearchBar = sizes.xFinderEnd - sizes.searchBarWidth - 1
 	obj.mainZone = GUI.object(sizes.xMain, sizes.yMain, sizes.mainWidth, sizes.mainHeight)
+	obj.topBarZone = GUI.object(sizes.xFinder, sizes.yFinder, sizes.finderWidth, sizes.topBarHeight)
 end
 
 --Рисем цветные кружочки слева вверху
@@ -304,7 +305,6 @@ local function drawAll(force)
 end
 
 local function getListAndDrawAll()
-	-- ecs.error("ДА ЕБАНА")
 	getFileList()
 	drawAll()
 end
@@ -377,10 +377,68 @@ drawAll()
 openModem()
 sendPersonalInfo()
 
+local xDrag, yDrag
 while true do
 	local eventData = {event.pull()}
-	if eventData[1] == "touch" then
+	if eventData[1] == "drag" then
+		local xMove, yMove = eventData[3] - xDrag, eventData[4] - yDrag
+		xDrag, yDrag = eventData[3], eventData[4]
+		local xFinder, yFinder = sizes.xFinder + xMove, sizes.yFinder + yMove
+		if xFinder >= 1 and yFinder >= 1 and xFinder + sizes.finderWidth - 1 <= buffer.screen.width and yFinder + sizes.finderHeight - 1 <= buffer.screen.height then
+			calculateSizes(xFinder, yFinder)
+			buffer.paste(1, 1, oldPixelsOfFullScreen)
+			drawAll()
+		end
+	elseif eventData[1] == "touch" then
 		local clickedAtEmptyArea = true
+
+		if clickedAtEmptyArea and obj.topBarZone:isClicked(eventData[3], eventData[4]) then
+			if obj.historyBack:isClicked(eventData[3], eventData[4]) then
+				obj.historyBack:press(0.2)
+				currentWorkPathHistoryElement = currentWorkPathHistoryElement - 1
+				getListAndDrawAll()
+			elseif obj.historyForward:isClicked(eventData[3], eventData[4]) then
+				obj.historyForward:press(0.2)
+				currentWorkPathHistoryElement = currentWorkPathHistoryElement + 1
+				getListAndDrawAll()
+			elseif obj.search:isClicked(eventData[3], eventData[4]) then
+				searchBarText = ""
+				searchBarText = drawSearchBar(false)
+				if searchBarText == "" then searchBarText = nil end
+				sizes.yFileList = sizes.yFileListStartPoint
+				getListAndDrawAll()
+			elseif obj.close:isClicked(eventData[3], eventData[4]) then
+				obj.close:press(0.2)
+				return
+			elseif obj.showFormat:isClicked(eventData[3], eventData[4]) then
+				config.showFileFormat = not config.showFileFormat
+				saveConfig()
+				getListAndDrawAll()
+			elseif obj.showHidden:isClicked(eventData[3], eventData[4]) then
+				config.showHiddenFiles = not config.showHiddenFiles
+				saveConfig()
+				getListAndDrawAll()
+			elseif obj.sortingMethod:isClicked(eventData[3], eventData[4]) then
+				obj.sortingMethod:press(0.2)
+				local data = ecs.universalWindow("auto", "auto", 36, 0x262626, true,
+					{"EmptyLine"},
+					{"CenterText", ecs.colors.orange, lang.sortingMethod},
+					{"EmptyLine"},
+					{"Selector", 0xFFFFFF, ecs.colors.orange, lang.sortByTypeShort, lang.sortByNameShort, lang.sortByDateShort},
+					{"EmptyLine"},
+					{"Button", {ecs.colors.orange, 0xffffff, "OK"}, {0x999999, 0xffffff, lang.cancel}}
+				)
+				if data[2] == "OK" then
+					config.currentSortingMethod = sortingMethods[data[1]]
+					saveConfig()
+					getListAndDrawAll()
+				end
+			else
+				xDrag, yDrag = eventData[3], eventData[4]
+			end
+
+			clickedAtEmptyArea = false
+		end
 
 		if clickedAtEmptyArea then
 			if obj.networkMessage and obj.networkMessage:isClicked(eventData[3], eventData[4]) then
@@ -399,53 +457,6 @@ while true do
 					else
 						GUI.error("Файл не существует")
 					end
-				end
-				clickedAtEmptyArea = false
-			elseif obj.historyBack:isClicked(eventData[3], eventData[4]) then
-				obj.historyBack:press(0.2)
-				currentWorkPathHistoryElement = currentWorkPathHistoryElement - 1
-				getListAndDrawAll()
-				clickedAtEmptyArea = false
-			elseif obj.historyForward:isClicked(eventData[3], eventData[4]) then
-				obj.historyForward:press(0.2)
-				currentWorkPathHistoryElement = currentWorkPathHistoryElement + 1
-				getListAndDrawAll()
-				clickedAtEmptyArea = false
-			elseif obj.search:isClicked(eventData[3], eventData[4]) then
-				searchBarText = ""
-				searchBarText = drawSearchBar(false)
-				if searchBarText == "" then searchBarText = nil end
-				sizes.yFileList = sizes.yFileListStartPoint
-				getListAndDrawAll()
-				clickedAtEmptyArea = false
-			elseif obj.close:isClicked(eventData[3], eventData[4]) then
-				obj.close:press(0.2)
-				clickedAtEmptyArea = false
-				return
-			elseif obj.showFormat:isClicked(eventData[3], eventData[4]) then
-				config.showFileFormat = not config.showFileFormat
-				saveConfig()
-				getListAndDrawAll()
-				clickedAtEmptyArea = false
-			elseif obj.showHidden:isClicked(eventData[3], eventData[4]) then
-				config.showHiddenFiles = not config.showHiddenFiles
-				saveConfig()
-				getListAndDrawAll()
-				clickedAtEmptyArea = false
-			elseif obj.sortingMethod:isClicked(eventData[3], eventData[4]) then
-				obj.sortingMethod:press(0.2)
-				local data = ecs.universalWindow("auto", "auto", 36, 0x262626, true,
-					{"EmptyLine"},
-					{"CenterText", ecs.colors.orange, lang.sortingMethod},
-					{"EmptyLine"},
-					{"Selector", 0xFFFFFF, ecs.colors.orange, lang.sortByTypeShort, lang.sortByNameShort, lang.sortByDateShort},
-					{"EmptyLine"},
-					{"Button", {ecs.colors.orange, 0xffffff, "OK"}, {0x999999, 0xffffff, lang.cancel}}
-				)
-				if data[2] == "OK" then
-					config.currentSortingMethod = sortingMethods[data[1]]
-					saveConfig()
-					getListAndDrawAll()
 				end
 				clickedAtEmptyArea = false
 			end
@@ -487,7 +498,7 @@ while true do
 			end
 		end
 
-		if clickedAtEmptyArea and obj.DesktopIcons and obj.mainZone:isClicked(eventData[3], eventData[4]) then
+		if clickedAtEmptyArea and obj.DesktopIcons and eventData[5] == 1 and obj.mainZone:isClicked(eventData[3], eventData[4]) then
 			MineOSCore.emptyZoneClick(eventData, workPathHistory[currentWorkPathHistoryElement], {method = getListAndDrawAll, arguments = {}})
 		end
 	elseif eventData[1] == "scroll" then
