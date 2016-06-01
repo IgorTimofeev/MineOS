@@ -366,7 +366,7 @@ sendPersonalInfo()
 local xDrag, yDrag
 while true do
 	local eventData = {event.pull()}
-	if eventData[1] == "drag" then
+	if eventData[1] == "drag" and obj.topBarZone:isClicked(eventData[3], eventData[4]) then
 		local xMove, yMove = eventData[3] - xDrag, eventData[4] - yDrag
 		xDrag, yDrag = eventData[3], eventData[4]
 		local xFinder, yFinder = sizes.xFinder + xMove, sizes.yFinder + yMove
@@ -376,6 +376,7 @@ while true do
 			drawAll()
 		end
 	elseif eventData[1] == "touch" then
+		xDrag, yDrag = eventData[3], eventData[4]
 		local clickedAtEmptyArea = true
 
 		if clickedAtEmptyArea and obj.topBarZone:isClicked(eventData[3], eventData[4]) then
@@ -419,8 +420,6 @@ while true do
 					saveConfig()
 					getListAndDrawAll()
 				end
-			else
-				xDrag, yDrag = eventData[3], eventData[4]
 			end
 
 			clickedAtEmptyArea = false
