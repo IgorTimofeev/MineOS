@@ -5,6 +5,7 @@
 local libraries = {
 	buffer = "doubleBuffering",
 	MineOSCore = "MineOSCore",
+	GUI = "GUI",
 	component = "component",
 	computer = "computer",
 	event = "event",
@@ -14,16 +15,9 @@ local libraries = {
 	unicode = "unicode",
 	archive = "archive",
 	serialization = "serialization",
-	GUI = "GUI",
 }
 
-local components = {
-	["gpu"] = "gpu",
-}
-
-for library in pairs(libraries) do if not _G[library] then _G[library] = require(libraries[library]) end end
-for comp in pairs(components) do if not _G[comp] then _G[comp] = _G.component[components[comp]] end end
-libraries, components = nil, nil
+for library in pairs(libraries) do if not _G[library] then _G[library] = require(libraries[library]) end end; libraries = nil
 
 ------------------------------------------------------------------------------------------------------------------
 
@@ -31,7 +25,7 @@ local colors = {
 	topBar = 0xdddddd,
 	main = 0xffffff,
 	leftBar = 0xeeeeee,
-	leftBarTransparency = 35,
+	leftBarTransparency = 25,
 	leftBarSelection = ecs.colors.blue,
 	leftBarSelectionText = 0xFFFFFF,
 	closes = {close = ecs.colors.red, hide = ecs.colors.orange, full = ecs.colors.green},
@@ -46,8 +40,6 @@ local colors = {
 
 local pathToComputerIcon = "MineOS/System/OS/Icons/Computer.pic"
 local pathToConfig = "MineOS/System/Finder/Config.cfg"
-local lang = files.loadTableFromFile("MineOS/System/OS/Languages/" .. _G.OSSettings.language .. ".lang")
-
 local workPathHistory = {}
 local currentWorkPathHistoryElement = 1
 
@@ -63,7 +55,7 @@ local sizes = {}
 local fileList = {}
 local config = {}
 local obj = {}
-local sortingMethods = {[0] = lang.sortByTypeShort, [1] = lang.sortByNameShort, [2] = lang.sortByDateShort, [lang.sortByTypeShort] = 0, [lang.sortByNameShort] = 1, [lang.sortByDateShort] = 2}
+local sortingMethods = {[0] = MineOSCore.localization.sortByTypeShort, [1] = MineOSCore.localization.sortByNameShort, [2] = MineOSCore.localization.sortByDateShort, [MineOSCore.localization.sortByTypeShort] = 0, [MineOSCore.localization.sortByNameShort] = 1, [MineOSCore.localization.sortByDateShort] = 2}
 
 ------------------------------------------------------------------------------------------------------------------
 
@@ -156,12 +148,7 @@ end
 
 --Рисем цветные кружочки слева вверху
 local function drawCloses()
-	local x, y = sizes.xFinder + 1, sizes.yFinder
-	local backgroundColor = _G.OSSettings.interfaceColor or colors.topBar
-	local symbol = "●"
-	obj.close = GUI.button(x, y, 1, 1,backgroundColor, colors.closes.close, backgroundColor, 0x000000, symbol)
-	obj.hide = GUI.button(obj.close.x + obj.close.width + 1, y, 1, 1, backgroundColor, colors.closes.hide, backgroundColor, 0x000000, symbol)
-	obj.full = GUI.button(obj.hide.x + obj.hide.width + 1, y, 1, 1, backgroundColor, colors.closes.full, backgroundColor, 0x000000, symbol)
+	obj.windowActionButtons = GUI.windowActionButtons(sizes.xFinder + 1, sizes.yFinder)
 end
 
 local function drawSearchBar(justDrawNotEvent)
@@ -169,7 +156,7 @@ local function drawSearchBar(justDrawNotEvent)
 	local textColor = searchBarText and 0x262626 or 0xBBBBBB
 	obj.search = GUI.object(sizes.xSearchBar, y, sizes.searchBarWidth, 1)
 	buffer.square(sizes.xSearchBar, y, sizes.searchBarWidth, 1, 0xFFFFFF, textColor, " ")
-	return GUI.input(sizes.xSearchBar + 1, y, sizes.searchBarWidth - 2, textColor, searchBarText or lang.search, {justDrawNotEvent = justDrawNotEvent})
+	return GUI.input(sizes.xSearchBar + 1, y, sizes.searchBarWidth - 2, textColor, searchBarText or MineOSCore.localization.search, {justDrawNotEvent = justDrawNotEvent})
 end
 
 local function drawTopBar()
@@ -185,8 +172,8 @@ local function drawTopBar()
 
 	local cyka = {
 		{objName = "sortingMethod", text = sortingMethods[config.currentSortingMethod], active = false},
-		{objName = "showFormat", text = lang.showFileFormatShort, active = config.showFileFormat},
-		{objName = "showHidden", text = lang.showHiddenFilesShort, active = config.showHiddenFiles},
+		{objName = "showFormat", text = MineOSCore.localization.showFileFormatShort, active = config.showFileFormat},
+		{objName = "showHidden", text = MineOSCore.localization.showHiddenFilesShort, active = config.showHiddenFiles},
 	}
 	for i = 1, #cyka do
 		obj[cyka[i].objName] = GUI.adaptiveButton(x, y, 1, 0, 0xFFFFFF, 0x262626, 0x262626, 0xFFFFFF, cyka[i].text)
@@ -217,7 +204,7 @@ local function drawLeftBar()
 	local x, y = sizes.xFinder + 1, sizes.yMain
 	--Фаворитсы
 	if #config.favourites > 0 then
-		buffer.text(x, y, colors.leftBarHeader, lang.favourites); y = y + 1
+		buffer.text(x, y, colors.leftBarHeader, MineOSCore.localization.favourites); y = y + 1
 		for i = 1, #config.favourites do
 			drawAndHiglightPath(y, config.favourites[i])
 			y = y + 1
@@ -226,7 +213,7 @@ local function drawLeftBar()
 	end
 	--Сеть
 	if (function() local count = 0; for key in pairs(network) do count = count + 1 end; return count end)() > 0 then
-		buffer.text(x, y, colors.leftBarHeader, lang.network); y = y + 1
+		buffer.text(x, y, colors.leftBarHeader, MineOSCore.localization.network); y = y + 1
 		for address in pairs(network) do
 			buffer.text(sizes.xFinder + 2, y, colors.leftBarList, unicode.sub(address, 1, sizes.leftBarWidth - 4))
 			obj.network[address] = GUI.object(sizes.xFinder + 2, y, sizes.leftBarWidth, 1)
@@ -235,7 +222,7 @@ local function drawLeftBar()
 		y = y + 1
 	end
 	--Диски
-	buffer.text(x, y, colors.leftBarHeader, lang.disks); y = y + 1
+	buffer.text(x, y, colors.leftBarHeader, MineOSCore.localization.disks); y = y + 1
 	for i = 1, #disks do
 		drawAndHiglightPath(y, disks[i])
 		y = y + 1
@@ -256,8 +243,8 @@ local function drawNetwork()
 	local text = ecs.stringLimit("end", currentNetworkAddress, sizes.mainWidth - 4)
 	buffer.text(math.floor(sizes.xMain + sizes.mainWidth / 2 - unicode.len(text) / 2), y, 0xAAAAAA, text); y = y + 2
 	x = math.floor(sizes.xMain + sizes.mainWidth / 2 - buttonWidth / 2)
-	obj.networkFile = GUI.button(x, y, buttonWidth, 1, 0xdddddd, 0x262626, 0x262626, 0xEEEEEE, lang.sendFile); y = y + 2
-	obj.networkMessage = GUI.button(x, y, buttonWidth, 1, 0xdddddd, 0x262626, 0x262626, 0xEEEEEE, lang.sendMessage); y = y + 2
+	obj.networkFile = GUI.button(x, y, buttonWidth, 1, 0xdddddd, 0x262626, 0x262626, 0xEEEEEE, MineOSCore.localization.sendFile); y = y + 2
+	obj.networkMessage = GUI.button(x, y, buttonWidth, 1, 0xdddddd, 0x262626, 0x262626, 0xEEEEEE, MineOSCore.localization.sendMessage); y = y + 2
 end
 
 local function drawFiles()
@@ -300,8 +287,8 @@ end
 local function drawAll(force)
 	drawTopBar()
 	drawLeftBar()
-	drawBottomBar()
 	drawMain()
+	drawBottomBar()
 	buffer.draw(force)
 end
 
@@ -331,7 +318,7 @@ local function sendMessageOrFileWindow(text1, text2)
 		{"EmptyLine"},
 		{"Input", 0xFFFFFF, ecs.colors.orange, text2},
 		{"EmptyLine"},
-		{"Button", {ecs.colors.orange, 0xffffff, "OK"}, {0x999999, 0xffffff, lang.cancel}}
+		{"Button", {ecs.colors.orange, 0xffffff, "OK"}, {0x999999, 0xffffff, MineOSCore.localization.cancel}}
 	)
 end
 
@@ -358,7 +345,7 @@ local function sendFile(path, address)
 
 	file:close()
 	component.modem.send(address, port, "FILESENDEND")
-	GUI.error(lang.fileSuccessfullySent)
+	GUI.error(MineOSCore.localization.fileSuccessfullySent)
 end
 
 ----------------------------------------------------------------------------------------------------------------------------------
@@ -368,8 +355,6 @@ local args = {...}
 -- buffer.clear(0xFF6666)
 
 oldPixelsOfFullScreen = buffer.copy(1, 1, buffer.screen.width, buffer.screen.height)
-MineOSCore.setLocalization(lang)
-MineOSCore.loadIcons()
 calculateSizes()
 loadConfig()
 createDisks()
@@ -408,8 +393,8 @@ while true do
 				if searchBarText == "" then searchBarText = nil end
 				sizes.yFileList = sizes.yFileListStartPoint
 				getListAndDrawAll()
-			elseif obj.close:isClicked(eventData[3], eventData[4]) then
-				obj.close:press(0.2)
+			elseif obj.windowActionButtons.close:isClicked(eventData[3], eventData[4]) then
+				obj.windowActionButtons.close:press(0.2)
 				return
 			elseif obj.showFormat:isClicked(eventData[3], eventData[4]) then
 				config.showFileFormat = not config.showFileFormat
@@ -423,11 +408,11 @@ while true do
 				obj.sortingMethod:press(0.2)
 				local data = ecs.universalWindow("auto", "auto", 36, 0x262626, true,
 					{"EmptyLine"},
-					{"CenterText", ecs.colors.orange, lang.sortingMethod},
+					{"CenterText", ecs.colors.orange, MineOSCore.localization.sortingMethod},
 					{"EmptyLine"},
-					{"Selector", 0xFFFFFF, ecs.colors.orange, lang.sortByTypeShort, lang.sortByNameShort, lang.sortByDateShort},
+					{"Selector", 0xFFFFFF, ecs.colors.orange, MineOSCore.localization.sortByTypeShort, MineOSCore.localization.sortByNameShort, MineOSCore.localization.sortByDateShort},
 					{"EmptyLine"},
-					{"Button", {ecs.colors.orange, 0xffffff, "OK"}, {0x999999, 0xffffff, lang.cancel}}
+					{"Button", {ecs.colors.orange, 0xffffff, "OK"}, {0x999999, 0xffffff, MineOSCore.localization.cancel}}
 				)
 				if data[2] == "OK" then
 					config.currentSortingMethod = sortingMethods[data[1]]
@@ -444,14 +429,14 @@ while true do
 		if clickedAtEmptyArea then
 			if obj.networkMessage and obj.networkMessage:isClicked(eventData[3], eventData[4]) then
 				obj.networkMessage:press(0.2)
-				local data = sendMessageOrFileWindow(lang.sendMessage, lang.messageText)
+				local data = sendMessageOrFileWindow(MineOSCore.localization.sendMessage, MineOSCore.localization.messageText)
 				if data[2] == "OK" then
 					component.modem.send(currentNetworkAddress, port, "hereIsMessage", data[1])
 				end
 				clickedAtEmptyArea = false
 			elseif obj.networkFile and obj.networkFile:isClicked(eventData[3], eventData[4]) then
 				obj.networkFile:press(0.2)
-				local data = sendMessageOrFileWindow(lang.sendFile, lang.pathToFile)
+				local data = sendMessageOrFileWindow(MineOSCore.localization.sendFile, MineOSCore.localization.pathToFile)
 				if data[2] == "OK" then
 					if fs.exists(data[1]) then
 						sendFile(data[1], currentNetworkAddress)
@@ -507,12 +492,12 @@ while true do
 			if eventData[5] == 1 then
 				if sizes.yFileList < sizes.yFileListStartPoint then
 					sizes.yFileList = sizes.yFileList + scrollSpeed
-					drawMain(); buffer.draw()
+					drawMain(); drawBottomBar(); buffer.draw()
 				end
 			else
 				if sizes.fromIcon < #fileList - sizes.xCountOfIcons then
 					sizes.yFileList = sizes.yFileList - scrollSpeed
-					drawMain(); buffer.draw()
+					drawMain(); drawBottomBar(); buffer.draw()
 				end
 			end
 		end
@@ -525,14 +510,14 @@ while true do
 				sendPersonalInfo()
 				drawAll()
 			elseif message1 == "hereIsMessage" then
-				GUI.error(message2, {title = {color = 0xFFDB40, text = lang.gotMessageFrom .. truncatedRemoteAddress}})
+				GUI.error(message2, {title = {color = 0xFFDB40, text = MineOSCore.localization.gotMessageFrom .. truncatedRemoteAddress}})
 			elseif message1 == "FILESTARTED" then
 				_G.finderFileReceiver = io.open("MineOS/System/Finder/tempFile.lua", "wb")
 			elseif message1 == "FILESEND" then
 				_G.finderFileReceiver:write(message2)
 			elseif message1 == "FILESENDEND" then
 				_G.finderFileReceiver:close()
-				local data = sendMessageOrFileWindow(lang.gotFileFrom .. truncatedRemoteAddress, lang.pathToSave)
+				local data = sendMessageOrFileWindow(MineOSCore.localization.gotFileFrom .. truncatedRemoteAddress, MineOSCore.localization.pathToSave)
 				if data[2] == "OK" and data[1] ~= "" then fs.rename("MineOS/System/Finder/tempFile.lua", data[1]); getListAndDrawAll() end
 			end
 		end

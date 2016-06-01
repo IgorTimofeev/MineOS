@@ -81,6 +81,7 @@
 
 	viewTab = "View",
 
+	errorWhileRunningProgram = "An error occurred when program execution: ",
 	fileDoesntExists = "File doesn't exists",
 	fileSuccessfullySent = "File has been successfully sent",
 	sendFile = "Send file",

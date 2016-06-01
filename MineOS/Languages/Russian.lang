@@ -81,6 +81,7 @@
 
 	viewTab = "Вид",
 
+	errorWhileRunningProgram = "Ошибка при выполнении программы: ",
 	fileDoesntExists = "Файл не существует",
 	fileSuccessfullySent = "Файл успешно отправлен",
 	sendFile = "Отправить файл",

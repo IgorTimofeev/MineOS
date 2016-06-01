@@ -178,6 +178,14 @@ function GUI.menu(x, y, width, menuColor, ...)
 	return menuObjects
 end
 
+function GUI.windowActionButtons(x, y, fatSymbol)
+	local symbol = fatSymbol and "⬤" or "●"
+	local windowActionButtons, background = {}
+	background = buffer.get(x, y); windowActionButtons.close = GUI.button(x, y, 1, 1, background, 0xFF4940, background, 0x992400, symbol); x = x + 2
+	background = buffer.get(x, y); windowActionButtons.minimize = GUI.button(x, y, 1, 1, background, 0xFFB640, background, 0x996D00, symbol); x = x + 2
+	background = buffer.get(x, y); windowActionButtons.maximize = GUI.button(x, y, 1, 1, background, 0x00B640, background, 0x006D40, symbol); x = x + 2
+	return windowActionButtons
+end
 
 ------------------------------------------------- Окна -------------------------------------------------------------------
 
@@ -382,34 +390,13 @@ end
 
 --------------------------------------------------------------------------------------------------------------------------------
 
--- buffer.clear(0xFFAAAA)
--- buffer.draw(true)
-
--- GUI.error("Ублюдок, мать твою, а ну иди сюда, говно собачье, а ну решил ко мне лезть, ты... засранец вонючий, мать твою. А?! ну иди сюда, попробуй меня трахнуть, я тебя сам трахну ублюдок, анонист чертов, будь ты проклят, иди идиот, трахать тебя за свою семью, говно собачье, жлоб вонючий, дерьмо, сука, падла, иди сюда мерзавец, негодяй, гад, иди сюда ты говно, жопа!", {title = {color = 0xFF7777, text = "Ошибка авторизации"}})
-
--- local event = require("event")
--- local myButton = GUI.adaptiveButton(2, 2, 2, 1, 0xFFFFFF, 0x000000, 0xFF8888, 0xFFFFFF, "Кнопачка")
--- buffer.draw()
--- while true do
--- 	local e = {event.pull("touch")}
--- 	if myButton:isClicked(e[3], e[4]) then
--- 		myButton:press(0.2)
--- 	end
--- end
-
--- local myButtons = GUI.buttons(2, 2, GUI.directions.horizontal, 2, {GUI.buttonTypes.adaptive, 2, 0, 0xCCCCCC, 0x262626, 0xFF8888, 0xFFFFFF, "Кнопачка1"}, {GUI.buttonTypes.default, 30, 1, 0xCCCCCC, 0x262626, 0xFF8888, 0xFFFFFF, "Кнопачка2"}, {GUI.buttonTypes.adaptive, 2, 0, 0xCCCCCC, 0x262626, 0xFF8888, 0xFFFFFF, "Кнопачка3"})
--- buffer.draw()
--- while true do
--- 	local e = {event.pull("touch")}
--- 	for _, button in pairs(myButtons) do
--- 		if button:isClicked(e[3], e[4]) then
--- 			button:press(0.2)
--- 		end
--- 	end
--- end
 
 --------------------------------------------------------------------------------------------------------------------------------
 
 return GUI
+
+
+
+
 
 

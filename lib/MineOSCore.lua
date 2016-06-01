@@ -16,47 +16,61 @@ local libraries = {
 for library in pairs(libraries) do if not _G[library] then _G[library] = require(libraries[library]) end end
 libraries = nil
 
--- Загрузка языкового пакета
--- local lang = files.loadTableFromFile("MineOS/System/OS/Languages/" .. _G.OSSettings.language .. ".lang")
-local lang = {}
 local MineOSCore = {}
 
 -----------------------------------------------------------------------------------------------------------------------------------
 
-MineOSCore.iconsPath = "MineOS/System/OS/Icons/"
 MineOSCore.iconWidth = 12
 MineOSCore.iconHeight = 6
+
+MineOSCore.paths = {
+	localizationFile = "MineOS/System/OS/Languages/" .. _G.OSSettings.language .. ".lang",
+	system = "MineOS/System/",
+	icons = "MineOS/System/OS/Icons/",
+	applications = "MineOS/Applications/",
+	pictures = "MineOS/Pictures/",
+}
+
 MineOSCore.sortingMethods = {
 	type = 0,
 	name = 1,
 	date = 2,
 }
+
 MineOSCore.colors = {
 	background = 0x262626.
 }
 
+MineOSCore.localization = {}
+
 -----------------------------------------------------------------------------------------------------------------------------------
 
---Присвоение языкового пакета
-function MineOSCore.setLocalization(langArray)
-	lang = langArray
+function MineOSCore.loadIcon(name, path)
+	if not MineOSCore.icons[name] then MineOSCore.icons[name] = image.load(path) end
+	return MineOSCore.icons[name]
 end
 
 --Вся необходимая информация для иконок
-function MineOSCore.loadIcons()
-	if MineOSCore.icons then return end
+function MineOSCore.loadStandartIcons()
 	MineOSCore.icons = {}
-	MineOSCore.icons.folder = image.load(MineOSCore.iconsPath .. "Folder.pic")
-	MineOSCore.icons.script = image.load(MineOSCore.iconsPath .. "Script.pic")
-	MineOSCore.icons.text = image.load(MineOSCore.iconsPath .. "Text.pic")
-	MineOSCore.icons.config = image.load(MineOSCore.iconsPath .. "Config.pic")
-	MineOSCore.icons.lua = image.load(MineOSCore.iconsPath .. "Lua.pic")
-	MineOSCore.icons.image = image.load(MineOSCore.iconsPath .. "Image.pic")
-	MineOSCore.icons.pastebin = image.load(MineOSCore.iconsPath .. "Pastebin.pic")
-	MineOSCore.icons.fileNotExists = image.load(MineOSCore.iconsPath .. "FileNotExists.pic")
-	MineOSCore.icons.archive = image.load(MineOSCore.iconsPath .. "Archive.pic")
-	MineOSCore.icons.model3D = image.load(MineOSCore.iconsPath .. "3DModel.pic")
+	MineOSCore.loadIcon("folder", MineOSCore.paths.icons .. "Folder.pic")
+	MineOSCore.loadIcon("script", MineOSCore.paths.icons .. "Script.pic")
+	MineOSCore.loadIcon("text", MineOSCore.paths.icons .. "Text.pic")
+	MineOSCore.loadIcon("config", MineOSCore.paths.icons .. "Config.pic")
+	MineOSCore.loadIcon("lua", MineOSCore.paths.icons .. "Lua.pic")
+	MineOSCore.loadIcon("image", MineOSCore.paths.icons .. "Image.pic")
+	MineOSCore.loadIcon("pastebin", MineOSCore.paths.icons .. "Pastebin.pic")
+	MineOSCore.loadIcon("fileNotExists", MineOSCore.paths.icons .. "FileNotExists.pic")
+	MineOSCore.loadIcon("archive", MineOSCore.paths.icons .. "Archive.pic")
+	MineOSCore.loadIcon("model3D", MineOSCore.paths.icons .. "3DModel.pic")
 end
+
+function MineOSCore.init()
+	MineOSCore.localization = files.loadTableFromFile(MineOSCore.paths.localizationFile)
+	MineOSCore.loadStandartIcons()
+end
+
+-----------------------------------------------------------------------------------------------------------------------------------
 
 --Отрисовка одной иконки
 function MineOSCore.drawIcon(x, y, path, showFileFormat, nameColor)
@@ -67,9 +81,7 @@ function MineOSCore.drawIcon(x, y, path, showFileFormat, nameColor)
 			-- icon = "cyka"
 			-- MineOSCore.icons[icon] = image.load(path .. "/Resources/Icon.pic")
 			icon = path .. "/Resources/Icon.pic"
-			if not MineOSCore.icons[icon] then
-				 MineOSCore.icons[icon] = image.load(icon)
-			end
+			MineOSCore.loadIcon(icon, icon)
 		else
 			icon = "folder"
 		end
@@ -112,7 +124,9 @@ function MineOSCore.drawIcon(x, y, path, showFileFormat, nameColor)
 end
 
 function MineOSCore.safeLaunch(command, ...)
+	local oldResolutionWidth, oldResolutionHeight = component.gpu.getResolution()
 	local success, reason = pcall(loadfile(command), ...)
+	component.gpu.setResolution(oldResolutionWidth, oldResolutionHeight)
 	--Ебал я автора мода в задницу, кусок ебанутого говна
 	--Какого хуя я должен вставлять кучу костылей в свой прекрасный код только потому, что эта ублюдочная
 	--скотина захотела выдавать table из pcall? Что, блядь? Где это видано, сука?
@@ -120,14 +134,13 @@ function MineOSCore.safeLaunch(command, ...)
 	--Что за ебливая сучья логика? 
 	if not success and type(reason) ~= "table" then
 		reason = ecs.parseErrorMessage(reason, false)
-		GUI.error(reason, {title = {color = 0xFFDB40, text = "Ошибка при выполнении программы"}})
+		GUI.error(reason, {title = {color = 0xFFDB40, text = MineOSCore.localization.errorWhileRunningProgram}})
 	end
+	buffer.start()
 end
 
 -- Запуск приложения
 function MineOSCore.launchIcon(path, translate)
-	--Запоминаем, какое разрешение было
-	local oldWidth, oldHeight = component.gpu.getResolution()
 	--Получаем файл формат заранее
 	local fileFormat = ecs.getFileFormat(path)
 	local isDirectory = fs.isDirectory(path)
@@ -153,7 +166,7 @@ function MineOSCore.launchIcon(path, translate)
 		MineOSCore.safeLaunch("MineOS/Applications/3DPrint.app/3DPrint.lua open " .. path)
 	
 	--Если это текст или конфиг или языковой
-	elseif fileFormat == ".txt" or fileFormat == ".cfg" or fileFormat == ".lang" then
+	elseif fileFormat == ".txt" or fileFormat == ".cfg" or fileFormat == ".MineOSCore.localization" then
 		ecs.prepareToExit()
 		MineOSCore.safeLaunch("bin/edit.lua", path)
 
@@ -163,16 +176,13 @@ function MineOSCore.launchIcon(path, translate)
 		if fs.exists(shortcutLink) then
 			MineOSCore.launchIcon(shortcutLink)
 		else
-			GUI.error(lang.shortcutIsCorrupted)
+			GUI.error(MineOSCore.localization.shortcutIsCorrupted)
 		end
 	
 	--Если это архив
 	elseif fileFormat == ".zip" then
 		zip.unarchive(path, (fs.path(path) or ""))
 	end
-	--Ставим старое разрешение
-	component.gpu.setResolution(oldWidth, oldHeight)
-	buffer.start()
 end
 
 -----------------------------------------------------------------------------------------------------------------------------------
@@ -244,124 +254,124 @@ function MineOSCore.iconRightClick(icon, oldPixelsOfIcon, eventData, fileFormat,
 	if fs.isDirectory(icon.path) then
 		if fileFormat == ".app" then
 			action = context.menu(eventData[3], eventData[4],
-				{lang.contextMenuShowPackageContent},
+				{MineOSCore.localization.contextMenuShowPackageContent},
 				"-",
-				{lang.contextMenuCopy},
-				{lang.contextMenuPaste, not _G.clipboard},
+				{MineOSCore.localization.contextMenuCopy},
+				{MineOSCore.localization.contextMenuPaste, not _G.clipboard},
 				"-",
-				{lang.contextMenuRename},
-				{lang.contextMenuCreateShortcut},
+				{MineOSCore.localization.contextMenuRename},
+				{MineOSCore.localization.contextMenuCreateShortcut},
 				"-",
-				{lang.contextMenuUploadToPastebin, true},
+				{MineOSCore.localization.contextMenuUploadToPastebin, true},
 				"-",
-				{lang.contextMenuAddToDock, not somethingCanBeAddedToDock},
-				{lang.contextMenuDelete}
+				{MineOSCore.localization.contextMenuAddToDock, not somethingCanBeAddedToDock},
+				{MineOSCore.localization.contextMenuDelete}
 			)
 		else
 			action = context.menu(eventData[3], eventData[4],
-				{lang.contextMenuCopy},
-				{lang.contextMenuRename},
-				{lang.contextMenuCreateShortcut},
+				{MineOSCore.localization.contextMenuCopy},
+				{MineOSCore.localization.contextMenuRename},
+				{MineOSCore.localization.contextMenuCreateShortcut},
 				"-",
-				{lang.contextMenuArchive},
+				{MineOSCore.localization.contextMenuArchive},
 				"-",
-				{lang.contextMenuDelete}
+				{MineOSCore.localization.contextMenuDelete}
 			)
 		end
 	else
 		if fileFormat == ".pic" then
 			action = context.menu(eventData[3], eventData[4],
-				{lang.contextMenuEdit},
-				{lang.contextMenuEditInPhotoshop},
-				{lang.contextMenuSetAsWallpaper},
+				{MineOSCore.localization.contextMenuEdit},
+				{MineOSCore.localization.contextMenuEditInPhotoshop},
+				{MineOSCore.localization.contextMenuSetAsWallpaper},
 				"-",
-				{lang.contextMenuCopy, false},
-				{lang.contextMenuRename},
-				{lang.contextMenuCreateShortcut},
+				{MineOSCore.localization.contextMenuCopy, false},
+				{MineOSCore.localization.contextMenuRename},
+				{MineOSCore.localization.contextMenuCreateShortcut},
 				"-",
-				{lang.contextMenuUploadToPastebin, true},
+				{MineOSCore.localization.contextMenuUploadToPastebin, true},
 				"-",
-				{lang.contextMenuAddToDock, not somethingCanBeAddedToDock},
-				{lang.contextMenuDelete, false}
+				{MineOSCore.localization.contextMenuAddToDock, not somethingCanBeAddedToDock},
+				{MineOSCore.localization.contextMenuDelete, false}
 			)
 		else
 			action = context.menu(eventData[3], eventData[4],
-				{lang.contextMenuEdit},
-				-- {lang.contextMenuCreateApplication},
+				{MineOSCore.localization.contextMenuEdit},
+				-- {MineOSCore.localization.contextMenuCreateApplication},
 				"-",
-				{lang.contextMenuCopy},
-				{lang.contextMenuRename},
-				{lang.contextMenuCreateShortcut},
+				{MineOSCore.localization.contextMenuCopy},
+				{MineOSCore.localization.contextMenuRename},
+				{MineOSCore.localization.contextMenuCreateShortcut},
 				"-",
-				{lang.contextMenuUploadToPastebin, true},
+				{MineOSCore.localization.contextMenuUploadToPastebin, true},
 				"-",
-				{lang.contextMenuAddToDock, not somethingCanBeAddedToDock},
-				{lang.contextMenuDelete}
+				{MineOSCore.localization.contextMenuAddToDock, not somethingCanBeAddedToDock},
+				{MineOSCore.localization.contextMenuDelete}
 			)
 		end
 	end
 
-	if action == lang.contextMenuEdit then
+	if action == MineOSCore.localization.contextMenuEdit then
 		ecs.prepareToExit()
 		MineOSCore.safeLaunch("bin/edit.lua", icon.path)
 		executeMethod(fullRefreshMethod)
-	elseif action == lang.contextMenuEditInPhotoshop then
+	elseif action == MineOSCore.localization.contextMenuEditInPhotoshop then
 		MineOSCore.safeLaunch("MineOS/Applications/Photoshop.app/Photoshop.lua", "open", icon.path)
 		executeMethod(fullRefreshMethod)
 		-- buffer.paste(1, 1, oldPixelsOfFullScreen)
 		-- drawAll(true)
-	elseif action == lang.contextMenuAddToFavourites then
+	elseif action == MineOSCore.localization.contextMenuAddToFavourites then
 		-- addToFavourites(fs.name(path), path)
 		computer.pushSignal("finderFavouriteAdded", icon.path)
 		executeMethod(drawAllMethod)
-	elseif action == lang.contextMenuShowPackageContent then
+	elseif action == MineOSCore.localization.contextMenuShowPackageContent then
 		executeMethod(changeCurrentPathMethod)
 		executeMethod(drawAllMethod)
 		-- changePath(path)
 		-- drawAll()
-	elseif action == lang.contextMenuCopy then
+	elseif action == MineOSCore.localization.contextMenuCopy then
 		_G.clipboard = icon.path
 		executeMethod(drawAllMethod)
-	elseif action == lang.contextMenuPaste then
+	elseif action == MineOSCore.localization.contextMenuPaste then
 		ecs.copy(_G.clipboard, fs.path(icon.path) or "")
 		executeMethod(drawAllMethod)
 		-- getFileList(workPathHistory[currentWorkPathHistoryElement])
 		-- drawAll()
-	elseif action == lang.contextMenuDelete then
+	elseif action == MineOSCore.localization.contextMenuDelete then
 		fs.remove(icon.path)
 		executeMethod(drawAllMethod)
 		-- getFileList(workPathHistory[currentWorkPathHistoryElement])
 		-- drawAll()
-	elseif action == lang.contextMenuRename then
+	elseif action == MineOSCore.localization.contextMenuRename then
 		ecs.rename(icon.path)
 		executeMethod(drawAllMethod)
 		-- getFileList(workPathHistory[currentWorkPathHistoryElement])
 		-- drawAll()
-	elseif action == lang.contextMenuCreateShortcut then
+	elseif action == MineOSCore.localization.contextMenuCreateShortcut then
 		ecs.createShortCut(fs.path(icon.path).."/"..ecs.hideFileFormat(fs.name(icon.path))..".lnk", icon.path)
 		executeMethod(drawAllMethod)
 		-- getFileList(workPathHistory[currentWorkPathHistoryElement])
 		-- drawAll()
-	elseif action == lang.contextMenuArchive then
+	elseif action == MineOSCore.localization.contextMenuArchive then
 		-- ecs.info("auto", "auto", "", "Архивация файлов...")
 		archive.pack(ecs.hideFileFormat(fs.name(icon.path))..".pkg", icon.path)
 		executeMethod(drawAllMethod)
 		-- getFileList(workPathHistory[currentWorkPathHistoryElement])
 		-- drawAll()
-	elseif action == lang.contextMenuUploadToPastebin then
+	elseif action == MineOSCore.localization.contextMenuUploadToPastebin then
 		MineOSCore.safeLaunch("MineOS/Applications/Pastebin.app/Pastebin.lua", "upload", icon.path)
 		executeMethod(fullRefreshMethod)
 		-- shell.execute("MineOS/Applications/Pastebin.app/Pastebin.lua upload " .. path)
 		-- getFileList(workPathHistory[currentWorkPathHistoryElement])
 		-- drawAll(true)
-	elseif action == lang.contextMenuSetAsWallpaper then
+	elseif action == MineOSCore.localization.contextMenuSetAsWallpaper then
 		--ecs.error(path)
 		ecs.createShortCut("MineOS/System/OS/Wallpaper.lnk", icon.path)
 		computer.pushSignal("OSWallpaperChanged")
 		return true
 		-- buffer.paste(1, 1, oldPixelsOfFullScreen)
 		-- buffer.draw()
-	elseif action == lang.contextMenuCreateApplication then
+	elseif action == MineOSCore.localization.contextMenuCreateApplication then
 		ecs.newApplicationFromLuaFile(icon.path, fs.path(icon.path) or "")
 		executeMethod(drawAllMethod)
 		-- getFileList(workPathHistory[currentWorkPathHistoryElement])
@@ -387,31 +397,25 @@ function MineOSCore.iconClick(icon, eventData, selectionColor, selectionTranspar
 end
 
 function MineOSCore.emptyZoneClick(eventData, workPath, drawAllMethod, fullRefreshMethod)
-	local action = context.menu(eventData[3], eventData[4], {lang.contextMenuNewFile}, {lang.contextMenuNewFolder}, {lang.contextMenuNewApplication}, "-", {lang.contextMenuPaste, (_G.clipboard == nil), "^V"})
-	if action == lang.contextMenuNewFile then
+	local action = context.menu(eventData[3], eventData[4], {MineOSCore.localization.contextMenuNewFile}, {MineOSCore.localization.contextMenuNewFolder}, {MineOSCore.localization.contextMenuNewApplication}, "-", {MineOSCore.localization.contextMenuPaste, (_G.clipboard == nil), "^V"})
+	if action == MineOSCore.localization.contextMenuNewFile then
 		ecs.newFile(workPath)
 		executeMethod(fullRefreshMethod)
-	elseif action == lang.contextMenuNewFolder then
+	elseif action == MineOSCore.localization.contextMenuNewFolder then
 		ecs.newFolder(workPath)
 		executeMethod(drawAllMethod)
-	elseif action == lang.contextMenuPaste then
+	elseif action == MineOSCore.localization.contextMenuPaste then
 		ecs.copy(_G.clipboard, workPath)
 		executeMethod(drawAllMethod)
-	elseif action == lang.contextMenuNewApplication then
+	elseif action == MineOSCore.localization.contextMenuNewApplication then
 		ecs.newApplication(workPath)
 		executeMethod(drawAllMethod)
 	end
 end
 
-
 -----------------------------------------------------------------------------------------------------------------------------------
 
--- MineOSCore.loadIcons()
--- buffer.start()
-
--- buffer.clear(0x262626)
--- MineOSCore.drawIconField(2, 2, 5, 5, 1, 25, 2, 1, "lib/", "type", true, 0xFFFFFF)
--- buffer.draw(true)
+MineOSCore.init()
 
 -----------------------------------------------------------------------------------------------------------------------------------
 
