@@ -180,17 +180,17 @@ do
   ecs.loadOSSettings()
   _G._OSLANGUAGE = _G.OSSettings.language
 
-  -- Завершаем работу с инициализацией
-  os.sleep(0.5) -- Allow signal processing by libraries.
-  require("computer").pushSignal("init")
-  os.sleep(0.1) -- Allow init processing.
-  runlevel = 1
-
   -- Выставляем адекватный масштаб монитора
   ecs.fadeOut(background, 0x1b1b1b, 0.05)
   -- component.gpu.setBackground(background)
   component.gpu.fill(1, 1, 160, 50, " ")
   ecs.setScale(1)
+
+  -- Завершаем работу с инициализацией
+  os.sleep(0.1) -- Allow signal processing by libraries.
+  require("computer").pushSignal("init")
+  os.sleep(0.1) -- Allow init processing.
+  runlevel = 1
 end
 
 while true do
