@@ -157,10 +157,11 @@ end
 --Рисем цветные кружочки слева вверху
 local function drawCloses()
 	local x, y = sizes.xFinder + 1, sizes.yFinder
+	local backgroundColor = _G.OSSettings.interfaceColor or colors.topBar
 	local symbol = "●"
-	obj.close = GUI.button(x, y, 1, 1, colors.topBar, colors.closes.close, colors.topBar, 0x000000, symbol)
-	obj.hide = GUI.button(obj.close.x + obj.close.width + 1, y, 1, 1, colors.topBar, colors.closes.hide, colors.topBar, 0x000000, symbol)
-	obj.full = GUI.button(obj.hide.x + obj.hide.width + 1, y, 1, 1, colors.topBar, colors.closes.full, colors.topBar, 0x000000, symbol)
+	obj.close = GUI.button(x, y, 1, 1,backgroundColor, colors.closes.close, backgroundColor, 0x000000, symbol)
+	obj.hide = GUI.button(obj.close.x + obj.close.width + 1, y, 1, 1, backgroundColor, colors.closes.hide, backgroundColor, 0x000000, symbol)
+	obj.full = GUI.button(obj.hide.x + obj.hide.width + 1, y, 1, 1, backgroundColor, colors.closes.full, backgroundColor, 0x000000, symbol)
 end
 
 local function drawSearchBar(justDrawNotEvent)
@@ -172,7 +173,7 @@ local function drawSearchBar(justDrawNotEvent)
 end
 
 local function drawTopBar()
-	buffer.square(sizes.xFinder, sizes.yFinder, sizes.finderWidth, sizes.topBarHeight, colors.topBar)
+	buffer.square(sizes.xFinder, sizes.yFinder, sizes.finderWidth, sizes.topBarHeight, _G.OSSettings.interfaceColor or colors.topBar)
 	drawCloses()
 	local x, y = sizes.xFinder + 2, sizes.yFinder + 1
 	obj.historyBack = GUI.button(x, y, 3, 1, 0xffffff, 0x262626, 0xAAAAAA, 0x000000, "<"); x = x + obj.historyBack.width + 1
@@ -211,7 +212,7 @@ local function drawLeftBar()
 	obj.network = {}
 	buffer.setDrawLimit(sizes.xFinder, sizes.yMain, sizes.leftBarWidth, sizes.mainHeight + 1)
 	buffer.paste(1, 1, oldPixelsOfFullScreen)
-	buffer.square(sizes.xFinder, sizes.yMain, sizes.leftBarWidth, sizes.mainHeight + 1, colors.leftBar, 0x000000, " ", colors.leftBarTransparency)
+	buffer.square(sizes.xFinder, sizes.yMain, sizes.leftBarWidth, sizes.mainHeight + 1, _G.OSSettings.interfaceColor or colors.leftBar, 0x000000, " ", colors.leftBarTransparency)
 
 	local x, y = sizes.xFinder + 1, sizes.yMain
 	--Фаворитсы
