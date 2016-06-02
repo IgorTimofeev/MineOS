@@ -5,7 +5,7 @@
 			y = 5,
 		},
 		fieldOfView = 60,
-		rotation = 90,
+		rotation = 0,
 	},
 	colors = {
 		sky = 0x99DBFF,
