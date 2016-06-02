@@ -86,48 +86,52 @@ end
 
 ------------------------------------------------- Playground -----------------------------------------------------------------
 
--- local sampleTable = {
--- 	"one",
--- 	"two",
--- 	"three",
--- 	[9] = 9,
--- 	[10] = "ten",
--- 	[11] = "eleven",
--- 	["test"] = "sucess",
--- 	["tableTest"] = {
--- 		["tableInTable"] = {
--- 			[12] = "blah-blah",
--- 			["hello"] = "world",
--- 		},
--- 		"cyka",
--- 		"blyad",
--- 	},
--- 	["nilTest"] = nil,
--- 	["booleanTest"] = true,
--- }
+local sampleTable = {
+	"one",
+	"two",
+	"three",
+	[9] = 9,
+	[10] = "ten",
+	[11] = "eleven",
+	["test"] = "sucess",
+	["tableTest"] = {
+		["tableInTable"] = {
+			[12] = "blah-blah",
+			["hello"] = "world",
+		},
+		"cyka",
+		"blyad",
+	},
+	["nilTest"] = nil,
+	["booleanTest"] = true,
+}
 
--- local function fillTable()
--- 	for i = 1, 1000 do
--- 		table.insert(sampleTable, math.random(1, 100000))
--- 	end
--- end
+local function fillTable(count)
+	print("Filling table with " .. count .. " random values...")
+	for i = 1, count do
+		table.insert(sampleTable, math.random(1, 100000))
+	end
+end
 
--- local function executeAndPrintExecutionTime(method, ...)
--- 	local oldTime = os.clock()
--- 	method(...)
--- 	print(os.clock() - oldTime)
--- end
+local function executeAndPrintExecutionTime(method, ...)
+	local oldTime = os.clock()
+	method(...)
+	print("Execution time: " .. os.clock() - oldTime .. " seconds")
+end
 
--- local function compareAlgorhytms()
---  local oldSerialization = require("openOSSerialization")
--- 	print("Old:")
--- 	executeAndPrintExecutionTime(oldSerialization.serialize, sampleTable)
--- 	print("New:")
--- 	executeAndPrintExecutionTime(serialization.serialize, sampleTable)
--- end
+local function compareAlgorithms()
+	print(" ")
+	fillTable(10000)
+	print(" ")
+	local oldSerialization = require("openOSSerialization")
+	print("Old:")
+	executeAndPrintExecutionTime(oldSerialization.serialize, sampleTable)
+	print("New:")
+	executeAndPrintExecutionTime(serialization.serialize, sampleTable)
+	print(" ")
+end
 
--- fillTable()
--- compareAlgorhytms()
+compareAlgorithms()
 
 ----------------------------------------------------------------------------------------------------------------------
 
