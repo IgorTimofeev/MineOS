@@ -128,7 +128,7 @@ local function vRaycast(player, angle)
 	return math.abs(rayEngine.scene.player.position.y - By) / math.abs(math.sin( angle ))
 end
 
-function rayEngine.drawScene(force)
+function rayEngine.drawScene()
 	buffer.clear(rayEngine.scene.colors.ground)
 	buffer.square(1, 1, buffer.screen.width, math.floor(buffer.screen.height / 2),rayEngine.scene.colors.sky)
 
@@ -154,9 +154,6 @@ function rayEngine.drawScene(force)
 		buffer.square(math.floor(startX), math.floor(startY), 1, height, tileColor, 0x000000, " ")
 		startX = startX + 1
 	end
-
-	-- buffer.text(1, 1, 0xFF0000, "Memory: " .. computer.freeMemory() / 1024 .. ", dist = " .. tostring(dist))
-	buffer.draw(force)
 end
 
 function rayEngine.intro()

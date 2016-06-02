@@ -132,8 +132,8 @@ function buffer.square(x, y, width, height, background, foreground, symbol, tran
 end
 
 --Очистка экрана, по сути более короткая запись buffer.square
-function buffer.clear(color)
-	buffer.square(1, 1, buffer.screen.width, buffer.screen.height, color or 0x262626)
+function buffer.clear(color, transparency)
+	buffer.square(1, 1, buffer.screen.width, buffer.screen.height, color or 0x262626, 0x000000, " ", transparency)
 end
 
 --Заливка области изображения (рекурсивная, говно-метод)

@@ -917,8 +917,12 @@
     ["version"]=1.0,
     ["resources"]={
       {
-        ["name"]="Scene1.level",
-        ["url"]="IgorTimofeev/OpenComputers/master/Applications/RayWalk/Scene1.level",
+        ["name"]="Day.scene",
+        ["url"]="IgorTimofeev/OpenComputers/master/Applications/RayWalk/Day.scene",
+      },
+      {
+        ["name"]="Night.scene",
+        ["url"]="IgorTimofeev/OpenComputers/master/Applications/RayWalk/Night.scene",
       },
     },
   },
