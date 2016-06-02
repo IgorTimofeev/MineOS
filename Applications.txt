@@ -903,6 +903,20 @@
     },
   },
   {
+    ["name"]="MineOS/Applications/RayWalk",
+    ["url"]="IgorTimofeev/OpenComputers/master/Applications/RayWalk/RayWalk.lua",
+    ["type"]="Application",
+    ["icon"]="IgorTimofeev/OpenComputers/master/Applications/RayWalk/Icon.pic",
+    ["createShortcut"]="desktop",
+    ["version"]=1.0,
+    ["resources"]={
+      {
+        ["name"]="Scene1.level",
+        ["url"]="IgorTimofeev/OpenComputers/master/Applications/RayWalk/Scene1.level",
+      },
+    },
+  },
+  {
     ["name"]="MineOS/Applications/Weather",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/Weather/Weather.lua",
     ["type"]="Application",
