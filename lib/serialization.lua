@@ -56,11 +56,7 @@ end
 function serialization.unserialize(serializedString)
 	checkArg(1, serializedString, "string")
 	local success, result = pcall(load("return " .. serializedString))
-	if success then
-		return result
-	else
-		return nil, result
-	end
+	if success then return result else return nil, result end
 end
 
 function serialization.serializeToFile(path, array, prettyLook, indentationWidth, indentUsingTabs, appendToFile)
