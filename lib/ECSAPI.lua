@@ -337,7 +337,7 @@ function ecs.getOSApplication(application)
 		ecs.getFromPastebin(application.url, application.name)
 		
 	--Если просто какой-то скрипт
-	elseif application.type == "Script" or application.type == "Library" then
+	elseif application.type == "Script" or application.type == "Library" or application.type == "Icon" or application.type == "Wallpaper" then
 		ecs.getFromGitHub(application.url, application.name)
 	
 	--А если ваще какая-то абстрактная хуйня, либо ссылка на веб, то загружаем по УРЛ-ке

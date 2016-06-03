@@ -335,7 +335,6 @@ fs.makeDirectory(dockPath)
 --------------------------СТАДИЯ ЗАГРУЗКИ-----------------------------------
 
 do
-
   local barWidth = math.floor(windowWidth * 2 / 3)
   local xBar = math.floor(xSize/2-barWidth/2)
   local yBar = yWindowEnd - 3
@@ -347,7 +346,7 @@ do
 
   ecs.blankWindow(xWindow,yWindow,windowWidth,windowHeight)
 
-  image.draw(math.floor(xSize/2 - 33), yWindow + 2, imageDownloading)
+  image.draw(math.floor(xSize / 2 - 33), yWindow + 2, imageDownloading)
 
   ecs.colorTextWithBack(xBar, yBar - 1, ecs.colors.gray, ecs.windowColors.background, lang.osInstallation)
   ecs.progressBar(xBar, yBar, barWidth, 1, 0xcccccc, ecs.colors.blue, 0)
@@ -365,6 +364,7 @@ do
       (applications[i].forceDownload)
     then
       table.insert(thingsToDownload, applications[i])
+    end
   end
 
   for app = 1, #thingsToDownload do
@@ -373,6 +373,7 @@ do
     local percent = app / #thingsToDownload * 100
     ecs.progressBar(xBar, yBar, barWidth, 1, 0xcccccc, ecs.colors.blue, percent)
 
+    ecs.error("A<FAEfaefA", thingsToDownload[app].url)
     ecs.getOSApplication(thingsToDownload[app])
   end
 
@@ -380,8 +381,10 @@ do
 end
 
 --Создаем базовые обои рабочего стола
-ecs.createShortCut(desktopPath .. "Pictures.lnk", picturesPath)
-if downloadWallpapers then ecs.createShortCut("MineOS/System/OS/Wallpaper.lnk", picturesPath .. "Girl.pic") end
+if downloadWallpapers then
+  ecs.createShortCut(desktopPath .. "Pictures.lnk", picturesPath)
+  ecs.createShortCut("MineOS/System/OS/Wallpaper.lnk", picturesPath .. "Girl.pic")
+end
 
 --Автозагрузка
 local file = io.open("autorun.lua", "w")
