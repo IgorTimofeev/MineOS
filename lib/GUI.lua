@@ -187,6 +187,42 @@ function GUI.windowActionButtons(x, y, fatSymbol)
 	return windowActionButtons
 end
 
+function GUI.toolbar(x, y, width, height, spaceBetweenElements, currentElement, toolbarColor, elementTextColor, activeElementColor, activeElementTextColor, ...)
+	local elements, objects, elementLength, isCurrent, elementWidth = {...}, {}
+	local totalWidth = 0; for i = 1, #elements do totalWidth = totalWidth + unicode.len(elements[i]) + 2 + spaceBetweenElements end; totalWidth = totalWidth - spaceBetweenElements
+	buffer.square(x, y, width, height, toolbarColor)
+	x = math.floor(x + width / 2 - totalWidth / 2)
+	local yText = math.floor(y + height / 2)
+
+	for i = 1, #elements do
+		elementLength, isCurrent = unicode.len(elements[i]), i == currentElement 
+		elementWidth = elementLength + 2
+		if isCurrent then buffer.square(x, y, elementWidth, height, activeElementColor) end
+		buffer.text(x + 1, yText, isCurrent and activeElementTextColor or elementTextColor, elements[i])
+		table.insert(objects, GUI.object(x, y, elementWidth, height))
+		x = x + elementWidth + spaceBetweenElements
+	end	
+
+	return objects
+end
+
+function GUI.progressBar(x, y, width, height, firstColor, secondColor, value, maxValue, thin)
+	local percent = value / maxValue
+	local activeWidth = math.floor(percent * width)
+	if thin then
+		buffer.text(x, y, firstColor, string.rep("━", width))
+		buffer.text(x, y, secondColor, string.rep("━", activeWidth))
+	else
+		buffer.square(x, y, width, height, firstColor)
+		buffer.square(x, y, activeWidth, height, secondColor)
+	end
+end
+
+function GUI.windowShadow(x, y, width, height, transparency)
+	buffer.square(x + width, y + 1, 2, height, 0x000000, 0x000000, " ", transparency)
+	buffer.square(x + 2, y + height, width - 2, 1, 0x000000, 0x000000, " ", transparency)
+end
+
 ------------------------------------------------- Окна -------------------------------------------------------------------
 
 -- Красивое окошко для отображения сообщения об ошибке. Аргумент errorWindowParameters может принимать следующие значения:

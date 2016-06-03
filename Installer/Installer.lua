@@ -207,7 +207,7 @@ end
 
 ecs.prepareToExit()
 
-local downloadWallpapers, showHelpTips = false, false
+local downloadWallpapers, showHelpTips, downloadAllApps = false, false, false
 
 do
 
@@ -220,8 +220,23 @@ do
 
   waitForClickOnButton("Select language")
 
-  local data = ecs.universalWindow("auto", "auto", 36, 0x262626, true, {"EmptyLine"}, {"CenterText", ecs.colors.orange, "Select language"}, {"EmptyLine"}, {"Select", 0xFFFFFF, ecs.colors.green, "Russian", "English"}, {"EmptyLine"}, {"CenterText", ecs.colors.orange, "Change some OS properties"}, {"EmptyLine"}, {"Switch", 0xF2B233, 0xffffff, 0xFFFFFF, "Download wallpapers", true}, {"EmptyLine"}, {"Switch", 0xF2B233, 0xffffff, 0xFFFFFF, "Show help tips in OS", true}, {"EmptyLine"}, {"Button", {ecs.colors.orange, 0x262626, "OK"}})
-  downloadWallpapers, showHelpTips = data[2], data[3]
+  local data = ecs.universalWindow("auto", "auto", 36, 0x262626, true,
+    {"EmptyLine"},
+    {"CenterText", ecs.colors.orange, "Select language"},
+    {"EmptyLine"},
+    {"Select", 0xFFFFFF, ecs.colors.green, "Russian", "English"},
+    {"EmptyLine"},
+    {"CenterText", ecs.colors.orange, "Change some OS properties"},
+    {"EmptyLine"},
+    {"Switch", 0xF2B233, 0xffffff, 0xFFFFFF, "Download all Apps", true},
+    {"EmptyLine"},
+    {"Switch", 0xF2B233, 0xffffff, 0xFFFFFF, "Download wallpapers", true},
+    {"EmptyLine"},
+    {"Switch", 0xF2B233, 0xffffff, 0xFFFFFF, "Show help tips in OS", true},
+    {"EmptyLine"},
+    {"Button", {ecs.colors.orange, 0x262626, "OK"}}
+  )
+  downloadAllApps, downloadWallpapers, showHelpTips = data[2], data[3], data[4]
 
   --УСТАНАВЛИВАЕМ НУЖНЫЙ ЯЗЫК
   _G.OSSettings = { showHelpOnApplicationStart = showHelpTips, language = data[1] }
@@ -338,13 +353,27 @@ do
   ecs.progressBar(xBar, yBar, barWidth, 1, 0xcccccc, ecs.colors.blue, 0)
   os.sleep(timing)
 
-  for app = 1, #applications do
+  local thingsToDownload = {}
+  for i = 1, #applications do
+    if 
+      (applications[i].type == "Wallpaper" and downloadWallpapers)
+      or
+      (applications[i].type == "Application" and (downloadAllApps or applications[i].forceDownload))
+      or
+      (applications[i].type == "Library" or applications[i].type == "Icon")
+      or
+      (applications[i].forceDownload)
+    then
+      table.insert(thingsToDownload, applications[i])
+  end
+
+  for app = 1, #thingsToDownload do
     --ВСЕ ДЛЯ ГРАФОНА
-    drawInfo(xBar, yBar + 1, lang.downloading .. " " .. applications[app]["name"])
-    local percent = app / #applications * 100
+    drawInfo(xBar, yBar + 1, lang.downloading .. " " .. thingsToDownload[app]["name"])
+    local percent = app / #thingsToDownload * 100
     ecs.progressBar(xBar, yBar, barWidth, 1, 0xcccccc, ecs.colors.blue, percent)
 
-    ecs.getOSApplication(applications[app], downloadWallpapers)
+    ecs.getOSApplication(thingsToDownload[app])
   end
 
   os.sleep(timing)

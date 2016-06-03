@@ -94,6 +94,20 @@ function ecs.internetRequest(url)
 	end
 end
 
+--Загрузка файла с инета
+function ecs.getFileFromUrl(url, path)
+	local success, response = ecs.internetRequest(url)
+	if success then
+		fs.makeDirectory(fs.path(path) or "")
+		local file = io.open(path, "w")
+		file:write(response)
+		file:close()
+	else
+		ecs.error("Could not connect to to URL address \"" .. url .. "\"")
+		return
+	end
+end
+
 --Отключение принудительного завершения программ
 function ecs.disableInterrupting()
 	_G.eventInterruptBackup = package.loaded.event.shouldInterrupt 
@@ -270,27 +284,6 @@ function ecs.duplicateFileSystem(fromAddress, toAddress)
 	shell.execute("bin/cp -rx "..source.."* "..destination)
 end
 
---Загрузка файла с инета
-function ecs.getFileFromUrl(url, path)
-	if not _G.internet then _G.internet = require("internet") end
-
-	local result, response = pcall(internet.request, url)
-	if not result then
-		ecs.error("Could not connect to to URL address \"" .. url .. "\"")
-		return
-	end
-
-	fs.remove(path)
-	fs.makeDirectory(fs.path(path))
-	local file = io.open(path, "w")
-
-	for chunk in response do
-		file:write(chunk)
-	end
-
-	file:close()
-end
-
 --Загрузка файла с пастебина
 function ecs.getFromPastebin(paste, path)
 	local url = "http://pastebin.com/raw.php?i=" .. paste
@@ -304,8 +297,7 @@ function ecs.getFromGitHub(url, path)
 end
 
 --Загрузить ОС-приложение
-function ecs.getOSApplication(application, downloadWallpapers)
-	if downloadWallpapers == nil then downloadWallpapers = true end
+function ecs.getOSApplication(application)
     --Если это приложение
     if application.type == "Application" then
 		--Удаляем приложение, если оно уже существовало и создаем все нужные папочки
@@ -343,13 +335,7 @@ function ecs.getOSApplication(application, downloadWallpapers)
 	--Если тип = другой, чужой, а мб и свой пастебин
 	elseif application.type == "Pastebin" then
 		ecs.getFromPastebin(application.url, application.name)
-
-	--Если обои
-	elseif application.type == "Wallpaper" then
-		if downloadWallpapers then
-			ecs.getFromGitHub(application.url, application.name)
-		end
-	
+		
 	--Если просто какой-то скрипт
 	elseif application.type == "Script" or application.type == "Library" then
 		ecs.getFromGitHub(application.url, application.name)
@@ -1090,6 +1076,7 @@ end
 
 --Очистить экран, установить комфортные цвета и поставить курсок на 1, 1
 function ecs.prepareToExit(color1, color2)
+	term.setCursor(1, 1)
 	ecs.clearScreen(color1 or 0x333333)
 	gpu.setForeground(color2 or 0xffffff)
 	gpu.set(1, 1, "")

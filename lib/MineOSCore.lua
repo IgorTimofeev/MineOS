@@ -125,16 +125,21 @@ end
 
 function MineOSCore.safeLaunch(command, ...)
 	local oldResolutionWidth, oldResolutionHeight = component.gpu.getResolution()
-	local success, reason = pcall(loadfile(command), ...)
-	component.gpu.setResolution(oldResolutionWidth, oldResolutionHeight)
-	--Ебал я автора мода в задницу, кусок ебанутого говна
-	--Какого хуя я должен вставлять кучу костылей в свой прекрасный код только потому, что эта ублюдочная
-	--скотина захотела выдавать table из pcall? Что, блядь? Где это видано, сука?
-	--Почему тогда во всех случаях выдается string, а при os.exit выдается {reason = "terminated"}?
-	--Что за ебливая сучья логика? 
-	if not success and type(reason) ~= "table" then
-		reason = ecs.parseErrorMessage(reason, false)
-		GUI.error(reason, {title = {color = 0xFFDB40, text = MineOSCore.localization.errorWhileRunningProgram}})
+	local loadSuccess, loadReason = loadfile(command)
+	if loadSuccess then
+		local success, reason = pcall(loadSuccess, ...)
+		--Ебал я автора мода в задницу, кусок ебанутого говна
+		--Какого хуя я должен вставлять кучу костылей в свой прекрасный код только потому, что эта ублюдочная
+		--скотина захотела выдавать table из pcall? Что, блядь? Где это видано, сука?
+		--Почему тогда во всех случаях выдается string, а при os.exit выдается {reason = "terminated"}?
+		--Что за ебливая сучья логика? 
+		if not success and type(reason) ~= "table" then
+			reason = ecs.parseErrorMessage(reason, false)
+			GUI.error(reason, {title = {color = 0xFFDB40, text = MineOSCore.localization.errorWhileRunningProgram}})
+		end
+	else
+		component.gpu.setResolution(oldResolutionWidth, oldResolutionHeight)
+		GUI.error(loadReason, {title = {color = 0xFFDB40, text = MineOSCore.localization.errorWhileRunningProgram}})
 	end
 	buffer.start()
 end
