@@ -386,7 +386,7 @@ end
 --Создаем базовые обои рабочего стола
 if downloadWallpapers then
   ecs.createShortCut(desktopPath .. "Pictures.lnk", picturesPath)
-  ecs.createShortCut("MineOS/System/OS/Wallpaper.lnk", picturesPath .. "Girl.pic")
+  ecs.createShortCut("MineOS/System/OS/Wallpaper.lnk", picturesPath .. "Nettle.pic")
 end
 
 --Автозагрузка

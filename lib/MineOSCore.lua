@@ -155,7 +155,7 @@ function MineOSCore.launchIcon(path, translate)
 		MineOSCore.safeLaunch(path .. "/" .. ecs.hideFileFormat(fs.name(path)) .. ".lua")
 	--Если это папка
 	elseif (fileFormat == "" or fileFormat == nil) and isDirectory then
-		MineOSCore.safeLaunch("MineOS/Applications/Finder.app/Finder.lua " .. path)
+		MineOSCore.safeLaunch("MineOS/Applications/Finder.app/Finder.lua", "open", path)
 	--Если это обычный луа файл - т.е. скрипт
 	elseif fileFormat == ".lua" or fileFormat == nil then
 		buffer.clear(MineOSCore.colors.background)

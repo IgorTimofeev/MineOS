@@ -22,8 +22,8 @@
     ["version"]=1.0,
   },
   {
-    ["name"]="MineOS/Pictures/Harp.pic",
-    ["url"]="IgorTimofeev/OpenComputers/master/MineOS/Wallpapers/Harp.pic",
+    ["name"]="MineOS/Pictures/Nettle.pic",
+    ["url"]="IgorTimofeev/OpenComputers/master/MineOS/Wallpapers/Nettle.pic",
     ["type"]="Wallpaper",
     ["version"]=1.0,
   },
