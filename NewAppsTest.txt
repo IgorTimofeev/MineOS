@@ -1,18 +1,18 @@
 {
   GitHubUserURL = "https://raw.githubusercontent.com/",
-  GihHubApplicationListURL = "https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/NewAppsTest.txt",
+  GihHubApplicationListURL = "https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/Applications.txt",
   ----------------------------------------------------- Все для ОС --------------------------------------------------------------------------
   {
     ["name"]="OS.lua",
     ["url"]="IgorTimofeev/OpenComputers/master/MineOS/OS.lua",
     ["type"]="Script",
-    ["version"]=3.0,
+    ["version"]=4.0,
   },
   {
     ["name"]="MineOS/Pictures/Dayeneris.pic",
     ["url"]="IgorTimofeev/OpenComputers/master/MineOS/Wallpapers/Dayeneris.pic",
     ["type"]="Wallpaper",
-    ["version"]=1.0,
+    ["version"]=5.0,
   },
   {
     ["name"]="MineOS/Pictures/Catniss.pic",
@@ -72,7 +72,7 @@
     ["name"]="MineOS/Pictures/TemplarAssassin.pic",
     ["url"]="IgorTimofeev/OpenComputers/master/MineOS/Wallpapers/TemplarAssassin.pic",
     ["type"]="Wallpaper",
-    ["version"]=1.0,
+    ["version"]=6.0,
   },
   {
     ["name"]="MineOS/Pictures/Invoker.pic",
@@ -114,7 +114,7 @@
     ["name"]="MineOS/System/OS/Languages/English.lang",
     ["url"]="IgorTimofeev/OpenComputers/master/MineOS/Languages/English.lang",
     ["type"]="Script",
-    ["version"]=1.0,
+    ["version"]=112.0,
   },
 
   ----------------------------------------------------- Системные иконки --------------------------------------------------------------------------
@@ -164,19 +164,19 @@
     ["name"]="MineOS/System/OS/Icons/Floppy.pic",
     ["url"]="IgorTimofeev/OpenComputers/master/MineOS/Icons/Floppy.pic",
     ["type"]="Script",
-    ["version"]=1.0,
+    ["version"]=33.0,
   },
   {
     ["name"]="MineOS/System/OS/Icons/Steve.pic",
     ["url"]="IgorTimofeev/OpenComputers/master/MineOS/Icons/Steve.pic",
     ["type"]="Script",
-    ["version"]=1.0,
+    ["version"]=14.0,
   },
   {
     ["name"]="MineOS/System/OS/Icons/Folder.pic",
     ["url"]="IgorTimofeev/OpenComputers/master/MineOS/Icons/Folder.pic",
     ["type"]="Script",
-    ["version"]=1.0,
+    ["version"]=1.5,
   },
   {
     ["name"]="MineOS/System/OS/Icons/Finger.pic",
@@ -236,7 +236,7 @@
     ["name"]="MineOS/System/OS/Icons/Lua.pic",
     ["url"]="IgorTimofeev/OpenComputers/master/MineOS/Icons/Lua.pic",
     ["type"]="Script",
-    ["version"]=1.0,
+    ["version"]=1.6,
   },
   {
     ["name"]="MineOS/System/OS/Icons/SampleIcon.pic",
