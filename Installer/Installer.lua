@@ -365,6 +365,8 @@ do
     then
       table.insert(thingsToDownload, applications[i])
     end
+    --Подчищаем за собой, а то мусора нынче много
+    applications[i] = nil
   end
 
   for app = 1, #thingsToDownload do
@@ -373,7 +375,6 @@ do
     local percent = app / #thingsToDownload * 100
     ecs.progressBar(xBar, yBar, barWidth, 1, 0xcccccc, ecs.colors.blue, percent)
 
-    ecs.error("A<FAEfaefA", thingsToDownload[app].url)
     ecs.getOSApplication(thingsToDownload[app])
   end
 

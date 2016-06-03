@@ -109,12 +109,14 @@
     ["name"]="MineOS/System/OS/Languages/Russian.lang",
     ["url"]="IgorTimofeev/OpenComputers/master/MineOS/Languages/Russian.lang",
     ["type"]="Script",
+    ["forceDownload"]=true,
     ["version"]=1.0,
   },
   {
     ["name"]="MineOS/System/OS/Languages/English.lang",
     ["url"]="IgorTimofeev/OpenComputers/master/MineOS/Languages/English.lang",
     ["type"]="Script",
+    ["forceDownload"]=true,
     ["version"]=1.0,
   },
 
@@ -720,7 +722,6 @@
     ["type"]="Application",
     ["icon"]="IgorTimofeev/OpenComputers/master/Applications/Autorun/Icon.pic",
     ["createShortcut"]="desktop",
-    ["forceDownload"]=true,
     ["version"]=1.0,
   },
   {
