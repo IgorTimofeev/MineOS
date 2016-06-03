@@ -668,7 +668,6 @@
     ["type"]="Application",
     ["icon"]="IgorTimofeev/OpenComputers/master/Applications/Calendar/Icon.pic",
     ["createShortcut"]="dock",
-    ["forceDownload"]=true,
     ["version"]=1.0,
   },
   {

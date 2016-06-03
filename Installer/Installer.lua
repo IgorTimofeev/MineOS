@@ -143,10 +143,12 @@ applications = seri.unserialize(getFromGitHubSafely(GitHubUserUrl .. "IgorTimofe
 print(" ")
 
 for i = 1, #preLoadApi do
-  print("Downloading must-have files (" .. fs.name(preLoadApi[i].path) .. ")")
+  print("Downloading \"" .. fs.name(preLoadApi[i].path) .. "\"")
   getFromGitHubSafely(GitHubUserUrl .. preLoadApi[i].paste, preLoadApi[i].path)
 end
 
+print(" ")
+print("Initialization stage is complete, loading installer")
 print(" ")
 
 package.loaded.ecs = nil

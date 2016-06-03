@@ -460,10 +460,10 @@ while true do
 					MineOSCore.drawIcon(icon.x, icon.y, pathOfDockShortcuts .. icon.path, false, 0xffffff)
 					buffer.draw()
 
+					local fileFormat = ecs.getFileFormat(icon.path)
 					if eventData[5] == 0 then
-						os.sleep(0.2)
-						MineOSCore.launchIcon(pathOfDockShortcuts .. icon.path)
-						drawAll(true)
+						icon.path = pathOfDockShortcuts .. icon.path
+						MineOSCore.iconLeftClick(icon, oldPixelsOfIcon, fileFormat, {method = getFileListAndDrawAll, arguments = {}}, {method = getFileListAndDrawAll, arguments = {true}}, {method = function() MineOSCore.safeLaunch("Finder.lua", "open", icon.path) end, arguments = {icon.path}})
 					else
 						local content = ecs.readShortcut(pathOfDockShortcuts .. icon.path)
 						action = context.menu(eventData[3], eventData[4], {MineOSCore.localization.contextMenuRemoveFromDock, not (currentCountOfIconsInDock > 1)})
