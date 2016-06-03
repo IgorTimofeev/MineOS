@@ -1,6 +1,6 @@
 {
   GitHubUserURL = "https://raw.githubusercontent.com/",
-  GitHubApplicationListURL = "https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/NewAppsTest.txt",
+  GitHubApplicationListURL = "https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/Applications.txt",
   ----------------------------------------------------- Все для ОС --------------------------------------------------------------------------
   {
     ["name"]="OS.lua",
