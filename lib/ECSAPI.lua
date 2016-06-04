@@ -317,7 +317,7 @@ function ecs.getOSApplication(application)
 
 		--Если есть файл "о программе", то грузим и его
 		if application.about then
-			ecs.getFromGitHub(application.about, application.name .. ".app/Resources/About/" .. _G.OSSettings.language .. ".txt")
+			ecs.getFromGitHub(application.about .. _G.OSSettings.language .. ".txt", application.name .. ".app/Resources/About/" .. _G.OSSettings.language .. ".txt")
 		end 
 
 		--Если имеется режим создания ярлыка, то создаем его
