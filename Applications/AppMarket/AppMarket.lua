@@ -123,7 +123,7 @@ local function getApplication(i)
 	end
 
 	if newApplications[i].about then
-		currentApps[i].description = getDescription(newApplications.GitHubUserURL .. newApplications[i].about)
+		currentApps[i].description = getDescription(newApplications.GitHubUserURL .. newApplications[i].about .. _G.OSSettings.language .. ".txt")
 		currentApps[i].description = ecs.stringWrap({currentApps[i].description}, sizes.descriptionTruncateSize )
 	else
 		currentApps[i].description = {"Описание отсутствует"}

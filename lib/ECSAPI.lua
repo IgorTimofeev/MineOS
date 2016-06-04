@@ -317,7 +317,7 @@ function ecs.getOSApplication(application)
 
 		--Если есть файл "о программе", то грузим и его
 		if application.about then
-			ecs.getFromGitHub(application.about, application.name .. ".app/Resources/About.txt")
+			ecs.getFromGitHub(application.about, application.name .. ".app/Resources/About/" .. _G.OSSettings.language .. ".txt")
 		end 
 
 		--Если имеется режим создания ярлыка, то создаем его
@@ -1604,7 +1604,7 @@ end
 
 --Отобразить окно с содержимым файла информации о приложении
 function ecs.applicationHelp(pathToApplication)
-	local pathToAboutFile = pathToApplication .. "/resources/About.txt"
+	local pathToAboutFile = pathToApplication .. "/resources/About/" .. _G.OSSettings.language .. ".txt"
 	if _G.OSSettings and _G.OSSettings.showHelpOnApplicationStart and fs.exists(pathToAboutFile) then
 		local applicationName = fs.name(pathToApplication)
 		local file = io.open(pathToAboutFile, "r")

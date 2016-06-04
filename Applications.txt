@@ -497,7 +497,7 @@
   {
     ["name"]="MineOS/Applications/Battleship",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/Battleship/Battleship.lua",
-    ["about"]="IgorTimofeev/OpenComputers/master/Applications/Battleship/About.txt",
+    ["about"]="IgorTimofeev/OpenComputers/master/Applications/Battleship/About/",
     ["type"]="Application",
     ["icon"]="IgorTimofeev/OpenComputers/master/Applications/Battleship/Icon.pic",
     ["createShortcut"]="desktop",
@@ -514,7 +514,7 @@
   {
     ["name"]="MineOS/Applications/Radio",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/Radio/Radio.lua",
-    ["about"]="IgorTimofeev/OpenComputers/master/Applications/Radio/About.txt",
+    ["about"]="IgorTimofeev/OpenComputers/master/Applications/Radio/About/",
     ["type"]="Application",
     ["icon"]="IgorTimofeev/OpenComputers/master/Applications/Radio/Icon.pic",
     ["createShortcut"]="desktop",
@@ -523,7 +523,7 @@
   {
     ["name"]="MineOS/Applications/FuckTheRain",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/FuckTheRain/FuckTheRain.lua",
-    ["about"]="IgorTimofeev/OpenComputers/master/Applications/FuckTheRain/About.txt",
+    ["about"]="IgorTimofeev/OpenComputers/master/Applications/FuckTheRain/About/",
     ["type"]="Application",
     ["icon"]="IgorTimofeev/OpenComputers/master/Applications/FuckTheRain/Icon.pic",
     ["createShortcut"]="desktop",
@@ -532,7 +532,7 @@
   {
     ["name"]="MineOS/Applications/GuessWord",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/GuessWord/GuessWord.lua",
-    ["about"]="IgorTimofeev/OpenComputers/master/Applications/GuessWord/About.txt",
+    ["about"]="IgorTimofeev/OpenComputers/master/Applications/GuessWord/About/",
     ["type"]="Application",
     ["icon"]="IgorTimofeev/OpenComputers/master/Applications/GuessWord/Icon.pic",
     ["createShortcut"]="desktop",
@@ -541,7 +541,7 @@
   {
     ["name"]="MineOS/Applications/3DPrint",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/3DPrint/3DPrint.lua",
-    ["about"]="IgorTimofeev/OpenComputers/master/Applications/3DPrint/About.txt",
+    ["about"]="IgorTimofeev/OpenComputers/master/Applications/3DPrint/About/",
     ["type"]="Application",
     ["icon"]="IgorTimofeev/OpenComputers/master/Applications/3DPrint/Icon.pic",
     ["createShortcut"]="desktop",
@@ -550,7 +550,7 @@
   {
     ["name"]="MineOS/Applications/ForceAdmin",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/ForceAdmin/ForceAdmin.lua",
-    ["about"]="IgorTimofeev/OpenComputers/master/Applications/ForceAdmin/About.txt",
+    ["about"]="IgorTimofeev/OpenComputers/master/Applications/ForceAdmin/About/",
     ["type"]="Application",
     ["icon"]="IgorTimofeev/OpenComputers/master/Applications/ForceAdmin/Icon.pic",
     ["createShortcut"]="desktop",
@@ -559,7 +559,7 @@
   {
     ["name"]="MineOS/Applications/MineSweeper",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/MineSweeper/MineSweeper.lua",
-    ["about"]="IgorTimofeev/OpenComputers/master/Applications/MineSweeper/About.txt",
+    ["about"]="IgorTimofeev/OpenComputers/master/Applications/MineSweeper/About/",
     ["type"]="Application",
     ["icon"]="IgorTimofeev/OpenComputers/master/Applications/MineSweeper/Icon.pic",
     ["createShortcut"]="desktop",
@@ -568,7 +568,7 @@
   {
     ["name"]="MineOS/Applications/DanceFloor",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/DanceFloor/DanceFloor.lua",
-    ["about"]="IgorTimofeev/OpenComputers/master/Applications/DanceFloor/About.txt",
+    ["about"]="IgorTimofeev/OpenComputers/master/Applications/DanceFloor/About/",
     ["type"]="Application",
     ["icon"]="IgorTimofeev/OpenComputers/master/Applications/DanceFloor/Icon.pic",
     ["createShortcut"]="desktop",
@@ -577,7 +577,7 @@
   {
     ["name"]="MineOS/Applications/RunningString",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/RunningString/RunningString.lua",
-    ["about"]="IgorTimofeev/OpenComputers/master/Applications/RunningString/About.txt",
+    ["about"]="IgorTimofeev/OpenComputers/master/Applications/RunningString/About/",
     ["type"]="Application",
     ["icon"]="IgorTimofeev/OpenComputers/master/Applications/RunningString/Icon.pic",
     ["createShortcut"]="desktop",
@@ -586,7 +586,7 @@
   {
     ["name"]="MineOS/Applications/QuantumCube",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/QuantumCube/QuantumCube.lua",
-    ["about"]="IgorTimofeev/OpenComputers/master/Applications/QuantumCube/About.txt",
+    ["about"]="IgorTimofeev/OpenComputers/master/Applications/QuantumCube/About/",
     ["type"]="Application",
     ["icon"]="IgorTimofeev/OpenComputers/master/Applications/QuantumCube/Icon.pic",
     ["createShortcut"]="desktop",
@@ -595,7 +595,7 @@
   {
     ["name"]="MineOS/Applications/Photoshop",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/Photoshop/Photoshop.lua",
-    ["about"]="IgorTimofeev/OpenComputers/master/Applications/Photoshop/About.txt",
+    ["about"]="IgorTimofeev/OpenComputers/master/Applications/Photoshop/About/",
     ["type"]="Application",
     ["icon"]="IgorTimofeev/OpenComputers/master/Applications/Photoshop/Icon.pic",
     ["createShortcut"]="dock",
@@ -637,7 +637,7 @@
   {
     ["name"]="MineOS/Applications/Finder",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/Finder/Finder.lua",
-    ["about"]="IgorTimofeev/OpenComputers/master/Applications/Finder/About.txt",
+    ["about"]="IgorTimofeev/OpenComputers/master/Applications/Finder/About/",
     ["type"]="Application",
     ["icon"]="IgorTimofeev/OpenComputers/master/Applications/Finder/Icon.pic",
     ["createShortcut"]="dock",
@@ -647,7 +647,7 @@
   {
     ["name"]="MineOS/Applications/Control",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/Control/Control.lua",
-    ["about"]="IgorTimofeev/OpenComputers/master/Applications/Control/About.txt",
+    ["about"]="IgorTimofeev/OpenComputers/master/Applications/Control/About/",
     ["type"]="Application",
     ["icon"]="IgorTimofeev/OpenComputers/master/Applications/Control/Icon.pic",
     ["createShortcut"]="desktop",
@@ -664,7 +664,7 @@
   {
     ["name"]="MineOS/Applications/Calendar",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/Calendar/Calendar.lua",
-    ["about"]="IgorTimofeev/OpenComputers/master/Applications/Calendar/About.txt",
+    ["about"]="IgorTimofeev/OpenComputers/master/Applications/Calendar/About/",
     ["type"]="Application",
     ["icon"]="IgorTimofeev/OpenComputers/master/Applications/Calendar/Icon.pic",
     ["createShortcut"]="dock",
@@ -681,7 +681,7 @@
   {
     ["name"]="MineOS/Applications/CodeDoor",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/CodeDoor/CodeDoor.lua",
-    ["about"]="IgorTimofeev/OpenComputers/master/Applications/CodeDoor/About.txt",
+    ["about"]="IgorTimofeev/OpenComputers/master/Applications/CodeDoor/About/",
     ["type"]="Application",
     ["icon"]="IgorTimofeev/OpenComputers/master/Applications/CodeDoor/Icon.pic",
     ["createShortcut"]="desktop",
@@ -690,7 +690,7 @@
   {
     ["name"]="MineOS/Applications/Keyboard",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/Keyboard/Keyboard.lua",
-    ["about"]="IgorTimofeev/OpenComputers/master/Applications/Keyboard/About.txt",
+    ["about"]="IgorTimofeev/OpenComputers/master/Applications/Keyboard/About/",
     ["type"]="Application",
     ["icon"]="IgorTimofeev/OpenComputers/master/Applications/Keyboard/Icon.pic",
     ["createShortcut"]="desktop",
@@ -699,7 +699,7 @@
   {
     ["name"]="MineOS/Applications/Nano",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/Nano/Nano.lua",
-    ["about"]="IgorTimofeev/OpenComputers/master/Applications/Nano/About.txt",
+    ["about"]="IgorTimofeev/OpenComputers/master/Applications/Nano/About/",
     ["type"]="Application",
     ["icon"]="IgorTimofeev/OpenComputers/master/Applications/Nano/Icon.pic",
     ["createShortcut"]="desktop",
@@ -708,7 +708,7 @@
   {
     ["name"]="MineOS/Applications/Camera",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/Camera/Camera.lua",
-    ["about"]="IgorTimofeev/OpenComputers/master/Applications/Camera/About.txt",
+    ["about"]="IgorTimofeev/OpenComputers/master/Applications/Camera/About/",
     ["type"]="Application",
     ["icon"]="IgorTimofeev/OpenComputers/master/Applications/Camera/Icon.pic",
     ["createShortcut"]="desktop",
@@ -717,7 +717,7 @@
   {
     ["name"]="MineOS/Applications/Autorun",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/Autorun/Autorun.lua",
-    ["about"]="IgorTimofeev/OpenComputers/master/Applications/Autorun/About.txt",
+    ["about"]="IgorTimofeev/OpenComputers/master/Applications/Autorun/About/",
     ["type"]="Application",
     ["icon"]="IgorTimofeev/OpenComputers/master/Applications/Autorun/Icon.pic",
     ["createShortcut"]="desktop",
@@ -726,7 +726,7 @@
   {
     ["name"]="MineOS/Applications/Matrix",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/Matrix/Matrix.lua",
-    ["about"]="IgorTimofeev/OpenComputers/master/Applications/Matrix/About.txt",
+    ["about"]="IgorTimofeev/OpenComputers/master/Applications/Matrix/About/",
     ["type"]="Application",
     ["icon"]="IgorTimofeev/OpenComputers/master/Applications/Matrix/Icon.pic",
     ["createShortcut"]="desktop",
@@ -735,7 +735,7 @@
   {
     ["name"]="MineOS/Applications/HEX",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/HEX/HEX.lua",
-    ["about"]="IgorTimofeev/OpenComputers/master/Applications/HEX/About.txt",
+    ["about"]="IgorTimofeev/OpenComputers/master/Applications/HEX/About/",
     ["type"]="Application",
     ["icon"]="IgorTimofeev/OpenComputers/master/Applications/HEX/Icon.pic",
     ["createShortcut"]="desktop",
@@ -744,7 +744,7 @@
   {
     ["name"]="MineOS/Applications/ChristmasTree",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/ChristmasTree/ChristmasTree.lua",
-    ["about"]="IgorTimofeev/OpenComputers/master/Applications/ChristmasTree/About.txt",
+    ["about"]="IgorTimofeev/OpenComputers/master/Applications/ChristmasTree/About/",
     ["type"]="Application",
     ["createShortcut"]="desktop",
     ["icon"]="IgorTimofeev/OpenComputers/master/Applications/ChristmasTree/Icon.pic",
@@ -755,7 +755,7 @@
     ["name"]="MineOS/Applications/InfoPanel",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/InfoPanel/InfoPanel.lua",
     ["type"]="Application",
-    ["about"]="IgorTimofeev/OpenComputers/master/Applications/InfoPanel/About.txt",
+    ["about"]="IgorTimofeev/OpenComputers/master/Applications/InfoPanel/About/",
     ["icon"]="IgorTimofeev/OpenComputers/master/Applications/InfoPanel/Icon.pic",
     ["createShortcut"]="desktop",
     ["version"]=1.0,
@@ -788,7 +788,7 @@
   {
     ["name"]="MineOS/Applications/Chat",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/Chat/Chat.lua",
-    ["about"]="IgorTimofeev/OpenComputers/master/Applications/Chat/About.txt",
+    ["about"]="IgorTimofeev/OpenComputers/master/Applications/Chat/About/",
     ["type"]="Application",
     ["icon"]="IgorTimofeev/OpenComputers/master/Applications/Chat/Icon.pic",
     ["createShortcut"]="desktop",
@@ -838,7 +838,7 @@
     ["name"]="MineOS/Applications/TurretControl",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/TurretControl/TurretControl.lua",
     ["type"]="Application",
-    ["about"]="IgorTimofeev/OpenComputers/master/Applications/TurretControl/About.txt",
+    ["about"]="IgorTimofeev/OpenComputers/master/Applications/TurretControl/About/",
     ["icon"]="IgorTimofeev/OpenComputers/master/Applications/TurretControl/Icon.pic",
     ["createShortcut"]="desktop",
     ["version"]=1.0,
@@ -866,7 +866,7 @@
   {
     ["name"]="MineOS/Applications/Crossword",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/Crossword/Crossword.lua",
-    ["about"]="IgorTimofeev/OpenComputers/master/Applications/Crossword/About.txt",
+    ["about"]="IgorTimofeev/OpenComputers/master/Applications/Crossword/About/",
     ["type"]="Application",
     ["icon"]="IgorTimofeev/OpenComputers/master/Applications/Crossword/Icon.pic",
     ["createShortcut"]="desktop",
@@ -899,7 +899,7 @@
   {
     ["name"]="MineOS/Applications/BufferDemo",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/BufferDemo/BufferDemo.lua",
-    ["about"]="IgorTimofeev/OpenComputers/master/Applications/BufferDemo/About.txt",
+    ["about"]="IgorTimofeev/OpenComputers/master/Applications/BufferDemo/About/",
     ["type"]="Application",
     ["icon"]="IgorTimofeev/OpenComputers/master/Applications/BufferDemo/Icon.pic",
     ["createShortcut"]="desktop",
@@ -914,7 +914,7 @@
   {
     ["name"]="MineOS/Applications/Viewer",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/Viewer/Viewer.lua",
-    ["about"]="IgorTimofeev/OpenComputers/master/Applications/Viewer/About.txt",
+    ["about"]="IgorTimofeev/OpenComputers/master/Applications/Viewer/About/",
     ["type"]="Application",
     ["icon"]="IgorTimofeev/OpenComputers/master/Applications/Viewer/Icon.pic",
     ["createShortcut"]="desktop",
