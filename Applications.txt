@@ -8,7 +8,7 @@
     ["about"]="IgorTimofeev/OpenComputers/master/MineOS/About/",
     ["type"]="Script",
     ["forceDownload"]=true,
-    ["version"]=3.2,
+    ["version"]=3.21,
   },
   {
     ["name"]="MineOS/Pictures/Dayeneris.pic",
