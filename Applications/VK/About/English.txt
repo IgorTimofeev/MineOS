@@ -1,0 +1,1 @@
+This is a standalone client for VK.com social network. It allows you to communicate with your friends, view their profiles and basic information, read the news feed, and listen to audio.

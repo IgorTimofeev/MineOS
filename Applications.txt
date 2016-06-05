@@ -7,7 +7,7 @@
     ["url"]="IgorTimofeev/OpenComputers/master/MineOS/OS.lua",
     ["type"]="Script",
     ["forceDownload"]=true,
-    ["version"]=3.0,
+    ["version"]=3.1,
   },
   {
     ["name"]="MineOS/Pictures/Dayeneris.pic",
@@ -409,6 +409,7 @@
     ["name"]="bin/get.lua",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/get.lua",
     ["type"]="Script",
+    ["forceDownload"]=true,
     ["version"]=1.0,
   },
   {
@@ -460,7 +461,129 @@
     ["forceDownload"]=true,
     ["version"]=1.0,
   },
-  ----------------------------------------------------- Приложения без ресурсов --------------------------------------------------------------------------
+  ----------------------------------------------------- Приложения --------------------------------------------------------------------------
+  {
+    ["name"]="MineOS/Applications/VK",
+    ["url"]="IgorTimofeev/OpenComputers/master/Applications/VK/VK.lua",
+    ["about"]="IgorTimofeev/OpenComputers/master/Applications/VK/About/",
+    ["type"]="Application",
+    ["icon"]="IgorTimofeev/OpenComputers/master/Applications/VK/Icon.pic",
+    ["createShortcut"]="dock",
+    ["version"]=1.1,
+    ["resources"]={
+      {
+        ["name"]="VKLogo.pic",
+        ["url"]="IgorTimofeev/OpenComputers/master/Applications/VK/VKLogo.pic",
+      },
+    },
+  },
+  {
+    ["name"]="MineOS/Applications/Weather",
+    ["url"]="IgorTimofeev/OpenComputers/master/Applications/Weather/Weather.lua",
+    ["about"]="IgorTimofeev/OpenComputers/master/Applications/Weather/About/",
+    ["type"]="Application",
+    ["icon"]="IgorTimofeev/OpenComputers/master/Applications/Weather/Icon.pic",
+    ["createShortcut"]="desktop",
+    ["version"]=1.1,
+    ["resources"]={
+      {
+        ["name"]="Cloudy.pic",
+        ["url"]="IgorTimofeev/OpenComputers/master/Applications/Weather/Cloudy.pic",
+      },
+      {
+        ["name"]="Cloudy.pic",
+        ["url"]="IgorTimofeev/OpenComputers/master/Applications/Weather/Cloudy.pic",
+      },
+      {
+        ["name"]="Rainy.pic",
+        ["url"]="IgorTimofeev/OpenComputers/master/Applications/Weather/Rainy.pic",
+      },
+      {
+        ["name"]="Snowy.pic",
+        ["url"]="IgorTimofeev/OpenComputers/master/Applications/Weather/Snowy.pic",
+      },
+      {
+        ["name"]="Stormy.pic",
+        ["url"]="IgorTimofeev/OpenComputers/master/Applications/Weather/Stormy.pic",
+      },
+      {
+        ["name"]="Sunny.pic",
+        ["url"]="IgorTimofeev/OpenComputers/master/Applications/Weather/Sunny.pic",
+      },
+      {
+        ["name"]="SunnyWithClouds.pic",
+        ["url"]="IgorTimofeev/OpenComputers/master/Applications/Weather/SunnyWithClouds.pic",
+      },
+    },
+  },
+  {
+    ["name"]="MineOS/Applications/3DPrint",
+    ["url"]="IgorTimofeev/OpenComputers/master/Applications/3DPrint/3DPrint.lua",
+    ["about"]="IgorTimofeev/OpenComputers/master/Applications/3DPrint/About/",
+    ["type"]="Application",
+    ["icon"]="IgorTimofeev/OpenComputers/master/Applications/3DPrint/Icon.pic",
+    ["createShortcut"]="desktop",
+    ["version"]=1.1,
+  },
+  {
+    ["name"]="MineOS/Applications/FlappyBird",
+    ["url"]="IgorTimofeev/OpenComputers/master/Applications/FlappyBird/FlappyBird.lua",
+    ["about"]="IgorTimofeev/OpenComputers/master/Applications/FlappyBird/About/",
+    ["type"]="Application",
+    ["icon"]="IgorTimofeev/OpenComputers/master/Applications/FlappyBird/Icon.pic",
+    ["createShortcut"]="desktop",
+    ["version"]=1.1,
+    ["resources"]={
+      {
+        ["name"]="Flappy.pic",
+        ["url"]="IgorTimofeev/OpenComputers/master/Applications/FlappyBird/Flappy.pic",
+      },
+    },
+  },
+  {
+    ["name"]="MineOS/Applications/RayWalk",
+    ["url"]="IgorTimofeev/OpenComputers/master/Applications/RayWalk/RayWalk.lua",
+    ["about"]="IgorTimofeev/OpenComputers/master/Applications/RayWalk/About/",
+    ["type"]="Application",
+    ["icon"]="IgorTimofeev/OpenComputers/master/Applications/RayWalk/Icon.pic",
+    ["createShortcut"]="desktop",
+    ["version"]=1.1,
+    ["resources"]={
+      {
+        ["name"]="Day.scene",
+        ["url"]="IgorTimofeev/OpenComputers/master/Applications/RayWalk/Day.scene",
+      },
+      {
+        ["name"]="Night.scene",
+        ["url"]="IgorTimofeev/OpenComputers/master/Applications/RayWalk/Night.scene",
+      },
+    },
+  },
+  {
+    ["name"]="MineOS/Applications/Calendar",
+    ["url"]="IgorTimofeev/OpenComputers/master/Applications/Calendar/Calendar.lua",
+    ["about"]="IgorTimofeev/OpenComputers/master/Applications/Calendar/About/",
+    ["type"]="Application",
+    ["icon"]="IgorTimofeev/OpenComputers/master/Applications/Calendar/Icon.pic",
+    ["createShortcut"]="dock",
+    ["version"]=1.0,
+  },
+  {
+    ["name"]="MineOS/Applications/Snake",
+    ["url"]="IgorTimofeev/OpenComputers/master/Applications/Snake/Snake.lua",
+    ["type"]="Application",
+    ["icon"]="IgorTimofeev/OpenComputers/master/Applications/Snake/Icon.pic",
+    ["createShortcut"]="desktop",
+    ["version"]=1.0,
+  },
+  {
+    ["name"]="MineOS/Applications/Palette",
+    ["url"]="IgorTimofeev/OpenComputers/master/Applications/Palette/Palette.lua",
+    ["type"]="Application",
+    ["icon"]="IgorTimofeev/OpenComputers/master/Applications/Palette/Icon.pic",
+    ["createShortcut"]="desktop",
+    ["version"]=1.0,
+  },
   {
     ["name"]="MineOS/Applications/AppMarket",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/AppMarket/AppMarket.lua",
@@ -504,14 +627,6 @@
     ["version"]=1.0,
   },
   {
-    ["name"]="MineOS/Applications/Palette",
-    ["url"]="IgorTimofeev/OpenComputers/master/Applications/Palette/Palette.lua",
-    ["type"]="Application",
-    ["icon"]="IgorTimofeev/OpenComputers/master/Applications/Palette/Icon.pic",
-    ["createShortcut"]="desktop",
-    ["version"]=1.0,
-  },
-  {
     ["name"]="MineOS/Applications/Radio",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/Radio/Radio.lua",
     ["about"]="IgorTimofeev/OpenComputers/master/Applications/Radio/About/",
@@ -535,15 +650,6 @@
     ["about"]="IgorTimofeev/OpenComputers/master/Applications/GuessWord/About/",
     ["type"]="Application",
     ["icon"]="IgorTimofeev/OpenComputers/master/Applications/GuessWord/Icon.pic",
-    ["createShortcut"]="desktop",
-    ["version"]=1.0,
-  },
-  {
-    ["name"]="MineOS/Applications/3DPrint",
-    ["url"]="IgorTimofeev/OpenComputers/master/Applications/3DPrint/3DPrint.lua",
-    ["about"]="IgorTimofeev/OpenComputers/master/Applications/3DPrint/About/",
-    ["type"]="Application",
-    ["icon"]="IgorTimofeev/OpenComputers/master/Applications/3DPrint/Icon.pic",
     ["createShortcut"]="desktop",
     ["version"]=1.0,
   },
@@ -658,23 +764,6 @@
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/Piano/Piano.lua",
     ["type"]="Application",
     ["icon"]="IgorTimofeev/OpenComputers/master/Applications/Piano/Icon.pic",
-    ["createShortcut"]="desktop",
-    ["version"]=1.0,
-  },
-  {
-    ["name"]="MineOS/Applications/Calendar",
-    ["url"]="IgorTimofeev/OpenComputers/master/Applications/Calendar/Calendar.lua",
-    ["about"]="IgorTimofeev/OpenComputers/master/Applications/Calendar/About/",
-    ["type"]="Application",
-    ["icon"]="IgorTimofeev/OpenComputers/master/Applications/Calendar/Icon.pic",
-    ["createShortcut"]="dock",
-    ["version"]=1.0,
-  },
-  {
-    ["name"]="MineOS/Applications/Snake",
-    ["url"]="IgorTimofeev/OpenComputers/master/Applications/Snake/Snake.lua",
-    ["type"]="Application",
-    ["icon"]="IgorTimofeev/OpenComputers/master/Applications/Snake/Icon.pic",
     ["createShortcut"]="desktop",
     ["version"]=1.0,
   },
@@ -800,7 +889,6 @@
     ["type"]="Script",
     ["version"]=1.0,
   },
-  ----------------------------------------------------- Приложения с ресурсами --------------------------------------------------------------------------
   {
     ["name"]="MineOS/Applications/Stargate",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/Stargate/Stargate.lua",
@@ -820,21 +908,6 @@
     },
   },
   {
-    ["name"]="MineOS/Applications/VK",
-    ["url"]="IgorTimofeev/OpenComputers/master/Applications/VK/VK.lua",
-    ["type"]="Application",
-    ["icon"]="IgorTimofeev/OpenComputers/master/Applications/VK/Icon.pic",
-    ["createShortcut"]="dock",
-    ["forceDownload"]=true,
-    ["version"]=1.0,
-    ["resources"]={
-      {
-        ["name"]="VKLogo.pic",
-        ["url"]="IgorTimofeev/OpenComputers/master/Applications/VK/VKLogo.pic",
-      },
-    },
-  },
-  {
     ["name"]="MineOS/Applications/TurretControl",
     ["url"]="IgorTimofeev/OpenComputers/master/Applications/TurretControl/TurretControl.lua",
     ["type"]="Application",
@@ -846,20 +919,6 @@
       {
         ["name"]="Turret.pic",
         ["url"]="IgorTimofeev/OpenComputers/master/Applications/TurretControl/Turret.pic",
-      },
-    },
-  },
-  {
-    ["name"]="MineOS/Applications/FlappyBird",
-    ["url"]="IgorTimofeev/OpenComputers/master/Applications/FlappyBird/FlappyBird.lua",
-    ["type"]="Application",
-    ["icon"]="IgorTimofeev/OpenComputers/master/Applications/FlappyBird/Icon.pic",
-    ["createShortcut"]="desktop",
-    ["version"]=1.0,
-    ["resources"]={
-      {
-        ["name"]="Flappy.pic",
-        ["url"]="IgorTimofeev/OpenComputers/master/Applications/FlappyBird/Flappy.pic",
       },
     },
   },
@@ -932,62 +991,6 @@
       {
         ["name"]="play.pic",
         ["url"]="IgorTimofeev/OpenComputers/master/Applications/Viewer/play.pic",
-      },
-    },
-  },
-  {
-    ["name"]="MineOS/Applications/RayWalk",
-    ["url"]="IgorTimofeev/OpenComputers/master/Applications/RayWalk/RayWalk.lua",
-    ["type"]="Application",
-    ["icon"]="IgorTimofeev/OpenComputers/master/Applications/RayWalk/Icon.pic",
-    ["createShortcut"]="desktop",
-    ["version"]=1.0,
-    ["resources"]={
-      {
-        ["name"]="Day.scene",
-        ["url"]="IgorTimofeev/OpenComputers/master/Applications/RayWalk/Day.scene",
-      },
-      {
-        ["name"]="Night.scene",
-        ["url"]="IgorTimofeev/OpenComputers/master/Applications/RayWalk/Night.scene",
-      },
-    },
-  },
-  {
-    ["name"]="MineOS/Applications/Weather",
-    ["url"]="IgorTimofeev/OpenComputers/master/Applications/Weather/Weather.lua",
-    ["type"]="Application",
-    ["icon"]="IgorTimofeev/OpenComputers/master/Applications/Weather/Icon.pic",
-    ["createShortcut"]="desktop",
-    ["version"]=1.0,
-    ["resources"]={
-      {
-        ["name"]="Cloudy.pic",
-        ["url"]="IgorTimofeev/OpenComputers/master/Applications/Weather/Cloudy.pic",
-      },
-      {
-        ["name"]="Cloudy.pic",
-        ["url"]="IgorTimofeev/OpenComputers/master/Applications/Weather/Cloudy.pic",
-      },
-      {
-        ["name"]="Rainy.pic",
-        ["url"]="IgorTimofeev/OpenComputers/master/Applications/Weather/Rainy.pic",
-      },
-      {
-        ["name"]="Snowy.pic",
-        ["url"]="IgorTimofeev/OpenComputers/master/Applications/Weather/Snowy.pic",
-      },
-      {
-        ["name"]="Stormy.pic",
-        ["url"]="IgorTimofeev/OpenComputers/master/Applications/Weather/Stormy.pic",
-      },
-      {
-        ["name"]="Sunny.pic",
-        ["url"]="IgorTimofeev/OpenComputers/master/Applications/Weather/Sunny.pic",
-      },
-      {
-        ["name"]="SunnyWithClouds.pic",
-        ["url"]="IgorTimofeev/OpenComputers/master/Applications/Weather/SunnyWithClouds.pic",
       },
     },
   },

@@ -1,1 +1,1 @@
-Это профессиональный инструмент для создания и распечатки 3D-моделей на 3D-принтере на любой вкус. Поддерживает все возможные функции принтера без исключения. Для работы требуется сам принтер и, по желанию, голографический проектор 2 уровня.
+This is a professional tool for the creating and printing models using 3D-printer. It supports all the features of the printer. It requires the printer itself, and, if desired, a holographic projector 2 level.

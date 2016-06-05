@@ -1,1 +1,1 @@
-Calendar - простая программа, не нуждающаяся в особом представлении. Красивый интерфейс позволяет легко узнать день недели конкретной даты любого года.
+Calendar - a simple program that needs no special introduction. The beautiful interface makes it easy to find out the day of the week a particular date every year.

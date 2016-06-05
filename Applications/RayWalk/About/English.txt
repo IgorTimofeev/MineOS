@@ -1,0 +1,1 @@
+This application demonstrates the power of our double buffering library and the power of RayEngine engine that renders graphics like a DOOM and Wolfenstein.

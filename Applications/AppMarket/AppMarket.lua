@@ -18,10 +18,11 @@ for library in pairs(libraries) do if not _G[library] then _G[library] = require
 local obj = {}
 local sizes = {}
 local colors = {
-	topBar = 0xDDDDDD,
 	main = 0xFFFFFF,
-	topBarElementText = 0x444444,
+	topBar = 0xDDDDDD,
+	topBarText = 0x555555,
 	topBarElement = 0xCCCCCC,
+	topBarElementText = 0x555555,
 	statusBar = 0xDDDDDD,
 	statusBarText = 0x888888,
 	appName = 0x262626,
@@ -78,7 +79,7 @@ local function calculateSizes()
 end
 
 local function drawTopBar()
-	obj.topBarButtons = GUI.toolbar(sizes.x, sizes.y, sizes.width, sizes.topBarHeight, 2, currentTopBarElement, colors.topBar, colors.topBarElementText, colors.topBarElement, colors.topBarElementText, table.unpack(topBarElements))
+	obj.topBarButtons = GUI.toolbar(sizes.x, sizes.y, sizes.width, sizes.topBarHeight, 2, currentTopBarElement, colors.topBar, colors.topBarText, colors.topBarElement, colors.topBarElementText, table.unpack(topBarElements))
 	obj.windowActionButtons = GUI.windowActionButtons(sizes.x + 1, sizes.y)
 end
 
@@ -326,6 +327,11 @@ end
 
 -- buffer.start()
 -- buffer.clear(0xFF8888)
+
+local args = {...}
+if args[1] == "open" then
+	if args[2] and tonumber(args[2]) then currentTopBarElement = tonumber(args[2]) end
+end
 
 calculateSizes()
 flush()
