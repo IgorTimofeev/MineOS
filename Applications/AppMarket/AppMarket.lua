@@ -57,7 +57,7 @@ local from, limit, fromY = 1, 8
 ------------------------------------------------------------------------------------------------------------------
 
 local function correctDouble(number)
-	return string.format("%.1f", number)
+	return string.format("%.2f", number)
 end
 
 local function status(text)

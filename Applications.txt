@@ -585,7 +585,7 @@
     ["icon"]="IgorTimofeev/OpenComputers/master/Applications/AppMarket/Icon.pic",
     ["createShortcut"]="dock",
     ["forceDownload"]=true,
-    ["version"]=1.31,
+    ["version"]=1.32,
   },
   {
     ["name"]="MineOS/Applications/Snake",
