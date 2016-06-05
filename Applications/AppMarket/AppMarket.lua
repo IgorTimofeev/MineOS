@@ -202,9 +202,6 @@ local function drawMain(refreshData)
 					getApplication(i)
 				end
 				x, y = drawApplication(x, y, i)
-			-- else 
-			-- 	ecs.error(matchCount, from, from + limit - 1)
-			-- 	break
 			end
 			matchCount = matchCount + 1
 		end
@@ -379,11 +376,13 @@ while true do
 				obj.nextPageButton:press()
 				fromY = sizes.yMain + 1
 				from = from + limit
+				currentApps = {}
 				drawAll(true, false)
 			elseif obj.prevPageButton:isClicked(e[3], e[4]) then
 				if from > limit then
 					fromY = sizes.yMain + 1
 					from = from - limit
+					currentApps = {}
 					drawAll(true, false)
 				end
 			end
@@ -403,22 +402,15 @@ while true do
 			end
 		end
 	elseif e[1] == "scroll" then
-		-- if currentTopBarElement < 5 then
-			if e[5] == 1 then
-				if (fromY < sizes.yMain) then
-					fromY = fromY + 2
-					drawAll(false, false)
-				end
-			else
-				fromY = fromY - 2
+		if e[5] == 1 then
+			if (fromY < sizes.yMain) then
+				fromY = fromY + 2
 				drawAll(false, false)
 			end
-		-- else
-		-- 	if e[5] == 1 then
-
-		-- 	else
-		-- 	end
-		-- end
+		else
+			fromY = fromY - 2
+			drawAll(false, false)
+		end
 	end
 end
 
