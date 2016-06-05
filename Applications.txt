@@ -254,7 +254,7 @@
     ["name"]="lib/MineOSCore.lua",
     ["url"]="IgorTimofeev/OpenComputers/master/lib/MineOSCore.lua",
     ["type"]="Library",
-    ["version"]=1.0,
+    ["version"]=1.1,
   },
   {
     ["name"]="lib/GUI.lua",
@@ -468,7 +468,7 @@
     ["icon"]="IgorTimofeev/OpenComputers/master/Applications/AppMarket/Icon.pic",
     ["createShortcut"]="dock",
     ["forceDownload"]=true,
-    ["version"]=1.0,
+    ["version"]=1.1,
   },
   {
     ["name"]="MineOS/Applications/Graph",
