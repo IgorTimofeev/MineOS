@@ -73,6 +73,7 @@
 	backgroundColor = "Background color",
 	interfaceColor = "Interface color",
 	selectionColor = "Selection color",
+	desktopPaintingColor = "Painting color",
 	screenResolution = "Screen resolution",
 	settings = "Preferences",
 	changePassword = "Change password",

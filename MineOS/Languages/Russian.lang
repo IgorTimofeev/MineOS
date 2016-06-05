@@ -73,6 +73,7 @@
 	backgroundColor = "Цвет фона",
 	interfaceColor = "Цвет интерфейса",
 	selectionColor = "Цвет выделения",
+	desktopPaintingColor = "Цвет рисования",
 	screenResolution = "Разрешение экрана",
 	settings = "Настройки",
 	changePassword = "Изменить пароль",
