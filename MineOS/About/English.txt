@@ -1,0 +1,1 @@
+This is the main executable MineOS file, that contains all the basic features and controls libraries like MineOSCore, doubleBuffering, GUI and ECSAPI.

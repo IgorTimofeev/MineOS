@@ -5,9 +5,10 @@
   {
     ["name"]="OS.lua",
     ["url"]="IgorTimofeev/OpenComputers/master/MineOS/OS.lua",
+    ["about"]="IgorTimofeev/OpenComputers/master/MineOS/About/",
     ["type"]="Script",
     ["forceDownload"]=true,
-    ["version"]=3.1,
+    ["version"]=3.2,
   },
   {
     ["name"]="MineOS/Pictures/Dayeneris.pic",
