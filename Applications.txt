@@ -32,7 +32,7 @@
     ["name"]="MineOS/Pictures/Govnokod.pic",
     ["url"]="IgorTimofeev/OpenComputers/master/MineOS/Wallpapers/Govnokod.pic",
     ["type"]="Wallpaper",
-    ["version"]=1.0,
+    ["version"]=1.1,
   },
   {
     ["name"]="MineOS/Pictures/Nocturnal.pic",
