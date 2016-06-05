@@ -1,0 +1,1 @@
+One of the main system applications, allows you to check for available updates, and download the most beautiful programs created specifically for MineOS.
