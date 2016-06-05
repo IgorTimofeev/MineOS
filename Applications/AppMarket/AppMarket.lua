@@ -226,7 +226,6 @@ end
 local function getChanges()
 	changes = {}
 	for i = 1, #oldApplications do
-		-- local fileExistsInNewApplications
 		for j = 1, #newApplications do
 			if oldApplications[i].name == newApplications[j].name then
 				if oldApplications[i].version < newApplications[j].version then
@@ -271,7 +270,6 @@ local function flush()
 	from = 1
 	fs.makeDirectory(appStorePath)
 	currentApps = {}
-	changes = {}
 end
 
 local function loadOldApplications()
@@ -329,8 +327,8 @@ end
 -- buffer.clear(0xFF8888)
 
 local args = {...}
-if args[1] == "open" then
-	if args[2] and tonumber(args[2]) then currentTopBarElement = tonumber(args[2]) end
+if args[1] == "updateCheck" then
+	currentTopBarElement = 5
 end
 
 calculateSizes()
@@ -341,6 +339,7 @@ GUI.windowShadow(sizes.x, sizes.y, sizes.width, sizes.height, 50)
 updateImageWindowWithText("Загрузка списка приложений")
 buffer.draw()
 getNewApplications()
+getChanges()
 drawAll(true, false)
 
 while true do
@@ -398,13 +397,7 @@ while true do
 			if button:isClicked(e[3], e[4]) then
 				currentTopBarElement = key
 				flush()
-				if key < 5 then
-					drawAll(true, false)
-				else
-					status("Получаю изменения")
-					getChanges()
-					drawAll(false, false)
-				end
+				drawAll(true, false)
 				break
 			end
 		end
