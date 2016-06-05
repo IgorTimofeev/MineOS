@@ -517,9 +517,7 @@ while true do
 							ecs.TV(0)
 							shell.execute("reboot")
 						elseif action == MineOSCore.localization.updates then
-							ecs.prepareToExit()
-							shell.execute("pastebin run 0nm5b1ju")
-							return 0
+							MineOSCore.safeLaunch("MineOS/Applications/AppMarket.app/AppMarket.lua", "open", "5")
 						elseif action == MineOSCore.localization.aboutSystem then
 							ecs.prepareToExit()
 							print(copyright)
