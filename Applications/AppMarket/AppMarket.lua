@@ -317,6 +317,7 @@ local function updateAll()
 		buffer.draw()
 		ecs.getOSApplication(newApplications[changes[i].newApplicationsIndex], true)
 	end
+	changes = {}
 	oldApplications = newApplications
 	saveOldApplications()
 end
