@@ -261,7 +261,7 @@
     name="lib/rayEngine.lua",
     url="IgorTimofeev/OpenComputers/master/lib/rayEngine.lua",
     type="Library",
-    version=1.0,
+    version=1.1,
   },
   {
     name="lib/doubleHeight.lua",
@@ -541,7 +541,7 @@
     type="Application",
     icon="IgorTimofeev/OpenComputers/master/Applications/RayWalk/Icon.pic",
     createShortcut="desktop",
-    version=1.1,
+    version=1.2,
     resources={
       {
         name="Day.scene",
@@ -550,6 +550,10 @@
       {
         name="Night.scene",
         url="IgorTimofeev/OpenComputers/master/Applications/RayWalk/Night.scene",
+      },
+      {
+        name="Sunset.scene",
+        url="IgorTimofeev/OpenComputers/master/Applications/RayWalk/Sunset.scene",
       },
     },
   },
@@ -770,7 +774,7 @@
     icon="IgorTimofeev/OpenComputers/master/Applications/AppMarket/Icon.pic",
     createShortcut="dock",
     forceDownload=true,
-    version=1.41,
+    version=1.42,
   },
   {
     name="MineOS/Applications/Control",

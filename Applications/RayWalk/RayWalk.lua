@@ -1,7 +1,11 @@
+package.loaded.rayEngine = nil
+_G.rayEngine = nil
+
 local libraries = {
 	buffer = "doubleBuffering",
 	rayEngine = "rayEngine",
 	GUI = "GUI",
+	unicode = "unicode",
 	event = "event",
 }
 
@@ -18,10 +22,12 @@ end
 
 local function menu()
 	local buttonWidth = 50
-	local buttons = {"Day.scene", "Night.scene", "Выход"}
-	local x, y = math.floor(buffer.screen.width / 2 - buttonWidth / 2), math.floor(buffer.screen.height / 2 - (#buttons * 4) / 2)
+	local buttons = {}
+	for file in fs.list(scenesPath) do if unicode.sub(file, -6, -1) == ".scene" then table.insert(buttons, file) end end
+	local x, y = math.floor(buffer.screen.width / 2 - buttonWidth / 2), math.floor(buffer.screen.height / 2 - ((#buttons + 1) * 4) / 2)
 	local buttonData = {}; for i = 1, #buttons do table.insert(buttonData, {GUI.buttonTypes.default, buttonWidth, 3, 0xDDDDDD, 0x555555, 0xBBBBBB, 0x262626, buttons[i]}) end
-		
+	table.insert(buttonData, {GUI.buttonTypes.default, buttonWidth, 3, 0xBBBBBB, 0x262626, 0x999999, 0x262626, "Выход"})
+
 	rayEngine.drawScene()
 	buffer.clear(0x000000, 50)
 	buttons = GUI.buttons(x, y, GUI.directions.vertical, 1, table.unpack(buttonData))
@@ -50,19 +56,23 @@ rayEngine.intro()
 menu()
 update()
 
+local xDrag = 0
 while (true) do
-	local e = { event.pull("key_down") }
-
-	if ( e[4] == 30 ) then --a
-		rayEngine.rotate(-4)
-	elseif ( e[4] == 32 ) then --d
-		rayEngine.rotate(4)
-	elseif ( e[4] == 17 ) then --w
-		rayEngine.move(16)
-	elseif ( e[4] == 31 ) then --s
-		rayEngine.move(-16)
-	elseif ( e[4] == 14 or e[4] == 28 ) then --r
-		menu()
+	local e = { event.pull() }
+	if e[1] == "touch" then
+		if e[5] == 1 then rayEngine.place(3) else rayEngine.destroy(3) end
+	elseif e[1] == "key_down" then
+		if ( e[4] == 30 ) then --a
+			rayEngine.rotate(-4)
+		elseif ( e[4] == 32 ) then --d
+			rayEngine.rotate(4)
+		elseif ( e[4] == 17 ) then --w
+			rayEngine.move(16, 0)
+		elseif ( e[4] == 31 ) then --s
+			rayEngine.move(-16, 0)
+		elseif ( e[4] == 14 or e[4] == 28 ) then --r
+			menu()
+		end
 	end
 
 	update()

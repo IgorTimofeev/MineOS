@@ -9,6 +9,15 @@ local rayEngine = {}
 
 ----------------------------------------------------------------------------------------------------------------------------------
 
+local function round(chislo)
+  local celaya, drobnaya = math.modf(chislo)
+  if drobnaya >= 0.5 then
+    return (celaya + 1)
+  else
+    return celaya
+  end
+end
+
 local function convertRadiansToDegrees(rad)
 	return rad * (180 / 3.14)
 end
@@ -46,14 +55,42 @@ end
 
 ----------------------------------------------------------------------------------------------------------------------------------
 
-function rayEngine.move(distance)
+local function convertWorldCoordsToMapCoords(x, y)
+	return round(x / rayEngine.tileWidth), round(y / rayEngine.tileWidth)
+end
+
+local function getBlockCoordsByLook(distance)
 	local radRotation = math.rad(rayEngine.scene.player.rotation + 90)
-	rayEngine.scene.player.position.x, rayEngine.scene.player.position.y = rayEngine.scene.player.position.x + distance * math.sin(radRotation), rayEngine.scene.player.position.y  + distance * math.cos(radRotation)
+	return convertWorldCoordsToMapCoords(rayEngine.scene.player.position.x + distance * math.sin(radRotation) * rayEngine.tileWidth, rayEngine.scene.player.position.y + distance * math.cos(radRotation) * rayEngine.tileWidth)
+end
+
+function rayEngine.move(distanceForward, distanceRight)
+	local forwardRotation = math.rad(rayEngine.scene.player.rotation + 90)
+	local rightRotation = math.rad(rayEngine.scene.player.rotation + 180)
+	local xNew = rayEngine.scene.player.position.x + distanceForward * math.sin(forwardRotation) + distanceRight * math.sin(rightRotation)
+	local yNew = rayEngine.scene.player.position.y + distanceForward * math.cos(forwardRotation) + distanceRight * math.cos(rightRotation)
+
+	local xWorld, yWorld = convertWorldCoordsToMapCoords(xNew, yNew)
+	if rayEngine.scene.map[yWorld][xWorld] == nil then
+		rayEngine.scene.player.position.x, rayEngine.scene.player.position.y = xNew, yNew
+	end
 end
 
 function rayEngine.rotate(angle)
 	rayEngine.scene.player.rotation = constrainAngle(rayEngine.scene.player.rotation + angle)
 end
+
+function rayEngine.destroy(distance)
+	local xBlock, yBlock = getBlockCoordsByLook(distance)
+	rayEngine.scene.map[yBlock][xBlock] = nil
+end
+
+function rayEngine.place(distance, blockColor)
+	local xBlock, yBlock = getBlockCoordsByLook(distance)
+	rayEngine.scene.map[yBlock][xBlock] = blockColor or 0x0
+end
+
+----------------------------------------------------------------------------------------------------------------------------------
 
 function rayEngine.drawMap(x, y, width, height, transparency)
 	buffer.square(x, y, width, height, 0x000000, 0x000000, " ", transparency)
@@ -147,7 +184,7 @@ function rayEngine.drawScene()
 		dist = math.min( hDist, vDist )
 
 		height = rayEngine.tileWidth / dist * rayEngine.distanceToProjectionPlane
-		startY = buffer.screen.height / 2 - height / 2
+		startY = buffer.screen.height / 2 - height / 2 + 1
 
 		--Рисуем сценку
 		tileColor = height > distanceLimit and rayEngine.scene.colors.distanceMap[#rayEngine.scene.colors.distanceMap] or rayEngine.scene.colors.distanceMap[math.floor(#rayEngine.scene.colors.distanceMap * height / distanceLimit)]
@@ -173,5 +210,6 @@ function rayEngine.intro()
 end
 
 ----------------------------------------------------------------------------------------------------------------------------------
+
 
 return rayEngine
