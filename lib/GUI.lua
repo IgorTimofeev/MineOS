@@ -2,7 +2,8 @@
 local libraries = {
 	buffer = "doubleBuffering",
 	ecs = "ECSAPI",
-	unicode = "unicode"
+	unicode = "unicode",
+	event = "event",
 }
 
 for library in pairs(libraries) do if not _G[library] then _G[library] = require(libraries[library]) end end; libraries = nil
@@ -24,11 +25,12 @@ GUI.buttonTypes = {
 
 GUI.colors = {
 	disabled = 0x888888,
+	disabledText = 0xAAAAAA,
 }
 
 -- Универсальный метод для проверки клика на прямоугольный объект
 local function objectClicked(object, x, y)
-	if x >= object.x and y >= object.y and x <= object.x + object.width - 1 and y <= object.y + object.height - 1 and not object.disabled then return true end
+	if x >= object.x and y >= object.y and x <= object.x + object.width - 1 and y <= object.y + object.height - 1 and not object.disabled and not object.invisible ~= false then return true end
 	return false
 end
 
@@ -91,7 +93,7 @@ local function createButtonObject(buttonType, x, y, width, height, buttonColor, 
 		},
 		disabled = {
 			button = GUI.colors.disabled,
-			text = GUI.colors.disabled,
+			text = GUI.colors.disabledText,
 		}
 	}
 	buttonObject.disabled = disabledState
@@ -329,6 +331,8 @@ end
 -- }
 
 function GUI.input(x, y, width, foreground, startText, textFieldProperties)
+	if not (y >= buffer.drawLimit.y and y <= buffer.drawLimit.y2) then return startText end
+
 	local text = startText
 	local textLength = unicode.len(text)
 	local cursorBlinkState = false
@@ -422,6 +426,51 @@ function GUI.input(x, y, width, foreground, startText, textFieldProperties)
 			draw()
 		end
 	end
+end
+
+local function drawTextField(object, isFocused)
+	if not object.invisible then
+		local background = object.disabled and object.colors.disabled.textField or (isFocused and object.colors.focused.textField or object.colors.default.textField)
+		local foreground = object.disabled and object.colors.disabled.text or (isFocused and object.colors.focused.text or object.colors.default.text)
+		local y = math.floor(object.y + object.height / 2)
+		local text = isFocused and (object.text or "") or (object.text or object.placeholderText or "")
+
+		if background then buffer.square(object.x, object.y, object.width, object.height, background, foreground, " ") end
+		local resultText = GUI.input(object.x + 1, y, object.width - 2, foreground, text, {justDrawNotEvent = not isFocused})
+		object.text = isFocused and resultText or object.text
+	end
+end
+
+local function textFieldBeginInput(object)
+	drawTextField(object, true)
+	if object.text == "" then object.text = nil; drawTextField(object, false); buffer.draw() end
+end
+
+function GUI.textField(x, y, width, height, textFieldColor, textColor, textFieldFocusedColor, textFocusedColor, text, placeholderText, disabledState, invisibleState)
+	local object = GUI.object(x, y, width, height)
+	object.invisible = invisibleState
+	object.disabled = disabledState
+	object.colors = {
+		default = {
+			textField = textFieldColor,
+			text = textColor
+		},
+		focused = {
+			textField = textFieldFocusedColor,
+			text = textFocusedColor
+		},
+		disabled = {
+			textField = GUI.colors.disabled,
+			text = GUI.colors.disabledText,
+		}
+	}
+	object.text = text
+	object.placeholderText = placeholderText
+	object.isClicked = objectClicked
+	object.draw = drawTextField
+	object.input = textFieldBeginInput
+	object:draw()
+	return object
 end
 
 --------------------------------------------------------------------------------------------------------------------------------

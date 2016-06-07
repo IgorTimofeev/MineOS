@@ -249,7 +249,7 @@
     ["name"]="lib/GUI.lua",
     ["url"]="IgorTimofeev/OpenComputers/master/lib/GUI.lua",
     ["type"]="Library",
-    ["version"]=1.0,
+    ["version"]=1.1,
   },
   {
     ["name"]="lib/serialization.lua",
@@ -351,7 +351,7 @@
     ["name"]="lib/doubleBuffering.lua",
     ["url"]="IgorTimofeev/OpenComputers/master/lib/doubleBuffering.lua",
     ["type"]="Library",
-    ["version"]=1.0,
+    ["version"]=1.1,
   },
   {
     ["name"]="lib/thread.lua",
@@ -578,7 +578,7 @@
     ["icon"]="IgorTimofeev/OpenComputers/master/Applications/AppMarket/Icon.pic",
     ["createShortcut"]="dock",
     ["forceDownload"]=true,
-    ["version"]=1.34,
+    ["version"]=1.35,
   },
   {
     ["name"]="MineOS/Applications/Snake",

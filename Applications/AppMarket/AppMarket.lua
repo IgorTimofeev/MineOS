@@ -1,4 +1,7 @@
 
+package.loaded.GUI = nil
+_G.GUI = nil
+
 local libraries = {
 	buffer = "doubleBuffering",
 	MineOSCore = "MineOSCore",
@@ -48,8 +51,7 @@ local pathToApplications = "MineOS/System/OS/Applications.txt"
 local updateImage = image.load(MineOSCore.paths.icons .. "Update.pic")
 -- local topBarElements = {{title = "Приложения", type = "Application"}, {title = "Библиотеки", type = "Library"}, {title = "Обои", type = "Wallpaper"}, {title = "Другое"}, {title = "Обновления"}}
 local topBarElements = {"Приложения", "Библиотеки", "Обои", "Другое", "Обновления"}
-local oldApplications, newApplications, changes = {}, {}, {}
-local currentApps = {}
+local oldApplications, newApplications, currentApps, changes = {}, {}, {}, {}
 
 local currentTopBarElement = 1
 local from, limit, fromY = 1, 8
@@ -72,10 +74,11 @@ local function calculateSizes()
 	sizes.width, sizes.height = math.floor(buffer.screen.width * 0.6), math.floor(buffer.screen.height * 0.7)
 	sizes.x, sizes.y = math.floor(buffer.screen.width / 2 - sizes.width / 2), math.floor(buffer.screen.height / 2 - sizes.height / 2)
 	sizes.topBarHeight = 3
-	sizes.yMain = sizes.y + sizes.topBarHeight
-	sizes.mainHeight = sizes.height - sizes.topBarHeight
+	obj.main = GUI.object(sizes.x, sizes.y + sizes.topBarHeight, sizes.width, sizes.height - sizes.topBarHeight)
 	sizes.downloadButtonWidth = 17
 	sizes.descriptionTruncateSize = sizes.width - 6 - MineOSCore.iconWidth - sizes.downloadButtonWidth
+	sizes.searchFieldWidth = math.floor(sizes.width * 0.3)
+	obj.searchTextField = GUI.textField(math.floor(sizes.x + sizes.width / 2 - sizes.searchFieldWidth / 2), 1, sizes.searchFieldWidth, 1, 0xEEEEEE, 0x777777, 0xEEEEEE, 0x555555, nil, "Поиск", false, true)
 end
 
 local function drawTopBar()
@@ -184,26 +187,33 @@ local function drawPageSwitchButtons(y)
 end
 
 local function clearMainZone()
-	buffer.square(sizes.x, sizes.yMain, sizes.width, sizes.mainHeight, 0xFFFFFF)
+	buffer.square(sizes.x, obj.main.y, sizes.width, obj.main.height, 0xFFFFFF)
 end
 
 local function drawMain(refreshData)
 	clearMainZone()
 	local x, y = sizes.x + 2, fromY
 
-	buffer.setDrawLimit(sizes.x, sizes.yMain, sizes.width, sizes.mainHeight)
+	buffer.setDrawLimit(sizes.x, obj.main.y, sizes.width, obj.main.height)
+
+	obj.searchTextField.y, obj.searchTextField.invisible = y, false
+	obj.searchTextField:draw()
+	y = y + 2
 
 	local matchCount = 1
 	for i = 1, #newApplications do
 		if newApplications[i].type == typeFilters[currentTopBarElement] then
-			if matchCount >= from and matchCount <= from + limit - 1 then
-				if refreshData and not currentApps[i] then
-					status("Загрузка информации о приложении \"" .. newApplications[i].name .. "\"")
-					getApplication(i)
+			-- if obj.searchTextField.text then GUI.error(tostring(unicode.lower(obj.searchTextField.text))) end
+			if not obj.searchTextField.text or (string.find(unicode.lower(fs.name(newApplications[i].name)), unicode.lower(obj.searchTextField.text))) then
+				if matchCount >= from and matchCount <= from + limit - 1 then
+					if refreshData and not currentApps[i] then
+						status("Загрузка информации о приложении \"" .. newApplications[i].name .. "\"")
+						getApplication(i)
+					end
+					x, y = drawApplication(x, y, i)
 				end
-				x, y = drawApplication(x, y, i)
+				matchCount = matchCount + 1
 			end
-			matchCount = matchCount + 1
 		end
 	end
 
@@ -226,8 +236,7 @@ local function getChanges()
 		for j = 1, #newApplications do
 			if oldApplications[i].name == newApplications[j].name then
 				if oldApplications[i].version < newApplications[j].version then
-					table.insert(changes, newApplications[j])
-					changes[#changes].newApplicationsIndex = j
+					table.insert(changes, j)
 				end
 			end
 		end
@@ -238,18 +247,18 @@ local function updates()
 	clearMainZone()
 
 	if #changes > 0 then
-		buffer.setDrawLimit(sizes.x, sizes.yMain, sizes.width, sizes.mainHeight)
+		buffer.setDrawLimit(sizes.x, obj.main.y, sizes.width, obj.main.height)
 		local x, y = sizes.x + 2, fromY
 		obj.updateAllButton = GUI.button(math.floor(sizes.x + sizes.width / 2 - sizes.downloadButtonWidth / 2), y, 20, 1, colors.downloadButton, colors.downloadButtonText, 0x555555, 0xFFFFFF, "Обновить все")
 		y = y + 2
 
 		for i = from, (from + limit) do
 			if not changes[i] then break end
-			if not currentApps[changes[i].newApplicationsIndex] then
-				status("Загрузка информации о приложении \"" .. changes[i].name .. "\"")
-				getApplication(changes[i].newApplicationsIndex)
+			if not currentApps[changes[i]] then
+				status("Загрузка информации о приложении \"" .. fs.name(newApplications[changes[i]].name) .. "\"")
+				getApplication(changes[i])
 			end
-			x, y = drawApplication(x, y, changes[i].newApplicationsIndex, true)
+			x, y = drawApplication(x, y, changes[i], true)
 		end
 
 		if #changes > limit then
@@ -258,12 +267,12 @@ local function updates()
 		buffer.resetDrawLimit()
 	else
 		local text = "У вас самое новое ПО"
-		buffer.text(math.floor(sizes.x + sizes.width / 2 - unicode.len(text) / 2), math.floor(sizes.yMain + sizes.mainHeight / 2 - 1), colors.description, text)
+		buffer.text(math.floor(sizes.x + sizes.width / 2 - unicode.len(text) / 2), math.floor(obj.main.y + obj.main.height / 2 - 1), colors.description, text)
 	end
 end
 
 local function flush()
-	fromY = sizes.yMain + 1
+	fromY = obj.main.y + 1
 	from = 1
 	fs.makeDirectory(appStorePath)
 	currentApps = {}
@@ -289,7 +298,7 @@ end
 
 local function updateImageWindow()
 	clearMainZone()
-	local x, y = math.floor(sizes.x + sizes.width / 2 - updateImage.width / 2), math.floor(sizes.yMain + sizes.mainHeight / 2 - updateImage.height / 2 - 2)
+	local x, y = math.floor(sizes.x + sizes.width / 2 - updateImage.width / 2), math.floor(obj.main.y + obj.main.height / 2 - updateImage.height / 2 - 2)
 	buffer.image(x, y, updateImage)
 	return y + updateImage.height
 end
@@ -306,13 +315,13 @@ local function updateAll()
 	local xBar = math.floor(sizes.x + sizes.width / 2 - barWidth / 2)
 	y = y + 2
 	for i = 1, #changes do
-		local text = "Обновление " .. fs.name(changes[i].name)
+		local text = "Обновление " .. fs.name(newApplications[changes[i]].name)
 		local xText = math.floor(sizes.x + sizes.width / 2 - unicode.len(text) / 2)
 		buffer.square(sizes.x, y + 1, sizes.width, 1, 0xFFFFFF)
 		buffer.text(xText, y + 1, colors.description, text)
 		GUI.progressBar(xBar, y, barWidth, 1, 0xAAAAAA, 0x55FF55, i, #changes, true)
 		buffer.draw()
-		ecs.getOSApplication(newApplications[changes[i].newApplicationsIndex], true)
+		ecs.getOSApplication(newApplications[changes[i]], true)
 	end
 	changes = {}
 	oldApplications = newApplications
@@ -321,8 +330,8 @@ end
 
 ------------------------------------------------------------------------------------------------------------------
 
--- buffer.start()
--- buffer.clear(0xFF8888)
+buffer.start()
+buffer.clear(0xFF8888)
 
 local args = {...}
 if args[1] == "updateCheck" then
@@ -343,50 +352,60 @@ drawAll(true, false)
 while true do
 	local e = {event.pull()}
 	if e[1] == "touch" then
-		if currentTopBarElement < 5 then
-			for appIndex, app in pairs(currentApps) do
-				if app.buttonObject:isClicked(e[3], e[4]) then
-					app.buttonObject:press(0.3)
-					if app.buttonObject.text == "Обновить" or app.buttonObject.text == "Загрузить" then
-						app.buttonObject.text = "Загрузка"
-						app.buttonObject.disabled = true
-						app.buttonObject.colors.disabled.button, app.buttonObject.colors.disabled.text = colors.downloading, colors.downloadingText
-						app.buttonObject:draw()
-						buffer.draw()
-						ecs.getOSApplication(newApplications[appIndex], true)
-						app.buttonObject.text = "Установлено"
-						app.buttonObject.colors.disabled.button, app.buttonObject.colors.disabled.text = colors.downloaded, colors.downloadedText
-						app.buttonObject:draw()
-						buffer.draw()
-					end
-					break
-				end	
-			end
-		else
-			if obj.updateAllButton and obj.updateAllButton:isClicked(e[3], e[4]) then
-				obj.updateAllButton:press()
-				updateAll()
-				flush()
-				drawAll()
-			end
-		end
 
-		if obj.nextPageButton then
-			if obj.nextPageButton:isClicked(e[3], e[4]) then
-				obj.nextPageButton:press()
-				fromY = sizes.yMain + 1
-				from = from + limit
-				currentApps = {}
+		if obj.main:isClicked(e[3], e[4]) then
+			if obj.searchTextField:isClicked(e[3], e[4]) then
+				obj.searchTextField:input()
+				flush()
 				drawAll(true, false)
-			elseif obj.prevPageButton:isClicked(e[3], e[4]) then
-				if from > limit then
-					fromY = sizes.yMain + 1
-					from = from - limit
+			end
+
+			if currentTopBarElement < 5 then
+				for appIndex, app in pairs(currentApps) do
+					if app.buttonObject:isClicked(e[3], e[4]) then
+						app.buttonObject:press(0.3)
+						if app.buttonObject.text == "Обновить" or app.buttonObject.text == "Загрузить" then
+							app.buttonObject.text = "Загрузка"
+							app.buttonObject.disabled = true
+							app.buttonObject.colors.disabled.button, app.buttonObject.colors.disabled.text = colors.downloading, colors.downloadingText
+							app.buttonObject:draw()
+							buffer.draw()
+							ecs.getOSApplication(newApplications[appIndex], true)
+							app.buttonObject.text = "Установлено"
+							app.buttonObject.colors.disabled.button, app.buttonObject.colors.disabled.text = colors.downloaded, colors.downloadedText
+							app.buttonObject:draw()
+							buffer.draw()
+						end
+						break
+					end	
+				end
+			else
+				if obj.updateAllButton and obj.updateAllButton:isClicked(e[3], e[4]) then
+					obj.updateAllButton:press()
+					updateAll()
+					flush()
+					drawAll()
+				end
+			end
+
+			if obj.nextPageButton then
+				if obj.nextPageButton:isClicked(e[3], e[4]) then
+					obj.nextPageButton:press()
+					fromY = obj.main.y + 1
+					from = from + limit
 					currentApps = {}
 					drawAll(true, false)
+				elseif obj.prevPageButton:isClicked(e[3], e[4]) then
+					if from > limit then
+						fromY = obj.main.y + 1
+						from = from - limit
+						currentApps = {}
+						drawAll(true, false)
+					end
 				end
 			end
 		end
+
 
 		if obj.windowActionButtons.close:isClicked(e[3], e[4]) then
 			obj.windowActionButtons.close:press()
@@ -403,7 +422,7 @@ while true do
 		end
 	elseif e[1] == "scroll" then
 		if e[5] == 1 then
-			if (fromY < sizes.yMain) then
+			if (fromY < obj.main.y) then
 				fromY = fromY + 2
 				drawAll(false, false)
 			end
