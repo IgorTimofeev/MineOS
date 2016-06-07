@@ -246,6 +246,8 @@ end
 local function updates()
 	clearMainZone()
 
+	obj.searchTextField.invisible = true
+
 	if #changes > 0 then
 		buffer.setDrawLimit(sizes.x, obj.main.y, sizes.width, obj.main.height)
 		local x, y = sizes.x + 2, fromY
@@ -319,7 +321,7 @@ local function updateAll()
 		local xText = math.floor(sizes.x + sizes.width / 2 - unicode.len(text) / 2)
 		buffer.square(sizes.x, y + 1, sizes.width, 1, 0xFFFFFF)
 		buffer.text(xText, y + 1, colors.description, text)
-		GUI.progressBar(xBar, y, barWidth, 1, 0xAAAAAA, 0xFFFFFF, i, #changes, true)
+		GUI.progressBar(xBar, y, barWidth, 1, 0xCCCCCC, 0x0092FF, i, #changes, true)
 		buffer.draw()
 		ecs.getOSApplication(newApplications[changes[i]], true)
 	end
