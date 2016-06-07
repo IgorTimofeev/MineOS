@@ -1,6 +1,6 @@
 
-package.loaded.GUI = nil
-_G.GUI = nil
+-- package.loaded.GUI = nil
+-- _G.GUI = nil
 
 local libraries = {
 	buffer = "doubleBuffering",
