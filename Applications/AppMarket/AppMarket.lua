@@ -330,8 +330,8 @@ end
 
 ------------------------------------------------------------------------------------------------------------------
 
-buffer.start()
-buffer.clear(0xFF8888)
+-- buffer.start()
+-- buffer.clear(0xFF8888)
 
 local args = {...}
 if args[1] == "updateCheck" then
