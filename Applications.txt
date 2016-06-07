@@ -743,7 +743,7 @@
     ["icon"]="IgorTimofeev/OpenComputers/master/Applications/Finder/Icon.pic",
     ["createShortcut"]="dock",
     ["forceDownload"]=true,
-    ["version"]=1.0,
+    ["version"]=1.1,
   },
   {
     ["name"]="MineOS/Applications/Control",

@@ -307,8 +307,8 @@ local function openModem()
 	if component.isAvailable("modem") then component.modem.open(port) end
 end
 
-local function sendPersonalInfo()
-	if component.isAvailable("modem") then component.modem.broadcast(port, "addMeToList") end
+local function sendPersonalInfo(sendAgain)
+	if component.isAvailable("modem") then component.modem.broadcast(port, sendAgain and "addMeToListToo" or "addMeToList") end
 end
 
 local function sendMessageOrFileWindow(text1, text2)
@@ -504,9 +504,12 @@ while true do
 		local localAddress, remoteAddress, remotePort, distance, message1, message2 = eventData[2], eventData[3], eventData[4], eventData[5], eventData[6], eventData[7]
 		local truncatedRemoteAddress = unicode.sub(remoteAddress, 1, 5)
 		if remotePort == port then
-			if message1 == "addMeToList" and not network[remoteAddress] then
+			if message1 == "addMeToList" then
+				sendPersonalInfo(true)
 				network[remoteAddress] = true
-				sendPersonalInfo()
+				drawAll()
+			elseif message1 == "addMeToListToo" then
+				network[remoteAddress] = true
 				drawAll()
 			elseif message1 == "hereIsMessage" then
 				GUI.error(message2, {title = {color = 0xFFDB40, text = MineOSCore.localization.gotMessageFrom .. truncatedRemoteAddress}})
