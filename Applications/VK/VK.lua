@@ -106,6 +106,7 @@ local settings = {saveAuthData = false, addSendingInfo = true}
 local vip = {
 	[7799889] = {avatarColor = 0x000000, avatarTextColor = 0xCCCCCC, avatarBottomText = "DEV", avatarBottomTextColor = 0x1b1b1b},
 	[113499693] = {avatarColor = 0xFF99CC, avatarTextColor = 0x000000, avatarBottomText = "DEV", avatarBottomTextColor = 0xff6dbf},
+	[60991376] = {avatarColor = 0xEEEEEE, avatarTextColor = 0x000000, avatarBottomText = "DEV", avatarBottomTextColor = 0x555555},
 }
 
 local messageEndAdderText = " (отправлено с MineOS VKClient)"

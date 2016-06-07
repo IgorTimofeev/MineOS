@@ -463,7 +463,7 @@
     type="Application",
     icon="IgorTimofeev/OpenComputers/master/Applications/VK/Icon.pic",
     createShortcut="dock",
-    version=1.1,
+    version=1.2,
     resources={
       {
         name="VKLogo.pic",
