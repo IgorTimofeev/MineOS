@@ -232,14 +232,18 @@ end
 
 local function getChanges()
 	changes = {}
-	for i = 1, #oldApplications do
-		for j = 1, #newApplications do
+	for j = 1, #newApplications do
+		local matchFound = false
+		for i = 1, #oldApplications do	
 			if oldApplications[i].name == newApplications[j].name then
 				if oldApplications[i].version < newApplications[j].version then
 					table.insert(changes, j)
 				end
+				matchFound = true
+				break
 			end
 		end
+		if not matchFound then table.insert(changes, j) end
 	end
 end
 
@@ -434,8 +438,6 @@ while true do
 		end
 	end
 end
-
-
 
 
 
