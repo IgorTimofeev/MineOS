@@ -770,7 +770,7 @@
     icon="IgorTimofeev/OpenComputers/master/Applications/AppMarket/Icon.pic",
     createShortcut="dock",
     forceDownload=true,
-    version=1.39,
+    version=1.40,
   },
   {
     name="MineOS/Applications/Control",

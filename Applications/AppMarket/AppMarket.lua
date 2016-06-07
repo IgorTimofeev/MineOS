@@ -225,7 +225,7 @@ local function drawMain(refreshData)
 end
 
 local function getNewApplications()
-	local pathToNewApplications = "MineOS/System/OS/AppStore/NewApplications.txt"
+	local pathToNewApplications = appStorePath .. "NewApplications.txt"
 	ecs.getFileFromUrl(oldApplications.GitHubApplicationListURL, pathToNewApplications)
 	newApplications = files.loadTableFromFile(pathToNewApplications)
 end
@@ -276,7 +276,6 @@ end
 local function flush()
 	fromY = obj.main.y + 1
 	from = 1
-	fs.makeDirectory(appStorePath)
 	currentApps = {}
 end
 
@@ -340,6 +339,7 @@ if args[1] == "updateCheck" then
 	currentTopBarElement = 5
 end
 
+fs.makeDirectory(appStorePath)
 calculateSizes()
 flush()
 loadOldApplications()
