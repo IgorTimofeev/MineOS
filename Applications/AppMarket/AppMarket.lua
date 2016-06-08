@@ -46,11 +46,11 @@ local typeFilters = {
 	"Script",
 }
 
-local appStorePath = "MineOS/System/AppStore/"
+local localization = files.loadTableFromFile("MineOS/Applications/AppMarket.app/Resources/Localization/" .. _G.OSSettings.language .. ".lang")
+local appMarketConfigPath = "MineOS/System/AppMarket/"
 local pathToApplications = "MineOS/System/OS/Applications.txt"
 local updateImage = image.load(MineOSCore.paths.icons .. "Update.pic")
--- local topBarElements = {{title = "Приложения", type = "Application"}, {title = "Библиотеки", type = "Library"}, {title = "Обои", type = "Wallpaper"}, {title = "Другое"}, {title = "Обновления"}}
-local topBarElements = {"Приложения", "Библиотеки", "Обои", "Другое", "Обновления"}
+local topBarElements = {localization.applications, localization.libraries, localization.wallpapers, localization.other, localization.updates}
 local oldApplications, newApplications, currentApps, changes = {}, {}, {}, {}
 
 local currentTopBarElement = 1
@@ -78,7 +78,7 @@ local function calculateSizes()
 	sizes.downloadButtonWidth = 17
 	sizes.descriptionTruncateSize = sizes.width - 6 - MineOSCore.iconWidth - sizes.downloadButtonWidth
 	sizes.searchFieldWidth = math.floor(sizes.width * 0.3)
-	obj.searchTextField = GUI.textField(math.floor(sizes.x + sizes.width / 2 - sizes.searchFieldWidth / 2), 1, sizes.searchFieldWidth, 1, 0xEEEEEE, 0x777777, 0xEEEEEE, 0x555555, nil, "Поиск", false, true)
+	obj.searchTextField = GUI.textField(math.floor(sizes.x + sizes.width / 2 - sizes.searchFieldWidth / 2), 1, sizes.searchFieldWidth, 1, 0xEEEEEE, 0x777777, 0xEEEEEE, 0x555555, nil, localization.search, false, true)
 end
 
 local function drawTopBar()
@@ -88,13 +88,13 @@ end
 
 local function getIcon(url)
 	local success, response = ecs.internetRequest(url)
-	local path = appStorePath .. "TempIcon.pic"
+	local path = appMarketConfigPath .. "TempIcon.pic"
 	if success then
 		local file = io.open(path, "w")
 		file:write(response)
 		file:close()
 	else
-		GUI.error(tostring(response), {title = {color = 0xFFDB40, text = "Ошибка при загрузке иконки"}})
+		GUI.error(tostring(response), {title = {color = 0xFFDB40, text = localization.errorWhileLoadingIcon}})
 	end
 	return image.load(path)
 end
@@ -104,7 +104,7 @@ local function getDescription(url)
 	if success then
 		return response
 	else
-		GUI.error(tostring(response), {title = {color = 0xFFDB40, text = "Ошибка при загрузке описания приложения"}})
+		GUI.error(tostring(response), {title = {color = 0xFFDB40, text = localization.errorWhileLoadingDescription}})
 	end
 end
 
@@ -130,13 +130,13 @@ local function getApplication(i)
 		currentApps[i].description = getDescription(newApplications.GitHubUserURL .. newApplications[i].about .. _G.OSSettings.language .. ".txt")
 		currentApps[i].description = ecs.stringWrap({currentApps[i].description}, sizes.descriptionTruncateSize )
 	else
-		currentApps[i].description = {"Описание отсутствует"}
+		currentApps[i].description = {localization.descriptionNotAvailable}
 	end
 
 	if newApplications[i].version then
-		currentApps[i].version = "Версия: " .. correctDouble(newApplications[i].version)
+		currentApps[i].version = localization.version .. correctDouble(newApplications[i].version)
 	else
-		currentApps[i].version = "Версия не указана"
+		currentApps[i].version = localization.versionNotAvailable
 	end
 end
 
@@ -152,7 +152,7 @@ local function drawApplication(x, y, i, doNotDrawButton)
 	buffer.text(x + 10, y, colors.appName, currentApps[i].name)
 	buffer.text(x + 10, y + 1, colors.version, currentApps[i].version)
 	local appExists = checkAppExists(newApplications[i].name, newApplications[i].type)
-	local text = appExists and "Обновить" or "Загрузить"
+	local text = appExists and localization.update or localization.download
 	
 	if not doNotDrawButton then
 		local xButton, yButton = sizes.x + sizes.width - sizes.downloadButtonWidth - 2, y + 1
@@ -174,7 +174,7 @@ local function drawApplication(x, y, i, doNotDrawButton)
 end
 
 local function drawPageSwitchButtons(y)
-	local text = "Приложения с " .. from .. " по " .. from + limit - 1
+	local text = localization.applicationsFrom .. from .. localization.applicationsTo .. from + limit - 1
 	local textLength = unicode.len(text)
 	local buttonWidth = 5
 	local width = buttonWidth * 2 + textLength + 2
@@ -203,11 +203,10 @@ local function drawMain(refreshData)
 	local matchCount = 1
 	for i = 1, #newApplications do
 		if newApplications[i].type == typeFilters[currentTopBarElement] then
-			-- if obj.searchTextField.text then GUI.error(tostring(unicode.lower(obj.searchTextField.text))) end
 			if not obj.searchTextField.text or (string.find(unicode.lower(fs.name(newApplications[i].name)), unicode.lower(obj.searchTextField.text))) then
 				if matchCount >= from and matchCount <= from + limit - 1 then
 					if refreshData and not currentApps[i] then
-						status("Загрузка информации о приложении \"" .. newApplications[i].name .. "\"")
+						status(localization.downloadingInfoAboutApplication .. " \"" .. newApplications[i].name .. "\"")
 						getApplication(i)
 					end
 					x, y = drawApplication(x, y, i)
@@ -225,7 +224,7 @@ local function drawMain(refreshData)
 end
 
 local function getNewApplications()
-	local pathToNewApplications = appStorePath .. "NewApplications.txt"
+	local pathToNewApplications = appMarketConfigPath .. "NewApplications.txt"
 	ecs.getFileFromUrl(oldApplications.GitHubApplicationListURL, pathToNewApplications)
 	newApplications = files.loadTableFromFile(pathToNewApplications)
 end
@@ -259,7 +258,7 @@ local function updates()
 		for i = from, (from + limit) do
 			if not changes[i] then break end
 			if not currentApps[changes[i]] then
-				status("Загрузка информации о приложении \"" .. fs.name(newApplications[changes[i]].name) .. "\"")
+				status(localization.downloadingInfoAboutApplication .. " \"" .. fs.name(newApplications[changes[i]].name) .. "\"")
 				getApplication(changes[i])
 			end
 			x, y = drawApplication(x, y, changes[i], true)
@@ -270,7 +269,7 @@ local function updates()
 		end
 		buffer.resetDrawLimit()
 	else
-		local text = "У вас самое новое ПО"
+		local text = localization.youHaveNewestApps
 		buffer.text(math.floor(sizes.x + sizes.width / 2 - unicode.len(text) / 2), math.floor(obj.main.y + obj.main.height / 2 - 1), colors.description, text)
 	end
 end
@@ -318,7 +317,7 @@ local function updateAll()
 	local xBar = math.floor(sizes.x + sizes.width / 2 - barWidth / 2)
 	y = y + 2
 	for i = 1, #changes do
-		local text = "Обновление " .. fs.name(newApplications[changes[i]].name)
+		local text = localization.updating .. " " .. fs.name(newApplications[changes[i]].name)
 		local xText = math.floor(sizes.x + sizes.width / 2 - unicode.len(text) / 2)
 		buffer.square(sizes.x, y + 1, sizes.width, 1, 0xFFFFFF)
 		buffer.text(xText, y + 1, colors.description, text)
@@ -341,13 +340,13 @@ if args[1] == "updateCheck" then
 	currentTopBarElement = 5
 end
 
-fs.makeDirectory(appStorePath)
+fs.makeDirectory(appMarketConfigPath)
 calculateSizes()
 flush()
 loadOldApplications()
 drawTopBar()
 GUI.windowShadow(sizes.x, sizes.y, sizes.width, sizes.height, 50)
-updateImageWindowWithText("Загрузка списка приложений")
+updateImageWindowWithText(localization.downloadingApplicationsList)
 buffer.draw()
 getNewApplications()
 getChanges()
@@ -368,14 +367,14 @@ while true do
 				for appIndex, app in pairs(currentApps) do
 					if app.buttonObject:isClicked(e[3], e[4]) then
 						app.buttonObject:press(0.3)
-						if app.buttonObject.text == "Обновить" or app.buttonObject.text == "Загрузить" then
-							app.buttonObject.text = "Загрузка"
+						if app.buttonObject.text == localization.update or app.buttonObject.text == localization.download then
+							app.buttonObject.text = localization.downloading
 							app.buttonObject.disabled = true
 							app.buttonObject.colors.disabled.button, app.buttonObject.colors.disabled.text = colors.downloading, colors.downloadingText
 							app.buttonObject:draw()
 							buffer.draw()
 							ecs.getOSApplication(newApplications[appIndex], true)
-							app.buttonObject.text = "Установлено"
+							app.buttonObject.text = localization.downloaded
 							app.buttonObject.colors.disabled.button, app.buttonObject.colors.disabled.text = colors.downloaded, colors.downloadedText
 							app.buttonObject:draw()
 							buffer.draw()

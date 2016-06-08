@@ -774,7 +774,17 @@
     icon="IgorTimofeev/OpenComputers/master/Applications/AppMarket/Icon.pic",
     createShortcut="dock",
     forceDownload=true,
-    version=1.42,
+    version=1.43,
+     resources={
+      {
+        name="Localization/Russian.lang",
+        url="IgorTimofeev/OpenComputers/master/Applications/AppMarket/Localization/Russian.lang",
+      },
+      {
+        name="Localization/English.lang",
+        url="IgorTimofeev/OpenComputers/master/Applications/AppMarket/Localization/English.lang",
+      },
+    },
   },
   {
     name="MineOS/Applications/Control",
