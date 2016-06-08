@@ -4,7 +4,6 @@ local term = require("term")
 local unicode = require("unicode")
 local event = require("event")
 local fs = require("filesystem")
-local internet = require("internet")
 local seri = require("serialization")
 local shell = require("shell")
 local gpu = component.gpu
@@ -57,68 +56,41 @@ local timing = 0.2
 
 -----------------------------СТАДИЯ ПОДГОТОВКИ-------------------------------------------
 
-
---ЗАГРУЗОЧКА С ГИТХАБА
-local function getFromGitHub(url, path)
-  local sContent = ""
-  local result, response = pcall(internet.request, url)
-  if not result then
-    return nil
+local function request(url)
+  local success, response = pcall(component.internet.request, url)
+  if success then
+    local responseData = ""
+    while true do
+      local data, responseChunk = response.read() 
+      if data then
+        responseData = responseData .. data
+      else
+        if responseChunk then
+          return false, responseChunk
+        else
+          return responseData
+        end
+      end
+    end
+  else
+    return false, reason
   end
-
-  if fs.exists(path) then fs.remove(path) end
-  fs.makeDirectory(fs.path(path))
-  local file = io.open(path, "w")
-
-  for chunk in response do
-    file:write(chunk)
-    sContent = sContent .. chunk
-  end
-
-  file:close()
-
-  return sContent
 end
 
 --БЕЗОПАСНАЯ ЗАГРУЗОЧКА
 local function getFromGitHubSafely(url, path)
-  local success, sRepos = pcall(getFromGitHub, url, path)
-  if not success then
+  local success, reason = request(url)
+  if success then
+    fs.makeDirectory(fs.path(path) or "")
+    fs.remove(path)
+    local file = io.open(path, "w")
+    file:write(success)
+    file:close()
+    return success
+  else
     io.stderr:write("Can't download \"" .. url .. "\"!\n")
     return -1
   end
-  return sRepos
-end
-
---ЗАГРУЗОЧКА С ПАСТЕБИНА
-local function getFromPastebin(paste, filename)
-  local cyka = ""
-  local f, reason = io.open(filename, "w")
-  if not f then
-    io.stderr:write("Failed opening file for writing: " .. reason)
-    return
-  end
-  --io.write("Downloading from pastebin.com... ")
-  local url = "http://pastebin.com/raw.php?i=" .. paste
-  local result, response = pcall(internet.request, url)
-  if result then
-    --io.write("success.\n")
-    for chunk in response do
-      --if not options.k then
-        --string.gsub(chunk, "\r\n", "\n")
-      --end
-      f:write(chunk)
-      cyka = cyka .. chunk
-    end
-    f:close()
-    --io.write("Saved data to " .. filename .. "\n")
-  else
-    f:close()
-    fs.remove(filename)
-    io.stderr:write("HTTP request failed: " .. response .. "\n")
-  end
-
-  return cyka
 end
 
 local GitHubUserUrl = "https://raw.githubusercontent.com/"
