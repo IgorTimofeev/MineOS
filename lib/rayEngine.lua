@@ -2,6 +2,9 @@ local libraries = {
 	buffer = "doubleBuffering",
 	event = "event",
 	files = "files",
+	computer = "computer",
+	doubleHeight = "doubleHeight",
+	colorlib = "colorlib",
 }
 
 for library in pairs(libraries) do if not _G[library] then _G[library] = require(libraries[library]) end end; libraries = nil
@@ -9,13 +12,12 @@ local rayEngine = {}
 
 ----------------------------------------------------------------------------------------------------------------------------------
 
-local function round(chislo)
-  local celaya, drobnaya = math.modf(chislo)
-  if drobnaya >= 0.5 then
-    return (celaya + 1)
-  else
-    return celaya
-  end
+local function round(num) 
+	if num >= 0 then 
+		return math.floor(num + 0.5) 
+	else
+		return math.ceil(num - 0.5)
+	end
 end
 
 local function convertRadiansToDegrees(rad)
@@ -35,22 +37,58 @@ local function constrainAngle(value)
 	return value
 end
 
+local function getSkyColorByTime()
+	return rayEngine.world.colors.sky[rayEngine.world.dayNightCycle.currentTime > 0 and math.ceil(rayEngine.world.dayNightCycle.currentTime / rayEngine.world.dayNightCycle.length * #rayEngine.world.colors.sky) or 1]
+end
+
+local function getBrightnessByTime()
+	return rayEngine.world.colors.brightnessMultiplyer[rayEngine.world.dayNightCycle.currentTime > 0 and math.ceil(rayEngine.world.dayNightCycle.currentTime / rayEngine.world.dayNightCycle.length * #rayEngine.world.colors.brightnessMultiplyer) or 1]
+end
+
+local function getTimeDependentColors()
+	rayEngine.world.colors.sky.current = getSkyColorByTime()
+	rayEngine.world.colors.brightnessMultiplyer.current = math.floor(getBrightnessByTime() * 2.55)
+	rayEngine.world.colors.groundByTime = colorlib.alphaBlend(rayEngine.world.colors.ground, 0x000000, rayEngine.world.colors.brightnessMultiplyer.current)
+
+	rayEngine.world.colors.tile.byTime = {}
+	for i = 1, #rayEngine.world.colors.tile do
+		rayEngine.world.colors.tile.byTime[i] = colorlib.alphaBlend(rayEngine.world.colors.tile[i], 0x000000, rayEngine.world.colors.brightnessMultiplyer.current)
+	end
+end
+
+local function doDayNightCycle()
+	if rayEngine.world.dayNightCycle.enabled then
+		local computerUptime = computer.uptime()
+		if (computerUptime - rayEngine.world.dayNightCycle.lastComputerUptime) >= rayEngine.world.dayNightCycle.speed then
+			rayEngine.world.dayNightCycle.currentTime = rayEngine.world.dayNightCycle.currentTime + rayEngine.world.dayNightCycle.speed
+			if rayEngine.world.dayNightCycle.currentTime > rayEngine.world.dayNightCycle.length then rayEngine.world.dayNightCycle.currentTime = 0 end	
+			rayEngine.world.dayNightCycle.lastComputerUptime = computerUptime
+
+			getTimeDependentColors()
+		end
+	end
+end
+
+local function correctDouble(number)
+	return string.format("%.1f", number)
+end
+
 ----------------------------------------------------------------------------------------------------------------------------------
 
 rayEngine.tileWidth = 32
-rayEngine.scene = {}
 
-function rayEngine.loadScene(sceneArray)
-	rayEngine.scene = sceneArray
-	rayEngine.scene.width = #rayEngine.scene.map[1]
-	rayEngine.scene.height = #rayEngine.scene.map
-	rayEngine.scene.player.position.x = rayEngine.tileWidth * rayEngine.scene.player.position.x - rayEngine.tileWidth / 2
-	rayEngine.scene.player.position.y = rayEngine.tileWidth * rayEngine.scene.player.position.y - rayEngine.tileWidth / 2
-	rayEngine.distanceToProjectionPlane = (buffer.screen.width / 2) / math.tan(convertDegreesToRadians(rayEngine.scene.player.fieldOfView / 2))
-end
+function rayEngine.loadWorld(pathToWorldFolder)
+	rayEngine.world = files.loadTableFromFile(pathToWorldFolder .. "/World.cfg")
+	rayEngine.map = files.loadTableFromFile(pathToWorldFolder .. "/Map.cfg")
+	rayEngine.player = files.loadTableFromFile(pathToWorldFolder .. "/Player.cfg")
 
-function rayEngine.loadSceneFromFile(path)
-	rayEngine.loadScene(files.loadTableFromFile(path))
+	rayEngine.map.width = #rayEngine.map[1]
+	rayEngine.map.height = #rayEngine.map
+	rayEngine.player.position.x = rayEngine.tileWidth * rayEngine.player.position.x - rayEngine.tileWidth / 2
+	rayEngine.player.position.y = rayEngine.tileWidth * rayEngine.player.position.y - rayEngine.tileWidth / 2
+	getTimeDependentColors()
+	rayEngine.world.dayNightCycle.lastComputerUptime = computer.uptime()
+	rayEngine.distanceToProjectionPlane = (buffer.screen.width / 2) / math.tan(convertDegreesToRadians(rayEngine.player.fieldOfView / 2))
 end
 
 ----------------------------------------------------------------------------------------------------------------------------------
@@ -60,47 +98,56 @@ local function convertWorldCoordsToMapCoords(x, y)
 end
 
 local function getBlockCoordsByLook(distance)
-	local radRotation = math.rad(rayEngine.scene.player.rotation + 90)
-	return convertWorldCoordsToMapCoords(rayEngine.scene.player.position.x + distance * math.sin(radRotation) * rayEngine.tileWidth, rayEngine.scene.player.position.y + distance * math.cos(radRotation) * rayEngine.tileWidth)
+	local radRotation = math.rad(rayEngine.player.rotation + 90)
+	return convertWorldCoordsToMapCoords(rayEngine.player.position.x + distance * math.sin(radRotation) * rayEngine.tileWidth, rayEngine.player.position.y + distance * math.cos(radRotation) * rayEngine.tileWidth)
 end
 
 function rayEngine.move(distanceForward, distanceRight)
-	local forwardRotation = math.rad(rayEngine.scene.player.rotation + 90)
-	local rightRotation = math.rad(rayEngine.scene.player.rotation + 180)
-	local xNew = rayEngine.scene.player.position.x + distanceForward * math.sin(forwardRotation) + distanceRight * math.sin(rightRotation)
-	local yNew = rayEngine.scene.player.position.y + distanceForward * math.cos(forwardRotation) + distanceRight * math.cos(rightRotation)
+	local forwardRotation = math.rad(rayEngine.player.rotation + 90)
+	local rightRotation = math.rad(rayEngine.player.rotation + 180)
+	local xNew = rayEngine.player.position.x + distanceForward * math.sin(forwardRotation) + distanceRight * math.sin(rightRotation)
+	local yNew = rayEngine.player.position.y + distanceForward * math.cos(forwardRotation) + distanceRight * math.cos(rightRotation)
 
 	local xWorld, yWorld = convertWorldCoordsToMapCoords(xNew, yNew)
-	if rayEngine.scene.map[yWorld][xWorld] == nil then
-		rayEngine.scene.player.position.x, rayEngine.scene.player.position.y = xNew, yNew
+	if rayEngine.map[yWorld][xWorld] == nil then
+		rayEngine.player.position.x, rayEngine.player.position.y = xNew, yNew
 	end
 end
 
 function rayEngine.rotate(angle)
-	rayEngine.scene.player.rotation = constrainAngle(rayEngine.scene.player.rotation + angle)
+	rayEngine.player.rotation = constrainAngle(rayEngine.player.rotation + angle)
 end
 
 function rayEngine.destroy(distance)
 	local xBlock, yBlock = getBlockCoordsByLook(distance)
-	rayEngine.scene.map[yBlock][xBlock] = nil
+	rayEngine.map[yBlock][xBlock] = nil
 end
 
 function rayEngine.place(distance, blockColor)
 	local xBlock, yBlock = getBlockCoordsByLook(distance)
-	rayEngine.scene.map[yBlock][xBlock] = blockColor or 0x0
+	rayEngine.map[yBlock][xBlock] = blockColor or 0x0
 end
 
 ----------------------------------------------------------------------------------------------------------------------------------
 
+local function drawFieldOfViewAngle(x, y, distance, color)
+	local fieldOfViewHalf = rayEngine.player.fieldOfView / 2
+	local firstAngle, secondAngle = math.rad(-(rayEngine.player.rotation - fieldOfViewHalf + 90)), math.rad(-(rayEngine.player.rotation + fieldOfViewHalf + 90))
+	local xFirst, yFirst = math.floor(x + math.sin(firstAngle) * distance), math.floor(y + math.cos(firstAngle) * distance)
+	local xSecond, ySecond = math.floor(x + math.sin(secondAngle) * distance), math.floor(y + math.cos(secondAngle) * distance)
+	doubleHeight.line(x, y, xFirst, yFirst, color)
+	doubleHeight.line(x, y, xSecond, ySecond, color)
+end
+
 function rayEngine.drawMap(x, y, width, height, transparency)
 	buffer.square(x, y, width, height, 0x000000, 0x000000, " ", transparency)
 	local xHalf, yHalf = math.floor(width / 2), math.floor(height / 2)
-	local xMap, yMap = math.floor(rayEngine.scene.player.position.x / rayEngine.tileWidth), math.floor(rayEngine.scene.player.position.y / rayEngine.tileWidth)
+	local xMap, yMap = convertWorldCoordsToMapCoords(rayEngine.player.position.x, rayEngine.player.position.y)
 
 	local xPos, yPos = x, y
 	for i = yMap - yHalf + 1, yMap + yHalf + 1 do
-		for j = xMap - xHalf + 1, xMap + xHalf + 1 do
-			if rayEngine.scene.map[i] and rayEngine.scene.map[i][j] then
+		for j = xMap + xHalf + 1, xMap - xHalf + 1, -1 do
+			if rayEngine.map[i] and rayEngine.map[i][j] then
 				buffer.square(xPos, yPos, 1, 1, 0xEEEEEE)
 			end
 			xPos = xPos + 1
@@ -108,7 +155,17 @@ function rayEngine.drawMap(x, y, width, height, transparency)
 		xPos = x; yPos = yPos + 1
 	end
 
-	buffer.square(x + xHalf, y + yHalf, 1, 1, 0x55FF55, 0x000000, " ")
+	--Поворот
+	local xPlayer, yPlayer = x + xHalf, (y + yHalf) * 2
+	--Поле зрения
+	drawFieldOfViewAngle(xPlayer, yPlayer, 5, 0xCCFFBF)
+	--Игрок
+	doubleHeight.set(xPlayer, yPlayer, 0x66FF40)
+	--Инфа
+	y = y + height
+	buffer.square(x, y, width, 1, 0x000000, 0x000000, " ", transparency + 10)
+	x = x + 1
+	buffer.text(x, y, 0xFFFFFF, "POS: " .. correctDouble(rayEngine.player.position.x) .. " x " .. correctDouble(rayEngine.player.position.y))
 end
 
 ----------------------------------------------------------------------------------------------------------------------------------
@@ -118,25 +175,25 @@ local function hRaycast(player, angle)
 
 	local tanAng = math.tan( angle )
 
-	local Ay = math.floor(rayEngine.scene.player.position.y / rayEngine.tileWidth) * rayEngine.tileWidth; Ay = Ay + ( (rayInTop) and -1 or rayEngine.tileWidth )
-	local Ax = rayEngine.scene.player.position.x + (rayEngine.scene.player.position.y - Ay) / tanAng
+	local Ay = math.floor(rayEngine.player.position.y / rayEngine.tileWidth) * rayEngine.tileWidth; Ay = Ay + ( (rayInTop) and -1 or rayEngine.tileWidth )
+	local Ax = rayEngine.player.position.x + (rayEngine.player.position.y - Ay) / tanAng
 
 	local Ya = (rayInTop) and -rayEngine.tileWidth or rayEngine.tileWidth
 	local Xa = rayEngine.tileWidth / tanAng; Xa = Xa * ( (rayInTop) and 1 or -1 )
 
 	local x, y = math.floor(Ax / rayEngine.tileWidth), math.floor(Ay / rayEngine.tileWidth)
 
-	while (rayEngine.scene.map[y + 1] and not rayEngine.scene.map[y + 1][x + 1]) do
+	while (rayEngine.map[y + 1] and not rayEngine.map[y + 1][x + 1]) do
 		Ax = Ax + Xa; Ay = Ay + Ya
 
-		if (Ax < 0 or Ax > rayEngine.tileWidth * rayEngine.scene.width or Ay < 0 or Ay > rayEngine.tileWidth * rayEngine.scene.height) then
+		if (Ax < 0 or Ax > rayEngine.tileWidth * rayEngine.map.width or Ay < 0 or Ay > rayEngine.tileWidth * rayEngine.map.height) then
 			break
 		end
 
 		x, y = math.floor(Ax / rayEngine.tileWidth), math.floor(Ay / rayEngine.tileWidth)
 	end
 
-	return math.abs(rayEngine.scene.player.position.x - Ax) / math.abs(math.cos( angle ))
+	return math.abs(rayEngine.player.position.x - Ax) / math.abs(math.cos( angle ))
 end
 
 local function vRaycast(player, angle)
@@ -144,37 +201,37 @@ local function vRaycast(player, angle)
 
 	local tanAng = math.tan( angle )
 
-	local Bx = math.floor(rayEngine.scene.player.position.x / rayEngine.tileWidth) * rayEngine.tileWidth; Bx = Bx + ( (rayInRight) and rayEngine.tileWidth or -1 )
-	local By = rayEngine.scene.player.position.y + (rayEngine.scene.player.position.x - Bx) * tanAng
+	local Bx = math.floor(rayEngine.player.position.x / rayEngine.tileWidth) * rayEngine.tileWidth; Bx = Bx + ( (rayInRight) and rayEngine.tileWidth or -1 )
+	local By = rayEngine.player.position.y + (rayEngine.player.position.x - Bx) * tanAng
 
 	local Xa = (rayInRight) and rayEngine.tileWidth or -rayEngine.tileWidth
 	local Ya = rayEngine.tileWidth * tanAng; Ya = Ya * ( (rayInRight) and -1 or 1 )
 
 	local x, y = math.floor(Bx / rayEngine.tileWidth), math.floor(By / rayEngine.tileWidth)
 
-	while (rayEngine.scene.map[y + 1] and not rayEngine.scene.map[y + 1][x + 1]) do
+	while (rayEngine.map[y + 1] and not rayEngine.map[y + 1][x + 1]) do
 		Bx = Bx + Xa; By = By + Ya
 
-		if (Bx < 0 or Bx > rayEngine.tileWidth * rayEngine.scene.width or By < 0 or By > rayEngine.tileWidth * rayEngine.scene.height) then
+		if (Bx < 0 or Bx > rayEngine.tileWidth * rayEngine.map.width or By < 0 or By > rayEngine.tileWidth * rayEngine.map.height) then
 			break
 		end
 
 		x, y = math.floor(Bx / rayEngine.tileWidth), math.floor(By / rayEngine.tileWidth)
 	end
 
-	return math.abs(rayEngine.scene.player.position.y - By) / math.abs(math.sin( angle ))
+	return math.abs(rayEngine.player.position.y - By) / math.abs(math.sin( angle ))
 end
 
-function rayEngine.drawScene()
-	buffer.clear(rayEngine.scene.colors.ground)
-	buffer.square(1, 1, buffer.screen.width, math.floor(buffer.screen.height / 2),rayEngine.scene.colors.sky)
+function rayEngine.drawWorld()
+	buffer.clear(rayEngine.world.colors.groundByTime)
+	buffer.square(1, 1, buffer.screen.width, math.floor(buffer.screen.height / 2), rayEngine.world.colors.sky.current)
 
-	local startColumn = rayEngine.scene.player.rotation - (rayEngine.scene.player.fieldOfView / 2)
-	local endColumn = rayEngine.scene.player.rotation + (rayEngine.scene.player.fieldOfView / 2)
-	local step = rayEngine.scene.player.fieldOfView / buffer.screen.width
+	local startColumn = rayEngine.player.rotation - (rayEngine.player.fieldOfView / 2)
+	local endColumn = rayEngine.player.rotation + (rayEngine.player.fieldOfView / 2)
+	local step = rayEngine.player.fieldOfView / buffer.screen.width
 
 	local startX = 1
-	local distanceLimit = buffer.screen.height - 4
+	local distanceLimit = buffer.screen.height * 0.8
 	local hDist, vDist, dist, height, startY, tileColor
 	for angle = startColumn, endColumn, step do
 		hDist = hRaycast(player, convertDegreesToRadians(angle) )
@@ -182,15 +239,17 @@ function rayEngine.drawScene()
 
 		-- local dist = math.min( hDist, vDist ) * math.cos( convertDegreesToRadians(angle) )
 		dist = math.min( hDist, vDist )
-
 		height = rayEngine.tileWidth / dist * rayEngine.distanceToProjectionPlane
 		startY = buffer.screen.height / 2 - height / 2 + 1
 
 		--Рисуем сценку
-		tileColor = height > distanceLimit and rayEngine.scene.colors.distanceMap[#rayEngine.scene.colors.distanceMap] or rayEngine.scene.colors.distanceMap[math.floor(#rayEngine.scene.colors.distanceMap * height / distanceLimit)]
+		tileColor = height > distanceLimit and rayEngine.world.colors.tile.byTime[#rayEngine.world.colors.tile.byTime] or rayEngine.world.colors.tile.byTime[math.floor(#rayEngine.world.colors.tile.byTime * height / distanceLimit)]
 		buffer.square(math.floor(startX), math.floor(startY), 1, height, tileColor, 0x000000, " ")
+		-- buffer.square(math.floor(startX), math.floor(startY), 1, height, 0x000000, 0x000000, " ")
 		startX = startX + 1
 	end
+
+	doDayNightCycle()
 end
 
 function rayEngine.intro()
