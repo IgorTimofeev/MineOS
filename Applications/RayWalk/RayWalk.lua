@@ -52,7 +52,7 @@ local function menu()
 end
 
 buffer.start()
--- rayEngine.intro()
+rayEngine.intro()
 rayEngine.loadWorld(worldsPath .. "ExampleWorld")
 menu()
 update()

@@ -541,7 +541,7 @@
     type="Application",
     icon="IgorTimofeev/OpenComputers/master/Applications/RayWalk/Icon.pic",
     createShortcut="desktop",
-    version=1.3,
+    version=1.4,
     resources={
       {
         name="Worlds/ExampleWorld/Map.cfg",
