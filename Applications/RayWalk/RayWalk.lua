@@ -64,13 +64,17 @@ while (true) do
 		if e[5] == 1 then rayEngine.place(3) else rayEngine.destroy(3) end
 	elseif e[1] == "key_down" then
 		if ( e[4] == 30 ) then --a
-			rayEngine.rotate(-4)
+			rayEngine.move(0, -16)
 		elseif ( e[4] == 32 ) then --d
-			rayEngine.rotate(4)
+			rayEngine.move(0, 16)
 		elseif ( e[4] == 17 ) then --w
 			rayEngine.move(16, 0)
 		elseif ( e[4] == 31 ) then --s
 			rayEngine.move(-16, 0)
+		elseif ( e[4] == 16 ) then --q
+			rayEngine.rotate(-4)
+		elseif ( e[4] == 18 ) then --e
+			rayEngine.rotate(4)
 		elseif ( e[4] == 14 or e[4] == 28 ) then --backspace, enter
 			menu()
 		elseif ( e[4] == 50 ) then
