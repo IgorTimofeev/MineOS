@@ -77,20 +77,14 @@
 
 -- Адаптивная загрузка необходимых библиотек и компонентов
 local libraries = {
-	["component"] = "component",
-	["unicode"] = "unicode",
-	["fs"] = "filesystem",
-	["colorlib"] = "colorlib",
-	["bit"] = "bit32",
+	component = "component",
+	unicode = "unicode",
+	fs = "filesystem",
+	colorlib = "colorlib",
+	bit32 = "bit32",
 }
 
-local components = {
-	["gpu"] = "gpu",
-}
-
-for library in pairs(libraries) do if not _G[library] then _G[library] = require(libraries[library]) end end
-for comp in pairs(components) do if not _G[comp] then _G[comp] = _G.component[components[comp]] end end
-libraries, components = nil, nil
+for library in pairs(libraries) do if not _G[library] then _G[library] = require(libraries[library]) end end; libraries = nil
 
 local image = {}
 
@@ -99,12 +93,6 @@ local image = {}
 --Константы программы
 local constants = {
 	OCIFSignature = "OCIF",
-	encodingMethods = {
-		raw = 0,
-		OCIF1 = 1,
-		OCIF2 = 2,
-		OCIF3 = 3,
-	},
 	OCIF2Elements = {
 		alphaStart = "A",
 		symbolStart = "S",
@@ -116,7 +104,6 @@ local constants = {
 	nullChar = 0,
 	rawImageLoadStep = 19,
 	compressedFileFormat = ".pic",
-	rawFileFormat = ".rawpic",
 	pngFileFormat = ".png",
 }
 
@@ -737,7 +724,7 @@ function image.get(picture, x, y)
 	end
 end
 
---Установить пиксель в изображении по указанным координа
+--Установить пиксель в изображении по указанным координатам
 function image.set(picture, x, y, background, foreground, alpha, symbol)
 	if x >= 1 and y >= 1 and x <= picture.width and y <= picture.height then
 		local index = convertCoordsToIndex(x, y, picture.width)
@@ -757,11 +744,11 @@ end
 function image.screenshot(path)
 	local picture = {}
 	local foreground, background, symbol
-	picture.width, picture.height = gpu.getResolution()
+	picture.width, picture.height = component.gpu.getResolution()
 	
 	for j = 1, picture.height do
 		for i = 1, picture.width do
-			symbol, foreground, background = gpu.get(i, j)
+			symbol, foreground, background = component.gpu.get(i, j)
 			table.insert(picture, background)
 			table.insert(picture, foreground)
 			table.insert(picture, 0x00)
@@ -1055,6 +1042,42 @@ function image.gaussianBlur(picture, radius, force)
 	return picture
 end
 
+----------------------------------------- Строковая обработка изображений -------------------------------------------------------------------
+
+--Преобразовать изображение в строковую интерпретацию, которая может быть вставлена в код
+--Удобно, если не хочется возиться с файловой системой
+function image.toString(picture)
+	local stringedPicture = {}
+	picture = convertImageColorsTo8Bit(picture)
+	table.insert(stringedPicture, string.format("%03i", picture.width))
+	table.insert(stringedPicture, string.format("%03i", picture.height))
+	for i = 1, #picture, 4 do
+		table.insert(stringedPicture, string.format("%02X", picture[i]))
+		table.insert(stringedPicture, string.format("%02X", picture[i + 1]))
+		table.insert(stringedPicture, string.format("%02X", picture[i + 2]))
+		table.insert(stringedPicture, picture[i + 3])
+	end
+	picture = convertImageColorsTo24Bit(picture)
+	return table.concat(stringedPicture)
+end
+
+--Получить изображение из строковой интерпретации, созданной ранее
+function image.fromString(stringedPicture)
+	local picture = {}
+	local subIndex = 1
+	picture.width = tonumber(unicode.sub(stringedPicture, subIndex, subIndex + 2)); subIndex = subIndex + 3
+	picture.height = tonumber(unicode.sub(stringedPicture, subIndex, subIndex + 2)); subIndex = subIndex + 3
+	
+	for pixel = 1, picture.width * picture.height do
+		table.insert(picture, tonumber("0x" .. unicode.sub(stringedPicture, subIndex, subIndex + 1))); subIndex = subIndex + 2
+		table.insert(picture, tonumber("0x" .. unicode.sub(stringedPicture, subIndex, subIndex + 1))); subIndex = subIndex + 2
+		table.insert(picture, tonumber("0x" .. unicode.sub(stringedPicture, subIndex, subIndex + 1))); subIndex = subIndex + 2
+		table.insert(picture, unicode.sub(stringedPicture, subIndex, subIndex)); subIndex = subIndex + 1
+	end
+	picture = convertImageColorsTo24Bit(picture)
+	return picture
+end
+
 ----------------------------------------- Основные функции программы -------------------------------------------------------------------
 
 --Сохранить изображение любого поддерживаемого формата
@@ -1064,14 +1087,16 @@ function image.save(path, picture, encodingMethod)
 	fs.makeDirectory(fs.path(path))
 	--Получаем формат указанного файла
 	local fileFormat = getFileFormat(path)
-	--Оптимизируем картинку
-	picture = image.optimize(picture)
-	--Открываем файл
-	local file = io.open(path, "w")
-	--Записываем сигнатуру
-	writeSignature(file)
+
 	--Проверяем соответствие формата файла
 	if fileFormat == constants.compressedFileFormat then
+		--Оптимизируем картинку
+		picture = image.optimize(picture)
+		--Открываем файл
+		local file = io.open(path, "w")
+		--Записываем сигнатуру
+		writeSignature(file)
+		--Разбираемся с кодировкой
 		if encodingMethod == 0 or string.lower(encodingMethod) == "raw" then
 			file:write(string.char(encodingMethod))
 			saveRaw(file, picture)
@@ -1082,12 +1107,17 @@ function image.save(path, picture, encodingMethod)
 			file:write(string.char(encodingMethod))
 			saveOCIF2(file, picture)
 		elseif encodingMethod == 3 or string.lower(encodingMethod) == "ocif3" then
-			error("Encoding method 3 is deprecated and no longer supported. Use method 4 instead of it.")
+			error("Saving in encoding method 3 is deprecated and no longer supported. Use method 4 instead of it.")
 		elseif encodingMethod == 4 or string.lower(encodingMethod) == "ocif4" then
 			file:write(string.char(encodingMethod))
 			picture = convertImageColorsTo8Bit(picture)
 			saveOCIF2(file, picture, true)
 			picture = convertImageColorsTo24Bit(picture)
+		elseif encodingMethod == 6 then
+			file:close()
+			file = io.open(path, "w")
+			file:write(image.toString(picture))
+			file:close()
 		else
 			file:close()
 			error("Unsupported encoding method.\n")
@@ -1146,9 +1176,9 @@ function image.draw(x, y, picture)
 	for alpha in pairs(picture) do
 		for symbol in pairs(picture[alpha]) do
 			for foreground in pairs(picture[alpha][symbol]) do
-				if gpu.getForeground ~= foreground then gpu.setForeground(foreground) end
+				if component.gpu.getForeground ~= foreground then component.gpu.setForeground(foreground) end
 				for background in pairs(picture[alpha][symbol][foreground]) do
-					if gpu.getBackground ~= background then gpu.setBackground(background) end
+					if component.gpu.getBackground ~= background then component.gpu.setBackground(background) end
 					currentBackground = background
 
 					for yArray in pairs(picture[alpha][symbol][foreground][background]) do
@@ -1157,19 +1187,19 @@ function image.draw(x, y, picture)
 							
 							--Если альфа имеется, но она не совсем прозрачна
 							if (alpha > 0x00 and alpha < 0xFF) or (alpha == 0xFF and symbol ~= " ")then
-								_, _, currentBackground = gpu.get(xPos, yPos)
+								_, _, currentBackground = component.gpu.get(xPos, yPos)
 								currentBackground = colorlib.alphaBlend(currentBackground, background, alpha)
-								gpu.setBackground(currentBackground)
+								component.gpu.setBackground(currentBackground)
 
-								gpu.set(xPos, yPos, symbol)
+								component.gpu.set(xPos, yPos, symbol)
 
 							elseif alpha == 0x00 then
 								if currentBackground ~= background then
 									currentBackground = background
-									gpu.setBackground(currentBackground)
+									component.gpu.setBackground(currentBackground)
 								end
 
-								gpu.set(xPos, yPos, symbol)
+								component.gpu.set(xPos, yPos, symbol)
 							end
 							--ecs.wait()
 						end
