@@ -1049,8 +1049,8 @@ end
 function image.toString(picture)
 	local stringedPicture = {}
 	picture = convertImageColorsTo8Bit(picture)
-	table.insert(stringedPicture, string.format("%03i", picture.width))
-	table.insert(stringedPicture, string.format("%03i", picture.height))
+	table.insert(stringedPicture, string.format("%02X", picture.width))
+	table.insert(stringedPicture, string.format("%02X", picture.height))
 	for i = 1, #picture, 4 do
 		table.insert(stringedPicture, string.format("%02X", picture[i]))
 		table.insert(stringedPicture, string.format("%02X", picture[i + 1]))
@@ -1065,8 +1065,8 @@ end
 function image.fromString(stringedPicture)
 	local picture = {}
 	local subIndex = 1
-	picture.width = tonumber(unicode.sub(stringedPicture, subIndex, subIndex + 2)); subIndex = subIndex + 3
-	picture.height = tonumber(unicode.sub(stringedPicture, subIndex, subIndex + 2)); subIndex = subIndex + 3
+	picture.width = tonumber("0x" .. unicode.sub(stringedPicture, subIndex, subIndex + 1)); subIndex = subIndex + 2
+	picture.height = tonumber("0x" .. unicode.sub(stringedPicture, subIndex, subIndex + 1)); subIndex = subIndex + 2
 	
 	for pixel = 1, picture.width * picture.height do
 		table.insert(picture, tonumber("0x" .. unicode.sub(stringedPicture, subIndex, subIndex + 1))); subIndex = subIndex + 2

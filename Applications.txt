@@ -258,6 +258,12 @@
     version=1.0,
   },
   {
+    name="lib/image.lua",
+    url="IgorTimofeev/OpenComputers/master/lib/image.lua",
+    type="Library",
+    version=1.1,
+  },
+  {
     name="lib/rayEngine.lua",
     url="IgorTimofeev/OpenComputers/master/lib/rayEngine.lua",
     type="Library",
