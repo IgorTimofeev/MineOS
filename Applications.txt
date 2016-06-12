@@ -546,53 +546,53 @@
       },
     },
   },
-  {
-    name="MineOS/Applications/RayWalk",
-    url="IgorTimofeev/OpenComputers/master/Applications/RayWalk/RayWalk.lua",
-    about="IgorTimofeev/OpenComputers/master/Applications/RayWalk/About/",
-    type="Application",
-    icon="IgorTimofeev/OpenComputers/master/Applications/RayWalk/Icon.pic",
-    createShortcut="desktop",
-    version=1.43,
-    resources={
-      {
-        name="Worlds/ExampleWorld/Map.cfg",
-        url="IgorTimofeev/OpenComputers/master/Applications/RayWalk/Worlds/ExampleWorld/Map.cfg",
-      },
-      {
-        name="Worlds/ExampleWorld/Player.cfg",
-        url="IgorTimofeev/OpenComputers/master/Applications/RayWalk/Worlds/ExampleWorld/Player.cfg",
-      },
-      {
-        name="Worlds/ExampleWorld/World.cfg",
-        url="IgorTimofeev/OpenComputers/master/Applications/RayWalk/Worlds/ExampleWorld/World.cfg",
-      },
-      {
-        name="Worlds/ForeverDay/Map.cfg",
-        url="IgorTimofeev/OpenComputers/master/Applications/RayWalk/Worlds/ForeverDay/Map.cfg",
-      },
-      {
-        name="Worlds/ForeverDay/Player.cfg",
-        url="IgorTimofeev/OpenComputers/master/Applications/RayWalk/Worlds/ForeverDay/Player.cfg",
-      },
-      {
-        name="Worlds/ForeverDay/World.cfg",
-        url="IgorTimofeev/OpenComputers/master/Applications/RayWalk/Worlds/ForeverDay/World.cfg",
-      },
-      {
-        name="Worlds/SundownBeams/Map.cfg",
-        url="IgorTimofeev/OpenComputers/master/Applications/RayWalk/Worlds/SundownBeams/Map.cfg",
-      },
-      {
-        name="Worlds/SundownBeams/Player.cfg",
-        url="IgorTimofeev/OpenComputers/master/Applications/RayWalk/Worlds/SundownBeams/Player.cfg",
-      },
-      {
-        name="Worlds/SundownBeams/World.cfg",
-        url="IgorTimofeev/OpenComputers/master/Applications/RayWalk/Worlds/SundownBeams/World.cfg",
-      },
-    },
-  },
+  -- {
+  --   name="MineOS/Applications/RayWalk",
+  --   url="IgorTimofeev/OpenComputers/master/Applications/RayWalk/RayWalk.lua",
+  --   about="IgorTimofeev/OpenComputers/master/Applications/RayWalk/About/",
+  --   type="Application",
+  --   icon="IgorTimofeev/OpenComputers/master/Applications/RayWalk/Icon.pic",
+  --   createShortcut="desktop",
+  --   version=1.43,
+  --   resources={
+  --     {
+  --       name="Worlds/ExampleWorld/Map.cfg",
+  --       url="IgorTimofeev/OpenComputers/master/Applications/RayWalk/Worlds/ExampleWorld/Map.cfg",
+  --     },
+  --     {
+  --       name="Worlds/ExampleWorld/Player.cfg",
+  --       url="IgorTimofeev/OpenComputers/master/Applications/RayWalk/Worlds/ExampleWorld/Player.cfg",
+  --     },
+  --     {
+  --       name="Worlds/ExampleWorld/World.cfg",
+  --       url="IgorTimofeev/OpenComputers/master/Applications/RayWalk/Worlds/ExampleWorld/World.cfg",
+  --     },
+  --     {
+  --       name="Worlds/ForeverDay/Map.cfg",
+  --       url="IgorTimofeev/OpenComputers/master/Applications/RayWalk/Worlds/ForeverDay/Map.cfg",
+  --     },
+  --     {
+  --       name="Worlds/ForeverDay/Player.cfg",
+  --       url="IgorTimofeev/OpenComputers/master/Applications/RayWalk/Worlds/ForeverDay/Player.cfg",
+  --     },
+  --     {
+  --       name="Worlds/ForeverDay/World.cfg",
+  --       url="IgorTimofeev/OpenComputers/master/Applications/RayWalk/Worlds/ForeverDay/World.cfg",
+  --     },
+  --     {
+  --       name="Worlds/SundownBeams/Map.cfg",
+  --       url="IgorTimofeev/OpenComputers/master/Applications/RayWalk/Worlds/SundownBeams/Map.cfg",
+  --     },
+  --     {
+  --       name="Worlds/SundownBeams/Player.cfg",
+  --       url="IgorTimofeev/OpenComputers/master/Applications/RayWalk/Worlds/SundownBeams/Player.cfg",
+  --     },
+  --     {
+  --       name="Worlds/SundownBeams/World.cfg",
+  --       url="IgorTimofeev/OpenComputers/master/Applications/RayWalk/Worlds/SundownBeams/World.cfg",
+  --     },
+  --   },
+  -- },
   {
     name="MineOS/Applications/GuessWord",
     url="IgorTimofeev/OpenComputers/master/Applications/GuessWord/GuessWord.lua",
