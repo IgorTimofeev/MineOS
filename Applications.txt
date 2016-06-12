@@ -261,7 +261,7 @@
     name="lib/image.lua",
     url="IgorTimofeev/OpenComputers/master/lib/image.lua",
     type="Library",
-    version=1.2,
+    version=1.21,
   },
   {
     name="lib/colorlib.lua",

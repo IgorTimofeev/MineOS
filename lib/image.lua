@@ -759,71 +759,161 @@ function image.screenshot(path)
 	image.save(path, picture)
 end
 
------------------------------------------- Функции обработки изображения ------------------------------------------------
+------------------------------------------ Методы трансформирования изображения ------------------------------------------------
+
+--Вставка ряда пикселей
+function image.insertRow(picture, y, rowArray)
+	local index = convertCoordsToIndex(1, y, picture.width)
+	for i = 1, #rowArray, 4 do
+		table.insert(picture, index, rowArray[i + 3])
+		table.insert(picture, index, rowArray[i + 2])
+		table.insert(picture, index, rowArray[i + 1])
+		table.insert(picture, index, rowArray[i])
+		index = index + 4
+	end
+	picture.height = picture.height + 1
+	return picture
+end
+
+function image.insertColumn(picture, x, columnArray)
+	local index = convertCoordsToIndex(x, 1, picture.width)
+	for i = 1, #columnArray, 4 do
+		table.insert(picture, index, columnArray[i + 3])
+		table.insert(picture, index, columnArray[i + 2])
+		table.insert(picture, index, columnArray[i + 1])
+		table.insert(picture, index, columnArray[i])
+		index = index + picture.width * 4 + 4
+	end
+	picture.width = picture.width + 1
+	return picture
+end
+
+--Удаление ряда пикселей
+function image.removeRow(picture, y)
+	local index = convertCoordsToIndex(1, y, picture.width)
+	for i = 1, picture.width * 4 do table.remove(picture, index) end
+	picture.height = picture.height - 1
+	return picture
+end
+
+--Удаление колонки пикселей
+function image.removeColumn(picture, x)
+	local index = convertCoordsToIndex(x, 1, picture.width)
+	for i = 1, picture.height do
+		for j = 1, 4 do table.remove(picture, index) end
+		index = index + (picture.width) * 4 - 4
+	end
+	picture.width = picture.width - 1
+	return picture
+end
+
+--Получение ряда пикселей
+function image.getRow(picture, y)
+	local row, background, foreground, alpha, symbol = {}
+	for x = 1, picture.width do
+		background, foreground, alpha, symbol = image.get(picture, x, y)
+		table.insert(row, background)
+		table.insert(row, foreground)
+		table.insert(row, alpha)
+		table.insert(row, symbol)
+	end
+	return row
+end
+
+--Получение колонки пикселей
+function image.getColumn(picture, x)
+	local column, background, foreground, alpha, symbol = {}
+	for y = 1, picture.height do
+		background, foreground, alpha, symbol = image.get(picture, x, y)
+		table.insert(column, background)
+		table.insert(column, foreground)
+		table.insert(column, alpha)
+		table.insert(column, symbol)
+	end
+	return column
+end
+
+--Создание копии массива изображения
+function image.duplicate(picture)
+	local newPicture = {width = picture.width, height = picture.height}
+	for i = 1, #picture do newPicture[i] = picture[i] end
+	return newPicture
+end
+
+--Аналог свободного трансформирования из фотошопа
+function image.transform(picture, widthScale, heightScale)
+	local newPicture = image.duplicate(picture)
+	local newWidth, newHeight = math.floor(picture.width * widthScale), math.floor(picture.height * heightScale)
+	local deltaWidth, deltaHeight = math.abs(newWidth - picture.width), math.abs(newHeight - picture.height)
+	local widthIteration, heightIteration = widthScale > 1 and newWidth / deltaWidth or picture.width / deltaWidth, heightScale > 1 and newHeight / deltaHeight or picture.height / deltaHeight
+
+	ecs.error(widthIteration, heightIteration, deltaWidth, picture.width, newWidth)
+
+	--Сжимаем шакалов по ширине
+	if widthScale > 1 then
+		local x = 1
+		while x <= newPicture.width do
+			if math.floor(x % widthIteration) == 0 then newPicture = image.insertColumn(newPicture, x, image.getColumn(newPicture, x - 1)) end
+			x = x + 1
+		end
+	elseif widthScale < 1 then
+		local x = 1
+		while x <= newPicture.width do
+			if math.floor(x % widthIteration) == 0 then newPicture = image.removeColumn(newPicture, x) end
+			x = x + 1
+		end
+	end
+
+	--И по высоте
+	if heightScale > 1 then
+		local y = 1
+		while y <= newPicture.height do
+			if math.floor(y % heightIteration) == 0 then newPicture = image.insertRow(newPicture, y, image.getRow(newPicture, y - 1)) end
+			y = y + 1
+		end
+	elseif heightScale < 1 then
+		local y = 1
+		while y <= newPicture.height do
+			if math.floor(y % heightIteration) == 0 then newPicture = image.removeRow(newPicture, y) end
+			y = y + 1
+		end
+	end
+
+	return newPicture
+end
 
 function image.expand(picture, mode, countOfPixels, background, foreground, alpha, symbol)
-	background = background or 0xffffff
-	foreground = foreground or 0x000000
-	alpha = alpha or 0x00
-	symbol = symbol or " "
+	local column = {}; for i = 1, picture.height do table.insert(column, background or 0xFFFFFF); table.insert(column, foreground or 0xFFFFFF); table.insert(column, alpha or 0x00); table.insert(column, symbol or " ") end
+	local row = {}; for i = 1, picture.height do table.insert(row, background or 0xFFFFFF); table.insert(row, foreground or 0xFFFFFF); table.insert(row, alpha or 0x00); table.insert(row, symbol or " ") end
+
 	if mode == "fromRight" then
-		for j = 1, countOfPixels do
-			for i = 1, picture.height do		
-				local index = convertCoordsToIndex(picture.width + j, i, picture.width + j)
-				table.insert(picture, index, symbol); table.insert(picture, index, alpha); table.insert(picture, index, foreground); table.insert(picture, index, background)
-			end
-		end
-		picture.width = picture.width + countOfPixels
+		for i = 1, countOfPixels do picture = image.insertColumn(picture, picture.width + 1, column) end
 	elseif mode == "fromLeft" then
-		for j = 1, countOfPixels do
-			for i = 1, picture.height do		
-				local index = convertCoordsToIndex(1, i, picture.width + j)
-				table.insert(picture, index, symbol); table.insert(picture, index, alpha); table.insert(picture, index, foreground); table.insert(picture, index, background)
-			end
-		end
-		picture.width = picture.width + countOfPixels
+		for i = 1, countOfPixels do picture = image.insertColumn(picture, 1, column) end
 	elseif mode == "fromTop" then
-		for i = 1, (countOfPixels * picture.width) do
-			table.insert(picture, 1, symbol); table.insert(picture, 1, alpha); table.insert(picture, 1, foreground); table.insert(picture, 1, background)
-		end
-		picture.height = picture.height + countOfPixels
+		for i = 1, countOfPixels do picture = image.insertRow(picture, 1, row) end
 	elseif mode == "fromBottom" then
-		for i = 1, (countOfPixels * picture.width) do
-			table.insert(picture, background); table.insert(picture, foreground); table.insert(picture, alpha); table.insert(picture, symbol)
-		end
-		picture.height = picture.height + countOfPixels
+		for i = 1, countOfPixels do picture = image.insertRow(picture, picture.height + 1, row) end
 	else
 		error("Wrong image expanding mode: only 'fromRight', 'fromLeft', 'fromTop' and 'fromBottom' are supported.")
 	end
+
 	return picture
 end
 
 function image.crop(picture, mode, countOfPixels)
 	if mode == "fromRight" then
-		for j = 1, countOfPixels do
-			for i = 1, picture.height do
-				local index = convertCoordsToIndex(picture.width + 1 - j, i, picture.width - j)
-				for a = 1, constants.elementCount do table.remove(picture, index) end
-			end
-		end
-		picture.width = picture.width - countOfPixels
+		for i = 1, countOfPixels do picture = image.removeColumn(picture, picture.width) end
 	elseif mode == "fromLeft" then
-		for j = 1, countOfPixels do
-			for i = 1, picture.height do
-				local index = convertCoordsToIndex(1, i, picture.width - j)
-				for a = 1, constants.elementCount do table.remove(picture, index) end
-			end
-		end
-		picture.width = picture.width - countOfPixels
+		for i = 1, countOfPixels do picture = image.removeColumn(picture, 1) end
 	elseif mode == "fromTop" then
-		for i = 1, (countOfPixels * constants.elementCount * picture.width) do table.remove(picture, 1) end
-		picture.height = picture.height - countOfPixels
+		for i = 1, countOfPixels do picture = image.removeRow(picture, 1) end
 	elseif mode == "fromBottom" then
-		for i = 1, (countOfPixels * constants.elementCount * picture.width) do table.remove(picture, #picture) end
-		picture.height = picture.height - countOfPixels
+		for i = 1, countOfPixels do picture = image.removeRow(picture, picture.height) end
 	else
 		error("Wrong image cropping mode: only 'fromRight', 'fromLeft', 'fromTop' and 'fromBottom' are supported.")
 	end
+
 	return picture
 end
 
@@ -1231,15 +1321,27 @@ local function createSaveAndLoadFiles()
 	image.draw(34, 2, cyka4)
 end
 
------------------------------------------- Место для баловства ------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------
 
--- ecs.prepareToExit()
+-- local picture = image.load("MineOS/System/OS/Icons/Love.pic")
+-- buffer.clear(0xFF8888)
+-- buffer.draw(true)
 
--- local cyka = image.load("3.pic")
--- image.draw(2, 2, cyka)
--- ecs.error(HEXtoSTRING(cyka[1], 6, true))
--- image.draw(8, 2, cyka)
--- createSaveAndLoadFiles()
+-- buffer.image(1, 1, picture)
+-- buffer.draw()
+
+-- local newPicture = transform(picture, 0.5, 2)
+
+-- local columnArray = {}; for i = 1, picture.height do table.insert(columnArray, 0xFFFFFF); table.insert(columnArray, 0x000000); table.insert(columnArray, 0x00); table.insert(columnArray, " ") end
+-- local rowArray = {}; for i = 1, picture.width do table.insert(rowArray, 0xFFFFFF); table.insert(rowArray, 0x000000); table.insert(rowArray, 0x00); table.insert(rowArray, " ") end
+-- local rowArray = image.getRow(picture, 2)
+-- picture = image.insertColumn(picture, 1, columnArray)
+-- picture = image.insertRow(picture, 3, rowArray)
+-- picture = image.removeColumn(picture, 1)
+
+-- buffer.image(1, 19, picture)
+-- buffer.image(1, 19, newPicture)
+-- buffer.draw()
 
 ------------------------------------------------------------------------------------------------------------------------
 
