@@ -101,6 +101,17 @@ function colorlib.alphaBlend(back_color, front_color, alpha_channel)
   return colorlib.RGBtoHEX( blended_rr, blended_gg, blended_bb )
 end
 
+--Получение среднего цвета между перечисленными. К примеру, между черным и белым выдаст серый.
+function colorlib.getAverageColor(...)
+  local colors = {...}
+  local averageRed, averageGreen, averageBlue = 0, 0, 0
+  for i = 1, #colors do
+    local r, g, b = colorlib.HEXtoRGB(colors[i])
+    averageRed, averageGreen, averageBlue = averageRed + r, averageGreen + g, averageBlue + b
+  end
+  return colorlib.RGBtoHEX(math.floor(averageRed / #colors), math.floor(averageGreen / #colors), math.floor(averageBlue / #colors))
+end
+
 -----------------------------------------------------------------------------------------------------------------------
 
 local openComputersPalette = {

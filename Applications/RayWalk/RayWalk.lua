@@ -11,18 +11,8 @@ local libraries = {
 
 for library in pairs(libraries) do if not _G[library] then _G[library] = require(libraries[library]) end end; libraries = nil
 local worldsPath = "MineOS/Applications/RayWalk.app/Resources/Worlds/"
-local minimapEnabled, compassEnabled, isCrouch, isJump = true, false, false, false
-local jumpHeight, crouchHeight = 10, 10
 
 ----------------------------------------------------------------------------------------------------------------------------------
-
-local function update()
-	rayEngine.drawWorld()
-	if minimapEnabled then rayEngine.drawMap(2, 2, 25, 13, 50) end
-	if compassEnabled then rayEngine.compass(2, buffer.screen.height - 26) end
-	--rayEngine.drawWeapon()
-	buffer.draw()
-end
 
 local function menu()
 	local buttonWidth = 50
@@ -56,78 +46,24 @@ end
 
 ----------------------------------------------------------------------------------------------------------------------------------
 
-local function jumpTimerDone()
-	rayEngine.horizontHeight = rayEngine.horizontHeight - jumpHeight
-	rayEngine.modifer = rayEngine.modifer - jumpHeight
-	jumpTimer = nil
-end
-
-local function inJump()
-	if not jumpTimer then
-		jumpTimer = event.timer(1, jumpTimerDone)
-		rayEngine.modifer = rayEngine.modifer + jumpHeight
-		rayEngine.horizontHeight = rayEngine.horizontHeight + jumpHeight
-	end
-end
-
-local function crouch()
-	isCrouch = not isCrouch
-	local heightAdder = isCrouch and -crouchHeight or crouchHeight
-	rayEngine.modifer = rayEngine.modifer + heightAdder
-	rayEngine.horizontHeight = rayEngine.horizontHeight + heightAdder
-end
-
--- default control --
-local function turnLeft()
-	rayEngine.rotate(-4)
-end
-
-local function turnRight()
-	rayEngine.rotate(4)
-end
-
-local function moveForward()
-	rayEngine.move(16, 0)
-end
-
-local function moveBackward()
-	rayEngine.move(-16, 0)
-end
-
-local function moveLeft()
-	rayEngine.move(0, -16)
-end
-
-local function moveRight()
-	rayEngine.move(0, 16)
-end
-
-local function minimapSwitch()
-	minimapEnabled = not minimapEnabled
-end
-
-local function compassSwitch()
-	compassEnabled = not compassEnabled
-end
-
 local controls = {
 	["key_down"] =  {
-		[57] = inJump, --space
-		[29] = crouch, --ctrl
-		[16] = turnLeft, --q
-		[18] = turnRight, --e
-		[30] = moveLeft, --a
-		[32] = moveRight, --d
-		[17] = moveForward, --w
-		[31] = moveBackward, --s
-		[50] = minimapSwitch, --m
+		[16] = rayEngine.turnLeft, --q
+		[18] = rayEngine.turnRight, --e
+		[30] = rayEngine.moveLeft, --a
+		[32] = rayEngine.moveRight, --d
+		[17] = rayEngine.moveForward, --w
+		[31] = rayEngine.moveBackward, --s
+		[50] = rayEngine.toggleMinimap, --m
+		[37] = rayEngine.toggleCompass, --k
+		[25] = rayEngine.toggleWatch, --p
 		[14] = menu, --backspace
-		[28] = menu, --enter
-		[37] = compassSwitch,
+		[28] = rayEngine.commandLine, --enter
+		[57] = rayEngine.jump, --space
+		[29] = rayEngine.crouch, --ctrl
 	},
 	["key_up"] = {
-		[57] = outJump, --space
-		[29] = outCrouch, --ctrl
+		[29] = rayEngine.crouch, --ctrl
 	},
 }
 
@@ -137,7 +73,7 @@ buffer.start()
 -- rayEngine.intro()
 rayEngine.loadWorld(worldsPath .. "ExampleWorld")
 menu()
-update()
+rayEngine.update()
 
 while (true) do
 	local e = { event.pull(1) }
@@ -150,5 +86,5 @@ while (true) do
 		end
 	end
 
-	update()
+	rayEngine.update()
 end
