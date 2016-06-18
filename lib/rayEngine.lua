@@ -88,12 +88,37 @@ local function getBlockCoordsByLook(distance)
 	return convertWorldCoordsToMapCoords(rayEngine.player.position.x + distance * math.sin(radRotation) * rayEngine.properties.tileWidth, rayEngine.player.position.y + distance * math.cos(radRotation) * rayEngine.properties.tileWidth)
 end
 
+function rayEngine.changeWeapon(weaponID)
+	if rayEngine.weapons[weaponID] then 
+		rayEngine.currentWeapon = {
+			damage = rayEngine.weapons[weaponID].damage,
+			weaponTexture = image.load(rayEngine.weaponsFolder .. rayEngine.weapons[weaponID].weaponTexture),
+			fireTexture = image.load(rayEngine.weaponsFolder .. rayEngine.weapons[weaponID].fireTexture),
+			crosshairTexture = image.load(rayEngine.weaponsFolder .. rayEngine.weapons[weaponID].crosshairTexture)
+		}
+		rayEngine.currentWeapon.xWeapon = buffer.screen.width - rayEngine.currentWeapon.weaponTexture.width + 1
+		rayEngine.currentWeapon.yWeapon = buffer.screen.height - rayEngine.currentWeapon.weaponTexture.height + 1
+		rayEngine.currentWeapon.xFire = rayEngine.currentWeapon.xWeapon + rayEngine.weapons[weaponID].firePosition.x
+		rayEngine.currentWeapon.yFire = rayEngine.currentWeapon.yWeapon + rayEngine.weapons[weaponID].firePosition.y
+		rayEngine.currentWeapon.xCrosshair = math.floor(buffer.screen.width / 2 - rayEngine.currentWeapon.crosshairTexture.width / 2)
+		rayEngine.currentWeapon.yCrosshair = math.floor(buffer.screen.height / 2 - rayEngine.currentWeapon.crosshairTexture.height / 2)
+	else
+		rayEngine.currentWeapon = nil
+	end
+end
+
 ---------------------------------------------------- Работа с файлами ------------------------------------------------------------------
 
 --Грузим базовый конфиг движка
-function rayEngine.init(pathToRayEnginePropertiesFile)
+function rayEngine.loadEngine(pathToRayEnginePropertiesFile)
 	rayEngine.properties = files.loadTableFromFile(pathToRayEnginePropertiesFile)
 	rayEngine.properties.raycastQuality = rayEngine.properties.raycastQuality * rayEngine.properties.tileWidth
+end
+
+function rayEngine.loadWeapons(pathToWeaponsFolder)
+	rayEngine.weaponsFolder = pathToWeaponsFolder
+	rayEngine.weapons = files.loadTableFromFile(rayEngine.weaponsFolder .. "Weapons.cfg")
+	rayEngine.changeWeapon(1)
 end
 
 --Загружаем все конфиг-файлы мира
@@ -381,6 +406,21 @@ function rayEngine.toggleWatch()
 	if not rayEngine.watchEnabled then rayEngine.watchImage = nil end
 end
 
+function rayEngine.drawWeapon()
+	if rayEngine.currentWeapon.needToFire then buffer.image(rayEngine.currentWeapon.xFire, rayEngine.currentWeapon.yFire, rayEngine.currentWeapon.fireTexture); rayEngine.currentWeapon.needToFire = false end
+	buffer.image(rayEngine.currentWeapon.xWeapon, rayEngine.currentWeapon.yWeapon, rayEngine.currentWeapon.weaponTexture)
+	buffer.image(rayEngine.currentWeapon.xCrosshair, rayEngine.currentWeapon.yCrosshair, rayEngine.currentWeapon.crosshairTexture)
+end
+
+function rayEngine.drawStats()
+	local width = math.floor(buffer.screen.width * 0.3)
+	local height = 5
+	local x, y = buffer.screen.width - width - 1, 2
+	buffer.square(x, y, width, height, 0x000000, 0xFFFFFF, " ", 50)
+
+	GUI.progressBar(x + 1, y + 4, width - 2, 1, 0x000000, 0xFF5555, rayEngine.player.health.current, rayEngine.player.health.maximum, true)
+end
+
 ---------------------------------------------------- Функции отрисовки мира ------------------------------------------------------------------
 
 local function raycast(angle)
@@ -425,6 +465,7 @@ function rayEngine.drawWorld()
 
 			--Кусочек стенки
 			tileColor = height > distanceLimit and rayEngine.world.colors.tile.byTime[#rayEngine.world.colors.tile.byTime] or rayEngine.world.colors.tile.byTime[math.floor(#rayEngine.world.colors.tile.byTime * height / distanceLimit)]
+			-- tileColor = 0x000000
 			buffer.square(math.floor(startX), math.floor(startY), 1, math.floor(height), tileColor, 0x000000, " ")
 		end
 		startX = startX + 1
@@ -433,14 +474,24 @@ end
 
 function rayEngine.update()
 	rayEngine.drawWorld()
+	if rayEngine.currentWeapon then rayEngine.drawWeapon() end
 	if rayEngine.minimapEnabled then rayEngine.drawMap(3, 2, 25, 13, 50) end
+	-- rayEngine.drawStats()
 	local xTools, yTools = 3, buffer.screen.height - 25
 	if rayEngine.compassEnabled then rayEngine.compass(xTools, yTools); xTools = xTools + 30 end
 	if rayEngine.watchEnabled then rayEngine.watch(xTools, yTools) end
-	--rayEngine.drawWeapon()
 	if rayEngine.chatEnabled then rayEngine.chat() end
 	doDayNightCycle()
 	buffer.draw()
+end
+
+----------------------------------------------------------------------------------------------------------------------------------
+
+function rayEngine.fire()
+	rayEngine.currentWeapon.needToFire = true
+	rayEngine.update()
+	os.sleep(0.1)
+	rayEngine.update()
 end
 
 ----------------------------------------------------------------------------------------------------------------------------------

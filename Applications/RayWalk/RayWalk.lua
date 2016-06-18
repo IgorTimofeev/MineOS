@@ -11,6 +11,9 @@ local libraries = {
 }
 
 for library in pairs(libraries) do if not _G[library] then _G[library] = require(libraries[library]) end end; libraries = nil
+
+----------------------------------------------------------------------------------------------------------------------------------
+
 local applicationPath = "MineOS/Applications/RayWalk.app/Resources/"
 local worldsPath = applicationPath .. "Worlds/"
 local rayWalkVersion = "RayWalk v3.2 closed beta"
@@ -82,7 +85,8 @@ local controls = {
 
 buffer.start()
 -- rayEngine.intro()
-rayEngine.init(applicationPath .. "RayEngine.cfg")
+rayEngine.loadEngine(applicationPath .. "RayEngine.cfg")
+rayEngine.loadWeapons(applicationPath .. "Weapons/")
 rayEngine.loadWorld(worldsPath .. "ExampleWorld")
 menu()
 rayEngine.update()
@@ -92,9 +96,17 @@ while (true) do
 
 	if ( e[1] ) then
 		if e[1] == "touch" then
-			if e[5] == 1 then rayEngine.place(3) else rayEngine.destroy(3) end
+			if e[5] == 1 then 
+				if not rayEngine.currentWeapon then rayEngine.place(3) end
+			else
+				if rayEngine.currentWeapon then rayEngine.fire() else rayEngine.destroy(3) end
+			end
 		else
-			if controls[e[1]] and controls[e[1]][e[4]] then controls[e[1]][e[4]]() end
+			if e[4] > 1 and e[4] < 10 then
+				rayEngine.changeWeapon(e[4] - 2)
+			else
+				if controls[e[1]] and controls[e[1]][e[4]] then controls[e[1]][e[4]]() end
+			end
 		end
 	end
 
