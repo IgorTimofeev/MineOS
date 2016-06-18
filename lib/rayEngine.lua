@@ -14,7 +14,6 @@ local rayEngine = {}
 
 ---------------------------------------------------- Константы ------------------------------------------------------------------
 
-rayEngine.wallsPosition = 0
 rayEngine.horizonPosition = math.floor(buffer.screen.height / 2)
 rayEngine.minimapEnabled = true
 rayEngine.compassEnabled = false
@@ -165,12 +164,12 @@ function rayEngine.jump()
 	if not rayEngine.player.jumpTimer then
 		local function onJumpFinished()
 			rayEngine.horizonPosition = rayEngine.horizonPosition - rayEngine.player.jumpHeight;
-			rayEngine.wallsPosition = rayEngine.wallsPosition - rayEngine.player.jumpHeight;
+			rayEngine.horizonPosition = rayEngine.horizonPosition - rayEngine.player.jumpHeight;
 			rayEngine.player.jumpTimer = nil
 		end
 
 		rayEngine.player.jumpTimer = event.timer(1, onJumpFinished)
-		rayEngine.wallsPosition = rayEngine.wallsPosition + rayEngine.player.jumpHeight
+		rayEngine.horizonPosition = rayEngine.horizonPosition + rayEngine.player.jumpHeight
 		rayEngine.horizonPosition = rayEngine.horizonPosition + rayEngine.player.jumpHeight
 	end
 end
@@ -178,7 +177,7 @@ end
 function rayEngine.crouch()
 	rayEngine.player.isCrouched = not rayEngine.player.isCrouched
 	local heightAdder = rayEngine.player.isCrouched and -rayEngine.player.crouchHeight or rayEngine.player.crouchHeight
-	rayEngine.wallsPosition = rayEngine.wallsPosition + heightAdder
+	rayEngine.horizonPosition = rayEngine.horizonPosition + heightAdder
 	rayEngine.horizonPosition = rayEngine.horizonPosition + heightAdder
 end
 
@@ -403,9 +402,10 @@ function rayEngine.drawWorld()
 		distanceToTile, tile = raycast(angle)
 		if distanceToTile then
 			height = rayEngine.properties.tileWidth / distanceToTile * rayEngine.distanceToProjectionPlane
-			startY = buffer.screen.height / 2 - height / 2 + rayEngine.wallsPosition + 1
+			startY = rayEngine.horizonPosition - height / 2 + 1
 
 			tileColor = height > distanceLimit and rayEngine.world.colors.tile.byTime[#rayEngine.world.colors.tile.byTime] or rayEngine.world.colors.tile.byTime[math.floor(#rayEngine.world.colors.tile.byTime * height / distanceLimit)]
+			--Кусочек стенки
 			buffer.square(math.floor(startX), math.floor(startY), 1, math.floor(height), tileColor, 0x000000, " ")
 		end
 		startX = startX + 1

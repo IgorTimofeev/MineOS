@@ -273,7 +273,7 @@
     name="lib/rayEngine.lua",
     url="IgorTimofeev/OpenComputers/master/lib/rayEngine.lua",
     type="Library",
-    version=1.24,
+    version=1.25,
   },
   {
     name="lib/doubleHeight.lua",
