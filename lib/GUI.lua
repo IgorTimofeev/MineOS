@@ -1,7 +1,6 @@
 
 local libraries = {
 	buffer = "doubleBuffering",
-	ecs = "ECSAPI",
 	unicode = "unicode",
 	event = "event",
 }
@@ -10,6 +9,12 @@ for library in pairs(libraries) do if not _G[library] then _G[library] = require
 local GUI = {}
 
 ---------------------------------------------------- Универсальные методы --------------------------------------------------------
+
+GUI.alignment = {
+	verticalCenter = 0,
+	horizontalCenter = 1,
+	horizontalAndVerticalCenter = 3,
+}
 
 GUI.directions = {
 	horizontal = 0,
@@ -253,10 +258,10 @@ function GUI.error(text, errorWindowParameters)
 	--Ебемся с текстом, делаем его пиздатым во всех смыслах
 	if type(text) ~= "table" then
 		text = tostring(text)
-		text = (errorWindowParameters and errorWindowParameters.truncate) and ecs.stringLimit("end", text, errorWindowParameters.truncate) or text
+		text = (errorWindowParameters and errorWindowParameters.truncate) and unicode.sub(text, 1, errorWindowParameters.truncate) or text
 		text = { text }
 	end
-	text = ecs.stringWrap(text, widthOfText)
+	text = GUI.stringWrap(text, widthOfText)
 
 
 	--Ебашим высоту правильнуюe
@@ -475,6 +480,67 @@ end
 
 --------------------------------------------------------------------------------------------------------------------------------
 
+--Функция по переносу слов на новую строку в зависимости от ограничения по ширине
+function GUI.stringWrap(strings, limit)
+	local currentString = 1
+	while currentString <= #strings do
+		local words = {}; for word in string.gmatch(tostring(strings[currentString]), "[^%s]+") do table.insert(words, word) end
+
+		local newStringThatFormedFromWords, oldStringThatFormedFromWords = "", ""
+		local word = 1
+		local overflow = false
+		while word <= #words do
+			oldStringThatFormedFromWords = oldStringThatFormedFromWords .. (word > 1 and " " or "") .. words[word]
+			if unicode.len(oldStringThatFormedFromWords) > limit then
+				--ЕБЛО
+				if unicode.len(words[word]) > limit then
+					local left = unicode.sub(oldStringThatFormedFromWords, 1, limit)
+					local right = unicode.sub(strings[currentString], unicode.len(left) + 1, -1)
+					overflow = true
+					strings[currentString] = left
+					if strings[currentString + 1] then
+						strings[currentString + 1] = right .. " " .. strings[currentString + 1]
+					else
+						strings[currentString + 1] = right
+					end 
+				end
+				break
+			else
+				newStringThatFormedFromWords = oldStringThatFormedFromWords
+			end
+			word = word + 1
+		end
+
+		if word <= #words and not overflow then
+			local fuckToAdd = table.concat(words, " ", word, #words)
+			if strings[currentString + 1] then
+				strings[currentString + 1] = fuckToAdd .. " " .. strings[currentString + 1]
+			else
+				strings[currentString + 1] = fuckToAdd
+			end
+			strings[currentString] = newStringThatFormedFromWords
+		end
+
+		currentString = currentString + 1
+	end
+
+	return strings
+end
+
+--------------------------------------------------------------------------------------------------------------------------------
+
+function GUI.centeredText(centrationENUM, coordinate, color, text)
+	local textLength, x, y = unicode.len(text)
+	if centrationENUM == GUI.alignment.verticalCenter then
+		x, y = math.floor(buffer.screen.width / 2 - textLength / 2), coordinate
+	elseif centrationENUM == GUI.alignment.horizontalCenter then
+		x, y = coordinate, math.floor(buffer.screen.height / 2)
+	else
+		x, y = math.floor(buffer.screen.width / 2 - textLength / 2), math.floor(buffer.screen.height / 2)
+	end
+
+	buffer.text(x, y, color, text)
+end
 
 --------------------------------------------------------------------------------------------------------------------------------
 

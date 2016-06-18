@@ -14,6 +14,7 @@ local rayEngine = {}
 
 ---------------------------------------------------- Константы ------------------------------------------------------------------
 
+rayEngine.tileWidth = 32
 rayEngine.wallsPosition = 0
 rayEngine.horizonPosition = math.floor(buffer.screen.height / 2)
 rayEngine.minimapEnabled = true
@@ -33,6 +34,14 @@ local function round(num)
 	else
 		return math.ceil(num - 0.5)
 	end
+end
+
+local function convertRadiansToDegrees(rad)
+	return rad * (180 / 3.14)
+end
+
+local function convertDegreesToRadians(ang)
+	return ang * (3.14 / 180)
 end
 
 local function constrainAngle(value)
@@ -81,24 +90,18 @@ local function correctDouble(number)
 end
 
 local function convertWorldCoordsToMapCoords(x, y)
-	return round(x / rayEngine.properties.tileWidth), round(y / rayEngine.properties.tileWidth)
+	return round(x / rayEngine.tileWidth), round(y / rayEngine.tileWidth)
 end
 
 local function getBlockCoordsByLook(distance)
-	local radRotation = math.rad(rayEngine.player.rotation)
-	return convertWorldCoordsToMapCoords(rayEngine.player.position.x + distance * math.sin(radRotation) * rayEngine.properties.tileWidth, rayEngine.player.position.y + distance * math.cos(radRotation) * rayEngine.properties.tileWidth)
+	local radRotation = math.rad(rayEngine.player.rotation + 90)
+	return convertWorldCoordsToMapCoords(rayEngine.player.position.x + distance * math.sin(radRotation) * rayEngine.tileWidth, rayEngine.player.position.y + distance * math.cos(radRotation) * rayEngine.tileWidth)
 end
 
 ---------------------------------------------------- Работа с файлами ------------------------------------------------------------------
 
---Грузим базовый конфиг движка
-function rayEngine.init(pathToRayEnginePropertiesFile)
-	rayEngine.properties = files.loadTableFromFile(pathToRayEnginePropertiesFile)
-	rayEngine.properties.raycastQuality = rayEngine.properties.raycastQuality * rayEngine.properties.tileWidth
-end
-
---Загружаем все конфиг-файлы мира
 function rayEngine.loadWorld(pathToWorldFolder)
+	--Загружаем все конфиг-файлы мира
 	rayEngine.world = files.loadTableFromFile(pathToWorldFolder .. "/World.cfg")
 	rayEngine.map = files.loadTableFromFile(pathToWorldFolder .. "/Map.cfg")
 	rayEngine.player = files.loadTableFromFile(pathToWorldFolder .. "/Player.cfg")
@@ -106,24 +109,22 @@ function rayEngine.loadWorld(pathToWorldFolder)
 	rayEngine.map.width = #rayEngine.map[1]
 	rayEngine.map.height = #rayEngine.map
 	--Ебашим правильную позицию игрока, основанную на этой ХУЙНЕ, которую ГЛЕБ так ЛЮБИТ
-	rayEngine.player.position.x = rayEngine.properties.tileWidth * rayEngine.player.position.x - rayEngine.properties.tileWidth / 2
-	rayEngine.player.position.y = rayEngine.properties.tileWidth * rayEngine.player.position.y - rayEngine.properties.tileWidth / 2
+	rayEngine.player.position.x = rayEngine.tileWidth * rayEngine.player.position.x - rayEngine.tileWidth / 2
+	rayEngine.player.position.y = rayEngine.tileWidth * rayEngine.player.position.y - rayEngine.tileWidth / 2
 	--Рассчитываем стартовые цвета, зависимые от времени - небо, землю, стены
 	getTimeDependentColors()
 	--Обнуляем текущее время, если превышен лимит
 	rayEngine.world.dayNightCycle.currentTime = rayEngine.world.dayNightCycle.currentTime > rayEngine.world.dayNightCycle.length and 0 or rayEngine.world.dayNightCycle.currentTime
 	--Осуществляем базовое получение аптайма пекарни
 	rayEngine.world.dayNightCycle.lastComputerUptime = computer.uptime()
-	rayEngine.distanceToProjectionPlane = (buffer.screen.width / 2) / math.tan(math.rad((rayEngine.player.fieldOfView / 2)))
-	--Шаг, с которым будет изменяться угол рейкаста
-	rayEngine.properties.raycastStep = rayEngine.player.fieldOfView / buffer.screen.width
+	rayEngine.distanceToProjectionPlane = (buffer.screen.width / 2) / math.tan(convertDegreesToRadians(rayEngine.player.fieldOfView / 2))
 end
 
 ---------------------------------------------------- Функции, связанные с игроком ------------------------------------------------------------------
 
 function rayEngine.move(distanceForward, distanceRight)
-	local forwardRotation = math.rad(rayEngine.player.rotation)
-	local rightRotation = math.rad(rayEngine.player.rotation + 90)
+	local forwardRotation = math.rad(rayEngine.player.rotation + 90)
+	local rightRotation = math.rad(rayEngine.player.rotation + 180)
 	local xNew = rayEngine.player.position.x + distanceForward * math.sin(forwardRotation) + distanceRight * math.sin(rightRotation)
 	local yNew = rayEngine.player.position.y + distanceForward * math.cos(forwardRotation) + distanceRight * math.cos(rightRotation)
 
@@ -373,43 +374,86 @@ end
 
 ---------------------------------------------------- Функции отрисовки мира ------------------------------------------------------------------
 
-local function raycast(angle)
-	angle = math.rad(angle)
-	local angleSinDistance, angleCosDistance, currentDistance, xWorld, yWorld, xMap, yMap, tile = math.sin(angle) * rayEngine.properties.raycastQuality, math.cos(angle) * rayEngine.properties.raycastQuality, 0, rayEngine.player.position.x, rayEngine.player.position.y
+local function hRaycast(player, angle)
+	local rayInTop = math.sin( angle ) > 0
 
-	while true do
-		if currentDistance <= rayEngine.properties.drawDistance then
-			xMap, yMap = math.floor(xWorld / rayEngine.properties.tileWidth), math.floor(yWorld / rayEngine.properties.tileWidth)
-			if rayEngine.map[yMap] and rayEngine.map[yMap][xMap] then
-				return currentDistance, rayEngine.map[yMap][xMap]
-			end
+	local tanAng = math.tan( angle )
 
-			xWorld, yWorld = xWorld + angleSinDistance, yWorld + angleCosDistance
-			currentDistance = currentDistance + rayEngine.properties.raycastQuality
-		else
-			return nil
+	local Ay = math.floor(rayEngine.player.position.y / rayEngine.tileWidth) * rayEngine.tileWidth; Ay = Ay + ( (rayInTop) and -1 or rayEngine.tileWidth )
+	local Ax = rayEngine.player.position.x + (rayEngine.player.position.y - Ay) / tanAng
+
+	local Ya = (rayInTop) and -rayEngine.tileWidth or rayEngine.tileWidth
+	local Xa = rayEngine.tileWidth / tanAng; Xa = Xa * ( (rayInTop) and 1 or -1 )
+
+	local x, y = math.floor(Ax / rayEngine.tileWidth), math.floor(Ay / rayEngine.tileWidth)
+
+	while (rayEngine.map[y + 1] and not rayEngine.map[y + 1][x + 1]) do
+		Ax = Ax + Xa; Ay = Ay + Ya
+
+		if (Ax < 0 or Ax > rayEngine.tileWidth * rayEngine.map.width or Ay < 0 or Ay > rayEngine.tileWidth * rayEngine.map.height) then
+			break
 		end
+
+		x, y = math.floor(Ax / rayEngine.tileWidth), math.floor(Ay / rayEngine.tileWidth)
 	end
+
+	return math.abs(rayEngine.player.position.x - Ax) / math.abs(math.cos( angle ))
+end
+
+local function vRaycast(player, angle)
+	local rayInRight = math.cos( angle ) > 0
+
+	local tanAng = math.tan( angle )
+
+	local Bx = math.floor(rayEngine.player.position.x / rayEngine.tileWidth) * rayEngine.tileWidth; Bx = Bx + ( (rayInRight) and rayEngine.tileWidth or -1 )
+	local By = rayEngine.player.position.y + (rayEngine.player.position.x - Bx) * tanAng
+
+	local Xa = (rayInRight) and rayEngine.tileWidth or -rayEngine.tileWidth
+	local Ya = rayEngine.tileWidth * tanAng; Ya = Ya * ( (rayInRight) and -1 or 1 )
+
+	local x, y = math.floor(Bx / rayEngine.tileWidth), math.floor(By / rayEngine.tileWidth)
+
+	while (rayEngine.map[y + 1] and not rayEngine.map[y + 1][x + 1]) do
+		Bx = Bx + Xa; By = By + Ya
+
+		if (Bx < 0 or Bx > rayEngine.tileWidth * rayEngine.map.width or By < 0 or By > rayEngine.tileWidth * rayEngine.map.height) then
+			break
+		end
+
+		x, y = math.floor(Bx / rayEngine.tileWidth), math.floor(By / rayEngine.tileWidth)
+	end
+
+	return math.abs(rayEngine.player.position.y - By) / math.abs(math.sin( angle ))
 end
 
 function rayEngine.drawWorld()
-	--Земля
 	buffer.clear(rayEngine.world.colors.groundByTime)
-	--Небо
 	buffer.square(1, 1, buffer.screen.width, rayEngine.horizonPosition, rayEngine.world.colors.sky.current)
-	--Сцена
-	local startAngle, endAngle, startX, distanceLimit, distanceToTile, tile, height, startY, tileColor = rayEngine.player.rotation - rayEngine.player.fieldOfView / 2, rayEngine.player.rotation + rayEngine.player.fieldOfView / 2, 1, buffer.screen.height * 0.85	
-	for angle = startAngle, endAngle, rayEngine.properties.raycastStep do
-		distanceToTile, tile = raycast(angle)
-		if distanceToTile then
-			height = rayEngine.properties.tileWidth / distanceToTile * rayEngine.distanceToProjectionPlane
-			startY = buffer.screen.height / 2 - height / 2 + rayEngine.wallsPosition + 1
 
-			tileColor = height > distanceLimit and rayEngine.world.colors.tile.byTime[#rayEngine.world.colors.tile.byTime] or rayEngine.world.colors.tile.byTime[math.floor(#rayEngine.world.colors.tile.byTime * height / distanceLimit)]
-			buffer.square(math.floor(startX), math.floor(startY), 1, math.floor(height), tileColor, 0x000000, " ")
-		end
+	local startColumn = rayEngine.player.rotation - (rayEngine.player.fieldOfView / 2)
+	local endColumn = rayEngine.player.rotation + (rayEngine.player.fieldOfView / 2)
+	local step = rayEngine.player.fieldOfView / buffer.screen.width
+
+	local startX = 1
+	local distanceLimit = buffer.screen.height * 0.85
+	local hDist, vDist, dist, height, startY, tileColor
+	for angle = startColumn, endColumn, step do
+		hDist = hRaycast(player, convertDegreesToRadians(angle) )
+		vDist = vRaycast(player, convertDegreesToRadians(angle) )
+
+		-- local dist = math.min( hDist, vDist ) * math.cos( convertDegreesToRadians(angle) )
+		dist = math.min( hDist, vDist )
+		height = rayEngine.tileWidth / dist * rayEngine.distanceToProjectionPlane
+		startY = buffer.screen.height / 2 - height / 2 + 1 + rayEngine.wallsPosition
+
+		--Рисуем сценку
+		tileColor = height > distanceLimit and rayEngine.world.colors.tile.byTime[#rayEngine.world.colors.tile.byTime] or rayEngine.world.colors.tile.byTime[math.floor(#rayEngine.world.colors.tile.byTime * height / distanceLimit)]
+		buffer.square(math.floor(startX), math.floor(startY), 1, height, tileColor, 0x000000, " ")
+		-- buffer.square(math.floor(startX), math.floor(startY), 1, height, 0x000000, 0x000000, " ")
 		startX = startX + 1
 	end
+
+	doDayNightCycle()
 end
 
 function rayEngine.update()
@@ -420,7 +464,6 @@ function rayEngine.update()
 	if rayEngine.watchEnabled then rayEngine.watch(xTools, yTools) end
 	--rayEngine.drawWeapon()
 	if rayEngine.chatEnabled then rayEngine.chat() end
-	doDayNightCycle()
 	buffer.draw()
 end
 
