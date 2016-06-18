@@ -261,7 +261,7 @@
     name="lib/image.lua",
     url="IgorTimofeev/OpenComputers/master/lib/image.lua",
     type="Library",
-    version=1.21,
+    version=1.22,
   },
   {
     name="lib/colorlib.lua",
@@ -273,7 +273,7 @@
     name="lib/rayEngine.lua",
     url="IgorTimofeev/OpenComputers/master/lib/rayEngine.lua",
     type="Library",
-    version=1.25,
+    version=1.26,
   },
   {
     name="lib/doubleHeight.lua",

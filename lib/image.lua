@@ -812,7 +812,7 @@ end
 
 --Получение ряда пикселей
 function image.getRow(picture, y)
-	local row, background, foreground, alpha, symbol = {}
+	local row, background, foreground, alpha, symbol = {width = picture.width, height = 1}
 	for x = 1, picture.width do
 		background, foreground, alpha, symbol = image.get(picture, x, y)
 		table.insert(row, background)
@@ -825,7 +825,7 @@ end
 
 --Получение колонки пикселей
 function image.getColumn(picture, x)
-	local column, background, foreground, alpha, symbol = {}
+	local column, background, foreground, alpha, symbol = {width = 1, height = picture.height}
 	for y = 1, picture.height do
 		background, foreground, alpha, symbol = image.get(picture, x, y)
 		table.insert(column, background)
@@ -844,13 +844,13 @@ function image.duplicate(picture)
 end
 
 --Аналог свободного трансформирования из фотошопа
-function image.transform(picture, widthScale, heightScale)
+function image.transform(picture, newWidth, newHeight)
 	local newPicture = image.duplicate(picture)
-	local newWidth, newHeight = math.floor(picture.width * widthScale), math.floor(picture.height * heightScale)
+	local widthScale, heightScale = newWidth / picture.width, newHeight / picture.height
 	local deltaWidth, deltaHeight = math.abs(newWidth - picture.width), math.abs(newHeight - picture.height)
 	local widthIteration, heightIteration = widthScale > 1 and newWidth / deltaWidth or picture.width / deltaWidth, heightScale > 1 and newHeight / deltaHeight or picture.height / deltaHeight
 
-	ecs.error(widthIteration, heightIteration, deltaWidth, picture.width, newWidth)
+	-- ecs.error(widthIteration, heightIteration, deltaWidth, picture.width, newWidth)
 
 	--Сжимаем шакалов по ширине
 	if widthScale > 1 then

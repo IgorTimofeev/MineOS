@@ -116,6 +116,9 @@ function rayEngine.loadWorld(pathToWorldFolder)
 	rayEngine.distanceToProjectionPlane = (buffer.screen.width / 2) / math.tan(math.rad((rayEngine.player.fieldOfView / 2)))
 	--Шаг, с которым будет изменяться угол рейкаста
 	rayEngine.properties.raycastStep = rayEngine.player.fieldOfView / buffer.screen.width
+
+	-- rayEngine.wallsTexture = image.load("/heart.pic")
+	-- rayEngine.wallsTexture = image.transform(rayEngine.wallsTexture, rayEngine.properties.tileWidth, rayEngine.properties.tileWidth / 2)
 end
 
 ---------------------------------------------------- Функции, связанные с игроком ------------------------------------------------------------------
@@ -338,10 +341,18 @@ function rayEngine.commandLine(transparency)
 					addItemToChatHistory("Текущее время: " .. rayEngine.world.dayNightCycle.currentTime, 0xFFDB40)
 					addItemToChatHistory("Длина суток: " .. rayEngine.world.dayNightCycle.length, 0xFFDB40)
 				end
+			elseif words[1] == "setrenderquality" and tonumber(words[2]) then
+				rayEngine.properties.raycastQuality = rayEngine.properties.tileWidth * tonumber(words[2])
+				addItemToChatHistory("Качество рендера изменено на: " .. tonumber(words[2]), 0xFFDB40)
+			elseif words[1] == "setdrawdistance" and tonumber(words[2]) then
+				rayEngine.properties.drawDistance = tonumber(words[2])
+				addItemToChatHistory("Дистанция прорисовки изменена на: " .. tonumber(words[2]), 0xFFDB40)
 			elseif words[1] == "help" then
 				addItemToChatHistory("Доступные команды:", 0xFFDB40)
 				addItemToChatHistory("/time get", 0xFFFFBF)
 				addItemToChatHistory("/time set <value>", 0xFFFFBF)
+				addItemToChatHistory("/setrenderquality <value>", 0xFFFFBF)
+				addItemToChatHistory("/setdrawdistance <value>", 0xFFFFBF)
 			else
 				addItemToChatHistory("Неизвестная команда. Введите /help для получения списка команд", 0xFF8888)
 			end
@@ -404,8 +415,16 @@ function rayEngine.drawWorld()
 			height = rayEngine.properties.tileWidth / distanceToTile * rayEngine.distanceToProjectionPlane
 			startY = rayEngine.horizonPosition - height / 2 + 1
 
-			tileColor = height > distanceLimit and rayEngine.world.colors.tile.byTime[#rayEngine.world.colors.tile.byTime] or rayEngine.world.colors.tile.byTime[math.floor(#rayEngine.world.colors.tile.byTime * height / distanceLimit)]
+			--ТИКСТУРКА)))00
+			-- local xTexture = startX % rayEngine.properties.tileWidth + 1
+			-- if xTexture >= 1 and xTexture <= buffer.screen.width then
+			-- 	local column = image.getColumn(rayEngine.wallsTexture, xTexture)
+			-- 	column = image.transform(column, 1, height)
+			-- 	buffer.image(math.floor(startX), math.floor(startY), column)
+			-- end
+
 			--Кусочек стенки
+			tileColor = height > distanceLimit and rayEngine.world.colors.tile.byTime[#rayEngine.world.colors.tile.byTime] or rayEngine.world.colors.tile.byTime[math.floor(#rayEngine.world.colors.tile.byTime * height / distanceLimit)]
 			buffer.square(math.floor(startX), math.floor(startY), 1, math.floor(height), tileColor, 0x000000, " ")
 		end
 		startX = startX + 1
