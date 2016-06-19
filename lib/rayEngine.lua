@@ -215,12 +215,12 @@ end
 
 function rayEngine.destroy(distance)
 	local xBlock, yBlock = getBlockCoordsByLook(distance)
-	rayEngine.map[yBlock][xBlock] = nil
+	if rayEngine.map[yBlock] and rayEngine.map[yBlock][xBlock] and rayEngine.blocks[rayEngine.map[yBlock][xBlock]] and rayEngine.blocks[rayEngine.map[yBlock][xBlock]].canBeDestroyed then rayEngine.map[yBlock][xBlock] = nil end
 end
 
 function rayEngine.place(distance, blockColor)
 	local xBlock, yBlock = getBlockCoordsByLook(distance)
-	rayEngine.map[yBlock][xBlock] = blockColor or 0x0
+	if rayEngine.map[yBlock] and rayEngine.map[yBlock][xBlock] == nil then rayEngine.map[yBlock][xBlock] = blockColor end
 end
 
 ---------------------------------------------------- Функции интерфейса ------------------------------------------------------------------
