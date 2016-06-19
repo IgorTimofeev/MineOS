@@ -48,18 +48,20 @@ local function getSkyColorByTime()
 end
 
 local function getBrightnessByTime()
-	return rayEngine.world.colors.brightnessMultiplyer[rayEngine.world.dayNightCycle.currentTime > 0 and math.ceil(rayEngine.world.dayNightCycle.currentTime / rayEngine.world.dayNightCycle.length * #rayEngine.world.colors.brightnessMultiplyer) or 1]
+	return rayEngine.properties.shadingTransparencyMap[rayEngine.world.dayNightCycle.currentTime > 0 and math.ceil(rayEngine.world.dayNightCycle.currentTime / rayEngine.world.dayNightCycle.length * #rayEngine.properties.shadingTransparencyMap) or 1]
+end
+
+local function getTileColor(basecolor, distance)
+	local limitedDistance = math.floor(distance * rayEngine.properties.shadingCascades / rayEngine.properties.shadingDistance)
+	local transparency = rayEngine.properties.shadingTransparencyMap.current - math.floor(limitedDistance * 255 / rayEngine.properties.shadingCascades)
+	transparency = (transparency >=  rayEngine.properties.shadingTransparencyMap[1] and transparency <= 255) and transparency or  rayEngine.properties.shadingTransparencyMap[1]
+	return colorlib.alphaBlend(basecolor, 0x000000, transparency)
 end
 
 local function getTimeDependentColors()
 	rayEngine.world.colors.sky.current = getSkyColorByTime()
-	rayEngine.world.colors.brightnessMultiplyer.current = math.floor(getBrightnessByTime() * 2.55)
-	rayEngine.world.colors.groundByTime = colorlib.alphaBlend(rayEngine.world.colors.ground, 0x000000, rayEngine.world.colors.brightnessMultiplyer.current)
-
-	rayEngine.world.colors.tile.byTime = {}
-	for i = 1, #rayEngine.world.colors.tile do
-		rayEngine.world.colors.tile.byTime[i] = colorlib.alphaBlend(rayEngine.world.colors.tile[i], 0x000000, rayEngine.world.colors.brightnessMultiplyer.current)
-	end
+	rayEngine.properties.shadingTransparencyMap.current = getBrightnessByTime()
+	rayEngine.world.colors.groundByTime = colorlib.alphaBlend(rayEngine.world.colors.ground, 0x000000, rayEngine.properties.shadingTransparencyMap.current)
 end
 
 local function doDayNightCycle()
@@ -113,6 +115,7 @@ end
 function rayEngine.loadEngine(pathToRayEnginePropertiesFile)
 	rayEngine.properties = files.loadTableFromFile(pathToRayEnginePropertiesFile)
 	rayEngine.properties.raycastQuality = rayEngine.properties.raycastQuality * rayEngine.properties.tileWidth
+	rayEngine.properties.shadingDistance = math.floor(rayEngine.properties.drawDistance * rayEngine.properties.shadingDistance)
 end
 
 function rayEngine.loadWeapons(pathToWeaponsFolder)
@@ -126,6 +129,7 @@ function rayEngine.loadWorld(pathToWorldFolder)
 	rayEngine.world = files.loadTableFromFile(pathToWorldFolder .. "/World.cfg")
 	rayEngine.map = files.loadTableFromFile(pathToWorldFolder .. "/Map.cfg")
 	rayEngine.player = files.loadTableFromFile(pathToWorldFolder .. "/Player.cfg")
+	rayEngine.blocks = files.loadTableFromFile(pathToWorldFolder .. "/Blocks.cfg")
 	--Дополняем карту ее размерами
 	rayEngine.map.width = #rayEngine.map[1]
 	rayEngine.map.height = #rayEngine.map
@@ -349,7 +353,7 @@ function rayEngine.commandLine(transparency)
 
 	--Ввод данных
 	local text = GUI.input(x + 2, y + 1, buffer.screen.width - 4, 0xFFFFFF, "")
-	local words = {}; for word in string.gmatch(text, "[^%s]+") do table.insert(words, word) end
+	local words = {}; for word in string.gmatch(text, "[^%s]+") do table.insert(words, unicode.lower(word)) end
 	if #words > 0 then
 		if unicode.sub(words[1], 1, 1) == "/" then
 			words[1] = unicode.sub(words[1], 2, -1)
@@ -365,6 +369,9 @@ function rayEngine.commandLine(transparency)
 				elseif words[2] == "get" then
 					addItemToChatHistory("Текущее время: " .. rayEngine.world.dayNightCycle.currentTime, 0xFFDB40)
 					addItemToChatHistory("Длина суток: " .. rayEngine.world.dayNightCycle.length, 0xFFDB40)
+				elseif words[2] == "lock" then
+					rayEngine.world.dayNightCycle.enabled = not rayEngine.world.dayNightCycle.enabled
+					addItemToChatHistory("Состояние цикла дня и ночи: " .. tostring(rayEngine.world.dayNightCycle.enabled), 0xFFDB40)
 				end
 			elseif words[1] == "setrenderquality" and tonumber(words[2]) then
 				rayEngine.properties.raycastQuality = rayEngine.properties.tileWidth * tonumber(words[2])
@@ -372,12 +379,22 @@ function rayEngine.commandLine(transparency)
 			elseif words[1] == "setdrawdistance" and tonumber(words[2]) then
 				rayEngine.properties.drawDistance = tonumber(words[2])
 				addItemToChatHistory("Дистанция прорисовки изменена на: " .. tonumber(words[2]), 0xFFDB40)
+			elseif words[1] == "setshadingcascades" and tonumber(words[2]) then
+				rayEngine.properties.shadingCascades = tonumber(words[2])
+				addItemToChatHistory("Количество цветов для отрисовки блока изменено на: " .. tonumber(words[2]), 0xFFDB40)
+			elseif words[1] == "setshadingdistance" and tonumber(words[2]) then
+				rayEngine.properties.shadingDistance = rayEngine.properties.drawDistance * tonumber(words[2])
+				addItemToChatHistory("Дистация затенения блоков изменена на: " .. tonumber(words[2]), 0xFFDB40)
 			elseif words[1] == "help" then
 				addItemToChatHistory("Доступные команды:", 0xFFDB40)
 				addItemToChatHistory("/time get", 0xFFFFBF)
 				addItemToChatHistory("/time set <value>", 0xFFFFBF)
-				addItemToChatHistory("/setrenderquality <value>", 0xFFFFBF)
-				addItemToChatHistory("/setdrawdistance <value>", 0xFFFFBF)
+				addItemToChatHistory("/time lock", 0xFFFFBF)
+				addItemToChatHistory(" ", 0xFFFFFF)
+				addItemToChatHistory("/setRenderQuality <value>", 0xFFFFBF)
+				addItemToChatHistory("/setDrawDistance <value>", 0xFFFFBF)
+				addItemToChatHistory("/setShadingCascades <value>", 0xFFFFBF)
+				addItemToChatHistory("/setShadingDistance <value>", 0xFFFFBF)
 			else
 				addItemToChatHistory("Неизвестная команда. Введите /help для получения списка команд", 0xFF8888)
 			end
@@ -448,9 +465,9 @@ function rayEngine.drawWorld()
 	--Небо
 	buffer.square(1, 1, buffer.screen.width, rayEngine.horizonPosition, rayEngine.world.colors.sky.current)
 	--Сцена
-	local startAngle, endAngle, startX, distanceLimit, distanceToTile, tile, height, startY, tileColor = rayEngine.player.rotation - rayEngine.player.fieldOfView / 2, rayEngine.player.rotation + rayEngine.player.fieldOfView / 2, 1, buffer.screen.height * 0.85	
+	local startAngle, endAngle, startX, distanceLimit, distanceToTile, tileID, height, startY, tileColor = rayEngine.player.rotation - rayEngine.player.fieldOfView / 2, rayEngine.player.rotation + rayEngine.player.fieldOfView / 2, 1, buffer.screen.height * 0.85	
 	for angle = startAngle, endAngle, rayEngine.properties.raycastStep do
-		distanceToTile, tile = raycast(angle)
+		distanceToTile, tileID = raycast(angle)
 		if distanceToTile then
 			height = rayEngine.properties.tileWidth / distanceToTile * rayEngine.distanceToProjectionPlane
 			startY = rayEngine.horizonPosition - height / 2 + 1
@@ -464,8 +481,9 @@ function rayEngine.drawWorld()
 			-- end
 
 			--Кусочек стенки
-			tileColor = height > distanceLimit and rayEngine.world.colors.tile.byTime[#rayEngine.world.colors.tile.byTime] or rayEngine.world.colors.tile.byTime[math.floor(#rayEngine.world.colors.tile.byTime * height / distanceLimit)]
+			-- tileColor = height > distanceLimit and rayEngine.world.colors.tile.byTime[#rayEngine.world.colors.tile.byTime] or rayEngine.world.colors.tile.byTime[math.floor(#rayEngine.world.colors.tile.byTime * height / distanceLimit)]
 			-- tileColor = 0x000000
+			tileColor = getTileColor(rayEngine.blocks[tileID].color, distanceToTile)
 			buffer.square(math.floor(startX), math.floor(startY), 1, math.floor(height), tileColor, 0x000000, " ")
 		end
 		startX = startX + 1

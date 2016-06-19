@@ -273,7 +273,7 @@
     name="lib/rayEngine.lua",
     url="IgorTimofeev/OpenComputers/master/lib/rayEngine.lua",
     type="Library",
-    version=1.27,
+    version=1.28,
   },
   {
     name="lib/doubleHeight.lua",
@@ -553,7 +553,7 @@
     type="Application",
     icon="IgorTimofeev/OpenComputers/master/Applications/RayWalk/Icon.pic",
     createShortcut="desktop",
-    version=1.46,
+    version=1.47,
     resources={
       {
         name="RayEngine.cfg",
@@ -577,10 +577,18 @@
         name="Weapons/CrosshairTextures/Half.pic",
         url="IgorTimofeev/OpenComputers/master/Applications/RayWalk/Weapons/CrosshairTextures/Half.pic",
       },
+      {
+        name="Weapons/CrosshairTextures/Dotted.pic",
+        url="IgorTimofeev/OpenComputers/master/Applications/RayWalk/Weapons/CrosshairTextures/Dotted.pic",
+      },
 ------------
       {
         name="Weapons/FireTextures/PowderFire.pic",
         url="IgorTimofeev/OpenComputers/master/Applications/RayWalk/Weapons/FireTextures/PowderFire.pic",
+      },
+      {
+        name="Weapons/FireTextures/Plasma.pic",
+        url="IgorTimofeev/OpenComputers/master/Applications/RayWalk/Weapons/FireTextures/Plasma.pic",
       },
 ------------
       {
@@ -594,6 +602,10 @@
       {
         name="Weapons/WeaponTextures/Rifle.pic",
         url="IgorTimofeev/OpenComputers/master/Applications/RayWalk/Weapons/WeaponTextures/Rifle.pic",
+      },
+      {
+        name="Weapons/WeaponTextures/Plasmer.pic",
+        url="IgorTimofeev/OpenComputers/master/Applications/RayWalk/Weapons/WeaponTextures/Plasmer.pic",
       },
 ------------
       {
@@ -609,6 +621,11 @@
         url="IgorTimofeev/OpenComputers/master/Applications/RayWalk/Worlds/ExampleWorld/World.cfg",
       },
       {
+        name="Worlds/ExampleWorld/Blocks.cfg",
+        url="IgorTimofeev/OpenComputers/master/Applications/RayWalk/Worlds/ExampleWorld/Blocks.cfg",
+      },
+------------
+      {
         name="Worlds/SundownBeams/Map.cfg",
         url="IgorTimofeev/OpenComputers/master/Applications/RayWalk/Worlds/SundownBeams/Map.cfg",
       },
@@ -619,6 +636,10 @@
       {
         name="Worlds/SundownBeams/World.cfg",
         url="IgorTimofeev/OpenComputers/master/Applications/RayWalk/Worlds/SundownBeams/World.cfg",
+      },
+      {
+        name="Worlds/SundownBeams/Blocks.cfg",
+        url="IgorTimofeev/OpenComputers/master/Applications/RayWalk/Worlds/SundownBeams/Blocks.cfg",
       },
     },
   },
