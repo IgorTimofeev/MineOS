@@ -8,32 +8,40 @@ local lowerPixel = "▄"
 ------------------------------------------------------------------------------------------------------------------------------------------
 
 function doubleHeight.set(x, y, color)
-	if x >= 1 and x <= buffer.screen.width and y >= 1 and y <= buffer.screen.height * 2 then
-		local yFixed = math.ceil(y / 2)
-		local background, foreground, symbol = buffer.get(x, yFixed)
+    if x >= 1 and x <= buffer.screen.width and y >= 1 and y <= buffer.screen.height * 2 then
+        local yFixed = math.ceil(y / 2)
+        local background, foreground, symbol = buffer.get(x, yFixed)
 
-		if y % 2 == 0 then
-			if symbol == upperPixel then
-				buffer.set(x, yFixed, color, foreground, upperPixel)
-			else
-				buffer.set(x, yFixed, background, color, lowerPixel)
-			end
-		else
-			if symbol == lowerPixel then
-				buffer.set(x, yFixed, color, foreground, lowerPixel)
-			else
-				buffer.set(x, yFixed, background, color, upperPixel)
-			end
-		end
-	end
+        if y % 2 == 0 then
+            if symbol == upperPixel then
+                buffer.set(x, yFixed, color, foreground, upperPixel)
+            else
+                buffer.set(x, yFixed, background, color, lowerPixel)
+            end
+        else
+            if symbol == lowerPixel then
+                buffer.set(x, yFixed, color, foreground, lowerPixel)
+            else
+                buffer.set(x, yFixed, background, color, upperPixel)
+            end
+        end
+    end
+end
+
+function doubleHeight.square(x, y, width, height, color)
+    for j = y, y + height - 1 do
+        for i = x, x + width - 1 do
+            doubleHeight.set(i, j, color)
+        end
+    end
 end
 
 local function swap(a, b)
-	return b, a
+    return b, a
 end
 
 function doubleHeight.line(x0, y0, x1, y1, color)
-   	local steep = false;
+    local steep = false;
     
     if math.abs(x0 - x1) < math.abs(y0 - y1 ) then
         x0, y0 = swap(x0, y0)
@@ -42,8 +50,8 @@ function doubleHeight.line(x0, y0, x1, y1, color)
     end
 
     if (x0 > x1) then
-    	x0, x1 = swap(x0, x1)
-    	y0, y1 = swap(y0, y1)
+        x0, x1 = swap(x0, x1)
+        y0, y1 = swap(y0, y1)
     end
 
     local dx = x1 - x0;
@@ -56,7 +64,7 @@ function doubleHeight.line(x0, y0, x1, y1, color)
         if steep then
             doubleHeight.set(y, x, color);
         else
-        	doubleHeight.set(x, y, color)
+            doubleHeight.set(x, y, color)
         end
 
         error2 = error2 + derror2;
