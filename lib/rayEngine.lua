@@ -465,12 +465,12 @@ function rayEngine.drawWorld()
 	--Небо
 	buffer.square(1, 1, buffer.screen.width, rayEngine.horizonPosition, rayEngine.world.colors.sky.current)
 	--Сцена
-	local startAngle, endAngle, startX, doubleHorizon, distanceToTile, tileID, height, startY, tileColor = rayEngine.player.rotation - rayEngine.player.fieldOfView / 2, rayEngine.player.rotation + rayEngine.player.fieldOfView / 2, 1, rayEngine.horizonPosition * 2	
+	local startAngle, endAngle, startX, distanceToTile, tileID, height, startY, tileColor = rayEngine.player.rotation - rayEngine.player.fieldOfView / 2, rayEngine.player.rotation + rayEngine.player.fieldOfView / 2, 1
 	for angle = startAngle, endAngle, rayEngine.properties.raycastStep do
 		distanceToTile, tileID = raycast(angle)
 		if distanceToTile then
-			height = rayEngine.properties.tileWidth / distanceToTile * rayEngine.distanceToProjectionPlane * 2
-			startY = doubleHorizon - height / 2
+			height = rayEngine.properties.tileWidth / distanceToTile * rayEngine.distanceToProjectionPlane
+			startY = rayEngine.horizonPosition - height / 2
 
 			--ТИКСТУРКА)))00
 			-- local xTexture = startX % rayEngine.properties.tileWidth + 1
@@ -482,8 +482,8 @@ function rayEngine.drawWorld()
 
 			--Кусочек стенки
 			tileColor = getTileColor(rayEngine.blocks[tileID].color, distanceToTile)
-			doubleHeight.square(math.floor(startX), math.floor(startY), 1, math.floor(height), tileColor)
-			-- buffer.square(math.floor(startX), math.floor(startY), 1, math.floor(height), tileColor, 0x000000, " ")
+			-- doubleHeight.square(math.floor(startX), math.floor(startY), 1, math.floor(height), tileColor)
+			buffer.square(math.floor(startX), math.floor(startY), 1, math.floor(height), tileColor, 0x000000, " ")
 		end
 		startX = startX + 1
 	end
