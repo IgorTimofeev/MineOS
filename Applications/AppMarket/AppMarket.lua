@@ -328,6 +328,7 @@ local function updateAll()
 	changes = {}
 	oldApplications = newApplications
 	saveOldApplications()
+	require("computer").shutdown(true)
 end
 
 ------------------------------------------------------------------------------------------------------------------
