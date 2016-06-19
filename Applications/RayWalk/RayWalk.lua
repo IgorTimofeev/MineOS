@@ -97,7 +97,7 @@ while (true) do
 	if ( e[1] ) then
 		if e[1] == "touch" then
 			if e[5] == 1 then 
-				if not rayEngine.currentWeapon then rayEngine.place(3) end
+				if not rayEngine.currentWeapon then rayEngine.place(3, 0x3) end
 			else
 				if rayEngine.currentWeapon then rayEngine.fire() else rayEngine.destroy(3) end
 			end
