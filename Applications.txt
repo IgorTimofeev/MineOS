@@ -1,6 +1,6 @@
 {
-  GitHubUserURL = "https://raw.githubusercontent.com/",
-  GitHubApplicationListURL = "https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/Applications.txt",
+  GitHubUserURL="https://raw.githubusercontent.com/",
+  GitHubApplicationListURL="https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/Applications.txt",
   ----------------------------------------------------- Все для ОС --------------------------------------------------------------------------
   {
     name="OS.lua",
@@ -110,6 +110,34 @@
   },
 
   ----------------------------------------------------- Системные иконки --------------------------------------------------------------------------
+  {
+    name="MineOS/System/OS/Icons/Languages.pic",
+    url="IgorTimofeev/OpenComputers/master/MineOS/Icons/Languages.pic",
+    type="Icon",
+    preLoadFile=true,
+    version=1.0,
+  },
+  {
+    name="MineOS/System/OS/Icons/OK.pic",
+    url="IgorTimofeev/OpenComputers/master/MineOS/Icons/OK.pic",
+    type="Icon",
+    preLoadFile=true,
+    version=1.0,
+  },
+  {
+    name="MineOS/System/OS/Icons/Downloading.pic",
+    url="IgorTimofeev/OpenComputers/master/MineOS/Icons/Downloading.pic",
+    type="Icon",
+    preLoadFile=true,
+    version=1.0,
+  },
+  {
+    name="MineOS/System/OS/Icons/OS_Logo.pic",
+    url="IgorTimofeev/OpenComputers/master/MineOS/Icons/OS_Logo.pic",
+    type="Icon",
+    preLoadFile=true,
+    version=1.0,
+  },
   {
     name="MineOS/System/OS/Icons/3DModel.pic",
     url="IgorTimofeev/OpenComputers/master/MineOS/Icons/3DModel.pic",
@@ -240,10 +268,38 @@
   ----------------------------------------------------- Библиотеки --------------------------------------------------------------------------
 
   {
+    name="lib/ECSAPI.lua",
+    url="IgorTimofeev/OpenComputers/master/lib/ECSAPI.lua",
+    type="Library",
+    preLoadFile=true,
+    version=1.00,
+  },
+  {
+    name="lib/colorlib.lua",
+    url="IgorTimofeev/OpenComputers/master/lib/colorlib.lua",
+    type="Library",
+    preLoadFile=true,
+    version=1.01,
+  },
+  {
+    name="lib/image.lua",
+    url="IgorTimofeev/OpenComputers/master/lib/image.lua",
+    type="Library",
+    preLoadFile=true,
+    version=1.22,
+  },
+  {
+    name="lib/files.lua",
+    url="IgorTimofeev/OpenComputers/master/lib/files.lua",
+    type="Library",
+    preLoadFile=true,
+    version=1.0,
+  },
+  {
     name="lib/MineOSCore.lua",
     url="IgorTimofeev/OpenComputers/master/lib/MineOSCore.lua",
     type="Library",
-    version=1.11,
+    version=1.12,
   },
   {
     name="lib/GUI.lua",
@@ -256,24 +312,6 @@
     url="IgorTimofeev/OpenComputers/master/lib/serialization.lua",
     type="Library",
     version=1.0,
-  },
-  {
-    name="lib/ECSAPI.lua",
-    url="IgorTimofeev/OpenComputers/master/lib/ECSAPI.lua",
-    type="Library",
-    version=1.00,
-  },
-  {
-    name="lib/image.lua",
-    url="IgorTimofeev/OpenComputers/master/lib/image.lua",
-    type="Library",
-    version=1.22,
-  },
-  {
-    name="lib/colorlib.lua",
-    url="IgorTimofeev/OpenComputers/master/lib/colorlib.lua",
-    type="Library",
-    version=1.01,
   },
   {
     name="lib/rayEngine.lua",
@@ -308,12 +346,6 @@
   {
     name="lib/bigLetters.lua",
     url="IgorTimofeev/OpenComputers/master/lib/bigLetters.lua",
-    type="Library",
-    version=1.0,
-  },
-  {
-    name="lib/files.lua",
-    url="IgorTimofeev/OpenComputers/master/lib/files.lua",
     type="Library",
     version=1.0,
   },

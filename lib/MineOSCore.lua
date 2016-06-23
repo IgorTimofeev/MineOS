@@ -265,9 +265,9 @@ function MineOSCore.iconRightClick(icon, oldPixelsOfIcon, eventData, fileFormat,
 				{MineOSCore.localization.contextMenuCopy},
 				"-",
 				{MineOSCore.localization.contextMenuRename},
-				{MineOSCore.localization.contextMenuCreateShortcut},
-				"-",
-				{MineOSCore.localization.contextMenuUploadToPastebin, true},
+				{MineOSCore.localization.contextMenuCreateShortcut, fileFormat == ".lnk"},
+				-- "-",
+				-- {MineOSCore.localization.contextMenuUploadToPastebin, true},
 				"-",
 				{MineOSCore.localization.contextMenuAddToDock, not somethingCanBeAddedToDock},
 				{MineOSCore.localization.contextMenuDelete}
@@ -277,7 +277,7 @@ function MineOSCore.iconRightClick(icon, oldPixelsOfIcon, eventData, fileFormat,
 				{MineOSCore.localization.contextMenuCut},
 				{MineOSCore.localization.contextMenuCopy},
 				{MineOSCore.localization.contextMenuRename},
-				{MineOSCore.localization.contextMenuCreateShortcut},
+				{MineOSCore.localization.contextMenuCreateShortcut, fileFormat == ".lnk"},
 				"-",
 				{MineOSCore.localization.contextMenuArchive},
 				"-",
@@ -287,16 +287,16 @@ function MineOSCore.iconRightClick(icon, oldPixelsOfIcon, eventData, fileFormat,
 	else
 		if fileFormat == ".pic" then
 			action = context.menu(eventData[3], eventData[4],
-				{MineOSCore.localization.contextMenuEdit},
+				-- {MineOSCore.localization.contextMenuEdit},
 				{MineOSCore.localization.contextMenuEditInPhotoshop},
 				{MineOSCore.localization.contextMenuSetAsWallpaper},
 				"-",
 				{MineOSCore.localization.contextMenuCut},
 				{MineOSCore.localization.contextMenuCopy},
 				{MineOSCore.localization.contextMenuRename},
-				{MineOSCore.localization.contextMenuCreateShortcut},
-				"-",
-				{MineOSCore.localization.contextMenuUploadToPastebin, true},
+				{MineOSCore.localization.contextMenuCreateShortcut, fileFormat == ".lnk"},
+				-- "-",
+				-- {MineOSCore.localization.contextMenuUploadToPastebin, true},
 				"-",
 				{MineOSCore.localization.contextMenuAddToDock, not somethingCanBeAddedToDock},
 				{MineOSCore.localization.contextMenuDelete, false}
@@ -309,9 +309,9 @@ function MineOSCore.iconRightClick(icon, oldPixelsOfIcon, eventData, fileFormat,
 				{MineOSCore.localization.contextMenuCut},
 				{MineOSCore.localization.contextMenuCopy},
 				{MineOSCore.localization.contextMenuRename},
-				{MineOSCore.localization.contextMenuCreateShortcut},
-				"-",
-				{MineOSCore.localization.contextMenuUploadToPastebin, true},
+				{MineOSCore.localization.contextMenuCreateShortcut, fileFormat == ".lnk"},
+				-- "-",
+				-- {MineOSCore.localization.contextMenuUploadToPastebin, true},
 				"-",
 				{MineOSCore.localization.contextMenuAddToDock, not somethingCanBeAddedToDock},
 				{MineOSCore.localization.contextMenuDelete}
@@ -355,7 +355,7 @@ function MineOSCore.iconRightClick(icon, oldPixelsOfIcon, eventData, fileFormat,
 		-- getFileList(workPathHistory[currentWorkPathHistoryElement])
 		-- drawAll()
 	elseif action == MineOSCore.localization.contextMenuCreateShortcut then
-		ecs.createShortCut(fs.path(icon.path) .. "/" .. ecs.hideFileFormat(fs.name(icon.path)) .. "-" .. MineOSCore.localization.shortcut .. ".lnk", icon.path)
+		ecs.createShortCut(fs.path(icon.path) .. "/" .. ecs.hideFileFormat(fs.name(icon.path)) .. ".lnk", icon.path)
 		executeMethod(drawAllMethod)
 		-- getFileList(workPathHistory[currentWorkPathHistoryElement])
 		-- drawAll()

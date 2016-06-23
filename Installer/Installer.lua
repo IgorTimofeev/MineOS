@@ -98,36 +98,24 @@ local GitHubUserUrl = "https://raw.githubusercontent.com/"
 
 --------------------------------- Стадия стартовой загрузки всего необходимого ---------------------------------
 
-
-local preLoadApi = {
-  { paste = "IgorTimofeev/OpenComputers/master/lib/ECSAPI.lua", path = "lib/ECSAPI.lua" },
-  { paste = "IgorTimofeev/OpenComputers/master/lib/colorlib.lua", path = "lib/colorlib.lua" },
-  { paste = "IgorTimofeev/OpenComputers/master/lib/image.lua", path = "lib/image.lua" },
-  { paste = "IgorTimofeev/OpenComputers/master/lib/config.lua", path = "lib/config.lua" },
-  { paste = "IgorTimofeev/OpenComputers/master/MineOS/Icons/Languages.pic", path = "MineOS/System/OS/Icons/Languages.pic" },
-  { paste = "IgorTimofeev/OpenComputers/master/MineOS/Icons/OK.pic", path = "MineOS/System/OS/Icons/OK.pic" },
-  { paste = "IgorTimofeev/OpenComputers/master/MineOS/Icons/Downloading.pic", path = "MineOS/System/OS/Icons/Downloading.pic" },
-  { paste = "IgorTimofeev/OpenComputers/master/MineOS/Icons/OS_Logo.pic", path = "MineOS/System/OS/Icons/OS_Logo.pic" },
-}
-
 print("Downloading file list")
 applications = seri.unserialize(getFromGitHubSafely(GitHubUserUrl .. "IgorTimofeev/OpenComputers/master/Applications.txt", "MineOS/System/OS/Applications.txt"))
 print(" ")
 
-for i = 1, #preLoadApi do
-  print("Downloading \"" .. fs.name(preLoadApi[i].path) .. "\"")
-  getFromGitHubSafely(GitHubUserUrl .. preLoadApi[i].paste, preLoadApi[i].path)
+for i = 1, #applications do
+  if applications[i].preLoadFile then
+    print("Downloading \"" .. fs.name(applications[i].path) .. "\"")
+    getFromGitHubSafely(GitHubUserUrl .. applications[i].paste, applications[i].path)
+  end
 end
 
-print(" ")
-print("Initialization stage is complete, loading installer")
 print(" ")
 
 package.loaded.ecs = nil
 package.loaded.ECSAPI = nil
 _G.ecs = require("ECSAPI")
 _G.image = require("image")
-_G.config = require("config")
+_G.files = require("files")
 
 local imageOS = image.load("MineOS/System/OS/Icons/OS_Logo.pic")
 local imageLanguages = image.load("MineOS/System/OS/Icons/Languages.pic")
@@ -223,8 +211,7 @@ do
   getFromGitHubSafely(GitHubUserUrl .. "IgorTimofeev/OpenComputers/master/MineOS/License/" .. _G.OSSettings.language .. ".txt", "MineOS/System/OS/License.txt")
   
   --Ставим язык
-  lang = config.readAll(pathToLang)
-
+  lang = files.loadTableFromFile(pathToLang)
 end
 
 
