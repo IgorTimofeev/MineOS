@@ -104,8 +104,8 @@ print(" ")
 
 for i = 1, #applications do
   if applications[i].preLoadFile then
-    print("Downloading \"" .. fs.name(applications[i].path) .. "\"")
-    getFromGitHubSafely(GitHubUserUrl .. applications[i].paste, applications[i].path)
+    print("Downloading \"" .. fs.name(applications[i].name) .. "\"")
+    getFromGitHubSafely(GitHubUserUrl .. applications[i].url, applications[i].name)
   end
 end
 
