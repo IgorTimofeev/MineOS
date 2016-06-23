@@ -1,6 +1,8 @@
-beginOsInstall = Press next to begin installation
-acceptLicense = Accept
-osInstallation = Installing OS
-downloading = Downloading
-needToRestart = System installed, need to restart
-restart = Restart
+{
+	beginOsInstall = "Press next to begin installation", 
+	acceptLicense = "Accept", 
+	osInstallation = "Installing OS", 
+	downloading = "Downloading", 
+	needToRestart = "System installed, need to restart", 
+	restart = "Restart", 
+}
