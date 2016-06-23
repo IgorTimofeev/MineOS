@@ -73,21 +73,21 @@ end
 -----------------------------------------------------------------------------------------------------------------------------------
 
 --Отрисовка одной иконки
-function MineOSCore.drawIcon(x, y, path, showFileFormat, nameColor)
+function MineOSCore.drawIcon(x, y, path, showFileFormat, nameColor, name)
 	local fileFormat, icon = ecs.getFileFormat(path)
 
 	if fs.isDirectory(path) then
 		if fileFormat == ".app" then
-			-- icon = "cyka"
-			-- MineOSCore.icons[icon] = image.load(path .. "/Resources/Icon.pic")
-			icon = path .. "/Resources/Icon.pic"
-			MineOSCore.loadIcon(icon, icon)
+			icon = "cyka"
+			MineOSCore.icons[icon] = image.load(path .. "/Resources/Icon.pic")
+			-- icon = path .. "/Resources/Icon.pic"
+			-- MineOSCore.loadIcon(icon, icon)
 		else
 			icon = "folder"
 		end
 	else
 		if fileFormat == ".lnk" then
-			MineOSCore.drawIcon(x, y, ecs.readShortcut(path), showFileFormat, nameColor)
+			MineOSCore.drawIcon(x, y, ecs.readShortcut(path), showFileFormat, nameColor, fs.name(path))
 			buffer.set(x + MineOSCore.iconWidth - 3, y + MineOSCore.iconHeight - 3, 0xFFFFFF, 0x000000, "<")
 			return 0
 		elseif fileFormat == ".cfg" or fileFormat == ".config" then
@@ -115,7 +115,7 @@ function MineOSCore.drawIcon(x, y, path, showFileFormat, nameColor)
 	buffer.image(x + 2, y, MineOSCore.icons[icon])
 
 	--Делаем текст для иконки
-	local text = fs.name(path)
+	local text = name or fs.name(path)
 	if not showFileFormat and fileFormat then text = unicode.sub(text, 1, -(unicode.len(fileFormat) + 1)) end
 	text = ecs.stringLimit("end", text, MineOSCore.iconWidth)
 	x = x + math.floor(MineOSCore.iconWidth / 2 - unicode.len(text) / 2)
@@ -261,8 +261,8 @@ function MineOSCore.iconRightClick(icon, oldPixelsOfIcon, eventData, fileFormat,
 			action = context.menu(eventData[3], eventData[4],
 				{MineOSCore.localization.contextMenuShowPackageContent},
 				"-",
+				{MineOSCore.localization.contextMenuCut},
 				{MineOSCore.localization.contextMenuCopy},
-				{MineOSCore.localization.contextMenuPaste, not _G.clipboard},
 				"-",
 				{MineOSCore.localization.contextMenuRename},
 				{MineOSCore.localization.contextMenuCreateShortcut},
@@ -274,6 +274,7 @@ function MineOSCore.iconRightClick(icon, oldPixelsOfIcon, eventData, fileFormat,
 			)
 		else
 			action = context.menu(eventData[3], eventData[4],
+				{MineOSCore.localization.contextMenuCut},
 				{MineOSCore.localization.contextMenuCopy},
 				{MineOSCore.localization.contextMenuRename},
 				{MineOSCore.localization.contextMenuCreateShortcut},
@@ -290,7 +291,8 @@ function MineOSCore.iconRightClick(icon, oldPixelsOfIcon, eventData, fileFormat,
 				{MineOSCore.localization.contextMenuEditInPhotoshop},
 				{MineOSCore.localization.contextMenuSetAsWallpaper},
 				"-",
-				{MineOSCore.localization.contextMenuCopy, false},
+				{MineOSCore.localization.contextMenuCut},
+				{MineOSCore.localization.contextMenuCopy},
 				{MineOSCore.localization.contextMenuRename},
 				{MineOSCore.localization.contextMenuCreateShortcut},
 				"-",
@@ -304,6 +306,7 @@ function MineOSCore.iconRightClick(icon, oldPixelsOfIcon, eventData, fileFormat,
 				{MineOSCore.localization.contextMenuEdit},
 				-- {MineOSCore.localization.contextMenuCreateApplication},
 				"-",
+				{MineOSCore.localization.contextMenuCut},
 				{MineOSCore.localization.contextMenuCopy},
 				{MineOSCore.localization.contextMenuRename},
 				{MineOSCore.localization.contextMenuCreateShortcut},
@@ -337,11 +340,10 @@ function MineOSCore.iconRightClick(icon, oldPixelsOfIcon, eventData, fileFormat,
 	elseif action == MineOSCore.localization.contextMenuCopy then
 		_G.clipboard = icon.path
 		executeMethod(drawAllMethod)
-	elseif action == MineOSCore.localization.contextMenuPaste then
-		ecs.copy(_G.clipboard, fs.path(icon.path) or "")
+	elseif action == MineOSCore.localization.contextMenuCut then
+		_G.clipboard = icon.path
+		_G.clipboardCut = true
 		executeMethod(drawAllMethod)
-		-- getFileList(workPathHistory[currentWorkPathHistoryElement])
-		-- drawAll()
 	elseif action == MineOSCore.localization.contextMenuDelete then
 		fs.remove(icon.path)
 		executeMethod(drawAllMethod)
@@ -353,7 +355,7 @@ function MineOSCore.iconRightClick(icon, oldPixelsOfIcon, eventData, fileFormat,
 		-- getFileList(workPathHistory[currentWorkPathHistoryElement])
 		-- drawAll()
 	elseif action == MineOSCore.localization.contextMenuCreateShortcut then
-		ecs.createShortCut(fs.path(icon.path).."/"..ecs.hideFileFormat(fs.name(icon.path))..".lnk", icon.path)
+		ecs.createShortCut(fs.path(icon.path) .. "/" .. ecs.hideFileFormat(fs.name(icon.path)) .. "-" .. MineOSCore.localization.shortcut .. ".lnk", icon.path)
 		executeMethod(drawAllMethod)
 		-- getFileList(workPathHistory[currentWorkPathHistoryElement])
 		-- drawAll()
@@ -402,7 +404,7 @@ function MineOSCore.iconClick(icon, eventData, selectionColor, selectionTranspar
 end
 
 function MineOSCore.emptyZoneClick(eventData, workPath, drawAllMethod, fullRefreshMethod)
-	local action = context.menu(eventData[3], eventData[4], {MineOSCore.localization.contextMenuNewFile}, {MineOSCore.localization.contextMenuNewFolder}, {MineOSCore.localization.contextMenuNewApplication}, "-", {MineOSCore.localization.contextMenuPaste, (_G.clipboard == nil), "^V"})
+	local action = context.menu(eventData[3], eventData[4], {MineOSCore.localization.contextMenuNewFile}, {MineOSCore.localization.contextMenuNewFolder}, {MineOSCore.localization.contextMenuNewApplication}, "-", {MineOSCore.localization.contextMenuPaste, (_G.clipboard == nil)})
 	if action == MineOSCore.localization.contextMenuNewFile then
 		ecs.newFile(workPath)
 		executeMethod(fullRefreshMethod)
@@ -411,6 +413,11 @@ function MineOSCore.emptyZoneClick(eventData, workPath, drawAllMethod, fullRefre
 		executeMethod(drawAllMethod)
 	elseif action == MineOSCore.localization.contextMenuPaste then
 		ecs.copy(_G.clipboard, workPath)
+		if _G.clipboardCut then
+			fs.remove(_G.clipboard)
+			_G.clipboardCut = nil
+			_G.clipboard = nil
+		end
 		executeMethod(drawAllMethod)
 	elseif action == MineOSCore.localization.contextMenuNewApplication then
 		ecs.newApplication(workPath)

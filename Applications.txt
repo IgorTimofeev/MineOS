@@ -99,14 +99,14 @@
     url="IgorTimofeev/OpenComputers/master/MineOS/Languages/Russian.lang",
     type="Script",
     forceDownload=true,
-    version=1.1,
+    version=1.11,
   },
   {
     name="MineOS/System/OS/Languages/English.lang",
     url="IgorTimofeev/OpenComputers/master/MineOS/Languages/English.lang",
     type="Script",
     forceDownload=true,
-    version=1.1,
+    version=1.11,
   },
 
   ----------------------------------------------------- Системные иконки --------------------------------------------------------------------------
@@ -243,7 +243,7 @@
     name="lib/MineOSCore.lua",
     url="IgorTimofeev/OpenComputers/master/lib/MineOSCore.lua",
     type="Library",
-    version=1.1,
+    version=1.11,
   },
   {
     name="lib/GUI.lua",
@@ -256,6 +256,12 @@
     url="IgorTimofeev/OpenComputers/master/lib/serialization.lua",
     type="Library",
     version=1.0,
+  },
+  {
+    name="lib/ECSAPI.lua",
+    url="IgorTimofeev/OpenComputers/master/lib/ECSAPI.lua",
+    type="Library",
+    version=1.00,
   },
   {
     name="lib/image.lua",
@@ -273,7 +279,7 @@
     name="lib/rayEngine.lua",
     url="IgorTimofeev/OpenComputers/master/lib/rayEngine.lua",
     type="Library",
-    version=1.31,
+    version=1.32,
   },
   {
     name="lib/doubleHeight.lua",
@@ -850,7 +856,7 @@
     icon="IgorTimofeev/OpenComputers/master/Applications/Finder/Icon.pic",
     createShortcut="dock",
     forceDownload=true,
-    version=1.1,
+    version=1.11,
   },
   {
     name="MineOS/Applications/AppMarket",

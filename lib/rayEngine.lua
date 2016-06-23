@@ -18,7 +18,7 @@ rayEngine.horizonPosition = math.floor(buffer.screen.height / 2)
 rayEngine.minimapEnabled = true
 rayEngine.compassEnabled = false
 rayEngine.watchEnabled = false
-rayEngine.drawFieldOfViewOnMinimap = false
+rayEngine.drawFieldOfViewOnMinimap = true
 rayEngine.chatShowTime = 4
 rayEngine.chatHistory = {}
 rayEngine.chatPanelWidth, rayEngine.chatPanelHeight = math.floor(buffer.screen.width * 0.4), math.floor(buffer.screen.height * 0.4)
@@ -227,7 +227,7 @@ end
 
 local function drawFieldOfViewAngle(x, y, distance, color)
 	local fieldOfViewHalf = rayEngine.player.fieldOfView / 2
-	local firstAngle, secondAngle = math.rad(-(rayEngine.player.rotation - fieldOfViewHalf + 90)), math.rad(-(rayEngine.player.rotation + fieldOfViewHalf + 90))
+	local firstAngle, secondAngle = math.rad(-(rayEngine.player.rotation - fieldOfViewHalf)), math.rad(-(rayEngine.player.rotation + fieldOfViewHalf))
 	local xFirst, yFirst = math.floor(x + math.sin(firstAngle) * distance), math.floor(y + math.cos(firstAngle) * distance)
 	local xSecond, ySecond = math.floor(x + math.sin(secondAngle) * distance), math.floor(y + math.cos(secondAngle) * distance)
 	doubleHeight.line(x, y, xFirst, yFirst, color)
@@ -235,28 +235,29 @@ local function drawFieldOfViewAngle(x, y, distance, color)
 end
 
 function rayEngine.drawMap(x, y, width, height, transparency)
-	buffer.square(x, y, width, height, 0x000000, 0x000000, " ", transparency)
 	local xHalf, yHalf = math.floor(width / 2), math.floor(height / 2)
 	local xMap, yMap = convertWorldCoordsToMapCoords(rayEngine.player.position.x, rayEngine.player.position.y)
 
-	local xPos, yPos = x, y
-	for i = yMap - yHalf + 1, yMap + yHalf + 1 do
-		for j = xMap + xHalf + 1, xMap - xHalf + 1, -1 do
+	buffer.square(x, y, width, yHalf, 0x000000, 0x000000, " ", transparency)
+
+	local xPos, yPos = x, y * 2 - 1
+	for i = yMap - yHalf + 1, yMap + yHalf do
+		for j = xMap + xHalf + 1, xMap - xHalf + 2, -1 do
 			if rayEngine.map[i] and rayEngine.map[i][j] then
-				buffer.square(xPos, yPos, 1, 1, 0xEEEEEE)
+				doubleHeight.set(xPos, yPos, rayEngine.blocks[rayEngine.map[i][j]].color)
 			end
 			xPos = xPos + 1
 		end
 		xPos = x; yPos = yPos + 1
 	end
 
-	local xPlayer, yPlayer = x + xHalf, (y + yHalf) * 2
+	local xPlayer, yPlayer = x + xHalf, y + yHalf
 	--Поле зрения
 	if rayEngine.drawFieldOfViewOnMinimap then drawFieldOfViewAngle(xPlayer, yPlayer, 5, 0xCCFFBF) end
 	--Игрок
 	doubleHeight.set(xPlayer, yPlayer, 0x66FF40)
 	--Инфа
-	y = y + height
+	y = y + yHalf
 	buffer.square(x, y, width, 1, 0x000000, 0x000000, " ", transparency + 10)
 	x = x + 1
 	buffer.text(x, y, 0xFFFFFF, "POS: " .. correctDouble(rayEngine.player.position.x) .. " x " .. correctDouble(rayEngine.player.position.y))
@@ -492,7 +493,7 @@ end
 function rayEngine.update()
 	rayEngine.drawWorld()
 	if rayEngine.currentWeapon then rayEngine.drawWeapon() end
-	if rayEngine.minimapEnabled then rayEngine.drawMap(3, 2, 25, 13, 50) end
+	if rayEngine.minimapEnabled then rayEngine.drawMap(3, 2, 24, 24, 50) end
 	-- rayEngine.drawStats()
 	local xTools, yTools = 3, buffer.screen.height - 25
 	if rayEngine.compassEnabled then rayEngine.compass(xTools, yTools); xTools = xTools + 30 end

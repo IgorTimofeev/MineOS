@@ -1,6 +1,7 @@
 -- package.loaded.MineOSCore = nil
 -- _G.MineOSCore = nil
 
+
 -- Адаптивная загрузка необходимых библиотек и компонентов
 local libraries = {
 	buffer = "doubleBuffering",
@@ -383,10 +384,12 @@ while true do
 			if obj.historyBack:isClicked(eventData[3], eventData[4]) then
 				obj.historyBack:press(0.2)
 				currentWorkPathHistoryElement = currentWorkPathHistoryElement - 1
+				sizes.yFileList = sizes.yFileListStartPoint
 				getListAndDrawAll()
 			elseif obj.historyForward:isClicked(eventData[3], eventData[4]) then
 				obj.historyForward:press(0.2)
 				currentWorkPathHistoryElement = currentWorkPathHistoryElement + 1
+				sizes.yFileList = sizes.yFileListStartPoint
 				getListAndDrawAll()
 			elseif obj.search:isClicked(eventData[3], eventData[4]) then
 				searchBarText = ""
@@ -477,6 +480,8 @@ while true do
 					buffer.setDrawLimit(sizes.xMain, sizes.yMain, sizes.mainWidth, sizes.mainHeight)
 					if MineOSCore.iconClick(icon, eventData, colors.selection, nil, 0xFFFFFF, 0.2, config.showFileFormat, {method = getListAndDrawAll, arguments = {}}, {method = fullRefresh, arguments = {}}, {method = changePath, arguments = {icon.path}}) then return end
 					buffer.resetDrawLimit()
+					drawTopBar()
+					buffer.draw()
 					clickedAtEmptyArea = false
 					break
 				end

@@ -78,6 +78,7 @@
 	settings = "Preferences",
 	changePassword = "Change password",
 	cancel = "Cancel",
+	shortcut = "shortcut",
 	shortcutIsCorrupted = "Shortcut file is corrupted",
 
 	viewTab = "View",

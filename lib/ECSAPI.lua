@@ -1326,16 +1326,21 @@ function ecs.displayCompileMessage(y, reason, translate, withAnimation)
 end
 
 --Спросить, заменять ли файл (если таковой уже имеется)
-function ecs.askForReplaceFile(path)
-	if fs.exists(path) then
-		local action = ecs.universalWindow("auto", "auto", 46, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Файл \"".. fs.name(path) .. "\" уже имеется в этом месте."}, {"CenterText", 0x262626, "Заменить его перемещаемым объектом?"}, {"EmptyLine"}, {"Button", {0xdddddd, 0x262626, "Оставить оба"}, {0xffffff, 0x262626, "Отмена"}, {ecs.colors.lightBlue, 0xffffff, "Заменить"}})
-		if action[1] == "Оставить оба" then
-			return "keepBoth"
-		elseif action[2] == "Отмена" then
-			return "cancel"
-		else
-			return "replace"
-		end
+function ecs.askForReplaceFile(path, includeForAllButton)
+	local cyka = {
+		{"EmptyLine"}, 
+		{"CenterText", 0x262626, "Файл \"".. fs.name(path) .. "\" уже имеется в этом месте."}, 
+		{"CenterText", 0x262626, "Заменить его перемещаемым объектом?"},
+		{"EmptyLine"}
+	}
+	if includeForAllButton then table.insert(cyka, {"Switch", 0xF2B233, 0xffffff, 0x262626, "Для всех", true}) end
+	table.insert(cyka, {"Button", {0x444444, 0xFFFFFF, "Заменить"}, {0x666666, 0xFFFFFF, "Отмена"}})
+
+	local action = ecs.universalWindow("auto", "auto", 46, ecs.windowColors.background, true, table.unpack(cyka))
+	if action[includeForAllButton and 2 or 1] == "Заменить" then
+		return 1, action[includeForAllButton and 1]
+	else
+		return 2, action[includeForAllButton and 1]
 	end
 end
 
@@ -1627,12 +1632,30 @@ function ecs.applicationHelp(pathToApplication)
 	end
 end
 
+function ecs.correctFileNameIfFileExists(path, requestedName)
+	local number = 1
+	local fileFormat = ecs.getFileFormat(requestedName) or ""
+	requestedName = ecs.hideFileFormat(requestedName)
+	while true do
+		local finalFileName = requestedName .. string.rep("-copy", number) .. fileFormat
+		if fs.exists(path .. "/" .. finalFileName) then
+			number = number + 1
+		else
+			return finalFileName
+		end
+	end
+end
+
 --Создать ярлык для конкретной проги (для операционки)
-function ecs.createShortCut(path, pathToProgram)
-	fs.remove(path)
-	fs.makeDirectory(fs.path(path))
-	local file = io.open(path, "w")
-	file:write("return ", "\"", pathToProgram, "\"")
+function ecs.createShortCut(pathToShortcut, pathToFile)
+	local pathToPathToShortcut = fs.path(pathToShortcut) or "/"
+	fs.makeDirectory(pathToPathToShortcut)
+	if fs.exists(pathToShortcut) then
+		pathToShortcut = ecs.correctFileNameIfFileExists(pathToPathToShortcut, pathToShortcut)
+	end
+
+	local file = io.open(pathToShortcut, "w")
+	file:write("return ", "\"", pathToFile, "\"")
 	file:close()
 end
 
@@ -1642,54 +1665,53 @@ function ecs.readShortcut(path)
 	if success then
 		return filename
 	else
-		error("Ошибка чтения файла ярлыка. Вероятно, он создан криво, либо не существует в папке " .. path)
+		error("Ошибка чтения файла ярлыка. Вероятно, он создан криво, либо не существует в папке \"" .. fs.path(path) or "" .. "\"")
 	end
 end
 
 --Редактирование файла (для операционки)
 function ecs.editFile(path)
 	ecs.prepareToExit()
-	shell.execute("edit "..path)
+	shell.execute("edit " .. path)
 end
 
--- Копирование папки через рекурсию, т.к. fs.copy() не поддерживает папки
--- Ну долбоеб автор мода - хули я тут сделаю? Придется так вот
--- Хотя можно юзать обычный bin/cp, как это сделано в дисковом дубляже. Надо перекодить, короч
-function ecs.copyFolder(path, toPath)
-	local function doCopy(path)
-		local fileList = ecs.getFileList(path)
-		for i = 1, #fileList do
-			if fs.isDirectory(path..fileList[i]) then
-				doCopy(path..fileList[i])
-			else
-				fs.makeDirectory(toPath..path)
-				fs.copy(path..fileList[i], toPath ..path.. fileList[i])
+--Копирование файлов и папок
+function ecs.copy(from, toFolder)
+	fs.makeDirectory(toFolder)
+
+	if fs.isDirectory(from) then
+		local currentAction, yesToAllAction
+		local function recursiveFolderCopy(from, to)
+			for file in fs.list(from) do
+				local finalFromName = from .. "/" .. file
+				local finalToName = to .. "/" .. file
+
+				if fs.exists(finalToName) then
+					if not yesToAllAction then
+						currentAction, yesToAll = ecs.askForReplaceFile(finalToName, true)
+						if yesToAll == true then yesToAllAction = true end
+					end
+				else
+					currentAction = 1
+				end
+
+				if currentAction == 1 then
+					if fs.isDirectory(finalFromName) then
+						fs.makeDirectory(finalToName)
+						recursiveFolderCopy(finalFromName, finalToName)
+					else
+						fs.copy(finalFromName, finalToName)
+					end
+				end
 			end
 		end
-	end
 
-	toPath = fs.path(toPath)
-	doCopy(path.."/")
-end
-
---Копирование файлов для операционки
-function ecs.copy(from, to)
-	local name = fs.name(from)
-	local toName = to .. "/" .. name
-	local action = ecs.askForReplaceFile(toName)
-	if action == nil or action == "replace" then
-		fs.remove(toName)
-		if fs.isDirectory(from) then
-			ecs.copyFolder(from, toName)
-		else
-			fs.copy(from, toName)
-		end
-	elseif action == "keepBoth" then
-		if fs.isDirectory(from) then
-			ecs.copyFolder(from, to .. "/(copy)" .. name)
-		else
-			fs.copy(from, to .. "/(copy)" .. name)
-		end	
+		recursiveFolderCopy(from, toFolder .. fs.name(from))
+	else
+		local to = toFolder .. "/" .. fs.name(from)
+		local action = 1
+		if fs.exists(to) then action = ecs.askForReplaceFile(to) end
+		if action == 1 then fs.copy(from, to) end
 	end
 end
 
@@ -2415,12 +2437,6 @@ end
 
 --Функция-демонстратор, показывающая все возможные объекты в одном окне. Код окна находится выше.
 --ecs.demoWindow()
-
---Функция-отладчик, выдающая окно с указанным сообщением об ошибке. Полезна при дебаге.
---ecs.error("Это сообщение об ошибке! Hello world!")
-
---Функция, спрашивающая, стоит ли заменять указанный файл, если он уже имеется
---ecs.askForReplaceFile("OS.lua")
 
 --Функция, предлагающая сохранить файл в нужном месте в нужном формате.
 --ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Сохранить как"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, "Путь"}, {"Selector", 0x262626, 0x880000, "PNG", "JPG", "PSD"}, {"EmptyLine"}, {"Button", {0xbbbbbb, 0xffffff, "OK!"}})

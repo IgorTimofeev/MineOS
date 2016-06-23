@@ -78,6 +78,7 @@
 	settings = "Настройки",
 	changePassword = "Изменить пароль",
 	cancel = "Отмена",
+	shortcut = "ярлык",
 	shortcutIsCorrupted = "Файл ярлыка поврежден или имеет неизвестный формат",
 
 	viewTab = "Вид",
