@@ -279,7 +279,7 @@
     url="IgorTimofeev/OpenComputers/master/lib/colorlib.lua",
     type="Library",
     preLoadFile=true,
-    version=1.01,
+    version=1.02,
   },
   {
     name="lib/image.lua",

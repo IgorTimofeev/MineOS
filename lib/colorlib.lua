@@ -86,19 +86,18 @@ function colorlib.HSBtoHEX(h, s, b)
 end
 
 --Смешивание двух цветов на основе альфа-канала второго
-function colorlib.alphaBlend(back_color, front_color, alpha_channel)
-  local INVERTED_ALPHA_CHANNEL = 255 - alpha_channel
+function colorlib.alphaBlend(firstColor, secondColor, alphaChannel)
+  local invertedAlphaChannelDividedBy255 = (255 - alphaChannel) / 255
+  alphaChannel = alphaChannel / 255
+  
+  local firstColorRed, firstColorGreen, firstColorBlue = colorlib.HEXtoRGB(firstColor)
+  local secondColorRed, secondColorGreen, secondColorBlue = colorlib.HEXtoRGB(secondColor)
 
-  local back_color_rr, back_color_gg, back_color_bb    = colorlib.HEXtoRGB(back_color)
-  local front_color_rr, front_color_gg, front_color_bb = colorlib.HEXtoRGB(front_color)
-
-  local blended_rr = front_color_rr * INVERTED_ALPHA_CHANNEL / 255 + back_color_rr * alpha_channel / 255
-  local blended_gg = front_color_gg * INVERTED_ALPHA_CHANNEL / 255 + back_color_gg * alpha_channel / 255
-  local blended_bb = front_color_bb * INVERTED_ALPHA_CHANNEL / 255 + back_color_bb * alpha_channel / 255
-
-  INVERTED_ALPHA_CHANNEL, back_color_rr, back_color_gg, back_color_bb, front_color_rr, front_color_gg, front_color_bb = nil, nil, nil, nil, nil, nil, nil
-
-  return colorlib.RGBtoHEX( blended_rr, blended_gg, blended_bb )
+  return colorlib.RGBtoHEX(
+    secondColorRed * invertedAlphaChannelDividedBy255 + firstColorRed * alphaChannel,
+    secondColorGreen * invertedAlphaChannelDividedBy255 + firstColorGreen * alphaChannel,
+    secondColorBlue * invertedAlphaChannelDividedBy255 + firstColorBlue * alphaChannel
+  )
 end
 
 --Получение среднего цвета между перечисленными. К примеру, между черным и белым выдаст серый.
