@@ -302,32 +302,29 @@ end
 
 -- Отрисовка изображения
 function buffer.image(x, y, picture)
-	if not _G.image then _G.image = require("image") end
-	local index, imageIndex, indexPlus1, indexPlus2, imageIndexPlus1, imageIndexPlus2, imageIndexPlus3
+	local xPos, xEnd = x, x + picture.width - 1
+	local bufferIndex = convertCoordsToIndex(x, y)
+	local bufferIndexIterationStep = (buffer.screen.width - picture.width) * 3
 
-	for j = y, (y + picture.height - 1) do
-		for i = x, (x + picture.width - 1) do
-			if i >= buffer.drawLimit.x and j >= buffer.drawLimit.y and i <= buffer.drawLimit.x2 and j <= buffer.drawLimit.y2 then
-				index = convertCoordsToIndex(i, j)
-				indexPlus1 = index + 1
-				indexPlus2 = index + 2
-
-				imageIndex = (picture.width * (j - y) + (i - x + 1)) * 4 - 3
-				imageIndexPlus1 = imageIndex + 1
-				imageIndexPlus2 = imageIndex + 2
-				imageIndexPlus3 = imageIndex + 3
-
-				if picture[imageIndexPlus2] ~= 0x00 then
-					buffer.screen.new[index] = colorlib.alphaBlend(buffer.screen.new[index], picture[imageIndex], picture[imageIndexPlus2])
-				else
-					buffer.screen.new[index] = picture[imageIndex]
-				end
-
-				--Если символ равен пробелу, то сбрасываем цвет текста на ноль
-				-- buffer.screen.new[indexPlus1] = picture[imageIndexPlus3] == " " and 0x000000 or picture[imageIndexPlus1]
-				buffer.screen.new[indexPlus1] = picture[imageIndexPlus1]
-				buffer.screen.new[indexPlus2] = picture[imageIndexPlus3]
+	for imageIndex = 1, #picture, 4 do
+		if xPos >= buffer.drawLimit.x and y >= buffer.drawLimit.y and xPos <= buffer.drawLimit.x2 and y <= buffer.drawLimit.y2 then
+			--Фон и его прозрачность
+			if picture[imageIndex + 2] == 0x00 then
+				buffer.screen.new[bufferIndex] = picture[imageIndex]
+			else
+				buffer.screen.new[bufferIndex] = colorlib.alphaBlend(buffer.screen.new[bufferIndex], picture[imageIndex], picture[imageIndex + 2])
 			end
+			--Цвет символа
+			buffer.screen.new[bufferIndex + 1] = picture[imageIndex + 1]
+			--Символ
+			buffer.screen.new[bufferIndex + 2] = picture[imageIndex + 3]
+		end
+
+		--Корректируем координаты и индексы
+		xPos = xPos + 1
+		bufferIndex = bufferIndex + 3
+		if xPos > xEnd then
+			xPos, y, bufferIndex = x, y + 1, bufferIndex + bufferIndexIterationStep
 		end
 	end
 end

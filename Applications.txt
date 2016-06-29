@@ -401,7 +401,7 @@
     name="lib/doubleBuffering.lua",
     url="IgorTimofeev/OpenComputers/master/lib/doubleBuffering.lua",
     type="Library",
-    version=1.1,
+    version=1.11,
   },
   {
     name="lib/thread.lua",
