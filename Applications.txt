@@ -8,7 +8,7 @@
     about="IgorTimofeev/OpenComputers/master/MineOS/About/",
     type="Script",
     forceDownload=true,
-    version=3.22,
+    version=3.23,
   },
   {
     name="MineOS/Pictures/Raspberry.pic",
@@ -401,7 +401,7 @@
     name="lib/doubleBuffering.lua",
     url="IgorTimofeev/OpenComputers/master/lib/doubleBuffering.lua",
     type="Library",
-    version=1.11,
+    version=1.12,
   },
   {
     name="lib/thread.lua",

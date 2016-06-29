@@ -7,13 +7,7 @@ local libraries = {
 	["colorlib"] = "colorlib",
 }
 
-local components = {
-	["gpu"] = "gpu",
-}
-
-for library in pairs(libraries) do if not _G[library] then _G[library] = require(libraries[library]) end end
-for comp in pairs(components) do if not _G[comp] then _G[comp] = _G.component[components[comp]] end end
-libraries, components = nil, nil
+for library in pairs(libraries) do if not _G[library] then _G[library] = require(libraries[library]) end end; libraries = nil
 
 local buffer = {}
 local debug = false
@@ -64,7 +58,7 @@ function buffer.start()
 	buffer.screen = {}
 	buffer.screen.current = {}
 	buffer.screen.new = {}
-	buffer.screen.width, buffer.screen.height = gpu.getResolution()
+	buffer.screen.width, buffer.screen.height = component.gpu.getResolution()
 
 	buffer.resetDrawLimit()
 
@@ -533,21 +527,20 @@ function buffer.draw(force)
 
 	--Перебираем все цвета текста и фона, выполняя гпу-операции
 	for foreground in pairs(buffer.screen.changes) do
-		if indexPlus1 ~= foreground then gpu.setForeground(foreground); indexPlus1 = foreground end
+		if indexPlus1 ~= foreground then component.gpu.setForeground(foreground); indexPlus1 = foreground end
 		for background in pairs(buffer.screen.changes[foreground]) do
-			if index ~= background then gpu.setBackground(background); index = background end
+			if index ~= background then component.gpu.setBackground(background); index = background end
 			
 			for i = 1, #buffer.screen.changes[foreground][background], 2 do
 				--Конвертируем указанный индекс в координаты
 				x, y = convertIndexToCoords(buffer.screen.changes[foreground][background][i])
 				--Выставляем ту самую собранную строку из одинаковых цветов
-				gpu.set(x, y, buffer.screen.changes[foreground][background][i + 1])
+				component.gpu.set(x, y, buffer.screen.changes[foreground][background][i + 1])
 			end
 		end
 	end
 
 	--Очищаем память, ибо незачем нам хранить третий буфер
-	buffer.screen.changes = {}
 	buffer.screen.changes = nil
 end
 
