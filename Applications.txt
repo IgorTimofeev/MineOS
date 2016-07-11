@@ -272,7 +272,7 @@
     url="IgorTimofeev/OpenComputers/master/lib/ECSAPI.lua",
     type="Library",
     preLoadFile=true,
-    version=1.00,
+    version=1.01,
   },
   {
     name="lib/colorlib.lua",
@@ -299,7 +299,7 @@
     name="lib/MineOSCore.lua",
     url="IgorTimofeev/OpenComputers/master/lib/MineOSCore.lua",
     type="Library",
-    version=1.12,
+    version=1.13,
   },
   {
     name="lib/GUI.lua",
@@ -389,7 +389,7 @@
     name="lib/syntax.lua",
     url="IgorTimofeev/OpenComputers/master/lib/syntax.lua",
     type="Library",
-    version=1.0,
+    version=1.01,
   },
   {
     name="lib/palette.lua",

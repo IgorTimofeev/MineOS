@@ -10,7 +10,8 @@ local libraries = {
 	buffer = "doubleBuffering",
 	image = "image",
 	GUI = "GUI",
-	zip = "archive"
+	zip = "archive",
+	syntax = "syntax",
 }
 
 for library in pairs(libraries) do if not _G[library] then _G[library] = require(libraries[library]) end end
@@ -29,6 +30,7 @@ MineOSCore.paths = {
 	icons = "MineOS/System/OS/Icons/",
 	applications = "MineOS/Applications/",
 	pictures = "MineOS/Pictures/",
+	applicationList = "MineOS/System/OS/Applications.txt",
 }
 
 MineOSCore.sortingMethods = {
@@ -123,26 +125,206 @@ function MineOSCore.drawIcon(x, y, path, showFileFormat, nameColor, name)
 	buffer.text(x, y + MineOSCore.iconHeight - 1, nameColor or 0xffffff, text)
 end
 
-function MineOSCore.safeLaunch(command, ...)
+-----------------------------------------------------------------------------------------------------------------------------------
+
+--Функция парсинга Lua-сообщения об ошибке. Конвертирует из строки в массив.
+function MineOSCore.parseErrorMessage(error, indentationWidth)
+	local parsedError = {}
+
+	--Замена /r/n и табсов
+	error = string.gsub(error, "\r\n", "\n")
+	error = string.gsub(error, "	", string.rep(" ", indentationWidth or 4))
+
+	--Удаление энтеров
+	local searchFrom, starting, ending = 1
+	for i = 1, unicode.len(error) do
+		starting, ending = string.find(error, "\n", searchFrom)
+		if starting then
+			table.insert(parsedError, unicode.sub(error, searchFrom, starting - 1))
+			searchFrom = ending + 1
+		else
+			break
+		end
+	end
+
+	--На всякий случай, если сообщение об ошибке без энтеров вообще, т.е. однострочное
+	if #parsedError == 0 then table.insert(parsedError, error) end
+
+	return parsedError
+end
+
+--Функция-оптимизатор говносимволов для урлек, пробелсы там в %20 и т.п.
+function MineOSCore.optimizeStringForURLSending(code)
+	if code then
+	code = string.gsub(code, "([^%w ])", function (c)
+		return string.format("%%%02X", string.byte(c))
+	end)
+		code = string.gsub(code, " ", "+")
+	end
+	return code 
+end
+
+local function drawErrorWindow(path, errorLine, reason, showSendToDeveloperButton)
+	local topbarColor = 0x383838
+	local programName = "Ошибка при выполнении " .. fs.name(path)
+	local width, height = buffer.screen.width, math.floor(buffer.screen.height * 0.45)
+	local x, y = 1, math.floor(buffer.screen.height / 2 - height / 2)
+	local topbarHeight = 3
+	local codeHeight = height - topbarHeight - 3
+	local codeWidth = math.floor(width * 0.62)
+	local stackWidth = width - codeWidth
+	local buttons = {}
+
+	--Фончик
+	buffer.square(1, 1, buffer.screen.width, buffer.screen.height, 0x000000, 0x000000, " ", 50)
+
+	--Топбарчик
+	buffer.square(x, y, width, topbarHeight, topbarColor, 0xFFFFFF, " ")
+	buffer.text(math.floor(x + width / 2 - unicode.len(programName) / 2), y + 1, 0xFFFFFF, programName)
+
+	--Кнопачки
+	buttons = GUI.windowActionButtons(x + 1, y + 1, false)
+	if showSendToDeveloperButton and component.isAvailable("internet") then buttons.sendToDeveloper = GUI.adaptiveButton(x + 8, y, 2, 1, 0x444444, 0xFFFFFF, 0x343434, 0xFFFFFF, "Отправить отчет") end
+	y = y + topbarHeight
+
+	--Кодик
+	local strings = {}
+	local fromString = errorLine - math.floor((codeHeight - 1) / 2)
+	if fromString < 0 then fromString = 1 end
+	local toString = fromString + codeHeight - 1
+
+	local file = io.open(path, "r")
+	local lineCounter = 1
+	for line in file:lines() do
+		if lineCounter >= fromString and lineCounter <= toString then
+			line = string.gsub(line, "	", "  ")
+			table.insert(strings, line)
+		elseif lineCounter > toString then
+			break
+		end
+		lineCounter = lineCounter + 1
+	end
+	file:close()
+
+	syntax.viewCode(
+		{
+			x = x,
+			y = y,
+			width = codeWidth,
+			height = codeHeight, 
+			strings = strings, 
+			maximumStringWidth = 50,
+			fromSymbol = 1,
+			fromString = 1,
+			fromStringOnLineNumbers = fromString,
+			highlightLuaSyntax = true,
+			highlightedStrings = {[errorLine] = 0xFF4444},
+			scrollbars = {
+				vertical = true,
+				horizontal = false,
+			}
+		}
+	)
+
+	--Стек
+	strings = GUI.stringWrap(MineOSCore.parseErrorMessage(reason, 4), stackWidth - 2)
+	x = x + codeWidth
+	buffer.square(x, y, stackWidth, codeHeight, 0xFFFFFF)
+	x = x + 1
+	for i = 1, #strings do buffer.text(x, y, 0x000000, strings[i]); y = y + 1; if i > codeHeight - 1 then break end end
+
+	buffer.draw()
+	for i = 1, 2 do component.computer.beep(1500, 0.1) end
+
+	--Ивентовая параша
+	while true do
+		local e = {event.pull()}
+		if e[1] == "touch" then
+			for objectName, button in pairs(buttons) do
+				if button:isClicked(e[3], e[4]) then
+					button:press()
+					if objectName == "close" then
+						return
+					elseif objectName == "sendToDeveloper" then
+						local data = ecs.universalWindow("auto", "auto", 36, 0xeeeeee, true,
+							{"EmptyLine"},
+							{"CenterText", 0x880000, "Отправить отчет"},
+							{"EmptyLine"},
+							{"Input", 0x262626, 0x880000, "Ваше имя"},
+							{"Input", 0x262626, 0x880000, "Сообщение разработчику"},
+							{"EmptyLine"},
+							{"CenterText", 0x880000, "Стек ошибки"},
+							{"EmptyLine"},
+							{"TextField", 5, 0xFFFFFF, 0x000000, 0xcccccc, 0x3366CC, reason},
+							{"Button", {0x999999, 0xffffff, "OK"}, {0x777777, 0xffffff, "Отмена"}}
+						)
+
+						if data[3] == "OK" then
+							if component.isAvailable("internet") then
+								local phpUrl = "http://igortimofeev.wallst.ru/MineOSErrorReports/Report.php"
+								local url = phpUrl .. "?path=" .. path .. "&errorMessage=" .. MineOSCore.optimizeStringForURLSending(reason) .. "&userMessage=" .. MineOSCore.optimizeStringForURLSending(data[2]) .. "&userContacts=" .. MineOSCore.optimizeStringForURLSending(data[1])
+								local success, reason = component.internet.request(url)
+								if success then
+									success:close()
+								else
+									ecs.error(reason)
+								end
+							end
+
+							return
+						end
+					end
+
+					break
+				end
+			end
+		end
+	end
+end
+
+function MineOSCore.safeLaunch(path, ...)
+	local args = {...}
 	local oldResolutionWidth, oldResolutionHeight = component.gpu.getResolution()
-	local loadSuccess, loadReason = loadfile(command)
+	local finalSuccess, finalReason = true, true
+	local loadSuccess, loadReason = loadfile(path)
+	
 	if loadSuccess then
-		local success, reason = pcall(loadSuccess, ...)
-		--Ебал я автора мода в задницу, кусок ебанутого говна
-		--Какого хуя я должен вставлять кучу костылей в свой прекрасный код только потому, что эта ублюдочная
-		--скотина захотела выдавать table из pcall? Что, блядь? Где это видано, сука?
-		--Почему тогда во всех случаях выдается string, а при os.exit выдается {reason = "terminated"}?
-		--Что за ебливая сучья логика? 
-		if not success and type(reason) ~= "table" then
-			reason = ecs.parseErrorMessage(reason, false)
-			GUI.error(reason, {title = {color = 0xFFDB40, text = MineOSCore.localization.errorWhileRunningProgram}})
+		local function launcher()
+			loadSuccess(table.unpack(args))
+		end
+
+		local runSuccess, runReason = xpcall(launcher, debug.traceback)
+		if not runSuccess then
+			if type(runReason) == "string" then
+				if not string.find(runReason, "interrupted", 1, 15) then
+					finalSuccess, finalReason = false, runReason
+				end
+			end
 		end
 	else
-		component.gpu.setResolution(oldResolutionWidth, oldResolutionHeight)
-		GUI.error(loadReason, {title = {color = 0xFFDB40, text = MineOSCore.localization.errorWhileRunningProgram}})
+		finalSuccess, finalReason = false, loadReason
 	end
+
+	if not finalSuccess then
+		local errorLine = 1
+		local starting, ending = string.find(finalReason, "%:%d+%:")
+		if starting and ending then
+			path = unicode.sub(finalReason, 2, starting - 1)
+			errorLine = tonumber(unicode.sub(finalReason, starting + 1, ending - 1))
+		end
+
+		local applications = files.loadTableFromFile(MineOSCore.paths.applicationList)
+		local applicationExists = false
+		for i = 1, #applications do if path == applications[i].name then applicationExists = true; break end end
+
+		drawErrorWindow(path, errorLine, finalReason, applicationExists)
+	end
+
+	component.gpu.setResolution(oldResolutionWidth, oldResolutionHeight)
 	buffer.start()
 end
+
+-----------------------------------------------------------------------------------------------------------------------------------
 
 -- Запуск приложения
 function MineOSCore.launchIcon(path, translate)
