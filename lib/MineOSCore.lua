@@ -166,7 +166,7 @@ end
 
 local function drawErrorWindow(path, errorLine, reason, showSendToDeveloperButton)
 	local topbarColor = 0x383838
-	local programName = "Ошибка при выполнении " .. fs.name(path)
+	local programName = MineOSCore.localization.errorWhileRunningProgram .. "\"" .. fs.name(path) .. "\""
 	local width, height = buffer.screen.width, math.floor(buffer.screen.height * 0.45)
 	local x, y = 1, math.floor(buffer.screen.height / 2 - height / 2)
 	local topbarHeight = 3
@@ -184,7 +184,7 @@ local function drawErrorWindow(path, errorLine, reason, showSendToDeveloperButto
 
 	--Кнопачки
 	buttons = GUI.windowActionButtons(x + 1, y + 1, false)
-	if showSendToDeveloperButton and component.isAvailable("internet") then buttons.sendToDeveloper = GUI.adaptiveButton(x + 8, y, 2, 1, 0x444444, 0xFFFFFF, 0x343434, 0xFFFFFF, "Отправить отчет") end
+	if showSendToDeveloperButton and component.isAvailable("internet") then buttons.sendToDeveloper = GUI.adaptiveButton(x + 8, y, 2, 1, 0x444444, 0xFFFFFF, 0x343434, 0xFFFFFF, MineOSCore.localization.sendFeedback) end
 	y = y + topbarHeight
 
 	--Кодик
@@ -248,15 +248,15 @@ local function drawErrorWindow(path, errorLine, reason, showSendToDeveloperButto
 					elseif objectName == "sendToDeveloper" then
 						local data = ecs.universalWindow("auto", "auto", 36, 0xeeeeee, true,
 							{"EmptyLine"},
-							{"CenterText", 0x880000, "Отправить отчет"},
+							{"CenterText", 0x880000, MineOSCore.localization.sendFeedback},
 							{"EmptyLine"},
-							{"Input", 0x262626, 0x880000, "Ваше имя"},
-							{"Input", 0x262626, 0x880000, "Сообщение разработчику"},
+							{"Input", 0x262626, 0x880000, MineOSCore.localization.yourContacts},
+							{"Input", 0x262626, 0x880000, MineOSCore.localization.additionalInfo},
 							{"EmptyLine"},
-							{"CenterText", 0x880000, "Стек ошибки"},
+							{"CenterText", 0x880000, MineOSCore.localization.stackTraceback .. ":"},
 							{"EmptyLine"},
 							{"TextField", 5, 0xFFFFFF, 0x000000, 0xcccccc, 0x3366CC, reason},
-							{"Button", {0x999999, 0xffffff, "OK"}, {0x777777, 0xffffff, "Отмена"}}
+							{"Button", {0x999999, 0xffffff, "OK"}, {0x777777, 0xffffff, MineOSCore.localization.cancel}}
 						)
 
 						if data[3] == "OK" then
@@ -309,13 +309,13 @@ function MineOSCore.safeLaunch(path, ...)
 		local errorLine = 1
 		local starting, ending = string.find(finalReason, "%:%d+%:")
 		if starting and ending then
-			path = unicode.sub(finalReason, 2, starting - 1)
+			path = unicode.sub(finalReason, 1, starting - 1)
 			errorLine = tonumber(unicode.sub(finalReason, starting + 1, ending - 1))
 		end
 
 		local applications = files.loadTableFromFile(MineOSCore.paths.applicationList)
 		local applicationExists = false
-		for i = 1, #applications do if path == applications[i].name then applicationExists = true; break end end
+		for i = 1, #applications do if path == "/" .. applications[i].name then applicationExists = true; break end end
 
 		drawErrorWindow(path, errorLine, finalReason, applicationExists)
 	end

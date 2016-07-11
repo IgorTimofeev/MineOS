@@ -83,7 +83,11 @@
 
 	viewTab = "View",
 
-	errorWhileRunningProgram = "An error occurred when program execution: ",
+	errorWhileRunningProgram = "Error while running ",
+	sendFeedback = "Send feedback",
+	yourContacts = "Your contacts",
+	additionalInfo = "Additional information",
+	stackTraceback = "Stack traceback",
 	fileDoesntExists = "File doesn't exists",
 	fileSuccessfullySent = "File has been successfully sent",
 	sendFile = "Send file",

@@ -83,7 +83,11 @@
 
 	viewTab = "Вид",
 
-	errorWhileRunningProgram = "Ошибка при выполнении программы: ",
+	errorWhileRunningProgram = "Ошибка при выполнении ",
+	sendFeedback = "Отправить отчет",
+	yourContacts = "Ваши контакты",
+	additionalInfo = "Дополнительная информация",
+	stackTraceback = "Стек ошибки",
 	fileDoesntExists = "Файл не существует",
 	fileSuccessfullySent = "Файл успешно отправлен",
 	sendFile = "Отправить файл",

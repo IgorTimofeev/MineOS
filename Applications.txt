@@ -99,14 +99,14 @@
     url="IgorTimofeev/OpenComputers/master/MineOS/Languages/Russian.lang",
     type="Script",
     forceDownload=true,
-    version=1.11,
+    version=1.12,
   },
   {
     name="MineOS/System/OS/Languages/English.lang",
     url="IgorTimofeev/OpenComputers/master/MineOS/Languages/English.lang",
     type="Script",
     forceDownload=true,
-    version=1.11,
+    version=1.12,
   },
 
   ----------------------------------------------------- Системные иконки --------------------------------------------------------------------------
@@ -299,7 +299,7 @@
     name="lib/MineOSCore.lua",
     url="IgorTimofeev/OpenComputers/master/lib/MineOSCore.lua",
     type="Library",
-    version=1.13,
+    version=1.14,
   },
   {
     name="lib/GUI.lua",
