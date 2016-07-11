@@ -50,9 +50,9 @@ local selection = {
 }
 
 local highlightedStrings = {
-	{ number = 31, color = 0xFF4444 },
-	{ number = 32, color = 0xFF4444 },
-	{ number = 34, color = 0x66FF66 },
+	[31] = 0xFF4444,
+	[32] = 0xFF4444,
+	[34] = 0x66FF66,
 }
 
 local colors = {
@@ -173,7 +173,26 @@ local function drawTopMenu()
 end
 
 local function drawCode()
-	textFieldPosition = syntax.viewCode(sizes.xCode, sizes.yCode, sizes.codeWidth, sizes.codeHeight, strings, maximumStringWidth,fromSymbol, fromString, showLuaSyntax, selection, highlightedStrings)
+	textFieldPosition = syntax.viewCode(
+		{
+			x = sizes.xCode,
+			y = sizes.yCode,
+			width = sizes.codeWidth,
+			height = sizes.codeHeight,
+			strings = strings,
+			maximumStringWidth = maximumStringWidth,
+			fromSymbol = fromSymbol,
+			fromString = fromString,
+			fromStringOnLineNumbers = fromString,
+			highlightLuaSyntax = showLuaSyntax,
+			selection = selection,
+			highlightedStrings = highlightedStrings,
+			scrollbars = {
+				vertical = true,
+				horizontal = true,
+			}
+		}
+	)
 end
 
 local function launch()

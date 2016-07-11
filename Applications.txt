@@ -299,7 +299,7 @@
     name="lib/MineOSCore.lua",
     url="IgorTimofeev/OpenComputers/master/lib/MineOSCore.lua",
     type="Library",
-    version=1.14,
+    version=1.15,
   },
   {
     name="lib/GUI.lua",
@@ -773,7 +773,7 @@
     type="Application",
     icon="IgorTimofeev/OpenComputers/master/Applications/MineCode2/Icon.pic",
     createShortcut="desktop",
-    version=1.0,
+    version=1.01,
   },
   {
     name="MineOS/Applications/Battleship",

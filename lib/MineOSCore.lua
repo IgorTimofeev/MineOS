@@ -278,6 +278,8 @@ local function drawErrorWindow(path, errorLine, reason, showSendToDeveloperButto
 					break
 				end
 			end
+		elseif e[1] == "key_down" and (e[4] == 28 or e[4] == 57 or e[4] == 14) then
+			return
 		end
 	end
 end
