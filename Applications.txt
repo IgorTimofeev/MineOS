@@ -272,7 +272,7 @@
     url="IgorTimofeev/OpenComputers/master/lib/ECSAPI.lua",
     type="Library",
     preLoadFile=true,
-    version=1.01,
+    version=1.02,
   },
   {
     name="lib/colorlib.lua",

@@ -1267,7 +1267,7 @@ function ecs.newApplication(path, startName)
 		fs.makeDirectory(name)
 		fs.copy("MineOS/System/OS/Icons/SampleIcon.pic", name .. "Icon.pic")
 		local file = io.open(path .. inputs[1] .. ".app/" .. inputs[1] .. ".lua", "w")
-		file:write("local ecs = require(\"ecs\")", "\n")
+		file:write("local ecs = require(\"ECSAPI\")", "\n")
 		file:write("ecs.universalWindow(\"auto\", \"auto\", 30, 0xeeeeee, true, {\"EmptyLine\"}, {\"CenterText\", 0x262626, \"Hello world!\"}, {\"EmptyLine\"}, {\"Button\", {0x880000, 0xffffff, \"Hello!\"}})", "\n")
 		file:close()
 	end
