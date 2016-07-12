@@ -3,19 +3,22 @@
 
 local copyright = [[
 	
-	Photoshop v6.2 для OpenComputers
+	Photoshop v6.3 для OpenComputers
 
 	Автор: ECS
 		Контактый адрес: https://vk.com/id7799889
 	Соавтор: Pornogion
 		Контактый адрес: https://vk.com/id88323331
 
+	Что нового в версии 6.3:
+		- Добавлена поддержка языковых пакетов
+
 	Что нового в версии 6.2:
-		- Добавлен суб-инструмент "Многоугольник"
+		- Добавлен суб-инструмент localization.polygon
 		- Улучшен инструмент "Выделение", теперь можно выделять области с шириной или высотой, равными 1
 
 	Что нового в версии 6.1:
-		- Добавлен суб-инструмент "Эллипс"
+		- Добавлен суб-инструмент localization.ellipse
 
 	Что нового в версии 6.0:
 		- Добавлен иструмент "Фигура", включающий в себя линию, прямоугольник и рамку
@@ -30,7 +33,7 @@ local copyright = [[
 
 	Что нового в версии 5.0:
 		- Добавлен инструмент "выделение" и несколько функций для работы с ним
-		- Добавлено меню "Горячие клавиши", подсказывающее, как можно удобнее работать с программой
+		- Добавлено меню localization.hotkeys, подсказывающее, как можно удобнее работать с программой
 
 	Что нового в версии 4.0:
 		- Программа переведена на библиотеку тройного буфера, скорость работы увеличена в десятки раз
@@ -55,22 +58,20 @@ local libraries = {
 	colorlib = "colorlib",
 	palette = "palette",
 	event = "event",
+	files = "files",
 }
-
-local components = {
-	gpu = "gpu",
-}
-
-local selection
-
-for library in pairs(libraries) do if not _G[library] then _G[library] = require(libraries[library]) end end
-for comp in pairs(components) do if not _G[comp] then _G[comp] = _G.component[components[comp]] end end
-libraries, components = nil, nil
+for library in pairs(libraries) do if not _G[library] then _G[library] = require(libraries[library]) end end; libraries = nil
 
 ------------------------------------------------ Переменные --------------------------------------------------------------
 
 --Инициализируем библиотеку двойного буфера
 buffer.start()
+
+--Массив локалиации
+local localization = files.loadTableFromFile("/MineOS/Applications/Photoshop.app/Resources/Localization/" .. _G.OSSettings.language .. ".lang")
+
+--Массив инфы о выделении
+local selection
 
 --Получаем аргументы программы
 local args = {...}
@@ -144,7 +145,7 @@ local currentShape
 local currentPolygonCountOfEdges
 
 --Верхний тулбар
-local topToolbar = {{"PS", ecs.colors.blue}, {"Файл"}, {"Изображение"}, {"Редактировать"}, {"Горячие клавиши"}, {"О программе"}}
+local topToolbar = {{"PS", ecs.colors.blue}, {localization.file}, {localization.image}, {localization.edit}, {localization.hotkeys}, {localization.about}}
 
 ------------------------------------------------ Функции отрисовки --------------------------------------------------------------
 
@@ -253,7 +254,7 @@ end
 
 --Отрисовка верхней панели инструментов, пока что она не шибко-то полезна
 local function drawTopBar()
-	local topBarInputs = { {"Размер кисти", currentBrushSize}, {"Прозрачность", math.floor(currentAlpha)}}
+	local topBarInputs = { {localization.brushSize, currentBrushSize}, {localization.transparency, math.floor(currentAlpha)}}
 
 	buffer.square(1, 2, buffer.screen.width, sizes.heightOfTopBar, colors.topToolbar, 0xFFFFFF, " ")
 	local xPos, yPos = 3, 3
@@ -405,7 +406,7 @@ local function drawSelection()
 		end
 	end
 
-	drawTooltip(xEnd + 2, yEnd - 1, "Ш: " .. selection.width .. " px", "В: " .. selection.height .. " px")
+	drawTooltip(xEnd + 2, yEnd - 1, localization.w .. ": " .. selection.width .. " px", localization.h .. ": " .. selection.height .. " px")
 	-- drawTooltip(xEnd + 2, yEnd - 1, "Ш: " .. selection.width .. " px", "В: " .. selection.height .. " px", "S: " .. xStart .. "x" .. yStart, "E: " .. xEnd .. "x" .. yEnd)
 end
 
@@ -464,7 +465,7 @@ local function drawLineShape()
 
 	line(xStart, yStart, xEnd, yEnd, currentBackground)
 	drawShapeCornerPoints(xStart, yStart, xEnd, yEnd)
-	drawTooltip(xEnd + 2, yEnd - 3, "Ш: " .. selection.width .. " px", "В: " .. selection.height .. " px", " ", "Enter - применить")
+	drawTooltip(xEnd + 2, yEnd - 3, localization.w .. ": " .. selection.width .. " px", localization.h .. ": " .. selection.height .. " px", " ", localization.accept)
 end
 
 --Функция для обводки выделенной зоны
@@ -566,7 +567,7 @@ local function drawPolygonShape()
 	polygon(xStart, yStart, xEnd, yEnd, currentPolygonCountOfEdges, currentBackground)
 
 	drawShapeCornerPoints(xStart, yStart, xEnd, yEnd)
-	drawTooltip(xEnd + 2, yEnd - 3, "Радиус: " .. radius .. " px", "Грани: " .. currentPolygonCountOfEdges, " ", "Enter - применить")
+	drawTooltip(xEnd + 2, yEnd - 3, localization.radius .. ": " .. radius .. " px", localization.edges .. ": " .. currentPolygonCountOfEdges, " ", localization.accept)
 end
 
 local function drawSquareShape(type)
@@ -582,7 +583,7 @@ local function drawSquareShape(type)
 	end
 
 	drawShapeCornerPoints(xStart, yStart, xEnd, yEnd)
-	drawTooltip(xEnd + 2, yEnd - 3, "Ш: " .. selection.width .. " px", "В: " .. selection.height .. " px", " ", "Enter - применить")
+	drawTooltip(xEnd + 2, yEnd - 3, localization.w .. ": " .. selection.width .. " px", localization.h .. ": " .. selection.height .. " px", " ", localization.accept)
 end
 
 local function drawMultiPointInstrument()
@@ -590,15 +591,15 @@ local function drawMultiPointInstrument()
 		if instruments[currentInstrument] == "M" then
 			drawSelection()
 		elseif instruments[currentInstrument] == "S" then
-			if currentShape == "Линия" then
+			if currentShape == localization.line then
 				drawLineShape()
-			elseif currentShape == "Эллипс" then
+			elseif currentShape == localization.ellipse then
 				drawSquareShape("ellipse")
-			elseif currentShape == "Прямоугольник" then
+			elseif currentShape == localization.rectangle then
 				drawSquareShape("filledSquare")
-			elseif currentShape == "Рамка" then
+			elseif currentShape == localization.border then
 				drawSquareShape("frame")
-			elseif currentShape == "Многоугольник" then
+			elseif currentShape == localization.polygon then
 				drawPolygonShape()
 			end
 		end
@@ -631,7 +632,7 @@ local function drawImage()
 	end
 
 	if masterPixels.width > 0 and masterPixels.height > 0 then
-		local text = "Размер: " .. masterPixels.width .. "x" .. masterPixels.height .. " px"
+		local text = localization.size  .. ": " .. masterPixels.width .. "x" .. masterPixels.height .. " px"
 		xPos = math.floor(sizes.xStartOfImage + masterPixels.width / 2 - unicode.len(text) / 2)
 		buffer.text(xPos, sizes.yEndOfImage + 1, 0xFFFFFF, text)
 	end
@@ -819,7 +820,7 @@ end
 --Функция, спрашивающая юзверя, какого размера пикчу он  хочет создать - ну, и создает ее
 local function new()
 	selection = nil
-	local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Новый документ"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, "Ширина"}, {"Input", 0x262626, 0x880000, "Высота"}, {"EmptyLine"}, {"Button", {0xbbbbbb, 0xffffff, "OK"}})
+	local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, localization.newDocument}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, localization.width}, {"Input", 0x262626, 0x880000, localization.height}, {"EmptyLine"}, {"Button", {0xbbbbbb, 0xffffff, "OK"}})
 
 	data[1] = tonumber(data[1]) or 51
 	data[2] = tonumber(data[2]) or 19
@@ -916,21 +917,21 @@ local function cropOrExpand(text)
 		{"EmptyLine"},
 		{"CenterText", 0x262626, text},
 		{"EmptyLine"},
-		{"Input", 0x262626, 0x880000, "Количество пикселей"},
-		{"Selector", 0x262626, 0x880000, "Снизу", "Сверху", "Слева", "Справа"},
+		{"Input", 0x262626, 0x880000, localization.countOfPixels},
+		{"Selector", 0x262626, 0x880000, localization.fromBottom, localization.fromTop, localization.fromLeft, localization.fromRight},
 		{"EmptyLine"},
-		{"Button", {0xaaaaaa, 0xffffff, "OK"}, {0x888888, 0xffffff, "Отмена"}}
+		{"Button", {0xaaaaaa, 0xffffff, "OK"}, {0x888888, 0xffffff, localization.cancel}}
 	)
 
 	if data[3] == "OK" then
 		local countOfPixels = tonumber(data[1])
 		if countOfPixels then
 			local direction = ""
-			if data[2] == "Снизу" then
+			if data[2] == localization.fromBottom then
 				direction = "fromBottom"
-			elseif data[2] == "Сверху" then
+			elseif data[2] == localization.fromTop then
 				direction = "fromTop"
-			elseif data[2] == "Слева" then
+			elseif data[2] == localization.fromLeft then
 				direction = "fromLeft"
 			else
 				direction = "fromRight"
@@ -945,7 +946,7 @@ end
 
 --Функция-обрезчик картинки
 local function crop()
-	local direction, countOfPixels = cropOrExpand("Обрезать")
+	local direction, countOfPixels = cropOrExpand(localization.crop)
 	if direction then
 		masterPixels = image.crop(masterPixels, direction, countOfPixels)
 		reCalculateImageSizes(sizes.xStartOfImage, sizes.yStartOfImage)
@@ -955,7 +956,7 @@ end
 
 --Функция-расширитель картинки
 local function expand()
-	local direction, countOfPixels = cropOrExpand("Обрезать")
+	local direction, countOfPixels = cropOrExpand(localization.crop)
 	if direction then
 		masterPixels = image.expand(masterPixels, direction, countOfPixels, 0x010101, 0x010101, 0xFF, " ")
 		reCalculateImageSizes(sizes.xStartOfImage, sizes.yStartOfImage)
@@ -991,13 +992,13 @@ local function fillSelection(background, foreground, alpha, symbol)
 end
 
 local function applyShapeToMasterPixels()
-	if currentShape == "Линия" then
+	if currentShape == localization.line then
 		line(selection.xStart, selection.yStart, selection.xEnd, selection.yEnd, currentBackground, true)
-	elseif currentShape == "Прямоугольник" then
+	elseif currentShape == localization.rectangle then
 		fillSelection(currentBackground, 0x00000, 0x00, " ")
-	elseif currentShape == "Рамка" then
+	elseif currentShape == localization.border then
 		stroke(selection.x, selection.y, selection.width, selection.height, currentBackground, true)
-	elseif currentShape == "Эллипс" then
+	elseif currentShape == localization.ellipse then
 		ellipse(selection.x, selection.y, selection.width, selection.height, currentBackground, true)
 	end
 
@@ -1069,7 +1070,7 @@ while true do
 					
 					--Если нажата клавиша альт
 					if keyboard.isKeyDown(56) then
-						local _, _, gettedBackground = gpu.get(e[3], e[4])
+						local _, _, gettedBackground = component.gpu.get(e[3], e[4])
 						currentBackground = gettedBackground
 						drawColors()
 						buffer.draw()
@@ -1135,13 +1136,13 @@ while true do
 					currentInstrument = key
 					drawLeftBar(); buffer.draw()
 					if instruments[currentInstrument] == "S" then
-						local action = context.menu(obj["Instruments"][key][3] + 1, obj["Instruments"][key][2], {"Линия"}, {"Эллипс"}, {"Прямоугольник"}, {"Многоугольник"}, {"Рамка"})
-						currentShape = action or "Линия"
+						local action = context.menu(obj["Instruments"][key][3] + 1, obj["Instruments"][key][2], {localization.line}, {localization.ellipse}, {localization.rectangle}, {localization.polygon}, {localization.border})
+						currentShape = action or localization.line
 						
-						if currentShape == "Многоугольник" then
+						if currentShape == localization.polygon then
 							local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true,
 								{"EmptyLine"},
-								{"CenterText", 0x262626, "Количество граней"},
+								{"CenterText", 0x262626, localization.edges},
 								{"EmptyLine"},
 								{"Selector", 0x262626, 0x880000, "3", "4", "5", "6", "7", "8", "9", "10"},
 								{"EmptyLine"}, 
@@ -1164,123 +1165,109 @@ while true do
 
 					local action
 					
-					if key == "Файл" then
-						action = context.menu(obj["TopMenu"][key][1] - 1, obj["TopMenu"][key][2] + 1, {"Новый"}, {"Открыть"}, "-", {"Сохранить", (savePath == nil)}, {"Сохранить как"}, "-", {"Выход"})
-					elseif key == "Изображение" then
-						action = context.menu(obj["TopMenu"][key][1] - 1, obj["TopMenu"][key][2] + 1, {"Обрезать"}, {"Расширить"}, "-", {"Повернуть на 90 градусов"}, {"Повернуть на 180 градусов"}, "-", {"Отразить по горизонтали"}, {"Отразить по вертикали"})
-					elseif key == "Редактировать" then
-						action = context.menu(obj["TopMenu"][key][1] - 1, obj["TopMenu"][key][2] + 1, {"Цветовой тон/насыщенность"}, {"Цветовой баланс"}, {"Фотофильтр"}, "-", {"Инвертировать цвета"}, {"Черно-белый фильтр"}, "-", {"Размытие по Гауссу"})
-					elseif key == "О программе" then
-						ecs.universalWindow("auto", "auto", 36, 0xeeeeee, true, {"EmptyLine"}, {"CenterText", 0x880000, "Photoshop v6.2"}, {"EmptyLine"}, {"CenterText", 0x262626, "Авторы:"}, {"CenterText", 0x555555, "Тимофеев Игорь"}, {"CenterText", 0x656565, "vk.com/id7799889"}, {"CenterText", 0x656565, "Трифонов Глеб"}, {"CenterText", 0x656565, "vk.com/id88323331"}, {"EmptyLine"}, {"CenterText", 0x262626, "Тестеры:"}, {"CenterText", 0x656565, "Шестаков Тимофей"}, {"CenterText", 0x656565, "vk.com/id113499693"}, {"CenterText", 0x656565, "Вечтомов Роман"}, {"CenterText", 0x656565, "vk.com/id83715030"}, {"CenterText", 0x656565, "Омелаенко Максим"},  {"CenterText", 0x656565, "vk.com/paladincvm"}, {"EmptyLine"},{"Button", {0xbbbbbb, 0xffffff, "OK"}})
-					elseif key == "Горячие клавиши" then
-						ecs.universalWindow( "auto", "auto", 42, 0xeeeeee, true,
-							{"EmptyLine"},
-							{"CenterText", 0x880000, "Горячие клавиши"},
-							{"EmptyLine"},
-							{"CenterText", 0x000000, "B - кисть"},
-							{"CenterText", 0x000000, "E - ластик"},
-							{"CenterText", 0x000000, "T - текст"},
-							{"CenterText", 0x000000, "G - заливка"},
-							{"CenterText", 0x000000, "M - выделение"},
-							{"EmptyLine"},
-							{"WrappedText", 0x000000, "Стрелки - перемещение изображения"},
-							{"WrappedText", 0x000000, "X - поменять цвета местами"},
-							{"WrappedText", 0x000000, "D - установка черного и белого цвета"},
-							{"WrappedText", 0x000000, "Ctrl+D - отмена выделения"},
-							{"WrappedText", 0x000000, "Alt+Клик - выбор цвета (только для Кисти)"},
-							{"EmptyLine"},
-							{"Button", {0xbbbbbb, 0xffffff, "OK"}}
+					if key == localization.file then
+						action = context.menu(obj["TopMenu"][key][1] - 1, obj["TopMenu"][key][2] + 1, {localization.new}, {localization.open}, "-", {localization.save, (savePath == nil)}, {localization.saveAs}, "-", {localization.exit})
+					elseif key == localization.image then
+						action = context.menu(obj["TopMenu"][key][1] - 1, obj["TopMenu"][key][2] + 1, {localization.crop}, {localization.expand}, "-", {localization.rotateBy90}, {localization.rotateBy180}, "-", {localization.flipHorizontal}, {localization.flipVertical})
+					elseif key == localization.edit then
+						action = context.menu(obj["TopMenu"][key][1] - 1, obj["TopMenu"][key][2] + 1, {localization.hueSaturation}, {localization.colorBalance}, {localization.photoFilter}, "-", {localization.invertColors}, {localization.blackWhite}, "-", {localization.gaussianBlur})
+					elseif key == localization.about then
+						ecs.universalWindow("auto", "auto", 36, 0xeeeeee, true, {"EmptyLine"}, {"CenterText", 0x880000, "Photoshop v6.3"}, {"EmptyLine"}, {"CenterText", 0x262626, localization.developers}, {"CenterText", 0x555555, "Тимофеев Игорь"}, {"CenterText", 0x656565, "vk.com/id7799889"}, {"CenterText", 0x656565, "Трифонов Глеб"}, {"CenterText", 0x656565, "vk.com/id88323331"}, {"EmptyLine"}, {"CenterText", 0x262626, localization.testers}, {"CenterText", 0x656565, "Шестаков Тимофей"}, {"CenterText", 0x656565, "vk.com/id113499693"}, {"CenterText", 0x656565, "Вечтомов Роман"}, {"CenterText", 0x656565, "vk.com/id83715030"}, {"CenterText", 0x656565, "Омелаенко Максим"},  {"CenterText", 0x656565, "vk.com/paladincvm"}, {"EmptyLine"},{"Button", {0xbbbbbb, 0xffffff, "OK"}})
+					elseif key == localization.hotkeys then
+
+						ecs.universalWindow( "auto", "auto", 42, 0xeeeeee, true, 
+							table.unpack(localization.hotkeysLines)
 						)				
 					end
 
-					if action == "Выход" then
+					if action == localization.exit then
 						ecs.prepareToExit()
 						return
-					elseif action == "Цветовой тон/насыщенность" then
+					elseif action == localization.hueSaturation then
 						local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true,
 							{"EmptyLine"},
-							{"CenterText", 0x262626, "Цветовой тон/насыщенность"},
+							{"CenterText", 0x262626, localization.hueSaturation},
 							{"EmptyLine"},
-							{"Slider", 0x262626, 0x880000, 0, 100, 50, "Тон: ", ""},
-							{"Slider", 0x262626, ecs.colors.red, 0, 100, 50, "Насыщенность: ", ""},
-							{"Slider", 0x262626, 0x000000, 0, 100, 50, "Яркость: ", ""},
+							{"Slider", 0x262626, 0x880000, 0, 100, 50, localization.hue .. ": ", ""},
+							{"Slider", 0x262626, ecs.colors.red, 0, 100, 50,  localization.saturation .. ": ", ""},
+							{"Slider", 0x262626, 0x000000, 0, 100, 50,  localization.brightness .. ": ", ""},
 							{"EmptyLine"}, 
-							{"Button", {0xaaaaaa, 0xffffff, "OK"}, {0x888888, 0xffffff, "Отмена"}}
+							{"Button", {0xaaaaaa, 0xffffff, "OK"}, {0x888888, 0xffffff, localization.cancel}}
 						)
 						if data[4] == "OK" then
 							masterPixels = image.hueSaturationBrightness(masterPixels, data[1] - 50, data[2] - 50, data[3] - 50)
 							drawAll()
 						end
-					elseif action == "Размытие по Гауссу" then
+					elseif action == localization.gaussianBlur then
 						local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true,
 							{"EmptyLine"},
-							{"CenterText", 0x262626, "Размытие по Гауссу"},
+							{"CenterText", 0x262626, localization.gaussianBlur},
 							{"EmptyLine"},
-							{"Slider", 0x262626, 0x880000, 1, 5, 2, "Радиус: ", ""},
-							{"Slider", 0x262626, 0x880000, 1, 255, 0x88, "Сила: ", ""},
+							{"Slider", 0x262626, 0x880000, 1, 5, 2, localization.radius .. ": ", ""},
+							{"Slider", 0x262626, 0x880000, 1, 255, 0x88, localization.force .. ": ", ""},
 							{"EmptyLine"}, 
-							{"Button", {0xaaaaaa, 0xffffff, "OK"}, {0x888888, 0xffffff, "Отмена"}}
+							{"Button", {0xaaaaaa, 0xffffff, "OK"}, {0x888888, 0xffffff, localization.cancel}}
 						)
 						if data[3] == "OK" then
 							masterPixels = image.gaussianBlur(masterPixels, tonumber(data[1]), tonumber(data[2]))
 							drawAll()
 						end
-					elseif action == "Цветовой баланс" then
+					elseif action == localization.colorBalance then
 						local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true,
 							{"EmptyLine"},
-							{"CenterText", 0x262626, "Цветовой баланс"},
+							{"CenterText", 0x262626, localization.colorBalance},
 							{"EmptyLine"},
 							{"Slider", 0x262626, 0x880000, 0, 100, 50, "R: ", ""},
 							{"Slider", 0x262626, ecs.colors.green, 0, 100, 50, "G: ", ""},
 							{"Slider", 0x262626, ecs.colors.blue, 0, 100, 50, "B: ", ""},
 							{"EmptyLine"}, 
-							{"Button", {0xaaaaaa, 0xffffff, "OK"}, {0x888888, 0xffffff, "Отмена"}}
+							{"Button", {0xaaaaaa, 0xffffff, "OK"}, {0x888888, 0xffffff, localization.cancel}}
 						)
 						if data[4] == "OK" then
 							masterPixels = image.colorBalance(masterPixels, data[1] - 50, data[2] - 50, data[3] - 50)
 							drawAll()
 						end
-					elseif action == "Фотофильтр" then
+					elseif action == localization.photoFilter then
 						local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true,
 							{"EmptyLine"},
-							{"CenterText", 0x262626, "Фотофильтр"},
+							{"CenterText", 0x262626, localization.photoFilter},
 							{"EmptyLine"},
-							{"Color", "Цвет фильтра", 0x333333},
-							{"Slider", 0x262626, 0x880000, 0, 255, 100, "Прозрачность: ", ""},
+							{"Color", localization.filterColor, 0x333333},
+							{"Slider", 0x262626, 0x880000, 0, 255, 100, localization.transparency .. ": ", ""},
 							{"EmptyLine"}, 
-							{"Button", {0xaaaaaa, 0xffffff, "OK"}, {0x888888, 0xffffff, "Отмена"}}
+							{"Button", {0xaaaaaa, 0xffffff, "OK"}, {0x888888, 0xffffff, localization.cancel}}
 						)
 						if data[3] == "OK" then
 							masterPixels = image.photoFilter(masterPixels, data[1], data[2])
 							drawAll()
 						end
-					elseif action == "Обрезать" then
+					elseif action == localization.crop then
 						crop()
-					elseif action == "Расширить" then
+					elseif action == localization.expand then
 						expand()
-					elseif action == "Отразить по вертикали" then
+					elseif action == localization.flipVertical then
 						masterPixels = image.flipVertical(masterPixels)
 						drawAll()
-					elseif action == "Отразить по горизонтали" then
+					elseif action == localization.flipHorizontal then
 						masterPixels = image.flipHorizontal(masterPixels)
 						drawAll()
-					elseif action == "Инвертировать цвета" then
+					elseif action == localization.invertColors then
 						masterPixels = image.invert(masterPixels)
 						drawAll()
-					elseif action == "Черно-белый фильтр" then
+					elseif action == localization.blackWhite then
 						masterPixels = image.blackAndWhite(masterPixels)
 						drawAll()
-					elseif action == "Повернуть на 90 градусов" then
+					elseif action == localization.rotateBy90 then
 						masterPixels = image.rotate(masterPixels, 90)
 						drawAll()
-					elseif action == "Повернуть на 180 градусов" then
+					elseif action == localization.rotateBy180 then
 						masterPixels = image.rotate(masterPixels, 180)
 						drawAll()
-					elseif action == "Новый" then
+					elseif action == localization.new then
 						new()
 						drawAll()
-					elseif action == "Сохранить как" then
-						local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Сохранить как"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, "Путь"}, {"Selector", 0x262626, 0x880000, "OCIF4", "OCIF1", "OCIFString", "RAW"}, {"CenterText", 0x262626, "Рекомендуется использовать"}, {"CenterText", 0x262626, "метод кодирования OCIF4"}, {"EmptyLine"}, {"Button", {0xaaaaaa, 0xffffff, "OK"}, {0x888888, 0xffffff, "Отмена"}})
+					elseif action == localization.saveAs then
+						local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, localization.saveAs}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, "Путь"}, {"Selector", 0x262626, 0x880000, "OCIF4", "OCIF1", "OCIFString", "RAW"}, {"CenterText", 0x262626, "Рекомендуется использовать"}, {"CenterText", 0x262626, "метод кодирования OCIF4"}, {"EmptyLine"}, {"Button", {0xaaaaaa, 0xffffff, "OK"}, {0x888888, 0xffffff, localization.cancel}})
 						if data[3] == "OK" then
 							data[1] = data[1] or "Untitled"
 							data[2] = data[2] or "OCIF4"
@@ -1303,11 +1290,11 @@ while true do
 							image.save(filename, masterPixels, encodingMethod)
 							savePath = filename
 						end
-					elseif action == "Сохранить" then
+					elseif action == localization.save then
 						image.save(savePath, masterPixels)
 
-					elseif action == "Открыть" then
-						local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Открыть"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, "Путь"}, {"EmptyLine"}, {"Button", {0xaaaaaa, 0xffffff, "OK"}, {0x888888, 0xffffff, "Отмена"}})
+					elseif action == localization.open then
+						local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, localization.open}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, "Путь"}, {"EmptyLine"}, {"Button", {0xaaaaaa, 0xffffff, "OK"}, {0x888888, 0xffffff, localization.cancel}})
 						if data[2] == "OK" then
 							local fileFormat = ecs.getFileFormat(data[1])
 						
@@ -1355,15 +1342,15 @@ while true do
 			if ecs.clickedAtArea(e[3], e[4], sizes.xStartOfImage, sizes.yStartOfImage, sizes.xEndOfImage, sizes.yEndOfImage) then
 				
 				if instruments[currentInstrument] == "M" and selection then
-					local action = context.menu(e[3], e[4], {"Убрать выделение"}, {"Обрезать", true}, "-", {"Заливка"}, {"Рамка"}, "-", {"Очистить"})
-					if action == "Убрать выделение" then
+					local action = context.menu(e[3], e[4], {localization.deselect}, {localization.crop, true}, "-", {localization.fill}, {localization.border}, "-", {localization.clear})
+					if action == localization.deselect then
 						selection = nil
 						drawAll()
-					elseif action == "Очистить" then
+					elseif action == localization.clear then
 						fillSelection(0x0, 0x0, 0xFF, " ")
-					elseif action == "Заливка" then
+					elseif action == localization.fill then
 						fillSelection(currentBackground, 0x0, 0x0, " ")
-					elseif action == "Рамка" then
+					elseif action == localization.border then
 						stroke(selection.x, selection.y, selection.width, selection.height, currentBackground, true)
 						drawAll()
 					end
@@ -1373,7 +1360,7 @@ while true do
 					if y + height >= buffer.screen.height then y = buffer.screen.height - height end
 					if x + width + 1 >= buffer.screen.width then x = buffer.screen.width - width - 1 end
 
-					currentBrushSize, currentAlpha = table.unpack(ecs.universalWindow(x, y, width, 0xeeeeee, true, {"EmptyLine"}, {"CenterText", 0x880000, "Параметры кисти"}, {"Slider", 0x262626, 0x880000, 1, 10, currentBrushSize, "Размер: ", " px"}, {"Slider", 0x262626, 0x880000, 0, 255, currentAlpha, "Прозрачность: ", ""}, {"EmptyLine"}, {"Button", {0xbbbbbb, 0xffffff, "OK"}}))
+					currentBrushSize, currentAlpha = table.unpack(ecs.universalWindow(x, y, width, 0xeeeeee, true, {"EmptyLine"}, {"CenterText", 0x880000, localization.brushParameters}, {"Slider", 0x262626, 0x880000, 1, 10, currentBrushSize, localization.size ..  ": ", " px"}, {"Slider", 0x262626, 0x880000, 0, 255, currentAlpha, localization.transparency .. ": ", ""}, {"EmptyLine"}, {"Button", {0xbbbbbb, 0xffffff, "OK"}}))
 					drawTopBar()
 					buffer.draw()
 				end

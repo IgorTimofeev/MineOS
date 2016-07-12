@@ -846,7 +846,17 @@
     icon="IgorTimofeev/OpenComputers/master/Applications/Photoshop/Icon.pic",
     createShortcut="dock",
     forceDownload=true,
-    version=1.0,
+    version=1.01,
+    resources={
+      {
+        name="Localization/Russian.lang",
+        url="IgorTimofeev/OpenComputers/master/Applications/Photoshop/Localization/Russian.lang"
+      },
+      {
+        name="Localization/English.lang",
+        url="IgorTimofeev/OpenComputers/master/Applications/Photoshop/Localization/English.lang"
+      },
+    }
   },
   {
     name="MineOS/Applications/Shooting",
