@@ -299,7 +299,7 @@
     name="lib/MineOSCore.lua",
     url="IgorTimofeev/OpenComputers/master/lib/MineOSCore.lua",
     type="Library",
-    version=1.15,
+    version=1.16,
   },
   {
     name="lib/GUI.lua",

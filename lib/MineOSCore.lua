@@ -290,36 +290,43 @@ function MineOSCore.safeLaunch(path, ...)
 	local finalSuccess, finalReason = true, true
 	local loadSuccess, loadReason = loadfile(path)
 	
-	if loadSuccess then
-		local function launcher()
-			loadSuccess(table.unpack(args))
-		end
+	if fs.exists(path) then
+		if loadSuccess then
+			local function launcher()
+				loadSuccess(table.unpack(args))
+			end
 
-		local runSuccess, runReason = xpcall(launcher, debug.traceback)
-		if not runSuccess then
-			if type(runReason) == "string" then
-				if not string.find(runReason, "interrupted", 1, 15) then
-					finalSuccess, finalReason = false, runReason
+			local runSuccess, runReason = xpcall(launcher, debug.traceback)
+			if not runSuccess then
+				if type(runReason) == "string" then
+					if not string.find(runReason, "interrupted", 1, 15) then
+						finalSuccess, finalReason = false, runReason
+					end
 				end
 			end
+		else
+			finalSuccess, finalReason = false, loadReason
 		end
 	else
-		finalSuccess, finalReason = false, loadReason
+		finalSuccess, finalReason = false, unicode.sub(debug.traceback(), 19, -1)
 	end
 
 	if not finalSuccess then
-		local errorLine = 1
 		local starting, ending = string.find(finalReason, "%:%d+%:")
+		--Проверяем, все ли удачно у нас нашлось - строка ошибки и т.п.
 		if starting and ending then
+			local errorLine = tonumber(unicode.sub(finalReason, starting + 1, ending - 1))
 			path = unicode.sub(finalReason, 1, starting - 1)
-			errorLine = tonumber(unicode.sub(finalReason, starting + 1, ending - 1))
+
+			--Проверяем, стоит ли нам врубать отсылку отчетов на мой сервер, ибо это должно быть онли у моих прожек
+			local applications = files.loadTableFromFile(MineOSCore.paths.applicationList)
+			local applicationExists = false
+			for i = 1, #applications do if path == "/" .. applications[i].name then applicationExists = true; break end end
+
+			drawErrorWindow(path, errorLine, finalReason, applicationExists)
+		else
+			GUI.error("Unknown error in lib/MineOSCore.lua: possible reason is \"" .. tostring(finalReason) .. "\"")
 		end
-
-		local applications = files.loadTableFromFile(MineOSCore.paths.applicationList)
-		local applicationExists = false
-		for i = 1, #applications do if path == "/" .. applications[i].name then applicationExists = true; break end end
-
-		drawErrorWindow(path, errorLine, finalReason, applicationExists)
 	end
 
 	component.gpu.setResolution(oldResolutionWidth, oldResolutionHeight)
