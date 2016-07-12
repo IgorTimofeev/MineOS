@@ -56,8 +56,9 @@ modem.open(port)
 
 -------------------------------------------------------------------------------------------------------------------------------
 
-local pathToSaveSendedFiles = "MineOS/Downloads/"
-local contactsAvatarsPath = "MineOS/System/Chat/Avatars/"
+local pathToApplication = "/MineOS/Applications/Chat.app/"
+local pathToSaveSendedFiles = "/MineOS/Downloads/"
+local contactsAvatarsPath = pathToApplication .. "Resources/Avatars/"
 local personalAvatarPath = contactsAvatarsPath .. "MyAvatar.pic"
 local chatHistoryPath = "MineOS/System/Chat/History.cfg"
 local avatarWidthLimit = 6

@@ -1032,13 +1032,13 @@
     type="Application",
     icon="IgorTimofeev/OpenComputers/master/Applications/Chat/Icon.pic",
     createShortcut="desktop",
-    version=1.0,
-  },
-  {
-    name="MineOS/System/Chat/Avatars/MyAvatar.pic",
-    url="IgorTimofeev/OpenComputers/master/Applications/Chat/MyAvatar.pic",
-    type="Script",
-    version=1.0,
+    version=1.01,
+    resources = {
+      {
+        name="Avatars/MyAvatar.pic",
+        url="IgorTimofeev/OpenComputers/master/Applications/Chat/MyAvatar.pic",
+      }
+    },
   },
   {
     name="MineOS/Applications/TurretControl",
