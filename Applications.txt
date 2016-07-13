@@ -271,14 +271,14 @@
     name="lib/MineOSCore.lua",
     url="IgorTimofeev/OpenComputers/master/lib/MineOSCore.lua",
     type="Library",
-    version=1.18,
+    version=1.19,
   },
   {
     name="lib/advancedLua.lua",
     url="IgorTimofeev/OpenComputers/master/lib/advancedLua.lua",
     type="Library",
     preLoadFile=true,
-    version=1.00,
+    version=1.01,
   },
   {
     name="lib/ECSAPI.lua",

@@ -154,17 +154,6 @@ function MineOSCore.parseErrorMessage(error, indentationWidth)
 	return parsedError
 end
 
---Функция-оптимизатор говносимволов для урлек, пробелсы там в %20 и т.п.
-function MineOSCore.optimizeStringForURLSending(code)
-	if code then
-	code = string.gsub(code, "([^%w ])", function (c)
-		return string.format("%%%02X", string.byte(c))
-	end)
-		code = string.gsub(code, " ", "+")
-	end
-	return code 
-end
-
 local function drawErrorWindow(path, programVersion, errorLine, reason, showSendToDeveloperButton)
 	local topbarColor = 0x383838
 	local programName = MineOSCore.localization.errorWhileRunningProgram .. "\"" .. fs.name(path) .. "\""
@@ -265,10 +254,10 @@ local function drawErrorWindow(path, programVersion, errorLine, reason, showSend
 								local phpUrl = "http://igortimofeev.wallst.ru/MineOSErrorReports/Report.php"
 								local url = phpUrl .. 
 								"?path=" .. path .. 
-								"&version=" .. MineOSCore.optimizeStringForURLSending(programVersion) ..
-								"&userContacts=" .. MineOSCore.optimizeStringForURLSending(data[1]) ..
-								"&userMessage=" .. MineOSCore.optimizeStringForURLSending(data[2]) .. 
-								"&errorMessage=" .. MineOSCore.optimizeStringForURLSending(reason)
+								"&version=" .. string.optimizeForURLRequests(programVersion) ..
+								"&userContacts=" .. string.optimizeForURLRequests(data[1]) ..
+								"&userMessage=" .. string.optimizeForURLRequests(data[2]) .. 
+								"&errorMessage=" .. string.optimizeForURLRequests(reason)
 
 								local success, reason = component.internet.request(url)
 								if success then
@@ -329,10 +318,11 @@ function MineOSCore.safeLaunch(path, ...)
 			local applications = files.loadTableFromFile(MineOSCore.paths.applicationList)
 			local applicationExists = false
 			local programVersion = "N/A"
+
 			for i = 1, #applications do
-				if path == "/" .. applications[i].name then
+				if string.canonicalPath("/" .. path) == string.canonicalPath("/" .. applications[i].name) then
 					applicationExists = true
-					programVersion = tostring(applications[i].version) or programVersion
+					programVersion = math.doubleToString(applications[i].version, 2) or programVersion
 					break
 				end
 			end

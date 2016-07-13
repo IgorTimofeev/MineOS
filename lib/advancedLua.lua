@@ -157,6 +157,26 @@ end
 
 -------------------------------------------------- String extensions --------------------------------------------------
 
+function string.canonicalPath(str)
+	return string.gsub("/" .. str, "%/+", "/")
+end
+
+function string.optimize(str, indentationWidth)
+	str = string.gsub("\r\n", "\n")
+	str = string.gsub("	", string.rep(" ", indentationWidth or 2))
+	return str
+end
+
+function string.optimizeForURLRequests(code)
+	if code then
+	code = string.gsub(code, "([^%w ])", function (c)
+		return string.format("%%%02X", string.byte(c))
+	end)
+		code = string.gsub(code, " ", "+")
+	end
+	return code 
+end
+
 function string.unicodeFind(str, pattern, init, plain)
 	if init then
 		if init < 0 then
