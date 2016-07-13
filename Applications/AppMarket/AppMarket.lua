@@ -3,6 +3,7 @@
 -- _G.GUI = nil
 
 local libraries = {
+	advancedLua = "advancedLua",
 	buffer = "doubleBuffering",
 	MineOSCore = "MineOSCore",
 	image = "image",
@@ -128,7 +129,7 @@ local function getApplication(i)
 
 	if newApplications[i].about then
 		currentApps[i].description = getDescription(newApplications.GitHubUserURL .. newApplications[i].about .. _G.OSSettings.language .. ".txt")
-		currentApps[i].description = ecs.stringWrap({currentApps[i].description}, sizes.descriptionTruncateSize )
+		currentApps[i].description = string.wrap({currentApps[i].description}, sizes.descriptionTruncateSize )
 	else
 		currentApps[i].description = {localization.descriptionNotAvailable}
 	end
@@ -328,7 +329,6 @@ local function updateAll()
 	changes = {}
 	oldApplications = newApplications
 	saveOldApplications()
-	require("computer").shutdown(true)
 end
 
 ------------------------------------------------------------------------------------------------------------------

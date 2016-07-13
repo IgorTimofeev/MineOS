@@ -1,4 +1,5 @@
 local libraries = {
+	advancedLua = "advancedLua",
 	colorlib = "colorlib",
 	image = "image",
 	buffer = "doubleBuffering",
@@ -18,7 +19,7 @@ rayEngine.horizonPosition = math.floor(buffer.screen.height / 2)
 rayEngine.minimapEnabled = true
 rayEngine.compassEnabled = false
 rayEngine.watchEnabled = false
-rayEngine.drawFieldOfViewOnMinimap = true
+rayEngine.drawFieldOfViewOnMinimap = false
 rayEngine.chatShowTime = 4
 rayEngine.chatHistory = {}
 rayEngine.chatPanelWidth, rayEngine.chatPanelHeight = math.floor(buffer.screen.width * 0.4), math.floor(buffer.screen.height * 0.4)
@@ -319,7 +320,7 @@ function rayEngine.watch(x, y)
 end	
 
 local function addItemToChatHistory(text, color)
-	text = GUI.stringWrap({text}, rayEngine.chatPanelWidth - 2)
+	text = string.wrap({text}, rayEngine.chatPanelWidth - 2)
 	table.insert(rayEngine.chatHistory, {color = color, text = text})
 	if #rayEngine.chatHistory > rayEngine.chatHistoryLimit then table.remove(rayEngine.chatHistory, 1) end
 end

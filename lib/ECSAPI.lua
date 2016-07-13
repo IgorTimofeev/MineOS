@@ -1,26 +1,20 @@
 
 -- Адаптивная загрузка необходимых библиотек и компонентов
 local libraries = {
-	["component"] = "component",
-	["term"] = "term",
-	["unicode"] = "unicode",
-	["event"] = "event",
-	["fs"] = "filesystem",
-	["shell"] = "shell",
-	["keyboard"] = "keyboard",
-	["computer"] = "computer",
-	["serialization"] = "serialization",
-	--["internet"] = "internet",
-	--["image"] = "image",
+	advancedLua = "advancedLua",
+	component = "component",
+	term = "term",
+	unicode = "unicode",
+	event = "event",
+	fs = "filesystem",
+	shell = "shell",
+	keyboard = "keyboard",
+	computer = "computer",
+	serialization = "serialization",
 }
 
-local components = {
-	["gpu"] = "gpu",
-}
-
-for library in pairs(libraries) do if not _G[library] then _G[library] = require(libraries[library]) end end
-for comp in pairs(components) do if not _G[comp] then _G[comp] = _G.component[components[comp]] end end
-libraries, components = nil, nil
+for library in pairs(libraries) do if not _G[library] then _G[library] = require(libraries[library]) end end; libraries = nil
+_G.gpu = component.gpu
 
 local ecs = {}
 
@@ -154,7 +148,7 @@ function ecs.getScaledResolution(scale, debug)
 	local proportion = xPixels / yPixels
 
 	--Получаем максимально возможное разрешение данной видеокарты
-	local xMax, yMax = gpu.maxResolution()
+	local xMax, yMax = component.gpu.maxResolution()
 
 	--Получаем теоретическое максимальное разрешение монитора с учетом его пропорции, но без учета лимита видеокарты
 	local newWidth, newHeight
@@ -204,11 +198,11 @@ end
 --Установка масштаба монитора
 function ecs.setScale(scale, debug)
 	--Устанавливаем выбранное разрешение
-	gpu.setResolution(ecs.getScaledResolution(scale, debug))
+	component.gpu.setResolution(ecs.getScaledResolution(scale, debug))
 end
 
 function ecs.rebindGPU(address)
-	gpu.bind(address)
+	component.gpu.bind(address)
 end
 
 --Получаем всю инфу об оперативку в килобайтах
@@ -439,33 +433,33 @@ end
 
 --Заливка всего экрана указанным цветом
 function ecs.clearScreen(color)
-  if color then gpu.setBackground(color) end
+  if color then component.gpu.setBackground(color) end
   term.clear()
 end
 
 --Установка пикселя нужного цвета
 function ecs.setPixel(x,y,color)
-  gpu.setBackground(color)
-  gpu.set(x,y," ")
+  component.gpu.setBackground(color)
+  component.gpu.set(x,y," ")
 end
 
 --Простая установка цветов в одну строку, ибо я ленивый
 function ecs.setColor(background, foreground)
-	gpu.setBackground(background)
-	gpu.setForeground(foreground)
+	component.gpu.setBackground(background)
+	component.gpu.setForeground(foreground)
 end
 
 --Цветной текст
 function ecs.colorText(x,y,textColor,text)
-  gpu.setForeground(textColor)
-  gpu.set(x,y,text)
+  component.gpu.setForeground(textColor)
+  component.gpu.set(x,y,text)
 end
 
 --Цветной текст с жопкой!
 function ecs.colorTextWithBack(x,y,textColor,backColor,text)
-  gpu.setForeground(textColor)
-  gpu.setBackground(backColor)
-  gpu.set(x,y,text)
+  component.gpu.setForeground(textColor)
+  component.gpu.setBackground(backColor)
+  component.gpu.set(x,y,text)
 end
 
 --Инверсия цвета
@@ -475,12 +469,12 @@ end
 
 --Адаптивный текст, подстраивающийся под фон
 function ecs.adaptiveText(x,y,text,textColor)
-  gpu.setForeground(textColor)
+  component.gpu.setForeground(textColor)
   x = x - 1
   for i=1,unicode.len(text) do
-    local info = {gpu.get(x+i,y)}
-    gpu.setBackground(info[3])
-    gpu.set(x+i,y,unicode.sub(text,i,i))
+    local info = {component.gpu.get(x+i,y)}
+    component.gpu.setBackground(info[3])
+    component.gpu.set(x+i,y,unicode.sub(text,i,i))
   end
 end
 
@@ -514,7 +508,7 @@ function ecs.smartText(x, y, text)
 	--Разбираем по кусочкам строку и получаем цвета
 	local massiv = {}
 	local iterator = 1
-	local currentColor = gpu.getForeground()
+	local currentColor = component.gpu.getForeground()
 	while iterator <= sText do
 		local symbol = unicode.sub(text, iterator, iterator)
 		if symbol == specialSymbol then
@@ -528,8 +522,8 @@ function ecs.smartText(x, y, text)
 	end
 	x = x - 1
 	for i = 1, #massiv do
-		if currentColor ~= massiv[i][2] then currentColor = massiv[i][2]; gpu.setForeground(massiv[i][2]) end
-		gpu.set(x + i, y, massiv[i][1])
+		if currentColor ~= massiv[i][2] then currentColor = massiv[i][2]; component.gpu.setForeground(massiv[i][2]) end
+		component.gpu.set(x + i, y, massiv[i][1])
 	end
 end
 
@@ -548,14 +542,14 @@ function ecs.formattedText(x, y, text, limit)
 		--Если находим символ параграфа, то
 		if symbols[i] == "§" then
 			--Меняем цвет текста на указанный
-			gpu.setForeground(tonumber("0x" .. symbols[i+1] .. symbols[i+2] .. symbols[i+3] .. symbols[i+4] .. symbols[i+5] .. symbols[i+6]))
+			component.gpu.setForeground(tonumber("0x" .. symbols[i+1] .. symbols[i+2] .. symbols[i+3] .. symbols[i+4] .. symbols[i+5] .. symbols[i+6]))
 			--Увеличиваем лимит на 7, т.к.
 			limit = limit + 7
 			--Сдвигаем итератор цикла на 7
 			i = i + 7
 		end
 		--Рисуем символ на нужной позиции
-		gpu.set(xPos, y, symbols[i])
+		component.gpu.set(xPos, y, symbols[i])
 		--Увеличиваем позицию курсора и итератор на 1
 		xPos = xPos + 1
 		i = i + 1
@@ -564,7 +558,7 @@ end
 
 --Инвертированный текст на основе цвета фона
 function ecs.invertedText(x,y,symbol)
-  local info = {gpu.get(x,y)}
+  local info = {component.gpu.get(x,y)}
   ecs.adaptiveText(x,y,symbol,ecs.invertColor(info[3]))
 end
 
@@ -586,34 +580,34 @@ end
 
 --Обычный квадрат указанного цвета
 function ecs.square(x,y,width,height,color)
-  gpu.setBackground(color)
-  gpu.fill(x,y,width,height," ")
+  component.gpu.setBackground(color)
+  component.gpu.fill(x,y,width,height," ")
 end
 
 --Юникодовская рамка
 function ecs.border(x, y, width, height, back, fore)
 	local stringUp = "┌"..string.rep("─", width - 2).."┐"
 	local stringDown = "└"..string.rep("─", width - 2).."┘"
-	gpu.setForeground(fore)
-	gpu.setBackground(back)
-	gpu.set(x, y, stringUp)
-	gpu.set(x, y + height - 1, stringDown)
+	component.gpu.setForeground(fore)
+	component.gpu.setBackground(back)
+	component.gpu.set(x, y, stringUp)
+	component.gpu.set(x, y + height - 1, stringDown)
 
 	local yPos = 1
 	for i = 1, (height - 2) do
-		gpu.set(x, y + yPos, "│")
-		gpu.set(x + width - 1, y + yPos, "│")
+		component.gpu.set(x, y + yPos, "│")
+		component.gpu.set(x + width - 1, y + yPos, "│")
 		yPos = yPos + 1
 	end
 end
 
 --Кнопка в виде текста в рамке
 function ecs.drawFramedButton(x, y, width, height, text, color)
-	ecs.border(x, y, width, height, gpu.getBackground(), color)
-	gpu.fill(x + 1, y + 1, width - 2, height - 2, " ")
+	ecs.border(x, y, width, height, component.gpu.getBackground(), color)
+	component.gpu.fill(x + 1, y + 1, width - 2, height - 2, " ")
 	x = x + math.floor(width / 2 - unicode.len(text) / 2)
 	y = y + math.floor(width / 2 - 1)
-	gpu.set(x, y, text)
+	component.gpu.set(x, y, text)
 end
 
 --Юникодовский разделитель
@@ -624,14 +618,14 @@ end
 --Автоматическое центрирование текста по указанной координате (x, y, xy)
 function ecs.centerText(mode,coord,text)
 	local dlina = unicode.len(text)
-	local xSize,ySize = gpu.getResolution()
+	local xSize,ySize = component.gpu.getResolution()
 
 	if mode == "x" then
-		gpu.set(math.floor(xSize/2-dlina/2),coord,text)
+		component.gpu.set(math.floor(xSize/2-dlina/2),coord,text)
 	elseif mode == "y" then
-		gpu.set(coord,math.floor(ySize/2),text)
+		component.gpu.set(coord,math.floor(ySize/2),text)
 	else
-		gpu.set(math.floor(xSize/2-dlina/2),math.floor(ySize/2),text)
+		component.gpu.set(math.floor(xSize/2-dlina/2),math.floor(ySize/2),text)
 	end
 end
 
@@ -647,9 +641,9 @@ function ecs.drawCustomImage(x,y,pixels)
 	for i=1,pixelsHeight do
 		for j=1,pixelsWidth do
 			if pixels[i][j][3] ~= "#" then
-				if gpu.getBackground() ~= pixels[i][j][1] then gpu.setBackground(pixels[i][j][1]) end
-				if gpu.getForeground() ~= pixels[i][j][2] then gpu.setForeground(pixels[i][j][2]) end
-				gpu.set(x+j,y+i,pixels[i][j][3])
+				if component.gpu.getBackground() ~= pixels[i][j][1] then component.gpu.setBackground(pixels[i][j][1]) end
+				if component.gpu.getForeground() ~= pixels[i][j][2] then component.gpu.setForeground(pixels[i][j][2]) end
+				component.gpu.set(x+j,y+i,pixels[i][j][3])
 			end
 		end
 	end
@@ -659,7 +653,7 @@ end
 
 --Корректировка стартовых координат. Core-функция для всех моих программ
 function ecs.correctStartCoords(xStart,yStart,xWindowSize,yWindowSize)
-	local xSize,ySize = gpu.getResolution()
+	local xSize,ySize = component.gpu.getResolution()
 	if xStart == "auto" then
 		xStart = math.floor(xSize/2 - xWindowSize/2)
 	end
@@ -672,7 +666,7 @@ end
 --Запомнить область пикселей и возвратить ее в виде массива
 function ecs.rememberOldPixels(x, y, x2, y2)
 	local newPNGMassiv = { ["backgrounds"] = {} }
-	local xSize, ySize = gpu.getResolution()
+	local xSize, ySize = component.gpu.getResolution()
 	newPNGMassiv.x, newPNGMassiv.y = x, y
 
 	--Перебираем весь массив стандартного PNG-вида по высоте
@@ -685,7 +679,7 @@ function ecs.rememberOldPixels(x, y, x2, y2)
 				error("Can't remember pixel, because it's located behind the screen: x("..i.."), y("..j..") out of xSize("..xSize.."), ySize("..ySize..")\n")
 			end
 
-			local symbol, fore, back = gpu.get(i, j)
+			local symbol, fore, back = component.gpu.get(i, j)
 
 			newPNGMassiv["backgrounds"][back] = newPNGMassiv["backgrounds"][back] or {}
 			newPNGMassiv["backgrounds"][back][fore] = newPNGMassiv["backgrounds"][back][fore] or {}
@@ -707,12 +701,12 @@ end
 function ecs.drawOldPixels(massivSudaPihay)
 	--Перебираем массив с фонами
 	for back, backValue in pairs(massivSudaPihay["backgrounds"]) do
-		gpu.setBackground(back)
+		component.gpu.setBackground(back)
 		for fore, foreValue in pairs(massivSudaPihay["backgrounds"][back]) do
-			gpu.setForeground(fore)
+			component.gpu.setForeground(fore)
 			for pixel = 1, #massivSudaPihay["backgrounds"][back][fore] do
 				if massivSudaPihay["backgrounds"][back][fore][pixel][3] ~= transparentSymbol then
-					gpu.set(massivSudaPihay.x + massivSudaPihay["backgrounds"][back][fore][pixel][1] - 1, massivSudaPihay.y + massivSudaPihay["backgrounds"][back][fore][pixel][2] - 1, massivSudaPihay["backgrounds"][back][fore][pixel][3])
+					component.gpu.set(massivSudaPihay.x + massivSudaPihay["backgrounds"][back][fore][pixel][1] - 1, massivSudaPihay.y + massivSudaPihay["backgrounds"][back][fore][pixel][2] - 1, massivSudaPihay["backgrounds"][back][fore][pixel][3])
 				end
 			end
 		end
@@ -886,13 +880,13 @@ function ecs.drawTopBar(x, y, width, selectedObject, background, foreground, ...
 	for i = 1, #objects do
 		if i == selectedObject then
 			ecs.square(xPos, y, unicode.len(objects[i][1]) + spaceBetween, 3, ecs.colors.blue)
-			gpu.setForeground(0xffffff)
+			component.gpu.setForeground(0xffffff)
 		else
-			gpu.setBackground(background)
-			gpu.setForeground(foreground)
+			component.gpu.setBackground(background)
+			component.gpu.setForeground(foreground)
 		end
-		gpu.set(xPos + spaceBetween / 2, y + 2, objects[i][1])
-		gpu.set(xPos + math.ceil(unicode.len(objects[i][1]) / 2), y + 1, objects[i][2])
+		component.gpu.set(xPos + spaceBetween / 2, y + 2, objects[i][1])
+		component.gpu.set(xPos + math.ceil(unicode.len(objects[i][1]) / 2), y + 1, objects[i][2])
 
 		xPos = xPos + unicode.len(objects[i][1]) + spaceBetween
 	end
@@ -908,13 +902,13 @@ function ecs.drawTopMenu(x, y, width, color, selectedObject, ...)
 	for i = 1, #objects do
 		if i == selectedObject then
 			ecs.square(xPos - 1, y, unicode.len(objects[i][1]) + spaceBetween, 1, ecs.colors.blue)
-			gpu.setForeground(0xffffff)
-			gpu.set(xPos, y, objects[i][1])
-			gpu.setForeground(objects[i][2])
-			gpu.setBackground(color)
+			component.gpu.setForeground(0xffffff)
+			component.gpu.set(xPos, y, objects[i][1])
+			component.gpu.setForeground(objects[i][2])
+			component.gpu.setBackground(color)
 		else
-			if gpu.getForeground() ~= objects[i][2] then gpu.setForeground(objects[i][2]) end
-			gpu.set(xPos, y, objects[i][1])
+			if component.gpu.getForeground() ~= objects[i][2] then component.gpu.setForeground(objects[i][2]) end
+			component.gpu.set(xPos, y, objects[i][1])
 		end
 		objectsToReturn[objects[i][1]] = { xPos, y, xPos + unicode.len(objects[i][1]) - 1, y, i }
 		xPos = xPos + unicode.len(objects[i][1]) + spaceBetween
@@ -950,9 +944,9 @@ end
 
 --Отрисовка оконной "тени"
 function ecs.windowShadow(x,y,width,height)
-	gpu.setBackground(ecs.windowColors.shadow)
-	gpu.fill(x+width,y+1,2,height," ")
-	gpu.fill(x+1,y+height,width,1," ")
+	component.gpu.setBackground(ecs.windowColors.shadow)
+	component.gpu.fill(x+width,y+1,2,height," ")
+	component.gpu.fill(x+1,y+height,width,1," ")
 end
 
 --Просто белое окошко с тенью
@@ -972,17 +966,17 @@ function ecs.emptyWindow(x,y,width,height,title)
 	local oldPixels = ecs.rememberOldPixels(x,y,x+width+1,y+height)
 
 	--ОКНО
-	gpu.setBackground(ecs.windowColors.background)
-	gpu.fill(x,y+1,width,height-1," ")
+	component.gpu.setBackground(ecs.windowColors.background)
+	component.gpu.fill(x,y+1,width,height-1," ")
 
 	--ТАБ СВЕРХУ
-	gpu.setBackground(ecs.windowColors.tab)
-	gpu.fill(x,y,width,1," ")
+	component.gpu.setBackground(ecs.windowColors.tab)
+	component.gpu.fill(x,y,width,1," ")
 
 	--ТИТЛ
-	gpu.setForeground(ecs.windowColors.title)
+	component.gpu.setForeground(ecs.windowColors.title)
 	local textPosX = x + math.floor(width/2-unicode.len(title)/2) -1
-	gpu.set(textPosX,y,title)
+	component.gpu.set(textPosX,y,title)
 
 	--ТЕНЬ
 	ecs.windowShadow(x,y,width,height)
@@ -995,66 +989,6 @@ function ecs.getWordsArrayFromString(s)
 	local words = {} 
 	for word in string.gmatch(s, "[^%s]+") do table.insert(words, word) end
 	return words
-end
-
---Функция по переносу слов на новую строку в зависимости от ограничения по ширине
-function ecs.stringWrap(strings, limit)
-	local currentString = 1
-	while currentString <= #strings do
-		local words = ecs.getWordsArrayFromString(tostring(strings[currentString]))
-
-		local newStringThatFormedFromWords, oldStringThatFormedFromWords = "", ""
-		local word = 1
-		local overflow = false
-		while word <= #words do
-			oldStringThatFormedFromWords = oldStringThatFormedFromWords .. (word > 1 and " " or "") .. words[word]
-			if unicode.len(oldStringThatFormedFromWords) > limit then
-				--ЕБЛО
-				if unicode.len(words[word]) > limit then
-					local left = unicode.sub(oldStringThatFormedFromWords, 1, limit)
-					local right = unicode.sub(strings[currentString], unicode.len(left) + 1, -1)
-					overflow = true
-					strings[currentString] = left
-					if strings[currentString + 1] then
-						strings[currentString + 1] = right .. " " .. strings[currentString + 1]
-					else
-						strings[currentString + 1] = right
-					end 
-				end
-				break
-			else
-				newStringThatFormedFromWords = oldStringThatFormedFromWords
-			end
-			word = word + 1
-		end
-
-		if word <= #words and not overflow then
-			local fuckToAdd = table.concat(words, " ", word, #words)
-			if strings[currentString + 1] then
-				strings[currentString + 1] = fuckToAdd .. " " .. strings[currentString + 1]
-			else
-				strings[currentString + 1] = fuckToAdd
-			end
-			strings[currentString] = newStringThatFormedFromWords
-		end
-
-		currentString = currentString + 1
-	end
-
-	return strings
-	-- local firstSlice, secondSlice
-	-- local i = 1
-	-- while i <= #strings do
-	-- 	if unicode.len(strings[i]) > limit then
-	-- 		firstSlice = unicode.sub(strings[i], 1, limit)
-	-- 		secondSlice = unicode.sub(strings[i], limit + 1, -1)
-			
-	-- 		strings[i] = firstSlice
-	-- 		table.insert(strings, i + 1, secondSlice)
-	-- 	end
-	-- 	i = i + 1
-	-- end
-	-- return strings
 end
 
 --Моя любимая функция ошибки C:
@@ -1071,15 +1005,15 @@ function ecs.error(...)
 	else
 		text = tostring(args[1])
 	end
-	ecs.universalWindow("auto", "auto", math.ceil(gpu.getResolution() * 0.45), ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x880000, "Ошибка!"}, {"EmptyLine"}, {"WrappedText", 0x262626, text}, {"EmptyLine"}, {"Button", {0x880000, 0xffffff, "OK!"}})
+	ecs.universalWindow("auto", "auto", math.ceil(component.gpu.getResolution() * 0.45), ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x880000, "Ошибка!"}, {"EmptyLine"}, {"WrappedText", 0x262626, text}, {"EmptyLine"}, {"Button", {0x880000, 0xffffff, "OK!"}})
 end
 
 --Очистить экран, установить комфортные цвета и поставить курсок на 1, 1
 function ecs.prepareToExit(color1, color2)
 	term.setCursor(1, 1)
 	ecs.clearScreen(color1 or 0x333333)
-	gpu.setForeground(color2 or 0xffffff)
-	gpu.set(1, 1, "")
+	component.gpu.setForeground(color2 or 0xffffff)
+	component.gpu.set(1, 1, "")
 end
 
 --Конвертация из юникода в символ. Вроде норм, а вроде и не норм. Но полезно.
@@ -1125,9 +1059,9 @@ function ecs.inputText(x, y, limit, cheBiloVvedeno, background, foreground, just
 	background = background or 0xffffff
 	foreground = foreground or 0x000000
 
-	gpu.setBackground(background)
-	gpu.setForeground(foreground)
-	gpu.fill(x, y, limit, 1, " ")
+	component.gpu.setBackground(background)
+	component.gpu.setForeground(foreground)
+	component.gpu.fill(x, y, limit, 1, " ")
 
 	local text = cheBiloVvedeno
 
@@ -1139,9 +1073,9 @@ function ecs.inputText(x, y, limit, cheBiloVvedeno, background, foreground, just
 		if xCursor > (x + limit - 1) then xCursor = (x + limit - 1) end
 
 		if maskTextWith then
-			gpu.set(x, y, ecs.stringLimit("start", string.rep("●", dlina), limit))
+			component.gpu.set(x, y, ecs.stringLimit("start", string.rep("●", dlina), limit))
 		else
-			gpu.set(x, y, ecs.stringLimit("start", text, limit))
+			component.gpu.set(x, y, ecs.stringLimit("start", text, limit))
 		end
 
 		term.setCursor(xCursor, y)
@@ -1159,7 +1093,7 @@ function ecs.inputText(x, y, limit, cheBiloVvedeno, background, foreground, just
 			if e[4] == 14 then
 				term.setCursorBlink(false)
 				text = unicode.sub(text, 1, -2)
-				if unicode.len(text) < limit then gpu.set(x + unicode.len(text), y, " ") end
+				if unicode.len(text) < limit then component.gpu.set(x + unicode.len(text), y, " ") end
 				draw()
 			elseif e[4] == 28 then
 				term.setCursorBlink(false)
@@ -1348,12 +1282,12 @@ function ecs.textField(x, y, width, height, lines, displayFrom, background, fore
 	ecs.square(x, y, width - 1, height, background)
 	ecs.srollBar(x + width - 1, y, 1, height, sLines, displayFrom, scrollbarBackground, scrollbarForeground)
 
-	gpu.setBackground(background)
-	gpu.setForeground(foreground)
+	component.gpu.setBackground(background)
+	component.gpu.setForeground(foreground)
 	local yPos = y
 	for i = displayFrom, (displayFrom + height - 1) do
 		if lines[i] then
-			gpu.set(x + 1, yPos, lines[i])
+			component.gpu.set(x + 1, yPos, lines[i])
 			yPos = yPos + 1
 		else
 			break
@@ -1575,10 +1509,10 @@ end
 
 -- Анимация затухания экрана
 function ecs.fadeOut(startColor, targetColor, speed)
-	local xSize, ySize = gpu.getResolution()
+	local xSize, ySize = component.gpu.getResolution()
 	while startColor >= targetColor do
-		gpu.setBackground(startColor)
-		gpu.fill(1, 1, xSize, ySize, " ")
+		component.gpu.setBackground(startColor)
+		component.gpu.fill(1, 1, xSize, ySize, " ")
 		startColor = startColor - 0x111111
 		os.sleep(speed or 0)
 	end
@@ -1586,10 +1520,10 @@ end
 
 -- Анимация загорания экрана
 function ecs.fadeIn(startColor, targetColor, speed)
-	local xSize, ySize = gpu.getResolution()
+	local xSize, ySize = component.gpu.getResolution()
 	while startColor <= targetColor do
-		gpu.setBackground(startColor)
-		gpu.fill(1, 1, xSize, ySize, " ")
+		component.gpu.setBackground(startColor)
+		component.gpu.fill(1, 1, xSize, ySize, " ")
 		startColor = startColor + 0x111111
 		os.sleep(speed or 0)
 	end
@@ -1597,23 +1531,23 @@ end
 
 -- Анимация выхода в олдскул-телевизионном стиле
 function ecs.TV(speed, targetColor)
-	local xSize, ySize = gpu.getResolution()
+	local xSize, ySize = component.gpu.getResolution()
 	local xCenter, yCenter = math.floor(xSize / 2), math.floor(ySize / 2)
-	gpu.setBackground(targetColor or 0x000000)
+	component.gpu.setBackground(targetColor or 0x000000)
 	
 	for y = 1, yCenter do
-		gpu.fill(1, y - 1, xSize, 1, " ")
-		gpu.fill(1, ySize - y + 1, xSize, 1, " ")
+		component.gpu.fill(1, y - 1, xSize, 1, " ")
+		component.gpu.fill(1, ySize - y + 1, xSize, 1, " ")
 		os.sleep(speed or 0)
 	end
 	
 	for x = 1, xCenter - 1 do
-		gpu.fill(x, yCenter, 1, 1, " ")
-		gpu.fill(xSize - x + 1, yCenter, 1, 1, " ")
+		component.gpu.fill(x, yCenter, 1, 1, " ")
+		component.gpu.fill(xSize - x + 1, yCenter, 1, 1, " ")
 		os.sleep(speed or 0)
 	end
 	os.sleep(0.3)
-	gpu.fill(1, yCenter, xSize, 1, " ")
+	component.gpu.fill(1, yCenter, xSize, 1, " ")
 end
 
 
@@ -1695,7 +1629,7 @@ function ecs.universalWindow(x, y, width, background, closeWindowAfter, ...)
 			height = height + objects[i][2]
 		elseif objectType == "wrappedtext" then
 			--Заранее парсим текст перенесенный
-			objects[i].wrapped = ecs.stringWrap({objects[i][3]}, width - 4)
+			objects[i].wrapped = string.wrap({objects[i][3]}, width - 4)
 			objects[i].height = #objects[i].wrapped
 			height = height + objects[i].height
 		else
@@ -1708,8 +1642,8 @@ function ecs.universalWindow(x, y, width, background, closeWindowAfter, ...)
 	--Запоминаем инфу о том, что было нарисовано, если это необходимо
 	local oldPixels, oldBackground, oldForeground
 	if closeWindowAfter then
-		oldBackground = gpu.getBackground()
-		oldForeground = gpu.getForeground()
+		oldBackground = component.gpu.getBackground()
+		oldForeground = component.gpu.getForeground()
 		oldPixels = ecs.rememberOldPixels(x, y, x + width - 1, y + height - 1)
 	end
 	--Считаем все координаты объектов
@@ -1742,9 +1676,9 @@ function ecs.universalWindow(x, y, width, background, closeWindowAfter, ...)
 				
 		if objectType == "centertext" then
 			local xPos = x + math.floor(width / 2 - unicode.len(objects[number][3]) / 2)
-			gpu.setForeground(objects[number][2])
-			gpu.setBackground(background)
-			gpu.set(xPos, objects[number].y, objects[number][3])
+			component.gpu.setForeground(objects[number][2])
+			component.gpu.setBackground(background)
+			component.gpu.set(xPos, objects[number].y, objects[number][3])
 		
 		elseif objectType == "input" then
 
@@ -1757,7 +1691,7 @@ function ecs.universalWindow(x, y, width, background, closeWindowAfter, ...)
 				--Рамочка
 				ecs.border(x + 1, objects[number].y, width - 2, objectsHeights.input, background, objects[number][2])
 				--Текстик
-				gpu.set(x + 3, objects[number].y + 1, ecs.stringLimit("start", objects[number][4], width - 6))
+				component.gpu.set(x + 3, objects[number].y + 1, ecs.stringLimit("start", objects[number][4], width - 6))
 				ecs.inputText(x + 3, objects[number].y + 1, width - 6, objects[number][4], background, objects[number][2], true, objects[number][5])
 			end
 
@@ -1803,12 +1737,12 @@ function ecs.universalWindow(x, y, width, background, closeWindowAfter, ...)
 				--Коробка для галочки
 				ecs.border(x + 1, yPos, 5, 3, background, usualColor)
 				--Текст
-				gpu.set(x + 7, yPos + 1, objects[number][i])
+				component.gpu.set(x + 7, yPos + 1, objects[number][i])
 				--Галочка
 				if objects[number].selectedData == (i - 3) then
 					ecs.colorText(x + 3, yPos + 1, selectionColor, symbol)
 				else
-					gpu.set(x + 3, yPos + 1, "  ")
+					component.gpu.set(x + 3, yPos + 1, "  ")
 				end
 
 				obj["Selects"] = obj["Selects"] or {}
@@ -1831,12 +1765,12 @@ function ecs.universalWindow(x, y, width, background, closeWindowAfter, ...)
 			local yPos = objects[number].y
 
 			local function bordak(borderColor)
-				gpu.setBackground(background)
-				gpu.setForeground(borderColor)
-				gpu.set(x + 1, objects[number].y, topLine)
-				gpu.set(x + 1, objects[number].y + 1, midLine)
-				gpu.set(x + 1, objects[number].y + 2, botLine)
-				gpu.set(x + 3, objects[number].y + 1, ecs.stringLimit("start", objects[number].selectedElement, width - 6))
+				component.gpu.setBackground(background)
+				component.gpu.setForeground(borderColor)
+				component.gpu.set(x + 1, objects[number].y, topLine)
+				component.gpu.set(x + 1, objects[number].y + 1, midLine)
+				component.gpu.set(x + 1, objects[number].y + 2, botLine)
+				component.gpu.set(x + 3, objects[number].y + 1, ecs.stringLimit("start", objects[number].selectedElement, width - 6))
 				ecs.colorText(x + width - 4, objects[number].y + 1, arrowColor, "▼")
 			end
 
@@ -1860,9 +1794,9 @@ function ecs.universalWindow(x, y, width, background, closeWindowAfter, ...)
 				local botLine = "└"..string.rep("─", selectorWidth - 2) .. "┘"
 				ecs.colorTextWithBack(xPos, yPos - 1, arrowColor, background, topLine)
 				for i = 1, spisokHeight - 1 do
-					gpu.set(xPos, yPos + i - 1, midLine)
+					component.gpu.set(xPos, yPos + i - 1, midLine)
 				end
-				gpu.set(xPos, yPos + spisokHeight - 1, botLine)
+				component.gpu.set(xPos, yPos + spisokHeight - 1, botLine)
 
 				--Элементы рисуем
 				xPos = xPos + 2
@@ -1901,15 +1835,15 @@ function ecs.universalWindow(x, y, width, background, closeWindowAfter, ...)
 		
 		elseif objectType == "textfield" then
 			newObj("TextFields", number, x + 1, objects[number].y, x + width - 2, objects[number].y + objects[number][2] - 1)
-			if not objects[number].strings then objects[number].strings = ecs.stringWrap({objects[number][7]}, width - 3) end
+			if not objects[number].strings then objects[number].strings = string.wrap({objects[number][7]}, width - 3) end
 			objects[number].displayFrom = objects[number].displayFrom or 1
 			ecs.textField(x, objects[number].y, width, objects[number][2], objects[number].strings, objects[number].displayFrom, objects[number][3], objects[number][4], objects[number][5], objects[number][6])
 		
 		elseif objectType == "wrappedtext" then
-			gpu.setBackground(background)
-			gpu.setForeground(objects[number][2])
+			component.gpu.setBackground(background)
+			component.gpu.setForeground(objects[number][2])
 			for i = 1, #objects[number].wrapped do
-				gpu.set(x + 2, objects[number].y + i - 1, objects[number].wrapped[i])
+				component.gpu.set(x + 2, objects[number].y + i - 1, objects[number].wrapped[i])
 			end
 
 		elseif objectType == "button" then
@@ -2007,8 +1941,8 @@ function ecs.universalWindow(x, y, width, background, closeWindowAfter, ...)
 	local function redrawBeforeClose()
 		if closeWindowAfter then
 			ecs.drawOldPixels(oldPixels)
-			gpu.setBackground(oldBackground)
-			gpu.setForeground(oldForeground)
+			component.gpu.setBackground(oldBackground)
+			component.gpu.setForeground(oldForeground)
 		end
 	end
 

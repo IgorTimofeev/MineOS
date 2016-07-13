@@ -268,11 +268,24 @@
   ----------------------------------------------------- Библиотеки --------------------------------------------------------------------------
 
   {
+    name="lib/MineOSCore.lua",
+    url="IgorTimofeev/OpenComputers/master/lib/MineOSCore.lua",
+    type="Library",
+    version=1.18,
+  },
+  {
+    name="lib/advancedLua.lua",
+    url="IgorTimofeev/OpenComputers/master/lib/advancedLua.lua",
+    type="Library",
+    preLoadFile=true,
+    version=1.00,
+  },
+  {
     name="lib/ECSAPI.lua",
     url="IgorTimofeev/OpenComputers/master/lib/ECSAPI.lua",
     type="Library",
     preLoadFile=true,
-    version=1.02,
+    version=1.03,
   },
   {
     name="lib/colorlib.lua",
@@ -296,16 +309,10 @@
     version=1.0,
   },
   {
-    name="lib/MineOSCore.lua",
-    url="IgorTimofeev/OpenComputers/master/lib/MineOSCore.lua",
-    type="Library",
-    version=1.17,
-  },
-  {
     name="lib/GUI.lua",
     url="IgorTimofeev/OpenComputers/master/lib/GUI.lua",
     type="Library",
-    version=1.11,
+    version=1.12,
   },
   {
     name="lib/serialization.lua",
@@ -317,7 +324,7 @@
     name="lib/rayEngine.lua",
     url="IgorTimofeev/OpenComputers/master/lib/rayEngine.lua",
     type="Library",
-    version=1.32,
+    version=1.33,
   },
   {
     name="lib/doubleHeight.lua",
@@ -513,7 +520,7 @@
     type="Application",
     icon="IgorTimofeev/OpenComputers/master/Applications/VK/Icon.pic",
     createShortcut="dock",
-    version=1.2,
+    version=1.21,
     resources={
       {
         name="VKLogo.pic",
@@ -908,7 +915,7 @@
     icon="IgorTimofeev/OpenComputers/master/Applications/AppMarket/Icon.pic",
     createShortcut="dock",
     forceDownload=true,
-    version=1.44,
+    version=1.45,
      resources={
       {
         name="Localization/Russian.lang",

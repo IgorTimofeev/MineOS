@@ -1,6 +1,7 @@
 ---------------------------------------------- Библиотеки ------------------------------------------------------------------------
 
 local libraries = {
+	advancedLua = "advancedLua",
 	computer = "computer",
 	ecs = "ECSAPI",
 	component = "component",
@@ -227,7 +228,7 @@ local function drawErrorWindow(path, programVersion, errorLine, reason, showSend
 	)
 
 	--Стек
-	strings = GUI.stringWrap(MineOSCore.parseErrorMessage(reason, 4), stackWidth - 2)
+	strings = string.wrap(MineOSCore.parseErrorMessage(reason, 4), stackWidth - 2)
 	x = x + codeWidth
 	buffer.square(x, y, stackWidth, codeHeight, 0xFFFFFF)
 	x = x + 1

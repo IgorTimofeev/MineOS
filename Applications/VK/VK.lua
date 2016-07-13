@@ -1,6 +1,7 @@
 
 ---------------------------------------------------- Библиотеки ----------------------------------------------------------------
 
+local advancedLua = require("advancedLua")
 local json = require("json")
 local serialization = require("serialization")
 local event = require("event")
@@ -507,7 +508,7 @@ local function messagesGUI()
 			if messages.response.items[i].attachments then table.insert(messageTextArray, getAttachments(messages.response.items[i])) end
 			if messages.response.items[i].action == "chat_invite_user" then table.insert(messageTextArray, "Пользователь под ID " .. messages.response.items[i].from_id .. " пригласил в беседу пользователя под ID " .. messages.response.items[i].action_mid) end
 
-			messageTextArray = ecs.stringWrap(messageTextArray, cloudWidth - 4)
+			messageTextArray = string.wrap(messageTextArray, cloudWidth - 4)
 			local peerID = getPeerIDFromMessageArray(messages.response.items[i])
 
 			--Делаем дату пиздатой
