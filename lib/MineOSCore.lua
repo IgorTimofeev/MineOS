@@ -164,7 +164,7 @@ function MineOSCore.optimizeStringForURLSending(code)
 	return code 
 end
 
-local function drawErrorWindow(path, errorLine, reason, showSendToDeveloperButton)
+local function drawErrorWindow(path, programVersion, errorLine, reason, showSendToDeveloperButton)
 	local topbarColor = 0x383838
 	local programName = MineOSCore.localization.errorWhileRunningProgram .. "\"" .. fs.name(path) .. "\""
 	local width, height = buffer.screen.width, math.floor(buffer.screen.height * 0.45)
@@ -262,7 +262,13 @@ local function drawErrorWindow(path, errorLine, reason, showSendToDeveloperButto
 						if data[3] == "OK" then
 							if component.isAvailable("internet") then
 								local phpUrl = "http://igortimofeev.wallst.ru/MineOSErrorReports/Report.php"
-								local url = phpUrl .. "?path=" .. path .. "&errorMessage=" .. MineOSCore.optimizeStringForURLSending(reason) .. "&userMessage=" .. MineOSCore.optimizeStringForURLSending(data[2]) .. "&userContacts=" .. MineOSCore.optimizeStringForURLSending(data[1])
+								local url = phpUrl .. 
+								"?path=" .. path .. 
+								"&version=" .. MineOSCore.optimizeStringForURLSending(programVersion) ..
+								"&userContacts=" .. MineOSCore.optimizeStringForURLSending(data[1]) ..
+								"&userMessage=" .. MineOSCore.optimizeStringForURLSending(data[2]) .. 
+								"&errorMessage=" .. MineOSCore.optimizeStringForURLSending(reason)
+
 								local success, reason = component.internet.request(url)
 								if success then
 									success:close()
@@ -321,9 +327,16 @@ function MineOSCore.safeLaunch(path, ...)
 			--Проверяем, стоит ли нам врубать отсылку отчетов на мой сервер, ибо это должно быть онли у моих прожек
 			local applications = files.loadTableFromFile(MineOSCore.paths.applicationList)
 			local applicationExists = false
-			for i = 1, #applications do if path == "/" .. applications[i].name then applicationExists = true; break end end
+			local programVersion = "N/A"
+			for i = 1, #applications do
+				if path == "/" .. applications[i].name then
+					applicationExists = true
+					programVersion = tostring(applications[i].version) or programVersion
+					break
+				end
+			end
 
-			drawErrorWindow(path, errorLine, finalReason, applicationExists)
+			drawErrorWindow(path, programVersion, errorLine, finalReason, applicationExists)
 		else
 			GUI.error("Unknown error in lib/MineOSCore.lua: possible reason is \"" .. tostring(finalReason) .. "\"")
 		end
