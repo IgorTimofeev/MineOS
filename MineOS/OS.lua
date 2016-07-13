@@ -442,7 +442,7 @@ while true do
 		if clickedAtEmptyArea then
 			for _, icon in pairs(obj.DesktopIcons) do
 				if icon:isClicked(eventData[3], eventData[4]) then
-					if MineOSCore.iconClick(icon, eventData, colors.selection, colors.iconsSelectionTransparency, 0xFFFFFF, 0.2, showFileFormat, {method = getFileListAndDrawAll, arguments = {}}, {method = getFileListAndDrawAll, arguments = {true}}, {method = function() MineOSCore.safeLaunch("Finder.lua", "open", icon.path) end, arguments = {}}) then return end
+					if MineOSCore.iconClick(icon, eventData, colors.selection, colors.iconsSelectionTransparency, 0xFFFFFF, 0.2, showFileFormat, {method = getFileListAndDrawAll, arguments = {}}, {method = getFileListAndDrawAll, arguments = {true}}, {method = function() MineOSCore.safeLaunch(MineOSCore.paths.applications .. "Finder.app/Finder.lua", "open", icon.path) end, arguments = {}}) then return end
 					clickedAtEmptyArea = false
 					break
 				end
@@ -461,7 +461,7 @@ while true do
 					local fileFormat = ecs.getFileFormat(icon.path)
 					if eventData[5] == 0 then
 						icon.path = pathOfDockShortcuts .. icon.path
-						MineOSCore.iconLeftClick(icon, oldPixelsOfIcon, fileFormat, {method = getFileListAndDrawAll, arguments = {}}, {method = getFileListAndDrawAll, arguments = {true}}, {method = function() MineOSCore.safeLaunch("Finder.lua", "open", icon.path) end, arguments = {icon.path}})
+						MineOSCore.iconLeftClick(icon, oldPixelsOfIcon, fileFormat, {method = getFileListAndDrawAll, arguments = {}}, {method = getFileListAndDrawAll, arguments = {true}}, {method = function() MineOSCore.safeLaunch(MineOSCore.paths.applications .. "Finder.app/Finder.lua", "open", icon.path) end, arguments = {icon.path}})
 					else
 						local content = ecs.readShortcut(pathOfDockShortcuts .. icon.path)
 						action = context.menu(eventData[3], eventData[4], {MineOSCore.localization.contextMenuRemoveFromDock, not (currentCountOfIconsInDock > 1)})
