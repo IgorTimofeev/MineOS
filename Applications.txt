@@ -312,7 +312,7 @@
     name="lib/GUI.lua",
     url="IgorTimofeev/OpenComputers/master/lib/GUI.lua",
     type="Library",
-    version=1.12,
+    version=1.13,
   },
   {
     name="lib/serialization.lua",
