@@ -6,6 +6,13 @@
 	w = "W",
 	h = "H",
 
+	view = "View",
+	transparencyPad = "Transparency pad",
+	transparencyColor = "Transparency color",
+	transparencyGrid = "Transparency grid",
+
+	path = "Path",
+	string = "String",
 	file = "File",
 	image = "Image",
 	edit = "Edit",
@@ -18,6 +25,7 @@
 
 	new = "New",
 	open = "Open",
+	createFromString = "Create from OCIFString",
 	save = "Save",
 	saveAs = "Save as",
 	exit = "Exit",

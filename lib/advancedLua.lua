@@ -1,7 +1,7 @@
 
 --[[
 	
-	Advanced Lua Library v1.0 by ECS
+	Advanced Lua Library v1.1 by ECS
 
 	This library extends a lot of default Lua methods
 	and adds some really cool features that haven't been
@@ -12,6 +12,35 @@
 
 _G.filesystem = _G.filesystem or require("filesystem")
 _G.unicode = _G.unicode or require("unicode")
+
+-------------------------------------------------- System extensions --------------------------------------------------
+
+function _G.getCurrentScript()
+	local runLevel, info = 0
+	while true do
+		info = debug.getinfo(runLevel)
+		if info then
+			if info.what == "main" and fs.exists(info.short_src) then return info.short_src end
+		else
+			error("Failed to get running script: current runLevel is " .. runLevel)
+		end
+
+		runLevel = runLevel + 1
+	end
+end
+
+function enum(...)
+	local args, enums = {...}, {}
+	for i = 1, #args do
+		if type(args[i]) ~= "string" then error("Function argument " .. i .. " have non-string type: " .. type(args[i])) end
+		enums[args[i]] = i
+	end
+	return enums
+end
+
+function swap(a, b)
+	return b, a
+end
 
 -------------------------------------------------- Math extensions --------------------------------------------------
 
@@ -25,12 +54,12 @@ function math.roundToDecimalPlaces(num, decimalPlaces)
 end
 
 function math.doubleToString(num, digitCount)
-	return string.format("%." .. digitCount or 1 .. "f", num)
+	return string.format("%." .. (digitCount or 1) .. "f", num)
 end
 
 -------------------------------------------------- Table extensions --------------------------------------------------
 
-local function doSerialize(array, text, prettyLook, indentationSymbol, oldIndentationSymbol, equalsSymbol)
+local function doSerialize(array, text, prettyLook, indentationSymbol, oldIndentationSymbol, equalsSymbol, currentRecusrionStack, recursionStackLimit)
 	text = {"{"}
 	table.insert(text, (prettyLook and "\n" or nil))
 	
@@ -51,15 +80,20 @@ local function doSerialize(array, text, prettyLook, indentationSymbol, oldIndent
 				table.insert(text, stringValue)
 				table.insert(text, "\"")
 			elseif valueType == "table" then
-				table.insert(text, table.concat(doSerialize(value, text, prettyLook, table.concat({indentationSymbol, indentationSymbol}), table.concat({oldIndentationSymbol, indentationSymbol}), equalsSymbol)))
+				-- Ограничение стека рекурсии
+				if currentRecusrionStack < recursionStackLimit then
+					table.insert(text, table.concat(doSerialize(value, text, prettyLook, table.concat({indentationSymbol, indentationSymbol}), table.concat({oldIndentationSymbol, indentationSymbol}), equalsSymbol, currentRecusrionStack + 1, recursionStackLimit)))
+				else
+					table.insert(text, "...")
+				end
 			else
-				error("Unsupported table value type: " .. valueType)
+				-- error("Unsupported table value type: " .. valueType)
 			end
 			
 			table.insert(text, ",")
 			table.insert(text, (prettyLook and "\n" or nil))
 		else
-			error("Unsupported table key type: " .. keyType)
+			-- error("Unsupported table key type: " .. keyType)
 		end
 	end
 
@@ -69,12 +103,12 @@ local function doSerialize(array, text, prettyLook, indentationSymbol, oldIndent
 	return text
 end
 
-function table.serialize(array, prettyLook, indentationWidth, indentUsingTabs)
+function table.serialize(array, prettyLook, indentationWidth, indentUsingTabs, recursionStackLimit)
 	checkArg(1, array, "table")
 	indentationWidth = indentationWidth or 2
 	local indentationSymbol = indentUsingTabs and "	" or " "
 	indentationSymbol, indentationSymbolHalf = string.rep(indentationSymbol, indentationWidth)
-	return table.concat(doSerialize(array, {}, prettyLook, indentationSymbol, "", prettyLook and " = " or "="))
+	return table.concat(doSerialize(array, {}, prettyLook, indentationSymbol, "", prettyLook and " = " or "=", 1, recursionStackLimit or math.huge))
 end
 
 function table.unserialize(serializedString)
@@ -83,12 +117,20 @@ function table.unserialize(serializedString)
 	if success then return result else return nil, result end
 end
 
-function table.toFile(path, array, prettyLook, indentationWidth, indentUsingTabs, appendToFile)
+function table.toString(...)
+	return table.serialize(...)
+end
+
+function table.fromString(...)
+	return table.unserialize(...)
+end
+
+function table.toFile(path, array, prettyLook, indentationWidth, indentUsingTabs, recursionStackLimit, appendToFile)
 	checkArg(1, path, "string")
 	checkArg(2, array, "table")
 	filesystem.makeDirectory(filesystem.path(path) or "")
 	local file = io.open(path, appendToFile and "a" or "w")
-	file:write(table.serialize(array, prettyLook, indentationWidth, indentUsingTabs))
+	file:write(table.serialize(array, prettyLook, indentationWidth, indentUsingTabs, recursionStackLimit))
 	file:close()
 end
 
@@ -150,8 +192,8 @@ function table.binarySearch(t, requestedValue)
 end
 
 function table.size(t)
-	local size = 0
-	for key, value in pairs(t) do size = size + 1 end
+	local size = #t
+	if size == 0 then for key in pairs(t) do size = size + 1 end end
 	return size
 end
 
@@ -169,9 +211,9 @@ end
 
 function string.optimizeForURLRequests(code)
 	if code then
-	code = string.gsub(code, "([^%w ])", function (c)
-		return string.format("%%%02X", string.byte(c))
-	end)
+		code = string.gsub(code, "([^%w ])", function (c)
+			return string.format("%%%02X", string.byte(c))
+		end)
 		code = string.gsub(code, " ", "+")
 	end
 	return code 
@@ -274,10 +316,6 @@ end
 -- local function safeCallString(str)
 -- 	return safeCall(load(str))
 -- end
-
--- local cyka = table.copy({123, 542, {abc = true, 16, 32, {cyka = false, haha = "abc"}}})
--- print(table.serialize(cyka, true))
-
 
 -- print(safeCallString("return 123"))
 

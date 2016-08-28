@@ -13,6 +13,8 @@
 	contextMenuUploadToPastebin = "Upload to Pastebin",
 	contextMenuAddToDock = "Add to Dock",
 	contextMenuRemoveFromDock = "Remove from Dock",
+	contextMenuMoveRight = "Move right",
+	contextMenuMoveLeft = "Move left",
 	contextMenuArchive = "Add to archive",
 	contextMenuDelete = "Delete",
 	contextMenuAddToFavourites = "Add to favourites",
@@ -33,6 +35,8 @@
 	hideFileFormat = "Hide file format",
 	showHiddenFiles = "Show hidden files",
 	hideHiddenFiles = "Hide hidden files",
+	showApplicationIcons = "Show application icons",
+	hideApplicationIcons = "Hide application icons",
 
 	sortByTypeShort = "By type",
 	sortByNameShort = "By name",

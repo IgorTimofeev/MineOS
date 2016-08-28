@@ -668,31 +668,20 @@ function image.convertToGroupedImage(picture)
 end
 
 --Нарисовать по указанным координатам картинку указанной ширины и высоты для теста
-function image.createImage(width, height, random)
-	local picture = {}
-	local symbolArray = {"A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "А", "Б", "В", "Г", "Д", "Е", "Ж", "З", "И", "Й", "К", "Л", "И", "Н", "О", "П", "Р", "С", "Т", "У", "Ф", "Х", "Ц", "Ч", "Ш", "Щ", "Ъ", "Ы", "Ь", "Э", "Ю", "Я"}
-	picture.width = width
-	picture.height = height
-	local background, foreground, symbol
-	for j = 1, height do
-		for i = 1, width do
-			if random then
-				background = math.random(0x000000, 0xffffff)
-				foreground = math.random(0x000000, 0xffffff)
-				symbol = symbolArray[math.random(1, #symbolArray)]
-			else
-				background = 0x880000
-				foreground = 0xffffff
-				symbol = "Q"
-			end
-
-			table.insert(picture, background)
-			table.insert(picture, foreground)
-			table.insert(picture, 0x00)
-			table.insert(picture, symbol)
+function image.create(width, height, background, foreground, alpha, symbol, random)
+	background, foreground, alpha, symbol = background or 0x0, foreground or 0x0, alpha or 0x0, symbol or " "
+	local picture, symbolArray = {width = width, height = height}, {"A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "А", "Б", "В", "Г", "Д", "Е", "Ж", "З", "И", "Й", "К", "Л", "И", "Н", "О", "П", "Р", "С", "Т", "У", "Ф", "Х", "Ц", "Ч", "Ш", "Щ", "Ъ", "Ы", "Ь", "Э", "Ю", "Я"}
+	for i = 1, picture.width * picture.height do
+		if random then
+			background = math.random(0x000000, 0xffffff)
+			foreground = math.random(0x000000, 0xffffff)
+			symbol = symbolArray[math.random(1, #symbolArray)]
 		end
+		table.insert(picture, background)
+		table.insert(picture, foreground)
+		table.insert(picture, alpha)
+		table.insert(picture, symbol)
 	end
-	-- image.draw(x, y, picture)
 	return picture
 end
 
@@ -728,7 +717,7 @@ function image.get(picture, x, y)
 end
 
 --Установить пиксель в изображении по указанным координатам
-function image.set(picture, x, y, background, foreground, alpha, symbol)
+function image.set(picture, x, y, background, foreground, alpha, symbol, debug)
 	if x >= 1 and y >= 1 and x <= picture.width and y <= picture.height then
 		local index = convertCoordsToIndex(x, y, picture.width)
 		picture[index] = background or 0xFF00FF

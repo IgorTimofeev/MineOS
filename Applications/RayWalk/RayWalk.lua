@@ -1,11 +1,13 @@
-package.loaded.rayEngine = nil
-_G.rayEngine = nil
+
+package.loaded.doubleHeight, package.loaded.rayEngine, package.loaded.GUI, package.loaded.windows, _G.doubleHeight, _G.rayEngine, _G.GUI, _G.windows = nil, nil, nil, nil, nil, nil, nil, nil
 
 local libraries = {
+	component = "component",
 	buffer = "doubleBuffering",
-	rayEngine = "rayEngine",
 	GUI = "GUI",
-	ecs = "ECSAPI",
+	windows = "windows",
+	rayEngine = "rayEngine",
+	MineOSCore = "MineOSCore",
 	unicode = "unicode",
 	event = "event",
 }
@@ -14,49 +16,82 @@ for library in pairs(libraries) do if not _G[library] then _G[library] = require
 
 ----------------------------------------------------------------------------------------------------------------------------------
 
-local applicationPath = "MineOS/Applications/RayWalk.app/Resources/"
-local worldsPath = applicationPath .. "Worlds/"
-local rayWalkVersion = "RayWalk v3.2 closed beta"
+local applicationResourcesDirectory = MineOSCore.getCurrentApplicationResourcesDirectory()
+local localization = MineOSCore.getLocalization(applicationResourcesDirectory .. "Localization/")
+local worldsPath = applicationResourcesDirectory .. "Worlds/"
+local rayWalkVersion = "RayWalk Tech Demo v3.3"
 
 ----------------------------------------------------------------------------------------------------------------------------------
 
-local function menu()
-	local buttonWidth, buttonHeight = 50, 3
-	local selectWorldButtons, buttons = {}, {}
-	for file in fs.list(worldsPath) do table.insert(selectWorldButtons, unicode.sub(file, 1, -2)) end
-	local x, y = math.floor(buffer.screen.width / 2 - buttonWidth / 2), math.floor(buffer.screen.height / 2 - ((#selectWorldButtons + 3) * (buttonHeight + 1)) / 2)
-	local buttonData = {}; for i = 1, #selectWorldButtons do table.insert(buttonData, {GUI.buttonTypes.default, buttonWidth, buttonHeight, 0xEEEEEE, 0x262626, 0xBBBBBB, 0x262626, selectWorldButtons[i]}) end
-
+local function menuBackground()
 	rayEngine.drawWorld()
 	buffer.clear(0x000000, 50)
-
-	GUI.centeredText(GUI.alignment.verticalCenter, y, 0xFFFFFF, rayWalkVersion); y = y + 2
-	buttons.resume = GUI.button(x, y, buttonWidth, buttonHeight, 0xEEEEEE, 0x262626, 0xBBBBBB, 0x262626, "Продолжить"); y = y + buttonHeight + 1
-	buttons.quit = GUI.button(x, y, buttonWidth, buttonHeight, 0xEEEEEE, 0x262626, 0x999999, 0x262626, "Выход"); y = y + buttonHeight + 1
-	GUI.centeredText(GUI.alignment.verticalCenter, y, 0xFFFFFF, "Загрузить мир"); y = y + 2
-	selectWorldButtons = GUI.buttons(x, y, GUI.directions.vertical, 1, table.unpack(buttonData))
-
-	buffer.draw()
-
-	while true do
-		local e = {event.pull("touch")}
-		for _, button in pairs(selectWorldButtons) do
-			if button:isClicked(e[3], e[4]) then
-				button:press()
-				rayEngine.loadWorld(worldsPath .. button.text)
-				return
-			end
-		end
-
-		if buttons.resume:isClicked(e[3], e[4]) then
-			buttons.resume:press()
-			return
-		elseif buttons.quit:isClicked(e[3], e[4]) then
-			buttons.quit:press()
-			os.exit()
-		end
-	end
 end
+
+local function settings()
+	local window = windows.empty(1, 1, buffer.screen.width, buffer.screen.height, buffer.screen.width, buffer.screen.height)
+	window.onDrawStarted = menuBackground
+
+	local sliderWidth, textBoxWidth = 43, 19
+	local x, y = math.floor(window.width / 2 - sliderWidth / 2), math.floor(window.height / 2 - 19)
+
+	window:addLabel("settingsLabel", 1, y, window.width, 1, 0xFFFFFF, localization.rayEngineProperties):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); y = y + 3
+
+	local resolutionTextBoxWidth = window:addInputTextBox("resolutionTextBoxWidth", x, y, textBoxWidth, 3, 0x262626, 0xBBBBBB, 0x262626, 0xFFFFFF, buffer.screen.width, nil, nil, true)
+	window:addLabel("resolutionCrossLabel", x + textBoxWidth + 2, y + 1, 1, 1, 0xFFFFFF, "X")
+	local resolutionTextBoxHeight = window:addInputTextBox("resolutionTextBoxHeight",  x + textBoxWidth + 5, y, textBoxWidth, 3, 0x262626, 0xBBBBBB, 0x262626, 0xFFFFFF, buffer.screen.height, nil, nil, true); y = y + 4
+	window:addLabel("resolutionLabel", 1, y, window.width, 1, 0xDDDDDD, localization.screenResolution):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); y = y + 3
+	resolutionTextBoxWidth.validator = function(text) local num = tonumber(text); if num and num >= 40 and num <= 160 then return true end end
+	resolutionTextBoxHeight.validator = function(text) local num = tonumber(text); if num and num >= 12 and num <= 50 then return true end end
+	local function onAnyResolutionTextBoxInputFinished() window:close(); rayEngine.changeResolution(tonumber(resolutionTextBoxWidth.text), tonumber(resolutionTextBoxHeight.text)); settings() end
+	resolutionTextBoxWidth.onInputFinished = onAnyResolutionTextBoxInputFinished
+	resolutionTextBoxHeight.onInputFinished = onAnyResolutionTextBoxInputFinished
+
+	window:addHorizontalSlider("drawDistanceSlider", x, y, sliderWidth, 0xFFDB80, 0x000000, 0xFFDB40, 0xDDDDDD, 100, 5000, rayEngine.properties.drawDistance, true, localization.drawDistance).onValueChanged = function(object) rayEngine.properties.drawDistance = object.value; window:draw(); buffer:draw() end; y = y + 4
+	window:addHorizontalSlider("shadingDistanceSlider", x, y, sliderWidth, 0xFFDB80, 0x000000, 0xFFDB40, 0xDDDDDD, 100, 3000, rayEngine.properties.shadingDistance, true, localization.shadingDistance).onValueChanged = function(object) rayEngine.properties.shadingDistance = object.value; window:draw(); buffer:draw(); window:draw(); buffer:draw() end; y = y + 4
+	window:addHorizontalSlider("shadingCascadesSlider", x, y, sliderWidth, 0xFFDB80, 0x000000, 0xFFDB40, 0xDDDDDD, 2, 48, rayEngine.properties.shadingCascades, true, localization.shadingCascades).onValueChanged = function(object) rayEngine.properties.shadingCascades = object.value; window:draw(); buffer:draw() end; y = y + 4
+	window:addHorizontalSlider("raycastQualitySlider", x, y, sliderWidth, 0xFFDB80, 0x000000, 0xFFDB40, 0xDDDDDD, 0.5, 32, rayEngine.properties.raycastQuality, true, localization.raycastQuality).onValueChanged = function(object) rayEngine.properties.raycastQuality = object.value; window:draw(); buffer:draw() end; y = y + 4
+	window:addHorizontalSlider("currentTimeSlider", x, y, sliderWidth, rayEngine.world.colors.sky.current, 0x000000, rayEngine.world.colors.sky.current, 0xDDDDDD, 0, rayEngine.world.dayNightCycle.length, rayEngine.world.dayNightCycle.currentTime, true, localization.dayNightCycle, localization.seconds).onValueChanged = function(object) rayEngine.world.dayNightCycle.currentTime = object.value; rayEngine.refreshTimeDependentColors(); object.colors.active = rayEngine.world.colors.sky.current; object.colors.pipe = rayEngine.world.colors.sky.current; window:draw(); buffer:draw() end; y = y + 4
+
+	window:addLabel("graphonLabel", x, y, sliderWidth, 1, 0xDDDDDD, localization.enableSemipixelRenderer)
+	window:addSwitch("graphonSwitch", x + sliderWidth - 8, y, 8, 0xFFDB40, 0xAAAAAA, 0xFFFFFF, not rayEngine.properties.useSimpleRenderer).onStateChanged = function(object) rayEngine.properties.useSimpleRenderer = not object.state; window:draw(); buffer:draw() end; y = y + 3
+
+	window:addLabel("lockTimeLabel", x, y, sliderWidth, 1, 0xDDDDDD, localization.enableDayNightCycle)
+	window:addSwitch("lockTimeSwitch", x + sliderWidth - 8, y, 8, 0xFFDB40, 0xAAAAAA, 0xFFFFFF, rayEngine.world.dayNightCycle.enabled).onStateChanged = function(object) rayEngine.world.dayNightCycle.enabled = object.state; window:draw(); buffer:draw() end; y = y + 3
+
+	window:addButton("resumeButton", x, y, sliderWidth, 3, 0xEEEEEE, 0x262626, 0xBBBBBB, 0x262626, localization.continue).onTouch = function() window:close(); table.toFile(applicationResourcesDirectory .. "RayEngine.cfg", rayEngine.properties, true) end
+
+	window:draw(); buffer.draw(); window:handleEvents()
+end
+
+local function menu()
+	local window = windows.empty(1, 1, buffer.screen.width, buffer.screen.height, buffer.screen.width, buffer.screen.height)
+	window.onDrawStarted = menuBackground
+
+	local buttonWidth, buttonHeight = 50, 3
+	local worlds = {}
+	for file in fs.list(worldsPath) do table.insert(worlds, unicode.sub(file, 1, -2)) end
+	local x, y = math.floor(window.width / 2 - buttonWidth / 2), math.floor(window.height / 2 - #worlds * (buttonHeight + 1) / 2 - 11)
+	
+	window:addLabel("versionLabel", 1, y, window.width, 1, 0xFFFFFF, rayWalkVersion):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); y = y + 3
+	window:addButton("resumeButton", x, y, buttonWidth, buttonHeight, 0xEEEEEE, 0x262626, 0xBBBBBB, 0x262626, localization.continue).onTouch = function() window:close()	end; y = y + buttonHeight + 1
+	window:addButton("settingsButton", x, y, buttonWidth, buttonHeight, 0xEEEEEE, 0x262626, 0xBBBBBB, 0x262626, localization.settings).onTouch = function() window:close(); settings() end; y = y + buttonHeight + 1
+	window:addButton("exitButton", x, y, buttonWidth, buttonHeight, 0xEEEEEE, 0x262626, 0x999999, 0x262626, localization.exit).onTouch = function() buffer.clear(0x000000); buffer.draw(); os.exit()	end; y = y + buttonHeight + 1
+	window:addLabel("loadWorldLabel", 1, y, window.width, 1, 0xFFFFFF, localization.loadWorld):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); y = y + 2
+
+	for i = 1, #worlds do
+		window:addButton("worldButton" .. i, x, y, buttonWidth, buttonHeight, 0xEEEEEE, 0x262626, 0xBBBBBB, 0x262626, worlds[i]).onTouch = function() rayEngine.loadWorld(worldsPath .. worlds[i]); window:close() end
+		y = y + buttonHeight + 1
+	end
+
+	local lines = localization.controlsHelp
+	table.insert(lines, 1, " ")
+	table.insert(lines, 1, {text = localization.controls, color = 0xFFFFFF})
+	window:addTextBox("informationTextBox", 1, y, window.width, #lines, nil, 0xDDDDDD, lines, 1):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); y = y + #lines + 1
+
+	window:draw(); buffer.draw(); window:handleEvents()
+end
+
 
 ----------------------------------------------------------------------------------------------------------------------------------
 
@@ -75,6 +110,7 @@ local controls = {
 		[28] = rayEngine.commandLine, --enter
 		[57] = rayEngine.jump, --space
 		[29] = rayEngine.crouch, --ctrl
+		[59] = rayEngine.toggleDebugInformation, -- F1
 	},
 	["key_up"] = {
 		[29] = rayEngine.crouch, --ctrl
@@ -83,32 +119,30 @@ local controls = {
 
 --------------------------------------------------------------------------------------------------------------
 
-buffer.start()
--- rayEngine.intro()
-rayEngine.loadEngine(applicationPath .. "RayEngine.cfg")
-rayEngine.loadWeapons(applicationPath .. "Weapons/")
+rayEngine.loadEngineProperties(applicationResourcesDirectory .. "RayEngine.cfg")
+rayEngine.loadWeapons(applicationResourcesDirectory .. "Weapons/")
 rayEngine.loadWorld(worldsPath .. "ExampleWorld")
+rayEngine.changeResolution(rayEngine.properties.screenResolution.width, rayEngine.properties.screenResolution.height)
+-- rayEngine.intro()
 menu()
 rayEngine.update()
 
-while (true) do
+while true do
 	local e = { event.pull(1) }
-
-	if ( e[1] ) then
-		if e[1] == "touch" then
-			if e[5] == 1 then 
-				if not rayEngine.currentWeapon then rayEngine.place(3, 0x3) end
-			else
-				if rayEngine.currentWeapon then rayEngine.fire() else rayEngine.destroy(3) end
-			end
+	if e[1] == "touch" then
+		if e[5] == 1 then 
+			if not rayEngine.currentWeapon then rayEngine.place(3, 0x3) end
 		else
-			if e[4] > 1 and e[4] < 10 then
-				rayEngine.changeWeapon(e[4] - 2)
-			else
-				if controls[e[1]] and controls[e[1]][e[4]] then controls[e[1]][e[4]]() end
-			end
+			if rayEngine.currentWeapon then rayEngine.fire() else rayEngine.destroy(3) end
 		end
+	elseif e[1] == "key_down" then
+		if e[4] > 1 and e[4] < 10 then
+			rayEngine.changeWeapon(e[4] - 2)
+		else
+			if controls[e[1]] and controls[e[1]][e[4]] then controls[e[1]][e[4]]() end
+		end
+	elseif e[1] == "key_up" then
+		if controls[e[1]] and controls[e[1]][e[4]] then controls[e[1]][e[4]]() end
 	end
-
 	rayEngine.update()
 end

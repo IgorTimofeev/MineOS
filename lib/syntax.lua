@@ -34,10 +34,10 @@ local currentColorScheme, patterns
 local function definePatterns()
 	patterns = {
 		--Комментарии
-		{ pattern = "%-%-.*", color = currentColorScheme.comments, cutFromLeft = 0, cutFromRight = 0 },
+		{ pattern = "%-%-.+", color = currentColorScheme.comments, cutFromLeft = 0, cutFromRight = 0 },
 		
 		--Строки
-		{ pattern = "\"[^\"\"]*\"", color = currentColorScheme.strings, cutFromLeft = 0, cutFromRight = 0 },
+		{ pattern = "\"[^\"\"]+\"", color = currentColorScheme.strings, cutFromLeft = 0, cutFromRight = 0 },
 		
 		--Циклы, условия, объявления
 		{ pattern = "while ", color = currentColorScheme.loops, cutFromLeft = 0, cutFromRight = 1 },
@@ -64,9 +64,10 @@ local function definePatterns()
 		{ pattern = "nil", color = currentColorScheme.boolean, cutFromLeft = 0, cutFromRight = 0 },
 				
 		--Функции
-		{ pattern = "%s([%a%d%_%-%.]*)%(", color = currentColorScheme.functions, cutFromLeft = 0, cutFromRight = 1 },
+		{ pattern = "[%s%=][%a%d%_%-%.]+%(", color = currentColorScheme.functions, cutFromLeft = 0, cutFromRight = 1 },
+		{ pattern = "^[%a%d%_%-%.%=]+%(", color = currentColorScheme.functions, cutFromLeft = 0, cutFromRight = 1 },
 		
-		--And, or, not, break
+		--Логические выражения
 		{ pattern = " and ", color = currentColorScheme.logic, cutFromLeft = 0, cutFromRight = 1 },
 		{ pattern = " or ", color = currentColorScheme.logic, cutFromLeft = 0, cutFromRight = 1 },
 		{ pattern = " not ", color = currentColorScheme.logic, cutFromLeft = 0, cutFromRight = 1 },
@@ -86,13 +87,14 @@ local function definePatterns()
 		{ pattern = "%-", color = currentColorScheme.compares, cutFromLeft = 0, cutFromRight = 0 },
 		{ pattern = "%*", color = currentColorScheme.compares, cutFromLeft = 0, cutFromRight = 0 },
 		{ pattern = "%/", color = currentColorScheme.compares, cutFromLeft = 0, cutFromRight = 0 },
-		{ pattern = "%.%.", color = currentColorScheme.compares, cutFromLeft = 0, cutFromRight = 0 },
+		{ pattern = "%.+", color = currentColorScheme.compares, cutFromLeft = 0, cutFromRight = 0 },
 		{ pattern = "%#", color = currentColorScheme.compares, cutFromLeft = 0, cutFromRight = 0 },
 		{ pattern = "#^", color = currentColorScheme.compares, cutFromLeft = 0, cutFromRight = 0 },
+		{ pattern = "%%", color = currentColorScheme.compares, cutFromLeft = 0, cutFromRight = 0 },
 
 		--Числа
-		{ pattern = "%s(0x)(%w*)", color = currentColorScheme.numbers, cutFromLeft = 0, cutFromRight = 0 },
-		{ pattern = "(%s)([%d%.]*)", color = currentColorScheme.numbers, cutFromLeft = 0, cutFromRight = 0 },	
+		{ pattern = "[%s%(%,]0x%w+", color = currentColorScheme.numbers, cutFromLeft = 1, cutFromRight = 0 },
+		{ pattern = "[%s%(%,][%d%.]+", color = currentColorScheme.numbers, cutFromLeft = 1, cutFromRight = 0 },	
 	}
 end
 
@@ -153,7 +155,7 @@ function syntax.highlightString(x, y, text, fromSymbol, limit)
 		while true do
 			starting, ending = unicode.find(text, patterns[i].pattern, searchFrom)
 			if starting and ending then
-				buffer.text(x + starting - fromSymbol, y, patterns[i].color, unicode.sub(text, starting, ending - patterns[i].cutFromRight))		
+				buffer.text(x + starting - fromSymbol + patterns[i].cutFromLeft, y, patterns[i].color, unicode.sub(text, starting + patterns[i].cutFromLeft, ending - patterns[i].cutFromRight))		
 				if ending > limit then break end
 				searchFrom = ending + 1
 			else

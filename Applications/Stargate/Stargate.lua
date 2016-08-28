@@ -120,17 +120,17 @@ local function drawSG()
 
 
 	y = y + 1
-	buttons.connectButton = GUI.framedButton(x, y, buttonWidth, 3, lineColor, lineColor, pressColor, pressColor, "Прямое подключение", stargateState == "Connected"); y = y + 3
-	buttons.disconnectButton = GUI.framedButton(x, y, buttonWidth, 3, lineColor, lineColor, pressColor, pressColor, "Отключиться", stargateState ~= "Connected"); y = y + 3
-	buttons.messageButton = GUI.framedButton(x, y, buttonWidth, 3, lineColor, lineColor, pressColor, pressColor, "Сообщение", stargateState ~= "Connected"); y = y + 3
-	buttons.closeIrisButton = GUI.framedButton(x, y, buttonWidth, 3, lineColor, lineColor, pressColor, pressColor, irisState == "Closed" and "Открыть Iris" or "Закрыть Iris", irisState == "Offline"); y = y + 3
+	buttons.connectButton = GUI.framedButton(x, y, buttonWidth, 3, lineColor, lineColor, pressColor, pressColor, "Прямое подключение", stargateState == "Connected"):draw(); y = y + 3
+	buttons.disconnectButton = GUI.framedButton(x, y, buttonWidth, 3, lineColor, lineColor, pressColor, pressColor, "Отключиться", stargateState ~= "Connected"):draw(); y = y + 3
+	buttons.messageButton = GUI.framedButton(x, y, buttonWidth, 3, lineColor, lineColor, pressColor, pressColor, "Сообщение", stargateState ~= "Connected"):draw(); y = y + 3
+	buttons.closeIrisButton = GUI.framedButton(x, y, buttonWidth, 3, lineColor, lineColor, pressColor, pressColor, irisState == "Closed" and "Открыть Iris" or "Закрыть Iris", irisState == "Offline"):draw(); y = y + 3
 
 	y = y + 1
 	centerText(y, lineColor, "Контакты"); y = y + 2
 	local sizeOfContacts = getArraySize(contacts.addresses)
-	buttons.addContactButton = GUI.framedButton(x, y, buttonWidth, 3, lineColor, lineColor, pressColor, pressColor, "Добавить"); y = y + 3
-	buttons.removeContactButton = GUI.framedButton(x, y, buttonWidth, 3, lineColor, lineColor, pressColor, pressColor, "Удалить", sizeOfContacts <= 0); y = y + 3
-	buttons.connectToContactButton = GUI.framedButton(x, y, buttonWidth, 3, lineColor, lineColor, pressColor, pressColor, "Соединиться", sizeOfContacts <= 0 or stargateState == "Connected"); y = y + 3
+	buttons.addContactButton = GUI.framedButton(x, y, buttonWidth, 3, lineColor, lineColor, pressColor, pressColor, "Добавить"):draw(); y = y + 3
+	buttons.removeContactButton = GUI.framedButton(x, y, buttonWidth, 3, lineColor, lineColor, pressColor, pressColor, "Удалить", sizeOfContacts <= 0):draw(); y = y + 3
+	buttons.connectToContactButton = GUI.framedButton(x, y, buttonWidth, 3, lineColor, lineColor, pressColor, pressColor, "Соединиться", sizeOfContacts <= 0 or stargateState == "Connected"):draw(); y = y + 3
 	y = y + 1
 	centerText(y, lineColor, "Затраты на активацию"); y = y + 2
 	buffer.text(x, y, 0x228822, string.rep("━", buttonWidth))
@@ -144,7 +144,7 @@ local function drawSG()
 	end
 
 	y = y + 2
-	buttons.quitButton = GUI.framedButton(x, y, buttonWidth, 3, lineColor, lineColor, pressColor, pressColor, "Выйти"); y = y + 3
+	buttons.quitButton = GUI.framedButton(x, y, buttonWidth, 3, lineColor, lineColor, pressColor, pressColor, "Выйти"):draw(); y = y + 3
 
 end
 
@@ -181,7 +181,7 @@ while true do
 	if e[1] == "touch" then
 		for _, button in pairs(buttons) do
 			if button:isClicked(e[3], e[4]) then
-				button:press(0.2)
+				button:pressAndRelease()
 
 				if button.text == "Прямое подключение" then
 					local data = ecs.universalWindow("auto", "auto", 36, 0x262626, true,

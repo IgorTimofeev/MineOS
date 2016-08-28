@@ -1,37 +1,39 @@
+
 ---------------------------------------------- Библиотеки ------------------------------------------------------------------------
 
 local libraries = {
-	advancedLua = "advancedLua",
-	computer = "computer",
-	ecs = "ECSAPI",
 	component = "component",
-	files = "files",
-	fs = "filesystem",
-	context = "context",
-	buffer = "doubleBuffering",
+	advancedLua = "advancedLua",
 	image = "image",
+	buffer = "doubleBuffering",
 	GUI = "GUI",
+	ecs = "ECSAPI",
 	zip = "archive",
 	syntax = "syntax",
+	computer = "computer",
+	fs = "filesystem",
 }
 
-for library in pairs(libraries) do if not _G[library] then _G[library] = require(libraries[library]) end end
-libraries = nil
-
-local MineOSCore = {}
+for library in pairs(libraries) do if not _G[library] then _G[library] = require(libraries[library]) end end; libraries = nil
 
 -----------------------------------------------------------------------------------------------------------------------------------
 
+local MineOSCore = {}
+
+MineOSCore.showApplicationIcons = true
 MineOSCore.iconWidth = 12
 MineOSCore.iconHeight = 6
 
 MineOSCore.paths = {
-	localizationFile = "MineOS/System/OS/Languages/" .. _G.OSSettings.language .. ".lang",
-	system = "MineOS/System/",
-	icons = "MineOS/System/OS/Icons/",
-	applications = "MineOS/Applications/",
-	pictures = "MineOS/Pictures/",
-	applicationList = "MineOS/System/OS/Applications.txt",
+	localizationFile = "/MineOS/System/OS/Languages/" .. _G.OSSettings.language .. ".lang",
+	system = "/MineOS/System/",
+	icons = "/MineOS/System/OS/Icons/",
+	applications = "/MineOS/Applications/",
+	pictures = "/MineOS/Pictures/",
+	desktop = "/MineOS/Desktop/",
+	dock = "/MineOS/System/OS/Dock/",
+	applicationList = "/MineOS/System/OS/Applications.txt",
+	trash = "/MineOS/Trash/",
 }
 
 MineOSCore.sortingMethods = {
@@ -41,10 +43,33 @@ MineOSCore.sortingMethods = {
 }
 
 MineOSCore.colors = {
-	background = 0x262626.
+	background = 0x262626
 }
 
 MineOSCore.localization = {}
+
+-----------------------------------------------------------------------------------------------------------------------------------
+
+function MineOSCore.getCurrentScriptDirectory()
+	return fs.path(getCurrentScript())
+end
+
+function MineOSCore.getCurrentApplicationResourcesDirectory() 
+	return MineOSCore.getCurrentScriptDirectory() .. "/Resources/"
+end
+
+function MineOSCore.getLocalization(pathToLocalizationFolder)
+	local localizationFileName = pathToLocalizationFolder .. _G.OSSettings.language .. ".lang"
+	if fs.exists(localizationFileName) then
+		return table.fromFile(localizationFileName)
+	else
+		error("Localization file \"" .. localizationFileName .. "\" doesn't exists")
+	end
+end
+
+function MineOSCore.getCurrentApplicationLocalization()
+	return MineOSCore.getLocalization(MineOSCore.getCurrentApplicationResourcesDirectory() .. "Localization/")	
+end
 
 -----------------------------------------------------------------------------------------------------------------------------------
 
@@ -66,10 +91,11 @@ function MineOSCore.loadStandartIcons()
 	MineOSCore.loadIcon("fileNotExists", MineOSCore.paths.icons .. "FileNotExists.pic")
 	MineOSCore.loadIcon("archive", MineOSCore.paths.icons .. "Archive.pic")
 	MineOSCore.loadIcon("model3D", MineOSCore.paths.icons .. "3DModel.pic")
+	MineOSCore.loadIcon("application", MineOSCore.paths.icons .. "application.pic")
 end
 
 function MineOSCore.init()
-	MineOSCore.localization = files.loadTableFromFile(MineOSCore.paths.localizationFile)
+	MineOSCore.localization = table.fromFile(MineOSCore.paths.localizationFile)
 	MineOSCore.loadStandartIcons()
 end
 
@@ -81,10 +107,12 @@ function MineOSCore.drawIcon(x, y, path, showFileFormat, nameColor, name)
 
 	if fs.isDirectory(path) then
 		if fileFormat == ".app" then
-			icon = "cyka"
-			MineOSCore.icons[icon] = image.load(path .. "/Resources/Icon.pic")
-			-- icon = path .. "/Resources/Icon.pic"
-			-- MineOSCore.loadIcon(icon, icon)
+			if MineOSCore.showApplicationIcons then
+				icon = "cyka"
+				MineOSCore.icons[icon] = image.load(path .. "/Resources/Icon.pic")
+			else
+				icon = "application"
+			end
 		else
 			icon = "folder"
 		end
@@ -155,34 +183,32 @@ function MineOSCore.parseErrorMessage(error, indentationWidth)
 end
 
 local function drawErrorWindow(path, programVersion, errorLine, reason, showSendToDeveloperButton)
-	local topbarColor = 0x383838
+	local drawLimit = buffer.getDrawLimit(); buffer.resetDrawLimit()
+	local colors = { topBar = 0x383838, title = 0xFFFFFF }
 	local programName = MineOSCore.localization.errorWhileRunningProgram .. "\"" .. fs.name(path) .. "\""
 	local width, height = buffer.screen.width, math.floor(buffer.screen.height * 0.45)
 	local x, y = 1, math.floor(buffer.screen.height / 2 - height / 2)
-	local topbarHeight = 3
-	local codeHeight = height - topbarHeight - 3
-	local codeWidth = math.floor(width * 0.62)
+	local codeWidth, codeHeight = math.floor(width * 0.62), height - 3
 	local stackWidth = width - codeWidth
-	local buttons = {}
 
-	--Фончик
-	buffer.square(1, 1, buffer.screen.width, buffer.screen.height, 0x000000, 0x000000, " ", 50)
+	-- Затенение оконца
+	buffer.clear(0x000000, 50)
 
-	--Топбарчик
-	buffer.square(x, y, width, topbarHeight, topbarColor, 0xFFFFFF, " ")
-	buffer.text(math.floor(x + width / 2 - unicode.len(programName) / 2), y + 1, 0xFFFFFF, programName)
+	-- Окошечко и всякая шняжка на нем
+	local window = require("windows").empty(x, y, width, height, width, height)
+	window:addPanel("topBar", 1, 1, width, 3, colors.topBar)
+	window:addLabel("title", 1, 2, width, 1, colors.title, programName):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+	local windowActionButtons =  window:addWindowActionButtons("windowActionButtons", 2, 2, false)
+	local sendToDeveloperButton = window:addAdaptiveButton("sendToDeveloperButton", 9, 1, 2, 1, 0x444444, 0xFFFFFF, 0x343434, 0xFFFFFF, MineOSCore.localization.sendFeedback)
+	local stackTextBox = window:addTextBox("stackTextBox", codeWidth + 1, 4, stackWidth, codeHeight, 0xFFFFFF, 0x000000, string.wrap(MineOSCore.parseErrorMessage(reason, 4), stackWidth - 2), 1, 1, 0)
+	--Рисуем окошечко, чтобы кодику не было ОБИДНО
+	--!!1
+	window:draw()
 
-	--Кнопачки
-	buttons = GUI.windowActionButtons(x + 1, y + 1, false)
-	if showSendToDeveloperButton and component.isAvailable("internet") then buttons.sendToDeveloper = GUI.adaptiveButton(x + 8, y, 2, 1, 0x444444, 0xFFFFFF, 0x343434, 0xFFFFFF, MineOSCore.localization.sendFeedback) end
-	y = y + topbarHeight
-
-	--Кодик
+	--Кодик на окошечке
 	local strings = {}
-	local fromString = errorLine - math.floor((codeHeight - 1) / 2)
-	if fromString < 0 then fromString = 1 end
+	local fromString = errorLine - math.floor((codeHeight - 1) / 2); if fromString < 0 then fromString = 1 end
 	local toString = fromString + codeHeight - 1
-
 	local file = io.open(path, "r")
 	local lineCounter = 1
 	for line in file:lines() do
@@ -195,11 +221,10 @@ local function drawErrorWindow(path, programVersion, errorLine, reason, showSend
 		lineCounter = lineCounter + 1
 	end
 	file:close()
-
 	syntax.viewCode(
 		{
 			x = x,
-			y = y,
+			y = y + 3,
 			width = codeWidth,
 			height = codeHeight, 
 			strings = strings, 
@@ -216,75 +241,58 @@ local function drawErrorWindow(path, programVersion, errorLine, reason, showSend
 		}
 	)
 
-	--Стек
-	strings = string.wrap(MineOSCore.parseErrorMessage(reason, 4), stackWidth - 2)
-	x = x + codeWidth
-	buffer.square(x, y, stackWidth, codeHeight, 0xFFFFFF)
-	x = x + 1
-	for i = 1, #strings do buffer.text(x, y, 0x000000, strings[i]); y = y + 1; if i > codeHeight - 1 then break end end
+	-- Всякие действия пиздатые
+	local function exit()
+		windowActionButtons.close:pressAndRelease()
+		buffer.setDrawLimit(drawLimit)
+		window:close()
+	end
+	
+	windowActionButtons.close.onTouch = exit
+	
+	window.onKeyDown = function(eventData)
+		if eventData[4] == 28 then exit() end
+	end
 
-	buffer.draw()
-	for i = 1, 2 do component.computer.beep(1500, 0.1) end
+	sendToDeveloperButton.onTouch = function()
+		local data = ecs.universalWindow("auto", "auto", 36, 0xeeeeee, true,
+			{"EmptyLine"},
+			{"CenterText", 0x880000, MineOSCore.localization.sendFeedback},
+			{"EmptyLine"},
+			{"Input", 0x262626, 0x880000, MineOSCore.localization.yourContacts},
+			{"Input", 0x262626, 0x880000, MineOSCore.localization.additionalInfo},
+			{"EmptyLine"},
+			{"CenterText", 0x880000, MineOSCore.localization.stackTraceback .. ":"},
+			{"EmptyLine"},
+			{"TextField", 5, 0xFFFFFF, 0x000000, 0xcccccc, 0x3366CC, reason},
+			{"Button", {0x999999, 0xffffff, "OK"}, {0x777777, 0xffffff, MineOSCore.localization.cancel}}
+		)
 
-	--Ивентовая параша
-	while true do
-		local e = {event.pull()}
-		if e[1] == "touch" then
-			for objectName, button in pairs(buttons) do
-				if button:isClicked(e[3], e[4]) then
-					button:press()
-					if objectName == "close" then
-						return
-					elseif objectName == "sendToDeveloper" then
-						local data = ecs.universalWindow("auto", "auto", 36, 0xeeeeee, true,
-							{"EmptyLine"},
-							{"CenterText", 0x880000, MineOSCore.localization.sendFeedback},
-							{"EmptyLine"},
-							{"Input", 0x262626, 0x880000, MineOSCore.localization.yourContacts},
-							{"Input", 0x262626, 0x880000, MineOSCore.localization.additionalInfo},
-							{"EmptyLine"},
-							{"CenterText", 0x880000, MineOSCore.localization.stackTraceback .. ":"},
-							{"EmptyLine"},
-							{"TextField", 5, 0xFFFFFF, 0x000000, 0xcccccc, 0x3366CC, reason},
-							{"Button", {0x999999, 0xffffff, "OK"}, {0x777777, 0xffffff, MineOSCore.localization.cancel}}
-						)
-
-						if data[3] == "OK" then
-							if component.isAvailable("internet") then
-								local phpUrl = "http://igortimofeev.wallst.ru/MineOSErrorReports/Report.php"
-								local url = phpUrl .. 
-								"?path=" .. path .. 
-								"&version=" .. string.optimizeForURLRequests(programVersion) ..
-								"&userContacts=" .. string.optimizeForURLRequests(data[1]) ..
-								"&userMessage=" .. string.optimizeForURLRequests(data[2]) .. 
-								"&errorMessage=" .. string.optimizeForURLRequests(reason)
-
-								local success, reason = component.internet.request(url)
-								if success then
-									success:close()
-								else
-									ecs.error(reason)
-								end
-							end
-
-							return
-						end
-					end
-
-					break
+		if data[3] == "OK" then
+			if component.isAvailable("internet") then
+				local url = "http://igortimofeev.wallst.ru/MineOSErrorReports/Report.php?path=" .. path .. "&version=" .. string.optimizeForURLRequests(programVersion) .. "&userContacts=" .. string.optimizeForURLRequests(data[1]) .. "&userMessage=" .. string.optimizeForURLRequests(data[2]) .. "&errorMessage=" .. string.optimizeForURLRequests(reason)
+				local success, reason = component.internet.request(url)
+				if success then
+					success:close()
+				else
+					ecs.error(reason)
 				end
 			end
-		elseif e[1] == "key_down" and (e[4] == 28 or e[4] == 57 or e[4] == 14) then
-			return
+			exit()
 		end
 	end
+
+	-- Начинаем гомоеблю!
+	buffer.draw()
+	for i = 1, 3 do component.computer.beep(1500, 0.08) end
+	window:handleEvents()
 end
 
 function MineOSCore.safeLaunch(path, ...)
 	local args = {...}
 	local oldResolutionWidth, oldResolutionHeight = component.gpu.getResolution()
 	local finalSuccess, finalReason = true, true
-	local loadSuccess, loadReason = loadfile(path)
+	local loadSuccess, loadReason = loadfile(string.canonicalPath("/" .. path))
 	
 	if fs.exists(path) then
 		if loadSuccess then
@@ -308,28 +316,33 @@ function MineOSCore.safeLaunch(path, ...)
 	end
 
 	if not finalSuccess then
-		local starting, ending = string.find(finalReason, "%:%d+%:")
-		--Проверяем, все ли удачно у нас нашлось - строка ошибки и т.п.
-		if starting and ending then
-			local errorLine = tonumber(unicode.sub(finalReason, starting + 1, ending - 1))
-			path = unicode.sub(finalReason, 1, starting - 1)
+		finalReason = string.canonicalPath("/" .. finalReason)
+		local match = string.match(finalReason, "%/[^%:]+%:%d+%:")
+		if match then
+			local errorLine = tonumber(unicode.sub(string.match(match, "%:%d+%:"), 2, -2))
+			local errorPath = unicode.sub(string.match(match, "%/[^%:]+%:"), 1, -2)
+
+			--print(string.match("bad arg in cyka bla bla /lib/cyka.lua:2013:cykatest in path bin/pidor.lua:31:afa", "%/[^%:%/]+%:%d+%:"))
 
 			--Проверяем, стоит ли нам врубать отсылку отчетов на мой сервер, ибо это должно быть онли у моих прожек
-			local applications = files.loadTableFromFile(MineOSCore.paths.applicationList)
-			local applicationExists = false
-			local programVersion = "N/A"
+			local applications, applicationExists, programVersion = table.fromFile(MineOSCore.paths.applicationList), true, "N/A"
+			-- errorPath = string.canonicalPath(errorPath)
 
-			for i = 1, #applications do
-				if string.canonicalPath("/" .. path) == string.canonicalPath("/" .. applications[i].name) then
-					applicationExists = true
-					programVersion = math.doubleToString(applications[i].version, 2) or programVersion
-					break
-				end
-			end
+			-- for i = 1, #applications do
+			-- 	if errorPath == string.canonicalPath("/" .. applications[i].name) then
+			-- 		applicationExists = true
+			-- 		programVersion = math.doubleToString(applications[i].version, 2) or programVersion
+			-- 		break
+			-- 	end
+			-- end
 
-			drawErrorWindow(path, programVersion, errorLine, finalReason, applicationExists)
+			-- ecs.error("EXISTS: " .. tostring(applicationExists))
+			-- ecs.error("PATH: " .. errorPath .. ", ERRORLINE: " .. errorLine)
+			-- ecs.error("REASON: " .. finalReason)
+
+			drawErrorWindow(errorPath, programVersion, errorLine, finalReason, applicationExists)
 		else
-			GUI.error("Unknown error in lib/MineOSCore.lua: possible reason is \"" .. tostring(finalReason) .. "\"")
+			GUI.error("Unknown error in lib/MineOSCore.lua due program execution: possible reason is \"" .. tostring(finalReason) .. "\"")
 		end
 	end
 
@@ -350,7 +363,7 @@ function MineOSCore.launchIcon(path, translate)
 		MineOSCore.safeLaunch(path .. "/" .. ecs.hideFileFormat(fs.name(path)) .. ".lua")
 	--Если это папка
 	elseif (fileFormat == "" or fileFormat == nil) and isDirectory then
-		MineOSCore.safeLaunch("MineOS/Applications/Finder.app/Finder.lua", "open", path)
+		MineOSCore.safeLaunch("/MineOS/Applications/Finder.app/Finder.lua", "open", path)
 	--Если это обычный луа файл - т.е. скрипт
 	elseif fileFormat == ".lua" or fileFormat == nil then
 		buffer.clear(MineOSCore.colors.background)
@@ -366,7 +379,7 @@ function MineOSCore.launchIcon(path, translate)
 		MineOSCore.safeLaunch("MineOS/Applications/3DPrint.app/3DPrint.lua open " .. path)
 	
 	--Если это текст или конфиг или языковой
-	elseif fileFormat == ".txt" or fileFormat == ".cfg" or fileFormat == ".MineOSCore.localization" then
+	elseif fileFormat == ".txt" or fileFormat == ".cfg" or fileFormat == ".lang" then
 		ecs.prepareToExit()
 		MineOSCore.safeLaunch("bin/edit.lua", path)
 
@@ -453,7 +466,7 @@ function MineOSCore.iconRightClick(icon, oldPixelsOfIcon, eventData, fileFormat,
 	-- Разные контекстные меню
 	if fs.isDirectory(icon.path) then
 		if fileFormat == ".app" then
-			action = context.menu(eventData[3], eventData[4],
+			action = GUI.contextMenu(eventData[3], eventData[4],
 				{MineOSCore.localization.contextMenuShowPackageContent},
 				"-",
 				{MineOSCore.localization.contextMenuCut},
@@ -464,11 +477,11 @@ function MineOSCore.iconRightClick(icon, oldPixelsOfIcon, eventData, fileFormat,
 				-- "-",
 				-- {MineOSCore.localization.contextMenuUploadToPastebin, true},
 				"-",
-				{MineOSCore.localization.contextMenuAddToDock, not somethingCanBeAddedToDock},
+				{MineOSCore.localization.contextMenuAddToDock},
 				{MineOSCore.localization.contextMenuDelete}
-			)
+			):show()
 		else
-			action = context.menu(eventData[3], eventData[4],
+			action = GUI.contextMenu(eventData[3], eventData[4],
 				{MineOSCore.localization.contextMenuCut},
 				{MineOSCore.localization.contextMenuCopy},
 				{MineOSCore.localization.contextMenuRename},
@@ -477,11 +490,11 @@ function MineOSCore.iconRightClick(icon, oldPixelsOfIcon, eventData, fileFormat,
 				{MineOSCore.localization.contextMenuArchive},
 				"-",
 				{MineOSCore.localization.contextMenuDelete}
-			)
+			):show()
 		end
 	else
 		if fileFormat == ".pic" then
-			action = context.menu(eventData[3], eventData[4],
+			action = GUI.contextMenu(eventData[3], eventData[4],
 				-- {MineOSCore.localization.contextMenuEdit},
 				{MineOSCore.localization.contextMenuEditInPhotoshop},
 				{MineOSCore.localization.contextMenuSetAsWallpaper},
@@ -493,11 +506,11 @@ function MineOSCore.iconRightClick(icon, oldPixelsOfIcon, eventData, fileFormat,
 				-- "-",
 				-- {MineOSCore.localization.contextMenuUploadToPastebin, true},
 				"-",
-				{MineOSCore.localization.contextMenuAddToDock, not somethingCanBeAddedToDock},
+				{MineOSCore.localization.contextMenuAddToDock},
 				{MineOSCore.localization.contextMenuDelete, false}
-			)
+			):show()
 		else
-			action = context.menu(eventData[3], eventData[4],
+			action = GUI.contextMenu(eventData[3], eventData[4],
 				{MineOSCore.localization.contextMenuEdit},
 				-- {MineOSCore.localization.contextMenuCreateApplication},
 				"-",
@@ -508,9 +521,9 @@ function MineOSCore.iconRightClick(icon, oldPixelsOfIcon, eventData, fileFormat,
 				-- "-",
 				-- {MineOSCore.localization.contextMenuUploadToPastebin, true},
 				"-",
-				{MineOSCore.localization.contextMenuAddToDock, not somethingCanBeAddedToDock},
+				{MineOSCore.localization.contextMenuAddToDock},
 				{MineOSCore.localization.contextMenuDelete}
-			)
+			):show()
 		end
 	end
 
@@ -568,8 +581,11 @@ function MineOSCore.iconRightClick(icon, oldPixelsOfIcon, eventData, fileFormat,
 		-- drawAll(true)
 	elseif action == MineOSCore.localization.contextMenuSetAsWallpaper then
 		--ecs.error(path)
-		ecs.createShortCut("MineOS/System/OS/Wallpaper.lnk", icon.path)
+		local wallpaperPath = "MineOS/System/OS/Wallpaper.lnk"
+		fs.remove(wallpaperPath)
+		ecs.createShortCut(wallpaperPath, icon.path)
 		computer.pushSignal("OSWallpaperChanged")
+		executeMethod(drawAllMethod)
 		return true
 		-- buffer.paste(1, 1, oldPixelsOfFullScreen)
 		-- buffer.draw()
@@ -578,6 +594,10 @@ function MineOSCore.iconRightClick(icon, oldPixelsOfIcon, eventData, fileFormat,
 		executeMethod(drawAllMethod)
 		-- getFileList(workPathHistory[currentWorkPathHistoryElement])
 		-- drawAll()
+	elseif action == MineOSCore.localization.contextMenuAddToDock then
+		table.insert(_G.OSSettings.dockShortcuts, {path = icon.path})
+		ecs.saveOSSettings()
+		executeMethod(fullRefreshMethod)
 	else
 		buffer.paste(icon.x, icon.y, oldPixelsOfIcon)
 		buffer.draw()
@@ -599,7 +619,13 @@ function MineOSCore.iconClick(icon, eventData, selectionColor, selectionTranspar
 end
 
 function MineOSCore.emptyZoneClick(eventData, workPath, drawAllMethod, fullRefreshMethod)
-	local action = context.menu(eventData[3], eventData[4], {MineOSCore.localization.contextMenuNewFile}, {MineOSCore.localization.contextMenuNewFolder}, {MineOSCore.localization.contextMenuNewApplication}, "-", {MineOSCore.localization.contextMenuPaste, (_G.clipboard == nil)})
+	local action = GUI.contextMenu(eventData[3], eventData[4],
+		{MineOSCore.localization.contextMenuNewFile},
+		{MineOSCore.localization.contextMenuNewFolder},
+		{MineOSCore.localization.contextMenuNewApplication},
+		"-",
+		{MineOSCore.localization.contextMenuPaste, (_G.clipboard == nil)}
+	):show()
 	if action == MineOSCore.localization.contextMenuNewFile then
 		ecs.newFile(workPath)
 		executeMethod(fullRefreshMethod)

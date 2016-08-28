@@ -12,7 +12,6 @@ local libraries = {
 	event = "event",
 	fs = "filesystem",
 	files = "files",
-	context = "context",
 	unicode = "unicode",
 	archive = "archive",
 	serialization = "serialization",
@@ -149,7 +148,7 @@ end
 
 --Рисем цветные кружочки слева вверху
 local function drawCloses()
-	obj.windowActionButtons = GUI.windowActionButtons(sizes.xFinder + 1, sizes.yFinder)
+	obj.windowActionButtons = GUI.windowActionButtons(sizes.xFinder + 1, sizes.yFinder):draw()
 end
 
 local function drawSearchBar(justDrawNotEvent)
@@ -164,11 +163,11 @@ local function drawTopBar()
 	buffer.square(sizes.xFinder, sizes.yFinder, sizes.finderWidth, sizes.topBarHeight, _G.OSSettings.interfaceColor or colors.topBar)
 	drawCloses()
 	local x, y = sizes.xFinder + 2, sizes.yFinder + 1
-	obj.historyBack = GUI.button(x, y, 3, 1, 0xffffff, 0x262626, 0xAAAAAA, 0x000000, "<"); x = x + obj.historyBack.width + 1
-	obj.historyBack.colors.disabled.button, obj.historyBack.colors.disabled.text = 0xFFFFFF, 0xdddddd
+	obj.historyBack = GUI.button(x, y, 3, 1, 0xffffff, 0x262626, 0xAAAAAA, 0x000000, "<"):draw(); x = x + obj.historyBack.width + 1
+	obj.historyBack.colors.disabled.background, obj.historyBack.colors.disabled.text = 0xFFFFFF, 0xdddddd
 	if currentWorkPathHistoryElement == 1 then obj.historyBack.disabled = true; obj.historyBack:draw() end
-	obj.historyForward = GUI.button(x, y, 3, 1, 0xffffff, 0x262626, 0xAAAAAA, 0x000000, ">"); x = x + obj.historyForward.width + 2
-	obj.historyForward.colors.disabled.button, obj.historyForward.colors.disabled.text = 0xFFFFFF, 0xdddddd
+	obj.historyForward = GUI.button(x, y, 3, 1, 0xffffff, 0x262626, 0xAAAAAA, 0x000000, ">"):draw(); x = x + obj.historyForward.width + 2
+	obj.historyForward.colors.disabled.background, obj.historyForward.colors.disabled.text = 0xFFFFFF, 0xdddddd
 	if currentWorkPathHistoryElement == #workPathHistory then obj.historyForward.disabled = true; obj.historyForward:draw() end
 
 	local cyka = {
@@ -177,8 +176,8 @@ local function drawTopBar()
 		{objName = "showHidden", text = MineOSCore.localization.showHiddenFilesShort, active = config.showHiddenFiles},
 	}
 	for i = 1, #cyka do
-		obj[cyka[i].objName] = GUI.adaptiveButton(x, y, 1, 0, 0xFFFFFF, 0x262626, 0x262626, 0xFFFFFF, cyka[i].text)
-		if cyka[i].active then obj[cyka[i].objName]:draw(true) end
+		obj[cyka[i].objName] = GUI.adaptiveButton(x, y, 1, 0, 0xFFFFFF, 0x262626, 0x262626, 0xFFFFFF, cyka[i].text):draw()
+		if cyka[i].active then obj[cyka[i].objName]:press() end
 		x = x + obj[cyka[i].objName].width + 1
 	end
 
@@ -189,7 +188,7 @@ local function drawAndHiglightPath(y, arrayElement)
 	-- GUI.error(workPathHistory[currentWorkPathHistoryElement] .. " - " .. tostring(arrayElement.path))
 	local pathAreEquals = workPathHistory[currentWorkPathHistoryElement] == arrayElement.path
 	if pathAreEquals then buffer.square(sizes.xFinder, y, sizes.leftBarWidth, 1, colors.leftBarSelection, colors.leftBarSelectionText, " ") end
-	buffer.text(sizes.xFinder + 2, y, pathAreEquals and colors.leftBarSelectionText or colors.leftBarList, unicode.sub(arrayElement.name, 1, sizes.leftBarWidth - 4))
+	buffer.text(sizes.xFinder + 2, y, pathAreEquals and colors.leftBarSelectionText or colors.leftBarList, unicode.sub(arrayElement.name, 1, sizes.leftBarWidth - 3))
 	local object = GUI.object(sizes.xFinder, y, sizes.leftBarWidth, 1)
 	object.path = arrayElement.path
 	table.insert(obj.leftBarItems, object)
@@ -244,8 +243,8 @@ local function drawNetwork()
 	local text = ecs.stringLimit("end", currentNetworkAddress, sizes.mainWidth - 4)
 	buffer.text(math.floor(sizes.xMain + sizes.mainWidth / 2 - unicode.len(text) / 2), y, 0xAAAAAA, text); y = y + 2
 	x = math.floor(sizes.xMain + sizes.mainWidth / 2 - buttonWidth / 2)
-	obj.networkFile = GUI.button(x, y, buttonWidth, 1, 0xdddddd, 0x262626, 0x262626, 0xEEEEEE, MineOSCore.localization.sendFile); y = y + 2
-	obj.networkMessage = GUI.button(x, y, buttonWidth, 1, 0xdddddd, 0x262626, 0x262626, 0xEEEEEE, MineOSCore.localization.sendMessage); y = y + 2
+	obj.networkFile = GUI.button(x, y, buttonWidth, 1, 0xdddddd, 0x262626, 0x262626, 0xEEEEEE, MineOSCore.localization.sendFile):draw(); y = y + 2
+	obj.networkMessage = GUI.button(x, y, buttonWidth, 1, 0xdddddd, 0x262626, 0x262626, 0xEEEEEE, MineOSCore.localization.sendMessage):draw(); y = y + 2
 end
 
 local function drawFiles()
@@ -382,12 +381,12 @@ while true do
 
 		if clickedAtEmptyArea and obj.topBarZone:isClicked(eventData[3], eventData[4]) then
 			if obj.historyBack:isClicked(eventData[3], eventData[4]) then
-				obj.historyBack:press(0.2)
+				obj.historyBack:pressAndRelease(0.2)
 				currentWorkPathHistoryElement = currentWorkPathHistoryElement - 1
 				sizes.yFileList = sizes.yFileListStartPoint
 				getListAndDrawAll()
 			elseif obj.historyForward:isClicked(eventData[3], eventData[4]) then
-				obj.historyForward:press(0.2)
+				obj.historyForward:pressAndRelease(0.2)
 				currentWorkPathHistoryElement = currentWorkPathHistoryElement + 1
 				sizes.yFileList = sizes.yFileListStartPoint
 				getListAndDrawAll()
@@ -398,7 +397,7 @@ while true do
 				sizes.yFileList = sizes.yFileListStartPoint
 				getListAndDrawAll()
 			elseif obj.windowActionButtons.close:isClicked(eventData[3], eventData[4]) then
-				obj.windowActionButtons.close:press(0.2)
+				obj.windowActionButtons.close:pressAndRelease(0.2)
 				return
 			elseif obj.showFormat:isClicked(eventData[3], eventData[4]) then
 				config.showFileFormat = not config.showFileFormat
@@ -409,7 +408,7 @@ while true do
 				saveConfig()
 				getListAndDrawAll()
 			elseif obj.sortingMethod:isClicked(eventData[3], eventData[4]) then
-				obj.sortingMethod:press(0.2)
+				obj.sortingMethod:pressAndRelease(0.2)
 				local data = ecs.universalWindow("auto", "auto", 36, 0x262626, true,
 					{"EmptyLine"},
 					{"CenterText", ecs.colors.orange, MineOSCore.localization.sortingMethod},
@@ -430,14 +429,14 @@ while true do
 
 		if clickedAtEmptyArea then
 			if obj.networkMessage and obj.networkMessage:isClicked(eventData[3], eventData[4]) then
-				obj.networkMessage:press(0.2)
+				obj.networkMessage:pressAndRelease(0.2)
 				local data = sendMessageOrFileWindow(MineOSCore.localization.sendMessage, MineOSCore.localization.messageText)
 				if data[2] == "OK" then
 					component.modem.send(currentNetworkAddress, port, "hereIsMessage", data[1])
 				end
 				clickedAtEmptyArea = false
 			elseif obj.networkFile and obj.networkFile:isClicked(eventData[3], eventData[4]) then
-				obj.networkFile:press(0.2)
+				obj.networkFile:pressAndRelease(0.2)
 				local data = sendMessageOrFileWindow(MineOSCore.localization.sendFile, MineOSCore.localization.pathToFile)
 				if data[2] == "OK" then
 					if fs.exists(data[1]) then

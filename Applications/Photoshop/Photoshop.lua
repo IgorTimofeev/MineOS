@@ -1,24 +1,33 @@
 
 ------------------------------------------------ Информешйн, епта --------------------------------------------------------------
 
+local photoshopVersion = "Photoshop v6.5"
+
 local copyright = [[
 	
-	Photoshop v6.3 для OpenComputers
+	Photoshop v6.5 для OpenComputers
 
 	Автор: ECS
 		Контактый адрес: https://vk.com/id7799889
 	Соавтор: Pornogion
 		Контактый адрес: https://vk.com/id88323331
 
+	Что нового в версии 6.5:
+		- Палитра заменена на более быструю и стильную, работающую на тройном буфере
+		- Добавлена возможность загрузки изображения из строки, созданной методом сохранения OCIFString
+
+	Что нового в версии 6.4:
+		- Добавлена возможность выбора цвета сетки прозрачности во вкладке "Вид"
+
 	Что нового в версии 6.3:
 		- Добавлена поддержка языковых пакетов
 
 	Что нового в версии 6.2:
-		- Добавлен суб-инструмент localization.polygon
+		- Добавлен суб-инструмент "Полигон"
 		- Улучшен инструмент "Выделение", теперь можно выделять области с шириной или высотой, равными 1
 
 	Что нового в версии 6.1:
-		- Добавлен суб-инструмент localization.ellipse
+		- Добавлен суб-инструмент "Эллипс"
 
 	Что нового в версии 6.0:
 		- Добавлен иструмент "Фигура", включающий в себя линию, прямоугольник и рамку
@@ -33,7 +42,7 @@ local copyright = [[
 
 	Что нового в версии 5.0:
 		- Добавлен инструмент "выделение" и несколько функций для работы с ним
-		- Добавлено меню localization.hotkeys, подсказывающее, как можно удобнее работать с программой
+		- Добавлено меню "Горячие клавиши", подсказывающее, как можно удобнее работать с программой
 
 	Что нового в версии 4.0:
 		- Программа переведена на библиотеку тройного буфера, скорость работы увеличена в десятки раз
@@ -48,9 +57,9 @@ copyright = nil
 
 local libraries = {
 	ecs = "ECSAPI",
+	MineOSCore = "MineOSCore",
 	fs = "filesystem",
 	unicode = "unicode",
-	context = "context",
 	image = "image",
 	component = "component",
 	keyboard = "keyboard",
@@ -68,7 +77,7 @@ for library in pairs(libraries) do if not _G[library] then _G[library] = require
 buffer.start()
 
 --Массив локалиации
-local localization = files.loadTableFromFile("/MineOS/Applications/Photoshop.app/Resources/Localization/" .. _G.OSSettings.language .. ".lang")
+local localization = MineOSCore.getCurrentApplicationLocalization()
 
 --Массив инфы о выделении
 local selection
@@ -104,10 +113,9 @@ local colors = {
 local sizes = {
 	widthOfLeftBar = 6,
 }
-sizes.heightOfTopBar = 3
 sizes.xStartOfDrawingArea = sizes.widthOfLeftBar + 1
 sizes.xEndOfDrawingArea = buffer.screen.width
-sizes.yStartOfDrawingArea = sizes.heightOfTopBar + 2
+sizes.yStartOfDrawingArea = 2
 sizes.yEndOfDrawingArea = buffer.screen.height - 1
 sizes.widthOfDrawingArea = sizes.xEndOfDrawingArea - sizes.xStartOfDrawingArea + 1
 sizes.heightOfDrawingArea = sizes.yEndOfDrawingArea - sizes.yStartOfDrawingArea + 1
@@ -133,7 +141,7 @@ local instruments = {
 	"S",
 }
 sizes.heightOfInstrument = 3
-sizes.yStartOfInstruments = sizes.heightOfTopBar + 2
+sizes.yStartOfInstruments = 2
 local currentInstrument = 2
 local currentBackground = 0x000000
 local currentForeground = 0xFFFFFF
@@ -143,9 +151,7 @@ local currentBrushSize = 1
 local savePath
 local currentShape
 local currentPolygonCountOfEdges
-
---Верхний тулбар
-local topToolbar = {{"PS", ecs.colors.blue}, {localization.file}, {localization.image}, {localization.edit}, {localization.hotkeys}, {localization.about}}
+local showTransparencyGrid = true
 
 ------------------------------------------------ Функции отрисовки --------------------------------------------------------------
 
@@ -174,26 +180,30 @@ end
 
 --Отрисовка "прозрачной зоны", этакая сеточка чередующаяся
 local function drawTransparentZone(x, y)
-	y = y - 1
+	if showTransparencyGrid then
+		y = y - 1
 
-	local stro4ka1 = ""
-	local stro4ka2 = ""
-	if masterPixels.width % 2 == 0 then
-		stro4ka1 = string.rep("▒ ", masterPixels.width / 2)
-		stro4ka2 = stro4ka1
-	else
-		stro4ka1 = string.rep("▒ ", masterPixels.width / 2)
-		stro4ka2 = stro4ka1 .. "▒"
-	end
-
-	for i = 1, masterPixels.height do
-		if i % 2 == 0 then
-			buffer.square(x, y + i, masterPixels.width, 1, colors.transparencyWhite, colors.transparencyGray, " ")
-			buffer.text(x + 1, y + i, colors.transparencyGray, stro4ka1)
+		local stro4ka1 = ""
+		local stro4ka2 = ""
+		if masterPixels.width % 2 == 0 then
+			stro4ka1 = string.rep("▒ ", masterPixels.width / 2)
+			stro4ka2 = stro4ka1
 		else
-			buffer.square(x, y + i, masterPixels.width, 1, colors.transparencyWhite, colors.transparencyGray)
-			buffer.text(x, y + i, colors.transparencyGray, stro4ka2)
+			stro4ka1 = string.rep("▒ ", masterPixels.width / 2)
+			stro4ka2 = stro4ka1 .. "▒"
 		end
+
+		for i = 1, masterPixels.height do
+			if i % 2 == 0 then
+				buffer.square(x, y + i, masterPixels.width, 1, colors.transparencyWhite, colors.transparencyGray, " ")
+				buffer.text(x + 1, y + i, colors.transparencyGray, stro4ka1)
+			else
+				buffer.square(x, y + i, masterPixels.width, 1, colors.transparencyWhite, colors.transparencyGray)
+				buffer.text(x, y + i, colors.transparencyGray, stro4ka2)
+			end
+		end
+	else
+		buffer.square(x, y, masterPixels.width, masterPixels.height, colors.transparencyWhite, 0x000000, " ")
 	end
 end
 
@@ -240,39 +250,7 @@ end
 
 --Отрисовка верхнего меню
 local function drawTopMenu()
-	buffer.square(1, 1, buffer.screen.width, 1, colors.topMenu, 0xFFFFFF, " ")
-	local xPos = 3
-
-	for i = 1, #topToolbar do
-		buffer.text(xPos, 1, topToolbar[i][2] or colors.topMenuText, topToolbar[i][1])
-		if i > 1 then
-			newObj("TopMenu", topToolbar[i][1], xPos, 1, xPos + unicode.len(topToolbar[i][1]) - 1, 1)
-		end
-		xPos = xPos + unicode.len(topToolbar[i][1]) + 2
-	end
-end
-
---Отрисовка верхней панели инструментов, пока что она не шибко-то полезна
-local function drawTopBar()
-	local topBarInputs = { {localization.brushSize, currentBrushSize}, {localization.transparency, math.floor(currentAlpha)}}
-
-	buffer.square(1, 2, buffer.screen.width, sizes.heightOfTopBar, colors.topToolbar, 0xFFFFFF, " ")
-	local xPos, yPos = 3, 3
-	local limit = 8
-
-	for i = 1, #topBarInputs do
-		buffer.text(xPos, yPos, 0xeeeeee, topBarInputs[i][1])
-		
-		xPos = xPos + unicode.len(topBarInputs[i][1]) + 1
-		ecs.inputText(xPos, yPos, limit, tostring(topBarInputs[i][2]), 0xffffff, 0x262626, true)
-
-		newObj("TopBarInputs", i, xPos, yPos, xPos + limit - 1, yPos, limit)
-
-		if i == 2 then xPos = xPos + 3 end
-
-		xPos = xPos + limit + 2
-	end
-
+	obj.menu = GUI.menu(1, 1, buffer.screen.width, colors.topMenu, colors.topMenuText, 0x3366CC, 0xFFFFFF, 0, {"PS", ecs.colors.blue}, {localization.file}, {localization.image}, {localization.edit}, {localization.view}, {localization.hotkeys}, {localization.about}):draw()
 end
 
 --Функция, создающая пустой массив изображения на основе указанных ранее длины и ширины
@@ -653,7 +631,6 @@ end
 local function drawAll()
 	drawBackground()
 	drawLeftBar()
-	drawTopBar()
 	drawTopMenu()
 	drawBackgroundAndImage()
 
@@ -820,7 +797,7 @@ end
 --Функция, спрашивающая юзверя, какого размера пикчу он  хочет создать - ну, и создает ее
 local function new()
 	selection = nil
-	local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, localization.newDocument}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, localization.width}, {"Input", 0x262626, 0x880000, localization.height}, {"EmptyLine"}, {"Button", {0xbbbbbb, 0xffffff, "OK"}})
+	local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, localization.newDocument}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, localization.width}, {"Input", 0x262626, 0x880000, localization.height}, {"EmptyLine"}, {"Button", {0x999999, 0xffffff, "OK"}})
 
 	data[1] = tonumber(data[1]) or 51
 	data[2] = tonumber(data[2]) or 19
@@ -885,7 +862,7 @@ local function brush(x, y, background, foreground, alpha, symbol)
 					--А если прозрачный, то смешиваем прозрачности
 					--Пиздануться вообще, сук
 					else
-						--Если его прозоачность максимальная
+						--Если его прозрачность максимальная
 						if masterPixels[newIterator + 2] == 0xFF then
 							setPixel(newIterator, background, foreground, alpha, symbol)
 						--Если не максимальная
@@ -1070,8 +1047,9 @@ while true do
 					
 					--Если нажата клавиша альт
 					if keyboard.isKeyDown(56) then
-						local _, _, gettedBackground = component.gpu.get(e[3], e[4])
+						local _, gettedForeground, gettedBackground = component.gpu.get(e[3], e[4])
 						currentBackground = gettedBackground
+						currentForeground = gettedForeground
 						drawColors()
 						buffer.draw()
 					
@@ -1112,13 +1090,11 @@ while true do
 			for key in pairs(obj["Colors"]) do
 				if ecs.clickedAtArea(e[3], e[4], obj["Colors"][key][1], obj["Colors"][key][2], obj["Colors"][key][3], obj["Colors"][key][4]) then
 					if key == 1 then
-						currentBackground = palette.draw("auto", "auto", currentBackground) or currentBackground
-						drawColors()
-						buffer.draw()
+						currentBackground = palette.show("auto", "auto", currentBackground) or currentBackground
+						drawAll()
 					elseif key == 2 or key == 3 then
-						currentForeground = palette.draw("auto", "auto", currentForeground) or currentForeground
-						drawColors()
-						buffer.draw()
+						currentForeground = palette.show("auto", "auto", currentForeground) or currentForeground
+						drawAll()
 					elseif key == 4 then
 						buffer.text(obj["Colors"][key][1], obj["Colors"][key][2], 0xFF0000, "←→")
 						os.sleep(0.2)
@@ -1136,7 +1112,7 @@ while true do
 					currentInstrument = key
 					drawLeftBar(); buffer.draw()
 					if instruments[currentInstrument] == "S" then
-						local action = context.menu(obj["Instruments"][key][3] + 1, obj["Instruments"][key][2], {localization.line}, {localization.ellipse}, {localization.rectangle}, {localization.polygon}, {localization.border})
+						local action = GUI.contextMenu(obj["Instruments"][key][3] + 1, obj["Instruments"][key][2], {localization.line}, {localization.ellipse}, {localization.rectangle}, {localization.polygon}, {localization.border}):show()
 						currentShape = action or localization.line
 						
 						if currentShape == localization.polygon then
@@ -1157,192 +1133,203 @@ while true do
 			end
 
 			--Верхний меню-бар
-			for key in pairs(obj["TopMenu"]) do
-				if ecs.clickedAtArea(e[3], e[4], obj["TopMenu"][key][1], obj["TopMenu"][key][2], obj["TopMenu"][key][3], obj["TopMenu"][key][4]) then
-					buffer.square(obj["TopMenu"][key][1] - 1, obj["TopMenu"][key][2], unicode.len(key) + 2, 1, ecs.colors.blue, 0xFFFFFF, " ")
-					buffer.text(obj["TopMenu"][key][1], obj["TopMenu"][key][2], 0xffffff, key)
-					buffer.draw()
+			local object = obj.menu:getClickedObject(e[3], e[4])
+			if object then
+				object:press()
+				buffer.draw()
+				local action
+				if object.text == localization.file then
+					action = GUI.contextMenu(object.x, object.y + 1, {localization.new, false, "^N"}, {localization.open, false, "^O"}, {localization.createFromString}, "-", {localization.save, (savePath == nil), "^S"}, {localization.saveAs}, "-", {localization.exit}):show()
+				elseif object.text == localization.image then
+					action = GUI.contextMenu(object.x, object.y + 1, {localization.crop}, {localization.expand}, "-", {localization.rotateBy90}, {localization.rotateBy180}, "-", {localization.flipHorizontal}, {localization.flipVertical}):show()
+				elseif object.text == localization.edit then
+					action = GUI.contextMenu(object.x, object.y + 1, {localization.hueSaturation}, {localization.colorBalance}, {localization.photoFilter}, "-", {localization.invertColors}, {localization.blackWhite}, "-", {localization.gaussianBlur}):show()
+				elseif object.text == localization.view then
+					action = GUI.contextMenu(object.x, object.y + 1, {localization.transparencyPad}):show()
+				elseif object.text == localization.about then
+					ecs.universalWindow("auto", "auto", 36, 0xeeeeee, true, {"EmptyLine"}, {"CenterText", 0x880000, photoshopVersion}, {"EmptyLine"}, {"CenterText", 0x262626, localization.developers}, {"CenterText", 0x555555, "Тимофеев Игорь"}, {"CenterText", 0x656565, "vk.com/id7799889"}, {"CenterText", 0x656565, "Трифонов Глеб"}, {"CenterText", 0x656565, "vk.com/id88323331"}, {"EmptyLine"}, {"CenterText", 0x262626, localization.testers}, {"CenterText", 0x656565, "Шестаков Тимофей"}, {"CenterText", 0x656565, "vk.com/id113499693"}, {"CenterText", 0x656565, "Вечтомов Роман"}, {"CenterText", 0x656565, "vk.com/id83715030"}, {"CenterText", 0x656565, "Омелаенко Максим"},  {"CenterText", 0x656565, "vk.com/paladincvm"}, {"EmptyLine"},{"Button", {0xbbbbbb, 0xffffff, "OK"}})
+				elseif object.text == localization.hotkeys then
+					ecs.universalWindow( "auto", "auto", 42, 0xeeeeee, true, 
+						table.unpack(localization.hotkeysLines)
+					)				
+				end
 
-					local action
-					
-					if key == localization.file then
-						action = context.menu(obj["TopMenu"][key][1] - 1, obj["TopMenu"][key][2] + 1, {localization.new}, {localization.open}, "-", {localization.save, (savePath == nil)}, {localization.saveAs}, "-", {localization.exit})
-					elseif key == localization.image then
-						action = context.menu(obj["TopMenu"][key][1] - 1, obj["TopMenu"][key][2] + 1, {localization.crop}, {localization.expand}, "-", {localization.rotateBy90}, {localization.rotateBy180}, "-", {localization.flipHorizontal}, {localization.flipVertical})
-					elseif key == localization.edit then
-						action = context.menu(obj["TopMenu"][key][1] - 1, obj["TopMenu"][key][2] + 1, {localization.hueSaturation}, {localization.colorBalance}, {localization.photoFilter}, "-", {localization.invertColors}, {localization.blackWhite}, "-", {localization.gaussianBlur})
-					elseif key == localization.about then
-						ecs.universalWindow("auto", "auto", 36, 0xeeeeee, true, {"EmptyLine"}, {"CenterText", 0x880000, "Photoshop v6.3"}, {"EmptyLine"}, {"CenterText", 0x262626, localization.developers}, {"CenterText", 0x555555, "Тимофеев Игорь"}, {"CenterText", 0x656565, "vk.com/id7799889"}, {"CenterText", 0x656565, "Трифонов Глеб"}, {"CenterText", 0x656565, "vk.com/id88323331"}, {"EmptyLine"}, {"CenterText", 0x262626, localization.testers}, {"CenterText", 0x656565, "Шестаков Тимофей"}, {"CenterText", 0x656565, "vk.com/id113499693"}, {"CenterText", 0x656565, "Вечтомов Роман"}, {"CenterText", 0x656565, "vk.com/id83715030"}, {"CenterText", 0x656565, "Омелаенко Максим"},  {"CenterText", 0x656565, "vk.com/paladincvm"}, {"EmptyLine"},{"Button", {0xbbbbbb, 0xffffff, "OK"}})
-					elseif key == localization.hotkeys then
-
-						ecs.universalWindow( "auto", "auto", 42, 0xeeeeee, true, 
-							table.unpack(localization.hotkeysLines)
-						)				
+				if action == localization.exit then
+					ecs.prepareToExit()
+					return
+				elseif action == localization.hueSaturation then
+					local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true,
+						{"EmptyLine"},
+						{"CenterText", 0x262626, localization.hueSaturation},
+						{"EmptyLine"},
+						{"Slider", 0x262626, 0x880000, 0, 100, 50, localization.hue .. ": ", ""},
+						{"Slider", 0x262626, ecs.colors.red, 0, 100, 50,  localization.saturation .. ": ", ""},
+						{"Slider", 0x262626, 0x000000, 0, 100, 50,  localization.brightness .. ": ", ""},
+						{"EmptyLine"}, 
+						{"Button", {0xaaaaaa, 0xffffff, "OK"}, {0x888888, 0xffffff, localization.cancel}}
+					)
+					if data[4] == "OK" then
+						masterPixels = image.hueSaturationBrightness(masterPixels, data[1] - 50, data[2] - 50, data[3] - 50)
+						drawAll()
 					end
-
-					if action == localization.exit then
-						ecs.prepareToExit()
-						return
-					elseif action == localization.hueSaturation then
-						local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true,
-							{"EmptyLine"},
-							{"CenterText", 0x262626, localization.hueSaturation},
-							{"EmptyLine"},
-							{"Slider", 0x262626, 0x880000, 0, 100, 50, localization.hue .. ": ", ""},
-							{"Slider", 0x262626, ecs.colors.red, 0, 100, 50,  localization.saturation .. ": ", ""},
-							{"Slider", 0x262626, 0x000000, 0, 100, 50,  localization.brightness .. ": ", ""},
-							{"EmptyLine"}, 
-							{"Button", {0xaaaaaa, 0xffffff, "OK"}, {0x888888, 0xffffff, localization.cancel}}
-						)
-						if data[4] == "OK" then
-							masterPixels = image.hueSaturationBrightness(masterPixels, data[1] - 50, data[2] - 50, data[3] - 50)
-							drawAll()
-						end
-					elseif action == localization.gaussianBlur then
-						local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true,
-							{"EmptyLine"},
-							{"CenterText", 0x262626, localization.gaussianBlur},
-							{"EmptyLine"},
-							{"Slider", 0x262626, 0x880000, 1, 5, 2, localization.radius .. ": ", ""},
-							{"Slider", 0x262626, 0x880000, 1, 255, 0x88, localization.force .. ": ", ""},
-							{"EmptyLine"}, 
-							{"Button", {0xaaaaaa, 0xffffff, "OK"}, {0x888888, 0xffffff, localization.cancel}}
-						)
-						if data[3] == "OK" then
-							masterPixels = image.gaussianBlur(masterPixels, tonumber(data[1]), tonumber(data[2]))
-							drawAll()
-						end
-					elseif action == localization.colorBalance then
-						local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true,
-							{"EmptyLine"},
-							{"CenterText", 0x262626, localization.colorBalance},
-							{"EmptyLine"},
-							{"Slider", 0x262626, 0x880000, 0, 100, 50, "R: ", ""},
-							{"Slider", 0x262626, ecs.colors.green, 0, 100, 50, "G: ", ""},
-							{"Slider", 0x262626, ecs.colors.blue, 0, 100, 50, "B: ", ""},
-							{"EmptyLine"}, 
-							{"Button", {0xaaaaaa, 0xffffff, "OK"}, {0x888888, 0xffffff, localization.cancel}}
-						)
-						if data[4] == "OK" then
-							masterPixels = image.colorBalance(masterPixels, data[1] - 50, data[2] - 50, data[3] - 50)
-							drawAll()
-						end
-					elseif action == localization.photoFilter then
-						local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true,
-							{"EmptyLine"},
-							{"CenterText", 0x262626, localization.photoFilter},
-							{"EmptyLine"},
-							{"Color", localization.filterColor, 0x333333},
-							{"Slider", 0x262626, 0x880000, 0, 255, 100, localization.transparency .. ": ", ""},
-							{"EmptyLine"}, 
-							{"Button", {0xaaaaaa, 0xffffff, "OK"}, {0x888888, 0xffffff, localization.cancel}}
-						)
-						if data[3] == "OK" then
-							masterPixels = image.photoFilter(masterPixels, data[1], data[2])
-							drawAll()
-						end
-					elseif action == localization.crop then
-						crop()
-					elseif action == localization.expand then
-						expand()
-					elseif action == localization.flipVertical then
-						masterPixels = image.flipVertical(masterPixels)
+				elseif action == localization.gaussianBlur then
+					local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true,
+						{"EmptyLine"},
+						{"CenterText", 0x262626, localization.gaussianBlur},
+						{"EmptyLine"},
+						{"Slider", 0x262626, 0x880000, 1, 5, 2, localization.radius .. ": ", ""},
+						{"Slider", 0x262626, 0x880000, 1, 255, 0x88, localization.force .. ": ", ""},
+						{"EmptyLine"}, 
+						{"Button", {0xaaaaaa, 0xffffff, "OK"}, {0x888888, 0xffffff, localization.cancel}}
+					)
+					if data[3] == "OK" then
+						masterPixels = image.gaussianBlur(masterPixels, tonumber(data[1]), tonumber(data[2]))
 						drawAll()
-					elseif action == localization.flipHorizontal then
-						masterPixels = image.flipHorizontal(masterPixels)
+					end
+				elseif action == localization.colorBalance then
+					local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true,
+						{"EmptyLine"},
+						{"CenterText", 0x262626, localization.colorBalance},
+						{"EmptyLine"},
+						{"Slider", 0x262626, 0x880000, 0, 100, 50, "R: ", ""},
+						{"Slider", 0x262626, ecs.colors.green, 0, 100, 50, "G: ", ""},
+						{"Slider", 0x262626, ecs.colors.blue, 0, 100, 50, "B: ", ""},
+						{"EmptyLine"}, 
+						{"Button", {0xaaaaaa, 0xffffff, "OK"}, {0x888888, 0xffffff, localization.cancel}}
+					)
+					if data[4] == "OK" then
+						masterPixels = image.colorBalance(masterPixels, data[1] - 50, data[2] - 50, data[3] - 50)
 						drawAll()
-					elseif action == localization.invertColors then
-						masterPixels = image.invert(masterPixels)
+					end
+				elseif action == localization.photoFilter then
+					local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true,
+						{"EmptyLine"},
+						{"CenterText", 0x262626, localization.photoFilter},
+						{"EmptyLine"},
+						{"Color", localization.filterColor, 0x333333},
+						{"Slider", 0x262626, 0x880000, 0, 255, 100, localization.transparency .. ": ", ""},
+						{"EmptyLine"}, 
+						{"Button", {0xaaaaaa, 0xffffff, "OK"}, {0x888888, 0xffffff, localization.cancel}}
+					)
+					if data[3] == "OK" then
+						masterPixels = image.photoFilter(masterPixels, data[1], data[2])
 						drawAll()
-					elseif action == localization.blackWhite then
-						masterPixels = image.blackAndWhite(masterPixels)
-						drawAll()
-					elseif action == localization.rotateBy90 then
-						masterPixels = image.rotate(masterPixels, 90)
-						drawAll()
-					elseif action == localization.rotateBy180 then
-						masterPixels = image.rotate(masterPixels, 180)
-						drawAll()
-					elseif action == localization.new then
-						new()
-						drawAll()
-					elseif action == localization.saveAs then
-						local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, localization.saveAs}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, "Путь"}, {"Selector", 0x262626, 0x880000, "OCIF4", "OCIF1", "OCIFString", "RAW"}, {"CenterText", 0x262626, "Рекомендуется использовать"}, {"CenterText", 0x262626, "метод кодирования OCIF4"}, {"EmptyLine"}, {"Button", {0xaaaaaa, 0xffffff, "OK"}, {0x888888, 0xffffff, localization.cancel}})
-						if data[3] == "OK" then
-							data[1] = data[1] or "Untitled"
-							data[2] = data[2] or "OCIF4"
-							
-							if data[2] == "RAW" then
-								data[2] = 0
-							elseif data[2] == "OCIF1" then
-								data[2] = 1
-							elseif data[2] == "OCIF4" then
-								data[2] = 4
-							elseif data[2] == "OCIFString" then
-								data[2] = 6
-							else
-								data[2] = 4
-							end
-
-							local filename = data[1] .. ".pic"
-							local encodingMethod = data[2]
-
-							image.save(filename, masterPixels, encodingMethod)
-							savePath = filename
-						end
-					elseif action == localization.save then
-						image.save(savePath, masterPixels)
-
-					elseif action == localization.open then
-						local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, localization.open}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, "Путь"}, {"EmptyLine"}, {"Button", {0xaaaaaa, 0xffffff, "OK"}, {0x888888, 0xffffff, localization.cancel}})
-						if data[2] == "OK" then
-							local fileFormat = ecs.getFileFormat(data[1])
+					end
+				elseif action == localization.crop then
+					crop()
+				elseif action == localization.expand then
+					expand()
+				elseif action == localization.flipVertical then
+					masterPixels = image.flipVertical(masterPixels)
+					drawAll()
+				elseif action == localization.flipHorizontal then
+					masterPixels = image.flipHorizontal(masterPixels)
+					drawAll()
+				elseif action == localization.invertColors then
+					masterPixels = image.invert(masterPixels)
+					drawAll()
+				elseif action == localization.blackWhite then
+					masterPixels = image.blackAndWhite(masterPixels)
+					drawAll()
+				elseif action == localization.rotateBy90 then
+					masterPixels = image.rotate(masterPixels, 90)
+					drawAll()
+				elseif action == localization.rotateBy180 then
+					masterPixels = image.rotate(masterPixels, 180)
+					drawAll()
+				elseif action == localization.new then
+					new()
+					drawAll()
+				elseif action == localization.saveAs then
+					local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, localization.saveAs}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, localization.path}, {"Selector", 0x262626, 0x880000, "OCIF4", "OCIF1", "OCIFString", "RAW"}, {"CenterText", 0x262626, "Рекомендуется использовать"}, {"CenterText", 0x262626, "метод кодирования OCIF4"}, {"EmptyLine"}, {"Button", {0xaaaaaa, 0xffffff, "OK"}, {0x888888, 0xffffff, localization.cancel}})
+					if data[3] == "OK" then
+						data[1] = data[1] or "Untitled"
+						data[2] = data[2] or "OCIF4"
 						
-							if not data[1] then
-								ecs.error("Некорректное имя файла!")
-							elseif not fs.exists(data[1]) then
-								ecs.error("Файл\""..data[1].."\" не существует!")
-							elseif fileFormat ~= ".pic" and fileFormat ~= ".rawpic" and fileFormat ~= ".png" then 
-								ecs.error("Формат файла \""..fileFormat.."\" не поддерживается!")
-							else
-								loadImageFromFile(data[1])
-								drawAll()
-							end
+						if data[2] == "RAW" then
+							data[2] = 0
+						elseif data[2] == "OCIF1" then
+							data[2] = 1
+						elseif data[2] == "OCIF4" then
+							data[2] = 4
+						elseif data[2] == "OCIFString" then
+							data[2] = 6
+						else
+							data[2] = 4
+						end
+
+						local filename = string.gsub(data[1], ".pic$", "") .. ".pic"
+						local encodingMethod = data[2]
+
+						image.save(filename, masterPixels, encodingMethod)
+						savePath = filename
+					end
+				elseif action == localization.save then
+					image.save(savePath, masterPixels)
+
+				elseif action == localization.open then
+					local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, localization.open}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, localization.path}, {"EmptyLine"}, {"Button", {0xaaaaaa, 0xffffff, "OK"}, {0x888888, 0xffffff, localization.cancel}})
+					if data[2] == "OK" then
+						local fileFormat = ecs.getFileFormat(data[1])
+					
+						if not data[1] then
+							ecs.error("Некорректное имя файла!")
+						elseif not fs.exists(data[1]) then
+							ecs.error("Файл\""..data[1].."\" не существует!")
+						elseif fileFormat ~= ".pic" and fileFormat ~= ".rawpic" and fileFormat ~= ".png" then 
+							ecs.error("Формат файла \""..fileFormat.."\" не поддерживается!")
+						else
+							loadImageFromFile(data[1])
+							drawAll()
 						end
 					end
-
-					drawTopMenu()
-					buffer.draw()
-					break
-				end
-			end
-
-			--Топбар
-			for key in pairs(obj["TopBarInputs"]) do
-				if ecs.clickedAtArea(e[3], e[4], obj["TopBarInputs"][key][1], obj["TopBarInputs"][key][2], obj["TopBarInputs"][key][3], obj["TopBarInputs"][key][4]) then
-					local input = ecs.inputText(obj["TopBarInputs"][key][1], obj["TopBarInputs"][key][2], obj["TopBarInputs"][key][5], "", 0xffffff, 0x262626)
-					input = tonumber(input)
-
-					if input then
-						if key == 1 then
-							if input > 0 and input < 10 then currentBrushSize = input end
-						elseif key == 2 then
-							if input > 0 and input <= 255 then currentAlpha = input end
+				elseif action == localization.createFromString then
+					local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true,
+						{"EmptyLine"},
+						{"CenterText", 0x262626, localization.createFromString},
+						{"EmptyLine"},
+						{"Input", 0x262626, 0x880000, localization.string},
+						{"EmptyLine"},
+						{"Button", {0xaaaaaa, 0xffffff, "OK"}, {0x888888, 0xffffff, localization.cancel}}
+					)
+					if data[2] == "OK" then
+						local success, picture = pcall(image.fromString, data[1])
+						if success then
+							masterPixels, selection, savePath = picture, nil, nil
+							tryToFitImageOnCenterOfScreen()
+							drawAll()
+						else
+							error("Невозможно создать изображение из этой строки!")
 						end
 					end
+				elseif action == localization.transparencyPad then
+					local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true,
+						{"EmptyLine"},
+						{"CenterText", 0x262626, localization.transparencyPad},
+						{"EmptyLine"},
+						{"Color", localization.transparencyColor .. " 1", colors.transparencyWhite},
+						{"Color", localization.transparencyColor .. " 2", colors.transparencyGray},
+						{"EmptyLine"},
+						{"Switch", 0xF2B233, 0xffffff, 0x262626, localization.transparencyGrid, showTransparencyGrid},
+						{"EmptyLine"},
+						{"Button", {0xaaaaaa, 0xffffff, "OK"}, {0x888888, 0xffffff, localization.cancel}}
+					)
 
-					drawTopBar()
-					buffer.draw()
-
-					break
+					if data[4] == "OK" then
+						colors.transparencyWhite, colors.transparencyGray, showTransparencyGrid = data[1], data[2], data[3]
+						drawAll()
+					end
 				end
+
+				drawTopMenu()
+				buffer.draw()
 			end
 		else
 			--Если кликнули на рисовабельную зонку
 			if ecs.clickedAtArea(e[3], e[4], sizes.xStartOfImage, sizes.yStartOfImage, sizes.xEndOfImage, sizes.yEndOfImage) then
 				
 				if instruments[currentInstrument] == "M" and selection then
-					local action = context.menu(e[3], e[4], {localization.deselect}, {localization.crop, true}, "-", {localization.fill}, {localization.border}, "-", {localization.clear})
+					local action = GUI.contextMenu(e[3], e[4], {localization.deselect}, {localization.crop, true}, "-", {localization.fill}, {localization.border}, "-", {localization.clear}):show()
 					if action == localization.deselect then
 						selection = nil
 						drawAll()
@@ -1361,7 +1348,6 @@ while true do
 					if x + width + 1 >= buffer.screen.width then x = buffer.screen.width - width - 1 end
 
 					currentBrushSize, currentAlpha = table.unpack(ecs.universalWindow(x, y, width, 0xeeeeee, true, {"EmptyLine"}, {"CenterText", 0x880000, localization.brushParameters}, {"Slider", 0x262626, 0x880000, 1, 10, currentBrushSize, localization.size ..  ": ", " px"}, {"Slider", 0x262626, 0x880000, 0, 255, currentAlpha, localization.transparency .. ": ", ""}, {"EmptyLine"}, {"Button", {0xbbbbbb, 0xffffff, "OK"}}))
-					drawTopBar()
 					buffer.draw()
 				end
 			end

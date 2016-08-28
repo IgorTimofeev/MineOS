@@ -44,11 +44,11 @@ local function drawButtons()
 end
 
 local function drawHorizontalLine(x, y, x2, color)
-	for i = x, x2 do doubleHeight.set(i, y, color) end
+	for i = x, x2 do buffer.semiPixelSet(i, y, color) end
 end
 
 local function drawVerticalLine(x, y, y2, color)
-	for i = y, y2 do doubleHeight.set(x, i, color) end
+	for i = y, y2 do buffer.semiPixelSet(x, i, color) end
 end
 
 local function drawAxis()
@@ -86,7 +86,7 @@ end
 local function drawGraph()
 	for i = 1, #keyPoints do
 		doubleHeight.line(xGraph + keyPoints[i].x, yGraph - keyPoints[i].y, xGraph + keyPoints[i].x2, yGraph - keyPoints[i].y2, graphColor)
-		if showCornerPoints then doubleHeight.set(xGraph + keyPoints[i].x, yGraph - keyPoints[i].y, 0x00A8FF) end
+		if showCornerPoints then buffer.semiPixelSet(xGraph + keyPoints[i].x, yGraph - keyPoints[i].y, 0x00A8FF) end
 	end
 end
 
@@ -108,7 +108,7 @@ local function drawSelectedPoint(x, y, pointNumber)
 	if xOnScreen <= xGraph then drawHorizontalLine(xOnScreen, yOnScreen, xGraph - 1, selectionPointLineColor) else drawHorizontalLine(xGraph + 1, yOnScreen, xOnScreen, selectionPointLineColor) end
 	if yOnScreen <= yGraph then drawVerticalLine(xOnScreen, yOnScreen, yGraph - 1, selectionPointLineColor) else drawVerticalLine(xOnScreen, yGraph + 1, yOnScreen, selectionPointLineColor) end
 
-	doubleHeight.set(xOnScreen, yOnScreen, selectionPointColor)
+	buffer.semiPixelSet(xOnScreen, yOnScreen, selectionPointColor)
 
 	yOnScreen = math.ceil(yOnScreen / 2)
 

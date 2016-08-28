@@ -317,11 +317,8 @@ function ecs.getOSApplication(application)
 		--Если имеется режим создания ярлыка, то создаем его
 		if application.createShortcut then
 			local desktopPath = "MineOS/Desktop/"
-			local dockPath = "MineOS/System/OS/Dock/"
 			
-			if application.createShortcut == "dock" then
-				ecs.createShortCut(dockPath .. fs.name(application.name) .. ".lnk", application.name .. ".app")
-			else
+			if application.createShortcut == "desktop" then
 				ecs.createShortCut(desktopPath .. fs.name(application.name) .. ".lnk", application.name .. ".app")
 			end
 		end

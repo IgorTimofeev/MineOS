@@ -79,12 +79,14 @@ local function calculateSizes()
 	sizes.downloadButtonWidth = 17
 	sizes.descriptionTruncateSize = sizes.width - 6 - MineOSCore.iconWidth - sizes.downloadButtonWidth
 	sizes.searchFieldWidth = math.floor(sizes.width * 0.3)
-	obj.searchTextField = GUI.textField(math.floor(sizes.x + sizes.width / 2 - sizes.searchFieldWidth / 2), 1, sizes.searchFieldWidth, 1, 0xEEEEEE, 0x777777, 0xEEEEEE, 0x555555, nil, localization.search, false, true)
+	obj.searchTextField = GUI.inputTextBox(math.floor(sizes.x + sizes.width / 2 - sizes.searchFieldWidth / 2), 1, sizes.searchFieldWidth, 1, 0xEEEEEE, 0x555555, 0xEEEEEE, 0x262626, nil, localization.search, false, true)
 end
 
 local function drawTopBar()
-	obj.topBarButtons = GUI.toolbar(sizes.x, sizes.y, sizes.width, sizes.topBarHeight, 2, currentTopBarElement, colors.topBar, colors.topBarText, colors.topBarElement, colors.topBarElementText, table.unpack(topBarElements))
-	obj.windowActionButtons = GUI.windowActionButtons(sizes.x + 1, sizes.y)
+	obj.topBarButtons = GUI.tabBar(sizes.x, sizes.y, sizes.width, sizes.topBarHeight, 2, colors.topBar, colors.topBarText, colors.topBarElement, colors.topBarElementText, table.unpack(topBarElements))
+	obj.topBarButtons.selectedTab = currentTopBarElement
+	obj.topBarButtons:draw()
+	obj.windowActionButtons = GUI.windowActionButtons(sizes.x + 1, sizes.y):draw()
 end
 
 local function getIcon(url)
@@ -161,7 +163,7 @@ local function drawApplication(x, y, i, doNotDrawButton)
 			currentApps[i].buttonObject.x, currentApps[i].buttonObject.y = xButton, yButton
 			currentApps[i].buttonObject:draw()
 		else
-			currentApps[i].buttonObject = GUI.button(xButton, yButton, sizes.downloadButtonWidth, 1, colors.downloadButton, colors.downloadButtonText, 0x555555, 0xFFFFFF, text)
+			currentApps[i].buttonObject = GUI.button(xButton, yButton, sizes.downloadButtonWidth, 1, colors.downloadButton, colors.downloadButtonText, 0x555555, 0xFFFFFF, text):draw()
 		end
 	end
 
@@ -180,11 +182,11 @@ local function drawPageSwitchButtons(y)
 	local buttonWidth = 5
 	local width = buttonWidth * 2 + textLength + 2
 	local x = math.floor(sizes.x + sizes.width / 2 - width / 2)
-	obj.prevPageButton = GUI.button(x, y, buttonWidth, 1, colors.downloadButton, colors.downloadButtonText, 0x262626, 0xFFFFFF, "<")
+	obj.prevPageButton = GUI.button(x, y, buttonWidth, 1, colors.downloadButton, colors.downloadButtonText, 0x262626, 0xFFFFFF, "<"):draw()
 	x = x + obj.prevPageButton.width + 1
 	buffer.text(x, y, colors.version, text)
 	x = x + textLength + 1
-	obj.nextPageButton = GUI.button(x, y, buttonWidth, 1, colors.downloadButton, colors.downloadButtonText, 0x262626, 0xFFFFFF, ">")
+	obj.nextPageButton = GUI.button(x, y, buttonWidth, 1, colors.downloadButton, colors.downloadButtonText, 0x262626, 0xFFFFFF, ">"):draw()
 end
 
 local function clearMainZone()
@@ -253,7 +255,7 @@ local function updates()
 	if #changes > 0 then
 		buffer.setDrawLimit(sizes.x, obj.main.y, sizes.width, obj.main.height)
 		local x, y = sizes.x + 2, fromY
-		obj.updateAllButton = GUI.button(math.floor(sizes.x + sizes.width / 2 - sizes.downloadButtonWidth / 2), y, 20, 1, colors.downloadButton, colors.downloadButtonText, 0x555555, 0xFFFFFF, "Обновить все")
+		obj.updateAllButton = GUI.button(math.floor(sizes.x + sizes.width / 2 - sizes.downloadButtonWidth / 2), y, 20, 1, colors.downloadButton, colors.downloadButtonText, 0x555555, 0xFFFFFF, "Обновить все"):draw()
 		y = y + 2
 
 		for i = from, (from + limit) do
@@ -367,7 +369,7 @@ while true do
 			if currentTopBarElement < 5 then
 				for appIndex, app in pairs(currentApps) do
 					if app.buttonObject:isClicked(e[3], e[4]) then
-						app.buttonObject:press(0.3)
+						app.buttonObject:pressAndRelease(0.3)
 						if app.buttonObject.text == localization.update or app.buttonObject.text == localization.download then
 							app.buttonObject.text = localization.downloading
 							app.buttonObject.disabled = true
@@ -385,7 +387,7 @@ while true do
 				end
 			else
 				if obj.updateAllButton and obj.updateAllButton:isClicked(e[3], e[4]) then
-					obj.updateAllButton:press()
+					obj.updateAllButton:pressAndRelease()
 					updateAll()
 					flush()
 					drawAll()
@@ -394,7 +396,7 @@ while true do
 
 			if obj.nextPageButton then
 				if obj.nextPageButton:isClicked(e[3], e[4]) then
-					obj.nextPageButton:press()
+					obj.nextPageButton:pressAndRelease()
 					fromY = obj.main.y + 1
 					from = from + limit
 					currentApps = {}
@@ -412,11 +414,11 @@ while true do
 
 
 		if obj.windowActionButtons.close:isClicked(e[3], e[4]) then
-			obj.windowActionButtons.close:press()
+			obj.windowActionButtons.close:pressAndRelease()
 			return
 		end
 
-		for key, button in pairs(obj.topBarButtons) do
+		for key, button in pairs(obj.topBarButtons.tabs.children) do
 			if button:isClicked(e[3], e[4]) then
 				currentTopBarElement = key
 				flush()

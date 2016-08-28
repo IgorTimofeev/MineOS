@@ -6,6 +6,13 @@
 	w = "Ш",
 	h = "В",
 
+	view = "Вид",
+	transparencyPad = "Подложка прозрачности",
+	transparencyColor = "Цвет прозрачности",
+	transparencyGrid = "Сетка прозрачности",
+
+	path = "Путь",
+	string = "Строка",
 	file = "Файл",
 	image = "Изображение",
 	edit = "Редактировать",
@@ -18,6 +25,7 @@
 
 	new = "Новый",
 	open = "Открыть",
+	createFromString = "Создать из OCIFString",
 	save = "Сохранить",
 	saveAs = "Сохранить как",
 	exit = "Выход",

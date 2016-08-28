@@ -201,7 +201,17 @@ do
   downloadAllApps, downloadWallpapers, showHelpTips = data[2], data[3], data[4]
 
   --УСТАНАВЛИВАЕМ НУЖНЫЙ ЯЗЫК
-  _G.OSSettings = { showHelpOnApplicationStart = showHelpTips, language = data[1] }
+  _G.OSSettings = {
+    showHelpOnApplicationStart = showHelpTips,
+    language = data[1],
+    dockShortcuts = {
+      {path = "/MineOS/Applications/AppMarket.app"},
+      {path = "/MineOS/Applications/Finder.app"},
+      {path = "/MineOS/Applications/Photoshop.app"},
+      {path = "/MineOS/Applications/VK.app"},
+    }
+  }
+
   ecs.saveOSSettings()
 
   --Качаем язык
