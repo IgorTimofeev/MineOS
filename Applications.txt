@@ -8,7 +8,7 @@
     about="IgorTimofeev/OpenComputers/master/MineOS/About/",
     type="Script",
     forceDownload=true,
-    version=3.27,
+    version=3.28,
   },
   {
     name="MineOS/Pictures/Raspberry.pic",
@@ -114,7 +114,6 @@
     name="MineOS/System/OS/Icons/Application.pic",
     url="IgorTimofeev/OpenComputers/master/MineOS/Icons/Application.pic",
     type="Icon",
-    preLoadFile=true,
     version=1.0,
   },
   {
