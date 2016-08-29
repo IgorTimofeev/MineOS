@@ -91,7 +91,7 @@ function MineOSCore.loadStandartIcons()
 	MineOSCore.loadIcon("fileNotExists", MineOSCore.paths.icons .. "FileNotExists.pic")
 	MineOSCore.loadIcon("archive", MineOSCore.paths.icons .. "Archive.pic")
 	MineOSCore.loadIcon("model3D", MineOSCore.paths.icons .. "3DModel.pic")
-	MineOSCore.loadIcon("application", MineOSCore.paths.icons .. "application.pic")
+	MineOSCore.loadIcon("application", MineOSCore.paths.icons .. "Application.pic")
 end
 
 function MineOSCore.init()
