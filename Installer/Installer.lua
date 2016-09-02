@@ -32,7 +32,7 @@ if math.floor(computer.totalMemory() / 1024 ) < 1536 then table.insert(govno, "N
 if fs.get("bin/edit.lua") == nil or fs.get("bin/edit.lua").isReadOnly() then table.insert(govno, "You can't install MineOS on floppy disk. Run \"install\" in command line and install OpenOS from floppy to HDD first. After that you're be able to install MineOS from Pastebin.") end
 
 --Если нашло какое-то несоответствие сис. требованиям, то написать, что именно не так
-if #govno > 0 args[1] ~= "skipcheck" then
+if #govno > 0 and args[1] ~= "skipcheck" then
   print(" ")
   for i = 1, #govno do
     print(govno[i])
