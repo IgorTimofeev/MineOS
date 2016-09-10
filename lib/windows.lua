@@ -91,8 +91,10 @@ function windows.handleEventData(window, eventData)
 			elseif object.type == GUI.objectTypes.switch then
 				switchHandler(window, object, objectIndex, eventData)
 			elseif object.onTouch then
-				executeObjectMethod(object.onTouch, object, eventData)
+				executeObjectMethod(object.onTouch, eventData)
 			end
+		else
+			executeObjectMethod(window.onTouch, eventData)
 		end
 	elseif eventData[1] == "scroll" then
 		local object, objectIndex = window:getClickedObject(eventData[3], eventData[4])
@@ -100,8 +102,10 @@ function windows.handleEventData(window, eventData)
 			if object.type == GUI.objectTypes.textBox then
 				textBoxScrollHandler(window, object, objectIndex, eventData)
 			elseif object.onScroll then
-				executeObjectMethod(object.onScroll, object, eventData)
+				executeObjectMethod(object.onScroll, eventData)
 			end
+		else
+			executeObjectMethod(window.onScroll, eventData)
 		end
 	elseif eventData[1] == "drag" then
 		local object, objectIndex = window:getClickedObject(eventData[3], eventData[4])
@@ -109,17 +113,23 @@ function windows.handleEventData(window, eventData)
 			if object.type == GUI.objectTypes.horizontalSlider then
 				horizontalSliderHandler(window, object, objectIndex, eventData)
 			elseif object.onDrag then
-				executeObjectMethod(object.onDrag, object, eventData)
+				executeObjectMethod(object.onDrag, eventData)
 			end
+		else
+			executeObjectMethod(window.onDrag, eventData)
 		end
 	elseif eventData[1] == "key_down" then
 		executeObjectMethod(window.onKeyDown, eventData)
+	elseif eventData[1] == "key_up" then
+		executeObjectMethod(window.onKeyUp, eventData)
 	end
+
+	executeObjectMethod(window.onAnyEvent, eventData)
 end
 
-function windows.handleEvents(window)
+function windows.handleEvents(window, pullTime)
 	while true do
-		window:handleEventData({event.pull()})
+		window:handleEventData({event.pull(pullTime)})
 		if window.dataToReturn then return table.unpack(window.dataToReturn) end
 	end
 end
@@ -151,6 +161,7 @@ local function drawWindow(window)
 	window:reimplementedDraw()
 	if window.drawShadow then GUI.windowShadow(window.x, window.y, window.width, window.height, 50) end
 	if window.onDrawFinished then window.onDrawFinished() end
+	buffer.draw()
 end
 
 local function newWindow(x, y, width, height, minimumWidth, minimumHeight)

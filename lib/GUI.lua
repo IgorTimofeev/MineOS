@@ -79,7 +79,8 @@ GUI.objectTypes = enum(
 	"inputTextBox",
 	"textBox",
 	"horizontalSlider",
-	"switch"
+	"switch",
+	"progressBar"
 )
 
 ----------------------------------------- Primitive objects -----------------------------------------
@@ -255,6 +256,11 @@ local function addHorizontalSliderObjectToContainer(container, objectName, ...)
 	return addObjectToContainer(container, GUI.objectTypes.horizontalSlider, objectName, GUI.horizontalSlider(...))
 end
 
+-- Add Progressbar object to container
+local function addProgressBarObjectToContainer(container, objectName, ...)
+	return addObjectToContainer(container, GUI.objectTypes.progressBar, objectName, GUI.progressBar(...))
+end
+
 -- Add Switch object to container
 local function addSwitchObjectToContainer(container, objectName, ...)
 	return addObjectToContainer(container, GUI.objectTypes.switch, objectName, GUI.switch(...))
@@ -307,6 +313,7 @@ function GUI.container(x, y, width, height)
 	container.addInputTextBox = addInputTextBoxObjectToContainer
 	container.addHorizontalSlider = addHorizontalSliderObjectToContainer
 	container.addSwitch = addSwitchObjectToContainer
+	container.addProgressBar = addProgressBarObjectToContainer
 
 	return container
 end
@@ -637,19 +644,39 @@ function GUI.menu(x, y, width, backgroundColor, textColor, backgroundPressedColo
 	return menuObject
 end
 
------------------------------------------ Other GUI elements -----------------------------------------
+----------------------------------------- ProgressBar Object -----------------------------------------
 
-function GUI.progressBar(x, y, width, height, firstColor, secondColor, value, maxValue, thin)
-	local percent = value / maxValue
-	local activeWidth = math.floor(percent * width)
-	if thin then
-		buffer.text(x, y, firstColor, string.rep("━", width))
-		buffer.text(x, y, secondColor, string.rep("━", activeWidth))
+local function drawProgressBar(object)
+	local activeWidth = math.floor(object.value * object.width / 100)
+	if object.thin then
+		buffer.text(object.x, object.y, object.colors.passive, string.rep("━", object.width))
+		buffer.text(object.x, object.y, object.colors.active, string.rep("━", activeWidth))
 	else
-		buffer.square(x, y, width, height, firstColor)
-		buffer.square(x, y, activeWidth, height, secondColor)
+		buffer.square(object.x, object.y, object.width, object.height, object.colors.passive)
+		buffer.square(object.x, object.y, activeWidth, object.height, object.colors.active)
 	end
+
+	if object.showValue then
+		local stringValue = tostring((object.valuePrefix or "") .. object.value .. (object.valuePostfix or ""))
+		buffer.text(math.floor(object.x + object.width / 2 - unicode.len(stringValue) / 2), object.y + 1, object.colors.value, stringValue)
+	end
+
+	return object
 end
+
+function GUI.progressBar(x, y, width, activeColor, passiveColor, valueColor, value, thin, showValue, valuePrefix, valuePostfix)
+	local object = GUI.object(x, y, width, 1)
+	object.value = value
+	object.colors = {active = activeColor, passive = passiveColor, value = valueColor}
+	object.thin = thin
+	object.draw = drawProgressBar
+	object.showValue = showValue
+	object.valuePrefix = valuePrefix
+	object.valuePostfix = valuePostfix
+	return object
+end
+
+----------------------------------------- Other GUI elements -----------------------------------------
 
 function GUI.windowShadow(x, y, width, height, transparency, thin)
 	transparency = transparency or 50
@@ -1081,7 +1108,7 @@ local function drawHorizontalSlider(object)
 
 	-- А еще текущее значение рисуем, если хочется нам
 	if object.currentValuePrefix or object.currentValuePostfix then
-		local stringCurrentValue =(object.currentValuePrefix or "") .. (object.roundValues and math.floor(object.value) or math.roundToDecimalPlaces(object.value, 2)) .. (object.currentValuePostfix or "")
+		local stringCurrentValue = (object.currentValuePrefix or "") .. (object.roundValues and math.floor(object.value) or math.roundToDecimalPlaces(object.value, 2)) .. (object.currentValuePostfix or "")
 		buffer.text(math.floor(object.x + object.width / 2 - unicode.len(stringCurrentValue) / 2), object.y + 1, object.colors.value, stringCurrentValue)
 	end
 
