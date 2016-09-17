@@ -376,7 +376,7 @@ function MineOSCore.launchIcon(path, translate)
 	
 	--Если это 3D-модель
 	elseif fileFormat == ".3dm" then
-		MineOSCore.safeLaunch("MineOS/Applications/3DPrint.app/3DPrint.lua open " .. path)
+		MineOSCore.safeLaunch("MineOS/Applications/3DPrint.app/3DPrint.lua", "open", path)
 	
 	--Если это текст или конфиг или языковой
 	elseif fileFormat == ".txt" or fileFormat == ".cfg" or fileFormat == ".lang" then

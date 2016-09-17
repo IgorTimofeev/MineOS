@@ -2036,8 +2036,15 @@ function ecs.universalWindow(x, y, width, background, closeWindowAfter, ...)
 						os.sleep(0.3)
 						objects[key][3] = oldColor
 						displayObject(key)
+
+						local paletteWidth, paletteHeight = 75, 27
+						local screenWidth, screenHeight = component.gpu.getResolution()
+						local paletteX, paletteY = math.floor(screenWidth / 2 - paletteWidth / 2), math.floor(screenHeight / 2 - paletteHeight / 2)
+						local oldPixels = ecs.rememberOldPixels(paletteX, paletteY, paletteX + paletteWidth - 1, paletteY + paletteHeight - 1)
 						local color = loadfile("lib/palette.lua")().draw("auto", "auto", objects[key][3])
+						ecs.drawOldPixels(oldPixels)
 						objects[key][3] = color or oldColor
+
 						displayObject(key)
 						break
 					end
