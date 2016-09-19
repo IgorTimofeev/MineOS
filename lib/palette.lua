@@ -196,7 +196,7 @@ local function createWindow(x, y)
 	window:addPanel("backgroundPanel", x, y, window.width, window.height, 0xEEEEEE)
 	
 	bigRainbow = window:addImage("bigRainbow", x, y, image.create(50, 25))
-	bigRainbow.onTouch = function(object, eventData)
+	bigRainbow.onTouch = function(eventData)
 		xBigCrest, yBigCrest = eventData[3], eventData[4]
 		local _, _, background = component.gpu.get(eventData[3], eventData[4])
 		switchColorFromHex(background)
@@ -207,7 +207,7 @@ local function createWindow(x, y)
 	x = x + bigRainbow.width + 2
 	
 	miniRainbow = window:addImage("miniRainbow", x, y, image.create(3, 25))
-	miniRainbow.onTouch = function(object, eventData)
+	miniRainbow.onTouch = function(eventData)
 		yMiniCrest = eventData[4]
 		switchColorFromHsb((eventData[4] - miniRainbow.y) * 360 / miniRainbow.height, currentColor.hsb.saturation, currentColor.hsb.brightness)
 		refreshRainbows()
