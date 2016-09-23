@@ -726,6 +726,14 @@
     version=1.0,
   },
   {
+    name="MineOS/Applications/PrintImage",
+    url="IgorTimofeev/OpenComputers/master/Applications/PrintImage/PrintImage.lua",
+    type="Application",
+    icon="IgorTimofeev/OpenComputers/master/Applications/PrintImage/Icon.pic",
+    createShortcut="desktop",
+    version=1.0,
+  },
+  {
     name="MineOS/Applications/Palette",
     url="IgorTimofeev/OpenComputers/master/Applications/Palette/Palette.lua",
     type="Application",
