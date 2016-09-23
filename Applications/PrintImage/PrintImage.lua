@@ -19,6 +19,7 @@ for library in pairs(libraries) do if not _G[library] then _G[library] = require
 
 ----------------------------------------- cyka -----------------------------------------
 
+if not component.isAvailable("printer3d") then GUI.error("This program requires at least one 3D-printer", {title = {color = 0xFFDB40, text = "Error"}}); return end
 local args, options = require("shell").parse(...)
 local window
 local mainImage
