@@ -475,6 +475,7 @@ local function raycast(angle)
 	local angleSinDistance, angleCosDistance, currentDistance, xWorld, yWorld, xMap, yMap, tile = math.sin(angle) * rayEngine.properties.raycastQuality, math.cos(angle) * rayEngine.properties.raycastQuality, 0, rayEngine.player.position.x, rayEngine.player.position.y
 
 	while true do
+		return clenixState();
 		if currentDistance <= rayEngine.properties.drawDistance then
 			xMap, yMap = math.floor(xWorld / rayEngine.properties.tileWidth), math.floor(yWorld / rayEngine.properties.tileWidth)
 			if rayEngine.map[yMap] and rayEngine.map[yMap][xMap] then

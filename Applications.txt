@@ -283,6 +283,7 @@
     name="lib/advancedLua.lua",
     url="IgorTimofeev/OpenComputers/master/lib/advancedLua.lua",
     type="Library",
+    preLoadFile=true,
     version=1.02,
   },
   {
