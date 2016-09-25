@@ -24,26 +24,21 @@ MineOSCore.showApplicationIcons = true
 MineOSCore.iconWidth = 12
 MineOSCore.iconHeight = 6
 
-MineOSCore.paths = {
-	localizationFile = "/MineOS/System/OS/Languages/" .. _G.OSSettings.language .. ".lang",
-	system = "/MineOS/System/",
-	icons = "/MineOS/System/OS/Icons/",
-	applications = "/MineOS/Applications/",
-	pictures = "/MineOS/Pictures/",
-	desktop = "/MineOS/Desktop/",
-	dock = "/MineOS/System/OS/Dock/",
-	applicationList = "/MineOS/System/OS/Applications.txt",
-	trash = "/MineOS/Trash/",
-}
+MineOSCore.paths = {}
+MineOSCore.paths.OS = "/MineOS/"
+MineOSCore.paths.system = MineOSCore.paths.OS .. "System/"
+MineOSCore.paths.localizationFile = MineOSCore.paths.system .. "OS/Languages/" .. _G.OSSettings.language .. ".lang"
+MineOSCore.paths.icons = MineOSCore.paths.system .. "OS/Icons/"
+MineOSCore.paths.applications = MineOSCore.paths.OS .. "Applications/"
+MineOSCore.paths.pictures = MineOSCore.paths.OS .. "Pictures/"
+MineOSCore.paths.desktop = MineOSCore.paths.OS .. "Desktop/"
+MineOSCore.paths.applicationList = MineOSCore.paths.system .. "OS/Applications.txt"
+MineOSCore.paths.trash = MineOSCore.paths.OS .. "Trash/"
 
 MineOSCore.sortingMethods = {
 	type = 0,
 	name = 1,
 	date = 2,
-}
-
-MineOSCore.colors = {
-	background = 0x262626
 }
 
 MineOSCore.localization = {}
@@ -366,7 +361,7 @@ function MineOSCore.launchIcon(path, translate)
 		MineOSCore.safeLaunch("/MineOS/Applications/Finder.app/Finder.lua", "open", path)
 	--Если это обычный луа файл - т.е. скрипт
 	elseif fileFormat == ".lua" or fileFormat == nil then
-		buffer.clear(MineOSCore.colors.background)
+		buffer.clear(0x262626)
 		ecs.prepareToExit()
 		MineOSCore.safeLaunch(path)
 	
