@@ -267,6 +267,10 @@ function palette.show(x, y, startColor)
 	createWindow(x, y)
 	createCrestsCoordinates()
 
+	--Поддержка внебуферных систем
+	buffer.square(window.x, window.y, window.width, window.height, 0xEEEEEE)
+	buffer.draw()
+
 	refreshRainbows()
 	window.drawShadow = true
 	drawAll()
