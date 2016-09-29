@@ -53,6 +53,15 @@ function math.roundToDecimalPlaces(num, decimalPlaces)
 	return math.floor(num * mult + 0.5) / mult
 end
 
+function math.getDigitCount(num)
+	local count = 0
+	while number > 0 do
+		number = math.floor(number / 10)
+		count = count + 1
+	end
+	return count
+end
+
 function math.doubleToString(num, digitCount)
 	return string.format("%." .. (digitCount or 1) .. "f", num)
 end
@@ -204,8 +213,8 @@ function string.canonicalPath(str)
 end
 
 function string.optimize(str, indentationWidth)
-	str = string.gsub("\r\n", "\n")
-	str = string.gsub("	", string.rep(" ", indentationWidth or 2))
+	str = string.gsub(str, "\r\n", "\n")
+	str = string.gsub(str, "	", string.rep(" ", indentationWidth or 2))
 	return str
 end
 

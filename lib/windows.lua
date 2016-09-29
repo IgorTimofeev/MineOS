@@ -189,6 +189,12 @@ function windows.empty(x, y, width, height, minimumWidth, minimumHeight, title)
 	return window
 end
 
+function windows.fullScreen()
+	local window = newWindow(1, 1, buffer.screen.width, buffer.screen.height)
+	window.drawShadow = false
+	return window
+end
+
 function windows.tabbed(x, y, width, height, minimumWidth, minimumHeight, ...)
 	local tabs = {...}
 	local window = newWindow(x, y, width, height, minimumWidth, minimumHeight)

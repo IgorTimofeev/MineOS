@@ -7,6 +7,7 @@ local libraries = {
 	component = "component",
 	computer = "computer",
 	unicode = "unicode",
+	fs = "filesystem",
 	advancedLua = "advancedLua",
 	colorlib = "colorlib",
 	image = "image",
@@ -21,22 +22,39 @@ for library in pairs(libraries) do if not _G[library] then _G[library] = require
 
 if not component.isAvailable("printer3d") then GUI.error("This program requires at least one 3D-printer", {title = {color = 0xFFDB40, text = "Error"}}); return end
 local args, options = require("shell").parse(...)
+local startImagePath = args[1] == "open" and args[2] or "/MineOS/System/OS/Icons/Steve.pic"
+local configPath = "/MineOS/System/PrintImage/Config.cfg"
+local panelWidth = 34
 local window
 local mainImage
-local startImagePath = args[1] == "open" and args[2] or "/MineOS/System/OS/Icons/Steve.pic"
 local printers
 local currentPrinter = 1
 local shapeResolutionLimit = 4
--- local shapeResolutionLimit = math.floor(math.sqrt(printers[currentPrinter].getMaxShapeCount()))
+local timeDelay = 0.05
 
-local showGrid = true
-local floorMode = false
-local emitLight = false
-local frameEnabled = true
+----------------------------------------- Config -----------------------------------------
 
-local frameWidthSlider
+local function save()
+	table.toFile(configPath, config)
+end
 
------------------------------------------ pidor -----------------------------------------
+local function load()
+	if fs.exists(configPath) then
+		config = table.fromFile(configPath)
+	else
+		config = {
+			mainMaterial = "quartz_block_side",
+			printName = "My picture",
+			showGrid = true,
+			floorMode = false,
+			frame = {enabled = true, width = 3, material = "planks_spruce"},
+			lightEmission = {enabled = false, level = 8}
+		}
+		save()
+	end
+end
+
+----------------------------------------- Printer-related cyka -----------------------------------------
 
 local function getPrinters()
 	printers = {}
@@ -48,18 +66,18 @@ local function addShapePixel(x, y, color, xPrinterPixel, yPrinterPixel)
 	local xPrinter = x * pixelSize - pixelSize
 	local yPrinter = y * pixelSize - pixelSize
 	
-	if floorMode then
-		printers[currentPrinter].addShape(xPrinter, 0, yPrinter, xPrinter + pixelSize, 16, yPrinter + pixelSize, window.shadeContainer.mainMaterial.text, false, color)
+	if config.floorMode then
+		printers[currentPrinter].addShape(xPrinter, 0, yPrinter, xPrinter + pixelSize, 16, yPrinter + pixelSize, config.mainMaterial, false, color)
 	else
-		if frameEnabled then
+		if config.frame.enabled then
 			local xModifyer1, xModifyer2, yModifyer1, yModifyer2 = 0, 0, 0, 0
-			if xPrinterPixel == 1 then xModifyer1 = frameWidthSlider.value end
-			if xPrinterPixel == mainImage.width then xModifyer2 = -frameWidthSlider.value end
-			if yPrinterPixel == 1 then yModifyer2 = -frameWidthSlider.value end
-			if yPrinterPixel == mainImage.height * 2 then yModifyer1 = frameWidthSlider.value end
-			printers[currentPrinter].addShape(xPrinter + xModifyer1, yPrinter + yModifyer1, 15, xPrinter + pixelSize + xModifyer2, yPrinter + pixelSize + yModifyer2, 16, window.shadeContainer.mainMaterial.text, false, color)
+			if xPrinterPixel == 1 then xModifyer1 = config.frame.width end
+			if xPrinterPixel == mainImage.width then xModifyer2 = -config.frame.width end
+			if yPrinterPixel == 1 then yModifyer2 = -config.frame.width end
+			if yPrinterPixel == mainImage.height * 2 then yModifyer1 = config.frame.width end
+			printers[currentPrinter].addShape(xPrinter + xModifyer1, yPrinter + yModifyer1, 15, xPrinter + pixelSize + xModifyer2, yPrinter + pixelSize + yModifyer2, 16, config.mainMaterial, false, color)
 		else
-			printers[currentPrinter].addShape(xPrinter, 15, yPrinter, xPrinter + pixelSize, 16, yPrinter + pixelSize, window.shadeContainer.mainMaterial.text, false, color)
+			printers[currentPrinter].addShape(xPrinter, 15, yPrinter, xPrinter + pixelSize, 16, yPrinter + pixelSize, config.mainMaterial, false, color)
 		end
 	end
 end
@@ -67,16 +85,15 @@ end
 local function beginPrint()
 	buffer.clear(0x0000000, 50)
 
-	local material = window.shadeContainer.frameMaterial.text
 	local xShape, yShape = 1, 1
 	local xShapeCount, yShapeCount = math.ceil(mainImage.width / shapeResolutionLimit), math.ceil(mainImage.height * 2 / shapeResolutionLimit)
 	local counter = 0
 	while true do
 		if printers[currentPrinter].status() == "idle" then
 			printers[currentPrinter].reset()
-			printers[currentPrinter].setLabel(fs.name(window.shadeContainer.imagePath.text))
+			printers[currentPrinter].setLabel(config.printName)
 			printers[currentPrinter].setTooltip("Part " .. xShape .. "x" .. yShape .. " of " .. xShapeCount .. "x" .. yShapeCount)
-			if emitLight then printers[currentPrinter].setLightLevel(window.shadeContainer.lightSlider.value) end
+			if config.lightEmission.enabled then printers[currentPrinter].setLightLevel(config.lightEmission.level) end
 
 			local jReplacer = shapeResolutionLimit
 			for j = 1, shapeResolutionLimit / 2 do
@@ -102,16 +119,16 @@ local function beginPrint()
 				jReplacer = jReplacer - 2
 			end
 
-			if frameEnabled and not floorMode then
+			if config.frame.enabled and not config.floorMode then
 				local xFrame, yFrame = shapeResolutionLimit * (mainImage.width % shapeResolutionLimit), shapeResolutionLimit * ((mainImage.height * 2) % shapeResolutionLimit)
 				xFrame = xShape == xShapeCount and (xFrame == 0 and 16 or xFrame) or 16
 				yFrame = yShape == yShapeCount and (yFrame == 0 and 0 or yFrame) or 0
 
-				if xShape == 1 then printers[currentPrinter].addShape(0, yFrame, 14, frameWidthSlider.value, 16, 16, material) end
-				if xShape == xShapeCount then printers[currentPrinter].addShape(xFrame - frameWidthSlider.value, yFrame, 14, xFrame, 16, 16, material) end
+				if xShape == 1 then printers[currentPrinter].addShape(0, yFrame, 14, config.frame.width, 16, 16, config.frame.material) end
+				if xShape == xShapeCount then printers[currentPrinter].addShape(xFrame - config.frame.width, yFrame, 14, xFrame, 16, 16, config.frame.material) end
 
-				if yShape == 1 then printers[currentPrinter].addShape(0, 16 - frameWidthSlider.value, 14, xFrame, 16, 16, material) end
-				if yShape == yShapeCount then printers[currentPrinter].addShape(0, yFrame, 14, xFrame, yFrame + frameWidthSlider.value, 16, material) end
+				if yShape == 1 then printers[currentPrinter].addShape(0, 16 - config.frame.width, 14, xFrame, 16, 16, config.frame.material) end
+				if yShape == yShapeCount then printers[currentPrinter].addShape(0, yFrame, 14, xFrame, yFrame + config.frame.width, 16, config.frame.material) end
 			end
 
 			printers[currentPrinter].commit()
@@ -124,13 +141,15 @@ local function beginPrint()
 
 		currentPrinter = currentPrinter + 1
 		if currentPrinter > #printers then currentPrinter = 1 end
-		os.sleep(0.1)
+		os.sleep(timeDelay)
 	end
 
 	buffer.clear()
 	window:draw()
 	buffer.draw(true)
 end
+
+----------------------------------------- Window-zaluped parasha -----------------------------------------
 
 local function getStatus()
 	local xBlocks, yBlocks = math.ceil(mainImage.width / shapeResolutionLimit), math.ceil(mainImage.height * 2 / shapeResolutionLimit)
@@ -162,7 +181,7 @@ local function drawMainImageObject(object)
 		local yImage = mainImage.height < buffer.screen.height and math.floor(buffer.screen.height / 2 - mainImage.height / 2) or 1
 		buffer.image(xImage, yImage, mainImage)
 		GUI.windowShadow(xImage, yImage, mainImage.width, mainImage.height, 50, true)
-		if showGrid then
+		if config.showGrid then
 			for x = xImage, xImage + mainImage.width - 1, shapeResolutionLimit do verticalLine(x, yImage, mainImage.height, 0xA0) end
 			for y = yImage, yImage + mainImage.height - 1, shapeResolutionLimit / 2 do horizontalLine(xImage, y, mainImage.width, 0xA0) end
 			buffer.text(1, 1, 0xBBBBBB, "хуй")
@@ -174,7 +193,6 @@ local function createWindow()
 	window = windows.fullScreen()
 	window:addPanel("backgroundPanel", 1, 1, window.width, window.height, 0xEEEEEE)
 	window:addObject("mainImageObject", 1, 1, window.width, window.height).draw = drawMainImageObject
-	local panelWidth = 34
 	local textBoxesWidth = math.floor(panelWidth * 0.55)
 	
 	local shadeContainer = window:addContainer("shadeContainer", window.width - panelWidth + 1, 1, panelWidth, window.height)
@@ -201,22 +219,34 @@ local function createWindow()
 	
 	y = y + 2
 	shadeContainer:addLabel("mainMaterialLabel", 3, y, shadeContainer.width, 1, 0xCCCCCC, "Material:")
-	shadeContainer:addInputTextBox("mainMaterial", shadeContainer.width - textBoxesWidth - 1, y, textBoxesWidth, 1, 0xEEEEEE, 0x555555, 0xEEEEEE, 0x262626, "quartz_block_side", nil, nil, true).validator = function(text)
+	local mainMaterialTextBox = shadeContainer:addInputTextBox("mainMaterialTextBox", shadeContainer.width - textBoxesWidth - 1, y, textBoxesWidth, 1, 0xEEEEEE, 0x555555, 0xEEEEEE, 0x262626, config.mainMaterial, nil, nil, false)
+	mainMaterialTextBox.onInputFinished = function()
+		config.mainMaterial = mainMaterialTextBox.text
+		save()
+	end
 
+	y = y + 2
+	shadeContainer:addLabel("printNameLabel", 3, y, shadeContainer.width, 1, 0xCCCCCC, "Print name:")
+	local printNameTextBox = shadeContainer:addInputTextBox("printNameTextBox", shadeContainer.width - textBoxesWidth - 1, y, textBoxesWidth, 1, 0xEEEEEE, 0x555555, 0xEEEEEE, 0x262626, config.printName, nil, nil, false)
+	printNameTextBox.onInputFinished = function()
+		config.printName = printNameTextBox.text
+		save()
 	end
 
 	y = y + 2
 	shadeContainer:addLabel("label", 3, y, shadeContainer.width, 1, 0xCCCCCC, "Floor mode:")
-	local floorSwitch = shadeContainer:addSwitch("floorSwitch", shadeContainer.width - 9, y, 8, 0xFFDB40, 0xAAAAAA, 0xFFFFFF, floorMode)
+	local floorSwitch = shadeContainer:addSwitch("floorSwitch", shadeContainer.width - 9, y, 8, 0xFFDB40, 0xAAAAAA, 0xFFFFFF, config.floorMode)
 	floorSwitch.onStateChanged = function()
-		floorMode = floorSwitch.state
+		config.floorMode = floorSwitch.state
+		save()
 	end
 
 	y = y + 2
 	shadeContainer:addLabel("label", 3, y, shadeContainer.width, 1, 0xCCCCCC, "Show grid:")
-	local gridSwitch = shadeContainer:addSwitch("gridSwitch", shadeContainer.width - 9, y, 8, 0xFFDB40, 0xAAAAAA, 0xFFFFFF, showGrid)
+	local gridSwitch = shadeContainer:addSwitch("gridSwitch", shadeContainer.width - 9, y, 8, 0xFFDB40, 0xAAAAAA, 0xFFFFFF, config.showGrid)
 	gridSwitch.onStateChanged = function()
-		showGrid = gridSwitch.state
+		config.showGrid = gridSwitch.state
+		save()
 		window:draw()
 	end
 	
@@ -224,29 +254,44 @@ local function createWindow()
 	shadeContainer:addLabel("label", 1, y, shadeContainer.width, 1, 0xFFFFFF, "Frame properties"):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
 	y = y + 2
 	shadeContainer:addLabel("label", 3, y, shadeContainer.width, 1, 0xCCCCCC, "Enabled:")
-	local frameSwitch = shadeContainer:addSwitch("frameSwitch", shadeContainer.width - 9, y, 8, 0xFFDB40, 0xAAAAAA, 0xFFFFFF, frameEnabled)
+	local frameSwitch = shadeContainer:addSwitch("frameSwitch", shadeContainer.width - 9, y, 8, 0xFFDB40, 0xAAAAAA, 0xFFFFFF, config.frame.enabled)
 	frameSwitch.onStateChanged = function()
-		frameEnabled = frameSwitch.state
+		config.frame.enabled = frameSwitch.state
+		save()
 	end
 	y = y + 2
 	shadeContainer:addLabel("frameMaterialLabel", 3, y, shadeContainer.width, 1, 0xCCCCCC, "Material:")
-	shadeContainer:addInputTextBox("frameMaterial", shadeContainer.width - textBoxesWidth - 1, y, textBoxesWidth, 1, 0xEEEEEE, 0x555555, 0xEEEEEE, 0x262626, "planks_spruce", nil, nil, true)
+	local frameMaterialTextBox = shadeContainer:addInputTextBox("frameMaterial", shadeContainer.width - textBoxesWidth - 1, y, textBoxesWidth, 1, 0xEEEEEE, 0x555555, 0xEEEEEE, 0x262626, config.frame.material, nil, nil, false)
+	frameMaterialTextBox.onInputFinished = function()
+		config.frame.material = frameMaterialTextBox.text
+		save()
+	end
+
 	y = y + 2
-	frameWidthSlider = shadeContainer:addHorizontalSlider("frameWidthSlider", 3, y, shadeContainer.width - 4, 0xFFDB80, 0x000000, 0xFFDB40, 0xCCCCCC, 1, shapeResolutionLimit - 1, 1, false, "Width: " , " voxel(s)")
+	local frameWidthSlider = shadeContainer:addHorizontalSlider("frameWidthSlider", 3, y, shadeContainer.width - 4, 0xFFDB80, 0x000000, 0xFFDB40, 0xCCCCCC, 1, shapeResolutionLimit - 1, config.frame.width, false, "Width: " , " voxel(s)")
+	frameWidthSlider.onValueChanged = function(value)
+		config.frame.width = frameWidthSlider.value
+		save()
+	end
 	frameWidthSlider.roundValues = true
 
 	y = y + 5
 	shadeContainer:addLabel("label", 1, y, shadeContainer.width, 1, 0xFFFFFF, "Light emission"):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
 	y = y + 2
 	shadeContainer:addLabel("label", 3, y, shadeContainer.width, 1, 0xCCCCCC, "Enabled:")
-	local lightSwitch = shadeContainer:addSwitch("lightSwitch", shadeContainer.width - 9, y, 8, 0xFFDB40, 0xAAAAAA, 0xFFFFFF, emitLight)
+	local lightSwitch = shadeContainer:addSwitch("lightSwitch", shadeContainer.width - 9, y, 8, 0xFFDB40, 0xAAAAAA, 0xFFFFFF, config.lightEmission.enabled)
 	lightSwitch.onStateChanged = function()
-		emitLight = lightSwitch.state
+		config.lightEmission.enabled = true
+		save()
 	end
 
 	y = y + 2
  	local lightSlider = shadeContainer:addHorizontalSlider("lightSlider", 3, y, shadeContainer.width - 4, 0xFFDB80, 0x000000, 0xFFDB40, 0xCCCCCC, 1, 8, 8, false, "Radius: " , " block(s)")
 	lightSlider.roundValues = true
+	lightSlider.onValueChanged = function()
+		config.lightEmission.value = lightSlider.value
+		save()
+	end
 
 	y = y + 5
 	shadeContainer:addLabel("label", 1, y, shadeContainer.width, 1, 0xFFFFFF, "Summary information:"):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
@@ -260,11 +305,20 @@ local function createWindow()
 	shadeContainer:addButton("printButton", 1, shadeContainer.height - 2, shadeContainer.width, 3, 0x262626, 0xFFFFFF, 0xFFFFFF, 0x262626, "Start print").onTouch = function()
 		beginPrint()
 	end
+
+	window.onAnyEvent = function(eventData)
+		if (eventData[1] == "component_added" or eventData[1] == "component_removed") and eventData[3] == "printer3d" then
+			getPrinters()
+			getStatus()
+			window:draw()
+		end
+	end
 end
 
------------------------------------------ Program -----------------------------------------
+----------------------------------------- Shitty meatball rolls -----------------------------------------
 
 buffer.start()
+load()
 getPrinters()
 createWindow()
 mainImage = image.load(startImagePath)
@@ -272,6 +326,12 @@ getStatus()
 window:draw()
 
 window:handleEvents()
+
+
+
+
+
+
 
 
 

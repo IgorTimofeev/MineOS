@@ -123,7 +123,7 @@ rayEngine.loadEngineProperties(applicationResourcesDirectory .. "RayEngine.cfg")
 rayEngine.loadWeapons(applicationResourcesDirectory .. "Weapons/")
 rayEngine.loadWorld(worldsPath .. "ExampleWorld")
 rayEngine.changeResolution(rayEngine.properties.screenResolution.width, rayEngine.properties.screenResolution.height)
--- rayEngine.intro()
+rayEngine.intro()
 menu()
 rayEngine.update()
 

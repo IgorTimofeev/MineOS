@@ -299,6 +299,7 @@ function GUI.container(x, y, width, height)
 	container.getClickedObject = GUI.getClickedObject
 	container.deleteObjects = deleteContainersContent
 
+	container.addObject = addEmptyObjectToContainer
 	container.addContainer = addContainerToContainer
 	container.addPanel = addPanelObjectToContainer
 	container.addLabel = addLabelObjectToContainer

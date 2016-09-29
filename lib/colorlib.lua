@@ -109,7 +109,7 @@ end
 
 -----------------------------------------------------------------------------------------------------------------------
 
-local openComputersPalette = {
+local palette = {
   0x000000, 0x000040, 0x000080, 0x0000BF, 0x0000FF, 0x002400, 0x002440, 0x002480, 0x0024BF, 0x0024FF, 0x004900, 0x004940, 0x004980, 0x0049BF, 0x0049FF, 0x006D00, 
   0x006D40, 0x006D80, 0x006DBF, 0x006DFF, 0x009200, 0x009240, 0x009280, 0x0092BF, 0x0092FF, 0x00B600, 0x00B640, 0x00B680, 0x00B6BF, 0x00B6FF, 0x00DB00, 0x00DB40, 
   0x00DB80, 0x00DBBF, 0x00DBFF, 0x00FF00, 0x00FF40, 0x00FF80, 0x00FFBF, 0x00FFFF, 0x0F0F0F, 0x1E1E1E, 0x2D2D2D, 0x330000, 0x330040, 0x330080, 0x3300BF, 0x3300FF, 
@@ -126,58 +126,39 @@ local openComputersPalette = {
   0xCCFF00, 0xCCFF40, 0xCCFF80, 0xCCFFBF, 0xCCFFFF, 0xD2D2D2, 0xE1E1E1, 0xF0F0F0, 0xFF0000, 0xFF0040, 0xFF0080, 0xFF00BF, 0xFF00FF, 0xFF2400, 0xFF2440, 0xFF2480, 
   0xFF24BF, 0xFF24FF, 0xFF4900, 0xFF4940, 0xFF4980, 0xFF49BF, 0xFF49FF, 0xFF6D00, 0xFF6D40, 0xFF6D80, 0xFF6DBF, 0xFF6DFF, 0xFF9200, 0xFF9240, 0xFF9280, 0xFF92BF, 
   0xFF92FF, 0xFFB600, 0xFFB640, 0xFFB680, 0xFFB6BF, 0xFFB6FF, 0xFFDB00, 0xFFDB40, 0xFFDB80, 0xFFDBBF, 0xFFDBFF, 0xFFFF00, 0xFFFF40, 0xFFFF80, 0xFFFFBF, 0xFFFFFF, 
-  possibleChannelValues = {
-    r = { 0x00, 0x0F, 0x1E, 0x2D, 0x33, 0x3C, 0x4B, 0x5A, 0x66, 0x69, 0x78, 0x87, 0x96, 0x99, 0xA5, 0xB4, 0xC3, 0xCC, 0xD2, 0xE1, 0xF0, 0xFF }, -- 22
-    g = { 0x00, 0x0F, 0x1E, 0x24, 0x2D, 0x3C, 0x49, 0x4B, 0x5A, 0x69, 0x6D, 0x78, 0x87, 0x92, 0x96, 0xA5, 0xB4, 0xB6, 0xC3, 0xD2, 0xDB, 0xE1, 0xF0, 0xFF }, -- 24
-    b = { 0x00, 0x0F, 0x1E, 0x2D, 0x3C, 0x40, 0x4B, 0x5A, 0x69, 0x78, 0x80, 0x87, 0x96, 0xA5, 0xB4, 0xBF, 0xC3, 0xD2, 0xE1, 0xF0, 0xFF },  -- 21
-  }
 }
 
-local function getClosestChannelValue(channelName, startIndex, endIndex, requestedValue)
-  local difference = endIndex - startIndex
-  local centerIndex = math.floor(difference / 2 + startIndex)
-
-  if difference > 1 then
-    if requestedValue >= openComputersPalette.possibleChannelValues[channelName][centerIndex] then
-      return getClosestChannelValue(channelName, centerIndex, endIndex, requestedValue)
-    else
-      return getClosestChannelValue(channelName, startIndex, centerIndex, requestedValue)
-    end
-  else
-    if math.abs(requestedValue - openComputersPalette.possibleChannelValues[channelName][startIndex]) > math.abs(openComputersPalette.possibleChannelValues[channelName][endIndex] - requestedValue) then
-      return openComputersPalette.possibleChannelValues[channelName][endIndex]
-    else
-      return openComputersPalette.possibleChannelValues[channelName][startIndex]
-    end
-  end
-end
-
 function colorlib.convert24BitTo8Bit(hex24)
-  local r, g, b = colorlib.HEXtoRGB(hex24)
+  local encodedIndex = nil
+  local colorMatchFactor = nil
+  local colorMatchFactor_min = math.huge
 
-  local rClosest = getClosestChannelValue("r", 1, #openComputersPalette.possibleChannelValues.r, r)
-  local gClosest = getClosestChannelValue("g", 1, #openComputersPalette.possibleChannelValues.g, g)
-  local bClosest = getClosestChannelValue("b", 1, #openComputersPalette.possibleChannelValues.b, b)
-  local hexFinal = colorlib.RGBtoHEX(rClosest, gClosest, bClosest)
-  
-  for i = 1, #openComputersPalette do
-    if openComputersPalette[i] == hexFinal then
-      return i
+  local red24, green24, blue24 = colorlib.HEXtoRGB(hex24)
+
+  for colorIndex, colorPalette in ipairs(palette) do
+    local redPalette, greenPalette, bluePalette = colorlib.HEXtoRGB(colorPalette)
+
+    colorMatchFactor = (redPalette-red24)^2 + (greenPalette-green24)^2 + (bluePalette-blue24)^2
+
+    if (colorMatchFactor < colorMatchFactor_min) then
+      encodedIndex = colorIndex
+      colorMatchFactor_min = colorMatchFactor
     end
   end
-
-  error("Failed to compress color from 24 bit to 8 bit: value \"" .. string.format("%06X", hexFinal) .. "\" not found in palette")
+    
+  return encodedIndex - 1
+  -- return searchClosestColor(1, #palette, hex24)
 end
 
 function colorlib.convert8BitTo24Bit(hex8)
-  return openComputersPalette[hex8 + 1]
+  return palette[hex8 + 1]
 end
 
 function colorlib.debugColorCompression(color)
-  print("Исходный цвет: " .. string.format("0x%06X", color))
   local compressedColor = colorlib.convert24BitTo8Bit(color)
-  print("Сжатый цвет: " .. string.format("0x%02X", compressedColor))
   local decompressedColor = colorlib.convert8BitTo24Bit(compressedColor)
+  print("Исходный цвет: " .. string.format("0x%06X", color))
+  print("Сжатый цвет: " .. string.format("0x%02X", compressedColor))
   print("Расжатый цвет: " .. string.format("0x%06X", decompressedColor))
 end
 
