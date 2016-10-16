@@ -88,6 +88,7 @@ local function flashEFI()
   local data = ""; local file = io.open("/MineOS/System/OS/EFI.lua", "r"); data = file:read("*a"); file:close()
   component.eeprom.set(data)
   component.eeprom.setLabel("EEPROM (MineOS EFI)")
+  component.eeprom.setData(component.filesystem.address)
 end
 
 ------------------------------------- Стадия стартовой загрузки всего необходимого -------------------------------------
