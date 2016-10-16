@@ -83,6 +83,12 @@ local function getFromGitHubSafely(url, path)
   end
 end
 
+-- Прошивочка биоса на более пиздатый, нашенский
+local function flashEFI()
+  local data = ""; local file = io.open("/MineOS/System/OS/EFI.lua", "r"); data = file:read("*a"); file:close() end
+  component.eeprom.set(data)
+end
+
 ------------------------------------- Стадия стартовой загрузки всего необходимого -------------------------------------
 
 print("Downloading file list")
@@ -332,7 +338,7 @@ do
   end
 
   os.sleep(timing)
-  if installOptions == "Install only libraries" then ecs.prepareToExit(); computer.shutdown(true) end
+  if installOptions == "Install only libraries" then flashEFI(); ecs.prepareToExit(); computer.shutdown(true) end
 end
 
 -- Создаем базовые обои рабочего стола
@@ -345,6 +351,10 @@ end
 local file = io.open("autorun.lua", "w")
 file:write("local success, reason = pcall(loadfile(\"OS.lua\")); if not success then print(\"Ошибка: \" .. tostring(reason)) end")
 file:close()
+
+-- Биосик
+flashEFI()
+
 
 ------------------------------ Стадия перезагрузки ------------------------------------------
 
@@ -360,8 +370,9 @@ ecs.centerText("x",yWindowEnd - 5, lang.needToRestart)
 --Кнопа
 drawButton(lang.restart, false)
 waitForClickOnButton(lang.restart)
-ecs.prepareToExit()
 
+--Перезагружаем компик
+ecs.prepareToExit()
 computer.shutdown(true)
 
 
