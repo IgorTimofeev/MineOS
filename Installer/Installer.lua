@@ -85,7 +85,7 @@ end
 
 -- Прошивочка биоса на более пиздатый, нашенский
 local function flashEFI()
-  local data = ""; local file = io.open("/MineOS/System/OS/EFI.lua", "r"); data = file:read("*a"); file:close() end
+  local data = ""; local file = io.open("/MineOS/System/OS/EFI.lua", "r"); data = file:read("*a"); file:close()
   component.eeprom.set(data)
   component.eeprom.setLabel("EEPROM (MineOS EFI)")
 end
