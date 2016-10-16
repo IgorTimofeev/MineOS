@@ -1,5 +1,4 @@
-
-local ee,gpu,screen,background,foreground,re
+local ee,gpu,sc,bg,fg,re,sce
 local pr,cm,ls,ps=component.proxy,computer,component.list,computer.pullSignal
 
 local function init()
@@ -8,14 +7,13 @@ local function init()
 	local e=ls("eeprom")()
 
 	if g and s and e then
-		gpu,screen,ee=pr(g),pr(s),pr(e)
-
+		gpu,sc,ee=pr(g),pr(s),pr(e)
 		computer.getBootAddress=function() return ee.getData() end
 		computer.setBootAddress=function(address) return ee.setData(address) end
-
-		gpu.bind(screen.address)
+		gpu.bind(sc.address)
 		re={};re.width,re.height=gpu.maxResolution()
 		gpu.setResolution(re.width,re.height)
+		sce=math.floor(re.height/2)
 	else
 		error("")
 	end
@@ -28,8 +26,8 @@ local function sleep(timeout)
 	while cm.uptime()<deadline do ps(deadline - cm.uptime()) end
 end
 
-local function bindGPUToScreen()
-	gpu.bind(screen.address)
+local function bGP()
+	gpu.bind(sc.address)
 	re={}
 	re.width,re.height=gpu.maxResolution()
 	gpu.setResolution(re.width,re.height)
@@ -37,9 +35,11 @@ end
 
 local colors={b=0xDDDDDD,t1=0x444444,t2=0x999999,t3=0x888888}
 
-local function sB(color) if color ~= background then background=color;gpu.setBackground(color) end end
-local function sF(color) if color ~= foreground then foreground=color;gpu.setForeground(color) end end
+local function sB(color) if color~=bg then bg=color;gpu.setBackground(color) end end
+local function sF(color) if color~=fg then fg=color;gpu.setForeground(color) end end
 local function clear() gpu.fill(1,1,re.width,re.height," ") end
+local function cT(y,color,text) sF(color);gpu.set(math.floor(re.width/2-#text/2),y,text) end
+local function l() sB(colors.b);clear();cT(sce-1,colors.t1,"MineOS EFI") end
 
 local function fade(fromColor,toColor,step)
 	for color=fromColor,toColor,step do
@@ -51,26 +51,21 @@ local function fade(fromColor,toColor,step)
 	clear()
 end
 
-local function cT(y,color,text)
-	sF(color)
-	gpu.set(math.floor(re.width/2-#text/2),y,text)
-end
-
-local function bt(d)
-	ee.setData(d)
-	local fs=pr(d)
-	local openSuccesss,fileOrReason=pcall(fs.open,"/init.lua","r")
-	if openSuccesss then
-		local data,readedData="",""
-		while readedData do data=data..readedData;readedData=fs.read(fileOrReason,math.huge) end
-		fs.close(fileOrReason)
+local function bt(fs)
+	cT(sce,colors.t2,"Booting from " .. fs.address)
+	ee.setData(fs.address)
+	local openS,fileOrR=pcall(fs.open,"/init.lua","r")
+	if openS then
+		local data,rData="",""
+		while rData do data=data..rData;rData=fs.read(fileOrR,math.huge) end
+		fs.close(fileOrR)
 		
-		local loadSuccess,loadReason=load(data)
-		if loadSuccess then
-			local xpcallSuccess,xpcallReason=xpcall(loadSuccess,debug.traceback)
-			if not xpcallSuccess then error(xpcallReason) end
+		local loadS,loadR=load(data)
+		if loadS then
+			local xpS,xpR=xpcall(loadS,debug.traceback)
+			if not xpS then error(xpR) end
 		else
-			error(loadReason)
+			error(loadR)
 		end
 	else
 		error("init.lua not found")
@@ -79,14 +74,14 @@ end
 
 local function cbf(f) return f.exists("/init.lua") or f.exists("/MineOS/EFI.lua") end
 
-local function getBootableDrives()
+local function gB()
 	local dr={}
-	for address in ls("filesystem") do local fs=pr(address);if cbf(fs) then table.insert(dr,fs.address) end end
+	for address in ls("filesystem") do local fs=pr(address);if cbf(fs) then table.insert(dr,fs) end end
 	return dr
 end
 
 local function menu(t,v)
-	local y,sv,b,f=math.floor(re.height/2-#v/2-2),1
+	local y,sv,b,f=math.floor(sce-#v/2-1),1
 	while true do
 		sB(colors.b)
 		clear()
@@ -103,43 +98,38 @@ local function menu(t,v)
 		elseif e[4]==208 then
 			sv=sv<#v and sv+1 or #v
 		elseif e[4]==28 then
-			return v[sv]
+			return sv
  		end
 	end
 end
 
 local function waitForAlt(t,dr)
-	local dl=cm.uptime()+(t or 0)
+	local dl=cm.uptime()+t
 	while cm.uptime()<dl do
 		local e={ps(dl-cm.uptime())}
-		if e[1] == "key_down" and e[4] == 56 then
-			local d=menu("Choose drive",dr)
-			local a=menu("Drive \""..d.."\"",{"Set as bootable",not pr(d).isReadOnly() and "Format" or nil})
-			if a=="Set as bootable" then
-				bt(d)
-			else
-				local fs=pr(d);for _,file in pairs(fs.list("/")) do fs.remove("/"..file) end;cm.shutdown(true)
+		if e[1]=="key_down" and e[4]==56 then
+			while true do
+				local v={};for i=1,#dr do v[i]=dr[i].getLabel().." "..(dr[i].spaceTotal()>524288 and "HDD" or "FDD").." ("..dr[i].address..")" end; table.insert(v, "Back")
+				local d=menu("Choose drive",v);
+				if d==#v then break end
+				local a=menu("Drive \""..dr[d].address.."\"",{"Set as bootable", "Format", "Back"})
+				if a==1 then
+					l();bt(dr[d]);return
+				elseif a==2 and not not dr[d].isReadOnly() then
+					for _,file in pairs(dr[d].list("/")) do dr[d].remove("/"..file) end;cm.shutdown(true)
+				end
 			end
 		end
 	end
+	
 	local fs=pr(ee.getData() or "")
-	bt((fs and cbf(fs)) and fs.address or dr[1])
+	l();bt((fs and cbf(fs)) and fs or dr[1])
 end
 
 init()
-bindGPUToScreen()
+bGP()
 fade(0x0,colors.b,0x202020)
-local y=math.floor(re.height / 2 - 1)
-cT(y,colors.t1,"MineOS EFI")
-cT(y+1,colors.t2,"Initialising system...")
-local dr=getBootableDrives()
-if #dr>0 then cT(re.height - 1,colors.t2,"Hold Alt to enter boot options menu");waitForAlt(1.2,dr) else cT(y+1,colors.t2,"Bootable drives not found");pu("key_down");fade(colors.b,0x0,-0x202020);cm.shutdown() end
-
-
-
-
-
-
-
-
-
+l()
+cT(sce,colors.t2,"Initialising system")
+local dr=gB()
+if #dr>0 then cT(re.height - 1,colors.t2,"Hold Alt to enter boot options menu");waitForAlt(1.2,dr) else cT(sce,colors.t2,"Bootable drives not found");pu("key_down");fade(colors.b,0x0,-0x202020);cm.shutdown() end
