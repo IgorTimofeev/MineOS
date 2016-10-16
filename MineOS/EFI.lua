@@ -115,7 +115,7 @@ local function waitForAlt(t,dr)
 				local a=menu("Drive \""..dr[d].address.."\"",{"Set as bootable", "Format", "Back"})
 				if a==1 then
 					l();bt(dr[d]);return
-				elseif a==2 and not not dr[d].isReadOnly() then
+				elseif a==2 and not dr[d].isReadOnly() then
 					for _,file in pairs(dr[d].list("/")) do dr[d].remove("/"..file) end;cm.shutdown(true)
 				end
 			end
