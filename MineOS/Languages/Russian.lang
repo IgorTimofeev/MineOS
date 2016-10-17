@@ -23,6 +23,7 @@
 	contextMenuShowPackageContent = "Показать содержимое пакета",
 	contextMenuShowContainingFolder = "Открыть содержащую папку",
 	contextMenuRemoveFromFavourites = "Удалить из избранного",
+	contextMenuFlashEEPROM = "Записать файл на EEPROM",
 
 	favourites = "Избранное",
 	disks = "Диски",

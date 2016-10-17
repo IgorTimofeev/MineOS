@@ -504,6 +504,22 @@ function MineOSCore.iconRightClick(icon, oldPixelsOfIcon, eventData, fileFormat,
 				{MineOSCore.localization.contextMenuAddToDock},
 				{MineOSCore.localization.contextMenuDelete, false}
 			):show()
+		elseif fileFormat == ".lua" then
+			action = GUI.contextMenu(eventData[3], eventData[4],
+				{MineOSCore.localization.contextMenuEdit},
+				{MineOSCore.localization.contextMenuFlashEEPROM, (not component.isAvailable("eeprom") or fs.size(icon.path) > 4096)},
+				{MineOSCore.localization.contextMenuCreateApplication},
+				"-",
+				{MineOSCore.localization.contextMenuCut},
+				{MineOSCore.localization.contextMenuCopy},
+				{MineOSCore.localization.contextMenuRename},
+				{MineOSCore.localization.contextMenuCreateShortcut, fileFormat == ".lnk"},
+				-- "-",
+				-- {MineOSCore.localization.contextMenuUploadToPastebin, true},
+				"-",
+				{MineOSCore.localization.contextMenuAddToDock},
+				{MineOSCore.localization.contextMenuDelete}
+			):show()
 		else
 			action = GUI.contextMenu(eventData[3], eventData[4],
 				{MineOSCore.localization.contextMenuEdit},
@@ -584,9 +600,15 @@ function MineOSCore.iconRightClick(icon, oldPixelsOfIcon, eventData, fileFormat,
 		return true
 		-- buffer.paste(1, 1, oldPixelsOfFullScreen)
 		-- buffer.draw()
+	elseif action == MineOSCore.localization.contextMenuFlashEEPROM then
+		local file = io.open(icon.path, "r")
+		component.eeprom.set(file:read("*a"))
+		file:close()
+		computer.beep(1500, 0.2)
+		executeMethod(drawAllMethod)
 	elseif action == MineOSCore.localization.contextMenuCreateApplication then
 		ecs.newApplicationFromLuaFile(icon.path, fs.path(icon.path) or "")
-		executeMethod(drawAllMethod)
+		executeMethod(drawAll)
 		-- getFileList(workPathHistory[currentWorkPathHistoryElement])
 		-- drawAll()
 	elseif action == MineOSCore.localization.contextMenuAddToDock then

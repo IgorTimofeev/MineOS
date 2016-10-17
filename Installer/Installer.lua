@@ -85,10 +85,12 @@ end
 
 -- Прошивочка биоса на более пиздатый, нашенский
 local function flashEFI()
-  local data = ""; local file = io.open("/MineOS/System/OS/EFI.lua", "r"); data = file:read("*a"); file:close()
+  local oldBootAddress = component.eeprom.getData()
+  local data; local file = io.open("/MineOS/System/OS/EFI.lua", "r"); data = file:read("*a"); file:close()
   component.eeprom.set(data)
   component.eeprom.setLabel("EEPROM (MineOS EFI)")
-  component.eeprom.setData(component.filesystem.address)
+  component.eeprom.setData(oldBootAddress)
+  pcall(component.proxy(oldBootAddress).setLabel, "MineOS")
 end
 
 ------------------------------------- Стадия стартовой загрузки всего необходимого -------------------------------------
@@ -356,9 +358,6 @@ file:close()
 
 -- Биосик
 flashEFI()
-
---Переименовываем дисочек
-component.filesystem.setLabel("MineOS")
 
 ------------------------------ Стадия перезагрузки ------------------------------------------
 

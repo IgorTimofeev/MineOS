@@ -23,6 +23,7 @@
 	contextMenuShowPackageContent = "Show package content",
 	contextMenuShowContainingFolder = "Show containing folder",
 	contextMenuRemoveFromFavourites = "Remove from favourites",
+	contextMenuFlashEEPROM = "Write file to EEPROM",
 
 	favourites = "Favourites",
 	disks = "HDDs",
