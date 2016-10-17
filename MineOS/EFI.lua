@@ -112,10 +112,11 @@ local function waitForAlt(t,dr)
 				local v={};for i=1,#dr do v[i]=dr[i].getLabel().." "..(dr[i].spaceTotal()>524288 and "HDD" or "FDD").." ("..dr[i].address..")" end; table.insert(v, "Back")
 				local d=menu("Choose drive",v);
 				if d==#v then break end
-				local a=menu("Drive \""..dr[d].address.."\"",{"Set as bootable", "Format", "Back"})
+				v={"Set as bootable"};if not dr[d].isReadOnly() then v[2]="Format" end; table.insert(v, "Back")
+				local a=menu("Drive \""..dr[d].address.."\"",v)
 				if a==1 then
 					l();bt(dr[d]);return
-				elseif a==2 and not dr[d].isReadOnly() then
+				elseif a==2 and #v==3 then
 					for _,file in pairs(dr[d].list("/")) do dr[d].remove("/"..file) end;cm.shutdown(true)
 				end
 			end
