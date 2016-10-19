@@ -1,4 +1,5 @@
 local ecs = require("ECSAPI")
+local MineOSCore = require("MineOSCore")
 local xml = require("xmlParser")
 local image = require("image")
 local event = require("event")
@@ -12,7 +13,7 @@ local config = {
 	scale = 0.63,
 	leftBarWidth = 20,
 	scrollSpeed = 6,
-	pathToInfoPanelFolder = "MineOS/System/InfoPanel/",
+	pathToInfoPanelFolder = MineOSCore.getCurrentApplicationResourcesDirectory() .. "Pages/",
 	colors = {
 		leftBar = 0xEEEEEE,
 		leftBarText = 0x262626,
@@ -55,9 +56,9 @@ local function drawLeftBar()
 			newObj("Files", i, ecs.drawButton(1, yPos, config.leftBarWidth, 3, ecs.hideFileFormat(fileList[i]), config.colors.leftBarSelection, config.colors.leftBarSelectionText))
 		else
 			if i % 2 == 0 then
-				newObj("Files", i, ecs.drawButton(1, yPos, config.leftBarWidth, 3, ecs.stringLimit("end", fileList[i], config.leftBarWidth - 2), config.colors.leftBar, config.colors.leftBarText))
+				newObj("Files", i, ecs.drawButton(1, yPos, config.leftBarWidth, 3, ecs.stringLimit("end", ecs.hideFileFormat(fileList[i]), config.leftBarWidth - 2), config.colors.leftBar, config.colors.leftBarText))
 			else
-				newObj("Files", i, ecs.drawButton(1, yPos, config.leftBarWidth, 3, ecs.stringLimit("end", fileList[i], config.leftBarWidth - 2), config.colors.leftBar - 0x111111, config.colors.leftBarText))
+				newObj("Files", i, ecs.drawButton(1, yPos, config.leftBarWidth, 3, ecs.stringLimit("end", ecs.hideFileFormat(fileList[i]), config.leftBarWidth - 2), config.colors.leftBar - 0x111111, config.colors.leftBarText))
 			end
 		end
 		yPos = yPos + 3

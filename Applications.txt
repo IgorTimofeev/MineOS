@@ -1050,31 +1050,25 @@
     about="IgorTimofeev/OpenComputers/master/Applications/InfoPanel/About/",
     icon="IgorTimofeev/OpenComputers/master/Applications/InfoPanel/Icon.pic",
     createShortcut="desktop",
-    version=1.0,
-  },
-  {
-    name="MineOS/System/InfoPanel/Правила",
-    url="IgorTimofeev/OpenComputers/master/Applications/InfoPanel/Rules.txt",
-    type="Script",
-    version=1.0,
-  },
-  {
-    name="MineOS/System/InfoPanel/Главная",
-    url="IgorTimofeev/OpenComputers/master/Applications/InfoPanel/Main.txt",
-    type="Script",
-    version=1.0,
-  },
-  {
-    name="MineOS/System/InfoPanel/ССПИ",
-    url="IgorTimofeev/OpenComputers/master/Applications/InfoPanel/SSPI.txt",
-    type="Script",
-    version=1.0,
-  },
-  {
-    name="MineOS/System/InfoPanel/Приват",
-    url="IgorTimofeev/OpenComputers/master/Applications/InfoPanel/Claims.txt",
-    type="Script",
-    version=1.0,
+    version=1.01,
+    resources = {
+      {
+        name="Pages/Rules.txt",
+        url="IgorTimofeev/OpenComputers/master/Applications/InfoPanel/Rules.txt",
+      },
+      {
+        name="Pages/Main.txt",
+        url="IgorTimofeev/OpenComputers/master/Applications/InfoPanel/Main.txt",
+      },
+      {
+        name="Pages/SSPI.txt",
+        url="IgorTimofeev/OpenComputers/master/Applications/InfoPanel/SSPI.txt",
+      },
+      {
+        name="Pages/Claims.txt",
+        url="IgorTimofeev/OpenComputers/master/Applications/InfoPanel/Claims.txt",
+      },
+    }
   },
   --Приложение Чат
   {
