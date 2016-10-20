@@ -1,7 +1,6 @@
 
 -- Адаптивная загрузка необходимых библиотек и компонентов
 local libraries = {
-	advancedLua = "advancedLua",
 	component = "component",
 	term = "term",
 	unicode = "unicode",
@@ -1554,6 +1553,7 @@ end
 
 --Описание ниже, ебана. Ниже - это значит в самой жопе кода!
 function ecs.universalWindow(x, y, width, background, closeWindowAfter, ...)
+	require("advancedLua")
 	local objects = {...}
 	local countOfObjects = #objects
 
