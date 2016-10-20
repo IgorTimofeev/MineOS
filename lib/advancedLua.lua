@@ -12,6 +12,7 @@
 
 _G.filesystem = _G.filesystem or require("filesystem")
 _G.unicode = _G.unicode or require("unicode")
+_G.bit32 = _G.bit32 or require("bit32")
 
 -------------------------------------------------- System extensions --------------------------------------------------
 
@@ -41,6 +42,36 @@ end
 function swap(a, b)
 	return b, a
 end
+
+-------------------------------------------------- Bit32 extensions --------------------------------------------------
+
+function bit32.numberToByteArray(number)
+	local byteArray = {}
+	while number > 0 do
+		table.insert(byteArray, 1, bit32.band(number, 0xFF))
+		number = bit32.rshift(number, 8)
+	end
+	return byteArray
+end
+
+function bit32.byteArrayToNumber(byteArray)
+	local number = byteArray[1]
+	for i = 2, #byteArray do
+		number = bit32.bor(byteArray[i], bit32.lshift(number, 8))
+	end
+	return number
+end
+
+function bit32.bitArrayToByte(bitArray)
+	local number = 0
+	for i = 1, #bitArray do
+		number = bit32.bor(bitArray[i], bit32.lshift(number, 1))
+	end
+	return number
+end
+
+bit32.byteArrayFromNumber = bit32.numberToByteArray
+bit32.numberFromByteArray = bit32.byteArrayToNumber
 
 -------------------------------------------------- Math extensions --------------------------------------------------
 
