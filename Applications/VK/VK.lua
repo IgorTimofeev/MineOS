@@ -756,7 +756,7 @@ local function userProfileGUI()
 	local function drawInfo(x, y2, key, value)
 		if checkField(value) then
 			value = {value}
-			value = ecs.stringWrap(value, buffer.screen.width - x - 4 - informationOffset)
+			value = string.wrap(value, buffer.screen.width - x - 4 - informationOffset)
 			buffer.text(x, y2, informationKeyColor, key)
 			for i = 1, #value do
 				buffer.text(x + informationOffset, y2, informationValueColor, value[i])
@@ -810,7 +810,7 @@ local function userProfileGUI()
 			buffer.text(buffer.screen.width - unicode.len(date) - 2, y, 0xCCCCCC, date)
 			y = y + 1
 			local text = {currentProfile.wall.response.items[i].text}
-			text = ecs.stringWrap(text, buffer.screen.width - x - 10)
+			text = string.wrap(text, buffer.screen.width - x - 10)
 			for i = 1, #text do
 				buffer.text(x + 8, y, 0x000000, text[i])
 				y = y + 1
@@ -968,7 +968,7 @@ local function newsGUI()
 				end
 			end
 			--Делаем его еще пизже
-			local text = {news.response.items[item].text}; text = ecs.stringWrap(text, buffer.screen.width - x - 10)
+			local text = {news.response.items[item].text}; text = string.wrap(text, buffer.screen.width - x - 10)
 			--Получаем инфу нужную
 			local avatarText, name = getAvatarTextAndNameForNews(news.response.items[item].source_id)
 			--Сместиться потом на стока вот
