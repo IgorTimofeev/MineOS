@@ -21,7 +21,7 @@ for library in pairs(libraries) do if not _G[library] then _G[library] = require
 local window
 
 local paths = {}
-paths.resources = MineOSCore.getCurrentApplicationResourcesDirectory(),
+paths.resources = MineOSCore.getCurrentApplicationResourcesDirectory()
 -- paths.resources = "/SmartHouse/"
 paths.modules = paths.resources .. "Modules/"
 
