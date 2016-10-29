@@ -725,7 +725,7 @@ local function showContextMenu(object)
 	if object.y + object.height >= buffer.screen.height then object.y = buffer.screen.height - object.height end
 	if object.x + object.width + 1 >= buffer.screen.width then object.x = buffer.screen.width - object.width - 1 end
 
-	object:reimplementedShow()
+	return object:reimplementedShow()
 end
 
 function GUI.contextMenu(x, y, ...)

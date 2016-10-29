@@ -324,13 +324,13 @@
     name="lib/GUI.lua",
     url="IgorTimofeev/OpenComputers/master/lib/GUI.lua",
     type="Library",
-    version=1.15,
+    version=1.16,
   },
   {
     name="lib/windows.lua",
     url="IgorTimofeev/OpenComputers/master/lib/windows.lua",
     type="Library",
-    version=1.01,
+    version=1.02,
   },
   {
     name="lib/serialization.lua",
@@ -426,7 +426,7 @@
     name="lib/doubleBuffering.lua",
     url="IgorTimofeev/OpenComputers/master/lib/doubleBuffering.lua",
     type="Library",
-    version=1.13,
+    version=1.14,
   },
   {
     name="lib/thread.lua",
