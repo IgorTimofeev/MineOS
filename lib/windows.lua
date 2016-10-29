@@ -44,19 +44,19 @@ local function buttonHandler(window, object, objectIndex, eventData)
 	object.pressed = true; window:draw(); buffer.draw()
 	os.sleep(0.2)
 	object.pressed = false; window:draw(); buffer.draw()
-	executeObjectMethod(object.onTouch, object, eventData)
+	executeObjectMethod(object.onTouch, eventData)
 end
 
 local function tabBarTabHandler(window, object, objectIndex, eventData)
 	object.parent.parent.selectedTab = objectIndex
 	window:draw(); buffer:draw()
-	executeObjectMethod(object.parent.parent.onTabSwitched, object, eventData)
+	executeObjectMethod(object.parent.parent.onTabSwitched, eventData)
 end
 
 local function inputTextBoxHandler(window, object, objectIndex, eventData)
 	object:input()
 	window:draw(); buffer:draw()
-	executeObjectMethod(object.onInputFinished, object, eventData)
+	executeObjectMethod(object.onInputFinished, eventData)
 end
 
 local function textBoxScrollHandler(window, object, objectIndex, eventData)
@@ -67,13 +67,18 @@ local function horizontalSliderHandler(window, object, objectIndex, eventData)
 	local clickPosition = eventData[3] - object.x + 1
 	object.value = object.minimumValue + (clickPosition * (object.maximumValue - object.minimumValue) / object.width)
 	window:draw(); buffer:draw()
-	executeObjectMethod(object.onValueChanged, object, eventData)
+	executeObjectMethod(object.onValueChanged, eventData)
 end
 
 local function switchHandler(window, object, objectIndex, eventData)
 	object.state = not object.state
 	window:draw(); buffer:draw()
-	executeObjectMethod(object.onStateChanged, object, eventData)
+	executeObjectMethod(object.onStateChanged, eventData)
+end
+
+local function comboBoxHandler(window, object, objectIndex, eventData)
+	object:selectItem()
+	executeObjectMethod(object.onItemSelected, eventData)
 end
 
 function windows.handleEventData(window, eventData)
@@ -90,6 +95,8 @@ function windows.handleEventData(window, eventData)
 				horizontalSliderHandler(window, object, objectIndex, eventData)
 			elseif object.type == GUI.objectTypes.switch then
 				switchHandler(window, object, objectIndex, eventData)
+			elseif object.type == GUI.objectTypes.comboBox then
+				comboBoxHandler(window, object, objectIndex, eventData)
 			elseif object.onTouch then
 				executeObjectMethod(object.onTouch, eventData)
 			end
@@ -117,6 +124,15 @@ function windows.handleEventData(window, eventData)
 			end
 		else
 			executeObjectMethod(window.onDrag, eventData)
+		end
+	elseif eventData[1] == "drop" then
+		local object, objectIndex = window:getClickedObject(eventData[3], eventData[4])
+		if object then
+			if object.onDrag then
+				executeObjectMethod(object.onDrop, eventData)
+			end
+		else
+			executeObjectMethod(window.onDrop, eventData)
 		end
 	elseif eventData[1] == "key_down" then
 		executeObjectMethod(window.onKeyDown, eventData)
@@ -158,7 +174,7 @@ end
 
 local function drawWindow(window)
 	if window.onDrawStarted then window.onDrawStarted() end
-	window:reimplementedDraw()
+	window:update()
 	if window.drawShadow then GUI.windowShadow(window.x, window.y, window.width, window.height, 50) end
 	if window.onDrawFinished then window.onDrawFinished() end
 	buffer.draw()
@@ -171,7 +187,7 @@ local function newWindow(x, y, width, height, minimumWidth, minimumHeight)
 	window.minimumWidth = minimumWidth
 	window.minimumHeight = minimumHeight
 	window.drawShadow = true
-	window.reimplementedDraw = window.draw
+	window.update = window.draw
 	window.draw = drawWindow
 	window.handleEventData = windows.handleEventData
 	window.handleEvents = windows.handleEvents

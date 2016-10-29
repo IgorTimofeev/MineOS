@@ -532,6 +532,69 @@
   },
   ----------------------------------------------------- Приложения --------------------------------------------------------------------------
   {
+    name="MineOS/Applications/SmartHouse",
+    url="IgorTimofeev/OpenComputers/master/Applications/SmartHouse/SmartHouse.lua",
+    type="Application",
+    icon="IgorTimofeev/OpenComputers/master/Applications/SmartHouse/Icon.pic",
+    createShortcut="desktop",
+    version=1.21,
+    resources={
+      {
+        name="Modules/redstone/Icon.pic",
+        url="IgorTimofeev/OpenComputers/master/Applications/SmartHouse/Modules/redstone/Icon.pic",
+      },
+      {
+        name="Modules/redstone/Main.lua",
+        url="IgorTimofeev/OpenComputers/master/Applications/SmartHouse/Modules/redstone/Main.lua",
+      },
+      --
+      {
+        name="Modules/mfsu/Icon.pic",
+        url="IgorTimofeev/OpenComputers/master/Applications/SmartHouse/Modules/mfsu/Icon.pic",
+      },
+      {
+        name="Modules/mfsu/Main.lua",
+        url="IgorTimofeev/OpenComputers/master/Applications/SmartHouse/Modules/mfsu/Main.lua",
+      },
+      --
+      {
+        name="Modules/screen/Icon.pic",
+        url="IgorTimofeev/OpenComputers/master/Applications/SmartHouse/Modules/screen/Icon.pic",
+      },
+      {
+        name="Modules/screen/Main.lua",
+        url="IgorTimofeev/OpenComputers/master/Applications/SmartHouse/Modules/screen/Main.lua",
+      },
+      --
+      {
+        name="Modules/homePC/Icon.pic",
+        url="IgorTimofeev/OpenComputers/master/Applications/SmartHouse/Modules/homePC/Icon.pic",
+      },
+      {
+        name="Modules/homePC/Main.lua",
+        url="IgorTimofeev/OpenComputers/master/Applications/SmartHouse/Modules/homePC/Main.lua",
+      },
+      --
+      {
+        name="Modules/motion_sensor/Icon.pic",
+        url="IgorTimofeev/OpenComputers/master/Applications/SmartHouse/Modules/motion_sensor/Icon.pic",
+      },
+      {
+        name="Modules/motion_sensor/Main.lua",
+        url="IgorTimofeev/OpenComputers/master/Applications/SmartHouse/Modules/motion_sensor/Main.lua",
+      },
+      --
+      {
+        name="Modules/reactor/Icon.pic",
+        url="IgorTimofeev/OpenComputers/master/Applications/SmartHouse/Modules/reactor/Icon.pic",
+      },
+      {
+        name="Modules/reactor/Main.lua",
+        url="IgorTimofeev/OpenComputers/master/Applications/SmartHouse/Modules/reactor/Main.lua",
+      },
+    },
+  },
+  {
     name="MineOS/Applications/VK",
     url="IgorTimofeev/OpenComputers/master/Applications/VK/VK.lua",
     about="IgorTimofeev/OpenComputers/master/Applications/VK/About/",

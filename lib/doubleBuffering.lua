@@ -8,6 +8,7 @@ local libraries = {
 
 for library in pairs(libraries) do if not _G[library] then _G[library] = require(libraries[library]) end end; libraries = nil
 
+local gpu = component.gpu
 local buffer = {}
 
 ------------------------------------------------- Вспомогательные методы -----------------------------------------------------------------
@@ -71,12 +72,12 @@ end
 
 -- Инициализация буфера со всеми необходимыми параметрами, вызывается автоматически
 function buffer.start()	
-	buffer.flush(component.gpu.getResolution())
+	buffer.flush(gpu.getResolution())
 end
 
 -- Изменение разрешения экрана и пересоздание массивов буфера
 function buffer.changeResolution(width, height)
-	component.gpu.setResolution(width, height)
+	gpu.setResolution(width, height)
 	buffer.flush(width, height)
 end
 
@@ -495,6 +496,42 @@ function buffer.semiPixelSquare(x, y, width, height, color)
 	end
 end
 
+function buffer.semiPixelLine(x0, y0, x1, y1, color)
+	local steep = false;
+	
+	if math.abs(x0 - x1) < math.abs(y0 - y1 ) then
+		x0, y0 = swap(x0, y0)
+		x1, y1 = swap(x1, y1)
+		steep = true;
+	end
+
+	if (x0 > x1) then
+		x0, x1 = swap(x0, x1)
+		y0, y1 = swap(y0, y1)
+	end
+
+	local dx = x1 - x0;
+	local dy = y1 - y0;
+	local derror2 = math.abs(dy) * 2
+	local error2 = 0;
+	local y = y0;
+	
+	for x = x0, x1, 1 do
+		if steep then
+			buffer.semiPixelSet(y, x, color);
+		else
+			buffer.semiPixelSet(x, y, color)
+		end
+
+		error2 = error2 + derror2;
+
+		if error2 > dx then
+			y = y + (y1 > y0 and 1 or -1);
+			error2 = error2 - dx * 2;
+		end
+	end
+end
+
 ------------------------------------------- Просчет изменений и отрисовка ------------------------------------------------------------------------
 
 --Функция рассчитывает изменения и применяет их, возвращая то, что было изменено
@@ -595,11 +632,11 @@ function buffer.draw(force)
 
 	--Перебираем все цвета текста и фона, выполняя гпу-операции
 	for foreground in pairs(buffer.screen.changes) do
-		if currentForeground ~= foreground then component.gpu.setForeground(foreground); currentForeground = foreground end
+		if currentForeground ~= foreground then gpu.setForeground(foreground); currentForeground = foreground end
 		for background in pairs(buffer.screen.changes[foreground]) do
-			if currentBackground ~= background then component.gpu.setBackground(background); currentBackground = background end
+			if currentBackground ~= background then gpu.setBackground(background); currentBackground = background end
 			for i = 1, #buffer.screen.changes[foreground][background], 3 do
-				component.gpu.set(buffer.screen.changes[foreground][background][i], buffer.screen.changes[foreground][background][i + 1], buffer.screen.changes[foreground][background][i + 2])
+				gpu.set(buffer.screen.changes[foreground][background][i], buffer.screen.changes[foreground][background][i + 1], buffer.screen.changes[foreground][background][i + 2])
 			end
 		end
 	end

@@ -38,9 +38,9 @@ GUI.colors = {
 		text = 0xAAAAAA
 	},
 	contextMenu = {
-		background = 0xFFFFFF,
 		separator = 0xAAAAAA,
 		default = {
+			background = 0xFFFFFF,
 			text = 0x2D2D2D
 		},
 		disabled = {
@@ -57,7 +57,7 @@ GUI.colors = {
 	}
 }
 
-GUI.contextMenuElementTypes = enum(
+GUI.dropDownMenuElementTypes = enum(
 	"default",
 	"separator"
 )
@@ -80,14 +80,16 @@ GUI.objectTypes = enum(
 	"textBox",
 	"horizontalSlider",
 	"switch",
-	"progressBar"
+	"progressBar",
+	"chart",
+	"comboBox"
 )
 
 ----------------------------------------- Primitive objects -----------------------------------------
 
 -- Universal method to check if object was clicked by following coordinates
 local function isObjectClicked(object, x, y)
-	if x >= object.x and y >= object.y and x <= object.x + object.width - 1 and y <= object.y + object.height - 1 and not object.disabled and not object.invisible ~= false then return true end
+	if x >= object.x and y >= object.y and x <= object.x + object.width - 1 and y <= object.y + object.height - 1 and not object.disabled and not object.hidden then return true end
 	return false
 end
 
@@ -163,17 +165,62 @@ end
 function GUI.getClickedObject(container, xEvent, yEvent)
 	local clickedObject, clickedIndex
 	for objectIndex = #container.children, 1, -1 do
-		container.children[objectIndex].x, container.children[objectIndex].y = container.children[objectIndex].localPosition.x + container.x - 1, container.children[objectIndex].localPosition.y + container.y - 1
-		if container.children[objectIndex].children and #container.children[objectIndex].children > 0 then
-			clickedObject, clickedIndex = GUI.getClickedObject(container.children[objectIndex], xEvent, yEvent)
-		    if clickedObject then break end
-		elseif not container.children[objectIndex].disableClicking and container.children[objectIndex]:isClicked(xEvent, yEvent) then
-			clickedObject, clickedIndex = container.children[objectIndex], objectIndex
-			break
+		if not container.children[objectIndex].hidden then
+			container.children[objectIndex].x, container.children[objectIndex].y = container.children[objectIndex].localPosition.x + container.x - 1, container.children[objectIndex].localPosition.y + container.y - 1
+			if container.children[objectIndex].children and #container.children[objectIndex].children > 0 then
+				clickedObject, clickedIndex = GUI.getClickedObject(container.children[objectIndex], xEvent, yEvent)
+			    if clickedObject then break end
+			elseif not container.children[objectIndex].disableClicking and container.children[objectIndex]:isClicked(xEvent, yEvent) then
+				clickedObject, clickedIndex = container.children[objectIndex], objectIndex
+				break
+			end
 		end
 	end
 
 	return clickedObject, clickedIndex
+end
+
+local function checkObjectParentExists(object)
+	if not object.parent then error("Object doesn't have a parent container") end
+end
+
+local function containerObjectIndexOf(object)
+	checkObjectParentExists(object)
+	for objectIndex = 1, #object.parent.children do
+		if object.parent.children[objectIndex] == object then
+			return objectIndex
+		end
+	end
+end
+
+-- Move container's object "closer" to our eyes
+local function containerObjectMoveForward(object)
+	local objectIndex = object:indexOf()
+	if objectIndex < #object.parent.children then
+		object.parent.children[index], object.parent.children[index + 1] = swap(object.parent.children[index], object.parent.children[index + 1])
+	end
+end
+
+-- Move container's object "more far out" of our eyes
+local function containerObjectMoveBackward(object)
+	local objectIndex = object:indexOf()
+	if objectIndex > 1 then
+		object.parent.children[index], object.parent.children[index - 1] = swap(object.parent.children[index], object.parent.children[index - 1])
+	end
+end
+
+-- Move container's object to front of all objects
+local function containerObjectMoveToFront(object)
+	local objectIndex = object:indexOf()
+	table.insert(object.parent.children, object)
+	table.remove(object.parent.children, objectIndex)
+end
+
+-- Move container's object to back of all objects
+local function containerObjectMoveToBack(object)
+	local objectIndex = object:indexOf()
+	table.insert(object.parent.children, 1, object)
+	table.remove(object.parent.children, objectIndex + 1)
 end
 
 -- Add any object as children to parent container with specified objectName
@@ -181,8 +228,15 @@ local function addObjectToContainer(container, objectType, objectName, object)
 	object.name = objectName
 	object.type = objectType
 	object.parent = container
+	object.indexOf = containerObjectIndexOf
+	object.moveToFront = containerObjectMoveToFront
+	object.moveToBack = containerObjectMoveToBack
+	object.moveForward = containerObjectMoveForward
+	object.moveBackward = containerObjectMoveBackward
 	object.localPosition = {x = object.x, y = object.y}
+
 	table.insert(container.children, object)
+	
 	return object
 end
 
@@ -266,18 +320,31 @@ local function addSwitchObjectToContainer(container, objectName, ...)
 	return addObjectToContainer(container, GUI.objectTypes.switch, objectName, GUI.switch(...))
 end
 
+-- Add Chart object to container
+local function addChartObjectToContainer(container, objectName, ...)
+	return addObjectToContainer(container, GUI.objectTypes.chart, objectName, GUI.chart(...))
+end
+
+-- Add ComboBox object to container
+local function addComboBoxObjectToContainer(container, objectName, ...)
+	return addObjectToContainer(container, GUI.objectTypes.comboBox, objectName, GUI.comboBox(...))
+end
+
 -- Recursively draw container's content including all children container's content
 local function drawContainerContent(container)
 	for objectIndex = 1, #container.children do
-		container.children[objectIndex].x, container.children[objectIndex].y = container.children[objectIndex].localPosition.x + container.x - 1, container.children[objectIndex].localPosition.y + container.y - 1
-		if container.children[objectIndex].children then
-			-- drawContainerContent(container.children[objectIndex])
-			container.children[objectIndex]:draw()
-		else
-			if container.children[objectIndex].draw then
+		if not container.children[objectIndex].hidden then
+			container.children[objectIndex].x, container.children[objectIndex].y = container.children[objectIndex].localPosition.x + container.x - 1, container.children[objectIndex].localPosition.y + container.y - 1
+			if container.children[objectIndex].children then
+				-- drawContainerContent(container.children[objectIndex])
+				-- We use :draw() method against of recursive call. The reason is possible user-defined :draw() reimplementations
 				container.children[objectIndex]:draw()
 			else
-				error("Container object with index " .. objectIndex .. " and name \"" .. tostring(container.children[objectIndex].name) ..  "\" doesn't have :draw() method")
+				if container.children[objectIndex].draw then
+					container.children[objectIndex]:draw()
+				else
+					error("Container object with index " .. objectIndex .. " and name \"" .. tostring(container.children[objectIndex].name) ..  "\" doesn't have :draw() method")
+				end
 			end
 		end
 	end
@@ -315,6 +382,8 @@ function GUI.container(x, y, width, height)
 	container.addHorizontalSlider = addHorizontalSliderObjectToContainer
 	container.addSwitch = addSwitchObjectToContainer
 	container.addProgressBar = addProgressBarObjectToContainer
+	container.addChart = addChartObjectToContainer
+	container.addComboBox = addComboBoxObjectToContainer
 
 	return container
 end
@@ -513,72 +582,70 @@ function GUI.windowActionButtons(x, y, fatSymbol)
 	return container
 end
 
------------------------------------------ Context Menu -----------------------------------------
+----------------------------------------- Dropdown Menu -----------------------------------------
 
-local function drawContextMenuElement(contextMenuObject, elementIndex, isPressed)
-	if contextMenuObject.elements[elementIndex].type == GUI.contextMenuElementTypes.default then
-		local textColor = contextMenuObject.elements[elementIndex].disabled and GUI.colors.contextMenu.disabled.text or (contextMenuObject.elements[elementIndex].color or GUI.colors.contextMenu.default.text)
-		
+local function drawDropDownMenuElement(object, itemIndex, isPressed)
+	local y = object.y + itemIndex * (object.spaceBetweenElements + 1) - 1
+	local yText = math.floor(y)
+	
+	if object.items[itemIndex].type == GUI.dropDownMenuElementTypes.default then
+		local textColor = object.items[itemIndex].disabled and object.colors.disabled.text or (object.items[itemIndex].color or object.colors.default.text)
+
+		-- Нажатие
 		if isPressed then
-			buffer.square(contextMenuObject.x, contextMenuObject.y + elementIndex - 1, contextMenuObject.width, 1, GUI.colors.contextMenu.pressed.background, GUI.colors.contextMenu.pressed.text, " ")
-			textColor = GUI.colors.contextMenu.pressed.text
+			buffer.square(object.x, y - object.spaceBetweenElements, object.width, object.spaceBetweenElements * 2 + 1, object.colors.pressed.background, object.colors.pressed.text, " ")
+			textColor = object.colors.pressed.text
 		end
 
-		buffer.text(contextMenuObject.x + 2, contextMenuObject.y + elementIndex - 1, textColor, contextMenuObject.elements[elementIndex].text)
-		
-		if contextMenuObject.elements[elementIndex].shortcut then
-			buffer.text(contextMenuObject.x + contextMenuObject.width - unicode.len(contextMenuObject.elements[elementIndex].shortcut) - 2, contextMenuObject.y + elementIndex - 1, textColor, contextMenuObject.elements[elementIndex].shortcut)
+		-- Основной текст
+		buffer.text(object.x + object.sidesOffset, yText, textColor, string.limit(object.items[itemIndex].text, object.width - object.sidesOffset * 2, false))
+		-- Шурткатикус
+		if object.items[itemIndex].shortcut then
+			buffer.text(object.x + object.width - unicode.len(object.items[itemIndex].shortcut) - object.sidesOffset, yText, textColor, object.items[itemIndex].shortcut)
 		end
 	else
-		buffer.text(contextMenuObject.x, contextMenuObject.y + elementIndex - 1, GUI.colors.contextMenu.separator, string.rep("─", contextMenuObject.width))
+		-- Сепаратор
+		buffer.text(object.x, yText, object.colors.separator, string.rep("─", object.width))
 	end
 end
 
-local function drawContextMenu(contextMenuObject)
-	buffer.square(contextMenuObject.x, contextMenuObject.y, contextMenuObject.width, contextMenuObject.height, GUI.colors.contextMenu.background, GUI.colors.contextMenu.default.text, " ", GUI.colors.contextMenu.transparency.background)
-	GUI.windowShadow(contextMenuObject.x, contextMenuObject.y, contextMenuObject.width, contextMenuObject.height, GUI.colors.contextMenu.transparency.shadow, true)
-	for elementIndex = 1, #contextMenuObject.elements do drawContextMenuElement(contextMenuObject, elementIndex, false) end
+local function drawDropDownMenu(object)
+	buffer.square(object.x, object.y, object.width, object.height, object.colors.default.background, object.colors.default.text, " ", object.colors.transparency)
+	if object.drawShadow then GUI.windowShadow(object.x, object.y, object.width, object.height, GUI.colors.contextMenu.transparency.shadow, true) end
+	for itemIndex = 1, #object.items do drawDropDownMenuElement(object, itemIndex, false) end
 end
 
-local function showContextMenu(contextMenuObject)
+local function showDropDownMenu(object)
 	local oldDrawLimit = buffer.getDrawLimit(); buffer.resetDrawLimit()
-	-- Расчет ширины окна меню
-	local longestElement, longestShortcut = 0, 0
-	for elementIndex = 1, #contextMenuObject.elements do
-		if contextMenuObject.elements[elementIndex].type == GUI.contextMenuElementTypes.default then
-			longestElement = math.max(longestElement, unicode.len(contextMenuObject.elements[elementIndex].text))
-			if contextMenuObject.elements[elementIndex].shortcut then longestShortcut = math.max(longestShortcut, unicode.len(contextMenuObject.elements[elementIndex].shortcut)) end
-		end
-	end
-	contextMenuObject.width, contextMenuObject.height = longestElement + 4 + (longestShortcut > 0 and longestShortcut + 3 or 0), #contextMenuObject.elements
+	object.height = #object.items * (object.spaceBetweenElements + 1) + object.spaceBetweenElements
 
-	-- А это чтоб за края экрана не лезло
-	if contextMenuObject.y + contextMenuObject.height >= buffer.screen.height then contextMenuObject.y = buffer.screen.height - contextMenuObject.height end
-	if contextMenuObject.x + contextMenuObject.width + 1 >= buffer.screen.width then contextMenuObject.x = buffer.screen.width - contextMenuObject.width - 1 end
-
-	local oldPixels = buffer.copy(contextMenuObject.x, contextMenuObject.y, contextMenuObject.width + 1, contextMenuObject.height + 1)
+	local oldPixels = buffer.copy(object.x, object.y, object.width + 1, object.height + 1)
 	local function quit()
-		buffer.paste(contextMenuObject.x, contextMenuObject.y, oldPixels)
+		buffer.paste(object.x, object.y, oldPixels)
 		buffer.draw()
 		buffer.setDrawLimit(oldDrawLimit)
 	end
 
-	drawContextMenu(contextMenuObject)
+	drawDropDownMenu(object)
 	buffer.draw()
 
 	while true do
 		local e = {event.pull()}
 		if e[1] == "touch" then
 			local objectFound = false
-			for elementIndex = 1, #contextMenuObject.elements do
-				if e[3] >= contextMenuObject.x and e[3] <= contextMenuObject.x + contextMenuObject.width - 1 and e[4] == contextMenuObject.y + elementIndex - 1 then
+			for itemIndex = 1, #object.items do
+				if 
+					e[3] >= object.x and
+					e[3] <= object.x + object.width - 1 and
+					e[4] == object.y + itemIndex * (object.spaceBetweenElements + 1) - 1
+				then
 					objectFound = true
-					if not contextMenuObject.elements[elementIndex].disabled and contextMenuObject.elements[elementIndex].type == GUI.contextMenuElementTypes.default then
-						drawContextMenuElement(contextMenuObject, elementIndex, true)
+					if not object.items[itemIndex].disabled and object.items[itemIndex].type == GUI.dropDownMenuElementTypes.default then
+						drawDropDownMenuElement(object, itemIndex, true)
 						buffer.draw()
 						os.sleep(0.2)
 						quit()
-						return contextMenuObject.elements[elementIndex].text
+						return object.items[itemIndex].text, itemIndex
 					end
 					break
 				end
@@ -589,43 +656,97 @@ local function showContextMenu(contextMenuObject)
 	end
 end
 
-local function addContextMenuElement(contextMenuObject, text, disabled, shortcut, color)
-	local element = {}
-	element.type = GUI.contextMenuElementTypes.default
-	element.text = text
-	element.disabled = disabled
-	element.shortcut = shortcut
-	element.color = color or GUI.colors.contextMenu.default.text --OPTIMIZATION
+local function addDropDownMenuItem(object, text, disabled, shortcut, color)
+	local item = {}
+	item.type = GUI.dropDownMenuElementTypes.default
+	item.text = text
+	item.disabled = disabled
+	item.shortcut = shortcut
+	item.color = color
 
-	table.insert(contextMenuObject.elements, element)
-	return element
+	table.insert(object.items, item)
+	return item
 end
 
-local function addContextMenuSeparator(contextMenuObject)
-	local element = {type = GUI.contextMenuElementTypes.separator}
-	table.insert(contextMenuObject.elements, element)
-	return element
+local function addDropDownMenuSeparator(object)
+	local item = {type = GUI.dropDownMenuElementTypes.separator}
+	table.insert(object.items, item)
+	return item
+end
+
+function GUI.dropDownMenu(x, y, width, spaceBetweenElements, backgroundColor, textColor, backgroundPressedColor, textPressedColor, disabledColor, separatorColor, transparency, items)
+	local object = GUI.object(x, y, width, 1)
+	object.colors = {
+		default = {
+			background = backgroundColor,
+			text = textColor
+		},
+		pressed = {
+			background = backgroundPressedColor,
+			text = textPressedColor
+		},
+		disabled = {
+			text = disabledColor
+		},
+		separator = separatorColor,
+		transparency = transparency
+	}
+	object.sidesOffset = 2
+	object.spaceBetweenElements = spaceBetweenElements
+	object.addSeparator = addDropDownMenuSeparator
+	object.addItem = addDropDownMenuItem
+	object.items = {}
+	if items then
+		for i = 1, #items do
+			object:addItem(items[i])
+		end
+	end
+	object.drawShadow = true
+	object.draw = drawDropDownMenu
+	object.show = showDropDownMenu
+	return object
+end
+
+----------------------------------------- Context Menu -----------------------------------------
+
+local function showContextMenu(object)
+	-- Расчет ширины окна меню
+	local longestItem, longestShortcut = 0, 0
+	for itemIndex = 1, #object.items do
+		if object.items[itemIndex].type == GUI.dropDownMenuElementTypes.default then
+			longestItem = math.max(longestItem, unicode.len(object.items[itemIndex].text))
+			if object.items[itemIndex].shortcut then longestShortcut = math.max(longestShortcut, unicode.len(object.items[itemIndex].shortcut)) end
+		end
+	end
+	object.width = object.sidesOffset + longestItem + (longestShortcut > 0 and 3 + longestShortcut or 0) + object.sidesOffset
+	object.height = #object.items * (object.spaceBetweenElements + 1) + object.spaceBetweenElements
+
+	-- А это чтоб за края экрана не лезло
+	if object.y + object.height >= buffer.screen.height then object.y = buffer.screen.height - object.height end
+	if object.x + object.width + 1 >= buffer.screen.width then object.x = buffer.screen.width - object.width - 1 end
+
+	object:reimplementedShow()
 end
 
 function GUI.contextMenu(x, y, ...)
-	local argumentElements = {...}
+	local argumentItems = {...}
+	local object = GUI.dropDownMenu(x, y, 1, 0, GUI.colors.contextMenu.default.background, GUI.colors.contextMenu.default.text, GUI.colors.contextMenu.pressed.background, GUI.colors.contextMenu.pressed.text, GUI.colors.contextMenu.disabled.text, GUI.colors.contextMenu.separator, GUI.colors.contextMenu.transparency.background)
 
-	local contextMenuObject = GUI.object(x, y, 1, 1)
-	contextMenuObject.elements = {}
-	contextMenuObject.addElement = addContextMenuElement
-	contextMenuObject.addSeparator = addContextMenuSeparator
-	contextMenuObject.show = showContextMenu
-	contextMenuObject.selectedElement = nil
-
-	for elementIndex = 1, #argumentElements do
-		if argumentElements[elementIndex] == "-" then
-			contextMenuObject:addSeparator()
+	-- Заполняем менюшку парашей
+	for itemIndex = 1, #argumentItems do
+		if argumentItems[itemIndex] == "-" then
+			object:addSeparator()
 		else
-			contextMenuObject:addElement(argumentElements[elementIndex][1], argumentElements[elementIndex][2], argumentElements[elementIndex][3], argumentElements[elementIndex][4])
+			object:addItem(argumentItems[itemIndex][1], argumentItems[itemIndex][2], argumentItems[itemIndex][3], argumentItems[itemIndex][4])
 		end
 	end
 
-	return contextMenuObject
+	object.reimplementedShow = object.show
+	object.show = showContextMenu
+	object.selectedElement = nil
+	object.spaceBetweenElements = 0
+
+	return object
 end
 
 ----------------------------------------- Menu -----------------------------------------
@@ -1155,14 +1276,143 @@ function GUI.switch(x, y, width, activeColor, passiveColor, pipeColor, state)
 	return object
 end
 
+----------------------------------------- Chart object -----------------------------------------
+
+local function drawChart(object)
+	-- Ебошем пездатые оси
+	for i = object.y, object.y + object.height - 2 do buffer.text(object.x, i, object.colors.axis, "│") end
+	buffer.text(object.x + 1, object.y + object.height - 1, object.colors.axis, string.rep("─", object.width - 1))
+	buffer.text(object.x, object.y + object.height - 1, object.colors.axis, "└")
+
+	if #object.values > 1 then
+		local oldDrawLimit = buffer.getDrawLimit()
+		buffer.setDrawLimit(object.x, object.y, object.width, object.height)
+		
+		local delta, fieldWidth, fieldHeight = object.maximumValue - object.minimumValue, object.width - 2, object.height - 1
+
+		-- Рисуем линии значений
+		local roundValues = object.maximumValue > 10
+		local step = 0.2 * fieldHeight
+		for i = step, fieldHeight, step do
+			local value = object.minimumValue + delta * (i / fieldHeight)
+			local stringValue = roundValues and tostring(math.floor(value)) or math.doubleToString(value, 1)
+			buffer.text(object.x + 1, math.floor(object.y + fieldHeight - i), object.colors.value, string.rep("─", object.width - unicode.len(stringValue) - 2) .. " " .. stringValue)
+		end
+
+		-- Рисуем графек, йопта
+		local function getDotPosition(valueIndex)
+			return
+				object.x + math.round((fieldWidth * (valueIndex - 1) / (#object.values - 1))) + 1,
+				object.y + math.round(((fieldHeight - 1) * (object.maximumValue - object.values[valueIndex]) / delta))
+		end
+
+		local x, y = getDotPosition(1)
+		for valueIndex = 2, #object.values do
+			local xNew, yNew = getDotPosition(valueIndex)
+			buffer.semiPixelLine(x, y * 2, xNew, yNew * 2, object.colors.chart)
+			x, y = xNew, yNew
+		end
+
+		buffer.setDrawLimit(oldDrawLimit)
+	end
+
+	-- Дорисовываем названия осей
+	if object.axisNames.y then buffer.text(object.x + 1, object.y, object.colors.axis, object.axisNames.y) end
+	if object.axisNames.x then buffer.text(object.x + object.width - unicode.len(object.axisNames.x), object.y + object.height - 2, object.colors.axis, object.axisNames.x) end
+end
+
+function GUI.chart(x, y, width, height, axisColor, axisValueColor, chartColor, xAxisName, yAxisName, minimumValue, maximumValue, values)
+	if minimumValue >= maximumValue then error("Chart's minimum value can't be >= maximum value!") end
+	local object = GUI.object(x, y, width, height)
+	object.colors = {axis = axisColor, chart = chartColor, value = axisValueColor}
+	object.draw = drawChart
+	object.values = values
+	object.minimumValue = minimumValue
+	object.maximumValue = maximumValue
+	object.axisNames = {x = xAxisName, y = yAxisName}
+	return object
+end
+
+----------------------------------------- Combo Box Object -----------------------------------------
+
+local function drawComboBox(object)
+	buffer.square(object.x, object.y, object.width, object.height, object.colors.default.background)
+	local x, y, limit, arrowSize = object.x + 1, math.floor(object.y + object.height / 2), object.width - 5, object.height
+	buffer.text(x, y, object.colors.default.text, string.limit(object.items[object.currentItem].text, limit, false))
+	GUI.button(object.x + object.width - arrowSize * 2 + 1, object.y, arrowSize * 2 - 1, arrowSize, object.colors.arrow.background, object.colors.arrow.text, 0x0, 0x0, object.state and "▲" or "▼"):draw()
+end
+
+local function selectComboBoxItem(object)
+	object.state = true
+	object:draw()
+
+	local dropDownMenu = GUI.dropDownMenu(object.x, object.y + object.height, object.width, object.height == 1 and 0 or 1, object.colors.default.background, object.colors.default.text, object.colors.pressed.background, object.colors.pressed.text, GUI.colors.contextMenu.disabled.text, GUI.colors.contextMenu.separator, GUI.colors.contextMenu.transparency.background, object.items)
+	dropDownMenu.items = object.items
+	dropDownMenu.sidesOffset = 1
+	local _, itemIndex = dropDownMenu:show()
+
+	object.currentItem = itemIndex or object.currentItem
+	object.state = false
+	object:draw()
+	buffer.draw()
+end
+
+function GUI.comboBox(x, y, width, height, backgroundColor, textColor, arrowBackgroundColor, arrowTextColor, items)
+	local object = GUI.object(x, y, width, height)
+	object.colors = {
+		default = {
+			background = backgroundColor,
+			text = textColor
+		},
+		pressed = {
+			background = GUI.colors.contextMenu.pressed.background,
+			text = GUI.colors.contextMenu.pressed.text
+		},
+		arrow = {
+			background = arrowBackgroundColor,
+			text = arrowTextColor 
+		}
+	}
+	object.items = {}
+	object.currentItem = 1
+	object.addItem = addDropDownMenuItem
+	object.addSeparator = addDropDownMenuSeparator
+	if items then
+		for i = 1, #items do
+			object:addItem(items[i])
+		end
+	end
+	object.draw = drawComboBox
+	object.selectItem = selectComboBoxItem
+	object.state = false
+	return object
+end
+
 --------------------------------------------------------------------------------------------------------------------------------
 
+-- buffer.start()
 -- buffer.clear(0x1b1b1b)
--- buffer.draw(true)
 
--- GUI.switch(2, 2, 8, 0x77FF77, 0x999999, 0xFFFFFF, true):draw()
+-- local comboBox = GUI.comboBox(2, 2, 30, 1, 0xFFFFFF, 0x262626, 0xDDDDDD, 0x262626, {"PIC", "RAW", "PNG", "JPG"})
+-- comboBox:selectItem()
 
 -- buffer.draw()
+
+-- GUI.chart(2, 10, 40, 20, 0xFFFFFF, 0xBBBBBB, 0xFFDB40, "t", "EU", 0, 2, {
+-- 	0.5,
+-- 	0.12
+-- }):draw()
+
+-- local menu = GUI.dropDownMenu(2, 2, 40, 1, 0xFFFFFF, 0x000000, 0xFFDB40, 0xFFFFFF, 0x999999, 0x777777, 50)
+-- menu:addItem("New")
+-- menu:addItem("Open")
+-- menu:addSeparator()
+-- menu:addItem("Save")
+-- menu:addItem("Save as")
+-- menu:show()
+
+-- GUI.contextMenu(2, 2, {"Hello"}, {"World"}, "-", {"You are the"}, {"Best of best", false, "^S"}, {"And bestest yopta"}):show()
+
 
 --------------------------------------------------------------------------------------------------------------------------------
 
