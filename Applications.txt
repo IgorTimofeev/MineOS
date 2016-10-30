@@ -35,8 +35,8 @@
     version=1.0,
   },
   {
-    name="MineOS/Pictures/Govnokod.pic",
-    url="IgorTimofeev/OpenComputers/master/MineOS/Wallpapers/Govnokod.pic",
+    name="MineOS/Pictures/Sunbeams.pic",
+    url="IgorTimofeev/OpenComputers/master/MineOS/Wallpapers/Sunbeams.pic",
     type="Wallpaper",
     version=1.1,
   },
@@ -53,8 +53,8 @@
     version=1.0,
   },
   {
-    name="MineOS/Pictures/AhsokaTano.pic",
-    url="IgorTimofeev/OpenComputers/master/MineOS/Wallpapers/AhsokaTano.pic",
+    name="MineOS/Pictures/AhsokaTanoHiRes.pic",
+    url="IgorTimofeev/OpenComputers/master/MineOS/Wallpapers/AhsokaTanoHiRes.pic",
     type="Wallpaper",
     version=1.0,
   },
@@ -73,12 +73,6 @@
   {
     name="MineOS/Pictures/Invoker.pic",
     url="IgorTimofeev/OpenComputers/master/MineOS/Wallpapers/Invoker.pic",
-    type="Wallpaper",
-    version=1.0,
-  },
-  {
-    name="MineOS/Pictures/GrammarNazi.pic",
-    url="IgorTimofeev/OpenComputers/master/MineOS/Wallpapers/GrammarNazi.pic",
     type="Wallpaper",
     version=1.0,
   },

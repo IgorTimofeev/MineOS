@@ -348,7 +348,7 @@ end
 -- Создаем базовые обои рабочего стола
 if downloadWallpapers then
   ecs.createShortCut(desktopPath .. "Pictures.lnk", picturesPath)
-  ecs.createShortCut("/MineOS/System/OS/Wallpaper.lnk", picturesPath .. "Raspberry.pic")
+  ecs.createShortCut("/MineOS/System/OS/Wallpaper.lnk", picturesPath .. "Sunbeams.pic")
 end
 
 -- Создаем файл автозагрузки
