@@ -1,5 +1,5 @@
 
-package.loaded.doubleHeight, package.loaded.rayEngine, package.loaded.GUI, package.loaded.windows, _G.doubleHeight, _G.rayEngine, _G.GUI, _G.windows = nil, nil, nil, nil, nil, nil, nil, nil
+package.loaded.rayEngine, package.loaded.GUI, package.loaded.windows, _G.rayEngine, _G.GUI, _G.windows = nil, nil, nil, nil, nil, nil, nil, nil
 
 local libraries = {
 	component = "component",
@@ -19,7 +19,7 @@ for library in pairs(libraries) do if not _G[library] then _G[library] = require
 local applicationResourcesDirectory = MineOSCore.getCurrentApplicationResourcesDirectory()
 local localization = MineOSCore.getLocalization(applicationResourcesDirectory .. "Localization/")
 local worldsPath = applicationResourcesDirectory .. "Worlds/"
-local rayWalkVersion = "RayWalk Tech Demo v3.3"
+local rayWalkVersion = "RayWalk Tech Demo v3.4"
 
 ----------------------------------------------------------------------------------------------------------------------------------
 
@@ -47,17 +47,61 @@ local function settings()
 	resolutionTextBoxWidth.onInputFinished = onAnyResolutionTextBoxInputFinished
 	resolutionTextBoxHeight.onInputFinished = onAnyResolutionTextBoxInputFinished
 
-	window:addHorizontalSlider("drawDistanceSlider", x, y, sliderWidth, 0xFFDB80, 0x000000, 0xFFDB40, 0xDDDDDD, 100, 5000, rayEngine.properties.drawDistance, true, localization.drawDistance).onValueChanged = function(object) rayEngine.properties.drawDistance = object.value; window:draw(); buffer:draw() end; y = y + 4
-	window:addHorizontalSlider("shadingDistanceSlider", x, y, sliderWidth, 0xFFDB80, 0x000000, 0xFFDB40, 0xDDDDDD, 100, 3000, rayEngine.properties.shadingDistance, true, localization.shadingDistance).onValueChanged = function(object) rayEngine.properties.shadingDistance = object.value; window:draw(); buffer:draw(); window:draw(); buffer:draw() end; y = y + 4
-	window:addHorizontalSlider("shadingCascadesSlider", x, y, sliderWidth, 0xFFDB80, 0x000000, 0xFFDB40, 0xDDDDDD, 2, 48, rayEngine.properties.shadingCascades, true, localization.shadingCascades).onValueChanged = function(object) rayEngine.properties.shadingCascades = object.value; window:draw(); buffer:draw() end; y = y + 4
-	window:addHorizontalSlider("raycastQualitySlider", x, y, sliderWidth, 0xFFDB80, 0x000000, 0xFFDB40, 0xDDDDDD, 0.5, 32, rayEngine.properties.raycastQuality, true, localization.raycastQuality).onValueChanged = function(object) rayEngine.properties.raycastQuality = object.value; window:draw(); buffer:draw() end; y = y + 4
-	window:addHorizontalSlider("currentTimeSlider", x, y, sliderWidth, rayEngine.world.colors.sky.current, 0x000000, rayEngine.world.colors.sky.current, 0xDDDDDD, 0, rayEngine.world.dayNightCycle.length, rayEngine.world.dayNightCycle.currentTime, true, localization.dayNightCycle, localization.seconds).onValueChanged = function(object) rayEngine.world.dayNightCycle.currentTime = object.value; rayEngine.refreshTimeDependentColors(); object.colors.active = rayEngine.world.colors.sky.current; object.colors.pipe = rayEngine.world.colors.sky.current; window:draw(); buffer:draw() end; y = y + 4
+	local drawDistanceSlider = window:addHorizontalSlider("drawDistanceSlider", x, y, sliderWidth, 0xFFDB80, 0x000000, 0xFFDB40, 0xDDDDDD, 100, 5000, rayEngine.properties.drawDistance, true, localization.drawDistance)
+	drawDistanceSlider.onValueChanged = function()
+		rayEngine.properties.drawDistance = drawDistanceSlider.value
+		window:draw()
+		buffer:draw()
+	end; y = y + 4
+	
+	local shadingDistanceSlider = window:addHorizontalSlider("shadingDistanceSlider", x, y, sliderWidth, 0xFFDB80, 0x000000, 0xFFDB40, 0xDDDDDD, 100, 3000, rayEngine.properties.shadingDistance, true, localization.shadingDistance)
+	shadingDistanceSlider.onValueChanged = function()
+		rayEngine.properties.shadingDistance = shadingDistanceSlider.value
+		window:draw()
+		buffer:draw()
+	end; y = y + 4
+	
+	local shadingCascadesSlider = window:addHorizontalSlider("shadingCascadesSlider", x, y, sliderWidth, 0xFFDB80, 0x000000, 0xFFDB40, 0xDDDDDD, 2, 48, rayEngine.properties.shadingCascades, true, localization.shadingCascades)
+	shadingCascadesSlider.onValueChanged = function()
+		rayEngine.properties.shadingCascades = shadingCascadesSlider.value
+		window:draw()
+		buffer:draw()
+	end; y = y + 4
+
+	local raycastQualitySlider = window:addHorizontalSlider("raycastQualitySlider", x, y, sliderWidth, 0xFFDB80, 0x000000, 0xFFDB40, 0xDDDDDD, 0.5, 32, rayEngine.properties.raycastQuality, true, localization.raycastQuality)
+	raycastQualitySlider.onValueChanged = function()
+		rayEngine.properties.raycastQuality = raycastQualitySlider.value
+		window:draw()
+		buffer:draw()
+	end; y = y + 4
+
+	local currentTimeSlider = window:addHorizontalSlider("currentTimeSlider", x, y, sliderWidth, rayEngine.world.colors.sky.current, 0x000000, rayEngine.world.colors.sky.current, 0xDDDDDD, 0, rayEngine.world.dayNightCycle.length, rayEngine.world.dayNightCycle.currentTime, true, localization.dayNightCycle, localization.seconds)
+	currentTimeSlider.onValueChanged = function()
+		rayEngine.world.dayNightCycle.currentTime = currentTimeSlider.value
+		rayEngine.refreshTimeDependentColors()
+		currentTimeSlider.colors.active = rayEngine.world.colors.sky.current
+		currentTimeSlider.colors.pipe = rayEngine.world.colors.sky.current
+		window:draw()
+		buffer:draw()
+	end; y = y + 4
 
 	window:addLabel("graphonLabel", x, y, sliderWidth, 1, 0xDDDDDD, localization.enableSemipixelRenderer)
-	window:addSwitch("graphonSwitch", x + sliderWidth - 8, y, 8, 0xFFDB40, 0xAAAAAA, 0xFFFFFF, not rayEngine.properties.useSimpleRenderer).onStateChanged = function(object) rayEngine.properties.useSimpleRenderer = not object.state; window:draw(); buffer:draw() end; y = y + 3
+	
+	local graphonSwitch = window:addSwitch("graphonSwitch", x + sliderWidth - 8, y, 8, 0xFFDB40, 0xAAAAAA, 0xFFFFFF, not rayEngine.properties.useSimpleRenderer)
+	graphonSwitch.onStateChanged = function()
+		rayEngine.properties.useSimpleRenderer = not graphonSwith.state
+		window:draw()
+		buffer:draw()
+	end; y = y + 3
 
 	window:addLabel("lockTimeLabel", x, y, sliderWidth, 1, 0xDDDDDD, localization.enableDayNightCycle)
-	window:addSwitch("lockTimeSwitch", x + sliderWidth - 8, y, 8, 0xFFDB40, 0xAAAAAA, 0xFFFFFF, rayEngine.world.dayNightCycle.enabled).onStateChanged = function(object) rayEngine.world.dayNightCycle.enabled = object.state; window:draw(); buffer:draw() end; y = y + 3
+	
+	local lockTimeSwitch = window:addSwitch("lockTimeSwitch", x + sliderWidth - 8, y, 8, 0xFFDB40, 0xAAAAAA, 0xFFFFFF, rayEngine.world.dayNightCycle.enabled)
+	lockTimeSwitch.onStateChanged = function()
+		rayEngine.world.dayNightCycle.enabled = lockTimeSwitch.state
+		window:draw()
+		buffer:draw()
+	end; y = y + 3
 
 	window:addButton("resumeButton", x, y, sliderWidth, 3, 0xEEEEEE, 0x262626, 0xBBBBBB, 0x262626, localization.continue).onTouch = function() window:close(); table.toFile(applicationResourcesDirectory .. "RayEngine.cfg", rayEngine.properties, true) end
 

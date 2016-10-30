@@ -185,8 +185,15 @@ local function createInputs(x, y)
 end
 
 local function createFavourites()
-	local function onFavouriteClicked(button) switchColorFromHex(button.colors.default.background); refreshRainbows(); createCrestsCoordinates(); drawAll() end
-	for i = 1, #favourites do favouritesContainer:addButton("favourite" .. i, i * 2 - 1, 1, 2, 1, favourites[i], 0x0, 0x0, 0x0, " ").onTouch = onFavouriteClicked end
+	for i = 1, #favourites do
+		local button = favouritesContainer:addButton("favourite" .. i, i * 2 - 1, 1, 2, 1, favourites[i], 0x0, 0x0, 0x0, " ")
+		button.onTouch = function()
+			switchColorFromHex(button.colors.default.background)
+			refreshRainbows()
+			createCrestsCoordinates()
+			drawAll()
+		end
+	end
 end
 
 local function createWindow(x, y)
@@ -266,10 +273,6 @@ function palette.show(x, y, startColor)
 	switchColorFromHex(startColor or 0x00B6FF)
 	createWindow(x, y)
 	createCrestsCoordinates()
-
-	--Поддержка внебуферных систем
-	buffer.square(window.x, window.y, window.width, window.height, 0xEEEEEE)
-	buffer.draw()
 
 	refreshRainbows()
 	window.drawShadow = true
