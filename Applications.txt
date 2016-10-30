@@ -865,14 +865,6 @@
     version=1.01,
   },
   {
-    name="MineOS/Applications/FlappyBlock",
-    url="IgorTimofeev/OpenComputers/master/Applications/FlappyBlock/FlappyBlock.lua",
-    type="Application",
-    icon="IgorTimofeev/OpenComputers/master/Applications/FlappyBlock/Icon.pic",
-    createShortcut="desktop",
-    version=1.0,
-  },
-  {
     name="MineOS/Applications/MineCode",
     url="IgorTimofeev/OpenComputers/master/Applications/MineCode2/MineCode.lua",
     type="Application",
@@ -1161,21 +1153,6 @@
       {
         name="Turret.pic",
         url="IgorTimofeev/OpenComputers/master/Applications/TurretControl/Turret.pic",
-      },
-    },
-  },
-  {
-    name="MineOS/Applications/Crossword",
-    url="IgorTimofeev/OpenComputers/master/Applications/Crossword/Crossword.lua",
-    about="IgorTimofeev/OpenComputers/master/Applications/Crossword/About/",
-    type="Application",
-    icon="IgorTimofeev/OpenComputers/master/Applications/Crossword/Icon.pic",
-    createShortcut="desktop",
-    version=1.0,
-    resources={
-      {
-        name="CrosswordFile.txt",
-        url="IgorTimofeev/OpenComputers/master/Applications/Crossword/CrosswordFile.txt",
       },
     },
   },
