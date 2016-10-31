@@ -1,7 +1,9 @@
 --         Hologram Editor
 -- by NEO, Totoro
 -- 10/14/2014, all right reserved =)
+-- райтс, хуяйтс, резервед ЙОПТА
 
+local MineOSCore = require("MineOSCore")
 local unicode = require('unicode')
 local event = require('event')
 local term = require('term')
@@ -9,8 +11,7 @@ local fs = require('filesystem')
 local com = require('component')
 local gpu = com.gpu
 
-local config = require("config")
-local lang = config.readAll("MineOS/Applications/HoloEdit.app/Resources/" .. _OSLANGUAGE .. ".lang")
+local lang = MineOSCore.getCurrentApplicationLocalization()
 
 --   Константы   --
 HOLOH = 32

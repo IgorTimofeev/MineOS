@@ -281,6 +281,13 @@
     version=1.04,
   },
   {
+    name="lib/internet.lua",
+    url="IgorTimofeev/OpenComputers/master/lib/internet.lua",
+    type="Library",
+    preLoadFile=true,
+    version=1.0,
+  },
+  {
     name="MineOS/System/OS/EFI.lua",
     url="IgorTimofeev/OpenComputers/master/MineOS/EFI.lua",
     type="Library",
@@ -589,7 +596,7 @@
     type="Application",
     icon="IgorTimofeev/OpenComputers/master/Applications/VK/Icon.pic",
     createShortcut="dock",
-    version=1.21,
+    version=1.22,
     resources={
       {
         name="VKLogo.pic",
@@ -968,14 +975,6 @@
     version=1.01,
   },
   {
-    name="MineOS/Applications/Pastebin",
-    url="IgorTimofeev/OpenComputers/master/Applications/Pastebin/Pastebin.lua",
-    type="Application",
-    icon="IgorTimofeev/OpenComputers/master/Applications/Pastebin/Icon.pic",
-    createShortcut="desktop",
-    version=1.0,
-  },
-  {
     name="MineOS/Applications/Finder",
     url="IgorTimofeev/OpenComputers/master/Applications/Finder/Finder.lua",
     about="IgorTimofeev/OpenComputers/master/Applications/Finder/About/",
@@ -1150,15 +1149,15 @@
     type="Application",
     icon="IgorTimofeev/OpenComputers/master/Applications/HoloEdit/Icon.pic",
     createShortcut="desktop",
-    version=1.0,
+    version=1.01,
     resources={
       {
         name="Russian.lang",
-        url="IgorTimofeev/OpenComputers/master/Applications/HoloEdit/Russian.lang",
+        url="IgorTimofeev/OpenComputers/master/Applications/HoloEdit/Localization/Russian.lang",
       },
       {
         name="English.lang",
-        url="IgorTimofeev/OpenComputers/master/Applications/HoloEdit/English.lang",
+        url="IgorTimofeev/OpenComputers/master/Applications/HoloEdit/Localization/English.lang",
       },
     },
   },

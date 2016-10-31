@@ -68,6 +68,43 @@ end
 
 -----------------------------------------------------------------------------------------------------------------------------------
 
+local function getFilenameAndFormat(path)
+	local fileName, format = string.match(path, "^(.+)(%..+)$")
+	return fileName or path, format and string.gsub(format, "/", "") or nil
+end
+
+local function getFilePathAndName(path)
+	local filePath, fileName = string.math(path, "^(.+%/)(.+)$")
+	return filePath or "/", fileName or path
+end
+
+function MineOSCore.getFileFormat(path)
+	local fileName, format = getFilenameAndFormat(path)
+	return format
+end
+
+function MineOSCore.hideFileFormat(path)
+	local fileName, format = getFilenameAndFormat(path)
+	return fileName
+end
+
+function MineOSCore.getFileName(path)
+	local filePath, fileName = getFilePathAndName(path)
+	return fileName
+end
+
+function MineOSCore.getFilePath(path)
+	local filePath, fileName = getFilePathAndName(path)
+	return filePath
+end
+
+function MineOSCore.isFileHidden(path)
+	if string.match(path, "^%..+$") then return true end
+	return false
+end
+
+-----------------------------------------------------------------------------------------------------------------------------------
+
 function MineOSCore.loadIcon(name, path)
 	if not MineOSCore.icons[name] then MineOSCore.icons[name] = image.load(path) end
 	return MineOSCore.icons[name]
@@ -98,7 +135,8 @@ end
 
 --Отрисовка одной иконки
 function MineOSCore.drawIcon(x, y, path, showFileFormat, nameColor, name)
-	local fileFormat, icon = ecs.getFileFormat(path)
+	local fileFormat = MineOSCore.getFileFormat(path)
+	local icon
 
 	if fs.isDirectory(path) then
 		if fileFormat == ".app" then
@@ -191,11 +229,11 @@ local function drawErrorWindow(path, programVersion, errorLine, reason, showSend
 
 	-- Окошечко и всякая шняжка на нем
 	local window = require("windows").empty(x, y, width, height, width, height)
-	window:addPanel("topBar", 1, 1, width, 3, colors.topBar)
-	window:addLabel("title", 1, 2, width, 1, colors.title, programName):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
-	local windowActionButtons =  window:addWindowActionButtons("windowActionButtons", 2, 2, false)
-	local sendToDeveloperButton = window:addAdaptiveButton("sendToDeveloperButton", 9, 1, 2, 1, 0x444444, 0xFFFFFF, 0x343434, 0xFFFFFF, MineOSCore.localization.sendFeedback)
-	local stackTextBox = window:addTextBox("stackTextBox", codeWidth + 1, 4, stackWidth, codeHeight, 0xFFFFFF, 0x000000, string.wrap(MineOSCore.parseErrorMessage(reason, 4), stackWidth - 2), 1, 1, 0)
+	window:addPanel(1, 1, width, 3, colors.topBar)
+	window:addLabel(1, 2, width, 1, colors.title, programName):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+	local windowActionButtons = window:addWindowActionButtons(2, 2, false)
+	local sendToDeveloperButton = window:addAdaptiveButton(9, 1, 2, 1, 0x444444, 0xFFFFFF, 0x343434, 0xFFFFFF, MineOSCore.localization.sendFeedback)
+	local stackTextBox = window:addTextBox(codeWidth + 1, 4, stackWidth, codeHeight, 0xFFFFFF, 0x000000, string.wrap(MineOSCore.parseErrorMessage(reason, 4), stackWidth - 2), 1, 1, 0)
 	--Рисуем окошечко, чтобы кодику не было ОБИДНО
 	--!!1
 	window:draw()

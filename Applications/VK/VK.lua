@@ -6,6 +6,7 @@ local json = require("json")
 local serialization = require("serialization")
 local event = require("event")
 local ecs = require("ECSAPI")
+local internet = require("internet")
 local fs = require("filesystem")
 local buffer = require("doubleBuffering")
 local context = require("context")
@@ -143,7 +144,7 @@ end
 
 --Банальный URL-запрос, декодирующийся через ЖУСОН в случае успеха, епты
 local function request(url)
-	local success, response = ecs.internetRequest(url)
+	local success, response = internet.request(url, true)
 	if success then response = json:decode(response) end
 	return success, response
 end

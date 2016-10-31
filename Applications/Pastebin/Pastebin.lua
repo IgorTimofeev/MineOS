@@ -1,3 +1,4 @@
+require("advancedLua")
 local component = require("component")
 local event = require("event")
 local term = require("term")
@@ -8,7 +9,6 @@ local shell = require("shell")
 local internet = require("internet")
 local context = require("context")
 local xml = require("xmlParser")
-local config = require("config")
 local unixtime = require("unixtime")
 local SHA2 = require("SHA2")
 -- local computer = require("computer")
@@ -332,7 +332,7 @@ end
 
 local function analyseConfig()
 	if fs.exists(pathToConfig) then
-		local massiv = config.readAll(pathToConfig)
+		local massiv = table.fromFile(pathToConfig)
 		username = massiv.username
 		password = massiv.password
 		massiv = nil
@@ -340,8 +340,7 @@ local function analyseConfig()
 		fs.makeDirectory(fs.path(pathToConfig))
 		local success = inputPassword()
 		if not success then return false end
-		config.write(pathToConfig, "username", username)
-		config.write(pathToConfig, "password", password)
+		table.toFile(pathToConfig, {username = username, password = password})
 	end
 
 	return true
