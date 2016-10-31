@@ -21,8 +21,8 @@ for library in pairs(libraries) do if not _G[library] then _G[library] = require
 local window
 
 local paths = {}
-paths.resources = MineOSCore.getCurrentApplicationResourcesDirectory()
--- paths.resources = "/SmartHouse/"
+-- paths.resources = MineOSCore.getCurrentApplicationResourcesDirectory()
+paths.resources = "/SmartHouse/"
 paths.modules = paths.resources .. "Modules/"
 
 local colors = {
@@ -131,7 +131,7 @@ end
 
 local function createDevice(x, y, componentName, componentProxy, name)
 	if not modules[componentName] then error("No such module: " .. componentName) end
-	local container = window:addContainer(name, x, y, 16, 9)
+	local container = window:addContainer(x, y, 16, 9)
 
 	container.name = name
 	container.module = modules[componentName]
@@ -140,8 +140,8 @@ local function createDevice(x, y, componentName, componentProxy, name)
 	container.detailsIsHidden = true
 
 	x, y = 1, 1
-	local deviceImage = container:addImage("deviceImage", x, y, container.module.icon); y = y + 8
-	local stateButton = container:addButton("stateButton", 1, y, container.width, 1, colors.devicesButtonBackground, colors.devicesButtonText, colors.devicesButtonText, colors.devicesButtonBackground, "*")
+	local deviceImage = container:addImage(x, y, container.module.icon); y = y + 8
+	local stateButton = container:addButton(1, y, container.width, 1, colors.devicesButtonBackground, colors.devicesButtonText, colors.devicesButtonText, colors.devicesButtonBackground, "*")
 	stateButton.onTouch = function()
 		container.detailsIsHidden = not container.detailsIsHidden
 		changeChildrenState(container, container.detailsIsHidden)
@@ -152,11 +152,11 @@ local function createDevice(x, y, componentName, componentProxy, name)
 		end
 	end
 
-	container.backgroundPanel = container:addPanel("backgroundPanel", 1, y, container.width, 1, colors.devicesBackground, colors.devicesBackgroundTransparency)
+	container.backgroundPanel = container:addPanel(1, y, container.width, 1, colors.devicesBackground, colors.devicesBackgroundTransparency)
 
 
-	container:addLabel("nameLabel", 2, y, container.width - 2, 1, 0xFFFFFF, container.name):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); y = y + 1
-	container:addLabel("addressLabel", 2, y, container.width - 2, 1, 0x999999, container.componentProxy.address):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); y = y + 2
+	container:addLabel(2, y, container.width - 2, 1, 0xFFFFFF, container.name):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); y = y + 1
+	container:addLabel(2, y, container.width - 2, 1, 0x999999, container.componentProxy.address):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); y = y + 2
 	
 	container.module.start(container)
 	container.module.update(container, {})

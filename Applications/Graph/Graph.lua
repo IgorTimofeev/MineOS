@@ -1,7 +1,6 @@
 
 _G.buffer = require("doubleBuffering")
 buffer.start()
-_G.doubleHeight = require("doubleHeight")
 _G.unicode = require("unicode")
 _G.event = require("event")
 _G.ecs = require("ECSAPI")
@@ -72,7 +71,7 @@ local function calculateKeyPoints()
 				
 				if limit(xOld) and limit(yOld) and limit(xNew) and limit(yNew) then
 					table.insert(keyPoints, {x = xOld, y = yOld, x2 = xNew, y2 = yNew})
-					-- doubleHeight.line(xOld, yOld, xNew, yNew, graphColor)
+					-- buffer.semiPixelLine(xOld, yOld, xNew, yNew, graphColor)
 				end
 				
 				xOld, yOld = xNew, yNew
@@ -85,7 +84,7 @@ end
 
 local function drawGraph()
 	for i = 1, #keyPoints do
-		doubleHeight.line(xGraph + keyPoints[i].x, yGraph - keyPoints[i].y, xGraph + keyPoints[i].x2, yGraph - keyPoints[i].y2, graphColor)
+		buffer.semiPixelLine(xGraph + keyPoints[i].x, yGraph - keyPoints[i].y, xGraph + keyPoints[i].x2, yGraph - keyPoints[i].y2, graphColor)
 		if showCornerPoints then buffer.semiPixelSet(xGraph + keyPoints[i].x, yGraph - keyPoints[i].y, 0x00A8FF) end
 	end
 end

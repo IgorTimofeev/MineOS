@@ -214,9 +214,9 @@ end
 function windows.tabbed(x, y, width, height, minimumWidth, minimumHeight, ...)
 	local tabs = {...}
 	local window = newWindow(x, y, width, height, minimumWidth, minimumHeight)
-	window:addPanel("windowBackgroundPanel", 1, 1, window.width, window.height, 0xEEEEEE).disabled = true
-	window:addTabBar("tabBar", 1, 1, window.width, 3, 1, 0xDDDDDD, 0x262626, 0xCCCCCC, 0x262626, ...)
-	window:addWindowActionButtons("windowActionButtons", 2, 1, false)
+	window:addPanel(1, 1, window.width, window.height, 0xEEEEEE).disabled = true
+	window:addTabBar(1, 1, window.width, 3, 1, 0xDDDDDD, 0x262626, 0xCCCCCC, 0x262626, ...)
+	window:addWindowActionButtons(2, 1, false)
 
 	return window
 end
@@ -227,9 +227,9 @@ end
 -- buffer.draw(true)
 
 -- local myWindow = windows.empty(10, 5, 60, 20, 60, 20)
--- myWindow:addPanel("backgroundPanel", 1, 1, myWindow.width, myWindow.height, 0xEEEEEE)
--- myWindow:addLabel("counter", 2, 5, 20, 1, 0x000000, tostring(10)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
--- myWindow:addHorizontalSlider("slider", 2, 4, 20, 0x880000, 0x000000, 0xFF4444, 0, 100, 10).onValueChanged = function(object)
+-- myWindow:addPanel(1, 1, myWindow.width, myWindow.height, 0xEEEEEE)
+-- myWindow:addLabel(2, 5, 20, 1, 0x000000, tostring(10)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+-- myWindow:addHorizontalSlider(2, 4, 20, 0x880000, 0x000000, 0xFF4444, 0, 100, 10).onValueChanged = function(object)
 -- 	myWindow.counter.text = tostring(object.value)
 -- end
 

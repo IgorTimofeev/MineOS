@@ -4,7 +4,6 @@ local libraries = {
 	colorlib = "colorlib",
 	image = "image",
 	buffer = "doubleBuffering",
-	doubleHeight = "doubleHeight",
 	GUI = "GUI",
 	files = "files",
 	event = "event",
@@ -260,8 +259,8 @@ local function drawFieldOfViewAngle(x, y, distance, color)
 	local firstAngle, secondAngle = math.rad(-(rayEngine.player.rotation - fieldOfViewHalf)), math.rad(-(rayEngine.player.rotation + fieldOfViewHalf))
 	local xFirst, yFirst = math.floor(x + math.sin(firstAngle) * distance), math.floor(y + math.cos(firstAngle) * distance)
 	local xSecond, ySecond = math.floor(x + math.sin(secondAngle) * distance), math.floor(y + math.cos(secondAngle) * distance)
-	doubleHeight.line(x, y, xFirst, yFirst, color)
-	doubleHeight.line(x, y, xSecond, ySecond, color)
+	buffer.semiPixelLine(x, y, xFirst, yFirst, color)
+	buffer.semiPixelLine(x, y, xSecond, ySecond, color)
 end
 
 function rayEngine.drawMap(x, y, width, height, transparency)
@@ -318,8 +317,8 @@ function rayEngine.compass(x, y)
 	southPoint.x, southPoint.y = math.round(x + math.sin(northAngleRad) * distance * xScaleFactor), math.round(y - math.cos(northAngleRad) * distance)
 	
 	y = y * 2
-	doubleHeight.line(x, y, northPoint.x, northPoint.y * 2, 0xFF5555)
-	doubleHeight.line(x, y, southPoint.x, southPoint.y * 2, 0xFFFFFF)
+	buffer.semiPixelLine(x, y, northPoint.x, northPoint.y * 2, 0xFF5555)
+	buffer.semiPixelLine(x, y, southPoint.x, southPoint.y * 2, 0xFFFFFF)
 	buffer.semiPixelSet(x, y, 0x000000)
 end
 
@@ -339,8 +338,8 @@ function rayEngine.watch(x, y)
 	local xHour, yHour = math.round(x + math.sin(hourAngle) * hourArrowLength * 2), math.round(y - math.cos(hourAngle) * hourArrowLength)
 
 	y = y * 2
-	doubleHeight.line(x, y, xMinute, yMinute * 2, 0xEEEEEE)
-	doubleHeight.line(x, y, xHour, yHour * 2, 0xEEEEEE)
+	buffer.semiPixelLine(x, y, xMinute, yMinute * 2, 0xEEEEEE)
+	buffer.semiPixelLine(x, y, xHour, yHour * 2, 0xEEEEEE)
 end	
 
 local function addItemToChatHistory(text, color)

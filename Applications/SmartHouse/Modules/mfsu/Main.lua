@@ -10,8 +10,8 @@ local module = {
 function module.start(moduleContainer)
 	local x, y = 2, moduleContainer.children[#moduleContainer.children].localPosition.y + 2
 	
-	moduleContainer.capaticyLabel = moduleContainer:addLabel("capaticyLabel", x, y, moduleContainer.width - 2, 1, 0xDDDDDD, "Capacity"):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); y = y + 1
-	moduleContainer.chart = moduleContainer:addChart("chart", x, y, moduleContainer.width - 2, math.floor(moduleContainer.width - 2) / 2, 0xFFFFFF, 0x999999, 0xFFDB40, "t", "%", 0, 100, {})
+	moduleContainer.capaticyLabel = moduleContainer:addLabel(x, y, moduleContainer.width - 2, 1, 0xDDDDDD, "Capacity"):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); y = y + 1
+	moduleContainer.chart = moduleContainer:addChart(x, y, moduleContainer.width - 2, math.floor(moduleContainer.width - 2) / 2, 0xFFFFFF, 0x999999, 0xFFDB40, "t", "%", 0, 100, {})
 end
 
 -- This method is called on each frame update (every second by default), but only if module details is not hidden or updateWhenModuleDetailsIsHidden == true

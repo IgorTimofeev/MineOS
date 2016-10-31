@@ -318,13 +318,13 @@
     name="lib/GUI.lua",
     url="IgorTimofeev/OpenComputers/master/lib/GUI.lua",
     type="Library",
-    version=1.16,
+    version=1.17,
   },
   {
     name="lib/windows.lua",
     url="IgorTimofeev/OpenComputers/master/lib/windows.lua",
     type="Library",
-    version=1.02,
+    version=1.03,
   },
   {
     name="lib/serialization.lua",
@@ -336,13 +336,7 @@
     name="lib/rayEngine.lua",
     url="IgorTimofeev/OpenComputers/master/lib/rayEngine.lua",
     type="Library",
-    version=1.35,
-  },
-  {
-    name="lib/doubleHeight.lua",
-    url="IgorTimofeev/OpenComputers/master/lib/doubleHeight.lua",
-    type="Library",
-    version=1.02,
+    version=1.36,
   },
   {
     name="lib/json.lua",
@@ -414,7 +408,7 @@
     name="lib/palette.lua",
     url="IgorTimofeev/OpenComputers/master/lib/palette.lua",
     type="Library",
-    version=1.02,
+    version=1.03,
   },
   {
     name="lib/doubleBuffering.lua",
@@ -525,69 +519,69 @@
     version=1.0,
   },
   ----------------------------------------------------- Приложения --------------------------------------------------------------------------
-  -- {
-  --   name="MineOS/Applications/SmartHouse",
-  --   url="IgorTimofeev/OpenComputers/master/Applications/SmartHouse/SmartHouse.lua",
-  --   type="Application",
-  --   icon="IgorTimofeev/OpenComputers/master/Applications/SmartHouse/Icon.pic",
-  --   createShortcut="desktop",
-  --   version=1.22,
-  --   resources={
-  --     {
-  --       name="Modules/redstone/Icon.pic",
-  --       url="IgorTimofeev/OpenComputers/master/Applications/SmartHouse/Modules/redstone/Icon.pic",
-  --     },
-  --     {
-  --       name="Modules/redstone/Main.lua",
-  --       url="IgorTimofeev/OpenComputers/master/Applications/SmartHouse/Modules/redstone/Main.lua",
-  --     },
-  --     --
-  --     {
-  --       name="Modules/mfsu/Icon.pic",
-  --       url="IgorTimofeev/OpenComputers/master/Applications/SmartHouse/Modules/mfsu/Icon.pic",
-  --     },
-  --     {
-  --       name="Modules/mfsu/Main.lua",
-  --       url="IgorTimofeev/OpenComputers/master/Applications/SmartHouse/Modules/mfsu/Main.lua",
-  --     },
-  --     --
-  --     {
-  --       name="Modules/screen/Icon.pic",
-  --       url="IgorTimofeev/OpenComputers/master/Applications/SmartHouse/Modules/screen/Icon.pic",
-  --     },
-  --     {
-  --       name="Modules/screen/Main.lua",
-  --       url="IgorTimofeev/OpenComputers/master/Applications/SmartHouse/Modules/screen/Main.lua",
-  --     },
-  --     --
-  --     {
-  --       name="Modules/homePC/Icon.pic",
-  --       url="IgorTimofeev/OpenComputers/master/Applications/SmartHouse/Modules/homePC/Icon.pic",
-  --     },
-  --     {
-  --       name="Modules/homePC/Main.lua",
-  --       url="IgorTimofeev/OpenComputers/master/Applications/SmartHouse/Modules/homePC/Main.lua",
-  --     },
-  --     --
-  --     {
-  --       name="Modules/motion_sensor/Icon.pic",
-  --       url="IgorTimofeev/OpenComputers/master/Applications/SmartHouse/Modules/motion_sensor/Icon.pic",
-  --     },
-  --     {
-  --       name="Modules/motion_sensor/Main.lua",
-  --       url="IgorTimofeev/OpenComputers/master/Applications/SmartHouse/Modules/motion_sensor/Main.lua",
-  --     },
-  --     --
-  --     {
-  --       name="Modules/reactor/Icon.pic",
-  --       url="IgorTimofeev/OpenComputers/master/Applications/SmartHouse/Modules/reactor/Icon.pic",
-  --     },
-  --     {
-  --       name="Modules/reactor/Main.lua",
-  --       url="IgorTimofeev/OpenComputers/master/Applications/SmartHouse/Modules/reactor/Main.lua",
-  --     },
-  --   },
-  -- },
+  {
+    name="MineOS/Applications/SmartHouse",
+    url="IgorTimofeev/OpenComputers/master/Applications/SmartHouse/SmartHouse.lua",
+    type="Application",
+    icon="IgorTimofeev/OpenComputers/master/Applications/SmartHouse/Icon.pic",
+    createShortcut="desktop",
+    version=1.23,
+    resources={
+      {
+        name="Modules/redstone/Icon.pic",
+        url="IgorTimofeev/OpenComputers/master/Applications/SmartHouse/Modules/redstone/Icon.pic",
+      },
+      {
+        name="Modules/redstone/Main.lua",
+        url="IgorTimofeev/OpenComputers/master/Applications/SmartHouse/Modules/redstone/Main.lua",
+      },
+      --
+      {
+        name="Modules/mfsu/Icon.pic",
+        url="IgorTimofeev/OpenComputers/master/Applications/SmartHouse/Modules/mfsu/Icon.pic",
+      },
+      {
+        name="Modules/mfsu/Main.lua",
+        url="IgorTimofeev/OpenComputers/master/Applications/SmartHouse/Modules/mfsu/Main.lua",
+      },
+      --
+      {
+        name="Modules/screen/Icon.pic",
+        url="IgorTimofeev/OpenComputers/master/Applications/SmartHouse/Modules/screen/Icon.pic",
+      },
+      {
+        name="Modules/screen/Main.lua",
+        url="IgorTimofeev/OpenComputers/master/Applications/SmartHouse/Modules/screen/Main.lua",
+      },
+      --
+      {
+        name="Modules/homePC/Icon.pic",
+        url="IgorTimofeev/OpenComputers/master/Applications/SmartHouse/Modules/homePC/Icon.pic",
+      },
+      {
+        name="Modules/homePC/Main.lua",
+        url="IgorTimofeev/OpenComputers/master/Applications/SmartHouse/Modules/homePC/Main.lua",
+      },
+      --
+      {
+        name="Modules/motion_sensor/Icon.pic",
+        url="IgorTimofeev/OpenComputers/master/Applications/SmartHouse/Modules/motion_sensor/Icon.pic",
+      },
+      {
+        name="Modules/motion_sensor/Main.lua",
+        url="IgorTimofeev/OpenComputers/master/Applications/SmartHouse/Modules/motion_sensor/Main.lua",
+      },
+      --
+      {
+        name="Modules/reactor/Icon.pic",
+        url="IgorTimofeev/OpenComputers/master/Applications/SmartHouse/Modules/reactor/Icon.pic",
+      },
+      {
+        name="Modules/reactor/Main.lua",
+        url="IgorTimofeev/OpenComputers/master/Applications/SmartHouse/Modules/reactor/Main.lua",
+      },
+    },
+  },
   {
     name="MineOS/Applications/VK",
     url="IgorTimofeev/OpenComputers/master/Applications/VK/VK.lua",
@@ -673,7 +667,7 @@
     type="Application",
     icon="IgorTimofeev/OpenComputers/master/Applications/RayWalk/Icon.pic",
     createShortcut="desktop",
-    version=1.54,
+    version=1.55,
     resources={
       {
         name="Localization/Russian.lang",
@@ -796,7 +790,7 @@
     type="Application",
     icon="IgorTimofeev/OpenComputers/master/Applications/PrintImage/Icon.pic",
     createShortcut="desktop",
-    version=1.01,
+    version=1.02,
   },
   {
     name="MineOS/Applications/Palette",
@@ -856,7 +850,7 @@
     type="Application",
     icon="IgorTimofeev/OpenComputers/master/Applications/Graph/Icon.pic",
     createShortcut="desktop",
-    version=1.01,
+    version=1.02,
   },
   {
     name="MineOS/Applications/MineCode",

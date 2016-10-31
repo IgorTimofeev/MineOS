@@ -1,7 +1,7 @@
 
 ----------------------------------------- Libraries -----------------------------------------
 
-package.loaded.windows = nil
+-- package.loaded.windows = nil
 
 local libraries = {
 	component = "component",
@@ -191,19 +191,19 @@ end
 
 local function createWindow()
 	window = windows.fullScreen()
-	window:addPanel("backgroundPanel", 1, 1, window.width, window.height, 0xEEEEEE)
-	window:addObject("mainImageObject", 1, 1, window.width, window.height).draw = drawMainImageObject
+	window:addPanel(1, 1, window.width, window.height, 0xEEEEEE)
+	window:addObject(1, 1, window.width, window.height).draw = drawMainImageObject
 	local textBoxesWidth = math.floor(panelWidth * 0.55)
 	
-	local shadeContainer = window:addContainer("shadeContainer", window.width - panelWidth + 1, 1, panelWidth, window.height)
-	shadeContainer:addPanel("shadePanel", 1, 1, shadeContainer.width, shadeContainer.height, 0x0000000, 40)
+	window.shadeContainer = window:addContainer(window.width - panelWidth + 1, 1, panelWidth, window.height)
+	window.shadeContainer:addPanel(1, 1, window.shadeContainer.width, window.shadeContainer.height, 0x0000000, 40)
 	
 	local y = 2
-	shadeContainer:addLabel("label", 1, y, shadeContainer.width, 1, 0xFFFFFF, "Main properties"):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+	window.shadeContainer:addLabel(1, y, window.shadeContainer.width, 1, 0xFFFFFF, "Main properties"):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
 	
 	y = y + 2
-	shadeContainer:addLabel("imagePathLabel", 3, y, shadeContainer.width, 1, 0xCCCCCC, "Image path:")
-	shadeContainer:addInputTextBox("imagePath", shadeContainer.width - textBoxesWidth - 1, y, textBoxesWidth, 1, 0xEEEEEE, 0x555555, 0xEEEEEE, 0x262626, startImagePath, nil, nil, true).validator = function(text)
+	window.shadeContainer:addLabel(3, y, window.shadeContainer.width, 1, 0xCCCCCC, "Image path:")
+	window.shadeContainer:addInputTextBox(window.shadeContainer.width - textBoxesWidth - 1, y, textBoxesWidth, 1, 0xEEEEEE, 0x555555, 0xEEEEEE, 0x262626, startImagePath, nil, nil, true).validator = function(text)
 		if text and fs.exists(text) then
 			if unicode.sub(text, -4, -1) == ".pic" then
 				mainImage = image.load(text)
@@ -218,32 +218,32 @@ local function createWindow()
 	end
 	
 	y = y + 2
-	shadeContainer:addLabel("mainMaterialLabel", 3, y, shadeContainer.width, 1, 0xCCCCCC, "Material:")
-	local mainMaterialTextBox = shadeContainer:addInputTextBox("mainMaterialTextBox", shadeContainer.width - textBoxesWidth - 1, y, textBoxesWidth, 1, 0xEEEEEE, 0x555555, 0xEEEEEE, 0x262626, config.mainMaterial, nil, nil, false)
+	window.shadeContainer:addLabel(3, y, window.shadeContainer.width, 1, 0xCCCCCC, "Material:")
+	local mainMaterialTextBox = window.shadeContainer:addInputTextBox(window.shadeContainer.width - textBoxesWidth - 1, y, textBoxesWidth, 1, 0xEEEEEE, 0x555555, 0xEEEEEE, 0x262626, config.mainMaterial, nil, nil, false)
 	mainMaterialTextBox.onInputFinished = function()
 		config.mainMaterial = mainMaterialTextBox.text
 		save()
 	end
 
 	y = y + 2
-	shadeContainer:addLabel("printNameLabel", 3, y, shadeContainer.width, 1, 0xCCCCCC, "Print name:")
-	local printNameTextBox = shadeContainer:addInputTextBox("printNameTextBox", shadeContainer.width - textBoxesWidth - 1, y, textBoxesWidth, 1, 0xEEEEEE, 0x555555, 0xEEEEEE, 0x262626, config.printName, nil, nil, false)
+	window.shadeContainer:addLabel(3, y, window.shadeContainer.width, 1, 0xCCCCCC, "Print name:")
+	local printNameTextBox = window.shadeContainer:addInputTextBox(window.shadeContainer.width - textBoxesWidth - 1, y, textBoxesWidth, 1, 0xEEEEEE, 0x555555, 0xEEEEEE, 0x262626, config.printName, nil, nil, false)
 	printNameTextBox.onInputFinished = function()
 		config.printName = printNameTextBox.text
 		save()
 	end
 
 	y = y + 2
-	shadeContainer:addLabel("label", 3, y, shadeContainer.width, 1, 0xCCCCCC, "Floor mode:")
-	local floorSwitch = shadeContainer:addSwitch("floorSwitch", shadeContainer.width - 9, y, 8, 0xFFDB40, 0xAAAAAA, 0xFFFFFF, config.floorMode)
+	window.shadeContainer:addLabel(3, y, window.shadeContainer.width, 1, 0xCCCCCC, "Floor mode:")
+	local floorSwitch = window.shadeContainer:addSwitch(window.shadeContainer.width - 9, y, 8, 0xFFDB40, 0xAAAAAA, 0xFFFFFF, config.floorMode)
 	floorSwitch.onStateChanged = function()
 		config.floorMode = floorSwitch.state
 		save()
 	end
 
 	y = y + 2
-	shadeContainer:addLabel("label", 3, y, shadeContainer.width, 1, 0xCCCCCC, "Show grid:")
-	local gridSwitch = shadeContainer:addSwitch("gridSwitch", shadeContainer.width - 9, y, 8, 0xFFDB40, 0xAAAAAA, 0xFFFFFF, config.showGrid)
+	window.shadeContainer:addLabel(3, y, window.shadeContainer.width, 1, 0xCCCCCC, "Show grid:")
+	local gridSwitch = window.shadeContainer:addSwitch(window.shadeContainer.width - 9, y, 8, 0xFFDB40, 0xAAAAAA, 0xFFFFFF, config.showGrid)
 	gridSwitch.onStateChanged = function()
 		config.showGrid = gridSwitch.state
 		save()
@@ -251,24 +251,24 @@ local function createWindow()
 	end
 	
 	y = y + 4
-	shadeContainer:addLabel("label", 1, y, shadeContainer.width, 1, 0xFFFFFF, "Frame properties"):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+	window.shadeContainer:addLabel(1, y, window.shadeContainer.width, 1, 0xFFFFFF, "Frame properties"):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
 	y = y + 2
-	shadeContainer:addLabel("label", 3, y, shadeContainer.width, 1, 0xCCCCCC, "Enabled:")
-	local frameSwitch = shadeContainer:addSwitch("frameSwitch", shadeContainer.width - 9, y, 8, 0xFFDB40, 0xAAAAAA, 0xFFFFFF, config.frame.enabled)
+	window.shadeContainer:addLabel(3, y, window.shadeContainer.width, 1, 0xCCCCCC, "Enabled:")
+	local frameSwitch = window.shadeContainer:addSwitch(window.shadeContainer.width - 9, y, 8, 0xFFDB40, 0xAAAAAA, 0xFFFFFF, config.frame.enabled)
 	frameSwitch.onStateChanged = function()
 		config.frame.enabled = frameSwitch.state
 		save()
 	end
 	y = y + 2
-	shadeContainer:addLabel("frameMaterialLabel", 3, y, shadeContainer.width, 1, 0xCCCCCC, "Material:")
-	local frameMaterialTextBox = shadeContainer:addInputTextBox("frameMaterial", shadeContainer.width - textBoxesWidth - 1, y, textBoxesWidth, 1, 0xEEEEEE, 0x555555, 0xEEEEEE, 0x262626, config.frame.material, nil, nil, false)
+	window.shadeContainer:addLabel(3, y, window.shadeContainer.width, 1, 0xCCCCCC, "Material:")
+	local frameMaterialTextBox = window.shadeContainer:addInputTextBox(window.shadeContainer.width - textBoxesWidth - 1, y, textBoxesWidth, 1, 0xEEEEEE, 0x555555, 0xEEEEEE, 0x262626, config.frame.material, nil, nil, false)
 	frameMaterialTextBox.onInputFinished = function()
 		config.frame.material = frameMaterialTextBox.text
 		save()
 	end
 
 	y = y + 2
-	local frameWidthSlider = shadeContainer:addHorizontalSlider("frameWidthSlider", 3, y, shadeContainer.width - 4, 0xFFDB80, 0x000000, 0xFFDB40, 0xCCCCCC, 1, shapeResolutionLimit - 1, config.frame.width, false, "Width: " , " voxel(s)")
+	local frameWidthSlider = window.shadeContainer:addHorizontalSlider(3, y, window.shadeContainer.width - 4, 0xFFDB80, 0x000000, 0xFFDB40, 0xCCCCCC, 1, shapeResolutionLimit - 1, config.frame.width, false, "Width: " , " voxel(s)")
 	frameWidthSlider.onValueChanged = function(value)
 		config.frame.width = frameWidthSlider.value
 		save()
@@ -276,17 +276,17 @@ local function createWindow()
 	frameWidthSlider.roundValues = true
 
 	y = y + 5
-	shadeContainer:addLabel("label", 1, y, shadeContainer.width, 1, 0xFFFFFF, "Light emission"):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+	window.shadeContainer:addLabel(1, y, window.shadeContainer.width, 1, 0xFFFFFF, "Light emission"):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
 	y = y + 2
-	shadeContainer:addLabel("label", 3, y, shadeContainer.width, 1, 0xCCCCCC, "Enabled:")
-	local lightSwitch = shadeContainer:addSwitch("lightSwitch", shadeContainer.width - 9, y, 8, 0xFFDB40, 0xAAAAAA, 0xFFFFFF, config.lightEmission.enabled)
+	window.shadeContainer:addLabel(3, y, window.shadeContainer.width, 1, 0xCCCCCC, "Enabled:")
+	local lightSwitch = window.shadeContainer:addSwitch(window.shadeContainer.width - 9, y, 8, 0xFFDB40, 0xAAAAAA, 0xFFFFFF, config.lightEmission.enabled)
 	lightSwitch.onStateChanged = function()
 		config.lightEmission.enabled = true
 		save()
 	end
 
 	y = y + 2
- 	local lightSlider = shadeContainer:addHorizontalSlider("lightSlider", 3, y, shadeContainer.width - 4, 0xFFDB80, 0x000000, 0xFFDB40, 0xCCCCCC, 1, 8, 8, false, "Radius: " , " block(s)")
+ 	local lightSlider = window.shadeContainer:addHorizontalSlider(3, y, window.shadeContainer.width - 4, 0xFFDB80, 0x000000, 0xFFDB40, 0xCCCCCC, 1, 8, 8, false, "Radius: " , " block(s)")
 	lightSlider.roundValues = true
 	lightSlider.onValueChanged = function()
 		config.lightEmission.value = lightSlider.value
@@ -294,15 +294,15 @@ local function createWindow()
 	end
 
 	y = y + 5
-	shadeContainer:addLabel("label", 1, y, shadeContainer.width, 1, 0xFFFFFF, "Summary information:"):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+	window.shadeContainer:addLabel(1, y, window.shadeContainer.width, 1, 0xFFFFFF, "Summary information:"):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
 	y = y + 2
-	shadeContainer:addTextBox("statusTextBox", 3, y, shadeContainer.width - 4, 5, nil, 0xCCCCCC, {}, 1):setAlignment(GUI.alignment.horizontal.left, GUI.alignment.vertical.top)
+	window.shadeContainer.statusTextBox = window.shadeContainer:addTextBox(3, y, window.shadeContainer.width - 4, 5, nil, 0xCCCCCC, {}, 1):setAlignment(GUI.alignment.horizontal.left, GUI.alignment.vertical.top)
 
-	shadeContainer:addButton("printButton", 1, shadeContainer.height - 5, shadeContainer.width, 3, 0x363636, 0xFFFFFF, 0xFFFFFF, 0x262626, "Exit").onTouch = function()
+	window.shadeContainer:addButton(1, window.shadeContainer.height - 5, window.shadeContainer.width, 3, 0x363636, 0xFFFFFF, 0xFFFFFF, 0x262626, "Exit").onTouch = function()
 		window:close()
 	end
 
-	shadeContainer:addButton("printButton", 1, shadeContainer.height - 2, shadeContainer.width, 3, 0x262626, 0xFFFFFF, 0xFFFFFF, 0x262626, "Start print").onTouch = function()
+	window.shadeContainer:addButton(1, window.shadeContainer.height - 2, window.shadeContainer.width, 3, 0x262626, 0xFFFFFF, 0xFFFFFF, 0x262626, "Start print").onTouch = function()
 		beginPrint()
 	end
 

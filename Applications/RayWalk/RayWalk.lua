@@ -1,5 +1,5 @@
 
-package.loaded.rayEngine, package.loaded.GUI, package.loaded.windows, _G.rayEngine, _G.GUI, _G.windows = nil, nil, nil, nil, nil, nil, nil, nil
+-- package.loaded.rayEngine, package.loaded.GUI, package.loaded.windows, _G.rayEngine, _G.GUI, _G.windows = nil, nil, nil, nil, nil, nil, nil, nil
 
 local libraries = {
 	component = "component",
@@ -35,47 +35,47 @@ local function settings()
 	local sliderWidth, textBoxWidth = 43, 19
 	local x, y = math.floor(window.width / 2 - sliderWidth / 2), math.floor(window.height / 2 - 19)
 
-	window:addLabel("settingsLabel", 1, y, window.width, 1, 0xFFFFFF, localization.rayEngineProperties):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); y = y + 3
+	window:addLabel(1, y, window.width, 1, 0xFFFFFF, localization.rayEngineProperties):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); y = y + 3
 
-	local resolutionTextBoxWidth = window:addInputTextBox("resolutionTextBoxWidth", x, y, textBoxWidth, 3, 0x262626, 0xBBBBBB, 0x262626, 0xFFFFFF, buffer.screen.width, nil, nil, true)
-	window:addLabel("resolutionCrossLabel", x + textBoxWidth + 2, y + 1, 1, 1, 0xFFFFFF, "X")
-	local resolutionTextBoxHeight = window:addInputTextBox("resolutionTextBoxHeight",  x + textBoxWidth + 5, y, textBoxWidth, 3, 0x262626, 0xBBBBBB, 0x262626, 0xFFFFFF, buffer.screen.height, nil, nil, true); y = y + 4
-	window:addLabel("resolutionLabel", 1, y, window.width, 1, 0xDDDDDD, localization.screenResolution):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); y = y + 3
+	local resolutionTextBoxWidth = window:addInputTextBox(x, y, textBoxWidth, 3, 0x262626, 0xBBBBBB, 0x262626, 0xFFFFFF, buffer.screen.width, nil, nil, true)
+	window:addLabel(x + textBoxWidth + 2, y + 1, 1, 1, 0xFFFFFF, "X")
+	local resolutionTextBoxHeight = window:addInputTextBox(x + textBoxWidth + 5, y, textBoxWidth, 3, 0x262626, 0xBBBBBB, 0x262626, 0xFFFFFF, buffer.screen.height, nil, nil, true); y = y + 4
+	window:addLabel(1, y, window.width, 1, 0xDDDDDD, localization.screenResolution):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); y = y + 3
 	resolutionTextBoxWidth.validator = function(text) local num = tonumber(text); if num and num >= 40 and num <= 160 then return true end end
 	resolutionTextBoxHeight.validator = function(text) local num = tonumber(text); if num and num >= 12 and num <= 50 then return true end end
 	local function onAnyResolutionTextBoxInputFinished() window:close(); rayEngine.changeResolution(tonumber(resolutionTextBoxWidth.text), tonumber(resolutionTextBoxHeight.text)); settings() end
 	resolutionTextBoxWidth.onInputFinished = onAnyResolutionTextBoxInputFinished
 	resolutionTextBoxHeight.onInputFinished = onAnyResolutionTextBoxInputFinished
 
-	local drawDistanceSlider = window:addHorizontalSlider("drawDistanceSlider", x, y, sliderWidth, 0xFFDB80, 0x000000, 0xFFDB40, 0xDDDDDD, 100, 5000, rayEngine.properties.drawDistance, true, localization.drawDistance)
+	local drawDistanceSlider = window:addHorizontalSlider(x, y, sliderWidth, 0xFFDB80, 0x000000, 0xFFDB40, 0xDDDDDD, 100, 5000, rayEngine.properties.drawDistance, true, localization.drawDistance)
 	drawDistanceSlider.onValueChanged = function()
 		rayEngine.properties.drawDistance = drawDistanceSlider.value
 		window:draw()
 		buffer:draw()
 	end; y = y + 4
 	
-	local shadingDistanceSlider = window:addHorizontalSlider("shadingDistanceSlider", x, y, sliderWidth, 0xFFDB80, 0x000000, 0xFFDB40, 0xDDDDDD, 100, 3000, rayEngine.properties.shadingDistance, true, localization.shadingDistance)
+	local shadingDistanceSlider = window:addHorizontalSlider(x, y, sliderWidth, 0xFFDB80, 0x000000, 0xFFDB40, 0xDDDDDD, 100, 3000, rayEngine.properties.shadingDistance, true, localization.shadingDistance)
 	shadingDistanceSlider.onValueChanged = function()
 		rayEngine.properties.shadingDistance = shadingDistanceSlider.value
 		window:draw()
 		buffer:draw()
 	end; y = y + 4
 	
-	local shadingCascadesSlider = window:addHorizontalSlider("shadingCascadesSlider", x, y, sliderWidth, 0xFFDB80, 0x000000, 0xFFDB40, 0xDDDDDD, 2, 48, rayEngine.properties.shadingCascades, true, localization.shadingCascades)
+	local shadingCascadesSlider = window:addHorizontalSlider(x, y, sliderWidth, 0xFFDB80, 0x000000, 0xFFDB40, 0xDDDDDD, 2, 48, rayEngine.properties.shadingCascades, true, localization.shadingCascades)
 	shadingCascadesSlider.onValueChanged = function()
 		rayEngine.properties.shadingCascades = shadingCascadesSlider.value
 		window:draw()
 		buffer:draw()
 	end; y = y + 4
 
-	local raycastQualitySlider = window:addHorizontalSlider("raycastQualitySlider", x, y, sliderWidth, 0xFFDB80, 0x000000, 0xFFDB40, 0xDDDDDD, 0.5, 32, rayEngine.properties.raycastQuality, true, localization.raycastQuality)
+	local raycastQualitySlider = window:addHorizontalSlider(x, y, sliderWidth, 0xFFDB80, 0x000000, 0xFFDB40, 0xDDDDDD, 0.5, 32, rayEngine.properties.raycastQuality, true, localization.raycastQuality)
 	raycastQualitySlider.onValueChanged = function()
 		rayEngine.properties.raycastQuality = raycastQualitySlider.value
 		window:draw()
 		buffer:draw()
 	end; y = y + 4
 
-	local currentTimeSlider = window:addHorizontalSlider("currentTimeSlider", x, y, sliderWidth, rayEngine.world.colors.sky.current, 0x000000, rayEngine.world.colors.sky.current, 0xDDDDDD, 0, rayEngine.world.dayNightCycle.length, rayEngine.world.dayNightCycle.currentTime, true, localization.dayNightCycle, localization.seconds)
+	local currentTimeSlider = window:addHorizontalSlider(x, y, sliderWidth, rayEngine.world.colors.sky.current, 0x000000, rayEngine.world.colors.sky.current, 0xDDDDDD, 0, rayEngine.world.dayNightCycle.length, rayEngine.world.dayNightCycle.currentTime, true, localization.dayNightCycle, localization.seconds)
 	currentTimeSlider.onValueChanged = function()
 		rayEngine.world.dayNightCycle.currentTime = currentTimeSlider.value
 		rayEngine.refreshTimeDependentColors()
@@ -85,25 +85,25 @@ local function settings()
 		buffer:draw()
 	end; y = y + 4
 
-	window:addLabel("graphonLabel", x, y, sliderWidth, 1, 0xDDDDDD, localization.enableSemipixelRenderer)
+	window:addLabel(x, y, sliderWidth, 1, 0xDDDDDD, localization.enableSemipixelRenderer)
 	
-	local graphonSwitch = window:addSwitch("graphonSwitch", x + sliderWidth - 8, y, 8, 0xFFDB40, 0xAAAAAA, 0xFFFFFF, not rayEngine.properties.useSimpleRenderer)
+	local graphonSwitch = window:addSwitch(x + sliderWidth - 8, y, 8, 0xFFDB40, 0xAAAAAA, 0xFFFFFF, not rayEngine.properties.useSimpleRenderer)
 	graphonSwitch.onStateChanged = function()
-		rayEngine.properties.useSimpleRenderer = not graphonSwith.state
+		rayEngine.properties.useSimpleRenderer = not graphonSwitch.state
 		window:draw()
 		buffer:draw()
 	end; y = y + 3
 
-	window:addLabel("lockTimeLabel", x, y, sliderWidth, 1, 0xDDDDDD, localization.enableDayNightCycle)
+	window:addLabel(x, y, sliderWidth, 1, 0xDDDDDD, localization.enableDayNightCycle)
 	
-	local lockTimeSwitch = window:addSwitch("lockTimeSwitch", x + sliderWidth - 8, y, 8, 0xFFDB40, 0xAAAAAA, 0xFFFFFF, rayEngine.world.dayNightCycle.enabled)
+	local lockTimeSwitch = window:addSwitch(x + sliderWidth - 8, y, 8, 0xFFDB40, 0xAAAAAA, 0xFFFFFF, rayEngine.world.dayNightCycle.enabled)
 	lockTimeSwitch.onStateChanged = function()
 		rayEngine.world.dayNightCycle.enabled = lockTimeSwitch.state
 		window:draw()
 		buffer:draw()
 	end; y = y + 3
 
-	window:addButton("resumeButton", x, y, sliderWidth, 3, 0xEEEEEE, 0x262626, 0xBBBBBB, 0x262626, localization.continue).onTouch = function() window:close(); table.toFile(applicationResourcesDirectory .. "RayEngine.cfg", rayEngine.properties, true) end
+	window:addButton(x, y, sliderWidth, 3, 0xEEEEEE, 0x262626, 0xBBBBBB, 0x262626, localization.continue).onTouch = function() window:close(); table.toFile(applicationResourcesDirectory .. "RayEngine.cfg", rayEngine.properties, true) end
 
 	window:draw(); buffer.draw(); window:handleEvents()
 end
@@ -117,21 +117,21 @@ local function menu()
 	for file in fs.list(worldsPath) do table.insert(worlds, unicode.sub(file, 1, -2)) end
 	local x, y = math.floor(window.width / 2 - buttonWidth / 2), math.floor(window.height / 2 - #worlds * (buttonHeight + 1) / 2 - 11)
 	
-	window:addLabel("versionLabel", 1, y, window.width, 1, 0xFFFFFF, rayWalkVersion):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); y = y + 3
-	window:addButton("resumeButton", x, y, buttonWidth, buttonHeight, 0xEEEEEE, 0x262626, 0xBBBBBB, 0x262626, localization.continue).onTouch = function() window:close()	end; y = y + buttonHeight + 1
-	window:addButton("settingsButton", x, y, buttonWidth, buttonHeight, 0xEEEEEE, 0x262626, 0xBBBBBB, 0x262626, localization.settings).onTouch = function() window:close(); settings() end; y = y + buttonHeight + 1
-	window:addButton("exitButton", x, y, buttonWidth, buttonHeight, 0xEEEEEE, 0x262626, 0x999999, 0x262626, localization.exit).onTouch = function() buffer.clear(0x000000); buffer.draw(); os.exit()	end; y = y + buttonHeight + 1
-	window:addLabel("loadWorldLabel", 1, y, window.width, 1, 0xFFFFFF, localization.loadWorld):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); y = y + 2
+	window:addLabel(1, y, window.width, 1, 0xFFFFFF, rayWalkVersion):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); y = y + 3
+	window:addButton(x, y, buttonWidth, buttonHeight, 0xEEEEEE, 0x262626, 0xBBBBBB, 0x262626, localization.continue).onTouch = function() window:close()	end; y = y + buttonHeight + 1
+	window:addButton(x, y, buttonWidth, buttonHeight, 0xEEEEEE, 0x262626, 0xBBBBBB, 0x262626, localization.settings).onTouch = function() window:close(); settings() end; y = y + buttonHeight + 1
+	window:addButton(x, y, buttonWidth, buttonHeight, 0xEEEEEE, 0x262626, 0x999999, 0x262626, localization.exit).onTouch = function() buffer.clear(0x000000); buffer.draw(); os.exit()	end; y = y + buttonHeight + 1
+	window:addLabel(1, y, window.width, 1, 0xFFFFFF, localization.loadWorld):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); y = y + 2
 
 	for i = 1, #worlds do
-		window:addButton("worldButton" .. i, x, y, buttonWidth, buttonHeight, 0xEEEEEE, 0x262626, 0xBBBBBB, 0x262626, worlds[i]).onTouch = function() rayEngine.loadWorld(worldsPath .. worlds[i]); window:close() end
+		window:addButton(x, y, buttonWidth, buttonHeight, 0xEEEEEE, 0x262626, 0xBBBBBB, 0x262626, worlds[i]).onTouch = function() rayEngine.loadWorld(worldsPath .. worlds[i]); window:close() end
 		y = y + buttonHeight + 1
 	end
 
 	local lines = localization.controlsHelp
 	table.insert(lines, 1, " ")
 	table.insert(lines, 1, {text = localization.controls, color = 0xFFFFFF})
-	window:addTextBox("informationTextBox", 1, y, window.width, #lines, nil, 0xDDDDDD, lines, 1):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); y = y + #lines + 1
+	window:addTextBox(1, y, window.width, #lines, nil, 0xDDDDDD, lines, 1):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); y = y + #lines + 1
 
 	window:draw(); buffer.draw(); window:handleEvents()
 end

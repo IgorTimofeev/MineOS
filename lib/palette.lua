@@ -174,8 +174,8 @@ local function createInputs(x, y)
 	}
 
 	for i = 1, #inputs do
-		window:addLabel("inputShortcut" .. i, x, y, 2, 1, 0x000000, inputs[i].shortcut)
-		inputs[i].object = window:addInputTextBox("inputObject" .. i, x + 3, y, 9, 1, 0xFFFFFF, 0x444444, 0xFFFFFF, 0x000000, "", nil, nil, true)
+		window:addLabel(x, y, 2, 1, 0x000000, inputs[i].shortcut)
+		inputs[i].object = window:addInputTextBox(x + 3, y, 9, 1, 0xFFFFFF, 0x444444, 0xFFFFFF, 0x000000, "", nil, nil, true)
 		inputs[i].object.validator = inputs[i].validator
 		inputs[i].object.onInputFinished = inputs[i].onInputFinished
 		y = y + 2
@@ -186,7 +186,7 @@ end
 
 local function createFavourites()
 	for i = 1, #favourites do
-		local button = favouritesContainer:addButton("favourite" .. i, i * 2 - 1, 1, 2, 1, favourites[i], 0x0, 0x0, 0x0, " ")
+		local button = favouritesContainer:addButton(i * 2 - 1, 1, 2, 1, favourites[i], 0x0, 0x0, 0x0, " ")
 		button.onTouch = function()
 			switchColorFromHex(button.colors.default.background)
 			refreshRainbows()
@@ -200,9 +200,9 @@ local function createWindow(x, y)
 	window = windows.empty(x, y, 71, 25, 71, 25)
 	
 	x, y = 1, 1
-	window:addPanel("backgroundPanel", x, y, window.width, window.height, 0xEEEEEE)
+	window:addPanel(x, y, window.width, window.height, 0xEEEEEE)
 	
-	bigRainbow = window:addImage("bigRainbow", x, y, image.create(50, 25))
+	bigRainbow = window:addImage(x, y, image.create(50, 25))
 	bigRainbow.onTouch = function(eventData)
 		xBigCrest, yBigCrest = eventData[3], eventData[4]
 		local _, _, background = component.gpu.get(eventData[3], eventData[4])
@@ -213,7 +213,7 @@ local function createWindow(x, y)
 
 	x = x + bigRainbow.width + 2
 	
-	miniRainbow = window:addImage("miniRainbow", x, y, image.create(3, 25))
+	miniRainbow = window:addImage(x, y, image.create(3, 25))
 	miniRainbow.onTouch = function(eventData)
 		yMiniCrest = eventData[4]
 		switchColorFromHsb((eventData[4] - miniRainbow.y) * 360 / miniRainbow.height, currentColor.hsb.saturation, currentColor.hsb.brightness)
@@ -223,26 +223,26 @@ local function createWindow(x, y)
 	miniRainbow.onDrag = miniRainbow.onTouch
 	x, y = x + 5, y + 1
 	
-	currentColorPanel = window:addPanel("currentColorPanel", x, y, 12, 3, currentColor.hex)
+	currentColorPanel = window:addPanel(x, y, 12, 3, currentColor.hex)
 	y = y + 4
 	
-	window:addButton("okButton", x, y, 12, 1, 0x444444, 0xFFFFFF, 0x88FF88, 0xFFFFFF, "OK").onTouch = function()
+	window:addButton(x, y, 12, 1, 0x444444, 0xFFFFFF, 0x88FF88, 0xFFFFFF, "OK").onTouch = function()
 		window:returnData(currentColor.hex)
 	end
 	y = y + 2
 	
-	window:addButton("cancelButton", x, y, 12, 1, 0xFFFFFF, 0x444444, 0x88FF88, 0xFFFFFF, "Cancel").onTouch = function()
+	window:addButton(x, y, 12, 1, 0xFFFFFF, 0x444444, 0x88FF88, 0xFFFFFF, "Cancel").onTouch = function()
 		window:close()
 	end
 	y = y + 2
 
 	y = createInputs(x, y)
 	
-	favouritesContainer = window:addContainer("favouritesContainer", x, y, 12, 1)
+	favouritesContainer = window:addContainer(x, y, 12, 1)
 	createFavourites()
 	y = y + 1
 	
-	window:addButton("favouritesAddButton", x, y, 12, 1, 0xFFFFFF, 0x444444, 0x88FF88, 0xFFFFFF, "+").onTouch = function()
+	window:addButton(x, y, 12, 1, 0xFFFFFF, 0x444444, 0x88FF88, 0xFFFFFF, "+").onTouch = function()
 		local favouriteExists = false; for i = 1, #favourites do if favourites[i] == currentColor.hex then favouriteExists = true; break end end
 		if not favouriteExists then
 			table.insert(favourites, 1, currentColor.hex); table.remove(favourites, #favourites)

@@ -13,9 +13,9 @@ function module.start(moduleContainer)
 	local x, y = 1, moduleContainer.children[#moduleContainer.children].localPosition.y + 2
 	
 	local lines = {limit = 5}
-	moduleContainer.editWhitelistButton = moduleContainer:addButton("editWhitelistButton", 2, y, moduleContainer.width - 2, 1, 0xDDDDDD, 0x262626, 0xAAAAAA, 0x262626, "Whitelist")
+	moduleContainer.editWhitelistButton = moduleContainer:addButton(2, y, moduleContainer.width - 2, 1, 0xDDDDDD, 0x262626, 0xAAAAAA, 0x262626, "Whitelist")
 	y = y + 2
-	moduleContainer.sleepSlider = moduleContainer:addHorizontalSlider("sleepSlider", x, y, moduleContainer.width, 0xFFDB80, 0x000000, 0xFFDB40, 0xDDDDDD, 0.5, 2, sleepValue, false, "Sleep: ")
+	moduleContainer.sleepSlider = moduleContainer:addHorizontalSlider(x, y, moduleContainer.width, 0xFFDB80, 0x000000, 0xFFDB40, 0xDDDDDD, 0.5, 2, sleepValue, false, "Sleep: ")
 	moduleContainer.sleepSlider.onValueChanged = function()
 		sleepValue = moduleContainer.sleepSlider.value
 	end

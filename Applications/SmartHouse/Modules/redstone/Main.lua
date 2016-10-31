@@ -34,13 +34,13 @@ function module.start(moduleContainer)
 		moduleContainer.redstoneStates[i] = signalStrength > 0 and true or false
 	end
 
-	moduleContainer:addLabel("toggleLabel", x, y, moduleContainer.width - 2, 1, 0xDDDDDD, "Signal:")
-	moduleContainer.signalSwitch = moduleContainer:addSwitch("redstoneSwitch", moduleContainer.width - 6, y, 6, 0xFFDB40, 0xBBBBBB, 0xFFFFFF, false)
+	moduleContainer:addLabel(x, y, moduleContainer.width - 2, 1, 0xDDDDDD, "Signal:")
+	moduleContainer.signalSwitch = moduleContainer:addSwitch(moduleContainer.width - 6, y, 6, 0xFFDB40, 0xBBBBBB, 0xFFFFFF, false)
 	moduleContainer.signalSwitch.onStateChanged = function()
 		changeRedstoneState(moduleContainer, moduleContainer.signalSwitch.state)
 	end
 	y = y + 2
-	moduleContainer.emitOnceButton = moduleContainer:addButton("emitOnceButton", 2, y, moduleContainer.width - 2, 1, 0xDDDDDD, 0x262626, 0xAAAAAA, 0x262626, "Emit once")
+	moduleContainer.emitOnceButton = moduleContainer:addButton(2, y, moduleContainer.width - 2, 1, 0xDDDDDD, 0x262626, 0xAAAAAA, 0x262626, "Emit once")
 	moduleContainer.emitOnceButton.onTouch = function()
 		changeRedstoneState(moduleContainer, true)
 		os.sleep(0.1)
@@ -48,9 +48,9 @@ function module.start(moduleContainer)
 		moduleContainer.signalSwitch.state = false
 	end
 	y = y + 2
-	moduleContainer:addLabel("sideLabel", x, y, moduleContainer.width - 2, 1, 0xFFFFFF, "Side"):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+	moduleContainer:addLabel(x, y, moduleContainer.width - 2, 1, 0xFFFFFF, "Side"):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
 	y = y + 2
-	moduleContainer.sidesComboBox = moduleContainer:addComboBox("comboBox", x, y, moduleContainer.width - 2, 1, 0xDDDDDD, 0x262626, 0xCCCCCC, 0x262626, {"All", "Up", "Down", "North", "South", "West", "East"})
+	moduleContainer.sidesComboBox = moduleContainer:addComboBox(x, y, moduleContainer.width - 2, 1, 0xDDDDDD, 0x262626, 0xCCCCCC, 0x262626, {"All", "Up", "Down", "North", "South", "West", "East"})
 	moduleContainer.sidesComboBox.onItemSelected = function()
 		local comboBoxText = moduleContainer.sidesComboBox.items[moduleContainer.sidesComboBox.currentItem].text
 		if comboBoxText == "All" then

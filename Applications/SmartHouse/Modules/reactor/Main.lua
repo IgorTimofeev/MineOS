@@ -10,8 +10,8 @@ local module = {
 function module.start(moduleContainer)
 	local x, y = 2, moduleContainer.children[#moduleContainer.children].localPosition.y + 2
 	
-	moduleContainer.heatLabel = moduleContainer:addLabel("heatLabel", x, y, moduleContainer.width - 2, 1, 0xDDDDDD, ""); y = y + 1
-	moduleContainer.outputLabel = moduleContainer:addLabel("outputLabel", x, y, moduleContainer.width - 2, 1, 0xDDDDDD, "")
+	moduleContainer.heatLabel = moduleContainer:addLabel(x, y, moduleContainer.width - 2, 1, 0xDDDDDD, ""); y = y + 1
+	moduleContainer.outputLabel = moduleContainer:addLabel(x, y, moduleContainer.width - 2, 1, 0xDDDDDD, "")
 end
 
 -- This method is called on each frame update (every second by default), but only if module details is not hidden or updateWhenModuleDetailsIsHidden == true

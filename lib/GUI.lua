@@ -63,6 +63,7 @@ GUI.dropDownMenuElementTypes = enum(
 )
 
 GUI.objectTypes = enum(
+	"unknown",
 	"empty",
 	"panel",
 	"label",
@@ -150,17 +151,6 @@ end
 
 ----------------------------------------- Containers -----------------------------------------
 
--- Object calling by it's name using 'container["objectName"]' against of 'container.children[1, 2, 3, ...]'
-function GUI.setContainerMetasearch(container)
-	setmetatable(container, {
-		__index = function(container, objectName)
-			for objectIndex = 1, #container.children do
-				if container.children[objectIndex].name == objectName then return container.children[objectIndex] end
-			end
-		end
-	})
-end
-
 -- Go recursively through every container's object (including other containers) and return object that was clicked firstly by it's GUI-layer position
 function GUI.getClickedObject(container, xEvent, yEvent)
 	local clickedObject, clickedIndex
@@ -223,10 +213,9 @@ local function containerObjectMoveToBack(object)
 	table.remove(object.parent.children, objectIndex + 1)
 end
 
--- Add any object as children to parent container with specified objectName
-local function addObjectToContainer(container, objectType, objectName, object)
-	object.name = objectName
-	object.type = objectType
+-- Add any object as children to parent container with specified objectType
+function GUI.addChildToContainer(container, object, objectType)
+	object.type = objectType or GUI.objectTypes.unknown
 	object.parent = container
 	object.indexOf = containerObjectIndexOf
 	object.moveToFront = containerObjectMoveToFront
@@ -241,93 +230,93 @@ local function addObjectToContainer(container, objectType, objectName, object)
 end
 
 -- Add empty GUI.object to container
-local function addEmptyObjectToContainer(container, objectName, ...)
-	return addObjectToContainer(container, GUI.objectTypes.empty, objectName, GUI.object(...))
+local function addEmptyObjectToContainer(container, ...)
+	return GUI.addChildToContainer(container, GUI.object(...), GUI.objectTypes.empty)
 end
 
 -- Add button object to container
-local function addButtonObjectToContainer(container, objectName, ...)
-	return addObjectToContainer(container, GUI.objectTypes.button, objectName, GUI.button(...))
+local function addButtonObjectToContainer(container, ...)
+	return GUI.addChildToContainer(container, GUI.button(...), GUI.objectTypes.button)
 end
 
 -- Add adaptive button object to container
-local function addAdaptiveButtonObjectToContainer(container, objectName, ...)
-	return addObjectToContainer(container, GUI.objectTypes.button, objectName, GUI.adaptiveButton(...))
+local function addAdaptiveButtonObjectToContainer(container, ...)
+	return GUI.addChildToContainer(container, GUI.adaptiveButton(...), GUI.objectTypes.button)
 end
 
 -- Add framedButton object to container
-local function addFramedButtonObjectToContainer(container, objectName, ...)
-	return addObjectToContainer(container, GUI.objectTypes.button, objectName, GUI.framedButton(...))
+local function addFramedButtonObjectToContainer(container, ...)
+	return GUI.addChildToContainer(container, GUI.framedButton(...), GUI.objectTypes.button)
 end
 
 -- Add adaptive framedButton object to container
-local function addAdaptiveFramedButtonObjectToContainer(container, objectName, ...)
-	return addObjectToContainer(container, GUI.objectTypes.button, objectName, GUI.adaptiveFramedButton(...))
+local function addAdaptiveFramedButtonObjectToContainer(container, ...)
+	return GUI.addChildToContainer(container, GUI.adaptiveFramedButton(...), GUI.objectTypes.button)
 end
 
 -- Add label object to container
-local function addLabelObjectToContainer(container, objectName, ...)
-	return addObjectToContainer(container, GUI.objectTypes.label, objectName, GUI.label(...))
+local function addLabelObjectToContainer(container, ...)
+	return GUI.addChildToContainer(container, GUI.label(...), GUI.objectTypes.label)
 end
 
 -- Add panel object to container
-local function addPanelObjectToContainer(container, objectName, ...)
-	return addObjectToContainer(container, GUI.objectTypes.panel, objectName, GUI.panel(...))
+local function addPanelObjectToContainer(container, ...)
+	return GUI.addChildToContainer(container, GUI.panel(...), GUI.objectTypes.panel)
 end
 
 -- Add windowActionButtons object to container
-local function addWindowActionButtonsObjectToContainer(container, objectName, ...)
-	return addObjectToContainer(container, GUI.objectTypes.windowActionButtons, objectName, GUI.windowActionButtons(...))
+local function addWindowActionButtonsObjectToContainer(container, ...)
+	return GUI.addChildToContainer(container, GUI.windowActionButtons(...), GUI.objectTypes.windowActionButtons)
 end
 
 -- Add another container to container
-local function addContainerToContainer(container, objectName, ...)
-	return addObjectToContainer(container, GUI.objectTypes.container, objectName, GUI.container(...))
+local function addContainerToContainer(container, ...)
+	return GUI.addChildToContainer(container, GUI.container(...), GUI.objectTypes.container)
 end
 
 -- Add image object to container
-local function addImageObjectToContainer(container, objectName, ...)
-	return addObjectToContainer(container, GUI.objectTypes.image, objectName, GUI.image(...))
+local function addImageObjectToContainer(container, ...)
+	return GUI.addChildToContainer(container, GUI.image(...), GUI.objectTypes.image)
 end
 
 -- Add image object to container
-local function addTabBarObjectToContainer(container, objectName, ...)
-	return addObjectToContainer(container, GUI.objectTypes.tabBar, objectName, GUI.tabBar(...))
+local function addTabBarObjectToContainer(container, ...)
+	return GUI.addChildToContainer(container, GUI.tabBar(...), GUI.objectTypes.tabBar)
 end
 
 -- Add InputTextBox object to container
-local function addInputTextBoxObjectToContainer(container, objectName, ...)
-	return addObjectToContainer(container, GUI.objectTypes.inputTextBox, objectName, GUI.inputTextBox(...))
+local function addInputTextBoxObjectToContainer(container, ...)
+	return GUI.addChildToContainer(container, GUI.inputTextBox(...), GUI.objectTypes.inputTextBox)
 end
 
 -- Add TextBox object to container
-local function addTextBoxObjectToContainer(container, objectName, ...)
-	return addObjectToContainer(container, GUI.objectTypes.textBox, objectName, GUI.textBox(...))
+local function addTextBoxObjectToContainer(container, ...)
+	return GUI.addChildToContainer(container, GUI.textBox(...), GUI.objectTypes.textBox)
 end
 
 -- Add Horizontal Slider object to container
-local function addHorizontalSliderObjectToContainer(container, objectName, ...)
-	return addObjectToContainer(container, GUI.objectTypes.horizontalSlider, objectName, GUI.horizontalSlider(...))
+local function addHorizontalSliderObjectToContainer(container, ...)
+	return GUI.addChildToContainer(container, GUI.horizontalSlider(...), GUI.objectTypes.horizontalSlider)
 end
 
 -- Add Progressbar object to container
-local function addProgressBarObjectToContainer(container, objectName, ...)
-	return addObjectToContainer(container, GUI.objectTypes.progressBar, objectName, GUI.progressBar(...))
+local function addProgressBarObjectToContainer(container, ...)
+	return GUI.addChildToContainer(container, GUI.progressBar(...), GUI.objectTypes.progressBar)
 end
 
 -- Add Switch object to container
-local function addSwitchObjectToContainer(container, objectName, ...)
-	return addObjectToContainer(container, GUI.objectTypes.switch, objectName, GUI.switch(...))
+local function addSwitchObjectToContainer(container, ...)
+	return GUI.addChildToContainer(container, GUI.switch(...), GUI.objectTypes.switch)
 end
 
 -- Add Chart object to container
-local function addChartObjectToContainer(container, objectName, ...)
-	return addObjectToContainer(container, GUI.objectTypes.chart, objectName, GUI.chart(...))
+local function addChartObjectToContainer(container, ...)
+	return GUI.addChildToContainer(container, GUI.chart(...), GUI.objectTypes.chart)
 end
 
 -- Add ComboBox object to container
-local function addComboBoxObjectToContainer(container, objectName, ...)
-	return addObjectToContainer(container, GUI.objectTypes.comboBox, objectName, GUI.comboBox(...))
+local function addComboBoxObjectToContainer(container, ...)
+	return GUI.addChildToContainer(container, GUI.comboBox(...), GUI.objectTypes.comboBox)
 end
 
 -- Recursively draw container's content including all children container's content
@@ -336,15 +325,16 @@ local function drawContainerContent(container)
 		if not container.children[objectIndex].hidden then
 			container.children[objectIndex].x, container.children[objectIndex].y = container.children[objectIndex].localPosition.x + container.x - 1, container.children[objectIndex].localPosition.y + container.y - 1
 			if container.children[objectIndex].children then
+				-- cyka blyad
 				-- drawContainerContent(container.children[objectIndex])
 				-- We use :draw() method against of recursive call. The reason is possible user-defined :draw() reimplementations
 				container.children[objectIndex]:draw()
 			else
-				if container.children[objectIndex].draw then
+				-- if container.children[objectIndex].draw then
 					container.children[objectIndex]:draw()
-				else
-					error("Container object with index " .. objectIndex .. " and name \"" .. tostring(container.children[objectIndex].name) ..  "\" doesn't have :draw() method")
-				end
+				-- else
+				-- 	error("Container object with index " .. objectIndex .. " doesn't have :draw() method")
+				-- end
 			end
 		end
 	end
@@ -361,11 +351,11 @@ end
 function GUI.container(x, y, width, height)
 	local container = GUI.object(x, y, width, height)
 	container.children = {}
-	GUI.setContainerMetasearch(container)
 	container.draw = drawContainerContent
 	container.getClickedObject = GUI.getClickedObject
 	container.deleteObjects = deleteContainersContent
 
+	container.addChild = GUI.addChildToContainer
 	container.addObject = addEmptyObjectToContainer
 	container.addContainer = addContainerToContainer
 	container.addPanel = addPanelObjectToContainer
@@ -499,12 +489,12 @@ function GUI.tabBar(x, y, width, height, spaceBetweenElements, backgroundColor, 
 	object.reimplementedDraw = object.draw
 	object.draw = drawTabBar
 
-	object:addPanel("backgroundPanel", 1, 1, object.width, object.height, backgroundColor).disableClicking = true
-	object.tabs = object:addContainer("tabs", 1, 1, object.width, object.height)
+	object:addPanel(1, 1, object.width, object.height, backgroundColor).disableClicking = true
+	object.tabs = object:addContainer(1, 1, object.width, object.height)
 
 	x = math.floor(width / 2 - object.tabsWidth / 2)
 	for elementIndex = 1, #elements do
-		local tab = object.tabs:addButton(elements[elementIndex], x, 1, unicode.len(elements[elementIndex]) + 2, height, backgroundColor, textColor, backgroundSelectedColor, textSelectedColor, elements[elementIndex])
+		local tab = object.tabs:addButton(x, 1, unicode.len(elements[elementIndex]) + 2, height, backgroundColor, textColor, backgroundSelectedColor, textSelectedColor, elements[elementIndex])
 		tab.type = GUI.objectTypes.tabBarTab
 		x = x + tab.width + spaceBetweenElements
 	end	
@@ -572,12 +562,12 @@ function GUI.windowActionButtons(x, y, fatSymbol)
 	local symbol = fatSymbol and "⬤" or "●"
 	
 	local container = GUI.container(x, y, 5, 1)
-	local closeButton = container:addButton("close", 1, 1, 1, 1, 0x000000, 0xFF4940, 0x000000, 0x992400, symbol)
-	local minimizeButton = container:addButton("minimize", 3, 1, 1, 1, 0x000000, 0xFFB640, 0x000000, 0x996D00, symbol)
-	local maximizeButton = container:addButton("maximize", 5, 1, 1, 1, 0x000000, 0x00B640, 0x000000, 0x006D40, symbol)
+	container.close = container:addButton(1, 1, 1, 1, 0x000000, 0xFF4940, 0x000000, 0x992400, symbol)
+	container.minimize = container:addButton(3, 1, 1, 1, 0x000000, 0xFFB640, 0x000000, 0x996D00, symbol)
+	container.maximize = container:addButton(5, 1, 1, 1, 0x000000, 0x00B640, 0x000000, 0x006D40, symbol)
 
-	closeButton.reimplementedDraw, minimizeButton.reimplementedDraw, maximizeButton.reimplementedDraw = closeButton.draw, minimizeButton.draw, maximizeButton.draw
-	closeButton.draw, minimizeButton.draw, maximizeButton.draw = drawWindowActionButton, drawWindowActionButton, drawWindowActionButton
+	container.close.reimplementedDraw, container.minimize.reimplementedDraw, container.maximize.reimplementedDraw = container.close.draw, container.minimize.draw, container.maximize.draw
+	container.close.draw, container.minimize.draw, container.maximize.draw = drawWindowActionButton, drawWindowActionButton, drawWindowActionButton
 
 	return container
 end
@@ -754,11 +744,11 @@ end
 function GUI.menu(x, y, width, backgroundColor, textColor, backgroundPressedColor, textPressedColor, backgroundTransparency, ...)
 	local elements = {...}
 	local menuObject = GUI.container(x, y, width, 1)
-	menuObject:addPanel("backgroundPanel", 1, 1, menuObject.width, 1, backgroundColor, backgroundTransparency).disableClicking = true
+	menuObject:addPanel(1, 1, menuObject.width, 1, backgroundColor, backgroundTransparency).disableClicking = true
 
 	local x = 2
 	for elementIndex = 1, #elements do
-		local button = menuObject:addAdaptiveButton(elementIndex, x, 1, 1, 0, nil, elements[elementIndex][2] or textColor, elements[elementIndex][3] or backgroundPressedColor, elements[elementIndex][4] or textPressedColor, elements[elementIndex][1])
+		local button = menuObject:addAdaptiveButton(x, 1, 1, 0, nil, elements[elementIndex][2] or textColor, elements[elementIndex][3] or backgroundPressedColor, elements[elementIndex][4] or textPressedColor, elements[elementIndex][1])
 		button.type = GUI.objectTypes.menuElement
 		x = x + button.width
 	end
