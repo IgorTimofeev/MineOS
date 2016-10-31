@@ -532,7 +532,7 @@
     type="Application",
     icon="IgorTimofeev/OpenComputers/master/Applications/SmartHouse/Icon.pic",
     createShortcut="desktop",
-    version=1.23,
+    version=1.24,
     resources={
       {
         name="Modules/redstone/Icon.pic",
