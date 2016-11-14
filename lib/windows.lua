@@ -41,46 +41,38 @@ local function executeObjectMethod(method, ...)
 end
 
 local function buttonHandler(window, object, objectIndex, eventData)
-	object.pressed = true
-	window:draw()
+	object.pressed = true; window:draw(); buffer.draw()
 	os.sleep(0.2)
-	object.pressed = false
-	window:draw()
+	object.pressed = false; window:draw(); buffer.draw()
 	executeObjectMethod(object.onTouch, eventData)
 end
 
 local function tabBarTabHandler(window, object, objectIndex, eventData)
 	object.parent.parent.selectedTab = objectIndex
-	window:draw()
+	window:draw(); buffer:draw()
 	executeObjectMethod(object.parent.parent.onTabSwitched, eventData)
 end
 
 local function inputTextBoxHandler(window, object, objectIndex, eventData)
 	object:input()
-	window:draw()
+	window:draw(); buffer:draw()
 	executeObjectMethod(object.onInputFinished, eventData)
 end
 
 local function textBoxScrollHandler(window, object, objectIndex, eventData)
-	if eventData[5] == 1 then
-		object:scrollUp()
-		window:draw()
-	else
-		object:scrollDown()
-		window:draw()
-	end
+	if eventData[5] == 1 then object:scrollUp(); window:draw(); buffer.draw() else object:scrollDown(); window:draw(); buffer.draw() end
 end
 
 local function horizontalSliderHandler(window, object, objectIndex, eventData)
 	local clickPosition = eventData[3] - object.x + 1
 	object.value = object.minimumValue + (clickPosition * (object.maximumValue - object.minimumValue) / object.width)
-	window:draw()
+	window:draw(); buffer:draw()
 	executeObjectMethod(object.onValueChanged, eventData)
 end
 
 local function switchHandler(window, object, objectIndex, eventData)
 	object.state = not object.state
-	window:draw()
+	window:draw(); buffer:draw()
 	executeObjectMethod(object.onStateChanged, eventData)
 end
 
@@ -180,12 +172,12 @@ function windows.correctWindowCoordinates(x, y, width, height, minimumWidth, min
 	return x, y, width, height
 end
 
-local function drawWindow(window, bufferForcedRedraw)
+local function drawWindow(window)
 	if window.onDrawStarted then window.onDrawStarted() end
 	window:update()
 	if window.drawShadow then GUI.windowShadow(window.x, window.y, window.width, window.height, 50) end
 	if window.onDrawFinished then window.onDrawFinished() end
-	buffer.draw(bufferForcedRedraw)
+	buffer.draw()
 end
 
 local function newWindow(x, y, width, height, minimumWidth, minimumHeight)
@@ -242,6 +234,7 @@ end
 -- end
 
 -- myWindow:draw()
+-- buffer.draw()
 -- myWindow:handleEvents()
 
 ----------------------------------------- End of shit -----------------------------------------

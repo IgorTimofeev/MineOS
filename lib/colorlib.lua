@@ -90,9 +90,9 @@ function colorlib.alphaBlend(firstColor, secondColor, alphaChannel)
   local secondColorRed, secondColorGreen, secondColorBlue = colorlib.HEXtoRGB(secondColor)
 
   return colorlib.RGBtoHEX(
-    math.floor(secondColorRed * invertedAlphaChannelDividedBy255 + firstColorRed * alphaChannel),
-    math.floor(secondColorGreen * invertedAlphaChannelDividedBy255 + firstColorGreen * alphaChannel),
-    math.floor(secondColorBlue * invertedAlphaChannelDividedBy255 + firstColorBlue * alphaChannel)
+    secondColorRed * invertedAlphaChannelDividedBy255 + firstColorRed * alphaChannel,
+    secondColorGreen * invertedAlphaChannelDividedBy255 + firstColorGreen * alphaChannel,
+    secondColorBlue * invertedAlphaChannelDividedBy255 + firstColorBlue * alphaChannel
   )
 end
 

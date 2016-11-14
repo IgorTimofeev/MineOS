@@ -19,7 +19,7 @@ for library in pairs(libraries) do if not _G[library] then _G[library] = require
 local applicationResourcesDirectory = MineOSCore.getCurrentApplicationResourcesDirectory()
 local localization = MineOSCore.getLocalization(applicationResourcesDirectory .. "Localization/")
 local worldsPath = applicationResourcesDirectory .. "Worlds/"
-local rayWalkVersion = "RayWalk Tech Demo v3.5"
+local rayWalkVersion = "RayWalk Tech Demo v3.4"
 
 ----------------------------------------------------------------------------------------------------------------------------------
 
@@ -128,10 +128,10 @@ local function menu()
 		y = y + buttonHeight + 1
 	end
 
-	local lines = {}; for i = 1, #localization.controlsHelp do table.insert(lines, localization.controlsHelp[i]) end
+	local lines = localization.controlsHelp
 	table.insert(lines, 1, " ")
 	table.insert(lines, 1, {text = localization.controls, color = 0xFFFFFF})
-	window:addTextBox(1, y, window.width, #lines, nil, 0xCCCCCC, lines, 1):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); y = y + #lines + 1
+	window:addTextBox(1, y, window.width, #lines, nil, 0xDDDDDD, lines, 1):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); y = y + #lines + 1
 
 	window:draw(); buffer.draw(); window:handleEvents()
 end
