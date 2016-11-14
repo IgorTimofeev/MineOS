@@ -90,7 +90,7 @@ GUI.objectTypes = enum(
 
 -- Universal method to check if object was clicked by following coordinates
 local function isObjectClicked(object, x, y)
-	if x >= object.x and y >= object.y and x <= object.x + object.width - 1 and y <= object.y + object.height - 1 and not object.disabled and not object.isHidden then return true end
+	if x >= object.x and y >= object.y and x <= object.x + object.width - 1 and y <= object.y + object.height - 1 and not object.disabled and not object.hidden then return true end
 	return false
 end
 
@@ -155,7 +155,7 @@ end
 function GUI.getClickedObject(container, xEvent, yEvent)
 	local clickedObject, clickedIndex
 	for objectIndex = #container.children, 1, -1 do
-		if not container.children[objectIndex].isHidden then
+		if not container.children[objectIndex].hidden then
 			container.children[objectIndex].x, container.children[objectIndex].y = container.children[objectIndex].localPosition.x + container.x - 1, container.children[objectIndex].localPosition.y + container.y - 1
 			if container.children[objectIndex].children and #container.children[objectIndex].children > 0 then
 				clickedObject, clickedIndex = GUI.getClickedObject(container.children[objectIndex], xEvent, yEvent)
@@ -213,18 +213,6 @@ local function containerObjectMoveToBack(object)
 	table.remove(object.parent.children, objectIndex + 1)
 end
 
-local function containerGetFirstParent(object)
-	if object.parent then
-		local currentParent = object.parent
-		while currentParent.parent do
-			currentParent = currentParent.parent
-		end
-		return currentParent
-	else
-		error("Object doesn't have any parents")
-	end
-end
-
 -- Add any object as children to parent container with specified objectType
 function GUI.addChildToContainer(container, object, objectType)
 	object.type = objectType or GUI.objectTypes.unknown
@@ -234,7 +222,6 @@ function GUI.addChildToContainer(container, object, objectType)
 	object.moveToBack = containerObjectMoveToBack
 	object.moveForward = containerObjectMoveForward
 	object.moveBackward = containerObjectMoveBackward
-	object.getFirstParent = containerGetFirstParent
 	object.localPosition = {x = object.x, y = object.y}
 
 	table.insert(container.children, object)
@@ -332,15 +319,10 @@ local function addComboBoxObjectToContainer(container, ...)
 	return GUI.addChildToContainer(container, GUI.comboBox(...), GUI.objectTypes.comboBox)
 end
 
--- Add Menu object to container
-local function addMenuObjectToContainer(container, ...)
-	return GUI.addChildToContainer(container, GUI.menu(...), GUI.objectTypes.menu)
-end
-
 -- Recursively draw container's content including all children container's content
 local function drawContainerContent(container)
 	for objectIndex = 1, #container.children do
-		if not container.children[objectIndex].isHidden then
+		if not container.children[objectIndex].hidden then
 			container.children[objectIndex].x, container.children[objectIndex].y = container.children[objectIndex].localPosition.x + container.x - 1, container.children[objectIndex].localPosition.y + container.y - 1
 			if container.children[objectIndex].children then
 				-- cyka blyad
@@ -371,7 +353,7 @@ function GUI.container(x, y, width, height)
 	container.children = {}
 	container.draw = drawContainerContent
 	container.getClickedObject = GUI.getClickedObject
-	container.deleteChildren = deleteContainersContent
+	container.deleteObjects = deleteContainersContent
 
 	container.addChild = GUI.addChildToContainer
 	container.addObject = addEmptyObjectToContainer
@@ -392,7 +374,6 @@ function GUI.container(x, y, width, height)
 	container.addProgressBar = addProgressBarObjectToContainer
 	container.addChart = addChartObjectToContainer
 	container.addComboBox = addComboBoxObjectToContainer
-	container.addMenu = addMenuObjectToContainer
 
 	return container
 end
@@ -653,7 +634,6 @@ local function showDropDownMenu(object)
 						drawDropDownMenuElement(object, itemIndex, true)
 						buffer.draw()
 						os.sleep(0.2)
-						if object.items[itemIndex].onItemSelected then object.items[itemIndex].onItemSelected() end
 						quit()
 						return object.items[itemIndex].text, itemIndex
 					end

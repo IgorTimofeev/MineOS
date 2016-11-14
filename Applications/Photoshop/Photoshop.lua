@@ -186,10 +186,10 @@ local function drawTransparentZone(x, y)
 		local stro4ka1 = ""
 		local stro4ka2 = ""
 		if masterPixels.width % 2 == 0 then
-			stro4ka1 = string.rep("▒ ", math.floor(masterPixels.width / 2))
+			stro4ka1 = string.rep("▒ ", masterPixels.width / 2)
 			stro4ka2 = stro4ka1
 		else
-			stro4ka1 = string.rep("▒ ", math.floor(masterPixels.width / 2))
+			stro4ka1 = string.rep("▒ ", masterPixels.width / 2)
 			stro4ka2 = stro4ka1 .. "▒"
 		end
 
