@@ -446,7 +446,7 @@ function buffer.framedButton(x, y, width, height, backColor, buttonColor, text)
 	buffer.text(x, y, buttonColor, text)
 end
 
-------------------------------------------- Полупиксельные методы ------------------------------------------------------------------------
+------------------------------------------- Semipixel methods ------------------------------------------------------------------------
 
 local function semiPixelAdaptiveSet(y, index, color, yPercentTwoEqualsZero)
 	local upperPixel, lowerPixel, bothPixel, indexPlus1, indexPlus2 = "▀", "▄", " ", index + 1, index + 2
@@ -529,6 +529,42 @@ function buffer.semiPixelLine(x0, y0, x1, y1, color)
 			y = y + (y1 > y0 and 1 or -1);
 			error2 = error2 - dx * 2;
 		end
+	end
+end
+
+----------------------------------------- Bezier curve -----------------------------------------
+
+local function getPointTimedPosition(firstPoint, secondPoint, time)
+	return {
+		x = firstPoint.x + (secondPoint.x - firstPoint.x) * time,
+		y = firstPoint.y + (secondPoint.y - firstPoint.y) * time
+	}
+end
+
+local function getConnectionPoints(points, time)
+	local connectionPoints = {}
+	for point = 1, #points - 1 do
+		table.insert(connectionPoints, getPointTimedPosition(points[point], points[point + 1], time))
+	end
+	return connectionPoints
+end
+
+local function getMainPointPosition(points, time)
+	if #points > 1 then
+		return getMainPointPosition(getConnectionPoints(points, time), time)
+	else
+		return points[1]
+	end
+end
+
+function buffer.bezierCurve(points, color, precision)
+	local linePoints = {}
+	for time = 0, 1, precision or 0.01 do
+		table.insert(linePoints, getMainPointPosition(points, time))
+	end
+	
+	for point = 1, #linePoints - 1 do
+		buffer.semiPixelLine(math.floor(linePoints[point].x), math.floor(linePoints[point].y), math.floor(linePoints[point + 1].x), math.floor(linePoints[point + 1].y), color)
 	end
 end
 
@@ -648,6 +684,20 @@ end
 ------------------------------------------------------------------------------------------------------
 
 buffer.start()
+
+-- buffer.clear(0xFF8888)
+-- buffer.bezierCurve({
+-- 	-- { x = 32, y = 2},
+-- 	-- { x = 2, y = 2},
+-- 	-- { x = 2, y = 98},
+-- 	-- { x = 98, y = 98},
+-- 	{ x = 10, y = 80 },
+-- 	{ x = 2, y = 4 },
+-- 	{ x = 110, y = 4 },
+-- 	{ x = 130, y = 70 },
+-- 	{ x = 150, y = 10 },
+-- }, 0x0, 0.005)
+-- buffer.draw()
 
 -- ecs.prepareToExit()
 -- buffer.clear(0xFF8888)

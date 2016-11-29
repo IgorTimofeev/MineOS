@@ -8,23 +8,37 @@ local internet = {}
 ----------------------------------------- Main methods -----------------------------------------
 
 --Адекватный запрос к веб-серверу вместо стандартного Internet API, бросающего stderr, когда ему вздумается
-function internet.request(url, readResponse)
-	local success, response = pcall(internetComponent, url)
+function internet.request(url, skipReadingResponse)
+	local pcallSuccess, requestHandle, requestReason = pcall(internetComponent.request, url)
 	
-	if readResponse then
-		if success then
-			local responseData = ""
-			while true do
-				local data, responseChunk = response.read()	
-				if data then
-					responseData = responseData .. data
-				else
-					if responseChunk then
-						return false, responseChunk
+	-- Если требуется чтение инфы из соединения, то читаем
+	if not skipReadingResponse then
+		-- Если функция компонента была вызвана верна, то идем дальше
+		if pcallSuccess then
+			-- Если компонент вернул там хендл соединения, то читаем ответ из него
+			-- Хендл может не вернуться в случае хуевой урл-ки, которая не нравится компоненту
+			if requestHandle then
+				local responseData = ""
+				-- Читаем данные из хендла по кусочкам
+				while true do
+					local data, responseChunk = requestHandle.read()	
+					-- Если прочтение удалость, то записываем кусочек в буфер
+					if data then
+						responseData = responseData .. data
 					else
-						return true, responseData
+						-- Если чтение не удалось, и существует некий прочитанный кусочек, то в нем стопудова содержится ошибка чтения
+						if responseChunk then
+							requestHandle:close()
+							return false, responseChunk
+						-- А если кусочка нет, то это значит, что соединение можно закрывать с чистой совестью и возвращать всю инфу
+						else
+							requestHandle:close()
+							return true, responseData
+						end
 					end
 				end
+			else
+				return false, requestReason
 			end
 		else
 			return false, reason
@@ -34,7 +48,7 @@ end
 
 --Загрузка файла с инета
 function internet.downloadFile(url, path)
-	local success, response = internet.request(url, true)
+	local success, response = internet.request(url)
 	if success then
 		fs.makeDirectory(fs.path(path) or "")
 		local file = io.open(path, "w")
@@ -48,6 +62,8 @@ end
 
 
 -------------------------------------------------------------------------------------------
+
+-- print(internet.request("http://VK.com", true))
 
 return internet
 

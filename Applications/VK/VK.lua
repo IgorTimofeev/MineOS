@@ -144,7 +144,7 @@ end
 
 --Банальный URL-запрос, декодирующийся через ЖУСОН в случае успеха, епты
 local function request(url)
-	local success, response = internet.request(url, true)
+	local success, response = internet.request(url)
 	if success then response = json:decode(response) end
 	return success, response
 end
