@@ -8,39 +8,66 @@ local buffer = require("doubleBuffering")
 local OCGL = require("OpenComputersGL")
 local event = require("event")
 
--------------------------------------------------------- Playground --------------------------------------------------------
+-------------------------------------------------------- Constants --------------------------------------------------------
 
-buffer.start()
+local autoRotate, showGrid, renderMode = false, true, OCGL.renderModes.wireframe
+local translationOffset = 2
+local rotationAngle = 0.05
 
-local scene = OCGL.newScene()
-OCGL.addAxisLinesToScene(scene, 100)
-local cube = OCGL.newCube(OCGL.newVector3(-10, 0, -10), 20)
-scene:addObject(cube)
-scene:addObject(OCGL.newPlane(OCGL.newVector3(-30, 0, -30), 60, 60))
+local axisXTranslationVector1 = OCGL.newVector3(translationOffset, 0, 0)
+local axisXTranslationVector2 = OCGL.newVector3(-translationOffset, 0, 0)
+local axisYTranslationVector1 = OCGL.newVector3(0, translationOffset, 0)
+local axisYTranslationVector2 = OCGL.newVector3(0, -translationOffset, 0)
 
-local autoRotate, showGrid = false, true
+local axisXrotationMatrix1 = OCGL.newRotationMatrix(OCGL.axis.x, rotationAngle)
+local axisXrotationMatrix2 = OCGL.newRotationMatrix(OCGL.axis.x, -rotationAngle)
+local axisYrotationMatrix1 = OCGL.newRotationMatrix(OCGL.axis.y, rotationAngle)
+local axisYrotationMatrix2 = OCGL.newRotationMatrix(OCGL.axis.y, -rotationAngle)
+
+-------------------------------------------------------- Object group --------------------------------------------------------
+
+local objectGroup = OCGL.newObjectGroup(OCGL.newVector3(0, 0, 0))
+objectGroup:addObjects(OCGL.newGridLines(
+	OCGL.newVector3(0, 0, 0),
+	50,
+	10
+))
+local cube = objectGroup:addObject(OCGL.newCube(
+	OCGL.newVector3(0, 10, 0),
+	20
+))
+cube.showPivotPoint = true
+-- objectGroup:addObject(OCGL.newPlane(
+-- 	OCGL.newVector3(0, 0, 0),
+-- 	60,
+-- 	60
+-- ))
 
 local controls = {
 	-- Arrows
-	[200] = function() scene:rotateAroundAxis(OCGL.axis.x, -0.1) end,
-	[208] = function() scene:rotateAroundAxis(OCGL.axis.x, 0.1) end,
-	[203] = function() scene:rotateAroundAxis(OCGL.axis.y, -0.1) end,
-	[205] = function() scene:rotateAroundAxis(OCGL.axis.y, 0.1) end,
-
+	[200] = function() objectGroup:rotate(axisXrotationMatrix1) end,
+	[208] = function() objectGroup:rotate(axisXrotationMatrix2) end,
+	[203] = function() objectGroup:rotate(axisYrotationMatrix1) end,
+	[205] = function() objectGroup:rotate(axisYrotationMatrix2) end,
 	-- +-
-	[13 ] = function() cube:rotateAroundPoint(cube.verticesMatrix[1], OCGL.axis.y, 0.1) end,
-	[12 ] = function() cube:rotateAroundPoint(cube.verticesMatrix[1], OCGL.axis.y, -0.1) end,
-
+	[13 ] = function() cube:rotate(axisXrotationMatrix1) end,
+	[12 ] = function() cube:rotate(axisYrotationMatrix1) end,
+	-- G, X
+	[34 ] = function() objectGroup.showGrid = not objectGroup.showGrid end,
+	[45 ] = function() renderMode = renderMode == OCGL.renderModes.wireframe and OCGL.renderModes.dots or OCGL.renderModes.wireframe end,
 	-- WASD
-	[17 ] = function() scene:translate(0, 2, 0) end,
-	[31 ] = function() scene:translate(0, -2, 0) end,
-	[30 ] = function() scene:translate(2, 0, 0) end,
-	[32 ] = function() scene:translate(-2, 0, 0) end,
-
+	[17 ] = function() objectGroup:translate(axisYTranslationVector1) end,
+	[31 ] = function() objectGroup:translate(axisYTranslationVector2) end,
+	[30 ] = function() objectGroup:translate(axisXTranslationVector1) end,
+	[32 ] = function() objectGroup:translate(axisXTranslationVector2) end,
 	-- R, Enter
-	[18 ] = function() scene:rotateAroundAxis(OCGL.axis.x, -0.1) end,
-	[28 ] = function() autoRotate = not autoRotate end,
+	[19 ] = function() autoRotate = not autoRotate end,
+	[28 ] = function() os.exit() end,
 }
+
+-------------------------------------------------------- Main shit --------------------------------------------------------
+
+buffer.start()
 
 while true do
 	local e = {event.pull(0)}
@@ -50,27 +77,23 @@ while true do
 		if controls[e[4]] then controls[e[4]]() end
 	elseif e[1] == "scroll" then
 		if e[5] == 1 then
-			scene:scale(2, 2, 2)
+			objectGroup:scale(OCGL.newScaleMatrix(OCGL.newVector3(1.2, 1.2, 1.2)))
 		else
-			scene:scale(0.5, 0.5, 0.5)
+			objectGroup:scale(OCGL.newScaleMatrix(OCGL.newVector3(0.8, 0.8, 0.8)))
 		end
 	end
 
 	if autoRotate then
-		local speed = 0.05
-		-- scene:rotateAroundAxis(OCGL.axis.x, speed)
-		scene:rotateAroundAxis(OCGL.axis.y, speed)
-		-- scene:rotateAroundAxis(OCGL.axis.z, speed)
+		-- objectGroup:rotate(axisXrotationMatrix1)
+		objectGroup:rotate(axisYrotationMatrix1)
 	end
 
-	buffer.clear(0x0)
+	buffer.clear(0x1B1B1B)
 	
-	scene:render(OCGL.renderModes.wireframe)
-	buffer.text(1, 1, 0xFFFFFF, "Free RAM: " .. math.floor(computer.freeMemory() / 1024))
-	local timePerFrame = os.clock() - currentClock
-	-- 1 - timePerFrame
-	-- x - 1
-	buffer.text(1, 2, 0xFFFFFF, "Frame render time: " .. timePerFrame)
+	objectGroup:render(renderMode)
+
+	buffer.text(1, 1, 0xFFFFFF, "RAM: " .. math.floor(computer.freeMemory() / 1024))
+	buffer.text(1, 2, 0xFFFFFF, "FPS: " .. math.floor(0.1 / (os.clock() - currentClock)))
 	
 	buffer.draw()
 end
