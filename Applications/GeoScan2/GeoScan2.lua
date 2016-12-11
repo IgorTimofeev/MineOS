@@ -18,7 +18,7 @@ local earthImage = image.load(resourcesDirectory .. "Earth.pic")
 local glasses, geolyzer, projector
 if component.isAvailable("glasses") then glasses = component.glasses end
 if component.isAvailable("geolyzer") then geolyzer = component.geolyzer else GUI.error("This program requires a geolyzer to work!"); return  end
-if component.isAvailable("hologram") then projector = component.hologram else GUI.error("This program requires a hologram projector to work!"); return end
+if component.isAvailable("hologram") then projector = component.hologram end
 
 local onScreenDataXOffset, onScreenDataYOffset = math.floor(buffer.screen.width / 2), buffer.screen.height
 local onProjectorDataYOffset = 0
@@ -54,10 +54,10 @@ local function glassesCreateCube(x, y, z, color, text)
 end
 
 local function createDick()
-	local chance = math.random(1, 100) <= 20
+	local chance = math.random(1, 100) <= 100
 	if chance then
 		local range = 48
-		local isVisThrObj = false
+		local isVisThrObj = true
 		local x, y, z = math.random(-range, range), math.random(-range, range), math.random(-range, range)
 		createCube(x, y, z, 0xFFFFFF, isVisThrObj)
 		createCube(x + 1, y, z, 0xFFFFFF, isVisThrObj)

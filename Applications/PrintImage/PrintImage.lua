@@ -248,6 +248,7 @@ local function createWindow()
 		config.showGrid = gridSwitch.state
 		save()
 		window:draw()
+		buffer.draw()
 	end
 	
 	y = y + 4
@@ -311,6 +312,7 @@ local function createWindow()
 			getPrinters()
 			getStatus()
 			window:draw()
+			buffer.draw()
 		end
 	end
 end
@@ -324,6 +326,7 @@ createWindow()
 mainImage = image.load(startImagePath)
 getStatus()
 window:draw()
+buffer.draw()
 
 window:handleEvents()
 

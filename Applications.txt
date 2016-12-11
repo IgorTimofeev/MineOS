@@ -532,7 +532,7 @@
     type="Application",
     icon="IgorTimofeev/OpenComputers/master/Applications/GeoScan2/Icon.pic",
     createShortcut="desktop",
-    version=1.0,
+    version=1.01,
     resources={
       {
         name="Earth.pic",
@@ -811,7 +811,7 @@
     type="Application",
     icon="IgorTimofeev/OpenComputers/master/Applications/PrintImage/Icon.pic",
     createShortcut="desktop",
-    version=1.02,
+    version=1.03,
   },
   {
     name="MineOS/Applications/Palette",
