@@ -1,5 +1,5 @@
 
--- package.loaded.rayEngine, package.loaded.GUI, package.loaded.windows, _G.rayEngine, _G.GUI, _G.windows = nil, nil, nil, nil, nil, nil, nil, nil
+package.loaded.rayEngine, package.loaded.GUI, package.loaded.windows, _G.rayEngine, _G.GUI, _G.windows = nil, nil, nil, nil, nil, nil, nil, nil
 
 local libraries = {
 	component = "component",
@@ -19,7 +19,7 @@ for library in pairs(libraries) do if not _G[library] then _G[library] = require
 local applicationResourcesDirectory = MineOSCore.getCurrentApplicationResourcesDirectory()
 local localization = MineOSCore.getLocalization(applicationResourcesDirectory .. "Localization/")
 local worldsPath = applicationResourcesDirectory .. "Worlds/"
-local rayWalkVersion = "RayWalk Tech Demo v3.4"
+local rayWalkVersion = "RayWalk Tech Demo v3.5"
 
 ----------------------------------------------------------------------------------------------------------------------------------
 
@@ -51,28 +51,28 @@ local function settings()
 	drawDistanceSlider.onValueChanged = function()
 		rayEngine.properties.drawDistance = drawDistanceSlider.value
 		window:draw()
-		buffer:draw()
+		buffer.draw()
 	end; y = y + 4
 	
 	local shadingDistanceSlider = window:addHorizontalSlider(x, y, sliderWidth, 0xFFDB80, 0x000000, 0xFFDB40, 0xDDDDDD, 100, 3000, rayEngine.properties.shadingDistance, true, localization.shadingDistance)
 	shadingDistanceSlider.onValueChanged = function()
 		rayEngine.properties.shadingDistance = shadingDistanceSlider.value
 		window:draw()
-		buffer:draw()
+		buffer.draw()
 	end; y = y + 4
 	
 	local shadingCascadesSlider = window:addHorizontalSlider(x, y, sliderWidth, 0xFFDB80, 0x000000, 0xFFDB40, 0xDDDDDD, 2, 48, rayEngine.properties.shadingCascades, true, localization.shadingCascades)
 	shadingCascadesSlider.onValueChanged = function()
 		rayEngine.properties.shadingCascades = shadingCascadesSlider.value
 		window:draw()
-		buffer:draw()
+		buffer.draw()
 	end; y = y + 4
 
 	local raycastQualitySlider = window:addHorizontalSlider(x, y, sliderWidth, 0xFFDB80, 0x000000, 0xFFDB40, 0xDDDDDD, 0.5, 32, rayEngine.properties.raycastQuality, true, localization.raycastQuality)
 	raycastQualitySlider.onValueChanged = function()
 		rayEngine.properties.raycastQuality = raycastQualitySlider.value
 		window:draw()
-		buffer:draw()
+		buffer.draw()
 	end; y = y + 4
 
 	local currentTimeSlider = window:addHorizontalSlider(x, y, sliderWidth, rayEngine.world.colors.sky.current, 0x000000, rayEngine.world.colors.sky.current, 0xDDDDDD, 0, rayEngine.world.dayNightCycle.length, rayEngine.world.dayNightCycle.currentTime, true, localization.dayNightCycle, localization.seconds)
@@ -82,7 +82,7 @@ local function settings()
 		currentTimeSlider.colors.active = rayEngine.world.colors.sky.current
 		currentTimeSlider.colors.pipe = rayEngine.world.colors.sky.current
 		window:draw()
-		buffer:draw()
+		buffer.draw()
 	end; y = y + 4
 
 	window:addLabel(x, y, sliderWidth, 1, 0xDDDDDD, localization.enableSemipixelRenderer)
@@ -91,7 +91,7 @@ local function settings()
 	graphonSwitch.onStateChanged = function()
 		rayEngine.properties.useSimpleRenderer = not graphonSwitch.state
 		window:draw()
-		buffer:draw()
+		buffer.draw()
 	end; y = y + 3
 
 	window:addLabel(x, y, sliderWidth, 1, 0xDDDDDD, localization.enableDayNightCycle)
@@ -100,7 +100,7 @@ local function settings()
 	lockTimeSwitch.onStateChanged = function()
 		rayEngine.world.dayNightCycle.enabled = lockTimeSwitch.state
 		window:draw()
-		buffer:draw()
+		buffer.draw()
 	end; y = y + 3
 
 	window:addButton(x, y, sliderWidth, 3, 0xEEEEEE, 0x262626, 0xBBBBBB, 0x262626, localization.continue).onTouch = function() window:close(); table.toFile(applicationResourcesDirectory .. "RayEngine.cfg", rayEngine.properties, true) end
@@ -128,10 +128,10 @@ local function menu()
 		y = y + buttonHeight + 1
 	end
 
-	local lines = localization.controlsHelp
+	local lines = {}; for i = 1, #localization.controlsHelp do table.insert(lines, localization.controlsHelp[i]) end
 	table.insert(lines, 1, " ")
 	table.insert(lines, 1, {text = localization.controls, color = 0xFFFFFF})
-	window:addTextBox(1, y, window.width, #lines, nil, 0xDDDDDD, lines, 1):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); y = y + #lines + 1
+	window:addTextBox(1, y, window.width, #lines, nil, 0xCCCCCC, lines, 1):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); y = y + #lines + 1
 
 	window:draw(); buffer.draw(); window:handleEvents()
 end

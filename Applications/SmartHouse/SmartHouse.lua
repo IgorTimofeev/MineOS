@@ -21,14 +21,14 @@ for library in pairs(libraries) do if not _G[library] then _G[library] = require
 local window
 
 local paths = {}
-paths.resources = MineOSCore.getCurrentApplicationResourcesDirectory()
--- paths.resources = "/SmartHouse/"
+-- paths.resources = MineOSCore.getCurrentApplicationResourcesDirectory()
+paths.resources = "/SmartHouse/"
 paths.modules = paths.resources .. "Modules/"
 
 local colors = {
 	-- background = image.load("/MineOS/Pictures/Ciri.pic"),
-	background = 0xDDDDDD,
-	connectionLines = 0x262626,
+	background = 0x1b1b1b,
+	connectionLines = 0xFFFFFF,
 	devicesBackgroundTransparency = 40,
 	devicesBackground = 0x0,
 	devicesButtonBackground = 0xFFFFFF,
@@ -44,11 +44,21 @@ local offset = {x = 0, y = 0}
 
 -----------------------------------------------------------------------------------------------------------------------------------
 
+local function getComputerInfo()
+	local currentComputerAddress = computer.address()
+	for address, information in pairs(computer.getDeviceInfo()) do
+		if currentComputerAddress == address then
+			return information.description
+		end
+	end
+end
+
 local function loadModule(modulePath)
 	local success, module = pcall(loadfile(modulePath .. "/Main.lua"))
 	if success then
-		module.icon = image.load(modulePath .. "/Icon.pic")
-		modules[fs.name(modulePath)] = module
+		module.modulePath = modulePath
+		module.icon = image.load(module.modulePath .. "/Icon.pic")
+		modules[fs.name(module.modulePath)] = module
 	else
 		error("Module loading failed: " .. module)
 	end
@@ -125,7 +135,7 @@ end
 
 local function changeChildrenState(container, state)
 	for i = 3, #container.children do
-		container.children[i].hidden = state
+		container.children[i].isHidden = state
 	end
 end
 
@@ -140,7 +150,7 @@ local function createDevice(x, y, componentName, componentProxy, name)
 	container.detailsIsHidden = true
 
 	x, y = 1, 1
-	local deviceImage = container:addImage(x, y, container.module.icon); y = y + 8
+	container.deviceImage = container:addImage(x, y, container.module.icon); y = y + 8
 	local stateButton = container:addButton(1, y, container.width, 1, colors.devicesButtonBackground, colors.devicesButtonText, colors.devicesButtonText, colors.devicesButtonBackground, "*")
 	stateButton.onTouch = function()
 		container.detailsIsHidden = not container.detailsIsHidden
@@ -164,7 +174,7 @@ local function createDevice(x, y, componentName, componentProxy, name)
 	y = container.children[#container.children].localPosition.y + (container.children[#container.children].height or 0) + 1
 	container.backgroundPanel.height = container.backgroundPanel.height + (y - container.backgroundPanel.y - 1)
 
-	deviceImage.onTouch = function(eventData)
+	container.deviceImage.onTouch = function(eventData)
 		if eventData[5] == 0 then
 			window.deviceToDrag = container
 			container:moveToFront()
@@ -202,7 +212,7 @@ local function createDevice(x, y, componentName, componentProxy, name)
 		end
 		oldDraw(container)
 	end
-	container.pushSignal = containerPushSignal
+	container.sendSignal = containerPushSignal
 
 	changeChildrenState(container, container.detailsIsHidden)
 	return container
@@ -339,6 +349,8 @@ local function createWindow()
 
 	-- Создаем главное и неебически важное устройство домашнего писюка
 	local homePC = createDevice(math.floor(window.width / 2 - 8), math.floor(window.height / 2 - 4), "homePC", component.proxy(computer.address()), "Сервак")
+	local computerDescription = getComputerInfo()
+	if computerDescription == "Server" then homePC.module.icon = image.load(homePC.module.modulePath .. "Server.pic"); homePC.deviceImage.image = homePC.module.icon end
 
 	-- Перед отрисовкой окна чистим буфер фоном и перехуячиваем позиции объектов групп
 	window.onDrawStarted = function()
@@ -446,15 +458,7 @@ local function createWindow()
 		end
 
 		window:draw()
-	end
-end
-
-local function getComputerInfo()
-	local currentComputerAddress = computer.address()
-	for address, information in pairs(computer.getDeviceInfo()) do
-		if currentComputerAddress == address then
-			return information.description
-		end
+		buffer.draw()
 	end
 end
 
@@ -480,6 +484,7 @@ loadModules()
 createWindow()
 refreshComponents()
 window:draw()
+buffer.draw()
 window:handleEvents(1)
 
 

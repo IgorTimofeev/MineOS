@@ -325,13 +325,13 @@
     name="lib/GUI.lua",
     url="IgorTimofeev/OpenComputers/master/lib/GUI.lua",
     type="Library",
-    version=1.17,
+    version=1.18,
   },
   {
     name="lib/windows.lua",
     url="IgorTimofeev/OpenComputers/master/lib/windows.lua",
     type="Library",
-    version=1.03,
+    version=1.04,
   },
   {
     name="lib/serialization.lua",
@@ -421,7 +421,7 @@
     name="lib/doubleBuffering.lua",
     url="IgorTimofeev/OpenComputers/master/lib/doubleBuffering.lua",
     type="Library",
-    version=1.14,
+    version=1.15,
   },
   {
     name="lib/thread.lua",
@@ -527,12 +527,26 @@
   },
   ----------------------------------------------------- Приложения --------------------------------------------------------------------------
   {
+    name="MineOS/Applications/GeoScan2",
+    url="IgorTimofeev/OpenComputers/master/Applications/GeoScan2/GeoScan2.lua",
+    type="Application",
+    icon="IgorTimofeev/OpenComputers/master/Applications/GeoScan2/Icon.pic",
+    createShortcut="desktop",
+    version=1.0,
+    resources={
+      {
+        name="Earth.pic",
+        url="IgorTimofeev/OpenComputers/master/Applications/GeoScan2/Earth.pic",
+      }
+    },
+  },
+  {
     name="MineOS/Applications/SmartHouse",
     url="IgorTimofeev/OpenComputers/master/Applications/SmartHouse/SmartHouse.lua",
     type="Application",
     icon="IgorTimofeev/OpenComputers/master/Applications/SmartHouse/Icon.pic",
     createShortcut="desktop",
-    version=1.24,
+    version=1.25,
     resources={
       {
         name="Modules/redstone/Icon.pic",
@@ -674,7 +688,7 @@
     type="Application",
     icon="IgorTimofeev/OpenComputers/master/Applications/RayWalk/Icon.pic",
     createShortcut="desktop",
-    version=1.55,
+    version=1.56,
     resources={
       {
         name="Localization/Russian.lang",
@@ -955,14 +969,6 @@
     url="IgorTimofeev/OpenComputers/master/Applications/Shooting/Shooting.lua",
     type="Application",
     icon="IgorTimofeev/OpenComputers/master/Applications/Shooting/Icon.pic",
-    createShortcut="desktop",
-    version=1.0,
-  },
-  {
-    name="MineOS/Applications/Geoscan",
-    url="IgorTimofeev/OpenComputers/master/Applications/Geoscan/Geoscan.lua",
-    type="Application",
-    icon="IgorTimofeev/OpenComputers/master/Applications/Geoscan/Icon.pic",
     createShortcut="desktop",
     version=1.0,
   },

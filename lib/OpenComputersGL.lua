@@ -1,12 +1,14 @@
 
 -------------------------------------------------------- Libraries --------------------------------------------------------
 
+local OCGLTR = require("OpenComputersGLTriangleRenderer")
 local matrix = require("matrix")
 local buffer = require("doubleBuffering")
 
 -------------------------------------------------------- Constants --------------------------------------------------------
 
 local OCGL = {}
+local doubleHeight = buffer.screen.height * 2
 
 OCGL.axis = {
 	x = 1,
@@ -21,13 +23,35 @@ OCGL.colors = {
 		z = 0x0000FF,
 	},
 	pivotPoint = 0xFFFFFF,
+	wireframe = 0x00FFFF,
 }
 
 OCGL.renderModes = {
-	wireframe = 1,
-	material = 2,
-	dots = 3,
+	material = 1,
+	wireframe = 2,
+	vertices = 3,
 }
+
+OCGL.materialTypes = {
+	textured = 1,
+	solid = 2,
+}
+
+-------------------------------------------------------- Materials --------------------------------------------------------
+
+function OCGL.newSolidMaterial(color)
+	return {
+		type = OCGL.materialTypes.solid,
+		color = color
+	}
+end
+
+function OCGL.newTexturedMaterial(texture)
+	return {
+		type = OCGL.materialTypes.textured,
+		texture = texture
+	}
+end
 
 -------------------------------------------------------- Vertices manipulation --------------------------------------------------------
 
@@ -76,6 +100,15 @@ function OCGL.convertVector3ArrayToVerticesMatrix(vector3Position, vector3Vertic
 	
 	return verticesMatrix
 end
+
+function OCGL.isVertexInScreenRange(vector3Vertex)
+	return 
+		vector3Vertex[1] >= 1 and
+		vector3Vertex[1] <= buffer.screen.width and
+		vector3Vertex[2] >= 1 and
+		vector3Vertex[2] <= doubleHeight
+end
+
 
 -------------------------------------------------------- Matrix objects --------------------------------------------------------
 
@@ -259,38 +292,59 @@ function OCGL.renderDot(vector3Vertex, color)
 	buffer.semiPixelSet(math.floor(vector3Vertex[1]), math.floor(vector3Vertex[2]), color)
 end
 
-function OCGL.renderTriangle(vector3Vertex1, vector3Vertex2, vector3Vertex3, renderMode, color)
-	if renderMode == OCGL.renderModes.wireframe then
-		OCGL.renderLine(vector3Vertex1, vector3Vertex2, color)
-		OCGL.renderLine(vector3Vertex2, vector3Vertex3, color)
-		OCGL.renderLine(vector3Vertex1, vector3Vertex3, color)
-	elseif renderMode == OCGL.renderModes.dots then
-		OCGL.renderDot(vector3Vertex1, color)
-		OCGL.renderDot(vector3Vertex2, color)
-		OCGL.renderDot(vector3Vertex3, color)
+function OCGL.renderTriangle(vector3Vertex1, vector3Vertex2, vector3Vertex3, renderMode, material)
+	if renderMode == OCGL.renderModes.material then
+		if material.type == OCGL.materialTypes.solid then
+			OCGLTR.renderFilledTriangle(
+				{
+					OCGL.newVector3(vector3Vertex1[1], math.floor(vector3Vertex1[2]), vector3Vertex1[3]),
+					OCGL.newVector3(vector3Vertex2[1], math.floor(vector3Vertex2[2]), vector3Vertex2[3]),
+					OCGL.newVector3(vector3Vertex3[1], math.floor(vector3Vertex3[2]), vector3Vertex3[3])
+				},
+				material.color
+			)
+		else
+			error("Material type " .. tostring(material.type) .. " doesn't supported for rendering triangles")
+		end
+	elseif renderMode == OCGL.renderModes.wireframe then
+		OCGL.renderLine(vector3Vertex1, vector3Vertex2, OCGL.colors.wireframe)
+		OCGL.renderLine(vector3Vertex2, vector3Vertex3, OCGL.colors.wireframe)
+		OCGL.renderLine(vector3Vertex1, vector3Vertex3, OCGL.colors.wireframe)
+	elseif renderMode == OCGL.renderModes.vertices then
+		OCGL.renderDot(vector3Vertex1, OCGL.colors.wireframe)
+		OCGL.renderDot(vector3Vertex2, OCGL.colors.wireframe)
+		OCGL.renderDot(vector3Vertex3, OCGL.colors.wireframe)
 	else
-		error("Rendermode enum " .. tostring(renderMode) .. " doesn't exists")
+		error("Rendermode enum " .. tostring(renderMode) .. " doesn't supported for rendering triangles")
 	end
 end
 
 -------------------------------------------------------- Mesh object --------------------------------------------------------
 
-function OCGL.newIndexedTriangle(indexOfVertex1, indexOfVertex2, indexOfVertex3)
+function OCGL.newIndexedTriangle(indexOfVertex1, indexOfVertex2, indexOfVertex3, material)
 	return {
 		indexOfVertex1,
 		indexOfVertex2,
-		indexOfVertex3
+		indexOfVertex3,
+		material
 	}
 end
 
 local function renderMesh(mesh, renderMode)
 	for triangleIndex = 1, #mesh.triangles do
-		OCGL.renderTriangle(
-			mesh.verticesMatrix[mesh.triangles[triangleIndex][1]],
-			mesh.verticesMatrix[mesh.triangles[triangleIndex][2]],
-			mesh.verticesMatrix[mesh.triangles[triangleIndex][3]],
-			renderMode, 0xFFFFFF
-		)
+		if
+			OCGL.isVertexInScreenRange(mesh.verticesMatrix[mesh.triangles[triangleIndex][1]]) or
+			OCGL.isVertexInScreenRange(mesh.verticesMatrix[mesh.triangles[triangleIndex][2]]) or
+			OCGL.isVertexInScreenRange(mesh.verticesMatrix[mesh.triangles[triangleIndex][3]])
+		then
+			OCGL.renderTriangle(
+				mesh.verticesMatrix[mesh.triangles[triangleIndex][1]],
+				mesh.verticesMatrix[mesh.triangles[triangleIndex][2]],
+				mesh.verticesMatrix[mesh.triangles[triangleIndex][3]],
+				renderMode,
+				mesh.triangles[triangleIndex][4] or mesh.material
+			)
+		end
 	end
 
 	-- Рендерим локальные оси
@@ -316,9 +370,10 @@ local function renderMesh(mesh, renderMode)
 	return mesh
 end
 
-function OCGL.newMesh(vector3Position, vector3Vertices, triangles)
+function OCGL.newMesh(vector3Position, vector3Vertices, triangles, material)
 	local mesh = OCGL.newObject(vector3Position, vector3Vertices)
 
+	mesh.material = material
 	mesh.triangles = triangles
 	mesh.render = renderMesh
 
@@ -328,17 +383,17 @@ end
 -------------------------------------------------------- Line object --------------------------------------------------------
 
 local function lineObjectRender(line, renderMode)
-	if renderMode == OCGL.renderModes.wireframe then
+	if renderMode == OCGL.renderModes.vertices then
+		OCGL.renderDot(line.verticesMatrix[1], line.color)
+		OCGL.renderDot(line.verticesMatrix[2], line.color)
+	else
 		OCGL.renderLine(
 			line.verticesMatrix[1],
 			line.verticesMatrix[2],
 			line.color
 		)
-	elseif renderMode == OCGL.renderModes.dots then
-		OCGL.renderDot(line.verticesMatrix[1], line.color)
-		OCGL.renderDot(line.verticesMatrix[2], line.color)
-	else
-		error("Rendermode enum " .. tostring(renderMode) .. " doesn't exists")
+	-- else
+	-- 	error("Rendermode enum " .. tostring(renderMode) .. " doesn't supported for rendering lines")
 	end
 end
 
@@ -353,7 +408,7 @@ end
 
 -------------------------------------------------------- Plane object --------------------------------------------------------
 
-function OCGL.newPlane(vector3Position, width, height)
+function OCGL.newPlane(vector3Position, width, height, material)
 	local halfWidth, halfHeight = width / 2, height / 2
 	return OCGL.newMesh(
 		vector3Position,
@@ -366,7 +421,8 @@ function OCGL.newPlane(vector3Position, width, height)
 		{
 			OCGL.newIndexedTriangle(1, 2, 3),
 			OCGL.newIndexedTriangle(1, 4, 3)
-		}
+		},
+		material
 	)
 end
 
@@ -388,7 +444,7 @@ end
 -------------------------------------------------------- Cube object --------------------------------------------------------
 
 -- Start point is a bottom left nearest corner of cube
-function OCGL.newCube(vector3Position, size)
+function OCGL.newCube(vector3Position, size, material)
 	local halfSize = size / 2
 	return OCGL.newMesh(
 		vector3Position,
@@ -423,7 +479,8 @@ function OCGL.newCube(vector3Position, size)
 			-- Bottom
 			OCGL.newIndexedTriangle(1, 8, 5),
 			OCGL.newIndexedTriangle(1, 4, 5),
-		}
+		},
+		material
 	)
 end
 
@@ -537,6 +594,66 @@ function OCGL.newObjectGroup(vector3Position, ...)
 	objectGroup.render = objectGroupRender
 
 	return objectGroup
+end
+
+
+-------------------------------------------------------- FPS BITCH --------------------------------------------------------
+
+local function drawSegments(x, y, segments, color)
+	for i = 1, #segments do
+		if segments[i] == 1 then
+			buffer.semiPixelSquare(x, y, 3, 1, color)
+		elseif segments[i] == 2 then
+			buffer.semiPixelSquare(x + 2, y, 1, 3, color)
+		elseif segments[i] == 3 then
+			buffer.semiPixelSquare(x + 2, y + 2, 1, 3, color)
+		elseif segments[i] == 4 then
+			buffer.semiPixelSquare(x, y + 4, 3, 1, color)
+		elseif segments[i] == 5 then
+			buffer.semiPixelSquare(x, y + 2, 1, 3, color)
+		elseif segments[i] == 6 then
+			buffer.semiPixelSquare(x, y, 1, 3, color)
+		elseif segments[i] == 7 then
+			buffer.semiPixelSquare(x, y + 2, 3, 1, color)
+		else
+			error("Че за говно ты сюда напихал? Переделывай!")
+		end
+	end
+end
+
+--   1
+-- 6   2
+--   7
+-- 5   3
+--   4
+
+function OCGL.renderFPSCounter(x, y, renderMethod, color)
+	local numbers = {
+		["0"] = { 1, 2, 3, 4, 5, 6 },
+		["1"] = { 2, 3 },
+		["2"] = { 1, 2, 4, 5, 7 },
+		["3"] = { 1, 2, 3, 4, 7 },
+		["4"] = { 2, 3, 6, 7 },
+		["5"] = { 1, 3, 4, 6, 7 },
+		["6"] = { 1, 3, 4, 5, 6, 7 },
+		["7"] = { 1, 2, 3 },
+		["8"] = { 1, 2, 3, 4, 5, 6, 7 },
+		["9"] = { 1, 2, 3, 4, 6, 7 },
+	}
+
+	-- clock sec - 1 frame
+	-- 1 sec - x frames
+
+	local oldClock = os.clock()
+	renderMethod()
+	local fps = tostring(math.ceil(1 / (os.clock() - oldClock) / 10))
+
+	for i = 1, #fps do
+		drawSegments(x, y, numbers[fps:sub(i, i)], color)
+		x = x + 4
+	end
+
+	return x - 3
 end
 
 -------------------------------------------------------- Playground --------------------------------------------------------

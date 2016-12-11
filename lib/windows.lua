@@ -41,38 +41,54 @@ local function executeObjectMethod(method, ...)
 end
 
 local function buttonHandler(window, object, objectIndex, eventData)
-	object.pressed = true; window:draw(); buffer.draw()
+	object.pressed = true
+	window:draw()
+	buffer.draw()
 	os.sleep(0.2)
-	object.pressed = false; window:draw(); buffer.draw()
+	object.pressed = false
+	window:draw()
+	buffer.draw()
 	executeObjectMethod(object.onTouch, eventData)
 end
 
 local function tabBarTabHandler(window, object, objectIndex, eventData)
 	object.parent.parent.selectedTab = objectIndex
-	window:draw(); buffer:draw()
+	window:draw()
+	buffer.draw()
 	executeObjectMethod(object.parent.parent.onTabSwitched, eventData)
 end
 
 local function inputTextBoxHandler(window, object, objectIndex, eventData)
 	object:input()
-	window:draw(); buffer:draw()
+	window:draw()
+	buffer.draw()
 	executeObjectMethod(object.onInputFinished, eventData)
 end
 
 local function textBoxScrollHandler(window, object, objectIndex, eventData)
-	if eventData[5] == 1 then object:scrollUp(); window:draw(); buffer.draw() else object:scrollDown(); window:draw(); buffer.draw() end
+	if eventData[5] == 1 then
+		object:scrollUp()
+		window:draw()
+		buffer.draw()
+	else
+		object:scrollDown()
+		window:draw()
+		buffer.draw()
+	end
 end
 
 local function horizontalSliderHandler(window, object, objectIndex, eventData)
 	local clickPosition = eventData[3] - object.x + 1
 	object.value = object.minimumValue + (clickPosition * (object.maximumValue - object.minimumValue) / object.width)
-	window:draw(); buffer:draw()
+	window:draw()
+	buffer.draw()
 	executeObjectMethod(object.onValueChanged, eventData)
 end
 
 local function switchHandler(window, object, objectIndex, eventData)
 	object.state = not object.state
-	window:draw(); buffer:draw()
+	window:draw()
+	buffer.draw()
 	executeObjectMethod(object.onStateChanged, eventData)
 end
 
@@ -84,6 +100,7 @@ end
 function windows.handleEventData(window, eventData)
 	if eventData[1] == "touch" then
 		local object, objectIndex = window:getClickedObject(eventData[3], eventData[4])
+		
 		if object then
 			if object.type == GUI.objectTypes.button then
 				buttonHandler(window, object, objectIndex, eventData)
@@ -174,10 +191,9 @@ end
 
 local function drawWindow(window)
 	if window.onDrawStarted then window.onDrawStarted() end
-	window:update()
+	window:drawMethodOutOfWindowsLibrary()
 	if window.drawShadow then GUI.windowShadow(window.x, window.y, window.width, window.height, 50) end
 	if window.onDrawFinished then window.onDrawFinished() end
-	buffer.draw()
 end
 
 local function newWindow(x, y, width, height, minimumWidth, minimumHeight)
@@ -187,7 +203,7 @@ local function newWindow(x, y, width, height, minimumWidth, minimumHeight)
 	window.minimumWidth = minimumWidth
 	window.minimumHeight = minimumHeight
 	window.drawShadow = true
-	window.update = window.draw
+	window.drawMethodOutOfWindowsLibrary = window.draw
 	window.draw = drawWindow
 	window.handleEventData = windows.handleEventData
 	window.handleEvents = windows.handleEvents

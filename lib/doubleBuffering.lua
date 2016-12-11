@@ -448,7 +448,7 @@ end
 
 ------------------------------------------- Semipixel methods ------------------------------------------------------------------------
 
-local function semiPixelAdaptiveSet(y, index, color, yPercentTwoEqualsZero)
+local function semiPixelAdaptiveSet(index, color, yPercentTwoEqualsZero)
 	local upperPixel, lowerPixel, bothPixel, indexPlus1, indexPlus2 = "▀", "▄", " ", index + 1, index + 2
 	local background, foreground, symbol = buffer.screen.new[index], buffer.screen.new[indexPlus1], buffer.screen.new[indexPlus2]
 
@@ -470,7 +470,7 @@ end
 function buffer.semiPixelSet(x, y, color)
 	local yFixed = math.ceil(y / 2)
 	if x >= buffer.drawLimit.x and yFixed >= buffer.drawLimit.y and x <= buffer.drawLimit.x2 and yFixed <= buffer.drawLimit.y2 then
-		semiPixelAdaptiveSet(y, convertCoordsToIndex(x, yFixed), color, y % 2 == 0)
+		semiPixelAdaptiveSet(convertCoordsToIndex(x, yFixed), color, y % 2 == 0)
 	end
 end
 
@@ -482,9 +482,9 @@ function buffer.semiPixelSquare(x, y, width, height, color)
 		
 		for i = x, x + width - 1 do
 			jFixed = math.ceil(j / 2)
-			if x >= buffer.drawLimit.x and jFixed >= buffer.drawLimit.y and x <= buffer.drawLimit.x2 and jFixed <= buffer.drawLimit.y2 then
-				semiPixelAdaptiveSet(j, index, color, jPercentTwoEqualsZero)
-			end
+			-- if x >= buffer.drawLimit.x and jFixed >= buffer.drawLimit.y and x <= buffer.drawLimit.x2 and jFixed <= buffer.drawLimit.y2 then
+				semiPixelAdaptiveSet(index, color, jPercentTwoEqualsZero)
+			-- end
 			index = index + 3
 		end
 
@@ -496,38 +496,65 @@ function buffer.semiPixelSquare(x, y, width, height, color)
 	end
 end
 
-function buffer.semiPixelLine(x0, y0, x1, y1, color)
-	local steep = false;
+-- function buffer.semiPixelLine(x0, y0, x1, y1, color)
+-- 	local steep = false;
 	
-	if math.abs(x0 - x1) < math.abs(y0 - y1 ) then
-		x0, y0 = swap(x0, y0)
-		x1, y1 = swap(x1, y1)
-		steep = true;
+-- 	if math.abs(x0 - x1) < math.abs(y0 - y1 ) then
+-- 		x0, y0 = swap(x0, y0)
+-- 		x1, y1 = swap(x1, y1)
+-- 		steep = true;
+-- 	end
+
+-- 	if (x0 > x1) then
+-- 		x0, x1 = swap(x0, x1)
+-- 		y0, y1 = swap(y0, y1)
+-- 	end
+
+-- 	local dx = x1 - x0;
+-- 	local dy = y1 - y0;
+-- 	local derror2 = math.abs(dy) * 2
+-- 	local error2 = 0;
+-- 	local y = y0;
+	
+-- 	for x = x0, x1, 1 do
+-- 		if steep then
+-- 			buffer.semiPixelSet(y, x, color);
+-- 		else
+-- 			buffer.semiPixelSet(x, y, color)
+-- 		end
+
+-- 		error2 = error2 + derror2;
+
+-- 		if error2 > dx then
+-- 			y = y + (y1 > y0 and 1 or -1);
+-- 			error2 = error2 - dx * 2;
+-- 		end
+-- 	end
+-- end
+
+function buffer.semiPixelLine(x1, y1, x2, y2, color)
+	local incycleValueFrom, incycleValueTo, outcycleValueFrom, outcycleValueTo, isReversed, incycleValueDelta, outcycleValueDelta = x1, x2, y1, y2, false, math.abs(x2 - x1), math.abs(y2 - y1)
+	if incycleValueDelta < outcycleValueDelta then
+		incycleValueFrom, incycleValueTo, outcycleValueFrom, outcycleValueTo, isReversed, incycleValueDelta, outcycleValueDelta = y1, y2, x1, x2, true, outcycleValueDelta, incycleValueDelta
 	end
 
-	if (x0 > x1) then
-		x0, x1 = swap(x0, x1)
-		y0, y1 = swap(y0, y1)
+	if outcycleValueFrom > outcycleValueTo then
+		outcycleValueFrom, outcycleValueTo = swap(outcycleValueFrom, outcycleValueTo)
+		incycleValueFrom, incycleValueTo = swap(incycleValueFrom, incycleValueTo)
 	end
 
-	local dx = x1 - x0;
-	local dy = y1 - y0;
-	local derror2 = math.abs(dy) * 2
-	local error2 = 0;
-	local y = y0;
-	
-	for x = x0, x1, 1 do
-		if steep then
-			buffer.semiPixelSet(y, x, color);
+	local outcycleValue, outcycleValueCounter, outcycleValueTriggerIncrement = outcycleValueFrom, 1, incycleValueDelta / outcycleValueDelta
+	local outcycleValueTrigger = outcycleValueTriggerIncrement
+	for incycleValue = incycleValueFrom, incycleValueTo, incycleValueFrom < incycleValueTo and 1 or -1 do
+		if isReversed then
+			buffer.semiPixelSet(outcycleValue, incycleValue, color)
 		else
-			buffer.semiPixelSet(x, y, color)
+			buffer.semiPixelSet(incycleValue, outcycleValue, color)
 		end
 
-		error2 = error2 + derror2;
-
-		if error2 > dx then
-			y = y + (y1 > y0 and 1 or -1);
-			error2 = error2 - dx * 2;
+		outcycleValueCounter = outcycleValueCounter + 1
+		if outcycleValueCounter > outcycleValueTrigger then
+			outcycleValue, outcycleValueTrigger = outcycleValue + 1, outcycleValueTrigger + outcycleValueTriggerIncrement
 		end
 	end
 end
