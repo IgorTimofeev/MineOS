@@ -1,35 +1,32 @@
 
+------------------------------------------------- Libraries -------------------------------------------------
+
 local libraries = {
 	component = "component",
 	unicode = "unicode",
-	image = "image",
 	colorlib = "colorlib",
+	image = "image",
 }
 
 for library in pairs(libraries) do if not _G[library] then _G[library] = require(libraries[library]) end end; libraries = nil
 
+------------------------------------------------- Constants -------------------------------------------------
+
+
 local gpu = component.gpu
 local buffer = {}
 
-------------------------------------------------- Вспомогательные методы -----------------------------------------------------------------
+------------------------------------------------- Core methods -------------------------------------------------
 
 --Формула конвертации индекса массива изображения в абсолютные координаты пикселя изображения
-local function convertIndexToCoords(index)
-	--Приводим индекс к корректному виду (1 = 1, 4 = 2, 7 = 3, 10 = 4, 13 = 5, ...)
-	index = (index + 2) / 3
-	--Получаем остаток от деления индекса на ширину изображения
-	local ostatok = index % buffer.screen.width
-	--Если остаток равен 0, то х равен ширине изображения, а если нет, то х равен остатку
-	local x = (ostatok == 0) and buffer.screen.width or ostatok
-	--А теперь как два пальца получаем координату по Y
-	local y = math.ceil(index / buffer.screen.width)
-	--Возвращаем координаты
-	return x, y
+function buffer.getBufferCoordinatesByIndex(index)
+	local integer, fractional = math.modf(index / (buffer.screen.tripleWidth))
+	return math.ceil(fractional * buffer.screen.width), integer + 1
 end
 
 --Формула конвертации абсолютных координат пикселя изображения в индекс для массива изображения
-local function convertCoordsToIndex(x, y)
-	return (buffer.screen.width * (y - 1) + x) * 3 - 2
+function buffer.getBufferIndexByCoordinates(x, y)
+	return buffer.screen.tripleWidth * (y - 1) + x * 3 - 2
 end
 
 -- Установить ограниченную зону рисования. Все пиксели, не попадающие в эту зону, будут игнорироваться.
@@ -53,7 +50,13 @@ end
 
 -- Создание массивов буфера и всех необходимых параметров
 function buffer.flush(width, height)
-	buffer.screen = {current = {}, new = {}, width = width, height = height}
+	buffer.screen = {
+		current = {},
+		new = {},
+		width = width,
+		height = height,
+		tripleWidth = width * 3,
+	}
 	buffer.drawLimit = {}
 	buffer.resetDrawLimit()
 
@@ -83,24 +86,29 @@ end
 
 ------------------------------------------------- Методы отрисовки -----------------------------------------------------------------
 
+function buffer.rawSet(index, background, foreground, symbol)
+	buffer.screen.new[index], buffer.screen.new[index + 1], buffer.screen.new[index + 2] = background, foreground, symbol
+end
+
+function buffer.rawGet(index)
+	return buffer.screen.new[index], buffer.screen.new[index + 1], buffer.screen.new[index + 2]
+end
+
 -- Получить информацию о пикселе из буфера
 function buffer.get(x, y)
-	local index = convertCoordsToIndex(x, y)
+	local index = buffer.getBufferIndexByCoordinates(x, y)
 	if x >= 1 and y >= 1 and x <= buffer.screen.width and y <= buffer.screen.height then
-		return buffer.screen.new[index], buffer.screen.new[index + 1], buffer.screen.new[index + 2]
+		return buffer.rawGet(index)
 	else
 		return 0x000000, 0x000000, " "
-		-- error("Невозможно получить пиксель, так как его координаты лежат за пределами экрана: x = " .. x .. ", y = " .. y .. "\n")
 	end
 end
 
 -- Установить пиксель в буфере
 function buffer.set(x, y, background, foreground, symbol)
-	local index = convertCoordsToIndex(x, y)
+	local index = buffer.getBufferIndexByCoordinates(x, y)
 	if x >= buffer.drawLimit.x and y >= buffer.drawLimit.y and x <= buffer.drawLimit.x2 and y <= buffer.drawLimit.y2 then
-		buffer.screen.new[index] = background
-		buffer.screen.new[index + 1] = foreground
-		buffer.screen.new[index + 2] = symbol
+		buffer.rawSet(index, background, foreground or 0x0, symbol or " ")
 	end
 end
 
@@ -116,7 +124,7 @@ function buffer.square(x, y, width, height, background, foreground, symbol, tran
 	if not foreground then foreground = 0x000000 end
 	if not symbol then symbol = " " end
 
-	local index, indexStepForward, indexPlus1 = convertCoordsToIndex(x, y), (buffer.screen.width - width) * 3
+	local index, indexStepForward, indexPlus1 = buffer.getBufferIndexByCoordinates(x, y), (buffer.screen.width - width) * 3
 	for j = y, (y + height - 1) do
 		for i = x, (x + width - 1) do
 			if i >= buffer.drawLimit.x and j >= buffer.drawLimit.y and i <= buffer.drawLimit.x2 and j <= buffer.drawLimit.y2 then
@@ -142,81 +150,6 @@ function buffer.clear(color, transparency)
 	buffer.square(1, 1, buffer.screen.width, buffer.screen.height, color or 0x262626, 0x000000, " ", transparency)
 end
 
---Заливка области изображения (рекурсивная, говно-метод)
-function buffer.fill(x, y, background, foreground, symbol)
-	
-	local startBackground, startForeground, startSymbol
-
-	local function doFill(xStart, yStart)
-		local index = convertCoordsToIndex(xStart, yStart)
-
-		if
-			buffer.screen.new[index] ~= startBackground or
-			-- buffer.screen.new[index + 1] ~= startForeground or
-			-- buffer.screen.new[index + 2] ~= startSymbol or
-			buffer.screen.new[index] == background
-			-- buffer.screen.new[index + 1] == foreground or
-			-- buffer.screen.new[index + 2] == symbol
-		then
-			return
-		end
-
-		--Заливаем в память
-		if xStart >= buffer.drawLimit.x and yStart >= buffer.drawLimit.y and xStart <= buffer.drawLimit.x2 and yStart <= buffer.drawLimit.y2 then
-			buffer.screen.new[index] = background
-			buffer.screen.new[index + 1] = foreground
-			buffer.screen.new[index + 2] = symbol
-		end
-
-		doFill(xStart + 1, yStart)
-		doFill(xStart - 1, yStart)
-		doFill(xStart, yStart + 1)
-		doFill(xStart, yStart - 1)
-
-		iterator = nil
-	end
-
-	local startIndex = convertCoordsToIndex(x, y)
-	startBackground = buffer.screen.new[startIndex]
-	startForeground = buffer.screen.new[startIndex + 1]
-	startSymbol = buffer.screen.new[startIndex + 2]
-
-	doFill(x, y)
-end
-
---Нарисовать окружность, алгоритм спизжен с вики
-function buffer.circle(xCenter, yCenter, radius, background, foreground, symbol)
-	--Подфункция вставки точек
-	local function insertPoints(x, y)
-		buffer.set(xCenter + x * 2, yCenter + y, background, foreground, symbol)
-		buffer.set(xCenter + x * 2, yCenter - y, background, foreground, symbol)
-		buffer.set(xCenter - x * 2, yCenter + y, background, foreground, symbol)
-		buffer.set(xCenter - x * 2, yCenter - y, background, foreground, symbol)
-
-		buffer.set(xCenter + x * 2 + 1, yCenter + y, background, foreground, symbol)
-		buffer.set(xCenter + x * 2 + 1, yCenter - y, background, foreground, symbol)
-		buffer.set(xCenter - x * 2 + 1, yCenter + y, background, foreground, symbol)
-		buffer.set(xCenter - x * 2 + 1, yCenter - y, background, foreground, symbol)
-	end
-
-	local x = 0
-	local y = radius
-	local delta = 3 - 2 * radius;
-	while (x < y) do
-		insertPoints(x, y);
-		insertPoints(y, x);
-		if (delta < 0) then
-			delta = delta + (4 * x + 6)
-		else 
-			delta = delta + (4 * (x - y) + 10)
-			y = y - 1
-		end
-		x = x + 1
-	end
-
-	if x == y then insertPoints(x, y) end
-end
-
 --Скопировать область изображения и вернуть ее в виде массива
 function buffer.copy(x, y, width, height)
 	local copyArray = {
@@ -231,7 +164,7 @@ function buffer.copy(x, y, width, height)
 	local index
 	for j = y, (y + height - 1) do
 		for i = x, (x + width - 1) do
-			index = convertCoordsToIndex(i, j)
+			index = buffer.getBufferIndexByCoordinates(i, j)
 			table.insert(copyArray, buffer.screen.new[index])
 			table.insert(copyArray, buffer.screen.new[index + 1])
 			table.insert(copyArray, buffer.screen.new[index + 2])
@@ -250,7 +183,7 @@ function buffer.paste(x, y, copyArray)
 		for i = x, (x + copyArray.width - 1) do
 			if i >= buffer.drawLimit.x and j >= buffer.drawLimit.y and i <= buffer.drawLimit.x2 and j <= buffer.drawLimit.y2 then
 				--Рассчитываем индекс массива основного изображения
-				index = convertCoordsToIndex(i, j)
+				index = buffer.getBufferIndexByCoordinates(i, j)
 				--Копипаст формулы, аккуратнее!
 				--Рассчитываем индекс массива вставочного изображения
 				arrayIndex = (copyArray.width * (j - y) + (i - x + 1)) * 3 - 2
@@ -302,7 +235,7 @@ function buffer.text(x, y, color, text, transparency)
 		end
 	end
 
-	local index, sText = convertCoordsToIndex(x, y), unicode.len(text)
+	local index, sText = buffer.getBufferIndexByCoordinates(x, y), unicode.len(text)
 	for i = 1, sText do
 		if x >= buffer.drawLimit.x and y >= buffer.drawLimit.y and x <= buffer.drawLimit.x2 and y <= buffer.drawLimit.y2 then
 			buffer.screen.new[index + 1] = not transparency and color or colorlib.alphaBlend(buffer.screen.new[index], color, transparency)
@@ -316,7 +249,7 @@ end
 -- Отрисовка изображения
 function buffer.image(x, y, picture)
 	local xPos, xEnd, bufferIndexStepOnReachOfImageWidth = x, x + picture.width - 1, (buffer.screen.width - picture.width) * 3
-	local bufferIndex = convertCoordsToIndex(x, y)
+	local bufferIndex = buffer.getBufferIndexByCoordinates(x, y)
 	local imageIndexPlus2, imageIndexPlus3
 
 	for imageIndex = 1, #picture, 4 do
@@ -448,19 +381,27 @@ end
 
 ------------------------------------------- Semipixel methods ------------------------------------------------------------------------
 
-local function semiPixelAdaptiveSet(index, color, yPercentTwoEqualsZero)
+function buffer.semiPixelRawSet(index, color, yPercentTwoEqualsZero)
 	local upperPixel, lowerPixel, bothPixel, indexPlus1, indexPlus2 = "▀", "▄", " ", index + 1, index + 2
 	local background, foreground, symbol = buffer.screen.new[index], buffer.screen.new[indexPlus1], buffer.screen.new[indexPlus2]
 
 	if yPercentTwoEqualsZero then
 		if symbol == upperPixel then
-			buffer.screen.new[index], buffer.screen.new[indexPlus1], buffer.screen.new[indexPlus2] = color, foreground, bothPixel
+			if color == foreground then
+				buffer.screen.new[index], buffer.screen.new[indexPlus2] = color, bothPixel
+			else
+				buffer.screen.new[index] = color
+			end
 		else
-			buffer.screen.new[index], buffer.screen.new[indexPlus1], buffer.screen.new[indexPlus2] = background, color, lowerPixel
+			buffer.screen.new[indexPlus1], buffer.screen.new[indexPlus2] = color, lowerPixel
 		end
 	else
 		if symbol == lowerPixel then
-			buffer.screen.new[index], buffer.screen.new[indexPlus1], buffer.screen.new[indexPlus2] = color, foreground, bothPixel
+			if color == foreground then
+				buffer.screen.new[index], buffer.screen.new[indexPlus2] = color, bothPixel
+			else
+				buffer.screen.new[index] = color
+			end
 		else
 			buffer.screen.new[index], buffer.screen.new[indexPlus1], buffer.screen.new[indexPlus2] = background, color, upperPixel
 		end
@@ -470,20 +411,20 @@ end
 function buffer.semiPixelSet(x, y, color)
 	local yFixed = math.ceil(y / 2)
 	if x >= buffer.drawLimit.x and yFixed >= buffer.drawLimit.y and x <= buffer.drawLimit.x2 and yFixed <= buffer.drawLimit.y2 then
-		semiPixelAdaptiveSet(convertCoordsToIndex(x, yFixed), color, y % 2 == 0)
+		buffer.semiPixelRawSet(buffer.getBufferIndexByCoordinates(x, yFixed), color, y % 2 == 0)
 	end
 end
 
 function buffer.semiPixelSquare(x, y, width, height, color)
 	-- for j = y, y + height - 1 do for i = x, x + width - 1 do buffer.semiPixelSet(i, j, color) end end
-	local index, indexStepForward, indexStepBackward, jPercentTwoEqualsZero, jFixed = convertCoordsToIndex(x, math.ceil(y / 2)), (buffer.screen.width - width) * 3, width * 3
+	local index, indexStepForward, indexStepBackward, jPercentTwoEqualsZero, jFixed = buffer.getBufferIndexByCoordinates(x, math.ceil(y / 2)), (buffer.screen.width - width) * 3, width * 3
 	for j = y, y + height - 1 do
 		jPercentTwoEqualsZero = j % 2 == 0
 		
 		for i = x, x + width - 1 do
 			jFixed = math.ceil(j / 2)
 			-- if x >= buffer.drawLimit.x and jFixed >= buffer.drawLimit.y and x <= buffer.drawLimit.x2 and jFixed <= buffer.drawLimit.y2 then
-				semiPixelAdaptiveSet(index, color, jPercentTwoEqualsZero)
+				buffer.semiPixelRawSet(index, color, jPercentTwoEqualsZero)
 			-- end
 			index = index + 3
 		end
@@ -495,42 +436,6 @@ function buffer.semiPixelSquare(x, y, width, height, color)
 		end
 	end
 end
-
--- function buffer.semiPixelLine(x0, y0, x1, y1, color)
--- 	local steep = false;
-	
--- 	if math.abs(x0 - x1) < math.abs(y0 - y1 ) then
--- 		x0, y0 = swap(x0, y0)
--- 		x1, y1 = swap(x1, y1)
--- 		steep = true;
--- 	end
-
--- 	if (x0 > x1) then
--- 		x0, x1 = swap(x0, x1)
--- 		y0, y1 = swap(y0, y1)
--- 	end
-
--- 	local dx = x1 - x0;
--- 	local dy = y1 - y0;
--- 	local derror2 = math.abs(dy) * 2
--- 	local error2 = 0;
--- 	local y = y0;
-	
--- 	for x = x0, x1, 1 do
--- 		if steep then
--- 			buffer.semiPixelSet(y, x, color);
--- 		else
--- 			buffer.semiPixelSet(x, y, color)
--- 		end
-
--- 		error2 = error2 + derror2;
-
--- 		if error2 > dx then
--- 			y = y + (y1 > y0 and 1 or -1);
--- 			error2 = error2 - dx * 2;
--- 		end
--- 	end
--- end
 
 function buffer.semiPixelLine(x1, y1, x2, y2, color)
 	local incycleValueFrom, incycleValueTo, outcycleValueFrom, outcycleValueTo, isReversed, incycleValueDelta, outcycleValueDelta = x1, x2, y1, y2, false, math.abs(x2 - x1), math.abs(y2 - y1)
@@ -635,7 +540,7 @@ function buffer.draw(force)
 	--Массив третьего буфера, содержащий в себе измененные пиксели
 	buffer.screen.changes, indexStepOnEveryLine = {}, (buffer.screen.width - buffer.drawLimit.width) * 3 
 
-	index = convertCoordsToIndex(buffer.drawLimit.x, buffer.drawLimit.y)
+	index = buffer.getBufferIndexByCoordinates(buffer.drawLimit.x, buffer.drawLimit.y)
 	for y = buffer.drawLimit.y, buffer.drawLimit.y2 do
 		local x = buffer.drawLimit.x
 		while x <= buffer.drawLimit.x2 do

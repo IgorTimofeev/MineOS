@@ -1,19 +1,22 @@
 
 -------------------------------------------------------- Libraries --------------------------------------------------------
 
-package.loaded.matrix, package.loaded.doubleBuffering, package.loaded.OpenComputersGL, package.loaded.GUI = nil, nil, nil, nil
-_G.OCGL, _G.buffer, _G.matrix, _G.GUI = nil, nil, nil, nil
+buffer = nil
+package.loaded.doubleBuffering = nil
 
-_G.buffer = require("doubleBuffering")
-_G.GUI = require("GUI")
-_G.OCGL = require("OpenComputersGL")
-_G.event = require("event")
+buffer = require("doubleBuffering")
+local event = require("event")
+local GUI = require("GUI")
+local windows = require("windows")
+
+OCGL = dofile("/lib/OpenComputersGL/Core.lua")
+renderer = dofile("/lib/OpenComputersGL/Renderer.lua")
 
 -------------------------------------------------------- Constants --------------------------------------------------------
 
 local autoRotate, showGrid, renderMode = false, true, OCGL.renderModes.wireframe 
 local translationOffset = 2
-local rotationAngle = 0.05
+local rotationAngle = 0.08
 
 local axisXTranslationVector1 = OCGL.newVector3(translationOffset, 0, 0)
 local axisXTranslationVector2 = OCGL.newVector3(-translationOffset, 0, 0)
@@ -28,23 +31,24 @@ local axisYrotationMatrix2 = OCGL.newRotationMatrix(OCGL.axis.y, -rotationAngle)
 -------------------------------------------------------- Object group --------------------------------------------------------
 
 local objectGroup = OCGL.newObjectGroup(OCGL.newVector3(0, 0, 0))
-objectGroup:addObjects(OCGL.newGridLines(
-	OCGL.newVector3(0, 0, 0),
-	100,
-	20
-))
+-- objectGroup:addObjects(OCGL.newGridLines(
+-- 	OCGL.newVector3(0, 0, 0),
+-- 	60,
+-- 	50,
+-- 	10
+-- ))
 objectGroup:addObject(OCGL.newPlane(
-	OCGL.newVector3(0, 0, 0),
+	OCGL.newVector3(0, 2, 0),
 	60,
 	60,
 	OCGL.newSolidMaterial(0xEEEEEE)
 ))
 local cube = objectGroup:addObject(OCGL.newCube(
-	OCGL.newVector3(0, 10, 0),
+	OCGL.newVector3(0, 13, 0),
 	20,
-	OCGL.newSolidMaterial(0xBBBBBB)
+	OCGL.newSolidMaterial(0xFF8888)
 ))
--- cube.showPivotPoint = true
+cube.showPivotPoint = true
 
 local controls = {
 	-- Arrows
@@ -71,11 +75,14 @@ local controls = {
 -------------------------------------------------------- Main shit --------------------------------------------------------
 
 buffer.start()
+renderer.setProjectionSurfaceLimit(1, 1, 1, buffer.screen.width, buffer.screen.height * 2, 1)
 local progressBar = GUI.progressBar(buffer.screen.width - 32, 2, 30, 0xFFFF00, 0xFFFFFF, 0xFFFFFF, 1, true, true, "RAM usage: ", "%")
 
 local function renderMethod()
 	buffer.clear(0x1B1B1B)
+	renderer.clearDepthBuffer()
 	objectGroup:render(renderMode)
+
 	local total = computer.totalMemory()
 	progressBar.value = math.ceil((total - computer.freeMemory()) / total * 100)
 	progressBar:draw()
@@ -102,7 +109,7 @@ while true do
 		objectGroup:rotate(axisYrotationMatrix1)
 	end
 
-	OCGL.renderFPSCounter(2, 2, renderMethod, 0xFFFF00)
+	renderer.renderFPSCounter(2, 2, renderMethod, 0xFFFF00)
 	buffer.text(2, 10, 0xFFFFFF, "RenderMode: " .. renderMode)
 	buffer.draw()
 end
