@@ -1,22 +1,36 @@
 
 -------------------------------------------------------- Libraries --------------------------------------------------------
 
+local vector = require("vector")
+local materials = require("OpenComputersGL/Materials")
+local buffer = require("doubleBuffering")
+
 local renderer = {
 	depthBuffer = {},
 	projectionSurface = {},
 }
 
--------------------------------------------------------- Additional methods --------------------------------------------------------
+-------------------------------------------------------- Constants --------------------------------------------------------
 
-function renderer.setProjectionSurfaceLimit(x, y, z, x2, y2, z2)
-	renderer.projectionSurface = { x = x, y = y, z = z, x2 = x2, y2 = y2, z2 = z2 }
-	renderer.projectionSurface.width = x2 - x + 1
-	renderer.projectionSurface.height = y2 - y + 1
-	renderer.projectionSurface.depth = z2 - z + 1
-end
+renderer.colors = {
+	axis = {
+		x = 0xFF0000,
+		y = 0x00FF00,
+		z = 0x0000FF,
+	},
+	pivotPoint = 0xFFFFFF,
+	wireframe = 0x00FFFF,
+}
+
+renderer.renderModes = {
+	material = 1,
+	wireframe = 2,
+	vertices = 3,
+}
+
+-------------------------------------------------------- Renderer --------------------------------------------------------
 
 function renderer.clearDepthBuffer()
-	renderer.depthBuffer = {}
 	for y = 1, renderer.projectionSurface.height do
 		renderer.depthBuffer[y] = {}
 		for x = 1, renderer.projectionSurface.width do
@@ -25,12 +39,23 @@ function renderer.clearDepthBuffer()
 	end
 end
 
-function renderer.getDepthBufferIndexByCoordinates(x, y)
-	return (y - 1) * renderer.projectionSurface.width + x
+function renderer.setProjectionSurface(x, y, z, x2, y2, z2)
+	renderer.projectionSurface = { x = x, y = y, z = z, x2 = x2, y2 = y2, z2 = z2 }
+	renderer.projectionSurface.width = x2 - x + 1
+	renderer.projectionSurface.height = y2 - y + 1
+	renderer.projectionSurface.depth = z2 - z + 1
+	renderer.depthBuffer = {}
 end
 
 function renderer.setPixelUsingDepthBuffer(x, y, pixelDepthValue, pixelColor)
-	if x >= renderer.projectionSurface.x and y >= renderer.projectionSurface.y and x <= renderer.projectionSurface.x2 and y <= renderer.projectionSurface.y2 then
+	if
+		x >= renderer.projectionSurface.x and
+		x <= renderer.projectionSurface.x2 and
+		y >= renderer.projectionSurface.y and
+		y <= renderer.projectionSurface.y2 and
+		pixelDepthValue >= 1 and
+		pixelDepthValue <= renderer.projectionSurface.z2
+	then
 		if pixelDepthValue < renderer.depthBuffer[y][x] then
 			renderer.depthBuffer[y][x] = pixelDepthValue
 			buffer.semiPixelRawSet(buffer.getBufferIndexByCoordinates(x, math.ceil(y / 2)), pixelColor, y % 2 == 0)
@@ -132,34 +157,7 @@ function renderer.renderTexturedTriangle(vertices, texture)
 
 end
 
-function renderer.renderTriangleObject(vector3Vertex1, vector3Vertex2, vector3Vertex3, renderMode, material)
-	if renderMode == OCGL.renderModes.material then
-		if material.type == OCGL.materialTypes.solid then
-			renderer.renderFilledTriangle(
-				{
-					OCGL.newVector3(vector3Vertex1[1], math.floor(vector3Vertex1[2]), vector3Vertex1[3]),
-					OCGL.newVector3(vector3Vertex2[1], math.floor(vector3Vertex2[2]), vector3Vertex2[3]),
-					OCGL.newVector3(vector3Vertex3[1], math.floor(vector3Vertex3[2]), vector3Vertex3[3])
-				},
-				material.color
-			)
-		else
-			error("Material type " .. tostring(material.type) .. " doesn't supported for rendering triangles")
-		end
-	elseif renderMode == OCGL.renderModes.wireframe then
-		renderer.renderLine(math.floor(vector3Vertex1[1]), math.floor(vector3Vertex1[2]), vector3Vertex1[3], math.floor(vector3Vertex2[1]), math.floor(vector3Vertex2[2]), vector3Vertex2[3], OCGL.colors.wireframe)
-		renderer.renderLine(math.floor(vector3Vertex2[1]), math.floor(vector3Vertex2[2]), vector3Vertex2[3], math.floor(vector3Vertex3[1]), math.floor(vector3Vertex3[2]), vector3Vertex3[3], OCGL.colors.wireframe)
-		renderer.renderLine(math.floor(vector3Vertex1[1]), math.floor(vector3Vertex1[2]), vector3Vertex1[3], math.floor(vector3Vertex3[1]), math.floor(vector3Vertex3[2]), vector3Vertex3[3], OCGL.colors.wireframe)
-	elseif renderMode == OCGL.renderModes.vertices then
-		renderer.renderDot(vector3Vertex1, OCGL.colors.wireframe)
-		renderer.renderDot(vector3Vertex2, OCGL.colors.wireframe)
-		renderer.renderDot(vector3Vertex3, OCGL.colors.wireframe)
-	else
-		error("Rendermode enum " .. tostring(renderMode) .. " doesn't supported for rendering triangles")
-	end
-end
-
--------------------------------------------------------- Mesh render --------------------------------------------------------
+-------------------------------------------------------- Mesh Object Rendering --------------------------------------------------------
 
 function renderer.renderMesh(mesh, renderMode)
 	for triangleIndex = 1, #mesh.triangles do
@@ -178,48 +176,7 @@ function renderer.renderMesh(mesh, renderMode)
 		-- end
 	end
 
-	--Рендерим локальные оси
-	-- if mesh.showPivotPoint then
-	-- 	local scale = 30
-	-- 	renderer.renderLine(
-	-- 		mesh.pivotPoint.position,
-	-- 		OCGL.newVector3(mesh.pivotPoint.position[1] + mesh.pivotPoint.axis[1][1] * scale, mesh.pivotPoint.position[2] + mesh.pivotPoint.axis[1][2] * scale, mesh.pivotPoint.position[3] + mesh.pivotPoint.axis[1][3] * scale),
-	-- 		OCGL.colors.axis.x
-	-- 	)
-	-- 	renderer.renderLine(
-	-- 		mesh.pivotPoint.position,
-	-- 		OCGL.newVector3(mesh.pivotPoint.position[1] + mesh.pivotPoint.axis[2][1] * scale, mesh.pivotPoint.position[2] + mesh.pivotPoint.axis[2][2] * scale, mesh.pivotPoint.position[3] + mesh.pivotPoint.axis[2][3] * scale),
-	-- 		OCGL.colors.axis.y
-	-- 	)
-	-- 	renderer.renderLine(
-	-- 		mesh.pivotPoint.position,
-	-- 		OCGL.newVector3(mesh.pivotPoint.position[1] + mesh.pivotPoint.axis[3][1] * scale, mesh.pivotPoint.position[2] + mesh.pivotPoint.axis[3][2] * scale, mesh.pivotPoint.position[3] + mesh.pivotPoint.axis[3][3] * scale),
-	-- 		OCGL.colors.axis.z
-	-- 	)
-	-- end
-
 	return mesh
-end
-
--------------------------------------------------------- Line object render --------------------------------------------------------
-
-function renderer.renderLineObject(line, renderMode)
-	if renderMode == OCGL.renderModes.vertices then
-		renderer.renderDot(line.verticesMatrix[1], line.color)
-		renderer.renderDot(line.verticesMatrix[2], line.color)
-	else
-		renderer.renderLine(
-			math.floor(line.verticesMatrix[1][1]),
-			math.floor(line.verticesMatrix[1][2]),
-			line.verticesMatrix[1][3],
-			math.floor(line.verticesMatrix[2][1]),
-			math.floor(line.verticesMatrix[2][2]),
-			line.verticesMatrix[2][3],
-			line.color
-		)
-	-- else
-	-- 	error("Rendermode enum " .. tostring(renderMode) .. " doesn't supported for rendering lines")
-	end
 end
 
 -------------------------------------------------------- FPS counter overlay render --------------------------------------------------------
@@ -246,12 +203,6 @@ local function drawSegments(x, y, segments, color)
 	end
 end
 
---   1
--- 6   2
---   7
--- 5   3
---   4
-
 function renderer.renderFPSCounter(x, y, renderMethod, color)
 	local numbers = {
 		["0"] = { 1, 2, 3, 4, 5, 6 },
@@ -273,6 +224,8 @@ function renderer.renderFPSCounter(x, y, renderMethod, color)
 	renderMethod()
 	local fps = tostring(math.ceil(1 / (os.clock() - oldClock) / 10))
 
+	-- buffer.text(1, 1, 0xFFFFFF, "FPS: " .. os.clock() - oldClock)
+
 	for i = 1, #fps do
 		drawSegments(x, y, numbers[fps:sub(i, i)], color)
 		x = x + 4
@@ -281,31 +234,9 @@ function renderer.renderFPSCounter(x, y, renderMethod, color)
 	return x - 3
 end
 
-------------------------------------------------------------------------------------------------------------------------
 
--- buffer.clear(0x0)
--- for i = 1, 10 do
--- 	renderer.renderFilledTriangle(
--- 		{
--- 			-- { i + 40, i + 40 },
--- 			-- { i + 3, i + 3 },
--- 			-- { i + 30, i + 60 },
--- 			{math.random(1, buffer.screen.width), math.random(1, buffer.screen.height * 2)},
--- 			{math.random(1, buffer.screen.width), math.random(1, buffer.screen.height * 2)},
--- 			{math.random(1, buffer.screen.width), math.random(1, buffer.screen.height * 2)},
--- 		},
--- 		math.random(0x0, 0xFFFFFF)
--- 	)
--- end
--- buffer.draw(true)
--- while true do ecs.error(event.pull("touch")) end
 
 ------------------------------------------------------------------------------------------------------------------------
 
 return renderer
-
-
-
-
-
 
