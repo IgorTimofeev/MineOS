@@ -285,7 +285,7 @@
     url="IgorTimofeev/OpenComputers/master/lib/internet.lua",
     type="Library",
     preLoadFile=true,
-    version=1.0,
+    version=1.01,
   },
   {
     name="MineOS/System/OS/EFI.lua",
@@ -465,6 +465,18 @@
     version=1.0,
   },
   {
+    name="bin/wget.lua",
+    url="IgorTimofeev/OpenComputers/master/Applications/wget.lua",
+    type="Script",
+    version=1.0,
+  },
+  {
+    name="bin/pastebin.lua",
+    url="IgorTimofeev/OpenComputers/master/Applications/pastebin.lua",
+    type="Script",
+    version=1.0,
+  },
+  {
     name="bin/get.lua",
     url="IgorTimofeev/OpenComputers/master/Applications/get.lua",
     type="Script",
@@ -474,13 +486,6 @@
     name="bin/convertImage.lua",
     url="IgorTimofeev/OpenComputers/master/Applications/convertImage.lua",
     type="Script",
-    version=1.0,
-  },
-  {
-    name="bin/event.lua",
-    url="IgorTimofeev/OpenComputers/master/Applications/event.lua",
-    type="Script",
-    forceDownload=true,
     version=1.0,
   },
   {

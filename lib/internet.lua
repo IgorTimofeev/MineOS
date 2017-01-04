@@ -2,14 +2,14 @@
 ----------------------------------------- Libraries -----------------------------------------
 
 local fs = require("filesystem")
-local internetComponent = require("component").internet
+local component = require("component")
 local internet = {}
 
 ----------------------------------------- Main methods -----------------------------------------
 
 --Адекватный запрос к веб-серверу вместо стандартного Internet API, бросающего stderr, когда ему вздумается
 function internet.request(url, skipReadingResponse)
-	local pcallSuccess, requestHandle, requestReason = pcall(internetComponent.request, url)
+	local pcallSuccess, requestHandle, requestReason = pcall(component.internet.request, url)
 	
 	-- Если требуется чтение инфы из соединения, то читаем
 	if not skipReadingResponse then
@@ -38,32 +38,44 @@ function internet.request(url, skipReadingResponse)
 					end
 				end
 			else
-				return false, requestReason
+				return false, "Invalid URL addess"
 			end
 		else
-			return false, reason
+			return false, "Usage: internet.request(string url)"
 		end
 	end
 end
 
---Загрузка файла с инета
-function internet.downloadFile(url, path)
-	local success, response = internet.request(url)
+function internet.runScript(url)
+	local success, result = internet.request(url)
 	if success then
-		fs.makeDirectory(fs.path(path) or "")
-		local file = io.open(path, "w")
-		file:write(response)
-		file:close()
+		local loadSucces, loadReason = load(result)
+		if loadSucces then
+			local xpcallSuccess, xpcallSuccessReason = xpcall(loadSucces, debug.traceback)
+			if not xpcallSuccess then
+				error("Failed to run script: " .. tostring(xpcallSuccessReason))
+			end
+		else
+			error("Failed to run script: " .. tostring(loadReason))
+		end
 	else
-		error("Could not connect to to URL address \"" .. url .. "\", the reason is \"" .. response .. "\"")
-		return
+		error("Could not connect to to URL address \"" .. tostring(url) .. "\", the reason is \"" .. tostring(result) .. "\"")
 	end
 end
 
+function internet.downloadFile(url, path)
+	local success, result = internet.request(url)
+	if success then
+		fs.makeDirectory(fs.path(path) or "")
+		local file = io.open(path, "w")
+		file:write(result)
+		file:close()
+	else
+		error("Could not connect to to URL address \"" .. tostring(url) .. "\", the reason is \"" .. tostring(result) .. "\"")
+	end
+end
 
 -------------------------------------------------------------------------------------------
-
--- print(internet.request("http://VK.com", true))
 
 return internet
 
