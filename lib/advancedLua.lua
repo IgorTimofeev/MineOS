@@ -10,9 +10,9 @@
 
 ]]
 
-_G.filesystem = _G.filesystem or require("filesystem")
-_G.unicode = _G.unicode or require("unicode")
-_G.bit32 = _G.bit32 or require("bit32")
+local filesystem = require("filesystem")
+local unicode = require("unicode")
+local bit32 = require("bit32")
 
 -------------------------------------------------- System extensions --------------------------------------------------
 
@@ -76,7 +76,11 @@ bit32.numberFromByteArray = bit32.byteArrayToNumber
 -------------------------------------------------- Math extensions --------------------------------------------------
 
 function math.round(num) 
-	if num >= 0 then return math.floor(num + 0.5) else return math.ceil(num - 0.5) end
+	if num >= 0 then
+		return math.floor(num + 0.5)
+	else
+		return math.ceil(num - 0.5)
+	end
 end
 
 function math.roundToDecimalPlaces(num, decimalPlaces)
@@ -85,16 +89,29 @@ function math.roundToDecimalPlaces(num, decimalPlaces)
 end
 
 function math.getDigitCount(num)
-	local count = 0
-	while number > 0 do
-		number = math.floor(number / 10)
-		count = count + 1
-	end
-	return count
+	return num == 0 and 1 or math.ceil(math.log(num + 1, 10))
 end
 
 function math.doubleToString(num, digitCount)
 	return string.format("%." .. (digitCount or 1) .. "f", num)
+end
+
+function math.shortenNumber(number, digitCount)
+	local shortcuts = {
+		"K",
+		"M",
+		"B",
+		"T"
+	}
+
+	local index = math.floor(math.log(number, 1000))
+	if number < 1000 then
+		return number
+	elseif index > #shortcuts then
+		index = #shortcuts
+	end
+
+	return math.roundToDecimalPlaces(number / 1000 ^ index, digitCount) .. shortcuts[index]
 end
 
 -------------------------------------------------- Table extensions --------------------------------------------------

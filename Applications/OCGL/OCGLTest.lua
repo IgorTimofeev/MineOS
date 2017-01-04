@@ -21,16 +21,23 @@ local renderer = require("OpenComputersGL/Renderer")
 local OCGL = require("OpenComputersGL/Main")
 local wildCatEngine = require("WildCatEngine/Main")
 
+wildCatEngine.intro(vector.newVector3(0, 0, 0), 20)
+
 -------------------------------------------------------- Constants --------------------------------------------------------
 
-local autoRotate, showGrid, renderMode = false, true, renderer.renderModes.material 
+local autoRotate, showGrid = false, true
 local rotationAngle = math.rad(5)
-local translationOffset = 2
-local backgroundColor = 0x222222
+local translationOffset = 4
 
 -------------------------------------------------------- Object group --------------------------------------------------------
 
-local scene = wildCatEngine.newScene(vector.newVector3(0, 0, 0))
+local scene = wildCatEngine.newScene(0x222222)
+local size = 40
+
+-- scene:addObject(wildCatEngine.newPolyCatMesh(vector.newVector3(0, 0, 0), 20))
+-- scene:addObject(wildCatEngine.newFloatingText(vector.newVector3(0, -23, 0), 0xEEEEEE, "Powered by PolyCat Engine™"))
+
+
 -- scene:addObjects(wildCatEngine.newGridLines(
 -- 	vector.newVector3(0, 0, 0),
 -- 	50,
@@ -67,11 +74,10 @@ end
 
 
 local function move(x, y, z)
-	local moveMatrix = {{-x, -y, -z}}
-	moveMatrix = matrix.multiply(moveMatrix, scene.camera.rotationMatrix)[1]
-	scene.camera:translate(moveMatrix[1], moveMatrix[2], moveMatrix[3])
-
-	-- scene.camera:translate(x, y, z)
+	-- local moveMatrix = {{-x, -y, -z}}
+	-- moveMatrix = matrix.multiply(moveMatrix, scene.camera.rotationMatrix)[1]
+	-- scene.camera:translate(moveMatrix[1], moveMatrix[2], moveMatrix[3], 0, 0, 0)
+	scene.camera:translate(x, y, z)
 end
 
 local controls = {
@@ -88,15 +94,15 @@ local controls = {
 	[12 ] = function()  end,
 	-- G, X
 	[34 ] = function() scene.showGrid = not scene.showGrid end,
-	[45 ] = function() renderMode = renderMode + 1; if renderMode > 3 then renderMode = 1 end end,
+	[45 ] = function() scene.renderMode = scene.renderMode + 1; if scene.renderMode > 3 then scene.renderMode = 1 end end,
 	-- WASD
-	[17 ] = function() move(0, 0, 2) end,
-	[31 ] = function() move(0, 0, -2) end,
-	[30 ] = function() move(2, 0, 0) end,
-	[32 ] = function() move(-2, 0, 0) end,
+	[17 ] = function() move(0, 0, translationOffset) end,
+	[31 ] = function() move(0, 0, -translationOffset) end,
+	[30 ] = function() move(translationOffset, 0, 0) end,
+	[32 ] = function() move(-translationOffset, 0, 0) end,
 	--RSHIFT, SPACE
-	[42 ] = function() move(0, 2, 0) end,
-	[57 ] = function() move(0, -2, 0) end,
+	[42 ] = function() move(0, translationOffset, 0) end,
+	[57 ] = function() move(0, -translationOffset, 0) end,
 	-- Backspace, R, Enter
 	[14 ] = function() os.exit() end,
 	[19 ] = function() autoRotate = not autoRotate end,
@@ -106,16 +112,21 @@ local controls = {
 -------------------------------------------------------- Main shit --------------------------------------------------------
 
 buffer.start()
-local progressBar = GUI.progressBar(buffer.screen.width - 32, 2, 30, 0xFFFF00, 0xFFFFFF, 0xFFFFFF, 1, true, true, "RAM usage: ", "%")
 
 local function renderMethod()
-	scene:render(0x0, renderMode)
+	scene:render()
 
+	local y = 6
 	local total = computer.totalMemory()
-	progressBar.value = math.ceil((total - computer.freeMemory()) / total * 100)
-	progressBar:draw()
-	buffer.text(2, 10, 0xFFFFFF, "RenderMode: " .. renderMode)
-	buffer.text(2, 12, 0xFFFFFF, "СameraPosition: " .. string.format("%.2f", scene.camera.position[1]) .. " x " .. string.format("%.2f", scene.camera.position[2]) .. " x " .. string.format("%.2f", scene.camera.position[3]))
+	buffer.text(2, y, 0xFFFFFF, "RenderMode: " .. scene.renderMode); y = y + 2
+	buffer.text(2, y, 0xFFFFFF, "CameraFOV: " .. string.format("%.2f", math.deg(scene.camera.FOV))); y = y + 1
+	buffer.text(2, y, 0xFFFFFF, "СameraPosition: " .. string.format("%.2f", scene.camera.position[1]) .. " x " .. string.format("%.2f", scene.camera.position[2]) .. " x " .. string.format("%.2f", scene.camera.position[3])); y = y + 1
+	buffer.text(2, y, 0xFFFFFF, "СameraRotation: " .. string.format("%.2f", math.deg(scene.camera.rotation[1])) .. " x " .. string.format("%.2f", math.deg(scene.camera.rotation[2])) .. " x " .. string.format("%.2f", math.deg(scene.camera.rotation[3]))); y = y + 1
+	buffer.text(2, y, 0xFFFFFF, "CameraNearClippingSurface: " .. string.format("%.2f", scene.camera.nearClippingSurface)); y = y + 1
+	buffer.text(2, y, 0xFFFFFF, "CameraFarClippingSurface: " .. string.format("%.2f", scene.camera.farClippingSurface)); y = y + 1
+	buffer.text(2, y, 0xFFFFFF, "CameraProjectionSurface: " .. string.format("%.2f", scene.camera.projectionSurface)); y = y + 1
+	buffer.text(2, y, 0xFFFFFF, "CameraPerspectiveProjection: " .. tostring(scene.camera.projectionEnabled)); y = y + 3
+	GUI.progressBar(2, y, 30, 0xFFFF00, 0xFFFFFF, 0xFFFFFF, math.ceil((total - computer.freeMemory()) / total * 100), true, true, "RAM usage: ", "%"):draw(); y = y + 3
 end
 
 while true do
@@ -123,6 +134,16 @@ while true do
 
 	if e[1] == "key_down" then
 		if controls[e[4]] then controls[e[4]]() end
+	elseif e[1] == "scroll" then
+		if e[5] == 1 then
+			if scene.camera.FOV < math.rad(170) then
+				scene.camera:setFOV(scene.camera.FOV + math.rad(5))
+			end
+		else
+			if scene.camera.FOV > math.rad(5) then
+				scene.camera:setFOV(scene.camera.FOV - math.rad(5))
+			end
+		end
 	elseif e[1] == "touch" then
 		local mesh, triangleIndex = OCGL.triangleRaycast(
 			vector.newVector3(e[3], e[4] * 2, -1000),

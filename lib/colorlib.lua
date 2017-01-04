@@ -5,15 +5,8 @@ local function isNan(x)
   return x~=x
 end
 
---RGB model
 function colorlib.HEXtoRGB(color)
-  color = math.floor(color)
-
-  local rr = bit32.rshift( color, 16 )
-  local gg = bit32.rshift( bit32.band(color, 0x00ff00), 8 )
-  local bb = bit32.band(color, 0x0000ff)
-
-  return rr, gg, bb
+  return bit32.rshift(color, 16), bit32.band(bit32.rshift(color, 8), 0xFF), bit32.band(color, 0xFF)
 end
 
 function colorlib.RGBtoHEX(rr, gg, bb)
@@ -33,13 +26,13 @@ function colorlib.RGBtoHSB(rr, gg, bb)
   if ( max == bb ) then h = 60*(rr-gg)/delta + 240 end
 
   local s = 0
-  if ( max ~= 0 ) then s = 1-(min/max) end
+  if ( max ~= 0 ) then s = 1 - (min / max) end
 
-  local b = max*100/255
+  local b = max * 100 / 255
 
   if isNan(h) then h = 0 end
 
-  return h, s*100, b
+  return h, s * 100, b
 end
 
 function colorlib.HSBtoRGB(h, s, v)
@@ -83,28 +76,29 @@ end
 
 --Смешивание двух цветов на основе альфа-канала второго
 function colorlib.alphaBlend(firstColor, secondColor, alphaChannel)
-  local invertedAlphaChannelDividedBy255 = (255 - alphaChannel) / 255
   alphaChannel = alphaChannel / 255
+  local invertedAlphaChannel = 1 - alphaChannel
+  
   
   local firstColorRed, firstColorGreen, firstColorBlue = colorlib.HEXtoRGB(firstColor)
   local secondColorRed, secondColorGreen, secondColorBlue = colorlib.HEXtoRGB(secondColor)
 
   return colorlib.RGBtoHEX(
-    secondColorRed * invertedAlphaChannelDividedBy255 + firstColorRed * alphaChannel,
-    secondColorGreen * invertedAlphaChannelDividedBy255 + firstColorGreen * alphaChannel,
-    secondColorBlue * invertedAlphaChannelDividedBy255 + firstColorBlue * alphaChannel
+    secondColorRed * invertedAlphaChannel + firstColorRed * alphaChannel,
+    secondColorGreen * invertedAlphaChannel + firstColorGreen * alphaChannel,
+    secondColorBlue * invertedAlphaChannel + firstColorBlue * alphaChannel
   )
 end
 
 --Получение среднего цвета между перечисленными. К примеру, между черным и белым выдаст серый.
-function colorlib.getAverageColor(...)
-  local colors = {...}
+function colorlib.getAverageColor(colors)
+  local sColors = #colors
   local averageRed, averageGreen, averageBlue = 0, 0, 0
-  for i = 1, #colors do
+  for i = 1, sColors do
     local r, g, b = colorlib.HEXtoRGB(colors[i])
     averageRed, averageGreen, averageBlue = averageRed + r, averageGreen + g, averageBlue + b
   end
-  return colorlib.RGBtoHEX(math.floor(averageRed / #colors), math.floor(averageGreen / #colors), math.floor(averageBlue / #colors))
+  return colorlib.RGBtoHEX(math.floor(averageRed / sColors), math.floor(averageGreen / sColors), math.floor(averageBlue / sColors))
 end
 
 -----------------------------------------------------------------------------------------------------------------------

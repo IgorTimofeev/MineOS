@@ -1,14 +1,10 @@
 
 ------------------------------------------------- Libraries -------------------------------------------------
 
-local libraries = {
-	component = "component",
-	unicode = "unicode",
-	colorlib = "colorlib",
-	image = "image",
-}
-
-for library in pairs(libraries) do if not _G[library] then _G[library] = require(libraries[library]) end end; libraries = nil
+local component = require("component")
+local unicode = require("unicode")
+local colorlib = require("colorlib")
+local image = require("image")
 
 ------------------------------------------------- Constants -------------------------------------------------
 
@@ -388,19 +384,27 @@ function buffer.semiPixelRawSet(index, color, yPercentTwoEqualsZero)
 	if yPercentTwoEqualsZero then
 		if symbol == upperPixel then
 			if color == foreground then
-				buffer.screen.new[index], buffer.screen.new[indexPlus2] = color, bothPixel
+				buffer.screen.new[index], buffer.screen.new[indexPlus1], buffer.screen.new[indexPlus2] = color, foreground, bothPixel
 			else
-				buffer.screen.new[index] = color
+				buffer.screen.new[index], buffer.screen.new[indexPlus1], buffer.screen.new[indexPlus2] = color, foreground, symbol
+			end
+		elseif symbol == bothPixel then
+			if color ~= background then
+				buffer.screen.new[index], buffer.screen.new[indexPlus1], buffer.screen.new[indexPlus2] = background, color, lowerPixel
 			end
 		else
-			buffer.screen.new[indexPlus1], buffer.screen.new[indexPlus2] = color, lowerPixel
+			buffer.screen.new[index], buffer.screen.new[indexPlus1], buffer.screen.new[indexPlus2] = background, color, lowerPixel
 		end
 	else
 		if symbol == lowerPixel then
 			if color == foreground then
-				buffer.screen.new[index], buffer.screen.new[indexPlus2] = color, bothPixel
+				buffer.screen.new[index], buffer.screen.new[indexPlus1], buffer.screen.new[indexPlus2] = color, foreground, bothPixel
 			else
-				buffer.screen.new[index] = color
+				buffer.screen.new[index], buffer.screen.new[indexPlus1], buffer.screen.new[indexPlus2] = color, foreground, symbol
+			end
+		elseif symbol == bothPixel then
+			if color ~= background then
+				buffer.screen.new[index], buffer.screen.new[indexPlus1], buffer.screen.new[indexPlus2] = background, color, upperPixel
 			end
 		else
 			buffer.screen.new[index], buffer.screen.new[indexPlus1], buffer.screen.new[indexPlus2] = background, color, upperPixel
@@ -535,6 +539,11 @@ end
 
 --Функция группировки изменений и их отрисовки на экран
 function buffer.draw(force)
+	-- if buffer.drawDebug then
+	-- 	gpu.setBackground(0x0)
+	-- 	gpu.setForeground(0x444444)
+	-- 	gpu.fill(1, 1, buffer.screen.width, buffer.screen.height, "#")
+	-- end
 	--Необходимые переменные, дабы не создавать их в цикле и не генерировать конструкторы
 	local somethingIsChanged, index, indexPlus1, indexPlus2, sameCharArray
 	--Массив третьего буфера, содержащий в себе измененные пиксели
@@ -605,12 +614,16 @@ function buffer.draw(force)
 			if currentBackground ~= background then gpu.setBackground(background); currentBackground = background end
 			for i = 1, #buffer.screen.changes[foreground][background], 3 do
 				gpu.set(buffer.screen.changes[foreground][background][i], buffer.screen.changes[foreground][background][i + 1], buffer.screen.changes[foreground][background][i + 2])
+				-- if buffer.drawDebug then
+					-- ecs.wait()
+				-- end
 			end
 		end
 	end
 
 	--Очищаем память, ибо на кой хер нам хранить третий буфер
 	buffer.screen.changes = nil
+	-- buffer.drawDebug = nil
 end
 
 ------------------------------------------------------------------------------------------------------

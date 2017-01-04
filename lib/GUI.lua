@@ -1,14 +1,10 @@
 
 ----------------------------------------- Libraries -----------------------------------------
 
-local libraries = {
-	advancedLua = "advancedLua",
-	buffer = "doubleBuffering",
-	unicode = "unicode",
-	event = "event",
-}
-
-for library in pairs(libraries) do if not _G[library] then _G[library] = require(libraries[library]) end end; libraries = nil
+require("advancedLua")
+local buffer = require("doubleBuffering")
+local unicode = require("unicode")
+local event = require("event")
 
 ----------------------------------------- Core constants -----------------------------------------
 

@@ -78,16 +78,11 @@
 
 --------------------------------------- Подгрузка библиотек --------------------------------------------------------------
 
--- Адаптивная загрузка необходимых библиотек и компонентов
-local libraries = {
-	component = "component",
-	unicode = "unicode",
-	fs = "filesystem",
-	colorlib = "colorlib",
-	bit32 = "bit32",
-}
-
-for library in pairs(libraries) do if not _G[library] then _G[library] = require(libraries[library]) end end; libraries = nil
+local component = require("component")
+local unicode = require("unicode")
+local fs = require("filesystem")
+local colorlib = require("colorlib")
+local bit32 = require("bit32")
 
 local image = {}
 

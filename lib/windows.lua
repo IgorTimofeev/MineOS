@@ -1,16 +1,13 @@
 
 ----------------------------------------- Libraries -----------------------------------------
 
-_G.GUI, package.loaded.GUI = nil, nil
+-- _G.GUI, package.loaded.GUI = nil, nil
 
-local libraries = {
-	computer = "computer",
-	doubleBuffering = "doubleBuffering",
-	GUI = "GUI",
-	unicode = "unicode",
-}
-
-for library in pairs(libraries) do if not _G[library] then _G[library] = require(libraries[library]) end end; libraries = nil
+local computer = require("computer")
+local buffer = require("doubleBuffering")
+local GUI = require("GUI")
+local unicode = require("unicode")
+local event = require("event")
 
 ----------------------------------------- Main variables -----------------------------------------
 
