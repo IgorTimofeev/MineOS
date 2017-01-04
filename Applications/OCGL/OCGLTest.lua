@@ -11,6 +11,7 @@ package.loaded["OpenComputersGL/Renderer"] = nil
 package.loaded["WildCatEngine/Main"] = nil
 package.loaded["WildCatEngine/PostProcessing"] = nil
 
+local computer = require("computer")
 local buffer = require("doubleBuffering")
 local event = require("event")
 local GUI = require("GUI")
