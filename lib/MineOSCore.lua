@@ -246,6 +246,7 @@ function MineOSCore.analyseIconFormat(iconObject)
 
 			iconObject.iconImage.image = shortcutIconObject.iconImage.image
 			iconObject.launch = shortcutIconObject.launch
+			iconObject.isDirectory = shortcutIconObject.isDirectory
 
 			shortcutIconObject = nil
 		elseif iconObject.format == ".cfg" or iconObject.format == ".config" then
@@ -605,6 +606,8 @@ function MineOSCore.iconLeftClick(iconObject, eventData)
 		if iconObject.format == ".app" then
 			iconObject.launch()
 			computer.pushSignal("MineOSCore", "updateFileList")
+		elseif iconObject.isShortcut then
+			computer.pushSignal("MineOSCore", "changeWorkpath", iconObject.shortcutPath)
 		else
 			computer.pushSignal("MineOSCore", "changeWorkpath", iconObject.path)
 		end
@@ -629,6 +632,18 @@ function MineOSCore.iconRightClick(icon, eventData)
 				{MineOSCore.localization.contextMenuCreateShortcut, icon.format == ".lnk"},
 				-- "-",
 				-- {MineOSCore.localization.contextMenuUploadToPastebin, true},
+				"-",
+				{MineOSCore.localization.contextMenuAddToDock},
+				{MineOSCore.localization.contextMenuDelete}
+			):show()
+		elseif icon.isShortcut then
+			action = GUI.contextMenu(eventData[3], eventData[4],
+				{MineOSCore.localization.contextMenuEdit},
+				{MineOSCore.localization.contextMenuShowContainingFolder},
+				"-",
+				{MineOSCore.localization.contextMenuCut},
+				{MineOSCore.localization.contextMenuCopy},
+				{MineOSCore.localization.contextMenuRename},
 				"-",
 				{MineOSCore.localization.contextMenuAddToDock},
 				{MineOSCore.localization.contextMenuDelete}
@@ -700,6 +715,8 @@ function MineOSCore.iconRightClick(icon, eventData)
 		ecs.prepareToExit()
 		MineOSCore.safeLaunch("/bin/edit.lua", icon.path)
 		computer.pushSignal("MineOSCore", "updateFileListAndBufferTrueRedraw")
+	elseif action == MineOSCore.localization.contextMenuShowContainingFolder then
+		computer.pushSignal("MineOSCore", "changeWorkpath", fs.path(icon.shortcutPath))
 	elseif action == MineOSCore.localization.contextMenuEditInPhotoshop then
 		MineOSCore.safeLaunch("MineOS/Applications/Photoshop.app/Photoshop.lua", "open", icon.path)
 		computer.pushSignal("MineOSCore", "updateFileList")
