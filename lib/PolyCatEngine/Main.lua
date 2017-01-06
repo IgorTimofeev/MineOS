@@ -7,12 +7,12 @@ local matrix = require("matrix")
 local OCGL = require("OpenComputersGL/Main")
 local renderer = require("OpenComputersGL/Renderer")
 local materials = require("OpenComputersGL/Materials")
-local postProcessing = require("WildCatEngine/PostProcessing")
-local wildCatEngine = {}
+local postProcessing = require("PolyCatEngine/PostProcessing")
+local polyCatEngine = {}
 
 -------------------------------------------------------- Universal object methods --------------------------------------------------------
 
-function wildCatEngine.newPivotPoint(vector3Position)
+function polyCatEngine.newPivotPoint(vector3Position)
 	return {
 		position = vector3Position,
 		axis = {
@@ -41,10 +41,10 @@ local function pushMeshToRenderQueue(mesh)
 end
 
 
-function wildCatEngine.newMesh(vector3Position, vertices, triangles, material)
+function polyCatEngine.newMesh(vector3Position, vertices, triangles, material)
 	local mesh = {}
 
-	-- mesh.pivotPoint = wildCatEngine.newPivotPoint(vector3Position)
+	-- mesh.pivotPoint = polyCatEngine.newPivotPoint(vector3Position)
 	mesh.vertices = vertices
 	for vertexIndex = 1, #mesh.vertices do
 		mesh.vertices[vertexIndex][1], mesh.vertices[vertexIndex][2], mesh.vertices[vertexIndex][3] = mesh.vertices[vertexIndex][1] + vector3Position[1], mesh.vertices[vertexIndex][2] + vector3Position[2], mesh.vertices[vertexIndex][3] + vector3Position[3]
@@ -66,10 +66,10 @@ local function pushLineToRenderQueue(line)
 	)
 end
 
-function wildCatEngine.newLine(vector3Position, vector3Vertex1, vector3Vertex2, color)
+function polyCatEngine.newLine(vector3Position, vector3Vertex1, vector3Vertex2, color)
 	local line = {}
 
-	-- line.pivotPoint = wildCatEngine.newPivotPoint(vector3Position)
+	-- line.pivotPoint = polyCatEngine.newPivotPoint(vector3Position)
 	line.vertices = { vector3Vertex1, vector3Vertex2 }
 	line.color = color
 	line.pushToRenderQueue = pushLineToRenderQueue
@@ -87,7 +87,7 @@ local function pushFloatingTextToRenderQueue(floatingText)
 	)
 end
 
-function wildCatEngine.newFloatingText(vector3Position, color, text)
+function polyCatEngine.newFloatingText(vector3Position, color, text)
 	local floatingText = {}
 
 	floatingText.position = vector3Position
@@ -100,9 +100,9 @@ end
 
 -------------------------------------------------------- Plane object --------------------------------------------------------
 
-function wildCatEngine.newPlane(vector3Position, width, height, material)
+function polyCatEngine.newPlane(vector3Position, width, height, material)
 	local halfWidth, halfHeight = width / 2, height / 2
-	return wildCatEngine.newMesh(
+	return polyCatEngine.newMesh(
 		vector3Position,
 		{
 			vector.newVector3(-halfWidth, 0, -halfHeight),
@@ -132,9 +132,9 @@ end
 	1######4	4######5	5######8	8######1	2######3	1######4
 ]]
 
-function wildCatEngine.newCube(vector3Position, size, material)
+function polyCatEngine.newCube(vector3Position, size, material)
 	local halfSize = size / 2
-	return wildCatEngine.newMesh(
+	return polyCatEngine.newMesh(
 		vector3Position,
 		{
 			-- (1-2-3-4)
@@ -174,11 +174,11 @@ end
 
 -------------------------------------------------------- Grid lines --------------------------------------------------------
 
-function wildCatEngine.newGridLines(vector3Position, axisRange, gridRange, gridRangeStep)
+function polyCatEngine.newGridLines(vector3Position, axisRange, gridRange, gridRangeStep)
 	local objects = {}
 	-- Grid
 	for x = -gridRange, gridRange, gridRangeStep do
-		table.insert(objects, 1, wildCatEngine.newLine(
+		table.insert(objects, 1, polyCatEngine.newLine(
 			vector.newVector3(vector3Position[1] + x, vector3Position[2], vector3Position[3]),
 			vector.newVector3(0, 0, -gridRange),
 			vector.newVector3(0, 0, gridRange),
@@ -186,7 +186,7 @@ function wildCatEngine.newGridLines(vector3Position, axisRange, gridRange, gridR
 		))
 	end
 	for z = -gridRange, gridRange, gridRangeStep do
-		table.insert(objects, 1, wildCatEngine.newLine(
+		table.insert(objects, 1, polyCatEngine.newLine(
 			vector.newVector3(vector3Position[1], vector3Position[2], vector3Position[3] + z),
 			vector.newVector3(-gridRange, 0, 0),
 			vector.newVector3(gridRange, 0, 0),
@@ -195,19 +195,19 @@ function wildCatEngine.newGridLines(vector3Position, axisRange, gridRange, gridR
 	end
 
 	-- Axis
-	table.insert(objects, wildCatEngine.newLine(
+	table.insert(objects, polyCatEngine.newLine(
 		vector3Position,
 		vector.newVector3(-axisRange, -1, 0),
 		vector.newVector3(axisRange, -1, 0),
 		renderer.colors.axis.x
 	))
-	table.insert(objects, wildCatEngine.newLine(
+	table.insert(objects, polyCatEngine.newLine(
 		vector3Position,
 		vector.newVector3(0, -axisRange, 0),
 		vector.newVector3(0, axisRange, 0),
 		renderer.colors.axis.y
 	))
-	table.insert(objects, wildCatEngine.newLine(
+	table.insert(objects, polyCatEngine.newLine(
 		vector3Position,
 		vector.newVector3(0, -1, -axisRange),
 		vector.newVector3(0, -1, axisRange),
@@ -264,7 +264,7 @@ local function cameraSetFOV(camera, FOV)
 	return camera
 end
 
-function wildCatEngine.newCamera(vector3Position, FOV, nearClippingSurface, farClippingSurface)
+function polyCatEngine.newCamera(vector3Position, FOV, nearClippingSurface, farClippingSurface)
 	local camera = {}
 
 	camera.projectionEnabled = true
@@ -323,7 +323,7 @@ local function sceneRender(scene)
 	return scene
 end
 
-function wildCatEngine.newScene(backgroundColor)
+function polyCatEngine.newScene(backgroundColor)
 	local scene = {}
 
 	scene.renderMode = renderer.renderModes.material
@@ -334,7 +334,7 @@ function wildCatEngine.newScene(backgroundColor)
 	scene.addObjects = sceneAddObjects
 	scene.render = sceneRender
 
-	scene.camera = wildCatEngine.newCamera(vector.newVector3(0, 0, 0), math.rad(90), 1, 100)
+	scene.camera = polyCatEngine.newCamera(vector.newVector3(0, 0, 0), math.rad(90), 1, 100)
 
 	return scene
 end
@@ -350,7 +350,7 @@ end
 -- end
 
 -- -- В случае попадания лучика этот метод вернет сам треугольник, а также дистанцию до его плоскости
--- function wildCatEngine.triangleRaycast(vector3RayStart, vector3RayEnd)
+-- function polyCatEngine.triangleRaycast(vector3RayStart, vector3RayEnd)
 -- 	local minimalDistance, closestTriangleIndex
 -- 	for triangleIndex = 1, #OCGL.triangles do
 -- 		-- Это вершины треугольника
@@ -408,12 +408,12 @@ end
 -- 	return closestTriangleIndex, minimalDistance
 -- end
 
--- -- function wildCatEngine.sceneRaycast(scene, vector3RayStart, vector3RayEnd)
+-- -- function polyCatEngine.sceneRaycast(scene, vector3RayStart, vector3RayEnd)
 -- -- 	local closestObjectIndex, closestTriangleIndex, minimalDistance
 	
 -- -- 	for objectIndex = 1, #scene.objects do
 -- -- 		if scene.objects[objectIndex].triangles then
--- -- 			local triangleIndex, distance = wildCatEngine.meshRaycast(scene.objects[objectIndex], vector3RayStart, vector3RayEnd)
+-- -- 			local triangleIndex, distance = polyCatEngine.meshRaycast(scene.objects[objectIndex], vector3RayStart, vector3RayEnd)
 -- -- 			if triangleIndex and (not minimalDistance or distance < minimalDistance ) then
 -- -- 				closestObjectIndex, closestTriangleIndex, minimalDistance = objectIndex, triangleIndex, distance
 -- -- 			end
@@ -425,8 +425,8 @@ end
 
 -------------------------------------------------------- Intro --------------------------------------------------------
 
-function wildCatEngine.newPolyCatMesh(vector3Position, size)
-	return wildCatEngine.newMesh(
+function polyCatEngine.newPolyCatMesh(vector3Position, size)
+	return polyCatEngine.newMesh(
 		vector3Position,
 		{
 			vector.newVector3(-1.0 * size, 0.8 * size, 0.3 * size),
@@ -465,11 +465,11 @@ function wildCatEngine.newPolyCatMesh(vector3Position, size)
 	)
 end
 
-function wildCatEngine.intro(vector3Position, size)
+function polyCatEngine.intro(vector3Position, size)
 	local GUI = require("GUI")
-	local scene = wildCatEngine.newScene(0xEEEEEE)
-	scene:addObject(wildCatEngine.newPolyCatMesh(vector3Position, size))
-	scene:addObject(wildCatEngine.newFloatingText(vector.newVector3(vector3Position[1] + 2, vector3Position[2] - size, vector3Position[3] + size * 0.1), 0xBBBBBB, "Powered by PolyCat Engine™"))
+	local scene = polyCatEngine.newScene(0xEEEEEE)
+	scene:addObject(polyCatEngine.newPolyCatMesh(vector3Position, size))
+	scene:addObject(polyCatEngine.newFloatingText(vector.newVector3(vector3Position[1] + 2, vector3Position[2] - size, vector3Position[3] + size * 0.1), 0xBBBBBB, "Powered by PolyCat Engine™"))
 
 	local from, to, speed = -30, 20, 4
 	local transparency, transparencyStep = 0, 100 / math.abs(to - from) * speed
@@ -503,4 +503,4 @@ end
 
 -------------------------------------------------------- Zalupa --------------------------------------------------------
 
-return wildCatEngine
+return polyCatEngine

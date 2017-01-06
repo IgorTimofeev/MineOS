@@ -447,6 +447,48 @@
     type="Library",
     version=1.0,
   },
+  {
+    name="lib/vector.lua",
+    url="IgorTimofeev/OpenComputers/master/lib/vector.lua",
+    type="Library",
+    version=1.0,
+  },
+  {
+    name="lib/matrix.lua",
+    url="IgorTimofeev/OpenComputers/master/lib/matrix.lua",
+    type="Library",
+    version=1.0,
+  },
+  {
+    name="lib/OpenComputersGL/Main.lua",
+    url="IgorTimofeev/OpenComputers/master/lib/OpenComputersGL/Main.lua",
+    type="Library",
+    version=1.0,
+  },
+  {
+    name="lib/OpenComputersGL/Materials.lua",
+    url="IgorTimofeev/OpenComputers/master/lib/OpenComputersGL/Materials.lua",
+    type="Library",
+    version=1.0,
+  },
+  {
+    name="lib/OpenComputersGL/Renderer.lua",
+    url="IgorTimofeev/OpenComputers/master/lib/OpenComputersGL/Renderer.lua",
+    type="Library",
+    version=1.0,
+  },
+  {
+    name="lib/PolyCatEngine/Main.lua",
+    url="IgorTimofeev/OpenComputers/master/lib/PolyCatEngine/Main.lua",
+    type="Library",
+    version=1.0,
+  },
+  {
+    name="lib/PolyCatEngine/Main.lua",
+    url="IgorTimofeev/OpenComputers/master/lib/PolyCatEngine/PostProcessing.lua",
+    type="Library",
+    version=1.0,
+  },
 
   ----------------------------------------------------- Скрипты и дополнения к ним --------------------------------------------------------------------------
 
@@ -521,6 +563,14 @@
     version=1.0,
   },
   ----------------------------------------------------- Приложения --------------------------------------------------------------------------
+  {
+    name="MineOS/Applications/OCGLTest",
+    url="IgorTimofeev/OpenComputers/master/Applications/OCGLTest/OCGLTest.lua",
+    type="Application",
+    icon="IgorTimofeev/OpenComputers/master/Applications/OCGLTest/Icon.pic",
+    createShortcut="desktop",
+    version=1.00,
+  },
   {
     name="MineOS/Applications/GeoScan2",
     url="IgorTimofeev/OpenComputers/master/Applications/GeoScan2/GeoScan2.lua",

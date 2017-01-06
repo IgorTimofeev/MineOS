@@ -8,8 +8,8 @@ package.loaded["matrix"] = nil
 package.loaded["OpenComputersGL/Main"] = nil
 package.loaded["OpenComputersGL/Materials"] = nil
 package.loaded["OpenComputersGL/Renderer"] = nil
-package.loaded["WildCatEngine/Main"] = nil
-package.loaded["WildCatEngine/PostProcessing"] = nil
+package.loaded["PolyCatEngine/Main"] = nil
+package.loaded["PolyCatEngine/PostProcessing"] = nil
 
 local computer = require("computer")
 local buffer = require("doubleBuffering")
@@ -20,9 +20,9 @@ local matrix = require("matrix")
 local materials = require("OpenComputersGL/Materials")
 local renderer = require("OpenComputersGL/Renderer")
 local OCGL = require("OpenComputersGL/Main")
-local wildCatEngine = require("WildCatEngine/Main")
+local polyCatEngine = require("PolyCatEngine/Main")
 
-wildCatEngine.intro(vector.newVector3(0, 0, 0), 20)
+polyCatEngine.intro(vector.newVector3(0, 0, 0), 20)
 
 -------------------------------------------------------- Constants --------------------------------------------------------
 
@@ -32,20 +32,20 @@ local translationOffset = 4
 
 -------------------------------------------------------- Object group --------------------------------------------------------
 
-local scene = wildCatEngine.newScene(0x222222)
+local scene = polyCatEngine.newScene(0x222222)
 local size = 40
 
--- scene:addObject(wildCatEngine.newPolyCatMesh(vector.newVector3(0, 0, 0), 20))
--- scene:addObject(wildCatEngine.newFloatingText(vector.newVector3(0, -23, 0), 0xEEEEEE, "Powered by PolyCat Engine™"))
+-- scene:addObject(polyCatEngine.newPolyCatMesh(vector.newVector3(0, 0, 0), 20))
+-- scene:addObject(polyCatEngine.newFloatingText(vector.newVector3(0, -23, 0), 0xEEEEEE, "Powered by PolyCat Engine™"))
 
 
--- scene:addObjects(wildCatEngine.newGridLines(
+-- scene:addObjects(polyCatEngine.newGridLines(
 -- 	vector.newVector3(0, 0, 0),
 -- 	50,
 -- 	40,
 -- 	8
 -- ))
--- scene:addObject(wildCatEngine.newPlane(
+-- scene:addObject(polyCatEngine.newPlane(
 -- 	vector.newVector3(0, 0, 0),
 -- 	60,
 -- 	60,
@@ -59,7 +59,7 @@ local xCube, zCube = -cubeSize - spaceBetween, -cubeSize - spaceBetween
 for j = 1, 3 do
 	for i = 1, 3 do
 		if not (i == 2 and j == 2) then
-			scene:addObject(wildCatEngine.newCube(
+			scene:addObject(polyCatEngine.newCube(
 				vector.newVector3(xCube, 0, zCube),
 				cubeSize,
 				materials.newSolidMaterial(math.random(0x0, 0xFFFFFF))
@@ -157,7 +157,7 @@ while true do
 				-- local currentCube = scene.objects[objectIndex]
 				-- local newPosition = vector.newVector3(currentCube.pivotPoint.position[1], currentCube.pivotPoint.position[2] + 20, currentCube.pivotPoint.position[3])
 
-				-- scene:addObject(wildCatEngine.newCube(
+				-- scene:addObject(polyCatEngine.newCube(
 				-- 	newPosition,
 				-- 	20,
 				-- 	materials.newSolidMaterial(math.random(0x0, 0xFFFFFF))
