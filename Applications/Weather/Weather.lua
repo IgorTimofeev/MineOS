@@ -13,7 +13,6 @@ local image = require("image")
 local unicode = require("unicode")
 local component = require("component")
 local GUI = require("GUI")
-local internet = require("internet")
 
 ---------------------------------------------------- Константы ----------------------------------------------------------------
 
@@ -88,7 +87,7 @@ local weatherIcons = {
 --Запрос на получение погоды
 local function weatherRequest(city)
 	local url = "https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20weather.forecast%20where%20woeid%20in%20(select%20woeid%20from%20geo.places(1)%20where%20text%3D%22" .. city .. "%2C%20ak%22)&format=json&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys"
-	local success, response = internet.request(url)
+	local success, response = ecs.internetRequest(url)
 
 	if success then
 		response = json:decode(response)

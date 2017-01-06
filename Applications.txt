@@ -292,7 +292,7 @@
     url="IgorTimofeev/OpenComputers/master/lib/ECSAPI.lua",
     type="Library",
     preLoadFile=true,
-    version=1.06,
+    version=1.07,
   },
   {
     name="lib/colorlib.lua",
@@ -313,12 +313,6 @@
     url="IgorTimofeev/OpenComputers/master/lib/serialization.lua",
     type="Library",
     version=1.05,
-  },
-  {
-    name="lib/internet.lua",
-    url="IgorTimofeev/OpenComputers/master/lib/internet.lua",
-    type="Library",
-    version=1.01,
   },
   {
     name="lib/GUI.lua",
@@ -476,20 +470,6 @@
     version=1.0,
   },
   {
-    name="bin/wget.lua",
-    url="IgorTimofeev/OpenComputers/master/Applications/wget.lua",
-    type="Script",
-    forceDownload=true,
-    version=1.01,
-  },
-  {
-    name="bin/pastebin.lua",
-    url="IgorTimofeev/OpenComputers/master/Applications/pastebin.lua",
-    type="Script",
-    forceDownload=true,
-    version=1.01,
-  },
-  {
     name="bin/clear.lua",
     url="IgorTimofeev/OpenComputers/master/Applications/clear.lua",
     type="Script",
@@ -624,7 +604,7 @@
     type="Application",
     icon="IgorTimofeev/OpenComputers/master/Applications/VK/Icon.pic",
     createShortcut="dock",
-    version=1.23,
+    version=1.24,
     resources={
       {
         name="VKLogo.pic",
@@ -639,7 +619,7 @@
     type="Application",
     icon="IgorTimofeev/OpenComputers/master/Applications/Weather/Icon.pic",
     createShortcut="desktop",
-    version=1.11,
+    version=1.12,
     resources={
       {
         name="Cloudy.pic",
