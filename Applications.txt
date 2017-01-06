@@ -8,7 +8,7 @@
     about="IgorTimofeev/OpenComputers/master/MineOS/About/",
     type="Script",
     forceDownload=true,
-    version=3.33,
+    version=3.34,
   },
   {
     name="MineOS/Pictures/Raspberry.pic",
@@ -93,14 +93,14 @@
     url="IgorTimofeev/OpenComputers/master/MineOS/Languages/Russian.lang",
     type="Script",
     forceDownload=true,
-    version=1.13,
+    version=1.14,
   },
   {
     name="MineOS/System/OS/Languages/English.lang",
     url="IgorTimofeev/OpenComputers/master/MineOS/Languages/English.lang",
     type="Script",
     forceDownload=true,
-    version=1.13,
+    version=1.14,
   },
 
   ----------------------------------------------------- Системные иконки --------------------------------------------------------------------------
@@ -271,7 +271,7 @@
     name="lib/MineOSCore.lua",
     url="IgorTimofeev/OpenComputers/master/lib/MineOSCore.lua",
     type="Library",
-    version=1.27,
+    version=1.28,
   },
   {
     name="lib/advancedLua.lua",
@@ -518,7 +518,7 @@
     type="Application",
     icon="IgorTimofeev/OpenComputers/master/Applications/OCGLTest/Icon.pic",
     createShortcut="desktop",
-    version=1.00,
+    version=1.01,
   },
   {
     name="MineOS/Applications/GeoScan2",

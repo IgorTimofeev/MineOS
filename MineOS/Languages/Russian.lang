@@ -1,4 +1,11 @@
 {
+	type = "Тип",
+	size = "Размер",
+	date = "Дата",
+	path = "Путь",
+	folder = "Папка",
+	unknown = "Неизвестно",
+	contextMenuProperties = "Свойства",
 	contextMenuNewFile = "Новый файл",
 	contextMenuNewFolder = "Новая папка",
 	contextMenuNewApplication = "Новое приложение MineOS",

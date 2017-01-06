@@ -1,4 +1,11 @@
 {
+	type = "Type",
+	size = "Size",
+	date = "Date",
+	path = "Path",
+	folder = "Folder",
+	unknown = "Unknown",
+	contextMenuProperties = "Properties",
 	contextMenuNewFile = "New file",
 	contextMenuNewFolder = "New folder",
 	contextMenuNewApplication = "New MineOS application",

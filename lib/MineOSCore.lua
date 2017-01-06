@@ -7,6 +7,7 @@ local advancedLua = require("advancedLua")
 local image = require("image")
 local buffer = require("doubleBuffering")
 local GUI = require("GUI")
+local windows = require("windows")
 local ecs = require("ECSAPI")
 local zip = require("archive")
 local syntax = require("syntax")
@@ -448,7 +449,7 @@ local function drawErrorWindow(path, programVersion, errorLine, reason, showSend
 	buffer.clear(0x000000, 50)
 
 	-- Окошечко и всякая шняжка на нем
-	local window = require("windows").empty(x, y, width, height, width, height)
+	local window = windows.empty(x, y, width, height, width, height)
 	window:addPanel(1, 1, width, 3, colors.topBar)
 	window:addLabel(1, 2, width, 1, colors.title, programName):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
 	local windowActionButtons = window:addWindowActionButtons(2, 2, false)
@@ -627,13 +628,13 @@ function MineOSCore.iconRightClick(icon, eventData)
 				"-",
 				{MineOSCore.localization.contextMenuCut},
 				{MineOSCore.localization.contextMenuCopy},
-				"-",
 				{MineOSCore.localization.contextMenuRename},
 				{MineOSCore.localization.contextMenuCreateShortcut, icon.format == ".lnk"},
 				-- "-",
 				-- {MineOSCore.localization.contextMenuUploadToPastebin, true},
 				"-",
 				{MineOSCore.localization.contextMenuAddToDock},
+				{MineOSCore.localization.contextMenuProperties},
 				{MineOSCore.localization.contextMenuDelete}
 			):show()
 		elseif icon.isShortcut then
@@ -646,6 +647,7 @@ function MineOSCore.iconRightClick(icon, eventData)
 				{MineOSCore.localization.contextMenuRename},
 				"-",
 				{MineOSCore.localization.contextMenuAddToDock},
+				{MineOSCore.localization.contextMenuProperties},
 				{MineOSCore.localization.contextMenuDelete}
 			):show()
 		else
@@ -655,8 +657,7 @@ function MineOSCore.iconRightClick(icon, eventData)
 				{MineOSCore.localization.contextMenuRename},
 				{MineOSCore.localization.contextMenuCreateShortcut, icon.format == ".lnk"},
 				"-",
-				{MineOSCore.localization.contextMenuArchive},
-				"-",
+				{MineOSCore.localization.contextMenuProperties},
 				{MineOSCore.localization.contextMenuDelete}
 			):show()
 		end
@@ -675,7 +676,8 @@ function MineOSCore.iconRightClick(icon, eventData)
 				-- {MineOSCore.localization.contextMenuUploadToPastebin, true},
 				"-",
 				{MineOSCore.localization.contextMenuAddToDock},
-				{MineOSCore.localization.contextMenuDelete, false}
+				{MineOSCore.localization.contextMenuProperties},
+				{MineOSCore.localization.contextMenuDelete}
 			):show()
 		elseif icon.format == ".lua" then
 			action = GUI.contextMenu(eventData[3], eventData[4],
@@ -691,6 +693,7 @@ function MineOSCore.iconRightClick(icon, eventData)
 				-- {MineOSCore.localization.contextMenuUploadToPastebin, true},
 				"-",
 				{MineOSCore.localization.contextMenuAddToDock},
+				{MineOSCore.localization.contextMenuProperties},
 				{MineOSCore.localization.contextMenuDelete}
 			):show()
 		else
@@ -706,6 +709,7 @@ function MineOSCore.iconRightClick(icon, eventData)
 				-- {MineOSCore.localization.contextMenuUploadToPastebin, true},
 				"-",
 				{MineOSCore.localization.contextMenuAddToDock},
+				{MineOSCore.localization.contextMenuProperties},
 				{MineOSCore.localization.contextMenuDelete}
 			):show()
 		end
@@ -715,6 +719,8 @@ function MineOSCore.iconRightClick(icon, eventData)
 		ecs.prepareToExit()
 		MineOSCore.safeLaunch("/bin/edit.lua", icon.path)
 		computer.pushSignal("MineOSCore", "updateFileListAndBufferTrueRedraw")
+	elseif action == "Свойства" then
+		MineOSCore.showPropertiesWindow(eventData[3], eventData[4], 36, 11, icon)
 	elseif action == MineOSCore.localization.contextMenuShowContainingFolder then
 		computer.pushSignal("MineOSCore", "changeWorkpath", fs.path(icon.shortcutPath))
 	elseif action == MineOSCore.localization.contextMenuEditInPhotoshop then
@@ -789,6 +795,40 @@ function MineOSCore.emptyZoneClick(eventData, workspace, workpath)
 		ecs.newApplication(workpath)
 		computer.pushSignal("MineOSCore", "updateFileList")
 	end
+end
+
+local function addKeyAndValue(window, x, y, key, value)
+	window:addLabel(x, y, window.width , 1, 0x333333, key .. ":"); x = x + unicode.len(key) + 2
+	window:addLabel(x, y, window.width, 1, 0x555555, value)
+end
+
+function MineOSCore.showPropertiesWindow(x, y, width, height, iconObject)
+	local window = windows.empty(x, y, width, height)
+	local backgroundPanel = window:addPanel(1, 2, window.width, window.height - 1, 0xFFFFFF, 20)
+	window:addPanel(1, 1, window.width, 1, 0xEEEEEE)
+	window:addLabel(1, 1, window.width, 1, 0x333333, MineOSCore.localization.contextMenuProperties):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+	window:addButton(2, 1, 1, 1, nil, 0xFF4940, nil, 0x992400, "●").onTouch = function() window:close() end
+
+	window:addImage(3, 3, iconObject.iconImage.image)
+
+	local y = 3
+	addKeyAndValue(window, 13, y, MineOSCore.localization.type, iconObject.format and unicode.upper(unicode.sub(iconObject.format, 2, 2)) .. unicode.sub(iconObject.format, 3, -1) or (iconObject.isDirectory and MineOSCore.localization.folder or MineOSCore.localization.unknown)); y = y + 1
+	if not iconObject.isDirectory then addKeyAndValue(window, 13, y, MineOSCore.localization.size, math.ceil(iconObject.size / 1024) .. "KB"); y = y + 1 end
+	addKeyAndValue(window, 13, y, MineOSCore.localization.date, os.date("%d.%m.%y, %H:%M", fs.lastModified(iconObject.path))); y = y + 1
+	addKeyAndValue(window, 13, y, MineOSCore.localization.path, " ")
+
+	local lines = string.wrap(iconObject.path, window.width - 19)
+	local textBox = window:addTextBox(19, y, window.width - 19, #lines, nil, 0x555555, lines, 1)
+	window.height = textBox.y + textBox.height 
+	backgroundPanel.height = window.height - 1
+
+	if window.x + window.width > buffer.screen.width then window.x = window.x - (window.x + window.width - buffer.screen.width) end
+	if window.y + window.height > buffer.screen.height then window.y = window.y - (window.y + window.height - buffer.screen.height) end
+
+	window:draw()
+	GUI.windowShadow(window.x, window.y, window.width, window.height, 50, true)
+	buffer.draw()
+	window:handleEvents()
 end
 
 -----------------------------------------------------------------------------------------------------------------------------------
