@@ -58,7 +58,7 @@ local sizes = {
 	ySpaceBetweenIcons = 1,
 }
 
-local currentWorkpathHistoryIndex, workpathHistory = 1, {"/"}
+local currentWorkpathHistoryIndex, workpathHistory = 1, {MineOSCore.paths.desktop}
 local workspace
 local currentDesktop, countOfDesktops = 1
 
@@ -101,8 +101,14 @@ local function updateDesktopCounters()
 			table.remove(workpathHistory, #workpathHistory)
 			changeWorkpath(#workpathHistory)
 			workspace.updateFileList()
-		end
-		x = x + 3
+		end; x = x + 3
+	end
+	if workpathHistory[currentWorkpathHistoryIndex] ~= "/" then
+		workspace.desktopCounters:addButton(x, 1, 4, 1, nil, 0xEEEEEE, nil, 0x888888, "Root").onTouch = function()
+			table.insert(workpathHistory, "/")
+			changeWorkpath(#workpathHistory)
+			workspace.updateFileList()
+		end; x = x + 6
 	end
 	for i = 1, countOfDesktops do
 		workspace.desktopCounters:addButton(x, 1, 1, 1, nil, i == currentDesktop and 0xEEEEEE or 0xBBBBBB, nil, 0x888888, "●").onTouch = function()
@@ -110,8 +116,7 @@ local function updateDesktopCounters()
 				currentDesktop = i
 				workspace.updateFileList()
 			end
-		end
-		x = x + 3
+		end; x = x + 3
 	end
 end
 
