@@ -8,7 +8,7 @@
     about="IgorTimofeev/OpenComputers/master/MineOS/About/",
     type="Script",
     forceDownload=true,
-    version=3.30,
+    version=3.31,
   },
   {
     name="MineOS/Pictures/Raspberry.pic",
@@ -832,14 +832,6 @@
         url="IgorTimofeev/OpenComputers/master/Applications/Stargate/GateCore.pic",
       },
     },
-  },
-  {
-    name="MineOS/Applications/Snake",
-    url="IgorTimofeev/OpenComputers/master/Applications/Snake/Snake.lua",
-    type="Application",
-    icon="IgorTimofeev/OpenComputers/master/Applications/Snake/Icon.pic",
-    createShortcut="desktop",
-    version=1.1,
   },
   {
     name="MineOS/Applications/RunningString",

@@ -27,6 +27,7 @@ local copyright = [[
 ---------------------------------------------- Адаптивная загрузка библиотек ------------------------------------------------------------------------
 
 local component = require("component")
+local unicode = require("unicode")
 local fs = require("filesystem")
 local event = require("event")
 local image = require("image")
