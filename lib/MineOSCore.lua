@@ -228,7 +228,7 @@ function MineOSCore.analyseIconFormat(iconObject)
 		else
 			iconObject.iconImage.image = MineOSCore.icons.folder
 			iconObject.launch = function()
-				MineOSCore.safeLaunch("/MineOS/Applications/Finder.app/Finder.lua", "open", iconObject.path)
+				computer.pushSignal("MineOSCore", "changeWorkpath", iconObject.path)
 			end
 		end
 	else
@@ -247,7 +247,6 @@ function MineOSCore.analyseIconFormat(iconObject)
 
 			iconObject.iconImage.image = shortcutIconObject.iconImage.image
 			iconObject.launch = shortcutIconObject.launch
-			iconObject.isDirectory = shortcutIconObject.isDirectory
 
 			shortcutIconObject = nil
 		elseif iconObject.format == ".cfg" or iconObject.format == ".config" then
@@ -607,14 +606,16 @@ function MineOSCore.iconLeftClick(iconObject, eventData)
 		if iconObject.format == ".app" then
 			iconObject.launch()
 			computer.pushSignal("MineOSCore", "updateFileList")
-		elseif iconObject.isShortcut then
-			computer.pushSignal("MineOSCore", "changeWorkpath", iconObject.shortcutPath)
 		else
 			computer.pushSignal("MineOSCore", "changeWorkpath", iconObject.path)
 		end
 	else
-		iconObject.launch()
-		computer.pushSignal("MineOSCore", "updateFileListAndBufferTrueRedraw")
+		if iconObject.isShortcut then
+			computer.pushSignal("MineOSCore", "changeWorkpath", iconObject.shortcutPath)
+		else
+			iconObject.launch()
+			computer.pushSignal("MineOSCore", "updateFileListAndBufferTrueRedraw")
+		end
 	end
 end
 
@@ -637,19 +638,6 @@ function MineOSCore.iconRightClick(icon, eventData)
 				{MineOSCore.localization.contextMenuProperties},
 				{MineOSCore.localization.contextMenuDelete}
 			):show()
-		elseif icon.isShortcut then
-			action = GUI.contextMenu(eventData[3], eventData[4],
-				{MineOSCore.localization.contextMenuEdit},
-				{MineOSCore.localization.contextMenuShowContainingFolder},
-				"-",
-				{MineOSCore.localization.contextMenuCut},
-				{MineOSCore.localization.contextMenuCopy},
-				{MineOSCore.localization.contextMenuRename},
-				"-",
-				{MineOSCore.localization.contextMenuAddToDock},
-				{MineOSCore.localization.contextMenuProperties},
-				{MineOSCore.localization.contextMenuDelete}
-			):show()
 		else
 			action = GUI.contextMenu(eventData[3], eventData[4],
 				{MineOSCore.localization.contextMenuCut},
@@ -662,7 +650,20 @@ function MineOSCore.iconRightClick(icon, eventData)
 			):show()
 		end
 	else
-		if icon.format == ".pic" then
+		if icon.isShortcut then
+			action = GUI.contextMenu(eventData[3], eventData[4],
+				{MineOSCore.localization.contextMenuEdit},
+				{MineOSCore.localization.contextMenuShowContainingFolder},
+				"-",
+				{MineOSCore.localization.contextMenuCut},
+				{MineOSCore.localization.contextMenuCopy},
+				{MineOSCore.localization.contextMenuRename},
+				"-",
+				{MineOSCore.localization.contextMenuAddToDock},
+				{MineOSCore.localization.contextMenuProperties},
+				{MineOSCore.localization.contextMenuDelete}
+			):show()
+		elseif icon.format == ".pic" then
 			action = GUI.contextMenu(eventData[3], eventData[4],
 				-- {MineOSCore.localization.contextMenuEdit},
 				{MineOSCore.localization.contextMenuEditInPhotoshop},
