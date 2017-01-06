@@ -2,20 +2,17 @@
 -- package.loaded.GUI = nil
 -- _G.GUI = nil
 
-local libraries = {
-	advancedLua = "advancedLua",
-	buffer = "doubleBuffering",
-	MineOSCore = "MineOSCore",
-	image = "image",
-	GUI = "GUI",
-	fs = "filesystem",
-	component = "component",
-	unicode = "unicode",
-	files = "files",
-	ecs = "ECSAPI",
-}
-
-for library in pairs(libraries) do if not _G[library] then _G[library] = require(libraries[library]) end end; libraries = nil
+local advancedLua = require("advancedLua")
+local buffer = require("doubleBuffering")
+local MineOSCore = require("MineOSCore")
+local image = require("image")
+local GUI = require("GUI")
+local fs = require("filesystem")
+local component = require("component")
+local unicode = require("unicode")
+local files = require("files")
+local event = require("event")
+local ecs = require("ECSAPI")
 
 ------------------------------------------------------------------------------------------------------------------
 

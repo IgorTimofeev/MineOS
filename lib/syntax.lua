@@ -1,5 +1,5 @@
-if not _G.buffer then _G.buffer = require("doubleBuffering") end
-if not _G.unicode then _G.unicode = require("unicode") end
+local buffer = require("doubleBuffering")
+local unicode = require("unicode")
 
 local syntax = {}
 

@@ -55,21 +55,18 @@ copyright = nil
 
 ------------------------------------------------ Библиотеки --------------------------------------------------------------
 
-local libraries = {
-	ecs = "ECSAPI",
-	MineOSCore = "MineOSCore",
-	fs = "filesystem",
-	unicode = "unicode",
-	image = "image",
-	component = "component",
-	keyboard = "keyboard",
-	buffer = "doubleBuffering",
-	colorlib = "colorlib",
-	palette = "palette",
-	event = "event",
-	files = "files",
-}
-for library in pairs(libraries) do if not _G[library] then _G[library] = require(libraries[library]) end end; libraries = nil
+local ecs = require("ECSAPI")
+local MineOSCore = require("MineOSCore")
+local fs = require("filesystem")
+local unicode = require("unicode")
+local image = require("image")
+local component = require("component")
+local keyboard = require("keyboard")
+local buffer = require("doubleBuffering")
+local colorlib = require("colorlib")
+local palette = require("palette")
+local event = require("event")
+local files = require("files")
 
 ------------------------------------------------ Переменные --------------------------------------------------------------
 
@@ -186,10 +183,10 @@ local function drawTransparentZone(x, y)
 		local stro4ka1 = ""
 		local stro4ka2 = ""
 		if masterPixels.width % 2 == 0 then
-			stro4ka1 = string.rep("▒ ", masterPixels.width / 2)
+			stro4ka1 = string.rep("▒ ", math.floor(masterPixels.width / 2))
 			stro4ka2 = stro4ka1
 		else
-			stro4ka1 = string.rep("▒ ", masterPixels.width / 2)
+			stro4ka1 = string.rep("▒ ", math.floor(masterPixels.width / 2))
 			stro4ka2 = stro4ka1 .. "▒"
 		end
 
@@ -250,7 +247,15 @@ end
 
 --Отрисовка верхнего меню
 local function drawTopMenu()
-	obj.menu = GUI.menu(1, 1, buffer.screen.width, colors.topMenu, colors.topMenuText, 0x3366CC, 0xFFFFFF, 0, {"PS", ecs.colors.blue}, {localization.file}, {localization.image}, {localization.edit}, {localization.view}, {localization.hotkeys}, {localization.about}):draw()
+	obj.menu = GUI.menu(1, 1, buffer.screen.width, colors.topMenu, colors.topMenuText, 0x3366CC, 0xFFFFFF, 0)
+	obj.menu:addItem("PS", ecs.colors.blue)
+	obj.menu:addItem(localization.file)
+	obj.menu:addItem(localization.image)
+	obj.menu:addItem(localization.edit)
+	obj.menu:addItem(localization.view)
+	obj.menu:addItem(localization.hotkeys)
+	obj.menu:addItem(localization.about)
+	obj.menu:draw()
 end
 
 --Функция, создающая пустой массив изображения на основе указанных ранее длины и ширины

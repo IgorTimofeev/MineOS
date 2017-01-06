@@ -1,18 +1,14 @@
 
 package.loaded.rayEngine, package.loaded.GUI, package.loaded.windows, _G.rayEngine, _G.GUI, _G.windows = nil, nil, nil, nil, nil, nil, nil, nil
 
-local libraries = {
-	component = "component",
-	buffer = "doubleBuffering",
-	GUI = "GUI",
-	windows = "windows",
-	rayEngine = "rayEngine",
-	MineOSCore = "MineOSCore",
-	unicode = "unicode",
-	event = "event",
-}
-
-for library in pairs(libraries) do if not _G[library] then _G[library] = require(libraries[library]) end end; libraries = nil
+local component = require("component")
+local buffer = require("doubleBuffering")
+local GUI = require("GUI")
+local windows = require("windows")
+local rayEngine = require("rayEngine")
+local MineOSCore = require("MineOSCore")
+local unicode = require("unicode")
+local event = require("event")
 
 ----------------------------------------------------------------------------------------------------------------------------------
 

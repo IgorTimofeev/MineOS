@@ -196,7 +196,7 @@ do
     language = data[1],
     dockShortcuts = {
       {path = "/MineOS/Applications/AppMarket.app"},
-      {path = "/MineOS/Applications/Finder.app"},
+      {path = "/MineOS/Applications/RayWalk.app"},
       {path = "/MineOS/Applications/Photoshop.app"},
       {path = "/MineOS/Applications/VK.app"},
     }
@@ -348,7 +348,7 @@ end
 -- Создаем базовые обои рабочего стола
 if downloadWallpapers then
   ecs.createShortCut(desktopPath .. "Pictures.lnk", picturesPath)
-  ecs.createShortCut("/MineOS/System/OS/Wallpaper.lnk", picturesPath .. "Sunbeams.pic")
+  ecs.createShortCut("/MineOS/System/OS/Wallpaper.lnk", picturesPath .. "Ciri.pic")
 end
 
 -- Создаем файл автозагрузки

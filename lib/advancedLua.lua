@@ -21,7 +21,7 @@ function _G.getCurrentScript()
 	while true do
 		info = debug.getinfo(runLevel)
 		if info then
-			if info.what == "main" and fs.exists(info.short_src) then return info.short_src end
+			if info.what == "main" and filesystem.exists(info.short_src) then return info.short_src end
 		else
 			error("Failed to get running script: current runLevel is " .. runLevel)
 		end

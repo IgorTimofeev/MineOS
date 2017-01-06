@@ -1,15 +1,13 @@
-local libraries = {
-	computer = "computer",
-	advancedLua = "advancedLua",
-	colorlib = "colorlib",
-	image = "image",
-	buffer = "doubleBuffering",
-	GUI = "GUI",
-	files = "files",
-	event = "event",
-}
 
-for library in pairs(libraries) do if not _G[library] then _G[library] = require(libraries[library]) end end; libraries = nil
+local component = require("component")
+local computer = require("computer")
+local advancedLua = require("advancedLua")
+local colorlib = require("colorlib")
+local image = require("image")
+local buffer = require("doubleBuffering")
+local GUI = require("GUI")
+local files = require("files")
+local event = require("event")
 
 ---------------------------------------------------- Константы ------------------------------------------------------------------
 
@@ -551,7 +549,6 @@ end
 ----------------------------------------------------------------------------------------------------------------------------------
 
 function rayEngine.changeResolution(width, height)
-	buffer.clear(0x000000); buffer.draw()
 	component.gpu.setResolution(width, height)
 	buffer.start()
 	rayEngine.calculateAllParameters()

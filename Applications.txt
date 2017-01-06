@@ -271,14 +271,14 @@
     name="lib/MineOSCore.lua",
     url="IgorTimofeev/OpenComputers/master/lib/MineOSCore.lua",
     type="Library",
-    version=1.23,
+    version=1.24,
   },
   {
     name="lib/advancedLua.lua",
     url="IgorTimofeev/OpenComputers/master/lib/advancedLua.lua",
     type="Library",
     preLoadFile=true,
-    version=1.04,
+    version=1.05,
   },
   {
     name="lib/internet.lua",
@@ -299,7 +299,7 @@
     url="IgorTimofeev/OpenComputers/master/lib/ECSAPI.lua",
     type="Library",
     preLoadFile=true,
-    version=1.04,
+    version=1.05,
   },
   {
     name="lib/colorlib.lua",
@@ -325,13 +325,13 @@
     name="lib/GUI.lua",
     url="IgorTimofeev/OpenComputers/master/lib/GUI.lua",
     type="Library",
-    version=1.18,
+    version=1.19,
   },
   {
     name="lib/windows.lua",
     url="IgorTimofeev/OpenComputers/master/lib/windows.lua",
     type="Library",
-    version=1.04,
+    version=1.05,
   },
   {
     name="lib/serialization.lua",
@@ -343,7 +343,7 @@
     name="lib/rayEngine.lua",
     url="IgorTimofeev/OpenComputers/master/lib/rayEngine.lua",
     type="Library",
-    version=1.36,
+    version=1.37,
   },
   {
     name="lib/json.lua",
@@ -409,7 +409,7 @@
     name="lib/syntax.lua",
     url="IgorTimofeev/OpenComputers/master/lib/syntax.lua",
     type="Library",
-    version=1.02,
+    version=1.03,
   },
   {
     name="lib/palette.lua",
@@ -455,7 +455,7 @@
     url="IgorTimofeev/OpenComputers/master/MineOS/Init.lua",
     type="Script",
     forceDownload=true,
-    version=1.1,
+    version=1.11,
   },
   {
     name="etc/profile",
@@ -468,25 +468,15 @@
     name="bin/wget.lua",
     url="IgorTimofeev/OpenComputers/master/Applications/wget.lua",
     type="Script",
-    version=1.0,
+    forceDownload=true,
+    version=1.01,
   },
   {
     name="bin/pastebin.lua",
     url="IgorTimofeev/OpenComputers/master/Applications/pastebin.lua",
     type="Script",
-    version=1.0,
-  },
-  {
-    name="bin/get.lua",
-    url="IgorTimofeev/OpenComputers/master/Applications/get.lua",
-    type="Script",
-    version=1.0,
-  },
-  {
-    name="bin/convertImage.lua",
-    url="IgorTimofeev/OpenComputers/master/Applications/convertImage.lua",
-    type="Script",
-    version=1.0,
+    forceDownload=true,
+    version=1.01,
   },
   {
     name="bin/clear.lua",
@@ -521,7 +511,7 @@
     url="IgorTimofeev/OpenComputers/master/Applications/Motd/motd.lua",
     type="Script",
     forceDownload=true,
-    version=1.0,
+    version=1.01,
   },
   {
     name="bin/archive.lua",
@@ -669,7 +659,7 @@
     type="Application",
     icon="IgorTimofeev/OpenComputers/master/Applications/3DPrint/Icon.pic",
     createShortcut="desktop",
-    version=1.1,
+    version=1.11,
   },
   {
     name="MineOS/Applications/FlappyBird",
@@ -693,7 +683,7 @@
     type="Application",
     icon="IgorTimofeev/OpenComputers/master/Applications/RayWalk/Icon.pic",
     createShortcut="desktop",
-    version=1.56,
+    version=1.57,
     resources={
       {
         name="Localization/Russian.lang",
@@ -957,7 +947,7 @@
     icon="IgorTimofeev/OpenComputers/master/Applications/Photoshop/Icon.pic",
     createShortcut="dock",
     forceDownload=true,
-    version=1.02,
+    version=1.03,
     resources={
       {
         name="Localization/Russian.lang",
@@ -1003,7 +993,7 @@
     icon="IgorTimofeev/OpenComputers/master/Applications/AppMarket/Icon.pic",
     createShortcut="dock",
     forceDownload=true,
-    version=1.46,
+    version=1.47,
      resources={
       {
         name="Localization/Russian.lang",
@@ -1022,7 +1012,7 @@
     type="Application",
     icon="IgorTimofeev/OpenComputers/master/Applications/Control/Icon.pic",
     createShortcut="desktop",
-    version=1.0,
+    version=1.01,
   },
   {
     name="MineOS/Applications/Piano",

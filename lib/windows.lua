@@ -94,6 +94,16 @@ local function comboBoxHandler(window, object, objectIndex, eventData)
 	executeObjectMethod(object.onItemSelected, eventData)
 end
 
+local function menuItemHandler(window, object, objectIndex, eventData)
+	object.pressed = true
+	window:draw()
+	buffer.draw()
+	executeObjectMethod(object.onTouch, eventData)
+	object.pressed = false
+	window:draw()
+	buffer.draw()
+end
+
 function windows.handleEventData(window, eventData)
 	if eventData[1] == "touch" then
 		local object, objectIndex = window:getClickedObject(eventData[3], eventData[4])
@@ -111,6 +121,8 @@ function windows.handleEventData(window, eventData)
 				switchHandler(window, object, objectIndex, eventData)
 			elseif object.type == GUI.objectTypes.comboBox then
 				comboBoxHandler(window, object, objectIndex, eventData)
+			elseif object.type == GUI.objectTypes.menuItem then
+				menuItemHandler(window, object, objectIndex, eventData)
 			elseif object.onTouch then
 				executeObjectMethod(object.onTouch, eventData)
 			end

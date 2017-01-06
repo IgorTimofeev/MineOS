@@ -71,7 +71,7 @@ GUI.objectTypes = enum(
 	"tabBar",
 	"tabBarTab",
 	"menu",
-	"menuElement",
+	"menuItem",
 	"window",
 	"inputTextBox",
 	"textBox",
@@ -653,8 +653,8 @@ local function showDropDownMenu(object)
 						drawDropDownMenuElement(object, itemIndex, true)
 						buffer.draw()
 						os.sleep(0.2)
-						if object.items[itemIndex].onItemSelected then object.items[itemIndex].onItemSelected() end
 						quit()
+						if object.items[itemIndex].onTouch then object.items[itemIndex].onTouch() end
 						return object.items[itemIndex].text, itemIndex
 					end
 					break
@@ -761,19 +761,31 @@ end
 
 ----------------------------------------- Menu -----------------------------------------
 
+local function menuAddItem(menu, text, textColor)
+	local x = 2; for i = 2, #menu.children do x = x + unicode.len(menu.children[i].text) + 2; end
+	local item = menu:addAdaptiveButton(x, 1, 1, 0, nil, textColor or menu.colors.default.text, menu.colors.pressed.background, menu.colors.pressed.text, text)
+	item.type = GUI.objectTypes.menuItem
+	return item
+end
+
 function GUI.menu(x, y, width, backgroundColor, textColor, backgroundPressedColor, textPressedColor, backgroundTransparency, ...)
-	local elements = {...}
-	local menuObject = GUI.container(x, y, width, 1)
-	menuObject:addPanel(1, 1, menuObject.width, 1, backgroundColor, backgroundTransparency).disableClicking = true
+	local menu = GUI.container(x, y, width, 1)
+	menu:addPanel(1, 1, menu.width, 1, backgroundColor, backgroundTransparency)
+	menu.colors = {
+		default = {
+			background = backgroundColor,
+			text = textColor,
+		},
+		pressed = {
+			background = backgroundPressedColor,
+			text = textPressedColor,
+		},
+		transparency = backgroundTransparency
+	}
 
-	local x = 2
-	for elementIndex = 1, #elements do
-		local button = menuObject:addAdaptiveButton(x, 1, 1, 0, nil, elements[elementIndex][2] or textColor, elements[elementIndex][3] or backgroundPressedColor, elements[elementIndex][4] or textPressedColor, elements[elementIndex][1])
-		button.type = GUI.objectTypes.menuElement
-		x = x + button.width
-	end
+	menu.addItem = menuAddItem
 
-	return menuObject
+	return menu
 end
 
 ----------------------------------------- ProgressBar Object -----------------------------------------

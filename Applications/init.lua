@@ -1,4 +1,4 @@
-local background, foreground, logoColor = 0xCCCCCC, 0x666666, 0x262626
+local background, foreground, logoColor = 0xDDDDDD, 0x999999, 0x444444
 
 do
   _G._OSVERSION = "OpenOS 1.6"
@@ -59,11 +59,11 @@ do
     end
   end
 
-  local y = math.floor(h / 2)
+  local y = math.floor(h / 2 - 1)
 
   local function status(text)
-    centerText(y - 2, "MineOS", logoColor)
-    centerText(y, text, foreground)
+    centerText(y, "MineOS", logoColor)
+    centerText(y + 1, text, foreground)
   end
 
   status("Booting " .. _OSVERSION .. "...")
@@ -173,8 +173,9 @@ end
 -- MineOS Init data
 do
   -- Загружаем необходимые библиотеки, дабы избежать потерь памяти
-  _G.shell = require("shell"); shell.setWorkingDirectory("")
-  _G.ecs = require("ECSAPI")
+  local shell = require("shell"); shell.setWorkingDirectory("")
+  local ecs = require("ECSAPI")
+  local component = require("component")
 
   -- Загружаем параметры ОС
   ecs.loadOSSettings()

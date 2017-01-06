@@ -9,11 +9,10 @@ if not component.isAvailable("gpu") then
 	return
 end
 
+local gpu = component.gpu
 local xSize, ySize = gpu.getResolution()
 local oldBackground = gpu.getBackground()
 local oldForeground = gpu.getForeground()
-
-local gpu = component.gpu
 
 local lines = { "OpenOS (customized by ECS), " .. math.floor(computer.totalMemory() / 1024) .. "KB RAM"}
 local maxWidth = unicode.len(lines[1])

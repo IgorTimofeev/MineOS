@@ -1,20 +1,18 @@
 
--- Адаптивная загрузка необходимых библиотек и компонентов
-local libraries = {
-	component = "component",
-	term = "term",
-	unicode = "unicode",
-	event = "event",
-	fs = "filesystem",
-	shell = "shell",
-	keyboard = "keyboard",
-	computer = "computer",
-	serialization = "serialization",
-}
 
-for library in pairs(libraries) do if not _G[library] then _G[library] = require(libraries[library]) end end; libraries = nil
-_G.gpu = component.gpu
+local advancedLua = require("advancedLua")
+local component = require("component")
+local term = require("term")
+local unicode = require("unicode")
+local event = require("event")
+local fs = require("filesystem")
+local shell = require("shell")
+local keyboard = require("keyboard")
+local computer = require("computer")
+local serialization = require("serialization")
 
+
+local gpu = component.gpu
 local ecs = {}
 
 ----------------------------------------------------------------------------------------------------
@@ -1553,7 +1551,6 @@ end
 
 --Описание ниже, ебана. Ниже - это значит в самой жопе кода!
 function ecs.universalWindow(x, y, width, background, closeWindowAfter, ...)
-	require("advancedLua")
 	local objects = {...}
 	local countOfObjects = #objects
 

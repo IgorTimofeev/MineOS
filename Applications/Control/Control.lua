@@ -8,6 +8,7 @@ local event = require("event")
 local context = require("context")
 local screen = c.screen
 local gpu = c.gpu
+local image = require("image")
 
 
 -------------------------------------------------------------------------------------------------------------------------------
