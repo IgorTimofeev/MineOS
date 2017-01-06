@@ -964,7 +964,7 @@
     type="Application",
     icon="IgorTimofeev/OpenComputers/master/Applications/HoloClock/Icon.pic",
     createShortcut="desktop",
-    version=1.01,
+    version=1.02,
   },
   -- {
   --   name="MineOS/Applications/Finder",
