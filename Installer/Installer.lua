@@ -338,7 +338,7 @@ do
     local percent = app / #thingsToDownload * 100
     ecs.progressBar(xBar, yBar, barWidth, 1, 0xcccccc, ecs.colors.blue, percent)
 
-    ecs.getOSApplication(thingsToDownload[app])
+    ecs.getOSApplication("/" .. thingsToDownload[app])
   end
 
   os.sleep(timing)
