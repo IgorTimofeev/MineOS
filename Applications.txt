@@ -447,7 +447,7 @@
     version=1.01,
   },
   {
-    name="lib/PolyCatEngine/Main.lua",
+    name="lib/PolyCatEngine/PostProcessing.lua",
     url="IgorTimofeev/OpenComputers/master/lib/PolyCatEngine/PostProcessing.lua",
     type="Library",
     version=1.01,
