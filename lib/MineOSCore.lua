@@ -706,7 +706,7 @@ function MineOSCore.iconRightClick(icon, eventData)
 	elseif action == MineOSCore.localization.contextMenuAddToFavourites then
 		computer.pushSignal("finderFavouriteAdded", icon.path)
 	elseif action == MineOSCore.localization.contextMenuShowPackageContent then
-		computer.pushSignal("MineOSCore", "updateFileList")
+		computer.pushSignal("MineOSCore", "changeWorkpath", icon.path)
 	elseif action == MineOSCore.localization.contextMenuCopy then
 		_G.clipboard = icon.path
 	elseif action == MineOSCore.localization.contextMenuCut then

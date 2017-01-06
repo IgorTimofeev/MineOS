@@ -271,7 +271,7 @@
     name="lib/MineOSCore.lua",
     url="IgorTimofeev/OpenComputers/master/lib/MineOSCore.lua",
     type="Library",
-    version=1.24,
+    version=1.25,
   },
   {
     name="lib/advancedLua.lua",
