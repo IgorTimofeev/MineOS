@@ -1,6 +1,7 @@
 
 package.loaded.rayEngine, package.loaded.GUI, package.loaded.windows, _G.rayEngine, _G.GUI, _G.windows = nil, nil, nil, nil, nil, nil, nil, nil
 
+local fs = require("filesystem")
 local component = require("component")
 local buffer = require("doubleBuffering")
 local GUI = require("GUI")
