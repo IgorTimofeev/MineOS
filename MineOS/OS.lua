@@ -1,7 +1,7 @@
 
-_G.GUI = nil
-package.loaded.GUI = nil
-
+package.loaded.MineOSCore, _G.MineOSCore = nil, nil
+package.loaded.GUI, _G.GUI = nil, nil
+package.loaded.windows, _G.windows = nil, nil
 
 ---------------------------------------------- Копирайт, епта ------------------------------------------------------------------------
 
@@ -24,46 +24,28 @@ local copyright = [[
 -- Я передумал, не очищаем, пригодится еще кое-где. Вот же ж костыльная параша!
 -- copyright = nil
 
----------------------------------------------- Библиотеки ------------------------------------------------------------------------
+---------------------------------------------- Адаптивная загрузка библиотек ------------------------------------------------------------------------
 
--- Адаптивная загрузка необходимых библиотек и компонентов
-local libraries = {
-	component = "component",
-	image = "image",
-	buffer = "doubleBuffering",
-	MineOSCore = "MineOSCore",
-	GUI = "GUI",
-	ecs = "ECSAPI",
-	event = "event",
-	files = "files",
-	SHA2 = "SHA2",
-}
+local component = require("component")
+local fs = require("filesystem")
+local event = require("event")
+local image = require("image")
+local buffer = require("doubleBuffering")
+local GUI = require("GUI")
+local windows = require("windows")
+local MineOSCore = require("MineOSCore")
+local ecs = require("ECSAPI")
+local SHA2 = require("SHA2")
 
-for library in pairs(libraries) do if not _G[library] then _G[library] = require(libraries[library]) end end; libraries = nil
-
----------------------------------------------- Переменные ------------------------------------------------------------------------
-
-local workPath = "/MineOS/Desktop/"
-local pathOfDockShortcuts = "/MineOS/System/OS/Dock/"
-local pathToWallpaper = "/MineOS/System/OS/Wallpaper.lnk"
-local currentDesktop = 1
-local showHiddenFiles = false
-local showFileFormat = false
-local sortingMethod = "type"
-local wallpaper
-local controlDown = false
-local fileList
-local paintArray
-
-local obj = {}
+---------------------------------------------- Базовые константы ------------------------------------------------------------------------
 
 local colors = {
 	background = 0x262626,
 	topBarTransparency = 35,
 	selection = ecs.colors.lightBlue,
 	interface = 0xCCCCCC,
-	dockBaseTransparency = 20,
-	dockTransparencyAdder = 15,
+	dockBaseTransparency = 70,
+	dockTransparencyAdder = 10,
 	iconsSelectionTransparency = 20,
 	desktopCounter = 0x999999,
 	desktopCounterActive = 0xFFFFFF,
@@ -71,150 +53,358 @@ local colors = {
 }
 
 local sizes = {
-	widthOfIcon = 12,
-	heightOfIcon = 6,
-	heightOfDock = 4,
+	heightOfDock = 6,
 	xSpaceBetweenIcons = 2,
 	ySpaceBetweenIcons = 1,
 }
 
----------------------------------------------- Функции ------------------------------------------------------------------------
+local currentWorkpathHistoryIndex, workpathHistory = 1, {"/"}
+local workspace
+local currentDesktop, countOfDesktops = 1
 
---Рерасчет всех необходимых параметров
-local function calculateSizes()
-	sizes.xCountOfIcons, sizes.yCountOfIcons, sizes.totalCountOfIcons =  MineOSCore.getParametersForDrawingIcons(buffer.screen.width, buffer.screen.height - sizes.heightOfDock - 6, sizes.xSpaceBetweenIcons, sizes.ySpaceBetweenIcons)
-	sizes.yPosOfIcons = 3
-	sizes.xPosOfIcons = math.floor(buffer.screen.width / 2 - (sizes.xCountOfIcons * (sizes.widthOfIcon + sizes.xSpaceBetweenIcons) - sizes.xSpaceBetweenIcons) / 2)
-	sizes.dockCountOfIcons = sizes.xCountOfIcons - 1
+---------------------------------------------- Основные функции ------------------------------------------------------------------------
+
+local function changeWallpaper()
+	if fs.exists(MineOSCore.paths.wallpaper) then
+		local path = ecs.readShortcut(MineOSCore.paths.wallpaper)
+		if fs.exists(path) then
+			workspace.wallpaper.image = image.load(path)
+			workspace.wallpaper.isHidden = false
+		end
+	else
+		workspace.wallpaper.image = nil
+		workspace.wallpaper.isHidden = true
+	end
 end
 
---Изменение обоев из файла обоев
-local function changeWallpaper()
-	wallpaper = nil
-	if fs.exists(pathToWallpaper) then
-		local path = ecs.readShortcut(pathToWallpaper)
-		if fs.exists(path) then
-			wallpaper = image.load(path)
+local function changeWorkpath(newWorkpathHistoryIndex)
+	currentDesktop = 1
+	currentWorkpathHistoryIndex = newWorkpathHistoryIndex
+	workspace.iconField.workpath = workpathHistory[currentWorkpathHistoryIndex]
+	workspace.background.onTouch = function(eventData)
+		if eventData[5] == 1 then
+			MineOSCore.emptyZoneClick(eventData, workspace, workspace.iconField.workpath)
 		end
 	end
+	workspace.wallpaper.onTouch = workspace.background.onTouch
 end
 
---Загрузка обоев или статичного фона
-local function drawWallpaper()
-	if wallpaper then
-		buffer.image(1, 1, wallpaper)
-	else
-		buffer.square(1, 1, buffer.screen.width, buffer.screen.height, _G.OSSettings.backgroundColor or colors.background, 0xFFFFFF, " ")
+local function updateDesktopCounters()
+	countOfDesktops = math.ceil(#workspace.iconField.fileList / workspace.iconField.iconCount.total)
+	workspace.desktopCounters.width = (countOfDesktops) * 3
+	workspace.desktopCounters.localPosition.x = math.floor(workspace.width / 2 - workspace.desktopCounters.width / 2)
+	workspace.desktopCounters.localPosition.y = workspace.height - sizes.heightOfDock - 2
+	workspace.desktopCounters.children = {}
+	local x = 1
+	if #workpathHistory > 1 then
+		workspace.desktopCounters:addButton(x, 1, 1, 1, nil, 0xEEEEEE, nil, 0x888888, "<").onTouch = function()
+			table.remove(workpathHistory, #workpathHistory)
+			changeWorkpath(#workpathHistory)
+			workspace.updateFileList()
+		end
+		x = x + 3
+	end
+	for i = 1, countOfDesktops do
+		workspace.desktopCounters:addButton(x, 1, 1, 1, nil, i == currentDesktop and 0xEEEEEE or 0xBBBBBB, nil, 0x888888, "●").onTouch = function()
+			if currentDesktop ~= i then
+				currentDesktop = i
+				workspace.updateFileList()
+			end
+		end
+		x = x + 3
 	end
 end
 
-local function getFileList()
-	fileList = ecs.getFileList(workPath)
-	fileList = ecs.sortFiles(workPath, fileList, sortingMethod, showHiddenFiles)
-end
+local function changeResolution()
+	currentDesktop = 1
+	ecs.setScale(_G.OSSettings.screenScale or 1)
+	buffer.start()
 
---ОТРИСОВКА ИКОНОК НА РАБОЧЕМ СТОЛЕ ПО ТЕКУЩЕЙ ПАПКЕ
-local function drawDesktop()
-	obj.DesktopCounters = {}
+	workspace.width, workspace.height = buffer.screen.width, buffer.screen.height
 
-	--Ебашим раб стол
-	sizes.countOfDesktops = math.ceil(#fileList / sizes.totalCountOfIcons)
-	local fromIcon = currentDesktop * sizes.totalCountOfIcons - sizes.totalCountOfIcons + 1
-	obj.DesktopIcons = MineOSCore.drawIconField(sizes.xPosOfIcons, sizes.yPosOfIcons, sizes.xCountOfIcons, sizes.yCountOfIcons, fromIcon, sizes.totalCountOfIcons, sizes.xSpaceBetweenIcons, sizes.ySpaceBetweenIcons, workPath, fileList, showFileFormat, 0xFFFFFF)
+	workspace.iconField.iconCount.width, workspace.iconField.iconCount.height, workspace.iconField.iconCount.total =  MineOSCore.getParametersForDrawingIcons(workspace.width, workspace.height - sizes.heightOfDock - 5, sizes.xSpaceBetweenIcons, sizes.ySpaceBetweenIcons)
+	workspace.iconField.localPosition.x = math.floor(workspace.width / 2 - (workspace.iconField.iconCount.width * (MineOSCore.iconWidth + sizes.xSpaceBetweenIcons) - sizes.xSpaceBetweenIcons) / 2)
+	workspace.iconField.localPosition.y = 3
 
-	--Отрисовываем пиздюлинки под раб столы
-	local width = 4 * sizes.countOfDesktops - 2
-	local x = math.floor(buffer.screen.width / 2 - width / 2)
-	local y = buffer.screen.height - sizes.heightOfDock - 4
-	for i = 1, sizes.countOfDesktops do
-		buffer.square(x, y, 2, 1, i == currentDesktop and colors.desktopCounterActive or colors.desktopCounter)
-		obj.DesktopCounters[i] = GUI.object(x, y, 2, 1)
-		x = x + 4
-	end
+	workspace.dockContainer.width = (#_G.OSSettings.dockShortcuts * (MineOSCore.iconWidth + sizes.xSpaceBetweenIcons) - sizes.xSpaceBetweenIcons) + 2
+	workspace.dockContainer.localPosition.x = math.floor(buffer.screen.width / 2 - workspace.dockContainer.width / 2)
+	workspace.dockContainer.localPosition.y = workspace.height - sizes.heightOfDock + 1
+
+	workspace.updateFileList(true)
 end
 
 -- Отрисовка дока
-local function drawDock()
-	--Получаем список файлов ярлыком дока
-	-- _G.OSSettings.dockShortcuts = {
-	-- 	{
-	-- 		canNotBeDeleted = true,
-	-- 		path = MineOSCore.paths.applications .. "Finder.app"
-	-- 	},
-	-- 	{
-	-- 		path = MineOSCore.paths.applications .. "Control.app"
-	-- 	},
-	-- 	{
-	-- 		path = MineOSCore.paths.applications .. "Photoshop.app"
-	-- 	},
-	-- 	{
-	-- 		path = MineOSCore.paths.applications .. "AppMarket.app"
-	-- 	},
-	-- 	{
-	-- 		canNotBeDeleted = true,
-	-- 		path = MineOSCore.paths.applications .. "Trash.app"
-	-- 	},
-	-- }
-
-	obj.DockIcons = {}
-
-	--Рассчитываем размер и позицию дока на основе размера
-	local widthOfDock = (#_G.OSSettings.dockShortcuts * (sizes.widthOfIcon + sizes.xSpaceBetweenIcons) - sizes.xSpaceBetweenIcons) + sizes.heightOfDock * 2 + 2
-	local xDock, yDock = math.floor(buffer.screen.width / 2 - widthOfDock / 2), buffer.screen.height
-
-	--Рисуем сам док
-	if #_G.OSSettings.dockShortcuts > 0 then
-		local transparency = colors.dockBaseTransparency
-		local currentDockWidth = widthOfDock - 2
-		for i = 1, sizes.heightOfDock do
-			buffer.text(xDock, yDock, _G.OSSettings.interfaceColor or colors.interface, "▟", transparency)
-			buffer.square(xDock + 1, yDock, currentDockWidth, 1, _G.OSSettings.interfaceColor or colors.interface, 0xFFFFFF, " ", transparency)
-			buffer.text(xDock + currentDockWidth + 1, yDock, _G.OSSettings.interfaceColor or colors.interface, "▙", transparency)
-
-			transparency = transparency + colors.dockTransparencyAdder
-			currentDockWidth = currentDockWidth - 2
-			xDock = xDock + 1
-			yDock = yDock - 1
+local function createDock()
+	workspace.dockContainer = workspace:addContainer(1, 1, workspace.width, sizes.heightOfDock)
+	workspace.dockContainer.updateFileList = function(dockContainer)
+		local function moveDockShortcut(iconIndex, direction)
+			_G.OSSettings.dockShortcuts[iconIndex], _G.OSSettings.dockShortcuts[iconIndex + direction] = swap(_G.OSSettings.dockShortcuts[iconIndex], _G.OSSettings.dockShortcuts[iconIndex + direction])
+			MineOSCore.saveOSSettings()
+			dockContainer:updateFileList()
+			workspace:draw()
+			buffer.draw()
 		end
 
-		--Рисуем ярлыки на доке
-		local xIcons = math.floor(buffer.screen.width / 2 - ((sizes.widthOfIcon + sizes.xSpaceBetweenIcons) * #_G.OSSettings.dockShortcuts - sizes.xSpaceBetweenIcons) / 2 )
-		local yIcons = buffer.screen.height - sizes.heightOfDock - 1
+		-- Создание иконок дока
+		dockContainer:deleteChildren()
+		local xPos, yPos = 2, 1
+		for iconIndex = 1, #_G.OSSettings.dockShortcuts do
+			local iconObject = MineOSCore.createIconObject(xPos, yPos, _G.OSSettings.dockShortcuts[iconIndex].path, 0x000000, showFileFormat)
+				
+			iconObject.onRightClick = function(iconObject, eventData)
+				local menu = GUI.contextMenu(eventData[3], eventData[4])
+				menu:addItem(MineOSCore.localization.contextMenuShowContainingFolder, true).onTouch = function()
+					MineOSCore.safeLaunch(MineOSCore.paths.applications .. "Finder.app/Finder.lua", "open", fs.path(_G.OSSettings.dockShortcuts[iconIndex].path))
+					dockContainer:updateFileList()
+					workspace:draw()
+					buffer.draw()
+				end
+				menu:addSeparator()
+				menu:addItem(MineOSCore.localization.contextMenuMoveRight, iconIndex >= #_G.OSSettings.dockShortcuts).onTouch = function()
+					moveDockShortcut(iconIndex, 1)
+				end
+				menu:addItem(MineOSCore.localization.contextMenuMoveLeft, iconIndex <= 1).onTouch = function()
+					moveDockShortcut(iconIndex, -1)
+				end
+				menu:addSeparator()
+				menu:addItem(MineOSCore.localization.contextMenuRemoveFromDock, _G.OSSettings.dockShortcuts[iconIndex].canNotBeDeleted or #_G.OSSettings.dockShortcuts < 2).onTouch = function()
+					table.remove(_G.OSSettings.dockShortcuts, iconIndex)
+					MineOSCore.saveOSSettings()
+					dockContainer:updateFileList()
+					workspace:draw()
+					buffer.draw()
+				end
+				menu:show()
+			end
 
-		for i = 1, #_G.OSSettings.dockShortcuts do
-			MineOSCore.drawIcon(xIcons, yIcons, _G.OSSettings.dockShortcuts[i].path, showFileFormat, 0x000000)
-			obj.DockIcons[i] = GUI.object(xIcons, yIcons, sizes.widthOfIcon, sizes.heightOfIcon)
-			obj.DockIcons[i].path = _G.OSSettings.dockShortcuts[i].path
-			xIcons = xIcons + sizes.xSpaceBetweenIcons + sizes.widthOfIcon
+			dockContainer:addChild(iconObject, GUI.objectTypes.container)
+			xPos = xPos + MineOSCore.iconWidth + sizes.xSpaceBetweenIcons
 		end
 	end
+
+	-- Отрисовка дока
+	local oldDraw = workspace.dockContainer.draw
+	workspace.dockContainer.draw = function(dockContainer)
+		if #_G.OSSettings.dockShortcuts > 0 then
+			local currentDockTransparency, currentDockWidth, xPos, yPos = colors.dockBaseTransparency, dockContainer.width - 2, dockContainer.x, dockContainer.y + 2
+			
+			for i = 1, sizes.heightOfDock do
+				buffer.text(xPos, yPos, _G.OSSettings.interfaceColor or colors.interface, "▟", currentDockTransparency)
+				buffer.square(xPos + 1, yPos, currentDockWidth, 1, _G.OSSettings.interfaceColor or colors.interface, 0xFFFFFF, " ", currentDockTransparency)
+				buffer.text(xPos + currentDockWidth + 1, yPos, _G.OSSettings.interfaceColor or colors.interface, "▙", currentDockTransparency)
+
+				currentDockTransparency, currentDockWidth, xPos, yPos = currentDockTransparency - colors.dockTransparencyAdder, currentDockWidth + 2, xPos - 1, yPos + 1
+			end
+		end
+
+		oldDraw(dockContainer)
+	end
+
+	return dockContainer
 end
 
--- Нарисовать информацию справа на топбаре
-local function drawTime()
-	local free, total, used = ecs.getInfoAboutRAM()
-	local time = used .. "/".. total .. " KB RAM, " .. unicode.sub(os.date("%T"), 1, -4) .. " "
-	buffer.text(buffer.screen.width - unicode.len(time), 1, 0x262626, time)
-end
+local function createWorkspace()
+	workspace = windows.fullScreen()
+	workspace.background = workspace:addPanel(1, 1, workspace.width, workspace.height, _G.OSSettings.backgroundColor or colors.background)
+	workspace.wallpaper = workspace:addImage(1, 1, {width = workspace.width, height = workspace.height})
 
---РИСОВАТЬ ВЕСЬ ТОПБАР
-local function drawTopBar()
-	obj.menu = GUI.menu(1, 1, buffer.screen.width, _G.OSSettings.interfaceColor or colors.interface, 0x444444, 0x3366CC, 0xFFFFFF, 10, {"MineOS", 0x000000}, {MineOSCore.localization.viewTab}, {MineOSCore.localization.settings}):draw()
-	-- buffer.text(1, 2, 0x000000, string.rep("▀", buffer.screen.width), 50)
-	drawTime()
-end
+	workspace.desktopCounters = workspace:addContainer(1, 1, 1, 1)
 
-local function drawAll(force)
-	drawWallpaper()
-	drawDesktop()
-	drawDock()
-	drawTopBar()
-	buffer.draw(force)
-end
+	workspace.iconField = workspace:addChild(
+		MineOSCore.createIconField(
+			1, 1, 1, 1, 1, 1, 1,
+			sizes.xSpaceBetweenIcons,
+			sizes.ySpaceBetweenIcons,
+			0xFFFFFF,
+			_G.OSSettings.showFileFormat == nil and true or _G.OSSettings.showFileFormat,
+			_G.OSSettings.showHiddenFiles == nil and true or _G.OSSettings.showHiddenFiles,
+			MineOSCore.sortingMethods[_G.OSSettings.sortingMethod or "type"],
+			"/"
+		),
+		GUI.objectTypes.container
+	)
 
-local function getFileListAndDrawAll(force)
-	getFileList()
-	drawAll(force)
+	createDock()
+
+	workspace.menu = workspace:addMenu(1, 1, workspace.width, _G.OSSettings.interfaceColor or colors.interface, 0x444444, 0x3366CC, 0xFFFFFF, 10)
+	local item1 = workspace.menu:addItem("MineOS", 0x000000)
+	item1.onTouch = function()
+		local menu = GUI.contextMenu(item1.x, item1.y + 1)
+		menu:addItem(MineOSCore.localization.aboutSystem).onTouch = function()
+			ecs.prepareToExit()
+			print(copyright)
+			ecs.waitForTouchOrClick()
+			buffer.draw(true)
+		end
+		menu:addItem(MineOSCore.localization.updates).onTouch = function()
+			MineOSCore.safeLaunch("/MineOS/Applications/AppMarket.app/AppMarket.lua", "updateCheck")
+		end
+		menu:addSeparator()
+		menu:addItem(MineOSCore.localization.logout, _G.OSSettings.protectionMethod == "withoutProtection").onTouch = function()
+			login()
+		end
+		menu:addItem(MineOSCore.localization.reboot).onTouch = function()
+			ecs.TV(0)
+			shell.execute("reboot")
+		end
+		menu:addItem(MineOSCore.localization.shutdown).onTouch = function()
+			ecs.TV(0)
+			shell.execute("shutdown")
+		end		
+		menu:addSeparator()
+		menu:addItem(MineOSCore.localization.returnToShell).onTouch = function()
+			workspace:close()
+			ecs.prepareToExit()
+			os.exit()
+		end	
+		menu:show()
+	end
+
+	local item2 = workspace.menu:addItem(MineOSCore.localization.viewTab)
+	item2.onTouch = function()
+		local menu = GUI.contextMenu(item2.x, item2.y + 1)
+		menu:addItem(workspace.iconField.showFileFormat and MineOSCore.localization.hideFileFormat or MineOSCore.localization.showFileFormat).onTouch = function()
+			workspace.iconField.showFileFormat = not workspace.iconField.showFileFormat
+			_G.OSSettings.showFileFormat = workspace.iconField.showFileFormat
+			MineOSCore.saveOSSettings()
+			workspace:updateFileList()
+		end
+		menu:addItem(workspace.iconField.showHiddenFiles and MineOSCore.localization.hideHiddenFiles or MineOSCore.localization.showHiddenFiles).onTouch = function()
+			workspace.iconField.showHiddenFiles = not workspace.iconField.showHiddenFiles
+			_G.OSSettings.showHiddenFiles = workspace.iconField.showHiddenFiles
+			MineOSCore.saveOSSettings()
+			workspace:updateFileList()
+		end
+		menu:addItem(MineOSCore.showApplicationIcons and MineOSCore.localization.hideApplicationIcons or  MineOSCore.localization.showApplicationIcons).onTouch = function()
+			MineOSCore.showApplicationIcons = not MineOSCore.showApplicationIcons
+		end
+		menu:addSeparator()
+		menu:addItem(MineOSCore.localization.sortByName).onTouch = function()
+			_G.OSSettings.sortingMethod = "name"
+			MineOSCore.saveOSSettings()
+			workspace.iconField.sortingMethod = MineOSCore.sortingMethods.name
+			workspace:updateFileList()
+		end
+		menu:addItem(MineOSCore.localization.sortByDate).onTouch = function()
+			_G.OSSettings.sortingMethod = "date"
+			MineOSCore.saveOSSettings()
+			workspace.iconField.sortingMethod = MineOSCore.sortingMethods.date
+			workspace:updateFileList()
+		end
+		menu:addItem(MineOSCore.localization.sortByType).onTouch = function()
+			_G.OSSettings.sortingMethod = "type"
+			MineOSCore.saveOSSettings()
+			workspace.iconField.sortingMethod = MineOSCore.sortingMethods.type
+			workspace:updateFileList()
+		end
+		menu:addSeparator()
+		menu:addItem(MineOSCore.localization.contextMenuRemoveWallpaper, workspace.wallpaper.isHidden).onTouch = function()
+			fs.remove(MineOSCore.paths.wallpaper)
+			changeWallpaper()
+		end
+		menu:show()
+	end
+
+	local item3 = workspace.menu:addItem(MineOSCore.localization.settings)
+	item3.onTouch = function()
+		local menu = GUI.contextMenu(item3.x, item3.y + 1)
+		menu:addItem(MineOSCore.localization.screenResolution).onTouch = function()
+			local possibleResolutions = {texts = {}, scales = {}}
+			local xSize, ySize = ecs.getScaledResolution(1)
+			local currentScale, decreaseStep = 1, 0.1
+			for i = 1, 5 do
+				local width, height = math.floor(xSize * currentScale), math.floor(ySize * currentScale)
+				local text = width .. "x" .. height
+				possibleResolutions.texts[i] = text
+				possibleResolutions.scales[text] = currentScale
+				currentScale = currentScale - decreaseStep
+			end
+
+			local data = ecs.universalWindow("auto", "auto", 36, 0xeeeeee, true,
+				{"EmptyLine"},
+				{"CenterText", 0x000000, MineOSCore.localization.screenResolution},
+				{"EmptyLine"},
+				{"Selector", 0x262626, 0x880000, table.unpack(possibleResolutions.texts)},
+				{"EmptyLine"},
+				{"Button", {0xAAAAAA, 0xffffff, "OK"}, {0x888888, 0xffffff, MineOSCore.localization.cancel}}
+			)
+
+			if data[2] == "OK" then
+				_G.OSSettings.screenScale = possibleResolutions.scales[data[1]]
+				MineOSCore.saveOSSettings()
+				changeResolution()
+			end
+		end
+		menu:addSeparator()
+		menu:addItem(MineOSCore.localization.changePassword, _G.OSSettings.protectionMethod ~= "password").onTouch = function()
+			changePassword()
+		end
+		menu:addItem(MineOSCore.localization.setProtectionMethod).onTouch = function()
+			setProtectionMethod()
+		end
+		menu:addSeparator()
+		menu:addItem(MineOSCore.localization.colorScheme).onTouch = function()
+			local data = ecs.universalWindow("auto", "auto", 36, 0xeeeeee, true,
+				{"EmptyLine"},
+				{"CenterText", 0x000000, MineOSCore.localization.colorScheme},
+				{"EmptyLine"},
+				{"Color", MineOSCore.localization.backgroundColor, _G.OSSettings.backgroundColor or colors.background},
+				{"Color", MineOSCore.localization.interfaceColor, _G.OSSettings.interfaceColor or colors.interface},
+				{"Color", MineOSCore.localization.selectionColor, _G.OSSettings.selectionColor or colors.selection},
+				{"Color", MineOSCore.localization.desktopPaintingColor, _G.OSSettings.desktopPaintingColor or colors.desktopPainting},
+				{"EmptyLine"},
+				{"Button", {0xAAAAAA, 0xffffff, "OK"}, {0x888888, 0xffffff, MineOSCore.localization.cancel}}
+			)
+
+			if data[5] == "OK" then
+				_G.OSSettings.backgroundColor = data[1]
+				_G.OSSettings.interfaceColor = data[2]
+				_G.OSSettings.selectionColor = data[3]
+				_G.OSSettings.desktopPaintingColor = data[4]
+				MineOSCore.saveOSSettings()
+			end
+		end
+		menu:show()
+	end
+
+	workspace.updateFileList = function(forceRedraw)
+		workspace.iconField.fromFile = currentDesktop * workspace.iconField.iconCount.total - workspace.iconField.iconCount.total + 1
+		workspace.iconField:updateFileList()
+		workspace.dockContainer:updateFileList()
+		updateDesktopCounters()
+		workspace:draw()
+		buffer.draw(forceRedraw)
+	end
+
+	workspace.onAnyEvent = function(eventData)
+		if eventData[1] == "scroll" then
+			if eventData[5] == 1 then
+				if currentDesktop < countOfDesktops then
+					currentDesktop = currentDesktop + 1
+					workspace.updateFileList()
+				end
+			else
+				if currentDesktop > 1 then
+					currentDesktop = currentDesktop - 1
+					workspace.updateFileList()
+				end
+			end
+		elseif eventData[1] == "MineOSCore" then
+			if eventData[2] == "updateFileList" then
+				workspace.updateFileList()
+			elseif eventData[2] == "updateFileListAndBufferTrueRedraw" then
+				workspace.updateFileList(true)
+			elseif eventData[2] == "changeWorkpath" then
+				table.insert(workpathHistory, eventData[3])
+				changeWorkpath(#workpathHistory)
+				workspace.updateFileList()
+			elseif eventData[2] == "updateWallpaper" then
+				changeWallpaper()
+				workspace:draw()
+				buffer.draw()
+			end
+		end
+	end
 end
 
 ---------------------------------------------- Система защиты пекарни ------------------------------------------------------------------------
@@ -259,7 +449,7 @@ local function setBiometry()
 		if success then
 			_G.OSSettings.protectionMethod = "biometric"
 			_G.OSSettings.passwordHash = SHA2.hash(username)
-			ecs.saveOSSettings()
+			MineOSCore.saveOSSettings()
 			break
 		end
 	end
@@ -300,7 +490,7 @@ local function setPassword()
 		if data[1] == data[2] then
 			_G.OSSettings.protectionMethod = "password"
 			_G.OSSettings.passwordHash = SHA2.hash(data[1])
-			ecs.saveOSSettings()
+			MineOSCore.saveOSSettings()
 			return
 		else
 			GUI.error(MineOSCore.localization.passwordsAreDifferent)
@@ -315,7 +505,7 @@ end
 local function setWithoutProtection()
 	_G.OSSettings.passwordHash = nil
 	_G.OSSettings.protectionMethod = "withoutProtection"
-	ecs.saveOSSettings()
+	MineOSCore.saveOSSettings()
 end
 
 local function setProtectionMethod()
@@ -387,7 +577,7 @@ local function windows10()
 
 	local function disableUpdates()
 		_G.OSSettings.showWindows10Upgrade = false
-		ecs.saveOSSettings()
+		MineOSCore.saveOSSettings()
 	end
 
 	draw(0x33B6FF)
@@ -398,13 +588,15 @@ local function windows10()
 			buffer.text(eventData[3], eventData[4], ecs.colors.blue, "X")
 			buffer.draw()
 			os.sleep(0.2)
-			drawAll()
+			workspace:draw()
+			buffer:draw()
 			disableUpdates()
 
 			return
 		elseif ecs.clickedAtArea(eventData[3], eventData[4], x, y, x + width - 1, x + height - 1) then
 			draw(0x0092FF)
-			drawAll()
+			workspace:draw()
+			buffer:draw()
 
 			local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x000000, "  Да шучу я.  "}, {"CenterText", 0x000000, "  Но ведь достали же обновления, верно?  "}, {"EmptyLine"}, {"Button", {0xbbbbbb, 0xFFFFFF, "Да"}, {0x999999, 0xFFFFFF, "Нет"}})
 			if data[1] == "Да" then
@@ -418,289 +610,20 @@ local function windows10()
 	end
 end
 
-local function changeResolution()
-	currentDesktop = 1
-	ecs.setScale(_G.OSSettings.screenScale or 1)
-	buffer.start()
-	calculateSizes()
-end
-
-local function paint(x, y)
-	table.insert(paintArray, x)
-	table.insert(paintArray, y)
-		
-	for i = 1, #paintArray, 2 do
-		buffer.square(paintArray[i], paintArray[i + 1], 2, 2, 0x000000)
-	end
-
-	for i = 1, #paintArray, 2 do
-		buffer.square(paintArray[i], paintArray[i + 1], 1, 1, _G.OSSettings.desktopPaintingColor or colors.desktopPainting)
-	end
-end
-
 ---------------------------------------------- Сама ОС ------------------------------------------------------------------------
 
-changeResolution()
+createWorkspace()
+changeWorkpath(1)
 changeWallpaper()
-getFileListAndDrawAll()
+changeResolution()
 login()
 windows10()
+workspace:handleEvents()
 
----------------------------------------------- Анализ событий ------------------------------------------------------------------------
 
-while true do
-	local eventData = { event.pull() }
-	local clickedAtEmptyArea = true
-	-- Рисовалочка
-	if (eventData[1] == "touch" or eventData[1] == "drag") and controlDown then
-		paint(eventData[3], eventData[4])
-		buffer.draw()
-		clickedAtEmptyArea = false
-	end
 
-	if eventData[1] == "touch" then
-		if clickedAtEmptyArea then
-			for _, icon in pairs(obj.DesktopIcons) do
-				if icon:isClicked(eventData[3], eventData[4]) then
-					if MineOSCore.iconClick(icon, eventData, colors.selection, colors.iconsSelectionTransparency, 0xFFFFFF, 0.2, showFileFormat, {method = getFileListAndDrawAll, arguments = {}}, {method = getFileListAndDrawAll, arguments = {true}}, {method = function() MineOSCore.safeLaunch(MineOSCore.paths.applications .. "Finder.app/Finder.lua", "open", icon.path) end, arguments = {}}) then return end
-					clickedAtEmptyArea = false
-					break
-				end
-			end
-		end
 
-		if clickedAtEmptyArea then
-			for iconIndex, icon in pairs(obj.DockIcons) do
-				if icon:isClicked(eventData[3], eventData[4]) then
-					local oldPixelsOfIcon = buffer.copy(icon.x, icon.y, sizes.widthOfIcon, sizes.heightOfIcon)
 
-					buffer.square(icon.x, icon.y, sizes.widthOfIcon, sizes.heightOfIcon, colors.selection, 0xFFFFFF, " ", colors.iconsSelectionTransparency)
-					MineOSCore.drawIcon(icon.x, icon.y, _G.OSSettings.dockShortcuts[iconIndex].path, false, 0xffffff)
-					buffer.draw()
 
-					local fileFormat = ecs.getFileFormat(_G.OSSettings.dockShortcuts[iconIndex].path)
-					if eventData[5] == 0 then
-						MineOSCore.iconLeftClick(icon, oldPixelsOfIcon, fileFormat, {method = getFileListAndDrawAll, arguments = {}}, {method = getFileListAndDrawAll, arguments = {true}}, {method = function() MineOSCore.safeLaunch(MineOSCore.paths.applications .. "Finder.app/Finder.lua", "open", icon.path) end, arguments = {icon.path}})
-					else
-						action = GUI.contextMenu(eventData[3], eventData[4],
-							{MineOSCore.localization.contextMenuShowContainingFolder},
-							"-",
-							{MineOSCore.localization.contextMenuMoveRight, iconIndex >= #_G.OSSettings.dockShortcuts},
-							{MineOSCore.localization.contextMenuMoveLeft, iconIndex <= 1},
-							"-",
-							{MineOSCore.localization.contextMenuRemoveFromDock, _G.OSSettings.dockShortcuts[iconIndex].canNotBeDeleted}
-						):show()
 
-						if action == MineOSCore.localization.contextMenuRemoveFromDock then
-							table.remove(_G.OSSettings.dockShortcuts, iconIndex)
-							ecs.saveOSSettings()
-							drawAll()
-						elseif action == MineOSCore.localization.contextMenuShowContainingFolder then
-							MineOSCore.safeLaunch(MineOSCore.paths.applications .. "Finder.app/Finder.lua", "open", fs.path(_G.OSSettings.dockShortcuts[iconIndex].path))
-							drawAll()
-						elseif action == MineOSCore.localization.contextMenuMoveRight or action == MineOSCore.localization.contextMenuMoveLeft then
-							local mathModifyer = action == MineOSCore.localization.contextMenuMoveRight and 1 or -1
-							local temp = _G.OSSettings.dockShortcuts[iconIndex + mathModifyer]
-							_G.OSSettings.dockShortcuts[iconIndex + mathModifyer] = _G.OSSettings.dockShortcuts[iconIndex]
-							_G.OSSettings.dockShortcuts[iconIndex] = temp
-							ecs.saveOSSettings()
-							drawAll()
-						else
-							buffer.paste(icon.x, icon.y, oldPixelsOfIcon)
-							buffer.draw()
-						end
-					end
 
-					clickedAtEmptyArea = false
-					break
-				end
-			end
-		end
-
-		if clickedAtEmptyArea then
-			for desktop, counter in pairs(obj.DesktopCounters) do
-				if counter:isClicked(eventData[3], eventData[4]) then
-					currentDesktop = desktop
-					drawAll()
-					clickedAtEmptyArea = false
-					break
-				end
-			end
-		end
-
-		if clickedAtEmptyArea then
-			local object = obj.menu:getClickedObject(eventData[3], eventData[4])
-			if object then
-				object:press()
-				buffer.draw()
-
-				if object.text == "MineOS" then
-					local action = GUI.contextMenu(object.x, object.y + 1, {MineOSCore.localization.aboutSystem}, {MineOSCore.localization.updates}, "-", {MineOSCore.localization.logout, _G.OSSettings.protectionMethod == "withoutProtection"}, {MineOSCore.localization.reboot}, {MineOSCore.localization.shutdown}, "-", {MineOSCore.localization.returnToShell}):show()
-
-					if action == MineOSCore.localization.returnToShell then
-						ecs.prepareToExit()
-						return 0
-					elseif action == MineOSCore.localization.logout then
-						drawAll()
-						login()
-					elseif action == MineOSCore.localization.shutdown then
-						ecs.TV(0)
-						shell.execute("shutdown")
-					elseif action == MineOSCore.localization.reboot then
-						ecs.TV(0)
-						shell.execute("reboot")
-					elseif action == MineOSCore.localization.updates then
-						MineOSCore.safeLaunch("/MineOS/Applications/AppMarket.app/AppMarket.lua", "updateCheck")
-					elseif action == MineOSCore.localization.aboutSystem then
-						ecs.prepareToExit()
-						print(copyright)
-						print("А теперь жмякай любую кнопку и продолжай работу с ОС.")
-						ecs.waitForTouchOrClick()
-						drawAll(true)
-					end
-
-				elseif object.text == MineOSCore.localization.viewTab then
-					local action = GUI.contextMenu(object.x, object.y + 1,
-						{showFileFormat and MineOSCore.localization.hideFileFormat or MineOSCore.localization.showFileFormat},
-						{showHiddenFiles and MineOSCore.localization.hideHiddenFiles or MineOSCore.localization.showHiddenFiles},
-						{MineOSCore.showApplicationIcons and MineOSCore.localization.hideApplicationIcons or  MineOSCore.localization.showApplicationIcons},
-						"-",
-						{MineOSCore.localization.sortByName},
-						{MineOSCore.localization.sortByDate},
-						{MineOSCore.localization.sortByType},
-						"-",
-						{MineOSCore.localization.contextMenuRemoveWallpaper, not wallpaper}
-					):show()
-
-					if action == MineOSCore.localization.showHiddenFiles then
-						showHiddenFiles = true
-						drawAll()
-					elseif action == MineOSCore.localization.hideHiddenFiles then
-						showHiddenFiles = false
-						drawAll()
-					elseif action == MineOSCore.localization.showFileFormat then
-						showFileFormat = true
-						drawAll()
-					elseif action == MineOSCore.localization.hideFileFormat then
-						showFileFormat = false
-						drawAll()
-					elseif action == MineOSCore.localization.showApplicationIcons then
-						MineOSCore.showApplicationIcons = true
-						drawAll()
-					elseif action == MineOSCore.localization.hideApplicationIcons then
-						MineOSCore.showApplicationIcons = false
-						drawAll()
-					elseif action == MineOSCore.localization.sortByName then
-						sortingMethod = "name"
-						drawAll()
-					elseif action == MineOSCore.localization.sortByDate then
-						sortingMethod = "date"
-						drawAll()
-					elseif action == MineOSCore.localization.sortByType then
-						sortingMethod = "type"
-						drawAll()
-					elseif action == MineOSCore.localization.contextMenuRemoveWallpaper then
-						wallpaper = nil
-						fs.remove(pathToWallpaper)
-						drawAll(true)
-					end
-				elseif object.text == MineOSCore.localization.settings then
-					local action = GUI.contextMenu(object.x, object.y + 1,
-						{MineOSCore.localization.screenResolution},
-						"-",
-						{MineOSCore.localization.changePassword, _G.OSSettings.protectionMethod ~= "password"},
-						{MineOSCore.localization.setProtectionMethod},
-						"-",
-						{MineOSCore.localization.colorScheme}
-					):show()
-
-					if action == MineOSCore.localization.screenResolution then
-						local possibleResolutions = {texts = {}, scales = {}}
-						local xSize, ySize = ecs.getScaledResolution(1)
-						local currentScale, decreaseStep = 1, 0.1
-						for i = 1, 5 do
-							local width, height = math.floor(xSize * currentScale), math.floor(ySize * currentScale)
-							local text = width .. "x" .. height
-							possibleResolutions.texts[i] = text
-							possibleResolutions.scales[text] = currentScale
-							currentScale = currentScale - decreaseStep
-						end
-
-						local data = ecs.universalWindow("auto", "auto", 36, 0xeeeeee, true,
-							{"EmptyLine"},
-							{"CenterText", 0x000000, MineOSCore.localization.screenResolution},
-							{"EmptyLine"},
-							{"Selector", 0x262626, 0x880000, table.unpack(possibleResolutions.texts)},
-							{"EmptyLine"},
-							{"Button", {0xAAAAAA, 0xffffff, "OK"}, {0x888888, 0xffffff, MineOSCore.localization.cancel}}
-						)
-
-						if data[2] == "OK" then
-							_G.OSSettings.screenScale = possibleResolutions.scales[data[1]]
-							changeResolution()
-							ecs.saveOSSettings()
-							drawAll()
-						end
-					elseif action == MineOSCore.localization.changePassword then
-						changePassword()
-					elseif action == MineOSCore.localization.setProtectionMethod then
-						setProtectionMethod()
-					elseif action == MineOSCore.localization.colorScheme then
-						local data = ecs.universalWindow("auto", "auto", 36, 0xeeeeee, true,
-							{"EmptyLine"},
-							{"CenterText", 0x000000, MineOSCore.localization.colorScheme},
-							{"EmptyLine"},
-							{"Color", MineOSCore.localization.backgroundColor, _G.OSSettings.backgroundColor or colors.background},
-							{"Color", MineOSCore.localization.interfaceColor, _G.OSSettings.interfaceColor or colors.interface},
-							{"Color", MineOSCore.localization.selectionColor, _G.OSSettings.selectionColor or colors.selection},
-							{"Color", MineOSCore.localization.desktopPaintingColor, _G.OSSettings.desktopPaintingColor or colors.desktopPainting},
-							{"EmptyLine"},
-							{"Button", {0xAAAAAA, 0xffffff, "OK"}, {0x888888, 0xffffff, MineOSCore.localization.cancel}}
-						)
-
-						if data[5] == "OK" then
-							_G.OSSettings.backgroundColor = data[1]
-							_G.OSSettings.interfaceColor = data[2]
-							_G.OSSettings.selectionColor = data[3]
-							_G.OSSettings.desktopPaintingColor = data[4]
-							ecs.saveOSSettings()
-						end
-					end
-				end
-
-				drawAll()
-				clickedAtEmptyArea = false
-			end
-		end
-
-		if clickedAtEmptyArea and eventData[5] == 1 then
-			MineOSCore.emptyZoneClick(eventData, workPath, {method = getFileListAndDrawAll, arguments = {}}, {method = getFileListAndDrawAll, arguments = {true}})
-		end
-	elseif eventData[1] == "OSWallpaperChanged" then
-		changeWallpaper()
-		drawAll(true)
-	elseif eventData[1] == "scroll" then
-		if eventData[5] == 1 then
-			if currentDesktop < sizes.countOfDesktops then
-				currentDesktop = currentDesktop + 1
-				drawAll()
-			end
-		else
-			if currentDesktop > 1 then
-				currentDesktop = currentDesktop - 1
-				drawAll()
-			end
-		end
-	elseif eventData[1] == "key_down" then
-		if eventData[4] == 29 then
-			paintArray = {}
-			controlDown = true
-		end
-	elseif eventData[1] == "key_up" then
-		if eventData[4] == 29 then
-			controlDown = false
-			paintArray = nil
-			drawAll()
-		end
-	end
-end

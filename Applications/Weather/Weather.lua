@@ -1,6 +1,7 @@
 
 ---------------------------------------------------- Библиотеки ----------------------------------------------------------------
 
+require("advancedLua")
 local json = require("json")
 local serialization = require("serialization")
 local event = require("event")
@@ -10,9 +11,9 @@ local bigLetters = require("bigLetters")
 local buffer = require("doubleBuffering")
 local image = require("image")
 local unicode = require("unicode")
-local files = require("files")
 local component = require("component")
 local GUI = require("GUI")
+local internet = require("internet")
 
 ---------------------------------------------------- Константы ----------------------------------------------------------------
 
@@ -83,31 +84,11 @@ local weatherIcons = {
 	[47] = pathsToWeatherTypes.stormy,
 }
 
-local function request(url)
-	local success, reason = pcall(component.internet.request, url)
-	if success then
-		local response = ""
-		while true do
-			local data, dataReason = reason.read()	
-			if data then
-				response = response .. data
-			else
-				if dataReason then
-					return false, dataReason
-				else
-					return true, response
-				end
-			end
-		end
-	else
-		return false, reason
-	end
-end
 
 --Запрос на получение погоды
 local function weatherRequest(city)
 	local url = "https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20weather.forecast%20where%20woeid%20in%20(select%20woeid%20from%20geo.places(1)%20where%20text%3D%22" .. city .. "%2C%20ak%22)&format=json&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys"
-	local success, response = request(url)
+	local success, response = internet.request(url)
 
 	if success then
 		response = json:decode(response)
@@ -238,7 +219,7 @@ end
 
 local function loadWeatherData()
 	if fs.exists(pathToWeatherFile) then
-		weather = files.loadTableFromFile(pathToWeatherFile)
+		weather = table.fromFile(pathToWeatherFile)
 	else
 		weather = {
 			myCity = "saint-petersburg",
@@ -253,7 +234,7 @@ local function loadWeatherData()
 end
 
 local function saveWeatherData()
-	files.saveTableToFile(pathToWeatherFile, weather)
+	table.toFile(pathToWeatherFile, weather)
 end
 
 local function tryToGetAndDrawWeather()

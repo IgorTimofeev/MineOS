@@ -1,5 +1,5 @@
+require("advancedLua")
 local unicode = require("unicode")
-local files = require("files")
 local buffer = require("doubleBuffering")
 local event = require("event")
 local fs = require("filesystem")
@@ -63,16 +63,15 @@ local function readFile()
 	config.CurrentByte = 1
 
 	file = {}
-	local fileStream = files.openForReadingBytes(config.pathToFile)
+	local fileStream = io.open(config.pathToFile, "rb")
 
-	local readedByte
 	while true do
-		readedByte = fileStream.readByteAsHex()
+		local readedByte = myFileStream.luaFileStream:read(1)
 		if not readedByte then break end
-		table.insert(file, readedByte)
+		table.insert(file, string.format("%02X", string.byte(readedByte)))
 	end
 
-	fileStream.close()
+	fileStream:close()
 	config.sizeOfFile = math.ceil(fs.size(config.pathToFile) / 1024)
 end
 
@@ -273,11 +272,11 @@ end
 
 local function save(path)
 	fs.makeDirectory(fs.path(path) or "")
-	local fileStream = files.openForWriting(path)
+	local fileStream = io.open(path, "w")
 	for i = 1, #file do
-		fileStream.write(unicode.char(tonumber(table.concat({"0x", file[i]}))))
+		fileStream:write(unicode.char(tonumber(table.concat({"0x", file[i]}))))
 	end
-	fileStream.close()
+	fileStream:close()
 end
 
 --------------------------------------------------------------------------------------------------------------------------------

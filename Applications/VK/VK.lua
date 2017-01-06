@@ -14,7 +14,6 @@ local image = require("image")
 local unicode = require("unicode")
 local component = require("component")
 local computer = require("computer")
-local files = require("files")
 local GUI = require("GUI")
 
 ---------------------------------------------------- Константы ----------------------------------------------------------------
@@ -121,11 +120,11 @@ local countOfNewsToGet = 20
 ---------------------------------------------------- Веб-часть ----------------------------------------------------------------
 
 local function loadSettings()
-	if fs.exists(settingsPath) then settings = files.loadTableFromFile(settingsPath) end
+	if fs.exists(settingsPath) then settings = table.fromFile(settingsPath) end
 end
 
 local function saveSettings()
-	files.saveTableToFile(settingsPath, settings)
+	table.toFile(settingsPath, settings)
 end
 
 --Объекты

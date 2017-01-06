@@ -8,7 +8,7 @@
     about="IgorTimofeev/OpenComputers/master/MineOS/About/",
     type="Script",
     forceDownload=true,
-    version=3.28,
+    version=3.30,
   },
   {
     name="MineOS/Pictures/Raspberry.pic",
@@ -281,13 +281,6 @@
     version=1.05,
   },
   {
-    name="lib/internet.lua",
-    url="IgorTimofeev/OpenComputers/master/lib/internet.lua",
-    type="Library",
-    preLoadFile=true,
-    version=1.01,
-  },
-  {
     name="MineOS/System/OS/EFI.lua",
     url="IgorTimofeev/OpenComputers/master/MineOS/EFI.lua",
     type="Library",
@@ -316,10 +309,16 @@
     version=1.23,
   },
   {
-    name="lib/files.lua",
-    url="IgorTimofeev/OpenComputers/master/lib/files.lua",
+    name="lib/serialization.lua",
+    url="IgorTimofeev/OpenComputers/master/lib/serialization.lua",
     type="Library",
-    version=1.0,
+    version=1.05,
+  },
+  {
+    name="lib/internet.lua",
+    url="IgorTimofeev/OpenComputers/master/lib/internet.lua",
+    type="Library",
+    version=1.01,
   },
   {
     name="lib/GUI.lua",
@@ -334,26 +333,14 @@
     version=1.05,
   },
   {
-    name="lib/serialization.lua",
-    url="IgorTimofeev/OpenComputers/master/lib/serialization.lua",
-    type="Library",
-    version=1.01,
-  },
-  {
     name="lib/rayEngine.lua",
     url="IgorTimofeev/OpenComputers/master/lib/rayEngine.lua",
     type="Library",
-    version=1.37,
+    version=1.38,
   },
   {
     name="lib/json.lua",
     url="IgorTimofeev/OpenComputers/master/lib/json.lua",
-    type="Library",
-    version=1.0,
-  },
-  {
-    name="lib/filemanager.lua",
-    url="IgorTimofeev/OpenComputers/master/lib/filemanager.lua",
     type="Library",
     version=1.0,
   },
@@ -388,18 +375,6 @@
     version=1.0,
   },
   {
-    name="lib/tetris.lua",
-    url="IgorTimofeev/OpenComputers/master/lib/tetris.lua",
-    type="Library",
-    version=1.0,
-  },
-  {
-    name="lib/unixtime.lua",
-    url="IgorTimofeev/OpenComputers/master/lib/unixtime.lua",
-    type="Library",
-    version=1.0,
-  },
-  {
     name="lib/context.lua",
     url="IgorTimofeev/OpenComputers/master/lib/context.lua",
     type="Library",
@@ -422,12 +397,6 @@
     url="IgorTimofeev/OpenComputers/master/lib/doubleBuffering.lua",
     type="Library",
     version=1.16,
-  },
-  {
-    name="lib/thread.lua",
-    url="IgorTimofeev/OpenComputers/master/lib/thread.lua",
-    type="Library",
-    version=1.0,
   },
   {
     name="lib/archive.lua",
@@ -655,7 +624,7 @@
     type="Application",
     icon="IgorTimofeev/OpenComputers/master/Applications/VK/Icon.pic",
     createShortcut="dock",
-    version=1.22,
+    version=1.23,
     resources={
       {
         name="VKLogo.pic",
@@ -670,7 +639,7 @@
     type="Application",
     icon="IgorTimofeev/OpenComputers/master/Applications/Weather/Icon.pic",
     createShortcut="desktop",
-    version=1.1,
+    version=1.11,
     resources={
       {
         name="Cloudy.pic",
@@ -872,7 +841,7 @@
     type="Application",
     icon="IgorTimofeev/OpenComputers/master/Applications/Stargate/Icon.pic",
     createShortcut="desktop",
-    version=1.01,
+    version=1.02,
     resources={
       {
         name="Gate.pic",
@@ -1025,16 +994,16 @@
     createShortcut="desktop",
     version=1.01,
   },
-  {
-    name="MineOS/Applications/Finder",
-    url="IgorTimofeev/OpenComputers/master/Applications/Finder/Finder.lua",
-    about="IgorTimofeev/OpenComputers/master/Applications/Finder/About/",
-    type="Application",
-    icon="IgorTimofeev/OpenComputers/master/Applications/Finder/Icon.pic",
-    createShortcut="dock",
-    forceDownload=true,
-    version=1.12,
-  },
+  -- {
+  --   name="MineOS/Applications/Finder",
+  --   url="IgorTimofeev/OpenComputers/master/Applications/Finder/Finder.lua",
+  --   about="IgorTimofeev/OpenComputers/master/Applications/Finder/About/",
+  --   type="Application",
+  --   icon="IgorTimofeev/OpenComputers/master/Applications/Finder/Icon.pic",
+  --   createShortcut="dock",
+  --   forceDownload=true,
+  --   version=1.12,
+  -- },
   {
     name="MineOS/Applications/AppMarket",
     url="IgorTimofeev/OpenComputers/master/Applications/AppMarket/AppMarket.lua",
@@ -1043,7 +1012,7 @@
     icon="IgorTimofeev/OpenComputers/master/Applications/AppMarket/Icon.pic",
     createShortcut="dock",
     forceDownload=true,
-    version=1.47,
+    version=1.48,
      resources={
       {
         name="Localization/Russian.lang",
@@ -1124,7 +1093,7 @@
     type="Application",
     icon="IgorTimofeev/OpenComputers/master/Applications/HEX/Icon.pic",
     createShortcut="desktop",
-    version=1.0,
+    version=1.01,
   },
   {
     name="MineOS/Applications/ChristmasTree",

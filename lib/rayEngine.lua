@@ -6,7 +6,6 @@ local colorlib = require("colorlib")
 local image = require("image")
 local buffer = require("doubleBuffering")
 local GUI = require("GUI")
-local files = require("files")
 local event = require("event")
 
 ---------------------------------------------------- Константы ------------------------------------------------------------------
@@ -121,22 +120,22 @@ end
 
 -- Загрузка параметров движка
 function rayEngine.loadEngineProperties(pathToRayEnginePropertiesFile)
-	rayEngine.properties = files.loadTableFromFile(pathToRayEnginePropertiesFile)
+	rayEngine.properties = table.fromFile(pathToRayEnginePropertiesFile)
 end
 
 -- Загрузка конифгурации оружия
 function rayEngine.loadWeapons(pathToWeaponsFolder)
 	rayEngine.weaponsFolder = pathToWeaponsFolder
-	rayEngine.weapons = files.loadTableFromFile(rayEngine.weaponsFolder .. "Weapons.cfg")
+	rayEngine.weapons = table.fromFile(rayEngine.weaponsFolder .. "Weapons.cfg")
 	rayEngine.changeWeapon(1)
 end
 
 -- Загрузка конкретного мира
 function rayEngine.loadWorld(pathToWorldFolder)
-	rayEngine.world = files.loadTableFromFile(pathToWorldFolder .. "/World.cfg")
-	rayEngine.map = files.loadTableFromFile(pathToWorldFolder .. "/Map.cfg")
-	rayEngine.player = files.loadTableFromFile(pathToWorldFolder .. "/Player.cfg")
-	rayEngine.blocks = files.loadTableFromFile(pathToWorldFolder .. "/Blocks.cfg")
+	rayEngine.world = table.fromFile(pathToWorldFolder .. "/World.cfg")
+	rayEngine.map = table.fromFile(pathToWorldFolder .. "/Map.cfg")
+	rayEngine.player = table.fromFile(pathToWorldFolder .. "/Player.cfg")
+	rayEngine.blocks = table.fromFile(pathToWorldFolder .. "/Blocks.cfg")
 	-- Дополняем карту ее размерами
 	rayEngine.map.width = #rayEngine.map[1]
 	rayEngine.map.height = #rayEngine.map

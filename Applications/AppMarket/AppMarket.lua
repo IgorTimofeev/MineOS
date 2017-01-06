@@ -10,7 +10,6 @@ local GUI = require("GUI")
 local fs = require("filesystem")
 local component = require("component")
 local unicode = require("unicode")
-local files = require("files")
 local event = require("event")
 local ecs = require("ECSAPI")
 
@@ -44,7 +43,7 @@ local typeFilters = {
 	"Script",
 }
 
-local localization = files.loadTableFromFile("MineOS/Applications/AppMarket.app/Resources/Localization/" .. _G.OSSettings.language .. ".lang")
+local localization = table.fromFile("MineOS/Applications/AppMarket.app/Resources/Localization/" .. _G.OSSettings.language .. ".lang")
 local appMarketConfigPath = "MineOS/System/AppMarket/"
 local pathToApplications = "MineOS/System/OS/Applications.txt"
 local updateImage = image.load(MineOSCore.paths.icons .. "Update.pic")
@@ -226,7 +225,7 @@ end
 local function getNewApplications()
 	local pathToNewApplications = appMarketConfigPath .. "NewApplications.txt"
 	ecs.getFileFromUrl(oldApplications.GitHubApplicationListURL, pathToNewApplications)
-	newApplications = files.loadTableFromFile(pathToNewApplications)
+	newApplications = table.fromFile(pathToNewApplications)
 end
 
 local function getChanges()
@@ -281,11 +280,11 @@ local function flush()
 end
 
 local function loadOldApplications()
-	oldApplications = files.loadTableFromFile(pathToApplications)
+	oldApplications = table.fromFile(pathToApplications)
 end
 
 local function saveOldApplications()
-	files.saveTableToFile(pathToApplications, oldApplications)
+	table.toFile(pathToApplications, oldApplications)
 end
 
 local function drawAll(refreshIcons, force)

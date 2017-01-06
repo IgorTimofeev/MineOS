@@ -1,10 +1,10 @@
+require("advancedLua")
 local image = require("image")
 local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 local component = require("component")
 local unicode = require("unicode")
 local event = require("event")
-local files = require("files")
 local stargate
 
 if not component.isAvailable("stargate") then
@@ -32,12 +32,12 @@ local chevrons = {
 
 local function loadContacts()
 	if fs.exists(pathToContacts) then
-		contacts = files.loadTableFromFile(pathToContacts)
+		contacts = table.fromFile(pathToContacts)
 	end
 end
 
 local function saveContacts()
-	files.saveTableToFile(pathToContacts, contacts)
+	table.toFile(pathToContacts, contacts)
 end
 
 local function getArraySize(array)
