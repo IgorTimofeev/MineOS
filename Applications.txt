@@ -460,7 +460,7 @@
     url="IgorTimofeev/OpenComputers/master/MineOS/Init.lua",
     type="Script",
     forceDownload=true,
-    version=1.11,
+    version=1.12,
   },
   {
     name="etc/profile",
