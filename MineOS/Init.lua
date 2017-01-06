@@ -173,8 +173,9 @@ end
 -- MineOS Init data
 do
   -- Загружаем необходимые библиотеки, дабы избежать потерь памяти
-  _G.shell = require("shell"); shell.setWorkingDirectory("")
-  _G.ecs = require("ECSAPI")
+  local shell = require("shell"); shell.setWorkingDirectory("")
+  local ecs = require("ECSAPI")
+  local component = require("component")
 
   -- Загружаем параметры ОС
   ecs.loadOSSettings()

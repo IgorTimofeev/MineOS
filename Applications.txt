@@ -460,7 +460,7 @@
     url="IgorTimofeev/OpenComputers/master/MineOS/Init.lua",
     type="Script",
     forceDownload=true,
-    version=1.12,
+    version=1.13,
   },
   {
     name="etc/profile",
@@ -1152,11 +1152,11 @@
     version=1.01,
     resources={
       {
-        name="Russian.lang",
+        name="Localization/Russian.lang",
         url="IgorTimofeev/OpenComputers/master/Applications/HoloEdit/Localization/Russian.lang",
       },
       {
-        name="English.lang",
+        name="Localization/English.lang",
         url="IgorTimofeev/OpenComputers/master/Applications/HoloEdit/Localization/English.lang",
       },
     },

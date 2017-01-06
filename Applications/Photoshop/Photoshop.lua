@@ -57,6 +57,7 @@ copyright = nil
 
 local ecs = require("ECSAPI")
 local MineOSCore = require("MineOSCore")
+local GUI = require("GUI")
 local fs = require("filesystem")
 local unicode = require("unicode")
 local image = require("image")
@@ -66,7 +67,6 @@ local buffer = require("doubleBuffering")
 local colorlib = require("colorlib")
 local palette = require("palette")
 local event = require("event")
-local files = require("files")
 
 ------------------------------------------------ Переменные --------------------------------------------------------------
 
