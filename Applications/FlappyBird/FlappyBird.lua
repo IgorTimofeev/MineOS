@@ -5,6 +5,7 @@ local bigLetters = require("bigLetters")
 local fs = require("filesystem")
 local serialization = require("serialization")
 local ecs = require("ECSAPI")
+local event = require("event")
 
 buffer.start()
 
