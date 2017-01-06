@@ -6,6 +6,7 @@ local unicode = require("unicode")
 local event = require("event")
 local buffer = require("doubleBuffering")
 local MineOSCore = require("MineOSCore")
+local GUI = require("GUI")
 
 --------------------------------------------------------------------------------------------
 
