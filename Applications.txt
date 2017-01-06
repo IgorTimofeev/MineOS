@@ -481,13 +481,13 @@
     name="lib/PolyCatEngine/Main.lua",
     url="IgorTimofeev/OpenComputers/master/lib/PolyCatEngine/Main.lua",
     type="Library",
-    version=1.0,
+    version=1.01,
   },
   {
     name="lib/PolyCatEngine/Main.lua",
     url="IgorTimofeev/OpenComputers/master/lib/PolyCatEngine/PostProcessing.lua",
     type="Library",
-    version=1.0,
+    version=1.01,
   },
 
   ----------------------------------------------------- Скрипты и дополнения к ним --------------------------------------------------------------------------
