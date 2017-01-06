@@ -23,7 +23,7 @@ if component.isAvailable("tablet") then table.insert(govno, "Tablet PC detected 
 -- Проверяем GPU
 if component.gpu.maxResolution() < 150 then table.insert(govno, "Bad GPU or Screen - MineOS requires Tier 3 GPU and Tier 3 Screen.") end
 -- Проверяем оперативку
-if math.floor(computer.totalMemory() / 1024 ) < 2048 then table.insert(govno, "Not enough RAM - MineOS requires at least 1536 KB RAM.") end
+if math.floor(computer.totalMemory() / 1024 ) < 1024 then table.insert(govno, "Not enough RAM - MineOS requires at least 1024 KB RAM.") end
 -- Проверяем, не флоппи-диск ли это
 if fs.get("/bin/edit.lua") == nil or fs.get("/bin/edit.lua").isReadOnly() then table.insert(govno, "You can't install MineOS on floppy disk. Run \"install\" in command line and install OpenOS from floppy to HDD first. After that you're be able to install MineOS from Pastebin.") end
 

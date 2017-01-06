@@ -66,7 +66,7 @@ local function readFile()
 	local fileStream = io.open(config.pathToFile, "rb")
 
 	while true do
-		local readedByte = myFileStream.luaFileStream:read(1)
+		local readedByte = fileStream:read(1)
 		if not readedByte then break end
 		table.insert(file, string.format("%02X", string.byte(readedByte)))
 	end

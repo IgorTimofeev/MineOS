@@ -761,6 +761,11 @@ end
 
 ----------------------------------------- Menu -----------------------------------------
 
+local function menuDraw(menu)
+	buffer.square(menu.x, menu.y, menu.width, 1, menu.colors.default.background, menu.colors.default.text, " ", menu.colors.transparency)
+	menu:reimplementedDraw()
+end
+
 local function menuAddItem(menu, text, textColor)
 	local x = 2; for i = 2, #menu.children do x = x + unicode.len(menu.children[i].text) + 2; end
 	local item = menu:addAdaptiveButton(x, 1, 1, 0, nil, textColor or menu.colors.default.text, menu.colors.pressed.background, menu.colors.pressed.text, text)
@@ -784,6 +789,8 @@ function GUI.menu(x, y, width, backgroundColor, textColor, backgroundPressedColo
 	}
 
 	menu.addItem = menuAddItem
+	menu.reimplementedDraw = menu.draw
+	menu.draw = menuDraw
 
 	return menu
 end

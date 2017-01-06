@@ -605,17 +605,13 @@ function MineOSCore.iconLeftClick(iconObject, eventData)
 	if iconObject.isDirectory then
 		if iconObject.format == ".app" then
 			iconObject.launch()
-			computer.pushSignal("MineOSCore", "updateFileList")
+			computer.pushSignal("MineOSCore", "updateFileListAndBufferTrueRedraw")
 		else
 			computer.pushSignal("MineOSCore", "changeWorkpath", iconObject.path)
 		end
 	else
-		if iconObject.isShortcut then
-			computer.pushSignal("MineOSCore", "changeWorkpath", iconObject.shortcutPath)
-		else
-			iconObject.launch()
-			computer.pushSignal("MineOSCore", "updateFileListAndBufferTrueRedraw")
-		end
+		iconObject.launch()
+		computer.pushSignal("MineOSCore", "updateFileListAndBufferTrueRedraw")
 	end
 end
 

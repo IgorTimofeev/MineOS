@@ -136,6 +136,9 @@ local function changeResolution()
 	workspace.dockContainer.localPosition.x = math.floor(buffer.screen.width / 2 - workspace.dockContainer.width / 2)
 	workspace.dockContainer.localPosition.y = workspace.height - sizes.heightOfDock + 1
 
+	workspace.menu.width = workspace.width
+	workspace.background.width, workspace.background.height = workspace.width, workspace.height
+
 	workspace.updateFileList(true)
 end
 

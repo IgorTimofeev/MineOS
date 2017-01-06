@@ -8,7 +8,7 @@
     about="IgorTimofeev/OpenComputers/master/MineOS/About/",
     type="Script",
     forceDownload=true,
-    version=3.34,
+    version=3.35,
   },
   {
     name="MineOS/Pictures/Raspberry.pic",
@@ -271,7 +271,7 @@
     name="lib/MineOSCore.lua",
     url="IgorTimofeev/OpenComputers/master/lib/MineOSCore.lua",
     type="Library",
-    version=1.29,
+    version=1.30,
   },
   {
     name="lib/advancedLua.lua",
@@ -318,7 +318,7 @@
     name="lib/GUI.lua",
     url="IgorTimofeev/OpenComputers/master/lib/GUI.lua",
     type="Library",
-    version=1.19,
+    version=1.20,
   },
   {
     name="lib/windows.lua",
@@ -1065,7 +1065,7 @@
     type="Application",
     icon="IgorTimofeev/OpenComputers/master/Applications/HEX/Icon.pic",
     createShortcut="desktop",
-    version=1.01,
+    version=1.02,
   },
   {
     name="MineOS/Applications/ChristmasTree",
