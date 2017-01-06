@@ -292,6 +292,7 @@ function ecs.getOSApplication(application)
     --Если это приложение
     if application.type == "Application" then
 		--Удаляем приложение, если оно уже существовало и создаем все нужные папочки
+		application.name = "/" .. application.name
 		fs.remove(application.name .. ".app")
 		fs.makeDirectory(application.name .. ".app/Resources")
 		
