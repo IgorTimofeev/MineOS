@@ -251,11 +251,11 @@ local function createWorkspace()
 		end
 		menu:addItem(MineOSCore.localization.reboot).onTouch = function()
 			ecs.TV(0)
-			shell.execute("reboot")
+			dofile("/bin/reboot.lua")
 		end
 		menu:addItem(MineOSCore.localization.shutdown).onTouch = function()
 			ecs.TV(0)
-			shell.execute("shutdown")
+			dofile("/bin/shutdown.lua")
 		end		
 		menu:addSeparator()
 		menu:addItem(MineOSCore.localization.returnToShell).onTouch = function()
