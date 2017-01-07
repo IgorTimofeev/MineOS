@@ -5,6 +5,7 @@ local function matrix(backgroundColor, maximumLines, minumLineLength, maximumLin
 	local xScreen, yScreen = gpu.getResolution()
 
 	local chars = {"ァ", "ア", "ィ", "イ", "ゥ", "ウ", "ェ", "エ", "ォ", "オ", "カ", "ガ", "キ", "ギ", "ク", "グ", "ケ", "ゲ", "コ", "ゴ", "サ", "ザ", "シ", "ジ", "ス", "ズ", "セ", "ゼ", "ソ", "ゾ", "タ", "ダ", "チ", "ヂ", "ッ", "ツ", "ヅ", "テ", "デ", "ト", "ド", "ナ", "ニ", "ヌ", "ネ", "ノ", "ハ", "バ", "パ", "ヒ", "ビ", "ピ", "フ", "ブ", "プ", "ヘ", "ベ", "ペ", "ホ", "ボ", "ポ", "マ", "ミ", "ム", "メ", "モ", "ャ", "ヤ", "ュ", "ユ", "ョ", "ヨ", "ラ", "リ", "ル", "レ", "ロ", "ヮ", "ワ", "ヰ", "ヱ", "ヲ", "ン", "ヴ", "ヵ", "ヶ", "ヷ", "ヸ", "ヹ", "ヺ", "・", "ー", "ヽ", "ヾ", "ヿ"}
+	-- local chars = {"%", "?", "@", "#", "$", "!", "0", "/", "№", "&"}
 	local colorsForeground = { 0xFFFFFF, 0xBBFFBB, 0x88FF88, 0x33FF33, 0x00FF00, 0x00EE00, 0x00DD00, 0x00CC00, 0x00BB00, 0x00AA00, 0x009900, 0x008800, 0x007700, 0x006600, 0x005500, 0x004400, 0x003300, 0x002200, 0x001100 }
 	local colorsBackground = { 0x004400, 0x004400, 0x003300, 0x002200, 0x001100 }
 
@@ -48,6 +49,8 @@ local function matrix(backgroundColor, maximumLines, minumLineLength, maximumLin
 		tick()
 		local e = {event.pull(0.03)}
 		if e[1] == "key_down" and e[4] == 28 or e[1] == "touch" then
+			gpu.setBackground(backgroundColor)
+			gpu.fill(1, 1, xScreen, yScreen, " ")
 			break
 		end
 	end

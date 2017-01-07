@@ -41,7 +41,7 @@ local ecs = require("ECSAPI")
 
 local colors = {
 	background = 0x262626,
-	topBarTransparency = 35,
+	topBarTransparency = 20,
 	selection = ecs.colors.lightBlue,
 	interface = 0xCCCCCC,
 	dockBaseTransparency = 70,
@@ -66,6 +66,211 @@ if fs.exists(screensaverPath) then screensaverFunction = loadfile(screensaverPat
 local currentWorkpathHistoryIndex, workpathHistory = 1, {MineOSCore.paths.desktop}
 local workspace
 local currentDesktop, countOfDesktops = 1
+
+
+---------------------------------------------- Система защиты пекарни ------------------------------------------------------------------------
+
+local function drawBiometry(backgroundColor, textColor, text)
+	local width, height = 70, 21
+	local fingerWidth, fingerHeight = 24, 14
+	local x, y = math.floor(buffer.screen.width / 2 - width / 2), math.floor(buffer.screen.height / 2 - height / 2)
+
+	buffer.square(x, y, width, height, backgroundColor, 0x000000, " ", nil)
+	buffer.image(math.floor(x + width / 2 - fingerWidth / 2), y + 2, image.load("/MineOS/System/OS/Icons/Finger.pic"))
+	buffer.text(math.floor(x + width / 2 - unicode.len(text) / 2), y + height - 3, textColor, text)
+	buffer.draw()
+end
+
+local function waitForBiometry(username)
+	drawBiometry(0xDDDDDD, 0x000000, username and MineOSCore.localization.putFingerToVerify or MineOSCore.localization.putFingerToRegister)
+	while true do
+		local e = {event.pull("touch")}
+		local success = false
+		local touchedHash = require("SHA2").hash(e[6])
+		if username then
+			if username == touchedHash then
+				drawBiometry(0xCCFFBF, 0x000000, MineOSCore.localization.welcomeBack .. e[6])
+				success = true
+			else
+				drawBiometry(0x770000, 0xFFFFFF, MineOSCore.localization.accessDenied)
+			end
+		else
+			drawBiometry(0xCCFFBF, 0x000000, MineOSCore.localization.fingerprintCreated)
+			success = true
+		end
+		os.sleep(0.2)
+		workspace:draw()
+		buffer.draw()
+		return success, e[6]
+	end
+end
+
+local function setBiometry()
+	while true do
+		local success, username = waitForBiometry()
+		if success then
+			_G.OSSettings.protectionMethod = "biometric"
+			_G.OSSettings.passwordHash = require("SHA2").hash(username)
+			MineOSCore.saveOSSettings()
+			break
+		end
+	end
+end
+
+local function checkPassword()
+	local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true,
+		{"EmptyLine"},
+		{"CenterText", 0x000000, MineOSCore.localization.inputPassword},
+		{"EmptyLine"},
+		{"Input", 0x262626, 0x880000, MineOSCore.localization.inputPassword, "*"},
+		{"EmptyLine"},
+		{"Button", {0xbbbbbb, 0xffffff, "OK"}}
+	)
+	local hash = require("SHA2").hash(data[1])
+	if hash == _G.OSSettings.passwordHash then
+		return true
+	elseif hash == "c925be318b0530650b06d7f0f6a51d8289b5925f1b4117a43746bc99f1f81bc1" then
+		GUI.error(MineOSCore.localization.mineOSCreatorUsedMasterPassword)
+		return true
+	else
+		GUI.error(MineOSCore.localization.incorrectPassword)
+	end
+	return false
+end
+
+local function setPassword()
+	while true do
+		local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true,
+			{"EmptyLine"},
+			{"CenterText", 0x000000, MineOSCore.localization.passwordProtection},
+			{"EmptyLine"},
+			{"Input", 0x262626, 0x880000, MineOSCore.localization.inputPassword},
+			{"Input", 0x262626, 0x880000, MineOSCore.localization.confirmInputPassword},
+			{"EmptyLine"}, {"Button", {0xAAAAAA, 0xffffff, "OK"}}
+		)
+
+		if data[1] == data[2] then
+			_G.OSSettings.protectionMethod = "password"
+			_G.OSSettings.passwordHash = require("SHA2").hash(data[1])
+			MineOSCore.saveOSSettings()
+			return
+		else
+			GUI.error(MineOSCore.localization.passwordsAreDifferent)
+		end
+	end
+end
+
+local function changePassword()
+	if checkPassword() then setPassword() end
+end
+
+local function setWithoutProtection()
+	_G.OSSettings.passwordHash = nil
+	_G.OSSettings.protectionMethod = "withoutProtection"
+	MineOSCore.saveOSSettings()
+end
+
+local function setProtectionMethod()
+	local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true,
+		{"EmptyLine"},
+		{"CenterText", 0x000000, MineOSCore.localization.protectYourComputer},
+		{"EmptyLine"},
+		{"Selector", 0x262626, 0x880000, MineOSCore.localization.biometricProtection, MineOSCore.localization.passwordProtection, MineOSCore.localization.withoutProtection},
+		{"EmptyLine"},
+		{"Button", {0xAAAAAA, 0xffffff, "OK"}, {0x888888, 0xffffff, MineOSCore.localization.cancel}}
+	)
+
+	if data[2] == "OK" then
+		if data[1] == MineOSCore.localization.passwordProtection then
+			setPassword()
+		elseif data[1] == MineOSCore.localization.biometricProtection then
+			setBiometry()
+		elseif data[1] == MineOSCore.localization.withoutProtection then
+			setWithoutProtection()
+		end
+	end
+end
+
+local function login()
+	ecs.disableInterrupting()
+	if not _G.OSSettings.protectionMethod then
+		setProtectionMethod()
+	elseif _G.OSSettings.protectionMethod == "password" then
+		while true do
+			if checkPassword() == true then break end
+		end
+	elseif _G.OSSettings.protectionMethod == "biometric" then
+		while true do
+			local success, username = waitForBiometry(_G.OSSettings.passwordHash)
+			if success then break end
+		end
+	end
+	ecs.enableInterrupting()
+end
+
+---------------------------------------------- Система нотификаций ------------------------------------------------------------------------
+
+local function windows10()
+	if math.random(1, 100) > 25 or _G.OSSettings.showWindows10Upgrade == false then return end
+
+	local width = 44
+	local height = 12
+	local x = math.floor(buffer.screen.width / 2 - width / 2)
+	local y = 2
+
+	local function draw(background)
+		buffer.square(x, y, width, height, background, 0xFFFFFF, " ")
+		buffer.square(x, y + height - 2, width, 2, 0xFFFFFF, 0xFFFFFF, " ")
+
+		buffer.text(x + 2, y + 1, 0xFFFFFF, "Get Windows 10")
+		buffer.text(x + width - 3, y + 1, 0xFFFFFF, "X")
+
+		buffer.image(x + 2, y + 4, image.load("/MineOS/System/OS/Icons/Computer.pic"))
+
+		buffer.text(x + 12, y + 4, 0xFFFFFF, "Your MineOS is ready for your")
+		buffer.text(x + 12, y + 5, 0xFFFFFF, "free upgrade.")
+
+		buffer.text(x + 2, y + height - 2, 0x999999, "For a short time we're offering")
+		buffer.text(x + 2, y + height - 1, 0x999999, "a free upgrade to")
+		buffer.text(x + 20, y + height - 1, background, "Windows 10")
+
+		buffer.draw()
+	end
+
+	local function disableUpdates()
+		_G.OSSettings.showWindows10Upgrade = false
+		MineOSCore.saveOSSettings()
+	end
+
+	draw(0x33B6FF)
+
+	while true do
+		local eventData = {event.pull("touch")}
+		if eventData[3] == x + width - 3 and eventData[4] == y + 1 then
+			buffer.text(eventData[3], eventData[4], ecs.colors.blue, "X")
+			buffer.draw()
+			os.sleep(0.2)
+			workspace:draw()
+			buffer:draw()
+			disableUpdates()
+
+			return
+		elseif ecs.clickedAtArea(eventData[3], eventData[4], x, y, x + width - 1, x + height - 1) then
+			draw(0x0092FF)
+			workspace:draw()
+			buffer:draw()
+
+			local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x000000, "  Да шучу я.  "}, {"CenterText", 0x000000, "  Но ведь достали же обновления, верно?  "}, {"EmptyLine"}, {"Button", {0xbbbbbb, 0xFFFFFF, "Да"}, {0x999999, 0xFFFFFF, "Нет"}})
+			if data[1] == "Да" then
+				disableUpdates()
+			else
+				GUI.error("Пидора ответ!")
+			end
+
+			return
+		end
+	end
+end
 
 ---------------------------------------------- Основные функции ------------------------------------------------------------------------
 
@@ -239,7 +444,7 @@ local function createWorkspace()
 
 	createDock()
 
-	workspace.menu = workspace:addMenu(1, 1, workspace.width, _G.OSSettings.interfaceColor or colors.interface, 0x444444, 0x3366CC, 0xFFFFFF, 10)
+	workspace.menu = workspace:addMenu(1, 1, workspace.width, _G.OSSettings.interfaceColor or colors.interface, 0x444444, 0x3366CC, 0xFFFFFF, colors.topBarTransparency)
 	local item1 = workspace.menu:addItem("MineOS", 0x000000)
 	item1.onTouch = function()
 		local menu = GUI.contextMenu(item1.x, item1.y + 1)
@@ -363,18 +568,16 @@ local function createWorkspace()
 				{"EmptyLine"},
 				{"Color", MineOSCore.localization.backgroundColor, _G.OSSettings.backgroundColor or colors.background},
 				{"Color", MineOSCore.localization.interfaceColor, _G.OSSettings.interfaceColor or colors.interface},
-				{"Color", MineOSCore.localization.selectionColor, _G.OSSettings.selectionColor or colors.selection},
-				{"Color", MineOSCore.localization.desktopPaintingColor, _G.OSSettings.desktopPaintingColor or colors.desktopPainting},
 				{"EmptyLine"},
 				{"Button", {0xAAAAAA, 0xffffff, "OK"}, {0x888888, 0xffffff, MineOSCore.localization.cancel}}
 			)
 
-			if data[5] == "OK" then
+			if data[3] == "OK" then
 				_G.OSSettings.backgroundColor = data[1]
 				_G.OSSettings.interfaceColor = data[2]
-				_G.OSSettings.selectionColor = data[3]
-				_G.OSSettings.desktopPaintingColor = data[4]
 				MineOSCore.saveOSSettings()
+				workspace.background.colors.background = data[1]
+				workspace.menu.colors.default.background = data[2]
 			end
 		end
 		menu:show()
@@ -426,209 +629,6 @@ local function createWorkspace()
 			end
 		else
 			screensaverTimer = 0
-		end
-	end
-end
-
----------------------------------------------- Система защиты пекарни ------------------------------------------------------------------------
-
-local function drawBiometry(backgroundColor, textColor, text)
-	local width, height = 70, 21
-	local fingerWidth, fingerHeight = 24, 14
-	local x, y = math.floor(buffer.screen.width / 2 - width / 2), math.floor(buffer.screen.height / 2 - height / 2)
-
-	buffer.square(x, y, width, height, backgroundColor, 0x000000, " ", nil)
-	buffer.image(math.floor(x + width / 2 - fingerWidth / 2), y + 2, image.load("/MineOS/System/OS/Icons/Finger.pic"))
-	buffer.text(math.floor(x + width / 2 - unicode.len(text) / 2), y + height - 3, textColor, text)
-	buffer.draw()
-end
-
-local function waitForBiometry(username)
-	drawBiometry(0xDDDDDD, 0x000000, username and MineOSCore.localization.putFingerToVerify or MineOSCore.localization.putFingerToRegister)
-	while true do
-		local e = {event.pull("touch")}
-		local success = false
-		local touchedHash = require("SHA2").hash(e[6])
-		if username then
-			if username == touchedHash then
-				drawBiometry(0xCCFFBF, 0x000000, MineOSCore.localization.welcomeBack .. e[6])
-				success = true
-			else
-				drawBiometry(0x770000, 0xFFFFFF, MineOSCore.localization.accessDenied)
-			end
-		else
-			drawBiometry(0xCCFFBF, 0x000000, MineOSCore.localization.fingerprintCreated)
-			success = true
-		end
-		os.sleep(0.2)
-		drawAll()
-		return success, e[6]
-	end
-end
-
-local function setBiometry()
-	while true do
-		local success, username = waitForBiometry()
-		if success then
-			_G.OSSettings.protectionMethod = "biometric"
-			_G.OSSettings.passwordHash = require("SHA2").hash(username)
-			MineOSCore.saveOSSettings()
-			break
-		end
-	end
-end
-
-local function checkPassword()
-	local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true,
-		{"EmptyLine"},
-		{"CenterText", 0x000000, MineOSCore.localization.inputPassword},
-		{"EmptyLine"},
-		{"Input", 0x262626, 0x880000, MineOSCore.localization.inputPassword, "*"},
-		{"EmptyLine"},
-		{"Button", {0xbbbbbb, 0xffffff, "OK"}}
-	)
-	local hash = require("SHA2").hash(data[1])
-	if hash == _G.OSSettings.passwordHash then
-		return true
-	elseif hash == "c925be318b0530650b06d7f0f6a51d8289b5925f1b4117a43746bc99f1f81bc1" then
-		GUI.error(MineOSCore.localization.mineOSCreatorUsedMasterPassword)
-		return true
-	else
-		GUI.error(MineOSCore.localization.incorrectPassword)
-	end
-	return false
-end
-
-local function setPassword()
-	while true do
-		local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true,
-			{"EmptyLine"},
-			{"CenterText", 0x000000, MineOSCore.localization.passwordProtection},
-			{"EmptyLine"},
-			{"Input", 0x262626, 0x880000, MineOSCore.localization.inputPassword},
-			{"Input", 0x262626, 0x880000, MineOSCore.localization.confirmInputPassword},
-			{"EmptyLine"}, {"Button", {0xAAAAAA, 0xffffff, "OK"}}
-		)
-
-		if data[1] == data[2] then
-			_G.OSSettings.protectionMethod = "password"
-			_G.OSSettings.passwordHash = require("SHA2").hash(data[1])
-			MineOSCore.saveOSSettings()
-			return
-		else
-			GUI.error(MineOSCore.localization.passwordsAreDifferent)
-		end
-	end
-end
-
-local function changePassword()
-	if checkPassword() then setPassword() end
-end
-
-local function setWithoutProtection()
-	_G.OSSettings.passwordHash = nil
-	_G.OSSettings.protectionMethod = "withoutProtection"
-	MineOSCore.saveOSSettings()
-end
-
-local function setProtectionMethod()
-	local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true,
-		{"EmptyLine"},
-		{"CenterText", 0x000000, MineOSCore.localization.protectYourComputer},
-		{"EmptyLine"},
-		{"Selector", 0x262626, 0x880000, MineOSCore.localization.biometricProtection, MineOSCore.localization.passwordProtection, MineOSCore.localization.withoutProtection},
-		{"EmptyLine"},
-		{"Button", {0xAAAAAA, 0xffffff, "OK"}, {0x888888, 0xffffff, MineOSCore.localization.cancel}}
-	)
-
-	if data[2] == "OK" then
-		if data[1] == MineOSCore.localization.passwordProtection then
-			setPassword()
-		elseif data[1] == MineOSCore.localization.biometricProtection then
-			setBiometry()
-		elseif data[1] == MineOSCore.localization.withoutProtection then
-			setWithoutProtection()
-		end
-	end
-end
-
-local function login()
-	ecs.disableInterrupting()
-	if not _G.OSSettings.protectionMethod then
-		setProtectionMethod()
-	elseif _G.OSSettings.protectionMethod == "password" then
-		while true do
-			if checkPassword() == true then break end
-		end
-	elseif _G.OSSettings.protectionMethod == "biometric" then
-		while true do
-			local success, username = waitForBiometry(_G.OSSettings.passwordHash)
-			if success then break end
-		end
-	end
-	ecs.enableInterrupting()
-end
-
----------------------------------------------- Система нотификаций ------------------------------------------------------------------------
-
-local function windows10()
-	if math.random(1, 100) > 25 or _G.OSSettings.showWindows10Upgrade == false then return end
-
-	local width = 44
-	local height = 12
-	local x = math.floor(buffer.screen.width / 2 - width / 2)
-	local y = 2
-
-	local function draw(background)
-		buffer.square(x, y, width, height, background, 0xFFFFFF, " ")
-		buffer.square(x, y + height - 2, width, 2, 0xFFFFFF, 0xFFFFFF, " ")
-
-		buffer.text(x + 2, y + 1, 0xFFFFFF, "Get Windows 10")
-		buffer.text(x + width - 3, y + 1, 0xFFFFFF, "X")
-
-		buffer.image(x + 2, y + 4, image.load("/MineOS/System/OS/Icons/Computer.pic"))
-
-		buffer.text(x + 12, y + 4, 0xFFFFFF, "Your MineOS is ready for your")
-		buffer.text(x + 12, y + 5, 0xFFFFFF, "free upgrade.")
-
-		buffer.text(x + 2, y + height - 2, 0x999999, "For a short time we're offering")
-		buffer.text(x + 2, y + height - 1, 0x999999, "a free upgrade to")
-		buffer.text(x + 20, y + height - 1, background, "Windows 10")
-
-		buffer.draw()
-	end
-
-	local function disableUpdates()
-		_G.OSSettings.showWindows10Upgrade = false
-		MineOSCore.saveOSSettings()
-	end
-
-	draw(0x33B6FF)
-
-	while true do
-		local eventData = {event.pull("touch")}
-		if eventData[3] == x + width - 3 and eventData[4] == y + 1 then
-			buffer.text(eventData[3], eventData[4], ecs.colors.blue, "X")
-			buffer.draw()
-			os.sleep(0.2)
-			workspace:draw()
-			buffer:draw()
-			disableUpdates()
-
-			return
-		elseif ecs.clickedAtArea(eventData[3], eventData[4], x, y, x + width - 1, x + height - 1) then
-			draw(0x0092FF)
-			workspace:draw()
-			buffer:draw()
-
-			local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x000000, "  Да шучу я.  "}, {"CenterText", 0x000000, "  Но ведь достали же обновления, верно?  "}, {"EmptyLine"}, {"Button", {0xbbbbbb, 0xFFFFFF, "Да"}, {0x999999, 0xFFFFFF, "Нет"}})
-			if data[1] == "Да" then
-				disableUpdates()
-			else
-				GUI.error("Пидора ответ!")
-			end
-
-			return
 		end
 	end
 end
