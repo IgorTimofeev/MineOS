@@ -8,7 +8,7 @@
     about="IgorTimofeev/OpenComputers/master/MineOS/About/",
     type="Script",
     forceDownload=true,
-    version=3.35,
+    version=3.36,
   },
   {
     name="MineOS/Pictures/Raspberry.pic",
@@ -849,7 +849,7 @@
     type="Application",
     icon="IgorTimofeev/OpenComputers/master/Applications/Matrix/Icon.pic",
     createShortcut="desktop",
-    version=1.0,
+    version=1.01,
   },
   {
     name="MineOS/Applications/Graph",

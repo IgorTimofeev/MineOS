@@ -36,7 +36,6 @@ local GUI = require("GUI")
 local windows = require("windows")
 local MineOSCore = require("MineOSCore")
 local ecs = require("ECSAPI")
-local SHA2 = require("SHA2")
 
 ---------------------------------------------- Базовые константы ------------------------------------------------------------------------
 
@@ -58,6 +57,11 @@ local sizes = {
 	xSpaceBetweenIcons = 2,
 	ySpaceBetweenIcons = 1,
 }
+
+local screensaverDelay = 10
+local screensaverPath = MineOSCore.paths.applications .. "Matrix.app/Matrix.lua"
+local screensaverTimer, screensaverFunction = 0
+if fs.exists(screensaverPath) then screensaverFunction = loadfile(screensaverPath) end
 
 local currentWorkpathHistoryIndex, workpathHistory = 1, {MineOSCore.paths.desktop}
 local workspace
@@ -412,6 +416,16 @@ local function createWorkspace()
 				workspace:draw()
 				buffer.draw()
 			end
+		elseif not eventData[1] then
+			screensaverTimer = screensaverTimer + 0.5
+			if screensaverTimer > screensaverDelay and screensaverFunction then
+				screensaverFunction()
+				screensaverTimer = 0
+				workspace:draw()
+				buffer.draw(true)
+			end
+		else
+			screensaverTimer = 0
 		end
 	end
 end
@@ -434,7 +448,7 @@ local function waitForBiometry(username)
 	while true do
 		local e = {event.pull("touch")}
 		local success = false
-		local touchedHash = SHA2.hash(e[6])
+		local touchedHash = require("SHA2").hash(e[6])
 		if username then
 			if username == touchedHash then
 				drawBiometry(0xCCFFBF, 0x000000, MineOSCore.localization.welcomeBack .. e[6])
@@ -457,7 +471,7 @@ local function setBiometry()
 		local success, username = waitForBiometry()
 		if success then
 			_G.OSSettings.protectionMethod = "biometric"
-			_G.OSSettings.passwordHash = SHA2.hash(username)
+			_G.OSSettings.passwordHash = require("SHA2").hash(username)
 			MineOSCore.saveOSSettings()
 			break
 		end
@@ -473,7 +487,7 @@ local function checkPassword()
 		{"EmptyLine"},
 		{"Button", {0xbbbbbb, 0xffffff, "OK"}}
 	)
-	local hash = SHA2.hash(data[1])
+	local hash = require("SHA2").hash(data[1])
 	if hash == _G.OSSettings.passwordHash then
 		return true
 	elseif hash == "c925be318b0530650b06d7f0f6a51d8289b5925f1b4117a43746bc99f1f81bc1" then
@@ -498,7 +512,7 @@ local function setPassword()
 
 		if data[1] == data[2] then
 			_G.OSSettings.protectionMethod = "password"
-			_G.OSSettings.passwordHash = SHA2.hash(data[1])
+			_G.OSSettings.passwordHash = require("SHA2").hash(data[1])
 			MineOSCore.saveOSSettings()
 			return
 		else
@@ -627,7 +641,7 @@ changeWallpaper()
 changeResolution()
 login()
 windows10()
-workspace:handleEvents()
+workspace:handleEvents(0.5)
 
 
 
