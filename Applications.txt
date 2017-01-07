@@ -17,12 +17,6 @@
     version=1.0,
   },
   {
-    name="MineOS/Pictures/Blueberry.pic",
-    url="IgorTimofeev/OpenComputers/master/MineOS/Wallpapers/Blueberry.pic",
-    type="Wallpaper",
-    version=1.0,
-  },
-  {
     name="MineOS/Pictures/Nettle.pic",
     url="IgorTimofeev/OpenComputers/master/MineOS/Wallpapers/Nettle.pic",
     type="Wallpaper",
@@ -33,12 +27,6 @@
     url="IgorTimofeev/OpenComputers/master/MineOS/Wallpapers/Catniss.pic",
     type="Wallpaper",
     version=1.0,
-  },
-  {
-    name="MineOS/Pictures/Sunbeams.pic",
-    url="IgorTimofeev/OpenComputers/master/MineOS/Wallpapers/Sunbeams.pic",
-    type="Wallpaper",
-    version=1.1,
   },
   {
     name="MineOS/Pictures/Nocturnal.pic",
@@ -67,18 +55,6 @@
   {
     name="MineOS/Pictures/TemplarAssassin.pic",
     url="IgorTimofeev/OpenComputers/master/MineOS/Wallpapers/TemplarAssassin.pic",
-    type="Wallpaper",
-    version=1.0,
-  },
-  {
-    name="MineOS/Pictures/Invoker.pic",
-    url="IgorTimofeev/OpenComputers/master/MineOS/Wallpapers/Invoker.pic",
-    type="Wallpaper",
-    version=1.0,
-  },
-  {
-    name="MineOS/Pictures/Jodie.pic",
-    url="IgorTimofeev/OpenComputers/master/MineOS/Wallpapers/Jodie.pic",
     type="Wallpaper",
     version=1.0,
   },
@@ -849,7 +825,7 @@
     type="Application",
     icon="IgorTimofeev/OpenComputers/master/Applications/Matrix/Icon.pic",
     createShortcut="desktop",
-    version=1.02,
+    version=1.03,
   },
   {
     name="MineOS/Applications/Graph",
