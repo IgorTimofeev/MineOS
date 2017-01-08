@@ -2,6 +2,7 @@
 ----------------------------------------- Libraries -----------------------------------------
 
 require("advancedLua")
+local keyboard = require("keyboard")
 local buffer = require("doubleBuffering")
 local unicode = require("unicode")
 local event = require("event")
