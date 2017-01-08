@@ -1,11 +1,11 @@
 
+local computer = require("computer")
 local ecs = require("ECSAPI")
 local image = require("image")
 local fs = require("filesystem")
 local buffer = require("doubleBuffering")
 local unicode = require("unicode")
 local event = require("event")
-
 
 local pathToApplicationResources = "MineOS/Applications/Viewer.app/Resources/"
 local currentPath = "MineOS/Pictures/"
@@ -189,7 +189,7 @@ while true do
 			buffer.clear(0x262626)
 			buffer.draw()
 			ecs.createShortCut("MineOS/System/OS/Wallpaper.lnk", imageList[currentImage])
-			computer.pushSignal("OSWallpaperChanged")
+			computer.pushSignal("MineOSCore", "updateWallpaper")
 			return
 		elseif (e[3] >= 2 and e[3] <= 3 and e[4] == 1) then
 			buffer.text(2, 1, ecs.colors.blue, "⬤")

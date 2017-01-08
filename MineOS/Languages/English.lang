@@ -1,4 +1,8 @@
 {
+	screensaver = "Screensaver",
+	screensaverDelay = "Delay",
+	screensaverDisabled = "Disabled",
+
 	type = "Type",
 	size = "Size",
 	date = "Date",
@@ -46,13 +50,6 @@
 	showApplicationIcons = "Show application icons",
 	hideApplicationIcons = "Hide application icons",
 
-	sortByTypeShort = "By type",
-	sortByNameShort = "By name",
-	sortByDateShort = "By date",
-	showFileFormatShort = "Format",
-	showHiddenFilesShort = "Hidden",
-	sortingMethod = "Sorting method",
-
 	aboutSystem = "About this PC",
 	updates = "Updates",
 	shutdown = "Shutdown",
@@ -84,15 +81,13 @@
 	colorScheme = "Color scheme",
 	backgroundColor = "Background color",
 	interfaceColor = "Interface color",
-	selectionColor = "Selection color",
-	desktopPaintingColor = "Painting color",
 	screenResolution = "Screen resolution",
-	settings = "Preferences",
 	changePassword = "Change password",
 	cancel = "Cancel",
 	shortcut = "shortcut",
 	shortcutIsCorrupted = "Shortcut file is corrupted",
 
+	settings = "Preferences",
 	viewTab = "View",
 
 	errorWhileRunningProgram = "Error while running ",

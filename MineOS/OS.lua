@@ -58,10 +58,7 @@ local sizes = {
 	ySpaceBetweenIcons = 1,
 }
 
-local screensaverDelay = 10
-local screensaverPath = MineOSCore.paths.applications .. "Matrix.app/Matrix.lua"
-local screensaverTimer, screensaverFunction = 0
-if fs.exists(screensaverPath) then screensaverFunction = loadfile(screensaverPath) end
+local screensaversPath, screensaverTimer = MineOSCore.paths.system .. "OS/Screensavers/", 0
 
 local currentWorkpathHistoryIndex, workpathHistory = 1, {MineOSCore.paths.desktop}
 local workspace
@@ -516,6 +513,45 @@ local function createWorkspace()
 			workspace:updateFileList()
 		end
 		menu:addSeparator()
+		menu:addItem(MineOSCore.localization.screensaver).onTouch = function()
+			local possibleScreensavers = {}; for file in fs.list(screensaversPath) do table.insert(possibleScreensavers, MineOSCore.hideFileFormat(file)) end
+			local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true,
+				{"EmptyLine"},
+				{"CenterText", 0x000000, MineOSCore.localization.screensaver},
+				{"EmptyLine"},
+				{"Selector", 0x262626, 0x880000, MineOSCore.localization.screensaverDisabled, table.unpack(possibleScreensavers)},
+				{"Slider", 0x262626, 0x880000, 1, 100, _G.OSSettings.screensaverDelay or 20, MineOSCore.localization.screensaverDelay .. ": ", ""},
+				{"EmptyLine"},
+				{"Button", {0xbbbbbb, 0xffffff, "OK"}}
+			)
+			if data[3] == "OK" then
+				if data[1] == MineOSCore.localization.screensaverDisabled then
+					_G.OSSettings.screensaver = nil
+				else
+					_G.OSSettings.screensaver, _G.OSSettings.screensaverDelay = data[1], data[2]
+				end
+				MineOSCore.saveOSSettings()
+			end
+		end
+		menu:addItem(MineOSCore.localization.colorScheme).onTouch = function()
+			local data = ecs.universalWindow("auto", "auto", 36, 0xeeeeee, true,
+				{"EmptyLine"},
+				{"CenterText", 0x000000, MineOSCore.localization.colorScheme},
+				{"EmptyLine"},
+				{"Color", MineOSCore.localization.backgroundColor, _G.OSSettings.backgroundColor or colors.background},
+				{"Color", MineOSCore.localization.interfaceColor, _G.OSSettings.interfaceColor or colors.interface},
+				{"EmptyLine"},
+				{"Button", {0xAAAAAA, 0xffffff, "OK"}, {0x888888, 0xffffff, MineOSCore.localization.cancel}}
+			)
+
+			if data[3] == "OK" then
+				_G.OSSettings.backgroundColor = data[1]
+				_G.OSSettings.interfaceColor = data[2]
+				MineOSCore.saveOSSettings()
+				workspace.background.colors.background = data[1]
+				workspace.menu.colors.default.background = data[2]
+			end
+		end
 		menu:addItem(MineOSCore.localization.contextMenuRemoveWallpaper, workspace.wallpaper.isHidden).onTouch = function()
 			fs.remove(MineOSCore.paths.wallpaper)
 			changeWallpaper()
@@ -560,26 +596,6 @@ local function createWorkspace()
 		menu:addItem(MineOSCore.localization.setProtectionMethod).onTouch = function()
 			setProtectionMethod()
 		end
-		menu:addSeparator()
-		menu:addItem(MineOSCore.localization.colorScheme).onTouch = function()
-			local data = ecs.universalWindow("auto", "auto", 36, 0xeeeeee, true,
-				{"EmptyLine"},
-				{"CenterText", 0x000000, MineOSCore.localization.colorScheme},
-				{"EmptyLine"},
-				{"Color", MineOSCore.localization.backgroundColor, _G.OSSettings.backgroundColor or colors.background},
-				{"Color", MineOSCore.localization.interfaceColor, _G.OSSettings.interfaceColor or colors.interface},
-				{"EmptyLine"},
-				{"Button", {0xAAAAAA, 0xffffff, "OK"}, {0x888888, 0xffffff, MineOSCore.localization.cancel}}
-			)
-
-			if data[3] == "OK" then
-				_G.OSSettings.backgroundColor = data[1]
-				_G.OSSettings.interfaceColor = data[2]
-				MineOSCore.saveOSSettings()
-				workspace.background.colors.background = data[1]
-				workspace.menu.colors.default.background = data[2]
-			end
-		end
 		menu:show()
 	end
 
@@ -621,8 +637,8 @@ local function createWorkspace()
 			end
 		elseif not eventData[1] then
 			screensaverTimer = screensaverTimer + 0.5
-			if screensaverTimer > screensaverDelay and screensaverFunction then
-				screensaverFunction()
+			if _G.OSSettings.screensaver and screensaverTimer > _G.OSSettings.screensaverDelay and fs.exists(screensaversPath .. _G.OSSettings.screensaver .. ".lua") then
+				MineOSCore.safeLaunch(screensaversPath .. _G.OSSettings.screensaver .. ".lua")
 				screensaverTimer = 0
 				workspace:draw()
 				buffer.draw(true)

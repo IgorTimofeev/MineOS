@@ -69,14 +69,14 @@
     url="IgorTimofeev/OpenComputers/master/MineOS/Languages/Russian.lang",
     type="Script",
     forceDownload=true,
-    version=1.14,
+    version=1.15,
   },
   {
     name="MineOS/System/OS/Languages/English.lang",
     url="IgorTimofeev/OpenComputers/master/MineOS/Languages/English.lang",
     type="Script",
     forceDownload=true,
-    version=1.14,
+    version=1.15,
   },
 
   ----------------------------------------------------- Системные иконки --------------------------------------------------------------------------
@@ -480,12 +480,20 @@
     forceDownload=true,
     version=1.02,
   },
+  ----------------------------------------------------- Screensavers --------------------------------------------------------------------------
   {
-    name="bin/archive.lua",
-    url="IgorTimofeev/OpenComputers/master/Applications/archive.lua",
+    name="MineOS/System/OS/Screensavers/Matrix.lua",
+    url="IgorTimofeev/OpenComputers/master/MineOS/Screensavers/Matrix.lua",
     type="Script",
     forceDownload=true,
-    version=1.0,
+    version=1.00,
+  },
+  {
+    name="MineOS/System/OS/Screensavers/Kaleidoscope.lua",
+    url="IgorTimofeev/OpenComputers/master/MineOS/Screensavers/Kaleidoscope.lua",
+    type="Script",
+    forceDownload=true,
+    version=1.00,
   },
   ----------------------------------------------------- Приложения --------------------------------------------------------------------------
   {
@@ -819,15 +827,6 @@
     version=1.0,
   },
   {
-    name="MineOS/Applications/Matrix",
-    url="IgorTimofeev/OpenComputers/master/Applications/Matrix/Matrix.lua",
-    about="IgorTimofeev/OpenComputers/master/Applications/Matrix/About/",
-    type="Application",
-    icon="IgorTimofeev/OpenComputers/master/Applications/Matrix/Icon.pic",
-    createShortcut="desktop",
-    version=1.03,
-  },
-  {
     name="MineOS/Applications/Graph",
     url="IgorTimofeev/OpenComputers/master/Applications/Graph/Graph.lua",
     type="Application",
@@ -1152,7 +1151,7 @@
     icon="IgorTimofeev/OpenComputers/master/Applications/Viewer/Icon.pic",
     createShortcut="desktop",
     forceDownload=true,
-    version=1.0,
+    version=1.01,
     resources={
       {
         name="arrowLeft.pic",

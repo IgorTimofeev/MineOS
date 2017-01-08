@@ -1,4 +1,8 @@
 {
+	screensaver = "Заставка",
+	screensaverDelay = "Задрежка",
+	screensaverDisabled = "Отключена",
+
 	type = "Тип",
 	size = "Размер",
 	date = "Дата",
@@ -46,13 +50,6 @@
 	showApplicationIcons = "Показывать иконки приложений",
 	hideApplicationIcons = "Скрывать иконки приложений",
 
-	sortByTypeShort = "По типу",
-	sortByNameShort = "По имени",
-	sortByDateShort = "По дате",
-	showFileFormatShort = "Формат",
-	showHiddenFilesShort = "Скрытые",
-	sortingMethod = "Упорядочить",
-
 	aboutSystem = "Об этом ПК",
 	updates = "Обновления",
 	shutdown = "Выключить",
@@ -78,21 +75,19 @@
 	welcomeBack = "Добро пожаловать, ",
 	passwordsAreDifferent = "Пароли различаются",
 	incorrectPassword = "Неверный пароль",
-	mineOSCreatorUsedMasterPassword = "Создатель операционной системы использовал Мастер-Пароль",
+	mineOSCreatorUsedMasterPassword = "Создатель операционной системы использовал мастер-ключ",
 	loginToSystem = "Вход в систему",
 
 	colorScheme = "Цветовая схема",
 	backgroundColor = "Цвет фона",
 	interfaceColor = "Цвет интерфейса",
-	selectionColor = "Цвет выделения",
-	desktopPaintingColor = "Цвет рисования",
 	screenResolution = "Разрешение экрана",
-	settings = "Настройки",
 	changePassword = "Изменить пароль",
 	cancel = "Отмена",
 	shortcut = "ярлык",
 	shortcutIsCorrupted = "Файл ярлыка поврежден или имеет неизвестный формат",
 
+	settings = "Настройки",
 	viewTab = "Вид",
 
 	errorWhileRunningProgram = "Ошибка при выполнении ",
