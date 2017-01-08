@@ -300,7 +300,7 @@
     name="lib/windows.lua",
     url="IgorTimofeev/OpenComputers/master/lib/windows.lua",
     type="Library",
-    version=1.05,
+    version=1.06,
   },
   {
     name="lib/rayEngine.lua",
@@ -360,7 +360,7 @@
     name="lib/palette.lua",
     url="IgorTimofeev/OpenComputers/master/lib/palette.lua",
     type="Library",
-    version=1.03,
+    version=1.04,
   },
   {
     name="lib/doubleBuffering.lua",
@@ -588,6 +588,7 @@
     type="Application",
     icon="IgorTimofeev/OpenComputers/master/Applications/VK/Icon.pic",
     createShortcut="dock",
+    forceDownload=true,
     version=1.24,
     resources={
       {
@@ -666,6 +667,7 @@
     type="Application",
     icon="IgorTimofeev/OpenComputers/master/Applications/RayWalk/Icon.pic",
     createShortcut="desktop",
+    forceDownload=true,
     version=1.57,
     resources={
       {

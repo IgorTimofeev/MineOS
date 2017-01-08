@@ -211,7 +211,7 @@ local function newWindow(x, y, width, height, minimumWidth, minimumHeight)
 	local window = GUI.container(x, y, width, height)
 	window.minimumWidth = minimumWidth
 	window.minimumHeight = minimumHeight
-	window.drawShadow = true
+	window.drawShadow = false
 	window.drawMethodOutOfWindowsLibrary = window.draw
 	window.draw = drawWindow
 	window.handleEventData = windows.handleEventData
@@ -224,16 +224,12 @@ end
 
 ----------------------------------------- Window patterns -----------------------------------------
 
-function windows.empty(x, y, width, height, minimumWidth, minimumHeight, title)
-	local window = newWindow(x, y, width, height, minimumWidth, minimumHeight)
-	window.drawShadow = false
-	return window
+function windows.empty(x, y, width, height, minimumWidth, minimumHeight)
+	return newWindow(x, y, width, height, minimumWidth, minimumHeight)
 end
 
 function windows.fullScreen()
-	local window = newWindow(1, 1, buffer.screen.width, buffer.screen.height)
-	window.drawShadow = false
-	return window
+	return newWindow(1, 1, buffer.screen.width, buffer.screen.height)
 end
 
 function windows.tabbed(x, y, width, height, minimumWidth, minimumHeight, ...)

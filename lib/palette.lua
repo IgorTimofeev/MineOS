@@ -1,18 +1,14 @@
 
 -- _G.windows, _G.GUI, package.loaded.windows, package.loaded.GUI = nil, nil, nil, nil
 
-local libraries = {
-	advancedLua = "advancedLua",
-	component = "component",
-	fs = "filesystem",
-	colorlib = "colorlib",
-	image = "image",
-	buffer = "doubleBuffering",
-	GUI = "GUI",
-	windows = "windows",
-}
-
-for library in pairs(libraries) do if not _G[library] then _G[library] = require(libraries[library]) end end; libraries = nil
+local advancedLua = require("advancedLua")
+local component = require("component")
+local fs = require("filesystem")
+local colorlib = require("colorlib")
+local image = require("image")
+local buffer = require("doubleBuffering")
+local GUI = require("GUI")
+local windows = require("windows")
 
 --------------------------------------------------------------------------------------------------------------
 
@@ -269,6 +265,7 @@ end
 --------------------------------------------------------------------------------------------------------------
 
 function palette.show(x, y, startColor)
+	buffer.start()
 	loadFavourites()
 	switchColorFromHex(startColor or 0x00B6FF)
 	createWindow(x, y)
