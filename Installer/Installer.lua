@@ -192,6 +192,8 @@ do
 
   -- Устанавливаем базовую конфигурацию системы
   _G.OSSettings = {
+    screensaver = "Matrix",
+    screensaverDelay = 20,
     showHelpOnApplicationStart = showHelpTips,
     language = data[1],
     dockShortcuts = {
