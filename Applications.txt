@@ -8,7 +8,7 @@
     about="IgorTimofeev/OpenComputers/master/MineOS/About/",
     type="Script",
     forceDownload=true,
-    version=3.40,
+    version=3.41,
   },
   {
     name="MineOS/Pictures/Raspberry.pic",
@@ -253,7 +253,7 @@
     name="lib/MineOSCore.lua",
     url="IgorTimofeev/OpenComputers/master/lib/MineOSCore.lua",
     type="Library",
-    version=1.35,
+    version=1.36,
   },
   {
     name="lib/advancedLua.lua",

@@ -743,7 +743,17 @@ function MineOSCore.iconRightClick(icon, eventData)
 		_G.clipboardCut = true
 		computer.pushSignal("MineOSCore", "updateFileList")
 	elseif action == MineOSCore.localization.contextMenuDelete then
-		fs.rename(icon.path, MineOSCore.paths.trash .. fs.name(icon.path))
+		if fs.path(icon.path) == MineOSCore.paths.trash then
+			fs.remove(icon.path)
+		else
+			local newName = MineOSCore.paths.trash .. fs.name(icon.path)
+			local clearName = MineOSCore.hideFileFormat(fs.name(icon.path))
+			local repeats = 1
+			while fs.exists(newName) do
+				newName, repeats = MineOSCore.paths.trash .. clearName .. string.rep("-copy", repeats) .. icon.format, repeats + 1
+			end
+			fs.rename(icon.path, newName)
+		end
 		computer.pushSignal("MineOSCore", "updateFileList")
 	elseif action == MineOSCore.localization.contextMenuRename then
 		ecs.rename(icon.path)

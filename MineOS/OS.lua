@@ -387,6 +387,7 @@ local function updateDock()
 				for file in fs.list(MineOSCore.paths.trash) do
 					fs.remove(MineOSCore.paths.trash .. file)
 				end
+				workspace.updateFileList()
 			end
 		end
 		menu:show()
