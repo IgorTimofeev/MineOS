@@ -524,7 +524,7 @@
     type="Application",
     icon="IgorTimofeev/OpenComputers/master/Applications/SmartHouse/Icon.pic",
     createShortcut="desktop",
-    version=1.26,
+    version=1.27,
     resources={
       {
         name="Modules/command_block/Icon.pic",
@@ -562,6 +562,10 @@
         url="IgorTimofeev/OpenComputers/master/Applications/SmartHouse/Modules/screen/Main.lua",
       },
       --
+      {
+        name="Modules/homePC/Server.pic",
+        url="IgorTimofeev/OpenComputers/master/Applications/SmartHouse/Modules/homePC/Server.pic",
+      },
       {
         name="Modules/homePC/Icon.pic",
         url="IgorTimofeev/OpenComputers/master/Applications/SmartHouse/Modules/homePC/Icon.pic",
@@ -612,8 +616,12 @@
     type="Application",
     icon="IgorTimofeev/OpenComputers/master/Applications/Control2/Icon.pic",
     createShortcut="desktop",
-    version=1.00,
+    version=1.01,
     resources={
+      {
+        name="LuaLogo.pic",
+        url="IgorTimofeev/OpenComputers/master/Applications/Control2/LuaLogo.pic",
+      },
       {
         name="Modules/00_LuaConsole.lua",
         url="IgorTimofeev/OpenComputers/master/Applications/Control2/Modules/00_LuaConsole.lua",

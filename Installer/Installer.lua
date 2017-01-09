@@ -299,7 +299,7 @@ do
 
   local function drawInfo(x, y, info)
     ecs.square(x, y, barWidth, 1, ecs.windowColors.background)
-    ecs.colorText(x, y, ecs.colors.gray, info)
+    ecs.colorText(x, y, ecs.colors.gray, ecs.stringLimit("end", info, barWidth))
   end
 
   ecs.blankWindow(xWindow,yWindow,windowWidth,windowHeight)
