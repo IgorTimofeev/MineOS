@@ -1,4 +1,5 @@
 {
+	pressAnyKeyToContinue = "Press any key to continue",
 	screensaver = "Screensaver",
 	screensaverDelay = "Delay",
 	screensaverDisabled = "Disabled",

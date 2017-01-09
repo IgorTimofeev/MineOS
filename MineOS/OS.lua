@@ -298,9 +298,6 @@ end
 
 local function updateDesktopCounters()
 	countOfDesktops = math.ceil(#workspace.iconField.fileList / workspace.iconField.iconCount.total)
-	workspace.desktopCounters.width = (countOfDesktops) * 3
-	workspace.desktopCounters.localPosition.x = math.floor(workspace.width / 2 - workspace.desktopCounters.width / 2)
-	workspace.desktopCounters.localPosition.y = workspace.height - sizes.heightOfDock - 2
 	workspace.desktopCounters.children = {}
 	local x = 1
 	if #workpathHistory > 1 then
@@ -325,6 +322,9 @@ local function updateDesktopCounters()
 			end
 		end; x = x + 3
 	end
+
+	workspace.desktopCounters.width = x - 3
+	workspace.desktopCounters.localPosition.x = math.floor(workspace.width / 2 - workspace.desktopCounters.width / 2)
 end
 
 local function changeResolution()
@@ -337,6 +337,8 @@ local function changeResolution()
 	workspace.iconField.iconCount.width, workspace.iconField.iconCount.height, workspace.iconField.iconCount.total =  MineOSCore.getParametersForDrawingIcons(workspace.width, workspace.height - sizes.heightOfDock - 5, sizes.xSpaceBetweenIcons, sizes.ySpaceBetweenIcons)
 	workspace.iconField.localPosition.x = math.floor(workspace.width / 2 - (workspace.iconField.iconCount.width * (MineOSCore.iconWidth + sizes.xSpaceBetweenIcons) - sizes.xSpaceBetweenIcons) / 2)
 	workspace.iconField.localPosition.y = 3
+
+	workspace.desktopCounters.localPosition.y = workspace.height - sizes.heightOfDock - 2
 
 	workspace.dockContainer.width = (#_G.OSSettings.dockShortcuts * (MineOSCore.iconWidth + sizes.xSpaceBetweenIcons) - sizes.xSpaceBetweenIcons) + 2
 	workspace.dockContainer.localPosition.x = math.floor(buffer.screen.width / 2 - workspace.dockContainer.width / 2)
@@ -600,7 +602,7 @@ local function createWorkspace()
 	end
 
 	workspace.updateFileList = function(forceRedraw)
-		workspace.iconField.fromFile = currentDesktop * workspace.iconField.iconCount.total - workspace.iconField.iconCount.total + 1
+		workspace.iconField.fromFile = (currentDesktop - 1) * workspace.iconField.iconCount.total + 1
 		workspace.iconField:updateFileList()
 		workspace.dockContainer:updateFileList()
 		updateDesktopCounters()
@@ -629,7 +631,6 @@ local function createWorkspace()
 			elseif eventData[2] == "changeWorkpath" then
 				table.insert(workpathHistory, eventData[3])
 				changeWorkpath(#workpathHistory)
-				workspace.updateFileList()
 			elseif eventData[2] == "updateWallpaper" then
 				changeWallpaper()
 				workspace:draw()

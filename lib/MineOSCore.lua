@@ -3,6 +3,7 @@
 
 local component = require("component")
 local computer = require("computer")
+local event = require("event")
 local advancedLua = require("advancedLua")
 local image = require("image")
 local buffer = require("doubleBuffering")
@@ -212,6 +213,15 @@ function MineOSCore.init()
 	MineOSCore.loadStandartIcons()
 end
 
+local function waitForPressingAnyKey()
+	print(" ")
+	print(MineOSCore.localization.pressAnyKeyToContinue)
+	while true do
+		local eventType = event.pull()
+		if eventType == "key_down" or eventType == "touch" then break end
+	end
+end
+
 function MineOSCore.analyseIconFormat(iconObject)
 	if iconObject.isDirectory then
 		if iconObject.format == ".app" then
@@ -265,12 +275,14 @@ function MineOSCore.analyseIconFormat(iconObject)
 		 	iconObject.iconImage.image = MineOSCore.icons.lua
 		 	iconObject.launch = function()
 				ecs.prepareToExit()
-				MineOSCore.safeLaunch(iconObject.path)
+				if MineOSCore.safeLaunch(iconObject.path) then
+					waitForPressingAnyKey()
+				end
 			end
 		elseif iconObject.format == ".pic" or iconObject.format == ".png" then
 			iconObject.iconImage.image = MineOSCore.icons.image
 			iconObject.launch = function()
-				MineOSCore.safeLaunch("/MineOS/Applications/Viewer.app/Viewer.lua", "open", iconObject.path)
+				MineOSCore.safeLaunch(MineOSCore.paths.applications .. "Viewer.app/Viewer.lua", "open", iconObject.path)
 			end
 		elseif iconObject.format == ".pkg" or iconObject.format == ".zip" then
 			iconObject.iconImage.image = MineOSCore.icons.archive
@@ -280,7 +292,7 @@ function MineOSCore.analyseIconFormat(iconObject)
 		elseif iconObject.format == ".3dm" then
 			iconObject.iconImage.image = MineOSCore.icons.model3D
 			iconObject.launch = function()
-				MineOSCore.safeLaunch("/MineOS/Applications/3DPrint.app/3DPrint.lua", "open", iconObject.path)
+				MineOSCore.safeLaunch(MineOSCore.paths.applications .. "3DPrint.app/3DPrint.lua", "open", iconObject.path)
 			end
 		elseif not fs.exists(iconObject.path) then
 			iconObject.iconImage.image = MineOSCore.icons.fileNotExists
@@ -291,7 +303,9 @@ function MineOSCore.analyseIconFormat(iconObject)
 			iconObject.iconImage.image = MineOSCore.icons.script
 			iconObject.launch = function()
 				ecs.prepareToExit()
-				MineOSCore.safeLaunch("/bin/edit.lua", iconObject.path)
+				if MineOSCore.safeLaunch(iconObject.path) then
+					waitForPressingAnyKey()
+				end
 			end
 		end
 	end
@@ -575,20 +589,6 @@ function MineOSCore.safeLaunch(path, ...)
 			local errorLine = tonumber(unicode.sub(string.match(match, "%:%d+%:"), 2, -2))
 			local errorPath = unicode.sub(string.match(match, "%/[^%:]+%:"), 1, -2)
 
-			--print(string.match("bad arg in cyka bla bla /lib/cyka.lua:2013:cykatest in path bin/pidor.lua:31:afa", "%/[^%:%/]+%:%d+%:"))
-
-			--Проверяем, стоит ли нам врубать отсылку отчетов на мой сервер, ибо это должно быть онли у моих прожек
-			local applications, applicationExists, programVersion = table.fromFile(MineOSCore.paths.applicationList), true, "N/A"
-			-- errorPath = string.canonicalPath(errorPath)
-
-			-- for i = 1, #applications do
-			-- 	if errorPath == string.canonicalPath("/" .. applications[i].name) then
-			-- 		applicationExists = true
-			-- 		programVersion = math.doubleToString(applications[i].version, 2) or programVersion
-			-- 		break
-			-- 	end
-			-- end
-
 			drawErrorWindow(errorPath, programVersion, errorLine, finalReason, applicationExists)
 		else
 			GUI.error("Unknown error in lib/MineOSCore.lua due program execution: possible reason is \"" .. tostring(finalReason) .. "\"")
@@ -597,22 +597,15 @@ function MineOSCore.safeLaunch(path, ...)
 
 	component.gpu.setResolution(oldResolutionWidth, oldResolutionHeight)
 	buffer.start()
+
+	return finalSuccess, finalReason
 end
 
 -----------------------------------------------------------------------------------------------------------------------------------
 
 function MineOSCore.iconLeftClick(iconObject, eventData)
-	if iconObject.isDirectory then
-		if iconObject.format == ".app" then
-			iconObject.launch()
-			computer.pushSignal("MineOSCore", "updateFileListAndBufferTrueRedraw")
-		else
-			computer.pushSignal("MineOSCore", "changeWorkpath", iconObject.path)
-		end
-	else
-		iconObject.launch()
-		computer.pushSignal("MineOSCore", "updateFileListAndBufferTrueRedraw")
-	end
+	iconObject.launch()
+	computer.pushSignal("MineOSCore", "updateFileList")
 end
 
 function MineOSCore.iconRightClick(icon, eventData)
@@ -715,11 +708,12 @@ function MineOSCore.iconRightClick(icon, eventData)
 	if action == MineOSCore.localization.contextMenuEdit then
 		ecs.prepareToExit()
 		MineOSCore.safeLaunch("/bin/edit.lua", icon.path)
-		computer.pushSignal("MineOSCore", "updateFileListAndBufferTrueRedraw")
+		computer.pushSignal("MineOSCore", "updateFileList")
 	elseif action == "Свойства" then
 		MineOSCore.showPropertiesWindow(eventData[3], eventData[4], 36, 11, icon)
 	elseif action == MineOSCore.localization.contextMenuShowContainingFolder then
 		computer.pushSignal("MineOSCore", "changeWorkpath", fs.path(icon.shortcutPath))
+		computer.pushSignal("MineOSCore", "updateFileList")
 	elseif action == MineOSCore.localization.contextMenuEditInPhotoshop then
 		MineOSCore.safeLaunch("MineOS/Applications/Photoshop.app/Photoshop.lua", "open", icon.path)
 		computer.pushSignal("MineOSCore", "updateFileList")
@@ -727,6 +721,7 @@ function MineOSCore.iconRightClick(icon, eventData)
 		computer.pushSignal("finderFavouriteAdded", icon.path)
 	elseif action == MineOSCore.localization.contextMenuShowPackageContent then
 		computer.pushSignal("MineOSCore", "changeWorkpath", icon.path)
+		computer.pushSignal("MineOSCore", "updateFileList")
 	elseif action == MineOSCore.localization.contextMenuCopy then
 		_G.clipboard = icon.path
 	elseif action == MineOSCore.localization.contextMenuCut then

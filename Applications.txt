@@ -8,7 +8,7 @@
     about="IgorTimofeev/OpenComputers/master/MineOS/About/",
     type="Script",
     forceDownload=true,
-    version=3.37,
+    version=3.38,
   },
   {
     name="MineOS/Pictures/Raspberry.pic",
@@ -69,14 +69,14 @@
     url="IgorTimofeev/OpenComputers/master/MineOS/Languages/Russian.lang",
     type="Script",
     forceDownload=true,
-    version=1.15,
+    version=1.16,
   },
   {
     name="MineOS/System/OS/Languages/English.lang",
     url="IgorTimofeev/OpenComputers/master/MineOS/Languages/English.lang",
     type="Script",
     forceDownload=true,
-    version=1.15,
+    version=1.16,
   },
 
   ----------------------------------------------------- Системные иконки --------------------------------------------------------------------------
@@ -247,7 +247,7 @@
     name="lib/MineOSCore.lua",
     url="IgorTimofeev/OpenComputers/master/lib/MineOSCore.lua",
     type="Library",
-    version=1.31,
+    version=1.32,
   },
   {
     name="lib/advancedLua.lua",
@@ -366,7 +366,7 @@
     name="lib/doubleBuffering.lua",
     url="IgorTimofeev/OpenComputers/master/lib/doubleBuffering.lua",
     type="Library",
-    version=1.16,
+    version=1.17,
   },
   {
     name="lib/archive.lua",

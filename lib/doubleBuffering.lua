@@ -537,23 +537,17 @@ function buffer.calculateDifference(index)
 	return somethingIsChanged
 end
 
---Функция группировки изменений и их отрисовки на экран
+-- Функция группировки изменений и их отрисовки на экран
 function buffer.draw(force)
-	-- if buffer.drawDebug then
-	-- 	gpu.setBackground(0x0)
-	-- 	gpu.setForeground(0x444444)
-	-- 	gpu.fill(1, 1, buffer.screen.width, buffer.screen.height, "#")
-	-- end
-	--Необходимые переменные, дабы не создавать их в цикле и не генерировать конструкторы
-	local somethingIsChanged, index, indexPlus1, indexPlus2, sameCharArray
-	--Массив третьего буфера, содержащий в себе измененные пиксели
-	buffer.screen.changes, indexStepOnEveryLine = {}, (buffer.screen.width - buffer.drawLimit.width) * 3 
+	-- Всякое дерьмо, необходимое для расчетов
+	local index, indexStepOnEveryLine, somethingIsChanged, indexPlus1, indexPlus2, sameCharArray, x, xCharCheck, indexCharCheck, currentBackground, currentForeground = buffer.getBufferIndexByCoordinates(buffer.drawLimit.x, buffer.drawLimit.y), (buffer.screen.width - buffer.drawLimit.width) * 3
+	-- Массив третьего буфера, содержащий в себе измененные пиксели
+	buffer.screen.changes = {}
 
-	index = buffer.getBufferIndexByCoordinates(buffer.drawLimit.x, buffer.drawLimit.y)
 	for y = buffer.drawLimit.y, buffer.drawLimit.y2 do
-		local x = buffer.drawLimit.x
+		x = buffer.drawLimit.x
 		while x <= buffer.drawLimit.x2 do
-			--Чутка оптимизируем рассчеты
+			--Чутка оптимизируем расчеты
 			indexPlus1, indexPlus2 = index + 1, index + 2
 			--Получаем изменения и применяем их
 			somethingIsChanged = buffer.calculateDifference(index)
@@ -562,7 +556,7 @@ function buffer.draw(force)
 				--Оптимизация by Krutoy, создаем массив, в который заносим чарсы. Работает быстрее, чем конкатенейт строк
 				sameCharArray = { buffer.screen.current[indexPlus2] }
 				--Загоняем в наш чарс-массив одинаковые пиксели справа, если таковые имеются
-				local xCharCheck, indexCharCheck = x + 1, index + 3
+				xCharCheck, indexCharCheck = x + 1, index + 3
 				while xCharCheck <= buffer.drawLimit.x2 do
 					indexCharCheckPlus2 = indexCharCheck + 2
 					if	
@@ -585,12 +579,12 @@ function buffer.draw(force)
 				end
 
 				--Заполняем третий буфер полученными данными
-				buffer.screen.changes[buffer.screen.current[indexPlus1]] = buffer.screen.changes[buffer.screen.current[indexPlus1]] or {}
-				buffer.screen.changes[buffer.screen.current[indexPlus1]][buffer.screen.current[index]] = buffer.screen.changes[buffer.screen.current[indexPlus1]][buffer.screen.current[index]] or {}
+				buffer.screen.changes[buffer.screen.current[index]] = buffer.screen.changes[buffer.screen.current[index]] or {}
+				buffer.screen.changes[buffer.screen.current[index]][buffer.screen.current[indexPlus1]] = buffer.screen.changes[buffer.screen.current[index]][buffer.screen.current[indexPlus1]] or {}
 				
-				table.insert(buffer.screen.changes[buffer.screen.current[indexPlus1]][buffer.screen.current[index]], x)
-				table.insert(buffer.screen.changes[buffer.screen.current[indexPlus1]][buffer.screen.current[index]], y)
-				table.insert(buffer.screen.changes[buffer.screen.current[indexPlus1]][buffer.screen.current[index]], table.concat(sameCharArray))
+				table.insert(buffer.screen.changes[buffer.screen.current[index]][buffer.screen.current[indexPlus1]], x)
+				table.insert(buffer.screen.changes[buffer.screen.current[index]][buffer.screen.current[indexPlus1]], y)
+				table.insert(buffer.screen.changes[buffer.screen.current[index]][buffer.screen.current[indexPlus1]], table.concat(sameCharArray))
 			
 				--Смещаемся по иксу вправо
 				index = index + #sameCharArray * 3 - 3
@@ -605,25 +599,21 @@ function buffer.draw(force)
 	end
 
 	--Сбрасываем переменные на невозможное значение цвета, чтобы не багнуло
-	local currentBackground, currentForeground = -math.huge, -math.huge
+	currentBackground, currentForeground = nil, nil
 
 	--Перебираем все цвета текста и фона, выполняя гпу-операции
-	for foreground in pairs(buffer.screen.changes) do
-		if currentForeground ~= foreground then gpu.setForeground(foreground); currentForeground = foreground end
-		for background in pairs(buffer.screen.changes[foreground]) do
-			if currentBackground ~= background then gpu.setBackground(background); currentBackground = background end
-			for i = 1, #buffer.screen.changes[foreground][background], 3 do
-				gpu.set(buffer.screen.changes[foreground][background][i], buffer.screen.changes[foreground][background][i + 1], buffer.screen.changes[foreground][background][i + 2])
-				-- if buffer.drawDebug then
-					-- ecs.wait()
-				-- end
+	for background in pairs(buffer.screen.changes) do
+		gpu.setBackground(background)
+		for foreground in pairs(buffer.screen.changes[background]) do
+			if currentForeground ~= foreground then gpu.setForeground(foreground); currentForeground = foreground end
+			for i = 1, #buffer.screen.changes[background][foreground], 3 do
+				gpu.set(buffer.screen.changes[background][foreground][i], buffer.screen.changes[background][foreground][i + 1], buffer.screen.changes[background][foreground][i + 2])
 			end
 		end
 	end
 
 	--Очищаем память, ибо на кой хер нам хранить третий буфер
 	buffer.screen.changes = nil
-	-- buffer.drawDebug = nil
 end
 
 ------------------------------------------------------------------------------------------------------
