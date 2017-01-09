@@ -1,4 +1,5 @@
-require("advancedLua")
+
+local fs = require("filesystem")
 local image = require("image")
 local buffer = require("doubleBuffering")
 local GUI = require("GUI")
