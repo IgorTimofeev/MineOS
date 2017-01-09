@@ -278,16 +278,14 @@ end
 
 --Создаем стартовые пути и прочие мелочи чисто для эстетики
 local desktopPath = "/MineOS/Desktop/"
-local dockPath = "/MineOS/System/OS/Dock/"
 local applicationsPath = "/MineOS/Applications/"
 local picturesPath = "/MineOS/Pictures/"
 
 fs.remove(desktopPath)
-fs.remove(dockPath)
 
 -- fs.makeDirectory(desktopPath .. "My files")
 -- fs.makeDirectory(picturesPath)
-fs.makeDirectory(dockPath)
+fs.makeDirectory("/MineOS/Trash/")
 
 ------------------------------ Загрузка всего ------------------------------------------
 
