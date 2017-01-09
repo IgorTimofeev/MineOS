@@ -616,7 +616,7 @@
     type="Application",
     icon="IgorTimofeev/OpenComputers/master/Applications/Control2/Icon.pic",
     createShortcut="desktop",
-    version=1.02,
+    version=1.03,
     resources={
       {
         name="LuaLogo.pic",

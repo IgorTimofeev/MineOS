@@ -1,12 +1,11 @@
 
-local args = {...}
 local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 local image = require("image")
 local unicode = require("unicode")
 
 local module = {
-	name = "Интерпретатор Lua2"
+	name = "Интерпретатор Lua"
 }
 
 ----------------------------------------------------------------------------------------------------------------------------
