@@ -567,7 +567,7 @@ function MineOSCore.safeLaunch(path, ...)
 			local function launchMethod()
 				loadSuccess(table.unpack(args))
 			end
-			
+
 			local function tracebackMethod(xpcallTraceback)
 				local traceback, info, firstMatch = xpcallTraceback .. "\n" .. debug.traceback()
 				for runLevel = 0, math.huge do

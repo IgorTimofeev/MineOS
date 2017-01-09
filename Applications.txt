@@ -838,7 +838,7 @@
     type="Application",
     icon="IgorTimofeev/OpenComputers/master/Applications/Stargate/Icon.pic",
     createShortcut="desktop",
-    version=1.02,
+    version=1.03,
     resources={
       {
         name="Gate.pic",
@@ -873,7 +873,7 @@
     type="Application",
     icon="IgorTimofeev/OpenComputers/master/Applications/MineCode2/Icon.pic",
     createShortcut="desktop",
-    version=1.01,
+    version=1.02,
   },
   {
     name="MineOS/Applications/Battleship",

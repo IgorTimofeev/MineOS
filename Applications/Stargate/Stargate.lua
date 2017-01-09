@@ -1,4 +1,5 @@
 
+local ecs = require("ECSAPI")
 local fs = require("filesystem")
 local image = require("image")
 local buffer = require("doubleBuffering")

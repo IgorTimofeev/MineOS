@@ -1,31 +1,17 @@
 
--- _G.syntax = nil
--- _G.filemanager = nil
--- _G.doubleBuffering = nil
 -- package.loaded.doubleBuffering = nil
 -- package.loaded.syntax = nil
--- package.loaded.filemanager = nil
 
 -- Адаптивная загрузка необходимых библиотек и компонентов
-local libraries = {
-	ecs = "ECSAPI",
-	fs = "fs",
-	syntax = "syntax",
-	buffer = "buffer",
-	unicode = "unicode",
-	context = "context",
-	event = "event",
-	component = "component",
-	filemanager = "filemanager",
-}
-
-local components = {
-	gpu = "gpu",
-}
-
-for library in pairs(libraries) do if not _G[library] then _G[library] = require(libraries[library]) end end
-for comp in pairs(components) do if not _G[comp] then _G[comp] = _G.component[components[comp]] end end
-libraries, components = nil, nil
+local ecs = require("ECSAPI")
+local fs = require("filesystem")
+local syntax = require("syntax")
+local buffer = require("doubleBuffering")
+local unicode = require("unicode")
+local context = require("context")
+local event = require("event")
+local component = require("component")
+local gpu = component.gpu
 
 --------------------------------------------------- Константы ------------------------------------------------------------------
 
@@ -39,7 +25,6 @@ local fromString = 1
 local fromSymbol = 1
 local scrollSpeed = 8
 local showLuaSyntax = true
-local showFilemanager = true
 
 local xCursor, yCursor = 1, 1
 local textFieldPosition
@@ -73,7 +58,6 @@ local topButtonsSymbols = {
 local sizes = {
 	yTopBar = 2,
 	topBarHeight = 3,
-	filemanagerWidth = math.floor(buffer.screen.width * 0.16),
 }
 
 --------------------------------------------------- Функции ------------------------------------------------------------------
@@ -81,13 +65,8 @@ local sizes = {
 local function recalculateSizes()
 	sizes.yCode = sizes.yTopBar + sizes.topBarHeight
 	sizes.codeHeight = buffer.screen.height - 1 - sizes.topBarHeight
-	if showFilemanager then
-		sizes.codeWidth = buffer.screen.width - sizes.filemanagerWidth
-		sizes.xCode = sizes.filemanagerWidth + 1
-	else
-		sizes.codeWidth = buffer.screen.width
-		sizes.xCode = 1
-	end
+	sizes.codeWidth = buffer.screen.width
+	sizes.xCode = 1
 end
 
 --Объекты для тача
@@ -215,15 +194,11 @@ end
 
 -- end
 
-local function drawFileManager()
-	filemanager.draw(1, sizes.yCode, sizes.filemanagerWidth, buffer.screen.height - 4, fs.path(pathToFile), 1)
-end
 
 local function drawAll(force)
 	drawTopBar()
 	drawInfoPanel()
 	drawTopMenu()
-	if showFilemanager then drawFileManager() end
 	drawCode()
 	buffer.draw(force)
 end
