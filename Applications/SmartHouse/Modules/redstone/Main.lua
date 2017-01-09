@@ -1,3 +1,5 @@
+
+local GUI = require("GUI")
 local sides = require("sides")
 
 local module = {

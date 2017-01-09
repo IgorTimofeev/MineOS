@@ -1,7 +1,5 @@
 
-package.loaded.MineOSCore, _G.MineOSCore = nil, nil
-package.loaded.GUI, _G.GUI = nil, nil
-package.loaded.windows, _G.windows = nil, nil
+-- package.loaded.MineOSCore, package.loaded.GUI, package.loaded.windows = nil, nil, nil
 
 ---------------------------------------------- Копирайт, епта ------------------------------------------------------------------------
 

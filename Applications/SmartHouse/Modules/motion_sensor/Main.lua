@@ -1,4 +1,6 @@
 
+local GUI = require("GUI")
+
 local module = {
 	allowSignalConnections = false,
 	updateWhenModuleDetailsIsHidden = true,

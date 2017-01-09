@@ -32,13 +32,14 @@ local function createWindow()
 	window = windows.empty("auto", "auto", math.floor(buffer.screen.width * 0.8), math.floor(buffer.screen.height * 0.7), 78, 24)
 	window:addPanel(1, 1, window.width, window.height, 0xEEEEEE).disabled = true
 	window.tabBar = window:addTabBar(1, 1, window.width, 3, 1, 0xDDDDDD, 0x262626, 0xCCCCCC, 0x262626, "Интерпретатор Lua", "События", "Память", "Диски", "BIOS")
-	window:addWindowActionButtons(2, 1, false)
-	window.drawingArea = window:addContainer(1, 4, window.width, window.height - 3, 0xEEEEEE)
-
 	window.tabBar.onTabSwitched = function(object, eventData)
 		
 	end
-
+	window:addWindowActionButtons(2, 1, false).close.onTouch = function()
+		window:close()
+	end
+	window.drawingArea = window:addContainer(1, 4, window.width, window.height - 3, 0xEEEEEE)
+	
 	window.resourcesPath = MineOSCore.getCurrentApplicationResourcesDirectory()
 	window.modules = {}
 	for file in fs.list(window.resourcesPath .. "Modules/") do

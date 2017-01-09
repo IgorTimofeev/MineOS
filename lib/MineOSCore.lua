@@ -449,7 +449,7 @@ function MineOSCore.parseErrorMessage(error, indentationWidth)
 	return parsedError
 end
 
-local function drawErrorWindow(path, programVersion, errorLine, reason, showSendToDeveloperButton)
+local function drawErrorWindow(path, programVersion, errorLine, reason)
 	local drawLimit = buffer.getDrawLimit(); buffer.resetDrawLimit()
 	local colors = { topBar = 0x383838, title = 0xFFFFFF }
 	local programName = MineOSCore.localization.errorWhileRunningProgram .. "\"" .. fs.name(path) .. "\""
@@ -557,48 +557,61 @@ end
 
 function MineOSCore.safeLaunch(path, ...)
 	local args = {...}
-	local oldResolutionWidth, oldResolutionHeight = component.gpu.getResolution()
-	local finalSuccess, finalReason = true, true
-	local loadSuccess, loadReason = loadfile(string.canonicalPath("/" .. path))
+	local oldResolutionWidth, oldResolutionHeight = buffer.screen.width, buffer.screen.height
+	local finalSuccess, finalPath, finalLine, finalTraceback = true
 	
 	if fs.exists(path) then
+		local loadSuccess, loadReason = loadfile(string.canonicalPath("/" .. path))
+
 		if loadSuccess then
-			local function launcher()
+			local function launchMethod()
 				loadSuccess(table.unpack(args))
 			end
-
-			local runSuccess, runReason = xpcall(launcher, debug.traceback)
-			if not runSuccess then
-				if type(runReason) == "string" then
-					if not string.find(runReason, "interrupted", 1, 15) then
-						finalSuccess, finalReason = false, runReason
+			
+			local function tracebackMethod(xpcallTraceback)
+				local traceback, info, firstMatch = xpcallTraceback .. "\n" .. debug.traceback()
+				for runLevel = 0, math.huge do
+					info = debug.getinfo(runLevel)
+					if info then
+						if (info.what == "main" or info.what == "Lua") and info.source ~= "=machine" then
+							if firstMatch then
+								return {
+									path = info.source:sub(2, -1),
+									line = info.currentline,
+									traceback = traceback
+								}
+							else
+								firstMatch = true
+							end
+						end
+					else
+						error("Failed to get debug info for runlevel " .. runLevel)
 					end
 				end
 			end
+
+			local runSuccess, runReason = xpcall(launchMethod, tracebackMethod)
+			if not runSuccess and not string.find(runReason.traceback, "interrupted", 1, 15) then
+				finalSuccess, finalPath, finalLine, finalTraceback = false, runReason.path, runReason.line, runReason.traceback
+			end
 		else
-			finalSuccess, finalReason = false, loadReason
+			finalSuccess, finalPath, finalTraceback = false, path, loadReason
+			local match = string.match(loadReason, ":(%d+)%:")
+			finalLine = tonumber(match)
+			if not match or not finalLine then error("Дебажь говно! " .. tostring(loadReason)) end
 		end
 	else
-		finalSuccess, finalReason = false, unicode.sub(debug.traceback(), 19, -1)
+		GUI.error("Failed to safely launch file that doesn't exists: \"" .. path .. "\"", {title = {color = 0xFFDB40, text = "Warning"}})
 	end
 
 	if not finalSuccess then
-		finalReason = string.canonicalPath("/" .. finalReason)
-		local match = string.match(finalReason, "%/[^%:]+%:%d+%:")
-		if match then
-			local errorLine = tonumber(unicode.sub(string.match(match, "%:%d+%:"), 2, -2))
-			local errorPath = unicode.sub(string.match(match, "%/[^%:]+%:"), 1, -2)
-
-			drawErrorWindow(errorPath, programVersion, errorLine, finalReason, applicationExists)
-		else
-			GUI.error("Unknown error in lib/MineOSCore.lua due program execution: possible reason is \"" .. tostring(finalReason) .. "\"")
-		end
+		drawErrorWindow(finalPath, "1.0", finalLine, finalTraceback)
 	end
 
 	component.gpu.setResolution(oldResolutionWidth, oldResolutionHeight)
 	buffer.start()
 
-	return finalSuccess, finalReason
+	return finalSuccess, finalPath, finalLine, finalTraceback
 end
 
 -----------------------------------------------------------------------------------------------------------------------------------

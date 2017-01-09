@@ -17,16 +17,16 @@ local bit32 = require("bit32")
 -------------------------------------------------- System extensions --------------------------------------------------
 
 function _G.getCurrentScript()
-	local runLevel, info = 0
-	while true do
+	local info
+	for runLevel = 0, math.huge do
 		info = debug.getinfo(runLevel)
 		if info then
-			if info.what == "main" and filesystem.exists(info.short_src) then return info.short_src end
+			if info.what == "main" then
+				return info.source:sub(2, -1)
+			end
 		else
-			error("Failed to get running script: current runLevel is " .. runLevel)
+			error("Failed to get debug info for runlevel " .. runLevel)
 		end
-
-		runLevel = runLevel + 1
 	end
 end
 
