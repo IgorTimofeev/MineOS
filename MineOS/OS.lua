@@ -323,6 +323,97 @@ local function updateDesktopCounters()
 
 	workspace.desktopCounters.width = x - 3
 	workspace.desktopCounters.localPosition.x = math.floor(workspace.width / 2 - workspace.desktopCounters.width / 2)
+	workspace.desktopCounters.localPosition.y = workspace.height - sizes.heightOfDock - 2
+end
+
+local function updateDock()
+	local function moveDockShortcut(iconIndex, direction)
+		_G.OSSettings.dockShortcuts[iconIndex], _G.OSSettings.dockShortcuts[iconIndex + direction] = swap(_G.OSSettings.dockShortcuts[iconIndex], _G.OSSettings.dockShortcuts[iconIndex + direction])
+		MineOSCore.saveOSSettings()
+		updateDock()
+		workspace:draw()
+		buffer.draw()
+	end
+
+	workspace.dockContainer.width = (#_G.OSSettings.dockShortcuts + 1) * (MineOSCore.iconWidth + sizes.xSpaceBetweenIcons) - sizes.xSpaceBetweenIcons
+	workspace.dockContainer.localPosition.x = math.floor(workspace.width / 2 - workspace.dockContainer.width / 2)
+	workspace.dockContainer.localPosition.y = workspace.height - sizes.heightOfDock + 1
+	workspace.dockContainer:deleteChildren()
+
+	local xPos = 1
+	for iconIndex = 1, #_G.OSSettings.dockShortcuts do
+		local iconObject = MineOSCore.createIconObject(xPos, 1, _G.OSSettings.dockShortcuts[iconIndex].path, 0x000000, _G.OSSettings.showFileFormat)
+			
+		iconObject.onRightClick = function(iconObject, eventData)
+			local menu = GUI.contextMenu(eventData[3], eventData[4])
+			menu:addItem(MineOSCore.localization.contextMenuShowContainingFolder, true).onTouch = function()
+				ecs.error("ТУТА БУДЕТ ОТКРЫВАТОР ПУТИ ИКОНКИ ДОКА")
+			end
+			menu:addSeparator()
+			menu:addItem(MineOSCore.localization.contextMenuMoveRight, iconIndex >= #_G.OSSettings.dockShortcuts).onTouch = function()
+				moveDockShortcut(iconIndex, 1)
+			end
+			menu:addItem(MineOSCore.localization.contextMenuMoveLeft, iconIndex <= 1).onTouch = function()
+				moveDockShortcut(iconIndex, -1)
+			end
+			menu:addSeparator()
+			menu:addItem(MineOSCore.localization.contextMenuRemoveFromDock, _G.OSSettings.dockShortcuts[iconIndex].canNotBeDeleted or #_G.OSSettings.dockShortcuts < 2).onTouch = function()
+				table.remove(_G.OSSettings.dockShortcuts, iconIndex)
+				MineOSCore.saveOSSettings()
+				updateDock()
+				workspace:draw()
+				buffer.draw()
+			end
+			menu:show()
+		end
+
+		workspace.dockContainer:addChild(iconObject, GUI.objectTypes.container)
+		xPos = xPos + MineOSCore.iconWidth + sizes.xSpaceBetweenIcons
+	end
+
+	local iconObject = MineOSCore.createIconObject(xPos, 1, MineOSCore.paths.trash, 0x000000, _G.OSSettings.showFileFormat)
+	iconObject.iconImage.image = MineOSCore.icons.trash
+	iconObject.onRightClick = function(iconObject, eventData)
+		local menu = GUI.contextMenu(eventData[3], eventData[4])
+		menu:addItem(MineOSCore.localization.emptyTrash).onTouch = function()
+			local data = ecs.universalWindow("auto", "auto", 36, 0xeeeeee, true,
+				{"EmptyLine"},
+				{"CenterText", 0x000000, MineOSCore.localization.areYouSure},
+				{"EmptyLine"},
+				{"Button", {0xAAAAAA, 0xffffff, "OK"}, {0x888888, 0xffffff, MineOSCore.localization.cancel}}
+			)
+
+			if data[1] == "OK" then
+				for file in fs.list(MineOSCore.paths.trash) do
+					fs.remove(MineOSCore.paths.trash .. file)
+				end
+			end
+		end
+		menu:show()
+	end
+
+	workspace.dockContainer:addChild(iconObject, GUI.objectTypes.container)
+end
+
+-- Отрисовка дока
+local function createDock()
+	workspace.dockContainer = workspace:addContainer(1, 1, workspace.width, sizes.heightOfDock)
+
+	-- Отрисовка дока
+	local oldDraw = workspace.dockContainer.draw
+	workspace.dockContainer.draw = function(dockContainer)
+		local currentDockTransparency, currentDockWidth, xPos, yPos = colors.dockBaseTransparency, dockContainer.width, dockContainer.x, dockContainer.y + 2
+		local color = _G.OSSettings.interfaceColor or colors.interface
+		for i = 1, dockContainer.height do
+			buffer.text(xPos, yPos, color, "▟", currentDockTransparency)
+			buffer.square(xPos + 1, yPos, currentDockWidth - 2, 1, color, 0xFFFFFF, " ", currentDockTransparency)
+			buffer.text(xPos + currentDockWidth - 1, yPos, color, "▙", currentDockTransparency)
+
+			currentDockTransparency, currentDockWidth, xPos, yPos = currentDockTransparency - colors.dockTransparencyAdder, currentDockWidth + 2, xPos - 1, yPos + 1
+		end
+
+		oldDraw(dockContainer)
+	end
 end
 
 local function changeResolution()
@@ -336,86 +427,10 @@ local function changeResolution()
 	workspace.iconField.localPosition.x = math.floor(workspace.width / 2 - (workspace.iconField.iconCount.width * (MineOSCore.iconWidth + sizes.xSpaceBetweenIcons) - sizes.xSpaceBetweenIcons) / 2)
 	workspace.iconField.localPosition.y = 3
 
-	workspace.desktopCounters.localPosition.y = workspace.height - sizes.heightOfDock - 2
-
-	workspace.dockContainer.width = (#_G.OSSettings.dockShortcuts * (MineOSCore.iconWidth + sizes.xSpaceBetweenIcons) - sizes.xSpaceBetweenIcons) + 2
-	workspace.dockContainer.localPosition.x = math.floor(buffer.screen.width / 2 - workspace.dockContainer.width / 2)
-	workspace.dockContainer.localPosition.y = workspace.height - sizes.heightOfDock + 1
-
 	workspace.menu.width = workspace.width
 	workspace.background.width, workspace.background.height = workspace.width, workspace.height
 
 	workspace.updateFileList(true)
-end
-
--- Отрисовка дока
-local function createDock()
-	workspace.dockContainer = workspace:addContainer(1, 1, workspace.width, sizes.heightOfDock)
-	workspace.dockContainer.updateFileList = function(dockContainer)
-		local function moveDockShortcut(iconIndex, direction)
-			_G.OSSettings.dockShortcuts[iconIndex], _G.OSSettings.dockShortcuts[iconIndex + direction] = swap(_G.OSSettings.dockShortcuts[iconIndex], _G.OSSettings.dockShortcuts[iconIndex + direction])
-			MineOSCore.saveOSSettings()
-			dockContainer:updateFileList()
-			workspace:draw()
-			buffer.draw()
-		end
-
-		-- Создание иконок дока
-		dockContainer:deleteChildren()
-		local xPos, yPos = 2, 1
-		for iconIndex = 1, #_G.OSSettings.dockShortcuts do
-			local iconObject = MineOSCore.createIconObject(xPos, yPos, _G.OSSettings.dockShortcuts[iconIndex].path, 0x000000, showFileFormat)
-				
-			iconObject.onRightClick = function(iconObject, eventData)
-				local menu = GUI.contextMenu(eventData[3], eventData[4])
-				menu:addItem(MineOSCore.localization.contextMenuShowContainingFolder, true).onTouch = function()
-					MineOSCore.safeLaunch(MineOSCore.paths.applications .. "Finder.app/Finder.lua", "open", fs.path(_G.OSSettings.dockShortcuts[iconIndex].path))
-					dockContainer:updateFileList()
-					workspace:draw()
-					buffer.draw()
-				end
-				menu:addSeparator()
-				menu:addItem(MineOSCore.localization.contextMenuMoveRight, iconIndex >= #_G.OSSettings.dockShortcuts).onTouch = function()
-					moveDockShortcut(iconIndex, 1)
-				end
-				menu:addItem(MineOSCore.localization.contextMenuMoveLeft, iconIndex <= 1).onTouch = function()
-					moveDockShortcut(iconIndex, -1)
-				end
-				menu:addSeparator()
-				menu:addItem(MineOSCore.localization.contextMenuRemoveFromDock, _G.OSSettings.dockShortcuts[iconIndex].canNotBeDeleted or #_G.OSSettings.dockShortcuts < 2).onTouch = function()
-					table.remove(_G.OSSettings.dockShortcuts, iconIndex)
-					MineOSCore.saveOSSettings()
-					dockContainer:updateFileList()
-					workspace:draw()
-					buffer.draw()
-				end
-				menu:show()
-			end
-
-			dockContainer:addChild(iconObject, GUI.objectTypes.container)
-			xPos = xPos + MineOSCore.iconWidth + sizes.xSpaceBetweenIcons
-		end
-	end
-
-	-- Отрисовка дока
-	local oldDraw = workspace.dockContainer.draw
-	workspace.dockContainer.draw = function(dockContainer)
-		if #_G.OSSettings.dockShortcuts > 0 then
-			local currentDockTransparency, currentDockWidth, xPos, yPos = colors.dockBaseTransparency, dockContainer.width - 2, dockContainer.x, dockContainer.y + 2
-			
-			for i = 1, sizes.heightOfDock do
-				buffer.text(xPos, yPos, _G.OSSettings.interfaceColor or colors.interface, "▟", currentDockTransparency)
-				buffer.square(xPos + 1, yPos, currentDockWidth, 1, _G.OSSettings.interfaceColor or colors.interface, 0xFFFFFF, " ", currentDockTransparency)
-				buffer.text(xPos + currentDockWidth + 1, yPos, _G.OSSettings.interfaceColor or colors.interface, "▙", currentDockTransparency)
-
-				currentDockTransparency, currentDockWidth, xPos, yPos = currentDockTransparency - colors.dockTransparencyAdder, currentDockWidth + 2, xPos - 1, yPos + 1
-			end
-		end
-
-		oldDraw(dockContainer)
-	end
-
-	return dockContainer
 end
 
 local function createWorkspace()
@@ -482,35 +497,36 @@ local function createWorkspace()
 			workspace.iconField.showFileFormat = not workspace.iconField.showFileFormat
 			_G.OSSettings.showFileFormat = workspace.iconField.showFileFormat
 			MineOSCore.saveOSSettings()
-			workspace:updateFileList()
+			workspace.updateFileList()
 		end
 		menu:addItem(workspace.iconField.showHiddenFiles and MineOSCore.localization.hideHiddenFiles or MineOSCore.localization.showHiddenFiles).onTouch = function()
 			workspace.iconField.showHiddenFiles = not workspace.iconField.showHiddenFiles
 			_G.OSSettings.showHiddenFiles = workspace.iconField.showHiddenFiles
 			MineOSCore.saveOSSettings()
-			workspace:updateFileList()
+			workspace.updateFileList()
 		end
 		menu:addItem(MineOSCore.showApplicationIcons and MineOSCore.localization.hideApplicationIcons or  MineOSCore.localization.showApplicationIcons).onTouch = function()
 			MineOSCore.showApplicationIcons = not MineOSCore.showApplicationIcons
+			workspace.updateFileList()
 		end
 		menu:addSeparator()
 		menu:addItem(MineOSCore.localization.sortByName).onTouch = function()
 			_G.OSSettings.sortingMethod = "name"
 			MineOSCore.saveOSSettings()
 			workspace.iconField.sortingMethod = MineOSCore.sortingMethods.name
-			workspace:updateFileList()
+			workspace.updateFileList()
 		end
 		menu:addItem(MineOSCore.localization.sortByDate).onTouch = function()
 			_G.OSSettings.sortingMethod = "date"
 			MineOSCore.saveOSSettings()
 			workspace.iconField.sortingMethod = MineOSCore.sortingMethods.date
-			workspace:updateFileList()
+			workspace.updateFileList()
 		end
 		menu:addItem(MineOSCore.localization.sortByType).onTouch = function()
 			_G.OSSettings.sortingMethod = "type"
 			MineOSCore.saveOSSettings()
 			workspace.iconField.sortingMethod = MineOSCore.sortingMethods.type
-			workspace:updateFileList()
+			workspace.updateFileList()
 		end
 		menu:addSeparator()
 		menu:addItem(MineOSCore.localization.screensaver).onTouch = function()
@@ -602,7 +618,7 @@ local function createWorkspace()
 	workspace.updateFileList = function(forceRedraw)
 		workspace.iconField.fromFile = (currentDesktop - 1) * workspace.iconField.iconCount.total + 1
 		workspace.iconField:updateFileList()
-		workspace.dockContainer:updateFileList()
+		updateDock()
 		updateDesktopCounters()
 		workspace:draw()
 		buffer.draw(forceRedraw)

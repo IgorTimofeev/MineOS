@@ -206,6 +206,7 @@ function MineOSCore.loadStandartIcons()
 	MineOSCore.loadIcon("archive", MineOSCore.paths.icons .. "Archive.pic")
 	MineOSCore.loadIcon("model3D", MineOSCore.paths.icons .. "3DModel.pic")
 	MineOSCore.loadIcon("application", MineOSCore.paths.icons .. "Application.pic")
+	MineOSCore.loadIcon("trash", MineOSCore.paths.icons .. "Trash.pic")
 end
 
 function MineOSCore.init()
@@ -742,7 +743,7 @@ function MineOSCore.iconRightClick(icon, eventData)
 		_G.clipboardCut = true
 		computer.pushSignal("MineOSCore", "updateFileList")
 	elseif action == MineOSCore.localization.contextMenuDelete then
-		fs.remove(icon.path)
+		fs.rename(icon.path, MineOSCore.paths.trash .. fs.name(icon.path))
 		computer.pushSignal("MineOSCore", "updateFileList")
 	elseif action == MineOSCore.localization.contextMenuRename then
 		ecs.rename(icon.path)

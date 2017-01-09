@@ -4,6 +4,8 @@
 	screensaverDelay = "Задрежка",
 	screensaverDisabled = "Отключена",
 
+	areYouSure = "Вы уверены?",
+	emptyTrash = "Очистить корзину",
 	type = "Тип",
 	size = "Размер",
 	date = "Дата",

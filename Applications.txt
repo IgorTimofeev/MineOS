@@ -8,7 +8,7 @@
     about="IgorTimofeev/OpenComputers/master/MineOS/About/",
     type="Script",
     forceDownload=true,
-    version=3.39,
+    version=3.40,
   },
   {
     name="MineOS/Pictures/Raspberry.pic",
@@ -69,14 +69,14 @@
     url="IgorTimofeev/OpenComputers/master/MineOS/Languages/Russian.lang",
     type="Script",
     forceDownload=true,
-    version=1.16,
+    version=1.17,
   },
   {
     name="MineOS/System/OS/Languages/English.lang",
     url="IgorTimofeev/OpenComputers/master/MineOS/Languages/English.lang",
     type="Script",
     forceDownload=true,
-    version=1.16,
+    version=1.17,
   },
 
   ----------------------------------------------------- Системные иконки --------------------------------------------------------------------------
@@ -240,6 +240,12 @@
     type="Icon",
     version=1.0,
   },
+  {
+    name="MineOS/System/OS/Icons/Trash.pic",
+    url="IgorTimofeev/OpenComputers/master/MineOS/Icons/Trash.pic",
+    type="Icon",
+    version=1.0,
+  },
 
   ----------------------------------------------------- Библиотеки --------------------------------------------------------------------------
 
@@ -247,7 +253,7 @@
     name="lib/MineOSCore.lua",
     url="IgorTimofeev/OpenComputers/master/lib/MineOSCore.lua",
     type="Library",
-    version=1.34,
+    version=1.35,
   },
   {
     name="lib/advancedLua.lua",
@@ -697,9 +703,8 @@
     about="IgorTimofeev/OpenComputers/master/Applications/RayWalk/About/",
     type="Application",
     icon="IgorTimofeev/OpenComputers/master/Applications/RayWalk/Icon.pic",
-    createShortcut="dock",
-    forceDownload=true,
-    version=1.57,
+    createShortcut="desktop",
+    version=1.58,
     resources={
       {
         name="Localization/Russian.lang",
