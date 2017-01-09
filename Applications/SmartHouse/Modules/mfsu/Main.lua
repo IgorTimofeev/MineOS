@@ -17,7 +17,7 @@ end
 -- This method is called on each frame update (every second by default), but only if module details is not hidden or updateWhenModuleDetailsIsHidden == true
 function module.update(moduleContainer, eventData)
 	table.insert(moduleContainer.chart.values, math.ceil(moduleContainer.componentProxy.getStored() / moduleContainer.componentProxy.getCapacity() * 100))
-	if #moduleContainer.chart.values > moduleContainer.chart.width - 1 then
+	if #moduleContainer.chart.values > 100 then
 		table.remove(moduleContainer.chart.values, 1)
 	end
 end

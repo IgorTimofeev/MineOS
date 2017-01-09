@@ -71,7 +71,7 @@ end
 -- This method is called when a this module receives virtual signal from the another module, but only if field allowSignalConnections == true
 function module.onSignalReceived(moduleContainer, ...)
 	local data = {...}
-	if data[1] == "redstone" and data[2] == "setState" and type(data[3]) == "boolean" then
+	if data[1] == "redstone" and data[2] == "pulse" then
 		changeRedstoneState(moduleContainer, data[3])
 	end
 end

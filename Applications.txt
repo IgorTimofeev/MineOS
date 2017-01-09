@@ -247,7 +247,7 @@
     name="lib/MineOSCore.lua",
     url="IgorTimofeev/OpenComputers/master/lib/MineOSCore.lua",
     type="Library",
-    version=1.32,
+    version=1.33,
   },
   {
     name="lib/advancedLua.lua",
@@ -294,7 +294,7 @@
     name="lib/GUI.lua",
     url="IgorTimofeev/OpenComputers/master/lib/GUI.lua",
     type="Library",
-    version=1.21,
+    version=1.22,
   },
   {
     name="lib/windows.lua",
@@ -524,8 +524,17 @@
     type="Application",
     icon="IgorTimofeev/OpenComputers/master/Applications/SmartHouse/Icon.pic",
     createShortcut="desktop",
-    version=1.25,
+    version=1.26,
     resources={
+      {
+        name="Modules/command_block/Icon.pic",
+        url="IgorTimofeev/OpenComputers/master/Applications/SmartHouse/Modules/command_block/Icon.pic",
+      },
+      {
+        name="Modules/command_block/Main.lua",
+        url="IgorTimofeev/OpenComputers/master/Applications/SmartHouse/Modules/command_block/Main.lua",
+      },
+      --
       {
         name="Modules/redstone/Icon.pic",
         url="IgorTimofeev/OpenComputers/master/Applications/SmartHouse/Modules/redstone/Icon.pic",
@@ -594,6 +603,20 @@
       {
         name="VKLogo.pic",
         url="IgorTimofeev/OpenComputers/master/Applications/VK/VKLogo.pic",
+      },
+    },
+  },
+  {
+    name="MineOS/Applications/Control2",
+    url="IgorTimofeev/OpenComputers/master/Applications/Control2/Control2.lua",
+    type="Application",
+    icon="IgorTimofeev/OpenComputers/master/Applications/Control2/Icon.pic",
+    createShortcut="desktop",
+    version=1.00,
+    resources={
+      {
+        name="Modules/00_LuaConsole.lua",
+        url="IgorTimofeev/OpenComputers/master/Applications/Control2/Modules/00_LuaConsole.lua",
       },
     },
   },

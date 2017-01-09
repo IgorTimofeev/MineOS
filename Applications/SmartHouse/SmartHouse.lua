@@ -1,28 +1,24 @@
 
-local libraries = {
-	sides = "sides",
-	component = "component",
-	advancedLua = "advancedLua",
-	image = "image",
-	buffer = "doubleBuffering",
-	keyboard = "keyboard",
-	GUI = "GUI",
-	ecs = "ECSAPI",
-	windows = "windows",
-	MineOSCore = "MineOSCore",
-	computer = "computer",
-	fs = "filesystem",
-}
-
-for library in pairs(libraries) do if not _G[library] then _G[library] = require(libraries[library]) end end; libraries = nil
+local sides = require("sides")
+local component = require("component")
+local advancedLua = require("advancedLua")
+local image = require("image")
+local buffer = require("doubleBuffering")
+local keyboard = require("keyboard")
+local GUI = require("GUI")
+local ecs = require("ECSAPI")
+local windows = require("windows")
+local MineOSCore = require("MineOSCore")
+local computer = require("computer")
+local fs = require("filesystem")
 
 -----------------------------------------------------------------------------------------------------------------------------------
 
 local window
 
 local paths = {}
--- paths.resources = MineOSCore.getCurrentApplicationResourcesDirectory()
-paths.resources = "/SmartHouse/"
+paths.resources = MineOSCore.getCurrentApplicationResourcesDirectory()
+-- paths.resources = "/SmartHouse/"
 paths.modules = paths.resources .. "Modules/"
 
 local colors = {

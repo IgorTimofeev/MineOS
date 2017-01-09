@@ -161,7 +161,7 @@ function GUI.getClickedObject(container, xEvent, yEvent)
 			if container.children[objectIndex].children and #container.children[objectIndex].children > 0 then
 				clickedObject, clickedIndex = GUI.getClickedObject(container.children[objectIndex], xEvent, yEvent)
 			    if clickedObject then break end
-			elseif not container.children[objectIndex].disableClicking and container.children[objectIndex]:isClicked(xEvent, yEvent) then
+			elseif container.children[objectIndex]:isClicked(xEvent, yEvent) then
 				clickedObject, clickedIndex = container.children[objectIndex], objectIndex
 				break
 			end
@@ -509,7 +509,7 @@ function GUI.tabBar(x, y, width, height, spaceBetweenElements, backgroundColor, 
 	object.reimplementedDraw = object.draw
 	object.draw = drawTabBar
 
-	object:addPanel(1, 1, object.width, object.height, backgroundColor).disableClicking = true
+	object:addPanel(1, 1, object.width, object.height, backgroundColor)
 	object.tabs = object:addContainer(1, 1, object.width, object.height)
 
 	x = math.floor(width / 2 - object.tabsWidth / 2)
@@ -571,23 +571,13 @@ end
 
 ----------------------------------------- Window action buttons -----------------------------------------
 
-local function drawWindowActionButton(object)
-	local background = buffer.get(object.x, object.y)
-	object.colors.default.background, object.colors.pressed.background, object.colors.disabled.background = background, background, background
-	object:reimplementedDraw()
-	return object
-end
-
 function GUI.windowActionButtons(x, y, fatSymbol)
 	local symbol = fatSymbol and "⬤" or "●"
 	
 	local container = GUI.container(x, y, 5, 1)
-	container.close = container:addButton(1, 1, 1, 1, 0x000000, 0xFF4940, 0x000000, 0x992400, symbol)
-	container.minimize = container:addButton(3, 1, 1, 1, 0x000000, 0xFFB640, 0x000000, 0x996D00, symbol)
-	container.maximize = container:addButton(5, 1, 1, 1, 0x000000, 0x00B640, 0x000000, 0x006D40, symbol)
-
-	container.close.reimplementedDraw, container.minimize.reimplementedDraw, container.maximize.reimplementedDraw = container.close.draw, container.minimize.draw, container.maximize.draw
-	container.close.draw, container.minimize.draw, container.maximize.draw = drawWindowActionButton, drawWindowActionButton, drawWindowActionButton
+	container.close = container:addButton(1, 1, 1, 1, nil, 0xFF4940, nil, 0x992400, symbol)
+	container.minimize = container:addButton(3, 1, 1, 1, nil, 0xFFB640, nil, 0x996D00, symbol)
+	container.maximize = container:addButton(5, 1, 1, 1, nil, 0x00B640, nil, 0x006D40, symbol)
 
 	return container
 end

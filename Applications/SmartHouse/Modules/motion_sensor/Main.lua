@@ -26,9 +26,7 @@ function module.update(moduleContainer, eventData)
 	if eventData[1] == "motion" then
 		if moduleContainer.componentProxy.address == eventData[2] then
 			if eventData[6] == "ECS" then
-				moduleContainer:pushSignal("redstone", "setValue", 15)
-				os.sleep(sleepValue)
-				moduleContainer:pushSignal("redstone", "setValue", 0)
+				moduleContainer:sendSignal("redstone", "pulse")
 			end
 		end
 	end
