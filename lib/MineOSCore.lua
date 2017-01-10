@@ -48,7 +48,7 @@ MineOSCore.localization = {}
 ---------------------------------------------- Current sсript processing methods ------------------------------------------------------------------------
 
 function MineOSCore.getCurrentScriptDirectory()
-	return fs.path(getCurrentScript())
+	return MineOSCore.getFilePath(getCurrentScript())
 end
 
 function MineOSCore.getCurrentApplicationResourcesDirectory() 
@@ -86,13 +86,16 @@ end
 ---------------------------------------------- Filesystem-related methods ------------------------------------------------------------------------
 
 local function getFilenameAndFormat(path)
-	local fileName, format = string.match(path, "^(.+)(%..+)$")
-	return (fileName or path), (format and string.gsub(format, "%/+$", "") or nil)
+	local fileName, format = string.match(path, "^(.+)(%.[^%/]+)%/?$")
+	return (fileName or path), format
 end
 
-local function getFilePathAndName(path)
-	local filePath, fileName = string.math(path, "^(.+%/)(.+)$")
-	return (filePath or "/"), (fileName or path)
+function MineOSCore.getFilePath(path)
+	return string.match(path, "^(.+%/).") or ""
+end
+
+function MineOSCore.getFileName(path)
+	return string.match(path, "%/?([^%/]+)%/?$")
 end
 
 function MineOSCore.getFileFormat(path)
@@ -234,7 +237,7 @@ function MineOSCore.analyseIconFormat(iconObject)
 
 			iconObject.launch = function()
 				ecs.applicationHelp(iconObject.path)
-				MineOSCore.safeLaunch(iconObject.path .. "/" .. MineOSCore.hideFileFormat(fs.name(iconObject.path)) .. ".lua")
+				MineOSCore.safeLaunch(iconObject.path .. "/" .. MineOSCore.hideFileFormat(MineOSCore.getFileName(iconObject.path)) .. ".lua")
 			end
 		else
 			iconObject.iconImage.image = MineOSCore.icons.folder
@@ -288,7 +291,7 @@ function MineOSCore.analyseIconFormat(iconObject)
 		elseif iconObject.format == ".pkg" or iconObject.format == ".zip" then
 			iconObject.iconImage.image = MineOSCore.icons.archive
 			iconObject.launch = function()
-				zip.unarchive(iconObject.path, (fs.path(iconObject.path) or ""))
+				zip.unarchive(iconObject.path, (MineOSCore.getFilePath(iconObject.path) or ""))
 			end
 		elseif iconObject.format == ".3dm" then
 			iconObject.iconImage.image = MineOSCore.icons.model3D
@@ -332,15 +335,15 @@ function MineOSCore.createIconObject(x, y, path, textColor, showFileFormat)
 	iconObject.isSelected = false
 
 	iconObject.iconImage = iconObject:addImage(3, 1, {width = 8, height = 4})
-	iconObject.textLabel = iconObject:addLabel(1, MineOSCore.iconHeight, MineOSCore.iconWidth, 1, textColor, fs.name(iconObject.path)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+	iconObject.textLabel = iconObject:addLabel(1, MineOSCore.iconHeight, MineOSCore.iconWidth, 1, textColor, MineOSCore.getFileName(iconObject.path)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
 	
 	local oldDraw = iconObject.draw
 	iconObject.draw = function(iconObject)
 		if iconObject.isSelected then buffer.square(iconObject.x, iconObject.y, iconObject.width, iconObject.height, 0xFFFFFF, 0x000000, " ", 50) end
 		if iconObject.showFormat then
-			iconObject.textLabel.text = MineOSCore.limitFileName(fs.name(iconObject.path), iconObject.textLabel.width)
+			iconObject.textLabel.text = MineOSCore.limitFileName(MineOSCore.getFileName(iconObject.path), iconObject.textLabel.width)
 		else
-			iconObject.textLabel.text = MineOSCore.limitFileName(MineOSCore.hideFileFormat(fs.name(iconObject.path)), iconObject.textLabel.width)
+			iconObject.textLabel.text = MineOSCore.limitFileName(MineOSCore.hideFileFormat(MineOSCore.getFileName(iconObject.path)), iconObject.textLabel.width)
 		end
 		oldDraw(iconObject)
 		if iconObject.isShortcut then buffer.set(iconObject.iconImage.x + iconObject.iconImage.width - 1, iconObject.iconImage.y + iconObject.iconImage.height - 1, 0xFFFFFF, 0x000000, "<") end
@@ -453,7 +456,7 @@ end
 local function drawErrorWindow(path, programVersion, errorLine, reason)
 	local drawLimit = buffer.getDrawLimit(); buffer.resetDrawLimit()
 	local colors = { topBar = 0x383838, title = 0xFFFFFF }
-	local programName = MineOSCore.localization.errorWhileRunningProgram .. "\"" .. fs.name(path) .. "\""
+	local programName = MineOSCore.localization.errorWhileRunningProgram .. "\"" .. MineOSCore.getFileName(path) .. "\""
 	local width, height = buffer.screen.width, math.floor(buffer.screen.height * 0.45)
 	local x, y = 1, math.floor(buffer.screen.height / 2 - height / 2)
 	local codeWidth, codeHeight = math.floor(width * 0.62), height - 3
@@ -726,7 +729,7 @@ function MineOSCore.iconRightClick(icon, eventData)
 	elseif action == "Свойства" then
 		MineOSCore.showPropertiesWindow(eventData[3], eventData[4], 36, 11, icon)
 	elseif action == MineOSCore.localization.contextMenuShowContainingFolder then
-		computer.pushSignal("MineOSCore", "changeWorkpath", fs.path(icon.shortcutPath))
+		computer.pushSignal("MineOSCore", "changeWorkpath", MineOSCore.getFilePath(icon.shortcutPath))
 		computer.pushSignal("MineOSCore", "updateFileList")
 	elseif action == MineOSCore.localization.contextMenuEditInPhotoshop then
 		MineOSCore.safeLaunch("MineOS/Applications/Photoshop.app/Photoshop.lua", "open", icon.path)
@@ -743,11 +746,11 @@ function MineOSCore.iconRightClick(icon, eventData)
 		_G.clipboardCut = true
 		computer.pushSignal("MineOSCore", "updateFileList")
 	elseif action == MineOSCore.localization.contextMenuDelete then
-		if fs.path(icon.path) == MineOSCore.paths.trash then
+		if MineOSCore.getFilePath(icon.path) == MineOSCore.paths.trash then
 			fs.remove(icon.path)
 		else
-			local newName = MineOSCore.paths.trash .. fs.name(icon.path)
-			local clearName = MineOSCore.hideFileFormat(fs.name(icon.path))
+			local newName = MineOSCore.paths.trash .. MineOSCore.getFileName(icon.path)
+			local clearName = MineOSCore.hideFileFormat(MineOSCore.getFileName(icon.path))
 			local repeats = 1
 			while fs.exists(newName) do
 				newName, repeats = MineOSCore.paths.trash .. clearName .. string.rep("-copy", repeats) .. icon.format, repeats + 1
@@ -759,11 +762,11 @@ function MineOSCore.iconRightClick(icon, eventData)
 		ecs.rename(icon.path)
 		computer.pushSignal("MineOSCore", "updateFileList")
 	elseif action == MineOSCore.localization.contextMenuCreateShortcut then
-		ecs.createShortCut(fs.path(icon.path) .. "/" .. ecs.hideFileFormat(fs.name(icon.path)) .. ".lnk", icon.path)
+		ecs.createShortCut(MineOSCore.getFilePath(icon.path) .. "/" .. ecs.hideFileFormat(MineOSCore.getFileName(icon.path)) .. ".lnk", icon.path)
 		computer.pushSignal("MineOSCore", "updateFileList")
 	elseif action == MineOSCore.localization.contextMenuArchive then
 		-- ecs.info("auto", "auto", "", "Архивация файлов...")
-		archive.pack(ecs.hideFileFormat(fs.name(icon.path))..".pkg", icon.path)
+		archive.pack(ecs.hideFileFormat(MineOSCore.getFileName(icon.path))..".pkg", icon.path)
 		computer.pushSignal("MineOSCore", "updateFileList")
 	elseif action == MineOSCore.localization.contextMenuSetAsWallpaper then
 		fs.remove(MineOSCore.paths.wallpaper)
@@ -775,7 +778,7 @@ function MineOSCore.iconRightClick(icon, eventData)
 		file:close()
 		computer.beep(1500, 0.2)
 	elseif action == MineOSCore.localization.contextMenuCreateApplication then
-		ecs.newApplicationFromLuaFile(icon.path, fs.path(icon.path) or "")
+		ecs.newApplicationFromLuaFile(icon.path, MineOSCore.getFilePath(icon.path) or "")
 		computer.pushSignal("MineOSCore", "updateFileList")
 	elseif action == MineOSCore.localization.contextMenuAddToDock then
 		table.insert(_G.OSSettings.dockShortcuts, {path = icon.path})

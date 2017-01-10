@@ -18,6 +18,15 @@ function module.execute(window)
 		error = 0xFF4940,
 	}
 
+	window.drawingArea:deleteChildren()
+	local logoPanelWidth = 20
+	local consolePanelWidth = window.drawingArea.width - logoPanelWidth
+	local luaLogoPanel = window.drawingArea:addPanel(1, 1, logoPanelWidth, window.drawingArea.height, 0xEEEEEE)
+	local luaLogoImage = window.drawingArea:addImage(2, 1, image.load(window.resourcesPath .. "LuaLogo.pic"))
+	local luaCopyrightTextBox = window.drawingArea:addTextBox(2, luaLogoImage.height + 2, luaLogoPanel.width - 2, 5, nil, 0x999999, {_G._VERSION, "(C) 1994-2016", "Lua.org, PUC-Rio", "", "GUI-based by ECS"}, 1)
+	luaCopyrightTextBox:setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+	local consolePanel = window.drawingArea:addPanel(logoPanelWidth + 1, 1, consolePanelWidth, window.drawingArea.height, 0x1E1E1E)
+
 	local lines = {
 		{color = 0xFFDB40, text = "Система " .. _VERSION .. " инициализирована"},
 		{color = colors.passive, text = "● Введите выражение и нажимте Enter для его "},
@@ -28,23 +37,13 @@ function module.execute(window)
 		{color = colors.passive, text = "  конкретной переменной"},
 		" "
 	}
-
-	window.drawingArea:deleteChildren()
-	local logoPanelWidth = 20
-	local consolePanelWidth = window.drawingArea.width - logoPanelWidth
-	local luaLogoPanel = window.drawingArea:addPanel(1, 1, logoPanelWidth, window.drawingArea.height, 0xEEEEEE)
-	local luaLogoImage = window.drawingArea:addImage(2, 1, image.load(window.resourcesPath .. "LuaLogo.pic"))
-	local luaCopyrightTextBox = window.drawingArea:addTextBox(2, luaLogoImage.height + 2, luaLogoPanel.width - 2, 5, nil, 0x999999, {_G._VERSION, "(C) 1994-2016", "Lua.org, PUC-Rio", "", "GUI-based by ECS"}, 1)
-	luaCopyrightTextBox:setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
-	local consolePanel = window.drawingArea:addPanel(logoPanelWidth + 1, 1, consolePanelWidth, window.drawingArea.height, 0x1E1E1E)
 	local consoleTextBox = window.drawingArea:addTextBox(logoPanelWidth + 2, 1, consolePanelWidth - 2, window.drawingArea.height - 3, nil, 0xFFFFFF, lines, 1)
+
 	local consoleCommandInputTextBox = window.drawingArea:addInputTextBox(logoPanelWidth + 1, consolePanel.height - 2, consolePanel.width, 3, 0x333333, 0x777777, 0x333333, 0x444444, nil, "print(\"Hello, world!\")")
 	consoleCommandInputTextBox.highlightLuaSyntax = true
 	consoleCommandInputTextBox.autocompleteVariables = true
 
-	-- table.toFile("text.txt", MineOSCore, true, nil, nil, 1)
-
-	local function addLines(lines)
+	local function addLines(lines, printColor)
 		for i = 1, #lines do
 			if #consoleTextBox.lines > luaConsoleHistoryLimit then table.remove(consoleTextBox.lines, 1) end
 			table.insert(consoleTextBox.lines, printColor and {color = printColor, text = lines[i]} or lines[i])
@@ -53,7 +52,7 @@ function module.execute(window)
 	end
 
 	local function getStringValueOfVariable(variable)
-		local type, value = type(variable), ""
+		local type, value = type(variable)
 		if type == "table" then
 			value = table.serialize(variable, true, nil, nil, 1)
 		else
@@ -82,12 +81,10 @@ function module.execute(window)
 			local oldPrint = print
 			print = reimplementedPrint
 			-- Пишем, че мы вообще исполняли
-			printColor = colors.passive
-			addLines({"> " .. consoleCommandInputTextBox.text})
-			printColor = nil
+			addLines({"> " .. consoleCommandInputTextBox.text}, colors.passive)
 
 			-- Ебашим поддержку =
-			if unicode.sub(consoleCommandInputTextBox.text, 1, 1) == "=" then consoleCommandInputTextBox.text = "return " .. unicode.sub(consoleCommandInputTextBox.text, 2, -1) end
+			consoleCommandInputTextBox.text = consoleCommandInputTextBox.text:gsub("^[%s+]?%=[%s+]?", "return ")
 			local loadSuccess, loadReason = load(consoleCommandInputTextBox.text)
 			if loadSuccess then
 				local xpcallResult = {xpcall(loadSuccess, debug.traceback)}
@@ -95,14 +92,10 @@ function module.execute(window)
 					table.remove(xpcallResult, 1)
 					reimplementedPrint(table.unpack(xpcallResult))
 				else
-					printColor = colors.error
-					reimplementedPrint(xpcallResult[2])
-					printColor = nil
+					addLines({xpcallResult[2]}, colors.error)
 				end
 			else
-				printColor = colors.error
-				reimplementedPrint(loadReason)
-				printColor = nil
+				addLines({loadReason}, colors.error)
 			end
 
 			consoleCommandInputTextBox.text = nil
