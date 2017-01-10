@@ -5,6 +5,7 @@ local fs = require("filesystem")
 local event = require("event")
 local unicode = require("unicode")
 local bit32 = require("bit32")
+local gpu = components.gpu
 
 package.loaded.libPNGImage = nil
 
