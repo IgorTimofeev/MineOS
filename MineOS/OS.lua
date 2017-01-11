@@ -346,8 +346,10 @@ local function updateDock()
 			
 		iconObject.onRightClick = function(iconObject, eventData)
 			local menu = GUI.contextMenu(eventData[3], eventData[4])
-			menu:addItem(MineOSCore.localization.contextMenuShowContainingFolder, true).onTouch = function()
-				ecs.error("ТУТА БУДЕТ ОТКРЫВАТОР ПУТИ ИКОНКИ ДОКА")
+			menu:addItem(MineOSCore.localization.contextMenuShowContainingFolder).onTouch = function()
+				table.insert(workpathHistory, fs.path(iconObject.path))
+				changeWorkpath(#workpathHistory)
+				workspace.updateFileList()
 			end
 			menu:addSeparator()
 			menu:addItem(MineOSCore.localization.contextMenuMoveRight, iconIndex >= #_G.OSSettings.dockShortcuts).onTouch = function()
