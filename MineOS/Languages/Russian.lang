@@ -12,6 +12,7 @@
 	path = "Путь",
 	folder = "Папка",
 	unknown = "Неизвестно",
+	calculatingSize = "идет подсчет…",
 	contextMenuProperties = "Свойства",
 	contextMenuNewFile = "Новый файл",
 	contextMenuNewFolder = "Новая папка",

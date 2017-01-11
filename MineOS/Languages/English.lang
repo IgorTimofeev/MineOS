@@ -12,6 +12,7 @@
 	path = "Path",
 	folder = "Folder",
 	unknown = "Unknown",
+	calculatingSize = "calculating…",
 	contextMenuProperties = "Properties",
 	contextMenuNewFile = "New file",
 	contextMenuNewFolder = "New folder",
