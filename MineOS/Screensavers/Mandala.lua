@@ -139,7 +139,7 @@ while true do
   gsB(0)
 
   local e = {event.pull(1)}
-  if (e[1] == "key_down" and e[4] == 28) or e[1] == "touch" then
+  if e[1] == "key_down" or e[1] == "touch" then
     gpu.setBackground(0x0)
     gpu.fill(1, 1, w, h, " ")
     break

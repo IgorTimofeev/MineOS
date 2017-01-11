@@ -48,7 +48,7 @@ while true do
 	end
 
 	local e = {event.pull(0.03)}
-	if (e[1] == "key_down" and e[4] == 28) or e[1] == "touch" then
+	if e[1] == "key_down" or e[1] == "touch" then
 		gpu.setBackground(backgroundColor)
 		gpu.fill(1, 1, xScreen, yScreen, " ")
 		break
