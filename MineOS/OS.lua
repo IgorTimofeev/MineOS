@@ -312,13 +312,22 @@ local function updateDesktopCounters()
 			workspace.updateFileList()
 		end; x = x + 6
 	end
-	for i = 1, countOfDesktops do
-		workspace.desktopCounters:addButton(x, 1, 1, 1, nil, i == currentDesktop and 0xEEEEEE or 0xBBBBBB, nil, 0x888888, "●").onTouch = function()
-			if currentDesktop ~= i then
-				currentDesktop = i
-				workspace.updateFileList()
-			end
-		end; x = x + 3
+	if workpathHistory[currentWorkpathHistoryIndex] ~= MineOSCore.paths.desktop then
+		workspace.desktopCounters:addButton(x, 1, 7, 1, nil, 0xEEEEEE, nil, 0x888888, "Desktop").onTouch = function()
+			table.insert(workpathHistory, MineOSCore.paths.desktop)
+			changeWorkpath(#workpathHistory)
+			workspace.updateFileList()
+		end; x = x + 9
+	end
+	if countOfDesktops > 1 then
+		for i = 1, countOfDesktops do
+			workspace.desktopCounters:addButton(x, 1, 1, 1, nil, i == currentDesktop and 0xEEEEEE or 0xBBBBBB, nil, 0x888888, "●").onTouch = function()
+				if currentDesktop ~= i then
+					currentDesktop = i
+					workspace.updateFileList()
+				end
+			end; x = x + 3
+		end
 	end
 
 	workspace.desktopCounters.width = x - 3
