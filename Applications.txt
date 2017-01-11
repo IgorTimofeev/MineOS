@@ -495,8 +495,15 @@
     version=1.00,
   },
   {
-    name="MineOS/System/OS/Screensavers/Kaleidoscope.lua",
-    url="IgorTimofeev/OpenComputers/master/MineOS/Screensavers/Kaleidoscope.lua",
+    name="MineOS/System/OS/Screensavers/Mandala.lua",
+    url="IgorTimofeev/OpenComputers/master/MineOS/Screensavers/Mandala.lua",
+    type="Script",
+    forceDownload=true,
+    version=1.00,
+  },
+  {
+    name="MineOS/System/OS/Screensavers/Clock.lua",
+    url="IgorTimofeev/OpenComputers/master/MineOS/Screensavers/Clock.lua",
     type="Script",
     forceDownload=true,
     version=1.00,
