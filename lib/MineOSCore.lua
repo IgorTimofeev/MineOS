@@ -238,7 +238,7 @@ local function waitForPressingAnyKey()
 	end
 end
 
-function MineOSCore.analyseIconFormat(iconObject)
+function MineOSCore.analyzeIconFormat(iconObject)
 	if iconObject.isDirectory then
 		if iconObject.format == ".app" then
 			if MineOSCore.showApplicationIcons then
@@ -264,7 +264,7 @@ function MineOSCore.analyseIconFormat(iconObject)
 			iconObject.shortcutIsDirectory = fs.isDirectory(iconObject.shortcutPath)
 			iconObject.isShortcut = true
 
-			local shortcutIconObject = MineOSCore.analyseIconFormat({
+			local shortcutIconObject = MineOSCore.analyzeIconFormat({
 				path = iconObject.shortcutPath,
 				format = iconObject.shortcutFormat,
 				isDirectory = iconObject.shortcutIsDirectory,
@@ -385,7 +385,7 @@ function MineOSCore.createIconObject(x, y, path, textColor, showFileFormat)
 	end
 
 	-- Онализ формата и прочего говна иконки для последующего получения изображения иконки и функции-лаунчера
-	MineOSCore.analyseIconFormat(iconObject)
+	MineOSCore.analyzeIconFormat(iconObject)
 	
 	return iconObject
 end
