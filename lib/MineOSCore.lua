@@ -180,6 +180,18 @@ function MineOSCore.limitFileName(text, limit)
 	return text
 end
 
+function MineOSCore.getFolderSize(path)
+	local size = 0
+	for file in fs.list(path) do
+		if fs.isDirectory(path .. file) then
+			size = size + MineOSCore.getFolderSize(path .. file)
+		else
+			size = size + fs.size(path .. file)
+		end
+	end
+	return size
+end
+
 ---------------------------------------------- MineOS Icons related methods ------------------------------------------------------------------------
 
 function MineOSCore.saveOSSettings()
@@ -727,7 +739,7 @@ function MineOSCore.iconRightClick(icon, eventData)
 		MineOSCore.safeLaunch("/bin/edit.lua", icon.path)
 		computer.pushSignal("MineOSCore", "updateFileList")
 	elseif action == "Свойства" then
-		MineOSCore.showPropertiesWindow(eventData[3], eventData[4], 36, 11, icon)
+		MineOSCore.showPropertiesWindow(eventData[3], eventData[4], 40, icon)
 	elseif action == MineOSCore.localization.contextMenuShowContainingFolder then
 		computer.pushSignal("MineOSCore", "changeWorkpath", MineOSCore.getFilePath(icon.shortcutPath))
 		computer.pushSignal("MineOSCore", "updateFileList")
@@ -818,12 +830,12 @@ end
 
 local function addKeyAndValue(window, x, y, key, value)
 	window:addLabel(x, y, window.width , 1, 0x333333, key .. ":"); x = x + unicode.len(key) + 2
-	window:addLabel(x, y, window.width, 1, 0x555555, value)
+	return window:addLabel(x, y, window.width, 1, 0x555555, value)
 end
 
-function MineOSCore.showPropertiesWindow(x, y, width, height, iconObject)
-	local window = windows.empty(x, y, width, height)
-	local backgroundPanel = window:addPanel(1, 2, window.width, window.height - 1, 0xFFFFFF, 20)
+function MineOSCore.showPropertiesWindow(x, y, width, iconObject)
+	local window = windows.empty(x, y, width, 1)
+	local backgroundPanel = window:addPanel(1, 2, window.width, 1, 0xDDDDDD)
 	window:addPanel(1, 1, window.width, 1, 0xEEEEEE)
 	window:addLabel(1, 1, window.width, 1, 0x333333, MineOSCore.localization.contextMenuProperties):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
 	window:addButton(2, 1, 1, 1, nil, 0xFF4940, nil, 0x992400, "●").onTouch = function() window:close() end
@@ -831,8 +843,8 @@ function MineOSCore.showPropertiesWindow(x, y, width, height, iconObject)
 	window:addImage(3, 3, iconObject.iconImage.image)
 
 	local y = 3
-	addKeyAndValue(window, 13, y, MineOSCore.localization.type, iconObject.format and unicode.upper(unicode.sub(iconObject.format, 2, 2)) .. unicode.sub(iconObject.format, 3, -1) or (iconObject.isDirectory and MineOSCore.localization.folder or MineOSCore.localization.unknown)); y = y + 1
-	if not iconObject.isDirectory then addKeyAndValue(window, 13, y, MineOSCore.localization.size, math.ceil(iconObject.size / 1024) .. "KB"); y = y + 1 end
+	addKeyAndValue(window, 13, y, MineOSCore.localization.type, iconObject.format and iconObject.format or (iconObject.isDirectory and MineOSCore.localization.folder or MineOSCore.localization.unknown)); y = y + 1
+	local fileSizeLabel = addKeyAndValue(window, 13, y, MineOSCore.localization.size, iconObject.isDirectory and MineOSCore.localization.calculatingSize or string.format("%.2f", iconObject.size / 1024) .. " KB"); y = y + 1
 	addKeyAndValue(window, 13, y, MineOSCore.localization.date, os.date("%d.%m.%y, %H:%M", fs.lastModified(iconObject.path))); y = y + 1
 	addKeyAndValue(window, 13, y, MineOSCore.localization.path, " ")
 
@@ -845,8 +857,14 @@ function MineOSCore.showPropertiesWindow(x, y, width, height, iconObject)
 	if window.y + window.height > buffer.screen.height then window.y = window.y - (window.y + window.height - buffer.screen.height) end
 
 	window:draw()
-	GUI.windowShadow(window.x, window.y, window.width, window.height, 50, true)
 	buffer.draw()
+
+	if iconObject.isDirectory then
+		fileSizeLabel.text = string.format("%.2f", MineOSCore.getFolderSize(iconObject.path) / 1024) .. " KB"
+		window:draw()
+		buffer.draw()
+	end
+
 	window:handleEvents()
 end
 
