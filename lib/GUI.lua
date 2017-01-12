@@ -1425,12 +1425,17 @@ local function scrollBarDraw(scrollBar)
 	local isVertical = scrollBar.height > scrollBar.width
 	local valuesDelta = scrollBar.maximumValue - scrollBar.minimumValue + 1
 	local part = scrollBar.value / valuesDelta
-	local barSize = math.ceil(scrollBar.shownValueCount / valuesDelta * scrollBar.height)
-	local halfBarSize = math.floor(barSize / 2)
 
-	buffer.square(scrollBar.x, scrollBar.y, scrollBar.width, scrollBar.height, scrollBar.colors.background, 0x0, " ")
+	if not isVertical and scrollBar.thinHorizontalMode then
+		buffer.text(scrollBar.x, scrollBar.y, scrollBar.colors.background, string.rep("▄", scrollBar.width))
+	else
+		buffer.square(scrollBar.x, scrollBar.y, scrollBar.width, scrollBar.height, scrollBar.colors.background, 0x0, " ")
+	end
 
 	if isVertical then
+		local barSize = math.ceil(scrollBar.shownValueCount / valuesDelta * scrollBar.height)
+		local halfBarSize = math.floor(barSize / 2)
+		
 		scrollBar.ghostPosition.x = scrollBar.x
 		scrollBar.ghostPosition.y = scrollBar.y + halfBarSize
 		scrollBar.ghostPosition.width = scrollBar.width
@@ -1444,24 +1449,31 @@ local function scrollBarDraw(scrollBar)
 			scrollBar.colors.foreground, 0x0, " "
 		)
 	else
+		local barSize = math.ceil(scrollBar.shownValueCount / valuesDelta * scrollBar.width)
+		local halfBarSize = math.floor(barSize / 2)
+		
 		scrollBar.ghostPosition.x = scrollBar.x + halfBarSize
 		scrollBar.ghostPosition.y = scrollBar.y
 		scrollBar.ghostPosition.width = scrollBar.width - barSize
 		scrollBar.ghostPosition.height = scrollBar.height
 
-		buffer.square(
-			math.floor(scrollBar.ghostPosition.x + part * scrollBar.ghostPosition.width - halfBarSize),
-			scrollBar.ghostPosition.y,
-			barSize,
-			scrollBar.ghostPosition.height,
-			scrollBar.colors.foreground, 0x0, " "
-		)
+		if not isVertical and scrollBar.thinHorizontalMode then
+			buffer.text(math.floor(scrollBar.ghostPosition.x + part * scrollBar.ghostPosition.width - halfBarSize), scrollBar.ghostPosition.y, scrollBar.colors.foreground, string.rep("▄", barSize))
+		else
+			buffer.square(
+				math.floor(scrollBar.ghostPosition.x + part * scrollBar.ghostPosition.width - halfBarSize),
+				scrollBar.ghostPosition.y,
+				barSize,
+				scrollBar.ghostPosition.height,
+				scrollBar.colors.foreground, 0x0, " "
+			)
+		end
 	end
 
 	return scrollBar
 end
 
-function GUI.scrollBar(x, y, width, height, backgroundColor, foregroundColor, minimumValue, maximumValue, value, shownValueCount, onScrollValueIncrement, horizontalThin)
+function GUI.scrollBar(x, y, width, height, backgroundColor, foregroundColor, minimumValue, maximumValue, value, shownValueCount, onScrollValueIncrement, thinHorizontalMode)
 	local scrollBar = GUI.object(x, y, width, height)
 
 	scrollBar.maximumValue = maximumValue
@@ -1469,7 +1481,7 @@ function GUI.scrollBar(x, y, width, height, backgroundColor, foregroundColor, mi
 	scrollBar.value = value
 	scrollBar.onScrollValueIncrement = onScrollValueIncrement
 	scrollBar.shownValueCount = shownValueCount
-	scrollBar.thin = horizontalThin
+	scrollBar.thinHorizontalMode = thinHorizontalMode
 	scrollBar.colors = {
 		background = backgroundColor,
 		foreground = foregroundColor,
@@ -1482,32 +1494,12 @@ end
 
 --------------------------------------------------------------------------------------------------------------------------------
 
-buffer.start()
-buffer.clear(0x1b1b1b)
+-- buffer.start()
+-- buffer.clear(0x1b1b1b)
 
 -- GUI.scrollBar(1, 5, 1, 20, 0x444444, 0x00DBFF, 1, 100, 50, 20, 1, true):draw()
 
 -- buffer.draw()
-
--- local comboBox = GUI.comboBox(2, 2, 30, 1, 0xFFFFFF, 0x262626, 0xDDDDDD, 0x262626, {"PIC", "RAW", "PNG", "JPG"})
--- comboBox:selectItem()
-
--- buffer.draw()
-
--- GUI.chart(2, 10, 40, 20, 0xFFFFFF, 0xBBBBBB, 0xFFDB40, "t", "EU", 0, 2, {
--- 	0.5,
--- 	0.12
--- }):draw()
-
--- local menu = GUI.dropDownMenu(2, 2, 40, 1, 0xFFFFFF, 0x000000, 0xFFDB40, 0xFFFFFF, 0x999999, 0x777777, 50)
--- menu:addItem("New")
--- menu:addItem("Open")
--- menu:addSeparator()
--- menu:addItem("Save")
--- menu:addItem("Save as")
--- menu:show()
-
--- GUI.contextMenu(2, 2, {"Hello"}, {"World"}, "-", {"You are the"}, {"Best of best", false, "^S"}, {"And bestest yopta"}):show()
 
 --------------------------------------------------------------------------------------------------------------------------------
 

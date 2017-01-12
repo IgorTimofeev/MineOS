@@ -282,18 +282,10 @@ end
 -- buffer.draw(true)
 
 -- local myWindow = windows.empty(2, 2, 60, 20, 60, 20)
--- myWindow:addScrollBar(1, 1, 1, 20, 0x444444, 0x00DBFF, 1, 100, 50, 20, 4, true)
--- myWindow:draw()
--- buffer.draw()
--- myWindow:handleEvents()
-
--- local myWindow = windows.empty(10, 5, 60, 20, 60, 20)
--- myWindow:addPanel(1, 1, myWindow.width, myWindow.height, 0xEEEEEE)
--- myWindow:addLabel(2, 5, 20, 1, 0x000000, tostring(10)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
--- myWindow:addHorizontalSlider(2, 4, 20, 0x880000, 0x000000, 0xFF4444, 0, 100, 10).onValueChanged = function(object)
--- 	myWindow.counter.text = tostring(object.value)
+-- local scrollBar = myWindow:addScrollBar(1, 1, 20, 1, 0x444444, 0x00DBFF, 1, 100, 50, 20, 4, true)
+-- scrollBar.onTouch = function()
+-- 	buffer.text(4, 1, 0xFFFFFF, "Value: " .. scrollBar.value)
 -- end
-
 -- myWindow:draw()
 -- buffer.draw()
 -- myWindow:handleEvents()
