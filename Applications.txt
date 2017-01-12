@@ -366,7 +366,7 @@
     name="lib/palette.lua",
     url="IgorTimofeev/OpenComputers/master/lib/palette.lua",
     type="Library",
-    version=1.04,
+    version=1.05,
   },
   {
     name="lib/doubleBuffering.lua",
