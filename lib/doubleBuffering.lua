@@ -149,12 +149,12 @@ end
 --Скопировать область изображения и вернуть ее в виде массива
 function buffer.copy(x, y, width, height)
 	local copyArray = {
-		["width"] = width,
-		["height"] = height,
+		width = width,
+		height = height,
 	}
 
 	if x < 1 or y < 1 or x + width - 1 > buffer.screen.width or y + height - 1 > buffer.screen.height then
-		error("Область копирования выходит за пределы экрана.")
+		error("Copy field is out of screen range")
 	end
 
 	local index

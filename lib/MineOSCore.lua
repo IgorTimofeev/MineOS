@@ -585,7 +585,7 @@ function MineOSCore.safeLaunch(path, ...)
 			end
 
 			local function tracebackMethod(xpcallTraceback)
-				local traceback, info, firstMatch = xpcallTraceback .. "\n" .. debug.traceback()
+				local traceback, info, firstMatch = tostring(xpcallTraceback) .. "\n" .. debug.traceback()
 				for runLevel = 0, math.huge do
 					info = debug.getinfo(runLevel)
 					if info then
@@ -607,7 +607,7 @@ function MineOSCore.safeLaunch(path, ...)
 			end
 
 			local runSuccess, runReason = xpcall(launchMethod, tracebackMethod)
-			if not runSuccess and not string.find(runReason.traceback, "interrupted", 1, 15) then
+			if not runSuccess and not string.match(runReason.traceback, "^table") and not string.find(runReason.traceback, "interrupted", 1, 15) then
 				finalSuccess, finalPath, finalLine, finalTraceback = false, runReason.path, runReason.line, runReason.traceback
 			end
 		else

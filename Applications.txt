@@ -8,7 +8,7 @@
     about="IgorTimofeev/OpenComputers/master/MineOS/About/",
     type="Script",
     forceDownload=true,
-    version=3.42,
+    version=3.43,
   },
   {
     name="MineOS/Pictures/Raspberry.pic",
@@ -253,7 +253,7 @@
     name="lib/MineOSCore.lua",
     url="IgorTimofeev/OpenComputers/master/lib/MineOSCore.lua",
     type="Library",
-    version=1.38,
+    version=1.40,
   },
   {
     name="lib/advancedLua.lua",
@@ -300,13 +300,13 @@
     name="lib/GUI.lua",
     url="IgorTimofeev/OpenComputers/master/lib/GUI.lua",
     type="Library",
-    version=1.22,
+    version=1.24,
   },
   {
     name="lib/windows.lua",
     url="IgorTimofeev/OpenComputers/master/lib/windows.lua",
     type="Library",
-    version=1.06,
+    version=1.08,
   },
   {
     name="lib/rayEngine.lua",
@@ -372,7 +372,7 @@
     name="lib/doubleBuffering.lua",
     url="IgorTimofeev/OpenComputers/master/lib/doubleBuffering.lua",
     type="Library",
-    version=1.17,
+    version=1.19,
   },
   {
     name="lib/archive.lua",
@@ -523,7 +523,7 @@
     type="Application",
     icon="IgorTimofeev/OpenComputers/master/Applications/GeoScan2/Icon.pic",
     createShortcut="desktop",
-    version=1.01,
+    version=1.02,
     resources={
       {
         name="Earth.pic",
@@ -629,7 +629,7 @@
     type="Application",
     icon="IgorTimofeev/OpenComputers/master/Applications/Control2/Icon.pic",
     createShortcut="desktop",
-    version=1.04,
+    version=1.05,
     resources={
       {
         name="LuaLogo.pic",
@@ -711,7 +711,7 @@
     type="Application",
     icon="IgorTimofeev/OpenComputers/master/Applications/RayWalk/Icon.pic",
     createShortcut="desktop",
-    version=1.58,
+    version=1.60,
     resources={
       {
         name="Localization/Russian.lang",
@@ -1004,7 +1004,7 @@
     icon="IgorTimofeev/OpenComputers/master/Applications/AppMarket/Icon.pic",
     createShortcut="dock",
     forceDownload=true,
-    version=1.48,
+    version=1.49,
      resources={
       {
         name="Localization/Russian.lang",

@@ -11,6 +11,7 @@ local module = {
 ----------------------------------------------------------------------------------------------------------------------------
 
 function module.execute(window)
+	local luaConsoleCommandHistoryLimit = 20
 	local luaConsoleHistoryLimit = 50
 
 	local colors, printColor = {
@@ -39,7 +40,8 @@ function module.execute(window)
 	}
 	local consoleTextBox = window.drawingArea:addTextBox(logoPanelWidth + 2, 1, consolePanelWidth - 2, window.drawingArea.height - 3, nil, 0xFFFFFF, lines, 1)
 
-	local consoleCommandInputTextBox = window.drawingArea:addInputTextBox(logoPanelWidth + 1, consolePanel.height - 2, consolePanel.width, 3, 0x333333, 0x777777, 0x333333, 0x444444, nil, "print(\"Hello, world!\")")
+	local consoleCommandInputTextBox = window.drawingArea:addInputTextBox(logoPanelWidth + 1, consolePanel.height - 2, consolePanel.width, 3, 0x333333, 0x777777, 0x333333, 0x444444, "", "print(\"Hello, world!\")")
+	consoleCommandInputTextBox.eraseTextOnFocus = true
 	consoleCommandInputTextBox.highlightLuaSyntax = true
 	consoleCommandInputTextBox.autocompleteVariables = true
 
@@ -76,34 +78,32 @@ function module.execute(window)
 	-- abc = function(a, b, c) local d = b ^ 2 - 4 * a * c; if d < 0 then error("Сууука!!! D < 0") end; x1 = (-b + math.sqrt(d)) / (2 * a); x2 = (-b - math.sqrt(d)) / (2 * a); return x1, x2 end
 
 	consoleCommandInputTextBox.onInputFinished = function()
-		if consoleCommandInputTextBox.text then
-			-- Подменяем стандартный print() на мой пиздатый
-			local oldPrint = print
-			print = reimplementedPrint
-			-- Пишем, че мы вообще исполняли
-			addLines({"> " .. consoleCommandInputTextBox.text}, colors.passive)
+		-- Подменяем стандартный print() на мой пиздатый
+		local oldPrint = print
+		print = reimplementedPrint
+		-- Пишем, че мы вообще исполняли
+		addLines({"> " .. consoleCommandInputTextBox.text}, colors.passive)
 
-			-- Ебашим поддержку =
-			consoleCommandInputTextBox.text = consoleCommandInputTextBox.text:gsub("^[%s+]?%=[%s+]?", "return ")
-			local loadSuccess, loadReason = load(consoleCommandInputTextBox.text)
-			if loadSuccess then
-				local xpcallResult = {xpcall(loadSuccess, debug.traceback)}
-				if xpcallResult[1] then
-					table.remove(xpcallResult, 1)
-					reimplementedPrint(table.unpack(xpcallResult))
-				else
-					addLines({xpcallResult[2]}, colors.error)
-				end
+		-- Ебашим поддержку =
+		consoleCommandInputTextBox.text = consoleCommandInputTextBox.text:gsub("^[%s+]?%=[%s+]?", "return ")
+		local loadSuccess, loadReason = load(consoleCommandInputTextBox.text)
+		if loadSuccess then
+			local xpcallResult = {xpcall(loadSuccess, debug.traceback)}
+			if xpcallResult[1] then
+				table.remove(xpcallResult, 1)
+				reimplementedPrint(table.unpack(xpcallResult))
 			else
-				addLines({loadReason}, colors.error)
+				addLines({xpcallResult[2]}, colors.error)
 			end
-
-			consoleCommandInputTextBox.text = nil
-			print = oldPrint
-
-			window:draw()
-			buffer.draw()
+		else
+			addLines({loadReason}, colors.error)
 		end
+
+		consoleCommandInputTextBox.text = ""
+		print = oldPrint
+
+		window:draw()
+		buffer.draw()
 	end
 end
 

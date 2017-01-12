@@ -75,7 +75,7 @@ local function calculateSizes()
 	sizes.downloadButtonWidth = 17
 	sizes.descriptionTruncateSize = sizes.width - 6 - MineOSCore.iconWidth - sizes.downloadButtonWidth
 	sizes.searchFieldWidth = math.floor(sizes.width * 0.3)
-	obj.searchTextField = GUI.inputTextBox(math.floor(sizes.x + sizes.width / 2 - sizes.searchFieldWidth / 2), 1, sizes.searchFieldWidth, 1, 0xEEEEEE, 0x555555, 0xEEEEEE, 0x262626, nil, localization.search, false, true)
+	obj.searchTextField = GUI.inputTextBox(math.floor(sizes.x + sizes.width / 2 - sizes.searchFieldWidth / 2), 1, sizes.searchFieldWidth, 1, 0xEEEEEE, 0x555555, 0xEEEEEE, 0x262626, "", localization.search, true)
 end
 
 local function drawTopBar()
@@ -195,14 +195,14 @@ local function drawMain(refreshData)
 
 	buffer.setDrawLimit(sizes.x, obj.main.y, sizes.width, obj.main.height)
 
-	obj.searchTextField.y, obj.searchTextField.invisible = y, false
+	obj.searchTextField.y, obj.searchTextField.isHidden = y, false
 	obj.searchTextField:draw()
 	y = y + 2
 
 	local matchCount = 1
 	for i = 1, #newApplications do
 		if newApplications[i].type == typeFilters[currentTopBarElement] then
-			if not obj.searchTextField.text or (string.find(unicode.lower(fs.name(newApplications[i].name)), unicode.lower(obj.searchTextField.text))) then
+			if obj.searchTextField.text == "" or (string.find(unicode.lower(fs.name(newApplications[i].name)), unicode.lower(obj.searchTextField.text))) then
 				if matchCount >= from and matchCount <= from + limit - 1 then
 					if refreshData and not currentApps[i] then
 						status(localization.downloadingInfoAboutApplication .. " \"" .. newApplications[i].name .. "\"")
@@ -246,7 +246,7 @@ end
 local function updates()
 	clearMainZone()
 
-	obj.searchTextField.invisible = true
+	obj.searchTextField.isHidden = true
 
 	if #changes > 0 then
 		buffer.setDrawLimit(sizes.x, obj.main.y, sizes.width, obj.main.height)

@@ -1,5 +1,5 @@
 
--- package.loaded.MineOSCore, package.loaded.GUI, package.loaded.windows = nil, nil, nil
+package.loaded.MineOSCore, package.loaded.GUI, package.loaded.windows = nil, nil, nil
 
 ---------------------------------------------- Копирайт, епта ------------------------------------------------------------------------
 

@@ -104,6 +104,34 @@ local function menuItemHandler(window, object, objectIndex, eventData)
 	buffer.draw()
 end
 
+local function scrollBarHandler(window, object, objectIndex, eventData)
+	if eventData[1] == "touch" or eventData[1] == "drag" then
+		local delta = object.maximumValue - object.minimumValue + 1
+		if object.height > object.width then
+			object.value = math.floor((eventData[4] - object.y + 1) / object.height * delta)
+		else
+			object.value = math.floor((eventData[3] - object.x + 1) / object.width * delta)
+		end
+	elseif eventData[1] == "scroll" then
+		if eventData[5] == 1 then
+			if object.value >= object.minimumValue + object.onScrollValueIncrement then
+				object.value = object.value - object.onScrollValueIncrement
+			else
+				object.value = object.minimumValue
+			end
+		else
+			if object.value <= object.maximumValue - object.onScrollValueIncrement then
+				object.value = object.value + object.onScrollValueIncrement
+			else
+				object.value = object.maximumValue
+			end
+		end
+	end
+	window:draw()
+	buffer.draw()
+	executeObjectMethod(object.onTouch, eventData)
+end
+
 function windows.handleEventData(window, eventData)
 	if eventData[1] == "touch" then
 		local object, objectIndex = window:getClickedObject(eventData[3], eventData[4])
@@ -123,6 +151,8 @@ function windows.handleEventData(window, eventData)
 				comboBoxHandler(window, object, objectIndex, eventData)
 			elseif object.type == GUI.objectTypes.menuItem then
 				menuItemHandler(window, object, objectIndex, eventData)
+			elseif object.type == GUI.objectTypes.scrollBar then
+				scrollBarHandler(window, object, objectIndex, eventData)
 			elseif object.onTouch then
 				executeObjectMethod(object.onTouch, eventData)
 			end
@@ -134,6 +164,8 @@ function windows.handleEventData(window, eventData)
 		if object then
 			if object.type == GUI.objectTypes.textBox then
 				textBoxScrollHandler(window, object, objectIndex, eventData)
+			elseif object.type == GUI.objectTypes.scrollBar then
+				scrollBarHandler(window, object, objectIndex, eventData)
 			elseif object.onScroll then
 				executeObjectMethod(object.onScroll, eventData)
 			end
@@ -145,6 +177,8 @@ function windows.handleEventData(window, eventData)
 		if object then
 			if object.type == GUI.objectTypes.horizontalSlider then
 				horizontalSliderHandler(window, object, objectIndex, eventData)
+			elseif object.type == GUI.objectTypes.scrollBar then
+				scrollBarHandler(window, object, objectIndex, eventData)
 			elseif object.onDrag then
 				executeObjectMethod(object.onDrag, eventData)
 			end
@@ -246,6 +280,12 @@ end
 
 -- buffer.clear(0x262626)
 -- buffer.draw(true)
+
+-- local myWindow = windows.empty(2, 2, 60, 20, 60, 20)
+-- myWindow:addScrollBar(1, 1, 1, 20, 0x444444, 0x00DBFF, 1, 100, 50, 20, 4, true)
+-- myWindow:draw()
+-- buffer.draw()
+-- myWindow:handleEvents()
 
 -- local myWindow = windows.empty(10, 5, 60, 20, 60, 20)
 -- myWindow:addPanel(1, 1, myWindow.width, myWindow.height, 0xEEEEEE)

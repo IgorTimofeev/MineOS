@@ -80,7 +80,8 @@ GUI.objectTypes = enum(
 	"switch",
 	"progressBar",
 	"chart",
-	"comboBox"
+	"comboBox",
+	"scrollBar"
 )
 
 ----------------------------------------- Primitive objects -----------------------------------------
@@ -338,6 +339,11 @@ local function addMenuObjectToContainer(container, ...)
 	return GUI.addChildToContainer(container, GUI.menu(...), GUI.objectTypes.menu)
 end
 
+-- Add Menu object to container
+local function addScrollBarObjectToContainer(container, ...)
+	return GUI.addChildToContainer(container, GUI.scrollBar(...), GUI.objectTypes.scrollBar)
+end
+
 -- Recursively draw container's content including all children container's content
 local function drawContainerContent(container)
 	for objectIndex = 1, #container.children do
@@ -394,6 +400,7 @@ function GUI.container(x, y, width, height)
 	container.addChart = addChartObjectToContainer
 	container.addComboBox = addComboBoxObjectToContainer
 	container.addMenu = addMenuObjectToContainer
+	container.addScrollBar = addScrollBarObjectToContainer
 
 	return container
 end
@@ -974,167 +981,169 @@ local function autocompleteVariables(sourceText)
 	end
 end
 
--- local inputProperties = {
--- 	--Метод, получающий на вход текущий текст и проверяющий вводимые данные. В случае успеха должен возвращать true
--- 	validator = function(text) if string.match(text, "^%d+$") then return true end
--- 	-- Автоматически очищает текстовое поле при начале ввода информации в него.
--- 	-- Если при окончании ввода тексет не будет соответствовать методу validator, указанному выше,
--- 	-- то будет возвращено исходное значение текста (не очищенное)
--- 	eraseTextWhenInputBegins = true
--- 	--Отключает символ многоточия при выходе за пределы текстового поля
--- 	disableDots = true,
--- 	--Попросту отрисовывает всю необходимую информацию без активации нажатия на клавиши
--- 	justDrawNotEvent = true,
--- 	--Задержка между миганимем курсора
--- 	cursorBlinkDelay = 1.5,
--- 	--Цвет курсора
--- 	cursorColor = 0xFF7777,
--- 	--Символ, используемый для отрисовки курсора
--- 	cursorSymbol = "▌",
--- 	--Символ-маскировщик, на который будет визуально заменен весь вводимый текст. Полезно для полей ввода пароля
--- 	maskTextWithSymbol = "*",
--- 	--Активация подсветки Lua-синтаксиса
--- 	highlightLuaSyntax = true,
--- 	-- Активация автозаполнения названий переменных по нажатию клавиши Tab
--- 	autocompleteVariables = true,
--- }
-
-function GUI.input(x, y, width, foreground, startText, inputProperties)
-	inputProperties = inputProperties or {}
-	if not (y >= buffer.drawLimit.y and y <= buffer.drawLimit.y2) then return startText end
-
-	local text = startText
-	if not inputProperties.justDrawNotEvent and inputProperties.eraseTextWhenInputBegins then text = "" end
-	local textLength = unicode.len(text)
-	local cursorBlinkState = false
-	local cursorBlinkDelay = inputProperties.cursorBlinkDelay and inputProperties.cursorBlinkDelay or 0.5
-	local cursorColor = inputProperties.cursorColor and inputProperties.cursorColor or 0x00A8FF
-	local cursorSymbol = inputProperties.cursorSymbol and inputProperties.cursorSymbol or "┃"
+local function inputFieldDraw(inputField)
+	if inputField.oldPixels then
+		buffer.paste(inputField.x, inputField.y, inputField.oldPixels)
+	else
+		inputField.oldPixels = buffer.copy(inputField.x, inputField.y, inputField.width, 1)
+	end
 	
-	local oldPixels = {}; for i = x, x + width - 1 do table.insert(oldPixels, { buffer.get(i, y) }) end
-
-	local function drawOldPixels()
-		for i = 1, #oldPixels do buffer.set(x + i - 1, y, oldPixels[i][1], oldPixels[i][2], oldPixels[i][3]) end
+	if inputField.highlightLuaSyntax then
+		require("syntax").highlightString(inputField.x, inputField.y, inputField.text, inputField.textCutFrom, inputField.width)
+	else
+		buffer.text(
+			inputField.x,
+			inputField.y,
+			inputField.colors.text,
+			unicode.sub(
+				inputField.textMask and string.rep(inputField.textMask, unicode.len(inputField.text)) or inputField.text,
+				inputField.textCutFrom,
+				inputField.textCutFrom + inputField.width - 1
+			)
+		)
 	end
 
-	local function getTextLength()
-		textLength = unicode.len(text)
+	if inputField.cursorBlinkState then
+		buffer.text(inputField.x + inputField.cursorPosition - inputField.textCutFrom, inputField.y, inputField.cursorColor, inputField.cursorSymbol)
 	end
 
-	local function textFormat()
-		local formattedText = text
+	return inputField
+end
 
-		if inputProperties.maskTextWithSymbol then
-			formattedText = string.rep(inputProperties.maskTextWithSymbol or "*", textLength)
-		end
-
-		if textLength > width then
-			if inputProperties.disableDots then
-				formattedText = unicode.sub(formattedText, -width, -1)
-			else
-				formattedText = "…" .. unicode.sub(formattedText, -width + 1, -1)
-			end
-		end
-
-		return formattedText
+local function inputFieldSetCursorPosition(inputField, newPosition)
+	if newPosition < 1 then
+		newPosition = 1
+	elseif newPosition > unicode.len(inputField.text) + 1 then
+		newPosition = unicode.len(inputField.text) + 1
 	end
 
-	local function draw()
-		drawOldPixels()
-		if inputProperties.highlightLuaSyntax then
-			require("syntax").highlightString(x, y, textFormat(), 1, width)
-		else
-			buffer.text(x, y, foreground, textFormat())
-		end
-
-		if cursorBlinkState then
-			local cursorPosition = textLength < width and x + textLength or x + width - 1
-			local bg = buffer.get(cursorPosition, y)
-			buffer.set(cursorPosition, y, bg, cursorColor, cursorSymbol)
-		end
-
-		if not inputProperties.justDrawNotEvent then buffer.draw() end
+	if newPosition > inputField.textCutFrom + inputField.width - 1 then
+		inputField.textCutFrom = inputField.textCutFrom + newPosition - (inputField.textCutFrom + inputField.width - 1)
+	elseif newPosition < inputField.textCutFrom then
+		inputField.textCutFrom = newPosition
 	end
 
-	local function backspace()
-		if unicode.len(text) > 0 then text = unicode.sub(text, 1, -2); getTextLength(); draw() end
-	end
+	inputField.cursorPosition = newPosition
 
-	local function quit()
-		cursorBlinkState = false
-		if inputProperties.validator and not inputProperties.validator(text) then
-			text = startText
-			draw()
-			return startText
-		end
-		draw()
-		return text
-	end
+	return inputField
+end
 
-	draw()
-
-	if inputProperties.justDrawNotEvent then return startText end
+local function inputFieldBeginInput(inputField)
+	inputField.cursorBlinkState = true; inputField:draw(); buffer.draw()
 
 	while true do
-		local e = { event.pull(cursorBlinkDelay) }
-		if e[1] == "key_down" then
-			if e[4] == 14 then
-				backspace()
-			elseif e[4] == 28 then
-				return quit()
-			elseif e[4] == 15 then
-				if inputProperties.autocompleteVariables then
-					text = autocompleteVariables(text); getTextLength(); draw()
-				end
+		local e = { event.pull(inputField.cursorBlinkDelay) }
+		if e[1] == "touch" or e[1] == "drag" then
+			if inputField:isClicked(e[3], e[4]) then
+				inputField:setCursorPosition(inputField.textCutFrom + e[3] - inputField.x)
+				inputField.cursorBlinkState = true; inputField:draw(); buffer.draw()
 			else
-				local symbol = unicode.char(e[3])
+				inputField.cursorBlinkState = false; inputField:draw(); buffer.draw()
+				return inputField
+			end
+		elseif e[1] == "key_down" then
+			if e[4] == 28 then
+				inputField.cursorBlinkState = false; inputField:draw(); buffer.draw()
+				return inputField
+			elseif e[4] == 15 then
+				if inputField.autocompleteVariables then
+					inputField.text = autocompleteVariables(inputField.text)
+					inputField:setCursorPosition(unicode.len(inputField.text) + 1)
+					inputField.cursorBlinkState = true; inputField:draw(); buffer.draw()
+				end
+			elseif e[4] == 203 then
+				inputField:setCursorPosition(inputField.cursorPosition - 1)
+				inputField.cursorBlinkState = true; inputField:draw(); buffer.draw()
+			elseif e[4] == 205 then	
+				inputField:setCursorPosition(inputField.cursorPosition + 1)
+				inputField.cursorBlinkState = true; inputField:draw(); buffer.draw()
+			elseif e[4] == 14 then
+				inputField.text = unicode.sub(unicode.sub(inputField.text, 1, inputField.cursorPosition - 1), 1, -2) .. unicode.sub(inputField.text, inputField.cursorPosition, -1)
+				inputField:setCursorPosition(inputField.cursorPosition - 1)
+				inputField.cursorBlinkState = true; inputField:draw(); buffer.draw()
+			else
 				if not keyboard.isControl(e[3]) then
-					text = text .. symbol
-					getTextLength()
-					draw()
+					inputField.text = unicode.sub(inputField.text, 1, inputField.cursorPosition - 1) .. unicode.char(e[3]) .. unicode.sub(inputField.text, inputField.cursorPosition, -1)
+					inputField:setCursorPosition(inputField.cursorPosition + 1)
+					inputField.cursorBlinkState = true; inputField:draw(); buffer.draw()
 				end
 			end
 		elseif e[1] == "clipboard" then
-			text = text .. e[3]
-			getTextLength()
-			draw()
-		elseif e[1] == "touch" then
-			return quit()
+			inputField.text = unicode.sub(inputField.text, 1, inputField.cursorPosition - 1) .. e[3] .. unicode.sub(inputField.text, inputField.cursorPosition, -1)
+			inputField:setCursorPosition(inputField.cursorPosition + unicode.len(e[3]))
+			inputField.cursorBlinkState = true; inputField:draw(); buffer.draw()
 		else
-			cursorBlinkState = not cursorBlinkState
-			draw()
+			inputField.cursorBlinkState = not inputField.cursorBlinkState; inputField:draw(); buffer.draw()
 		end
 	end
+end
+
+function GUI.inputField(x, y, width, textColor, text, textMask, highlightLuaSyntax, autocompleteVariables)
+	local inputField = GUI.object(x, y, width, 1)
+
+	inputField.textCutFrom = 1
+	inputField.cursorPosition = 1
+	inputField.cursorColor = 0x00A8FF
+	inputField.cursorSymbol = "┃"
+	inputField.cursorBlinkDelay = 0.4
+	inputField.cursorBlinkState = false
+
+	inputField.colors = {text = textColor}
+	inputField.text = text
+	inputField.textMask = textMask
+	inputField.highlightLuaSyntax = highlightLuaSyntax
+	inputField.autocompleteVariables = autocompleteVariables
+
+	inputField.setCursorPosition = inputFieldSetCursorPosition
+	inputField.draw = inputFieldDraw
+	inputField.input = inputFieldBeginInput
+
+	inputField:setCursorPosition(unicode.len(inputField.text) + 1)
+
+	return inputField
 end
 
 ----------------------------------------- Input Text Box object -----------------------------------------
 
-local function drawInputTextBox(object, isFocused)
-	local background = isFocused and object.colors.focused.background or object.colors.default.background
-	local foreground = isFocused and object.colors.focused.text or object.colors.default.text
-	local y = math.floor(object.y + object.height / 2)
-	local text = isFocused and (object.text or "") or (object.text or object.placeholderText or "")
+local function drawInputTextBox(inputTextBox)
+	local background = inputTextBox.isFocused and inputTextBox.colors.focused.background or inputTextBox.colors.default.background
+	local foreground = inputTextBox.isFocused and inputTextBox.colors.focused.text or inputTextBox.colors.default.text
+	local y = math.floor(inputTextBox.y + inputTextBox.height / 2)
+	local text = inputTextBox.isFocused and (inputTextBox.eraseTextOnFocus and "" or inputTextBox.text) or (inputTextBox.text ~= "" and inputTextBox.text or inputTextBox.placeholderText or "")
 
-	if background then buffer.square(object.x, object.y, object.width, object.height, background, foreground, " ") end
-	local resultText = GUI.input(object.x + 1, y, object.width - 2, foreground, text, {
-		justDrawNotEvent = not isFocused,
-		highlightLuaSyntax = isFocused and object.highlightLuaSyntax or nil,
-		autocompleteVariables = object.autocompleteVariables or nil,
-		maskTextWithSymbol = object.textMask or nil,
-		validator = object.validator or nil,
-		eraseTextWhenInputBegins = object.eraseTextOnFocus or nil,
-	})
-	object.text = isFocused and resultText or object.text
+	if background then
+		buffer.square(inputTextBox.x, inputTextBox.y, inputTextBox.width, inputTextBox.height, background, foreground, " ")
+	end
+	
+	if inputTextBox.isFocused then
+		local inputField = GUI.inputField(inputTextBox.x + 1, y, inputTextBox.width - 2, foreground, text, inputTextBox.textMask, inputTextBox.highlightLuaSyntax, inputTextBox.autocompleteVariables)
+		inputField:input()
+
+		if inputTextBox.validator then
+			if inputTextBox.validator(inputField.text) then
+				inputTextBox.text = inputField.text
+			end
+		else
+			inputTextBox.text = inputField.text
+		end
+	else
+		GUI.inputField(inputTextBox.x + 1, y, inputTextBox.width - 2, foreground, text, inputTextBox.textMask, false, inputTextBox.autocompleteVariables):draw()
+	end
+
+	return inputTextBox
 end
 
-local function inputTextBoxBeginInput(object)
-	drawInputTextBox(object, true)
-	if object.text == "" then object.text = nil; drawInputTextBox(object, false); buffer.draw() end
+local function inputTextBoxBeginInput(inputTextBox)
+	inputTextBox.isFocused = true
+	inputTextBox:draw()
+	inputTextBox.isFocused = false
+
+	return inputTextBox
 end
 
-function GUI.inputTextBox(x, y, width, height, inputTextBoxColor, textColor, inputTextBoxFocusedColor, textFocusedColor, text, placeholderText, maskTextWithSymbol, eraseTextOnFocus)
-	local object = GUI.object(x, y, width, height)
-	object.colors = {
+function GUI.inputTextBox(x, y, width, height, inputTextBoxColor, textColor, inputTextBoxFocusedColor, textFocusedColor, text, placeholderText, eraseTextOnFocus, textMask, highlightLuaSyntax, autocompleteVariables)
+	local inputTextBox = GUI.object(x, y, width, height)
+	inputTextBox.colors = {
 		default = {
 			background = inputTextBoxColor,
 			text = textColor
@@ -1144,14 +1153,14 @@ function GUI.inputTextBox(x, y, width, height, inputTextBoxColor, textColor, inp
 			text = textFocusedColor
 		}
 	}
-	object.text = text
-	object.placeholderText = placeholderText
-	object.isClicked = isObjectClicked
-	object.draw = drawInputTextBox
-	object.input = inputTextBoxBeginInput
-	object.eraseTextOnFocus = eraseTextOnFocus
-	object.textMask = maskTextWithSymbol
-	return object
+	inputTextBox.text = text
+	inputTextBox.placeholderText = placeholderText
+	inputTextBox.draw = drawInputTextBox
+	inputTextBox.input = inputTextBoxBeginInput
+	inputTextBox.eraseTextOnFocus = eraseTextOnFocus
+	inputTextBox.textMask = textMask
+
+	return inputTextBox
 end
 
 ----------------------------------------- Text Box object -----------------------------------------
@@ -1407,10 +1416,75 @@ function GUI.comboBox(x, y, width, height, backgroundColor, textColor, arrowBack
 	return object
 end
 
+----------------------------------------- Scrollbar object -----------------------------------------
+
+local function scrollBarDraw(scrollBar)
+	local isVertical = scrollBar.height > scrollBar.width
+	local valuesDelta = scrollBar.maximumValue - scrollBar.minimumValue + 1
+	local part = scrollBar.value / valuesDelta
+	local barSize = math.ceil(scrollBar.shownValueCount / valuesDelta * scrollBar.height)
+	local halfBarSize = math.floor(barSize / 2)
+
+	buffer.square(scrollBar.x, scrollBar.y, scrollBar.width, scrollBar.height, scrollBar.colors.background, 0x0, " ")
+
+	if isVertical then
+		scrollBar.ghostPosition.x = scrollBar.x
+		scrollBar.ghostPosition.y = scrollBar.y + halfBarSize
+		scrollBar.ghostPosition.width = scrollBar.width
+		scrollBar.ghostPosition.height = scrollBar.height - barSize
+
+		buffer.square(
+			scrollBar.ghostPosition.x,
+			math.floor(scrollBar.ghostPosition.y + part * scrollBar.ghostPosition.height - halfBarSize),
+			scrollBar.ghostPosition.width,
+			barSize,
+			scrollBar.colors.foreground, 0x0, " "
+		)
+	else
+		scrollBar.ghostPosition.x = scrollBar.x + halfBarSize
+		scrollBar.ghostPosition.y = scrollBar.y
+		scrollBar.ghostPosition.width = scrollBar.width - barSize
+		scrollBar.ghostPosition.height = scrollBar.height
+
+		buffer.square(
+			math.floor(scrollBar.ghostPosition.x + part * scrollBar.ghostPosition.width - halfBarSize),
+			scrollBar.ghostPosition.y,
+			barSize,
+			scrollBar.ghostPosition.height,
+			scrollBar.colors.foreground, 0x0, " "
+		)
+	end
+
+	return scrollBar
+end
+
+function GUI.scrollBar(x, y, width, height, backgroundColor, foregroundColor, minimumValue, maximumValue, value, shownValueCount, onScrollValueIncrement, horizontalThin)
+	local scrollBar = GUI.object(x, y, width, height)
+
+	scrollBar.maximumValue = maximumValue
+	scrollBar.minimumValue = minimumValue
+	scrollBar.value = value
+	scrollBar.onScrollValueIncrement = onScrollValueIncrement
+	scrollBar.shownValueCount = shownValueCount
+	scrollBar.thin = horizontalThin
+	scrollBar.colors = {
+		background = backgroundColor,
+		foreground = foregroundColor,
+	}
+	scrollBar.ghostPosition = {}
+	scrollBar.draw = scrollBarDraw
+
+	return scrollBar
+end
+
 --------------------------------------------------------------------------------------------------------------------------------
 
--- buffer.start()
--- buffer.clear(0x1b1b1b)
+buffer.start()
+buffer.clear(0x1b1b1b)
+
+-- GUI.scrollBar(1, 5, 1, 20, 0x444444, 0x00DBFF, 1, 100, 50, 20, 1, true):draw()
+
+-- buffer.draw()
 
 -- local comboBox = GUI.comboBox(2, 2, 30, 1, 0xFFFFFF, 0x262626, 0xDDDDDD, 0x262626, {"PIC", "RAW", "PNG", "JPG"})
 -- comboBox:selectItem()
@@ -1431,7 +1505,6 @@ end
 -- menu:show()
 
 -- GUI.contextMenu(2, 2, {"Hello"}, {"World"}, "-", {"You are the"}, {"Best of best", false, "^S"}, {"And bestest yopta"}):show()
-
 
 --------------------------------------------------------------------------------------------------------------------------------
 

@@ -1,11 +1,11 @@
 
 local component = require("component")
-local MineOSCore = require("MineOSCore")
+local colorlib = require("colorlib")
+local image = require("image")
+local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 local windows = require("windows")
-local image = require("image")
-local colorlib = require("colorlib")
-local buffer = require("doubleBuffering")
+local MineOSCore = require("MineOSCore")
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -15,10 +15,7 @@ buffer.start()
 local resourcesDirectory = MineOSCore.getCurrentApplicationResourcesDirectory() 
 local earthImage = image.load(resourcesDirectory .. "Earth.pic")
 
-local glasses, geolyzer, projector
-if component.isAvailable("glasses") then glasses = component.glasses end
-if component.isAvailable("geolyzer") then geolyzer = component.geolyzer else GUI.error("This program requires a geolyzer to work!"); return  end
-if component.isAvailable("hologram") then projector = component.hologram end
+if not component.isAvailable("geolyzer") then GUI.error("This program requires a geolyzer to work!"); return  end
 
 local onScreenDataXOffset, onScreenDataYOffset = math.floor(buffer.screen.width / 2), buffer.screen.height
 local onProjectorDataYOffset = 0
@@ -33,7 +30,7 @@ local function getOpenGLValidColorChannels(color)
 end
 
 local function createCube(x, y, z, color, isVisThrObj)
-	local cube = glasses.addCube3D()
+	local cube = component.glasses.addCube3D()
 	cube.set3DPos(x, y, z)
 	cube.setVisibleThroughObjects(isVisThrObj)
 	cube.setColor(getOpenGLValidColorChannels(color))
@@ -45,7 +42,7 @@ local function glassesCreateCube(x, y, z, color, text)
 	local cube = createCube(x, y, z, color, true)
 	cube.setVisibleThroughObjects(true)
 
-	local floatingText = glasses.addFloatingText()
+	local floatingText = component.glasses.addFloatingText()
 	floatingText.set3DPos(x + 0.5, y + 0.5, z + 0.5)
 	floatingText.setColor(1, 1, 1)
 	floatingText.setAlpha(0.6)
@@ -53,12 +50,8 @@ local function glassesCreateCube(x, y, z, color, text)
 	floatingText.setScale(0.015)
 end
 
-local function createDick()
-	local chance = math.random(1, 100) <= 100
-	if chance then
-		local range = 48
-		local isVisThrObj = true
-		local x, y, z = math.random(-range, range), math.random(-range, range), math.random(-range, range)
+local function createDick(x, y, z, chance, isVisThrObj)
+	if math.random(1, 100) <= chance then
 		createCube(x, y, z, 0xFFFFFF, isVisThrObj)
 		createCube(x + 1, y, z, 0xFFFFFF, isVisThrObj)
 		createCube(x + 2, y, z, 0xFFFFFF, isVisThrObj)
@@ -81,11 +74,8 @@ local function updateData(onScreen, onProjector, onGlasses)
 	local projectorAvailable = component.isAvailable("hologram")
 
 	if onScreen then buffer.clear(0xEEEEEE) end
-	if onProjector and projectorAvailable then
-		projector.clear()
-		projector.setScale(window.projectorScaleSlider.value)
-	end
-	if onGlasses and glassesAvailable then glasses.removeAll() end
+	if onProjector and projectorAvailable then component.hologram.clear() end
+	if onGlasses and glassesAvailable then component.glasses.removeAll() end
 
 	local min, max = tonumber(window.minimumHardnessTextBox.text), tonumber(window.maximumHardnessTextBox.text)
 	local horizontalRange, verticalRange = math.floor(window.horizontalScanRangeSlider.value), math.floor(window.verticalScanRangeSlider.value)
@@ -98,7 +88,7 @@ local function updateData(onScreen, onProjector, onGlasses)
 						buffer.semiPixelSet(onScreenDataXOffset + x, onScreenDataYOffset + 32 - y, 0x454545)
 					end
 					if onProjector and window.projectorUpdateSwitch.state and projectorAvailable then
-						projector.set(horizontalRange + x, math.floor(window.projectorYOffsetSlider.value) + y - 32, horizontalRange + z, 1)
+						component.hologram.set(horizontalRange + x, math.floor(window.projectorYOffsetSlider.value) + y - 32, horizontalRange + z, 1)
 					end
 					if onGlasses and window.glassesUpdateSwitch.state and glassesAvailable then
 						glassesCreateCube(x, y - 32, z, window.glassesOreColorButton.colors.default.background, "Hardness: " .. string.format("%.2f", scanResult[x][z][y]))
@@ -136,16 +126,19 @@ objectY = objectY + 4
 window:addLabel(buttonX, objectY, buttonWidth, 1, 0xFFFFFF, "Rendering properties"):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
 objectY = objectY + 2
 
-window.minimumHardnessTextBox = window:addInputTextBox(buttonX, objectY, 12, 3, 0x262626, 0xBBBBBB, 0x262626, 0xFFFFFF, 2.7, nil, nil, true)
+window.minimumHardnessTextBox = window:addInputTextBox(buttonX, objectY, 12, 3, 0x262626, 0xBBBBBB, 0x262626, 0xFFFFFF, tostring(2.7), nil, true)
 window.minimumHardnessTextBox.validator = function(text) if tonumber(text) then return true end end
-window.maximumHardnessTextBox = window:addInputTextBox(buttonX + 14, objectY, 12, 3, 0x262626, 0xBBBBBB, 0x262626, 0xFFFFFF, 10, nil, nil, true)
+window.maximumHardnessTextBox = window:addInputTextBox(buttonX + 14, objectY, 12, 3, 0x262626, 0xBBBBBB, 0x262626, 0xFFFFFF, tostring(10), nil, true)
 window.maximumHardnessTextBox.validator = function(text) if tonumber(text) then return true end end
 objectY = objectY + 3
 window:addLabel(buttonX, objectY, buttonWidth, 1, 0xBBBBBB, "Hardness min  Hardness max"):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
 objectY = objectY + 2
 
 
-window.projectorScaleSlider = window:addHorizontalSlider(buttonX, objectY, buttonWidth, 0xFFDB80, 0x000000, 0xFFDB40, 0xBBBBBB, 0.33, 3, projector.getScale(), false, "Projection scale: ")
+window.projectorScaleSlider = window:addHorizontalSlider(buttonX, objectY, buttonWidth, 0xFFDB80, 0x000000, 0xFFDB40, 0xBBBBBB, 0.33, 3, component.hologram.getScale(), false, "Projection scale: ")
+window.projectorScaleSlider.onValueChanged = function()
+	component.hologram.setScale(window.projectorScaleSlider.value)
+end
 objectY = objectY + 3
 window.projectorYOffsetSlider = window:addHorizontalSlider(buttonX, objectY, buttonWidth, 0xFFDB80, 0x000000, 0xFFDB40, 0xBBBBBB, 0, 64, 4, false, "Projection Y offset: ")
 window.projectorYOffsetSlider.roundValues = true
@@ -158,10 +151,10 @@ local function setButtonColorFromPalette(button)
 end
 
 local function updateProjectorColors()
-	projector.setPaletteColor(1, window.color1Button.colors.default.background)
+	component.hologram.setPaletteColor(1, window.color1Button.colors.default.background)
 end
 
-local color1, color2, color3 = projector.getPaletteColor(1), projector.getPaletteColor(2), projector.getPaletteColor(3)
+local color1, color2, color3 = component.hologram.getPaletteColor(1), component.hologram.getPaletteColor(2), component.hologram.getPaletteColor(3)
 window.color1Button = window:addButton(buttonX, objectY, buttonWidth, 1, color1, 0xBBBBBB, 0xEEEEEE, 0x262626, "Projector color"); objectY = objectY + 1
 window.color1Button.onTouch = function()
 	setButtonColorFromPalette(window.color1Button)
@@ -182,7 +175,7 @@ objectY = objectY + 2
 
 window:addButton(buffer.screen.width, 1, 1, 1, nil, 0xEEEEEE, nil, 0xFF2222, "X").onTouch = function()
 	window:close()
-	createDick()
+	createDick(math.random(-48, 48), math.random(1, 32), math.random(-48, 48), 100, false)
 end
 
 window:addButton(panelX, buffer.screen.height - 5, panelWidth, 3, 0x353535, 0xEEEEEE, 0xAAAAAA, 0x262626, "Update").onTouch = function()
@@ -198,7 +191,7 @@ window.scanButton.onTouch = function()
 	for x = -horizontalRange, horizontalRange do
 		scanResult[x] = {}
 		for z = -horizontalRange, horizontalRange do
-			scanResult[x][z] = geolyzer.scan(x, z)
+			scanResult[x][z] = component.geolyzer.scan(x, z)
 			current = current + 1
 			progressReport(math.ceil(current / total * 100), "Scan progress: ")
 			buffer.draw()
@@ -212,6 +205,7 @@ end
 
 --------------------------------------------------------------------------------------------------------------------
 
+buffer.clear(0x0)
 window:draw()
 buffer.draw()
 window:handleEvents()

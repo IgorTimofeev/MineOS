@@ -1,5 +1,5 @@
 
-package.loaded.rayEngine, package.loaded.GUI, package.loaded.windows, _G.rayEngine, _G.GUI, _G.windows = nil, nil, nil, nil, nil, nil, nil, nil
+-- package.loaded.rayEngine, package.loaded.GUI, package.loaded.windows, _G.rayEngine, _G.GUI, _G.windows = nil, nil, nil, nil, nil, nil, nil, nil
 
 local fs = require("filesystem")
 local component = require("component")
@@ -34,9 +34,9 @@ local function settings()
 
 	window:addLabel(1, y, window.width, 1, 0xFFFFFF, localization.rayEngineProperties):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); y = y + 3
 
-	local resolutionTextBoxWidth = window:addInputTextBox(x, y, textBoxWidth, 3, 0x262626, 0xBBBBBB, 0x262626, 0xFFFFFF, buffer.screen.width, nil, nil, true)
+	local resolutionTextBoxWidth = window:addInputTextBox(x, y, textBoxWidth, 3, 0x262626, 0xBBBBBB, 0x262626, 0xFFFFFF, tostring(buffer.screen.width), nil, true)
 	window:addLabel(x + textBoxWidth + 2, y + 1, 1, 1, 0xFFFFFF, "X")
-	local resolutionTextBoxHeight = window:addInputTextBox(x + textBoxWidth + 5, y, textBoxWidth, 3, 0x262626, 0xBBBBBB, 0x262626, 0xFFFFFF, buffer.screen.height, nil, nil, true); y = y + 4
+	local resolutionTextBoxHeight = window:addInputTextBox(x + textBoxWidth + 5, y, textBoxWidth, 3, 0x262626, 0xBBBBBB, 0x262626, 0xFFFFFF, tostring(buffer.screen.height), nil, true); y = y + 4
 	window:addLabel(1, y, window.width, 1, 0xDDDDDD, localization.screenResolution):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); y = y + 3
 	resolutionTextBoxWidth.validator = function(text) local num = tonumber(text); if num and num >= 40 and num <= 160 then return true end end
 	resolutionTextBoxHeight.validator = function(text) local num = tonumber(text); if num and num >= 12 and num <= 50 then return true end end
@@ -164,7 +164,7 @@ rayEngine.loadEngineProperties(applicationResourcesDirectory .. "RayEngine.cfg")
 rayEngine.loadWeapons(applicationResourcesDirectory .. "Weapons/")
 rayEngine.loadWorld(worldsPath .. "ExampleWorld")
 rayEngine.changeResolution(rayEngine.properties.screenResolution.width, rayEngine.properties.screenResolution.height)
-rayEngine.intro()
+-- rayEngine.intro()
 menu()
 rayEngine.update()
 
