@@ -1115,11 +1115,10 @@ local function drawInputTextBox(inputTextBox)
 	if background then
 		buffer.square(inputTextBox.x, inputTextBox.y, inputTextBox.width, inputTextBox.height, background, foreground, " ")
 	end
-	
-	if inputTextBox.isFocused then
-		local inputField = GUI.inputField(inputTextBox.x + 1, y, inputTextBox.width - 2, foreground, text, inputTextBox.textMask, inputTextBox.highlightLuaSyntax, inputTextBox.autocompleteVariables)
-		inputField:input()
 
+	local inputField = GUI.inputField(inputTextBox.x + 1, y, inputTextBox.width - 2, foreground, text, inputTextBox.textMask, inputTextBox.highlightLuaSyntax, inputTextBox.autocompleteVariables)	
+	if inputTextBox.isFocused then
+		inputField:input()
 		if inputTextBox.validator then
 			if inputTextBox.validator(inputField.text) then
 				inputTextBox.text = inputField.text
@@ -1128,7 +1127,10 @@ local function drawInputTextBox(inputTextBox)
 			inputTextBox.text = inputField.text
 		end
 	else
-		GUI.inputField(inputTextBox.x + 1, y, inputTextBox.width - 2, foreground, text, inputTextBox.textMask, false, inputTextBox.autocompleteVariables):draw()
+		local oldHighlightLuaSyntaxValue = inputField.highlightLuaSyntax
+		inputField.highlightLuaSyntax = false
+		inputField:draw()
+		inputField.highlightLuaSyntax = oldHighlightLuaSyntaxValue
 	end
 
 	return inputTextBox
