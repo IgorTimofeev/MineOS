@@ -171,7 +171,7 @@ local function createInputs(x, y)
 
 	for i = 1, #inputs do
 		window:addLabel(x, y, 2, 1, 0x000000, inputs[i].shortcut)
-		inputs[i].object = window:addInputTextBox(x + 3, y, 9, 1, 0xFFFFFF, 0x444444, 0xFFFFFF, 0x000000, "", nil, nil, true)
+		inputs[i].object = window:addInputTextBox(x + 3, y, 9, 1, 0xFFFFFF, 0x444444, 0xFFFFFF, 0x000000, "", "", true)
 		inputs[i].object.validator = inputs[i].validator
 		inputs[i].object.onInputFinished = inputs[i].onInputFinished
 		y = y + 2
