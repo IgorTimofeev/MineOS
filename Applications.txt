@@ -244,7 +244,7 @@
     name="MineOS/System/OS/Icons/Trash.pic",
     url="IgorTimofeev/OpenComputers/master/MineOS/Icons/Trash.pic",
     type="Icon",
-    version=1.0,
+    version=1.01,
   },
 
   ----------------------------------------------------- Библиотеки --------------------------------------------------------------------------
