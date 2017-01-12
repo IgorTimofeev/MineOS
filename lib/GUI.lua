@@ -982,6 +982,7 @@ local function autocompleteVariables(sourceText)
 end
 
 local function inputFieldDraw(inputField)
+	if inputField.x < 1 or inputField.y < 1 or inputField.x + inputField.width - 1 > buffer.screen.width or inputField.y > buffer.screen.height then return inputField end
 	if inputField.oldPixels then
 		buffer.paste(inputField.x, inputField.y, inputField.oldPixels)
 	else
