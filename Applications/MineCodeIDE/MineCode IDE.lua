@@ -1,10 +1,10 @@
 
 ---------------------------------------------------- Libraries ----------------------------------------------------
 
-package.loaded.syntax = nil
-package.loaded.GUI = nil
-package.loaded.windows = nil
-package.loaded.MineOSCore = nil
+-- package.loaded.syntax = nil
+-- package.loaded.GUI = nil
+-- package.loaded.windows = nil
+-- package.loaded.MineOSCore = nil
 
 require("advancedLua")
 local fs = require("filesystem")
