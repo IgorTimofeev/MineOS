@@ -1,12 +1,10 @@
 
 ---------------------------------------------------- Libraries ----------------------------------------------------
 
--- package.loaded.syntax = nil
--- package.loaded.GUI = nil
--- package.loaded.windows = nil
--- package.loaded.MineOSCore = nil
-
+local args = {...}
 require("advancedLua")
+local component = require("component")
+local gpu = component.gpu
 local fs = require("filesystem")
 local buffer = require("doubleBuffering")
 local GUI = require("GUI")
@@ -15,12 +13,14 @@ local MineOSCore = require("MineOSCore")
 local event = require("event")
 local syntax = require("syntax")
 local unicode = require("unicode")
+local ecs = require("ECSAPI")
 local keyboard = require("keyboard")
 
 ---------------------------------------------------- Constants ----------------------------------------------------
 
 -- "/MineOS/Desktop/MineCode IDE.app/MineCode IDE.lua"
 
+local workPath
 local clipboard
 local cursor = {
 	position = {
@@ -47,25 +47,6 @@ local config = {
 	},
 	scrollSpeed = 8,
 }
-
----------------------------------------------------- File processing methods ----------------------------------------------------
-
-local function loadFile(path)
-	mainWindow.codeView.fromLine, mainWindow.codeView.fromSymbol, mainWindow.codeView.lines, mainWindow.codeView.maximumLineLength = 1, 1, {}, 0
-	local file = io.open(path, "r")
-	for line in file:lines() do
-		line = line:gsub("\t", string.rep(" ", config.indentaionWidth))
-		table.insert(mainWindow.codeView.lines, line)
-		mainWindow.codeView.maximumLineLength = math.max(mainWindow.codeView.maximumLineLength, unicode.len(line))
-	end
-	file:close()
-
-	mainWindow.titleTextBox.lines = {
-		"File: " .. path,
-		"Cursor position: 1x1",
-		"Zalupa, penis"
-	}
-end
 
 ---------------------------------------------------- Cursor methods ----------------------------------------------------
 
@@ -128,6 +109,91 @@ local function moveCursor(symbolOffset, lineOffset)
 	setCursorPosition(newSymbol, newLine)
 end
 
+local function setCursorPositionToEOF()
+	setCursorPosition(unicode.len(mainWindow.codeView.lines[#mainWindow.codeView.lines]) + 1, #mainWindow.codeView.lines)
+end
+
+---------------------------------------------------- File processing methods ----------------------------------------------------
+
+local function loadFile(path)
+	mainWindow.codeView.fromLine, mainWindow.codeView.fromSymbol, mainWindow.codeView.lines, mainWindow.codeView.maximumLineLength = 1, 1, {}, 0
+	local file = io.open(path, "r")
+	for line in file:lines() do
+		line = line:gsub("\t", string.rep(" ", config.indentaionWidth))
+		table.insert(mainWindow.codeView.lines, line)
+		mainWindow.codeView.maximumLineLength = math.max(mainWindow.codeView.maximumLineLength, unicode.len(line))
+	end
+	file:close()
+	workPath = path
+	setCursorPosition(1, 1)
+end
+
+local function saveFile(path)
+	fs.makeDirectory(fs.path(path))
+	local file = io.open(path, "w")
+	for line = 1, #mainWindow.codeView.lines do
+		file:write(mainWindow.codeView.lines[line], "\n")
+	end
+	file:close()
+end
+
+local function newFile()
+	mainWindow.codeView.lines = {
+		"",
+		"for i = 1, 10 do",
+		"  print(\"Hello world!\")",
+		"end",
+		""
+	}
+	setCursorPositionToEOF()
+end
+
+local function open()
+	local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true,
+		{"EmptyLine"},
+		{"CenterText", 0x000000, "Open file"},
+		{"EmptyLine"},
+		{"Input", 0x262626, 0x880000, ""},
+		{"EmptyLine"},
+		{"Button", {0xAAAAAA, 0xffffff, "OK"}, {0x888888, 0xffffff, MineOSCore.localization.cancel}}
+	)
+	if data[2] == "OK" and fs.exists(data[1]) then
+		loadFile(data[1])
+		setCursorPosition(1, 1)
+	end
+end
+
+local function saveAs()
+	local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true,
+		{"EmptyLine"},
+		{"CenterText", 0x000000, "Save as"},
+		{"EmptyLine"},
+		{"Input", 0x262626, 0x880000, ""},
+		{"EmptyLine"},
+		{"Button", {0xAAAAAA, 0xffffff, "OK"}, {0x888888, 0xffffff, MineOSCore.localization.cancel}}
+	)
+	if data[2] == "OK" then
+		saveFile(data[1])
+	end
+end
+
+local function run()
+	local loadSuccess, loadReason = load(table.concat(mainWindow.codeView.lines, "\n"))
+	if loadSuccess then
+		gpu.setBackground(0x262626); gpu.setForeground(0xFFFFFF); gpu.fill(1, 1, buffer.screen.width, buffer.screen.height, " ")
+		require("term").setCursor(1, 1)
+		local xpcallSuccess, xpcallReason = xpcall(loadSuccess)
+		if xpcallSuccess then
+			MineOSCore.waitForPressingAnyKey()
+			buffer.start()
+		else
+
+		end
+	else
+
+	end
+end
+
 ---------------------------------------------------- Text processing methods ----------------------------------------------------
 
 local function deleteLine(line)
@@ -140,7 +206,7 @@ end
 local function deleteSpecifiedData(fromSymbol, fromLine, toSymbol, toLine)
 	local upperLine = unicode.sub(mainWindow.codeView.lines[fromLine], 1, fromSymbol - 1)
 	local lowerLine = unicode.sub(mainWindow.codeView.lines[toLine], toSymbol + 1, -1)
-	for i = fromLine + 1, toLine do
+	for line = fromLine + 1, toLine do
 		table.remove(mainWindow.codeView.lines, fromLine + 1)
 	end
 	mainWindow.codeView.lines[fromLine] = upperLine .. lowerLine
@@ -181,22 +247,25 @@ local function cut()
 end
 
 local function paste(pasteLines)
-	local firstPart = unicode.sub(mainWindow.codeView.lines[cursor.position.line], 1, cursor.position.symbol - 1)
-	local secondPart = unicode.sub(mainWindow.codeView.lines[cursor.position.line], cursor.position.symbol, -1)
-
-	if #pasteLines == 1 then
-		mainWindow.codeView.lines[cursor.position.line] = firstPart .. pasteLines[1] .. secondPart
-		setCursorPosition(cursor.position.symbol + unicode.len(pasteLines[1]), cursor.position.line)
-	else
-		local line = cursor.position.line
-		mainWindow.codeView.lines[line] = firstPart .. pasteLines[1]
-		line = line + 1
-		for i = #pasteLines - 1, 2, -1 do
-			table.insert(mainWindow.codeView.lines, line, pasteLines[i])
-			line = line + 1
+	if pasteLines then
+		if mainWindow.codeView.selections[1] then
+			deleteSelectedData()
 		end
-		mainWindow.codeView.lines[line] = pasteLines[#pasteLines] .. secondPart
-		setCursorPosition(unicode.len(pasteLines[#pasteLines]) + 1, cursor.position.line + #pasteLines - 1)
+
+		local firstPart = unicode.sub(mainWindow.codeView.lines[cursor.position.line], 1, cursor.position.symbol - 1)
+		local secondPart = unicode.sub(mainWindow.codeView.lines[cursor.position.line], cursor.position.symbol, -1)
+
+		if #pasteLines == 1 then
+			mainWindow.codeView.lines[cursor.position.line] = firstPart .. pasteLines[1] .. secondPart
+			setCursorPosition(cursor.position.symbol + unicode.len(pasteLines[1]), cursor.position.line)
+		else
+			mainWindow.codeView.lines[cursor.position.line] = firstPart .. pasteLines[1]
+			for pasteLine = #pasteLines - 1, 2, -1 do
+				table.insert(mainWindow.codeView.lines, cursor.position.line + 1, pasteLines[pasteLine])
+			end
+			table.insert(mainWindow.codeView.lines, cursor.position.line + #pasteLines - 1, pasteLines[#pasteLines] .. secondPart)
+			setCursorPosition(unicode.len(pasteLines[#pasteLines]) + 1, cursor.position.line + #pasteLines - 1)
+		end
 	end
 end
 
@@ -207,7 +276,9 @@ local function backspace()
 		if cursor.position.symbol > 1 then
 			deleteSpecifiedData(cursor.position.symbol - 1, cursor.position.line, cursor.position.symbol - 1, cursor.position.line)
 		else
-			deleteSpecifiedData(unicode.len(mainWindow.codeView.lines[cursor.position.line - 1]) + 1, cursor.position.line - 1, 0, cursor.position.line)
+			if cursor.position.line > 1 then
+				deleteSpecifiedData(unicode.len(mainWindow.codeView.lines[cursor.position.line - 1]) + 1, cursor.position.line - 1, 0, cursor.position.line)
+			end
 		end
 	end
 end
@@ -218,6 +289,12 @@ local function enter()
 	mainWindow.codeView.lines[cursor.position.line] = firstPart
 	table.insert(mainWindow.codeView.lines, cursor.position.line + 1, secondPart)
 	setCursorPosition(1, cursor.position.line + 1)
+end
+
+local function selectAll()
+	mainWindow.codeView.selections[1] = {from = {}, to = {}}
+	mainWindow.codeView.selections[1].from.symbol, mainWindow.codeView.selections[1].from.line = 1, 1
+	mainWindow.codeView.selections[1].to.symbol, mainWindow.codeView.selections[1].to.line = unicode.len(mainWindow.codeView.lines[#mainWindow.codeView.lines]), #mainWindow.codeView.lines
 end
 
 ---------------------------------------------------- Text comments-related methods ----------------------------------------------------
@@ -331,40 +408,108 @@ end
 
 ---------------------------------------------------- Main window related methods ----------------------------------------------------
 
+local function updateTitle()
+	mainWindow.titleTextBox.lines[1] = "File: " .. (workPath or "none")
+	mainWindow.titleTextBox.lines[2] = "Cursor: " .. cursor.position.line .. " line, " .. cursor.position.symbol .. " symbol"
+	if mainWindow.codeView.selections[1] then
+		local countOfSelectedLines = mainWindow.codeView.selections[1].to.line - mainWindow.codeView.selections[1].from.line + 1
+		local countOfSelectedSymbols
+		if mainWindow.codeView.selections[1].from.line == mainWindow.codeView.selections[1].to.line then
+			countOfSelectedSymbols = unicode.len(unicode.sub(mainWindow.codeView.lines[mainWindow.codeView.selections[1].from.line], mainWindow.codeView.selections[1].from.symbol, mainWindow.codeView.selections[1].to.symbol))
+		else
+			countOfSelectedSymbols = unicode.len(unicode.sub(mainWindow.codeView.lines[mainWindow.codeView.selections[1].from.line], mainWindow.codeView.selections[1].from.symbol, -1))
+			for line = mainWindow.codeView.selections[1].from.line + 1, mainWindow.codeView.selections[1].to.line - 1 do
+				countOfSelectedSymbols = countOfSelectedSymbols + unicode.len(mainWindow.codeView.lines[line])
+			end
+			countOfSelectedSymbols = countOfSelectedSymbols + unicode.len(unicode.sub(mainWindow.codeView.lines[mainWindow.codeView.selections[1].to.line], 1, mainWindow.codeView.selections[1].to.symbol))
+		end
+		mainWindow.titleTextBox.lines[3] = "Selection: " .. countOfSelectedLines .. " lines, " .. countOfSelectedSymbols .. " symbols"
+	else
+		mainWindow.titleTextBox.lines[3] = "Selection: none"
+	end
+end
+
 local function calculateSizes()
 	if mainWindow.topToolBar.isHidden then
 		mainWindow.codeView.localPosition.y = 2
+		mainWindow.codeView.height = mainWindow.height - 1
 	else
 		mainWindow.codeView.localPosition.y = 5
 		mainWindow.topToolBar.width = mainWindow.width
 		mainWindow.topToolBar.backgroundPanel.width = mainWindow.width
-		mainWindow.titleTextBox.width = mainWindow.topToolBar.width * 0.25 
+		mainWindow.titleTextBox.width = math.floor(mainWindow.topToolBar.width * 0.28)
 		mainWindow.titleTextBox.localPosition.x = math.floor(mainWindow.topToolBar.width / 2 - mainWindow.titleTextBox.width / 2)
+		mainWindow.codeView.height = mainWindow.height - 4
 	end
 
 	mainWindow.topMenu.width = mainWindow.width
-	mainWindow.codeView.width, mainWindow.codeView.height = mainWindow.width, mainWindow.height - 4
+	mainWindow.codeView.width = mainWindow.width
 end
 
 local function createWindow()
 	mainWindow = windows.fullScreen()
 
-	mainWindow.codeView = mainWindow:addCodeView(1, 1, 1, 1, {}, 1, 1, 1, {}, {}, true)
+	mainWindow.codeView = mainWindow:addCodeView(1, 1, 1, 1, {""}, 1, 1, 1, {}, {}, true)
 	mainWindow.topMenu = mainWindow:addMenu(1, 1, 1, config.colorScheme.topMenu.backgroundColor, config.colorScheme.topMenu.textColor, config.colorScheme.topMenu.backgroundPressedColor, config.colorScheme.topMenu.textPressedColor)
-	mainWindow.topMenu:addItem("MineCode", 0x0)
-	mainWindow.topMenu:addItem("File")
-	mainWindow.topMenu:addItem("View")
-	mainWindow.topMenu:addItem("Properties")
+	
+	local item1 = mainWindow.topMenu:addItem("MineCode", 0x0)
+	item1.onTouch = function()
+		local menu = GUI.contextMenu(item1.x, item1.y + 1)
+		menu:addItem("About", true).onTouch = function()
+			
+		end
+		menu:addItem("Quit MineCode").onTouch = function()
+			mainWindow:close()
+		end
+		menu:show()
+	end
+
+	local item2 = mainWindow.topMenu:addItem("File")
+	item2.onTouch = function()
+		local menu = GUI.contextMenu(item2.x, item2.y + 1)
+		menu:addItem("New").onTouch = function()
+			newFile()
+		end
+		menu:addItem("Open").onTouch = function()
+			open()
+		end
+		menu:addSeparator()
+		menu:addItem("Save", true).onTouch = function()
+
+		end
+		menu:addItem("Save as").onTouch = function()
+			saveAs()
+		end
+		menu:show()
+	end
+
+	local item3 = mainWindow.topMenu:addItem("View")
+	item3.onTouch = function()
+		local menu = GUI.contextMenu(item3.x, item3.y + 1)
+		menu:addItem("Togle top toolbar").onTouch = function()
+			mainWindow.topToolBar.isHidden = not mainWindow.topToolBar.isHidden
+			calculateSizes()
+		end
+		menu:show()
+	end
+
+	-- mainWindow.topMenu:addItem("Properties")
 	mainWindow.topToolBar = mainWindow:addContainer(1, 2, 1, 3)
 	mainWindow.topToolBar.backgroundPanel = mainWindow.topToolBar:addPanel(1, 1, 1, 3, config.colorScheme.topToolBar)
 	mainWindow.titleTextBox = mainWindow.topToolBar:addTextBox(1, 1, 1, 3, 0xDDDDDD, 0x444444, {}, 1):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
 	mainWindow.runButton = mainWindow.topToolBar:addAdaptiveButton(1, 1, 2, 1, 0x444444, 0xFFFFFF, 0xFFFFFF, 0x444444, "Run")
 	mainWindow.runButton.onTouch = function()
-		GUI.error("RUN ВАСЯ РАН")
+		run()
 	end
-	mainWindow.toggleSyntaxHighlightingButton = mainWindow.topToolBar:addAdaptiveButton(8, 1, 2, 1, 0xDDDDDD, 0x262626, 0x262626, 0xDDDDDD, "Syntax")
+	mainWindow.toggleSyntaxHighlightingButton = mainWindow.topToolBar:addAdaptiveButton(8, 1, 2, 1, 0x262626, 0xDDDDDD, 0x262626, 0xDDDDDD, "Syntax")
 	mainWindow.toggleSyntaxHighlightingButton.onTouch = function()
 		mainWindow.codeView.highlightLuaSyntax = not mainWindow.codeView.highlightLuaSyntax
+		local color1, color2 = 0xDDDDDD, 0x262626
+		if mainWindow.codeView.highlightLuaSyntax then
+			color1, color2 = 0x262626, 0xDDDDDD
+		end
+		mainWindow.toggleSyntaxHighlightingButton.colors.default.background, mainWindow.toggleSyntaxHighlightingButton.colors.default.text = color1, color2
+		mainWindow.toggleSyntaxHighlightingButton.colors.pressed.background, mainWindow.toggleSyntaxHighlightingButton.colors.pressed.text = color1, color2
 	end
 
 	mainWindow.onAnyEvent = function(eventData)
@@ -375,11 +520,19 @@ local function createWindow()
 		if eventData[1] == "touch" and mainWindow.codeView:isClicked(eventData[3], eventData[4]) then
 			if eventData[5] == 1 then
 				local menu = GUI.contextMenu(eventData[3], eventData[4])
-				menu:addItem("Copy", false, "^C")
-				menu:addItem("Paste", false, "^V")
-				menu:addItem("Delete")
+				menu:addItem("Cut", not mainWindow.codeView.selections[1], "^C").onTouch = function()
+					cut()
+				end
+				menu:addItem("Copy", not mainWindow.codeView.selections[1], "^C").onTouch = function()
+					copy()
+				end
+				menu:addItem("Paste", not clipboard, "^V").onTouch = function()
+					paste(clipboard)
+				end
 				menu:addSeparator()
-				menu:addItem("Select all", false, "^A")
+				menu:addItem("Select all", false, "^A").onTouch = function()
+					selectAll()
+				end
 				menu:show()
 			else
 				clearSelection()
@@ -394,6 +547,10 @@ local function createWindow()
 				if mainWindow.codeView.selections[1].from.line > mainWindow.codeView.selections[1].to.line then
 					mainWindow.codeView.selections[1].from.line, mainWindow.codeView.selections[1].to.line = swap(mainWindow.codeView.selections[1].from.line, mainWindow.codeView.selections[1].to.line)
 					mainWindow.codeView.selections[1].from.symbol, mainWindow.codeView.selections[1].to.symbol = swap(mainWindow.codeView.selections[1].from.symbol, mainWindow.codeView.selections[1].to.symbol)
+				elseif mainWindow.codeView.selections[1].from.line == mainWindow.codeView.selections[1].to.line then
+					if mainWindow.codeView.selections[1].from.symbol > mainWindow.codeView.selections[1].to.symbol then
+						mainWindow.codeView.selections[1].from.symbol, mainWindow.codeView.selections[1].to.symbol = swap(mainWindow.codeView.selections[1].from.symbol, mainWindow.codeView.selections[1].to.symbol)
+					end
 				end
 			end
 		elseif eventData[1] == "key_down" then
@@ -404,9 +561,7 @@ local function createWindow()
 					toggleComment()
 				-- A
 				elseif eventData[4] == 30 then
-					mainWindow.codeView.selections[1] = {from = {}, to = {}}
-					mainWindow.codeView.selections[1].from.symbol, mainWindow.codeView.selections[1].from.line = 1, 1
-					mainWindow.codeView.selections[1].to.symbol, mainWindow.codeView.selections[1].to.line = unicode.len(mainWindow.codeView.lines[#mainWindow.codeView.lines]), #mainWindow.codeView.lines
+					selectAll()
 				-- C
 				elseif eventData[4] == 46 then
 					copy()
@@ -442,6 +597,9 @@ local function createWindow()
 			-- Enter
 			elseif eventData[4] == 28 then
 				enter()
+			-- F5
+			elseif eventData[4] == 63 then
+				run()
 			else
 				if not keyboard.isControl(eventData[3]) then
 					deleteSelectedData()
@@ -470,6 +628,7 @@ local function createWindow()
 			cursor.blinkState = oldCursorState
 		end
 
+		updateTitle()
 		mainWindow:draw()
 		if cursor.blinkState then
 			local x, y = mainWindow.codeView.codeAreaPosition + cursor.position.symbol - mainWindow.codeView.fromSymbol + 1, mainWindow.codeView.y + cursor.position.line - mainWindow.codeView.fromLine
@@ -492,13 +651,16 @@ buffer.start()
 
 createWindow()
 calculateSizes()
-loadFile("/OS.lua")
-
-mainWindow.drawShadow = true
-mainWindow:draw()
-buffer.draw()
 mainWindow.drawShadow = false
-setCursorPosition(1, 1)
+mainWindow:draw()
+
+if args[1] == "open" and fs.exists(args[2]) then
+	loadFile("/lib/GUI.lua")
+else
+	newFile()
+end
+
+buffer.draw()
 mainWindow:handleEvents(cursor.blinkDelay)
 
 
