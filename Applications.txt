@@ -886,7 +886,7 @@
     icon="IgorTimofeev/OpenComputers/master/Applications/MineCodeIDE/Icon.pic",
     createShortcut="dock",
     forceDownload=true,
-    version=1.13,
+    version=1.14,
   },
   {
     name="MineOS/Applications/Battleship",

@@ -759,10 +759,8 @@ local function createWindow()
 			end
 		elseif eventData[1] == "clipboard" then
 			local lines = {}
-			for line in eventData[3]:gmatch("(.+)\n") do
-				table.insert(lines, removeTabs(line))
-			end
-			paste({eventData[3]})
+			for line in eventData[3]:gmatch("(.+)\n") do table.insert(lines, removeTabs(line)) end
+			paste(lines)
 		elseif eventData[1] == "scroll" then
 			if mainWindow.codeView:isClicked(eventData[3], eventData[4]) then
 				scroll(eventData[5], config.scrollSpeed)
