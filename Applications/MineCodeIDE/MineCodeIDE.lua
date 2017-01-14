@@ -1,6 +1,11 @@
 
 ---------------------------------------------------- Libraries ----------------------------------------------------
 
+-- package.loaded.syntax = nil
+-- package.loaded.GUI = nil
+-- package.loaded.windows = nil
+-- package.loaded.MineOSCore = nil
+
 local args = {...}
 require("advancedLua")
 local component = require("component")
@@ -180,12 +185,16 @@ end
 local function run()
 	local loadSuccess, loadReason = load(table.concat(mainWindow.codeView.lines, "\n"))
 	if loadSuccess then
-		gpu.setBackground(0x262626); gpu.setForeground(0xFFFFFF); gpu.fill(1, 1, buffer.screen.width, buffer.screen.height, " ")
-		require("term").setCursor(1, 1)
+		local oldResolutionX, oldResolutionY = gpu.getResolution()
+		gpu.setBackground(0x262626); gpu.setForeground(0xFFFFFF); gpu.fill(1, 1, oldResolutionX, oldResolutionY, " "); require("term").setCursor(1, 1)
+		
 		local xpcallSuccess, xpcallReason = xpcall(loadSuccess)
 		if xpcallSuccess then
 			MineOSCore.waitForPressingAnyKey()
+			gpu.setResolution(oldResolutionX, oldResolutionY)
 			buffer.start()
+			mainWindow:draw()
+			buffer:draw()
 		else
 
 		end
