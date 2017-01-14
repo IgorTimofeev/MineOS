@@ -158,9 +158,9 @@ end
 local function moveCursor(symbolOffset, lineOffset)
 	local newSymbol, newLine = cursor.position.symbol + symbolOffset, cursor.position.line + lineOffset
 	
-	if newSymbol < 1 then
+	if symbolOffset < 0 and newSymbol < 1 then
 		newLine, newSymbol = newLine - 1, math.huge
-	elseif newSymbol > unicode.len(mainWindow.codeView.lines[newLine] or "") + 1 then
+	elseif symbolOffset > 0 and newSymbol > unicode.len(mainWindow.codeView.lines[newLine] or "") + 1 then
 		newLine, newSymbol = newLine + 1, 1
 	end
 
