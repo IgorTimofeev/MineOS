@@ -1181,7 +1181,7 @@ function ecs.newFile(path)
 		fs.makeDirectory(path)
 		local file = io.open(path .. inputs[1], "w"); file:write(""); file:close()
 		local MineOSCore = require("MineOSCore")
-		MineOSCore.safeLaunch(MineOSCore.paths.applications .. "/MineCode IDE.app/MineCode IDE.lua", "open", path)
+		MineOSCore.safeLaunch(MineOSCore.paths.applications .. "/MineCode IDE.app/MineCode IDE.lua", "open", path .. inputs[1])
 	end
 end
 
