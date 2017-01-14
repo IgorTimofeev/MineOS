@@ -253,7 +253,7 @@
     name="lib/MineOSCore.lua",
     url="IgorTimofeev/OpenComputers/master/lib/MineOSCore.lua",
     type="Library",
-    version=1.43,
+    version=1.44,
   },
   {
     name="lib/advancedLua.lua",
@@ -274,7 +274,7 @@
     url="IgorTimofeev/OpenComputers/master/lib/ECSAPI.lua",
     type="Library",
     preLoadFile=true,
-    version=1.07,
+    version=1.08,
   },
   {
     name="lib/colorlib.lua",
@@ -886,7 +886,7 @@
     icon="IgorTimofeev/OpenComputers/master/Applications/MineCodeIDE/Icon.pic",
     createShortcut="dock",
     forceDownload=true,
-    version=1.10,
+    version=1.11,
   },
   {
     name="MineOS/Applications/Battleship",

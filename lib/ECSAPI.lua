@@ -1178,8 +1178,8 @@ function ecs.newFile(path)
 	local inputs = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, "Новый файл"}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, ""}, {"EmptyLine"}, {"Button", {0xbbbbbb, 0xffffff, "OK"}})
 
 	if ecs.checkName(inputs[1], path) then
-		ecs.prepareToExit()
-		ecs.editFile(path .. inputs[1])
+		local MineOSCore = require("MineOSCore")
+		MineOSCore.safeLaunch(MineOSCore.paths.applications .. "/MineCode IDE.app/MineCode IDE.lua", "open", path)
 	end
 end
 

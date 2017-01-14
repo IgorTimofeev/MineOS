@@ -168,8 +168,28 @@ local function moveCursor(symbolOffset, lineOffset)
 	setCursorPositionAndClearSelection(newSymbol, newLine)
 end
 
-local function setCursorPositionToEOF()
+local function setCursorPositionToHome()
+	setCursorPositionAndClearSelection(1, 1)
+end
+
+local function setCursorPositionToEnd()
 	setCursorPositionAndClearSelection(unicode.len(mainWindow.codeView.lines[#mainWindow.codeView.lines]) + 1, #mainWindow.codeView.lines)
+end
+
+local function scroll(direction, speed)
+	if direction == 1 then
+		if mainWindow.codeView.fromLine > speed then
+			mainWindow.codeView.fromLine = mainWindow.codeView.fromLine - speed
+		else
+			mainWindow.codeView.fromLine = 1
+		end
+	else
+		if mainWindow.codeView.fromLine < #mainWindow.codeView.lines - speed then
+			mainWindow.codeView.fromLine = mainWindow.codeView.fromLine + speed
+		else
+			mainWindow.codeView.fromLine = #mainWindow.codeView.lines
+		end
+	end
 end
 
 local function gotoLine(line)
@@ -183,11 +203,15 @@ end
 
 ---------------------------------------------------- File processing methods ----------------------------------------------------
 
+local function removeTabs(text)
+	return text:gsub("\t", string.rep(" ", mainWindow.codeView.indentationWidth))
+end
+
 local function loadFile(path)
 	mainWindow.codeView.fromLine, mainWindow.codeView.fromSymbol, mainWindow.codeView.lines, mainWindow.codeView.maximumLineLength = 1, 1, {}, 0
 	local file = io.open(path, "r")
 	for line in file:lines() do
-		line = line:gsub("\t", string.rep(" ", mainWindow.codeView.indentationWidth))
+		line = removeTabs(line)
 		table.insert(mainWindow.codeView.lines, line)
 		mainWindow.codeView.maximumLineLength = math.max(mainWindow.codeView.maximumLineLength, unicode.len(line))
 	end
@@ -214,7 +238,7 @@ local function newFile()
 		""
 	}
 	workPath = nil
-	setCursorPositionToEOF()
+	setCursorPositionAndClearSelection(1, 1)
 end
 
 local function open()
@@ -714,6 +738,18 @@ local function createWindow()
 			-- F5
 			elseif eventData[4] == 63 then
 				run()
+			-- Home
+			elseif eventData[4] == 199 then
+				setCursorPositionToHome()
+			-- End
+			elseif eventData[4] == 207 then
+				setCursorPositionToEnd()
+			-- Page Up
+			elseif eventData[4] == 201 then
+				scroll(1, mainWindow.codeView.height - 2)
+			-- Page Down
+			elseif eventData[4] == 209 then
+				scroll(-1, mainWindow.codeView.height - 2)
 			else
 				if not keyboard.isControl(eventData[3]) then
 					deleteSelectedData()
@@ -721,22 +757,14 @@ local function createWindow()
 				end
 			end
 		elseif eventData[1] == "clipboard" then
+			local lines = {}
+			for line in data:gmatch("(.+)\n") do
+				table.insert(lines, removeTabs(line))
+			end
 			paste({eventData[3]})
 		elseif eventData[1] == "scroll" then
 			if mainWindow.codeView:isClicked(eventData[3], eventData[4]) then
-				if eventData[5] == 1 then
-					if mainWindow.codeView.fromLine > config.scrollSpeed then
-						mainWindow.codeView.fromLine = mainWindow.codeView.fromLine - config.scrollSpeed
-					else
-						mainWindow.codeView.fromLine = 1
-					end
-				else
-					if mainWindow.codeView.fromLine < #mainWindow.codeView.lines - config.scrollSpeed then
-						mainWindow.codeView.fromLine = mainWindow.codeView.fromLine + config.scrollSpeed
-					else
-						mainWindow.codeView.fromLine = #mainWindow.codeView.lines
-					end
-				end
+				scroll(eventData[5], config.scrollSpeed)
 			end
 		elseif not eventData[1] then
 			cursor.blinkState = oldCursorState
