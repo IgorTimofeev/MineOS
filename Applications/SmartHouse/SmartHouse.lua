@@ -40,15 +40,6 @@ local offset = {x = 0, y = 0}
 
 -----------------------------------------------------------------------------------------------------------------------------------
 
-local function getComputerInfo()
-	local currentComputerAddress = computer.address()
-	for address, information in pairs(computer.getDeviceInfo()) do
-		if currentComputerAddress == address then
-			return information.description
-		end
-	end
-end
-
 local function loadModule(modulePath)
 	local success, module = pcall(loadfile(modulePath .. "/Main.lua"))
 	if success then
@@ -345,8 +336,8 @@ local function createWindow()
 
 	-- Создаем главное и неебически важное устройство домашнего писюка
 	local homePC = createDevice(math.floor(window.width / 2 - 8), math.floor(window.height / 2 - 4), "homePC", component.proxy(computer.address()), "Сервак")
-	local computerDescription = getComputerInfo()
-	if computerDescription == "Server" then homePC.module.icon = image.load(homePC.module.modulePath .. "Server.pic"); homePC.deviceImage.image = homePC.module.icon end
+	homePC.module.icon = image.load(homePC.module.modulePath .. "Server.pic")
+	homePC.deviceImage.image = homePC.module.icon
 
 	-- Перед отрисовкой окна чистим буфер фоном и перехуячиваем позиции объектов групп
 	window.onDrawStarted = function()

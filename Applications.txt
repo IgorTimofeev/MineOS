@@ -537,7 +537,7 @@
     type="Application",
     icon="IgorTimofeev/OpenComputers/master/Applications/SmartHouse/Icon.pic",
     createShortcut="desktop",
-    version=1.28,
+    version=1.29,
     resources={
       {
         name="Modules/command_block/Icon.pic",
@@ -885,7 +885,7 @@
     type="Application",
     icon="IgorTimofeev/OpenComputers/master/Applications/MineCodeIDE/Icon.pic",
     createShortcut="desktop",
-    version=1.03,
+    version=1.04,
   },
   {
     name="MineOS/Applications/Battleship",
