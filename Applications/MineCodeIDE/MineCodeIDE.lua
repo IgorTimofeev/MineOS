@@ -1,8 +1,7 @@
 
 ---------------------------------------------------- Libraries ----------------------------------------------------
 
--- "/MineOS/Desktop/MineCode IDE.app/MineCode IDE.lua"
--- "/MineOS/Applications/MineCode IDE.app/MineCode IDE.lua"
+-- "/MineOS/Applications/MineCode IDE.app/MineCode IDE.lua" open Govno.lua
 
 -- package.loaded.syntax = nil
 -- package.loaded.GUI = nil
@@ -218,6 +217,7 @@ local function loadFile(path)
 	end
 	file:close()
 	workPath = path
+	if #mainWindow.codeView.lines == 0 then table.insert(mainWindow.codeView.lines, "") end
 	setCursorPositionAndClearSelection(1, 1)
 end
 
@@ -231,13 +231,7 @@ local function saveFile(path)
 end
 
 local function newFile()
-	mainWindow.codeView.lines = {
-		"",
-		"for i = 1, 10 do",
-		"  print(\"Hello world!\")",
-		"end",
-		""
-	}
+	mainWindow.codeView.lines = {""}
 	workPath = nil
 	setCursorPositionAndClearSelection(1, 1)
 end
@@ -759,10 +753,14 @@ local function createWindow()
 			end
 		elseif eventData[1] == "clipboard" then
 			local lines = {}
-			for line in eventData[3]:gmatch("(.+)\n") do table.insert(lines, removeTabs(line)) end
+			for line in eventData[3]:gmatch("([^\r\n]+)\r?\n?") do
+				line = removeTabs(line)
+				table.insert(lines, line)
+			end
+			table.insert(lines, "")
 			paste(lines)
 		elseif eventData[1] == "scroll" then
-			if mainWindow.codeView:isClicked(eventData[3], eventData[4]) then
+			if isClickedOnCodeArea(eventData[3], eventData[4]) then
 				scroll(eventData[5], config.scrollSpeed)
 			end
 		elseif not eventData[1] then
@@ -792,11 +790,15 @@ buffer.start()
 
 createWindow()
 calculateSizes()
-mainWindow.drawShadow = false
 mainWindow:draw()
 
-if args[1] == "open" and fs.exists(args[2]) then
-	loadFile(args[2])
+if args[1] == "open" then
+	if fs.exists(args[2]) then
+		loadFile(args[2])
+	else
+		newFile()
+		workPath = args[2]
+	end
 else
 	newFile()
 end

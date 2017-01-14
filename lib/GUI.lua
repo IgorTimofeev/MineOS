@@ -1595,16 +1595,26 @@ local function codeViewDraw(codeView)
 	end
 	buffer.setDrawLimit(oldDrawLimit)
 
-	codeView.scrollBars.vertical.colors.background, codeView.scrollBars.vertical.colors.foreground = syntax.colorScheme.scrollBarBackground, syntax.colorScheme.scrollBarForeground
-	codeView.scrollBars.vertical.minimumValue, codeView.scrollBars.vertical.maximumValue, codeView.scrollBars.vertical.value, codeView.scrollBars.vertical.shownValueCount = 1, #codeView.lines, codeView.fromLine, codeView.height
-	codeView.scrollBars.vertical.localPosition.x = codeView.width
-	codeView.scrollBars.vertical.localPosition.y = 1
-	codeView.scrollBars.vertical.height = codeView.height
+	if #codeView.lines > codeView.height then
+		codeView.scrollBars.vertical.isHidden = false
+		codeView.scrollBars.vertical.colors.background, codeView.scrollBars.vertical.colors.foreground = syntax.colorScheme.scrollBarBackground, syntax.colorScheme.scrollBarForeground
+		codeView.scrollBars.vertical.minimumValue, codeView.scrollBars.vertical.maximumValue, codeView.scrollBars.vertical.value, codeView.scrollBars.vertical.shownValueCount = 1, #codeView.lines, codeView.fromLine, codeView.height
+		codeView.scrollBars.vertical.localPosition.x = codeView.width
+		codeView.scrollBars.vertical.localPosition.y = 1
+		codeView.scrollBars.vertical.height = codeView.height
+	else
+		codeView.scrollBars.vertical.isHidden = true
+	end
 
-	codeView.scrollBars.horizontal.colors.background, codeView.scrollBars.horizontal.colors.foreground = syntax.colorScheme.scrollBarBackground, syntax.colorScheme.scrollBarForeground
-	codeView.scrollBars.horizontal.minimumValue, codeView.scrollBars.horizontal.maximumValue, codeView.scrollBars.horizontal.value, codeView.scrollBars.horizontal.shownValueCount = 1, codeView.maximumLineLength, codeView.fromSymbol, codeView.codeAreaWidth - 2
-	codeView.scrollBars.horizontal.localPosition.x, codeView.scrollBars.horizontal.width = codeView.lineNumbersWidth + 1, codeView.codeAreaWidth - 1
-	codeView.scrollBars.horizontal.localPosition.y = codeView.height
+	if codeView.maximumLineLength > codeView.codeAreaWidth - 2 then
+		codeView.scrollBars.horizontal.isHidden = false
+		codeView.scrollBars.horizontal.colors.background, codeView.scrollBars.horizontal.colors.foreground = syntax.colorScheme.scrollBarBackground, syntax.colorScheme.scrollBarForeground
+		codeView.scrollBars.horizontal.minimumValue, codeView.scrollBars.horizontal.maximumValue, codeView.scrollBars.horizontal.value, codeView.scrollBars.horizontal.shownValueCount = 1, codeView.maximumLineLength, codeView.fromSymbol, codeView.codeAreaWidth - 2
+		codeView.scrollBars.horizontal.localPosition.x, codeView.scrollBars.horizontal.width = codeView.lineNumbersWidth + 1, codeView.codeAreaWidth - codeView.lineNumbersWidth
+		codeView.scrollBars.horizontal.localPosition.y = codeView.height
+	else
+		codeView.scrollBars.horizontal.isHidden = true
+	end
 
 	codeView:reimplementedDraw()
 end
