@@ -229,7 +229,7 @@ function MineOSCore.init()
 	MineOSCore.loadStandartIcons()
 end
 
-local function waitForPressingAnyKey()
+function MineOSCore.waitForPressingAnyKey()
 	print(" ")
 	print(MineOSCore.localization.pressAnyKeyToContinue)
 	while true do
@@ -292,7 +292,7 @@ function MineOSCore.analyzeIconFormat(iconObject)
 		 	iconObject.launch = function()
 				ecs.prepareToExit()
 				if MineOSCore.safeLaunch(iconObject.path) then
-					waitForPressingAnyKey()
+					MineOSCore.waitForPressingAnyKey()
 				end
 			end
 		elseif iconObject.format == ".pic" or iconObject.format == ".png" then
@@ -320,7 +320,7 @@ function MineOSCore.analyzeIconFormat(iconObject)
 			iconObject.launch = function()
 				ecs.prepareToExit()
 				if MineOSCore.safeLaunch(iconObject.path) then
-					waitForPressingAnyKey()
+					MineOSCore.waitForPressingAnyKey()
 				end
 			end
 		end
