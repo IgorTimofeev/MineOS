@@ -204,7 +204,8 @@ end
 ---------------------------------------------------- File processing methods ----------------------------------------------------
 
 local function removeTabs(text)
-	return text:gsub("\t", string.rep(" ", mainWindow.codeView.indentationWidth))
+	local result = text:gsub("\t", string.rep(" ", mainWindow.codeView.indentationWidth))
+	return result
 end
 
 local function loadFile(path)
