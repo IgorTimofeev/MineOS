@@ -466,73 +466,54 @@ function MineOSCore.parseErrorMessage(error, indentationWidth)
 end
 
 local function drawErrorWindow(path, programVersion, errorLine, reason)
-	local drawLimit = buffer.getDrawLimit(); buffer.resetDrawLimit()
-	local colors = { topBar = 0x383838, title = 0xFFFFFF }
-	local programName = MineOSCore.localization.errorWhileRunningProgram .. "\"" .. MineOSCore.getFileName(path) .. "\""
+	local oldDrawLimit = buffer.getDrawLimit(); buffer.resetDrawLimit()
 	local width, height = buffer.screen.width, math.floor(buffer.screen.height * 0.45)
-	local x, y = 1, math.floor(buffer.screen.height / 2 - height / 2)
-	local codeWidth, codeHeight = math.floor(width * 0.62), height - 3
-	local stackWidth = width - codeWidth
-
-	-- Затенение оконца
-	buffer.clear(0x000000, 50)
+	local y = math.floor(buffer.screen.height / 2 - height / 2)
 
 	-- Окошечко и всякая шняжка на нем
-	local window = windows.empty(x, y, width, height, width, height)
-	window:addPanel(1, 1, width, 3, colors.topBar)
-	window:addLabel(1, 2, width, 1, colors.title, programName):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+	local window = windows.empty(1, y, width, height, width, height)
+	window:addPanel(1, 1, width, 3, 0x383838)
+	window:addLabel(1, 2, width, 1, 0xFFFFFF, MineOSCore.localization.errorWhileRunningProgram .. "\"" .. MineOSCore.getFileName(path) .. "\""):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
 	local windowActionButtons = window:addWindowActionButtons(2, 2, false)
 	local sendToDeveloperButton = window:addAdaptiveButton(9, 1, 2, 1, 0x444444, 0xFFFFFF, 0x343434, 0xFFFFFF, MineOSCore.localization.sendFeedback)
-	local stackTextBox = window:addTextBox(codeWidth + 1, 4, stackWidth, codeHeight, 0xFFFFFF, 0x000000, string.wrap(MineOSCore.parseErrorMessage(reason, 4), stackWidth - 2), 1, 1, 0)
-	--Рисуем окошечко, чтобы кодику не было ОБИДНО
-	--!!1
-	window:draw()
 
 	--Кодик на окошечке
-	local strings = {}
-	local fromString = errorLine - math.floor((codeHeight - 1) / 2); if fromString < 0 then fromString = 1 end
-	local toString = fromString + codeHeight - 1
+	local lines = {}
+	local fromLine = errorLine - math.floor((height - 3) / 2) + 1; if fromLine <= 0 then fromLine = 1 end
+	local toLine = fromLine + window.height - 3 - 1
 	local file = io.open(path, "r")
 	local lineCounter = 1
 	for line in file:lines() do
-		if lineCounter >= fromString and lineCounter <= toString then
-			line = string.gsub(line, "	", "  ")
-			table.insert(strings, line)
-		elseif lineCounter > toString then
+		if lineCounter >= fromLine and lineCounter <= toLine then
+			lines[lineCounter] = string.gsub(line, "	", "  ")
+		elseif lineCounter < fromLine then
+			lines[lineCounter] = " "
+		elseif lineCounter > toLine then
 			break
 		end
 		lineCounter = lineCounter + 1
 	end
 	file:close()
-	syntax.viewCode(
-		{
-			x = x,
-			y = y + 3,
-			width = codeWidth,
-			height = codeHeight, 
-			strings = strings, 
-			maximumStringWidth = 50,
-			fromSymbol = 1,
-			fromString = 1,
-			fromStringOnLineNumbers = fromString,
-			highlightLuaSyntax = true,
-			highlightedStrings = {[errorLine] = 0xFF4444},
-			scrollbars = {
-				vertical = true,
-				horizontal = false,
-			}
-		}
-	)
+
+	local codeView = window:addCodeView(1, 4, math.floor(width * 0.62), height - 3, lines, 1, fromLine, 100, {}, {[errorLine] = 0xFF4444}, true)
+	codeView.scrollBars.horizontal.isHidden = true
+
+	-- Текстбоксик
+	local stackTextBox = window:addTextBox(codeView.width + 1, 4, window.width - codeView.width, codeView.height, 0xFFFFFF, 0x000000, string.wrap(MineOSCore.parseErrorMessage(reason, 4), window.width - codeView.width - 2), 1, 1, 0)
 
 	-- Всякие действия пиздатые
 	local function exit()
 		windowActionButtons.close:pressAndRelease()
-		buffer.setDrawLimit(drawLimit)
+		buffer.setDrawLimit(oldDrawLimit)
 		window:close()
 	end
 	
 	windowActionButtons.close.onTouch = exit
 	
+	window.onDrawStarted = function()
+		buffer.clear(0x000000, 50)
+	end
+
 	window.onKeyDown = function(eventData)
 		if eventData[4] == 28 then exit() end
 	end
@@ -566,6 +547,7 @@ local function drawErrorWindow(path, programVersion, errorLine, reason)
 	end
 
 	-- Начинаем гомоеблю!
+	window:draw()
 	buffer.draw()
 	for i = 1, 3 do component.computer.beep(1500, 0.08) end
 	window:handleEvents()

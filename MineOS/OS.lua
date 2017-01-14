@@ -1,5 +1,5 @@
 
-package.loaded.MineOSCore, package.loaded.GUI, package.loaded.windows = nil, nil, nil
+-- package.loaded.MineOSCore, package.loaded.GUI, package.loaded.windows = nil, nil, nil
 
 ---------------------------------------------- Копирайт, епта ------------------------------------------------------------------------
 
@@ -351,7 +351,7 @@ local function updateDock()
 
 	local xPos = 1
 	for iconIndex = 1, #_G.OSSettings.dockShortcuts do
-		local iconObject = MineOSCore.createIconObject(xPos, 1, _G.OSSettings.dockShortcuts[iconIndex].path, 0x000000, _G.OSSettings.showFileFormat)
+		local iconObject = MineOSCore.createIconObject(xPos, 1, _G.OSSettings.dockShortcuts[iconIndex].path, 0x262626, _G.OSSettings.showFileFormat)
 			
 		iconObject.onRightClick = function(iconObject, eventData)
 			local menu = GUI.contextMenu(eventData[3], eventData[4])
@@ -382,7 +382,7 @@ local function updateDock()
 		xPos = xPos + MineOSCore.iconWidth + sizes.xSpaceBetweenIcons
 	end
 
-	local iconObject = MineOSCore.createIconObject(xPos, 1, MineOSCore.paths.trash, 0x000000, _G.OSSettings.showFileFormat)
+	local iconObject = MineOSCore.createIconObject(xPos, 1, MineOSCore.paths.trash, 0x262626, _G.OSSettings.showFileFormat)
 	iconObject.iconImage.image = MineOSCore.icons.trash
 	iconObject.onRightClick = function(iconObject, eventData)
 		local menu = GUI.contextMenu(eventData[3], eventData[4])

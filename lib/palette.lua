@@ -222,7 +222,8 @@ local function createWindow(x, y)
 	currentColorPanel = window:addPanel(x, y, 12, 3, currentColor.hex)
 	y = y + 4
 	
-	window:addButton(x, y, 12, 1, 0x444444, 0xFFFFFF, 0x88FF88, 0xFFFFFF, "OK").onTouch = function()
+	window.okButton = window:addButton(x, y, 12, 1, 0x444444, 0xFFFFFF, 0x88FF88, 0xFFFFFF, "OK")
+	window.okButton.onTouch = function()
 		window:returnData(currentColor.hex)
 	end
 	y = y + 2

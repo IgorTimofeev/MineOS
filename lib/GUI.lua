@@ -6,6 +6,7 @@ local keyboard = require("keyboard")
 local buffer = require("doubleBuffering")
 local unicode = require("unicode")
 local event = require("event")
+local syntax = require("syntax")
 
 ----------------------------------------- Core constants -----------------------------------------
 
@@ -81,7 +82,8 @@ GUI.objectTypes = enum(
 	"progressBar",
 	"chart",
 	"comboBox",
-	"scrollBar"
+	"scrollBar",
+	"codeView"
 )
 
 ----------------------------------------- Primitive objects -----------------------------------------
@@ -156,14 +158,14 @@ end
 -- Go recursively through every container's object (including other containers) and return object that was clicked firstly by it's GUI-layer position
 function GUI.getClickedObject(container, xEvent, yEvent)
 	local clickedObject, clickedIndex
-	for objectIndex = #container.children, 1, -1 do
-		if not container.children[objectIndex].isHidden then
-			container.children[objectIndex].x, container.children[objectIndex].y = container.children[objectIndex].localPosition.x + container.x - 1, container.children[objectIndex].localPosition.y + container.y - 1
-			if container.children[objectIndex].children and #container.children[objectIndex].children > 0 then
-				clickedObject, clickedIndex = GUI.getClickedObject(container.children[objectIndex], xEvent, yEvent)
+	for childIndex = #container.children, 1, -1 do
+		if not container.children[childIndex].isHidden then
+			container.children[childIndex].x, container.children[childIndex].y = container.children[childIndex].localPosition.x + container.x - 1, container.children[childIndex].localPosition.y + container.y - 1
+			if container.children[childIndex].children and #container.children[childIndex].children > 0 then
+				clickedObject, clickedIndex = GUI.getClickedObject(container.children[childIndex], xEvent, yEvent)
 			    if clickedObject then break end
-			elseif container.children[objectIndex]:isClicked(xEvent, yEvent) then
-				clickedObject, clickedIndex = container.children[objectIndex], objectIndex
+			elseif container.children[childIndex]:isClicked(xEvent, yEvent) then
+				clickedObject, clickedIndex = container.children[childIndex], childIndex
 				break
 			end
 		end
@@ -344,6 +346,11 @@ local function addScrollBarObjectToContainer(container, ...)
 	return GUI.addChildToContainer(container, GUI.scrollBar(...), GUI.objectTypes.scrollBar)
 end
 
+-- Add Menu object to container
+local function addCodeViewObjectToContainer(container, ...)
+	return GUI.addChildToContainer(container, GUI.codeView(...), GUI.objectTypes.codeView)
+end
+
 -- Recursively draw container's content including all children container's content
 local function drawContainerContent(container)
 	for objectIndex = 1, #container.children do
@@ -401,6 +408,7 @@ function GUI.container(x, y, width, height)
 	container.addComboBox = addComboBoxObjectToContainer
 	container.addMenu = addMenuObjectToContainer
 	container.addScrollBar = addScrollBarObjectToContainer
+	container.addCodeView = addCodeViewObjectToContainer
 
 	return container
 end
@@ -771,7 +779,7 @@ local function menuAddItem(menu, text, textColor)
 	return item
 end
 
-function GUI.menu(x, y, width, backgroundColor, textColor, backgroundPressedColor, textPressedColor, backgroundTransparency, ...)
+function GUI.menu(x, y, width, backgroundColor, textColor, backgroundPressedColor, textPressedColor, backgroundTransparency)
 	local menu = GUI.container(x, y, width, 1)
 	menu.colors = {
 		default = {
@@ -990,7 +998,7 @@ local function inputFieldDraw(inputField)
 	end
 	
 	if inputField.highlightLuaSyntax then
-		require("syntax").highlightString(inputField.x, inputField.y, inputField.text, inputField.textCutFrom, inputField.width)
+		require("syntax").highlightString(inputField.x, inputField.y, inputField.text)
 	else
 		buffer.text(
 			inputField.x,
@@ -1492,12 +1500,150 @@ function GUI.scrollBar(x, y, width, height, backgroundColor, foregroundColor, mi
 	return scrollBar
 end
 
+----------------------------------------- CodeView object -----------------------------------------
+
+local function codeViewDraw(codeView)
+	-- local toLine = codeView.fromLine + codeView.height - (codeView.scrollBars.horizontal.isHidden and 1 or 2)
+	local toLine = codeView.fromLine + codeView.height - 1
+
+	-- Line numbers bar and code area
+	codeView.lineNumbersWidth = unicode.len(tostring(toLine)) + 2
+	codeView.codeAreaPosition = codeView.x + codeView.lineNumbersWidth
+	codeView.codeAreaWidth = codeView.width - codeView.lineNumbersWidth
+	buffer.square(codeView.x, codeView.y, codeView.lineNumbersWidth, codeView.height, syntax.colorScheme.lineNumbers, syntax.colorScheme.lineNumbersText, " ")	
+	buffer.square(codeView.codeAreaPosition, codeView.y, codeView.codeAreaWidth, codeView.height, syntax.colorScheme.background, syntax.colorScheme.text, " ")
+
+	-- Line numbers texts
+	local y = codeView.y
+	for line = codeView.fromLine, toLine do
+		if codeView.lines[line] then
+			local text = tostring(line)
+			if codeView.highlights[line] then
+				buffer.square(codeView.x, y, codeView.lineNumbersWidth, 1, codeView.highlights[line], syntax.colorScheme.text, " ", 30)
+				buffer.square(codeView.codeAreaPosition, y, codeView.codeAreaWidth, 1, codeView.highlights[line], syntax.colorScheme.text, " ")
+			end
+			buffer.text(codeView.codeAreaPosition - unicode.len(text) - 1, y, syntax.colorScheme.lineNumbersText, text)
+			y = y + 1
+		else
+			break
+		end	
+	end
+
+	-- Selections
+	local oldDrawLimit = buffer.getDrawLimit()
+	buffer.setDrawLimit(codeView.codeAreaPosition, codeView.y, codeView.codeAreaWidth, codeView.height)
+
+	local function drawUpperSelection(y, selectionIndex)
+		buffer.square(
+			codeView.codeAreaPosition + codeView.selections[selectionIndex].from.symbol,
+			y + codeView.selections[selectionIndex].from.line - codeView.fromLine,
+			codeView.codeAreaWidth - codeView.selections[selectionIndex].from.symbol,
+			1,
+			codeView.selections[selectionIndex].color or syntax.colorScheme.selection, syntax.colorScheme.text, " "
+		)
+	end
+
+	local function drawLowerSelection(y, selectionIndex)
+		buffer.square(
+			codeView.codeAreaPosition,
+			y + codeView.selections[selectionIndex].from.line - codeView.fromLine,
+			codeView.selections[selectionIndex].to.symbol + 1,
+			1,
+			codeView.selections[selectionIndex].color or syntax.colorScheme.selection, syntax.colorScheme.text, " "
+		)
+	end
+
+	if #codeView.selections > 0 then
+		for selectionIndex = 1, #codeView.selections do
+			y = codeView.y
+			local dy = codeView.selections[selectionIndex].to.line - codeView.selections[selectionIndex].from.line
+			if dy == 0 then
+				buffer.square(
+					codeView.codeAreaPosition + codeView.selections[selectionIndex].from.symbol,
+					y + codeView.selections[selectionIndex].from.line - codeView.fromLine,
+					codeView.selections[selectionIndex].to.symbol - codeView.selections[selectionIndex].from.symbol + 1,
+					1,
+					codeView.selections[selectionIndex].color or syntax.colorScheme.selection, syntax.colorScheme.text, " "
+				)
+			elseif dy == 1 then
+				drawUpperSelection(y, selectionIndex); y = y + 1
+				drawLowerSelection(y, selectionIndex)
+			else
+				drawUpperSelection(y, selectionIndex); y = y + 1
+				for i = 1, dy - 1 do
+					buffer.square(codeView.codeAreaPosition, y + codeView.selections[selectionIndex].from.line - codeView.fromLine, codeView.codeAreaWidth, 1, codeView.selections[selectionIndex].color or syntax.colorScheme.selection, syntax.colorScheme.text, " "); y = y + 1
+				end
+				drawLowerSelection(y, selectionIndex)
+			end
+		end
+	end
+
+	-- Code strings
+	y = codeView.y
+	buffer.setDrawLimit(codeView.codeAreaPosition + 1, y, codeView.codeAreaWidth - 2, codeView.height)
+	for i = codeView.fromLine, toLine do
+		if codeView.lines[i] then
+			if codeView.highlightLuaSyntax then
+				syntax.highlightString(codeView.codeAreaPosition - codeView.fromSymbol + 2, y, codeView.lines[i])
+			else
+				buffer.text(codeView.codeAreaPosition - codeView.fromSymbol + 2, y, syntax.colorScheme.text, codeView.lines[i])
+			end
+			y = y + 1
+		else
+			break
+		end
+	end
+	buffer.setDrawLimit(oldDrawLimit)
+
+	codeView.scrollBars.vertical.colors.background, codeView.scrollBars.vertical.colors.foreground = syntax.colorScheme.scrollBarBackground, syntax.colorScheme.scrollBarForeground
+	codeView.scrollBars.vertical.minimumValue, codeView.scrollBars.vertical.maximumValue, codeView.scrollBars.vertical.value, codeView.scrollBars.vertical.shownValueCount = 1, #codeView.lines, codeView.fromLine, codeView.height
+	codeView.scrollBars.vertical.localPosition.x = codeView.width
+	codeView.scrollBars.vertical.localPosition.y = 1
+	codeView.scrollBars.vertical.height = codeView.height
+
+	codeView.scrollBars.horizontal.colors.background, codeView.scrollBars.horizontal.colors.foreground = syntax.colorScheme.scrollBarBackground, syntax.colorScheme.scrollBarForeground
+	codeView.scrollBars.horizontal.minimumValue, codeView.scrollBars.horizontal.maximumValue, codeView.scrollBars.horizontal.value, codeView.scrollBars.horizontal.shownValueCount = 1, codeView.maximumLineLength, codeView.fromSymbol, codeView.codeAreaWidth - 2
+	codeView.scrollBars.horizontal.localPosition.x, codeView.scrollBars.horizontal.width = codeView.lineNumbersWidth + 1, codeView.codeAreaWidth - 1
+	codeView.scrollBars.horizontal.localPosition.y = codeView.height
+
+	codeView:reimplementedDraw()
+end
+
+function GUI.codeView(x, y, width, height, lines, fromSymbol, fromLine, maximumLineLength, selections, highlights, highlightLuaSyntax)
+	local codeView = GUI.container(x, y, width, height)
+	
+	codeView.lines = lines
+	codeView.fromSymbol = fromSymbol
+	codeView.fromLine = fromLine
+	codeView.maximumLineLength = maximumLineLength
+	codeView.selections = selections or {}
+	codeView.highlights = highlights or {}
+	codeView.highlightLuaSyntax = highlightLuaSyntax
+
+	codeView.scrollBars = {
+		vertical = codeView:addScrollBar(1, 1, 1, 1, 0x0, 0x0, 1, 1, 1, 1, 1, false),
+		horizontal = codeView:addScrollBar(1, 1, 1, 1, 0x0, 0x0, 1, 1, 1, 1, 1, true)
+	}
+
+	codeView.reimplementedDraw = codeView.draw
+	codeView.draw = codeViewDraw
+
+	return codeView
+end
+
 --------------------------------------------------------------------------------------------------------------------------------
 
 -- buffer.start()
--- buffer.clear(0x1b1b1b)
+-- buffer.clear(0xFF8888)
 
--- GUI.scrollBar(1, 5, 1, 20, 0x444444, 0x00DBFF, 1, 100, 50, 20, 1, true):draw()
+-- local lines = {}
+-- local file = io.open("/OS.lua", "r")
+-- local maximumLineLength = 0
+-- for line in file:lines() do line = line:gsub("	", "  "); table.insert(lines, line); maximumLineLength = math.max(maximumLineLength, unicode.len(line)) end
+-- file:close()
+
+-- GUI.codeView(1, 1, buffer.screen.width, buffer.screen.height, lines, 1, 110, maximumLineLength, {{from = {symbol = 14, line = 122}, to = {symbol = 20, line = 128}}}, {[131] = 0xFF4444}, true):draw()
+-- -- GUI.scrollBar(1, 5, 1, 20, 0x444444, 0x00DBFF, 1, 100, 50, 20, 1, true):draw()
 
 -- buffer.draw()
 

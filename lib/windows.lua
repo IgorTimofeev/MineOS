@@ -161,6 +161,7 @@ function windows.handleEventData(window, eventData)
 		end
 	elseif eventData[1] == "scroll" then
 		local object, objectIndex = window:getClickedObject(eventData[3], eventData[4])
+		
 		if object then
 			if object.type == GUI.objectTypes.textBox then
 				textBoxScrollHandler(window, object, objectIndex, eventData)

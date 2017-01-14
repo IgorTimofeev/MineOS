@@ -8,7 +8,7 @@
     about="IgorTimofeev/OpenComputers/master/MineOS/About/",
     type="Script",
     forceDownload=true,
-    version=3.43,
+    version=3.44,
   },
   {
     name="MineOS/Pictures/Raspberry.pic",
@@ -253,7 +253,7 @@
     name="lib/MineOSCore.lua",
     url="IgorTimofeev/OpenComputers/master/lib/MineOSCore.lua",
     type="Library",
-    version=1.40,
+    version=1.41,
   },
   {
     name="lib/advancedLua.lua",
@@ -300,13 +300,13 @@
     name="lib/GUI.lua",
     url="IgorTimofeev/OpenComputers/master/lib/GUI.lua",
     type="Library",
-    version=1.27,
+    version=1.28,
   },
   {
     name="lib/windows.lua",
     url="IgorTimofeev/OpenComputers/master/lib/windows.lua",
     type="Library",
-    version=1.09,
+    version=1.10,
   },
   {
     name="lib/rayEngine.lua",
@@ -360,13 +360,13 @@
     name="lib/syntax.lua",
     url="IgorTimofeev/OpenComputers/master/lib/syntax.lua",
     type="Library",
-    version=1.03,
+    version=1.04,
   },
   {
     name="lib/palette.lua",
     url="IgorTimofeev/OpenComputers/master/lib/palette.lua",
     type="Library",
-    version=1.05,
+    version=1.06,
   },
   {
     name="lib/doubleBuffering.lua",
@@ -880,12 +880,12 @@
     version=1.02,
   },
   {
-    name="MineOS/Applications/MineCode",
-    url="IgorTimofeev/OpenComputers/master/Applications/MineCode2/MineCode.lua",
+    name="MineOS/Applications/MineCode IDE",
+    url="IgorTimofeev/OpenComputers/master/Applications/MineCodeIDE/MineCodeIDE.lua",
     type="Application",
-    icon="IgorTimofeev/OpenComputers/master/Applications/MineCode2/Icon.pic",
+    icon="IgorTimofeev/OpenComputers/master/Applications/MineCodeIDE/Icon.pic",
     createShortcut="desktop",
-    version=1.02,
+    version=1.03,
   },
   {
     name="MineOS/Applications/Battleship",
