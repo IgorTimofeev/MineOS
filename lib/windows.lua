@@ -105,30 +105,33 @@ local function menuItemHandler(window, object, objectIndex, eventData)
 end
 
 local function scrollBarHandler(window, object, objectIndex, eventData)
+	local newValue = object.value
+
 	if eventData[1] == "touch" or eventData[1] == "drag" then
 		local delta = object.maximumValue - object.minimumValue + 1
 		if object.height > object.width then
-			object.value = math.floor((eventData[4] - object.y + 1) / object.height * delta)
+			newValue = math.floor((eventData[4] - object.y + 1) / object.height * delta)
 		else
-			object.value = math.floor((eventData[3] - object.x + 1) / object.width * delta)
+			newValue = math.floor((eventData[3] - object.x + 1) / object.width * delta)
 		end
 	elseif eventData[1] == "scroll" then
 		if eventData[5] == 1 then
 			if object.value >= object.minimumValue + object.onScrollValueIncrement then
-				object.value = object.value - object.onScrollValueIncrement
+				newValue = object.value - object.onScrollValueIncrement
 			else
-				object.value = object.minimumValue
+				newValue = object.minimumValue
 			end
 		else
 			if object.value <= object.maximumValue - object.onScrollValueIncrement then
-				object.value = object.value + object.onScrollValueIncrement
+				newValue = object.value + object.onScrollValueIncrement
 			else
-				object.value = object.maximumValue
+				newValue = object.maximumValue
 			end
 		end
 	end
 	window:draw()
 	buffer.draw()
+	object.value = newValue
 	executeObjectMethod(object.onTouch, eventData)
 end
 

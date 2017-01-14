@@ -300,13 +300,13 @@
     name="lib/GUI.lua",
     url="IgorTimofeev/OpenComputers/master/lib/GUI.lua",
     type="Library",
-    version=1.28,
+    version=1.29,
   },
   {
     name="lib/windows.lua",
     url="IgorTimofeev/OpenComputers/master/lib/windows.lua",
     type="Library",
-    version=1.10,
+    version=1.11,
   },
   {
     name="lib/rayEngine.lua",
@@ -884,8 +884,8 @@
     url="IgorTimofeev/OpenComputers/master/Applications/MineCodeIDE/MineCodeIDE.lua",
     type="Application",
     icon="IgorTimofeev/OpenComputers/master/Applications/MineCodeIDE/Icon.pic",
-    createShortcut="desktop",
-    version=1.06,
+    createShortcut="dock",
+    version=1.08,
   },
   {
     name="MineOS/Applications/Battleship",

@@ -1177,7 +1177,7 @@ end
 ----------------------------------------- Text Box object -----------------------------------------
 
 local function drawTextBox(object)
-	if object.colors.background then buffer.square(object.x, object.y, object.width, object.height, object.colors.background, object.colors.text, " ") end
+	if object.colors.background then buffer.square(object.x, object.y, object.width, object.height, object.colors.background, object.colors.text, " ", object.colors.transparency) end
 	local xPos, yPos = GUI.getAlignmentCoordinates(object, {width = 1, height = object.height - object.offset.vertical * 2})
 	local lineLimit = object.width - object.offset.horizontal * 2
 	for line = object.currentLine, object.currentLine + object.height - 1 do

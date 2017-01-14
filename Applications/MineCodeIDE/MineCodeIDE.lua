@@ -6,8 +6,8 @@
 -- package.loaded.windows = nil
 -- package.loaded.MineOSCore = nil
 
-local args = {...}
 require("advancedLua")
+local computer = require("computer")
 local component = require("component")
 local gpu = component.gpu
 local fs = require("filesystem")
@@ -19,14 +19,40 @@ local event = require("event")
 local syntax = require("syntax")
 local unicode = require("unicode")
 local ecs = require("ECSAPI")
+local image = require("image")
 local keyboard = require("keyboard")
 
 ---------------------------------------------------- Constants ----------------------------------------------------
 
 -- "/MineOS/Desktop/MineCode IDE.app/MineCode IDE.lua"
+-- "/MineOS/Applications/MineCode IDE.app/MineCode IDE.lua"
 
-local workPath
-local clipboard
+local args = {...}
+
+local config = {
+	indentaionWidth = 2,
+	colorScheme = {
+		topToolBar = 0xBBBBBB,
+		topMenu = {
+			backgroundColor = 0xEEEEEE,
+			textColor = 0x444444,
+			backgroundPressedColor = 0x3366CC,
+			textPressedColor = 0xFFFFFF,
+		},
+		title = {
+			default = {
+				background = 0xDDDDDD,
+				text = 0x444444
+			},
+			warning = {
+				background = 0x880000,
+				text = 0xEEEEEE,
+			}
+		}
+	},
+	scrollSpeed = 8,
+} 
+
 local cursor = {
 	position = {
 		symbol = 20,
@@ -38,22 +64,40 @@ local cursor = {
 	blinkState = false,
 }
 
+local workPath
+local clipboard
+local lastErrorLine
 local mainWindow = {}
-local config = {
-	indentaionWidth = 2,
-	colorScheme = {
-		topToolBar = 0xBBBBBB,
-		topMenu = {
-			backgroundColor = 0xEEEEEE,
-			textColor = 0x444444,
-			backgroundPressedColor = 0x3366CC,
-			textPressedColor = 0xFFFFFF,
-		},
-	},
-	scrollSpeed = 8,
-}
+
+---------------------------------------------------- Safe launch ----------------------------------------------------
+
+local function showErrorMessage(text)
+	mainWindow.errorMessage.errorTextBox.lines = string.wrap({text}, mainWindow.errorMessage.errorTextBox.width)
+	mainWindow.errorMessage.height = 2 + #mainWindow.errorMessage.errorTextBox.lines
+	mainWindow.errorMessage.backgroundPanel.height = mainWindow.errorMessage.height
+	mainWindow.errorMessage.errorTextBox.height = mainWindow.errorMessage.height - 2
+	
+	mainWindow.titleTextBox.colors.background, mainWindow.titleTextBox.colors.text = config.colorScheme.title.warning.background, config.colorScheme.title.warning.text
+
+	for i = 1, 3 do component.computer.beep(1500, 0.08) end
+	mainWindow.errorMessage.isHidden = false
+end
+
+local function hideErrorMessage()
+	mainWindow.titleTextBox.colors.background = config.colorScheme.title.default.background
+	mainWindow.titleTextBox.colors.text = config.colorScheme.title.default.text
+	mainWindow.errorMessage.isHidden = true
+end
 
 ---------------------------------------------------- Cursor methods ----------------------------------------------------
+
+local function deselectLastErrorLine()
+	if lastErrorLine then mainWindow.codeView.highlights[lastErrorLine] = nil end
+end
+
+local function clearSelection()
+	mainWindow.codeView.selections[1] = nil
+end
 
 local function fixFromLineByCursorPosition()
 	if mainWindow.codeView.fromLine > cursor.position.line then
@@ -92,14 +136,21 @@ local function setCursorPosition(symbol, line)
 	cursor.position.symbol, cursor.position.line = fixCursorPosition(symbol, line)
 	fixFromLineByCursorPosition()
 	fixFromSymbolByCursorPosition()
+	deselectLastErrorLine()
+	clearSelection()
+	hideErrorMessage()
 end
 
 local function convertScreenCoordinatesToCursorPosition(x, y)
 	return x - mainWindow.codeView.codeAreaPosition + mainWindow.codeView.fromSymbol - 1, y - mainWindow.codeView.y + mainWindow.codeView.fromLine
 end
 
-local function clearSelection()
-	mainWindow.codeView.selections[1] = nil
+local function isClickedOnCodeArea(x, y)
+	return
+		x >= mainWindow.codeView.codeAreaPosition and
+		y >= mainWindow.codeView.y and
+		x < mainWindow.width and
+		y < mainWindow.codeView.y + mainWindow.codeView.height - 1
 end
 
 local function moveCursor(symbolOffset, lineOffset)
@@ -116,6 +167,15 @@ end
 
 local function setCursorPositionToEOF()
 	setCursorPosition(unicode.len(mainWindow.codeView.lines[#mainWindow.codeView.lines]) + 1, #mainWindow.codeView.lines)
+end
+
+local function gotoLine(line)
+	mainWindow.codeView.fromLine = math.floor(line - mainWindow.codeView.height / 2) + 1
+	if mainWindow.codeView.fromLine < 1 then
+		mainWindow.codeView.fromLine = 1
+	elseif mainWindow.codeView.fromLine > #mainWindow.codeView.lines then
+		mainWindow.codeView.fromLine = #mainWindow.codeView.lines
+	end
 end
 
 ---------------------------------------------------- File processing methods ----------------------------------------------------
@@ -150,6 +210,7 @@ local function newFile()
 		"end",
 		""
 	}
+	workPath = nil
 	setCursorPositionToEOF()
 end
 
@@ -179,27 +240,42 @@ local function saveAs()
 	)
 	if data[2] == "OK" then
 		saveFile(data[1])
+		workPath = data[1]
 	end
 end
 
+local function save()
+	saveFile(workPath)
+end
+
 local function run()
+	deselectLastErrorLine()
+
 	local loadSuccess, loadReason = load(table.concat(mainWindow.codeView.lines, "\n"))
 	if loadSuccess then
 		local oldResolutionX, oldResolutionY = gpu.getResolution()
 		gpu.setBackground(0x262626); gpu.setForeground(0xFFFFFF); gpu.fill(1, 1, oldResolutionX, oldResolutionY, " "); require("term").setCursor(1, 1)
 		
-		local xpcallSuccess, xpcallReason = xpcall(loadSuccess)
+		local xpcallSuccess, xpcallReason = xpcall(loadSuccess, debug.traceback)
 		if xpcallSuccess then
 			MineOSCore.waitForPressingAnyKey()
-			gpu.setResolution(oldResolutionX, oldResolutionY)
-			buffer.start()
-			mainWindow:draw()
-			buffer:draw()
-		else
-
 		end
-	else
 
+		gpu.setResolution(oldResolutionX, oldResolutionY)
+		buffer.start()
+		mainWindow:draw()
+
+		if not xpcallSuccess then
+			showErrorMessage(xpcallReason)
+		end
+
+		buffer:draw()		
+	else
+		local match = string.match(loadReason, ":(%d+)%:")
+		lastErrorLine = tonumber(match)
+		mainWindow.codeView.highlights[lastErrorLine] = 0xFF4444
+		gotoLine(lastErrorLine)
+		showErrorMessage(loadReason)
 	end
 end
 
@@ -440,16 +516,19 @@ end
 
 local function calculateSizes()
 	if mainWindow.topToolBar.isHidden then
-		mainWindow.codeView.localPosition.y = 2
-		mainWindow.codeView.height = mainWindow.height - 1
+		mainWindow.codeView.localPosition.y, mainWindow.codeView.height = 2, mainWindow.height - 1
+		mainWindow.errorMessage.localPosition.y = 2
 	else
-		mainWindow.codeView.localPosition.y = 5
-		mainWindow.topToolBar.width = mainWindow.width
-		mainWindow.topToolBar.backgroundPanel.width = mainWindow.width
-		mainWindow.titleTextBox.width = math.floor(mainWindow.topToolBar.width * 0.28)
-		mainWindow.titleTextBox.localPosition.x = math.floor(mainWindow.topToolBar.width / 2 - mainWindow.titleTextBox.width / 2)
-		mainWindow.codeView.height = mainWindow.height - 4
+		mainWindow.codeView.localPosition.y, mainWindow.codeView.height = 5, mainWindow.height - 4
+		mainWindow.topToolBar.width, mainWindow.topToolBar.backgroundPanel.width = mainWindow.width, mainWindow.width
+		mainWindow.errorMessage.localPosition.y = 5
 	end
+
+	mainWindow.titleTextBox.width = math.floor(mainWindow.topToolBar.width * 0.32)
+	mainWindow.titleTextBox.localPosition.x = math.floor(mainWindow.topToolBar.width / 2 - mainWindow.titleTextBox.width / 2)
+
+	mainWindow.errorMessage.localPosition.x, mainWindow.errorMessage.width = mainWindow.titleTextBox.localPosition.x, mainWindow.titleTextBox.width
+	mainWindow.errorMessage.backgroundPanel.width, mainWindow.errorMessage.errorTextBox.width = mainWindow.errorMessage.width, mainWindow.errorMessage.width - 4
 
 	mainWindow.topMenu.width = mainWindow.width
 	mainWindow.codeView.width = mainWindow.width
@@ -459,6 +538,12 @@ local function createWindow()
 	mainWindow = windows.fullScreen()
 
 	mainWindow.codeView = mainWindow:addCodeView(1, 1, 1, 1, {""}, 1, 1, 1, {}, {}, true)
+	mainWindow.codeView.scrollBars.vertical.onTouch = function()
+		mainWindow.codeView.fromLine = mainWindow.codeView.scrollBars.vertical.value
+	end
+	mainWindow.codeView.scrollBars.horizontal.onTouch = function()
+		mainWindow.codeView.fromSymbol = mainWindow.codeView.scrollBars.horizontal.value
+	end
 	mainWindow.topMenu = mainWindow:addMenu(1, 1, 1, config.colorScheme.topMenu.backgroundColor, config.colorScheme.topMenu.textColor, config.colorScheme.topMenu.backgroundPressedColor, config.colorScheme.topMenu.textPressedColor)
 	
 	local item1 = mainWindow.topMenu:addItem("MineCode", 0x0)
@@ -467,7 +552,7 @@ local function createWindow()
 		menu:addItem("About", true).onTouch = function()
 			
 		end
-		menu:addItem("Quit MineCode").onTouch = function()
+		menu:addItem("Quit MineCode", false, "^W").onTouch = function()
 			mainWindow:close()
 		end
 		menu:show()
@@ -476,17 +561,17 @@ local function createWindow()
 	local item2 = mainWindow.topMenu:addItem("File")
 	item2.onTouch = function()
 		local menu = GUI.contextMenu(item2.x, item2.y + 1)
-		menu:addItem("New").onTouch = function()
+		menu:addItem("New", false, "^N").onTouch = function()
 			newFile()
 		end
-		menu:addItem("Open").onTouch = function()
+		menu:addItem("Open", false, "^O").onTouch = function()
 			open()
 		end
 		menu:addSeparator()
-		menu:addItem("Save", true).onTouch = function()
-
+		menu:addItem("Save", not workPath, "^S").onTouch = function()
+			save()
 		end
-		menu:addItem("Save as").onTouch = function()
+		menu:addItem("Save as", false, "^⇧S").onTouch = function()
 			saveAs()
 		end
 		menu:show()
@@ -495,7 +580,7 @@ local function createWindow()
 	local item3 = mainWindow.topMenu:addItem("View")
 	item3.onTouch = function()
 		local menu = GUI.contextMenu(item3.x, item3.y + 1)
-		menu:addItem("Togle top toolbar").onTouch = function()
+		menu:addItem("Toggle top toolbar").onTouch = function()
 			mainWindow.topToolBar.isHidden = not mainWindow.topToolBar.isHidden
 			calculateSizes()
 		end
@@ -505,11 +590,12 @@ local function createWindow()
 	-- mainWindow.topMenu:addItem("Properties")
 	mainWindow.topToolBar = mainWindow:addContainer(1, 2, 1, 3)
 	mainWindow.topToolBar.backgroundPanel = mainWindow.topToolBar:addPanel(1, 1, 1, 3, config.colorScheme.topToolBar)
-	mainWindow.titleTextBox = mainWindow.topToolBar:addTextBox(1, 1, 1, 3, 0xDDDDDD, 0x444444, {}, 1):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+	mainWindow.titleTextBox = mainWindow.topToolBar:addTextBox(1, 1, 1, 3, 0x0, 0x0, {}, 1):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
 	mainWindow.runButton = mainWindow.topToolBar:addAdaptiveButton(1, 1, 2, 1, 0x444444, 0xFFFFFF, 0xFFFFFF, 0x444444, "Run")
 	mainWindow.runButton.onTouch = function()
 		run()
 	end
+
 	mainWindow.toggleSyntaxHighlightingButton = mainWindow.topToolBar:addAdaptiveButton(8, 1, 2, 1, 0x262626, 0xDDDDDD, 0x262626, 0xDDDDDD, "Syntax")
 	mainWindow.toggleSyntaxHighlightingButton.onTouch = function()
 		mainWindow.codeView.highlightLuaSyntax = not mainWindow.codeView.highlightLuaSyntax
@@ -521,12 +607,17 @@ local function createWindow()
 		mainWindow.toggleSyntaxHighlightingButton.colors.pressed.background, mainWindow.toggleSyntaxHighlightingButton.colors.pressed.text = color1, color2
 	end
 
+	mainWindow.errorMessage = mainWindow:addContainer(1, 1, 1, 1)
+	mainWindow.errorMessage.backgroundPanel = mainWindow.errorMessage:addPanel(1, 1, 1, 1, 0xFFFFFF, 40)
+	mainWindow.errorMessage.errorTextBox = mainWindow.errorMessage:addTextBox(3, 2, 1, 1, nil, 0x262626, {}, 1)
+	hideErrorMessage()
+
 	mainWindow.onAnyEvent = function(eventData)
 		cursor.blinkState = not cursor.blinkState
 		local oldCursorState = cursor.blinkState
 		cursor.blinkState = true
 			
-		if eventData[1] == "touch" and mainWindow.codeView:isClicked(eventData[3], eventData[4]) then
+		if eventData[1] == "touch" and isClickedOnCodeArea(eventData[3], eventData[4]) then
 			if eventData[5] == 1 then
 				local menu = GUI.contextMenu(eventData[3], eventData[4])
 				menu:addItem("Cut", not mainWindow.codeView.selections[1], "^C").onTouch = function()
@@ -544,10 +635,9 @@ local function createWindow()
 				end
 				menu:show()
 			else
-				clearSelection()
 				setCursorPosition(convertScreenCoordinatesToCursorPosition(eventData[3], eventData[4]))
 			end
-		elseif eventData[1] == "drag" then
+		elseif eventData[1] == "drag" and isClickedOnCodeArea(eventData[3], eventData[4]) then
 			if eventData[5] ~= 1 then
 				mainWindow.codeView.selections[1] = mainWindow.codeView.selections[1] or {from = {}, to = {}}
 				mainWindow.codeView.selections[1].from.symbol, mainWindow.codeView.selections[1].from.line = cursor.position.symbol, cursor.position.line
@@ -582,7 +672,19 @@ local function createWindow()
 					cut()
 				-- W
 				elseif eventData[4] == 17 then
-
+					mainWindow:close()
+				-- N
+				elseif eventData[4] == 49 then
+					newFile()
+				-- O
+				elseif eventData[4] == 24 then
+					open()
+				-- S + Shift
+				elseif eventData[4] == 31 and keyboard.isKeyDown(42) then
+					saveAs()
+				-- S
+				elseif eventData[4] == 31 and workPath then
+					save()
 				end
 			-- Arrows up, down, left, right
 			elseif eventData[4] == 200 then
@@ -664,11 +766,12 @@ mainWindow.drawShadow = false
 mainWindow:draw()
 
 if args[1] == "open" and fs.exists(args[2]) then
-	loadFile("/lib/GUI.lua")
+	loadFile(args[2])
 else
 	newFile()
 end
 
+mainWindow:draw()
 buffer.draw()
 mainWindow:handleEvents(cursor.blinkDelay)
 

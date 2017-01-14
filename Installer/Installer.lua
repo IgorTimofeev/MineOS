@@ -198,8 +198,9 @@ do
     language = data[1],
     dockShortcuts = {
       {path = "/MineOS/Applications/AppMarket.app"},
-      {path = "/MineOS/Applications/VK.app"},
+      {path = "/MineOS/Applications/MineCode IDE.app"},
       {path = "/MineOS/Applications/Photoshop.app"},
+      {path = "/MineOS/Applications/VK.app"},
     }
   }
 
