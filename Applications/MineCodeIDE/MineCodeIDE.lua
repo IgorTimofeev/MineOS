@@ -1,10 +1,13 @@
 
 ---------------------------------------------------- Libraries ----------------------------------------------------
 
-package.loaded.syntax = nil
-package.loaded.GUI = nil
-package.loaded.windows = nil
-package.loaded.MineOSCore = nil
+-- "/MineOS/Desktop/MineCode IDE.app/MineCode IDE.lua"
+-- "/MineOS/Applications/MineCode IDE.app/MineCode IDE.lua"
+
+-- package.loaded.syntax = nil
+-- package.loaded.GUI = nil
+-- package.loaded.windows = nil
+-- package.loaded.MineOSCore = nil
 
 require("advancedLua")
 local computer = require("computer")
@@ -24,13 +27,9 @@ local keyboard = require("keyboard")
 
 ---------------------------------------------------- Constants ----------------------------------------------------
 
--- "/MineOS/Desktop/MineCode IDE.app/MineCode IDE.lua"
--- "/MineOS/Applications/MineCode IDE.app/MineCode IDE.lua"
-
 local args = {...}
 
 local config = {
-	indentaionWidth = 2,
 	colorScheme = {
 		topToolBar = 0xBBBBBB,
 		topMenu = {
@@ -188,7 +187,7 @@ local function loadFile(path)
 	mainWindow.codeView.fromLine, mainWindow.codeView.fromSymbol, mainWindow.codeView.lines, mainWindow.codeView.maximumLineLength = 1, 1, {}, 0
 	local file = io.open(path, "r")
 	for line in file:lines() do
-		line = line:gsub("\t", string.rep(" ", config.indentaionWidth))
+		line = line:gsub("\t", string.rep(" ", mainWindow.codeView.indentationWidth))
 		table.insert(mainWindow.codeView.lines, line)
 		mainWindow.codeView.maximumLineLength = math.max(mainWindow.codeView.maximumLineLength, unicode.len(line))
 	end
@@ -440,11 +439,11 @@ end
 ---------------------------------------------------- Text indentation-related methods ----------------------------------------------------
 
 local function indentLine(line)
-	mainWindow.codeView.lines[line] = string.rep(" ", config.indentaionWidth) .. mainWindow.codeView.lines[line]
+	mainWindow.codeView.lines[line] = string.rep(" ", mainWindow.codeView.indentationWidth) .. mainWindow.codeView.lines[line]
 end
 
 local function unindentLine(line)
-	mainWindow.codeView.lines[line], countOfReplaces = string.gsub(mainWindow.codeView.lines[line], "^" .. string.rep("%s", config.indentaionWidth), "")
+	mainWindow.codeView.lines[line], countOfReplaces = string.gsub(mainWindow.codeView.lines[line], "^" .. string.rep("%s", mainWindow.codeView.indentationWidth), "")
 	return countOfReplaces
 end
 
@@ -466,30 +465,30 @@ local function indentOrUnindent(isIndent)
 		end		
 
 		if isIndent then
-			setCursorPosition(cursor.position.symbol + config.indentaionWidth, cursor.position.line)
-			mainWindow.codeView.selections[1].from.symbol, mainWindow.codeView.selections[1].to.symbol = mainWindow.codeView.selections[1].from.symbol + config.indentaionWidth, mainWindow.codeView.selections[1].to.symbol + config.indentaionWidth
+			setCursorPosition(cursor.position.symbol + mainWindow.codeView.indentationWidth, cursor.position.line)
+			mainWindow.codeView.selections[1].from.symbol, mainWindow.codeView.selections[1].to.symbol = mainWindow.codeView.selections[1].from.symbol + mainWindow.codeView.indentationWidth, mainWindow.codeView.selections[1].to.symbol + mainWindow.codeView.indentationWidth
 		else
 			if countOfReplacesInFirstLine > 0 then
-				mainWindow.codeView.selections[1].from.symbol = mainWindow.codeView.selections[1].from.symbol - config.indentaionWidth
+				mainWindow.codeView.selections[1].from.symbol = mainWindow.codeView.selections[1].from.symbol - mainWindow.codeView.indentationWidth
 				if cursor.position.line == mainWindow.codeView.selections[1].from.line then
-					setCursorPosition(cursor.position.symbol - config.indentaionWidth, cursor.position.line)
+					setCursorPosition(cursor.position.symbol - mainWindow.codeView.indentationWidth, cursor.position.line)
 				end
 			end
 
 			if countOfReplacesInLastLine > 0 then
-				mainWindow.codeView.selections[1].to.symbol = mainWindow.codeView.selections[1].to.symbol - config.indentaionWidth
+				mainWindow.codeView.selections[1].to.symbol = mainWindow.codeView.selections[1].to.symbol - mainWindow.codeView.indentationWidth
 				if cursor.position.line == mainWindow.codeView.selections[1].to.line then
-					setCursorPosition(cursor.position.symbol - config.indentaionWidth, cursor.position.line)
+					setCursorPosition(cursor.position.symbol - mainWindow.codeView.indentationWidth, cursor.position.line)
 				end
 			end
 		end
 	else
 		if isIndent then
 			indentLine(cursor.position.line)
-			setCursorPositionAndClearSelection(cursor.position.symbol + config.indentaionWidth, cursor.position.line)
+			setCursorPositionAndClearSelection(cursor.position.symbol + mainWindow.codeView.indentationWidth, cursor.position.line)
 		else
 			if unindentLine(cursor.position.line) > 0 then
-				setCursorPositionAndClearSelection(cursor.position.symbol - config.indentaionWidth, cursor.position.line)
+				setCursorPositionAndClearSelection(cursor.position.symbol - mainWindow.codeView.indentationWidth, cursor.position.line)
 			end
 		end
 	end
@@ -541,7 +540,7 @@ end
 local function createWindow()
 	mainWindow = windows.fullScreen()
 
-	mainWindow.codeView = mainWindow:addCodeView(1, 1, 1, 1, {""}, 1, 1, 1, {}, {}, true)
+	mainWindow.codeView = mainWindow:addCodeView(1, 1, 1, 1, {""}, 1, 1, 1, {}, {}, true, 2)
 	mainWindow.codeView.scrollBars.vertical.onTouch = function()
 		mainWindow.codeView.fromLine = mainWindow.codeView.scrollBars.vertical.value
 	end

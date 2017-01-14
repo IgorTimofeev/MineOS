@@ -1584,7 +1584,7 @@ local function codeViewDraw(codeView)
 	for i = codeView.fromLine, toLine do
 		if codeView.lines[i] then
 			if codeView.highlightLuaSyntax then
-				syntax.highlightString(codeView.codeAreaPosition - codeView.fromSymbol + 2, y, codeView.lines[i])
+				syntax.highlightString(codeView.codeAreaPosition - codeView.fromSymbol + 2, y, codeView.lines[i], codeView.indentationWidth)
 			else
 				buffer.text(codeView.codeAreaPosition - codeView.fromSymbol + 2, y, syntax.colorScheme.text, codeView.lines[i])
 			end
@@ -1609,7 +1609,7 @@ local function codeViewDraw(codeView)
 	codeView:reimplementedDraw()
 end
 
-function GUI.codeView(x, y, width, height, lines, fromSymbol, fromLine, maximumLineLength, selections, highlights, highlightLuaSyntax)
+function GUI.codeView(x, y, width, height, lines, fromSymbol, fromLine, maximumLineLength, selections, highlights, highlightLuaSyntax, indentationWidth)
 	local codeView = GUI.container(x, y, width, height)
 	
 	codeView.lines = lines
@@ -1619,6 +1619,7 @@ function GUI.codeView(x, y, width, height, lines, fromSymbol, fromLine, maximumL
 	codeView.selections = selections or {}
 	codeView.highlights = highlights or {}
 	codeView.highlightLuaSyntax = highlightLuaSyntax
+	codeView.indentationWidth = indentationWidth
 
 	codeView.scrollBars = {
 		vertical = codeView:addScrollBar(1, 1, 1, 1, 0x0, 0x0, 1, 1, 1, 1, 1, false),

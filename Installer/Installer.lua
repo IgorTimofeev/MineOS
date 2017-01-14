@@ -312,17 +312,20 @@ do
   local thingsToDownload = {}
   for i = 1, #applications do
     if
-      (applications[i].type == "Library" or applications[i].type == "Icon")
-      or
+      not applications[i].preLoadFile and
       (
-        (installOptions ~= "Install only libraries")
-        and
+        (applications[i].type == "Library" or applications[i].type == "Icon")
+        or
         (
-          (applications[i].forceDownload)
-          or
-          (applications[i].type == "Wallpaper" and downloadWallpapers)
-          or
-          (applications[i].type == "Application" and installOptions == "Full installation")
+          (installOptions ~= "Install only libraries")
+          and
+          (
+            (applications[i].forceDownload)
+            or
+            (applications[i].type == "Wallpaper" and downloadWallpapers)
+            or
+            (applications[i].type == "Application" and installOptions == "Full installation")
+          )
         )
       )
     then

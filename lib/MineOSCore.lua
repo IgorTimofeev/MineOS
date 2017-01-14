@@ -278,14 +278,12 @@ function MineOSCore.analyzeIconFormat(iconObject)
 		elseif iconObject.format == ".cfg" or iconObject.format == ".config" then
 			iconObject.iconImage.image = MineOSCore.icons.config
 			iconObject.launch = function()
-				ecs.prepareToExit()
-				MineOSCore.safeLaunch("/bin/edit.lua", iconObject.path)
+				MineOSCore.safeLaunch(MineOSCore.paths.applications .. "/MineCode IDE.app/MineCode IDE.lua", "open", iconObject.path)
 			end
 		elseif iconObject.format == ".txt" or iconObject.format == ".rtf" then
 			iconObject.iconImage.image = MineOSCore.icons.text
 			iconObject.launch = function()
-				ecs.prepareToExit()
-				MineOSCore.safeLaunch("/bin/edit.lua", iconObject.path)
+				MineOSCore.safeLaunch(MineOSCore.paths.applications .. "/MineCode IDE.app/MineCode IDE.lua", "open", iconObject.path)
 			end
 		elseif iconObject.format == ".lua" then
 		 	iconObject.iconImage.image = MineOSCore.icons.lua
@@ -495,7 +493,7 @@ local function drawErrorWindow(path, programVersion, errorLine, reason)
 	end
 	file:close()
 
-	local codeView = window:addCodeView(1, 4, math.floor(width * 0.62), height - 3, lines, 1, fromLine, 100, {}, {[errorLine] = 0xFF4444}, true)
+	local codeView = window:addCodeView(1, 4, math.floor(width * 0.62), height - 3, lines, 1, fromLine, 100, {}, {[errorLine] = 0xFF4444}, true, 2)
 	codeView.scrollBars.horizontal.isHidden = true
 
 	-- Текстбоксик
@@ -717,8 +715,7 @@ function MineOSCore.iconRightClick(icon, eventData)
 	end
 
 	if action == MineOSCore.localization.contextMenuEdit then
-		ecs.prepareToExit()
-		MineOSCore.safeLaunch("/bin/edit.lua", icon.path)
+		MineOSCore.safeLaunch(MineOSCore.paths.applications .. "/MineCode IDE.app/MineCode IDE.lua", "open", icon.path)
 		computer.pushSignal("MineOSCore", "updateFileList")
 	elseif action == "Свойства" then
 		MineOSCore.showPropertiesWindow(eventData[3], eventData[4], 40, icon)

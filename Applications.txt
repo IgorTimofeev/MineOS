@@ -253,7 +253,7 @@
     name="lib/MineOSCore.lua",
     url="IgorTimofeev/OpenComputers/master/lib/MineOSCore.lua",
     type="Library",
-    version=1.42,
+    version=1.43,
   },
   {
     name="lib/advancedLua.lua",
@@ -300,13 +300,13 @@
     name="lib/GUI.lua",
     url="IgorTimofeev/OpenComputers/master/lib/GUI.lua",
     type="Library",
-    version=1.29,
+    version=1.30,
   },
   {
     name="lib/windows.lua",
     url="IgorTimofeev/OpenComputers/master/lib/windows.lua",
     type="Library",
-    version=1.11,
+    version=1.12,
   },
   {
     name="lib/rayEngine.lua",
@@ -360,7 +360,7 @@
     name="lib/syntax.lua",
     url="IgorTimofeev/OpenComputers/master/lib/syntax.lua",
     type="Library",
-    version=1.04,
+    version=1.05,
   },
   {
     name="lib/palette.lua",
@@ -886,7 +886,7 @@
     icon="IgorTimofeev/OpenComputers/master/Applications/MineCodeIDE/Icon.pic",
     createShortcut="dock",
     forceDownload=true,
-    version=1.09,
+    version=1.10,
   },
   {
     name="MineOS/Applications/Battleship",

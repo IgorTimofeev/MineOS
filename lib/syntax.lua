@@ -7,8 +7,10 @@ local syntax = {}
 
 ----------------------------------------------------------------------------------------------------------------------------------------
 
+syntax.indentationSeparator = "┇"
+
 syntax.colorScheme = {
-	background = 0x1b1b1b,
+	background = 0x1E1E1E,
 	text = 0xffffff,
 	strings = 0x99FF80,
 	loops = 0xffff98,
@@ -18,11 +20,12 @@ syntax.colorScheme = {
 	numbers = 0x66DBFF,
 	functions = 0xffcc66,
 	compares = 0xffff98,
-	lineNumbers = 0x262626,
-	lineNumbersText = 0xBBBBBB,
+	lineNumbers = 0x2D2D2D,
+	lineNumbersText = 0xCCCCCC,
 	scrollBarBackground = 0x444444,
 	scrollBarForeground = 0x33B6FF,
 	selection = 0x555555,
+	indentation = 0x2D2D2D,
 }
 
 syntax.patterns = {
@@ -80,17 +83,21 @@ syntax.patterns = {
 ----------------------------------------------------------------------------------------------------------------------------------------
 
 --Нарисовать и подсветить строку
-function syntax.highlightString(x, y, str)
+function syntax.highlightString(x, y, str, indentationWidth)
 	if y >= buffer.drawLimit.y and y <= buffer.drawLimit.y2 then
-		local colors, searchFrom, starting, ending, bufferIndex = {}
+		local stringLength, symbols, colors, searchFrom, starting, ending, bufferIndex = unicode.len(str), {}, {}
+
+		for symbol = 1, stringLength do
+			symbols[symbol] = unicode.sub(str, symbol, symbol)
+		end
 
 		for patternIndex = #syntax.patterns, 1, -1 do
 			searchFrom = 1
 			while true do
 				starting, ending = string.unicodeFind(str, syntax.patterns[patternIndex][1], searchFrom)
 				if starting then
-					for colorIndex = starting + syntax.patterns[patternIndex][3], ending - syntax.patterns[patternIndex][4] do
-						colors[colorIndex] = syntax.colorScheme[syntax.patterns[patternIndex][2]]
+					for symbol = starting + syntax.patterns[patternIndex][3], ending - syntax.patterns[patternIndex][4] do
+						colors[symbol] = syntax.colorScheme[syntax.patterns[patternIndex][2]]
 					end
 				else
 					break
@@ -99,11 +106,26 @@ function syntax.highlightString(x, y, str)
 			end
 		end
 
-		for i = 1, unicode.len(str) do
+		local notSpaceNotFound, indentationSymbolCounter = true, 1
+
+		for symbol = 1, stringLength do
+			if indentationWidth and notSpaceNotFound then
+				if symbols[symbol] == " " then
+					colors[symbol] = syntax.colorScheme.indentation
+					if indentationSymbolCounter == 1 then
+						symbols[symbol] = syntax.indentationSeparator
+						indentationSymbolCounter = indentationWidth + 1
+					end
+				else
+					notSpaceNotFound = false
+				end
+				indentationSymbolCounter = indentationSymbolCounter - 1
+			end
+
 			if x >= buffer.drawLimit.x then
 				bufferIndex = bufferIndex or buffer.getBufferIndexByCoordinates(x, y)
-				buffer.screen.new[bufferIndex + 1] = colors[i] or syntax.colorScheme.text
-				buffer.screen.new[bufferIndex + 2] = unicode.sub(str, i, i)
+				buffer.screen.new[bufferIndex + 1] = colors[symbol] or syntax.colorScheme.text
+				buffer.screen.new[bufferIndex + 2] = symbols[symbol]
 				bufferIndex = bufferIndex + 3
 				if x >= buffer.drawLimit.x2 then break end
 			end
@@ -117,10 +139,14 @@ end
 -- buffer.start()
 -- buffer.clear(0x1b1b1b)
 
--- buffer.square(5, 5, 30, 3, 0x444444, 0x0, " ")
--- buffer.setDrawLimit(5, 5, 30, 3)
--- syntax.highlightString(5, 6, "if not fs.exists(path) then error(\"File \\\"\"..path..\"\\\" doesnt't exsists.\\n\") end")
--- buffer.resetDrawLimit()
+-- buffer.square(5, 5, 30, 3, syntax.colorScheme.background, 0x0, " ")
+-- -- buffer.setDrawLimit(5, 5, 30, 3)
+-- -- syntax.highlightString(5, 6, "if not fs.exists(path) then error(\"File \\\"\"..path..\"\\\" doesnt't exsists.\\n\") end")
+-- syntax.highlightString(5, 6, "for i = 1, 10 do", 2)
+-- syntax.highlightString(5, 7, "  local abc = print(123)", 2)
+-- syntax.highlightString(5, 8, "    local abc = print(123)", 2)
+-- syntax.highlightString(5, 9, "end", 2)
+-- -- buffer.resetDrawLimit()
 
 -- buffer.draw(true)
 
