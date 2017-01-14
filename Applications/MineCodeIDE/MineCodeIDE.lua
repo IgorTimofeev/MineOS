@@ -301,7 +301,8 @@ local function run()
 		gpu.setBackground(0x262626); gpu.setForeground(0xFFFFFF); gpu.fill(1, 1, oldResolutionX, oldResolutionY, " "); require("term").setCursor(1, 1)
 		
 		local xpcallSuccess, xpcallReason = xpcall(loadSuccess, debug.traceback)
-		if xpcallSuccess then
+		local xpcallReasonType = type(xpcallReason)
+		if xpcallSuccess or xpcallReasonType == "table" then
 			MineOSCore.waitForPressingAnyKey()
 		end
 
@@ -309,7 +310,7 @@ local function run()
 		buffer.start()
 		mainWindow:draw()
 
-		if not xpcallSuccess then
+		if not xpcallSuccess and xpcallReasonType ~= "table" then
 			showErrorMessage(xpcallReason)
 		end
 
