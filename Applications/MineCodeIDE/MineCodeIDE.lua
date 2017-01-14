@@ -1,10 +1,10 @@
 
 ---------------------------------------------------- Libraries ----------------------------------------------------
 
--- package.loaded.syntax = nil
--- package.loaded.GUI = nil
--- package.loaded.windows = nil
--- package.loaded.MineOSCore = nil
+package.loaded.syntax = nil
+package.loaded.GUI = nil
+package.loaded.windows = nil
+package.loaded.MineOSCore = nil
 
 require("advancedLua")
 local computer = require("computer")
@@ -137,8 +137,12 @@ local function setCursorPosition(symbol, line)
 	fixFromLineByCursorPosition()
 	fixFromSymbolByCursorPosition()
 	deselectLastErrorLine()
-	clearSelection()
 	hideErrorMessage()
+end
+
+local function setCursorPositionAndClearSelection(symbol, line)
+	setCursorPosition(symbol, line)
+	clearSelection()
 end
 
 local function convertScreenCoordinatesToCursorPosition(x, y)
@@ -162,11 +166,11 @@ local function moveCursor(symbolOffset, lineOffset)
 		newLine, newSymbol = newLine + 1, 1
 	end
 
-	setCursorPosition(newSymbol, newLine)
+	setCursorPositionAndClearSelection(newSymbol, newLine)
 end
 
 local function setCursorPositionToEOF()
-	setCursorPosition(unicode.len(mainWindow.codeView.lines[#mainWindow.codeView.lines]) + 1, #mainWindow.codeView.lines)
+	setCursorPositionAndClearSelection(unicode.len(mainWindow.codeView.lines[#mainWindow.codeView.lines]) + 1, #mainWindow.codeView.lines)
 end
 
 local function gotoLine(line)
@@ -190,7 +194,7 @@ local function loadFile(path)
 	end
 	file:close()
 	workPath = path
-	setCursorPosition(1, 1)
+	setCursorPositionAndClearSelection(1, 1)
 end
 
 local function saveFile(path)
@@ -225,7 +229,7 @@ local function open()
 	)
 	if data[2] == "OK" and fs.exists(data[1]) then
 		loadFile(data[1])
-		setCursorPosition(1, 1)
+		setCursorPositionAndClearSelection(1, 1)
 	end
 end
 
@@ -284,7 +288,7 @@ end
 local function deleteLine(line)
 	if #lines > 0 then
 		table.remove(mainWindow.codeView.lines, line)
-		setCursorPosition(1, cursor.position.line)
+		setCursorPositionAndClearSelection(1, cursor.position.line)
 	end
 end
 
@@ -295,7 +299,7 @@ local function deleteSpecifiedData(fromSymbol, fromLine, toSymbol, toLine)
 		table.remove(mainWindow.codeView.lines, fromLine + 1)
 	end
 	mainWindow.codeView.lines[fromLine] = upperLine .. lowerLine
-	setCursorPosition(fromSymbol, fromLine)
+	setCursorPositionAndClearSelection(fromSymbol, fromLine)
 end
 
 local function deleteSelectedData()
@@ -342,14 +346,14 @@ local function paste(pasteLines)
 
 		if #pasteLines == 1 then
 			mainWindow.codeView.lines[cursor.position.line] = firstPart .. pasteLines[1] .. secondPart
-			setCursorPosition(cursor.position.symbol + unicode.len(pasteLines[1]), cursor.position.line)
+			setCursorPositionAndClearSelection(cursor.position.symbol + unicode.len(pasteLines[1]), cursor.position.line)
 		else
 			mainWindow.codeView.lines[cursor.position.line] = firstPart .. pasteLines[1]
 			for pasteLine = #pasteLines - 1, 2, -1 do
 				table.insert(mainWindow.codeView.lines, cursor.position.line + 1, pasteLines[pasteLine])
 			end
 			table.insert(mainWindow.codeView.lines, cursor.position.line + #pasteLines - 1, pasteLines[#pasteLines] .. secondPart)
-			setCursorPosition(unicode.len(pasteLines[#pasteLines]) + 1, cursor.position.line + #pasteLines - 1)
+			setCursorPositionAndClearSelection(unicode.len(pasteLines[#pasteLines]) + 1, cursor.position.line + #pasteLines - 1)
 		end
 	end
 end
@@ -373,7 +377,7 @@ local function enter()
 	local secondPart = unicode.sub(mainWindow.codeView.lines[cursor.position.line], cursor.position.symbol, -1)
 	mainWindow.codeView.lines[cursor.position.line] = firstPart
 	table.insert(mainWindow.codeView.lines, cursor.position.line + 1, secondPart)
-	setCursorPosition(1, cursor.position.line + 1)
+	setCursorPositionAndClearSelection(1, cursor.position.line + 1)
 end
 
 local function selectAll()
@@ -424,11 +428,11 @@ local function toggleComment()
 	else
 		if isLineCommented(cursor.position.line) then
 			if uncommentLine(cursor.position.line) > 0 then
-				setCursorPosition(cursor.position.symbol - 3, cursor.position.line)
+				setCursorPositionAndClearSelection(cursor.position.symbol - 3, cursor.position.line)
 			end
 		else
 			commentLine(cursor.position.line)
-			setCursorPosition(cursor.position.symbol + 3, cursor.position.line)
+			setCursorPositionAndClearSelection(cursor.position.symbol + 3, cursor.position.line)
 		end
 	end
 end
@@ -482,10 +486,10 @@ local function indentOrUnindent(isIndent)
 	else
 		if isIndent then
 			indentLine(cursor.position.line)
-			setCursorPosition(cursor.position.symbol + config.indentaionWidth, cursor.position.line)
+			setCursorPositionAndClearSelection(cursor.position.symbol + config.indentaionWidth, cursor.position.line)
 		else
 			if unindentLine(cursor.position.line) > 0 then
-				setCursorPosition(cursor.position.symbol - config.indentaionWidth, cursor.position.line)
+				setCursorPositionAndClearSelection(cursor.position.symbol - config.indentaionWidth, cursor.position.line)
 			end
 		end
 	end
@@ -635,7 +639,7 @@ local function createWindow()
 				end
 				menu:show()
 			else
-				setCursorPosition(convertScreenCoordinatesToCursorPosition(eventData[3], eventData[4]))
+				setCursorPositionAndClearSelection(convertScreenCoordinatesToCursorPosition(eventData[3], eventData[4]))
 			end
 		elseif eventData[1] == "drag" and isClickedOnCodeArea(eventData[3], eventData[4]) then
 			if eventData[5] ~= 1 then
