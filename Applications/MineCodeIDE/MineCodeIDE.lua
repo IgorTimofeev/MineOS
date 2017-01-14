@@ -1,7 +1,7 @@
 
 ---------------------------------------------------- Libraries ----------------------------------------------------
 
--- "/MineOS/Applications/MineCode IDE.app/MineCode IDE.lua" open Govno.lua
+-- "/MineOS/Applications/MineCode IDE.app/MineCode IDE.lua" open OS.lua
 
 -- package.loaded.syntax = nil
 -- package.loaded.GUI = nil
@@ -48,6 +48,24 @@ local config = {
 			}
 		}
 	},
+	syntaxColorScheme = {
+		background = 0x1E1E1E,
+		text = 0xffffff,
+		strings = 0x99FF80,
+		loops = 0xffff98,
+		comments = 0x888888,
+		boolean = 0xffcc66,
+		logic = 0xffcc66,
+		numbers = 0x66DBFF,
+		functions = 0xffcc66,
+		compares = 0xffff98,
+		lineNumbers = 0x2D2D2D,
+		lineNumbersText = 0xCCCCCC,
+		scrollBarBackground = 0x444444,
+		scrollBarForeground = 0x33B6FF,
+		selection = 0x555555,
+		indentation = 0x2D2D2D,
+	},
 	scrollSpeed = 8,
 } 
 
@@ -68,6 +86,10 @@ local lastErrorLine
 local mainWindow = {}
 
 ---------------------------------------------------- Safe launch ----------------------------------------------------
+
+local function updateColorScheme()
+	syntax.colorScheme = config.syntaxColorScheme
+end
 
 local function showErrorMessage(text)
 	mainWindow.errorMessage.errorTextBox.lines = string.wrap({text}, mainWindow.errorMessage.errorTextBox.width)
@@ -602,6 +624,27 @@ local function createWindow()
 	local item3 = mainWindow.topMenu:addItem("View")
 	item3.onTouch = function()
 		local menu = GUI.contextMenu(item3.x, item3.y + 1)
+		menu:addItem("Color scheme").onTouch = function()
+			local variants = {}
+			for key in pairs(config.syntaxColorScheme) do
+				table.insert(variants, key)
+			end
+			
+			local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true,
+				{"EmptyLine"},
+				{"CenterText", 0x000000, "Color scheme"},
+				{"EmptyLine"},
+				{"Selector", 0x262626, 0x880000, table.unpack(variants)},
+				{"Color", "Color", 0x000000},
+				{"EmptyLine"},
+				{"Button", {0xAAAAAA, 0xffffff, "OK"}, {0x888888, 0xffffff, MineOSCore.localization.cancel}}
+			)
+
+			if data[#data] == "OK" then
+				config.syntaxColorScheme[data[1]] = data[2]
+			end
+			updateColorScheme()
+		end
 		menu:addItem("Toggle top toolbar").onTouch = function()
 			mainWindow.topToolBar.isHidden = not mainWindow.topToolBar.isHidden
 			calculateSizes()
@@ -788,6 +831,7 @@ end
 
 buffer.start()
 
+updateColorScheme()
 createWindow()
 calculateSizes()
 mainWindow:draw()

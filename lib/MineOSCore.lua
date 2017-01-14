@@ -587,8 +587,12 @@ function MineOSCore.safeLaunch(path, ...)
 			end
 
 			local runSuccess, runReason = xpcall(launchMethod, tracebackMethod)
-			if not runSuccess and not string.match(runReason.traceback, "^table") and not string.find(runReason.traceback, "interrupted", 1, 15) then
-				finalSuccess, finalPath, finalLine, finalTraceback = false, runReason.path, runReason.line, runReason.traceback
+			if type(runReason) == "string" then
+				GUI.error(runReason, {title = {color = 0xFFDB40, text = "Warning"}})
+			else
+				if not runSuccess and not string.match(runReason.traceback, "^table") and not string.find(runReason.traceback, "interrupted", 1, 15) then
+					finalSuccess, finalPath, finalLine, finalTraceback = false, runReason.path, runReason.line, runReason.traceback
+				end
 			end
 		else
 			finalSuccess, finalPath, finalTraceback = false, path, loadReason
