@@ -758,7 +758,7 @@ local function createWindow()
 			end
 		elseif eventData[1] == "clipboard" then
 			local lines = {}
-			for line in data:gmatch("(.+)\n") do
+			for line in eventData[3]:gmatch("(.+)\n") do
 				table.insert(lines, removeTabs(line))
 			end
 			paste({eventData[3]})
