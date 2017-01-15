@@ -834,7 +834,7 @@
     type="Application",
     icon="IgorTimofeev/OpenComputers/master/Applications/PrintImage/Icon.pic",
     createShortcut="desktop",
-    version=1.03,
+    version=1.04,
   },
   {
     name="MineOS/Applications/Palette",
