@@ -7,7 +7,7 @@ local syntax = {}
 
 ----------------------------------------------------------------------------------------------------------------------------------------
 
-syntax.indentationSeparator = "┇"
+syntax.indentationSeparator = "│"
 
 syntax.colorScheme = {
 	background = 0x1E1E1E,
