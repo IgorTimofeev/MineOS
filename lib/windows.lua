@@ -38,14 +38,21 @@ local function executeObjectMethod(method, ...)
 end
 
 local function buttonHandler(window, object, objectIndex, eventData)
-	object.pressed = true
-	window:draw()
-	buffer.draw()
-	os.sleep(0.2)
-	object.pressed = false
-	window:draw()
-	buffer.draw()
-	executeObjectMethod(object.onTouch, eventData)
+	if object.switchMode then
+		object.pressed = not object.pressed
+		window:draw()
+		buffer.draw()
+		executeObjectMethod(object.onTouch, eventData)
+	else
+		object.pressed = true
+		window:draw()
+		buffer.draw()
+		os.sleep(0.2)
+		object.pressed = false
+		window:draw()
+		buffer.draw()
+		executeObjectMethod(object.onTouch, eventData)
+	end
 end
 
 local function tabBarTabHandler(window, object, objectIndex, eventData)

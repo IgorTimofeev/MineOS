@@ -30,7 +30,12 @@ local args = {...}
 
 local config = {
 	colorScheme = {
-		topToolBar = 0xBBBBBB,
+		topToolBar = 0xCCCCCC,
+		bottomToolBar = {
+			background = 0x3C3C3C,
+			buttons = 0x2D2D2D,
+			buttonsText = 0xFFFFFF,
+		},
 		topMenu = {
 			backgroundColor = 0xEEEEEE,
 			textColor = 0x444444,
@@ -80,12 +85,43 @@ local cursor = {
 	blinkState = false,
 }
 
+local findStartFrom
 local workPath
 local clipboard
 local lastErrorLine
 local mainWindow = {}
 
 ---------------------------------------------------- Safe launch ----------------------------------------------------
+
+local function calculateSizes()
+	if mainWindow.topToolBar.isHidden then
+		mainWindow.codeView.localPosition.y, mainWindow.codeView.height = 2, mainWindow.height - 1
+		mainWindow.errorMessage.localPosition.y = 2
+	else
+		mainWindow.codeView.localPosition.y, mainWindow.codeView.height = 5, mainWindow.height - 4
+		mainWindow.errorMessage.localPosition.y = 5
+	end
+
+	if mainWindow.bottomToolBar.isHidden then
+
+	else
+		mainWindow.codeView.height = mainWindow.codeView.height - 3
+	end
+
+	mainWindow.bottomToolBar.localPosition.y, mainWindow.bottomToolBar.width = mainWindow.height - 2, mainWindow.width
+	mainWindow.bottomToolBar.findButton.localPosition.x = mainWindow.bottomToolBar.width - mainWindow.bottomToolBar.findButton.width + 1
+	mainWindow.bottomToolBar.inputTextBox.width = mainWindow.bottomToolBar.width - mainWindow.bottomToolBar.inputTextBox.localPosition.x - mainWindow.bottomToolBar.findButton.width + 1
+
+	mainWindow.topToolBar.width, mainWindow.topToolBar.backgroundPanel.width = mainWindow.width, mainWindow.width
+	mainWindow.titleTextBox.width = math.floor(mainWindow.topToolBar.width * 0.32)
+	mainWindow.titleTextBox.localPosition.x = math.floor(mainWindow.topToolBar.width / 2 - mainWindow.titleTextBox.width / 2)
+
+	mainWindow.errorMessage.localPosition.x, mainWindow.errorMessage.width = mainWindow.titleTextBox.localPosition.x, mainWindow.titleTextBox.width
+	mainWindow.errorMessage.backgroundPanel.width, mainWindow.errorMessage.errorTextBox.width = mainWindow.errorMessage.width, mainWindow.errorMessage.width - 4
+
+	mainWindow.topMenu.width = mainWindow.width
+	mainWindow.codeView.width = mainWindow.width
+end
 
 local function updateColorScheme()
 	syntax.colorScheme = config.syntaxColorScheme
@@ -559,24 +595,51 @@ local function updateTitle()
 	end
 end
 
-local function calculateSizes()
-	if mainWindow.topToolBar.isHidden then
-		mainWindow.codeView.localPosition.y, mainWindow.codeView.height = 2, mainWindow.height - 1
-		mainWindow.errorMessage.localPosition.y = 2
-	else
-		mainWindow.codeView.localPosition.y, mainWindow.codeView.height = 5, mainWindow.height - 4
-		mainWindow.topToolBar.width, mainWindow.topToolBar.backgroundPanel.width = mainWindow.width, mainWindow.width
-		mainWindow.errorMessage.localPosition.y = 5
+local function find()
+	if not mainWindow.bottomToolBar.isHidden and mainWindow.bottomToolBar.inputTextBox.text ~= "" then
+		findStartFrom = findStartFrom + 1
+	
+		for line = findStartFrom, #mainWindow.codeView.lines do
+			local whereToFind, whatToFind = mainWindow.codeView.lines[line], mainWindow.bottomToolBar.inputTextBox.text
+			if not mainWindow.bottomToolBar.caseSensitiveButton.pressed then
+				whereToFind, whatToFind = unicode.lower(whereToFind), unicode.lower(whatToFind)
+			end
+
+			local success, starting, ending = pcall(string.unicodeFind, whereToFind, whatToFind)
+			if success then
+				if starting then
+					mainWindow.codeView.selections[1] = {
+						from = {symbol = starting, line = line},
+						to = {symbol = ending, line = line},
+						color = 0xCC9200
+					}
+					findStartFrom = line
+					gotoLine(line)
+					return
+				end
+			else
+				GUI.error("Wrong searching regex", {title = {color = 0xFFDB40, text = "Warning"}})
+			end
+		end
+
+		findStartFrom = 0
 	end
+end
 
-	mainWindow.titleTextBox.width = math.floor(mainWindow.topToolBar.width * 0.32)
-	mainWindow.titleTextBox.localPosition.x = math.floor(mainWindow.topToolBar.width / 2 - mainWindow.titleTextBox.width / 2)
+local function findFromFirstDisplayedLine()
+	findStartFrom = mainWindow.codeView.fromLine
+	find()
+end
 
-	mainWindow.errorMessage.localPosition.x, mainWindow.errorMessage.width = mainWindow.titleTextBox.localPosition.x, mainWindow.titleTextBox.width
-	mainWindow.errorMessage.backgroundPanel.width, mainWindow.errorMessage.errorTextBox.width = mainWindow.errorMessage.width, mainWindow.errorMessage.width - 4
-
-	mainWindow.topMenu.width = mainWindow.width
-	mainWindow.codeView.width = mainWindow.width
+local function toggleBottomToolbar()
+	mainWindow.bottomToolBar.isHidden = not mainWindow.bottomToolBar.isHidden
+	calculateSizes()
+		
+	if not mainWindow.bottomToolBar.isHidden then
+		mainWindow:draw()
+		mainWindow.bottomToolBar.inputTextBox:input()
+		findFromFirstDisplayedLine()
+	end
 end
 
 local function createWindow()
@@ -653,29 +716,39 @@ local function createWindow()
 		menu:show()
 	end
 
-	-- mainWindow.topMenu:addItem("Properties")
 	mainWindow.topToolBar = mainWindow:addContainer(1, 2, 1, 3)
 	mainWindow.topToolBar.backgroundPanel = mainWindow.topToolBar:addPanel(1, 1, 1, 3, config.colorScheme.topToolBar)
 	mainWindow.titleTextBox = mainWindow.topToolBar:addTextBox(1, 1, 1, 3, 0x0, 0x0, {}, 1):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
-	mainWindow.runButton = mainWindow.topToolBar:addAdaptiveButton(1, 1, 2, 1, 0x444444, 0xFFFFFF, 0xFFFFFF, 0x444444, "Run")
+	mainWindow.runButton = mainWindow.topToolBar:addAdaptiveButton(1, 1, 2, 1, 0x444444, 0xEEEEEE, 0xEEEEEE, 0x444444, "Run")
 	mainWindow.runButton.onTouch = function()
 		run()
 	end
 
-	mainWindow.toggleSyntaxHighlightingButton = mainWindow.topToolBar:addAdaptiveButton(8, 1, 2, 1, 0x262626, 0xDDDDDD, 0x262626, 0xDDDDDD, "Syntax")
+	mainWindow.toggleSyntaxHighlightingButton = mainWindow.topToolBar:addAdaptiveButton(8, 1, 2, 1, 0x3C3C3C, 0xEEEEEE, 0xEEEEEE, 0x3C3C3C, "Syntax")
+	mainWindow.toggleSyntaxHighlightingButton.switchMode = true
 	mainWindow.toggleSyntaxHighlightingButton.onTouch = function()
 		mainWindow.codeView.highlightLuaSyntax = not mainWindow.codeView.highlightLuaSyntax
-		local color1, color2 = 0xDDDDDD, 0x262626
-		if mainWindow.codeView.highlightLuaSyntax then
-			color1, color2 = 0x262626, 0xDDDDDD
-		end
-		mainWindow.toggleSyntaxHighlightingButton.colors.default.background, mainWindow.toggleSyntaxHighlightingButton.colors.default.text = color1, color2
-		mainWindow.toggleSyntaxHighlightingButton.colors.pressed.background, mainWindow.toggleSyntaxHighlightingButton.colors.pressed.text = color1, color2
 	end
+
+	mainWindow.bottomToolBar = mainWindow:addContainer(1, 1, 1, 1)
+	mainWindow.bottomToolBar.caseSensitiveButton = mainWindow.bottomToolBar:addAdaptiveButton(1, 1, 2, 1, 0x3C3C3C, 0xEEEEEE, 0xBBBBBB, 0x2D2D2D, "Aa")
+	mainWindow.bottomToolBar.caseSensitiveButton.switchMode = true
+	mainWindow.bottomToolBar.onTouch = function()
+		find()
+	end
+	mainWindow.bottomToolBar.inputTextBox = mainWindow.bottomToolBar:addInputTextBox(7, 1, 10, 3, 0xEEEEEE, 0xAAAAAA, 0xEEEEEE, 0x2D2D2D, "", "Let's find some shit…")
+	mainWindow.bottomToolBar.inputTextBox.onInputFinished = function()
+		findFromFirstDisplayedLine()
+	end
+	mainWindow.bottomToolBar.findButton = mainWindow.bottomToolBar:addAdaptiveButton(1, 1, 3, 1, 0x3C3C3C, 0xEEEEEE, 0xBBBBBB, 0x2D2D2D, "Find")
+	mainWindow.bottomToolBar.findButton.onTouch = function()
+		find()
+	end
+	mainWindow.bottomToolBar.isHidden = true
 
 	mainWindow.errorMessage = mainWindow:addContainer(1, 1, 1, 1)
 	mainWindow.errorMessage.backgroundPanel = mainWindow.errorMessage:addPanel(1, 1, 1, 1, 0xFFFFFF, 40)
-	mainWindow.errorMessage.errorTextBox = mainWindow.errorMessage:addTextBox(3, 2, 1, 1, nil, 0x262626, {}, 1)
+	mainWindow.errorMessage.errorTextBox = mainWindow.errorMessage:addTextBox(3, 2, 1, 1, nil, 0x2D2D2D, {}, 1)
 	hideErrorMessage()
 
 	mainWindow.onAnyEvent = function(eventData)
@@ -751,6 +824,12 @@ local function createWindow()
 				-- S
 				elseif eventData[4] == 31 and workPath then
 					save()
+				-- F
+				elseif eventData[4] == 33 then
+					toggleBottomToolbar()
+				-- G
+				elseif eventData[4] == 34 then
+					find()
 				end
 			-- Arrows up, down, left, right
 			elseif eventData[4] == 200 then
