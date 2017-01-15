@@ -25,7 +25,7 @@ syntax.colorScheme = {
 	scrollBarBackground = 0x444444,
 	scrollBarForeground = 0x33B6FF,
 	selection = 0x555555,
-	indentation = 0x3C3C3C,
+	indentation = 0x2D2D2D,
 }
 
 syntax.patterns = {
