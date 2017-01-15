@@ -74,33 +74,33 @@ end
 --------------------------------------------------------------------------------------------------------------
 
 local function refreshBigRainbow(width, height)
-	local picture = image.create(width, height, 0x0, 0x0, 0x0, " ")
-	local saturationStep, brightnessStep, saturation, brightness = 100 / width, 100 / height, 0, 100
+	local saturationStep, brightnessStep, saturation, brightness = 100 / width, 100 / (height * 2), 0, 100
 	for j = 1, height do
 		for i = 1, width do
-			image.set(picture, i, j, colorlib.HSBtoHEX(currentColor.hsb.hue, saturation, brightness), 0x0, 0x0, " ")
+			local background = colorlib.HSBtoHEX(currentColor.hsb.hue, saturation, brightness)
+			local foreground = colorlib.HSBtoHEX(currentColor.hsb.hue, saturation, brightness - brightnessStep)
+			image.set(bigRainbow.image, i, j, background, foreground, 0x0, "▄")
 			saturation = saturation + saturationStep
 		end
-		saturation = 0; brightness = brightness - brightnessStep
+		saturation = 0; brightness = brightness - brightnessStep - brightnessStep
 	end
-	return picture
 end
 
 local function refreshMiniRainbow(width, height)
-	local picture = image.create(width, height, 0x0, 0x0, 0x0, " ")
-	local hueStep, hue = 360 / height, 0
+	local hueStep, hue = 360 / (height * 2), 0
 	for j = 1, height do
 		for i = 1, width do
-			image.set(picture, i, j, colorlib.HSBtoHEX(hue, 100, 100), 0x0, 0x0, " ")
+			local background = colorlib.HSBtoHEX(hue, 100, 100)
+			local foreground = colorlib.HSBtoHEX(hue + hueStep, 100, 100)
+			image.set(miniRainbow.image, i, j, background, foreground, 0x0, "▄")
 		end
-		hue = hue + hueStep
+		hue = hue + hueStep + hueStep
 	end
-	return picture
 end
 
 local function refreshRainbows()
-	bigRainbow.image = refreshBigRainbow(50, 25)
-	miniRainbow.image = refreshMiniRainbow(3, 25)
+	refreshBigRainbow(50, 25)
+	refreshMiniRainbow(3, 25)
 end
 
 local function betterVisiblePixel(x, y, symbol)
@@ -271,8 +271,8 @@ function palette.show(x, y, startColor)
 	switchColorFromHex(startColor or 0x00B6FF)
 	createWindow(x, y)
 	createCrestsCoordinates()
-
 	refreshRainbows()
+	
 	window.drawShadow = true
 	drawAll()
 	window.drawShadow = false
@@ -285,7 +285,9 @@ palette.draw = palette.show
 
 --------------------------------------------------------------------------------------------------------------
 
--- ecs.error(palette.show("auto", "auto", 0xFF5555))
+-- buffer.start()
+-- buffer.draw(true)
+-- require("ECSAPI").error(palette.show("auto", "auto", 0xFF5555))
 
 --------------------------------------------------------------------------------------------------------------
 
