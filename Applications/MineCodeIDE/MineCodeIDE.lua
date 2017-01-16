@@ -1061,7 +1061,7 @@ end
 
 buffer.start()
 
--- loadConfig()
+loadConfig()
 createWindow()
 calculateSizes()
 mainWindow:draw()
