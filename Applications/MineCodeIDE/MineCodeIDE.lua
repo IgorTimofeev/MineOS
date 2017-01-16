@@ -364,6 +364,7 @@ local function saveAs()
 	if data[2] == "OK" then
 		saveFile(data[1])
 		workPath = data[1]
+		mainWindow.leftTreeView.workPath = workPath
 	end
 end
 
@@ -993,12 +994,14 @@ local function createWindow()
 				-- O
 				elseif eventData[4] == 24 then
 					open()
-				-- S + Shift
-				elseif eventData[4] == 31 and keyboard.isKeyDown(42) then
-					saveAs()
 				-- S
-				elseif eventData[4] == 31 and workPath then
-					save()
+				elseif eventData[4] == 31 then
+					-- Shift
+					if workPath and not keyboard.isKeyDown(42) then
+						save()
+					else
+						saveAs()
+					end
 				-- F
 				elseif eventData[4] == 33 then
 					toggleBottomToolBar()
