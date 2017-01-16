@@ -886,7 +886,7 @@
     icon="IgorTimofeev/OpenComputers/master/Applications/MineCodeIDE/Icon.pic",
     createShortcut="dock",
     forceDownload=true,
-    version=1.24,
+    version=1.25,
     resources={
       {
         name="Localization/Russian.lang",
@@ -1015,7 +1015,7 @@
     icon="IgorTimofeev/OpenComputers/master/Applications/AppMarket/Icon.pic",
     createShortcut="dock",
     forceDownload=true,
-    version=1.52,
+    version=1.53,
      resources={
       {
         name="Localization/Russian.lang",
