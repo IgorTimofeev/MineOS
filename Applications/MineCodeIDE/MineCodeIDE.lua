@@ -718,7 +718,7 @@ local function createWindow()
 	local item3 = mainWindow.topMenu:addItem(localization.edit)
 	item3.onTouch = function()
 		local menu = GUI.contextMenu(item3.x, item3.y + 1)
-		menu:addItem(localization.cut, not mainWindow.codeView.selections[1], "^C").onTouch = function()
+		menu:addItem(localization.cut, not mainWindow.codeView.selections[1], "^X").onTouch = function()
 			cut()
 		end
 		menu:addItem(localization.copy, not mainWindow.codeView.selections[1], "^C").onTouch = function()
