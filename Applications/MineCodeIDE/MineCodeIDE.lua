@@ -153,7 +153,6 @@ local function showErrorMessage(text)
 	mainWindow.errorMessage.errorTextBox.height = mainWindow.errorMessage.height - 2
 	
 	mainWindow.titleTextBox.colors.background, mainWindow.titleTextBox.colors.text = colors.title.warning.background, colors.title.warning.text
-	mainWindow.titleTextBox.colors.sides = colors.title.warning.sides
 
 	for i = 1, 3 do component.computer.beep(1500, 0.08) end
 	mainWindow.errorMessage.isHidden = false
@@ -161,7 +160,6 @@ end
 
 local function hideErrorMessage()
 	mainWindow.titleTextBox.colors.background, mainWindow.titleTextBox.colors.text = colors.title.default.background, colors.title.default.text
-	mainWindow.titleTextBox.colors.sides = colors.title.default.sides
 	mainWindow.errorMessage.isHidden = true
 end
 
@@ -862,12 +860,12 @@ local function createWindow()
 	mainWindow.topToolBar = mainWindow:addContainer(1, 2, 1, 3)
 	mainWindow.topToolBar.backgroundPanel = mainWindow.topToolBar:addPanel(1, 1, 1, 3, colors.topToolBar)
 	mainWindow.titleTextBox = mainWindow.topToolBar:addTextBox(1, 1, 1, 3, 0x0, 0x0, {}, 1):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
-	mainWindow.titleTextBox.colors.sides = colors.title.default.sides
 	local titleTextBoxOldDraw = mainWindow.titleTextBox.draw
 	mainWindow.titleTextBox.draw = function(titleTextBox)
 		titleTextBoxOldDraw(titleTextBox)
-		buffer.square(titleTextBox.x, titleTextBox.y, 1, titleTextBox.height, mainWindow.titleTextBox.colors.sides, titleTextBox.colors.text, " ")
-		buffer.square(titleTextBox.x + titleTextBox.width - 1, titleTextBox.y, 1, titleTextBox.height, mainWindow.titleTextBox.colors.sides, titleTextBox.colors.text, " ")
+		local sidesColor = mainWindow.errorMessage.isHidden and colors.title.default.sides or colors.title.warning.sides
+		buffer.square(titleTextBox.x, titleTextBox.y, 1, titleTextBox.height, sidesColor, titleTextBox.colors.text, " ")
+		buffer.square(titleTextBox.x + titleTextBox.width - 1, titleTextBox.y, 1, titleTextBox.height, sidesColor, titleTextBox.colors.text, " ")
 	end
 
 	mainWindow.runButton = mainWindow.topToolBar:addAdaptiveButton(1, 1, 3, 1, 0x4B4B4B, 0xEEEEEE, 0xCCCCCC, 0x444444, "▷")
