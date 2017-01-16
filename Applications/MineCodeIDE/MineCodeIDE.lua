@@ -1,7 +1,7 @@
 
 ---------------------------------------------------- Libraries ----------------------------------------------------
 
--- "/MineOS/Applications/MineCode IDE.app/MineCode IDE.lua" open OS.lua
+-- "/MineOS/Applications/MineCode IDE.app/MineCode IDE.lua" open OS.luaad
 
 -- package.loaded.syntax = nil
 -- package.loaded.GUI = nil
@@ -882,7 +882,7 @@ local function createWindow()
 	end
 	mainWindow.bottomToolBar.isHidden = true
 
-	mainWindow.leftTreeView = mainWindow:addTreeView(1, 1, 1, 1, config.colorScheme.leftTreeView.background, 0x2D2D2D, 0x2D2D2D, 0xEEEEEE, 0x888888, 0x444444, 0x00DBFF, "/")
+	mainWindow.leftTreeView = mainWindow:addTreeView(1, 1, 1, 1, config.colorScheme.leftTreeView.background, 0x3C3C3C, 0x3C3C3C, 0xEEEEEE, 0x888888, 0x444444, 0x00DBFF, "/")
 	mainWindow.leftTreeView.onFileSelected = function(path)
 		loadFile(path)
 	end
@@ -1061,7 +1061,7 @@ end
 
 buffer.start()
 
-loadConfig()
+-- loadConfig()
 createWindow()
 calculateSizes()
 mainWindow:draw()
