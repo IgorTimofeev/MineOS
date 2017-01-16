@@ -28,34 +28,37 @@ local keyboard = require("keyboard")
 
 local args = {...}
 
-local config = {
-	colorScheme = {
-		topToolBar = 0xDDDDDD,
-		bottomToolBar = {
+local colors = {
+	topToolBar = 0xDDDDDD,
+	bottomToolBar = {
+		background = 0x3C3C3C,
+		buttons = 0x2D2D2D,
+		buttonsText = 0xFFFFFF,
+	},
+	topMenu = {
+		backgroundColor = 0xEEEEEE,
+		textColor = 0x444444,
+		backgroundPressedColor = 0x3366CC,
+		textPressedColor = 0xFFFFFF,
+	},
+	title = {
+		default = {
+			sides = 0x555555,
 			background = 0x3C3C3C,
-			buttons = 0x2D2D2D,
-			buttonsText = 0xFFFFFF,
+			text = 0xEEEEEE
 		},
-		topMenu = {
-			backgroundColor = 0xEEEEEE,
-			textColor = 0x444444,
-			backgroundPressedColor = 0x3366CC,
-			textPressedColor = 0xFFFFFF,
-		},
-		title = {
-			default = {
-				background = 0x3C3C3C,
-				text = 0xEEEEEE
-			},
-			warning = {
-				background = 0x880000,
-				text = 0xEEEEEE,
-			}
-		},
-		leftTreeView = {
-			background = 0xCCCCCC,
+		warning = {
+			sides = 0xCC4940,
+			background = 0x880000,
+			text = 0xEEEEEE,
 		}
 	},
+	leftTreeView = {
+		background = 0xCCCCCC,
+	}
+}
+
+local config = {
 	syntaxColorScheme = syntax.colorScheme,
 	scrollSpeed = 8,
 	cursorColor = 0x00A8FF,
@@ -76,7 +79,6 @@ local resourcesPath = MineOSCore.getCurrentApplicationResourcesDirectory()
 local configPath = resourcesPath .. "Config.cfg"
 local localization = MineOSCore.getLocalization(resourcesPath .. "Localization/")
 local findStartFrom
-local workPath
 local clipboard
 local lastErrorLine
 local lastClickUptime = computer.uptime()
@@ -150,15 +152,16 @@ local function showErrorMessage(text)
 	mainWindow.errorMessage.backgroundPanel.height = mainWindow.errorMessage.height
 	mainWindow.errorMessage.errorTextBox.height = mainWindow.errorMessage.height - 2
 	
-	mainWindow.titleTextBox.colors.background, mainWindow.titleTextBox.colors.text = config.colorScheme.title.warning.background, config.colorScheme.title.warning.text
+	mainWindow.titleTextBox.colors.background, mainWindow.titleTextBox.colors.text = colors.title.warning.background, colors.title.warning.text
+	mainWindow.titleTextBox.colors.sides = colors.title.warning.sides
 
 	for i = 1, 3 do component.computer.beep(1500, 0.08) end
 	mainWindow.errorMessage.isHidden = false
 end
 
 local function hideErrorMessage()
-	mainWindow.titleTextBox.colors.background = config.colorScheme.title.default.background
-	mainWindow.titleTextBox.colors.text = config.colorScheme.title.default.text
+	mainWindow.titleTextBox.colors.background, mainWindow.titleTextBox.colors.text = colors.title.default.background, colors.title.default.text
+	mainWindow.titleTextBox.colors.sides = colors.title.default.sides
 	mainWindow.errorMessage.isHidden = true
 end
 
@@ -316,8 +319,7 @@ local function loadFile(path)
 		mainWindow.codeView.maximumLineLength = math.max(mainWindow.codeView.maximumLineLength, unicode.len(line))
 	end
 	file:close()
-	workPath = path
-	mainWindow.leftTreeView.currentFile = workPath
+	mainWindow.leftTreeView.currentFile = path
 	if #mainWindow.codeView.lines == 0 then table.insert(mainWindow.codeView.lines, "") end
 	setCursorPositionAndClearSelection(1, 1)
 end
@@ -333,8 +335,7 @@ end
 
 local function newFile()
 	mainWindow.codeView.lines = {""}
-	mainWindow.leftTreeView.currentFile = ""
-	workPath = nil
+	mainWindow.leftTreeView.currentFile = nil
 	setCursorPositionAndClearSelection(1, 1)
 end
 
@@ -363,13 +364,13 @@ local function saveAs()
 	)
 	if data[2] == "OK" then
 		saveFile(data[1])
-		workPath = data[1]
-		mainWindow.leftTreeView.workPath = workPath
+		mainWindow.leftTreeView.currentFile = data[1]
+		mainWindow.leftTreeView:updateFileList()
 	end
 end
 
 local function save()
-	saveFile(workPath)
+	saveFile(mainWindow.leftTreeView.currentFile)
 end
 
 local function run()
@@ -625,8 +626,8 @@ local function indentOrUnindent(isIndent)
 end
 
 local function updateTitle()
-	mainWindow.titleTextBox.lines[1] = string.limit(localization.file .. ": " .. (workPath or localization.none), mainWindow.titleTextBox.width - 2)
-	mainWindow.titleTextBox.lines[2] = string.limit(localization.cursor .. cursor.position.line .. localization.line .. cursor.position.symbol .. localization.symbol, mainWindow.titleTextBox.width - 2)
+	mainWindow.titleTextBox.lines[1] = string.limit(localization.file .. ": " .. (mainWindow.leftTreeView.currentFile or localization.none), mainWindow.titleTextBox.width - 4)
+	mainWindow.titleTextBox.lines[2] = string.limit(localization.cursor .. cursor.position.line .. localization.line .. cursor.position.symbol .. localization.symbol, mainWindow.titleTextBox.width - 4)
 	if mainWindow.codeView.selections[1] then
 		local countOfSelectedLines = mainWindow.codeView.selections[1].to.line - mainWindow.codeView.selections[1].from.line + 1
 		local countOfSelectedSymbols
@@ -639,9 +640,9 @@ local function updateTitle()
 			end
 			countOfSelectedSymbols = countOfSelectedSymbols + unicode.len(unicode.sub(mainWindow.codeView.lines[mainWindow.codeView.selections[1].to.line], 1, mainWindow.codeView.selections[1].to.symbol))
 		end
-		mainWindow.titleTextBox.lines[3] = string.limit(localization.selection .. countOfSelectedLines .. localization.lines .. countOfSelectedSymbols .. localization.symbols, mainWindow.titleTextBox.width - 2)
+		mainWindow.titleTextBox.lines[3] = string.limit(localization.selection .. countOfSelectedLines .. localization.lines .. countOfSelectedSymbols .. localization.symbols, mainWindow.titleTextBox.width - 4)
 	else
-		mainWindow.titleTextBox.lines[3] = string.limit(localization.selection .. localization.none, mainWindow.titleTextBox.width - 2)
+		mainWindow.titleTextBox.lines[3] = string.limit(localization.selection .. localization.none, mainWindow.titleTextBox.width - 4)
 	end
 end
 
@@ -715,7 +716,7 @@ local function createWindow()
 	mainWindow.codeView.scrollBars.horizontal.onTouch = function()
 		mainWindow.codeView.fromSymbol = mainWindow.codeView.scrollBars.horizontal.value
 	end
-	mainWindow.topMenu = mainWindow:addMenu(1, 1, 1, config.colorScheme.topMenu.backgroundColor, config.colorScheme.topMenu.textColor, config.colorScheme.topMenu.backgroundPressedColor, config.colorScheme.topMenu.textPressedColor)
+	mainWindow.topMenu = mainWindow:addMenu(1, 1, 1, colors.topMenu.backgroundColor, colors.topMenu.textColor, colors.topMenu.backgroundPressedColor, colors.topMenu.textPressedColor)
 	
 	local item1 = mainWindow.topMenu:addItem("MineCode", 0x0)
 	item1.onTouch = function()
@@ -739,7 +740,7 @@ local function createWindow()
 			open()
 		end
 		menu:addSeparator()
-		menu:addItem(localization.save, not workPath, "^S").onTouch = function()
+		menu:addItem(localization.save, not mainWindow.leftTreeView.currentFile, "^S").onTouch = function()
 			save()
 		end
 		menu:addItem(localization.saveAs, false, "^⇧S").onTouch = function()
@@ -859,15 +860,22 @@ local function createWindow()
 	end
 
 	mainWindow.topToolBar = mainWindow:addContainer(1, 2, 1, 3)
-	mainWindow.topToolBar.backgroundPanel = mainWindow.topToolBar:addPanel(1, 1, 1, 3, config.colorScheme.topToolBar)
+	mainWindow.topToolBar.backgroundPanel = mainWindow.topToolBar:addPanel(1, 1, 1, 3, colors.topToolBar)
 	mainWindow.titleTextBox = mainWindow.topToolBar:addTextBox(1, 1, 1, 3, 0x0, 0x0, {}, 1):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
-	
+	mainWindow.titleTextBox.colors.sides = colors.title.default.sides
+	local titleTextBoxOldDraw = mainWindow.titleTextBox.draw
+	mainWindow.titleTextBox.draw = function(titleTextBox)
+		titleTextBoxOldDraw(titleTextBox)
+		buffer.square(titleTextBox.x, titleTextBox.y, 1, titleTextBox.height, mainWindow.titleTextBox.colors.sides, titleTextBox.colors.text, " ")
+		buffer.square(titleTextBox.x + titleTextBox.width - 1, titleTextBox.y, 1, titleTextBox.height, mainWindow.titleTextBox.colors.sides, titleTextBox.colors.text, " ")
+	end
+
 	mainWindow.runButton = mainWindow.topToolBar:addAdaptiveButton(1, 1, 3, 1, 0x4B4B4B, 0xEEEEEE, 0xCCCCCC, 0x444444, "▷")
 	mainWindow.runButton.onTouch = function()
 		run()
 	end
 
-	mainWindow.toggleSyntaxHighlightingButton = mainWindow.topToolBar:addAdaptiveButton(1, 1, 3, 1, 0xCCCCCC, 0x444444, 0x5A5A5A, 0xEEEEEE, "*")
+	mainWindow.toggleSyntaxHighlightingButton = mainWindow.topToolBar:addAdaptiveButton(1, 1, 3, 1, 0xCCCCCC, 0x444444, 0x696969, 0xEEEEEE, "*")
 	mainWindow.toggleSyntaxHighlightingButton.switchMode, mainWindow.toggleSyntaxHighlightingButton.pressed = true, true
 	mainWindow.toggleSyntaxHighlightingButton.onTouch = function()
 		mainWindow.codeView.highlightLuaSyntax = not mainWindow.codeView.highlightLuaSyntax
@@ -880,14 +888,14 @@ local function createWindow()
 		calculateSizes()
 	end
 
-	mainWindow.toggleBottomToolBarButton = mainWindow.topToolBar:addAdaptiveButton(1, 1, 3, 1, 0xCCCCCC, 0x444444, 0x5A5A5A, 0xEEEEEE, "⇩")
+	mainWindow.toggleBottomToolBarButton = mainWindow.topToolBar:addAdaptiveButton(1, 1, 3, 1, 0xCCCCCC, 0x444444, 0x696969, 0xEEEEEE, "⇩")
 	mainWindow.toggleBottomToolBarButton.switchMode, mainWindow.toggleBottomToolBarButton.pressed = true, false
 	mainWindow.toggleBottomToolBarButton.onTouch = function()
 		mainWindow.bottomToolBar.isHidden = not mainWindow.toggleBottomToolBarButton.pressed
 		calculateSizes()
 	end
 
-	mainWindow.toggleTopToolBarButton = mainWindow.topToolBar:addAdaptiveButton(1, 1, 3, 1, 0xCCCCCC, 0x444444, 0x696969, 0xEEEEEE, "⇧")
+	mainWindow.toggleTopToolBarButton = mainWindow.topToolBar:addAdaptiveButton(1, 1, 3, 1, 0xCCCCCC, 0x444444, 0x878787, 0xEEEEEE, "⇧")
 	mainWindow.toggleTopToolBarButton.switchMode, mainWindow.toggleTopToolBarButton.pressed = true, true
 	mainWindow.toggleTopToolBarButton.onTouch = function()
 		mainWindow.topToolBar.isHidden = not mainWindow.toggleTopToolBarButton.pressed
@@ -910,7 +918,7 @@ local function createWindow()
 	end
 	mainWindow.bottomToolBar.isHidden = true
 
-	mainWindow.leftTreeView = mainWindow:addTreeView(1, 1, 1, 1, config.colorScheme.leftTreeView.background, 0x3C3C3C, 0x3C3C3C, 0xEEEEEE, 0x888888, 0x444444, 0x00DBFF, "/")
+	mainWindow.leftTreeView = mainWindow:addTreeView(1, 1, 1, 1, colors.leftTreeView.background, 0x3C3C3C, 0x3C3C3C, 0xEEEEEE, 0x888888, 0x444444, 0x00DBFF, "/")
 	mainWindow.leftTreeView.onFileSelected = function(path)
 		loadFile(path)
 	end
@@ -997,7 +1005,7 @@ local function createWindow()
 				-- S
 				elseif eventData[4] == 31 then
 					-- Shift
-					if workPath and not keyboard.isKeyDown(42) then
+					if mainWindow.leftTreeView.currentFile and not keyboard.isKeyDown(42) then
 						save()
 					else
 						saveAs()
@@ -1101,15 +1109,11 @@ buffer.start()
 loadConfig()
 createWindow()
 calculateSizes()
+updateTitle()
 mainWindow:draw()
 
-if args[1] == "open" then
-	if fs.exists(args[2]) then
-		loadFile(args[2])
-	else
-		newFile()
-		workPath = args[2]
-	end
+if args[1] == "open" and fs.exists(args[2] or "") then
+	loadFile(args[2])
 else
 	newFile()
 end

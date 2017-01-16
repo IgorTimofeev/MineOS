@@ -306,7 +306,7 @@
     name="lib/windows.lua",
     url="IgorTimofeev/OpenComputers/master/lib/windows.lua",
     type="Library",
-    version=1.15,
+    version=1.16,
   },
   {
     name="lib/rayEngine.lua",
@@ -366,7 +366,7 @@
     name="lib/palette.lua",
     url="IgorTimofeev/OpenComputers/master/lib/palette.lua",
     type="Library",
-    version=1.08,
+    version=1.09,
   },
   {
     name="lib/doubleBuffering.lua",
@@ -886,7 +886,7 @@
     icon="IgorTimofeev/OpenComputers/master/Applications/MineCodeIDE/Icon.pic",
     createShortcut="dock",
     forceDownload=true,
-    version=1.30,
+    version=1.31,
     resources={
       {
         name="Localization/Russian.lang",

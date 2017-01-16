@@ -254,7 +254,11 @@ end
 function windows.handleEvents(window, pullTime)
 	while true do
 		window:handleEventData({event.pull(pullTime)})
-		if window.dataToReturn then return table.unpack(window.dataToReturn) end
+		if window.dataToReturn then
+			local data = window.dataToReturn
+			window = nil
+			return table.unpack(data)
+		end
 	end
 end
 
@@ -320,7 +324,7 @@ function windows.tabbed(x, y, width, height, minimumWidth, minimumHeight, ...)
 	window:addPanel(1, 1, window.width, window.height, 0xEEEEEE).disabled = true
 	window:addTabBar(1, 1, window.width, 3, 1, 0xDDDDDD, 0x262626, 0xCCCCCC, 0x262626, ...)
 	window:addWindowActionButtons(2, 1, false)
-
+	
 	return window
 end
 

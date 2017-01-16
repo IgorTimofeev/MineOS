@@ -269,7 +269,7 @@ function palette.show(x, y, startColor)
 	buffer.start()
 	loadFavourites()
 	switchColorFromHex(startColor or 0x00B6FF)
-	createWindow(x, y)
+	createWindow(x or "auto", y or "auto")
 	createCrestsCoordinates()
 	refreshRainbows()
 	
