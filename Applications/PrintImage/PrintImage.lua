@@ -3,20 +3,16 @@
 
 -- package.loaded.windows = nil
 
-local libraries = {
-	component = "component",
-	computer = "computer",
-	unicode = "unicode",
-	fs = "filesystem",
-	advancedLua = "advancedLua",
-	colorlib = "colorlib",
-	image = "image",
-	doubleBuffering = "doubleBuffering",
-	GUI = "GUI",
-	windows = "windows",
-}
-
-for library in pairs(libraries) do if not _G[library] then _G[library] = require(libraries[library]) end end; libraries = nil
+local component = require("component")
+local computer = require("computer")
+local unicode = require("unicode")
+local fs = require("filesystem")
+local advancedLua = require("advancedLua")
+local colorlib = require("colorlib")
+local image = require("image")
+local buffer = require("doubleBuffering")
+local GUI = require("GUI")
+local windows = require("windows")
 
 ----------------------------------------- cyka -----------------------------------------
 
@@ -324,6 +320,7 @@ createWindow()
 mainImage = image.load(startImagePath)
 getStatus()
 window:draw()
+buffer.draw()
 
 window:handleEvents()
 
