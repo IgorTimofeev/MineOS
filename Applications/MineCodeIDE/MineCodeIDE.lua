@@ -44,8 +44,8 @@ local config = {
 		},
 		title = {
 			default = {
-				background = 0xCCCCCC,
-				text = 0x444444
+				background = 0x3C3C3C,
+				text = 0xEEEEEE
 			},
 			warning = {
 				background = 0x880000,
@@ -650,6 +650,7 @@ end
 
 local function toggleBottomToolBar()
 	mainWindow.bottomToolBar.isHidden = not mainWindow.bottomToolBar.isHidden
+	mainWindow.toggleBottomToolBarButton.pressed = not mainWindow.bottomToolBar.isHidden
 	calculateSizes()
 		
 	if not mainWindow.bottomToolBar.isHidden then
@@ -661,11 +662,13 @@ end
 
 local function toggleTopToolBar()
 	mainWindow.topToolBar.isHidden = not mainWindow.topToolBar.isHidden
+	mainWindow.toggleTopToolBarButton.pressed = not mainWindow.topToolBar.isHidden
 	calculateSizes()
 end
 
 local function toggleLeftToolBar()
 	mainWindow.leftTreeView.isHidden = not mainWindow.leftTreeView.isHidden
+	mainWindow.toggleLeftToolBarButton.pressed = not mainWindow.leftTreeView.isHidden
 	calculateSizes()
 end
 
@@ -801,30 +804,37 @@ local function createWindow()
 	mainWindow.topToolBar = mainWindow:addContainer(1, 2, 1, 3)
 	mainWindow.topToolBar.backgroundPanel = mainWindow.topToolBar:addPanel(1, 1, 1, 3, config.colorScheme.topToolBar)
 	mainWindow.titleTextBox = mainWindow.topToolBar:addTextBox(1, 1, 1, 3, 0x0, 0x0, {}, 1):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
-	mainWindow.runButton = mainWindow.topToolBar:addAdaptiveButton(1, 1, 3, 1, 0xCCCCCC, 0x444444, 0xBBBBBB, 0x2D2D2D, "▷")
+	
+	mainWindow.runButton = mainWindow.topToolBar:addAdaptiveButton(1, 1, 3, 1, 0x4B4B4B, 0xEEEEEE, 0xCCCCCC, 0x444444, "▷")
 	mainWindow.runButton.onTouch = function()
 		run()
 	end
 
-	mainWindow.toggleSyntaxHighlightingButton = mainWindow.topToolBar:addAdaptiveButton(1, 1, 3, 1, 0xCCCCCC, 0x444444, 0xBBBBBB, 0x2D2D2D, "*")
-	mainWindow.toggleSyntaxHighlightingButton.switchMode = true
+	mainWindow.toggleSyntaxHighlightingButton = mainWindow.topToolBar:addAdaptiveButton(1, 1, 3, 1, 0xCCCCCC, 0x444444, 0x5A5A5A, 0xEEEEEE, "*")
+	mainWindow.toggleSyntaxHighlightingButton.switchMode, mainWindow.toggleSyntaxHighlightingButton.pressed = true, true
 	mainWindow.toggleSyntaxHighlightingButton.onTouch = function()
 		mainWindow.codeView.highlightLuaSyntax = not mainWindow.codeView.highlightLuaSyntax
 	end
 
-	mainWindow.toggleLeftToolBarButton = mainWindow.topToolBar:addAdaptiveButton(1, 1, 3, 1, 0xCCCCCC, 0x444444, 0xBBBBBB, 0x2D2D2D, "⇦")
+	mainWindow.toggleLeftToolBarButton = mainWindow.topToolBar:addAdaptiveButton(1, 1, 3, 1, 0xCCCCCC, 0x444444, 0x4B4B4B, 0xEEEEEE, "⇦")
+	mainWindow.toggleLeftToolBarButton.switchMode, mainWindow.toggleLeftToolBarButton.pressed = true, true
 	mainWindow.toggleLeftToolBarButton.onTouch = function()
-		toggleLeftToolBar()
+		mainWindow.leftTreeView.isHidden = not mainWindow.toggleLeftToolBarButton.pressed
+		calculateSizes()
 	end
 
-	mainWindow.toggleBottomToolBarButton = mainWindow.topToolBar:addAdaptiveButton(1, 1, 3, 1, 0xCCCCCC, 0x444444, 0xBBBBBB, 0x2D2D2D, "⇩")
+	mainWindow.toggleBottomToolBarButton = mainWindow.topToolBar:addAdaptiveButton(1, 1, 3, 1, 0xCCCCCC, 0x444444, 0x5A5A5A, 0xEEEEEE, "⇩")
+	mainWindow.toggleBottomToolBarButton.switchMode, mainWindow.toggleBottomToolBarButton.pressed = true, false
 	mainWindow.toggleBottomToolBarButton.onTouch = function()
-		toggleBottomToolBar()
+		mainWindow.bottomToolBar.isHidden = not mainWindow.toggleBottomToolBarButton.pressed
+		calculateSizes()
 	end
 
-	mainWindow.toggleTopToolBarButton = mainWindow.topToolBar:addAdaptiveButton(1, 1, 3, 1, 0xCCCCCC, 0x444444, 0xBBBBBB, 0x2D2D2D, "⇧")
+	mainWindow.toggleTopToolBarButton = mainWindow.topToolBar:addAdaptiveButton(1, 1, 3, 1, 0xCCCCCC, 0x444444, 0x696969, 0xEEEEEE, "⇧")
+	mainWindow.toggleTopToolBarButton.switchMode, mainWindow.toggleTopToolBarButton.pressed = true, true
 	mainWindow.toggleTopToolBarButton.onTouch = function()
-		toggleTopToolBar()
+		mainWindow.topToolBar.isHidden = not mainWindow.toggleTopToolBarButton.pressed
+		calculateSizes()
 	end
 
 	mainWindow.bottomToolBar = mainWindow:addContainer(1, 1, 1, 1)

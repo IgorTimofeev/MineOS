@@ -144,16 +144,20 @@ end
 
 local function treeViewHandler(window, object, objectIndex, eventData)
 	if eventData[1] == "touch" then
-		local fileListIndex = eventData[4] - object.y + object.fromFile - 1
-		if object.fileList[fileListIndex] then
-			if object.fileList[fileListIndex].isDirectory then
-				object.fileList[fileListIndex].showDirectoryContent = not object.fileList[fileListIndex].showDirectoryContent
+		local fileIndex = eventData[4] - object.y + object.fromFile - 1
+		if object.fileList[fileIndex] then
+			if object.fileList[fileIndex].isDirectory then
+				if object.directoriesToShowContent[object.fileList[fileIndex].path] then
+					object.directoriesToShowContent[object.fileList[fileIndex].path] = nil
+				else
+					object.directoriesToShowContent[object.fileList[fileIndex].path] = true
+				end
 				object:updateFileList()
 				object:draw(); buffer.draw()
 			else
-				object.currentFile = object.fileList[fileListIndex].path
-				executeObjectMethod(object.onFileSelected, object.currentFile)
+				object.currentFile = object.fileList[fileIndex].path
 				object:draw(); buffer.draw()
+				executeObjectMethod(object.onFileSelected, object.currentFile)
 			end
 		end
 	elseif eventData[1] == "scroll" then
@@ -326,7 +330,7 @@ end
 -- buffer.clear(0xFF8888)
 -- buffer.draw(true)
 
--- local myWindow = windows.empty(2, 2, 40, 30, 30, 40)
+-- local myWindow = windows.empty(2, 2, 20, 40, 20, 40)
 -- myWindow:addTreeView(1, 1, myWindow.width, myWindow.height, 0xDDDDDD, 0x2D2D2D, 0x2D2D2D, 0xEEEEEE, 0x555555, 0x444444, 0x00DBFF, "/")
 -- myWindow:draw()
 -- buffer.draw()

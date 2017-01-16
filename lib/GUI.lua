@@ -1664,40 +1664,23 @@ end
 
 ----------------------------------------- Color Selector object -----------------------------------------
 
-local function updateFileList(xOffset, path, fileList, fileListIndex)
-	local fileCounter = 1
-	
+local function updateFileList(treeView, xOffset, path)
 	for file in fs.list(path) do
-		if fileList[fileListIndex] then
-			if fileList[fileListIndex].path == path .. file then
-				if fileList[fileListIndex].showDirectoryContent then
-					fileListIndex = updateFileList(xOffset + 2, path .. file, fileList, fileListIndex + 1) - 1
-				end
-			else
-				fileList[fileListIndex] = {}
-				fileList[fileListIndex].path = path .. file
-				fileList[fileListIndex].isDirectory = fs.isDirectory(fileList[fileListIndex].path)
-				fileList[fileListIndex].xOffset = xOffset
-			end
-		else
-			fileList[fileListIndex] = {}
-			fileList[fileListIndex].path = path .. file
-			fileList[fileListIndex].isDirectory = fs.isDirectory(fileList[fileListIndex].path)
-			fileList[fileListIndex].xOffset = xOffset
-		end
+		local element = {}
+		element.path = path .. file
+		element.xOffset = xOffset
+		element.isDirectory = fs.isDirectory(element.path)
+		table.insert(treeView.fileList, element)
 
-		fileListIndex = fileListIndex + 1
+		if treeView.directoriesToShowContent[element.path] then
+			updateFileList(treeView, xOffset + 2, path .. file)
+		end		
 	end
-
-	return fileListIndex
 end
 
 local function treeViewUpdateFileList(treeView)
-	local fileListIndex = updateFileList(1, treeView.path, treeView.fileList, 1)
-
-	for i = fileListIndex, #treeView.fileList do
-		treeView.fileList[i] = nil
-	end
+	treeView.fileList = {}
+	updateFileList(treeView, 1, treeView.workPath)
 
 	return treeView
 end
@@ -1705,37 +1688,34 @@ end
 local function treeViewDraw(treeView)
 	local y = treeView.y + 1
 	local showScrollBar = #treeView.fileList > treeView.height
+	local textLimit = treeView.width - (showScrollBar and 2 or 1)
 
 	if treeView.colors.default.background then
 		buffer.square(treeView.x, treeView.y, treeView.width, treeView.height, treeView.colors.default.background, treeView.colors.default.text, " ")
 	end
 
-	local drawLimit = buffer.getDrawLimit(); buffer.setDrawLimit(treeView.x, treeView.y, treeView.width - (showScrollBar and 1 or 0), treeView.height)
-	
-	for fileListIndex = treeView.fromFile, #treeView.fileList do
+	for fileIndex = treeView.fromFile, #treeView.fileList do
 		local textColor = treeView.colors.default.text
-		if treeView.fileList[fileListIndex].path == treeView.currentFile then
+		if treeView.fileList[fileIndex].path == treeView.currentFile then
 			textColor = treeView.colors.selected.text
 			buffer.square(treeView.x, y, treeView.width, 1, treeView.colors.selected.background, textColor, " ") 
 		end
 
-		if treeView.fileList[fileListIndex].isDirectory then
-			if treeView.fileList[fileListIndex].showDirectoryContent then
-				buffer.text(treeView.x + treeView.fileList[fileListIndex].xOffset, y, treeView.colors.arrow, "▽")
-				buffer.text(treeView.x + treeView.fileList[fileListIndex].xOffset + 2, y, textColor, "■ " .. fs.name(treeView.fileList[fileListIndex].path))
+		if treeView.fileList[fileIndex].isDirectory then
+			if treeView.fileList[fileIndex].showDirectoryContent then
+				buffer.text(treeView.x + treeView.fileList[fileIndex].xOffset, y, treeView.colors.arrow, "▽")
+				buffer.text(treeView.x + treeView.fileList[fileIndex].xOffset + 2, y, textColor, unicode.sub("■ " .. fs.name(treeView.fileList[fileIndex].path), 1, textLimit - treeView.fileList[fileIndex].xOffset - 2))
 			else
-				buffer.text(treeView.x + treeView.fileList[fileListIndex].xOffset, y, treeView.colors.arrow, "▷")
-				buffer.text(treeView.x + treeView.fileList[fileListIndex].xOffset + 2, y, textColor, "■ " .. fs.name(treeView.fileList[fileListIndex].path))
+				buffer.text(treeView.x + treeView.fileList[fileIndex].xOffset, y, treeView.colors.arrow, "▷")
+				buffer.text(treeView.x + treeView.fileList[fileIndex].xOffset + 2, y, textColor, unicode.sub("■ " .. fs.name(treeView.fileList[fileIndex].path), 1, textLimit - treeView.fileList[fileIndex].xOffset - 2))
 			end
 		else
-			buffer.text(treeView.x + treeView.fileList[fileListIndex].xOffset, y, textColor, "  □ " .. fs.name(treeView.fileList[fileListIndex].path))
+			buffer.text(treeView.x + treeView.fileList[fileIndex].xOffset, y, textColor, unicode.sub("  □ " .. fs.name(treeView.fileList[fileIndex].path), 1, textLimit - treeView.fileList[fileIndex].xOffset))
 		end
 
 		y = y + 1
 		if y > treeView.y + treeView.height - 2 then break end
 	end
-
-	buffer.setDrawLimit(drawLimit)
 
 	if showScrollBar then
 		GUI.scrollBar(
@@ -1774,8 +1754,9 @@ function GUI.treeView(x, y, width, height, backgroundColor, textColor, selection
 		},
 		arrow = arrowColor
 	}
+	treeView.directoriesToShowContent = {}
 	treeView.fileList = {}
-	treeView.path = workPath
+	treeView.workPath = workPath
 
 	treeView.updateFileList = treeViewUpdateFileList
 	treeView.draw = treeViewDraw
