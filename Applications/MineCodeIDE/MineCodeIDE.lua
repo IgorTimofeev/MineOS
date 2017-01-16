@@ -245,6 +245,14 @@ local function setCursorPositionToEnd()
 	setCursorPositionAndClearSelection(unicode.len(mainWindow.codeView.lines[#mainWindow.codeView.lines]) + 1, #mainWindow.codeView.lines)
 end
 
+local function pageUp()
+	scroll(1, mainWindow.codeView.height - 2)
+end
+
+local function pageDown()
+	scroll(-1, mainWindow.codeView.height - 2)
+end
+
 local function scroll(direction, speed)
 	if direction == 1 then
 		if mainWindow.codeView.fromLine > speed then
@@ -737,6 +745,9 @@ local function createWindow()
 		menu:addItem(localization.unindent, false, "⇧Tab").onTouch = function()
 			indentOrUnindent(false)
 		end
+		menu:addItem(localization.deleteLine, false, "^Del").onTouch = function()
+			deleteLine(cursor.position.line)
+		end
 		menu:addSeparator()
 		menu:addItem(localization.selectAll, false, "^A").onTouch = function()
 			selectAll()
@@ -797,6 +808,24 @@ local function createWindow()
 		end
 		menu:addItem(localization.toggleTopToolBar).onTouch = function()
 			toggleTopToolBar()
+		end
+		menu:show()
+	end
+
+	local item5 = mainWindow.topMenu:addItem(localization.gotoCyka)
+	item5.onTouch = function()
+		local menu = GUI.contextMenu(item5.x, item5.y + 1)
+		menu:addItem(localization.pageUp, false, "PgUp").onTouch = function()
+			pageUp()
+		end
+		menu:addItem(localization.pageDown, false, "PgDn").onTouch = function()
+			pageDown()
+		end
+		menu:addItem(localization.gotoStart, false, "Home").onTouch = function()
+			setCursorPositionToHome()
+		end
+		menu:addItem(localization.gotoEnd, false, "End").onTouch = function()
+			setCursorPositionToEnd()
 		end
 		menu:show()
 	end
@@ -871,7 +900,7 @@ local function createWindow()
 		if eventData[1] == "touch" and isClickedOnCodeArea(eventData[3], eventData[4]) then
 			if eventData[5] == 1 then
 				local menu = GUI.contextMenu(eventData[3], eventData[4])
-				menu:addItem(localization.cut, not mainWindow.codeView.selections[1], "^C").onTouch = function()
+				menu:addItem(localization.cut, not mainWindow.codeView.selections[1], "^X").onTouch = function()
 					cut()
 				end
 				menu:addItem(localization.copy, not mainWindow.codeView.selections[1], "^C").onTouch = function()
@@ -982,10 +1011,10 @@ local function createWindow()
 				setCursorPositionToEnd()
 			-- Page Up
 			elseif eventData[4] == 201 then
-				scroll(1, mainWindow.codeView.height - 2)
+				pageUp()
 			-- Page Down
 			elseif eventData[4] == 209 then
-				scroll(-1, mainWindow.codeView.height - 2)
+				pageDown()
 			-- Delete
 			elseif eventData[4] == 211 then
 				delete()

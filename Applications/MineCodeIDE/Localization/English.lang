@@ -1,4 +1,10 @@
 {
+	gotoCyka = "Goto",
+	gotoEnd = "Scroll to end",
+	gotoStart = "Scroll to start",
+	pageDown = "Page down",
+	pageUp = "Page up",
+	deleteLine = "Delete current line",
 	cursorProperties = "Cursor properties",
 	cursorSymbol = "Symbol",
 	cursorColor = "Color",
