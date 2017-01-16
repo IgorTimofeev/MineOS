@@ -15,7 +15,7 @@ syntax.colorScheme = {
 	strings = 0x99FF80,
 	loops = 0xffff98,
 	comments = 0x888888,
-	boolean = 0xffcc66,
+	boolean = 0xFFDB40,
 	logic = 0xffcc66,
 	numbers = 0x66DBFF,
 	functions = 0xffcc66,
@@ -25,7 +25,7 @@ syntax.colorScheme = {
 	scrollBarBackground = 0x444444,
 	scrollBarForeground = 0x33B6FF,
 	selection = 0x555555,
-	indentation = 0x2D2D2D,
+	indentation = 0x3C3C3C,
 }
 
 syntax.patterns = {
@@ -53,6 +53,8 @@ syntax.patterns = {
 	{ "else$", "loops", 0, 0 },
 	{ "else[%s%;]", "loops", 0, 1 },
 	{ "elseif ", "loops", 0, 1 },
+	{ " break$", "loops", 0, 0 },
+	{ " break ", "loops", 0, 0 },
 
 	--Состояния переменной
 	{ "true", "boolean", 0, 0 },
@@ -60,16 +62,13 @@ syntax.patterns = {
 	{ "nil", "boolean", 0, 0 },
 			
 	--Функции
-	{ "[%s%=%{%(][%a%d%_%-%.%:]+%(", "functions", 1, 1 },
-	{ "^[%a%d%_%-%.%=%:]+%(", "functions", 0, 1 },
+	{ "[%s%=%{%(][^%s%(%)%{%}%[%]]+%(", "functions", 1, 1 },
+	{ "^[^%s%(%)%{%}%[%]]+%(", "functions", 0, 1 },
 	
 	--Логические выражения
 	{ " and ", "logic", 0, 1 },
 	{ " or ", "logic", 0, 1 },
 	{ " not ", "logic", 0, 1 },
-	{ " break$", "logic", 0, 0 },
-	{ "^break", "logic", 0, 0 },
-	{ " break ", "logic", 0, 0 },
 	{ "[^%d]%.+[^%d]", "logic", 1, 1 },
 
 	--Сравнения и мат. операции
@@ -77,7 +76,8 @@ syntax.patterns = {
 
 	--Числа
 	{ "0x%w+", "numbers", 0, 0 },
-	{ "[%.%d]+", "numbers", 0, 0 },
+	{ "[^%a%d][%.%d]+$", "numbers", 1, 0 },
+	{ "[^%a%d][%.%d]+[^%a%d]", "numbers", 1, 1 },
 }
 
 ----------------------------------------------------------------------------------------------------------------------------------------

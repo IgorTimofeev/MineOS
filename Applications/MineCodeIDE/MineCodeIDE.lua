@@ -30,7 +30,7 @@ local args = {...}
 
 local config = {
 	colorScheme = {
-		topToolBar = 0xCCCCCC,
+		topToolBar = 0xDDDDDD,
 		bottomToolBar = {
 			background = 0x3C3C3C,
 			buttons = 0x2D2D2D,
@@ -44,60 +44,73 @@ local config = {
 		},
 		title = {
 			default = {
-				background = 0xDDDDDD,
+				background = 0xCCCCCC,
 				text = 0x444444
 			},
 			warning = {
 				background = 0x880000,
 				text = 0xEEEEEE,
 			}
+		},
+		leftTreeView = {
+			background = 0xCCCCCC,
 		}
 	},
-	syntaxColorScheme = {
-		background = 0x1E1E1E,
-		text = 0xffffff,
-		strings = 0x99FF80,
-		loops = 0xffff98,
-		comments = 0x888888,
-		boolean = 0xffcc66,
-		logic = 0xffcc66,
-		numbers = 0x66DBFF,
-		functions = 0xffcc66,
-		compares = 0xffff98,
-		lineNumbers = 0x2D2D2D,
-		lineNumbersText = 0xCCCCCC,
-		scrollBarBackground = 0x444444,
-		scrollBarForeground = 0x33B6FF,
-		selection = 0x555555,
-		indentation = 0x2D2D2D,
-	},
+	syntaxColorScheme = syntax.colorScheme,
 	scrollSpeed = 8,
-} 
+	cursorColor = 0x00A8FF,
+	cursorSymbol = "┃",
+	cursorBlinkDelay = 0.4,
+}
 
 local cursor = {
 	position = {
 		symbol = 20,
 		line = 8
 	},
-	color = 0x00A8FF,
-	symbol = "┃",
-	blinkDelay = 0.4,
-	blinkState = false,
+	blinkState = false
 }
 
+local configPath = MineOSCore.paths.system .. "MineCode/Config.cfg"
+local localization = MineOSCore.getCurrentApplicationLocalization()
 local findStartFrom
 local workPath
 local clipboard
 local lastErrorLine
 local mainWindow = {}
 
----------------------------------------------------- Safe launch ----------------------------------------------------
+---------------------------------------------------- Functions ----------------------------------------------------
+
+local function saveConfig()
+	table.toFile(configPath, config)
+end
+
+local function loadConfig()
+	if fs.exists(configPath) then
+		config = table.fromFile(configPath)
+		syntax.colorScheme = config.syntaxColorScheme
+	else
+		saveConfig()
+	end
+end
 
 local function calculateSizes()
+	mainWindow.leftTreeView.width = math.floor(mainWindow.width * 0.16)
+
+	if mainWindow.leftTreeView.isHidden then
+		mainWindow.codeView.localPosition.x, mainWindow.codeView.width = 1, mainWindow.width
+		mainWindow.bottomToolBar.localPosition.x, mainWindow.bottomToolBar.width = mainWindow.codeView.localPosition.x, mainWindow.codeView.width
+	else
+		mainWindow.codeView.localPosition.x, mainWindow.codeView.width = mainWindow.leftTreeView.width + 1, mainWindow.width - mainWindow.leftTreeView.width
+		mainWindow.bottomToolBar.localPosition.x, mainWindow.bottomToolBar.width = mainWindow.codeView.localPosition.x, mainWindow.codeView.width
+	end
+
 	if mainWindow.topToolBar.isHidden then
+		mainWindow.leftTreeView.localPosition.y, mainWindow.leftTreeView.height = 2, mainWindow.height - 1
 		mainWindow.codeView.localPosition.y, mainWindow.codeView.height = 2, mainWindow.height - 1
 		mainWindow.errorMessage.localPosition.y = 2
 	else
+		mainWindow.leftTreeView.localPosition.y, mainWindow.leftTreeView.height = 5, mainWindow.height - 4
 		mainWindow.codeView.localPosition.y, mainWindow.codeView.height = 5, mainWindow.height - 4
 		mainWindow.errorMessage.localPosition.y = 5
 	end
@@ -108,23 +121,24 @@ local function calculateSizes()
 		mainWindow.codeView.height = mainWindow.codeView.height - 3
 	end
 
-	mainWindow.bottomToolBar.localPosition.y, mainWindow.bottomToolBar.width = mainWindow.height - 2, mainWindow.width
+
+	mainWindow.bottomToolBar.localPosition.y = mainWindow.height - 2
 	mainWindow.bottomToolBar.findButton.localPosition.x = mainWindow.bottomToolBar.width - mainWindow.bottomToolBar.findButton.width + 1
 	mainWindow.bottomToolBar.inputTextBox.width = mainWindow.bottomToolBar.width - mainWindow.bottomToolBar.inputTextBox.localPosition.x - mainWindow.bottomToolBar.findButton.width + 1
 
 	mainWindow.topToolBar.width, mainWindow.topToolBar.backgroundPanel.width = mainWindow.width, mainWindow.width
 	mainWindow.titleTextBox.width = math.floor(mainWindow.topToolBar.width * 0.32)
 	mainWindow.titleTextBox.localPosition.x = math.floor(mainWindow.topToolBar.width / 2 - mainWindow.titleTextBox.width / 2)
+	mainWindow.runButton.localPosition.x = mainWindow.titleTextBox.localPosition.x - mainWindow.runButton.width - 2
+	mainWindow.toggleSyntaxHighlightingButton.localPosition.x = mainWindow.runButton.localPosition.x - mainWindow.toggleSyntaxHighlightingButton.width - 2
+	mainWindow.toggleLeftToolBarButton.localPosition.x = mainWindow.titleTextBox.localPosition.x + mainWindow.titleTextBox.width + 2
+	mainWindow.toggleBottomToolBarButton.localPosition.x = mainWindow.toggleLeftToolBarButton.localPosition.x + mainWindow.toggleLeftToolBarButton.width + 2
+	mainWindow.toggleTopToolBarButton.localPosition.x = mainWindow.toggleBottomToolBarButton.localPosition.x + mainWindow.toggleBottomToolBarButton.width + 2
 
 	mainWindow.errorMessage.localPosition.x, mainWindow.errorMessage.width = mainWindow.titleTextBox.localPosition.x, mainWindow.titleTextBox.width
 	mainWindow.errorMessage.backgroundPanel.width, mainWindow.errorMessage.errorTextBox.width = mainWindow.errorMessage.width, mainWindow.errorMessage.width - 4
 
 	mainWindow.topMenu.width = mainWindow.width
-	mainWindow.codeView.width = mainWindow.width
-end
-
-local function updateColorScheme()
-	syntax.colorScheme = config.syntaxColorScheme
 end
 
 local function showErrorMessage(text)
@@ -144,8 +158,6 @@ local function hideErrorMessage()
 	mainWindow.titleTextBox.colors.text = config.colorScheme.title.default.text
 	mainWindow.errorMessage.isHidden = true
 end
-
----------------------------------------------------- Cursor methods ----------------------------------------------------
 
 local function deselectLastErrorLine()
 	if lastErrorLine then mainWindow.codeView.highlights[lastErrorLine] = nil end
@@ -258,8 +270,6 @@ local function gotoLine(line)
 	end
 end
 
----------------------------------------------------- File processing methods ----------------------------------------------------
-
 local function removeTabs(text)
 	local result = text:gsub("\t", string.rep(" ", mainWindow.codeView.indentationWidth))
 	return result
@@ -275,6 +285,7 @@ local function loadFile(path)
 	end
 	file:close()
 	workPath = path
+	mainWindow.leftTreeView.currentFile = workPath
 	if #mainWindow.codeView.lines == 0 then table.insert(mainWindow.codeView.lines, "") end
 	setCursorPositionAndClearSelection(1, 1)
 end
@@ -290,6 +301,7 @@ end
 
 local function newFile()
 	mainWindow.codeView.lines = {""}
+	mainWindow.leftTreeView.currentFile = ""
 	workPath = nil
 	setCursorPositionAndClearSelection(1, 1)
 end
@@ -297,7 +309,7 @@ end
 local function open()
 	local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true,
 		{"EmptyLine"},
-		{"CenterText", 0x000000, "Open file"},
+		{"CenterText", 0x000000, localization.openFile},
 		{"EmptyLine"},
 		{"Input", 0x262626, 0x880000, ""},
 		{"EmptyLine"},
@@ -305,14 +317,13 @@ local function open()
 	)
 	if data[2] == "OK" and fs.exists(data[1]) then
 		loadFile(data[1])
-		setCursorPositionAndClearSelection(1, 1)
 	end
 end
 
 local function saveAs()
 	local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true,
 		{"EmptyLine"},
-		{"CenterText", 0x000000, "Save as"},
+		{"CenterText", 0x000000, localization.saveAs},
 		{"EmptyLine"},
 		{"Input", 0x262626, 0x880000, ""},
 		{"EmptyLine"},
@@ -360,10 +371,8 @@ local function run()
 	end
 end
 
----------------------------------------------------- Text processing methods ----------------------------------------------------
-
 local function deleteLine(line)
-	if #lines > 0 then
+	if #mainWindow.codeView.lines > 1 then
 		table.remove(mainWindow.codeView.lines, line)
 		setCursorPositionAndClearSelection(1, cursor.position.line)
 	end
@@ -435,6 +444,20 @@ local function paste(pasteLines)
 	end
 end
 
+local function delete()
+	if mainWindow.codeView.selections[1] then
+		deleteSelectedData()
+	else
+		if cursor.position.symbol < unicode.len(mainWindow.codeView.lines[cursor.position.line]) - 1 then
+			deleteSpecifiedData(cursor.position.symbol, cursor.position.line, cursor.position.symbol, cursor.position.line)
+		else
+			if cursor.position.line > 1 then
+				deleteSpecifiedData(unicode.len(mainWindow.codeView.lines[cursor.position.line]) + 1, cursor.position.line, 0, cursor.position.line + 1)
+			end
+		end
+	end
+end
+
 local function backspace()
 	if mainWindow.codeView.selections[1] then
 		deleteSelectedData()
@@ -462,8 +485,6 @@ local function selectAll()
 	mainWindow.codeView.selections[1].from.symbol, mainWindow.codeView.selections[1].from.line = 1, 1
 	mainWindow.codeView.selections[1].to.symbol, mainWindow.codeView.selections[1].to.line = unicode.len(mainWindow.codeView.lines[#mainWindow.codeView.lines]), #mainWindow.codeView.lines
 end
-
----------------------------------------------------- Text comments-related methods ----------------------------------------------------
 
 local function isLineCommented(line)
 	return mainWindow.codeView.lines[line]:match("%-%-[^%-]")
@@ -513,8 +534,6 @@ local function toggleComment()
 		end
 	end
 end
-
----------------------------------------------------- Text indentation-related methods ----------------------------------------------------
 
 local function indentLine(line)
 	mainWindow.codeView.lines[line] = string.rep(" ", mainWindow.codeView.indentationWidth) .. mainWindow.codeView.lines[line]
@@ -572,11 +591,9 @@ local function indentOrUnindent(isIndent)
 	end
 end
 
----------------------------------------------------- Main window related methods ----------------------------------------------------
-
 local function updateTitle()
-	mainWindow.titleTextBox.lines[1] = "File: " .. (workPath or "none")
-	mainWindow.titleTextBox.lines[2] = "Cursor: " .. cursor.position.line .. " line, " .. cursor.position.symbol .. " symbol"
+	mainWindow.titleTextBox.lines[1] = string.limit(localization.file .. ": " .. (workPath or localization.none), mainWindow.titleTextBox.width - 2)
+	mainWindow.titleTextBox.lines[2] = string.limit(localization.cursor .. cursor.position.line .. localization.line .. cursor.position.symbol .. localization.symbol, mainWindow.titleTextBox.width - 2)
 	if mainWindow.codeView.selections[1] then
 		local countOfSelectedLines = mainWindow.codeView.selections[1].to.line - mainWindow.codeView.selections[1].from.line + 1
 		local countOfSelectedSymbols
@@ -589,9 +606,9 @@ local function updateTitle()
 			end
 			countOfSelectedSymbols = countOfSelectedSymbols + unicode.len(unicode.sub(mainWindow.codeView.lines[mainWindow.codeView.selections[1].to.line], 1, mainWindow.codeView.selections[1].to.symbol))
 		end
-		mainWindow.titleTextBox.lines[3] = "Selection: " .. countOfSelectedLines .. " lines, " .. countOfSelectedSymbols .. " symbols"
+		mainWindow.titleTextBox.lines[3] = string.limit(localization.selection .. countOfSelectedLines .. localization.lines .. countOfSelectedSymbols .. localization.symbols, mainWindow.titleTextBox.width - 2)
 	else
-		mainWindow.titleTextBox.lines[3] = "Selection: none"
+		mainWindow.titleTextBox.lines[3] = string.limit(localization.selection .. localization.none, mainWindow.titleTextBox.width - 2)
 	end
 end
 
@@ -631,7 +648,7 @@ local function findFromFirstDisplayedLine()
 	find()
 end
 
-local function toggleBottomToolbar()
+local function toggleBottomToolBar()
 	mainWindow.bottomToolBar.isHidden = not mainWindow.bottomToolBar.isHidden
 	calculateSizes()
 		
@@ -640,6 +657,16 @@ local function toggleBottomToolbar()
 		mainWindow.bottomToolBar.inputTextBox:input()
 		findFromFirstDisplayedLine()
 	end
+end
+
+local function toggleTopToolBar()
+	mainWindow.topToolBar.isHidden = not mainWindow.topToolBar.isHidden
+	calculateSizes()
+end
+
+local function toggleLeftToolBar()
+	mainWindow.leftTreeView.isHidden = not mainWindow.leftTreeView.isHidden
+	calculateSizes()
 end
 
 local function createWindow()
@@ -657,38 +684,67 @@ local function createWindow()
 	local item1 = mainWindow.topMenu:addItem("MineCode", 0x0)
 	item1.onTouch = function()
 		local menu = GUI.contextMenu(item1.x, item1.y + 1)
-		menu:addItem("About", true).onTouch = function()
+		menu:addItem(localization.about, true).onTouch = function()
 			
 		end
-		menu:addItem("Quit MineCode", false, "^W").onTouch = function()
+		menu:addItem(localization.quit, false, "^W").onTouch = function()
 			mainWindow:close()
 		end
 		menu:show()
 	end
 
-	local item2 = mainWindow.topMenu:addItem("File")
+	local item2 = mainWindow.topMenu:addItem(localization.file)
 	item2.onTouch = function()
 		local menu = GUI.contextMenu(item2.x, item2.y + 1)
-		menu:addItem("New", false, "^N").onTouch = function()
+		menu:addItem(localization.new, false, "^N").onTouch = function()
 			newFile()
 		end
-		menu:addItem("Open", false, "^O").onTouch = function()
+		menu:addItem(localization.open, false, "^O").onTouch = function()
 			open()
 		end
 		menu:addSeparator()
-		menu:addItem("Save", not workPath, "^S").onTouch = function()
+		menu:addItem(localization.save, not workPath, "^S").onTouch = function()
 			save()
 		end
-		menu:addItem("Save as", false, "^⇧S").onTouch = function()
+		menu:addItem(localization.saveAs, false, "^⇧S").onTouch = function()
 			saveAs()
 		end
 		menu:show()
 	end
 
-	local item3 = mainWindow.topMenu:addItem("View")
+	local item3 = mainWindow.topMenu:addItem(localization.edit)
 	item3.onTouch = function()
 		local menu = GUI.contextMenu(item3.x, item3.y + 1)
-		menu:addItem("Color scheme").onTouch = function()
+		menu:addItem(localization.cut, not mainWindow.codeView.selections[1], "^C").onTouch = function()
+			cut()
+		end
+		menu:addItem(localization.copy, not mainWindow.codeView.selections[1], "^C").onTouch = function()
+			copy()
+		end
+		menu:addItem(localization.paste, not clipboard, "^V").onTouch = function()
+			paste(clipboard)
+		end
+		menu:addSeparator()
+		menu:addItem(localization.comment, false, "^/").onTouch = function()
+			toggleComment()
+		end
+		menu:addItem(localization.indent, false, "Tab").onTouch = function()
+			indentOrUnindent(true)
+		end
+		menu:addItem(localization.unindent, false, "⇧Tab").onTouch = function()
+			indentOrUnindent(false)
+		end
+		menu:addSeparator()
+		menu:addItem(localization.selectAll, false, "^A").onTouch = function()
+			selectAll()
+		end
+		menu:show()
+	end
+
+	local item4 = mainWindow.topMenu:addItem(localization.view)
+	item4.onTouch = function()
+		local menu = GUI.contextMenu(item4.x, item4.y + 1)
+		menu:addItem(localization.colorScheme).onTouch = function()
 			local variants = {}
 			for key in pairs(config.syntaxColorScheme) do
 				table.insert(variants, key)
@@ -696,22 +752,48 @@ local function createWindow()
 			
 			local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true,
 				{"EmptyLine"},
-				{"CenterText", 0x000000, "Color scheme"},
+				{"CenterText", 0x000000, localization.colorScheme},
 				{"EmptyLine"},
 				{"Selector", 0x262626, 0x880000, table.unpack(variants)},
-				{"Color", "Color", 0x000000},
+				{"Color", localization.color, 0x000000},
 				{"EmptyLine"},
 				{"Button", {0xAAAAAA, 0xffffff, "OK"}, {0x888888, 0xffffff, MineOSCore.localization.cancel}}
 			)
 
 			if data[#data] == "OK" then
 				config.syntaxColorScheme[data[1]] = data[2]
+				syntax.colorScheme = config.syntaxColorScheme
+				saveConfig()
 			end
-			updateColorScheme()
 		end
-		menu:addItem("Toggle top toolbar").onTouch = function()
-			mainWindow.topToolBar.isHidden = not mainWindow.topToolBar.isHidden
-			calculateSizes()
+		menu:addItem(localization.cursorProperties).onTouch = function()
+			local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true,
+				{"EmptyLine"},
+				{"CenterText", 0x000000, localization.cursorProperties},
+				{"EmptyLine"},
+				{"Input", 0x262626, 0x880000, config.cursorSymbol},
+				{"Color", localization.cursorColor, config.cursorColor},
+				{"Slider", 0x262626, 0x880000, 1, 100, config.cursorBlinkDelay * 100, localization.cursorBlinkDelay .. ": ", " ms"},
+				{"EmptyLine"},
+				{"Button", {0xAAAAAA, 0xffffff, "OK"}, {0x888888, 0xffffff, MineOSCore.localization.cancel}}
+			)
+
+			if data[#data] == "OK" then
+				config.cursorSymbol = data[1]
+				config.cursorColor = data[2]
+				config.cursorBlinkDelay = data[3] / 100
+				saveConfig()
+			end
+		end
+		menu:addSeparator()
+		menu:addItem(localization.toggleLeftToolBar).onTouch = function()
+			toggleLeftToolBar()
+		end
+		menu:addItem(localization.toggleBottomToolBar).onTouch = function()
+			toggleBottomToolBar()
+		end
+		menu:addItem(localization.toggleTopToolBar).onTouch = function()
+			toggleTopToolBar()
 		end
 		menu:show()
 	end
@@ -719,15 +801,30 @@ local function createWindow()
 	mainWindow.topToolBar = mainWindow:addContainer(1, 2, 1, 3)
 	mainWindow.topToolBar.backgroundPanel = mainWindow.topToolBar:addPanel(1, 1, 1, 3, config.colorScheme.topToolBar)
 	mainWindow.titleTextBox = mainWindow.topToolBar:addTextBox(1, 1, 1, 3, 0x0, 0x0, {}, 1):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
-	mainWindow.runButton = mainWindow.topToolBar:addAdaptiveButton(1, 1, 2, 1, 0x444444, 0xEEEEEE, 0xEEEEEE, 0x444444, "Run")
+	mainWindow.runButton = mainWindow.topToolBar:addAdaptiveButton(1, 1, 3, 1, 0xCCCCCC, 0x444444, 0xBBBBBB, 0x2D2D2D, "▷")
 	mainWindow.runButton.onTouch = function()
 		run()
 	end
 
-	mainWindow.toggleSyntaxHighlightingButton = mainWindow.topToolBar:addAdaptiveButton(8, 1, 2, 1, 0x3C3C3C, 0xEEEEEE, 0xEEEEEE, 0x3C3C3C, "Syntax")
+	mainWindow.toggleSyntaxHighlightingButton = mainWindow.topToolBar:addAdaptiveButton(1, 1, 3, 1, 0xCCCCCC, 0x444444, 0xBBBBBB, 0x2D2D2D, "*")
 	mainWindow.toggleSyntaxHighlightingButton.switchMode = true
 	mainWindow.toggleSyntaxHighlightingButton.onTouch = function()
 		mainWindow.codeView.highlightLuaSyntax = not mainWindow.codeView.highlightLuaSyntax
+	end
+
+	mainWindow.toggleLeftToolBarButton = mainWindow.topToolBar:addAdaptiveButton(1, 1, 3, 1, 0xCCCCCC, 0x444444, 0xBBBBBB, 0x2D2D2D, "⇦")
+	mainWindow.toggleLeftToolBarButton.onTouch = function()
+		toggleLeftToolBar()
+	end
+
+	mainWindow.toggleBottomToolBarButton = mainWindow.topToolBar:addAdaptiveButton(1, 1, 3, 1, 0xCCCCCC, 0x444444, 0xBBBBBB, 0x2D2D2D, "⇩")
+	mainWindow.toggleBottomToolBarButton.onTouch = function()
+		toggleBottomToolBar()
+	end
+
+	mainWindow.toggleTopToolBarButton = mainWindow.topToolBar:addAdaptiveButton(1, 1, 3, 1, 0xCCCCCC, 0x444444, 0xBBBBBB, 0x2D2D2D, "⇧")
+	mainWindow.toggleTopToolBarButton.onTouch = function()
+		toggleTopToolBar()
 	end
 
 	mainWindow.bottomToolBar = mainWindow:addContainer(1, 1, 1, 1)
@@ -736,15 +833,20 @@ local function createWindow()
 	mainWindow.bottomToolBar.onTouch = function()
 		find()
 	end
-	mainWindow.bottomToolBar.inputTextBox = mainWindow.bottomToolBar:addInputTextBox(7, 1, 10, 3, 0xEEEEEE, 0xAAAAAA, 0xEEEEEE, 0x2D2D2D, "", "Let's find some shit…")
+	mainWindow.bottomToolBar.inputTextBox = mainWindow.bottomToolBar:addInputTextBox(7, 1, 10, 3, 0xCCCCCC, 0x999999, 0xCCCCCC, 0x2D2D2D, "", localization.findSomeShit)
 	mainWindow.bottomToolBar.inputTextBox.onInputFinished = function()
 		findFromFirstDisplayedLine()
 	end
-	mainWindow.bottomToolBar.findButton = mainWindow.bottomToolBar:addAdaptiveButton(1, 1, 3, 1, 0x3C3C3C, 0xEEEEEE, 0xBBBBBB, 0x2D2D2D, "Find")
+	mainWindow.bottomToolBar.findButton = mainWindow.bottomToolBar:addAdaptiveButton(1, 1, 3, 1, 0x3C3C3C, 0xEEEEEE, 0xBBBBBB, 0x2D2D2D, localization.find)
 	mainWindow.bottomToolBar.findButton.onTouch = function()
 		find()
 	end
 	mainWindow.bottomToolBar.isHidden = true
+
+	mainWindow.leftTreeView = mainWindow:addTreeView(1, 1, 1, 1, config.colorScheme.leftTreeView.background, 0x2D2D2D, 0x2D2D2D, 0xEEEEEE, 0x555555, 0x444444, 0x00DBFF, "/")
+	mainWindow.leftTreeView.onFileSelected = function(path)
+		loadFile(path)
+	end
 
 	mainWindow.errorMessage = mainWindow:addContainer(1, 1, 1, 1)
 	mainWindow.errorMessage.backgroundPanel = mainWindow.errorMessage:addPanel(1, 1, 1, 1, 0xFFFFFF, 40)
@@ -759,17 +861,17 @@ local function createWindow()
 		if eventData[1] == "touch" and isClickedOnCodeArea(eventData[3], eventData[4]) then
 			if eventData[5] == 1 then
 				local menu = GUI.contextMenu(eventData[3], eventData[4])
-				menu:addItem("Cut", not mainWindow.codeView.selections[1], "^C").onTouch = function()
+				menu:addItem(localization.cut, not mainWindow.codeView.selections[1], "^C").onTouch = function()
 					cut()
 				end
-				menu:addItem("Copy", not mainWindow.codeView.selections[1], "^C").onTouch = function()
+				menu:addItem(localization.copy, not mainWindow.codeView.selections[1], "^C").onTouch = function()
 					copy()
 				end
-				menu:addItem("Paste", not clipboard, "^V").onTouch = function()
+				menu:addItem(localization.paste, not clipboard, "^V").onTouch = function()
 					paste(clipboard)
 				end
 				menu:addSeparator()
-				menu:addItem("Select all", false, "^A").onTouch = function()
+				menu:addItem(localization.selectAll, false, "^A").onTouch = function()
 					selectAll()
 				end
 				menu:show()
@@ -826,10 +928,16 @@ local function createWindow()
 					save()
 				-- F
 				elseif eventData[4] == 33 then
-					toggleBottomToolbar()
+					toggleBottomToolBar()
 				-- G
 				elseif eventData[4] == 34 then
 					find()
+				-- Backspace
+				elseif eventData[4] == 14 then
+					deleteLine(cursor.position.line)
+				-- Delete
+				elseif eventData[4] == 211 then
+					deleteLine(cursor.position.line)
 				end
 			-- Arrows up, down, left, right
 			elseif eventData[4] == 200 then
@@ -868,6 +976,9 @@ local function createWindow()
 			-- Page Down
 			elseif eventData[4] == 209 then
 				scroll(-1, mainWindow.codeView.height - 2)
+			-- Delete
+			elseif eventData[4] == 211 then
+				delete()
 			else
 				if not keyboard.isControl(eventData[3]) then
 					deleteSelectedData()
@@ -900,18 +1011,18 @@ local function createWindow()
 				y >= mainWindow.codeView.y and
 				y <= mainWindow.codeView.y + mainWindow.codeView.height - 2
 			then
-				buffer.text(x, y, cursor.color, cursor.symbol)
+				buffer.text(x, y, config.cursorColor, config.cursorSymbol)
 			end
 		end
 		buffer.draw()
 	end
 end
 
------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------- RUSH B! ----------------------------------------------------
 
 buffer.start()
 
-updateColorScheme()
+loadConfig()
 createWindow()
 calculateSizes()
 mainWindow:draw()
@@ -929,6 +1040,6 @@ end
 
 mainWindow:draw()
 buffer.draw()
-mainWindow:handleEvents(cursor.blinkDelay)
+mainWindow:handleEvents(config.cursorBlinkDelay)
 
 

@@ -8,7 +8,7 @@
     about="IgorTimofeev/OpenComputers/master/MineOS/About/",
     type="Script",
     forceDownload=true,
-    version=3.45,
+    version=3.46,
   },
   {
     name="MineOS/Pictures/Raspberry.pic",
@@ -300,13 +300,13 @@
     name="lib/GUI.lua",
     url="IgorTimofeev/OpenComputers/master/lib/GUI.lua",
     type="Library",
-    version=1.33,
+    version=1.34,
   },
   {
     name="lib/windows.lua",
     url="IgorTimofeev/OpenComputers/master/lib/windows.lua",
     type="Library",
-    version=1.13,
+    version=1.14,
   },
   {
     name="lib/rayEngine.lua",
@@ -360,7 +360,7 @@
     name="lib/syntax.lua",
     url="IgorTimofeev/OpenComputers/master/lib/syntax.lua",
     type="Library",
-    version=1.08,
+    version=1.09,
   },
   {
     name="lib/palette.lua",
@@ -886,7 +886,17 @@
     icon="IgorTimofeev/OpenComputers/master/Applications/MineCodeIDE/Icon.pic",
     createShortcut="dock",
     forceDownload=true,
-    version=1.19,
+    version=1.20,
+    resources={
+      {
+        name="Localization/Russian.lang",
+        url="IgorTimofeev/OpenComputers/master/Applications/MineCodeIDE/Localization/Russian.lang"
+      },
+      {
+        name="Localization/English.lang",
+        url="IgorTimofeev/OpenComputers/master/Applications/MineCodeIDE/Localization/English.lang"
+      },
+    }
   },
   {
     name="MineOS/Applications/Battleship",

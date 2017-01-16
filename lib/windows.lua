@@ -142,6 +142,35 @@ local function scrollBarHandler(window, object, objectIndex, eventData)
 	executeObjectMethod(object.onTouch, eventData)
 end
 
+local function treeViewHandler(window, object, objectIndex, eventData)
+	if eventData[1] == "touch" then
+		local fileListIndex = eventData[4] - object.y + object.fromFile - 1
+		if object.fileList[fileListIndex] then
+			if object.fileList[fileListIndex].isDirectory then
+				object.fileList[fileListIndex].showDirectoryContent = not object.fileList[fileListIndex].showDirectoryContent
+				object:updateFileList()
+				object:draw(); buffer.draw()
+			else
+				object.currentFile = object.fileList[fileListIndex].path
+				executeObjectMethod(object.onFileSelected, object.currentFile)
+				object:draw(); buffer.draw()
+			end
+		end
+	elseif eventData[1] == "scroll" then
+		if eventData[5] == 1 then
+			if object.fromFile > 1 then
+				object.fromFile = object.fromFile - 1
+				object:draw(); buffer.draw()
+			end
+		else
+			if object.fromFile < #object.fileList then
+				object.fromFile = object.fromFile + 1
+				object:draw(); buffer.draw()
+			end
+		end
+	end
+end
+
 function windows.handleEventData(window, eventData)
 	if eventData[1] == "touch" then
 		local object, objectIndex = window:getClickedObject(eventData[3], eventData[4])
@@ -163,6 +192,8 @@ function windows.handleEventData(window, eventData)
 				menuItemHandler(window, object, objectIndex, eventData)
 			elseif object.type == GUI.objectTypes.scrollBar then
 				scrollBarHandler(window, object, objectIndex, eventData)
+			elseif object.type == GUI.objectTypes.treeView then
+				treeViewHandler(window, object, objectIndex, eventData)
 			elseif object.onTouch then
 				executeObjectMethod(object.onTouch, eventData)
 			end
@@ -177,6 +208,8 @@ function windows.handleEventData(window, eventData)
 				textBoxScrollHandler(window, object, objectIndex, eventData)
 			elseif object.type == GUI.objectTypes.scrollBar then
 				scrollBarHandler(window, object, objectIndex, eventData)
+			elseif object.type == GUI.objectTypes.treeView then
+				treeViewHandler(window, object, objectIndex, eventData)
 			elseif object.onScroll then
 				executeObjectMethod(object.onScroll, eventData)
 			end
@@ -289,8 +322,16 @@ end
 
 ----------------------------------------- Playground -----------------------------------------
 
--- buffer.clear(0x262626)
+-- buffer.start()
+-- buffer.clear(0xFF8888)
 -- buffer.draw(true)
+
+-- local myWindow = windows.empty(2, 2, 40, 30, 30, 40)
+-- myWindow:addTreeView(1, 1, myWindow.width, myWindow.height, 0xDDDDDD, 0x2D2D2D, 0x2D2D2D, 0xEEEEEE, 0x555555, 0x444444, 0x00DBFF, "/")
+-- myWindow:draw()
+-- buffer.draw()
+-- myWindow:handleEvents()
+
 
 -- local myWindow = windows.empty(2, 2, 60, 20, 60, 20)
 -- local scrollBar = myWindow:addScrollBar(1, 1, 20, 1, 0x444444, 0x00DBFF, 1, 100, 50, 20, 4, true)

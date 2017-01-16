@@ -7,6 +7,7 @@ local buffer = require("doubleBuffering")
 local unicode = require("unicode")
 local event = require("event")
 local syntax = require("syntax")
+local fs = require("filesystem")
 
 ----------------------------------------- Core constants -----------------------------------------
 
@@ -83,7 +84,8 @@ GUI.objectTypes = enum(
 	"chart",
 	"comboBox",
 	"scrollBar",
-	"codeView"
+	"codeView",
+	"treeView"
 )
 
 ----------------------------------------- Primitive objects -----------------------------------------
@@ -341,14 +343,19 @@ local function addMenuObjectToContainer(container, ...)
 	return GUI.addChildToContainer(container, GUI.menu(...), GUI.objectTypes.menu)
 end
 
--- Add Menu object to container
+-- Add ScrollBar object to container
 local function addScrollBarObjectToContainer(container, ...)
 	return GUI.addChildToContainer(container, GUI.scrollBar(...), GUI.objectTypes.scrollBar)
 end
 
--- Add Menu object to container
+-- Add CodeView object to container
 local function addCodeViewObjectToContainer(container, ...)
 	return GUI.addChildToContainer(container, GUI.codeView(...), GUI.objectTypes.codeView)
+end
+
+-- Add TreeView object to container
+local function addTreeViewObjectToContainer(container, ...)
+	return GUI.addChildToContainer(container, GUI.treeView(...), GUI.objectTypes.treeView)
 end
 
 -- Recursively draw container's content including all children container's content
@@ -409,6 +416,7 @@ function GUI.container(x, y, width, height)
 	container.addMenu = addMenuObjectToContainer
 	container.addScrollBar = addScrollBarObjectToContainer
 	container.addCodeView = addCodeViewObjectToContainer
+	container.addTreeView = addTreeViewObjectToContainer
 
 	return container
 end
@@ -1640,6 +1648,143 @@ function GUI.codeView(x, y, width, height, lines, fromSymbol, fromLine, maximumL
 	codeView.draw = codeViewDraw
 
 	return codeView
+end
+
+----------------------------------------- Color Selector object -----------------------------------------
+
+local function colorSelectorDraw(colorSelector)
+
+end
+
+function GUI.colorSelector(x, y, width, height, color)
+	local colorSelector = GUI.object(x, y, width, height)
+	colorSelector.color = color
+	colorSelector.draw = colorSelectorDraw
+end
+
+----------------------------------------- Color Selector object -----------------------------------------
+
+local function updateFileList(xOffset, path, fileList, fileListIndex)
+	local fileCounter = 1
+	
+	for file in fs.list(path) do
+		if fileList[fileListIndex] then
+			if fileList[fileListIndex].path == path .. file then
+				if fileList[fileListIndex].showDirectoryContent then
+					fileListIndex = updateFileList(xOffset + 2, path .. file, fileList, fileListIndex + 1) - 1
+				end
+			else
+				fileList[fileListIndex] = {}
+				fileList[fileListIndex].path = path .. file
+				fileList[fileListIndex].isDirectory = fs.isDirectory(fileList[fileListIndex].path)
+				fileList[fileListIndex].xOffset = xOffset
+			end
+		else
+			fileList[fileListIndex] = {}
+			fileList[fileListIndex].path = path .. file
+			fileList[fileListIndex].isDirectory = fs.isDirectory(fileList[fileListIndex].path)
+			fileList[fileListIndex].xOffset = xOffset
+		end
+
+		fileListIndex = fileListIndex + 1
+	end
+
+	return fileListIndex
+end
+
+local function treeViewUpdateFileList(treeView)
+	local fileListIndex = updateFileList(1, treeView.path, treeView.fileList, 1)
+
+	for i = fileListIndex, #treeView.fileList do
+		treeView.fileList[i] = nil
+	end
+
+	return treeView
+end
+
+local function treeViewDraw(treeView)
+	local y = treeView.y + 1
+	local showScrollBar = #treeView.fileList > treeView.height
+
+	if treeView.colors.default.background then
+		buffer.square(treeView.x, treeView.y, treeView.width, treeView.height, treeView.colors.default.background, treeView.colors.default.text, " ")
+	end
+
+	local drawLimit = buffer.getDrawLimit(); buffer.setDrawLimit(treeView.x, treeView.y, treeView.width - (showScrollBar and 1 or 0), treeView.height)
+	
+	for fileListIndex = treeView.fromFile, #treeView.fileList do
+		local textColor = treeView.colors.default.text
+		if treeView.fileList[fileListIndex].path == treeView.currentFile then
+			textColor = treeView.colors.selected.text
+			buffer.square(treeView.x, y, treeView.width, 1, treeView.colors.selected.background, textColor, " ") 
+		end
+
+		if treeView.fileList[fileListIndex].isDirectory then
+			if treeView.fileList[fileListIndex].showDirectoryContent then
+				buffer.text(treeView.x + treeView.fileList[fileListIndex].xOffset, y, treeView.colors.arrow, "▽")
+				buffer.text(treeView.x + treeView.fileList[fileListIndex].xOffset + 2, y, textColor, "■ " .. fs.name(treeView.fileList[fileListIndex].path))
+			else
+				buffer.text(treeView.x + treeView.fileList[fileListIndex].xOffset, y, treeView.colors.arrow, "▷")
+				buffer.text(treeView.x + treeView.fileList[fileListIndex].xOffset + 2, y, textColor, "■ " .. fs.name(treeView.fileList[fileListIndex].path))
+			end
+		else
+			buffer.text(treeView.x + treeView.fileList[fileListIndex].xOffset, y, textColor, "  □ " .. fs.name(treeView.fileList[fileListIndex].path))
+		end
+
+		y = y + 1
+		if y > treeView.y + treeView.height - 2 then break end
+	end
+
+	buffer.setDrawLimit(drawLimit)
+
+	if showScrollBar then
+		GUI.scrollBar(
+			treeView.x + treeView.width - 1,
+			treeView.y,
+			1,
+			treeView.height,
+			treeView.colors.scrollBar.background, 
+			treeView.colors.scrollBar.foreground,
+			1,
+			#treeView.fileList,
+			treeView.fromFile,
+			treeView.height - 2,
+			1
+		):draw()	
+	end
+
+	return treeView
+end
+
+function GUI.treeView(x, y, width, height, backgroundColor, textColor, selectionColor, selectionTextColor, arrowColor, scrollBarBackground, scrollBarForeground, workPath)
+	local treeView = GUI.container(x, y, width, height)
+	
+	treeView.colors = {
+		default = {
+			background = backgroundColor,
+			text = textColor,
+		},
+		selected = {
+			background = selectionColor,
+			text = selectionTextColor,
+		},
+		scrollBar = {
+			background = scrollBarBackground,
+			foreground = scrollBarForeground
+		},
+		arrow = arrowColor
+	}
+	treeView.fileList = {}
+	treeView.path = workPath
+
+	treeView.updateFileList = treeViewUpdateFileList
+	treeView.draw = treeViewDraw
+	treeView.currentFile = ""
+	treeView.fromFile = 1
+
+	treeView:updateFileList()
+
+	return treeView
 end
 
 --------------------------------------------------------------------------------------------------------------------------------
