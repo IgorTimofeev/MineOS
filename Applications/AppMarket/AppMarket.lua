@@ -320,7 +320,7 @@ local function updateAll()
 		local xText = math.floor(sizes.x + sizes.width / 2 - unicode.len(text) / 2)
 		buffer.square(sizes.x, y + 1, sizes.width, 1, 0xFFFFFF)
 		buffer.text(xText, y + 1, colors.description, text)
-		GUI.progressBar(xBar, y, barWidth, 1, 0xCCCCCC, 0x0092FF, i, #changes, true):draw()
+		GUI.progressBar(xBar, y, barWidth, 1, 0xCCCCCC, 0x0092FF, 0x0, math.ceil(i / #changes * 100), true, false):draw()
 		buffer.draw()
 		ecs.getOSApplication(newApplications[changes[i]], true)
 	end
