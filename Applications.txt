@@ -300,7 +300,7 @@
     name="lib/GUI.lua",
     url="IgorTimofeev/OpenComputers/master/lib/GUI.lua",
     type="Library",
-    version=1.35,
+    version=1.36,
   },
   {
     name="lib/windows.lua",

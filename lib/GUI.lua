@@ -1702,7 +1702,7 @@ local function treeViewDraw(treeView)
 		end
 
 		if treeView.fileList[fileIndex].isDirectory then
-			if treeView.fileList[fileIndex].showDirectoryContent then
+			if treeView.directoriesToShowContent[treeView.fileList[fileIndex].path] then
 				buffer.text(treeView.x + treeView.fileList[fileIndex].xOffset, y, treeView.colors.arrow, "▽")
 				buffer.text(treeView.x + treeView.fileList[fileIndex].xOffset + 2, y, textColor, unicode.sub("■ " .. fs.name(treeView.fileList[fileIndex].path), 1, textLimit - treeView.fileList[fileIndex].xOffset - 2))
 			else
