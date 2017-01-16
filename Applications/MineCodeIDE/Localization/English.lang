@@ -1,4 +1,5 @@
 {
+	selectWord = "Select current word",
 	gotoCyka = "Goto",
 	gotoEnd = "Scroll to end",
 	gotoStart = "Scroll to start",

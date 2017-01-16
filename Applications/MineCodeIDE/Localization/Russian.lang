@@ -1,4 +1,5 @@
 {
+	selectWord = "Выделить текущее слово",
 	gotoCyka = "Переход",
 	gotoEnd = "В конец",
 	gotoStart = "В начало",

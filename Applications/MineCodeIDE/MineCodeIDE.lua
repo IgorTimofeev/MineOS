@@ -61,6 +61,7 @@ local config = {
 	cursorColor = 0x00A8FF,
 	cursorSymbol = "┃",
 	cursorBlinkDelay = 0.4,
+	doubleClickDelay = 0.4,
 }
 
 local cursor = {
@@ -71,12 +72,14 @@ local cursor = {
 	blinkState = false
 }
 
-local configPath = MineOSCore.paths.system .. "MineCode/Config.cfg"
-local localization = MineOSCore.getCurrentApplicationLocalization()
+local resourcesPath = MineOSCore.getCurrentApplicationResourcesDirectory() 
+local configPath = resourcesPath .. "Config.cfg"
+local localization = MineOSCore.getLocalization(resourcesPath .. "Localization/")
 local findStartFrom
 local workPath
 local clipboard
 local lastErrorLine
+local lastClickUptime = computer.uptime()
 local mainWindow = {}
 
 ---------------------------------------------------- Functions ----------------------------------------------------
@@ -275,6 +278,27 @@ local function gotoLine(line)
 		mainWindow.codeView.fromLine = 1
 	elseif mainWindow.codeView.fromLine > #mainWindow.codeView.lines then
 		mainWindow.codeView.fromLine = #mainWindow.codeView.lines
+	end
+end
+
+local function selectWord()
+	local shittySymbolsRegexp, from, to = "[%s%c%p]"
+
+	for i = cursor.position.symbol, 1, -1 do
+		if unicode.sub(mainWindow.codeView.lines[cursor.position.line], i, i):match(shittySymbolsRegexp) then break end
+		from = i
+	end
+
+	for i = cursor.position.symbol, unicode.len(mainWindow.codeView.lines[cursor.position.line]) do
+		if unicode.sub(mainWindow.codeView.lines[cursor.position.line], i, i):match(shittySymbolsRegexp) then break end
+		to = i
+	end
+
+	if from and to then
+		mainWindow.codeView.selections[1] = {
+			from = {symbol = from, line = cursor.position.line},
+			to = {symbol = to, line = cursor.position.line},
+		}
 	end
 end
 
@@ -749,6 +773,9 @@ local function createWindow()
 			deleteLine(cursor.position.line)
 		end
 		menu:addSeparator()
+		menu:addItem(localization.selectWord, false, "^\\").onTouch = function()
+			selectWord()
+		end
 		menu:addItem(localization.selectAll, false, "^A").onTouch = function()
 			selectAll()
 		end
@@ -916,6 +943,10 @@ local function createWindow()
 				menu:show()
 			else
 				setCursorPositionAndClearSelection(convertScreenCoordinatesToCursorPosition(eventData[3], eventData[4]))
+
+				local newUptime = computer.uptime()
+				if newUptime - lastClickUptime <= config.doubleClickDelay then selectWord() end
+				lastClickUptime = newUptime
 			end
 		elseif eventData[1] == "drag" and isClickedOnCodeArea(eventData[3], eventData[4]) then
 			if eventData[5] ~= 1 then
@@ -935,8 +966,11 @@ local function createWindow()
 		elseif eventData[1] == "key_down" then
 			-- Ctrl or CMD
 			if keyboard.isKeyDown(29) or keyboard.isKeyDown(219) then
+				-- Backslash
+				if eventData[4] == 43 then
+					selectWord()
 				-- Slash
-				if eventData[4] == 53 then
+				elseif eventData[4] == 53 then
 					toggleComment()
 				-- A
 				elseif eventData[4] == 30 then
