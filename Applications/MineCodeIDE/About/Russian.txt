@@ -1,1 +1,1 @@
-MineCode IDE is a powerful tool for developing any app you want. It supports Lua syntax highlighting, text selection and copy/pasting, user-defined color schemes and beautiful integrated file manager.
+MineCode IDE - это мощный инстурмент для разработки красивейших приложений с богатым функционалом: от подсветки синтаксиса Lua, выделения текста и работы с буфером обмена до поддержки пользовательских цветовых схем. Удобный файловый менеджер также прилагается.
