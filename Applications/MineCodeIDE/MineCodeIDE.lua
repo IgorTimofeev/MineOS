@@ -23,6 +23,7 @@ local unicode = require("unicode")
 local ecs = require("ECSAPI")
 local image = require("image")
 local keyboard = require("keyboard")
+local palette = require("palette")
 
 ---------------------------------------------------- Constants ----------------------------------------------------
 
@@ -43,7 +44,7 @@ local colors = {
 	},
 	title = {
 		default = {
-			sides = 0x555555,
+			sides = 0x4B4B4B,
 			background = 0x3C3C3C,
 			text = 0xEEEEEE
 		},
@@ -65,6 +66,7 @@ local config = {
 	cursorSymbol = "┃",
 	cursorBlinkDelay = 0.4,
 	doubleClickDelay = 0.4,
+	screenScale = 1,
 }
 
 local cursor = {
@@ -100,6 +102,7 @@ local function loadConfig()
 end
 
 local function calculateSizes()
+	mainWindow.width, mainWindow.height = buffer.screen.width, buffer.screen.height
 	mainWindow.leftTreeView.width = math.floor(mainWindow.width * 0.16)
 
 	if mainWindow.leftTreeView.isHidden then
@@ -126,6 +129,8 @@ local function calculateSizes()
 		mainWindow.codeView.height = mainWindow.codeView.height - 3
 	end
 
+	mainWindow.settingsContainer.width, mainWindow.settingsContainer.height = mainWindow.width, mainWindow.height
+	mainWindow.settingsContainer.backgroundPanel.width, mainWindow.settingsContainer.backgroundPanel.height = mainWindow.settingsContainer.width, mainWindow.settingsContainer.height
 
 	mainWindow.bottomToolBar.localPosition.y = mainWindow.height - 2
 	mainWindow.bottomToolBar.findButton.localPosition.x = mainWindow.bottomToolBar.width - mainWindow.bottomToolBar.findButton.width + 1
@@ -139,11 +144,24 @@ local function calculateSizes()
 	mainWindow.toggleLeftToolBarButton.localPosition.x = mainWindow.titleTextBox.localPosition.x + mainWindow.titleTextBox.width + 2
 	mainWindow.toggleBottomToolBarButton.localPosition.x = mainWindow.toggleLeftToolBarButton.localPosition.x + mainWindow.toggleLeftToolBarButton.width + 2
 	mainWindow.toggleTopToolBarButton.localPosition.x = mainWindow.toggleBottomToolBarButton.localPosition.x + mainWindow.toggleBottomToolBarButton.width + 2
+	
+	mainWindow.RAMUsageProgressBar.localPosition.x = mainWindow.toggleTopToolBarButton.localPosition.x + mainWindow.toggleTopToolBarButton.width + 3
+	mainWindow.RAMUsageProgressBar.width = mainWindow.topToolBar.width - mainWindow.RAMUsageProgressBar.localPosition.x - 3
 
 	mainWindow.errorMessage.localPosition.x, mainWindow.errorMessage.width = mainWindow.titleTextBox.localPosition.x, mainWindow.titleTextBox.width
 	mainWindow.errorMessage.backgroundPanel.width, mainWindow.errorMessage.errorTextBox.width = mainWindow.errorMessage.width, mainWindow.errorMessage.width - 4
 
 	mainWindow.topMenu.width = mainWindow.width
+end
+
+local function changeScale(newScale)
+	ecs.setScale(newScale)
+	buffer.start()
+	calculateSizes()
+	mainWindow:draw()
+	buffer.draw()
+	config.screenScale = newScale
+	saveConfig()
 end
 
 local function showErrorMessage(text)
@@ -161,6 +179,11 @@ end
 local function hideErrorMessage()
 	mainWindow.titleTextBox.colors.background, mainWindow.titleTextBox.colors.text = colors.title.default.background, colors.title.default.text
 	mainWindow.errorMessage.isHidden = true
+end
+
+local function hideSettingsContainer()
+	for childIndex = 2, #mainWindow.settingsContainer.children do mainWindow.settingsContainer.children[childIndex] = nil end
+	mainWindow.settingsContainer.isHidden = true
 end
 
 local function deselectLastErrorLine()
@@ -338,32 +361,31 @@ local function newFile()
 end
 
 local function open()
-	local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true,
-		{"EmptyLine"},
-		{"CenterText", 0x000000, localization.openFile},
-		{"EmptyLine"},
-		{"Input", 0x262626, 0x880000, ""},
-		{"EmptyLine"},
-		{"Button", {0xAAAAAA, 0xffffff, "OK"}, {0x888888, 0xffffff, MineOSCore.localization.cancel}}
-	)
-	if data[2] == "OK" and fs.exists(data[1]) then
-		loadFile(data[1])
+	mainWindow.settingsContainer.isHidden = false
+	local elementWidth = math.floor(mainWindow.width * 0.3)
+	local x, y = math.floor(mainWindow.width / 2 - elementWidth / 2), math.floor(mainWindow.height / 2) - 3
+	mainWindow.settingsContainer:addLabel(1, y, mainWindow.settingsContainer.width, 1, 0xFFFFFF, localization.openFile):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); y = y + 3
+	local inputTextBox = mainWindow.settingsContainer:addInputTextBox(x, y, elementWidth, 3, 0xCCCCCC, 0x777777, 0xCCCCCC, 0x2D2D2D, "", localization.pathToFile); y = y + 5
+	inputTextBox.validator = function(text)
+		if fs.exists(text) then return true end
+	end
+	inputTextBox.onInputFinished = function()
+		loadFile(inputTextBox.text)
+		hideSettingsContainer()
 	end
 end
 
 local function saveAs()
-	local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true,
-		{"EmptyLine"},
-		{"CenterText", 0x000000, localization.saveAs},
-		{"EmptyLine"},
-		{"Input", 0x262626, 0x880000, ""},
-		{"EmptyLine"},
-		{"Button", {0xAAAAAA, 0xffffff, "OK"}, {0x888888, 0xffffff, MineOSCore.localization.cancel}}
-	)
-	if data[2] == "OK" then
-		saveFile(data[1])
-		mainWindow.leftTreeView.currentFile = data[1]
+	mainWindow.settingsContainer.isHidden = false
+	local elementWidth = math.floor(mainWindow.width * 0.3)
+	local x, y = math.floor(mainWindow.width / 2 - elementWidth / 2), math.floor(mainWindow.height / 2) - 3
+	mainWindow.settingsContainer:addLabel(1, y, mainWindow.settingsContainer.width, 1, 0xFFFFFF, localization.saveAs):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); y = y + 3
+	local inputTextBox = mainWindow.settingsContainer:addInputTextBox(x, y, elementWidth, 3, 0xCCCCCC, 0x777777, 0xCCCCCC, 0x2D2D2D, "", localization.pathToFile); y = y + 5
+	inputTextBox.onInputFinished = function()
+		saveFile(inputTextBox.text)
+		mainWindow.leftTreeView.currentFile = inputTextBox.text
 		mainWindow.leftTreeView:updateFileList()
+		hideSettingsContainer()
 	end
 end
 
@@ -623,24 +645,33 @@ local function indentOrUnindent(isIndent)
 	end
 end
 
+local function updateRAMProgressBar()
+	if not mainWindow.topToolBar.isHidden then
+		local totalMemory = computer.totalMemory()
+		mainWindow.RAMUsageProgressBar.value = math.ceil((totalMemory - computer.freeMemory()) / totalMemory * 100)
+	end
+end
+
 local function updateTitle()
-	mainWindow.titleTextBox.lines[1] = string.limit(localization.file .. ": " .. (mainWindow.leftTreeView.currentFile or localization.none), mainWindow.titleTextBox.width - 4)
-	mainWindow.titleTextBox.lines[2] = string.limit(localization.cursor .. cursor.position.line .. localization.line .. cursor.position.symbol .. localization.symbol, mainWindow.titleTextBox.width - 4)
-	if mainWindow.codeView.selections[1] then
-		local countOfSelectedLines = mainWindow.codeView.selections[1].to.line - mainWindow.codeView.selections[1].from.line + 1
-		local countOfSelectedSymbols
-		if mainWindow.codeView.selections[1].from.line == mainWindow.codeView.selections[1].to.line then
-			countOfSelectedSymbols = unicode.len(unicode.sub(mainWindow.codeView.lines[mainWindow.codeView.selections[1].from.line], mainWindow.codeView.selections[1].from.symbol, mainWindow.codeView.selections[1].to.symbol))
-		else
-			countOfSelectedSymbols = unicode.len(unicode.sub(mainWindow.codeView.lines[mainWindow.codeView.selections[1].from.line], mainWindow.codeView.selections[1].from.symbol, -1))
-			for line = mainWindow.codeView.selections[1].from.line + 1, mainWindow.codeView.selections[1].to.line - 1 do
-				countOfSelectedSymbols = countOfSelectedSymbols + unicode.len(mainWindow.codeView.lines[line])
+	if not mainWindow.topToolBar.isHidden then
+		mainWindow.titleTextBox.lines[1] = string.limit(localization.file .. ": " .. (mainWindow.leftTreeView.currentFile or localization.none), mainWindow.titleTextBox.width - 4)
+		mainWindow.titleTextBox.lines[2] = string.limit(localization.cursor .. cursor.position.line .. localization.line .. cursor.position.symbol .. localization.symbol, mainWindow.titleTextBox.width - 4)
+		if mainWindow.codeView.selections[1] then
+			local countOfSelectedLines = mainWindow.codeView.selections[1].to.line - mainWindow.codeView.selections[1].from.line + 1
+			local countOfSelectedSymbols
+			if mainWindow.codeView.selections[1].from.line == mainWindow.codeView.selections[1].to.line then
+				countOfSelectedSymbols = unicode.len(unicode.sub(mainWindow.codeView.lines[mainWindow.codeView.selections[1].from.line], mainWindow.codeView.selections[1].from.symbol, mainWindow.codeView.selections[1].to.symbol))
+			else
+				countOfSelectedSymbols = unicode.len(unicode.sub(mainWindow.codeView.lines[mainWindow.codeView.selections[1].from.line], mainWindow.codeView.selections[1].from.symbol, -1))
+				for line = mainWindow.codeView.selections[1].from.line + 1, mainWindow.codeView.selections[1].to.line - 1 do
+					countOfSelectedSymbols = countOfSelectedSymbols + unicode.len(mainWindow.codeView.lines[line])
+				end
+				countOfSelectedSymbols = countOfSelectedSymbols + unicode.len(unicode.sub(mainWindow.codeView.lines[mainWindow.codeView.selections[1].to.line], 1, mainWindow.codeView.selections[1].to.symbol))
 			end
-			countOfSelectedSymbols = countOfSelectedSymbols + unicode.len(unicode.sub(mainWindow.codeView.lines[mainWindow.codeView.selections[1].to.line], 1, mainWindow.codeView.selections[1].to.symbol))
+			mainWindow.titleTextBox.lines[3] = string.limit(localization.selection .. countOfSelectedLines .. localization.lines .. countOfSelectedSymbols .. localization.symbols, mainWindow.titleTextBox.width - 4)
+		else
+			mainWindow.titleTextBox.lines[3] = string.limit(localization.selection .. localization.none, mainWindow.titleTextBox.width - 4)
 		end
-		mainWindow.titleTextBox.lines[3] = string.limit(localization.selection .. countOfSelectedLines .. localization.lines .. countOfSelectedSymbols .. localization.symbols, mainWindow.titleTextBox.width - 4)
-	else
-		mainWindow.titleTextBox.lines[3] = string.limit(localization.selection .. localization.none, mainWindow.titleTextBox.width - 4)
 	end
 end
 
@@ -786,44 +817,50 @@ local function createWindow()
 	item4.onTouch = function()
 		local menu = GUI.contextMenu(item4.x, item4.y + 1)
 		menu:addItem(localization.colorScheme).onTouch = function()
-			local variants = {}
-			for key in pairs(config.syntaxColorScheme) do
-				table.insert(variants, key)
-			end
+			mainWindow.settingsContainer.isHidden = false
 			
-			local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true,
-				{"EmptyLine"},
-				{"CenterText", 0x000000, localization.colorScheme},
-				{"EmptyLine"},
-				{"Selector", 0x262626, 0x880000, table.unpack(variants)},
-				{"Color", localization.color, 0x000000},
-				{"EmptyLine"},
-				{"Button", {0xAAAAAA, 0xffffff, "OK"}, {0x888888, 0xffffff, MineOSCore.localization.cancel}}
-			)
+			local colorSelectorsCount, colorSelectorCountX = 0, 4; for key in pairs(config.syntaxColorScheme) do colorSelectorsCount = colorSelectorsCount + 1 end
+			local colorSelectorCountY = math.ceil(colorSelectorsCount / colorSelectorCountX)
+			local colorSelectorWidth, colorSelectorHeight, colorSelectorSpaceX, colorSelectorSpaceY = math.floor(mainWindow.settingsContainer.width / colorSelectorCountX * 0.8), 3, 2, 1
+			
+			local startX, y = math.floor(mainWindow.settingsContainer.width / 2 - (colorSelectorCountX * (colorSelectorWidth + colorSelectorSpaceX) - colorSelectorSpaceX) / 2), math.floor(mainWindow.settingsContainer.height / 2 - (colorSelectorCountY * (colorSelectorHeight + colorSelectorSpaceY) - colorSelectorSpaceY + 3) / 2)
+			mainWindow.settingsContainer:addLabel(1, y, mainWindow.settingsContainer.width, 1, 0xFFFFFF, localization.colorScheme):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); y = y + 3
+			local x, counter = startX, 1
 
-			if data[#data] == "OK" then
-				config.syntaxColorScheme[data[1]] = data[2]
-				syntax.colorScheme = config.syntaxColorScheme
-				saveConfig()
+			for key in pairs(config.syntaxColorScheme) do
+				local colorSelector = mainWindow.settingsContainer:addColorSelector(x, y, colorSelectorWidth, colorSelectorHeight, config.syntaxColorScheme[key], key)
+				colorSelector.onTouch = function()
+					config.syntaxColorScheme[key] = colorSelector.color
+					syntax.colorScheme = config.syntaxColorScheme
+					saveConfig()
+				end
+
+				x, counter = x + colorSelectorWidth + colorSelectorSpaceX, counter + 1
+				if counter > colorSelectorCountX then
+					x, y, counter = startX, y + colorSelectorHeight + colorSelectorSpaceY, 1
+				end
 			end
 		end
 		menu:addItem(localization.cursorProperties).onTouch = function()
-			local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true,
-				{"EmptyLine"},
-				{"CenterText", 0x000000, localization.cursorProperties},
-				{"EmptyLine"},
-				{"Input", 0x262626, 0x880000, config.cursorSymbol},
-				{"Color", localization.cursorColor, config.cursorColor},
-				{"Slider", 0x262626, 0x880000, 1, 100, config.cursorBlinkDelay * 100, localization.cursorBlinkDelay .. ": ", " ms"},
-				{"EmptyLine"},
-				{"Button", {0xAAAAAA, 0xffffff, "OK"}, {0x888888, 0xffffff, MineOSCore.localization.cancel}}
-			)
+			mainWindow.settingsContainer.isHidden = false
 
-			if data[#data] == "OK" then
-				config.cursorSymbol = data[1]
-				config.cursorColor = data[2]
-				config.cursorBlinkDelay = data[3] / 100
-				saveConfig()
+			local elementWidth = math.floor(mainWindow.width * 0.3)
+			local x, y = math.floor(mainWindow.width / 2 - elementWidth / 2), math.floor(mainWindow.height / 2) - 7
+			mainWindow.settingsContainer:addLabel(1, y, mainWindow.settingsContainer.width, 1, 0xFFFFFF, localization.cursorProperties):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); y = y + 3
+			local inputTextBox = mainWindow.settingsContainer:addInputTextBox(x, y, elementWidth, 3, 0xCCCCCC, 0x777777, 0xCCCCCC, 0x2D2D2D, config.cursorSymbol, localization.cursorSymbol); y = y + 5
+			inputTextBox.validator = function(text)
+				if unicode.len(text) == 1 then return true end
+			end
+			inputTextBox.onInputFinished = function()
+				config.cursorSymbol = inputTextBox.text; saveConfig()
+			end
+			local colorSelector = mainWindow.settingsContainer:addColorSelector(x, y, elementWidth, 3, config.cursorColor, localization.cursorColor); y = y + 5
+			colorSelector.onTouch = function()
+				config.cursorColor = colorSelector.color; saveConfig()
+			end
+			local horizontalSlider = mainWindow.settingsContainer:addHorizontalSlider(x, y, elementWidth, 0xFFDB80, 0x000000, 0xFFDB40, 0xDDDDDD, 1, 1000, config.cursorBlinkDelay * 1000, false, localization.cursorBlinkDelay .. ": ", " ms")
+			horizontalSlider.onValueChanged = function()
+				config.cursorBlinkDelay = horizontalSlider.value / 1000; saveConfig()
 			end
 		end
 		menu:addSeparator()
@@ -867,6 +904,8 @@ local function createWindow()
 		buffer.square(titleTextBox.x, titleTextBox.y, 1, titleTextBox.height, sidesColor, titleTextBox.colors.text, " ")
 		buffer.square(titleTextBox.x + titleTextBox.width - 1, titleTextBox.y, 1, titleTextBox.height, sidesColor, titleTextBox.colors.text, " ")
 	end
+
+	mainWindow.RAMUsageProgressBar = mainWindow.topToolBar:addProgressBar(1, 2, 1, 0x777777, 0xBBBBBB, 0xAAAAAA, 50, true, true, "RAM: ", "%")
 
 	mainWindow.runButton = mainWindow.topToolBar:addAdaptiveButton(1, 1, 3, 1, 0x4B4B4B, 0xEEEEEE, 0xCCCCCC, 0x444444, "▷")
 	mainWindow.runButton.onTouch = function()
@@ -925,6 +964,11 @@ local function createWindow()
 	mainWindow.errorMessage.backgroundPanel = mainWindow.errorMessage:addPanel(1, 1, 1, 1, 0xFFFFFF, 40)
 	mainWindow.errorMessage.errorTextBox = mainWindow.errorMessage:addTextBox(3, 2, 1, 1, nil, 0x2D2D2D, {}, 1)
 	hideErrorMessage()
+
+	mainWindow.settingsContainer = mainWindow:addContainer(1, 1, 1, 1)
+	mainWindow.settingsContainer.backgroundPanel = mainWindow.settingsContainer:addPanel(1, 1, mainWindow.settingsContainer.width, mainWindow.settingsContainer.height, 0x0, 30)
+	mainWindow.settingsContainer.backgroundPanel.onTouch = hideSettingsContainer
+	mainWindow.settingsContainer.isHidden = true
 
 	mainWindow.onAnyEvent = function(eventData)
 		cursor.blinkState = not cursor.blinkState
@@ -1020,6 +1064,12 @@ local function createWindow()
 				-- Delete
 				elseif eventData[4] == 211 then
 					deleteLine(cursor.position.line)
+				-- +
+				elseif eventData[4] == 13 then
+					if config.screenScale > 0.3 then changeScale(config.screenScale - 0.1) end
+				-- -
+				elseif eventData[4] == 12 then
+					if config.screenScale < 1 then changeScale(config.screenScale + 0.1) end
 				end
 			-- Arrows up, down, left, right
 			elseif eventData[4] == 200 then
@@ -1084,6 +1134,7 @@ local function createWindow()
 		end
 
 		updateTitle()
+		updateRAMProgressBar()
 		mainWindow:draw()
 		if cursor.blinkState then
 			local x, y = mainWindow.codeView.codeAreaPosition + cursor.position.symbol - mainWindow.codeView.fromSymbol + 1, mainWindow.codeView.y + cursor.position.line - mainWindow.codeView.fromLine
@@ -1106,8 +1157,9 @@ buffer.start()
 
 loadConfig()
 createWindow()
-calculateSizes()
+changeScale(config.screenScale)
 updateTitle()
+updateRAMProgressBar()
 mainWindow:draw()
 
 if args[1] == "open" and fs.exists(args[2] or "") then

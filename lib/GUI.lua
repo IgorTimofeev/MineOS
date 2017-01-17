@@ -85,7 +85,8 @@ GUI.objectTypes = enum(
 	"comboBox",
 	"scrollBar",
 	"codeView",
-	"treeView"
+	"treeView",
+	"colorSelector"
 )
 
 ----------------------------------------- Primitive objects -----------------------------------------
@@ -358,6 +359,11 @@ local function addTreeViewObjectToContainer(container, ...)
 	return GUI.addChildToContainer(container, GUI.treeView(...), GUI.objectTypes.treeView)
 end
 
+-- Add ColorSelector object to container
+local function addColorSelectorObjectToContainer(container, ...)
+	return GUI.addChildToContainer(container, GUI.colorSelector(...), GUI.objectTypes.colorSelector)
+end
+
 -- Recursively draw container's content including all children container's content
 local function drawContainerContent(container)
 	for objectIndex = 1, #container.children do
@@ -417,6 +423,7 @@ function GUI.container(x, y, width, height)
 	container.addScrollBar = addScrollBarObjectToContainer
 	container.addCodeView = addCodeViewObjectToContainer
 	container.addTreeView = addTreeViewObjectToContainer
+	container.addColorSelector = addColorSelectorObjectToContainer
 
 	return container
 end
@@ -1648,19 +1655,7 @@ function GUI.codeView(x, y, width, height, lines, fromSymbol, fromLine, maximumL
 	codeView.draw = codeViewDraw
 
 	return codeView
-end
-
------------------------------------------ Color Selector object -----------------------------------------
-
-local function colorSelectorDraw(colorSelector)
-
-end
-
-function GUI.colorSelector(x, y, width, height, color)
-	local colorSelector = GUI.object(x, y, width, height)
-	colorSelector.color = color
-	colorSelector.draw = colorSelectorDraw
-end
+end 
 
 ----------------------------------------- Color Selector object -----------------------------------------
 
@@ -1763,10 +1758,39 @@ function GUI.treeView(x, y, width, height, backgroundColor, textColor, selection
 	return treeView
 end
 
+----------------------------------------- Color Selector object -----------------------------------------
+
+local function colorSelectorDraw(colorSelector)
+	local overlayColor = colorSelector.color < 0x7FFFFF and 0xFFFFFF or 0x000000
+	buffer.square(colorSelector.x, colorSelector.y, colorSelector.width, colorSelector.height, colorSelector.color, overlayColor, " ")
+	if colorSelector.pressed then
+		buffer.square(colorSelector.x, colorSelector.y, colorSelector.width, colorSelector.height, overlayColor, overlayColor, " ", 80)
+	end
+	buffer.text(colorSelector.x, colorSelector.y + colorSelector.height - 1, overlayColor, string.rep("▄", colorSelector.width), 80)
+	buffer.text(colorSelector.x + 1, colorSelector.y + math.floor(colorSelector.height / 2), overlayColor, string.limit(colorSelector.text, colorSelector.width - 2))
+	return colorSelector
+end
+
+function GUI.colorSelector(x, y, width, height, color, text)
+	local colorSelector = GUI.object(x, y, width, height)
+	colorSelector.color = color
+	colorSelector.text = text
+	colorSelector.draw = colorSelectorDraw
+	return colorSelector
+end 
+
 --------------------------------------------------------------------------------------------------------------------------------
 
 -- buffer.start()
 -- buffer.clear(0xFF8888)
+-- buffer.draw(true)
+
+-- local y = 2
+-- for i = 1, 10 do
+-- 	GUI.colorSelector(2, y, 30, 3, math.random(0x0, 0xFFFFFF), "Типа цвет " .. i):draw()
+-- 	y = y + 4
+-- end
+-- buffer.draw()
 
 -- local lines = {}
 -- local file = io.open("/OS.lua", "r")

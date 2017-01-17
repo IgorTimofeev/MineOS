@@ -175,6 +175,13 @@ local function treeViewHandler(window, object, objectIndex, eventData)
 	end
 end
 
+local function colorSelectorHandler(window, object, objectIndex, eventData)
+	object.pressed = true; object:draw(); buffer.draw()
+	object.color = require("palette").show("auto", "auto", object.color) or object.color
+	object.pressed = false; object:draw(); buffer.draw()
+	executeObjectMethod(object.onTouch)
+end
+
 function windows.handleEventData(window, eventData)
 	if eventData[1] == "touch" then
 		local object, objectIndex = window:getClickedObject(eventData[3], eventData[4])
@@ -198,6 +205,8 @@ function windows.handleEventData(window, eventData)
 				scrollBarHandler(window, object, objectIndex, eventData)
 			elseif object.type == GUI.objectTypes.treeView then
 				treeViewHandler(window, object, objectIndex, eventData)
+			elseif object.type == GUI.objectTypes.colorSelector then
+				colorSelectorHandler(window, object, objectIndex, eventData)
 			elseif object.onTouch then
 				executeObjectMethod(object.onTouch, eventData)
 			end
@@ -333,6 +342,12 @@ end
 -- buffer.start()
 -- buffer.clear(0xFF8888)
 -- buffer.draw(true)
+
+-- local myWindow = windows.empty(2, 2, 60, 30, 60, 30)
+-- myWindow:addColorSelector(2, 2, 30, 3, 0xFF00FF, "Text")
+-- myWindow:draw()
+-- buffer.draw()
+-- myWindow:handleEvents()
 
 -- local myWindow = windows.empty(2, 2, 20, 40, 20, 40)
 -- myWindow:addTreeView(1, 1, myWindow.width, myWindow.height, 0xDDDDDD, 0x2D2D2D, 0x2D2D2D, 0xEEEEEE, 0x555555, 0x444444, 0x00DBFF, "/")

@@ -1,4 +1,5 @@
 {
+	pathToFile = "Путь к файлу",
 	selectWord = "Выделить текущее слово",
 	gotoCyka = "Переход",
 	gotoEnd = "В конец",

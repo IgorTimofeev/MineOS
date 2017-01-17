@@ -1,4 +1,5 @@
 {
+	pathToFile = "Path to file",
 	selectWord = "Select current word",
 	gotoCyka = "Goto",
 	gotoEnd = "Scroll to end",
