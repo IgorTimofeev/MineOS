@@ -510,6 +510,26 @@
   },
   ----------------------------------------------------- Приложения --------------------------------------------------------------------------
   {
+    name="MineOS/Applications/MineCode IDE",
+    url="IgorTimofeev/OpenComputers/master/Applications/MineCodeIDE/MineCodeIDE.lua",
+    about="IgorTimofeev/OpenComputers/master/Applications/MineCodeIDE/About/",
+    type="Application",
+    icon="IgorTimofeev/OpenComputers/master/Applications/MineCodeIDE/Icon.pic",
+    createShortcut="dock",
+    forceDownload=true,
+    version=1.34,
+    resources={
+      {
+        name="Localization/Russian.lang",
+        url="IgorTimofeev/OpenComputers/master/Applications/MineCodeIDE/Localization/Russian.lang"
+      },
+      {
+        name="Localization/English.lang",
+        url="IgorTimofeev/OpenComputers/master/Applications/MineCodeIDE/Localization/English.lang"
+      },
+    }
+  },
+  {
     name="MineOS/Applications/OCGLTest",
     url="IgorTimofeev/OpenComputers/master/Applications/OCGLTest/OCGLTest.lua",
     type="Application",
@@ -878,25 +898,6 @@
     icon="IgorTimofeev/OpenComputers/master/Applications/Graph/Icon.pic",
     createShortcut="desktop",
     version=1.02,
-  },
-  {
-    name="MineOS/Applications/MineCode IDE",
-    url="IgorTimofeev/OpenComputers/master/Applications/MineCodeIDE/MineCodeIDE.lua",
-    type="Application",
-    icon="IgorTimofeev/OpenComputers/master/Applications/MineCodeIDE/Icon.pic",
-    createShortcut="dock",
-    forceDownload=true,
-    version=1.33,
-    resources={
-      {
-        name="Localization/Russian.lang",
-        url="IgorTimofeev/OpenComputers/master/Applications/MineCodeIDE/Localization/Russian.lang"
-      },
-      {
-        name="Localization/English.lang",
-        url="IgorTimofeev/OpenComputers/master/Applications/MineCodeIDE/Localization/English.lang"
-      },
-    }
   },
   {
     name="MineOS/Applications/Battleship",
