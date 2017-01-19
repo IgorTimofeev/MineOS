@@ -29,6 +29,32 @@ local palette = require("palette")
 
 local args = {...}
 
+local about = {
+	"MineCode IDE",
+	"Copyright © 2015-2017 ECS Inc.",
+	" ",
+	"Developers:",
+	" ",
+	"Timofeev Igor, vk.com/id7799889",
+	"Trifonov Gleb, vk.com/id88323331",
+	" ",
+	"Testers:",
+	" ",
+	"Semyonov Semyon, vk.com/id92656626",
+	"Shestakov Timofey, vk.com/id113499693",
+}
+
+local config = {
+	syntaxColorScheme = syntax.colorScheme,
+	scrollSpeed = 8,
+	cursorColor = 0x00A8FF,
+	cursorSymbol = "┃",
+	cursorBlinkDelay = 0.5,
+	doubleClickDelay = 0.4,
+	screenScale = 1,
+	enableAutoBrackets = true
+}
+
 local colors = {
 	topToolBar = 0xDDDDDD,
 	bottomToolBar = {
@@ -59,14 +85,10 @@ local colors = {
 	}
 }
 
-local config = {
-	syntaxColorScheme = syntax.colorScheme,
-	scrollSpeed = 8,
-	cursorColor = 0x00A8FF,
-	cursorSymbol = "┃",
-	cursorBlinkDelay = 0.4,
-	doubleClickDelay = 0.4,
-	screenScale = 1,
+local possibleBrackets = {
+	["{"] = "}",
+	["["] = "]",
+	["("] = ")",
 }
 
 local cursor = {
@@ -272,14 +294,6 @@ local function setCursorPositionToEnd()
 	setCursorPositionAndClearSelection(unicode.len(mainWindow.codeView.lines[#mainWindow.codeView.lines]) + 1, #mainWindow.codeView.lines)
 end
 
-local function pageUp()
-	scroll(1, mainWindow.codeView.height - 2)
-end
-
-local function pageDown()
-	scroll(-1, mainWindow.codeView.height - 2)
-end
-
 local function scroll(direction, speed)
 	if direction == 1 then
 		if mainWindow.codeView.fromLine > speed then
@@ -294,6 +308,14 @@ local function scroll(direction, speed)
 			mainWindow.codeView.fromLine = #mainWindow.codeView.lines
 		end
 	end
+end
+
+local function pageUp()
+	scroll(1, mainWindow.codeView.height - 2)
+end
+
+local function pageDown()
+	scroll(-1, mainWindow.codeView.height - 2)
 end
 
 local function gotoLine(line)
@@ -331,11 +353,16 @@ local function removeTabs(text)
 	return result
 end
 
+local function removeWindowsLineEndings(text)
+	local result = text:gsub("\r\n", "\n")
+	return result
+end
+
 local function loadFile(path)
 	mainWindow.codeView.fromLine, mainWindow.codeView.fromSymbol, mainWindow.codeView.lines, mainWindow.codeView.maximumLineLength = 1, 1, {}, 0
 	local file = io.open(path, "r")
 	for line in file:lines() do
-		line = removeTabs(line)
+		line = removeWindowsLineEndings(removeTabs(line))
 		table.insert(mainWindow.codeView.lines, line)
 		mainWindow.codeView.maximumLineLength = math.max(mainWindow.codeView.maximumLineLength, unicode.len(line))
 	end
@@ -495,6 +522,16 @@ local function paste(pasteLines)
 			table.insert(mainWindow.codeView.lines, cursor.position.line + #pasteLines - 1, pasteLines[#pasteLines] .. secondPart)
 			setCursorPositionAndClearSelection(unicode.len(pasteLines[#pasteLines]) + 1, cursor.position.line + #pasteLines - 1)
 		end
+	end
+end
+
+local function pasteAutoBrackets(firstSymbol, secondSymbol)
+	local nextSymbol = unicode.sub(mainWindow.codeView.lines[cursor.position.line], cursor.position.symbol, cursor.position.symbol)
+	if config.enableAutoBrackets and (nextSymbol:match("[%s%{%}%[%]%(%)]") or nextSymbol == "") then
+		paste({firstSymbol .. secondSymbol})
+		setCursorPosition(cursor.position.symbol - 1, cursor.position.line)
+	else
+		paste({firstSymbol})
 	end
 end
 
@@ -750,8 +787,10 @@ local function createWindow()
 	local item1 = mainWindow.topMenu:addItem("MineCode", 0x0)
 	item1.onTouch = function()
 		local menu = GUI.contextMenu(item1.x, item1.y + 1)
-		menu:addItem(localization.about, true).onTouch = function()
-			
+		menu:addItem(localization.about).onTouch = function()
+			mainWindow.settingsContainer.isHidden = false
+			local y = math.floor(mainWindow.settingsContainer.height / 2 - #about / 2)
+			mainWindow.settingsContainer:addTextBox(1, y, mainWindow.settingsContainer.width, #about, nil, 0xEEEEEE, about, 1):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
 		end
 		menu:addItem(localization.quit, false, "^W").onTouch = function()
 			mainWindow:close()
@@ -970,12 +1009,10 @@ local function createWindow()
 	mainWindow.settingsContainer.backgroundPanel.onTouch = hideSettingsContainer
 	mainWindow.settingsContainer.isHidden = true
 
-	mainWindow.onAnyEvent = function(eventData)
-		cursor.blinkState = not cursor.blinkState
-		local oldCursorState = cursor.blinkState
-		cursor.blinkState = true
-			
+	mainWindow.onAnyEvent = function(eventData)		
 		if eventData[1] == "touch" and isClickedOnCodeArea(eventData[3], eventData[4]) then
+			cursor.blinkState = true
+			
 			if eventData[5] == 1 then
 				local menu = GUI.contextMenu(eventData[3], eventData[4])
 				menu:addItem(localization.cut, not mainWindow.codeView.selections[1], "^X").onTouch = function()
@@ -1000,6 +1037,8 @@ local function createWindow()
 				lastClickUptime = newUptime
 			end
 		elseif eventData[1] == "drag" and isClickedOnCodeArea(eventData[3], eventData[4]) then
+			cursor.blinkState = true
+			
 			if eventData[5] ~= 1 then
 				mainWindow.codeView.selections[1] = mainWindow.codeView.selections[1] or {from = {}, to = {}}
 				mainWindow.codeView.selections[1].from.symbol, mainWindow.codeView.selections[1].from.line = cursor.position.symbol, cursor.position.line
@@ -1015,6 +1054,8 @@ local function createWindow()
 				end
 			end
 		elseif eventData[1] == "key_down" then
+			cursor.blinkState = true
+
 			-- Ctrl or CMD
 			if keyboard.isKeyDown(29) or keyboard.isKeyDown(219) then
 				-- Backslash
@@ -1112,9 +1153,13 @@ local function createWindow()
 			elseif eventData[4] == 211 then
 				delete()
 			else
-				if not keyboard.isControl(eventData[3]) then
+				local char = unicode.char(eventData[3])
+				if possibleBrackets[char] then
+					pasteAutoBrackets(char, possibleBrackets[char])
+					cursor.blinkState = false
+				elseif not keyboard.isControl(eventData[3]) then
 					deleteSelectedData()
-					paste({unicode.char(eventData[3])})
+					paste({char})
 				end
 			end
 		elseif eventData[1] == "clipboard" then
@@ -1130,7 +1175,7 @@ local function createWindow()
 				scroll(eventData[5], config.scrollSpeed)
 			end
 		elseif not eventData[1] then
-			cursor.blinkState = oldCursorState
+			cursor.blinkState = not cursor.blinkState
 		end
 
 		updateTitle()
