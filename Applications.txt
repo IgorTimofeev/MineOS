@@ -463,7 +463,7 @@
     url="IgorTimofeev/OpenComputers/master/Applications/scale.lua",
     type="Script",
     forceDownload=true,
-    version=1.0,
+    version=1.01,
   },
   {
     name="usr/misc/greetings/English.txt",
@@ -517,7 +517,7 @@
     icon="IgorTimofeev/OpenComputers/master/Applications/MineCodeIDE/Icon.pic",
     createShortcut="dock",
     forceDownload=true,
-    version=1.36,
+    version=1.37,
     resources={
       {
         name="Localization/Russian.lang",
@@ -535,7 +535,7 @@
     type="Application",
     icon="IgorTimofeev/OpenComputers/master/Applications/OCGLTest/Icon.pic",
     createShortcut="desktop",
-    version=1.01,
+    version=1.02,
   },
   {
     name="MineOS/Applications/GeoScan2",

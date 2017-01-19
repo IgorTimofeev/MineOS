@@ -186,6 +186,14 @@ local function changeScale(newScale)
 	saveConfig()
 end
 
+local function scalePlus()
+	if config.screenScale > 0.3 then changeScale(config.screenScale - 0.1) end
+end
+
+local function scaleMinus()
+	if config.screenScale < 1 then changeScale(config.screenScale + 0.1) end
+end
+
 local function showErrorMessage(text)
 	mainWindow.errorMessage.errorTextBox.lines = string.wrap({text}, mainWindow.errorMessage.errorTextBox.width)
 	mainWindow.errorMessage.height = 2 + #mainWindow.errorMessage.errorTextBox.lines
@@ -383,6 +391,7 @@ end
 
 local function newFile()
 	mainWindow.codeView.lines = {""}
+	mainWindow.codeView.maximumLineLength = 1
 	mainWindow.leftTreeView.currentFile = nil
 	setCursorPositionAndClearSelection(1, 1)
 end
@@ -525,9 +534,12 @@ local function paste(pasteLines)
 	end
 end
 
+local function autoBracketsCheck(symbol)
+	return config.enableAutoBrackets and (symbol:match("[%s%{%}%[%]%(%)]") or symbol == "")
+end
+
 local function pasteAutoBrackets(firstSymbol, secondSymbol)
-	local nextSymbol = unicode.sub(mainWindow.codeView.lines[cursor.position.line], cursor.position.symbol, cursor.position.symbol)
-	if config.enableAutoBrackets and (nextSymbol:match("[%s%{%}%[%]%(%)]") or nextSymbol == "") then
+	if autoBracketsCheck(unicode.sub(mainWindow.codeView.lines[cursor.position.line], cursor.position.symbol, cursor.position.symbol)) then
 		paste({firstSymbol .. secondSymbol})
 		setCursorPosition(cursor.position.symbol - 1, cursor.position.line)
 	else
@@ -535,11 +547,17 @@ local function pasteAutoBrackets(firstSymbol, secondSymbol)
 	end
 end
 
+local function backspaceAutoBrackets()
+	if autoBracketsCheck(unicode.sub(mainWindow.codeView.lines[cursor.position.line], cursor.position.symbol - 1, cursor.position.symbol - 1)) then
+		deleteSpecifiedData(cursor.position.symbol, cursor.position.line, cursor.position.symbol, cursor.position.line)
+	end
+end
+
 local function delete()
 	if mainWindow.codeView.selections[1] then
 		deleteSelectedData()
 	else
-		if cursor.position.symbol < unicode.len(mainWindow.codeView.lines[cursor.position.line]) - 1 then
+		if cursor.position.symbol < unicode.len(mainWindow.codeView.lines[cursor.position.line]) + 1 then
 			deleteSpecifiedData(cursor.position.symbol, cursor.position.line, cursor.position.symbol, cursor.position.line)
 		else
 			if cursor.position.line > 1 then
@@ -555,6 +573,7 @@ local function backspace()
 	else
 		if cursor.position.symbol > 1 then
 			deleteSpecifiedData(cursor.position.symbol - 1, cursor.position.line, cursor.position.symbol - 1, cursor.position.line)
+			backspaceAutoBrackets()
 		else
 			if cursor.position.line > 1 then
 				deleteSpecifiedData(unicode.len(mainWindow.codeView.lines[cursor.position.line - 1]) + 1, cursor.position.line - 1, 0, cursor.position.line)
@@ -572,9 +591,14 @@ local function enter()
 end
 
 local function selectAll()
-	mainWindow.codeView.selections[1] = {from = {}, to = {}}
-	mainWindow.codeView.selections[1].from.symbol, mainWindow.codeView.selections[1].from.line = 1, 1
-	mainWindow.codeView.selections[1].to.symbol, mainWindow.codeView.selections[1].to.line = unicode.len(mainWindow.codeView.lines[#mainWindow.codeView.lines]), #mainWindow.codeView.lines
+	mainWindow.codeView.selections[1] = {
+		from = {
+			symbol = 1, line = 1
+		},
+		to = {
+			symbol = unicode.len(mainWindow.codeView.lines[#mainWindow.codeView.lines]), line = #mainWindow.codeView.lines
+		}
+	}
 end
 
 local function isLineCommented(line)
@@ -912,6 +936,13 @@ local function createWindow()
 		menu:addItem(localization.toggleTopToolBar).onTouch = function()
 			toggleTopToolBar()
 		end
+		menu:addSeparator()
+		menu:addItem(localization.scalePlus, false, "^+").onTouch = function()
+			scalePlus()
+		end
+		menu:addItem(localization.scaleMinus, false, "^-").onTouch = function()
+			scaleMinus()
+		end
 		menu:show()
 	end
 
@@ -1107,10 +1138,10 @@ local function createWindow()
 					deleteLine(cursor.position.line)
 				-- +
 				elseif eventData[4] == 13 then
-					if config.screenScale > 0.3 then changeScale(config.screenScale - 0.1) end
+					scalePlus()
 				-- -
 				elseif eventData[4] == 12 then
-					if config.screenScale < 1 then changeScale(config.screenScale + 0.1) end
+					scaleMinus()
 				end
 			-- Arrows up, down, left, right
 			elseif eventData[4] == 200 then

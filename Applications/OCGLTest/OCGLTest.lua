@@ -1,15 +1,15 @@
 
 -------------------------------------------------------- Libraries --------------------------------------------------------
 
-package.loaded["GUI"] = nil
-package.loaded["doubleBuffering"] = nil
-package.loaded["vector"] = nil
-package.loaded["matrix"] = nil
-package.loaded["OpenComputersGL/Main"] = nil
-package.loaded["OpenComputersGL/Materials"] = nil
-package.loaded["OpenComputersGL/Renderer"] = nil
-package.loaded["PolyCatEngine/Main"] = nil
-package.loaded["PolyCatEngine/PostProcessing"] = nil
+-- package.loaded["GUI"] = nil
+-- package.loaded["doubleBuffering"] = nil
+-- package.loaded["vector"] = nil
+-- package.loaded["matrix"] = nil
+-- package.loaded["OpenComputersGL/Main"] = nil
+-- package.loaded["OpenComputersGL/Materials"] = nil
+-- package.loaded["OpenComputersGL/Renderer"] = nil
+-- package.loaded["PolyCatEngine/Main"] = nil
+-- package.loaded["PolyCatEngine/PostProcessing"] = nil
 
 local computer = require("computer")
 local buffer = require("doubleBuffering")

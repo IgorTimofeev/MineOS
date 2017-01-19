@@ -1,4 +1,6 @@
 {
+	scalePlus = "Увеличить масштаб",
+	scaleMinus = "Уменьшить масштаб",
 	pathToFile = "Путь к файлу",
 	selectWord = "Выделить текущее слово",
 	gotoCyka = "Переход",

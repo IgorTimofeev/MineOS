@@ -1,4 +1,6 @@
 {
+	scalePlus = "Increase scale",
+	scaleMinus = "Decrease scale",
 	pathToFile = "Path to file",
 	selectWord = "Select current word",
 	gotoCyka = "Goto",
