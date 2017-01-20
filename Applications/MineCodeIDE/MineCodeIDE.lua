@@ -42,6 +42,7 @@ local about = {
 	"Testers:",
 	" ",
 	"Semyonov Semyon, vk.com/id92656626",
+	"Prosin Mihail, vk.com/id75667079",
 	"Shestakov Timofey, vk.com/id113499693",
 	"Bogushevich Victoria, vk.com/id171497518",
 	"Vitvitskaya Yana, vk.com/id183425349",
