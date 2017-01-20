@@ -524,17 +524,16 @@ end
 
 local function getVariables(codePart)
 	local variables = {}
-	-- Сначала проверяем участок кода на наличие функций или комментариев
+	-- Сначала мы проверяем участок кода на наличие комментариев
 	if
 		not codePart:match("^%-%-") and
-		not codePart:match("^[\t%s]+%-%-") and
-		not codePart:match("^.+function") and
-		not codePart:match("^function")
+		not codePart:match("^[\t%s]+%-%-")
 	then
-		-- Потом разбиваем код на отдельные слова
-		for word in codePart:gmatch("[^%s\t]+") do
-			-- Далее проверяем, не совпадает ли это слово с одним из луа-шаблонов, то бишь,
-			-- не является ли оно частью синтаксиса
+		-- Затем заменяем все строковые куски в участке кода на "ничего", чтобы наш "прекрасный" парсер не искал переменных в строках
+		codePart = codePart:gsub("\"[^\"]+\"", "")
+		-- Потом разбиваем код на отдельные буквенно-цифровые слова, не забыв точечку с двоеточием
+		for word in codePart:gmatch("[%a%d%.%:]+") do
+			-- Далее проверяем, не совпадает ли это слово с одним из луа-шаблонов, то бишь, не является ли оно частью синтаксиса
 			if
 				word ~= "local" and
 				word ~= "return" and
@@ -556,19 +555,13 @@ local function getVariables(codePart)
 				word ~= "not" and
 				word ~= "and" and
 				word ~= "or"  and
-				-- А вот это надо на всякий пожарный, вдруг это ебучая строка с дохуяллионом кавычек
-				not word:match("^\".+\"$")
+				-- Также проверяем, не число ли это в чистом виде
+				not word:match("^%d+$") and
+				not word:match("^0x%x+$") and
+				-- Или символ конкатенации, например
+				not word:match("^%.+$")
 			then
-				-- Затем извлекаем из наших слов куски без всяких хитрожопых символов, оставляя лишь буковки с циферками
-				for variable in word:gmatch("[^%[%]%{%}%(%)%;%,%=%+%-%*%/%^%%%>%<]+") do
-					-- Попутно чекаем, не является ли этот кусок числом
-					if
-						not variable:match("^%d+$") and
-						not variable:match("^0x%x+$")
-					then
-						variables[variable] = true
-					end
-				end
+				variables[word] = true
 			end
 		end
 	end
@@ -1180,8 +1173,8 @@ local function createWindow()
 	end
 
 	mainWindow.errorMessage = mainWindow:addContainer(1, 1, 1, 1)
-	mainWindow.errorMessage.backgroundPanel = mainWindow.errorMessage:addPanel(1, 1, 1, 1, 0xFFFFFF, 40)
-	mainWindow.errorMessage.errorTextBox = mainWindow.errorMessage:addTextBox(3, 2, 1, 1, nil, 0x3C3C3C, {}, 1)
+	mainWindow.errorMessage.backgroundPanel = mainWindow.errorMessage:addPanel(1, 1, 1, 1, 0xFFFFFF, 30)
+	mainWindow.errorMessage.errorTextBox = mainWindow.errorMessage:addTextBox(3, 2, 1, 1, nil, 0x4B4B4B, {}, 1)
 	hideErrorMessage()
 
 	mainWindow.settingsContainer = mainWindow:addContainer(1, 1, 1, 1)
