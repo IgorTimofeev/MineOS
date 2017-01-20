@@ -1,4 +1,7 @@
-{
+{	
+	debugging = "Debugger on line ",
+	runtimeError = "Runtime error",
+	variables = "Values of the variables:",
 	scalePlus = "Increase scale",
 	scaleMinus = "Decrease scale",
 	pathToFile = "Path to file",
@@ -31,9 +34,7 @@
 	saveAs = "Save as",
 	colorScheme = "Color scheme",
 	color = "Color",
-	toggleLeftToolBar = "Toggle filemanager",
-	toggleTopToolBar = "Toggle toolbar",
-	toggleBottomToolBar = "Toggle search bar",
+	toggleTopToolBar = "Show top toolbar",
 	find = "Find",
 	findSomeShit = "Let's find some shit…",
 	cut = "Cut",

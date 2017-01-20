@@ -1750,7 +1750,7 @@ function GUI.treeView(x, y, width, height, backgroundColor, textColor, selection
 
 	treeView.updateFileList = treeViewUpdateFileList
 	treeView.draw = treeViewDraw
-	treeView.currentFile = ""
+	treeView.currentFile = nil
 	treeView.fromFile = 1
 
 	treeView:updateFileList()

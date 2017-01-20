@@ -24,6 +24,7 @@ local ecs = require("ECSAPI")
 local image = require("image")
 local keyboard = require("keyboard")
 local palette = require("palette")
+local term = require("term")
 
 ---------------------------------------------------- Constants ----------------------------------------------------
 
@@ -31,7 +32,7 @@ local args = {...}
 
 local about = {
 	"MineCode IDE",
-	"Copyright © 2015-2017 ECS Inc.",
+	"Copyright © 2014-2017 ECS Inc.",
 	" ",
 	"Developers:",
 	" ",
@@ -42,6 +43,9 @@ local about = {
 	" ",
 	"Semyonov Semyon, vk.com/id92656626",
 	"Shestakov Timofey, vk.com/id113499693",
+	"Bogushevich Victoria, vk.com/id171497518",
+	"Vitvitskaya Yana, vk.com/id183425349",
+	"Golovanova Polina, vk.com/id226251826",
 }
 
 local config = {
@@ -70,18 +74,22 @@ local colors = {
 	},
 	title = {
 		default = {
-			sides = 0x4B4B4B,
+			sides = 0x555555,
 			background = 0x3C3C3C,
-			text = 0xEEEEEE
+			text = 0xEEEEEE,
 		},
-		warning = {
+		onError = {
 			sides = 0xCC4940,
 			background = 0x880000,
 			text = 0xEEEEEE,
-		}
+		},
 	},
 	leftTreeView = {
 		background = 0xCCCCCC,
+	},
+	highlights = {
+		onError = 0xFF4940,
+		onBreakpoint = 0x990000,
 	}
 }
 
@@ -93,8 +101,8 @@ local possibleBrackets = {
 
 local cursor = {
 	position = {
-		symbol = 20,
-		line = 8
+		symbol = 1,
+		line = 1
 	},
 	blinkState = false
 }
@@ -105,6 +113,7 @@ local localization = MineOSCore.getLocalization(resourcesPath .. "Localization/"
 local findStartFrom
 local clipboard
 local lastErrorLine
+local breakpointLine = 5
 local lastClickUptime = computer.uptime()
 local mainWindow = {}
 
@@ -163,10 +172,11 @@ local function calculateSizes()
 	mainWindow.titleTextBox.localPosition.x = math.floor(mainWindow.topToolBar.width / 2 - mainWindow.titleTextBox.width / 2)
 	mainWindow.runButton.localPosition.x = mainWindow.titleTextBox.localPosition.x - mainWindow.runButton.width - 2
 	mainWindow.toggleSyntaxHighlightingButton.localPosition.x = mainWindow.runButton.localPosition.x - mainWindow.toggleSyntaxHighlightingButton.width - 2
+	mainWindow.addBreakpointButton.localPosition.x = mainWindow.toggleSyntaxHighlightingButton.localPosition.x - mainWindow.addBreakpointButton.width - 2
 	mainWindow.toggleLeftToolBarButton.localPosition.x = mainWindow.titleTextBox.localPosition.x + mainWindow.titleTextBox.width + 2
 	mainWindow.toggleBottomToolBarButton.localPosition.x = mainWindow.toggleLeftToolBarButton.localPosition.x + mainWindow.toggleLeftToolBarButton.width + 2
 	mainWindow.toggleTopToolBarButton.localPosition.x = mainWindow.toggleBottomToolBarButton.localPosition.x + mainWindow.toggleBottomToolBarButton.width + 2
-	
+
 	mainWindow.RAMUsageProgressBar.localPosition.x = mainWindow.toggleTopToolBarButton.localPosition.x + mainWindow.toggleTopToolBarButton.width + 3
 	mainWindow.RAMUsageProgressBar.width = mainWindow.topToolBar.width - mainWindow.RAMUsageProgressBar.localPosition.x - 3
 
@@ -194,16 +204,75 @@ local function scaleMinus()
 	if config.screenScale < 1 then changeScale(config.screenScale + 0.1) end
 end
 
-local function showErrorMessage(text)
-	mainWindow.errorMessage.errorTextBox.lines = string.wrap({text}, mainWindow.errorMessage.errorTextBox.width)
+local function updateTitle()
+	if not mainWindow.topToolBar.isHidden then
+		if mainWindow.errorMessage.isHidden then
+			mainWindow.titleTextBox.lines[1] = string.limit(localization.file .. ": " .. (mainWindow.leftTreeView.currentFile or localization.none), mainWindow.titleTextBox.width - 4)
+			mainWindow.titleTextBox.lines[2] = string.limit(localization.cursor .. cursor.position.line .. localization.line .. cursor.position.symbol .. localization.symbol, mainWindow.titleTextBox.width - 4)
+			if mainWindow.codeView.selections[1] then
+				local countOfSelectedLines = mainWindow.codeView.selections[1].to.line - mainWindow.codeView.selections[1].from.line + 1
+				local countOfSelectedSymbols
+				if mainWindow.codeView.selections[1].from.line == mainWindow.codeView.selections[1].to.line then
+					countOfSelectedSymbols = unicode.len(unicode.sub(mainWindow.codeView.lines[mainWindow.codeView.selections[1].from.line], mainWindow.codeView.selections[1].from.symbol, mainWindow.codeView.selections[1].to.symbol))
+				else
+					countOfSelectedSymbols = unicode.len(unicode.sub(mainWindow.codeView.lines[mainWindow.codeView.selections[1].from.line], mainWindow.codeView.selections[1].from.symbol, -1))
+					for line = mainWindow.codeView.selections[1].from.line + 1, mainWindow.codeView.selections[1].to.line - 1 do
+						countOfSelectedSymbols = countOfSelectedSymbols + unicode.len(mainWindow.codeView.lines[line])
+					end
+					countOfSelectedSymbols = countOfSelectedSymbols + unicode.len(unicode.sub(mainWindow.codeView.lines[mainWindow.codeView.selections[1].to.line], 1, mainWindow.codeView.selections[1].to.symbol))
+				end
+				mainWindow.titleTextBox.lines[3] = string.limit(localization.selection .. countOfSelectedLines .. localization.lines .. countOfSelectedSymbols .. localization.symbols, mainWindow.titleTextBox.width - 4)
+			else
+				mainWindow.titleTextBox.lines[3] = string.limit(localization.selection .. localization.none, mainWindow.titleTextBox.width - 4)
+			end
+		else
+			mainWindow.titleTextBox.lines[1], mainWindow.titleTextBox.lines[3] = " ", " "
+			if breakpointLine then
+				mainWindow.titleTextBox.lines[2] = localization.debugging .. cursor.position.line
+			else
+				mainWindow.titleTextBox.lines[2] = localization.runtimeError
+			end
+		end
+	end
+end
+
+local function calculateErrorMessageSizeAndBeep()
 	mainWindow.errorMessage.height = 2 + #mainWindow.errorMessage.errorTextBox.lines
 	mainWindow.errorMessage.backgroundPanel.height = mainWindow.errorMessage.height
 	mainWindow.errorMessage.errorTextBox.height = mainWindow.errorMessage.height - 2
-	
-	mainWindow.titleTextBox.colors.background, mainWindow.titleTextBox.colors.text = colors.title.warning.background, colors.title.warning.text
+
+	updateTitle()
+	mainWindow:draw()
+	buffer.draw()
 
 	for i = 1, 3 do component.computer.beep(1500, 0.08) end
+end
+
+local function showBreakpointMessage(variables)
+	mainWindow.titleTextBox.colors.background, mainWindow.titleTextBox.colors.text = colors.title.onError.background, colors.title.onError.text
 	mainWindow.errorMessage.isHidden = false
+
+	mainWindow.errorMessage.errorTextBox:setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+	mainWindow.errorMessage.errorTextBox.lines = {
+		{text = localization.variables, color = 0x0},
+		" ",
+	}
+
+	for variable, value in pairs(variables) do
+		table.insert(mainWindow.errorMessage.errorTextBox.lines, variable .. " = " .. value)
+	end
+
+	calculateErrorMessageSizeAndBeep()
+end
+
+local function showErrorMessage(text)
+	mainWindow.titleTextBox.colors.background, mainWindow.titleTextBox.colors.text = colors.title.onError.background, colors.title.onError.text
+	mainWindow.errorMessage.isHidden = false
+
+	mainWindow.errorMessage.errorTextBox:setAlignment(GUI.alignment.horizontal.left, GUI.alignment.vertical.top)
+	mainWindow.errorMessage.errorTextBox.lines = string.wrap({text}, mainWindow.errorMessage.errorTextBox.width)	
+	
+	calculateErrorMessageSizeAndBeep()
 end
 
 local function hideErrorMessage()
@@ -216,8 +285,16 @@ local function hideSettingsContainer()
 	mainWindow.settingsContainer.isHidden = true
 end
 
-local function deselectLastErrorLine()
-	if lastErrorLine then mainWindow.codeView.highlights[lastErrorLine] = nil end
+local function clearHighlights()
+	if lastErrorLine then
+		mainWindow.codeView.highlights[lastErrorLine] = nil
+		lastErrorLine = nil
+	end
+
+	if breakpointLine then
+		mainWindow.codeView.highlights[breakpointLine] = nil
+		breakpointLine = nil
+	end
 end
 
 local function clearSelection()
@@ -261,7 +338,7 @@ local function setCursorPosition(symbol, line)
 	cursor.position.symbol, cursor.position.line = fixCursorPosition(symbol, line)
 	fixFromLineByCursorPosition()
 	fixFromSymbolByCursorPosition()
-	deselectLastErrorLine()
+	clearHighlights()
 	hideErrorMessage()
 end
 
@@ -429,33 +506,122 @@ local function save()
 	saveFile(mainWindow.leftTreeView.currentFile)
 end
 
+local function addErrorLine(line)
+	lastErrorLine = line
+	mainWindow.codeView.highlights[line] = colors.highlights.onError
+end
+
+local function addBreakpoint()
+	clearHighlights()
+	breakpointLine = cursor.position.line
+	mainWindow.codeView.highlights[breakpointLine] = colors.highlights.onBreakpoint
+end
+
+local function getVariables(codePart)
+	local variables = {}
+	-- Сначала проверяем участок кода на наличие функций или комментариев
+	if
+		not codePart:match("^%-%-") and
+		not codePart:match("^[\t%s]+%-%-") and
+		not codePart:match("^.+function") and
+		not codePart:match("^function")
+	then
+		-- Потом разбиваем код на отдельные слова
+		for word in codePart:gmatch("[^%s\t]+") do
+			-- Далее проверяем, не совпадает ли это слово с одним из луа-шаблонов, то бишь,
+			-- не является ли оно частью синтаксиса
+			if
+				word ~= "local" and
+				word ~= "return" and
+				word ~= "while" and
+				word ~= "repeat" and
+				word ~= "until" and
+				word ~= "for" and
+				word ~= "in" and
+				word ~= "do" and
+				word ~= "if" and
+				word ~= "then" and
+				word ~= "else" and
+				word ~= "elseif" and
+				word ~= "end" and
+				word ~= "function" and
+				word ~= "true" and
+				word ~= "false" and
+				word ~= "nil" and
+				word ~= "not" and
+				word ~= "and" and
+				word ~= "or"
+			then
+				-- Затем извлекаем из наших слов куски без всяких хитрожопых символов, оставляя лишь буковки с циферками
+				for variable in word:gmatch("[^%[%]%{%}%(%)%;%,%=%+%-%*%/%^%%%>%<]+") do
+					-- Попутно чекаем, не является ли этот кусок числом или строкой
+					if
+						not variable:match("^%d+$") and
+						not variable:match("^0x%x+$") and
+						not variable:match("^\".+\"$")
+					then
+						variables[variable] = true
+					end
+				end
+			end
+		end
+	end
+
+	return variables
+end
+
+local function createBreakpointError(variables)
+	local errorMessage = "error({variables={"
+
+	for variable in pairs(variables) do
+		errorMessage = errorMessage .. "[\"" .. variable .. "\"]=tostring(" .. variable .. "),"
+	end
+
+	return errorMessage .. "}})"
+end
+
 local function run()
-	deselectLastErrorLine()
+	if breakpointLine then
+		table.insert(mainWindow.codeView.lines, breakpointLine, createBreakpointError(getVariables(mainWindow.codeView.lines[breakpointLine])))
+	end
 
 	local loadSuccess, loadReason = load(table.concat(mainWindow.codeView.lines, "\n"))
 	if loadSuccess then
 		local oldResolutionX, oldResolutionY = gpu.getResolution()
-		gpu.setBackground(0x262626); gpu.setForeground(0xFFFFFF); gpu.fill(1, 1, oldResolutionX, oldResolutionY, " "); require("term").setCursor(1, 1)
+		gpu.setBackground(0x1B1B1B)
+		gpu.setForeground(0xFFFFFF)
+		gpu.fill(1, 1, oldResolutionX, oldResolutionY, " ")
+		term.setCursor(1, 1)
 		
 		local xpcallSuccess, xpcallReason = xpcall(loadSuccess, debug.traceback)
 		local xpcallReasonType = type(xpcallReason)
-		if xpcallSuccess or xpcallReasonType == "table" then
+
+		if breakpointLine then
+			table.remove(mainWindow.codeView.lines, breakpointLine)
+		end
+
+		if xpcallSuccess or (xpcallReasonType == "table" and xpcallReason.terminated == true) then
 			MineOSCore.waitForPressingAnyKey()
 		end
 
 		gpu.setResolution(oldResolutionX, oldResolutionY)
-		buffer.start()
-		mainWindow:draw()
+		buffer.start()		
 
-		if not xpcallSuccess and xpcallReasonType ~= "table" then
-			showErrorMessage(xpcallReason)
+		if not xpcallSuccess then
+			if xpcallReasonType == "table" then
+				if xpcallReason.variables then
+					gotoLine(breakpointLine)
+					showBreakpointMessage(xpcallReason.variables)
+				end
+			else
+				showErrorMessage(xpcallReason)
+			end
 		end
 
+		mainWindow:draw()
 		buffer:draw()		
 	else
-		local match = string.match(loadReason, ":(%d+)%:")
-		lastErrorLine = tonumber(match)
-		mainWindow.codeView.highlights[lastErrorLine] = 0xFF4444
+		addErrorLine(tonumber(loadReason:match(":(%d+)%:")))
 		gotoLine(lastErrorLine)
 		showErrorMessage(loadReason)
 	end
@@ -534,12 +700,8 @@ local function paste(pasteLines)
 	end
 end
 
-local function autoBracketsCheck(symbol)
-	return config.enableAutoBrackets and (symbol:match("[%s%{%}%[%]%(%)]") or symbol == "")
-end
-
 local function pasteAutoBrackets(firstSymbol, secondSymbol)
-	if autoBracketsCheck(unicode.sub(mainWindow.codeView.lines[cursor.position.line], cursor.position.symbol, cursor.position.symbol)) then
+	if config.enableAutoBrackets then
 		paste({firstSymbol .. secondSymbol})
 		setCursorPosition(cursor.position.symbol - 1, cursor.position.line)
 	else
@@ -548,7 +710,7 @@ local function pasteAutoBrackets(firstSymbol, secondSymbol)
 end
 
 local function backspaceAutoBrackets()
-	if autoBracketsCheck(unicode.sub(mainWindow.codeView.lines[cursor.position.line], cursor.position.symbol - 1, cursor.position.symbol - 1)) then
+	if config.enableAutoBrackets and unicode.sub(mainWindow.codeView.lines[cursor.position.line], cursor.position.symbol - 1, cursor.position.symbol - 1):match("[%{%[%(]") then
 		deleteSpecifiedData(cursor.position.symbol, cursor.position.line, cursor.position.symbol, cursor.position.line)
 	end
 end
@@ -572,8 +734,8 @@ local function backspace()
 		deleteSelectedData()
 	else
 		if cursor.position.symbol > 1 then
-			deleteSpecifiedData(cursor.position.symbol - 1, cursor.position.line, cursor.position.symbol - 1, cursor.position.line)
 			backspaceAutoBrackets()
+			deleteSpecifiedData(cursor.position.symbol - 1, cursor.position.line, cursor.position.symbol - 1, cursor.position.line)
 		else
 			if cursor.position.line > 1 then
 				deleteSpecifiedData(unicode.len(mainWindow.codeView.lines[cursor.position.line - 1]) + 1, cursor.position.line - 1, 0, cursor.position.line)
@@ -710,29 +872,6 @@ local function updateRAMProgressBar()
 	if not mainWindow.topToolBar.isHidden then
 		local totalMemory = computer.totalMemory()
 		mainWindow.RAMUsageProgressBar.value = math.ceil((totalMemory - computer.freeMemory()) / totalMemory * 100)
-	end
-end
-
-local function updateTitle()
-	if not mainWindow.topToolBar.isHidden then
-		mainWindow.titleTextBox.lines[1] = string.limit(localization.file .. ": " .. (mainWindow.leftTreeView.currentFile or localization.none), mainWindow.titleTextBox.width - 4)
-		mainWindow.titleTextBox.lines[2] = string.limit(localization.cursor .. cursor.position.line .. localization.line .. cursor.position.symbol .. localization.symbol, mainWindow.titleTextBox.width - 4)
-		if mainWindow.codeView.selections[1] then
-			local countOfSelectedLines = mainWindow.codeView.selections[1].to.line - mainWindow.codeView.selections[1].from.line + 1
-			local countOfSelectedSymbols
-			if mainWindow.codeView.selections[1].from.line == mainWindow.codeView.selections[1].to.line then
-				countOfSelectedSymbols = unicode.len(unicode.sub(mainWindow.codeView.lines[mainWindow.codeView.selections[1].from.line], mainWindow.codeView.selections[1].from.symbol, mainWindow.codeView.selections[1].to.symbol))
-			else
-				countOfSelectedSymbols = unicode.len(unicode.sub(mainWindow.codeView.lines[mainWindow.codeView.selections[1].from.line], mainWindow.codeView.selections[1].from.symbol, -1))
-				for line = mainWindow.codeView.selections[1].from.line + 1, mainWindow.codeView.selections[1].to.line - 1 do
-					countOfSelectedSymbols = countOfSelectedSymbols + unicode.len(mainWindow.codeView.lines[line])
-				end
-				countOfSelectedSymbols = countOfSelectedSymbols + unicode.len(unicode.sub(mainWindow.codeView.lines[mainWindow.codeView.selections[1].to.line], 1, mainWindow.codeView.selections[1].to.symbol))
-			end
-			mainWindow.titleTextBox.lines[3] = string.limit(localization.selection .. countOfSelectedLines .. localization.lines .. countOfSelectedSymbols .. localization.symbols, mainWindow.titleTextBox.width - 4)
-		else
-			mainWindow.titleTextBox.lines[3] = string.limit(localization.selection .. localization.none, mainWindow.titleTextBox.width - 4)
-		end
 	end
 end
 
@@ -926,16 +1065,14 @@ local function createWindow()
 				config.cursorBlinkDelay = horizontalSlider.value / 1000; saveConfig()
 			end
 		end
-		menu:addSeparator()
-		menu:addItem(localization.toggleLeftToolBar).onTouch = function()
-			toggleLeftToolBar()
+
+		if mainWindow.topToolBar.isHidden then
+			menu:addSeparator()
+			menu:addItem(localization.toggleTopToolBar).onTouch = function()
+				toggleTopToolBar()
+			end
 		end
-		menu:addItem(localization.toggleBottomToolBar).onTouch = function()
-			toggleBottomToolBar()
-		end
-		menu:addItem(localization.toggleTopToolBar).onTouch = function()
-			toggleTopToolBar()
-		end
+
 		menu:addSeparator()
 		menu:addItem(localization.scalePlus, false, "^+").onTouch = function()
 			scalePlus()
@@ -970,22 +1107,28 @@ local function createWindow()
 	local titleTextBoxOldDraw = mainWindow.titleTextBox.draw
 	mainWindow.titleTextBox.draw = function(titleTextBox)
 		titleTextBoxOldDraw(titleTextBox)
-		local sidesColor = mainWindow.errorMessage.isHidden and colors.title.default.sides or colors.title.warning.sides
+		local sidesColor = mainWindow.errorMessage.isHidden and colors.title.default.sides or colors.title.onError.sides
 		buffer.square(titleTextBox.x, titleTextBox.y, 1, titleTextBox.height, sidesColor, titleTextBox.colors.text, " ")
 		buffer.square(titleTextBox.x + titleTextBox.width - 1, titleTextBox.y, 1, titleTextBox.height, sidesColor, titleTextBox.colors.text, " ")
 	end
 
 	mainWindow.RAMUsageProgressBar = mainWindow.topToolBar:addProgressBar(1, 2, 1, 0x777777, 0xBBBBBB, 0xAAAAAA, 50, true, true, "RAM: ", "%")
 
-	mainWindow.runButton = mainWindow.topToolBar:addAdaptiveButton(1, 1, 3, 1, 0x4B4B4B, 0xEEEEEE, 0xCCCCCC, 0x444444, "▷")
-	mainWindow.runButton.onTouch = function()
-		run()
+	--☯◌☺
+	mainWindow.addBreakpointButton = mainWindow.topToolBar:addAdaptiveButton(1, 1, 3, 1, 0x878787, 0xEEEEEE, 0xCCCCCC, 0x444444, "x")
+	mainWindow.addBreakpointButton.onTouch = function()
+		addBreakpoint()
 	end
 
-	mainWindow.toggleSyntaxHighlightingButton = mainWindow.topToolBar:addAdaptiveButton(1, 1, 3, 1, 0xCCCCCC, 0x444444, 0x696969, 0xEEEEEE, "*")
+	mainWindow.toggleSyntaxHighlightingButton = mainWindow.topToolBar:addAdaptiveButton(1, 1, 3, 1, 0xCCCCCC, 0x444444, 0x696969, 0xEEEEEE, "◌")
 	mainWindow.toggleSyntaxHighlightingButton.switchMode, mainWindow.toggleSyntaxHighlightingButton.pressed = true, true
 	mainWindow.toggleSyntaxHighlightingButton.onTouch = function()
 		mainWindow.codeView.highlightLuaSyntax = not mainWindow.codeView.highlightLuaSyntax
+	end
+
+	mainWindow.runButton = mainWindow.topToolBar:addAdaptiveButton(1, 1, 3, 1, 0x4B4B4B, 0xEEEEEE, 0xCCCCCC, 0x444444, "▷")
+	mainWindow.runButton.onTouch = function()
+		run()
 	end
 
 	mainWindow.toggleLeftToolBarButton = mainWindow.topToolBar:addAdaptiveButton(1, 1, 3, 1, 0xCCCCCC, 0x444444, 0x4B4B4B, 0xEEEEEE, "⇦")
@@ -1032,7 +1175,7 @@ local function createWindow()
 
 	mainWindow.errorMessage = mainWindow:addContainer(1, 1, 1, 1)
 	mainWindow.errorMessage.backgroundPanel = mainWindow.errorMessage:addPanel(1, 1, 1, 1, 0xFFFFFF, 40)
-	mainWindow.errorMessage.errorTextBox = mainWindow.errorMessage:addTextBox(3, 2, 1, 1, nil, 0x2D2D2D, {}, 1)
+	mainWindow.errorMessage.errorTextBox = mainWindow.errorMessage:addTextBox(3, 2, 1, 1, nil, 0x3C3C3C, {}, 1)
 	hideErrorMessage()
 
 	mainWindow.settingsContainer = mainWindow:addContainer(1, 1, 1, 1)
