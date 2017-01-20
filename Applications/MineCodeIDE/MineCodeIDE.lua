@@ -573,7 +573,7 @@ local function createBreakpointError(variables)
 	local errorMessage = "error({variables={"
 
 	for variable in pairs(variables) do
-		errorMessage = errorMessage .. "[\"" .. variable .. "\"]=tostring(" .. variable .. "),"
+		errorMessage = errorMessage .. "[\"" .. variable .. "\"] = type(" .. variable .. ") == \"string\" and \"\\\"\" .. " .. variable .. " .. \"\\\"\" or tostring(" .. variable .. "),"
 	end
 
 	return errorMessage .. "}})"
