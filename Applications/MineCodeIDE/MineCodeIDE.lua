@@ -254,13 +254,17 @@ local function showBreakpointMessage(variables)
 	mainWindow.errorMessage.isHidden = false
 
 	mainWindow.errorMessage.errorTextBox:setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
-	mainWindow.errorMessage.errorTextBox.lines = {
-		{text = localization.variables, color = 0x0},
-		" ",
-	}
+	mainWindow.errorMessage.errorTextBox.lines = {}
 
 	for variable, value in pairs(variables) do
 		table.insert(mainWindow.errorMessage.errorTextBox.lines, variable .. " = " .. value)
+	end
+
+	if #mainWindow.errorMessage.errorTextBox.lines > 0 then
+		table.insert(mainWindow.errorMessage.errorTextBox.lines, 1, " ")
+		table.insert(mainWindow.errorMessage.errorTextBox.lines, 1, {text = localization.variables, color = 0x0})
+	else
+		table.insert(mainWindow.errorMessage.errorTextBox.lines, 1, {text = localization.variablesNotAvailable, color = 0x0})
 	end
 
 	calculateErrorMessageSizeAndBeep()
@@ -551,15 +555,16 @@ local function getVariables(codePart)
 				word ~= "nil" and
 				word ~= "not" and
 				word ~= "and" and
-				word ~= "or"
+				word ~= "or"  and
+				-- А вот это надо на всякий пожарный, вдруг это ебучая строка с дохуяллионом кавычек
+				not word:match("^\".+\"$")
 			then
 				-- Затем извлекаем из наших слов куски без всяких хитрожопых символов, оставляя лишь буковки с циферками
 				for variable in word:gmatch("[^%[%]%{%}%(%)%;%,%=%+%-%*%/%^%%%>%<]+") do
-					-- Попутно чекаем, не является ли этот кусок числом или строкой
+					-- Попутно чекаем, не является ли этот кусок числом
 					if
 						not variable:match("^%d+$") and
-						not variable:match("^0x%x+$") and
-						not variable:match("^\".+\"$")
+						not variable:match("^0x%x+$")
 					then
 						variables[variable] = true
 					end
