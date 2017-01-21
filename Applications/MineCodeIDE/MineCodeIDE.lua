@@ -1,9 +1,10 @@
 
 ---------------------------------------------------- Libraries ----------------------------------------------------
 
--- "/MineOS/Applications/MineCode IDE.app/MineCode IDE.lua" open OS.luaad
+-- "/MineOS/Applications/MineCode IDE.app/MineCode IDE.lua" open OS.lua
 
 -- package.loaded.syntax = nil
+-- package.loaded.ECSAPI = nil
 -- package.loaded.GUI = nil
 -- package.loaded.windows = nil
 -- package.loaded.MineOSCore = nil
@@ -11,7 +12,6 @@
 require("advancedLua")
 local computer = require("computer")
 local component = require("component")
-local gpu = component.gpu
 local fs = require("filesystem")
 local buffer = require("doubleBuffering")
 local GUI = require("GUI")
@@ -188,21 +188,19 @@ local function calculateSizes()
 end
 
 local function changeScale(newScale)
-	ecs.setScale(newScale)
-	buffer.start()
+	buffer.changeResolution(ecs.getScaledResolution(newScale))
 	calculateSizes()
 	mainWindow:draw()
 	buffer.draw()
 	config.screenScale = newScale
-	saveConfig()
 end
 
 local function scalePlus()
-	if config.screenScale > 0.3 then changeScale(config.screenScale - 0.1) end
+	if config.screenScale > 0.3 then changeScale(config.screenScale - 0.1); saveConfig() end
 end
 
 local function scaleMinus()
-	if config.screenScale < 1 then changeScale(config.screenScale + 0.1) end
+	if config.screenScale < 1 then changeScale(config.screenScale + 0.1); saveConfig() end
 end
 
 local function updateTitle()
@@ -624,10 +622,10 @@ local function run()
 
 	local loadSuccess, loadReason = load(table.concat(mainWindow.codeView.lines, "\n"))
 	if loadSuccess then
-		local oldResolutionX, oldResolutionY = gpu.getResolution()
-		gpu.setBackground(0x1B1B1B)
-		gpu.setForeground(0xFFFFFF)
-		gpu.fill(1, 1, oldResolutionX, oldResolutionY, " ")
+		local oldResolutionX, oldResolutionY = component.gpu.getResolution()
+		component.gpu.setBackground(0x1B1B1B)
+		component.gpu.setForeground(0xFFFFFF)
+		component.gpu.fill(1, 1, oldResolutionX, oldResolutionY, " ")
 		term.setCursor(1, 1)
 		
 		local xpcallSuccess, xpcallReason = xpcall(loadSuccess, debug.traceback)
@@ -641,8 +639,7 @@ local function run()
 			MineOSCore.waitForPressingAnyKey()
 		end
 
-		gpu.setResolution(oldResolutionX, oldResolutionY)
-		buffer.start()		
+		buffer.changeResolution(oldResolutionX, oldResolutionY)	
 
 		if not xpcallSuccess then
 			if xpcallReasonType == "table" then
@@ -1387,6 +1384,7 @@ local function createWindow()
 			end
 		elseif eventData[1] == "component_added" or eventData[1] == "component_removed" then
 			if eventData[3] == "screen" then
+				os.sleep(0.5)
 				changeScale(config.screenScale)
 			end
 		elseif not eventData[1] then
@@ -1412,8 +1410,6 @@ local function createWindow()
 end
 
 ---------------------------------------------------- RUSH B! ----------------------------------------------------
-
-buffer.start()
 
 loadConfig()
 createWindow()
