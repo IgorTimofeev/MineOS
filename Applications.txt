@@ -517,7 +517,7 @@
     icon="IgorTimofeev/OpenComputers/master/Applications/MineCodeIDE/Icon.pic",
     createShortcut="dock",
     forceDownload=true,
-    version=1.43,
+    version=1.44,
     resources={
       {
         name="Localization/Russian.lang",
@@ -1173,7 +1173,7 @@
     type="Application",
     icon="IgorTimofeev/OpenComputers/master/Applications/HoloEdit/Icon.pic",
     createShortcut="desktop",
-    version=1.01,
+    version=1.02,
     resources={
       {
         name="Localization/Russian.lang",

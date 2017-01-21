@@ -122,13 +122,15 @@ function syntax.highlightString(x, y, str, indentationWidth)
 				indentationSymbolCounter = indentationSymbolCounter - 1
 			end
 
-			if x >= buffer.drawLimit.x then
+			if x > buffer.drawLimit.x2 then
+				break
+			elseif x >= buffer.drawLimit.x then
 				bufferIndex = bufferIndex or buffer.getBufferIndexByCoordinates(x, y)
 				buffer.screen.new[bufferIndex + 1] = colors[symbol] or syntax.colorScheme.text
 				buffer.screen.new[bufferIndex + 2] = symbols[symbol]
 				bufferIndex = bufferIndex + 3
-				if x >= buffer.drawLimit.x2 then break end
 			end
+			
 			x = x + 1
 		end
 	end

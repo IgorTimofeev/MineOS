@@ -78,7 +78,7 @@ function save(filename)
   file:close()
 end
 
-function load(filename)
+local function load(filename)
   if fs.exists(filename) then
     file = io.open(filename, 'rb')
     -- загружаем палитру
