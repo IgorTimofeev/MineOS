@@ -1385,6 +1385,8 @@ local function createWindow()
 			if isClickedOnCodeArea(eventData[3], eventData[4]) then
 				scroll(eventData[5], config.scrollSpeed)
 			end
+		elseif eventData[1] == "screen_resized" then
+			changeScale(config.screenScale)
 		elseif not eventData[1] then
 			cursor.blinkState = not cursor.blinkState
 		end
