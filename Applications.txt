@@ -517,7 +517,7 @@
     icon="IgorTimofeev/OpenComputers/master/Applications/MineCodeIDE/Icon.pic",
     createShortcut="dock",
     forceDownload=true,
-    version=1.44,
+    version=1.45,
     resources={
       {
         name="Localization/Russian.lang",

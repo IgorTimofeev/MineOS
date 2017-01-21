@@ -658,7 +658,7 @@ local function run()
 		mainWindow:draw()
 		buffer:draw()		
 	else
-		addErrorLine(tonumber(loadReason:match(":(%d+)%:")))
+		addErrorLine(tonumber(loadReason:match("^%[.+%]%:(%d+)%:")))
 		gotoLine(lastErrorLine)
 		showErrorMessage(loadReason)
 	end
