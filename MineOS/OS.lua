@@ -241,27 +241,12 @@ local function windows10()
 
 	while true do
 		local eventData = {event.pull("touch")}
-		if eventData[3] == x + width - 3 and eventData[4] == y + 1 then
-			buffer.text(eventData[3], eventData[4], ecs.colors.blue, "X")
-			buffer.draw()
+		if ecs.clickedAtArea(eventData[3], eventData[4], x, y, x + width - 1, x + height - 1) then
+			draw(0x0092FF)
 			os.sleep(0.2)
 			workspace:draw()
-			buffer:draw()
+			buffer.draw()
 			disableUpdates()
-
-			return
-		elseif ecs.clickedAtArea(eventData[3], eventData[4], x, y, x + width - 1, x + height - 1) then
-			draw(0x0092FF)
-			workspace:draw()
-			buffer:draw()
-
-			local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x000000, "  Да шучу я.  "}, {"CenterText", 0x000000, "  Но ведь достали же обновления, верно?  "}, {"EmptyLine"}, {"Button", {0xbbbbbb, 0xFFFFFF, "Да"}, {0x999999, 0xFFFFFF, "Нет"}})
-			if data[1] == "Да" then
-				disableUpdates()
-			else
-				GUI.error("Пидора ответ!")
-			end
-
 			return
 		end
 	end
