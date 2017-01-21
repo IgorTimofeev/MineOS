@@ -300,7 +300,7 @@
     name="lib/GUI.lua",
     url="IgorTimofeev/OpenComputers/master/lib/GUI.lua",
     type="Library",
-    version=1.39,
+    version=1.40,
   },
   {
     name="lib/windows.lua",
@@ -360,7 +360,7 @@
     name="lib/syntax.lua",
     url="IgorTimofeev/OpenComputers/master/lib/syntax.lua",
     type="Library",
-    version=1.09,
+    version=1.10,
   },
   {
     name="lib/palette.lua",
@@ -517,7 +517,7 @@
     icon="IgorTimofeev/OpenComputers/master/Applications/MineCodeIDE/Icon.pic",
     createShortcut="dock",
     forceDownload=true,
-    version=1.48,
+    version=1.49,
     resources={
       {
         name="Localization/Russian.lang",

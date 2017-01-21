@@ -57,7 +57,7 @@ local config = {
 	cursorBlinkDelay = 0.5,
 	doubleClickDelay = 0.4,
 	screenScale = 1,
-	enableAutoBrackets = true
+	enableAutoBrackets = true,
 }
 
 local colors = {
@@ -95,9 +95,20 @@ local colors = {
 }
 
 local possibleBrackets = {
-	["{"] = "}",
-	["["] = "]",
-	["("] = ")",
+	openers = {
+		["{"] = "}",
+		["["] = "]",
+		["("] = ")",
+		["\""] = "\"",
+		["\'"] = "\'"
+	},
+	closers = {
+		["}"] = "{",
+		["]"] = "[",
+		[")"] = "(",
+		["\""] = "\"",
+		["\'"] = "\'"
+	}
 }
 
 local cursor = {
@@ -734,17 +745,62 @@ local function paste(pasteLines)
 	end
 end
 
-local function pasteAutoBrackets(firstSymbol, secondSymbol)
-	if config.enableAutoBrackets then
-		paste({firstSymbol .. secondSymbol})
-		setCursorPosition(cursor.position.symbol - 1, cursor.position.line)
-	else
-		paste({firstSymbol})
+local function pasteRegularChar(unicodeByte, char)
+	if not keyboard.isControl(unicodeByte) then
+		deleteSelectedData()
+		paste({char})
 	end
 end
 
-local function backspaceAutoBrackets()
-	if config.enableAutoBrackets and unicode.sub(mainWindow.codeView.lines[cursor.position.line], cursor.position.symbol - 1, cursor.position.symbol - 1):match("[%{%[%(]") then
+local function pasteAutoBrackets(unicodeByte)
+	local char = unicode.char(unicodeByte)
+	local currentSymbol = unicode.sub(mainWindow.codeView.lines[cursor.position.line], cursor.position.symbol, cursor.position.symbol)
+
+	-- Если у нас вообще врублен режим автоскобок, то чекаем их
+	if config.enableAutoBrackets then
+		-- Ситуация, когда курсор находится на закрывающей скобке, и нехуй ее еще раз вставлять
+		if possibleBrackets.closers[char] and currentSymbol == char then
+			deleteSelectedData()
+			setCursorPosition(cursor.position.symbol + 1, cursor.position.line)
+		-- Если нажата открывающая скобка
+		elseif possibleBrackets.openers[char] then
+			-- А вот тут мы берем в скобочки уже выделенный текст
+			if mainWindow.codeView.selections[1] then
+				local firstPart = unicode.sub(mainWindow.codeView.lines[mainWindow.codeView.selections[1].from.line], 1, mainWindow.codeView.selections[1].from.symbol - 1)
+				local secondPart = unicode.sub(mainWindow.codeView.lines[mainWindow.codeView.selections[1].from.line], mainWindow.codeView.selections[1].from.symbol, -1)
+				mainWindow.codeView.lines[mainWindow.codeView.selections[1].from.line] = firstPart .. char .. secondPart
+				mainWindow.codeView.selections[1].from.symbol = mainWindow.codeView.selections[1].from.symbol + 1
+
+				if mainWindow.codeView.selections[1].to.line == mainWindow.codeView.selections[1].from.line then
+					mainWindow.codeView.selections[1].to.symbol = mainWindow.codeView.selections[1].to.symbol + 1
+				end
+
+				firstPart = unicode.sub(mainWindow.codeView.lines[mainWindow.codeView.selections[1].to.line], 1, mainWindow.codeView.selections[1].to.symbol)
+				secondPart = unicode.sub(mainWindow.codeView.lines[mainWindow.codeView.selections[1].to.line], mainWindow.codeView.selections[1].to.symbol + 1, -1)
+				mainWindow.codeView.lines[mainWindow.codeView.selections[1].to.line] = firstPart .. possibleBrackets.openers[char] .. secondPart
+			-- А тут мы делаем двойную автоскобку, если можем
+			elseif possibleBrackets.openers[char] and not currentSymbol:match("[%a%d%_]") then
+				paste({char .. possibleBrackets.openers[char]})
+				setCursorPosition(cursor.position.symbol - 1, cursor.position.line)
+				cursor.blinkState = false
+			-- Ну, и если нет ни выделений, ни можем ебануть автоскобочку по регулярке
+			else
+				pasteRegularChar(unicodeByte, char)
+			end
+		-- Если мы вообще на скобку не нажимали
+		else
+			pasteRegularChar(unicodeByte, char)
+		end
+	-- Если оффнуты афтоскобки
+	else
+		pasteRegularChar(unicodeByte, char)
+	end
+end
+
+local function backspaceAutoBrackets()	
+	local previousSymbol = unicode.sub(mainWindow.codeView.lines[cursor.position.line], cursor.position.symbol - 1, cursor.position.symbol - 1)
+	local currentSymbol = unicode.sub(mainWindow.codeView.lines[cursor.position.line], cursor.position.symbol, cursor.position.symbol)
+	if config.enableAutoBrackets and possibleBrackets.openers[previousSymbol] and possibleBrackets.openers[previousSymbol] == currentSymbol then
 		deleteSpecifiedData(cursor.position.symbol, cursor.position.line, cursor.position.symbol, cursor.position.line)
 	end
 end
@@ -1043,7 +1099,7 @@ local function createWindow()
 			deleteLine(cursor.position.line)
 		end
 		menu:addSeparator()
-		menu:addItem(localization.selectWord, false, "^\\").onTouch = function()
+		menu:addItem(localization.selectWord).onTouch = function()
 			selectWord()
 		end
 		menu:addItem(localization.selectAll, false, "^A").onTouch = function()
@@ -1104,9 +1160,19 @@ local function createWindow()
 		end
 
 		if mainWindow.topToolBar.isHidden then
-			menu:addSeparator()
 			menu:addItem(localization.toggleTopToolBar).onTouch = function()
 				toggleTopToolBar()
+			end
+		end
+		if config.enableAutoBrackets then
+			menu:addItem(localization.disableAutoBrackets, false, "^]").onTouch = function()
+				config.enableAutoBrackets = false
+				saveConfig()
+			end
+		else
+			menu:addItem(localization.enableAutoBrackets, false, "^]").onTouch = function()
+				config.enableAutoBrackets = true
+				saveConfig()
 			end
 		end
 
@@ -1236,6 +1302,9 @@ local function createWindow()
 					paste(clipboard)
 				end
 				menu:addSeparator()
+				menu:addItem(localization.selectWord).onTouch = function()
+					selectWord()
+				end
 				menu:addItem(localization.selectAll, false, "^A").onTouch = function()
 					selectAll()
 				end
@@ -1269,12 +1338,13 @@ local function createWindow()
 
 			-- Ctrl or CMD
 			if keyboard.isKeyDown(29) or keyboard.isKeyDown(219) then
-				-- Backslash
-				if eventData[4] == 43 then
-					selectWord()
 				-- Slash
-				elseif eventData[4] == 53 then
+				if eventData[4] == 53 then
 					toggleComment()
+				-- ]
+				elseif eventData[4] == 27 then
+					config.enableAutoBrackets = not config.enableAutoBrackets
+					saveConfig()
 				-- A
 				elseif eventData[4] == 30 then
 					selectAll()
@@ -1367,14 +1437,7 @@ local function createWindow()
 			elseif eventData[4] == 211 then
 				delete()
 			else
-				local char = unicode.char(eventData[3])
-				if possibleBrackets[char] then
-					pasteAutoBrackets(char, possibleBrackets[char])
-					cursor.blinkState = false
-				elseif not keyboard.isControl(eventData[3]) then
-					deleteSelectedData()
-					paste({char})
-				end
+				pasteAutoBrackets(eventData[3])
 			end
 		elseif eventData[1] == "clipboard" then
 			paste(splitStringIntoLines(eventData[3]))

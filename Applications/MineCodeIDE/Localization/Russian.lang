@@ -1,4 +1,6 @@
 {
+	enableAutoBrackets = "Включить авто-скобки",
+	disableAutoBrackets = "Отключить авто-скобки",
 	url = "http://example.com/something.lua",
 	getFromWeb = "Загрузить по URL",
 	debugging = "Отладчик на строке ",

@@ -1,4 +1,6 @@
 {	
+	enableAutoBrackets = "Enable autobrackets",
+	disableAutoBrackets = "Disable autobrackets",
 	url = "http://example.com/something.lua",
 	getFromWeb = "Download from URL",
 	debugging = "Debugger on line ",

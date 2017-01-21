@@ -1525,7 +1525,7 @@ local function codeViewDraw(codeView)
 	codeView.lineNumbersWidth = unicode.len(tostring(toLine)) + 2
 	codeView.codeAreaPosition = codeView.x + codeView.lineNumbersWidth
 	codeView.codeAreaWidth = codeView.width - codeView.lineNumbersWidth
-	buffer.square(codeView.x, codeView.y, codeView.lineNumbersWidth, codeView.height, syntax.colorScheme.lineNumbers, syntax.colorScheme.lineNumbersText, " ")	
+	buffer.square(codeView.x, codeView.y, codeView.lineNumbersWidth, codeView.height, syntax.colorScheme.lineNumbersBackground, syntax.colorScheme.lineNumbersText, " ")	
 	buffer.square(codeView.codeAreaPosition, codeView.y, codeView.codeAreaWidth, codeView.height, syntax.colorScheme.background, syntax.colorScheme.text, " ")
 
 	-- Line numbers texts
