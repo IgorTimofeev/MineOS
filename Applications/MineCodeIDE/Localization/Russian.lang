@@ -1,4 +1,6 @@
 {
+	url = "http://example.com/something.lua",
+	getFromWeb = "Загрузить по URL",
 	debugging = "Отладчик на строке ",
 	runtimeError = "Ошибка при выполнении программы",
 	variablesNotAvailable = "Не найдено возможных переменных",

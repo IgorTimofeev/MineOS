@@ -288,6 +288,8 @@ end
 local function hideSettingsContainer()
 	for childIndex = 2, #mainWindow.settingsContainer.children do mainWindow.settingsContainer.children[childIndex] = nil end
 	mainWindow.settingsContainer.isHidden = true
+	mainWindow:draw()
+	buffer.draw()
 end
 
 local function clearHighlights()
@@ -438,6 +440,8 @@ local function selectWord()
 	end
 end
 
+------------------------------------------------------------------------------------------------------------------
+
 local function removeTabs(text)
 	local result = text:gsub("\t", string.rep(" ", mainWindow.codeView.indentationWidth))
 	return result
@@ -448,8 +452,23 @@ local function removeWindowsLineEndings(text)
 	return result
 end
 
+local function createInputTextBoxForSettingsWindow(title, placeholder)
+	mainWindow.settingsContainer.isHidden = false
+	local elementWidth = math.floor(mainWindow.width * 0.3)
+	local x, y = math.floor(mainWindow.width / 2 - elementWidth / 2), math.floor(mainWindow.height / 2) - 3
+	mainWindow.settingsContainer:addLabel(1, y, mainWindow.settingsContainer.width, 1, 0xFFFFFF, title):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); y = y + 3
+	return mainWindow.settingsContainer:addInputTextBox(x, y, elementWidth, 3, 0xCCCCCC, 0x777777, 0xCCCCCC, 0x2D2D2D, "", placeholder)
+end
+
+local function newFile()
+	mainWindow.codeView.lines = {""}
+	mainWindow.codeView.maximumLineLength = 1
+	mainWindow.leftTreeView.currentFile = nil
+	setCursorPositionAndClearSelection(1, 1)
+end
+
 local function loadFile(path)
-	mainWindow.codeView.fromLine, mainWindow.codeView.fromSymbol, mainWindow.codeView.lines, mainWindow.codeView.maximumLineLength = 1, 1, {}, 0
+	newFile()
 	local file = io.open(path, "r")
 	for line in file:lines() do
 		line = removeWindowsLineEndings(removeTabs(line))
@@ -458,8 +477,6 @@ local function loadFile(path)
 	end
 	file:close()
 	mainWindow.leftTreeView.currentFile = path
-	if #mainWindow.codeView.lines == 0 then table.insert(mainWindow.codeView.lines, "") end
-	setCursorPositionAndClearSelection(1, 1)
 end
 
 local function saveFile(path)
@@ -471,19 +488,8 @@ local function saveFile(path)
 	file:close()
 end
 
-local function newFile()
-	mainWindow.codeView.lines = {""}
-	mainWindow.codeView.maximumLineLength = 1
-	mainWindow.leftTreeView.currentFile = nil
-	setCursorPositionAndClearSelection(1, 1)
-end
-
 local function open()
-	mainWindow.settingsContainer.isHidden = false
-	local elementWidth = math.floor(mainWindow.width * 0.3)
-	local x, y = math.floor(mainWindow.width / 2 - elementWidth / 2), math.floor(mainWindow.height / 2) - 3
-	mainWindow.settingsContainer:addLabel(1, y, mainWindow.settingsContainer.width, 1, 0xFFFFFF, localization.openFile):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); y = y + 3
-	local inputTextBox = mainWindow.settingsContainer:addInputTextBox(x, y, elementWidth, 3, 0xCCCCCC, 0x777777, 0xCCCCCC, 0x2D2D2D, "", localization.pathToFile); y = y + 5
+	local inputTextBox = createInputTextBoxForSettingsWindow(localization.openFile, localization.pathToFile)
 	inputTextBox.validator = function(text)
 		if fs.exists(text) then return true end
 	end
@@ -494,11 +500,7 @@ local function open()
 end
 
 local function saveAs()
-	mainWindow.settingsContainer.isHidden = false
-	local elementWidth = math.floor(mainWindow.width * 0.3)
-	local x, y = math.floor(mainWindow.width / 2 - elementWidth / 2), math.floor(mainWindow.height / 2) - 3
-	mainWindow.settingsContainer:addLabel(1, y, mainWindow.settingsContainer.width, 1, 0xFFFFFF, localization.saveAs):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); y = y + 3
-	local inputTextBox = mainWindow.settingsContainer:addInputTextBox(x, y, elementWidth, 3, 0xCCCCCC, 0x777777, 0xCCCCCC, 0x2D2D2D, "", localization.pathToFile); y = y + 5
+	local inputTextBox = createInputTextBoxForSettingsWindow(localization.saveAs, localization.pathToFile)
 	inputTextBox.onInputFinished = function()
 		saveFile(inputTextBox.text)
 		mainWindow.leftTreeView.currentFile = inputTextBox.text
@@ -510,6 +512,42 @@ end
 local function save()
 	saveFile(mainWindow.leftTreeView.currentFile)
 end
+
+local function splitStringIntoLines(s)
+	s = removeWindowsLineEndings(removeTabs(s))
+
+	local lines, searchLineEndingFrom, maximumLineLength, lineEndingFoundAt, line = {}, 1, 0
+	repeat
+		lineEndingFoundAt = string.unicodeFind(s, "\n", searchLineEndingFrom)
+		if lineEndingFoundAt then
+			line = unicode.sub(s, searchLineEndingFrom, lineEndingFoundAt - 1)
+			searchLineEndingFrom = lineEndingFoundAt + 1
+		else
+			line = unicode.sub(s, searchLineEndingFrom, -1)
+		end
+
+		table.insert(lines, line)
+		maximumLineLength = math.max(maximumLineLength, unicode.len(line))
+	until not lineEndingFoundAt
+
+	return lines, maximumLineLength
+end
+
+local function downloadFromWeb()
+	local inputTextBox = createInputTextBoxForSettingsWindow(localization.getFromWeb, localization.url)
+	inputTextBox.onInputFinished = function()
+		local success, reason = ecs.internetRequest(inputTextBox.text)
+		if success then
+			newFile()
+			mainWindow.codeView.lines, mainWindow.codeView.maximumLineLength = splitStringIntoLines(reason)
+			hideSettingsContainer()
+		else
+			GUI.error(reason, {title = {color = 0xFFDB40, text = "Failed to connect to URL"}})
+		end
+	end
+end
+
+------------------------------------------------------------------------------------------------------------------
 
 local function addErrorLine(line)
 	lastErrorLine = line
@@ -969,6 +1007,9 @@ local function createWindow()
 		menu:addItem(localization.open, false, "^O").onTouch = function()
 			open()
 		end
+		menu:addItem(localization.getFromWeb, false, "^U").onTouch = function()
+			downloadFromWeb()
+		end
 		menu:addSeparator()
 		menu:addItem(localization.save, not mainWindow.leftTreeView.currentFile, "^S").onTouch = function()
 			save()
@@ -1258,6 +1299,9 @@ local function createWindow()
 				-- O
 				elseif eventData[4] == 24 then
 					open()
+				-- U
+				elseif eventData[4] == 22 then
+					downloadFromWeb()
 				-- S
 				elseif eventData[4] == 31 then
 					-- Shift
@@ -1336,13 +1380,7 @@ local function createWindow()
 				end
 			end
 		elseif eventData[1] == "clipboard" then
-			local lines = {}
-			for line in eventData[3]:gmatch("([^\r\n]+)\r?\n?") do
-				line = removeTabs(line)
-				table.insert(lines, line)
-			end
-			table.insert(lines, "")
-			paste(lines)
+			paste(splitStringIntoLines(eventData[3]))
 		elseif eventData[1] == "scroll" then
 			if isClickedOnCodeArea(eventData[3], eventData[4]) then
 				scroll(eventData[5], config.scrollSpeed)
