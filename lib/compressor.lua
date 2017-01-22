@@ -22,6 +22,12 @@ local function byteArrayToNumber(byteArray)
 	return number
 end
 
+local function info(showInfo, text)
+	if showInfo then
+		print(text)
+	end
+end
+
 ------------------------------------------------------------------------------------------------------------------
 
 local function writePath(compressedFile, path)
@@ -65,24 +71,24 @@ local function getFileList(path)
 	return fileList
 end
 
-local function doCompressionRecursively(fileList, compressedFile, currentPackPath, pathToCompressedFile)
+local function doCompressionRecursively(compressedFile, fileList, currentPackPath, pathToCompressedFile, showInfo)
 	for file = 1, #fileList do
 		local filename = (fs.name(fileList[file]) or "")
 		local filePackPath = currentPackPath .. filename
 
-		if fileList[file] ~= pathToCompressedFile and filename ~= "dev" and filename ~= "mnt" and filename ~= ".DS_Store" then
-			-- print("Локальный путь архива: " .. filePackPath)
+		-- info(showInfo, "Local path: " .. filePackPath)
+		if fileList[file] == pathToCompressedFile or filename == "mnt" or filename == "dev" or filename == ".DS_Store" then
+			info(showInfo, "Skipping restricted path \"" .. fileList[file] .. "\"")
+		else
 			if fs.isDirectory(fileList[file]) then
-				-- print("Это папка: " .. fileList[file])
-				-- print(" ")
+				info(showInfo, "Packing directory " .. fileList[file])
 
 				compressedFile:write("D")
 				writePath(compressedFile, filePackPath .. "/")
 				
-				doCompressionRecursively(getFileList(fileList[file]), compressedFile, filePackPath .. "/", pathToCompressedFile)
+				doCompressionRecursively(compressedFile, getFileList(fileList[file]), filePackPath .. "/", pathToCompressedFile, showInfo)
 			else
-				-- print("Это файл: " .. fileList[file])
-				-- print(" ")
+				info(showInfo, "Packing file " .. fileList[file])
 
 				compressedFile:write("F")
 				writePath(compressedFile, filePackPath)
@@ -92,27 +98,32 @@ local function doCompressionRecursively(fileList, compressedFile, currentPackPat
 				compressedFile:write(fileToCompress:read("*a"))
 				fileToCompress:close()
 			end
-		-- else
-			-- print("Говно-путь: " .. fileList[file])
-			-- print(" ")
 		end
 		-- require("ECSAPI").wait()
 	end
 end
 
 function compressor.pack(pathToCompressedFile, ...)
+	local data, showInfo = {...}, false
+	if type(data[#data]) == "boolean" then showInfo = data[#data]; data[#data] = nil end
+
+	info(showInfo, "Packing data to file \"" .. pathToCompressedFile .. "\"...")
+	info(showInfo, " ")
 	fs.makeDirectory(fs.path(pathToCompressedFile))
+	
 	-- Открываем файл со сжатым контентом
 	local compressedFile, reason = io.open(pathToCompressedFile, "wb")
 	if not compressedFile then
-		error("Failed to open file for writing while packing: " .. tostring(reason))
+		error("Failed to open package file for writing: " .. tostring(reason))
 	end
 	-- Записываем сигнатурку
 	compressedFile:write("ARCH")
 	-- Пакуем данные
-	doCompressionRecursively({...}, compressedFile, "", pathToCompressedFile)
+	doCompressionRecursively(compressedFile, data, "", pathToCompressedFile, showInfo)
 	-- Закрываем файл со сжатым контентом
 	compressedFile:close()
+	info(showInfo, " ")
+	info(showInfo, "Data packing finished")
 end
 
 ------------------------------------------------------------------------------------------------------------------
@@ -125,9 +136,9 @@ local function readPath(compressedFile)
 	end
 	local pathSize = byteArrayToNumber(pathBytes)
 	local path = compressedFile:read(pathSize)
-	-- print("Колво байт под байты пути: ", countOfBytesForPathBytes)
-	-- print("Колво байт под путь: ", pathSize)
-	-- print("Путь: ", path)
+	-- info(showInfo, "Колво байт под байты пути: ", countOfBytesForPathBytes)
+	-- info(showInfo, "Колво байт под путь: ", pathSize)
+	-- info(showInfo, "Путь: ", path)
 	return path
 end
 
@@ -138,36 +149,40 @@ local function readFileSize(compressedFile)
 		table.insert(fileSizeBytes, string.byte(compressedFile:read(1)))
 	end
 	local fileSize = byteArrayToNumber(fileSizeBytes)
-	-- print("Размер файла: ", fileSize)
+	-- info(showInfo, "Размер файла: ", fileSize)
 	return fileSize
 end
 
-function compressor.unpack(pathToCompressedFile, pathWhereToUnpack)
-	if not fs.exists(pathToCompressedFile) then
-		error("Failed to unpack file \"" .. tostring(pathToCompressedFile) .. "\" because it doesn't exists")
-	end
+function compressor.unpack(pathToCompressedFile, pathWhereToUnpack, showInfo)
+	info(showInfo, "Unpacking data from file \"" .. pathToCompressedFile .. "\"...")
+	info(showInfo, " ")
 	fs.makeDirectory(pathWhereToUnpack)
+	
+	local compressedFile, reason = io.open(pathToCompressedFile, "rb")
+	if not compressedFile then
+		error("Failed to open package file for reading: " .. tostring(reason))
+	end
 
-	local compressedFile = io.open(pathToCompressedFile, "rb")
 	local signature = compressedFile:read(4)
 	if signature == "ARCH" then
 		while true do
 			local type = compressedFile:read(1)
 			if type == "D" then
-				-- print("Это папка")
 				local path = readPath(compressedFile)
 				fs.makeDirectory(pathWhereToUnpack .. path)
+				info(showInfo, "Unpacking directory \"" .. path .. "\"")
 			elseif type == "F" then
-				-- print("Это файл")
 				local path = readPath(compressedFile)
 				local size = readFileSize(compressedFile)
 				
+				info(showInfo, "Unpacking file \"" .. path .. "\"")
 				local file, reason = io.open(pathWhereToUnpack .. path, "wb")
-				if not file then
-					error("Failed to open file for writing while unpacking: " .. tostring(reason))
-				end
-				file:write(compressedFile:read(size))
-				file:close()
+				if file then
+					file:write(compressedFile:read(size))
+					file:close()
+				else
+					info(showInfo, "Failed to open file for writing while unpacking: " .. tostring(reason))
+				end				
 			elseif not type then
 				break
 			else
@@ -181,17 +196,15 @@ function compressor.unpack(pathToCompressedFile, pathWhereToUnpack)
 	end
 
 	compressedFile:close()
-end
-
-function compressor.packEntireFilesystem(pathToCompressedFile)
-	compressor.pack(pathToCompressedFile, table.unpack(getFileList("/")))
+	info(showInfo, " ")
+	info(showInfo, "Unpacking data finished")
 end
 
 ------------------------------------------------------------------------------------------------------------------
 
--- compressor.pack("/test1.pkg", "/MineOS/System/OS/", "/etc/")
--- print(" ")
--- compressor.unpack("/test1.pkg", "/papkaUnpacked/")
+-- compressor.pack("/test1.pkg", "/MineOS/System/OS/", "/etc/", true)
+-- info(showInfo, " ")
+-- compressor.unpack("/test1.pkg", "/papkaUnpacked/", true)
 
 ------------------------------------------------------------------------------------------------------------------
 
