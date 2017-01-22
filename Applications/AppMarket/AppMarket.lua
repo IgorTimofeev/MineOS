@@ -46,6 +46,7 @@ local typeFilters = {
 local localization = table.fromFile("MineOS/Applications/AppMarket.app/Resources/Localization/" .. _G.OSSettings.language .. ".lang")
 local appMarketConfigPath = "MineOS/System/AppMarket/"
 local pathToApplications = "MineOS/System/OS/Applications.txt"
+local pathToNewApplications = appMarketConfigPath .. "NewApplications.txt"
 local updateImage = image.load(MineOSCore.paths.icons .. "Update.pic")
 local topBarElements = {localization.applications, localization.libraries, localization.wallpapers, localization.other, localization.updates}
 local oldApplications, newApplications, currentApps, changes = {}, {}, {}, {}
@@ -223,7 +224,6 @@ local function drawMain(refreshData)
 end
 
 local function getNewApplications()
-	local pathToNewApplications = appMarketConfigPath .. "NewApplications.txt"
 	ecs.getFileFromUrl(oldApplications.GitHubApplicationListURL, pathToNewApplications)
 	newApplications = table.fromFile(pathToNewApplications)
 end
@@ -327,6 +327,7 @@ local function updateAll()
 	changes = {}
 	oldApplications = newApplications
 	saveOldApplications()
+	fs.remove(pathToNewApplications)
 	require("computer").shutdown(true)
 end
 

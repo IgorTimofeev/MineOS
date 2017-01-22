@@ -1016,7 +1016,7 @@
     icon="IgorTimofeev/OpenComputers/master/Applications/AppMarket/Icon.pic",
     createShortcut="dock",
     forceDownload=true,
-    version=1.53,
+    version=1.54,
      resources={
       {
         name="Localization/Russian.lang",
