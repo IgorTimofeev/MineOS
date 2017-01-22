@@ -253,7 +253,7 @@
     name="lib/MineOSCore.lua",
     url="IgorTimofeev/OpenComputers/master/lib/MineOSCore.lua",
     type="Library",
-    version=1.46,
+    version=1.47,
   },
   {
     name="lib/advancedLua.lua",
@@ -378,7 +378,7 @@
     name="lib/compressor.lua",
     url="IgorTimofeev/OpenComputers/master/lib/compressor.lua",
     type="Library",
-    version=1.0,
+    version=1.01,
   },
   {
     name="lib/xmlParser.lua",

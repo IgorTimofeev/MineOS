@@ -21,15 +21,6 @@ local function byteArrayToNumber(byteArray)
 	end
 	return number
 end
-
-local function getFileList(path)
-	local fileList = {}
-	for file in fs.list(path) do
-		table.insert(fileList, path .. file)
-	end
-	return fileList
-end
-
 ------------------------------------------------------------------------------------------------------------------
 
 local function writePath(compressedFile, path)
@@ -65,32 +56,50 @@ local function writeFileSize(compressedFile, path)
 	end
 end
 
-local function doCompressionRecursively(fileList, compressedFile)
+local function getFileList(path)
+	local fileList = {}
+	for file in fs.list(path) do
+		table.insert(fileList, path .. file)
+	end
+	return fileList
+end
+
+local function doCompressionRecursively(fileList, compressedFile, currentPackPath)
 	for file = 1, #fileList do
-		if fs.name(fileList[file]) ~= "mnt/" and fs.name(fileList[file]) ~= ".DS_Store" then
+		local filename = fs.name(fileList[file])
+		local filePackPath = currentPackPath .. fs.name(fileList[file])
+
+		if filename ~= "mnt" and filename ~= ".DS_Store" then
+			-- print("Локальный путь архива: " .. filePackPath)
 			if fs.isDirectory(fileList[file]) then
 				-- print("Это папка: " .. fileList[file])
+				-- print(" ")
+
 				compressedFile:write("D")
-				writePath(compressedFile, fileList[file])
+				writePath(compressedFile, filePackPath .. "/")
 				
-				doCompressionRecursively(getFileList(fileList[file]), compressedFile)
+				doCompressionRecursively(getFileList(fileList[file]), compressedFile, filePackPath .. "/")
 			else
 				-- print("Это файл: " .. fileList[file])
+				-- print(" ")
+
 				compressedFile:write("F")
-				writePath(compressedFile, fileList[file])
+				writePath(compressedFile, filePackPath)
 				writeFileSize(compressedFile, fileList[file])
 				
-				local compressionFile = io.open(fileList[file], "rb")
-				compressedFile:write(compressionFile:read("*a"))
-				compressionFile:close()
+				local fileToCompress = io.open(fileList[file], "rb")
+				compressedFile:write(fileToCompress:read("*a"))
+				fileToCompress:close()
 			end
 		-- else
 		-- 	print("Говно-путь: " .. fileList[file])
+		-- 	print(" ")
 		end
+		-- require("ECSAPI").wait()
 	end
 end
 
-function compressor.pack(pathToCompress, pathToCompressedFile)
+function compressor.pack(pathToCompressedFile, ...)
 	fs.makeDirectory(fs.path(pathToCompressedFile))
 	-- Открываем файл со сжатым контентом
 	local compressedFile, reason = io.open(pathToCompressedFile, "wb")
@@ -100,7 +109,7 @@ function compressor.pack(pathToCompress, pathToCompressedFile)
 	-- Записываем сигнатурку
 	compressedFile:write("ARCH")
 	-- Пакуем данные
-	doCompressionRecursively({ pathToCompress }, compressedFile)
+	doCompressionRecursively({...}, compressedFile, "")
 	-- Закрываем файл со сжатым контентом
 	compressedFile:close()
 end
@@ -175,7 +184,7 @@ end
 
 ------------------------------------------------------------------------------------------------------------------
 
--- compressor.pack("/etc/", "/test1.pkg")
+-- compressor.pack("/test1.pkg", "/MineOS/System/OS/", "/etc/")
 -- print(" ")
 -- compressor.unpack("/test1.pkg", "/papkaUnpacked/")
 

@@ -760,7 +760,7 @@ function MineOSCore.iconRightClick(icon, eventData)
 		ecs.createShortCut(MineOSCore.getFilePath(icon.path) .. "/" .. ecs.hideFileFormat(MineOSCore.getFileName(icon.path)) .. ".lnk", icon.path)
 		computer.pushSignal("MineOSCore", "updateFileList")
 	elseif action == MineOSCore.localization.contextMenuArchive then
-		require("compressor").pack(icon.path, MineOSCore.getFilePath(icon.path) .. "Archive.pkg")
+		require("compressor").pack(MineOSCore.getFilePath(icon.path) .. MineOSCore.hideFileFormat(MineOSCore.getFileName(icon.path)) .. ".pkg", icon.path)
 		computer.pushSignal("MineOSCore", "updateFileList")
 	elseif action == MineOSCore.localization.contextMenuSetAsWallpaper then
 		fs.remove(MineOSCore.paths.wallpaper)
