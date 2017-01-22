@@ -377,15 +377,23 @@ local function isClickedOnCodeArea(x, y)
 end
 
 local function moveCursor(symbolOffset, lineOffset)
-	local newSymbol, newLine = cursor.position.symbol + symbolOffset, cursor.position.line + lineOffset
-	
-	if symbolOffset < 0 and newSymbol < 1 then
-		newLine, newSymbol = newLine - 1, math.huge
-	elseif symbolOffset > 0 and newSymbol > unicode.len(mainWindow.codeView.lines[newLine] or "") + 1 then
-		newLine, newSymbol = newLine + 1, 1
-	end
+	if mainWindow.codeView.selections[1] then
+		if symbolOffset < 0 or lineOffset < 0 then
+			setCursorPositionAndClearSelection(mainWindow.codeView.selections[1].from.symbol, mainWindow.codeView.selections[1].from.line)
+		else
+			setCursorPositionAndClearSelection(mainWindow.codeView.selections[1].to.symbol, mainWindow.codeView.selections[1].to.line)
+		end
+	else
+		local newSymbol, newLine = cursor.position.symbol + symbolOffset, cursor.position.line + lineOffset
+		
+		if symbolOffset < 0 and newSymbol < 1 then
+			newLine, newSymbol = newLine - 1, math.huge
+		elseif symbolOffset > 0 and newSymbol > unicode.len(mainWindow.codeView.lines[newLine] or "") + 1 then
+			newLine, newSymbol = newLine + 1, 1
+		end
 
-	setCursorPositionAndClearSelection(newSymbol, newLine)
+		setCursorPositionAndClearSelection(newSymbol, newLine)
+	end
 end
 
 local function setCursorPositionToHome()
