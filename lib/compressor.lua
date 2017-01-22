@@ -21,6 +21,7 @@ local function byteArrayToNumber(byteArray)
 	end
 	return number
 end
+
 ------------------------------------------------------------------------------------------------------------------
 
 local function writePath(compressedFile, path)
@@ -66,8 +67,8 @@ end
 
 local function doCompressionRecursively(fileList, compressedFile, currentPackPath)
 	for file = 1, #fileList do
-		local filename = fs.name(fileList[file])
-		local filePackPath = currentPackPath .. fs.name(fileList[file])
+		local filename = (fs.name(fileList[file]) or "")
+		local filePackPath = currentPackPath .. filename
 
 		if filename ~= "mnt" and filename ~= ".DS_Store" then
 			-- print("Локальный путь архива: " .. filePackPath)
@@ -180,6 +181,10 @@ function compressor.unpack(pathToCompressedFile, pathWhereToUnpack)
 	end
 
 	compressedFile:close()
+end
+
+function compressor.packAll(pathToCompressedFile)
+	compressor.pack(pathToCompressedFile, getFileList("/"))
 end
 
 ------------------------------------------------------------------------------------------------------------------
