@@ -378,7 +378,7 @@
     name="lib/compressor.lua",
     url="IgorTimofeev/OpenComputers/master/lib/compressor.lua",
     type="Library",
-    version=1.02,
+    version=1.03,
   },
   {
     name="lib/xmlParser.lua",

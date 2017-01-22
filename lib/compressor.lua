@@ -183,7 +183,7 @@ function compressor.unpack(pathToCompressedFile, pathWhereToUnpack)
 	compressedFile:close()
 end
 
-function compressor.packAll(pathToCompressedFile)
+function compressor.packEntireFilesystem(pathToCompressedFile)
 	compressor.pack(pathToCompressedFile, getFileList("/"))
 end
 
