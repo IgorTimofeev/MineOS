@@ -65,12 +65,12 @@ local function getFileList(path)
 	return fileList
 end
 
-local function doCompressionRecursively(fileList, compressedFile, currentPackPath)
+local function doCompressionRecursively(fileList, compressedFile, currentPackPath, pathToCompressedFile)
 	for file = 1, #fileList do
 		local filename = (fs.name(fileList[file]) or "")
 		local filePackPath = currentPackPath .. filename
 
-		if filename ~= "mnt" and filename ~= ".DS_Store" then
+		if fileList[file] ~= pathToCompressedFile and filename ~= "dev" and filename ~= "mnt" and filename ~= ".DS_Store" then
 			-- print("Локальный путь архива: " .. filePackPath)
 			if fs.isDirectory(fileList[file]) then
 				-- print("Это папка: " .. fileList[file])
@@ -79,7 +79,7 @@ local function doCompressionRecursively(fileList, compressedFile, currentPackPat
 				compressedFile:write("D")
 				writePath(compressedFile, filePackPath .. "/")
 				
-				doCompressionRecursively(getFileList(fileList[file]), compressedFile, filePackPath .. "/")
+				doCompressionRecursively(getFileList(fileList[file]), compressedFile, filePackPath .. "/", pathToCompressedFile)
 			else
 				-- print("Это файл: " .. fileList[file])
 				-- print(" ")
@@ -93,8 +93,8 @@ local function doCompressionRecursively(fileList, compressedFile, currentPackPat
 				fileToCompress:close()
 			end
 		-- else
-		-- 	print("Говно-путь: " .. fileList[file])
-		-- 	print(" ")
+			-- print("Говно-путь: " .. fileList[file])
+			-- print(" ")
 		end
 		-- require("ECSAPI").wait()
 	end
@@ -110,7 +110,7 @@ function compressor.pack(pathToCompressedFile, ...)
 	-- Записываем сигнатурку
 	compressedFile:write("ARCH")
 	-- Пакуем данные
-	doCompressionRecursively({...}, compressedFile, "")
+	doCompressionRecursively({...}, compressedFile, "", pathToCompressedFile)
 	-- Закрываем файл со сжатым контентом
 	compressedFile:close()
 end
@@ -184,7 +184,7 @@ function compressor.unpack(pathToCompressedFile, pathWhereToUnpack)
 end
 
 function compressor.packEntireFilesystem(pathToCompressedFile)
-	compressor.pack(pathToCompressedFile, getFileList("/"))
+	compressor.pack(pathToCompressedFile, table.unpack(getFileList("/")))
 end
 
 ------------------------------------------------------------------------------------------------------------------
