@@ -109,7 +109,7 @@ function syntax.highlightString(x, y, str, indentationWidth)
 		local notSpaceNotFound, indentationSymbolCounter = true, 1
 
 		for symbol = 1, stringLength do
-			if indentationWidth and notSpaceNotFound then
+			if notSpaceNotFound then
 				if symbols[symbol] == " " then
 					colors[symbol] = syntax.colorScheme.indentation
 					if indentationSymbolCounter == 1 then

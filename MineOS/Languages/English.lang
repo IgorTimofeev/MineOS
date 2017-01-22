@@ -30,7 +30,7 @@
 	contextMenuRemoveFromDock = "Remove from Dock",
 	contextMenuMoveRight = "Move right",
 	contextMenuMoveLeft = "Move left",
-	contextMenuArchive = "Add to archive",
+	contextMenuArchive = "Compress",
 	contextMenuDelete = "Delete",
 	contextMenuAddToFavourites = "Add to favourites",
 	contextMenuCreateApplication = "Create MineOS application",

@@ -10,8 +10,6 @@ local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 local windows = require("windows")
 local ecs = require("ECSAPI")
-local zip = require("archive")
-local syntax = require("syntax")
 local fs = require("filesystem")
 local unicode = require("unicode")
 
@@ -298,10 +296,10 @@ function MineOSCore.analyzeIconFormat(iconObject)
 			iconObject.launch = function()
 				MineOSCore.safeLaunch(MineOSCore.paths.applications .. "Viewer.app/Viewer.lua", "open", iconObject.path)
 			end
-		elseif iconObject.format == ".pkg" or iconObject.format == ".zip" then
+		elseif iconObject.format == ".pkg" then
 			iconObject.iconImage.image = MineOSCore.icons.archive
 			iconObject.launch = function()
-				zip.unarchive(iconObject.path, (MineOSCore.getFilePath(iconObject.path) or ""))
+				require("compressor").unpack(iconObject.path, MineOSCore.getFilePath(iconObject.path))
 			end
 		elseif iconObject.format == ".3dm" then
 			iconObject.iconImage.image = MineOSCore.icons.model3D
@@ -633,10 +631,10 @@ function MineOSCore.iconRightClick(icon, eventData)
 				{MineOSCore.localization.contextMenuCopy},
 				{MineOSCore.localization.contextMenuRename},
 				{MineOSCore.localization.contextMenuCreateShortcut, icon.format == ".lnk"},
-				-- "-",
-				-- {MineOSCore.localization.contextMenuUploadToPastebin, true},
 				"-",
+				{MineOSCore.localization.contextMenuArchive},
 				{MineOSCore.localization.contextMenuAddToDock},
+				"-",
 				{MineOSCore.localization.contextMenuProperties},
 				{MineOSCore.localization.contextMenuDelete}
 			):show()
@@ -646,6 +644,9 @@ function MineOSCore.iconRightClick(icon, eventData)
 				{MineOSCore.localization.contextMenuCopy},
 				{MineOSCore.localization.contextMenuRename},
 				{MineOSCore.localization.contextMenuCreateShortcut, icon.format == ".lnk"},
+				"-",
+				{MineOSCore.localization.contextMenuArchive},
+				{MineOSCore.localization.contextMenuAddToDock},
 				"-",
 				{MineOSCore.localization.contextMenuProperties},
 				{MineOSCore.localization.contextMenuDelete}
@@ -667,7 +668,6 @@ function MineOSCore.iconRightClick(icon, eventData)
 			):show()
 		elseif icon.format == ".pic" then
 			action = GUI.contextMenu(eventData[3], eventData[4],
-				-- {MineOSCore.localization.contextMenuEdit},
 				{MineOSCore.localization.contextMenuEditInPhotoshop},
 				{MineOSCore.localization.contextMenuSetAsWallpaper},
 				"-",
@@ -675,10 +675,10 @@ function MineOSCore.iconRightClick(icon, eventData)
 				{MineOSCore.localization.contextMenuCopy},
 				{MineOSCore.localization.contextMenuRename},
 				{MineOSCore.localization.contextMenuCreateShortcut, icon.format == ".lnk"},
-				-- "-",
-				-- {MineOSCore.localization.contextMenuUploadToPastebin, true},
 				"-",
+				-- {MineOSCore.localization.contextMenuArchive},
 				{MineOSCore.localization.contextMenuAddToDock},
+				"-",
 				{MineOSCore.localization.contextMenuProperties},
 				{MineOSCore.localization.contextMenuDelete}
 			):show()
@@ -686,7 +686,6 @@ function MineOSCore.iconRightClick(icon, eventData)
 			action = GUI.contextMenu(eventData[3], eventData[4],
 				{MineOSCore.localization.contextMenuEdit},
 				{MineOSCore.localization.contextMenuFlashEEPROM, (not component.isAvailable("eeprom") or icon.size > 4096)},
-				{MineOSCore.localization.contextMenuCreateApplication},
 				"-",
 				{MineOSCore.localization.contextMenuCut},
 				{MineOSCore.localization.contextMenuCopy},
@@ -695,23 +694,24 @@ function MineOSCore.iconRightClick(icon, eventData)
 				-- "-",
 				-- {MineOSCore.localization.contextMenuUploadToPastebin, true},
 				"-",
+				-- {MineOSCore.localization.contextMenuArchive},
 				{MineOSCore.localization.contextMenuAddToDock},
+				"-",
 				{MineOSCore.localization.contextMenuProperties},
 				{MineOSCore.localization.contextMenuDelete}
 			):show()
 		else
 			action = GUI.contextMenu(eventData[3], eventData[4],
 				{MineOSCore.localization.contextMenuEdit},
-				-- {MineOSCore.localization.contextMenuCreateApplication},
 				"-",
 				{MineOSCore.localization.contextMenuCut},
 				{MineOSCore.localization.contextMenuCopy},
 				{MineOSCore.localization.contextMenuRename},
 				{MineOSCore.localization.contextMenuCreateShortcut, icon.format == ".lnk"},
-				-- "-",
-				-- {MineOSCore.localization.contextMenuUploadToPastebin, true},
 				"-",
+				-- {MineOSCore.localization.contextMenuArchive},
 				{MineOSCore.localization.contextMenuAddToDock},
+				"-",
 				{MineOSCore.localization.contextMenuProperties},
 				{MineOSCore.localization.contextMenuDelete}
 			):show()
@@ -760,8 +760,7 @@ function MineOSCore.iconRightClick(icon, eventData)
 		ecs.createShortCut(MineOSCore.getFilePath(icon.path) .. "/" .. ecs.hideFileFormat(MineOSCore.getFileName(icon.path)) .. ".lnk", icon.path)
 		computer.pushSignal("MineOSCore", "updateFileList")
 	elseif action == MineOSCore.localization.contextMenuArchive then
-		-- ecs.info("auto", "auto", "", "Архивация файлов...")
-		archive.pack(ecs.hideFileFormat(MineOSCore.getFileName(icon.path))..".pkg", icon.path)
+		require("compressor").pack(icon.path, MineOSCore.getFilePath(icon.path) .. "Archive.pkg")
 		computer.pushSignal("MineOSCore", "updateFileList")
 	elseif action == MineOSCore.localization.contextMenuSetAsWallpaper then
 		fs.remove(MineOSCore.paths.wallpaper)

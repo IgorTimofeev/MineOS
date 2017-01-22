@@ -253,7 +253,7 @@
     name="lib/MineOSCore.lua",
     url="IgorTimofeev/OpenComputers/master/lib/MineOSCore.lua",
     type="Library",
-    version=1.45,
+    version=1.46,
   },
   {
     name="lib/advancedLua.lua",
@@ -300,7 +300,7 @@
     name="lib/GUI.lua",
     url="IgorTimofeev/OpenComputers/master/lib/GUI.lua",
     type="Library",
-    version=1.40,
+    version=1.41,
   },
   {
     name="lib/windows.lua",
@@ -360,7 +360,7 @@
     name="lib/syntax.lua",
     url="IgorTimofeev/OpenComputers/master/lib/syntax.lua",
     type="Library",
-    version=1.10,
+    version=1.11,
   },
   {
     name="lib/palette.lua",
@@ -375,8 +375,8 @@
     version=1.19,
   },
   {
-    name="lib/archive.lua",
-    url="IgorTimofeev/OpenComputers/master/lib/archive.lua",
+    name="lib/compressor.lua",
+    url="IgorTimofeev/OpenComputers/master/lib/compressor.lua",
     type="Library",
     version=1.0,
   },
@@ -470,14 +470,14 @@
     url="IgorTimofeev/OpenComputers/master/Applications/Motd/English.txt",
     type="Script",
     forceDownload=true,
-    version=1.02,
+    version=1.03,
   },
   {
     name="usr/misc/greetings/Russian.txt",
     url="IgorTimofeev/OpenComputers/master/Applications/Motd/Russian.txt",
     type="Script",
     forceDownload=true,
-    version=1.02,
+    version=1.03,
   },
   {
     name="etc/motd",

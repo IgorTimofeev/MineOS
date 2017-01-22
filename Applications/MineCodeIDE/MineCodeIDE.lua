@@ -3,7 +3,7 @@
 
 -- "/MineOS/Applications/MineCode IDE.app/MineCode IDE.lua" open OS.lua
 
--- package.loaded.syntax = nil
+package.loaded.syntax = nil
 -- package.loaded.ECSAPI = nil
 -- package.loaded.GUI = nil
 -- package.loaded.windows = nil
@@ -58,6 +58,7 @@ local config = {
 	doubleClickDelay = 0.4,
 	screenScale = 1,
 	enableAutoBrackets = true,
+	highlightLuaSyntax = true,
 }
 
 local colors = {
@@ -446,6 +447,7 @@ local function selectWord()
 			from = {symbol = from, line = cursor.position.line},
 			to = {symbol = to, line = cursor.position.line},
 		}
+		cursor.position.symbol = to
 	end
 end
 
@@ -1028,7 +1030,7 @@ end
 local function createWindow()
 	mainWindow = windows.fullScreen()
 
-	mainWindow.codeView = mainWindow:addCodeView(1, 1, 1, 1, {""}, 1, 1, 1, {}, {}, true, 2)
+	mainWindow.codeView = mainWindow:addCodeView(1, 1, 1, 1, {""}, 1, 1, 1, {}, {}, config.highlightLuaSyntax, 2)
 	mainWindow.codeView.scrollBars.vertical.onTouch = function()
 		mainWindow.codeView.fromLine = mainWindow.codeView.scrollBars.vertical.value
 	end
@@ -1227,6 +1229,8 @@ local function createWindow()
 	mainWindow.toggleSyntaxHighlightingButton.switchMode, mainWindow.toggleSyntaxHighlightingButton.pressed = true, true
 	mainWindow.toggleSyntaxHighlightingButton.onTouch = function()
 		mainWindow.codeView.highlightLuaSyntax = not mainWindow.codeView.highlightLuaSyntax
+		config.highlightLuaSyntax = mainWindow.codeView.highlightLuaSyntax
+		saveConfig()
 	end
 
 	mainWindow.runButton = mainWindow.topToolBar:addAdaptiveButton(1, 1, 3, 1, 0x4B4B4B, 0xEEEEEE, 0xCCCCCC, 0x444444, "▷")

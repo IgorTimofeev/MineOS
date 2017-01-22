@@ -1013,7 +1013,7 @@ local function inputFieldDraw(inputField)
 	end
 	
 	if inputField.highlightLuaSyntax then
-		require("syntax").highlightString(inputField.x, inputField.y, inputField.text)
+		require("syntax").highlightString(inputField.x, inputField.y, inputField.text, 2)
 	else
 		buffer.text(
 			inputField.x,

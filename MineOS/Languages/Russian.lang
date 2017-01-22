@@ -30,7 +30,7 @@
 	contextMenuRemoveFromDock = "Удалить из Dock",
 	contextMenuMoveRight = "Передвинуть правее",
 	contextMenuMoveLeft = "Передвинуть левее",
-	contextMenuArchive = "Добавить в архив",
+	contextMenuArchive = "Сжать",
 	contextMenuDelete = "Удалить",
 	contextMenuAddToFavourites = "Добавить в избранное",
 	contextMenuCreateApplication = "Создать приложение MineOS",
