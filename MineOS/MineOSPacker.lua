@@ -84,4 +84,5 @@ else
 	print("  MineOSPacker pack <path>")
 	print("  MineOSPacker unpack <path>")
 	print("  MineOSPacker unpackFromMineOSRepository")
+	print(" ")
 end
