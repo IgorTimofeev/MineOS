@@ -1159,7 +1159,7 @@
     about="IgorTimofeev/OpenComputers/master/Applications/TurretControl/About/",
     icon="IgorTimofeev/OpenComputers/master/Applications/TurretControl/Icon.pic",
     createShortcut="desktop",
-    version=1.0,
+    version=1.01,
     resources={
       {
         name="Turret.pic",

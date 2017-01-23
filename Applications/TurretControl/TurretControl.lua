@@ -9,6 +9,8 @@ local unicode = require("unicode")
 
 -------------------------------------------------------------------------------------------------------------------------------------
 
+-- /MineOS/Applications/TurretControl.app/TurretControl.lua
+
 buffer.start()
 local pathToTurretPicture = "MineOS/Applications/TurretControl.app/Resources/Turret.pic"
 local turretImage = image.load(pathToTurretPicture)
@@ -42,7 +44,7 @@ local function newObj(class, name, ...)
 end
 
 local function getProxiesOfAllComponents(name)
-	for address in pairs(component.list(name)) do
+	for address in component.list(name) do
 		table.insert(proxies, component.proxy(address))
 	end
 end
@@ -62,6 +64,7 @@ local function getTurrets()
 
 	for i = 1, #proxies do
 		-- print(proxies[i].type)
+		ecs.error(proxies[i].type)
 		if type(proxies[i].getCurrentEnergyStorage()) ~= "string" then
 			local turret = {}
 			turret.type = proxies[i].type
@@ -204,19 +207,23 @@ refresh()
 while true do
 	local e = {event.pull()}
 	if e[1] == "touch" then
-		for key in pairs(obj.TurretOn) do
-			if ecs.clickedAtArea(e[3], e[4], obj.TurretOn[key][1], obj.TurretOn[key][2], obj.TurretOn[key][3], obj.TurretOn[key][4]) then
-				changeTurretState(key, true)
-				drawAll()
-				break
+		if obj.TurretOn then
+			for key in pairs(obj.TurretOn) do
+				if ecs.clickedAtArea(e[3], e[4], obj.TurretOn[key][1], obj.TurretOn[key][2], obj.TurretOn[key][3], obj.TurretOn[key][4]) then
+					changeTurretState(key, true)
+					drawAll()
+					break
+				end
 			end
 		end
 
-		for key in pairs(obj.TurretOff) do
-			if ecs.clickedAtArea(e[3], e[4], obj.TurretOff[key][1], obj.TurretOff[key][2], obj.TurretOff[key][3], obj.TurretOff[key][4]) then
-				changeTurretState(key, false)
-				drawAll()
-				break
+		if obj.TurretOff then
+			for key in pairs(obj.TurretOff) do
+				if ecs.clickedAtArea(e[3], e[4], obj.TurretOff[key][1], obj.TurretOff[key][2], obj.TurretOff[key][3], obj.TurretOff[key][4]) then
+					changeTurretState(key, false)
+					drawAll()
+					break
+				end
 			end
 		end
 
