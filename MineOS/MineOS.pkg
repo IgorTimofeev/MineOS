@@ -6833,7 +6833,7 @@ return {
   -- hash256 = hash256,
   -- hash224 = hash224,
   -- new256 = new256,
-}Flib/advancedLua.lua*�
+}Flib/advancedLua.lua*�
 --[[
 	
 	Advanced Lua Library v1.1 by ECS
@@ -6951,15 +6951,15 @@ end
 
 -------------------------------------------------- Table extensions --------------------------------------------------
 
-local function doSerialize(array, text, prettyLook, indentationSymbol, oldIndentationSymbol, equalsSymbol, currentRecusrionStack, recursionStackLimit)
-	text = {"{"}
+local function doSerialize(array, prettyLook, indentationSymbol, indentationSymbolAdder, equalsSymbol, currentRecusrionStack, recursionStackLimit)
+	local text, keyType, valueType, stringValue = {"{"}
 	table.insert(text, (prettyLook and "\n" or nil))
 	
 	for key, value in pairs(array) do
-		local keyType, valueType, stringValue = type(key), type(value), tostring(value)
+		keyType, valueType, stringValue = type(key), type(value), tostring(value)
 
 		if keyType == "number" or keyType == "string" then
-			table.insert(text, (prettyLook and indentationSymbol or nil))
+			table.insert(text, (prettyLook and table.concat({indentationSymbol, indentationSymbolAdder}) or nil))
 			table.insert(text, "[")
 			table.insert(text, (keyType == "string" and table.concat({"\"", key, "\""}) or key))
 			table.insert(text, "]")
@@ -6974,33 +6974,48 @@ local function doSerialize(array, text, prettyLook, indentationSymbol, oldIndent
 			elseif valueType == "table" then
 				-- Ограничение стека рекурсии
 				if currentRecusrionStack < recursionStackLimit then
-					table.insert(text, table.concat(doSerialize(value, text, prettyLook, table.concat({indentationSymbol, indentationSymbol}), table.concat({oldIndentationSymbol, indentationSymbol}), equalsSymbol, currentRecusrionStack + 1, recursionStackLimit)))
+					table.insert(text, table.concat(doSerialize(value, prettyLook, table.concat({indentationSymbol, indentationSymbolAdder}), indentationSymbolAdder, equalsSymbol, currentRecusrionStack + 1, recursionStackLimit)))
 				else
 					table.insert(text, "...")
 				end
-			else
-				-- error("Unsupported table value type: " .. valueType)
 			end
 			
 			table.insert(text, ",")
 			table.insert(text, (prettyLook and "\n" or nil))
-		else
-			-- error("Unsupported table key type: " .. keyType)
 		end
 	end
 
-	table.remove(text, (prettyLook and #text - 1 or #text))
-	table.insert(text, (prettyLook and oldIndentationSymbol or nil))
+	-- Удаляем запятую
+	if prettyLook then
+		if #text > 2 then
+			table.remove(text, #text - 1)
+		end
+		-- Вставляем заодно уж символ индентации, благо чек на притти лук идет
+		table.insert(text, indentationSymbol)
+	else
+		if #text > 1 then
+			table.remove(text, #text)
+		end
+	end
+
 	table.insert(text, "}")
+
 	return text
 end
 
 function table.serialize(array, prettyLook, indentationWidth, indentUsingTabs, recursionStackLimit)
 	checkArg(1, array, "table")
-	indentationWidth = indentationWidth or 2
-	local indentationSymbol = indentUsingTabs and "	" or " "
-	indentationSymbol, indentationSymbolHalf = string.rep(indentationSymbol, indentationWidth)
-	return table.concat(doSerialize(array, {}, prettyLook, indentationSymbol, "", prettyLook and " = " or "=", 1, recursionStackLimit or math.huge))
+	return table.concat(
+		doSerialize(
+			array,
+			prettyLook,
+			"",
+			string.rep(indentUsingTabs and "	" or " ", indentationWidth or 2),
+			prettyLook and " = " or "=",
+			1,
+			recursionStackLimit or math.huge
+		)
+	)
 end
 
 function table.unserialize(serializedString)
@@ -7009,13 +7024,8 @@ function table.unserialize(serializedString)
 	if success then return result else return nil, result end
 end
 
-function table.toString(...)
-	return table.serialize(...)
-end
-
-function table.fromString(...)
-	return table.unserialize(...)
-end
+table.toString = table.serialize
+table.fromString = table.unserialize
 
 function table.toFile(path, array, prettyLook, indentationWidth, indentUsingTabs, recursionStackLimit, appendToFile)
 	checkArg(1, path, "string")
@@ -7200,16 +7210,26 @@ end
 
 -------------------------------------------------- Playground --------------------------------------------------
 
--- local function safeCall(method, ...)
--- 	local arguments = {...}
--- 	return xpcall(function() return method(table.unpack(arguments)) end, debug.traceback)
--- end
+-- local t =  {
+-- 	abc = 123,
+-- 	def = {
+-- 		cyka = "pidor",
+-- 		vagina = {
+-- 			chlen = 555,
+-- 			devil = 666,
+-- 			god = 777,
+-- 			serost = {
+-- 				tripleTable = "aefaef",
+-- 				aaa = "bbb",
+-- 				ccc = 123,
+-- 			}
+-- 		}
+-- 	},
+-- 	ghi = "HEHE",
+-- 	emptyTable = {},
+-- }
 
--- local function safeCallString(str)
--- 	return safeCall(load(str))
--- end
-
--- print(safeCallString("return 123"))
+-- print(table.toString(t, true))
 
 ------------------------------------------------------------------------------------------------------------------
 
@@ -8560,7 +8580,7 @@ do
   end
 end
 
-return colorsFlib/compressor.lua1
+return colorsFlib/compressor.luaP
 local unicode = require("unicode")
 local fs = require("filesystem")
 local compressor = {}
@@ -8743,6 +8763,7 @@ function compressor.unpack(pathToCompressedFile, pathWhereToUnpack, showInfo)
 					file:write(compressedFile:read(size))
 					file:close()
 				else
+					compressedFile:read(size)
 					info(showInfo, "Failed to open file for writing while unpacking: " .. tostring(reason))
 				end				
 			elseif not type then
@@ -18329,7 +18350,7 @@ setmetatable(sides, metatable)
 -------------------------------------------------------------------------------
 
 return sides
-Flib/syntax.lua�
+Flib/syntax.lua
 require("advancedLua")
 local buffer = require("doubleBuffering")
 local unicode = require("unicode")
@@ -18360,13 +18381,13 @@ syntax.colorScheme = {
 }
 
 syntax.patterns = {
-	--Комментарии
+	-- Комментарии
 	{ "%-%-.+", "comments", 0, 0 },
 	
-	--Строки
+	-- Строки
 	{ "\"[^\"]+\"", "strings", 0, 0 },
 	
-	--Циклы, условия, объявления
+	-- Циклы, условия и прочая поебень
 	{ "while ", "loops", 0, 1 },
 	{ "do$", "loops", 0, 0 },
 	{ "do ", "loops", 0, 1 },
@@ -18387,7 +18408,7 @@ syntax.patterns = {
 	{ " break$", "loops", 0, 0 },
 	{ " break ", "loops", 0, 0 },
 
-	--Состояния переменной
+	-- Истина, ложь, нулл
 	{ "true", "boolean", 0, 0 },
 	{ "false", "boolean", 0, 0 },
 	{ "nil", "boolean", 0, 0 },
@@ -18396,16 +18417,18 @@ syntax.patterns = {
 	{ "[%s%=%{%(][^%s%(%)%{%}%[%]]+%(", "functions", 1, 1 },
 	{ "^[^%s%(%)%{%}%[%]]+%(", "functions", 0, 1 },
 	
-	--Логические выражения
+	-- Логические выражения
 	{ " and ", "logic", 0, 1 },
 	{ " or ", "logic", 0, 1 },
 	{ " not ", "logic", 0, 1 },
+
+	-- Конкатенация строк
 	{ "[^%d]%.+[^%d]", "logic", 1, 1 },
 
-	--Сравнения и мат. операции
+	-- Сравнения и мат. операции
 	{ "[%>%<%=%~%+%-%*%/%^%#%%]", "compares", 0, 0 },
 
-	--Числа
+	-- Числа
 	{ "0x%w+", "numbers", 0, 0 },
 	{ "[^%a%d][%.%d]+$", "numbers", 1, 0 },
 	{ "[^%a%d][%.%d]+[^%a%d]", "numbers", 1, 1 },
@@ -18413,7 +18436,7 @@ syntax.patterns = {
 
 ----------------------------------------------------------------------------------------------------------------------------------------
 
---Нарисовать и подсветить строку
+-- Отрисовка строки с подсвеченным синтаксисом
 function syntax.highlightString(x, y, str, indentationWidth)
 	if y >= buffer.drawLimit.y and y <= buffer.drawLimit.y2 then
 		local stringLength, symbols, colors, searchFrom, starting, ending, bufferIndex = unicode.len(str), {}, {}
@@ -25296,105 +25319,7 @@ alias ..="cd .."
 alias df="df -h"
 
 alias grep="grep --color"
-Detc/Fetc/edit.cfgkeybinds={
-  ["findnext"] = {
-    [1] = {
-        [1] = "control",
-        [2] = "g"
-      },
-    [2] = {
-        [1] = "control",
-        [2] = "n"
-      },
-    [3] = {
-        [1] = "f3"
-      }
-  },
-  ["deleteLine"] = {
-    [1] = {
-        [1] = "control",
-        [2] = "delete"
-      },
-    [2] = {
-        [1] = "shift",
-        [2] = "delete"
-      }
-  },
-  ["home"] = {
-    [1] = {
-        [1] = "home"
-      }
-  },
-  ["up"] = {
-    [1] = {
-        [1] = "up"
-      }
-  },
-  ["pageDown"] = {
-    [1] = {
-        [1] = "pageDown"
-      }
-  },
-  ["close"] = {
-    [1] = {
-        [1] = "control",
-        [2] = "w"
-      }
-  },
-  ["right"] = {
-    [1] = {
-        [1] = "right"
-      }
-  },
-  ["backspace"] = {
-    [1] = {
-        [1] = "back"
-      }
-  },
-  ["newline"] = {
-    [1] = {
-        [1] = "enter"
-      }
-  },
-  ["find"] = {
-    [1] = {
-        [1] = "control",
-        [2] = "f"
-      }
-  },
-  ["pageUp"] = {
-    [1] = {
-        [1] = "pageUp"
-      }
-  },
-  ["delete"] = {
-    [1] = {
-        [1] = "delete"
-      }
-  },
-  ["left"] = {
-    [1] = {
-        [1] = "left"
-      }
-  },
-  ["save"] = {
-    [1] = {
-        [1] = "control",
-        [2] = "s"
-      }
-  },
-  ["eol"] = {
-    [1] = {
-        [1] = "end"
-      }
-  },
-  ["down"] = {
-    [1] = {
-        [1] = "down"
-      }
-  }
-}
-Fetc/filesystem.cfgautorun=trueFetc/motdp#!/bin/lua
+Detc/Fetc/filesystem.cfgautorun=trueFetc/motdp#!/bin/lua
 
 local component = require("component")
 local computer = require("computer")
@@ -25986,12 +25911,12 @@ D,MineOS/Applications/AppMarket.app/Resources/D2MineOS/Applications/AppMarket.
 	youHaveNewestApps = "У вас самое новое ПО",
 	downloadingInfoAboutApplication = "Загрузка информации о приложении",
 	updating = "Обновление",
-}D%MineOS/Applications/MineCode IDE.app/F5MineOS/Applications/MineCode IDE.app/MineCode IDE.lua�
+}D%MineOS/Applications/MineCode IDE.app/F5MineOS/Applications/MineCode IDE.app/MineCode IDE.lua�
 ---------------------------------------------------- Libraries ----------------------------------------------------
 
 -- "/MineOS/Applications/MineCode IDE.app/MineCode IDE.lua" open OS.lua
 
-package.loaded.syntax = nil
+-- package.loaded.syntax = nil
 -- package.loaded.ECSAPI = nil
 -- package.loaded.GUI = nil
 -- package.loaded.windows = nil
@@ -27059,8 +26984,10 @@ local function createWindow()
 		menu:addItem(localization.open, false, "^O").onTouch = function()
 			open()
 		end
-		menu:addItem(localization.getFromWeb, false, "^U").onTouch = function()
-			downloadFromWeb()
+		if component.isAvailable("internet") then
+			menu:addItem(localization.getFromWeb, false, "^U").onTouch = function()
+				downloadFromWeb()
+			end
 		end
 		menu:addSeparator()
 		menu:addItem(localization.save, not mainWindow.leftTreeView.currentFile, "^S").onTouch = function()
@@ -27368,7 +27295,7 @@ local function createWindow()
 				elseif eventData[4] == 24 then
 					open()
 				-- U
-				elseif eventData[4] == 22 then
+				elseif eventData[4] == 22 and component.isAvailable("internet") then
 					downloadFromWeb()
 				-- S
 				elseif eventData[4] == 31 then
@@ -27493,7 +27420,7 @@ buffer.draw()
 mainWindow:handleEvents(config.cursorBlinkDelay)
 
 
-D/MineOS/Applications/MineCode IDE.app/Resources/D5MineOS/Applications/MineCode IDE.app/Resources/About/F@MineOS/Applications/MineCode IDE.app/Resources/About/Russian.txt�MineCode IDE - это мощный инстурмент для разработки приложений с богатым функционалом: от подсветки синтаксиса Lua, выделения текста и работы с буфером обмена до поддержки пользовательских цветовых схем. Удобный файловый менеджер также прилагается.F9MineOS/Applications/MineCode IDE.app/Resources/Config.cfgP{["cursorSymbol"]="┃",["screenScale"]=1,["cursorColor"]=43263,["scrollSpeed"]=8,["doubleClickDelay"]=0.4,["enableAutoBrackets"]=true,["highlightLuaSyntax"]=true,["syntaxColorScheme"]={["text"]=16777215,["functions"]=16764006,["lineNumbersText"]=13421772,["numbers"]=6740991,["scrollBarForeground"]=3389183,["selection"]=5592405,["strings"]=10092416,["scrollBarBackground"]=4473924,["boolean"]=16767808,["logic"]=16764006,["indentation"]=3947580,["comments"]=8947848,["compares"]=16777112,["loops"]=16777112,["background"]=1973790,["lineNumbersBackground"]=2960685},["cursorBlinkDelay"]=0.5}F7MineOS/Applications/MineCode IDE.app/Resources/Icon.picOCIFA SbF�B )YScFUB )YSdF�B )YSeF�B )YYFUB )YSwF�B )YShF�B )YS▀F�B )YF�B )YSiF�B )YSmFUB )YSlF�B )YS-FUB )YSnF�B )YSoFUB )YS F B )YYYSaF�B )YD<MineOS/Applications/MineCode IDE.app/Resources/Localization/FHMineOS/Applications/MineCode IDE.app/Resources/Localization/English.langf{	
+D/MineOS/Applications/MineCode IDE.app/Resources/D5MineOS/Applications/MineCode IDE.app/Resources/About/F@MineOS/Applications/MineCode IDE.app/Resources/About/Russian.txt�MineCode IDE - это мощный инстурмент для разработки приложений с богатым функционалом: от подсветки синтаксиса Lua, выделения текста и работы с буфером обмена до поддержки пользовательских цветовых схем. Удобный файловый менеджер также прилагается.F7MineOS/Applications/MineCode IDE.app/Resources/Icon.picOCIFA SbF�B )YScFUB )YSdF�B )YSeF�B )YYFUB )YSwF�B )YShF�B )YS▀F�B )YF�B )YSiF�B )YSmFUB )YSlF�B )YS-FUB )YSnF�B )YSoFUB )YS F B )YYYSaF�B )YD<MineOS/Applications/MineCode IDE.app/Resources/Localization/FHMineOS/Applications/MineCode IDE.app/Resources/Localization/English.langf{	
 	enableAutoBrackets = "Enable autobrackets",
 	disableAutoBrackets = "Disable autobrackets",
 	url = "http://example.com/something.lua",
@@ -30592,7 +30519,7 @@ end
 
 
 
-DMineOS/Desktop/FMineOS/Desktop/VK.lnk%return "/MineOS/Applications/VK.app/"DMineOS/Pictures/DMineOS/System/DMineOS/System/OS/F!MineOS/System/OS/Applications.txt��{
+DMineOS/Desktop/FMineOS/Desktop/VK.lnk$return "/MineOS/Applications/VK.app"DMineOS/Pictures/DMineOS/System/DMineOS/System/OS/F!MineOS/System/OS/Applications.txt��{
   GitHubUserURL="https://raw.githubusercontent.com/",
   GitHubApplicationListURL="https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/Applications.txt",
   ----------------------------------------------------- Все для ОС --------------------------------------------------------------------------
@@ -30602,7 +30529,7 @@ DMineOS/Desktop/FMineOS/Desktop/VK.lnk%return "/MineOS/Applications/VK.app/
     about="IgorTimofeev/OpenComputers/master/MineOS/About/",
     type="Script",
     forceDownload=true,
-    version=3.47,
+    version=3.48,
   },
   {
     name="MineOS/Pictures/Raspberry.pic",
@@ -30854,7 +30781,7 @@ DMineOS/Desktop/FMineOS/Desktop/VK.lnk%return "/MineOS/Applications/VK.app/
     url="IgorTimofeev/OpenComputers/master/lib/advancedLua.lua",
     type="Library",
     preLoadFile=true,
-    version=1.06,
+    version=1.07,
   },
   {
     name="MineOS/System/OS/EFI.lua",
@@ -30954,7 +30881,7 @@ DMineOS/Desktop/FMineOS/Desktop/VK.lnk%return "/MineOS/Applications/VK.app/
     name="lib/syntax.lua",
     url="IgorTimofeev/OpenComputers/master/lib/syntax.lua",
     type="Library",
-    version=1.11,
+    version=1.12,
   },
   {
     name="lib/palette.lua",
@@ -30972,7 +30899,7 @@ DMineOS/Desktop/FMineOS/Desktop/VK.lnk%return "/MineOS/Applications/VK.app/
     name="lib/compressor.lua",
     url="IgorTimofeev/OpenComputers/master/lib/compressor.lua",
     type="Library",
-    version=1.05,
+    version=1.06,
   },
   {
     name="lib/xmlParser.lua",
@@ -31111,7 +31038,7 @@ DMineOS/Desktop/FMineOS/Desktop/VK.lnk%return "/MineOS/Applications/VK.app/
     icon="IgorTimofeev/OpenComputers/master/Applications/MineCodeIDE/Icon.pic",
     createShortcut="dock",
     forceDownload=true,
-    version=1.52,
+    version=1.54,
     resources={
       {
         name="Localization/Russian.lang",
@@ -31227,9 +31154,9 @@ DMineOS/Desktop/FMineOS/Desktop/VK.lnk%return "/MineOS/Applications/VK.app/
     about="IgorTimofeev/OpenComputers/master/Applications/VK/About/",
     type="Application",
     icon="IgorTimofeev/OpenComputers/master/Applications/VK/Icon.pic",
-    createShortcut="dock",
+    createShortcut="desktop",
     forceDownload=true,
-    version=1.24,
+    version=1.25,
     resources={
       {
         name="VKLogo.pic",
@@ -31464,7 +31391,7 @@ DMineOS/Desktop/FMineOS/Desktop/VK.lnk%return "/MineOS/Applications/VK.app/
     type="Application",
     icon="IgorTimofeev/OpenComputers/master/Applications/Stargate/Icon.pic",
     createShortcut="desktop",
-    version=1.03,
+    version=1.04,
     resources={
       {
         name="Gate.pic",
@@ -31753,7 +31680,7 @@ DMineOS/Desktop/FMineOS/Desktop/VK.lnk%return "/MineOS/Applications/VK.app/
     about="IgorTimofeev/OpenComputers/master/Applications/TurretControl/About/",
     icon="IgorTimofeev/OpenComputers/master/Applications/TurretControl/Icon.pic",
     createShortcut="desktop",
-    version=1.0,
+    version=1.01,
     resources={
       {
         name="Turret.pic",
@@ -32432,24 +32359,23 @@ DMineOS/System/OS/Languages/F'MineOS/System/OS/Languages/English.lang9{
 В случае несогласия с любым из вышеперечисленных пунктов,
 вы обязаны нажать сочетание клавиш Ctrl+Alt+C, чтобы завершить
 программу установки.
-FMineOS/System/OS/OSSettings.cfg�{
+FMineOS/System/OS/OSSettings.cfg�{
+  ["dockShortcuts"] = {
+    [1] = {
+      ["path"] = "/MineOS/Applications/AppMarket.app"
+    },
+    [2] = {
+      ["path"] = "/MineOS/Applications/MineCode IDE.app"
+    },
+    [3] = {
+      ["path"] = "/MineOS/Applications/Photoshop.app"
+    }
+  },
+  ["language"] = "Russian",
   ["protectionMethod"] = "withoutProtection",
   ["showHelpOnApplicationStart"] = false,
-  ["screensaver"] = "Matrix",
   ["screensaverDelay"] = 20,
-  ["showWindows10Upgrade"] = false,
-  ["language"] = "Russian",
-  ["dockShortcuts"] = {
-    [2] = {
-        ["path"] = "/MineOS/Applications/MineCode IDE.app"
-      },
-    [1] = {
-        ["path"] = "/MineOS/Applications/AppMarket.app"
-      },
-    [3] = {
-        ["path"] = "/MineOS/Applications/Photoshop.app"
-      }
-  }
+  ["screensaver"] = "Matrix"
 }DMineOS/System/OS/Screensavers/F'MineOS/System/OS/Screensavers/Clock.lua�local gpu = require("component").gpu
 local event = require("event")
 local w, h, t, q = gpu.getResolution()
