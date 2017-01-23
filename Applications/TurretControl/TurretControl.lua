@@ -64,7 +64,7 @@ local function getTurrets()
 
 	for i = 1, #proxies do
 		-- print(proxies[i].type)
-		ecs.error(proxies[i].type)
+		-- ecs.error(proxies[i].type)
 		if type(proxies[i].getCurrentEnergyStorage()) ~= "string" then
 			local turret = {}
 			turret.type = proxies[i].type
