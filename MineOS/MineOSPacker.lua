@@ -13,9 +13,13 @@ local compressorURL = "https://raw.githubusercontent.com/IgorTimofeev/OpenComput
 local MineOSPackageURL = "https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/MineOS/MineOS.pkg"
 
 local packageFileList = {
-	"/MineOS/",
 	"/boot/",
 	"/lib/",
+	"/bin/",
+	"/usr/",
+	"/home/",
+	"/etc/",
+	"/MineOS/",
 	"/OS.lua",
 	"/init.lua",
 	"/autorun.lua",
