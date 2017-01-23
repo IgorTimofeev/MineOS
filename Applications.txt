@@ -360,7 +360,7 @@
     name="lib/syntax.lua",
     url="IgorTimofeev/OpenComputers/master/lib/syntax.lua",
     type="Library",
-    version=1.11,
+    version=1.12,
   },
   {
     name="lib/palette.lua",

@@ -29,13 +29,13 @@ syntax.colorScheme = {
 }
 
 syntax.patterns = {
-	--Комментарии
+	-- Комментарии
 	{ "%-%-.+", "comments", 0, 0 },
 	
-	--Строки
+	-- Строки
 	{ "\"[^\"]+\"", "strings", 0, 0 },
 	
-	--Циклы, условия, объявления
+	-- Циклы, условия и прочая поебень
 	{ "while ", "loops", 0, 1 },
 	{ "do$", "loops", 0, 0 },
 	{ "do ", "loops", 0, 1 },
@@ -56,7 +56,7 @@ syntax.patterns = {
 	{ " break$", "loops", 0, 0 },
 	{ " break ", "loops", 0, 0 },
 
-	--Состояния переменной
+	-- Истина, ложь, нулл
 	{ "true", "boolean", 0, 0 },
 	{ "false", "boolean", 0, 0 },
 	{ "nil", "boolean", 0, 0 },
@@ -65,16 +65,18 @@ syntax.patterns = {
 	{ "[%s%=%{%(][^%s%(%)%{%}%[%]]+%(", "functions", 1, 1 },
 	{ "^[^%s%(%)%{%}%[%]]+%(", "functions", 0, 1 },
 	
-	--Логические выражения
+	-- Логические выражения
 	{ " and ", "logic", 0, 1 },
 	{ " or ", "logic", 0, 1 },
 	{ " not ", "logic", 0, 1 },
+
+	-- Конкатенация строк
 	{ "[^%d]%.+[^%d]", "logic", 1, 1 },
 
-	--Сравнения и мат. операции
+	-- Сравнения и мат. операции
 	{ "[%>%<%=%~%+%-%*%/%^%#%%]", "compares", 0, 0 },
 
-	--Числа
+	-- Числа
 	{ "0x%w+", "numbers", 0, 0 },
 	{ "[^%a%d][%.%d]+$", "numbers", 1, 0 },
 	{ "[^%a%d][%.%d]+[^%a%d]", "numbers", 1, 1 },
@@ -82,7 +84,7 @@ syntax.patterns = {
 
 ----------------------------------------------------------------------------------------------------------------------------------------
 
---Нарисовать и подсветить строку
+-- Отрисовка строки с подсвеченным синтаксисом
 function syntax.highlightString(x, y, str, indentationWidth)
 	if y >= buffer.drawLimit.y and y <= buffer.drawLimit.y2 then
 		local stringLength, symbols, colors, searchFrom, starting, ending, bufferIndex = unicode.len(str), {}, {}
