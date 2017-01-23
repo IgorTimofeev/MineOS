@@ -3,7 +3,7 @@
 
 -- "/MineOS/Applications/MineCode IDE.app/MineCode IDE.lua" open OS.lua
 
-package.loaded.syntax = nil
+-- package.loaded.syntax = nil
 -- package.loaded.ECSAPI = nil
 -- package.loaded.GUI = nil
 -- package.loaded.windows = nil
