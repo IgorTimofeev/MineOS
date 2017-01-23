@@ -253,7 +253,7 @@
     name="lib/MineOSCore.lua",
     url="IgorTimofeev/OpenComputers/master/lib/MineOSCore.lua",
     type="Library",
-    version=1.47,
+    version=1.48,
   },
   {
     name="lib/advancedLua.lua",
@@ -1197,30 +1197,6 @@
       {
         name="Wallpaper.pic",
         url="IgorTimofeev/OpenComputers/master/Applications/BufferDemo/Wallpaper.pic",
-      },
-    },
-  },
-  {
-    name="MineOS/Applications/Viewer",
-    url="IgorTimofeev/OpenComputers/master/Applications/Viewer/Viewer.lua",
-    about="IgorTimofeev/OpenComputers/master/Applications/Viewer/About/",
-    type="Application",
-    icon="IgorTimofeev/OpenComputers/master/Applications/Viewer/Icon.pic",
-    createShortcut="desktop",
-    forceDownload=true,
-    version=1.01,
-    resources={
-      {
-        name="arrowLeft.pic",
-        url="IgorTimofeev/OpenComputers/master/Applications/Viewer/arrowLeft.pic",
-      },
-      {
-        name="arrowRight.pic",
-        url="IgorTimofeev/OpenComputers/master/Applications/Viewer/arrowRight.pic",
-      },
-      {
-        name="play.pic",
-        url="IgorTimofeev/OpenComputers/master/Applications/Viewer/play.pic",
       },
     },
   },

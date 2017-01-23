@@ -294,7 +294,7 @@ function MineOSCore.analyzeIconFormat(iconObject)
 		elseif iconObject.format == ".pic" or iconObject.format == ".png" then
 			iconObject.iconImage.image = MineOSCore.icons.image
 			iconObject.launch = function()
-				MineOSCore.safeLaunch(MineOSCore.paths.applications .. "Viewer.app/Viewer.lua", "open", iconObject.path)
+				MineOSCore.safeLaunch(MineOSCore.paths.applications .. "Photoshop.app/Photoshop.lua", "open", iconObject.path)
 			end
 		elseif iconObject.format == ".pkg" then
 			iconObject.iconImage.image = MineOSCore.icons.archive
@@ -668,7 +668,6 @@ function MineOSCore.iconRightClick(icon, eventData)
 			):show()
 		elseif icon.format == ".pic" then
 			action = GUI.contextMenu(eventData[3], eventData[4],
-				{MineOSCore.localization.contextMenuEditInPhotoshop},
 				{MineOSCore.localization.contextMenuSetAsWallpaper},
 				"-",
 				{MineOSCore.localization.contextMenuCut},
@@ -725,9 +724,6 @@ function MineOSCore.iconRightClick(icon, eventData)
 		MineOSCore.showPropertiesWindow(eventData[3], eventData[4], 40, icon)
 	elseif action == MineOSCore.localization.contextMenuShowContainingFolder then
 		computer.pushSignal("MineOSCore", "changeWorkpath", MineOSCore.getFilePath(icon.shortcutPath))
-		computer.pushSignal("MineOSCore", "updateFileList")
-	elseif action == MineOSCore.localization.contextMenuEditInPhotoshop then
-		MineOSCore.safeLaunch("MineOS/Applications/Photoshop.app/Photoshop.lua", "open", icon.path)
 		computer.pushSignal("MineOSCore", "updateFileList")
 	elseif action == MineOSCore.localization.contextMenuAddToFavourites then
 		computer.pushSignal("finderFavouriteAdded", icon.path)
