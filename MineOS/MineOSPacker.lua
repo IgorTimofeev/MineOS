@@ -2,6 +2,7 @@
 local args = {...}
 local fs = require("filesystem")
 local component = require("component")
+local compressor
 
 ------------------------------------------------------------------------------------------------------------
 
@@ -50,6 +51,7 @@ end
 local function getCompressor()
 	print("Downloading compressor library...")
 	getFile(compressorURL, compressorPath)
+	compressor = dofile(compressorPath)
 	print("Done.")
 	print(" ")
 end
@@ -63,17 +65,20 @@ end
 
 ------------------------------------------------------------------------------------------------------------
 
-getCompressor()
-local compressor = dofile(compressorPath)
-
 if args[1] == "pack" then
+	getCompressor()
 	packageFileList[#packageFileList + 1] = true
 	compressor.pack(args[2], table.unpack(packageFileList))
 elseif args[1] == "unpack" and args[2] and fs.exists(args[2]) then
+	getCompressor()
 	compressor.unpack(args[2], "/", true)
+	require("computer").shutdown(true)
 elseif args[1] == "unpackFromMineOSRepository" then
+	getCompressor()
 	getPackage()
 	compressor.unpack(MineOSPackagePath, "/", true)
+	fs.remove(MineOSPackagePath)
+	require("computer").shutdown(true)
 else
 	print("Usage:")
 	print("  MineOSPacker pack <path>")
