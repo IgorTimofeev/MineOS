@@ -633,9 +633,9 @@
     about="IgorTimofeev/OpenComputers/master/Applications/VK/About/",
     type="Application",
     icon="IgorTimofeev/OpenComputers/master/Applications/VK/Icon.pic",
-    createShortcut="dock",
+    createShortcut="desktop",
     forceDownload=true,
-    version=1.24,
+    version=1.25,
     resources={
       {
         name="VKLogo.pic",
