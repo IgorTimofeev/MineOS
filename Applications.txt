@@ -8,7 +8,7 @@
     about="IgorTimofeev/OpenComputers/master/MineOS/About/",
     type="Script",
     forceDownload=true,
-    version=3.47,
+    version=3.48,
   },
   {
     name="MineOS/Pictures/Raspberry.pic",

@@ -38,7 +38,7 @@ local ecs = require("ECSAPI")
 ---------------------------------------------- Базовые константы ------------------------------------------------------------------------
 
 local colors = {
-	background = 0x262626,
+	background = 0x1B1B1B,
 	topBarTransparency = 20,
 	selection = ecs.colors.lightBlue,
 	interface = 0xCCCCCC,
