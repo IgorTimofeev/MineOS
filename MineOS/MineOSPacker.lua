@@ -50,11 +50,15 @@ end
 local function getCompressor()
 	print("Downloading compressor library...")
 	getFile(compressorURL, compressorPath)
+	print("Done.")
+	print(" ")
 end
 
 local function getPackage()
 	print("Downloading MineOS package...")
 	getFile(MineOSPackageURL, MineOSPackagePath)
+	print("Done.")
+	print(" ")
 end
 
 ------------------------------------------------------------------------------------------------------------
@@ -64,11 +68,15 @@ local compressor = dofile(compressorPath)
 
 if args[1] == "pack" then
 	packageFileList[#packageFileList + 1] = true
-	compressor.pack(MineOSPackagePath, table.unpack(packageFileList))
-elseif args[1] == "unpack" then
+	compressor.pack(args[2], table.unpack(packageFileList))
+elseif args[1] == "unpack" and args[2] and fs.exists(args[2]) then
+	compressor.unpack(args[2], "/", true)
+elseif args[1] == "unpackFromMineOSRepository" then
 	getPackage()
 	compressor.unpack(MineOSPackagePath, "/", true)
 else
 	print("Usage:")
-	print("  MineOSPacker <pack/unpack>")
+	print("  MineOSPacker pack <path>")
+	print("  MineOSPacker unpack <path>")
+	print("  MineOSPacker unpackFromMineOSRepository")
 end
