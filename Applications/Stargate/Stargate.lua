@@ -19,7 +19,7 @@ end
 local toolbarWidth = 32
 local sg = image.load("MineOS/Applications/Stargate.app/Resources/Gate.pic")
 local sgCore = image.load("MineOS/Applications/Stargate.app/Resources/GateCore.pic")
-local pathToContacts = "MineOS/System/Stargate/Contacts.cfg"
+local pathToContacts = "MineOS/System/Stargate/Contacts2.cfg"
 local buttons = {}
 local contacts = {addresses = {}}
 local chevrons = {

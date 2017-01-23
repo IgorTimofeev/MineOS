@@ -116,15 +116,15 @@ end
 
 -------------------------------------------------- Table extensions --------------------------------------------------
 
-local function doSerialize(array, text, prettyLook, indentationSymbol, oldIndentationSymbol, equalsSymbol, currentRecusrionStack, recursionStackLimit)
-	text = {"{"}
+local function doSerialize(array, prettyLook, indentationSymbol, indentationSymbolAdder, equalsSymbol, currentRecusrionStack, recursionStackLimit)
+	local text, keyType, valueType, stringValue = {"{"}
 	table.insert(text, (prettyLook and "\n" or nil))
 	
 	for key, value in pairs(array) do
-		local keyType, valueType, stringValue = type(key), type(value), tostring(value)
+		keyType, valueType, stringValue = type(key), type(value), tostring(value)
 
 		if keyType == "number" or keyType == "string" then
-			table.insert(text, (prettyLook and indentationSymbol or nil))
+			table.insert(text, (prettyLook and table.concat({indentationSymbol, indentationSymbolAdder}) or nil))
 			table.insert(text, "[")
 			table.insert(text, (keyType == "string" and table.concat({"\"", key, "\""}) or key))
 			table.insert(text, "]")
@@ -139,33 +139,48 @@ local function doSerialize(array, text, prettyLook, indentationSymbol, oldIndent
 			elseif valueType == "table" then
 				-- Ограничение стека рекурсии
 				if currentRecusrionStack < recursionStackLimit then
-					table.insert(text, table.concat(doSerialize(value, text, prettyLook, table.concat({indentationSymbol, indentationSymbol}), table.concat({oldIndentationSymbol, indentationSymbol}), equalsSymbol, currentRecusrionStack + 1, recursionStackLimit)))
+					table.insert(text, table.concat(doSerialize(value, prettyLook, table.concat({indentationSymbol, indentationSymbolAdder}), indentationSymbolAdder, equalsSymbol, currentRecusrionStack + 1, recursionStackLimit)))
 				else
 					table.insert(text, "...")
 				end
-			else
-				-- error("Unsupported table value type: " .. valueType)
 			end
 			
 			table.insert(text, ",")
 			table.insert(text, (prettyLook and "\n" or nil))
-		else
-			-- error("Unsupported table key type: " .. keyType)
 		end
 	end
 
-	table.remove(text, (prettyLook and #text - 1 or #text))
-	table.insert(text, (prettyLook and oldIndentationSymbol or nil))
+	-- Удаляем запятую
+	if prettyLook then
+		if #text > 2 then
+			table.remove(text, #text - 1)
+		end
+		-- Вставляем заодно уж символ индентации, благо чек на притти лук идет
+		table.insert(text, indentationSymbol)
+	else
+		if #text > 1 then
+			table.remove(text, #text)
+		end
+	end
+
 	table.insert(text, "}")
+
 	return text
 end
 
 function table.serialize(array, prettyLook, indentationWidth, indentUsingTabs, recursionStackLimit)
 	checkArg(1, array, "table")
-	indentationWidth = indentationWidth or 2
-	local indentationSymbol = indentUsingTabs and "	" or " "
-	indentationSymbol, indentationSymbolHalf = string.rep(indentationSymbol, indentationWidth)
-	return table.concat(doSerialize(array, {}, prettyLook, indentationSymbol, "", prettyLook and " = " or "=", 1, recursionStackLimit or math.huge))
+	return table.concat(
+		doSerialize(
+			array,
+			prettyLook,
+			"",
+			string.rep(indentUsingTabs and "	" or " ", indentationWidth or 2),
+			prettyLook and " = " or "=",
+			1,
+			recursionStackLimit or math.huge
+		)
+	)
 end
 
 function table.unserialize(serializedString)
@@ -174,13 +189,8 @@ function table.unserialize(serializedString)
 	if success then return result else return nil, result end
 end
 
-function table.toString(...)
-	return table.serialize(...)
-end
-
-function table.fromString(...)
-	return table.unserialize(...)
-end
+table.toString = table.serialize
+table.fromString = table.unserialize
 
 function table.toFile(path, array, prettyLook, indentationWidth, indentUsingTabs, recursionStackLimit, appendToFile)
 	checkArg(1, path, "string")
@@ -365,16 +375,26 @@ end
 
 -------------------------------------------------- Playground --------------------------------------------------
 
--- local function safeCall(method, ...)
--- 	local arguments = {...}
--- 	return xpcall(function() return method(table.unpack(arguments)) end, debug.traceback)
--- end
+-- local t =  {
+-- 	abc = 123,
+-- 	def = {
+-- 		cyka = "pidor",
+-- 		vagina = {
+-- 			chlen = 555,
+-- 			devil = 666,
+-- 			god = 777,
+-- 			serost = {
+-- 				tripleTable = "aefaef",
+-- 				aaa = "bbb",
+-- 				ccc = 123,
+-- 			}
+-- 		}
+-- 	},
+-- 	ghi = "HEHE",
+-- 	emptyTable = {},
+-- }
 
--- local function safeCallString(str)
--- 	return safeCall(load(str))
--- end
-
--- print(safeCallString("return 123"))
+-- print(table.toString(t, true))
 
 ------------------------------------------------------------------------------------------------------------------
 
