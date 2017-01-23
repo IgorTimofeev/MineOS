@@ -273,7 +273,7 @@ function palette.show(x, y, startColor)
 	createCrestsCoordinates()
 	refreshRainbows()
 	
-	window.drawShadow = true
+	window.drawShadow = false
 	drawAll()
 	window.drawShadow = false
 

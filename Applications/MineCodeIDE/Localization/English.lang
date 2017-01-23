@@ -1,4 +1,5 @@
 {	
+	selectAndPasteColor = "Select and paste color",
 	enableAutoBrackets = "Enable autobrackets",
 	disableAutoBrackets = "Disable autobrackets",
 	url = "http://example.com/something.lua",

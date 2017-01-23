@@ -755,9 +755,20 @@ local function paste(pasteLines)
 	end
 end
 
+local function selectAndPasteColor()
+	local startColor = 0xFF0000
+	if mainWindow.codeView.selections[1] and mainWindow.codeView.selections[1].from.line == mainWindow.codeView.selections[1].to.line then
+		startColor = tonumber(unicode.sub(mainWindow.codeView.lines[mainWindow.codeView.selections[1].from.line], mainWindow.codeView.selections[1].from.symbol, mainWindow.codeView.selections[1].to.symbol)) or startColor
+	end
+
+	local selectedColor = require("palette").show("auto", "auto", startColor)
+	if selectedColor then
+		paste({string.format("0x%06X", selectedColor)})
+	end
+end
+
 local function pasteRegularChar(unicodeByte, char)
 	if not keyboard.isControl(unicodeByte) then
-		deleteSelectedData()
 		paste({char})
 	end
 end
@@ -1046,6 +1057,42 @@ local function createWindow()
 	mainWindow.codeView.scrollBars.horizontal.onTouch = function()
 		mainWindow.codeView.fromSymbol = mainWindow.codeView.scrollBars.horizontal.value
 	end
+
+	local editOrRightClickMenu = GUI.contextMenu(1, 1)
+	editOrRightClickMenu:addItem(localization.cut, not mainWindow.codeView.selections[1], "^X").onTouch = function()
+		cut()
+	end
+	editOrRightClickMenu:addItem(localization.copy, not mainWindow.codeView.selections[1], "^C").onTouch = function()
+		copy()
+	end
+	editOrRightClickMenu:addItem(localization.paste, not clipboard, "^V").onTouch = function()
+		paste(clipboard)
+	end
+	editOrRightClickMenu:addSeparator()
+	editOrRightClickMenu:addItem(localization.comment, false, "^/").onTouch = function()
+		toggleComment()
+	end
+	editOrRightClickMenu:addItem(localization.indent, false, "Tab").onTouch = function()
+		indentOrUnindent(true)
+	end
+	editOrRightClickMenu:addItem(localization.unindent, false, "⇧Tab").onTouch = function()
+		indentOrUnindent(false)
+	end
+	editOrRightClickMenu:addSeparator()
+	editOrRightClickMenu:addItem(localization.deleteLine, false, "^Del").onTouch = function()
+		deleteLine(cursor.position.line)
+	end
+	editOrRightClickMenu:addItem(localization.selectAndPasteColor, false, "^⇧C").onTouch = function()
+		selectAndPasteColor()
+	end
+	editOrRightClickMenu:addSeparator()
+	editOrRightClickMenu:addItem(localization.selectWord).onTouch = function()
+		selectWord()
+	end
+	editOrRightClickMenu:addItem(localization.selectAll, false, "^A").onTouch = function()
+		selectAll()
+	end
+
 	mainWindow.topMenu = mainWindow:addMenu(1, 1, 1, colors.topMenu.backgroundColor, colors.topMenu.textColor, colors.topMenu.backgroundPressedColor, colors.topMenu.textPressedColor)
 	
 	local item1 = mainWindow.topMenu:addItem("MineCode", 0x0)
@@ -1088,37 +1135,8 @@ local function createWindow()
 
 	local item3 = mainWindow.topMenu:addItem(localization.edit)
 	item3.onTouch = function()
-		local menu = GUI.contextMenu(item3.x, item3.y + 1)
-		menu:addItem(localization.cut, not mainWindow.codeView.selections[1], "^X").onTouch = function()
-			cut()
-		end
-		menu:addItem(localization.copy, not mainWindow.codeView.selections[1], "^C").onTouch = function()
-			copy()
-		end
-		menu:addItem(localization.paste, not clipboard, "^V").onTouch = function()
-			paste(clipboard)
-		end
-		menu:addSeparator()
-		menu:addItem(localization.comment, false, "^/").onTouch = function()
-			toggleComment()
-		end
-		menu:addItem(localization.indent, false, "Tab").onTouch = function()
-			indentOrUnindent(true)
-		end
-		menu:addItem(localization.unindent, false, "⇧Tab").onTouch = function()
-			indentOrUnindent(false)
-		end
-		menu:addItem(localization.deleteLine, false, "^Del").onTouch = function()
-			deleteLine(cursor.position.line)
-		end
-		menu:addSeparator()
-		menu:addItem(localization.selectWord).onTouch = function()
-			selectWord()
-		end
-		menu:addItem(localization.selectAll, false, "^A").onTouch = function()
-			selectAll()
-		end
-		menu:show()
+		editOrRightClickMenu.x, editOrRightClickMenu.y = item3.x, item3.y + 1
+		editOrRightClickMenu:show()
 	end
 
 	local item4 = mainWindow.topMenu:addItem(localization.view)
@@ -1306,24 +1324,8 @@ local function createWindow()
 			cursor.blinkState = true
 			
 			if eventData[5] == 1 then
-				local menu = GUI.contextMenu(eventData[3], eventData[4])
-				menu:addItem(localization.cut, not mainWindow.codeView.selections[1], "^X").onTouch = function()
-					cut()
-				end
-				menu:addItem(localization.copy, not mainWindow.codeView.selections[1], "^C").onTouch = function()
-					copy()
-				end
-				menu:addItem(localization.paste, not clipboard, "^V").onTouch = function()
-					paste(clipboard)
-				end
-				menu:addSeparator()
-				menu:addItem(localization.selectWord).onTouch = function()
-					selectWord()
-				end
-				menu:addItem(localization.selectAll, false, "^A").onTouch = function()
-					selectAll()
-				end
-				menu:show()
+				editOrRightClickMenu.x, editOrRightClickMenu.y = eventData[3], eventData[4]
+				editOrRightClickMenu:show()
 			else
 				setCursorPositionAndClearSelection(convertScreenCoordinatesToCursorPosition(eventData[3], eventData[4]))
 
@@ -1365,7 +1367,12 @@ local function createWindow()
 					selectAll()
 				-- C
 				elseif eventData[4] == 46 then
-					copy()
+					-- Shift
+					if keyboard.isKeyDown(42) then
+						selectAndPasteColor()
+					else
+						copy()
+					end
 				-- V
 				elseif eventData[4] == 47 then
 					paste(clipboard)

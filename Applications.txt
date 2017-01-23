@@ -366,7 +366,7 @@
     name="lib/palette.lua",
     url="IgorTimofeev/OpenComputers/master/lib/palette.lua",
     type="Library",
-    version=1.09,
+    version=1.10,
   },
   {
     name="lib/doubleBuffering.lua",
@@ -517,7 +517,7 @@
     icon="IgorTimofeev/OpenComputers/master/Applications/MineCodeIDE/Icon.pic",
     createShortcut="dock",
     forceDownload=true,
-    version=1.54,
+    version=1.55,
     resources={
       {
         name="Localization/Russian.lang",
