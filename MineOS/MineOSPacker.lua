@@ -14,6 +14,7 @@ local MineOSPackageURL = "https://raw.githubusercontent.com/IgorTimofeev/OpenCom
 
 local packageFileList = {
 	"/MineOS/",
+	"/boot/",
 	"/lib/",
 	"/OS.lua",
 	"/init.lua",
