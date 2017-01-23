@@ -272,7 +272,9 @@ while true do
 		if e[3] == "Closing" then stateOfChevrons(false) end
 		drawAll()
 	elseif e[1] == "sgChevronEngaged" then
-		chevrons[e[3]].isActivated = true
+		if chevrons[e[3]] then
+			chevrons[e[3]].isActivated = true
+		end
 		drawAll()
 	elseif e[1] == "sgMessageReceived" then
 		GUI.error(tostring(e[3]), {title = {color = 0xFFDB40, text = "Соообщение от Врат"}, backgroundColor = 0x262626})
