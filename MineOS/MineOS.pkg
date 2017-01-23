@@ -4665,7 +4665,7 @@ return GUI
 
 
 
-Flib/MineOSCore.lua��
+Flib/MineOSCore.lua��
 ---------------------------------------------- Libraries ------------------------------------------------------------------------
 
 local component = require("component")
@@ -4961,7 +4961,7 @@ function MineOSCore.analyzeIconFormat(iconObject)
 		elseif iconObject.format == ".pic" or iconObject.format == ".png" then
 			iconObject.iconImage.image = MineOSCore.icons.image
 			iconObject.launch = function()
-				MineOSCore.safeLaunch(MineOSCore.paths.applications .. "Viewer.app/Viewer.lua", "open", iconObject.path)
+				MineOSCore.safeLaunch(MineOSCore.paths.applications .. "Photoshop.app/Photoshop.lua", "open", iconObject.path)
 			end
 		elseif iconObject.format == ".pkg" then
 			iconObject.iconImage.image = MineOSCore.icons.archive
@@ -5335,7 +5335,6 @@ function MineOSCore.iconRightClick(icon, eventData)
 			):show()
 		elseif icon.format == ".pic" then
 			action = GUI.contextMenu(eventData[3], eventData[4],
-				{MineOSCore.localization.contextMenuEditInPhotoshop},
 				{MineOSCore.localization.contextMenuSetAsWallpaper},
 				"-",
 				{MineOSCore.localization.contextMenuCut},
@@ -5392,9 +5391,6 @@ function MineOSCore.iconRightClick(icon, eventData)
 		MineOSCore.showPropertiesWindow(eventData[3], eventData[4], 40, icon)
 	elseif action == MineOSCore.localization.contextMenuShowContainingFolder then
 		computer.pushSignal("MineOSCore", "changeWorkpath", MineOSCore.getFilePath(icon.shortcutPath))
-		computer.pushSignal("MineOSCore", "updateFileList")
-	elseif action == MineOSCore.localization.contextMenuEditInPhotoshop then
-		MineOSCore.safeLaunch("MineOS/Applications/Photoshop.app/Photoshop.lua", "open", icon.path)
 		computer.pushSignal("MineOSCore", "updateFileList")
 	elseif action == MineOSCore.localization.contextMenuAddToFavourites then
 		computer.pushSignal("finderFavouriteAdded", icon.path)
@@ -12759,7 +12755,125 @@ return image
 
 
 
-F
+Flib/internet.lua
+tlocal buffer = require("buffer")
+local component = require("component")
+local event = require("event")
+
+local internet = {}
+
+-------------------------------------------------------------------------------
+
+function internet.request(url, data, headers)
+  checkArg(1, url, "string")
+  checkArg(2, data, "string", "table", "nil")
+  checkArg(3, headers, "table", "nil")
+
+  local inet = component.internet
+  if not inet then
+    error("no primary internet card found", 2)
+  end
+
+  local post
+  if type(data) == "string" then
+    post = data
+  elseif type(data) == "table" then
+    for k, v in pairs(data) do
+      post = post and (post .. "&") or ""
+      post = post .. tostring(k) .. "=" .. tostring(v)
+    end
+  end
+
+  local request, reason = inet.request(url, post, headers)
+  if not request then
+    error(reason, 2)
+  end
+
+  return function()
+    while true do
+      local data, reason = request.read()
+      if not data then
+        request.close()
+        if reason then
+          error(reason, 2)
+        else
+          return nil -- eof
+        end
+      elseif #data > 0 then
+        return data
+      end
+      -- else: no data, block
+      os.sleep(0)
+    end
+  end
+end
+
+-------------------------------------------------------------------------------
+
+local socketStream = {}
+
+function socketStream:close()
+  if self.socket then
+    self.socket.close()
+    self.socket = nil
+  end
+end
+
+function socketStream:seek()
+  return nil, "bad file descriptor"
+end
+
+function socketStream:read(n)
+  if not self.socket then
+    return nil, "connection is closed"
+  end
+  return self.socket.read(n)
+end
+
+function socketStream:write(value)
+  if not self.socket then
+    return nil, "connection is closed"
+  end
+  while #value > 0 do
+    local written, reason = self.socket.write(value)
+    if not written then
+      return nil, reason
+    end
+    value = string.sub(value, written + 1)
+  end
+  return true
+end
+
+function internet.socket(address, port)
+  checkArg(1, address, "string")
+  checkArg(2, port, "number", "nil")
+  if port then
+    address = address .. ":" .. port
+  end
+
+  local inet = component.internet
+  local socket, reason = inet.connect(address)
+  if not socket then
+    return nil, reason
+  end
+
+  local stream = {inet = inet, socket = socket}
+  local metatable = {__index = socketStream,
+                     __metatable = "socketstream"}
+  return setmetatable(stream, metatable)
+end
+
+function internet.open(address, port)
+  local stream, reason = internet.socket(address, port)
+  if not stream then
+    return nil, reason
+  end
+  return buffer.new("rwb", stream)
+end
+
+-------------------------------------------------------------------------------
+
+return internetF
 lib/io.lua	klocal io = {}
 
 -------------------------------------------------------------------------------
@@ -23007,7 +23121,159 @@ if not result then
   io.stderr:write((reason or "unknown error")..'\n')
   return 1
 end
-Fbin/primary.lua�local component = require("component")
+Fbin/pastebin.lua�--[[ This program allows downloading and uploading from and to pastebin.com.
+     Authors: Sangar, Vexatos ]]
+local component = require("component")
+local fs = require("filesystem")
+local internet = require("internet")
+local shell = require("shell")
+
+if not component.isAvailable("internet") then
+  io.stderr:write("This program requires an internet card to run.")
+  return
+end
+
+local args, options = shell.parse(...)
+
+-- This gets code from the website and stores it in the specified file.
+local function get(pasteId, filename)
+  local f, reason = io.open(filename, "w")
+  if not f then
+    io.stderr:write("Failed opening file for writing: " .. reason)
+    return
+  end
+
+  io.write("Downloading from pastebin.com... ")
+  local url = "http://pastebin.com/raw.php?i=" .. pasteId
+  local result, response = pcall(internet.request, url)
+  if result then
+    io.write("success.\n")
+    for chunk in response do
+      if not options.k then
+        string.gsub(chunk, "\r\n", "\n")
+      end
+      f:write(chunk)
+    end
+
+    f:close()
+    io.write("Saved data to " .. filename .. "\n")
+  else
+    io.write("failed.\n")
+    f:close()
+    fs.remove(filename)
+    io.stderr:write("HTTP request failed: " .. response .. "\n")
+  end
+end
+
+-- This makes a string safe for being used in a URL.
+function encode(code)
+  if code then
+    code = string.gsub(code, "([^%w ])", function (c)
+      return string.format("%%%02X", string.byte(c))
+    end)
+    code = string.gsub(code, " ", "+")
+  end
+  return code 
+end
+
+-- This stores the program in a temporary file, which it will
+-- delete after the program was executed.
+function run(pasteId, ...)
+  local tmpFile = os.tmpname()
+  get(pasteId, tmpFile)
+  io.write("Running...\n")
+
+  local success, reason = shell.execute(tmpFile, nil, ...)
+  if not success then
+    io.stderr:write(reason)
+  end
+  fs.remove(tmpFile)
+end
+
+-- Uploads the specified file as a new paste to pastebin.com.
+function put(path)
+  local config = {}
+  local configFile = loadfile("/etc/pastebin.conf", "t", config)
+  if configFile then
+    local result, reason = pcall(configFile)
+    if not result then
+      io.stderr:write("Failed loading config: " .. reason)
+    end
+  end
+  config.key = config.key or "fd92bd40a84c127eeb6804b146793c97"
+  local file, reason = io.open(path, "r")
+
+  if not file then
+    io.stderr:write("Failed opening file for reading: " .. reason)
+    return
+  end
+
+  local data = file:read("*a")
+  file:close()
+
+  io.write("Uploading to pastebin.com... ")
+  local result, response = pcall(internet.request,
+        "http://pastebin.com/api/api_post.php", 
+        "api_option=paste&" ..
+        "api_dev_key=" .. config.key .. "&" ..
+        "api_paste_format=lua&" ..
+        "api_paste_expire_date=N&" ..
+        "api_paste_name=" .. encode(fs.name(path)) .. "&" ..
+        "api_paste_code=" .. encode(data))
+
+  if result then
+    local info = ""
+    for chunk in response do
+      info = info .. chunk
+    end
+    if string.match(info, "^Bad API request, ") then
+      io.write("failed.\n")
+      io.write(info)
+    else
+      io.write("success.\n")
+      local pasteId = string.match(info, "[^/]+$")
+      io.write("Uploaded as " .. info .. "\n")
+      io.write('Run "pastebin get ' .. pasteId .. '" to download anywhere.')
+    end
+  else
+    io.write("failed.\n")
+    io.stderr:write(response)
+  end
+end
+
+local command = args[1]
+if command == "put" then
+  if #args == 2 then
+    put(shell.resolve(args[2]))
+    return
+  end
+elseif command == "get" then
+  if #args == 3 then
+    local path = shell.resolve(args[3])
+    if fs.exists(path) then
+      if not options.f or not os.remove(path) then
+        io.stderr:write("file already exists")
+        return
+      end
+    end
+    get(args[2], path)
+    return
+  end
+elseif command == "run" then
+  if #args >= 2 then
+    run(args[2], table.unpack(args, 3))
+    return
+  end
+end
+
+-- If we come here there was some invalid input.
+io.write("Usages:\n")
+io.write("pastebin put [-f] <file>\n")
+io.write("pastebin get [-f] <id> <file>\n")
+io.write("pastebin run [-f] <id> [<arguments...>]\n")
+io.write(" -f: Force overwriting existing files.\n")
+io.write(" -k: keep line endings as-is (will convert\n")
+io.write("     Windows line endings to Unix otherwise).")Fbin/primary.lua�local component = require("component")
 local shell = require("shell")
 
 local args = shell.parse(...)
@@ -23950,6 +24216,121 @@ if not computer.removeUser(args[1]) then
   io.stderr:write("no such user\n")
   return 1
 end
+Fbin/wget.lua�local component = require("component")
+local fs = require("filesystem")
+local internet = require("internet")
+local shell = require("shell")
+local text = require("text")
+
+if not component.isAvailable("internet") then
+  io.stderr:write("This program requires an internet card to run.")
+  return
+end
+
+local args, options = shell.parse(...)
+options.q = options.q or options.Q
+
+if #args < 1 then
+  io.write("Usage: wget [-fq] <url> [<filename>]\n")
+  io.write(" -f: Force overwriting existing files.\n")
+  io.write(" -q: Quiet mode - no status messages.\n")
+  io.write(" -Q: Superquiet mode - no error messages.")
+  return
+end
+
+local url = text.trim(args[1])
+local filename = args[2]
+if not filename then
+  filename = url
+  local index = string.find(filename, "/[^/]*$")
+  if index then
+    filename = string.sub(filename, index + 1)
+  end
+  index = string.find(filename, "?", 1, true)
+  if index then
+    filename = string.sub(filename, 1, index - 1)
+  end
+end
+filename = text.trim(filename)
+if filename == "" then
+  if not options.Q then
+    io.stderr:write("could not infer filename, please specify one")
+  end
+  return nil, "missing target filename" -- for programs using wget as a function
+end
+filename = shell.resolve(filename)
+
+local preexisted
+if fs.exists(filename) then
+  preexisted = true
+  if not options.f then
+    if not options.Q then
+      io.stderr:write("file already exists")
+    end
+    return nil, "file already exists" -- for programs using wget as a function
+  end
+end
+
+local f, reason = io.open(filename, "a")
+if not f then
+  if not options.Q then
+    io.stderr:write("failed opening file for writing: " .. reason)
+  end
+  return nil, "failed opening file for writing: " .. reason -- for programs using wget as a function
+end
+f:close()
+f = nil
+
+if not options.q then
+  io.write("Downloading... ")
+end
+local result, response = pcall(internet.request, url)
+if result then
+  local result, reason = pcall(function()
+    for chunk in response do
+      if not f then
+        f, reason = io.open(filename, "wb")
+        assert(f, "failed opening file for writing: " .. tostring(reason))
+      end
+      f:write(chunk)
+    end
+  end)
+  if not result then
+    if not options.q then
+      io.stderr:write("failed.\n")
+    end
+    if f then
+      f:close()
+      if not preexisted then
+        fs.remove(filename)
+      end
+    end
+    if not options.Q then
+      io.stderr:write("HTTP request failed: " .. reason .. "\n")
+    end
+    return nil, reason -- for programs using wget as a function
+  end
+  if not options.q then
+    io.write("success.\n")
+  end
+  
+  if f then
+    f:close()
+  end
+
+  if not options.q then
+    io.write("Saved data to " .. filename .. "\n")
+  end
+else
+  if not options.q then
+    io.write("failed.\n")
+  end
+  if not options.Q then
+    io.stderr:write("HTTP request failed: " .. response .. "\n")
+  end
+  return nil, response -- for programs using wget as a function
+end
+return true -- for programs using wget as a function
 Fbin/which.lua�local shell = require("shell")
 
 local args = shell.parse(...)
@@ -24481,7 +24862,29 @@ EXAMPLES
     Renames file `a` to `b`.
 
   mv /home/a /var/b
-    Moves file from `/home/a` to `/var/b`.Fusr/man/primary NAME
+    Moves file from `/home/a` to `/var/b`.Fusr/man/pastebin�NAME
+  pastebin - download and upload programs from and to pastebin
+
+SYNOPSIS
+  pastebin get PASTID FILE
+  pastebin put FILE
+  pastebin run PASTEID [ARGUMENT]...
+
+DESCRIPTION
+  The pastebin program allows downloading programs from pastebin, identified by their paste ID. I can also be used to upload programs to pastebin.
+
+  The pastebin program requires an internet card and internet access to be enabled in the mod's configuration.
+
+OPTIONS
+  -f
+    do not prompt before overwriting
+
+EXAMPLES
+  pastebin get AbCdEfGh test
+    Downloads the paste with ID `AbCdEfGh` and writes it to file `test`.
+
+  pastebin put prog.lua
+    Uploads the program `prog.lua` to pastebin.Fusr/man/primary NAME
   primary - get or set primary components
 
 SYNOPSIS
@@ -24760,7 +25163,29 @@ DESCRIPTION
 
 EXAMPLES
   userdel Steve
-    Removes the player named `Steve` from the userlist.Fusr/man/which�NAME
+    Removes the player named `Steve` from the userlist.Fusr/man/wgetUNAME
+  wget - download files via http
+
+SYNOPSIS
+  wget URL [FILE]
+
+DESCRIPTION
+  The wget program allows downloading programs from the interwebs, given the URL to download from.
+
+  The wget program requires an internet card and internet access to be enabled in the mod's configuration.
+
+OPTIONS
+  -f
+    do not prompt before overwriting
+  -q
+    only print errors, no status messages
+
+EXAMPLES
+  wget http://example.com/data.zip
+    Downloads the file `data.zip` and saves it as `data.zip`.
+
+  wget http://example.com/data.zip blah.zip
+    Downloads the file `data.zip` and saves it as `blah.zip`.Fusr/man/which�NAME
   which - locate a command
 
 SYNOPSIS
@@ -24871,7 +25296,105 @@ alias ..="cd .."
 alias df="df -h"
 
 alias grep="grep --color"
-Detc/Fetc/filesystem.cfgautorun=trueFetc/motdp#!/bin/lua
+Detc/Fetc/edit.cfgkeybinds={
+  ["findnext"] = {
+    [1] = {
+        [1] = "control",
+        [2] = "g"
+      },
+    [2] = {
+        [1] = "control",
+        [2] = "n"
+      },
+    [3] = {
+        [1] = "f3"
+      }
+  },
+  ["deleteLine"] = {
+    [1] = {
+        [1] = "control",
+        [2] = "delete"
+      },
+    [2] = {
+        [1] = "shift",
+        [2] = "delete"
+      }
+  },
+  ["home"] = {
+    [1] = {
+        [1] = "home"
+      }
+  },
+  ["up"] = {
+    [1] = {
+        [1] = "up"
+      }
+  },
+  ["pageDown"] = {
+    [1] = {
+        [1] = "pageDown"
+      }
+  },
+  ["close"] = {
+    [1] = {
+        [1] = "control",
+        [2] = "w"
+      }
+  },
+  ["right"] = {
+    [1] = {
+        [1] = "right"
+      }
+  },
+  ["backspace"] = {
+    [1] = {
+        [1] = "back"
+      }
+  },
+  ["newline"] = {
+    [1] = {
+        [1] = "enter"
+      }
+  },
+  ["find"] = {
+    [1] = {
+        [1] = "control",
+        [2] = "f"
+      }
+  },
+  ["pageUp"] = {
+    [1] = {
+        [1] = "pageUp"
+      }
+  },
+  ["delete"] = {
+    [1] = {
+        [1] = "delete"
+      }
+  },
+  ["left"] = {
+    [1] = {
+        [1] = "left"
+      }
+  },
+  ["save"] = {
+    [1] = {
+        [1] = "control",
+        [2] = "s"
+      }
+  },
+  ["eol"] = {
+    [1] = {
+        [1] = "end"
+      }
+  },
+  ["down"] = {
+    [1] = {
+        [1] = "down"
+      }
+  }
+}
+Fetc/filesystem.cfgautorun=trueFetc/motdp#!/bin/lua
 
 local component = require("component")
 local computer = require("computer")
@@ -25463,7 +25986,7 @@ D,MineOS/Applications/AppMarket.app/Resources/D2MineOS/Applications/AppMarket.
 	youHaveNewestApps = "У вас самое новое ПО",
 	downloadingInfoAboutApplication = "Загрузка информации о приложении",
 	updating = "Обновление",
-}D%MineOS/Applications/MineCode IDE.app/F5MineOS/Applications/MineCode IDE.app/MineCode IDE.lua�
+}D%MineOS/Applications/MineCode IDE.app/F5MineOS/Applications/MineCode IDE.app/MineCode IDE.lua�
 ---------------------------------------------------- Libraries ----------------------------------------------------
 
 -- "/MineOS/Applications/MineCode IDE.app/MineCode IDE.lua" open OS.lua
@@ -26024,10 +26547,10 @@ local function downloadFromWeb()
 		if success then
 			newFile()
 			mainWindow.codeView.lines, mainWindow.codeView.maximumLineLength = splitStringIntoLines(reason)
-			hideSettingsContainer()
 		else
 			GUI.error(reason, {title = {color = 0xFFDB40, text = "Failed to connect to URL"}})
 		end
+		hideSettingsContainer()
 	end
 end
 
@@ -26253,6 +26776,7 @@ local function pasteAutoBrackets(unicodeByte)
 				firstPart = unicode.sub(mainWindow.codeView.lines[mainWindow.codeView.selections[1].to.line], 1, mainWindow.codeView.selections[1].to.symbol)
 				secondPart = unicode.sub(mainWindow.codeView.lines[mainWindow.codeView.selections[1].to.line], mainWindow.codeView.selections[1].to.symbol + 1, -1)
 				mainWindow.codeView.lines[mainWindow.codeView.selections[1].to.line] = firstPart .. possibleBrackets.openers[char] .. secondPart
+				cursor.position.symbol = cursor.position.symbol + 2
 			-- А тут мы делаем двойную автоскобку, если можем
 			elseif possibleBrackets.openers[char] and not currentSymbol:match("[%a%d%_]") then
 				paste({char .. possibleBrackets.openers[char]})
@@ -26969,7 +27493,7 @@ buffer.draw()
 mainWindow:handleEvents(config.cursorBlinkDelay)
 
 
-D/MineOS/Applications/MineCode IDE.app/Resources/D5MineOS/Applications/MineCode IDE.app/Resources/About/F@MineOS/Applications/MineCode IDE.app/Resources/About/Russian.txt�MineCode IDE - это мощный инстурмент для разработки приложений с богатым функционалом: от подсветки синтаксиса Lua, выделения текста и работы с буфером обмена до поддержки пользовательских цветовых схем. Удобный файловый менеджер также прилагается.F7MineOS/Applications/MineCode IDE.app/Resources/Icon.picOCIFA SbF�B )YScFUB )YSdF�B )YSeF�B )YYFUB )YSwF�B )YShF�B )YS▀F�B )YF�B )YSiF�B )YSmFUB )YSlF�B )YS-FUB )YSnF�B )YSoFUB )YS F B )YYYSaF�B )YD<MineOS/Applications/MineCode IDE.app/Resources/Localization/FHMineOS/Applications/MineCode IDE.app/Resources/Localization/English.langf{	
+D/MineOS/Applications/MineCode IDE.app/Resources/D5MineOS/Applications/MineCode IDE.app/Resources/About/F@MineOS/Applications/MineCode IDE.app/Resources/About/Russian.txt�MineCode IDE - это мощный инстурмент для разработки приложений с богатым функционалом: от подсветки синтаксиса Lua, выделения текста и работы с буфером обмена до поддержки пользовательских цветовых схем. Удобный файловый менеджер также прилагается.F9MineOS/Applications/MineCode IDE.app/Resources/Config.cfgP{["cursorSymbol"]="┃",["screenScale"]=1,["cursorColor"]=43263,["scrollSpeed"]=8,["doubleClickDelay"]=0.4,["enableAutoBrackets"]=true,["highlightLuaSyntax"]=true,["syntaxColorScheme"]={["text"]=16777215,["functions"]=16764006,["lineNumbersText"]=13421772,["numbers"]=6740991,["scrollBarForeground"]=3389183,["selection"]=5592405,["strings"]=10092416,["scrollBarBackground"]=4473924,["boolean"]=16767808,["logic"]=16764006,["indentation"]=3947580,["comments"]=8947848,["compares"]=16777112,["loops"]=16777112,["background"]=1973790,["lineNumbersBackground"]=2960685},["cursorBlinkDelay"]=0.5}F7MineOS/Applications/MineCode IDE.app/Resources/Icon.picOCIFA SbF�B )YScFUB )YSdF�B )YSeF�B )YYFUB )YSwF�B )YShF�B )YS▀F�B )YF�B )YSiF�B )YSmFUB )YSlF�B )YS-FUB )YSnF�B )YSoFUB )YS F B )YYYSaF�B )YD<MineOS/Applications/MineCode IDE.app/Resources/Localization/FHMineOS/Applications/MineCode IDE.app/Resources/Localization/English.langf{	
 	enableAutoBrackets = "Enable autobrackets",
 	disableAutoBrackets = "Disable autobrackets",
 	url = "http://example.com/something.lua",
@@ -30068,225 +30592,7 @@ end
 
 
 
-DMineOS/Applications/Viewer.app/D)MineOS/Applications/Viewer.app/Resources/D/MineOS/Applications/Viewer.app/Resources/About/F:MineOS/Applications/Viewer.app/Resources/About/Russian.txt�Программа для просмотра изображений в нашем формате .pic, имеется возможность проигрывания картинок в режиме слайдшоу.F1MineOS/Applications/Viewer.app/Resources/Icon.pic�OCIFA S▀F B �YB �YB �YB  YB �YB CYB �YS F B �YB �YB �YB  YYB �YB CYB �YS▄F�B  YA�S▙F�B  YS▄F�B  YS F�B  YF�B  YS▟F�B  YF6MineOS/Applications/Viewer.app/Resources/arrowLeft.pic�OCIFA�S▀F�B  YYS▁F�B  YS▔F�B  YS▄F�B  YYS F B  YF�B  YYA S F�B �YYF7MineOS/Applications/Viewer.app/Resources/arrowRight.pic�OCIFA�S▀F�B  YYS▁F�B  YS▔F�B  YS▄F�B  YYS F B  YF�B  YYA S F�B �YYF1MineOS/Applications/Viewer.app/Resources/play.pic�OCIFA�S▀F�B  YYS▁F�B  YS▔F�B  YS▄F�B  YYS F B  YF�B  YYYYA S F�B �YYF)MineOS/Applications/Viewer.app/Viewer.lua�
-local computer = require("computer")
-local ecs = require("ECSAPI")
-local image = require("image")
-local fs = require("filesystem")
-local buffer = require("doubleBuffering")
-local unicode = require("unicode")
-local event = require("event")
-
-local pathToApplicationResources = "MineOS/Applications/Viewer.app/Resources/"
-local currentPath = "MineOS/Pictures/"
-local imageList = {}
-local currentImage = 1
-local showGUI = true
-local slideShowInterval = 5
-local enableSlideShow = true
-
-local arrowLeftImage = image.load(pathToApplicationResources .. "arrowLeft.pic")
-local arrowRightImage = image.load(pathToApplicationResources .. "arrowRight.pic")
-local playImage = image.load(pathToApplicationResources .. "play.pic")
-local wallpaperImage = image.load("MineOS/System/OS/Icons/Computer.pic")
-
-local obj = {}
-
-buffer.start()
-
-local function loadImageList()
-	local fileList = fs.list(currentPath)
-	imageList = {}
-	for file in fileList do
-		if ecs.getFileFormat(file) == ".pic" then
-			table.insert(imageList, currentPath .. file)
-		end
-	end
-end
-
-local function drawImage()
-	if #imageList > 0 then
-		local xImage, yImage = 1, 1   
-		local currentLoadedImage = image.load(imageList[currentImage])
-		
-		if currentLoadedImage.width < buffer.screen.width then xImage = math.floor(buffer.screen.width / 2 - currentLoadedImage.width / 2) end
-		if currentLoadedImage.height < buffer.screen.height then yImage = math.floor(buffer.screen.height / 2 - currentLoadedImage.height / 2) end
-		
-		buffer.image(xImage, yImage, currentLoadedImage)
-		currentLoadedImage = nil
-	else
-		local text = "Изображения в директории \"" .. currentPath .. "\" не найдены"
-		buffer.text(math.floor(buffer.screen.width / 2 - unicode.len(text) / 2), math.floor(buffer.screen.height / 2), 0x000000, text)
-	end
-end
-
-local function multipleButtons(x, y, widthOfButton, heightOfButton, spaceBetweenButtons, ...)
-	local buttons = {...}
-	local objectsToReturn = {}
-	for i = 1, #buttons do
-		buffer.button(x, y, widthOfButton, heightOfButton, buttons[i][1], buttons[i][2], buttons[i][3])
-		table.insert(objectsToReturn, {x, y, x + widthOfButton - 1, y + heightOfButton - 1})
-		x = x + widthOfButton + spaceBetweenButtons
-	end
-	return objectsToReturn
-end
-
-local function drawBottomButtons()
-	local y = buffer.screen.height - 4
-	local x = math.floor(buffer.screen.width / 2 - 21)
-
-	obj.arrowLeft = {x, y, x + 7, y + 3} 
-	buffer.image(x, y, arrowLeftImage); x = x + 10
-	obj.play = {x, y, x + 7, y + 3} 
-	buffer.image(x, y, playImage); x = x + 10
-	obj.arrowRight = {x, y, x + 7, y + 3} 
-	buffer.image(x, y, arrowRightImage); x = x + 12
-	obj.wallpaper = {x, y, x + 7, y + 3} 
-	buffer.image(x, y, wallpaperImage)
-end
-
-local function drawGUI()
-	if showGUI then
-		--Верхний бар
-		buffer.square(1, 1, buffer.screen.width, 1, 0xDDDDDD, 0xFFFFFF, " ")
-		local text = #imageList > 0 and ecs.stringLimit("start", imageList[currentImage], 40) or "Viewer"
-		buffer.text(math.floor(buffer.screen.width / 2 - unicode.len(text) / 2), 1, 0x000000, text)
-		buffer.text(2, 1, ecs.colors.red, "⬤")
-		buffer.text(5, 1, ecs.colors.orange, "⬤")
-		buffer.text(8, 1, ecs.colors.green, "⬤")
-
-		--Нижний бар
-		local height = 6
-		local transparency = 40
-		local y = buffer.screen.height - height + 1
-		buffer.square(1, y, buffer.screen.width, height, 0x000000, 0xFFFFFF, " ", transparency)
-		-- multipleButtons(math.floor(buffer.screen.width / 2 - 16), y, 7, 3, 2, {0xEEEEEE, 0x262626, "←"}, {0xEEEEEE, 0x262626, "►"}, {0xEEEEEE, 0x262626, "→"}, {0xEEEEEE, 0x262626, "♥"})
-		drawBottomButtons()
-	end
-end
-
-local function drawAll(force)
-	buffer.clear(0xFFFFFF)
-
-	drawImage()
-	drawGUI()
-
-	buffer.draw(force)
-end
-
-local function prevImage()
-	currentImage = currentImage - 1
-	if currentImage < 1 then currentImage = #imageList end
-	drawAll()
-end
-
-local function nextImage()
-	currentImage = currentImage + 1
-	if currentImage > #imageList then currentImage = 1 end
-	drawAll()
-end
-
-local function slideShowDro4er()
-	nextImage()
-end
-
-local function enableSlideShowDro4er()
-	enableSlideShow = true
-	_G.imageViewerSlideShowTimer = event.timer(slideShowInterval, slideShowDro4er, math.huge)
-end
-
-local function clicked(x, y, obj)
-	if obj and ecs.clickedAtArea(x, y, obj[1], obj[2], obj[3], obj[4]) and #imageList > 0 then
-		return true
-	end
-	return false
-end
-
-local function press(x, y)
-	buffer.square(x, y, 10, 6, 0x000000, 0xFFFFFF, " ", 60)
-	drawBottomButtons()
-	buffer.draw()
-	os.sleep(0.2)
-	drawAll()
-end
-
-------------------------------------------------------------------------------------------------------------------------------------------------
-
-local args = {...}
-
-if args[1] == "open" then
-	if args[2] then
-		currentPath = fs.path(args[2])
-		loadImageList()
-		for i = 1, #imageList do
-			if args[2] == imageList[i] then currentImage = i; break end
-		end
-	else
-		ecs.error("Invalid arguments!")
-		return
-	end
-else
-	loadImageList()
-end
-
-drawAll()
-
-while true do
-	local e = {event.pull()}
-	if e[1] == "touch" then
-
-		if enableSlideShow then
-			showGUI = true
-			enableSlideShow = false
-			if _G.imageViewerSlideShowTimer then event.cancel(_G.imageViewerSlideShowTimer) end
-			drawAll()
-		end
-
-		if clicked(e[3], e[4], obj.arrowLeft) then
-			press(obj.arrowLeft[1] - 1, obj.arrowLeft[2] - 1)
-			prevImage()
-		elseif clicked(e[3], e[4], obj.play) then
-			press(obj.play[1] - 1, obj.play[2] - 1)
-			showGUI = false
-			obj = {}
-			enableSlideShowDro4er()
-			drawAll()
-		elseif clicked(e[3], e[4], obj.arrowRight) then
-			press(obj.arrowRight[1] - 1, obj.arrowRight[2] - 1)
-			nextImage()
-		elseif clicked(e[3], e[4], obj.wallpaper) then
-			press(obj.wallpaper[1] - 1, obj.wallpaper[2] - 1)
-			buffer.clear(0x262626)
-			buffer.draw()
-			ecs.createShortCut("MineOS/System/OS/Wallpaper.lnk", imageList[currentImage])
-			computer.pushSignal("MineOSCore", "updateWallpaper")
-			return
-		elseif (e[3] >= 2 and e[3] <= 3 and e[4] == 1) then
-			buffer.text(2, 1, ecs.colors.blue, "⬤")
-			buffer.draw()
-			os.sleep(0.2)
-			buffer.clear(0x262626)
-			buffer.draw()
-			return
-		end
-	end
-end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-DMineOS/Desktop/FMineOS/Desktop/Viewer.lnk(return "/MineOS/Applications/Viewer.app"DMineOS/System/DMineOS/System/OS/F!MineOS/System/OS/Applications.txt��{
+DMineOS/Desktop/FMineOS/Desktop/VK.lnk%return "/MineOS/Applications/VK.app/"DMineOS/Pictures/DMineOS/System/DMineOS/System/OS/F!MineOS/System/OS/Applications.txt��{
   GitHubUserURL="https://raw.githubusercontent.com/",
   GitHubApplicationListURL="https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/Applications.txt",
   ----------------------------------------------------- Все для ОС --------------------------------------------------------------------------
@@ -30541,7 +30847,7 @@ DMineOS/Desktop/FMineOS/Desktop/Viewer.lnk(return "/MineOS/Applications/Vie
     name="lib/MineOSCore.lua",
     url="IgorTimofeev/OpenComputers/master/lib/MineOSCore.lua",
     type="Library",
-    version=1.47,
+    version=1.48,
   },
   {
     name="lib/advancedLua.lua",
@@ -30805,7 +31111,7 @@ DMineOS/Desktop/FMineOS/Desktop/Viewer.lnk(return "/MineOS/Applications/Vie
     icon="IgorTimofeev/OpenComputers/master/Applications/MineCodeIDE/Icon.pic",
     createShortcut="dock",
     forceDownload=true,
-    version=1.51,
+    version=1.52,
     resources={
       {
         name="Localization/Russian.lang",
@@ -31488,32 +31794,8 @@ DMineOS/Desktop/FMineOS/Desktop/Viewer.lnk(return "/MineOS/Applications/Vie
       },
     },
   },
-  {
-    name="MineOS/Applications/Viewer",
-    url="IgorTimofeev/OpenComputers/master/Applications/Viewer/Viewer.lua",
-    about="IgorTimofeev/OpenComputers/master/Applications/Viewer/About/",
-    type="Application",
-    icon="IgorTimofeev/OpenComputers/master/Applications/Viewer/Icon.pic",
-    createShortcut="desktop",
-    forceDownload=true,
-    version=1.01,
-    resources={
-      {
-        name="arrowLeft.pic",
-        url="IgorTimofeev/OpenComputers/master/Applications/Viewer/arrowLeft.pic",
-      },
-      {
-        name="arrowRight.pic",
-        url="IgorTimofeev/OpenComputers/master/Applications/Viewer/arrowRight.pic",
-      },
-      {
-        name="play.pic",
-        url="IgorTimofeev/OpenComputers/master/Applications/Viewer/play.pic",
-      },
-    },
-  },
 }
-FMineOS/System/OS/EFI.luawlocal ee,gpu,sc,bg,fg,re,sce
+FMineOS/System/OS/EFI.lua�local ee,gpu,sc,bg,fg,re,sce
 local pr,cm,ls,ps=component.proxy,computer,component.list,computer.pullSignal
 
 local function init()
@@ -31624,7 +31906,7 @@ local function waitForAlt(t,dr)
 		local e={ps(dl-cm.uptime())}
 		if e[1]=="key_down" and e[4]==56 then
 			while true do
-				local v={};for i=1,#dr do v[i]=dr[i].getLabel().." "..(dr[i].spaceTotal()>524288 and "HDD" or "FDD").." ("..dr[i].address..")" end; table.insert(v, "Back")
+				local v={};for i=1,#dr do v[i]=(dr[i].getLabel() or "Unnamed").." "..(dr[i].spaceTotal()>524288 and "HDD" or "FDD").." ("..dr[i].address..")" end; table.insert(v, "Back")
 				local d=menu("Choose drive",v);
 				if d==#v then break end
 				v={"Set as bootable"};if not dr[d].isReadOnly() then v[2]="Format" end; table.insert(v, "Back")
@@ -32150,24 +32432,22 @@ DMineOS/System/OS/Languages/F'MineOS/System/OS/Languages/English.lang9{
 В случае несогласия с любым из вышеперечисленных пунктов,
 вы обязаны нажать сочетание клавиш Ctrl+Alt+C, чтобы завершить
 программу установки.
-FMineOS/System/OS/OSSettings.cfg�{
-  ["screensaverDelay"] = 20,
-  ["language"] = "Russian",
-  ["screensaver"] = "Matrix",
+FMineOS/System/OS/OSSettings.cfg�{
   ["protectionMethod"] = "withoutProtection",
   ["showHelpOnApplicationStart"] = false,
+  ["screensaver"] = "Matrix",
+  ["screensaverDelay"] = 20,
+  ["showWindows10Upgrade"] = false,
+  ["language"] = "Russian",
   ["dockShortcuts"] = {
-    [1] = {
-        ["path"] = "/MineOS/Applications/AppMarket.app"
-      },
     [2] = {
         ["path"] = "/MineOS/Applications/MineCode IDE.app"
       },
+    [1] = {
+        ["path"] = "/MineOS/Applications/AppMarket.app"
+      },
     [3] = {
         ["path"] = "/MineOS/Applications/Photoshop.app"
-      },
-    [4] = {
-        ["path"] = "/MineOS/Applications/VK.app"
       }
   }
 }DMineOS/System/OS/Screensavers/F'MineOS/System/OS/Screensavers/Clock.lua�local gpu = require("component").gpu
@@ -32486,7 +32766,7 @@ local ecs = require("ECSAPI")
 ---------------------------------------------- Базовые константы ------------------------------------------------------------------------
 
 local colors = {
-	background = 0x262626,
+	background = 0x1B1B1B,
 	topBarTransparency = 20,
 	selection = ecs.colors.lightBlue,
 	interface = 0xCCCCCC,

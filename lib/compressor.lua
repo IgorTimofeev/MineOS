@@ -181,6 +181,7 @@ function compressor.unpack(pathToCompressedFile, pathWhereToUnpack, showInfo)
 					file:write(compressedFile:read(size))
 					file:close()
 				else
+					compressedFile:read(size)
 					info(showInfo, "Failed to open file for writing while unpacking: " .. tostring(reason))
 				end				
 			elseif not type then
