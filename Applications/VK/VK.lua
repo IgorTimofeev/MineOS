@@ -143,7 +143,9 @@ end
 --Банальный URL-запрос, декодирующийся через ЖУСОН в случае успеха, епты
 local function request(url)
 	local success, response = ecs.internetRequest(url)
-	if success then response = json:decode(response) end
+	if success then
+		response = json:decode(response)
+	end
 	return success, response
 end
 
@@ -317,17 +319,15 @@ local function loginGUI(startUsername, startPassword)
 	obj.button = GUI.button(x, y, textFieldWidth, textFieldHeight, buttonColor, 0xFFFFFF, 0xFFFFFF, buttonColor, "Войти")
 
 	local VKLogoImage = image.load(VKLogoImagePath)
+	local loginTextBox = GUI.inputTextBox(x, obj.username[2], textFieldWidth, 3, 0xFFFFFF, 0x444444, 0xFFFFFF, 0x262626, username, "E-Mail", false)
+	local passwordTextBox = GUI.inputTextBox(x, obj.password[2], textFieldWidth, 3, 0xFFFFFF, 0x444444, 0xFFFFFF, 0x262626, password, "Password", false, "*")
 
 	local function draw()
 		buffer.clear(colors.loginGUIBackground)
 
 		buffer.image(x + 5, obj.username[2] - 15, VKLogoImage)
-
-		buffer.square(x, obj.username[2], textFieldWidth, 3, 0xFFFFFF, 0x000000, " ")
-		buffer.square(x, obj.password[2], textFieldWidth, 3, 0xFFFFFF, 0x000000, " ")
-		buffer.text(x + 1, obj.username[2] + 1, textColor, ecs.stringLimit("end", username, textFieldWidth - 2))
-		buffer.text(x + 1, obj.password[2] + 1, textColor, ecs.stringLimit("end", string.rep("●", unicode.len(password)), textFieldWidth - 2))
-
+		loginTextBox:draw()
+		passwordTextBox:draw()		
 		obj.button:draw()
 
 		buffer.draw()
@@ -338,12 +338,12 @@ local function loginGUI(startUsername, startPassword)
 		local e = {event.pull()}
 		if e[1] == "touch" then
 			if clickedAtZone(e[3], e[4], obj.username) then
-				username = ""
-				username = ecs.inputText(x + 1, obj.username[2] + 1, textFieldWidth - 2, username, 0xFFFFFF, 0x262626) or ""
-			
+				loginTextBox:input()
+				username = loginTextBox.text
+
 			elseif clickedAtZone(e[3], e[4], obj.password) then
-				password = ""
-				password = ecs.inputText(x + 1, obj.password[2] + 1, textFieldWidth - 2, password, 0xFFFFFF, 0x262626, false, "*") or ""
+				passwordTextBox:input()
+				password = passwordTextBox.text
 			
 			elseif obj.button:isClicked(e[3], e[4]) then
 				obj.button:press(0.2)
@@ -445,10 +445,9 @@ end
 
 local function drawMessageInputBar(currentText)
 	local x, y = mainZoneX, buffer.screen.height - 5
-	obj.messageInputBar = GUI.object(x, y, mainZoneWidth - 4, 4)
 	buffer.square(x, y, mainZoneWidth, 5, colors.messageInputBarColor)
-	buffer.square(x + 2, y + 1, mainZoneWidth - 4, 3, colors.messageInputBarTextBackgroundColor)
-	buffer.text(x + 4, y + 2, colors.messsageInputBarTextColor, ecs.stringLimit("start", currentText or "Введите сообщение", mainZoneWidth - 8))
+	obj.messageInputBar = GUI.inputTextBox(x + 2, y + 1, mainZoneWidth - 4, 3, 0xFFFFFF, 0x444444, 0xFFFFFF, 0x262626, "", "Введите сообщение", true)
+	obj.messageInputBar:draw()
 end
 
 local function getUserNamesFromTheirIDs(IDsArray)
@@ -529,12 +528,10 @@ local function messagesGUI()
 
 		local currentText
 
-		drawMessageInputBar(currentText)
-
+		-- Создаем объект тырканья
+		drawMessageInputBar()
 		status("История переписки загружена, ожидаю ввода сообщения")
-
 		buffer.resetDrawLimit()
-		-- buffer.draw()
 	end
 end
 
@@ -1172,9 +1169,8 @@ while true do
 
 		if whatIsOnScreen == "messages" then
 			if obj.messageInputBar:isClicked(e[3], e[4]) then
-				drawMessageInputBar(" ")
-				buffer.draw()
-				local newText = ecs.inputText(obj.messageInputBar.x + 4, obj.messageInputBar.y + 2, obj.messageInputBar.width - 4, "", colors.messageInputBarTextBackgroundColor, colors.messsageInputBarTextColor)
+				obj.messageInputBar:input()
+				local newText = obj.messageInputBar.text
 				if newText and newText ~= " " and newText ~= "" then
 					computer.beep(1700)
 					status("Отправляю сообщение пользователю")
@@ -1183,7 +1179,7 @@ while true do
 					messageToShowFrom = 1
 					messagesGUI()
 				end
-				drawMessageInputBar(" ")
+				drawMessageInputBar()
 			end
 		end
 

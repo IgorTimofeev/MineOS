@@ -635,7 +635,7 @@
     icon="IgorTimofeev/OpenComputers/master/Applications/VK/Icon.pic",
     createShortcut="desktop",
     forceDownload=true,
-    version=1.25,
+    version=1.26,
     resources={
       {
         name="VKLogo.pic",
@@ -1078,15 +1078,6 @@
     about="IgorTimofeev/OpenComputers/master/Applications/Camera/About/",
     type="Application",
     icon="IgorTimofeev/OpenComputers/master/Applications/Camera/Icon.pic",
-    createShortcut="desktop",
-    version=1.0,
-  },
-  {
-    name="MineOS/Applications/Autorun",
-    url="IgorTimofeev/OpenComputers/master/Applications/Autorun/Autorun.lua",
-    about="IgorTimofeev/OpenComputers/master/Applications/Autorun/About/",
-    type="Application",
-    icon="IgorTimofeev/OpenComputers/master/Applications/Autorun/Icon.pic",
     createShortcut="desktop",
     version=1.0,
   },
