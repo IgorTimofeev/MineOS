@@ -1071,8 +1071,10 @@ local function createWindow()
 		menu:addItem(localization.open, false, "^O").onTouch = function()
 			open()
 		end
-		menu:addItem(localization.getFromWeb, false, "^U").onTouch = function()
-			downloadFromWeb()
+		if component.isAvailable("internet") then
+			menu:addItem(localization.getFromWeb, false, "^U").onTouch = function()
+				downloadFromWeb()
+			end
 		end
 		menu:addSeparator()
 		menu:addItem(localization.save, not mainWindow.leftTreeView.currentFile, "^S").onTouch = function()
@@ -1380,7 +1382,7 @@ local function createWindow()
 				elseif eventData[4] == 24 then
 					open()
 				-- U
-				elseif eventData[4] == 22 then
+				elseif eventData[4] == 22 and component.isAvailable("internet") then
 					downloadFromWeb()
 				-- S
 				elseif eventData[4] == 31 then
