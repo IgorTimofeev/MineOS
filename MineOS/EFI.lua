@@ -109,7 +109,7 @@ local function waitForAlt(t,dr)
 		local e={ps(dl-cm.uptime())}
 		if e[1]=="key_down" and e[4]==56 then
 			while true do
-				local v={};for i=1,#dr do v[i]=dr[i].getLabel().." "..(dr[i].spaceTotal()>524288 and "HDD" or "FDD").." ("..dr[i].address..")" end; table.insert(v, "Back")
+				local v={};for i=1,#dr do v[i]=(dr[i].getLabel() or "Unnamed").." "..(dr[i].spaceTotal()>524288 and "HDD" or "FDD").." ("..dr[i].address..")" end; table.insert(v, "Back")
 				local d=menu("Choose drive",v);
 				if d==#v then break end
 				v={"Set as bootable"};if not dr[d].isReadOnly() then v[2]="Format" end; table.insert(v, "Back")
