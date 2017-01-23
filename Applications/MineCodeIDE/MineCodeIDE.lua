@@ -559,10 +559,10 @@ local function downloadFromWeb()
 		if success then
 			newFile()
 			mainWindow.codeView.lines, mainWindow.codeView.maximumLineLength = splitStringIntoLines(reason)
-			hideSettingsContainer()
 		else
 			GUI.error(reason, {title = {color = 0xFFDB40, text = "Failed to connect to URL"}})
 		end
+		hideSettingsContainer()
 	end
 end
 
@@ -788,6 +788,7 @@ local function pasteAutoBrackets(unicodeByte)
 				firstPart = unicode.sub(mainWindow.codeView.lines[mainWindow.codeView.selections[1].to.line], 1, mainWindow.codeView.selections[1].to.symbol)
 				secondPart = unicode.sub(mainWindow.codeView.lines[mainWindow.codeView.selections[1].to.line], mainWindow.codeView.selections[1].to.symbol + 1, -1)
 				mainWindow.codeView.lines[mainWindow.codeView.selections[1].to.line] = firstPart .. possibleBrackets.openers[char] .. secondPart
+				cursor.position.symbol = cursor.position.symbol + 2
 			-- А тут мы делаем двойную автоскобку, если можем
 			elseif possibleBrackets.openers[char] and not currentSymbol:match("[%a%d%_]") then
 				paste({char .. possibleBrackets.openers[char]})
