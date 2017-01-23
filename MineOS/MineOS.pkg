@@ -7471,7 +7471,618 @@ end
 
 
 
-DMineOS/Trash/Dlib/Flib/ECSAPI.luaUP
+DMineOS/Trash/Dboot/Fboot/00_base.luaÇfunction dofile(filename)
+  local program, reason = loadfile(filename)
+  if not program then
+    return error(reason .. ':' .. filename, 0)
+  end
+  return program()
+end
+
+function loadfile(filename, mode, env)
+  local file, reason = io.open(filename)
+  if not file then
+    return nil, reason
+  end
+  local source, reason = file:read("*a")
+  file:close()
+  if not source then
+    return nil, reason
+  end
+  if string.sub(source, 1, 1) == "#" then
+    local endline = string.find(source, "\n", 2, true)
+    if endline then
+      source = string.sub(source, endline + 1)
+    else
+      source = ""
+    end
+  end
+  return load(source, "=" .. filename, mode, env)
+end
+
+function print(...)
+  local args = table.pack(...)
+  local stdout = io.stdout
+  stdout:setvbuf("line")
+  for i = 1, args.n do
+    local arg = tostring(args[i])
+    if i > 1 then
+      arg = "\t" .. arg
+    end
+    stdout:write(arg)
+  end
+  stdout:write("\n")
+  stdout:setvbuf("no")
+  stdout:flush()
+end
+Fboot/01_process.lua§local process = require("process")
+
+--Initialize coroutine library--
+local _coroutine = coroutine -- real coroutine backend
+
+_G.coroutine = {}
+package.loaded.coroutine = _G.coroutine
+
+for key,value in pairs(_coroutine) do
+  if type(value) == "function" and value ~= "running" and value ~= "create" then
+    _G.coroutine[key] = function(...)
+      local thread = _coroutine.running()
+      local info = process.info(thread)
+      -- note the gc thread does not have a process info
+      assert(info,"process not found for " .. tostring(thread))
+      local data = info.data
+      local co = data.coroutine_handler
+      local handler = co[key]
+      return handler(...)
+    end
+  else
+    _G.coroutine[key] = value
+  end
+end
+
+local init_thread = _coroutine.running()
+local init_load = _G.load
+
+_G.load = function(ld, source, mode, env)
+  env = env or select(2, process.running())
+  return init_load(ld, source, mode, env)
+end
+
+local kernel_create = _coroutine.create
+_coroutine.create = function(f,standAlone)
+  local co = kernel_create(f)
+  if not standAlone then
+    table.insert(process.findProcess().instances, co)
+  end
+  return co
+end
+
+_coroutine.wrap = function(f)
+  local thread = coroutine.create(f)
+  return function(...)
+    local result_pack = table.pack(coroutine.resume(thread, ...))
+    local result, reason = result_pack[1], result_pack[2]
+    assert(result, reason)
+    return select(2, table.unpack(result_pack))
+  end
+end
+
+process.list[init_thread] = {
+  path = "/init.lua",
+  command = "init",
+  env = _ENV,
+  data =
+  {
+    vars={},
+    io={}, --init will populate this
+    coroutine_handler=setmetatable({}, {__index=_coroutine})
+  },
+  instances = setmetatable({}, {__mode="v"})
+}
+Fboot/02_os.luaÍlocal computer = require("computer")
+local event = require("event")
+local fs = require("filesystem")
+local shell = require("shell")
+local unicode = require("unicode")
+local process = require("process")
+
+local function env()
+  return process.info().data.vars
+end
+
+os.execute = function(command)
+  if not command then
+    return type(shell) == "table"
+  end
+  return shell.execute(command)
+end
+
+function os.exit(code)
+  error({reason="terminated", code=code}, 0)
+end
+
+function os.getenv(varname)
+  if varname == '#' then
+    return #env()
+  elseif varname ~= nil then
+    return env()[varname]
+  else
+    return env()
+  end
+end
+
+function os.setenv(varname, value)
+  checkArg(1, varname, "string", "number")
+  if value == nil then
+    env()[varname] = nil
+  else
+    local success, val = pcall(tostring, value)
+    if success then
+      env()[varname] = val
+      return env()[varname]
+    else
+      return nil, val
+    end
+  end
+end
+
+function os.remove(...)
+  return fs.remove(...)
+end
+
+function os.rename(...)
+  return fs.rename(...)
+end
+
+function os.sleep(timeout)
+  checkArg(1, timeout, "number", "nil")
+  local deadline = computer.uptime() + (timeout or 0)
+  repeat
+    event.pull(deadline - computer.uptime())
+  until computer.uptime() >= deadline
+end
+
+function os.tmpname()
+  local path = os.getenv("TMPDIR") or "/tmp"
+  if fs.exists(path) then
+    for i = 1, 10 do
+      local name = fs.concat(path, tostring(math.random(1, 0x7FFFFFFF)))
+      if not fs.exists(name) then
+        return name
+      end
+    end
+  end
+end
+
+os.setenv("PATH", "/bin:/usr/bin:/home/bin:.")
+os.setenv("TMP", "/tmp") -- Deprecated
+os.setenv("TMPDIR", "/tmp")
+
+if computer.tmpAddress() then
+  fs.mount(computer.tmpAddress(), os.getenv("TMPDIR") or "/tmp")
+end
+Fboot/03_io.luaalocal buffer = require("buffer")
+local term = require("term")
+
+local io_open = io.open
+function io.open(path, mode)
+  return io_open(require("shell").resolve(path), mode)
+end
+
+local stdinStream = {handle="stdin"}
+local stdoutStream = {handle="stdout"}
+local stderrStream = {handle="stderr"}
+local stdinHistory = {}
+
+local function badFileDescriptor()
+  return nil, "bad file descriptor"
+end
+
+function stdinStream:close()
+  return nil, "cannot close standard file"
+end
+stdoutStream.close = stdinStream.close
+stderrStream.close = stdinStream.close
+
+function stdinStream:read(n, dobreak)
+  stdinHistory.dobreak = dobreak
+  local result = term.readKeyboard(stdinHistory)
+  return result
+end
+
+function stdoutStream:write(str)
+  term.drawText(str, self.wrap ~= false)
+  return self
+end
+
+function stderrStream:write(str)
+  local gpu = term.gpu()
+  local set_depth = gpu and gpu.getDepth() and gpu.getDepth() > 1
+
+  if set_depth then
+    set_depth = gpu.setForeground(0xFF0000)
+  end
+    
+  term.drawText(str, true)
+
+  if set_depth then
+    gpu.setForeground(set_depth)
+  end
+
+  return self
+end
+
+stdinStream.seek = badFileDescriptor
+stdinStream.write = badFileDescriptor
+stdoutStream.read = badFileDescriptor
+stdoutStream.seek = badFileDescriptor
+stderrStream.read = badFileDescriptor
+stderrStream.seek = badFileDescriptor
+
+local core_stdin = buffer.new("r", stdinStream)
+local core_stdout = buffer.new("w", stdoutStream)
+local core_stderr = buffer.new("w", stderrStream)
+
+core_stdout:setvbuf("no")
+core_stderr:setvbuf("no")
+core_stdin.tty = true
+core_stdout.tty = true
+core_stderr.tty = true
+
+core_stdin.close = stdinStream.close
+core_stdout.close = stdinStream.close
+core_stderr.close = stdinStream.close
+
+local fd_map =
+{
+  -- key name => method name
+  stdin = 'input',
+  stdout = 'output',
+  stderr = 'error'
+}
+
+local io_mt = getmetatable(io) or {}
+io_mt.__index = function(t, k)
+  if fd_map[k] then
+    return io[fd_map[k]]()
+  end
+end
+io_mt.__newindex = function(t, k, v)
+  if fd_map[k] then
+    io[fd_map[k]](v)
+  else
+    rawset(io, k, v)
+  end
+end
+
+setmetatable(io, io_mt)
+
+io.stdin = core_stdin
+io.stdout = core_stdout
+io.stderr = core_stderr
+Fboot/04_component.lua)local component = require("component")
+local computer = require("computer")
+local event = require("event")
+
+local adding = {}
+local removing = {}
+local primaries = {}
+
+-------------------------------------------------------------------------------
+
+-- This allows writing component.modem.open(123) instead of writing
+-- component.getPrimary("modem").open(123), which may be nicer to read.
+setmetatable(component, {
+  __index = function(_, key)
+    return component.getPrimary(key)
+  end,
+  __pairs = function(self)
+    local parent = false
+    return function(_, key)
+      if parent then
+        return next(primaries, key)
+      else
+        local k, v = next(self, key)
+        if not k then
+          parent = true
+          return next(primaries)
+        else
+          return k, v
+        end
+      end
+    end
+  end
+})
+
+function component.get(address, componentType)
+  checkArg(1, address, "string")
+  checkArg(2, componentType, "string", "nil")
+  for c in component.list(componentType, true) do
+    if c:sub(1, address:len()) == address then
+      return c
+    end
+  end
+  return nil, "no such component"
+end
+
+function component.isAvailable(componentType)
+  checkArg(1, componentType, "string")
+  if not primaries[componentType] and not adding[componentType] then
+    -- This is mostly to avoid out of memory errors preventing proxy
+    -- creation cause confusion by trying to create the proxy again,
+    -- causing the oom error to be thrown again.
+    component.setPrimary(componentType, component.list(componentType, true)())
+  end
+  return primaries[componentType] ~= nil
+end
+
+function component.isPrimary(address)
+  local componentType = component.type(address)
+  if componentType then
+    if component.isAvailable(componentType) then
+      return primaries[componentType].address == address
+    end
+  end
+  return false
+end
+
+function component.getPrimary(componentType)
+  checkArg(1, componentType, "string")
+  assert(component.isAvailable(componentType),
+    "no primary '" .. componentType .. "' available")
+  return primaries[componentType]
+end
+
+function component.setPrimary(componentType, address)
+  checkArg(1, componentType, "string")
+  checkArg(2, address, "string", "nil")
+  if address ~= nil then
+    address = component.get(address, componentType)
+    assert(address, "no such component")
+  end
+
+  local wasAvailable = primaries[componentType]
+  if wasAvailable and address == wasAvailable.address then
+    return
+  end
+  local wasAdding = adding[componentType]
+  if wasAdding and address == wasAdding.address then
+    return
+  end
+  if wasAdding then
+    event.cancel(wasAdding.timer)
+  end
+  primaries[componentType] = nil
+  adding[componentType] = nil
+
+  local primary = address and component.proxy(address) or nil
+  if wasAvailable then
+    computer.pushSignal("component_unavailable", componentType)
+  end
+  if primary then
+    if wasAvailable or wasAdding then
+      adding[componentType] = {
+        address=address,
+        timer=event.timer(0.1, function()
+          adding[componentType] = nil
+          primaries[componentType] = primary
+          computer.pushSignal("component_available", componentType)
+        end)
+      }
+    else
+      primaries[componentType] = primary
+      computer.pushSignal("component_available", componentType)
+    end
+  end
+end
+
+-------------------------------------------------------------------------------
+
+for address in component.list('screen', true) do
+  if #component.invoke(address,'getKeyboards') > 0 then
+    component.setPrimary('screen',address)
+  end
+end
+
+local function onComponentAdded(_, address, componentType)
+  if not (primaries[componentType] or adding[componentType]) then
+    component.setPrimary(componentType, address)
+  end
+end
+
+local function onComponentRemoved(_, address, componentType)
+  if primaries[componentType] and primaries[componentType].address == address or
+     adding[componentType] and adding[componentType].address == address
+  then
+    component.setPrimary(componentType, component.list(componentType, true)())
+  end
+end
+
+event.listen("component_added", onComponentAdded)
+event.listen("component_removed", onComponentRemoved)
+Fboot/10_devfs.lua¢require("filesystem").mount(
+setmetatable({
+  isReadOnly = function()return false end
+},
+{
+  __index=function(tbl,key)return require("devfs")[key]end
+}), "/dev")
+Fboot/90_filesystem.lua local component = require("component")
+local event = require("event")
+local fs = require("filesystem")
+local shell = require("shell")
+
+local isInitialized, pendingAutoruns = false, {}
+
+local function onInit()
+  isInitialized = true
+  for _, run in ipairs(pendingAutoruns) do
+    local result, reason = pcall(run)
+    if not result then
+      local path = fs.concat(os.getenv("TMPDIR") or "/tmp", "event.log")
+      local log = io.open(path, "a")
+      if log then
+        log:write(reason .. "\n")
+        log:close()
+      end
+    end
+  end
+  pendingAutoruns = nil
+end
+
+local function onComponentAdded(_, address, componentType)
+  if componentType == "filesystem" then
+    local proxy = component.proxy(address)
+    if proxy then
+      local name = address:sub(1, 3)
+      while fs.exists(fs.concat("/mnt", name)) and
+            name:len() < address:len() -- just to be on the safe side
+      do
+        name = address:sub(1, name:len() + 1)
+      end
+      name = fs.concat("/mnt", name)
+      fs.mount(proxy, name)
+      if fs.isAutorunEnabled() then
+        local function run()
+          local file = shell.resolve(fs.concat(name, "autorun"), "lua") or
+                       shell.resolve(fs.concat(name, ".autorun"), "lua")
+          if file then
+            local result, reason = shell.execute(file, _ENV, proxy)
+            if not result then
+              error(reason, 0)
+            end
+          end
+        end
+        if isInitialized then
+          run()
+        else
+          table.insert(pendingAutoruns, run)
+        end
+      end
+    end
+  end
+end
+
+local function onComponentRemoved(_, address, componentType)
+  if componentType == "filesystem" then
+    if fs.get(shell.getWorkingDirectory()).address == address then
+      shell.setWorkingDirectory("/")
+    end
+    fs.umount(address)
+  end
+end
+
+event.listen("init", onInit)
+event.listen("component_added", onComponentAdded)
+event.listen("component_removed", onComponentRemoved)
+Fboot/91_gpu.lua@local component = require("component")
+local event = require("event")
+
+local function onComponentAvailable(_, componentType)
+  if (componentType == "screen" and component.isAvailable("gpu")) or
+     (componentType == "gpu" and component.isAvailable("screen"))
+  then
+    component.gpu.bind(component.screen.address)
+    local depth = 2^(component.gpu.getDepth())
+    os.setenv("TERM", "term-"..depth.."color")
+    require("computer").pushSignal("gpu_bound", component.gpu.address, component.screen.address)
+  end
+end
+
+event.listen("component_available", onComponentAvailable)
+Fboot/92_keyboard.lualocal component = require("component")
+local event = require("event")
+local keyboard = require("keyboard")
+
+local function onKeyDown(_, address, char, code)
+  if keyboard.pressedChars[address] then
+    keyboard.pressedChars[address][char] = true
+    keyboard.pressedCodes[address][code] = true
+  end
+end
+
+local function onKeyUp(_, address, char, code)
+  if keyboard.pressedChars[address] then
+    keyboard.pressedChars[address][char] = nil
+    keyboard.pressedCodes[address][code] = nil
+  end
+end
+
+local function onComponentAdded(_, address, componentType)
+  if componentType == "keyboard" then
+    keyboard.pressedChars[address] = {}
+    keyboard.pressedCodes[address] = {}
+  end
+end
+
+local function onComponentRemoved(_, address, componentType)
+  if componentType == "keyboard" then
+    keyboard.pressedChars[address] = nil
+    keyboard.pressedCodes[address] = nil
+  end
+end
+
+for address in component.list("keyboard", true) do
+  onComponentAdded("component_added", address, "keyboard")
+end
+
+event.listen("key_down", onKeyDown)
+event.listen("key_up", onKeyUp)
+event.listen("component_added", onComponentAdded)
+event.listen("component_removed", onComponentRemoved)
+Fboot/93_term.lua)local component = require("component")
+local computer = require("computer")
+local event = require("event")
+local term = require("term")
+local process = require("process")
+
+-- this should be the init level process
+process.info().data.window = term.internal.open()
+
+event.listen("gpu_bound", function(ename, gpu, screen)
+  gpu=component.proxy(gpu)
+  screen=component.proxy(screen)
+  term.bind(gpu, screen)
+  computer.pushSignal("term_available")
+end)
+
+event.listen("component_unavailable", function(_,type)
+  if type == "screen" or type == "gpu" then
+    if term.isAvailable() then
+      local window = term.internal.window()
+      if window[type] and not component.proxy(window[type].address) then
+        window[type] = nil
+      end
+    end
+    if not term.isAvailable() then
+      computer.pushSignal("term_unavailable")
+    end
+  end
+end)
+
+event.listen("screen_resized", function(_,addr,w,h)
+  local window = term.internal.window()
+  if term.isAvailable(window) and window.screen.address == addr and window.fullscreen then
+    window.w,window.h = w,h
+  end
+end)
+Fboot/94_shell.luaòlocal shell = require("shell")
+
+require("event").listen("init", function()
+  local file = io.open("/etc/hostname")
+  if file then
+    os.setenv("HOSTNAME", file:read("*l"))
+    os.setenv("PS1", "$HOSTNAME:$PWD# ")
+    file:close()
+  end
+end)
+Fboot/99_rc.lua-- Run all enabled rc scripts.
+local shell = require("shell")
+local rc = shell.resolve("rc", "lua")
+if rc then 
+  dofile(rc)
+end
+Dlib/Flib/ECSAPI.luaUP
 
 local advancedLua = require("advancedLua")
 local component = require("component")
