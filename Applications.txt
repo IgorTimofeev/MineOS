@@ -426,7 +426,7 @@
     name="lib/PolyCatEngine/Main.lua",
     url="IgorTimofeev/OpenComputers/master/lib/PolyCatEngine/Main.lua",
     type="Library",
-    version=1.01,
+    version=1.02,
   },
   {
     name="lib/PolyCatEngine/PostProcessing.lua",
@@ -535,7 +535,7 @@
     type="Application",
     icon="IgorTimofeev/OpenComputers/master/Applications/OCGLTest/Icon.pic",
     createShortcut="desktop",
-    version=1.02,
+    version=1.03,
   },
   {
     name="MineOS/Applications/GeoScan2",

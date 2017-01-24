@@ -5,12 +5,13 @@
 -- package.loaded["doubleBuffering"] = nil
 -- package.loaded["vector"] = nil
 -- package.loaded["matrix"] = nil
--- package.loaded["OpenComputersGL/Main"] = nil
--- package.loaded["OpenComputersGL/Materials"] = nil
--- package.loaded["OpenComputersGL/Renderer"] = nil
--- package.loaded["PolyCatEngine/Main"] = nil
--- package.loaded["PolyCatEngine/PostProcessing"] = nil
+package.loaded["OpenComputersGL/Main"] = nil
+package.loaded["OpenComputersGL/Materials"] = nil
+package.loaded["OpenComputersGL/Renderer"] = nil
+package.loaded["PolyCatEngine/Main"] = nil
+package.loaded["PolyCatEngine/PostProcessing"] = nil
 
+local ecs = require("ECSAPI")
 local computer = require("computer")
 local buffer = require("doubleBuffering")
 local event = require("event")
@@ -22,8 +23,6 @@ local renderer = require("OpenComputersGL/Renderer")
 local OCGL = require("OpenComputersGL/Main")
 local polyCatEngine = require("PolyCatEngine/Main")
 
-polyCatEngine.intro(vector.newVector3(0, 0, 0), 20)
-
 -------------------------------------------------------- Constants --------------------------------------------------------
 
 local autoRotate, showGrid = false, true
@@ -33,10 +32,10 @@ local translationOffset = 4
 -------------------------------------------------------- Object group --------------------------------------------------------
 
 local scene = polyCatEngine.newScene(0x222222)
-local size = 40
+scene.camera:translate(0, 0, -30)
 
--- scene:addObject(polyCatEngine.newPolyCatMesh(vector.newVector3(0, 0, 0), 20))
--- scene:addObject(polyCatEngine.newFloatingText(vector.newVector3(0, -23, 0), 0xEEEEEE, "Powered by PolyCat Engine™"))
+scene:addObject(polyCatEngine.newPolyCatMesh(vector.newVector3(0, 0, 0), 20))
+scene:addObject(polyCatEngine.newFloatingText(vector.newVector3(0, -23, 0), 0xEEEEEE, "Хуй пизда целка блядина"))
 
 
 -- scene:addObjects(polyCatEngine.newGridLines(
@@ -53,22 +52,22 @@ local size = 40
 -- ))
 
 
-local spaceBetween = 5
-local cubeSize = 20
-local xCube, zCube = -cubeSize - spaceBetween, -cubeSize - spaceBetween
-for j = 1, 3 do
-	for i = 1, 3 do
-		if not (i == 2 and j == 2) then
-			scene:addObject(polyCatEngine.newCube(
-				vector.newVector3(xCube, 0, zCube),
-				cubeSize,
-				materials.newSolidMaterial(math.random(0x0, 0xFFFFFF))
-			))
-		end
-		xCube = xCube + cubeSize + spaceBetween
-	end
-	zCube, xCube = zCube + cubeSize + spaceBetween, -cubeSize - spaceBetween
-end
+-- local spaceBetween = 5
+-- local cubeSize = 20
+-- local xCube, zCube = -cubeSize - spaceBetween, -cubeSize - spaceBetween
+-- for j = 1, 3 do
+-- 	for i = 1, 3 do
+-- 		if not (i == 2 and j == 2) then
+-- 			scene:addObject(polyCatEngine.newCube(
+-- 				vector.newVector3(xCube, 0, zCube),
+-- 				cubeSize,
+-- 				materials.newSolidMaterial(math.random(0x0, 0xFFFFFF))
+-- 			))
+-- 		end
+-- 		xCube = xCube + cubeSize + spaceBetween
+-- 	end
+-- 	zCube, xCube = zCube + cubeSize + spaceBetween, -cubeSize - spaceBetween
+-- end
 
 
 
@@ -113,9 +112,24 @@ local controls = {
 -------------------------------------------------------- Main shit --------------------------------------------------------
 
 buffer.start()
+polyCatEngine.intro(vector.newVector3(0, 0, 0), 20)
+
+local function drawInvertedText(x, y, text)
+	local index = buffer.getBufferIndexByCoordinates(x, y)
+	local background, foreground = buffer.rawGet(index)
+	buffer.rawSet(index, background, 0xFFFFFF - foreground, text)
+end
+
+local function drawCross(x, y)
+	drawInvertedText(x - 2, y, "━━")
+	drawInvertedText(x, y, "━━")
+	drawInvertedText(x, y - 1, "┃")
+	drawInvertedText(x, y + 1, "┃")
+end
 
 local function renderMethod()
 	scene:render()
+	drawCross(math.floor(buffer.screen.width / 2), math.floor(buffer.screen.height / 2))
 
 	local y = 6
 	local total = computer.totalMemory()
@@ -146,32 +160,19 @@ while true do
 			end
 		end
 	elseif e[1] == "touch" then
-		local mesh, triangleIndex = OCGL.triangleRaycast(
-			vector.newVector3(e[3], e[4] * 2, -1000),
-			vector.newVector3(e[3], e[4] * 2, 1000)
+		local objectIndex, triangleIndex, distance = polyCatEngine.sceneRaycast(
+			scene,
+			vector.newVector3(scene.camera.position[1], scene.camera.position[2], scene.camera.position[3]),
+			vector.newVector3(scene.camera.position[1], scene.camera.position[2], scene.camera.position[3] + 1000)
 		)
-		if mesh then 	
-			ecs.error("ТЫКНУЛОСЬ СУКА")		
-			-- Правый клик
-			if e[5] == 1 then
-				-- local currentCube = scene.objects[objectIndex]
-				-- local newPosition = vector.newVector3(currentCube.pivotPoint.position[1], currentCube.pivotPoint.position[2] + 20, currentCube.pivotPoint.position[3])
 
-				-- scene:addObject(polyCatEngine.newCube(
-				-- 	newPosition,
-				-- 	20,
-				-- 	materials.newSolidMaterial(math.random(0x0, 0xFFFFFF))
-				-- ))
+		if objectIndex then
+			if e[5] == 1 then
+				scene.objects[objectIndex].triangles[triangleIndex][4] = nil
 			else
-				-- table.remove(scene.objects, objectIndex)
+				scene.objects[objectIndex].triangles[triangleIndex][4] = materials.newSolidMaterial(math.random(0x0, 0xFFFFFF))
 			end
 		end
-	-- elseif e[1] == "scroll" then
-	-- 	if e[5] == 1 then
-	-- 		scene:scale(OCGL.newScaleMatrix(vector.newVector3(1.2, 1.2, 1.2)))
-	-- 	else
-	-- 		scene:scale(OCGL.newScaleMatrix(vector.newVector3(0.8, 0.8, 0.8)))
-	-- 	end
 	end
 
 	if autoRotate then
