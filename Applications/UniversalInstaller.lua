@@ -79,7 +79,7 @@ local function progressBar(x, y, width, height, passiveColor, activeColor, perce
 end
 
 local function downloadWindow()
-	local windowWidth, windowHeight = math.ceil(resolutionWidth * 0.3), 5
+	local windowWidth, windowHeight = math.ceil(resolutionWidth * 0.35), 5
 	local x, y = math.floor(resolutionWidth / 2 - windowWidth / 2), math.floor(resolutionHeight / 2 - windowHeight / 2)
 	local progressBarWidth = windowWidth - 4
 
