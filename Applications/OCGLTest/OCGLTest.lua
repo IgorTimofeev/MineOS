@@ -32,7 +32,7 @@ local translationOffset = 1
 -------------------------------------------------------- Object group --------------------------------------------------------
 
 local scene = polyCatEngine.newScene(0x222222)
-scene.camera:translate(0, 0, -30)
+scene.camera:translate(0, 0, -20)
 
 scene:addObject(polyCatEngine.newPolyCatMesh(vector.newVector3(0, 0, 0), 7))
 scene:addObject(polyCatEngine.newFloatingText(vector.newVector3(0, -12, 0), 0xEEEEEE, "Хуй пизда целка блядина"))
@@ -51,22 +51,22 @@ scene:addObject(polyCatEngine.newFloatingText(vector.newVector3(0, -12, 0), 0xEE
 -- 	materials.newSolidMaterial(0xEEEEEE)
 -- ))
 
--- local spaceBetween = 1
--- local cubeSize = 5
--- local xCube, zCube = 0 -cubeSize - spaceBetween, 10 -cubeSize - spaceBetween
--- for j = 1, 3 do
--- 	for i = 1, 3 do
--- 		if not (i == 2 and j == 2) then
--- 			scene:addObject(polyCatEngine.newCube(
--- 				vector.newVector3(xCube, 0, zCube),
--- 				cubeSize,
--- 				materials.newSolidMaterial(tonumber("0x" .. string.rep(tostring(math.random(0x0, 0xF)), 6)))
--- 			))
--- 		end
--- 		xCube = xCube + cubeSize + spaceBetween
--- 	end
--- 	zCube, xCube = zCube + cubeSize + spaceBetween, -cubeSize - spaceBetween
--- end
+local spaceBetween = 2
+local cubeSize = 5
+local xCube, zCube = 0 - cubeSize - spaceBetween, 12 - cubeSize - spaceBetween
+for j = 1, 3 do
+	for i = 1, 3 do
+		if not (i == 2 and j == 2) then
+			scene:addObject(polyCatEngine.newCube(
+				vector.newVector3(xCube, 0, zCube),
+				cubeSize,
+				materials.newSolidMaterial(tonumber("0x" .. string.rep(tostring(math.random(0x0, 0xF)), 6)))
+			))
+		end
+		xCube = xCube + cubeSize + spaceBetween
+	end
+	zCube, xCube = zCube + cubeSize + spaceBetween, -cubeSize - spaceBetween
+end
 
 local function move(x, y, z)
 	local moveVector = vector.newVector3(x, y, z)
@@ -170,7 +170,7 @@ while true do
 			if e[5] == 1 then
 				scene.objects[objectIndex].triangles[triangleIndex][4] = nil
 			else
-				scene.objects[objectIndex].triangles[triangleIndex][4] = materials.newSolidMaterial(math.random(0x0, 0xFFFFFF))
+				scene.objects[objectIndex].material = materials.newSolidMaterial(math.random(0x0, 0xFFFFFF))
 			end
 		end
 	end
