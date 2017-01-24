@@ -27,15 +27,15 @@ local polyCatEngine = require("PolyCatEngine/Main")
 
 local autoRotate, showGrid = false, true
 local rotationAngle = math.rad(5)
-local translationOffset = 4
+local translationOffset = 1
 
 -------------------------------------------------------- Object group --------------------------------------------------------
 
 local scene = polyCatEngine.newScene(0x222222)
 scene.camera:translate(0, 0, -30)
 
-scene:addObject(polyCatEngine.newPolyCatMesh(vector.newVector3(0, 0, 0), 20))
-scene:addObject(polyCatEngine.newFloatingText(vector.newVector3(0, -23, 0), 0xEEEEEE, "Хуй пизда целка блядина"))
+scene:addObject(polyCatEngine.newPolyCatMesh(vector.newVector3(0, 0, 0), 7))
+scene:addObject(polyCatEngine.newFloatingText(vector.newVector3(0, -12, 0), 0xEEEEEE, "Хуй пизда целка блядина"))
 
 
 -- scene:addObjects(polyCatEngine.newGridLines(
@@ -51,17 +51,16 @@ scene:addObject(polyCatEngine.newFloatingText(vector.newVector3(0, -23, 0), 0xEE
 -- 	materials.newSolidMaterial(0xEEEEEE)
 -- ))
 
-
--- local spaceBetween = 5
--- local cubeSize = 20
--- local xCube, zCube = -cubeSize - spaceBetween, -cubeSize - spaceBetween
+-- local spaceBetween = 1
+-- local cubeSize = 5
+-- local xCube, zCube = 0 -cubeSize - spaceBetween, 10 -cubeSize - spaceBetween
 -- for j = 1, 3 do
 -- 	for i = 1, 3 do
 -- 		if not (i == 2 and j == 2) then
 -- 			scene:addObject(polyCatEngine.newCube(
 -- 				vector.newVector3(xCube, 0, zCube),
 -- 				cubeSize,
--- 				materials.newSolidMaterial(math.random(0x0, 0xFFFFFF))
+-- 				materials.newSolidMaterial(tonumber("0x" .. string.rep(tostring(math.random(0x0, 0xF)), 6)))
 -- 			))
 -- 		end
 -- 		xCube = xCube + cubeSize + spaceBetween
@@ -69,23 +68,19 @@ scene:addObject(polyCatEngine.newFloatingText(vector.newVector3(0, -23, 0), 0xEE
 -- 	zCube, xCube = zCube + cubeSize + spaceBetween, -cubeSize - spaceBetween
 -- end
 
-
-
-
-
 local function move(x, y, z)
-	-- local moveMatrix = {{-x, -y, -z}}
-	-- moveMatrix = matrix.multiply(moveMatrix, scene.camera.rotationMatrix)[1]
-	-- scene.camera:translate(moveMatrix[1], moveMatrix[2], moveMatrix[3], 0, 0, 0)
-	scene.camera:translate(x, y, z)
+	local moveVector = vector.newVector3(x, y, z)
+	OCGL.rotateVector(moveVector, OCGL.axis.x, scene.camera.rotation[1])
+	OCGL.rotateVector(moveVector, OCGL.axis.y, scene.camera.rotation[2])
+	scene.camera:translate(moveVector[1], moveVector[2], moveVector[3])
 end
 
 local controls = {
 	-- Arrows
-	[200] = function() scene.camera:rotate(rotationAngle, 0, 0) end,
-	[208] = function() scene.camera:rotate(-rotationAngle, 0, 0) end,
-	[203] = function() scene.camera:rotate(0, rotationAngle, 0) end,
-	[205] = function() scene.camera:rotate(0, -rotationAngle, 0) end,
+	[200] = function() scene.camera:rotate(-rotationAngle, 0, 0) end,
+	[208] = function() scene.camera:rotate(rotationAngle, 0, 0) end,
+	[203] = function() scene.camera:rotate(0, -rotationAngle, 0) end,
+	[205] = function() scene.camera:rotate(0, rotationAngle, 0) end,
 	[16 ] = function() scene.camera:rotate(0, 0, rotationAngle) end,
 	[18 ] = function() scene.camera:rotate(0, 0, -rotationAngle) end,
 
@@ -98,11 +93,11 @@ local controls = {
 	-- WASD
 	[17 ] = function() move(0, 0, translationOffset) end,
 	[31 ] = function() move(0, 0, -translationOffset) end,
-	[30 ] = function() move(translationOffset, 0, 0) end,
-	[32 ] = function() move(-translationOffset, 0, 0) end,
+	[30 ] = function() move(-translationOffset, 0, 0) end,
+	[32 ] = function() move(translationOffset, 0, 0) end,
 	--RSHIFT, SPACE
-	[42 ] = function() move(0, translationOffset, 0) end,
-	[57 ] = function() move(0, -translationOffset, 0) end,
+	[42 ] = function() move(0, -translationOffset, 0) end,
+	[57 ] = function() move(0, translationOffset, 0) end,
 	-- Backspace, R, Enter
 	[14 ] = function() os.exit() end,
 	[19 ] = function() autoRotate = not autoRotate end,
@@ -121,8 +116,10 @@ local function drawInvertedText(x, y, text)
 end
 
 local function drawCross(x, y)
-	drawInvertedText(x - 2, y, "━━")
-	drawInvertedText(x, y, "━━")
+	drawInvertedText(x - 2, y, "━")
+	drawInvertedText(x - 1, y, "━")
+	drawInvertedText(x + 2, y, "━")
+	drawInvertedText(x + 1, y, "━")
 	drawInvertedText(x, y - 1, "┃")
 	drawInvertedText(x, y + 1, "┃")
 end
@@ -160,10 +157,13 @@ while true do
 			end
 		end
 	elseif e[1] == "touch" then
+		local targetVector = vector.newVector3(scene.camera.position[1], scene.camera.position[2], scene.camera.position[3] + 1000)
+		OCGL.rotateVector(targetVector, OCGL.axis.x, scene.camera.rotation[1])
+		OCGL.rotateVector(targetVector, OCGL.axis.y, scene.camera.rotation[2])
 		local objectIndex, triangleIndex, distance = polyCatEngine.sceneRaycast(
 			scene,
-			vector.newVector3(scene.camera.position[1], scene.camera.position[2], scene.camera.position[3]),
-			vector.newVector3(scene.camera.position[1], scene.camera.position[2], scene.camera.position[3] + 1000)
+			scene.camera.position,
+			targetVector
 		)
 
 		if objectIndex then

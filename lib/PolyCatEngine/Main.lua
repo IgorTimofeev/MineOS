@@ -313,9 +313,9 @@ local function sceneRender(scene)
 	end
 	
 	OCGL.translate(-scene.camera.position[1], -scene.camera.position[2], -scene.camera.position[3])
-	OCGL.rotate(OCGL.axis.x, -scene.camera.rotation[1])
 	OCGL.rotate(OCGL.axis.y, -scene.camera.rotation[2])
-	OCGL.rotate(OCGL.axis.z, -scene.camera.rotation[3])
+	OCGL.rotate(OCGL.axis.x, -scene.camera.rotation[1])
+	-- OCGL.rotate(OCGL.axis.z, -scene.camera.rotation[3])
 	
 	if scene.camera.projectionEnabled then OCGL.createPerspectiveProjection() end
 	OCGL.render(scene.renderMode)
