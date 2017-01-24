@@ -223,6 +223,7 @@ function MineOSCore.loadStandartIcons()
 end
 
 function MineOSCore.init()
+	if not _G.OSSettings then MineOSCore.loadOSSettings() end
 	MineOSCore.localization = table.fromFile(MineOSCore.paths.localizationFile)
 	MineOSCore.loadStandartIcons()
 end
