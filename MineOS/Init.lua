@@ -176,21 +176,16 @@ do
   local shell = require("shell"); shell.setWorkingDirectory("")
   local ecs = require("ECSAPI")
   local component = require("component")
-
-  -- Загружаем параметры ОС
-  ecs.loadOSSettings()
-  _G._OSLANGUAGE = _G.OSSettings.language
-
+  -- Загружаем параметры ОС (через инит-метод идет загрузка OSSettings)
+  require("MineOSCore")
   -- Выставляем адекватный масштаб монитора
   ecs.fadeOut(background, 0x1b1b1b, 0.05)
-  -- component.gpu.setBackground(background)
-  component.gpu.fill(1, 1, 160, 50, " ")
   ecs.setScale(1)
 
   -- Завершаем работу с инициализацией
   os.sleep(0.1) -- Allow signal processing by libraries.
   require("computer").pushSignal("init")
-  os.sleep(0.1) -- Allow init processing.
+  os.sleep(0.1) -- Allow init processing by libraries.
   runlevel = 1
 end
 

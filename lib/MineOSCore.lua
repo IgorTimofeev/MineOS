@@ -26,7 +26,7 @@ MineOSCore.paths = {}
 MineOSCore.paths.OS = "/MineOS/"
 MineOSCore.paths.system = MineOSCore.paths.OS .. "System/"
 MineOSCore.paths.wallpaper = MineOSCore.paths.system .. "OS/Wallpaper.lnk"
-MineOSCore.paths.localizationFile = MineOSCore.paths.system .. "OS/Languages/" .. _G.OSSettings.language .. ".lang"
+MineOSCore.paths.localizationFiles = MineOSCore.paths.system .. "OS/Languages/"
 MineOSCore.paths.icons = MineOSCore.paths.system .. "OS/Icons/"
 MineOSCore.paths.applications = MineOSCore.paths.OS .. "Applications/"
 MineOSCore.paths.pictures = MineOSCore.paths.OS .. "Pictures/"
@@ -223,8 +223,8 @@ function MineOSCore.loadStandartIcons()
 end
 
 function MineOSCore.init()
-	if not _G.OSSettings then MineOSCore.loadOSSettings() end
-	MineOSCore.localization = table.fromFile(MineOSCore.paths.localizationFile)
+	MineOSCore.loadOSSettings()
+	MineOSCore.localization = table.fromFile(MineOSCore.paths.localizationFiles .. _G.OSSettings.language .. ".lang")
 	MineOSCore.loadStandartIcons()
 end
 

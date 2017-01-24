@@ -253,7 +253,7 @@
     name="lib/MineOSCore.lua",
     url="IgorTimofeev/OpenComputers/master/lib/MineOSCore.lua",
     type="Library",
-    version=1.49,
+    version=1.50,
   },
   {
     name="lib/advancedLua.lua",
@@ -442,7 +442,7 @@
     url="IgorTimofeev/OpenComputers/master/MineOS/Init.lua",
     type="Script",
     forceDownload=true,
-    version=1.13,
+    version=1.14,
   },
   {
     name="etc/profile",
