@@ -146,6 +146,21 @@ end
 
 ------------------------------------------------------------------------------------------------------------------
 
+local function saveConfig()
+	table.toFile(configPath, config)
+end
+
+local function loadConfig()
+	if fs.exists(configPath) then
+		config = table.fromFile(configPath)
+		syntax.colorScheme = config.syntaxColorScheme
+	else
+		saveConfig()
+	end
+end
+
+------------------------------------------------------------------------------------------------------------------
+
 local function updateAutocompleteDatabaseFromString(str, value)
 	for word in str:gmatch("[%a%d%_]+") do
 		if not word:match("^%d+$") then
@@ -228,20 +243,13 @@ local function showAutocompleteWindow()
 	end
 end
 
+local function toggleEnableAutocompleteDatabase()
+	config.enableAutocompletion = not config.enableAutocompletion
+	autocompleteDatabase = {}
+	saveConfig()
+end
+
 ------------------------------------------------------------------------------------------------------------------
-
-local function saveConfig()
-	table.toFile(configPath, config)
-end
-
-local function loadConfig()
-	if fs.exists(configPath) then
-		config = table.fromFile(configPath)
-		syntax.colorScheme = config.syntaxColorScheme
-	else
-		saveConfig()
-	end
-end
 
 local function calculateSizes()
 	mainWindow.width, mainWindow.height = buffer.screen.width, buffer.screen.height
@@ -1333,8 +1341,7 @@ local function createWindow()
 			saveConfig()
 		end
 		menu:addItem(config.enableAutocompletion and localization.disableAutocompletion or localization.enableAutocompletion, false, "^I").onTouch = function()
-			config.enableAutocompletion = not config.enableAutocompletion
-			saveConfig()
+			toggleEnableAutocompleteDatabase()
 		end
 		menu:addSeparator()
 		menu:addItem(localization.scalePlus, false, "^+").onTouch = function()
@@ -1529,8 +1536,7 @@ local function createWindow()
 					saveConfig()
 				-- I
 				elseif eventData[4] == 23 then
-					config.enableAutocompletion = not config.enableAutocompletion
-					saveConfig()
+					toggleEnableAutocompleteDatabase()
 				-- A
 				elseif eventData[4] == 30 then
 					selectAll()
