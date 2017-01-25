@@ -11,7 +11,7 @@ syntax.indentationSeparator = "│"
 
 syntax.colorScheme = {
 	background = 0x1E1E1E,
-	text = 0xffffff,
+	text = 0xEEEEEE,
 	strings = 0x99FF80,
 	loops = 0xffff98,
 	comments = 0x888888,

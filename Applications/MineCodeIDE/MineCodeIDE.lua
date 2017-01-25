@@ -1,7 +1,7 @@
 
 ---------------------------------------------------- Libraries ----------------------------------------------------
 
--- "/MineOS/Applications/MineCode IDE.app/MineCode IDE.lua" open OS.lua
+-- "/MineOS/Applications/MineCode IDE.app/MineCode IDE.lua" open /OS.lua
 
 -- package.loaded.syntax = nil
 -- package.loaded.ECSAPI = nil
@@ -59,6 +59,7 @@ local config = {
 	screenScale = 1,
 	enableAutoBrackets = true,
 	highlightLuaSyntax = true,
+	enableAutocompletion = true,
 }
 
 local colors = {
@@ -129,8 +130,105 @@ local lastErrorLine
 local breakpointLine = 5
 local lastClickUptime = computer.uptime()
 local mainWindow = {}
+local autocompleteDatabase
 
----------------------------------------------------- Functions ----------------------------------------------------
+------------------------------------------------------------------------------------------------------------------
+
+local function convertTextPositionToScreenCoordinates(symbol, line)
+	return
+		mainWindow.codeView.codeAreaPosition + symbol - mainWindow.codeView.fromSymbol + 1,
+		mainWindow.codeView.y + line - mainWindow.codeView.fromLine
+end
+
+local function convertScreenCoordinatesToTextPosition(x, y)
+	return x - mainWindow.codeView.codeAreaPosition + mainWindow.codeView.fromSymbol - 1, y - mainWindow.codeView.y + mainWindow.codeView.fromLine
+end
+
+------------------------------------------------------------------------------------------------------------------
+
+local function updateAutocompleteDatabaseFromString(str, value)
+	for word in str:gmatch("[%a%d%_]+") do
+		if not word:match("^%d+$") then
+			autocompleteDatabase[word] = value
+		end
+	end
+end
+
+local function updateAutocompleteDatabaseFromFile()
+	if config.enableAutocompletion then
+		autocompleteDatabase = {}
+		for line = 1, #mainWindow.codeView.lines do
+			updateAutocompleteDatabaseFromString(mainWindow.codeView.lines[line], true)
+		end
+	end
+end
+
+local function getCurrentWordStartingAndEnding(fromSymbol)
+	local shittySymbolsRegexp, from, to = "[%s%c%p]"
+
+	for i = fromSymbol, 1, -1 do
+		if unicode.sub(mainWindow.codeView.lines[cursor.position.line], i, i):match(shittySymbolsRegexp) then break end
+		from = i
+	end
+
+	for i = fromSymbol, unicode.len(mainWindow.codeView.lines[cursor.position.line]) do
+		if unicode.sub(mainWindow.codeView.lines[cursor.position.line], i, i):match(shittySymbolsRegexp) then break end
+		to = i
+	end
+
+	return from, to
+end
+
+local function aplhabeticalSort(t)
+	table.sort(t, function(a, b) return a[1] < b[1] end)
+end
+
+local function getAutocompleteDatabaseMatches(stringToSearch)
+	local matches = {}
+
+	for word in pairs(autocompleteDatabase) do
+		if word ~= str then
+			local match = word:match("^" .. stringToSearch)
+			if match then
+				table.insert(matches, { word, match })
+			end
+		end
+	end
+
+	aplhabeticalSort(matches)
+	return matches
+end
+
+local function hideAutocompleteWindow()
+	mainWindow.autocompleteWindow.isHidden = true
+end
+
+local function showAutocompleteWindow()
+	if config.enableAutocompletion then
+		mainWindow.autocompleteWindow.currentWordStarting, mainWindow.autocompleteWindow.currentWordEnding = getCurrentWordStartingAndEnding(cursor.position.symbol - 1)
+
+		if mainWindow.autocompleteWindow.currentWordStarting then
+			mainWindow.autocompleteWindow.matches = getAutocompleteDatabaseMatches(
+				unicode.sub(
+					mainWindow.codeView.lines[cursor.position.line],
+					mainWindow.autocompleteWindow.currentWordStarting,
+					mainWindow.autocompleteWindow.currentWordEnding
+				)
+			)
+
+			if #mainWindow.autocompleteWindow.matches > 0 then
+				mainWindow.autocompleteWindow.fromMatch, mainWindow.autocompleteWindow.currentMatch = 1, 1
+				mainWindow.autocompleteWindow.isHidden = false
+			else
+				hideAutocompleteWindow()
+			end
+		else
+			hideAutocompleteWindow()
+		end
+	end
+end
+
+------------------------------------------------------------------------------------------------------------------
 
 local function saveConfig()
 	table.toFile(configPath, config)
@@ -357,15 +455,12 @@ local function setCursorPosition(symbol, line)
 	fixFromSymbolByCursorPosition()
 	clearHighlights()
 	hideErrorMessage()
+	hideAutocompleteWindow()
 end
 
 local function setCursorPositionAndClearSelection(symbol, line)
 	setCursorPosition(symbol, line)
 	clearSelection()
-end
-
-local function convertScreenCoordinatesToCursorPosition(x, y)
-	return x - mainWindow.codeView.codeAreaPosition + mainWindow.codeView.fromSymbol - 1, y - mainWindow.codeView.y + mainWindow.codeView.fromLine
 end
 
 local function isClickedOnCodeArea(x, y)
@@ -377,22 +472,36 @@ local function isClickedOnCodeArea(x, y)
 end
 
 local function moveCursor(symbolOffset, lineOffset)
-	if mainWindow.codeView.selections[1] then
-		if symbolOffset < 0 or lineOffset < 0 then
-			setCursorPositionAndClearSelection(mainWindow.codeView.selections[1].from.symbol, mainWindow.codeView.selections[1].from.line)
+	if mainWindow.autocompleteWindow.isHidden or lineOffset == 0 then
+		if mainWindow.codeView.selections[1] then
+			if symbolOffset < 0 or lineOffset < 0 then
+				setCursorPositionAndClearSelection(mainWindow.codeView.selections[1].from.symbol, mainWindow.codeView.selections[1].from.line)
+			else
+				setCursorPositionAndClearSelection(mainWindow.codeView.selections[1].to.symbol, mainWindow.codeView.selections[1].to.line)
+			end
 		else
-			setCursorPositionAndClearSelection(mainWindow.codeView.selections[1].to.symbol, mainWindow.codeView.selections[1].to.line)
-		end
-	else
-		local newSymbol, newLine = cursor.position.symbol + symbolOffset, cursor.position.line + lineOffset
-		
-		if symbolOffset < 0 and newSymbol < 1 then
-			newLine, newSymbol = newLine - 1, math.huge
-		elseif symbolOffset > 0 and newSymbol > unicode.len(mainWindow.codeView.lines[newLine] or "") + 1 then
-			newLine, newSymbol = newLine + 1, 1
-		end
+			local newSymbol, newLine = cursor.position.symbol + symbolOffset, cursor.position.line + lineOffset
+			
+			if symbolOffset < 0 and newSymbol < 1 then
+				newLine, newSymbol = newLine - 1, math.huge
+			elseif symbolOffset > 0 and newSymbol > unicode.len(mainWindow.codeView.lines[newLine] or "") + 1 then
+				newLine, newSymbol = newLine + 1, 1
+			end
 
-		setCursorPositionAndClearSelection(newSymbol, newLine)
+			setCursorPositionAndClearSelection(newSymbol, newLine)
+		end
+	elseif not mainWindow.autocompleteWindow.isHidden then
+		mainWindow.autocompleteWindow.currentMatch = mainWindow.autocompleteWindow.currentMatch + lineOffset
+		
+		if mainWindow.autocompleteWindow.currentMatch < 1 then
+			mainWindow.autocompleteWindow.currentMatch = 1
+		elseif mainWindow.autocompleteWindow.currentMatch > #mainWindow.autocompleteWindow.matches then
+			mainWindow.autocompleteWindow.currentMatch = #mainWindow.autocompleteWindow.matches
+		elseif mainWindow.autocompleteWindow.currentMatch < mainWindow.autocompleteWindow.fromMatch then
+			mainWindow.autocompleteWindow.fromMatch = mainWindow.autocompleteWindow.currentMatch
+		elseif mainWindow.autocompleteWindow.currentMatch > mainWindow.autocompleteWindow.fromMatch + mainWindow.autocompleteWindow.height - 1 then
+			mainWindow.autocompleteWindow.fromMatch = mainWindow.autocompleteWindow.currentMatch - mainWindow.autocompleteWindow.height + 1
+		end
 	end
 end
 
@@ -438,18 +547,7 @@ local function gotoLine(line)
 end
 
 local function selectWord()
-	local shittySymbolsRegexp, from, to = "[%s%c%p]"
-
-	for i = cursor.position.symbol, 1, -1 do
-		if unicode.sub(mainWindow.codeView.lines[cursor.position.line], i, i):match(shittySymbolsRegexp) then break end
-		from = i
-	end
-
-	for i = cursor.position.symbol, unicode.len(mainWindow.codeView.lines[cursor.position.line]) do
-		if unicode.sub(mainWindow.codeView.lines[cursor.position.line], i, i):match(shittySymbolsRegexp) then break end
-		to = i
-	end
-
+	local from, to = getCurrentWordStartingAndEnding(cursor.position.symbol)
 	if from and to then
 		mainWindow.codeView.selections[1] = {
 			from = {symbol = from, line = cursor.position.line},
@@ -480,6 +578,7 @@ local function createInputTextBoxForSettingsWindow(title, placeholder)
 end
 
 local function newFile()
+	autocompleteDatabase = {}
 	mainWindow.codeView.lines = {""}
 	mainWindow.codeView.maximumLineLength = 1
 	mainWindow.leftTreeView.currentFile = nil
@@ -496,6 +595,7 @@ local function loadFile(path)
 	end
 	file:close()
 	mainWindow.leftTreeView.currentFile = path
+	updateAutocompleteDatabaseFromFile()
 end
 
 local function saveFile(path)
@@ -686,6 +786,8 @@ local function deleteLine(line)
 	if #mainWindow.codeView.lines > 1 then
 		table.remove(mainWindow.codeView.lines, line)
 		setCursorPositionAndClearSelection(1, cursor.position.line)
+
+		updateAutocompleteDatabaseFromFile()
 	end
 end
 
@@ -697,6 +799,8 @@ local function deleteSpecifiedData(fromSymbol, fromLine, toSymbol, toLine)
 	end
 	mainWindow.codeView.lines[fromLine] = upperLine .. lowerLine
 	setCursorPositionAndClearSelection(fromSymbol, fromLine)
+
+	updateAutocompleteDatabaseFromFile()
 end
 
 local function deleteSelectedData()
@@ -707,6 +811,7 @@ local function deleteSelectedData()
 			mainWindow.codeView.selections[1].to.symbol,
 			mainWindow.codeView.selections[1].to.line
 		)
+
 		clearSelection()
 	end
 end
@@ -732,6 +837,14 @@ local function cut()
 	end
 end
 
+local function pasteSelectedAutocompletion()
+	local firstPart = unicode.sub(mainWindow.codeView.lines[cursor.position.line], 1, mainWindow.autocompleteWindow.currentWordStarting - 1)
+	local secondPart = unicode.sub(mainWindow.codeView.lines[cursor.position.line], mainWindow.autocompleteWindow.currentWordEnding + 1, -1)
+	mainWindow.codeView.lines[cursor.position.line] = firstPart .. mainWindow.autocompleteWindow.matches[mainWindow.autocompleteWindow.currentMatch][1] .. secondPart
+	setCursorPositionAndClearSelection(unicode.len(firstPart .. mainWindow.autocompleteWindow.matches[mainWindow.autocompleteWindow.currentMatch][1]) + 1, cursor.position.line)
+	hideAutocompleteWindow()
+end
+
 local function paste(pasteLines)
 	if pasteLines then
 		if mainWindow.codeView.selections[1] then
@@ -752,6 +865,8 @@ local function paste(pasteLines)
 			table.insert(mainWindow.codeView.lines, cursor.position.line + #pasteLines - 1, pasteLines[#pasteLines] .. secondPart)
 			setCursorPositionAndClearSelection(unicode.len(pasteLines[#pasteLines]) + 1, cursor.position.line + #pasteLines - 1)
 		end
+
+		updateAutocompleteDatabaseFromFile()
 	end
 end
 
@@ -770,6 +885,10 @@ end
 local function pasteRegularChar(unicodeByte, char)
 	if not keyboard.isControl(unicodeByte) then
 		paste({char})
+		if char == " " then
+			updateAutocompleteDatabaseFromFile()
+		end
+		showAutocompleteWindow()
 	end
 end
 
@@ -838,6 +957,9 @@ local function delete()
 				deleteSpecifiedData(unicode.len(mainWindow.codeView.lines[cursor.position.line]) + 1, cursor.position.line, 0, cursor.position.line + 1)
 			end
 		end
+
+		-- updateAutocompleteDatabaseFromFile()
+		showAutocompleteWindow()
 	end
 end
 
@@ -853,6 +975,9 @@ local function backspace()
 				deleteSpecifiedData(unicode.len(mainWindow.codeView.lines[cursor.position.line - 1]) + 1, cursor.position.line - 1, 0, cursor.position.line)
 			end
 		end
+
+		-- updateAutocompleteDatabaseFromFile()
+		showAutocompleteWindow()
 	end
 end
 
@@ -1139,7 +1264,7 @@ local function createWindow()
 		editOrRightClickMenu:show()
 	end
 
-	local item4 = mainWindow.topMenu:addItem(localization.view)
+	local item4 = mainWindow.topMenu:addItem(localization.properties)
 	item4.onTouch = function()
 		local menu = GUI.contextMenu(item4.x, item4.y + 1)
 		menu:addItem(localization.colorScheme).onTouch = function()
@@ -1153,10 +1278,17 @@ local function createWindow()
 			mainWindow.settingsContainer:addLabel(1, y, mainWindow.settingsContainer.width, 1, 0xFFFFFF, localization.colorScheme):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); y = y + 3
 			local x, counter = startX, 1
 
+			local colors = {}
 			for key in pairs(config.syntaxColorScheme) do
-				local colorSelector = mainWindow.settingsContainer:addColorSelector(x, y, colorSelectorWidth, colorSelectorHeight, config.syntaxColorScheme[key], key)
+				table.insert(colors, {key})
+			end
+
+			aplhabeticalSort(colors)
+
+			for i = 1, #colors do
+				local colorSelector = mainWindow.settingsContainer:addColorSelector(x, y, colorSelectorWidth, colorSelectorHeight, config.syntaxColorScheme[colors[i][1]], colors[i][1])
 				colorSelector.onTouch = function()
-					config.syntaxColorScheme[key] = colorSelector.color
+					config.syntaxColorScheme[colors[i][1]] = colorSelector.color
 					syntax.colorScheme = config.syntaxColorScheme
 					saveConfig()
 				end
@@ -1195,18 +1327,15 @@ local function createWindow()
 				toggleTopToolBar()
 			end
 		end
-		if config.enableAutoBrackets then
-			menu:addItem(localization.disableAutoBrackets, false, "^]").onTouch = function()
-				config.enableAutoBrackets = false
-				saveConfig()
-			end
-		else
-			menu:addItem(localization.enableAutoBrackets, false, "^]").onTouch = function()
-				config.enableAutoBrackets = true
-				saveConfig()
-			end
+		menu:addSeparator()
+		menu:addItem(config.enableAutoBrackets and localization.disableAutoBrackets or localization.enableAutoBrackets, false, "^]").onTouch = function()
+			config.enableAutoBrackets = not config.enableAutoBrackets
+			saveConfig()
 		end
-
+		menu:addItem(config.enableAutocompletion and localization.disableAutocompletion or localization.enableAutocompletion, false, "^I").onTouch = function()
+			config.enableAutocompletion = not config.enableAutocompletion
+			saveConfig()
+		end
 		menu:addSeparator()
 		menu:addItem(localization.scalePlus, false, "^+").onTouch = function()
 			scalePlus()
@@ -1318,6 +1447,42 @@ local function createWindow()
 	mainWindow.settingsContainer.backgroundPanel = mainWindow.settingsContainer:addPanel(1, 1, mainWindow.settingsContainer.width, mainWindow.settingsContainer.height, 0x0, 30)
 	mainWindow.settingsContainer.backgroundPanel.onTouch = hideSettingsContainer
 	mainWindow.settingsContainer.isHidden = true
+	
+	mainWindow.autocompleteWindow = mainWindow:addObject(1, 1, 40, 1)
+	mainWindow.autocompleteWindow.maximumHeight = 8
+	mainWindow.autocompleteWindow.matches = {}
+	mainWindow.autocompleteWindow.fromMatch = 1
+	mainWindow.autocompleteWindow.currentMatch = 1
+	mainWindow.autocompleteWindow.isHidden = true
+	mainWindow.autocompleteWindow.draw = function(object)
+		mainWindow.autocompleteWindow.x, mainWindow.autocompleteWindow.y = convertTextPositionToScreenCoordinates(mainWindow.autocompleteWindow.currentWordStarting, cursor.position.line)
+		mainWindow.autocompleteWindow.x, mainWindow.autocompleteWindow.y = mainWindow.autocompleteWindow.x, mainWindow.autocompleteWindow.y + 1
+
+		object.height = object.maximumHeight
+		if object.height > #object.matches then object.height = #object.matches end
+		
+		buffer.square(object.x, object.y, object.width, object.height, 0xFFFFFF, 0x0, " ")
+
+		local y = object.y
+		for i = object.fromMatch, #object.matches do
+			local firstColor, secondColor = 0x3C3C3C, 0x777777
+			
+			if i == object.currentMatch then
+				buffer.square(object.x, y, object.width, 1, 0x2D2D2D, 0xEEEEEE, " ")
+				firstColor, secondColor = 0xEEEEEE, 0x999999
+			end
+
+			buffer.text(object.x + 1, y, secondColor, unicode.sub(object.matches[i][1], 1, object.width - 2))
+			buffer.text(object.x + 1, y, firstColor, unicode.sub(object.matches[i][2], 1, object.width - 2))
+
+			y = y + 1
+			if y > object.y + object.height - 1 then break end
+		end
+
+		if object.height < #object.matches then
+			GUI.scrollBar(object.x + object.width - 1, object.y, 1, object.height, 0x444444, 0x00DBFF, 1, #object.matches, object.currentMatch, object.height, 1, true):draw()
+		end
+	end
 
 	mainWindow.onAnyEvent = function(eventData)		
 		if eventData[1] == "touch" and isClickedOnCodeArea(eventData[3], eventData[4]) then
@@ -1327,7 +1492,7 @@ local function createWindow()
 				editOrRightClickMenu.x, editOrRightClickMenu.y = eventData[3], eventData[4]
 				editOrRightClickMenu:show()
 			else
-				setCursorPositionAndClearSelection(convertScreenCoordinatesToCursorPosition(eventData[3], eventData[4]))
+				setCursorPositionAndClearSelection(convertScreenCoordinatesToTextPosition(eventData[3], eventData[4]))
 
 				local newUptime = computer.uptime()
 				if newUptime - lastClickUptime <= config.doubleClickDelay then selectWord() end
@@ -1339,7 +1504,7 @@ local function createWindow()
 			if eventData[5] ~= 1 then
 				mainWindow.codeView.selections[1] = mainWindow.codeView.selections[1] or {from = {}, to = {}}
 				mainWindow.codeView.selections[1].from.symbol, mainWindow.codeView.selections[1].from.line = cursor.position.symbol, cursor.position.line
-				mainWindow.codeView.selections[1].to.symbol, mainWindow.codeView.selections[1].to.line = fixCursorPosition(convertScreenCoordinatesToCursorPosition(eventData[3], eventData[4]))
+				mainWindow.codeView.selections[1].to.symbol, mainWindow.codeView.selections[1].to.line = fixCursorPosition(convertScreenCoordinatesToTextPosition(eventData[3], eventData[4]))
 				
 				if mainWindow.codeView.selections[1].from.line > mainWindow.codeView.selections[1].to.line then
 					mainWindow.codeView.selections[1].from.line, mainWindow.codeView.selections[1].to.line = swap(mainWindow.codeView.selections[1].from.line, mainWindow.codeView.selections[1].to.line)
@@ -1361,6 +1526,10 @@ local function createWindow()
 				-- ]
 				elseif eventData[4] == 27 then
 					config.enableAutoBrackets = not config.enableAutoBrackets
+					saveConfig()
+				-- I
+				elseif eventData[4] == 23 then
+					config.enableAutocompletion = not config.enableAutocompletion
 					saveConfig()
 				-- A
 				elseif eventData[4] == 30 then
@@ -1439,7 +1608,11 @@ local function createWindow()
 				end
 			-- Enter
 			elseif eventData[4] == 28 then
-				enter()
+				if mainWindow.autocompleteWindow.isHidden then
+					enter()
+				else
+					pasteSelectedAutocompletion()
+				end
 			-- F5
 			elseif eventData[4] == 63 then
 				run()
@@ -1480,7 +1653,8 @@ local function createWindow()
 		updateRAMProgressBar()
 		mainWindow:draw()
 		if cursor.blinkState then
-			local x, y = mainWindow.codeView.codeAreaPosition + cursor.position.symbol - mainWindow.codeView.fromSymbol + 1, mainWindow.codeView.y + cursor.position.line - mainWindow.codeView.fromLine
+			-- local x, y = mainWindow.codeView.codeAreaPosition + cursor.position.symbol - mainWindow.codeView.fromSymbol + 1, mainWindow.codeView.y + cursor.position.line - mainWindow.codeView.fromLine
+			local x, y = convertTextPositionToScreenCoordinates(cursor.position.symbol, cursor.position.line)
 			if 
 				x >= mainWindow.codeView.codeAreaPosition + 1 and
 				x <= mainWindow.codeView.codeAreaPosition + mainWindow.codeView.codeAreaWidth - 2 and
