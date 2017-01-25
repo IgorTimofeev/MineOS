@@ -187,7 +187,7 @@ local function getAutocompleteDatabaseMatches(stringToSearch)
 	local matches = {}
 
 	for word in pairs(autocompleteDatabase) do
-		if word ~= str then
+		if word ~= stringToSearch then
 			local match = word:match("^" .. stringToSearch)
 			if match then
 				table.insert(matches, { word, match })
