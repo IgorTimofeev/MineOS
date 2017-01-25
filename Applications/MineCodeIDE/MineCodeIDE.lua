@@ -1465,7 +1465,7 @@ local function createWindow()
 
 		local y = object.y
 		for i = object.fromMatch, #object.matches do
-			local firstColor, secondColor = 0x3C3C3C, 0x777777
+			local firstColor, secondColor = 0x3C3C3C, 0x999999
 			
 			if i == object.currentMatch then
 				buffer.square(object.x, y, object.width, 1, 0x2D2D2D, 0xEEEEEE, " ")
