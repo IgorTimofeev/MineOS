@@ -1,4 +1,6 @@
 {
+	enableAutocompletion = "Включить автодополнение",
+	disableAutocompletion = "Отключить автодополнение",
 	selectAndPasteColor = "Выбрать и вставить цвет",
 	enableAutoBrackets = "Включить авто-скобки",
 	disableAutoBrackets = "Отключить авто-скобки",
@@ -24,7 +26,7 @@
 	cursorBlinkDelay = "Время мигания",
 	selection = "Выделение: ",
 	none = "нет",
-	view = "Вид",
+	properties = "Настройки",
 	about = "О программе",
 	quit = "Выйти из MineCode",
 	line = " строка, ",
