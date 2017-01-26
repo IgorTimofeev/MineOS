@@ -1,3 +1,5 @@
+
+local advancedLua = require("advancedLua")
 local ecs = require("ECSAPI")
 local components = require("component")
 local serialization = require("serialization")
