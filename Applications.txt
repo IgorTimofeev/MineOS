@@ -69,14 +69,14 @@
     url="IgorTimofeev/OpenComputers/master/MineOS/Languages/Russian.lang",
     type="Script",
     forceDownload=true,
-    version=1.18,
+    version=1.19,
   },
   {
     name="MineOS/System/OS/Languages/English.lang",
     url="IgorTimofeev/OpenComputers/master/MineOS/Languages/English.lang",
     type="Script",
     forceDownload=true,
-    version=1.18,
+    version=1.19,
   },
 
   ----------------------------------------------------- Системные иконки --------------------------------------------------------------------------

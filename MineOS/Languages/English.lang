@@ -5,7 +5,7 @@
 	screensaverDisabled = "Disabled",
 
 	areYouSure = "Are you sure?",
-	emptyTrash = "Empty trash"
+	emptyTrash = "Empty trash",
 	type = "Type",
 	size = "Size",
 	date = "Date",
