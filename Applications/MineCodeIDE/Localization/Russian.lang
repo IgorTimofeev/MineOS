@@ -1,4 +1,6 @@
 {
+	gotoLine = "Перейти к строке",
+	lineNumber = "Номер строки",
 	enableAutocompletion = "Включить автодополнение",
 	disableAutocompletion = "Отключить автодополнение",
 	selectAndPasteColor = "Выбрать и вставить цвет",

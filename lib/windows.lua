@@ -66,7 +66,7 @@ local function inputTextBoxHandler(window, object, objectIndex, eventData)
 	object:input()
 	window:draw()
 	buffer.draw()
-	executeObjectMethod(object.onInputFinished, eventData)
+	executeObjectMethod(object.onInputFinished, object.text)
 end
 
 local function textBoxScrollHandler(window, object, objectIndex, eventData)
@@ -86,19 +86,19 @@ local function horizontalSliderHandler(window, object, objectIndex, eventData)
 	object.value = object.minimumValue + (clickPosition * (object.maximumValue - object.minimumValue) / object.width)
 	window:draw()
 	buffer.draw()
-	executeObjectMethod(object.onValueChanged, eventData)
+	executeObjectMethod(object.onValueChanged, object.value)
 end
 
 local function switchHandler(window, object, objectIndex, eventData)
 	object.state = not object.state
 	window:draw()
 	buffer.draw()
-	executeObjectMethod(object.onStateChanged, eventData)
+	executeObjectMethod(object.onStateChanged, object.state)
 end
 
 local function comboBoxHandler(window, object, objectIndex, eventData)
 	object:selectItem()
-	executeObjectMethod(object.onItemSelected, eventData)
+	executeObjectMethod(object.onItemSelected, object.items[object.currentItem])
 end
 
 local function menuItemHandler(window, object, objectIndex, eventData)

@@ -1,4 +1,6 @@
 {	
+	gotoLine = "Goto line",
+	lineNumber = "Line",
 	enableAutocompletion = "Enable autocompletion",
 	disableAutocompletion = "Disable autocompletion",
 	selectAndPasteColor = "Select and paste color",

@@ -546,7 +546,7 @@ local function pageDown()
 end
 
 local function gotoLine(line)
-	mainWindow.codeView.fromLine = math.floor(line - mainWindow.codeView.height / 2) + 1
+	mainWindow.codeView.fromLine = math.ceil(line - mainWindow.codeView.height / 2)
 	if mainWindow.codeView.fromLine < 1 then
 		mainWindow.codeView.fromLine = 1
 	elseif mainWindow.codeView.fromLine > #mainWindow.codeView.lines then
@@ -577,12 +577,19 @@ local function removeWindowsLineEndings(text)
 	return result
 end
 
-local function createInputTextBoxForSettingsWindow(title, placeholder)
+local function createInputTextBoxForSettingsWindow(title, placeholder, onInputFinishedMethod, validatorMethod)
 	mainWindow.settingsContainer.isHidden = false
-	local elementWidth = math.floor(mainWindow.width * 0.3)
-	local x, y = math.floor(mainWindow.width / 2 - elementWidth / 2), math.floor(mainWindow.height / 2) - 3
-	mainWindow.settingsContainer:addLabel(1, y, mainWindow.settingsContainer.width, 1, 0xFFFFFF, title):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); y = y + 3
-	return mainWindow.settingsContainer:addInputTextBox(x, y, elementWidth, 3, 0xCCCCCC, 0x777777, 0xCCCCCC, 0x2D2D2D, "", placeholder)
+	local textBoxWidth = math.floor(mainWindow.width * 0.3)
+	local x, y = math.floor(mainWindow.width / 2 - textBoxWidth / 2), math.floor(mainWindow.height / 2) - 3
+	
+	mainWindow.settingsContainer:addLabel(1, y, mainWindow.width, 1, 0xFFFFFF, title):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); y = y + 3
+	local inputTextBox = mainWindow.settingsContainer:addInputTextBox(x, y, textBoxWidth, 3, 0xCCCCCC, 0x777777, 0xCCCCCC, 0x2D2D2D, "", placeholder)
+	
+	inputTextBox.validator = validatorMethod
+	inputTextBox.onInputFinished = function(...)
+		onInputFinishedMethod(...)
+		hideSettingsContainer()
+	end
 end
 
 local function newFile()
@@ -615,28 +622,39 @@ local function saveFile(path)
 	file:close()
 end
 
-local function open()
-	local inputTextBox = createInputTextBoxForSettingsWindow(localization.openFile, localization.pathToFile)
-	inputTextBox.validator = function(text)
-		if fs.exists(text) then return true end
-	end
-	inputTextBox.onInputFinished = function()
-		loadFile(inputTextBox.text)
-		hideSettingsContainer()
-	end
+local function gotoLineWindow()
+	createInputTextBoxForSettingsWindow(localization.gotoLine, localization.lineNumber,
+		function(text)
+			gotoLine(tonumber(text))
+		end,
+		function(text)
+			if text:match("%d+") then return true end
+		end
+	)
 end
 
-local function saveAs()
-	local inputTextBox = createInputTextBoxForSettingsWindow(localization.saveAs, localization.pathToFile)
-	inputTextBox.onInputFinished = function()
-		saveFile(inputTextBox.text)
-		mainWindow.leftTreeView.currentFile = inputTextBox.text
-		mainWindow.leftTreeView:updateFileList()
-		hideSettingsContainer()
-	end
+local function openFileWindow()
+	createInputTextBoxForSettingsWindow(localization.openFile, localization.pathToFile,
+		function(text)
+			loadFile(text)
+		end,
+		function(text)
+			if fs.exists(text) then return true end
+		end
+	)
 end
 
-local function save()
+local function saveFileAsWindow()
+	createInputTextBoxForSettingsWindow(localization.saveAs, localization.pathToFile,
+		function(text)
+			saveFile(text)
+			mainWindow.leftTreeView.currentFile = text
+			mainWindow.leftTreeView:updateFileList()
+		end
+	)
+end
+
+local function saveFileWindow()
 	saveFile(mainWindow.leftTreeView.currentFile)
 end
 
@@ -660,18 +678,19 @@ local function splitStringIntoLines(s)
 	return lines, maximumLineLength
 end
 
-local function downloadFromWeb()
-	local inputTextBox = createInputTextBoxForSettingsWindow(localization.getFromWeb, localization.url)
-	inputTextBox.onInputFinished = function()
-		local success, reason = ecs.internetRequest(inputTextBox.text)
-		if success then
-			newFile()
-			mainWindow.codeView.lines, mainWindow.codeView.maximumLineLength = splitStringIntoLines(reason)
-		else
-			GUI.error(reason, {title = {color = 0xFFDB40, text = "Failed to connect to URL"}})
+local function downloadFileFromWeb()
+	createInputTextBoxForSettingsWindow(localization.getFromWeb, localization.url,
+		function(text)
+			local success, reason = ecs.internetRequest(text)
+			if success then
+				newFile()
+				mainWindow.codeView.lines, mainWindow.codeView.maximumLineLength = splitStringIntoLines(reason)
+			else
+				GUI.error(reason, {title = {color = 0xFFDB40, text = "Failed to connect to URL"}})
+			end
+			hideSettingsContainer()
 		end
-		hideSettingsContainer()
-	end
+	)
 end
 
 ------------------------------------------------------------------------------------------------------------------
@@ -1249,19 +1268,19 @@ local function createWindow()
 			newFile()
 		end
 		menu:addItem(localization.open, false, "^O").onTouch = function()
-			open()
+			openFileWindow()
 		end
 		if component.isAvailable("internet") then
 			menu:addItem(localization.getFromWeb, false, "^U").onTouch = function()
-				downloadFromWeb()
+				downloadFileFromWeb()
 			end
 		end
 		menu:addSeparator()
 		menu:addItem(localization.save, not mainWindow.leftTreeView.currentFile, "^S").onTouch = function()
-			save()
+			saveFileWindow()
 		end
 		menu:addItem(localization.saveAs, false, "^⇧S").onTouch = function()
-			saveAs()
+			saveFileAsWindow()
 		end
 		menu:show()
 	end
@@ -1367,6 +1386,10 @@ local function createWindow()
 		end
 		menu:addItem(localization.gotoEnd, false, "End").onTouch = function()
 			setCursorPositionToEnd()
+		end
+		menu:addSeparator()
+		menu:addItem(localization.gotoLine, false, "^L").onTouch = function()
+			gotoLineWindow()
 		end
 		menu:show()
 	end
@@ -1562,17 +1585,17 @@ local function createWindow()
 					newFile()
 				-- O
 				elseif eventData[4] == 24 then
-					open()
+					openFileWindow()
 				-- U
 				elseif eventData[4] == 22 and component.isAvailable("internet") then
-					downloadFromWeb()
+					downloadFileFromWeb()
 				-- S
 				elseif eventData[4] == 31 then
 					-- Shift
 					if mainWindow.leftTreeView.currentFile and not keyboard.isKeyDown(42) then
-						save()
+						saveFileWindow()
 					else
-						saveAs()
+						saveFileAsWindow()
 					end
 				-- F
 				elseif eventData[4] == 33 then
@@ -1580,6 +1603,9 @@ local function createWindow()
 				-- G
 				elseif eventData[4] == 34 then
 					find()
+				-- L
+				elseif eventData[4] == 38 then
+					gotoLineWindow()
 				-- Backspace
 				elseif eventData[4] == 14 then
 					deleteLine(cursor.position.line)
@@ -1658,8 +1684,7 @@ local function createWindow()
 		updateTitle()
 		updateRAMProgressBar()
 		mainWindow:draw()
-		if cursor.blinkState then
-			-- local x, y = mainWindow.codeView.codeAreaPosition + cursor.position.symbol - mainWindow.codeView.fromSymbol + 1, mainWindow.codeView.y + cursor.position.line - mainWindow.codeView.fromLine
+		if cursor.blinkState and mainWindow.settingsContainer.isHidden then
 			local x, y = convertTextPositionToScreenCoordinates(cursor.position.symbol, cursor.position.line)
 			if 
 				x >= mainWindow.codeView.codeAreaPosition + 1 and
