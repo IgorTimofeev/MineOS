@@ -915,7 +915,7 @@
     type="Application",
     icon="IgorTimofeev/OpenComputers/master/Applications/Radio/Icon.pic",
     createShortcut="desktop",
-    version=1.0,
+    version=1.01,
   },
   {
     name="MineOS/Applications/FuckTheRain",

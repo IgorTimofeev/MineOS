@@ -1,5 +1,5 @@
 
-package.loaded.bigLetters = nil
+-- package.loaded.bigLetters = nil
 local buffer = require("doubleBuffering")
 local bigLetters = require("bigLetters")
 local unicode = require("unicode")
@@ -7,6 +7,7 @@ local component = require("component")
 local fs = require("filesystem")
 local context = require("context")
 local serialization = require("serialization")
+local ecs = require("ECSAPI")
 local radio
 
 if not component.isAvailable("openfm_radio") then
