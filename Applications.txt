@@ -1029,15 +1029,6 @@
     },
   },
   {
-    name="MineOS/Applications/Control",
-    url="IgorTimofeev/OpenComputers/master/Applications/Control/Control.lua",
-    about="IgorTimofeev/OpenComputers/master/Applications/Control/About/",
-    type="Application",
-    icon="IgorTimofeev/OpenComputers/master/Applications/Control/Icon.pic",
-    createShortcut="desktop",
-    version=1.01,
-  },
-  {
     name="MineOS/Applications/Piano",
     url="IgorTimofeev/OpenComputers/master/Applications/Piano/Piano.lua",
     type="Application",
