@@ -870,7 +870,7 @@
     type="Application",
     icon="IgorTimofeev/OpenComputers/master/Applications/Stargate/Icon.pic",
     createShortcut="desktop",
-    version=1.04,
+    version=1.05,
     resources={
       {
         name="Gate.pic",
