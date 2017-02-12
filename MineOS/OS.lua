@@ -670,10 +670,3 @@ changeResolution()
 login()
 windows10()
 workspace:handleEvents(0.5)
-
-
-
-
-
-
-
