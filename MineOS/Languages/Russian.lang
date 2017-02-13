@@ -1,7 +1,7 @@
 {
 	pressAnyKeyToContinue = "Нажмите любую клавишу, чтобы продолжить",
 	screensaver = "Заставка",
-	screensaverDelay = "Задрежка",
+	screensaverDelay = "Задержка",
 	screensaverDisabled = "Отключена",
 
 	areYouSure = "Вы уверены?",
