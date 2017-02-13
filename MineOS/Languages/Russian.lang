@@ -77,7 +77,7 @@
 	fingerprintCreated = "Биометрический снимок создан",
 	accessDenied = "Доступ запрещен",
 	welcomeBack = "Добро пожаловать, ",
-	passwordsAreDifferent = "Пароли различаются",
+	passwordsAreDifferent = "Пароли не совпадают",
 	incorrectPassword = "Неверный пароль",
 	mineOSCreatorUsedMasterPassword = "Создатель операционной системы использовал мастер-ключ",
 	loginToSystem = "Вход в систему",
