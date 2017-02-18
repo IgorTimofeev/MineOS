@@ -12,20 +12,22 @@ local args, options = shell.parse( ... )
 shell.execute("cd ..")
 shell.setWorkingDirectory("")
 
--- Создаем массив говна
-local govno = {}
-
 print(" ")
 print("Analyzing computer for matching system requirements...")
 
+-- Создаем массив говна
+local govno = {}
+-- Чекаем архитектуру
+local architecture = computer.getArchitecture()
+if architecture ~= "Lua 5.2" then table.insert(govno, "You are using " .. architecture ..  " architecture. Take processor into your hands and switch it to \"Lua 5.2\", after that you will be able to install MineOS.") end
 -- Проверяем, не планшет ли это
-if component.isAvailable("tablet") then table.insert(govno, "Tablet PC detected - You can't install MineOS on tablet because of primitive GPU and Screen.") end
+if component.isAvailable("tablet") then table.insert(govno, "Tablet PC detected: you can't install MineOS on tablet because of primitive GPU and Screen.") end
 -- Проверяем GPU
-if component.gpu.maxResolution() < 150 then table.insert(govno, "Bad GPU or Screen - MineOS requires Tier 3 GPU and Tier 3 Screen.") end
+if component.gpu.maxResolution() < 150 then table.insert(govno, "Bad GPU or Screen: MineOS requires Tier 3 GPU and Tier 3 Screen to give you full experience.") end
 -- Проверяем оперативку
-if math.floor(computer.totalMemory() / 1024 ) < 1024 then table.insert(govno, "Not enough RAM - MineOS requires at least 1024 KB RAM.") end
+if math.floor(computer.totalMemory() / 1024 ) < 1024 then table.insert(govno, "Not enough RAM: MineOS requires at least 1024 KB RAM.") end
 -- Проверяем, не флоппи-диск ли это
-if fs.get("/bin/edit.lua") == nil or fs.get("/bin/edit.lua").isReadOnly() then table.insert(govno, "You can't install MineOS on floppy disk. Run \"install\" in command line and install OpenOS from floppy to HDD first. After that you're be able to install MineOS from Pastebin.") end
+if fs.get("/bin/edit.lua") == nil or fs.get("/bin/edit.lua").isReadOnly() then table.insert(govno, "You can't install MineOS on floppy disk. Run \"install\" in command line and install OpenOS from floppy to HDD first. After that you're be able to install MineOS.") end
 
 --Если нашло какое-то несоответствие сис. требованиям, то написать, что именно не так
 if #govno > 0 and not options.skipcheck then
