@@ -18,8 +18,8 @@ print("Analyzing computer for matching system requirements...")
 -- Создаем массив говна
 local govno = {}
 -- Чекаем архитектуру
-local architecture = computer.getArchitecture()
-if architecture ~= "Lua 5.2" then table.insert(govno, "You are using " .. architecture ..  " architecture. Take processor into your hands and switch it to \"Lua 5.2\", after that you will be able to install MineOS.") end
+-- local architecture = computer.getArchitecture()
+-- if architecture ~= "Lua 5.2" then table.insert(govno, "You are using " .. architecture ..  " architecture. Take processor into your hands and switch it to \"Lua 5.2\", after that you will be able to install MineOS.") end
 -- Проверяем, не планшет ли это
 if component.isAvailable("tablet") then table.insert(govno, "Tablet PC detected: you can't install MineOS on tablet because of primitive GPU and Screen.") end
 -- Проверяем GPU
