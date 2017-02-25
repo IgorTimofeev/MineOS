@@ -531,7 +531,7 @@ local function drawErrorWindow(path, programVersion, errorLine, reason)
 
 		if data[3] == "OK" then
 			if component.isAvailable("internet") then
-				local url = "http://igortimofeev.wallst.ru/MineOSErrorReports/Report.php?path=" .. path .. "&version=" .. string.optimizeForURLRequests(programVersion) .. "&userContacts=" .. string.optimizeForURLRequests(data[1]) .. "&userMessage=" .. string.optimizeForURLRequests(data[2]) .. "&errorMessage=" .. string.optimizeForURLRequests(reason)
+				local url = "https://api.mcmodder.ru/ECS/report.php?path=" .. path .. "&version=" .. string.optimizeForURLRequests(programVersion) .. "&userContacts=" .. string.optimizeForURLRequests(data[1]) .. "&userMessage=" .. string.optimizeForURLRequests(data[2]) .. "&errorMessage=" .. string.optimizeForURLRequests(reason)
 				local success, reason = component.internet.request(url)
 				if success then
 					success:close()
