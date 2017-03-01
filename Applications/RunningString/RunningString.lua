@@ -1,3 +1,6 @@
+local ecs = require("ECSAPI")
+local event = require("event")
+local gpu = require("component").gpu
 local unicode = require("unicode")
 local keyboard = require("keyboard")
 
@@ -53,5 +56,17 @@ while true do
 		return
 	end
 
-	os.sleep(speed)
+	local e = event.pull(speed)
+	if e == "key_down" or e == "touch" then return end
 end
+
+
+
+
+
+
+
+
+
+
+

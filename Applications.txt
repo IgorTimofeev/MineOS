@@ -543,7 +543,7 @@
     type="Application",
     icon="IgorTimofeev/OpenComputers/master/Applications/GeoScan2/Icon.pic",
     createShortcut="desktop",
-    version=1.02,
+    version=1.03,
     resources={
       {
         name="Earth.pic",
@@ -889,7 +889,7 @@
     type="Application",
     icon="IgorTimofeev/OpenComputers/master/Applications/RunningString/Icon.pic",
     createShortcut="desktop",
-    version=1.0,
+    version=1.01,
   },
   {
     name="MineOS/Applications/Graph",
@@ -1029,14 +1029,6 @@
     },
   },
   {
-    name="MineOS/Applications/Piano",
-    url="IgorTimofeev/OpenComputers/master/Applications/Piano/Piano.lua",
-    type="Application",
-    icon="IgorTimofeev/OpenComputers/master/Applications/Piano/Icon.pic",
-    createShortcut="desktop",
-    version=1.0,
-  },
-  {
     name="MineOS/Applications/CodeDoor",
     url="IgorTimofeev/OpenComputers/master/Applications/CodeDoor/CodeDoor.lua",
     about="IgorTimofeev/OpenComputers/master/Applications/CodeDoor/About/",
@@ -1055,22 +1047,13 @@
     version=1.0,
   },
   {
-    name="MineOS/Applications/Nano",
-    url="IgorTimofeev/OpenComputers/master/Applications/Nano/Nano.lua",
-    about="IgorTimofeev/OpenComputers/master/Applications/Nano/About/",
-    type="Application",
-    icon="IgorTimofeev/OpenComputers/master/Applications/Nano/Icon.pic",
-    createShortcut="desktop",
-    version=1.0,
-  },
-  {
     name="MineOS/Applications/Camera",
     url="IgorTimofeev/OpenComputers/master/Applications/Camera/Camera.lua",
     about="IgorTimofeev/OpenComputers/master/Applications/Camera/About/",
     type="Application",
     icon="IgorTimofeev/OpenComputers/master/Applications/Camera/Icon.pic",
     createShortcut="desktop",
-    version=1.0,
+    version=1.01,
   },
   {
     name="MineOS/Applications/HEX",

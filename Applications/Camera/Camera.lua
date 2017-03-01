@@ -1,6 +1,9 @@
 local component = require("component")
+local ecs = require("ECSAPI")
 local buffer = require("doubleBuffering")
 local event = require("event")
+local context = require("context")
+local gpu = component.gpu
 local camera
 
 if not component.isAvailable("camera") then

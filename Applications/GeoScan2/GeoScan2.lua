@@ -9,13 +9,13 @@ local MineOSCore = require("MineOSCore")
 
 --------------------------------------------------------------------------------------------------------------------
 
+if not component.isAvailable("geolyzer") or not component.isAvailable("hologram") then GUI.error("This program requires a geolyzer and hologram projector to work!"); return end
+
 component.gpu.setResolution(component.gpu.maxResolution())
 buffer.start()
 
 local resourcesDirectory = MineOSCore.getCurrentApplicationResourcesDirectory() 
 local earthImage = image.load(resourcesDirectory .. "Earth.pic")
-
-if not component.isAvailable("geolyzer") then GUI.error("This program requires a geolyzer to work!"); return  end
 
 local onScreenDataXOffset, onScreenDataYOffset = math.floor(buffer.screen.width / 2), buffer.screen.height
 local onProjectorDataYOffset = 0
@@ -51,7 +51,7 @@ local function glassesCreateCube(x, y, z, color, text)
 end
 
 local function createDick(x, y, z, chance, isVisThrObj)
-	if math.random(1, 100) <= chance then
+	if component.isAvailable("glasses") and math.random(1, 100) <= chance then
 		createCube(x, y, z, 0xFFFFFF, isVisThrObj)
 		createCube(x + 1, y, z, 0xFFFFFF, isVisThrObj)
 		createCube(x + 2, y, z, 0xFFFFFF, isVisThrObj)
@@ -71,10 +71,9 @@ end
 
 local function updateData(onScreen, onProjector, onGlasses)
 	local glassesAvailable = component.isAvailable("glasses")
-	local projectorAvailable = component.isAvailable("hologram")
 
 	if onScreen then buffer.clear(0xEEEEEE) end
-	if onProjector and projectorAvailable then component.hologram.clear() end
+	if onProjector then component.hologram.clear() end
 	if onGlasses and glassesAvailable then component.glasses.removeAll() end
 
 	local min, max = tonumber(window.minimumHardnessTextBox.text), tonumber(window.maximumHardnessTextBox.text)
@@ -87,7 +86,7 @@ local function updateData(onScreen, onProjector, onGlasses)
 					if onScreen then
 						buffer.semiPixelSet(onScreenDataXOffset + x, onScreenDataYOffset + 32 - y, 0x454545)
 					end
-					if onProjector and window.projectorUpdateSwitch.state and projectorAvailable then
+					if onProjector and window.projectorUpdateSwitch.state then
 						component.hologram.set(horizontalRange + x, math.floor(window.projectorYOffsetSlider.value) + y - 32, horizontalRange + z, 1)
 					end
 					if onGlasses and window.glassesUpdateSwitch.state and glassesAvailable then
