@@ -1,5 +1,6 @@
 
 -- package.loaded.bigLetters = nil
+local event = require("event")
 local buffer = require("doubleBuffering")
 local bigLetters = require("bigLetters")
 local unicode = require("unicode")

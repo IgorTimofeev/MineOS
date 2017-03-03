@@ -10,9 +10,10 @@ local image = require("image")
 local unicode = require("unicode")
 local component = require("component")
 local computer = require("computer")
-local modem = component.modem
 
 -------------------------------------------------------------------------------------------------------------------------------
+
+if not component.isAvailable("modem") then ecs.error("This program requires wireless modem to work!"); return end
 
 local colors = {
 	leftBar = 0x262626,
@@ -52,6 +53,7 @@ local colors = {
 local chatHistory = {}
 local avatars = {}
 local port = 899
+local modem = component.modem
 modem.open(port)
 
 -------------------------------------------------------------------------------------------------------------------------------

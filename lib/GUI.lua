@@ -1330,63 +1330,6 @@ function GUI.switch(x, y, width, activeColor, passiveColor, pipeColor, state)
 	return object
 end
 
------------------------------------------ Chart object -----------------------------------------
-
-local function drawChart(object)
-	-- Ебошем пездатые оси
-	for i = object.y, object.y + object.height - 2 do buffer.text(object.x, i, object.colors.axis, "│") end
-	buffer.text(object.x + 1, object.y + object.height - 1, object.colors.axis, string.rep("─", object.width - 1))
-	buffer.text(object.x, object.y + object.height - 1, object.colors.axis, "└")
-
-	if #object.values > 1 then
-		local oldDrawLimit = buffer.getDrawLimit()
-		buffer.setDrawLimit(object.x, object.y, object.width, object.height)
-		
-		local delta, fieldWidth, fieldHeight = object.maximumValue - object.minimumValue, object.width - 2, object.height - 1
-
-		-- Рисуем линии значений
-		local roundValues = object.maximumValue > 10
-		local step = 0.2 * fieldHeight
-		for i = step, fieldHeight, step do
-			local value = object.minimumValue + delta * (i / fieldHeight)
-			local stringValue = roundValues and tostring(math.floor(value)) or math.doubleToString(value, 1)
-			buffer.text(object.x + 1, math.floor(object.y + fieldHeight - i), object.colors.value, string.rep("─", object.width - unicode.len(stringValue) - 2) .. " " .. stringValue)
-		end
-
-		-- Рисуем графек, йопта
-		local function getDotPosition(valueIndex)
-			return
-				object.x + math.round((fieldWidth * (valueIndex - 1) / (#object.values - 1))) + 1,
-				object.y + math.round(((fieldHeight - 1) * (object.maximumValue - object.values[valueIndex]) / delta))
-		end
-
-		local x, y = getDotPosition(1)
-		for valueIndex = 2, #object.values do
-			local xNew, yNew = getDotPosition(valueIndex)
-			buffer.semiPixelLine(x, y * 2, xNew, yNew * 2, object.colors.chart)
-			x, y = xNew, yNew
-		end
-
-		buffer.setDrawLimit(oldDrawLimit)
-	end
-
-	-- Дорисовываем названия осей
-	if object.axisNames.y then buffer.text(object.x + 1, object.y, object.colors.axis, object.axisNames.y) end
-	if object.axisNames.x then buffer.text(object.x + object.width - unicode.len(object.axisNames.x), object.y + object.height - 2, object.colors.axis, object.axisNames.x) end
-end
-
-function GUI.chart(x, y, width, height, axisColor, axisValueColor, chartColor, xAxisName, yAxisName, minimumValue, maximumValue, values)
-	if minimumValue >= maximumValue then error("Chart's minimum value can't be >= maximum value!") end
-	local object = GUI.object(x, y, width, height)
-	object.colors = {axis = axisColor, chart = chartColor, value = axisValueColor}
-	object.draw = drawChart
-	object.values = values
-	object.minimumValue = minimumValue
-	object.maximumValue = maximumValue
-	object.axisNames = {x = xAxisName, y = yAxisName}
-	return object
-end
-
 ----------------------------------------- Combo Box Object -----------------------------------------
 
 local function drawComboBox(object)
@@ -1779,28 +1722,103 @@ function GUI.colorSelector(x, y, width, height, color, text)
 	return colorSelector
 end 
 
+----------------------------------------- Chart object -----------------------------------------
+
+local function getAxisValue(number, postfix)
+	local integer, fractional = math.modf(number)
+	local firstPart, secondPart = "", ""
+	if math.abs(integer) >= 1000 then
+		return math.shortenNumber(integer, 2) .. postfix
+	else
+		if math.abs(fractional) > 0 then
+			return string.format("%.2f", number) .. postfix
+		else
+			return number .. postfix
+		end
+	end
+end
+
+local function drawChart(object)
+	-- Sorting by x value
+	local valuesCopy = {}
+	for i = 1, #object.values do valuesCopy[i] = object.values[i] end
+	table.sort(valuesCopy, function(a, b) return a[1] < b[1] end)
+	
+	if #valuesCopy == 0 then valuesCopy = {{0, 0}} end
+
+	-- Max, min, deltas
+	local xMin, xMax, yMin, yMax = valuesCopy[1][1], valuesCopy[#valuesCopy][1], valuesCopy[1][2], valuesCopy[1][2]
+	for i = 1, #valuesCopy do yMin, yMax = math.min(yMin, valuesCopy[i][2]), math.max(yMax, valuesCopy[i][2]) end
+	local dx, dy = xMax - xMin, yMax - yMin
+
+	-- y axis values and helpers
+	local value, chartHeight, yAxisValues, yAxisValueMaxWidth = yMin, object.height - 2, {}, -math.huge
+	for y = object.y + object.height - 3, object.y + 1, -chartHeight * object.axisValueInterval do
+		local stringValue = getAxisValue(value, object.yAxisPostfix)
+		yAxisValueMaxWidth = math.max(yAxisValueMaxWidth, unicode.len(stringValue))
+		table.insert(yAxisValues, {y = math.round(y), value = stringValue})
+		value = value + dy * object.axisValueInterval
+	end
+	table.insert(yAxisValues, {y = object.y, value = getAxisValue(yMax, object.yAxisPostfix)})
+	local x, chartWidth, chartX = object.x + yAxisValueMaxWidth + 2, object.width - yAxisValueMaxWidth - 2, object.x + yAxisValueMaxWidth + 2
+	for i = 1, #yAxisValues do
+		buffer.text(x - unicode.len(yAxisValues[i].value) - 2, yAxisValues[i].y, object.colors.axisValue, yAxisValues[i].value)
+		buffer.text(x, yAxisValues[i].y, object.colors.helpers, string.rep("─", chartWidth))
+	end
+
+	-- x axis values
+	local value = xMin
+	for x = x, x + chartWidth - 1, chartWidth * object.axisValueInterval do
+		local stringValue = getAxisValue(value, object.xAxisPostfix)
+		buffer.text(math.floor(x - unicode.len(stringValue) / 2), object.y + object.height - 1, object.colors.axisValue, stringValue)
+		value = value + dx * object.axisValueInterval
+	end
+	local value = getAxisValue(xMax, object.xAxisPostfix)
+	buffer.text(object.x + object.width - unicode.len(value), object.y + object.height - 1, object.colors.axisValue, value)
+
+	-- Axis lines
+	for y = object.y, object.y + chartHeight - 1 do
+		buffer.text(chartX - 1, y, object.colors.axis, "┨")
+	end
+	buffer.text(chartX - 1, object.y + object.height - 2, object.colors.axis, "┗" .. string.rep("┯━", chartWidth / 2))
+
+	-- chart
+	for i = 1, #valuesCopy - 1 do
+		local x = math.floor(chartX + (valuesCopy[i][1] - xMin) / dx * (chartWidth - 1))
+		local y = math.floor(object.y + object.height - 3 - (valuesCopy[i][2] - yMin) / dy * (chartHeight - 1)) * 2
+		local xNext = math.floor(chartX + (valuesCopy[i + 1][1] - xMin) / dx * (chartWidth - 1))
+		local yNext = math.floor(object.y + object.height - 3 - (valuesCopy[i + 1][2] - yMin) / dy * (chartHeight - 1)) * 2
+		buffer.semiPixelLine(x, y, xNext, yNext, 0xFF00FF)
+		-- buffer.semiPixelSet(x, y, 0xFF00FF)
+	end
+
+	return object
+end
+
+function GUI.chart(x, y, width, height, axisColor, axisValueColor, axisHelpersColor, chartColor, values, xAxisPostfix, yAxisPostfix, axisValueInterval)
+	local object = GUI.object(x, y, width, height)
+
+	object.colors = {axis = axisColor, chart = chartColor, axisValue = axisValueColor, helpers = axisHelpersColor}
+	object.draw = drawChart
+	object.values = values
+	object.xAxisPostfix = xAxisPostfix
+	object.yAxisPostfix = yAxisPostfix
+	object.axisValueInterval = axisValueInterval
+
+	return object
+end
+
 --------------------------------------------------------------------------------------------------------------------------------
 
 -- buffer.start()
--- buffer.clear(0xFF8888)
--- buffer.draw(true)
-
--- local y = 2
--- for i = 1, 10 do
--- 	GUI.colorSelector(2, y, 30, 3, math.random(0x0, 0xFFFFFF), "Типа цвет " .. i):draw()
--- 	y = y + 4
+-- local x, y, width, height = 1, 1, 160, 44
+-- buffer.clear(0x262626)
+-- buffer.square(x, y, width, height, 0x1D1D1D)
+-- local chart = GUI.chart(x, y, width, height, 0xFFFFFF, 0xBBBBBB, 0x777777, 0xFFDB40, {}, "%", " RF/t", 0.25)
+-- for i = 100000, 200000, 10000 do
+-- 	table.insert(chart.values, {i, i ^ 2})
 -- end
--- buffer.draw()
-
--- local lines = {}
--- local file = io.open("/OS.lua", "r")
--- local maximumLineLength = 0
--- for line in file:lines() do line = line:gsub("	", "  "); table.insert(lines, line); maximumLineLength = math.max(maximumLineLength, unicode.len(line)) end
--- file:close()
-
--- GUI.codeView(1, 1, buffer.screen.width, buffer.screen.height, lines, 1, 110, maximumLineLength, {{from = {symbol = 14, line = 122}, to = {symbol = 20, line = 128}}}, {[131] = 0xFF4444}, true):draw()
--- -- GUI.scrollBar(1, 5, 1, 20, 0x444444, 0x00DBFF, 1, 100, 50, 20, 1, true):draw()
-
+-- chart:draw()
 -- buffer.draw()
 
 --------------------------------------------------------------------------------------------------------------------------------
