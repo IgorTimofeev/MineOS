@@ -1753,11 +1753,11 @@ local function drawChart(object)
 
 	-- y axis values and helpers
 	local value, chartHeight, yAxisValues, yAxisValueMaxWidth = yMin, object.height - 2, {}, -math.huge
-	for y = object.y + object.height - 3, object.y + 1, -chartHeight * object.axisValueInterval do
+	for y = object.y + object.height - 3, object.y + 1, -chartHeight * object.yAxisValueInterval do
 		local stringValue = getAxisValue(value, object.yAxisPostfix)
 		yAxisValueMaxWidth = math.max(yAxisValueMaxWidth, unicode.len(stringValue))
 		table.insert(yAxisValues, {y = math.round(y), value = stringValue})
-		value = value + dy * object.axisValueInterval
+		value = value + dy * object.yAxisValueInterval
 	end
 	table.insert(yAxisValues, {y = object.y, value = getAxisValue(yMax, object.yAxisPostfix)})
 	local x, chartWidth, chartX = object.x + yAxisValueMaxWidth + 2, object.width - yAxisValueMaxWidth - 2, object.x + yAxisValueMaxWidth + 2
@@ -1768,10 +1768,10 @@ local function drawChart(object)
 
 	-- x axis values
 	local value = xMin
-	for x = x, x + chartWidth - 1, chartWidth * object.axisValueInterval do
+	for x = x, x + chartWidth - 2, chartWidth * object.xAxisValueInterval do
 		local stringValue = getAxisValue(value, object.xAxisPostfix)
 		buffer.text(math.floor(x - unicode.len(stringValue) / 2), object.y + object.height - 1, object.colors.axisValue, stringValue)
-		value = value + dx * object.axisValueInterval
+		value = value + dx * object.xAxisValueInterval
 	end
 	local value = getAxisValue(xMax, object.xAxisPostfix)
 	buffer.text(object.x + object.width - unicode.len(value), object.y + object.height - 1, object.colors.axisValue, value)
@@ -1782,28 +1782,55 @@ local function drawChart(object)
 	end
 	buffer.text(chartX - 1, object.y + object.height - 2, object.colors.axis, "┗" .. string.rep("┯━", chartWidth / 2))
 
+	local function fillVerticalPart(x1, y1, x2, y2)
+		local dx, dy = x2 - x1, y2 - y1
+		local absdx, absdy = math.abs(dx), math.abs(dy)
+		if absdx >= absdy then
+			local step, y = dy / absdx, y1
+			for x = x1, x2, (x1 < x2 and 1 or -1) do
+				if object.drawAsFilled then
+					buffer.semiPixelSquare(math.floor(x), math.floor(y), 1, math.floor(object.y + chartHeight) * 2 - y - 1, object.colors.chart)
+				else
+					buffer.semiPixelSet(math.floor(x), math.floor(y), object.colors.chart)
+				end
+				y = y + step
+			end
+		else
+			local step, x = dx / absdy, x1
+			for y = y1, y2, (y1 < y2 and 1 or -1) do
+				if object.drawAsFilled then
+					buffer.semiPixelSquare(math.floor(x), math.floor(y), 1, math.floor(object.y + chartHeight) * 2 - y - 1, object.colors.chart)
+				else
+					buffer.semiPixelSet(math.floor(x), math.floor(y), object.colors.chart)
+				end
+				x = x + step
+			end
+		end
+	end
+
 	-- chart
 	for i = 1, #valuesCopy - 1 do
 		local x = math.floor(chartX + (valuesCopy[i][1] - xMin) / dx * (chartWidth - 1))
 		local y = math.floor(object.y + object.height - 3 - (valuesCopy[i][2] - yMin) / dy * (chartHeight - 1)) * 2
 		local xNext = math.floor(chartX + (valuesCopy[i + 1][1] - xMin) / dx * (chartWidth - 1))
 		local yNext = math.floor(object.y + object.height - 3 - (valuesCopy[i + 1][2] - yMin) / dy * (chartHeight - 1)) * 2
-		buffer.semiPixelLine(x, y, xNext, yNext, 0xFF00FF)
-		-- buffer.semiPixelSet(x, y, 0xFF00FF)
+		fillVerticalPart(x, y, xNext, yNext)
 	end
 
 	return object
 end
 
-function GUI.chart(x, y, width, height, axisColor, axisValueColor, axisHelpersColor, chartColor, values, xAxisPostfix, yAxisPostfix, axisValueInterval)
+function GUI.chart(x, y, width, height, axisColor, axisValueColor, axisHelpersColor, chartColor, xAxisValueInterval, yAxisValueInterval, xAxisPostfix, yAxisPostfix, drawAsFilled, values)
 	local object = GUI.object(x, y, width, height)
 
 	object.colors = {axis = axisColor, chart = chartColor, axisValue = axisValueColor, helpers = axisHelpersColor}
 	object.draw = drawChart
-	object.values = values
+	object.values = values or {}
 	object.xAxisPostfix = xAxisPostfix
 	object.yAxisPostfix = yAxisPostfix
-	object.axisValueInterval = axisValueInterval
+	object.xAxisValueInterval = xAxisValueInterval
+	object.yAxisValueInterval = yAxisValueInterval
+	object.drawAsFilled = drawAsFilled
 
 	return object
 end
@@ -1811,15 +1838,19 @@ end
 --------------------------------------------------------------------------------------------------------------------------------
 
 -- buffer.start()
--- local x, y, width, height = 1, 1, 160, 44
--- buffer.clear(0x262626)
--- buffer.square(x, y, width, height, 0x1D1D1D)
--- local chart = GUI.chart(x, y, width, height, 0xFFFFFF, 0xBBBBBB, 0x777777, 0xFFDB40, {}, "%", " RF/t", 0.25)
--- for i = 100000, 200000, 10000 do
--- 	table.insert(chart.values, {i, i ^ 2})
+-- local x, y, width, height = 2, 2, 150, 40
+-- local chart = GUI.chart(x, y, width, height, 0xFFFFFF, 0xBBBBBB, 0x777777, 0xFF4444, 0.1, 0.15, "%", " RF/t", false, {})
+-- local counter = 1
+-- while true do
+-- 	buffer.clear(0x262626)
+-- 	buffer.square(x, y, width, height, 0x1D1D1D)
+-- 	table.insert(chart.values, {counter, math.random(0, 100)})
+-- 	chart:draw()
+-- 	buffer.draw()
+-- 	counter = counter + 1
+-- 	if #chart.values > 20 then table.remove(chart.values, 1) end
+-- 	os.sleep(0.5)
 -- end
--- chart:draw()
--- buffer.draw()
 
 --------------------------------------------------------------------------------------------------------------------------------
 
