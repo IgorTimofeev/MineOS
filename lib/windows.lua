@@ -9,7 +9,7 @@ local GUI = require("GUI")
 local unicode = require("unicode")
 local event = require("event")
 
------------------------------------------ Main variables -----------------------------------------
+----------------------------------------- Constants -----------------------------------------
 
 local windows = {}
 
@@ -40,75 +40,64 @@ end
 local function buttonHandler(window, object, objectIndex, eventData)
 	if object.switchMode then
 		object.pressed = not object.pressed
-		window:draw()
-		buffer.draw()
+		window:draw(); buffer.draw()
 		executeObjectMethod(object.onTouch, eventData)
 	else
 		object.pressed = true
-		window:draw()
-		buffer.draw()
+		window:draw(); buffer.draw()
 		os.sleep(0.2)
 		object.pressed = false
-		window:draw()
-		buffer.draw()
+		window:draw(); buffer.draw()
 		executeObjectMethod(object.onTouch, eventData)
 	end
 end
 
 local function tabBarTabHandler(window, object, objectIndex, eventData)
 	object.parent.parent.selectedTab = objectIndex
-	window:draw()
-	buffer.draw()
-	executeObjectMethod(object.parent.parent.onTabSwitched, eventData)
+	window:draw(); buffer.draw()
+	executeObjectMethod(object.parent.parent.onTabSwitched, object.parent.parent.selectedTab, eventData)
 end
 
 local function inputTextBoxHandler(window, object, objectIndex, eventData)
 	object:input()
-	window:draw()
-	buffer.draw()
-	executeObjectMethod(object.onInputFinished, object.text)
+	window:draw(); buffer.draw()
+	executeObjectMethod(object.onInputFinished, object.text, eventData)
 end
 
 local function textBoxScrollHandler(window, object, objectIndex, eventData)
 	if eventData[5] == 1 then
 		object:scrollUp()
-		window:draw()
-		buffer.draw()
+		window:draw(); buffer.draw()
 	else
 		object:scrollDown()
-		window:draw()
-		buffer.draw()
+		window:draw(); buffer.draw()
 	end
 end
 
 local function horizontalSliderHandler(window, object, objectIndex, eventData)
 	local clickPosition = eventData[3] - object.x + 1
 	object.value = object.minimumValue + (clickPosition * (object.maximumValue - object.minimumValue) / object.width)
-	window:draw()
-	buffer.draw()
-	executeObjectMethod(object.onValueChanged, object.value)
+	window:draw(); buffer.draw()
+	executeObjectMethod(object.onValueChanged, object.value, eventData)
 end
 
 local function switchHandler(window, object, objectIndex, eventData)
 	object.state = not object.state
-	window:draw()
-	buffer.draw()
-	executeObjectMethod(object.onStateChanged, object.state)
+	window:draw(); buffer.draw()
+	executeObjectMethod(object.onStateChanged, object.state, eventData)
 end
 
 local function comboBoxHandler(window, object, objectIndex, eventData)
 	object:selectItem()
-	executeObjectMethod(object.onItemSelected, object.items[object.currentItem])
+	executeObjectMethod(object.onItemSelected, object.items[object.currentItem], eventData)
 end
 
 local function menuItemHandler(window, object, objectIndex, eventData)
 	object.pressed = true
-	window:draw()
-	buffer.draw()
+	window:draw(); buffer.draw()
 	executeObjectMethod(object.onTouch, eventData)
 	object.pressed = false
-	window:draw()
-	buffer.draw()
+	window:draw(); buffer.draw()
 end
 
 local function scrollBarHandler(window, object, objectIndex, eventData)
@@ -136,9 +125,8 @@ local function scrollBarHandler(window, object, objectIndex, eventData)
 			end
 		end
 	end
-	window:draw()
-	buffer.draw()
 	object.value = newValue
+	window:draw(); buffer.draw()
 	executeObjectMethod(object.onTouch, eventData)
 end
 
@@ -157,7 +145,7 @@ local function treeViewHandler(window, object, objectIndex, eventData)
 			else
 				object.currentFile = object.fileList[fileIndex].path
 				object:draw(); buffer.draw()
-				executeObjectMethod(object.onFileSelected, object.currentFile)
+				executeObjectMethod(object.onFileSelected, object.currentFile, eventData)
 			end
 		end
 	elseif eventData[1] == "scroll" then
@@ -176,10 +164,12 @@ local function treeViewHandler(window, object, objectIndex, eventData)
 end
 
 local function colorSelectorHandler(window, object, objectIndex, eventData)
-	object.pressed = true; object:draw(); buffer.draw()
+	object.pressed = true
+	object:draw(); buffer.draw()
 	object.color = require("palette").show("auto", "auto", object.color) or object.color
-	object.pressed = false; object:draw(); buffer.draw()
-	executeObjectMethod(object.onTouch)
+	object.pressed = false
+	object:draw(); buffer.draw()
+	executeObjectMethod(object.onTouch, eventData)
 end
 
 function windows.handleEventData(window, eventData)
@@ -338,10 +328,6 @@ function windows.tabbed(x, y, width, height, minimumWidth, minimumHeight, ...)
 end
 
 ----------------------------------------- Playground -----------------------------------------
-
--- buffer.start()
--- buffer.clear(0xFF8888)
--- buffer.draw(true)
 
 -- local myWindow = windows.empty(2, 2, 60, 30, 60, 30)
 -- myWindow:addColorSelector(2, 2, 30, 3, 0xFF00FF, "Text")

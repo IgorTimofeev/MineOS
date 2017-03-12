@@ -388,8 +388,10 @@ local function drawContainerContent(container)
 end
 
 -- Delete every container's children object
-local function deleteContainersContent(container)
-	for objectIndex = 1, #container.children do container.children[objectIndex] = nil end
+local function deleteContainersContent(container, from, to)
+	for objectIndex = from or 1, to or #container.children do
+		container.children[objectIndex] = nil
+	end
 end
 
 -- Universal container to store any other objects like buttons, labels, etc
@@ -1756,7 +1758,7 @@ local function drawChart(object)
 	for y = object.y + object.height - 3, object.y + 1, -chartHeight * object.yAxisValueInterval do
 		local stringValue = getAxisValue(value, object.yAxisPostfix)
 		yAxisValueMaxWidth = math.max(yAxisValueMaxWidth, unicode.len(stringValue))
-		table.insert(yAxisValues, {y = math.round(y), value = stringValue})
+		table.insert(yAxisValues, {y = math.ceil(y), value = stringValue})
 		value = value + dy * object.yAxisValueInterval
 	end
 	table.insert(yAxisValues, {y = object.y, value = getAxisValue(yMax, object.yAxisPostfix)})
@@ -1788,21 +1790,15 @@ local function drawChart(object)
 		if absdx >= absdy then
 			local step, y = dy / absdx, y1
 			for x = x1, x2, (x1 < x2 and 1 or -1) do
-				if object.drawAsFilled then
-					buffer.semiPixelSquare(math.floor(x), math.floor(y), 1, math.floor(object.y + chartHeight) * 2 - y - 1, object.colors.chart)
-				else
-					buffer.semiPixelSet(math.floor(x), math.floor(y), object.colors.chart)
-				end
+				local yFloor = math.floor(y)
+				buffer.semiPixelSquare(math.floor(x), yFloor, 1, math.floor(object.y + chartHeight) * 2 - yFloor - 1, object.colors.chart)
 				y = y + step
 			end
 		else
 			local step, x = dx / absdy, x1
 			for y = y1, y2, (y1 < y2 and 1 or -1) do
-				if object.drawAsFilled then
-					buffer.semiPixelSquare(math.floor(x), math.floor(y), 1, math.floor(object.y + chartHeight) * 2 - y - 1, object.colors.chart)
-				else
-					buffer.semiPixelSet(math.floor(x), math.floor(y), object.colors.chart)
-				end
+				local yFloor = math.floor(y)
+				buffer.semiPixelSquare(math.floor(x), yFloor, 1, math.floor(object.y + chartHeight) * 2 - yFloor - 1, object.colors.chart)
 				x = x + step
 			end
 		end
@@ -1814,13 +1810,17 @@ local function drawChart(object)
 		local y = math.floor(object.y + object.height - 3 - (valuesCopy[i][2] - yMin) / dy * (chartHeight - 1)) * 2
 		local xNext = math.floor(chartX + (valuesCopy[i + 1][1] - xMin) / dx * (chartWidth - 1))
 		local yNext = math.floor(object.y + object.height - 3 - (valuesCopy[i + 1][2] - yMin) / dy * (chartHeight - 1)) * 2
-		fillVerticalPart(x, y, xNext, yNext)
+		if object.fillChartArea then
+			fillVerticalPart(x, y, xNext, yNext)
+		else
+			buffer.semiPixelLine(x, y, xNext, yNext, object.colors.chart)
+		end
 	end
 
 	return object
 end
 
-function GUI.chart(x, y, width, height, axisColor, axisValueColor, axisHelpersColor, chartColor, xAxisValueInterval, yAxisValueInterval, xAxisPostfix, yAxisPostfix, drawAsFilled, values)
+function GUI.chart(x, y, width, height, axisColor, axisValueColor, axisHelpersColor, chartColor, xAxisValueInterval, yAxisValueInterval, xAxisPostfix, yAxisPostfix, fillChartArea, values)
 	local object = GUI.object(x, y, width, height)
 
 	object.colors = {axis = axisColor, chart = chartColor, axisValue = axisValueColor, helpers = axisHelpersColor}
@@ -1830,7 +1830,7 @@ function GUI.chart(x, y, width, height, axisColor, axisValueColor, axisHelpersCo
 	object.yAxisPostfix = yAxisPostfix
 	object.xAxisValueInterval = xAxisValueInterval
 	object.yAxisValueInterval = yAxisValueInterval
-	object.drawAsFilled = drawAsFilled
+	object.fillChartArea = fillChartArea
 
 	return object
 end
@@ -1839,7 +1839,16 @@ end
 
 -- buffer.start()
 -- local x, y, width, height = 2, 2, 150, 40
--- local chart = GUI.chart(x, y, width, height, 0xFFFFFF, 0xBBBBBB, 0x777777, 0xFF4444, 0.1, 0.15, "%", " RF/t", false, {})
+-- local chart = GUI.chart(x, y, width, height, 0xFFFFFF, 0xBBBBBB, 0x777777, 0xFF4444, 0.1, 0.15, "%", " RF/t", true, {})
+
+-- -- buffer.clear(0x262626)
+-- -- buffer.square(x, y, width, height, 0x1D1D1D)
+-- -- for i = 1, 50 do
+-- -- 	table.insert(chart.values, {i, math.random(1, 100)})
+-- -- end
+-- -- chart:draw()
+-- -- buffer.draw()
+
 -- local counter = 1
 -- while true do
 -- 	buffer.clear(0x262626)

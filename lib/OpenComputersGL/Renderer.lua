@@ -1,6 +1,7 @@
 
 -------------------------------------------------------- Libraries --------------------------------------------------------
 
+local computer = require("computer")
 local vector = require("vector")
 local unicode = require("unicode")
 local materials = require("OpenComputersGL/Materials")
@@ -9,24 +10,6 @@ local buffer = require("doubleBuffering")
 local renderer = {
 	depthBuffer = {},
 	viewport = {},
-}
-
--------------------------------------------------------- Constants --------------------------------------------------------
-
-renderer.colors = {
-	axis = {
-		x = 0xFF0000,
-		y = 0x00FF00,
-		z = 0x0000FF,
-	},
-	pivotPoint = 0xFFFFFF,
-	wireframe = 0x00FFFF,
-}
-
-renderer.renderModes = {
-	material = 1,
-	wireframe = 2,
-	vertices = 3,
 }
 
 -------------------------------------------------------- Renderer --------------------------------------------------------
@@ -109,25 +92,15 @@ function renderer.renderLine(x1, y1, z1, x2, y2, z2, color)
 	end
 end
 
-function renderer.renderDot(vector3Vertex, color)
-	renderer.setPixelUsingDepthBuffer(math.floor(vector3Vertex[1]), math.floor(vector3Vertex[2]), vector3Vertex[3], color)
+function renderer.renderDot(x, y, z, color)
+	renderer.setPixelUsingDepthBuffer(x, y, z, color)
 end
 
 -------------------------------------------------------- Triangles render --------------------------------------------------------
 
-local function fillPart(x1Screen, x2Screen, z1Screen, z2Screen, y, color)
-	if x2Screen < x1Screen then x1Screen, x2Screen, z1Screen, z2Screen = x2Screen, x1Screen, z2Screen, z1Screen end
-
-	local z, zStep = z1Screen, (z2Screen - z1Screen) / (x2Screen - x1Screen)
-	for x = math.floor(x1Screen), math.floor(x2Screen) do
-		renderer.setPixelUsingDepthBuffer(x, y, z, color)
-		-- buffer.semiPixelSet(x, y, color)
-		z = z + zStep
-	end
-end
-
-function renderer.renderFilledTriangle(points, color)
+local function getTriangleDrawingShit(points)
 	local topID, centerID, bottomID = 1, 1, 1
+	
 	for i = 1, 3 do
 		points[i][2] = math.floor(points[i][2])
 		if points[i][2] < points[topID][2] then topID = i end
@@ -135,14 +108,45 @@ function renderer.renderFilledTriangle(points, color)
 	end
 	for i = 1, 3 do if i ~= topID and i ~= bottomID then centerID = i end end
 
-	local x1ScreenStep = (points[centerID][1] - points[topID][1]) / (points[centerID][2] - points[topID][2])
-	local x2ScreenStep = (points[bottomID][1] - points[topID][1]) / (points[bottomID][2] - points[topID][2])
+	local yCenterMinusYTop = points[centerID][2] - points[topID][2]
+	local yBottomMinusYTop = points[bottomID][2] - points[topID][2]
+
 	local x1Screen, x2Screen = points[topID][1], points[topID][1]
-
-	local z1ScreenStep = (points[centerID][3] - points[topID][3]) / (points[centerID][2] - points[topID][2])
-	local z2ScreenStep = (points[bottomID][3] - points[topID][3]) / (points[bottomID][2] - points[topID][2])
+	local x1ScreenStep = (points[centerID][1] - points[topID][1]) / yCenterMinusYTop
+	local x2ScreenStep = (points[bottomID][1] - points[topID][1]) / yBottomMinusYTop
+	
 	local z1Screen, z2Screen = points[topID][3], points[topID][3]
+	local z1ScreenStep = (points[centerID][3] - points[topID][3]) / yCenterMinusYTop
+	local z2ScreenStep = (points[bottomID][3] - points[topID][3]) / yBottomMinusYTop
 
+	return topID, centerID, bottomID, x1Screen, x2Screen, x1ScreenStep, x2ScreenStep, z1Screen, z2Screen, z1ScreenStep, z2ScreenStep
+end
+
+
+local function getTriangleSecondPartScreenCoordinates(points, centerID, bottomID)
+	-- return x1Screen, x1ScreenStep, z1Screen, z1ScreenStep
+	local yBottomMinusYCenter = points[bottomID][2] - points[centerID][2]
+	return 
+		points[centerID][1],
+		(points[bottomID][1] - points[centerID][1]) / yBottomMinusYCenter,
+		points[centerID][3],
+		(points[bottomID][3] - points[centerID][3]) / yBottomMinusYCenter
+end
+
+local function fillPart(x1Screen, x2Screen, z1Screen, z2Screen, y, color)
+	if x2Screen < x1Screen then
+		x1Screen, x2Screen, z1Screen, z2Screen = x2Screen, x1Screen, z2Screen, z1Screen
+	end
+
+	local z, zStep = z1Screen, (z2Screen - z1Screen) / (x2Screen - x1Screen)
+	for x = math.floor(x1Screen), math.floor(x2Screen) do
+		renderer.setPixelUsingDepthBuffer(x, y, z, color)
+		z = z + zStep
+	end
+end
+
+function renderer.renderFilledTriangle(points, color)
+	local topID, centerID, bottomID, x1Screen, x2Screen, x1ScreenStep, x2ScreenStep, z1Screen, z2Screen, z1ScreenStep, z2ScreenStep = getTriangleDrawingShit(points)
 	-- Рисуем первый кусок треугольника от верхней точки до центральной
 	for y = points[topID][2], points[centerID][2] - 1 do
 		fillPart(x1Screen, x2Screen, z1Screen, z2Screen, y, color)
@@ -150,8 +154,7 @@ function renderer.renderFilledTriangle(points, color)
 	end
 
 	-- Далее считаем, как будет изменяться X от центрельной точки до нижней
-	x1Screen, x1ScreenStep = points[centerID][1], (points[bottomID][1] - points[centerID][1]) / (points[bottomID][2] - points[centerID][2])
-	z1Screen, z1ScreenStep = points[centerID][3], (points[bottomID][3] - points[centerID][3]) / (points[bottomID][2] - points[centerID][2])
+	x1Screen, x1ScreenStep, z1Screen, z1ScreenStep = getTriangleSecondPartScreenCoordinates(points, centerID, bottomID)
 	-- И рисуем нижний кусок треугольника от центральной точки до нижней
 	for y = points[centerID][2], points[bottomID][2] do
 		fillPart(x1Screen, x2Screen, z1Screen, z2Screen, y, color)
@@ -159,8 +162,70 @@ function renderer.renderFilledTriangle(points, color)
 	end
 end
 
-function renderer.renderTexturedTriangle(vertices, texture)
+local function fillTexturedPart(firstZ, secondZ, x1Screen, x2Screen, z1Screen, z2Screen, u1Texture, u2Texture, v1Texture, v2Texture, y, texture)
+	if x2Screen < x1Screen then
+		x1Screen, x2Screen, z1Screen, z2Screen = x2Screen, x1Screen, z2Screen, z1Screen
+		u1Texture, u2Texture = u2Texture, u1Texture
+		v1Texture, v2Texture = v2Texture, v1Texture
+	end
 
+	local z, zStep = z1Screen, (z2Screen - z1Screen) / (x2Screen - x1Screen)
+
+	-- secondZ - (v2Texture - v1Texture)
+	-- z - x
+
+	u2Texture = u1Texture + (u2Texture - u1Texture) * (secondZ / z)
+	v2Texture = v1Texture + (v2Texture - v1Texture) * (secondZ / z)
+
+	local u, uStep = u1Texture, (u2Texture - u1Texture) / (x2Screen - x1Screen)
+	local v, vStep = v1Texture, (v2Texture - v1Texture) / (x2Screen - x1Screen)
+
+	-- buffer.text(1, 1, 0xFF00FF, "GOVNO: " .. math.abs(renderer.viewport.projectionSurface / z))
+
+	local color, uVal, vVal
+	for x = math.floor(x1Screen), math.floor(x2Screen) do
+		uVal, vVal = math.floor(u + 0.5), math.floor(v + 0.5)
+		if texture[vVal] and texture[vVal][uVal] then
+			color = texture[vVal][uVal]
+		else
+			color = 0x00FF00
+		end
+		renderer.setPixelUsingDepthBuffer(x, y, z, color)
+		-- buffer.semiPixelSet(x, y, color)
+		z, u, v = z + zStep, u + uStep, v + vStep
+	end
+end
+
+function renderer.renderTexturedTriangle(points, texture)
+	local topID, centerID, bottomID, x1Screen, x2Screen, x1ScreenStep, x2ScreenStep, z1Screen, z2Screen, z1ScreenStep, z2ScreenStep = getTriangleDrawingShit(points)
+
+	local u1Texture, u2Texture = points[topID][4], points[topID][4]
+	local u1TextureStep = (points[centerID][4] - points[topID][4]) / (points[centerID][2] - points[topID][2])
+	local u2TextureStep = (points[bottomID][4] - points[topID][4]) / (points[bottomID][2] - points[topID][2])
+	
+	local v1Texture, v2Texture = points[topID][5], points[topID][5]
+	local v1TextureStep = (points[centerID][5] - points[topID][5]) / (points[centerID][2] - points[topID][2])
+	local v2TextureStep = (points[bottomID][5] - points[topID][5]) / (points[bottomID][2] - points[topID][2])
+
+	for y = points[topID][2], points[centerID][2] - 1 do
+		fillTexturedPart(points[topID][3], points[bottomID][3], x1Screen, x2Screen, z1Screen, z2Screen, u1Texture, u2Texture, v1Texture, v2Texture, y, texture)
+		x1Screen, x2Screen, z1Screen, z2Screen = x1Screen + x1ScreenStep, x2Screen + x2ScreenStep, z1Screen + z1ScreenStep, z2Screen + z2ScreenStep
+		u1Texture, u2Texture, v1Texture, v2Texture = u1Texture + u1TextureStep, u2Texture + u2TextureStep, v1Texture + v1TextureStep, v2Texture + v2TextureStep
+	end
+
+	x1Screen, x1ScreenStep, z1Screen, z1ScreenStep = getTriangleSecondPartScreenCoordinates(points, centerID, bottomID)
+	u1Texture, u1TextureStep = points[centerID][4], (points[bottomID][4] - points[centerID][4]) / (points[bottomID][2] - points[centerID][2])
+	v1Texture, v1TextureStep = points[centerID][5], (points[bottomID][5] - points[centerID][5]) / (points[bottomID][2] - points[centerID][2])
+
+	for y = points[centerID][2], points[bottomID][2] do
+		fillTexturedPart(points[topID][3], points[bottomID][3], x1Screen, x2Screen, z1Screen, z2Screen, u1Texture, u2Texture, v1Texture, v2Texture, y, texture)
+		x1Screen, x2Screen, z1Screen, z2Screen = x1Screen + x1ScreenStep, x2Screen + x2ScreenStep, z1Screen + z1ScreenStep, z2Screen + z2ScreenStep
+		u1Texture, u2Texture, v1Texture, v2Texture = u1Texture + u1TextureStep, u2Texture + u2TextureStep, v1Texture + v1TextureStep, v2Texture + v2TextureStep
+	end
+
+	-- for i = 1, 3 do
+	-- 	buffer.text(math.floor(points[i][1]), math.floor(points[i][2]), 0xFFFFFF, "ID " .. i .. ": u = " ..  points[i][4] .. ", v = " .. points[topID][5])
+	-- end
 end
 
 -------------------------------------------------------- Floating text rendering --------------------------------------------------------
@@ -238,7 +303,7 @@ function renderer.renderFPSCounter(x, y, renderMethod, color)
 	renderMethod()
 	local fps = tostring(math.ceil(1 / (os.clock() - oldClock) / 10))
 
-	-- buffer.text(1, 1, 0xFFFFFF, "FPS: " .. os.clock() - oldClock)
+	-- buffer.text(1, 1, 0xFFFFFF, "FPS: " .. fps)
 
 	for i = 1, #fps do
 		drawSegments(x, y, numbers[fps:sub(i, i)], color)
@@ -248,7 +313,24 @@ function renderer.renderFPSCounter(x, y, renderMethod, color)
 	return x - 3
 end
 
+------------------------------------------------------------------------------------------------------------------------
 
+-- buffer.start()
+-- buffer.clear(0xFFFFFF)
+
+-- local texture = materials.newDebugTexture(16, 16, 0xFF00FF, 0x000000)
+-- renderer.renderTexturedTriangle({
+-- 	{2, 2, 1, 1, 1},
+-- 	{2, 52, 1, 1, 16},
+-- 	{52, 52, 1, 16, 16},
+-- }, texture)
+-- renderer.renderTexturedTriangle({
+-- 	{2, 2, 1, 1, 1},
+-- 	{52, 2, 1, 16, 1},
+-- 	{52, 52, 1, 16, 16},
+-- }, texture)
+
+-- buffer.draw(true)
 
 ------------------------------------------------------------------------------------------------------------------------
 

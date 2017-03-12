@@ -23,6 +23,23 @@ function polyCatEngine.newPivotPoint(vector3Position)
 	}
 end
 
+-------------------------------------------------------- Light object --------------------------------------------------------
+
+local function pushLightToRenderQueue(light)
+	OCGL.pushLightToRenderQueue(
+		vector.newVector3(light.position[1], light.position[2], light.position[3]),
+		light.emissionDistance
+	)
+end
+
+function polyCatEngine.newLight(vector3Position, emissionDistance)
+	return {
+		position = vector3Position,
+		emissionDistance = emissionDistance,
+		pushToRenderQueue = pushLightToRenderQueue
+	}
+end
+
 -------------------------------------------------------- Mesh object --------------------------------------------------------
 
 local function pushMeshToRenderQueue(mesh)
@@ -30,12 +47,10 @@ local function pushMeshToRenderQueue(mesh)
 	for triangleIndex = 1, #mesh.triangles do
 		vector3Vertex1, vector3Vertex2, vector3Vertex3 = mesh.vertices[mesh.triangles[triangleIndex][1]], mesh.vertices[mesh.triangles[triangleIndex][2]], mesh.vertices[mesh.triangles[triangleIndex][3]]
 		OCGL.pushTriangleToRenderQueue(
-			vector.newVector3(vector3Vertex1[1], vector3Vertex1[2], vector3Vertex1[3]),
-			vector.newVector3(vector3Vertex2[1], vector3Vertex2[2], vector3Vertex2[3]),
-			vector.newVector3(vector3Vertex3[1], vector3Vertex3[2], vector3Vertex3[3]),
-			mesh.triangles[triangleIndex][4] or mesh.material,
-			mesh,
-			triangleIndex
+			vector.newVector5(vector3Vertex1[1], vector3Vertex1[2], vector3Vertex1[3], vector3Vertex1[4], vector3Vertex1[5]),
+			vector.newVector5(vector3Vertex2[1], vector3Vertex2[2], vector3Vertex2[3], vector3Vertex2[4], vector3Vertex2[5]),
+			vector.newVector5(vector3Vertex3[1], vector3Vertex3[2], vector3Vertex3[3], vector3Vertex3[4], vector3Vertex3[5]),
+			mesh.triangles[triangleIndex][4] or mesh.material
 		)
 	end
 end
@@ -67,14 +82,11 @@ local function pushLineToRenderQueue(line)
 end
 
 function polyCatEngine.newLine(vector3Position, vector3Vertex1, vector3Vertex2, color)
-	local line = {}
-
-	-- line.pivotPoint = polyCatEngine.newPivotPoint(vector3Position)
-	line.vertices = { vector3Vertex1, vector3Vertex2 }
-	line.color = color
-	line.pushToRenderQueue = pushLineToRenderQueue
-
-	return line
+	return {
+		vertices = { vector3Vertex1, vector3Vertex2 },
+		color = color,
+		pushToRenderQueue = pushLineToRenderQueue
+	}
 end
 
 -------------------------------------------------------- Floating text object --------------------------------------------------------
@@ -88,33 +100,31 @@ local function pushFloatingTextToRenderQueue(floatingText)
 end
 
 function polyCatEngine.newFloatingText(vector3Position, color, text)
-	local floatingText = {}
-
-	floatingText.position = vector3Position
-	floatingText.color = color
-	floatingText.text = text
-	floatingText.pushToRenderQueue = pushFloatingTextToRenderQueue
-
-	return floatingText
+	return {
+		position = vector3Position,
+		color = color,
+		text = text,
+		pushToRenderQueue = pushFloatingTextToRenderQueue
+	}
 end
 
 -------------------------------------------------------- Plane object --------------------------------------------------------
 
-function polyCatEngine.newPlane(vector3Position, width, height, material)
-	local halfWidth, halfHeight = width / 2, height / 2
+function polyCatEngine.newTexturedPlane(vector3Position, width, height, texture)
+	width, height = width / 2, height / 2
 	return polyCatEngine.newMesh(
 		vector3Position,
 		{
-			vector.newVector3(-halfWidth, 0, -halfHeight),
-			vector.newVector3(-halfWidth, 0, halfHeight),
-			vector.newVector3(halfWidth, 0, halfHeight),
-			vector.newVector3(halfWidth, 0, -halfHeight),
+			vector.newVector5(-width, 0, -height, 1, texture.height),
+			vector.newVector5(-width, 0, height, 1, 1),
+			vector.newVector5(width, 0, height, texture.width, 1),
+			vector.newVector5(width, 0, -height, texture.width, texture.height),
 		},
 		{
 			OCGL.newIndexedTriangle(1, 2, 3),
 			OCGL.newIndexedTriangle(1, 4, 3)
 		},
-		material
+		materials.newTexturedMaterial(texture)
 	)
 end
 
@@ -170,51 +180,6 @@ function polyCatEngine.newCube(vector3Position, size, material)
 		},
 		material
 	)
-end
-
--------------------------------------------------------- Grid lines --------------------------------------------------------
-
-function polyCatEngine.newGridLines(vector3Position, axisRange, gridRange, gridRangeStep)
-	local objects = {}
-	-- Grid
-	for x = -gridRange, gridRange, gridRangeStep do
-		table.insert(objects, 1, polyCatEngine.newLine(
-			vector.newVector3(vector3Position[1] + x, vector3Position[2], vector3Position[3]),
-			vector.newVector3(0, 0, -gridRange),
-			vector.newVector3(0, 0, gridRange),
-			0x444444
-		))
-	end
-	for z = -gridRange, gridRange, gridRangeStep do
-		table.insert(objects, 1, polyCatEngine.newLine(
-			vector.newVector3(vector3Position[1], vector3Position[2], vector3Position[3] + z),
-			vector.newVector3(-gridRange, 0, 0),
-			vector.newVector3(gridRange, 0, 0),
-			0x444444
-		))
-	end
-
-	-- Axis
-	table.insert(objects, polyCatEngine.newLine(
-		vector3Position,
-		vector.newVector3(-axisRange, -1, 0),
-		vector.newVector3(axisRange, -1, 0),
-		renderer.colors.axis.x
-	))
-	table.insert(objects, polyCatEngine.newLine(
-		vector3Position,
-		vector.newVector3(0, -axisRange, 0),
-		vector.newVector3(0, axisRange, 0),
-		renderer.colors.axis.y
-	))
-	table.insert(objects, polyCatEngine.newLine(
-		vector3Position,
-		vector.newVector3(0, -1, -axisRange),
-		vector.newVector3(0, -1, axisRange),
-		renderer.colors.axis.z
-	))
-
-	return objects
 end
 
 -------------------------------------------------------- Camera object --------------------------------------------------------
@@ -292,20 +257,16 @@ end
 
 local function sceneAddObject(scene, object)
 	table.insert(scene.objects, object)
-
 	return object
 end
 
 local function sceneAddObjects(scene, objects)
-	for objectIndex = 1, #objects do
-		table.insert(scene.objects, objects[objectIndex])
-	end
-
+	for objectIndex = 1, #objects do table.insert(scene.objects, objects[objectIndex]) end
 	return objects
 end
 
 local function sceneRender(scene)
-	OCGL.setViewport( 1, 1, buffer.screen.width, buffer.screen.height * 2, scene.camera.nearClippingSurface, scene.camera.farClippingSurface, scene.camera.projectionSurface)
+	renderer.setViewport( 1, 1, buffer.screen.width, buffer.screen.height * 2, scene.camera.nearClippingSurface, scene.camera.farClippingSurface, scene.camera.projectionSurface)
 	OCGL.clearBuffer(scene.backgroundColor)
 
 	for objectIndex = 1, #scene.objects do
@@ -317,8 +278,17 @@ local function sceneRender(scene)
 	OCGL.rotate(OCGL.axis.x, -scene.camera.rotation[1])
 	-- OCGL.rotate(OCGL.axis.z, -scene.camera.rotation[3])
 	
-	if scene.camera.projectionEnabled then OCGL.createPerspectiveProjection() end
-	OCGL.render(scene.renderMode)
+	if scene.renderMode == OCGL.renderModes.flatShading then
+		OCGL.calculateLights()
+	end
+
+	if scene.camera.projectionEnabled then
+		OCGL.createPerspectiveProjection()
+	end
+	
+	OCGL.renderMode = scene.renderMode
+	OCGL.auxiliaryMode = scene.auxiliaryMode
+	OCGL.render()
 	
 	return scene
 end
@@ -326,7 +296,9 @@ end
 function polyCatEngine.newScene(backgroundColor)
 	local scene = {}
 
-	scene.renderMode = renderer.renderModes.material
+	scene.renderMode = OCGL.renderModes.constantShading
+	scene.auxiliaryMode = OCGL.auxiliaryModes.disabled
+
 	scene.backgroundColor = backgroundColor
 
 	scene.objects = {}

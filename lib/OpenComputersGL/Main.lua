@@ -1,6 +1,7 @@
 
 -------------------------------------------------------- Libraries --------------------------------------------------------
 
+local colorlib = require("colorlib")
 local vector = require("vector")
 local matrix = require("matrix")
 local buffer = require("doubleBuffering")
@@ -16,10 +17,39 @@ OCGL.axis = {
 	z = 3,
 }
 
+OCGL.colors = {
+	axis = {
+		x = 0xFF0000,
+		y = 0x00FF00,
+		z = 0x0000FF,
+	},
+	pivotPoint = 0xFFFFFF,
+	wireframe = 0x000000,
+	vertices = 0xFFDB40,
+	lights = 0x44FF44
+}
+
+OCGL.renderModes = {
+	disabled = 1,
+	constantShading = 2,
+	flatShading = 3,
+	textured = 4
+}
+
+OCGL.auxiliaryModes = {
+	disabled = 1,
+	wireframe = 2,
+	vertices = 3,
+}
+
+OCGL.renderMode = 3
+OCGL.auxiliaryMode = 1
+
 OCGL.vertices = {}
 OCGL.triangles = {}
 OCGL.lines = {}
 OCGL.floatingTexts = {}
+OCGL.lights = {}
 
 -------------------------------------------------------- Vertex field methods --------------------------------------------------------
 
@@ -50,6 +80,10 @@ end
 
 -------------------------------------------------------- Render queue methods --------------------------------------------------------
 
+function OCGL.newIndexedLight(indexOfVertex1, emissionDistance)
+	return { indexOfVertex1, emissionDistance }
+end
+
 function OCGL.newIndexedTriangle(indexOfVertex1, indexOfVertex2, indexOfVertex3, material)
 	return { indexOfVertex1, indexOfVertex2, indexOfVertex3, material }
 end
@@ -62,11 +96,17 @@ function OCGL.newIndexedFloatingText(indexOfVertex, color, text)
 	return {indexOfVertex, text, color}
 end
 
-function OCGL.pushTriangleToRenderQueue(vector3Vertex1, vector3Vertex2, vector3Vertex3, material, meshPointer, meshTriangleIndexPointer)
+function OCGL.pushLightToRenderQueue(vector3Vertex, emissionDistance)
+	table.insert(OCGL.vertices, vector3Vertex)
+	table.insert(OCGL.lights, OCGL.newIndexedLight(OCGL.nextVertexIndex, emissionDistance))
+	OCGL.nextVertexIndex = OCGL.nextVertexIndex + 1
+end
+
+function OCGL.pushTriangleToRenderQueue(vector3Vertex1, vector3Vertex2, vector3Vertex3, material)
 	table.insert(OCGL.vertices, vector3Vertex1)
 	table.insert(OCGL.vertices, vector3Vertex2)
 	table.insert(OCGL.vertices, vector3Vertex3)
-	table.insert(OCGL.triangles, OCGL.newIndexedTriangle(OCGL.nextVertexIndex, OCGL.nextVertexIndex + 1, OCGL.nextVertexIndex + 2, material, meshPointer, meshTriangleIndexPointer))
+	table.insert(OCGL.triangles, OCGL.newIndexedTriangle(OCGL.nextVertexIndex, OCGL.nextVertexIndex + 1, OCGL.nextVertexIndex + 2, material))
 	OCGL.nextVertexIndex = OCGL.nextVertexIndex + 3
 end
 
@@ -85,94 +125,162 @@ end
 
 -------------------------------------------------------- Rendering methods --------------------------------------------------------
 
-OCGL.setViewport = renderer.setViewport
-
 function OCGL.clearBuffer(backgroundColor)
-	OCGL.nextVertexIndex, OCGL.vertices, OCGL.triangles, OCGL.lines, OCGL.floatingTexts = 1, {}, {}, {}, {}
+	OCGL.nextVertexIndex, OCGL.vertices, OCGL.triangles, OCGL.lines, OCGL.floatingTexts, OCGL.lights = 1, {}, {}, {}, {}, {}
 	renderer.clearDepthBuffer()
 	buffer.clear(backgroundColor)
 end
 
 function OCGL.createPerspectiveProjection() 
-	local zNearDivZ
+	local zProjectionDivZ
 	for vertexIndex = 1, #OCGL.vertices do
-		zNearDivZ = math.abs(renderer.viewport.projectionSurface / OCGL.vertices[vertexIndex][3])
-		OCGL.vertices[vertexIndex][1] = zNearDivZ * OCGL.vertices[vertexIndex][1]
-		OCGL.vertices[vertexIndex][2] = zNearDivZ * OCGL.vertices[vertexIndex][2]
-		-- OCGL.vertices[vertexIndex][3] = zNearDivZ * OCGL.vertices[vertexIndex][3]
+		zProjectionDivZ = math.abs(renderer.viewport.projectionSurface / OCGL.vertices[vertexIndex][3])
+		OCGL.vertices[vertexIndex][1] = zProjectionDivZ * OCGL.vertices[vertexIndex][1]
+		OCGL.vertices[vertexIndex][2] = zProjectionDivZ * OCGL.vertices[vertexIndex][2]
 	end
 end
 
-function OCGL.render(renderMode)
-	local vector3Vertex1, vector3Vertex2, vector3Vertex3, material = {}, {}, {}
+function OCGL.getTriangleLightIntensity(vertex1, vertex2, vertex3, indexedLight)
+	local lightVector = {
+		OCGL.vertices[indexedLight[1]][1] - vertex1[1],
+		OCGL.vertices[indexedLight[1]][2] - vertex1[2],
+		OCGL.vertices[indexedLight[1]][3] - vertex1[3]
+	}
+	local lightDistance = vector.length(lightVector)
+	
+	if lightDistance <= indexedLight[2] then
+		local normalVector = {
+			vertex1[2] * (vertex2[3] - vertex3[3]) + vertex2[2] * (vertex3[3] - vertex1[3]) + vertex3[2] * (vertex1[3] - vertex2[3]),
+			vertex1[3] * (vertex2[1] - vertex3[1]) + vertex2[3] * (vertex3[1] - vertex1[1]) + vertex3[3] * (vertex1[1] - vertex2[1]),
+			vertex1[1] * (vertex2[2] - vertex3[2]) + vertex2[1] * (vertex3[2] - vertex1[2]) + vertex3[1] * (vertex1[2] - vertex2[2])
+		}
+		-- buffer.text(2, buffer.screen.height - 2, 0x0, "normalVector: " .. normalVector[1] .. " x " .. normalVector[2] .. " x " .. normalVector[3])
 
-	-- for lineIndex = 1, #OCGL.lines do
-	-- 	vector3Vertex1, vector3Vertex2, material = OCGL.vertices[OCGL.lines[lineIndex][1]], OCGL.vertices[OCGL.lines[lineIndex][2]], OCGL.lines[lineIndex][3]
+		local cameraScalar = vector.scalarMultiply({0, 0, 100}, normalVector)
+		local lightScalar = vector.scalarMultiply(lightVector, normalVector )
 
-	-- 	if renderMode == renderer.renderModes.vertices then
-	-- 		renderer.renderDot(vector3Vertex1, material)
-	-- 		renderer.renderDot(vector3Vertex2, material)
-	-- 	else
-	-- 		renderer.renderLine(
-	-- 			math.floor(vector3Vertex1[1]),
-	-- 			math.floor(vector3Vertex1[2]),
-	-- 			vector3Vertex1[3],
-	-- 			math.floor(vector3Vertex2[1]),
-	-- 			math.floor(vector3Vertex2[2]),
-	-- 			vector3Vertex2[3],
-	-- 			material
-	-- 		)
-	-- 	end
-	-- end
+		-- buffer.text(2, buffer.screen.height - 1, 0xFFFFFF, "Scalars: " .. cameraScalar .. " x " .. lightScalar)
+		if cameraScalar < 0 and lightScalar >= 0 or cameraScalar >= 0 and lightScalar < 0 then			
+			local absAngle = math.abs(math.acos(lightScalar / (lightDistance * vector.length(normalVector))))
+			if absAngle > 1.5707963267949 then
+				absAngle = 3.1415926535898 - absAngle
+			end
+			-- buffer.text(2, buffer.screen.height, 0xFFFFFF, "Angle: " .. math.deg(angle) .. ", newAngle: " .. math.deg(absAngle) .. ", intensity: " .. absAngle / 1.5707963267949)
+			return (1 - lightDistance / indexedLight[2]) * (1 - absAngle / 1.5707963267949)
+		else
+			return 0
+		end
+	else
+		-- buffer.text(2, buffer.screen.height, 0x0, "Out of light range: " .. lightDistance .. " vs " .. indexedLight[2])
+		return 0
+	end
+end
+
+function OCGL.calculateLights()
+	for triangleIndex = 1, #OCGL.triangles do
+		OCGL.triangles[triangleIndex][5] = OCGL.getTriangleLightIntensity(
+			OCGL.vertices[OCGL.triangles[triangleIndex][1]], 
+			OCGL.vertices[OCGL.triangles[triangleIndex][2]], 
+			OCGL.vertices[OCGL.triangles[triangleIndex][3]], 
+			OCGL.lights[1]
+		)
+	end
+end
+
+function OCGL.render()
+	local vertex1, vertex2, vertex3, material, auxiliaryColor = {}, {}, {}
+
+	for triangleIndex = 1, #OCGL.triangles do
+		vertex1[1], vertex1[2], vertex1[3] = renderer.viewport.xCenter + OCGL.vertices[OCGL.triangles[triangleIndex][1]][1], renderer.viewport.yCenter - OCGL.vertices[OCGL.triangles[triangleIndex][1]][2], OCGL.vertices[OCGL.triangles[triangleIndex][1]][3]
+		vertex2[1], vertex2[2], vertex2[3] = renderer.viewport.xCenter + OCGL.vertices[OCGL.triangles[triangleIndex][2]][1], renderer.viewport.yCenter - OCGL.vertices[OCGL.triangles[triangleIndex][2]][2], OCGL.vertices[OCGL.triangles[triangleIndex][2]][3]
+		vertex3[1], vertex3[2], vertex3[3] = renderer.viewport.xCenter + OCGL.vertices[OCGL.triangles[triangleIndex][3]][1], renderer.viewport.yCenter - OCGL.vertices[OCGL.triangles[triangleIndex][3]][2], OCGL.vertices[OCGL.triangles[triangleIndex][3]][3]
+		material = OCGL.triangles[triangleIndex][4]
+
+		if
+			-- renderer.isVertexInViewRange(vertex1[1], vertex1[2], vertex1[3]) or
+			-- renderer.isVertexInViewRange(vertex2[1], vertex2[2], vertex2[3]) or
+			-- renderer.isVertexInViewRange(vertex3[1], vertex3[2], vertex3[3])
+			true
+		then
+			if material.type == materials.types.solid then
+				if OCGL.renderMode == OCGL.renderModes.constantShading then
+					renderer.renderFilledTriangle({ vertex1, vertex2, vertex3 }, material.color)
+				elseif OCGL.renderMode == OCGL.renderModes.flatShading then
+					local finalColor = 0x0
+					if #OCGL.lights > 0 then
+						finalColor = colorlib.alphaBlend(material.color, 0x0, OCGL.triangles[triangleIndex][5] * 255)
+						OCGL.triangles[triangleIndex][5] = nil
+					end
+					renderer.renderFilledTriangle({ vertex1, vertex2, vertex3 }, finalColor)
+				end
+			elseif material.type == materials.types.textured then
+				vertex1[4], vertex1[5] = OCGL.vertices[OCGL.triangles[triangleIndex][1]][4], OCGL.vertices[OCGL.triangles[triangleIndex][1]][5]
+				vertex2[4], vertex2[5] = OCGL.vertices[OCGL.triangles[triangleIndex][2]][4], OCGL.vertices[OCGL.triangles[triangleIndex][2]][5]
+				vertex3[4], vertex3[5] = OCGL.vertices[OCGL.triangles[triangleIndex][3]][4], OCGL.vertices[OCGL.triangles[triangleIndex][3]][5]
+				
+				renderer.renderTexturedTriangle({ vertex1, vertex2, vertex3 }, material.texture)
+			else
+				error("Material type " .. tostring(material.type) .. " doesn't supported for rendering triangles")
+			end
+
+			if OCGL.auxiliaryMode ~= OCGL.auxiliaryModes.disabled then
+				vertex1[1], vertex1[2], vertex1[3] = math.floor(renderer.viewport.xCenter + OCGL.vertices[OCGL.triangles[triangleIndex][1]][1]), math.floor(renderer.viewport.yCenter - OCGL.vertices[OCGL.triangles[triangleIndex][1]][2]), math.floor(OCGL.vertices[OCGL.triangles[triangleIndex][1]][3])
+				vertex2[1], vertex2[2], vertex2[3] = math.floor(renderer.viewport.xCenter + OCGL.vertices[OCGL.triangles[triangleIndex][2]][1]), math.floor(renderer.viewport.yCenter - OCGL.vertices[OCGL.triangles[triangleIndex][2]][2]), math.floor(OCGL.vertices[OCGL.triangles[triangleIndex][2]][3])
+				vertex3[1], vertex3[2], vertex3[3] = math.floor(renderer.viewport.xCenter + OCGL.vertices[OCGL.triangles[triangleIndex][3]][1]), math.floor(renderer.viewport.yCenter - OCGL.vertices[OCGL.triangles[triangleIndex][3]][2]), math.floor(OCGL.vertices[OCGL.triangles[triangleIndex][3]][3])
+
+				if OCGL.auxiliaryMode == OCGL.auxiliaryModes.wireframe then
+					renderer.renderLine(vertex1[1], vertex1[2], vertex1[3], vertex2[1], vertex2[2], vertex2[3], OCGL.colors.wireframe)
+					renderer.renderLine(vertex2[1], vertex2[2], vertex2[3], vertex3[1], vertex3[2], vertex3[3], OCGL.colors.wireframe)
+					renderer.renderLine(vertex1[1], vertex1[2], vertex1[3], vertex3[1], vertex3[2], vertex3[3], OCGL.colors.wireframe)
+				elseif OCGL.auxiliaryMode == OCGL.auxiliaryModes.vertices then
+					renderer.renderDot(vertex1[1], vertex1[2], vertex1[3], OCGL.colors.vertices)
+					renderer.renderDot(vertex2[1], vertex2[2], vertex2[3], OCGL.colors.vertices)
+					renderer.renderDot(vertex3[1], vertex3[2], vertex3[3], OCGL.colors.vertices)
+				end
+			end
+		end
+	end
+
+	if OCGL.auxiliaryMode ~= OCGL.auxiliaryModes.disabled then
+		for lightIndex = 1, #OCGL.lights do
+			renderer.renderDot(
+				math.floor(renderer.viewport.xCenter + OCGL.vertices[OCGL.lights[lightIndex][1]][1]),
+				math.floor(renderer.viewport.yCenter - OCGL.vertices[OCGL.lights[lightIndex][1]][2]),
+				math.floor(OCGL.vertices[OCGL.lights[lightIndex][1]][3]),
+				OCGL.colors.lights
+			)
+		end
+	end
 
 	for floatingTextIndex = 1, #OCGL.floatingTexts do
-		vector3Vertex1 = OCGL.vertices[OCGL.floatingTexts[floatingTextIndex][1]]
+		vertex1 = OCGL.vertices[OCGL.floatingTexts[floatingTextIndex][1]]
 		renderer.renderFloatingText(
-			renderer.viewport.xCenter + vector3Vertex1[1],
-			renderer.viewport.yCenter - vector3Vertex1[2],
-			vector3Vertex1[3],
+			renderer.viewport.xCenter + vertex1[1],
+			renderer.viewport.yCenter - vertex1[2],
+			vertex1[3],
 			OCGL.floatingTexts[floatingTextIndex][2],
 			OCGL.floatingTexts[floatingTextIndex][3]
 		)
 	end
 
-	for triangleIndex = 1, #OCGL.triangles do
-		material = OCGL.triangles[triangleIndex][4]
-		vector3Vertex1[1], vector3Vertex1[2], vector3Vertex1[3] = renderer.viewport.xCenter + OCGL.vertices[OCGL.triangles[triangleIndex][1]][1], renderer.viewport.yCenter - OCGL.vertices[OCGL.triangles[triangleIndex][1]][2], OCGL.vertices[OCGL.triangles[triangleIndex][1]][3]
-		vector3Vertex2[1], vector3Vertex2[2], vector3Vertex2[3] = renderer.viewport.xCenter + OCGL.vertices[OCGL.triangles[triangleIndex][2]][1], renderer.viewport.yCenter - OCGL.vertices[OCGL.triangles[triangleIndex][2]][2], OCGL.vertices[OCGL.triangles[triangleIndex][2]][3]
-		vector3Vertex3[1], vector3Vertex3[2], vector3Vertex3[3] = renderer.viewport.xCenter + OCGL.vertices[OCGL.triangles[triangleIndex][3]][1], renderer.viewport.yCenter - OCGL.vertices[OCGL.triangles[triangleIndex][3]][2], OCGL.vertices[OCGL.triangles[triangleIndex][3]][3]
-		
-		if
-			renderer.isVertexInViewRange(vector3Vertex1[1], vector3Vertex1[2], vector3Vertex1[3]) or
-			renderer.isVertexInViewRange(vector3Vertex2[1], vector3Vertex2[2], vector3Vertex2[3]) or
-			renderer.isVertexInViewRange(vector3Vertex3[1], vector3Vertex3[2], vector3Vertex3[3])
-		then
-			if renderMode == renderer.renderModes.material then
-				if material.type == materials.types.solid then
-					renderer.renderFilledTriangle(
-						{
-							vector3Vertex1,
-							vector3Vertex2,
-							vector3Vertex3
-						},
-						material.color
-					)
-				else
-					error("Material type " .. tostring(material.type) .. " doesn't supported for rendering triangles")
-				end
-			elseif renderMode == renderer.renderModes.wireframe then
-				renderer.renderLine(math.floor(vector3Vertex1[1]), math.floor(vector3Vertex1[2]), vector3Vertex1[3], math.floor(vector3Vertex2[1]), math.floor(vector3Vertex2[2]), vector3Vertex2[3], material.color or renderer.colors.wireframe)
-				renderer.renderLine(math.floor(vector3Vertex2[1]), math.floor(vector3Vertex2[2]), vector3Vertex2[3], math.floor(vector3Vertex3[1]), math.floor(vector3Vertex3[2]), vector3Vertex3[3], material.color or renderer.colors.wireframe)
-				renderer.renderLine(math.floor(vector3Vertex1[1]), math.floor(vector3Vertex1[2]), vector3Vertex1[3], math.floor(vector3Vertex3[1]), math.floor(vector3Vertex3[2]), vector3Vertex3[3], material.color or renderer.colors.wireframe)
-			elseif renderMode == renderer.renderModes.vertices then
-				renderer.renderDot(vector3Vertex1, material.color or renderer.colors.wireframe)
-				renderer.renderDot(vector3Vertex2, material.color or renderer.colors.wireframe)
-				renderer.renderDot(vector3Vertex3, material.color or renderer.colors.wireframe)
-			else
-				error("Rendermode enum " .. tostring(renderMode) .. " doesn't supported for rendering triangles")
-			end
-		end
-	end
+	-- for lineIndex = 1, #OCGL.lines do
+	-- 	vertex1, vertex2, material = OCGL.vertices[OCGL.lines[lineIndex][1]], OCGL.vertices[OCGL.lines[lineIndex][2]], OCGL.lines[lineIndex][3]
+
+	-- 	if OCGL.renderMode == renderer.renderModes.vertices then
+	-- 		renderer.renderDot(vertex1, material)
+	-- 		renderer.renderDot(vertex2, material)
+	-- 	else
+	-- 		renderer.renderLine(
+	-- 			math.floor(vertex1[1]),
+	-- 			math.floor(vertex1[2]),
+	-- 			vertex1[3],
+	-- 			math.floor(vertex2[1]),
+	-- 			math.floor(vertex2[2]),
+	-- 			vertex2[3],
+	-- 			material
+	-- 		)
+	-- 	end
+	-- end
 end
 
 -------------------------------------------------------- Raycasting methods --------------------------------------------------------
