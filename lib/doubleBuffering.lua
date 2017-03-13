@@ -51,7 +51,7 @@ function buffer.flush(width, height)
 		new = {},
 		width = width,
 		height = height,
-		tripleWidth = width * 3,
+		tripleWidth = width * 3
 	}
 	buffer.drawLimit = {}
 	buffer.resetDrawLimit()

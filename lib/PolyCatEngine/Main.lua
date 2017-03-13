@@ -7,7 +7,6 @@ local matrix = require("matrix")
 local OCGL = require("OpenComputersGL/Main")
 local renderer = require("OpenComputersGL/Renderer")
 local materials = require("OpenComputersGL/Materials")
-local postProcessing = require("PolyCatEngine/PostProcessing")
 local polyCatEngine = {}
 
 -------------------------------------------------------- Universal object methods --------------------------------------------------------
@@ -25,18 +24,10 @@ end
 
 -------------------------------------------------------- Light object --------------------------------------------------------
 
-local function pushLightToRenderQueue(light)
-	OCGL.pushLightToRenderQueue(
-		vector.newVector3(light.position[1], light.position[2], light.position[3]),
-		light.emissionDistance
-	)
-end
-
 function polyCatEngine.newLight(vector3Position, emissionDistance)
 	return {
 		position = vector3Position,
-		emissionDistance = emissionDistance,
-		pushToRenderQueue = pushLightToRenderQueue
+		emissionDistance = emissionDistance
 	}
 end
 
@@ -59,8 +50,8 @@ end
 function polyCatEngine.newMesh(vector3Position, vertices, triangles, material)
 	local mesh = {}
 
-	-- mesh.pivotPoint = polyCatEngine.newPivotPoint(vector3Position)
 	mesh.vertices = vertices
+	mesh.position = vector3Position
 	for vertexIndex = 1, #mesh.vertices do
 		mesh.vertices[vertexIndex][1], mesh.vertices[vertexIndex][2], mesh.vertices[vertexIndex][3] = mesh.vertices[vertexIndex][1] + vector3Position[1], mesh.vertices[vertexIndex][2] + vector3Position[2], mesh.vertices[vertexIndex][3] + vector3Position[3]
 	end
@@ -260,6 +251,11 @@ local function sceneAddObject(scene, object)
 	return object
 end
 
+local function sceneAddLight(scene, light)
+	table.insert(scene.lights, light)
+	return light
+end
+
 local function sceneAddObjects(scene, objects)
 	for objectIndex = 1, #objects do table.insert(scene.objects, objects[objectIndex]) end
 	return objects
@@ -268,9 +264,18 @@ end
 local function sceneRender(scene)
 	renderer.setViewport( 1, 1, buffer.screen.width, buffer.screen.height * 2, scene.camera.nearClippingSurface, scene.camera.farClippingSurface, scene.camera.projectionSurface)
 	OCGL.clearBuffer(scene.backgroundColor)
+	OCGL.renderMode = scene.renderMode
+	OCGL.auxiliaryMode = scene.auxiliaryMode
 
 	for objectIndex = 1, #scene.objects do
 		scene.objects[objectIndex]:pushToRenderQueue()
+	end
+
+	for lightIndex = 1, #scene.lights do
+		OCGL.pushLightToRenderQueue(
+			vector.newVector3(scene.lights[lightIndex].position[1], scene.lights[lightIndex].position[2], scene.lights[lightIndex].position[3]),
+			scene.lights[lightIndex].emissionDistance
+		)
 	end
 	
 	OCGL.translate(-scene.camera.position[1], -scene.camera.position[2], -scene.camera.position[3])
@@ -286,8 +291,6 @@ local function sceneRender(scene)
 		OCGL.createPerspectiveProjection()
 	end
 	
-	OCGL.renderMode = scene.renderMode
-	OCGL.auxiliaryMode = scene.auxiliaryMode
 	OCGL.render()
 	
 	return scene
@@ -302,7 +305,9 @@ function polyCatEngine.newScene(backgroundColor)
 	scene.backgroundColor = backgroundColor
 
 	scene.objects = {}
+	scene.lights = {}
 	scene.addObject = sceneAddObject
+	scene.addLight = sceneAddLight
 	scene.addObjects = sceneAddObjects
 	scene.render = sceneRender
 

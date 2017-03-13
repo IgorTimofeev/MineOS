@@ -1711,7 +1711,9 @@ local function colorSelectorDraw(colorSelector)
 	if colorSelector.pressed then
 		buffer.square(colorSelector.x, colorSelector.y, colorSelector.width, colorSelector.height, overlayColor, overlayColor, " ", 80)
 	end
-	buffer.text(colorSelector.x, colorSelector.y + colorSelector.height - 1, overlayColor, string.rep("▄", colorSelector.width), 80)
+	if colorSelector.height > 1 then
+		buffer.text(colorSelector.x, colorSelector.y + colorSelector.height - 1, overlayColor, string.rep("▄", colorSelector.width), 80)
+	end
 	buffer.text(colorSelector.x + 1, colorSelector.y + math.floor(colorSelector.height / 2), overlayColor, string.limit(colorSelector.text, colorSelector.width - 2))
 	return colorSelector
 end
@@ -1726,16 +1728,20 @@ end
 
 ----------------------------------------- Chart object -----------------------------------------
 
-local function getAxisValue(number, postfix)
-	local integer, fractional = math.modf(number)
-	local firstPart, secondPart = "", ""
-	if math.abs(integer) >= 1000 then
-		return math.shortenNumber(integer, 2) .. postfix
+local function getAxisValue(number, postfix, roundValues)
+	if roundValues then
+		return math.floor(number) .. postfix
 	else
-		if math.abs(fractional) > 0 then
-			return string.format("%.2f", number) .. postfix
+		local integer, fractional = math.modf(number)
+		local firstPart, secondPart = "", ""
+		if math.abs(integer) >= 1000 then
+			return math.shortenNumber(integer, 2) .. postfix
 		else
-			return number .. postfix
+			if math.abs(fractional) > 0 then
+				return string.format("%.2f", number) .. postfix
+			else
+				return number .. postfix
+			end
 		end
 	end
 end
@@ -1756,12 +1762,12 @@ local function drawChart(object)
 	-- y axis values and helpers
 	local value, chartHeight, yAxisValues, yAxisValueMaxWidth = yMin, object.height - 2, {}, -math.huge
 	for y = object.y + object.height - 3, object.y + 1, -chartHeight * object.yAxisValueInterval do
-		local stringValue = getAxisValue(value, object.yAxisPostfix)
+		local stringValue = getAxisValue(value, object.yAxisPostfix, object.roundValues)
 		yAxisValueMaxWidth = math.max(yAxisValueMaxWidth, unicode.len(stringValue))
 		table.insert(yAxisValues, {y = math.ceil(y), value = stringValue})
 		value = value + dy * object.yAxisValueInterval
 	end
-	table.insert(yAxisValues, {y = object.y, value = getAxisValue(yMax, object.yAxisPostfix)})
+	table.insert(yAxisValues, {y = object.y, value = getAxisValue(yMax, object.yAxisPostfix, object.roundValues)})
 	local x, chartWidth, chartX = object.x + yAxisValueMaxWidth + 2, object.width - yAxisValueMaxWidth - 2, object.x + yAxisValueMaxWidth + 2
 	for i = 1, #yAxisValues do
 		buffer.text(x - unicode.len(yAxisValues[i].value) - 2, yAxisValues[i].y, object.colors.axisValue, yAxisValues[i].value)
@@ -1771,11 +1777,11 @@ local function drawChart(object)
 	-- x axis values
 	local value = xMin
 	for x = x, x + chartWidth - 2, chartWidth * object.xAxisValueInterval do
-		local stringValue = getAxisValue(value, object.xAxisPostfix)
+		local stringValue = getAxisValue(value, object.xAxisPostfix, object.roundValues)
 		buffer.text(math.floor(x - unicode.len(stringValue) / 2), object.y + object.height - 1, object.colors.axisValue, stringValue)
 		value = value + dx * object.xAxisValueInterval
 	end
-	local value = getAxisValue(xMax, object.xAxisPostfix)
+	local value = getAxisValue(xMax, object.xAxisPostfix, object.roundValues)
 	buffer.text(object.x + object.width - unicode.len(value), object.y + object.height - 1, object.colors.axisValue, value)
 
 	-- Axis lines

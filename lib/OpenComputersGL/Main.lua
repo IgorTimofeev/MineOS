@@ -33,7 +33,6 @@ OCGL.renderModes = {
 	disabled = 1,
 	constantShading = 2,
 	flatShading = 3,
-	textured = 4
 }
 
 OCGL.auxiliaryModes = {
@@ -142,12 +141,12 @@ end
 
 function OCGL.getTriangleLightIntensity(vertex1, vertex2, vertex3, indexedLight)
 	local lightVector = {
-		OCGL.vertices[indexedLight[1]][1] - vertex1[1],
-		OCGL.vertices[indexedLight[1]][2] - vertex1[2],
-		OCGL.vertices[indexedLight[1]][3] - vertex1[3]
+		OCGL.vertices[indexedLight[1]][1] - (vertex1[1] + vertex2[1] + vertex3[1]) / 3,
+		OCGL.vertices[indexedLight[1]][2] - (vertex1[2] + vertex2[2] + vertex3[2]) / 3,
+		OCGL.vertices[indexedLight[1]][3] - (vertex1[3] + vertex2[3] + vertex3[3]) / 3
 	}
 	local lightDistance = vector.length(lightVector)
-	
+
 	if lightDistance <= indexedLight[2] then
 		local normalVector = {
 			vertex1[2] * (vertex2[3] - vertex3[3]) + vertex2[2] * (vertex3[3] - vertex1[3]) + vertex3[2] * (vertex1[3] - vertex2[3]),
@@ -178,12 +177,19 @@ end
 
 function OCGL.calculateLights()
 	for triangleIndex = 1, #OCGL.triangles do
-		OCGL.triangles[triangleIndex][5] = OCGL.getTriangleLightIntensity(
-			OCGL.vertices[OCGL.triangles[triangleIndex][1]], 
-			OCGL.vertices[OCGL.triangles[triangleIndex][2]], 
-			OCGL.vertices[OCGL.triangles[triangleIndex][3]], 
-			OCGL.lights[1]
-		)
+		for lightIndex = 1, #OCGL.lights do
+			local intensity = OCGL.getTriangleLightIntensity(
+				OCGL.vertices[OCGL.triangles[triangleIndex][1]], 
+				OCGL.vertices[OCGL.triangles[triangleIndex][2]], 
+				OCGL.vertices[OCGL.triangles[triangleIndex][3]], 
+				OCGL.lights[lightIndex]
+			)
+			if OCGL.triangles[triangleIndex][5] then
+				OCGL.triangles[triangleIndex][5] = (OCGL.triangles[triangleIndex][5] + intensity) / 2
+			else
+				OCGL.triangles[triangleIndex][5] = intensity
+			end
+		end
 	end
 end
 
@@ -196,21 +202,18 @@ function OCGL.render()
 		vertex3[1], vertex3[2], vertex3[3] = renderer.viewport.xCenter + OCGL.vertices[OCGL.triangles[triangleIndex][3]][1], renderer.viewport.yCenter - OCGL.vertices[OCGL.triangles[triangleIndex][3]][2], OCGL.vertices[OCGL.triangles[triangleIndex][3]][3]
 		material = OCGL.triangles[triangleIndex][4]
 
-		if
-			-- renderer.isVertexInViewRange(vertex1[1], vertex1[2], vertex1[3]) or
-			-- renderer.isVertexInViewRange(vertex2[1], vertex2[2], vertex2[3]) or
-			-- renderer.isVertexInViewRange(vertex3[1], vertex3[2], vertex3[3])
-			true
-		then
+		-- if
+		-- 	renderer.isVertexInViewRange(vertex1[1], vertex1[2], vertex1[3]) or
+		-- 	renderer.isVertexInViewRange(vertex2[1], vertex2[2], vertex2[3]) or
+		-- 	renderer.isVertexInViewRange(vertex3[1], vertex3[2], vertex3[3])
+		-- then
 			if material.type == materials.types.solid then
 				if OCGL.renderMode == OCGL.renderModes.constantShading then
 					renderer.renderFilledTriangle({ vertex1, vertex2, vertex3 }, material.color)
 				elseif OCGL.renderMode == OCGL.renderModes.flatShading then
 					local finalColor = 0x0
-					if #OCGL.lights > 0 then
-						finalColor = colorlib.alphaBlend(material.color, 0x0, OCGL.triangles[triangleIndex][5] * 255)
-						OCGL.triangles[triangleIndex][5] = nil
-					end
+					finalColor = colorlib.alphaBlend(material.color, 0x0, OCGL.triangles[triangleIndex][5] * 255)
+					OCGL.triangles[triangleIndex][5] = nil
 					renderer.renderFilledTriangle({ vertex1, vertex2, vertex3 }, finalColor)
 				end
 			elseif material.type == materials.types.textured then
@@ -238,7 +241,7 @@ function OCGL.render()
 					renderer.renderDot(vertex3[1], vertex3[2], vertex3[3], OCGL.colors.vertices)
 				end
 			end
-		end
+		-- end
 	end
 
 	if OCGL.auxiliaryMode ~= OCGL.auxiliaryModes.disabled then

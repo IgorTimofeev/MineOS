@@ -60,6 +60,28 @@ function renderer.isVertexInViewRange(x, y, z)
 		z <= renderer.viewport.farClippingSurface
 end
 
+function renderer.visualizeDepthBuffer()
+	local minDepth, maxDepth = math.huge, -math.huge
+	for y = 1, #renderer.depthBuffer do
+		for x = 1, #renderer.depthBuffer[y] do
+			if renderer.depthBuffer[y][x] ~= math.huge then
+				minDepth, maxDepth = math.min(minDepth, renderer.depthBuffer[y][x]), math.max(maxDepth, renderer.depthBuffer[y][x])
+			end
+		end
+	end
+	
+	local delta = math.abs(maxDepth - minDepth)
+	local grayscalePalette = { [0] = 0xFFFFFF, [1] = 0xEEEEEE, [2] = 0xDDDDDD, [3] = 0xCCCCCC, [4] = 0xBBBBBB, [5] = 0xAAAAAA, [6] = 0x999999, [7] = 0x888888, [8] = 0x777777, [9] = 0x666666, [10] = 0x555555, [11] = 0x444444, [12] = 0x333333, [13] = 0x222222, [14] = 0x111111, [15] = 0x000000 }
+
+	for y = 1, #renderer.depthBuffer do
+		for x = 1, #renderer.depthBuffer[y] do
+			local value = (renderer.depthBuffer[y][x] - math.abs(minDepth)) / delta
+			local color = grayscalePalette[math.floor(#grayscalePalette * value)]
+			buffer.semiPixelSet(x, y, color or 0x0)
+		end
+	end
+end
+
 -------------------------------------------------------- Line rendering --------------------------------------------------------
 
 function renderer.renderLine(x1, y1, z1, x2, y2, z2, color)
@@ -282,7 +304,7 @@ local function drawSegments(x, y, segments, color)
 	end
 end
 
-function renderer.renderFPSCounter(x, y, renderMethod, color)
+function renderer.renderFPSCounter(x, y, fps, color)
 	local numbers = {
 		["0"] = { 1, 2, 3, 4, 5, 6 },
 		["1"] = { 2, 3 },
@@ -296,21 +318,10 @@ function renderer.renderFPSCounter(x, y, renderMethod, color)
 		["9"] = { 1, 2, 3, 4, 6, 7 },
 	}
 
-	-- clock sec - 1 frame
-	-- 1 sec - x frames
-
-	local oldClock = os.clock()
-	renderMethod()
-	local fps = tostring(math.ceil(1 / (os.clock() - oldClock) / 10))
-
-	-- buffer.text(1, 1, 0xFFFFFF, "FPS: " .. fps)
-
 	for i = 1, #fps do
 		drawSegments(x, y, numbers[fps:sub(i, i)], color)
 		x = x + 4
 	end
-
-	return x - 3
 end
 
 ------------------------------------------------------------------------------------------------------------------------
