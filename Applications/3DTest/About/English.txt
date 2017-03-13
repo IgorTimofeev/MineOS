@@ -1,0 +1,1 @@
+This is a program for demostration of the capabilities of our 3D-engine, created specifically for low-performance computers. It embodies almost all the achievements of our team: rendering complex 3D-objects, dynamic lighting, texturing and user interface based on a powerful GUI library.

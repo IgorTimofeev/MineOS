@@ -526,10 +526,11 @@
   {
     name="MineOS/Applications/3DTest",
     url="IgorTimofeev/OpenComputers/master/Applications/3DTest/3DTest.lua",
+    about="IgorTimofeev/OpenComputers/master/Applications/3DTest/About/",
     type="Application",
     icon="IgorTimofeev/OpenComputers/master/Applications/3DTest/Icon.pic",
     createShortcut="desktop",
-    version=1.06,
+    version=1.07,
   },
   {
     name="MineOS/Applications/GeoScan2",
