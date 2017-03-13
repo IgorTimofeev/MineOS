@@ -27,14 +27,16 @@ local polyCatEngine = require("PolyCatEngine/Main")
 ---------------------------------------------- Anus preparing ----------------------------------------------
 
 buffer.start()
--- polyCatEngine.intro(vector.newVector3(0, 0, 0), 20)
+polyCatEngine.intro(vector.newVector3(0, 0, 0), 20)
 local mainWindow = windows.fullScreen()
 local scene = polyCatEngine.newScene(0x1D1D1D)
 scene:addLight(polyCatEngine.newLight(vector.newVector3(0, 20, 0), 1000))
-scene.camera:translate(0, 0, -20)
+scene.camera:translate(-2.5, 8.11, -19.57)
+scene.camera:rotate(math.rad(30), 0, 0)
 
 ---------------------------------------------- Constants ----------------------------------------------
 
+local blockSize = 5
 local rotationAngle = math.rad(5)
 local translationOffset = 1
 
@@ -56,34 +58,143 @@ local translationOffset = 1
 -- 	)
 -- )
 
----------------------------------------------- Cubes ----------------------------------------------
+---------------------------------------------- Voxel-world system ----------------------------------------------
 
-local xCubes, yCubes = 3, 3
-local spaceBetween = 5
-local cubeSize = 5
-local xCubeStart = -math.floor(xCubes / 2) * (cubeSize + spaceBetween)
-local xCube, zCube = xCubeStart, -math.floor(yCubes / 2) * (cubeSize + spaceBetween)
-local xCentralCube, yCentralCube = math.ceil(xCubes / 2), math.ceil(yCubes / 2)
-local hueCube, hueCubeStep = 0, 359 / (xCubes * yCubes)
-for j = 1, yCubes do
-	for i = 1, xCubes do
-		if not (i == xCentralCube and j == yCentralCube) then
-			scene:addObject(polyCatEngine.newCube(
-				vector.newVector3(xCube, 0, zCube),
-				cubeSize,
-				materials.newSolidMaterial(colorlib.HSBtoHEX(hueCube, 100, 100))
-			))
-			hueCube = hueCube + hueCubeStep
-		end
-		xCube = xCube + cubeSize + spaceBetween
+local world = {{{}}}
+
+local worldMesh = scene:addObject(
+	polyCatEngine.newMesh(
+		vector.newVector3(0, 0, 0), { }, { },
+		materials.newSolidMaterial(0xFF00FF)
+	)
+)
+
+local function checkBlock(x, y, z)
+	if world[z] and world[z][y] and world[z][y][x] then
+		return true
 	end
-	zCube, xCube = zCube + cubeSize + spaceBetween, xCubeStart
+	return false
+end
+
+local function setBlock(x, y, z, value)
+	world[z] = world[z] or {}
+	world[z][y] = world[z][y] or {}
+	world[z][y][x] = value
+end
+
+local blockSides = {
+	front = 1,
+	left = 2,
+	back = 3,
+	right = 4,
+	up = 5,
+	down = 6
+}
+
+local function renderWorld()
+	worldMesh.vertices = {}
+	worldMesh.triangles = {}
+
+	for z in pairs(world) do
+		for y in pairs(world[z]) do
+			for x in pairs(world[z][y]) do
+				local firstVertexIndex = #worldMesh.vertices + 1
+				local xBlock, yBlock, zBlock = (x - 1) * blockSize, (y - 1) * blockSize, (z - 1) * blockSize
+				local material = materials.newSolidMaterial(world[z][y][x])
+
+				table.insert(worldMesh.vertices, vector.newVector3(xBlock, yBlock, zBlock))
+				table.insert(worldMesh.vertices, vector.newVector3(xBlock, yBlock + blockSize, zBlock))
+				table.insert(worldMesh.vertices, vector.newVector3(xBlock + blockSize, yBlock + blockSize, zBlock))
+				table.insert(worldMesh.vertices, vector.newVector3(xBlock + blockSize, yBlock, zBlock))
+				table.insert(worldMesh.vertices, vector.newVector3(xBlock, yBlock, zBlock + blockSize))
+				table.insert(worldMesh.vertices, vector.newVector3(xBlock, yBlock + blockSize, zBlock + blockSize))
+				table.insert(worldMesh.vertices, vector.newVector3(xBlock + blockSize, yBlock + blockSize, zBlock + blockSize))
+				table.insert(worldMesh.vertices, vector.newVector3(xBlock + blockSize, yBlock, zBlock + blockSize))
+
+				-- Front (1, 2)
+				if not checkBlock(x, y, z - 1) then
+					local triangle1 = OCGL.newIndexedTriangle(firstVertexIndex, firstVertexIndex + 1, firstVertexIndex + 2, material)
+					triangle1[6] = blockSides.front
+					table.insert(worldMesh.triangles, triangle1)
+					
+					local triangle2 = OCGL.newIndexedTriangle(firstVertexIndex, firstVertexIndex + 3, firstVertexIndex + 2, material)
+					triangle2[6] = blockSides.front
+					table.insert(worldMesh.triangles, triangle2)
+				end
+
+				-- Left (3, 4)
+				if not checkBlock(x - 1, y, z) then
+					local triangle1 = OCGL.newIndexedTriangle(firstVertexIndex + 1, firstVertexIndex + 5, firstVertexIndex + 4, material)
+					triangle1[6] = blockSides.left
+					table.insert(worldMesh.triangles, triangle1)
+					
+					local triangle2 = OCGL.newIndexedTriangle(firstVertexIndex + 1, firstVertexIndex, firstVertexIndex + 4, material)
+					triangle2[6] = blockSides.left
+					table.insert(worldMesh.triangles, triangle2)
+				end
+
+				-- Back (5, 6)
+				if not checkBlock(x, y, z + 1) then
+					local triangle1 = OCGL.newIndexedTriangle(firstVertexIndex + 5, firstVertexIndex + 6, firstVertexIndex + 7, material)
+					triangle1[6] = blockSides.back
+					table.insert(worldMesh.triangles, triangle1)
+					
+					local triangle2 = OCGL.newIndexedTriangle(firstVertexIndex + 5, firstVertexIndex + 4, firstVertexIndex + 7, material)
+					triangle2[6] = blockSides.back
+					table.insert(worldMesh.triangles, triangle2)
+				end
+
+				-- Right (7, 8)
+				if not checkBlock(x + 1, y, z) then
+					local triangle1 = OCGL.newIndexedTriangle(firstVertexIndex + 3, firstVertexIndex + 2, firstVertexIndex + 6, material)
+					triangle1[6] = blockSides.right
+					table.insert(worldMesh.triangles, triangle1)
+					
+					local triangle2 = OCGL.newIndexedTriangle(firstVertexIndex + 3, firstVertexIndex + 7, firstVertexIndex + 6, material)
+					triangle2[6] = blockSides.right
+					table.insert(worldMesh.triangles, triangle2)
+				end
+
+				-- Up (9, 10)
+				if not checkBlock(x, y + 1, z) then
+					local triangle1 = OCGL.newIndexedTriangle(firstVertexIndex + 1, firstVertexIndex + 5, firstVertexIndex + 6, material)
+					triangle1[6] = blockSides.up
+					table.insert(worldMesh.triangles, triangle1)
+					
+					local triangle2 = OCGL.newIndexedTriangle(firstVertexIndex + 1, firstVertexIndex + 2, firstVertexIndex + 6, material)
+					triangle2[6] = blockSides.up
+					table.insert(worldMesh.triangles, triangle2)
+				end
+
+				-- Down (11, 12)
+				if not checkBlock(x, y - 1, z) then
+					local triangle1 = OCGL.newIndexedTriangle(firstVertexIndex, firstVertexIndex + 4, firstVertexIndex + 7, material)
+					triangle1[6] = blockSides.down
+					table.insert(worldMesh.triangles, triangle1)
+					
+					local triangle2 = OCGL.newIndexedTriangle(firstVertexIndex, firstVertexIndex + 3, firstVertexIndex + 7, material)
+					triangle2[6] = blockSides.down
+					table.insert(worldMesh.triangles, triangle2)
+				end
+			end
+		end
+	end
+end
+
+local hue, hueStep = 0, 360 / 9
+for i = -1, 1 do
+	for j = -1, 1 do
+		if not (i == 0 and j == 0) then
+			setBlock(i, 0, j, colorlib.HSBtoHEX(hue, 100, 100))
+			hue = hue + hueStep
+		end
+	end
 end
 
 ---------------------------------------------- Cat ----------------------------------------------
 
 -- scene:addObject(polyCatEngine.newPolyCatMesh(vector.newVector3(0, 5, 0), 5))
--- scene:addObject(polyCatEngine.newFloatingText(vector.newVector3(0, -12, 0), 0xEEEEEE, "Тест плавающего текста"))
+-- scene:addObject(polyCatEngine.newFloatingText(vector.newVector3(0, -2, 0), 0xEEEEEE, "Тест плавающего текста"))
 
 ---------------------------------------------- Texture ----------------------------------------------
 
@@ -182,6 +293,7 @@ end
 
 -- local plane = createField(vector.newVector3(0, 0, 0), 8, 4, 4)
 -- scene:addObject(plane)
+-- plane:randomizeTrianglesColor(10, 10, 50)
 
 -------------------------------------------------------- Controls --------------------------------------------------------
 
@@ -227,6 +339,8 @@ local controls = {
 
 -------------------------------------------------------- GUI --------------------------------------------------------
 
+local OCGLView = GUI.object(1, 1, mainWindow.width, mainWindow.height)
+
 local function drawInvertedText(x, y, text)
 	local index = buffer.getBufferIndexByCoordinates(x, y)
 	local background, foreground = buffer.rawGet(index)
@@ -242,19 +356,16 @@ local function drawCross(x, y)
 	drawInvertedText(x, y + 1, "┃")
 end
 
-local OCGLView = GUI.object(1, 1, mainWindow.width, mainWindow.height)
 OCGLView.draw = function(object)
 	mainWindow.oldClock = os.clock()
-	if scene.materialChange then
-		plane:randomizeTrianglesColor(5, 5, 50)
-		plane:randomizeVerticesPosition(0.05)
-	end
+	if world then renderWorld() end
 	scene:render()
 	if mainWindow.toolbar.zBufferSwitch.state then
 		renderer.visualizeDepthBuffer()
 	end
 	drawCross(renderer.viewport.xCenter, math.floor(renderer.viewport.yCenter / 2))
 end
+
 OCGLView.onTouch = function(e)
 	local targetVector = vector.newVector3(scene.camera.position[1], scene.camera.position[2], scene.camera.position[3] + 1000)
 	OCGL.rotateVector(targetVector, OCGL.axis.x, scene.camera.rotation[1])
@@ -262,37 +373,33 @@ OCGLView.onTouch = function(e)
 	local objectIndex, triangleIndex, distance = polyCatEngine.sceneRaycast(scene, scene.camera.position, targetVector)
 
 	if objectIndex then
+		local triangle = scene.objects[objectIndex].triangles[triangleIndex]
+		local xMiddle = (scene.objects[objectIndex].vertices[triangle[1]][1] + scene.objects[objectIndex].vertices[triangle[2]][1] + scene.objects[objectIndex].vertices[triangle[3]][1]) / 3
+		local yMiddle = (scene.objects[objectIndex].vertices[triangle[1]][2] + scene.objects[objectIndex].vertices[triangle[2]][2] + scene.objects[objectIndex].vertices[triangle[3]][2]) / 3
+		local zMiddle = (scene.objects[objectIndex].vertices[triangle[1]][3] + scene.objects[objectIndex].vertices[triangle[2]][3] + scene.objects[objectIndex].vertices[triangle[3]][3]) / 3
+
+		local xWorld = math.floor(xMiddle / blockSize) + 1
+		local yWorld = math.floor(yMiddle / blockSize) + 1
+		local zWorld = math.floor(zMiddle / blockSize) + 1
+
 		if e[5] == 1 then
-			local triangleOffsets = {
-				-- Front
-				{0, 0, -1},
-				{0, 0, -1},
-				-- Left
-				{1, 0, 0},
-				{1, 0, 0},
-				-- Back
-				{0, 0, 1},
-				{0, 0, 1},
-				-- Right
-				{-1, 0, 0},
-				{-1, 0, 0},
-				-- Top
-				{0, 1, 0},
-				{0, 1, 0},
-				-- Bottom
-				{0, -1, 0},
-				{0, -1, 0},
-			}
-
-			local newCubePosition = vector.newVector3(
-				scene.objects[objectIndex].position[1] + triangleOffsets[triangleIndex][1] * cubeSize,
-				scene.objects[objectIndex].position[2] + triangleOffsets[triangleIndex][2] * cubeSize,
-				scene.objects[objectIndex].position[3] + triangleOffsets[triangleIndex][3] * cubeSize
-			)
-
-			scene:addObject(polyCatEngine.newCube(newCubePosition, cubeSize, materials.newSolidMaterial(mainWindow.toolbar.cubeColorSelector.color)))
+			if triangle[6] == blockSides.front then
+				zWorld = zWorld - 1
+			elseif triangle[6] == blockSides.left then
+				xWorld = xWorld - 1
+			elseif triangle[6] == blockSides.down then
+				yWorld = yWorld - 1
+			end
+			setBlock(xWorld, yWorld, zWorld, mainWindow.toolbar.blockColorSelector.color)
 		else
-			table.remove(scene.objects, objectIndex)
+			if triangle[6] == blockSides.back then
+				zWorld = zWorld - 1
+			elseif triangle[6] == blockSides.right then
+				xWorld = xWorld - 1
+			elseif triangle[6] == blockSides.up then
+				yWorld = yWorld - 1
+			end
+			setBlock(xWorld, yWorld, zWorld, nil)
 		end
 	end
 end
@@ -300,7 +407,7 @@ end
 mainWindow:addChild(OCGLView)
 
 mainWindow.infoTextBox = mainWindow:addTextBox(2, 5, 45, mainWindow.height, nil, 0xEEEEEE, {}, 1, 0, 0)
-mainWindow:addLabel(2, mainWindow.height, mainWindow.width - 1, 1, 0x444444, "Authors: Timoveef Igor (vk.com/id7799889), Trifonov Gleb (vk.com/id88323331), Verevkin Yakov (vk.com/id60991376)")
+mainWindow:addLabel(2, mainWindow.height, mainWindow.width - 1, 1, 0x444444, "Authors: Timofeef Igor (vk.com/id7799889), Trifonov Gleb (vk.com/id88323331), Verevkin Yakov (vk.com/id60991376)")
 
 local elementY = 2
 mainWindow.toolbar = mainWindow:addContainer(mainWindow.width - 31, 1, 32, mainWindow.height)
@@ -368,8 +475,8 @@ mainWindow.toolbar.lightEmissionSlider.onValueChanged = function(value)
 	scene.lights[mainWindow.toolbar.lightSelectComboBox.currentItem].emissionDistance = value
 end
 
-mainWindow.toolbar.cubeColorSelector = mainWindow.toolbar:addColorSelector(2, elementY, elementWidth, 1, 0xEEEEEE, "Cube color"); elementY = elementY + mainWindow.toolbar.cubeColorSelector.height + 1
-mainWindow.toolbar.backgroundColorSelector = mainWindow.toolbar:addColorSelector(2, elementY, elementWidth, 1, scene.backgroundColor, "Background color"); elementY = elementY + mainWindow.toolbar.cubeColorSelector.height + 1
+mainWindow.toolbar.blockColorSelector = mainWindow.toolbar:addColorSelector(2, elementY, elementWidth, 1, 0xEEEEEE, "Block color"); elementY = elementY + mainWindow.toolbar.blockColorSelector.height + 1
+mainWindow.toolbar.backgroundColorSelector = mainWindow.toolbar:addColorSelector(2, elementY, elementWidth, 1, scene.backgroundColor, "Background color"); elementY = elementY + mainWindow.toolbar.blockColorSelector.height + 1
 mainWindow.toolbar.backgroundColorSelector.onTouch = function()
 	scene.backgroundColor = mainWindow.toolbar.backgroundColorSelector.color
 end
@@ -415,10 +522,11 @@ mainWindow.onAnyEvent = function(e)
 			" ",
 			"Controls:",
 			" ",
-			"Arrows: camera rotation",
-			"WASD/Shift/Space: camera movement",
-			"NUM 8/2/4/6/1/3: selected light movement",
-			"F1: toggle GUI overlay",
+			"Arrows - camera rotation",
+			"WASD/Shift/Space - camera movement",
+			"LMB/RMB - destroy/place block",
+			"NUM 8/2/4/6/1/3 - selected light movement",
+			"F1 - toggle GUI overlay",
 		}
 
 		mainWindow.infoTextBox.height = #mainWindow.infoTextBox.lines
@@ -444,8 +552,6 @@ end
 
 -------------------------------------------------------- Ebat-kopat --------------------------------------------------------
 
-mainWindow:draw()
-buffer.draw()
 mainWindow:handleEvents(0)
 
 
