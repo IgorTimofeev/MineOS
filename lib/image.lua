@@ -344,7 +344,7 @@ local function loadOCIF1(file)
 		--Читаем форграунд
 		table.insert(picture, readBytes(file, 3))
 		--Читаем альфу
-		table.insert(picture, readBytes(file, 1) / 0xFF)
+		table.insert(picture, readBytes(file, 1))
 		--Читаем символ
 		table.insert(picture, decodeChar( file ))
 	end
@@ -463,7 +463,7 @@ local function loadOCIF2(file, decompressColors, useOCIF4)
 		if header == "A" then
 			local countOfBytesForArraySize = string.byte(file:read(1))
 			alphaSize = string.byte(file:read(countOfBytesForArraySize))
-			alpha = string.byte(file:read(1)) / 0xFF
+			alpha = string.byte(file:read(1))
 			-- print("Количество байт под размер массива символов: " .. countOfBytesForArraySize)
 			-- print("Размер массива символов: " .. alphaSize)
 			-- print("Альфа: " .. alpha)
@@ -584,7 +584,7 @@ local function loadRaw(file)
 
 			table.insert(picture, tonumber(background))
 			table.insert(picture, tonumber(foreground))
-			table.insert(picture, tonumber(alpha) / 0xFF)
+			table.insert(picture, tonumber(alpha))
 			table.insert(picture, symbol)
 		end
 		lineCounter = lineCounter + 1
@@ -1040,8 +1040,8 @@ end
 function image.photoFilter(picture, color, transparency)
 	if transparency < 0 then transparency = 0 elseif transparency > 255 then transparency = 255 end
 	for i = 1, #picture, 4 do
-		picture[i] = colorlib.alphaBlend(picture[i], color, transparency)
-		picture[i + 1] = colorlib.alphaBlend(picture[i + 1], color, transparency)
+		picture[i] = colorlib.alphaBlend(picture[i], color, transparency / 255)
+		picture[i + 1] = colorlib.alphaBlend(picture[i + 1], color, transparency / 255)
 	end
 	return picture
 end
@@ -1074,13 +1074,13 @@ function image.gaussianBlur(picture, radius, force)
 		local matrixBackground, matrixForeground, matrixAlpha, matrixSymbol = image.get(picture, xCoordinate, yCoordinate)
 
 		if matrixBackground and matrixForeground then
-			local newBackground = colorlib.alphaBlend(startBackground, matrixBackground, matrixValue)
+			local newBackground = colorlib.alphaBlend(startBackground, matrixBackground, matrixValue / 0xFF)
 			--Пизданись оно все в жопу, ебанина
 			--Короч, смари. Если символ равен пробелу, то мы полюбэ не учитываем цвет текста, верно?
 			--Но в будущих итерациях это цвет будет учтен, поэтому возникали ссаные баги графические
 			--Поэтому даже для ебучего пробела мы присваиваем значение цвета текста, равному НОВОМУ цвету фона
 			--Т.е. вроде бы как они и равны, но потом охуенно все будет, угу
-			local newForeground = matrixSymbol == " " and newBackground or colorlib.alphaBlend(startForeground, matrixForeground, matrixValue)
+			local newForeground = matrixSymbol == " " and newBackground or colorlib.alphaBlend(startForeground, matrixForeground, matrixValue / 0xFF)
 
 			image.set(picture, xCoordinate, yCoordinate, newBackground, newForeground, 0x00, matrixSymbol)
 		end
@@ -1265,7 +1265,7 @@ function image.draw(x, y, picture)
 							--Если альфа имеется, но она не совсем прозрачна
 							if (alpha > 0x00 and alpha < 0xFF) or (alpha == 0xFF and symbol ~= " ")then
 								_, _, currentBackground = component.gpu.get(xPos, yPos)
-								currentBackground = colorlib.alphaBlend(currentBackground, background, alpha)
+								currentBackground = colorlib.alphaBlend(currentBackground, background, alpha / 0xFF)
 								component.gpu.setBackground(currentBackground)
 
 								component.gpu.set(xPos, yPos, symbol)
