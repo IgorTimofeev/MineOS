@@ -29,7 +29,7 @@ local polyCatEngine = require("PolyCatEngine/Main")
 -- /MineOS/Desktop/3DTest.app/3DTest.lua
 
 buffer.start()
--- polyCatEngine.intro(vector.newVector3(0, 0, 0), 20)
+polyCatEngine.intro(vector.newVector3(0, 0, 0), 20)
 local mainWindow = windows.fullScreen()
 local scene = polyCatEngine.newScene(0x1D1D1D)
 scene:addLight(polyCatEngine.newLight(vector.newVector3(0, 20, 0), 1000))
@@ -153,16 +153,16 @@ local function renderWorld()
 	end
 end
 
-setBlock(1, 1, 1, 0xFFFFFF)
--- local hue, hueStep = 0, 360 / 9
--- for i = -1, 1 do
--- 	for j = -1, 1 do
--- 		if not (i == 0 and j == 0) then
--- 			setBlock(i, 0, j, colorlib.HSBtoHEX(hue, 100, 100))
--- 			hue = hue + hueStep
--- 		end
--- 	end
--- end
+-- setBlock(1, 1, 1, 0xFFFFFF)
+local hue, hueStep = 0, 360 / 9
+for i = -1, 1 do
+	for j = -1, 1 do
+		if not (i == 0 and j == 0) then
+			setBlock(i, 0, j, colorlib.HSBtoHEX(hue, 100, 100))
+			hue = hue + hueStep
+		end
+	end
+end
 
 ---------------------------------------------- Cat ----------------------------------------------
 
