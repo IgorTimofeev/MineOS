@@ -115,83 +115,54 @@ local function renderWorld()
 
 				-- Front (1, 2)
 				if not checkBlock(x, y, z - 1) then
-					local triangle1 = OCGL.newIndexedTriangle(firstVertexIndex, firstVertexIndex + 1, firstVertexIndex + 2, material)
-					triangle1[6] = blockSides.front
-					table.insert(worldMesh.triangles, triangle1)
-					
-					local triangle2 = OCGL.newIndexedTriangle(firstVertexIndex, firstVertexIndex + 3, firstVertexIndex + 2, material)
-					triangle2[6] = blockSides.front
-					table.insert(worldMesh.triangles, triangle2)
+					table.insert(worldMesh.triangles, OCGL.newIndexedTriangle(firstVertexIndex, firstVertexIndex + 1, firstVertexIndex + 2, material))
+					table.insert(worldMesh.triangles, OCGL.newIndexedTriangle(firstVertexIndex + 3, firstVertexIndex, firstVertexIndex + 2, material))
 				end
 
 				-- Left (3, 4)
 				if not checkBlock(x - 1, y, z) then
-					local triangle1 = OCGL.newIndexedTriangle(firstVertexIndex + 1, firstVertexIndex + 5, firstVertexIndex + 4, material)
-					triangle1[6] = blockSides.left
-					table.insert(worldMesh.triangles, triangle1)
-					
-					local triangle2 = OCGL.newIndexedTriangle(firstVertexIndex + 1, firstVertexIndex, firstVertexIndex + 4, material)
-					triangle2[6] = blockSides.left
-					table.insert(worldMesh.triangles, triangle2)
+					table.insert(worldMesh.triangles, OCGL.newIndexedTriangle(firstVertexIndex + 5, firstVertexIndex + 1, firstVertexIndex + 4, material))
+					table.insert(worldMesh.triangles, OCGL.newIndexedTriangle(firstVertexIndex + 1, firstVertexIndex, firstVertexIndex + 4, material))
 				end
 
 				-- Back (5, 6)
 				if not checkBlock(x, y, z + 1) then
-					local triangle1 = OCGL.newIndexedTriangle(firstVertexIndex + 5, firstVertexIndex + 6, firstVertexIndex + 7, material)
-					triangle1[6] = blockSides.back
-					table.insert(worldMesh.triangles, triangle1)
-					
-					local triangle2 = OCGL.newIndexedTriangle(firstVertexIndex + 5, firstVertexIndex + 4, firstVertexIndex + 7, material)
-					triangle2[6] = blockSides.back
-					table.insert(worldMesh.triangles, triangle2)
+					table.insert(worldMesh.triangles, OCGL.newIndexedTriangle(firstVertexIndex + 6, firstVertexIndex + 5, firstVertexIndex + 7, material))
+					table.insert(worldMesh.triangles, OCGL.newIndexedTriangle(firstVertexIndex + 5, firstVertexIndex + 4, firstVertexIndex + 7, material))
 				end
 
 				-- Right (7, 8)
 				if not checkBlock(x + 1, y, z) then
-					local triangle1 = OCGL.newIndexedTriangle(firstVertexIndex + 3, firstVertexIndex + 2, firstVertexIndex + 6, material)
-					triangle1[6] = blockSides.right
-					table.insert(worldMesh.triangles, triangle1)
-					
-					local triangle2 = OCGL.newIndexedTriangle(firstVertexIndex + 3, firstVertexIndex + 7, firstVertexIndex + 6, material)
-					triangle2[6] = blockSides.right
-					table.insert(worldMesh.triangles, triangle2)
+					table.insert(worldMesh.triangles, OCGL.newIndexedTriangle(firstVertexIndex + 3, firstVertexIndex + 2, firstVertexIndex + 6, material))
+					table.insert(worldMesh.triangles, OCGL.newIndexedTriangle(firstVertexIndex + 7, firstVertexIndex + 3, firstVertexIndex + 6, material))
 				end
 
 				-- Up (9, 10)
 				if not checkBlock(x, y + 1, z) then
-					local triangle1 = OCGL.newIndexedTriangle(firstVertexIndex + 1, firstVertexIndex + 5, firstVertexIndex + 6, material)
-					triangle1[6] = blockSides.up
-					table.insert(worldMesh.triangles, triangle1)
-					
-					local triangle2 = OCGL.newIndexedTriangle(firstVertexIndex + 1, firstVertexIndex + 2, firstVertexIndex + 6, material)
-					triangle2[6] = blockSides.up
-					table.insert(worldMesh.triangles, triangle2)
+					table.insert(worldMesh.triangles, OCGL.newIndexedTriangle(firstVertexIndex + 1, firstVertexIndex + 5, firstVertexIndex + 6, material))
+					table.insert(worldMesh.triangles, OCGL.newIndexedTriangle(firstVertexIndex + 2, firstVertexIndex + 1, firstVertexIndex + 6, material))
 				end
 
 				-- Down (11, 12)
 				if not checkBlock(x, y - 1, z) then
-					local triangle1 = OCGL.newIndexedTriangle(firstVertexIndex, firstVertexIndex + 4, firstVertexIndex + 7, material)
-					triangle1[6] = blockSides.down
-					table.insert(worldMesh.triangles, triangle1)
-					
-					local triangle2 = OCGL.newIndexedTriangle(firstVertexIndex, firstVertexIndex + 3, firstVertexIndex + 7, material)
-					triangle2[6] = blockSides.down
-					table.insert(worldMesh.triangles, triangle2)
+					table.insert(worldMesh.triangles, OCGL.newIndexedTriangle(firstVertexIndex + 4, firstVertexIndex, firstVertexIndex + 7, material))
+					table.insert(worldMesh.triangles, OCGL.newIndexedTriangle(firstVertexIndex, firstVertexIndex + 3, firstVertexIndex + 7, material))
 				end
 			end
 		end
 	end
 end
 
-local hue, hueStep = 0, 360 / 9
-for i = -1, 1 do
-	for j = -1, 1 do
-		if not (i == 0 and j == 0) then
-			setBlock(i, 0, j, colorlib.HSBtoHEX(hue, 100, 100))
-			hue = hue + hueStep
-		end
-	end
-end
+setBlock(1, 1, 1, 0xFFFFFF)
+-- local hue, hueStep = 0, 360 / 9
+-- for i = -1, 1 do
+-- 	for j = -1, 1 do
+-- 		if not (i == 0 and j == 0) then
+-- 			setBlock(i, 0, j, colorlib.HSBtoHEX(hue, 100, 100))
+-- 			hue = hue + hueStep
+-- 		end
+-- 	end
+-- end
 
 ---------------------------------------------- Cat ----------------------------------------------
 
@@ -376,33 +347,25 @@ OCGLView.onTouch = function(e)
 
 	if objectIndex then
 		local triangle = scene.objects[objectIndex].triangles[triangleIndex]
-		local xMiddle = (scene.objects[objectIndex].vertices[triangle[1]][1] + scene.objects[objectIndex].vertices[triangle[2]][1] + scene.objects[objectIndex].vertices[triangle[3]][1]) / 3
-		local yMiddle = (scene.objects[objectIndex].vertices[triangle[1]][2] + scene.objects[objectIndex].vertices[triangle[2]][2] + scene.objects[objectIndex].vertices[triangle[3]][2]) / 3
-		local zMiddle = (scene.objects[objectIndex].vertices[triangle[1]][3] + scene.objects[objectIndex].vertices[triangle[2]][3] + scene.objects[objectIndex].vertices[triangle[3]][3]) / 3
+		local xWorld = math.floor(((scene.objects[objectIndex].vertices[scene.objects[objectIndex].triangles[triangleIndex][1]][1] + scene.objects[objectIndex].vertices[scene.objects[objectIndex].triangles[triangleIndex][2]][1] + scene.objects[objectIndex].vertices[scene.objects[objectIndex].triangles[triangleIndex][3]][1]) / 3) / blockSize) + 1
+		local yWorld = math.floor(((scene.objects[objectIndex].vertices[triangle[1]][2] + scene.objects[objectIndex].vertices[triangle[2]][2] + scene.objects[objectIndex].vertices[triangle[3]][2]) / 3) / blockSize) + 1
+		local zWorld = math.floor(((scene.objects[objectIndex].vertices[triangle[1]][3] + scene.objects[objectIndex].vertices[triangle[2]][3] + scene.objects[objectIndex].vertices[triangle[3]][3]) / 3) / blockSize) + 1
 
-		local xWorld = math.floor(xMiddle / blockSize) + 1
-		local yWorld = math.floor(yMiddle / blockSize) + 1
-		local zWorld = math.floor(zMiddle / blockSize) + 1
+		local normalVector = vector.getSurfaceNormal(
+			scene.objects[objectIndex].vertices[triangle[1]],
+			scene.objects[objectIndex].vertices[triangle[2]],
+			scene.objects[objectIndex].vertices[triangle[3]]
+		)
 
-		if e[5] == 1 then
-			if triangle[6] == blockSides.front then
-				zWorld = zWorld - 1
-			elseif triangle[6] == blockSides.left then
-				xWorld = xWorld - 1
-			elseif triangle[6] == blockSides.down then
-				yWorld = yWorld - 1
-			end
-			setBlock(xWorld, yWorld, zWorld, mainWindow.toolbar.blockColorSelector.color)
-		else
-			if triangle[6] == blockSides.back then
-				zWorld = zWorld - 1
-			elseif triangle[6] == blockSides.right then
-				xWorld = xWorld - 1
-			elseif triangle[6] == blockSides.up then
-				yWorld = yWorld - 1
-			end
-			setBlock(xWorld, yWorld, zWorld, nil)
+		if normalVector[1] > 0 and e[5] ~= 1 or normalVector[1] < 0 and e[5] == 1 then
+			xWorld = xWorld - 1
+		elseif normalVector[2] > 0 and e[5] ~= 1 or normalVector[2] < 0 and e[5] == 1 then
+			yWorld = yWorld - 1
+		elseif normalVector[3] > 0 and e[5] ~= 1 or normalVector[3] < 0 and e[5] == 1 then
+			zWorld = zWorld - 1
 		end
+
+		setBlock(xWorld, yWorld, zWorld, e[5] == 1 and mainWindow.toolbar.blockColorSelector.color or nil)
 	end
 end
 
@@ -490,7 +453,7 @@ mainWindow.toolbar.RAMChart.roundValues = true
 mainWindow.toolbar.RAMChart.counter = 1
 mainWindow.toolbar.RAMProgressBar = mainWindow.toolbar:addProgressBar(2, elementY, elementWidth, 0x66DB80, 0x2D2D2D, 0xAAAAAA, 1, true, true, "", "%")
 
-mainWindow.toolbar:addButton(1, mainWindow.toolbar.height - 2, mainWindow.toolbar.width, 3, 0xEEEEEE, 0x2D2D2D, 0xAAAAAA, 0x2D2D2D, "Exit").onTouch = function()
+mainWindow.toolbar:addButton(1, mainWindow.toolbar.height - 2, mainWindow.toolbar.width, 3, 0x2D2D2D, 0xEEEEEE, 0x444444, 0xEEEEEE, "Exit").onTouch = function()
 	mainWindow:close()
 end
 mainWindow.onDrawFinished = function()

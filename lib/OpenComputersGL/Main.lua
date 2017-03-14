@@ -148,11 +148,7 @@ function OCGL.getTriangleLightIntensity(vertex1, vertex2, vertex3, indexedLight)
 	local lightDistance = vector.length(lightVector)
 
 	if lightDistance <= indexedLight[2] then
-		local normalVector = {
-			vertex1[2] * (vertex2[3] - vertex3[3]) + vertex2[2] * (vertex3[3] - vertex1[3]) + vertex3[2] * (vertex1[3] - vertex2[3]),
-			vertex1[3] * (vertex2[1] - vertex3[1]) + vertex2[3] * (vertex3[1] - vertex1[1]) + vertex3[3] * (vertex1[1] - vertex2[1]),
-			vertex1[1] * (vertex2[2] - vertex3[2]) + vertex2[1] * (vertex3[2] - vertex1[2]) + vertex3[1] * (vertex1[2] - vertex2[2])
-		}
+		local normalVector = vector.getSurfaceNormal(vertex1, vertex2, vertex3)
 		-- buffer.text(2, buffer.screen.height - 2, 0x0, "normalVector: " .. normalVector[1] .. " x " .. normalVector[2] .. " x " .. normalVector[3])
 
 		local cameraScalar = vector.scalarMultiply({0, 0, 100}, normalVector)
