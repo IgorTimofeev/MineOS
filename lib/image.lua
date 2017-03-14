@@ -344,7 +344,7 @@ local function loadOCIF1(file)
 		--Читаем форграунд
 		table.insert(picture, readBytes(file, 3))
 		--Читаем альфу
-		table.insert(picture, readBytes(file, 1))
+		table.insert(picture, readBytes(file, 1) / 0xFF)
 		--Читаем символ
 		table.insert(picture, decodeChar( file ))
 	end
@@ -463,7 +463,7 @@ local function loadOCIF2(file, decompressColors, useOCIF4)
 		if header == "A" then
 			local countOfBytesForArraySize = string.byte(file:read(1))
 			alphaSize = string.byte(file:read(countOfBytesForArraySize))
-			alpha = string.byte(file:read(1))
+			alpha = string.byte(file:read(1)) / 0xFF
 			-- print("Количество байт под размер массива символов: " .. countOfBytesForArraySize)
 			-- print("Размер массива символов: " .. alphaSize)
 			-- print("Альфа: " .. alpha)
@@ -584,7 +584,7 @@ local function loadRaw(file)
 
 			table.insert(picture, tonumber(background))
 			table.insert(picture, tonumber(foreground))
-			table.insert(picture, tonumber(alpha))
+			table.insert(picture, tonumber(alpha) / 0xFF)
 			table.insert(picture, symbol)
 		end
 		lineCounter = lineCounter + 1

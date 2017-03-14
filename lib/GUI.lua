@@ -1760,35 +1760,43 @@ local function drawChart(object)
 	local dx, dy = xMax - xMin, yMax - yMin
 
 	-- y axis values and helpers
-	local value, chartHeight, yAxisValues, yAxisValueMaxWidth = yMin, object.height - 2, {}, -math.huge
+	local value, chartHeight, yAxisValueMaxWidth, yAxisValues = yMin, object.height - 1 - (object.showXAxisValues and 1 or 0), 0, {}
 	for y = object.y + object.height - 3, object.y + 1, -chartHeight * object.yAxisValueInterval do
 		local stringValue = getAxisValue(value, object.yAxisPostfix, object.roundValues)
 		yAxisValueMaxWidth = math.max(yAxisValueMaxWidth, unicode.len(stringValue))
 		table.insert(yAxisValues, {y = math.ceil(y), value = stringValue})
 		value = value + dy * object.yAxisValueInterval
 	end
-	table.insert(yAxisValues, {y = object.y, value = getAxisValue(yMax, object.yAxisPostfix, object.roundValues)})
-	local x, chartWidth, chartX = object.x + yAxisValueMaxWidth + 2, object.width - yAxisValueMaxWidth - 2, object.x + yAxisValueMaxWidth + 2
+	local stringValue = getAxisValue(yMax, object.yAxisPostfix, object.roundValues)
+	table.insert(yAxisValues, {y = object.y, value = stringValue})
+	yAxisValueMaxWidth = math.max(yAxisValueMaxWidth, unicode.len(stringValue))
+
+	local chartWidth = object.width - (object.showYAxisValues and yAxisValueMaxWidth + 2 or 0) 
+	local chartX = object.x + object.width - chartWidth
 	for i = 1, #yAxisValues do
-		buffer.text(x - unicode.len(yAxisValues[i].value) - 2, yAxisValues[i].y, object.colors.axisValue, yAxisValues[i].value)
-		buffer.text(x, yAxisValues[i].y, object.colors.helpers, string.rep("─", chartWidth))
+		if object.showYAxisValues then
+			buffer.text(chartX - unicode.len(yAxisValues[i].value) - 2, yAxisValues[i].y, object.colors.axisValue, yAxisValues[i].value)
+		end
+		buffer.text(chartX, yAxisValues[i].y, object.colors.helpers, string.rep("─", chartWidth))
 	end
 
 	-- x axis values
-	local value = xMin
-	for x = x, x + chartWidth - 2, chartWidth * object.xAxisValueInterval do
-		local stringValue = getAxisValue(value, object.xAxisPostfix, object.roundValues)
-		buffer.text(math.floor(x - unicode.len(stringValue) / 2), object.y + object.height - 1, object.colors.axisValue, stringValue)
-		value = value + dx * object.xAxisValueInterval
+	if object.showXAxisValues then
+		value = xMin
+		for x = chartX, chartX + chartWidth - 2, chartWidth * object.xAxisValueInterval do
+			local stringValue = getAxisValue(value, object.xAxisPostfix, object.roundValues)
+			buffer.text(math.floor(x - unicode.len(stringValue) / 2), object.y + object.height - 1, object.colors.axisValue, stringValue)
+			value = value + dx * object.xAxisValueInterval
+		end
+		local value = getAxisValue(xMax, object.xAxisPostfix, object.roundValues)
+		buffer.text(object.x + object.width - unicode.len(value), object.y + object.height - 1, object.colors.axisValue, value)
 	end
-	local value = getAxisValue(xMax, object.xAxisPostfix, object.roundValues)
-	buffer.text(object.x + object.width - unicode.len(value), object.y + object.height - 1, object.colors.axisValue, value)
 
 	-- Axis lines
 	for y = object.y, object.y + chartHeight - 1 do
 		buffer.text(chartX - 1, y, object.colors.axis, "┨")
 	end
-	buffer.text(chartX - 1, object.y + object.height - 2, object.colors.axis, "┗" .. string.rep("┯━", chartWidth / 2))
+	buffer.text(chartX - 1, object.y + chartHeight, object.colors.axis, "┗" .. string.rep("┯━", chartWidth / 2))
 
 	local function fillVerticalPart(x1, y1, x2, y2)
 		local dx, dy = x2 - x1, y2 - y1
@@ -1813,9 +1821,9 @@ local function drawChart(object)
 	-- chart
 	for i = 1, #valuesCopy - 1 do
 		local x = math.floor(chartX + (valuesCopy[i][1] - xMin) / dx * (chartWidth - 1))
-		local y = math.floor(object.y + object.height - 3 - (valuesCopy[i][2] - yMin) / dy * (chartHeight - 1)) * 2
+		local y = math.floor(object.y + chartHeight - 1 - (valuesCopy[i][2] - yMin) / dy * (chartHeight - 1)) * 2
 		local xNext = math.floor(chartX + (valuesCopy[i + 1][1] - xMin) / dx * (chartWidth - 1))
-		local yNext = math.floor(object.y + object.height - 3 - (valuesCopy[i + 1][2] - yMin) / dy * (chartHeight - 1)) * 2
+		local yNext = math.floor(object.y + chartHeight - 1 - (valuesCopy[i + 1][2] - yMin) / dy * (chartHeight - 1)) * 2
 		if object.fillChartArea then
 			fillVerticalPart(x, y, xNext, yNext)
 		else
@@ -1837,6 +1845,8 @@ function GUI.chart(x, y, width, height, axisColor, axisValueColor, axisHelpersCo
 	object.xAxisValueInterval = xAxisValueInterval
 	object.yAxisValueInterval = yAxisValueInterval
 	object.fillChartArea = fillChartArea
+	object.showYAxisValues = true
+	object.showXAxisValues = true
 
 	return object
 end
@@ -1844,8 +1854,10 @@ end
 --------------------------------------------------------------------------------------------------------------------------------
 
 -- buffer.start()
--- local x, y, width, height = 2, 2, 150, 40
+-- local x, y, width, height = 10, 10, 32, 16
 -- local chart = GUI.chart(x, y, width, height, 0xFFFFFF, 0xBBBBBB, 0x777777, 0xFF4444, 0.1, 0.15, "%", " RF/t", true, {})
+-- chart.showXAxisValues = false
+-- chart.showYAxisValues = false
 
 -- -- buffer.clear(0x262626)
 -- -- buffer.square(x, y, width, height, 0x1D1D1D)

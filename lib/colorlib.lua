@@ -76,9 +76,7 @@ end
 
 --Смешивание двух цветов на основе альфа-канала второго
 function colorlib.alphaBlend(firstColor, secondColor, alphaChannel)
-  alphaChannel = alphaChannel / 255
   local invertedAlphaChannel = 1 - alphaChannel
-  
   
   local firstColorRed, firstColorGreen, firstColorBlue = colorlib.HEXtoRGB(firstColor)
   local secondColorRed, secondColorGreen, secondColorBlue = colorlib.HEXtoRGB(secondColor)

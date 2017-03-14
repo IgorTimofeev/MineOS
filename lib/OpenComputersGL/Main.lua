@@ -212,7 +212,7 @@ function OCGL.render()
 					renderer.renderFilledTriangle({ vertex1, vertex2, vertex3 }, material.color)
 				elseif OCGL.renderMode == OCGL.renderModes.flatShading then
 					local finalColor = 0x0
-					finalColor = colorlib.alphaBlend(material.color, 0x0, OCGL.triangles[triangleIndex][5] * 255)
+					finalColor = colorlib.alphaBlend(material.color, 0x0, OCGL.triangles[triangleIndex][5])
 					OCGL.triangles[triangleIndex][5] = nil
 					renderer.renderFilledTriangle({ vertex1, vertex2, vertex3 }, finalColor)
 				end

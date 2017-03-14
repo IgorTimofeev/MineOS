@@ -1885,7 +1885,7 @@ function ecs.universalWindow(x, y, width, background, closeWindowAfter, ...)
 
 		elseif objectType == "color" then
 			local xPos, yPos = x + 1, objects[number].y
-			local blendedColor = require("colorlib").alphaBlend(objects[number][3], 0xFFFFFF, 180)
+			local blendedColor = require("colorlib").alphaBlend(objects[number][3], 0xFFFFFF, 0.705882)
 			local w = width - 2
 
 			ecs.colorTextWithBack(xPos, yPos + 2, blendedColor, background, string.rep("▀", w))

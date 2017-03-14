@@ -327,7 +327,7 @@ local function drawPixel(x, y, xPixel, yPixel, iterator)
 			end
 		end
 
-		buffer.set(x, y, colorlib.alphaBlend(blendColor, background, alpha), foreground, symbol)
+		buffer.set(x, y, colorlib.alphaBlend(blendColor, background, alpha / 0xFF), foreground, symbol)
 	end
 	background, foreground, alpha, symbol = nil, nil, nil, nil
 end
@@ -862,7 +862,7 @@ local function brush(x, y, background, foreground, alpha, symbol)
 				elseif alpha < 0xFF and alpha > 0x00 then
 					--Если пиксель в массиве ни хуя не прозрачный, то оставляем его таким же, разве что цвет меняем на сблендированный
 					if masterPixels[newIterator + 2] == 0x00 then
-						local gettedBackground = colorlib.alphaBlend(masterPixels[newIterator], background, alpha)
+						local gettedBackground = colorlib.alphaBlend(masterPixels[newIterator], background, alpha / 0xFF)
 						setPixel(newIterator, gettedBackground, foreground, 0x00, symbol)
 					--А если прозрачный, то смешиваем прозрачности
 					--Пиздануться вообще, сук

@@ -83,8 +83,8 @@ end
 
 local function getTileColor(basecolor, distance)
 	local limitedDistance = math.floor(distance * rayEngine.properties.shadingCascades / rayEngine.properties.shadingDistance)
-	local transparency = rayEngine.currentShadingTransparencyMapValue - math.floor(limitedDistance * 255 / rayEngine.properties.shadingCascades)
-	transparency = (transparency >= rayEngine.properties.shadingTransparencyMap[1] and transparency <= 255) and transparency or rayEngine.properties.shadingTransparencyMap[1]
+	local transparency = rayEngine.currentShadingTransparencyMapValue - limitedDistance / rayEngine.properties.shadingCascades
+	transparency = (transparency >= rayEngine.properties.shadingTransparencyMap[1] and transparency <= 1) and transparency or rayEngine.properties.shadingTransparencyMap[1]
 	return colorlib.alphaBlend(basecolor, 0x000000, transparency)
 end
 

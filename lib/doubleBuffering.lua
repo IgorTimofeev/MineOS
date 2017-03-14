@@ -114,7 +114,7 @@ function buffer.square(x, y, width, height, background, foreground, symbol, tran
 		if transparency == 0 then
 			transparency = nil
 		else
-			transparency = transparency * 2.55
+			transparency = transparency / 100
 		end
 	end
 	if not foreground then foreground = 0x000000 end
@@ -227,7 +227,7 @@ function buffer.text(x, y, color, text, transparency)
 		if transparency == 0 then
 			transparency = nil
 		else
-			transparency = transparency * 2.55
+			transparency = transparency / 100
 		end
 	end
 

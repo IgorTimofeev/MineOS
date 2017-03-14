@@ -1,5 +1,5 @@
 
--- package.loaded.rayEngine, package.loaded.GUI, package.loaded.windows, _G.rayEngine, _G.GUI, _G.windows = nil, nil, nil, nil, nil, nil, nil, nil
+package.loaded.rayEngine, package.loaded.GUI, package.loaded.windows, _G.rayEngine, _G.GUI, _G.windows = nil, nil, nil, nil, nil, nil, nil, nil
 
 local fs = require("filesystem")
 local component = require("component")
@@ -164,7 +164,7 @@ rayEngine.loadEngineProperties(applicationResourcesDirectory .. "RayEngine.cfg")
 rayEngine.loadWeapons(applicationResourcesDirectory .. "Weapons/")
 rayEngine.loadWorld(worldsPath .. "ExampleWorld")
 rayEngine.changeResolution(rayEngine.properties.screenResolution.width, rayEngine.properties.screenResolution.height)
--- rayEngine.intro()
+rayEngine.intro()
 menu()
 rayEngine.update()
 

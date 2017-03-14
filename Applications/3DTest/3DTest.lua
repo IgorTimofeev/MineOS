@@ -26,8 +26,10 @@ local polyCatEngine = require("PolyCatEngine/Main")
 
 ---------------------------------------------- Anus preparing ----------------------------------------------
 
+-- /MineOS/Desktop/3DTest.app/3DTest.lua
+
 buffer.start()
-polyCatEngine.intro(vector.newVector3(0, 0, 0), 20)
+-- polyCatEngine.intro(vector.newVector3(0, 0, 0), 20)
 local mainWindow = windows.fullScreen()
 local scene = polyCatEngine.newScene(0x1D1D1D)
 scene:addLight(polyCatEngine.newLight(vector.newVector3(0, 20, 0), 1000))
@@ -482,13 +484,15 @@ mainWindow.toolbar.backgroundColorSelector.onTouch = function()
 end
 
 mainWindow.toolbar:addLabel(2, elementY, elementWidth, 1, 0xEEEEEE, "RAM monitoring"):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); elementY = elementY + 2
-mainWindow.toolbar.RAMChart = mainWindow.toolbar:addChart(2, elementY, elementWidth, mainWindow.toolbar.height - elementY - 3, 0xEEEEEE, 0xAAAAAA, 0x555555, 0x66DB80, 0.35, 0.25, "s", "%", true, {}); elementY = elementY + mainWindow.toolbar.RAMChart.height + 1
+mainWindow.toolbar.RAMChart = mainWindow.toolbar:addChart(2, elementY, elementWidth, mainWindow.toolbar.height - elementY - 6, 0xEEEEEE, 0xAAAAAA, 0x555555, 0x66DB80, 0.35, 0.25, "s", "%", true, {}); elementY = elementY + mainWindow.toolbar.RAMChart.height + 1
 mainWindow.toolbar.RAMChart.roundValues = true
+-- mainWindow.toolbar.RAMChart.showXAxisValues = false
 mainWindow.toolbar.RAMChart.counter = 1
+mainWindow.toolbar.RAMProgressBar = mainWindow.toolbar:addProgressBar(2, elementY, elementWidth, 0x66DB80, 0x2D2D2D, 0xAAAAAA, 1, true, true, "", "%")
+
 mainWindow.toolbar:addButton(1, mainWindow.toolbar.height - 2, mainWindow.toolbar.width, 3, 0xEEEEEE, 0x2D2D2D, 0xAAAAAA, 0x2D2D2D, "Exit").onTouch = function()
 	mainWindow:close()
 end
-
 mainWindow.onDrawFinished = function()
 	-- clock sec - 1 frame
 	-- 1 sec - x frames
@@ -498,7 +502,8 @@ end
 mainWindow.onAnyEvent = function(e)
 	if not mainWindow.toolbar.isHidden then
 		local totalMemory = computer.totalMemory()
-		table.insert(mainWindow.toolbar.RAMChart.values, {mainWindow.toolbar.RAMChart.counter, math.ceil((totalMemory - computer.freeMemory()) / totalMemory * 100)})
+		mainWindow.toolbar.RAMProgressBar.value = math.ceil((totalMemory - computer.freeMemory()) / totalMemory * 100)
+		table.insert(mainWindow.toolbar.RAMChart.values, {mainWindow.toolbar.RAMChart.counter, mainWindow.toolbar.RAMProgressBar.value})
 		mainWindow.toolbar.RAMChart.counter = mainWindow.toolbar.RAMChart.counter + 1
 		if #mainWindow.toolbar.RAMChart.values > 20 then table.remove(mainWindow.toolbar.RAMChart.values, 1) end
 

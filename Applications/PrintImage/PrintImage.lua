@@ -178,8 +178,8 @@ local function drawMainImageObject(object)
 		buffer.image(xImage, yImage, mainImage)
 		GUI.windowShadow(xImage, yImage, mainImage.width, mainImage.height, 50, true)
 		if config.showGrid then
-			for x = xImage, xImage + mainImage.width - 1, shapeResolutionLimit do verticalLine(x, yImage, mainImage.height, 0xA0) end
-			for y = yImage, yImage + mainImage.height - 1, shapeResolutionLimit / 2 do horizontalLine(xImage, y, mainImage.width, 0xA0) end
+			for x = xImage, xImage + mainImage.width - 1, shapeResolutionLimit do verticalLine(x, yImage, mainImage.height, 0.627) end
+			for y = yImage, yImage + mainImage.height - 1, shapeResolutionLimit / 2 do horizontalLine(xImage, y, mainImage.width, 0.627) end
 			buffer.text(1, 1, 0xBBBBBB, "хуй")
 		end
 	end
