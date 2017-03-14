@@ -376,7 +376,7 @@ end
 
 mainWindow:addChild(OCGLView)
 
-mainWindow.infoTextBox = mainWindow:addTextBox(2, 5, 45, mainWindow.height, nil, 0xEEEEEE, {}, 1, 0, 0)
+mainWindow.infoTextBox = mainWindow:addTextBox(2, 4, 45, mainWindow.height, nil, 0xEEEEEE, {}, 1, 0, 0)
 mainWindow:addLabel(2, mainWindow.height, mainWindow.width - 1, 1, 0x444444, "Authors: Timofeef Igor (vk.com/id7799889), Trifonov Gleb (vk.com/id88323331), Verevkin Yakov (vk.com/id60991376)")
 
 local elementY = 2
