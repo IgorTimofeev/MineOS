@@ -30,11 +30,16 @@ local polyCatEngine = require("PolyCatEngine/Main")
 
 buffer.start()
 polyCatEngine.intro(vector.newVector3(0, 0, 0), 20)
+
 local mainWindow = windows.fullScreen()
 local scene = polyCatEngine.newScene(0x1D1D1D)
-scene:addLight(polyCatEngine.newLight(vector.newVector3(0, 20, 0), 1000))
+
+scene.renderMode = OCGL.renderModes.flatShading
+scene.auxiliaryMode = OCGL.auxiliaryModes.disabled
+
 scene.camera:translate(-2.5, 8.11, -19.57)
 scene.camera:rotate(math.rad(30), 0, 0)
+scene:addLight(polyCatEngine.newLight(vector.newVector3(0, 20, 0), 1000))
 
 ---------------------------------------------- Constants ----------------------------------------------
 
@@ -384,7 +389,7 @@ mainWindow.toolbar.renderModeComboBox = mainWindow.toolbar:addComboBox(2, elemen
 mainWindow.toolbar.renderModeComboBox:addItem("disabled")
 mainWindow.toolbar.renderModeComboBox:addItem("constantShading")
 mainWindow.toolbar.renderModeComboBox:addItem("flatShading")
-mainWindow.toolbar.renderModeComboBox.currentItem = 2
+mainWindow.toolbar.renderModeComboBox.currentItem = scene.renderMode
 mainWindow.toolbar.renderModeComboBox.onItemSelected = function()
 	scene.renderMode = mainWindow.toolbar.renderModeComboBox.currentItem
 end
@@ -393,7 +398,7 @@ mainWindow.toolbar.auxiliaryModeComboBox = mainWindow.toolbar:addComboBox(2, ele
 mainWindow.toolbar.auxiliaryModeComboBox:addItem("disabled")
 mainWindow.toolbar.auxiliaryModeComboBox:addItem("wireframe")
 mainWindow.toolbar.auxiliaryModeComboBox:addItem("vertices")
-mainWindow.toolbar.auxiliaryModeComboBox.currentItem = 1
+mainWindow.toolbar.auxiliaryModeComboBox.currentItem = scene.auxiliaryMode
 mainWindow.toolbar.auxiliaryModeComboBox.onItemSelected = function()
 	scene.auxiliaryMode = mainWindow.toolbar.auxiliaryModeComboBox.currentItem
 end

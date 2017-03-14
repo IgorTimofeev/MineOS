@@ -530,7 +530,7 @@
     type="Application",
     icon="IgorTimofeev/OpenComputers/master/Applications/3DTest/Icon.pic",
     createShortcut="desktop",
-    version=1.11,
+    version=1.12,
   },
   {
     name="MineOS/Applications/GeoScan2",
