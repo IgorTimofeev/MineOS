@@ -396,7 +396,7 @@
     name="lib/vector.lua",
     url="IgorTimofeev/OpenComputers/master/lib/vector.lua",
     type="Library",
-    version=1.02,
+    version=1.03,
   },
   {
     name="lib/matrix.lua",
@@ -408,7 +408,7 @@
     name="lib/OpenComputersGL/Main.lua",
     url="IgorTimofeev/OpenComputers/master/lib/OpenComputersGL/Main.lua",
     type="Library",
-    version=1.04,
+    version=1.05,
   },
   {
     name="lib/OpenComputersGL/Materials.lua",
@@ -426,7 +426,7 @@
     name="lib/PolyCatEngine/Main.lua",
     url="IgorTimofeev/OpenComputers/master/lib/PolyCatEngine/Main.lua",
     type="Library",
-    version=1.05,
+    version=1.06,
   },
 
   ----------------------------------------------------- Скрипты и дополнения к ним --------------------------------------------------------------------------
@@ -530,7 +530,7 @@
     type="Application",
     icon="IgorTimofeev/OpenComputers/master/Applications/3DTest/Icon.pic",
     createShortcut="desktop",
-    version=1.13,
+    version=1.14,
   },
   {
     name="MineOS/Applications/GeoScan2",

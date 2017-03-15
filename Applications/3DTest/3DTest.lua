@@ -29,7 +29,7 @@ local polyCatEngine = require("PolyCatEngine/Main")
 -- /MineOS/Desktop/3DTest.app/3DTest.lua
 
 buffer.start()
-polyCatEngine.intro(vector.newVector3(0, 0, 0), 20)
+-- polyCatEngine.intro(vector.newVector3(0, 0, 0), 20)
 
 local mainWindow = windows.fullScreen()
 local scene = polyCatEngine.newScene(0x1D1D1D)
@@ -39,7 +39,7 @@ scene.auxiliaryMode = OCGL.auxiliaryModes.disabled
 
 scene.camera:translate(-2.5, 8.11, -19.57)
 scene.camera:rotate(math.rad(30), 0, 0)
-scene:addLight(polyCatEngine.newLight(vector.newVector3(0, 20, 0), 1000))
+scene:addLight(polyCatEngine.newLight(vector.newVector3(0, 20, 0), 1.0, 200))
 
 ---------------------------------------------- Constants ----------------------------------------------
 
@@ -419,16 +419,16 @@ local function calculateLightComboBox()
 		mainWindow.toolbar.lightSelectComboBox:addItem(tostring(i))
 	end
 	mainWindow.toolbar.lightSelectComboBox.currentItem = #mainWindow.toolbar.lightSelectComboBox.items
+	mainWindow.toolbar.lightIntensitySlider.value = scene.lights[mainWindow.toolbar.lightSelectComboBox.currentItem].intensity * 100
+	mainWindow.toolbar.lightEmissionSlider.value = scene.lights[mainWindow.toolbar.lightSelectComboBox.currentItem].emissionDistance
 end
 
 mainWindow.toolbar:addLabel(2, elementY, elementWidth, 1, 0xEEEEEE, "Light control"):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); elementY = elementY + 2
 mainWindow.toolbar.lightSelectComboBox = mainWindow.toolbar:addComboBox(2, elementY, elementWidth, 1, 0x2D2D2D, 0xAAAAAA, 0x555555, 0x888888); elementY = elementY + mainWindow.toolbar.lightSelectComboBox.height + 1
-calculateLightComboBox()
-
 
 mainWindow.toolbar.addLightButton = mainWindow.toolbar:addButton(2, elementY, elementWidth, 1, 0x2D2D2D, 0xAAAAAA, 0x555555, 0xAAAAAA, "Add light"); elementY = elementY + 2
 mainWindow.toolbar.addLightButton.onTouch = function()
-	scene:addLight(polyCatEngine.newLight(vector.newVector3(0, 10, 0), mainWindow.toolbar.lightEmissionSlider.value))
+	scene:addLight(polyCatEngine.newLight(vector.newVector3(0, 10, 0), mainWindow.toolbar.lightIntensitySlider.value / 100,  mainWindow.toolbar.lightEmissionSlider.value))
 	calculateLightComboBox()
 end
 
@@ -440,10 +440,15 @@ mainWindow.toolbar.removeLightButton.onTouch = function()
 	end
 end
 
-mainWindow.toolbar.lightEmissionSlider = mainWindow.toolbar:addHorizontalSlider(2, elementY, elementWidth, 0xCCCCCC, 0x2D2D2D, 0xEEEEEE, 0xAAAAAA, 5, 500, 450, false, "Emission: ", ""); elementY = elementY + 3
+mainWindow.toolbar.lightIntensitySlider = mainWindow.toolbar:addHorizontalSlider(2, elementY, elementWidth, 0xCCCCCC, 0x2D2D2D, 0xEEEEEE, 0xAAAAAA, 0, 500, 100, false, "Intensity: ", ""); elementY = elementY + 3
+mainWindow.toolbar.lightIntensitySlider.onValueChanged = function(value)
+	scene.lights[mainWindow.toolbar.lightSelectComboBox.currentItem].intensity = value / 100
+end
+mainWindow.toolbar.lightEmissionSlider = mainWindow.toolbar:addHorizontalSlider(2, elementY, elementWidth, 0xCCCCCC, 0x2D2D2D, 0xEEEEEE, 0xAAAAAA, 0, scene.lights[mainWindow.toolbar.lightSelectComboBox.currentItem].emissionDistance, scene.lights[mainWindow.toolbar.lightSelectComboBox.currentItem].emissionDistance, false, "Distance: ", ""); elementY = elementY + 3
 mainWindow.toolbar.lightEmissionSlider.onValueChanged = function(value)
 	scene.lights[mainWindow.toolbar.lightSelectComboBox.currentItem].emissionDistance = value
 end
+calculateLightComboBox()
 
 mainWindow.toolbar.blockColorSelector = mainWindow.toolbar:addColorSelector(2, elementY, elementWidth, 1, 0xEEEEEE, "Block color"); elementY = elementY + mainWindow.toolbar.blockColorSelector.height + 1
 mainWindow.toolbar.backgroundColorSelector = mainWindow.toolbar:addColorSelector(2, elementY, elementWidth, 1, scene.backgroundColor, "Background color"); elementY = elementY + mainWindow.toolbar.blockColorSelector.height + 1
@@ -454,7 +459,7 @@ end
 mainWindow.toolbar:addLabel(2, elementY, elementWidth, 1, 0xEEEEEE, "RAM monitoring"):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); elementY = elementY + 2
 mainWindow.toolbar.RAMChart = mainWindow.toolbar:addChart(2, elementY, elementWidth, mainWindow.toolbar.height - elementY - 6, 0xEEEEEE, 0xAAAAAA, 0x555555, 0x66DB80, 0.35, 0.25, "s", "%", true, {}); elementY = elementY + mainWindow.toolbar.RAMChart.height + 1
 mainWindow.toolbar.RAMChart.roundValues = true
--- mainWindow.toolbar.RAMChart.showXAxisValues = false
+mainWindow.toolbar.RAMChart.showXAxisValues = false
 mainWindow.toolbar.RAMChart.counter = 1
 mainWindow.toolbar.RAMProgressBar = mainWindow.toolbar:addProgressBar(2, elementY, elementWidth, 0x66DB80, 0x2D2D2D, 0xAAAAAA, 1, true, true, "", "%")
 

@@ -57,7 +57,7 @@ end
 function vectorLibrary.toString(vector)
 	local result = "("
 	for dismension = 1, #vector do
-		result = result .. vector[dismension]
+		result = result .. string.format("%.2f", vector[dismension])
 		if dismension < #vector then
 			result = result .. "; "
 		end

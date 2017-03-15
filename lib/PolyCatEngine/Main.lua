@@ -24,10 +24,11 @@ end
 
 -------------------------------------------------------- Light object --------------------------------------------------------
 
-function polyCatEngine.newLight(vector3Position, emissionDistance)
+function polyCatEngine.newLight(vector3Position, intensity, emissionDistance)
 	return {
 		position = vector3Position,
-		emissionDistance = emissionDistance
+		emissionDistance = emissionDistance,
+		intensity = intensity
 	}
 end
 
@@ -274,6 +275,7 @@ local function sceneRender(scene)
 	for lightIndex = 1, #scene.lights do
 		OCGL.pushLightToRenderQueue(
 			vector.newVector3(scene.lights[lightIndex].position[1], scene.lights[lightIndex].position[2], scene.lights[lightIndex].position[3]),
+			scene.lights[lightIndex].intensity,
 			scene.lights[lightIndex].emissionDistance
 		)
 	end

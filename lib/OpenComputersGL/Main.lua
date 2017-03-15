@@ -79,8 +79,8 @@ end
 
 -------------------------------------------------------- Render queue methods --------------------------------------------------------
 
-function OCGL.newIndexedLight(indexOfVertex1, emissionDistance)
-	return { indexOfVertex1, emissionDistance }
+function OCGL.newIndexedLight(indexOfVertex1, intensity, emissionDistance)
+	return { indexOfVertex1, intensity, emissionDistance }
 end
 
 function OCGL.newIndexedTriangle(indexOfVertex1, indexOfVertex2, indexOfVertex3, material)
@@ -95,9 +95,9 @@ function OCGL.newIndexedFloatingText(indexOfVertex, color, text)
 	return {indexOfVertex, text, color}
 end
 
-function OCGL.pushLightToRenderQueue(vector3Vertex, emissionDistance)
+function OCGL.pushLightToRenderQueue(vector3Vertex, intensity, emissionDistance)
 	table.insert(OCGL.vertices, vector3Vertex)
-	table.insert(OCGL.lights, OCGL.newIndexedLight(OCGL.nextVertexIndex, emissionDistance))
+	table.insert(OCGL.lights, OCGL.newIndexedLight(OCGL.nextVertexIndex, intensity, emissionDistance))
 	OCGL.nextVertexIndex = OCGL.nextVertexIndex + 1
 end
 
@@ -147,7 +147,7 @@ function OCGL.getTriangleLightIntensity(vertex1, vertex2, vertex3, indexedLight)
 	}
 	local lightDistance = vector.length(lightVector)
 
-	if lightDistance <= indexedLight[2] then
+	if lightDistance <= indexedLight[3] then
 		local normalVector = vector.getSurfaceNormal(vertex1, vertex2, vertex3)
 		-- buffer.text(2, buffer.screen.height - 2, 0x0, "normalVector: " .. normalVector[1] .. " x " .. normalVector[2] .. " x " .. normalVector[3])
 
@@ -161,7 +161,7 @@ function OCGL.getTriangleLightIntensity(vertex1, vertex2, vertex3, indexedLight)
 				absAngle = 3.1415926535898 - absAngle
 			end
 			-- buffer.text(2, buffer.screen.height, 0xFFFFFF, "Angle: " .. math.deg(angle) .. ", newAngle: " .. math.deg(absAngle) .. ", intensity: " .. absAngle / 1.5707963267949)
-			return (1 - lightDistance / indexedLight[2]) * (1 - absAngle / 1.5707963267949)
+			return indexedLight[2] * (1 - lightDistance / indexedLight[3]) * (1 - absAngle / 1.5707963267949)
 		else
 			return 0
 		end
@@ -181,7 +181,7 @@ function OCGL.calculateLights()
 				OCGL.lights[lightIndex]
 			)
 			if OCGL.triangles[triangleIndex][5] then
-				OCGL.triangles[triangleIndex][5] = (OCGL.triangles[triangleIndex][5] + intensity) / 2
+				OCGL.triangles[triangleIndex][5] = OCGL.triangles[triangleIndex][5] + intensity
 			else
 				OCGL.triangles[triangleIndex][5] = intensity
 			end
@@ -207,10 +207,19 @@ function OCGL.render()
 				if OCGL.renderMode == OCGL.renderModes.constantShading then
 					renderer.renderFilledTriangle({ vertex1, vertex2, vertex3 }, material.color)
 				elseif OCGL.renderMode == OCGL.renderModes.flatShading then
-					local finalColor = 0x0
-					finalColor = colorlib.alphaBlend(material.color, 0x0, OCGL.triangles[triangleIndex][5])
+					-- local finalColor = 0x0
+					-- finalColor = colorlib.alphaBlend(material.color, 0x0, OCGL.triangles[triangleIndex][5])
+					-- OCGL.triangles[triangleIndex][5] = nil
+					-- renderer.renderFilledTriangle({ vertex1, vertex2, vertex3 }, finalColor)
+
+					local r, g, b = colorlib.HEXtoRGB(material.color)
+					r, g, b = r * OCGL.triangles[triangleIndex][5], g * OCGL.triangles[triangleIndex][5], b * OCGL.triangles[triangleIndex][5]
+					if r > 255 then r = 255 end
+					if g > 255 then g = 255 end
+					if b > 255 then b = 255 end
 					OCGL.triangles[triangleIndex][5] = nil
-					renderer.renderFilledTriangle({ vertex1, vertex2, vertex3 }, finalColor)
+
+					renderer.renderFilledTriangle({ vertex1, vertex2, vertex3 }, colorlib.RGBtoHEX(r, g, b))
 				end
 			elseif material.type == materials.types.textured then
 				vertex1[4], vertex1[5] = OCGL.vertices[OCGL.triangles[triangleIndex][1]][4], OCGL.vertices[OCGL.triangles[triangleIndex][1]][5]
