@@ -26,7 +26,7 @@ local polyCatEngine = require("PolyCatEngine/Main")
 -- /MineOS/Desktop/3DTest.app/3DTest.lua
 
 buffer.start()
--- polyCatEngine.intro(vector.newVector3(0, 0, 0), 20)
+polyCatEngine.intro(vector.newVector3(0, 0, 0), 20)
 
 local mainWindow = windows.fullScreen()
 local scene = polyCatEngine.newScene(0x1D1D1D)
