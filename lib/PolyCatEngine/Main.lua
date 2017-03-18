@@ -3,7 +3,6 @@
 
 local buffer = require("doubleBuffering")
 local vector = require("vector")
-local matrix = require("matrix")
 local OCGL = require("OpenComputersGL/Main")
 local renderer = require("OpenComputersGL/Renderer")
 local materials = require("OpenComputersGL/Materials")
@@ -101,6 +100,40 @@ function polyCatEngine.newFloatingText(vector3Position, color, text)
 end
 
 -------------------------------------------------------- Plane object --------------------------------------------------------
+
+function polyCatEngine.newPlane(vector3Position, width, height, segmentsWidth, segmentsHeight, material)
+	local vertices, triangles, widthCellSize, heightCellSize, vertexIndex = {}, {}, width / segmentsWidth, height / segmentsHeight, 1
+	segmentsWidth, segmentsHeight = segmentsWidth + 1, segmentsHeight + 1
+	
+	for zSegment = 1, segmentsHeight do
+		for xSegment = 1, segmentsWidth do
+			table.insert(vertices, vector.newVector3(xSegment * widthCellSize - widthCellSize, 0, zSegment * heightCellSize - heightCellSize))
+
+			if xSegment < segmentsWidth and zSegment < segmentsHeight then
+				table.insert(triangles,
+					OCGL.newIndexedTriangle(
+						vertexIndex,
+						vertexIndex + 1,
+						vertexIndex + segmentsWidth
+					)
+				)
+				table.insert(triangles,
+					OCGL.newIndexedTriangle(
+						vertexIndex + 1,
+						vertexIndex + segmentsWidth + 1,
+						vertexIndex + segmentsWidth
+					)
+				)
+			end
+
+			vertexIndex = vertexIndex + 1
+		end
+	end
+	
+	return polyCatEngine.newMesh(vector3Position, vertices, triangles, material)
+end
+
+-------------------------------------------------------- Textured plane object --------------------------------------------------------
 
 function polyCatEngine.newTexturedPlane(vector3Position, width, height, texture)
 	width, height = width / 2, height / 2
@@ -217,7 +250,7 @@ local function cameraSetFOV(camera, FOV)
 	else
 		error("FOV can't be < 0 or > 180 degrees")
 	end
-	-- ecs.error(camera.projectionSurface)
+
 	return camera
 end
 
@@ -389,8 +422,7 @@ function polyCatEngine.meshRaycast(mesh, vector3RayStart, vector3RayEnd)
 			end 
 		end
 	end
-
-	-- ecs.error(closestTriangleIndex)
+	
 	return closestTriangleIndex, minimalDistance
 end
 

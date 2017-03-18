@@ -3,22 +3,19 @@
 
 -- package.loaded["GUI"] = nil
 -- package.loaded["doubleBuffering"] = nil
-package.loaded["vector"] = nil
-package.loaded["matrix"] = nil
-package.loaded["OpenComputersGL/Main"] = nil
-package.loaded["OpenComputersGL/Materials"] = nil
-package.loaded["OpenComputersGL/Renderer"] = nil
-package.loaded["PolyCatEngine/Main"] = nil
+-- package.loaded["vector"] = nil
+-- package.loaded["OpenComputersGL/Main"] = nil
+-- package.loaded["OpenComputersGL/Materials"] = nil
+-- package.loaded["OpenComputersGL/Renderer"] = nil
+-- package.loaded["PolyCatEngine/Main"] = nil
 
 local colorlib = require("colorlib")
-local ecs = require("ECSAPI")
 local computer = require("computer")
 local buffer = require("doubleBuffering")
 local event = require("event")
 local GUI = require("GUI")
 local windows = require("windows")
 local vector = require("vector")
-local matrix = require("matrix")
 local materials = require("OpenComputersGL/Materials")
 local renderer = require("OpenComputersGL/Renderer")
 local OCGL = require("OpenComputersGL/Main")
@@ -46,24 +43,6 @@ scene:addLight(polyCatEngine.newLight(vector.newVector3(0, 20, 0), 1.0, 200))
 local blockSize = 5
 local rotationAngle = math.rad(5)
 local translationOffset = 1
-
----------------------------------------------- Lighting test ----------------------------------------------
-
--- scene:addObject(polyCatEngine.newCube(vector.newVector3(0, 0, 0), 5, materials.newSolidMaterial(0xFF4444)))
--- scene:addObject(
--- 	polyCatEngine.newMesh(
--- 		vector.newVector3(0, 0, 0),
--- 		{
--- 			vector.newVector3(0, 0, 10),
--- 			vector.newVector3(10, 0, 10),
--- 			vector.newVector3(5, 0, 0),	
--- 		},
--- 		{
--- 			OCGL.newIndexedTriangle(1, 2, 3)
--- 		},
--- 		materials.newSolidMaterial(0xFF4444)
--- 	)
--- )
 
 ---------------------------------------------- Voxel-world system ----------------------------------------------
 
@@ -158,16 +137,23 @@ local function renderWorld()
 	end
 end
 
--- setBlock(1, 1, 1, 0xFFFFFF)
+-- Mode 1
 local hue, hueStep = 0, 360 / 9
-for i = -1, 1 do
-	for j = -1, 1 do
-		if not (i == 0 and j == 0) then
-			setBlock(i, 0, j, colorlib.HSBtoHEX(hue, 100, 100))
+for z = -1, 1 do
+	for x = -1, 1 do
+		if not (x == 0 and z == 0) then
+			setBlock(x, 0, z, colorlib.HSBtoHEX(hue, 100, 100))
 			hue = hue + hueStep
 		end
 	end
 end
+
+-- -- Mode 2
+-- for z = 1, 7 do
+-- 	for x = -3, 3 do
+-- 		setBlock(x, 0, z, 0xFFFFFF)
+-- 	end
+-- end
 
 ---------------------------------------------- Cat ----------------------------------------------
 
@@ -179,6 +165,18 @@ end
 -- scene.camera:translate(0, 20, 0)
 -- scene.camera:rotate(math.rad(90), 0, 0)
 -- local texturedPlane = scene:addObject(polyCatEngine.newTexturedPlane(vector.newVector3(0, 0, 0), 20, 20, materials.newDebugTexture(16, 16, 40)))
+
+---------------------------------------------- Wave ----------------------------------------------
+
+-- local xCells, yCells = 4, 1
+-- local plane = polyCatEngine.newPlane(vector.newVector3(0, 0, 0), 40, 15, xCells, yCells, materials.newSolidMaterial(0xFFFFFF))
+-- plane.nextWave = function(mesh)
+-- 	for xCell = 1, xCells do
+-- 		for yCell = 1, yCells do
+			
+-- 		end
+-- 	end
+-- end
 
 ---------------------------------------------- Fractal field ----------------------------------------------
 
@@ -457,11 +455,11 @@ mainWindow.toolbar.backgroundColorSelector.onTouch = function()
 end
 
 mainWindow.toolbar:addLabel(2, elementY, elementWidth, 1, 0xEEEEEE, "RAM monitoring"):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); elementY = elementY + 2
-mainWindow.toolbar.RAMChart = mainWindow.toolbar:addChart(2, elementY, elementWidth, mainWindow.toolbar.height - elementY - 6, 0xEEEEEE, 0xAAAAAA, 0x555555, 0x66DB80, 0.35, 0.25, "s", "%", true, {}); elementY = elementY + mainWindow.toolbar.RAMChart.height + 1
+mainWindow.toolbar.RAMChart = mainWindow.toolbar:addChart(2, elementY, elementWidth, mainWindow.toolbar.height - elementY - 3, 0xEEEEEE, 0xAAAAAA, 0x555555, 0x66DB80, 0.35, 0.25, "s", "%", true, {}); elementY = elementY + mainWindow.toolbar.RAMChart.height + 1
 mainWindow.toolbar.RAMChart.roundValues = true
-mainWindow.toolbar.RAMChart.showXAxisValues = false
+-- mainWindow.toolbar.RAMChart.showXAxisValues = false
 mainWindow.toolbar.RAMChart.counter = 1
-mainWindow.toolbar.RAMProgressBar = mainWindow.toolbar:addProgressBar(2, elementY, elementWidth, 0x66DB80, 0x2D2D2D, 0xAAAAAA, 1, true, true, "", "%")
+-- mainWindow.toolbar.RAMProgressBar = mainWindow.toolbar:addProgressBar(2, elementY, elementWidth, 0x66DB80, 0x2D2D2D, 0xAAAAAA, 1, true, true, "", "%")
 
 mainWindow.toolbar:addButton(1, mainWindow.toolbar.height - 2, mainWindow.toolbar.width, 3, 0x2D2D2D, 0xEEEEEE, 0x444444, 0xEEEEEE, "Exit").onTouch = function()
 	mainWindow:close()
@@ -475,8 +473,7 @@ end
 mainWindow.onAnyEvent = function(e)
 	if not mainWindow.toolbar.isHidden then
 		local totalMemory = computer.totalMemory()
-		mainWindow.toolbar.RAMProgressBar.value = math.ceil((totalMemory - computer.freeMemory()) / totalMemory * 100)
-		table.insert(mainWindow.toolbar.RAMChart.values, {mainWindow.toolbar.RAMChart.counter, mainWindow.toolbar.RAMProgressBar.value})
+		table.insert(mainWindow.toolbar.RAMChart.values, {mainWindow.toolbar.RAMChart.counter, math.ceil((totalMemory - computer.freeMemory()) / totalMemory * 100)})
 		mainWindow.toolbar.RAMChart.counter = mainWindow.toolbar.RAMChart.counter + 1
 		if #mainWindow.toolbar.RAMChart.values > 20 then table.remove(mainWindow.toolbar.RAMChart.values, 1) end
 

@@ -3,7 +3,6 @@
 
 local colorlib = require("colorlib")
 local vector = require("vector")
-local matrix = require("matrix")
 local buffer = require("doubleBuffering")
 local materials = require("OpenComputersGL/Materials")
 local renderer = require("OpenComputersGL/Renderer")
