@@ -1199,18 +1199,8 @@ local function toggleLeftToolBar()
 	calculateSizes()
 end
 
-local function createWindow()
-	mainWindow = windows.fullScreen()
-
-	mainWindow.codeView = mainWindow:addCodeView(1, 1, 1, 1, {""}, 1, 1, 1, {}, {}, config.highlightLuaSyntax, 2)
-	mainWindow.codeView.scrollBars.vertical.onTouch = function()
-		mainWindow.codeView.fromLine = mainWindow.codeView.scrollBars.vertical.value
-	end
-	mainWindow.codeView.scrollBars.horizontal.onTouch = function()
-		mainWindow.codeView.fromSymbol = mainWindow.codeView.scrollBars.horizontal.value
-	end
-
-	local editOrRightClickMenu = GUI.contextMenu(1, 1)
+local function createEditOrRightClickMenu(x, y)
+	local editOrRightClickMenu = GUI.contextMenu(x, y)
 	editOrRightClickMenu:addItem(localization.cut, not mainWindow.codeView.selections[1], "^X").onTouch = function()
 		cut()
 	end
@@ -1243,6 +1233,19 @@ local function createWindow()
 	end
 	editOrRightClickMenu:addItem(localization.selectAll, false, "^A").onTouch = function()
 		selectAll()
+	end
+	editOrRightClickMenu:show()
+end
+
+local function createWindow()
+	mainWindow = windows.fullScreen()
+
+	mainWindow.codeView = mainWindow:addCodeView(1, 1, 1, 1, {""}, 1, 1, 1, {}, {}, config.highlightLuaSyntax, 2)
+	mainWindow.codeView.scrollBars.vertical.onTouch = function()
+		mainWindow.codeView.fromLine = mainWindow.codeView.scrollBars.vertical.value
+	end
+	mainWindow.codeView.scrollBars.horizontal.onTouch = function()
+		mainWindow.codeView.fromSymbol = mainWindow.codeView.scrollBars.horizontal.value
 	end
 
 	mainWindow.topMenu = mainWindow:addMenu(1, 1, 1, colors.topMenu.backgroundColor, colors.topMenu.textColor, colors.topMenu.backgroundPressedColor, colors.topMenu.textPressedColor)
@@ -1287,8 +1290,7 @@ local function createWindow()
 
 	local item3 = mainWindow.topMenu:addItem(localization.edit)
 	item3.onTouch = function()
-		editOrRightClickMenu.x, editOrRightClickMenu.y = item3.x, item3.y + 1
-		editOrRightClickMenu:show()
+		createEditOrRightClickMenu(item3.x, item3.y + 1)
 	end
 
 	local item4 = mainWindow.topMenu:addItem(localization.properties)
@@ -1519,8 +1521,7 @@ local function createWindow()
 			cursor.blinkState = true
 			
 			if eventData[5] == 1 then
-				editOrRightClickMenu.x, editOrRightClickMenu.y = eventData[3], eventData[4]
-				editOrRightClickMenu:show()
+				createEditOrRightClickMenu(eventData[3], eventData[4])
 			else
 				setCursorPositionAndClearSelection(convertScreenCoordinatesToTextPosition(eventData[3], eventData[4]))
 
