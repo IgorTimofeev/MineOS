@@ -1,4 +1,3 @@
-
 local component = require("component")
 local unicode = require("unicode")
 local fs = require("filesystem")
@@ -7,8 +6,35 @@ local gpu = component.gpu
 ---------------------------------------------------------------------------------------------------------------------------------
 
 local applications = {
-	{ url = "https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/lib/ECSAPI.lua", path = "/lib/ECSAPI.lua" },
+	{ url = "https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/lib/advancedLua.lua", path = "/lib/advancedLua.lua" },
 	{ url = "https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/lib/colorlib.lua", path = "/lib/colorlib.lua" },
+	{ url = "https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/lib/image.lua", path = "/lib/image.lua" },
+	{ url = "https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/lib/doubleBuffering.lua", path = "/lib/doubleBuffering.lua" },
+	{ url = "https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/lib/syntax.lua", path = "/lib/syntax.lua" },
+	{ url = "https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/lib/GUI.lua", path = "/lib/GUI.lua" },
+	{ url = "https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/lib/windows.lua", path = "/lib/windows.lua" },
+	{ url = "https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/lib/MineOSCore.lua", path = "/lib/MineOSCore.lua" },
+	{ url = "https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/lib/palette.lua", path = "/lib/palette.lua" },
+	{ url = "https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/lib/ECSAPI.lua", path = "/lib/ECSAPI.lua" },
+
+	{ url = "https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/MineOS/Icons/Folder.pic", path = "/MineOS/System/OS/Icons/Folder.pic" },
+	{ url = "https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/MineOS/Icons/Script.pic", path = "/MineOS/System/OS/Icons/Script.pic" },
+	{ url = "https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/MineOS/Icons/Text.pic", path = "/MineOS/System/OS/Icons/Text.pic" },
+	{ url = "https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/MineOS/Icons/Config.pic", path = "/MineOS/System/OS/Icons/Config.pic" },
+	{ url = "https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/MineOS/Icons/Lua.pic", path = "/MineOS/System/OS/Icons/Lua.pic" },
+	{ url = "https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/MineOS/Icons/Image.pic", path = "/MineOS/System/OS/Icons/Image.pic" },
+	{ url = "https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/MineOS/Icons/Pastebin.pic", path = "/MineOS/System/OS/Icons/Pastebin.pic" },
+	{ url = "https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/MineOS/Icons/FileNotExists.pic", path = "/MineOS/System/OS/Icons/FileNotExists.pic" },
+	{ url = "https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/MineOS/Icons/Archive.pic", path = "/MineOS/System/OS/Icons/Archive.pic" },
+	{ url = "https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/MineOS/Icons/3DModel.pic", path = "/MineOS/System/OS/Icons/3DModel.pic" },
+	{ url = "https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/MineOS/Icons/Application.pic", path = "/MineOS/System/OS/Icons/Application.pic" },
+	{ url = "https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/MineOS/Icons/Trash.pic", path = "/MineOS/System/OS/Icons/Trash.pic" },
+
+	{ url = "https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/MineOS/Languages/Russian.lang", path = "/MineOS/System/OS/Languages/Russian.lang" },
+	{ url = "https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/MineOS/OSSettings.cfg", path = "/MineOS/System/OS/OSSettings.cfg" },
+
+	{ url = "https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/Applications/MineCodeIDE/Localization/Russian.lang", path = "/MineCode/Resources/Localization/Russian.lang" },
+	{ url = "https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/Applications/MineCodeIDE/MineCodeIDE.lua", path = "/MineCode/MineCode.lua" },
 }
 
 ---------------------------------------------------------------------------------------------------------------------------------
@@ -22,7 +48,7 @@ function getFile(url, path)
 	if pcallSuccess then
 		if requestHandle then
 			while true do
-				local data, reason = requestHandle.read(math.huge)	
+				local data, reason = requestHandle.read(math.huge)  
 				if data then
 					file:write(data)
 				else
@@ -36,8 +62,8 @@ function getFile(url, path)
 				end
 			end
 		else
-			errro("Invalid URL addess")
-		end	
+			error("Invalid URL-address: " .. tostring(url))
+		end 
 	else
 		error("Usage: component.internet.request(string url)")
 	end
@@ -113,6 +139,6 @@ local function downloadWindow()
 	drawOldPixels(oldPixels)
 end
 
-------------------------------------------- Программа -------------------------------------------
+---------------------------------------------------------------------------------------------------------------------------------
 
 downloadWindow()
