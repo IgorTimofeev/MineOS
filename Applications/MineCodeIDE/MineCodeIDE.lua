@@ -56,11 +56,12 @@ local config = {
 	cursorSymbol = "┃",
 	cursorBlinkDelay = 0.5,
 	doubleClickDelay = 0.4,
-	screenScale = 1,
+	screenResolution = {},
 	enableAutoBrackets = true,
 	highlightLuaSyntax = true,
 	enableAutocompletion = true,
 }
+config.screenResolution.width, config.screenResolution.height = component.gpu.getResolution()
 
 local colors = {
 	topToolBar = 0xDDDDDD,
@@ -122,7 +123,7 @@ local cursor = {
 }
 
 local resourcesPath = MineOSCore.getCurrentApplicationResourcesDirectory() 
-local configPath = resourcesPath .. "Config.cfg"
+local configPath = resourcesPath .. "ConfigVersion2.cfg"
 local localization = MineOSCore.getLocalization(resourcesPath .. "Localization/")
 local findStartFrom
 local clipboard
@@ -253,7 +254,7 @@ end
 
 local function calculateSizes()
 	mainWindow.width, mainWindow.height = buffer.screen.width, buffer.screen.height
-	mainWindow.leftTreeView.width = math.floor(mainWindow.width * 0.16)
+	mainWindow.leftTreeView.width = math.floor(mainWindow.width * 0.165)
 
 	if mainWindow.leftTreeView.isHidden then
 		mainWindow.codeView.localPosition.x, mainWindow.codeView.width = 1, mainWindow.width
@@ -303,22 +304,6 @@ local function calculateSizes()
 	mainWindow.errorMessage.backgroundPanel.width, mainWindow.errorMessage.errorTextBox.width = mainWindow.errorMessage.width, mainWindow.errorMessage.width - 4
 
 	mainWindow.topMenu.width = mainWindow.width
-end
-
-local function changeScale(newScale)
-	buffer.changeResolution(ecs.getScaledResolution(newScale))
-	calculateSizes()
-	mainWindow:draw()
-	buffer.draw()
-	config.screenScale = newScale
-end
-
-local function scalePlus()
-	if config.screenScale > 0.3 then changeScale(config.screenScale - 0.1); saveConfig() end
-end
-
-local function scaleMinus()
-	if config.screenScale < 1 then changeScale(config.screenScale + 0.1); saveConfig() end
 end
 
 local function updateTitle()
@@ -575,6 +560,44 @@ end
 local function removeWindowsLineEndings(text)
 	local result = text:gsub("\r\n", "\n")
 	return result
+end
+
+local function changeResolution(width, height)
+	buffer.changeResolution(width, height)
+	calculateSizes()
+	mainWindow:draw()
+	buffer.draw()
+	config.screenResolution.width = width
+	config.screenResolution.height = height
+end
+
+local function changeResolutionWindow()
+	mainWindow.settingsContainer.isHidden = false
+	local textBoxesWidth = math.floor(mainWindow.width * 0.3)
+	local textBoxWidth, x, y = math.floor(textBoxesWidth / 2), math.floor(mainWindow.width / 2 - textBoxesWidth / 2), math.floor(mainWindow.height / 2) - 3
+	
+	mainWindow.settingsContainer:addLabel(1, y, mainWindow.width, 1, 0xFFFFFF, localization.changeResolution):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); y = y + 3
+	local inputTextBoxWidth = mainWindow.settingsContainer:addInputTextBox(x, y, textBoxWidth, 3, 0xCCCCCC, 0x777777, 0xCCCCCC, 0x2D2D2D, tostring(config.screenResolution.width)); x = x + textBoxWidth + 2
+	local inputTextBoxHeight = mainWindow.settingsContainer:addInputTextBox(x, y, textBoxWidth, 3, 0xCCCCCC, 0x777777, 0xCCCCCC, 0x2D2D2D, tostring(config.screenResolution.height))
+	
+	local maxResolutionWidth, maxResolutionHeight = component.gpu.maxResolution()
+	inputTextBoxWidth.validator = function(text)
+		local number = tonumber(text)
+		if number and number >= 1 and number <= maxResolutionWidth then return true end
+	end
+	inputTextBoxHeight.validator = function(text)
+		local number = tonumber(text)
+		if number and number >= 1 and number <= maxResolutionHeight then return true end
+	end
+
+	local oldOnTouch = mainWindow.settingsContainer.backgroundPanel.onTouch
+	mainWindow.settingsContainer.backgroundPanel.onTouch = function()
+		config.screenResolution.width, config.screenResolution.height = tonumber(inputTextBoxWidth.text), tonumber(inputTextBoxHeight.text)
+		saveConfig()
+		hideSettingsContainer()
+		changeResolution(config.screenResolution.width, config.screenResolution.height)
+		mainWindow.settingsContainer.backgroundPanel.onTouch = oldOnTouch
+	end
 end
 
 local function createInputTextBoxForSettingsWindow(title, placeholder, onInputFinishedMethod, validatorMethod)
@@ -1365,11 +1388,8 @@ local function createWindow()
 			toggleEnableAutocompleteDatabase()
 		end
 		menu:addSeparator()
-		menu:addItem(localization.scalePlus, false, "^+").onTouch = function()
-			scalePlus()
-		end
-		menu:addItem(localization.scaleMinus, false, "^-").onTouch = function()
-			scaleMinus()
+		menu:addItem(localization.changeResolution, false, "^R").onTouch = function()
+			changeResolutionWindow()
 		end
 		menu:show()
 	end
@@ -1613,12 +1633,9 @@ local function createWindow()
 				-- Delete
 				elseif eventData[4] == 211 then
 					deleteLine(cursor.position.line)
-				-- +
-				elseif eventData[4] == 13 then
-					scalePlus()
-				-- -
-				elseif eventData[4] == 12 then
-					scaleMinus()
+				-- R
+				elseif eventData[4] == 19 then
+					changeResolutionWindow()
 				end
 			-- Arrows up, down, left, right
 			elseif eventData[4] == 200 then
@@ -1673,11 +1690,6 @@ local function createWindow()
 			if isClickedOnCodeArea(eventData[3], eventData[4]) then
 				scroll(eventData[5], config.scrollSpeed)
 			end
-		elseif eventData[1] == "component_added" or eventData[1] == "component_removed" then
-			if eventData[3] == "screen" then
-				os.sleep(0.5)
-				changeScale(config.screenScale)
-			end
 		elseif not eventData[1] then
 			cursor.blinkState = not cursor.blinkState
 		end
@@ -1704,7 +1716,7 @@ end
 
 loadConfig()
 createWindow()
-changeScale(config.screenScale)
+changeResolution(config.screenResolution.width, config.screenResolution.height)
 updateTitle()
 updateRAMProgressBar()
 mainWindow:draw()
