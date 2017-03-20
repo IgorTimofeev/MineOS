@@ -1621,7 +1621,8 @@ end
 local function treeViewUpdateFileList(treeView)
 	treeView.fileList = {}
 	updateFileList(treeView, 1, treeView.workPath)
-
+	table.sort(treeView.fileList, function(a, b) return unicode.lower(a.path) < unicode.lower(b.path) end)
+	
 	return treeView
 end
 
@@ -1852,6 +1853,11 @@ function GUI.chart(x, y, width, height, axisColor, axisValueColor, axisHelpersCo
 end
 
 --------------------------------------------------------------------------------------------------------------------------------
+
+-- buffer.start()
+-- buffer.clear(0x262626)
+-- GUI.treeView(2, 2, 50, 40, 0xFFFFFF, 0x0, 0x262626, 0x555555, 0x888888, 0xFF4444, 0x44FF44, "/MineOS/Desktop/3DTest.app/"):draw()
+-- buffer.draw(true)
 
 -- buffer.start()
 -- local x, y, width, height = 10, 10, 32, 16
