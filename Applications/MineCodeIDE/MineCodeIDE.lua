@@ -625,6 +625,7 @@ end
 
 local function loadFile(path)
 	newFile()
+	table.remove(mainWindow.codeView.lines, 1)
 	local file = io.open(path, "r")
 	for line in file:lines() do
 		line = removeWindowsLineEndings(removeTabs(line))

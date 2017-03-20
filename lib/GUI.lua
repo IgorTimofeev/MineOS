@@ -1604,25 +1604,47 @@ end
 
 ----------------------------------------- Color Selector object -----------------------------------------
 
-local function updateFileList(treeView, xOffset, path)
+local function updateFileList(directoriesToShowContent, xOffset, path)
+	local localFileList = {}
 	for file in fs.list(path) do
 		local element = {}
 		element.path = path .. file
 		element.xOffset = xOffset
 		element.isDirectory = fs.isDirectory(element.path)
-		table.insert(treeView.fileList, element)
-
-		if treeView.directoriesToShowContent[element.path] then
-			updateFileList(treeView, xOffset + 2, path .. file)
-		end		
+		table.insert(localFileList, element)
 	end
+
+	-- Sort file list alphabeitcally
+	table.sort(localFileList, function(a, b) return unicode.lower(a.path) < unicode.lower(b.path) end)
+	-- Move folders on top and recursively get their content if needed
+	local i, nextDirectoryIndex, nextLocalFileListIndex = 1, 1, 1
+	while i <= #localFileList do
+		if localFileList[i].isDirectory then
+			table.insert(localFileList, nextDirectoryIndex, localFileList[i])
+			table.remove(localFileList, i + 1)
+
+			if directoriesToShowContent[localFileList[nextDirectoryIndex].path] then
+				local nextLocalFileList = updateFileList(directoriesToShowContent, xOffset + 2, localFileList[nextDirectoryIndex].path)
+				
+				nextLocalFileListIndex = nextDirectoryIndex + 1
+				for j = 1, #nextLocalFileList do
+					table.insert(localFileList, nextLocalFileListIndex, nextLocalFileList[j])
+					nextLocalFileListIndex = nextLocalFileListIndex + 1
+				end
+				i, nextDirectoryIndex = i + #nextLocalFileList, nextDirectoryIndex + #nextLocalFileList
+			end
+
+			nextDirectoryIndex = nextDirectoryIndex + 1
+		end
+
+		i = i + 1
+	end
+
+	return localFileList
 end
 
 local function treeViewUpdateFileList(treeView)
-	treeView.fileList = {}
-	updateFileList(treeView, 1, treeView.workPath)
-	table.sort(treeView.fileList, function(a, b) return unicode.lower(a.path) < unicode.lower(b.path) end)
-	
+	treeView.fileList = updateFileList(treeView.directoriesToShowContent, 1, treeView.workPath)
 	return treeView
 end
 
@@ -1856,7 +1878,12 @@ end
 
 -- buffer.start()
 -- buffer.clear(0x262626)
--- GUI.treeView(2, 2, 50, 40, 0xFFFFFF, 0x0, 0x262626, 0x555555, 0x888888, 0xFF4444, 0x44FF44, "/MineOS/Desktop/3DTest.app/"):draw()
+-- local treeView = GUI.treeView(2, 2, 50, 40, 0xFFFFFF, 0x0, 0x262626, 0x555555, 0x888888, 0xFF4444, 0x44FF44, "/MineOS/System/OS/")
+
+-- treeView.directoriesToShowContent["/MineOS/System/OS/Languages/"] = true
+-- treeView:updateFileList()
+
+-- treeView:draw()
 -- buffer.draw(true)
 
 -- buffer.start()
