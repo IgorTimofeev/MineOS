@@ -306,7 +306,7 @@
     name="lib/windows.lua",
     url="IgorTimofeev/OpenComputers/master/lib/windows.lua",
     type="Library",
-    version=1.19,
+    version=1.20,
   },
   {
     name="lib/rayEngine.lua",
@@ -511,7 +511,7 @@
     icon="IgorTimofeev/OpenComputers/master/Applications/MineCodeIDE/Icon.pic",
     createShortcut="dock",
     forceDownload=true,
-    version=1.67,
+    version=1.68,
     resources={
       {
         name="Localization/Russian.lang",

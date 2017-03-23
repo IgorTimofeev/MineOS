@@ -42,33 +42,36 @@ local applications = {
 local resolutionWidth, resolutionHeight = gpu.getResolution()
 
 function getFile(url, path)
-	local file = io.open(path, "w")
-
-	local pcallSuccess, requestHandle, requestReason = pcall(component.internet.request, url)
-	if pcallSuccess then
-		if requestHandle then
-			while true do
-				local data, reason = requestHandle.read(math.huge)  
-				if data then
-					file:write(data)
-				else
-					requestHandle:close()
-					if reason then
-						error(reason)
+	local file, fileReason = io.open(path, "w")
+	if file then
+		local pcallSuccess, requestHandle, requestReason = pcall(component.internet.request, url)
+		if pcallSuccess then
+			if requestHandle then
+				while true do
+					local data, reason = requestHandle.read(math.huge)  
+					if data then
+						file:write(data)
 					else
-						file:close()
-						return
+						requestHandle:close()
+						if reason then
+							error(reason)
+						else
+							file:close()
+							return
+						end
 					end
 				end
-			end
+			else
+				error("Invalid URL-address: " .. tostring(url))
+			end 
 		else
-			error("Invalid URL-address: " .. tostring(url))
-		end 
-	else
-		error("Usage: component.internet.request(string url)")
-	end
+			error("Usage: component.internet.request(string url)")
+		end
 
-	file:close()
+		file:close()
+	else
+		error("Failed to open file for writing: " .. tostring(fileReason))
+	end
 end
 
 local function rememberOldPixels(x, y, width, height)

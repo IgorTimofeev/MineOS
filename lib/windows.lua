@@ -126,8 +126,8 @@ local function scrollBarHandler(window, object, objectIndex, eventData)
 		end
 	end
 	object.value = newValue
-	window:draw(); buffer.draw()
 	executeObjectMethod(object.onTouch, eventData)
+	window:draw(); buffer.draw()
 end
 
 local function treeViewHandler(window, object, objectIndex, eventData)

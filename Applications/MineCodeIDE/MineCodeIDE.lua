@@ -362,7 +362,7 @@ local function updateHighlights()
 	end
 end
 
-local function calculateErrorContainerSizeAndBeep(hideBreakpointButtons)
+local function calculateErrorContainerSizeAndBeep(hideBreakpointButtons, frequency, times)
 	mainWindow.errorContainer.errorTextBox.height = #mainWindow.errorContainer.errorTextBox.lines
 	mainWindow.errorContainer.height = 2 + mainWindow.errorContainer.errorTextBox.height
 	mainWindow.errorContainer.backgroundPanel.height = mainWindow.errorContainer.height
@@ -379,7 +379,7 @@ local function calculateErrorContainerSizeAndBeep(hideBreakpointButtons)
 	mainWindow:draw()
 	buffer.draw()
 
-	for i = 1, 3 do component.computer.beep(1500, 0.08) end	
+	for i = 1, times do component.computer.beep(frequency, 0.08) end	
 end
 
 local function showBreakpointMessage(variables)
@@ -400,7 +400,7 @@ local function showBreakpointMessage(variables)
 		table.insert(mainWindow.errorContainer.errorTextBox.lines, 1, {text = localization.variablesNotAvailable, color = 0x0})
 	end
 
-	calculateErrorContainerSizeAndBeep(false)
+	calculateErrorContainerSizeAndBeep(false, 1800, 1)
 end
 
 local function showErrorContainer(errorCode)
@@ -410,13 +410,25 @@ local function showErrorContainer(errorCode)
 	mainWindow.errorContainer.errorTextBox:setAlignment(GUI.alignment.horizontal.left, GUI.alignment.vertical.top)
 	mainWindow.errorContainer.errorTextBox.lines = string.wrap({errorCode}, mainWindow.errorContainer.errorTextBox.width)	
 	
+	-- Извлекаем ошибочную строку текущего скрипта
 	lastErrorLine = tonumber(errorCode:match("%:(%d+)%: in main chunk"))
-	updateHighlights()
 	if lastErrorLine then
+		-- Делаем поправку на количество брейкпоинтов в виде вставленных дебаг-строк
+		if breakpointLines then
+			local countOfBreakpointsBeforeLastErrorLine = 0
+			for i = 1, #breakpointLines do
+				if breakpointLines[i] < lastErrorLine then
+					countOfBreakpointsBeforeLastErrorLine = countOfBreakpointsBeforeLastErrorLine + 1
+				else
+					break
+				end
+			end
+			lastErrorLine = lastErrorLine - countOfBreakpointsBeforeLastErrorLine
+		end
 		gotoLine(lastErrorLine)
 	end
-	
-	calculateErrorContainerSizeAndBeep(true)
+	updateHighlights()
+	calculateErrorContainerSizeAndBeep(true, 1500, 3)
 end
 
 local function hideErrorContainer()
@@ -443,22 +455,29 @@ local function clearBreakpoints()
 end
 
 local function addBreakpoint()
-	breakpointLines = breakpointLines or {}
-	local lineExists
-	for i = 1, #breakpointLines do
-		if breakpointLines[i] == cursor.position.line then
-			lineExists = i
-			break
+	if mainWindow.errorContainer.isHidden then
+		breakpointLines = breakpointLines or {}
+		local lineExists
+		for i = 1, #breakpointLines do
+			if breakpointLines[i] == cursor.position.line then
+				lineExists = i
+				break
+			end
 		end
-	end
 
-	if lineExists then
-		table.remove(breakpointLines, lineExists)
-		if #breakpointLines == 0 then breakpointLines = nil end
-	else
-		table.insert(breakpointLines, cursor.position.line)
+		if lineExists then
+			table.remove(breakpointLines, lineExists)
+		else
+			table.insert(breakpointLines, cursor.position.line)
+		end
+
+		if #breakpointLines > 0 then
+			table.sort(breakpointLines, function(a, b) return a < b end)
+		else
+			breakpointLines = nil
+		end
+		updateHighlights()
 	end
-	updateHighlights()
 end
 
 local function fixFromLineByCursorPosition()
@@ -509,10 +528,10 @@ end
 
 local function isClickedOnCodeArea(x, y)
 	return
-		x >= mainWindow.codeView.codeAreaPosition and
+		x >= mainWindow.codeView.codeAreaPosition + 1 and
 		y >= mainWindow.codeView.y and
-		x < mainWindow.width and
-		y < mainWindow.codeView.y + mainWindow.codeView.height - 1 and
+		x <= mainWindow.codeView.codeAreaPosition + mainWindow.codeView.codeAreaWidth - 2 and
+		y <= mainWindow.codeView.y + mainWindow.codeView.height - 2 and
 		(mainWindow.errorContainer.isHidden or not mainWindow.errorContainer:isClicked(x, y))
 end
 
@@ -798,7 +817,7 @@ local function getVariables(codePart)
 				word ~= "and" and
 				word ~= "or"  and
 				-- Также проверяем, не число ли это в чистом виде
-				not word:match("^%d+$") and
+				not word:match("^[%d%.]+$") and
 				not word:match("^0x%x+$") and
 				-- Или символ конкатенации, например
 				not word:match("^%.+$")
@@ -844,9 +863,10 @@ local function continue()
 end
 
 local function run()
+	hideErrorContainer()
+
 	-- Инсертим брейкпоинты
 	if breakpointLines then
-		table.sort(breakpointLines, function(a, b) return a < b end)
 		local offset = 0
 		for i = 1, #breakpointLines do
 			local variables = getVariables(mainWindow.codeView.lines[breakpointLines[i] + offset])
@@ -867,13 +887,8 @@ local function run()
 	
 	-- Чистим дерьмо вилочкой, чистим
 	if breakpointLines then
-		local line = 1
-		while line <= #mainWindow.codeView.lines do
-			if mainWindow.codeView.lines[line]:match("^%_G%.MineCodeIDEDebugInfo") then
-				table.remove(mainWindow.codeView.lines, line)
-				line = line - 1
-			end
-			line = line + 1
+		for i = 1, #breakpointLines do
+			table.remove(mainWindow.codeView.lines, breakpointLines[i])
 		end
 	end
 
@@ -1601,168 +1616,173 @@ local function createWindow()
 		end
 	end
 
-	mainWindow.onAnyEvent = function(eventData)		
-		if eventData[1] == "touch" and isClickedOnCodeArea(eventData[3], eventData[4]) then
-			cursor.blinkState = true
+	mainWindow.onTouch = function(eventData)
+		cursor.blinkState = true
 
-			if eventData[5] == 1 then
-				createEditOrRightClickMenu(eventData[3], eventData[4])
-			else
-				setCursorPositionAndClearSelection(convertScreenCoordinatesToTextPosition(eventData[3], eventData[4]))
+		if eventData[5] == 1 then
+			createEditOrRightClickMenu(eventData[3], eventData[4])
+		else
+			setCursorPositionAndClearSelection(convertScreenCoordinatesToTextPosition(eventData[3], eventData[4]))
 
-				local newUptime = computer.uptime()
-				if newUptime - lastClickUptime <= config.doubleClickDelay then selectWord() end
-				lastClickUptime = newUptime
-			end
-		elseif eventData[1] == "drag" and isClickedOnCodeArea(eventData[3], eventData[4]) then
-			cursor.blinkState = true
+			local newUptime = computer.uptime()
+			if newUptime - lastClickUptime <= config.doubleClickDelay then selectWord() end
+			lastClickUptime = newUptime
+		end
+	end
+
+	mainWindow.onDrag = function(eventData)
+		cursor.blinkState = true
 			
-			if eventData[5] ~= 1 then
-				mainWindow.codeView.selections[1] = mainWindow.codeView.selections[1] or {from = {}, to = {}}
-				mainWindow.codeView.selections[1].from.symbol, mainWindow.codeView.selections[1].from.line = cursor.position.symbol, cursor.position.line
-				mainWindow.codeView.selections[1].to.symbol, mainWindow.codeView.selections[1].to.line = fixCursorPosition(convertScreenCoordinatesToTextPosition(eventData[3], eventData[4]))
-				
-				if mainWindow.codeView.selections[1].from.line > mainWindow.codeView.selections[1].to.line then
-					mainWindow.codeView.selections[1].from.line, mainWindow.codeView.selections[1].to.line = swap(mainWindow.codeView.selections[1].from.line, mainWindow.codeView.selections[1].to.line)
+		if eventData[5] ~= 1 then
+			mainWindow.codeView.selections[1] = mainWindow.codeView.selections[1] or {from = {}, to = {}}
+			mainWindow.codeView.selections[1].from.symbol, mainWindow.codeView.selections[1].from.line = cursor.position.symbol, cursor.position.line
+			mainWindow.codeView.selections[1].to.symbol, mainWindow.codeView.selections[1].to.line = fixCursorPosition(convertScreenCoordinatesToTextPosition(eventData[3], eventData[4]))
+			
+			if mainWindow.codeView.selections[1].from.line > mainWindow.codeView.selections[1].to.line then
+				mainWindow.codeView.selections[1].from.line, mainWindow.codeView.selections[1].to.line = swap(mainWindow.codeView.selections[1].from.line, mainWindow.codeView.selections[1].to.line)
+				mainWindow.codeView.selections[1].from.symbol, mainWindow.codeView.selections[1].to.symbol = swap(mainWindow.codeView.selections[1].from.symbol, mainWindow.codeView.selections[1].to.symbol)
+			elseif mainWindow.codeView.selections[1].from.line == mainWindow.codeView.selections[1].to.line then
+				if mainWindow.codeView.selections[1].from.symbol > mainWindow.codeView.selections[1].to.symbol then
 					mainWindow.codeView.selections[1].from.symbol, mainWindow.codeView.selections[1].to.symbol = swap(mainWindow.codeView.selections[1].from.symbol, mainWindow.codeView.selections[1].to.symbol)
-				elseif mainWindow.codeView.selections[1].from.line == mainWindow.codeView.selections[1].to.line then
-					if mainWindow.codeView.selections[1].from.symbol > mainWindow.codeView.selections[1].to.symbol then
-						mainWindow.codeView.selections[1].from.symbol, mainWindow.codeView.selections[1].to.symbol = swap(mainWindow.codeView.selections[1].from.symbol, mainWindow.codeView.selections[1].to.symbol)
-					end
 				end
 			end
-		elseif eventData[1] == "key_down" then
-			cursor.blinkState = true
+		end
+	end
 
-			-- Ctrl or CMD
-			if keyboard.isKeyDown(29) or keyboard.isKeyDown(219) then
-				-- Slash
-				if eventData[4] == 53 then
-					toggleComment()
-				-- ]
-				elseif eventData[4] == 27 then
-					config.enableAutoBrackets = not config.enableAutoBrackets
-					saveConfig()
-				-- I
-				elseif eventData[4] == 23 then
-					toggleEnableAutocompleteDatabase()
-				-- A
-				elseif eventData[4] == 30 then
-					selectAll()
-				-- C
-				elseif eventData[4] == 46 then
-					-- Shift
-					if keyboard.isKeyDown(42) then
-						selectAndPasteColor()
-					else
-						copy()
-					end
-				-- V
-				elseif eventData[4] == 47 then
-					paste(clipboard)
-				-- X
-				elseif eventData[4] == 45 then
-					cut()
-				-- W
-				elseif eventData[4] == 17 then
-					mainWindow:close()
-				-- N
-				elseif eventData[4] == 49 then
-					newFile()
-				-- O
-				elseif eventData[4] == 24 then
-					openFileWindow()
-				-- U
-				elseif eventData[4] == 22 and component.isAvailable("internet") then
-					downloadFileFromWeb()
-				-- S
-				elseif eventData[4] == 31 then
-					-- Shift
-					if mainWindow.leftTreeView.currentFile and not keyboard.isKeyDown(42) then
-						saveFileWindow()
-					else
-						saveFileAsWindow()
-					end
-				-- F
-				elseif eventData[4] == 33 then
-					toggleBottomToolBar()
-				-- G
-				elseif eventData[4] == 34 then
-					find()
-				-- L
-				elseif eventData[4] == 38 then
-					gotoLineWindow()
-				-- Backspace
-				elseif eventData[4] == 14 then
-					deleteLine(cursor.position.line)
-				-- Delete
-				elseif eventData[4] == 211 then
-					deleteLine(cursor.position.line)
-				-- R
-				elseif eventData[4] == 19 then
-					changeResolutionWindow()
-				end
-			-- Arrows up, down, left, right
-			elseif eventData[4] == 200 then
-				moveCursor(0, -1)
-			elseif eventData[4] == 208 then
-				moveCursor(0, 1)
-			elseif eventData[4] == 203 then
-				moveCursor(-1, 0)
-			elseif eventData[4] == 205 then
-				moveCursor(1, 0)
-			-- Backspace
-			elseif eventData[4] == 14 then
-				backspace()
-			-- Tab
-			elseif eventData[4] == 15 then
-				if keyboard.isKeyDown(42) then
-					indentOrUnindent(false)
-				else
-					indentOrUnindent(true)
-				end
-			-- Enter
-			elseif eventData[4] == 28 then
-				if mainWindow.autocompleteWindow.isHidden then
-					enter()
-				else
-					pasteSelectedAutocompletion()
-				end
-			-- F5
-			elseif eventData[4] == 63 then
-				run()
-			-- F9
-			elseif eventData[4] == 67 then
+	mainWindow.onKeyDown = function(eventData)
+		cursor.blinkState = true
+		-- Ctrl or CMD
+		if keyboard.isKeyDown(29) or keyboard.isKeyDown(219) then
+			-- Slash
+			if eventData[4] == 53 then
+				toggleComment()
+			-- ]
+			elseif eventData[4] == 27 then
+				config.enableAutoBrackets = not config.enableAutoBrackets
+				saveConfig()
+			-- I
+			elseif eventData[4] == 23 then
+				toggleEnableAutocompleteDatabase()
+			-- A
+			elseif eventData[4] == 30 then
+				selectAll()
+			-- C
+			elseif eventData[4] == 46 then
 				-- Shift
 				if keyboard.isKeyDown(42) then
-					clearBreakpoints()
+					selectAndPasteColor()
 				else
-					addBreakpoint()
+					copy()
 				end
-			-- Home
-			elseif eventData[4] == 199 then
-				setCursorPositionToHome()
-			-- End
-			elseif eventData[4] == 207 then
-				setCursorPositionToEnd()
-			-- Page Up
-			elseif eventData[4] == 201 then
-				pageUp()
-			-- Page Down
-			elseif eventData[4] == 209 then
-				pageDown()
+			-- V
+			elseif eventData[4] == 47 then
+				paste(clipboard)
+			-- X
+			elseif eventData[4] == 45 then
+				cut()
+			-- W
+			elseif eventData[4] == 17 then
+				mainWindow:close()
+			-- N
+			elseif eventData[4] == 49 then
+				newFile()
+			-- O
+			elseif eventData[4] == 24 then
+				openFileWindow()
+			-- U
+			elseif eventData[4] == 22 and component.isAvailable("internet") then
+				downloadFileFromWeb()
+			-- S
+			elseif eventData[4] == 31 then
+				-- Shift
+				if mainWindow.leftTreeView.currentFile and not keyboard.isKeyDown(42) then
+					saveFileWindow()
+				else
+					saveFileAsWindow()
+				end
+			-- F
+			elseif eventData[4] == 33 then
+				toggleBottomToolBar()
+			-- G
+			elseif eventData[4] == 34 then
+				find()
+			-- L
+			elseif eventData[4] == 38 then
+				gotoLineWindow()
+			-- Backspace
+			elseif eventData[4] == 14 then
+				deleteLine(cursor.position.line)
 			-- Delete
 			elseif eventData[4] == 211 then
-				delete()
+				deleteLine(cursor.position.line)
+			-- R
+			elseif eventData[4] == 19 then
+				changeResolutionWindow()
+			end
+		-- Arrows up, down, left, right
+		elseif eventData[4] == 200 then
+			moveCursor(0, -1)
+		elseif eventData[4] == 208 then
+			moveCursor(0, 1)
+		elseif eventData[4] == 203 then
+			moveCursor(-1, 0)
+		elseif eventData[4] == 205 then
+			moveCursor(1, 0)
+		-- Backspace
+		elseif eventData[4] == 14 then
+			backspace()
+		-- Tab
+		elseif eventData[4] == 15 then
+			if keyboard.isKeyDown(42) then
+				indentOrUnindent(false)
 			else
-				pasteAutoBrackets(eventData[3])
+				indentOrUnindent(true)
 			end
-		elseif eventData[1] == "clipboard" then
+		-- Enter
+		elseif eventData[4] == 28 then
+			if mainWindow.autocompleteWindow.isHidden then
+				enter()
+			else
+				pasteSelectedAutocompletion()
+			end
+		-- F5
+		elseif eventData[4] == 63 then
+			run()
+		-- F9
+		elseif eventData[4] == 67 then
+			-- Shift
+			if keyboard.isKeyDown(42) then
+				clearBreakpoints()
+			else
+				addBreakpoint()
+			end
+		-- Home
+		elseif eventData[4] == 199 then
+			setCursorPositionToHome()
+		-- End
+		elseif eventData[4] == 207 then
+			setCursorPositionToEnd()
+		-- Page Up
+		elseif eventData[4] == 201 then
+			pageUp()
+		-- Page Down
+		elseif eventData[4] == 209 then
+			pageDown()
+		-- Delete
+		elseif eventData[4] == 211 then
+			delete()
+		else
+			pasteAutoBrackets(eventData[3])
+		end
+	end
+
+	mainWindow.onScroll = function(eventData)
+		scroll(eventData[5], config.scrollSpeed)
+	end
+
+	mainWindow.onAnyEvent = function(eventData)		
+		if eventData[1] == "clipboard" then
 			paste(splitStringIntoLines(eventData[3]))
-		elseif eventData[1] == "scroll" then
-			if isClickedOnCodeArea(eventData[3], eventData[4]) then
-				scroll(eventData[5], config.scrollSpeed)
-			end
 		elseif not eventData[1] then
 			cursor.blinkState = not cursor.blinkState
 		end
@@ -1772,12 +1792,7 @@ local function createWindow()
 		mainWindow:draw()
 		if cursor.blinkState and mainWindow.settingsContainer.isHidden then
 			local x, y = convertTextPositionToScreenCoordinates(cursor.position.symbol, cursor.position.line)
-			if 
-				x >= mainWindow.codeView.codeAreaPosition + 1 and
-				x <= mainWindow.codeView.codeAreaPosition + mainWindow.codeView.codeAreaWidth - 2 and
-				y >= mainWindow.codeView.y and
-				y <= mainWindow.codeView.y + mainWindow.codeView.height - 2
-			then
+			if isClickedOnCodeArea(x, y) then
 				buffer.text(x, y, config.cursorColor, config.cursorSymbol)
 			end
 		end
