@@ -1105,7 +1105,7 @@ local function selectAll()
 end
 
 local function isLineCommented(line)
-	return mainWindow.codeView.lines[line]:match("%-%-[^%-]")
+	if mainWindow.codeView.lines[line] == "" or mainWindow.codeView.lines[line]:match("%-%-%s?") then return true end
 end
 
 local function commentLine(line)
@@ -1113,7 +1113,8 @@ local function commentLine(line)
 end
 
 local function uncommentLine(line)
-	mainWindow.codeView.lines[line], countOfReplaces = mainWindow.codeView.lines[line]:gsub("%-%-%s", "", 1)
+	local countOfReplaces
+	mainWindow.codeView.lines[line], countOfReplaces = mainWindow.codeView.lines[line]:gsub("%-%-%s?", "", 1)
 	return countOfReplaces
 end
 
@@ -1124,6 +1125,7 @@ local function toggleComment()
 		for line = mainWindow.codeView.selections[1].from.line, mainWindow.codeView.selections[1].to.line do
 			if not isLineCommented(line) then
 				allLinesAreCommented = false
+				break
 			end
 		end
 		
@@ -1136,9 +1138,7 @@ local function toggleComment()
 		end
 
 		local modifyer = 3
-		if allLinesAreCommented then
-			modifyer = -3
-		end
+		if allLinesAreCommented then modifyer = -modifyer end
 		setCursorPosition(cursor.position.symbol + modifyer, cursor.position.line)
 		mainWindow.codeView.selections[1].from.symbol, mainWindow.codeView.selections[1].to.symbol = mainWindow.codeView.selections[1].from.symbol + modifyer, mainWindow.codeView.selections[1].to.symbol + modifyer
 	else
