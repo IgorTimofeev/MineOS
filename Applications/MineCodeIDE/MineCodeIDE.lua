@@ -455,29 +455,30 @@ local function clearBreakpoints()
 end
 
 local function addBreakpoint()
-	if mainWindow.errorContainer.isHidden then
-		breakpointLines = breakpointLines or {}
-		local lineExists
-		for i = 1, #breakpointLines do
-			if breakpointLines[i] == cursor.position.line then
-				lineExists = i
-				break
-			end
+	hideErrorContainer()
+	breakpointLines = breakpointLines or {}
+	
+	local lineExists
+	for i = 1, #breakpointLines do
+		if breakpointLines[i] == cursor.position.line then
+			lineExists = i
+			break
 		end
-
-		if lineExists then
-			table.remove(breakpointLines, lineExists)
-		else
-			table.insert(breakpointLines, cursor.position.line)
-		end
-
-		if #breakpointLines > 0 then
-			table.sort(breakpointLines, function(a, b) return a < b end)
-		else
-			breakpointLines = nil
-		end
-		updateHighlights()
 	end
+	
+	if lineExists then
+		table.remove(breakpointLines, lineExists)
+	else
+		table.insert(breakpointLines, cursor.position.line)
+	end
+
+	if #breakpointLines > 0 then
+		table.sort(breakpointLines, function(a, b) return a < b end)
+	else
+		breakpointLines = nil
+	end
+
+	updateHighlights()
 end
 
 local function fixFromLineByCursorPosition()
@@ -524,15 +525,6 @@ end
 local function setCursorPositionAndClearSelection(symbol, line)
 	setCursorPosition(symbol, line)
 	clearSelection()
-end
-
-local function isClickedOnCodeArea(x, y)
-	return
-		x >= mainWindow.codeView.codeAreaPosition + 1 and
-		y >= mainWindow.codeView.y and
-		x <= mainWindow.codeView.codeAreaPosition + mainWindow.codeView.codeAreaWidth - 2 and
-		y <= mainWindow.codeView.y + mainWindow.codeView.height - 2 and
-		(mainWindow.errorContainer.isHidden or not mainWindow.errorContainer:isClicked(x, y))
 end
 
 local function moveCursor(symbolOffset, lineOffset)
@@ -1792,7 +1784,12 @@ local function createWindow()
 		mainWindow:draw()
 		if cursor.blinkState and mainWindow.settingsContainer.isHidden then
 			local x, y = convertTextPositionToScreenCoordinates(cursor.position.symbol, cursor.position.line)
-			if isClickedOnCodeArea(x, y) then
+			if
+				x >= mainWindow.codeView.codeAreaPosition + 1 and
+				y >= mainWindow.codeView.y and
+				x <= mainWindow.codeView.codeAreaPosition + mainWindow.codeView.codeAreaWidth - 2 and
+				y <= mainWindow.codeView.y + mainWindow.codeView.height - 2
+			then
 				buffer.text(x, y, config.cursorColor, config.cursorSymbol)
 			end
 		end
