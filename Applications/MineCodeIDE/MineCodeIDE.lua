@@ -499,6 +499,7 @@ local function setCursorPosition(symbol, line)
 	fixFromLineByCursorPosition()
 	fixFromSymbolByCursorPosition()
 	hideAutocompleteWindow()
+	hideErrorContainer()
 end
 
 local function setCursorPositionAndClearSelection(symbol, line)
@@ -511,7 +512,8 @@ local function isClickedOnCodeArea(x, y)
 		x >= mainWindow.codeView.codeAreaPosition and
 		y >= mainWindow.codeView.y and
 		x < mainWindow.width and
-		y < mainWindow.codeView.y + mainWindow.codeView.height - 1
+		y < mainWindow.codeView.y + mainWindow.codeView.height - 1 and
+		(mainWindow.errorContainer.isHidden or not mainWindow.errorContainer:isClicked(x, y))
 end
 
 local function moveCursor(symbolOffset, lineOffset)
@@ -660,7 +662,6 @@ local function newFile()
 	mainWindow.codeView.maximumLineLength = 1
 	setCursorPositionAndClearSelection(1, 1)
 	mainWindow.leftTreeView.currentFile = nil
-	hideErrorContainer()
 	clearBreakpoints()
 end
 
@@ -1556,8 +1557,6 @@ local function createWindow()
 	mainWindow.errorContainer.breakpointContinueButton = mainWindow.errorContainer:addButton(1, 1, 1, 1, 0x444444, 0xCCCCCC, 0x2D2D2D, 0x888888, localization.continueDebug)
 
 	mainWindow.errorContainer.breakpointExitButton.onTouch = hideErrorContainer
-	mainWindow.errorContainer.backgroundPanel.onTouch = hideErrorContainer
-	mainWindow.errorContainer.errorTextBox.onTouch = hideErrorContainer
 	mainWindow.errorContainer.breakpointContinueButton.onTouch = continue
 	hideErrorContainer()
 
@@ -1605,7 +1604,7 @@ local function createWindow()
 	mainWindow.onAnyEvent = function(eventData)		
 		if eventData[1] == "touch" and isClickedOnCodeArea(eventData[3], eventData[4]) then
 			cursor.blinkState = true
-			
+
 			if eventData[5] == 1 then
 				createEditOrRightClickMenu(eventData[3], eventData[4])
 			else
