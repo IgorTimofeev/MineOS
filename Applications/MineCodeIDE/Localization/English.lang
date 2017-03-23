@@ -1,4 +1,8 @@
 {	
+	addBreakpoint = "Add breakpoint",
+	clearBreakpoints = "Clear breakpoints",
+	finishDebug = "Stop",
+	continueDebug = "Continue",
 	gotoLine = "Goto line",
 	lineNumber = "Line",
 	enableAutocompletion = "Enable autocompletion",

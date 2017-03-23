@@ -1,4 +1,8 @@
 {
+	addBreakpoint = "Точка останова",
+	clearBreakpoints = "Удалить точки останова",
+	finishDebug = "Стоп",
+	continueDebug = "Продолжить",
 	gotoLine = "Перейти к строке",
 	lineNumber = "Номер строки",
 	enableAutocompletion = "Включить автодополнение",

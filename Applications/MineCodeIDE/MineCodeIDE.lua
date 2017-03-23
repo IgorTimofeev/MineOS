@@ -122,13 +122,14 @@ local cursor = {
 	blinkState = false
 }
 
+local scriptCoroutine
 local resourcesPath = MineOSCore.getCurrentApplicationResourcesDirectory() 
 local configPath = resourcesPath .. "ConfigVersion2.cfg"
 local localization = MineOSCore.getLocalization(resourcesPath .. "Localization/")
 local findStartFrom
 local clipboard
+local breakpointLines
 local lastErrorLine
-local breakpointLine = 5
 local lastClickUptime = computer.uptime()
 local mainWindow = {}
 local autocompleteDatabase
@@ -267,11 +268,11 @@ local function calculateSizes()
 	if mainWindow.topToolBar.isHidden then
 		mainWindow.leftTreeView.localPosition.y, mainWindow.leftTreeView.height = 2, mainWindow.height - 1
 		mainWindow.codeView.localPosition.y, mainWindow.codeView.height = 2, mainWindow.height - 1
-		mainWindow.errorMessage.localPosition.y = 2
+		mainWindow.errorContainer.localPosition.y = 2
 	else
 		mainWindow.leftTreeView.localPosition.y, mainWindow.leftTreeView.height = 5, mainWindow.height - 4
 		mainWindow.codeView.localPosition.y, mainWindow.codeView.height = 5, mainWindow.height - 4
-		mainWindow.errorMessage.localPosition.y = 5
+		mainWindow.errorContainer.localPosition.y = 5
 	end
 
 	if mainWindow.bottomToolBar.isHidden then
@@ -300,15 +301,15 @@ local function calculateSizes()
 	mainWindow.RAMUsageProgressBar.localPosition.x = mainWindow.toggleTopToolBarButton.localPosition.x + mainWindow.toggleTopToolBarButton.width + 3
 	mainWindow.RAMUsageProgressBar.width = mainWindow.topToolBar.width - mainWindow.RAMUsageProgressBar.localPosition.x - 3
 
-	mainWindow.errorMessage.localPosition.x, mainWindow.errorMessage.width = mainWindow.titleTextBox.localPosition.x, mainWindow.titleTextBox.width
-	mainWindow.errorMessage.backgroundPanel.width, mainWindow.errorMessage.errorTextBox.width = mainWindow.errorMessage.width, mainWindow.errorMessage.width - 4
+	mainWindow.errorContainer.localPosition.x, mainWindow.errorContainer.width = mainWindow.titleTextBox.localPosition.x, mainWindow.titleTextBox.width
+	mainWindow.errorContainer.backgroundPanel.width, mainWindow.errorContainer.errorTextBox.width = mainWindow.errorContainer.width, mainWindow.errorContainer.width - 4
 
 	mainWindow.topMenu.width = mainWindow.width
 end
 
 local function updateTitle()
 	if not mainWindow.topToolBar.isHidden then
-		if mainWindow.errorMessage.isHidden then
+		if mainWindow.errorContainer.isHidden then
 			mainWindow.titleTextBox.lines[1] = string.limit(localization.file .. ": " .. (mainWindow.leftTreeView.currentFile or localization.none), mainWindow.titleTextBox.width - 4)
 			mainWindow.titleTextBox.lines[2] = string.limit(localization.cursor .. cursor.position.line .. localization.line .. cursor.position.symbol .. localization.symbol, mainWindow.titleTextBox.width - 4)
 			if mainWindow.codeView.selections[1] then
@@ -329,61 +330,100 @@ local function updateTitle()
 			end
 		else
 			mainWindow.titleTextBox.lines[1], mainWindow.titleTextBox.lines[3] = " ", " "
-			if breakpointLine then
-				mainWindow.titleTextBox.lines[2] = localization.debugging .. cursor.position.line
-			else
+			if lastErrorLine then
 				mainWindow.titleTextBox.lines[2] = localization.runtimeError
+			else
+				mainWindow.titleTextBox.lines[2] = localization.debugging .. (_G.MineCodeIDEDebugInfo and _G.MineCodeIDEDebugInfo.line or "N/A")
 			end
 		end
 	end
 end
 
-local function calculateErrorMessageSizeAndBeep()
-	mainWindow.errorMessage.height = 2 + #mainWindow.errorMessage.errorTextBox.lines
-	mainWindow.errorMessage.backgroundPanel.height = mainWindow.errorMessage.height
-	mainWindow.errorMessage.errorTextBox.height = mainWindow.errorMessage.height - 2
+local function gotoLine(line)
+	mainWindow.codeView.fromLine = math.ceil(line - mainWindow.codeView.height / 2)
+	if mainWindow.codeView.fromLine < 1 then
+		mainWindow.codeView.fromLine = 1
+	elseif mainWindow.codeView.fromLine > #mainWindow.codeView.lines then
+		mainWindow.codeView.fromLine = #mainWindow.codeView.lines
+	end
+end
+
+local function updateHighlights()
+	mainWindow.codeView.highlights = {}
+
+	if breakpointLines then
+		for i = 1, #breakpointLines do
+			mainWindow.codeView.highlights[breakpointLines[i]] = colors.highlights.onBreakpoint
+		end
+	end
+
+	if lastErrorLine then
+		mainWindow.codeView.highlights[lastErrorLine] = colors.highlights.onError
+	end
+end
+
+local function calculateErrorContainerSizeAndBeep(hideBreakpointButtons)
+	mainWindow.errorContainer.errorTextBox.height = #mainWindow.errorContainer.errorTextBox.lines
+	mainWindow.errorContainer.height = 2 + mainWindow.errorContainer.errorTextBox.height
+	mainWindow.errorContainer.backgroundPanel.height = mainWindow.errorContainer.height
+
+	mainWindow.errorContainer.breakpointExitButton.isHidden, mainWindow.errorContainer.breakpointContinueButton.isHidden = hideBreakpointButtons, hideBreakpointButtons
+	if not hideBreakpointButtons then
+		mainWindow.errorContainer.height = mainWindow.errorContainer.height + 1
+		mainWindow.errorContainer.breakpointExitButton.localPosition.y, mainWindow.errorContainer.breakpointContinueButton.localPosition.y = mainWindow.errorContainer.height, mainWindow.errorContainer.height
+		mainWindow.errorContainer.breakpointExitButton.width = math.floor(mainWindow.errorContainer.width / 2)
+		mainWindow.errorContainer.breakpointContinueButton.localPosition.x, mainWindow.errorContainer.breakpointContinueButton.width = mainWindow.errorContainer.breakpointExitButton.width + 1, mainWindow.errorContainer.width - mainWindow.errorContainer.breakpointExitButton.width
+	end
 
 	updateTitle()
 	mainWindow:draw()
 	buffer.draw()
 
-	for i = 1, 3 do component.computer.beep(1500, 0.08) end
+	for i = 1, 3 do component.computer.beep(1500, 0.08) end	
 end
 
 local function showBreakpointMessage(variables)
 	mainWindow.titleTextBox.colors.background, mainWindow.titleTextBox.colors.text = colors.title.onError.background, colors.title.onError.text
-	mainWindow.errorMessage.isHidden = false
+	mainWindow.errorContainer.isHidden = false
 
-	mainWindow.errorMessage.errorTextBox:setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
-	mainWindow.errorMessage.errorTextBox.lines = {}
+	mainWindow.errorContainer.errorTextBox:setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+	mainWindow.errorContainer.errorTextBox.lines = {}
 
 	for variable, value in pairs(variables) do
-		table.insert(mainWindow.errorMessage.errorTextBox.lines, variable .. " = " .. value)
+		table.insert(mainWindow.errorContainer.errorTextBox.lines, variable .. " = " .. value)
 	end
 
-	if #mainWindow.errorMessage.errorTextBox.lines > 0 then
-		table.insert(mainWindow.errorMessage.errorTextBox.lines, 1, " ")
-		table.insert(mainWindow.errorMessage.errorTextBox.lines, 1, {text = localization.variables, color = 0x0})
+	if #mainWindow.errorContainer.errorTextBox.lines > 0 then
+		table.insert(mainWindow.errorContainer.errorTextBox.lines, 1, " ")
+		table.insert(mainWindow.errorContainer.errorTextBox.lines, 1, {text = localization.variables, color = 0x0})
 	else
-		table.insert(mainWindow.errorMessage.errorTextBox.lines, 1, {text = localization.variablesNotAvailable, color = 0x0})
+		table.insert(mainWindow.errorContainer.errorTextBox.lines, 1, {text = localization.variablesNotAvailable, color = 0x0})
 	end
 
-	calculateErrorMessageSizeAndBeep()
+	calculateErrorContainerSizeAndBeep(false)
 end
 
-local function showErrorMessage(text)
+local function showErrorContainer(errorCode)
 	mainWindow.titleTextBox.colors.background, mainWindow.titleTextBox.colors.text = colors.title.onError.background, colors.title.onError.text
-	mainWindow.errorMessage.isHidden = false
+	mainWindow.errorContainer.isHidden = false
 
-	mainWindow.errorMessage.errorTextBox:setAlignment(GUI.alignment.horizontal.left, GUI.alignment.vertical.top)
-	mainWindow.errorMessage.errorTextBox.lines = string.wrap({text}, mainWindow.errorMessage.errorTextBox.width)	
+	mainWindow.errorContainer.errorTextBox:setAlignment(GUI.alignment.horizontal.left, GUI.alignment.vertical.top)
+	mainWindow.errorContainer.errorTextBox.lines = string.wrap({errorCode}, mainWindow.errorContainer.errorTextBox.width)	
 	
-	calculateErrorMessageSizeAndBeep()
+	lastErrorLine = tonumber(errorCode:match("%:(%d+)%: in main chunk"))
+	updateHighlights()
+	if lastErrorLine then
+		gotoLine(lastErrorLine)
+	end
+	
+	calculateErrorContainerSizeAndBeep(true)
 end
 
-local function hideErrorMessage()
+local function hideErrorContainer()
 	mainWindow.titleTextBox.colors.background, mainWindow.titleTextBox.colors.text = colors.title.default.background, colors.title.default.text
-	mainWindow.errorMessage.isHidden = true
+	mainWindow.errorContainer.isHidden = true
+	lastErrorLine, scriptCoroutine = nil, nil
+	updateHighlights()
 end
 
 local function hideSettingsContainer()
@@ -393,20 +433,32 @@ local function hideSettingsContainer()
 	buffer.draw()
 end
 
-local function clearHighlights()
-	if lastErrorLine then
-		mainWindow.codeView.highlights[lastErrorLine] = nil
-		lastErrorLine = nil
-	end
-
-	if breakpointLine then
-		mainWindow.codeView.highlights[breakpointLine] = nil
-		breakpointLine = nil
-	end
-end
-
 local function clearSelection()
 	mainWindow.codeView.selections[1] = nil
+end
+
+local function clearBreakpoints()
+	breakpointLines = nil
+	updateHighlights()
+end
+
+local function addBreakpoint()
+	breakpointLines = breakpointLines or {}
+	local lineExists
+	for i = 1, #breakpointLines do
+		if breakpointLines[i] == cursor.position.line then
+			lineExists = i
+			break
+		end
+	end
+
+	if lineExists then
+		table.remove(breakpointLines, lineExists)
+		if #breakpointLines == 0 then breakpointLines = nil end
+	else
+		table.insert(breakpointLines, cursor.position.line)
+	end
+	updateHighlights()
 end
 
 local function fixFromLineByCursorPosition()
@@ -446,8 +498,6 @@ local function setCursorPosition(symbol, line)
 	cursor.position.symbol, cursor.position.line = fixCursorPosition(symbol, line)
 	fixFromLineByCursorPosition()
 	fixFromSymbolByCursorPosition()
-	clearHighlights()
-	hideErrorMessage()
 	hideAutocompleteWindow()
 end
 
@@ -530,15 +580,6 @@ local function pageDown()
 	scroll(-1, mainWindow.codeView.height - 2)
 end
 
-local function gotoLine(line)
-	mainWindow.codeView.fromLine = math.ceil(line - mainWindow.codeView.height / 2)
-	if mainWindow.codeView.fromLine < 1 then
-		mainWindow.codeView.fromLine = 1
-	elseif mainWindow.codeView.fromLine > #mainWindow.codeView.lines then
-		mainWindow.codeView.fromLine = #mainWindow.codeView.lines
-	end
-end
-
 local function selectWord()
 	local from, to = getCurrentWordStartingAndEnding(cursor.position.symbol)
 	if from and to then
@@ -549,8 +590,6 @@ local function selectWord()
 		cursor.position.symbol = to
 	end
 end
-
-------------------------------------------------------------------------------------------------------------------
 
 local function removeTabs(text)
 	local result = text:gsub("\t", string.rep(" ", mainWindow.codeView.indentationWidth))
@@ -619,8 +658,10 @@ local function newFile()
 	autocompleteDatabase = {}
 	mainWindow.codeView.lines = {""}
 	mainWindow.codeView.maximumLineLength = 1
-	mainWindow.leftTreeView.currentFile = nil
 	setCursorPositionAndClearSelection(1, 1)
+	mainWindow.leftTreeView.currentFile = nil
+	hideErrorContainer()
+	clearBreakpoints()
 end
 
 local function loadFile(path)
@@ -673,6 +714,9 @@ local function saveFileAsWindow()
 		function(text)
 			saveFile(text)
 			mainWindow.leftTreeView.currentFile = text
+			if unicode.sub(mainWindow.leftTreeView.currentFile, 1, 1) ~= "/" then
+				mainWindow.leftTreeView.currentFile = "/" .. mainWindow.leftTreeView.currentFile
+			end
 			mainWindow.leftTreeView:updateFileList()
 		end
 	)
@@ -718,17 +762,6 @@ local function downloadFileFromWeb()
 end
 
 ------------------------------------------------------------------------------------------------------------------
-
-local function addErrorLine(line)
-	lastErrorLine = line
-	mainWindow.codeView.highlights[line] = colors.highlights.onError
-end
-
-local function addBreakpoint()
-	clearHighlights()
-	breakpointLine = cursor.position.line
-	mainWindow.codeView.highlights[breakpointLine] = colors.highlights.onBreakpoint
-end
 
 local function getVariables(codePart)
 	local variables = {}
@@ -777,59 +810,78 @@ local function getVariables(codePart)
 	return variables
 end
 
-local function createBreakpointError(variables)
-	local errorMessage = "error({variables={"
+local function continue()
+	-- Готовим экран к запуску
+	local oldResolutionX, oldResolutionY = component.gpu.getResolution()
+	component.gpu.setBackground(0x1B1B1B)
+	component.gpu.setForeground(0xFFFFFF)
+	component.gpu.fill(1, 1, oldResolutionX, oldResolutionY, " ")
+	term.setCursor(1, 1)
 
-	for variable in pairs(variables) do
-		errorMessage = errorMessage .. "[\"" .. variable .. "\"] = type(" .. variable .. ") == \"string\" and \"\\\"\" .. " .. variable .. " .. \"\\\"\" or tostring(" .. variable .. "),"
+	-- Запускаем
+	_G.MineCodeIDEDebugInfo = nil
+	local coroutineResumeSuccess, coroutineResumeReason = coroutine.resume(scriptCoroutine)
+
+	-- Анализируем результат запуска
+	if coroutineResumeSuccess then
+		if coroutine.status(scriptCoroutine) == "dead" then
+			MineOSCore.waitForPressingAnyKey()
+			hideErrorContainer()
+			buffer.changeResolution(oldResolutionX, oldResolutionY); mainWindow:draw(); buffer.draw(true)
+		else
+			-- Тест на пидора, мало ли у чувака в проге тоже есть yield
+			if _G.MineCodeIDEDebugInfo then
+				buffer.changeResolution(oldResolutionX, oldResolutionY); mainWindow:draw(); buffer.draw(true)
+				gotoLine(_G.MineCodeIDEDebugInfo.line)
+				showBreakpointMessage(_G.MineCodeIDEDebugInfo.variables)
+			end
+		end
+	else
+		buffer.changeResolution(oldResolutionX, oldResolutionY); mainWindow:draw(); buffer.draw(true)
+		showErrorContainer(debug.traceback(scriptCoroutine, coroutineResumeReason))
 	end
-
-	return errorMessage .. "}})"
 end
 
 local function run()
-	if breakpointLine then
-		table.insert(mainWindow.codeView.lines, breakpointLine, createBreakpointError(getVariables(mainWindow.codeView.lines[breakpointLine])))
+	-- Инсертим брейкпоинты
+	if breakpointLines then
+		table.sort(breakpointLines, function(a, b) return a < b end)
+		local offset = 0
+		for i = 1, #breakpointLines do
+			local variables = getVariables(mainWindow.codeView.lines[breakpointLines[i] + offset])
+			
+			local breakpointMessage = "_G.MineCodeIDEDebugInfo = {variables = {"
+			for variable in pairs(variables) do
+				breakpointMessage = breakpointMessage .. "[\"" .. variable .. "\"] = type(" .. variable .. ") == 'string' and '\"' .. " .. variable .. " .. '\"' or tostring(" .. variable .. "), "
+			end
+			breakpointMessage =  breakpointMessage .. "}, line = " .. breakpointLines[i] .. "}; coroutine.yield()"
+
+			table.insert(mainWindow.codeView.lines, breakpointLines[i] + offset, breakpointMessage)
+			offset = offset + 1
+		end
 	end
 
+	-- Лоадим кодыч
 	local loadSuccess, loadReason = load(table.concat(mainWindow.codeView.lines, "\n"))
-	if loadSuccess then
-		local oldResolutionX, oldResolutionY = component.gpu.getResolution()
-		component.gpu.setBackground(0x1B1B1B)
-		component.gpu.setForeground(0xFFFFFF)
-		component.gpu.fill(1, 1, oldResolutionX, oldResolutionY, " ")
-		term.setCursor(1, 1)
-		
-		local xpcallSuccess, xpcallReason = xpcall(loadSuccess, debug.traceback)
-		local xpcallReasonType = type(xpcallReason)
-
-		if breakpointLine then
-			table.remove(mainWindow.codeView.lines, breakpointLine)
-		end
-
-		if xpcallSuccess or (xpcallReasonType == "table" and xpcallReason.terminated == true) then
-			MineOSCore.waitForPressingAnyKey()
-		end
-
-		buffer.changeResolution(oldResolutionX, oldResolutionY)	
-
-		if not xpcallSuccess then
-			if xpcallReasonType == "table" then
-				if xpcallReason.variables then
-					gotoLine(breakpointLine)
-					showBreakpointMessage(xpcallReason.variables)
-				end
-			else
-				showErrorMessage(xpcallReason)
+	
+	-- Чистим дерьмо вилочкой, чистим
+	if breakpointLines then
+		local line = 1
+		while line <= #mainWindow.codeView.lines do
+			if mainWindow.codeView.lines[line]:match("^%_G%.MineCodeIDEDebugInfo") then
+				table.remove(mainWindow.codeView.lines, line)
+				line = line - 1
 			end
+			line = line + 1
 		end
+	end
 
-		mainWindow:draw()
-		buffer:draw()		
+	-- Запускаем кодыч
+	if loadSuccess then
+		scriptCoroutine = coroutine.create(loadSuccess)
+		continue()
 	else
-		addErrorLine(tonumber(loadReason:match("^%[.+%]%:(%d+)%:")))
-		gotoLine(lastErrorLine)
-		showErrorMessage(loadReason)
+		showErrorContainer(loadReason)
 	end
 end
 
@@ -1244,14 +1296,20 @@ local function createEditOrRightClickMenu(x, y)
 	editOrRightClickMenu:addItem(localization.unindent, false, "⇧Tab").onTouch = function()
 		indentOrUnindent(false)
 	end
-	editOrRightClickMenu:addSeparator()
 	editOrRightClickMenu:addItem(localization.deleteLine, false, "^Del").onTouch = function()
 		deleteLine(cursor.position.line)
 	end
+	editOrRightClickMenu:addSeparator()
+	editOrRightClickMenu:addItem(localization.addBreakpoint, false, "F9").onTouch = function()
+		addBreakpoint()
+	end
+	editOrRightClickMenu:addItem(localization.clearBreakpoints, not breakpointLines, "^F9").onTouch = function()
+		clearBreakpoints()
+	end
+	editOrRightClickMenu:addSeparator()
 	editOrRightClickMenu:addItem(localization.selectAndPasteColor, false, "^⇧C").onTouch = function()
 		selectAndPasteColor()
 	end
-	editOrRightClickMenu:addSeparator()
 	editOrRightClickMenu:addItem(localization.selectWord).onTouch = function()
 		selectWord()
 	end
@@ -1423,7 +1481,7 @@ local function createWindow()
 	local titleTextBoxOldDraw = mainWindow.titleTextBox.draw
 	mainWindow.titleTextBox.draw = function(titleTextBox)
 		titleTextBoxOldDraw(titleTextBox)
-		local sidesColor = mainWindow.errorMessage.isHidden and colors.title.default.sides or colors.title.onError.sides
+		local sidesColor = mainWindow.errorContainer.isHidden and colors.title.default.sides or colors.title.onError.sides
 		buffer.square(titleTextBox.x, titleTextBox.y, 1, titleTextBox.height, sidesColor, titleTextBox.colors.text, " ")
 		buffer.square(titleTextBox.x + titleTextBox.width - 1, titleTextBox.y, 1, titleTextBox.height, sidesColor, titleTextBox.colors.text, " ")
 	end
@@ -1491,10 +1549,17 @@ local function createWindow()
 		loadFile(path)
 	end
 
-	mainWindow.errorMessage = mainWindow:addContainer(1, 1, 1, 1)
-	mainWindow.errorMessage.backgroundPanel = mainWindow.errorMessage:addPanel(1, 1, 1, 1, 0xFFFFFF, 30)
-	mainWindow.errorMessage.errorTextBox = mainWindow.errorMessage:addTextBox(3, 2, 1, 1, nil, 0x4B4B4B, {}, 1)
-	hideErrorMessage()
+	mainWindow.errorContainer = mainWindow:addContainer(1, 1, 1, 1)
+	mainWindow.errorContainer.backgroundPanel = mainWindow.errorContainer:addPanel(1, 1, 1, 1, 0xFFFFFF, 30)
+	mainWindow.errorContainer.errorTextBox = mainWindow.errorContainer:addTextBox(3, 2, 1, 1, nil, 0x4B4B4B, {}, 1)
+	mainWindow.errorContainer.breakpointExitButton = mainWindow.errorContainer:addButton(1, 1, 1, 1, 0x3C3C3C, 0xCCCCCC, 0x2D2D2D, 0x888888, localization.finishDebug)
+	mainWindow.errorContainer.breakpointContinueButton = mainWindow.errorContainer:addButton(1, 1, 1, 1, 0x444444, 0xCCCCCC, 0x2D2D2D, 0x888888, localization.continueDebug)
+
+	mainWindow.errorContainer.breakpointExitButton.onTouch = hideErrorContainer
+	mainWindow.errorContainer.backgroundPanel.onTouch = hideErrorContainer
+	mainWindow.errorContainer.errorTextBox.onTouch = hideErrorContainer
+	mainWindow.errorContainer.breakpointContinueButton.onTouch = continue
+	hideErrorContainer()
 
 	mainWindow.settingsContainer = mainWindow:addContainer(1, 1, 1, 1)
 	mainWindow.settingsContainer.backgroundPanel = mainWindow.settingsContainer:addPanel(1, 1, mainWindow.settingsContainer.width, mainWindow.settingsContainer.height, 0x0, 30)
@@ -1667,6 +1732,14 @@ local function createWindow()
 			-- F5
 			elseif eventData[4] == 63 then
 				run()
+			-- F9
+			elseif eventData[4] == 67 then
+				-- Shift
+				if keyboard.isKeyDown(42) then
+					clearBreakpoints()
+				else
+					addBreakpoint()
+				end
 			-- Home
 			elseif eventData[4] == 199 then
 				setCursorPositionToHome()
