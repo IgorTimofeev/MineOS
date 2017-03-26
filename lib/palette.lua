@@ -46,7 +46,7 @@ local function randomizeFavourites()
 	favourites = {}; for i = 1, 6 do favourites[i] = math.random(0x000000, 0xFFFFFF) end
 end
 
-local function saveFavoutites()
+local function savefavourites()
 	table.toFile(pathToFavouritesConfig, favourites)
 end
 
@@ -55,7 +55,7 @@ local function loadFavourites()
 		favourites = table.fromFile(pathToFavouritesConfig)
 	else
 		randomizeFavourites()
-		saveFavoutites()
+		savefavourites()
 	end
 end
 
@@ -244,7 +244,7 @@ local function createWindow(x, y)
 		if not favouriteExists then
 			table.insert(favourites, 1, currentColor.hex); table.remove(favourites, #favourites)
 			for i = 1, #favourites do favouritesContainer.children[i].colors.default.background = favourites[i]; favouritesContainer.children[i].colors.pressed.background = 0x0 end
-			saveFavoutites()
+			savefavourites()
 			drawAll()
 		end
 	end
