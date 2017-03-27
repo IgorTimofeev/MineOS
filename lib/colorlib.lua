@@ -101,12 +101,11 @@ end
 
 -----------------------------------------------------------------------------------------------------------------------
 
---Создаём 8-ми битные цвета в 24-х битном диапазоне
 local palette = {}
 
-for r = 0, 5 do --Красный спектр
-  for g = 0, 7 do --Зелёный спектр
-    for b = 0, 4 do --Синий спектр
+for r = 0, 5 do
+  for g = 0, 7 do
+    for b = 0, 4 do
       table.insert(palette, colorlib.RGBtoHEX(r * 0x33, g * 0x24, math.floor(b / 4 * 0xFF + 0.5))) --СИНИЙ, ПРЕКРАТИ
     end
   end
@@ -114,7 +113,7 @@ end
 for gr = 1, 0x10 do --Градации серого
   table.insert(palette, gr * 0xF0F0F) --Нет смысла использовать colorlib.RGBtoHEX()
 end
-table.sort(palette) --Сортируем
+table.sort(palette)
 
 function colorlib.convert24BitTo8Bit(hex24)
   local encodedIndex = nil

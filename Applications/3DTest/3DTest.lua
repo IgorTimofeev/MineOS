@@ -275,8 +275,8 @@ end
 
 local function move(x, y, z)
 	local moveVector = vector.newVector3(x, y, z)
-	OCGL.rotateVector(moveVector, OCGL.axis.x, scene.camera.rotation[1])
-	OCGL.rotateVector(moveVector, OCGL.axis.y, scene.camera.rotation[2])
+	OCGL.rotateVectorRelativeToXAxis(moveVector, scene.camera.rotation[1])
+	OCGL.rotateVectorRelativeToYAxis(moveVector, scene.camera.rotation[2])
 	scene.camera:translate(moveVector[1], moveVector[2], moveVector[3])
 end
 
@@ -344,8 +344,8 @@ end
 
 OCGLView.onTouch = function(e)
 	local targetVector = vector.newVector3(scene.camera.position[1], scene.camera.position[2], scene.camera.position[3] + 1000)
-	OCGL.rotateVector(targetVector, OCGL.axis.x, scene.camera.rotation[1])
-	OCGL.rotateVector(targetVector, OCGL.axis.y, scene.camera.rotation[2])
+	OCGL.rotateVectorRelativeToXAxis(targetVector, scene.camera.rotation[1])
+	OCGL.rotateVectorRelativeToYAxis(targetVector, scene.camera.rotation[2])
 	local objectIndex, triangleIndex, distance = polyCatEngine.sceneRaycast(scene, scene.camera.position, targetVector)
 
 	if objectIndex then

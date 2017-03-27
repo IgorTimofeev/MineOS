@@ -51,17 +51,20 @@ OCGL.lights = {}
 
 -------------------------------------------------------- Vertex field methods --------------------------------------------------------
 
-function OCGL.rotateVector(vector, axis, angle)
+
+function OCGL.rotateVectorRelativeToXAxis(vector, angle)
 	local sin, cos = math.sin(angle), math.cos(angle)
-	if axis == OCGL.axis.x then
-		vector[1], vector[2], vector[3] = vector[1], cos * vector[2] - sin * vector[3], sin * vector[2] + cos * vector[3]
-	elseif axis == OCGL.axis.y then
-		vector[1], vector[2], vector[3] = cos * vector[1] + sin * vector[3], vector[2], cos * vector[3] - sin * vector[1]
-	elseif axis == OCGL.axis.z then
-		vector[1], vector[2], vector[3] = cos * vector[1] - sin * vector[2], sin * vector[1] + cos * vector[2], vector[3]
-	else
-		error("Axis enum " .. tostring(axis) .. " doesn't exists")
-	end
+	vector[2], vector[3] = cos * vector[2] - sin * vector[3], sin * vector[2] + cos * vector[3]
+end
+
+function OCGL.rotateVectorRelativeToYAxis(vector, angle)
+	local sin, cos = math.sin(angle), math.cos(angle)
+	vector[1], vector[3] = cos * vector[1] + sin * vector[3], cos * vector[3] - sin * vector[1]
+end
+
+function OCGL.rotateVectorRelativeToZAxis(vector, angle)
+	local sin, cos = math.sin(angle), math.cos(angle)
+	vector[1], vector[2] = cos * vector[1] - sin * vector[2], sin * vector[1] + cos * vector[2]
 end
 
 function OCGL.translate(xTranslation, yTranslation, zTranslation)
@@ -70,9 +73,9 @@ function OCGL.translate(xTranslation, yTranslation, zTranslation)
 	end
 end
 
-function OCGL.rotate(axis, angle)
+function OCGL.rotate(vectorRotationMethod, angle)
 	for vertexIndex = 1, #OCGL.vertices do
-		OCGL.rotateVector(OCGL.vertices[vertexIndex], axis, angle)
+		vectorRotationMethod(OCGL.vertices[vertexIndex], angle)
 	end
 end
 

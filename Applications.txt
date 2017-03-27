@@ -281,7 +281,7 @@
     url="IgorTimofeev/OpenComputers/master/lib/colorlib.lua",
     type="Library",
     preLoadFile=true,
-    version=1.04,
+    version=1.05,
   },
   {
     name="lib/image.lua",
@@ -408,25 +408,25 @@
     name="lib/OpenComputersGL/Main.lua",
     url="IgorTimofeev/OpenComputers/master/lib/OpenComputersGL/Main.lua",
     type="Library",
-    version=1.05,
+    version=1.06,
   },
   {
     name="lib/OpenComputersGL/Materials.lua",
     url="IgorTimofeev/OpenComputers/master/lib/OpenComputersGL/Materials.lua",
     type="Library",
-    version=1.02,
+    version=1.06,
   },
   {
     name="lib/OpenComputersGL/Renderer.lua",
     url="IgorTimofeev/OpenComputers/master/lib/OpenComputersGL/Renderer.lua",
     type="Library",
-    version=1.02,
+    version=1.06,
   },
   {
     name="lib/PolyCatEngine/Main.lua",
     url="IgorTimofeev/OpenComputers/master/lib/PolyCatEngine/Main.lua",
     type="Library",
-    version=1.06,
+    version=1.07,
   },
 
   ----------------------------------------------------- Скрипты и дополнения к ним --------------------------------------------------------------------------
@@ -530,7 +530,7 @@
     type="Application",
     icon="IgorTimofeev/OpenComputers/master/Applications/3DTest/Icon.pic",
     createShortcut="desktop",
-    version=1.14,
+    version=1.15,
   },
   {
     name="MineOS/Applications/GeoScan2",
