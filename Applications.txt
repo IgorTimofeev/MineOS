@@ -630,7 +630,7 @@
     icon="IgorTimofeev/OpenComputers/master/Applications/VK/Icon.pic",
     createShortcut="desktop",
     forceDownload=true,
-    version=1.26,
+    version=1.27,
     resources={
       {
         name="VKLogo.pic",
