@@ -12,6 +12,7 @@ local component = require("component")
 local unicode = require("unicode")
 local event = require("event")
 local ecs = require("ECSAPI")
+local internet = require("internet")
 
 ------------------------------------------------------------------------------------------------------------------
 
