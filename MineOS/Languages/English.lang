@@ -72,7 +72,7 @@
 	withoutProtection = "Without protection",
 	passwordProtection = "Password protection",
 	biometricProtection = "Biometric protection",
-	putFingerToVerify = "Put your finger to authorizate",
+	putFingerToVerify = "Put your finger to authorize",
 	putFingerToRegister = "Put your finger to create a biometric signature",
 	fingerprintCreated = "Biometric signature has been created",
 	accessDenied = "Access denied",
