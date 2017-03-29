@@ -76,7 +76,7 @@
     url="IgorTimofeev/OpenComputers/master/MineOS/Languages/English.lang",
     type="Script",
     forceDownload=true,
-    version=1.19,
+    version=1.20,
   },
 
   ----------------------------------------------------- Системные иконки --------------------------------------------------------------------------
