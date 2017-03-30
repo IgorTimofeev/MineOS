@@ -93,7 +93,7 @@ local function menu(t,v)
       sv=sv<#v and sv+1 or #v
     elseif e[4]==28 then
       return sv
-     end
+    end
   end
 end
 
