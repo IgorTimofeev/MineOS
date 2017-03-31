@@ -1,5 +1,6 @@
-local ee,gpu,sc,bg,fg,re,sce
-local pr,cm,ls,ps=component.proxy,computer,component.list,computer.pullSignal
+local c=component
+local pr,cm,ls,ps=c.proxy,computer,c.list,computer.pullSignal
+local ee,gpu,bg,fg,re,sce
 
 local function init()
 	local g=ls("gpu")()
@@ -7,10 +8,10 @@ local function init()
 	local e=ls("eeprom")()
 
 	if g and s and e then
-		gpu,sc,ee=pr(g),pr(s),pr(e)
+		gpu,ee=pr(g),pr(e)
 		computer.getBootAddress=function() return ee.getData() end
 		computer.setBootAddress=function(address) return ee.setData(address) end
-		gpu.bind(sc.address)
+		gpu.bind(s)
 		re={};re.width,re.height=gpu.maxResolution()
 		gpu.setResolution(re.width,re.height)
 		sce=math.floor(re.height/2)
@@ -24,13 +25,6 @@ local function pu(t) while true do local e={ps()};if e[1]==t then return e end e
 local function sleep(timeout)
 	local deadline=cm.uptime() + (timeout or 0)
 	while cm.uptime()<deadline do ps(deadline - cm.uptime()) end
-end
-
-local function bGP()
-	gpu.bind(sc.address)
-	re={}
-	re.width,re.height=gpu.maxResolution()
-	gpu.setResolution(re.width,re.height)
 end
 
 local colors={b=0xDDDDDD,t1=0x444444,t2=0x999999,t3=0x888888}
@@ -59,7 +53,7 @@ local function bt(fs)
 		local data,rData="",""
 		while rData do data=data..rData;rData=fs.read(fileOrR,math.huge) end
 		fs.close(fileOrR)
-		
+
 		local loadS,loadR=load(data)
 		if loadS then
 			local xpS,xpR=xpcall(loadS,debug.traceback)
@@ -99,7 +93,7 @@ local function menu(t,v)
 			sv=sv<#v and sv+1 or #v
 		elseif e[4]==28 then
 			return sv
- 		end
+		end
 	end
 end
 
@@ -128,7 +122,6 @@ local function waitForAlt(t,dr)
 end
 
 init()
-bGP()
 fade(0x0,colors.b,0x202020)
 l()
 cT(sce,colors.t2,"Initialising system")
