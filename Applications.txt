@@ -524,6 +524,25 @@
     }
   },
   {
+    name="MineOS/Applications/MusicPlayer",
+    url="IgorTimofeev/OpenComputers/master/Applications/MusicPlayer/MusicPlayer.lua",
+    about="IgorTimofeev/OpenComputers/master/Applications/MusicPlayer/About/",
+    type="Application",
+    icon="IgorTimofeev/OpenComputers/master/Applications/MusicPlayer/Icon.pic",
+    createShortcut="desktop",
+    version=1.0,
+    resources={
+      {
+        name="Localization/Russian.lang",
+        url="IgorTimofeev/OpenComputers/master/Applications/MusicPlayer/Localization/Russian.lang"
+      },
+      {
+        name="Localization/English.lang",
+        url="IgorTimofeev/OpenComputers/master/Applications/MusicPlayer/Localization/English.lang"
+      },
+    }
+  },
+  {
     name="MineOS/Applications/3DTest",
     url="IgorTimofeev/OpenComputers/master/Applications/3DTest/3DTest.lua",
     about="IgorTimofeev/OpenComputers/master/Applications/3DTest/About/",

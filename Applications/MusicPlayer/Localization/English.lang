@@ -1,0 +1,5 @@
+{
+	load = "Load file",
+	path = "Path to file",
+	play = "Play",
+}

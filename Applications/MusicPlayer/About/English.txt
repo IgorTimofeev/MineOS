@@ -1,0 +1,1 @@
+This is a music player that lets you play music sheets that already recorded by you or other people.Read the instruction in the source code of this program.
