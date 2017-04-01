@@ -309,8 +309,8 @@ GUI.**image**( x, y, loadedImage ): *table* image
 | ------ | ------ | ------ |
 | *function* | .**onTouch**( *table* eventData )| Метод, вызываемый после нажатия на изображение в обработчике событий |
 
-#GUI.**progressBar**( x, y, width, primaryColor, secondaryColor, valueColor, value, thin, showValue, valuePrefix, valuePostfix ): *table* progressBar
-
+GUI.**progressBar**( x, y, width, primaryColor, secondaryColor, valueColor, value, thin, showValue, valuePrefix, valuePostfix ): *table* progressBar
+------------------------------------------------------------------------
 | Тип | Аргумент | Описание |
 | ------ | ------ | ------ |
 | *int* | x | Координата объекта по оси x |
@@ -327,8 +327,8 @@ GUI.**image**( x, y, loadedImage ): *table* image
 
 Создать объект типа "шкала прогресса", значение которой меняется от 0 до 100.
 
-#GUI.**textBox**(x, y, width, height, backgroundColor, textColor, lines, currentLine, horizontalOffset, verticalOffset): *table* textBox
-
+GUI.**textBox**(x, y, width, height, backgroundColor, textColor, lines, currentLine, horizontalOffset, verticalOffset): *table* textBox
+------------------------------------------------------------------------
 | Тип | Аргумент | Описание |
 | ------ | ------ | ------ |
 | *int* | x | Координата объекта по оси x |
@@ -348,8 +348,8 @@ GUI.**image**( x, y, loadedImage ): *table* image
 | ------ | ------ | ------ |
 | *function* | .**onTouch**( *table* eventData )| Метод, вызываемый после нажатия на текстбокс в обработчике событий |
 
-#GUI.**treeView**( x, y, width, height, backgroundColor, textColor, selectionBackgroundColor, selectionTextColor, arrowColor, scrollBarPrimaryColor, scrollBarSecondaryColor, workPath ): *table* treeView
-
+GUI.**treeView**( x, y, width, height, backgroundColor, textColor, selectionBackgroundColor, selectionTextColor, arrowColor, scrollBarPrimaryColor, scrollBarSecondaryColor, workPath ): *table* treeView
+------------------------------------------------------------------------
 | Тип | Аргумент | Описание |
 | ------ | ------ | ------ |
 | *int* | x | Координата объекта по оси x |
@@ -371,8 +371,8 @@ GUI.**image**( x, y, loadedImage ): *table* image
 | ------ | ------ | ------ |
 | *function* | .**onFileSelected**( *int* currentFile )| Метод, вызываемый после выбора файла в TreeView |
 
-#GUI.**codeView**( x, y, width, height, lines, fromSymbol, fromLine, maximumLineLength, selections, highlights, highlightLuaSyntax, indentationWidth ): *table* codeView
-
+GUI.**codeView**( x, y, width, height, lines, fromSymbol, fromLine, maximumLineLength, selections, highlights, highlightLuaSyntax, indentationWidth ): *table* codeView
+------------------------------------------------------------------------
 | Тип | Аргумент | Описание |
 | ------ | ------ | ------ |
 | *int* | x | Координата объекта по оси x |
@@ -390,8 +390,8 @@ GUI.**image**( x, y, loadedImage ): *table* image
 
 Создать объект типа "CodeView", предназначенный для наглядного отображения Lua-кода с номерами строк, подсветкой синтаксиса, выделениям и скроллбарами.
 
-#GUI.**chart**( x, y, width, height, axisColor, axisValueColor, axisHelpersColor, chartColor, xAxisValueInterval, yAxisValueInterval, xAxisPostfix, yAxisPostfix, fillChartArea, values ): *table* chart
-
+GUI.**chart**( x, y, width, height, axisColor, axisValueColor, axisHelpersColor, chartColor, xAxisValueInterval, yAxisValueInterval, xAxisPostfix, yAxisPostfix, fillChartArea, values ): *table* chart
+------------------------------------------------------------------------
 | Тип | Аргумент | Описание |
 | ------ | ------ | ------ |
 | *int* | x | Координата объекта по оси x |
