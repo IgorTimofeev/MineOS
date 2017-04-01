@@ -50,7 +50,7 @@
 	showFileFormat = "Показывать формат файлов",
 	hideFileFormat = "Скрывать формат файлов",
 	showHiddenFiles = "Показывать скрытые файлы",
-	hideHiddenFiles = "Скрывать скрытые файлы",
+	hideHiddenFiles = "Не показывать скрытые файлы",
 	showApplicationIcons = "Показывать иконки приложений",
 	hideApplicationIcons = "Скрывать иконки приложений",
 

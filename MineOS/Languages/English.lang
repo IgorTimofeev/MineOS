@@ -89,7 +89,7 @@
 	changePassword = "Change password",
 	cancel = "Cancel",
 	shortcut = "shortcut",
-	shortcutIsCorrupted = "Shortcut file is corrupted",
+	shortcutIsCorrupted = "Shortcut is corrupted",
 
 	settings = "Preferences",
 	viewTab = "View",
@@ -107,5 +107,5 @@
 	messageText = "Message text",
 	gotMessageFrom = "Got message from ",
 	gotFileFrom = "Got file from ",
-	pathToSave = "Path to save file",
+	pathToSave = "Path to save the file",
 }
