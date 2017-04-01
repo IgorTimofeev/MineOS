@@ -410,3 +410,34 @@ GUI.**chart**( x, y, width, height, axisColor, axisValueColor, axisHelpersColor,
 | *table* | values | Таблица вида {{x = *float* x, y = *float* y}, ...} со значениями графика |
 
 Создать объект типа "график", предназначенный для отображения статистической информации в виде графика с подписью значений осей.
+
+Практические примеры
+--------------------
+
+ Для закрепления работы с GUI.**window**, GUI.**panel** и GUI.**button** напишем следующий код:
+ 
+```lua
+local buffer = require("doubleBuffering")
+local GUI = require("GUI")
+
+local window = GUI.window(1, 1, buffer.screen.width, buffer.screen.height)
+window:addPanel(1, 1, window.width, window.height, 0x2D2D2D)
+
+local y = 2
+for i = 1, 5 do
+	local button = window:addButton(2, y, 30, 3, 0xEEEEEE, 0x2D2D2D, 0x666666, 0xEEEEEE, "This is button " .. i)
+	button.onTouch = function()
+		GUI.error("You've pressed button " .. i .. "!")
+	end
+	y = y + button.height + 1
+end
+
+window:draw()
+buffer.draw()
+window:handleEvents()
+```
+При нажатии на любую из созданных кнопок будет показываться дебаг-окно с информацией, указанной в методе *.onTouch*:
+
+![enter image description here](http://i90.fastpic.ru/big/2017/0402/32/90656de1b96b157284fb21e2467d9632.png)
+
+![enter image description here](http://i91.fastpic.ru/big/2017/0402/c3/e02d02fb39a28dd17220b535e59292c3.png)
