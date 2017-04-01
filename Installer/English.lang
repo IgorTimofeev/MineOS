@@ -3,6 +3,6 @@
 	acceptLicense = "Accept", 
 	osInstallation = "Installing OS", 
 	downloading = "Downloading", 
-	needToRestart = "System installed, need to restart", 
+	needToRestart = "System has been installed, need to restart", 
 	restart = "Restart", 
 }
