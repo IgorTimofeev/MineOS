@@ -1,6 +1,4 @@
 
--- package.loaded.MineOSCore, package.loaded.GUI, package.loaded.windows = nil, nil, nil
-
 ---------------------------------------------- Копирайт, епта ------------------------------------------------------------------------
 
 local copyright = [[
@@ -24,6 +22,7 @@ local copyright = [[
 
 ---------------------------------------------- Адаптивная загрузка библиотек ------------------------------------------------------------------------
 
+-- package.loaded.MineOSCore, package.loaded.GUI = nil, nil
 local component = require("component")
 local unicode = require("unicode")
 local fs = require("filesystem")
@@ -31,7 +30,6 @@ local event = require("event")
 local image = require("image")
 local buffer = require("doubleBuffering")
 local GUI = require("GUI")
-local windows = require("windows")
 local MineOSCore = require("MineOSCore")
 local ecs = require("ECSAPI")
 
@@ -431,7 +429,7 @@ local function changeResolution()
 end
 
 local function createWorkspace()
-	workspace = windows.fullScreen()
+	workspace = GUI.fullScreenWindow()
 	workspace.background = workspace:addPanel(1, 1, workspace.width, workspace.height, _G.OSSettings.backgroundColor or colors.background)
 	workspace.wallpaper = workspace:addImage(1, 1, {width = workspace.width, height = workspace.height})
 
