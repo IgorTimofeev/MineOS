@@ -411,7 +411,7 @@ GUI.**chart**( x, y, width, height, axisColor, axisValueColor, axisHelpersColor,
 
 Создать объект типа "график", предназначенный для отображения статистической информации в виде графика с подписью значений осей.
 
-Практические примеры
+Практический пример #1
 --------------------
 
  Для закрепления работы с GUI.**window**, GUI.**panel** и GUI.**button** напишем следующий код:
@@ -441,3 +441,37 @@ window:handleEvents()
 ![enter image description here](http://i90.fastpic.ru/big/2017/0402/32/90656de1b96b157284fb21e2467d9632.png)
 
 ![enter image description here](http://i91.fastpic.ru/big/2017/0402/c3/e02d02fb39a28dd17220b535e59292c3.png)
+
+Практический пример #2
+--------------------
+
+Также продемонстрирую возможность изменения цвета фона программы путем добавления GUI.**colorSelector** в окно:
+ 
+```lua
+local buffer = require("doubleBuffering")
+local GUI = require("GUI")
+
+local window = GUI.window(1, 1, buffer.screen.width, buffer.screen.height)
+local panel = window:addPanel(1, 1, window.width, window.height, 0x2D2D2D)
+
+local colorSelector = window:addColorSelector(2, 2, 30, 3, 0xFFDB40, "Choose color")
+colorSelector.onTouch = function()
+	panel.colors.background = colorSelector.color
+	colorSelector.color = 0xFFFFFF - colorSelector.color
+	window:draw()
+	buffer.draw()
+end
+
+window:draw()
+buffer.draw()
+window:handleEvents()
+```
+При нажатии на цветовой селектор цвет фона изменится на выбранный, а цвет селектора на инвертированный:
+
+![enter image description here](http://i89.fastpic.ru/big/2017/0402/14/1e720fe2b43fe3f1c296dc00b3d4eb14.png)
+
+![enter image description here](http://i89.fastpic.ru/big/2017/0402/f6/9d181ff3fac1036ae12363da9094c2f6.png)
+
+![enter image description here](http://i90.fastpic.ru/big/2017/0402/43/a7fcca838ed8a8f1fcaa597bfc9b5c43.png)
+
+
