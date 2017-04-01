@@ -22,28 +22,21 @@ end
 local function pu(t) while true do local e={ps()};if e[1]==t then return e end end end
 
 local function sleep(timeout)
-	local deadline=cm.uptime() + (timeout or 0)
-	while cm.uptime()<deadline do ps(deadline - cm.uptime()) end
-end
-
-local function bGP()
-	gpu.bind(sc.address)
-	re={}
-	re.width,re.height=gpu.maxResolution()
-	gpu.setResolution(re.width,re.height)
+	local deadline=cm.uptime()+(timeout or 0)
+	while cm.uptime()<deadline do ps(deadline-cm.uptime()) end
 end
 
 local colors={b=0xDDDDDD,t1=0x444444,t2=0x999999,t3=0x888888}
 
-local function sB(color) if color~=bg then bg=color;gpu.setBackground(color) end end
-local function sF(color) if color~=fg then fg=color;gpu.setForeground(color) end end
+local function sB(c) if c~=bg then bg=c;gpu.setBackground(c) end end
+local function sF(c) if c~=fg then fg=c;gpu.setForeground(c) end end
 local function clear() gpu.fill(1,1,re.width,re.height," ") end
-local function cT(y,color,text) sF(color);gpu.set(math.floor(re.width/2-#text/2),y,text) end
+local function cT(y,c,t) sF(c);gpu.set(math.floor(re.width/2-#t/2),y,t) end
 local function l() sB(colors.b);clear();cT(sce-1,colors.t1,"MineOS EFI") end
 
 local function fade(fromColor,toColor,step)
-	for color=fromColor,toColor,step do
-		sB(color)
+	for i=fromColor,toColor,step do
+		sB(i)
 		clear()
 		sleep(0.05)
 	end
@@ -128,9 +121,8 @@ local function waitForAlt(t,dr)
 end
 
 init()
-bGP()
 fade(0x0,colors.b,0x202020)
 l()
 cT(sce,colors.t2,"Initialising system")
 local dr=gB()
-if #dr>0 then cT(re.height - 1,colors.t2,"Hold Alt to enter boot options menu");waitForAlt(1.2,dr) else cT(sce,colors.t2,"Bootable drives not found");pu("key_down");fade(colors.b,0x0,-0x202020);cm.shutdown() end
+if #dr>0 then cT(re.height-1,colors.t2,"Hold Alt to enter boot options menu");waitForAlt(1.2,dr) else cT(sce,colors.t2,"Bootable drives not found");pu("key_down");fade(colors.b,0x0,-0x202020);cm.shutdown() end
