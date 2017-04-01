@@ -6,7 +6,6 @@
 -- package.loaded.syntax = nil
 -- package.loaded.ECSAPI = nil
 -- package.loaded.GUI = nil
--- package.loaded.windows = nil
 -- package.loaded.MineOSCore = nil
 
 require("advancedLua")
@@ -15,7 +14,6 @@ local component = require("component")
 local fs = require("filesystem")
 local buffer = require("doubleBuffering")
 local GUI = require("GUI")
-local windows = require("windows")
 local MineOSCore = require("MineOSCore")
 local event = require("event")
 local syntax = require("syntax")
@@ -1328,7 +1326,7 @@ local function createEditOrRightClickMenu(x, y)
 end
 
 local function createWindow()
-	mainWindow = windows.fullScreen()
+	mainWindow = GUI.fullScreenWindow()
 
 	mainWindow.codeView = mainWindow:addCodeView(1, 1, 1, 1, {""}, 1, 1, 1, {}, {}, config.highlightLuaSyntax, 2)
 	mainWindow.codeView.scrollBars.vertical.onTouch = function()

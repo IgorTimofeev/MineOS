@@ -1,8 +1,6 @@
 
 ----------------------------------------- Libraries -----------------------------------------
 
--- package.loaded.windows = nil
-
 local component = require("component")
 local computer = require("computer")
 local unicode = require("unicode")
@@ -12,7 +10,6 @@ local colorlib = require("colorlib")
 local image = require("image")
 local buffer = require("doubleBuffering")
 local GUI = require("GUI")
-local windows = require("windows")
 
 ----------------------------------------- cyka -----------------------------------------
 
@@ -186,7 +183,7 @@ local function drawMainImageObject(object)
 end
 
 local function createWindow()
-	window = windows.fullScreen()
+	window = GUI.fullScreenWindow()
 	window:addPanel(1, 1, window.width, window.height, 0xEEEEEE)
 	window:addObject(1, 1, window.width, window.height).draw = drawMainImageObject
 	local textBoxesWidth = math.floor(panelWidth * 0.55)

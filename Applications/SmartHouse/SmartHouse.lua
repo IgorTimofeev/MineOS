@@ -7,7 +7,6 @@ local buffer = require("doubleBuffering")
 local keyboard = require("keyboard")
 local GUI = require("GUI")
 local ecs = require("ECSAPI")
-local windows = require("windows")
 local MineOSCore = require("MineOSCore")
 local computer = require("computer")
 local fs = require("filesystem")
@@ -332,7 +331,7 @@ local function drawSignals()
 end
 
 local function createWindow()
-	window = windows.fullScreen()
+	window = GUI.fullScreenWindow()
 
 	-- Создаем главное и неебически важное устройство домашнего писюка
 	local homePC = createDevice(math.floor(window.width / 2 - 8), math.floor(window.height / 2 - 4), "homePC", component.proxy(computer.address()), "Сервак")

@@ -2,6 +2,7 @@
 ----------------------------------------- Libraries -----------------------------------------
 
 require("advancedLua")
+local computer = require("computer")
 local keyboard = require("keyboard")
 local buffer = require("doubleBuffering")
 local unicode = require("unicode")
@@ -375,11 +376,7 @@ local function drawContainerContent(container)
 				-- We use :draw() method against of recursive call. The reason is possible user-defined :draw() reimplementations
 				container.children[objectIndex]:draw()
 			else
-				-- if container.children[objectIndex].draw then
-					container.children[objectIndex]:draw()
-				-- else
-				-- 	error("Container object with index " .. objectIndex .. " doesn't have :draw() method")
-				-- end
+				container.children[objectIndex]:draw()
 			end
 		end
 	end
@@ -1874,43 +1871,283 @@ function GUI.chart(x, y, width, height, axisColor, axisValueColor, axisHelpersCo
 	return object
 end
 
+----------------------------------------- Window object -----------------------------------------
+
+local function windowExecuteMethod(method, ...)
+	if method then method(...) end
+end
+
+local function windowButtonHandler(window, object, objectIndex, eventData)
+	if object.switchMode then
+		object.pressed = not object.pressed
+		window:draw(); buffer.draw()
+		windowExecuteMethod(object.onTouch, eventData)
+	else
+		object.pressed = true
+		window:draw(); buffer.draw()
+		os.sleep(0.2)
+		object.pressed = false
+		window:draw(); buffer.draw()
+		windowExecuteMethod(object.onTouch, eventData)
+	end
+end
+
+local function windowTabBarTabHandler(window, object, objectIndex, eventData)
+	object.parent.parent.selectedTab = objectIndex
+	window:draw(); buffer.draw()
+	windowExecuteMethod(object.parent.parent.onTabSwitched, object.parent.parent.selectedTab, eventData)
+end
+
+local function windowInputTextBoxHandler(window, object, objectIndex, eventData)
+	object:input()
+	window:draw(); buffer.draw()
+	windowExecuteMethod(object.onInputFinished, object.text, eventData)
+end
+
+local function windowTextBoxScrollHandler(window, object, objectIndex, eventData)
+	if eventData[5] == 1 then
+		object:scrollUp()
+		window:draw(); buffer.draw()
+	else
+		object:scrollDown()
+		window:draw(); buffer.draw()
+	end
+end
+
+local function windowHorizontalSliderHandler(window, object, objectIndex, eventData)
+	local clickPosition = eventData[3] - object.x + 1
+	object.value = object.minimumValue + (clickPosition * (object.maximumValue - object.minimumValue) / object.width)
+	window:draw(); buffer.draw()
+	windowExecuteMethod(object.onValueChanged, object.value, eventData)
+end
+
+local function windowSwitchHandler(window, object, objectIndex, eventData)
+	object.state = not object.state
+	window:draw(); buffer.draw()
+	windowExecuteMethod(object.onStateChanged, object.state, eventData)
+end
+
+local function windowComboBoxHandler(window, object, objectIndex, eventData)
+	object:selectItem()
+	windowExecuteMethod(object.onItemSelected, object.items[object.currentItem], eventData)
+end
+
+local function windowMenuItemHandler(window, object, objectIndex, eventData)
+	object.pressed = true
+	window:draw(); buffer.draw()
+	windowExecuteMethod(object.onTouch, eventData)
+	object.pressed = false
+	window:draw(); buffer.draw()
+end
+
+local function windowScrollBarHandler(window, object, objectIndex, eventData)
+	local newValue = object.value
+
+	if eventData[1] == "touch" or eventData[1] == "drag" then
+		local delta = object.maximumValue - object.minimumValue + 1
+		if object.height > object.width then
+			newValue = math.floor((eventData[4] - object.y + 1) / object.height * delta)
+		else
+			newValue = math.floor((eventData[3] - object.x + 1) / object.width * delta)
+		end
+	elseif eventData[1] == "scroll" then
+		if eventData[5] == 1 then
+			if object.value >= object.minimumValue + object.onScrollValueIncrement then
+				newValue = object.value - object.onScrollValueIncrement
+			else
+				newValue = object.minimumValue
+			end
+		else
+			if object.value <= object.maximumValue - object.onScrollValueIncrement then
+				newValue = object.value + object.onScrollValueIncrement
+			else
+				newValue = object.maximumValue
+			end
+		end
+	end
+	object.value = newValue
+	windowExecuteMethod(object.onTouch, eventData)
+	window:draw(); buffer.draw()
+end
+
+local function windowTreeViewHandler(window, object, objectIndex, eventData)
+	if eventData[1] == "touch" then
+		local fileIndex = eventData[4] - object.y + object.fromFile - 1
+		if object.fileList[fileIndex] then
+			if object.fileList[fileIndex].isDirectory then
+				if object.directoriesToShowContent[object.fileList[fileIndex].path] then
+					object.directoriesToShowContent[object.fileList[fileIndex].path] = nil
+				else
+					object.directoriesToShowContent[object.fileList[fileIndex].path] = true
+				end
+				object:updateFileList()
+				object:draw(); buffer.draw()
+			else
+				object.currentFile = object.fileList[fileIndex].path
+				object:draw(); buffer.draw()
+				windowExecuteMethod(object.onFileSelected, object.currentFile, eventData)
+			end
+		end
+	elseif eventData[1] == "scroll" then
+		if eventData[5] == 1 then
+			if object.fromFile > 1 then
+				object.fromFile = object.fromFile - 1
+				object:draw(); buffer.draw()
+			end
+		else
+			if object.fromFile < #object.fileList then
+				object.fromFile = object.fromFile + 1
+				object:draw(); buffer.draw()
+			end
+		end
+	end
+end
+
+local function windowColorSelectorHandler(window, object, objectIndex, eventData)
+	object.pressed = true
+	object:draw(); buffer.draw()
+	object.color = require("palette").show("auto", "auto", object.color) or object.color
+	object.pressed = false
+	object:draw(); buffer.draw()
+	windowExecuteMethod(object.onTouch, eventData)
+end
+
+local function windowHandleEventData(window, eventData)
+	if eventData[1] == "touch" then
+		local object, objectIndex = window:getClickedObject(eventData[3], eventData[4])
+		
+		if object then
+			if object.type == GUI.objectTypes.button then
+				windowButtonHandler(window, object, objectIndex, eventData)
+			elseif object.type == GUI.objectTypes.tabBarTab then
+				windowTabBarTabHandler(window, object, objectIndex, eventData)
+			elseif object.type == GUI.objectTypes.inputTextBox then
+				windowInputTextBoxHandler(window, object, objectIndex, eventData)
+			elseif object.type == GUI.objectTypes.horizontalSlider then
+				windowHorizontalSliderHandler(window, object, objectIndex, eventData)
+			elseif object.type == GUI.objectTypes.switch then
+				windowSwitchHandler(window, object, objectIndex, eventData)
+			elseif object.type == GUI.objectTypes.comboBox then
+				windowComboBoxHandler(window, object, objectIndex, eventData)
+			elseif object.type == GUI.objectTypes.menuItem then
+				windowMenuItemHandler(window, object, objectIndex, eventData)
+			elseif object.type == GUI.objectTypes.scrollBar then
+				windowScrollBarHandler(window, object, objectIndex, eventData)
+			elseif object.type == GUI.objectTypes.treeView then
+				windowTreeViewHandler(window, object, objectIndex, eventData)
+			elseif object.type == GUI.objectTypes.colorSelector then
+				windowColorSelectorHandler(window, object, objectIndex, eventData)
+			elseif object.onTouch then
+				windowExecuteMethod(object.onTouch, eventData)
+			end
+		else
+			windowExecuteMethod(window.onTouch, eventData)
+		end
+	elseif eventData[1] == "scroll" then
+		local object, objectIndex = window:getClickedObject(eventData[3], eventData[4])
+		
+		if object then
+			if object.type == GUI.objectTypes.textBox then
+				windowTextBoxScrollHandler(window, object, objectIndex, eventData)
+			elseif object.type == GUI.objectTypes.scrollBar then
+				windowScrollBarHandler(window, object, objectIndex, eventData)
+			elseif object.type == GUI.objectTypes.treeView then
+				windowTreeViewHandler(window, object, objectIndex, eventData)
+			elseif object.onScroll then
+				windowExecuteMethod(object.onScroll, eventData)
+			end
+		else
+			windowExecuteMethod(window.onScroll, eventData)
+		end
+	elseif eventData[1] == "drag" then
+		local object, objectIndex = window:getClickedObject(eventData[3], eventData[4])
+		if object then
+			if object.type == GUI.objectTypes.horizontalSlider then
+				windowHorizontalSliderHandler(window, object, objectIndex, eventData)
+			elseif object.type == GUI.objectTypes.scrollBar then
+				windowScrollBarHandler(window, object, objectIndex, eventData)
+			elseif object.onDrag then
+				windowExecuteMethod(object.onDrag, eventData)
+			end
+		else
+			windowExecuteMethod(window.onDrag, eventData)
+		end
+	elseif eventData[1] == "drop" then
+		local object, objectIndex = window:getClickedObject(eventData[3], eventData[4])
+		if object then
+			if object.onDrag then
+				windowExecuteMethod(object.onDrop, eventData)
+			end
+		else
+			windowExecuteMethod(window.onDrop, eventData)
+		end
+	elseif eventData[1] == "key_down" then
+		windowExecuteMethod(window.onKeyDown, eventData)
+	elseif eventData[1] == "key_up" then
+		windowExecuteMethod(window.onKeyUp, eventData)
+	end
+
+	windowExecuteMethod(window.onAnyEvent, eventData)
+end
+
+local function windowHandleEvents(window, pullTime)
+	while true do
+		windowHandleEventData(window, {event.pull(pullTime)})
+		if window.dataToReturn then
+			local data = window.dataToReturn
+			window = nil
+			return table.unpack(data)
+		end
+	end
+end
+
+local function windowReturnData(window, ...)
+	window.dataToReturn = {...}
+	computer.pushSignal("windowAction")
+end
+
+local function windowClose(window)
+	windowReturnData(window, nil)
+end
+
+local function windowCorrectCoordinates(x, y, width, height, minimumWidth, minimumHeight)
+	width = minimumWidth and math.max(width, minimumWidth) or width
+	height = minimumHeight and math.max(height, minimumHeight) or height
+	x = (x == "auto" and math.floor(buffer.screen.width / 2 - width / 2)) or x
+	y = (y == "auto" and math.floor(buffer.screen.height / 2 - height / 2)) or y
+
+	return x, y, width, height
+end
+
+local function windowDraw(window)
+	if window.onDrawStarted then window.onDrawStarted() end
+	drawContainerContent(window)
+	if window.drawShadow then GUI.windowShadow(window.x, window.y, window.width, window.height, 50) end
+	if window.onDrawFinished then window.onDrawFinished() end
+end
+
+function GUI.window(x, y, width, height, minimumWidth, minimumHeight)
+	x, y, width, height = windowCorrectCoordinates(x, y, width, height, minimumWidth, minimumHeight)
+	local window = GUI.container(x, y, width, height)
+
+	window.minimumWidth = minimumWidth
+	window.minimumHeight = minimumHeight
+	window.drawShadow = false
+	window.draw = windowDraw
+	window.handleEvents = windowHandleEvents
+	window.close = windowClose
+	window.returnData = windowReturnData
+
+	return window
+end
+
+function GUI.fullScreenWindow()
+	return GUI.window(1, 1, buffer.screen.width, buffer.screen.height)
+end
+
 --------------------------------------------------------------------------------------------------------------------------------
 
--- buffer.start()
--- buffer.clear(0x262626)
--- local treeView = GUI.treeView(2, 2, 50, 40, 0xFFFFFF, 0x0, 0x262626, 0x555555, 0x888888, 0xFF4444, 0x44FF44, "/MineOS/System/OS/")
 
--- treeView.directoriesToShowContent["/MineOS/System/OS/Languages/"] = true
--- treeView:updateFileList()
-
--- treeView:draw()
--- buffer.draw(true)
-
--- buffer.start()
--- local x, y, width, height = 10, 10, 32, 16
--- local chart = GUI.chart(x, y, width, height, 0xFFFFFF, 0xBBBBBB, 0x777777, 0xFF4444, 0.1, 0.15, "%", " RF/t", true, {})
--- chart.showXAxisValues = false
--- chart.showYAxisValues = false
-
--- -- buffer.clear(0x262626)
--- -- buffer.square(x, y, width, height, 0x1D1D1D)
--- -- for i = 1, 50 do
--- -- 	table.insert(chart.values, {i, math.random(1, 100)})
--- -- end
--- -- chart:draw()
--- -- buffer.draw()
-
--- local counter = 1
--- while true do
--- 	buffer.clear(0x262626)
--- 	buffer.square(x, y, width, height, 0x1D1D1D)
--- 	table.insert(chart.values, {counter, math.random(0, 100)})
--- 	chart:draw()
--- 	buffer.draw()
--- 	counter = counter + 1
--- 	if #chart.values > 20 then table.remove(chart.values, 1) end
--- 	os.sleep(0.5)
--- end
 
 --------------------------------------------------------------------------------------------------------------------------------
 

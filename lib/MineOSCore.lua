@@ -8,10 +8,10 @@ local advancedLua = require("advancedLua")
 local image = require("image")
 local buffer = require("doubleBuffering")
 local GUI = require("GUI")
-local windows = require("windows")
 local ecs = require("ECSAPI")
 local fs = require("filesystem")
 local unicode = require("unicode")
+local keyboard = require("keyboard")
 
 ---------------------------------------------- Core constants ------------------------------------------------------------------------
 
@@ -42,6 +42,74 @@ MineOSCore.sortingMethods = enum(
 )
 
 MineOSCore.localization = {}
+
+
+---------------------------------------------- Tasks ------------------------------------------------------------------------
+
+--[[
+MineOSCore.tasks = {}
+
+function MineOSCore.showTaskManager()
+	MineOSCore.tasks.current = 1
+	buffer.clear(0x2D2D2D)
+	for i = 1, #MineOSCore.tasks do
+		buffer.text(1, i, 0xFFFFFF, i .. ": " .. table.toString(MineOSCore.tasks[i]))
+	end
+	buffer.draw()
+	MineOSCore.rawPullSignal()
+end
+
+local function replacePullSignal()
+	MineOSCore.rawPullSignal = computer.pullSignal
+	computer.pullSignal = function(timeout)
+		local signalData = {MineOSCore.rawPullSignal(timeout)}
+
+		local i = 1
+		while i <= #MineOSCore.tasks do
+			if coroutine.status(MineOSCore.tasks[i].coroutine) == "dead" then
+				if i > 1 then
+					MineOSCore.tasks.current = 1
+					MineOSCore.tasks[i].coroutine = nil
+					table.remove(MineOSCore.tasks, i)
+				else
+					error("MineOSCore fatal error cyka bitch")
+				end
+			else
+				i = i + 1
+			end
+		end
+
+		if MineOSCore.taskManagerOpen then
+			MineOSCore.showTaskManager()
+		else
+			if keyboard.isKeyDown(0) and keyboard.isKeyDown(28) then
+				MineOSCore.taskManagerOpen = true
+				MineOSCore.tasks[MineOSCore.tasks.current].isPaused = true
+				computer.pushSignal("")
+				coroutine.yield()
+			else
+				return table.unpack(signalData)
+			end
+		end
+	end
+end
+
+function MineOSCore.newTask(func, name)
+	local task = {
+		coroutine = coroutine.create(func),
+		name = name,
+		isPaused = false
+	}
+	table.insert(MineOSCore.tasks, task)
+	return task
+end
+
+function MineOSCore.newTaskFromFile(path)
+	local loadSuccess, loadReason = loadfile(path)
+	MineOSCore.newTask(loadSuccess)
+end
+
+]]
 
 ---------------------------------------------- Current sсript processing methods ------------------------------------------------------------------------
 
@@ -468,7 +536,7 @@ local function drawErrorWindow(path, programVersion, errorLine, reason)
 	local y = math.floor(buffer.screen.height / 2 - height / 2)
 
 	-- Окошечко и всякая шняжка на нем
-	local window = windows.empty(1, y, width, height, width, height)
+	local window = GUI.window(1, y, width, height, width, height)
 	window:addPanel(1, 1, width, 3, 0x383838)
 	window:addLabel(1, 2, width, 1, 0xFFFFFF, MineOSCore.localization.errorWhileRunningProgram .. "\"" .. MineOSCore.getFileName(path) .. "\""):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
 	local windowActionButtons = window:addWindowActionButtons(2, 2, false)
@@ -813,7 +881,7 @@ local function addKeyAndValue(window, x, y, key, value)
 end
 
 function MineOSCore.showPropertiesWindow(x, y, width, iconObject)
-	local window = windows.empty(x, y, width, 1)
+	local window = GUI.window(x, y, width, 1)
 	local backgroundPanel = window:addPanel(1, 2, window.width, 1, 0xDDDDDD)
 	window:addPanel(1, 1, window.width, 1, 0xEEEEEE)
 	window:addLabel(1, 1, window.width, 1, 0x333333, MineOSCore.localization.contextMenuProperties):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)

@@ -14,7 +14,6 @@ local computer = require("computer")
 local buffer = require("doubleBuffering")
 local event = require("event")
 local GUI = require("GUI")
-local windows = require("windows")
 local vector = require("vector")
 local materials = require("OpenComputersGL/Materials")
 local renderer = require("OpenComputersGL/Renderer")
@@ -28,7 +27,7 @@ local polyCatEngine = require("PolyCatEngine/Main")
 buffer.start()
 polyCatEngine.intro(vector.newVector3(0, 0, 0), 20)
 
-local mainWindow = windows.fullScreen()
+local mainWindow = GUI.fullScreenWindow()
 local scene = polyCatEngine.newScene(0x1D1D1D)
 
 scene.renderMode = OCGL.renderModes.flatShading

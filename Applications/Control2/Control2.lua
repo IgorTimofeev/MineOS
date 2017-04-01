@@ -3,7 +3,6 @@ local fs = require("filesystem")
 local advancedLua = require("advancedLua")
 local buffer = require("doubleBuffering")
 local GUI = require("GUI")
-local windows = require("windows")
 local MineOSCore = require("MineOSCore")
 local event = require("event")
 local unicode = require("unicode")
@@ -15,7 +14,7 @@ local window = {}
 -----------------------------------------------------------------------------------------------------------------------------
 
 local function createWindow()
-	window = windows.empty("auto", "auto", math.floor(buffer.screen.width * 0.8), math.floor(buffer.screen.height * 0.7), 78, 24)
+	window = GUI.window("auto", "auto", math.floor(buffer.screen.width * 0.8), math.floor(buffer.screen.height * 0.7), 78, 24)
 	window:addPanel(1, 1, window.width, window.height, 0xEEEEEE).disabled = true
 	
 	window.resourcesPath = MineOSCore.getCurrentApplicationResourcesDirectory()

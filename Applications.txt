@@ -253,7 +253,7 @@
     name="lib/MineOSCore.lua",
     url="IgorTimofeev/OpenComputers/master/lib/MineOSCore.lua",
     type="Library",
-    version=1.51,
+    version=1.52,
   },
   {
     name="lib/advancedLua.lua",
@@ -300,13 +300,7 @@
     name="lib/GUI.lua",
     url="IgorTimofeev/OpenComputers/master/lib/GUI.lua",
     type="Library",
-    version=1.48,
-  },
-  {
-    name="lib/windows.lua",
-    url="IgorTimofeev/OpenComputers/master/lib/windows.lua",
-    type="Library",
-    version=1.20,
+    version=1.49,
   },
   {
     name="lib/rayEngine.lua",
@@ -366,7 +360,7 @@
     name="lib/palette.lua",
     url="IgorTimofeev/OpenComputers/master/lib/palette.lua",
     type="Library",
-    version=1.10,
+    version=1.11,
   },
   {
     name="lib/doubleBuffering.lua",
@@ -511,7 +505,7 @@
     icon="IgorTimofeev/OpenComputers/master/Applications/MineCodeIDE/Icon.pic",
     createShortcut="dock",
     forceDownload=true,
-    version=1.69,
+    version=1.70,
     resources={
       {
         name="Localization/Russian.lang",
@@ -530,7 +524,7 @@
     type="Application",
     icon="IgorTimofeev/OpenComputers/master/Applications/3DTest/Icon.pic",
     createShortcut="desktop",
-    version=1.15,
+    version=1.16,
   },
   {
     name="MineOS/Applications/GeoScan2",
@@ -538,7 +532,7 @@
     type="Application",
     icon="IgorTimofeev/OpenComputers/master/Applications/GeoScan2/Icon.pic",
     createShortcut="desktop",
-    version=1.03,
+    version=1.04,
     resources={
       {
         name="Earth.pic",
@@ -552,7 +546,7 @@
     type="Application",
     icon="IgorTimofeev/OpenComputers/master/Applications/SmartHouse/Icon.pic",
     createShortcut="desktop",
-    version=1.29,
+    version=1.30,
     resources={
       {
         name="Modules/command_block/Icon.pic",
@@ -644,7 +638,7 @@
     type="Application",
     icon="IgorTimofeev/OpenComputers/master/Applications/Control2/Icon.pic",
     createShortcut="desktop",
-    version=1.05,
+    version=1.06,
     resources={
       {
         name="LuaLogo.pic",
@@ -726,7 +720,7 @@
     type="Application",
     icon="IgorTimofeev/OpenComputers/master/Applications/RayWalk/Icon.pic",
     createShortcut="desktop",
-    version=1.62,
+    version=1.63,
     resources={
       {
         name="Localization/Russian.lang",
@@ -849,7 +843,7 @@
     type="Application",
     icon="IgorTimofeev/OpenComputers/master/Applications/PrintImage/Icon.pic",
     createShortcut="desktop",
-    version=1.07,
+    version=1.08,
   },
   {
     name="MineOS/Applications/Palette",

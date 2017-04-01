@@ -1,5 +1,5 @@
 
--- _G.windows, _G.GUI, package.loaded.windows, package.loaded.GUI = nil, nil, nil, nil
+-- _G.GUI, package.loaded.GUI = nil, nil
 
 local advancedLua = require("advancedLua")
 local component = require("component")
@@ -8,7 +8,6 @@ local colorlib = require("colorlib")
 local image = require("image")
 local buffer = require("doubleBuffering")
 local GUI = require("GUI")
-local windows = require("windows")
 
 --------------------------------------------------------------------------------------------------------------
 
@@ -46,7 +45,7 @@ local function randomizeFavourites()
 	favourites = {}; for i = 1, 6 do favourites[i] = math.random(0x000000, 0xFFFFFF) end
 end
 
-local function savefavourites()
+local function saveFavoutites()
 	table.toFile(pathToFavouritesConfig, favourites)
 end
 
@@ -55,7 +54,7 @@ local function loadFavourites()
 		favourites = table.fromFile(pathToFavouritesConfig)
 	else
 		randomizeFavourites()
-		savefavourites()
+		saveFavoutites()
 	end
 end
 
@@ -193,7 +192,7 @@ local function createFavourites()
 end
 
 local function createWindow(x, y)
-	window = windows.empty(x, y, 71, 25, 71, 25)
+	window = GUI.window(x, y, 71, 25, 71, 25)
 	
 	x, y = 1, 1
 	window:addPanel(x, y, window.width, window.height, 0xEEEEEE)
@@ -244,7 +243,7 @@ local function createWindow(x, y)
 		if not favouriteExists then
 			table.insert(favourites, 1, currentColor.hex); table.remove(favourites, #favourites)
 			for i = 1, #favourites do favouritesContainer.children[i].colors.default.background = favourites[i]; favouritesContainer.children[i].colors.pressed.background = 0x0 end
-			savefavourites()
+			saveFavoutites()
 			drawAll()
 		end
 	end

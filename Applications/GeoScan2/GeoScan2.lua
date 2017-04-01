@@ -4,7 +4,6 @@ local colorlib = require("colorlib")
 local image = require("image")
 local buffer = require("doubleBuffering")
 local GUI = require("GUI")
-local windows = require("windows")
 local MineOSCore = require("MineOSCore")
 
 --------------------------------------------------------------------------------------------------------------------
@@ -20,7 +19,7 @@ local earthImage = image.load(resourcesDirectory .. "Earth.pic")
 local onScreenDataXOffset, onScreenDataYOffset = math.floor(buffer.screen.width / 2), buffer.screen.height
 local onProjectorDataYOffset = 0
 local scanResult = {horizontalRange = 0, verticalRange = 0}
-local window = windows.fullScreen()
+local window = GUI.fullScreenWindow()
 
 --------------------------------------------------------------------------------------------------------------------
 

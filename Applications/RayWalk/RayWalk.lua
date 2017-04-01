@@ -1,11 +1,10 @@
 
-package.loaded.rayEngine, package.loaded.GUI, package.loaded.windows, _G.rayEngine, _G.GUI, _G.windows = nil, nil, nil, nil, nil, nil, nil, nil
+package.loaded.rayEngine, package.loaded.GUI, _G.rayEngine, _G.GUI = nil, nil, nil, nil, nil, nil
 
 local fs = require("filesystem")
 local component = require("component")
 local buffer = require("doubleBuffering")
 local GUI = require("GUI")
-local windows = require("windows")
 local rayEngine = require("rayEngine")
 local MineOSCore = require("MineOSCore")
 local unicode = require("unicode")
@@ -26,7 +25,7 @@ local function menuBackground()
 end
 
 local function settings()
-	local window = windows.empty(1, 1, buffer.screen.width, buffer.screen.height, buffer.screen.width, buffer.screen.height)
+	local window = GUI.window(1, 1, buffer.screen.width, buffer.screen.height, buffer.screen.width, buffer.screen.height)
 	window.onDrawStarted = menuBackground
 
 	local sliderWidth, textBoxWidth = 43, 19
@@ -106,7 +105,7 @@ local function settings()
 end
 
 local function menu()
-	local window = windows.empty(1, 1, buffer.screen.width, buffer.screen.height, buffer.screen.width, buffer.screen.height)
+	local window = GUI.window(1, 1, buffer.screen.width, buffer.screen.height, buffer.screen.width, buffer.screen.height)
 	window.onDrawStarted = menuBackground
 
 	local buttonWidth, buttonHeight = 50, 3
@@ -164,7 +163,7 @@ rayEngine.loadEngineProperties(applicationResourcesDirectory .. "RayEngine.cfg")
 rayEngine.loadWeapons(applicationResourcesDirectory .. "Weapons/")
 rayEngine.loadWorld(worldsPath .. "ExampleWorld")
 rayEngine.changeResolution(rayEngine.properties.screenResolution.width, rayEngine.properties.screenResolution.height)
-rayEngine.intro()
+-- rayEngine.intro()
 menu()
 rayEngine.update()
 
