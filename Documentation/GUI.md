@@ -6,7 +6,7 @@ GUI - многофункциональная графическая библио
 
 К примеру, моя операционная система и среда разработки полностью реализованы методами данной библиотеки:
 
-![enter image description here](http://i91.fastpic.ru/big/2017/0402/5b/5a612030f415c4c831bb86ab1c62d65b.png)
+![enter image description here](http://i90.fastpic.ru/big/2017/0402/c6/f7800d9f57b8bdfdcb3fc4b0b33396c6.png)
 
 ![enter image description here](http://i89.fastpic.ru/big/2017/0402/71/4573b0833e2d90d214d8b10b38d25571.png)
 
