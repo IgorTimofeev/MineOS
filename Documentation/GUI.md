@@ -208,10 +208,9 @@ local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 
 local window = GUI.fullScreenWindow()
-window:addPanel(1, 1, window.width, window.height, 0x0)
 
-local panel1 = window:addPanel(1, 1, window.width, math.floor(window.height / 2), 0xFFFFFF)
-window:addPanel(1, panel1.height, window.width, window.height - panel1.height, 0xFF0000)
+local panel1 = window:addPanel(1, 1, window.width, math.floor(window.height / 2), 0x444444)
+window:addPanel(1, panel1.height, window.width, window.height - panel1.height + 1, 0x880000)
 
 window:draw()
 buffer.draw(true)
@@ -220,7 +219,7 @@ window:handleEvents()
 
 Результат:
 
-![enter image description here](http://i91.fastpic.ru/big/2017/0402/0e/f85dc0db4dd6b575920fdf79090c020e.png)
+![enter image description here](http://i91.fastpic.ru/big/2017/0402/46/d2516c735ef5a92d294caa560aa87546.png)
 
 GUI.**button**( x, y, width, height, buttonColor, textColor, buttonPressedColor, textPressedColor, text ): *table* button
 ------------------------------------------------------------------------
