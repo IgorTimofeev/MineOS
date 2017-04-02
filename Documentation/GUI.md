@@ -681,6 +681,53 @@ window:handleEvents()
 
 ![enter image description here](http://i89.fastpic.ru/big/2017/0402/f1/ef1da27531ccf899eb9eb59c010180f1.png)
 
+GUI.**scrollBar**( x, y, width, height, backgroundColor, foregroundColor, minimumValue, maximumValue, value, shownValueCount, onScrollValueIncrement, thinHorizontalMode ): *table* scrollBar
+------------------------------------------------------------------------
+| Тип | Аргумент | Описание |
+| ------ | ------ | ------ |
+| *int* | x | Координата объекта по оси x |
+| *int* | y | Координата объекта по оси y |
+| *int* | width | Ширина объекта |
+| *int* | height | Высота объекта |
+| *int* | backgroundColor | Цвет фона scrollBar |
+| *int* | foregroundColor | Цвет текста scrollBar |
+| *int* | minimumValue | Минимальное значение scrollBar |
+| *int* | maximumValue | Максимальное значение scrollBar |
+| *int* | value | Текущее значение scrollBar |
+| *int* | shownValueCount | Число "отображаемых" значений scrollBar |
+| *int* | onScrollValueIncrement | Количество строк, пролистываемых при прокрутке |
+| *boolean* | thinHorizontalMode | Режим отображения scrollBar в полупиксельном виде при горизонтальной ориентации |
+
+Создать объект типа "ScrollBar", предназначенный для визуальной демонстрации числа показанных объектов на экране. Сам по себе практически не используется, полезен в совокупности с другими виджетами.
+
+| Тип свойства | Свойство |Описание |
+| ------ | ------ | ------ |
+| *callback-function* | .**onTouch**( *table* eventData )| Метод, вызываемый при клике на скорллбар. Значение скроллбара будет изменяться автоматически в указанном диапазоне |
+| *callback-function* | .**onScroll**( *table* eventData )| Метод, вызываемый при использовании колеса мыши на скроллбаре. Значение скроллбара будет изменяться в зависимости от величины *.onScrollValueIncrement* |
+
+Пример реализации ScrollBar:
+
+```lua
+local buffer = require("doubleBuffering")
+local GUI = require("GUI")
+
+local window = GUI.fullScreenWindow()
+window:addPanel(1, 1, window.width, window.height, 0x0)
+
+local scrollBar = window:addScrollBar(2, 2, 1, 30, 0xEEEEEE, 0x3366CC, 1, 100, 1, 10, 1, false)
+scrollBar.onTouch = function()
+	-- Do something on scrollBar touch
+end
+
+window:draw()
+buffer.draw(true)
+window:handleEvents()
+```
+
+Результат:
+
+![enter image description here](http://i89.fastpic.ru/big/2017/0402/90/b78e291e777f9bcb84802ef6451bc790.png)
+
 GUI.**textBox**(x, y, width, height, backgroundColor, textColor, lines, currentLine, horizontalOffset, verticalOffset): *table* textBox
 ------------------------------------------------------------------------
 | Тип | Аргумент | Описание |
