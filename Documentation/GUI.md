@@ -486,4 +486,81 @@ window:handleEvents()
 
 ![enter image description here](http://i90.fastpic.ru/big/2017/0402/43/a7fcca838ed8a8f1fcaa597bfc9b5c43.png)
 
+Практический пример #3
+--------------------
 
+Для демонстрации возможностей библиотеки предлагаю создать кастомный виджет с нуля. К примеру, накодить панель для рисования на ней произвольным цветом по аналогии со школьной доской.
+ 
+```lua
+local buffer = require("doubleBuffering")
+local GUI = require("GUI")
+
+---------------------------------------------------------------------
+
+-- Создаем полноэкранное окно
+local window = GUI.fullScreenWindow()
+
+-- Создаем метод, возвращающий кастомный виджет
+local function createMyWidget(x, y, width, height, backgroundColor, paintColor)
+	-- Наследуемся от GUI.object, дополняем его параметрами цветов и пиксельной карты
+	local object = GUI.object(x, y, width, height)
+	object.colors = {background = backgroundColor, paint = paintColor}
+	object.pixels = {}
+	
+	-- Реализуем метод отрисовки виджета
+	object.draw = function(object)
+		-- Рисуем подложку цветом фона виджета
+		buffer.square(object.x, object.y, object.width, object.height, object.colors.background, 0x0, " ")
+		
+		-- Перебираем пиксельную карту, отрисовывая соответствующие пиксели в экранный буфер
+		for y = 1, object.height do
+			for x = 1, object.width do
+				if object.pixels[y] and object.pixels[y][x] then
+					buffer.set(object.x + x - 1, object.y + y - 1, object.colors.paint, 0x0, " ")
+				end
+			end
+		end
+	end
+
+	-- Реализуем метод клика на объект, устанавливая или удаляя пиксели в зависимости от кнопки мыши
+	object.onTouch = function(eventData)
+		local x, y = eventData[3] - object.x + 1, eventData[4] - object.y + 1
+		object.pixels[y] = object.pixels[y] or {}
+		object.pixels[y][x] = eventData[5] == 0 and true or nil
+		window:draw()
+		buffer.draw()
+	end
+	-- Дублируем метод onTouch, чтобы рисование было непрерывным
+	object.onDrag = object.onTouch
+
+	return object
+end
+
+---------------------------------------------------------------------
+
+-- Добавляем темно-серую панель на окно
+window:addPanel(1, 1, window.width, window.height, 0x2D2D2D)
+-- Создаем экземпляр виджета-рисовалки и добавляем его на окно
+window:addChild(createMyWidget(2, 2, 32, 16, 0x3C3C3C, 0xEEEEEEE))
+
+window:draw()
+buffer.draw(true)
+window:handleEvents()
+```
+При нажатии на левую кнопку мыши в нашем виджете устанавливается пиксель указанного цвета, а на правую - удаляется.
+
+![enter image description here](http://i89.fastpic.ru/big/2017/0402/fd/be80c13085824bebf68f64a329e226fd.png)
+
+Для разнообразия модифицируем код, создав несколько виджетов с рандомными цветами:
+
+```lua
+local x = 2
+for i = 1, 5 do
+	window:addChild(createMyWidget(x, 2, 32, 16, math.random(0x0, 0xFFFFFF), math.random(0x0, 0xFFFFFF)))
+	x = x + 34
+end
+```
+
+В результате получаем 5 индивидуальных экземпляров виджета рисования:
+
+![enter image description here](http://i90.fastpic.ru/big/2017/0402/96/96aba372bdb3c1e61007170132f00096.png)
