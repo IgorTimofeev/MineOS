@@ -8,7 +8,7 @@ GUI - многофункциональная графическая библио
 
 ![enter image description here](http://i90.fastpic.ru/big/2017/0402/c6/f7800d9f57b8bdfdcb3fc4b0b33396c6.png)
 
-![enter image description here](http://i89.fastpic.ru/big/2017/0402/71/4573b0833e2d90d214d8b10b38d25571.png)
+![enter image description here](http://i90.fastpic.ru/big/2017/0402/80/1a930418ebc05e30dd4d778dd6243080.png)
 
 Пусть синтаксис и обилие текста вас не пугают, в документации имеется множество наглядных иллюстрированных примеров и практических задач.
 
