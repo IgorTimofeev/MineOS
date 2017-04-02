@@ -416,26 +416,33 @@ GUI.**chart**( x, y, width, height, axisColor, axisValueColor, axisHelpersColor,
 Практический пример #1
 --------------------
 
- Для закрепления работы с GUI.**window**, GUI.**panel** и GUI.**button** напишем следующий код:
+ В качестве стартового примера возьмем простейшую задачу: расположим на экране 5 кнопок по вертикали и заставим их показывать окно с порядковым номером этой кнопки при нажатии на нее. Напишем следующий код:
  
 ```lua
+-- Подключаем необходимые библиотеки
 local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 
-local window = GUI.window(1, 1, buffer.screen.width, buffer.screen.height)
+-- Создаем полноэкранное окно
+local window = GUI.fullScreenWindow()
+-- Добавляем на окно темно-серую панель по всей его ширине и высоте
 window:addPanel(1, 1, window.width, window.height, 0x2D2D2D)
 
+-- Создаем 5 объектов-кнопок, располагаемых все ниже и ниже
 local y = 2
 for i = 1, 5 do
-	local button = window:addButton(2, y, 30, 3, 0xEEEEEE, 0x2D2D2D, 0x666666, 0xEEEEEE, "This is button " .. i)
-	button.onTouch = function()
+	-- При нажатии на конкретную кнопку будет вызван указанный метод .onTouch()
+	window:addButton(2, y, 30, 3, 0xEEEEEE, 0x2D2D2D, 0x666666, 0xEEEEEE, "This is button " .. i).onTouch = function()
 		GUI.error("You've pressed button " .. i .. "!")
 	end
-	y = y + button.height + 1
+	y = y + 4
 end
 
+-- Отрисовываем содержимое окно
 window:draw()
+-- Отрисовываем содержимое экранного буфера
 buffer.draw()
+-- Активируем режим обработки событий
 window:handleEvents()
 ```
 При нажатии на любую из созданных кнопок будет показываться дебаг-окно с информацией, указанной в методе *.onTouch*:
@@ -447,19 +454,22 @@ window:handleEvents()
 Практический пример #2
 --------------------
 
-Также продемонстрирую возможность изменения цвета фона программы путем добавления GUI.**colorSelector** в окно:
+В качестве второго примера предлагаю реализовать возможность изменения цвета фона программы путем добавления цветового селектора в окно.
  
 ```lua
 local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 
-local window = GUI.window(1, 1, buffer.screen.width, buffer.screen.height)
+local window = GUI.fullScreenWindow()
 local panel = window:addPanel(1, 1, window.width, window.height, 0x2D2D2D)
 
+-- Добавляем селектор цвета
 local colorSelector = window:addColorSelector(2, 2, 30, 3, 0xFFDB40, "Choose color")
+-- Создаем метод .onTouch, в котором цвет фона станет эквивалентным выбранному цвету селектора, а цвет селектора будет инвертироваться на противоположный
 colorSelector.onTouch = function()
 	panel.colors.background = colorSelector.color
 	colorSelector.color = 0xFFFFFF - colorSelector.color
+	-- После обработки цветов вызываем методы отрисовки окна и экранного буфера
 	window:draw()
 	buffer.draw()
 end
