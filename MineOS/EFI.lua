@@ -8,8 +8,8 @@ local function init()
 
 	if g and s and e then
 		gpu,ee=pr(g),pr(e)
-		computer.getBootAddress=function() return ee.getData() end
-		computer.setBootAddress=function(address) return ee.setData(address) end
+		cm.getBootAddress=function() return ee.getData() end
+		cm.setBootAddress=function(address) return ee.setData(address) end
 		gpu.bind(s)
 		re={};re.width,re.height=gpu.maxResolution()
 		gpu.setResolution(re.width,re.height)
