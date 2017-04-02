@@ -614,15 +614,14 @@ end
 ----------------------------------------- Dropdown Menu -----------------------------------------
 
 local function drawDropDownMenuElement(object, itemIndex, isPressed)
-	local y = object.y + itemIndex * (object.spaceBetweenElements + 1) - 1
-	local yText = math.floor(y)
-	
+	local y = object.y + (itemIndex - 1) * object.elementHeight
+	local yText = y + math.floor(object.elementHeight / 2)
 	if object.items[itemIndex].type == GUI.dropDownMenuElementTypes.default then
 		local textColor = object.items[itemIndex].disabled and object.colors.disabled.text or (object.items[itemIndex].color or object.colors.default.text)
 
 		-- Нажатие
 		if isPressed then
-			buffer.square(object.x, y - object.spaceBetweenElements, object.width, object.spaceBetweenElements * 2 + 1, object.colors.pressed.background, object.colors.pressed.text, " ")
+			buffer.square(object.x, y, object.width, object.elementHeight, object.colors.pressed.background, object.colors.pressed.text, " ")
 			textColor = object.colors.pressed.text
 		end
 
@@ -646,7 +645,7 @@ end
 
 local function showDropDownMenu(object)
 	local oldDrawLimit = buffer.getDrawLimit(); buffer.resetDrawLimit()
-	object.height = #object.items * (object.spaceBetweenElements + 1) + object.spaceBetweenElements
+	object.height = #object.items * object.elementHeight
 
 	local oldPixels = buffer.copy(object.x, object.y, object.width + 1, object.height + 1)
 	local function quit()
@@ -666,7 +665,8 @@ local function showDropDownMenu(object)
 				if 
 					e[3] >= object.x and
 					e[3] <= object.x + object.width - 1 and
-					e[4] == object.y + itemIndex * (object.spaceBetweenElements + 1) - 1
+					e[4] >= object.y + (itemIndex - 1) * object.elementHeight - 1 and
+					e[4] <= object.y + (itemIndex - 1) * object.elementHeight - 1 + object.elementHeight
 				then
 					objectFound = true
 					if not object.items[itemIndex].disabled and object.items[itemIndex].type == GUI.dropDownMenuElementTypes.default then
@@ -704,7 +704,7 @@ local function addDropDownMenuSeparator(object)
 	return item
 end
 
-function GUI.dropDownMenu(x, y, width, spaceBetweenElements, backgroundColor, textColor, backgroundPressedColor, textPressedColor, disabledColor, separatorColor, transparency, items)
+function GUI.dropDownMenu(x, y, width, elementHeight, backgroundColor, textColor, backgroundPressedColor, textPressedColor, disabledColor, separatorColor, transparency, items)
 	local object = GUI.object(x, y, width, 1)
 	object.colors = {
 		default = {
@@ -722,7 +722,7 @@ function GUI.dropDownMenu(x, y, width, spaceBetweenElements, backgroundColor, te
 		transparency = transparency
 	}
 	object.sidesOffset = 2
-	object.spaceBetweenElements = spaceBetweenElements
+	object.elementHeight = elementHeight
 	object.addSeparator = addDropDownMenuSeparator
 	object.addItem = addDropDownMenuItem
 	object.items = {}
@@ -749,7 +749,7 @@ local function showContextMenu(object)
 		end
 	end
 	object.width = object.sidesOffset + longestItem + (longestShortcut > 0 and 3 + longestShortcut or 0) + object.sidesOffset
-	object.height = #object.items * (object.spaceBetweenElements + 1) + object.spaceBetweenElements
+	object.height = #object.items * object.elementHeight
 
 	-- А это чтоб за края экрана не лезло
 	if object.y + object.height >= buffer.screen.height then object.y = buffer.screen.height - object.height end
@@ -760,7 +760,7 @@ end
 
 function GUI.contextMenu(x, y, ...)
 	local argumentItems = {...}
-	local object = GUI.dropDownMenu(x, y, 1, 0, GUI.colors.contextMenu.default.background, GUI.colors.contextMenu.default.text, GUI.colors.contextMenu.pressed.background, GUI.colors.contextMenu.pressed.text, GUI.colors.contextMenu.disabled.text, GUI.colors.contextMenu.separator, GUI.colors.contextMenu.transparency.background)
+	local object = GUI.dropDownMenu(x, y, 1, 1, GUI.colors.contextMenu.default.background, GUI.colors.contextMenu.default.text, GUI.colors.contextMenu.pressed.background, GUI.colors.contextMenu.pressed.text, GUI.colors.contextMenu.disabled.text, GUI.colors.contextMenu.separator, GUI.colors.contextMenu.transparency.background)
 
 	-- Заполняем менюшку парашей
 	for itemIndex = 1, #argumentItems do
@@ -774,7 +774,6 @@ function GUI.contextMenu(x, y, ...)
 	object.reimplementedShow = object.show
 	object.show = showContextMenu
 	object.selectedElement = nil
-	object.spaceBetweenElements = 0
 
 	return object
 end
@@ -1276,7 +1275,7 @@ local function drawHorizontalSlider(object)
 
 	-- Отображаем максимальное и минимальное значение, если требуется
 	if object.showMaximumAndMinimumValues then
-		local stringMaximumValue, stringMinimumValue = tostring(object.roundValues and math.floor(object.maximumValue) or math.roundToDecimalPlaces(object.maximumValue, 2)), tostring(object.roundValues and math.floor(object.maximumValue) or math.roundToDecimalPlaces(object.minimumValue, 2))
+		local stringMaximumValue, stringMinimumValue = tostring(object.roundValues and math.floor(object.maximumValue) or math.roundToDecimalPlaces(object.maximumValue, 2)), tostring(object.roundValues and math.floor(object.minimumValue) or math.roundToDecimalPlaces(object.minimumValue, 2))
 		buffer.text(object.x - unicode.len(stringMinimumValue) - 1, object.y, object.colors.value, stringMinimumValue)
 		buffer.text(object.x + object.width + 1, object.y, object.colors.value, stringMaximumValue)
 	end
@@ -1342,7 +1341,7 @@ local function selectComboBoxItem(object)
 	object.state = true
 	object:draw()
 
-	local dropDownMenu = GUI.dropDownMenu(object.x, object.y + object.height, object.width, object.height == 1 and 0 or 1, object.colors.default.background, object.colors.default.text, object.colors.pressed.background, object.colors.pressed.text, GUI.colors.contextMenu.disabled.text, GUI.colors.contextMenu.separator, GUI.colors.contextMenu.transparency.background, object.items)
+	local dropDownMenu = GUI.dropDownMenu(object.x, object.y + object.height, object.width, object.height, object.colors.default.background, object.colors.default.text, object.colors.pressed.background, object.colors.pressed.text, GUI.colors.contextMenu.disabled.text, GUI.colors.contextMenu.separator, GUI.colors.contextMenu.transparency.background, object.items)
 	dropDownMenu.items = object.items
 	dropDownMenu.sidesOffset = 1
 	local _, itemIndex = dropDownMenu:show()
@@ -1353,8 +1352,8 @@ local function selectComboBoxItem(object)
 	buffer.draw()
 end
 
-function GUI.comboBox(x, y, width, height, backgroundColor, textColor, arrowBackgroundColor, arrowTextColor, items)
-	local object = GUI.object(x, y, width, height)
+function GUI.comboBox(x, y, width, elementHeight, backgroundColor, textColor, arrowBackgroundColor, arrowTextColor, items)
+	local object = GUI.object(x, y, width, elementHeight)
 	object.colors = {
 		default = {
 			background = backgroundColor,
@@ -2146,7 +2145,6 @@ function GUI.fullScreenWindow()
 end
 
 --------------------------------------------------------------------------------------------------------------------------------
-
 
 
 --------------------------------------------------------------------------------------------------------------------------------

@@ -2,7 +2,7 @@
 
 О библиотеке
 ------------
-GUI - многофункциональная графическая библиотека, отлаженная под использование маломощными компьютерами с максимально возможной производительностью и удобством для конечного пользователя. Она поддерживает множество элементов интерфейса: от привычных кнопок, слайдеров, текстовых полей и картинок до графиков и инструментов работы с цветовыми режимами. Быстродействие достигается за счет использования тройной буферизации и сложных группировочных алгоритмов.
+GUI - многофункциональная графическая библиотека, отлаженная под использование маломощными компьютерами с максимально возможной производительностью. Она поддерживает множество элементов интерфейса: от привычных кнопок, слайдеров, текстовых полей и картинок до графиков и инструментов работы с цветовыми режимами. Быстродействие достигается за счет использования тройной буферизации и сложных группировочных алгоритмов.
 
 Пусть синтаксис и обилие текста вас не пугает, в конце файла документации вы сможете найти несколько наглядных иллюстрированных примеров.
 
@@ -21,7 +21,73 @@ GUI - многофункциональная графическая библио
 
     pastebin run ryhyXUKZ
 
-Методы для создания контейнеров
+Standalone-методы
+---------
+
+Библиотека имеет несколько полезных независимых методов, упрощающих разработку программ. К таковым относятся, к примеру, котекстное меню и информационное alert-окно.
+
+GUI.**contextMenu**( x, y ): *table* contextMenu
+------------------------------------------------------------------------
+| Тип | Аргумент | Описание |
+| ------ | ------ | ------ |
+| *int* | x | Координата меню по оси x |
+| *int* | y | Координата меню по оси y |
+
+Открыть по указанным координатам котекстное меню и ожидать выбора пользователя. При выборе какого-либо элемента будет вызыван его callback-метод .**onTouch**, если таковой имеется.
+
+| Тип свойства | Свойство |Описание |
+| ------ | ------ | ------ |
+| *function* | :**addItem**( *string* text, *boolean* disabled, *string* shortcut, *int* color )| Добавить в контекстное меню элемент с указанными параметрами. При параметре disabled элемент не будет реагировать на клики мышью. Каждый элемент может иметь собственный callback-метод .**onTouch** для последующей обработки данных |
+| *function* | :**addSeparator**()| Добавить в контекстное меню визуальный разделитель |
+| *table* | .**items** | Таблица элементов котекстного меню |
+
+Пример реализации контекстного меню:
+
+```lua
+local buffer = require("doubleBuffering")
+local GUI = require("GUI")
+
+buffer.clear(0x0)
+local contextMenu = GUI.contextMenu(2, 2)
+contextMenu:addItem("New")
+contextMenu:addItem("Open").onTouch = function()
+	-- Do something to open file or whatever
+end
+contextMenu:addSeparator()
+contextMenu:addItem("Save", true)
+contextMenu:addItem("Save as")
+contextMenu:show()
+```
+
+Результат:
+
+![enter image description here](http://i89.fastpic.ru/big/2017/0402/20/d7d5f14ca47ecef72aec535293e88320.png)
+
+GUI.**error**( text, [parameters] )
+------------------------------------------------------------------------
+| Тип | Аргумент | Описание |
+| ------ | ------ | ------ |
+| *string* | text | Текст информационного окна |
+| *table* | parameters | Опциональные параметры информационного окна. К примеру, {title = {text = "Alert", color = 0xFFDB40}, backgroundColor = 0x2D2D2D} добавит окну желтый заголовок и сделает фон окна темно-серым |
+
+Показать отладочное окно с текстовой информацией. Слишком длинная строка будет автоматически перенесена. Для закрытия окна необходимо использовать клавишу return или нажать на кнопку "ОК".
+
+Пример реализации:
+
+```lua
+local buffer = require("doubleBuffering")
+local GUI = require("GUI")
+
+buffer.clear(0x0)
+GUI.error("Something went wrong here, my friend", {title = {text = "Alert", color = 0xFFDB40}})
+
+```
+
+Результат:
+
+![enter image description here](http://i90.fastpic.ru/big/2017/0402/99/c2b151738ce348c213ff5d1d45053e99.png)
+
+Методы для создания окон и контейнеров
 -------------------------------
 Вся библиотека делится на две основные кострукции: контейнеры и виджеты. Контейнер предназначен для группировки нескольких виджетов в единую структуру и их конвеерной обработки, поэтому в первую очередь необходимо изучить особенности работы с контейнерами и окнами.
 
@@ -34,14 +100,20 @@ GUI.**container**( x, y, width, height ): *table* container
 | *int* | width | Ширина объекта |
 | *int* | height | Высота объекта |
 
-Как было сказано выше, каждый контейнер - это объект-группировщик для других объектов, перечисленных ниже. К примеру, при изменении позиции контейнера на экране все его дочерние элементы будут также смещены на соответствующие координаты. Контейнер также содержит все основные методы по добавлению дочерних элементов (виджетов) и работе с ними.
+Каждый контейнер - это объект-группировщик для других объектов, описанных ниже. К примеру, при изменении позиции контейнера на экране все его дочерние элементы будут также смещены на соответствующие координаты. Контейнер также содержит все основные методы по добавлению дочерних элементов (виджетов) и работе с ними.
 
 Все дочерние элементы контейнера имеют свою *localPosition* в контейнере (к примеру, *{x = 4, y = 2}*),  при добавлении нового элемента в контейнер используются именно локальные координаты.  Для получения глобальных (экранных) координат дочернего элемента необходимо обращаться к *element.x* и *element.y*. Глобальная (экранная) позиция дочерних элементов рассчитывается при каждой отрисовке содержимого контейнера. Таким образом,  изменяя глобальные координаты дочернего элемента вручную, вы, в сущности, ничего не добьетесь.
 
+Наглядно система иерархии и позиционирования контейнеров и дочерних элементов представлена на следущем изображении:
+
+![enter image description here](http://i91.fastpic.ru/big/2017/0402/71/219099e171ab91e6e9511a803a194c71.png)
+
+
 Для добавления в контейнер любого существующего виджета (см. ниже) используйте синтаксическую конструкцию **:addОбъект(...)**. К примеру, для добавления кнопки используйте *:addButton*, а для добавления изображения *:addImage*. Кроме того, в контейнер можно добавлять другие контейнеры, а в добавленные - еще одни, создавая сложные иерархические цепочки и группируя дочерние объекты по своему усмотрению. Ниже перечислены дополнительные методы контейнера, способные оказаться полезными
 
-| Тип свойства | Свойство объекта |Описание |
+| Тип свойства | Свойство |Описание |
 | ------ | ------ | ------ |
+| *function* | :**addОбъект**( *table* object ): *table* object| Добавить в контейнер один из объектов-шаблонов, перечисленных ниже. Как уже было сказано, для добавления, к примеру, объекта GUI.**chart** используйте метод :**addChart**(...) |
 | *function* | :**addChild**( *table* child ): *table* child| Добавить произвольный объект в контейнер в качестве дочернего - таким образом вы способны создавать собственные виджеты с индивидуальными особенностями. Уточняю, что у добавляемого объекта **обязательно** должен иметься метод *:draw* (подробнее см. ниже). При добавлении объекта его глобальные координаты становятся локальными |
 | *function* | :**deleteChildren**()| Удалить все дочерние элементы контейнера |
 | *function* | :**getClickedObject**(*int* x, *int* y): *table* object or *nil*| Получить объект по указанным координатам, используя иерархический порядок расположения элементов. То есть при наличии двух объектов на одних и тех же координатах будет выдан тот, что находится ближе к глазам пользователя. Вложенные контейнеры для данного метода являются *невидимыми*  |
@@ -56,18 +128,18 @@ GUI.**window**( x, y, width, height ): *table* window
 | *int* | width | Ширина объекта |
 | *int* | height | Высота объекта |
 
-Создание объекта типа "окно" для дальнейшей работы. Каждое окно - это наследник объекта объекта типа "контейнер" (см. выше), содержащий дополнительные методы обработки системных событий и возврата данных окна.
+Создание объекта типа "окно" для дальнейшей работы. Каждое окно - это наследник объекта объекта типа "контейнер" (см. выше), содержащий дополнительные методы обработки системных событий и возврата данных окна. Для удобства имеется метод  GUI.**fullScreenWindow**( ): *table* window, создающий окно по размеру экранного буфера.
 
-| Тип свойства | Свойство объекта |Описание |
+| Тип свойства | Свойство |Описание |
 | ------ | ------ | ------ |
 | *function* | :**handleEvents**([*int* timeout]) | Запустить обработчик событий и ожидать действий со стороны пользователя. К примеру, при нажатии на кнопку на экране система автоматически определит "нажатый" элемент, осуществит нажатие кнопки и отрисовку. Опциональный аргумент *timeout* эквивалентен аналогичному аргументу в *computer.pullSignal(timeout)* |
-| *function* | .**onTouch**(*table* eventData) | Метод, вызывающийся при каждом событии типа *touch* |
-| *function* | .**onDrag**(*table* eventData) | Метод, вызывающийся при каждом событии типа *drag* |
-| *function* | .**onScroll**(*table* eventData) | Метод, вызывающийся при каждом событии типа *scroll* |
-| *function* | .**onKeyDown**(*table* eventData) | Метод, вызывающийся при каждом событии типа *key_down* |
-| *function* | .**onAnyEvent**(*table* eventData) | Метод, вызывающийся *всегда*, при любом событии. Полезен для дальнейшей обработки разработчиком |
-| *function* | .**onDrawStarted**() | Метод, вызывающийся до начала отрисовки содержимого окна в экранный буфер |
-| *function* | .**onDrawFinished**() | Метод, вызывающийся после отрисовки содержимого окна в экранный буфер |
+| *callback-function* | .**onTouch**(*table* eventData) | Метод, вызывающийся при каждом событии типа *touch* |
+| *callback-function* | .**onDrag**(*table* eventData) | Метод, вызывающийся при каждом событии типа *drag* |
+| *callback-function* | .**onScroll**(*table* eventData) | Метод, вызывающийся при каждом событии типа *scroll* |
+| *callback-function* | .**onKeyDown**(*table* eventData) | Метод, вызывающийся при каждом событии типа *key_down* |
+| *callback-function* | .**onAnyEvent**(*table* eventData) | Метод, вызывающийся *всегда*, при любом событии. Полезен для дальнейшей обработки разработчиком |
+| *callback-function* | .**onDrawStarted**() | Метод, вызывающийся до начала отрисовки содержимого окна в экранный буфер |
+| *callback-function* | .**onDrawFinished**() | Метод, вызывающийся после отрисовки содержимого окна в экранный буфер |
 | *function* | :**returnData**(...)| Закрыть окно и вернуть множество данных любого типа |
 | *function* | :**close**() | Закрыть окно без возврата данных|
 
@@ -84,7 +156,7 @@ GUI.**object**( x, y, width, height ): *table* object
 | *int* | width | Ширина объекта |
 | *int* | height | Высота объекта |
 
-Создание базового примитива-объекта.  Помимо координат он может иметь несколько индивидуальных свойств  отрисовки и поведения, описанными разработчиком.  Однако имеются универсальные свойства, имеющиеся у каждого объекта:
+Помимо координат GUI.**object** может иметь несколько индивидуальных свойств  отрисовки и поведения, описанных разработчиком.  Однако имеются универсальные свойства, имеющиеся у каждого экземпляра объекта:
 
 | Тип свойства| Свойство |Описание |
 | ------ | ------ | ------ |
@@ -105,7 +177,7 @@ GUI.**object**( x, y, width, height ): *table* object
 | *function* | :**moveToBack**() | Передвинуть виджет в начало иерархии виджетов контейнера |
 | *function* | :**getFirstParent**() | Получить первый родительский контейнер для рассматриваемой системы родительских контейнеров. К примеру, при существовании множества вложенных контейнеров метод вернет первый и "главный" из них |
 
-Ниже перечислены виджеты, уже созданные мной на основе описанных выше инструкций. При желании вы можете сделать абсолютно аналогичные или гораздо более технически продвинутые виджеты без каких-либо затруднений.
+При желании вы можете сделать абсолютно аналогичные или технически гораздо более продвинутые виджеты без каких-либо затруднений. Подробнее о создании собственных виджетов см. практические примеры в конце документации. Однако далее перечислены виджеты, уже созданные мной на основе описанных выше инструкций. 
 
 GUI.**button**( x, y, width, height, buttonColor, textColor, buttonPressedColor, textPressedColor, text ): *table* button
 ------------------------------------------------------------------------
@@ -129,12 +201,34 @@ GUI.**button**( x, y, width, height, buttonColor, textColor, buttonPressedColor,
  - GUI.**framedButton**(...), эквивалентный GUI.**button** за исключением того, что отрисовывается в рамочном режиме.
  - GUI.**adaptiveFramedButton**(...), отрисовывающийся по такому же методу, что и GUI.**framedButton** и рассчитывающийся по аналогии с GUI.**adaptiveButton.**
 
-| Тип свойства | Свойство объекта |Описание |
+| Тип свойства | Свойство |Описание |
 | ------ | ------ | ------ |
-| *function* | .**onTouch**( *table* eventData )| Метод, вызываемый после нажатия кнопки в обработчике событий |
+| *callback-function* | .**onTouch**( *table* eventData )| Метод, вызываемый после нажатия кнопки в обработчике событий |
 | *function* | :**press**()| Изменить состояние кнопки на "нажатое" |
 | *function* | :**release**()| Изменить состояние кнопки на "отжатое" |
 | *function* | :**pressAndRelease**( *float* time )| Нажать и отжать кнопку в течение указанного временного периода. Примечание: этот метод использует отрисовку содержимого двойного буфера |
+
+Пример реализации кнопки:
+```lua
+local buffer = require("doubleBuffering")
+local GUI = require("GUI")
+
+local window = GUI.fullScreenWindow()
+window:addPanel(1, 1, window.width, window.height, 0x0)
+
+window:addButton(2, 2, 30, 3, 0xFFFFFF, 0x000000, 0xAAAAAA, 0x000000, "Button text").onTouch = function()
+	-- Do something on button click
+end
+
+window:draw()
+buffer.draw(true)
+window:handleEvents()
+```
+
+Результат:
+
+![enter image description here](http://i89.fastpic.ru/big/2017/0402/a4/054d171e923c7631f032ba5d12c6d7a4.png)
+
 
 GUI.**panel**( x, y, width, height, color, transparency ): *table* panel
 ------------------------------------------------------------------------
@@ -149,9 +243,29 @@ GUI.**panel**( x, y, width, height, color, transparency ): *table* panel
 
 Создать объект типа "панель", представляющий собой закрашенный прямоугольник с определенной опциональной прозрачностью. В большинстве случаев служит декоративным элементом, однако способен обрабатывать индивидуальный метод *.onTouch()*.
 
-| Тип свойства | Свойство объекта |Описание |
+| Тип свойства | Свойство |Описание |
 | ------ | ------ | ------ |
-| *function* | .**onTouch**( *table* eventData )| Метод, вызываемый после нажатия на панель в обработчике событий |
+| *callback-function* | .**onTouch**( *table* eventData )| Метод, вызываемый после нажатия на панель в обработчике событий |
+
+Пример реализации панели:
+```lua
+local buffer = require("doubleBuffering")
+local GUI = require("GUI")
+
+local window = GUI.fullScreenWindow()
+window:addPanel(1, 1, window.width, window.height, 0x0)
+
+local panel1 = window:addPanel(1, 1, window.width, math.floor(window.height / 2), 0xFFFFFF)
+window:addPanel(1, panel1.height, window.width, window.height - panel1.height, 0xFF0000)
+
+window:draw()
+buffer.draw(true)
+window:handleEvents()
+```
+
+Результат:
+
+![enter image description here](http://i91.fastpic.ru/big/2017/0402/0e/f85dc0db4dd6b575920fdf79090c020e.png)
 
 GUI.**label**( x, y, width, height, textColor, text ): *table* label
 --------------------------------------------------------------------
@@ -166,11 +280,29 @@ GUI.**label**( x, y, width, height, textColor, text ): *table* label
 
 Создать объект типа "лейбл", предназначенный для отображения текстовой информации в различных вариациях расположения.
 
-| Тип свойства | Свойство объекта |Описание |
+| Тип свойства | Свойство |Описание |
 | ------ | ------ | ------ |
-| *function* | .**onTouch**( *table* eventData )| Метод, вызываемый после нажатия на лейбл в обработчике событий |
-| *function* | :**setAlignment**( *enum* GUI.alignment.vertical, *enum* GUI.alignment.horizontal )| Выбрать вариант отображения текста относительно границ лейбла |
+| *callback-function* | .**onTouch**( *table* eventData )| Метод, вызываемый после нажатия на лейбл в обработчике событий |
+| *function* | :**setAlignment**( *enum* GUI.alignment.vertical, *enum* GUI.alignment.horizontal ): *table* label| Выбрать вариант отображения текста относительно границ лейбла |
 
+Пример реализации лейбла:
+```lua
+local buffer = require("doubleBuffering")
+local GUI = require("GUI")
+
+local window = GUI.fullScreenWindow()
+window:addPanel(1, 1, window.width, window.height, 0x0)
+
+window:addLabel(2, 2, window.width, window.height, 0xFFFFFF, "Centered text"):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.center)
+
+window:draw()
+buffer.draw(true)
+window:handleEvents()
+```
+
+Результат:
+
+![enter image description here](http://i91.fastpic.ru/big/2017/0402/06/9b1d66cb137abaa67076e979d7ddc206.png)
 
 GUI.**inputTextBox**( x, y, width, height, backgroundColor, textColor, backgroundFocusedColor, textFocusedColor, text, [placeholderText, eraseTextOnFocus, textMask, highlightLuaSyntax, autocompleteVariables] ): *table* inputTextBox
 ------------------------------------------------------------------------
@@ -193,10 +325,39 @@ GUI.**inputTextBox**( x, y, width, height, backgroundColor, textColor, backgroun
 
 Создать объект типа "поле ввода текста", предназначенный для ввода и анализа текстовых данных с клавиатуры. Объект универсален и подходит как для создания простых форм для ввода логина/пароля, так и для сложных структур наподобие командных консолей. К примеру, окно *палитры* выше целиком и полностью основано на использовании этого объекта.
 
-| Тип свойства | Свойство объекта |Описание |
+| Тип свойства | Свойство |Описание |
 | ------ | ------ | ------ |
-| *function* | .**validator**( *string* text )| Метод, вызывающийся после окончания ввода текста в поле. Если возвращает *true*, то текст в текстовом поле меняется на введенный, в противном случае введенные данные игнорируются. К примеру, в данном методе удобно проверять, является ли введенная текстовая информация числом через *tonumber()* |
-| *function* | .**onInputFinished**( *string* text, *table* eventData )| Метод, вызываемый после ввода данных в обработчике событий |
+| *callback-function* | .**validator**( *string* text )| Метод, вызывающийся после окончания ввода текста в поле. Если возвращает *true*, то текст в текстовом поле меняется на введенный, в противном случае введенные данные игнорируются. К примеру, в данном методе удобно проверять, является ли введенная текстовая информация числом через *tonumber()* |
+| *callback-function* | .**onInputFinished**( *string* text, *table* eventData )| Метод, вызываемый после ввода данных в обработчике событий |
+
+Пример реализации поля ввода:
+
+```lua
+local buffer = require("doubleBuffering")
+local GUI = require("GUI")
+
+local window = GUI.fullScreenWindow()
+window:addPanel(1, 1, window.width, window.height, 0x0)
+
+local inputTextBox = window:addInputTextBox(2, 2, 32, 3, 0xEEEEEE, 0x555555, 0xEEEEEE, 0x2D2D2D, nil, "Type number here", true, nil, nil, nil)
+inputTextBox.validator = function(text)
+	if tonumber(text) then return true end
+end
+inputTextBox.onInputFinished = function()
+	-- Do something when input finished
+end
+
+window:draw()
+buffer.draw(true)
+window:handleEvents()
+```
+
+Результат:
+
+![enter image description here](http://i89.fastpic.ru/big/2017/0402/37/4cca31bccfea2d08c5e0e6fb9c7e1937.png)
+
+
+![enter image description here](http://i89.fastpic.ru/big/2017/0402/04/709cff165b64efd64d6346ecec188704.png)
 
 GUI.**horizontalSlider**( x, y, width, primaryColor, secondaryColor, pipeColor, valueColor, minimumValue, maximumValue, value, [showCornerValues, currentValuePrefix, currentValuePostfix] ): *table* horizontalSlider
 ------------------------------------------------------------------------
@@ -218,9 +379,33 @@ GUI.**horizontalSlider**( x, y, width, primaryColor, secondaryColor, pipeColor, 
 
 Создать объект типа "горизонтальный слайдер", предназначенный для манипуляцией числовыми данными. Значение слайдера всегда будет варьироваться в диапазоне от минимального до максимального значений. Опционально можно указать значение поля *слайдер.**roundValues** = true*, если необходимо округлять изменяющееся число.
 
-| Тип свойства | Свойство объекта |Описание |
+| Тип свойства | Свойство |Описание |
 | ------ | ------ | ------ |
-| *function* | .**onValueChanged**( *float* value, *table* eventData )| Метод, вызывающийся после изменения значения слайдера |
+| *callback-function* | .**onValueChanged**( *float* value, *table* eventData )| Метод, вызывающийся после изменения значения слайдера |
+
+Пример реализации слайдера:
+
+```lua
+local buffer = require("doubleBuffering")
+local GUI = require("GUI")
+
+local window = GUI.fullScreenWindow()
+window:addPanel(1, 1, window.width, window.height, 0x0)
+
+local slider = window:addHorizontalSlider(4, 2, 30, 0xFFDB40, 0xEEEEEE, 0xFFDB80, 0xBBBBBB, 0, 100, 50, true, "Prefix: ", " postfix")
+slider.roundValues = true
+slider.onValueChanged = function(value)
+	-- Do something when slider's value changed
+end
+
+window:draw()
+buffer.draw(true)
+window:handleEvents()
+```
+
+Результат:
+
+![enter image description here](http://i89.fastpic.ru/big/2017/0402/76/3caab6877dfc1541fd094b491e653476.png)
 
 GUI.**switch**( x, y, width, primaryColor, secondaryColor, pipeColor, state ): *table* switch
 ------------------------------------------------------------------------
@@ -236,9 +421,34 @@ GUI.**switch**( x, y, width, primaryColor, secondaryColor, pipeColor, state ): *
 
 Создать объект типа "переключатель", для определения истинности или ложности того или иного события. При клике на объект меняет состояние на противоположное. 
 
-| Тип свойства | Свойство объекта |Описание |
+| Тип свойства | Свойство |Описание |
 | ------ | ------ | ------ |
-| *function* | .**onStateChanged**( *boolean* state, *table* eventData )| Метод, вызывающийся после изменения состояния переключателя |
+| *callback-function* | .**onStateChanged**( *boolean* state, *table* eventData )| Метод, вызывающийся после изменения состояния переключателя |
+
+Пример реализации свитча:
+
+```lua
+local buffer = require("doubleBuffering")
+local GUI = require("GUI")
+
+local window = GUI.fullScreenWindow()
+window:addPanel(1, 1, window.width, window.height, 0x0)
+
+local switch1 = window:addSwitch(2, 2, 8, 0xFFDB40, 0xAAAAAA, 0xEEEEEE, true)
+local switch2 = window:addSwitch(12, 2, 8, 0xFFDB40, 0xAAAAAA, 0xEEEEEE, false)
+switch2.onStateChanged = function(state)
+	-- Do something when switch's state changed
+end
+
+window:draw()
+buffer.draw(true)
+window:handleEvents()
+
+```
+
+Результат:
+
+![enter image description here](http://i91.fastpic.ru/big/2017/0402/c7/d93ec986446887714c2f238d3db45cc7.png)
 
 GUI.**colorSelector**( x, y, width, height, color, text ): *table* colorSelector
 ------------------------------------------------------------------------
@@ -253,29 +463,84 @@ GUI.**colorSelector**( x, y, width, height, color, text ): *table* colorSelector
 
 Создать объект типа "селектор цвета", представляющий собой аналог кнопки, позволяющей выбрать цвет при помощи удобной палитры.
 
-| Тип свойства | Свойство объекта |Описание |
+| Тип свойства | Свойство |Описание |
 | ------ | ------ | ------ |
-| *function* | .**onTouch**( *table* eventData )| Метод, вызываемый после нажатия на селектор цвета в обработчике событий |
+| *callback-function* | .**onTouch**( *table* eventData )| Метод, вызываемый после нажатия на селектор цвета в обработчике событий |
 
-GUI.**comboBox**( x, y, width, height, backgroundColor, textColor, arrowBackgroundColor, arrowTextColor, items ): *table* comboBox
+Пример реализации селектора цвета:
+
+```lua
+local buffer = require("doubleBuffering")
+local GUI = require("GUI")
+
+local window = GUI.fullScreenWindow()
+window:addPanel(1, 1, window.width, window.height, 0x0)
+
+window:addColorSelector(2, 2, 30, 3, 0xFF55FF, "Choose color").onTouch = function()
+	-- Do something after choosing color
+end
+
+window:draw()
+buffer.draw(true)
+window:handleEvents()
+```
+
+Результат:
+
+![enter image description here](http://i91.fastpic.ru/big/2017/0402/24/59bbe68f569420588cf88f7aa0124124.png)
+
+GUI.**comboBox**( x, y, width, elementHeight, backgroundColor, textColor, arrowBackgroundColor, arrowTextColor ): *table* comboBox
 ------------------------------------------------------------------------
 | Тип | Аргумент | Описание |
 | ------ | ------ | ------ |
 | *int* | x | Координата объекта по оси x |
 | *int* | y | Координата объекта по оси y |
 | *int* | width | Ширина объекта |
+| *int* | elementHeight | Высота элемента комбо-бокса |
 | *int* | backgroundColor | Цвет фона комбо-бокса |
 | *int* | textColor | Цвет текста комбо-бокса |
 | *int* | arrowBackgroundColor | Цвет фона стрелки комбо-бокса |
 | *int* | arrowTextColor | Цвет текста стрелки комбо-бокса |
 
-Создать объект типа "комбо-бокс", позволяющий выбирать объекты из множества перечисленных вариантов.
+Создать объект типа "комбо-бокс", позволяющий выбирать объекты из множества перечисленных вариантов. Методика обращения к комбо-боксу схожа с обращением к контекстному меню.
 
-| Тип свойства | Свойство объекта |Описание |
+| Тип свойства | Свойство |Описание |
 | ------ | ------ | ------ |
-| *function* | :**addItem**( *string* text, *boolean* disabled, *string* shortcut, *int* color )| Добавить в комбо-бокс элемент с указанными параметрами |
+| *function* | :**addItem**( *string* text, *boolean* disabled, *string* shortcut, *int* color )| Добавить в комбо-бокс элемент с указанными параметрами. При параметре disabled элемент не будет реагировать на клики мышью. Каждый элемент может иметь собственный callback-метод .**onTouch** для последующей обработки данных |
 | *function* | :**addSeparator**()| Добавить визуальный в комбо-бокс разделитель |
-| *function* | .**onItemSelected**( *table* item, *table* eventData )| Метод, вызывающийся после выборе какого-либо элемента комбо-бокса |
+| *table* | .**items** | Таблица элементов комбо-бокса |
+| *int* | .**currentItem** | Индекс выбранного элемента комбо-бокса |
+
+Пример реализации комбо-бокса:
+
+```lua
+local buffer = require("doubleBuffering")
+local GUI = require("GUI")
+
+local window = GUI.fullScreenWindow()
+window:addPanel(1, 1, window.width, window.height, 0x0)
+
+local comboBox = window:addComboBox(2, 2, 30, 3, 0xEEEEEE, 0x2D2D2D, 0xCCCCCC, 0x999999)
+comboBox:addItem(".PNG")
+comboBox:addItem(".JPG").onTouch = function()
+	-- Do something when .JPG was selected
+end
+comboBox:addItem(".GIF")
+comboBox:addSeparator()
+comboBox:addItem(".PSD")
+
+comboBox.onItemSelected = function(item)
+	-- Do something after item selection
+end
+
+window:draw()
+buffer.draw(true)
+window:handleEvents()
+```
+
+Результат:
+
+![enter image description here](http://i89.fastpic.ru/big/2017/0402/33/bbc9428db996ef8a8fb9d5df78087733.png)
 
 GUI.**menu**( x, y, width, backgroundColor, textColor, backgroundPressedColor, textPressedColor, backgroundTransparency ): *table* menu
 ------------------------------------------------------------------------
@@ -292,10 +557,45 @@ GUI.**menu**( x, y, width, backgroundColor, textColor, backgroundPressedColor, t
 
 Создать объект типа "горизонтальное меню", позволяющий выбирать объекты из множества перечисленных вариантов. По большей части применяется в структурах типа "Файл - Редактировать - Вид - Помощь" и подобных.
 
-| Тип свойства | Свойство объекта |Описание |
+| Тип свойства | Свойство |Описание |
 | ------ | ------ | ------ |
-| *function* | :**addItem**( *string* text, *int* color )| Добавить в меню элемент с указанными параметрами |
-| *function* | .**onItemSelected**( *table* item, *table* eventData )| Метод, вызывающийся после выборе какого-либо элемента комбо-бокса |
+| *function* | :**addItem**( *string* text, *int* color ): *table* item | Добавить в меню элемент с указанными параметрами. Каждый элемент имеет собственный callback-метод .**onTouch** |
+| *callback-function* | .**onItemSelected**( *table* item, *table* eventData )| Метод, вызывающийся после выборе какого-либо элемента комбо-бокса |
+
+Пример реализации меню:
+
+```lua
+local buffer = require("doubleBuffering")
+local GUI = require("GUI")
+
+local window = GUI.fullScreenWindow()
+window:addPanel(1, 1, window.width, window.height, 0x0)
+
+local menu = window:addMenu(1, 1, window.width, 0xEEEEEE, 0x2D2D2D, 0x3366CC, 0xFFFFFF, nil)
+menu:addItem("MineCode IDE", 0x0)
+menu:addItem("File").onTouch = function(eventData)
+	local contextMenu = GUI.contextMenu(eventData[3], eventData[4] + 1)
+	contextMenu:addItem("New")
+	contextMenu:addItem("Open").onTouch = function()
+		-- Do something to open file or whatever
+	end
+	contextMenu:addSeparator()
+	contextMenu:addItem("Save")
+	contextMenu:addItem("Save as")
+	contextMenu:show()
+end
+menu:addItem("Edit")
+menu:addItem("View")
+menu:addItem("About")
+
+window:draw()
+buffer.draw(true)
+window:handleEvents()
+```
+
+Результат:
+
+![enter image description here](http://i91.fastpic.ru/big/2017/0402/17/6c49644e775ec55221808ae931157817.png)
 
 GUI.**image**( x, y, loadedImage ): *table* image
 -------------------------------------------------
@@ -307,9 +607,31 @@ GUI.**image**( x, y, loadedImage ): *table* image
 
 Создать объект типа "изображение", представляющий из себя аналог объекта *panel* с тем лишь исключением, что вместо статичного цвета используется загруженное изображение.
 
-| Тип свойства | Свойство объекта |Описание |
+| Тип свойства | Свойство |Описание |
 | ------ | ------ | ------ |
-| *function* | .**onTouch**( *table* eventData )| Метод, вызываемый после нажатия на изображение в обработчике событий |
+| *callback-function* | .**onTouch**( *table* eventData )| Метод, вызываемый после нажатия на изображение в обработчике событий |
+| *table* | .**image**| Таблица пиксельных данных изображения |
+
+Пример реализации изображения:
+
+```lua
+local image = require("image")
+local buffer = require("doubleBuffering")
+local GUI = require("GUI")
+
+local window = GUI.fullScreenWindow()
+window:addPanel(1, 1, window.width, window.height, 0x0)
+
+window:addImage(2, 2, image.load("/Furnance.pic"))
+
+window:draw()
+buffer.draw(true)
+window:handleEvents()
+```
+
+Результат:
+
+![enter image description here](http://i91.fastpic.ru/big/2017/0402/80/3b0ec81c3b2f660b9a4c6f18908f4280.png)
 
 GUI.**progressBar**( x, y, width, primaryColor, secondaryColor, valueColor, value, thin, showValue, valuePrefix, valuePostfix ): *table* progressBar
 ------------------------------------------------------------------------
@@ -329,6 +651,30 @@ GUI.**progressBar**( x, y, width, primaryColor, secondaryColor, valueColor, valu
 
 Создать объект типа "шкала прогресса", значение которой меняется от 0 до 100.
 
+| Тип свойства | Свойство |Описание |
+| ------ | ------ | ------ |
+| *int* | .**value**| Текущее числовое значение шкалы прогресса |
+
+Пример реализации шкалы прогресса:
+
+```lua
+local buffer = require("doubleBuffering")
+local GUI = require("GUI")
+
+local window = GUI.fullScreenWindow()
+window:addPanel(1, 1, window.width, window.height, 0x0)
+
+window:addProgressBar(2, 2, 50, 0x3366CC, 0xEEEEEE, 0xEEEEEE, 80, true, true, "Value prefix: ", " value postfix")
+
+window:draw()
+buffer.draw(true)
+window:handleEvents()
+```
+
+Результат:
+
+![enter image description here](http://i89.fastpic.ru/big/2017/0402/f1/ef1da27531ccf899eb9eb59c010180f1.png)
+
 GUI.**textBox**(x, y, width, height, backgroundColor, textColor, lines, currentLine, horizontalOffset, verticalOffset): *table* textBox
 ------------------------------------------------------------------------
 | Тип | Аргумент | Описание |
@@ -337,18 +683,44 @@ GUI.**textBox**(x, y, width, height, backgroundColor, textColor, lines, currentL
 | *int* | y | Координата объекта по оси y |
 | *int* | width | Ширина объекта |
 | *int* | height | Высота объекта |
-| *int* or *nil* | backgroundColor | Цвет фона текстбокса. При значении *nil* фон не рисуется |
+| *int* or *nil* | backgroundColor | Цвет фона текстбокса. При значении *nil* фон не рисуется в экранный буфер |
 | *int* | textColor | Цвет текста текстбокса |
-| *table* | lines | Таблица отображаемых строк текстбокса |
+| *table* | lines | Таблица отображаемых строк текстбокса. Имеется опциональная возможность установки цвета конкретной строки, для этого элемент таблицы должен иметь вид {text = *string*, color = *int*} |
 | *int* | currentLine | Текущая строка текстбокса, с которой осуществляется отображение текста |
 | *int* | horizontalOffset | Отступ отображения текста от левого и правого краев текстбокса |
 | *int* | verticalOffset | Отступ отображения текста от верхнего и нижнего краев текстбокса |
 
 Создать объект типа "текстбокс", предназначенный для отображения большого количества текстовых данных в небольшом контейнере с полосами прокрутки. При использовании колесика мыши и активации события *scroll* содержимое текстбокса будет автоматически "скроллиться" в нужном направлении.
 
-| Тип свойства | Свойство объекта |Описание |
+| Тип свойства | Свойство |Описание |
 | ------ | ------ | ------ |
-| *function* | .**onTouch**( *table* eventData )| Метод, вызываемый после нажатия на текстбокс в обработчике событий |
+| *function* | :**setAlignment**( *enum* GUI.alignment.vertical, *enum* GUI.alignment.horizontal ): *table* textBox| Выбрать вариант отображения текста относительно границ текстбокса |
+| *table* | .**lines**| Таблица со строковыми данными текстбокса |
+
+Пример реализации текстбокса:
+
+```lua
+local buffer = require("doubleBuffering")
+local GUI = require("GUI")
+
+local window = GUI.fullScreenWindow()
+window:addPanel(1, 1, window.width, window.height, 0x0)
+
+local textBox = window:addTextBox(2, 2, 32, 16, 0xEEEEEE, 0x2D2D2D, {}, 1, 1, 0)
+table.insert(textBox.lines, {text = "Sample colored line ", color = 0x880000})
+for i = 1, 100 do
+	table.insert(textBox.lines, "Sample line " .. i)
+end
+
+window:draw()
+buffer.draw(true)
+window:handleEvents()
+```
+
+Результат:
+
+![enter image description here](http://i89.fastpic.ru/big/2017/0402/ad/01cdcf7aec919051f64ac2b7d9daf0ad.png)
+
 
 GUI.**treeView**( x, y, width, height, backgroundColor, textColor, selectionBackgroundColor, selectionTextColor, arrowColor, scrollBarPrimaryColor, scrollBarSecondaryColor, workPath ): *table* treeView
 ------------------------------------------------------------------------
@@ -369,9 +741,33 @@ GUI.**treeView**( x, y, width, height, backgroundColor, textColor, selectionBack
 
 Создать объект типа "TreeView", предназначенный для навигации по файловой системе в виде иерархического древа. При клике на директорию будет показано ее содержимое, а во время прокрутки колесиком мыши содержимое будет "скроллиться" в указанном направлении.
 
-| Тип свойства | Свойство объекта |Описание |
+| Тип свойства | Свойство |Описание |
 | ------ | ------ | ------ |
-| *function* | .**onFileSelected**( *int* currentFile )| Метод, вызываемый после выбора файла в TreeView |
+| *callback-function* | .**onFileSelected**( *int* currentFile )| Метод, вызываемый после выбора файла в TreeView |
+
+Пример реализации TreeView:
+
+```lua
+local buffer = require("doubleBuffering")
+local GUI = require("GUI")
+
+local window = GUI.fullScreenWindow()
+window:addPanel(1, 1, window.width, window.height, 0x0)
+
+local treeView = window:addTreeView(2, 2, 30, 41, 0xCCCCCC, 0x2D2D2D, 0x3C3C3C, 0xEEEEEE, 0x666666, 0xEEEEEE, 0x3366CC, "/")
+treeView.onFileSelected = function(filePath)
+	-- Do something when file was selected
+end
+
+window:draw()
+buffer.draw(true)
+window:handleEvents()
+
+```
+
+Результат:
+
+![enter image description here](http://i89.fastpic.ru/big/2017/0402/d2/25b46010c6050d65ed4894c9092a0fd2.png)
 
 GUI.**codeView**( x, y, width, height, lines, fromSymbol, fromLine, maximumLineLength, selections, highlights, highlightLuaSyntax, indentationWidth ): *table* codeView
 ------------------------------------------------------------------------
@@ -392,6 +788,34 @@ GUI.**codeView**( x, y, width, height, lines, fromSymbol, fromLine, maximumLineL
 
 Создать объект типа "CodeView", предназначенный для наглядного отображения Lua-кода с номерами строк, подсветкой синтаксиса, выделениям и скроллбарами.
 
+Пример реализации CodeView:
+
+```lua
+local buffer = require("doubleBuffering")
+local GUI = require("GUI")
+local unicode = require("unicode")
+
+local window = GUI.fullScreenWindow()
+window:addPanel(1, 1, window.width, window.height, 0x0)
+
+local codeView = window:addCodeView(2, 2, 130, 40, {}, 1, 1, 1, {}, {}, true, 2)
+local file = io.open("/lib/OpenComputersGL/Main.lua", "r")
+for line in file:lines() do
+	line = line:gsub("\t", "  ")
+	table.insert(codeView.lines, line)
+	codeView.maximumLineLength = math.max(codeView.maximumLineLength, unicode.len(line))
+end
+file:close()
+
+window:draw()
+buffer.draw(true)
+window:handleEvents()
+```
+
+Результат:
+
+![enter image description here](http://i89.fastpic.ru/big/2017/0402/a9/a00b12a34bf367940dccde93d28b03a9.png)
+
 GUI.**chart**( x, y, width, height, axisColor, axisValueColor, axisHelpersColor, chartColor, xAxisValueInterval, yAxisValueInterval, xAxisPostfix, yAxisPostfix, fillChartArea, values ): *table* chart
 ------------------------------------------------------------------------
 | Тип | Аргумент | Описание |
@@ -409,9 +833,33 @@ GUI.**chart**( x, y, width, height, axisColor, axisValueColor, axisHelpersColor,
 | *string* | xAxisPostfix | Текстовый постфикс для значений графика конкретной оси |
 | *string* | yAxisPostfix | Текстовый постфикс для значений графика конкретной оси |
 | *boolean* | fillChartArea | Необходимо ли закрашивать область графика или же рисовать его линией |
-| *table* | values | Таблица вида {{x = *float* x, y = *float* y}, ...} со значениями графика |
+| *table* | values | Таблица вида {{*float* x, *float* y}, ...} со значениями графика |
 
 Создать объект типа "график", предназначенный для отображения статистической информации в виде графика с подписью значений осей.
+
+Пример реализации Chart:
+
+```lua
+local buffer = require("doubleBuffering")
+local GUI = require("GUI")
+
+local window = GUI.fullScreenWindow()
+window:addPanel(1, 1, window.width, window.height, 0x0)
+
+local chart = window:addChart(2, 2, 100, 30, 0xEEEEEE, 0xAAAAAA, 0x888888, 0xFFDB40, 0.25, 0.25, "s", "t", true, {})
+for i = 1, 100 do
+	table.insert(chart.values, {i, math.random(0, 80)})
+end
+
+window:draw()
+buffer.draw(true)
+window:handleEvents()
+
+```
+
+Результат:
+
+![enter image description here](http://i91.fastpic.ru/big/2017/0402/5b/66ff353492298f6a0c9b01c0fc8a525b.png)
 
 Практический пример #1
 --------------------
@@ -452,41 +900,6 @@ window:handleEvents()
 ![enter image description here](http://i91.fastpic.ru/big/2017/0402/c3/e02d02fb39a28dd17220b535e59292c3.png)
 
 Практический пример #2
---------------------
-
-В качестве второго примера предлагаю реализовать возможность изменения цвета фона программы путем добавления цветового селектора в окно.
- 
-```lua
-local buffer = require("doubleBuffering")
-local GUI = require("GUI")
-
-local window = GUI.fullScreenWindow()
-local panel = window:addPanel(1, 1, window.width, window.height, 0x2D2D2D)
-
--- Добавляем селектор цвета
-local colorSelector = window:addColorSelector(2, 2, 30, 3, 0xFFDB40, "Choose color")
--- Создаем метод .onTouch, в котором цвет фона станет эквивалентным выбранному цвету селектора, а цвет селектора будет инвертироваться на противоположный
-colorSelector.onTouch = function()
-	panel.colors.background = colorSelector.color
-	colorSelector.color = 0xFFFFFF - colorSelector.color
-	-- После обработки цветов вызываем методы отрисовки окна и экранного буфера
-	window:draw()
-	buffer.draw()
-end
-
-window:draw()
-buffer.draw()
-window:handleEvents()
-```
-При нажатии на цветовой селектор цвет фона изменится на выбранный, а цвет селектора на инвертированный:
-
-![enter image description here](http://i89.fastpic.ru/big/2017/0402/14/1e720fe2b43fe3f1c296dc00b3d4eb14.png)
-
-![enter image description here](http://i89.fastpic.ru/big/2017/0402/f6/9d181ff3fac1036ae12363da9094c2f6.png)
-
-![enter image description here](http://i90.fastpic.ru/big/2017/0402/43/a7fcca838ed8a8f1fcaa597bfc9b5c43.png)
-
-Практический пример #3
 --------------------
 
 Для демонстрации возможностей библиотеки предлагаю создать кастомный виджет с нуля. К примеру, накодить панель для рисования на ней произвольным цветом по аналогии со школьной доской.
