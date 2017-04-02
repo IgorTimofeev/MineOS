@@ -185,6 +185,43 @@ GUI.**object**( x, y, width, height ): *table* object
 
 При желании вы можете сделать абсолютно аналогичные или технически гораздо более продвинутые виджеты без каких-либо затруднений. Подробнее о создании собственных виджетов см. практические примеры в конце документации. Однако далее перечислены виджеты, уже созданные мной на основе описанных выше инструкций. 
 
+GUI.**panel**( x, y, width, height, color, transparency ): *table* panel
+------------------------------------------------------------------------
+| Тип | Аргумент | Описание |
+| ------ | ------ | ------ |
+| *int* | x | Координата объекта по оси x |
+| *int* | y | Координата объекта по оси y |
+| *int* | width | Ширина объекта |
+| *int* | height | Высота объекта |
+| *int* | color | Цвет панели |
+| [*byte* | transparency] | Опциональная прозрачность панели |
+
+Создать объект типа "панель", представляющий собой закрашенный прямоугольник с определенной опциональной прозрачностью. В большинстве случаев служит декоративным элементом, однако способен обрабатывать индивидуальный метод *.onTouch()*.
+
+| Тип свойства | Свойство |Описание |
+| ------ | ------ | ------ |
+| *callback-function* | .**onTouch**( *table* eventData )| Метод, вызываемый после нажатия на панель в обработчике событий |
+
+Пример реализации панели:
+```lua
+local buffer = require("doubleBuffering")
+local GUI = require("GUI")
+
+local window = GUI.fullScreenWindow()
+window:addPanel(1, 1, window.width, window.height, 0x0)
+
+local panel1 = window:addPanel(1, 1, window.width, math.floor(window.height / 2), 0xFFFFFF)
+window:addPanel(1, panel1.height, window.width, window.height - panel1.height, 0xFF0000)
+
+window:draw()
+buffer.draw(true)
+window:handleEvents()
+```
+
+Результат:
+
+![enter image description here](http://i91.fastpic.ru/big/2017/0402/0e/f85dc0db4dd6b575920fdf79090c020e.png)
+
 GUI.**button**( x, y, width, height, buttonColor, textColor, buttonPressedColor, textPressedColor, text ): *table* button
 ------------------------------------------------------------------------
 | Тип | Аргумент | Описание |
@@ -234,44 +271,6 @@ window:handleEvents()
 Результат:
 
 ![enter image description here](http://i89.fastpic.ru/big/2017/0402/a4/054d171e923c7631f032ba5d12c6d7a4.png)
-
-
-GUI.**panel**( x, y, width, height, color, transparency ): *table* panel
-------------------------------------------------------------------------
-| Тип | Аргумент | Описание |
-| ------ | ------ | ------ |
-| *int* | x | Координата объекта по оси x |
-| *int* | y | Координата объекта по оси y |
-| *int* | width | Ширина объекта |
-| *int* | height | Высота объекта |
-| *int* | color | Цвет панели |
-| [*byte* | transparency] | Опциональная прозрачность панели |
-
-Создать объект типа "панель", представляющий собой закрашенный прямоугольник с определенной опциональной прозрачностью. В большинстве случаев служит декоративным элементом, однако способен обрабатывать индивидуальный метод *.onTouch()*.
-
-| Тип свойства | Свойство |Описание |
-| ------ | ------ | ------ |
-| *callback-function* | .**onTouch**( *table* eventData )| Метод, вызываемый после нажатия на панель в обработчике событий |
-
-Пример реализации панели:
-```lua
-local buffer = require("doubleBuffering")
-local GUI = require("GUI")
-
-local window = GUI.fullScreenWindow()
-window:addPanel(1, 1, window.width, window.height, 0x0)
-
-local panel1 = window:addPanel(1, 1, window.width, math.floor(window.height / 2), 0xFFFFFF)
-window:addPanel(1, panel1.height, window.width, window.height - panel1.height, 0xFF0000)
-
-window:draw()
-buffer.draw(true)
-window:handleEvents()
-```
-
-Результат:
-
-![enter image description here](http://i91.fastpic.ru/big/2017/0402/0e/f85dc0db4dd6b575920fdf79090c020e.png)
 
 GUI.**label**( x, y, width, height, textColor, text ): *table* label
 --------------------------------------------------------------------
