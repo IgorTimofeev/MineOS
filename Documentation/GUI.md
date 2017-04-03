@@ -953,6 +953,68 @@ window:handleEvents()
 Практический пример #2
 --------------------
 
+Поскольку в моде OpenComputers имеется интернет-плата, я написал небольшой клиент для работы с VK.com. Разумеется, для этого необходимо реализовать авторизацию на серверах, вводя свой e-mail/номер телефона и пароль к аккаунту. В качестве тренировки привожу часть кода, отвечающую за это.
+ 
+```lua
+-- Подключаем библиотеки
+local image = require("image")
+local buffer = require("doubleBuffering")
+local GUI = require("GUI")
+
+-- Создаем окно с синей фоновой панелью
+local window = GUI.fullScreenWindow()
+window:addPanel(1, 1, window.width, window.height, 0x002440)
+
+-- Указываем размеры полей ввода текста и кнопок
+local elementWidth, elementHeight = 40, 3
+local x, y = math.floor(window.width / 2 - elementWidth / 2), math.floor(window.height / 2) - 2
+
+-- Загружаем и добавляем изображение логотипа "нашей компании"
+local logotype = image.load("/MineOS/Applications/VK.app/Resources/VKLogo.pic")
+window:addImage(math.floor(window.width / 2 - logotype.width / 2) - 2, y - logotype.height - 1, logotype); y = y + 2
+
+-- Создаем поле для ввода адреса почты
+local emailTextBox = window:addInputTextBox(x, y, elementWidth, elementHeight, 0xEEEEEE, 0x777777, 0xEEEEEE, 0x2D2D2D, nil, "E-mail", false, nil, nil, nil)
+-- Создаем красный текстовый лейбл, показывающийся только в том случае, когда адрес почты неверен
+local invalidEmailLabel = window:addLabel(emailTextBox.localPosition.x + emailTextBox.width + 2, y + 1, window.width, 1, 0xFF5555, "Invalid e-mail"); y = y + elementHeight + 1
+invalidEmailLabel.isHidden = true
+-- Создаем callback-функцию, вызывающуюся после ввода текста и проверяющую корректность введенного адреса
+emailTextBox.onInputFinished = function(text)
+	invalidEmailLabel.isHidden = text:match("%w+@%w+%.%w+") and true or false
+	window:draw()
+	buffer.draw()
+end
+-- Создаем поле для ввода пароля
+window:addInputTextBox(x, y, elementWidth, elementHeight, 0xEEEEEE, 0x777777, 0xEEEEEE, 0x2D2D2D, nil, "Password", false, "*", nil, nil); y = y + elementHeight + 1
+
+-- Добавляем малоприметную кнопку для закрытия программы
+window:addButton(window.width, 1, 1, 1, 0x002440, 0xEEEEEE, 0x002440, 0xAAAAAA, "X").onTouch = function()
+	window:close()
+	buffer.clear(0x0)
+	buffer.draw(true)
+end
+
+-- Добавляем кнопку для логина
+window:addButton(x, y, elementWidth, elementHeight, 0x666DFF, 0xEEEEEE, 0xEEEEEE, 0x666DFF, "Login").onTouch = function()
+	-- Код, выполняемый при успешном логине
+end
+
+window:draw()
+buffer.draw(true)
+window:handleEvents()
+```
+
+Результат:
+
+![enter image description here](http://i.imgur.com/PT0AUGR.png?1)
+
+![enter image description here](http://i.imgur.com/dphuFtb.png?1)
+
+![enter image description here](http://i.imgur.com/LXfsT0o.png?1)
+
+Практический пример #3
+--------------------
+
 Для демонстрации возможностей библиотеки предлагаю создать кастомный виджет с нуля. К примеру, накодить панель для рисования на ней произвольным цветом по аналогии со школьной доской.
  
 ```lua
