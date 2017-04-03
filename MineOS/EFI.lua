@@ -1,5 +1,5 @@
-local ee,gpu,sc,bg,fg,re,sce
-local pr,cm,ls,ps=component.proxy,computer,component.list,computer.pullSignal
+local c,cm=component,computer
+local pr,ls,ps,ut,sd,	ee,gpu,bg,fg,re,sce=c.proxy,c.list,cm.pullSignal,cm.uptime,cm.shutdown
 
 local function init()
 	local g=ls("gpu")()
@@ -7,10 +7,10 @@ local function init()
 	local e=ls("eeprom")()
 
 	if g and s and e then
-		gpu,sc,ee=pr(g),pr(s),pr(e)
-		computer.getBootAddress=function() return ee.getData() end
-		computer.setBootAddress=function(address) return ee.setData(address) end
-		gpu.bind(sc.address)
+		gpu,ee=pr(g),pr(e)
+		cm.getBootAddress=function() return ee.getData() end
+		cm.setBootAddress=function(address) return ee.setData(address) end
+		gpu.bind(s)
 		re={};re.width,re.height=gpu.maxResolution()
 		gpu.setResolution(re.width,re.height)
 		sce=math.floor(re.height/2)
@@ -22,8 +22,8 @@ end
 local function pu(t) while true do local e={ps()};if e[1]==t then return e end end end
 
 local function sleep(timeout)
-	local deadline=cm.uptime()+(timeout or 0)
-	while cm.uptime()<deadline do ps(deadline-cm.uptime()) end
+	local deadline=ut()+(timeout or 0)
+	while ut()<deadline do ps(deadline-ut()) end
 end
 
 local colors={b=0xDDDDDD,t1=0x444444,t2=0x999999,t3=0x888888}
@@ -52,7 +52,7 @@ local function bt(fs)
 		local data,rData="",""
 		while rData do data=data..rData;rData=fs.read(fileOrR,math.huge) end
 		fs.close(fileOrR)
-		
+
 		local loadS,loadR=load(data)
 		if loadS then
 			local xpS,xpR=xpcall(loadS,debug.traceback)
@@ -92,14 +92,14 @@ local function menu(t,v)
 			sv=sv<#v and sv+1 or #v
 		elseif e[4]==28 then
 			return sv
- 		end
+		end
 	end
 end
 
 local function waitForAlt(t,dr)
-	local dl=cm.uptime()+t
-	while cm.uptime()<dl do
-		local e={ps(dl-cm.uptime())}
+	local dl=ut()+t
+	while ut()<dl do
+		local e={ps(dl-ut())}
 		if e[1]=="key_down" and e[4]==56 then
 			while true do
 				local v={};for i=1,#dr do v[i]=(dr[i].getLabel() or "Unnamed").." "..(dr[i].spaceTotal()>524288 and "HDD" or "FDD").." ("..dr[i].address..")" end; table.insert(v, "Back")
@@ -110,12 +110,12 @@ local function waitForAlt(t,dr)
 				if a==1 then
 					l();bt(dr[d]);return
 				elseif a==2 and #v==3 then
-					for _,file in pairs(dr[d].list("/")) do dr[d].remove("/"..file) end;cm.shutdown(true)
+					for _,file in pairs(dr[d].list("/")) do dr[d].remove("/"..file) end;sd(true)
 				end
 			end
 		end
 	end
-	
+
 	local fs=pr(ee.getData() or "")
 	l();bt((fs and cbf(fs)) and fs or dr[1])
 end
@@ -125,4 +125,4 @@ fade(0x0,colors.b,0x202020)
 l()
 cT(sce,colors.t2,"Initialising system")
 local dr=gB()
-if #dr>0 then cT(re.height-1,colors.t2,"Hold Alt to enter boot options menu");waitForAlt(1.2,dr) else cT(sce,colors.t2,"Bootable drives not found");pu("key_down");fade(colors.b,0x0,-0x202020);cm.shutdown() end
+if #dr>0 then cT(re.height-1,colors.t2,"Hold Alt to enter boot options menu");waitForAlt(1.2,dr) else cT(sce,colors.t2,"Bootable drives not found");pu("key_down");fade(colors.b,0x0,-0x202020);sd() end
