@@ -648,7 +648,7 @@ window:handleEvents()
 
 ![enter image description here](http://i91.fastpic.ru/big/2017/0402/80/3b0ec81c3b2f660b9a4c6f18908f4280.png)
 
-GUI.**progressBar**( x, y, width, primaryColor, secondaryColor, valueColor, value, thin, showValue, valuePrefix, valuePostfix ): *table* progressBar
+GUI.**progressBar**( x, y, width, primaryColor, secondaryColor, valueColor, value, [thin, showValue, valuePrefix, valuePostfix] ): *table* progressBar
 ------------------------------------------------------------------------
 | Тип | Аргумент | Описание |
 | ------ | ------ | ------ |
@@ -659,10 +659,10 @@ GUI.**progressBar**( x, y, width, primaryColor, secondaryColor, valueColor, valu
 | *int* | secondaryColor | Вторичный цвет шкалы прогресса |
 | *int* | valueColor | Цвет текста значений шкалы прогресса |
 | *float* | value | Значение шкалы прогресса |
-| [*bool* | thin] | Активировать ли режим отрисовки "тонкого" объекта |
-| [*bool* | showValue] | Показывать ли значение шкалы прогресса |
-| [*string* | valuePrefix] | Префикс для значения шкалы прогресса |
-| [*string* | valuePostfix] | Постфикс для значения шкалы прогресса |
+| [*bool*] | [thin] | Активировать ли режим отрисовки "тонкого" объекта |
+| [*bool*] | [showValue] | Показывать ли значение шкалы прогресса |
+| [*string*] | [valuePrefix] | Префикс для значения шкалы прогресса |
+| [*string*] | [valuePostfix] | Постфикс для значения шкалы прогресса |
 
 Создать объект типа "шкала прогресса", значение которой меняется от 0 до 100.
 
