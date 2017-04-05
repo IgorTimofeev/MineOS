@@ -532,7 +532,7 @@
     type="Application",
     icon="IgorTimofeev/OpenComputers/master/Applications/GeoScan2/Icon.pic",
     createShortcut="desktop",
-    version=1.04,
+    version=1.05,
     resources={
       {
         name="Earth.pic",

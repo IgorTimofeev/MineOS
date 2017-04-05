@@ -8,7 +8,13 @@ local MineOSCore = require("MineOSCore")
 
 --------------------------------------------------------------------------------------------------------------------
 
-if not component.isAvailable("geolyzer") or not component.isAvailable("hologram") then GUI.error("This program requires a geolyzer and hologram projector to work!"); return end
+if not component.isAvailable("geolyzer") then
+	GUI.error("This program requires a geolyzer to work!"); return
+end
+
+if not component.isAvailable("hologram") then
+	GUI.error("This program requires a hologram projector to work!"); return
+end
 
 component.gpu.setResolution(component.gpu.maxResolution())
 buffer.start()
