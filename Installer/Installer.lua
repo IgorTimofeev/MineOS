@@ -381,6 +381,3 @@ waitForClickOnButton(lang.restart)
 --Перезагружаем компик
 ecs.prepareToExit()
 computer.shutdown(true)
-
-
-
