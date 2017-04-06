@@ -12,6 +12,7 @@ local component = require("component")
 local unicode = require("unicode")
 local event = require("event")
 local ecs = require("ECSAPI")
+local internet = require("internet")
 
 ------------------------------------------------------------------------------------------------------------------
 
@@ -87,7 +88,7 @@ local function drawTopBar()
 end
 
 local function getIcon(url)
-	local success, response = ecs.internetRequest(url)
+	local success, response = internet.request(url, false)
 	local path = appMarketConfigPath .. "TempIcon.pic"
 	if success then
 		local file = io.open(path, "w")
@@ -100,7 +101,7 @@ local function getIcon(url)
 end
 
 local function getDescription(url)
-	local success, response = ecs.internetRequest(url)
+	local success, response = internet.request(url, false)
 	if success then
 		return response
 	else
@@ -222,9 +223,21 @@ local function drawMain(refreshData)
 
 	buffer.resetDrawLimit()
 end
-
+--Загрузка файла с инета(спизжено с ECSAPI)
+local function getFileFromUrl(url, path)
+	local success, response = internet.request(url, false)
+	if success then
+		fs.makeDirectory(fs.path(path) or "")
+		local file = io.open(path, "w")
+		file:write(response)
+		file:close()
+	else
+		ecs.error("Could not connect to to URL address \"" .. url .. "\"")--Вот это я переделать не смог((
+		return
+	end
+end
 local function getNewApplications()
-	ecs.getFileFromUrl(oldApplications.GitHubApplicationListURL, pathToNewApplications)
+	getFileFromUrl(oldApplications.GitHubApplicationListURL, pathToNewApplications)
 	newApplications = table.fromFile(pathToNewApplications)
 end
 

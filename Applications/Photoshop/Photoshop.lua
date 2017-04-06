@@ -67,6 +67,7 @@ local buffer = require("doubleBuffering")
 local colorlib = require("colorlib")
 local palette = require("palette")
 local event = require("event")
+local unicode = require("unicode")
 
 ------------------------------------------------ Переменные --------------------------------------------------------------
 
@@ -248,7 +249,7 @@ end
 --Отрисовка верхнего меню
 local function drawTopMenu()
 	obj.menu = GUI.menu(1, 1, buffer.screen.width, colors.topMenu, colors.topMenuText, 0x3366CC, 0xFFFFFF, 0)
-	obj.menu:addItem("PS", ecs.colors.blue)
+	obj.menu:addItem("PS", 0x3366CC)
 	obj.menu:addItem(localization.file)
 	obj.menu:addItem(localization.image)
 	obj.menu:addItem(localization.edit)
@@ -290,12 +291,11 @@ local function convertCoordsToIterator(x, y)
 	--Конвертируем координаты в итератор
 	return (masterPixels.width * (y - 1) + x) * sizes.sizeOfPixelData - sizes.sizeOfPixelData + 1
 end
-
 --Мини-консолька для отладки, сообщающая снизу, че происходит ваще
 local function console(text)
 	buffer.square(sizes.xStartOfDrawingArea, buffer.screen.height, sizes.widthOfDrawingArea, 1, colors.console, colors.consoleText, " ")
 	
-	local _, total, used = ecs.getInfoAboutRAM()
+	local _, total, used = getInfoAboutRAM()
 	local RAMText = used .. "/" .. total .. " KB RAM"
 	buffer.text(sizes.xEndOfDrawingArea - unicode.len(RAMText), buffer.screen.height, colors.consoleText, RAMText)
 	
@@ -698,23 +698,96 @@ local function swapColors()
 	drawColors()
 	console("Цвета поменяны местами")
 end
+--============================================Спизжено с ECSAPI============================================
+local function rememberOldPixels(x, y, x2, y2)
+	local newPNGMassiv = { ["backgrounds"] = {} }
+	local xSize, ySize = component.gpu.getResolution()
+	newPNGMassiv.x, newPNGMassiv.y = x, y
 
+	--Перебираем весь массив стандартного PNG-вида по высоте
+	local xCounter, yCounter = 1, 1
+	for j = y, y2 do
+		xCounter = 1
+		for i = x, x2 do
+
+			if (i > xSize or i < 0) or (j > ySize or j < 0) then
+				error("Can't remember pixel, because it's located behind the screen: x("..i.."), y("..j..") out of xSize("..xSize.."), ySize("..ySize..")\n")
+			end
+
+			local symbol, fore, back = component.gpu.get(i, j)
+
+			newPNGMassiv["backgrounds"][back] = newPNGMassiv["backgrounds"][back] or {}
+			newPNGMassiv["backgrounds"][back][fore] = newPNGMassiv["backgrounds"][back][fore] or {}
+
+			table.insert(newPNGMassiv["backgrounds"][back][fore], {xCounter, yCounter, symbol} )
+
+			xCounter = xCounter + 1
+			back, fore, symbol = nil, nil, nil
+		end
+
+		yCounter = yCounter + 1
+	end
+
+	xSize, ySize = nil, nil
+	return newPNGMassiv
+end
+local function adaptiveText(x,y,text,textColor)
+  component.gpu.setForeground(textColor)
+  x = x - 1
+  for i=1,unicode.len(text) do
+    local info = {component.gpu.get(x+i,y)}
+    component.gpu.setBackground(info[3])
+    component.gpu.set(x+i,y,unicode.sub(text,i,i))
+  end
+end
+--Инвертированный текст на основе цвета фона
+local function invertedText(x,y,symbol)
+  local info = {component.gpu.get(x,y)}
+  adaptiveText(x,y,symbol,ecs.invertColor(info[3]))
+end
+--Спизжено с ECSAPI
+local function getInfoAboutRAM()
+	local free = math.floor(computer.freeMemory() / 1024)
+	local total = math.floor(computer.totalMemory() / 1024)
+	local used = total - free
+
+	return free, total, used
+end
+--Ограничение длины строки. Маст-хев функция.
+local function stringLimit(mode, text, size, noDots)
+	if unicode.len(text) <= size then return text end
+	local length = unicode.len(text)
+	if mode == "start" then
+		if noDots then
+			return unicode.sub(text, length - size + 1, -1)
+		else
+			return "…" .. unicode.sub(text, length - size + 2, -1)
+		end
+	else
+		if noDots then
+			return unicode.sub(text, 1, size)
+		else
+			return unicode.sub(text, 1, size - 1) .. "…"
+		end
+	end
+end
+--========================================================================================================
 --Ух, сука! Функция для работы инструмента текста
 --Лютая дичь, спиздил со старого фш, но, вроде, пашет нормас
 --Правда, чет есть предчувствие, что костыльная и багованная она, ну да похуй
 local function inputText(x, y, limit)
-	local oldPixels = ecs.rememberOldPixels(x,y-1,x+limit-1,y+1)
+	local oldPixels = rememberOldPixels(x,y-1,x+limit-1,y+1)
 	local text = ""
 	local inputPos = 1
 
 	local function drawThisShit()
 		for i = 1, inputPos do
-			ecs.invertedText(x + i - 1, y + 1, "─")
-			ecs.adaptiveText(x + i - 1, y - 1, " ", currentBackground)
+			invertedText(x + i - 1, y + 1, "─")
+			adaptiveText(x + i - 1, y - 1, " ", currentBackground)
 		end
-		ecs.invertedText(x + inputPos - 1, y + 1, "▲")--"▲","▼"
-		ecs.invertedText(x + inputPos - 1, y - 1, "▼")
-		ecs.adaptiveText(x, y, ecs.stringLimit("start", text, limit, false), currentBackground)
+		invertedText(x + inputPos - 1, y + 1, "▲")--"▲","▼"
+		invertedText(x + inputPos - 1, y - 1, "▼")
+		adaptiveText(x, y, stringLimit("start", text, limit, false), currentBackground)
 	end
 
 	drawThisShit()
@@ -728,7 +801,7 @@ local function inputText(x, y, limit)
 					if unicode.len(text) < (limit - 1) then
 						inputPos = inputPos - 1
 					end
-					ecs.drawOldPixels(oldPixels)
+					drawOldPixels(oldPixels)
 					drawThisShit()
 				end
 			elseif e[4] == 28 then
@@ -766,7 +839,7 @@ local function inputText(x, y, limit)
 		end
 	end
 
-	ecs.drawOldPixels(oldPixels)
+	drawOldPixels(oldPixels)
 	if text == "" then text = " " end
 	return text
 end

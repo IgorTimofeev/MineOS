@@ -624,7 +624,7 @@
     icon="IgorTimofeev/OpenComputers/master/Applications/VK/Icon.pic",
     createShortcut="desktop",
     forceDownload=true,
-    version=1.26,
+    version=1.27,
     resources={
       {
         name="VKLogo.pic",
@@ -959,7 +959,7 @@
     icon="IgorTimofeev/OpenComputers/master/Applications/Photoshop/Icon.pic",
     createShortcut="dock",
     forceDownload=true,
-    version=1.04,
+    version=1.05,
     resources={
       {
         name="Localization/Russian.lang",
@@ -1005,7 +1005,7 @@
     icon="IgorTimofeev/OpenComputers/master/Applications/AppMarket/Icon.pic",
     createShortcut="dock",
     forceDownload=true,
-    version=1.54,
+    version=1.55,
      resources={
       {
         name="Localization/Russian.lang",

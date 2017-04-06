@@ -14,6 +14,7 @@ local unicode = require("unicode")
 local component = require("component")
 local computer = require("computer")
 local GUI = require("GUI")
+local internet = require("internet")
 
 ---------------------------------------------------- Константы ----------------------------------------------------------------
 
@@ -142,7 +143,7 @@ end
 
 --Банальный URL-запрос, декодирующийся через ЖУСОН в случае успеха, епты
 local function request(url)
-	local success, response = ecs.internetRequest(url)
+	local success, response = internet.request(url, false)
 	if success then
 		response = json:decode(response)
 	end
@@ -266,8 +267,24 @@ end
 local function setCrazyTypingRequest(peer_id)
 	return VKAPIRequest("messages.setActivity", "type=typing", "peer_id=" .. peer_id)
 end
-
-
+--Вытащил из ECSAPI
+local function stringLimit(mode, text, size, noDots)
+	if unicode.len(text) <= size then return text end
+	local length = unicode.len(text)
+	if mode == "start" then
+		if noDots then
+			return unicode.sub(text, length - size + 1, -1)
+		else
+			return "…" .. unicode.sub(text, length - size + 2, -1)
+		end
+	else
+		if noDots then
+			return unicode.sub(text, 1, size)
+		else
+			return unicode.sub(text, 1, size - 1) .. "…"
+		end
+	end
+end
 
 
 
@@ -628,7 +645,7 @@ local function dialogsGUI()
 				local cyka = tostring(dialogs.response.items[i].unread)
 				local cykaWidth = unicode.len(cyka) + 2
 				local cykaX = buffer.screen.width - cykaWidth - 2
-				buffer.square(cykaX, y + 2, cykaWidth, 1, ecs.colors.blue)
+				buffer.square(cykaX, y + 2, cykaWidth, 1, 0x3366CC)
 				buffer.text(cykaX + 1, y + 2, 0xFFFFFF, cyka)
 			end
 
@@ -839,7 +856,7 @@ local function userProfileGUI()
 	local count = 1
 	for i = 1, #currentProfile.friends.response.items do
 		drawAvatar(xPos, yPos, 6, 3, currentProfile.friends.response.items[i].id, unicode.sub(currentProfile.friends.response.items[i].first_name, 1, 1) .. unicode.sub(currentProfile.friends.response.items[i].last_name, 1, 1))
-		buffer.text(xPos - 1, yPos + 3, 0x000000, ecs.stringLimit("end", currentProfile.friends.response.items[i].first_name .. " " .. currentProfile.friends.response.items[i].last_name, 8))
+		buffer.text(xPos - 1, yPos + 3, 0x000000, stringLimit("end", currentProfile.friends.response.items[i].first_name .. " " .. currentProfile.friends.response.items[i].last_name, 8))
 		xPos = xPos + 10
 		if i % 2 == 0 then xPos = x + 1; yPos = yPos + 5 end
 		count = count + 1
@@ -1005,7 +1022,7 @@ local function drawLeftBar()
 	
 	if personalInfo then
 		drawPersonalAvatar(3, 2, 6, 3)
-		buffer.text(11, 3, 0xFFFFFF, ecs.stringLimit("end", personalInfo.first_name .. " " .. personalInfo.last_name, leftBarWidth - 11))
+		buffer.text(11, 3, 0xFFFFFF, stringLimit("end", personalInfo.first_name .. " " .. personalInfo.last_name, leftBarWidth - 11))
 	end
 
 	--Элементы
@@ -1020,7 +1037,7 @@ local function drawLeftBar()
 
 		buffer.square(1, y, leftBarWidth, 3, color, 0xFFFFFF, " ")
 		y = y + 1
-		buffer.text(3, y, colors.leftBarText, ecs.stringLimit("end", leftBarElements[i], leftBarWidth - 4))
+		buffer.text(3, y, colors.leftBarText, stringLimit("end", leftBarElements[i], leftBarWidth - 4))
 		y = y + 2
 	end
 end
