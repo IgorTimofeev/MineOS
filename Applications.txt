@@ -531,6 +531,7 @@
     type="Application",
     icon="IgorTimofeev/OpenComputers/master/Applications/3DTest/Icon.pic",
     createShortcut="desktop",
+    forceDownload=true,
     version=1.16,
   },
   {
@@ -630,7 +631,6 @@
     type="Application",
     icon="IgorTimofeev/OpenComputers/master/Applications/VK/Icon.pic",
     createShortcut="desktop",
-    forceDownload=true,
     version=1.26,
     resources={
       {
