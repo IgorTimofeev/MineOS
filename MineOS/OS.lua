@@ -185,7 +185,7 @@ local function setProtectionMethod()
 end
 
 local function login()
-	ecs.disableInterrupting()
+	event.interuptingEnabled = false
 	if not _G.OSSettings.protectionMethod then
 		setProtectionMethod()
 	elseif _G.OSSettings.protectionMethod == "password" then
@@ -198,7 +198,7 @@ local function login()
 			if success then break end
 		end
 	end
-	ecs.enableInterrupting()
+	event.interuptingEnabled = true
 end
 
 ---------------------------------------------- Система нотификаций ------------------------------------------------------------------------
@@ -668,7 +668,6 @@ changeResolution()
 login()
 windows10()
 workspace:handleEvents(0.5)
-
 
 
 

@@ -1,320 +1,210 @@
+
+-- This is a fast OpenComputers event processing library written as an alternative
+-- for its' OpenOS analogue which has become too slow and inefficient in the latest updates
+
+--------------------------------------------------------------------------------------------------------
+
 local computer = require("computer")
-local keyboard = require("keyboard")
-local component = require("component")
 
-local event, listeners, timers = {}, {}, {}
-local lastInterrupt = -math.huge
+local event = {
+	push = computer.pushSignal,
+	handlers = {},
+	interruptingEnabled = true,
+	interruptingDelay = 1,
+	interruptingKeyCodes = {
+		[29] = true,
+		[46] = true,
+		[56] = true
+	},
+	onError = function(errorMessage)
+		
+	end
+}
 
-local function call(callback, ...)
-  local result, message = pcall(callback, ...)
-  if not result and type(event.onError) == "function" then
-    pcall(event.onError, message)
-    return
-  end
-  return message
+local lastInterrupt, interruptingKeysDown = 0, {}
+
+--------------------------------------------------------------------------------------------------------
+
+function event.register(callback, signalType, times, interval)
+	checkArg(1, callback, "function")
+	checkArg(2, signalType, "string", "nil")
+	checkArg(3, times, "number", "nil")
+	checkArg(4, nextTriggerTime, "number", "nil")
+
+	local ID
+	while not ID do
+		ID = math.random(1, 0x7FFFFFFF)
+		for handlerIndex = 1, #event.handlers do
+			if event.handlers[handlerIndex].ID == ID then
+				ID = nil
+				break
+			end
+		end
+	end
+
+	table.insert(event.handlers, {
+		ID = ID,
+		signalType = signalType,
+		callback = callback,
+		times = times,
+		interval = interval,
+		nextTriggerTime = interval and (computer.uptime() + interval) or nil
+	})
 end
 
-local function dispatch(signal, ...)
-  if listeners[signal] then
-    local function callbacks()
-      local list = {}
-      for index, listener in ipairs(listeners[signal]) do
-        list[index] = listener
-      end
-      return list
-    end
-    for _, callback in ipairs(callbacks()) do
-      if call(callback, signal, ...) == false then
-        event.ignore(signal, callback) -- alternative method of removing a listener
-      end
-    end
-  end
+function event.cancel(ID)
+	checkArg(1, ID, "number")
+
+	for handlerIndex = 1, #event.handlers do
+		if event.handlers[handlerIndex].ID == ID then
+			table.remove(event.handlers, handlerIndex)
+			return true
+		end
+	end
+
+	return false, "No registered handlers found for ID \"" .. ID .. "\""
 end
 
-local function tick()
-  local function elapsed()
-    local list = {}
-    for id, timer in pairs(timers) do
-      if timer.after <= computer.uptime() then
-        table.insert(list, timer.callback)
-        timer.times = timer.times - 1
-        if timer.times <= 0 then
-          timers[id] = nil
-        else
-          timer.after = computer.uptime() + timer.interval
-        end
-      end
-    end
-    return list
-  end
-  for _, callback in ipairs(elapsed()) do
-    call(callback)
-  end
+--------------------------------------------------------------------------------------------------------
+
+function event.listen(signalType, callback)
+	checkArg(1, signalType, "string")
+	checkArg(2, callback, "function")
+
+	for handlerIndex = 1, #event.handlers do
+		if event.handlers[handlerIndex].callback == callback then
+			return false, "Callback method " .. tostring(callback) .. " is already registered"
+		end
+	end
+
+	event.register(callback, signalType)
 end
 
-local function createPlainFilter(name, ...)
-  local filter = table.pack(...)
-  if name == nil and filter.n == 0 then
-    return nil
-  end
+function event.ignore(signalType, callback)
+	checkArg(1, signalType, "string")
+	checkArg(2, callback, "function")
 
-  return function(...)
-    local signal = table.pack(...)
-    if name and not (type(signal[1]) == "string" and signal[1]:match(name)) then
-      return false
-    end
-    for i = 1, filter.n do
-      if filter[i] ~= nil and filter[i] ~= signal[i + 1] then
-        return false
-      end
-    end
-    return true
-  end
+	for handlerIndex = 1, #event.handlers do
+		if event.handlers[handlerIndex].signalType == signalType and event.handlers[handlerIndex].callback == callback then
+			table.remove(event.handlers, handlerIndex)
+			return true
+		end
+	end
+
+	return false, "No registered listeners found for signal \"" .. signalType .. "\" and callback method \"" .. tostring(callback)
 end
 
-local function createMultipleFilter(...)
-  local filter = table.pack(...)
-  if filter.n == 0 then
-    return nil
-  end
+--------------------------------------------------------------------------------------------------------
 
-  return function(...)
-    local signal = table.pack(...)
-    if type(signal[1]) ~= "string" then
-      return false
-    end
-    for i = 1, filter.n do
-      if filter[i] ~= nil and signal[1]:match(filter[i]) then
-        return true
-      end
-    end
-    return false
-  end
-end
--------------------------------------------------------------------------------
+function event.timer(interval, callback, times)
+	checkArg(1, interval, "number")
+	checkArg(2, callback, "function")
+	checkArg(3, times, "number", "nil")
 
-function event.cancel(timerId)
-  checkArg(1, timerId, "number")
-  if timers[timerId] then
-    timers[timerId] = nil
-    return true
-  end
-  return false
+	event.register(callback, nil, times, interval)
+	
+	return event.handlers[#event.handlers].ID
 end
 
-function event.ignore(name, callback)
-  checkArg(1, name, "string")
-  checkArg(2, callback, "function")
-  if listeners[name] then
-    for i = 1, #listeners[name] do
-      if listeners[name][i] == callback then
-        table.remove(listeners[name], i)
-        if #listeners[name] == 0 then
-          listeners[name] = nil
-        end
-        return true
-      end
-    end
-  end
-  return false
+--------------------------------------------------------------------------------------------------------
+
+local function executeHandlerCallback(callback, ...)
+	local success, result = pcall(callback, ...)
+	if success then
+		return result
+	else
+		if type(event.onError) == "function" then
+			pcall(event.onError, result)
+		end
+	end
 end
 
-function event.listen(name, callback)
-  checkArg(1, name, "string")
-  checkArg(2, callback, "function")
-  if listeners[name] then
-    for i = 1, #listeners[name] do
-      if listeners[name][i] == callback then
-        return false
-      end
-    end
-  else
-    listeners[name] = {}
-  end
-  table.insert(listeners[name], callback)
-  return true
+local function eventTick(timeout)
+	local eventData, handlerIndex, uptime = {computer.pullSignal(timeout)}, 1, computer.uptime()
+
+	-- Process every registered event handlers 
+	while handlerIndex <= #event.handlers do		
+		if not event.handlers[handlerIndex].times or event.handlers[handlerIndex].times > 0 then
+			if
+				(not event.handlers[handlerIndex].signalType or event.handlers[handlerIndex].signalType == eventData[1]) and
+				(not event.handlers[handlerIndex].nextTriggerTime or event.handlers[handlerIndex].nextTriggerTime <= uptime)
+			then
+				executeHandlerCallback(event.handlers[handlerIndex].callback, table.unpack(eventData))
+				uptime = computer.uptime()
+
+				if event.handlers[handlerIndex].times then
+					event.handlers[handlerIndex].times = event.handlers[handlerIndex].times - 1
+				end
+
+				if event.handlers[handlerIndex].nextTriggerTime then
+					event.handlers[handlerIndex].nextTriggerTime = uptime + event.handlers[handlerIndex].interval
+				end
+			end
+
+			handlerIndex = handlerIndex + 1
+		else
+			table.remove(event.handlers, handlerIndex)
+		end
+	end
+
+	-- Interruption support
+	if event.interruptingEnabled then
+		-- Analysing for which interrupting key is pressed - we don't need keyboard API for this
+		if eventData[1] == "key_down" then
+			if event.interruptingKeyCodes[eventData[4]] then
+				interruptingKeysDown[eventData[4]] = true
+			end
+		elseif eventData[1] == "key_up" then
+			if event.interruptingKeyCodes[eventData[4]] then
+				interruptingKeysDown[eventData[4]] = nil
+			end
+		end
+
+		local shouldInterrupt = true
+		for keyCode in pairs(event.interruptingKeyCodes) do
+			if not interruptingKeysDown[keyCode] then
+				shouldInterrupt = false
+			end
+		end
+
+		-- Checking interruption delays
+		if shouldInterrupt and uptime - lastInterrupt > event.interruptingDelay then
+			lastInterrupt = uptime
+			error("interrupted", 0)
+		end
+	end
+
+	return eventData
 end
 
-function event.onError(message)
-  local log = io.open("/tmp/event.log", "a")
-  if log then
-    log:write(message .. "\n")
-    log:close()
-  end
+local function getNearestHandlerTriggerTime()
+	local nearestTriggerTime
+	for handlerIndex = 1, #event.handlers do
+		if event.handlers[handlerIndex].nextTriggerTime then
+			nearestTriggerTime = math.min(nearestTriggerTime or math.huge, event.handlers[handlerIndex].nextTriggerTime)
+		end
+	end
+
+	return nearestTriggerTime
 end
 
 function event.pull(...)
-  local args = table.pack(...)
-  if type(args[1]) == "string" then
-    return event.pullFiltered(createPlainFilter(...))
-  else
-    checkArg(1, args[1], "number", "nil")
-    checkArg(2, args[2], "string", "nil")
-    return event.pullFiltered(args[1], createPlainFilter(select(2, ...)))
-  end
-end
+	local args = {...}
 
-function event.pullMultiple(...)
-  local seconds
-  local args
-  if type(...) == "number" then
-    seconds = ...
-    args = table.pack(select(2,...))
-    for i=1,args.n do
-      checkArg(i+1, args[i], "string", "nil")
-    end
-  else
-    args = table.pack(...)
-    for i=1,args.n do
-      checkArg(i, args[i], "string", "nil")
-    end
-  end
-  return event.pullFiltered(seconds, createMultipleFilter(table.unpack(args, 1, args.n)))
-
-end
-
-function event.pullFiltered(...)
-  local args = table.pack(...)
-  local seconds, filter
-
-  if type(args[1]) == "function" then
-    filter = args[1]
-  else
-    checkArg(1, args[1], "number", "nil")
-    checkArg(2, args[2], "function", "nil")
-    seconds = args[1]
-    filter = args[2]
-  end
-
-  local deadline = seconds and
-                   (computer.uptime() + seconds) or
-                   (filter and math.huge or 0)
-  repeat
-    local closest = seconds and deadline or math.huge
-    for _, timer in pairs(timers) do
-      closest = math.min(closest, timer.after)
-    end
-    local signal = table.pack(computer.pullSignal(closest - computer.uptime()))
-    if signal.n > 0 then
-      dispatch(table.unpack(signal, 1, signal.n))
-    end
-    tick()
-
-    event.takeScreenshot()
-
-    ----------
-
-    --Инициализируем протокол RCON
-    _G.RCON = _G.RCON or nil
-    --Если принимаем сообщеньку
-    if signal[1] == "modem_message" then
-      --Получаем понятные для простых смертных названия говна
-      local localAddress, remoteAddress, port, distance, protocol, command = signal[2], signal[3], signal[4], signal[5], signal[6], signal[7]
-      --Если порт подходит нам
-      if port == 512 then
-        --Если протокол сообщения подходит нам
-        if protocol == "RCON" then
-          --Если протокол RCON еще не активирован, т.е. равен nil
-          if _G.RCON == nil then
-            --Если у нас запрашивают управление
-            if command == "iWantToControl" then
-              --Спрашиваем на данном компе, разрешить ли управлять им
-              local data = ecs.universalWindow("auto", "auto", 46, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x880000, "RCON"}, {"EmptyLine"}, {"CenterText", 0x262626, "Копьютер "..ecs.stringLimit("end", remoteAddress, 8).." запрашивает управление"}, {"EmptyLine"}, {"Button", {0x880000, 0xffffff, "Разрешить"}, {0xbbbbbb, 0xffffff, "Отклонить"}})
-              if data[1] == "Разрешить" then
-                component.modem.send(remoteAddress, port, "RCON", "acceptControl")
-                --Разрешаем коннект
-                _G.RCON = true
-              else
-                component.modem.send(remoteAddress, port, "RCON", "denyControl")
-                --Отключаем RCON на данном устройстве, чтобы никакая мразь больше не коннектилась.
-                _G.RCON = false
-              end
-            end
-          --А если RCON активирован
-          elseif _G.RCON == true then
-            if command == "getResolution" then
-              local xSize, ySize = component.gpu.getResolution()
-              component.modem.send(remoteAddress, port, "RCON", xSize, ySize)
-            elseif command == "execute" then
-              shell.execute(signal[8])
-            elseif command == "shutdown" then
-              computer.shutdown()
-            elseif command == "reboot" then
-              computer.shutdown(true)
-            elseif command == "key_down" then
-              computer.pushSignal("key_down", component.getPrimary("keyboard").address, signal[8], signal[9], signal[10])
-              --print("Пушу ивент кей довн ", component.getPrimary("keyboard").address, signal[8], signal[9], signal[10])
-            elseif command == "touch" then
-              computer.pushSignal("touch", remoteAddress, signal[8], signal[9], signal[10], signal[11])
-            elseif command == "scroll" then
-              computer.pushSignal("scroll", remoteAddress, signal[8], signal[9], signal[10], signal[11])
-            elseif command == "clipboard" then
-              computer.pushSignal("clipboard", remoteAddress, signal[8], signal[9])
-            elseif command == "closeConnection" then
-              ecs.error("Клиент под ID "..remoteAddress.." отключился. Закрываю сеть RCON.")
-              _G.RCON = nil
-            end
-          end
-        end
-      end
-    end
-
-    ----------
-
-    if event.shouldInterrupt() then
-      lastInterrupt = computer.uptime()
-      error("interrupted", 0)
-    end
-    if event.shouldSoftInterrupt() and (filter == nil or filter("interrupted", computer.uptime() - lastInterrupt))  then
-      local awaited = computer.uptime() - lastInterrupt
-      lastInterrupt = computer.uptime()
-      return "interrupted", awaited
-    end
-    if not (seconds or filter) or filter == nil or filter(table.unpack(signal, 1, signal.n)) then
-      return table.unpack(signal, 1, signal.n)
-    end
-  until computer.uptime() >= deadline
-end
-
-function event.shouldInterrupt()
-  return computer.uptime() - lastInterrupt > 1 and
-         keyboard.isControlDown() and
-         keyboard.isAltDown() and
-         keyboard.isKeyDown(keyboard.keys.c)
-end
-
-function event.shouldSoftInterrupt()
-  return computer.uptime() - lastInterrupt > 1 and
-         keyboard.isControlDown() and
-         keyboard.isKeyDown(keyboard.keys.c)
-end
-
-function event.takeScreenshot()
-  if keyboard.isKeyDown(100) or keyboard.isKeyDown(183) then
-    computer.beep(1500)
-    local screenshotPath = "screenshot.pic"
-    image.screenshot(screenshotPath)
-    computer.beep(2000)
-    computer.beep(2000)
-    computer.pushSignal("screenshot", screenshotPath)
-  end
-end
-
-function event.timer(interval, callback, times)
-  checkArg(1, interval, "number")
-  checkArg(2, callback, "function")
-  checkArg(3, times, "number", "nil")
-  local id
-  repeat
-    id = math.floor(math.random(1, 0x7FFFFFFF))
-  until not timers[id]
-  timers[id] = {
-    interval = interval,
-    after = computer.uptime() + interval,
-    callback = callback,
-    times = times or 1
-  }
-  return id
+	local args1Type, timeout, signalType = type(args[1])
+	if args1Type == "string" then
+		timeout, signalType = math.huge, args[1]
+	elseif args1Type == "number" then
+		timeout, signalType = args[1], type(args[2]) == "string" and args[2] or nil
+	end
+	
+	local deadline = computer.uptime() + (timeout or math.huge)
+	while computer.uptime() <= deadline do
+		local eventData = eventTick((getNearestHandlerTriggerTime() or deadline) - computer.uptime())
+		if eventData[1] and (not signalType or signalType == eventData[1]) then
+			return table.unpack(eventData)
+		end
+	end
 end
 
 -------------------------------------------------------------------------------

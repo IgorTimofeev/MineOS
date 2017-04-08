@@ -8,7 +8,7 @@
     about="IgorTimofeev/OpenComputers/master/MineOS/About/",
     type="Script",
     forceDownload=true,
-    version=3.48,
+    version=3.49,
   },
   {
     name="MineOS/Pictures/Raspberry.pic",
@@ -263,6 +263,13 @@
     version=1.07,
   },
   {
+    name="lib/event.lua",
+    url="IgorTimofeev/OpenComputers/master/lib/event.lua",
+    type="Library",
+    preLoadFile=true,
+    version=1.00,
+  },
+  {
     name="MineOS/System/OS/EFI.lua",
     url="IgorTimofeev/OpenComputers/master/MineOS/EFI.lua",
     type="Library",
@@ -417,8 +424,8 @@
     version=1.06,
   },
   {
-    name="lib/PolyCatEngine/Main.lua",
-    url="IgorTimofeev/OpenComputers/master/lib/PolyCatEngine/Main.lua",
+    name="lib/MeowEngine/Main.lua",
+    url="IgorTimofeev/OpenComputers/master/lib/MeowEngine/Main.lua",
     type="Library",
     version=1.07,
   },

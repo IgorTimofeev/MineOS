@@ -6,11 +6,11 @@ local vector = require("vector")
 local OCGL = require("OpenComputersGL/Main")
 local renderer = require("OpenComputersGL/Renderer")
 local materials = require("OpenComputersGL/Materials")
-local polyCatEngine = {}
+local meowEngine = {}
 
 -------------------------------------------------------- Universal object methods --------------------------------------------------------
 
-function polyCatEngine.newPivotPoint(vector3Position)
+function meowEngine.newPivotPoint(vector3Position)
 	return {
 		position = vector3Position,
 		axis = {
@@ -23,7 +23,7 @@ end
 
 -------------------------------------------------------- Light object --------------------------------------------------------
 
-function polyCatEngine.newLight(vector3Position, intensity, emissionDistance)
+function meowEngine.newLight(vector3Position, intensity, emissionDistance)
 	return {
 		position = vector3Position,
 		emissionDistance = emissionDistance,
@@ -47,7 +47,7 @@ local function pushMeshToRenderQueue(mesh)
 end
 
 
-function polyCatEngine.newMesh(vector3Position, vertices, triangles, material)
+function meowEngine.newMesh(vector3Position, vertices, triangles, material)
 	local mesh = {}
 
 	mesh.vertices = vertices
@@ -72,7 +72,7 @@ local function pushLineToRenderQueue(line)
 	)
 end
 
-function polyCatEngine.newLine(vector3Position, vector3Vertex1, vector3Vertex2, color)
+function meowEngine.newLine(vector3Position, vector3Vertex1, vector3Vertex2, color)
 	return {
 		vertices = { vector3Vertex1, vector3Vertex2 },
 		color = color,
@@ -90,7 +90,7 @@ local function pushFloatingTextToRenderQueue(floatingText)
 	)
 end
 
-function polyCatEngine.newFloatingText(vector3Position, color, text)
+function meowEngine.newFloatingText(vector3Position, color, text)
 	return {
 		position = vector3Position,
 		color = color,
@@ -101,7 +101,7 @@ end
 
 -------------------------------------------------------- Plane object --------------------------------------------------------
 
-function polyCatEngine.newPlane(vector3Position, width, height, segmentsWidth, segmentsHeight, material)
+function meowEngine.newPlane(vector3Position, width, height, segmentsWidth, segmentsHeight, material)
 	local vertices, triangles, widthCellSize, heightCellSize, vertexIndex = {}, {}, width / segmentsWidth, height / segmentsHeight, 1
 	segmentsWidth, segmentsHeight = segmentsWidth + 1, segmentsHeight + 1
 	
@@ -130,14 +130,14 @@ function polyCatEngine.newPlane(vector3Position, width, height, segmentsWidth, s
 		end
 	end
 	
-	return polyCatEngine.newMesh(vector3Position, vertices, triangles, material)
+	return meowEngine.newMesh(vector3Position, vertices, triangles, material)
 end
 
 -------------------------------------------------------- Textured plane object --------------------------------------------------------
 
-function polyCatEngine.newTexturedPlane(vector3Position, width, height, texture)
+function meowEngine.newTexturedPlane(vector3Position, width, height, texture)
 	width, height = width / 2, height / 2
-	return polyCatEngine.newMesh(
+	return meowEngine.newMesh(
 		vector3Position,
 		{
 			vector.newVector5(-width, 0, -height, 1, texture.height),
@@ -167,9 +167,9 @@ end
 	1######4	4######5	5######8	8######1	2######3	1######4
 ]]
 
-function polyCatEngine.newCube(vector3Position, size, material)
+function meowEngine.newCube(vector3Position, size, material)
 	local halfSize = size / 2
-	return polyCatEngine.newMesh(
+	return meowEngine.newMesh(
 		vector3Position,
 		{
 			-- (1-2-3-4)
@@ -254,7 +254,7 @@ local function cameraSetFOV(camera, FOV)
 	return camera
 end
 
-function polyCatEngine.newCamera(vector3Position, FOV, nearClippingSurface, farClippingSurface)
+function meowEngine.newCamera(vector3Position, FOV, nearClippingSurface, farClippingSurface)
 	local camera = {}
 
 	camera.projectionEnabled = true
@@ -331,7 +331,7 @@ local function sceneRender(scene)
 	return scene
 end
 
-function polyCatEngine.newScene(backgroundColor)
+function meowEngine.newScene(backgroundColor)
 	local scene = {}
 
 	scene.renderMode = OCGL.renderModes.constantShading
@@ -346,7 +346,7 @@ function polyCatEngine.newScene(backgroundColor)
 	scene.addObjects = sceneAddObjects
 	scene.render = sceneRender
 
-	scene.camera = polyCatEngine.newCamera(vector.newVector3(0, 0, 0), math.rad(90), 1, 100)
+	scene.camera = meowEngine.newCamera(vector.newVector3(0, 0, 0), math.rad(90), 1, 100)
 
 	return scene
 end
@@ -366,7 +366,7 @@ local function getVectorDistance(a)
 end
 
 -- В случае попадания лучика этот метод вернет сам треугольник, а также дистанцию до его плоскости
-function polyCatEngine.meshRaycast(mesh, vector3RayStart, vector3RayEnd)
+function meowEngine.meshRaycast(mesh, vector3RayStart, vector3RayEnd)
 	local minimalDistance, closestTriangleIndex
 	for triangleIndex = 1, #mesh.triangles do
 		-- Это вершины треугольника
@@ -426,12 +426,12 @@ function polyCatEngine.meshRaycast(mesh, vector3RayStart, vector3RayEnd)
 	return closestTriangleIndex, minimalDistance
 end
 
-function polyCatEngine.sceneRaycast(scene, vector3RayStart, vector3RayEnd)
+function meowEngine.sceneRaycast(scene, vector3RayStart, vector3RayEnd)
 	local closestObjectIndex, closestTriangleIndex, minimalDistance
 	
 	for objectIndex = 1, #scene.objects do
 		if scene.objects[objectIndex].triangles then
-			local triangleIndex, distance = polyCatEngine.meshRaycast(scene.objects[objectIndex], vector3RayStart, vector3RayEnd)
+			local triangleIndex, distance = meowEngine.meshRaycast(scene.objects[objectIndex], vector3RayStart, vector3RayEnd)
 			if triangleIndex and (not minimalDistance or distance < minimalDistance ) then
 				closestObjectIndex, closestTriangleIndex, minimalDistance = objectIndex, triangleIndex, distance
 			end
@@ -443,8 +443,8 @@ end
 
 -------------------------------------------------------- Intro --------------------------------------------------------
 
-function polyCatEngine.newPolyCatMesh(vector3Position, size)
-	return polyCatEngine.newMesh(
+function meowEngine.newPolyCatMesh(vector3Position, size)
+	return meowEngine.newMesh(
 		vector3Position,
 		{
 			vector.newVector3(-1.0 * size, 0.8 * size, 0.3 * size),
@@ -483,11 +483,11 @@ function polyCatEngine.newPolyCatMesh(vector3Position, size)
 	)
 end
 
-function polyCatEngine.intro(vector3Position, size)
+function meowEngine.intro(vector3Position, size)
 	local GUI = require("GUI")
-	local scene = polyCatEngine.newScene(0xEEEEEE)
-	scene:addObject(polyCatEngine.newPolyCatMesh(vector3Position, size))
-	scene:addObject(polyCatEngine.newFloatingText(vector.newVector3(vector3Position[1] + 2, vector3Position[2] - size, vector3Position[3] + size * 0.1), 0xBBBBBB, "Powered by PolyCat Engine™"))
+	local scene = meowEngine.newScene(0xEEEEEE)
+	scene:addObject(meowEngine.newPolyCatMesh(vector3Position, size))
+	scene:addObject(meowEngine.newFloatingText(vector.newVector3(vector3Position[1] + 2, vector3Position[2] - size, vector3Position[3] + size * 0.1), 0xBBBBBB, "Powered by MeowEngine™"))
 
 	local from, to, speed = -30, 20, 4
 	local transparency, transparencyStep = 0, 100 / math.abs(to - from) * speed
@@ -497,11 +497,6 @@ function polyCatEngine.intro(vector3Position, size)
 		scene.camera:translate(speed, 0, 0)
 		scene.camera:lookAt(0, 0, 0)
 		scene:render()
-		local lines = {
-			"Copyright © 2016-2017 - Developed by ECS, Harch and Pirnogion",
-			"All rights reserved",
-		}
-		GUI.textBox(1, buffer.screen.height - #lines, buffer.screen.width, #lines, nil, 0xBBBBBB, lines, 1):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top):draw()
 		if scene.camera.position[1] < to then buffer.clear(0x0, transparency) end
 		buffer.draw()
 
@@ -521,4 +516,4 @@ end
 
 -------------------------------------------------------- Zalupa --------------------------------------------------------
 
-return polyCatEngine
+return meowEngine

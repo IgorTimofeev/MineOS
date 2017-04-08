@@ -7,7 +7,7 @@
 -- package.loaded["OpenComputersGL/Main"] = nil
 -- package.loaded["OpenComputersGL/Materials"] = nil
 -- package.loaded["OpenComputersGL/Renderer"] = nil
--- package.loaded["PolyCatEngine/Main"] = nil
+-- package.loaded["MeowEngine/Main"] = nil
 
 local colorlib = require("colorlib")
 local computer = require("computer")
@@ -18,24 +18,24 @@ local vector = require("vector")
 local materials = require("OpenComputersGL/Materials")
 local renderer = require("OpenComputersGL/Renderer")
 local OCGL = require("OpenComputersGL/Main")
-local polyCatEngine = require("PolyCatEngine/Main")
+local meowEngine = require("MeowEngine/Main")
 
 ---------------------------------------------- Anus preparing ----------------------------------------------
 
 -- /MineOS/Desktop/3DTest.app/3DTest.lua
 
 buffer.start()
-polyCatEngine.intro(vector.newVector3(0, 0, 0), 20)
+meowEngine.intro(vector.newVector3(0, 0, 0), 20)
 
 local mainWindow = GUI.fullScreenWindow()
-local scene = polyCatEngine.newScene(0x1D1D1D)
+local scene = meowEngine.newScene(0x1D1D1D)
 
 scene.renderMode = OCGL.renderModes.flatShading
 scene.auxiliaryMode = OCGL.auxiliaryModes.disabled
 
 scene.camera:translate(-2.5, 8.11, -19.57)
 scene.camera:rotate(math.rad(30), 0, 0)
-scene:addLight(polyCatEngine.newLight(vector.newVector3(0, 20, 0), 1.0, 200))
+scene:addLight(meowEngine.newLight(vector.newVector3(0, 20, 0), 1.0, 200))
 
 ---------------------------------------------- Constants ----------------------------------------------
 
@@ -48,7 +48,7 @@ local translationOffset = 1
 local world = {{{}}}
 
 local worldMesh = scene:addObject(
-	polyCatEngine.newMesh(
+	meowEngine.newMesh(
 		vector.newVector3(0, 0, 0), { }, { },
 		materials.newSolidMaterial(0xFF00FF)
 	)
@@ -156,19 +156,19 @@ end
 
 ---------------------------------------------- Cat ----------------------------------------------
 
--- scene:addObject(polyCatEngine.newPolyCatMesh(vector.newVector3(0, 5, 0), 5))
--- scene:addObject(polyCatEngine.newFloatingText(vector.newVector3(0, -2, 0), 0xEEEEEE, "Тест плавающего текста"))
+-- scene:addObject(meowEngine.newPolyCatMesh(vector.newVector3(0, 5, 0), 5))
+-- scene:addObject(meowEngine.newFloatingText(vector.newVector3(0, -2, 0), 0xEEEEEE, "Тест плавающего текста"))
 
 ---------------------------------------------- Texture ----------------------------------------------
 
 -- scene.camera:translate(0, 20, 0)
 -- scene.camera:rotate(math.rad(90), 0, 0)
--- local texturedPlane = scene:addObject(polyCatEngine.newTexturedPlane(vector.newVector3(0, 0, 0), 20, 20, materials.newDebugTexture(16, 16, 40)))
+-- local texturedPlane = scene:addObject(meowEngine.newTexturedPlane(vector.newVector3(0, 0, 0), 20, 20, materials.newDebugTexture(16, 16, 40)))
 
 ---------------------------------------------- Wave ----------------------------------------------
 
 -- local xCells, yCells = 4, 1
--- local plane = polyCatEngine.newPlane(vector.newVector3(0, 0, 0), 40, 15, xCells, yCells, materials.newSolidMaterial(0xFFFFFF))
+-- local plane = meowEngine.newPlane(vector.newVector3(0, 0, 0), 40, 15, xCells, yCells, materials.newSolidMaterial(0xFFFFFF))
 -- plane.nextWave = function(mesh)
 -- 	for xCell = 1, xCells do
 -- 		for yCell = 1, yCells do
@@ -211,7 +211,7 @@ end
 -- 		end
 -- 	end
 
--- 	local mesh = polyCatEngine.newMesh(vector3Position, vertices, triangles,materials.newSolidMaterial(0xFF8888))
+-- 	local mesh = meowEngine.newMesh(vector3Position, vertices, triangles,materials.newSolidMaterial(0xFF8888))
 	
 -- 	local function getRandomSignedInt(from, to)
 -- 		return (math.random(0, 1) == 1 and 1 or -1) * (math.random(from, to))
@@ -345,7 +345,7 @@ OCGLView.onTouch = function(e)
 	local targetVector = vector.newVector3(scene.camera.position[1], scene.camera.position[2], scene.camera.position[3] + 1000)
 	OCGL.rotateVectorRelativeToXAxis(targetVector, scene.camera.rotation[1])
 	OCGL.rotateVectorRelativeToYAxis(targetVector, scene.camera.rotation[2])
-	local objectIndex, triangleIndex, distance = polyCatEngine.sceneRaycast(scene, scene.camera.position, targetVector)
+	local objectIndex, triangleIndex, distance = meowEngine.sceneRaycast(scene, scene.camera.position, targetVector)
 
 	if objectIndex then
 		local triangle = scene.objects[objectIndex].triangles[triangleIndex]
@@ -374,7 +374,13 @@ end
 mainWindow:addChild(OCGLView)
 
 mainWindow.infoTextBox = mainWindow:addTextBox(2, 4, 45, mainWindow.height, nil, 0xEEEEEE, {}, 1, 0, 0)
-mainWindow:addLabel(2, mainWindow.height, mainWindow.width - 1, 1, 0x444444, "Authors: Timofeef Igor (vk.com/id7799889), Trifonov Gleb (vk.com/id88323331), Verevkin Yakov (vk.com/id60991376)")
+
+local lines = {
+	"Copyright © 2016-2017 - Developed by ECS Inc.",
+	"Timofeef Igor (vk.com/id7799889), Trifonov Gleb (vk.com/id88323331), Verevkin Yakov (vk.com/id60991376), Bogushevich Victoria (vk.com/id171497518)",
+	"All rights reserved",
+}
+mainWindow:addTextBox(1, buffer.screen.height - #lines + 1, buffer.screen.width, #lines, nil, 0x3C3C3C, lines, 1):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
 
 local elementY = 2
 mainWindow.toolbar = mainWindow:addContainer(mainWindow.width - 31, 1, 32, mainWindow.height)
@@ -425,7 +431,7 @@ mainWindow.toolbar.lightSelectComboBox = mainWindow.toolbar:addComboBox(2, eleme
 
 mainWindow.toolbar.addLightButton = mainWindow.toolbar:addButton(2, elementY, elementWidth, 1, 0x2D2D2D, 0xAAAAAA, 0x555555, 0xAAAAAA, "Add light"); elementY = elementY + 2
 mainWindow.toolbar.addLightButton.onTouch = function()
-	scene:addLight(polyCatEngine.newLight(vector.newVector3(0, 10, 0), mainWindow.toolbar.lightIntensitySlider.value / 100,  mainWindow.toolbar.lightEmissionSlider.value))
+	scene:addLight(meowEngine.newLight(vector.newVector3(0, 10, 0), mainWindow.toolbar.lightIntensitySlider.value / 100,  mainWindow.toolbar.lightEmissionSlider.value))
 	calculateLightComboBox()
 end
 
