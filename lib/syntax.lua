@@ -43,7 +43,7 @@ syntax.patterns = {
 	{ "end[%s%;]", "loops", 0, 1 },
 	{ "for ", "loops", 0, 1 },
 	{ " in ", "loops", 0, 1 },
-	{ "repeat ", "loops", 0, 1 },
+	{ "repeat$", "loops", 0, 1 },
 	{ "if ", "loops", 0, 1 },
 	{ "then", "loops", 0, 0 },
 	{ "until ", "loops", 0, 1 },
