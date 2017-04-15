@@ -134,7 +134,7 @@ function colorlib.convert24BitTo8Bit(hex24)
   end
     
   return encodedIndex - 1
-  -- return searchClosestColor(1, #palette, hex24)
+  -- return searchClosestColor(1, #colorlib.palette, hex24)
 end
 
 function colorlib.convert8BitTo24Bit(hex8)
