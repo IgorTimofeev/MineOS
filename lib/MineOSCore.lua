@@ -675,6 +675,7 @@ function MineOSCore.safeLaunch(path, ...)
 		drawErrorWindow(finalPath, "1.0", finalLine, finalTraceback)
 	end
 
+	component.screen.setPrecise(false)
 	component.gpu.setResolution(oldResolutionWidth, oldResolutionHeight)
 	buffer.start()
 
