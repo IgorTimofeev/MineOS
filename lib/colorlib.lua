@@ -1,5 +1,7 @@
-local colorlib = {}
+
+local bit32 = require("bit32")
 local serialization = require("serialization")
+local colorlib = {}
 
 local function isNan(x)
   return x~=x
