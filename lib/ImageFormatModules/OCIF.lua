@@ -165,7 +165,7 @@ function module.load(path)
 			error("Failed to load OCIF image: wrong signature (\"" .. tostring(readedSignature) .. "\")")
 		end
 	else
-		error("Failed to open file for reading: " .. tostring(reason))
+		error("Failed to open file \"" .. tostring(path) .. "\" for reading: " .. tostring(reason))
 	end
 end
 
