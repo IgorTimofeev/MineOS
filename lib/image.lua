@@ -66,7 +66,16 @@ function image.draw(x, y, picture)
 					gpu.setForeground(foreground)
 					for yPos in pairs(groupedPicture[alpha][symbol][background][foreground]) do
 						for xPos = 1, #groupedPicture[alpha][symbol][background][foreground][yPos] do
-							gpu.set(x + groupedPicture[alpha][symbol][background][foreground][yPos][xPos] - 1, y + yPos - 1, symbol)
+							if alpha > 0x0 then
+								local oldBackground = background
+								local _, _, gpuGetBackground = gpu.get(x, y)
+								
+								gpu.setBackground(colorlib.alphaBlend(gpuGetBackground, background, alpha / 0xFF))
+								gpu.set(x + groupedPicture[alpha][symbol][background][foreground][yPos][xPos] - 1, y + yPos - 1, symbol)
+								gpu.setBackground(oldBackground)
+							else
+								gpu.set(x + groupedPicture[alpha][symbol][background][foreground][yPos][xPos] - 1, y + yPos - 1, symbol)
+							end
 						end
 					end
 				end
@@ -340,13 +349,15 @@ image.loadFormatModule("/lib/ImageFormatModules/OCIF.lua", ".pic")
 
 -- recursiveConversion("/MineOS/", "/ConvertedPics/")
 
--- local function clearAndDraw(picture)
--- 	gpu.setBackground(0x2D2D2D)
--- 	gpu.setForeground(0xFFFFFF)
--- 	gpu.fill(1, 1, 160, 50, " ")
+local function clearAndDraw(picture)
+	gpu.setBackground(0x2D2D2D)
+	gpu.setForeground(0xFFFFFF)
+	gpu.fill(1, 1, 160, 50, " ")
 
--- 	image.draw(1, 1, picture)
--- end
+	image.draw(1, 1, picture)
+end
+
+clearAndDraw(image.load("/MineOS/System/OS/Icons/Love.pic"))
 
 -- local w, h = 2, 2
 -- local picture = image.create(w, h, 0xFF0000, 0xFFFFFF, 0x0, "Q")

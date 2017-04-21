@@ -291,6 +291,13 @@
     version=1.05,
   },
   {
+    name="lib/ImageFormatModules/OCIF.lua",
+    url="IgorTimofeev/OpenComputers/master/lib/ImageFormatModules/OCIF.lua",
+    type="Library",
+    preLoadFile=true,
+    version=1.00,
+  },
+  {
     name="lib/image.lua",
     url="IgorTimofeev/OpenComputers/master/lib/image.lua",
     type="Library",
