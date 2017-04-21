@@ -103,19 +103,19 @@ end
 
 -----------------------------------------------------------------------------------------------------------------------
 
-local palette = {}
+colorlib.palette = {}
 
-for r = 0, 5 do
-  for g = 0, 7 do
-    for b = 0, 4 do
-      table.insert(palette, colorlib.RGBtoHEX(r * 0x33, g * 0x24, math.floor(b / 4 * 0xFF + 0.5))) --СИНИЙ, ПРЕКРАТИ
+for r = 0, 0xFF, 0xFF / 5 do
+  for g = 0, 0xFF, 0xFF / 7 do
+    for b = 0, 0xFF, 0xFF / 4 do
+      table.insert(colorlib.palette, colorlib.RGBtoHEX(r, math.floor(g + 0.5), math.floor(b + 0.5))) --один красный нормальный
     end
   end
 end
 for gr = 1, 0x10 do --Градации серого
-  table.insert(palette, gr * 0xF0F0F) --Нет смысла использовать colorlib.RGBtoHEX()
+  table.insert(colorlib.palette, gr * 0xF0F0F) --Нет смысла использовать colorlib.RGBtoHEX()
 end
-table.sort(palette)
+table.sort(colorlib.palette)
 
 function colorlib.convert24BitTo8Bit(hex24)
   local encodedIndex = nil
@@ -124,7 +124,7 @@ function colorlib.convert24BitTo8Bit(hex24)
 
   local red24, green24, blue24 = colorlib.HEXtoRGB(hex24)
 
-  for colorIndex, colorPalette in ipairs(palette) do
+  for colorIndex, colorPalette in ipairs(colorlib.palette) do
     local redPalette, greenPalette, bluePalette = colorlib.HEXtoRGB(colorPalette)
 
     colorMatchFactor = (redPalette-red24)^2 + (greenPalette-green24)^2 + (bluePalette-blue24)^2
@@ -136,11 +136,11 @@ function colorlib.convert24BitTo8Bit(hex24)
   end
     
   return encodedIndex - 1
-  -- return searchClosestColor(1, #palette, hex24)
+  -- return searchClosestColor(1, #colorlib.palette, hex24)
 end
 
 function colorlib.convert8BitTo24Bit(hex8)
-  return palette[hex8 + 1]
+  return colorlib.palette[hex8 + 1]
 end
 
 function colorlib.debugColorCompression(color)
