@@ -57,29 +57,49 @@ end
 
 function image.draw(x, y, picture)
 	local groupedPicture = image.group(picture)
+	local _, _, currentBackground, currentForeground, gpuGetBackground, imageX, imageY
 
 	for alpha in pairs(groupedPicture) do
 		for symbol in pairs(groupedPicture[alpha]) do
-			for background in pairs(groupedPicture[alpha][symbol]) do
-				gpu.setBackground(background)
-				for foreground in pairs(groupedPicture[alpha][symbol][background]) do
-					gpu.setForeground(foreground)
-					for yPos in pairs(groupedPicture[alpha][symbol][background][foreground]) do
-						for xPos = 1, #groupedPicture[alpha][symbol][background][foreground][yPos] do
-							if alpha > 0x0 then
-								local oldBackground = background
-								local _, _, gpuGetBackground = gpu.get(x, y)
-								
-								gpu.setBackground(colorlib.alphaBlend(gpuGetBackground, background, alpha / 0xFF))
-								gpu.set(x + groupedPicture[alpha][symbol][background][foreground][yPos][xPos] - 1, y + yPos - 1, symbol)
-								gpu.setBackground(oldBackground)
-							else
-								gpu.set(x + groupedPicture[alpha][symbol][background][foreground][yPos][xPos] - 1, y + yPos - 1, symbol)
+			
+			if not (symbol == " " and alpha == 0xFF) then
+				for background in pairs(groupedPicture[alpha][symbol]) do
+					
+					if background ~= currentBackground then
+						currentBackground = background
+						gpu.setBackground(background)
+					end
+
+					for foreground in pairs(groupedPicture[alpha][symbol][background]) do
+						
+						if foreground ~= currentForeground and symbol ~= " " then
+							currentForeground = foreground
+							gpu.setForeground(foreground)
+						end
+						
+						for yPos in pairs(groupedPicture[alpha][symbol][background][foreground]) do
+							for xPos = 1, #groupedPicture[alpha][symbol][background][foreground][yPos] do
+								imageX, imageY = x + groupedPicture[alpha][symbol][background][foreground][yPos][xPos] - 1, y + yPos - 1
+
+								if alpha > 0x0 then
+									_, _, gpuGetBackground = gpu.get(imageX, imageY)
+									
+									if alpha == 0xFF then
+										currentBackground = gpuGetBackground
+										gpu.setBackground(currentBackground)
+									else
+										currentBackground = colorlib.alphaBlend(gpuGetBackground, background, alpha / 0xFF)
+										gpu.setBackground(currentBackground)
+									end
+								end
+
+								gpu.set(imageX, imageY, symbol)
 							end
 						end
 					end
 				end
 			end
+
 		end
 	end
 end
@@ -357,7 +377,7 @@ image.loadFormatModule("/lib/ImageFormatModules/OCIF.lua", ".pic")
 -- 	image.draw(1, 1, picture)
 -- end
 
--- clearAndDraw(image.load("/MineOS/System/OS/Icons/Love.pic"))
+-- clearAndDraw(image.load("/MineOS/Pictures/Ciri.pic"))
 
 -- local w, h = 2, 2
 -- local picture = image.create(w, h, 0xFF0000, 0xFFFFFF, 0x0, "Q")
