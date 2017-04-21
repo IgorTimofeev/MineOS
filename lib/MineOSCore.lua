@@ -353,12 +353,12 @@ function MineOSCore.analyzeIconFormat(iconObject)
 		elseif iconObject.format == ".cfg" or iconObject.format == ".config" then
 			iconObject.iconImage.image = MineOSCore.icons.config
 			iconObject.launch = function()
-				MineOSCore.safeLaunch(MineOSCore.paths.applications .. "/MineCode IDE.app/MineCode IDE.lua", "open", iconObject.path)
+				MineOSCore.safeLaunch(MineOSCore.paths.applications .. "/MineCode IDE.app/Main.lua", "open", iconObject.path)
 			end
 		elseif iconObject.format == ".txt" or iconObject.format == ".rtf" then
 			iconObject.iconImage.image = MineOSCore.icons.text
 			iconObject.launch = function()
-				MineOSCore.safeLaunch(MineOSCore.paths.applications .. "/MineCode IDE.app/MineCode IDE.lua", "open", iconObject.path)
+				MineOSCore.safeLaunch(MineOSCore.paths.applications .. "/MineCode IDE.app/Main.lua", "open", iconObject.path)
 			end
 		elseif iconObject.format == ".lua" then
 		 	iconObject.iconImage.image = MineOSCore.icons.lua
@@ -371,7 +371,7 @@ function MineOSCore.analyzeIconFormat(iconObject)
 		elseif iconObject.format == ".pic" or iconObject.format == ".png" then
 			iconObject.iconImage.image = MineOSCore.icons.image
 			iconObject.launch = function()
-				MineOSCore.safeLaunch(MineOSCore.paths.applications .. "Photoshop.app/Photoshop.lua", "open", iconObject.path)
+				MineOSCore.safeLaunch(MineOSCore.paths.applications .. "Photoshop.app/Main.lua", "open", iconObject.path)
 			end
 		elseif iconObject.format == ".pkg" then
 			iconObject.iconImage.image = MineOSCore.icons.archive
@@ -381,7 +381,7 @@ function MineOSCore.analyzeIconFormat(iconObject)
 		elseif iconObject.format == ".3dm" then
 			iconObject.iconImage.image = MineOSCore.icons.model3D
 			iconObject.launch = function()
-				MineOSCore.safeLaunch(MineOSCore.paths.applications .. "3DPrint.app/3DPrint.lua", "open", iconObject.path)
+				MineOSCore.safeLaunch(MineOSCore.paths.applications .. "3DPrint.app/Main.lua", "open", iconObject.path)
 			end
 		elseif not fs.exists(iconObject.path) then
 			iconObject.iconImage.image = MineOSCore.icons.fileNotExists
@@ -796,7 +796,7 @@ function MineOSCore.iconRightClick(icon, eventData)
 	end
 
 	if action == MineOSCore.localization.contextMenuEdit then
-		MineOSCore.safeLaunch(MineOSCore.paths.applications .. "/MineCode IDE.app/MineCode IDE.lua", "open", icon.path)
+		MineOSCore.safeLaunch(MineOSCore.paths.applications .. "/MineCode IDE.app/Main.lua", "open", icon.path)
 		computer.pushSignal("MineOSCore", "updateFileList")
 	elseif action == "Свойства" then
 		MineOSCore.showPropertiesWindow(eventData[3], eventData[4], 40, icon)
