@@ -27,8 +27,8 @@ local turretConfig = {
 local yTurrets = 2
 local spaceBetweenTurretsHorizontal = 2
 local spaceBetweenTurretsVertical = 1
-local turretHeight = turretImage.height + 12
-local turretWidth = turretImage.width + 8
+local turretHeight = turretImage[2] + 12
+local turretWidth = turretImage[1] + 8
 local countOfTurretsCanBeShowByWidth = math.floor(buffer.screen.width / (turretWidth + spaceBetweenTurretsHorizontal))
 local xTurrets = math.floor(buffer.screen.width / 2 - (countOfTurretsCanBeShowByWidth * (turretWidth + spaceBetweenTurretsHorizontal)) / 2 ) + math.floor(spaceBetweenTurretsHorizontal / 2)
 
@@ -107,7 +107,7 @@ local function drawTurrets(y)
 		buffer.text(x + 2, yPos, yellowColor, ecs.stringLimit("end", "Турель " .. turrets[turret].proxy.address, turretWidth - 4))
 		yPos = yPos + 2
 		buffer.image(x + 4, yPos, turretImage)
-		yPos = yPos + turretImage.height + 1
+		yPos = yPos + turretImage[2] + 1
 		buffer.text(x + 2, yPos, yellowColor, "Энергия:")
 		yPos = yPos + 1
 		progressBar(x + 1, yPos, turretWidth - 2, 3, 0x000000, yellowColor, turrets[turret].energyPercent)

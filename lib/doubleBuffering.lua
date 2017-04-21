@@ -244,14 +244,14 @@ end
 
 -- Отрисовка изображения
 function buffer.image(x, y, picture)
-	local xPos, xEnd, bufferIndexStepOnReachOfImageWidth = x, x + picture.width - 1, (buffer.screen.width - picture.width) * 3
+	local xPos, xEnd, bufferIndexStepOnReachOfImageWidth = x, x + picture[1] - 1, (buffer.screen.width - picture[1]) * 3
 	local bufferIndex = buffer.getBufferIndexByCoordinates(x, y)
 	local imageIndexPlus2, imageIndexPlus3
 
-	for imageIndex = 1, #picture, 4 do
+	for imageIndex = 3, #picture, 4 do
 		if xPos >= buffer.drawLimit.x and y >= buffer.drawLimit.y and xPos <= buffer.drawLimit.x2 and y <= buffer.drawLimit.y2 then
 			imageIndexPlus2, imageIndexPlus3 = imageIndex + 2, imageIndex + 3
-			-- Ебля с прозрачностью
+			
 			if picture[imageIndexPlus2] == 0x00 then
 				buffer.screen.new[bufferIndex] = picture[imageIndex]
 				buffer.screen.new[bufferIndex + 1] = picture[imageIndex + 1]
@@ -265,11 +265,11 @@ function buffer.image(x, y, picture)
 				buffer.screen.new[bufferIndex + 2] = picture[imageIndexPlus3]
 			end
 		end
-
-		--Корректируем координаты и индексы
-		xPos = xPos + 1
-		bufferIndex = bufferIndex + 3
-		if xPos > xEnd then xPos, y, bufferIndex = x, y + 1, bufferIndex + bufferIndexStepOnReachOfImageWidth end
+		
+		xPos, bufferIndex = xPos + 1, bufferIndex + 3
+		if xPos > xEnd then
+			xPos, y, bufferIndex = x, y + 1, bufferIndex + bufferIndexStepOnReachOfImageWidth
+		end
 	end
 end
 
@@ -468,6 +468,31 @@ function buffer.semiPixelLine(x1, y1, x2, y2, color)
 	end
 end
 
+function buffer.semiPixelCircle(xCenter, yCenter, radius, color, filled)
+	local function insertPoints(x, y)
+		buffer.semiPixelSet(xCenter + x, yCenter + y, color)
+		buffer.semiPixelSet(xCenter + x, yCenter - y, color)
+		buffer.semiPixelSet(xCenter - x, yCenter + y, color)
+		buffer.semiPixelSet(xCenter - x, yCenter - y, color)
+	end
+
+	local x, y = 0, radius
+	local delta = 3 - 2 * radius;
+	while (x < y) do
+		insertPoints(x, y);
+		insertPoints(y, x);
+		if (delta < 0) then
+			delta = delta + (4 * x + 6)
+		else 
+			delta = delta + (4 * (x - y) + 10)
+			y = y - 1
+		end
+		x = x + 1
+	end
+
+	if x == y then insertPoints(x, y) end
+end
+
 ----------------------------------------- Bezier curve -----------------------------------------
 
 local function getPointTimedPosition(firstPoint, secondPoint, time)
@@ -619,6 +644,10 @@ end
 ------------------------------------------------------------------------------------------------------
 
 buffer.start()
+
+-- buffer.clear(0x0)
+-- buffer.semiPixelCircle(80, 50, 20, 0xFFDB40, true)
+-- buffer.draw()
 
 -- buffer.clear(0xFF8888)
 -- buffer.bezierCurve({

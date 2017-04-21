@@ -309,14 +309,22 @@ function MineOSCore.analyzeIconFormat(iconObject)
 	if iconObject.isDirectory then
 		if iconObject.format == ".app" then
 			if MineOSCore.showApplicationIcons then
-				iconObject.iconImage.image = image.load(iconObject.path .. "/Resources/Icon.pic")
+				if fs.exists(iconObject.path .. "/Resources/Icon.pic") then
+					iconObject.iconImage.image = image.load(iconObject.path .. "/Resources/Icon.pic")
+				else
+					iconObject.iconImage.image = MineOSCore.icons.fileNotExists
+				end
 			else
 				iconObject.iconImage.image = MineOSCore.icons.application
 			end
 
 			iconObject.launch = function()
 				ecs.applicationHelp(iconObject.path)
-				MineOSCore.safeLaunch(iconObject.path .. "/" .. MineOSCore.hideFileFormat(MineOSCore.getFileName(iconObject.path)) .. ".lua")
+				if fs.exists(iconObject.path .. "/Main.lua") then
+					MineOSCore.safeLaunch(iconObject.path .. "/Main.lua")
+				else
+					MineOSCore.safeLaunch(iconObject.path .. "/" .. MineOSCore.hideFileFormat(MineOSCore.getFileName(iconObject.path)) .. ".lua")
+				end
 			end
 		else
 			iconObject.iconImage.image = MineOSCore.icons.folder
@@ -411,7 +419,7 @@ function MineOSCore.createIconObject(x, y, path, textColor, showFileFormat)
 	iconObject.isShortcut = false
 	iconObject.isSelected = false
 
-	iconObject.iconImage = iconObject:addImage(3, 1, {width = 8, height = 4})
+	iconObject.iconImage = iconObject:addImage(3, 1, {8, 4})
 	iconObject.textLabel = iconObject:addLabel(1, MineOSCore.iconHeight, MineOSCore.iconWidth, 1, textColor, MineOSCore.getFileName(iconObject.path)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
 	
 	local oldDraw = iconObject.draw

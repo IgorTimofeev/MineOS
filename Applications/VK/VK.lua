@@ -307,7 +307,7 @@ local function loginGUI(startUsername, startPassword)
 	local background = 0x002440
 	local buttonColor = 0x666DFF
 	local textColor = 0x262626
-	local username, password = startUsername or "E-Mail или номер телефона", startPassword or "Пароль"
+	local username, password = startUsername, startPassword
 
 	local textFieldWidth = 50
 	local textFieldHeight = 3
@@ -316,11 +316,11 @@ local function loginGUI(startUsername, startPassword)
 	local obj = {}
 	obj.username = {x, y, x + textFieldWidth - 1, y + 2}; y = y + textFieldHeight + 1
 	obj.password = {x, y, x + textFieldWidth - 1, y + 2}; y = y + textFieldHeight + 1
-	obj.button = GUI.button(x, y, textFieldWidth, textFieldHeight, buttonColor, 0xFFFFFF, 0xFFFFFF, buttonColor, "Войти")
+	obj.button = GUI.button(x, y, textFieldWidth, textFieldHeight, buttonColor, 0xEEEEEE, 0xEEEEEE, buttonColor, "Войти")
 
 	local VKLogoImage = image.load(VKLogoImagePath)
-	local loginTextBox = GUI.inputTextBox(x, obj.username[2], textFieldWidth, 3, 0xFFFFFF, 0x444444, 0xFFFFFF, 0x262626, username, "E-Mail", false)
-	local passwordTextBox = GUI.inputTextBox(x, obj.password[2], textFieldWidth, 3, 0xFFFFFF, 0x444444, 0xFFFFFF, 0x262626, password, "Password", false, "*")
+	local loginTextBox = GUI.inputTextBox(x, obj.username[2], textFieldWidth, 3, 0xEEEEEE, 0x777777, 0xEEEEEE, 0x262626, username, "E-Mail", false)
+	local passwordTextBox = GUI.inputTextBox(x, obj.password[2], textFieldWidth, 3, 0xEEEEEE, 0x777777, 0xEEEEEE, 0x262626, password, "Password", false, "*")
 
 	local function draw()
 		buffer.clear(colors.loginGUIBackground)
@@ -1087,7 +1087,7 @@ buffer.start()
 --Хуярим настррррроечки
 loadSettings()
 --Активируем форму логина
-local loginData = loginGUI(settings.username or "E-Mail", settings.password or "password")
+local loginData = loginGUI(settings.username, settings.password)
 access_token = loginData.access_token
 --Получаем персональные данные
 _, personalInfo = usersInformationRequest(loginData.user_id)

@@ -297,7 +297,7 @@ function ecs.getOSApplication(application)
 		fs.makeDirectory(application.name .. ".app/Resources")
 		
 		--Загружаем основной исполняемый файл и иконку
-		ecs.getFromGitHub(application.url, application.name .. ".app/" .. fs.name(application.name .. ".lua"))
+		ecs.getFromGitHub(application.url, application.name .. ".app/Main.lua")
 		ecs.getFromGitHub(application.icon, application.name .. ".app/Resources/Icon.pic")
 
 		--Если есть ресурсы, то загружаем ресурсы

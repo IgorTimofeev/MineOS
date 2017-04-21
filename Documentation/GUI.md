@@ -982,7 +982,7 @@ local x, y = math.floor(window.width / 2 - elementWidth / 2), math.floor(window.
 
 -- Загружаем и добавляем изображение логотипа "нашей компании"
 local logotype = image.load("/MineOS/Applications/VK.app/Resources/VKLogo.pic")
-window:addImage(math.floor(window.width / 2 - logotype.width / 2) - 2, y - logotype.height - 1, logotype); y = y + 2
+window:addImage(math.floor(window.width / 2 - image.getWidth(logotype) / 2) - 2, y - image.getHeight(logotype) - 1, logotype); y = y + 2
 
 -- Создаем поле для ввода адреса почты
 local emailTextBox = window:addInputTextBox(x, y, elementWidth, elementHeight, 0xEEEEEE, 0x777777, 0xEEEEEE, 0x2D2D2D, nil, "E-mail", false, nil, nil, nil)

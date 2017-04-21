@@ -45,23 +45,56 @@ end
 
 -------------------------------------------------- Bit32 extensions --------------------------------------------------
 
+-- Merge two numbers into one (0xAABB, 0xCCDD -> 0xAABBCCDD)
+function bit32.merge(number2, number1)
+	local cutter = math.ceil(math.log(number1 + 1, 256)) * 8
+	while number2 > 0 do
+		number1, number2, cutter = bit32.bor(bit32.lshift(bit32.band(number2, 0xFF), cutter), number1), bit32.rshift(number2, 8), cutter + 8
+	end
+
+	return number1
+end
+
+-- Split number to it's own bytes (0xAABBCC -> {0xAA, 0xBB, 0xCC})
 function bit32.numberToByteArray(number)
 	local byteArray = {}
-	while number > 0 do
+
+	repeat
 		table.insert(byteArray, 1, bit32.band(number, 0xFF))
 		number = bit32.rshift(number, 8)
-	end
+	until number <= 0
+
 	return byteArray
 end
 
-function bit32.byteArrayToNumber(byteArray)
-	local number = byteArray[1]
-	for i = 2, #byteArray do
-		number = bit32.bor(byteArray[i], bit32.lshift(number, 8))
+-- Split nubmer to it's own bytes with specified count of bytes (0xAABB, 5 -> {0x00, 0x00, 0x00, 0xAA, 0xBB})
+function bit32.numberToFixedSizeByteArray(number, size)
+	local byteArray, counter = {}, 0
+	
+	repeat
+		table.insert(byteArray, 1, bit32.band(number, 0xFF))
+		number = bit32.rshift(number, 8)
+		counter = counter + 1
+	until number <= 0
+
+	for i = 1, size - counter do
+		table.insert(byteArray, 1, 0x0)
 	end
-	return number
+
+	return byteArray
 end
 
+-- Create number from it's own bytes ({0xAA, 0xBB, 0xCC} -> 0xAABBCC)
+function bit32.byteArrayToNumber(byteArray)
+	local result = byteArray[1]
+	for i = 2, #byteArray do
+		result = bit32.bor(bit32.lshift(result, 8), byteArray[i])
+	end
+
+	return result
+end
+
+-- Create byte from it's bits ({1, 0, 1, 0, 1, 0, 1, 1} -> 0xAB)
 function bit32.bitArrayToByte(bitArray)
 	local number = 0
 	for i = 1, #bitArray do
@@ -69,9 +102,6 @@ function bit32.bitArrayToByte(bitArray)
 	end
 	return number
 end
-
-bit32.byteArrayFromNumber = bit32.numberToByteArray
-bit32.numberFromByteArray = bit32.byteArrayToNumber
 
 -------------------------------------------------- Math extensions --------------------------------------------------
 
@@ -85,7 +115,7 @@ end
 
 function math.roundToDecimalPlaces(num, decimalPlaces)
 	local mult = 10 ^ (decimalPlaces or 0)
-	return math.round(num * mult) / mult
+	return math.floor(num * mult + 0.5) / mult
 end
 
 function math.getDigitCount(num)
@@ -259,12 +289,30 @@ function table.binarySearch(t, requestedValue)
 end
 
 function table.size(t)
-	local size = #t
-	if size == 0 then for key in pairs(t) do size = size + 1 end end
+	local size = 0
+	for key in pairs(t) do size = size + 1 end
 	return size
 end
 
 -------------------------------------------------- String extensions --------------------------------------------------
+
+function string.readUnicodeChar(file)
+	local byteArray = {string.byte(file:read(1))}
+
+	local nullBitPosition = 0
+	for i = 1, 7 do
+		if bit32.band(bit32.rshift(byteArray[1], 8 - i), 0x1) == 0x0 then
+			nullBitPosition = i
+			break
+		end
+	end
+
+	for i = 1, nullBitPosition - 2 do
+		table.insert(byteArray, string.byte(file:read(1)))
+	end
+
+	return string.char(table.unpack(byteArray))
+end
 
 function string.canonicalPath(str)
 	return string.gsub("/" .. str, "%/+", "/")
@@ -307,21 +355,24 @@ function string.unicodeFind(str, pattern, init, plain)
 	end
 end
 
-function string.limit(text, size, fromLeft, noDots)
+function string.limit(text, limit, mode, noDots)
 	local length = unicode.len(text)
-	if length <= size then return text end
+	if length <= limit then return text end
 
-	if fromLeft then
+	if mode == "left" then
 		if noDots then
-			return unicode.sub(text, length - size + 1, -1)
+			return unicode.sub(text, length - limit + 1, -1)
 		else
-			return "…" .. unicode.sub(text, length - size + 2, -1)
+			return "…" .. unicode.sub(text, length - limit + 2, -1)
 		end
+	elseif mode == "center" then
+		local partSize = math.ceil(limit / 2)
+		return unicode.sub(text, 1, partSize) .. "…" .. unicode.sub(text, -partSize + 1, -1)
 	else
 		if noDots then
-			return unicode.sub(text, 1, size)
+			return unicode.sub(text, 1, limit)
 		else
-			return unicode.sub(text, 1, size - 1) .. "…"
+			return unicode.sub(text, 1, limit - 1) .. "…"
 		end
 	end
 end

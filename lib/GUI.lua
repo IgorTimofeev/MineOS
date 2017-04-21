@@ -592,7 +592,7 @@ local function drawImage(object)
 end
 
 function GUI.image(x, y, image)
-	local object = GUI.object(x, y, image.width, image.height)
+	local object = GUI.object(x, y, image[1], image[2])
 	object.image = image
 	object.draw = drawImage
 	return object
@@ -626,7 +626,7 @@ local function drawDropDownMenuElement(object, itemIndex, isPressed)
 		end
 
 		-- Основной текст
-		buffer.text(object.x + object.sidesOffset, yText, textColor, string.limit(object.items[itemIndex].text, object.width - object.sidesOffset * 2, false))
+		buffer.text(object.x + object.sidesOffset, yText, textColor, string.limit(object.items[itemIndex].text, object.width - object.sidesOffset * 2, "right"))
 		-- Шурткатикус
 		if object.items[itemIndex].shortcut then
 			buffer.text(object.x + object.width - unicode.len(object.items[itemIndex].shortcut) - object.sidesOffset, yText, textColor, object.items[itemIndex].shortcut)
@@ -665,8 +665,8 @@ local function showDropDownMenu(object)
 				if 
 					e[3] >= object.x and
 					e[3] <= object.x + object.width - 1 and
-					e[4] >= object.y + (itemIndex - 1) * object.elementHeight - 1 and
-					e[4] <= object.y + (itemIndex - 1) * object.elementHeight - 1 + object.elementHeight
+					e[4] >= object.y + itemIndex * object.elementHeight - object.elementHeight and
+					e[4] <= object.y + itemIndex * object.elementHeight - 1
 				then
 					objectFound = true
 					if not object.items[itemIndex].disabled and object.items[itemIndex].type == GUI.dropDownMenuElementTypes.default then
@@ -1131,7 +1131,19 @@ local function drawInputTextBox(inputTextBox)
 	local background = inputTextBox.isFocused and inputTextBox.colors.focused.background or inputTextBox.colors.default.background
 	local foreground = inputTextBox.isFocused and inputTextBox.colors.focused.text or inputTextBox.colors.default.text
 	local y = math.floor(inputTextBox.y + inputTextBox.height / 2)
-	local text = inputTextBox.isFocused and (inputTextBox.eraseTextOnFocus and "" or inputTextBox.text) or (inputTextBox.text ~= "" and inputTextBox.text or inputTextBox.placeholderText or "")
+	
+	local text = inputTextBox.text or ""
+	if inputTextBox.isFocused then
+		if inputTextBox.eraseTextOnFocus then
+			text = ""
+		else
+			text = inputTextBox.text or ""
+		end
+	else
+		if inputTextBox.text == "" or not inputTextBox.text then
+			text = inputTextBox.placeholderText or ""			
+		end
+	end
 
 	if background then
 		buffer.square(inputTextBox.x, inputTextBox.y, inputTextBox.width, inputTextBox.height, background, foreground, " ")
@@ -1333,7 +1345,7 @@ end
 local function drawComboBox(object)
 	buffer.square(object.x, object.y, object.width, object.height, object.colors.default.background)
 	local x, y, limit, arrowSize = object.x + 1, math.floor(object.y + object.height / 2), object.width - 5, object.height
-	buffer.text(x, y, object.colors.default.text, string.limit(object.items[object.currentItem].text, limit, false))
+	buffer.text(x, y, object.colors.default.text, string.limit(object.items[object.currentItem].text, limit, "right"))
 	GUI.button(object.x + object.width - arrowSize * 2 + 1, object.y, arrowSize * 2 - 1, arrowSize, object.colors.arrow.background, object.colors.arrow.text, 0x0, 0x0, object.state and "▲" or "▼"):draw()
 end
 

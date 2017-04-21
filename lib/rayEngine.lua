@@ -40,12 +40,12 @@ end
 
 -- Позиция оружия на экране и всех его вспомогательных текстур
 function rayEngine.calculateWeaponPosition()
-	rayEngine.currentWeapon.xWeapon = buffer.screen.width - rayEngine.currentWeapon.weaponTexture.width + 1
-	rayEngine.currentWeapon.yWeapon = buffer.screen.height - rayEngine.currentWeapon.weaponTexture.height + 1
+	rayEngine.currentWeapon.xWeapon = buffer.screen.width - rayEngine.currentWeapon.weaponTexture[1] + 1
+	rayEngine.currentWeapon.yWeapon = buffer.screen.height - rayEngine.currentWeapon.weaponTexture[2] + 1
 	rayEngine.currentWeapon.xFire = rayEngine.currentWeapon.xWeapon + rayEngine.weapons[rayEngine.currentWeapon.ID].firePosition.x
 	rayEngine.currentWeapon.yFire = rayEngine.currentWeapon.yWeapon + rayEngine.weapons[rayEngine.currentWeapon.ID].firePosition.y
-	rayEngine.currentWeapon.xCrosshair = math.floor(buffer.screen.width / 2 - rayEngine.currentWeapon.crosshairTexture.width / 2)
-	rayEngine.currentWeapon.yCrosshair = math.floor(buffer.screen.height / 2 - rayEngine.currentWeapon.crosshairTexture.height / 2)
+	rayEngine.currentWeapon.xCrosshair = math.floor(buffer.screen.width / 2 - rayEngine.currentWeapon.crosshairTexture[1] / 2)
+	rayEngine.currentWeapon.yCrosshair = math.floor(buffer.screen.height / 2 - rayEngine.currentWeapon.crosshairTexture[2] / 2)
 end
 
 -- Грубо говоря, это расстояние от камеры до виртуального экрана, на котором рисуется весь наш мир, влияет на размер блоков
@@ -286,7 +286,7 @@ end
 
 function rayEngine.intro()
 	local logo = image.fromString("17060000FF 0000FF 0000FF 0000FF 007EFF▄007EFF▄007EFF▄007EFF▀007EFF▀007EFF▀007EFF▀007EFF▀007EFF▀007EFF▀007EFF▄007EFF▄007EFF▄0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 007EFF▄007EFF▀007EFF▀0000FF 0000FF 0000FF 0000FF 0053FF▄0053FF▀0053FF▀0053FF▀0053FF▄0000FF 0000FF 0000FF 0000FF 007EFF▀007EFF▀007EFF▄0000FF 0000FF 0000FF 007EFF▀007EFF▄0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 530000 0000FF 0078FF▀0000FF 537800▀0078FF▀0078FF▀0078FF▀0078FF▀0078FF▀0078FF▀7E7800▀0078FF▀0000FF 0078FF▀0000FF 0000FF 007EFF▀007EFF▀007EFF▄007EFF▄007EFF▄0000FF 0000FF 0053FF▀0053FF▀0053FF▀0000FF 0000FF 007EFF▄007EFF▄007EFF▄007EFF▀007EFF▀0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 007EFF▀007EFF▀007EFF▀007EFF▀007EFF▀007EFF▀007EFF▀0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 007EFFP007EFFo007EFFw007EFFe007EFFr007EFFe007EFFd0000FF 007EFFb007EFFy0000FF 007EFFR007EFFa007EFFy007EFFE007EFFn007EFFg007EFFi007EFFn007EFFe007EFF™0000FF 0000FF ")
-	local x, y = math.floor(buffer.screen.width / 2 - logo.width / 2), math.floor(buffer.screen.height / 2 - logo.height / 2)
+	local x, y = math.floor(buffer.screen.width / 2 - logo[1] / 2), math.floor(buffer.screen.height / 2 - logo[2] / 2)
 	local function draw(transparency)
 		buffer.clear(0xF0F0F0);
 		buffer.image(x, y, logo)

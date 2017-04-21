@@ -1,20 +1,24 @@
 
 ------------------------------------------------ Информешйн, епта --------------------------------------------------------------
 
-local photoshopVersion = "Photoshop v6.5"
+local photoshopVersion = "Photoshop v6.6"
 
 local copyright = [[
 	
-	Photoshop v6.5 для OpenComputers
+	Photoshop v6.6 для OpenComputers
 
 	Автор: ECS
 		Контактый адрес: https://vk.com/id7799889
 	Соавтор: Pornogion
 		Контактый адрес: https://vk.com/id88323331
 
+	Что нового в версии 6.6:
+		- Программа адаптирована под работу с нумерически индексированным форматом изображения
+		- Добавлена поддержка кодирования формата OCIF6
+
 	Что нового в версии 6.5:
 		- Палитра заменена на более быструю и стильную, работающую на тройном буфере
-		- Добавлена возможность загрузки изображения из строки, созданной методом сохранения OCIFString
+		- Добавлена возможность загрузки изображения из строки, созданной методом сохранения StringImage
 
 	Что нового в версии 6.4:
 		- Добавлена возможность выбора цвета сетки прозрачности во вкладке "Вид"
@@ -84,8 +88,8 @@ local args = {...}
 
 --Массив главного изображения
 local masterPixels = {
-	width = 0,
-	height = 0,
+	0,
+	0,
 }
 
 --Базовая цветовая схема программы
@@ -123,8 +127,8 @@ sizes.sizeOfPixelData = 4
 local function reCalculateImageSizes(x, y)
 	sizes.xStartOfImage = x or 9
 	sizes.yStartOfImage = y or 6
-	sizes.xEndOfImage = sizes.xStartOfImage + masterPixels.width - 1
-	sizes.yEndOfImage = sizes.yStartOfImage + masterPixels.height - 1
+	sizes.xEndOfImage = sizes.xStartOfImage + image.getWidth(masterPixels) - 1
+	sizes.yEndOfImage = sizes.yStartOfImage + image.getHeight(masterPixels) - 1
 end
 reCalculateImageSizes()
 
@@ -182,25 +186,25 @@ local function drawTransparentZone(x, y)
 
 		local stro4ka1 = ""
 		local stro4ka2 = ""
-		if masterPixels.width % 2 == 0 then
-			stro4ka1 = string.rep("▒ ", math.floor(masterPixels.width / 2))
+		if image.getWidth(masterPixels) % 2 == 0 then
+			stro4ka1 = string.rep("▒ ", math.floor(image.getWidth(masterPixels) / 2))
 			stro4ka2 = stro4ka1
 		else
-			stro4ka1 = string.rep("▒ ", math.floor(masterPixels.width / 2))
+			stro4ka1 = string.rep("▒ ", math.floor(image.getWidth(masterPixels) / 2))
 			stro4ka2 = stro4ka1 .. "▒"
 		end
 
-		for i = 1, masterPixels.height do
+		for i = 1, image.getHeight(masterPixels) do
 			if i % 2 == 0 then
-				buffer.square(x, y + i, masterPixels.width, 1, colors.transparencyWhite, colors.transparencyGray, " ")
+				buffer.square(x, y + i, image.getWidth(masterPixels), 1, colors.transparencyWhite, colors.transparencyGray, " ")
 				buffer.text(x + 1, y + i, colors.transparencyGray, stro4ka1)
 			else
-				buffer.square(x, y + i, masterPixels.width, 1, colors.transparencyWhite, colors.transparencyGray)
+				buffer.square(x, y + i, image.getWidth(masterPixels), 1, colors.transparencyWhite, colors.transparencyGray)
 				buffer.text(x, y + i, colors.transparencyGray, stro4ka2)
 			end
 		end
 	else
-		buffer.square(x, y, masterPixels.width, masterPixels.height, colors.transparencyWhite, 0x000000, " ")
+		buffer.square(x, y, image.getWidth(masterPixels), image.getHeight(masterPixels), colors.transparencyWhite, 0x000000, " ")
 	end
 end
 
@@ -251,7 +255,6 @@ local function drawTopMenu()
 	obj.menu:addItem("PS", ecs.colors.blue)
 	obj.menu:addItem(localization.file)
 	obj.menu:addItem(localization.image)
-	obj.menu:addItem(localization.edit)
 	obj.menu:addItem(localization.view)
 	obj.menu:addItem(localization.hotkeys)
 	obj.menu:addItem(localization.about)
@@ -261,34 +264,12 @@ end
 --Функция, создающая пустой массив изображения на основе указанных ранее длины и ширины
 local function createEmptyMasterPixels()
 	--Создаем пустой мастерпиксельс
-	for j = 1, masterPixels.height * masterPixels.width do
+	for j = 1, image.getHeight(masterPixels) * image.getWidth(masterPixels) do
 		table.insert(masterPixels, 0x010101)
 		table.insert(masterPixels, 0x010101)
 		table.insert(masterPixels, 0xFF)
 		table.insert(masterPixels, " ")
 	end
-end
-
---Формула конвертации итератора массива в абсолютные координаты пикселя изображения
-local function convertIteratorToCoords(iterator)
-	--Приводим итератор к корректному виду (1 = 1, 5 = 2, 9 = 3, 13 = 4, 17 = 5, ...)
-	iterator = (iterator + sizes.sizeOfPixelData - 1) / sizes.sizeOfPixelData
-	--Получаем остаток от деления итератора на ширину изображения
-	local ostatok = iterator % masterPixels.width
-	--Если остаток равен 0, то х равен ширине изображения, а если нет, то х равен остатку
-	local x = (ostatok == 0) and masterPixels.width or ostatok
-	--А теперь как два пальца получаем координату по Y
-	local y = math.ceil(iterator / masterPixels.width)
-	--Очищаем остаток из оперативки
-	ostatok = nil
-	--Возвращаем координаты
-	return x, y
-end
-
---Формула конвертации абсолютных координат пикселя изображения в итератор для массива
-local function convertCoordsToIterator(x, y)
-	--Конвертируем координаты в итератор
-	return (masterPixels.width * (y - 1) + x) * sizes.sizeOfPixelData - sizes.sizeOfPixelData + 1
 end
 
 --Мини-консолька для отладки, сообщающая снизу, че происходит ваще
@@ -456,18 +437,18 @@ local function stroke(x, y, width, height, color, applyToMasterPixels)
 	if applyToMasterPixels then
 		local iterator
 		for i = x, x + width - 1 do
-			iterator = convertCoordsToIterator(i, y)
+			iterator = image.getImageIndexByCoordinates(i, y, image.getWidth(masterPixels))
 			masterPixels[iterator] = color; masterPixels[iterator + 1] = 0x0; masterPixels[iterator + 2] = 0x0; masterPixels[iterator + 3] = " "
 
-			iterator = convertCoordsToIterator(i, y + height - 1)
+			iterator = image.getImageIndexByCoordinates(i, y + height - 1, image.getWidth(masterPixels))
 			masterPixels[iterator] = color; masterPixels[iterator + 1] = 0x0; masterPixels[iterator + 2] = 0x0; masterPixels[iterator + 3] = " "
 		end
 
 		for i = y, y + height - 1 do
-			iterator = convertCoordsToIterator(x, i)
+			iterator = image.getImageIndexByCoordinates(x, i, image.getWidth(masterPixels))
 			masterPixels[iterator] = color; masterPixels[iterator + 1] = 0x0; masterPixels[iterator + 2] = 0x0; masterPixels[iterator + 3] = " "
 
-			iterator = convertCoordsToIterator(x + width - 1, i)
+			iterator = image.getImageIndexByCoordinates(x + width - 1, i, image.getWidth(masterPixels))
 			masterPixels[iterator] = color; masterPixels[iterator + 1] = 0x0; masterPixels[iterator + 2] = 0x0; masterPixels[iterator + 3] = " "
 		end
 	else
@@ -602,7 +583,7 @@ local function drawImage()
 	drawTransparentZone(xPos, yPos)
 
 	--Перебираем массив мастерпиксельса
-	for i = 1, #masterPixels, 4 do
+	for i = 3, #masterPixels, 4 do
 		--Рисуем пиксель, если у него прозрачность не абсолютная, ЛИБО имеется какой-то символ
 		--Т.е. даже если прозрачность и охуела, но символ есть, то рисуем его
 		if masterPixels[i + 2] ~= 0xFF or masterPixels[i + 3] ~= " " then
@@ -611,12 +592,12 @@ local function drawImage()
 		--Всякие расчеты координат
 		xPixel = xPixel + 1
 		xPos = xPos + 1
-		if xPixel > masterPixels.width then xPixel = 1; xPos = sizes.xStartOfImage; yPixel = yPixel + 1; yPos = yPos + 1 end
+		if xPixel > image.getWidth(masterPixels) then xPixel = 1; xPos = sizes.xStartOfImage; yPixel = yPixel + 1; yPos = yPos + 1 end
 	end
 
-	if masterPixels.width > 0 and masterPixels.height > 0 then
-		local text = localization.size  .. ": " .. masterPixels.width .. "x" .. masterPixels.height .. " px"
-		xPos = math.floor(sizes.xStartOfImage + masterPixels.width / 2 - unicode.len(text) / 2)
+	if image.getWidth(masterPixels) > 0 and image.getHeight(masterPixels) > 0 then
+		local text = localization.size  .. ": " .. image.getWidth(masterPixels) .. "x" .. image.getHeight(masterPixels) .. " px"
+		xPos = math.floor(sizes.xStartOfImage + image.getWidth(masterPixels) / 2 - unicode.len(text) / 2)
 		buffer.text(xPos, sizes.yEndOfImage + 1, 0xFFFFFF, text)
 	end
 
@@ -659,13 +640,13 @@ local function move(direction)
 			if selection.y < 1 then selection.y = 1 end
 		elseif direction == "down" then
 			selection.y = selection.y + 1
-			if selection.y + selection.height - 1 > masterPixels.height then selection.y = selection.y - 1 end
+			if selection.y + selection.height - 1 > image.getHeight(masterPixels) then selection.y = selection.y - 1 end
 		elseif direction == "left" then
 			selection.x = selection.x - 1
 			if selection.x < 1 then selection.x = 1 end
 		elseif direction == "right" then
 			selection.x = selection.x + 1
-			if selection.x + selection.width - 1 > masterPixels.width then selection.x = selection.x - 1 end
+			if selection.x + selection.width - 1 > image.getWidth(masterPixels) then selection.x = selection.x - 1 end
 		end
 	else
 		local howMuchUpDown = 2
@@ -777,8 +758,8 @@ local function saveTextToPixels(x, y, text)
 	local iterator
 	x = x - 1
 	for i = 1, sText do
-		if x + i > masterPixels.width then break end
-		iterator = convertCoordsToIterator(x + i, y)
+		if x + i > image.getWidth(masterPixels) then break end
+		iterator = image.getImageIndexByCoordinates(x + i, y, image.getWidth(masterPixels))
 		setPixel(iterator, masterPixels[iterator], currentBackground, masterPixels[iterator + 2], unicode.sub(text, i, i))
 	end
 end
@@ -788,12 +769,12 @@ local function tryToFitImageOnCenterOfScreen()
 	reCalculateImageSizes()
 
 	local x, y = sizes.xStartOfImage, sizes.yStartOfImage
-	if masterPixels.width < sizes.widthOfDrawingArea then
-		x = math.floor(sizes.xStartOfDrawingArea + sizes.widthOfDrawingArea / 2 - masterPixels.width / 2) - 1
+	if image.getWidth(masterPixels) < sizes.widthOfDrawingArea then
+		x = math.floor(sizes.xStartOfDrawingArea + sizes.widthOfDrawingArea / 2 - image.getWidth(masterPixels) / 2) - 1
 	end
 
-	if masterPixels.height < sizes.heightOfDrawingArea then
-		y = math.floor(sizes.yStartOfDrawingArea + sizes.heightOfDrawingArea / 2 - masterPixels.height / 2)
+	if image.getHeight(masterPixels) < sizes.heightOfDrawingArea then
+		y = math.floor(sizes.yStartOfDrawingArea + sizes.heightOfDrawingArea / 2 - image.getHeight(masterPixels) / 2)
 	end
 
 	reCalculateImageSizes(x, y)
@@ -808,7 +789,7 @@ local function new()
 	data[2] = tonumber(data[2]) or 19
 
 	masterPixels = {}
-	masterPixels.width, masterPixels.height = data[1], data[2]
+	masterPixels[1], masterPixels[2] = data[1], data[2]
 	createEmptyMasterPixels()
 	tryToFitImageOnCenterOfScreen()
 	drawAll()
@@ -818,7 +799,7 @@ end
 --Есть инфа, что выжирает стек, но Луа, вроде, не особо ругается, так что заебок все
 local function fill(x, y, startColor, fillColor)
 	local function doFill(xStart, yStart)
-		local iterator = convertCoordsToIterator(xStart, yStart)
+		local iterator = image.getImageIndexByCoordinates(xStart, yStart, image.getWidth(masterPixels))
 
 		--Завершаем функцию, если цвет в массиве не такой, какой мы заливаем
 		if masterPixels[iterator] ~= startColor or masterPixels[iterator] == fillColor then return end
@@ -850,10 +831,10 @@ local function brush(x, y, background, foreground, alpha, symbol)
 	for cyka = 1, currentBrushSize do
 		for pidor = 1, currentBrushSize do
 			--Если этот кусочек входит в границы рисовабельной зоны, то
-			if x >= 1 and x <= masterPixels.width and y >= 1 and y <= masterPixels.height then
+			if x >= 1 and x <= image.getWidth(masterPixels) and y >= 1 and y <= image.getHeight(masterPixels) then
 				
 				--Считаем итератор для кусочка кисти
-				newIterator = convertCoordsToIterator(x, y)
+				newIterator = image.getImageIndexByCoordinates(x, y, image.getWidth(masterPixels))
 
 				--Если прозрачности кисти ВАЩЕ НЕТ, то просто рисуем как обычненько все
 				if alpha == 0x00 then
@@ -893,11 +874,21 @@ local function brush(x, y, background, foreground, alpha, symbol)
 	end
 end
 
---Диалоговое окно обрезки и расширения картинки
-local function cropOrExpand(text)
+--Функция-обрезчик картинки
+local function crop()
+	if selection then
+		masterPixels = image.crop(masterPixels, selection.x, selection.y, selection.width, selection.height)
+		selection = nil
+		tryToFitImageOnCenterOfScreen()
+		drawAll()
+	end
+end
+
+--Функция-расширитель картинки
+local function expand()
 	local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true,
 		{"EmptyLine"},
-		{"CenterText", 0x262626, text},
+		{"CenterText", 0x262626, localization.expand},
 		{"EmptyLine"},
 		{"Input", 0x262626, 0x880000, localization.countOfPixels},
 		{"Selector", 0x262626, 0x880000, localization.fromBottom, localization.fromTop, localization.fromLeft, localization.fromRight},
@@ -908,41 +899,16 @@ local function cropOrExpand(text)
 	if data[3] == "OK" then
 		local countOfPixels = tonumber(data[1])
 		if countOfPixels then
-			local direction = ""
-			if data[2] == localization.fromBottom then
-				direction = "fromBottom"
-			elseif data[2] == localization.fromTop then
-				direction = "fromTop"
-			elseif data[2] == localization.fromLeft then
-				direction = "fromLeft"
-			else
-				direction = "fromRight"
-			end
-
-			return direction, countOfPixels
-		else
-			ecs.error("Введено некорректное количество пикселей")
-		end 
-	end
-end
-
---Функция-обрезчик картинки
-local function crop()
-	local direction, countOfPixels = cropOrExpand(localization.crop)
-	if direction then
-		masterPixels = image.crop(masterPixels, direction, countOfPixels)
-		reCalculateImageSizes(sizes.xStartOfImage, sizes.yStartOfImage)
-		drawAll()
-	end
-end
-
---Функция-расширитель картинки
-local function expand()
-	local direction, countOfPixels = cropOrExpand(localization.crop)
-	if direction then
-		masterPixels = image.expand(masterPixels, direction, countOfPixels, 0x010101, 0x010101, 0xFF, " ")
-		reCalculateImageSizes(sizes.xStartOfImage, sizes.yStartOfImage)
-		drawAll()
+			masterPixels = image.expand(masterPixels,
+				data[2] == localization.fromTop and countOfPixels or 0,
+				data[2] == localization.fromBottom and countOfPixels or 0,
+				data[2] == localization.fromLeft and countOfPixels or 0,
+				data[2] == localization.fromRight and countOfPixels or 0,
+				0x010101, 0x010101, 0xFF, " "
+			)
+			reCalculateImageSizes(sizes.xStartOfImage, sizes.yStartOfImage)
+			drawAll()
+		end
 	end
 end
 
@@ -962,7 +928,7 @@ end
 local function fillSelection(background, foreground, alpha, symbol)
 	for j = selection.y, selection.y + selection.height - 1 do
 		for i = selection.x, selection.x + selection.width - 1 do
-			local iterator = convertCoordsToIterator(i, j)
+			local iterator = image.getImageIndexByCoordinates(i, j, image.getWidth(masterPixels))
 			masterPixels[iterator] = background
 			masterPixels[iterator + 1] = foreground
 			masterPixels[iterator + 2] = alpha
@@ -1015,7 +981,7 @@ while true do
 				
 				--Получаем координаты в изображении и итератор
 				local x, y = e[3] - sizes.xStartOfImage + 1, e[4] - sizes.yStartOfImage + 1
-				local iterator = convertCoordsToIterator(x, y)
+				local iterator = image.getImageIndexByCoordinates(x, y, image.getWidth(masterPixels))
 				
 				--Все для инструментов мультиточечного рисования
 				if instruments[currentInstrument] == "M" or instruments[currentInstrument] == "S" then
@@ -1072,7 +1038,7 @@ while true do
 					buffer.draw()
 				--Текст
 				elseif instruments[currentInstrument] == "T" then
-					local limit = masterPixels.width - x + 1
+					local limit = image.getWidth(masterPixels) - x + 1
 					local text = inputText(e[3], e[4], limit)
 					saveTextToPixels(x, y, text)
 					drawImage()
@@ -1146,9 +1112,16 @@ while true do
 				if object.text == localization.file then
 					action = GUI.contextMenu(object.x, object.y + 1, {localization.new, false, "^N"}, {localization.open, false, "^O"}, {localization.createFromString}, "-", {localization.save, (savePath == nil), "^S"}, {localization.saveAs}, "-", {localization.exit}):show()
 				elseif object.text == localization.image then
-					action = GUI.contextMenu(object.x, object.y + 1, {localization.crop}, {localization.expand}, "-", {localization.rotateBy90}, {localization.rotateBy180}, "-", {localization.flipHorizontal}, {localization.flipVertical}):show()
-				elseif object.text == localization.edit then
-					action = GUI.contextMenu(object.x, object.y + 1, {localization.hueSaturation}, {localization.colorBalance}, {localization.photoFilter}, "-", {localization.invertColors}, {localization.blackWhite}, "-", {localization.gaussianBlur}):show()
+					action = GUI.contextMenu(object.x, object.y + 1,
+						-- {localization.crop},
+						{localization.expand},
+						-- "-",
+						-- {localization.rotateBy90},
+						-- {localization.rotateBy180},
+						"-",
+						{localization.flipHorizontal},
+						{localization.flipVertical}
+					):show()
 				elseif object.text == localization.view then
 					action = GUI.contextMenu(object.x, object.y + 1, {localization.transparencyPad}):show()
 				elseif object.text == localization.about then
@@ -1225,10 +1198,10 @@ while true do
 				elseif action == localization.expand then
 					expand()
 				elseif action == localization.flipVertical then
-					masterPixels = image.flipVertical(masterPixels)
+					masterPixels = image.flipVertically(masterPixels)
 					drawAll()
 				elseif action == localization.flipHorizontal then
-					masterPixels = image.flipHorizontal(masterPixels)
+					masterPixels = image.flipHorizontally(masterPixels)
 					drawAll()
 				elseif action == localization.invertColors then
 					masterPixels = image.invert(masterPixels)
@@ -1246,28 +1219,28 @@ while true do
 					new()
 					drawAll()
 				elseif action == localization.saveAs then
-					local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true, {"EmptyLine"}, {"CenterText", 0x262626, localization.saveAs}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, localization.path}, {"Selector", 0x262626, 0x880000, "OCIF4", "OCIF1", "OCIFString", "RAW"}, {"CenterText", 0x262626, "Рекомендуется использовать"}, {"CenterText", 0x262626, "метод кодирования OCIF4"}, {"EmptyLine"}, {"Button", {0xaaaaaa, 0xffffff, "OK"}, {0x888888, 0xffffff, localization.cancel}})
+					local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true,
+						{"EmptyLine"},
+						{"CenterText", 0x262626, localization.saveAs},
+						{"EmptyLine"},
+						{"Input", 0x262626, 0x880000, localization.path},
+						{"Selector", 0x262626, 0x880000, "OCIF6", "OCIF1", "StringImage"},
+						{"EmptyLine"},
+						{"Button", {0xaaaaaa, 0xffffff, "OK"}, {0x888888, 0xffffff, localization.cancel}}
+					)
+
 					if data[3] == "OK" then
-						data[1] = data[1] or "Untitled"
-						data[2] = data[2] or "OCIF4"
+						data[1] = data[1] or "Untitled.pic"
 						
-						if data[2] == "RAW" then
-							data[2] = 0
-						elseif data[2] == "OCIF1" then
-							data[2] = 1
-						elseif data[2] == "OCIF4" then
-							data[2] = 4
-						elseif data[2] == "OCIFString" then
-							data[2] = 6
+						local path = string.gsub(data[1], "%.pic$", "") .. ".pic"
+						if data[2] == "StringImage" then
+							local file = io.open(path, "w")
+							file:write(image.toString(masterPixels))
+							file:close()
 						else
-							data[2] = 4
+							savePath = path
+							image.save(path, masterPixels, data[2] == "OCIF6" and 6 or 1)
 						end
-
-						local filename = string.gsub(data[1], ".pic$", "") .. ".pic"
-						local encodingMethod = data[2]
-
-						image.save(filename, masterPixels, encodingMethod)
-						savePath = filename
 					end
 				elseif action == localization.save then
 					image.save(savePath, masterPixels)
@@ -1304,7 +1277,7 @@ while true do
 							tryToFitImageOnCenterOfScreen()
 							drawAll()
 						else
-							error("Невозможно создать изображение из этой строки!")
+							error("Failed to create image from string")
 						end
 					end
 				elseif action == localization.transparencyPad then
@@ -1334,10 +1307,21 @@ while true do
 			if ecs.clickedAtArea(e[3], e[4], sizes.xStartOfImage, sizes.yStartOfImage, sizes.xEndOfImage, sizes.yEndOfImage) then
 				
 				if instruments[currentInstrument] == "M" and selection then
-					local action = GUI.contextMenu(e[3], e[4], {localization.deselect}, {localization.crop, true}, "-", {localization.fill}, {localization.border}, "-", {localization.clear}):show()
+					local action = GUI.contextMenu(e[3], e[4],
+						{localization.deselect},
+						{localization.crop},
+						"-",
+						{localization.fill},
+						{localization.border},
+						"-",
+						{localization.clear}
+					):show()
+
 					if action == localization.deselect then
 						selection = nil
 						drawAll()
+					elseif action == localization.crop then
+						crop()
 					elseif action == localization.clear then
 						fillSelection(0x0, 0x0, 0xFF, " ")
 					elseif action == localization.fill then

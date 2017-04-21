@@ -79,7 +79,7 @@ local function drawSG()
 	buttons = {}
 
 	local toolbarHeight = 34
-	local x, y = math.floor((buffer.screen.width - toolbarWidth) / 2 - sg.width / 2), math.floor(buffer.screen.height / 2 - sg.height / 2)
+	local x, y = math.floor((buffer.screen.width - toolbarWidth) / 2 - sg[1] / 2), math.floor(buffer.screen.height / 2 - sg[2] / 2)
 	buffer.image(x, y, sg)
 	
 	local stargateState = stargate.stargateState()
@@ -92,7 +92,7 @@ local function drawSG()
 	end
 	drawChevrons(x, y)
 	local currentDockWidth, heightOfDock = 50, 4
-	drawDock(math.floor(x + sg.width / 2 - currentDockWidth / 2), y + sg.height + 1, currentDockWidth, heightOfDock )
+	drawDock(math.floor(x + sg[1] / 2 - currentDockWidth / 2), y + sg[2] + 1, currentDockWidth, heightOfDock )
 
 	local function centerText(y, color, text)
 		local x = math.floor(buffer.screen.width - toolbarWidth / 2 - unicode.len(text) / 2 + 1)
@@ -104,7 +104,7 @@ local function drawSG()
 	local buttonDisabledColor = 0xAAAAAA
 
 	local pizdos = math.floor(buffer.screen.height / 2)
-	x, y = x + sg.width + 5, pizdos
+	x, y = x + sg[1] + 5, pizdos
 	local width = buffer.screen.width - x - toolbarWidth
 	buffer.text(x, y, lineColor, string.rep("─", width))
 	x = x + width
@@ -272,9 +272,7 @@ while true do
 		if e[3] == "Closing" then stateOfChevrons(false) end
 		drawAll()
 	elseif e[1] == "sgChevronEngaged" then
-		if chevrons[e[3]] then
-			chevrons[e[3]].isActivated = true
-		end
+		chevrons[e[3]].isActivated = true
 		drawAll()
 	elseif e[1] == "sgMessageReceived" then
 		GUI.error(tostring(e[3]), {title = {color = 0xFFDB40, text = "Соообщение от Врат"}, backgroundColor = 0x262626})

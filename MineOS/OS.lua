@@ -431,7 +431,7 @@ end
 local function createWorkspace()
 	workspace = GUI.fullScreenWindow()
 	workspace.background = workspace:addPanel(1, 1, workspace.width, workspace.height, _G.OSSettings.backgroundColor or colors.background)
-	workspace.wallpaper = workspace:addImage(1, 1, {width = workspace.width, height = workspace.height})
+	workspace.wallpaper = workspace:addImage(1, 1, {workspace.width, workspace.height})
 
 	workspace.desktopCounters = workspace:addContainer(1, 1, 1, 1)
 

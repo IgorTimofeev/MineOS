@@ -25,7 +25,7 @@
 
 	new = "New",
 	open = "Open",
-	createFromString = "Create from OCIFString",
+	createFromString = "Create from StringImage",
 	save = "Save",
 	saveAs = "Save as",
 	exit = "Exit",

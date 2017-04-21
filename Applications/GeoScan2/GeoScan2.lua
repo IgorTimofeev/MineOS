@@ -115,7 +115,7 @@ local buttonWidth = panelWidth - 4
 window:addPanel(panelX, 1, panelWidth, buffer.screen.height, 0x444444)
 
 window.planetImage = window:addImage(buttonX, objectY, earthImage)
-objectY = objectY + window.planetImage.image.height + 1
+objectY = objectY + window.planetImage.image[2] + 1
 
 window:addLabel(buttonX, objectY, buttonWidth, 1, 0xFFFFFF, "GeoScan v2.0"):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
 objectY = objectY + 2

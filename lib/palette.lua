@@ -205,7 +205,6 @@ local function createWindow(x, y)
 		drawAll()
 	end
 	bigRainbow.onDrag = bigRainbow.onTouch
-
 	x = x + bigRainbow.width + 2
 	
 	miniRainbow = window:addImage(x, y, image.create(3, 25))

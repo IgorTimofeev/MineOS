@@ -299,9 +299,9 @@ end
 
 local function updateImageWindow()
 	clearMainZone()
-	local x, y = math.floor(sizes.x + sizes.width / 2 - updateImage.width / 2), math.floor(obj.main.y + obj.main.height / 2 - updateImage.height / 2 - 2)
+	local x, y = math.floor(sizes.x + sizes.width / 2 - updateImage[1] / 2), math.floor(obj.main.y + obj.main.height / 2 - updateImage[2] / 2 - 2)
 	buffer.image(x, y, updateImage)
-	return y + updateImage.height
+	return y + updateImage[2]
 end
 
 local function updateImageWindowWithText(text)

@@ -65,9 +65,9 @@ local function addShapePixel(x, y, color, xPrinterPixel, yPrinterPixel)
 		if config.frame.enabled then
 			local xModifyer1, xModifyer2, yModifyer1, yModifyer2 = 0, 0, 0, 0
 			if xPrinterPixel == 1 then xModifyer1 = config.frame.width end
-			if xPrinterPixel == mainImage.width then xModifyer2 = -config.frame.width end
+			if xPrinterPixel == image.getWidth(mainImage) then xModifyer2 = -config.frame.width end
 			if yPrinterPixel == 1 then yModifyer2 = -config.frame.width end
-			if yPrinterPixel == mainImage.height * 2 then yModifyer1 = config.frame.width end
+			if yPrinterPixel == image.getHeight(mainImage) * 2 then yModifyer1 = config.frame.width end
 			printers[currentPrinter].addShape(xPrinter + xModifyer1, yPrinter + yModifyer1, 15, xPrinter + pixelSize + xModifyer2, yPrinter + pixelSize + yModifyer2, 16, config.mainMaterial, false, color)
 		else
 			printers[currentPrinter].addShape(xPrinter, 15, yPrinter, xPrinter + pixelSize, 16, yPrinter + pixelSize, config.mainMaterial, false, color)
@@ -79,7 +79,7 @@ local function beginPrint()
 	buffer.clear(0x0000000, 50)
 
 	local xShape, yShape = 1, 1
-	local xShapeCount, yShapeCount = math.ceil(mainImage.width / shapeResolutionLimit), math.ceil(mainImage.height * 2 / shapeResolutionLimit)
+	local xShapeCount, yShapeCount = math.ceil(image.getWidth(mainImage) / shapeResolutionLimit), math.ceil(image.getHeight(mainImage) * 2 / shapeResolutionLimit)
 	local counter = 0
 	while true do
 		if printers[currentPrinter].status() == "idle" then
@@ -94,7 +94,7 @@ local function beginPrint()
 					local xImage = xShape * shapeResolutionLimit - shapeResolutionLimit + i
 					local yImage = yShape * (shapeResolutionLimit / 2) - (shapeResolutionLimit / 2) + j
 
-					if xImage <= mainImage.width and yImage <= mainImage.height then
+					if xImage <= image.getWidth(mainImage) and yImage <= image.getHeight(mainImage) then
 						local background, foreground, alpha, symbol = image.get(mainImage, xImage, yImage)
 						if alpha < 0xFF then
 							if symbol == " " then foreground = background end
@@ -113,7 +113,7 @@ local function beginPrint()
 			end
 
 			if config.frame.enabled and not config.floorMode then
-				local xFrame, yFrame = shapeResolutionLimit * (mainImage.width % shapeResolutionLimit), shapeResolutionLimit * ((mainImage.height * 2) % shapeResolutionLimit)
+				local xFrame, yFrame = shapeResolutionLimit * (image.getWidth(mainImage) % shapeResolutionLimit), shapeResolutionLimit * ((image.getHeight(mainImage) * 2) % shapeResolutionLimit)
 				xFrame = xShape == xShapeCount and (xFrame == 0 and 16 or xFrame) or 16
 				yFrame = yShape == yShapeCount and (yFrame == 0 and 0 or yFrame) or 0
 
@@ -145,9 +145,9 @@ end
 ----------------------------------------- Window-zaluped parasha -----------------------------------------
 
 local function getStatus()
-	local xBlocks, yBlocks = math.ceil(mainImage.width / shapeResolutionLimit), math.ceil(mainImage.height * 2 / shapeResolutionLimit)
+	local xBlocks, yBlocks = math.ceil(image.getWidth(mainImage) / shapeResolutionLimit), math.ceil(image.getHeight(mainImage) * 2 / shapeResolutionLimit)
 	window.shadeContainer.statusTextBox.lines = {
-		"Image size: " .. mainImage.width .. "x" .. mainImage.height .. " px",
+		"Image size: " .. image.getWidth(mainImage) .. "x" .. image.getHeight(mainImage) .. " px",
 		"Count of printers: " .. #printers,
 		"Print result: " .. xBlocks .. "x" .. yBlocks .. " blocks",
 		"Total count: " .. xBlocks * yBlocks .. " blocks"
@@ -170,13 +170,13 @@ end
 
 local function drawMainImageObject(object)
 	if mainImage then
-		local xImage = mainImage.width < buffer.screen.width and math.floor(buffer.screen.width / 2 - mainImage.width / 2) or 1
-		local yImage = mainImage.height < buffer.screen.height and math.floor(buffer.screen.height / 2 - mainImage.height / 2) or 1
+		local xImage = image.getWidth(mainImage) < buffer.screen.width and math.floor(buffer.screen.width / 2 - image.getWidth(mainImage) / 2) or 1
+		local yImage = image.getHeight(mainImage) < buffer.screen.height and math.floor(buffer.screen.height / 2 - image.getHeight(mainImage) / 2) or 1
 		buffer.image(xImage, yImage, mainImage)
-		GUI.windowShadow(xImage, yImage, mainImage.width, mainImage.height, 50, true)
+		GUI.windowShadow(xImage, yImage, image.getWidth(mainImage), image.getHeight(mainImage), 50, true)
 		if config.showGrid then
-			for x = xImage, xImage + mainImage.width - 1, shapeResolutionLimit do verticalLine(x, yImage, mainImage.height, 0.627) end
-			for y = yImage, yImage + mainImage.height - 1, shapeResolutionLimit / 2 do horizontalLine(xImage, y, mainImage.width, 0.627) end
+			for x = xImage, xImage + image.getWidth(mainImage) - 1, shapeResolutionLimit do verticalLine(x, yImage, image.getHeight(mainImage), 0.627) end
+			for y = yImage, yImage + image.getHeight(mainImage) - 1, shapeResolutionLimit / 2 do horizontalLine(xImage, y, image.getWidth(mainImage), 0.627) end
 			buffer.text(1, 1, 0xBBBBBB, "хуй")
 		end
 	end
