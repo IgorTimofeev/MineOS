@@ -349,15 +349,15 @@ image.loadFormatModule("/lib/ImageFormatModules/OCIF.lua", ".pic")
 
 -- recursiveConversion("/MineOS/", "/ConvertedPics/")
 
-local function clearAndDraw(picture)
-	gpu.setBackground(0x2D2D2D)
-	gpu.setForeground(0xFFFFFF)
-	gpu.fill(1, 1, 160, 50, " ")
+-- local function clearAndDraw(picture)
+-- 	gpu.setBackground(0x2D2D2D)
+-- 	gpu.setForeground(0xFFFFFF)
+-- 	gpu.fill(1, 1, 160, 50, " ")
 
-	image.draw(1, 1, picture)
-end
+-- 	image.draw(1, 1, picture)
+-- end
 
-clearAndDraw(image.load("/MineOS/System/OS/Icons/Love.pic"))
+-- clearAndDraw(image.load("/MineOS/System/OS/Icons/Love.pic"))
 
 -- local w, h = 2, 2
 -- local picture = image.create(w, h, 0xFF0000, 0xFFFFFF, 0x0, "Q")
