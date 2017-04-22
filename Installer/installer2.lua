@@ -48,10 +48,10 @@ end
 ------------------------------------------------------------------------------------------------------------------------------------
 
 local paths = {}
-paths.applicationList = "/MineOS/System/OS/Applications.txt"
+paths.applicationList = "/MineOS/System/OS/Applications.cfg"
 
 local urls = {}
-urls.applicationList = "https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/Applications.txt"
+urls.applicationList = "https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/Applications.cfg"
 urls.installer = "https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/Installer/"
 
 ------------------------------------------------------------------------------------------------------------------------------------
@@ -109,10 +109,10 @@ local function addButtonsToStage(stage)
 
 	local totalWidth = (stage > 1 and buttonWidth or 0) + (stage > 1 and stage < #stages and spaceBetween or 0) + (stage < #stages and buttonWidth or 0)
 	local x = math.floor(stageContainer.width / 2 - totalWidth / 2) + 1
-	local y = stageContainer.height - 2
+	local y = stageContainer.height - 3
 
 	if stage > 1 then
-		stageContainer.previousStageButton = stageContainer:addRoundedButton(x, y, buttonWidth, 1, 0xAAAAAA, 0xDDDDDD, 0x777777, 0xDDDDDD, "⇦")
+		stageContainer.previousStageButton = stageContainer:addRoundedButton(x, y, buttonWidth, 3, 0xAAAAAA, 0xDDDDDD, 0x777777, 0xDDDDDD, "⇦")
 		stageContainer.previousStageButton.colors.disabled.background = 0xCCCCCC
 		stageContainer.previousStageButton.colors.disabled.text = 0xDDDDDD
 		stageContainer.previousStageButton.onTouch = function()
@@ -191,7 +191,7 @@ end
 ------------------------------------------------------------------------------------------------------------------------------------
 
 stages[3] = function()
-	local data = web.request("https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/MineOS/License/" .. _G.OSSettings.language .. ".txt")
+	local data = web.request("https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/MineOS/License/" .. _G.OSSettings.language .. ".lang")
 	local lines = {}
 	for line in data:gmatch("[^\n]+") do
 		table.insert(lines, line)
@@ -261,7 +261,7 @@ stages[5] = function()
 	stageContainer.children[#stageContainer.children].localPosition.x = stageContainer.children[#stageContainer.children].localPosition.x + 3
 	
 	stageContainer:addLabel(1, 22, stageContainer.width, 1, 0x666666, localization.needToReboot):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
-	stageContainer:addAdaptiveRoundedButton(math.floor(stageContainer.width / 2 - (unicode.len(localization.reboot) + 4) / 2), stageContainer.height - 3, 2, 0, 0xAAAAAA, 0xDDDDDD, 0x777777, 0xDDDDDD, localization.reboot).onTouch = function()
+	stageContainer:addAdaptiveRoundedButton(math.floor(stageContainer.width / 2 - (unicode.len(localization.reboot) + 4) / 2), stageContainer.height - 4, 2, 0, 0xAAAAAA, 0xDDDDDD, 0x777777, 0xDDDDDD, localization.reboot).onTouch = function()
 		_G.OSSettings.screensaver = "Matrix"
 		_G.OSSettings.screensaverDelay = 20
 		_G.OSSettings.showHelpOnApplicationStart = stageContainer.showApplicationsHelpSwitch.state
@@ -272,7 +272,7 @@ stages[5] = function()
 		}
 
 		component.eeprom.set(web.request("https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/MineOS/EFI.lua"))
-		table.toFile("/MineOS/System/OS/Settings.cfg", _G.OSSettings)
+		table.toFile("/MineOS/System/OS/OSSettings.cfg", _G.OSSettings)
 		require("computer").shutdown(true)
 	end
 end

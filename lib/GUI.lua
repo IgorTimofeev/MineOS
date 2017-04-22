@@ -452,9 +452,9 @@ local function drawButton(object)
 		if object.buttonType == GUI.objectTypes.button then
 			buffer.square(object.x, object.y, object.width, object.height, buttonColor, textColor, " ")
 		elseif object.buttonType == GUI.objectTypes.roundedButton then
-			buffer.text(object.x + 1, object.y - 1, buttonColor, string.rep("▄", object.width - 2))
-			buffer.square(object.x, object.y, object.width, object.height, buttonColor, textColor, " ")
-			buffer.text(object.x + 1, object.y + object.height, buttonColor, string.rep("▀", object.width - 2))
+			buffer.text(object.x + 1, object.y, buttonColor, string.rep("▄", object.width - 2))
+			buffer.square(object.x, object.y + 1, object.width, object.height - 2, buttonColor, textColor, " ")
+			buffer.text(object.x + 1, object.y + object.height - 1, buttonColor, string.rep("▀", object.width - 2))
 		else
 			buffer.frame(object.x, object.y, object.width, object.height, buttonColor)
 		end
