@@ -246,7 +246,6 @@
 		path="/lib/MineOSCore.lua",
 		url="https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/lib/MineOSCore.lua",
 		type="Library",
-		preloadFile=true,
 		version=1.52,
 	},
 	{
