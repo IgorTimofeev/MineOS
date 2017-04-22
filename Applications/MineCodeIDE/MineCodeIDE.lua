@@ -613,7 +613,7 @@ local function removeWindowsLineEndings(text)
 end
 
 local function changeResolution(width, height)
-	buffer.changeResolution(width, height)
+	buffer.setResolution(width, height)
 	calculateSizes()
 	mainWindow:draw()
 	buffer.draw()
@@ -837,17 +837,17 @@ local function continue()
 		if coroutine.status(scriptCoroutine) == "dead" then
 			MineOSCore.waitForPressingAnyKey()
 			hideErrorContainer()
-			buffer.changeResolution(oldResolutionX, oldResolutionY); mainWindow:draw(); buffer.draw(true)
+			buffer.setResolution(oldResolutionX, oldResolutionY); mainWindow:draw(); buffer.draw(true)
 		else
 			-- Тест на пидора, мало ли у чувака в проге тоже есть yield
 			if _G.MineCodeIDEDebugInfo then
-				buffer.changeResolution(oldResolutionX, oldResolutionY); mainWindow:draw(); buffer.draw(true)
+				buffer.setResolution(oldResolutionX, oldResolutionY); mainWindow:draw(); buffer.draw(true)
 				gotoLine(_G.MineCodeIDEDebugInfo.line)
 				showBreakpointMessage(_G.MineCodeIDEDebugInfo.variables)
 			end
 		end
 	else
-		buffer.changeResolution(oldResolutionX, oldResolutionY); mainWindow:draw(); buffer.draw(true)
+		buffer.setResolution(oldResolutionX, oldResolutionY); mainWindow:draw(); buffer.draw(true)
 		showErrorContainer(debug.traceback(scriptCoroutine, coroutineResumeReason))
 	end
 end

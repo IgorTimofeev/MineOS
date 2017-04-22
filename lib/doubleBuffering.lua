@@ -75,7 +75,7 @@ function buffer.start()
 end
 
 -- Изменение разрешения экрана и пересоздание массивов буфера
-function buffer.changeResolution(width, height)
+function buffer.setResolution(width, height)
 	gpu.setResolution(width, height)
 	buffer.flush(width, height)
 end
