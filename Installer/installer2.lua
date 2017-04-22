@@ -78,13 +78,14 @@ applicationList = unserializeFile(paths.applicationList)
 print(" ")
 for i = 1, #applicationList do
 	if applicationList[i].preloadFile then
-		print("Downloading \"" .. fs.name(applicationList[i].path) .. "\"")
-		-- wget(applicationList[i].url, applicationList[i].path)
+		print("Downloading framework \"" .. fs.name(applicationList[i].path) .. "\"")
+		wget(applicationList[i].url, applicationList[i].path)
 	end
 end
 
 ------------------------------------------------------------------------------------------------------------------------------------
 
+print(" ")
 print("Loading installer images...")
 local image = require("image")
 
@@ -169,7 +170,7 @@ end
 stages[1] = function()
 	addButtonsToStage()
 	local y = addImageToStage(3, imageLanguages)
-	y = y + 2
+	y = y + 3
 	local comboBox = stageContainer:addComboBox(math.floor(stageContainer.width / 2 - 15), y, 30, 3, 0xFFFFFF, 0x555555, 0xAAAAAA, 0xDDDDDD)
 	loadLocalization("Russian")
 	comboBox:addItem("Russian").onTouch = function()
@@ -264,13 +265,9 @@ stages[4] = function()
 		mainWindow:draw()
 		buffer.draw()
 
-		-- web.downloadMineOSApplication(thingsToDownload[i])
-		os.sleep(0.05)
+		web.downloadMineOSApplication(thingsToDownload[i])
+		-- os.sleep(0.05)
 	end
-
-	mainWindow:draw()
-	buffer.draw()
-	component.eeprom.set(web.request("https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/MineOS/EFI.lua"))
 	
 	stages.load(5)
 end
@@ -297,6 +294,10 @@ stages[5] = function()
 		local file = io.open("/autorun.lua", "w")
 		file:write("dofile(\"/OS.lua\")")
 		file:close()
+
+		gpu.setBackground(0x0)
+		gpu.fill(1, 1, buffer.screen.width, buffer.screen.height, " ")
+		component.eeprom.set(web.request("https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/MineOS/EFI.lua"))
 
 		require("computer").shutdown(true)
 	end
