@@ -92,7 +92,10 @@ function web.downloadMineOSApplication(application)
 		end 
 
 		if application.createShortcut == "desktop" then
-			local file = io.open("/MineOS/Desktop/" .. fs.name(application.path) .. ".lnk")
+			local path = "/MineOS/Desktop/" .. fs.name(application.path) .. ".lnk"
+			fs.makeDirectory(fs.path(path))
+			
+			local file = io.open(path)
 			file:write("return \"" .. application.path .. ".app" .. "\"")
 			file:close()
 		end
