@@ -94,15 +94,32 @@ function web.downloadMineOSApplication(application)
 		if application.createShortcut == "desktop" then
 			local path = "/MineOS/Desktop/" .. fs.name(application.path) .. ".lnk"
 			fs.makeDirectory(fs.path(path))
-			
-			local file = io.open(path)
-			file:write("return \"" .. application.path .. ".app" .. "\"")
-			file:close()
+
+			local file, reason = io.open(path, "w")
+			if file then
+				file:write("return \"" .. application.path .. ".app" .. "\"")
+				file:close()
+			else
+				print(reason)
+			end
 		end
 	else
 		web.downloadFile(application.url, application.path)
 	end
 end
+
+----------------------------------------------------------------------------------------
+
+-- web.downloadMineOSApplication({
+-- 	path="/MineOS/Applications/3DTest",
+-- 	url="https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/Applications/3DTest/3DTest.lua",
+-- 	about="https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/Applications/3DTest/About/",
+-- 	type="Application",
+-- 	icon="https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/Applications/3DTest/Icon.pic",
+-- 	createShortcut="desktop",
+-- 	forceDownload=true,
+-- 	version=1.16,
+-- })
 
 ----------------------------------------- Cyka -----------------------------------------
 
