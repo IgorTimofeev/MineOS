@@ -50,12 +50,16 @@ end
 
 ------------------------------------------------------------------------------------------------------------------------------------
 
-local paths = {}
-paths.applicationList = "/MineOS/System/OS/Applications.cfg"
+local paths = {
+	applicationList = "/MineOS/System/OS/Applications.cfg",
+	OSSettings = "/MineOS/System/OS/OSSettings.cfg",
+}
 
-local urls = {}
-urls.applicationList = "https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/Applications.cfg"
-urls.installer = "https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/Installer/"
+local urls = {
+	applicationList = "https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/Applications.cfg",
+	installer = "https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/Installer/",
+	EFI = "https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/MineOS/EFI.lua",
+}
 
 ------------------------------------------------------------------------------------------------------------------------------------
 
@@ -289,7 +293,7 @@ stages[5] = function()
 			{path = "/MineOS/Applications/Photoshop.app"},
 		}
 
-		table.toFile("/MineOS/System/OS/OSSettings.cfg", _G.OSSettings)
+		table.toFile(paths.OSSettings, _G.OSSettings)
 
 		local file = io.open("/autorun.lua", "w")
 		file:write("dofile(\"/OS.lua\")")
@@ -297,7 +301,7 @@ stages[5] = function()
 
 		gpu.setBackground(0x0)
 		gpu.fill(1, 1, buffer.screen.width, buffer.screen.height, " ")
-		component.eeprom.set(web.request("https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/MineOS/EFI.lua"))
+		component.eeprom.set(web.request(urls.EFI))
 
 		require("computer").shutdown(true)
 	end
