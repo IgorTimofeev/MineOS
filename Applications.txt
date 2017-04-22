@@ -256,19 +256,19 @@
 		preloadFile=true,
 		version=1.07,
 	},
+	{
+		path="/lib/web.lua",
+		url="https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/lib/web.lua",
+		type="Library",
+		preloadFile=true,
+		version=1.00,
+	},
 	-- {
 	-- 	path="/lib/event.lua",
 	-- 	url="https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/lib/event.lua",
 	-- 	type="Library",
 	-- 	version=1.00,
 	-- },
-	{
-		path="/MineOS/System/OS/EFI.lua",
-		url="https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/MineOS/EFI.lua",
-		type="Library",
-		forceDownload=true,
-		version=1.0,
-	},
 	{
 		path="/lib/ECSAPI.lua",
 		url="https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/lib/ECSAPI.lua",
