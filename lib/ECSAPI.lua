@@ -1179,7 +1179,7 @@ function ecs.newFile(path)
 
 	if ecs.checkName(inputs[1], path) then
 		local MineOSCore = require("MineOSCore")
-		MineOSCore.safeLaunch(MineOSCore.paths.applications .. "/MineCode IDE.app/MineCode IDE.lua", "open", path .. inputs[1])
+		MineOSCore.safeLaunch(MineOSCore.paths.applications .. "/MineCode IDE.app/Main.lua", "open", path .. inputs[1])
 	end
 end
 
@@ -1195,9 +1195,8 @@ function ecs.newApplication(path, startName)
 		local name = path .. inputs[1] .. ".app/Resources/"
 		fs.makeDirectory(name)
 		fs.copy("MineOS/System/OS/Icons/SampleIcon.pic", name .. "Icon.pic")
-		local file = io.open(path .. inputs[1] .. ".app/" .. inputs[1] .. ".lua", "w")
-		file:write("local ecs = require(\"ECSAPI\")", "\n")
-		file:write("ecs.universalWindow(\"auto\", \"auto\", 30, 0xeeeeee, true, {\"EmptyLine\"}, {\"CenterText\", 0x262626, \"Hello world!\"}, {\"EmptyLine\"}, {\"Button\", {0x880000, 0xffffff, \"Hello!\"}})", "\n")
+		local file = io.open(path .. inputs[1] .. ".app/Main.lua", "w")
+		file:write("require('GUI').error('Hello world')")
 		file:close()
 	end
 end

@@ -16,6 +16,7 @@ local keyboard = require("keyboard")
 ---------------------------------------------- Core constants ------------------------------------------------------------------------
 
 local MineOSCore = {}
+local gpu = component.gpu
 
 MineOSCore.showApplicationIcons = true
 MineOSCore.iconWidth = 12
@@ -660,7 +661,7 @@ function MineOSCore.safeLaunch(path, ...)
 					end
 				end
 			end
-
+			
 			local runSuccess, runReason = xpcall(launchMethod, tracebackMethod)
 			if type(runReason) == "string" then
 				GUI.error(runReason, {title = {color = 0xFFDB40, text = "Warning"}})
@@ -684,7 +685,7 @@ function MineOSCore.safeLaunch(path, ...)
 	end
 
 	component.screen.setPrecise(false)
-	component.gpu.setResolution(oldResolutionWidth, oldResolutionHeight)
+	gpu.setResolution(oldResolutionWidth, oldResolutionHeight)
 	buffer.start()
 
 	return finalSuccess, finalPath, finalLine, finalTraceback
