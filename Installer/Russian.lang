@@ -1,8 +1,10 @@
 {
-	beginOsInstall = "Чтобы начать установку ОС, нажмите далее",
-	acceptLicense = "Принимаю",
-	osInstallation = "Установка ОС",
+	fullInstallation = "Полная установка",
+	mustHaveInstallation = "Установка основных приложений",
+	installWallpapers = "Загрузить обои",
+	showApplicationsHelp = "Помощь в приложениях",
 	downloading = "Загрузка",
-	needToRestart = "Система установлена, необходима перезагрузка",
-	restart = "Перезагрузить",
+	reboot = "Перезагрузить",
+	needToReboot = "Система установлена, наслаждайтесь",
+	terms = "Я принимаю условия соглашения",
 }

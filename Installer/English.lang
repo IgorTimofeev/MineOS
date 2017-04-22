@@ -1,8 +1,10 @@
 {
-	beginOsInstall = "Press next to begin installation", 
-	acceptLicense = "Accept", 
-	osInstallation = "Installing OS", 
-	downloading = "Downloading", 
-	needToRestart = "System has been installed, need to restart", 
-	restart = "Restart", 
+	fullInstallation = "Full installation",
+	mustHaveInstallation = "Install only must-have apps",
+	installWallpapers = "Download wallpapers",
+	showApplicationsHelp = "Show applications help",
+	downloading = "Downloading",
+	reboot = "Reboot",
+	needToReboot = "MineOS successfully installed, enjoy",
+	terms = "I accept terms of the agreement",
 }

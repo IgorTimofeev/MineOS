@@ -69,6 +69,7 @@ GUI.objectTypes = enum(
 	"label",
 	"button",
 	"framedButton",
+	"roundedButton",
 	"image",
 	"windowActionButtons",
 	"windowActionButton",
@@ -270,6 +271,16 @@ local function addFramedButtonObjectToContainer(container, ...)
 	return GUI.addChildToContainer(container, GUI.framedButton(...), GUI.objectTypes.button)
 end
 
+-- Add roundedButton object to container
+local function addRoundedButtonObjectToContainer(container, ...)
+	return GUI.addChildToContainer(container, GUI.roundedButton(...), GUI.objectTypes.button)
+end
+
+-- Add adaptive roundedButton object to container
+local function addAdaptiveRoundedButtonObjectToContainer(container, ...)
+	return GUI.addChildToContainer(container, GUI.adaptiveRoundedButton(...), GUI.objectTypes.button)
+end
+
 -- Add adaptive framedButton object to container
 local function addAdaptiveFramedButtonObjectToContainer(container, ...)
 	return GUI.addChildToContainer(container, GUI.adaptiveFramedButton(...), GUI.objectTypes.button)
@@ -407,6 +418,8 @@ function GUI.container(x, y, width, height)
 	container.addButton = addButtonObjectToContainer
 	container.addAdaptiveButton = addAdaptiveButtonObjectToContainer
 	container.addFramedButton = addFramedButtonObjectToContainer
+	container.addRoundedButton = addRoundedButtonObjectToContainer
+	container.addAdaptiveRoundedButton = addAdaptiveRoundedButtonObjectToContainer
 	container.addAdaptiveFramedButton = addAdaptiveFramedButtonObjectToContainer
 	container.addWindowActionButtons = addWindowActionButtonsObjectToContainer
 	container.addImage = addImageObjectToContainer
@@ -439,6 +452,10 @@ local function drawButton(object)
 	if buttonColor then
 		if object.buttonType == GUI.objectTypes.button then
 			buffer.square(object.x, object.y, object.width, object.height, buttonColor, textColor, " ")
+		elseif object.buttonType == GUI.objectTypes.roundedButton then
+			buffer.text(object.x + 1, object.y - 1, buttonColor, string.rep("▄", object.width - 2))
+			buffer.square(object.x, object.y, object.width, object.height, buttonColor, textColor, " ")
+			buffer.text(object.x + 1, object.y + object.height, buttonColor, string.rep("▀", object.width - 2))
 		else
 			buffer.frame(object.x, object.y, object.width, object.height, buttonColor)
 		end
@@ -498,22 +515,31 @@ local function createButtonObject(buttonType, x, y, width, height, buttonColor, 
 end
 
 -- Кнопка фиксированных размеров
-function GUI.button(x, y, width, height, buttonColor, textColor, buttonPressedColor, textPressedColor, text, disabledState)
-	return createButtonObject(GUI.objectTypes.button, x, y, width, height, buttonColor, textColor, buttonPressedColor, textPressedColor, text, disabledState)
+function GUI.button(...)
+	return createButtonObject(GUI.objectTypes.button, ...)
 end
 
 -- Кнопка, подстраивающаяся под размер текста
-function GUI.adaptiveButton(x, y, xOffset, yOffset, buttonColor, textColor, buttonPressedColor, textPressedColor, text, disabledState) 
-	return createButtonObject(GUI.objectTypes.button, x, y, unicode.len(text) + xOffset * 2, yOffset * 2 + 1, buttonColor, textColor, buttonPressedColor, textPressedColor, text, disabledState)
+function GUI.adaptiveButton(x, y, xOffset, yOffset, buttonColor, textColor, buttonPressedColor, textPressedColor, text, ...) 
+	return createButtonObject(GUI.objectTypes.button, x, y, unicode.len(text) + xOffset * 2, yOffset * 2 + 1, buttonColor, textColor, buttonPressedColor, textPressedColor, text, ...)
 end
 
 -- Кнопка в рамке
-function GUI.framedButton(x, y, width, height, buttonColor, textColor, buttonPressedColor, textPressedColor, text, disabledState)
-	return createButtonObject(GUI.objectTypes.framedButton, x, y, width, height, buttonColor, textColor, buttonPressedColor, textPressedColor, text, disabledState)
+function GUI.framedButton(...)
+	return createButtonObject(GUI.objectTypes.framedButton, ...)
 end
 
-function GUI.adaptiveFramedButton(x, y, xOffset, yOffset, buttonColor, textColor, buttonPressedColor, textPressedColor, text, disabledState)
-	return createButtonObject(GUI.objectTypes.framedButton, x, y, unicode.len(text) + xOffset * 2, yOffset * 2 + 1, buttonColor, textColor, buttonPressedColor, textPressedColor, text, disabledState)
+function GUI.adaptiveFramedButton(x, y, xOffset, yOffset, buttonColor, textColor, buttonPressedColor, textPressedColor, text, ...)
+	return createButtonObject(GUI.objectTypes.framedButton, x, y, unicode.len(text) + xOffset * 2, yOffset * 2 + 1, buttonColor, textColor, buttonPressedColor, textPressedColor, text, ...)
+end
+
+-- Rounded button
+function GUI.roundedButton(...)
+	return createButtonObject(GUI.objectTypes.roundedButton, ...)
+end
+
+function GUI.adaptiveRoundedButton(x, y, xOffset, yOffset, buttonColor, textColor, buttonPressedColor, textPressedColor, text, ...)
+	return createButtonObject(GUI.objectTypes.roundedButton, x, y, unicode.len(text) + xOffset * 2, yOffset * 2 + 1, buttonColor, textColor, buttonPressedColor, textPressedColor, text, ...)
 end
 
 ----------------------------------------- TabBar -----------------------------------------
