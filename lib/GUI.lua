@@ -7,7 +7,6 @@ local keyboard = require("keyboard")
 local buffer = require("doubleBuffering")
 local unicode = require("unicode")
 local event = require("event")
-local syntax = require("syntax")
 local fs = require("filesystem")
 
 ----------------------------------------- Core constants -----------------------------------------
@@ -1504,8 +1503,8 @@ local function codeViewDraw(codeView)
 	codeView.lineNumbersWidth = unicode.len(tostring(toLine)) + 2
 	codeView.codeAreaPosition = codeView.x + codeView.lineNumbersWidth
 	codeView.codeAreaWidth = codeView.width - codeView.lineNumbersWidth
-	buffer.square(codeView.x, codeView.y, codeView.lineNumbersWidth, codeView.height, syntax.colorScheme.lineNumbersBackground, syntax.colorScheme.lineNumbersText, " ")	
-	buffer.square(codeView.codeAreaPosition, codeView.y, codeView.codeAreaWidth, codeView.height, syntax.colorScheme.background, syntax.colorScheme.text, " ")
+	buffer.square(codeView.x, codeView.y, codeView.lineNumbersWidth, codeView.height, require("syntax").colorScheme.lineNumbersBackground, require("syntax").colorScheme.lineNumbersText, " ")	
+	buffer.square(codeView.codeAreaPosition, codeView.y, codeView.codeAreaWidth, codeView.height, require("syntax").colorScheme.background, require("syntax").colorScheme.text, " ")
 
 	-- Line numbers texts
 	local y = codeView.y
@@ -1513,10 +1512,10 @@ local function codeViewDraw(codeView)
 		if codeView.lines[line] then
 			local text = tostring(line)
 			if codeView.highlights[line] then
-				buffer.square(codeView.x, y, codeView.lineNumbersWidth, 1, codeView.highlights[line], syntax.colorScheme.text, " ", 30)
-				buffer.square(codeView.codeAreaPosition, y, codeView.codeAreaWidth, 1, codeView.highlights[line], syntax.colorScheme.text, " ")
+				buffer.square(codeView.x, y, codeView.lineNumbersWidth, 1, codeView.highlights[line], require("syntax").colorScheme.text, " ", 30)
+				buffer.square(codeView.codeAreaPosition, y, codeView.codeAreaWidth, 1, codeView.highlights[line], require("syntax").colorScheme.text, " ")
 			end
-			buffer.text(codeView.codeAreaPosition - unicode.len(text) - 1, y, syntax.colorScheme.lineNumbersText, text)
+			buffer.text(codeView.codeAreaPosition - unicode.len(text) - 1, y, require("syntax").colorScheme.lineNumbersText, text)
 			y = y + 1
 		else
 			break
@@ -1533,7 +1532,7 @@ local function codeViewDraw(codeView)
 			y + codeView.selections[selectionIndex].from.line - codeView.fromLine,
 			codeView.codeAreaWidth - codeView.selections[selectionIndex].from.symbol,
 			1,
-			codeView.selections[selectionIndex].color or syntax.colorScheme.selection, syntax.colorScheme.text, " "
+			codeView.selections[selectionIndex].color or require("syntax").colorScheme.selection, require("syntax").colorScheme.text, " "
 		)
 	end
 
@@ -1543,7 +1542,7 @@ local function codeViewDraw(codeView)
 			y + codeView.selections[selectionIndex].from.line - codeView.fromLine,
 			codeView.selections[selectionIndex].to.symbol + 1,
 			1,
-			codeView.selections[selectionIndex].color or syntax.colorScheme.selection, syntax.colorScheme.text, " "
+			codeView.selections[selectionIndex].color or require("syntax").colorScheme.selection, require("syntax").colorScheme.text, " "
 		)
 	end
 
@@ -1557,7 +1556,7 @@ local function codeViewDraw(codeView)
 					y + codeView.selections[selectionIndex].from.line - codeView.fromLine,
 					codeView.selections[selectionIndex].to.symbol - codeView.selections[selectionIndex].from.symbol + 1,
 					1,
-					codeView.selections[selectionIndex].color or syntax.colorScheme.selection, syntax.colorScheme.text, " "
+					codeView.selections[selectionIndex].color or require("syntax").colorScheme.selection, require("syntax").colorScheme.text, " "
 				)
 			elseif dy == 1 then
 				drawUpperSelection(y, selectionIndex); y = y + 1
@@ -1565,7 +1564,7 @@ local function codeViewDraw(codeView)
 			else
 				drawUpperSelection(y, selectionIndex); y = y + 1
 				for i = 1, dy - 1 do
-					buffer.square(codeView.codeAreaPosition, y + codeView.selections[selectionIndex].from.line - codeView.fromLine, codeView.codeAreaWidth, 1, codeView.selections[selectionIndex].color or syntax.colorScheme.selection, syntax.colorScheme.text, " "); y = y + 1
+					buffer.square(codeView.codeAreaPosition, y + codeView.selections[selectionIndex].from.line - codeView.fromLine, codeView.codeAreaWidth, 1, codeView.selections[selectionIndex].color or require("syntax").colorScheme.selection, require("syntax").colorScheme.text, " "); y = y + 1
 				end
 				drawLowerSelection(y, selectionIndex)
 			end
@@ -1578,9 +1577,9 @@ local function codeViewDraw(codeView)
 	for i = codeView.fromLine, toLine do
 		if codeView.lines[i] then
 			if codeView.highlightLuaSyntax then
-				syntax.highlightString(codeView.codeAreaPosition - codeView.fromSymbol + 2, y, codeView.lines[i], codeView.indentationWidth)
+				require("syntax").highlightString(codeView.codeAreaPosition - codeView.fromSymbol + 2, y, codeView.lines[i], codeView.indentationWidth)
 			else
-				buffer.text(codeView.codeAreaPosition - codeView.fromSymbol + 2, y, syntax.colorScheme.text, codeView.lines[i])
+				buffer.text(codeView.codeAreaPosition - codeView.fromSymbol + 2, y, require("syntax").colorScheme.text, codeView.lines[i])
 			end
 			y = y + 1
 		else
@@ -1591,7 +1590,7 @@ local function codeViewDraw(codeView)
 
 	if #codeView.lines > codeView.height then
 		codeView.scrollBars.vertical.isHidden = false
-		codeView.scrollBars.vertical.colors.background, codeView.scrollBars.vertical.colors.foreground = syntax.colorScheme.scrollBarBackground, syntax.colorScheme.scrollBarForeground
+		codeView.scrollBars.vertical.colors.background, codeView.scrollBars.vertical.colors.foreground = require("syntax").colorScheme.scrollBarBackground, require("syntax").colorScheme.scrollBarForeground
 		codeView.scrollBars.vertical.minimumValue, codeView.scrollBars.vertical.maximumValue, codeView.scrollBars.vertical.value, codeView.scrollBars.vertical.shownValueCount = 1, #codeView.lines, codeView.fromLine, codeView.height
 		codeView.scrollBars.vertical.localPosition.x = codeView.width
 		codeView.scrollBars.vertical.localPosition.y = 1
@@ -1602,7 +1601,7 @@ local function codeViewDraw(codeView)
 
 	if codeView.maximumLineLength > codeView.codeAreaWidth - 2 then
 		codeView.scrollBars.horizontal.isHidden = false
-		codeView.scrollBars.horizontal.colors.background, codeView.scrollBars.horizontal.colors.foreground = syntax.colorScheme.scrollBarBackground, syntax.colorScheme.scrollBarForeground
+		codeView.scrollBars.horizontal.colors.background, codeView.scrollBars.horizontal.colors.foreground = require("syntax").colorScheme.scrollBarBackground, require("syntax").colorScheme.scrollBarForeground
 		codeView.scrollBars.horizontal.minimumValue, codeView.scrollBars.horizontal.maximumValue, codeView.scrollBars.horizontal.value, codeView.scrollBars.horizontal.shownValueCount = 1, codeView.maximumLineLength, codeView.fromSymbol, codeView.codeAreaWidth - 2
 		codeView.scrollBars.horizontal.localPosition.x, codeView.scrollBars.horizontal.width = codeView.lineNumbersWidth + 1, codeView.codeAreaWidth - 1
 		codeView.scrollBars.horizontal.localPosition.y = codeView.height
