@@ -11,7 +11,7 @@ local fs = require("filesystem")
 local component = require("component")
 local unicode = require("unicode")
 local event = require("event")
-local ecs = require("ECSAPI")
+local web = require("web")
 
 ------------------------------------------------------------------------------------------------------------------
 
@@ -46,8 +46,8 @@ local typeFilters = {
 local localization = table.fromFile("MineOS/Applications/AppMarket.app/Resources/Localization/" .. _G.OSSettings.language .. ".lang")
 local appMarketConfigPath = "MineOS/System/AppMarket/"
 local pathToApplications = "MineOS/System/OS/Applications.cfg"
-local pathToNewApplications = appMarketConfigPath .. "NewApplications.txt"
-local updateImage = image.load(MineOSCore.paths.icons .. "Update.pic")
+local pathToNewApplications = appMarketConfigPath .. "NewApplications.cfg"
+local updateImage = image.fromString([[20100000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF A40000 A40000 A40000 A40000 A40000 A40000 A40000 A40000 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF A40000 A40000 A40000 A40000 A40000 A40000 A40000 A40000 A40000 A40000 A40000 A40000 A40000 A40000 A40000 A40000 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 730000 730000 730000 730000 730000 730000 730000 730000 730000 730000 730000 730000 730000 730000 730000 730000 730000 730000 730000 730000 730000 730000 730000 730000 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 730000 730000 730000 730000 730000 730000 730000 730000 730000 730000 730000 730000 730000 730000 730000 730000 730000 730000 730000 730000 730000 730000 730000 730000 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 430000 430000 430000 430000 430000 430000 430000 430000 430000 430000 430000 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 430000 430000 430000 430000 430000 430000 430000 430000 430000 430000 430000 0000FF 0000FF 0000FF 0000FF 430000 430000 430000 430000 430000 430000 430000 430000 430000 430000 430000 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 430000 430000 430000 430000 430000 430000 430000 430000 430000 430000 430000 0000FF 0000FF 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 130000 130000 130000 130000 130000 130000 130000 130000 130000 0000FF 0000FF 0D0000 0D0000 0D0000 0D0000 0D0000 0D0000 0D0000 0D0000 0D0000 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0D0000 0D0000 0D0000 0D0000 0D0000 0D0000 0D0000 0D0000 0D0000 0000FF 0000FF 0000FF 0000FF 0D0000 0D0000 0D0000 0D0000 0D0000 0D0000 0D0000 0D0000 0D0000 0D0000 0D0000 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0D0000 0D0000 0D0000 0D0000 0D0000 0D0000 0D0000 0D0000 0D0000 0D0000 0D0000 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0D0000 0D0000 0D0000 0D0000 0D0000 0D0000 0D0000 0D0000 0D0000 0D0000 0D0000 0000FF 0000FF 0D0000 0D0000 0D0000 0D0000 0D0000 0D0000 0D0000 0D0000 0D0000 0D0000 0D0000 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0C0000 0C0000 0C0000 0C0000 0C0000 0C0000 0C0000 0C0000 0C0000 0C0000 0C0000 0C0000 0C0000 0C0000 0C0000 0C0000 0C0000 0C0000 0C0000 0C0000 0C0000 0C0000 0C0000 0C0000 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0C0000 0C0000 0C0000 0C0000 0C0000 0C0000 0C0000 0C0000 0C0000 0C0000 0C0000 0C0000 0C0000 0C0000 0C0000 0C0000 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0C0000 0C0000 0C0000 0C0000 0C0000 0C0000 0C0000 0C0000 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF ]])
 local topBarElements = {localization.applications, localization.libraries, localization.wallpapers, localization.other, localization.updates}
 local oldApplications, newApplications, currentApps, changes = {}, {}, {}, {}
 
@@ -87,33 +87,31 @@ local function drawTopBar()
 end
 
 local function getIcon(url)
-	local success, response = ecs.internetRequest(url)
 	local path = appMarketConfigPath .. "TempIcon.pic"
-	if success then
-		local file = io.open(path, "w")
-		file:write(response)
-		file:close()
-	else
-		GUI.error(tostring(response), {title = {color = 0xFFDB40, text = localization.errorWhileLoadingIcon}})
+
+	local success, reason = web.downloadFile(url, path)	
+	if not success then
+		error(reason)
 	end
+
 	return image.load(path)
 end
 
 local function getDescription(url)
-	local success, response = ecs.internetRequest(url)
-	if success then
-		return response
-	else
-		GUI.error(tostring(response), {title = {color = 0xFFDB40, text = localization.errorWhileLoadingDescription}})
+	local result, reason = web.request(url)
+	if not result then
+		error(reason)
 	end
+
+	return result
 end
 
 local function getApplication(i)
 	currentApps[i] = {}
-	currentApps[i].name = fs.name(newApplications[i].name)
+	currentApps[i].path = fs.name(newApplications[i].path)
 
 	if newApplications[i].icon then
-		currentApps[i].icon = getIcon(newApplications.GitHubUserURL .. newApplications[i].icon)
+		currentApps[i].icon = getIcon(newApplications[i].icon)
 	else
 		if newApplications[i].type == "Application" then
 			currentApps[i].icon = failureIcon
@@ -127,7 +125,7 @@ local function getApplication(i)
 	end
 
 	if newApplications[i].about then
-		currentApps[i].description = getDescription(newApplications.GitHubUserURL .. newApplications[i].about .. _G.OSSettings.language .. ".txt")
+		currentApps[i].description = getDescription(newApplications[i].about .. _G.OSSettings.language .. ".txt")
 		currentApps[i].description = string.wrap({currentApps[i].description}, sizes.descriptionTruncateSize )
 	else
 		currentApps[i].description = {localization.descriptionNotAvailable}
@@ -149,9 +147,9 @@ end
 
 local function drawApplication(x, y, i, doNotDrawButton)
 	buffer.image(x, y, currentApps[i].icon)
-	buffer.text(x + 10, y, colors.appName, currentApps[i].name)
+	buffer.text(x + 10, y, colors.appName, currentApps[i].path)
 	buffer.text(x + 10, y + 1, colors.version, currentApps[i].version)
-	local appExists = checkAppExists(newApplications[i].name, newApplications[i].type)
+	local appExists = checkAppExists(newApplications[i].path, newApplications[i].type)
 	local text = appExists and localization.update or localization.download
 	
 	if not doNotDrawButton then
@@ -203,10 +201,10 @@ local function drawMain(refreshData)
 	local matchCount = 1
 	for i = 1, #newApplications do
 		if newApplications[i].type == typeFilters[currentTopBarElement] then
-			if obj.searchTextField.text == "" or (string.find(unicode.lower(fs.name(newApplications[i].name)), unicode.lower(obj.searchTextField.text))) then
+			if obj.searchTextField.text == "" or (string.find(unicode.lower(fs.name(newApplications[i].path)), unicode.lower(obj.searchTextField.text))) then
 				if matchCount >= from and matchCount <= from + limit - 1 then
 					if refreshData and not currentApps[i] then
-						status(localization.downloadingInfoAboutApplication .. " \"" .. newApplications[i].name .. "\"")
+						status(localization.downloadingInfoAboutApplication .. " \"" .. newApplications[i].path .. "\"")
 						getApplication(i)
 					end
 					x, y = drawApplication(x, y, i)
@@ -224,7 +222,7 @@ local function drawMain(refreshData)
 end
 
 local function getNewApplications()
-	ecs.getFileFromUrl(oldApplications.GitHubApplicationListURL, pathToNewApplications)
+	web.downloadFile("https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/Applications.cfg", pathToNewApplications)
 	newApplications = table.fromFile(pathToNewApplications)
 end
 
@@ -233,7 +231,7 @@ local function getChanges()
 	for j = 1, #newApplications do
 		local matchFound = false
 		for i = 1, #oldApplications do	
-			if oldApplications[i].name == newApplications[j].name then
+			if oldApplications[i].path == newApplications[j].path then
 				if oldApplications[i].version < newApplications[j].version then table.insert(changes, j) end
 				matchFound = true
 				break
@@ -257,7 +255,7 @@ local function updates()
 		for i = from, (from + limit) do
 			if not changes[i] then break end
 			if not currentApps[changes[i]] then
-				status(localization.downloadingInfoAboutApplication .. " \"" .. fs.name(newApplications[changes[i]].name) .. "\"")
+				status(localization.downloadingInfoAboutApplication .. " \"" .. fs.name(newApplications[changes[i]].path) .. "\"")
 				getApplication(changes[i])
 			end
 			x, y = drawApplication(x, y, changes[i], true)
@@ -316,13 +314,13 @@ local function updateAll()
 	local xBar = math.floor(sizes.x + sizes.width / 2 - barWidth / 2)
 	y = y + 2
 	for i = 1, #changes do
-		local text = localization.updating .. " " .. fs.name(newApplications[changes[i]].name)
+		local text = localization.updating .. " " .. fs.name(newApplications[changes[i]].path)
 		local xText = math.floor(sizes.x + sizes.width / 2 - unicode.len(text) / 2)
 		buffer.square(sizes.x, y + 1, sizes.width, 1, 0xFFFFFF)
 		buffer.text(xText, y + 1, colors.description, text)
 		GUI.progressBar(xBar, y, barWidth, 0x0092FF, 0xCCCCCC, 0x0, math.ceil(i / #changes * 100), true, false):draw()
 		buffer.draw()
-		ecs.getOSApplication(newApplications[changes[i]], true)
+		web.downloadMineOSApplication(newApplications[changes[i]])
 	end
 	changes = {}
 	oldApplications = newApplications
@@ -374,7 +372,7 @@ while true do
 							app.buttonObject.colors.disabled.button, app.buttonObject.colors.disabled.text = colors.downloading, colors.downloadingText
 							app.buttonObject:draw()
 							buffer.draw()
-							ecs.getOSApplication(newApplications[appIndex], true)
+							web.downloadMineOSApplication(newApplications[appIndex])
 							app.buttonObject.text = localization.downloaded
 							app.buttonObject.colors.disabled.button, app.buttonObject.colors.disabled.text = colors.downloaded, colors.downloadedText
 							app.buttonObject:draw()
