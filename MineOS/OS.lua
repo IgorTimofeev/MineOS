@@ -463,7 +463,7 @@ local function createWorkspace()
 			buffer.draw(true)
 		end
 		menu:addItem(MineOSCore.localization.updates).onTouch = function()
-			MineOSCore.safeLaunch("/MineOS/Applications/AppMarket.app/AppMarket.lua", "updateCheck")
+			MineOSCore.safeLaunch("/MineOS/Applications/AppMarket.app/Main.lua", "updateCheck")
 		end
 		menu:addSeparator()
 		menu:addItem(MineOSCore.localization.logout, _G.OSSettings.protectionMethod == "withoutProtection").onTouch = function()
