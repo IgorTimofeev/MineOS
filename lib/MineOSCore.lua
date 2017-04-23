@@ -32,7 +32,7 @@ MineOSCore.paths.icons = MineOSCore.paths.system .. "OS/Icons/"
 MineOSCore.paths.applications = MineOSCore.paths.OS .. "Applications/"
 MineOSCore.paths.pictures = MineOSCore.paths.OS .. "Pictures/"
 MineOSCore.paths.desktop = MineOSCore.paths.OS .. "Desktop/"
-MineOSCore.paths.applicationList = MineOSCore.paths.system .. "OS/Applications.txt"
+MineOSCore.paths.applicationList = MineOSCore.paths.system .. "OS/Applications.cfg"
 MineOSCore.paths.trash = MineOSCore.paths.OS .. "Trash/"
 MineOSCore.paths.OSSettings = MineOSCore.paths.system .. "OS/OSSettings.cfg"
 
