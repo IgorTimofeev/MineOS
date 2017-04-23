@@ -208,10 +208,13 @@ function filesystem.sortedList(path, sortingMethod, showHiddenFiles)
 				for j = 1, #currentExtensionList do
 					table.insert(sortedFileList, currentExtensionList[j])
 				end
-
-				table.insert(sortedFileList, fileList[i][1])
-				currentExtensionList, currentExtension = {}, fileList[i][2]
+				currentExtensionList, currentExtension = {fileList[i][1]}, fileList[i][2]
 			end
+		end
+		
+		table.sort(currentExtensionList, function(a, b) return a < b end)
+		for j = 1, #currentExtensionList do
+			table.insert(sortedFileList, currentExtensionList[j])
 		end
 	elseif sortingMethod == "name" then
 		sortedFileList = fileList
