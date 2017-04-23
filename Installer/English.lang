@@ -7,4 +7,5 @@
 	reboot = "Reboot",
 	needToReboot = "MineOS has been successfully installed, enjoy",
 	terms = "I accept terms of the agreement",
+	flashingEEPROM = "Flasing BIOS...",
 }
