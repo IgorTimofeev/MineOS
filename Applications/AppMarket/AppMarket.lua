@@ -45,7 +45,7 @@ local typeFilters = {
 
 local localization = table.fromFile("MineOS/Applications/AppMarket.app/Resources/Localization/" .. _G.OSSettings.language .. ".lang")
 local appMarketConfigPath = "MineOS/System/AppMarket/"
-local pathToApplications = "MineOS/System/OS/Applications.txt"
+local pathToApplications = "MineOS/System/OS/Applications.cfg"
 local pathToNewApplications = appMarketConfigPath .. "NewApplications.txt"
 local updateImage = image.load(MineOSCore.paths.icons .. "Update.pic")
 local topBarElements = {localization.applications, localization.libraries, localization.wallpapers, localization.other, localization.updates}
