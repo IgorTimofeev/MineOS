@@ -22,7 +22,8 @@ local copyright = [[
 
 ---------------------------------------------- Адаптивная загрузка библиотек ------------------------------------------------------------------------
 
--- package.loaded.MineOSCore, package.loaded.GUI = nil, nil
+package.loaded.MineOSCore = nil
+
 local component = require("component")
 local unicode = require("unicode")
 local fs = require("filesystem")
@@ -443,7 +444,7 @@ local function createWorkspace()
 			0xFFFFFF,
 			_G.OSSettings.showFileFormat == nil and true or _G.OSSettings.showFileFormat,
 			_G.OSSettings.showHiddenFiles == nil and true or _G.OSSettings.showHiddenFiles,
-			MineOSCore.sortingMethods[_G.OSSettings.sortingMethod or "type"],
+			(_G.OSSettings.sortingMethod or "type"),
 			"/"
 		),
 		GUI.objectTypes.container
@@ -462,7 +463,7 @@ local function createWorkspace()
 			buffer.draw(true)
 		end
 		menu:addItem(MineOSCore.localization.updates).onTouch = function()
-			MineOSCore.safeLaunch("/MineOS/Applications/AppMarket.app/Main.lua", "updateCheck")
+			MineOSCore.safeLaunch("/MineOS/Applications/AppMarket.app/AppMarket.lua", "updateCheck")
 		end
 		menu:addSeparator()
 		menu:addItem(MineOSCore.localization.logout, _G.OSSettings.protectionMethod == "withoutProtection").onTouch = function()
@@ -508,19 +509,19 @@ local function createWorkspace()
 		menu:addItem(MineOSCore.localization.sortByName).onTouch = function()
 			_G.OSSettings.sortingMethod = "name"
 			MineOSCore.saveOSSettings()
-			workspace.iconField.sortingMethod = MineOSCore.sortingMethods.name
+			workspace.iconField.sortingMethod = _G.OSSettings.sortingMethod
 			workspace.updateFileList()
 		end
 		menu:addItem(MineOSCore.localization.sortByDate).onTouch = function()
 			_G.OSSettings.sortingMethod = "date"
 			MineOSCore.saveOSSettings()
-			workspace.iconField.sortingMethod = MineOSCore.sortingMethods.date
+			workspace.iconField.sortingMethod = _G.OSSettings.sortingMethod
 			workspace.updateFileList()
 		end
 		menu:addItem(MineOSCore.localization.sortByType).onTouch = function()
 			_G.OSSettings.sortingMethod = "type"
 			MineOSCore.saveOSSettings()
-			workspace.iconField.sortingMethod = MineOSCore.sortingMethods.type
+			workspace.iconField.sortingMethod = _G.OSSettings.sortingMethod
 			workspace.updateFileList()
 		end
 		menu:addSeparator()

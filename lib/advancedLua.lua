@@ -144,6 +144,117 @@ function math.shortenNumber(number, digitCount)
 	return math.roundToDecimalPlaces(number / 1000 ^ index, digitCount) .. shortcuts[index]
 end
 
+---------------------------------------------- Filesystem extensions ------------------------------------------------------------------------
+
+-- function filesystem.path(path)
+-- 	return string.match(path, "^(.+%/).") or ""
+-- end
+
+-- function filesystem.name(path)
+-- 	return string.match(path, "%/?([^%/]+)%/?$")
+-- end
+
+local function getNameAndExtension(path)
+	local fileName, extension = string.match(path, "^(.+)(%.[^%/]+)%/?$")
+	return (fileName or path), extension
+end
+
+function filesystem.extension(path)
+	local fileName, extension = getNameAndExtension(path)
+	return extension
+end
+
+function filesystem.hideExtension(path)
+	local fileName, extension = getNameAndExtension(path)
+	return fileName
+end
+
+function filesystem.isFileHidden(path)
+	if string.match(path, "^%..+$") then return true end
+	return false
+end
+
+function filesystem.sortedList(path, sortingMethod, showHiddenFiles)
+	if not filesystem.exists(path) then
+		error("Failed to get file list: directory \"" .. tostring(path) .. "\" doesn't exists")
+	end
+	if not filesystem.isDirectory(path) then
+		error("Failed to get file list: path \"" .. tostring(path) .. "\" is not a directory")
+	end
+
+	local fileList, sortedFileList = {}, {}
+	for file in filesystem.list(path) do
+		table.insert(fileList, file)
+	end
+
+	if sortingMethod == "type" then
+		local extension
+		for i = 1, #fileList do
+			extension = filesystem.extension(fileList[i]) or "Script"
+			if filesystem.isDirectory(path .. fileList[i]) and extension ~= ".app" then
+				extension = ".01_Folder"
+			end
+			fileList[i] = {fileList[i], extension}
+		end
+
+		table.sort(fileList, function(a, b) return a[2] < b[2] end)
+
+		local currentExtensionList, currentExtension = {}, fileList[1][2]
+		for i = 1, #fileList do
+			if currentExtension == fileList[i][2] then
+				table.insert(currentExtensionList, fileList[i][1])
+			else
+				table.sort(currentExtensionList, function(a, b) return a < b end)
+				for j = 1, #currentExtensionList do
+					table.insert(sortedFileList, currentExtensionList[j])
+				end
+
+				table.insert(sortedFileList, fileList[i][1])
+				currentExtensionList, currentExtension = {}, fileList[i][2]
+			end
+		end
+	elseif sortingMethod == "name" then
+		sortedFileList = fileList
+		table.sort(sortedFileList, function(a, b) return a < b end)
+	elseif sortingMethod == "date" then
+		for i = 1, #fileList do
+			fileList[i] = {fileList[i], filesystem.lastModified(path .. fileList[i])}
+		end
+
+		table.sort(fileList, function(a, b) return a[2] > b[2] end)
+
+		for i = 1, #fileList do
+			table.insert(sortedFileList, fileList[i][1])
+		end
+	else
+		error("Unknown sorting method: " .. tostring(sortingMethod))
+	end
+
+	local i = 1
+	while i <= #sortedFileList do
+		if not showHiddenFiles and filesystem.isFileHidden(sortedFileList[i]) then
+			table.remove(sortedFileList, i)
+		else
+			i = i + 1
+		end
+	end
+
+	return sortedFileList
+end
+
+function filesystem.directorySize(path)
+	local size = 0
+	for file in filesystmem.list(path) do
+		if filesystmem.isDirectory(path .. file) then
+			size = size + filesystem.directorySize(path .. file)
+		else
+			size = size + filesystmem.size(path .. file)
+		end
+	end
+	
+	return size
+end
+
 -------------------------------------------------- Table extensions --------------------------------------------------
 
 local function doSerialize(array, prettyLook, indentationSymbol, indentationSymbolAdder, equalsSymbol, currentRecusrionStack, recursionStackLimit)

@@ -99,7 +99,6 @@ function image.draw(x, y, picture)
 					end
 				end
 			end
-
 		end
 	end
 end
