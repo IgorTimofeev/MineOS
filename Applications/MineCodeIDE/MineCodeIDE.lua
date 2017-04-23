@@ -18,7 +18,7 @@ local MineOSCore = require("MineOSCore")
 local event = require("event")
 local syntax = require("syntax")
 local unicode = require("unicode")
-local ecs = require("ECSAPI")
+local web = require("web")
 local image = require("image")
 local keyboard = require("keyboard")
 local palette = require("palette")
@@ -759,10 +759,10 @@ end
 local function downloadFileFromWeb()
 	createInputTextBoxForSettingsWindow(localization.getFromWeb, localization.url,
 		function(text)
-			local success, reason = ecs.internetRequest(text)
-			if success then
+			local result, reason = web.request(text)
+			if result then
 				newFile()
-				mainWindow.codeView.lines, mainWindow.codeView.maximumLineLength = splitStringIntoLines(reason)
+				mainWindow.codeView.lines, mainWindow.codeView.maximumLineLength = splitStringIntoLines(result)
 			else
 				GUI.error(reason, {title = {color = 0xFFDB40, text = "Failed to connect to URL"}})
 			end
