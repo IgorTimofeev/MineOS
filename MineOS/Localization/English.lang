@@ -50,7 +50,7 @@
 	showFileFormat = "Show file format",
 	hideFileFormat = "Hide file format",
 	showHiddenFiles = "Show hidden files",
-	hideHiddenFiles = "Hide hidden files",
+	hideHiddenFiles = "Don't show hidden files",
 	showApplicationIcons = "Show application icons",
 	hideApplicationIcons = "Hide application icons",
 
