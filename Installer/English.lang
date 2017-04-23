@@ -5,6 +5,6 @@
 	showApplicationsHelp = "Show applications help",
 	downloading = "Downloading",
 	reboot = "Reboot",
-	needToReboot = "MineOS successfully installed, enjoy",
+	needToReboot = "MineOS has been successfully installed, enjoy",
 	terms = "I accept terms of the agreement",
 }
