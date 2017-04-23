@@ -274,12 +274,14 @@ stages[4] = function()
 		buffer.draw()
 
 		web.downloadMineOSApplication(thingsToDownload[i])
-		-- os.sleep(0.05)
 	end
 
 	stageContainer:deleteChildren(2)
-	addImageToStage(3, images.EEPROM)
-	stageContainer:addLabel(1, 22, stageContainer.width, 1, 0x666666, localization.flashingEEPROM):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+	y = addImageToStage(4, images.EEPROM)
+	stageContainer:addLabel(1, y + 3, stageContainer.width, 1, 0x666666, localization.flashingEEPROM):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+	mainWindow:draw()
+	buffer.draw()
+
 	component.eeprom.set(web.request(urls.EFI))
 
 	stages.load(5)
