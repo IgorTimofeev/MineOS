@@ -526,7 +526,7 @@ local function createWorkspace()
 		end
 		menu:addSeparator()
 		menu:addItem(MineOSCore.localization.screensaver).onTouch = function()
-			local possibleScreensavers = {}; for file in fs.list(screensaversPath) do table.insert(possibleScreensavers, MineOSCore.hideFileFormat(file)) end
+			local possibleScreensavers = {}; for file in fs.list(screensaversPath) do table.insert(possibleScreensavers, fs.hideExtension(file)) end
 			local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true,
 				{"EmptyLine"},
 				{"CenterText", 0x000000, MineOSCore.localization.screensaver},
