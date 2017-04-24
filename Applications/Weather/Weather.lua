@@ -21,7 +21,6 @@ local changeCityButton = {}
 local exitButton = {}
 
 local pathToWeatherFile = "MineOS/System/Weather/Forecast.cfg"
-local pathToWallpaper = "MineOS/System/OS/Wallpaper.lnk"
 
 local pathsToWeatherTypes = {
 	sunny = "MineOS/Applications/Weather.app/Resources/Sunny.pic",
@@ -178,8 +177,8 @@ end
 
 local function drawWeather()
 	--Рисуем обоинку или просто говнофон ССАНЫЙ
-	if fs.exists(pathToWallpaper) then
-		buffer.image(1, 1, image.load(ecs.readShortcut(pathToWallpaper)))
+	if fs.exists(_G.OSSettings.wallpaper) then
+		buffer.image(1, 1, image.load(_G.OSSettings.wallpaper))
 		buffer.square(1, 1, buffer.screen.width, buffer.screen.height, 0x0, 0x0, " ", 60)
 	else
 		buffer.clear(0x262626)
