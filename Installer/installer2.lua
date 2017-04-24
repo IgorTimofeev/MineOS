@@ -39,12 +39,12 @@ if computer.totalMemory() < 2097152 then
 	table.insert(reasons, "Not enough RAM: MineOS requires at least 2MB (2x Tier3 RAM modules) to work properly.")
 end
 
-for i = 1, #reasons do
-	print(reasons[i])
-	print(" ")
-end
-
 if #reasons > 0 then
+	for i = 1, #reasons do
+		print(reasons[i])
+		print(" ")
+	end
+	
 	return
 end
 
@@ -309,8 +309,6 @@ stages[5] = function()
 		local file = io.open("/autorun.lua", "w")
 		file:write("dofile(\"/OS.lua\")")
 		file:close()
-
-		fs.makeDirectory("/MineOS/Trash/")
 
 		require("computer").shutdown(true)
 	end
