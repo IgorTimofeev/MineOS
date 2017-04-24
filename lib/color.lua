@@ -105,13 +105,15 @@ local openComputersPalette = {}
 for r = 0x0, 0xFF, 0xFF / 5 do
 	for g = 0x0, 0xFF, 0xFF / 7 do
 		for b = 0x0, 0xFF, 0xFF / 4 do
-			table.insert(openComputersPalette, color.RGBtoHEX(r, math.floor(g + 0,5), math.floor(b + 0.5)))
+			table.insert(openComputersPalette, color.RGBToHEX(r, math.floor(g + 0,5), math.floor(b + 0.5)))
 		end
 	end
 end
-for gr = 0x1, 0x10 do
-	table.insert(openComputersPalette, gr * 0xF0F0F)
+
+for g = 0x1, 0x10 do
+	table.insert(openComputersPalette, g * 0xF0F0F)
 end
+
 table.sort(openComputersPalette)
 
 function color.to8Bit(color24Bit)
