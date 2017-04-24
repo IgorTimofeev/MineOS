@@ -2,7 +2,7 @@
 local component = require("component")
 local computer = require("computer")
 local advancedLua = require("advancedLua")
-local colorlib = require("colorlib")
+local color = require("color")
 local image = require("image")
 local buffer = require("doubleBuffering")
 local GUI = require("GUI")
@@ -85,13 +85,13 @@ local function getTileColor(basecolor, distance)
 	local limitedDistance = math.floor(distance * rayEngine.properties.shadingCascades / rayEngine.properties.shadingDistance)
 	local transparency = rayEngine.currentShadingTransparencyMapValue - limitedDistance / rayEngine.properties.shadingCascades
 	transparency = (transparency >= rayEngine.properties.shadingTransparencyMap[1] and transparency <= 1) and transparency or rayEngine.properties.shadingTransparencyMap[1]
-	return colorlib.alphaBlend(basecolor, 0x000000, transparency)
+	return color.blend(basecolor, 0x000000, transparency)
 end
 
 function rayEngine.refreshTimeDependentColors()
 	rayEngine.world.colors.sky.current = getSkyColorByTime()
 	rayEngine.currentShadingTransparencyMapValue = getBrightnessByTime()
-	rayEngine.world.colors.groundByTime = colorlib.alphaBlend(rayEngine.world.colors.ground, 0x000000, rayEngine.currentShadingTransparencyMapValue)
+	rayEngine.world.colors.groundByTime = color.blend(rayEngine.world.colors.ground, 0x000000, rayEngine.currentShadingTransparencyMapValue)
 end
 
 local function doDayNightCycle()

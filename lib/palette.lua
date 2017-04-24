@@ -4,7 +4,7 @@
 local advancedLua = require("advancedLua")
 local component = require("component")
 local fs = require("filesystem")
-local colorlib = require("colorlib")
+local color = require("color")
 local image = require("image")
 local buffer = require("doubleBuffering")
 local GUI = require("GUI")
@@ -23,20 +23,20 @@ local inputs
 
 local function switchColorFromHex(hex)
 	currentColor = {hsb = {}, rgb = {}, hex = hex}
-	currentColor.rgb.red, currentColor.rgb.green, currentColor.rgb.blue = colorlib.HEXtoRGB(hex)
-	currentColor.hsb.hue, currentColor.hsb.saturation, currentColor.hsb.brightness = colorlib.RGBtoHSB(currentColor.rgb.red, currentColor.rgb.green, currentColor.rgb.blue)
+	currentColor.rgb.red, currentColor.rgb.green, currentColor.rgb.blue = color.HEXToRGB(hex)
+	currentColor.hsb.hue, currentColor.hsb.saturation, currentColor.hsb.brightness = color.RGBToHSB(currentColor.rgb.red, currentColor.rgb.green, currentColor.rgb.blue)
 end
 
 local function switchColorFromHsb(hue, saturation, brightness)
 	currentColor = {hsb = {hue = hue, saturation = saturation, brightness = brightness}, rgb = {}, hex = nil}
-	currentColor.rgb.red, currentColor.rgb.green, currentColor.rgb.blue = colorlib.HSBtoRGB(hue, saturation, brightness)
-	currentColor.hex = colorlib.RGBtoHEX(currentColor.rgb.red, currentColor.rgb.green, currentColor.rgb.blue)
+	currentColor.rgb.red, currentColor.rgb.green, currentColor.rgb.blue = color.HSBToRGB(hue, saturation, brightness)
+	currentColor.hex = color.RGBToHEX(currentColor.rgb.red, currentColor.rgb.green, currentColor.rgb.blue)
 end
 
 local function switchColorFromRgb(red, green, blue)
 	currentColor = {hsb = {}, rgb = {red = red, green = green, blue = blue}, hex = nil}
-	currentColor.hsb.hue, currentColor.hsb.saturation, currentColor.hsb.brightness = colorlib.RGBtoHSB(red, green, blue)
-	currentColor.hex = colorlib.RGBtoHEX(red, green, blue)
+	currentColor.hsb.hue, currentColor.hsb.saturation, currentColor.hsb.brightness = color.RGBToHSB(red, green, blue)
+	currentColor.hex = color.RGBToHEX(red, green, blue)
 end
 
 --------------------------------------------------------------------------------------------------------------
@@ -76,8 +76,8 @@ local function refreshBigRainbow(width, height)
 	local saturationStep, brightnessStep, saturation, brightness = 100 / width, 100 / (height * 2), 0, 100
 	for j = 1, height do
 		for i = 1, width do
-			local background = colorlib.HSBtoHEX(currentColor.hsb.hue, saturation, brightness)
-			local foreground = colorlib.HSBtoHEX(currentColor.hsb.hue, saturation, brightness - brightnessStep)
+			local background = color.HSBToHEX(currentColor.hsb.hue, saturation, brightness)
+			local foreground = color.HSBToHEX(currentColor.hsb.hue, saturation, brightness - brightnessStep)
 			image.set(bigRainbow.image, i, j, background, foreground, 0x0, "▄")
 			saturation = saturation + saturationStep
 		end
@@ -89,8 +89,8 @@ local function refreshMiniRainbow(width, height)
 	local hueStep, hue = 360 / (height * 2), 0
 	for j = 1, height do
 		for i = 1, width do
-			local background = colorlib.HSBtoHEX(hue, 100, 100)
-			local foreground = colorlib.HSBtoHEX(hue + hueStep, 100, 100)
+			local background = color.HSBToHEX(hue, 100, 100)
+			local foreground = color.HSBToHEX(hue + hueStep, 100, 100)
 			image.set(miniRainbow.image, i, j, background, foreground, 0x0, "▄")
 		end
 		hue = hue + hueStep + hueStep
@@ -275,7 +275,10 @@ function palette.show(x, y, startColor)
 	drawAll()
 	window.drawShadow = false
 
-	return window:handleEvents()
+	local selectedColor = window:handleEvents()
+	window = nil
+
+	return selectedColor
 end
 
 -- Поддержим олдфагов!

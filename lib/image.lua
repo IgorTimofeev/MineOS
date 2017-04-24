@@ -1,7 +1,7 @@
 
 -------------------------------------------------- Libraries --------------------------------------------------
 
-local colorlib = require("colorlib")
+local color = require("color")
 local unicode = require("unicode")
 local gpu = require("component").gpu
 
@@ -32,7 +32,7 @@ function image.group(picture, compressColors)
 		iPlus2, iPlus3 = i + 2, i + 3
 
 		if compressColors then
-			background, foreground = colorlib.convert24BitTo8Bit(picture[i]), colorlib.convert24BitTo8Bit(picture[i + 1])
+			background, foreground = color.to8Bit(picture[i]), color.to8Bit(picture[i + 1])
 			compressionYield(i)
 		else
 			background, foreground = picture[i], picture[i + 1]
@@ -88,7 +88,7 @@ function image.draw(x, y, picture)
 										currentBackground = gpuGetBackground
 										gpu.setBackground(currentBackground)
 									else
-										currentBackground = colorlib.alphaBlend(gpuGetBackground, background, alpha / 0xFF)
+										currentBackground = color.blend(gpuGetBackground, background, alpha / 0xFF)
 										gpu.setBackground(currentBackground)
 									end
 								end
@@ -189,8 +189,8 @@ function image.toString(picture)
 	}
 	
 	for i = 3, #picture, 4 do
-		table.insert(charArray, string.format("%02X", colorlib.convert24BitTo8Bit(picture[i])))
-		table.insert(charArray, string.format("%02X", colorlib.convert24BitTo8Bit(picture[i + 1])))
+		table.insert(charArray, string.format("%02X", color.to8Bit(picture[i])))
+		table.insert(charArray, string.format("%02X", color.to8Bit(picture[i + 1])))
 		table.insert(charArray, string.format("%02X", picture[i + 2]))
 		table.insert(charArray, picture[i + 3])
 
@@ -207,20 +207,8 @@ function image.fromString(pictureString)
 	}
 
 	for i = 5, unicode.len(pictureString), 7 do
-		if type(colorlib.convert8BitTo24Bit(tonumber("0x" .. unicode.sub(pictureString, i, i + 1)))) ~= "number" then
-			print(unicode.sub(pictureString, i, i + 1))
-		end
-
-		if type(colorlib.convert8BitTo24Bit(tonumber("0x" .. unicode.sub(pictureString, i + 2, i + 3)))) ~= "number" then
-			print(unicode.sub(pictureString, i + 2, i + 3))
-		end
-
-		if type(tonumber("0x" .. unicode.sub(pictureString, i + 4, i + 5))) ~= "number" then
-			print("0x" .. unicode.sub(pictureString, i + 4, i + 5))
-		end
-
-		table.insert(picture, colorlib.convert8BitTo24Bit(tonumber("0x" .. unicode.sub(pictureString, i, i + 1))))
-		table.insert(picture, colorlib.convert8BitTo24Bit(tonumber("0x" .. unicode.sub(pictureString, i + 2, i + 3))))
+		table.insert(picture, color.to24Bit(tonumber("0x" .. unicode.sub(pictureString, i, i + 1))))
+		table.insert(picture, color.to24Bit(tonumber("0x" .. unicode.sub(pictureString, i + 2, i + 3))))
 		table.insert(picture, tonumber("0x" .. unicode.sub(pictureString, i + 4, i + 5)))
 		table.insert(picture, unicode.sub(pictureString, i + 6, i + 6))
 	end

@@ -177,6 +177,7 @@ function MineOSCore.loadStandartIcons()
 end
 
 function MineOSCore.init()
+	fs.makeDirectory(MineOSCore.paths.trash)
 	MineOSCore.loadOSSettings()
 	MineOSCore.localization = table.fromFile(MineOSCore.paths.localizationFiles .. _G.OSSettings.language .. ".lang")
 	MineOSCore.loadStandartIcons()
@@ -705,7 +706,6 @@ function MineOSCore.iconRightClick(icon, eventData)
 			while fs.exists(newName) do
 				newName, repeats = MineOSCore.paths.trash .. clearName .. string.rep("-copy", repeats) .. icon.format, repeats + 1
 			end
-			fs.rename(icon.path, newName)
 		end
 		computer.pushSignal("MineOSCore", "updateFileList")
 	elseif action == MineOSCore.localization.contextMenuRename then

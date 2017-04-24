@@ -1,7 +1,7 @@
 
 -------------------------------------------------------- Libraries --------------------------------------------------------
 
-local colorlib = require("colorlib")
+local color = require("color")
 local vector = require("vector")
 local buffer = require("doubleBuffering")
 local materials = require("OpenComputersGL/Materials")
@@ -210,18 +210,18 @@ function OCGL.render()
 					renderer.renderFilledTriangle({ vertex1, vertex2, vertex3 }, material.color)
 				elseif OCGL.renderMode == OCGL.renderModes.flatShading then
 					-- local finalColor = 0x0
-					-- finalColor = colorlib.alphaBlend(material.color, 0x0, OCGL.triangles[triangleIndex][5])
+					-- finalColor = color.blend(material.color, 0x0, OCGL.triangles[triangleIndex][5])
 					-- OCGL.triangles[triangleIndex][5] = nil
 					-- renderer.renderFilledTriangle({ vertex1, vertex2, vertex3 }, finalColor)
 
-					local r, g, b = colorlib.HEXtoRGB(material.color)
+					local r, g, b = color.HEXToRGB(material.color)
 					r, g, b = r * OCGL.triangles[triangleIndex][5], g * OCGL.triangles[triangleIndex][5], b * OCGL.triangles[triangleIndex][5]
 					if r > 255 then r = 255 end
 					if g > 255 then g = 255 end
 					if b > 255 then b = 255 end
 					OCGL.triangles[triangleIndex][5] = nil
 
-					renderer.renderFilledTriangle({ vertex1, vertex2, vertex3 }, colorlib.RGBtoHEX(r, g, b))
+					renderer.renderFilledTriangle({ vertex1, vertex2, vertex3 }, color.RGBToHEX(r, g, b))
 				end
 			elseif material.type == materials.types.textured then
 				vertex1[4], vertex1[5] = OCGL.vertices[OCGL.triangles[triangleIndex][1]][4], OCGL.vertices[OCGL.triangles[triangleIndex][1]][5]

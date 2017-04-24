@@ -6,7 +6,7 @@ local computer = require("computer")
 local unicode = require("unicode")
 local fs = require("filesystem")
 local advancedLua = require("advancedLua")
-local colorlib = require("colorlib")
+local color = require("color")
 local image = require("image")
 local buffer = require("doubleBuffering")
 local GUI = require("GUI")
@@ -157,14 +157,14 @@ end
 local function verticalLine(x, y, height, transparency)
 	for i = y, y + height - 1 do
 		local background = buffer.get(x, i)
-		buffer.set(x, i, background, colorlib.alphaBlend(background, 0xFFFFFF, transparency), "│")
+		buffer.set(x, i, background, color.blend(background, 0xFFFFFF, transparency), "│")
 	end
 end
 
 local function horizontalLine(x, y, width, transparency)
 	for i = x, x + width - 1 do
 		local background, foreground, symbol = buffer.get(i, y)
-		buffer.set(i, y, background, colorlib.alphaBlend(background, 0xFFFFFF, transparency), symbol == "│" and "┼" or "─")
+		buffer.set(i, y, background, color.blend(background, 0xFFFFFF, transparency), symbol == "│" and "┼" or "─")
 	end
 end
 

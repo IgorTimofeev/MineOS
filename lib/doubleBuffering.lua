@@ -3,7 +3,7 @@
 
 local component = require("component")
 local unicode = require("unicode")
-local colorlib = require("colorlib")
+local color = require("color")
 local image = require("image")
 
 ------------------------------------------------- Constants -------------------------------------------------
@@ -126,8 +126,8 @@ function buffer.square(x, y, width, height, background, foreground, symbol, tran
 			if i >= buffer.drawLimit.x and j >= buffer.drawLimit.y and i <= buffer.drawLimit.x2 and j <= buffer.drawLimit.y2 then
 				indexPlus1 = index + 1
 				if transparency then
-					buffer.screen.new[index] = colorlib.alphaBlend(buffer.screen.new[index], background, transparency)
-					buffer.screen.new[indexPlus1] = colorlib.alphaBlend(buffer.screen.new[indexPlus1], background, transparency)
+					buffer.screen.new[index] = color.blend(buffer.screen.new[index], background, transparency)
+					buffer.screen.new[indexPlus1] = color.blend(buffer.screen.new[indexPlus1], background, transparency)
 				else
 					buffer.screen.new[index] = background
 					buffer.screen.new[indexPlus1] = foreground
@@ -222,7 +222,7 @@ function buffer.line(x1, y1, x2, y2, background, foreground, symbol)
 end
 
 -- Отрисовка текста, подстраивающегося под текущий фон
-function buffer.text(x, y, color, text, transparency)
+function buffer.text(x, y, textColor, text, transparency)
 	if transparency then
 		if transparency == 0 then
 			transparency = nil
@@ -234,7 +234,7 @@ function buffer.text(x, y, color, text, transparency)
 	local index, sText = buffer.getBufferIndexByCoordinates(x, y), unicode.len(text)
 	for i = 1, sText do
 		if x >= buffer.drawLimit.x and y >= buffer.drawLimit.y and x <= buffer.drawLimit.x2 and y <= buffer.drawLimit.y2 then
-			buffer.screen.new[index + 1] = not transparency and color or colorlib.alphaBlend(buffer.screen.new[index], color, transparency)
+			buffer.screen.new[index + 1] = not transparency and textColor or color.blend(buffer.screen.new[index], textColor, transparency)
 			buffer.screen.new[index + 2] = unicode.sub(text, i, i)
 		end
 		index = index + 3
@@ -257,7 +257,7 @@ function buffer.image(x, y, picture)
 				buffer.screen.new[bufferIndex + 1] = picture[imageIndex + 1]
 				buffer.screen.new[bufferIndex + 2] = picture[imageIndexPlus3]
 			elseif picture[imageIndexPlus2] > 0x00 and picture[imageIndexPlus2] < 0xFF then
-				buffer.screen.new[bufferIndex] = colorlib.alphaBlend(buffer.screen.new[bufferIndex], picture[imageIndex], picture[imageIndexPlus2])
+				buffer.screen.new[bufferIndex] = color.blend(buffer.screen.new[bufferIndex], picture[imageIndex], picture[imageIndexPlus2])
 				buffer.screen.new[bufferIndex + 1] = picture[imageIndex + 1]
 				buffer.screen.new[bufferIndex + 2] = picture[imageIndexPlus3]
 			elseif picture[imageIndexPlus2] == 0xFF and picture[imageIndexPlus3] ~= " " then

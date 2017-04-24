@@ -1,6 +1,6 @@
 
-package.loaded.web = nil
-package.loaded.GUI = nil
+-- package.loaded.web = nil
+-- package.loaded.GUI = nil
 
 local fs = require("filesystem")
 local component = require("component")
@@ -309,6 +309,8 @@ stages[5] = function()
 		local file = io.open("/autorun.lua", "w")
 		file:write("dofile(\"/OS.lua\")")
 		file:close()
+
+		fs.makeDirectory("/MineOS/Trash/")
 
 		require("computer").shutdown(true)
 	end

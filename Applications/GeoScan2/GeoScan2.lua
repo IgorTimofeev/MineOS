@@ -1,6 +1,6 @@
 
 local component = require("component")
-local colorlib = require("colorlib")
+local color = require("color")
 local image = require("image")
 local buffer = require("doubleBuffering")
 local GUI = require("GUI")
@@ -30,7 +30,7 @@ local window = GUI.fullScreenWindow()
 --------------------------------------------------------------------------------------------------------------------
 
 local function getOpenGLValidColorChannels(color)
-	local r, g, b = colorlib.HEXtoRGB(color)
+	local r, g, b = color.HEXToRGB(color)
 	return r / 255, g / 255, b / 255
 end
 

@@ -8,7 +8,7 @@ local bit32 = require("bit32")
 local advancedLua = require("advancedLua")
 local unicode = require("unicode")
 local fs = require("filesystem")
-local colorlib = require("colorlib")
+local color = require("color")
 
 ------------------------------------------------------------------------------------------------------------
 
@@ -40,8 +40,8 @@ end
 
 encodingMethods.save[1] = function(file, picture)
 	for i = 3, #picture, 4 do
-		writeByteArrayToFile(file, {colorlib.HEXtoRGB(picture[i])})
-		writeByteArrayToFile(file, {colorlib.HEXtoRGB(picture[i + 1])})
+		writeByteArrayToFile(file, {color.HEXToRGB(picture[i])})
+		writeByteArrayToFile(file, {color.HEXToRGB(picture[i + 1])})
 		file:write(string.char(picture[i + 2]))
 		writeByteArrayToFile(file, {string.byte(picture[i + 3], 1, 6)})
 	end
@@ -49,8 +49,8 @@ end
 
 encodingMethods.load[1] = function(file, picture)
 	for i = 1, image.getWidth(picture) * image.getHeight(picture) do
-		table.insert(picture, colorlib.RGBtoHEX(string.byte(file:read(1)), string.byte(file:read(1)), string.byte(file:read(1))))
-		table.insert(picture, colorlib.RGBtoHEX(string.byte(file:read(1)), string.byte(file:read(1)), string.byte(file:read(1))))
+		table.insert(picture, color.RGBToHEX(string.byte(file:read(1)), string.byte(file:read(1)), string.byte(file:read(1))))
+		table.insert(picture, color.RGBToHEX(string.byte(file:read(1)), string.byte(file:read(1)), string.byte(file:read(1))))
 		table.insert(picture, string.byte(file:read(1)))
 		table.insert(picture, string.readUnicodeChar(file))
 	end
@@ -77,13 +77,13 @@ encodingMethods.save[6] = function(file, picture)
 			file:write(string.char(table.size(groupedPicture[alpha][symbol])))
 
 			for background in pairs(groupedPicture[alpha][symbol]) do
-				-- Writing 1 byte for background color value (compressed by colorlib)
+				-- Writing 1 byte for background color value (compressed by color)
 				file:write(string.char(background))
 				-- Writing 1 byte for foregrounds array size
 				file:write(string.char(table.size(groupedPicture[alpha][symbol][background])))
 
 				for foreground in pairs(groupedPicture[alpha][symbol][background]) do
-					-- Writing 1 byte for foreground color value (compressed by colorlib)
+					-- Writing 1 byte for foreground color value (compressed by color)
 					file:write(string.char(foreground))
 					-- Writing 1 byte for y array size
 					file:write(string.char(table.size(groupedPicture[alpha][symbol][background][foreground])))
@@ -119,11 +119,11 @@ encodingMethods.load[6] = function(file, picture)
 			backgroundSize = string.byte(file:read(1))
 			
 			for background = 1, backgroundSize do
-				currentBackground = colorlib.convert8BitTo24Bit(string.byte(file:read(1)))
+				currentBackground = color.to24Bit(string.byte(file:read(1)))
 				foregroundSize = string.byte(file:read(1))
 				
 				for foreground = 1, foregroundSize do
-					currentForeground = colorlib.convert8BitTo24Bit(string.byte(file:read(1)))
+					currentForeground = color.to24Bit(string.byte(file:read(1)))
 					ySize = string.byte(file:read(1))
 					
 					for y = 1, ySize do

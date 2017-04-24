@@ -9,7 +9,7 @@
 -- package.loaded["OpenComputersGL/Renderer"] = nil
 -- package.loaded["MeowEngine/Main"] = nil
 
-local colorlib = require("colorlib")
+local color = require("color")
 local computer = require("computer")
 local buffer = require("doubleBuffering")
 local event = require("event")
@@ -141,7 +141,7 @@ local hue, hueStep = 0, 360 / 9
 for z = -1, 1 do
 	for x = -1, 1 do
 		if not (x == 0 and z == 0) then
-			setBlock(x, 0, z, colorlib.HSBtoHEX(hue, 100, 100))
+			setBlock(x, 0, z, color.HSBToHEX(hue, 100, 100))
 			hue = hue + hueStep
 		end
 	end
@@ -232,7 +232,7 @@ end
 -- 			elseif mesh.triangles[triangleIndex].brightness < minimumBrightness then
 -- 				mesh.triangles[triangleIndex].brightness = minimumBrightness
 -- 			end
--- 			mesh.triangles[triangleIndex][4] = materials.newSolidMaterial(colorlib.HSBtoHEX(mesh.hue, 100, mesh.triangles[triangleIndex].brightness))
+-- 			mesh.triangles[triangleIndex][4] = materials.newSolidMaterial(color.HSBToHEX(mesh.hue, 100, mesh.triangles[triangleIndex].brightness))
 -- 		end
 -- 	end
 

@@ -22,7 +22,7 @@ local copyright = [[
 
 ---------------------------------------------- Адаптивная загрузка библиотек ------------------------------------------------------------------------
 
-package.loaded.MineOSCore = nil
+-- package.loaded.MineOSCore = nil
 
 local component = require("component")
 local unicode = require("unicode")

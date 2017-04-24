@@ -5,8 +5,7 @@ local unicode = require("unicode")
 local serialization = require("serialization")
 local fs = require("filesystem")
 
---image
-local colorlib = require("colorlib")
+local color = require("color")
 local buffer = require("doubleBuffering")
 local context = require("context")
 local bigLetters = require("bigLetters")
@@ -83,7 +82,7 @@ local shapeColors = {}
 local HUE = 0
 local HUEAdder = math.floor(360 / maxShapeCount)
 for i = 1, maxShapeCount do
-	shapeColors[i] = colorlib.HSBtoHEX(HUE, 100, 100)
+	shapeColors[i] = color.HSBToHEX(HUE, 100, 100)
 	HUE = HUE + HUEAdder
 end
 HUE, HUEAdder = nil, nil
@@ -375,10 +374,10 @@ local function drawDrawingZone()
 
 			if currentLayer >= selectionStartPoint.z and currentLayer <= selectionEndPoint.z then
 				if shape ~= currentShape then
-					local h, s, b = colorlib.HEXtoHSB(shapeColors[shape])
+					local h, s, b = color.HEXToHSB(shapeColors[shape])
 					s = 30
 					-- ecs.error("РИСУЮ")
-					drawPixel(selectionStartPoint.x, 18 - selectionStartPoint.y - yDifference, selectionEndPoint.x - selectionStartPoint.x + 1, yDifference, colorlib.HSBtoHEX(h, s, b))
+					drawPixel(selectionStartPoint.x, 18 - selectionStartPoint.y - yDifference, selectionEndPoint.x - selectionStartPoint.x + 1, yDifference, color.HSBToHEX(h, s, b))
 					-- drawPixel(selectionStartPoint.x, selectionStartPoint.z, selectionEndPoint.x - selectionStartPoint.x + 1, selectionEndPoint.z - selectionStartPoint.z + 1, shapeColors[shape], trasparency)
 				else
 					drawPixel(selectionStartPoint.x, 18 - selectionStartPoint.y - yDifference, selectionEndPoint.x - selectionStartPoint.x + 1, yDifference, shapeColors[shape])

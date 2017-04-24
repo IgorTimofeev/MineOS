@@ -68,7 +68,7 @@ local image = require("image")
 local component = require("component")
 local keyboard = require("keyboard")
 local buffer = require("doubleBuffering")
-local colorlib = require("colorlib")
+local color = require("color")
 local palette = require("palette")
 local event = require("event")
 
@@ -308,7 +308,7 @@ local function drawPixel(x, y, xPixel, yPixel, iterator)
 			end
 		end
 
-		buffer.set(x, y, colorlib.alphaBlend(blendColor, background, alpha / 0xFF), foreground, symbol)
+		buffer.set(x, y, color.blend(blendColor, background, alpha / 0xFF), foreground, symbol)
 	end
 	background, foreground, alpha, symbol = nil, nil, nil, nil
 end
@@ -843,7 +843,7 @@ local function brush(x, y, background, foreground, alpha, symbol)
 				elseif alpha < 0xFF and alpha > 0x00 then
 					--Если пиксель в массиве ни хуя не прозрачный, то оставляем его таким же, разве что цвет меняем на сблендированный
 					if masterPixels[newIterator + 2] == 0x00 then
-						local gettedBackground = colorlib.alphaBlend(masterPixels[newIterator], background, alpha / 0xFF)
+						local gettedBackground = color.blend(masterPixels[newIterator], background, alpha / 0xFF)
 						setPixel(newIterator, gettedBackground, foreground, 0x00, symbol)
 					--А если прозрачный, то смешиваем прозрачности
 					--Пиздануться вообще, сук
