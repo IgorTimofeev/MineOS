@@ -26,7 +26,6 @@ MineOSCore.iconClickDelay = 0.2
 MineOSCore.paths = {}
 MineOSCore.paths.OS = "/MineOS/"
 MineOSCore.paths.system = MineOSCore.paths.OS .. "System/"
-MineOSCore.paths.wallpaper = MineOSCore.paths.system .. "OS/Wallpaper.lnk"
 MineOSCore.paths.localizationFiles = MineOSCore.paths.system .. "OS/Localization/"
 MineOSCore.paths.icons = MineOSCore.paths.system .. "OS/Icons/"
 MineOSCore.paths.applications = MineOSCore.paths.OS .. "Applications/"
@@ -718,8 +717,8 @@ function MineOSCore.iconRightClick(icon, eventData)
 		require("compressor").pack(fs.path(icon.path) .. fs.hideExtension(fs.name(icon.path)) .. ".pkg", icon.path)
 		computer.pushSignal("MineOSCore", "updateFileList")
 	elseif action == MineOSCore.localization.contextMenuSetAsWallpaper then
-		fs.remove(MineOSCore.paths.wallpaper)
-		ecs.createShortCut(MineOSCore.paths.wallpaper, icon.path)
+		_G.OSSettings.wallpaper = icon.path
+		MineOSCore.saveOSSettings()
 		computer.pushSignal("MineOSCore", "updateWallpaper")
 	elseif action == MineOSCore.localization.contextMenuFlashEEPROM then
 		local file = io.open(icon.path, "r")

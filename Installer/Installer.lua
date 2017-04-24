@@ -295,6 +295,7 @@ stages[5] = function()
 	
 	stageContainer:addLabel(1, 22, stageContainer.width, 1, 0x666666, localization.needToReboot):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
 	stageContainer:addAdaptiveRoundedButton(math.floor(stageContainer.width / 2 - (unicode.len(localization.reboot) + 4) / 2), stageContainer.height - 4, 2, 1, 0xAAAAAA, 0xDDDDDD, 0x777777, 0xDDDDDD, localization.reboot).onTouch = function()
+		_G.OSSettings.wallpaper = stageContainer.downloadWallpapersSwitch.state and "/MineOS/Pictures/MoonTouch.pic" or nil
 		_G.OSSettings.screensaver = "Matrix"
 		_G.OSSettings.screensaverDelay = 20
 		_G.OSSettings.showHelpOnApplicationStart = stageContainer.showApplicationsHelpSwitch.state

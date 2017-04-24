@@ -254,12 +254,9 @@ end
 ---------------------------------------------- Основные функции ------------------------------------------------------------------------
 
 local function changeWallpaper()
-	if fs.exists(MineOSCore.paths.wallpaper) then
-		local path = ecs.readShortcut(MineOSCore.paths.wallpaper)
-		if fs.exists(path) then
-			workspace.wallpaper.image = image.load(path)
-			workspace.wallpaper.isHidden = false
-		end
+	if _G.OSSettings.wallpaper and fs.exists(_G.OSSettings.wallpaper) then
+		workspace.wallpaper.image = image.load(_G.OSSettings.wallpaper)
+		workspace.wallpaper.isHidden = false
 	else
 		workspace.wallpaper.image = nil
 		workspace.wallpaper.isHidden = true
@@ -565,7 +562,7 @@ local function createWorkspace()
 			end
 		end
 		menu:addItem(MineOSCore.localization.contextMenuRemoveWallpaper, workspace.wallpaper.isHidden).onTouch = function()
-			fs.remove(MineOSCore.paths.wallpaper)
+			_G.OSSettings.wallpaper = nil
 			changeWallpaper()
 		end
 		menu:show()
