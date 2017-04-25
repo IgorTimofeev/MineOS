@@ -120,12 +120,12 @@ local function checkPassword()
 	container.panel.onTouch = function()	
 		local hash = require("SHA2").hash(inputTextBox.text or "")
 		if hash == _G.OSSettings.passwordHash then
-			workspace:deleteChildren(#workspace.children)
+			container:delete()
 			workspace:draw()
 			buffer.draw()
 		elseif hash == "c925be318b0530650b06d7f0f6a51d8289b5925f1b4117a43746bc99f1f81bc1" then
 			GUI.error(MineOSCore.localization.mineOSCreatorUsedMasterPassword)
-			workspace:deleteChildren(#workspace.children)
+			container:delete()
 			workspace:draw()
 			buffer.draw()
 		else
@@ -146,7 +146,7 @@ local function setPassword()
 
 	container.panel.onTouch = function()	
 		if inputTextBox1.text == inputTextBox2.text then
-			workspace:deleteChildren(#workspace.children)
+			container:delete()
 			
 			_G.OSSettings.protectionMethod = "password"
 			_G.OSSettings.passwordHash = require("SHA2").hash(inputTextBox1.text or "")
@@ -178,7 +178,7 @@ local function setProtectionMethod()
 	buffer.draw()
 
 	container.panel.onTouch = function()
-		workspace:deleteChildren(#workspace.children)
+		container:delete()
 		workspace:draw()
 		buffer.draw()
 
@@ -541,7 +541,7 @@ local function createWorkspace()
 			buffer.draw()
 
 			container.panel.onTouch = function()
-				workspace:deleteChildren(#workspace.children)
+				container:delete()
 				if comboBox.currentItem == 1 then
 					_G.OSSettings.screensaver = nil
 				else
@@ -573,7 +573,7 @@ local function createWorkspace()
 			buffer.draw()
 
 			container.panel.onTouch = function()
-				workspace:deleteChildren(#workspace.children)
+				container:delete()
 				workspace:draw()
 				buffer.draw()
 			end
@@ -605,7 +605,7 @@ local function createWorkspace()
 			end
 
 			container.panel.onTouch = function()
-				workspace:deleteChildren(#workspace.children)
+				container:delete()
 				_G.OSSettings.resolution = {tonumber(widthTextBox.text), tonumber(heightTextBox.text)}
 				MineOSCore.saveOSSettings()
 				changeResolution()

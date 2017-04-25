@@ -234,6 +234,10 @@ local function containerGetFirstParent(object)
 	end
 end
 
+local function selfDelete(object)
+	table.remove(object.parent.children, containerObjectIndexOf(object))
+end
+
 -- Add any object as children to parent container with specified objectType
 function GUI.addChildToContainer(container, object, objectType)
 	object.type = objectType or GUI.objectTypes.unknown
@@ -244,6 +248,7 @@ function GUI.addChildToContainer(container, object, objectType)
 	object.moveForward = containerObjectMoveForward
 	object.moveBackward = containerObjectMoveBackward
 	object.getFirstParent = containerGetFirstParent
+	object.delete = selfDelete
 	object.localPosition = {x = object.x, y = object.y}
 
 	table.insert(container.children, object)

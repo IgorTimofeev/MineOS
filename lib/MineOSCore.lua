@@ -833,7 +833,7 @@ local function checkFileToExists(container, path)
 		container.parent:draw()
 		buffer.draw()
 	else
-		container.parent:deleteChildren(#container.parent.children, #container.parent.children)
+		container:delete()
 		fs.makeDirectory(fs.path(path))
 		return true
 	end
@@ -909,14 +909,14 @@ function MineOSCore.applicationHelp(parentWindow, path)
 		buffer.draw()
 
 		container.panel.onTouch = function()
-			parentWindow:deleteChildren(#parentWindow.children, #parentWindow.children)
+			container:delete()
 			MineOSCore.safeLaunch(path .. "/Main.lua")
 			parentWindow:draw()
 			buffer.draw()
 		end
 
 		button.onTouch = function()
-			parentWindow:deleteChildren(#parentWindow.children, #parentWindow.children)
+			container:delete()
 			_G.OSSettings.showHelpOnApplicationStart = false
 			MineOSCore.saveOSSettings()
 			
