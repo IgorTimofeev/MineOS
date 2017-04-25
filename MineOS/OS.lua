@@ -458,12 +458,12 @@ local function createWorkspace()
 	local item1 = workspace.menu:addItem("MineOS", 0x000000)
 	item1.onTouch = function()
 		local menu = GUI.contextMenu(item1.x, item1.y + 1)
-		menu:addItem(MineOSCore.localization.aboutSystem).onTouch = function()
-			ecs.prepareToExit()
-			print(copyright)
-			ecs.waitForTouchOrClick()
-			buffer.draw(true)
-		end
+		-- menu:addItem(MineOSCore.localization.aboutSystem).onTouch = function()
+		-- 	ecs.prepareToExit()
+		-- 	print(copyright)
+		-- 	ecs.waitForTouchOrClick()
+		-- 	buffer.draw(true)
+		-- end
 		menu:addItem(MineOSCore.localization.updates).onTouch = function()
 			MineOSCore.safeLaunch("/MineOS/Applications/AppMarket.app/Main.lua", "updateCheck")
 		end
@@ -549,6 +549,9 @@ local function createWorkspace()
 					_G.OSSettings.screensaver, _G.OSSettings.screensaverDelay = comboBox.items[comboBox.currentItem].text, slider.value
 				end
 				MineOSCore.saveOSSettings()
+
+				workspace:draw()
+				buffer.draw()
 			end
 		end
 		menu:addItem(MineOSCore.localization.colorScheme).onTouch = function()
@@ -557,14 +560,23 @@ local function createWorkspace()
 			local backgroundColorSelector = container.layout:addColorSelector(1, 1, 36, 3, workspace.background.colors.background, MineOSCore.localization.backgroundColor)
 			local interfaceColorSelector = container.layout:addColorSelector(1, 1, 36, 3, workspace.menu.colors.default.background, MineOSCore.localization.interfaceColor)
 			
+			backgroundColorSelector.onTouch = function()
+				_G.OSSettings.backgroundColor, _G.OSSettings.interfaceColor = backgroundColorSelector.color, interfaceColorSelector.color
+				workspace.background.colors.background, workspace.menu.colors.default.background = _G.OSSettings.backgroundColor, _G.OSSettings.interfaceColor
+				MineOSCore.saveOSSettings()
+				
+				workspace:draw()
+				buffer.draw()
+			end
+			interfaceColorSelector.onTouch = backgroundColorSelector.onTouch
+
 			workspace:draw()
 			buffer.draw()
 
 			container.panel.onTouch = function()
 				workspace:deleteChildren(#workspace.children)
-				_G.OSSettings.backgroundColor, _G.OSSettings.interfaceColor = backgroundColorSelector.color, interfaceColorSelector.color
-				workspace.background.colors.background, workspace.menu.colors.default.background = _G.OSSettings.backgroundColor, _G.OSSettings.interfaceColor
-				MineOSCore.saveOSSettings()
+				workspace:draw()
+				buffer.draw()
 			end
 		end
 		menu:addItem(MineOSCore.localization.contextMenuRemoveWallpaper, workspace.wallpaper.isHidden).onTouch = function()
