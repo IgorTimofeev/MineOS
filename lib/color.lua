@@ -8,8 +8,8 @@ local function isNan(x)
 	return x ~= x
 end
 
-function color.HEXToRGB(color)
-	return bit32.rshift(color, 16), bit32.band(bit32.rshift(color, 8), 0xFF), bit32.band(color, 0xFF)
+function color.HEXToRGB(HEXColor)
+	return bit32.rshift(HEXColor, 16), bit32.band(bit32.rshift(HEXColor, 8), 0xFF), bit32.band(HEXColor, 0xFF)
 end
 
 function color.RGBToHEX(r, g, b)
@@ -62,8 +62,8 @@ function color.HSBToRGB(h, s, v)
 	return math.floor(rr * const), math.floor(gg * const), math.floor(bb * const)
 end
 
-function color.HEXToHSB(color)
-	local rr, gg, bb = color.HEXToRGB(color)
+function color.HEXToHSB(HEXColor)
+	local rr, gg, bb = color.HEXToRGB(HEXColor)
 	local h, s, b = color.RGBToHSB( rr, gg, bb )
 	
 	return h, s, b

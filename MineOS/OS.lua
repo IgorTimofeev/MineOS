@@ -20,7 +20,7 @@ copyright = nil
 
 ---------------------------------------------- Адаптивная загрузка библиотек ------------------------------------------------------------------------
 
-package.loaded.MineOSCore = nil
+-- package.loaded.MineOSCore = nil
 
 local component = require("component")
 local unicode = require("unicode")
@@ -337,7 +337,7 @@ local function updateDock()
 
 	local xPos = 1
 	for iconIndex = 1, #_G.OSSettings.dockShortcuts do
-		local iconObject = MineOSCore.createIconObject(xPos, 1, _G.OSSettings.dockShortcuts[iconIndex].path, 0x262626, _G.OSSettings.showFileFormat)
+		local iconObject = MineOSCore.createIcon(xPos, 1, _G.OSSettings.dockShortcuts[iconIndex].path, 0x262626, _G.OSSettings.showExtension)
 			
 		iconObject.onRightClick = function(iconObject, eventData)
 			local menu = GUI.contextMenu(eventData[3], eventData[4])
@@ -368,7 +368,7 @@ local function updateDock()
 		xPos = xPos + MineOSCore.iconWidth + sizes.xSpaceBetweenIcons
 	end
 
-	local iconObject = MineOSCore.createIconObject(xPos, 1, MineOSCore.paths.trash, 0x262626, _G.OSSettings.showFileFormat)
+	local iconObject = MineOSCore.createIcon(xPos, 1, MineOSCore.paths.trash, 0x262626, _G.OSSettings.showExtension)
 	iconObject.iconImage.image = MineOSCore.icons.trash
 	iconObject.onRightClick = function(iconObject, eventData)
 		local menu = GUI.contextMenu(eventData[3], eventData[4])
@@ -443,7 +443,7 @@ local function createWorkspace()
 			sizes.xSpaceBetweenIcons,
 			sizes.ySpaceBetweenIcons,
 			0xFFFFFF,
-			_G.OSSettings.showFileFormat == nil and true or _G.OSSettings.showFileFormat,
+			_G.OSSettings.showExtension == nil and true or _G.OSSettings.showExtension,
 			_G.OSSettings.showHiddenFiles == nil and true or _G.OSSettings.showHiddenFiles,
 			(_G.OSSettings.sortingMethod or "type"),
 			"/"
@@ -491,9 +491,9 @@ local function createWorkspace()
 	local item2 = workspace.menu:addItem(MineOSCore.localization.viewTab)
 	item2.onTouch = function()
 		local menu = GUI.contextMenu(item2.x, item2.y + 1)
-		menu:addItem(workspace.iconField.showFileFormat and MineOSCore.localization.hideFileFormat or MineOSCore.localization.showFileFormat).onTouch = function()
-			workspace.iconField.showFileFormat = not workspace.iconField.showFileFormat
-			_G.OSSettings.showFileFormat = workspace.iconField.showFileFormat
+		menu:addItem(workspace.iconField.showExtension and MineOSCore.localization.hideExtension or MineOSCore.localization.showExtension).onTouch = function()
+			workspace.iconField.showExtension = not workspace.iconField.showExtension
+			_G.OSSettings.showExtension = workspace.iconField.showExtension
 			MineOSCore.saveOSSettings()
 			workspace.updateFileList()
 		end

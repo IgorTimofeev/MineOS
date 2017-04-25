@@ -271,7 +271,7 @@ while true do
 	end
 
 	if not somethingHappend then
-		if yBird + bird.height - 1 < buffer.screen.height then
+		if yBird + image.getHeight(bird) - 1 < buffer.screen.height then
 			yBird = yBird + config.birdFlyDownSpeed
 		else
 			scores[currentUser] = math.max(scores[currentUser] or 0, currentScore)

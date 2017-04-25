@@ -3,6 +3,7 @@
 
 local color = require("color")
 local unicode = require("unicode")
+local fs = require("filesystem")
 local gpu = require("component").gpu
 
 -------------------------------------------------- Constants --------------------------------------------------
@@ -163,10 +164,10 @@ local function getFileExtension(path)
 	return string.match(path, "^.+(%.[^%/]+)%/?$")
 end
 
-local function loadOrSave(methodName, path, picture, encodingMethod)
+local function loadOrSave(methodName, path, ...)
 	local fileExtension = getFileExtension(path)
 	if image.formatModules[fileExtension] then
-		return image.formatModules[fileExtension][methodName](path, picture, encodingMethod)
+		return image.formatModules[fileExtension][methodName](path, ...)
 	else
 		error("Failed to open file \"" .. tostring(path) .. "\" as image: format module for extension \"" .. tostring(fileExtension) .. "\" is not loaded")
 	end
@@ -177,7 +178,11 @@ function image.save(path, picture, encodingMethod)
 end
 
 function image.load(path)
-	return loadOrSave("load", path)
+	if fs.exists(path) then
+		return loadOrSave("load", path)
+	else
+		return image.fromString("0101FFE300x")
+	end
 end
 
 -------------------------------------------------- Image serialization --------------------------------------------------
