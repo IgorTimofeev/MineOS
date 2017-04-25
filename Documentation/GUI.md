@@ -160,6 +160,58 @@ GUI.**fullScreenWindow**( ): *table* window
 
 Создать объект окна на основе текущего разрешения экранного буфера.
 
+GUI.**layout**( x, y, width, height, columns, rows ): *table* window
+-----------------------------------------------------
+
+| Тип | Аргумент | Описание |
+| ------ | ------ | ------ |
+| *int* | x | Координата объекта по оси x |
+| *int* | y | Координата объекта по оси y |
+| *int* | width | Ширина объекта |
+| *int* | height | Высота объекта |
+| *int* | columns | Количество рядов сетки |
+| *int* | rows | Количество строк сетки |
+
+Layout является наследником GUI.**container**, предоставляющим автоматические методы расположения дочерних объектов внутри себя. К примеру, если вам хочется визуально красиво отобразить множество объектов, не тратя время на ручной расчет координат, то layout создан для вас.
+
+| Тип свойства | Свойство |Описание |
+| ------ | ------ | ------ |
+| *function* | :**setCellPosition**(*object* child, *int* column, *int* row): *object* child| Назначить дочернему объекту layout конкретную ячейку сетки. В одной ячейке может располагаться сколь угодно много объектов. |
+| *function* | :**setCellDirection**(*int* column, *int* row, *enum* direction): *layout* layout | Назначить ячейке сетки метод отображения дочерних объектов. Поддерживаются GUI.directions.horizontal и GUI.directions.vertical |
+
+Пример реализации layout:
+```lua
+local buffer = require("doubleBuffering")
+local GUI = require("GUI")
+
+-- Создаем полноэкранное окно, добавляем на него изображение с малиной и полупрозрачную черную панель
+local window = GUI.fullScreenWindow()
+window:addImage(1, 1, require("image").load("/MineOS/Pictures/Raspberry.pic"))
+window:addPanel(1, 1, window.width, window.height, 0x000000, 40)
+
+-- Добавляем к окну layout с сеткой 5x1
+local layout = window:addLayout(1, 1, window.width, window.height, 5, 1)
+
+-- Добавяляем в layout 9 кнопок, назначая им соответствующие позиции в сетке
+layout:setCellPosition(layout:addButton(1, 1, 26, 3, 0xEEEEEE, 0x000000, 0xAAAAAA, 0x000000, "Button 1"), 1, 1)
+layout:setCellPosition(layout:addButton(1, 1, 26, 3, 0xEEEEEE, 0x000000, 0xAAAAAA, 0x000000, "Button 2"), 2, 1)
+layout:setCellPosition(layout:addButton(1, 1, 26, 3, 0xEEEEEE, 0x000000, 0xAAAAAA, 0x000000, "Button 3"), 2, 1)
+layout:setCellPosition(layout:addButton(1, 1, 26, 3, 0xEEEEEE, 0x000000, 0xAAAAAA, 0x000000, "Button 4"), 3, 1)
+layout:setCellPosition(layout:addButton(1, 1, 26, 3, 0xEEEEEE, 0x000000, 0xAAAAAA, 0x000000, "Button 5"), 3, 1)
+layout:setCellPosition(layout:addButton(1, 1, 26, 3, 0xEEEEEE, 0x000000, 0xAAAAAA, 0x000000, "Button 6"), 3, 1)
+layout:setCellPosition(layout:addButton(1, 1, 26, 3, 0xEEEEEE, 0x000000, 0xAAAAAA, 0x000000, "Button 7"), 4, 1)
+layout:setCellPosition(layout:addButton(1, 1, 26, 3, 0xEEEEEE, 0x000000, 0xAAAAAA, 0x000000, "Button 8"), 4, 1)
+layout:setCellPosition(layout:addButton(1, 1, 26, 3, 0xEEEEEE, 0x000000, 0xAAAAAA, 0x000000, "Button 9"), 5, 1)
+
+window:draw()
+buffer.draw(true)
+window:handleEvents()
+```
+
+Результат:
+
+![Imgur](http://i.imgur.com/wjjMfDe.png?1)
+
 Методы для создания виджетов
 ======
 
