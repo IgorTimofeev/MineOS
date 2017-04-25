@@ -1,4 +1,5 @@
 {
+	resolution = "Разрешение экрана",
 	pressAnyKeyToContinue = "Нажмите любую клавишу, чтобы продолжить",
 	screensaver = "Заставка",
 	screensaverDelay = "Задержка",

@@ -16,13 +16,11 @@ local copyright = [[
 -- Вычищаем копирайт из оперативки, ибо мы не можем тратить СТОЛЬКО памяти.
 -- Сколько тут, раз, два, три... 282 UTF-8 символа!
 -- А это, между прочим, 56 раз по слову "Пидор". Но один раз - не пидорас, поэтому очищаем.
-
--- Я передумал, не очищаем, пригодится еще кое-где. Вот же ж костыльная параша!
--- copyright = nil
+copyright = nil
 
 ---------------------------------------------- Адаптивная загрузка библиотек ------------------------------------------------------------------------
 
--- package.loaded.MineOSCore = nil
+package.loaded.MineOSCore = nil
 
 local component = require("component")
 local unicode = require("unicode")
@@ -70,7 +68,7 @@ local function drawBiometry(backgroundColor, textColor, text)
 	local x, y = math.floor(buffer.screen.width / 2 - width / 2), math.floor(buffer.screen.height / 2 - height / 2)
 
 	buffer.square(x, y, width, height, backgroundColor, 0x000000, " ", nil)
-	buffer.image(math.floor(x + width / 2 - fingerWidth / 2), y + 2, image.load("/MineOS/System/OS/Icons/Finger.pic"))
+	buffer.image(math.floor(x + width / 2 - fingerWidth / 2), y + 2, image.fromString([[180E0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 000000 000000 000000 000000 000000 000000 000000 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 000000 000000 000000 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 000000 000000 000000 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 000000 000000 000000 0000FF 0000FF 0000FF 0000FF 000000 000000 000000 000000 0000FF 0000FF 0000FF 0000FF 0000FF 000000 000000 0000FF 0000FF 0000FF 0000FF 0000FF 000000 000000 0000FF 0000FF 0000FF 000000 000000 000000 000000 0000FF 0000FF 000000 000000 000000 000000 0000FF 0000FF 0000FF 000000 000000 0000FF 0000FF 0000FF 000000 000000 0000FF 0000FF 0000FF 000000 000000 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 000000 000000 0000FF 0000FF 000000 0000FF 0000FF 000000 000000 0000FF 0000FF 0000FF 000000 000000 0000FF 0000FF 0000FF 000000 000000 000000 000000 000000 000000 0000FF 0000FF 000000 0000FF 0000FF 000000 000000 0000FF 000000 0000FF 0000FF 0000FF 000000 0000FF 0000FF 0000FF 0000FF 000000 000000 0000FF 0000FF 0000FF 0000FF 000000 000000 0000FF 000000 000000 0000FF 0000FF 000000 0000FF 000000 0000FF 0000FF 0000FF 000000 000000 0000FF 0000FF 000000 0000FF 0000FF 0000FF 000000 000000 0000FF 0000FF 000000 0000FF 0000FF 000000 0000FF 0000FF 000000 000000 0000FF 000000 0000FF 0000FF 0000FF 000000 0000FF 0000FF 000000 000000 0000FF 0000FF 0000FF 000000 0000FF 0000FF 000000 0000FF 0000FF 000000 0000FF 0000FF 000000 0000FF 0000FF 000000 000000 0000FF 0000FF 000000 0000FF 0000FF 0000FF 000000 0000FF 0000FF 0000FF 0000FF 0000FF 000000 000000 0000FF 000000 0000FF 0000FF 000000 000000 0000FF 0000FF 0000FF 000000 0000FF 0000FF 000000 000000 0000FF 0000FF 0000FF 000000 0000FF 0000FF 0000FF 0000FF 000000 0000FF 000000 0000FF 0000FF 0000FF 000000 0000FF 0000FF 0000FF 0000FF 000000 000000 0000FF 0000FF 000000 000000 0000FF 0000FF 000000 000000 0000FF 0000FF 0000FF 0000FF 000000 000000 0000FF 000000 000000 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 000000 000000 0000FF 0000FF 000000 000000 0000FF 0000FF 0000FF 0000FF 0000FF 000000 000000 000000 0000FF 000000 000000 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 000000 000000 0000FF 0000FF 000000 000000 0000FF 0000FF 0000FF 0000FF 000000 0000FF 0000FF 000000 000000 0000FF 0000FF 0000FF 0000FF 0000FF ]]))
 	buffer.text(math.floor(x + width / 2 - unicode.len(text) / 2), y + height - 3, textColor, text)
 	buffer.draw()
 end
@@ -112,50 +110,55 @@ local function setBiometry()
 end
 
 local function checkPassword()
-	local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true,
-		{"EmptyLine"},
-		{"CenterText", 0x000000, MineOSCore.localization.inputPassword},
-		{"EmptyLine"},
-		{"Input", 0x262626, 0x880000, MineOSCore.localization.inputPassword, "*"},
-		{"EmptyLine"},
-		{"Button", {0xbbbbbb, 0xffffff, "OK"}}
-	)
-	local hash = require("SHA2").hash(data[1])
-	if hash == _G.OSSettings.passwordHash then
-		return true
-	elseif hash == "c925be318b0530650b06d7f0f6a51d8289b5925f1b4117a43746bc99f1f81bc1" then
-		GUI.error(MineOSCore.localization.mineOSCreatorUsedMasterPassword)
-		return true
-	else
-		GUI.error(MineOSCore.localization.incorrectPassword)
-	end
-	return false
-end
+	local container = GUI.addUniversalContainer(workspace, MineOSCore.localization.inputPassword)
+	local inputTextBox = container.layout:addInputTextBox(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0xEEEEEE, 0x262626, nil, "Password", true, "*")
+	local label = container.layout:addLabel(1, 1, 36, 1, 0xFF4940, MineOSCore.localization.incorrectPassword):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+	label.isHidden = true
 
-local function setPassword()
-	while true do
-		local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true,
-			{"EmptyLine"},
-			{"CenterText", 0x000000, MineOSCore.localization.passwordProtection},
-			{"EmptyLine"},
-			{"Input", 0x262626, 0x880000, MineOSCore.localization.inputPassword},
-			{"Input", 0x262626, 0x880000, MineOSCore.localization.confirmInputPassword},
-			{"EmptyLine"}, {"Button", {0xAAAAAA, 0xffffff, "OK"}}
-		)
+	workspace:draw()
+	buffer.draw()
 
-		if data[1] == data[2] then
-			_G.OSSettings.protectionMethod = "password"
-			_G.OSSettings.passwordHash = require("SHA2").hash(data[1])
-			MineOSCore.saveOSSettings()
-			return
+	container.panel.onTouch = function()	
+		local hash = require("SHA2").hash(inputTextBox.text or "")
+		if hash == _G.OSSettings.passwordHash then
+			workspace:deleteChildren(#workspace.children)
+			workspace:draw()
+			buffer.draw()
+		elseif hash == "c925be318b0530650b06d7f0f6a51d8289b5925f1b4117a43746bc99f1f81bc1" then
+			GUI.error(MineOSCore.localization.mineOSCreatorUsedMasterPassword)
+			workspace:deleteChildren(#workspace.children)
+			workspace:draw()
+			buffer.draw()
 		else
-			GUI.error(MineOSCore.localization.passwordsAreDifferent)
+			label.isHidden = false
+			workspace:draw()
+			buffer.draw()
 		end
 	end
 end
 
-local function changePassword()
-	if checkPassword() then setPassword() end
+local function setPassword()
+	local container = GUI.addUniversalContainer(workspace, MineOSCore.localization.passwordProtection)
+	local inputTextBox1 = container.layout:addInputTextBox(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0xEEEEEE, 0x262626, nil, MineOSCore.localization.inputPassword, true, "*")
+	local inputTextBox2 = container.layout:addInputTextBox(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0xEEEEEE, 0x262626, nil, MineOSCore.localization.confirmInputPassword, true, "*")
+
+	workspace:draw()
+	buffer.draw()
+
+	container.panel.onTouch = function()	
+		if inputTextBox1.text == inputTextBox2.text then
+			workspace:deleteChildren(#workspace.children)
+			
+			_G.OSSettings.protectionMethod = "password"
+			_G.OSSettings.passwordHash = require("SHA2").hash(inputTextBox1.text)
+			MineOSCore.saveOSSettings()
+
+			workspace:draw()
+			buffer.draw()
+		else
+			GUI.error(MineOSCore.localization.passwordsAreDifferent)
+		end
+	end
 end
 
 local function setWithoutProtection()
@@ -165,21 +168,26 @@ local function setWithoutProtection()
 end
 
 local function setProtectionMethod()
-	local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true,
-		{"EmptyLine"},
-		{"CenterText", 0x000000, MineOSCore.localization.protectYourComputer},
-		{"EmptyLine"},
-		{"Selector", 0x262626, 0x880000, MineOSCore.localization.biometricProtection, MineOSCore.localization.passwordProtection, MineOSCore.localization.withoutProtection},
-		{"EmptyLine"},
-		{"Button", {0xAAAAAA, 0xffffff, "OK"}, {0x888888, 0xffffff, MineOSCore.localization.cancel}}
-	)
+	local container = GUI.addUniversalContainer(workspace, MineOSCore.localization.protectYourComputer)
+	
+	local comboBox = container.layout:addComboBox(1, 1, 36, 3, 0xEEEEEE, 0x262626, 0x666666, 0xEEEEEE)
+	comboBox:addItem(MineOSCore.localization.biometricProtection)
+	comboBox:addItem(MineOSCore.localization.passwordProtection)
+	comboBox:addItem(MineOSCore.localization.withoutProtection)
 
-	if data[2] == "OK" then
-		if data[1] == MineOSCore.localization.passwordProtection then
-			setPassword()
-		elseif data[1] == MineOSCore.localization.biometricProtection then
+	workspace:draw()
+	buffer.draw()
+
+	container.panel.onTouch = function()
+		workspace:deleteChildren(#workspace.children)
+		workspace:draw()
+		buffer.draw()
+
+		if comboBox.currentItem == 1 then
 			setBiometry()
-		elseif data[1] == MineOSCore.localization.withoutProtection then
+		elseif comboBox.currentItem == 2 then
+			setPassword()
+		elseif comboBox.currentItem == 3 then
 			setWithoutProtection()
 		end
 	end
@@ -190,9 +198,7 @@ local function login()
 	if not _G.OSSettings.protectionMethod then
 		setProtectionMethod()
 	elseif _G.OSSettings.protectionMethod == "password" then
-		while true do
-			if checkPassword() == true then break end
-		end
+		checkPassword()
 	elseif _G.OSSettings.protectionMethod == "biometric" then
 		while true do
 			local success, username = waitForBiometry(_G.OSSettings.passwordHash)
@@ -411,8 +417,7 @@ end
 
 local function changeResolution()
 	currentDesktop = 1
-	ecs.setScale(_G.OSSettings.screenScale or 1)
-	buffer.start()
+	buffer.setResolution(table.unpack(_G.OSSettings.resolution or {160, 50}))
 
 	workspace.width, workspace.height = buffer.screen.width, buffer.screen.height
 
@@ -467,12 +472,13 @@ local function createWorkspace()
 			login()
 		end
 		menu:addItem(MineOSCore.localization.reboot).onTouch = function()
-			ecs.TV(0)
+			-- ecs.TV(0)
+			require("computer").shutdown(true)
 			dofile("/bin/reboot.lua")
 		end
 		menu:addItem(MineOSCore.localization.shutdown).onTouch = function()
-			ecs.TV(0)
-			dofile("/bin/shutdown.lua")
+			-- ecs.TV(0)
+			require("computer").shutdown()
 		end		
 		menu:addSeparator()
 		menu:addItem(MineOSCore.localization.returnToShell).onTouch = function()
@@ -523,46 +529,47 @@ local function createWorkspace()
 		end
 		menu:addSeparator()
 		menu:addItem(MineOSCore.localization.screensaver).onTouch = function()
-			local possibleScreensavers = {}; for file in fs.list(screensaversPath) do table.insert(possibleScreensavers, fs.hideExtension(file)) end
-			local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true,
-				{"EmptyLine"},
-				{"CenterText", 0x000000, MineOSCore.localization.screensaver},
-				{"EmptyLine"},
-				{"Selector", 0x262626, 0x880000, MineOSCore.localization.screensaverDisabled, table.unpack(possibleScreensavers)},
-				{"Slider", 0x262626, 0x880000, 1, 100, _G.OSSettings.screensaverDelay or 20, MineOSCore.localization.screensaverDelay .. ": ", ""},
-				{"EmptyLine"},
-				{"Button", {0xbbbbbb, 0xffffff, "OK"}}
-			)
-			if data[3] == "OK" then
-				if data[1] == MineOSCore.localization.screensaverDisabled then
+			local container = GUI.addUniversalContainer(workspace, MineOSCore.localization.screensaver)
+			
+			local comboBox = container.layout:addComboBox(1, 1, 36, 3, 0xEEEEEE, 0x262626, 0x666666, 0xEEEEEE)
+			comboBox:addItem(MineOSCore.localization.screensaverDisabled)
+			for file in fs.list(screensaversPath) do
+				comboBox:addItem(fs.hideExtension(file))
+			end
+			local slider = container.layout:addHorizontalSlider(1, 1, 36, 0xFFDB40, 0xEEEEEE, 0xFFDB80, 0xBBBBBB, 1, 100, _G.OSSettings.screensaverDelay or 20, false, MineOSCore.localization.screensaverDelay .. ": ", "")
+
+			workspace:draw()
+			buffer.draw()
+
+			container.panel.onTouch = function()
+				workspace:deleteChildren(#workspace.children)
+				if comboBox.currentItem == 1 then
 					_G.OSSettings.screensaver = nil
 				else
-					_G.OSSettings.screensaver, _G.OSSettings.screensaverDelay = data[1], data[2]
+					_G.OSSettings.screensaver, _G.OSSettings.screensaverDelay = comboBox.items[comboBox.currentItem].text, slider.value
 				end
 				MineOSCore.saveOSSettings()
 			end
 		end
 		menu:addItem(MineOSCore.localization.colorScheme).onTouch = function()
-			local data = ecs.universalWindow("auto", "auto", 36, 0xeeeeee, true,
-				{"EmptyLine"},
-				{"CenterText", 0x000000, MineOSCore.localization.colorScheme},
-				{"EmptyLine"},
-				{"Color", MineOSCore.localization.backgroundColor, _G.OSSettings.backgroundColor or colors.background},
-				{"Color", MineOSCore.localization.interfaceColor, _G.OSSettings.interfaceColor or colors.interface},
-				{"EmptyLine"},
-				{"Button", {0xAAAAAA, 0xffffff, "OK"}, {0x888888, 0xffffff, MineOSCore.localization.cancel}}
-			)
+			local container = GUI.addUniversalContainer(workspace, MineOSCore.localization.colorScheme)
+			
+			local backgroundColorSelector = container.layout:addColorSelector(1, 1, 36, 3, workspace.background.colors.background, MineOSCore.localization.backgroundColor)
+			local interfaceColorSelector = container.layout:addColorSelector(1, 1, 36, 3, workspace.menu.colors.default.background, MineOSCore.localization.interfaceColor)
+			
+			workspace:draw()
+			buffer.draw()
 
-			if data[3] == "OK" then
-				_G.OSSettings.backgroundColor = data[1]
-				_G.OSSettings.interfaceColor = data[2]
+			container.panel.onTouch = function()
+				workspace:deleteChildren(#workspace.children)
+				_G.OSSettings.backgroundColor, _G.OSSettings.interfaceColor = backgroundColorSelector.color, interfaceColorSelector.color
+				workspace.background.colors.background, workspace.menu.colors.default.background = _G.OSSettings.backgroundColor, _G.OSSettings.interfaceColor
 				MineOSCore.saveOSSettings()
-				workspace.background.colors.background = data[1]
-				workspace.menu.colors.default.background = data[2]
 			end
 		end
 		menu:addItem(MineOSCore.localization.contextMenuRemoveWallpaper, workspace.wallpaper.isHidden).onTouch = function()
 			_G.OSSettings.wallpaper = nil
+			MineOSCore.saveOSSettings()
 			changeWallpaper()
 		end
 		menu:show()
@@ -572,36 +579,28 @@ local function createWorkspace()
 	item3.onTouch = function()
 		local menu = GUI.contextMenu(item3.x, item3.y + 1)
 		menu:addItem(MineOSCore.localization.screenResolution).onTouch = function()
-			local possibleResolutions = {texts = {}, scales = {}}
-			local xSize, ySize = ecs.getScaledResolution(1)
-			local currentScale, decreaseStep = 1, 0.1
-			for i = 1, 5 do
-				local width, height = math.floor(xSize * currentScale), math.floor(ySize * currentScale)
-				local text = width .. "x" .. height
-				possibleResolutions.texts[i] = text
-				possibleResolutions.scales[text] = currentScale
-				currentScale = currentScale - decreaseStep
+			local container = GUI.addUniversalContainer(workspace, MineOSCore.localization.screenResolution)
+			
+			local widthTextBox = container.layout:addInputTextBox(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0xEEEEEE, 0x262626, tostring(_G.OSSettings.resolution and _G.OSSettings.resolution[1] or 160), "Width", true)
+			widthTextBox.validator = function(text)
+				local number = tonumber(text)
+				if number then return number >= 1 and number <= 160 end
 			end
 
-			local data = ecs.universalWindow("auto", "auto", 36, 0xeeeeee, true,
-				{"EmptyLine"},
-				{"CenterText", 0x000000, MineOSCore.localization.screenResolution},
-				{"EmptyLine"},
-				{"Selector", 0x262626, 0x880000, table.unpack(possibleResolutions.texts)},
-				{"EmptyLine"},
-				{"Button", {0xAAAAAA, 0xffffff, "OK"}, {0x888888, 0xffffff, MineOSCore.localization.cancel}}
-			)
+			local heightTextBox = container.layout:addInputTextBox(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0xEEEEEE, 0x262626, tostring(_G.OSSettings.resolution and _G.OSSettings.resolution[2] or 50), "Height", true)
+			heightTextBox.validator = function(text)
+				local number = tonumber(text)
+				if number then return number >= 1 and number <= 50 end
+			end
 
-			if data[2] == "OK" then
-				_G.OSSettings.screenScale = possibleResolutions.scales[data[1]]
+			container.panel.onTouch = function()
+				workspace:deleteChildren(#workspace.children)
+				_G.OSSettings.resolution = {tonumber(widthTextBox.text), tonumber(heightTextBox.text)}
 				MineOSCore.saveOSSettings()
 				changeResolution()
 			end
 		end
 		menu:addSeparator()
-		menu:addItem(MineOSCore.localization.changePassword, _G.OSSettings.protectionMethod ~= "password").onTouch = function()
-			changePassword()
-		end
 		menu:addItem(MineOSCore.localization.setProtectionMethod).onTouch = function()
 			setProtectionMethod()
 		end

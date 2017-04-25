@@ -87,7 +87,8 @@ GUI.objectTypes = enum(
 	"scrollBar",
 	"codeView",
 	"treeView",
-	"colorSelector"
+	"colorSelector",
+	"layout"
 )
 
 ----------------------------------------- Primitive objects -----------------------------------------
@@ -250,129 +251,108 @@ function GUI.addChildToContainer(container, object, objectType)
 	return object
 end
 
--- Add empty GUI.object to container
 local function addEmptyObjectToContainer(container, ...)
 	return GUI.addChildToContainer(container, GUI.object(...), GUI.objectTypes.empty)
 end
 
--- Add button object to container
 local function addButtonObjectToContainer(container, ...)
 	return GUI.addChildToContainer(container, GUI.button(...), GUI.objectTypes.button)
 end
 
--- Add adaptive button object to container
 local function addAdaptiveButtonObjectToContainer(container, ...)
 	return GUI.addChildToContainer(container, GUI.adaptiveButton(...), GUI.objectTypes.button)
 end
 
--- Add framedButton object to container
 local function addFramedButtonObjectToContainer(container, ...)
 	return GUI.addChildToContainer(container, GUI.framedButton(...), GUI.objectTypes.button)
 end
 
--- Add roundedButton object to container
 local function addRoundedButtonObjectToContainer(container, ...)
 	return GUI.addChildToContainer(container, GUI.roundedButton(...), GUI.objectTypes.button)
 end
 
--- Add adaptive roundedButton object to container
 local function addAdaptiveRoundedButtonObjectToContainer(container, ...)
 	return GUI.addChildToContainer(container, GUI.adaptiveRoundedButton(...), GUI.objectTypes.button)
 end
 
--- Add adaptive framedButton object to container
 local function addAdaptiveFramedButtonObjectToContainer(container, ...)
 	return GUI.addChildToContainer(container, GUI.adaptiveFramedButton(...), GUI.objectTypes.button)
 end
 
--- Add label object to container
 local function addLabelObjectToContainer(container, ...)
 	return GUI.addChildToContainer(container, GUI.label(...), GUI.objectTypes.label)
 end
 
--- Add panel object to container
 local function addPanelObjectToContainer(container, ...)
 	return GUI.addChildToContainer(container, GUI.panel(...), GUI.objectTypes.panel)
 end
 
--- Add windowActionButtons object to container
 local function addWindowActionButtonsObjectToContainer(container, ...)
 	return GUI.addChildToContainer(container, GUI.windowActionButtons(...), GUI.objectTypes.windowActionButtons)
 end
 
--- Add another container to container
 local function addContainerToContainer(container, ...)
 	return GUI.addChildToContainer(container, GUI.container(...), GUI.objectTypes.container)
 end
 
--- Add image object to container
 local function addImageObjectToContainer(container, ...)
 	return GUI.addChildToContainer(container, GUI.image(...), GUI.objectTypes.image)
 end
 
--- Add image object to container
 local function addTabBarObjectToContainer(container, ...)
 	return GUI.addChildToContainer(container, GUI.tabBar(...), GUI.objectTypes.tabBar)
 end
 
--- Add InputTextBox object to container
 local function addInputTextBoxObjectToContainer(container, ...)
 	return GUI.addChildToContainer(container, GUI.inputTextBox(...), GUI.objectTypes.inputTextBox)
 end
 
--- Add TextBox object to container
 local function addTextBoxObjectToContainer(container, ...)
 	return GUI.addChildToContainer(container, GUI.textBox(...), GUI.objectTypes.textBox)
 end
 
--- Add Horizontal Slider object to container
 local function addHorizontalSliderObjectToContainer(container, ...)
 	return GUI.addChildToContainer(container, GUI.horizontalSlider(...), GUI.objectTypes.horizontalSlider)
 end
 
--- Add Progressbar object to container
 local function addProgressBarObjectToContainer(container, ...)
 	return GUI.addChildToContainer(container, GUI.progressBar(...), GUI.objectTypes.progressBar)
 end
 
--- Add Switch object to container
 local function addSwitchObjectToContainer(container, ...)
 	return GUI.addChildToContainer(container, GUI.switch(...), GUI.objectTypes.switch)
 end
 
--- Add Chart object to container
 local function addChartObjectToContainer(container, ...)
 	return GUI.addChildToContainer(container, GUI.chart(...), GUI.objectTypes.chart)
 end
 
--- Add ComboBox object to container
 local function addComboBoxObjectToContainer(container, ...)
 	return GUI.addChildToContainer(container, GUI.comboBox(...), GUI.objectTypes.comboBox)
 end
 
--- Add Menu object to container
 local function addMenuObjectToContainer(container, ...)
 	return GUI.addChildToContainer(container, GUI.menu(...), GUI.objectTypes.menu)
 end
 
--- Add ScrollBar object to container
 local function addScrollBarObjectToContainer(container, ...)
 	return GUI.addChildToContainer(container, GUI.scrollBar(...), GUI.objectTypes.scrollBar)
 end
 
--- Add CodeView object to container
 local function addCodeViewObjectToContainer(container, ...)
 	return GUI.addChildToContainer(container, GUI.codeView(...), GUI.objectTypes.codeView)
 end
 
--- Add TreeView object to container
 local function addTreeViewObjectToContainer(container, ...)
 	return GUI.addChildToContainer(container, GUI.treeView(...), GUI.objectTypes.treeView)
 end
 
--- Add ColorSelector object to container
 local function addColorSelectorObjectToContainer(container, ...)
 	return GUI.addChildToContainer(container, GUI.colorSelector(...), GUI.objectTypes.colorSelector)
+end
+
+local function addLayoutObjectToContainer(container, ...)
+	return GUI.addChildToContainer(container, GUI.layout(...), GUI.objectTypes.layout)
 end
 
 -- Recursively draw container's content including all children container's content
@@ -396,8 +376,9 @@ end
 
 -- Delete every container's children object
 local function deleteContainersContent(container, from, to)
-	for objectIndex = from or 1, to or #container.children do
-		container.children[objectIndex] = nil
+	from = from or 1
+	for objectIndex = from, to or #container.children do
+		table.remove(container.children, from)
 	end
 end
 
@@ -435,6 +416,7 @@ function GUI.container(x, y, width, height)
 	container.addCodeView = addCodeViewObjectToContainer
 	container.addTreeView = addTreeViewObjectToContainer
 	container.addColorSelector = addColorSelectorObjectToContainer
+	container.addLayout = addLayoutObjectToContainer
 
 	return container
 end
@@ -1409,14 +1391,10 @@ function GUI.comboBox(x, y, width, elementHeight, backgroundColor, textColor, ar
 	object.currentItem = 1
 	object.addItem = addDropDownMenuItem
 	object.addSeparator = addDropDownMenuSeparator
-	if items then
-		for i = 1, #items do
-			object:addItem(items[i])
-		end
-	end
 	object.draw = drawComboBox
 	object.selectItem = selectComboBoxItem
 	object.state = false
+
 	return object
 end
 
@@ -2181,8 +2159,129 @@ function GUI.fullScreenWindow()
 	return GUI.window(1, 1, buffer.screen.width, buffer.screen.height)
 end
 
+----------------------------------------- Layout object -----------------------------------------
+
+local function layoutCheckCell(layout, column, row)
+	if column < 1 or column > #layout.grid[1] or row < 1 or row > #layout.grid then
+		error("Specified grid position (" .. tostring(column) .. "x" .. tostring(row) .. ") is out of layout grid range (" .. tostring(#layout.grid[1]) .. "x" .. tostring(#layout.grid) .. ")")
+	end
+end
+
+local function layoutCalculate(layout)
+	for row = 1, #layout.grid do
+		for column = 1, #layout.grid[1] do
+			layout.grid[row][column] = {direction = layout.grid[row][column].direction}
+		end
+	end
+
+	for i = 1, #layout.children do
+		layout.children[i].layoutGridPosition = layout.children[i].layoutGridPosition or {column = 1, row = 1}
+		table.insert(layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column], layout.children[i])
+	end
+
+	local gridCellWidth, gridCellHeight = layout.width / #layout.grid[1], layout.height / #layout.grid
+	for row = 1, #layout.grid do
+		for column = 1, #layout.grid[row] do
+			if #layout.grid[row][column] > 0 then
+				
+				local totalWidth, totalHeight = 0, 0
+				for i = 1, #layout.grid[row][column] do
+					if layout.grid[row][column].direction == GUI.directions.horizontal then
+						totalWidth = totalWidth + layout.grid[row][column][i].width + 2
+						totalHeight = math.max(totalHeight, layout.grid[row][column][i].height)
+					else
+						totalWidth = math.max(totalWidth, layout.grid[row][column][i].width)
+						totalHeight = totalHeight + layout.grid[row][column][i].height + 1
+					end
+				end
+
+				local x, y = column * gridCellWidth - gridCellWidth / 2 - totalWidth / 2, row * gridCellHeight - gridCellHeight / 2 - totalHeight / 2
+				for i = 1, #layout.grid[row][column] do
+					if layout.grid[row][column].direction == GUI.directions.horizontal then
+						layout.grid[row][column][i].localPosition.x = math.floor(x)
+						layout.grid[row][column][i].localPosition.y = math.floor(y + totalHeight / 2 - layout.grid[row][column][i].height / 2)
+						x = x + layout.grid[row][column][i].width + 2
+					else
+						layout.grid[row][column][i].localPosition.x = math.floor(x + totalWidth / 2 - layout.grid[row][column][i].width / 2)
+						layout.grid[row][column][i].localPosition.y = math.floor(y)
+						y = y + layout.grid[row][column][i].height + 1
+					end
+				end
+			end
+		end
+	end
+end
+
+local function layoutSetCellPosition(layout, object, column, row)
+	layoutCheckCell(layout, column, row)
+	
+	object.layoutGridPosition = {column = column, row = row}
+	layoutCalculate(layout)
+	return object
+end
+
+local function layoutSetCellDirection(layout, column, row, direction)
+	layoutCheckCell(layout, column, row)
+
+	layout.grid[row][column].direction = direction
+	layoutCalculate(layout)
+	return layout
+end
+
+local function layoutDraw(layout)
+	layoutCalculate(layout)
+	drawContainerContent(layout)
+end
+
+function GUI.layout(x, y, width, height, columnCount, rowCount)
+	local layout = GUI.container(x, y, width, height)
+
+	layout.grid = {}
+	for row = 1, rowCount do
+		layout.grid[row] = {}
+		for column = 1, columnCount do
+			layout.grid[row][column] = {direction = GUI.directions.vertical}
+		end
+	end
+	layout.setCellPosition = layoutSetCellPosition
+	layout.setCellDirection = layoutSetCellDirection
+	layout.draw = layoutDraw
+
+	return layout
+end
+
+----------------------------------------- Layout object -----------------------------------------
+
+function GUI.addUniversalContainer(parentWindow, title)
+	local container = parentWindow:addContainer(1, 1, parentWindow.width, parentWindow.height)
+	container.panel = container:addPanel(1, 1, container.width, container.height, 0x0, 30)
+	container.layout = container:addLayout(1, 1, container.width, container.height, 1, 1)
+	container.layout:addLabel(1, 1, unicode.len(title), 1, 0xEEEEEE, title):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+	
+	return container
+end
+
 --------------------------------------------------------------------------------------------------------------------------------
 
+-- buffer.start()
+
+-- local window = GUI.fullScreenWindow()
+-- window:addImage(1, 1, require("image").load("/MineOS/Pictures/Raspberry.pic"))
+-- window:addPanel(1, 1, window.width, window.height, 0x000000, 40)
+
+-- local layout = window:addLayout(1, 1, window.width, window.height, 1, 1)
+-- layout:setCellPosition(layout:addLabel(1, 1, 30, 1, 0xEEEEEE, "Сохранить как"), 1, 1):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+-- layout:setCellPosition(layout:addInputTextBox(1, 1, 30, 3, 0xEEEEEE, 0x666666, 0xEEEEEE, 0x262626, nil, "Путь", false), 1, 1)
+-- local comboBox = layout:setCellPosition(layout:addComboBox(1, 1, 20, 3, 0xEEEEEE, 0x262626, 0x777777, 0xEEEEEE), 1, 1)
+-- comboBox:addItem(".PNG")
+-- comboBox:addItem(".PSD")
+-- comboBox:addItem(".JPG")
+
+-- -- layout:setCellDirection(1, 1, GUI.directions.horizontal)
+
+-- window:draw()
+-- buffer.draw(true)
+-- window:handleEvents()
 
 --------------------------------------------------------------------------------------------------------------------------------
 
