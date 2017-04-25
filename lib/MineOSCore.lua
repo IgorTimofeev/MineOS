@@ -916,7 +916,6 @@ function MineOSCore.applicationHelp(parentWindow, path)
 		end
 
 		button.onTouch = function()
-			container:delete()
 			_G.OSSettings.showHelpOnApplicationStart = false
 			MineOSCore.saveOSSettings()
 			
