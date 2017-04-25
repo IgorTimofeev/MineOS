@@ -15,10 +15,6 @@ local screen = component.screen
 
 local reasons = {}
 
-if component.getPrimary("filesystem").isReadOnly() then
-	table.insert(reasons, "Floppy disk filesystem detected: type \"install\" in command line and install OpenOS to your HDD. After that run MineOS installer again.")
-end
-
 if not _G._OSVERSION or tonumber(_G._OSVERSION:sub(8, 10)) < 1.5 then
 	table.insert(reasons, "Old version of OpenComputers mod detected: MineOS requires OpenComputers 1.5 or newer to work properly.")
 end
