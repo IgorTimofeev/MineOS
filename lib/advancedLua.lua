@@ -187,58 +187,60 @@ function filesystem.sortedList(path, sortingMethod, showHiddenFiles)
 		table.insert(fileList, file)
 	end
 
-	if sortingMethod == "type" then
-		local extension
-		for i = 1, #fileList do
-			extension = filesystem.extension(fileList[i]) or "Script"
-			if filesystem.isDirectory(path .. fileList[i]) and extension ~= ".app" then
-				extension = ".01_Folder"
-			end
-			fileList[i] = {fileList[i], extension}
-		end
-
-		table.sort(fileList, function(a, b) return a[2] < b[2] end)
-
-		local currentExtensionList, currentExtension = {}, fileList[1][2]
-		for i = 1, #fileList do
-			if currentExtension == fileList[i][2] then
-				table.insert(currentExtensionList, fileList[i][1])
-			else
-				table.sort(currentExtensionList, function(a, b) return a < b end)
-				for j = 1, #currentExtensionList do
-					table.insert(sortedFileList, currentExtensionList[j])
+	if #fileList > 0 then
+		if sortingMethod == "type" then
+			local extension
+			for i = 1, #fileList do
+				extension = filesystem.extension(fileList[i]) or "Script"
+				if filesystem.isDirectory(path .. fileList[i]) and extension ~= ".app" then
+					extension = ".01_Folder"
 				end
-				currentExtensionList, currentExtension = {fileList[i][1]}, fileList[i][2]
+				fileList[i] = {fileList[i], extension}
 			end
-		end
-		
-		table.sort(currentExtensionList, function(a, b) return a < b end)
-		for j = 1, #currentExtensionList do
-			table.insert(sortedFileList, currentExtensionList[j])
-		end
-	elseif sortingMethod == "name" then
-		sortedFileList = fileList
-		table.sort(sortedFileList, function(a, b) return a < b end)
-	elseif sortingMethod == "date" then
-		for i = 1, #fileList do
-			fileList[i] = {fileList[i], filesystem.lastModified(path .. fileList[i])}
-		end
 
-		table.sort(fileList, function(a, b) return a[2] > b[2] end)
+			table.sort(fileList, function(a, b) return a[2] < b[2] end)
 
-		for i = 1, #fileList do
-			table.insert(sortedFileList, fileList[i][1])
-		end
-	else
-		error("Unknown sorting method: " .. tostring(sortingMethod))
-	end
+			local currentExtensionList, currentExtension = {}, fileList[1][2]
+			for i = 1, #fileList do
+				if currentExtension == fileList[i][2] then
+					table.insert(currentExtensionList, fileList[i][1])
+				else
+					table.sort(currentExtensionList, function(a, b) return a < b end)
+					for j = 1, #currentExtensionList do
+						table.insert(sortedFileList, currentExtensionList[j])
+					end
+					currentExtensionList, currentExtension = {fileList[i][1]}, fileList[i][2]
+				end
+			end
+			
+			table.sort(currentExtensionList, function(a, b) return a < b end)
+			for j = 1, #currentExtensionList do
+				table.insert(sortedFileList, currentExtensionList[j])
+			end
+		elseif sortingMethod == "name" then
+			sortedFileList = fileList
+			table.sort(sortedFileList, function(a, b) return a < b end)
+		elseif sortingMethod == "date" then
+			for i = 1, #fileList do
+				fileList[i] = {fileList[i], filesystem.lastModified(path .. fileList[i])}
+			end
 
-	local i = 1
-	while i <= #sortedFileList do
-		if not showHiddenFiles and filesystem.isFileHidden(sortedFileList[i]) then
-			table.remove(sortedFileList, i)
+			table.sort(fileList, function(a, b) return a[2] > b[2] end)
+
+			for i = 1, #fileList do
+				table.insert(sortedFileList, fileList[i][1])
+			end
 		else
-			i = i + 1
+			error("Unknown sorting method: " .. tostring(sortingMethod))
+		end
+
+		local i = 1
+		while i <= #sortedFileList do
+			if not showHiddenFiles and filesystem.isFileHidden(sortedFileList[i]) then
+				table.remove(sortedFileList, i)
+			else
+				i = i + 1
+			end
 		end
 	end
 

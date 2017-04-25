@@ -143,7 +143,23 @@ function MineOSCore.getAverageMethodExecutionTime(method, countOfTries)
 	return averageTime
 end
 
----------------------------------------------- MineOS Icons related methods ------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------------------------------
+
+function MineOSCore.createShortcut(where, forWhat)
+	fs.makeDirectory(fs.path(where))
+	local file = io.open(where, "w")
+	file:write("return \"" .. forWhat .. "\"")
+	file:close()
+end
+
+function MineOSCore.readShortcut(path)
+	local success, filename = pcall(loadfile(path))
+	if success then
+		return filename
+	else
+		error("Failed to read shortcut from path \"" .. fs.path(path) .. "\": file is corrupted")
+	end
+end
 
 function MineOSCore.saveOSSettings()
 	table.toFile(MineOSCore.paths.OSSettings, _G.OSSettings, true)
@@ -216,7 +232,7 @@ function MineOSCore.analyzeIconFormat(iconObject)
 		end
 	else
 		if iconObject.format == ".lnk" then
-			iconObject.shortcutPath = ecs.readShortcut(iconObject.path)
+			iconObject.shortcutPath = MineOSCore.readShortcut(iconObject.path)
 			iconObject.shortcutFormat = fs.extension(iconObject.shortcutPath)
 			iconObject.shortcutIsDirectory = fs.isDirectory(iconObject.shortcutPath)
 			iconObject.isShortcut = true
@@ -705,13 +721,13 @@ function MineOSCore.iconRightClick(icon, eventData)
 			while fs.exists(newName) do
 				newName, repeats = MineOSCore.paths.trash .. clearName .. string.rep("-copy", repeats) .. icon.format, repeats + 1
 			end
+			fs.rename(icon.path, newName)
 		end
 		computer.pushSignal("MineOSCore", "updateFileList")
 	elseif action == MineOSCore.localization.contextMenuRename then
-		ecs.rename(icon.path)
-		computer.pushSignal("MineOSCore", "updateFileList")
+		computer.pushSignal("MineOSCore", "rename", icon.path)
 	elseif action == MineOSCore.localization.contextMenuCreateShortcut then
-		ecs.createShortCut(fs.path(icon.path) .. "/" .. ecs.hideFileFormat(fs.name(icon.path)) .. ".lnk", icon.path)
+		MineOSCore.createShortcut(fs.path(icon.path) .. "/" .. fs.hideExtension(fs.name(icon.path)) .. ".lnk", icon.path)
 		computer.pushSignal("MineOSCore", "updateFileList")
 	elseif action == MineOSCore.localization.contextMenuArchive then
 		require("compressor").pack(fs.path(icon.path) .. fs.hideExtension(fs.name(icon.path)) .. ".pkg", icon.path)
@@ -725,9 +741,6 @@ function MineOSCore.iconRightClick(icon, eventData)
 		component.eeprom.set(file:read("*a"))
 		file:close()
 		computer.beep(1500, 0.2)
-	elseif action == MineOSCore.localization.contextMenuCreateApplication then
-		ecs.newApplicationFromLuaFile(icon.path, fs.path(icon.path) or "")
-		computer.pushSignal("MineOSCore", "updateFileList")
 	elseif action == MineOSCore.localization.contextMenuAddToDock then
 		table.insert(_G.OSSettings.dockShortcuts, {path = icon.path})
 		MineOSCore.saveOSSettings()
@@ -745,11 +758,9 @@ function MineOSCore.emptyZoneClick(eventData, workspace, workpath)
 	):show()
 
 	if action == MineOSCore.localization.contextMenuNewFile then
-		ecs.newFile(workpath)
-		computer.pushSignal("MineOSCore", "updateFileListAndBufferTrueRedraw")
+		computer.pushSignal("MineOSCore", "newFile")
 	elseif action == MineOSCore.localization.contextMenuNewFolder then
-		ecs.newFolder(workpath)
-		computer.pushSignal("MineOSCore", "updateFileList")
+		computer.pushSignal("MineOSCore", "newFolder")
 	elseif action == MineOSCore.localization.contextMenuPaste then
 		ecs.copy(_G.clipboard, workpath)
 		if _G.clipboardCut then
@@ -759,8 +770,7 @@ function MineOSCore.emptyZoneClick(eventData, workspace, workpath)
 		end
 		computer.pushSignal("MineOSCore", "updateFileList")
 	elseif action == MineOSCore.localization.contextMenuNewApplication then
-		ecs.newApplication(workpath)
-		computer.pushSignal("MineOSCore", "updateFileList")
+		computer.pushSignal("MineOSCore", "newApplication")
 	end
 end
 
@@ -796,12 +806,90 @@ function MineOSCore.showPropertiesWindow(x, y, width, iconObject)
 	buffer.draw()
 
 	if iconObject.isDirectory then
-		fileSizeLabel.text = string.format("%.2f", MineOSCore.getFolderSize(iconObject.path) / 1024) .. " KB"
+		fileSizeLabel.text = string.format("%.2f", fs.directorySize(iconObject.path) / 1024) .. " KB"
 		window:draw()
 		buffer.draw()
 	end
 
 	window:handleEvents()
+end
+
+-----------------------------------------------------------------------------------------------------------------------------------
+
+local function createUniversalContainer(parentWindow, path, text, title, placeholder)
+	local container = GUI.addUniversalContainer(parentWindow, title)
+	
+	container.inputTextBox = container.layout:addInputTextBox(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0xEEEEEE, 0x262626, text, placeholder, false)
+	container.label = container.layout:addLabel(1, 1, 36, 3, 0xFF4940, " "):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+	
+	parentWindow:draw()
+	buffer.draw()
+
+	return container
+end
+
+local function checkFileToExists(container, path)
+	if fs.exists(path) then
+		container.label.text = MineOSCore.localization.fileAlreadyExists
+		container.parent:draw()
+		buffer.draw()
+	else
+		container.parent:deleteChildren(#container.parent.children, #container.parent.children)
+		fs.makeDirectory(fs.path(path))
+		return true
+	end
+end
+
+function MineOSCore.newApplication(parentWindow, path)
+	local container = createUniversalContainer(parentWindow, path, nil, MineOSCore.localization.contextMenuNewApplication, MineOSCore.localization.applicationName)
+
+	container.inputTextBox.onInputFinished = function()
+		local finalPath = path .. container.inputTextBox.text .. ".app/"
+		if checkFileToExists(container, finalPath) then
+			fs.makeDirectory(finalPath .. "/Resources/")
+			fs.copy(MineOSCore.paths.icons .. "SampleIcon.pic", finalPath .. "/Resources/Icon.pic")
+			local file = io.open(finalPath .. "Main.lua", "w")
+			file:write("require('GUI').error('Hello world')")
+			file:close()
+
+			computer.pushSignal("MineOSCore", "updateFileList")
+		end
+	end
+end
+
+function MineOSCore.newFile(parentWindow, path)
+	local container = createUniversalContainer(parentWindow, path, nil, MineOSCore.localization.contextMenuNewFile, MineOSCore.localization.fileName)
+
+	container.inputTextBox.onInputFinished = function()
+		if checkFileToExists(container, path .. container.inputTextBox.text) then
+			local file = io.open(path .. container.inputTextBox.text, "w")
+			file:close()
+			MineOSCore.safeLaunch(MineOSCore.paths.applications .. "/MineCode IDE.app/Main.lua", "open", path .. container.inputTextBox.text)	
+			computer.pushSignal("MineOSCore", "updateFileList")
+		end
+	end
+end
+
+function MineOSCore.newFolder(parentWindow, path)
+	local container = createUniversalContainer(parentWindow, path, nil, MineOSCore.localization.contextMenuNewFolder, MineOSCore.localization.folderName)
+
+	container.inputTextBox.onInputFinished = function()
+		if checkFileToExists(container, path .. container.inputTextBox.text) then
+			fs.makeDirectory(path .. container.inputTextBox.text)
+			computer.pushSignal("MineOSCore", "updateFileList")
+		end
+	end
+end
+
+function MineOSCore.rename(parentWindow, path)
+	local container = createUniversalContainer(parentWindow, path, fs.name(path), MineOSCore.localization.contextMenuRename, MineOSCore.localization.newName)
+
+	container.inputTextBox.onInputFinished = function()
+		if checkFileToExists(container, fs.path(path) .. container.inputTextBox.text) then
+			fs.rename(path, fs.path(path) .. container.inputTextBox.text)
+			computer.pushSignal("MineOSCore", "updateFileList")
+		end
+	end
 end
 
 -----------------------------------------------------------------------------------------------------------------------------------

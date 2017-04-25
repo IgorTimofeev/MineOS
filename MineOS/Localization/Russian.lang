@@ -1,4 +1,10 @@
 {
+	newName = "Новое имя",
+	folderName = "Имя папки",
+	fileName = "Имя файла",
+	applicationName = "Имя приложения",
+	fileAlreadyExists = "Файл уже существует",
+
 	resolution = "Разрешение экрана",
 	pressAnyKeyToContinue = "Нажмите любую клавишу, чтобы продолжить",
 	screensaver = "Заставка",

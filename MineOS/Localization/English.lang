@@ -1,4 +1,11 @@
 {
+	newName = "New name",
+	folderName = "Folder name",
+	fileName = "File name",
+	applicationName = "Application name",
+	fileAlreadyExists = "File already exists",
+
+	resolution = "Screen resolution",
 	pressAnyKeyToContinue = "Press any key to continue",
 	screensaver = "Screensaver",
 	screensaverDelay = "Delay",

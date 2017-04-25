@@ -67,8 +67,8 @@ local cloudWidth = math.floor(mainZoneWidth * 0.7)
 
 -------------------------------------------------------------------------------------------------------------------------------
 
-local settingsPath = "MineOS/System/VK/Settings.cfg"
-local VKLogoImagePath = "MineOS/Applications/VK.app/Resources/VKLogo.pic"
+local settingsPath = "/MineOS/System/VK/Settings.cfg"
+local VKLogoImagePath = "/MineOS/Applications/VK.app/Resources/VKLogo.pic"
 -- local leftBarElements = {"Новости", "Друзья", "Сообщения", "Настройки", "Выход"}
 local leftBarElements = { "Моя страница", "Друзья", "Сообщения", "Аудиозаписи", "Новости", "Настройки", "Выход" }
 local currentLeftBarElement = 3
