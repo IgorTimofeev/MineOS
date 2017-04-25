@@ -1,4 +1,6 @@
 {
+	dontShowAnymore = "Don't show again",
+	applicationHelp = "About application",
 	newName = "New name",
 	folderName = "Folder name",
 	fileName = "File name",

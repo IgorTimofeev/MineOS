@@ -1,4 +1,6 @@
 {
+	dontShowAnymore = "Больше не показывать",
+	applicationHelp = "О приложении",
 	newName = "Новое имя",
 	folderName = "Имя папки",
 	fileName = "Имя файла",

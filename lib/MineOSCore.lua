@@ -221,8 +221,7 @@ function MineOSCore.analyzeIconFormat(iconObject)
 			end
 
 			iconObject.launch = function()
-				ecs.applicationHelp(iconObject.path)
-				MineOSCore.safeLaunch(iconObject.path .. "/Main.lua")
+				computer.pushSignal("MineOSCore", "applicationHelp", iconObject.path)
 			end
 		else
 			iconObject.iconImage.image = MineOSCore.icons.folder
@@ -889,6 +888,44 @@ function MineOSCore.rename(parentWindow, path)
 			fs.rename(path, fs.path(path) .. container.inputTextBox.text)
 			computer.pushSignal("MineOSCore", "updateFileList")
 		end
+	end
+end
+
+function MineOSCore.applicationHelp(parentWindow, path)
+	local pathToAboutFile = path .. "/resources/About/" .. _G.OSSettings.language .. ".txt"
+	if _G.OSSettings.showHelpOnApplicationStart and fs.exists(pathToAboutFile) then
+		local container = GUI.addUniversalContainer(parentWindow, MineOSCore.localization.applicationHelp .. "\"" .. fs.name(path) .. "\"")
+		
+		local lines = {}
+		for line in io.lines(pathToAboutFile) do
+			table.insert(lines, line)
+		end
+		lines = string.wrap(lines, 50)
+		
+		container.layout:addTextBox(1, 1, 50, #lines, nil, 0xcccccc, lines, 1, 0, 0)
+		local button = container.layout:addButton(1, 1, 30, 1, 0xEEEEEE, 0x262626, 0xAAAAAA, 0x262626, MineOSCore.localization.dontShowAnymore)
+
+		parentWindow:draw()
+		buffer.draw()
+
+		container.panel.onTouch = function()
+			parentWindow:deleteChildren(#parentWindow.children, #parentWindow.children)
+			MineOSCore.safeLaunch(path .. "/Main.lua")
+			parentWindow:draw()
+			buffer.draw()
+		end
+
+		button.onTouch = function()
+			parentWindow:deleteChildren(#parentWindow.children, #parentWindow.children)
+			_G.OSSettings.showHelpOnApplicationStart = false
+			MineOSCore.saveOSSettings()
+			
+			container.panel.onTouch()
+		end
+	else
+		MineOSCore.safeLaunch(path .. "/Main.lua")
+		parentWindow:draw()
+		buffer.draw()
 	end
 end
 
