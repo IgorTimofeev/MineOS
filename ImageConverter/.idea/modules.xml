@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/Converter2.iml" filepath="$PROJECT_DIR$/Converter2.iml" />
+      <module fileurl="file://$PROJECT_DIR$/ImageConverter.iml" filepath="$PROJECT_DIR$/ImageConverter.iml" />
     </modules>
   </component>
 </project>

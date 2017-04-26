@@ -43,6 +43,7 @@ public class Main extends Application {
     public TextField heightTextField;
     public ImageView imageView;
     public CheckBox brailleCheckBox;
+    public CheckBox ditheringCheckBox;
     public String currentImagePath;
     public javafx.scene.text.Text wrongSizesText;
 
@@ -479,20 +480,14 @@ public class Main extends Application {
             out.write((byte) width);
             out.write((byte) height);
 
-            convertAsBraiile(
-                    dither(
-                    new MyImage(
-                        new Image(
-                            "file:" + currentImagePath,
-                            width * 2,
-                            height * 4,
-                            false,
-                            true
-                        )
-                    )
-                ),
-                out
-            );
+            MyImage myImage = new MyImage(new Image("file:" + currentImagePath, width * 2, height * 4, false, true));
+
+            if (ditheringCheckBox.isSelected())
+            {
+                myImage = dither(myImage);
+            }
+
+            convertAsBraiile(myImage, out);
         }
         else
         {
@@ -502,21 +497,14 @@ public class Main extends Application {
             out.write((byte) width);
             out.write((byte) height);
 
+            MyImage myImage = new MyImage(new Image("file:" + currentImagePath, width, height * 2, false, true));
 
-            convertAsSemiPixel(
-                dither(
-                    new MyImage(
-                        new Image(
-                            "file:" + currentImagePath,
-                            width,
-                            height * 2,
-                            false,
-                            true
-                        )
-                    )
-                ),
-                out
-            );
+            if (ditheringCheckBox.isSelected())
+            {
+                myImage = dither(myImage);
+            }
+
+            convertAsSemiPixel(myImage, out);
         }
 
         out.close();

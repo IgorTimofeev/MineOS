@@ -54,5 +54,6 @@
             <Font name="Arial" size="11.0" />
          </font>
       </Text>
+      <CheckBox fx:id="ditheringCheckBox" layoutX="606.0" layoutY="279.0" mnemonicParsing="false" prefHeight="38.0" prefWidth="222.0" selected="true" styleClass="checkBox" stylesheets="@checkBox.css" text="Использовать дизеринг" textFill="WHITE" />
    </children>
 </Pane>
