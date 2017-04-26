@@ -38,7 +38,7 @@
             <Font name="Arial" size="11.0" />
          </font>
       </Text>
-      <Button fx:id="convertButton" disable="true" layoutX="594.0" layoutY="414.0" mnemonicParsing="false" onMouseClicked="#save" prefHeight="46.0" prefWidth="246.0" styleClass="defaultButton" stylesheets="@button.css" text="Конвертировать">
+      <Button fx:id="convertButton" layoutX="594.0" layoutY="414.0" mnemonicParsing="false" onMouseClicked="#save" prefHeight="46.0" prefWidth="246.0" styleClass="defaultButton" stylesheets="@button.css" text="Конвертировать">
          <font>
             <Font size="11.0" />
          </font>
@@ -54,6 +54,7 @@
             <Font name="Arial" size="11.0" />
          </font>
       </Text>
-      <CheckBox fx:id="ditheringCheckBox" layoutX="606.0" layoutY="279.0" mnemonicParsing="false" prefHeight="38.0" prefWidth="222.0" selected="true" styleClass="checkBox" stylesheets="@checkBox.css" text="Использовать дизеринг" textFill="WHITE" />
+      <CheckBox fx:id="ditheringCheckBox" layoutX="606.0" layoutY="279.0" mnemonicParsing="false" onMouseClicked="#onDitheringStateChanged" prefHeight="38.0" prefWidth="222.0" selected="true" styleClass="checkBox" stylesheets="@checkBox.css" text="Использовать дизеринг" textFill="WHITE" />
+      <Slider fx:id="ditheringSlider" layoutX="601.0" layoutY="322.0" min="1.0" prefHeight="16.0" prefWidth="232.0" showTickLabels="true" stylesheets="@slider.css" value="100.0" />
    </children>
 </Pane>

@@ -6,12 +6,12 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
+import javafx.scene.control.Slider;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -44,11 +44,18 @@ public class Main extends Application {
     public ImageView imageView;
     public CheckBox brailleCheckBox;
     public CheckBox ditheringCheckBox;
-    public String currentImagePath;
     public javafx.scene.text.Text wrongSizesText;
+    public Slider ditheringSlider;
+
+    public String currentImagePath = "sample/background.png";
 
     //---------------------------------------------------------------------------------------------------
 
+
+    public void onDitheringStateChanged()
+    {
+        ditheringSlider.setDisable(!ditheringCheckBox.isSelected());
+    }
 
     public boolean checkTextField(TextField textField, int maxValue)
     {
@@ -65,9 +72,7 @@ public class Main extends Application {
 
     public void checkTextFields() {
         if (checkTextField(widthTextField, 255) && checkTextField(heightTextField, 255)) {
-            if (currentImagePath != null) {
-                convertButton.setDisable(false);
-            }
+            convertButton.setDisable(false);
             wrongSizesText.setVisible(false);
         }
         else
@@ -83,7 +88,7 @@ public class Main extends Application {
         if (file.exists() && !file.isDirectory()) {
             //Вся вот эта хуета нужна для отображения пикчи по размеру экранчика
             imageView.setPreserveRatio(false);
-            Image imageViewImage = new Image("file:" + currentImagePath);
+            Image imageViewImage = new Image(currentImagePath);
             double imageProportion = imageViewImage.getWidth() / imageViewImage.getHeight();
             double newWidth = imageView.getScene().getWindow().getWidth();
             double newHeight = newWidth / imageProportion;
@@ -105,8 +110,7 @@ public class Main extends Application {
 
         if (file != null) {
             convertButton.setDisable(false);
-
-            currentImagePath = file.getPath();
+            currentImagePath = "file: " + file.getPath();
             loadImage();
         }
     }
@@ -284,13 +288,13 @@ public class Main extends Application {
                 if (x < myImage.width - 1) {
                     myImage.pixels[y][x + 1] = colorSum(
                         myImage.pixels[y][x + 1],
-                        colorMultiply(colorDifference, 7.0d / 16.0d)
+                        colorMultiply(colorDifference, 7.0d / 16.0d * ditheringSlider.getValue() / 100.0d)
                     );
 
                     if (y < myImage.height - 1) {
                         myImage.pixels[y + 1][x + 1] = colorSum(
                             myImage.pixels[y + 1][x + 1],
-                            colorMultiply(colorDifference, 1.0d / 16.0d)
+                            colorMultiply(colorDifference, 1.0d / 16.0d * ditheringSlider.getValue() / 100.0d)
                         );
                     }
                 }
@@ -298,13 +302,13 @@ public class Main extends Application {
                 if (y < myImage.height - 1) {
                     myImage.pixels[y + 1][x] = colorSum(
                         myImage.pixels[y + 1][x],
-                        colorMultiply(colorDifference, 5.0d / 16.0d)
+                        colorMultiply(colorDifference, 5.0d / 16.0d * ditheringSlider.getValue() / 100.0d)
                     );
 
                     if (x > 0) {
                         myImage.pixels[y + 1][x - 1] = colorSum(
                             myImage.pixels[y + 1][x - 1],
-                            colorMultiply(colorDifference, 3.0d / 16.0d)
+                            colorMultiply(colorDifference, 3.0d / 16.0d * ditheringSlider.getValue() / 100.0d)
                         );
                     }
                 }
@@ -482,7 +486,7 @@ public class Main extends Application {
             out.write((byte) width);
             out.write((byte) height);
 
-            MyImage myImage = new MyImage(new Image("file:" + currentImagePath, width * 2, height * 4, false, true));
+            MyImage myImage = new MyImage(new Image(currentImagePath, width * 2, height * 4, false, true));
 
             if (ditheringCheckBox.isSelected())
             {
@@ -499,7 +503,7 @@ public class Main extends Application {
             out.write((byte) width);
             out.write((byte) height);
 
-            MyImage myImage = new MyImage(new Image("file:" + currentImagePath, width, height * 2, false, true));
+            MyImage myImage = new MyImage(new Image(currentImagePath, width, height * 2, false, true));
 
             if (ditheringCheckBox.isSelected())
             {
