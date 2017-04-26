@@ -645,6 +645,12 @@ end
 
 buffer.start()
 
+------------------------------------------------------------------------------------------------------
+
+-- buffer.clear(0x0)
+-- buffer.image(1, 1, image.load("/Untitled.pic"))
+-- buffer.draw(true)
+
 -- buffer.clear(0x0)
 -- buffer.semiPixelCircle(80, 50, 20, 0xFFDB40, true)
 -- buffer.draw()

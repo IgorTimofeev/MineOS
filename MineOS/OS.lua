@@ -288,21 +288,21 @@ local function updateDesktopCounters()
 		workspace.desktopCounters:addButton(x, 1, 1, 1, nil, 0xEEEEEE, nil, 0x888888, "<").onTouch = function()
 			table.remove(workpathHistory, #workpathHistory)
 			changeWorkpath(#workpathHistory)
-			workspace.updateFileList()
+			workspace.updateAndDraw()
 		end; x = x + 3
 	end
 	if workpathHistory[currentWorkpathHistoryIndex] ~= "/" then
 		workspace.desktopCounters:addButton(x, 1, 4, 1, nil, 0xEEEEEE, nil, 0x888888, "Root").onTouch = function()
 			table.insert(workpathHistory, "/")
 			changeWorkpath(#workpathHistory)
-			workspace.updateFileList()
+			workspace.updateAndDraw()
 		end; x = x + 6
 	end
 	if workpathHistory[currentWorkpathHistoryIndex] ~= MineOSCore.paths.desktop then
 		workspace.desktopCounters:addButton(x, 1, 7, 1, nil, 0xEEEEEE, nil, 0x888888, "Desktop").onTouch = function()
 			table.insert(workpathHistory, MineOSCore.paths.desktop)
 			changeWorkpath(#workpathHistory)
-			workspace.updateFileList()
+			workspace.updateAndDraw()
 		end; x = x + 9
 	end
 	if countOfDesktops > 1 then
@@ -310,7 +310,7 @@ local function updateDesktopCounters()
 			workspace.desktopCounters:addButton(x, 1, 1, 1, nil, i == currentDesktop and 0xEEEEEE or 0xBBBBBB, nil, 0x888888, "●").onTouch = function()
 				if currentDesktop ~= i then
 					currentDesktop = i
-					workspace.updateFileList()
+					workspace.updateAndDraw()
 				end
 			end; x = x + 3
 		end
@@ -337,14 +337,14 @@ local function updateDock()
 
 	local xPos = 1
 	for iconIndex = 1, #_G.OSSettings.dockShortcuts do
-		local iconObject = MineOSCore.createIcon(xPos, 1, _G.OSSettings.dockShortcuts[iconIndex].path, 0x262626, _G.OSSettings.showExtension)
+		local icon = MineOSCore.createIcon(xPos, 1, _G.OSSettings.dockShortcuts[iconIndex].path, 0x262626, _G.OSSettings.showExtension)
 			
-		iconObject.onRightClick = function(iconObject, eventData)
+		icon.onRightClick = function(icon, eventData)
 			local menu = GUI.contextMenu(eventData[3], eventData[4])
 			menu:addItem(MineOSCore.localization.contextMenuShowContainingFolder).onTouch = function()
-				table.insert(workpathHistory, fs.path(iconObject.path))
+				table.insert(workpathHistory, fs.path(icon.path))
 				changeWorkpath(#workpathHistory)
-				workspace.updateFileList()
+				workspace.updateAndDraw()
 			end
 			menu:addSeparator()
 			menu:addItem(MineOSCore.localization.contextMenuMoveRight, iconIndex >= #_G.OSSettings.dockShortcuts).onTouch = function()
@@ -364,33 +364,38 @@ local function updateDock()
 			menu:show()
 		end
 
-		workspace.dockContainer:addChild(iconObject, GUI.objectTypes.container)
+		workspace.dockContainer:addChild(icon, GUI.objectTypes.container)
 		xPos = xPos + MineOSCore.iconWidth + sizes.xSpaceBetweenIcons
 	end
 
-	local iconObject = MineOSCore.createIcon(xPos, 1, MineOSCore.paths.trash, 0x262626, _G.OSSettings.showExtension)
-	iconObject.iconImage.image = MineOSCore.icons.trash
-	iconObject.onRightClick = function(iconObject, eventData)
+	local icon = MineOSCore.createIcon(xPos, 1, MineOSCore.paths.trash, 0x262626, _G.OSSettings.showExtension)
+	icon.iconImage.image = MineOSCore.icons.trash
+	icon.onRightClick = function(icon, eventData)
 		local menu = GUI.contextMenu(eventData[3], eventData[4])
 		menu:addItem(MineOSCore.localization.emptyTrash).onTouch = function()
-			local data = ecs.universalWindow("auto", "auto", 36, 0xeeeeee, true,
-				{"EmptyLine"},
-				{"CenterText", 0x000000, MineOSCore.localization.areYouSure},
-				{"EmptyLine"},
-				{"Button", {0xAAAAAA, 0xffffff, "OK"}, {0x888888, 0xffffff, MineOSCore.localization.cancel}}
-			)
-
-			if data[1] == "OK" then
+			local container = GUI.addUniversalContainer(workspace, MineOSCore.localization.areYouSure)
+			
+			container.layout:addButton(1, 1, 30, 3, 0xEEEEEE, 0x262626, 0xA, 0x262626, "OK").onTouch = function()
 				for file in fs.list(MineOSCore.paths.trash) do
 					fs.remove(MineOSCore.paths.trash .. file)
 				end
-				workspace.updateFileList()
+				container:delete()
+				workspace.updateAndDraw()
 			end
+
+			container.panel.onTouch = function()	
+				container:delete()
+				workspace:draw()
+				buffer.draw()
+			end
+
+			workspace:draw()
+			buffer.draw()
 		end
 		menu:show()
 	end
 
-	workspace.dockContainer:addChild(iconObject, GUI.objectTypes.container)
+	workspace.dockContainer:addChild(icon, GUI.objectTypes.container)
 end
 
 -- Отрисовка дока
@@ -426,8 +431,6 @@ local function changeResolution()
 
 	workspace.menu.width = workspace.width
 	workspace.background.width, workspace.background.height = workspace.width, workspace.height
-
-	workspace.updateFileList(true)
 end
 
 local function createWorkspace()
@@ -495,36 +498,36 @@ local function createWorkspace()
 			workspace.iconField.showExtension = not workspace.iconField.showExtension
 			_G.OSSettings.showExtension = workspace.iconField.showExtension
 			MineOSCore.saveOSSettings()
-			workspace.updateFileList()
+			workspace.updateAndDraw()
 		end
 		menu:addItem(workspace.iconField.showHiddenFiles and MineOSCore.localization.hideHiddenFiles or MineOSCore.localization.showHiddenFiles).onTouch = function()
 			workspace.iconField.showHiddenFiles = not workspace.iconField.showHiddenFiles
 			_G.OSSettings.showHiddenFiles = workspace.iconField.showHiddenFiles
 			MineOSCore.saveOSSettings()
-			workspace.updateFileList()
+			workspace.updateAndDraw()
 		end
 		menu:addItem(MineOSCore.showApplicationIcons and MineOSCore.localization.hideApplicationIcons or  MineOSCore.localization.showApplicationIcons).onTouch = function()
 			MineOSCore.showApplicationIcons = not MineOSCore.showApplicationIcons
-			workspace.updateFileList()
+			workspace.updateAndDraw()
 		end
 		menu:addSeparator()
 		menu:addItem(MineOSCore.localization.sortByName).onTouch = function()
 			_G.OSSettings.sortingMethod = "name"
 			MineOSCore.saveOSSettings()
 			workspace.iconField.sortingMethod = _G.OSSettings.sortingMethod
-			workspace.updateFileList()
+			workspace.updateAndDraw()
 		end
 		menu:addItem(MineOSCore.localization.sortByDate).onTouch = function()
 			_G.OSSettings.sortingMethod = "date"
 			MineOSCore.saveOSSettings()
 			workspace.iconField.sortingMethod = _G.OSSettings.sortingMethod
-			workspace.updateFileList()
+			workspace.updateAndDraw()
 		end
 		menu:addItem(MineOSCore.localization.sortByType).onTouch = function()
 			_G.OSSettings.sortingMethod = "type"
 			MineOSCore.saveOSSettings()
 			workspace.iconField.sortingMethod = _G.OSSettings.sortingMethod
-			workspace.updateFileList()
+			workspace.updateAndDraw()
 		end
 		menu:addSeparator()
 		menu:addItem(MineOSCore.localization.screensaver).onTouch = function()
@@ -609,6 +612,7 @@ local function createWorkspace()
 				_G.OSSettings.resolution = {tonumber(widthTextBox.text), tonumber(heightTextBox.text)}
 				MineOSCore.saveOSSettings()
 				changeResolution()
+				workspace.updateAndDraw()
 			end
 		end
 		menu:addSeparator()
@@ -618,11 +622,15 @@ local function createWorkspace()
 		menu:show()
 	end
 
-	workspace.updateFileList = function(forceRedraw)
+	workspace.update = function()
 		workspace.iconField.fromFile = (currentDesktop - 1) * workspace.iconField.iconCount.total + 1
 		workspace.iconField:updateFileList()
 		updateDock()
 		updateDesktopCounters()
+	end
+
+	workspace.updateAndDraw = function(forceRedraw)
+		workspace.update()
 		workspace:draw()
 		buffer.draw(forceRedraw)
 	end
@@ -632,19 +640,19 @@ local function createWorkspace()
 			if eventData[5] == 1 then
 				if currentDesktop < countOfDesktops then
 					currentDesktop = currentDesktop + 1
-					workspace.updateFileList()
+					workspace.updateAndDraw()
 				end
 			else
 				if currentDesktop > 1 then
 					currentDesktop = currentDesktop - 1
-					workspace.updateFileList()
+					workspace.updateAndDraw()
 				end
 			end
 		elseif eventData[1] == "MineOSCore" then
 			if eventData[2] == "updateFileList" then
-				workspace.updateFileList()
+				workspace.updateAndDraw()
 			elseif eventData[2] == "updateFileListAndBufferTrueRedraw" then
-				workspace.updateFileList(true)
+				workspace.updateAndDraw(true)
 			elseif eventData[2] == "changeWorkpath" then
 				table.insert(workpathHistory, eventData[3])
 				changeWorkpath(#workpathHistory)
@@ -680,9 +688,10 @@ end
 ---------------------------------------------- Сама ОС ------------------------------------------------------------------------
 
 createWorkspace()
+changeResolution()
 changeWorkpath(1)
 changeWallpaper()
-changeResolution()
+workspace.update()
 login()
 windows10()
 workspace:handleEvents(0.5)
