@@ -82,10 +82,10 @@ public class Main extends Application {
         }
     }
 
-    public void loadImage() {
+    public void loadImage(File file) {
         //Чекаем, существует ли такой файл, и не папка ли это. Чисто на всякий
-        File file = new File(currentImagePath);
         if (file.exists() && !file.isDirectory()) {
+            currentImagePath = "file:" + file.getPath();
             //Вся вот эта хуета нужна для отображения пикчи по размеру экранчика
             imageView.setPreserveRatio(false);
             Image imageViewImage = new Image(currentImagePath);
@@ -110,8 +110,7 @@ public class Main extends Application {
 
         if (file != null) {
             convertButton.setDisable(false);
-            currentImagePath = "file: " + file.getPath();
-            loadImage();
+            loadImage(file);
         }
     }
 
