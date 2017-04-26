@@ -137,6 +137,7 @@ local function setPassword()
 	local container = GUI.addUniversalContainer(workspace, MineOSCore.localization.passwordProtection)
 	local inputTextBox1 = container.layout:addInputTextBox(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0xEEEEEE, 0x262626, nil, MineOSCore.localization.inputPassword, true, "*")
 	local inputTextBox2 = container.layout:addInputTextBox(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0xEEEEEE, 0x262626, nil, MineOSCore.localization.confirmInputPassword, true, "*")
+	local label = container.layout:addLabel(1, 1, 36, 1, 0xFF4940, " "):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
 
 	workspace:draw()
 	buffer.draw()
@@ -148,12 +149,12 @@ local function setPassword()
 			_G.OSSettings.protectionMethod = "password"
 			_G.OSSettings.passwordHash = require("SHA2").hash(inputTextBox1.text or "")
 			MineOSCore.saveOSSettings()
-
-			workspace:draw()
-			buffer.draw()
 		else
-			GUI.error(MineOSCore.localization.passwordsAreDifferent)
+			label.text = MineOSCore.localization.passwordsAreDifferent
 		end
+
+		workspace:draw()
+		buffer.draw()
 	end
 end
 
