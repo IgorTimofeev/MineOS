@@ -3,10 +3,10 @@
 }
 
 .slider .thumb {
-    -fx-background-color:
-    derive(-fx-color,-36%),
+    -fx-background-color: #FFFFFF;
+    /*derive(-fx-color,-36%),
     derive(-fx-color,73%),
-    linear-gradient(to bottom, derive(-fx-color,-19%),derive(-fx-color,61%));
+    linear-gradient(to bottom, derive(-fx-color,-19%),derive(-fx-color,61%));*/
     -fx-background-insets: 0, 1, 2;
     -fx-background-radius: 1.0em;
     -fx-padding: 0.6em;
