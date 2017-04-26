@@ -114,9 +114,6 @@ local function checkPassword()
 	local inputTextBox = container.layout:addInputTextBox(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0xEEEEEE, 0x262626, nil, "Password", true, "*")
 	local label = container.layout:addLabel(1, 1, 36, 1, 0xFF4940, " "):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
 
-	workspace:draw()
-	buffer.draw()
-
 	container.panel.onTouch = function()	
 		local hash = require("SHA2").hash(inputTextBox.text or "")
 		if hash == _G.OSSettings.passwordHash then
@@ -174,9 +171,6 @@ local function setProtectionMethod()
 	comboBox:addItem(MineOSCore.localization.passwordProtection)
 	comboBox:addItem(MineOSCore.localization.withoutProtection)
 
-	workspace:draw()
-	buffer.draw()
-
 	container.panel.onTouch = function()
 		container:delete()
 		workspace:draw()
@@ -205,6 +199,9 @@ local function login()
 		end
 	end
 	event.interuptingEnabled = true
+
+	workspace:draw()
+	buffer.draw()
 end
 
 ---------------------------------------------- Система нотификаций ------------------------------------------------------------------------
