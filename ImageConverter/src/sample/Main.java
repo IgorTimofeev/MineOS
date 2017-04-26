@@ -65,7 +65,9 @@ public class Main extends Application {
 
     public void checkTextFields() {
         if (checkTextField(widthTextField, 255) && checkTextField(heightTextField, 255)) {
-            convertButton.setDisable(false);
+            if (currentImagePath != null) {
+                convertButton.setDisable(false);
+            }
             wrongSizesText.setVisible(false);
         }
         else
