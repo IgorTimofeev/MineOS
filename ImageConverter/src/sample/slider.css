@@ -13,27 +13,43 @@
 }
 
 .slider .track {
-    -fx-background-color: #FFFFFF22;
+    -fx-background-color: #FFFFFF10;
     -fx-background-insets: 1 0 -1 0, 0, 1;
     -fx-background-radius: 2.5, 2.5, 1.5;
     -fx-padding: 0.208333em; /* 2.5 */
 }
 
 .slider .axis {
-    -fx-tick-mark-stroke: ladder(-fx-background, derive(-fx-background,30%) 40%, derive(-fx-background,-30%) 41%);
     -fx-tick-label-font: 0.833333em System; 
-    -fx-tick-label-fill: -fx-text-background-color;
+    -fx-tick-label-fill: #FFFFFF88;
 }
 
-.slider:hover .track  {
-    -fx-background-color: #FFFFFF29;
+.axis-tick-mark {
+    -fx-stroke: #FFFFFF10;
+}
+.axis-minor-tick-mark {
+    -fx-stroke: #FFFFFF10;
+}
+
+.slider:hover .axis-tick-mark  {
+   -fx-stroke: #FFFFFF20;
+}
+
+.slider:hover .axis-minor-tick-mark  {
+   -fx-stroke: #FFFFFF20;
+}
+
+.slider:hover .axis  {
+    -fx-tick-label-fill: #FFFFFFAA;
+}
+
+.slider:hover  {
+    -fx-effect: dropshadow( three-pass-box , rgba(255,255,255,0.6) , 10, 0.2 , 0 , 1 );
 }
 
 .slider:hover .thumb {
     -fx-background-insets: -1.5, 0, 1, 2;
     -fx-background-radius: 1.0em;
-
-    -fx-effect: dropshadow( three-pass-box , rgba(255,255,255,0.6) , 10, 0.2 , 0 , 1 );
 }
 
 .slider:disabled {

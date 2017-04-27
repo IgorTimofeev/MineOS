@@ -55,6 +55,6 @@
          </font>
       </Text>
       <CheckBox fx:id="ditheringCheckBox" layoutX="606.0" layoutY="279.0" mnemonicParsing="false" onMouseClicked="#onDitheringStateChanged" prefHeight="38.0" prefWidth="222.0" selected="true" styleClass="checkBox" stylesheets="@checkBox.css" text="Использовать дизеринг" textFill="WHITE" />
-      <Slider fx:id="ditheringSlider" layoutX="601.0" layoutY="322.0" min="1.0" prefHeight="16.0" prefWidth="232.0" showTickLabels="true" stylesheets="@slider.css" value="100.0" />
+      <Slider fx:id="ditheringSlider" layoutX="601.0" layoutY="322.0" min="1.0" prefHeight="16.0" prefWidth="232.0" showTickLabels="true" showTickMarks="true" stylesheets="@slider.css" value="100.0" />
    </children>
 </Pane>

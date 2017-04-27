@@ -1,7 +1,7 @@
 .check-box {
     -fx-skin: "com.sun.javafx.scene.control.skin.CheckBoxSkin";
     -fx-label-padding: 0.0em 0.0em 0.0em 0.616667em; /* 0 0 0 5 */
-    -fx-text-fill: #FFFFFF;
+    -fx-text-fill: #FFFFFF88;
     -fx-font-size: 15pt;
 }
 
@@ -26,6 +26,7 @@
 .check-box:hover {
     /*-fx-color: -fx-hover-base;*/
     -fx-effect: dropshadow( three-pass-box , rgba(255,255,255,0.6) , 10, 0.2 , 0 , 1 );
+    -fx-text-fill: #FFFFFF;
 }
 
 .check-box:armed .box {

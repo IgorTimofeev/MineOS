@@ -99,8 +99,6 @@ public class Main extends Application {
     }
 
     public void open() {
-        convertButton.setDisable(true);
-
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Открыть файл");
         fileChooser.getExtensionFilters().addAll(
@@ -109,7 +107,6 @@ public class Main extends Application {
         File file = fileChooser.showOpenDialog(convertButton.getScene().getWindow());
 
         if (file != null) {
-            convertButton.setDisable(false);
             loadImage(file);
         }
     }
@@ -475,13 +472,10 @@ public class Main extends Application {
         out.write("OCIF".getBytes(StandardCharsets.US_ASCII));
         out.write((byte) 0x1);
 
-        double width, height;
+        double width = Double.parseDouble(widthTextField.getText()), height = Double.parseDouble(heightTextField.getText());
 
         if (brailleCheckBox.isSelected())
         {
-            width = Double.parseDouble(widthTextField.getText());
-            height = Double.parseDouble(heightTextField.getText());
-
             out.write((byte) width);
             out.write((byte) height);
 
@@ -496,9 +490,6 @@ public class Main extends Application {
         }
         else
         {
-            width = Double.parseDouble(widthTextField.getText());
-            height = Double.parseDouble(heightTextField.getText());
-
             out.write((byte) width);
             out.write((byte) height);
 
