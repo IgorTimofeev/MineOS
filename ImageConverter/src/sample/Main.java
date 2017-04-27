@@ -62,9 +62,9 @@ public class Main extends Application {
         String text = textField.getText();
 
         if (Pattern.matches("\\d{1,3}", text)) {
-           if (Integer.parseInt(text) <= maxValue)  {
-               return true;
-           }
+            if (Integer.parseInt(text) <= maxValue)  {
+                return true;
+            }
         }
 
         return false;
@@ -102,7 +102,7 @@ public class Main extends Application {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Открыть файл");
         fileChooser.getExtensionFilters().addAll(
-            new FileChooser.ExtensionFilter("Файлы изображений (JPG, PNG)", "*.jpg", "*.jpeg", "*.png")
+                new FileChooser.ExtensionFilter("Файлы изображений (JPG, PNG)", "*.jpg", "*.jpeg", "*.png")
         );
         File file = fileChooser.showOpenDialog(convertButton.getScene().getWindow());
 
@@ -115,7 +115,7 @@ public class Main extends Application {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Сохранить файл");
         fileChooser.getExtensionFilters().addAll(
-            new FileChooser.ExtensionFilter("Изображение OpenComputers", "*.pic")
+                new FileChooser.ExtensionFilter("Изображение OpenComputers", "*.pic")
         );
         File file = fileChooser.showSaveDialog(openButton.getScene().getWindow());
 
@@ -206,10 +206,10 @@ public class Main extends Application {
         for (int i = 0; i < palette.length; i++)
         {
             paletteColor = new MyColor(
-                0x0,
-                palette[i] >> 16,
-                (palette[i] >> 8) & 0xFF,
-                palette[i] & 0xFF
+                    0x0,
+                    palette[i] >> 16,
+                    (palette[i] >> 8) & 0xFF,
+                    palette[i] & 0xFF
             );
 
             delta = Math.pow((double) (paletteColor.red - color.red), 2) +
@@ -235,40 +235,40 @@ public class Main extends Application {
     public MyColor getColorDifference(MyColor color1, MyColor color2)
     {
         return new MyColor(
-            color1.alpha - color2.alpha,
-            color1.red - color2.red,
-            color1.green - color2.green,
-            color1.blue - color2.blue
+                color1.alpha - color2.alpha,
+                color1.red - color2.red,
+                color1.green - color2.green,
+                color1.blue - color2.blue
         );
     }
 
     public MyColor getAverageColor(MyColor color1, MyColor color2)
     {
         return new MyColor(
-            (color1.alpha + color2.alpha) / 2,
-            (color1.red + color2.red) / 2,
-            (color1.green + color2.green) / 2,
-            (color1.blue + color2.blue) / 2
+                (color1.alpha + color2.alpha) / 2,
+                (color1.red + color2.red) / 2,
+                (color1.green + color2.green) / 2,
+                (color1.blue + color2.blue) / 2
         );
     }
 
     public MyColor colorSum(MyColor color1, MyColor color2)
     {
         return new MyColor(
-            color1.alpha + color2.alpha,
-            color1.red + color2.red,
-            color1.green + color2.green,
-            color1.blue + color2.blue
+                color1.alpha + color2.alpha,
+                color1.red + color2.red,
+                color1.green + color2.green,
+                color1.blue + color2.blue
         );
     }
 
     public MyColor colorMultiply(MyColor color, double multiplyer)
     {
         return new MyColor(
-            (int) (color.alpha * multiplyer),
-            (int) (color.red * multiplyer),
-            (int) (color.green * multiplyer),
-            (int) (color.blue * multiplyer)
+                (int) (color.alpha * multiplyer),
+                (int) (color.red * multiplyer),
+                (int) (color.green * multiplyer),
+                (int) (color.blue * multiplyer)
         );
     }
 
@@ -283,28 +283,28 @@ public class Main extends Application {
 
                 if (x < myImage.width - 1) {
                     myImage.pixels[y][x + 1] = colorSum(
-                        myImage.pixels[y][x + 1],
-                        colorMultiply(colorDifference, 7.0d / 16.0d * ditheringSlider.getValue() / 100.0d)
+                            myImage.pixels[y][x + 1],
+                            colorMultiply(colorDifference, 7.0d / 16.0d * ditheringSlider.getValue() / 100.0d)
                     );
 
                     if (y < myImage.height - 1) {
                         myImage.pixels[y + 1][x + 1] = colorSum(
-                            myImage.pixels[y + 1][x + 1],
-                            colorMultiply(colorDifference, 1.0d / 16.0d * ditheringSlider.getValue() / 100.0d)
+                                myImage.pixels[y + 1][x + 1],
+                                colorMultiply(colorDifference, 1.0d / 16.0d * ditheringSlider.getValue() / 100.0d)
                         );
                     }
                 }
 
                 if (y < myImage.height - 1) {
                     myImage.pixels[y + 1][x] = colorSum(
-                        myImage.pixels[y + 1][x],
-                        colorMultiply(colorDifference, 5.0d / 16.0d * ditheringSlider.getValue() / 100.0d)
+                            myImage.pixels[y + 1][x],
+                            colorMultiply(colorDifference, 5.0d / 16.0d * ditheringSlider.getValue() / 100.0d)
                     );
 
                     if (x > 0) {
                         myImage.pixels[y + 1][x - 1] = colorSum(
-                            myImage.pixels[y + 1][x - 1],
-                            colorMultiply(colorDifference, 3.0d / 16.0d * ditheringSlider.getValue() / 100.0d)
+                                myImage.pixels[y + 1][x - 1],
+                                colorMultiply(colorDifference, 3.0d / 16.0d * ditheringSlider.getValue() / 100.0d)
                         );
                     }
                 }
@@ -395,10 +395,10 @@ public class Main extends Application {
         }
 
         String brailleChar = getBrailleChar(
-            brailleMatrix[0][0], brailleMatrix[0][1],
-            brailleMatrix[1][0], brailleMatrix[1][1],
-            brailleMatrix[2][0], brailleMatrix[2][1],
-            brailleMatrix[3][0], brailleMatrix[3][1]
+                brailleMatrix[0][0], brailleMatrix[0][1],
+                brailleMatrix[1][0], brailleMatrix[1][1],
+                brailleMatrix[2][0], brailleMatrix[2][1],
+                brailleMatrix[3][0], brailleMatrix[3][1]
         );
 
 
@@ -468,17 +468,16 @@ public class Main extends Application {
     public void convert(String path) throws IOException {
         FileOutputStream out = new FileOutputStream(path);
 
-        //Сигнатурка и метод кодировки
         out.write("OCIF".getBytes(StandardCharsets.US_ASCII));
         out.write((byte) 0x1);
 
         double width = Double.parseDouble(widthTextField.getText()), height = Double.parseDouble(heightTextField.getText());
 
+        out.write((byte) width);
+        out.write((byte) height);
+
         if (brailleCheckBox.isSelected())
         {
-            out.write((byte) width);
-            out.write((byte) height);
-
             MyImage myImage = new MyImage(new Image(currentImagePath, width * 2, height * 4, false, true));
 
             if (ditheringCheckBox.isSelected())
@@ -490,9 +489,6 @@ public class Main extends Application {
         }
         else
         {
-            out.write((byte) width);
-            out.write((byte) height);
-
             MyImage myImage = new MyImage(new Image(currentImagePath, width, height * 2, false, true));
 
             if (ditheringCheckBox.isSelected())
