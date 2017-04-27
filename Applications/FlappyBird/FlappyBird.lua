@@ -59,7 +59,7 @@ end
 
 local function dieBirdDie()
 	if birdIsAlive then
-		bird = image.photoFilter(bird, 0x880000, 100)
+		bird = image.blend(bird, 0x880000, 50)
 		birdIsAlive = false
 	end
 end

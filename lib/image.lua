@@ -331,6 +331,19 @@ function image.expand(picture, fromTop, fromBottom, fromLeft, fromRight, backgro
 	return newPicture
 end
 
+function image.blend(picture, blendColor, transparency)
+	local newPicture = {picture[1], picture[2]}
+
+	for i = 3, #picture, 4 do
+		table.insert(newPicture, color.blend(picture[i], blendColor, transparency / 100))
+		table.insert(newPicture, color.blend(picture[i + 1], blendColor, transparency / 100))
+		table.insert(newPicture, picture[i + 2])
+		table.insert(newPicture, picture[i + 3])
+	end
+
+	return newPicture
+end
+
 ------------------------------------------------------------------------------------------------------------------------
 
 image.loadFormatModule("/lib/ImageFormatModules/OCIF.lua", ".pic")

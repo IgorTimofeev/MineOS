@@ -348,7 +348,7 @@ local function loginGUI(startUsername, startPassword)
 			elseif obj.button:isClicked(e[3], e[4]) then
 				obj.button:press(0.2)
 				draw()
-				local success, loginData = getLoginDataRequest(username, password)
+				local success, loginData = getLoginDataRequest(username or "", password or "")
 				if success then 
 					if settings.saveAuthData then settings.username = username; settings.password = password; saveSettings() end
 					loginData.username = username

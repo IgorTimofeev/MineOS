@@ -676,7 +676,7 @@ end
 
 local function loadFile(path)
 	newFile()
-	table.remove(mainWindow.codeView.lines, 1)
+	
 	local file = io.open(path, "r")
 	for line in file:lines() do
 		line = removeWindowsLineEndings(removeTabs(line))
@@ -684,6 +684,11 @@ local function loadFile(path)
 		mainWindow.codeView.maximumLineLength = math.max(mainWindow.codeView.maximumLineLength, unicode.len(line))
 	end
 	file:close()
+	
+	if #mainWindow.codeView.lines > 1 then
+		table.remove(mainWindow.codeView.lines, 1)
+	end
+
 	mainWindow.leftTreeView.currentFile = path
 	updateAutocompleteDatabaseFromFile()
 end

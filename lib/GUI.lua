@@ -1511,9 +1511,9 @@ local function codeViewDraw(codeView)
 
 	local function drawUpperSelection(y, selectionIndex)
 		buffer.square(
-			codeView.codeAreaPosition + codeView.selections[selectionIndex].from.symbol,
+			codeView.codeAreaPosition + codeView.selections[selectionIndex].from.symbol - codeView.fromSymbol + 1,
 			y + codeView.selections[selectionIndex].from.line - codeView.fromLine,
-			codeView.codeAreaWidth - codeView.selections[selectionIndex].from.symbol,
+			codeView.codeAreaWidth - codeView.selections[selectionIndex].from.symbol + codeView.fromSymbol - 1,
 			1,
 			codeView.selections[selectionIndex].color or require("syntax").colorScheme.selection, require("syntax").colorScheme.text, " "
 		)
@@ -1523,7 +1523,7 @@ local function codeViewDraw(codeView)
 		buffer.square(
 			codeView.codeAreaPosition,
 			y + codeView.selections[selectionIndex].from.line - codeView.fromLine,
-			codeView.selections[selectionIndex].to.symbol + 1,
+			codeView.selections[selectionIndex].to.symbol - codeView.fromSymbol + 2,
 			1,
 			codeView.selections[selectionIndex].color or require("syntax").colorScheme.selection, require("syntax").colorScheme.text, " "
 		)
@@ -2269,6 +2269,16 @@ end
 --------------------------------------------------------------------------------------------------------------------------------
 
 -- buffer.start()
+
+-- local lines = {}
+-- for line in io.lines("/OS.lua") do
+-- 	table.insert(lines, line)
+-- end
+
+-- buffer.clear(0xFF8888)
+-- GUI.codeView(2, 2, 100, 40, lines, 1, 1, 40, {{from = {line = 3, symbol = 5}, to = {line = 8, symbol = 6}}}, {}, true, 2):draw()
+
+-- buffer.draw(true)
 
 -- local window = GUI.fullScreenWindow()
 -- window:addImage(1, 1, require("image").load("/MineOS/Pictures/Raspberry.pic"))
