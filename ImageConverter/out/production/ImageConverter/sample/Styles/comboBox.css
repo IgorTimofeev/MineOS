@@ -1,0 +1,69 @@
+
+.combo-box
+{
+    -fx-border-radius: 0;
+    -fx-background-radius: 0;
+    -fx-background-insets: 0, 0;
+    -fx-background-color: #FFFFFF10;
+}
+
+.combo-box:hover
+{
+    -fx-background-color: #FFFFFF;
+    -fx-text-fill: #000000;
+    -fx-effect: dropshadow( three-pass-box , rgba(255,255,255,0.6) , 10, 0.2 , 0 , 1 );
+}
+
+.arrow {
+    -fx-background-color: #FFFFFF;
+}
+.combo-box:hover .arrow
+{
+    -fx-background-color: #000000;
+}
+.arrow-button {
+    -fx-background-radius: 0;
+    -fx-background-color: #FFFFFF0A;
+}
+.combo-box:hover .arrow-button {
+    -fx-background-color: #E0E0E0;
+}
+
+.list-view
+{
+    -fx-border-radius: 0;
+    -fx-background-radius: 0;
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+    -fx-background-color: #FFFFFF88;
+    -fx-effect: dropshadow( three-pass-box , rgba(255,255,255,0.6) , 10, 0.2 , 0 , 1 );
+}
+
+.list-cell
+{
+    -fx-pref-height: 38;
+    -fx-background-color: #FFFFFF00;
+    -fx-text-fill: #000000;
+}
+
+.list-cell:selected
+{
+    -fx-background-color: #FFFFFF00;
+    -fx-text-fill: #AAAAAA;
+}
+
+.combo-box:hover .list-cell:selected
+{
+    -fx-background-color: #FFFFFF00;
+    -fx-text-fill: #000000;
+}
+
+.list-cell:hover
+{
+    -fx-background-color: #FFFFFF;
+    -fx-text-fill: #000000;
+}
+
+
+
+

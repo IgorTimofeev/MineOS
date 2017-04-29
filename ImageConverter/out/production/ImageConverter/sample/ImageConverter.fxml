@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.*?>
+<?import java.net.*?>
+<?import javafx.scene.effect.*?>
+<?import javafx.scene.text.*?>
+<?import javafx.scene.shape.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.control.*?>
+<?import java.lang.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.collections.*?>
+
+<Pane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="489.0" prefWidth="840.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sample.Main">
+   <children>
+      <ImageView fx:id="imageView" fitHeight="498.0" fitWidth="840.0" pickOnBounds="true">
+         <image>
+            <Image url="@Resources/Background.png" />
+         </image></ImageView>
+      <Rectangle fill="#000000d0" height="489.0" layoutX="594.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="246.0" />
+      <Button fx:id="openButton" layoutX="594.0" layoutY="69.0" mnemonicParsing="false" onMouseClicked="#open" prefHeight="38.0" prefWidth="246.0" styleClass="defaultButton" stylesheets="@Styles/button.css" text="Открыть">
+         <font>
+            <Font size="11.0" />
+         </font>
+      </Button>
+      <Text fill="WHITE" layoutX="594.0" layoutY="43.0" strokeType="OUTSIDE" strokeWidth="0.0" text="OC Image Converter" textAlignment="CENTER" wrappingWidth="246.0">
+         <font>
+            <Font size="16.0" />
+         </font>
+      </Text>
+      <TextField fx:id="widthTextField" alignment="CENTER" layoutX="594.0" layoutY="148.0" onKeyReleased="#onTextFieldTextChanged" prefHeight="38.0" prefWidth="246.0" promptText="Ширина" styleClass="textField" stylesheets="@Styles/textField.css" text="160">
+         <font>
+            <Font size="12.0" />
+         </font>
+      </TextField>
+      <Text fx:id="imageSizeText" fill="WHITE" layoutX="627.0" layoutY="132.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Размер для OpenComputers" textAlignment="CENTER" wrappingWidth="180.97265625">
+         <font>
+            <Font name="Arial" size="11.0" />
+         </font>
+      </Text>
+      <Button fx:id="convertButton" layoutX="594.0" layoutY="443.0" mnemonicParsing="false" onMouseClicked="#save" prefHeight="46.0" prefWidth="246.0" styleClass="defaultButton" stylesheets="@Styles/button.css" text="Конвертировать">
+         <font>
+            <Font size="11.0" />
+         </font>
+      </Button>
+      <TextField fx:id="heightTextField" alignment="CENTER" layoutX="594.0" layoutY="191.0" onKeyReleased="#onTextFieldTextChanged" prefHeight="38.0" prefWidth="246.0" promptText="Высота" styleClass="textField" stylesheets="@Styles/textField.css" text="50">
+         <font>
+            <Font size="12.0" />
+         </font>
+      </TextField>
+      <CheckBox fx:id="brailleCheckBox" layoutX="606.0" layoutY="314.0" mnemonicParsing="false" prefHeight="38.0" prefWidth="222.0" selected="true" styleClass="checkBox" stylesheets="@Styles/checkBox.css" text="Использовать шрифт Брайля" textFill="WHITE" />
+      <Text fx:id="wrongSizesText" fill="#ff5e5e" layoutX="627.0" layoutY="132.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Недопустимые значения размеров" textAlignment="CENTER" visible="false" wrappingWidth="180.97265625">
+         <font>
+            <Font name="Arial" size="11.0" />
+         </font>
+      </Text>
+      <CheckBox fx:id="ditheringCheckBox" layoutX="606.0" layoutY="352.0" mnemonicParsing="false" onMouseClicked="#onDitheringStateChanged" prefHeight="38.0" prefWidth="222.0" selected="true" styleClass="checkBox" stylesheets="@Styles/checkBox.css" text="Использовать дизеринг" textFill="WHITE" />
+      <Slider fx:id="ditheringSlider" layoutX="601.0" layoutY="395.0" min="1.0" prefHeight="16.0" prefWidth="232.0" showTickLabels="true" showTickMarks="true" stylesheets="@Styles/slider.css" value="100.0" />
+      <ComboBox fx:id="encodingMethodComboBox" layoutX="594.0" layoutY="270.0" prefHeight="38.0" prefWidth="246.0" promptText="Формат" stylesheets="@Styles/comboBox.css">
+         <items>
+            <FXCollections fx:factory="observableArrayList">
+               <String fx:value="OCIF1" />
+               <String fx:value="OCIF6" />
+            </FXCollections>
+         </items>
+         <value>
+            <String fx:value="OCIF6" />
+         </value>
+      </ComboBox>
+      <Text fill="WHITE" layoutX="627.0" layoutY="253.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Формат" textAlignment="CENTER" wrappingWidth="180.97265625">
+         <font>
+            <Font name="Arial" size="11.0" />
+         </font>
+      </Text>
+   </children>
+</Pane>

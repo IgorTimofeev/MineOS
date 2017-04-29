@@ -13,7 +13,7 @@
 }
 
 .slider .track {
-    -fx-background-color: #FFFFFF10;
+    -fx-background-color: #FFFFFF15;
     -fx-background-insets: 1 0 -1 0, 0, 1;
     -fx-background-radius: 2.5, 2.5, 1.5;
     -fx-padding: 0.208333em; /* 2.5 */
@@ -25,10 +25,10 @@
 }
 
 .axis-tick-mark {
-    -fx-stroke: #FFFFFF10;
+    -fx-stroke: #FFFFFF15;
 }
 .axis-minor-tick-mark {
-    -fx-stroke: #FFFFFF10;
+    -fx-stroke: #FFFFFF15;
 }
 
 .slider:hover .axis-tick-mark  {
