@@ -133,13 +133,12 @@ public class Main extends Application {
         File file = fileChooser.showSaveDialog(openButton.getScene().getWindow());
 
         if (file != null) {
-            System.out.println("Encoding: " + encodingMethodComboBox.getValue());
             OCIF.convert(
                     currentImagePath,
                     file.getPath(),
                     Integer.parseInt(widthTextField.getText()),
                     Integer.parseInt(heightTextField.getText()),
-                    encodingMethodComboBox.getValue() == "OCIF6" ? 6 : 1,
+                    encodingMethodComboBox.getValue().equals("OCIF6") ? 6 : 1,
                     brailleCheckBox.isSelected(),
                     ditheringCheckBox.isSelected(),
                     ditheringSlider.getValue()
