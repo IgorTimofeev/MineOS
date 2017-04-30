@@ -104,17 +104,16 @@ public class OCIF {
         FileOutputStream out = new FileOutputStream(convertedImagePath);
 
         out.write("OCIF".getBytes(StandardCharsets.US_ASCII));
-        out.write((byte) (encodingMethod));
+        out.write((byte) encodingMethod);
         out.write((byte) requestedWidth);
         out.write((byte) requestedHeight);
 
-        int xModifyer = 1, yModifyer = 2;
-        if (convertAsBraille) {
-            xModifyer = 2;
-            yModifyer = 4;
-        }
-
-        sample.Image image = new sample.Image(new javafx.scene.image.Image(imagePath, requestedWidth * xModifyer, requestedHeight * yModifyer, false, true));
+        sample.Image image = new sample.Image(new javafx.scene.image.Image(imagePath,
+                requestedWidth * (convertAsBraille ? 2 : 1),
+                requestedHeight * (convertAsBraille ? 4 : 2),
+                false,
+                true
+        ));
 
         if (enableDithering) {
             image = sample.Image.dither(image, ditheringIntensity);
