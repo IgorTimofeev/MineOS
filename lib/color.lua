@@ -4,10 +4,6 @@ local color = {}
 
 -----------------------------------------------------------------------------------------------------------------------
 
-local function isNan(x)
-	return x ~= x
-end
-
 function color.HEXToRGB(HEXColor)
 	return bit32.rshift(HEXColor, 16), bit32.band(bit32.rshift(HEXColor, 8), 0xFF), bit32.band(HEXColor, 0xFF)
 end
@@ -22,17 +18,17 @@ function color.RGBToHSB(rr, gg, bb)
 	local delta = max - min
 
 	local h = 0
-	if ( max == rr and gg >= bb) then h = 60*(gg-bb)/delta end
-	if ( max == rr and gg <= bb ) then h = 60*(gg-bb)/delta + 360 end
-	if ( max == gg ) then h = 60*(bb-rr)/delta + 120 end
-	if ( max == bb ) then h = 60*(rr-gg)/delta + 240 end
+	if ( max == rr and gg >= bb) then h = 60 * (gg - bb) / delta end
+	if ( max == rr and gg <= bb ) then h = 60 * (gg - bb) / delta + 360 end
+	if ( max == gg ) then h = 60 * (bb - rr) / delta + 120 end
+	if ( max == bb ) then h = 60 * (rr - gg) / delta + 240 end
 
 	local s = 0
 	if ( max ~= 0 ) then s = 1 - (min / max) end
 
 	local b = max * 100 / 255
 
-	if isNan(h) then h = 0 end
+	if delta == 0 then h = 0 end
 
 	return h, s * 100, b
 end
@@ -42,15 +38,15 @@ function color.HSBToRGB(h, s, v)
 	local rr, gg, bb = 0, 0, 0
 	local const = 255
 
-	s = s/100
-	v = v/100
+	s = s / 100
+	v = v / 100
 	
-	local i = math.floor(h/60)
-	local f = h/60 - i
+	local i = math.floor(h / 60)
+	local f = h / 60 - i
 	
-	local p = v*(1-s)
-	local q = v*(1-s*f)
-	local t = v*(1-(1-f)*s)
+	local p = v * (1 - s)
+	local q = v * (1 - s * f)
+	local t = v * (1 - (1 - f) * s)
 
 	if ( i == 0 ) then rr, gg, bb = v, t, p end
 	if ( i == 1 ) then rr, gg, bb = q, v, p end
@@ -76,17 +72,6 @@ function color.HSBToHEX(h, s, b)
 	return color
 end
 
-function color.blend(firstColor, secondColor, secondColorTransparency)
-	local invertedTransparency, firstColorR, firstColorG, firstColorB = 1 - secondColorTransparency, color.HEXToRGB(firstColor)
-	local secondColorR, secondColorG, secondColorB = color.HEXToRGB(secondColor)
-
-	return color.RGBToHEX(
-		secondColorR * invertedTransparency + firstColorR * secondColorTransparency,
-		secondColorG * invertedTransparency + firstColorG * secondColorTransparency,
-		secondColorB * invertedTransparency + firstColorB * secondColorTransparency
-	)
-end
-
 function color.average(colors)
 	local sColors, averageRed, averageGreen, averageBlue, r, g, b = #colors, 0, 0, 0
 
@@ -96,6 +81,17 @@ function color.average(colors)
 	end
 
 	return color.RGBToHEX(math.floor(averageRed / sColors), math.floor(averageGreen / sColors), math.floor(averageBlue / sColors))
+end
+
+function color.blend(firstColor, secondColor, secondColorTransparency)
+	local invertedTransparency, firstColorR, firstColorG, firstColorB = 1 - secondColorTransparency, color.HEXToRGB(firstColor)
+	local secondColorR, secondColorG, secondColorB = color.HEXToRGB(secondColor)
+
+	return color.RGBToHEX(
+		secondColorR * invertedTransparency + firstColorR * secondColorTransparency,
+		secondColorG * invertedTransparency + firstColorG * secondColorTransparency,
+		secondColorB * invertedTransparency + firstColorB * secondColorTransparency
+	)
 end
 
 -----------------------------------------------------------------------------------------------------------------------

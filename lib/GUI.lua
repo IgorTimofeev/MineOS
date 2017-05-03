@@ -1535,7 +1535,7 @@ local function codeViewDraw(codeView)
 			local dy = codeView.selections[selectionIndex].to.line - codeView.selections[selectionIndex].from.line
 			if dy == 0 then
 				buffer.square(
-					codeView.codeAreaPosition + codeView.selections[selectionIndex].from.symbol,
+					codeView.codeAreaPosition + codeView.selections[selectionIndex].from.symbol - codeView.fromSymbol + 1,
 					y + codeView.selections[selectionIndex].from.line - codeView.fromLine,
 					codeView.selections[selectionIndex].to.symbol - codeView.selections[selectionIndex].from.symbol + 1,
 					1,
@@ -2276,7 +2276,7 @@ end
 -- end
 
 -- buffer.clear(0xFF8888)
--- GUI.codeView(2, 2, 100, 40, lines, 1, 1, 40, {{from = {line = 3, symbol = 5}, to = {line = 8, symbol = 6}}}, {}, true, 2):draw()
+-- GUI.codeView(2, 2, 100, 40, lines, 1, 1, 40, {{from = {line = 7, symbol = 5}, to = {line = 7, symbol = 8}}}, {}, true, 2):draw()
 
 -- buffer.draw(true)
 

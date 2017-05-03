@@ -1,6 +1,7 @@
 -- SHA-256 code in Lua 5.2; based on the pseudo-code from
 -- Wikipedia (http://en.wikipedia.org/wiki/SHA-2)
 
+local bit32 = require("bit32")
 
 local band, rrotate, bxor, rshift, bnot =
   bit32.band, bit32.rrotate, bit32.bxor, bit32.rshift, bit32.bnot
