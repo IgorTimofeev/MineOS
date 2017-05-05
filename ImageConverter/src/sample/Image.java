@@ -272,7 +272,7 @@ public class Image {
         for (int y = 0; y < image.height; y += 2) {
             for (int x = 0; x < image.width; x++) {
                 pixel = getSemiPixel(image, x, y);
-                groupPixel(groupedImage, pixel.alpha, pixel.symbol, Palette.getClosestIndex(pixel.background), Palette.getClosestIndex(pixel.foreground), yCounter, x);
+                groupPixel(groupedImage, pixel.alpha, pixel.symbol, Palette.getClosestIndex(pixel.background), Palette.getClosestIndex(pixel.foreground), yCounter, x + 1);
             }
 
             yCounter++;
