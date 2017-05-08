@@ -97,13 +97,18 @@ end
 -----------------------------------------------------------------------------------------------------------------------
 
 local openComputersPalette = {}
-for r = 0, 5 do --Красный спектр
-	for g = 0, 7 do --Зелёный спектр
-		for b = 0, 4 do --Синий спектр
-			table.insert(openComputersPalette, colorlib.RGBtoHEX(r * 0x33, g * 0x24, math.floor(b / 4 * 0xFF + 0.5))) --СИНИЙ, ПРЕКРАТИ
+
+for r = 0x0, 0xFF, 0xFF / 5 do
+	for g = 0x0, 0xFF, 0xFF / 7 do
+		for b = 0x0, 0xFF, 0xFF / 4 do
+			table.insert(openComputersPalette, color.RGBToHEX(r, math.floor(g + 0,5), math.floor(b + 0.5)))
 		end
 	end
-end
+ end
+ for gr = 0x1, 0x10 do
+	table.insert(openComputersPalette, gr * 0xF0F0F)
+ end
+ table.sort(openComputersPalette)
 
 function color.to8Bit(color24Bit)
 	local closestDelta, r, g, b, closestIndex, delta, openComputersPaletteR, openComputersPaletteG, openComputersPaletteB = math.huge, color.HEXToRGB(color24Bit)
