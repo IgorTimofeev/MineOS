@@ -102,13 +102,20 @@ end
 -----------------------------------------------------------------------------------------------------------------------
 
 local palette = {}
-for r = 0, 5 do --Красный спектр
-  for g = 0, 7 do --Зелёный спектр
-    for b = 0, 4 do --Синий спектр
-      table.insert(palette, colorlib.RGBtoHEX(r * 0x33, g * 0x24, math.floor(b / 4 * 0xFF + 0.5)))
-    end
-  end
+
+for r = 0x0, 0xFF, 0xFF / 5 do
+	for g = 0x0, 0xFF, 0xFF / 7 do
+		for b = 0x0, 0xFF, 0xFF / 4 do
+			table.insert(palette, color.RGBToHEX(r, math.floor(g + 0,5), math.floor(b + 0.5)))
+		end
+	end
 end
+
+for g = 0x1, 0x10 do
+	table.insert(palette, g * 0xF0F0F)
+end
+
+table.sort(palette)
 
 function colorlib.convert24BitTo8Bit(hex24)
   local encodedIndex = nil
