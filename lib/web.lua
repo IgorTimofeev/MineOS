@@ -74,7 +74,7 @@ function web.runScript(url)
 	end
 end
 
-function web.downloadMineOSApplication(application)
+function web.downloadMineOSApplication(application, language)
     if application.type == "Application" then
 		fs.remove(application.path .. ".app")
 
@@ -88,7 +88,7 @@ function web.downloadMineOSApplication(application)
 		end
 
 		if application.about then
-			web.downloadFile(application.about .. _G.OSSettings.language .. ".txt", application.path .. ".app/Resources/About/" .. _G.OSSettings.language .. ".txt")
+			web.downloadFile(application.about .. language .. ".txt", application.path .. ".app/Resources/About/" .. language .. ".txt")
 		end 
 
 		if application.createShortcut == "desktop" then

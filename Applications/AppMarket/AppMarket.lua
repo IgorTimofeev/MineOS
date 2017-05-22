@@ -48,7 +48,7 @@ local function newApp(x, y, width, applicationListElement, hideDownloadButton)
 		mainContainer:draw()
 		buffer.draw()
 
-		web.downloadMineOSApplication(applicationListElement)
+		web.downloadMineOSApplication(applicationListElement, MineOSCore.OSSettings.language)
 
 		app.downloadButton.text = localization.downloaded
 		mainContainer:draw()
@@ -125,7 +125,7 @@ local function displayApps(fromPage, typeFilter, nameFilter, updateCheck)
 				progressBar.value = math.floor(i / #finalApplicationList * 100)
 				label.text = localization.updating .. fs.name(finalApplicationList[i].path)
 				
-				-- web.downloadMineOSApplication(finalApplicationList[i])
+				web.downloadMineOSApplication(finalApplicationList[i], MineOSCore.OSSettings.language)
 
 				mainContainer:draw()
 				buffer.draw()
