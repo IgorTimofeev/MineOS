@@ -263,11 +263,9 @@ end
 
 local function changeWallpaper()
 	if MineOSCore.OSSettings.wallpaper and fs.exists(MineOSCore.OSSettings.wallpaper) then
-		MineOSCore.OSMainContainer.wallpaper.image = image.load(MineOSCore.OSSettings.wallpaper)
-		MineOSCore.OSMainContainer.wallpaper.hidden = false
+		MineOSCore.OSMainContainer.background.wallpaper = image.transform(image.load(MineOSCore.OSSettings.wallpaper), MineOSCore.OSMainContainer.width, MineOSCore.OSMainContainer.height)
 	else
-		MineOSCore.OSMainContainer.wallpaper.image = nil
-		MineOSCore.OSMainContainer.wallpaper.hidden = true
+		MineOSCore.OSMainContainer.background.wallpaper = nil
 	end
 end
 
@@ -275,14 +273,6 @@ local function changeWorkpath(newWorkpathHistoryIndex)
 	currentDesktop = 1
 	currentWorkpathHistoryIndex = newWorkpathHistoryIndex
 	MineOSCore.OSMainContainer.iconField.workpath = workpathHistory[currentWorkpathHistoryIndex]
-	MineOSCore.OSMainContainer.background.eventHandler = function(mainContainer, object, eventData)
-		if eventData[1] == "touch" then
-			if eventData[5] == 1 then
-				MineOSCore.emptyZoneClick(eventData, MineOSCore.OSMainContainer, MineOSCore.OSMainContainer.iconField.workpath)
-			end
-		end
-	end
-	MineOSCore.OSMainContainer.wallpaper.eventHandler = MineOSCore.OSMainContainer.background.eventHandler
 end
 
 local function updateDesktopCounters()
@@ -443,9 +433,24 @@ end
 
 local function createOSWindow()
 	MineOSCore.OSMainContainer = GUI.fullScreenContainer()
-	MineOSCore.OSMainContainer.background = MineOSCore.OSMainContainer:addChild(GUI.panel(1, 1, MineOSCore.OSMainContainer.width, MineOSCore.OSMainContainer.height, MineOSCore.OSSettings.backgroundColor or colors.background))
-	MineOSCore.OSMainContainer.wallpaper = MineOSCore.OSMainContainer:addChild(GUI.image(1, 1, {MineOSCore.OSMainContainer.width, MineOSCore.OSMainContainer.height}))
 
+	MineOSCore.OSMainContainer.background = GUI.object(1, 1, 1, 1)
+	MineOSCore.OSMainContainer.background.draw = function(object)
+		if object.wallpaper then
+			buffer.image(object.x, object.y, object.wallpaper)
+		else
+			buffer.square(object.x, object.y, object.width, object.height, MineOSCore.OSSettings.backgroundColor or colors.background, 0x0, " ")
+		end
+	end
+	MineOSCore.OSMainContainer.background.eventHandler = function(mainContainer, object, eventData)
+		if eventData[1] == "touch" then
+			if eventData[5] == 1 then
+				MineOSCore.emptyZoneClick(eventData, MineOSCore.OSMainContainer, MineOSCore.OSMainContainer.iconField.workpath)
+			end
+		end
+	end
+	MineOSCore.OSMainContainer:addChild(MineOSCore.OSMainContainer.background)
+	
 	MineOSCore.OSMainContainer.desktopCounters = MineOSCore.OSMainContainer:addChild(GUI.container(1, 1, 1, 1))
 
 	MineOSCore.OSMainContainer.iconField = MineOSCore.OSMainContainer:addChild(
@@ -564,12 +569,12 @@ local function createOSWindow()
 		menu:addItem(MineOSCore.localization.colorScheme).onTouch = function()
 			local container = MineOSCore.addUniversalContainer(MineOSCore.OSMainContainer, MineOSCore.localization.colorScheme)
 			
-			local backgroundColorSelector = container.layout:addChild(GUI.colorSelector(1, 1, 36, 3, MineOSCore.OSMainContainer.background.colors.background, MineOSCore.localization.backgroundColor))
-			local interfaceColorSelector = container.layout:addChild(GUI.colorSelector(1, 1, 36, 3, MineOSCore.OSMainContainer.menu.colors.default.background, MineOSCore.localization.interfaceColor))
+			local backgroundColorSelector = container.layout:addChild(GUI.colorSelector(1, 1, 36, 3, MineOSCore.OSSettings.backgroundColor or colors.background, MineOSCore.localization.backgroundColor))
+			local interfaceColorSelector = container.layout:addChild(GUI.colorSelector(1, 1, 36, 3, MineOSCore.OSSettings.interfaceColor or colors.interface, MineOSCore.localization.interfaceColor))
 			
 			backgroundColorSelector.onTouch = function()
 				MineOSCore.OSSettings.backgroundColor, MineOSCore.OSSettings.interfaceColor = backgroundColorSelector.color, interfaceColorSelector.color
-				MineOSCore.OSMainContainer.background.colors.background, MineOSCore.OSMainContainer.menu.colors.default.background = MineOSCore.OSSettings.backgroundColor, MineOSCore.OSSettings.interfaceColor
+				MineOSCore.OSMainContainer.menu.colors.default.background = MineOSCore.OSSettings.interfaceColor
 				MineOSCore.saveOSSettings()
 				
 				MineOSCore.OSMainContainer:draw()
@@ -588,7 +593,7 @@ local function createOSWindow()
 				end
 			end
 		end
-		menu:addItem(MineOSCore.localization.contextMenuRemoveWallpaper, MineOSCore.OSMainContainer.wallpaper.hidden).onTouch = function()
+		menu:addItem(MineOSCore.localization.contextMenuRemoveWallpaper, not MineOSCore.OSMainContainer.background.wallpaper).onTouch = function()
 			MineOSCore.OSSettings.wallpaper = nil
 			MineOSCore.saveOSSettings()
 			changeWallpaper()
@@ -620,6 +625,7 @@ local function createOSWindow()
 					MineOSCore.OSSettings.resolution = {tonumber(widthTextBox.text), tonumber(heightTextBox.text)}
 					MineOSCore.saveOSSettings()
 					changeResolution()
+					changeWallpaper()
 					MineOSCore.OSMainContainer.updateAndDraw()
 				end
 			end
@@ -709,7 +715,6 @@ while true do
 	if success then
 		break
 	else
-		buffer.start()
 		changeResolution()
 		MineOSCore.OSMainContainer.windowsContainer:deleteChildren()
 		-- MineOSCore.OSMainContainer:draw()
