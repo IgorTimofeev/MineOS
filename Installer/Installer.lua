@@ -242,7 +242,7 @@ stages[4] = function()
 	local width = 62
 	local x = math.floor(stageContainer.width / 2 - width / 2)
 	local progressBar = stageContainer:addChild(GUI.progressBar(x, y, width, 0x3392FF, 0xBBBBBB, 0x555555, 0, true, false))
-	local fileLabel = stageContainer:addChild(GUI.label(x, y + 1, width, 1, 0x666666, ""))
+	local fileLabel = stageContainer:addChild(GUI.label(x, y + 1, width, 1, 0x666666, "")):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
 
 	local thingsToDownload = {}
 	for i = 1, #applicationList do
@@ -267,7 +267,7 @@ stages[4] = function()
 	applicationList = nil
 
 	for i = 1, #thingsToDownload do
-		fileLabel.text = localization.downloading .. " \"" .. thingsToDownload[i].path .. "\""
+		fileLabel.text = localization.downloading .. fs.name(thingsToDownload[i].path)
 		progressBar.value = math.ceil(i / #thingsToDownload * 100)
 
 		mainContainer:draw()
