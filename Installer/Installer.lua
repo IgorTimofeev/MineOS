@@ -113,15 +113,15 @@ local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 
 buffer.setResolution(gpu.maxResolution())
-local mainWindow = GUI.fullScreenWindow()
-mainWindow:addPanel(1, 1, mainWindow.width, mainWindow.height, 0x2D2D2D)
+local mainContainer = GUI.fullScreenContainer()
+mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x2D2D2D))
 
-local stageContainer = mainWindow:addContainer(math.floor(mainWindow.width / 2 - 90 / 2), math.floor(mainWindow.height / 2 - 28 / 2), 90, 28)
-stageContainer:addPanel(1, 1, stageContainer.width, stageContainer.height, 0xDDDDDD)
+local stageContainer = mainContainer:addChild(GUI.container(math.floor(mainContainer.width / 2 - 90 / 2), math.floor(mainContainer.height / 2 - 28 / 2), 90, 28))
+stageContainer:addChild(GUI.panel(1, 1, stageContainer.width, stageContainer.height, 0xDDDDDD))
 
 ------------------------------------------------------------------------------------------------------------------------------------
 
-_G.OSSettings = {}
+local OSSettings = {}
 local stages = {current = 1}
 local localization
 
@@ -134,7 +134,7 @@ local function addButtonsToStage()
 	local y = stageContainer.height - 3
 
 	if stages.current > 1 then
-		stageContainer.previousStageButton = stageContainer:addRoundedButton(x, y, buttonWidth, 3, 0xAAAAAA, 0xDDDDDD, 0x777777, 0xDDDDDD, "⇦")
+		stageContainer.previousStageButton = stageContainer:addChild(GUI.roundedButton(x, y, buttonWidth, 3, 0xAAAAAA, 0xDDDDDD, 0x777777, 0xDDDDDD, "⇦"))
 		stageContainer.previousStageButton.colors.disabled.background = 0xCCCCCC
 		stageContainer.previousStageButton.colors.disabled.text = 0xDDDDDD
 		stageContainer.previousStageButton.onTouch = function()
@@ -144,7 +144,7 @@ local function addButtonsToStage()
 	end
 
 	if stages.current < #stages then
-		stageContainer.nextStageButton = stageContainer:addRoundedButton(x, y, buttonWidth, 3, 0xAAAAAA, 0xDDDDDD, 0x777777, 0xDDDDDD, "⇨")
+		stageContainer.nextStageButton = stageContainer:addChild(GUI.roundedButton(x, y, buttonWidth, 3, 0xAAAAAA, 0xDDDDDD, 0x777777, 0xDDDDDD, "⇨"))
 		stageContainer.nextStageButton.colors.disabled.background = 0xCCCCCC
 		stageContainer.nextStageButton.colors.disabled.text = 0xDDDDDD
 		stageContainer.nextStageButton.onTouch = function()
@@ -159,27 +159,27 @@ function stages.load(stage)
 
 	stages[stage]()
 
-	mainWindow:draw()
+	mainContainer:draw()
 	buffer.draw()
 end
 
 local function addImageToStage(y, picture)
-	stageContainer:addImage(math.floor(stageContainer.width / 2 - image.getWidth(picture) / 2), y, picture)
+	stageContainer:addChild(GUI.image(math.floor(stageContainer.width / 2 - image.getWidth(picture) / 2), y, picture))
 	return y + image.getHeight(picture) - 1
 end
 
 ------------------------------------------------------------------------------------------------------------------------------------
 
 local function loadLocalization(language)
-	_G.OSSettings.language = language
-	localization = serialization.unserialize(web.request(urls.installer .. _G.OSSettings.language .. ".lang"))
+	OSSettings.language = language
+	localization = serialization.unserialize(web.request(urls.installer .. OSSettings.language .. ".lang"))
 end
 
 stages[1] = function()
 	addButtonsToStage()
 	local y = addImageToStage(3, images.languages)
 	y = y + 3
-	local comboBox = stageContainer:addComboBox(math.floor(stageContainer.width / 2 - 15), y, 30, 3, 0xFFFFFF, 0x555555, 0xAAAAAA, 0xDDDDDD)
+	local comboBox = stageContainer:addChild(GUI.comboBox(math.floor(stageContainer.width / 2 - 15), y, 30, 3, 0xFFFFFF, 0x555555, 0xAAAAAA, 0xDDDDDD))
 	loadLocalization("Russian")
 	comboBox:addItem("Russian").onTouch = function()
 		loadLocalization("Russian")
@@ -192,13 +192,13 @@ end
 ------------------------------------------------------------------------------------------------------------------------------------
 
 local function addSwitchToStage(x, y, color, text, state)
-	stageContainer:addLabel(math.floor(x + 4 - unicode.len(text) / 2), y + 1, stageContainer.width, 1, 0x555555, text)
-	return stageContainer:addSwitch(x, y, 8, color, 0x444444, 0xFFFFFF, state)
+	stageContainer:addChild(GUI.label(math.floor(x + 4 - unicode.len(text) / 2), y + 1, stageContainer.width, 1, 0x555555, text))
+	return stageContainer:addChild(GUI.switch(x, y, 8, color, 0x444444, 0xFFFFFF, state))
 end
 
 stages[2] = function()
 	addButtonsToStage()
-	stageContainer:addImage(1, 1, images.OS)
+	stageContainer:addChild(GUI.image(1, 1, images.OS))
 	local y = 22
 	local spaceBetween = 22
 	local x = math.floor(stageContainer.width / 2 - 25)
@@ -216,18 +216,18 @@ end
 
 stages[3] = function()
 	addButtonsToStage()
-	local data = web.request("https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/MineOS/License/" .. _G.OSSettings.language .. ".lang")
+	local data = web.request("https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/MineOS/License/" .. OSSettings.language .. ".lang")
 	local lines = {}
 	for line in data:gmatch("[^\n]+") do
 		table.insert(lines, line)
 	end
-	stageContainer:addTextBox(1, 1, 90, 20, 0xFFFFFF, 0x444444, string.wrap(lines, 88), 1, 1, 1)
+	stageContainer:addChild(GUI.textBox(1, 1, 90, 20, 0xFFFFFF, 0x444444, string.wrap(lines, 88), 1, 1, 1))
 
 	stageContainer.nextStageButton.disabled = true
 	local switch = addSwitchToStage(41, 22, 0x666666, localization.terms, false)
 	switch.onStateChanged = function(state)
 		stageContainer.nextStageButton.disabled = not state
-		mainWindow:draw()
+		mainContainer:draw()
 		buffer.draw()
 	end
 end
@@ -241,8 +241,8 @@ stages[4] = function()
 
 	local width = 62
 	local x = math.floor(stageContainer.width / 2 - width / 2)
-	local progressBar = stageContainer:addProgressBar(x, y, width, 0x3392FF, 0xBBBBBB, 0x555555, 0, true, false)
-	local fileLabel = stageContainer:addLabel(x, y + 1, width, 1, 0x666666, "")
+	local progressBar = stageContainer:addChild(GUI.progressBar(x, y, width, 0x3392FF, 0xBBBBBB, 0x555555, 0, true, false))
+	local fileLabel = stageContainer:addChild(GUI.label(x, y + 1, width, 1, 0x666666, ""))
 
 	local thingsToDownload = {}
 	for i = 1, #applicationList do
@@ -270,16 +270,16 @@ stages[4] = function()
 		fileLabel.text = localization.downloading .. " \"" .. thingsToDownload[i].path .. "\""
 		progressBar.value = math.ceil(i / #thingsToDownload * 100)
 
-		mainWindow:draw()
+		mainContainer:draw()
 		buffer.draw()
 
-		web.downloadMineOSApplication(thingsToDownload[i])
+		web.downloadMineOSApplication(thingsToDownload[i], OSSettings.language)
 	end
 
 	stageContainer:deleteChildren(2)
 	y = addImageToStage(4, images.EEPROM)
-	stageContainer:addLabel(1, y + 3, stageContainer.width, 1, 0x666666, localization.flashingEEPROM):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
-	mainWindow:draw()
+	stageContainer:addChild(GUI.label(1, y + 3, stageContainer.width, 1, 0x666666, localization.flashingEEPROM)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+	mainContainer:draw()
 	buffer.draw()
 
 	component.eeprom.set(web.request(urls.EFI))
@@ -293,19 +293,19 @@ stages[5] = function()
 	addImageToStage(3, images.OK)
 	stageContainer.children[#stageContainer.children].localPosition.x = stageContainer.children[#stageContainer.children].localPosition.x + 3
 	
-	stageContainer:addLabel(1, 22, stageContainer.width, 1, 0x666666, localization.needToReboot):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
-	stageContainer:addAdaptiveRoundedButton(math.floor(stageContainer.width / 2 - (unicode.len(localization.reboot) + 4) / 2), stageContainer.height - 4, 2, 1, 0xAAAAAA, 0xDDDDDD, 0x777777, 0xDDDDDD, localization.reboot).onTouch = function()
-		_G.OSSettings.wallpaper = stageContainer.downloadWallpapersSwitch.state and "/MineOS/Pictures/Ciri.pic" or nil
-		_G.OSSettings.screensaver = "Matrix"
-		_G.OSSettings.screensaverDelay = 20
-		_G.OSSettings.showHelpOnApplicationStart = stageContainer.showApplicationsHelpSwitch.state
-		_G.OSSettings.dockShortcuts = {
+	stageContainer:addChild(GUI.label(1, 22, stageContainer.width, 1, 0x666666, localization.needToReboot)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+	stageContainer:addChild(GUI.adaptiveRoundedButton(math.floor(stageContainer.width / 2 - (unicode.len(localization.reboot) + 4) / 2), stageContainer.height - 4, 2, 1, 0xAAAAAA, 0xDDDDDD, 0x777777, 0xDDDDDD, localization.reboot)).onTouch = function()
+		OSSettings.wallpaper = stageContainer.downloadWallpapersSwitch.state and "/MineOS/Pictures/Ciri.pic" or nil
+		OSSettings.screensaver = "Matrix"
+		OSSettings.screensaverDelay = 20
+		OSSettings.showHelpOnApplicationStart = stageContainer.showApplicationsHelpSwitch.state
+		OSSettings.dockShortcuts = {
 			{path = "/MineOS/Applications/AppMarket.app"},
 			{path = "/MineOS/Applications/MineCode IDE.app"},
 			{path = "/MineOS/Applications/Photoshop.app"},
 		}
 
-		table.toFile(paths.OSSettings, _G.OSSettings)
+		table.toFile(paths.OSSettings, OSSettings)
 
 		local file = io.open("/autorun.lua", "w")
 		file:write("dofile(\"/OS.lua\")")
@@ -318,6 +318,6 @@ end
 ------------------------------------------------------------------------------------------------------------------------------------
 
 stages.load(1)
-mainWindow:draw()
+mainContainer:draw()
 buffer.draw(true)
-mainWindow:handleEvents()
+mainContainer:startEventHandling()
