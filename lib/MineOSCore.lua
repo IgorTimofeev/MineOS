@@ -879,31 +879,27 @@ function MineOSCore.applicationHelp(parentWindow, path)
 		lines = string.wrap(lines, 50)
 		
 		container.layout:addChild(GUI.textBox(1, 1, 50, #lines, nil, 0xcccccc, lines, 1, 0, 0))
-		local button = container.layout:addChild(GUI.button(1, 1, 30, 1, 0xEEEEEE, 0x262626, 0xAAAAAA, 0x262626, MineOSCore.localization.dontShowAnymore))
-
-		parentWindow:draw()
-		buffer.draw()
-
+		local button = container.layout:addChild(GUI.button(1, 1, 30, 1, 0xEEEEEE, 0x262626, 0xAAAAAA, 0x262626, MineOSCore.localization.dontShowAnymore))	
+		
 		container.panel.eventHandler = function(mainContainer, object, eventData)
 			if eventData[1] == "touch" then
 				container:delete()
 				MineOSCore.safeLaunch(path .. "/Main.lua")
-				parentWindow:draw()
-				buffer.draw()
 			end
 		end
 
 		button.onTouch = function()
 			MineOSCore.OSSettings.showHelpOnApplicationStart = false
 			MineOSCore.saveOSSettings()
-			
-			container.panel.onTouch()
+			container:delete()
+			MineOSCore.safeLaunch(path .. "/Main.lua")
 		end
 	else
 		MineOSCore.safeLaunch(path .. "/Main.lua")
-		parentWindow:draw()
-		buffer.draw()
 	end
+
+	parentWindow:draw()
+	buffer.draw()
 end
 
 ----------------------------------------- Windows patterns -----------------------------------------
