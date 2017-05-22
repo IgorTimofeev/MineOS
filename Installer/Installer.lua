@@ -267,7 +267,7 @@ stages[4] = function()
 	applicationList = nil
 
 	for i = 1, #thingsToDownload do
-		fileLabel.text = localization.downloading .. fs.name(thingsToDownload[i].path)
+		fileLabel.text = localization.downloading .. " " .. fs.name(thingsToDownload[i].path)
 		progressBar.value = math.ceil(i / #thingsToDownload * 100)
 
 		mainContainer:draw()
