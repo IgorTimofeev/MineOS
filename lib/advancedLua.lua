@@ -249,11 +249,11 @@ end
 
 function filesystem.directorySize(path)
 	local size = 0
-	for file in filesystmem.list(path) do
-		if filesystmem.isDirectory(path .. file) then
+	for file in filesystem.list(path) do
+		if filesystem.isDirectory(path .. file) then
 			size = size + filesystem.directorySize(path .. file)
 		else
-			size = size + filesystmem.size(path .. file)
+			size = size + filesystem.size(path .. file)
 		end
 	end
 	

@@ -5,7 +5,7 @@ _G.unicode = require("unicode")
 _G.event = require("event")
 _G.ecs = require("ECSAPI")
 
-local xGraph, yGraph = math.floor(buffer.screen.width / 2), buffer.screen.height
+local xGraph, yGraph = math.floor(buffer.width / 2), buffer.height
 local yDependencyString = "math.sin(x) * 5"
 local graphScale = 4
 local graphResizeSpeed = 0.4
@@ -34,7 +34,7 @@ end
 local function drawButtons()
 	buttons = {}
 	local buttonNames = {"Функция", "Масштаб", "Очистить точки", "Выход"}
-	local x, y = math.floor(buffer.screen.width / 2 - (#buttonNames * (buttonWidth + 2) - 2) / 2), buffer.screen.height - 4
+	local x, y = math.floor(buffer.width / 2 - (#buttonNames * (buttonWidth + 2) - 2) / 2), buffer.height - 4
 
 	for i = 1, #buttonNames do
 		buttons[buttonNames[i]] = { buffer.button(x, y, buttonWidth, 3, buttonColor, buttonTextColor, buttonNames[i]) }
@@ -51,8 +51,8 @@ local function drawVerticalLine(x, y, y2, color)
 end
 
 local function drawAxis()
-	drawHorizontalLine(1, yGraph, buffer.screen.width, axisColor)
-	drawVerticalLine(xGraph, 1, buffer.screen.height * 2, axisColor)
+	drawHorizontalLine(1, yGraph, buffer.width, axisColor)
+	drawVerticalLine(xGraph, 1, buffer.height * 2, axisColor)
 end
 
 local function limit(n)

@@ -1,6 +1,4 @@
 
--- _G.GUI, package.loaded.GUI = nil, nil
-
 local advancedLua = require("advancedLua")
 local component = require("component")
 local fs = require("filesystem")
@@ -12,283 +10,275 @@ local GUI = require("GUI")
 --------------------------------------------------------------------------------------------------------------
 
 local palette = {}
-local window
-local currentColor, favourites
-local xBigCrest, yBigCrest, yMiniCrest
-local favouritesContainer, bigRainbow, miniRainbow, currentColorPanel
-local pathToFavouritesConfig = "/MineOS/System/Palette/Favourites.cfg"
-local inputs
+local pathToFavouritesConfig, favourites = "/MineOS/System/Palette/Favourites.cfg"
 
 --------------------------------------------------------------------------------------------------------------
 
-local function switchColorFromHex(hex)
-	currentColor = {hsb = {}, rgb = {}, hex = hex}
-	currentColor.rgb.red, currentColor.rgb.green, currentColor.rgb.blue = color.HEXToRGB(hex)
-	currentColor.hsb.hue, currentColor.hsb.saturation, currentColor.hsb.brightness = color.RGBToHSB(currentColor.rgb.red, currentColor.rgb.green, currentColor.rgb.blue)
-end
-
-local function switchColorFromHsb(hue, saturation, brightness)
-	currentColor = {hsb = {hue = hue, saturation = saturation, brightness = brightness}, rgb = {}, hex = nil}
-	currentColor.rgb.red, currentColor.rgb.green, currentColor.rgb.blue = color.HSBToRGB(hue, saturation, brightness)
-	currentColor.hex = color.RGBToHEX(currentColor.rgb.red, currentColor.rgb.green, currentColor.rgb.blue)
-end
-
-local function switchColorFromRgb(red, green, blue)
-	currentColor = {hsb = {}, rgb = {red = red, green = green, blue = blue}, hex = nil}
-	currentColor.hsb.hue, currentColor.hsb.saturation, currentColor.hsb.brightness = color.RGBToHSB(red, green, blue)
-	currentColor.hex = color.RGBToHEX(red, green, blue)
-end
-
---------------------------------------------------------------------------------------------------------------
-
-local function randomizeFavourites()
-	favourites = {}; for i = 1, 6 do favourites[i] = math.random(0x000000, 0xFFFFFF) end
-end
-
-local function saveFavoutites()
+local function saveFavourites()
 	table.toFile(pathToFavouritesConfig, favourites)
 end
 
-local function loadFavourites()
-	if fs.exists(pathToFavouritesConfig) then
-		favourites = table.fromFile(pathToFavouritesConfig)
-	else
-		randomizeFavourites()
-		saveFavoutites()
-	end
+--------------------------------------------------------------------------------------------------------------
+
+local function changeInputsValueToCurrentColor(window)
+	window.inputs[1].inputTextBox.text = tostring(window.color.rgb.red)
+	window.inputs[2].inputTextBox.text = tostring(window.color.rgb.green)
+	window.inputs[3].inputTextBox.text = tostring(window.color.rgb.blue)
+	window.inputs[4].inputTextBox.text = tostring(math.floor(window.color.hsb.hue))
+	window.inputs[5].inputTextBox.text = tostring(math.floor(window.color.hsb.saturation))
+	window.inputs[6].inputTextBox.text = tostring(math.floor(window.color.hsb.brightness))
+	window.inputs[7].inputTextBox.text = string.format("%06X", window.color.hex)
+	window.colorPanel.colors.background = window.color.hex
+end
+
+local function switchColorFromHex(window, hex)
+	window.color.hex = hex
+	window.color.rgb.red, window.color.rgb.green, window.color.rgb.blue = color.HEXToRGB(hex)
+	window.color.hsb.hue, window.color.hsb.saturation, window.color.hsb.brightness = color.RGBToHSB(window.color.rgb.red, window.color.rgb.green, window.color.rgb.blue)
+	changeInputsValueToCurrentColor(window)
+end
+
+local function switchColorFromHsb(window, hue, saturation, brightness)
+	window.color.hsb.hue, window.color.hsb.saturation, window.color.hsb.brightness = hue, saturation, brightness
+	window.color.rgb.red, window.color.rgb.green, window.color.rgb.blue = color.HSBToRGB(hue, saturation, brightness)
+	window.color.hex = color.RGBToHEX(window.color.rgb.red, window.color.rgb.green, window.color.rgb.blue)
+	changeInputsValueToCurrentColor(window)
+end
+
+local function switchColorFromRgb(window, red, green, blue)
+	window.color.rgb.red, window.color.rgb.green, window.color.rgb.blue = red, green, blue
+	window.color.hsb.hue, window.color.hsb.saturation, window.color.hsb.brightness = color.RGBToHSB(red, green, blue)
+	window.color.hex = color.RGBToHEX(red, green, blue)
+	changeInputsValueToCurrentColor(window)
 end
 
 --------------------------------------------------------------------------------------------------------------
 
-local function changeInputsValueToCurrentColor()
-	inputs[1].object.text = tostring(currentColor.rgb.red)
-	inputs[2].object.text = tostring(currentColor.rgb.green)
-	inputs[3].object.text = tostring(currentColor.rgb.blue)
-	inputs[4].object.text = tostring(math.floor(currentColor.hsb.hue))
-	inputs[5].object.text = tostring(math.floor(currentColor.hsb.saturation))
-	inputs[6].object.text = tostring(math.floor(currentColor.hsb.brightness))
-	inputs[7].object.text = string.format("%06X", currentColor.hex)
-end
-
---------------------------------------------------------------------------------------------------------------
-
-local function refreshBigRainbow(width, height)
-	local saturationStep, brightnessStep, saturation, brightness = 100 / width, 100 / (height * 2), 0, 100
-	for j = 1, height do
-		for i = 1, width do
-			local background = color.HSBToHEX(currentColor.hsb.hue, saturation, brightness)
-			local foreground = color.HSBToHEX(currentColor.hsb.hue, saturation, brightness - brightnessStep)
-			image.set(bigRainbow.image, i, j, background, foreground, 0x0, "▄")
+local function refreshBigRainbow(window)
+	local saturationStep, brightnessStep, saturation, brightness = 100 / image.getWidth(window.bigRainbow.image), 100 / (image.getHeight(window.bigRainbow.image)), 0, 100
+	for j = 1, image.getHeight(window.bigRainbow.image) do
+		for i = 1, image.getWidth(window.bigRainbow.image) do
+			image.set(window.bigRainbow.image, i, j, color.optimize(color.HSBToHEX(window.color.hsb.hue, saturation, brightness)), 0x0, 0x0, " ")
 			saturation = saturation + saturationStep
 		end
-		saturation = 0; brightness = brightness - brightnessStep - brightnessStep
+		saturation, brightness = 0, brightness - brightnessStep
 	end
 end
 
-local function refreshMiniRainbow(width, height)
-	local hueStep, hue = 360 / (height * 2), 0
-	for j = 1, height do
-		for i = 1, width do
-			local background = color.HSBToHEX(hue, 100, 100)
-			local foreground = color.HSBToHEX(hue + hueStep, 100, 100)
-			image.set(miniRainbow.image, i, j, background, foreground, 0x0, "▄")
+local function refreshMiniRainbow(window)
+	local hueStep, hue = 360 / (image.getHeight(window.miniRainbow.image)), 0
+	for j = 1, image.getHeight(window.miniRainbow.image) do
+		for i = 1, image.getWidth(window.miniRainbow.image) do
+			image.set(window.miniRainbow.image, i, j, color.optimize(color.HSBToHEX(hue, 100, 100)), 0x0, 0x0, " ")
 		end
-		hue = hue + hueStep + hueStep
+		hue = hue + hueStep
 	end
-end
-
-local function refreshRainbows()
-	refreshBigRainbow(50, 25)
-	refreshMiniRainbow(3, 25)
-end
-
-local function betterVisiblePixel(x, y, symbol)
-	local background, foreground = buffer.get(x, y)
-	if background > 0x888888 then foreground = 0x000000 else foreground = 0xFFFFFF end
-	buffer.set(x, y, background, foreground, symbol)
-end
-
-local function drawBigCrest()
-	local drawLimit = buffer.getDrawLimit(); buffer.setDrawLimit(window.x, window.y, bigRainbow.width + 2, bigRainbow.height)
-	betterVisiblePixel(xBigCrest - 2, yBigCrest, "─")
-	betterVisiblePixel(xBigCrest - 1, yBigCrest, "─")
-	betterVisiblePixel(xBigCrest + 1, yBigCrest, "─")
-	betterVisiblePixel(xBigCrest + 2, yBigCrest, "─")
-	betterVisiblePixel(xBigCrest, yBigCrest - 1, "│")
-	betterVisiblePixel(xBigCrest, yBigCrest + 1, "│")
-	buffer.setDrawLimit(drawLimit)
-end
-
-local function drawMiniCrest()
-	buffer.text(miniRainbow.x - 1, yMiniCrest, 0x000000, ">")
-	buffer.text(miniRainbow.x + miniRainbow.width, yMiniCrest, 0x000000, "<")
-end
-
-local function drawCrests()
-	drawBigCrest()
-	drawMiniCrest()
-end
-
-local function drawAll()
-	currentColorPanel.colors.background = currentColor.hex
-	changeInputsValueToCurrentColor()
-	window:draw()
-	drawCrests()
-	buffer.draw()
 end
 
 --------------------------------------------------------------------------------------------------------------
 
-local function createCrestsCoordinates()
-	local xBigCrestModifyer = (bigRainbow.width - 1) * currentColor.hsb.saturation / 100
-	local yBigCrestModifyer = (bigRainbow.height - 1) - (bigRainbow.height - 1) * currentColor.hsb.brightness / 100
-	local yMiniCrestModifyer = (miniRainbow.height - 1) - (miniRainbow.height - 1) * currentColor.hsb.hue / 360
-	
-	xBigCrest, yBigCrest, yMiniCrest = math.floor(window.x + xBigCrestModifyer), math.floor(window.y + yBigCrestModifyer), math.floor(window.y + yMiniCrestModifyer)
+local function createCrestsCoordinates(window)
+	window.bigCrest.localPosition.x = math.floor((window.bigRainbow.width - 1) * window.color.hsb.saturation / 100) - 1
+	window.bigCrest.localPosition.y = math.floor((window.bigRainbow.height - 1) - (window.bigRainbow.height - 1) * window.color.hsb.brightness / 100)
+	window.miniCrest.localPosition.y = math.floor(window.color.hsb.hue / 360 * window.miniRainbow.height)
 end
 
-local function createInputs(x, y)
-	local function onAnyInputFinished() refreshRainbows(); createCrestsCoordinates(); drawAll() end
-	local function onHexInputFinished(object) switchColorFromHex(tonumber("0x" .. inputs[7].object.text)); onAnyInputFinished() end
-	local function onRgbInputFinished(object) switchColorFromRgb(tonumber(inputs[1].object.text), tonumber(inputs[2].object.text), tonumber(inputs[3].object.text)); onAnyInputFinished() end
-	local function onHsbInputFinished(object) switchColorFromHsb(tonumber(inputs[4].object.text), tonumber(inputs[5].object.text), tonumber(inputs[6].object.text)); onAnyInputFinished() end
-
-	local function rgbValidaror(text) local num = tonumber(text) if num and num >= 0 and num <= 255 then return true end end
-	local function hValidator(text) local num = tonumber(text) if num and num >= 0 and num <= 359 then return true end end
-	local function sbValidator(text) local num = tonumber(text) if num and num >= 0 and num <= 100 then return true end end
-	local function hexValidator(text) if string.match(text, "^[0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F]$") then return true end end
-
-	inputs = {
-		{ shortcut = "R:", arrayName = "red",        validator = rgbValidaror, onInputFinished = onRgbInputFinished },
-		{ shortcut = "G:", arrayName = "green",      validator = rgbValidaror, onInputFinished = onRgbInputFinished },
-		{ shortcut = "B:", arrayName = "blue",       validator = rgbValidaror, onInputFinished = onRgbInputFinished },
-		{ shortcut = "H:", arrayName = "hue",        validator = hValidator,   onInputFinished = onHsbInputFinished },
-		{ shortcut = "S:", arrayName = "saturation", validator = sbValidator,  onInputFinished = onHsbInputFinished },
-		{ shortcut = "L:", arrayName = "brightness", validator = sbValidator,  onInputFinished = onHsbInputFinished },
-		{ shortcut = "0x", arrayName = "red",        validator = hexValidator, onInputFinished = onHexInputFinished }
-	}
-
-	for i = 1, #inputs do
-		window:addLabel(x, y, 2, 1, 0x000000, inputs[i].shortcut)
-		inputs[i].object = window:addInputTextBox(x + 3, y, 9, 1, 0xFFFFFF, 0x444444, 0xFFFFFF, 0x000000, "", "", true)
-		inputs[i].object.validator = inputs[i].validator
-		inputs[i].object.onInputFinished = inputs[i].onInputFinished
-		y = y + 2
+local function drawBigCrestPixel(window, x, y, symbol)
+	if window.bigRainbow:isClicked(x, y) then
+		local background, foreground = buffer.get(x, y)
+		if background >= 0x888888 then
+			foreground = 0x000000
+		else
+			foreground = 0xFFFFFF
+		end
+		buffer.set(x, y, background, foreground, symbol)
 	end
-
-	return y
 end
 
-local function createFavourites()
-	for i = 1, #favourites do
-		local button = favouritesContainer:addButton(i * 2 - 1, 1, 2, 1, favourites[i], 0x0, 0x0, 0x0, " ")
-		button.onTouch = function()
-			switchColorFromHex(button.colors.default.background)
-			refreshRainbows()
-			createCrestsCoordinates()
-			drawAll()
+--------------------------------------------------------------------------------------------------------------
+
+function palette.window(x, y, startColor)
+	local window = GUI.window(x, y, 71, 25)
+	
+	window.color = {hsb = {}, rgb = {}}
+	window:addChild(GUI.panel(1, 1, window.width, window.height, 0xEEEEEE))
+	
+	window.bigRainbow = window:addChild(GUI.image(1, 1, image.create(50, 25)))
+	window.bigCrest = window:addChild(GUI.object(1, 1, 5, 3))
+	window.bigCrest.draw = function(object)
+		drawBigCrestPixel(window, object.x, object.y + 1, "─")
+		drawBigCrestPixel(window, object.x + 1, object.y + 1, "─")
+		drawBigCrestPixel(window, object.x + 3, object.y + 1, "─")
+		drawBigCrestPixel(window, object.x + 4, object.y + 1, "─")
+		drawBigCrestPixel(window, object.x + 2, object.y, "│")
+		drawBigCrestPixel(window, object.x + 2, object.y + 2, "│")
+	end
+	window.bigRainbow.eventHandler = function(mainContainer, object, eventData)
+		if eventData[1] == "touch" or eventData[1] == "drag" and window.bigRainbow:isClicked(eventData[3], eventData[4]) then
+			window.bigCrest.localPosition.x, window.bigCrest.localPosition.y = eventData[3] - window.x - 1, eventData[4] - window.y
+			switchColorFromHex(window, select(3, component.gpu.get(eventData[3], eventData[4])))
+			mainContainer:draw()
+			buffer.draw()
 		end
 	end
-end
-
-local function createWindow(x, y)
-	window = GUI.window(x, y, 71, 25, 71, 25)
 	
-	x, y = 1, 1
-	window:addPanel(x, y, window.width, window.height, 0xEEEEEE)
-	
-	bigRainbow = window:addImage(x, y, image.create(50, 25))
-	bigRainbow.onTouch = function(eventData)
-		xBigCrest, yBigCrest = eventData[3], eventData[4]
-		local _, _, background = component.gpu.get(eventData[3], eventData[4])
-		switchColorFromHex(background)
-		drawAll()
+	window.miniRainbow = window:addChild(GUI.image(53, 1, image.create(3, 25)))
+	window.miniCrest = window:addChild(GUI.object(52, 1, 5, 1))
+	window.miniCrest.draw = function(object)
+		buffer.text(object.x, object.y, 0x0, ">")
+		buffer.text(object.x + 4, object.y, 0x0, "<")
 	end
-	bigRainbow.onDrag = bigRainbow.onTouch
-	x = x + bigRainbow.width + 2
-	
-	miniRainbow = window:addImage(x, y, image.create(3, 25))
-	miniRainbow.onTouch = function(eventData)
-		yMiniCrest = eventData[4]
-		switchColorFromHsb((eventData[4] - miniRainbow.y) * 360 / miniRainbow.height, currentColor.hsb.saturation, currentColor.hsb.brightness)
-		refreshRainbows()
-		drawAll()
-	end
-	miniRainbow.onDrag = miniRainbow.onTouch
-	x, y = x + 5, y + 1
-	
-	currentColorPanel = window:addPanel(x, y, 12, 3, currentColor.hex)
-	y = y + 4
-	
-	window.okButton = window:addButton(x, y, 12, 1, 0x444444, 0xFFFFFF, 0x88FF88, 0xFFFFFF, "OK")
-	window.okButton.onTouch = function()
-		window:returnData(currentColor.hex)
-	end
-	y = y + 2
-	
-	window:addButton(x, y, 12, 1, 0xFFFFFF, 0x444444, 0x88FF88, 0xFFFFFF, "Cancel").onTouch = function()
-		window:close()
-	end
-	y = y + 2
-
-	y = createInputs(x, y)
-	
-	favouritesContainer = window:addContainer(x, y, 12, 1)
-	createFavourites()
-	y = y + 1
-	
-	window:addButton(x, y, 12, 1, 0xFFFFFF, 0x444444, 0x88FF88, 0xFFFFFF, "+").onTouch = function()
-		local favouriteExists = false; for i = 1, #favourites do if favourites[i] == currentColor.hex then favouriteExists = true; break end end
-		if not favouriteExists then
-			table.insert(favourites, 1, currentColor.hex); table.remove(favourites, #favourites)
-			for i = 1, #favourites do favouritesContainer.children[i].colors.default.background = favourites[i]; favouritesContainer.children[i].colors.pressed.background = 0x0 end
-			saveFavoutites()
-			drawAll()
+	window.miniRainbow.eventHandler = function(mainContainer, object, eventData)
+		if eventData[1] == "touch" or eventData[1] == "drag" then
+			window.miniCrest.localPosition.y = eventData[4] - window.y + 1
+			switchColorFromHsb(window, (eventData[4] - window.miniRainbow.y) * 360 / window.miniRainbow.height, window.color.hsb.saturation, window.color.hsb.brightness)
+			refreshBigRainbow(window)
+			mainContainer:draw()
+			buffer.draw()
 		end
 	end
+	
+	window.colorPanel = window:addChild(GUI.panel(58, 2, 12, 3, 0x0))
+	window.OKButton = window:addChild(GUI.button(58, 6, 12, 1, 0x444444, 0xFFFFFF, 0x88FF88, 0xFFFFFF, "OK"))
+	window.cancelButton = window:addChild(GUI.button(58, 8, 12, 1, 0xFFFFFF, 0x444444, 0x88FF88, 0xFFFFFF, "Cancel"))
 
-	window.onDrawFinished = function()
-		drawCrests()
+	local function onAnyInputFinished(mainContainer, object, eventData)
+		refreshBigRainbow(window)
+		createCrestsCoordinates(window)
+		mainContainer:draw()
 		buffer.draw()
 	end
 
-	window.onKeyDown = function(eventData)
-		if eventData[4] == 28 then
-			window.okButton:press()
-			drawAll()
-			window:returnData(currentColor.hex)
+	local function onHexInputFinished(mainContainer, object, eventData, newText)
+		switchColorFromHex(window, tonumber("0x" .. newText))
+		onAnyInputFinished(mainContainer, object, eventData)
+	end
+
+	local function onRgbInputFinished(mainContainer, object, eventData, newText)
+		switchColorFromRgb(window, tonumber(window.inputs[1].inputTextBox.text), tonumber(window.inputs[2].inputTextBox.text), tonumber(window.inputs[3].inputTextBox.text))
+		onAnyInputFinished(mainContainer, object, eventData)
+	end
+
+	local function onHsbInputFinished(mainContainer, object, eventData, newText)
+		switchColorFromHsb(window, tonumber(window.inputs[4].inputTextBox.text), tonumber(window.inputs[5].inputTextBox.text), tonumber(window.inputs[6].inputTextBox.text))
+		onAnyInputFinished(mainContainer, object, eventData)
+	end
+
+	local function rgbValidaror(text)
+		local num = tonumber(text) if num and num >= 0 and num <= 255 then return true end
+	end
+
+	local function hValidator(text)
+		local num = tonumber(text) if num and num >= 0 and num <= 359 then return true end
+	end
+
+	local function sbValidator(text)
+		local num = tonumber(text) if num and num >= 0 and num <= 100 then return true end
+	end
+
+	local function hexValidator(text)
+		if string.match(text, "^[0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F]$") then
+			return true
 		end
 	end
+
+	window.inputs = {
+		{ shortcut = "R:", validator = rgbValidaror, onInputFinished = onRgbInputFinished },
+		{ shortcut = "G:", validator = rgbValidaror, onInputFinished = onRgbInputFinished },
+		{ shortcut = "B:", validator = rgbValidaror, onInputFinished = onRgbInputFinished },
+		{ shortcut = "H:", validator = hValidator,   onInputFinished = onHsbInputFinished },
+		{ shortcut = "S:", validator = sbValidator,  onInputFinished = onHsbInputFinished },
+		{ shortcut = "L:", validator = sbValidator,  onInputFinished = onHsbInputFinished },
+		{ shortcut = "0x", validator = hexValidator, onInputFinished = onHexInputFinished }
+	}
+
+	local y = 10
+	for i = 1, #window.inputs do
+		window:addChild(GUI.label(58, y, 2, 1, 0x000000, window.inputs[i].shortcut))
+		
+		window.inputs[i].inputTextBox = window:addChild(GUI.inputTextBox(61, y, 9, 1, 0xFFFFFF, 0x444444, 0xFFFFFF, 0x000000, "", "", true))
+		window.inputs[i].inputTextBox.validator = window.inputs[i].validator
+		window.inputs[i].inputTextBox.onInputFinished = window.inputs[i].onInputFinished
+		
+		y = y + 2
+	end
+	
+	if fs.exists(pathToFavouritesConfig) then
+		favourites = table.fromFile(pathToFavouritesConfig)
+	else
+		favourites = {}
+		for i = 1, 6 do favourites[i] = math.random(0x000000, 0xFFFFFF) end
+		saveFavourites()
+	end
+
+	palette.favouritesContainer = window:addChild(GUI.container(58, 24, 12, 1))
+	for i = 1, #favourites do
+		local button = palette.favouritesContainer:addChild(GUI.button(i * 2 - 1, 1, 2, 1, favourites[i], 0x0, 0x0, 0x0, " "))
+		button.onTouch = function(mainContainer, object, eventData)
+			switchColorFromHex(window, button.colors.default.background)
+			refreshBigRainbow(window)
+			createCrestsCoordinates(window)
+			mainContainer:draw()
+			buffer.draw()
+		end
+	end
+	
+	window:addChild(GUI.button(58, 25, 12, 1, 0xFFFFFF, 0x444444, 0x88FF88, 0xFFFFFF, "+")).onTouch = function(mainContainer, object, eventData)
+		local favouriteExists = false
+		for i = 1, #favourites do
+			if favourites[i] == window.color.hex then
+				favouriteExists = true
+				break
+			end
+		end
+		
+		if not favouriteExists then
+			table.insert(favourites, 1, window.color.hex)
+			table.remove(favourites, #favourites)
+			for i = 1, #favourites do
+				palette.favouritesContainer.children[i].colors.default.background = favourites[i]
+				palette.favouritesContainer.children[i].colors.pressed.background = 0x0
+			end
+			saveFavourites()
+			mainContainer:draw()
+			buffer.draw()
+		end
+	end
+
+	switchColorFromHex(window, startColor)
+	createCrestsCoordinates(window)
+	refreshBigRainbow(window)
+	refreshMiniRainbow(window)
+
+	return window
 end
 
---------------------------------------------------------------------------------------------------------------
-
 function palette.show(x, y, startColor)
-	buffer.start()
-	loadFavourites()
-	switchColorFromHex(startColor or 0x00B6FF)
-	createWindow(x or "auto", y or "auto")
-	createCrestsCoordinates()
-	refreshRainbows()
-	
-	window.drawShadow = false
-	drawAll()
-	window.drawShadow = false
+	local mainContainer = GUI.container(1, 1, buffer.width, buffer.height)
 
-	local selectedColor = window:handleEvents()
-	window = nil
+	local selectedColor
+	local window = mainContainer:addChild(palette.window(x, y, startColor))
+	window.eventHandler = nil
+	window.OKButton.onTouch = function(mainContainer, object, eventData)
+		mainContainer:stopEventHandling()
+		selectedColor = window.color.hex
+	end
+	window.cancelButton.onTouch = function(mainContainer, object, eventData)
+		mainContainer:stopEventHandling()
+	end
+
+	mainContainer:draw()
+	buffer.draw()
+	mainContainer:startEventHandling()
 
 	return selectedColor
 end
-
--- Поддержим олдфагов!
-palette.draw = palette.show
 
 --------------------------------------------------------------------------------------------------------------
 
 -- buffer.start()
 -- buffer.draw(true)
--- require("ECSAPI").error(palette.show("auto", "auto", 0xFF5555))
+-- GUI.error(tostring(palette.show(5, 5, 0xFF00FF)))
 
 --------------------------------------------------------------------------------------------------------------
 

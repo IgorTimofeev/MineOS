@@ -8,8 +8,9 @@ local buffer = require("doubleBuffering")
 local unicode = require("unicode")
 local event = require("event")
 local fs = require("filesystem")
+local image = require("image")
 
------------------------------------------ Core constants -----------------------------------------
+----------------------------------------- Constants -----------------------------------------
 
 local GUI = {}
 
@@ -29,6 +30,11 @@ GUI.alignment = {
 GUI.directions = enum(
 	"horizontal",
 	"vertical"
+)
+
+GUI.dropDownMenuElementTypes = enum(
+	"default",
+	"separator"
 )
 
 GUI.colors = {
@@ -53,72 +59,56 @@ GUI.colors = {
 			background = 20,
 			shadow = 50
 		}
+	},
+	windows = {
+		title = {
+			background = 0xEEEEEE,
+			text = 0x3C3C3C
+		},
+		backgroundPanel = 0xFFFFFF,
+		tabBar = {
+			default = {
+				background = 0xDDDDDD,
+				text = 0x3C3C3C
+			},
+			selected = {
+				background = 0xCCCCCC,
+				text = 0x3C3C3C
+			}
+		}
 	}
 }
 
-GUI.dropDownMenuElementTypes = enum(
-	"default",
-	"separator"
-)
+----------------------------------------- Interface objects -----------------------------------------
 
-GUI.objectTypes = enum(
-	"unknown",
-	"empty",
-	"panel",
-	"label",
-	"button",
-	"framedButton",
-	"roundedButton",
-	"image",
-	"windowActionButtons",
-	"windowActionButton",
-	"tabBar",
-	"tabBarTab",
-	"menu",
-	"menuItem",
-	"window",
-	"inputTextBox",
-	"textBox",
-	"horizontalSlider",
-	"switch",
-	"progressBar",
-	"chart",
-	"comboBox",
-	"scrollBar",
-	"codeView",
-	"treeView",
-	"colorSelector",
-	"layout"
-)
-
------------------------------------------ Primitive objects -----------------------------------------
-
--- Universal method to check if object was clicked by following coordinates
-local function isObjectClicked(object, x, y)
-	if x >= object.x and y >= object.y and x <= object.x + object.width - 1 and y <= object.y + object.height - 1 and not object.disabled and not object.isHidden then return true end
-	return false
-end
-
--- Limit object's text field to its' size
-local function objectTextLimit(object)
-	local text, textLength = object.text, unicode.len(object.text)
-	if textLength > object.width then text = unicode.sub(text, 1, object.width); textLength = object.width end
-	return text, textLength
-end
-
--- Base object to use in everything
-function GUI.object(x, y, width, height)
-	return {
-		x = x,
-		y = y,
-		width = width,
-		height = height,
-		isClicked = isObjectClicked
-	}
+local function callMethod(method, ...)
+	if method then method(...) end
 end
 
 function GUI.point(x, y)
 	return { x = x, y = y }
+end
+
+function GUI.rectangle(x, y, width, height)
+	return { x = x, y = y, width = width, height = height}
+end
+
+-- Universal method to check if object was clicked by following coordinates
+local function isObjectClicked(object, x, y)
+	return
+		x >= object.x and
+		y >= object.y and
+		x <= object.x + object.width - 1 and
+		y <= object.y + object.height - 1 and
+		not object.disabled and
+		not object.hidden
+end
+
+-- Main reactangle object to use in everything
+function GUI.object(x, y, width, height)
+	local rectangle = GUI.rectangle(x, y, width, height)
+	rectangle.isClicked = isObjectClicked
+	return rectangle
 end
 
 ----------------------------------------- Object alignment -----------------------------------------
@@ -159,25 +149,6 @@ function GUI.getAlignmentCoordinates(object, subObject)
 end
 
 ----------------------------------------- Containers -----------------------------------------
-
--- Go recursively through every container's object (including other containers) and return object that was clicked firstly by it's GUI-layer position
-function GUI.getClickedObject(container, xEvent, yEvent)
-	local clickedObject, clickedIndex
-	for childIndex = #container.children, 1, -1 do
-		if not container.children[childIndex].isHidden then
-			container.children[childIndex].x, container.children[childIndex].y = container.children[childIndex].localPosition.x + container.x - 1, container.children[childIndex].localPosition.y + container.y - 1
-			if container.children[childIndex].children and #container.children[childIndex].children > 0 then
-				clickedObject, clickedIndex = GUI.getClickedObject(container.children[childIndex], xEvent, yEvent)
-			    if clickedObject then break end
-			elseif container.children[childIndex]:isClicked(xEvent, yEvent) then
-				clickedObject, clickedIndex = container.children[childIndex], childIndex
-				break
-			end
-		end
-	end
-
-	return clickedObject, clickedIndex
-end
 
 local function checkObjectParentExists(object)
 	if not object.parent then error("Object doesn't have a parent container") end
@@ -238,10 +209,8 @@ local function selfDelete(object)
 	table.remove(object.parent.children, containerObjectIndexOf(object))
 end
 
--- Add any object as children to parent container with specified objectType
-function GUI.addChildToContainer(container, object, objectType)
-	object.type = objectType or GUI.objectTypes.unknown
-	object.parent = container
+-- Add any object as children to parent container
+function GUI.addChildToContainer(container, object)
 	object.indexOf = containerObjectIndexOf
 	object.moveToFront = containerObjectMoveToFront
 	object.moveToBack = containerObjectMoveToBack
@@ -250,133 +219,11 @@ function GUI.addChildToContainer(container, object, objectType)
 	object.getFirstParent = containerGetFirstParent
 	object.delete = selfDelete
 	object.localPosition = {x = object.x, y = object.y}
+	object.parent = container
 
 	table.insert(container.children, object)
 	
 	return object
-end
-
-local function addEmptyObjectToContainer(container, ...)
-	return GUI.addChildToContainer(container, GUI.object(...), GUI.objectTypes.empty)
-end
-
-local function addButtonObjectToContainer(container, ...)
-	return GUI.addChildToContainer(container, GUI.button(...), GUI.objectTypes.button)
-end
-
-local function addAdaptiveButtonObjectToContainer(container, ...)
-	return GUI.addChildToContainer(container, GUI.adaptiveButton(...), GUI.objectTypes.button)
-end
-
-local function addFramedButtonObjectToContainer(container, ...)
-	return GUI.addChildToContainer(container, GUI.framedButton(...), GUI.objectTypes.button)
-end
-
-local function addRoundedButtonObjectToContainer(container, ...)
-	return GUI.addChildToContainer(container, GUI.roundedButton(...), GUI.objectTypes.button)
-end
-
-local function addAdaptiveRoundedButtonObjectToContainer(container, ...)
-	return GUI.addChildToContainer(container, GUI.adaptiveRoundedButton(...), GUI.objectTypes.button)
-end
-
-local function addAdaptiveFramedButtonObjectToContainer(container, ...)
-	return GUI.addChildToContainer(container, GUI.adaptiveFramedButton(...), GUI.objectTypes.button)
-end
-
-local function addLabelObjectToContainer(container, ...)
-	return GUI.addChildToContainer(container, GUI.label(...), GUI.objectTypes.label)
-end
-
-local function addPanelObjectToContainer(container, ...)
-	return GUI.addChildToContainer(container, GUI.panel(...), GUI.objectTypes.panel)
-end
-
-local function addWindowActionButtonsObjectToContainer(container, ...)
-	return GUI.addChildToContainer(container, GUI.windowActionButtons(...), GUI.objectTypes.windowActionButtons)
-end
-
-local function addContainerToContainer(container, ...)
-	return GUI.addChildToContainer(container, GUI.container(...), GUI.objectTypes.container)
-end
-
-local function addImageObjectToContainer(container, ...)
-	return GUI.addChildToContainer(container, GUI.image(...), GUI.objectTypes.image)
-end
-
-local function addTabBarObjectToContainer(container, ...)
-	return GUI.addChildToContainer(container, GUI.tabBar(...), GUI.objectTypes.tabBar)
-end
-
-local function addInputTextBoxObjectToContainer(container, ...)
-	return GUI.addChildToContainer(container, GUI.inputTextBox(...), GUI.objectTypes.inputTextBox)
-end
-
-local function addTextBoxObjectToContainer(container, ...)
-	return GUI.addChildToContainer(container, GUI.textBox(...), GUI.objectTypes.textBox)
-end
-
-local function addHorizontalSliderObjectToContainer(container, ...)
-	return GUI.addChildToContainer(container, GUI.horizontalSlider(...), GUI.objectTypes.horizontalSlider)
-end
-
-local function addProgressBarObjectToContainer(container, ...)
-	return GUI.addChildToContainer(container, GUI.progressBar(...), GUI.objectTypes.progressBar)
-end
-
-local function addSwitchObjectToContainer(container, ...)
-	return GUI.addChildToContainer(container, GUI.switch(...), GUI.objectTypes.switch)
-end
-
-local function addChartObjectToContainer(container, ...)
-	return GUI.addChildToContainer(container, GUI.chart(...), GUI.objectTypes.chart)
-end
-
-local function addComboBoxObjectToContainer(container, ...)
-	return GUI.addChildToContainer(container, GUI.comboBox(...), GUI.objectTypes.comboBox)
-end
-
-local function addMenuObjectToContainer(container, ...)
-	return GUI.addChildToContainer(container, GUI.menu(...), GUI.objectTypes.menu)
-end
-
-local function addScrollBarObjectToContainer(container, ...)
-	return GUI.addChildToContainer(container, GUI.scrollBar(...), GUI.objectTypes.scrollBar)
-end
-
-local function addCodeViewObjectToContainer(container, ...)
-	return GUI.addChildToContainer(container, GUI.codeView(...), GUI.objectTypes.codeView)
-end
-
-local function addTreeViewObjectToContainer(container, ...)
-	return GUI.addChildToContainer(container, GUI.treeView(...), GUI.objectTypes.treeView)
-end
-
-local function addColorSelectorObjectToContainer(container, ...)
-	return GUI.addChildToContainer(container, GUI.colorSelector(...), GUI.objectTypes.colorSelector)
-end
-
-local function addLayoutObjectToContainer(container, ...)
-	return GUI.addChildToContainer(container, GUI.layout(...), GUI.objectTypes.layout)
-end
-
--- Recursively draw container's content including all children container's content
-local function drawContainerContent(container)
-	for objectIndex = 1, #container.children do
-		if not container.children[objectIndex].isHidden then
-			container.children[objectIndex].x, container.children[objectIndex].y = container.children[objectIndex].localPosition.x + container.x - 1, container.children[objectIndex].localPosition.y + container.y - 1
-			if container.children[objectIndex].children then
-				-- cyka blyad
-				-- drawContainerContent(container.children[objectIndex])
-				-- We use :draw() method against of recursive call. The reason is possible user-defined :draw() reimplementations
-				container.children[objectIndex]:draw()
-			else
-				container.children[objectIndex]:draw()
-			end
-		end
-	end
-
-	return container
 end
 
 -- Delete every container's children object
@@ -387,58 +234,136 @@ local function deleteContainersContent(container, from, to)
 	end
 end
 
+local function getRectangleIntersection(R1X1, R1Y1, R1X2, R1Y2, R2X1, R2Y1, R2X2, R2Y2)
+	if R2X1 <= R1X2 and R2Y1 <= R2Y2 and R2X2 >= R1X1 and R2Y2 >= R1Y1 then
+		return
+			math.max(R2X1, R1X1),
+			math.max(R2Y1, R1Y1),
+			math.min(R2X2, R1X2),
+			math.min(R2Y2, R1Y2)
+	end
+end
+
+-- Recursively draw container's content including all children container's content
+function GUI.drawContainerContent(container)
+	local R1X1, R1Y1, R1X2, R1Y2 = buffer.getDrawLimit()
+	local x1, y1, x2, y2 = getRectangleIntersection(R1X1, R1Y1, R1X2, R1Y2, container.x, container.y, container.x + container.width - 1, container.y + container.height - 1)
+
+	if x1 then
+		buffer.setDrawLimit(x1, y1, x2, y2)
+		
+		for objectIndex = 1, #container.children do
+			if not container.children[objectIndex].hidden then
+				container.children[objectIndex].x, container.children[objectIndex].y = container.children[objectIndex].localPosition.x + container.x - 1, container.children[objectIndex].localPosition.y + container.y - 1
+				container.children[objectIndex]:draw()
+			end
+		end
+
+		buffer.setDrawLimit(R1X1, R1Y1, R1X2, R1Y2)
+	end
+
+	return container
+end
+
+local function handleContainer(isScreenEvent, mainContainer, currentContainer, eventData, x1, y1, x2, y2)
+	local breakRecursion = false
+	
+	if not isScreenEvent or x1 and eventData[3] >= x1 and eventData[4] >= y1 and eventData[3] <= x2 and eventData[4] <= y2 then
+		for i = #currentContainer.children, 1, -1 do
+			if not currentContainer.children[i].hidden then
+				if currentContainer.children[i].children then
+					if handleContainer(isScreenEvent, mainContainer, currentContainer.children[i], eventData, getRectangleIntersection(
+						x1, y1, x2, y2,
+						currentContainer.children[i].x,
+						currentContainer.children[i].y,
+						currentContainer.children[i].x + currentContainer.children[i].width - 1,
+						currentContainer.children[i].y + currentContainer.children[i].height - 1
+					)) then
+						breakRecursion = true
+						break
+					end
+				else
+					if isScreenEvent then
+						if currentContainer.children[i]:isClicked(eventData[3], eventData[4]) then
+							callMethod(currentContainer.children[i].eventHandler, mainContainer, currentContainer.children[i], eventData)
+							breakRecursion = true
+							break
+						end
+					else
+						callMethod(currentContainer.children[i].eventHandler, mainContainer, currentContainer.children[i], eventData)
+					end
+				end
+			end
+		end
+
+		-- if isScreenEvent then
+		-- 	if currentContainer.eventHandler then
+		-- 		currentContainer.eventHandler(mainContainer, currentContainer, eventData)
+		-- 		breakRecursion = true
+		-- 	end
+		-- else
+			callMethod(currentContainer.eventHandler, mainContainer, currentContainer, eventData)
+		-- end
+	end
+
+	if breakRecursion then
+		return true
+	end
+end
+
+local function containerHandleEventData(mainContainer, eventData)
+	handleContainer(eventData[1] == "touch" or eventData[1] == "drag" or eventData[1] == "drop" or eventData[1] == "scroll", mainContainer, mainContainer, eventData, mainContainer.x, mainContainer.y, mainContainer.x + mainContainer.width - 1, mainContainer.y + mainContainer.height - 1)
+end
+
+local function containerStartEventHandling(container, pullTime)
+	while true do
+		containerHandleEventData(container, {event.pull(pullTime)})
+		if container.dataToReturn then
+			return table.unpack(container.dataToReturn)
+		end
+	end
+end
+
+local function containerReturnData(container, ...)
+	container.dataToReturn = {...}
+	computer.pushSignal("containerAction")
+end
+
+local function containerStopEventHandling(container)
+	containerReturnData(container, nil)
+end
+
 -- Universal container to store any other objects like buttons, labels, etc
 function GUI.container(x, y, width, height)
 	local container = GUI.object(x, y, width, height)
-	container.children = {}
-	container.draw = drawContainerContent
-	container.getClickedObject = GUI.getClickedObject
-	container.deleteChildren = deleteContainersContent
 
+	container.children = {}
+	container.draw = GUI.drawContainerContent
+	container.deleteChildren = deleteContainersContent
 	container.addChild = GUI.addChildToContainer
-	container.addObject = addEmptyObjectToContainer
-	container.addContainer = addContainerToContainer
-	container.addPanel = addPanelObjectToContainer
-	container.addLabel = addLabelObjectToContainer
-	container.addButton = addButtonObjectToContainer
-	container.addAdaptiveButton = addAdaptiveButtonObjectToContainer
-	container.addFramedButton = addFramedButtonObjectToContainer
-	container.addRoundedButton = addRoundedButtonObjectToContainer
-	container.addAdaptiveRoundedButton = addAdaptiveRoundedButtonObjectToContainer
-	container.addAdaptiveFramedButton = addAdaptiveFramedButtonObjectToContainer
-	container.addWindowActionButtons = addWindowActionButtonsObjectToContainer
-	container.addImage = addImageObjectToContainer
-	container.addTabBar = addTabBarObjectToContainer
-	container.addTextBox = addTextBoxObjectToContainer
-	container.addInputTextBox = addInputTextBoxObjectToContainer
-	container.addHorizontalSlider = addHorizontalSliderObjectToContainer
-	container.addSwitch = addSwitchObjectToContainer
-	container.addProgressBar = addProgressBarObjectToContainer
-	container.addChart = addChartObjectToContainer
-	container.addComboBox = addComboBoxObjectToContainer
-	container.addMenu = addMenuObjectToContainer
-	container.addScrollBar = addScrollBarObjectToContainer
-	container.addCodeView = addCodeViewObjectToContainer
-	container.addTreeView = addTreeViewObjectToContainer
-	container.addColorSelector = addColorSelectorObjectToContainer
-	container.addLayout = addLayoutObjectToContainer
+	container.returnData = containerReturnData
+	container.startEventHandling = containerStartEventHandling
+	container.stopEventHandling = containerStopEventHandling
 
 	return container
+end
+
+-- Container fitted to screen resolution
+function GUI.fullScreenContainer()
+	return GUI.container(1, 1, buffer.width, buffer.height)
 end
 
 ----------------------------------------- Buttons -----------------------------------------
 
 local function drawButton(object)
-	local text, textLength = objectTextLimit(object)
-
-	local xText, yText = GUI.getAlignmentCoordinates(object, {width = textLength, height = 1})
+	local xText, yText = GUI.getAlignmentCoordinates(object, {width = unicode.len(object.text), height = 1})
 	local buttonColor = object.disabled and object.colors.disabled.background or (object.pressed and object.colors.pressed.background or object.colors.default.background)
 	local textColor = object.disabled and object.colors.disabled.text or (object.pressed and object.colors.pressed.text or object.colors.default.text)
 
 	if buttonColor then
-		if object.buttonType == GUI.objectTypes.button then
+		if object.buttonType == 1 then
 			buffer.square(object.x, object.y, object.width, object.height, buttonColor, textColor, " ")
-		elseif object.buttonType == GUI.objectTypes.roundedButton then
+		elseif object.buttonType == 2 then
 			buffer.text(object.x + 1, object.y, buttonColor, string.rep("▄", object.width - 2))
 			buffer.square(object.x, object.y + 1, object.width, object.height - 2, buttonColor, textColor, " ")
 			buffer.text(object.x + 1, object.y + object.height - 1, buttonColor, string.rep("▀", object.width - 2))
@@ -447,7 +372,7 @@ local function drawButton(object)
 		end
 	end
 
-	buffer.text(xText, yText, textColor, text)
+	buffer.text(xText, yText, textColor, object.text)
 
 	return object
 end
@@ -470,9 +395,30 @@ local function pressAndReleaseButton(object, pressTime)
 	buffer.draw()
 end
 
+local function buttonEventHandler(mainContainer, object, eventData)
+	if eventData[1] == "touch" then
+		if object.switchMode then
+			object.pressed = not object.pressed
+			mainContainer:draw()
+			buffer.draw()
+			callMethod(object.onTouch, mainContainer, object, eventData)
+		else
+			object.pressed = true
+			mainContainer:draw()
+			buffer.draw()
+			os.sleep(0.2)
+			object.pressed = false
+			mainContainer:draw()
+			buffer.draw()
+			callMethod(object.onTouch, mainContainer, object, eventData)
+		end
+	end
+end
+
 -- Создание таблицы кнопки со всеми необходимыми параметрами
 local function createButtonObject(buttonType, x, y, width, height, buttonColor, textColor, buttonPressedColor, textPressedColor, text, disabledState)
 	local object = GUI.object(x, y, width, height)
+
 	object.colors = {
 		default = {
 			background = buttonColor,
@@ -487,6 +433,8 @@ local function createButtonObject(buttonType, x, y, width, height, buttonColor, 
 			text = GUI.colors.disabled.text,
 		}
 	}
+
+	object.eventHandler = buttonEventHandler
 	object.buttonType = buttonType
 	object.disabled = disabledState
 	object.text = text
@@ -497,70 +445,105 @@ local function createButtonObject(buttonType, x, y, width, height, buttonColor, 
 	object.setAlignment = GUI.setAlignment
 	object:setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.center)
 
+
 	return object
 end
 
 -- Кнопка фиксированных размеров
 function GUI.button(...)
-	return createButtonObject(GUI.objectTypes.button, ...)
+	return createButtonObject(1, ...)
 end
 
 -- Кнопка, подстраивающаяся под размер текста
 function GUI.adaptiveButton(x, y, xOffset, yOffset, buttonColor, textColor, buttonPressedColor, textPressedColor, text, ...) 
-	return createButtonObject(GUI.objectTypes.button, x, y, unicode.len(text) + xOffset * 2, yOffset * 2 + 1, buttonColor, textColor, buttonPressedColor, textPressedColor, text, ...)
-end
-
--- Кнопка в рамке
-function GUI.framedButton(...)
-	return createButtonObject(GUI.objectTypes.framedButton, ...)
-end
-
-function GUI.adaptiveFramedButton(x, y, xOffset, yOffset, buttonColor, textColor, buttonPressedColor, textPressedColor, text, ...)
-	return createButtonObject(GUI.objectTypes.framedButton, x, y, unicode.len(text) + xOffset * 2, yOffset * 2 + 1, buttonColor, textColor, buttonPressedColor, textPressedColor, text, ...)
+	return createButtonObject(1, x, y, unicode.len(text) + xOffset * 2, yOffset * 2 + 1, buttonColor, textColor, buttonPressedColor, textPressedColor, text, ...)
 end
 
 -- Rounded button
 function GUI.roundedButton(...)
-	return createButtonObject(GUI.objectTypes.roundedButton, ...)
+	return createButtonObject(2, ...)
 end
 
 function GUI.adaptiveRoundedButton(x, y, xOffset, yOffset, buttonColor, textColor, buttonPressedColor, textPressedColor, text, ...)
-	return createButtonObject(GUI.objectTypes.roundedButton, x, y, unicode.len(text) + xOffset * 2, yOffset * 2 + 1, buttonColor, textColor, buttonPressedColor, textPressedColor, text, ...)
+	return createButtonObject(2, x, y, unicode.len(text) + xOffset * 2, yOffset * 2 + 1, buttonColor, textColor, buttonPressedColor, textPressedColor, text, ...)
+end
+
+-- Кнопка в рамке
+function GUI.framedButton(...)
+	return createButtonObject(3, ...)
+end
+
+function GUI.adaptiveFramedButton(x, y, xOffset, yOffset, buttonColor, textColor, buttonPressedColor, textPressedColor, text, ...)
+	return createButtonObject(3, x, y, unicode.len(text) + xOffset * 2, yOffset * 2 + 1, buttonColor, textColor, buttonPressedColor, textPressedColor, text, ...)
 end
 
 ----------------------------------------- TabBar -----------------------------------------
 
-local function drawTabBar(object)
-	for tab = 1, #object.tabs.children do
-		if tab == object.selectedTab then
-			object.tabs.children[tab].pressed = true
-		else
-			object.tabs.children[tab].pressed = false
-		end
+local function tabBarTabEventHandler(mainContainer, object, eventData)
+	if eventData[1] == "touch" then
+		object.parent.selectedItem = object:indexOf() - 1
+		mainContainer:draw()
+		buffer.draw()
+		callMethod(object.onTouch, mainContainer, object, eventData)
 	end
-
-	object:reimplementedDraw()
-	return object
 end
 
-function GUI.tabBar(x, y, width, height, spaceBetweenElements, backgroundColor, textColor, backgroundSelectedColor, textSelectedColor, ...)
-	local elements, object = {...}, GUI.container(x, y, width, height)
-	object.selectedTab = 1
-	object.tabsWidth = 0; for elementIndex = 1, #elements do object.tabsWidth = object.tabsWidth + unicode.len(elements[elementIndex]) + 2 + spaceBetweenElements end; object.tabsWidth = object.tabsWidth - spaceBetweenElements
-	object.reimplementedDraw = object.draw
-	object.draw = drawTabBar
+local function tabBarDraw(tabBar)
+	tabBar.backgroundPanel.width, tabBar.backgroundPanel.height, tabBar.backgroundPanel.colors.background = tabBar.width, tabBar.height, tabBar.colors.default.background
+	
+	local totalWidth = 0
+	for i = 2, #tabBar.children do
+		totalWidth = totalWidth + tabBar.children[i].width + tabBar.spaceBetweenTabs
+	end
+	totalWidth = totalWidth - tabBar.spaceBetweenTabs
 
-	object:addPanel(1, 1, object.width, object.height, backgroundColor)
-	object.tabs = object:addContainer(1, 1, object.width, object.height)
+	local x = math.floor(tabBar.width / 2 - totalWidth / 2)
+	for i = 2, #tabBar.children do
+		tabBar.children[i].localPosition.x = x
+		x = x + tabBar.children[i].width + tabBar.spaceBetweenTabs
+		tabBar.children[i].pressed = (i - 1) == tabBar.selectedItem
+	end
 
-	x = math.floor(width / 2 - object.tabsWidth / 2)
-	for elementIndex = 1, #elements do
-		local tab = object.tabs:addButton(x, 1, unicode.len(elements[elementIndex]) + 2, height, backgroundColor, textColor, backgroundSelectedColor, textSelectedColor, elements[elementIndex])
-		tab.type = GUI.objectTypes.tabBarTab
-		x = x + tab.width + spaceBetweenElements
-	end	
+	GUI.drawContainerContent(tabBar)
 
-	return object
+	return tabBar
+end
+
+local function tabBarAddItem(tabBar, text)
+	local item = tabBar:addChild(GUI.button(1, 1, unicode.len(text) + tabBar.horizontalTabOffset * 2, tabBar.height, tabBar.colors.default.background, tabBar.colors.default.text, tabBar.colors.selected.background, tabBar.colors.selected.text, text))
+	
+	item.switchMode = true
+	item.eventHandler = tabBarTabEventHandler
+
+	return item
+end
+
+function GUI.tabBar(x, y, width, height, horizontalTabOffset, spaceBetweenTabs, backgroundColor, textColor, backgroundSelectedColor, textSelectedColor, ...)
+	local tabBar = GUI.container(x, y, width, height)
+
+	tabBar.backgroundPanel = tabBar:addChild(GUI.panel(1, 1, 1, 1, backgroundColor))
+	tabBar.horizontalTabOffset = horizontalTabOffset
+	tabBar.spaceBetweenTabs = spaceBetweenTabs
+	tabBar.colors = {
+		default = {
+			background = backgroundColor,
+			text = textColor
+		},
+		selected = {
+			background = backgroundSelectedColor,
+			text = textSelectedColor
+		}
+	}
+	tabBar.selectedItem = 1
+	tabBar.draw = tabBarDraw
+	tabBar.addItem = tabBarAddItem
+
+	local items = {...}
+	for i = 1, #items do
+		tabBar:addItem(items[i])
+	end
+
+	return tabBar
 end
 
 ----------------------------------------- Panel -----------------------------------------
@@ -572,17 +555,18 @@ end
 
 function GUI.panel(x, y, width, height, color, transparency)
 	local object = GUI.object(x, y, width, height)
+	
 	object.colors = {background = color, transparency = transparency}
 	object.draw = drawPanel
+	
 	return object
 end
 
 ----------------------------------------- Label -----------------------------------------
 
 local function drawLabel(object)
-	local text, textLength = objectTextLimit(object)
-	local xText, yText = GUI.getAlignmentCoordinates(object, {width = textLength, height = 1})
-	buffer.text(xText, yText, object.colors.text, text)
+	local xText, yText = GUI.getAlignmentCoordinates(object, {width = unicode.len(object.text), height = 1})
+	buffer.text(xText, yText, object.colors.text, object.text)
 	return object
 end
 
@@ -610,15 +594,15 @@ function GUI.image(x, y, image)
 	return object
 end
 
------------------------------------------ Window action buttons -----------------------------------------
+----------------------------------------- Action buttons -----------------------------------------
 
-function GUI.windowActionButtons(x, y, fatSymbol)
+function GUI.actionButtons(x, y, fatSymbol)
 	local symbol = fatSymbol and "⬤" or "●"
 	
 	local container = GUI.container(x, y, 5, 1)
-	container.close = container:addButton(1, 1, 1, 1, nil, 0xFF4940, nil, 0x992400, symbol)
-	container.minimize = container:addButton(3, 1, 1, 1, nil, 0xFFB640, nil, 0x996D00, symbol)
-	container.maximize = container:addButton(5, 1, 1, 1, nil, 0x00B640, nil, 0x006D40, symbol)
+	container.close = container:addChild(GUI.button(1, 1, 1, 1, nil, 0xFF4940, nil, 0x992400, symbol))
+	container.minimize = container:addChild(GUI.button(3, 1, 1, 1, nil, 0xFFB640, nil, 0x996D00, symbol))
+	container.maximize = container:addChild(GUI.button(5, 1, 1, 1, nil, 0x00B640, nil, 0x006D40, symbol))
 
 	return container
 end
@@ -651,19 +635,23 @@ end
 
 local function drawDropDownMenu(object)
 	buffer.square(object.x, object.y, object.width, object.height, object.colors.default.background, object.colors.default.text, " ", object.colors.transparency)
-	if object.drawShadow then GUI.windowShadow(object.x, object.y, object.width, object.height, GUI.colors.contextMenu.transparency.shadow, true) end
-	for itemIndex = 1, #object.items do drawDropDownMenuElement(object, itemIndex, false) end
+	
+	if object.drawShadow then
+		GUI.windowShadow(object.x, object.y, object.width, object.height, GUI.colors.contextMenu.transparency.shadow, true)
+	end
+
+	for itemIndex = 1, #object.items do
+		drawDropDownMenuElement(object, itemIndex, false)
+	end
 end
 
 local function showDropDownMenu(object)
-	local oldDrawLimit = buffer.getDrawLimit(); buffer.resetDrawLimit()
 	object.height = #object.items * object.elementHeight
 
 	local oldPixels = buffer.copy(object.x, object.y, object.width + 1, object.height + 1)
 	local function quit()
 		buffer.paste(object.x, object.y, oldPixels)
 		buffer.draw()
-		buffer.setDrawLimit(oldDrawLimit)
 	end
 
 	drawDropDownMenu(object)
@@ -764,8 +752,8 @@ local function showContextMenu(object)
 	object.height = #object.items * object.elementHeight
 
 	-- А это чтоб за края экрана не лезло
-	if object.y + object.height >= buffer.screen.height then object.y = buffer.screen.height - object.height end
-	if object.x + object.width + 1 >= buffer.screen.width then object.x = buffer.screen.width - object.width - 1 end
+	if object.y + object.height >= buffer.height then object.y = buffer.height - object.height end
+	if object.x + object.width + 1 >= buffer.width then object.x = buffer.width - object.width - 1 end
 
 	return object:reimplementedShow()
 end
@@ -797,15 +785,29 @@ local function menuDraw(menu)
 	menu:reimplementedDraw()
 end
 
+local function menuItemEventHandler(mainContainer, object, eventData)
+	if eventData[1] == "touch" then
+		object.pressed = true
+		mainContainer:draw()
+		buffer.draw()
+		callMethod(object.onTouch, eventData)
+		object.pressed = false
+		mainContainer:draw()
+		buffer.draw()
+	end
+end
+
 local function menuAddItem(menu, text, textColor)
 	local x = 2; for i = 1, #menu.children do x = x + unicode.len(menu.children[i].text) + 2; end
-	local item = menu:addAdaptiveButton(x, 1, 1, 0, nil, textColor or menu.colors.default.text, menu.colors.pressed.background, menu.colors.pressed.text, text)
-	item.type = GUI.objectTypes.menuItem
+	local item = menu:addChild(GUI.adaptiveButton(x, 1, 1, 0, nil, textColor or menu.colors.default.text, menu.colors.pressed.background, menu.colors.pressed.text, text))
+	item.eventHandler = menuItemEventHandler
+
 	return item
 end
 
 function GUI.menu(x, y, width, backgroundColor, textColor, backgroundPressedColor, textPressedColor, backgroundTransparency)
 	local menu = GUI.container(x, y, width, 1)
+	
 	menu.colors = {
 		default = {
 			background = backgroundColor,
@@ -817,7 +819,6 @@ function GUI.menu(x, y, width, backgroundColor, textColor, backgroundPressedColo
 		},
 		transparency = backgroundTransparency
 	}
-
 	menu.addItem = menuAddItem
 	menu.reimplementedDraw = menu.draw
 	menu.draw = menuDraw
@@ -847,6 +848,7 @@ end
 
 function GUI.progressBar(x, y, width, activeColor, passiveColor, valueColor, value, thin, showValue, valuePrefix, valuePostfix)
 	local object = GUI.object(x, y, width, 1)
+	
 	object.value = value
 	object.colors = {active = activeColor, passive = passiveColor, value = valueColor}
 	object.thin = thin
@@ -854,6 +856,7 @@ function GUI.progressBar(x, y, width, activeColor, passiveColor, valueColor, val
 	object.showValue = showValue
 	object.valuePrefix = valuePrefix
 	object.valuePostfix = valuePostfix
+	
 	return object
 end
 
@@ -871,90 +874,54 @@ function GUI.windowShadow(x, y, width, height, transparency, thin)
 	end
 end
 
-------------------------------------------------- Окна -------------------------------------------------------------------
+------------------------------------------------- Error window -------------------------------------------------------------------
 
--- Красивое окошко для отображения сообщения об ошибке. Аргумент errorWindowParameters может принимать следующие значения:
--- local errorWindowParameters = {
---   backgroundColor = 0x262626,
---   textColor = 0xFFFFFF,
---   truncate = 50,
---   title = {color = 0xFF8888, text = "Ошибочка"}
---   noAnimation = true,
--- }
-function GUI.error(text, errorWindowParameters)
-	--Всякие константы, бла-бла
-	local backgroundColor = (errorWindowParameters and errorWindowParameters.backgroundColor) or 0x1b1b1b
-	local errorPixMap = {
-		{{0xffdb40       , 0xffffff,"#"}, {0xffdb40       , 0xffffff, "#"}, {backgroundColor, 0xffdb40, "▟"}, {backgroundColor, 0xffdb40, "▙"}, {0xffdb40       , 0xffffff, "#"}, {0xffdb40       , 0xffffff, "#"}},
-		{{0xffdb40       , 0xffffff,"#"}, {backgroundColor, 0xffdb40, "▟"}, {0xffdb40       , 0xffffff, " "}, {0xffdb40       , 0xffffff, " "}, {backgroundColor, 0xffdb40, "▙"}, {0xffdb40       , 0xffffff, "#"}},
-		{{backgroundColor, 0xffdb40,"▟"}, {0xffdb40       , 0xffffff, "c"}, {0xffdb40       , 0xffffff, "y"}, {0xffdb40       , 0xffffff, "k"}, {0xffdb40       , 0xffffff, "a"}, {backgroundColor, 0xffdb40, "▙"}},
-	}
-	local textColor = (errorWindowParameters and errorWindowParameters.textColor) or 0xFFFFFF
-	local buttonWidth = 12
-	local verticalOffset = 2
-	local minimumHeight = verticalOffset * 2 + #errorPixMap
-	local height = 0
-	local widthOfText = math.floor(buffer.screen.width * 0.5)
-
-	--Ебемся с текстом, делаем его пиздатым во всех смыслах
-	if type(text) ~= "table" then
-		text = tostring(text)
-		text = (errorWindowParameters and errorWindowParameters.truncate) and unicode.sub(text, 1, errorWindowParameters.truncate) or text
-		text = { text }
-	end
-	text = string.wrap(text, widthOfText)
-
-
-	--Ебашим высоту правильнуюe
-	height = verticalOffset * 2 + #text + 1
-	if errorWindowParameters and errorWindowParameters.title then height = height + 2 end
-	if height < minimumHeight then height = minimumHeight end
-
-	--Ебашим стартовые коорды отрисовки
-	local x, y = math.ceil(buffer.screen.width / 2 - widthOfText / 2), math.ceil(buffer.screen.height / 2 - height / 2)
-	local OKButton = {}
-	local oldPixels = buffer.copy(1, y, buffer.screen.width, height)
-
-	--Отрисовочка
-	local function draw()
-		local yPos = y
-		--Подложка
-		buffer.square(1, yPos, buffer.screen.width, height, backgroundColor, 0x000000); yPos = yPos + verticalOffset
-		buffer.customImage(x - #errorPixMap[1] - 3, yPos, errorPixMap)
-		--Титл, епта!
-		if errorWindowParameters and errorWindowParameters.title then buffer.text(x, yPos, errorWindowParameters.title.color, errorWindowParameters.title.text); yPos = yPos + 2 end
-		--Текстус
-		for i = 1, #text do buffer.text(x, yPos, textColor, text[i]); yPos = yPos + 1 end; yPos = yPos + 1
-		--Кнопачка
-		OKButton = GUI.button(x + widthOfText - buttonWidth, y + height - 2, buttonWidth, 1, 0x3392FF, 0xFFFFFF, 0xFFFFFF, 0x262626, "OK"):draw()
-		--Атрисовачка
-		buffer.draw()
-	end
-
-	--Графонистый выход
-	local function quit()
-		OKButton:pressAndRelease(0.2)
-		buffer.paste(1, y, oldPixels)
-		buffer.draw()
-	end
-
-	--Онимацыя
-	if not (errorWindowParameters and errorWindowParameters.noAnimation) then for i = 1, height do buffer.setDrawLimit(1, math.floor(buffer.screen.height / 2) - i, buffer.screen.width, i * 2); draw(); os.sleep(0.05) end; buffer.resetDrawLimit() end
-	draw()
-
-	--Анализ говнища
-	while true do
-		local e = {event.pull()}
-		if e[1] == "key_down" then
-			if e[4] == 28 then
-				quit(); return
-			end
-		elseif e[1] == "touch" then
-			if OKButton:isClicked(e[3], e[4]) then
-				quit(); return
-			end
+function GUI.error(...)
+	local args = {...}
+	for i = 1, #args do
+		if type(args[i]) == "table" then
+			args[i] = table.toString(args[i])
+		else
+			args[i] = tostring(args[i])
 		end
 	end
+
+	local sign = image.fromString([[06030000FF 0000FF 00F7FF▟00F7FF▙0000FF 0000FF 0000FF 00F7FF▟F7FF00 F7FF00 00F7FF▙0000FF 00F7FF▟F7FF00CF7FF00yF7FF00kF7FF00a00F7FF▙]])
+	local offset = 2
+	local lines = #args > 1 and "\"" .. table.concat(args, "\", \"") .. "\"" or args[1]
+	local width = math.floor(buffer.width * 0.5)
+	local textWidth = width - image.getWidth(sign) - 2
+
+	lines = string.wrap(lines, textWidth)
+	local height = image.getHeight(sign)
+	if #lines + 2 > height then
+		height = #lines + 2
+	end
+
+	local mainContainer = GUI.container(1, math.floor(buffer.height / 2 - height / 2), buffer.width, height + offset * 2)
+	local oldPixels = buffer.copy(mainContainer.x, mainContainer.y, mainContainer.width, mainContainer.height)
+
+	local x, y = math.floor(buffer.width / 2 - width / 2), offset + 1
+	mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x1D1D1D))
+	mainContainer:addChild(GUI.image(x, y, sign))
+	mainContainer:addChild(GUI.textBox(x + image.getWidth(sign) + 2, y, textWidth, #lines, 0x1D1D1D, 0xEEEEEE, lines, 1, 0, 0)).eventHandler = nil
+	local buttonWidth = 12
+	local button = mainContainer:addChild(GUI.button(x + image.getWidth(sign) + textWidth - buttonWidth + 2, mainContainer.height - offset, buttonWidth, 1, 0x3366CC, 0xEEEEEE, 0xEEEEEE, 0x3366CC, "Ok"))
+	button.onTouch = function()
+		mainContainer:stopEventHandling()
+		buffer.paste(mainContainer.x, mainContainer.y, oldPixels)
+		buffer.draw()
+	end
+	mainContainer.eventHandler = function(mainContainer, object, eventData)
+		if eventData[1] == "key_down" and eventData[4] == 28 then
+			button:pressAndRelease()
+			button.onTouch()
+		end
+	end
+
+	mainContainer:draw()
+	buffer.draw(true)
+	mainContainer:startEventHandling()
 end
 
 ----------------------------------------- Universal keyboard-input function -----------------------------------------
@@ -1015,7 +982,7 @@ local function autocompleteVariables(sourceText)
 end
 
 local function inputFieldDraw(inputField)
-	if inputField.x < 1 or inputField.y < 1 or inputField.x + inputField.width - 1 > buffer.screen.width or inputField.y > buffer.screen.height then return inputField end
+	if inputField.x < 1 or inputField.y < 1 or inputField.x + inputField.width - 1 > buffer.width or inputField.y > buffer.height then return inputField end
 	if inputField.oldPixels then
 		buffer.paste(inputField.x, inputField.y, inputField.oldPixels)
 	else
@@ -1189,6 +1156,15 @@ local function inputTextBoxBeginInput(inputTextBox)
 	return inputTextBox
 end
 
+local function inputTextBoxEventHandler(mainContainer, object, eventData)
+	if eventData[1] == "touch" then
+		object:input()
+		mainContainer:draw()
+		buffer.draw()
+		callMethod(object.onInputFinished, mainContainer, object, eventData, object.text)
+	end
+end
+
 function GUI.inputTextBox(x, y, width, height, inputTextBoxColor, textColor, inputTextBoxFocusedColor, textFocusedColor, text, placeholderText, eraseTextOnFocus, textMask, highlightLuaSyntax, autocompleteVariables)
 	local inputTextBox = GUI.object(x, y, width, height)
 	inputTextBox.colors = {
@@ -1201,6 +1177,8 @@ function GUI.inputTextBox(x, y, width, height, inputTextBoxColor, textColor, inp
 			text = textFocusedColor
 		}
 	}
+
+	inputTextBox.eventHandler = inputTextBoxEventHandler
 	inputTextBox.text = text
 	inputTextBox.placeholderText = placeholderText
 	inputTextBox.draw = drawInputTextBox
@@ -1274,8 +1252,24 @@ local function scrollToEndTextBox(object)
 	return object
 end
 
+local function textBoxScrollEventHandler(mainContainer, object, eventData)
+	if eventData[1] == "scroll" then
+		if eventData[5] == 1 then
+			object:scrollUp()
+			mainContainer:draw()
+			buffer.draw()
+		else
+			object:scrollDown()
+			mainContainer:draw()
+			buffer.draw()
+		end
+	end
+end
+
 function GUI.textBox(x, y, width, height, backgroundColor, textColor, lines, currentLine, horizontalOffset, verticalOffset)
 	local object = GUI.object(x, y, width, height)
+	
+	object.eventHandler = textBoxScrollEventHandler
 	object.colors = { text = textColor, background = backgroundColor }
 	object.setAlignment = GUI.setAlignment
 	object:setAlignment(GUI.alignment.horizontal.left, GUI.alignment.vertical.top)
@@ -1319,8 +1313,20 @@ local function drawHorizontalSlider(object)
 	return object
 end
 
-function GUI.horizontalSlider(x, y, width, activeColor, passiveColor, pipeColor, valueColor, minimumValue, maximumValue, value, showMaximumAndMinimumValues, currentValuePrefix, currentValuePostfix)
+local function sliderEventHandler(mainContainer, object, eventData)
+	if eventData[1] == "touch" or eventData[1] == "drag" then
+		local clickPosition = eventData[3] - object.x + 1
+		object.value = object.minimumValue + (clickPosition * (object.maximumValue - object.minimumValue) / object.width)
+		mainContainer:draw()
+		buffer.draw()
+		callMethod(object.onValueChanged, object.value, eventData)
+	end
+end
+
+function GUI.slider(x, y, width, activeColor, passiveColor, pipeColor, valueColor, minimumValue, maximumValue, value, showMaximumAndMinimumValues, currentValuePrefix, currentValuePostfix)
 	local object = GUI.object(x, y, width, 1)
+	
+	object.eventHandler = sliderEventHandler
 	object.colors = {active = activeColor, passive = passiveColor, pipe = pipeColor, value = valueColor}
 	object.draw = drawHorizontalSlider
 	object.minimumValue = minimumValue
@@ -1330,26 +1336,40 @@ function GUI.horizontalSlider(x, y, width, activeColor, passiveColor, pipeColor,
 	object.currentValuePrefix = currentValuePrefix
 	object.currentValuePostfix = currentValuePostfix
 	object.roundValues = false
+	
 	return object
 end
 
 ----------------------------------------- Switch object -----------------------------------------
 
-local function drawSwitch(object)
-	local pipeWidth = object.height * 2
+local function drawSwitch(switch)
+	local pipeWidth = switch.height * 2
 	local pipePosition, backgroundColor
-	if object.state then pipePosition, backgroundColor = object.x + object.width - pipeWidth, object.colors.active else pipePosition, backgroundColor = object.x, object.colors.passive end
-	buffer.square(object.x, object.y, object.width, object.height, backgroundColor, 0x000000, " ")
-	buffer.square(pipePosition, object.y, pipeWidth, object.height, object.colors.pipe, 0x000000, " ")
-	return object
+	if switch.state then pipePosition, backgroundColor = switch.x + switch.width - pipeWidth, switch.colors.active else pipePosition, backgroundColor = switch.x, switch.colors.passive end
+	buffer.square(switch.x, switch.y, switch.width, switch.height, backgroundColor, 0x000000, " ")
+	buffer.square(pipePosition, switch.y, pipeWidth, switch.height, switch.colors.pipe, 0x000000, " ")
+	
+	return switch
+end
+
+local function switchEventHandler(mainContainer, object, eventData)
+	if eventData[1] == "touch" then
+		object.state = not object.state
+		mainContainer:draw()
+		buffer.draw()
+		callMethod(object.onStateChanged, object.state, eventData)
+	end
 end
 
 function GUI.switch(x, y, width, activeColor, passiveColor, pipeColor, state)
-	local object = GUI.object(x, y, width, 1)
-	object.colors = {active = activeColor, passive = passiveColor, pipe = pipeColor, value = valueColor}
-	object.draw = drawSwitch
-	object.state = state or false
-	return object
+	local switch = GUI.object(x, y, width, 1)
+	
+	switch.eventHandler = switchEventHandler
+	switch.colors = {active = activeColor, passive = passiveColor, pipe = pipeColor, value = valueColor}
+	switch.draw = drawSwitch
+	switch.state = state or false
+	
+	return switch
 end
 
 ----------------------------------------- Combo Box Object -----------------------------------------
@@ -1357,7 +1377,7 @@ end
 local function drawComboBox(object)
 	buffer.square(object.x, object.y, object.width, object.height, object.colors.default.background)
 	local x, y, limit, arrowSize = object.x + 1, math.floor(object.y + object.height / 2), object.width - 5, object.height
-	buffer.text(x, y, object.colors.default.text, string.limit(object.items[object.currentItem].text, limit, "right"))
+	buffer.text(x, y, object.colors.default.text, string.limit(object.items[object.selectedItem].text, limit, "right"))
 	GUI.button(object.x + object.width - arrowSize * 2 + 1, object.y, arrowSize * 2 - 1, arrowSize, object.colors.arrow.background, object.colors.arrow.text, 0x0, 0x0, object.state and "▲" or "▼"):draw()
 end
 
@@ -1370,14 +1390,23 @@ local function selectComboBoxItem(object)
 	dropDownMenu.sidesOffset = 1
 	local _, itemIndex = dropDownMenu:show()
 
-	object.currentItem = itemIndex or object.currentItem
+	object.selectedItem = itemIndex or object.selectedItem
 	object.state = false
 	object:draw()
 	buffer.draw()
 end
 
+local function comboBoxEventHandler(mainContainer, object, eventData)
+	if eventData[1] == "touch" then
+		object:selectItem()
+		callMethod(object.onItemSelected, object.items[object.selectedItem], eventData)
+	end
+end
+
 function GUI.comboBox(x, y, width, elementHeight, backgroundColor, textColor, arrowBackgroundColor, arrowTextColor, items)
 	local object = GUI.object(x, y, width, elementHeight)
+	
+	object.eventHandler = comboBoxEventHandler
 	object.colors = {
 		default = {
 			background = backgroundColor,
@@ -1393,7 +1422,7 @@ function GUI.comboBox(x, y, width, elementHeight, backgroundColor, textColor, ar
 		}
 	}
 	object.items = {}
-	object.currentItem = 1
+	object.selectedItem = 1
 	object.addItem = addDropDownMenuItem
 	object.addSeparator = addDropDownMenuSeparator
 	object.draw = drawComboBox
@@ -1457,9 +1486,44 @@ local function scrollBarDraw(scrollBar)
 	return scrollBar
 end
 
+local function scrollBarEventHandler(mainContainer, object, eventData)
+	local newValue = object.value
+
+	if eventData[1] == "touch" or eventData[1] == "drag" then
+		local delta = object.maximumValue - object.minimumValue + 1
+		if object.height > object.width then
+			newValue = math.floor((eventData[4] - object.y + 1) / object.height * delta)
+		else
+			newValue = math.floor((eventData[3] - object.x + 1) / object.width * delta)
+		end
+	elseif eventData[1] == "scroll" then
+		if eventData[5] == 1 then
+			if object.value >= object.minimumValue + object.onScrollValueIncrement then
+				newValue = object.value - object.onScrollValueIncrement
+			else
+				newValue = object.minimumValue
+			end
+		else
+			if object.value <= object.maximumValue - object.onScrollValueIncrement then
+				newValue = object.value + object.onScrollValueIncrement
+			else
+				newValue = object.maximumValue
+			end
+		end
+	end
+
+	if eventData[1] == "touch" or eventData[1] == "drag" or eventData[1] == "scroll" then
+		object.value = newValue
+		callMethod(object.onTouch, eventData)
+		mainContainer:draw()
+		buffer.draw()
+	end
+end
+
 function GUI.scrollBar(x, y, width, height, backgroundColor, foregroundColor, minimumValue, maximumValue, value, shownValueCount, onScrollValueIncrement, thinHorizontalMode)
 	local scrollBar = GUI.object(x, y, width, height)
 
+	scrollBar.eventHandler = scrollBarEventHandler
 	scrollBar.maximumValue = maximumValue
 	scrollBar.minimumValue = minimumValue
 	scrollBar.value = value
@@ -1479,7 +1543,7 @@ end
 ----------------------------------------- CodeView object -----------------------------------------
 
 local function codeViewDraw(codeView)
-	-- local toLine = codeView.fromLine + codeView.height - (codeView.scrollBars.horizontal.isHidden and 1 or 2)
+	-- local toLine = codeView.fromLine + codeView.height - (codeView.scrollBars.horizontal.hidden and 1 or 2)
 	local toLine = codeView.fromLine + codeView.height - 1
 
 	-- Line numbers bar and code area
@@ -1505,9 +1569,8 @@ local function codeViewDraw(codeView)
 		end	
 	end
 
-	-- Selections
-	local oldDrawLimit = buffer.getDrawLimit()
-	buffer.setDrawLimit(codeView.codeAreaPosition, codeView.y, codeView.codeAreaWidth, codeView.height)
+	local oldDrawLimitX1, oldDrawLimitY1, oldDrawLimitX2, oldDrawLimitY2 = buffer.getDrawLimit()
+	buffer.setDrawLimit(codeView.codeAreaPosition, codeView.y, codeView.codeAreaPosition + codeView.codeAreaWidth - 1, codeView.y + codeView.height - 1)
 
 	local function drawUpperSelection(y, selectionIndex)
 		buffer.square(
@@ -1556,7 +1619,7 @@ local function codeViewDraw(codeView)
 
 	-- Code strings
 	y = codeView.y
-	buffer.setDrawLimit(codeView.codeAreaPosition + 1, y, codeView.codeAreaWidth - 2, codeView.height)
+	buffer.setDrawLimit(codeView.codeAreaPosition + 1, y, codeView.codeAreaPosition + codeView.codeAreaWidth - 2, y + codeView.height - 1)
 	for i = codeView.fromLine, toLine do
 		if codeView.lines[i] then
 			if codeView.highlightLuaSyntax then
@@ -1569,27 +1632,27 @@ local function codeViewDraw(codeView)
 			break
 		end
 	end
-	buffer.setDrawLimit(oldDrawLimit)
+	buffer.setDrawLimit(oldDrawLimitX1, oldDrawLimitY1, oldDrawLimitX2, oldDrawLimitY2)
 
 	if #codeView.lines > codeView.height then
-		codeView.scrollBars.vertical.isHidden = false
+		codeView.scrollBars.vertical.hidden = false
 		codeView.scrollBars.vertical.colors.background, codeView.scrollBars.vertical.colors.foreground = require("syntax").colorScheme.scrollBarBackground, require("syntax").colorScheme.scrollBarForeground
 		codeView.scrollBars.vertical.minimumValue, codeView.scrollBars.vertical.maximumValue, codeView.scrollBars.vertical.value, codeView.scrollBars.vertical.shownValueCount = 1, #codeView.lines, codeView.fromLine, codeView.height
 		codeView.scrollBars.vertical.localPosition.x = codeView.width
 		codeView.scrollBars.vertical.localPosition.y = 1
 		codeView.scrollBars.vertical.height = codeView.height
 	else
-		codeView.scrollBars.vertical.isHidden = true
+		codeView.scrollBars.vertical.hidden = true
 	end
 
 	if codeView.maximumLineLength > codeView.codeAreaWidth - 2 then
-		codeView.scrollBars.horizontal.isHidden = false
+		codeView.scrollBars.horizontal.hidden = false
 		codeView.scrollBars.horizontal.colors.background, codeView.scrollBars.horizontal.colors.foreground = require("syntax").colorScheme.scrollBarBackground, require("syntax").colorScheme.scrollBarForeground
 		codeView.scrollBars.horizontal.minimumValue, codeView.scrollBars.horizontal.maximumValue, codeView.scrollBars.horizontal.value, codeView.scrollBars.horizontal.shownValueCount = 1, codeView.maximumLineLength, codeView.fromSymbol, codeView.codeAreaWidth - 2
 		codeView.scrollBars.horizontal.localPosition.x, codeView.scrollBars.horizontal.width = codeView.lineNumbersWidth + 1, codeView.codeAreaWidth - 1
 		codeView.scrollBars.horizontal.localPosition.y = codeView.height
 	else
-		codeView.scrollBars.horizontal.isHidden = true
+		codeView.scrollBars.horizontal.hidden = true
 	end
 
 	codeView:reimplementedDraw()
@@ -1608,8 +1671,8 @@ function GUI.codeView(x, y, width, height, lines, fromSymbol, fromLine, maximumL
 	codeView.indentationWidth = indentationWidth
 
 	codeView.scrollBars = {
-		vertical = codeView:addScrollBar(1, 1, 1, 1, 0x0, 0x0, 1, 1, 1, 1, 1, false),
-		horizontal = codeView:addScrollBar(1, 1, 1, 1, 0x0, 0x0, 1, 1, 1, 1, 1, true)
+		vertical = codeView:addChild(GUI.scrollBar(1, 1, 1, 1, 0x0, 0x0, 1, 1, 1, 1, 1, false)),
+		horizontal = codeView:addChild(GUI.scrollBar(1, 1, 1, 1, 0x0, 0x0, 1, 1, 1, 1, 1, true))
 	}
 
 	codeView.reimplementedDraw = codeView.draw
@@ -1710,9 +1773,47 @@ local function treeViewDraw(treeView)
 	return treeView
 end
 
+local function treeViewEventHandler(mainContainer, object, eventData)
+	if eventData[1] == "touch" then
+		local fileIndex = eventData[4] - object.y + object.fromFile - 1
+		if object.fileList[fileIndex] then
+			if object.fileList[fileIndex].isDirectory then
+				if object.directoriesToShowContent[object.fileList[fileIndex].path] then
+					object.directoriesToShowContent[object.fileList[fileIndex].path] = nil
+				else
+					object.directoriesToShowContent[object.fileList[fileIndex].path] = true
+				end
+				object:updateFileList()
+				mainContainer:draw()
+				buffer.draw()
+			else
+				object.currentFile = object.fileList[fileIndex].path
+				mainContainer:draw()
+				buffer.draw()
+				callMethod(object.onFileSelected, object.currentFile, eventData)
+			end
+		end
+	elseif eventData[1] == "scroll" then
+		if eventData[5] == 1 then
+			if object.fromFile > 1 then
+				object.fromFile = object.fromFile - 1
+				mainContainer:draw()
+				buffer.draw()
+			end
+		else
+			if object.fromFile < #object.fileList then
+				object.fromFile = object.fromFile + 1
+				mainContainer:draw()
+				buffer.draw()
+			end
+		end
+	end
+end
+
 function GUI.treeView(x, y, width, height, backgroundColor, textColor, selectionColor, selectionTextColor, arrowColor, scrollBarBackground, scrollBarForeground, workPath)
 	local treeView = GUI.container(x, y, width, height)
 	
+	treeView.eventHandler = treeViewEventHandler
 	treeView.colors = {
 		default = {
 			background = backgroundColor,
@@ -1757,11 +1858,29 @@ local function colorSelectorDraw(colorSelector)
 	return colorSelector
 end
 
+local function colorSelectorEventHandler(mainContainer, object, eventData)
+	if eventData[1] == "touch" then
+		object.pressed = true
+		mainContainer:draw()
+		buffer.draw()
+		
+		object.color = require("palette").show(math.floor(mainContainer.width / 2 - 35), math.floor(mainContainer.height / 2 - 12), object.color) or object.color
+		
+		object.pressed = false
+		mainContainer:draw()
+		buffer.draw()
+		callMethod(object.onTouch, eventData)
+	end
+end
+
 function GUI.colorSelector(x, y, width, height, color, text)
 	local colorSelector = GUI.object(x, y, width, height)
+	
+	colorSelector.eventHandler = colorSelectorEventHandler
 	colorSelector.color = color
 	colorSelector.text = text
 	colorSelector.draw = colorSelectorDraw
+	
 	return colorSelector
 end 
 
@@ -1890,280 +2009,6 @@ function GUI.chart(x, y, width, height, axisColor, axisValueColor, axisHelpersCo
 	return object
 end
 
------------------------------------------ Window object -----------------------------------------
-
-local function windowExecuteMethod(method, ...)
-	if method then method(...) end
-end
-
-local function windowButtonHandler(window, object, objectIndex, eventData)
-	if object.switchMode then
-		object.pressed = not object.pressed
-		window:draw(); buffer.draw()
-		windowExecuteMethod(object.onTouch, eventData)
-	else
-		object.pressed = true
-		window:draw(); buffer.draw()
-		os.sleep(0.2)
-		object.pressed = false
-		window:draw(); buffer.draw()
-		windowExecuteMethod(object.onTouch, eventData)
-	end
-end
-
-local function windowTabBarTabHandler(window, object, objectIndex, eventData)
-	object.parent.parent.selectedTab = objectIndex
-	window:draw(); buffer.draw()
-	windowExecuteMethod(object.parent.parent.onTabSwitched, object.parent.parent.selectedTab, eventData)
-end
-
-local function windowInputTextBoxHandler(window, object, objectIndex, eventData)
-	object:input()
-	window:draw(); buffer.draw()
-	windowExecuteMethod(object.onInputFinished, object.text, eventData)
-end
-
-local function windowTextBoxScrollHandler(window, object, objectIndex, eventData)
-	if eventData[5] == 1 then
-		object:scrollUp()
-		window:draw(); buffer.draw()
-	else
-		object:scrollDown()
-		window:draw(); buffer.draw()
-	end
-end
-
-local function windowHorizontalSliderHandler(window, object, objectIndex, eventData)
-	local clickPosition = eventData[3] - object.x + 1
-	object.value = object.minimumValue + (clickPosition * (object.maximumValue - object.minimumValue) / object.width)
-	window:draw(); buffer.draw()
-	windowExecuteMethod(object.onValueChanged, object.value, eventData)
-end
-
-local function windowSwitchHandler(window, object, objectIndex, eventData)
-	object.state = not object.state
-	window:draw(); buffer.draw()
-	windowExecuteMethod(object.onStateChanged, object.state, eventData)
-end
-
-local function windowComboBoxHandler(window, object, objectIndex, eventData)
-	object:selectItem()
-	windowExecuteMethod(object.onItemSelected, object.items[object.currentItem], eventData)
-end
-
-local function windowMenuItemHandler(window, object, objectIndex, eventData)
-	object.pressed = true
-	window:draw(); buffer.draw()
-	windowExecuteMethod(object.onTouch, eventData)
-	object.pressed = false
-	window:draw(); buffer.draw()
-end
-
-local function windowScrollBarHandler(window, object, objectIndex, eventData)
-	local newValue = object.value
-
-	if eventData[1] == "touch" or eventData[1] == "drag" then
-		local delta = object.maximumValue - object.minimumValue + 1
-		if object.height > object.width then
-			newValue = math.floor((eventData[4] - object.y + 1) / object.height * delta)
-		else
-			newValue = math.floor((eventData[3] - object.x + 1) / object.width * delta)
-		end
-	elseif eventData[1] == "scroll" then
-		if eventData[5] == 1 then
-			if object.value >= object.minimumValue + object.onScrollValueIncrement then
-				newValue = object.value - object.onScrollValueIncrement
-			else
-				newValue = object.minimumValue
-			end
-		else
-			if object.value <= object.maximumValue - object.onScrollValueIncrement then
-				newValue = object.value + object.onScrollValueIncrement
-			else
-				newValue = object.maximumValue
-			end
-		end
-	end
-	object.value = newValue
-	windowExecuteMethod(object.onTouch, eventData)
-	window:draw(); buffer.draw()
-end
-
-local function windowTreeViewHandler(window, object, objectIndex, eventData)
-	if eventData[1] == "touch" then
-		local fileIndex = eventData[4] - object.y + object.fromFile - 1
-		if object.fileList[fileIndex] then
-			if object.fileList[fileIndex].isDirectory then
-				if object.directoriesToShowContent[object.fileList[fileIndex].path] then
-					object.directoriesToShowContent[object.fileList[fileIndex].path] = nil
-				else
-					object.directoriesToShowContent[object.fileList[fileIndex].path] = true
-				end
-				object:updateFileList()
-				object:draw(); buffer.draw()
-			else
-				object.currentFile = object.fileList[fileIndex].path
-				object:draw(); buffer.draw()
-				windowExecuteMethod(object.onFileSelected, object.currentFile, eventData)
-			end
-		end
-	elseif eventData[1] == "scroll" then
-		if eventData[5] == 1 then
-			if object.fromFile > 1 then
-				object.fromFile = object.fromFile - 1
-				object:draw(); buffer.draw()
-			end
-		else
-			if object.fromFile < #object.fileList then
-				object.fromFile = object.fromFile + 1
-				object:draw(); buffer.draw()
-			end
-		end
-	end
-end
-
-local function windowColorSelectorHandler(window, object, objectIndex, eventData)
-	object.pressed = true
-	object:draw(); buffer.draw()
-	object.color = require("palette").show("auto", "auto", object.color) or object.color
-	object.pressed = false
-	object:draw(); buffer.draw()
-	windowExecuteMethod(object.onTouch, eventData)
-end
-
-local function windowHandleEventData(window, eventData)
-	if eventData[1] == "touch" then
-		local object, objectIndex = window:getClickedObject(eventData[3], eventData[4])
-		
-		if object then
-			if object.type == GUI.objectTypes.button then
-				windowButtonHandler(window, object, objectIndex, eventData)
-			elseif object.type == GUI.objectTypes.tabBarTab then
-				windowTabBarTabHandler(window, object, objectIndex, eventData)
-			elseif object.type == GUI.objectTypes.inputTextBox then
-				windowInputTextBoxHandler(window, object, objectIndex, eventData)
-			elseif object.type == GUI.objectTypes.horizontalSlider then
-				windowHorizontalSliderHandler(window, object, objectIndex, eventData)
-			elseif object.type == GUI.objectTypes.switch then
-				windowSwitchHandler(window, object, objectIndex, eventData)
-			elseif object.type == GUI.objectTypes.comboBox then
-				windowComboBoxHandler(window, object, objectIndex, eventData)
-			elseif object.type == GUI.objectTypes.menuItem then
-				windowMenuItemHandler(window, object, objectIndex, eventData)
-			elseif object.type == GUI.objectTypes.scrollBar then
-				windowScrollBarHandler(window, object, objectIndex, eventData)
-			elseif object.type == GUI.objectTypes.treeView then
-				windowTreeViewHandler(window, object, objectIndex, eventData)
-			elseif object.type == GUI.objectTypes.colorSelector then
-				windowColorSelectorHandler(window, object, objectIndex, eventData)
-			elseif object.onTouch then
-				windowExecuteMethod(object.onTouch, eventData)
-			end
-		else
-			windowExecuteMethod(window.onTouch, eventData)
-		end
-	elseif eventData[1] == "scroll" then
-		local object, objectIndex = window:getClickedObject(eventData[3], eventData[4])
-		
-		if object then
-			if object.type == GUI.objectTypes.textBox then
-				windowTextBoxScrollHandler(window, object, objectIndex, eventData)
-			elseif object.type == GUI.objectTypes.scrollBar then
-				windowScrollBarHandler(window, object, objectIndex, eventData)
-			elseif object.type == GUI.objectTypes.treeView then
-				windowTreeViewHandler(window, object, objectIndex, eventData)
-			elseif object.onScroll then
-				windowExecuteMethod(object.onScroll, eventData)
-			end
-		else
-			windowExecuteMethod(window.onScroll, eventData)
-		end
-	elseif eventData[1] == "drag" then
-		local object, objectIndex = window:getClickedObject(eventData[3], eventData[4])
-		if object then
-			if object.type == GUI.objectTypes.horizontalSlider then
-				windowHorizontalSliderHandler(window, object, objectIndex, eventData)
-			elseif object.type == GUI.objectTypes.scrollBar then
-				windowScrollBarHandler(window, object, objectIndex, eventData)
-			elseif object.onDrag then
-				windowExecuteMethod(object.onDrag, eventData)
-			end
-		else
-			windowExecuteMethod(window.onDrag, eventData)
-		end
-	elseif eventData[1] == "drop" then
-		local object, objectIndex = window:getClickedObject(eventData[3], eventData[4])
-		if object then
-			if object.onDrag then
-				windowExecuteMethod(object.onDrop, eventData)
-			end
-		else
-			windowExecuteMethod(window.onDrop, eventData)
-		end
-	elseif eventData[1] == "key_down" then
-		windowExecuteMethod(window.onKeyDown, eventData)
-	elseif eventData[1] == "key_up" then
-		windowExecuteMethod(window.onKeyUp, eventData)
-	end
-
-	windowExecuteMethod(window.onAnyEvent, eventData)
-end
-
-local function windowHandleEvents(window, pullTime)
-	while true do
-		windowHandleEventData(window, {event.pull(pullTime)})
-		if window.dataToReturn then
-			local data = window.dataToReturn
-			window = nil
-			return table.unpack(data)
-		end
-	end
-end
-
-local function windowReturnData(window, ...)
-	window.dataToReturn = {...}
-	computer.pushSignal("windowAction")
-end
-
-local function windowClose(window)
-	windowReturnData(window, nil)
-end
-
-local function windowCorrectCoordinates(x, y, width, height, minimumWidth, minimumHeight)
-	width = minimumWidth and math.max(width, minimumWidth) or width
-	height = minimumHeight and math.max(height, minimumHeight) or height
-	x = (x == "auto" and math.floor(buffer.screen.width / 2 - width / 2)) or x
-	y = (y == "auto" and math.floor(buffer.screen.height / 2 - height / 2)) or y
-
-	return x, y, width, height
-end
-
-local function windowDraw(window)
-	if window.onDrawStarted then window.onDrawStarted() end
-	drawContainerContent(window)
-	if window.drawShadow then GUI.windowShadow(window.x, window.y, window.width, window.height, 50) end
-	if window.onDrawFinished then window.onDrawFinished() end
-end
-
-function GUI.window(x, y, width, height, minimumWidth, minimumHeight)
-	x, y, width, height = windowCorrectCoordinates(x, y, width, height, minimumWidth, minimumHeight)
-	local window = GUI.container(x, y, width, height)
-
-	window.minimumWidth = minimumWidth
-	window.minimumHeight = minimumHeight
-	window.drawShadow = false
-	window.draw = windowDraw
-	window.handleEvents = windowHandleEvents
-	window.close = windowClose
-	window.returnData = windowReturnData
-
-	return window
-end
-
-function GUI.fullScreenWindow()
-	return GUI.window(1, 1, buffer.screen.width, buffer.screen.height)
-end
-
 ----------------------------------------- Layout object -----------------------------------------
 
 local function layoutCheckCell(layout, column, row)
@@ -2235,7 +2080,7 @@ end
 
 local function layoutDraw(layout)
 	layoutCalculate(layout)
-	drawContainerContent(layout)
+	GUI.drawContainerContent(layout)
 end
 
 function GUI.layout(x, y, width, height, columnCount, rowCount)
@@ -2255,49 +2100,123 @@ function GUI.layout(x, y, width, height, columnCount, rowCount)
 	return layout
 end
 
------------------------------------------ Layout object -----------------------------------------
+----------------------------------------- Window object -----------------------------------------
 
-function GUI.addUniversalContainer(parentWindow, title)
-	local container = parentWindow:addContainer(1, 1, parentWindow.width, parentWindow.height)
-	container.panel = container:addPanel(1, 1, container.width, container.height, 0x0, 30)
-	container.layout = container:addLayout(1, 1, container.width, container.height, 1, 1)
-	container.layout:addLabel(1, 1, unicode.len(title), 1, 0xEEEEEE, title):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+local function windowDraw(window)
+	GUI.drawContainerContent(window)
+	GUI.windowShadow(window.x, window.y, window.width, window.height, 50, true)
+	return window
+end
+
+local function windowCheck(container, x, y)
+	for i = #container.children, 1, -1 do
+		if container.children[i].children then
+			if windowCheck(container.children[i], x, y) then
+				return true
+			end
+		elseif container.children[i].eventHandler and container.children[i]:isClicked(x, y) then
+			return true
+		end
+	end
+end
+
+local function windowEventHandler(mainContainer, object, eventData)
+	if eventData ~= mainContainer.focusedWindowEventData then
+		mainContainer.focusedWindowEventData = eventData
+
+		if eventData[1] == "touch" then
+			mainContainer.focusedWindow = object
+			object.lastTouchPosition = object.lastTouchPosition or {}
+			object.lastTouchPosition.x, object.lastTouchPosition.y = eventData[3], eventData[4]
+			
+			if object ~= object.parent.children[#object.parent.children] then
+				object:moveToFront()
+				mainContainer:draw()
+				buffer.draw()
+			end
+		elseif eventData[1] == "drag" and object == mainContainer.focusedWindow and object.lastTouchPosition and not windowCheck(object, eventData[3], eventData[4]) then
+			local xOffset, yOffset = eventData[3] - object.lastTouchPosition.x, eventData[4] - object.lastTouchPosition.y
+			object.lastTouchPosition.x, object.lastTouchPosition.y = eventData[3], eventData[4]
+
+			if xOffset ~= 0 or yOffset ~= 0 then
+				object.localPosition.x, object.localPosition.y = object.localPosition.x + xOffset, object.localPosition.y + yOffset
+				mainContainer:draw()
+				buffer.draw()
+			end
+		elseif eventData[1] == "drop" then
+			mainContainer.focusedWindow = nil
+			object.lastTouchPosition = nil
+		end
+	end
+end
+
+function GUI.window(x, y, width, height)
+	local window = GUI.container(x, y, width, height)
 	
-	return container
+	window.eventHandler = windowEventHandler
+	window.allowDragMovement = true
+	window.draw = windowDraw
+
+	return window
+end
+
+function GUI.filledWindow(x, y, width, height, backgroundColor)
+	local window = GUI.window(x, y, width, height)
+
+	window.backgroundPanel = window:addChild(GUI.panel(1, 1, width, height, backgroundColor))
+	window.actionButtons = window:addChild(GUI.actionButtons(2, 1, false))
+
+	return window
+end
+
+function GUI.titledWindow(x, y, width, height, title, addTitlePanel)
+	local window = GUI.filledWindow(x, y, width, height, GUI.colors.windows.backgroundPanel)
+
+	if addTitlePanel then
+		window.titlePanel = window:addChild(GUI.panel(1, 1, width, 1, GUI.colors.windows.title.background))
+		window.backgroundPanel.localPosition.y, window.backgroundPanel.height = 2, window.height - 1
+	end
+	window.titleLabel = window:addChild(GUI.label(1, 1, width, height, GUI.colors.windows.title.text, title)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+	window.actionButtons:moveToFront()
+
+	return window
+end
+
+function GUI.tabbedWindow(x, y, width, height, ...)
+	local window = GUI.filledWindow(x, y, width, height, GUI.colors.windows.backgroundPanel)
+
+	window.tabBar = window:addChild(GUI.tabBar(1, 1, window.width, 3, 2, 0, GUI.colors.windows.tabBar.default.background, GUI.colors.windows.tabBar.default.text, GUI.colors.windows.tabBar.selected.background, GUI.colors.windows.tabBar.selected.text, ...))
+	window.backgroundPanel.localPosition.y, window.backgroundPanel.height = 4, window.height - 3
+	window.actionButtons:moveToFront()
+	window.actionButtons.localPosition.y = 2
+
+	return window
 end
 
 --------------------------------------------------------------------------------------------------------------------------------
 
--- buffer.start()
+buffer.start()
 
--- local lines = {}
--- for line in io.lines("/OS.lua") do
--- 	table.insert(lines, line)
+-- local mainContainer = GUI.fullScreenContainer()
+-- mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0xFF8888))
+
+-- for i = 1, 2 do
+-- 	-- local window = mainContainer:addChild(GUI.titledWindow(4 + i * 8, 2 + i * 4, 40, 16, "Окно " .. i, true))
+-- 	local window = mainContainer:addChild(GUI.tabbedWindow(4 + i * 8, 2 + i * 4, 80, 25, "Вкладка", "Еще вкладка", "Ты пидор", "Ебаный в рот"))
+-- 	window.counter = 0
+-- 	local label = window:addChild(GUI.label(1, 7, window.width, 1, 0x0, "Количество кликов: 0")):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+-- 	window:addChild(GUI.roundedButton(-5, 9, 33, 3, 0x999999, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, "Нажимай")).onTouch = function()
+-- 		window.counter = window.counter + 1
+-- 		label.text = "Количество кликов: " .. window.counter
+-- 		mainContainer:draw()
+-- 		buffer.draw()
+-- 	end
+-- 	window:addChild(GUI.button(2, 24, 10, 3, 0x0, 0xFFFFFF, 0x0, 0xFF0000, "AFAE"))
 -- end
 
--- buffer.clear(0xFF8888)
--- GUI.codeView(2, 2, 100, 40, lines, 1, 1, 40, {{from = {line = 7, symbol = 5}, to = {line = 7, symbol = 8}}}, {}, true, 2):draw()
-
--- buffer.draw(true)
-
--- local window = GUI.fullScreenWindow()
--- window:addImage(1, 1, require("image").load("/MineOS/Pictures/Raspberry.pic"))
--- window:addPanel(1, 1, window.width, window.height, 0x000000, 40)
-
--- local layout = window:addLayout(1, 1, window.width, window.height, 5, 1)
--- layout:setCellPosition(layout:addButton(1, 1, 26, 3, 0xEEEEEE, 0x000000, 0xAAAAAA, 0x000000, "Button 1"), 1, 1)
--- layout:setCellPosition(layout:addButton(1, 1, 26, 3, 0xEEEEEE, 0x000000, 0xAAAAAA, 0x000000, "Button 2"), 2, 1)
--- layout:setCellPosition(layout:addButton(1, 1, 26, 3, 0xEEEEEE, 0x000000, 0xAAAAAA, 0x000000, "Button 3"), 2, 1)
--- layout:setCellPosition(layout:addButton(1, 1, 26, 3, 0xEEEEEE, 0x000000, 0xAAAAAA, 0x000000, "Button 4"), 3, 1)
--- layout:setCellPosition(layout:addButton(1, 1, 26, 3, 0xEEEEEE, 0x000000, 0xAAAAAA, 0x000000, "Button 5"), 3, 1)
--- layout:setCellPosition(layout:addButton(1, 1, 26, 3, 0xEEEEEE, 0x000000, 0xAAAAAA, 0x000000, "Button 6"), 3, 1)
--- layout:setCellPosition(layout:addButton(1, 1, 26, 3, 0xEEEEEE, 0x000000, 0xAAAAAA, 0x000000, "Button 7"), 4, 1)
--- layout:setCellPosition(layout:addButton(1, 1, 26, 3, 0xEEEEEE, 0x000000, 0xAAAAAA, 0x000000, "Button 8"), 4, 1)
--- layout:setCellPosition(layout:addButton(1, 1, 26, 3, 0xEEEEEE, 0x000000, 0xAAAAAA, 0x000000, "Button 9"), 5, 1)
-
--- window:draw()
--- buffer.draw(true)
--- window:handleEvents()
+-- mainContainer:draw()
+-- buffer.draw()
+-- mainContainer:startEventHandling()
 
 --------------------------------------------------------------------------------------------------------------------------------
 

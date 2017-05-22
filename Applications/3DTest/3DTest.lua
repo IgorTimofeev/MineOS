@@ -27,7 +27,7 @@ local meowEngine = require("MeowEngine/Main")
 buffer.start()
 meowEngine.intro(vector.newVector3(0, 0, 0), 20)
 
-local mainWindow = GUI.fullScreenWindow()
+local mainContainer = GUI.fullScreenContainer()
 local scene = meowEngine.newScene(0x1D1D1D)
 
 scene.renderMode = OCGL.renderModes.flatShading
@@ -280,14 +280,14 @@ local function move(x, y, z)
 end
 
 local function moveLight(x, y, z)
-	scene.lights[mainWindow.toolbar.lightSelectComboBox.currentItem].position[1] = scene.lights[mainWindow.toolbar.lightSelectComboBox.currentItem].position[1] + x
-	scene.lights[mainWindow.toolbar.lightSelectComboBox.currentItem].position[2] = scene.lights[mainWindow.toolbar.lightSelectComboBox.currentItem].position[2] + y
-	scene.lights[mainWindow.toolbar.lightSelectComboBox.currentItem].position[3] = scene.lights[mainWindow.toolbar.lightSelectComboBox.currentItem].position[3] + z
+	scene.lights[mainContainer.toolbar.lightSelectComboBox.selectedItem].position[1] = scene.lights[mainContainer.toolbar.lightSelectComboBox.selectedItem].position[1] + x
+	scene.lights[mainContainer.toolbar.lightSelectComboBox.selectedItem].position[2] = scene.lights[mainContainer.toolbar.lightSelectComboBox.selectedItem].position[2] + y
+	scene.lights[mainContainer.toolbar.lightSelectComboBox.selectedItem].position[3] = scene.lights[mainContainer.toolbar.lightSelectComboBox.selectedItem].position[3] + z
 end
 
 local controls = {
 	-- F1
-	[59 ] = function() mainWindow.toolbar.isHidden = not mainWindow.toolbar.isHidden; mainWindow.infoTextBox.isHidden = not mainWindow.infoTextBox.isHidden end,
+	[59 ] = function() mainContainer.toolbar.hidden = not mainContainer.toolbar.hidden; mainContainer.infoTextBox.hidden = not mainContainer.infoTextBox.hidden end,
 	-- Arrows
 	[200] = function() scene.camera:rotate(-rotationAngle, 0, 0) end,
 	[208] = function() scene.camera:rotate(rotationAngle, 0, 0) end,
@@ -314,7 +314,7 @@ local controls = {
 
 -------------------------------------------------------- GUI --------------------------------------------------------
 
-local OCGLView = GUI.object(1, 1, mainWindow.width, mainWindow.height)
+local OCGLView = GUI.object(1, 1, mainContainer.width, mainContainer.height)
 
 local function drawInvertedText(x, y, text)
 	local index = buffer.getBufferIndexByCoordinates(x, y)
@@ -332,157 +332,158 @@ local function drawCross(x, y)
 end
 
 OCGLView.draw = function(object)
-	mainWindow.oldClock = os.clock()
+	mainContainer.oldClock = os.clock()
 	if world then renderWorld() end
 	scene:render()
-	if mainWindow.toolbar.zBufferSwitch.state then
+	if mainContainer.toolbar.zBufferSwitch.state then
 		renderer.visualizeDepthBuffer()
 	end
 	drawCross(renderer.viewport.xCenter, math.floor(renderer.viewport.yCenter / 2))
 end
 
-OCGLView.onTouch = function(e)
-	local targetVector = vector.newVector3(scene.camera.position[1], scene.camera.position[2], scene.camera.position[3] + 1000)
-	OCGL.rotateVectorRelativeToXAxis(targetVector, scene.camera.rotation[1])
-	OCGL.rotateVectorRelativeToYAxis(targetVector, scene.camera.rotation[2])
-	local objectIndex, triangleIndex, distance = meowEngine.sceneRaycast(scene, scene.camera.position, targetVector)
+OCGLView.eventHandler = function(mainContainer, object, eventData)
+	if eventData[1] == "touch" then
+		local targetVector = vector.newVector3(scene.camera.position[1], scene.camera.position[2], scene.camera.position[3] + 1000)
+		OCGL.rotateVectorRelativeToXAxis(targetVector, scene.camera.rotation[1])
+		OCGL.rotateVectorRelativeToYAxis(targetVector, scene.camera.rotation[2])
+		local objectIndex, triangleIndex, distance = meowEngine.sceneRaycast(scene, scene.camera.position, targetVector)
 
-	if objectIndex then
-		local triangle = scene.objects[objectIndex].triangles[triangleIndex]
-		local xWorld = math.floor(((scene.objects[objectIndex].vertices[scene.objects[objectIndex].triangles[triangleIndex][1]][1] + scene.objects[objectIndex].vertices[scene.objects[objectIndex].triangles[triangleIndex][2]][1] + scene.objects[objectIndex].vertices[scene.objects[objectIndex].triangles[triangleIndex][3]][1]) / 3) / blockSize) + 1
-		local yWorld = math.floor(((scene.objects[objectIndex].vertices[triangle[1]][2] + scene.objects[objectIndex].vertices[triangle[2]][2] + scene.objects[objectIndex].vertices[triangle[3]][2]) / 3) / blockSize) + 1
-		local zWorld = math.floor(((scene.objects[objectIndex].vertices[triangle[1]][3] + scene.objects[objectIndex].vertices[triangle[2]][3] + scene.objects[objectIndex].vertices[triangle[3]][3]) / 3) / blockSize) + 1
+		if objectIndex then
+			local triangle = scene.objects[objectIndex].triangles[triangleIndex]
+			local xWorld = math.floor(((scene.objects[objectIndex].vertices[scene.objects[objectIndex].triangles[triangleIndex][1]][1] + scene.objects[objectIndex].vertices[scene.objects[objectIndex].triangles[triangleIndex][2]][1] + scene.objects[objectIndex].vertices[scene.objects[objectIndex].triangles[triangleIndex][3]][1]) / 3) / blockSize) + 1
+			local yWorld = math.floor(((scene.objects[objectIndex].vertices[triangle[1]][2] + scene.objects[objectIndex].vertices[triangle[2]][2] + scene.objects[objectIndex].vertices[triangle[3]][2]) / 3) / blockSize) + 1
+			local zWorld = math.floor(((scene.objects[objectIndex].vertices[triangle[1]][3] + scene.objects[objectIndex].vertices[triangle[2]][3] + scene.objects[objectIndex].vertices[triangle[3]][3]) / 3) / blockSize) + 1
 
-		local normalVector = vector.getSurfaceNormal(
-			scene.objects[objectIndex].vertices[triangle[1]],
-			scene.objects[objectIndex].vertices[triangle[2]],
-			scene.objects[objectIndex].vertices[triangle[3]]
-		)
+			local normalVector = vector.getSurfaceNormal(
+				scene.objects[objectIndex].vertices[triangle[1]],
+				scene.objects[objectIndex].vertices[triangle[2]],
+				scene.objects[objectIndex].vertices[triangle[3]]
+			)
 
-		if normalVector[1] > 0 and e[5] ~= 1 or normalVector[1] < 0 and e[5] == 1 then
-			xWorld = xWorld - 1
-		elseif normalVector[2] > 0 and e[5] ~= 1 or normalVector[2] < 0 and e[5] == 1 then
-			yWorld = yWorld - 1
-		elseif normalVector[3] > 0 and e[5] ~= 1 or normalVector[3] < 0 and e[5] == 1 then
-			zWorld = zWorld - 1
+			if normalVector[1] > 0 and eventData[5] ~= 1 or normalVector[1] < 0 and eventData[5] == 1 then
+				xWorld = xWorld - 1
+			elseif normalVector[2] > 0 and eventData[5] ~= 1 or normalVector[2] < 0 and eventData[5] == 1 then
+				yWorld = yWorld - 1
+			elseif normalVector[3] > 0 and eventData[5] ~= 1 or normalVector[3] < 0 and eventData[5] == 1 then
+				zWorld = zWorld - 1
+			end
+
+			setBlock(xWorld, yWorld, zWorld, eventData[5] == 1 and mainContainer.toolbar.blockColorSelector.color or nil)
 		end
-
-		setBlock(xWorld, yWorld, zWorld, e[5] == 1 and mainWindow.toolbar.blockColorSelector.color or nil)
 	end
 end
 
-mainWindow:addChild(OCGLView)
+mainContainer:addChild(OCGLView)
 
-mainWindow.infoTextBox = mainWindow:addTextBox(2, 4, 45, mainWindow.height, nil, 0xEEEEEE, {}, 1, 0, 0)
-
+mainContainer.infoTextBox = mainContainer:addChild(GUI.textBox(2, 4, 45, mainContainer.height, nil, 0xEEEEEE, {}, 1, 0, 0))
 local lines = {
 	"Copyright © 2016-2017 - Developed by ECS Inc.",
 	"Timofeef Igor (vk.com/id7799889), Trifonov Gleb (vk.com/id88323331), Verevkin Yakov (vk.com/id60991376), Bogushevich Victoria (vk.com/id171497518)",
 	"All rights reserved",
 }
-mainWindow:addTextBox(1, buffer.screen.height - #lines + 1, buffer.screen.width, #lines, nil, 0x3C3C3C, lines, 1):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+mainContainer:addChild(GUI.textBox(1, mainContainer.height - #lines + 1, mainContainer.width, #lines, nil, 0x3C3C3C, lines, 1)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
 
 local elementY = 2
-mainWindow.toolbar = mainWindow:addContainer(mainWindow.width - 31, 1, 32, mainWindow.height)
-local elementWidth = mainWindow.toolbar.width - 2
-mainWindow.toolbar:addPanel(1, 1, mainWindow.toolbar.width, mainWindow.toolbar.height, 0x0, 50)
+mainContainer.toolbar = mainContainer:addChild(GUI.container(mainContainer.width - 31, 1, 32, mainContainer.height))
+local elementWidth = mainContainer.toolbar.width - 2
+mainContainer.toolbar:addChild(GUI.panel(1, 1, mainContainer.toolbar.width, mainContainer.toolbar.height, 0x0, 50))
 
-mainWindow.toolbar:addLabel(2, elementY, elementWidth, 1, 0xEEEEEE, "Render mode"):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); elementY = elementY + 2
-mainWindow.toolbar.renderModeComboBox = mainWindow.toolbar:addComboBox(2, elementY, elementWidth, 1, 0x2D2D2D, 0xAAAAAA, 0x555555, 0x888888); elementY = elementY + mainWindow.toolbar.renderModeComboBox.height + 1
-mainWindow.toolbar.renderModeComboBox:addItem("disabled")
-mainWindow.toolbar.renderModeComboBox:addItem("constantShading")
-mainWindow.toolbar.renderModeComboBox:addItem("flatShading")
-mainWindow.toolbar.renderModeComboBox.currentItem = scene.renderMode
-mainWindow.toolbar.renderModeComboBox.onItemSelected = function()
-	scene.renderMode = mainWindow.toolbar.renderModeComboBox.currentItem
+mainContainer.toolbar:addChild(GUI.label(2, elementY, elementWidth, 1, 0xEEEEEE, "Render mode")):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); elementY = elementY + 2
+mainContainer.toolbar.renderModeComboBox = mainContainer.toolbar:addChild(GUI.comboBox(2, elementY, elementWidth, 1, 0x2D2D2D, 0xAAAAAA, 0x555555, 0x888888)); elementY = elementY + mainContainer.toolbar.renderModeComboBox.height + 1
+mainContainer.toolbar.renderModeComboBox:addItem("disabled")
+mainContainer.toolbar.renderModeComboBox:addItem("constantShading")
+mainContainer.toolbar.renderModeComboBox:addItem("flatShading")
+mainContainer.toolbar.renderModeComboBox.selectedItem = scene.renderMode
+mainContainer.toolbar.renderModeComboBox.onItemSelected = function()
+	scene.renderMode = mainContainer.toolbar.renderModeComboBox.selectedItem
 end
 
-mainWindow.toolbar.auxiliaryModeComboBox = mainWindow.toolbar:addComboBox(2, elementY, elementWidth, 1, 0x2D2D2D, 0xAAAAAA, 0x555555, 0x888888); elementY = elementY + mainWindow.toolbar.auxiliaryModeComboBox.height + 1
-mainWindow.toolbar.auxiliaryModeComboBox:addItem("disabled")
-mainWindow.toolbar.auxiliaryModeComboBox:addItem("wireframe")
-mainWindow.toolbar.auxiliaryModeComboBox:addItem("vertices")
-mainWindow.toolbar.auxiliaryModeComboBox.currentItem = scene.auxiliaryMode
-mainWindow.toolbar.auxiliaryModeComboBox.onItemSelected = function()
-	scene.auxiliaryMode = mainWindow.toolbar.auxiliaryModeComboBox.currentItem
+mainContainer.toolbar.auxiliaryModeComboBox = mainContainer.toolbar:addChild(GUI.comboBox(2, elementY, elementWidth, 1, 0x2D2D2D, 0xAAAAAA, 0x555555, 0x888888)); elementY = elementY + mainContainer.toolbar.auxiliaryModeComboBox.height + 1
+mainContainer.toolbar.auxiliaryModeComboBox:addItem("disabled")
+mainContainer.toolbar.auxiliaryModeComboBox:addItem("wireframe")
+mainContainer.toolbar.auxiliaryModeComboBox:addItem("vertices")
+mainContainer.toolbar.auxiliaryModeComboBox.selectedItem = scene.auxiliaryMode
+mainContainer.toolbar.auxiliaryModeComboBox.onItemSelected = function()
+	scene.auxiliaryMode = mainContainer.toolbar.auxiliaryModeComboBox.selectedItem
 end
 
-mainWindow.toolbar:addLabel(2, elementY, elementWidth, 1, 0xAAAAAA, "Perspective proj:")
-mainWindow.toolbar.perspectiveSwitch = mainWindow.toolbar:addSwitch(mainWindow.toolbar.width - 8, elementY, 8, 0x66DB80, 0x2D2D2D, 0xEEEEEE, scene.camera.projectionEnabled); elementY = elementY + 2
-mainWindow.toolbar.perspectiveSwitch.onStateChanged = function(state)
+mainContainer.toolbar:addChild(GUI.label(2, elementY, elementWidth, 1, 0xAAAAAA, "Perspective proj:"))
+mainContainer.toolbar.perspectiveSwitch = mainContainer.toolbar:addChild(GUI.switch(mainContainer.toolbar.width - 8, elementY, 8, 0x66DB80, 0x2D2D2D, 0xEEEEEE, scene.camera.projectionEnabled)); elementY = elementY + 2
+mainContainer.toolbar.perspectiveSwitch.onStateChanged = function(state)
 	scene.camera.projectionEnabled = state
 end
 
-mainWindow.toolbar:addLabel(2, elementY, elementWidth, 1, 0xAAAAAA, "Z-buffer visualize:")
-mainWindow.toolbar.zBufferSwitch = mainWindow.toolbar:addSwitch(mainWindow.toolbar.width - 8, elementY, 8, 0x66DB80, 0x2D2D2D, 0xEEEEEE, false); elementY = elementY + 2
+mainContainer.toolbar:addChild(GUI.label(2, elementY, elementWidth, 1, 0xAAAAAA, "Z-buffer visualize:"))
+mainContainer.toolbar.zBufferSwitch = mainContainer.toolbar:addChild(GUI.switch(mainContainer.toolbar.width - 8, elementY, 8, 0x66DB80, 0x2D2D2D, 0xEEEEEE, false)); elementY = elementY + 2
 
 
 local function calculateLightComboBox()
-	mainWindow.toolbar.lightSelectComboBox.items = {}
+	mainContainer.toolbar.lightSelectComboBox.items = {}
 	for i = 1, #scene.lights do
-		mainWindow.toolbar.lightSelectComboBox:addItem(tostring(i))
+		mainContainer.toolbar.lightSelectComboBox:addItem(tostring(i))
 	end
-	mainWindow.toolbar.lightSelectComboBox.currentItem = #mainWindow.toolbar.lightSelectComboBox.items
-	mainWindow.toolbar.lightIntensitySlider.value = scene.lights[mainWindow.toolbar.lightSelectComboBox.currentItem].intensity * 100
-	mainWindow.toolbar.lightEmissionSlider.value = scene.lights[mainWindow.toolbar.lightSelectComboBox.currentItem].emissionDistance
+	mainContainer.toolbar.lightSelectComboBox.selectedItem = #mainContainer.toolbar.lightSelectComboBox.items
+	mainContainer.toolbar.lightIntensitySlider.value = scene.lights[mainContainer.toolbar.lightSelectComboBox.selectedItem].intensity * 100
+	mainContainer.toolbar.lightEmissionSlider.value = scene.lights[mainContainer.toolbar.lightSelectComboBox.selectedItem].emissionDistance
 end
 
-mainWindow.toolbar:addLabel(2, elementY, elementWidth, 1, 0xEEEEEE, "Light control"):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); elementY = elementY + 2
-mainWindow.toolbar.lightSelectComboBox = mainWindow.toolbar:addComboBox(2, elementY, elementWidth, 1, 0x2D2D2D, 0xAAAAAA, 0x555555, 0x888888); elementY = elementY + mainWindow.toolbar.lightSelectComboBox.height + 1
+mainContainer.toolbar:addChild(GUI.label(2, elementY, elementWidth, 1, 0xEEEEEE, "Light control")):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); elementY = elementY + 2
+mainContainer.toolbar.lightSelectComboBox = mainContainer.toolbar:addChild(GUI.comboBox(2, elementY, elementWidth, 1, 0x2D2D2D, 0xAAAAAA, 0x555555, 0x888888)); elementY = elementY + mainContainer.toolbar.lightSelectComboBox.height + 1
 
-mainWindow.toolbar.addLightButton = mainWindow.toolbar:addButton(2, elementY, elementWidth, 1, 0x2D2D2D, 0xAAAAAA, 0x555555, 0xAAAAAA, "Add light"); elementY = elementY + 2
-mainWindow.toolbar.addLightButton.onTouch = function()
-	scene:addLight(meowEngine.newLight(vector.newVector3(0, 10, 0), mainWindow.toolbar.lightIntensitySlider.value / 100,  mainWindow.toolbar.lightEmissionSlider.value))
+mainContainer.toolbar.addLightButton = mainContainer.toolbar:addChild(GUI.button(2, elementY, elementWidth, 1, 0x2D2D2D, 0xAAAAAA, 0x555555, 0xAAAAAA, "Add light")); elementY = elementY + 2
+mainContainer.toolbar.addLightButton.onTouch = function()
+	scene:addLight(meowEngine.newLight(vector.newVector3(0, 10, 0), mainContainer.toolbar.lightIntensitySlider.value / 100,  mainContainer.toolbar.lightEmissionSlider.value))
 	calculateLightComboBox()
 end
 
-mainWindow.toolbar.removeLightButton = mainWindow.toolbar:addButton(2, elementY, elementWidth, 1, 0x2D2D2D, 0xAAAAAA, 0x555555, 0xAAAAAA, "Remove light"); elementY = elementY + 2
-mainWindow.toolbar.removeLightButton.onTouch = function()
+mainContainer.toolbar.removeLightButton = mainContainer.toolbar:addChild(GUI.button(2, elementY, elementWidth, 1, 0x2D2D2D, 0xAAAAAA, 0x555555, 0xAAAAAA, "Remove light")); elementY = elementY + 2
+mainContainer.toolbar.removeLightButton.onTouch = function()
 	if #scene.lights > 1 then
-		table.remove(scene.lights, mainWindow.toolbar.lightSelectComboBox.currentItem)
+		table.remove(scene.lights, mainContainer.toolbar.lightSelectComboBox.selectedItem)
 		calculateLightComboBox()
 	end
 end
 
-mainWindow.toolbar.lightIntensitySlider = mainWindow.toolbar:addHorizontalSlider(2, elementY, elementWidth, 0xCCCCCC, 0x2D2D2D, 0xEEEEEE, 0xAAAAAA, 0, 500, 100, false, "Intensity: ", ""); elementY = elementY + 3
-mainWindow.toolbar.lightIntensitySlider.onValueChanged = function(value)
-	scene.lights[mainWindow.toolbar.lightSelectComboBox.currentItem].intensity = value / 100
+mainContainer.toolbar.lightIntensitySlider = mainContainer.toolbar:addChild(GUI.slider(2, elementY, elementWidth, 0xCCCCCC, 0x2D2D2D, 0xEEEEEE, 0xAAAAAA, 0, 500, 100, false, "Intensity: ", "")); elementY = elementY + 3
+mainContainer.toolbar.lightIntensitySlider.onValueChanged = function()
+	scene.lights[mainContainer.toolbar.lightSelectComboBox.selectedItem].intensity = mainContainer.toolbar.lightIntensitySlider.value / 100
 end
-mainWindow.toolbar.lightEmissionSlider = mainWindow.toolbar:addHorizontalSlider(2, elementY, elementWidth, 0xCCCCCC, 0x2D2D2D, 0xEEEEEE, 0xAAAAAA, 0, scene.lights[mainWindow.toolbar.lightSelectComboBox.currentItem].emissionDistance, scene.lights[mainWindow.toolbar.lightSelectComboBox.currentItem].emissionDistance, false, "Distance: ", ""); elementY = elementY + 3
-mainWindow.toolbar.lightEmissionSlider.onValueChanged = function(value)
-	scene.lights[mainWindow.toolbar.lightSelectComboBox.currentItem].emissionDistance = value
+mainContainer.toolbar.lightEmissionSlider = mainContainer.toolbar:addChild(GUI.slider(2, elementY, elementWidth, 0xCCCCCC, 0x2D2D2D, 0xEEEEEE, 0xAAAAAA, 0, scene.lights[mainContainer.toolbar.lightSelectComboBox.selectedItem].emissionDistance, scene.lights[mainContainer.toolbar.lightSelectComboBox.selectedItem].emissionDistance, false, "Distance: ", "")); elementY = elementY + 3
+mainContainer.toolbar.lightEmissionSlider.onValueChanged = function()
+	scene.lights[mainContainer.toolbar.lightSelectComboBox.selectedItem].emissionDistance = mainContainer.toolbar.lightEmissionSlider.value
 end
 calculateLightComboBox()
 
-mainWindow.toolbar.blockColorSelector = mainWindow.toolbar:addColorSelector(2, elementY, elementWidth, 1, 0xEEEEEE, "Block color"); elementY = elementY + mainWindow.toolbar.blockColorSelector.height + 1
-mainWindow.toolbar.backgroundColorSelector = mainWindow.toolbar:addColorSelector(2, elementY, elementWidth, 1, scene.backgroundColor, "Background color"); elementY = elementY + mainWindow.toolbar.blockColorSelector.height + 1
-mainWindow.toolbar.backgroundColorSelector.onTouch = function()
-	scene.backgroundColor = mainWindow.toolbar.backgroundColorSelector.color
+mainContainer.toolbar.blockColorSelector = mainContainer.toolbar:addChild(GUI.colorSelector(2, elementY, elementWidth, 1, 0xEEEEEE, "Block color")); elementY = elementY + mainContainer.toolbar.blockColorSelector.height + 1
+mainContainer.toolbar.backgroundColorSelector = mainContainer.toolbar:addChild(GUI.colorSelector(2, elementY, elementWidth, 1, scene.backgroundColor, "Background color")); elementY = elementY + mainContainer.toolbar.blockColorSelector.height + 1
+mainContainer.toolbar.backgroundColorSelector.onTouch = function()
+	scene.backgroundColor = mainContainer.toolbar.backgroundColorSelector.color
 end
 
-mainWindow.toolbar:addLabel(2, elementY, elementWidth, 1, 0xEEEEEE, "RAM monitoring"):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); elementY = elementY + 2
-mainWindow.toolbar.RAMChart = mainWindow.toolbar:addChart(2, elementY, elementWidth, mainWindow.toolbar.height - elementY - 3, 0xEEEEEE, 0xAAAAAA, 0x555555, 0x66DB80, 0.35, 0.25, "s", "%", true, {}); elementY = elementY + mainWindow.toolbar.RAMChart.height + 1
-mainWindow.toolbar.RAMChart.roundValues = true
--- mainWindow.toolbar.RAMChart.showXAxisValues = false
-mainWindow.toolbar.RAMChart.counter = 1
--- mainWindow.toolbar.RAMProgressBar = mainWindow.toolbar:addProgressBar(2, elementY, elementWidth, 0x66DB80, 0x2D2D2D, 0xAAAAAA, 1, true, true, "", "%")
+mainContainer.toolbar:addChild(GUI.label(2, elementY, elementWidth, 1, 0xEEEEEE, "RAM monitoring")):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); elementY = elementY + 2
+mainContainer.toolbar.RAMChart = mainContainer.toolbar:addChild(GUI.chart(2, elementY, elementWidth, mainContainer.toolbar.height - elementY - 3, 0xEEEEEE, 0xAAAAAA, 0x555555, 0x66DB80, 0.35, 0.25, "s", "%", true, {})); elementY = elementY + mainContainer.toolbar.RAMChart.height + 1
+mainContainer.toolbar.RAMChart.roundValues = true
+-- mainContainer.toolbar.RAMChart.showXAxisValues = false
+mainContainer.toolbar.RAMChart.counter = 1
 
-mainWindow.toolbar:addButton(1, mainWindow.toolbar.height - 2, mainWindow.toolbar.width, 3, 0x2D2D2D, 0xEEEEEE, 0x444444, 0xEEEEEE, "Exit").onTouch = function()
-	mainWindow:close()
-end
-mainWindow.onDrawFinished = function()
-	-- clock sec - 1 frame
-	-- 1 sec - x frames
-	renderer.renderFPSCounter(2, 2, tostring(math.ceil(1 / (os.clock() - mainWindow.oldClock) / 10)), 0xFFFF00)
+mainContainer.toolbar:addChild(GUI.button(1, mainContainer.toolbar.height - 2, mainContainer.toolbar.width, 3, 0x2D2D2D, 0xEEEEEE, 0x444444, 0xEEEEEE, "Exit")).onTouch = function()
+	mainContainer:stopEventHandling()
 end
 
-mainWindow.onAnyEvent = function(e)
-	if not mainWindow.toolbar.isHidden then
+local FPSCounter = GUI.object(2, 2, 8, 3)
+FPSCounter.draw = function(FPSCounter)
+	renderer.renderFPSCounter(FPSCounter.x, FPSCounter.y, tostring(math.ceil(1 / (os.clock() - mainContainer.oldClock) / 10)), 0xFFFF00)
+end
+mainContainer:addChild(FPSCounter)
+
+mainContainer.eventHandler = function(mainContainer, object, eventData)
+	if not mainContainer.toolbar.hidden then
 		local totalMemory = computer.totalMemory()
-		table.insert(mainWindow.toolbar.RAMChart.values, {mainWindow.toolbar.RAMChart.counter, math.ceil((totalMemory - computer.freeMemory()) / totalMemory * 100)})
-		mainWindow.toolbar.RAMChart.counter = mainWindow.toolbar.RAMChart.counter + 1
-		if #mainWindow.toolbar.RAMChart.values > 20 then table.remove(mainWindow.toolbar.RAMChart.values, 1) end
+		table.insert(mainContainer.toolbar.RAMChart.values, {mainContainer.toolbar.RAMChart.counter, math.ceil((totalMemory - computer.freeMemory()) / totalMemory * 100)})
+		mainContainer.toolbar.RAMChart.counter = mainContainer.toolbar.RAMChart.counter + 1
+		if #mainContainer.toolbar.RAMChart.values > 20 then table.remove(mainContainer.toolbar.RAMChart.values, 1) end
 
-		mainWindow.infoTextBox.lines = {
+		mainContainer.infoTextBox.lines = {
 			" ",
 			"SceneObjects: " .. #scene.objects,
 			" ",
@@ -509,13 +510,13 @@ mainWindow.onAnyEvent = function(e)
 			"F1 - toggle GUI overlay",
 		}
 
-		mainWindow.infoTextBox.height = #mainWindow.infoTextBox.lines
+		mainContainer.infoTextBox.height = #mainContainer.infoTextBox.lines
 	end
 
-	if e[1] == "key_down" then
-		if controls[e[4]] then controls[e[4]]() end
-	elseif e[1] == "scroll" then
-		if e[5] == 1 then
+	if eventData[1] == "key_down" then
+		if controls[eventData[4]] then controls[eventData[4]]() end
+	elseif eventData[1] == "scroll" then
+		if eventData[5] == 1 then
 			if scene.camera.FOV < math.rad(170) then
 				scene.camera:setFOV(scene.camera.FOV + math.rad(5))
 			end
@@ -526,13 +527,13 @@ mainWindow.onAnyEvent = function(e)
 		end
 	end
 
-	mainWindow:draw()
+	mainContainer:draw()
 	buffer.draw()
 end
 
 -------------------------------------------------------- Ebat-kopat --------------------------------------------------------
 
-mainWindow:handleEvents(0)
+mainContainer:startEventHandling(0)
 
 
 

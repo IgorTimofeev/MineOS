@@ -1,8 +1,8 @@
-local component = require("component")
-local term = require("term")
-component.gpu.setBackground(_G.OSSettings.shellBackground or 0x1B1B1B)
-component.gpu.setForeground(_G.OSSettings.shellBackground or 0xEEEEEE)
 
-local width, height = component.gpu.getResolution()
-component.gpu.fill(1, 1, width, height, " ")
-term.setCursor(1, 1)
+local gpu = require("component").gpu
+gpu.setBackground(0x1B1B1B)
+gpu.setForeground(0xEEEEEE)
+
+local width, height = gpu.getResolution()
+gpu.fill(1, 1, width, height, " ")
+require("term").setCursor(1, 1)

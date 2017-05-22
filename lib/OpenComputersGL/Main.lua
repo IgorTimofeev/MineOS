@@ -151,24 +151,24 @@ function OCGL.getTriangleLightIntensity(vertex1, vertex2, vertex3, indexedLight)
 
 	if lightDistance <= indexedLight[3] then
 		local normalVector = vector.getSurfaceNormal(vertex1, vertex2, vertex3)
-		-- buffer.text(2, buffer.screen.height - 2, 0x0, "normalVector: " .. normalVector[1] .. " x " .. normalVector[2] .. " x " .. normalVector[3])
+		-- buffer.text(2, buffer.height - 2, 0x0, "normalVector: " .. normalVector[1] .. " x " .. normalVector[2] .. " x " .. normalVector[3])
 
 		local cameraScalar = vector.scalarMultiply({0, 0, 100}, normalVector)
 		local lightScalar = vector.scalarMultiply(lightVector, normalVector )
 
-		-- buffer.text(2, buffer.screen.height - 1, 0xFFFFFF, "Scalars: " .. cameraScalar .. " x " .. lightScalar)
+		-- buffer.text(2, buffer.height - 1, 0xFFFFFF, "Scalars: " .. cameraScalar .. " x " .. lightScalar)
 		if cameraScalar < 0 and lightScalar >= 0 or cameraScalar >= 0 and lightScalar < 0 then			
 			local absAngle = math.abs(math.acos(lightScalar / (lightDistance * vector.length(normalVector))))
 			if absAngle > 1.5707963267949 then
 				absAngle = 3.1415926535898 - absAngle
 			end
-			-- buffer.text(2, buffer.screen.height, 0xFFFFFF, "Angle: " .. math.deg(angle) .. ", newAngle: " .. math.deg(absAngle) .. ", intensity: " .. absAngle / 1.5707963267949)
+			-- buffer.text(2, buffer.height, 0xFFFFFF, "Angle: " .. math.deg(angle) .. ", newAngle: " .. math.deg(absAngle) .. ", intensity: " .. absAngle / 1.5707963267949)
 			return indexedLight[2] * (1 - lightDistance / indexedLight[3]) * (1 - absAngle / 1.5707963267949)
 		else
 			return 0
 		end
 	else
-		-- buffer.text(2, buffer.screen.height, 0x0, "Out of light range: " .. lightDistance .. " vs " .. indexedLight[2])
+		-- buffer.text(2, buffer.height, 0x0, "Out of light range: " .. lightDistance .. " vs " .. indexedLight[2])
 		return 0
 	end
 end

@@ -8,7 +8,7 @@ local ecs = require("ECSAPI")
 
 --------------------------------------------------------------------------------------------------------------------------------
 
-local xSize, ySize = buffer.screen.width, buffer.screen.height
+local xSize, ySize = buffer.width, buffer.height
 local file = {}
 
 local config = {
@@ -108,7 +108,7 @@ end
 
 local function printDebug(line, text)
 	if debug then
-		ecs.square(1, line, buffer.screen.width, 1, 0x262626)
+		ecs.square(1, line, buffer.width, 1, 0x262626)
 		ecs.colorText(2, line, 0xFFFFFF, text)
 	end
 end

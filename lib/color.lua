@@ -121,6 +121,10 @@ function color.to24Bit(color8Bit)
 	return openComputersPalette[color8Bit + 1]
 end
 
+function color.optimize(color24Bit)
+	return color.to24Bit(color.to8Bit(color24Bit))
+end
+
 -----------------------------------------------------------------------------------------------------------------------
 
 return color

@@ -193,20 +193,20 @@ local function getDate()
 end
 
 local function flashback()
-	buffer.square(1, 1, buffer.screen.width, buffer.screen.height, 0x000000, 0x000000, " ", 50)
+	buffer.square(1, 1, buffer.width, buffer.height, 0x000000, 0x000000, " ", 50)
 end
 
 local function drawOnScreen()
 	local width, height = 58, 7
-	local x, y = math.floor(buffer.screen.width / 2 - width / 2), math.floor(buffer.screen.height / 2 - height / 2)
+	local x, y = math.floor(buffer.width / 2 - width / 2), math.floor(buffer.height / 2 - height / 2)
 
 	drawText(x, y, "88:88", 0x000000)
 	drawText(x, y, date, config.dateColor)
 
 	y = y + 9
-	GUI.label(1, y, buffer.screen.width, 1, config.dateColor, "Press R to randomize clock color, scroll to change projection scale,"):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top):draw(); y = y + 1
-	GUI.label(1, y, buffer.screen.width, 1, config.dateColor, "or press Enter to save and quit"):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top):draw()
-	-- GUI.label(1, y, buffer.screen.width, 1, 0xFFFFFF, ""):draw()
+	GUI.label(1, y, buffer.width, 1, config.dateColor, "Press R to randomize clock color, scroll to change projection scale,"):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top):draw(); y = y + 1
+	GUI.label(1, y, buffer.width, 1, config.dateColor, "or press Enter to save and quit"):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top):draw()
+	-- GUI.label(1, y, buffer.width, 1, 0xFFFFFF, ""):draw()
 
 	buffer.draw()
 end

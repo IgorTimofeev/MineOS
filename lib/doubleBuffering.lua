@@ -8,7 +8,6 @@ local image = require("image")
 
 ------------------------------------------------- Constants -------------------------------------------------
 
-
 local gpu = component.gpu
 local buffer = {}
 
@@ -16,55 +15,49 @@ local buffer = {}
 
 --Формула конвертации индекса массива изображения в абсолютные координаты пикселя изображения
 function buffer.getBufferCoordinatesByIndex(index)
-	local integer, fractional = math.modf(index / (buffer.screen.tripleWidth))
-	return math.ceil(fractional * buffer.screen.width), integer + 1
+	local integer, fractional = math.modf(index / (buffer.tripleWidth))
+	return math.ceil(fractional * buffer.width), integer + 1
 end
 
 --Формула конвертации абсолютных координат пикселя изображения в индекс для массива изображения
 function buffer.getBufferIndexByCoordinates(x, y)
-	return buffer.screen.tripleWidth * (y - 1) + x * 3 - 2
+	return buffer.tripleWidth * (y - 1) + x * 3 - 2
 end
 
 -- Установить ограниченную зону рисования. Все пиксели, не попадающие в эту зону, будут игнорироваться.
-function buffer.setDrawLimit(xOrPasteArray, y, width, height)
-	if type(xOrPasteArray) == "table" then
-		buffer.drawLimit.x, buffer.drawLimit.y, buffer.drawLimit.x2, buffer.drawLimit.y2, buffer.drawLimit.width, buffer.drawLimit.height = xOrPasteArray.x, xOrPasteArray.y, xOrPasteArray.x2, xOrPasteArray.y2, xOrPasteArray.width, xOrPasteArray.height
-	else
-		buffer.drawLimit.x, buffer.drawLimit.y, buffer.drawLimit.x2, buffer.drawLimit.y2, buffer.drawLimit.width, buffer.drawLimit.height = xOrPasteArray, y, xOrPasteArray + width - 1, y + height - 1, width, height
-	end
+function buffer.setDrawLimit(x1, y1, x2, y2)
+	buffer.drawLimit.x1, buffer.drawLimit.y1, buffer.drawLimit.x2, buffer.drawLimit.y2 = x1, y1, x2, y2
 end
 
 -- Удалить ограничение зоны рисования, по умолчанию она будет от 1х1 до координат размера экрана.
 function buffer.resetDrawLimit()
-	buffer.drawLimit.x, buffer.drawLimit.y, buffer.drawLimit.x2, buffer.drawLimit.y2, buffer.drawLimit.width, buffer.drawLimit.height = 1, 1, buffer.screen.width, buffer.screen.height, buffer.screen.width, buffer.screen.height
+	buffer.drawLimit.x1, buffer.drawLimit.y1, buffer.drawLimit.x2, buffer.drawLimit.y2 = 1, 1, buffer.width, buffer.height
 end
 
 -- Cкопировать ограничение зоны рисования в виде отдельного массива
 function buffer.getDrawLimit()
-	return { x = buffer.drawLimit.x, y = buffer.drawLimit.y, x2 = buffer.drawLimit.x2, y2 = buffer.drawLimit.y2, width = buffer.drawLimit.width, height = buffer.drawLimit.height }
+	return buffer.drawLimit.x1, buffer.drawLimit.y1, buffer.drawLimit.x2, buffer.drawLimit.y2
 end
 
 -- Создание массивов буфера и всех необходимых параметров
 function buffer.flush(width, height)
-	buffer.screen = {
-		current = {},
-		new = {},
-		width = width,
-		height = height,
-		tripleWidth = width * 3
-	}
+	buffer.currentFrame = {}
+	buffer.newFrame = {}
+	buffer.width = width
+	buffer.height = height
+	buffer.tripleWidth = width * 3
 	buffer.drawLimit = {}
 	buffer.resetDrawLimit()
 
-	for y = 1, buffer.screen.height do
-		for x = 1, buffer.screen.width do
-			table.insert(buffer.screen.current, 0x010101)
-			table.insert(buffer.screen.current, 0xFEFEFE)
-			table.insert(buffer.screen.current, " ")
+	for y = 1, buffer.height do
+		for x = 1, buffer.width do
+			table.insert(buffer.currentFrame, 0x010101)
+			table.insert(buffer.currentFrame, 0xFEFEFE)
+			table.insert(buffer.currentFrame, " ")
 
-			table.insert(buffer.screen.new, 0x010101)
-			table.insert(buffer.screen.new, 0xFEFEFE)
-			table.insert(buffer.screen.new, " ")
+			table.insert(buffer.newFrame, 0x010101)
+			table.insert(buffer.newFrame, 0xFEFEFE)
+			table.insert(buffer.newFrame, " ")
 		end
 	end
 end
@@ -83,17 +76,17 @@ end
 ------------------------------------------------- Методы отрисовки -----------------------------------------------------------------
 
 function buffer.rawSet(index, background, foreground, symbol)
-	buffer.screen.new[index], buffer.screen.new[index + 1], buffer.screen.new[index + 2] = background, foreground, symbol
+	buffer.newFrame[index], buffer.newFrame[index + 1], buffer.newFrame[index + 2] = background, foreground, symbol
 end
 
 function buffer.rawGet(index)
-	return buffer.screen.new[index], buffer.screen.new[index + 1], buffer.screen.new[index + 2]
+	return buffer.newFrame[index], buffer.newFrame[index + 1], buffer.newFrame[index + 2]
 end
 
 -- Получить информацию о пикселе из буфера
 function buffer.get(x, y)
 	local index = buffer.getBufferIndexByCoordinates(x, y)
-	if x >= 1 and y >= 1 and x <= buffer.screen.width and y <= buffer.screen.height then
+	if x >= 1 and y >= 1 and x <= buffer.width and y <= buffer.height then
 		return buffer.rawGet(index)
 	else
 		return 0x000000, 0x000000, " "
@@ -103,7 +96,7 @@ end
 -- Установить пиксель в буфере
 function buffer.set(x, y, background, foreground, symbol)
 	local index = buffer.getBufferIndexByCoordinates(x, y)
-	if x >= buffer.drawLimit.x and y >= buffer.drawLimit.y and x <= buffer.drawLimit.x2 and y <= buffer.drawLimit.y2 then
+	if x >= buffer.drawLimit.x1 and y >= buffer.drawLimit.y1 and x <= buffer.drawLimit.x2 and y <= buffer.drawLimit.y2 then
 		buffer.rawSet(index, background, foreground or 0x0, symbol or " ")
 	end
 end
@@ -120,18 +113,18 @@ function buffer.square(x, y, width, height, background, foreground, symbol, tran
 	if not foreground then foreground = 0x000000 end
 	if not symbol then symbol = " " end
 
-	local index, indexStepForward, indexPlus1 = buffer.getBufferIndexByCoordinates(x, y), (buffer.screen.width - width) * 3
+	local index, indexStepForward, indexPlus1 = buffer.getBufferIndexByCoordinates(x, y), (buffer.width - width) * 3
 	for j = y, (y + height - 1) do
 		for i = x, (x + width - 1) do
-			if i >= buffer.drawLimit.x and j >= buffer.drawLimit.y and i <= buffer.drawLimit.x2 and j <= buffer.drawLimit.y2 then
+			if i >= buffer.drawLimit.x1 and j >= buffer.drawLimit.y1 and i <= buffer.drawLimit.x2 and j <= buffer.drawLimit.y2 then
 				indexPlus1 = index + 1
 				if transparency then
-					buffer.screen.new[index] = color.blend(buffer.screen.new[index], background, transparency)
-					buffer.screen.new[indexPlus1] = color.blend(buffer.screen.new[indexPlus1], background, transparency)
+					buffer.newFrame[index] = color.blend(buffer.newFrame[index], background, transparency)
+					buffer.newFrame[indexPlus1] = color.blend(buffer.newFrame[indexPlus1], background, transparency)
 				else
-					buffer.screen.new[index] = background
-					buffer.screen.new[indexPlus1] = foreground
-					buffer.screen.new[index + 2] = symbol
+					buffer.newFrame[index] = background
+					buffer.newFrame[indexPlus1] = foreground
+					buffer.newFrame[index + 2] = symbol
 				end
 			end
 			index = index + 3
@@ -143,7 +136,7 @@ buffer.rectangle = buffer.square
 
 --Очистка экрана, по сути более короткая запись buffer.square
 function buffer.clear(color, transparency)
-	buffer.square(1, 1, buffer.screen.width, buffer.screen.height, color or 0x262626, 0x000000, " ", transparency)
+	buffer.square(1, 1, buffer.width, buffer.height, color or 0x262626, 0x000000, " ", transparency)
 end
 
 --Скопировать область изображения и вернуть ее в виде массива
@@ -153,7 +146,7 @@ function buffer.copy(x, y, width, height)
 		height = height,
 	}
 
-	if x < 1 or y < 1 or x + width - 1 > buffer.screen.width or y + height - 1 > buffer.screen.height then
+	if x < 1 or y < 1 or x + width - 1 > buffer.width or y + height - 1 > buffer.height then
 		error("Copy field is out of screen range")
 	end
 
@@ -161,9 +154,9 @@ function buffer.copy(x, y, width, height)
 	for j = y, (y + height - 1) do
 		for i = x, (x + width - 1) do
 			index = buffer.getBufferIndexByCoordinates(i, j)
-			table.insert(copyArray, buffer.screen.new[index])
-			table.insert(copyArray, buffer.screen.new[index + 1])
-			table.insert(copyArray, buffer.screen.new[index + 2])
+			table.insert(copyArray, buffer.newFrame[index])
+			table.insert(copyArray, buffer.newFrame[index + 1])
+			table.insert(copyArray, buffer.newFrame[index + 2])
 		end
 	end
 
@@ -177,16 +170,16 @@ function buffer.paste(x, y, copyArray)
 
 	for j = y, (y + copyArray.height - 1) do
 		for i = x, (x + copyArray.width - 1) do
-			if i >= buffer.drawLimit.x and j >= buffer.drawLimit.y and i <= buffer.drawLimit.x2 and j <= buffer.drawLimit.y2 then
+			if i >= buffer.drawLimit.x1 and j >= buffer.drawLimit.y1 and i <= buffer.drawLimit.x2 and j <= buffer.drawLimit.y2 then
 				--Рассчитываем индекс массива основного изображения
 				index = buffer.getBufferIndexByCoordinates(i, j)
 				--Копипаст формулы, аккуратнее!
 				--Рассчитываем индекс массива вставочного изображения
 				arrayIndex = (copyArray.width * (j - y) + (i - x + 1)) * 3 - 2
 				--Вставляем данные
-				buffer.screen.new[index] = copyArray[arrayIndex]
-				buffer.screen.new[index + 1] = copyArray[arrayIndex + 1]
-				buffer.screen.new[index + 2] = copyArray[arrayIndex + 2]
+				buffer.newFrame[index] = copyArray[arrayIndex]
+				buffer.newFrame[index + 1] = copyArray[arrayIndex + 1]
+				buffer.newFrame[index + 2] = copyArray[arrayIndex + 2]
 			end
 		end
 	end
@@ -233,9 +226,9 @@ function buffer.text(x, y, textColor, text, transparency)
 
 	local index, sText = buffer.getBufferIndexByCoordinates(x, y), unicode.len(text)
 	for i = 1, sText do
-		if x >= buffer.drawLimit.x and y >= buffer.drawLimit.y and x <= buffer.drawLimit.x2 and y <= buffer.drawLimit.y2 then
-			buffer.screen.new[index + 1] = not transparency and textColor or color.blend(buffer.screen.new[index], textColor, transparency)
-			buffer.screen.new[index + 2] = unicode.sub(text, i, i)
+		if x >= buffer.drawLimit.x1 and y >= buffer.drawLimit.y1 and x <= buffer.drawLimit.x2 and y <= buffer.drawLimit.y2 then
+			buffer.newFrame[index + 1] = not transparency and textColor or color.blend(buffer.newFrame[index], textColor, transparency)
+			buffer.newFrame[index + 2] = unicode.sub(text, i, i)
 		end
 		index = index + 3
 		x = x + 1
@@ -244,25 +237,25 @@ end
 
 -- Отрисовка изображения
 function buffer.image(x, y, picture)
-	local xPos, xEnd, bufferIndexStepOnReachOfImageWidth = x, x + picture[1] - 1, (buffer.screen.width - picture[1]) * 3
+	local xPos, xEnd, bufferIndexStepOnReachOfImageWidth = x, x + picture[1] - 1, (buffer.width - picture[1]) * 3
 	local bufferIndex = buffer.getBufferIndexByCoordinates(x, y)
 	local imageIndexPlus2, imageIndexPlus3
 
 	for imageIndex = 3, #picture, 4 do
-		if xPos >= buffer.drawLimit.x and y >= buffer.drawLimit.y and xPos <= buffer.drawLimit.x2 and y <= buffer.drawLimit.y2 then
+		if xPos >= buffer.drawLimit.x1 and y >= buffer.drawLimit.y1 and xPos <= buffer.drawLimit.x2 and y <= buffer.drawLimit.y2 then
 			imageIndexPlus2, imageIndexPlus3 = imageIndex + 2, imageIndex + 3
 			
 			if picture[imageIndexPlus2] == 0x00 then
-				buffer.screen.new[bufferIndex] = picture[imageIndex]
-				buffer.screen.new[bufferIndex + 1] = picture[imageIndex + 1]
-				buffer.screen.new[bufferIndex + 2] = picture[imageIndexPlus3]
+				buffer.newFrame[bufferIndex] = picture[imageIndex]
+				buffer.newFrame[bufferIndex + 1] = picture[imageIndex + 1]
+				buffer.newFrame[bufferIndex + 2] = picture[imageIndexPlus3]
 			elseif picture[imageIndexPlus2] > 0x00 and picture[imageIndexPlus2] < 0xFF then
-				buffer.screen.new[bufferIndex] = color.blend(buffer.screen.new[bufferIndex], picture[imageIndex], picture[imageIndexPlus2])
-				buffer.screen.new[bufferIndex + 1] = picture[imageIndex + 1]
-				buffer.screen.new[bufferIndex + 2] = picture[imageIndexPlus3]
+				buffer.newFrame[bufferIndex] = color.blend(buffer.newFrame[bufferIndex], picture[imageIndex], picture[imageIndexPlus2])
+				buffer.newFrame[bufferIndex + 1] = picture[imageIndex + 1]
+				buffer.newFrame[bufferIndex + 2] = picture[imageIndexPlus3]
 			elseif picture[imageIndexPlus2] == 0xFF and picture[imageIndexPlus3] ~= " " then
-				buffer.screen.new[bufferIndex + 1] = picture[imageIndex + 1]
-				buffer.screen.new[bufferIndex + 2] = picture[imageIndexPlus3]
+				buffer.newFrame[bufferIndex + 1] = picture[imageIndex + 1]
+				buffer.newFrame[bufferIndex + 2] = picture[imageIndexPlus3]
 			end
 		end
 		
@@ -271,6 +264,18 @@ function buffer.image(x, y, picture)
 			xPos, y, bufferIndex = x, y + 1, bufferIndex + bufferIndexStepOnReachOfImageWidth
 		end
 	end
+end
+
+-- Прамоугольная рамочка
+function buffer.frame(x, y, width, height, color)
+	local stringUp, stringDown, x2 = "┌" .. string.rep("─", width - 2) .. "┐", "└" .. string.rep("─", width - 2) .. "┘", x + width - 1
+	buffer.text(x, y, color, stringUp); y = y + 1
+	for i = 1, (height - 2) do
+		buffer.text(x, y, color, "│")
+		buffer.text(x2, y, color, "│")
+		y = y + 1
+	end
+	buffer.text(x, y, color, stringDown)
 end
 
 -- Кнопка фиксированных размеров
@@ -295,6 +300,17 @@ function buffer.adaptiveButton(x, y, xOffset, yOffset, background, foreground, t
 	buffer.text(x + xOffset, y + yOffset, foreground, text)
 
 	return x, y, (x + width - 1), (y + height - 1)
+end
+
+-- Кнопка в виде текста в рамке
+function buffer.framedButton(x, y, width, height, backColor, buttonColor, text)
+	buffer.square(x, y, width, height, backColor, buttonColor, " ")
+	buffer.frame(x, y, width, height, buttonColor)
+	
+	x = math.floor(x + width / 2 - unicode.len(text) / 2)
+	y = math.floor(y + height / 2)
+
+	buffer.text(x, y, buttonColor, text)
 end
 
 -- Вертикальный скролл-бар
@@ -332,102 +348,59 @@ function buffer.customImage(x, y, pixels)
 	return (x + 1), (y + 1), (x + #pixels[1]), (y + #pixels)
 end
 
---Нарисовать топ-меню, горизонтальная полоска такая с текстами
-function buffer.menu(x, y, width, color, selectedObject, ...)
-	local objects = { ... }
-	local objectsToReturn = {}
-	local xPos = x + 2
-	local spaceBetween = 2
-	buffer.square(x, y, width, 1, color, 0xFFFFFF, " ")
-	for i = 1, #objects do
-		if i == selectedObject then
-			buffer.square(xPos - 1, y, unicode.len(objects[i][1]) + spaceBetween, 1, 0x3366CC, 0xFFFFFF, " ")
-			buffer.text(xPos, y, 0xFFFFFF, objects[i][1])
-		else
-			buffer.text(xPos, y, objects[i][2], objects[i][1])
-		end
-		objectsToReturn[objects[i][1]] = { xPos, y, xPos + unicode.len(objects[i][1]) - 1, y, i }
-		xPos = xPos + unicode.len(objects[i][1]) + spaceBetween
-	end
-	return objectsToReturn
-end
-
--- Прамоугольная рамочка
-function buffer.frame(x, y, width, height, color)
-	local stringUp, stringDown, x2 = "┌" .. string.rep("─", width - 2) .. "┐", "└" .. string.rep("─", width - 2) .. "┘", x + width - 1
-	buffer.text(x, y, color, stringUp); y = y + 1
-	for i = 1, (height - 2) do
-		buffer.text(x, y, color, "│")
-		buffer.text(x2, y, color, "│")
-		y = y + 1
-	end
-	buffer.text(x, y, color, stringDown)
-end
-
--- Кнопка в виде текста в рамке
-function buffer.framedButton(x, y, width, height, backColor, buttonColor, text)
-	buffer.square(x, y, width, height, backColor, buttonColor, " ")
-	buffer.frame(x, y, width, height, buttonColor)
-	
-	x = math.floor(x + width / 2 - unicode.len(text) / 2)
-	y = math.floor(y + height / 2)
-
-	buffer.text(x, y, buttonColor, text)
-end
-
 ------------------------------------------- Semipixel methods ------------------------------------------------------------------------
 
 function buffer.semiPixelRawSet(index, color, yPercentTwoEqualsZero)
 	local upperPixel, lowerPixel, bothPixel, indexPlus1, indexPlus2 = "▀", "▄", " ", index + 1, index + 2
-	local background, foreground, symbol = buffer.screen.new[index], buffer.screen.new[indexPlus1], buffer.screen.new[indexPlus2]
+	local background, foreground, symbol = buffer.newFrame[index], buffer.newFrame[indexPlus1], buffer.newFrame[indexPlus2]
 
 	if yPercentTwoEqualsZero then
 		if symbol == upperPixel then
 			if color == foreground then
-				buffer.screen.new[index], buffer.screen.new[indexPlus1], buffer.screen.new[indexPlus2] = color, foreground, bothPixel
+				buffer.newFrame[index], buffer.newFrame[indexPlus1], buffer.newFrame[indexPlus2] = color, foreground, bothPixel
 			else
-				buffer.screen.new[index], buffer.screen.new[indexPlus1], buffer.screen.new[indexPlus2] = color, foreground, symbol
+				buffer.newFrame[index], buffer.newFrame[indexPlus1], buffer.newFrame[indexPlus2] = color, foreground, symbol
 			end
 		elseif symbol == bothPixel then
 			if color ~= background then
-				buffer.screen.new[index], buffer.screen.new[indexPlus1], buffer.screen.new[indexPlus2] = background, color, lowerPixel
+				buffer.newFrame[index], buffer.newFrame[indexPlus1], buffer.newFrame[indexPlus2] = background, color, lowerPixel
 			end
 		else
-			buffer.screen.new[index], buffer.screen.new[indexPlus1], buffer.screen.new[indexPlus2] = background, color, lowerPixel
+			buffer.newFrame[index], buffer.newFrame[indexPlus1], buffer.newFrame[indexPlus2] = background, color, lowerPixel
 		end
 	else
 		if symbol == lowerPixel then
 			if color == foreground then
-				buffer.screen.new[index], buffer.screen.new[indexPlus1], buffer.screen.new[indexPlus2] = color, foreground, bothPixel
+				buffer.newFrame[index], buffer.newFrame[indexPlus1], buffer.newFrame[indexPlus2] = color, foreground, bothPixel
 			else
-				buffer.screen.new[index], buffer.screen.new[indexPlus1], buffer.screen.new[indexPlus2] = color, foreground, symbol
+				buffer.newFrame[index], buffer.newFrame[indexPlus1], buffer.newFrame[indexPlus2] = color, foreground, symbol
 			end
 		elseif symbol == bothPixel then
 			if color ~= background then
-				buffer.screen.new[index], buffer.screen.new[indexPlus1], buffer.screen.new[indexPlus2] = background, color, upperPixel
+				buffer.newFrame[index], buffer.newFrame[indexPlus1], buffer.newFrame[indexPlus2] = background, color, upperPixel
 			end
 		else
-			buffer.screen.new[index], buffer.screen.new[indexPlus1], buffer.screen.new[indexPlus2] = background, color, upperPixel
+			buffer.newFrame[index], buffer.newFrame[indexPlus1], buffer.newFrame[indexPlus2] = background, color, upperPixel
 		end
 	end
 end
 
 function buffer.semiPixelSet(x, y, color)
 	local yFixed = math.ceil(y / 2)
-	if x >= buffer.drawLimit.x and yFixed >= buffer.drawLimit.y and x <= buffer.drawLimit.x2 and yFixed <= buffer.drawLimit.y2 then
+	if x >= buffer.drawLimit.x1 and yFixed >= buffer.drawLimit.y1 and x <= buffer.drawLimit.x2 and yFixed <= buffer.drawLimit.y2 then
 		buffer.semiPixelRawSet(buffer.getBufferIndexByCoordinates(x, yFixed), color, y % 2 == 0)
 	end
 end
 
 function buffer.semiPixelSquare(x, y, width, height, color)
 	-- for j = y, y + height - 1 do for i = x, x + width - 1 do buffer.semiPixelSet(i, j, color) end end
-	local index, indexStepForward, indexStepBackward, jPercentTwoEqualsZero, jFixed = buffer.getBufferIndexByCoordinates(x, math.ceil(y / 2)), (buffer.screen.width - width) * 3, width * 3
+	local index, indexStepForward, indexStepBackward, jPercentTwoEqualsZero, jFixed = buffer.getBufferIndexByCoordinates(x, math.ceil(y / 2)), (buffer.width - width) * 3, width * 3
 	for j = y, y + height - 1 do
 		jPercentTwoEqualsZero = j % 2 == 0
 		
 		for i = x, x + width - 1 do
 			jFixed = math.ceil(j / 2)
-			-- if x >= buffer.drawLimit.x and jFixed >= buffer.drawLimit.y and x <= buffer.drawLimit.x2 and jFixed <= buffer.drawLimit.y2 then
+			-- if x >= buffer.drawLimit.x1 and jFixed >= buffer.drawLimit.y1 and x <= buffer.drawLimit.x2 and jFixed <= buffer.drawLimit.y2 then
 				buffer.semiPixelRawSet(index, color, jPercentTwoEqualsZero)
 			-- end
 			index = index + 3
@@ -536,9 +509,9 @@ function buffer.calculateDifference(index)
 	local somethingIsChanged = false
 	
 	--Если цвет фона на новом экране отличается от цвета фона на текущем, то
-	if buffer.screen.new[index] ~= buffer.screen.current[index] then
+	if buffer.newFrame[index] ~= buffer.currentFrame[index] then
 		--Присваиваем цвету фона на текущем экране значение цвета фона на новом экране
-		buffer.screen.current[index] = buffer.screen.new[index]
+		buffer.currentFrame[index] = buffer.newFrame[index]
 		--Говорим системе, что что-то изменилось
 		somethingIsChanged = true
 	end
@@ -546,16 +519,16 @@ function buffer.calculateDifference(index)
 	index = index + 1
 	
 	--Аналогично для цвета текста
-	if buffer.screen.new[index] ~= buffer.screen.current[index] then
-		buffer.screen.current[index] = buffer.screen.new[index]
+	if buffer.newFrame[index] ~= buffer.currentFrame[index] then
+		buffer.currentFrame[index] = buffer.newFrame[index]
 		somethingIsChanged = true
 	end
 
 	index = index + 1
 
 	--И для символа
-	if buffer.screen.new[index] ~= buffer.screen.current[index] then
-		buffer.screen.current[index] = buffer.screen.new[index]
+	if buffer.newFrame[index] ~= buffer.currentFrame[index] then
+		buffer.currentFrame[index] = buffer.newFrame[index]
 		somethingIsChanged = true
 	end
 
@@ -565,12 +538,12 @@ end
 -- Функция группировки изменений и их отрисовки на экран
 function buffer.draw(force)
 	-- Всякое дерьмо, необходимое для расчетов
-	local index, indexStepOnEveryLine, somethingIsChanged, indexPlus1, indexPlus2, sameCharArray, x, xCharCheck, indexCharCheck, currentBackground, currentForeground = buffer.getBufferIndexByCoordinates(buffer.drawLimit.x, buffer.drawLimit.y), (buffer.screen.width - buffer.drawLimit.width) * 3
+	local index, indexStepOnEveryLine, somethingIsChanged, indexPlus1, indexPlus2, sameCharArray, x, xCharCheck, indexCharCheck, currentBackground, currentForeground = buffer.getBufferIndexByCoordinates(buffer.drawLimit.x1, buffer.drawLimit.y1), (buffer.width - buffer.drawLimit.x2 + buffer.drawLimit.x1 - 1) * 3
 	-- Массив третьего буфера, содержащий в себе измененные пиксели
-	buffer.screen.changes = {}
+	buffer.changes = {}
 
-	for y = buffer.drawLimit.y, buffer.drawLimit.y2 do
-		x = buffer.drawLimit.x
+	for y = buffer.drawLimit.y1, buffer.drawLimit.y2 do
+		x = buffer.drawLimit.x1
 		while x <= buffer.drawLimit.x2 do
 			--Чутка оптимизируем расчеты
 			indexPlus1, indexPlus2 = index + 1, index + 2
@@ -579,22 +552,22 @@ function buffer.draw(force)
 			--Если хоть что-то изменилось, то начинаем работу
 			if somethingIsChanged or force then
 				--Оптимизация by Krutoy, создаем массив, в который заносим чарсы. Работает быстрее, чем конкатенейт строк
-				sameCharArray = { buffer.screen.current[indexPlus2] }
+				sameCharArray = { buffer.currentFrame[indexPlus2] }
 				--Загоняем в наш чарс-массив одинаковые пиксели справа, если таковые имеются
 				xCharCheck, indexCharCheck = x + 1, index + 3
 				while xCharCheck <= buffer.drawLimit.x2 do
 					indexCharCheckPlus2 = indexCharCheck + 2
 					if	
-						buffer.screen.current[index] == buffer.screen.new[indexCharCheck]
+						buffer.currentFrame[index] == buffer.newFrame[indexCharCheck]
 						and
 						(
-						buffer.screen.new[indexCharCheckPlus2] == " "
+						buffer.newFrame[indexCharCheckPlus2] == " "
 						or
-						buffer.screen.current[indexPlus1] == buffer.screen.new[indexCharCheck + 1]
+						buffer.currentFrame[indexPlus1] == buffer.newFrame[indexCharCheck + 1]
 						)
 					then
 					 	buffer.calculateDifference(indexCharCheck)
-					 	table.insert(sameCharArray, buffer.screen.current[indexCharCheckPlus2])
+					 	table.insert(sameCharArray, buffer.currentFrame[indexCharCheckPlus2])
 					else
 						break
 					end
@@ -604,12 +577,12 @@ function buffer.draw(force)
 				end
 
 				--Заполняем третий буфер полученными данными
-				buffer.screen.changes[buffer.screen.current[index]] = buffer.screen.changes[buffer.screen.current[index]] or {}
-				buffer.screen.changes[buffer.screen.current[index]][buffer.screen.current[indexPlus1]] = buffer.screen.changes[buffer.screen.current[index]][buffer.screen.current[indexPlus1]] or {}
+				buffer.changes[buffer.currentFrame[index]] = buffer.changes[buffer.currentFrame[index]] or {}
+				buffer.changes[buffer.currentFrame[index]][buffer.currentFrame[indexPlus1]] = buffer.changes[buffer.currentFrame[index]][buffer.currentFrame[indexPlus1]] or {}
 				
-				table.insert(buffer.screen.changes[buffer.screen.current[index]][buffer.screen.current[indexPlus1]], x)
-				table.insert(buffer.screen.changes[buffer.screen.current[index]][buffer.screen.current[indexPlus1]], y)
-				table.insert(buffer.screen.changes[buffer.screen.current[index]][buffer.screen.current[indexPlus1]], table.concat(sameCharArray))
+				table.insert(buffer.changes[buffer.currentFrame[index]][buffer.currentFrame[indexPlus1]], x)
+				table.insert(buffer.changes[buffer.currentFrame[index]][buffer.currentFrame[indexPlus1]], y)
+				table.insert(buffer.changes[buffer.currentFrame[index]][buffer.currentFrame[indexPlus1]], table.concat(sameCharArray))
 			
 				--Смещаемся по иксу вправо
 				index = index + #sameCharArray * 3 - 3
@@ -627,18 +600,18 @@ function buffer.draw(force)
 	currentBackground, currentForeground = nil, nil
 
 	--Перебираем все цвета текста и фона, выполняя гпу-операции
-	for background in pairs(buffer.screen.changes) do
+	for background in pairs(buffer.changes) do
 		gpu.setBackground(background)
-		for foreground in pairs(buffer.screen.changes[background]) do
+		for foreground in pairs(buffer.changes[background]) do
 			if currentForeground ~= foreground then gpu.setForeground(foreground); currentForeground = foreground end
-			for i = 1, #buffer.screen.changes[background][foreground], 3 do
-				gpu.set(buffer.screen.changes[background][foreground][i], buffer.screen.changes[background][foreground][i + 1], buffer.screen.changes[background][foreground][i + 2])
+			for i = 1, #buffer.changes[background][foreground], 3 do
+				gpu.set(buffer.changes[background][foreground][i], buffer.changes[background][foreground][i + 1], buffer.changes[background][foreground][i + 2])
 			end
 		end
 	end
 
 	--Очищаем память, ибо на кой хер нам хранить третий буфер
-	buffer.screen.changes = nil
+	buffer.changes = nil
 end
 
 ------------------------------------------------------------------------------------------------------

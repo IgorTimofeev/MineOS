@@ -1,440 +1,244 @@
 
--- package.loaded.GUI = nil
--- _G.GUI = nil
-
-local advancedLua = require("advancedLua")
-local buffer = require("doubleBuffering")
+require("advancedLua")
 local MineOSCore = require("MineOSCore")
+local component = require("component")
+local computer = require("computer")
 local image = require("image")
+local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 local fs = require("filesystem")
-local component = require("component")
 local unicode = require("unicode")
-local event = require("event")
 local web = require("web")
 
-------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------
 
-local obj = {}
-local sizes = {}
-local colors = {
-	main = 0xFFFFFF,
-	topBar = 0xDDDDDD,
-	topBarText = 0x555555,
-	topBarElement = 0xCCCCCC,
-	topBarElementText = 0x555555,
-	statusBar = 0xDDDDDD,
-	statusBarText = 0x888888,
-	appName = 0x262626,
-	version = 0x555555,
-	description = 0x888888,
-	downloadButton = 0xAAAAAA,
-	downloadButtonText = 0xFFFFFF,
-	downloading = 0x009240,
-	downloadingText = 0xFFFFFF,
-	downloaded = 0xCCCCCC,
-	downloadedText = 0xFFFFFF,
-}
+local applicationListURL = "https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/Applications.cfg"
+local applicationList
+local localization = MineOSCore.getCurrentApplicationLocalization()
+local resources = MineOSCore.getCurrentApplicationResourcesDirectory()
+local updateImage = image.load(resources .. "Update.pic")
+local temproraryIconPath = "/MineOS/System/AppMarket/TempIcon.pic"
+local appsPerPage = 6
 
-local typeFilters = {
-	"Application",
-	"Library",
-	"Wallpaper",
-	"Script",
-}
+local mainContainer, window = MineOSCore.addWindow(GUI.tabbedWindow(nil, nil, 80, 32))
 
-local localization = table.fromFile("MineOS/Applications/AppMarket.app/Resources/Localization/" .. _G.OSSettings.language .. ".lang")
-local appMarketConfigPath = "MineOS/System/AppMarket/"
-local pathToApplications = "MineOS/System/OS/Applications.cfg"
-local pathToNewApplications = appMarketConfigPath .. "NewApplications.cfg"
-local updateImage = image.fromString([[20100000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF A40000 A40000 A40000 A40000 A40000 A40000 A40000 A40000 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF A40000 A40000 A40000 A40000 A40000 A40000 A40000 A40000 A40000 A40000 A40000 A40000 A40000 A40000 A40000 A40000 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 730000 730000 730000 730000 730000 730000 730000 730000 730000 730000 730000 730000 730000 730000 730000 730000 730000 730000 730000 730000 730000 730000 730000 730000 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 730000 730000 730000 730000 730000 730000 730000 730000 730000 730000 730000 730000 730000 730000 730000 730000 730000 730000 730000 730000 730000 730000 730000 730000 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 430000 430000 430000 430000 430000 430000 430000 430000 430000 430000 430000 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 430000 430000 430000 430000 430000 430000 430000 430000 430000 430000 430000 0000FF 0000FF 0000FF 0000FF 430000 430000 430000 430000 430000 430000 430000 430000 430000 430000 430000 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 430000 430000 430000 430000 430000 430000 430000 430000 430000 430000 430000 0000FF 0000FF 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 130000 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 130000 130000 130000 130000 130000 130000 130000 130000 130000 0000FF 0000FF 0D0000 0D0000 0D0000 0D0000 0D0000 0D0000 0D0000 0D0000 0D0000 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0D0000 0D0000 0D0000 0D0000 0D0000 0D0000 0D0000 0D0000 0D0000 0000FF 0000FF 0000FF 0000FF 0D0000 0D0000 0D0000 0D0000 0D0000 0D0000 0D0000 0D0000 0D0000 0D0000 0D0000 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0D0000 0D0000 0D0000 0D0000 0D0000 0D0000 0D0000 0D0000 0D0000 0D0000 0D0000 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0D0000 0D0000 0D0000 0D0000 0D0000 0D0000 0D0000 0D0000 0D0000 0D0000 0D0000 0000FF 0000FF 0D0000 0D0000 0D0000 0D0000 0D0000 0D0000 0D0000 0D0000 0D0000 0D0000 0D0000 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0C0000 0C0000 0C0000 0C0000 0C0000 0C0000 0C0000 0C0000 0C0000 0C0000 0C0000 0C0000 0C0000 0C0000 0C0000 0C0000 0C0000 0C0000 0C0000 0C0000 0C0000 0C0000 0C0000 0C0000 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0C0000 0C0000 0C0000 0C0000 0C0000 0C0000 0C0000 0C0000 0C0000 0C0000 0C0000 0C0000 0C0000 0C0000 0C0000 0C0000 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0C0000 0C0000 0C0000 0C0000 0C0000 0C0000 0C0000 0C0000 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF ]])
-local topBarElements = {localization.applications, localization.libraries, localization.wallpapers, localization.other, localization.updates}
-local oldApplications, newApplications, currentApps, changes = {}, {}, {}, {}
+----------------------------------------------------------------------------------------------------------------
 
-local currentTopBarElement = 1
-local from, limit, fromY = 1, 8
+local function newApp(x, y, width, applicationListElement, hideDownloadButton)
+	local app = GUI.container(x, y, width, 4)
+	
+	app.icon = app:addChild(GUI.image(1, 1, MineOSCore.icons.script))
+	if applicationListElement.icon then
+		web.downloadFile(applicationListElement.icon, temproraryIconPath)
+		app.icon.image = image.load(temproraryIconPath)
+	else
+		if applicationListElement.type == "Wallpaper" then
+			app.icon.image = MineOSCore.icons.image
+		elseif applicationListElement.type == "Library" then
+			app.icon.image = MineOSCore.icons.lua
+		end
+	end
 
-------------------------------------------------------------------------------------------------------------------
+	app.downloadButton = app:addChild(GUI.button(1, 1, 13, 1, 0x66DB80, 0xFFFFFF, 0x339240, 0xFFFFFF, localization.download))
+	app.downloadButton.localPosition.x = app.width - app.downloadButton.width + 1
+	app.downloadButton.onTouch = function()
+		app.downloadButton.disabled = true
+		app.downloadButton.colors.disabled.background, app.downloadButton.colors.disabled.text = 0xBBBBBB, 0xFFFFFF
+		app.downloadButton.text = localization.downloading
+		mainContainer:draw()
+		buffer.draw()
 
-local function correctDouble(number)
-	return string.format("%.2f", number)
+		web.downloadMineOSApplication(applicationListElement)
+
+		app.downloadButton.text = localization.downloaded
+		mainContainer:draw()
+		buffer.draw()
+	end
+	app.downloadButton.hidden = hideDownloadButton
+
+	app.pathLabel = app:addChild(GUI.label(app.icon.width + 2, 1, width - app.icon.width - app.downloadButton.width - 3, 1, 0x0, fs.name(applicationListElement.path)))
+	app.versionLabel = app:addChild(GUI.label(app.icon.width + 2, 2, app.pathLabel.width, 1, 0x555555, localization.version .. applicationListElement.version))
+	if applicationListElement.about then
+		local lines = string.wrap({web.request(applicationListElement.about .. MineOSCore.OSSettings.language .. ".txt")}, app.pathLabel.width)
+		app.aboutTextBox = app:addChild(GUI.textBox(app.icon.width + 2, 3, app.pathLabel.width, #lines, nil, 0x999999, lines, 1, 0, 0))
+		app.aboutTextBox.eventHandler = nil
+		if #lines > 2 then
+			app.height = #lines + 2
+		end
+	end
+
+	return app
 end
 
-local function status(text)
-	text = unicode.sub(text, 1, sizes.width - 2)
-	local y = sizes.y + sizes.height - 1
-	buffer.square(sizes.x, y, sizes.width, 1, colors.statusBar, colors.statusBarText, " ")
-	buffer.text(sizes.x + 1, y, colors.statusBarText, text)
+local function addUpdateImage()
+	window.contentContainer:deleteChildren()
+	local cyka = window.contentContainer:addChild(GUI.image(math.floor(window.contentContainer.width / 2 - image.getWidth(updateImage) / 2), math.floor(window.contentContainer.height / 2 - image.getHeight(updateImage) / 2) - 1, updateImage))
+	return cyka.localPosition.y + cyka.height + 2
+end
+
+local function updateApplicationList()
+	local y = addUpdateImage()
+	window.contentContainer:addChild(GUI.label(1, y, window.contentContainer.width, 1, 0x888888, localization.checkingForUpdates)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+	mainContainer:draw()
+	buffer.draw()
+
+	applicationList = table.fromString(web.request(applicationListURL))
+end
+
+
+local function displayApps(fromPage, typeFilter, nameFilter, updateCheck)
+	window.contentContainer:deleteChildren()
+	
+	local y = 2
+	local finalApplicationList = {}
+
+	if updateCheck then
+		local oldApplicationList = table.fromFile(MineOSCore.paths.applicationList)
+
+		for j = 1, #applicationList do
+			local pathFound = false
+			
+			for i = 1, #oldApplicationList do	
+				if oldApplicationList[i].path == applicationList[j].path then
+					if oldApplicationList[i].version < applicationList[j].version then
+						table.insert(finalApplicationList, applicationList[j])
+					end
+
+					pathFound = true
+					break
+				end
+			end
+
+			if not pathFound then
+				table.insert(finalApplicationList, applicationList[j])
+			end
+		end
+
+		window.contentContainer:addChild(GUI.button(math.floor(window.contentContainer.width / 2 - 10), y, 20, 1, 0xBBBBBB, 0xFFFFFF, 0x999999, 0xFFFFFF, localization.updateAll)).onTouch = function()
+			y = addUpdateImage()
+
+			local progressBarWidth = math.floor(window.contentContainer.width * 0.65)
+			local progressBar = window.contentContainer:addChild(GUI.progressBar(math.floor(window.contentContainer.width / 2 - progressBarWidth / 2), y, progressBarWidth, 0x33B6FF, 0xDDDDDD, 0x0, 0, true, false))
+			local label = window.contentContainer:addChild(GUI.label(1, y + 1, window.contentContainer.width, 1, 0x888888, "")):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+			
+			for i = 1, #finalApplicationList do
+				progressBar.value = math.floor(i / #finalApplicationList * 100)
+				label.text = localization.updating .. fs.name(finalApplicationList[i].path)
+				
+				-- web.downloadMineOSApplication(finalApplicationList[i])
+
+				mainContainer:draw()
+				buffer.draw()
+			end
+
+			computer.shutdown(true)
+		end
+
+		if #finalApplicationList == 0 then
+			window.contentContainer:addChild(GUI.label(1, 1, window.contentContainer.width, window.contentContainer.height, 0x888888, localization.youHaveNewestApps)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.center)
+			mainContainer:draw()
+			buffer.draw()
+			return
+		end
+	else
+		window.contentCon4tainer.searchInputTextBox = window.contentContainer:addChild(GUI.inputTextBox(math.floor(window.contentContainer.width / 2 - 10), y, 20, 1, 0xEEEEEE, 0xAAAAAA, 0xEEEEEE, 0x3C3C3C, nil, localization.search, true))
+		window.contentContainer.searchInputTextBox.onInputFinished = function()
+			if window.contentContainer.searchInputTextBox.text then
+				displayApps(1, typeFilter, window.contentContainer.searchInputTextBox.text)
+			end
+		end
+
+		for i = 1, #applicationList do
+			if (not typeFilter or typeFilter == applicationList[i].type) and (not nameFilter or unicode.find(unicode.lower(fs.name(applicationList[i].path)), unicode.lower(nameFilter))) then
+				table.insert(finalApplicationList, applicationList[i])
+			end
+		end
+	end
+
+	y = y + 2
+
+	mainContainer:draw()
+	buffer.draw()
+	
+	local appOnPageCounter, fromAppCounter, fromApp = 1, 1, (fromPage - 1) * appsPerPage + 1
+	for i = 1, #finalApplicationList do
+		if fromAppCounter >= fromApp then
+			y, appOnPageCounter = y + window.contentContainer:addChild(newApp(1, y, window.contentContainer.width, finalApplicationList[i])).height + 1, appOnPageCounter + 1
+			
+			mainContainer:draw()
+			buffer.draw()
+
+			if appOnPageCounter > appsPerPage then
+				break
+			end
+		end
+
+		fromAppCounter = fromAppCounter + 1
+	end
+
+	-- Pages buttons CYKA
+	local buttonWidth, text = 7, localization.page .. fromPage
+	local textLength = unicode.len(text)
+	local x = math.floor(window.contentContainer.width / 2 - (buttonWidth * 2 + textLength + 4) / 2)
+	window.contentContainer:addChild(GUI.button(x, y, buttonWidth, 1, 0xBBBBBB, 0xFFFFFF, 0x999999, 0xFFFFFF, "<")).onTouch = function()
+		if fromPage > 1 then
+			displayApps(fromPage - 1, typeFilter, nameFilter)
+		end
+	end
+	x = x + buttonWidth + 2
+
+	window.contentContainer:addChild(GUI.label(x, y, textLength, 1, 0x3C3C3C, text))
+	x = x + textLength + 2
+
+	window.contentContainer:addChild(GUI.button(x, y, buttonWidth, 1, 0xBBBBBB, 0xFFFFFF, 0x999999, 0xFFFFFF, ">")).onTouch = function()
+		displayApps(fromPage + 1, typeFilter, nameFilter)
+	end
+
+	mainContainer:draw()
 	buffer.draw()
 end
 
-local function calculateSizes()
-	sizes.width, sizes.height = math.floor(buffer.screen.width * 0.6), math.floor(buffer.screen.height * 0.7)
-	sizes.x, sizes.y = math.floor(buffer.screen.width / 2 - sizes.width / 2), math.floor(buffer.screen.height / 2 - sizes.height / 2)
-	sizes.topBarHeight = 3
-	obj.main = GUI.object(sizes.x, sizes.y + sizes.topBarHeight, sizes.width, sizes.height - sizes.topBarHeight)
-	sizes.downloadButtonWidth = 17
-	sizes.descriptionTruncateSize = sizes.width - 6 - MineOSCore.iconWidth - sizes.downloadButtonWidth
-	sizes.searchFieldWidth = math.floor(sizes.width * 0.3)
-	obj.searchTextField = GUI.inputTextBox(math.floor(sizes.x + sizes.width / 2 - sizes.searchFieldWidth / 2), 1, sizes.searchFieldWidth, 1, 0xEEEEEE, 0x555555, 0xEEEEEE, 0x262626, "", localization.search, true)
-end
-
-local function drawTopBar()
-	obj.topBarButtons = GUI.tabBar(sizes.x, sizes.y, sizes.width, sizes.topBarHeight, 2, colors.topBar, colors.topBarText, colors.topBarElement, colors.topBarElementText, table.unpack(topBarElements))
-	obj.topBarButtons.selectedTab = currentTopBarElement
-	obj.topBarButtons:draw()
-	obj.windowActionButtons = GUI.windowActionButtons(sizes.x + 1, sizes.y):draw()
-end
-
-local function getIcon(url)
-	local path = appMarketConfigPath .. "TempIcon.pic"
-
-	local success, reason = web.downloadFile(url, path)	
-	if not success then
-		error(reason)
-	end
-
-	return image.load(path)
-end
-
-local function getDescription(url)
-	local result, reason = web.request(url)
-	if not result then
-		error(reason)
-	end
-
-	return result
-end
-
-local function getApplication(i)
-	currentApps[i] = {}
-	currentApps[i].path = fs.name(newApplications[i].path)
-
-	if newApplications[i].icon then
-		currentApps[i].icon = getIcon(newApplications[i].icon)
-	else
-		if newApplications[i].type == "Application" then
-			currentApps[i].icon = failureIcon
-		elseif newApplications[i].type == "Wallpaper" then
-			currentApps[i].icon = MineOSCore.icons.image
-		elseif newApplications[i].type == "Library" then
-			currentApps[i].icon = MineOSCore.icons.lua
-		else
-			currentApps[i].icon = MineOSCore.icons.script
+window.contentContainer = window:addChild(GUI.container(3, 4, window.width - 4, window.height - 3))
+window.contentContainer.eventHandler = function(mainContainer, object, eventData)
+	if eventData[1] == "scroll" and (eventData[5] == -1 or window.contentContainer.children[1].localPosition.y <= 1) then
+		for i = 1, #window.contentContainer.children do
+			window.contentContainer.children[i].localPosition.y = window.contentContainer.children[i].localPosition.y + eventData[5]
 		end
-	end
-
-	if newApplications[i].about then
-		currentApps[i].description = getDescription(newApplications[i].about .. _G.OSSettings.language .. ".txt")
-		currentApps[i].description = string.wrap({currentApps[i].description}, sizes.descriptionTruncateSize )
-	else
-		currentApps[i].description = {localization.descriptionNotAvailable}
-	end
-
-	if newApplications[i].version then
-		currentApps[i].version = localization.version .. correctDouble(newApplications[i].version)
-	else
-		currentApps[i].version = localization.versionNotAvailable
-	end
-end
-
-local function checkAppExists(name, type)
-	if type == "Application" then
-		name = name .. ".app"
-	end
-	return fs.exists(name)
-end
-
-local function drawApplication(x, y, i, doNotDrawButton)
-	buffer.image(x, y, currentApps[i].icon)
-	buffer.text(x + 10, y, colors.appName, currentApps[i].path)
-	buffer.text(x + 10, y + 1, colors.version, currentApps[i].version)
-	local appExists = checkAppExists(newApplications[i].path, newApplications[i].type)
-	local text = appExists and localization.update or localization.download
-	
-	if not doNotDrawButton then
-		local xButton, yButton = sizes.x + sizes.width - sizes.downloadButtonWidth - 2, y + 1
-		if currentApps[i].buttonObject then
-			currentApps[i].buttonObject.x, currentApps[i].buttonObject.y = xButton, yButton
-			currentApps[i].buttonObject:draw()
-		else
-			currentApps[i].buttonObject = GUI.button(xButton, yButton, sizes.downloadButtonWidth, 1, colors.downloadButton, colors.downloadButtonText, 0x555555, 0xFFFFFF, text):draw()
-		end
-	end
-
-	for j = 1, #currentApps[i].description do
-		buffer.text(x + 10, y + j + 1, colors.description, currentApps[i].description[j])
-	end
-	y = y + (#currentApps[i].description > 2 and #currentApps[i].description - 2 or 0)
-	y = y + 5
-
-	return x, y
-end
-
-local function drawPageSwitchButtons(y)
-	local text = localization.applicationsFrom .. from .. localization.applicationsTo .. from + limit - 1
-	local textLength = unicode.len(text)
-	local buttonWidth = 5
-	local width = buttonWidth * 2 + textLength + 2
-	local x = math.floor(sizes.x + sizes.width / 2 - width / 2)
-	obj.prevPageButton = GUI.button(x, y, buttonWidth, 1, colors.downloadButton, colors.downloadButtonText, 0x262626, 0xFFFFFF, "<"):draw()
-	x = x + obj.prevPageButton.width + 1
-	buffer.text(x, y, colors.version, text)
-	x = x + textLength + 1
-	obj.nextPageButton = GUI.button(x, y, buttonWidth, 1, colors.downloadButton, colors.downloadButtonText, 0x262626, 0xFFFFFF, ">"):draw()
-end
-
-local function clearMainZone()
-	buffer.square(sizes.x, obj.main.y, sizes.width, obj.main.height, 0xFFFFFF)
-end
-
-local function drawMain(refreshData)
-	clearMainZone()
-	local x, y = sizes.x + 2, fromY
-
-	buffer.setDrawLimit(sizes.x, obj.main.y, sizes.width, obj.main.height)
-
-	obj.searchTextField.y, obj.searchTextField.isHidden = y, false
-	obj.searchTextField:draw()
-	y = y + 2
-
-	local matchCount = 1
-	for i = 1, #newApplications do
-		if newApplications[i].type == typeFilters[currentTopBarElement] then
-			if obj.searchTextField.text == "" or (string.find(unicode.lower(fs.name(newApplications[i].path)), unicode.lower(obj.searchTextField.text))) then
-				if matchCount >= from and matchCount <= from + limit - 1 then
-					if refreshData and not currentApps[i] then
-						status(localization.downloadingInfoAboutApplication .. " \"" .. newApplications[i].path .. "\"")
-						getApplication(i)
-					end
-					x, y = drawApplication(x, y, i)
-				end
-				matchCount = matchCount + 1
-			end
-		end
-	end
-
-	if matchCount > limit then
-		drawPageSwitchButtons(y)
-	end
-
-	buffer.resetDrawLimit()
-end
-
-local function getNewApplications()
-	web.downloadFile("https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/Applications.cfg", pathToNewApplications)
-	newApplications = table.fromFile(pathToNewApplications)
-end
-
-local function getChanges()
-	changes = {}
-	for j = 1, #newApplications do
-		local matchFound = false
-		for i = 1, #oldApplications do	
-			if oldApplications[i].path == newApplications[j].path then
-				if oldApplications[i].version < newApplications[j].version then table.insert(changes, j) end
-				matchFound = true
-				break
-			end
-		end
-		if not matchFound then table.insert(changes, j) end
-	end
-end
-
-local function updates()
-	clearMainZone()
-
-	obj.searchTextField.isHidden = true
-
-	if #changes > 0 then
-		buffer.setDrawLimit(sizes.x, obj.main.y, sizes.width, obj.main.height)
-		local x, y = sizes.x + 2, fromY
-		obj.updateAllButton = GUI.button(math.floor(sizes.x + sizes.width / 2 - sizes.downloadButtonWidth / 2), y, 20, 1, colors.downloadButton, colors.downloadButtonText, 0x555555, 0xFFFFFF, "Обновить все"):draw()
-		y = y + 2
-
-		for i = from, (from + limit) do
-			if not changes[i] then break end
-			if not currentApps[changes[i]] then
-				status(localization.downloadingInfoAboutApplication .. " \"" .. fs.name(newApplications[changes[i]].path) .. "\"")
-				getApplication(changes[i])
-			end
-			x, y = drawApplication(x, y, changes[i], true)
-		end
-
-		if #changes > limit then
-			drawPageSwitchButtons(y)
-		end
-		buffer.resetDrawLimit()
-	else
-		local text = localization.youHaveNewestApps
-		buffer.text(math.floor(sizes.x + sizes.width / 2 - unicode.len(text) / 2), math.floor(obj.main.y + obj.main.height / 2 - 1), colors.description, text)
-	end
-end
-
-local function flush()
-	fromY = obj.main.y + 1
-	from = 1
-	currentApps = {}
-end
-
-local function loadOldApplications()
-	oldApplications = table.fromFile(pathToApplications)
-end
-
-local function saveOldApplications()
-	table.toFile(pathToApplications, oldApplications)
-end
-
-local function drawAll(refreshIcons, force)
-	drawTopBar()
-	if currentTopBarElement == 5 then
-		updates()
-	else
-		drawMain(refreshIcons)
-	end
-	buffer.draw(force)
-end
-
-local function updateImageWindow()
-	clearMainZone()
-	local x, y = math.floor(sizes.x + sizes.width / 2 - updateImage[1] / 2), math.floor(obj.main.y + obj.main.height / 2 - updateImage[2] / 2 - 2)
-	buffer.image(x, y, updateImage)
-	return y + updateImage[2]
-end
-
-local function updateImageWindowWithText(text)
-	local y = updateImageWindow() + 2
-	local x = math.floor(sizes.x + sizes.width / 2 - unicode.len(text) / 2)
-	buffer.text(x, y, colors.description, text)
-end
-
-local function updateAll()
-	local y = updateImageWindow()
-	local barWidth = math.floor(sizes.width * 0.6)
-	local xBar = math.floor(sizes.x + sizes.width / 2 - barWidth / 2)
-	y = y + 2
-	for i = 1, #changes do
-		local text = localization.updating .. " " .. fs.name(newApplications[changes[i]].path)
-		local xText = math.floor(sizes.x + sizes.width / 2 - unicode.len(text) / 2)
-		buffer.square(sizes.x, y + 1, sizes.width, 1, 0xFFFFFF)
-		buffer.text(xText, y + 1, colors.description, text)
-		GUI.progressBar(xBar, y, barWidth, 0x0092FF, 0xCCCCCC, 0x0, math.ceil(i / #changes * 100), true, false):draw()
+		mainContainer:draw()
 		buffer.draw()
-		web.downloadMineOSApplication(newApplications[changes[i]])
-	end
-	changes = {}
-	oldApplications = newApplications
-	saveOldApplications()
-	fs.remove(pathToNewApplications)
-	require("computer").shutdown(true)
-end
-
-------------------------------------------------------------------------------------------------------------------
-
--- buffer.start()
--- buffer.clear(0xFF8888)
-
-local args = {...}
-if args[1] == "updateCheck" then
-	currentTopBarElement = 5
-end
-
-fs.makeDirectory(appMarketConfigPath)
-calculateSizes()
-flush()
-loadOldApplications()
-drawTopBar()
-GUI.windowShadow(sizes.x, sizes.y, sizes.width, sizes.height, 50)
-updateImageWindowWithText(localization.downloadingApplicationsList)
-buffer.draw()
-getNewApplications()
-getChanges()
-drawAll(true, false)
-
-while true do
-	local e = {event.pull()}
-	if e[1] == "touch" then
-
-		if obj.main:isClicked(e[3], e[4]) then
-			if obj.searchTextField:isClicked(e[3], e[4]) then
-				obj.searchTextField:input()
-				flush()
-				drawAll(true, false)
-			end
-
-			if currentTopBarElement < 5 then
-				for appIndex, app in pairs(currentApps) do
-					if app.buttonObject:isClicked(e[3], e[4]) then
-						app.buttonObject:pressAndRelease(0.3)
-						if app.buttonObject.text == localization.update or app.buttonObject.text == localization.download then
-							app.buttonObject.text = localization.downloading
-							app.buttonObject.disabled = true
-							app.buttonObject.colors.disabled.button, app.buttonObject.colors.disabled.text = colors.downloading, colors.downloadingText
-							app.buttonObject:draw()
-							buffer.draw()
-							web.downloadMineOSApplication(newApplications[appIndex])
-							app.buttonObject.text = localization.downloaded
-							app.buttonObject.colors.disabled.button, app.buttonObject.colors.disabled.text = colors.downloaded, colors.downloadedText
-							app.buttonObject:draw()
-							buffer.draw()
-						end
-						break
-					end	
-				end
-			else
-				if obj.updateAllButton and obj.updateAllButton:isClicked(e[3], e[4]) then
-					obj.updateAllButton:pressAndRelease()
-					updateAll()
-					flush()
-					drawAll()
-				end
-			end
-
-			if obj.nextPageButton then
-				if obj.nextPageButton:isClicked(e[3], e[4]) then
-					obj.nextPageButton:pressAndRelease()
-					fromY = obj.main.y + 1
-					from = from + limit
-					currentApps = {}
-					drawAll(true, false)
-				elseif obj.prevPageButton:isClicked(e[3], e[4]) then
-					if from > limit then
-						fromY = obj.main.y + 1
-						from = from - limit
-						currentApps = {}
-						drawAll(true, false)
-					end
-				end
-			end
-		end
-
-
-		if obj.windowActionButtons.close:isClicked(e[3], e[4]) then
-			obj.windowActionButtons.close:pressAndRelease()
-			return
-		end
-
-		for key, button in pairs(obj.topBarButtons.tabs.children) do
-			if button:isClicked(e[3], e[4]) then
-				currentTopBarElement = key
-				flush()
-				drawAll(true, false)
-				break
-			end
-		end
-	elseif e[1] == "scroll" then
-		if e[5] == 1 then
-			if (fromY < obj.main.y) then
-				fromY = fromY + 2
-				drawAll(false, false)
-			end
-		else
-			fromY = fromY - 2
-			drawAll(false, false)
-		end
 	end
 end
 
+local oldResize = window.onResize
+window.onResize = function(window, width, height)
+	window.contentContainer.width, window.contentContainer.height = width - 4, height - 3
+	oldResize(window, width, height)	
+	tabs[window.tabBar.selectedItem].onTouch()
+end
+
+local tabs = {
+	window.tabBar:addItem(localization.applications),
+	window.tabBar:addItem(localization.libraries),
+	window.tabBar:addItem(localization.wallpapers),
+	window.tabBar:addItem(localization.other),
+	window.tabBar:addItem(localization.updates)
+}
+
+tabs[1].onTouch = function() displayApps(1, "Application") end
+tabs[2].onTouch = function() displayApps(1, "Library") end
+tabs[3].onTouch = function() displayApps(1, "Wallpaper") end
+tabs[4].onTouch = function() displayApps(1, "Script") end
+tabs[5].onTouch = function() displayApps(1, nil, nil, true) end
+
+----------------------------------------------------------------------------------------------------------------
+
+updateApplicationList()
+
+if ({...})[1] == "updates" then
+	window.tabBar.selectedItem = 5
+end
+
+tabs[window.tabBar.selectedItem].onTouch()
 
 
 

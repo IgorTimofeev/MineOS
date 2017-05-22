@@ -104,6 +104,7 @@
 	viewTab = "View",
 
 	errorWhileRunningProgram = "Error while running ",
+	sendedFeedback = "Feedback was sent",
 	sendFeedback = "Send feedback",
 	yourContacts = "Your contacts",
 	additionalInfo = "Additional information",

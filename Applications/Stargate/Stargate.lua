@@ -1,36 +1,29 @@
 
-local ecs = require("ECSAPI")
 local fs = require("filesystem")
 local image = require("image")
 local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 local component = require("component")
 local unicode = require("unicode")
-local event = require("event")
-local stargate
-
+local MineOSCore = require("MineOSCore")
 if not component.isAvailable("stargate") then
-	GUI.error("Этой программе требуются Звездные Врата из мода \"SGCraft\"", {title = {color = 0xFF8888, text = "Ошибка"}})
+	GUI.error("This program requires stargate from mod \"SGCraft\"", {title = {color = 0xFF8888, text = "Ошибка"}})
 	return
-else
-	stargate = component.stargate
 end
+local stargate = component.stargate
 
-local toolbarWidth = 32
-local sg = image.load("MineOS/Applications/Stargate.app/Resources/Gate.pic")
-local sgCore = image.load("MineOS/Applications/Stargate.app/Resources/GateCore.pic")
-local pathToContacts = "MineOS/System/Stargate/Contacts2.cfg"
-local buttons = {}
-local contacts = {addresses = {}}
-local chevrons = {
-	{x = 5, y = 26, isActivated = false},
-	{x = 1, y = 15, isActivated = false},
-	{x = 12, y = 5, isActivated = false},
-	{x = 34, y = 1, isActivated = false},
-	{x = 56, y = 5, isActivated = false},
-	{x = 66, y = 15, isActivated = false},
-	{x = 63, y = 26, isActivated = false},
-}
+---------------------------------------------------------------------------------------------
+
+local resources = MineOSCore.getCurrentApplicationResourcesDirectory()
+local pathToContacts = "MineOS/System/Stargate/Contacts3.cfg"
+local contacts = {}
+local Ch1Image = image.load(resources .. "Ch1.pic")
+local Ch2Image = image.load(resources .. "Ch2.pic")
+
+buffer.start()
+local mainContainer = GUI.fullScreenContainer()
+
+---------------------------------------------------------------------------------------------
 
 local function loadContacts()
 	if fs.exists(pathToContacts) then
@@ -42,244 +35,277 @@ local function saveContacts()
 	table.toFile(pathToContacts, contacts)
 end
 
-local function getArraySize(array)
-	local size = 0; for key in pairs(array) do size = size + 1 end; return size
+local function chevronDraw(object)
+	local inactiveColor, activeColor, fadeColor = 0x332400, 0xFFDB00, 0xCC6D00
+	-- buffer.square(object.x, object.y, object.width, object.height, object.isActivated and fadeColor or inactiveColor)
+	-- buffer.square(object.x + 1, object.y, 3, object.height, object.isActivated and activeColor or inactiveColor)
+	-- buffer.text(object.x + 2, object.y + 1, object.isActivated and 0x0 or 0xFFFFFF, object.text)
+	buffer.image(object.x, object.y, object.isActivated and Ch1Image or Ch2Image)
+	return object
 end
 
-local function drawDock(xDock, yDock, currentDockWidth, heightOfDock)
-	local transparency = 25
-	for i = 1, heightOfDock do
-		buffer.text(xDock, yDock, 0xFFFFFF, "▟", transparency)
-		buffer.square(xDock + 1, yDock, currentDockWidth, 1, 0xFFFFFF, 0xFFFFFF, " ", transparency)
-		buffer.text(xDock + currentDockWidth + 1, yDock, 0xFFFFFF, "▙", transparency)
+local function newChevronObject(x, y)
+	local object = GUI.object(x, y, 5, 3)
 
-		transparency = transparency + 15
-		currentDockWidth = currentDockWidth - 2
-		xDock = xDock + 1; yDock = yDock - 1
+	object.draw = chevronDraw
+	object.isActivated = false
+	object.text = " "
+
+	return object
+end
+
+local function addChevron(x, y)
+	table.insert(mainContainer.chevrons, mainContainer.chevronsContainer:addChild(newChevronObject(x, y)))
+end
+
+local function updateChevrons(state)
+	for i = 1, #mainContainer.chevrons do
+		mainContainer.chevrons[i].isActivated = state
+		if not state then mainContainer.chevrons[i].text = " " end
 	end
 end
 
-local function stateOfChevrons(state)
-	for i = 1, #chevrons do chevrons[i].isActivated = state end
-end
-
-local function drawChevrons(xSg, ySg)
-	local inactiveColor = 0x332400
-	local activeColor = 0xFFDB00
-	local fadeColor = 0xCC6D00
-	for i = 1, #chevrons do
-		buffer.square(xSg + chevrons[i].x - 1, ySg + chevrons[i].y - 1, 4, 2, chevrons[i].isActivated and fadeColor or inactiveColor)
-		buffer.square(xSg + chevrons[i].x, ySg + chevrons[i].y - 1, 2, 2, chevrons[i].isActivated and activeColor or inactiveColor)
-	end
-end
-
-local function drawSG()
-	buffer.clear(0x1b1b1b)
-
-	buttons = {}
-
-	local toolbarHeight = 34
-	local x, y = math.floor((buffer.screen.width - toolbarWidth) / 2 - sg[1] / 2), math.floor(buffer.screen.height / 2 - sg[2] / 2)
-	buffer.image(x, y, sg)
-	
-	local stargateState = stargate.stargateState()
-	local irisState = stargate.irisState()
-	local remoteAddress = stargate.remoteAddress()
+local function update()
+	local stargateState, irisState, imagePath = stargate.stargateState(), stargate.irisState()
+	mainContainer.irisButton.text = irisState == "Closed" and "Open Iris" or "Close Iris"
+	mainContainer.connectionButton.text = stargateState == "Connected" and "Disconnect" or "Connect"
+	mainContainer.connectedToLabel.text = stargateState == "Connected" and "(Connected to " .. stargate.remoteAddress() .. ")" or "(Not connected)"
 	
 	if stargateState == "Connected" then
-		stateOfChevrons(true)
-		buffer.image(x, y, sgCore)
-	end
-	drawChevrons(x, y)
-	local currentDockWidth, heightOfDock = 50, 4
-	drawDock(math.floor(x + sg[1] / 2 - currentDockWidth / 2), y + sg[2] + 1, currentDockWidth, heightOfDock )
+		mainContainer.connectContactButton.disabled = true
+		mainContainer.messageContactButton.disabled = false
 
-	local function centerText(y, color, text)
-		local x = math.floor(buffer.screen.width - toolbarWidth / 2 - unicode.len(text) / 2 + 1)
-		buffer.text(x, y, color, text)
-	end
-
-	local lineColor = 0xFFFFFF
-	local pressColor = 0x6692FF
-	local buttonDisabledColor = 0xAAAAAA
-
-	local pizdos = math.floor(buffer.screen.height / 2)
-	x, y = x + sg[1] + 5, pizdos
-	local width = buffer.screen.width - x - toolbarWidth
-	buffer.text(x, y, lineColor, string.rep("─", width))
-	x = x + width
-	y = math.floor(buffer.screen.height / 2 - toolbarHeight / 2)
-	for i = y, y + toolbarHeight do
-		local bg = buffer.get(x, i)
-		buffer.set(x, i, bg, lineColor, "│")
-	end
-	buffer.text(x, pizdos, lineColor, "┤")
-
-	x = x + 3
-	local buttonWidth = buffer.screen.width - x - 1
-	centerText(y, lineColor, "Stargate " .. stargate.localAddress()); y = y + 1
-	centerText(y, 0x888888, stargateState == "Connected" and "(подключено к " .. remoteAddress .. ")" or "(не подключено)"); y = y + 1
-
-
-	y = y + 1
-	buttons.connectButton = GUI.framedButton(x, y, buttonWidth, 3, lineColor, lineColor, pressColor, pressColor, "Прямое подключение", stargateState == "Connected"):draw(); y = y + 3
-	buttons.disconnectButton = GUI.framedButton(x, y, buttonWidth, 3, lineColor, lineColor, pressColor, pressColor, "Отключиться", stargateState ~= "Connected"):draw(); y = y + 3
-	buttons.messageButton = GUI.framedButton(x, y, buttonWidth, 3, lineColor, lineColor, pressColor, pressColor, "Сообщение", stargateState ~= "Connected"):draw(); y = y + 3
-	buttons.closeIrisButton = GUI.framedButton(x, y, buttonWidth, 3, lineColor, lineColor, pressColor, pressColor, irisState == "Closed" and "Открыть Iris" or "Закрыть Iris", irisState == "Offline"):draw(); y = y + 3
-
-	y = y + 1
-	centerText(y, lineColor, "Контакты"); y = y + 2
-	local sizeOfContacts = getArraySize(contacts.addresses)
-	buttons.addContactButton = GUI.framedButton(x, y, buttonWidth, 3, lineColor, lineColor, pressColor, pressColor, "Добавить"):draw(); y = y + 3
-	buttons.removeContactButton = GUI.framedButton(x, y, buttonWidth, 3, lineColor, lineColor, pressColor, pressColor, "Удалить", sizeOfContacts <= 0):draw(); y = y + 3
-	buttons.connectToContactButton = GUI.framedButton(x, y, buttonWidth, 3, lineColor, lineColor, pressColor, pressColor, "Соединиться", sizeOfContacts <= 0 or stargateState == "Connected"):draw(); y = y + 3
-	y = y + 1
-	centerText(y, lineColor, "Затраты на активацию"); y = y + 2
-	buffer.text(x, y, 0x228822, string.rep("━", buttonWidth))
-
-	if remoteAddress ~= "" then
-		local pidor = stargate.energyToDial(remoteAddress)
-		local cyka = stargate.energyAvailable()
-		local blyad = math.ceil(pidor * buttonWidth / cyka)
-		centerText(y, lineColor, tostring(blyad) .. "%")
-		buffer.text(x, y, 0x55FF55, string.rep("━", blyad))
-	end
-
-	y = y + 2
-	buttons.quitButton = GUI.framedButton(x, y, buttonWidth, 3, lineColor, lineColor, pressColor, pressColor, "Выйти"):draw(); y = y + 3
-
-end
-
-local function drawAll(force)
-	drawSG()
-	buffer.draw(force)
-end
-
-local function connectSG(address)
-	address = unicode.upper(address)
-
-	local success, reason = stargate.dial(address)
-	if success then
-		contacts.lastAddress = address
-		saveContacts()
+		if irisState == "Closed" then
+			imagePath = "OnOn.pic"
+		else
+			imagePath = "OnOff.pic"
+		end
 	else
-		GUI.error(reason, {title = {color = 0xFFDB40, text = "Ошибка подключения к Вратам"}, backgroundColor = 0x262626})
+		mainContainer.connectContactButton.disabled = false
+		mainContainer.messageContactButton.disabled = true
+
+		if irisState == "Closed" then
+			imagePath = "OffOn.pic"
+		else
+			imagePath = "OffOff.pic"
+		end
+	end
+	mainContainer.SGImage.image = image.load(resources .. imagePath)
+end
+
+local function updateContacts()
+	mainContainer.contactsComboBox.items = {}
+	if #contacts == 0 then
+		mainContainer.contactsComboBox:addItem("No contacts found")
+	else
+		for i = 1, #contacts do
+			mainContainer.contactsComboBox:addItem(contacts[i].name)
+		end
 	end
 end
 
+local function newThing(x, y, width, height)
+	local object = GUI.object(x, y, width, height)
+	
+	object.draw = function(object)
+		local x, y = object.x + object.width - 1, math.floor(object.y + object.height / 2)
+		for i = object.y, object.y + object.height - 1 do
+			buffer.text(x, i, 0xEEEEEE, "│")
+		end
+		for i = object.x, object.x + width - 1 do
+			buffer.text(i, y, 0xEEEEEE, "─")
+		end
+		buffer.text(x, y, 0xEEEEEE, "┤")
+	end
 
--- ecs.prepareToExit()
--- for key, val in pairs(stargate) do print(key, val) end
--- ecs.wait()
+	return object
+end
 
-loadContacts()
+local function dial(address)
+	local success = stargate.dial(address)
+	if success then
+		mainContainer.fuelProgressBar.value = math.ceil(stargate.energyToDial(address) / stargate.energyAvailable() * 100)
+		mainContainer:draw()
+		buffer.draw()
+	end
+end
 
-buffer.start()
+---------------------------------------------------------------------------------------------
 
-drawAll(true)
+mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x1E1E1E))
+mainContainer.SGImage = mainContainer:addChild(GUI.image(1, 1, image.load(resources .. "OffOff.pic")))
+mainContainer.chevronsContainer = mainContainer:addChild(GUI.container(mainContainer.SGImage.localPosition.x, mainContainer.SGImage.localPosition.y, mainContainer.SGImage.width, mainContainer.SGImage.height))
+mainContainer.chevrons = {}
+addChevron(13, 30)
+addChevron(8, 17)
+addChevron(21, 6)
+addChevron(45, 1)
+addChevron(72, 6)
+addChevron(83, 17)
+addChevron(79, 30)
 
-while true do
-	local e = {event.pull()}
-	if e[1] == "touch" then
-		for _, button in pairs(buttons) do
-			if button:isClicked(e[3], e[4]) then
-				button:pressAndRelease()
+local width, height = 32, 37
+local x, y = mainContainer.width - width - 3, math.floor(mainContainer.height / 2 - height / 2)
 
-				if button.text == "Прямое подключение" then
-					local data = ecs.universalWindow("auto", "auto", 36, 0x262626, true,
-						{"EmptyLine"},
-						{"CenterText", ecs.colors.orange, "Прямое подключение"},
-						{"EmptyLine"},
-						{"Input", 0xFFFFFF, ecs.colors.orange, contacts.lastAddress or "Введите адрес"},
-						{"EmptyLine"},
-						{"Button", {ecs.colors.orange, 0xffffff, "OK"}, {0x999999, 0xffffff, "Отмена"}}
-					)
-					if data[2] == "OK" then
-						connectSG(data[1])
-					end
-				elseif button.text == "Открыть Iris" then
-					stargate.openIris()
-				elseif button.text == "Добавить" then
-					local remoteAddress = stargate.remoteAddress()
-					local data = ecs.universalWindow("auto", "auto", 36, 0x262626, true,
-						{"EmptyLine"},
-						{"CenterText", ecs.colors.orange, "Добавить контакт"},
-						{"EmptyLine"},
-						{"Input", 0xFFFFFF, ecs.colors.orange, "Название"},
-						{"Input", 0xFFFFFF, ecs.colors.orange, contacts.lastAddress or component.stargate.remoteAddress() or "Адрес Звездных Врат"},
-						{"EmptyLine"},
-						-- remoteAddress ~= "" and
-						-- {"Button", {ecs.colors.orange, 0xffffff, "OK"}, {0x999999, 0xffffff, "Добавить текущий"}, {0x777777, 0xffffff, "Отмена"}}
-						-- or 
-						{"Button", {ecs.colors.orange, 0xffffff, "OK"}, {0x777777, 0xffffff, "Отмена"}}
-					)
-					if data[3] == "OK" then
-						contacts.addresses[data[1]] = data[2]
-						saveContacts()
-					-- elseif data[3] == "Добавить текущий" then
-					-- 	contacts.addresses[data[1]] = remoteAddress
-					-- 	saveContacts()
-					end
-					drawAll()
-				elseif button.text == "Соединиться" or button.text == "Удалить" then
-					local isConnect = (button.text == "Соединиться")
-					local names = {}; for name in pairs(contacts.addresses) do table.insert(names, name) end
-					local data = ecs.universalWindow("auto", "auto", 36, 0x262626, true,
-						{"EmptyLine"},
-						{"CenterText", ecs.colors.orange, isConnect and "Соединиться" or "Удалить контакт"},
-						{"EmptyLine"},
-						{"Selector", 0xFFFFFF, ecs.colors.orange, table.unpack(names)},
-						{"EmptyLine"},
-						{"Button", {ecs.colors.orange, 0xffffff, "OK"}, {0x999999, 0xffffff, "Отмена"}}
-					)
-					if data[2] == "OK" then
-						if isConnect then
-							connectSG(contacts.addresses[data[1]])
-						else
-							for name in pairs(contacts.addresses) do
-								if name == data[1] then contacts.addresses[name] = nil; break end
-							end
-							saveContacts()
-						end
-						drawAll()
-					end
-				elseif button.text == "Закрыть Iris" then
-					stargate.closeIris()
-				elseif button.text == "Отключиться" then
-					stateOfChevrons(false)
-					stargate.disconnect()
-				elseif button.text == "Выйти" then
-					buffer.clear(0x262626)
-					return
-				elseif button.text == "Сообщение" then
-					local data = ecs.universalWindow("auto", "auto", 36, 0x262626, true,
-						{"EmptyLine"},
-						{"CenterText", ecs.colors.orange, "Сообщение"},
-						{"EmptyLine"},
-						{"Input", 0xFFFFFF, ecs.colors.orange, "Текст сообщения"},
-						{"EmptyLine"},
-						{"Button", {ecs.colors.orange, 0xffffff, "OK"}, {0x999999, 0xffffff, "Отмена"}}
-					)
-					if data[2] == "OK" then
-						component.stargate.sendMessage(data[1] or "Пустое сообщение")
-					end
-				end
+mainContainer.SGImage.localPosition.x, mainContainer.SGImage.localPosition.y = math.floor((x - 2) / 2 - image.getWidth(mainContainer.SGImage.image) / 2), mainContainer.height - image.getHeight(mainContainer.SGImage.image) + 1
+mainContainer.chevronsContainer.localPosition = mainContainer.SGImage.localPosition
+
+mainContainer:addChild(newThing(mainContainer.SGImage.localPosition.x + mainContainer.SGImage.width, y, mainContainer.width - mainContainer.SGImage.localPosition.x - mainContainer.SGImage.width - width - 7,  height))
+
+mainContainer:addChild(GUI.label(x, y, width, 1, 0xEEEEEE, "Stargate " .. stargate.localAddress())):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); y = y + 1
+mainContainer.connectedToLabel = mainContainer:addChild(GUI.label(x, y, width, 1, 0x555555, "(Not connected)")):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); y = y + 2
+mainContainer.connectionButton = mainContainer:addChild(GUI.framedButton(x, y, width, 3, 0xEEEEEE, 0xEEEEEE, 0xBBBBBB, 0xBBBBBB, "Connect")); y = y + 3
+mainContainer.connectionButton.onTouch = function()
+	if stargate.stargateState() == "Idle" then
+		local container = MineOSCore.addUniversalContainer(mainContainer, "Connect")
+		local inputTextBox = container.layout:addChild(GUI.inputTextBox(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0xEEEEEE, 0x262626, contacts.last, "Type address here"))
+		inputTextBox.onInputFinished = function()
+			if inputTextBox.text then
+				dial(inputTextBox.text)
+				contacts.last = inputTextBox.text
+				saveContacts()
+				container:delete()
+
+				mainContainer:draw()
+				buffer.draw()
 			end
 		end
-	elseif e[1] == "sgIrisStateChange" then
-		drawAll()
-	elseif e[1] == "sgStargateStateChange" then
-		if e[3] == "Closing" then stateOfChevrons(false) end
-		drawAll()
-	elseif e[1] == "sgChevronEngaged" then
-		chevrons[e[3]].isActivated = true
-		drawAll()
-	elseif e[1] == "sgMessageReceived" then
-		GUI.error(tostring(e[3]), {title = {color = 0xFFDB40, text = "Соообщение от Врат"}, backgroundColor = 0x262626})
+
+		container.panel.eventHandler = function()
+			inputTextBox.onInputFinished()
+		end
+
+		mainContainer:draw()
+		buffer.draw()
+	else
+		stargate.disconnect()
 	end
 end
- 
 
+mainContainer.irisButton = mainContainer:addChild(GUI.framedButton(x, y, width, 3, 0xEEEEEE, 0xEEEEEE, 0xBBBBBB, 0xBBBBBB, "Open Iris")); y = y + 3
+mainContainer.irisButton.onTouch = function()
+	if stargate.irisState() == "Open" then
+		stargate.closeIris()
+	else
+		stargate.openIris()
+	end
+end
+
+mainContainer.messageContactButton = mainContainer:addChild(GUI.framedButton(x, y, width, 3, 0xEEEEEE, 0xEEEEEE, 0xBBBBBB, 0xBBBBBB, "Message")); y = y + 4
+mainContainer.messageContactButton.onTouch = function()
+	local container = MineOSCore.addUniversalContainer(mainContainer, "Message")
+	local inputTextBox = container.layout:addChild(GUI.inputTextBox(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0xEEEEEE, 0x262626, nil, "Type message text here"))
+	inputTextBox.onInputFinished = function()
+		if inputTextBox.text then
+			container:delete()
+			stargate.sendMessage(inputTextBox.text)
+
+			mainContainer:draw()
+			buffer.draw()
+		end
+	end
+
+	container.panel.eventHandler = function()
+		inputTextBox.onInputFinished()
+	end
+
+	mainContainer:draw()
+	buffer.draw()
+end
+
+mainContainer:addChild(GUI.label(x, y, width, 1, 0xEEEEEE, "Contacts")):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); y = y + 2
+mainContainer.contactsComboBox = mainContainer:addChild(GUI.comboBox(x, y, width, 3, 0x3C3C3C, 0xBBBBBB, 0x555555, 0x888888)); y = y + 4
+
+mainContainer.connectContactButton = mainContainer:addChild(GUI.framedButton(x, y, width, 3, 0xEEEEEE, 0xEEEEEE, 0xBBBBBB, 0xBBBBBB, "Connect")); y = y + 3
+mainContainer.connectContactButton.onTouch = function()
+	if #contacts > 0 then
+		dial(contacts[mainContainer.contactsComboBox.selectedItem].address)
+	end
+end
+
+mainContainer.addContactButton = mainContainer:addChild(GUI.framedButton(x, y, width, 3, 0xEEEEEE, 0xEEEEEE, 0xBBBBBB, 0xBBBBBB, "Add contact")); y = y + 3
+mainContainer.addContactButton.onTouch = function()
+	local container = MineOSCore.addUniversalContainer(mainContainer, "Add contact")
+	local inputTextBox1 = container.layout:addChild(GUI.inputTextBox(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0xEEEEEE, 0x262626, nil, "Name"))
+	local inputTextBox2 = container.layout:addChild(GUI.inputTextBox(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0xEEEEEE, 0x262626, contacts.last, "Address"))
+
+	container.panel.eventHandler = function(mainContainer, object, eventData)
+		if eventData[1] == "touch" then
+			if inputTextBox1.text and inputTextBox2.text then
+				local exists = false
+				for i = 1, #contacts do
+					if contacts[i].address == inputTextBox2.text then
+						exists = true
+						break
+					end
+				end
+				if not exists then
+					table.insert(contacts, {name = inputTextBox1.text, address = inputTextBox2.text})
+					updateContacts()
+					saveContacts()	
+				end
+
+				container:delete()
+				mainContainer:draw()
+				buffer.draw()
+			end
+		end
+	end
+
+	mainContainer:draw()
+	buffer.draw()
+end
+
+mainContainer.removeContactButton = mainContainer:addChild(GUI.framedButton(x, y, width, 3, 0xEEEEEE, 0xEEEEEE, 0xBBBBBB, 0xBBBBBB, "Remove contact")); y = y + 4
+mainContainer.removeContactButton.onTouch = function()
+	if #contacts > 0 then
+		table.remove(contacts, mainContainer.contactsComboBox.selectedItem)
+		updateContacts()
+		saveContacts()
+
+		mainContainer:draw()
+		buffer.draw()
+	end
+end
+
+mainContainer:addChild(GUI.label(x, y, width, 1, 0xEEEEEE, "Energy to dial")):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); y = y + 2
+mainContainer.fuelProgressBar = mainContainer:addChild(GUI.progressBar(x, y, width, 0xBBBBBB, 0x0, 0xEEEEEE, 100, true, true, "", "%")); y = y + 3
+mainContainer.exitButton = mainContainer:addChild(GUI.framedButton(x, y, width, 3, 0xEEEEEE, 0xEEEEEE, 0xBBBBBB, 0xBBBBBB, "Exit")); y = y + 4
+mainContainer.exitButton.onTouch = function()
+	mainContainer:stopEventHandling()
+end
+
+mainContainer.eventHandler = function(mainContainer, object, eventData)
+	if eventData[1] == "sgIrisStateChange" then
+		update()
+		mainContainer:draw()
+		buffer.draw()
+	elseif eventData[1] == "sgStargateStateChange" then
+		if eventData[3] == "Idle" or eventData[3] == "Connected" then
+			update()
+			updateChevrons(eventData[3] == "Connected")
+			mainContainer:draw()
+			buffer.draw()
+		end
+	elseif eventData[1] == "sgChevronEngaged" then
+		if mainContainer.chevrons[eventData[3]] then
+			mainContainer.chevrons[eventData[3]].isActivated = true
+			mainContainer.chevrons[eventData[3]].text = eventData[4]
+			mainContainer:draw()
+			buffer.draw()
+		end
+	elseif eventData[1] == "sgMessageReceived" then
+		GUI.error(tostring(eventData[3]), {title = {color = 0xBBBBBB, text = "Incoming message"}, backgroundColor = 0x262626})
+	end
+end
+
+loadContacts()
+updateContacts()
+update()
+updateChevrons(stargate.stargateState() == "Connected")
+mainContainer:draw()
+buffer.draw()
+mainContainer:startEventHandling()
 
 
 

@@ -116,7 +116,7 @@ function MineOSCore.getCurrentApplicationResourcesDirectory()
 end
 
 function MineOSCore.getLocalization(pathToLocalizationFolder)
-	local localizationFileName = pathToLocalizationFolder .. _G.OSSettings.language .. ".lang"
+	local localizationFileName = pathToLocalizationFolder .. MineOSCore.OSSettings.language .. ".lang"
 	if fs.exists(localizationFileName) then
 		return table.fromFile(localizationFileName)
 	else
@@ -164,11 +164,11 @@ function MineOSCore.readShortcut(path)
 end
 
 function MineOSCore.saveOSSettings()
-	table.toFile(MineOSCore.paths.OSSettings, _G.OSSettings, true)
+	table.toFile(MineOSCore.paths.OSSettings, MineOSCore.OSSettings, true)
 end
 
 function MineOSCore.loadOSSettings()
-	_G.OSSettings = table.fromFile(MineOSCore.paths.OSSettings)
+	MineOSCore.OSSettings = table.fromFile(MineOSCore.paths.OSSettings)
 end
 
 function MineOSCore.loadIcon(name, path)
@@ -198,7 +198,7 @@ end
 function MineOSCore.init()
 	fs.makeDirectory(MineOSCore.paths.trash)
 	MineOSCore.loadOSSettings()
-	MineOSCore.localization = table.fromFile(MineOSCore.paths.localizationFiles .. _G.OSSettings.language .. ".lang")
+	MineOSCore.localization = table.fromFile(MineOSCore.paths.localizationFiles .. MineOSCore.OSSettings.language .. ".lang")
 	MineOSCore.loadStandartIcons()
 end
 
@@ -246,6 +246,13 @@ local function launch3DPrint(icon)
 	MineOSCore.safeLaunch(MineOSCore.paths.applications .. "3DPrint.app/Main.lua", "open", icon.path)
 end
 
+local function launchLnk(icon)
+	local oldPath = icon.path
+	icon.path = icon.shortcutPath
+	icon:shortcutLaunch()
+	icon.path = oldPath
+end
+
 local function launchCorrupted(icon)
 	GUI.error("Application is corrupted")
 end
@@ -278,9 +285,9 @@ function MineOSCore.analyzeIconExtension(icon)
 				iconImage = icon.iconImage
 			})
 
-			icon.path = shortcutIcon.path
 			icon.iconImage.image = shortcutIcon.iconImage.image
-			icon.launch = shortcutIcon.launch
+			icon.shortcutLaunch = shortcutIcon.launch
+			icon.launch = launchLnk
 
 			shortcutIcon = nil
 		elseif icon.extension == ".cfg" or icon.extension == ".config" then
@@ -319,7 +326,7 @@ function MineOSCore.getParametersForDrawingIcons(fieldWidth, fieldHeight, xSpace
 	return xCountOfIcons, yCountOfIcons, totalCountOfIcons
 end
 
-function MineOSCore.createIcon(x, y, path, textColor, showExtension)
+function MineOSCore.createIcon(x, y, path, textColor, showExtension, selectionColor)
 	local icon = GUI.container(x, y, MineOSCore.iconWidth, MineOSCore.iconHeight)
 	
 	icon.path = path
@@ -330,12 +337,12 @@ function MineOSCore.createIcon(x, y, path, textColor, showExtension)
 	icon.isShortcut = false
 	icon.isSelected = false
 
-	icon.iconImage = icon:addImage(3, 1, {8, 4})
-	icon.textLabel = icon:addLabel(1, MineOSCore.iconHeight, MineOSCore.iconWidth, 1, textColor, fs.name(icon.path)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+	icon.iconImage = icon:addChild(GUI.image(3, 1, {8, 4}))
+	icon.textLabel = icon:addChild(GUI.label(1, MineOSCore.iconHeight, MineOSCore.iconWidth, 1, textColor, fs.name(icon.path))):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
 	
 	local oldDraw = icon.draw
 	icon.draw = function(icon)
-		if icon.isSelected then buffer.square(icon.x, icon.y, icon.width, icon.height, 0xFFFFFF, 0x000000, " ", 50) end
+		if icon.isSelected then buffer.square(icon.x, icon.y, icon.width, icon.height, selectionColor, 0x000000, " ", 50) end
 		if icon.showExtension then
 			icon.textLabel.text = string.limit(fs.name(icon.path), icon.textLabel.width, "center")
 		else
@@ -350,22 +357,21 @@ function MineOSCore.createIcon(x, y, path, textColor, showExtension)
 	icon.onRightClick = MineOSCore.iconRightClick
 
 	-- Обработка клика непосредственно на иконку
-	icon.iconImage.onTouch = function(eventData)
-		icon.isSelected = true
-		local firstParent = icon:getFirstParent()
-		firstParent:draw()
-		buffer.draw()
+	icon.iconImage.eventHandler = function(mainContainer, object, eventData)
+		if eventData[1] == "touch" then
+			icon.isSelected = true
+			MineOSCore.OSDraw()
 
-		if eventData[5] == 0 then
-			os.sleep(MineOSCore.iconClickDelay)
-			icon.onLeftClick(icon, eventData)
-		else
-			icon.onRightClick(icon, eventData)
+			if eventData[5] == 0 then
+				os.sleep(MineOSCore.iconClickDelay)
+				icon.onLeftClick(icon, eventData)
+			else
+				icon.onRightClick(icon, eventData)
+			end
+
+			icon.isSelected = false
+			MineOSCore.OSDraw()
 		end
-
-		icon.isSelected = false
-		firstParent:draw()
-		buffer.draw()
 	end
 
 	-- Онализ формата и прочего говна иконки для последующего получения изображения иконки и функции-лаунчера
@@ -384,9 +390,13 @@ local function updateIconFieldFileList(iconField)
 
 		iconField:addChild(
 			MineOSCore.createIcon(
-				xPos, yPos, iconField.workpath .. iconField.fileList[i], iconField.colors.iconText, iconField.showExtension
-			),
-			GUI.objectTypes.container
+				xPos,
+				yPos,
+				iconField.workpath .. iconField.fileList[i],
+				iconField.colors.iconText,
+				iconField.showExtension,
+				iconField.selectionColor
+			)
 		)
 
 		xPos, counter = xPos + MineOSCore.iconWidth + iconField.spaceBetweenIcons.x, counter + 1
@@ -399,7 +409,7 @@ local function updateIconFieldFileList(iconField)
 	return iconField
 end
 
-function MineOSCore.createIconField(x, y, width, height, xCountOfIcons, yCountOfIcons, totalCountOfIcons, xSpaceBetweenIcons, ySpaceBetweenIcons, iconTextColor, showExtension, showHiddenFiles, sortingMethod, workpathworkpath)
+function MineOSCore.createIconField(x, y, width, height, xCountOfIcons, yCountOfIcons, totalCountOfIcons, xSpaceBetweenIcons, ySpaceBetweenIcons, iconTextColor, showExtension, showHiddenFiles, sortingMethod, workpath, selectionColor)
 	local iconField = GUI.container(x, y, width, height)
 
 	iconField.colors = {iconText = iconTextColor}
@@ -413,7 +423,8 @@ function MineOSCore.createIconField(x, y, width, height, xCountOfIcons, yCountOf
 	iconField.showHiddenFiles = showHiddenFiles
 	iconField.sortingMethod = sortingMethod
 	iconField.fileList = {}
-	iconField.fromFile = fromFile
+	iconField.fromFile = 1
+	iconField.selectionColor = selectionColor
 
 	iconField.updateFileList = updateIconFieldFileList
 
@@ -448,154 +459,134 @@ function MineOSCore.parseErrorMessage(error, indentationWidth)
 	return parsedError
 end
 
-local function drawErrorWindow(path, programVersion, errorLine, reason)
-	local oldDrawLimit = buffer.getDrawLimit(); buffer.resetDrawLimit()
-	local width, height = buffer.screen.width, math.floor(buffer.screen.height * 0.45)
-	local y = math.floor(buffer.screen.height / 2 - height / 2)
+function MineOSCore.showErrorWindow(path, errorLine, reason)
+	buffer.clear(0x0, 50)
 
-	-- Окошечко и всякая шняжка на нем
-	local window = GUI.window(1, y, width, height, width, height)
-	window:addPanel(1, 1, width, 3, 0x383838)
-	window:addLabel(1, 2, width, 1, 0xFFFFFF, MineOSCore.localization.errorWhileRunningProgram .. "\"" .. fs.name(path) .. "\""):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
-	local windowActionButtons = window:addWindowActionButtons(2, 2, false)
-	local sendToDeveloperButton = window:addAdaptiveButton(9, 1, 2, 1, 0x444444, 0xFFFFFF, 0x343434, 0xFFFFFF, MineOSCore.localization.sendFeedback)
+	local mainContainer = GUI.container(1, 1, buffer.width, math.floor(buffer.height * 0.45))
+	mainContainer.y = math.floor(buffer.height / 2 - mainContainer.height / 2)
+	
+	mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, 3, 0x383838))
+	mainContainer:addChild(GUI.label(1, 2, mainContainer.width, 1, 0xFFFFFF, MineOSCore.localization.errorWhileRunningProgram .. "\"" .. fs.name(path) .. "\"")):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+	local actionButtons = mainContainer:addChild(GUI.actionButtons(2, 2, false))
+	local sendToDeveloperButton = mainContainer:addChild(GUI.adaptiveButton(9, 1, 2, 1, 0x444444, 0xFFFFFF, 0x343434, 0xFFFFFF, MineOSCore.localization.sendFeedback))
 
-	--Кодик на окошечке
-	local lines = {}
-	local fromLine = errorLine - math.floor((height - 3) / 2) + 1; if fromLine <= 0 then fromLine = 1 end
-	local toLine = fromLine + window.height - 3 - 1
-	local file = io.open(path, "r")
-	local lineCounter = 1
-	for line in file:lines() do
-		if lineCounter >= fromLine and lineCounter <= toLine then
-			lines[lineCounter] = string.gsub(line, "	", "  ")
-		elseif lineCounter < fromLine then
-			lines[lineCounter] = " "
+	local codeView = mainContainer:addChild(GUI.codeView(1, 4, math.floor(mainContainer.width * 0.62), mainContainer.height - 3, {}, 1, 1, 100, {}, {[errorLine] = 0xFF4444}, true, 2))
+	codeView.scrollBars.horizontal.hidden = true
+
+	codeView.fromLine = errorLine - math.floor((mainContainer.height - 3) / 2) + 1
+	if codeView.fromLine <= 0 then codeView.fromLine = 1 end
+	local toLine, lineCounter = codeView.fromLine + codeView.height - 1, 1
+	for line in io.lines(path) do
+		if lineCounter >= codeView.fromLine and lineCounter <= toLine then
+			codeView.lines[lineCounter] = string.gsub(line, "	", "  ")
+		elseif lineCounter < codeView.fromLine then
+			codeView.lines[lineCounter] = " "
 		elseif lineCounter > toLine then
 			break
 		end
 		lineCounter = lineCounter + 1
 	end
-	file:close()
 
-	local codeView = window:addCodeView(1, 4, math.floor(width * 0.62), height - 3, lines, 1, fromLine, 100, {}, {[errorLine] = 0xFF4444}, true, 2)
-	codeView.scrollBars.horizontal.isHidden = true
-
-	-- Текстбоксик
-	local stackTextBox = window:addTextBox(codeView.width + 1, 4, window.width - codeView.width, codeView.height, 0xFFFFFF, 0x000000, string.wrap(MineOSCore.parseErrorMessage(reason, 4), window.width - codeView.width - 2), 1, 1, 0)
-
-	-- Всякие действия пиздатые
-	local function exit()
-		windowActionButtons.close:pressAndRelease()
-		buffer.setDrawLimit(oldDrawLimit)
-		window:close()
-	end
+	mainContainer:addChild(GUI.textBox(codeView.width + 1, 4, mainContainer.width - codeView.width, codeView.height, 0xFFFFFF, 0x000000, string.wrap(MineOSCore.parseErrorMessage(reason, 4), mainContainer.width - codeView.width - 2), 1, 1, 0))
 	
-	windowActionButtons.close.onTouch = exit
-	
-	window.onDrawStarted = function()
-		buffer.clear(0x000000, 50)
+	actionButtons.close.onTouch = function()
+		mainContainer:stopEventHandling()
 	end
 
-	window.onKeyDown = function(eventData)
-		if eventData[4] == 28 then exit() end
-	end
-
-	sendToDeveloperButton.onTouch = function()
-		local data = ecs.universalWindow("auto", "auto", 36, 0xeeeeee, true,
-			{"EmptyLine"},
-			{"CenterText", 0x880000, MineOSCore.localization.sendFeedback},
-			{"EmptyLine"},
-			{"Input", 0x262626, 0x880000, MineOSCore.localization.yourContacts},
-			{"Input", 0x262626, 0x880000, MineOSCore.localization.additionalInfo},
-			{"EmptyLine"},
-			{"CenterText", 0x880000, MineOSCore.localization.stackTraceback .. ":"},
-			{"EmptyLine"},
-			{"TextField", 5, 0xFFFFFF, 0x000000, 0xcccccc, 0x3366CC, reason},
-			{"Button", {0x999999, 0xffffff, "OK"}, {0x777777, 0xffffff, MineOSCore.localization.cancel}}
-		)
-
-		if data[3] == "OK" then
-			if component.isAvailable("internet") then
-				local url = "https://api.mcmodder.ru/ECS/report.php?path=" .. path .. "&version=" .. string.optimizeForURLRequests(programVersion) .. "&userContacts=" .. string.optimizeForURLRequests(data[1]) .. "&userMessage=" .. string.optimizeForURLRequests(data[2]) .. "&errorMessage=" .. string.optimizeForURLRequests(reason)
-				local success, reason = component.internet.request(url)
-				if success then
-					success:close()
-				else
-					ecs.error(reason)
-				end
-			end
-			exit()
+	mainContainer.eventHandler = function(mainContainer, object, eventData)
+		if eventData[1] == "key_down" and eventData[4] == 28 then
+			actionButtons.close.onTouch()
 		end
 	end
 
-	-- Начинаем гомоеблю!
-	window:draw()
+	sendToDeveloperButton.onTouch = function()
+		if component.isAvailable("internet") then
+			local url = "https://api.mcmodder.ru/ECS/report.php?path=" .. path .. "&errorMessage=" .. string.optimizeForURLRequests(reason)
+			local success, reason = component.internet.request(url)
+			if success then
+				success:close()
+			else
+				ecs.error(reason)
+			end
+
+			sendToDeveloperButton.text = MineOSCore.localization.sendedFeedback
+			mainContainer:draw()
+			buffer.draw()
+			os.sleep(1)
+		end
+		actionButtons.close.onTouch()
+	end
+
+	mainContainer:draw()
 	buffer.draw()
-	for i = 1, 3 do component.computer.beep(1500, 0.08) end
-	window:handleEvents()
+	for i = 1, 3 do
+		component.computer.beep(1500, 0.08)
+	end
+	mainContainer:startEventHandling()
+end
+
+function MineOSCore.call(method, ...)
+	local args = {...}
+	local function launchMethod()
+		method(table.unpack(args))
+	end
+
+	local function tracebackMethod(xpcallTraceback)
+		local traceback, info, firstMatch = tostring(xpcallTraceback) .. "\n" .. debug.traceback()
+		for runLevel = 0, math.huge do
+			info = debug.getinfo(runLevel)
+			if info then
+				if (info.what == "main" or info.what == "Lua") and info.source ~= "=machine" then
+					if firstMatch then
+						return {
+							path = info.source:sub(2, -1),
+							line = info.currentline,
+							traceback = traceback
+						}
+					else
+						firstMatch = true
+					end
+				end
+			else
+				error("Failed to get debug info for runlevel " .. runLevel)
+			end
+		end
+	end
+	
+	local xpcallSuccess, xpcallReason = xpcall(launchMethod, tracebackMethod)
+	if not xpcallSuccess and not xpcallReason.traceback:match("^table") and not xpcallReason.traceback:match("interrupted") then
+		return false, xpcallReason.path, xpcallReason.line, xpcallReason.traceback
+	end
+
+	return true
 end
 
 function MineOSCore.safeLaunch(path, ...)
-	local args = {...}
-	local oldResolutionWidth, oldResolutionHeight = buffer.screen.width, buffer.screen.height
+	local oldResolutionWidth, oldResolutionHeight = buffer.width, buffer.height
 	local finalSuccess, finalPath, finalLine, finalTraceback = true
 	
 	if fs.exists(path) then
-		local loadSuccess, loadReason = loadfile(string.canonicalPath("/" .. path))
-
+		local loadSuccess, loadReason = loadfile("/" .. path)
 		if loadSuccess then
-			local function launchMethod()
-				loadSuccess(table.unpack(args))
-			end
-
-			local function tracebackMethod(xpcallTraceback)
-				local traceback, info, firstMatch = tostring(xpcallTraceback) .. "\n" .. debug.traceback()
-				for runLevel = 0, math.huge do
-					info = debug.getinfo(runLevel)
-					if info then
-						if (info.what == "main" or info.what == "Lua") and info.source ~= "=machine" then
-							if firstMatch then
-								return {
-									path = info.source:sub(2, -1),
-									line = info.currentline,
-									traceback = traceback
-								}
-							else
-								firstMatch = true
-							end
-						end
-					else
-						error("Failed to get debug info for runlevel " .. runLevel)
-					end
-				end
-			end
-			
-			local runSuccess, runReason = xpcall(launchMethod, tracebackMethod)
-			if type(runReason) == "string" then
-				GUI.error(runReason, {title = {color = 0xFFDB40, text = "Warning"}})
-			else
-				if not runSuccess and not string.match(runReason.traceback, "^table") and not string.find(runReason.traceback, "interrupted", 1, 15) then
-					finalSuccess, finalPath, finalLine, finalTraceback = false, runReason.path, runReason.line, runReason.traceback
-				end
+			local success, path, line, traceback = MineOSCore.call(loadSuccess, ...)
+			if not success then
+				finalSuccess, finalPath, finalLine, finalTraceback = false, path, line, traceback
 			end
 		else
-			finalSuccess, finalPath, finalTraceback = false, path, loadReason
 			local match = string.match(loadReason, ":(%d+)%:")
-			finalLine = tonumber(match)
-			if not match or not finalLine then error("Дебажь говно! " .. tostring(loadReason)) end
+			finalSuccess, finalPath, finalLine, finalTraceback = false, path, tonumber(match) or 1, loadReason
 		end
 	else
 		GUI.error("Failed to safely launch file that doesn't exists: \"" .. path .. "\"", {title = {color = 0xFFDB40, text = "Warning"}})
 	end
 
-	if not finalSuccess then
-		drawErrorWindow(finalPath, "1.0", finalLine, finalTraceback)
-	end
-
 	component.screen.setPrecise(false)
-	gpu.setResolution(oldResolutionWidth, oldResolutionHeight)
-	buffer.start()
+	buffer.setResolution(oldResolutionWidth, oldResolutionHeight)
+	MineOSCore.OSDraw()
+
+	if not finalSuccess then
+		MineOSCore.showErrorWindow(finalPath, finalLine, finalTraceback)
+	end
 
 	return finalSuccess, finalPath, finalLine, finalTraceback
 end
@@ -709,7 +700,7 @@ function MineOSCore.iconRightClick(icon, eventData)
 		MineOSCore.safeLaunch(MineOSCore.paths.applications .. "/MineCode IDE.app/Main.lua", "open", icon.path)
 		computer.pushSignal("MineOSCore", "updateFileList")
 	elseif action == "Свойства" then
-		MineOSCore.showPropertiesWindow(eventData[3], eventData[4], 40, icon)
+		MineOSCore.propertiesWindow(eventData[3], eventData[4], 40, icon)
 	elseif action == MineOSCore.localization.contextMenuShowContainingFolder then
 		computer.pushSignal("MineOSCore", "changeWorkpath", fs.path(icon.shortcutPath))
 		computer.pushSignal("MineOSCore", "updateFileList")
@@ -746,7 +737,7 @@ function MineOSCore.iconRightClick(icon, eventData)
 		require("compressor").pack(fs.path(icon.path) .. fs.hideExtension(fs.name(icon.path)) .. ".pkg", icon.path)
 		computer.pushSignal("MineOSCore", "updateFileList")
 	elseif action == MineOSCore.localization.contextMenuSetAsWallpaper then
-		_G.OSSettings.wallpaper = icon.path
+		MineOSCore.OSSettings.wallpaper = icon.path
 		MineOSCore.saveOSSettings()
 		computer.pushSignal("MineOSCore", "updateWallpaper")
 	elseif action == MineOSCore.localization.contextMenuFlashEEPROM then
@@ -755,13 +746,13 @@ function MineOSCore.iconRightClick(icon, eventData)
 		file:close()
 		computer.beep(1500, 0.2)
 	elseif action == MineOSCore.localization.contextMenuAddToDock then
-		table.insert(_G.OSSettings.dockShortcuts, {path = icon.path})
+		table.insert(MineOSCore.OSSettings.dockShortcuts, {path = icon.path})
 		MineOSCore.saveOSSettings()
 		computer.pushSignal("MineOSCore", "updateFileList")
 	end
 end
 
-function MineOSCore.emptyZoneClick(eventData, workspace, workpath)
+function MineOSCore.emptyZoneClick(eventData, mainContainer, workpath)
 	local action = GUI.contextMenu(eventData[3], eventData[4],
 		{MineOSCore.localization.contextMenuNewFile},
 		{MineOSCore.localization.contextMenuNewFolder},
@@ -787,53 +778,24 @@ function MineOSCore.emptyZoneClick(eventData, workspace, workpath)
 	end
 end
 
-local function addKeyAndValue(window, x, y, key, value)
-	window:addLabel(x, y, window.width , 1, 0x333333, key .. ":"); x = x + unicode.len(key) + 2
-	return window:addLabel(x, y, window.width, 1, 0x555555, value)
-end
+-----------------------------------------------------------------------------------------------------------------------------------
 
-function MineOSCore.showPropertiesWindow(x, y, width, icon)
-	local window = GUI.window(x, y, width, 1)
-	local backgroundPanel = window:addPanel(1, 2, window.width, 1, 0xDDDDDD)
-	window:addPanel(1, 1, window.width, 1, 0xEEEEEE)
-	window:addLabel(1, 1, window.width, 1, 0x333333, MineOSCore.localization.contextMenuProperties):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
-	window:addButton(2, 1, 1, 1, nil, 0xFF4940, nil, 0x992400, "●").onTouch = function() window:close() end
-
-	window:addImage(3, 3, icon.iconImage.image)
-
-	local y = 3
-	addKeyAndValue(window, 13, y, MineOSCore.localization.type, icon.extension and icon.extension or (icon.isDirectory and MineOSCore.localization.folder or MineOSCore.localization.unknown)); y = y + 1
-	local fileSizeLabel = addKeyAndValue(window, 13, y, MineOSCore.localization.size, icon.isDirectory and MineOSCore.localization.calculatingSize or string.format("%.2f", icon.size / 1024) .. " KB"); y = y + 1
-	addKeyAndValue(window, 13, y, MineOSCore.localization.date, os.date("%d.%m.%y, %H:%M", fs.lastModified(icon.path))); y = y + 1
-	addKeyAndValue(window, 13, y, MineOSCore.localization.path, " ")
-
-	local lines = string.wrap(icon.path, window.width - 19)
-	local textBox = window:addTextBox(19, y, window.width - 19, #lines, nil, 0x555555, lines, 1)
-	window.height = textBox.y + textBox.height 
-	backgroundPanel.height = window.height - 1
-
-	if window.x + window.width > buffer.screen.width then window.x = window.x - (window.x + window.width - buffer.screen.width) end
-	if window.y + window.height > buffer.screen.height then window.y = window.y - (window.y + window.height - buffer.screen.height) end
-
-	window:draw()
-	buffer.draw()
-
-	if icon.isDirectory then
-		fileSizeLabel.text = string.format("%.2f", fs.directorySize(icon.path) / 1024) .. " KB"
-		window:draw()
-		buffer.draw()
-	end
-
-	window:handleEvents()
+function MineOSCore.addUniversalContainer(parentContainer, title)
+	local container = parentContainer:addChild(GUI.container(1, 1, parentContainer.width, parentContainer.height))
+	container.panel = container:addChild(GUI.panel(1, 1, container.width, container.height, 0x0, 30))
+	container.layout = container:addChild(GUI.layout(1, 1, container.width, container.height, 1, 1))
+	container.layout:addChild(GUI.label(1, 1, unicode.len(title), 1, 0xEEEEEE, title)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+	
+	return container
 end
 
 -----------------------------------------------------------------------------------------------------------------------------------
 
-local function createUniversalContainer(parentWindow, path, text, title, placeholder)
-	local container = GUI.addUniversalContainer(parentWindow, title)
+local function addUniversalContainerWithInputTextBoxes(parentWindow, path, text, title, placeholder)
+	local container = MineOSCore.addUniversalContainer(parentWindow, title)
 	
-	container.inputTextBox = container.layout:addInputTextBox(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0xEEEEEE, 0x262626, text, placeholder, false)
-	container.label = container.layout:addLabel(1, 1, 36, 3, 0xFF4940, " "):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+	container.inputTextBox = container.layout:addChild(GUI.inputTextBox(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0xEEEEEE, 0x262626, text, placeholder, false))
+	container.label = container.layout:addChild(GUI.label(1, 1, 36, 3, 0xFF4940, " ")):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
 	
 	parentWindow:draw()
 	buffer.draw()
@@ -854,7 +816,7 @@ local function checkFileToExists(container, path)
 end
 
 function MineOSCore.newApplication(parentWindow, path)
-	local container = createUniversalContainer(parentWindow, path, nil, MineOSCore.localization.contextMenuNewApplication, MineOSCore.localization.applicationName)
+	local container = addUniversalContainerWithInputTextBoxes(parentWindow, path, nil, MineOSCore.localization.contextMenuNewApplication, MineOSCore.localization.applicationName)
 
 	container.inputTextBox.onInputFinished = function()
 		local finalPath = path .. container.inputTextBox.text .. ".app/"
@@ -871,7 +833,7 @@ function MineOSCore.newApplication(parentWindow, path)
 end
 
 function MineOSCore.newFile(parentWindow, path)
-	local container = createUniversalContainer(parentWindow, path, nil, MineOSCore.localization.contextMenuNewFile, MineOSCore.localization.fileName)
+	local container = addUniversalContainerWithInputTextBoxes(parentWindow, path, nil, MineOSCore.localization.contextMenuNewFile, MineOSCore.localization.fileName)
 
 	container.inputTextBox.onInputFinished = function()
 		if checkFileToExists(container, path .. container.inputTextBox.text) then
@@ -884,7 +846,7 @@ function MineOSCore.newFile(parentWindow, path)
 end
 
 function MineOSCore.newFolder(parentWindow, path)
-	local container = createUniversalContainer(parentWindow, path, nil, MineOSCore.localization.contextMenuNewFolder, MineOSCore.localization.folderName)
+	local container = addUniversalContainerWithInputTextBoxes(parentWindow, path, nil, MineOSCore.localization.contextMenuNewFolder, MineOSCore.localization.folderName)
 
 	container.inputTextBox.onInputFinished = function()
 		if checkFileToExists(container, path .. container.inputTextBox.text) then
@@ -895,7 +857,7 @@ function MineOSCore.newFolder(parentWindow, path)
 end
 
 function MineOSCore.rename(parentWindow, path)
-	local container = createUniversalContainer(parentWindow, path, fs.name(path), MineOSCore.localization.contextMenuRename, MineOSCore.localization.newName)
+	local container = addUniversalContainerWithInputTextBoxes(parentWindow, path, fs.name(path), MineOSCore.localization.contextMenuRename, MineOSCore.localization.newName)
 
 	container.inputTextBox.onInputFinished = function()
 		if checkFileToExists(container, fs.path(path) .. container.inputTextBox.text) then
@@ -906,9 +868,9 @@ function MineOSCore.rename(parentWindow, path)
 end
 
 function MineOSCore.applicationHelp(parentWindow, path)
-	local pathToAboutFile = path .. "/resources/About/" .. _G.OSSettings.language .. ".txt"
-	if _G.OSSettings.showHelpOnApplicationStart and fs.exists(pathToAboutFile) then
-		local container = GUI.addUniversalContainer(parentWindow, MineOSCore.localization.applicationHelp .. "\"" .. fs.name(path) .. "\"")
+	local pathToAboutFile = path .. "/resources/About/" .. MineOSCore.OSSettings.language .. ".txt"
+	if MineOSCore.OSSettings.showHelpOnApplicationStart and fs.exists(pathToAboutFile) then
+		local container = MineOSCore.addUniversalContainer(parentWindow, MineOSCore.localization.applicationHelp .. "\"" .. fs.name(path) .. "\"")
 		
 		local lines = {}
 		for line in io.lines(pathToAboutFile) do
@@ -916,21 +878,23 @@ function MineOSCore.applicationHelp(parentWindow, path)
 		end
 		lines = string.wrap(lines, 50)
 		
-		container.layout:addTextBox(1, 1, 50, #lines, nil, 0xcccccc, lines, 1, 0, 0)
-		local button = container.layout:addButton(1, 1, 30, 1, 0xEEEEEE, 0x262626, 0xAAAAAA, 0x262626, MineOSCore.localization.dontShowAnymore)
+		container.layout:addChild(GUI.textBox(1, 1, 50, #lines, nil, 0xcccccc, lines, 1, 0, 0))
+		local button = container.layout:addChild(GUI.button(1, 1, 30, 1, 0xEEEEEE, 0x262626, 0xAAAAAA, 0x262626, MineOSCore.localization.dontShowAnymore))
 
 		parentWindow:draw()
 		buffer.draw()
 
-		container.panel.onTouch = function()
-			container:delete()
-			MineOSCore.safeLaunch(path .. "/Main.lua")
-			parentWindow:draw()
-			buffer.draw()
+		container.panel.eventHandler = function(mainContainer, object, eventData)
+			if eventData[1] == "touch" then
+				container:delete()
+				MineOSCore.safeLaunch(path .. "/Main.lua")
+				parentWindow:draw()
+				buffer.draw()
+			end
 		end
 
 		button.onTouch = function()
-			_G.OSSettings.showHelpOnApplicationStart = false
+			MineOSCore.OSSettings.showHelpOnApplicationStart = false
 			MineOSCore.saveOSSettings()
 			
 			container.panel.onTouch()
@@ -940,6 +904,118 @@ function MineOSCore.applicationHelp(parentWindow, path)
 		parentWindow:draw()
 		buffer.draw()
 	end
+end
+
+----------------------------------------- Windows patterns -----------------------------------------
+
+local function onWindowResize(window, width, height)
+	if window.titleLabel then
+		window.titleLabel.width = width
+	end
+
+	if window.titlePanel then
+		window.titlePanel.width = height
+	end
+
+	if window.tabBar then
+		window.tabBar.width = width
+	end
+
+	window.backgroundPanel.width, window.backgroundPanel.height = width, height - (window.titlePanel and 1 or 0)
+end
+
+local function windowResize(window, width, height)
+	window.width, window.height = width, height
+	window:onResize(width, height)
+
+	return window
+end
+
+local function windowMinimize(window)
+	window.localPosition.x, window.localPosition.y = window.oldGeometry.x, window.oldGeometry.y
+	window:resize(window.oldGeometry.width, window.oldGeometry.height)
+	MineOSCore.OSDraw()
+end
+
+local function windowMaximize(window)
+	window.localPosition.x, window.localPosition.y = 1, 1
+	if window.width ~= window.parent.width or window.height ~= window.parent.height then
+		window.oldGeometry.x, window.oldGeometry.y, window.oldGeometry.width, window.oldGeometry.height = window.localPosition.x, window.localPosition.y, window.width, window.height
+		window:resize(window.parent.width, window.parent.height)
+	end
+	MineOSCore.OSDraw()
+end
+
+local function windowClose(window)
+	window:delete()
+	MineOSCore.OSDraw()
+end
+
+function MineOSCore.addWindow(window)
+	window.x = window.x or math.floor(MineOSCore.OSMainContainer.windowsContainer.width / 2 - window.width / 2)
+	window.y = window.y or math.floor(MineOSCore.OSMainContainer.windowsContainer.height / 2 - window.height / 2)
+	
+	MineOSCore.OSMainContainer.windowsContainer:addChild(window)
+	
+	window.resize = windowResize
+	window.onResize = onWindowResize
+	window.close = windowClose
+
+	if window.actionButtons then
+		window.oldGeometry = {x = window.x, y = window.y, width = window.width, height = window.height}
+		
+		window.actionButtons.close.onTouch = function()
+			windowClose(window)
+		end
+		window.actionButtons.maximize.onTouch = function()
+			windowMaximize(window)
+		end
+		window.actionButtons.minimize.onTouch = function()
+			windowMinimize(window)
+		end
+	end
+
+	return MineOSCore.OSMainContainer, window
+end
+
+-----------------------------------------------------------------------------------------------------------------------------------
+
+local function addKeyAndValue(window, x, y, key, value)
+	x = x + window:addChild(GUI.label(x, y, unicode.len(key) + 1, 1, 0x333333, key .. ":")).width + 1
+	return window:addChild(GUI.label(x, y, unicode.len(value), 1, 0x555555, value))
+end
+
+function MineOSCore.propertiesWindow(x, y, width, icon)
+	local mainContainer, window = MineOSCore.addWindow(GUI.titledWindow(x, y, width, 1, package.loaded.MineOSCore.localization.contextMenuProperties))
+
+	window.backgroundPanel.colors.transparency = 25
+	window:addChild(GUI.image(2, 3, icon.iconImage.image))
+
+	local x, y = 11, 3
+	addKeyAndValue(window, x, y, package.loaded.MineOSCore.localization.type, icon.extension and icon.extension or (icon.isDirectory and package.loaded.MineOSCore.localization.folder or package.loaded.MineOSCore.localization.unknown)); y = y + 1
+	local fileSizeLabel = addKeyAndValue(window, x, y, package.loaded.MineOSCore.localization.size, icon.isDirectory and package.loaded.MineOSCore.localization.calculatingSize or string.format("%.2f", icon.size / 1024) .. " KB"); y = y + 1
+	addKeyAndValue(window, x, y, package.loaded.MineOSCore.localization.date, os.date("%d.%m.%y, %H:%M", fs.lastModified(icon.path))); y = y + 1
+	addKeyAndValue(window, x, y, package.loaded.MineOSCore.localization.path, " ")
+
+	local lines = string.wrap(icon.path, window.width - 18)
+	local textBox = window:addChild(GUI.textBox(17, y, window.width - 18, #lines, nil, 0x555555, lines, 1))
+	window:resize(window.width, textBox.y + textBox.height)
+
+	mainContainer:draw()
+	buffer.draw()
+
+	if icon.isDirectory then
+		fileSizeLabel.text = string.format("%.2f", fs.directorySize(icon.path) / 1024) .. " KB"
+		mainContainer:draw()
+		buffer.draw()
+	end
+end
+
+-----------------------------------------------------------------------------------------------------------------------------------
+
+function MineOSCore.OSDraw(force)
+	MineOSCore.OSMainContainer:draw()
+	buffer.draw(force)
 end
 
 -----------------------------------------------------------------------------------------------------------------------------------

@@ -68,7 +68,7 @@ local function drawStation(x, y, name, color)
 end
 
 local function drawLine()
-	local x = math.floor(buffer.screen.width / 2)
+	local x = math.floor(buffer.width / 2)
 	for i = 1, lineHeight do
 		buffer.text(x + 1, i, config.colors.lineShadow, "▎")
 		buffer.text(x, i, config.colors.line, "▍")
@@ -101,7 +101,7 @@ end
 
 local function drawMenu()
 	local width = 36 + (3 * 2 + 2) * #radioStations
-	local x, y = math.floor(buffer.screen.width / 2 - width / 2), lineHeight + math.floor((buffer.screen.height - lineHeight) / 2 - 1)
+	local x, y = math.floor(buffer.width / 2 - width / 2), lineHeight + math.floor((buffer.height - lineHeight) / 2 - 1)
 
 	obj.gromkostPlus = {x, y, x + 4, y + 3}
 	x = bigLetters.drawText(x, y, config.colors.bottomToolBarDefaultColor, "+", "*") + 1
@@ -132,7 +132,7 @@ local function drawStations()
 	-- Текущая станция
 	name = ecs.stringLimit("end", unicode.lower(radioStations[radioStations.currentStation].name), stationNameLimit, true)
 	currentWidth = bigLetters.getTextSize(name)
-	local x, y = math.floor(buffer.screen.width / 2 - currentWidth / 2), math.floor(buffer.screen.height / 2 - 3)
+	local x, y = math.floor(buffer.width / 2 - currentWidth / 2), math.floor(buffer.height / 2 - 3)
 	drawStation(x, y, name, config.colors.activeStation)
 
 	-- Предедущая
@@ -159,7 +159,7 @@ local function drawAll()
 		radioStations.currentStation = #radioStations
 	end
 
-	buffer.square(1, 1, buffer.screen.width, buffer.screen.height, config.colors.background, 0xFFFFFF, " ")
+	buffer.square(1, 1, buffer.width, buffer.height, config.colors.background, 0xFFFFFF, " ")
 
 	drawStations()
 	drawLine()
@@ -215,7 +215,7 @@ end
 
 
 buffer.start()
-lineHeight = math.floor(buffer.screen.height * 0.7)
+lineHeight = math.floor(buffer.height * 0.7)
 loadStations()
 radio.stop()
 radio.setURL(radioStations[radioStations.currentStation].url)
@@ -292,7 +292,7 @@ while true do
 					{"Button", {ecs.colors.orange, 0xffffff, "OK"}}
 				)
 			elseif action == "Выход" then
-				buffer.square(1, 1, buffer.screen.width, buffer.screen.height, config.colors.background, 0xFFFFFF, " ")
+				buffer.square(1, 1, buffer.width, buffer.height, config.colors.background, 0xFFFFFF, " ")
 				buffer.draw()
 				ecs.prepareToExit()
 				radio.stop()

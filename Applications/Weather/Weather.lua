@@ -13,6 +13,7 @@ local image = require("image")
 local unicode = require("unicode")
 local component = require("component")
 local GUI = require("GUI")
+local MineOSCore = require("MineOSCore")
 
 ---------------------------------------------------- Константы ----------------------------------------------------------------
 
@@ -20,15 +21,16 @@ local weather = {}
 local changeCityButton = {}
 local exitButton = {}
 
-local pathToWeatherFile = "MineOS/System/Weather/Forecast.cfg"
+local resources = MineOSCore.getCurrentApplicationResourcesDirectory()
+local pathToWeatherFile = "/MineOS/System/Weather/Forecast.cfg"
 
 local pathsToWeatherTypes = {
-	sunny = "MineOS/Applications/Weather.app/Resources/Sunny.pic",
-	sunnyWithClouds = "MineOS/Applications/Weather.app/Resources/SunnyWithClouds.pic",
-	snowy = "MineOS/Applications/Weather.app/Resources/Snowy.pic",
-	rainy = "MineOS/Applications/Weather.app/Resources/Rainy.pic",
-	cloudy = "MineOS/Applications/Weather.app/Resources/Cloudy.pic",
-	stormy = "MineOS/Applications/Weather.app/Resources/Stormy.pic",
+	sunny = resources .. "Sunny.pic",
+	sunnyWithClouds = resources .. "SunnyWithClouds.pic",
+	snowy = resources .. "Snowy.pic",
+	rainy = resources .. "Rainy.pic",
+	cloudy = resources .. "Cloudy.pic",
+	stormy = resources .. "Stormy.pic",
 }
 
 local weatherIcons = {
@@ -177,15 +179,15 @@ end
 
 local function drawWeather()
 	--Рисуем обоинку или просто говнофон ССАНЫЙ
-	if fs.exists(_G.OSSettings.wallpaper) then
-		buffer.image(1, 1, image.load(_G.OSSettings.wallpaper))
-		buffer.square(1, 1, buffer.screen.width, buffer.screen.height, 0x0, 0x0, " ", 60)
+	if fs.exists(MineOSCore.OSSettings.wallpaper or "---aefaefaefaefae") then
+		buffer.image(1, 1, image.load(MineOSCore.OSSettings.wallpaper))
+		buffer.square(1, 1, buffer.width, buffer.height, 0x0, 0x0, " ", 60)
 	else
 		buffer.clear(0x262626)
 	end
 
 	--Рисуем текущую температуру
-	local x, y = 10, buffer.screen.height - 25
+	local x, y = 10, buffer.height - 25
 	bigLetters.drawText(x, y, 0xFFFFFF, weather.temperature, drawWithSymbol)
 	y = y + 6
 	--Рисуем название города
@@ -200,7 +202,7 @@ local function drawWeather()
 	--Рисуем КНОПАЧКИ
 	y = y + 2
 	changeCityButton = {buffer.button(x, y, 22, 1, 0xEEEEEE, 0x262626, "Другой город")}
-	exitButton = {buffer.button(buffer.screen.width - 4, 2, 3, 1, 0xEEEEEE, 0x262626, "X")}
+	exitButton = {buffer.button(buffer.width - 4, 2, 3, 1, 0xEEEEEE, 0x262626, "X")}
 
 	--Рисуем долгосрочный прогноз
 	y = y + 3

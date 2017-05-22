@@ -86,7 +86,7 @@ syntax.patterns = {
 
 -- Отрисовка строки с подсвеченным синтаксисом
 function syntax.highlightString(x, y, str, indentationWidth)
-	if y >= buffer.drawLimit.y and y <= buffer.drawLimit.y2 then
+	if y >= buffer.drawLimit.y1 and y <= buffer.drawLimit.y2 then
 		local stringLength, symbols, colors, searchFrom, starting, ending, bufferIndex = unicode.len(str), {}, {}
 
 		for symbol = 1, stringLength do
@@ -126,10 +126,10 @@ function syntax.highlightString(x, y, str, indentationWidth)
 
 			if x > buffer.drawLimit.x2 then
 				break
-			elseif x >= buffer.drawLimit.x then
+			elseif x >= buffer.drawLimit.x1 then
 				bufferIndex = bufferIndex or buffer.getBufferIndexByCoordinates(x, y)
-				buffer.screen.new[bufferIndex + 1] = colors[symbol] or syntax.colorScheme.text
-				buffer.screen.new[bufferIndex + 2] = symbols[symbol]
+				buffer.newFrame[bufferIndex + 1] = colors[symbol] or syntax.colorScheme.text
+				buffer.newFrame[bufferIndex + 2] = symbols[symbol]
 				bufferIndex = bufferIndex + 3
 			end
 			
@@ -144,13 +144,11 @@ end
 -- buffer.clear(0x1b1b1b)
 
 -- buffer.square(5, 5, 30, 3, syntax.colorScheme.background, 0x0, " ")
--- -- buffer.setDrawLimit(5, 5, 30, 3)
 -- -- syntax.highlightString(5, 6, "if not fs.exists(path) then error(\"File \\\"\"..path..\"\\\" doesnt't exsists.\\n\") end")
 -- syntax.highlightString(5, 6, "for i = 1, 10 do", 2)
 -- syntax.highlightString(5, 7, "  local abc = print(123)", 2)
 -- syntax.highlightString(5, 8, "    local abc = print(123)", 2)
 -- syntax.highlightString(5, 9, "end", 2)
--- -- buffer.resetDrawLimit()
 
 -- buffer.draw(true)
 

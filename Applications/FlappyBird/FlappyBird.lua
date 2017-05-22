@@ -36,15 +36,15 @@ local colors = {
 
 local columns = {}
 
-local pathToHighScores = "MineOS/System/FlappyBird/Scores.txt"
-local pathToFlappyImage = "MineOS/Applications/FlappyBird.app/Resources/Flappy.pic"
+local pathToHighScores = "/MineOS/System/FlappyBird/Scores.txt"
+local pathToFlappyImage = "/MineOS/Applications/FlappyBird.app/Resources/Flappy.pic"
 local bird = image.load(pathToFlappyImage)
-local xBird, yBird = 8, math.floor(buffer.screen.height / 2 - 3)
+local xBird, yBird = 8, math.floor(buffer.height / 2 - 3)
 local birdIsAlive = true
 
 local scores = {}
 local currentScore, currentUser = 0, 0
-local xScore, yScore = math.floor(buffer.screen.width / 2 - 6), math.floor(buffer.screen.height * 0.16)
+local xScore, yScore = math.floor(buffer.width / 2 - 6), math.floor(buffer.height * 0.16)
 
 local function drawColumn(x, upperCornerStartPosition)
 	local y = 1
@@ -54,7 +54,7 @@ local function drawColumn(x, upperCornerStartPosition)
 	y = upperCornerStartPosition + config.columnFreeSpace
 	buffer.square(x, y, config.columnPipeWidth, config.columnPipeHeight, colors.columnAlternative)
 	y = y + config.columnPipeHeight
-	buffer.square(x + 1, y, config.columnWidth, buffer.screen.height - y + 1, colors.columnMain)
+	buffer.square(x + 1, y, config.columnWidth, buffer.height - y + 1, colors.columnMain)
 end
 
 local function dieBirdDie()
@@ -65,8 +65,8 @@ local function dieBirdDie()
 end
 
 local function generateColumn()
-	local yFreeZone = math.random(config.columnPipeHeight + 2, buffer.screen.height - config.columnPipeHeight - config.columnFreeSpace)
-	table.insert(columns, {x = buffer.screen.width - 1, yFreeZone = yFreeZone})
+	local yFreeZone = math.random(config.columnPipeHeight + 2, buffer.height - config.columnPipeHeight - config.columnFreeSpace)
+	table.insert(columns, {x = buffer.width - 1, yFreeZone = yFreeZone})
 end
 
 local scoreCanBeAdded = true
@@ -111,7 +111,7 @@ end
 
 local function drawBigCenterText(y, textColor, usePseudoShadow, text)
 	local width = bigLetters.getTextSize(text)
-	local x = math.floor(buffer.screen.width / 2 - width / 2)
+	local x = math.floor(buffer.width / 2 - width / 2)
 
 	if usePseudoShadow then buffer.square(x - 2, y - 1, width + 4, 7, colors.scoreTextBackground) end
 	bigLetters.drawText(x, y, textColor, text)
@@ -195,8 +195,8 @@ local function finalGUI()
 	local heightOfBoard = 40
 
 	local function draw()
-		local y = math.floor(buffer.screen.height / 2 - 19)
-		local x = math.floor(buffer.screen.width / 2 - widthOfBoard / 2)
+		local y = math.floor(buffer.height / 2 - 19)
+		local x = math.floor(buffer.width / 2 - widthOfBoard / 2)
 		
 		drawAll()
 		
@@ -232,7 +232,7 @@ local function finalGUI()
 			scoreCanBeAdded = true
 			columns = {}
 			bird = image.load(pathToFlappyImage)
-			yBird = math.floor(buffer.screen.height / 2 - 3)
+			yBird = math.floor(buffer.height / 2 - 3)
 			drawAll()
 			wait()
 			return
@@ -271,7 +271,7 @@ while true do
 	end
 
 	if not somethingHappend then
-		if yBird + image.getHeight(bird) - 1 < buffer.screen.height then
+		if yBird + image.getHeight(bird) - 1 < buffer.height then
 			yBird = yBird + config.birdFlyDownSpeed
 		else
 			scores[currentUser] = math.max(scores[currentUser] or 0, currentScore)
