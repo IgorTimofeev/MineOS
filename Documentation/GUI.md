@@ -119,7 +119,7 @@ GUI.**container**( x, y, width, height ): *table* container
 
 Для добавления в контейнер любого существующего виджета (см. ниже) используйте синтаксическую конструкцию :**addChild**(**<Объект>**). К примеру, для добавления кнопки используйте :**addChild**(GUI.**button**(...)). В контейнер можно добавлять другие контейнеры, а в добавленные - еще одни, создавая сложные иерархические цепочки и группируя дочерние объекты по своему усмотрению
 
-Наконец, самая важная особенность контейнеров - это автоматизированная обработка системных событий. Для запуска обработчика событий необходимо вызвать метод :**startEventHandling**. После его запуска при каждом событии текущий контейнер и всего его вложенные объекты будут рекурсивно проанализированы на наличие метода-обработчика .**eventHandler**.
+Наконец, самая важная особенность контейнеров - это автоматизированная обработка системных событий. Для запуска обработчика событий необходимо вызвать метод :**startEventHandling**. После его запуска при каждом событии текущий контейнер и всего его вложенные объекты будут рекурсивно проанализированы на наличие метода-обработчика .**eventHandler**. Если необходимо прекратить обработку событий, то необходимо вызывать метод :**stopEventHandling**.
 
 Если метод-обработчик имеется, то он будет вызван со следующими аргументами: *container* mainContainer, *object* object, *table* eventData, где первым аргументом является контейнер с вызванным обработчиком событий, вторым является текущий рассматриваемый объект обработчика событий, а третьим - таблица с данными события. Все объекты, перечисленные ниже, уже имеются собственный .**eventHandler** - к примеру, кнопка автоматически нажимается, слайдер перемещается влево-вправо, а селектор цвета открывает палитру для выбора желаемого оттенка. Все это реализовано именно на методе-обработчике. 
 
@@ -130,7 +130,8 @@ GUI.**container**( x, y, width, height ): *table* container
 | *function* | :**addChild**( *table* child ): *table* child| Добавить произвольный объект в контейнер в качестве дочернего - таким образом вы способны создавать собственные виджеты с индивидуальными особенностями. Уточняю, что у добавляемого объекта **обязательно** должен иметься метод *:draw* (подробнее см. ниже). При добавлении объекта его глобальные координаты становятся локальными |
 | *function* | :**deleteChildren**()| Удалить все дочерние элементы контейнера |
 | *function* | :**draw**(): *table* container | Рекурсивная отрисовка содержимого контейнера в порядке очереди его дочерних элементов. Обращаю внимание на то, что данный метод осуществляет отрисовку только в экранный буфер. Для отображения изменений на экране необходимо использовать метод библиотеки двойного буфера *.draw()* |
-| *function* | :**startEventHandling**([*float* delay]): *table* container | Запуск обработчика событий для текущего контейнера и всех вложенных в него дочерних элементов. Параметр *delay* аналогичен таковому в computer.**pullSignal** |
+| *function* | :**startEventHandling**([*float* delay]): *table* container | Запуск обработчика событий для данного контейнера и всех вложенных в него дочерних элементов. Параметр *delay* аналогичен таковому в computer.**pullSignal** |
+| *function* | :**stopEventHandling**(): *table* container | Остановка обработчика событий для данного контейнера |
 
 GUI.**fullScreenContainer**( ): *table* container
 -----------------------------------------------------
@@ -163,26 +164,26 @@ local GUI = require("GUI")
 
 -- Создаем полноэкранное окно, добавляем на него изображение с малиной и полупрозрачную черную панель
 local mainContainer = GUI.fullScreenContainer()
-mainContainer:addImage(1, 1, require("image").load("/MineOS/Pictures/Raspberry.pic"))
-mainContainer:addPanel(1, 1, mainContainer.width, mainContainer.height, 0x000000, 40)
+mainContainer:addChild(GUI.image(1, 1, require("image").load("/MineOS/Pictures/Raspberry.pic")))
+mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x000000, 40))
 
 -- Добавляем к окну layout с сеткой 5x1
-local layout = mainContainer:addLayout(1, 1, mainContainer.width, mainContainer.height, 5, 1)
+local layout = mainContainer:addChild(GUI.layout(1, 1, mainContainer.width, mainContainer.height, 5, 1))
 
 -- Добавяляем в layout 9 кнопок, назначая им соответствующие позиции в сетке
-layout:setCellPosition(layout:addButton(1, 1, 26, 3, 0xEEEEEE, 0x000000, 0xAAAAAA, 0x000000, "Button 1"), 1, 1)
-layout:setCellPosition(layout:addButton(1, 1, 26, 3, 0xEEEEEE, 0x000000, 0xAAAAAA, 0x000000, "Button 2"), 2, 1)
-layout:setCellPosition(layout:addButton(1, 1, 26, 3, 0xEEEEEE, 0x000000, 0xAAAAAA, 0x000000, "Button 3"), 2, 1)
-layout:setCellPosition(layout:addButton(1, 1, 26, 3, 0xEEEEEE, 0x000000, 0xAAAAAA, 0x000000, "Button 4"), 3, 1)
-layout:setCellPosition(layout:addButton(1, 1, 26, 3, 0xEEEEEE, 0x000000, 0xAAAAAA, 0x000000, "Button 5"), 3, 1)
-layout:setCellPosition(layout:addButton(1, 1, 26, 3, 0xEEEEEE, 0x000000, 0xAAAAAA, 0x000000, "Button 6"), 3, 1)
-layout:setCellPosition(layout:addButton(1, 1, 26, 3, 0xEEEEEE, 0x000000, 0xAAAAAA, 0x000000, "Button 7"), 4, 1)
-layout:setCellPosition(layout:addButton(1, 1, 26, 3, 0xEEEEEE, 0x000000, 0xAAAAAA, 0x000000, "Button 8"), 4, 1)
-layout:setCellPosition(layout:addButton(1, 1, 26, 3, 0xEEEEEE, 0x000000, 0xAAAAAA, 0x000000, "Button 9"), 5, 1)
+layout:setCellPosition(layout:addChild(GUI.button(1, 1, 26, 3, 0xEEEEEE, 0x000000, 0xAAAAAA, 0x000000, "Button 1")), 1, 1)
+layout:setCellPosition(layout:addChild(GUI.button(1, 1, 26, 3, 0xEEEEEE, 0x000000, 0xAAAAAA, 0x000000, "Button 2")), 2, 1)
+layout:setCellPosition(layout:addChild(GUI.button(1, 1, 26, 3, 0xEEEEEE, 0x000000, 0xAAAAAA, 0x000000, "Button 3")), 2, 1)
+layout:setCellPosition(layout:addChild(GUI.button(1, 1, 26, 3, 0xEEEEEE, 0x000000, 0xAAAAAA, 0x000000, "Button 4")), 3, 1)
+layout:setCellPosition(layout:addChild(GUI.button(1, 1, 26, 3, 0xEEEEEE, 0x000000, 0xAAAAAA, 0x000000, "Button 5")), 3, 1)
+layout:setCellPosition(layout:addChild(GUI.button(1, 1, 26, 3, 0xEEEEEE, 0x000000, 0xAAAAAA, 0x000000, "Button 6")), 3, 1)
+layout:setCellPosition(layout:addChild(GUI.button(1, 1, 26, 3, 0xEEEEEE, 0x000000, 0xAAAAAA, 0x000000, "Button 7")), 4, 1)
+layout:setCellPosition(layout:addChild(GUI.button(1, 1, 26, 3, 0xEEEEEE, 0x000000, 0xAAAAAA, 0x000000, "Button 8")), 4, 1)
+layout:setCellPosition(layout:addChild(GUI.button(1, 1, 26, 3, 0xEEEEEE, 0x000000, 0xAAAAAA, 0x000000, "Button 9")), 5, 1)
 
 mainContainer:draw()
 buffer.draw(true)
-mainContainer:handleEvents()
+mainContainer:startEventHandling()
 ```
 
 Результат:
@@ -253,12 +254,12 @@ local GUI = require("GUI")
 
 local mainContainer = GUI.fullScreenContainer()
 
-local panel1 = mainContainer:addPanel(1, 1, mainContainer.width, math.floor(mainContainer.height / 2), 0x444444)
-mainContainer:addPanel(1, panel1.height, mainContainer.width, mainContainer.height - panel1.height + 1, 0x880000)
+local panel1 = mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, math.floor(mainContainer.height / 2), 0x444444))
+mainContainer:addChild(GUI.panel(1, panel1.height, mainContainer.width, mainContainer.height - panel1.height + 1, 0x880000))
 
 mainContainer:draw()
 buffer.draw(true)
-mainContainer:handleEvents()
+mainContainer:startEventHandling()
 ```
 
 Результат:
@@ -279,7 +280,7 @@ GUI.**button**( x, y, width, height, buttonColor, textColor, buttonPressedColor,
 | *int* | textPressedColor | Цвет текста при нажатии |
 | *string* | text | Текст на кнопке |
 
-Создать объект типа "кнопка". Каждая кнопка имеет два состояния (*isPressed = true/false*), автоматически переключаемые оконным методом *handleEvents*. Для назначения какого-либо действия кнопке после ее нажатия создайте для нее метод *.onTouch()*.
+Создать объект типа "кнопка". Каждая кнопка имеет два состояния (*isPressed = true/false*), автоматически переключаемые методом-обработчиком .*eventHandler*. Для назначения какого-либо действия кнопке после ее нажатия создайте для нее метод *.onTouch()*.
 
 Имеется также три альтернативных варианта кнопки: 
 
@@ -300,15 +301,15 @@ local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 
 local mainContainer = GUI.fullScreenContainer()
-mainContainer:addPanel(1, 1, mainContainer.width, mainContainer.height, 0x0)
+mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x0))
 
-mainContainer:addButton(2, 2, 30, 3, 0xFFFFFF, 0x000000, 0xAAAAAA, 0x000000, "Button text").onTouch = function()
+mainContainer:addChild(GUI.button(2, 2, 30, 3, 0xFFFFFF, 0x000000, 0xAAAAAA, 0x000000, "Button text")).onTouch = function()
 	-- Do something on button click
 end
 
 mainContainer:draw()
 buffer.draw(true)
-mainContainer:handleEvents()
+mainContainer:startEventHandling()
 ```
 
 Результат:
@@ -339,13 +340,13 @@ local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 
 local mainContainer = GUI.fullScreenContainer()
-mainContainer:addPanel(1, 1, mainContainer.width, mainContainer.height, 0x0)
+mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x0))
 
-mainContainer:addLabel(2, 2, mainContainer.width, mainContainer.height, 0xFFFFFF, "Centered text"):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.center)
+mainContainer:addChild(GUI.label(2, 2, mainContainer.width, mainContainer.height, 0xFFFFFF, "Centered text")):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.center))
 
 mainContainer:draw()
 buffer.draw(true)
-mainContainer:handleEvents()
+mainContainer:startEventHandling()
 ```
 
 Результат:
@@ -385,9 +386,9 @@ local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 
 local mainContainer = GUI.fullScreenContainer()
-mainContainer:addPanel(1, 1, mainContainer.width, mainContainer.height, 0x0)
+mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x0))
 
-local inputTextBox = mainContainer:addInputTextBox(2, 2, 32, 3, 0xEEEEEE, 0x555555, 0xEEEEEE, 0x2D2D2D, nil, "Type number here", true, nil, nil, nil)
+local inputTextBox = mainContainer:addChild(GUI.inputTextBox(2, 2, 32, 3, 0xEEEEEE, 0x555555, 0xEEEEEE, 0x2D2D2D, nil, "Type number here", true, nil, nil, nil))
 inputTextBox.validator = function(text)
 	if tonumber(text) then return true end
 end
@@ -397,7 +398,7 @@ end
 
 mainContainer:draw()
 buffer.draw(true)
-mainContainer:handleEvents()
+mainContainer:startEventHandling()
 ```
 
 Результат:
@@ -407,7 +408,7 @@ mainContainer:handleEvents()
 
 ![enter image description here](http://i89.fastpic.ru/big/2017/0402/04/709cff165b64efd64d6346ecec188704.png)
 
-GUI.**horizontalSlider**( x, y, width, primaryColor, secondaryColor, pipeColor, valueColor, minimumValue, maximumValue, value, [showCornerValues, currentValuePrefix, currentValuePostfix] ): *table* horizontalSlider
+GUI.**slider**( x, y, width, primaryColor, secondaryColor, pipeColor, valueColor, minimumValue, maximumValue, value, [showCornerValues, currentValuePrefix, currentValuePostfix] ): *table* slider
 ------------------------------------------------------------------------
 | Тип | Аргумент | Описание |
 | ------ | ------ | ------ |
@@ -425,7 +426,7 @@ GUI.**horizontalSlider**( x, y, width, primaryColor, secondaryColor, pipeColor, 
 | [*string* | currentValuePrefix] | Префикс для значения слайдера |
 | [*string* | currentValuePostfix] | Постфикс для значения слайдера |
 
-Создать объект типа "горизонтальный слайдер", предназначенный для манипуляцией числовыми данными. Значение слайдера всегда будет варьироваться в диапазоне от минимального до максимального значений. Опционально можно указать значение поля *слайдер.**roundValues** = true*, если необходимо округлять изменяющееся число.
+Создать объект типа "слайдер", предназначенный для манипуляцией числовыми данными. Значение слайдера всегда будет варьироваться в диапазоне от минимального до максимального значений. Опционально можно указать значение поля *слайдер.**roundValues** = true*, если необходимо округлять изменяющееся число.
 
 | Тип свойства | Свойство |Описание |
 | ------ | ------ | ------ |
@@ -438,9 +439,9 @@ local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 
 local mainContainer = GUI.fullScreenContainer()
-mainContainer:addPanel(1, 1, mainContainer.width, mainContainer.height, 0x0)
+mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x0))
 
-local slider = mainContainer:addHorizontalSlider(4, 2, 30, 0xFFDB40, 0xEEEEEE, 0xFFDB80, 0xBBBBBB, 0, 100, 50, true, "Prefix: ", " postfix")
+local slider = mainContainer:addChild(GUI.slider(4, 2, 30, 0xFFDB40, 0xEEEEEE, 0xFFDB80, 0xBBBBBB, 0, 100, 50, true, "Prefix: ", " postfix"))
 slider.roundValues = true
 slider.onValueChanged = function(value)
 	-- Do something when slider's value changed
@@ -448,7 +449,7 @@ end
 
 mainContainer:draw()
 buffer.draw(true)
-mainContainer:handleEvents()
+mainContainer:startEventHandling()
 ```
 
 Результат:
@@ -480,17 +481,17 @@ local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 
 local mainContainer = GUI.fullScreenContainer()
-mainContainer:addPanel(1, 1, mainContainer.width, mainContainer.height, 0x0)
+mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x0))
 
-local switch1 = mainContainer:addSwitch(2, 2, 8, 0xFFDB40, 0xAAAAAA, 0xEEEEEE, true)
-local switch2 = mainContainer:addSwitch(12, 2, 8, 0xFFDB40, 0xAAAAAA, 0xEEEEEE, false)
+local switch1 = mainContainer:addChild(GUI.switch(2, 2, 8, 0xFFDB40, 0xAAAAAA, 0xEEEEEE, true))
+local switch2 = mainContainer:addChild(GUI.switch(12, 2, 8, 0xFFDB40, 0xAAAAAA, 0xEEEEEE, false))
 switch2.onStateChanged = function(state)
 	-- Do something when switch's state changed
 end
 
 mainContainer:draw()
 buffer.draw(true)
-mainContainer:handleEvents()
+mainContainer:startEventHandling()
 
 ```
 
@@ -522,15 +523,15 @@ local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 
 local mainContainer = GUI.fullScreenContainer()
-mainContainer:addPanel(1, 1, mainContainer.width, mainContainer.height, 0x0)
+mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x0))
 
-mainContainer:addColorSelector(2, 2, 30, 3, 0xFF55FF, "Choose color").onTouch = function()
+mainContainer:addChild(GUI.colorSelector(2, 2, 30, 3, 0xFF55FF, "Choose color")).onTouch = function()
 	-- Do something after choosing color
 end
 
 mainContainer:draw()
 buffer.draw(true)
-mainContainer:handleEvents()
+mainContainer:startEventHandling()
 ```
 
 Результат:
@@ -566,9 +567,9 @@ local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 
 local mainContainer = GUI.fullScreenContainer()
-mainContainer:addPanel(1, 1, mainContainer.width, mainContainer.height, 0x0)
+mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x0))
 
-local comboBox = mainContainer:addComboBox(2, 2, 30, 3, 0xEEEEEE, 0x2D2D2D, 0xCCCCCC, 0x999999)
+local comboBox = mainContainer:addChild(GUI.comboBox(2, 2, 30, 3, 0xEEEEEE, 0x2D2D2D, 0xCCCCCC, 0x999999))
 comboBox:addItem(".PNG")
 comboBox:addItem(".JPG").onTouch = function()
 	-- Do something when .JPG was selected
@@ -583,7 +584,7 @@ end
 
 mainContainer:draw()
 buffer.draw(true)
-mainContainer:handleEvents()
+mainContainer:startEventHandling()
 ```
 
 Результат:
@@ -617,9 +618,9 @@ local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 
 local mainContainer = GUI.fullScreenContainer()
-mainContainer:addPanel(1, 1, mainContainer.width, mainContainer.height, 0x0)
+mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x0))
 
-local menu = mainContainer:addMenu(1, 1, mainContainer.width, 0xEEEEEE, 0x2D2D2D, 0x3366CC, 0xFFFFFF, nil)
+local menu = mainContainer:addChild(GUI.menu(1, 1, mainContainer.width, 0xEEEEEE, 0x2D2D2D, 0x3366CC, 0xFFFFFF, nil))
 menu:addItem("MineCode IDE", 0x0)
 menu:addItem("File").onTouch = function(eventData)
 	local contextMenu = GUI.contextMenu(eventData[3], eventData[4] + 1)
@@ -638,7 +639,7 @@ menu:addItem("About")
 
 mainContainer:draw()
 buffer.draw(true)
-mainContainer:handleEvents()
+mainContainer:startEventHandling()
 ```
 
 Результат:
@@ -668,13 +669,13 @@ local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 
 local mainContainer = GUI.fullScreenContainer()
-mainContainer:addPanel(1, 1, mainContainer.width, mainContainer.height, 0x0)
+mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x0))
 
-mainContainer:addImage(2, 2, image.load("/Furnance.pic"))
+mainContainer:addChild(GUI.image(2, 2, image.load("/Furnance.pic")))
 
 mainContainer:draw()
 buffer.draw(true)
-mainContainer:handleEvents()
+mainContainer:startEventHandling()
 ```
 
 Результат:
@@ -710,13 +711,13 @@ local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 
 local mainContainer = GUI.fullScreenContainer()
-mainContainer:addPanel(1, 1, mainContainer.width, mainContainer.height, 0x0)
+mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x0))
 
-mainContainer:addProgressBar(2, 2, 50, 0x3366CC, 0xEEEEEE, 0xEEEEEE, 80, true, true, "Value prefix: ", " value postfix")
+mainContainer:addChild(GUI.progressBar(2, 2, 50, 0x3366CC, 0xEEEEEE, 0xEEEEEE, 80, true, true, "Value prefix: ", " value postfix"))
 
 mainContainer:draw()
 buffer.draw(true)
-mainContainer:handleEvents()
+mainContainer:startEventHandling()
 ```
 
 Результат:
@@ -754,16 +755,16 @@ local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 
 local mainContainer = GUI.fullScreenContainer()
-mainContainer:addPanel(1, 1, mainContainer.width, mainContainer.height, 0x0)
+mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x0))
 
-local scrollBar = mainContainer:addScrollBar(2, 2, 1, 30, 0xEEEEEE, 0x3366CC, 1, 100, 1, 10, 1, false)
+local scrollBar = mainContainer:addChild(GUI.scrollBar(2, 2, 1, 30, 0xEEEEEE, 0x3366CC, 1, 100, 1, 10, 1, false))
 scrollBar.onTouch = function()
 	-- Do something on scrollBar touch
 end
 
 mainContainer:draw()
 buffer.draw(true)
-mainContainer:handleEvents()
+mainContainer:startEventHandling()
 ```
 
 Результат:
@@ -799,9 +800,9 @@ local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 
 local mainContainer = GUI.fullScreenContainer()
-mainContainer:addPanel(1, 1, mainContainer.width, mainContainer.height, 0x0)
+mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x0))
 
-local textBox = mainContainer:addTextBox(2, 2, 32, 16, 0xEEEEEE, 0x2D2D2D, {}, 1, 1, 0)
+local textBox = mainContainer:addChild(GUI.textBox(2, 2, 32, 16, 0xEEEEEE, 0x2D2D2D, {}, 1, 1, 0))
 table.insert(textBox.lines, {text = "Sample colored line ", color = 0x880000})
 for i = 1, 100 do
 	table.insert(textBox.lines, "Sample line " .. i)
@@ -809,7 +810,7 @@ end
 
 mainContainer:draw()
 buffer.draw(true)
-mainContainer:handleEvents()
+mainContainer:startEventHandling()
 ```
 
 Результат:
@@ -847,16 +848,16 @@ local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 
 local mainContainer = GUI.fullScreenContainer()
-mainContainer:addPanel(1, 1, mainContainer.width, mainContainer.height, 0x0)
+mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x0))
 
-local treeView = mainContainer:addTreeView(2, 2, 30, 41, 0xCCCCCC, 0x2D2D2D, 0x3C3C3C, 0xEEEEEE, 0x666666, 0xEEEEEE, 0x3366CC, "/")
+local treeView = mainContainer:addChild(GUI.treeView(2, 2, 30, 41, 0xCCCCCC, 0x2D2D2D, 0x3C3C3C, 0xEEEEEE, 0x666666, 0xEEEEEE, 0x3366CC, "/"))
 treeView.onFileSelected = function(filePath)
 	-- Do something when file was selected
 end
 
 mainContainer:draw()
 buffer.draw(true)
-mainContainer:handleEvents()
+mainContainer:startEventHandling()
 
 ```
 
@@ -891,7 +892,7 @@ local GUI = require("GUI")
 local unicode = require("unicode")
 
 local mainContainer = GUI.fullScreenContainer()
-mainContainer:addPanel(1, 1, mainContainer.width, mainContainer.height, 0x0)
+mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x0))
 
 local codeView = mainContainer:addCodeView(2, 2, 130, 40, {}, 1, 1, 1, {}, {}, true, 2)
 local file = io.open("/lib/OpenComputersGL/Main.lua", "r")
@@ -904,7 +905,7 @@ file:close()
 
 mainContainer:draw()
 buffer.draw(true)
-mainContainer:handleEvents()
+mainContainer:startEventHandling()
 ```
 
 Результат:
@@ -939,16 +940,16 @@ local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 
 local mainContainer = GUI.fullScreenContainer()
-mainContainer:addPanel(1, 1, mainContainer.width, mainContainer.height, 0x0)
+mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x0))
 
-local chart = mainContainer:addChart(2, 2, 100, 30, 0xEEEEEE, 0xAAAAAA, 0x888888, 0xFFDB40, 0.25, 0.25, "s", "t", true, {})
+local chart = mainContainer:addChild(GUI.chart(2, 2, 100, 30, 0xEEEEEE, 0xAAAAAA, 0x888888, 0xFFDB40, 0.25, 0.25, "s", "t", true, {}))
 for i = 1, 100 do
 	table.insert(chart.values, {i, math.random(0, 80)})
 end
 
 mainContainer:draw()
 buffer.draw(true)
-mainContainer:handleEvents()
+mainContainer:startEventHandling()
 
 ```
 
@@ -969,13 +970,13 @@ local GUI = require("GUI")
 -- Создаем полноэкранное окно
 local mainContainer = GUI.fullScreenContainer()
 -- Добавляем на окно темно-серую панель по всей его ширине и высоте
-mainContainer:addPanel(1, 1, mainContainer.width, mainContainer.height, 0x2D2D2D)
+mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x2D2D2D))
 
 -- Создаем 5 объектов-кнопок, располагаемых все ниже и ниже
 local y = 2
 for i = 1, 5 do
 	-- При нажатии на конкретную кнопку будет вызван указанный метод .onTouch()
-	mainContainer:addButton(2, y, 30, 3, 0xEEEEEE, 0x2D2D2D, 0x666666, 0xEEEEEE, "This is button " .. i).onTouch = function()
+	mainContainer:addChild(GUI.button(2, y, 30, 3, 0xEEEEEE, 0x2D2D2D, 0x666666, 0xEEEEEE, "This is button " .. i)).onTouch = function()
 		GUI.error("You've pressed button " .. i .. "!")
 	end
 	y = y + 4
@@ -986,7 +987,7 @@ mainContainer:draw()
 -- Отрисовываем содержимое экранного буфера
 buffer.draw()
 -- Активируем режим обработки событий
-mainContainer:handleEvents()
+mainContainer:startEventHandling()
 ```
 При нажатии на любую из созданных кнопок будет показываться дебаг-окно с информацией, указанной в методе *.onTouch*:
 
@@ -1007,7 +1008,7 @@ local GUI = require("GUI")
 
 -- Создаем окно с синей фоновой панелью
 local mainContainer = GUI.fullScreenContainer()
-mainContainer:addPanel(1, 1, mainContainer.width, mainContainer.height, 0x002440)
+mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x002440))
 
 -- Указываем размеры полей ввода текста и кнопок
 local elementWidth, elementHeight = 40, 3
@@ -1015,12 +1016,12 @@ local x, y = math.floor(mainContainer.width / 2 - elementWidth / 2), math.floor(
 
 -- Загружаем и добавляем изображение логотипа "нашей компании"
 local logotype = image.load("/MineOS/Applications/VK.app/Resources/VKLogo.pic")
-mainContainer:addImage(math.floor(mainContainer.width / 2 - image.getWidth(logotype) / 2) - 2, y - image.getHeight(logotype) - 1, logotype); y = y + 2
+mainContainer:addChild(GUI.image(math.floor(mainContainer.width / 2 - image.getWidth(logotype) / 2) - 2, y - image.getHeight(logotype) - 1, logotype)); y = y + 2
 
 -- Создаем поле для ввода адреса почты
-local emailTextBox = mainContainer:addInputTextBox(x, y, elementWidth, elementHeight, 0xEEEEEE, 0x777777, 0xEEEEEE, 0x2D2D2D, nil, "E-mail", false, nil, nil, nil)
+local emailTextBox = mainContainer:addChild(GUI.inputTextBox(x, y, elementWidth, elementHeight, 0xEEEEEE, 0x777777, 0xEEEEEE, 0x2D2D2D, nil, "E-mail", false, nil, nil, nil))
 -- Создаем красный текстовый лейбл, показывающийся только в том случае, когда адрес почты неверен
-local invalidEmailLabel = mainContainer:addLabel(emailTextBox.localPosition.x + emailTextBox.width + 2, y + 1, mainContainer.width, 1, 0xFF5555, "Invalid e-mail"); y = y + elementHeight + 1
+local invalidEmailLabel = mainContainer:addChild(GUI.label(emailTextBox.localPosition.x + emailTextBox.width + 2, y + 1, mainContainer.width, 1, 0xFF5555, "Invalid e-mail")); y = y + elementHeight + 1
 invalidEmailLabel.isHidden = true
 -- Создаем callback-функцию, вызывающуюся после ввода текста и проверяющую корректность введенного адреса
 emailTextBox.onInputFinished = function(text)
@@ -1029,23 +1030,23 @@ emailTextBox.onInputFinished = function(text)
 	buffer.draw()
 end
 -- Создаем поле для ввода пароля
-mainContainer:addInputTextBox(x, y, elementWidth, elementHeight, 0xEEEEEE, 0x777777, 0xEEEEEE, 0x2D2D2D, nil, "Password", false, "*", nil, nil); y = y + elementHeight + 1
+mainContainer:addChild(GUI.inputTextBox(x, y, elementWidth, elementHeight, 0xEEEEEE, 0x777777, 0xEEEEEE, 0x2D2D2D, nil, "Password", false, "*", nil, nil)); y = y + elementHeight + 1
 
 -- Добавляем малоприметную кнопку для закрытия программы
-mainContainer:addButton(mainContainer.width, 1, 1, 1, 0x002440, 0xEEEEEE, 0x002440, 0xAAAAAA, "X").onTouch = function()
-	mainContainer:close()
+mainContainer:addChild(GUI.button(mainContainer.width, 1, 1, 1, 0x002440, 0xEEEEEE, 0x002440, 0xAAAAAA, "X")).onTouch = function()
+	mainContainer:stopEventHandling()
 	buffer.clear(0x0)
 	buffer.draw(true)
 end
 
 -- Добавляем кнопку для логина
-mainContainer:addButton(x, y, elementWidth, elementHeight, 0x666DFF, 0xEEEEEE, 0xEEEEEE, 0x666DFF, "Login").onTouch = function()
+mainContainer:addChild(GUI.button(x, y, elementWidth, elementHeight, 0x666DFF, 0xEEEEEE, 0xEEEEEE, 0x666DFF, "Login")).onTouch = function()
 	-- Код, выполняемый при успешном логине
 end
 
 mainContainer:draw()
 buffer.draw(true)
-mainContainer:handleEvents()
+mainContainer:startEventHandling()
 ```
 
 Результат:
@@ -1070,6 +1071,19 @@ local GUI = require("GUI")
 -- Создаем полноэкранное окно
 local mainContainer = GUI.fullScreenContainer()
 
+-- Создаем метод-обработчик событий для нашего виджета
+-- Грамотнее будет вынести его создание вне функции-конструктора, дабы не засорять память
+local function myWidgetEventHandler(mainContainer, object, eventData)
+	if eventData[1] == "touch" or eventData[1] == "drag" then
+		local x, y = eventData[3] - object.x + 1, eventData[4] - object.y + 1
+		object.pixels[y] = object.pixels[y] or {}
+		object.pixels[y][x] = eventData[5] == 0 and true or nil
+		
+		mainContainer:draw()
+		buffer.draw()
+	end
+end
+
 -- Создаем метод, возвращающий кастомный виджет
 local function createMyWidget(x, y, width, height, backgroundColor, paintColor)
 	-- Наследуемся от GUI.object, дополняем его параметрами цветов и пиксельной карты
@@ -1092,16 +1106,7 @@ local function createMyWidget(x, y, width, height, backgroundColor, paintColor)
 		end
 	end
 
-	-- Реализуем метод клика на объект, устанавливая или удаляя пиксели в зависимости от кнопки мыши
-	object.onTouch = function(eventData)
-		local x, y = eventData[3] - object.x + 1, eventData[4] - object.y + 1
-		object.pixels[y] = object.pixels[y] or {}
-		object.pixels[y][x] = eventData[5] == 0 and true or nil
-		mainContainer:draw()
-		buffer.draw()
-	end
-	-- Дублируем метод onTouch, чтобы рисование было непрерывным
-	object.onDrag = object.onTouch
+	object.eventHandler = myWidgetEventHandler
 
 	return object
 end
@@ -1109,13 +1114,13 @@ end
 ---------------------------------------------------------------------
 
 -- Добавляем темно-серую панель на окно
-mainContainer:addPanel(1, 1, mainContainer.width, mainContainer.height, 0x2D2D2D)
+mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x2D2D2D))
 -- Создаем экземпляр виджета-рисовалки и добавляем его на окно
 mainContainer:addChild(createMyWidget(2, 2, 32, 16, 0x3C3C3C, 0xEEEEEEE))
 
 mainContainer:draw()
 buffer.draw(true)
-mainContainer:handleEvents()
+mainContainer:startEventHandling()
 ```
 При нажатии на левую кнопку мыши в нашем виджете устанавливается пиксель указанного цвета, а на правую - удаляется.
 
