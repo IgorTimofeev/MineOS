@@ -88,7 +88,6 @@ local GUI = require("GUI")
 
 buffer.clear(0x0)
 GUI.error("Something went wrong here, my friend", {title = {text = "Alert", color = 0xFFDB40}})
-
 ```
 
 Результат:
@@ -145,6 +144,7 @@ button.eventHandler = function(mainContainer, button, eventData)
 			button.onTouch(mainContainer, object, eventData)
 		end
 	end
+end
 ```
 
 Ключевая деталь обработчика событий в том, что если событие "экранное", то есть относящееся к клику пользователя на монитор (touch, drag, drop, scroll), то метод-обработчик объекта будет вызван только в том случае, если пользователь "кликнул" на него, после чего обработка событий для оставшихся необработанных дочерних элементов завершится. Если событие не относится к экрану (key_down, clipboard и т.д.), или же объект не имеет метода-обработчика, то обработка оставшихся дочерних элементов продолжится в прежнем виде.
