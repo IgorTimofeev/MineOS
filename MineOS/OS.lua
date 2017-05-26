@@ -316,103 +316,7 @@ local function updateDesktopCounters()
 	MineOSCore.OSMainContainer.desktopCounters.localPosition.y = MineOSCore.OSMainContainer.height - sizes.heightOfDock - 2
 end
 
-local function updateDock()
-	local function moveDockShortcut(iconIndex, direction)
-		MineOSCore.OSSettings.dockShortcuts[iconIndex], MineOSCore.OSSettings.dockShortcuts[iconIndex + direction] = swap(MineOSCore.OSSettings.dockShortcuts[iconIndex], MineOSCore.OSSettings.dockShortcuts[iconIndex + direction])
-		MineOSCore.saveOSSettings()
-		updateDock()
-		MineOSCore.OSMainContainer:draw()
-		buffer.draw()
-	end
-
-	MineOSCore.OSMainContainer.dockContainer.width = (#MineOSCore.OSSettings.dockShortcuts + 1) * (MineOSCore.iconWidth + sizes.xSpaceBetweenIcons) - sizes.xSpaceBetweenIcons
-	MineOSCore.OSMainContainer.dockContainer.localPosition.x = math.floor(MineOSCore.OSMainContainer.width / 2 - MineOSCore.OSMainContainer.dockContainer.width / 2)
-	MineOSCore.OSMainContainer.dockContainer.localPosition.y = MineOSCore.OSMainContainer.height - sizes.heightOfDock + 1
-	MineOSCore.OSMainContainer.dockContainer:deleteChildren()
-
-	local xPos = 1
-	for iconIndex = 1, #MineOSCore.OSSettings.dockShortcuts do
-		local icon = MineOSCore.createIcon(xPos, 1, MineOSCore.OSSettings.dockShortcuts[iconIndex].path, 0x262626, MineOSCore.OSSettings.showExtension, 0xFFFFFF)
-			
-		icon.onRightClick = function(icon, eventData)
-			local menu = GUI.contextMenu(eventData[3], eventData[4])
-			menu:addItem(MineOSCore.localization.contextMenuShowContainingFolder).onTouch = function()
-				table.insert(workpathHistory, fs.path(icon.path))
-				changeWorkpath(#workpathHistory)
-				MineOSCore.OSMainContainer.updateAndDraw()
-			end
-			menu:addSeparator()
-			menu:addItem(MineOSCore.localization.contextMenuMoveRight, iconIndex >= #MineOSCore.OSSettings.dockShortcuts).onTouch = function()
-				moveDockShortcut(iconIndex, 1)
-			end
-			menu:addItem(MineOSCore.localization.contextMenuMoveLeft, iconIndex <= 1).onTouch = function()
-				moveDockShortcut(iconIndex, -1)
-			end
-			menu:addSeparator()
-			menu:addItem(MineOSCore.localization.contextMenuRemoveFromDock, MineOSCore.OSSettings.dockShortcuts[iconIndex].canNotBeDeleted or #MineOSCore.OSSettings.dockShortcuts < 2).onTouch = function()
-				table.remove(MineOSCore.OSSettings.dockShortcuts, iconIndex)
-				MineOSCore.saveOSSettings()
-				updateDock()
-				MineOSCore.OSMainContainer:draw()
-				buffer.draw()
-			end
-			menu:show()
-		end
-
-		MineOSCore.OSMainContainer.dockContainer:addChild(icon)
-		xPos = xPos + MineOSCore.iconWidth + sizes.xSpaceBetweenIcons
-	end
-
-	local icon = MineOSCore.createIcon(xPos, 1, MineOSCore.paths.trash, 0x262626, MineOSCore.OSSettings.showExtension, 0xFFFFFF)
-	icon.iconImage.image = MineOSCore.icons.trash
-	icon.onRightClick = function(icon, eventData)
-		local menu = GUI.contextMenu(eventData[3], eventData[4])
-		menu:addItem(MineOSCore.localization.emptyTrash).onTouch = function()
-			local container = MineOSCore.addUniversalContainer(MineOSCore.OSMainContainer, MineOSCore.localization.areYouSure)
-			
-			container.layout:addChild(GUI.button(1, 1, 30, 3, 0xEEEEEE, 0x262626, 0xA, 0x262626, "OK")).onTouch = function()
-				for file in fs.list(MineOSCore.paths.trash) do
-					fs.remove(MineOSCore.paths.trash .. file)
-				end
-				container:delete()
-				MineOSCore.OSMainContainer.updateAndDraw()
-			end
-
-			container.panel.onTouch = function()	
-				container:delete()
-				MineOSCore.OSMainContainer:draw()
-				buffer.draw()
-			end
-
-			MineOSCore.OSMainContainer:draw()
-			buffer.draw()
-		end
-		menu:show()
-	end
-
-	MineOSCore.OSMainContainer.dockContainer:addChild(icon)
-end
-
--- Отрисовка дока
-local function createDock()
-	MineOSCore.OSMainContainer.dockContainer = MineOSCore.OSMainContainer:addChild(GUI.container(1, 1, MineOSCore.OSMainContainer.width, sizes.heightOfDock))
-
-	-- Отрисовка дока
-	local oldDraw = MineOSCore.OSMainContainer.dockContainer.draw
-	MineOSCore.OSMainContainer.dockContainer.draw = function(dockContainer)
-		local currentDockTransparency, currentDockWidth, xPos, yPos = colors.dockBaseTransparency, dockContainer.width, dockContainer.x, dockContainer.y + 2
-		local color = MineOSCore.OSSettings.interfaceColor or colors.interface
-		for i = 1, dockContainer.height do
-			buffer.text(xPos, yPos, color, "▟", currentDockTransparency)
-			buffer.square(xPos + 1, yPos, currentDockWidth - 2, 1, color, 0xFFFFFF, " ", currentDockTransparency)
-			buffer.text(xPos + currentDockWidth - 1, yPos, color, "▙", currentDockTransparency)
-
-			currentDockTransparency, currentDockWidth, xPos, yPos = currentDockTransparency - colors.dockTransparencyAdder, currentDockWidth + 2, xPos - 1, yPos + 1
-		end
-
-		oldDraw(dockContainer)
-	end
-end
+---------------------------------------------- Всякая параша для ОС-контейнера ------------------------------------------------------------------------
 
 local function changeResolution()
 	currentDesktop = 1
@@ -425,10 +329,20 @@ local function changeResolution()
 	MineOSCore.OSMainContainer.iconField.localPosition.x = math.floor(MineOSCore.OSMainContainer.width / 2 - (MineOSCore.OSMainContainer.iconField.iconCount.width * (MineOSCore.iconWidth + sizes.xSpaceBetweenIcons) - sizes.xSpaceBetweenIcons) / 2)
 	MineOSCore.OSMainContainer.iconField.localPosition.y = 3
 
+	MineOSCore.OSMainContainer.dockContainer.localPosition.y = MineOSCore.OSMainContainer.height - sizes.heightOfDock + 1
+
 	MineOSCore.OSMainContainer.menu.width = MineOSCore.OSMainContainer.width
 	MineOSCore.OSMainContainer.background.width, MineOSCore.OSMainContainer.background.height = MineOSCore.OSMainContainer.width, MineOSCore.OSMainContainer.height
 
 	MineOSCore.OSMainContainer.windowsContainer.width, MineOSCore.OSMainContainer.windowsContainer.height = MineOSCore.OSMainContainer.width, MineOSCore.OSMainContainer.height - 1
+end
+
+local function moveDockIcon(index, direction)
+	MineOSCore.OSMainContainer.dockContainer.children[index], MineOSCore.OSMainContainer.dockContainer.children[index + direction] = MineOSCore.OSMainContainer.dockContainer.children[index + direction], MineOSCore.OSMainContainer.dockContainer.children[index]
+	MineOSCore.OSMainContainer.dockContainer.sort()
+	MineOSCore.OSMainContainer.dockContainer.saveToOSSettings()
+	MineOSCore.OSMainContainer:draw()
+	buffer.draw()
 end
 
 local function createOSWindow()
@@ -459,17 +373,148 @@ local function createOSWindow()
 			sizes.xSpaceBetweenIcons,
 			sizes.ySpaceBetweenIcons,
 			0xFFFFFF,
-			MineOSCore.OSSettings.showExtension or true,
-			MineOSCore.OSSettings.showHiddenFiles or true,
+			MineOSCore.OSSettings.showExtension,
+			MineOSCore.OSSettings.showHiddenFiles,
 			MineOSCore.OSSettings.sortingMethod or "type",
 			"/",
 			0xFFFFFF
 		)
 	)
 
-	createDock()
+	-- Dock
+	MineOSCore.OSMainContainer.dockContainer = MineOSCore.OSMainContainer:addChild(GUI.container(1, 1, MineOSCore.OSMainContainer.width, sizes.heightOfDock))
+	MineOSCore.OSMainContainer.dockContainer.saveToOSSettings = function()
+		MineOSCore.OSSettings.dockShortcuts = {}
+		for i = 1, #MineOSCore.OSMainContainer.dockContainer.children do
+			if MineOSCore.OSMainContainer.dockContainer.children[i].keepInDock then
+				table.insert(MineOSCore.OSSettings.dockShortcuts, MineOSCore.OSMainContainer.dockContainer.children[i].path)
+			end
+		end
+		MineOSCore.saveOSSettings()
+	end
+	MineOSCore.OSMainContainer.dockContainer.sort = function()
+		local x = 1
+		for i = 1, #MineOSCore.OSMainContainer.dockContainer.children do
+			MineOSCore.OSMainContainer.dockContainer.children[i].localPosition.x = x
+			x = x + MineOSCore.iconWidth + sizes.xSpaceBetweenIcons
+		end
+
+		MineOSCore.OSMainContainer.dockContainer.width = (#MineOSCore.OSMainContainer.dockContainer.children) * (MineOSCore.iconWidth + sizes.xSpaceBetweenIcons) - sizes.xSpaceBetweenIcons
+		MineOSCore.OSMainContainer.dockContainer.localPosition.x = math.floor(MineOSCore.OSMainContainer.width / 2 - MineOSCore.OSMainContainer.dockContainer.width / 2)
+	end
+
+	MineOSCore.OSMainContainer.dockContainer.addIcon = function(path, window)
+		local icon = MineOSCore.OSMainContainer.dockContainer:addChild(MineOSCore.createIcon(1, 1, path, 0x262626, MineOSCore.OSSettings.showExtension, 0xFFFFFF))
+		icon:moveBackward()
+		icon.window = window
+
+		icon.onLeftClick = function(icon, eventData)
+			if icon.window then
+				icon.window.hidden = false
+				icon.window:moveToFront()
+			else
+				MineOSCore.iconLeftClick(icon, eventData)
+			end
+		end
+
+		icon.onRightClick = function(icon, eventData)
+			local indexOf = icon:indexOf()
+
+			local menu = GUI.contextMenu(eventData[3], eventData[4])
+			menu:addItem(MineOSCore.localization.contextMenuShowContainingFolder).onTouch = function()
+				table.insert(workpathHistory, fs.path(icon.path))
+				changeWorkpath(#workpathHistory)
+				MineOSCore.OSMainContainer.updateAndDraw()
+			end
+			menu:addSeparator()
+			menu:addItem(MineOSCore.localization.contextMenuMoveRight, indexOf >= #MineOSCore.OSMainContainer.dockContainer.children - 1).onTouch = function()
+				moveDockIcon(indexOf, 1)
+			end
+			menu:addItem(MineOSCore.localization.contextMenuMoveLeft, indexOf <= 1).onTouch = function()
+				moveDockIcon(indexOf, -1)
+			end
+			menu:addSeparator()
+			if icon.keepInDock then
+				if #MineOSCore.OSMainContainer.dockContainer.children > 1 then
+					menu:addItem(MineOSCore.localization.contextMenuRemoveFromDock).onTouch = function()
+						if icon.window then
+							icon.keepInDock = nil
+						else
+							icon:delete()
+							MineOSCore.OSMainContainer.dockContainer.sort()
+						end
+						MineOSCore.OSMainContainer.dockContainer.saveToOSSettings()
+						MineOSCore.OSMainContainer:draw()
+						buffer.draw()
+					end
+				end
+			else
+				if icon.window then
+					menu:addItem(MineOSCore.localization.keepInDock).onTouch = function()
+						icon.keepInDock = true
+						MineOSCore.OSMainContainer.dockContainer.saveToOSSettings()
+					end
+				end
+			end
+
+			menu:show()
+		end
+
+		MineOSCore.OSMainContainer.dockContainer.sort()
+
+		return icon
+	end
+
+	-- Trash
+	local icon = MineOSCore.OSMainContainer.dockContainer.addIcon(MineOSCore.paths.trash)
+	icon.image = MineOSCore.icons.trash
+	icon.onRightClick = function(icon, eventData)
+		local menu = GUI.contextMenu(eventData[3], eventData[4])
+		menu:addItem(MineOSCore.localization.emptyTrash).onTouch = function()
+			local container = MineOSCore.addUniversalContainer(MineOSCore.OSMainContainer, MineOSCore.localization.areYouSure)
+			
+			container.layout:addChild(GUI.button(1, 1, 30, 3, 0xEEEEEE, 0x262626, 0xA, 0x262626, "OK")).onTouch = function()
+				for file in fs.list(MineOSCore.paths.trash) do
+					fs.remove(MineOSCore.paths.trash .. file)
+				end
+				container:delete()
+				MineOSCore.OSMainContainer.updateAndDraw()
+			end
+
+			container.panel.onTouch = function()	
+				container:delete()
+				MineOSCore.OSMainContainer:draw()
+				buffer.draw()
+			end
+
+			MineOSCore.OSMainContainer:draw()
+			buffer.draw()
+		end
+		menu:show()
+	end
+
+	for i = 1, #MineOSCore.OSSettings.dockShortcuts do
+		MineOSCore.OSMainContainer.dockContainer.addIcon(MineOSCore.OSSettings.dockShortcuts[i]).keepInDock = true
+	end
+
+	MineOSCore.OSMainContainer.dockContainer.draw = function(dockContainer)
+		local color, currentDockTransparency, currentDockWidth, xPos, yPos = MineOSCore.OSSettings.interfaceColor or colors.interface, colors.dockBaseTransparency, dockContainer.width, dockContainer.x, dockContainer.y + 2
+
+		for i = 1, dockContainer.height do
+			buffer.text(xPos, yPos, color, "▟", currentDockTransparency)
+			buffer.square(xPos + 1, yPos, currentDockWidth - 2, 1, color, 0xFFFFFF, " ", currentDockTransparency)
+			buffer.text(xPos + currentDockWidth - 1, yPos, color, "▙", currentDockTransparency)
+
+			currentDockTransparency, currentDockWidth, xPos, yPos = currentDockTransparency - colors.dockTransparencyAdder, currentDockWidth + 2, xPos - 1, yPos + 1
+		end
+
+		GUI.drawContainerContent(dockContainer)
+	end
+
+	-- Windows
 	MineOSCore.OSMainContainer.windowsContainer = MineOSCore.OSMainContainer:addChild(GUI.container(1, 2, 1, 1))
 
+	-- Menu
 	MineOSCore.OSMainContainer.menu = MineOSCore.OSMainContainer:addChild(GUI.menu(1, 1, MineOSCore.OSMainContainer.width, MineOSCore.OSSettings.interfaceColor or colors.interface, 0x444444, 0x3366CC, 0xFFFFFF, colors.topBarTransparency))
 	local item1 = MineOSCore.OSMainContainer.menu:addItem("MineOS", 0x000000)
 	item1.onTouch = function()
@@ -640,7 +685,6 @@ local function createOSWindow()
 	MineOSCore.OSMainContainer.update = function()
 		MineOSCore.OSMainContainer.iconField.fromFile = (currentDesktop - 1) * MineOSCore.OSMainContainer.iconField.iconCount.total + 1
 		MineOSCore.OSMainContainer.iconField:updateFileList()
-		updateDock()
 		updateDesktopCounters()
 	end
 
@@ -715,12 +759,13 @@ while true do
 	if success then
 		break
 	else
+		createOSWindow()
 		changeResolution()
-		MineOSCore.OSMainContainer.windowsContainer:deleteChildren()
-		-- MineOSCore.OSMainContainer:draw()
-		-- buffer.draw()
+		changeWorkpath(1)
+		changeWallpaper()
+		MineOSCore.OSMainContainer.updateAndDraw()
 
-		-- MineOSCore.showErrorWindow(path, line, traceback)
+		MineOSCore.showErrorWindow(path, line, traceback)
 
 		MineOSCore.OSMainContainer:draw()
 		buffer.draw()

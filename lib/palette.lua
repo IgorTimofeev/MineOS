@@ -121,6 +121,7 @@ function palette.window(x, y, startColor)
 			buffer.draw()
 		end
 	end
+	window.bigCrest.eventHandler = window.bigRainbow.eventHandler
 	
 	window.miniRainbow = window:addChild(GUI.image(53, 1, image.create(3, 25)))
 	window.miniCrest = window:addChild(GUI.object(52, 1, 5, 1))

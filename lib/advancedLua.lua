@@ -410,6 +410,23 @@ function table.size(t)
 	return size
 end
 
+function table.contains(t, object)
+	for key in pairs(t) do
+		if t[key] == object then
+			return true
+		end
+	end
+	return false
+end
+
+function table.indexOf(t, object)
+	for i = 1, #t do
+		if t[i] == object then 
+			return i
+		end
+	end
+end
+
 -------------------------------------------------- String extensions --------------------------------------------------
 
 function string.readUnicodeChar(file)

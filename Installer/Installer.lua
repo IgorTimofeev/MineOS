@@ -300,9 +300,9 @@ stages[5] = function()
 		OSSettings.screensaverDelay = 20
 		OSSettings.showHelpOnApplicationStart = stageContainer.showApplicationsHelpSwitch.state
 		OSSettings.dockShortcuts = {
-			{path = "/MineOS/Applications/AppMarket.app"},
-			{path = "/MineOS/Applications/MineCode IDE.app"},
-			{path = "/MineOS/Applications/Photoshop.app"},
+			"/MineOS/Applications/AppMarket.app/",
+			"/MineOS/Applications/MineCode IDE.app/",
+			"/MineOS/Applications/Photoshop.app/",
 		}
 
 		table.toFile(paths.OSSettings, OSSettings)

@@ -202,6 +202,14 @@ function MineOSCore.init()
 	MineOSCore.loadStandartIcons()
 end
 
+function MineOSCore.clearTerminal()
+	gpu.setBackground(0x1D1D1D)
+	gpu.setForeground(0xFFFFFF)
+	local width, height = gpu.getResolution()
+	gpu.fill(1, 1, width, height, " ")
+	require("term").setCursor(1, 1)
+end
+
 function MineOSCore.waitForPressingAnyKey()
 	print(" ")
 	print(MineOSCore.localization.pressAnyKeyToContinue)
@@ -228,7 +236,7 @@ local function launchEditor(icon)
 end
 
 local function launchLua(icon)
-	ecs.prepareToExit()
+	MineOSCore.clearTerminal()
 	if MineOSCore.safeLaunch(icon.path) then
 		MineOSCore.waitForPressingAnyKey()
 	end
@@ -261,14 +269,14 @@ function MineOSCore.analyzeIconExtension(icon)
 	if icon.isDirectory then
 		if icon.extension == ".app" then
 			if MineOSCore.showApplicationIcons then
-				icon.iconImage.image = image.load(icon.path .. "/Resources/Icon.pic")
+				icon.image = image.load(icon.path .. "/Resources/Icon.pic")
 			else
-				icon.iconImage.image = MineOSCore.icons.application
+				icon.image = MineOSCore.icons.application
 			end
 
 			icon.launch = launchApp
 		else
-			icon.iconImage.image = MineOSCore.icons.folder
+			icon.image = MineOSCore.icons.folder
 			icon.launch = launchDirectory
 		end
 	else
@@ -285,34 +293,34 @@ function MineOSCore.analyzeIconExtension(icon)
 				iconImage = icon.iconImage
 			})
 
-			icon.iconImage.image = shortcutIcon.iconImage.image
+			icon.image = shortcutIcon.image
 			icon.shortcutLaunch = shortcutIcon.launch
 			icon.launch = launchLnk
 
 			shortcutIcon = nil
 		elseif icon.extension == ".cfg" or icon.extension == ".config" then
-			icon.iconImage.image = MineOSCore.icons.config
+			icon.image = MineOSCore.icons.config
 			icon.launch = launchEditor
 		elseif icon.extension == ".txt" or icon.extension == ".rtf" then
-			icon.iconImage.image = MineOSCore.icons.text
+			icon.image = MineOSCore.icons.text
 			icon.launch = launchEditor
 		elseif icon.extension == ".lua" then
-		 	icon.iconImage.image = MineOSCore.icons.lua
+		 	icon.image = MineOSCore.icons.lua
 		 	icon.launch = launchLua
 		elseif icon.extension == ".pic" or icon.extension == ".png" then
-			icon.iconImage.image = MineOSCore.icons.image
+			icon.image = MineOSCore.icons.image
 			icon.launch = launchImage
 		elseif icon.extension == ".pkg" then
-			icon.iconImage.image = MineOSCore.icons.archive
+			icon.image = MineOSCore.icons.archive
 			icon.launch = launchPackage
 		elseif icon.extension == ".3dm" then
-			icon.iconImage.image = MineOSCore.icons.model3D
+			icon.image = MineOSCore.icons.model3D
 			icon.launch = launch3DPrint
 		elseif not fs.exists(icon.path) then
-			icon.iconImage.image = MineOSCore.icons.fileNotExists
+			icon.image = MineOSCore.icons.fileNotExists
 			icon.launch = launchCorrupted
 		else
-			icon.iconImage.image = MineOSCore.icons.script
+			icon.image = MineOSCore.icons.script
 			icon.launch = launchLua
 		end
 	end
@@ -326,9 +334,38 @@ function MineOSCore.getParametersForDrawingIcons(fieldWidth, fieldHeight, xSpace
 	return xCountOfIcons, yCountOfIcons, totalCountOfIcons
 end
 
-function MineOSCore.createIcon(x, y, path, textColor, showExtension, selectionColor)
-	local icon = GUI.container(x, y, MineOSCore.iconWidth, MineOSCore.iconHeight)
+local function iconDraw(icon)
+	if icon.isSelected then
+		buffer.square(icon.x, icon.y, icon.width, icon.height,  icon.colors.selection, 0x000000, " ", 50)
+	end
+
+	buffer.image(icon.x + 2, icon.y, icon.image)
+
+	local text
+	if icon.showExtension then
+		text = string.limit(fs.name(icon.path), icon.width, "center")
+	else
+		text = string.limit(fs.hideExtension(fs.name(icon.path)), icon.width, "center")
+	end
 	
+	buffer.text(math.floor(icon.x + icon.width / 2 - unicode.len(text) / 2), icon.y + icon.height - 1, icon.colors.text, text)
+
+	if icon.isShortcut then
+		buffer.set(icon.x + 9, icon.y + 3, 0xFFFFFF, 0x000000, "<")
+	end
+
+	if icon.window then
+		buffer.text(icon.x + 5, icon.y + 4, 0x66DBFF, "╺╸")
+	end
+end
+
+function MineOSCore.createIcon(x, y, path, textColor, showExtension, selectionColor)
+	local icon = GUI.object(x, y, MineOSCore.iconWidth, MineOSCore.iconHeight)
+	
+	icon.colors = {
+		text = textColor,
+		selection = selectionColor,
+	}
 	icon.path = path
 	icon.size = fs.size(icon.path)
 	icon.isDirectory = fs.isDirectory(icon.path)
@@ -337,27 +374,14 @@ function MineOSCore.createIcon(x, y, path, textColor, showExtension, selectionCo
 	icon.isShortcut = false
 	icon.isSelected = false
 
-	icon.iconImage = icon:addChild(GUI.image(3, 1, {8, 4}))
-	icon.textLabel = icon:addChild(GUI.label(1, MineOSCore.iconHeight, MineOSCore.iconWidth, 1, textColor, fs.name(icon.path))):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
-	
-	local oldDraw = icon.draw
-	icon.draw = function(icon)
-		if icon.isSelected then buffer.square(icon.x, icon.y, icon.width, icon.height, selectionColor, 0x000000, " ", 50) end
-		if icon.showExtension then
-			icon.textLabel.text = string.limit(fs.name(icon.path), icon.textLabel.width, "center")
-		else
-			icon.textLabel.text = string.limit(fs.hideExtension(fs.name(icon.path)), icon.textLabel.width, "center")
-		end
-		oldDraw(icon)
-		if icon.isShortcut then buffer.set(icon.iconImage.x + icon.iconImage.width - 1, icon.iconImage.y + icon.iconImage.height - 1, 0xFFFFFF, 0x000000, "<") end
-	end
+	icon.draw = iconDraw
 
 	-- Поддержка изменяемых извне функций правого и левого кликов
 	icon.onLeftClick = MineOSCore.iconLeftClick
 	icon.onRightClick = MineOSCore.iconRightClick
 
 	-- Обработка клика непосредственно на иконку
-	icon.iconImage.eventHandler = function(mainContainer, object, eventData)
+	icon.eventHandler = function(mainContainer, object, eventData)
 		if eventData[1] == "touch" then
 			icon.isSelected = true
 			MineOSCore.OSDraw()
@@ -505,8 +529,6 @@ function MineOSCore.showErrorWindow(path, errorLine, reason)
 			local success, reason = component.internet.request(url)
 			if success then
 				success:close()
-			else
-				ecs.error(reason)
 			end
 
 			sendToDeveloperButton.text = MineOSCore.localization.sendedFeedback
@@ -582,7 +604,6 @@ function MineOSCore.safeLaunch(path, ...)
 
 	component.screen.setPrecise(false)
 	buffer.setResolution(oldResolutionWidth, oldResolutionHeight)
-	MineOSCore.OSDraw()
 
 	if not finalSuccess then
 		MineOSCore.showErrorWindow(finalPath, finalLine, finalTraceback)
@@ -594,6 +615,7 @@ end
 -----------------------------------------------------------------------------------------------------------------------------------
 
 function MineOSCore.iconLeftClick(icon, eventData)
+	 MineOSCore.lastLaunchPath = icon.path
 	icon:launch()
 	computer.pushSignal("MineOSCore", "updateFileList")
 end
@@ -609,26 +631,24 @@ function MineOSCore.iconRightClick(icon, eventData)
 				{MineOSCore.localization.contextMenuCut},
 				{MineOSCore.localization.contextMenuCopy},
 				{MineOSCore.localization.contextMenuRename},
+				{MineOSCore.localization.contextMenuDelete},
 				{MineOSCore.localization.contextMenuCreateShortcut, icon.extension == ".lnk"},
-				"-",
 				{MineOSCore.localization.contextMenuArchive},
-				{MineOSCore.localization.contextMenuAddToDock},
 				"-",
-				{MineOSCore.localization.contextMenuProperties},
-				{MineOSCore.localization.contextMenuDelete}
+				{MineOSCore.localization.contextMenuAddToDock},
+				{MineOSCore.localization.contextMenuProperties}
 			):show()
 		else
 			action = GUI.contextMenu(eventData[3], eventData[4],
 				{MineOSCore.localization.contextMenuCut},
 				{MineOSCore.localization.contextMenuCopy},
 				{MineOSCore.localization.contextMenuRename},
+				{MineOSCore.localization.contextMenuDelete},
 				{MineOSCore.localization.contextMenuCreateShortcut, icon.extension == ".lnk"},
-				"-",
 				{MineOSCore.localization.contextMenuArchive},
-				{MineOSCore.localization.contextMenuAddToDock},
 				"-",
-				{MineOSCore.localization.contextMenuProperties},
-				{MineOSCore.localization.contextMenuDelete}
+				{MineOSCore.localization.contextMenuAddToDock},
+				{MineOSCore.localization.contextMenuProperties}
 			):show()
 		end
 	else
@@ -640,10 +660,10 @@ function MineOSCore.iconRightClick(icon, eventData)
 				{MineOSCore.localization.contextMenuCut},
 				{MineOSCore.localization.contextMenuCopy},
 				{MineOSCore.localization.contextMenuRename},
+				{MineOSCore.localization.contextMenuDelete},
 				"-",
 				{MineOSCore.localization.contextMenuAddToDock},
-				{MineOSCore.localization.contextMenuProperties},
-				{MineOSCore.localization.contextMenuDelete}
+				{MineOSCore.localization.contextMenuProperties}
 			):show()
 		elseif icon.extension == ".pic" then
 			action = GUI.contextMenu(eventData[3], eventData[4],
@@ -652,31 +672,26 @@ function MineOSCore.iconRightClick(icon, eventData)
 				{MineOSCore.localization.contextMenuCut},
 				{MineOSCore.localization.contextMenuCopy},
 				{MineOSCore.localization.contextMenuRename},
+				{MineOSCore.localization.contextMenuDelete},
 				{MineOSCore.localization.contextMenuCreateShortcut, icon.extension == ".lnk"},
 				"-",
-				-- {MineOSCore.localization.contextMenuArchive},
 				{MineOSCore.localization.contextMenuAddToDock},
-				"-",
-				{MineOSCore.localization.contextMenuProperties},
-				{MineOSCore.localization.contextMenuDelete}
+				{MineOSCore.localization.contextMenuProperties}
 			):show()
 		elseif icon.extension == ".lua" then
 			action = GUI.contextMenu(eventData[3], eventData[4],
 				{MineOSCore.localization.contextMenuEdit},
+				{MineOSCore.localization.launchWithArguments},
 				{MineOSCore.localization.contextMenuFlashEEPROM, (not component.isAvailable("eeprom") or icon.size > 4096)},
 				"-",
 				{MineOSCore.localization.contextMenuCut},
 				{MineOSCore.localization.contextMenuCopy},
 				{MineOSCore.localization.contextMenuRename},
+				{MineOSCore.localization.contextMenuDelete},
 				{MineOSCore.localization.contextMenuCreateShortcut, icon.extension == ".lnk"},
-				-- "-",
-				-- {MineOSCore.localization.contextMenuUploadToPastebin, true},
 				"-",
-				-- {MineOSCore.localization.contextMenuArchive},
 				{MineOSCore.localization.contextMenuAddToDock},
-				"-",
-				{MineOSCore.localization.contextMenuProperties},
-				{MineOSCore.localization.contextMenuDelete}
+				{MineOSCore.localization.contextMenuProperties}
 			):show()
 		else
 			action = GUI.contextMenu(eventData[3], eventData[4],
@@ -685,13 +700,11 @@ function MineOSCore.iconRightClick(icon, eventData)
 				{MineOSCore.localization.contextMenuCut},
 				{MineOSCore.localization.contextMenuCopy},
 				{MineOSCore.localization.contextMenuRename},
+				{MineOSCore.localization.contextMenuDelete},
 				{MineOSCore.localization.contextMenuCreateShortcut, icon.extension == ".lnk"},
 				"-",
-				-- {MineOSCore.localization.contextMenuArchive},
 				{MineOSCore.localization.contextMenuAddToDock},
-				"-",
-				{MineOSCore.localization.contextMenuProperties},
-				{MineOSCore.localization.contextMenuDelete}
+				{MineOSCore.localization.contextMenuProperties}
 			):show()
 		end
 	end
@@ -746,9 +759,10 @@ function MineOSCore.iconRightClick(icon, eventData)
 		file:close()
 		computer.beep(1500, 0.2)
 	elseif action == MineOSCore.localization.contextMenuAddToDock then
-		table.insert(MineOSCore.OSSettings.dockShortcuts, {path = icon.path})
-		MineOSCore.saveOSSettings()
-		computer.pushSignal("MineOSCore", "updateFileList")
+		MineOSCore.OSMainContainer.dockContainer.addIcon(icon.path).keepInDock = true
+		MineOSCore.OSMainContainer.dockContainer.saveToOSSettings()
+	elseif action == MineOSCore.localization.launchWithArguments then
+		MineOSCore.launchWithArguments(MineOSCore.OSMainContainer, icon.path)
 	end
 end
 
@@ -796,7 +810,14 @@ local function addUniversalContainerWithInputTextBoxes(parentWindow, path, text,
 	
 	container.inputTextBox = container.layout:addChild(GUI.inputTextBox(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0xEEEEEE, 0x262626, text, placeholder, false))
 	container.label = container.layout:addChild(GUI.label(1, 1, 36, 3, 0xFF4940, " ")):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
-	
+	container.panel.eventHandler = function(mainContainer, object, eventData)
+		if eventData[1] == "touch" then
+			container:delete()
+			mainContainer:draw()
+			buffer.draw()
+		end
+	end
+
 	parentWindow:draw()
 	buffer.draw()
 
@@ -867,6 +888,27 @@ function MineOSCore.rename(parentWindow, path)
 	end
 end
 
+function MineOSCore.launchWithArguments(parentWindow, path)
+	local container = addUniversalContainerWithInputTextBoxes(parentWindow, path, nil, MineOSCore.localization.launchWithArguments)
+
+	container.inputTextBox.onInputFinished = function()
+		local args = {}
+		if container.inputTextBox.text then
+			for arg in container.inputTextBox.text:gmatch("[^%s]+") do
+				table.insert(args, arg)
+			end
+		end
+		container:delete()
+
+		MineOSCore.clearTerminal()
+		if MineOSCore.safeLaunch(path, table.unpack(args)) then
+			MineOSCore.waitForPressingAnyKey()
+		end
+
+		MineOSCore.OSDraw(true)
+	end
+end
+
 function MineOSCore.applicationHelp(parentWindow, path)
 	local pathToAboutFile = path .. "/resources/About/" .. MineOSCore.OSSettings.language .. ".txt"
 	if MineOSCore.OSSettings.showHelpOnApplicationStart and fs.exists(pathToAboutFile) then
@@ -927,47 +969,69 @@ local function windowResize(window, width, height)
 	return window
 end
 
-local function windowMinimize(window)
-	window.localPosition.x, window.localPosition.y = window.oldGeometry.x, window.oldGeometry.y
-	window:resize(window.oldGeometry.width, window.oldGeometry.height)
-	MineOSCore.OSDraw()
-end
-
-local function windowMaximize(window)
-	window.localPosition.x, window.localPosition.y = 1, 1
-	if window.width ~= window.parent.width or window.height ~= window.parent.height then
-		window.oldGeometry.x, window.oldGeometry.y, window.oldGeometry.width, window.oldGeometry.height = window.localPosition.x, window.localPosition.y, window.width, window.height
-		window:resize(window.parent.width, window.parent.height)
-	end
-	MineOSCore.OSDraw()
-end
-
-local function windowClose(window)
-	window:delete()
-	MineOSCore.OSDraw()
-end
-
 function MineOSCore.addWindow(window)
 	window.x = window.x or math.floor(MineOSCore.OSMainContainer.windowsContainer.width / 2 - window.width / 2)
 	window.y = window.y or math.floor(MineOSCore.OSMainContainer.windowsContainer.height / 2 - window.height / 2)
 	
 	MineOSCore.OSMainContainer.windowsContainer:addChild(window)
-	
+
+	-- Dock
+	local dockPath = MineOSCore.lastLaunchPath or "/lib/MineOSCore.lua"
+	MineOSCore.lastLaunchPath = nil
+
+	local dockIcon
+	for i = 1, #MineOSCore.OSMainContainer.dockContainer.children do
+		if MineOSCore.OSMainContainer.dockContainer.children[i].path == dockPath then
+			dockIcon = MineOSCore.OSMainContainer.dockContainer.children[i]
+			break
+		end
+	end
+	dockIcon = dockIcon or MineOSCore.OSMainContainer.dockContainer.addIcon(dockPath, window)
+	dockIcon.window = dockIcon.window or window
+
 	window.resize = windowResize
 	window.onResize = onWindowResize
-	window.close = windowClose
+	window.close = function(window)
+		local sameIconExists = false
+		for i = 1, #MineOSCore.OSMainContainer.dockContainer.children do
+			if MineOSCore.OSMainContainer.dockContainer.children[i].path == dockPath and MineOSCore.OSMainContainer.dockContainer.children[i].window and MineOSCore.OSMainContainer.dockContainer.children[i].window ~= window then
+				sameIconExists = true
+				break
+			end
+		end
+
+		if not sameIconExists then
+			dockIcon.window = nil
+			if not dockIcon.keepInDock then
+				dockIcon:delete()
+				MineOSCore.OSMainContainer.dockContainer.sort()
+			end
+		end
+		
+		window:delete()
+		MineOSCore.OSDraw()
+	end
+	
+	window.maximize = function(window)
+		window.localPosition.x, window.localPosition.y = 1, 1
+		window:resize(window.parent.width, window.parent.height)
+		MineOSCore.OSDraw()
+	end
+
+	window.minimize = function(window)
+		window.hidden = true
+		MineOSCore.OSDraw()
+	end
 
 	if window.actionButtons then
-		window.oldGeometry = {x = window.x, y = window.y, width = window.width, height = window.height}
-		
 		window.actionButtons.close.onTouch = function()
-			windowClose(window)
+			window.close(window)
 		end
 		window.actionButtons.maximize.onTouch = function()
-			windowMaximize(window)
+			window.maximize(window)
 		end
 		window.actionButtons.minimize.onTouch = function()
-			windowMinimize(window)
+			window.minimize(window)
 		end
 	end
 
@@ -985,7 +1049,7 @@ function MineOSCore.propertiesWindow(x, y, width, icon)
 	local mainContainer, window = MineOSCore.addWindow(GUI.titledWindow(x, y, width, 1, package.loaded.MineOSCore.localization.contextMenuProperties))
 
 	window.backgroundPanel.colors.transparency = 25
-	window:addChild(GUI.image(2, 3, icon.iconImage.image))
+	window:addChild(GUI.image(2, 3, icon.image))
 
 	local x, y = 11, 3
 	addKeyAndValue(window, x, y, package.loaded.MineOSCore.localization.type, icon.extension and icon.extension or (icon.isDirectory and package.loaded.MineOSCore.localization.folder or package.loaded.MineOSCore.localization.unknown)); y = y + 1
@@ -996,6 +1060,7 @@ function MineOSCore.propertiesWindow(x, y, width, icon)
 	local lines = string.wrap(icon.path, window.width - 18)
 	local textBox = window:addChild(GUI.textBox(17, y, window.width - 18, #lines, nil, 0x555555, lines, 1))
 	window:resize(window.width, textBox.y + textBox.height)
+	textBox.eventHandler = nil
 
 	mainContainer:draw()
 	buffer.draw()

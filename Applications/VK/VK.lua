@@ -490,7 +490,7 @@ local function messagesGUI()
 
 		-- saveToFile("lastMessagesRequest.json", serialization.serialize(messages))
 
-		buffer.setDrawLimit(mainZoneX, mainZoneY, mainZoneWidth, mainZoneHeight)
+		buffer.setDrawLimit(mainZoneX, mainZoneY, mainZoneX + mainZoneWidth - 1, mainZoneY + mainZoneHeight - 1)
 
 		local y = buffer.height - 7
 		local xSender = mainZoneX + 2
@@ -727,7 +727,7 @@ local function userProfileGUI()
 	whatIsOnScreen = "userProfile"
 	drawTopBar("Страница пользователя " .. currentProfile.ID)
 
-	buffer.setDrawLimit(mainZoneX, mainZoneY, mainZoneWidth, mainZoneHeight)
+	buffer.setDrawLimit(mainZoneX, mainZoneY, mainZoneX + mainZoneWidth - 1, mainZoneY + mainZoneHeight - 1)
 
 	local xAvatar, yAvatar = mainZoneX + 4, currentProfileY
 	local x, y = xAvatar, yAvatar
@@ -866,7 +866,7 @@ local function friendsGUI()
 		currentFriends = {sendMessageButtons = {}, openProfileButtons = {}}
 		whatIsOnScreen = "friends"
 		drawTopBar("Друзья")
-		buffer.setDrawLimit(mainZoneX, mainZoneY, mainZoneWidth, mainZoneHeight)
+		buffer.setDrawLimit(mainZoneX, mainZoneY, mainZoneX + mainZoneWidth - 1, mainZoneY + mainZoneHeight - 1)
 
 		local function getListName(listID)
 			local name = "N/A"
@@ -926,7 +926,7 @@ local function newsGUI()
 	clearGUIZone()
 	drawTopBar("Новости")
 	whatIsOnScreen = "news"
-	buffer.setDrawLimit(mainZoneX, mainZoneY, mainZoneWidth, mainZoneHeight)
+	buffer.setDrawLimit(mainZoneX, mainZoneY, mainZoneX + mainZoneWidth - 1, mainZoneY + mainZoneHeight - 1)
 
 	local function getAvatarTextAndNameForNews(source_id)
 		local avatarText, name = "N/A", "N/A"

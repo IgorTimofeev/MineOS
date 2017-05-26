@@ -169,14 +169,16 @@ local function containerObjectMoveForward(object)
 	if objectIndex < #object.parent.children then
 		object.parent.children[index], object.parent.children[index + 1] = swap(object.parent.children[index], object.parent.children[index + 1])
 	end
+	return object
 end
 
 -- Move container's object "more far out" of our eyes
 local function containerObjectMoveBackward(object)
 	local objectIndex = object:indexOf()
 	if objectIndex > 1 then
-		object.parent.children[index], object.parent.children[index - 1] = swap(object.parent.children[index], object.parent.children[index - 1])
+		object.parent.children[objectIndex], object.parent.children[objectIndex - 1] = swap(object.parent.children[objectIndex], object.parent.children[objectIndex - 1])
 	end
+	return object
 end
 
 -- Move container's object to front of all objects
@@ -184,6 +186,7 @@ local function containerObjectMoveToFront(object)
 	local objectIndex = object:indexOf()
 	table.insert(object.parent.children, object)
 	table.remove(object.parent.children, objectIndex)
+	return object
 end
 
 -- Move container's object to back of all objects
@@ -191,6 +194,7 @@ local function containerObjectMoveToBack(object)
 	local objectIndex = object:indexOf()
 	table.insert(object.parent.children, 1, object)
 	table.remove(object.parent.children, objectIndex + 1)
+	return object
 end
 
 local function containerGetFirstParent(object)
@@ -210,7 +214,7 @@ local function selfDelete(object)
 end
 
 -- Add any object as children to parent container
-function GUI.addChildToContainer(container, object)
+function GUI.addChildToContainer(container, object, atIndex)
 	object.indexOf = containerObjectIndexOf
 	object.moveToFront = containerObjectMoveToFront
 	object.moveToBack = containerObjectMoveToBack
@@ -2195,7 +2199,7 @@ end
 
 --------------------------------------------------------------------------------------------------------------------------------
 
-buffer.start()
+-- buffer.start()
 
 -- local mainContainer = GUI.fullScreenContainer()
 -- mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0xFF8888))
