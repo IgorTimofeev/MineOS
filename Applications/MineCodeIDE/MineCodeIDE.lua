@@ -1572,7 +1572,7 @@ local function createMainContainer()
 		buffer.draw()
 	end
 
-	mainContainer.bottomToolBar = mainContainer:addChild(GUI.container(1, 1, 1, 1))
+	mainContainer.bottomToolBar = mainContainer:addChild(GUI.container(1, 1, 1, 3))
 	mainContainer.bottomToolBar.caseSensitiveButton = mainContainer.bottomToolBar:addChild(GUI.adaptiveButton(1, 1, 2, 1, 0x3C3C3C, 0xEEEEEE, 0xBBBBBB, 0x2D2D2D, "Aa"))
 	mainContainer.bottomToolBar.caseSensitiveButton.switchMode = true
 	mainContainer.bottomToolBar.onTouch = function()
