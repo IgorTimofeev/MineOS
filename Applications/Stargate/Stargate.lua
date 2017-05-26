@@ -7,7 +7,7 @@ local component = require("component")
 local unicode = require("unicode")
 local MineOSCore = require("MineOSCore")
 if not component.isAvailable("stargate") then
-	GUI.error("This program requires stargate from mod \"SGCraft\"", {title = {color = 0xFF8888, text = "Ошибка"}})
+	GUI.error("This program requires stargate from mod \"SGCraft\"")
 	return
 end
 local stargate = component.stargate
@@ -295,10 +295,11 @@ mainContainer.eventHandler = function(mainContainer, object, eventData)
 			buffer.draw()
 		end
 	elseif eventData[1] == "sgMessageReceived" then
-		GUI.error(tostring(eventData[3]), {title = {color = 0xBBBBBB, text = "Incoming message"}, backgroundColor = 0x262626})
+		GUI.error(eventData[3])
 	end
 end
 
+GUI.error()
 loadContacts()
 updateContacts()
 update()

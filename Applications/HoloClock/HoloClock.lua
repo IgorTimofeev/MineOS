@@ -11,7 +11,7 @@ local GUI = require("GUI")
 --------------------------------------------------------------------------------------------
 
 if not component.isAvailable("hologram") then
-  GUI.error("This program needs a Tier 2 holo-projector!", {title = {color = 0xFFDB40, text = "HoloClock"}})
+  GUI.error("This program needs a Tier 2 holo-projector to work")
   return
 end
 

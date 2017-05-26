@@ -248,7 +248,7 @@ local function tryToGetAndDrawWeather()
 		--Сейвим погодку
 		saveWeatherData()
 	else
-		GUI.error(jsonWeatherResponse, {title = {color = 0xFF8888, text = "Ошибка"}})
+		GUI.error(jsonWeatherResponse)
 	end
 end
 

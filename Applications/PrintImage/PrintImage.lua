@@ -13,7 +13,7 @@ local GUI = require("GUI")
 
 ----------------------------------------- cyka -----------------------------------------
 
-if not component.isAvailable("printer3d") then GUI.error("This program requires at least one 3D-printer", {title = {color = 0xFFDB40, text = "Error"}}); return end
+if not component.isAvailable("printer3d") then GUI.error("This program requires at least one 3D-printer"); return end
 local args, options = require("shell").parse(...)
 local startImagePath = args[1] == "open" and args[2] or "/MineOS/System/OS/Icons/Steve.pic"
 local configPath = "/MineOS/System/PrintImage/Config.cfg"
@@ -203,10 +203,10 @@ local function createWindow()
 				getStatus()
 				return true
 			else
-				GUI.error("File \"" .. text .. "\" is not in .pic format", {title = {color = 0xFFDB40, text = "Error while loading image"}})
+				GUI.error("File \"" .. text .. "\" is not in .pic format")
 			end
 		else
-			GUI.error("File \"" .. text .. "\" doesn't exists", {title = {color = 0xFFDB40, text = "Error while loading image"}})
+			GUI.error("File \"" .. text .. "\" doesn't exists")
 		end
 	end
 	

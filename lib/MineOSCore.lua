@@ -599,7 +599,7 @@ function MineOSCore.safeLaunch(path, ...)
 			finalSuccess, finalPath, finalLine, finalTraceback = false, path, tonumber(match) or 1, loadReason
 		end
 	else
-		GUI.error("Failed to safely launch file that doesn't exists: \"" .. path .. "\"", {title = {color = 0xFFDB40, text = "Warning"}})
+		GUI.error("Failed to safely launch file that doesn't exists: \"" .. path .. "\"")
 	end
 
 	component.screen.setPrecise(false)

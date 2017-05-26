@@ -889,6 +889,7 @@ function GUI.error(...)
 			args[i] = tostring(args[i])
 		end
 	end
+	if #args == 0 then args[1] = "nil" end
 
 	local sign = image.fromString([[06030000FF 0000FF 00F7FF▟00F7FF▙0000FF 0000FF 0000FF 00F7FF▟F7FF00 F7FF00 00F7FF▙0000FF 00F7FF▟F7FF00CF7FF00yF7FF00kF7FF00a00F7FF▙]])
 	local offset = 2

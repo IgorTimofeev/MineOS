@@ -768,7 +768,7 @@ local function downloadFileFromWeb()
 				newFile()
 				mainContainer.codeView.lines, mainContainer.codeView.maximumLineLength = splitStringIntoLines(result)
 			else
-				GUI.error(reason, {title = {color = 0xFFDB40, text = "Failed to connect to URL"}})
+				GUI.error("Failed to connect to URL: " .. tostring(reason))
 			end
 			hideSettingsContainer()
 		end
@@ -1248,7 +1248,7 @@ local function find()
 					return
 				end
 			else
-				GUI.error("Wrong searching regex", {title = {color = 0xFFDB40, text = "Warning"}})
+				GUI.error("Wrong searching regex")
 			end
 		end
 
