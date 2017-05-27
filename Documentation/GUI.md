@@ -71,12 +71,12 @@ contextMenu:show()
 
 ![enter image description here](http://i89.fastpic.ru/big/2017/0402/20/d7d5f14ca47ecef72aec535293e88320.png)
 
-GUI.**error**( text, [parameters] )
+GUI.**error**( text )
 ------------------------------------------------------------------------
 | Тип | Аргумент | Описание |
 | ------ | ------ | ------ |
 | *string* | text | Текст информационного окна |
-| *table* | parameters | Опциональные параметры информационного окна. К примеру, {title = {text = "Alert", color = 0xFFDB40}, backgroundColor = 0x2D2D2D} добавит окну желтый заголовок и сделает фон окна темно-серым |
+
 
 Показать отладочное окно с текстовой информацией. Слишком длинная строка будет автоматически перенесена. Для закрытия окна необходимо использовать клавишу return или нажать на кнопку "ОК".
 
@@ -87,12 +87,12 @@ local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 
 buffer.clear(0x0)
-GUI.error("Something went wrong here, my friend", {title = {text = "Alert", color = 0xFFDB40}})
+GUI.error("Something went wrong here, my friend")
 ```
 
 Результат:
 
-![enter image description here](http://i90.fastpic.ru/big/2017/0402/99/c2b151738ce348c213ff5d1d45053e99.png)
+![enter image description here](http://i.imgur.com/8sjD4T3.png)
 
 Методы для создания контейнеров
 ======
