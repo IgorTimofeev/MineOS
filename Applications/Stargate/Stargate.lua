@@ -299,7 +299,6 @@ mainContainer.eventHandler = function(mainContainer, object, eventData)
 	end
 end
 
-GUI.error()
 loadContacts()
 updateContacts()
 update()
