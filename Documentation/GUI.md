@@ -1136,8 +1136,6 @@ local function createMyWidget(x, y, width, height, backgroundColor, paintColor)
 
 	return object
 end
-```
----------------------------------------------------------------------
 
 -- Добавляем темно-серую панель в контейнер
 mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x2D2D2D))
@@ -1147,7 +1145,8 @@ mainContainer:addChild(createMyWidget(2, 2, 32, 16, 0x3C3C3C, 0xEEEEEEE))
 mainContainer:draw()
 buffer.draw(true)
 mainContainer:startEventHandling()
-
+```
+---------------------------------------------------------------------
 При нажатии на левую кнопку мыши в нашем виджете устанавливается пиксель указанного цвета, а на правую - удаляется.
 
 ![enter image description here](http://i89.fastpic.ru/big/2017/0402/fd/be80c13085824bebf68f64a329e226fd.png)
