@@ -505,7 +505,7 @@ end
 ------------------------------------------- Просчет изменений и отрисовка ------------------------------------------------------------------------
 
 --Функция рассчитывает изменения и применяет их, возвращая то, что было изменено
-function buffer.calculateDifference(index)
+local function calculateDifference(index)
 	local somethingIsChanged = false
 	
 	--Если цвет фона на новом экране отличается от цвета фона на текущем, то
@@ -537,36 +537,26 @@ end
 
 -- Функция группировки изменений и их отрисовки на экран
 function buffer.draw(force)
-	-- Всякое дерьмо, необходимое для расчетов
-	local index, indexStepOnEveryLine, somethingIsChanged, indexPlus1, indexPlus2, sameCharArray, x, xCharCheck, indexCharCheck, currentBackground, currentForeground = buffer.getBufferIndexByCoordinates(buffer.drawLimit.x1, buffer.drawLimit.y1), (buffer.width - buffer.drawLimit.x2 + buffer.drawLimit.x1 - 1) * 3
-	-- Массив третьего буфера, содержащий в себе измененные пиксели
-	buffer.changes = {}
+	local changes, index, indexStepOnEveryLine, indexPlus1, indexPlus2, sameCharArray, x, xCharCheck, indexCharCheck, currentForeground = {}, buffer.getBufferIndexByCoordinates(buffer.drawLimit.x1, buffer.drawLimit.y1), (buffer.width - buffer.drawLimit.x2 + buffer.drawLimit.x1 - 1) * 3
 
 	for y = buffer.drawLimit.y1, buffer.drawLimit.y2 do
 		x = buffer.drawLimit.x1
 		while x <= buffer.drawLimit.x2 do
-			--Чутка оптимизируем расчеты
 			indexPlus1, indexPlus2 = index + 1, index + 2
-			--Получаем изменения и применяем их
-			somethingIsChanged = buffer.calculateDifference(index)
-			--Если хоть что-то изменилось, то начинаем работу
-			if somethingIsChanged or force then
-				--Оптимизация by Krutoy, создаем массив, в который заносим чарсы. Работает быстрее, чем конкатенейт строк
+			if calculateDifference(index) or force then
 				sameCharArray = { buffer.currentFrame[indexPlus2] }
-				--Загоняем в наш чарс-массив одинаковые пиксели справа, если таковые имеются
 				xCharCheck, indexCharCheck = x + 1, index + 3
 				while xCharCheck <= buffer.drawLimit.x2 do
 					indexCharCheckPlus2 = indexCharCheck + 2
 					if	
-						buffer.currentFrame[index] == buffer.newFrame[indexCharCheck]
-						and
+						buffer.currentFrame[index] == buffer.newFrame[indexCharCheck] and
 						(
-						buffer.newFrame[indexCharCheckPlus2] == " "
-						or
-						buffer.currentFrame[indexPlus1] == buffer.newFrame[indexCharCheck + 1]
+							buffer.newFrame[indexCharCheckPlus2] == " "
+							or
+							buffer.currentFrame[indexPlus1] == buffer.newFrame[indexCharCheck + 1]
 						)
 					then
-					 	buffer.calculateDifference(indexCharCheck)
+					 	calculateDifference(indexCharCheck)
 					 	table.insert(sameCharArray, buffer.currentFrame[indexCharCheckPlus2])
 					else
 						break
@@ -576,42 +566,35 @@ function buffer.draw(force)
 					xCharCheck = xCharCheck + 1
 				end
 
-				--Заполняем третий буфер полученными данными
-				buffer.changes[buffer.currentFrame[index]] = buffer.changes[buffer.currentFrame[index]] or {}
-				buffer.changes[buffer.currentFrame[index]][buffer.currentFrame[indexPlus1]] = buffer.changes[buffer.currentFrame[index]][buffer.currentFrame[indexPlus1]] or {}
+				changes[buffer.currentFrame[index]] = changes[buffer.currentFrame[index]] or {}
+				changes[buffer.currentFrame[index]][buffer.currentFrame[indexPlus1]] = changes[buffer.currentFrame[index]][buffer.currentFrame[indexPlus1]] or {}
 				
-				table.insert(buffer.changes[buffer.currentFrame[index]][buffer.currentFrame[indexPlus1]], x)
-				table.insert(buffer.changes[buffer.currentFrame[index]][buffer.currentFrame[indexPlus1]], y)
-				table.insert(buffer.changes[buffer.currentFrame[index]][buffer.currentFrame[indexPlus1]], table.concat(sameCharArray))
-			
-				--Смещаемся по иксу вправо
-				index = index + #sameCharArray * 3 - 3
-				x = x + #sameCharArray - 1
+				table.insert(changes[buffer.currentFrame[index]][buffer.currentFrame[indexPlus1]], x)
+				table.insert(changes[buffer.currentFrame[index]][buffer.currentFrame[indexPlus1]], y)
+				table.insert(changes[buffer.currentFrame[index]][buffer.currentFrame[indexPlus1]], table.concat(sameCharArray))
+				
+				x, index = x + #sameCharArray - 1, index + #sameCharArray * 3 - 3
 			end
 
-			index = index + 3
-			x = x + 1
+			x, index = x + 1, index + 3
 		end
 
 		index = index + indexStepOnEveryLine
 	end
 
-	--Сбрасываем переменные на невозможное значение цвета, чтобы не багнуло
-	currentBackground, currentForeground = nil, nil
-
-	--Перебираем все цвета текста и фона, выполняя гпу-операции
-	for background in pairs(buffer.changes) do
+	currentForeground = nil
+	
+	for background in pairs(changes) do
 		gpu.setBackground(background)
-		for foreground in pairs(buffer.changes[background]) do
+		for foreground in pairs(changes[background]) do
 			if currentForeground ~= foreground then gpu.setForeground(foreground); currentForeground = foreground end
-			for i = 1, #buffer.changes[background][foreground], 3 do
-				gpu.set(buffer.changes[background][foreground][i], buffer.changes[background][foreground][i + 1], buffer.changes[background][foreground][i + 2])
+			for i = 1, #changes[background][foreground], 3 do
+				gpu.set(changes[background][foreground][i], changes[background][foreground][i + 1], changes[background][foreground][i + 2])
 			end
 		end
 	end
 
-	--Очищаем память, ибо на кой хер нам хранить третий буфер
-	buffer.changes = nil
+	changes = nil
 end
 
 ------------------------------------------------------------------------------------------------------
