@@ -378,7 +378,7 @@ mainContainer:addChild(OCGLView)
 mainContainer.infoTextBox = mainContainer:addChild(GUI.textBox(2, 4, 45, mainContainer.height, nil, 0xEEEEEE, {}, 1, 0, 0))
 local lines = {
 	"Copyright © 2016-2017 - Developed by ECS Inc.",
-	"Timofeef Igor (vk.com/id7799889), Trifonov Gleb (vk.com/id88323331), Verevkin Yakov (vk.com/id60991376), Bogushevich Victoria (vk.com/id171497518)",
+	"Timofeev Igor (vk.com/id7799889), Trifonov Gleb (vk.com/id88323331), Verevkin Yakov (vk.com/id60991376), Bogushevich Victoria (vk.com/id171497518)",
 	"All rights reserved",
 }
 mainContainer:addChild(GUI.textBox(1, mainContainer.height - #lines + 1, mainContainer.width, #lines, nil, 0x3C3C3C, lines, 1)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
