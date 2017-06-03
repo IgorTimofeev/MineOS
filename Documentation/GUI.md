@@ -176,16 +176,19 @@ GUI.**layout**( x, y, width, height, columns, rows ): *table* container
 | *int* | columnCount | Количество рядов сетки |
 | *int* | rowCount | Количество строк сетки |
 
-Layout является наследником GUI.**container**, автоматически располагающий дочерние объекты внутри себя. К примеру, если вам хочется визуально красиво отобразить множество объектов, не тратя время на ручной расчет координат, то layout создан для вас.
+Layout является наследником GUI.**container**, автоматически располагающим дочерние объекты внутри себя. К примеру, если вам хочется визуально красиво отобразить множество объектов, не тратя время на ручной расчет координат, то layout создан для вас. На картинке ниже хорошо поясняется суть:
+![Imgur](http://i.imgur.com/SuNHweA.png?1)
+Видно, что имеется layout, состоящий из 9 ячеек, каждая из которых может иметь собственную ориентацию объектов, расстояние между ними, а также выравнивание. Границы ячеек условны, и существуют лишь для расчета позиции дочерних объектов, так что дочерние объекты могут без проблем выходить за них.
 
 | Тип свойства | Свойство |Описание |
 | ------ | ------ | ------ |
 | *int* | .**columnCount**| Количество рядов сетки |
 | *int* | .**rowCount**| Количество строк сетки |
-| *function* | :**setCellPosition**(*int* column, *int* row, *object* child): *object* child| Назначить дочернему объекту layout конкретную ячейку сетки. В одной ячейке может располагаться сколь угодно много объектов. |
-| *function* | :**setCellDirection**(*int* column, *int* row, *enum* direction): *layout* layout | Назначить ячейке сетки метод отображения дочерних объектов. Поддерживаются GUI.directions.horizontal и GUI.directions.vertical |
-| *function* | :**setCellSpacing**(*int* column, *int* row, *int* spacing): *layout* layout | Назначить ячейке сетки расстояние в пикселях между объектами. По умолчанию оно равняется 1 |
 | *function* | :**setGridSize**(*int* columnCount, *int* columnCount): *layout* layout | Установить размер сетки. Все объекты, находящиеся вне диапазона нового размера, должны быть размещены в сетке заново через :**setCellPosition**()  |
+| *function* | :**setCellPosition**(*int* column, *int* row, *object* child): *object* child| Назначить дочернему объекту layout конкретную ячейку сетки. В одной ячейке может располагаться сколь угодно много объектов. |
+| *function* | :**setCellDirection**(*int* column, *int* row, *enum* direction): *layout* layout | Назначить ячейке сетки ориентацию дочерних объектов. Поддерживаются GUI.directions.horizontal и GUI.directions.vertical |
+| *function* | :**setCellAlignment**(*int* column, *int* row, *enum* GUI.alignment.vertical, *enum* GUI.alignment.horizontal): *layout* layout | Назначить ячейке сетки метод выравнивания дочерних объектов. Поддерживаются все 9 вариантов |
+| *function* | :**setCellSpacing**(*int* column, *int* row, *int* spacing): *layout* layout | Назначить ячейке сетки расстояние в пикселях между объектами. По умолчанию оно равняется 1 |
 
 Пример реализации layout:
 ```lua
@@ -197,7 +200,7 @@ local mainContainer = GUI.fullScreenContainer()
 mainContainer:addChild(GUI.image(1, 1, require("image").load("/MineOS/Pictures/Raspberry.pic")))
 mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x000000, 40))
 
--- Добавляем к контейнеру layout с сеткой 5x1
+-- Добавляем к контейнеру layout с сеткой размером 5x1
 local layout = mainContainer:addChild(GUI.layout(1, 1, mainContainer.width, mainContainer.height, 5, 1))
 
 -- Добавяляем в layout 9 кнопок, назначая им соответствующие позиции в сетке
@@ -238,6 +241,7 @@ layout:setCellPosition(3, 1, layout.children[9])
 
 ![Imgur](http://i.imgur.com/QD0BqWx.png?1)
 
+Более подробно работа с layout рассмотрена в практическом примере 4 в конце документа.
 
 Методы для создания виджетов
 ======
@@ -1187,4 +1191,60 @@ end
 
 ![enter image description here](http://i90.fastpic.ru/big/2017/0402/96/96aba372bdb3c1e61007170132f00096.png)
 
-Как видите, в создании виджетов нет совершенно ничего сложного, главное - обладать информацией по наиболее эффективной работе с библиотекой.
+Как видите, в создании собственных виджетов нет совершенно ничего сложного, главное - обладать информацией по наиболее эффективной работе с библиотекой.
+
+Практический пример #4
+======
+
+Предлагаю немного попрактиковаться в использовании layout. В качестве примера создадим контейнер-окно, в котором нам не придется ни разу вручную считать координаты при измененнии его размеров.
+
+```lua
+local buffer = require("doubleBuffering")
+local GUI = require("GUI")
+
+---------------------------------------------------------------------
+
+-- Создаем полноэкранный контейнер, добавляем на него изображение с малиной и полупрозрачную черную панель
+local mainContainer = GUI.fullScreenContainer()
+
+-- Добавляем в главный контенер другой контейнер, который и будет нашим окошком
+local window = mainContainer:addChild(GUI.container(2, 2, 80, 25))
+-- Добавляем в контейнер-окно светло-серую фоновую панель
+local backgroundPanel = window:addChild(GUI.panel(1, 1, window.width, window.height, 0xCCCCCC))
+
+-- Добавляем layout размером 3x1 чуть меньший, чем размер окна 
+local layout = window:addChild(GUI.layout(3, 2, window.width - 4, window.height - 2, 3, 1))
+
+-- В ячейку 2х1 добавляем загруженное изображение и label с определенным текстом
+layout:setCellPosition(2, 1, layout:addChild(GUI.image(1, 1, image.load("/MineOS/System/OS/Icons/Steve.pic"))))
+layout:setCellPosition(2, 1, layout:addChild(GUI.label(1, 1, 10, 1, 0x0, "Картиночка" ):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)))
+-- В ячейке 2х1 задаем вертикальную ориентацию объектов и расстояние между ними в 1 пиксель
+layout:setCellDirection(2, 1, GUI.directions.vertical)
+layout:setCellSpacing(2, 1, 1)
+
+-- В ячейку 3х1 добавляем 3 кнопки
+layout:setCellPosition(3, 1, layout:addChild(GUI.adaptiveButton(1, 1, 3, 0, 0xFFFFFF, 0x000000, 0x444444, 0xFFFFFF, "Подробности")))
+layout:setCellPosition(3, 1, layout:addChild(GUI.adaptiveButton(1, 1, 3, 0, 0xFFFFFF, 0x000000, 0x444444, 0xFFFFFF, "Отмена")))
+layout:setCellPosition(3, 1, layout:addChild(GUI.adaptiveButton(1, 1, 3, 0, 0x3392FF, 0xFFFFFF, 0x444444, 0xFFFFFF, "OK"))).onTouch = function()
+	-- При нажатии на кнопку "ОК" наше окно растянется на 10 пикселей
+	window.width, backgroundPanel.width, layout.width = window.width + 10, backgroundPanel.width + 10, layout.width + 10
+	mainContainer:draw()
+	buffer.draw()
+end
+-- В ячейке 3ч1 задаем горизонтальную ориентацию объектов, расстояние между ними в 2 пикселя, а также выравнивание по правому верхнему краю
+layout:setCellDirection(3, 1, GUI.directions.horizontal)
+layout:setCellSpacing(3, 1, 2)
+layout:setCellAlignment(3, 1, GUI.alignment.horizontal.right, GUI.alignment.vertical.bottom)
+
+mainContainer:draw()
+buffer.draw(true)
+mainContainer:startEventHandling()
+```
+
+В результате получаем симпатичное окошко с тремя кнопками, автоматически расположенными в его правой части:
+
+![Imgur](http://i.imgur.com/aCB4FDU.png?1)
+
+Если несколько раз нажать на кнопку "ОК", то окошко растянется, однако все объекты останутся на законных местах. Причем без каких-либо хардкорных расчетов вручную:
+
+![Imgur](http://i.imgur.com/MyMiiDU.png?1)
