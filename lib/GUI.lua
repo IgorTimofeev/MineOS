@@ -123,7 +123,7 @@ function GUI.setAlignment(object, horizontalAlignment, verticalAlignment)
 end
 
 -- Get subObject position inside of parent object
-function GUI.getAlignmentCoordinates(object, subObject)	
+function GUI.getAlignmentCoordinates(object, subObject)
 	local x, y
 	if object.alignment.horizontal == GUI.alignment.horizontal.left then
 		x = object.x
@@ -2014,124 +2014,6 @@ function GUI.chart(x, y, width, height, axisColor, axisValueColor, axisHelpersCo
 	return object
 end
 
------------------------------------------ Layout object -----------------------------------------
-
-local function layoutCheckCell(layout, column, row)
-	if column < 1 or column > layout.columnCount or row < 1 or row > layout.rowCount then
-		error("Specified grid position (" .. tostring(column) .. "x" .. tostring(row) .. ") is out of layout grid range")
-	end
-end
-
-local function layoutCalculate(layout)
-	for row = 1, layout.rowCount do
-		for column = 1, layout.columnCount do
-			layout.grid[row][column].totalWidth, layout.grid[row][column].totalHeight = 0, 0
-		end
-	end
-
-	for i = 1, #layout.children do
-		layout.children[i].layoutGridPosition = layout.children[i].layoutGridPosition or {column = 1, row = 1}
-
-		if layout.children[i].layoutGridPosition.row >= 1 and layout.children[i].layoutGridPosition.row <= layout.rowCount and layout.children[i].layoutGridPosition.column >= 1 and layout.children[i].layoutGridPosition.column <= layout.columnCount then
-			if layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].direction == GUI.directions.horizontal then
-				layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].totalWidth = layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].totalWidth + layout.children[i].width + layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].spacing
-				layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].totalHeight = math.max(layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].totalHeight, layout.children[i].height)
-			else
-				layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].totalWidth = math.max(layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].totalWidth, layout.children[i].width)
-				layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].totalHeight = layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].totalHeight + layout.children[i].height + layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].spacing
-			end
-		else
-			error("Layout child with index " .. i .. " has been assigned to cell (" .. layout.children[i].layoutGridPosition.column .. "x" .. layout.children[i].layoutGridPosition.row .. ") out of layout grid range")
-		end
-	end
-
-	local gridCellWidth, gridCellHeight = layout.width / layout.columnCount, layout.height / layout.rowCount
-	for row = 1, layout.rowCount do
-		for column = 1, layout.columnCount do
-			layout.grid[row][column].x = column * gridCellWidth - gridCellWidth / 2 - (layout.grid[row][column].totalWidth - layout.grid[row][column].spacing) / 2
-			layout.grid[row][column].y = row * gridCellHeight - gridCellHeight / 2 - (layout.grid[row][column].totalHeight - layout.grid[row][column].spacing) / 2
-		end
-	end
-
-	for i = 1, #layout.children do
-		layout.children[i].layoutGridPosition = layout.children[i].layoutGridPosition or {column = 1, row = 1}
-		
-		if layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].direction == GUI.directions.horizontal then
-			layout.children[i].localPosition.x = math.floor(layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].x)
-			layout.children[i].localPosition.y = math.floor(layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].y + layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].totalHeight / 2 - layout.children[i].height / 2)
-			layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].x = layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].x + layout.children[i].width + layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].spacing
-		else
-			layout.children[i].localPosition.x = math.floor(layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].x + layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].totalWidth / 2 - layout.children[i].width / 2)
-			layout.children[i].localPosition.y = math.floor(layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].y)
-			layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].y = layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].y + layout.children[i].height + layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].spacing
-		end
-	end
-end
-
-local function layoutSetCellPosition(layout, column, row, object)
-	layoutCheckCell(layout, column, row)
-	object.layoutGridPosition = {column = column, row = row}
-
-	return object
-end
-
-local function layoutSetCellDirection(layout, column, row, direction)
-	layoutCheckCell(layout, column, row)
-	layout.grid[row][column].direction = direction
-
-	return layout
-end
-
-local function layoutSetCellSpacing(layout, column, row, spacing)
-	layoutCheckCell(layout, column, row)
-	layout.grid[row][column].spacing = spacing
-
-	return layout
-end
-
-local function layoutSetGridSize(layout, columnCount, rowCount)
-	layout.rowCount = rowCount
-	layout.columnCount = columnCount
-
-	for row = 1, layout.rowCount do
-		layout.grid[row] = layout.grid[row] or {}
-		
-		for column = 1, layout.columnCount do
-			layout.grid[row][column] = layout.grid[row][column] or { direction = GUI.directions.vertical, spacing = 1 }
-		end
-
-		for i = layout.columnCount + 1, #layout.grid[row] do
-			layout.grid[row][i] = nil
-		end
-	end
-
-	for i = layout.rowCount + 1, #layout.grid do
-		layout.grid[i] = nil
-	end
-
-	return layout
-end
-
-local function layoutDraw(layout)
-	layoutCalculate(layout)
-	GUI.drawContainerContent(layout)
-end
-
-function GUI.layout(x, y, width, height, columnCount, rowCount)
-	local layout = GUI.container(x, y, width, height)
-
-	layout.grid = {}
-	layout.setCellPosition = layoutSetCellPosition
-	layout.setCellDirection = layoutSetCellDirection
-	layout.setGridSize = layoutSetGridSize
-	layout.setCellSpacing = layoutSetCellSpacing
-	layout.draw = layoutDraw
-
-	layoutSetGridSize(layout, columnCount, rowCount)
-
-	return layout
-end
-
 ----------------------------------------- Window object -----------------------------------------
 
 local function windowDraw(window)
@@ -2225,18 +2107,188 @@ function GUI.tabbedWindow(x, y, width, height, ...)
 	return window
 end
 
+----------------------------------------- Layout object -----------------------------------------
+
+local function layoutCheckCell(layout, column, row)
+	if column < 1 or column > layout.columnCount or row < 1 or row > layout.rowCount then
+		error("Specified grid position (" .. tostring(column) .. "x" .. tostring(row) .. ") is out of layout grid range")
+	end
+end
+
+local function layoutCalculate(layout)
+	for row = 1, layout.rowCount do
+		for column = 1, layout.columnCount do
+			layout.grid[row][column].totalWidth, layout.grid[row][column].totalHeight = 0, 0
+		end
+	end
+
+	for i = 1, #layout.children do
+		layout.children[i].layoutGridPosition = layout.children[i].layoutGridPosition or {column = 1, row = 1}
+
+		if layout.children[i].layoutGridPosition.row >= 1 and layout.children[i].layoutGridPosition.row <= layout.rowCount and layout.children[i].layoutGridPosition.column >= 1 and layout.children[i].layoutGridPosition.column <= layout.columnCount then
+			if layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].direction == GUI.directions.horizontal then
+				layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].totalWidth = layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].totalWidth + layout.children[i].width + layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].spacing
+				layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].totalHeight = math.max(layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].totalHeight, layout.children[i].height)
+			else
+				layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].totalWidth = math.max(layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].totalWidth, layout.children[i].width)
+				layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].totalHeight = layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].totalHeight + layout.children[i].height + layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].spacing
+			end
+		else
+			error("Layout child with index " .. i .. " has been assigned to cell (" .. layout.children[i].layoutGridPosition.column .. "x" .. layout.children[i].layoutGridPosition.row .. ") out of layout grid range")
+		end
+	end
+
+	local gridCellWidth, gridCellHeight = layout.width / layout.columnCount, layout.height / layout.rowCount
+	for row = 1, layout.rowCount do
+		for column = 1, layout.columnCount do
+			layout.grid[row][column].x, layout.grid[row][column].y = GUI.getAlignmentCoordinates(
+				{
+					x = (column - 1) * gridCellWidth + 1,
+					y = (row - 1) * gridCellHeight + 1,
+					width = gridCellWidth,
+					height = gridCellHeight,
+					alignment = layout.grid[row][column].alignment,
+				},
+				{
+					width = layout.grid[row][column].totalWidth - (layout.grid[row][column].direction == GUI.directions.horizontal and layout.grid[row][column].spacing or 0),
+					height = layout.grid[row][column].totalHeight - (layout.grid[row][column].direction == GUI.directions.vertical and layout.grid[row][column].spacing or 0),
+				}
+			)
+		end
+	end
+
+	for i = 1, #layout.children do
+		layout.children[i].layoutGridPosition = layout.children[i].layoutGridPosition or {column = 1, row = 1}
+		
+		if layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].direction == GUI.directions.horizontal then
+			layout.children[i].localPosition.x = math.floor(layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].x)
+			layout.children[i].localPosition.y = math.floor(layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].y + layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].totalHeight / 2 - layout.children[i].height / 2)
+			layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].x = layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].x + layout.children[i].width + layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].spacing
+		else
+			layout.children[i].localPosition.x = math.floor(layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].x + layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].totalWidth / 2 - layout.children[i].width / 2)
+			layout.children[i].localPosition.y = math.floor(layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].y)
+			layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].y = layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].y + layout.children[i].height + layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].spacing
+		end
+	end
+end
+
+local function layoutSetCellPosition(layout, column, row, object)
+	layoutCheckCell(layout, column, row)
+	object.layoutGridPosition = {column = column, row = row}
+
+	return object
+end
+
+local function layoutSetCellDirection(layout, column, row, direction)
+	layoutCheckCell(layout, column, row)
+	layout.grid[row][column].direction = direction
+
+	return layout
+end
+
+local function layoutSetCellSpacing(layout, column, row, spacing)
+	layoutCheckCell(layout, column, row)
+	layout.grid[row][column].spacing = spacing
+
+	return layout
+end
+
+local function layoutSetCellAlignment(layout, column, row, horizontalAlignment, verticalAlignment)
+	layoutCheckCell(layout, column, row)
+	layout.grid[row][column].alignment.horizontal, layout.grid[row][column].alignment.vertical = horizontalAlignment, verticalAlignment
+
+	return layout
+end
+
+local function layoutSetGridSize(layout, columnCount, rowCount)
+	layout.rowCount = rowCount
+	layout.columnCount = columnCount
+
+	for row = 1, layout.rowCount do
+		layout.grid[row] = layout.grid[row] or {}
+		
+		for column = 1, layout.columnCount do
+			layout.grid[row][column] = layout.grid[row][column] or {
+				alignment = {
+					horizontal = GUI.alignment.horizontal.center,
+					vertical = GUI.alignment.vertical.center
+				},
+				direction = GUI.directions.vertical,
+				spacing = 1
+			}
+		end
+
+		for i = layout.columnCount + 1, #layout.grid[row] do
+			layout.grid[row][i] = nil
+		end
+	end
+
+	for i = layout.rowCount + 1, #layout.grid do
+		layout.grid[i] = nil
+	end
+
+	return layout
+end
+
+local function layoutDraw(layout)
+	layoutCalculate(layout)
+	GUI.drawContainerContent(layout)
+end
+
+function GUI.layout(x, y, width, height, columnCount, rowCount)
+	local layout = GUI.container(x, y, width, height)
+
+	layout.grid = {}
+	layout.setCellPosition = layoutSetCellPosition
+	layout.setCellDirection = layoutSetCellDirection
+	layout.setGridSize = layoutSetGridSize
+	layout.setCellSpacing = layoutSetCellSpacing
+	layout.setCellAlignment = layoutSetCellAlignment
+	layout.draw = layoutDraw
+
+	layoutSetGridSize(layout, columnCount, rowCount)
+
+	return layout
+end
+
 --------------------------------------------------------------------------------------------------------------------------------
 
 -- buffer.start()
 
 -- -- Создаем полноэкранный контейнер, добавляем на него изображение с малиной и полупрозрачную черную панель
 -- local mainContainer = GUI.fullScreenContainer()
+
+-- -- Добавляем в главный контенер другой контейнер, который и будет нашим окошком
+-- local window = mainContainer:addChild(GUI.container(2, 2, 80, 25))
+-- -- Добавляем в контейнер-окно светло-серую фоновую панель
+-- local backgroundPanel = window:addChild(GUI.panel(1, 1, window.width, window.height, 0xCCCCCC))
+-- -- Добавляем layout размером 3x1 чуть меньший, чем размер окна 
+-- local layout = window:addChild(GUI.layout(3, 2, window.width - 4, window.height - 2, 3, 1))
+
+-- -- В ячейку 2х1 добавляем загруженное изображение и label с определенным текстом
+-- layout:setCellPosition(2, 1, layout:addChild(GUI.image(1, 1, image.load("/MineOS/System/OS/Icons/Steve.pic"))))
+-- layout:setCellPosition(2, 1, layout:addChild(GUI.label(1, 1, 10, 1, 0x0, "Картиночка" ):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)))
+-- -- В ячейке 2х1 задаем вертикальную ориентацию объектов и расстояние между ними в 1 пиксель
+-- layout:setCellDirection(2, 1, GUI.directions.vertical)
+-- layout:setCellSpacing(2, 1, 1)
+
+-- -- В ячейку 3х1 добавляем 3 кнопки
+-- layout:setCellPosition(3, 1, layout:addChild(GUI.adaptiveButton(1, 1, 3, 0, 0xFFFFFF, 0x000000, 0x444444, 0xFFFFFF, "Подробности")))
+-- layout:setCellPosition(3, 1, layout:addChild(GUI.adaptiveButton(1, 1, 3, 0, 0xFFFFFF, 0x000000, 0x444444, 0xFFFFFF, "Отмена")))
+-- layout:setCellPosition(3, 1, layout:addChild(GUI.adaptiveButton(1, 1, 3, 0, 0x3392FF, 0xFFFFFF, 0x444444, 0xFFFFFF, "OK"))).onTouch = function()
+-- 	-- При нажатии на кнопку "ОК" наше окно растянется на 10 пикселей
+-- 	window.width, backgroundPanel.width, layout.width = window.width + 10, backgroundPanel.width + 10, layout.width + 10
+-- 	mainContainer:draw()
+-- 	buffer.draw()
+-- end
+-- -- В ячейке 3ч1 задаем горизонтальную ориентацию объектов, расстояние между ними в 2 пикселя, а также выравнивание по правому верхнему краю
+-- layout:setCellDirection(3, 1, GUI.directions.horizontal)
+-- layout:setCellSpacing(3, 1, 2)
+-- layout:setCellAlignment(3, 1, GUI.alignment.horizontal.right, GUI.alignment.vertical.bottom)
+
+
 -- mainContainer:addChild(GUI.image(1, 1, require("image").load("/MineOS/Pictures/Raspberry.pic")))
 -- mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x000000, 40))
--- -- mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x880000))
-
--- -- Добавляем к контейнеру layout с сеткой 5x1
--- local layout = mainContainer:addChild(GUI.layout(1, 1, mainContainer.width, mainContainer.height, 5, 1))
 
 -- -- Добавяляем в layout 9 кнопок, назначая им соответствующие позиции в сетке
 -- layout:setCellPosition(1, 1, layout:addChild(GUI.button(1, 1, 26, 3, 0xEEEEEE, 0x000000, 0xAAAAAA, 0x000000, "Button 1")))
@@ -2249,16 +2301,16 @@ end
 -- layout:setCellPosition(4, 1, layout:addChild(GUI.button(1, 1, 26, 3, 0xEEEEEE, 0x000000, 0xAAAAAA, 0x000000, "Button 8")))
 -- layout:setCellPosition(5, 1, layout:addChild(GUI.button(1, 1, 26, 3, 0xEEEEEE, 0x000000, 0xAAAAAA, 0x000000, "Button 9")))
 
--- -- Изменяем размер сетки на 3x1
--- layout:setGridSize(3, 1)
--- -- Устанавливаем расстояние между объектами
--- for column = 1, 3 do
--- 	layout:setCellSpacing(column, 1, 4)
--- end
--- -- Обновляем позиции последних кнопок
--- layout:setCellPosition(3, 1, layout.children[7])
--- layout:setCellPosition(3, 1, layout.children[8])
--- layout:setCellPosition(3, 1, layout.children[9])
+-- -- -- Изменяем размер сетки на 3x1
+-- -- layout:setGridSize(3, 1)
+-- -- -- Устанавливаем расстояние между объектами
+-- -- for column = 1, 3 do
+-- -- 	layout:setCellSpacing(column, 1, 4)
+-- -- end
+-- -- -- Обновляем позиции последних кнопок
+-- -- layout:setCellPosition(3, 1, layout.children[7])
+-- -- layout:setCellPosition(3, 1, layout.children[8])
+-- -- layout:setCellPosition(3, 1, layout.children[9])
 
 -- mainContainer:draw()
 -- buffer.draw(true)
