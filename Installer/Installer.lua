@@ -20,9 +20,9 @@ if not _G._OSVERSION or tonumber(_G._OSVERSION:sub(8, 10)) < 1.5 then
 	table.insert(reasons, "Old version of OpenComputers mod detected: MineOS requires OpenComputers 1.5 or newer to work properly.")
 end
 
-if computer.getArchitecture and computer.getArchitecture() ~= "Lua 5.2" then
-	table.insert(reasons, "Unsupported CPU architecture detected: please take CPU in your hands, switch it to Lua 5.2 arhitecture and try again.")
-end
+-- if computer.getArchitecture and computer.getArchitecture() ~= "Lua 5.2" then
+-- 	table.insert(reasons, "Unsupported CPU architecture detected: please take CPU in your hands, switch it to Lua 5.2 arhitecture and try again.")
+-- end
 
 if component.isAvailable("tablet") then
 	table.insert(reasons, "Tablet PC detected: MineOS can't be installed on tablets.")

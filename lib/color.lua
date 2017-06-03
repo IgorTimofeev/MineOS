@@ -1,15 +1,23 @@
 
 local bit32 = require("bit32")
+local computer = require("computer")
 local color = {}
 
 -----------------------------------------------------------------------------------------------------------------------
 
-function color.HEXToRGB(HEXColor)
-	return bit32.rshift(HEXColor, 16), bit32.band(bit32.rshift(HEXColor, 8), 0xFF), bit32.band(HEXColor, 0xFF)
+-- Yoba-fix for PIDORS
+if computer.getArchitecture and computer.getArchitecture() == "Lua 5.3" then
+	color.RGBToHEX = function(r, g, b)
+		return bit32.lshift(math.floor(r), 16) + bit32.lshift(math.floor(g), 8) + math.floor(b)
+	end
+else
+	color.RGBToHEX = function(r, g, b)
+		return bit32.lshift(r, 16) + bit32.lshift(g, 8) + b
+	end
 end
 
-function color.RGBToHEX(r, g, b)
-	return bit32.lshift(r, 16) + bit32.lshift(g, 8) + b
+function color.HEXToRGB(HEXColor)
+	return bit32.rshift(HEXColor, 16), bit32.band(bit32.rshift(HEXColor, 8), 0xFF), bit32.band(HEXColor, 0xFF)
 end
 
 function color.RGBToHSB(rr, gg, bb)

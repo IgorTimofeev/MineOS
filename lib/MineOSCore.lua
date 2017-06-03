@@ -1048,7 +1048,7 @@ end
 function MineOSCore.propertiesWindow(x, y, width, icon)
 	local mainContainer, window = MineOSCore.addWindow(GUI.titledWindow(x, y, width, 1, package.loaded.MineOSCore.localization.contextMenuProperties))
 
-	window.backgroundPanel.colors.transparency = 25
+	-- window.backgroundPanel.colors.transparency = 25
 	window:addChild(GUI.image(2, 3, icon.image))
 
 	local x, y = 11, 3
