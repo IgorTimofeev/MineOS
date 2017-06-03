@@ -235,10 +235,11 @@ for column = 1, 3 do
 	layout:setCellSpacing(column, 1, 4)
 end
 -- Обновляем позиции трех последних кнопок, чтобы они принадлежали третьей колонке
-layout:setCellPosition(3, 1, layout.children[7])
-layout:setCellPosition(3, 1, layout.children[8])
-layout:setCellPosition(3, 1, layout.children[9])
+for child = 7, 9 do
+	layout:setCellPosition(3, 1, layout.children[child])
+end
 ```
+
 Результат:
 
 ![Imgur](http://i.imgur.com/QD0BqWx.png?1)
