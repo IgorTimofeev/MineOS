@@ -2255,8 +2255,9 @@ end
 
 -- buffer.start()
 
--- -- Создаем полноэкранный контейнер, добавляем на него изображение с малиной и полупрозрачную черную панель
+-- -- Создаем полноэкранный контейнер, добавляем темно-серую панель
 -- local mainContainer = GUI.fullScreenContainer()
+-- mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x2D2D2D))
 
 -- -- Добавляем в главный контенер другой контейнер, который и будет нашим окошком
 -- local window = mainContainer:addChild(GUI.container(2, 2, 80, 25))
@@ -2286,68 +2287,10 @@ end
 -- layout:setCellSpacing(3, 1, 2)
 -- layout:setCellAlignment(3, 1, GUI.alignment.horizontal.right, GUI.alignment.vertical.bottom)
 
-
--- mainContainer:addChild(GUI.image(1, 1, require("image").load("/MineOS/Pictures/Raspberry.pic")))
--- mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x000000, 40))
-
--- -- Добавяляем в layout 9 кнопок, назначая им соответствующие позиции в сетке
--- layout:setCellPosition(1, 1, layout:addChild(GUI.button(1, 1, 26, 3, 0xEEEEEE, 0x000000, 0xAAAAAA, 0x000000, "Button 1")))
--- layout:setCellPosition(2, 1, layout:addChild(GUI.button(1, 1, 26, 3, 0xEEEEEE, 0x000000, 0xAAAAAA, 0x000000, "Button 2")))
--- layout:setCellPosition(2, 1, layout:addChild(GUI.button(1, 1, 26, 3, 0xEEEEEE, 0x000000, 0xAAAAAA, 0x000000, "Button 3")))
--- layout:setCellPosition(3, 1, layout:addChild(GUI.button(1, 1, 26, 3, 0xEEEEEE, 0x000000, 0xAAAAAA, 0x000000, "Button 4")))
--- layout:setCellPosition(3, 1, layout:addChild(GUI.button(1, 1, 26, 3, 0xEEEEEE, 0x000000, 0xAAAAAA, 0x000000, "Button 5")))
--- layout:setCellPosition(3, 1, layout:addChild(GUI.button(1, 1, 26, 3, 0xEEEEEE, 0x000000, 0xAAAAAA, 0x000000, "Button 6")))
--- layout:setCellPosition(4, 1, layout:addChild(GUI.button(1, 1, 26, 3, 0xEEEEEE, 0x000000, 0xAAAAAA, 0x000000, "Button 7")))
--- layout:setCellPosition(4, 1, layout:addChild(GUI.button(1, 1, 26, 3, 0xEEEEEE, 0x000000, 0xAAAAAA, 0x000000, "Button 8")))
--- layout:setCellPosition(5, 1, layout:addChild(GUI.button(1, 1, 26, 3, 0xEEEEEE, 0x000000, 0xAAAAAA, 0x000000, "Button 9")))
-
--- -- -- Изменяем размер сетки на 3x1
--- -- layout:setGridSize(3, 1)
--- -- -- Устанавливаем расстояние между объектами
--- -- for column = 1, 3 do
--- -- 	layout:setCellSpacing(column, 1, 4)
--- -- end
--- -- -- Обновляем позиции последних кнопок
--- -- layout:setCellPosition(3, 1, layout.children[7])
--- -- layout:setCellPosition(3, 1, layout.children[8])
--- -- layout:setCellPosition(3, 1, layout.children[9])
-
 -- mainContainer:draw()
 -- buffer.draw(true)
 -- mainContainer:startEventHandling()
 
--- local mainContainer = GUI.fullScreenContainer()
-
--- mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0xFF8888))
--- local comboBox = mainContainer:addChild(GUI.comboBox(2, 30, 40, 3, 0x0, 0xFFFFFF, 0xAAAAAA, 0x555555))
--- comboBox:addItem("Cyka")
--- comboBox:addItem("Pidor 1")
--- comboBox:addItem("Pidor 2")
--- comboBox:addItem("Pidor 3")
--- comboBox:addSeparator()
--- comboBox:addItem("Pidor 4")
-
--- mainContainer:draw()
--- buffer.draw()
--- mainContainer:startEventHandling()
-
--- for i = 1, 2 do
--- 	-- local window = mainContainer:addChild(GUI.titledWindow(4 + i * 8, 2 + i * 4, 40, 16, "Окно " .. i, true))
--- 	local window = mainContainer:addChild(GUI.tabbedWindow(4 + i * 8, 2 + i * 4, 80, 25, "Вкладка", "Еще вкладка", "Ты пидор", "Ебаный в рот"))
--- 	window.counter = 0
--- 	local label = window:addChild(GUI.label(1, 7, window.width, 1, 0x0, "Количество кликов: 0")):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
--- 	window:addChild(GUI.roundedButton(-5, 9, 33, 3, 0x999999, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, "Нажимай")).onTouch = function()
--- 		window.counter = window.counter + 1
--- 		label.text = "Количество кликов: " .. window.counter
--- 		mainContainer:draw()
--- 		buffer.draw()
--- 	end
--- 	window:addChild(GUI.button(2, 24, 10, 3, 0x0, 0xFFFFFF, 0x0, 0xFF0000, "AFAE"))
--- end
-
--- mainContainer:draw()
--- buffer.draw()
--- mainContainer:startEventHandling()
 
 --------------------------------------------------------------------------------------------------------------------------------
 
