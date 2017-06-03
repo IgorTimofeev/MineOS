@@ -173,15 +173,19 @@ GUI.**layout**( x, y, width, height, columns, rows ): *table* container
 | *int* | y | Координата объекта по оси y |
 | *int* | width | Ширина объекта |
 | *int* | height | Высота объекта |
-| *int* | columns | Количество рядов сетки |
-| *int* | rows | Количество строк сетки |
+| *int* | columnCount | Количество рядов сетки |
+| *int* | rowCount | Количество строк сетки |
 
-Layout является наследником GUI.**container**, предоставляющим автоматические методы расположения дочерних объектов внутри себя. К примеру, если вам хочется визуально красиво отобразить множество объектов, не тратя время на ручной расчет координат, то layout создан для вас.
+Layout является наследником GUI.**container**, автоматически располагающий дочерние объекты внутри себя. К примеру, если вам хочется визуально красиво отобразить множество объектов, не тратя время на ручной расчет координат, то layout создан для вас.
 
 | Тип свойства | Свойство |Описание |
 | ------ | ------ | ------ |
-| *function* | :**setCellPosition**(*object* child, *int* column, *int* row): *object* child| Назначить дочернему объекту layout конкретную ячейку сетки. В одной ячейке может располагаться сколь угодно много объектов. |
+| *int* | .**columnCount**| Количество рядов сетки |
+| *int* | .**rowCount**| Количество строк сетки |
+| *function* | :**setCellPosition**(*int* column, *int* row, *object* child): *object* child| Назначить дочернему объекту layout конкретную ячейку сетки. В одной ячейке может располагаться сколь угодно много объектов. |
 | *function* | :**setCellDirection**(*int* column, *int* row, *enum* direction): *layout* layout | Назначить ячейке сетки метод отображения дочерних объектов. Поддерживаются GUI.directions.horizontal и GUI.directions.vertical |
+| *function* | :**setCellSpacing**(*int* column, *int* row, *int* spacing): *layout* layout | Назначить ячейке сетки расстояние в пикселях между объектами. По умолчанию оно равняется 1 |
+| *function* | :**setGridSize**(*int* columnCount, *int* columnCount): *layout* layout | Установить размер сетки. Все объекты, находящиеся вне диапазона нового размера, должны быть размещены в сетке заново через :**setCellPosition**()  |
 
 Пример реализации layout:
 ```lua
@@ -197,15 +201,15 @@ mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height
 local layout = mainContainer:addChild(GUI.layout(1, 1, mainContainer.width, mainContainer.height, 5, 1))
 
 -- Добавяляем в layout 9 кнопок, назначая им соответствующие позиции в сетке
-layout:setCellPosition(layout:addChild(GUI.button(1, 1, 26, 3, 0xEEEEEE, 0x000000, 0xAAAAAA, 0x000000, "Button 1")), 1, 1)
-layout:setCellPosition(layout:addChild(GUI.button(1, 1, 26, 3, 0xEEEEEE, 0x000000, 0xAAAAAA, 0x000000, "Button 2")), 2, 1)
-layout:setCellPosition(layout:addChild(GUI.button(1, 1, 26, 3, 0xEEEEEE, 0x000000, 0xAAAAAA, 0x000000, "Button 3")), 2, 1)
-layout:setCellPosition(layout:addChild(GUI.button(1, 1, 26, 3, 0xEEEEEE, 0x000000, 0xAAAAAA, 0x000000, "Button 4")), 3, 1)
-layout:setCellPosition(layout:addChild(GUI.button(1, 1, 26, 3, 0xEEEEEE, 0x000000, 0xAAAAAA, 0x000000, "Button 5")), 3, 1)
-layout:setCellPosition(layout:addChild(GUI.button(1, 1, 26, 3, 0xEEEEEE, 0x000000, 0xAAAAAA, 0x000000, "Button 6")), 3, 1)
-layout:setCellPosition(layout:addChild(GUI.button(1, 1, 26, 3, 0xEEEEEE, 0x000000, 0xAAAAAA, 0x000000, "Button 7")), 4, 1)
-layout:setCellPosition(layout:addChild(GUI.button(1, 1, 26, 3, 0xEEEEEE, 0x000000, 0xAAAAAA, 0x000000, "Button 8")), 4, 1)
-layout:setCellPosition(layout:addChild(GUI.button(1, 1, 26, 3, 0xEEEEEE, 0x000000, 0xAAAAAA, 0x000000, "Button 9")), 5, 1)
+layout:setCellPosition(1, 1, layout:addChild(GUI.button(1, 1, 26, 3, 0xEEEEEE, 0x000000, 0xAAAAAA, 0x000000, "Button 1")))
+layout:setCellPosition(2, 1, layout:addChild(GUI.button(1, 1, 26, 3, 0xEEEEEE, 0x000000, 0xAAAAAA, 0x000000, "Button 2")))
+layout:setCellPosition(2, 1, layout:addChild(GUI.button(1, 1, 26, 3, 0xEEEEEE, 0x000000, 0xAAAAAA, 0x000000, "Button 3")))
+layout:setCellPosition(3, 1, layout:addChild(GUI.button(1, 1, 26, 3, 0xEEEEEE, 0x000000, 0xAAAAAA, 0x000000, "Button 4")))
+layout:setCellPosition(3, 1, layout:addChild(GUI.button(1, 1, 26, 3, 0xEEEEEE, 0x000000, 0xAAAAAA, 0x000000, "Button 5")))
+layout:setCellPosition(3, 1, layout:addChild(GUI.button(1, 1, 26, 3, 0xEEEEEE, 0x000000, 0xAAAAAA, 0x000000, "Button 6")))
+layout:setCellPosition(4, 1, layout:addChild(GUI.button(1, 1, 26, 3, 0xEEEEEE, 0x000000, 0xAAAAAA, 0x000000, "Button 7")))
+layout:setCellPosition(4, 1, layout:addChild(GUI.button(1, 1, 26, 3, 0xEEEEEE, 0x000000, 0xAAAAAA, 0x000000, "Button 8")))
+layout:setCellPosition(5, 1, layout:addChild(GUI.button(1, 1, 26, 3, 0xEEEEEE, 0x000000, 0xAAAAAA, 0x000000, "Button 9")))
 
 mainContainer:draw()
 buffer.draw(true)
@@ -214,7 +218,26 @@ mainContainer:startEventHandling()
 
 Результат:
 
-![Imgur](http://i.imgur.com/wjjMfDe.png?1)
+![Imgur](http://i.imgur.com/LnBhKaN.png?1)
+
+Также мы можем модифицировать код, чтобы кнопки группировались в 3 колонки, а расстояние между ними было равным 4 пикселям:
+
+```lua
+-- Изменяем размер сетки на 3x1
+layout:setGridSize(3, 1)
+-- Устанавливаем расстояние между объектами для каждой колонки
+for column = 1, 3 do
+	layout:setCellSpacing(column, 1, 4)
+end
+-- Обновляем позиции трех последних кнопок, чтобы они принадлежали третьей колонке
+layout:setCellPosition(3, 1, layout.children[7])
+layout:setCellPosition(3, 1, layout.children[8])
+layout:setCellPosition(3, 1, layout.children[9])
+```
+Результат:
+
+![Imgur](http://i.imgur.com/QD0BqWx.png?1)
+
 
 Методы для создания виджетов
 ======

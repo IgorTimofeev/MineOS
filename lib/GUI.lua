@@ -2048,7 +2048,8 @@ local function layoutCalculate(layout)
 	local gridCellWidth, gridCellHeight = layout.width / layout.columnCount, layout.height / layout.rowCount
 	for row = 1, layout.rowCount do
 		for column = 1, layout.columnCount do
-			layout.grid[row][column].x, layout.grid[row][column].y = column * gridCellWidth - gridCellWidth / 2 - layout.grid[row][column].totalWidth / 2, row * gridCellHeight - gridCellHeight / 2 - layout.grid[row][column].totalHeight / 2
+			layout.grid[row][column].x = column * gridCellWidth - gridCellWidth / 2 - (layout.grid[row][column].totalWidth - layout.grid[row][column].spacing) / 2
+			layout.grid[row][column].y = row * gridCellHeight - gridCellHeight / 2 - (layout.grid[row][column].totalHeight - layout.grid[row][column].spacing) / 2
 		end
 	end
 
@@ -2081,9 +2082,11 @@ local function layoutSetCellDirection(layout, column, row, direction)
 	return layout
 end
 
-local function layoutDraw(layout)
-	layoutCalculate(layout)
-	GUI.drawContainerContent(layout)
+local function layoutSetCellSpacing(layout, column, row, spacing)
+	layoutCheckCell(layout, column, row)
+	layout.grid[row][column].spacing = spacing
+
+	return layout
 end
 
 local function layoutSetGridSize(layout, columnCount, rowCount)
@@ -2109,6 +2112,11 @@ local function layoutSetGridSize(layout, columnCount, rowCount)
 	return layout
 end
 
+local function layoutDraw(layout)
+	layoutCalculate(layout)
+	GUI.drawContainerContent(layout)
+end
+
 function GUI.layout(x, y, width, height, columnCount, rowCount)
 	local layout = GUI.container(x, y, width, height)
 
@@ -2116,6 +2124,7 @@ function GUI.layout(x, y, width, height, columnCount, rowCount)
 	layout.setCellPosition = layoutSetCellPosition
 	layout.setCellDirection = layoutSetCellDirection
 	layout.setGridSize = layoutSetGridSize
+	layout.setCellSpacing = layoutSetCellSpacing
 	layout.draw = layoutDraw
 
 	layoutSetGridSize(layout, columnCount, rowCount)
@@ -2224,6 +2233,7 @@ end
 -- local mainContainer = GUI.fullScreenContainer()
 -- mainContainer:addChild(GUI.image(1, 1, require("image").load("/MineOS/Pictures/Raspberry.pic")))
 -- mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x000000, 40))
+-- -- mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x880000))
 
 -- -- Добавляем к контейнеру layout с сеткой 5x1
 -- local layout = mainContainer:addChild(GUI.layout(1, 1, mainContainer.width, mainContainer.height, 5, 1))
@@ -2241,6 +2251,10 @@ end
 
 -- -- Изменяем размер сетки на 3x1
 -- layout:setGridSize(3, 1)
+-- -- Устанавливаем расстояние между объектами
+-- for column = 1, 3 do
+-- 	layout:setCellSpacing(column, 1, 4)
+-- end
 -- -- Обновляем позиции последних кнопок
 -- layout:setCellPosition(3, 1, layout.children[7])
 -- layout:setCellPosition(3, 1, layout.children[8])
