@@ -177,9 +177,7 @@ GUI.**layout**( x, y, width, height, columns, rows ): *table* container
 | *int* | rowCount | Количество строк сетки |
 
 Layout является наследником GUI.**container**, автоматически располагающим дочерние объекты внутри себя. К примеру, если вам хочется визуально красиво отобразить множество объектов, не тратя время на ручной расчет координат, то layout создан для вас. На картинке ниже хорошо поясняется суть:
-
 ![Imgur](http://i.imgur.com/SuNHweA.png?1)
-
 Видно, что имеется layout, состоящий из 9 ячеек, каждая из которых может иметь собственную ориентацию объектов, расстояние между ними, а также выравнивание. Границы ячеек условны, и существуют лишь для расчета позиции дочерних объектов, так что дочерние объекты могут без проблем выходить за них.
 
 | Тип свойства | Свойство |Описание |
@@ -239,7 +237,6 @@ for child = 7, 9 do
 	layout:setCellPosition(3, 1, layout.children[child])
 end
 ```
-
 Результат:
 
 ![Imgur](http://i.imgur.com/QD0BqWx.png?1)
@@ -357,7 +354,7 @@ local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 
 local mainContainer = GUI.fullScreenContainer()
-mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x0))
+mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x2D2D2D))
 
 mainContainer:addChild(GUI.button(2, 2, 30, 3, 0xFFFFFF, 0x000000, 0xAAAAAA, 0x000000, "Button text")).onTouch = function()
 	-- Do something on button click
@@ -370,7 +367,7 @@ mainContainer:startEventHandling()
 
 Результат:
 
-![enter image description here](http://i89.fastpic.ru/big/2017/0402/a4/054d171e923c7631f032ba5d12c6d7a4.png)
+![Imgur](http://i.imgur.com/KiPqftB.png?1)
 
 GUI.**label**( x, y, width, height, textColor, text ): *table* label
 --------------------------------------------------------------------
@@ -396,9 +393,9 @@ local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 
 local mainContainer = GUI.fullScreenContainer()
-mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x0))
+mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x2D2D2D))
 
-mainContainer:addChild(GUI.label(2, 2, mainContainer.width, mainContainer.height, 0xFFFFFF, "Centered text")):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.center))
+mainContainer:addChild(GUI.label(2, 2, mainContainer.width, mainContainer.height, 0xFFFFFF, "Centered text")):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.center)
 
 mainContainer:draw()
 buffer.draw(true)
@@ -407,7 +404,7 @@ mainContainer:startEventHandling()
 
 Результат:
 
-![enter image description here](http://i91.fastpic.ru/big/2017/0402/06/9b1d66cb137abaa67076e979d7ddc206.png)
+![Imgur](http://i.imgur.com/4Hl5G7l.png?1)
 
 GUI.**inputTextBox**( x, y, width, height, backgroundColor, textColor, backgroundFocusedColor, textFocusedColor, text, [placeholderText, eraseTextOnFocus, textMask, highlightLuaSyntax, autocompleteVariables] ): *table* inputTextBox
 ------------------------------------------------------------------------
@@ -442,7 +439,7 @@ local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 
 local mainContainer = GUI.fullScreenContainer()
-mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x0))
+mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x2D2D2D))
 
 local inputTextBox = mainContainer:addChild(GUI.inputTextBox(2, 2, 32, 3, 0xEEEEEE, 0x555555, 0xEEEEEE, 0x2D2D2D, nil, "Type number here", true, nil, nil, nil))
 inputTextBox.validator = function(text)
@@ -459,10 +456,9 @@ mainContainer:startEventHandling()
 
 Результат:
 
-![enter image description here](http://i89.fastpic.ru/big/2017/0402/37/4cca31bccfea2d08c5e0e6fb9c7e1937.png)
+![Imgur](http://i.imgur.com/CNYHJKF.png?1)
 
-
-![enter image description here](http://i89.fastpic.ru/big/2017/0402/04/709cff165b64efd64d6346ecec188704.png)
+![Imgur](http://i.imgur.com/AdOIiXQ.png?1)
 
 GUI.**slider**( x, y, width, primaryColor, secondaryColor, pipeColor, valueColor, minimumValue, maximumValue, value, [showCornerValues, currentValuePrefix, currentValuePostfix] ): *table* slider
 ------------------------------------------------------------------------
@@ -495,7 +491,7 @@ local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 
 local mainContainer = GUI.fullScreenContainer()
-mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x0))
+mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x2D2D2D))
 
 local slider = mainContainer:addChild(GUI.slider(4, 2, 30, 0xFFDB40, 0xEEEEEE, 0xFFDB80, 0xBBBBBB, 0, 100, 50, true, "Prefix: ", " postfix"))
 slider.roundValues = true
@@ -510,7 +506,7 @@ mainContainer:startEventHandling()
 
 Результат:
 
-![enter image description here](http://i89.fastpic.ru/big/2017/0402/76/3caab6877dfc1541fd094b491e653476.png)
+![Imgur](http://i.imgur.com/P4vQmNA.png?1)
 
 GUI.**switch**( x, y, width, primaryColor, secondaryColor, pipeColor, state ): *table* switch
 ------------------------------------------------------------------------
@@ -537,7 +533,7 @@ local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 
 local mainContainer = GUI.fullScreenContainer()
-mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x0))
+mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x2D2D2D))
 
 local switch1 = mainContainer:addChild(GUI.switch(2, 2, 8, 0xFFDB40, 0xAAAAAA, 0xEEEEEE, true))
 local switch2 = mainContainer:addChild(GUI.switch(12, 2, 8, 0xFFDB40, 0xAAAAAA, 0xEEEEEE, false))
@@ -553,7 +549,7 @@ mainContainer:startEventHandling()
 
 Результат:
 
-![enter image description here](http://i91.fastpic.ru/big/2017/0402/c7/d93ec986446887714c2f238d3db45cc7.png)
+![Imgur](http://i.imgur.com/wpJNU2F.png?1)
 
 GUI.**colorSelector**( x, y, width, height, color, text ): *table* colorSelector
 ------------------------------------------------------------------------
@@ -579,7 +575,7 @@ local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 
 local mainContainer = GUI.fullScreenContainer()
-mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x0))
+mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x2D2D2D))
 
 mainContainer:addChild(GUI.colorSelector(2, 2, 30, 3, 0xFF55FF, "Choose color")).onTouch = function()
 	-- Do something after choosing color
@@ -592,7 +588,7 @@ mainContainer:startEventHandling()
 
 Результат:
 
-![enter image description here](http://i91.fastpic.ru/big/2017/0402/24/59bbe68f569420588cf88f7aa0124124.png)
+![Imgur](http://i.imgur.com/n0nLIzx.png?1)
 
 GUI.**comboBox**( x, y, width, elementHeight, backgroundColor, textColor, arrowBackgroundColor, arrowTextColor ): *table* comboBox
 ------------------------------------------------------------------------
@@ -623,9 +619,9 @@ local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 
 local mainContainer = GUI.fullScreenContainer()
-mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x0))
+mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x2D2D2D))
 
-local comboBox = mainContainer:addChild(GUI.comboBox(2, 2, 30, 3, 0xEEEEEE, 0x2D2D2D, 0xCCCCCC, 0x999999))
+local comboBox = mainContainer:addChild(GUI.comboBox(2, 2, 30, 3, 0xEEEEEE, 0x2D2D2D, 0xCCCCCC, 0x888888))
 comboBox:addItem(".PNG")
 comboBox:addItem(".JPG").onTouch = function()
 	-- Do something when .JPG was selected
@@ -645,7 +641,7 @@ mainContainer:startEventHandling()
 
 Результат:
 
-![enter image description here](http://i89.fastpic.ru/big/2017/0402/33/bbc9428db996ef8a8fb9d5df78087733.png)
+![Imgur](http://i.imgur.com/4oTgrUV.png?1)
 
 GUI.**menu**( x, y, width, backgroundColor, textColor, backgroundPressedColor, textPressedColor, backgroundTransparency ): *table* menu
 ------------------------------------------------------------------------
@@ -674,7 +670,7 @@ local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 
 local mainContainer = GUI.fullScreenContainer()
-mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x0))
+mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x2D2D2D))
 
 local menu = mainContainer:addChild(GUI.menu(1, 1, mainContainer.width, 0xEEEEEE, 0x2D2D2D, 0x3366CC, 0xFFFFFF, nil))
 menu:addItem("MineCode IDE", 0x0)
@@ -700,7 +696,7 @@ mainContainer:startEventHandling()
 
 Результат:
 
-![enter image description here](http://i91.fastpic.ru/big/2017/0402/17/6c49644e775ec55221808ae931157817.png)
+![Imgur](http://i.imgur.com/jWyVhTP.png?1)
 
 GUI.**image**( x, y, loadedImage ): *table* image
 -------------------------------------------------
@@ -1207,14 +1203,14 @@ local GUI = require("GUI")
 
 ---------------------------------------------------------------------
 
--- Создаем полноэкранный контейнер, добавляем на него изображение с малиной и полупрозрачную черную панель
+-- Создаем полноэкранный контейнер, добавляем темно-серую панель
 local mainContainer = GUI.fullScreenContainer()
+mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x2D2D2D))
 
 -- Добавляем в главный контенер другой контейнер, который и будет нашим окошком
 local window = mainContainer:addChild(GUI.container(2, 2, 80, 25))
 -- Добавляем в контейнер-окно светло-серую фоновую панель
 local backgroundPanel = window:addChild(GUI.panel(1, 1, window.width, window.height, 0xCCCCCC))
-
 -- Добавляем layout размером 3x1 чуть меньший, чем размер окна 
 local layout = window:addChild(GUI.layout(3, 2, window.width - 4, window.height - 2, 3, 1))
 
@@ -1246,8 +1242,8 @@ mainContainer:startEventHandling()
 
 В результате получаем симпатичное окошко с тремя кнопками, автоматически расположенными в его правой части:
 
-![Imgur](http://i.imgur.com/aCB4FDU.png?1)
+![Imgur](http://i.imgur.com/b3CmBfS.png?1)
 
 Если несколько раз нажать на кнопку "ОК", то окошко растянется, однако все объекты останутся на законных местах. Причем без каких-либо хардкорных расчетов вручную:
 
-![Imgur](http://i.imgur.com/MyMiiDU.png?1)
+![Imgur](http://i.imgur.com/JQ2togt.png?1)
