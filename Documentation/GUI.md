@@ -47,7 +47,6 @@ GUI.**contextMenu**( x, y ): *table* contextMenu
 | ------ | ------ | ------ |
 | *function* | :**addItem**( *string* text, *boolean* disabled, *string* shortcut, *int* color )| Добавить в контекстное меню элемент с указанными параметрами. При параметре disabled элемент не будет реагировать на клики мышью. Каждый элемент может иметь собственный callback-метод .**onTouch** для последующей обработки данных |
 | *function* | :**addSeparator**()| Добавить в контекстное меню визуальный разделитель |
-| *table* | .**items** | Таблица элементов контекстного меню |
 
 Пример реализации контекстного меню:
 
@@ -55,7 +54,7 @@ GUI.**contextMenu**( x, y ): *table* contextMenu
 local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 
-buffer.clear(0x0)
+buffer.clear(0x2D2D2D)
 local contextMenu = GUI.contextMenu(2, 2)
 contextMenu:addItem("New")
 contextMenu:addItem("Open").onTouch = function()
@@ -69,7 +68,7 @@ contextMenu:show()
 
 Результат:
 
-![enter image description here](http://i89.fastpic.ru/big/2017/0402/20/d7d5f14ca47ecef72aec535293e88320.png)
+![Imgur](http://i.imgur.com/kw6jjtY.png)
 
 GUI.**error**( text )
 ------------------------------------------------------------------------
@@ -86,13 +85,13 @@ GUI.**error**( text )
 local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 
-buffer.clear(0x0)
+buffer.clear(0x2D2D2D)
 GUI.error("Something went wrong here, my friend")
 ```
 
 Результат:
 
-![enter image description here](http://i.imgur.com/8sjD4T3.png)
+![Imgur](http://i.imgur.com/s8mA2FL.png?1)
 
 Методы для создания контейнеров
 ======
