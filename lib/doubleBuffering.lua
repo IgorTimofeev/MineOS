@@ -41,6 +41,10 @@ end
 
 -- Создание массивов буфера и всех необходимых параметров
 function buffer.flush(width, height)
+	if not width or not height then
+		width, height = gpu.getResolution()
+	end
+
 	buffer.currentFrame = {}
 	buffer.newFrame = {}
 	buffer.width = width
@@ -62,10 +66,7 @@ function buffer.flush(width, height)
 	end
 end
 
--- Инициализация буфера со всеми необходимыми параметрами, вызывается автоматически
-function buffer.start()	
-	buffer.flush(gpu.getResolution())
-end
+buffer.start = buffer.flush
 
 -- Изменение разрешения экрана и пересоздание массивов буфера
 function buffer.setResolution(width, height)
@@ -141,22 +142,21 @@ end
 
 --Скопировать область изображения и вернуть ее в виде массива
 function buffer.copy(x, y, width, height)
-	local copyArray = {
-		width = width,
-		height = height,
-	}
-
-	if x < 1 or y < 1 or x + width - 1 > buffer.width or y + height - 1 > buffer.height then
-		error("Copy field is out of screen range")
-	end
+	local copyArray = { width = width, height = height }
 
 	local index
 	for j = y, (y + height - 1) do
 		for i = x, (x + width - 1) do
-			index = buffer.getBufferIndexByCoordinates(i, j)
-			table.insert(copyArray, buffer.newFrame[index])
-			table.insert(copyArray, buffer.newFrame[index + 1])
-			table.insert(copyArray, buffer.newFrame[index + 2])
+			if i >= 1 and j >= 1 and i <= buffer.width and j <= buffer.height then
+				index = buffer.getBufferIndexByCoordinates(i, j)
+				table.insert(copyArray, buffer.newFrame[index])
+				table.insert(copyArray, buffer.newFrame[index + 1])
+				table.insert(copyArray, buffer.newFrame[index + 2])
+			else
+				table.insert(copyArray, 0x0)
+				table.insert(copyArray, 0x0)
+				table.insert(copyArray, " ")
+			end
 		end
 	end
 
@@ -441,7 +441,7 @@ function buffer.semiPixelLine(x1, y1, x2, y2, color)
 	end
 end
 
-function buffer.semiPixelCircle(xCenter, yCenter, radius, color, filled)
+function buffer.semiPixelCircle(xCenter, yCenter, radius, color)
 	local function insertPoints(x, y)
 		buffer.semiPixelSet(xCenter + x, yCenter + y, color)
 		buffer.semiPixelSet(xCenter + x, yCenter - y, color)
@@ -599,9 +599,22 @@ end
 
 ------------------------------------------------------------------------------------------------------
 
-buffer.start()
+buffer.flush()
 
 ------------------------------------------------------------------------------------------------------
+
+-- buffer.clear(0x2D2D2D)
+	
+-- local x, y = 2, 2
+-- for i = 1, 10 do
+-- 	buffer.square(x, y, 6, 3, color.HSBToHEX(i * 36, 100, 100), 0x0, " ")
+-- 	x, y = x + 4, y + 2
+-- end
+
+-- buffer.semiPixelCircle(22, 22, 10, 0x0)
+-- buffer.semiPixelLine(2, 36, 35, 3, 0xFFFFFF)
+
+-- buffer.draw()
 
 -- buffer.clear(0x0)
 -- buffer.image(1, 1, image.load("/Untitled.pic"))
