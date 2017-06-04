@@ -440,17 +440,6 @@ mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height
 
 local inputField = mainContainer:addChild(GUI.inputField(2, 2, 30, 3, 0xEEEEEE, 0x555555, 0x999999, 0xFFFFFF, 0x2D2D2D, "Hello world", "Placeholder text"))
 
-inputField.validator = function(text)
-	if tonumber(text) then
-		GUI.error("It's a number!")
-	end
-	return true
-end
-
-inputField.onInputFinished = function()
-	-- Do something when input finished
-end
-
 mainContainer:draw()
 buffer.draw(true)
 mainContainer:startEventHandling()
