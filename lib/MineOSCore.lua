@@ -576,6 +576,7 @@ function MineOSCore.call(method, ...)
 	end
 	
 	local xpcallSuccess, xpcallReason = xpcall(launchMethod, tracebackMethod)
+	if type(xpcallReason) == "string" or type(xpcallReason) == "nil" then xpcallReason = {path = "/lib/MineOSCore.lua", line = 1, traceback = "MineOSCore fatal error: " .. tostring(xpcallReason)} end
 	if not xpcallSuccess and not xpcallReason.traceback:match("^table") and not xpcallReason.traceback:match("interrupted") then
 		return false, xpcallReason.path, xpcallReason.line, xpcallReason.traceback
 	end
