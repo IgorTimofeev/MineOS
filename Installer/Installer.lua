@@ -13,7 +13,6 @@ local screen = component.screen
 
 ------------------------------------------------------------------------------------------------------------------------------------
 
-print(" ")
 local reasons = {}
 
 if not _G._OSVERSION or tonumber(_G._OSVERSION:sub(8, 10)) < 1.5 then
@@ -41,6 +40,7 @@ if computer.totalMemory() < 2097152 then
 end
 
 if #reasons > 0 then
+	print(" ")
 	for i = 1, #reasons do
 		print(reasons[i])
 		print(" ")
