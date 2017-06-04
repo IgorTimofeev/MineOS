@@ -87,7 +87,12 @@
 	mineOSCreatorUsedMasterPassword = "The creator of this operating system has used Master-Password",
 	loginToSystem = "Login",
 
+	appearance = "Appearance",
+	wallpaperProperties = "Wallpaper properties",
 	colorScheme = "Color scheme",
+	wallpaperPath = "Path to wallpaper",
+	wallpaperModeStretch = "Stretch",
+	wallpaperModeCenter = "Center",
 	backgroundColor = "Background color",
 	interfaceColor = "Interface color",
 	screenResolution = "Screen resolution",

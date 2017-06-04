@@ -108,34 +108,36 @@ end
 
 local function checkPassword()
 	local container = MineOSCore.addUniversalContainer(MineOSCore.OSMainContainer, MineOSCore.localization.inputPassword)
-	local inputTextBox = container.layout:addChild(GUI.inputTextBox(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0xEEEEEE, 0x262626, nil, "Password", true, "*"))
+	local inputField = container.layout:addChild(GUI.inputField(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0x666666, 0xEEEEEE, 0x262626, nil, nil, true, "*"))
 	local label = container.layout:addChild(GUI.label(1, 1, 36, 1, 0xFF4940, " ")):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
 
-	container.panel.eventHandler = function(mainContainer, object, eventData)
-		if eventData[1] == "touch" then
-			local hash = require("SHA2").hash(inputTextBox.text or "")
-			if hash == MineOSCore.OSSettings.passwordHash then
-				container:delete()
-				MineOSCore.OSMainContainer:draw()
-				buffer.draw()
-			elseif hash == "c925be318b0530650b06d7f0f6a51d8289b5925f1b4117a43746bc99f1f81bc1" then
-				GUI.error(MineOSCore.localization.mineOSCreatorUsedMasterPassword)
-				container:delete()
-				MineOSCore.OSMainContainer:draw()
-				buffer.draw()
-			else
-				label.text = MineOSCore.localization.incorrectPassword
-				MineOSCore.OSMainContainer:draw()
-				buffer.draw()
-			end
+	inputField.onInputFinished = function()
+		local hash = require("SHA2").hash(inputField.text or "")
+		if hash == MineOSCore.OSSettings.passwordHash then
+			container:delete()
+			MineOSCore.OSMainContainer:draw()
+			buffer.draw()
+		elseif hash == "c925be318b0530650b06d7f0f6a51d8289b5925f1b4117a43746bc99f1f81bc1" then
+			GUI.error(MineOSCore.localization.mineOSCreatorUsedMasterPassword)
+			container:delete()
+			MineOSCore.OSMainContainer:draw()
+			buffer.draw()
+		else
+			label.text = MineOSCore.localization.incorrectPassword
+			MineOSCore.OSMainContainer:draw()
+			buffer.draw()
 		end
 	end
+
+	MineOSCore.OSMainContainer:draw()
+	buffer.draw()
+	inputField:startInput()
 end
 
 local function setPassword()
 	local container = MineOSCore.addUniversalContainer(MineOSCore.OSMainContainer, MineOSCore.localization.passwordProtection)
-	local inputTextBox1 = container.layout:addChild(GUI.inputTextBox(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0xEEEEEE, 0x262626, nil, MineOSCore.localization.inputPassword, true, "*"))
-	local inputTextBox2 = container.layout:addChild(GUI.inputTextBox(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0xEEEEEE, 0x262626, nil, MineOSCore.localization.confirmInputPassword, true, "*"))
+	local inputField1 = container.layout:addChild(GUI.inputField(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0x666666, 0xEEEEEE, 0x262626, nil, MineOSCore.localization.inputPassword, true, "*"))
+	local inputField2 = container.layout:addChild(GUI.inputField(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0x666666, 0xEEEEEE, 0x262626, nil, MineOSCore.localization.confirmInputPassword, true, "*"))
 	local label = container.layout:addChild(GUI.label(1, 1, 36, 1, 0xFF4940, " ")):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
 
 	MineOSCore.OSMainContainer:draw()
@@ -143,11 +145,11 @@ local function setPassword()
 
 	container.panel.eventHandler = function(mainContainer, object, eventData)
 		if eventData[1] == "touch" then
-			if inputTextBox1.text == inputTextBox2.text then
+			if inputField1.text == inputField2.text then
 				container:delete()
-				
+
 				MineOSCore.OSSettings.protectionMethod = "password"
-				MineOSCore.OSSettings.passwordHash = require("SHA2").hash(inputTextBox1.text or "")
+				MineOSCore.OSSettings.passwordHash = require("SHA2").hash(inputField1.text or "")
 				MineOSCore.saveOSSettings()
 			else
 				label.text = MineOSCore.localization.passwordsAreDifferent
@@ -167,7 +169,7 @@ end
 
 local function setProtectionMethod()
 	local container = MineOSCore.addUniversalContainer(MineOSCore.OSMainContainer, MineOSCore.localization.protectYourComputer)
-	
+
 	local comboBox = container.layout:addChild(GUI.comboBox(1, 1, 36, 3, 0xEEEEEE, 0x262626, 0x666666, 0xEEEEEE))
 	comboBox:addItem(MineOSCore.localization.biometricProtection)
 	comboBox:addItem(MineOSCore.localization.passwordProtection)
@@ -263,7 +265,14 @@ end
 
 local function changeWallpaper()
 	if MineOSCore.OSSettings.wallpaper and fs.exists(MineOSCore.OSSettings.wallpaper) then
-		MineOSCore.OSMainContainer.background.wallpaper = image.transform(image.load(MineOSCore.OSSettings.wallpaper), MineOSCore.OSMainContainer.width, MineOSCore.OSMainContainer.height)
+		MineOSCore.OSMainContainer.background.wallpaper = image.load(MineOSCore.OSSettings.wallpaper)
+		if MineOSCore.OSSettings.wallpaperMode == 1 then
+			MineOSCore.OSMainContainer.background.wallpaper = image.transform(MineOSCore.OSMainContainer.background.wallpaper, MineOSCore.OSMainContainer.width, MineOSCore.OSMainContainer.height)
+			MineOSCore.OSMainContainer.background.wallpaperPosition.x, MineOSCore.OSMainContainer.background.wallpaperPosition.y = 1, 1
+		else
+			MineOSCore.OSMainContainer.background.wallpaperPosition.x = math.floor(MineOSCore.OSMainContainer.width / 2 - image.getWidth(MineOSCore.OSMainContainer.background.wallpaper) / 2)
+			MineOSCore.OSMainContainer.background.wallpaperPosition.y = math.floor(MineOSCore.OSMainContainer.height / 2 - image.getHeight(MineOSCore.OSMainContainer.background.wallpaper) / 2)
+		end
 	else
 		MineOSCore.OSMainContainer.background.wallpaper = nil
 	end
@@ -348,12 +357,12 @@ end
 local function createOSWindow()
 	MineOSCore.OSMainContainer = GUI.fullScreenContainer()
 
-	MineOSCore.OSMainContainer.background = GUI.object(1, 1, 1, 1)
+	MineOSCore.OSMainContainer.background = MineOSCore.OSMainContainer:addChild(GUI.object(1, 1, 1, 1))
+	MineOSCore.OSMainContainer.background.wallpaperPosition = {x = 1, y = 1}
 	MineOSCore.OSMainContainer.background.draw = function(object)
+		buffer.square(object.x, object.y, object.width, object.height, MineOSCore.OSSettings.backgroundColor or colors.background, 0x0, " ")
 		if object.wallpaper then
-			buffer.image(object.x, object.y, object.wallpaper)
-		else
-			buffer.square(object.x, object.y, object.width, object.height, MineOSCore.OSSettings.backgroundColor or colors.background, 0x0, " ")
+			buffer.image(object.wallpaperPosition.x, object.wallpaperPosition.y, object.wallpaper)
 		end
 	end
 	MineOSCore.OSMainContainer.background.eventHandler = function(mainContainer, object, eventData)
@@ -363,8 +372,7 @@ local function createOSWindow()
 			end
 		end
 	end
-	MineOSCore.OSMainContainer:addChild(MineOSCore.OSMainContainer.background)
-	
+
 	MineOSCore.OSMainContainer.desktopCounters = MineOSCore.OSMainContainer:addChild(GUI.container(1, 1, 1, 1))
 
 	MineOSCore.OSMainContainer.iconField = MineOSCore.OSMainContainer:addChild(
@@ -472,7 +480,7 @@ local function createOSWindow()
 		local menu = GUI.contextMenu(eventData[3], eventData[4])
 		menu:addItem(MineOSCore.localization.emptyTrash).onTouch = function()
 			local container = MineOSCore.addUniversalContainer(MineOSCore.OSMainContainer, MineOSCore.localization.areYouSure)
-			
+
 			container.layout:addChild(GUI.button(1, 1, 30, 3, 0xEEEEEE, 0x262626, 0xA, 0x262626, "OK")).onTouch = function()
 				for file in fs.list(MineOSCore.paths.trash) do
 					fs.remove(MineOSCore.paths.trash .. file)
@@ -481,7 +489,7 @@ local function createOSWindow()
 				MineOSCore.OSMainContainer.updateAndDraw()
 			end
 
-			container.panel.onTouch = function()	
+			container.panel.onTouch = function()
 				container:delete()
 				MineOSCore.OSMainContainer:draw()
 				buffer.draw()
@@ -534,13 +542,13 @@ local function createOSWindow()
 		menu:addItem(MineOSCore.localization.shutdown).onTouch = function()
 			-- ecs.TV(0)
 			require("computer").shutdown()
-		end		
+		end
 		menu:addSeparator()
 		menu:addItem(MineOSCore.localization.returnToShell).onTouch = function()
 			MineOSCore.OSMainContainer:stopEventHandling()
 			ecs.prepareToExit()
 			os.exit()
-		end	
+		end
 		menu:show()
 	end
 
@@ -585,7 +593,7 @@ local function createOSWindow()
 		menu:addSeparator()
 		menu:addItem(MineOSCore.localization.screensaver).onTouch = function()
 			local container = MineOSCore.addUniversalContainer(MineOSCore.OSMainContainer, MineOSCore.localization.screensaver)
-			
+
 			local comboBox = container.layout:addChild(GUI.comboBox(1, 1, 36, 3, 0xEEEEEE, 0x262626, 0x666666, 0xEEEEEE))
 			comboBox:addItem(MineOSCore.localization.screensaverDisabled)
 			for file in fs.list(screensaversPath) do
@@ -611,24 +619,46 @@ local function createOSWindow()
 				end
 			end
 		end
-		menu:addItem(MineOSCore.localization.colorScheme).onTouch = function()
-			local container = MineOSCore.addUniversalContainer(MineOSCore.OSMainContainer, MineOSCore.localization.colorScheme)
-			
+		menu:addItem(MineOSCore.localization.appearance).onTouch = function()
+			local container = MineOSCore.addUniversalContainer(MineOSCore.OSMainContainer, MineOSCore.localization.wallpaperProperties)
+
+			local inputField = container.layout:addChild(GUI.inputField(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0x999999, 0xEEEEEE, 0x262626, MineOSCore.OSSettings.wallpaper, MineOSCore.localization.wallpaperPath, true))
+			local comboBox = container.layout:addChild(GUI.comboBox(1, 1, 36, 3, 0xEEEEEE, 0x262626, 0x666666, 0xEEEEEE))
+			comboBox.selectedItem = MineOSCore.OSSettings.wallpaperMode or 1
+			comboBox:addItem(MineOSCore.localization.wallpaperModeStretch)
+			comboBox:addItem(MineOSCore.localization.wallpaperModeCenter)
+
+			container.layout:addChild(GUI.label(1, 1, 36, 1, 0xEEEEEE, MineOSCore.localization.colorScheme)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
 			local backgroundColorSelector = container.layout:addChild(GUI.colorSelector(1, 1, 36, 3, MineOSCore.OSSettings.backgroundColor or colors.background, MineOSCore.localization.backgroundColor))
 			local interfaceColorSelector = container.layout:addChild(GUI.colorSelector(1, 1, 36, 3, MineOSCore.OSSettings.interfaceColor or colors.interface, MineOSCore.localization.interfaceColor))
 			
+			comboBox.onItemSelected = function()
+				MineOSCore.OSSettings.wallpaperMode = comboBox.selectedItem
+				MineOSCore.saveOSSettings()
+				changeWallpaper()
+
+				MineOSCore.OSMainContainer:draw()
+				buffer.draw()
+			end
+
+			inputField.onInputFinished = function()
+				MineOSCore.OSSettings.wallpaper = inputField.text
+				MineOSCore.saveOSSettings()
+				changeWallpaper()
+
+				MineOSCore.OSMainContainer:draw()
+				buffer.draw()
+			end
+
 			backgroundColorSelector.onTouch = function()
 				MineOSCore.OSSettings.backgroundColor, MineOSCore.OSSettings.interfaceColor = backgroundColorSelector.color, interfaceColorSelector.color
 				MineOSCore.OSMainContainer.menu.colors.default.background = MineOSCore.OSSettings.interfaceColor
 				MineOSCore.saveOSSettings()
-				
+
 				MineOSCore.OSMainContainer:draw()
 				buffer.draw()
 			end
 			interfaceColorSelector.onTouch = backgroundColorSelector.onTouch
-
-			MineOSCore.OSMainContainer:draw()
-			buffer.draw()
 
 			container.panel.eventHandler = function(mainContainer, object, eventData)
 				if eventData[1] == "touch" then
@@ -637,7 +667,11 @@ local function createOSWindow()
 					buffer.draw()
 				end
 			end
+
+			MineOSCore.OSMainContainer:draw()
+			buffer.draw()
 		end
+
 		menu:addItem(MineOSCore.localization.contextMenuRemoveWallpaper, not MineOSCore.OSMainContainer.background.wallpaper).onTouch = function()
 			MineOSCore.OSSettings.wallpaper = nil
 			MineOSCore.saveOSSettings()
@@ -651,14 +685,14 @@ local function createOSWindow()
 		local menu = GUI.contextMenu(item3.x, item3.y + 1)
 		menu:addItem(MineOSCore.localization.screenResolution).onTouch = function()
 			local container = MineOSCore.addUniversalContainer(MineOSCore.OSMainContainer, MineOSCore.localization.screenResolution)
-			
-			local widthTextBox = container.layout:addChild(GUI.inputTextBox(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0xEEEEEE, 0x262626, tostring(MineOSCore.OSSettings.resolution and MineOSCore.OSSettings.resolution[1] or 160), "Width", true))
+
+			local widthTextBox = container.layout:addChild(GUI.inputField(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0x666666, 0xEEEEEE, 0x262626, tostring(MineOSCore.OSSettings.resolution and MineOSCore.OSSettings.resolution[1] or 160), "Width", true))
 			widthTextBox.validator = function(text)
 				local number = tonumber(text)
 				if number then return number >= 1 and number <= 160 end
 			end
 
-			local heightTextBox = container.layout:addChild(GUI.inputTextBox(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0xEEEEEE, 0x262626, tostring(MineOSCore.OSSettings.resolution and MineOSCore.OSSettings.resolution[2] or 50), "Height", true))
+			local heightTextBox = container.layout:addChild(GUI.inputField(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0x666666, 0xEEEEEE, 0x262626, tostring(MineOSCore.OSSettings.resolution and MineOSCore.OSSettings.resolution[2] or 50), "Height", true))
 			heightTextBox.validator = function(text)
 				local number = tonumber(text)
 				if number then return number >= 1 and number <= 50 end
@@ -771,9 +805,3 @@ while true do
 		buffer.draw()
 	end
 end
-
-
-
-
-
-

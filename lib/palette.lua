@@ -21,13 +21,13 @@ end
 --------------------------------------------------------------------------------------------------------------
 
 local function changeInputsValueToCurrentColor(window)
-	window.inputs[1].inputTextBox.text = tostring(window.color.rgb.red)
-	window.inputs[2].inputTextBox.text = tostring(window.color.rgb.green)
-	window.inputs[3].inputTextBox.text = tostring(window.color.rgb.blue)
-	window.inputs[4].inputTextBox.text = tostring(math.floor(window.color.hsb.hue))
-	window.inputs[5].inputTextBox.text = tostring(math.floor(window.color.hsb.saturation))
-	window.inputs[6].inputTextBox.text = tostring(math.floor(window.color.hsb.brightness))
-	window.inputs[7].inputTextBox.text = string.format("%06X", window.color.hex)
+	window.inputs[1].inputField.text = tostring(window.color.rgb.red)
+	window.inputs[2].inputField.text = tostring(window.color.rgb.green)
+	window.inputs[3].inputField.text = tostring(window.color.rgb.blue)
+	window.inputs[4].inputField.text = tostring(math.floor(window.color.hsb.hue))
+	window.inputs[5].inputField.text = tostring(math.floor(window.color.hsb.saturation))
+	window.inputs[6].inputField.text = tostring(math.floor(window.color.hsb.brightness))
+	window.inputs[7].inputField.text = string.format("%06X", window.color.hex)
 	window.colorPanel.colors.background = window.color.hex
 end
 
@@ -143,26 +143,26 @@ function palette.window(x, y, startColor)
 	window.OKButton = window:addChild(GUI.button(58, 6, 12, 1, 0x444444, 0xFFFFFF, 0x88FF88, 0xFFFFFF, "OK"))
 	window.cancelButton = window:addChild(GUI.button(58, 8, 12, 1, 0xFFFFFF, 0x444444, 0x88FF88, 0xFFFFFF, "Cancel"))
 
-	local function onAnyInputFinished(mainContainer, object, eventData)
+	local function onAnyInputFinished()
 		refreshBigRainbow(window)
 		createCrestsCoordinates(window)
-		mainContainer:draw()
+		window:getFirstParent():draw()
 		buffer.draw()
 	end
 
-	local function onHexInputFinished(mainContainer, object, eventData, newText)
-		switchColorFromHex(window, tonumber("0x" .. newText))
-		onAnyInputFinished(mainContainer, object, eventData)
+	local function onHexInputFinished()
+		switchColorFromHex(window, tonumber("0x" .. window.inputs[7].inputField.text))
+		onAnyInputFinished()
 	end
 
-	local function onRgbInputFinished(mainContainer, object, eventData, newText)
-		switchColorFromRgb(window, tonumber(window.inputs[1].inputTextBox.text), tonumber(window.inputs[2].inputTextBox.text), tonumber(window.inputs[3].inputTextBox.text))
-		onAnyInputFinished(mainContainer, object, eventData)
+	local function onRgbInputFinished()
+		switchColorFromRgb(window, tonumber(window.inputs[1].inputField.text), tonumber(window.inputs[2].inputField.text), tonumber(window.inputs[3].inputField.text))
+		onAnyInputFinished()
 	end
 
-	local function onHsbInputFinished(mainContainer, object, eventData, newText)
-		switchColorFromHsb(window, tonumber(window.inputs[4].inputTextBox.text), tonumber(window.inputs[5].inputTextBox.text), tonumber(window.inputs[6].inputTextBox.text))
-		onAnyInputFinished(mainContainer, object, eventData)
+	local function onHsbInputFinished()
+		switchColorFromHsb(window, tonumber(window.inputs[4].inputField.text), tonumber(window.inputs[5].inputField.text), tonumber(window.inputs[6].inputField.text))
+		onAnyInputFinished()
 	end
 
 	local function rgbValidaror(text)
@@ -197,9 +197,9 @@ function palette.window(x, y, startColor)
 	for i = 1, #window.inputs do
 		window:addChild(GUI.label(58, y, 2, 1, 0x000000, window.inputs[i].shortcut))
 		
-		window.inputs[i].inputTextBox = window:addChild(GUI.inputTextBox(61, y, 9, 1, 0xFFFFFF, 0x444444, 0xFFFFFF, 0x000000, "", "", true))
-		window.inputs[i].inputTextBox.validator = window.inputs[i].validator
-		window.inputs[i].inputTextBox.onInputFinished = window.inputs[i].onInputFinished
+		window.inputs[i].inputField = window:addChild(GUI.inputField(61, y, 9, 1, 0xFFFFFF, 0x444444, 0x444444, 0xFFFFFF, 0x000000, "", "", true))
+		window.inputs[i].inputField.validator = window.inputs[i].validator
+		window.inputs[i].inputField.onInputFinished = window.inputs[i].onInputFinished
 		
 		y = y + 2
 	end

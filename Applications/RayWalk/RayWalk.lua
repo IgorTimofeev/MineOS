@@ -37,13 +37,17 @@ local function settings()
 
 	window:addChild(GUI.label(1, y, window.width, 1, 0xFFFFFF, localization.rayEngineProperties)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); y = y + 3
 
-	local resolutionTextBoxWidth = window:addChild(GUI.inputTextBox(x, y, textBoxWidth, 3, 0x262626, 0xBBBBBB, 0x262626, 0xFFFFFF, tostring(buffer.width), nil, true))
+	local resolutionTextBoxWidth = window:addChild(GUI.inputField(x, y, textBoxWidth, 3, 0x262626, 0xBBBBBB, 0xBBBBBB, 0x262626, 0xFFFFFF, tostring(buffer.width), nil, true))
 	window:addChild(GUI.label(x + textBoxWidth + 2, y + 1, 1, 1, 0xFFFFFF, "X"))
-	local resolutionTextBoxHeight = window:addChild(GUI.inputTextBox(x + textBoxWidth + 5, y, textBoxWidth, 3, 0x262626, 0xBBBBBB, 0x262626, 0xFFFFFF, tostring(buffer.height), nil, true)); y = y + 4
+	local resolutionTextBoxHeight = window:addChild(GUI.inputField(x + textBoxWidth + 5, y, textBoxWidth, 3, 0x262626, 0xBBBBBB, 0xBBBBBB, 0x262626, 0xFFFFFF, tostring(buffer.height), nil, true)); y = y + 4
 	window:addChild(GUI.label(1, y, window.width, 1, 0xDDDDDD, localization.screenResolution)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); y = y + 3
 	resolutionTextBoxWidth.validator = function(text) local num = tonumber(text); if num and num >= 40 and num <= 160 then return true end end
 	resolutionTextBoxHeight.validator = function(text) local num = tonumber(text); if num and num >= 12 and num <= 50 then return true end end
-	local function onAnyResolutionTextBoxInputFinished() window:stopEventHandling(); rayEngine.changeResolution(tonumber(resolutionTextBoxWidth.text), tonumber(resolutionTextBoxHeight.text)); settings() end
+	local function onAnyResolutionTextBoxInputFinished()
+		window:stopEventHandling()
+		rayEngine.changeResolution(tonumber(resolutionTextBoxWidth.text), tonumber(resolutionTextBoxHeight.text))
+		settings()
+	end
 	resolutionTextBoxWidth.onInputFinished = onAnyResolutionTextBoxInputFinished
 	resolutionTextBoxHeight.onInputFinished = onAnyResolutionTextBoxInputFinished
 

@@ -808,7 +808,7 @@ end
 local function addUniversalContainerWithInputTextBoxes(parentWindow, path, text, title, placeholder)
 	local container = MineOSCore.addUniversalContainer(parentWindow, title)
 	
-	container.inputTextBox = container.layout:addChild(GUI.inputTextBox(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0xEEEEEE, 0x262626, text, placeholder, false))
+	container.inputField = container.layout:addChild(GUI.inputField(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0x666666, 0xEEEEEE, 0x262626, text, placeholder, false))
 	container.label = container.layout:addChild(GUI.label(1, 1, 36, 3, 0xFF4940, " ")):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
 	container.panel.eventHandler = function(mainContainer, object, eventData)
 		if eventData[1] == "touch" then
@@ -839,8 +839,8 @@ end
 function MineOSCore.newApplication(parentWindow, path)
 	local container = addUniversalContainerWithInputTextBoxes(parentWindow, path, nil, MineOSCore.localization.contextMenuNewApplication, MineOSCore.localization.applicationName)
 
-	container.inputTextBox.onInputFinished = function()
-		local finalPath = path .. container.inputTextBox.text .. ".app/"
+	container.inputField.onInputFinished = function()
+		local finalPath = path .. container.inputField.text .. ".app/"
 		if checkFileToExists(container, finalPath) then
 			fs.makeDirectory(finalPath .. "/Resources/")
 			fs.copy(MineOSCore.paths.icons .. "SampleIcon.pic", finalPath .. "/Resources/Icon.pic")
@@ -856,11 +856,11 @@ end
 function MineOSCore.newFile(parentWindow, path)
 	local container = addUniversalContainerWithInputTextBoxes(parentWindow, path, nil, MineOSCore.localization.contextMenuNewFile, MineOSCore.localization.fileName)
 
-	container.inputTextBox.onInputFinished = function()
-		if checkFileToExists(container, path .. container.inputTextBox.text) then
-			local file = io.open(path .. container.inputTextBox.text, "w")
+	container.inputField.onInputFinished = function()
+		if checkFileToExists(container, path .. container.inputField.text) then
+			local file = io.open(path .. container.inputField.text, "w")
 			file:close()
-			MineOSCore.safeLaunch(MineOSCore.paths.applications .. "/MineCode IDE.app/Main.lua", "open", path .. container.inputTextBox.text)	
+			MineOSCore.safeLaunch(MineOSCore.paths.applications .. "/MineCode IDE.app/Main.lua", "open", path .. container.inputField.text)	
 			computer.pushSignal("MineOSCore", "updateFileList")
 		end
 	end
@@ -869,9 +869,9 @@ end
 function MineOSCore.newFolder(parentWindow, path)
 	local container = addUniversalContainerWithInputTextBoxes(parentWindow, path, nil, MineOSCore.localization.contextMenuNewFolder, MineOSCore.localization.folderName)
 
-	container.inputTextBox.onInputFinished = function()
-		if checkFileToExists(container, path .. container.inputTextBox.text) then
-			fs.makeDirectory(path .. container.inputTextBox.text)
+	container.inputField.onInputFinished = function()
+		if checkFileToExists(container, path .. container.inputField.text) then
+			fs.makeDirectory(path .. container.inputField.text)
 			computer.pushSignal("MineOSCore", "updateFileList")
 		end
 	end
@@ -880,9 +880,9 @@ end
 function MineOSCore.rename(parentWindow, path)
 	local container = addUniversalContainerWithInputTextBoxes(parentWindow, path, fs.name(path), MineOSCore.localization.contextMenuRename, MineOSCore.localization.newName)
 
-	container.inputTextBox.onInputFinished = function()
-		if checkFileToExists(container, fs.path(path) .. container.inputTextBox.text) then
-			fs.rename(path, fs.path(path) .. container.inputTextBox.text)
+	container.inputField.onInputFinished = function()
+		if checkFileToExists(container, fs.path(path) .. container.inputField.text) then
+			fs.rename(path, fs.path(path) .. container.inputField.text)
 			computer.pushSignal("MineOSCore", "updateFileList")
 		end
 	end
@@ -891,10 +891,10 @@ end
 function MineOSCore.launchWithArguments(parentWindow, path)
 	local container = addUniversalContainerWithInputTextBoxes(parentWindow, path, nil, MineOSCore.localization.launchWithArguments)
 
-	container.inputTextBox.onInputFinished = function()
+	container.inputField.onInputFinished = function()
 		local args = {}
-		if container.inputTextBox.text then
-			for arg in container.inputTextBox.text:gmatch("[^%s]+") do
+		if container.inputField.text then
+			for arg in container.inputField.text:gmatch("[^%s]+") do
 				table.insert(args, arg)
 			end
 		end

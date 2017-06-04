@@ -87,7 +87,12 @@
 	mineOSCreatorUsedMasterPassword = "Создатель операционной системы использовал мастер-ключ",
 	loginToSystem = "Вход в систему",
 
+	appearance = "Внешний вид",
+	wallpaperProperties = "Параметры обоев",
 	colorScheme = "Цветовая схема",
+	wallpaperPath = "Путь к обоям",
+	wallpaperModeStretch = "Растянуть",
+	wallpaperModeCenter = "По центру",
 	backgroundColor = "Цвет фона",
 	interfaceColor = "Цвет интерфейса",
 	screenResolution = "Разрешение экрана",

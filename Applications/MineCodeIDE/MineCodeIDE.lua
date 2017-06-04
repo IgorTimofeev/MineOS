@@ -283,7 +283,7 @@ local function calculateSizes()
 
 	mainContainer.bottomToolBar.localPosition.y = mainContainer.height - 2
 	mainContainer.bottomToolBar.findButton.localPosition.x = mainContainer.bottomToolBar.width - mainContainer.bottomToolBar.findButton.width + 1
-	mainContainer.bottomToolBar.inputTextBox.width = mainContainer.bottomToolBar.width - mainContainer.bottomToolBar.inputTextBox.localPosition.x - mainContainer.bottomToolBar.findButton.width + 1
+	mainContainer.bottomToolBar.inputField.width = mainContainer.bottomToolBar.width - mainContainer.bottomToolBar.inputField.localPosition.x - mainContainer.bottomToolBar.findButton.width + 1
 
 	mainContainer.topToolBar.width, mainContainer.topToolBar.backgroundPanel.width = mainContainer.width, mainContainer.width
 	mainContainer.titleTextBox.width = math.floor(mainContainer.topToolBar.width * 0.32)
@@ -626,22 +626,22 @@ local function changeResolutionWindow()
 	local textBoxWidth, x, y = math.floor(textBoxesWidth / 2), math.floor(mainContainer.width / 2 - textBoxesWidth / 2), math.floor(mainContainer.height / 2) - 3
 	
 	mainContainer.settingsContainer:addChild(GUI.label(1, y, mainContainer.width, 1, 0xFFFFFF, localization.changeResolution)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); y = y + 3
-	local inputTextBoxWidth = mainContainer.settingsContainer:addChild(GUI.inputTextBox(x, y, textBoxWidth, 3, 0xCCCCCC, 0x777777, 0xCCCCCC, 0x2D2D2D, tostring(config.screenResolution.width))); x = x + textBoxWidth + 2
-	local inputTextBoxHeight = mainContainer.settingsContainer:addChild(GUI.inputTextBox(x, y, textBoxWidth, 3, 0xCCCCCC, 0x777777, 0xCCCCCC, 0x2D2D2D, tostring(config.screenResolution.height)))
+	local inputFieldWidth = mainContainer.settingsContainer:addChild(GUI.inputField(x, y, textBoxWidth, 3, 0xCCCCCC, 0x777777, 0x777777, 0xCCCCCC, 0x2D2D2D, tostring(config.screenResolution.width))); x = x + textBoxWidth + 2
+	local inputFieldHeight = mainContainer.settingsContainer:addChild(GUI.inputField(x, y, textBoxWidth, 3, 0xCCCCCC, 0x777777, 0x777777, 0xCCCCCC, 0x2D2D2D, tostring(config.screenResolution.height)))
 	
 	local maxResolutionWidth, maxResolutionHeight = component.gpu.maxResolution()
-	inputTextBoxWidth.validator = function(text)
+	inputFieldWidth.validator = function(text)
 		local number = tonumber(text)
 		if number and number >= 1 and number <= maxResolutionWidth then return true end
 	end
-	inputTextBoxHeight.validator = function(text)
+	inputFieldHeight.validator = function(text)
 		local number = tonumber(text)
 		if number and number >= 1 and number <= maxResolutionHeight then return true end
 	end
 
 	mainContainer.settingsContainer.backgroundPanel.eventHandler = function(mainContainer, object, eventData)
 		if eventData[1] == "touch" then
-			config.screenResolution.width, config.screenResolution.height = tonumber(inputTextBoxWidth.text), tonumber(inputTextBoxHeight.text)
+			config.screenResolution.width, config.screenResolution.height = tonumber(inputFieldWidth.text), tonumber(inputFieldHeight.text)
 			saveConfig()
 			hideSettingsContainer()
 			changeResolution(config.screenResolution.width, config.screenResolution.height)
@@ -655,10 +655,10 @@ local function createInputTextBoxForSettingsWindow(title, placeholder, onInputFi
 	local x, y = math.floor(mainContainer.width / 2 - textBoxWidth / 2), math.floor(mainContainer.height / 2) - 3
 	
 	mainContainer.settingsContainer:addChild(GUI.label(1, y, mainContainer.width, 1, 0xFFFFFF, title)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); y = y + 3
-	mainContainer.settingsContainer.inputTextBox = mainContainer.settingsContainer:addChild(GUI.inputTextBox(x, y, textBoxWidth, 3, 0xCCCCCC, 0x777777, 0xCCCCCC, 0x2D2D2D, "", placeholder))
+	mainContainer.settingsContainer.inputField = mainContainer.settingsContainer:addChild(GUI.inputField(x, y, textBoxWidth, 3, 0xCCCCCC, 0x777777, 0x777777, 0xCCCCCC, 0x2D2D2D, "", placeholder))
 	
-	mainContainer.settingsContainer.inputTextBox.validator = validatorMethod
-	mainContainer.settingsContainer.inputTextBox.onInputFinished = function(...)
+	mainContainer.settingsContainer.inputField.validator = validatorMethod
+	mainContainer.settingsContainer.inputField.onInputFinished = function(...)
 		onInputFinishedMethod(...)
 		hideSettingsContainer()
 	end
@@ -704,10 +704,10 @@ end
 local function gotoLineWindow()
 	createInputTextBoxForSettingsWindow(localization.gotoLine, localization.lineNumber,
 		function()
-			gotoLine(tonumber(mainContainer.settingsContainer.inputTextBox.text))
+			gotoLine(tonumber(mainContainer.settingsContainer.inputField.text))
 		end,
 		function()
-			if mainContainer.settingsContainer.inputTextBox.text:match("%d+") then return true end
+			if mainContainer.settingsContainer.inputField.text:match("%d+") then return true end
 		end
 	)
 end
@@ -715,10 +715,10 @@ end
 local function openFileWindow()
 	createInputTextBoxForSettingsWindow(localization.openFile, localization.pathToFile,
 		function()
-			loadFile(mainContainer.settingsContainer.inputTextBox.text)
+			loadFile(mainContainer.settingsContainer.inputField.text)
 		end,
 		function()
-			if fs.exists(mainContainer.settingsContainer.inputTextBox.text) then return true end
+			if fs.exists(mainContainer.settingsContainer.inputField.text) then return true end
 		end
 	)
 end
@@ -726,8 +726,8 @@ end
 local function saveFileAsWindow()
 	createInputTextBoxForSettingsWindow(localization.saveAs, localization.pathToFile,
 		function()
-			saveFile(mainContainer.settingsContainer.inputTextBox.text)
-			mainContainer.leftTreeView.currentFile = mainContainer.settingsContainer.inputTextBox.text
+			saveFile(mainContainer.settingsContainer.inputField.text)
+			mainContainer.leftTreeView.currentFile = mainContainer.settingsContainer.inputField.text
 			if unicode.sub(mainContainer.leftTreeView.currentFile, 1, 1) ~= "/" then
 				mainContainer.leftTreeView.currentFile = "/" .. mainContainer.leftTreeView.currentFile
 			end
@@ -763,7 +763,7 @@ end
 local function downloadFileFromWeb()
 	createInputTextBoxForSettingsWindow(localization.getFromWeb, localization.url,
 		function()
-			local result, reason = web.request(mainContainer.settingsContainer.inputTextBox.text)
+			local result, reason = web.request(mainContainer.settingsContainer.inputField.text)
 			if result then
 				newFile()
 				mainContainer.codeView.lines, mainContainer.codeView.maximumLineLength = splitStringIntoLines(result)
@@ -1226,11 +1226,11 @@ local function updateRAMProgressBar()
 end
 
 local function find()
-	if not mainContainer.bottomToolBar.hidden and mainContainer.bottomToolBar.inputTextBox.text ~= "" then
+	if not mainContainer.bottomToolBar.hidden and mainContainer.bottomToolBar.inputField.text ~= "" then
 		findStartFrom = findStartFrom + 1
 	
 		for line = findStartFrom, #mainContainer.codeView.lines do
-			local whereToFind, whatToFind = mainContainer.codeView.lines[line], mainContainer.bottomToolBar.inputTextBox.text
+			local whereToFind, whatToFind = mainContainer.codeView.lines[line], mainContainer.bottomToolBar.inputField.text
 			if not mainContainer.bottomToolBar.caseSensitiveButton.pressed then
 				whereToFind, whatToFind = unicode.lower(whereToFind), unicode.lower(whatToFind)
 			end
@@ -1268,7 +1268,7 @@ local function toggleBottomToolBar()
 		
 	if not mainContainer.bottomToolBar.hidden then
 		mainContainer:draw()
-		mainContainer.bottomToolBar.inputTextBox:input()
+		mainContainer.bottomToolBar.inputField:startInput()
 		findFromFirstDisplayedLine()
 	end
 end
@@ -1450,12 +1450,12 @@ local function createMainContainer()
 			local elementWidth = math.floor(mainContainer.width * 0.3)
 			local x, y = math.floor(mainContainer.width / 2 - elementWidth / 2), math.floor(mainContainer.height / 2) - 7
 			mainContainer.settingsContainer:addChild(GUI.label(1, y, mainContainer.settingsContainer.width, 1, 0xFFFFFF, localization.cursorProperties)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); y = y + 3
-			local inputTextBox = mainContainer.settingsContainer:addChild(GUI.inputTextBox(x, y, elementWidth, 3, 0xCCCCCC, 0x777777, 0xCCCCCC, 0x2D2D2D, config.cursorSymbol, localization.cursorSymbol)); y = y + 5
-			inputTextBox.validator = function(text)
+			local inputField = mainContainer.settingsContainer:addChild(GUI.inputField(x, y, elementWidth, 3, 0xCCCCCC, 0x777777, 0x777777, 0xCCCCCC, 0x2D2D2D, config.cursorSymbol, localization.cursorSymbol)); y = y + 5
+			inputField.validator = function(text)
 				if unicode.len(text) == 1 then return true end
 			end
-			inputTextBox.onInputFinished = function()
-				config.cursorSymbol = inputTextBox.text; saveConfig()
+			inputField.onInputFinished = function()
+				config.cursorSymbol = inputField.text; saveConfig()
 			end
 			local colorSelector = mainContainer.settingsContainer:addChild(GUI.colorSelector(x, y, elementWidth, 3, config.cursorColor, localization.cursorColor)); y = y + 5
 			colorSelector.onTouch = function()
@@ -1578,8 +1578,8 @@ local function createMainContainer()
 	mainContainer.bottomToolBar.onTouch = function()
 		find()
 	end
-	mainContainer.bottomToolBar.inputTextBox = mainContainer.bottomToolBar:addChild(GUI.inputTextBox(7, 1, 10, 3, 0xCCCCCC, 0x999999, 0xCCCCCC, 0x2D2D2D, "", localization.findSomeShit))
-	mainContainer.bottomToolBar.inputTextBox.onInputFinished = function()
+	mainContainer.bottomToolBar.inputField = mainContainer.bottomToolBar:addChild(GUI.inputField(7, 1, 10, 3, 0xCCCCCC, 0x999999, 0x999999, 0xCCCCCC, 0x2D2D2D, "", localization.findSomeShit))
+	mainContainer.bottomToolBar.inputField.onInputFinished = function()
 		findFromFirstDisplayedLine()
 	end
 	mainContainer.bottomToolBar.findButton = mainContainer.bottomToolBar:addChild(GUI.adaptiveButton(1, 1, 3, 1, 0x3C3C3C, 0xEEEEEE, 0xBBBBBB, 0x2D2D2D, localization.find))

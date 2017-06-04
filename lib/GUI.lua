@@ -929,271 +929,6 @@ function GUI.error(...)
 	mainContainer:startEventHandling()
 end
 
------------------------------------------ Universal keyboard-input function -----------------------------------------
-
-local function findValue(t, whatToSearch)
-	if type(t) ~= "table" then return end
-	for key, value in pairs(t) do
-		if type(key) == "string" and string.match(key, "^" .. whatToSearch) then
-			local valueType, postfix = type(value), ""
-			if valueType == "function" or (valueType == "table" and getmetatable(value) and getmetatable(value).__call) then
-				postfix = "()"
-			elseif valueType == "table" then
-				postfix = "."
-			end
-			return key .. postfix
-		end
-	end
-end
-
-local function findTable(whereToSearch, t, whatToSearch)
-	local beforeFirstDot = string.match(whereToSearch, "^[^%.]+%.")
-	-- Если вообще есть таблица, где надо искать
-	if beforeFirstDot then
-		beforeFirstDot = unicode.sub(beforeFirstDot, 1, -2)
-		if t[beforeFirstDot] then
-			return findTable(unicode.sub(whereToSearch, unicode.len(beforeFirstDot) + 2, -1), t[beforeFirstDot], whatToSearch)
-		else
-			-- Кароч, слушай суда: вот в эту зону хуйня может зайти толька
-			-- тагда, кагда ты вручную ебенишь массив вида "abc.cda.blabla.test"
-			-- без автозаполнения, т.е. он МОЖЕТ быть неверным, однако прога все
-			-- равно проверяет на верность, и вот если НИ ХУЯ такого говнища типа 
-			-- ... .blabla не существует, то интерхпретатор захуяривается СУДЫ
-			-- И ЧТОБ БОЛЬШЕ ВОПРОСОВ НЕ ЗАДАВАЛ!11!
-		end
-	-- Или если таблиц либо ваще нету, либо рекурсия суда вон вошла
-	else
-		return findValue(t[whereToSearch], whatToSearch)
-	end
-end
-
-local function autocompleteVariables(sourceText)
-	local varPath = string.match(sourceText, "[a-zA-Z0-9%.%_]+$")
-	if varPath then
-		local prefix = string.sub(sourceText, 1, -unicode.len(varPath) - 1)
-		local whereToSearch = string.match(varPath, "[a-zA-Z0-9%.%_]+%.")
-		
-		if whereToSearch then
-			whereToSearch = unicode.sub(whereToSearch, 1, -2)
-			local findedTable = findTable(whereToSearch, _G, unicode.sub(varPath, unicode.len(whereToSearch) + 2, -1))
-			return findedTable and prefix .. whereToSearch .. "." .. findedTable or sourceText
-		else
-			local findedValue = findValue(_G, varPath)
-			return findedValue and prefix .. findedValue or sourceText
-		end
-	else
-		return sourceText
-	end
-end
-
-local function inputFieldDraw(inputField)
-	if inputField.x < 1 or inputField.y < 1 or inputField.x + inputField.width - 1 > buffer.width or inputField.y > buffer.height then return inputField end
-	if inputField.oldPixels then
-		buffer.paste(inputField.x, inputField.y, inputField.oldPixels)
-	else
-		inputField.oldPixels = buffer.copy(inputField.x, inputField.y, inputField.width, 1)
-	end
-	
-	if inputField.highlightLuaSyntax then
-		require("syntax").highlightString(inputField.x, inputField.y, inputField.text, 2)
-	else
-		buffer.text(
-			inputField.x,
-			inputField.y,
-			inputField.colors.text,
-			unicode.sub(
-				inputField.textMask and string.rep(inputField.textMask, unicode.len(inputField.text)) or inputField.text,
-				inputField.textCutFrom,
-				inputField.textCutFrom + inputField.width - 1
-			)
-		)
-	end
-
-	if inputField.cursorBlinkState then
-		buffer.text(inputField.x + inputField.cursorPosition - inputField.textCutFrom, inputField.y, inputField.cursorColor, inputField.cursorSymbol)
-	end
-
-	return inputField
-end
-
-local function inputFieldSetCursorPosition(inputField, newPosition)
-	if newPosition < 1 then
-		newPosition = 1
-	elseif newPosition > unicode.len(inputField.text) + 1 then
-		newPosition = unicode.len(inputField.text) + 1
-	end
-
-	if newPosition > inputField.textCutFrom + inputField.width - 1 then
-		inputField.textCutFrom = inputField.textCutFrom + newPosition - (inputField.textCutFrom + inputField.width - 1)
-	elseif newPosition < inputField.textCutFrom then
-		inputField.textCutFrom = newPosition
-	end
-
-	inputField.cursorPosition = newPosition
-
-	return inputField
-end
-
-local function inputFieldBeginInput(inputField)
-	inputField.cursorBlinkState = true; inputField:draw(); buffer.draw()
-
-	while true do
-		local e = { event.pull(inputField.cursorBlinkDelay) }
-		if e[1] == "touch" or e[1] == "drag" then
-			if inputField:isClicked(e[3], e[4]) then
-				inputField:setCursorPosition(inputField.textCutFrom + e[3] - inputField.x)
-				inputField.cursorBlinkState = true; inputField:draw(); buffer.draw()
-			else
-				inputField.cursorBlinkState = false; inputField:draw(); buffer.draw()
-				return inputField
-			end
-		elseif e[1] == "key_down" then
-			if e[4] == 28 then
-				inputField.cursorBlinkState = false; inputField:draw(); buffer.draw()
-				return inputField
-			elseif e[4] == 15 then
-				if inputField.autocompleteVariables then
-					inputField.text = autocompleteVariables(inputField.text)
-					inputField:setCursorPosition(unicode.len(inputField.text) + 1)
-					inputField.cursorBlinkState = true; inputField:draw(); buffer.draw()
-				end
-			elseif e[4] == 203 then
-				inputField:setCursorPosition(inputField.cursorPosition - 1)
-				inputField.cursorBlinkState = true; inputField:draw(); buffer.draw()
-			elseif e[4] == 205 then	
-				inputField:setCursorPosition(inputField.cursorPosition + 1)
-				inputField.cursorBlinkState = true; inputField:draw(); buffer.draw()
-			elseif e[4] == 14 then
-				inputField.text = unicode.sub(unicode.sub(inputField.text, 1, inputField.cursorPosition - 1), 1, -2) .. unicode.sub(inputField.text, inputField.cursorPosition, -1)
-				inputField:setCursorPosition(inputField.cursorPosition - 1)
-				inputField.cursorBlinkState = true; inputField:draw(); buffer.draw()
-			else
-				if not keyboard.isControl(e[3]) then
-					inputField.text = unicode.sub(inputField.text, 1, inputField.cursorPosition - 1) .. unicode.char(e[3]) .. unicode.sub(inputField.text, inputField.cursorPosition, -1)
-					inputField:setCursorPosition(inputField.cursorPosition + 1)
-					inputField.cursorBlinkState = true; inputField:draw(); buffer.draw()
-				end
-			end
-		elseif e[1] == "clipboard" then
-			inputField.text = unicode.sub(inputField.text, 1, inputField.cursorPosition - 1) .. e[3] .. unicode.sub(inputField.text, inputField.cursorPosition, -1)
-			inputField:setCursorPosition(inputField.cursorPosition + unicode.len(e[3]))
-			inputField.cursorBlinkState = true; inputField:draw(); buffer.draw()
-		else
-			inputField.cursorBlinkState = not inputField.cursorBlinkState; inputField:draw(); buffer.draw()
-		end
-	end
-end
-
-function GUI.inputField(x, y, width, textColor, text, textMask, highlightLuaSyntax, autocompleteVariables)
-	local inputField = GUI.object(x, y, width, 1)
-
-	inputField.textCutFrom = 1
-	inputField.cursorPosition = 1
-	inputField.cursorColor = 0x00A8FF
-	inputField.cursorSymbol = "┃"
-	inputField.cursorBlinkDelay = 0.4
-	inputField.cursorBlinkState = false
-
-	inputField.colors = {text = textColor}
-	inputField.text = text
-	inputField.textMask = textMask
-	inputField.highlightLuaSyntax = highlightLuaSyntax
-	inputField.autocompleteVariables = autocompleteVariables
-
-	inputField.setCursorPosition = inputFieldSetCursorPosition
-	inputField.draw = inputFieldDraw
-	inputField.input = inputFieldBeginInput
-
-	inputField:setCursorPosition(unicode.len(inputField.text) + 1)
-
-	return inputField
-end
-
------------------------------------------ Input Text Box object -----------------------------------------
-
-local function drawInputTextBox(inputTextBox)
-	local background = inputTextBox.isFocused and inputTextBox.colors.focused.background or inputTextBox.colors.default.background
-	local foreground = inputTextBox.isFocused and inputTextBox.colors.focused.text or inputTextBox.colors.default.text
-	local y = math.floor(inputTextBox.y + inputTextBox.height / 2)
-	
-	local text = inputTextBox.text or ""
-	if inputTextBox.isFocused then
-		if inputTextBox.eraseTextOnFocus then
-			text = ""
-		else
-			text = inputTextBox.text or ""
-		end
-	else
-		if inputTextBox.text == "" or not inputTextBox.text then
-			text = inputTextBox.placeholderText or ""			
-		end
-	end
-
-	if background then
-		buffer.square(inputTextBox.x, inputTextBox.y, inputTextBox.width, inputTextBox.height, background, foreground, " ")
-	end
-
-	local inputField = GUI.inputField(inputTextBox.x + 1, y, inputTextBox.width - 2, foreground, text, inputTextBox.textMask, inputTextBox.highlightLuaSyntax, inputTextBox.autocompleteVariables)	
-	if inputTextBox.isFocused then
-		inputField:input()
-		if inputTextBox.validator then
-			if inputTextBox.validator(inputField.text) then
-				inputTextBox.text = inputField.text
-			end
-		else
-			inputTextBox.text = inputField.text
-		end
-	else
-		local oldHighlightLuaSyntaxValue = inputField.highlightLuaSyntax
-		inputField.highlightLuaSyntax = false
-		inputField:draw()
-		inputField.highlightLuaSyntax = oldHighlightLuaSyntaxValue
-	end
-
-	return inputTextBox
-end
-
-local function inputTextBoxBeginInput(inputTextBox)
-	inputTextBox.isFocused = true
-	inputTextBox:draw()
-	inputTextBox.isFocused = false
-
-	return inputTextBox
-end
-
-local function inputTextBoxEventHandler(mainContainer, object, eventData)
-	if eventData[1] == "touch" then
-		object:input()
-		mainContainer:draw()
-		buffer.draw()
-		callMethod(object.onInputFinished, mainContainer, object, eventData, object.text)
-	end
-end
-
-function GUI.inputTextBox(x, y, width, height, inputTextBoxColor, textColor, inputTextBoxFocusedColor, textFocusedColor, text, placeholderText, eraseTextOnFocus, textMask, highlightLuaSyntax, autocompleteVariables)
-	local inputTextBox = GUI.object(x, y, width, height)
-	inputTextBox.colors = {
-		default = {
-			background = inputTextBoxColor,
-			text = textColor
-		},
-		focused = {
-			background = inputTextBoxFocusedColor,
-			text = textFocusedColor
-		}
-	}
-
-	inputTextBox.eventHandler = inputTextBoxEventHandler
-	inputTextBox.text = text
-	inputTextBox.placeholderText = placeholderText
-	inputTextBox.draw = drawInputTextBox
-	inputTextBox.input = inputTextBoxBeginInput
-	inputTextBox.eraseTextOnFocus = eraseTextOnFocus
-	inputTextBox.textMask = textMask
-
-	return inputTextBox
-end
-
 ----------------------------------------- Text Box object -----------------------------------------
 
 local function drawTextBox(object)
@@ -2251,9 +1986,231 @@ function GUI.layout(x, y, width, height, columnCount, rowCount)
 	return layout
 end
 
+----------------------------------------- Universal keyboard-input function -----------------------------------------
+
+local function inputDraw(input)
+	if input.oldPixels then
+		buffer.paste(input.x, input.y, input.oldPixels)
+	else
+		input.oldPixels = buffer.copy(input.x, input.y, input.width, 1)
+	end
+	
+	buffer.text(
+		input.x,
+		input.y,
+		input.colors.text,
+		unicode.sub(
+			input.textMask and string.rep(input.textMask, unicode.len(input.text)) or input.text,
+			input.textCutFrom,
+			input.textCutFrom + input.width - 1
+		)
+	)
+
+	if input.cursorBlinkState then
+		buffer.text(input.x + input.cursorPosition - input.textCutFrom, input.y, input.cursorColor, input.cursorSymbol)
+	end
+
+	return input
+end
+
+local function inputSetCursorPosition(input, newPosition)
+	if newPosition < 1 then
+		newPosition = 1
+	elseif newPosition > unicode.len(input.text) + 1 then
+		newPosition = unicode.len(input.text) + 1
+	end
+
+	if newPosition > input.textCutFrom + input.width - 1 then
+		input.textCutFrom = input.textCutFrom + newPosition - (input.textCutFrom + input.width - 1)
+	elseif newPosition < input.textCutFrom then
+		input.textCutFrom = newPosition
+	end
+
+	input.cursorPosition = newPosition
+
+	return input
+end
+
+local function inputBeginInput(input)
+	input.cursorBlinkState = true; input:draw(); buffer.draw()
+
+	while true do
+		local e = { event.pull(input.cursorBlinkDelay) }
+		if e[1] == "touch" or e[1] == "drag" then
+			if input:isClicked(e[3], e[4]) then
+				input:setCursorPosition(input.textCutFrom + e[3] - input.x)
+				input.cursorBlinkState = true; input:draw(); buffer.draw()
+			else
+				input.cursorBlinkState = false; input:draw(); buffer.draw()
+				return input
+			end
+		elseif e[1] == "key_down" then
+			-- Return
+			if e[4] == 28 then
+				input.cursorBlinkState = false; input:draw(); buffer.draw()
+				return input
+			-- Arrows left/right
+			elseif e[4] == 203 then
+				input:setCursorPosition(input.cursorPosition - 1)
+			elseif e[4] == 205 then	
+				input:setCursorPosition(input.cursorPosition + 1)
+			-- Backspace
+			elseif e[4] == 14 then
+				input.text = unicode.sub(unicode.sub(input.text, 1, input.cursorPosition - 1), 1, -2) .. unicode.sub(input.text, input.cursorPosition, -1)
+				input:setCursorPosition(input.cursorPosition - 1)
+			-- Delete
+			elseif e[4] == 211 then
+				input.text = unicode.sub(input.text, 1, input.cursorPosition - 1) .. unicode.sub(input.text, input.cursorPosition + 1, -1)
+			else
+				if not keyboard.isControl(e[3]) then
+					input.text = unicode.sub(input.text, 1, input.cursorPosition - 1) .. unicode.char(e[3]) .. unicode.sub(input.text, input.cursorPosition, -1)
+					input:setCursorPosition(input.cursorPosition + 1)
+				end
+			end
+
+			input.cursorBlinkState = true; input:draw(); buffer.draw()
+		elseif e[1] == "clipboard" then
+			input.text = unicode.sub(input.text, 1, input.cursorPosition - 1) .. e[3] .. unicode.sub(input.text, input.cursorPosition, -1)
+			input:setCursorPosition(input.cursorPosition + unicode.len(e[3]))
+			input.cursorBlinkState = true; input:draw(); buffer.draw()
+		else
+			input.cursorBlinkState = not input.cursorBlinkState; input:draw(); buffer.draw()
+		end
+	end
+end
+
+function GUI.input(x, y, width, textColor, text, textMask)
+	local input = GUI.object(x, y, width, 1)
+
+	input.textCutFrom = 1
+	input.cursorPosition = 1
+	input.cursorColor = 0x00A8FF
+	input.cursorSymbol = "┃"
+	input.cursorBlinkDelay = 0.4
+	input.cursorBlinkState = false
+
+	input.colors = {text = textColor}
+	input.text = text
+	input.textMask = textMask
+
+	input.setCursorPosition = inputSetCursorPosition
+	input.draw = inputDraw
+	input.startInput = inputBeginInput
+
+	input:setCursorPosition(unicode.len(input.text) + 1)
+
+	return input
+end
+
+----------------------------------------- Input Text Box object -----------------------------------------
+
+local function drawInputTextBox(inputField)
+	local background = inputField.isFocused and inputField.colors.focused.background or inputField.colors.default.background
+	local y = math.floor(inputField.y + inputField.height / 2)
+	
+	local text, foreground, textMask = inputField.text or "", inputField.colors.default.text, inputField.textMask
+	if inputField.isFocused then
+		if inputField.eraseTextOnFocus then
+			text = ""
+		else
+			text = inputField.text or ""
+		end
+
+		foreground = inputField.colors.focused.text
+	else
+		if inputField.text == "" or not inputField.text then
+			text, foreground, textMask = inputField.placeholderText or "", inputField.colors.placeholderText, nil
+		end
+	end
+
+	if background then
+		buffer.square(inputField.x, inputField.y, inputField.width, inputField.height, background, foreground, " ")
+	end
+
+	local input = GUI.input(inputField.x + 1, y, inputField.width - 2, foreground, text, textMask)	
+	input.onKeyDown = inputField.onKeyDown
+
+	if inputField.isFocused then
+		input:startInput()
+		if inputField.validator then
+			if inputField.validator(input.text) then
+				inputField.text = input.text
+			end
+		else
+			inputField.text = input.text
+		end
+	else
+		input:draw()
+	end
+
+	return inputField
+end
+
+local function inputFieldStartInput(inputField)
+	inputField.isFocused = true
+	inputField:draw()
+	inputField.isFocused = false
+	callMethod(inputField.onInputFinished, inputField.text)
+
+	return inputField
+end
+
+local function inputFieldEventHandler(mainContainer, object, eventData)
+	if eventData[1] == "touch" then
+		object:startInput()
+		mainContainer:draw()
+		buffer.draw()
+	end
+end
+
+function GUI.inputField(x, y, width, height, backgroundColor, textColor, placeholderTextColor, backgroundFocusedColor, textFocusedColor, text, placeholderText, eraseTextOnFocus, textMask)
+	local inputField = GUI.object(x, y, width, height)
+	inputField.colors = {
+		default = {
+			background = backgroundColor,
+			text = textColor
+		},
+		focused = {
+			background = backgroundFocusedColor,
+			text = textFocusedColor
+		},
+		placeholderText = placeholderTextColor
+	}
+
+	inputField.eventHandler = inputFieldEventHandler
+	inputField.text = text
+	inputField.placeholderText = placeholderText
+	inputField.draw = drawInputTextBox
+	inputField.startInput = inputFieldStartInput
+	inputField.eraseTextOnFocus = eraseTextOnFocus
+	inputField.textMask = textMask
+
+	return inputField
+end
+
 --------------------------------------------------------------------------------------------------------------------------------
 
 -- buffer.start()
+
+-- local mainContainer = GUI.fullScreenContainer()
+-- mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x2D2D2D))
+
+-- local inputField = mainContainer:addChild(GUI.inputField(2, 2, 30, 3, 0xEEEEEE, 0x555555, 0x999999, 0xFFFFFF, 0x2D2D2D, "Hello world", "Placeholder text"))
+
+-- inputField.validator = function(text)
+-- 	if tonumber(text) then
+-- 		GUI.error("It's a number!")
+-- 	end
+-- 	return true
+-- end
+
+-- inputField.onInputFinished = function()
+-- 	-- Do something when input finished
+-- end
+
+-- mainContainer:draw()
+-- buffer.draw(true)
+-- mainContainer:startEventHandling()
 
 -- -- Создаем полноэкранный контейнер, добавляем темно-серую панель
 -- local mainContainer = GUI.fullScreenContainer()
@@ -2282,7 +2239,7 @@ end
 -- 	mainContainer:draw()
 -- 	buffer.draw()
 -- end
--- -- В ячейке 3ч1 задаем горизонтальную ориентацию объектов, расстояние между ними в 2 пикселя, а также выравнивание по правому верхнему краю
+-- -- В ячейке 3x1 задаем горизонтальную ориентацию объектов, расстояние между ними в 2 пикселя, а также выравнивание по правому верхнему краю
 -- layout:setCellDirection(3, 1, GUI.directions.horizontal)
 -- layout:setCellSpacing(3, 1, 2)
 -- layout:setCellAlignment(3, 1, GUI.alignment.horizontal.right, GUI.alignment.vertical.bottom)

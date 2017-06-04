@@ -403,7 +403,7 @@ mainContainer:startEventHandling()
 
 ![Imgur](http://i.imgur.com/4Hl5G7l.png?1)
 
-GUI.**inputTextBox**( x, y, width, height, backgroundColor, textColor, backgroundFocusedColor, textFocusedColor, text, [placeholderText, eraseTextOnFocus, textMask, highlightLuaSyntax, autocompleteVariables] ): *table* inputTextBox
+GUI.**inputField**( x, y, width, height, backgroundColor, textColor, placeholderTextColor, backgroundFocusedColor, textFocusedColor, text, [placeholderText, eraseTextOnFocus, textMask ): *table* inputField
 ------------------------------------------------------------------------
 | Тип | Аргумент | Описание |
 | ------ | ------ | ------ |
@@ -411,23 +411,23 @@ GUI.**inputTextBox**( x, y, width, height, backgroundColor, textColor, backgroun
 | *int* | y | Координата объекта по оси y |
 | *int* | width | Ширина объекта |
 | *int* | height | Высота объекта |
-| *int* | backgroundColor | Цвет поля ввода |
-| *int* | textColor | Цвет текста поля ввода |
-| *int* | backgroundFocusedColor | Цвет поля ввода в состоянии *focused* |
-| *int* | textFocusedColor |Цвет текста поля ввода в состоянии *focused* |
+| *int* | backgroundColor | Цвет фона |
+| *int* | textColor | Цвет текста |
+| *int* | placeholderTextColor | Цвет текста *placeholder* при условии, что он указан ниже |
+| *int* | backgroundFocusedColor | Цвет фона в состоянии *focused* |
+| *int* | textFocusedColor |Цвет текста в состоянии *focused* |
 | *string* | text | Введенный на момент создания поля текст |
-| [*string* | placeholderText] | Текст, появляющийся при условии, что *text* == nil |
+| [*string* | placeholderText] | Текст, появляющийся при условии, что введенный текст отсутствует |
 | [*boolean* | eraseTextOnFocus] | Необходимо ли удалять текст при активации ввода |
-| [*string* | textMask] | Символ-маска для вводимого текста. Полезно для создания поля ввода пароля |
-| [*boolean* | highlightLuaSyntax] | Режим подсветки синтаксиса Lua для вводимой строки. Цвет текста при этом игнорируется |
-| [*boolean* | autocompleteVariables] | Режим автодополнения текстовых данных на основе поиска таковых переменных в оперативной памяти |
+| [*char* | textMask] | Символ-маска для вводимого текста. Удобно для создания поля ввода пароля |
 
-Создать объект типа "поле ввода текста", предназначенный для ввода и анализа текстовых данных с клавиатуры. Объект универсален и подходит как для создания простых форм для ввода логина/пароля, так и для сложных структур наподобие интерпретаторов команд. К примеру, окно *палитры* выше целиком и полностью основано на использовании этого объекта.
+Создать объект, предназначенный для ввода и анализа текстовых данных с клавиатуры. Объект универсален и подходит как для создания простых форм для ввода логина/пароля, так и для сложных структур наподобие интерпретаторов команд. К примеру, окно *палитры* со скриншота в начале документации полностью основано на использовании этого объекта.
 
 | Тип свойства | Свойство |Описание |
 | ------ | ------ | ------ |
+| *function* | :**startInput**()| Начать ввод в текстовое поле. Метод полезен, если хочется сразу сделать  |
 | *callback-function* | .**validator**( *string* text )| Метод, вызывающийся после окончания ввода текста в поле. Если возвращает *true*, то текст в текстовом поле меняется на введенный, в противном случае введенные данные игнорируются. К примеру, в данном методе удобно проверять, является ли введенная текстовая информация числом через *tonumber()* |
-| *callback-function* | .**onInputFinished**( *string* text, *table* eventData )| Метод, вызываемый после ввода данных в обработчике событий |
+| *callback-function* | .**onInputFinished**( *string* text, *table* eventData )| Метод, вызываемый после ввода данных в обработчике событий. Удобная штука, если хочется выполнить какие-либо действия сразу после ввода текста. Если у объекта имеется *validator*, и текст не прошел проверку через него, то *onInputFinished* вызван не будет. |
 
 Пример реализации поля ввода:
 
@@ -438,11 +438,16 @@ local GUI = require("GUI")
 local mainContainer = GUI.fullScreenContainer()
 mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x2D2D2D))
 
-local inputTextBox = mainContainer:addChild(GUI.inputTextBox(2, 2, 32, 3, 0xEEEEEE, 0x555555, 0xEEEEEE, 0x2D2D2D, nil, "Type number here", true, nil, nil, nil))
-inputTextBox.validator = function(text)
-	if tonumber(text) then return true end
+local inputField = mainContainer:addChild(GUI.inputField(2, 2, 30, 3, 0xEEEEEE, 0x555555, 0x999999, 0xFFFFFF, 0x2D2D2D, "Hello world", "Placeholder text"))
+
+inputField.validator = function(text)
+	if tonumber(text) then
+		GUI.error("It's a number!")
+	end
+	return true
 end
-inputTextBox.onInputFinished = function()
+
+inputField.onInputFinished = function()
 	-- Do something when input finished
 end
 
@@ -453,9 +458,11 @@ mainContainer:startEventHandling()
 
 Результат:
 
-![Imgur](http://i.imgur.com/CNYHJKF.png?1)
+![Imgur](http://i.imgur.com/8cUO1vy.png)
 
-![Imgur](http://i.imgur.com/AdOIiXQ.png?1)
+![Imgur](http://i.imgur.com/4jHPQfl.png)
+
+![Imgur](http://i.imgur.com/PV0RQOq.png)
 
 GUI.**slider**( x, y, width, primaryColor, secondaryColor, pipeColor, valueColor, minimumValue, maximumValue, value, [showCornerValues, currentValuePrefix, currentValuePostfix] ): *table* slider
 ------------------------------------------------------------------------
@@ -1227,7 +1234,7 @@ layout:setCellPosition(3, 1, layout:addChild(GUI.adaptiveButton(1, 1, 3, 0, 0x33
 	mainContainer:draw()
 	buffer.draw()
 end
--- В ячейке 3ч1 задаем горизонтальную ориентацию объектов, расстояние между ними в 2 пикселя, а также выравнивание по правому верхнему краю
+-- В ячейке 3x1 задаем горизонтальную ориентацию объектов, расстояние между ними в 2 пикселя, а также выравнивание по правому верхнему краю
 layout:setCellDirection(3, 1, GUI.directions.horizontal)
 layout:setCellSpacing(3, 1, 2)
 layout:setCellAlignment(3, 1, GUI.alignment.horizontal.right, GUI.alignment.vertical.bottom)

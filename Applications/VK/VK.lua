@@ -319,8 +319,8 @@ local function loginGUI(startUsername, startPassword)
 	obj.button = GUI.button(x, y, textFieldWidth, textFieldHeight, buttonColor, 0xEEEEEE, 0xEEEEEE, buttonColor, "Войти")
 
 	local VKLogoImage = image.load(VKLogoImagePath)
-	local loginTextBox = GUI.inputTextBox(x, obj.username[2], textFieldWidth, 3, 0xEEEEEE, 0x777777, 0xEEEEEE, 0x262626, username, "E-Mail", false)
-	local passwordTextBox = GUI.inputTextBox(x, obj.password[2], textFieldWidth, 3, 0xEEEEEE, 0x777777, 0xEEEEEE, 0x262626, password, "Password", false, "*")
+	local loginTextBox = GUI.inputField(x, obj.username[2], textFieldWidth, 3, 0xEEEEEE, 0x777777, 0x777777, 0xEEEEEE, 0x262626, username, "E-Mail", false)
+	local passwordTextBox = GUI.inputField(x, obj.password[2], textFieldWidth, 3, 0xEEEEEE, 0x777777, 0x777777, 0xEEEEEE, 0x262626, password, "Password", false, "*")
 
 	local function draw()
 		buffer.clear(colors.loginGUIBackground)
@@ -446,7 +446,7 @@ end
 local function drawMessageInputBar(currentText)
 	local x, y = mainZoneX, buffer.height - 5
 	buffer.square(x, y, mainZoneWidth, 5, colors.messageInputBarColor)
-	obj.messageInputBar = GUI.inputTextBox(x + 2, y + 1, mainZoneWidth - 4, 3, 0xFFFFFF, 0x444444, 0xFFFFFF, 0x262626, "", "Введите сообщение", true)
+	obj.messageInputBar = GUI.inputField(x + 2, y + 1, mainZoneWidth - 4, 3, 0xFFFFFF, 0x444444, 0x444444, 0x444444, 0xFFFFFF, 0x262626, "", "Введите сообщение", true)
 	obj.messageInputBar:draw()
 end
 
