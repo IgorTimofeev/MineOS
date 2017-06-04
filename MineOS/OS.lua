@@ -265,11 +265,13 @@ end
 
 local function changeWallpaper()
 	if MineOSCore.OSSettings.wallpaper and fs.exists(MineOSCore.OSSettings.wallpaper) then
-		MineOSCore.OSMainContainer.background.wallpaper = image.load(MineOSCore.OSSettings.wallpaper)
+		MineOSCore.OSMainContainer.background.wallpaper = nil
+		
 		if MineOSCore.OSSettings.wallpaperMode == 1 then
-			MineOSCore.OSMainContainer.background.wallpaper = image.transform(MineOSCore.OSMainContainer.background.wallpaper, MineOSCore.OSMainContainer.width, MineOSCore.OSMainContainer.height)
+			MineOSCore.OSMainContainer.background.wallpaper = image.transform(image.load(MineOSCore.OSSettings.wallpaper), MineOSCore.OSMainContainer.width, MineOSCore.OSMainContainer.height)
 			MineOSCore.OSMainContainer.background.wallpaperPosition.x, MineOSCore.OSMainContainer.background.wallpaperPosition.y = 1, 1
 		else
+			MineOSCore.OSMainContainer.background.wallpaper = image.load(MineOSCore.OSSettings.wallpaper)
 			MineOSCore.OSMainContainer.background.wallpaperPosition.x = math.floor(MineOSCore.OSMainContainer.width / 2 - image.getWidth(MineOSCore.OSMainContainer.background.wallpaper) / 2)
 			MineOSCore.OSMainContainer.background.wallpaperPosition.y = math.floor(MineOSCore.OSMainContainer.height / 2 - image.getHeight(MineOSCore.OSMainContainer.background.wallpaper) / 2)
 		end
