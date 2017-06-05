@@ -224,7 +224,7 @@ public class Image {
             groupedImage.get(alpha).get(symbol).put(
                     background,
                     filledHashMap.get(alpha).get(symbol).get(background)
-            );
+            )
         }
 
         if (!groupedImage.get(alpha).get(symbol).get(background).containsKey(foreground)) {
