@@ -317,7 +317,7 @@ local controls = {
 local OCGLView = GUI.object(1, 1, mainContainer.width, mainContainer.height)
 
 local function drawInvertedText(x, y, text)
-	local index = buffer.getBufferIndexByCoordinates(x, y)
+	local index = buffer.getIndexByCoordinates(x, y)
 	local background, foreground = buffer.rawGet(index)
 	buffer.rawSet(index, background, 0xFFFFFF - foreground, text)
 end
@@ -378,7 +378,7 @@ mainContainer:addChild(OCGLView)
 mainContainer.infoTextBox = mainContainer:addChild(GUI.textBox(2, 4, 45, mainContainer.height, nil, 0xEEEEEE, {}, 1, 0, 0))
 local lines = {
 	"Copyright © 2016-2017 - Developed by ECS Inc.",
-	"Timofeev Igor (vk.com/id7799889), Trifonov Gleb (vk.com/id88323331), Verevkin Yakov (vk.com/id60991376), Bogushevich Victoria (vk.com/id171497518)",
+	"Timofeef Igor (vk.com/id7799889), Trifonov Gleb (vk.com/id88323331), Verevkin Yakov (vk.com/id60991376), Bogushevich Victoria (vk.com/id171497518)",
 	"All rights reserved",
 }
 mainContainer:addChild(GUI.textBox(1, mainContainer.height - #lines + 1, mainContainer.width, #lines, nil, 0x3C3C3C, lines, 1)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)

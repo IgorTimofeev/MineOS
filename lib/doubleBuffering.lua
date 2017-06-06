@@ -14,13 +14,13 @@ local buffer = {}
 ------------------------------------------------- Core methods -------------------------------------------------
 
 --Формула конвертации индекса массива изображения в абсолютные координаты пикселя изображения
-function buffer.getBufferCoordinatesByIndex(index)
+function buffer.getCoordinatesByIndex(index)
 	local integer, fractional = math.modf(index / (buffer.tripleWidth))
 	return math.ceil(fractional * buffer.width), integer + 1
 end
 
 --Формула конвертации абсолютных координат пикселя изображения в индекс для массива изображения
-function buffer.getBufferIndexByCoordinates(x, y)
+function buffer.getIndexByCoordinates(x, y)
 	return buffer.tripleWidth * (y - 1) + x * 3 - 2
 end
 
@@ -86,7 +86,7 @@ end
 
 -- Получить информацию о пикселе из буфера
 function buffer.get(x, y)
-	local index = buffer.getBufferIndexByCoordinates(x, y)
+	local index = buffer.getIndexByCoordinates(x, y)
 	if x >= 1 and y >= 1 and x <= buffer.width and y <= buffer.height then
 		return buffer.rawGet(index)
 	else
@@ -96,7 +96,7 @@ end
 
 -- Установить пиксель в буфере
 function buffer.set(x, y, background, foreground, symbol)
-	local index = buffer.getBufferIndexByCoordinates(x, y)
+	local index = buffer.getIndexByCoordinates(x, y)
 	if x >= buffer.drawLimit.x1 and y >= buffer.drawLimit.y1 and x <= buffer.drawLimit.x2 and y <= buffer.drawLimit.y2 then
 		buffer.rawSet(index, background, foreground or 0x0, symbol or " ")
 	end
@@ -114,7 +114,7 @@ function buffer.square(x, y, width, height, background, foreground, symbol, tran
 	if not foreground then foreground = 0x000000 end
 	if not symbol then symbol = " " end
 
-	local index, indexStepForward, indexPlus1 = buffer.getBufferIndexByCoordinates(x, y), (buffer.width - width) * 3
+	local index, indexStepForward, indexPlus1 = buffer.getIndexByCoordinates(x, y), (buffer.width - width) * 3
 	for j = y, (y + height - 1) do
 		for i = x, (x + width - 1) do
 			if i >= buffer.drawLimit.x1 and j >= buffer.drawLimit.y1 and i <= buffer.drawLimit.x2 and j <= buffer.drawLimit.y2 then
@@ -148,7 +148,7 @@ function buffer.copy(x, y, width, height)
 	for j = y, (y + height - 1) do
 		for i = x, (x + width - 1) do
 			if i >= 1 and j >= 1 and i <= buffer.width and j <= buffer.height then
-				index = buffer.getBufferIndexByCoordinates(i, j)
+				index = buffer.getIndexByCoordinates(i, j)
 				table.insert(copyArray, buffer.newFrame[index])
 				table.insert(copyArray, buffer.newFrame[index + 1])
 				table.insert(copyArray, buffer.newFrame[index + 2])
@@ -172,7 +172,7 @@ function buffer.paste(x, y, copyArray)
 		for i = x, (x + copyArray.width - 1) do
 			if i >= buffer.drawLimit.x1 and j >= buffer.drawLimit.y1 and i <= buffer.drawLimit.x2 and j <= buffer.drawLimit.y2 then
 				--Рассчитываем индекс массива основного изображения
-				index = buffer.getBufferIndexByCoordinates(i, j)
+				index = buffer.getIndexByCoordinates(i, j)
 				--Копипаст формулы, аккуратнее!
 				--Рассчитываем индекс массива вставочного изображения
 				arrayIndex = (copyArray.width * (j - y) + (i - x + 1)) * 3 - 2
@@ -224,7 +224,7 @@ function buffer.text(x, y, textColor, text, transparency)
 		end
 	end
 
-	local index, sText = buffer.getBufferIndexByCoordinates(x, y), unicode.len(text)
+	local index, sText = buffer.getIndexByCoordinates(x, y), unicode.len(text)
 	for i = 1, sText do
 		if x >= buffer.drawLimit.x1 and y >= buffer.drawLimit.y1 and x <= buffer.drawLimit.x2 and y <= buffer.drawLimit.y2 then
 			buffer.newFrame[index + 1] = not transparency and textColor or color.blend(buffer.newFrame[index], textColor, transparency)
@@ -238,7 +238,7 @@ end
 -- Отрисовка изображения
 function buffer.image(x, y, picture)
 	local xPos, xEnd, bufferIndexStepOnReachOfImageWidth = x, x + picture[1] - 1, (buffer.width - picture[1]) * 3
-	local bufferIndex = buffer.getBufferIndexByCoordinates(x, y)
+	local bufferIndex = buffer.getIndexByCoordinates(x, y)
 	local imageIndexPlus2, imageIndexPlus3
 
 	for imageIndex = 3, #picture, 4 do
@@ -388,13 +388,13 @@ end
 function buffer.semiPixelSet(x, y, color)
 	local yFixed = math.ceil(y / 2)
 	if x >= buffer.drawLimit.x1 and yFixed >= buffer.drawLimit.y1 and x <= buffer.drawLimit.x2 and yFixed <= buffer.drawLimit.y2 then
-		buffer.semiPixelRawSet(buffer.getBufferIndexByCoordinates(x, yFixed), color, y % 2 == 0)
+		buffer.semiPixelRawSet(buffer.getIndexByCoordinates(x, yFixed), color, y % 2 == 0)
 	end
 end
 
 function buffer.semiPixelSquare(x, y, width, height, color)
 	-- for j = y, y + height - 1 do for i = x, x + width - 1 do buffer.semiPixelSet(i, j, color) end end
-	local index, indexStepForward, indexStepBackward, jPercentTwoEqualsZero, jFixed = buffer.getBufferIndexByCoordinates(x, math.ceil(y / 2)), (buffer.width - width) * 3, width * 3
+	local index, indexStepForward, indexStepBackward, jPercentTwoEqualsZero, jFixed = buffer.getIndexByCoordinates(x, math.ceil(y / 2)), (buffer.width - width) * 3, width * 3
 	for j = y, y + height - 1 do
 		jPercentTwoEqualsZero = j % 2 == 0
 		
@@ -537,7 +537,7 @@ end
 
 -- Функция группировки изменений и их отрисовки на экран
 function buffer.draw(force)
-	local changes, index, indexStepOnEveryLine, indexPlus1, indexPlus2, sameCharArray, x, xCharCheck, indexCharCheck, currentForeground = {}, buffer.getBufferIndexByCoordinates(buffer.drawLimit.x1, buffer.drawLimit.y1), (buffer.width - buffer.drawLimit.x2 + buffer.drawLimit.x1 - 1) * 3
+	local changes, index, indexStepOnEveryLine, indexPlus1, indexPlus2, sameCharArray, x, xCharCheck, indexCharCheck, currentForeground = {}, buffer.getIndexByCoordinates(buffer.drawLimit.x1, buffer.drawLimit.y1), (buffer.width - buffer.drawLimit.x2 + buffer.drawLimit.x1 - 1) * 3
 
 	for y = buffer.drawLimit.y1, buffer.drawLimit.y2 do
 		x = buffer.drawLimit.x1

@@ -127,7 +127,7 @@ function syntax.highlightString(x, y, str, indentationWidth)
 			if x > buffer.drawLimit.x2 then
 				break
 			elseif x >= buffer.drawLimit.x1 then
-				bufferIndex = bufferIndex or buffer.getBufferIndexByCoordinates(x, y)
+				bufferIndex = bufferIndex or buffer.getIndexByCoordinates(x, y)
 				buffer.newFrame[bufferIndex + 1] = colors[symbol] or syntax.colorScheme.text
 				buffer.newFrame[bufferIndex + 2] = symbols[symbol]
 				bufferIndex = bufferIndex + 3
