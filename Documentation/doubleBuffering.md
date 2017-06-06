@@ -298,7 +298,7 @@ end
 buffer.semiPixelCircle(22, 22, 10, 0xFFDB40)
 -- Рисуем белую линию
 buffer.semiPixelLine(2, 36, 35, 3, 0xFFFFFF)
--- Рисуем желтую кривую Безье с точностью 0.01
+-- Рисуем зеленую кривую Безье с точностью 0.01
 buffer.semiPixelBezierCurve(
 	{
 		{ x = 2, y = 63},
