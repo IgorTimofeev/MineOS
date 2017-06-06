@@ -491,7 +491,7 @@ local function getMainPointPosition(points, time)
 	end
 end
 
-function buffer.bezierCurve(points, color, precision)
+function buffer.semiPixelBezierCurve(points, color, precision)
 	local linePoints = {}
 	for time = 0, 1, precision or 0.01 do
 		table.insert(linePoints, getMainPointPosition(points, time))
@@ -603,50 +603,26 @@ buffer.flush()
 
 ------------------------------------------------------------------------------------------------------
 
--- buffer.clear(0x2D2D2D)
-	
+-- buffer.image(1, 1, image.load("/MineOS/Pictures/Raspberry.pic"))
+-- buffer.clear(0x0, 60)
+
 -- local x, y = 2, 2
 -- for i = 1, 10 do
 -- 	buffer.square(x, y, 6, 3, color.HSBToHEX(i * 36, 100, 100), 0x0, " ")
 -- 	x, y = x + 4, y + 2
 -- end
 
--- buffer.semiPixelCircle(22, 22, 10, 0x0)
+-- buffer.semiPixelCircle(22, 22, 10, 0xFFDB40)
 -- buffer.semiPixelLine(2, 36, 35, 3, 0xFFFFFF)
-
--- buffer.draw()
-
--- buffer.clear(0x0)
--- buffer.image(1, 1, image.load("/Untitled.pic"))
--- buffer.draw(true)
-
--- buffer.clear(0x0)
--- buffer.semiPixelCircle(80, 50, 20, 0xFFDB40, true)
--- buffer.draw()
-
--- buffer.clear(0xFF8888)
--- buffer.bezierCurve({
--- 	-- { x = 32, y = 2},
--- 	-- { x = 2, y = 2},
--- 	-- { x = 2, y = 98},
--- 	-- { x = 98, y = 98},
--- 	{ x = 10, y = 80 },
--- 	{ x = 2, y = 4 },
--- 	{ x = 110, y = 4 },
--- 	{ x = 130, y = 70 },
--- 	{ x = 150, y = 10 },
--- }, 0x0, 0.005)
--- buffer.draw()
-
--- ecs.prepareToExit()
--- buffer.clear(0xFF8888)
-
--- -- buffer.square(2, 2, 10, 5, 0xFFFFFF, 0x000000, " ")
--- -- buffer.square(5, 4, 10, 5, 0x000000, 0x000000, " ")
--- -- buffer.square(20, 4, 10, 5, 0xAAAAAA, 0x000000, " ")
-
--- buffer.semiPixelSquare(3, 3, 30, 30, 0x880088)
-
+-- buffer.semiPixelBezierCurve(
+-- 	{
+-- 		{ x = 2, y = 63},
+-- 		{ x = 63, y = 63},
+-- 		{ x = 63, y = 2}
+-- 	},
+-- 	0x44FF44,
+-- 	0.01
+-- )
 -- buffer.draw()
 
 ------------------------------------------------------------------------------------------------------
