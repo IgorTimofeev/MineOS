@@ -219,7 +219,7 @@ buffer.**semiPixelCircle**( xCenter, yCenter, radius, color )
 | *int* | radius | Радиус окружности |
 | *int* | color | Цвет окружности |
 
-buffer.**bezierCurve**( points, color, precision )
+buffer.**semiPixelBezierCurve**( points, color, precision )
 -----------------------------------------------------------
 | Тип | Аргумент | Описание |
 | ------ | ------ | ------ |
@@ -299,7 +299,7 @@ buffer.semiPixelCircle(22, 22, 10, 0xFFDB40)
 -- Рисуем белую линию
 buffer.semiPixelLine(2, 36, 35, 3, 0xFFFFFF)
 -- Рисуем желтую кривую Безье с точностью 0.01
-buffer.bezierCurve(
+buffer.semiPixelBezierCurve(
 	{
 		{ x = 2, y = 63},
 		{ x = 63, y = 63},
