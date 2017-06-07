@@ -262,6 +262,8 @@ buffer.**getCoordinatesByIndex**( index ): int x, int y
 
 buffer.**rawSet**( index, background, foreground, symbol )
 -----------------------------------------------------------
+| Тип | Аргумент | Описание |
+| ------ | ------ | ------ |
 | *int* | index | Индекс экранного буфера |
 | *int* | background | Цвет фона |
 | *int* | foreground | Цвет символа |
@@ -271,6 +273,8 @@ buffer.**rawSet**( index, background, foreground, symbol )
 
 buffer.**rawGet**( index ): int background, int foreground, char symbol
 -----------------------------------------------------------
+| Тип | Аргумент | Описание |
+| ------ | ------ | ------ |
 | *int* | index | Индекс экранного буфера |
 
 Метод, возвращающий соответствующие значения цветов и символа пикселя с указанным индексом.

@@ -511,9 +511,9 @@ local function createOSWindow()
 		local color, currentDockTransparency, currentDockWidth, xPos, yPos = MineOSCore.OSSettings.interfaceColor or colors.interface, colors.dockBaseTransparency, dockContainer.width, dockContainer.x, dockContainer.y + 2
 
 		for i = 1, dockContainer.height do
-			buffer.text(xPos, yPos, color, "▟", currentDockTransparency)
+			buffer.text(xPos, yPos, color, "◢", currentDockTransparency)
 			buffer.square(xPos + 1, yPos, currentDockWidth - 2, 1, color, 0xFFFFFF, " ", currentDockTransparency)
-			buffer.text(xPos + currentDockWidth - 1, yPos, color, "▙", currentDockTransparency)
+			buffer.text(xPos + currentDockWidth - 1, yPos, color, "◣", currentDockTransparency)
 
 			currentDockTransparency, currentDockWidth, xPos, yPos = currentDockTransparency - colors.dockTransparencyAdder, currentDockWidth + 2, xPos - 1, yPos + 1
 		end
