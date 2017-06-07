@@ -4,26 +4,17 @@ local serialization = {}
 
 ------------------------------------------------- Public methods -----------------------------------------------------------------
 
-function serialization.serialize(...)
-	return table.serialize(...)
+function serialization.serialize(variable, ...)
+	local variableType = type(variable)
+	if variableType == "table" then
+		return table.serialize(variable, ...)
+	else
+		return tostring(variableType)
+	end
 end
 
-function serialization.unserialize(...)
-	return table.unserialize(...)
-end
-
-function serialization.serializeToFile(...)
-	table.toFile(...)
-end
-
-function serialization.unserializeFromFile(...)
-	return table.fromFIle(...)
-end
+serialization.unserialize = table.unserialize
 
 ----------------------------------------------------------------------------------------------------------------------
 
 return serialization
-
-
-
-
