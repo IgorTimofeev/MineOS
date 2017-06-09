@@ -338,11 +338,11 @@ local function loginGUI(startUsername, startPassword)
 		local e = {event.pull()}
 		if e[1] == "touch" then
 			if clickedAtZone(e[3], e[4], obj.username) then
-				loginTextBox:input()
+				loginTextBox:startInput()
 				username = loginTextBox.text
 
 			elseif clickedAtZone(e[3], e[4], obj.password) then
-				passwordTextBox:input()
+				passwordTextBox:startInput()
 				password = passwordTextBox.text
 			
 			elseif obj.button:isClicked(e[3], e[4]) then
@@ -1169,7 +1169,7 @@ while true do
 
 		if whatIsOnScreen == "messages" then
 			if obj.messageInputBar:isClicked(e[3], e[4]) then
-				obj.messageInputBar:input()
+				obj.messageInputBar:startInput()
 				local newText = obj.messageInputBar.text
 				if newText and newText ~= " " and newText ~= "" then
 					computer.beep(1700)
