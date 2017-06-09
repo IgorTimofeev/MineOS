@@ -181,7 +181,7 @@ function image.load(path)
 	if fs.exists(path) then
 		return loadOrSave("load", path)
 	else
-		return image.fromString("0101FFE300x")
+		error("Failed to load image: file \"" .. tostring(path) .. "\" doesn't exists")
 	end
 end
 
@@ -392,19 +392,45 @@ function image.blur(picture, radius, strength)
 	return newPicture
 end
 
+function image.rotate(picture, angle)
+	local radAngle = math.rad(angle)
+	local sin, cos = math.sin(radAngle), math.cos(radAngle)
+	local pixMap = {}
+
+	local xCenter, yCenter = picture[1] / 2, picture[2] / 2
+	local xMin, xMax, yMin, yMax = math.huge, -math.huge, math.huge, -math.huge
+	for y = 1, picture[2] do
+		for x = 1, picture[1] do
+			local xNew = math.round(xCenter + (x - xCenter) * cos - (y - yCenter) * sin)
+			local yNew = math.round(yCenter + (y - yCenter) * cos + (x - xCenter) * sin)
+
+			xMin, xMax, yMin, yMax = math.min(xMin, xNew), math.max(xMax, xNew), math.min(yMin, yNew), math.max(yMax, yNew)
+
+			pixMap[yNew] = pixMap[yNew] or {}
+			pixMap[yNew][xNew] = {image.get(picture, x, y)}
+		end
+	end
+
+	local newPicture = image.create(xMax - xMin + 1, yMax - yMin + 1, 0xFF0000, 0x0, 0x0, "#")
+	for y in pairs(pixMap) do
+		for x in pairs(pixMap[y]) do
+			image.set(newPicture, x - xMin + 1, y - yMin + 1, pixMap[y][x][1], pixMap[y][x][2], pixMap[y][x][3], pixMap[y][x][4])
+		end
+	end
+
+	return newPicture
+end
+
 ------------------------------------------------------------------------------------------------------------------------
 
 image.loadFormatModule("/lib/ImageFormatModules/OCIF.lua", ".pic")
 
 ------------------------------------------------------------------------------------------------------------------------
 
+-- local picture = image.load("/MineOS/Pictures/Block.pic")
 -- gpu.setBackground(0x2D2D2D)
 -- gpu.fill(1, 1, 160, 50, " ")
-
--- local p1 = image.load("/Cat.pic")
--- image.draw(1, 1, p1)
--- local p2 = image.blur(p1, 7, 1)
--- image.draw(1, 1, p2)
+-- image.draw(2, 2, image.rotate(picture, 180))
 
 ------------------------------------------------------------------------------------------------------------------------
 
