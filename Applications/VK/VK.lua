@@ -446,7 +446,7 @@ end
 local function drawMessageInputBar(currentText)
 	local x, y = mainZoneX, buffer.height - 5
 	buffer.square(x, y, mainZoneWidth, 5, colors.messageInputBarColor)
-	obj.messageInputBar = GUI.inputField(x + 2, y + 1, mainZoneWidth - 4, 3, 0xFFFFFF, 0x444444, 0x444444, 0x444444, 0xFFFFFF, 0x262626, "", "Введите сообщение", true)
+	obj.messageInputBar = GUI.inputField(x + 2, y + 1, mainZoneWidth - 4, 3, 0xFFFFFF, 0x444444, 0x444444, 0xFFFFFF, 0x262626, nil, "Введите сообщение", true)
 	obj.messageInputBar:draw()
 end
 
