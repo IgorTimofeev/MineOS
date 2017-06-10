@@ -32,6 +32,11 @@ GUI.directions = enum(
 	"vertical"
 )
 
+GUI.sizePolicies = enum(
+	"percentage",
+	"absolute"
+)
+
 GUI.dropDownMenuElementTypes = enum(
 	"default",
 	"separator"
@@ -148,6 +153,25 @@ function GUI.getAlignmentCoordinates(object, subObject)
 	return x, y
 end
 
+-- Get object position based on it's alignment and margin in parent object
+function GUI.getMarginCoordinates(object)
+	local x, y = object.x, object.y
+
+	if object.alignment.horizontal == GUI.alignment.horizontal.left then
+		x = x + object.margin.horizontal
+	elseif object.alignment.horizontal == GUI.alignment.horizontal.right then
+		x = x - object.margin.horizontal
+	end
+
+	if object.alignment.vertical == GUI.alignment.vertical.top then
+		y = y + object.margin.vertical
+	elseif object.alignment.vertical == GUI.alignment.vertical.bottom then
+		y = y - object.margin.vertical
+	end
+
+	return x, y
+end
+
 ----------------------------------------- Containers -----------------------------------------
 
 local function checkObjectParentExists(object)
@@ -254,7 +278,7 @@ function GUI.drawContainerContent(container)
 	local x1, y1, x2, y2 = getRectangleIntersection(R1X1, R1Y1, R1X2, R1Y2, container.x, container.y, container.x + container.width - 1, container.y + container.height - 1)
 
 	if x1 then
-		buffer.setDrawLimit(x1, y1, x2, y2)
+		-- buffer.setDrawLimit(x1, y1, x2, y2)
 		
 		for objectIndex = 1, #container.children do
 			if not container.children[objectIndex].hidden then
@@ -263,7 +287,7 @@ function GUI.drawContainerContent(container)
 			end
 		end
 
-		buffer.setDrawLimit(R1X1, R1Y1, R1X2, R1Y2)
+		-- buffer.setDrawLimit(R1X1, R1Y1, R1X2, R1Y2)
 	end
 
 	return container
@@ -1842,150 +1866,6 @@ function GUI.tabbedWindow(x, y, width, height, ...)
 	return window
 end
 
------------------------------------------ Layout object -----------------------------------------
-
-local function layoutCheckCell(layout, column, row)
-	if column < 1 or column > layout.columnCount or row < 1 or row > layout.rowCount then
-		error("Specified grid position (" .. tostring(column) .. "x" .. tostring(row) .. ") is out of layout grid range")
-	end
-end
-
-local function layoutCalculate(layout)
-	for row = 1, layout.rowCount do
-		for column = 1, layout.columnCount do
-			layout.grid[row][column].totalWidth, layout.grid[row][column].totalHeight = 0, 0
-		end
-	end
-
-	for i = 1, #layout.children do
-		layout.children[i].layoutGridPosition = layout.children[i].layoutGridPosition or {column = 1, row = 1}
-
-		if layout.children[i].layoutGridPosition.row >= 1 and layout.children[i].layoutGridPosition.row <= layout.rowCount and layout.children[i].layoutGridPosition.column >= 1 and layout.children[i].layoutGridPosition.column <= layout.columnCount then
-			if layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].direction == GUI.directions.horizontal then
-				layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].totalWidth = layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].totalWidth + layout.children[i].width + layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].spacing
-				layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].totalHeight = math.max(layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].totalHeight, layout.children[i].height)
-			else
-				layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].totalWidth = math.max(layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].totalWidth, layout.children[i].width)
-				layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].totalHeight = layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].totalHeight + layout.children[i].height + layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].spacing
-			end
-		else
-			error("Layout child with index " .. i .. " has been assigned to cell (" .. layout.children[i].layoutGridPosition.column .. "x" .. layout.children[i].layoutGridPosition.row .. ") out of layout grid range")
-		end
-	end
-
-	local gridCellWidth, gridCellHeight = layout.width / layout.columnCount, layout.height / layout.rowCount
-	for row = 1, layout.rowCount do
-		for column = 1, layout.columnCount do
-			layout.grid[row][column].x, layout.grid[row][column].y = GUI.getAlignmentCoordinates(
-				{
-					x = (column - 1) * gridCellWidth + 1,
-					y = (row - 1) * gridCellHeight + 1,
-					width = gridCellWidth,
-					height = gridCellHeight,
-					alignment = layout.grid[row][column].alignment,
-				},
-				{
-					width = layout.grid[row][column].totalWidth - (layout.grid[row][column].direction == GUI.directions.horizontal and layout.grid[row][column].spacing or 0),
-					height = layout.grid[row][column].totalHeight - (layout.grid[row][column].direction == GUI.directions.vertical and layout.grid[row][column].spacing or 0),
-				}
-			)
-		end
-	end
-
-	for i = 1, #layout.children do
-		layout.children[i].layoutGridPosition = layout.children[i].layoutGridPosition or {column = 1, row = 1}
-		
-		if layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].direction == GUI.directions.horizontal then
-			layout.children[i].localPosition.x = math.floor(layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].x)
-			layout.children[i].localPosition.y = math.floor(layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].y + layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].totalHeight / 2 - layout.children[i].height / 2)
-			layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].x = layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].x + layout.children[i].width + layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].spacing
-		else
-			layout.children[i].localPosition.x = math.floor(layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].x + layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].totalWidth / 2 - layout.children[i].width / 2)
-			layout.children[i].localPosition.y = math.floor(layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].y)
-			layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].y = layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].y + layout.children[i].height + layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].spacing
-		end
-	end
-end
-
-local function layoutSetCellPosition(layout, column, row, object)
-	layoutCheckCell(layout, column, row)
-	object.layoutGridPosition = {column = column, row = row}
-
-	return object
-end
-
-local function layoutSetCellDirection(layout, column, row, direction)
-	layoutCheckCell(layout, column, row)
-	layout.grid[row][column].direction = direction
-
-	return layout
-end
-
-local function layoutSetCellSpacing(layout, column, row, spacing)
-	layoutCheckCell(layout, column, row)
-	layout.grid[row][column].spacing = spacing
-
-	return layout
-end
-
-local function layoutSetCellAlignment(layout, column, row, horizontalAlignment, verticalAlignment)
-	layoutCheckCell(layout, column, row)
-	layout.grid[row][column].alignment.horizontal, layout.grid[row][column].alignment.vertical = horizontalAlignment, verticalAlignment
-
-	return layout
-end
-
-local function layoutSetGridSize(layout, columnCount, rowCount)
-	layout.rowCount = rowCount
-	layout.columnCount = columnCount
-
-	for row = 1, layout.rowCount do
-		layout.grid[row] = layout.grid[row] or {}
-		
-		for column = 1, layout.columnCount do
-			layout.grid[row][column] = layout.grid[row][column] or {
-				alignment = {
-					horizontal = GUI.alignment.horizontal.center,
-					vertical = GUI.alignment.vertical.center
-				},
-				direction = GUI.directions.vertical,
-				spacing = 1
-			}
-		end
-
-		for i = layout.columnCount + 1, #layout.grid[row] do
-			layout.grid[row][i] = nil
-		end
-	end
-
-	for i = layout.rowCount + 1, #layout.grid do
-		layout.grid[i] = nil
-	end
-
-	return layout
-end
-
-local function layoutDraw(layout)
-	layoutCalculate(layout)
-	GUI.drawContainerContent(layout)
-end
-
-function GUI.layout(x, y, width, height, columnCount, rowCount)
-	local layout = GUI.container(x, y, width, height)
-
-	layout.grid = {}
-	layout.setCellPosition = layoutSetCellPosition
-	layout.setCellDirection = layoutSetCellDirection
-	layout.setGridSize = layoutSetGridSize
-	layout.setCellSpacing = layoutSetCellSpacing
-	layout.setCellAlignment = layoutSetCellAlignment
-	layout.draw = layoutDraw
-
-	layoutSetGridSize(layout, columnCount, rowCount)
-
-	return layout
-end
-
 ----------------------------------------- Universal keyboard-input function -----------------------------------------
 
 local function inputDraw(input)
@@ -2188,64 +2068,340 @@ function GUI.inputField(x, y, width, height, backgroundColor, textColor, placeho
 	return inputField
 end
 
+----------------------------------------- Layout object -----------------------------------------
+
+local function layoutCheckCell(layout, column, row)
+	if column < 1 or column > #layout.grid.columnSizes or row < 1 or row > #layout.grid.rowSizes then
+		error("Specified grid position (" .. tostring(column) .. "x" .. tostring(row) .. ") is out of layout grid range")
+	end
+end
+
+local function layoutGetAbsoluteTotalSize(array)
+	local absoluteTotalSize = 0
+	for i = 1, #array do
+		if array[i].sizePolicy == GUI.sizePolicies.absolute then
+			absoluteTotalSize = absoluteTotalSize + array[i].size
+		end
+	end
+	return absoluteTotalSize
+end
+
+local function layoutGetCalculatedSize(array, index, dependency)
+	if array[index].sizePolicy == GUI.sizePolicies.percentage then
+		array[index].calculatedSize = array[index].size * dependency
+	else
+		array[index].calculatedSize = array[index].size
+	end
+end
+
+local function layoutCalculate(layout)
+	for row = 1, #layout.grid.rowSizes do
+		for column = 1, #layout.grid.columnSizes do
+			layout.grid[row][column].totalWidth, layout.grid[row][column].totalHeight = 0, 0
+		end
+	end
+
+	for i = 1, #layout.children do
+		layout.children[i].layoutGridPosition = layout.children[i].layoutGridPosition or {column = 1, row = 1}
+
+		if layout.children[i].layoutGridPosition.row >= 1 and layout.children[i].layoutGridPosition.row <= #layout.grid.rowSizes and layout.children[i].layoutGridPosition.column >= 1 and layout.children[i].layoutGridPosition.column <= #layout.grid.columnSizes then
+			if layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].direction == GUI.directions.horizontal then
+				layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].totalWidth = layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].totalWidth + layout.children[i].width + layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].spacing
+				layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].totalHeight = math.max(layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].totalHeight, layout.children[i].height)
+			else
+				layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].totalWidth = math.max(layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].totalWidth, layout.children[i].width)
+				layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].totalHeight = layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].totalHeight + layout.children[i].height + layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].spacing
+			end
+		else
+			error("Layout child with index " .. i .. " has been assigned to cell (" .. layout.children[i].layoutGridPosition.column .. "x" .. layout.children[i].layoutGridPosition.row .. ") out of layout grid range")
+		end
+	end
+
+	local columnPercentageTotalSize, rowPercentageTotalSize = layout.width - layoutGetAbsoluteTotalSize(layout.grid.columnSizes), layout.height - layoutGetAbsoluteTotalSize(layout.grid.rowSizes)
+	local x, y = 1, 1
+	for row = 1, #layout.grid.rowSizes do
+		layoutGetCalculatedSize(layout.grid.rowSizes, row, rowPercentageTotalSize)
+
+		for column = 1, #layout.grid.columnSizes do
+			layoutGetCalculatedSize(layout.grid.columnSizes, column, columnPercentageTotalSize)
+
+			layout.grid[row][column].x, layout.grid[row][column].y = GUI.getAlignmentCoordinates(
+				{
+					x = x,
+					y = y,
+					width = layout.grid.columnSizes[column].calculatedSize,
+					height = layout.grid.rowSizes[row].calculatedSize,
+					alignment = layout.grid[row][column].alignment,
+				},
+				{
+					width = layout.grid[row][column].totalWidth - (layout.grid[row][column].direction == GUI.directions.horizontal and layout.grid[row][column].spacing or 0),
+					height = layout.grid[row][column].totalHeight - (layout.grid[row][column].direction == GUI.directions.vertical and layout.grid[row][column].spacing or 0),
+				}
+			)
+			if layout.grid[row][column].margin then
+				layout.grid[row][column].x, layout.grid[row][column].y = GUI.getMarginCoordinates(layout.grid[row][column])
+			end
+
+			x = x + layout.grid.columnSizes[column].calculatedSize
+		end
+
+		x, y = 1, y + layout.grid.rowSizes[row].calculatedSize
+	end
+
+	for i = 1, #layout.children do
+		layout.children[i].layoutGridPosition = layout.children[i].layoutGridPosition or {column = 1, row = 1}
+		
+		if layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].direction == GUI.directions.horizontal then
+			layout.children[i].localPosition.x = math.floor(layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].x)
+			layout.children[i].localPosition.y = math.floor(layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].y + layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].totalHeight / 2 - layout.children[i].height / 2)
+			layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].x = layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].x + layout.children[i].width + layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].spacing
+		else
+			layout.children[i].localPosition.x = math.floor(layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].x + layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].totalWidth / 2 - layout.children[i].width / 2)
+			layout.children[i].localPosition.y = math.floor(layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].y)
+			layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].y = layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].y + layout.children[i].height + layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].spacing
+		end
+	end
+end
+
+local function layoutSetCellPosition(layout, column, row, object)
+	layoutCheckCell(layout, column, row)
+	object.layoutGridPosition = {column = column, row = row}
+
+	return object
+end
+
+local function layoutSetCellDirection(layout, column, row, direction)
+	layoutCheckCell(layout, column, row)
+	layout.grid[row][column].direction = direction
+
+	return layout
+end
+
+local function layoutSetCellSpacing(layout, column, row, spacing)
+	layoutCheckCell(layout, column, row)
+	layout.grid[row][column].spacing = spacing
+
+	return layout
+end
+
+local function layoutSetCellAlignment(layout, column, row, horizontalAlignment, verticalAlignment)
+	layoutCheckCell(layout, column, row)
+	layout.grid[row][column].alignment.horizontal, layout.grid[row][column].alignment.vertical = horizontalAlignment, verticalAlignment
+
+	return layout
+end
+
+local function layoutSetCellMargin(layout, column, row, horizontalMargin, verticalMargin)
+	layoutCheckCell(layout, column, row)
+	layout.grid[row][column].margin = {
+		horizontal = horizontalMargin,
+		vertical = verticalMargin
+	}
+
+	return layout
+end
+
+local function layoutNewCell()
+	return {
+		alignment = {
+			horizontal = GUI.alignment.horizontal.center,
+			vertical = GUI.alignment.vertical.center
+		},
+		direction = GUI.directions.vertical,
+		spacing = 1
+	}
+end
+
+local function layoutCalculatePercentageSize(changingExistent, array, index)
+	if array[index].sizePolicy == GUI.sizePolicies.percentage then
+		local allPercents, beforeFromIndexPercents = 0, 0
+		for i = 1, #array do
+			if array[i].sizePolicy == GUI.sizePolicies.percentage then
+				allPercents = allPercents + array[i].size
+
+				if i <= index then
+					beforeFromIndexPercents = beforeFromIndexPercents + array[i].size
+				end
+			end
+		end
+
+		local modifyer
+		if changingExistent then
+			if beforeFromIndexPercents > 1 then
+				error("Layout summary percentage > 100% at index " .. index)
+			end
+			modifyer = (1 - beforeFromIndexPercents) / (allPercents - beforeFromIndexPercents)
+		else
+			modifyer = (1 - array[index].size) / (allPercents - array[index].size)
+		end
+
+		for i = changingExistent and index + 1 or 1, #array do
+			if array[i].sizePolicy == GUI.sizePolicies.percentage and i ~= index then
+				array[i].size = modifyer * array[i].size
+			end
+		end
+	end
+end
+
+local function layoutSetColumnWidth(layout, column, sizePolicy, size)
+	layout.grid.columnSizes[column].sizePolicy, layout.grid.columnSizes[column].size = sizePolicy, size
+	layoutCalculatePercentageSize(true, layout.grid.columnSizes, column)
+
+	return layout
+end
+
+local function layoutSetRowHeight(layout, row, sizePolicy, size)
+	layout.grid.rowSizes[row].sizePolicy, layout.grid.rowSizes[row].size = sizePolicy, size
+	layoutCalculatePercentageSize(true, layout.grid.rowSizes, row)
+
+	return layout
+end
+
+local function layoutAddColumn(layout, sizePolicy, size)
+	for i = 1, #layout.grid.rowSizes do
+		table.insert(layout.grid[i], layoutNewCell())
+	end
+
+	table.insert(layout.grid.columnSizes, {
+		sizePolicy = sizePolicy,
+		size = size
+	})
+	layoutCalculatePercentageSize(false, layout.grid.columnSizes, #layout.grid.columnSizes)
+	-- GUI.error(layout.grid.columnSizes)
+
+	return layout
+end
+
+local function layoutAddRow(layout, sizePolicy, size)
+	local row = {}
+	for i = 1, #layout.grid.columnSizes do
+		table.insert(row, layoutNewCell())
+	end
+
+	table.insert(layout.grid, row)
+	table.insert(layout.grid.rowSizes, {
+		sizePolicy = sizePolicy,
+		size = size
+	})
+
+	layoutCalculatePercentageSize(false, layout.grid.rowSizes, #layout.grid.rowSizes)
+	-- GUI.error(layout.grid.rowSizes)
+
+	return layout
+end
+
+local function layoutRemoveRow(layout, row)
+	table.remove(layout.grid, row)
+
+	layout.grid.rowSizes[row].size = 0
+	layoutCalculatePercentageSize(false, layout.grid.rowSizes, row)
+
+	table.remove(layout.grid.rowSizes, row)
+
+	return layout
+end
+
+local function layoutRemoveColumn(layout, column)
+	for i = 1, #layout.grid.rowSizes do
+		table.remove(layout.grid[i], column)
+	end
+
+	layout.grid.columnSizes[column].size = 0
+	layoutCalculatePercentageSize(false, layout.grid.columnSizes, column)
+
+	table.remove(layout.grid.columnSizes, column)
+
+	return layout
+end
+
+local function layoutSetGridSize(layout, columnCount, rowCount)
+	layout.grid = {
+		rowSizes = {},
+		columnSizes = {}
+	}
+
+	local rowSize, columnSize = 1 / rowCount, 1 / columnCount
+	for i = 1, rowCount do
+		layoutAddRow(layout, GUI.sizePolicies.percentage, 1 / i)
+	end
+
+	for i = 1, columnCount do
+		layoutAddColumn(layout, GUI.sizePolicies.percentage, 1 / i)
+	end
+
+	return layout
+end
+
+local function layoutDraw(layout)
+	layoutCalculate(layout)
+	GUI.drawContainerContent(layout)
+	if layout.showGrid then
+		local x = layout.x
+		for i = 1, #layout.grid.columnSizes do
+			buffer.square(math.floor(x), layout.y, 1, layout.height, 0xFF0000, 0x0, " ", 40)
+			x = x + layout.grid.columnSizes[i].calculatedSize
+		end
+
+		local y = layout.y
+		for i = 1, #layout.grid.rowSizes do
+			buffer.square(layout.x, math.floor(y), layout.width, 1, 0xFF0000, 0x0, " ", 40)
+			y = y + layout.grid.rowSizes[i].calculatedSize
+		end
+	end
+end
+
+function GUI.layout(x, y, width, height, columnCount, rowCount)
+	local layout = GUI.container(x, y, width, height)
+
+	layout.addRow = layoutAddRow
+	layout.addColumn = layoutAddColumn
+	layout.removeRow = layoutRemoveRow
+	layout.removeColumn = layoutRemoveColumn
+
+	layout.setRowHeight = layoutSetRowHeight
+	layout.setColumnWidth = layoutSetColumnWidth
+
+	layout.setCellPosition = layoutSetCellPosition
+	layout.setCellDirection = layoutSetCellDirection
+	layout.setGridSize = layoutSetGridSize
+	layout.setCellSpacing = layoutSetCellSpacing
+	layout.setCellAlignment = layoutSetCellAlignment
+	layout.setCellMargin = layoutSetCellMargin
+
+	layout.draw = layoutDraw
+
+	layoutSetGridSize(layout, columnCount, rowCount)
+
+	return layout
+end
+
 --------------------------------------------------------------------------------------------------------------------------------
 
--- buffer.start()
+-- buffer.setResolution(160, 50)
 
 -- local mainContainer = GUI.fullScreenContainer()
--- mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x2D2D2D))
+-- mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0xFF8888))
 
--- local inputField = mainContainer:addChild(GUI.inputField(2, 2, 30, 3, 0xEEEEEE, 0x555555, 0x999999, 0xFFFFFF, 0x2D2D2D, "Hello world", "Placeholder text"))
+-- local layout = mainContainer:addChild(GUI.layout(2, 2, 157, 48, 4, 4))
+-- mainContainer:addChild(GUI.panel(layout.localPosition.x, layout.localPosition.y, layout.width, layout.height, 0xFFFFFF)):moveBackward()
 
--- inputField.validator = function(text)
--- 	if tonumber(text) then
--- 		GUI.error("It's a number!")
--- 	end
--- 	return true
+-- for i = 1, 4 do
+-- 	layout:setCellPosition(2, 2, layout:addChild(GUI.button(1, 1, 30, 3, 0x0, 0xFFFFFF, 0x555555, 0x888888, "Button 1")))
 -- end
 
--- inputField.onInputFinished = function()
--- 	-- Do something when input finished
--- end
+-- layout:setCellAlignment(2, 2, GUI.alignment.horizontal.right, GUI.alignment.vertical.bottom)
+-- layout:setCellMargin(2, 2, 2, 1)
 
--- mainContainer:draw()
--- buffer.draw(true)
--- mainContainer:startEventHandling()
+-- layout:setCellPosition(3, 3, layout:addChild(GUI.button(1, 1, 30, 3, 0x0, 0xFFFFFF, 0x555555, 0x888888, "Button 2")))
+-- layout:setColumnWidth(1, GUI.sizePolicies.absolute, 4)
+-- layout:setColumnWidth(2, GUI.sizePolicies.percentage, 0.5)
+-- layout:setColumnWidth(3, GUI.sizePolicies.percentage, 0.1)
+-- layout:setRowHeight(3, GUI.sizePolicies.percentage, 0.4)
 
--- -- Создаем полноэкранный контейнер, добавляем темно-серую панель
--- local mainContainer = GUI.fullScreenContainer()
--- mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x2D2D2D))
+-- layout.showGrid = true
 
--- -- Добавляем в главный контенер другой контейнер, который и будет нашим окошком
--- local window = mainContainer:addChild(GUI.container(2, 2, 80, 25))
--- -- Добавляем в контейнер-окно светло-серую фоновую панель
--- local backgroundPanel = window:addChild(GUI.panel(1, 1, window.width, window.height, 0xCCCCCC))
--- -- Добавляем layout размером 3x1 чуть меньший, чем размер окна 
--- local layout = window:addChild(GUI.layout(3, 2, window.width - 4, window.height - 2, 3, 1))
-
--- -- В ячейку 2х1 добавляем загруженное изображение и label с определенным текстом
--- layout:setCellPosition(2, 1, layout:addChild(GUI.image(1, 1, image.load("/MineOS/System/OS/Icons/Steve.pic"))))
--- layout:setCellPosition(2, 1, layout:addChild(GUI.label(1, 1, 10, 1, 0x0, "Картиночка" ):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)))
--- -- В ячейке 2х1 задаем вертикальную ориентацию объектов и расстояние между ними в 1 пиксель
--- layout:setCellDirection(2, 1, GUI.directions.vertical)
--- layout:setCellSpacing(2, 1, 1)
-
--- -- В ячейку 3х1 добавляем 3 кнопки
--- layout:setCellPosition(3, 1, layout:addChild(GUI.adaptiveButton(1, 1, 3, 0, 0xFFFFFF, 0x000000, 0x444444, 0xFFFFFF, "Подробности")))
--- layout:setCellPosition(3, 1, layout:addChild(GUI.adaptiveButton(1, 1, 3, 0, 0xFFFFFF, 0x000000, 0x444444, 0xFFFFFF, "Отмена")))
--- layout:setCellPosition(3, 1, layout:addChild(GUI.adaptiveButton(1, 1, 3, 0, 0x3392FF, 0xFFFFFF, 0x444444, 0xFFFFFF, "OK"))).onTouch = function()
--- 	-- При нажатии на кнопку "ОК" наше окно растянется на 10 пикселей
--- 	window.width, backgroundPanel.width, layout.width = window.width + 10, backgroundPanel.width + 10, layout.width + 10
--- 	mainContainer:draw()
--- 	buffer.draw()
--- end
--- -- В ячейке 3x1 задаем горизонтальную ориентацию объектов, расстояние между ними в 2 пикселя, а также выравнивание по правому верхнему краю
--- layout:setCellDirection(3, 1, GUI.directions.horizontal)
--- layout:setCellSpacing(3, 1, 2)
--- layout:setCellAlignment(3, 1, GUI.alignment.horizontal.right, GUI.alignment.vertical.bottom)
-
--- mainContainer:draw()
--- buffer.draw(true)
+-- mainContainer:draw(true)
+-- buffer.draw()
 -- mainContainer:startEventHandling()
 
 

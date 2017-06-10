@@ -182,10 +182,15 @@ Layout является наследником GUI.**container**, автомат
 | *int* | .**columnCount**| Количество рядов сетки |
 | *int* | .**rowCount**| Количество строк сетки |
 | *function* | :**setGridSize**(*int* columnCount, *int* columnCount): *layout* layout | Установить размер сетки. Все объекты, находящиеся вне диапазона нового размера, должны быть размещены в сетке заново через :**setCellPosition**()  |
+| *function* | :**setColumnWidth**(*int* column, *enum* sizePolicy, *float* size): *layout* layout | Установить ширину указанного столбца. Ширина может быть двух типов: GUI.**sizePolicies.absolute** или GUI.**sizePolicies.percentage**. В первом случае ширина выражена в пикселях, и не меняется при изменении размеров layout, а во втором она выражена дробным числом в промежутке **[0; 1]**, обозначающим процентную ширину столбца. Если указана процентная ширина, и справа от выбранного столбца имеются другие, то их процентная ширина будет автоматически перерассчитана до нужных процентных значений. |
+| *function* | :**setRowHeight**(*int* row, *enum* sizePolicy, *float* size): *layout* layout | Установить высоту указанного ряда. Поведение метода аналогично **:setColumnWidth** |
+| *function* | :**addColumn**(*enum* sizePolicy, *float* size): *layout* layout | Добавить в сетку layout пустой столбец с указанным размером |
+| *function* | :**addRow**(*enum* sizePolicy, *float* size): *layout* layout | Добавить в сетку layout пустой ряд с указанным размером |
 | *function* | :**setCellPosition**(*int* column, *int* row, *object* child): *object* child| Назначить дочернему объекту layout конкретную ячейку сетки. В одной ячейке может располагаться сколь угодно много объектов. |
 | *function* | :**setCellDirection**(*int* column, *int* row, *enum* direction): *layout* layout | Назначить ячейке сетки ориентацию дочерних объектов. Поддерживаются GUI.directions.horizontal и GUI.directions.vertical |
 | *function* | :**setCellAlignment**(*int* column, *int* row, *enum* GUI.alignment.vertical, *enum* GUI.alignment.horizontal): *layout* layout | Назначить ячейке сетки метод выравнивания дочерних объектов. Поддерживаются все 9 вариантов |
 | *function* | :**setCellSpacing**(*int* column, *int* row, *int* spacing): *layout* layout | Назначить ячейке сетки расстояние в пикселях между объектами. По умолчанию оно равняется 1 |
+| *function* | :**setCellMargin**(*int* column, *int* row, *int* horizontalMargin, *int* verticalMargin): *layout* layout | Назначить ячейке сетки отступы в пикселях в зависимости от текущего *alignment* этой ячейки |
 
 Пример реализации layout:
 ```lua
@@ -1191,7 +1196,7 @@ end
 Практический пример #4
 ======
 
-Предлагаю немного попрактиковаться в использовании layout. В качестве примера создадим контейнер-окно, в котором нам не придется ни разу вручную считать координаты при измененнии его размеров.
+Предлагаю немного попрактиковаться в использовании layout. В качестве примера создадим контейнер-окно с четырьмя кнопками, изменяющими его размеры. Вы убедитесь, что нам ни разу не придется вручную считать координаты.
 
 ```lua
 local buffer = require("doubleBuffering")
@@ -1206,40 +1211,59 @@ mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height
 -- Добавляем в главный контенер другой контейнер, который и будет нашим окошком
 local window = mainContainer:addChild(GUI.container(2, 2, 80, 25))
 -- Добавляем в контейнер-окно светло-серую фоновую панель
-local backgroundPanel = window:addChild(GUI.panel(1, 1, window.width, window.height, 0xCCCCCC))
--- Добавляем layout размером 3x1 чуть меньший, чем размер окна 
-local layout = window:addChild(GUI.layout(3, 2, window.width - 4, window.height - 2, 3, 1))
+local backgroundPanel = window:addChild(GUI.panel(1, 1, window.width, window.height, 0xDDDDDD))
+-- Добавляем layout с сеткой 3х1 и такими же размерами, как у окна
+local layout = window:addChild(GUI.layout(1, 1, window.width, window.height, 3, 1))
 
--- В ячейку 2х1 добавляем загруженное изображение и label с определенным текстом
+-- В ячейку 2х1 добавляем загруженное изображение с лицом Стива
 layout:setCellPosition(2, 1, layout:addChild(GUI.image(1, 1, image.load("/MineOS/System/OS/Icons/Steve.pic"))))
-layout:setCellPosition(2, 1, layout:addChild(GUI.label(1, 1, 10, 1, 0x0, "Картиночка" ):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)))
+-- Туда же добавляем слайдер, с помощью которого будем регулировать изменение размера окна
+local slider = layout:setCellPosition(2, 1, layout:addChild(GUI.slider(1, 1, 30, 0x0, 0xAAAAAA, 0x1D1D1D, 0xAAAAAA, 1, 30, 10, true, "Изменять размер на: ", "px")))
 -- В ячейке 2х1 задаем вертикальную ориентацию объектов и расстояние между ними в 1 пиксель
 layout:setCellDirection(2, 1, GUI.directions.vertical)
 layout:setCellSpacing(2, 1, 1)
 
--- В ячейку 3х1 добавляем 3 кнопки
-layout:setCellPosition(3, 1, layout:addChild(GUI.adaptiveButton(1, 1, 3, 0, 0xFFFFFF, 0x000000, 0x444444, 0xFFFFFF, "Подробности")))
-layout:setCellPosition(3, 1, layout:addChild(GUI.adaptiveButton(1, 1, 3, 0, 0xFFFFFF, 0x000000, 0x444444, 0xFFFFFF, "Отмена")))
-layout:setCellPosition(3, 1, layout:addChild(GUI.adaptiveButton(1, 1, 3, 0, 0x3392FF, 0xFFFFFF, 0x444444, 0xFFFFFF, "OK"))).onTouch = function()
-	-- При нажатии на кнопку "ОК" наше окно растянется на 10 пикселей
-	window.width, backgroundPanel.width, layout.width = window.width + 10, backgroundPanel.width + 10, layout.width + 10
+-- Cоздаем функцию, изменяющую размер окна на указанную величину
+local function resizeWindow(horizontalOffset, verticalOffset)
+	window.width, backgroundPanel.width, layout.width = window.width + horizontalOffset, backgroundPanel.width + horizontalOffset, layout.width + horizontalOffset
+	window.height, backgroundPanel.height, layout.height = window.height + verticalOffset, backgroundPanel.height + verticalOffset, layout.height + verticalOffset
+
 	mainContainer:draw()
 	buffer.draw()
 end
--- В ячейке 3x1 задаем горизонтальную ориентацию объектов, расстояние между ними в 2 пикселя, а также выравнивание по правому верхнему краю
+
+-- В ячейку 3х1 добавляем 4 кнопки с назначенными функциями по изменению размера окна
+layout:setCellPosition(3, 1, layout:addChild(GUI.adaptiveButton(1, 1, 3, 0, 0xFFFFFF, 0x000000, 0x444444, 0xFFFFFF, "Ниже"))).onTouch = function()
+	resizeWindow(0, -math.floor(slider.value))
+end
+layout:setCellPosition(3, 1, layout:addChild(GUI.adaptiveButton(1, 1, 3, 0, 0xFFFFFF, 0x000000, 0x444444, 0xFFFFFF, "Выше"))).onTouch = function()
+	resizeWindow(0, math.floor(slider.value))
+end
+layout:setCellPosition(3, 1, layout:addChild(GUI.adaptiveButton(1, 1, 3, 0, 0xFFFFFF, 0x000000, 0x444444, 0xFFFFFF, "Уже"))).onTouch = function()
+	resizeWindow(-math.floor(slider.value), 0)
+end
+layout:setCellPosition(3, 1, layout:addChild(GUI.adaptiveButton(1, 1, 3, 0, 0x3392FF, 0xFFFFFF, 0x444444, 0xFFFFFF, "Шире"))).onTouch = function()
+	resizeWindow(math.floor(slider.value), 0)
+end
+
+-- В ячейке 3x1 задаем горизонтальную ориентацию кнопок и расстояние между ними в 2 пикселя
 layout:setCellDirection(3, 1, GUI.directions.horizontal)
 layout:setCellSpacing(3, 1, 2)
+-- Далее устанавливаем выравнивание кнопок по правому нижнему краю, а также отступ от краев выравнивания в 2 пикселя по ширине и 1 пиксель по высоте
 layout:setCellAlignment(3, 1, GUI.alignment.horizontal.right, GUI.alignment.vertical.bottom)
+layout:setCellMargin(3, 1, 2, 1)
 
 mainContainer:draw()
 buffer.draw(true)
 mainContainer:startEventHandling()
 ```
 
-В результате получаем симпатичное окошко с тремя кнопками, автоматически расположенными в его правой части:
+В результате получаем симпатичное окошко с четырьмя кнопками, автоматически расположенными в его правой части:
 
-![Imgur](http://i.imgur.com/b3CmBfS.png?1)
+![Imgur](http://i.imgur.com/NC5WU82.png?1)
 
-Если несколько раз нажать на кнопку "ОК", то окошко растянется, однако все объекты останутся на законных местах. Причем без каких-либо хардкорных расчетов вручную:
+Если несколько раз нажать на кнопку "Шире" и "Выше", то окошко растянется, однако все объекты останутся на законных местах. Причем без каких-либо хардкорных расчетов вручную:
 
-![Imgur](http://i.imgur.com/JQ2togt.png?1)
+![Imgur](http://i.imgur.com/NncPObT.png?1)
+
+![Imgur](http://i.imgur.com/RCdBDgr.png?1)
