@@ -179,13 +179,13 @@ Layout является наследником GUI.**container**, автомат
 
 | Тип свойства | Свойство |Описание |
 | ------ | ------ | ------ |
-| *int* | .**columnCount**| Количество рядов сетки |
-| *int* | .**rowCount**| Количество строк сетки |
 | *function* | :**setGridSize**(*int* columnCount, *int* columnCount): *layout* layout | Установить размер сетки. Все объекты, находящиеся вне диапазона нового размера, должны быть размещены в сетке заново через :**setCellPosition**()  |
 | *function* | :**setColumnWidth**(*int* column, *enum* sizePolicy, *float* size): *layout* layout | Установить ширину указанного столбца. Ширина может быть двух типов: GUI.**sizePolicies.absolute** или GUI.**sizePolicies.percentage**. В первом случае ширина выражена в пикселях, и не меняется при изменении размеров layout, а во втором она выражена дробным числом в промежутке **[0; 1]**, обозначающим процентную ширину столбца. Если указана процентная ширина, и справа от выбранного столбца имеются другие, то их процентная ширина будет автоматически перерассчитана до нужных процентных значений. |
 | *function* | :**setRowHeight**(*int* row, *enum* sizePolicy, *float* size): *layout* layout | Установить высоту указанного ряда. Поведение метода аналогично **:setColumnWidth** |
 | *function* | :**addColumn**(*enum* sizePolicy, *float* size): *layout* layout | Добавить в сетку layout пустой столбец с указанным размером |
 | *function* | :**addRow**(*enum* sizePolicy, *float* size): *layout* layout | Добавить в сетку layout пустой ряд с указанным размером |
+| *function* | :**removeColumn**(*int* column): *layout* layout | Удалить из сетки layout указанный столбец |
+| *function* | :**removeRow**(*int* row): *layout* layout | Удалить из сетки layout указанный ряд |
 | *function* | :**setCellPosition**(*int* column, *int* row, *object* child): *object* child| Назначить дочернему объекту layout конкретную ячейку сетки. В одной ячейке может располагаться сколь угодно много объектов. |
 | *function* | :**setCellDirection**(*int* column, *int* row, *enum* direction): *layout* layout | Назначить ячейке сетки ориентацию дочерних объектов. Поддерживаются GUI.directions.horizontal и GUI.directions.vertical |
 | *function* | :**setCellAlignment**(*int* column, *int* row, *enum* GUI.alignment.vertical, *enum* GUI.alignment.horizontal): *layout* layout | Назначить ячейке сетки метод выравнивания дочерних объектов. Поддерживаются все 9 вариантов |
