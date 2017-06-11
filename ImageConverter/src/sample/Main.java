@@ -1,5 +1,8 @@
 package sample;
 
+import javafx.animation.KeyFrame;
+import javafx.animation.KeyValue;
+import javafx.animation.Timeline;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
@@ -8,10 +11,15 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.Dragboard;
+import javafx.scene.input.TransferMode;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Pane;
 import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Callback;
+import javafx.util.Duration;
 
 import java.io.File;
 import java.io.IOException;
@@ -32,13 +40,33 @@ public class Main extends Application {
     public Slider ditheringSlider;
     public ComboBox<String> encodingMethodComboBox;
     public String currentImagePath = "sample/Resources/Background.png";
+    public Pane dragDropPane;
+    public GridPane gridPane;
 
     @Override
     public void start(Stage primaryStage) throws Exception {
         root = FXMLLoader.load(getClass().getResource("ImageConverter.fxml"));
         primaryStage.setResizable(false);
-        primaryStage.setScene(new Scene(root));
+        Scene scene = new Scene(root);
+        primaryStage.setScene(scene);
         primaryStage.show();
+    }
+
+    private void playAnimation(boolean start)
+    {
+        Timeline timeline = new Timeline();
+        timeline.getKeyFrames().addAll(
+                new KeyFrame(
+                        new Duration(0),
+                        new KeyValue(dragDropPane.opacityProperty(), start ? 0.0 : 1.0)
+                ),
+                new KeyFrame(
+                        new Duration(250),
+                        new KeyValue(dragDropPane.opacityProperty(), start ? 1.0 : 0.0)
+                )
+        );
+
+        timeline.play();
     }
 
     public void initialize() {
@@ -55,6 +83,7 @@ public class Main extends Application {
                 }
             }
         });
+
         // А это уже в выпадающем списке
         encodingMethodComboBox.setCellFactory(new Callback<ListView<String>, ListCell<String>>() {
             @Override
@@ -69,6 +98,26 @@ public class Main extends Application {
                         }
                     }
                 };
+            }
+        });
+
+        //Ебучий драг-дроп
+        dragDropPane.setOnDragEntered(event -> {
+            if (event.getDragboard().hasFiles()) {
+                playAnimation(true);
+                event.acceptTransferModes(TransferMode.COPY);
+            }
+        });
+
+        dragDropPane.setOnDragExited(event -> {
+            playAnimation(false);
+
+            Dragboard dragboard = event.getDragboard();
+            if (dragboard.hasFiles()) {
+                File file = new File(dragboard.getFiles().get(0).getAbsolutePath());
+                if (file.getAbsolutePath().matches("^.+\\.(png)?(jpg)?(jpeg)?$")) {
+                    loadImage(file);
+                }
             }
         });
     }
@@ -100,18 +149,27 @@ public class Main extends Application {
     }
 
     public void loadImage(File file) {
-        if (file.exists() && !file.isDirectory()) {
+        if (!file.isDirectory()) {
             currentImagePath = "file:" + file.getPath();
 
-            //Вся вот эта хуета нужна для отображения пикчи по размеру экранчика
-            imageView.setPreserveRatio(false);
-            javafx.scene.image.Image imageViewImage = new javafx.scene.image.Image(currentImagePath);
-            double imageProportion = imageViewImage.getWidth() / imageViewImage.getHeight();
-            double newWidth = imageView.getScene().getWindow().getWidth();
-            double newHeight = newWidth / imageProportion;
-            imageView.setFitWidth(newWidth);
-            imageView.setFitHeight(newHeight);
-            imageView.setImage(imageViewImage);
+            javafx.scene.image.Image image = new javafx.scene.image.Image(currentImagePath);
+            imageView.setImage(image);
+
+            if (image.getWidth() >= image.getHeight()) {
+                if (image.getWidth() <= gridPane.getWidth()) {
+                    imageView.setFitWidth(image.getWidth());
+                } else {
+                    imageView.setFitWidth(gridPane.getWidth());
+                }
+            } else {
+                double proportion = image.getWidth() / image.getHeight();
+
+                if (image.getHeight() <= gridPane.getHeight()) {
+                    imageView.setFitWidth(image.getHeight() * proportion);
+                } else {
+                    imageView.setFitWidth(gridPane.getWidth() * proportion);
+                }
+            }
         }
     }
 

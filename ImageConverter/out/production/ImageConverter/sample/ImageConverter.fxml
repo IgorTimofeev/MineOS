@@ -13,10 +13,39 @@
 
 <Pane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="489.0" prefWidth="840.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sample.Main">
    <children>
-      <ImageView fx:id="imageView" fitHeight="498.0" fitWidth="840.0" pickOnBounds="true">
+      <ImageView fx:id="imageView1" fitWidth="840.0" pickOnBounds="true" preserveRatio="true">
          <image>
-            <Image url="@Resources/Background.png" />
-         </image></ImageView>
+            <Image url="@Resources/Cells.png" />
+         </image>
+      </ImageView>
+      <GridPane fx:id="gridPane" alignment="CENTER" prefHeight="489.0" prefWidth="840.0">
+        <columnConstraints>
+          <ColumnConstraints hgrow="SOMETIMES" />
+        </columnConstraints>
+        <rowConstraints>
+          <RowConstraints maxHeight="1.7976931348623157E308" vgrow="SOMETIMES" />
+        </rowConstraints>
+         <children>
+            <ImageView fx:id="imageView" fitWidth="840.0" nodeOrientation="INHERIT" pickOnBounds="true" preserveRatio="true" GridPane.halignment="CENTER" GridPane.valignment="CENTER">
+               <image>
+                  <Image url="@Resources/Background.jpg" />
+               </image>
+               <effect>
+                  <DropShadow color="#000000ab" height="63.5" radius="23.66" width="33.14" />
+               </effect>
+            </ImageView>
+         </children>
+      </GridPane>
+      <Pane fx:id="dragDropPane" opacity="0.0" prefHeight="489.0" prefWidth="840.0">
+         <children>
+            <Rectangle fx:id="dragFilesRectangle" fill="#000000d0" height="489.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="594.0" />
+            <ImageView fx:id="dragFilesImageView" fitHeight="180.0" fitWidth="180.0" layoutX="240.0" layoutY="155.0" pickOnBounds="true">
+               <image>
+                  <Image url="@Resources/Files.png" />
+               </image>
+            </ImageView>
+         </children>
+      </Pane>
       <Rectangle fill="#000000d0" height="489.0" layoutX="594.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="246.0" />
       <Button fx:id="openButton" layoutX="594.0" layoutY="69.0" mnemonicParsing="false" onMouseClicked="#open" prefHeight="38.0" prefWidth="246.0" styleClass="defaultButton" stylesheets="@Styles/button.css" text="Открыть">
          <font>
