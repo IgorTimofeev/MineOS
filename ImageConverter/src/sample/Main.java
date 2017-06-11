@@ -7,7 +7,6 @@ import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
@@ -20,15 +19,12 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Callback;
 import javafx.util.Duration;
-
-import javax.swing.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.regex.Pattern;
 
 public class Main extends Application {
 
-    public static Parent root;
     public Button openButton;
     public Button convertButton;
     public TextField widthTextField;
@@ -40,44 +36,51 @@ public class Main extends Application {
     public Text imageSizeText;
     public Slider ditheringSlider;
     public ComboBox<String> encodingMethodComboBox;
-    public String currentImagePath = "sample/Resources/Background.png";
-    public Pane dragDropPane;
-    public GridPane gridPane;
+    public Pane dragDropAnimationGridPane;
+    public GridPane imageGridPane;
     public ImageView dragDropFilesImageView;
+    public Pane settingsPane;
+    public Pane mainPane;
+
+    private String currentImagePath = "sample/Resources/Background.png";
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-        root = FXMLLoader.load(getClass().getResource("ImageConverter.fxml"));
         primaryStage.setResizable(false);
-        Scene scene = new Scene(root);
+        Scene scene = new Scene(FXMLLoader.load(getClass().getResource("ImageConverter.fxml")));
         primaryStage.setScene(scene);
         primaryStage.show();
     }
 
-    private void playDragDropFileAnimation(boolean start, double imageScaleFactor)
-    {
-        dragDropPane.setVisible(true);
-
+    private Timeline newTimeLine(int duration, KeyValue[] startKeyValues, KeyValue[] endKeyValues) {
         Timeline timeline = new Timeline();
-        timeline.getKeyFrames().addAll(
-                new KeyFrame(
-                        new Duration(0),
-                        new KeyValue(dragDropPane.opacityProperty(), start ? 0.0 : 1.0),
-                        new KeyValue(dragDropFilesImageView.fitWidthProperty(), start ? dragDropFilesImageView.getImage().getWidth() * imageScaleFactor : dragDropFilesImageView.getImage().getWidth())
-                ),
-                new KeyFrame(
-                        new Duration(150),
-                        new KeyValue(dragDropPane.opacityProperty(), start ? 1.0 : 0.0),
-                        new KeyValue(dragDropFilesImageView.fitWidthProperty(), start ? dragDropFilesImageView.getImage().getWidth() : dragDropFilesImageView.getImage().getWidth() * imageScaleFactor)
-                )
-        );
 
-        timeline.setOnFinished(event -> {
-            if (!start) dragDropPane.setVisible(false);
-        });
+        timeline.getKeyFrames().add(new KeyFrame(new Duration(0), startKeyValues));
+        timeline.getKeyFrames().add(new KeyFrame(new Duration(duration), endKeyValues));
+
+        return timeline;
+    }
+
+    private void playDragDropFileAnimation(boolean start, boolean moveSettingsPane, double targetOpacity, double fromScale, double toScale)
+    {
+
+        Timeline timeline = newTimeLine(
+                150,
+                new KeyValue[] {
+                        new KeyValue(dragDropAnimationGridPane.opacityProperty(), dragDropAnimationGridPane.getOpacity()),
+                        new KeyValue(dragDropFilesImageView.fitWidthProperty(), dragDropFilesImageView.getImage().getWidth() * fromScale),
+                        moveSettingsPane ? new KeyValue(settingsPane.layoutXProperty(), start ? mainPane.getWidth() - settingsPane.getWidth() : mainPane.getWidth()) : null
+                },
+                new KeyValue[] {
+                        new KeyValue(dragDropAnimationGridPane.opacityProperty(), targetOpacity),
+                        new KeyValue(dragDropFilesImageView.fitWidthProperty(),  dragDropFilesImageView.getImage().getWidth() * toScale),
+                        moveSettingsPane ? new KeyValue(settingsPane.layoutXProperty(), start ? mainPane.getWidth() : mainPane.getWidth() - settingsPane.getWidth()) : null
+                }
+        );
 
         timeline.play();
     }
+
 
     public void initialize() {
         // Пидорасим текст по центру комбобокса
@@ -112,23 +115,21 @@ public class Main extends Application {
         });
 
         //Ебучий драг-дроп
-        imageView.setOnDragEntered(event -> {
+        dragDropAnimationGridPane.setOnDragEntered(event -> {
             if (event.getDragboard().hasFiles()) {
-                playDragDropFileAnimation(true, 0.8);
+                playDragDropFileAnimation(true, true,1.0d, 0.8d, 1.0d);
                 event.acceptTransferModes(TransferMode.COPY);
             }
-            event.consume();
         });
 
-        dragDropPane.setOnDragExited(event -> {
-            playDragDropFileAnimation(false, 0.8);
+        dragDropAnimationGridPane.setOnDragExited(event -> {
+            playDragDropFileAnimation(false, true, 0.0d, 1.0d, 0.8d);
 
             Dragboard dragboard = event.getDragboard();
             if (dragboard.hasFiles()) {
                 File file = new File(dragboard.getFiles().get(0).getAbsolutePath());
                 if (file.getAbsolutePath().matches("^.+\\.(png)?(jpg)?(jpeg)?$")) {
                     loadImage(file);
-                    event.consume();
                 }
             }
         });
@@ -142,9 +143,9 @@ public class Main extends Application {
         ditheringSlider.setDisable(!ditheringCheckBox.isSelected());
     }
 
-    private boolean checkTextField(TextField textField, int maxValue) {
+    private boolean checkTextField(TextField textField) {
         if (Pattern.matches("\\d{1,3}", textField.getText())) {
-            if (Integer.parseInt(textField.getText()) <= maxValue) {
+            if (Integer.parseInt(textField.getText()) <= 255) {
                 return true;
             }
         }
@@ -153,14 +154,14 @@ public class Main extends Application {
     }
 
     public void onTextFieldTextChanged() {
-        boolean state = checkTextField(widthTextField, 255) && checkTextField(heightTextField, 255);
+        boolean state = checkTextField(widthTextField) && checkTextField(heightTextField);
 
         convertButton.setDisable(!state);
         imageSizeText.setVisible(state);
         wrongSizesText.setVisible(!state);
     }
 
-    public void loadImage(File file) {
+    private void loadImage(File file) {
         if (!file.isDirectory()) {
             currentImagePath = "file:" + file.getPath();
 
@@ -168,18 +169,18 @@ public class Main extends Application {
             imageView.setImage(image);
 
             if (image.getWidth() >= image.getHeight()) {
-                if (image.getWidth() <= gridPane.getWidth()) {
+                if (image.getWidth() <= imageGridPane.getWidth()) {
                     imageView.setFitWidth(image.getWidth());
                 } else {
-                    imageView.setFitWidth(gridPane.getWidth());
+                    imageView.setFitWidth(imageGridPane.getWidth());
                 }
             } else {
                 double proportion = image.getWidth() / image.getHeight();
 
-                if (image.getHeight() <= gridPane.getHeight()) {
+                if (image.getHeight() <= imageGridPane.getHeight()) {
                     imageView.setFitWidth(image.getHeight() * proportion);
                 } else {
-                    imageView.setFitWidth(gridPane.getWidth() * proportion);
+                    imageView.setFitWidth(imageGridPane.getWidth() * proportion);
                 }
             }
         }

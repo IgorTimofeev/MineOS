@@ -12,14 +12,14 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.collections.*?>
 
-<Pane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="489.0" prefWidth="840.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sample.Main">
+<Pane fx:id="mainPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="489.0" prefWidth="840.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sample.Main">
    <children>
       <ImageView fx:id="imageView1" fitWidth="840.0" pickOnBounds="true" preserveRatio="true">
          <image>
             <Image url="@Resources/Cells.png" />
          </image>
       </ImageView>
-      <GridPane fx:id="gridPane" alignment="CENTER" prefHeight="489.0" prefWidth="840.0">
+      <GridPane fx:id="imageGridPane" alignment="CENTER" prefHeight="489.0" prefWidth="840.0">
         <columnConstraints>
           <ColumnConstraints hgrow="SOMETIMES" />
         </columnConstraints>
@@ -37,7 +37,23 @@
             </ImageView>
          </children>
       </GridPane>
-      <Pane layoutX="594.0" prefHeight="489.0" prefWidth="246.0">
+      <GridPane fx:id="dragDropAnimationGridPane" opacity="0.0" prefHeight="489.0" prefWidth="840.0">
+        <columnConstraints>
+          <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+        </columnConstraints>
+        <rowConstraints>
+            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+        </rowConstraints>
+         <children>
+            <Rectangle fx:id="dragFilesRectangle" fill="#000000d0" height="489.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="840.0" GridPane.halignment="LEFT" GridPane.hgrow="ALWAYS" GridPane.valignment="TOP" GridPane.vgrow="ALWAYS" />
+            <ImageView fx:id="dragDropFilesImageView" fitWidth="180.0" pickOnBounds="true" preserveRatio="true" GridPane.halignment="CENTER" GridPane.valignment="CENTER">
+               <image>
+                  <Image url="@Resources/Files.png" />
+               </image>
+            </ImageView>
+         </children>
+      </GridPane>
+      <Pane fx:id="settingsPane" layoutX="594.0" prefHeight="489.0" prefWidth="246.0">
          <children>
             <Rectangle fill="#000000d0" height="489.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="246.0" />
             <Button fx:id="openButton" layoutY="62.0" mnemonicParsing="false" onMouseClicked="#open" prefHeight="38.0" prefWidth="246.0" styleClass="defaultButton" stylesheets="@Styles/button.css" text="Открыть">
@@ -71,7 +87,7 @@
                </font>
             </TextField>
             <CheckBox fx:id="brailleCheckBox" layoutX="12.0" layoutY="304.0" mnemonicParsing="false" prefHeight="38.0" prefWidth="222.0" selected="true" styleClass="checkBox" stylesheets="@Styles/checkBox.css" text="Использовать шрифт Брайля" textFill="WHITE" />
-            <Text fx:id="wrongSizesText" fill="#ff5e5e" strokeType="OUTSIDE" strokeWidth="0.0" text="Недопустимые значения размеров" textAlignment="CENTER" visible="false" wrappingWidth="180.97265625">
+            <Text fx:id="wrongSizesText" fill="#ff5e5e" layoutX="33.0" layoutY="124.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Недопустимые значения размеров" textAlignment="CENTER" visible="false" wrappingWidth="180.97265625">
                <font>
                   <Font name="Arial" size="11.0" />
                </font>
@@ -96,21 +112,5 @@
             </Text>
          </children>
       </Pane>
-      <GridPane fx:id="dragDropPane" prefHeight="489.0" prefWidth="840.0" visible="false">
-        <columnConstraints>
-          <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-        </columnConstraints>
-        <rowConstraints>
-            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-        </rowConstraints>
-         <children>
-            <Rectangle fx:id="dragFilesRectangle" fill="#000000d0" height="489.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="840.0" GridPane.halignment="LEFT" GridPane.hgrow="ALWAYS" GridPane.valignment="TOP" GridPane.vgrow="ALWAYS" />
-            <ImageView fx:id="dragDropFilesImageView" fitWidth="180.0" pickOnBounds="true" preserveRatio="true" GridPane.halignment="CENTER" GridPane.valignment="CENTER">
-               <image>
-                  <Image url="@Resources/Files.png" />
-               </image>
-            </ImageView>
-         </children>
-      </GridPane>
    </children>
 </Pane>
