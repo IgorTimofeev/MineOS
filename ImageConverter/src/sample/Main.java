@@ -21,6 +21,7 @@ import javafx.stage.Stage;
 import javafx.util.Callback;
 import javafx.util.Duration;
 
+import javax.swing.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.regex.Pattern;
@@ -42,6 +43,7 @@ public class Main extends Application {
     public String currentImagePath = "sample/Resources/Background.png";
     public Pane dragDropPane;
     public GridPane gridPane;
+    public ImageView dragDropFilesImageView;
 
     @Override
     public void start(Stage primaryStage) throws Exception {
@@ -52,19 +54,27 @@ public class Main extends Application {
         primaryStage.show();
     }
 
-    private void playAnimation(boolean start)
+    private void playDragDropFileAnimation(boolean start, double imageScaleFactor)
     {
+        dragDropPane.setVisible(true);
+
         Timeline timeline = new Timeline();
         timeline.getKeyFrames().addAll(
                 new KeyFrame(
                         new Duration(0),
-                        new KeyValue(dragDropPane.opacityProperty(), start ? 0.0 : 1.0)
+                        new KeyValue(dragDropPane.opacityProperty(), start ? 0.0 : 1.0),
+                        new KeyValue(dragDropFilesImageView.fitWidthProperty(), start ? dragDropFilesImageView.getImage().getWidth() * imageScaleFactor : dragDropFilesImageView.getImage().getWidth())
                 ),
                 new KeyFrame(
-                        new Duration(250),
-                        new KeyValue(dragDropPane.opacityProperty(), start ? 1.0 : 0.0)
+                        new Duration(150),
+                        new KeyValue(dragDropPane.opacityProperty(), start ? 1.0 : 0.0),
+                        new KeyValue(dragDropFilesImageView.fitWidthProperty(), start ? dragDropFilesImageView.getImage().getWidth() : dragDropFilesImageView.getImage().getWidth() * imageScaleFactor)
                 )
         );
+
+        timeline.setOnFinished(event -> {
+            if (!start) dragDropPane.setVisible(false);
+        });
 
         timeline.play();
     }
@@ -102,21 +112,23 @@ public class Main extends Application {
         });
 
         //Ебучий драг-дроп
-        dragDropPane.setOnDragEntered(event -> {
+        imageView.setOnDragEntered(event -> {
             if (event.getDragboard().hasFiles()) {
-                playAnimation(true);
+                playDragDropFileAnimation(true, 0.8);
                 event.acceptTransferModes(TransferMode.COPY);
             }
+            event.consume();
         });
 
         dragDropPane.setOnDragExited(event -> {
-            playAnimation(false);
+            playDragDropFileAnimation(false, 0.8);
 
             Dragboard dragboard = event.getDragboard();
             if (dragboard.hasFiles()) {
                 File file = new File(dragboard.getFiles().get(0).getAbsolutePath());
                 if (file.getAbsolutePath().matches("^.+\\.(png)?(jpg)?(jpeg)?$")) {
                     loadImage(file);
+                    event.consume();
                 }
             }
         });
