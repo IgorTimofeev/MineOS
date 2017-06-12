@@ -109,18 +109,14 @@
       <file leaf-file-name="Main.java" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/sample/Main.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="123">
-              <caret line="101" column="21" lean-forward="true" selection-start-line="101" selection-start-column="21" selection-end-line="101" selection-end-column="21" />
+            <state relative-caret-position="487">
+              <caret line="120" column="11" lean-forward="true" selection-start-line="120" selection-start-column="11" selection-end-line="120" selection-end-column="11" />
               <folding>
                 <element signature="imports" expanded="true" />
-                <element signature="e#3375#3821#0" expanded="true" />
-                <element signature="e#3820#3821#0" expanded="true" />
-                <element signature="e#4076#4465#0" expanded="true" />
-                <element signature="e#4464#4465#0" expanded="true" />
-                <marker date="1497203118000" expanded="false" signature="5322:5333" ph=" { " />
-                <marker date="1497203118000" expanded="false" signature="5346:5352" ph=" }" />
-                <marker date="1497203118000" expanded="false" signature="5395:5406" ph=" { " />
-                <marker date="1497203118000" expanded="false" signature="5466:5472" ph=" }" />
+                <element signature="e#3373#3819#0" expanded="true" />
+                <element signature="e#3818#3819#0" expanded="true" />
+                <element signature="e#4074#4463#0" expanded="true" />
+                <element signature="e#4462#4463#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -131,12 +127,7 @@
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="3105">
               <caret line="237" column="0" lean-forward="false" selection-start-line="237" selection-start-column="0" selection-end-line="237" selection-end-column="0" />
-              <folding>
-                <element signature="e#0#9088#0" expanded="false" />
-                <element signature="imports" expanded="false" />
-                <element signature="e#6995#6996#0" expanded="false" />
-                <element signature="e#7029#7030#0" expanded="false" />
-              </folding>
+              <folding />
             </state>
           </provider>
         </entry>
@@ -211,8 +202,6 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="PackagesPane" />
-      <pane id="Scope" />
       <pane id="Scratches" />
       <pane id="ProjectPane">
         <subPane>
@@ -260,6 +249,8 @@
           </PATH>
         </subPane>
       </pane>
+      <pane id="PackagesPane" />
+      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -621,14 +612,14 @@
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/sample/ImageConverter.fxml">
-      <provider editor-type-id="JavaFX-Scene-Builder">
-        <state />
-      </provider>
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="105">
           <caret line="7" column="31" lean-forward="false" selection-start-line="7" selection-start-column="31" selection-end-line="7" selection-end-column="31" />
           <folding />
         </state>
+      </provider>
+      <provider editor-type-id="JavaFX-Scene-Builder">
+        <state />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/sample/Main.java">
@@ -637,14 +628,10 @@
           <caret line="49" column="9" lean-forward="false" selection-start-line="49" selection-start-column="9" selection-end-line="49" selection-end-column="9" />
           <folding>
             <element signature="imports" expanded="true" />
-            <element signature="e#3375#3821#0" expanded="true" />
-            <element signature="e#3820#3821#0" expanded="true" />
-            <element signature="e#4076#4465#0" expanded="true" />
-            <element signature="e#4464#4465#0" expanded="true" />
-            <marker date="1497203118000" expanded="false" signature="5322:5333" ph=" { " />
-            <marker date="1497203118000" expanded="false" signature="5346:5352" ph=" }" />
-            <marker date="1497203118000" expanded="false" signature="5395:5406" ph=" { " />
-            <marker date="1497203118000" expanded="false" signature="5466:5472" ph=" }" />
+            <element signature="e#3373#3819#0" expanded="true" />
+            <element signature="e#3818#3819#0" expanded="true" />
+            <element signature="e#4074#4463#0" expanded="true" />
+            <element signature="e#4462#4463#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -682,14 +669,14 @@
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/sample/ImageConverter.fxml">
-      <provider editor-type-id="JavaFX-Scene-Builder">
-        <state />
-      </provider>
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="105">
           <caret line="7" column="31" lean-forward="false" selection-start-line="7" selection-start-column="31" selection-end-line="7" selection-end-column="31" />
           <folding />
         </state>
+      </provider>
+      <provider editor-type-id="JavaFX-Scene-Builder">
+        <state />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/sample/Image.java">
@@ -708,14 +695,10 @@
           <caret line="143" column="46" lean-forward="false" selection-start-line="143" selection-start-column="46" selection-end-line="143" selection-end-column="46" />
           <folding>
             <element signature="imports" expanded="true" />
-            <element signature="e#3375#3821#0" expanded="true" />
-            <element signature="e#3820#3821#0" expanded="true" />
-            <element signature="e#4076#4465#0" expanded="true" />
-            <element signature="e#4464#4465#0" expanded="true" />
-            <marker date="1497203118000" expanded="false" signature="5322:5333" ph=" { " />
-            <marker date="1497203118000" expanded="false" signature="5346:5352" ph=" }" />
-            <marker date="1497203118000" expanded="false" signature="5395:5406" ph=" { " />
-            <marker date="1497203118000" expanded="false" signature="5466:5472" ph=" }" />
+            <element signature="e#3373#3819#0" expanded="true" />
+            <element signature="e#3818#3819#0" expanded="true" />
+            <element signature="e#4074#4463#0" expanded="true" />
+            <element signature="e#4462#4463#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -753,14 +736,14 @@
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/sample/ImageConverter.fxml">
-      <provider editor-type-id="JavaFX-Scene-Builder">
-        <state />
-      </provider>
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="105">
           <caret line="7" column="31" lean-forward="false" selection-start-line="7" selection-start-column="31" selection-end-line="7" selection-end-column="31" />
           <folding />
         </state>
+      </provider>
+      <provider editor-type-id="JavaFX-Scene-Builder">
+        <state />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/sample/Image.java">
@@ -779,14 +762,10 @@
           <caret line="143" column="46" lean-forward="false" selection-start-line="143" selection-start-column="46" selection-end-line="143" selection-end-column="46" />
           <folding>
             <element signature="imports" expanded="true" />
-            <element signature="e#3375#3821#0" expanded="true" />
-            <element signature="e#3820#3821#0" expanded="true" />
-            <element signature="e#4076#4465#0" expanded="true" />
-            <element signature="e#4464#4465#0" expanded="true" />
-            <marker date="1497203118000" expanded="false" signature="5322:5333" ph=" { " />
-            <marker date="1497203118000" expanded="false" signature="5346:5352" ph=" }" />
-            <marker date="1497203118000" expanded="false" signature="5395:5406" ph=" { " />
-            <marker date="1497203118000" expanded="false" signature="5466:5472" ph=" }" />
+            <element signature="e#3373#3819#0" expanded="true" />
+            <element signature="e#3818#3819#0" expanded="true" />
+            <element signature="e#4074#4463#0" expanded="true" />
+            <element signature="e#4462#4463#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -824,14 +803,14 @@
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/sample/ImageConverter.fxml">
-      <provider editor-type-id="JavaFX-Scene-Builder">
-        <state />
-      </provider>
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="105">
           <caret line="7" column="31" lean-forward="false" selection-start-line="7" selection-start-column="31" selection-end-line="7" selection-end-column="31" />
           <folding />
         </state>
+      </provider>
+      <provider editor-type-id="JavaFX-Scene-Builder">
+        <state />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/sample/Image.java">
@@ -850,14 +829,10 @@
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
             <element signature="imports" expanded="true" />
-            <element signature="e#3375#3821#0" expanded="true" />
-            <element signature="e#3820#3821#0" expanded="true" />
-            <element signature="e#4076#4465#0" expanded="true" />
-            <element signature="e#4464#4465#0" expanded="true" />
-            <marker date="1497203118000" expanded="false" signature="5322:5333" ph=" { " />
-            <marker date="1497203118000" expanded="false" signature="5346:5352" ph=" }" />
-            <marker date="1497203118000" expanded="false" signature="5395:5406" ph=" { " />
-            <marker date="1497203118000" expanded="false" signature="5466:5472" ph=" }" />
+            <element signature="e#3373#3819#0" expanded="true" />
+            <element signature="e#3818#3819#0" expanded="true" />
+            <element signature="e#4074#4463#0" expanded="true" />
+            <element signature="e#4462#4463#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -905,14 +880,14 @@
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/sample/ImageConverter.fxml">
-      <provider editor-type-id="JavaFX-Scene-Builder">
-        <state />
-      </provider>
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="105">
           <caret line="7" column="31" lean-forward="false" selection-start-line="7" selection-start-column="31" selection-end-line="7" selection-end-column="31" />
           <folding />
         </state>
+      </provider>
+      <provider editor-type-id="JavaFX-Scene-Builder">
+        <state />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/sample/Main.java">
@@ -921,14 +896,10 @@
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
             <element signature="imports" expanded="true" />
-            <element signature="e#3375#3821#0" expanded="true" />
-            <element signature="e#3820#3821#0" expanded="true" />
-            <element signature="e#4076#4465#0" expanded="true" />
-            <element signature="e#4464#4465#0" expanded="true" />
-            <marker date="1497203118000" expanded="false" signature="5322:5333" ph=" { " />
-            <marker date="1497203118000" expanded="false" signature="5346:5352" ph=" }" />
-            <marker date="1497203118000" expanded="false" signature="5395:5406" ph=" { " />
-            <marker date="1497203118000" expanded="false" signature="5466:5472" ph=" }" />
+            <element signature="e#3373#3819#0" expanded="true" />
+            <element signature="e#3818#3819#0" expanded="true" />
+            <element signature="e#4074#4463#0" expanded="true" />
+            <element signature="e#4462#4463#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -981,14 +952,10 @@
           <caret line="8" column="0" lean-forward="false" selection-start-line="8" selection-start-column="0" selection-end-line="8" selection-end-column="0" />
           <folding>
             <element signature="imports" expanded="true" />
-            <element signature="e#3375#3821#0" expanded="true" />
-            <element signature="e#3820#3821#0" expanded="true" />
-            <element signature="e#4076#4465#0" expanded="true" />
-            <element signature="e#4464#4465#0" expanded="true" />
-            <marker date="1497203118000" expanded="false" signature="5322:5333" ph=" { " />
-            <marker date="1497203118000" expanded="false" signature="5346:5352" ph=" }" />
-            <marker date="1497203118000" expanded="false" signature="5395:5406" ph=" { " />
-            <marker date="1497203118000" expanded="false" signature="5466:5472" ph=" }" />
+            <element signature="e#3373#3819#0" expanded="true" />
+            <element signature="e#3818#3819#0" expanded="true" />
+            <element signature="e#4074#4463#0" expanded="true" />
+            <element signature="e#4462#4463#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -1007,14 +974,14 @@
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/sample/ImageConverter.fxml">
-      <provider editor-type-id="JavaFX-Scene-Builder">
-        <state />
-      </provider>
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="105">
           <caret line="7" column="31" lean-forward="false" selection-start-line="7" selection-start-column="31" selection-end-line="7" selection-end-column="31" />
           <folding />
         </state>
+      </provider>
+      <provider editor-type-id="JavaFX-Scene-Builder">
+        <state />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/sample/Pixel.java">
@@ -1055,29 +1022,20 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="3105">
           <caret line="237" column="0" lean-forward="false" selection-start-line="237" selection-start-column="0" selection-end-line="237" selection-end-column="0" />
-          <folding>
-            <element signature="e#0#9088#0" expanded="false" />
-            <element signature="imports" expanded="false" />
-            <element signature="e#6995#6996#0" expanded="false" />
-            <element signature="e#7029#7030#0" expanded="false" />
-          </folding>
+          <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/sample/Main.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="123">
-          <caret line="101" column="21" lean-forward="true" selection-start-line="101" selection-start-column="21" selection-end-line="101" selection-end-column="21" />
+        <state relative-caret-position="487">
+          <caret line="120" column="11" lean-forward="true" selection-start-line="120" selection-start-column="11" selection-end-line="120" selection-end-column="11" />
           <folding>
             <element signature="imports" expanded="true" />
-            <element signature="e#3375#3821#0" expanded="true" />
-            <element signature="e#3820#3821#0" expanded="true" />
-            <element signature="e#4076#4465#0" expanded="true" />
-            <element signature="e#4464#4465#0" expanded="true" />
-            <marker date="1497203118000" expanded="false" signature="5322:5333" ph=" { " />
-            <marker date="1497203118000" expanded="false" signature="5346:5352" ph=" }" />
-            <marker date="1497203118000" expanded="false" signature="5395:5406" ph=" { " />
-            <marker date="1497203118000" expanded="false" signature="5466:5472" ph=" }" />
+            <element signature="e#3373#3819#0" expanded="true" />
+            <element signature="e#3818#3819#0" expanded="true" />
+            <element signature="e#4074#4463#0" expanded="true" />
+            <element signature="e#4462#4463#0" expanded="true" />
           </folding>
         </state>
       </provider>

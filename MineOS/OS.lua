@@ -210,57 +210,6 @@ local function login()
 	buffer.draw()
 end
 
----------------------------------------------- Винда-хуенда ------------------------------------------------------------------------
-
-local function windows10()
-	if math.random(1, 100) > 25 or MineOSCore.OSSettings.showWindows10Upgrade == false then
-		return
-	end
-
-	local width = 44
-	local height = 12
-	local x = math.floor(buffer.width / 2 - width / 2)
-	local y = 2
-
-	local function draw(background)
-		buffer.square(x, y, width, height, background, 0xFFFFFF, " ")
-		buffer.square(x, y + height - 2, width, 2, 0xFFFFFF, 0xFFFFFF, " ")
-
-		buffer.text(x + 2, y + 1, 0xFFFFFF, "Get Windows 10")
-		buffer.text(x + width - 3, y + 1, 0xFFFFFF, "X")
-
-		buffer.image(x + 2, y + 4, image.load("/MineOS/System/OS/Icons/Computer.pic"))
-
-		buffer.text(x + 12, y + 4, 0xFFFFFF, "Your MineOS is ready for your")
-		buffer.text(x + 12, y + 5, 0xFFFFFF, "free upgrade.")
-
-		buffer.text(x + 2, y + height - 2, 0x999999, "For a short time we're offering")
-		buffer.text(x + 2, y + height - 1, 0x999999, "a free upgrade to")
-		buffer.text(x + 20, y + height - 1, background, "Windows 10")
-
-		buffer.draw()
-	end
-
-	local function disableUpdates()
-		MineOSCore.OSSettings.showWindows10Upgrade = false
-		MineOSCore.saveOSSettings()
-	end
-
-	draw(0x33B6FF)
-
-	while true do
-		local eventData = {event.pull("touch")}
-		if ecs.clickedAtArea(eventData[3], eventData[4], x, y, x + width - 1, x + height - 1) then
-			draw(0x0092FF)
-			os.sleep(0.2)
-			MineOSCore.OSMainContainer:draw()
-			buffer.draw()
-			disableUpdates()
-			return
-		end
-	end
-end
-
 ---------------------------------------------- Основные функции ------------------------------------------------------------------------
 
 local function changeWallpaper()
@@ -788,7 +737,6 @@ changeWorkpath(1)
 changeWallpaper()
 MineOSCore.OSMainContainer.update()
 login()
-windows10()
 
 while true do
 	local success, path, line, traceback = MineOSCore.call(MineOSCore.OSMainContainer.startEventHandling, MineOSCore.OSMainContainer, 1)

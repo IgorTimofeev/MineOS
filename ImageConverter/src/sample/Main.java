@@ -63,7 +63,6 @@ public class Main extends Application {
 
     private void playDragDropFileAnimation(boolean start, boolean moveSettingsPane, double targetOpacity, double fromScale, double toScale)
     {
-
         Timeline timeline = newTimeLine(
                 150,
                 new KeyValue[] {
@@ -80,7 +79,6 @@ public class Main extends Application {
 
         timeline.play();
     }
-
 
     public void initialize() {
         // Пидорасим текст по центру комбобокса
