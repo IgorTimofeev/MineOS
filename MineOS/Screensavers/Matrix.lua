@@ -10,7 +10,7 @@ local maximumLineLength = 55
 local backgroundColor = 0x000000
 local speed = 0.00
 
-local chars = {"ァ", "ア", "ィ", "イ", "ゥ", "ウ", "ェ", "エ", "ォ", "オ", "カ", "ガ", "キ", "ギ", "ク", "グ", "ケ", "ゲ", "コ", "ゴ", "サ", "ザ", "シ", "ジ", "ス", "ズ", "セ", "ゼ", "ソ", "ゾ", "タ", "ダ", "チ", "ヂ", "ッ", "ツ", "ヅ", "テ", "デ", "ト", "ド", "ナ", "ニ", "ヌ", "ネ", "ノ", "ハ", "バ", "パ", "ヒ", "ビ", "ピ", "フ", "ブ", "プ", "ヘ", "ベ", "ペ", "ホ", "ボ", "ポ", "マ", "ミ", "ム", "メ", "モ", "ャ", "ヤ", "ュ", "ユ", "ョ", "ヨ", "ラ", "リ", "ル", "レ", "ロ", "ヮ", "ワ", "ヰ", "ヱ", "ヲ", "ン", "ヴ", "ヵ", "ヶ", "ヷ", "ヸ", "ヹ", "ヺ", "・", "ー", "ヽ", "ヾ", "ヿ"}
+local chars = { "ァ", "ア", "ィ", "イ", "ゥ", "ウ", "ェ", "エ", "ォ", "オ", "カ", "ガ", "キ", "ギ", "ク", "グ", "ケ", "ゲ", "コ", "ゴ", "サ", "ザ", "シ", "ジ", "ス", "ズ", "セ", "ゼ", "ソ", "ゾ", "タ", "ダ", "チ", "ヂ", "ッ", "ツ", "ヅ", "テ", "デ", "ト", "ド", "ナ", "ニ", "ヌ", "ネ", "ノ", "ハ", "バ", "パ", "ヒ", "ビ", "ピ", "フ", "ブ", "プ", "ヘ", "ベ", "ペ", "ホ", "ボ", "ポ", "マ", "ミ", "ム", "メ", "モ", "ャ", "ヤ", "ュ", "ユ", "ョ", "ヨ", "ラ", "リ", "ル", "レ", "ロ", "ヮ", "ワ", "ヰ", "ヱ", "ヲ", "ン", "ヴ", "ヵ", "ヶ", "ヷ", "ヸ", "ヹ", "ヺ", "・", "ー", "ヽ", "ヾ", "ヿ"}
 local lineColorsForeground = { 0xFFFFFF, 0xBBFFBB, 0x88FF88, 0x33FF33, 0x00FF00, 0x00EE00, 0x00DD00, 0x00CC00, 0x00BB00, 0x00AA00, 0x009900, 0x008800, 0x007700, 0x006600, 0x005500, 0x004400, 0x003300, 0x002200, 0x001100 }
 local lineColorsBackground = { 0x004400, 0x004400, 0x003300, 0x003300, 0x002200, 0x001100 }
 
@@ -57,16 +57,17 @@ while true do
 	
 	i, colors = 1, {}
 	while i <= #lines do
-		part = math.ceil(lineColorsForegroundCount * lines[i].y / lines[i].length)
-		background = lineColorsBackground[part] or 0x000000
-		colors[background] = colors[background] or {}
-		colors[background][lineColorsForeground[part]] = colors[background][lineColorsForeground[part]] or {}
-		table.insert(colors[background][lineColorsForeground[part]], i)
-
 		lines[i].y = lines[i].y + 1
 		if lines[i].y - lines[i].length > 0 then
 			table.remove(lines, i)
 		else
+			part = math.ceil(lineColorsForegroundCount * lines[i].y / lines[i].length)
+			
+			background = lineColorsBackground[part] or 0x000000
+			colors[background] = colors[background] or {}
+			colors[background][lineColorsForeground[part]] = colors[background][lineColorsForeground[part]] or {}
+			table.insert(colors[background][lineColorsForeground[part]], i)
+
 			i = i + 1
 		end
 	end
@@ -83,7 +84,8 @@ while true do
 
 	eventType = event.pull(speed)
 	if eventType == "key_down" or eventType == "touch" then
-		setBackground(backgroundColor)
+		setBackground(0x000000)
+		setForeground(0xFFFFFF)
 		gpu.fill(1, 1, screenWidth, screenHeight, " ")
 		break
 	end
