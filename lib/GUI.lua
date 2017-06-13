@@ -1054,25 +1054,22 @@ end
 local function drawHorizontalSlider(object)
 	-- На всякий случай делаем значение не меньше минимального и не больше максимального
 	object.value = math.min(math.max(object.value, object.minimumValue), object.maximumValue)
-
-	-- Отображаем максимальное и минимальное значение, если требуется
+	
 	if object.showMaximumAndMinimumValues then
 		local stringMaximumValue, stringMinimumValue = tostring(object.roundValues and math.floor(object.maximumValue) or math.roundToDecimalPlaces(object.maximumValue, 2)), tostring(object.roundValues and math.floor(object.minimumValue) or math.roundToDecimalPlaces(object.minimumValue, 2))
 		buffer.text(object.x - unicode.len(stringMinimumValue) - 1, object.y, object.colors.value, stringMinimumValue)
 		buffer.text(object.x + object.width + 1, object.y, object.colors.value, stringMaximumValue)
 	end
 
-	-- А еще текущее значение рисуем, если хочется нам
 	if object.currentValuePrefix or object.currentValuePostfix then
 		local stringCurrentValue = (object.currentValuePrefix or "") .. (object.roundValues and math.floor(object.value) or math.roundToDecimalPlaces(object.value, 2)) .. (object.currentValuePostfix or "")
 		buffer.text(math.floor(object.x + object.width / 2 - unicode.len(stringCurrentValue) / 2), object.y + 1, object.colors.value, stringCurrentValue)
 	end
 
-	-- Рисуем сам слайдер
 	local activeWidth = math.floor(object.width - ((object.maximumValue - object.value) * object.width / (object.maximumValue - object.minimumValue)))
 	buffer.text(object.x, object.y, object.colors.passive, string.rep("━", object.width))
 	buffer.text(object.x, object.y, object.colors.active, string.rep("━", activeWidth))
-	buffer.square(object.x + activeWidth - 1, object.y, 2, 1, object.colors.pipe, 0x000000, " ")
+	buffer.text(object.x + activeWidth - 1, object.y, object.colors.pipe, "⬤")
 
 	return object
 end
@@ -1106,12 +1103,22 @@ end
 
 ----------------------------------------- Switch object -----------------------------------------
 
-local function drawSwitch(switch)
-	local pipeWidth = switch.height * 2
+local function switchDraw(switch)
 	local pipePosition, backgroundColor
-	if switch.state then pipePosition, backgroundColor = switch.x + switch.width - pipeWidth, switch.colors.active else pipePosition, backgroundColor = switch.x, switch.colors.passive end
-	buffer.square(switch.x, switch.y, switch.width, switch.height, backgroundColor, 0x000000, " ")
-	buffer.square(pipePosition, switch.y, pipeWidth, switch.height, switch.colors.pipe, 0x000000, " ")
+	if switch.state then
+		pipePosition, backgroundColor = switch.x + switch.width - 2, switch.colors.active
+	else
+		pipePosition, backgroundColor = switch.x, switch.colors.passive
+	end
+
+	buffer.text(switch.x - 1, switch.y, backgroundColor, "⠰")
+	buffer.square(switch.x, switch.y, switch.width, 1, backgroundColor, 0x000000, " ")
+	buffer.text(switch.x + switch.width, switch.y, backgroundColor, "⠆")
+
+
+	buffer.text(pipePosition - 1, switch.y, switch.colors.pipe, "⠰")
+	buffer.square(pipePosition, switch.y, 2, 1, switch.colors.pipe, 0x000000, " ")
+	buffer.text(pipePosition + 2, switch.y, switch.colors.pipe, "⠆")
 	
 	return switch
 end
@@ -1130,7 +1137,7 @@ function GUI.switch(x, y, width, activeColor, passiveColor, pipeColor, state)
 	
 	switch.eventHandler = switchEventHandler
 	switch.colors = {active = activeColor, passive = passiveColor, pipe = pipeColor, value = valueColor}
-	switch.draw = drawSwitch
+	switch.draw = switchDraw
 	switch.state = state or false
 	
 	return switch
@@ -2381,6 +2388,10 @@ end
 
 -- local mainContainer = GUI.fullScreenContainer()
 -- mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0xFF8888))
+
+
+-- mainContainer:addChild(GUI.switch(2, 2, 8, 0xFFDB40, 0xBBBBBB, 0xFFFFFF, true))
+-- mainContainer:addChild(GUI.slider(2, 4, 36, 0xFFDB40, 0xBBBBBB, 0xFFFFFF, 0xBBBBBB, 0, 100, 50, true, "", "%"))
 
 -- local layout = mainContainer:addChild(GUI.layout(2, 2, 157, 48, 4, 4))
 -- mainContainer:addChild(GUI.panel(layout.localPosition.x, layout.localPosition.y, layout.width, layout.height, 0xFFFFFF)):moveBackward()
