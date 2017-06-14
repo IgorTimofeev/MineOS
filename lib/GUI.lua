@@ -278,7 +278,7 @@ function GUI.drawContainerContent(container)
 	local x1, y1, x2, y2 = getRectangleIntersection(R1X1, R1Y1, R1X2, R1Y2, container.x, container.y, container.x + container.width - 1, container.y + container.height - 1)
 
 	if x1 then
-		-- buffer.setDrawLimit(x1, y1, x2, y2)
+		buffer.setDrawLimit(x1, y1, x2, y2)
 		
 		for objectIndex = 1, #container.children do
 			if not container.children[objectIndex].hidden then
@@ -287,7 +287,7 @@ function GUI.drawContainerContent(container)
 			end
 		end
 
-		-- buffer.setDrawLimit(R1X1, R1Y1, R1X2, R1Y2)
+		buffer.setDrawLimit(R1X1, R1Y1, R1X2, R1Y2)
 	end
 
 	return container
