@@ -1,3 +1,35 @@
+| Содержание |
+| ----- |
+| [О библиотеке](https://github.com/IgorTimofeev/OpenComputers/blob/master/Documentation/doubleBuffering.md#О-библиотеке) |
+| [Установка](https://github.com/IgorTimofeev/OpenComputers/blob/master/Documentation/doubleBuffering.md#Установка) |
+| [Параметры библиотеки](https://github.com/IgorTimofeev/OpenComputers/blob/master/Documentation/doubleBuffering.md#Параметры-библиотеки) |
+| Методы библиотеки: |
+| [buffer.setResolution](https://github.com/IgorTimofeev/OpenComputers/blob/master/Documentation/doubleBuffering.md#buffersetresolution-width-height-) |
+| [buffer.draw](https://github.com/IgorTimofeev/OpenComputers/blob/master/Documentation/doubleBuffering.md#bufferdraw-force-) |
+| [buffer.setDrawLimit](https://github.com/IgorTimofeev/OpenComputers/blob/master/Documentation/doubleBuffering.md#buffersetdrawlimit-x1-y1-x2-y2-) |
+| [buffer.getDrawLimit](https://github.com/IgorTimofeev/OpenComputers/blob/master/Documentation/doubleBuffering.md#buffergetdrawlimit--int-x1-int-y1-int-x2-int-y2) |
+| [buffer.copy](https://github.com/IgorTimofeev/OpenComputers/blob/master/Documentation/doubleBuffering.md#buffercopy-x-y-width-height--table-pixeldata) |
+| [buffer.paste](https://github.com/IgorTimofeev/OpenComputers/blob/master/Documentation/doubleBuffering.md#bufferpaste-x-y-pixeldata-) |
+| Методы отрисовки: |
+| [buffer.set](https://github.com/IgorTimofeev/OpenComputers/blob/master/Documentation/doubleBuffering.md#bufferpaste-x-y-pixeldata-) |
+| [buffer.get](https://github.com/IgorTimofeev/OpenComputers/blob/master/Documentation/doubleBuffering.md#bufferpaste-x-y-pixeldata-) |
+| [buffer.square](https://github.com/IgorTimofeev/OpenComputers/blob/master/Documentation/doubleBuffering.md#buffersquare-x-y-width-height-background-foreground-symbol-transparency-) |
+| [buffer.clear](https://github.com/IgorTimofeev/OpenComputers/blob/master/Documentation/doubleBuffering.md#bufferclear-color-transparency-) |
+| [buffer.text](https://github.com/IgorTimofeev/OpenComputers/blob/master/Documentation/doubleBuffering.md#buffertext-x-y-color-text-transparency-) |
+| [Методы полупиксельной отрисовки:](https://github.com/IgorTimofeev/OpenComputers/blob/master/Documentation/doubleBuffering.md#Методы-полупиксельной-отрисовки) |
+| [buffer.semiPixelSet](https://github.com/IgorTimofeev/OpenComputers/blob/master/Documentation/doubleBuffering.md#buffersemipixelset-x-y-color-) |
+| [buffer.semiPixelSquare](https://github.com/IgorTimofeev/OpenComputers/blob/master/Documentation/doubleBuffering.md#buffersemipixelsquare-x-y-width-height-color-) |
+| [buffer.semiPixelLine](https://github.com/IgorTimofeev/OpenComputers/blob/master/Documentation/doubleBuffering.md#buffersemipixelline-x1-y1-x2-y2-color-) |
+| [buffer.semiPixelCircle](https://github.com/IgorTimofeev/OpenComputers/blob/master/Documentation/doubleBuffering.md#buffersemipixelcircle-xcenter-ycenter-radius-color-) |
+| [buffer.semiPixelBezierCurve](https://github.com/IgorTimofeev/OpenComputers/blob/master/Documentation/doubleBuffering.md#buffersemipixelbeziercurve-points-color-precision-) |
+| [Вспомогательные методы:](https://github.com/IgorTimofeev/OpenComputers/blob/master/Documentation/doubleBuffering.md#Вспомогательные-методы) |
+| [buffer.flush](https://github.com/IgorTimofeev/OpenComputers/blob/master/Documentation/doubleBuffering.md#bufferflush-width-height-) |
+| [buffer.getIndexByCoordinates](https://github.com/IgorTimofeev/OpenComputers/blob/master/Documentation/doubleBuffering.md#buffergetindexbycoordinates-x-y--int-index) |
+| [buffer.getCoordinatesByIndex](https://github.com/IgorTimofeev/OpenComputers/blob/master/Documentation/doubleBuffering.md#buffergetcoordinatesbyindex-index--int-x-int-y) |
+| [buffer.rawSet](https://github.com/IgorTimofeev/OpenComputers/blob/master/Documentation/doubleBuffering.md#bufferrawset-index-background-foreground-symbol-) |
+| [buffer.rawGet](https://github.com/IgorTimofeev/OpenComputers/blob/master/Documentation/doubleBuffering.md#bufferrawget-index--int-background-int-foreground-char-symbol) |
+| [Практический пример #1](https://github.com/IgorTimofeev/OpenComputers/blob/master/Documentation/doubleBuffering.md#Практический-пример-1) |
+
 
 О библиотеке
 ======
