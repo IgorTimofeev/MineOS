@@ -1,34 +1,34 @@
 | Содержание |
 | ----- |
-| [О библиотеке](https://github.com/IgorTimofeev/OpenComputers/blob/master/Documentation/GUI.md#О-библиотеке) |
-| [Установка](https://github.com/IgorTimofeev/OpenComputers/blob/master/Documentation/GUI.md#Установка) |
-| [Standalone-методы](https://github.com/IgorTimofeev/OpenComputers/blob/master/Documentation/GUI.md#standalone-методы) |
-| [GUI.contextMenu](https://github.com/IgorTimofeev/OpenComputers/blob/master/Documentation/GUI.md#guicontextmenu-x-y--table-contextmenu) |
-| [GUI.error](https://github.com/IgorTimofeev/OpenComputers/blob/master/Documentation/GUI.md#guierror-text-) |
-| [GUI.container](https://github.com/IgorTimofeev/OpenComputers/blob/master/Documentation/GUI.md#guicontainer-x-y-width-height--table-container) |
-| [GUI.layout](https://github.com/IgorTimofeev/OpenComputers/blob/master/Documentation/GUI.md#guilayout-x-y-width-height-columns-rows--table-container) |
-| [Методы для создания виджетов](https://github.com/IgorTimofeev/OpenComputers/blob/master/Documentation/GUI.md#Методы-для-создания-виджетов) |
-| [GUI.object](https://github.com/IgorTimofeev/OpenComputers/blob/master/Documentation/GUI.md#guiobject-x-y-width-height--table-object) |
-| [GUI.panel](https://github.com/IgorTimofeev/OpenComputers/blob/master/Documentation/GUI.md#guipanel-x-y-width-height-color-transparency--table-panel) |
-| [GUI.button](https://github.com/IgorTimofeev/OpenComputers/blob/master/Documentation/GUI.md#guibutton-x-y-width-height-buttoncolor-textcolor-buttonpressedcolor-textpressedcolor-text--table-button) |
-| [GUI.label](https://github.com/IgorTimofeev/OpenComputers/blob/master/Documentation/GUI.md#guilabel-x-y-width-height-textcolor-text--table-label) |
-| [GUI.inputField](https://github.com/IgorTimofeev/OpenComputers/blob/master/Documentation/GUI.md#guiinputfield-x-y-width-height-backgroundcolor-textcolor-placeholdertextcolor-backgroundfocusedcolor-textfocusedcolor-text-placeholdertext-erasetextonfocus-textmask--table-inputfield) |
-| [GUI.slider](https://github.com/IgorTimofeev/OpenComputers/blob/master/Documentation/GUI.md#guislider-x-y-width-primarycolor-secondarycolor-pipecolor-valuecolor-minimumvalue-maximumvalue-value-showcornervalues-currentvalueprefix-currentvaluepostfix--table-slider) |
-| [GUI.switch](https://github.com/IgorTimofeev/OpenComputers/blob/master/Documentation/GUI.md#guiswitch-x-y-width-primarycolor-secondarycolor-pipecolor-state--table-switch) |
-| [GUI.colorSelector](https://github.com/IgorTimofeev/OpenComputers/blob/master/Documentation/GUI.md#guicolorselector-x-y-width-height-color-text--table-colorselector) |
-| [GUI.comboBox](https://github.com/IgorTimofeev/OpenComputers/blob/master/Documentation/GUI.md#guicombobox-x-y-width-elementheight-backgroundcolor-textcolor-arrowbackgroundcolor-arrowtextcolor--table-combobox) |
-| [GUI.menu](https://github.com/IgorTimofeev/OpenComputers/blob/master/Documentation/GUI.md#guimenu-x-y-width-backgroundcolor-textcolor-backgroundpressedcolor-textpressedcolor-backgroundtransparency--table-menu) |
-| [GUI.image](https://github.com/IgorTimofeev/OpenComputers/blob/master/Documentation/GUI.md#guiimage-x-y-loadedimage--table-image) |
-| [GUI.progressBar](https://github.com/IgorTimofeev/OpenComputers/blob/master/Documentation/GUI.md#guiprogressbar-x-y-width-primarycolor-secondarycolor-valuecolor-value-thin-showvalue-valueprefix-valuepostfix--table-progressbar) |
-| [GUI.scrollBar](https://github.com/IgorTimofeev/OpenComputers/blob/master/Documentation/GUI.md#guiscrollbar-x-y-width-height-backgroundcolor-foregroundcolor-minimumvalue-maximumvalue-value-shownvaluecount-onscrollvalueincrement-thinhorizontalmode--table-scrollbar) |
-| [GUI.textBox](https://github.com/IgorTimofeev/OpenComputers/blob/master/Documentation/GUI.md#guitextboxx-y-width-height-backgroundcolor-textcolor-lines-currentline-horizontaloffset-verticaloffset-table-textbox) |
-| [GUI.treeView](https://github.com/IgorTimofeev/OpenComputers/blob/master/Documentation/GUI.md#guitreeview-x-y-width-height-backgroundcolor-textcolor-selectionbackgroundcolor-selectiontextcolor-arrowcolor-scrollbarprimarycolor-scrollbarsecondarycolor-workpath--table-treeview) |
-| [GUI.codeView](https://github.com/IgorTimofeev/OpenComputers/blob/master/Documentation/GUI.md#guicodeview-x-y-width-height-lines-fromsymbol-fromline-maximumlinelength-selections-highlights-highlightluasyntax-indentationwidth--table-codeview) |
-| [GUI.chart](https://github.com/IgorTimofeev/OpenComputers/blob/master/Documentation/GUI.md#guichart-x-y-width-height-axiscolor-axisvaluecolor-axishelperscolor-chartcolor-xaxisvalueinterval-yaxisvalueinterval-xaxispostfix-yaxispostfix-fillchartarea-values--table-chart) |
-| [Практический пример #1](https://github.com/IgorTimofeev/OpenComputers/blob/master/Documentation/GUI.md#Практический-пример-1) |
-| [Практический пример #2](https://github.com/IgorTimofeev/OpenComputers/blob/master/Documentation/GUI.md#Практический-пример-2) |
-| [Практический пример #3](https://github.com/IgorTimofeev/OpenComputers/blob/master/Documentation/GUI.md#Практический-пример-3) |
-| [Практический пример #4](https://github.com/IgorTimofeev/OpenComputers/blob/master/Documentation/GUI.md#Практический-пример-4) |
+| [О библиотеке](#О-библиотеке) |
+| [Установка](#Установка) |
+| [Standalone-методы](#standalone-методы) |
+| [GUI.contextMenu](#guicontextmenu-x-y--table-contextmenu) |
+| [GUI.error](#guierror-text-) |
+| [GUI.container](#guicontainer-x-y-width-height--table-container) |
+| [GUI.layout](#guilayout-x-y-width-height-columns-rows--table-container) |
+| [Методы для создания виджетов](#Методы-для-создания-виджетов) |
+| [GUI.object](#guiobject-x-y-width-height--table-object) |
+| [GUI.panel](#guipanel-x-y-width-height-color-transparency--table-panel) |
+| [GUI.button](#guibutton-x-y-width-height-buttoncolor-textcolor-buttonpressedcolor-textpressedcolor-text--table-button) |
+| [GUI.label](#guilabel-x-y-width-height-textcolor-text--table-label) |
+| [GUI.inputField](#guiinputfield-x-y-width-height-backgroundcolor-textcolor-placeholdertextcolor-backgroundfocusedcolor-textfocusedcolor-text-placeholdertext-erasetextonfocus-textmask--table-inputfield) |
+| [GUI.slider](#guislider-x-y-width-primarycolor-secondarycolor-pipecolor-valuecolor-minimumvalue-maximumvalue-value-showcornervalues-currentvalueprefix-currentvaluepostfix--table-slider) |
+| [GUI.switch](#guiswitch-x-y-width-primarycolor-secondarycolor-pipecolor-state--table-switch) |
+| [GUI.colorSelector](#guicolorselector-x-y-width-height-color-text--table-colorselector) |
+| [GUI.comboBox](#guicombobox-x-y-width-elementheight-backgroundcolor-textcolor-arrowbackgroundcolor-arrowtextcolor--table-combobox) |
+| [GUI.menu](#guimenu-x-y-width-backgroundcolor-textcolor-backgroundpressedcolor-textpressedcolor-backgroundtransparency--table-menu) |
+| [GUI.image](#guiimage-x-y-loadedimage--table-image) |
+| [GUI.progressBar](#guiprogressbar-x-y-width-primarycolor-secondarycolor-valuecolor-value-thin-showvalue-valueprefix-valuepostfix--table-progressbar) |
+| [GUI.scrollBar](#guiscrollbar-x-y-width-height-backgroundcolor-foregroundcolor-minimumvalue-maximumvalue-value-shownvaluecount-onscrollvalueincrement-thinhorizontalmode--table-scrollbar) |
+| [GUI.textBox](#guitextboxx-y-width-height-backgroundcolor-textcolor-lines-currentline-horizontaloffset-verticaloffset-table-textbox) |
+| [GUI.treeView](#guitreeview-x-y-width-height-backgroundcolor-textcolor-selectionbackgroundcolor-selectiontextcolor-arrowcolor-scrollbarprimarycolor-scrollbarsecondarycolor-workpath--table-treeview) |
+| [GUI.codeView](#guicodeview-x-y-width-height-lines-fromsymbol-fromline-maximumlinelength-selections-highlights-highlightluasyntax-indentationwidth--table-codeview) |
+| [GUI.chart](#guichart-x-y-width-height-axiscolor-axisvaluecolor-axishelperscolor-chartcolor-xaxisvalueinterval-yaxisvalueinterval-xaxispostfix-yaxispostfix-fillchartarea-values--table-chart) |
+| [Практический пример #1](#Практический-пример-1) |
+| [Практический пример #2](#Практический-пример-2) |
+| [Практический пример #3](#Практический-пример-3) |
+| [Практический пример #4](#Практический-пример-4) |
 
 
 О библиотеке
