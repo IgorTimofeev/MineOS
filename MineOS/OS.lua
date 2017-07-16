@@ -475,7 +475,7 @@ local function createOSWindow()
 
 	-- Menu
 	MineOSCore.OSMainContainer.menu = MineOSCore.OSMainContainer:addChild(GUI.menu(1, 1, MineOSCore.OSMainContainer.width, MineOSCore.OSSettings.interfaceColor or colors.interface, 0x444444, 0x3366CC, 0xFFFFFF, colors.topBarTransparency))
-	local item1 = MineOSCore.OSMainContainer.menu:addItem("MineOS", 0x000000)
+	local item1 = MineOSCore.OSMainContainer.menu:addItem("⬢", 0x000000)
 	item1.onTouch = function()
 		local menu = GUI.contextMenu(item1.x, item1.y + 1)
 		menu:addItem(MineOSCore.localization.updates).onTouch = function()
