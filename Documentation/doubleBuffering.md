@@ -323,7 +323,7 @@ buffer.image(1, 1, image.load("/MineOS/Pictures/Raspberry.pic"))
 -- Заполняем буфер черным цветом с прозрачностью 60%, чтобы малина на фоне  была чуть темнее
 buffer.clear(0x0, 60)
 
--- Рисуем 10 квадратиков, заполненных рандомным цветом
+-- Рисуем 10 квадратиков, заполненных случайным цветом
 local x, y, xStep, yStep = 2, 2, 4, 2
 for i = 1, 10 do
 	buffer.square(x, y, 6, 3, math.random(0x0, 0xFFFFFF), 0x0, " ")
