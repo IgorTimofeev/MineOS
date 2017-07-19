@@ -19,7 +19,7 @@ GUI - многофункциональная графическая библио
 | ------ | ------ |
 | *[GUI](https://github.com/IgorTimofeev/OpenComputers/blob/master/lib/GUI.lua)* | Данная библиотека |
 | *[advancedLua](https://github.com/IgorTimofeev/OpenComputers/blob/master/lib/advancedLua.lua)* | Дополнение стандартных библиотек Lua множеством функций: быстрой сериализацией таблиц, переносом строк, методами обработки бинарных данных и т.д. |
-| *[doubleBuffering](https://github.com/IgorTimofeev/OpenComputers/blob/master/lib/doubleBuffering.lua)* | Низкоуровневая библиотека двойной буферизации для максималььно быстрой отрисовки графики с поддержкой полу-пиксельных методов |
+| *[doubleBuffering](https://github.com/IgorTimofeev/OpenComputers/blob/master/lib/doubleBuffering.lua)* | Низкоуровневая библиотека двойной буферизации для максималььно быстрой отрисовки графики с поддержкой методов полупиксельной отрисовки |
 | *[color](https://github.com/IgorTimofeev/OpenComputers/blob/master/lib/color.lua)* | Низкоуровневая библиотека для работы с цветом, предоставляющая методы получения цветовых каналов, различные палитры и конвертацию цвета в 8-битный формат |
 | *[image](https://github.com/IgorTimofeev/OpenComputers/blob/master/lib/image.lua)* | Библиотека, реализующая стандарт изображений для OpenComputers и методы их обработки: транспонирование, обрезку, поворот, отражение и т.д. |
 | *[OCIF](https://github.com/IgorTimofeev/OpenComputers/blob/master/lib/ImageFormatModules/OCIF.lua)* | Модуль формата изображения OCIF (OpenComputers Image Format) для библиотеки image, написанный с учетом особенностей мода и реализующий эффективное сжатие пиксельных данных |
