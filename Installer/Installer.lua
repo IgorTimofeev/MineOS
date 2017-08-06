@@ -52,8 +52,8 @@ end
 ------------------------------------------------------------------------------------------------------------------------------------
 
 local paths = {
-	applicationList = "/MineOS/System/OS/Applications.cfg",
-	OSSettings = "/MineOS/System/OS/OSSettings.cfg",
+	applicationList = "/MineOS/System/Applications.cfg",
+	OSSettings = "/MineOS/System/Settings.cfg",
 }
 
 local urls = {
@@ -226,8 +226,8 @@ stages[3] = function()
 
 	stageContainer.nextStageButton.disabled = true
 	local switch = addSwitchToStage(41, 22, 0x666666, localization.terms, false)
-	switch.onStateChanged = function(state)
-		stageContainer.nextStageButton.disabled = not state
+	switch.onStateChanged = function()
+		stageContainer.nextStageButton.disabled = not switch.state
 		mainContainer:draw()
 		buffer.draw()
 	end
@@ -297,6 +297,9 @@ stages[5] = function()
 	stageContainer:addChild(GUI.label(1, 22, stageContainer.width, 1, 0x666666, localization.needToReboot)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
 	stageContainer:addChild(GUI.adaptiveRoundedButton(math.floor(stageContainer.width / 2 - (unicode.len(localization.reboot) + 4) / 2), stageContainer.height - 4, 2, 1, 0xAAAAAA, 0xDDDDDD, 0x777777, 0xDDDDDD, localization.reboot)).onTouch = function()
 		OSSettings.wallpaper = stageContainer.downloadWallpapersSwitch.state and "/MineOS/Pictures/Space.pic" or nil
+		OSSettings.wallpaperEnabled = true
+		OSSettings.transparencyEnabled = true
+		OSSettings.showApplicationIcons = true
 		OSSettings.screensaver = "Matrix"
 		OSSettings.screensaverDelay = 20
 		OSSettings.showHelpOnApplicationStart = stageContainer.showApplicationsHelpSwitch.state
