@@ -97,7 +97,7 @@ function web.downloadMineOSApplication(application, language)
 
 			local file, reason = io.open(path, "w")
 			if file then
-				file:write("return \"" .. application.path .. ".app/" .. "\"")
+				file:write(application.path .. ".app/")
 				file:close()
 			else
 				print(reason)
