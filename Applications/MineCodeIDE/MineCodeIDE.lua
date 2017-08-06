@@ -1,13 +1,14 @@
 
 ---------------------------------------------------- Libraries ----------------------------------------------------
 
--- "/MineOS/Applications/MineCode IDE.app/MineCode IDE.lua" open /OS.lua
+-- "/MineOS/Applications/MineCode IDE.app/MineCode IDE.lua" -o /OS.lua
 
 -- package.loaded.syntax = nil
 -- package.loaded.ECSAPI = nil
 -- package.loaded.GUI = nil
 -- package.loaded.MineOSCore = nil
 
+local args = {...}
 require("advancedLua")
 local computer = require("computer")
 local component = require("component")
@@ -25,8 +26,6 @@ local palette = require("palette")
 local term = require("term")
 
 ---------------------------------------------------- Constants ----------------------------------------------------
-
-local args = {...}
 
 local about = {
 	"MineCode IDE",
@@ -128,7 +127,6 @@ local findStartFrom
 local clipboard
 local breakpointLines
 local lastErrorLine
-local lastClickUptime = computer.uptime()
 local autocompleteDatabase
 
 ------------------------------------------------------------------------------------------------------------------
@@ -1353,7 +1351,7 @@ end
 
 local function createMainContainer()
 	mainContainer = GUI.fullScreenContainer()
-
+	
 	mainContainer.codeView = mainContainer:addChild(GUI.codeView(1, 1, 1, 1, {""}, 1, 1, 1, {}, {}, config.highlightLuaSyntax, 2))
 	mainContainer.codeView.scrollBars.vertical.onTouch = function()
 		mainContainer.codeView.fromLine = mainContainer.codeView.scrollBars.vertical.value
@@ -1655,14 +1653,16 @@ local function createMainContainer()
 				createEditOrRightClickMenu(eventData[3], eventData[4])
 			else
 				setCursorPositionAndClearSelection(convertScreenCoordinatesToTextPosition(eventData[3], eventData[4]))
-
-				local newUptime = computer.uptime()
-				if newUptime - lastClickUptime <= config.doubleClickDelay then selectWord() end
-				lastClickUptime = newUptime
 			end
 
 			cursor.blinkState = true
 			tick()
+		elseif eventData[1] == "double_touch" then
+			cursor.blinkState = true
+			selectWord()
+			
+			mainContainer:draw()
+			buffer.draw()
 		elseif eventData[1] == "drag" then
 			if eventData[5] ~= 1 then
 				mainContainer.codeView.selections[1] = mainContainer.codeView.selections[1] or {from = {}, to = {}}
@@ -1830,8 +1830,8 @@ updateTitle()
 updateRAMProgressBar()
 mainContainer:draw()
 
-if args[1] == "open" and fs.exists(args[2] or "") then
-	loadFile(args[2])
+if args[1] and fs.exists(args[1]) then
+	loadFile(args[1])
 else
 	newFile()
 end

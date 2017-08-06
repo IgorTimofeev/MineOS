@@ -7,6 +7,13 @@
 local computer = require("computer")
 
 local event = {
+	lastTouch = {
+		x = 0,
+		y = 0,
+		button = 0,
+		uptime = 0
+	},
+	doubleTouchInterval = 0.3,
 	push = computer.pushSignal,
 	handlers = {},
 	interruptingEnabled = true,
@@ -166,8 +173,7 @@ local function eventTick(timeout)
 				shouldInterrupt = false
 			end
 		end
-
-		-- Checking interruption delays
+		
 		if shouldInterrupt and uptime - lastInterrupt > event.interruptingDelay then
 			lastInterrupt = uptime
 			error("interrupted", 0)
@@ -188,6 +194,10 @@ local function getNearestHandlerTriggerTime()
 	return nearestTriggerTime
 end
 
+function event.skip(signalType)
+	event.skipSignalType = signalType
+end
+
 function event.pull(...)
 	local args = {...}
 
@@ -202,10 +212,28 @@ function event.pull(...)
 	while computer.uptime() <= deadline do
 		local eventData = eventTick((getNearestHandlerTriggerTime() or deadline) - computer.uptime())
 		if eventData[1] and (not signalType or signalType == eventData[1]) then
-			return table.unpack(eventData)
+			if eventData[1] == event.skipSignalType then
+				event.skipSignalType = nil
+			else
+				return table.unpack(eventData)
+			end
 		end
 	end
 end
+
+-------------------------------------------------------------------------------
+
+event.listen("touch", function(...)
+	local eventData = {...}
+	local uptime = computer.uptime()
+	
+	if event.lastTouch.x == eventData[3] and event.lastTouch.y == eventData[4] and event.lastTouch.button == eventData[5] and uptime - event.lastTouch.uptime <= event.doubleTouchInterval then
+		event.skip("touch")
+		computer.pushSignal("double_touch", table.unpack(eventData, 2))
+	end
+
+	event.lastTouch.x, event.lastTouch.y, event.lastTouch.button, event.lastTouch.uptime = eventData[3], eventData[4], eventData[5], uptime
+end)
 
 -------------------------------------------------------------------------------
 

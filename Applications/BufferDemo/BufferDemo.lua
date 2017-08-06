@@ -16,7 +16,7 @@ buffer.start()
 local function drawBackground()
 	--Заполним весь наш экран цветом фона 0x262626, цветом текста 0xFFFFFF и символом " "
 	if not risovatKartinku then
-		buffer.square(1, 1, buffer.screen.width, buffer.screen.height, currentBackground, 0xFFFFFF, " ")
+		buffer.square(1, 1, buffer.width, buffer.height, currentBackground, 0xFFFFFF, " ")
 	else
 		buffer.image(1, 1, fon)
 	end
@@ -119,7 +119,7 @@ while true do
 			drawWindow(xWindow, yWindow)
 			buffer.draw()
 		elseif e[4] == 28 then
-			buffer.square(1, 1, buffer.screen.width, buffer.screen.height, 0x262626, 0xFFFFFF, " ")
+			buffer.square(1, 1, buffer.width, buffer.height, 0x262626, 0xFFFFFF, " ")
 			buffer.draw()
 			return
 		elseif e[4] == 57 then

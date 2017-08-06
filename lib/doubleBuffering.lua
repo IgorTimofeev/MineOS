@@ -236,27 +236,31 @@ function buffer.text(x, y, textColor, text, transparency)
 end
 
 -- Отрисовка изображения
-function buffer.image(x, y, picture)
+function buffer.image(x, y, picture, blendForeground)
 	local xPos, xEnd, bufferIndexStepOnReachOfImageWidth = x, x + picture[1] - 1, (buffer.width - picture[1]) * 3
-	local bufferIndex = buffer.getIndexByCoordinates(x, y)
-	local imageIndexPlus2, imageIndexPlus3
+	local bufferIndex, bufferIndexPlus1 = buffer.getIndexByCoordinates(x, y)
+	local imageIndexPlus1, imageIndexPlus2, imageIndexPlus3
 
 	for imageIndex = 3, #picture, 4 do
 		if xPos >= buffer.drawLimit.x1 and y >= buffer.drawLimit.y1 and xPos <= buffer.drawLimit.x2 and y <= buffer.drawLimit.y2 then
-			imageIndexPlus2, imageIndexPlus3 = imageIndex + 2, imageIndex + 3
+			bufferIndexPlus1, imageIndexPlus1, imageIndexPlus2, imageIndexPlus3 = bufferIndex + 1, imageIndex + 1, imageIndex + 2, imageIndex + 3
 			
 			if picture[imageIndexPlus2] == 0x00 then
 				buffer.newFrame[bufferIndex] = picture[imageIndex]
 				buffer.newFrame[bufferIndex + 1] = picture[imageIndex + 1]
-				buffer.newFrame[bufferIndex + 2] = picture[imageIndexPlus3]
 			elseif picture[imageIndexPlus2] > 0x00 and picture[imageIndexPlus2] < 0xFF then
 				buffer.newFrame[bufferIndex] = color.blend(buffer.newFrame[bufferIndex], picture[imageIndex], picture[imageIndexPlus2])
-				buffer.newFrame[bufferIndex + 1] = picture[imageIndex + 1]
-				buffer.newFrame[bufferIndex + 2] = picture[imageIndexPlus3]
+				
+				if blendForeground then
+					buffer.newFrame[bufferIndex + 1] = color.blend(buffer.newFrame[bufferIndexPlus1], picture[imageIndexPlus1], picture[imageIndexPlus2])
+				else
+					buffer.newFrame[bufferIndex + 1] = picture[imageIndex + 1]
+				end
 			elseif picture[imageIndexPlus2] == 0xFF and picture[imageIndexPlus3] ~= " " then
 				buffer.newFrame[bufferIndex + 1] = picture[imageIndex + 1]
-				buffer.newFrame[bufferIndex + 2] = picture[imageIndexPlus3]
 			end
+
+			buffer.newFrame[bufferIndex + 2] = picture[imageIndexPlus3]
 		end
 		
 		xPos, bufferIndex = xPos + 1, bufferIndex + 3

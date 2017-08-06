@@ -15,7 +15,7 @@ local GUI = require("GUI")
 
 if not component.isAvailable("printer3d") then GUI.error("This program requires at least one 3D-printer"); return end
 local args, options = require("shell").parse(...)
-local startImagePath = args[1] == "open" and args[2] or "/MineOS/System/OS/Icons/Steve.pic"
+local startImagePath = args[1] == "open" and args[2] or "/MineOS/System/Icons/Steve.pic"
 local configPath = "/MineOS/System/PrintImage/Config.cfg"
 local panelWidth = 34
 local mainContainer

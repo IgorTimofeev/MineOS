@@ -434,8 +434,8 @@ model = {}
 fixModelArray()
 
 local args = {...}
-if args[1] == "open" or args[1] == "-o" then
-	open(args[2])
+if args[1] and fs.exists(args[1]) then
+	open(args[1])
 end
 
 drawAll()

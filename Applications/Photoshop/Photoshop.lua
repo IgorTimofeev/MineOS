@@ -907,8 +907,8 @@ end
 drawAll()
 
 --Открываем файлы по аргументам программы
-if args[1] == "o" or args[1] == "open" or args[1] == "-o" or args[1] == "load" then
-	loadImageFromFile(args[2])
+if args[1] and fs.exists(args[1]) then
+	loadImageFromFile(args[1])
 else
 	new()
 end
@@ -1029,9 +1029,15 @@ while true do
 					currentInstrument = key
 					drawLeftBar(); buffer.draw()
 					if instruments[currentInstrument] == "S" then
-						local action = GUI.contextMenu(obj["Instruments"][key][3] + 1, obj["Instruments"][key][2], {localization.line}, {localization.ellipse}, {localization.rectangle}, {localization.polygon}, {localization.border}):show()
-						currentShape = action or localization.line
+						local menu = GUI.contextMenu(obj["Instruments"][key][3] + 1, obj["Instruments"][key][2])
+						menu:addItem(localization.line)
+						menu:addItem(localization.ellipse)
+						menu:addItem(localization.rectangle)
+						menu:addItem(localization.polygon)
+						menu:addItem(localization.border)
 						
+						local action = menu:show()
+						currentShape = action or localization.line
 						if currentShape == localization.polygon then
 							local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true,
 								{"EmptyLine"},
@@ -1062,20 +1068,33 @@ while true do
 				buffer.draw()
 				local action
 				if object.text == localization.file then
-					action = GUI.contextMenu(object.x, object.y + 1, {localization.new, false, "^N"}, {localization.open, false, "^O"}, {localization.createFromString}, "-", {localization.save, (savePath == nil), "^S"}, {localization.saveAs}, "-", {localization.exit}):show()
+					local menu = GUI.contextMenu(object.x, object.y + 1)
+					
+					menu:addItem(localization.new, false, "^N")
+					menu:addItem(localization.open, false, "^O")
+					menu:addItem(localization.createFromString)
+					menu:addSeparator()
+					menu:addItem(localization.save, savePath == nil, "^S")
+					menu:addItem(localization.saveAs)
+					menu:addSeparator()
+					menu:addItem(localization.exit)
+					
+					action = menu:show()
 				elseif object.text == localization.image then
-					action = GUI.contextMenu(object.x, object.y + 1,
-						-- {localization.crop},
-						{localization.expand},
-						-- "-",
-						-- {localization.rotateBy90},
-						-- {localization.rotateBy180},
-						"-",
-						{localization.flipHorizontal},
-						{localization.flipVertical}
-					):show()
+					local menu = GUI.contextMenu(object.x, object.y + 1)
+					
+					menu:addItem(localization.expand)
+					menu:addSeparator()
+					menu:addItem(localization.flipHorizontal)
+					menu:addItem(localization.flipVertical)
+					
+					action = menu:show()
 				elseif object.text == localization.view then
-					action = GUI.contextMenu(object.x, object.y + 1, {localization.transparencyPad}):show()
+					local menu = GUI.contextMenu(object.x, object.y + 1)
+
+					menu:addItem(localization.transparencyPad)
+					
+					action = menu:show()
 				elseif object.text == localization.about then
 					ecs.universalWindow("auto", "auto", 36, 0xeeeeee, true, {"EmptyLine"}, {"CenterText", 0x880000, photoshopVersion}, {"EmptyLine"}, {"CenterText", 0x262626, localization.developers}, {"CenterText", 0x555555, "Тимофеев Игорь"}, {"CenterText", 0x656565, "vk.com/id7799889"}, {"CenterText", 0x656565, "Трифонов Глеб"}, {"CenterText", 0x656565, "vk.com/id88323331"}, {"EmptyLine"}, {"CenterText", 0x262626, localization.testers}, {"CenterText", 0x656565, "Шестаков Тимофей"}, {"CenterText", 0x656565, "vk.com/id113499693"}, {"CenterText", 0x656565, "Вечтомов Роман"}, {"CenterText", 0x656565, "vk.com/id83715030"}, {"CenterText", 0x656565, "Омелаенко Максим"},  {"CenterText", 0x656565, "vk.com/paladincvm"}, {"EmptyLine"},{"Button", {0xbbbbbb, 0xffffff, "OK"}})
 				elseif object.text == localization.hotkeys then
@@ -1259,16 +1278,17 @@ while true do
 			if ecs.clickedAtArea(e[3], e[4], sizes.xStartOfImage, sizes.yStartOfImage, sizes.xEndOfImage, sizes.yEndOfImage) then
 				
 				if instruments[currentInstrument] == "M" and selection then
-					local action = GUI.contextMenu(e[3], e[4],
-						{localization.deselect},
-						{localization.crop},
-						"-",
-						{localization.fill},
-						{localization.border},
-						"-",
-						{localization.clear}
-					):show()
+					local menu = GUI.contextMenu(e[3], e[4])
+					
+					menu:addItem(localization.deselect)
+					menu:addItem(localization.crop)
+					menu:addSeparator()
+					menu:addItem(localization.fill)
+					menu:addItem(localization.border)
+					menu:addSeparator()
+					menu:addItem(localization.clear)
 
+					action = menu:show()
 					if action == localization.deselect then
 						selection = nil
 						drawAll()

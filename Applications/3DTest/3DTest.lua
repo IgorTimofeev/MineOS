@@ -418,11 +418,11 @@ mainContainer.toolbar.zBufferSwitch = mainContainer.toolbar:addChild(GUI.switch(
 
 
 local function calculateLightComboBox()
-	mainContainer.toolbar.lightSelectComboBox.items = {}
+	mainContainer.toolbar.lightSelectComboBox.dropDownMenu.itemsContainer.children = {}
 	for i = 1, #scene.lights do
 		mainContainer.toolbar.lightSelectComboBox:addItem(tostring(i))
 	end
-	mainContainer.toolbar.lightSelectComboBox.selectedItem = #mainContainer.toolbar.lightSelectComboBox.items
+	mainContainer.toolbar.lightSelectComboBox.selectedItem = #mainContainer.toolbar.lightSelectComboBox.dropDownMenu.itemsContainer.children
 	mainContainer.toolbar.lightIntensitySlider.value = scene.lights[mainContainer.toolbar.lightSelectComboBox.selectedItem].intensity * 100
 	mainContainer.toolbar.lightEmissionSlider.value = scene.lights[mainContainer.toolbar.lightSelectComboBox.selectedItem].emissionDistance
 end

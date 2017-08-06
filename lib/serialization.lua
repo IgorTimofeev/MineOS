@@ -9,7 +9,7 @@ function serialization.serialize(variable, ...)
 	if variableType == "table" then
 		return table.serialize(variable, ...)
 	else
-		return tostring(variableType)
+		return tostring(variable)
 	end
 end
 

@@ -1,6 +1,6 @@
 
 --[[
-
+	
 	Advanced Lua Library v1.1 by ECS
 
 	This library extends a lot of default Lua methods
@@ -70,7 +70,7 @@ end
 -- Split nubmer to it's own bytes with specified count of bytes (0xAABB, 5 -> {0x00, 0x00, 0x00, 0xAA, 0xBB})
 function bit32.numberToFixedSizeByteArray(number, size)
 	local byteArray, counter = {}, 0
-
+	
 	repeat
 		table.insert(byteArray, 1, bit32.band(number, 0xFF))
 		number = bit32.rshift(number, 8)
@@ -146,31 +146,26 @@ end
 
 ---------------------------------------------- Filesystem extensions ------------------------------------------------------------------------
 
--- function filesystem.path(path)
--- 	return string.match(path, "^(.+%/).") or ""
--- end
+function filesystem.path(path)
+	return path:match("^(.+%/).") or ""
+end
 
--- function filesystem.name(path)
--- 	return string.match(path, "%/?([^%/]+)%/?$")
--- end
-
-local function getNameAndExtension(path)
-	local fileName, extension = string.match(path, "^(.+)(%.[^%/]+)%/?$")
-	return (fileName or path), extension
+function filesystem.name(path)
+	return path:match("%/?([^%/]+)%/?$")
 end
 
 function filesystem.extension(path)
-	local fileName, extension = getNameAndExtension(path)
-	return extension
+	return path:match("[^%/]+(%.[^%/]+)%/?$")
 end
 
 function filesystem.hideExtension(path)
-	local fileName, extension = getNameAndExtension(path)
-	return fileName
+	return path:match("(.+)%..+") or path
 end
 
 function filesystem.isFileHidden(path)
-	if string.match(path, "^%..+$") then return true end
+	if path:match("^%..+$") then
+		return true
+	end
 	return false
 end
 
@@ -212,7 +207,7 @@ function filesystem.sortedList(path, sortingMethod, showHiddenFiles)
 					currentExtensionList, currentExtension = {fileList[i][1]}, fileList[i][2]
 				end
 			end
-
+			
 			table.sort(currentExtensionList, function(a, b) return a < b end)
 			for j = 1, #currentExtensionList do
 				table.insert(sortedFileList, currentExtensionList[j])
@@ -256,7 +251,7 @@ function filesystem.directorySize(path)
 			size = size + filesystem.size(path .. file)
 		end
 	end
-
+	
 	return size
 end
 
@@ -265,7 +260,7 @@ end
 local function doSerialize(array, prettyLook, indentationSymbol, indentationSymbolAdder, equalsSymbol, currentRecusrionStack, recursionStackLimit)
 	local text, keyType, valueType, stringValue = {"{"}
 	table.insert(text, (prettyLook and "\n" or nil))
-
+	
 	for key, value in pairs(array) do
 		keyType, valueType, stringValue = type(key), type(value), tostring(value)
 
@@ -275,7 +270,7 @@ local function doSerialize(array, prettyLook, indentationSymbol, indentationSymb
 			table.insert(text, (keyType == "string" and table.concat({"\"", key, "\""}) or key))
 			table.insert(text, "]")
 			table.insert(text, equalsSymbol)
-
+			
 			if valueType == "number" or valueType == "boolean" or valueType == "nil" then
 				table.insert(text, stringValue)
 			elseif valueType == "string" or valueType == "function" then
@@ -290,7 +285,7 @@ local function doSerialize(array, prettyLook, indentationSymbol, indentationSymb
 					table.insert(text, "...")
 				end
 			end
-
+			
 			table.insert(text, ",")
 			table.insert(text, (prettyLook and "\n" or nil))
 		end
@@ -421,7 +416,7 @@ end
 
 function table.indexOf(t, object)
 	for i = 1, #t do
-		if t[i] == object then
+		if t[i] == object then 
 			return i
 		end
 	end
@@ -464,7 +459,7 @@ function string.optimizeForURLRequests(code)
 		end)
 		code = string.gsub(code, " ", "+")
 	end
-	return code
+	return code 
 end
 
 function string.unicodeFind(str, pattern, init, plain)
@@ -475,9 +470,9 @@ function string.unicodeFind(str, pattern, init, plain)
 			init = #unicode.sub(str, 1, init - 1) + 1
 		end
 	end
-
+	
 	a, b = string.find(str, pattern, init, plain)
-
+	
 	if a then
 		local ap, bp = str:sub(1, a - 1), str:sub(a,b)
 		a = unicode.len(ap) + 1
@@ -532,7 +527,7 @@ function string.wrap(strings, limit)
 						strings[currentString + 1] = right .. " " .. strings[currentString + 1]
 					else
 						strings[currentString + 1] = right
-					end
+					end 
 				end
 				break
 			else
@@ -583,3 +578,5 @@ end
 ------------------------------------------------------------------------------------------------------------------
 
 return {loaded = true}
+
+

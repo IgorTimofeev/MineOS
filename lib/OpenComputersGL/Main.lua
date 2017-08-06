@@ -49,21 +49,34 @@ OCGL.lines = {}
 OCGL.floatingTexts = {}
 OCGL.lights = {}
 
+local sinTable, cosTable = {}, {}
+
+-------------------------------------------------------- Sin / Cos optimization --------------------------------------------------------
+
+function OCGL.sin(angle)
+	sinTable[angle] = sinTable[angle] or math.sin(angle)
+	return sinTable[angle]
+end
+
+function OCGL.cos(angle)
+	cosTable[angle] = cosTable[angle] or math.cos(angle)
+	return cosTable[angle]
+end
+
 -------------------------------------------------------- Vertex field methods --------------------------------------------------------
 
-
 function OCGL.rotateVectorRelativeToXAxis(vector, angle)
-	local sin, cos = math.sin(angle), math.cos(angle)
+	local sin, cos = OCGL.sin(angle), OCGL.cos(angle)
 	vector[2], vector[3] = cos * vector[2] - sin * vector[3], sin * vector[2] + cos * vector[3]
 end
 
 function OCGL.rotateVectorRelativeToYAxis(vector, angle)
-	local sin, cos = math.sin(angle), math.cos(angle)
+	local sin, cos = OCGL.sin(angle), OCGL.cos(angle)
 	vector[1], vector[3] = cos * vector[1] + sin * vector[3], cos * vector[3] - sin * vector[1]
 end
 
 function OCGL.rotateVectorRelativeToZAxis(vector, angle)
-	local sin, cos = math.sin(angle), math.cos(angle)
+	local sin, cos = OCGL.sin(angle), OCGL.cos(angle)
 	vector[1], vector[2] = cos * vector[1] - sin * vector[2], sin * vector[1] + cos * vector[2]
 end
 
