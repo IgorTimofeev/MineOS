@@ -8,7 +8,7 @@ local color = {}
 -- Yoba-fix for PIDORS
 if computer.getArchitecture and computer.getArchitecture() == "Lua 5.3" then
 	color.RGBToHEX = function(r, g, b)
-		return bit32.lshift(math.floor(r), 16) + bit32.lshift(math.floor(g), 8) + math.floor(b)
+		return (r // 1 << 16) | (g // 1 << 8) | b // 1
 	end
 else
 	color.RGBToHEX = function(r, g, b)
