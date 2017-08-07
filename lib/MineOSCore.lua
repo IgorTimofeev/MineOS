@@ -844,6 +844,8 @@ function MineOSCore.iconRightClick(icon, eventData)
 				require("compressor").pack(fs.path(icon.path) .. fs.hideExtension(fs.name(icon.path)) .. ".pkg", icon.path)
 				computer.pushSignal("MineOSCore", "updateFileList")
 			end
+			
+			menu:addSeparator()
 		else
 			if icon.isShortcut then
 				menu:addItem(MineOSCore.localization.editShortcut).onTouch = function()
@@ -855,9 +857,12 @@ function MineOSCore.iconRightClick(icon, eventData)
 					computer.pushSignal("MineOSCore", "changeWorkpath", fs.path(icon.shortcutPath))
 					computer.pushSignal("MineOSCore", "updateFileList")
 				end
+
+				menu:addSeparator()
 			else
 				if MineOSCore.OSSettings.extensionAssociations[icon.extension] and MineOSCore.OSSettings.extensionAssociations[icon.extension].contextMenu then
 					pcall(loadfile(MineOSCore.OSSettings.extensionAssociations[icon.extension].contextMenu), icon, menu)
+					menu:addSeparator()
 				end
 
 				-- local subMenu = menu:addSubMenu(MineOSCore.localization.openWith)
@@ -869,8 +874,6 @@ function MineOSCore.iconRightClick(icon, eventData)
 				-- end
 			end
 		end
-
-		menu:addSeparator()
 	end
 
 	if #selectedIcons > 1 then

@@ -377,21 +377,36 @@ local function createOSWindow()
 		MineOSCore.OSMainContainer.dockContainer.width = (#MineOSCore.OSMainContainer.dockContainer.children) * (MineOSCore.iconWidth + MineOSCore.OSMainContainer.iconField.spaceBetweenIcons.horizontal) - MineOSCore.OSMainContainer.iconField.spaceBetweenIcons.horizontal
 	end
 
+	local function dockIconEventHandler(mainContainer, icon, eventData)
+		if eventData[1] == "touch" then
+			icon.selected = true
+			MineOSCore.OSDraw()
+
+			if eventData[5] == 1 then
+				icon.onRightClick(icon, eventData)
+			else
+				icon.onLeftClick(icon, eventData)
+			end
+
+			icon.selected = false
+		end
+	end
+
 	MineOSCore.OSMainContainer.dockContainer.addIcon = function(path, window)
 		local icon = MineOSCore.OSMainContainer.dockContainer:addChild(MineOSCore.icon(1, 1, path, 0x262626, 0xFFFFFF, MineOSCore.OSSettings.showExtension))
 		icon:moveBackward()
 		icon.window = window
 
+		icon.eventHandler = dockIconEventHandler
 		icon.onLeftClick = function(icon, eventData)
 			if icon.window then
 				icon.window.hidden = false
 				icon.window:moveToFront()
 			else
+				os.sleep(MineOSCore.iconClickDelay)
 				MineOSCore.iconDoubleClick(icon, eventData)
 			end
-			icon.selected = false
 		end
-
 		icon.onRightClick = function(icon, eventData)
 			local indexOf = icon:indexOf()
 
@@ -442,6 +457,11 @@ local function createOSWindow()
 	-- Trash
 	local icon = MineOSCore.OSMainContainer.dockContainer.addIcon(MineOSCore.paths.trash)
 	icon.image = MineOSCore.icons.trash
+	icon.eventHandler = dockIconEventHandler
+	icon.onLeftClick = function(icon, eventData)
+		os.sleep(MineOSCore.iconClickDelay)
+		MineOSCore.iconDoubleClick(icon, eventData)
+	end
 	icon.onRightClick = function(icon, eventData)
 		local menu = MineOSCore.contextMenu(eventData[3], eventData[4])
 		menu:addItem(MineOSCore.localization.emptyTrash).onTouch = function()
@@ -462,6 +482,7 @@ local function createOSWindow()
 
 			MineOSCore.OSDraw()
 		end
+
 		menu:show()
 	end
 
