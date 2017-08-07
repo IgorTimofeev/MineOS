@@ -1,45 +1,37 @@
 
-------------------------------------------------- Libraries -------------------------------------------------
-
 local component = require("component")
 local unicode = require("unicode")
 local color = require("color")
 local image = require("image")
 
-------------------------------------------------- Constants -------------------------------------------------
+--------------------------------------------------------------------------------------------------------------
 
 local gpu = component.gpu
 local buffer = {}
 
-------------------------------------------------- Core methods -------------------------------------------------
+--------------------------------------------------------------------------------------------------------------
 
---Формула конвертации индекса массива изображения в абсолютные координаты пикселя изображения
 function buffer.getCoordinatesByIndex(index)
 	local integer, fractional = math.modf(index / (buffer.tripleWidth))
 	return math.ceil(fractional * buffer.width), integer + 1
 end
 
---Формула конвертации абсолютных координат пикселя изображения в индекс для массива изображения
 function buffer.getIndexByCoordinates(x, y)
 	return buffer.tripleWidth * (y - 1) + x * 3 - 2
 end
 
--- Установить ограниченную зону рисования. Все пиксели, не попадающие в эту зону, будут игнорироваться.
 function buffer.setDrawLimit(x1, y1, x2, y2)
 	buffer.drawLimit.x1, buffer.drawLimit.y1, buffer.drawLimit.x2, buffer.drawLimit.y2 = x1, y1, x2, y2
 end
 
--- Удалить ограничение зоны рисования, по умолчанию она будет от 1х1 до координат размера экрана.
 function buffer.resetDrawLimit()
 	buffer.drawLimit.x1, buffer.drawLimit.y1, buffer.drawLimit.x2, buffer.drawLimit.y2 = 1, 1, buffer.width, buffer.height
 end
 
--- Cкопировать ограничение зоны рисования в виде отдельного массива
 function buffer.getDrawLimit()
 	return buffer.drawLimit.x1, buffer.drawLimit.y1, buffer.drawLimit.x2, buffer.drawLimit.y2
 end
 
--- Создание массивов буфера и всех необходимых параметров
 function buffer.flush(width, height)
 	if not width or not height then
 		width, height = gpu.getResolution()
@@ -66,15 +58,12 @@ function buffer.flush(width, height)
 	end
 end
 
-buffer.start = buffer.flush
-
--- Изменение разрешения экрана и пересоздание массивов буфера
 function buffer.setResolution(width, height)
 	gpu.setResolution(width, height)
 	buffer.flush(width, height)
 end
 
-------------------------------------------------- Методы отрисовки -----------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------
 
 function buffer.rawSet(index, background, foreground, symbol)
 	buffer.newFrame[index], buffer.newFrame[index + 1], buffer.newFrame[index + 2] = background, foreground, symbol
@@ -84,7 +73,6 @@ function buffer.rawGet(index)
 	return buffer.newFrame[index], buffer.newFrame[index + 1], buffer.newFrame[index + 2]
 end
 
--- Получить информацию о пикселе из буфера
 function buffer.get(x, y)
 	local index = buffer.getIndexByCoordinates(x, y)
 	if x >= 1 and y >= 1 and x <= buffer.width and y <= buffer.height then
@@ -94,7 +82,6 @@ function buffer.get(x, y)
 	end
 end
 
--- Установить пиксель в буфере
 function buffer.set(x, y, background, foreground, symbol)
 	local index = buffer.getIndexByCoordinates(x, y)
 	if x >= buffer.drawLimit.x1 and y >= buffer.drawLimit.y1 and x <= buffer.drawLimit.x2 and y <= buffer.drawLimit.y2 then
@@ -102,7 +89,6 @@ function buffer.set(x, y, background, foreground, symbol)
 	end
 end
 
---Нарисовать квадрат
 function buffer.square(x, y, width, height, background, foreground, symbol, transparency) 
 	if transparency then
 		if transparency == 0 then
@@ -133,14 +119,11 @@ function buffer.square(x, y, width, height, background, foreground, symbol, tran
 		index = index + indexStepForward
 	end
 end
-buffer.rectangle = buffer.square
 
---Очистка экрана, по сути более короткая запись buffer.square
 function buffer.clear(color, transparency)
 	buffer.square(1, 1, buffer.width, buffer.height, color or 0x262626, 0x000000, " ", transparency)
 end
 
---Скопировать область изображения и вернуть ее в виде массива
 function buffer.copy(x, y, width, height)
 	local copyArray = { width = width, height = height }
 
@@ -163,7 +146,6 @@ function buffer.copy(x, y, width, height)
 	return copyArray
 end
 
---Вставить скопированную ранее область изображения
 function buffer.paste(x, y, copyArray)
 	local index, arrayIndex
 	if not copyArray or #copyArray == 0 then error("Массив области экрана пуст.") end
@@ -185,7 +167,6 @@ function buffer.paste(x, y, copyArray)
 	end
 end
 
---Нарисовать линию, алгоритм спизжен с вики
 function buffer.line(x1, y1, x2, y2, background, foreground, symbol)
 	local deltaX = math.abs(x2 - x1)
 	local deltaY = math.abs(y2 - y1)
@@ -214,7 +195,6 @@ function buffer.line(x1, y1, x2, y2, background, foreground, symbol)
 	end
 end
 
--- Отрисовка текста, подстраивающегося под текущий фон
 function buffer.text(x, y, textColor, text, transparency)
 	if transparency then
 		if transparency == 0 then
@@ -235,7 +215,6 @@ function buffer.text(x, y, textColor, text, transparency)
 	end
 end
 
--- Отрисовка изображения
 function buffer.image(x, y, picture, blendForeground)
 	local xPos, xEnd, bufferIndexStepOnReachOfImageWidth = x, x + picture[1] - 1, (buffer.width - picture[1]) * 3
 	local bufferIndex, bufferIndexPlus1 = buffer.getIndexByCoordinates(x, y)
@@ -270,7 +249,6 @@ function buffer.image(x, y, picture, blendForeground)
 	end
 end
 
--- Прамоугольная рамочка
 function buffer.frame(x, y, width, height, color)
 	local stringUp, stringDown, x2 = "┌" .. string.rep("─", width - 2) .. "┐", "└" .. string.rep("─", width - 2) .. "┘", x + width - 1
 	buffer.text(x, y, color, stringUp); y = y + 1
@@ -282,7 +260,6 @@ function buffer.frame(x, y, width, height, color)
 	buffer.text(x, y, color, stringDown)
 end
 
--- Кнопка фиксированных размеров
 function buffer.button(x, y, width, height, background, foreground, text)
 	local textLength = unicode.len(text)
 	if textLength > width - 2 then text = unicode.sub(text, 1, width - 2) end
@@ -295,7 +272,6 @@ function buffer.button(x, y, width, height, background, foreground, text)
 	return x, y, (x + width - 1), (y + height - 1)
 end
 
--- Кнопка, подстраивающаяся под длину текста
 function buffer.adaptiveButton(x, y, xOffset, yOffset, background, foreground, text)
 	local width = xOffset * 2 + unicode.len(text)
 	local height = yOffset * 2 + 1
@@ -306,7 +282,6 @@ function buffer.adaptiveButton(x, y, xOffset, yOffset, background, foreground, t
 	return x, y, (x + width - 1), (y + height - 1)
 end
 
--- Кнопка в виде текста в рамке
 function buffer.framedButton(x, y, width, height, backColor, buttonColor, text)
 	buffer.square(x, y, width, height, backColor, buttonColor, " ")
 	buffer.frame(x, y, width, height, buttonColor)
@@ -317,7 +292,6 @@ function buffer.framedButton(x, y, width, height, backColor, buttonColor, text)
 	buffer.text(x, y, buttonColor, text)
 end
 
--- Вертикальный скролл-бар
 function buffer.scrollBar(x, y, width, height, countOfAllElements, currentElement, backColor, frontColor)
 	local sizeOfScrollBar = math.ceil(height / countOfAllElements)
 	local displayBarFrom = math.floor(y + height * ((currentElement - 1) / countOfAllElements))
@@ -336,7 +310,6 @@ function buffer.horizontalScrollBar(x, y, width, countOfAllElements, currentElem
 	buffer.text(displayBarFrom, y, foreground, string.rep("▄", pipeSize))
 end
 
--- Отрисовка любого изображения в виде трехмерного массива. Неоптимизированно, зато просто.
 function buffer.customImage(x, y, pixels)
 	x = x - 1
 	y = y - 1
@@ -352,7 +325,7 @@ function buffer.customImage(x, y, pixels)
 	return (x + 1), (y + 1), (x + #pixels[1]), (y + #pixels)
 end
 
-------------------------------------------- Semipixel methods ------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------
 
 function buffer.semiPixelRawSet(index, color, yPercentTwoEqualsZero)
 	local upperPixel, lowerPixel, bothPixel, indexPlus1, indexPlus2 = "▀", "▄", " ", index + 1, index + 2
@@ -470,7 +443,7 @@ function buffer.semiPixelCircle(xCenter, yCenter, radius, color)
 	if x == y then insertPoints(x, y) end
 end
 
------------------------------------------ Bezier curve -----------------------------------------
+--------------------------------------------------------------------------------------------------------------
 
 local function getPointTimedPosition(firstPoint, secondPoint, time)
 	return {
@@ -506,61 +479,62 @@ function buffer.semiPixelBezierCurve(points, color, precision)
 	end
 end
 
-------------------------------------------- Просчет изменений и отрисовка ------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------
 
---Функция рассчитывает изменения и применяет их, возвращая то, что было изменено
-local function calculateDifference(index)
-	local somethingIsChanged = false
-	
-	--Если цвет фона на новом экране отличается от цвета фона на текущем, то
-	if buffer.newFrame[index] ~= buffer.currentFrame[index] then
-		--Присваиваем цвету фона на текущем экране значение цвета фона на новом экране
-		buffer.currentFrame[index] = buffer.newFrame[index]
-		--Говорим системе, что что-то изменилось
-		somethingIsChanged = true
+local function info(...)
+	local args = {...}
+	local text = {}
+	for i = 1, #args do
+		table.insert(text, tostring(args[i]))
 	end
 
-	index = index + 1
-	
-	--Аналогично для цвета текста
-	if buffer.newFrame[index] ~= buffer.currentFrame[index] then
-		buffer.currentFrame[index] = buffer.newFrame[index]
-		somethingIsChanged = true
-	end
+	local b = gpu.getBackground()
+	local f = gpu.getForeground()
+	gpu.setBackground(0x0)
+	gpu.setForeground(0xFFFFFF)
+	gpu.fill(1, buffer.height, buffer.width, 1, " ")
+	gpu.set(2, buffer.height, table.concat(text, ", "))
+	gpu.setBackground(b)
+	gpu.setForeground(f)
 
-	index = index + 1
+	require("event").pull("touch")
+end
 
-	--И для символа
-	if buffer.newFrame[index] ~= buffer.currentFrame[index] then
-		buffer.currentFrame[index] = buffer.newFrame[index]
-		somethingIsChanged = true
-	end
+local function calculateDifference(index, indexPlus1, indexPlus2)
+	local somethingIsChanged =
+		buffer.currentFrame[index] ~= buffer.newFrame[index] or
+		buffer.currentFrame[indexPlus1] ~= buffer.newFrame[indexPlus1] or
+		buffer.currentFrame[indexPlus2] ~= buffer.newFrame[indexPlus2]
+
+	buffer.currentFrame[index] = buffer.newFrame[index]
+	buffer.currentFrame[indexPlus1] = buffer.newFrame[indexPlus1]
+	buffer.currentFrame[indexPlus2] = buffer.newFrame[indexPlus2]
 
 	return somethingIsChanged
 end
 
--- Функция группировки изменений и их отрисовки на экран
 function buffer.draw(force)
-	local changes, index, indexStepOnEveryLine, indexPlus1, indexPlus2, sameCharArray, x, xCharCheck, indexCharCheck, currentForeground = {}, buffer.getIndexByCoordinates(buffer.drawLimit.x1, buffer.drawLimit.y1), (buffer.width - buffer.drawLimit.x2 + buffer.drawLimit.x1 - 1) * 3
+	local oldOSClock = os.clock()
+	local changes, index, indexStepOnEveryLine, indexPlus1, indexPlus2, sameCharArray, x, xCharCheck, indexCharCheck, indexCharCheckPlus1, indexCharCheckPlus2, currentForeground = {}, buffer.getIndexByCoordinates(buffer.drawLimit.x1, buffer.drawLimit.y1), (buffer.width - buffer.drawLimit.x2 + buffer.drawLimit.x1 - 1) * 3
 
 	for y = buffer.drawLimit.y1, buffer.drawLimit.y2 do
 		x = buffer.drawLimit.x1
 		while x <= buffer.drawLimit.x2 do
 			indexPlus1, indexPlus2 = index + 1, index + 2
-			if calculateDifference(index) or force then
+			if calculateDifference(index, indexPlus1, indexPlus2) or force then
 				sameCharArray = { buffer.currentFrame[indexPlus2] }
 				xCharCheck, indexCharCheck = x + 1, index + 3
 				while xCharCheck <= buffer.drawLimit.x2 do
-					indexCharCheckPlus2 = indexCharCheck + 2
+					indexCharCheckPlus1, indexCharCheckPlus2 = indexCharCheck + 1, indexCharCheck + 2
 					if	
 						buffer.currentFrame[index] == buffer.newFrame[indexCharCheck] and
 						(
 							buffer.newFrame[indexCharCheckPlus2] == " "
 							or
-							buffer.currentFrame[indexPlus1] == buffer.newFrame[indexCharCheck + 1]
+							buffer.currentFrame[indexPlus1] == buffer.newFrame[indexCharCheckPlus1]
 						)
 					then
-					 	calculateDifference(indexCharCheck)
+					 	calculateDifference(indexCharCheck, indexCharCheckPlus1, indexCharCheckPlus2)
 					 	table.insert(sameCharArray, buffer.currentFrame[indexCharCheckPlus2])
 					else
 						break
@@ -585,27 +559,39 @@ function buffer.draw(force)
 
 		index = index + indexStepOnEveryLine
 	end
-
-	currentForeground = nil
 	
 	for background in pairs(changes) do
 		gpu.setBackground(background)
+
 		for foreground in pairs(changes[background]) do
-			if currentForeground ~= foreground then gpu.setForeground(foreground); currentForeground = foreground end
+			if currentForeground ~= foreground then
+				gpu.setForeground(foreground)
+				currentForeground = foreground
+			end
+
 			for i = 1, #changes[background][foreground], 3 do
 				gpu.set(changes[background][foreground][i], changes[background][foreground][i + 1], changes[background][foreground][i + 2])
 			end
 		end
 	end
-
-	changes = nil
 end
 
 ------------------------------------------------------------------------------------------------------
 
+buffer.start = buffer.flush
+buffer.rectangle = buffer.square
 buffer.flush()
 
 ------------------------------------------------------------------------------------------------------
+
+-- gpu.setBackground(0x0)
+-- gpu.fill(1, 1, buffer.width, buffer.height, " ")
+
+-- -- buffer.clear(0xFF8888)
+-- buffer.square(1, 1, buffer.width, buffer.height, 0xFF8888, 0x0, "Q")
+-- -- buffer.square(1, 1, buffer.width, buffer.height, 0xFFFFFF, 0xFFFFFF, "Q")
+-- -- buffer.square(3, 3, 10, 5, 0x00FF00, 0x0, "Q")
+-- buffer.draw(true)
 
 -- buffer.image(1, 1, image.load("/MineOS/Pictures/Raspberry.pic"))
 -- buffer.clear(0x0, 60)
