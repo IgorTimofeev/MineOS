@@ -698,7 +698,7 @@ mainContainer:startEventHandling()
 ```
 
 Результат:
-![Imgur](http://i.imgur.com/ABGKNPI.gif)
+![Imgur](http://i.imgur.com/4zKOla9.gif)
 
 GUI.**colorSelector**( x, y, width, height, color, text ): *table* colorSelector
 ------------------------------------------------------------------------
@@ -1075,7 +1075,7 @@ mainContainer:startEventHandling()
 
 Результат:
 
-![enter image description here](http://i.imgur.com/ycw6nrJ.gif)
+![Imgur](http://i.imgur.com/bSaDYWg.gif)
 
 GUI.**codeView**( x, y, width, height, lines, fromSymbol, fromLine, maximumLineLength, selections, highlights, highlightLuaSyntax, indentationWidth ): *table* codeView
 ------------------------------------------------------------------------
