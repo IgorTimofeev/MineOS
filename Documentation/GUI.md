@@ -3,32 +3,37 @@
 | [О библиотеке](#О-библиотеке) |
 | [Установка](#Установка) |
 | [Standalone-методы](#standalone-методы) |
-| [GUI.contextMenu](#guicontextmenu-x-y--table-contextmenu) |
-| [GUI.error](#guierror-text-) |
-| [GUI.container](#guicontainer-x-y-width-height--table-container) |
-| [GUI.layout](#guilayout-x-y-width-height-columns-rows--table-container) |
-| [Методы для создания виджетов](#Методы-для-создания-виджетов) |
-| [GUI.object](#guiobject-x-y-width-height--table-object) |
-| [GUI.panel](#guipanel-x-y-width-height-color-transparency--table-panel) |
-| [GUI.button](#guibutton-x-y-width-height-buttoncolor-textcolor-buttonpressedcolor-textpressedcolor-text--table-button) |
-| [GUI.label](#guilabel-x-y-width-height-textcolor-text--table-label) |
-| [GUI.inputField](#guiinputfield-x-y-width-height-backgroundcolor-textcolor-placeholdertextcolor-backgroundfocusedcolor-textfocusedcolor-text-placeholdertext-erasetextonfocus-textmask--table-inputfield) |
-| [GUI.slider](#guislider-x-y-width-primarycolor-secondarycolor-pipecolor-valuecolor-minimumvalue-maximumvalue-value-showcornervalues-currentvalueprefix-currentvaluepostfix--table-slider) |
-| [GUI.switch](#guiswitch-x-y-width-primarycolor-secondarycolor-pipecolor-state--table-switch) |
-| [GUI.colorSelector](#guicolorselector-x-y-width-height-color-text--table-colorselector) |
-| [GUI.comboBox](#guicombobox-x-y-width-elementheight-backgroundcolor-textcolor-arrowbackgroundcolor-arrowtextcolor--table-combobox) |
-| [GUI.menu](#guimenu-x-y-width-backgroundcolor-textcolor-backgroundpressedcolor-textpressedcolor-backgroundtransparency--table-menu) |
-| [GUI.image](#guiimage-x-y-loadedimage--table-image) |
-| [GUI.progressBar](#guiprogressbar-x-y-width-primarycolor-secondarycolor-valuecolor-value-thin-showvalue-valueprefix-valuepostfix--table-progressbar) |
-| [GUI.scrollBar](#guiscrollbar-x-y-width-height-backgroundcolor-foregroundcolor-minimumvalue-maximumvalue-value-shownvaluecount-onscrollvalueincrement-thinhorizontalmode--table-scrollbar) |
-| [GUI.textBox](#guitextboxx-y-width-height-backgroundcolor-textcolor-lines-currentline-horizontaloffset-verticaloffset-table-textbox) |
-| [GUI.treeView](#guitreeview-x-y-width-height-backgroundcolor-textcolor-selectionbackgroundcolor-selectiontextcolor-arrowcolor-scrollbarprimarycolor-scrollbarsecondarycolor-workpath--table-treeview) |
-| [GUI.codeView](#guicodeview-x-y-width-height-lines-fromsymbol-fromline-maximumlinelength-selections-highlights-highlightluasyntax-indentationwidth--table-codeview) |
-| [GUI.chart](#guichart-x-y-width-height-axiscolor-axisvaluecolor-axishelperscolor-chartcolor-xaxisvalueinterval-yaxisvalueinterval-xaxispostfix-yaxispostfix-fillchartarea-values--table-chart) |
-| [Практический пример #1](#Практический-пример-1) |
-| [Практический пример #2](#Практический-пример-2) |
-| [Практический пример #3](#Практический-пример-3) |
-| [Практический пример #4](#Практический-пример-4) |
+| [    GUI.contextMenu](#guicontextmenu-x-y--table-contextmenu) |
+| [    GUI.error](#guierror-text-) |
+| [Контейнеры](#Контейнеры) |
+| [    GUI.container](#guicontainer-x-y-width-height--table-container) |
+| [    GUI.layout](#guilayout-x-y-width-height-columns-rows--table-container) |
+| [Виджеты](#Методы-для-создания-виджетов) |
+| [    GUI.object](#guiobject-x-y-width-height--table-object) |
+| [Анимация](#Анимация) |
+| [Готовые виджеты](#Готовые-виджеты) |
+| [    GUI.panel](#guipanel-x-y-width-height-color-transparency--table-panel) |
+| [    GUI.button](#guibutton-x-y-width-height-buttoncolor-textcolor-buttonpressedcolor-textpressedcolor-text--table-button) |
+| [    GUI.label](#guilabel-x-y-width-height-textcolor-text--table-label) |
+| [    GUI.inputField](#guiinputfield-x-y-width-height-backgroundcolor-textcolor-placeholdertextcolor-backgroundfocusedcolor-textfocusedcolor-text-placeholdertext-erasetextonfocus-textmask--table-inputfield) |
+| [    GUI.slider](#guislider-x-y-width-primarycolor-secondarycolor-pipecolor-valuecolor-minimumvalue-maximumvalue-value-showcornervalues-currentvalueprefix-currentvaluepostfix--table-slider) |
+| [    GUI.switch](#guiswitch-x-y-width-primarycolor-secondarycolor-pipecolor-state--table-switch) |
+| [    GUI.colorSelector](#guicolorselector-x-y-width-height-color-text--table-colorselector) |
+| [    GUI.comboBox](#guicombobox-x-y-width-elementheight-backgroundcolor-textcolor-arrowbackgroundcolor-arrowtextcolor--table-combobox) |
+| [    GUI.menu](#guimenu-x-y-width-backgroundcolor-textcolor-backgroundpressedcolor-textpressedcolor-backgroundtransparency--table-menu) |
+| [    GUI.image](#guiimage-x-y-loadedimage--table-image) |
+| [    GUI.progressBar](#guiprogressbar-x-y-width-primarycolor-secondarycolor-valuecolor-value-thin-showvalue-valueprefix-valuepostfix--table-progressbar) |
+| [    GUI.scrollBar](#guiscrollbar-x-y-width-height-backgroundcolor-foregroundcolor-minimumvalue-maximumvalue-value-shownvaluecount-onscrollvalueincrement-thinhorizontalmode--table-scrollbar) |
+| [    GUI.textBox](#guitextboxx-y-width-height-backgroundcolor-textcolor-lines-currentline-horizontaloffset-verticaloffset-table-textbox) |
+| [    GUI.treeView](#guitreeview-x-y-width-height-backgroundcolor-textcolor-selectionbackgroundcolor-selectiontextcolor-arrowcolor-scrollbarprimarycolor-scrollbarsecondarycolor-workpath--table-treeview) |
+| [    GUI.codeView](#guicodeview-x-y-width-height-lines-fromsymbol-fromline-maximumlinelength-selections-highlights-highlightluasyntax-indentationwidth--table-codeview) |
+| [    GUI.chart](#guichart-x-y-width-height-axiscolor-axisvaluecolor-axishelperscolor-chartcolor-xaxisvalueinterval-yaxisvalueinterval-xaxispostfix-yaxispostfix-fillchartarea-values--table-chart) |
+| [Практические примеры](#Практический-пример-1) |
+| [    Практический пример #1](#Практический-пример-1) |
+| [    Практический пример #2](#Практический-пример-2) |
+| [    Практический пример #3](#Практический-пример-3) |
+| [    Практический пример #4](#Практический-пример-4) |
+| [    Практический пример #5](#Практический-пример-5) |
 
 
 О библиотеке
@@ -125,7 +130,7 @@ GUI.error("Something went wrong here, my friend")
 
 ![Imgur](http://i.imgur.com/s8mA2FL.png?1)
 
-Методы для создания контейнеров
+Контейнеры
 ======
 
 Вся библиотека делится на две основные кострукции: контейнеры и виджеты. Контейнер предназначен для группировки нескольких виджетов и их конвеерной обработки, поэтому в первую очередь необходимо изучить особенности работы с контейнерами.
@@ -283,7 +288,7 @@ end
 
 Более подробно работа с layout рассмотрена в практическом примере 4 в конце документа.
 
-Методы для создания виджетов
+Виджеты
 ======
 
 После понимания концепции контейнеров можно с легкостью приступить к добавлению виджетов в созданный контейнер. Каждый виджет - это наследник объекта типа GUI.**object**
@@ -319,9 +324,33 @@ GUI.**object**( x, y, width, height ): *table* object
 | *function* | :**moveToBack**() | Передвинуть виджет в начало иерархии виджетов контейнера |
 | *function* | :**getFirstParent**() | Получить первый родительский контейнер для рассматриваемой системы родительских контейнеров. К примеру, при существовании множества вложенных контейнеров метод вернет первый и "главный" из них |
 | *function* | :**delete**() | Удалить этот объект из родительского контейнера. Грубо говоря, это удобный способ самоуничтожения |
+| *function* | :**addAnimation**(*function* frameHandler, *function* onFinish): *table* animation | Добавить к этому объекту анимацию. Подробнее об анимациях и их создании см. ниже  |
 | [*callback-function* | .**eventHandler**(*container* mainContainer, *object* object, *table* eventData) ]| Необязательный метод для обработки системных событий, вызываемый обработчиком родительского контейнера. Если он имеется у рассматриваемого объекта, то будет вызван с соотвествующими аргументами |
 
-Далее перечислены виджеты, уже созданные мной на основе описанных выше инструкций.  При желании вы можете сделать абсолютно аналогичные или технически гораздо более продвинутые виджеты без каких-либо затруднений. Подробнее о создании собственных виджетов см. практические примеры в конце документации. 
+Анимация
+======
+Каждый виджет может быть без проблем анимирован при желании. К примеру, ниже представлена анимация GUI.**switch**.
+
+![Imgur](http://i.imgur.com/f5aO73U.gif)
+
+Чтобы добавить анимацию к виджету, вызовите метод *<виджет>*:**addAnimation**(*function* frameHandler, *function* onFinish). Данный метод возвращает объект анимации для дальнейшего использования, имеющий следущие свойства:
+
+| Тип свойства| Свойство |Описание |
+| ------ | ------ | ------ |
+| *table* | .**object** | Указатель на таблицу виджета, к которому была добавлена анимация |
+| *float* | .**position** | Текущая позиция воспроизведения анимации. Всегда находится в диапазоне [0.0; 1.0], где левая граница - начало анимации, а правая - ее конец |
+| *function* | :**start**() | Метод, начинающий воспроизведение анимации. **Важная деталь**: во время воспроизведения анимации контейнер, содержащий анимированные объекты, временно будет обрабатывать события с максимально возможной скоростью. По окончанию воспроизведения задержка между вызовами .**pullSignal** станет такой, какой была изначально |
+| *function* | :**stop**() | Метод, завершающий воспроизведение анимации |
+| *function* | :**delete**() | Метод, удаляющий анимацию из объекта |
+| *callback-function* | .**frameHandler**(*table* mainContainer, *table* object, *table* animation) | Функция-обработчик кадра анимации. Вызывается автоматически каждый раз перед отрисовкой объекта. Первым параметром идет главный контейнер, в котором вызван обработчик событий, вторым - сам анимированный виджет, а третьим - объект анимации |
+| *callback-function* | .**onFinish**() | Функция, вызываемая по окончанию воспроизведения анимации. Отмечу, что метод **:stop()** не вызывает срабатывания **.onFinish** |
+
+Создание анимированных объектов во всех подробностях описано в практическом примере в конце документа.
+
+Готовые виджеты
+======
+
+Далее перечислены виджеты, поставляющиеся вместе с библиотекой и созданные на основе описанных выше инструкций.  При желании вы можете сделать абсолютно аналогичные или гораздо более технически продвинутые виджеты без каких-либо затруднений. Подробнее о создании собственных виджетов см. практические примеры в конце документации. 
 
 GUI.**panel**( x, y, width, height, color, [transparency] ): *table* panel
 ------------------------------------------------------------------------
@@ -1298,3 +1327,142 @@ mainContainer:startEventHandling()
 ![Imgur](http://i.imgur.com/NncPObT.png?1)
 
 ![Imgur](http://i.imgur.com/RCdBDgr.png?1)
+
+Практический пример #5
+======
+
+Для демонстрации работы с анимациями привожу исходный код, позволяющий с абсолютного нуля создать виджет **switch** и добавить к нему анимацию перемещения.
+
+```lua
+
+-- Подключаем необходимые библиотеки
+local color = require("color")
+local buffer = require("doubleBuffering")
+local GUI = require("GUI")
+
+------------------------------------------------------------------------------------------
+
+-- Создаем функцию, отрисовывающую свитч в экранный буфер
+local function switchDraw(switch)
+	local bodyX = switch.x + switch.width - switch.bodyWidth
+	-- Рисуем текст свитча
+	buffer.text(switch.x, switch.y, switch.colors.text, switch.text)
+	-- Рисуем базовую фоновую подложку пассивного оттенка
+	buffer.square(bodyX, switch.y, switch.bodyWidth, 1, switch.colors.passive, 0x0, " ")
+	buffer.text(bodyX + switch.bodyWidth, switch.y, switch.colors.passive, "⠆")
+	-- Рисуем подложку активного оттенка
+	buffer.text(bodyX - 1, switch.y, switch.colors.active, "⠰")
+	buffer.square(bodyX, switch.y, switch.pipePosition - 1, 1, switch.colors.active, 0x0, " ")
+	-- Рисуем "пимпочку" свитча
+	buffer.text(bodyX + switch.pipePosition - 2, switch.y, switch.colors.pipe, "⠰")
+	buffer.square(bodyX + switch.pipePosition - 1, switch.y, 2, 1, switch.colors.pipe, 0x0, " ")
+	buffer.text(bodyX + switch.pipePosition + 1, switch.y, switch.colors.pipe, "⠆")
+end
+
+-- Создаем функцию-обработчик событий, вызываемую при клике на свитч
+local function switchEventHandler(mainContainer, switch, eventData)
+	if eventData[1] == "touch" then
+		-- Изменяем "состояние" свитча на противоположное и
+		-- создаем анимацию, плавно перемещающую "пимпочку"
+		switch.state = not switch.state
+		switch:addAnimation(
+			-- В качестве обработчика кадра анимации создаем функцию,
+			-- устанавливающую позицию "пимпочки" в зависимости от текущей
+			-- завершенности анимации.  Помним также, что animationPosition всегда
+			-- находится в диапазоне [0.0; 1.0]. Если состояние свитча имеет значение false,
+			-- то мы попросту инвертируем значение позиции анимации, чтобы та визуально
+			-- проигрывалась в обратную сторону.
+			function(mainContainer, switch, animation)
+				if switch.state then
+					switch.pipePosition = math.round(1 + animation.position * (switch.bodyWidth - 2))
+				else	
+					switch.pipePosition = math.round(1 + (1 - animation.position) * (switch.bodyWidth - 2))
+				end
+			end,
+			-- В качестве метода .onFinish создаем функцию, удаляющую анимацию по ее завершению
+			function(mainContainer, switch, animation)
+				animation:delete()
+			end
+		-- Запускаем созданную анимацию с указанным интервалом
+		):start(switch.animationDuration)
+	end
+end
+
+-- Создаем объект свитча, наследуясь от GUI.object и заполняя его необходимыми свойствами
+local function newSwitch(x, y, totalWidth, bodyWidth, activeColor, passiveColor, pipeColor, textColor, text, switchState)
+	local switch = GUI.object(x, y, totalWidth, 1)
+
+	switch.bodyWidth = bodyWidth
+	switch.colors = {
+		active = activeColor,
+		passive = passiveColor,
+		pipe = pipeColor,
+		text = textColor
+	}
+	switch.text = text
+	switch.state = switchState
+	switch.pipePosition = switch.state and switch.bodyWidth - 1 or 1
+	switch.animationDuration = 0.3	
+
+	switch.draw = switchDraw
+	switch.eventHandler = switchEventHandler
+
+	return switch
+end
+
+------------------------------------------------------------------------------------------
+
+-- Создаем полноэкранный контейнер и добавляем в него темно-серую фоновую панель
+local mainContainer = GUI.fullScreenContainer()
+mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x2D2D2D))
+
+-- Создаем гигантское поле из свитчей. Для начала указываем желаемое количество свитчей,
+-- а затем зависимые от количество параметры - такие как оттенок по HSB-палитре,
+-- координаты и длительность анимации
+local count = 168
+local hue = 0
+local hueStep = 360 / count
+local x, y = 3, 2
+local animationDurationMin = 0.3
+local animationDurationMax = 0.3
+local animationDuration = animationDurationMin
+local animationDurationStep = (animationDurationMax - animationDurationMin) / count
+
+-- Добавляем в главный контейнер указанное число свитчей
+for i = 1, count do
+	local switchColor = color.HSBToHEX(hue, 100, 100)
+	local switch = mainContainer:addChild(
+		newSwitch(
+			x,
+			y,
+			19,
+			7,
+			switchColor,
+			0x1D1D1D,
+			0xEEEEEE,
+			switchColor,
+			"Cвитч " .. i .. ":",
+			math.random(2) == 2
+		)
+	)
+
+	switch.animationDuration = animationDuration
+	animationDuration = animationDuration + animationDurationStep
+
+	hue = hue + hueStep
+	y = y + switch.height + 1
+	if y >= mainContainer.height then
+		x, y = x + switch.width + 3, 2
+	end
+end
+
+-- Отрисовываем содержимое главного контейнера в экранный буфер и выводим результат на экран
+mainContainer:draw()
+buffer.draw(true)
+-- Запускаем обработку событий главного контейнера
+mainContainer:startEventHandling()
+```
+
+Результат: 
+
+![Imgur](http://i.imgur.com/f5aO73U.gif)
