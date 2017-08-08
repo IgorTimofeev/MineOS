@@ -29,12 +29,12 @@
 | [    GUI.textBox](#guitextboxx-y-width-height-backgroundcolor-textcolor-lines-currentline-horizontaloffset-verticaloffset-table-textbox) |
 | [    GUI.codeView](#guicodeview-x-y-width-height-lines-fromsymbol-fromline-maximumlinelength-selections-highlights-highlightluasyntax-indentationwidth--table-codeview) |
 | [    GUI.chart](#guichart-x-y-width-height-axiscolor-axisvaluecolor-axishelperscolor-chartcolor-xaxisvalueinterval-yaxisvalueinterval-xaxispostfix-yaxispostfix-fillchartarea-values--table-chart) |
-| [Практические примеры](#Практический-пример-1) |
-| [    Практический пример #1](#Практический-пример-1) |
-| [    Практический пример #2](#Практический-пример-2) |
-| [    Практический пример #3](#Практический-пример-3) |
-| [    Практический пример #4](#Практический-пример-4) |
-| [    Практический пример #5](#Практический-пример-5) |
+| [Практические примеры](#Практические-примеры) |
+| [    Пример #1: Кнопочки](#Пример-1-Кнопочки) |
+| [    Пример #2: Окно авторизации](#Пример-2-Окно-авторизации) |
+| [    Пример #3: Создание собственного виджета](#Пример-3-Создание-собственного-виджета) |
+| [    Пример #4: Углубленная работа с Layout](#Пример-4-Углубленная-работа-с-Layout) |
+| [    Пример #5: Анимация собственного виджета](#Пример-5-Анимация-собственного-виджета) |
 
 
 О библиотеке
@@ -1169,15 +1169,21 @@ mainContainer:startEventHandling()
 
 ![enter image description here](http://i91.fastpic.ru/big/2017/0402/5b/66ff353492298f6a0c9b01c0fc8a525b.png)
 
-Практический пример #1
+Практические примеры
+======
+Ниже приведены подробно прокомментированные участки кода и иллюстрации, позволяющие во всех деталях разобраться с особенностями библиотеки. Не стесняйтесь изменять их под свой вкус и цвет.
+
+Пример #1: Кнопочки
 ======
 
- В качестве стартового примера возьмем простейшую задачу: расположим на экране 5 кнопок по вертикали и заставим их показывать окно с порядковым номером этой кнопки при нажатии на нее. Напишем следующий код:
+Возьмем простейшую задачу: расположим на экране 5 кнопок по вертикали и заставим их показывать окно с порядковым номером этой кнопки при нажатии на нее. Напишем следующий код:
  
 ```lua
 -- Подключаем необходимые библиотеки
 local buffer = require("doubleBuffering")
 local GUI = require("GUI")
+
+------------------------------------------------------------------------------------------
 
 -- Создаем полноэкранный контейнер
 local mainContainer = GUI.fullScreenContainer()
@@ -1191,8 +1197,11 @@ for i = 1, 5 do
 	mainContainer:addChild(GUI.button(2, y, 30, 3, 0xEEEEEE, 0x2D2D2D, 0x666666, 0xEEEEEE, "This is button " .. i)).onTouch = function()
 		GUI.error("You've pressed button " .. i .. "!")
 	end
+
 	y = y + 4
 end
+
+------------------------------------------------------------------------------------------
 
 -- Отрисовываем содержимое окно
 mainContainer:draw()
@@ -1203,76 +1212,105 @@ mainContainer:startEventHandling()
 ```
 При нажатии на любую из созданных кнопок будет показываться дебаг-окно с информацией, указанной в методе *.onTouch*:
 
-![enter image description here](http://i90.fastpic.ru/big/2017/0402/32/90656de1b96b157284fb21e2467d9632.png)
+![enter image description here](http://i.imgur.com/GChy5UA.gif)
 
-![enter image description here](http://i91.fastpic.ru/big/2017/0402/c3/e02d02fb39a28dd17220b535e59292c3.png)
-
-Практический пример #2
+Пример #2: Окно авторизации
 ======
 
-Поскольку в моде OpenComputers имеется интернет-плата, я написал небольшой клиент для работы с VK.com. Разумеется, для этого необходимо реализовать авторизацию на серверах, вводя свой e-mail/номер телефона и пароль к аккаунту. В качестве тренировки привожу часть кода, отвечающую за это.
+Поскольку в моде OpenComputers имеется интернет-плата, я написал небольшой клиент для работы с VK.com. Разумеется, для этого необходимо реализовать авторизацию на серверах, вводя свой e-mail/номер телефона и пароль к аккаунту. В качестве тренировки привожу часть кода, отвечающую за это:
  
 ```lua
--- Подключаем библиотеки
-local image = require("image")
 local buffer = require("doubleBuffering")
 local GUI = require("GUI")
+
+------------------------------------------------------------------------------------------
+
+-- Задаем базовые параметры - минимальную длину пароля и регулярное выражение для проверки валидности адреса почты
+local minimumPasswordLength = 2
+local emailRegex = "%w+@%w+%.%w+"
+
+-- Для примера также задаем "корректные" данные пользователя
+local userEmail = "cyka@gmail.com"
+local userPassword = "1234567"
+
+------------------------------------------------------------------------------------------
 
 -- Создаем контейнер с синей фоновой панелью
 local mainContainer = GUI.fullScreenContainer()
 mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x002440))
+-- Добавляем в него layout с размерностью сетки 1x1
+local layout = mainContainer:addChild(GUI.layout(1, 1, mainContainer.width, mainContainer.height, 1, 1))
 
--- Указываем размеры полей ввода текста и кнопок
-local elementWidth, elementHeight = 40, 3
-local x, y = math.floor(mainContainer.width / 2 - elementWidth / 2), math.floor(mainContainer.height / 2) - 2
+-- Добавляем в layout поле для ввода почтового адреса
+local emailInputField = layout:addChild(GUI.inputField(1, 1, 40, 3, 0xEEEEEE, 0x555555, 0x888888, 0xEEEEEE, 0x262626, nil, "E-mail", false, nil, nil, nil))
+-- Добавляем красный текстовый лейбл, показывающийся только в том случае, когда адрес почты невалиден
+local invalidEmailLabel = layout:addChild(GUI.label(1, 1, mainContainer.width, 1, 0xFF5555, "Incorrect e-mail")):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+invalidEmailLabel.hidden = true
 
--- Загружаем и добавляем изображение логотипа "нашей компании"
-local logotype = image.load("/MineOS/Applications/VK.app/Resources/VKLogo.pic")
-mainContainer:addChild(GUI.image(math.floor(mainContainer.width / 2 - image.getWidth(logotype) / 2) - 2, y - image.getHeight(logotype) - 1, logotype)); y = y + 2
+-- Добавляем аналогичное текстовое поле с лейблом для ввода пароля
+local passwordInputField = layout:addChild(GUI.inputField(1, 1, 40, 3, 0xEEEEEE, 0x555555, 0x888888, 0xEEEEEE, 0x262626, nil, "Password", false, "*", nil, nil))
+local invalidPasswordLabel = layout:addChild(GUI.label(1, 1, mainContainer.width, 1, 0xFF5555, "Password is too short")):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+invalidPasswordLabel.hidden = true
 
--- Создаем поле для ввода адреса почты
-local emailTextBox = mainContainer:addChild(GUI.inputTextBox(x, y, elementWidth, elementHeight, 0xEEEEEE, 0x777777, 0xEEEEEE, 0x2D2D2D, nil, "E-mail", false, nil, nil, nil))
--- Создаем красный текстовый лейбл, показывающийся только в том случае, когда адрес почты неверен
-local invalidEmailLabel = mainContainer:addChild(GUI.label(emailTextBox.localPosition.x + emailTextBox.width + 2, y + 1, mainContainer.width, 1, 0xFF5555, "Invalid e-mail")); y = y + elementHeight + 1
-invalidEmailLabel.isHidden = true
--- Создаем callback-функцию, вызывающуюся после ввода текста и проверяющую корректность введенного адреса
-emailTextBox.onInputFinished = function(text)
-	invalidEmailLabel.isHidden = text:match("%w+@%w+%.%w+") and true or false
+-- Добавляем кнопку, ползволяющую осуществлять авторизацию
+local loginButton = layout:addChild(GUI.button(1, 1, 40, 3, 0x3392FF, 0xEEEEEE, 0xEEEEEE, 0x3392FF, "Login"))
+-- По умолчанию кнопка имеет неактивное состояние, а также серый цвет
+loginButton.disabled = true
+loginButton.colors.disabled.background = 0xAAAAAA
+loginButton.colors.disabled.text = 0xDDDDDD
+-- При нажатии на кнопку логина идет сверка введенных данных с переменными выше, и выводится дебаг-сообщение
+loginButton.onTouch = function()
+	GUI.error(emailInputField.text == userEmail and passwordInputField.text == userPassword and "Login successfull" or "Login failed")
+end
+
+-- Создаем две переменных, в которых будут храниться состояния валидности введенных данных
+local emailValid, passwordValid
+-- Данная функция будет вызываться ниже после обращения к одному из текстовых полей, она необходима
+-- для контроля активности кнопки логина
+local function checkLoginButton()
+	loginButton.disabled = not emailValid or not passwordValid
+
 	mainContainer:draw()
 	buffer.draw()
 end
--- Создаем поле для ввода пароля
-mainContainer:addChild(GUI.inputTextBox(x, y, elementWidth, elementHeight, 0xEEEEEE, 0x777777, 0xEEEEEE, 0x2D2D2D, nil, "Password", false, "*", nil, nil)); y = y + elementHeight + 1
 
--- Добавляем малоприметную кнопку для закрытия программы
-mainContainer:addChild(GUI.button(mainContainer.width, 1, 1, 1, 0x002440, 0xEEEEEE, 0x002440, 0xAAAAAA, "X")).onTouch = function()
+-- Создаем callback-функцию, вызывающуюся после ввода текста и проверяющую корректность введенного адреса
+emailInputField.onInputFinished = function()
+	emailValid = emailInputField.text and emailInputField.text:match(emailRegex)
+	invalidEmailLabel.hidden = emailValid
+	checkLoginButton() 
+end
+
+-- Аналогично поступаем с полем для ввода пароля
+passwordInputField.onInputFinished = function()
+	passwordValid = passwordInputField.text and passwordInputField.text:len() > minimumPasswordLength
+	invalidPasswordLabel.hidden = passwordValid
+	checkLoginButton() 
+end
+
+-- Добавляем заодно кнопку для закрытия программы
+layout:addChild(GUI.button(1, 1, 40, 3, 0x336DBF, 0xEEEEEE, 0xEEEEEE, 0x336DBF, "Exit")).onTouch = function()
 	mainContainer:stopEventHandling()
 	buffer.clear(0x0)
 	buffer.draw(true)
 end
 
--- Добавляем кнопку для логина
-mainContainer:addChild(GUI.button(x, y, elementWidth, elementHeight, 0x666DFF, 0xEEEEEE, 0xEEEEEE, 0x666DFF, "Login")).onTouch = function()
-	-- Код, выполняемый при успешном логине
-end
+------------------------------------------------------------------------------------------
 
 mainContainer:draw()
 buffer.draw(true)
 mainContainer:startEventHandling()
+
 ```
 
 Результат:
 
-![enter image description here](http://i.imgur.com/PT0AUGR.png?1)
+![enter image description here](http://i.imgur.com/CWuCLop.gif)
 
-![enter image description here](http://i.imgur.com/dphuFtb.png?1)
-
-![enter image description here](http://i.imgur.com/LXfsT0o.png?1)
-
-Практический пример #3
+Пример #3: Создание собственного виджета
 ======
 
-Для демонстрации возможностей библиотеки предлагаю создать собственный виджет с нуля. К примеру, панель, реагирующую на клики мыши, позволяющую рисовать на ней произвольным цветом по аналогии со школьной доской.
+Одной из важнейших особенностей библиотеки является простота создания виджетов с нуля. К примеру, давайте сделаем панель, реагирующую на клики мыши и позволяющую рисовать на ней произвольным цветом по аналогии со школьной доской.
  
 ```lua
 local buffer = require("doubleBuffering")
@@ -1296,6 +1334,21 @@ local function myWidgetEventHandler(mainContainer, object, eventData)
 	end
 end
 
+-- Аналогичным образом поступим с функцией отрисовки виджета, храня ее в единственном экземпляре в памяти
+local function myWidgetDraw(object)
+	-- Рисуем подложку цветом фона виджета
+	buffer.square(object.x, object.y, object.width, object.height, object.colors.background, 0x0, " ")
+	
+	-- Перебираем пиксельную карту, отрисовывая соответствующие пиксели в экранный буфер
+	for y = 1, object.height do
+		for x = 1, object.width do
+			if object.pixels[y] and object.pixels[y][x] then
+				buffer.set(object.x + x - 1, object.y + y - 1, object.colors.paint, 0x0, " ")
+			end
+		end
+	end
+end
+
 -- Создаем метод, возвращающий наш виджет
 local function createMyWidget(x, y, width, height, backgroundColor, paintColor)
 	-- Наследуемся от GUI.object, дополняем его параметрами цветов и пиксельной карты
@@ -1303,56 +1356,39 @@ local function createMyWidget(x, y, width, height, backgroundColor, paintColor)
 	object.colors = {background = backgroundColor, paint = paintColor}
 	object.pixels = {}
 	
-	-- Реализуем метод отрисовки виджета
-	object.draw = function(object)
-		-- Рисуем подложку цветом фона виджета
-		buffer.square(object.x, object.y, object.width, object.height, object.colors.background, 0x0, " ")
-		
-		-- Перебираем пиксельную карту, отрисовывая соответствующие пиксели в экранный буфер
-		for y = 1, object.height do
-			for x = 1, object.width do
-				if object.pixels[y] and object.pixels[y][x] then
-					buffer.set(object.x + x - 1, object.y + y - 1, object.colors.paint, 0x0, " ")
-				end
-			end
-		end
-	end
-
+	-- Реализуем методы отрисовки виджета и обработки событий
+	object.draw = myWidgetDraw
 	object.eventHandler = myWidgetEventHandler
 
 	return object
 end
 
+---------------------------------------------------------------------
+
 -- Добавляем темно-серую панель в контейнер
 mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x2D2D2D))
--- Создаем экземпляр виджета-рисовалки и добавляем его в контейнер
-mainContainer:addChild(createMyWidget(2, 2, 32, 16, 0x3C3C3C, 0xEEEEEEE))
+-- Создаем 9 экземпляров виджета-рисовалки и добавляем их в контейнер
+local x, y, width, height = 2, 2, 30, 15
+for j = 1, 3 do
+	for i = 1, 3 do
+		mainContainer:addChild(createMyWidget(x, y, width, height, 0x3C3C3C, 0xEEEEEEE))
+		x = x + width + 2
+	end
+	x, y = 2, y + height + 1
+end
 
 mainContainer:draw()
 buffer.draw(true)
 mainContainer:startEventHandling()
 ```
----------------------------------------------------------------------
-При нажатии на левую кнопку мыши в нашем виджете устанавливается пиксель указанного цвета, а на правую - удаляется.
 
-![enter image description here](http://i89.fastpic.ru/big/2017/0402/fd/be80c13085824bebf68f64a329e226fd.png)
+Результат:
 
-Для разнообразия модифицируем код, создав несколько виджетов со случайными цветами:
-```lua
-local x = 2
-for i = 1, 5 do
-	mainContainer:addChild(createMyWidget(x, 2, 32, 16, math.random(0x0, 0xFFFFFF), math.random(0x0, 0xFFFFFF)))
-	x = x + 34
-end
-```
-
-В результате получаем 5 индивидуальных экземпляров виджета рисования:
-
-![enter image description here](http://i90.fastpic.ru/big/2017/0402/96/96aba372bdb3c1e61007170132f00096.png)
+![enter image description here](http://i.imgur.com/SodpPQo.gif)
 
 Как видите, в создании собственных виджетов нет совершенно ничего сложного, главное - обладать информацией по наиболее эффективной работе с библиотекой.
 
-Практический пример #4
+Пример #4: Углубленная работа с Layout
 ======
 
 Предлагаю немного попрактиковаться в использовании layout. В качестве примера создадим контейнер-окно с четырьмя кнопками, изменяющими его размеры. Вы убедитесь, что нам ни разу не придется вручную считать координаты.
@@ -1426,7 +1462,7 @@ mainContainer:startEventHandling()
 
 ![Imgur](http://i.imgur.com/c8Ks91w.gif)
 
-Практический пример #5
+Пример #5: Анимация собственного виджета
 ======
 
 Для демонстрации работы с анимациями привожу исходный код, позволяющий с абсолютного нуля создать виджет **switch** и добавить к нему анимацию перемещения.
