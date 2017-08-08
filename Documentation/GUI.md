@@ -8,7 +8,7 @@
 | [Контейнеры](#Контейнеры) |
 | [    GUI.container](#guicontainer-x-y-width-height--table-container) |
 | [    GUI.layout](#guilayout-x-y-width-height-columns-rows--table-container) |
-| [Виджеты](#Методы-для-создания-виджетов) |
+| [Виджеты](#Виджеты) |
 | [    GUI.object](#guiobject-x-y-width-height--table-object) |
 | [Анимация](#Анимация) |
 | [Готовые виджеты](#Готовые-виджеты) |
@@ -80,6 +80,8 @@ GUI.**contextMenu**( x, y ): *table* contextMenu
 
 Открыть по указанным координатам контекстное меню и ожидать выбора пользователя. При выборе какого-либо элемента будет вызван его callback-метод .**onTouch**, если таковой имеется.
 
+Если контекстное меню содержит слишком большое количество элементов, то появятся удобные кнопочки и поддержка колеса мыши для прокрутки содержимого.
+
 | Тип свойства | Свойство |Описание |
 | ------ | ------ | ------ |
 | *function* | :**addItem**( *string* text, *boolean* disabled, *string* shortcut, *int* color )| Добавить в контекстное меню элемент с указанными параметрами. При параметре disabled элемент не будет реагировать на клики мышью. Каждый элемент может иметь собственный callback-метод .**onTouch** для последующей обработки данных |
@@ -92,6 +94,8 @@ local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 
 buffer.clear(0x2D2D2D)
+buffer.draw(true)
+
 local contextMenu = GUI.contextMenu(2, 2)
 contextMenu:addItem("New")
 contextMenu:addItem("Open").onTouch = function()
@@ -100,12 +104,16 @@ end
 contextMenu:addSeparator()
 contextMenu:addItem("Save", true)
 contextMenu:addItem("Save as")
+contextMenu:addSeparator()
+for i = 1, 25 do
+	contextMenu:addItem("Do something " .. i)
+end
 contextMenu:show()
 ```
 
 Результат:
 
-![Imgur](http://i.imgur.com/kw6jjtY.png)
+![Imgur](http://i.imgur.com/UejZUwv.png)
 
 GUI.**error**( text )
 ------------------------------------------------------------------------
