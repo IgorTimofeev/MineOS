@@ -378,10 +378,14 @@ GUI.**panel**( x, y, width, height, color, [transparency] ): *table* panel
 local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 
+------------------------------------------------------------------------------------------
+
 local mainContainer = GUI.fullScreenContainer()
 
-local panel1 = mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, math.floor(mainContainer.height / 2), 0x444444))
-mainContainer:addChild(GUI.panel(1, panel1.height, mainContainer.width, mainContainer.height - panel1.height + 1, 0x880000))
+mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x262626))
+mainContainer:addChild(GUI.panel(10, 10, mainContainer.width - 20, mainContainer.height - 20, 0x880000))
+
+------------------------------------------------------------------------------------------
 
 mainContainer:draw()
 buffer.draw(true)
@@ -390,7 +394,7 @@ mainContainer:startEventHandling()
 
 Результат:
 
-![enter image description here](http://i91.fastpic.ru/big/2017/0402/46/d2516c735ef5a92d294caa560aa87546.png)
+![Imgur](http://i.imgur.com/Rho1RTl.png?1)
 
 GUI.**button**( x, y, width, height, buttonColor, textColor, buttonPressedColor, textPressedColor, text ): *table* button
 ------------------------------------------------------------------------
@@ -408,11 +412,19 @@ GUI.**button**( x, y, width, height, buttonColor, textColor, buttonPressedColor,
 
 Создать объект типа "кнопка". Каждая кнопка имеет два состояния (*isPressed = true/false*), автоматически переключаемые методом-обработчиком .*eventHandler*. Для назначения какого-либо действия кнопке после ее нажатия создайте для нее метод *.onTouch()*.
 
-Имеется также три альтернативных варианта кнопки: 
+Существует два дополнительных виджета кнопки, имеющие визуально разные стили:
 
- - GUI.**adaptiveButton**(...), отличающаяся тем, что вместо *width* и *height* использует отступ в пикселях со всех сторон от текста. Она удобна для автоматического расчета размера кнопки без получения размера текста.
- - GUI.**framedButton**(...), эквивалентный GUI.**button** за исключением того, что отрисовывается в рамочном режиме.
- - GUI.**adaptiveFramedButton**(...), отрисовывающийся по такому же методу, что и GUI.**framedButton** и рассчитывающийся по аналогии с GUI.**adaptiveButton.**
+ - GUI.**framedButton**(...) отрисовывается с рамкой по краям кнопки
+
+ ![Imgur](http://i.imgur.com/xwuFWqG.png)
+
+ - GUI.**roundedButton**(...) имеет симпатичные скругленные уголки
+
+ ![Imgur](http://i.imgur.com/p2exfKn.png)
+ 
+Для удобства имеется также альтернативные способы создания кнопки: 
+
+ - GUI.**adaptiveButton**(...) отличается тем, что вместо *width* и *height* использует отступ в пикселях со всех сторон от текста. Этот способ удобен для автоматического расчета размера кнопки вне зависимости от вложенного текста. Разумеется, поддерживаются также GUI.**adaptiveFramedButton**(...) и  GUI.**adaptiveRoundedButton**(...)
 
 | Тип свойства | Свойство |Описание |
 | ------ | ------ | ------ |
@@ -426,12 +438,24 @@ GUI.**button**( x, y, width, height, buttonColor, textColor, buttonPressedColor,
 local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 
+------------------------------------------------------------------------------------------
+
 local mainContainer = GUI.fullScreenContainer()
 mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x2D2D2D))
 
-mainContainer:addChild(GUI.button(2, 2, 30, 3, 0xFFFFFF, 0x000000, 0xAAAAAA, 0x000000, "Button text")).onTouch = function()
-	-- Do something on button click
+mainContainer:addChild(GUI.button(2, 2, 30, 3, 0xFFFFFF, 0x555555, 0xAAAAAA, 0x2D2D2D, "Regular button")).onTouch = function()
+	GUI.error("Regular button was pressed")
 end
+
+mainContainer:addChild(GUI.roundedButton(2, 6, 30, 3, 0xFFFFFF, 0x555555, 0xAAAAAA, 0x2D2D2D, "Rounded button")).onTouch = function()
+	GUI.error("Rounded button was pressed")
+end
+
+mainContainer:addChild(GUI.framedButton(2, 10, 30, 3, 0xFFFFFF, 0xFFFFFF, 0xAAAAAA, 0xAAAAAA, "Framed button")).onTouch = function()
+	GUI.error("Framed button was pressed")
+end
+
+------------------------------------------------------------------------------------------
 
 mainContainer:draw()
 buffer.draw(true)
@@ -440,7 +464,7 @@ mainContainer:startEventHandling()
 
 Результат:
 
-![Imgur](http://i.imgur.com/KiPqftB.png?1)
+![Imgur](http://i.imgur.com/yJ9V4c8.gif)
 
 GUI.**label**( x, y, width, height, textColor, text ): *table* label
 --------------------------------------------------------------------
@@ -511,10 +535,16 @@ GUI.**inputField**( x, y, width, height, backgroundColor, textColor, placeholder
 local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 
+------------------------------------------------------------------------------------------
+
 local mainContainer = GUI.fullScreenContainer()
 mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x2D2D2D))
 
-local inputField = mainContainer:addChild(GUI.inputField(2, 2, 30, 3, 0xEEEEEE, 0x555555, 0x999999, 0xFFFFFF, 0x2D2D2D, "Hello world", "Placeholder text"))
+mainContainer:addChild(GUI.inputField(2, 2, 30, 3, 0xEEEEEE, 0x555555, 0x999999, 0xFFFFFF, 0x2D2D2D, "Hello world", "Placeholder text")).onInputFinished = function()
+	GUI.error("Input finished!")
+end
+
+------------------------------------------------------------------------------------------
 
 mainContainer:draw()
 buffer.draw(true)
@@ -523,11 +553,7 @@ mainContainer:startEventHandling()
 
 Результат:
 
-![Imgur](http://i.imgur.com/8cUO1vy.png)
-
-![Imgur](http://i.imgur.com/4jHPQfl.png)
-
-![Imgur](http://i.imgur.com/PV0RQOq.png)
+![Imgur](http://i.imgur.com/njPN0eg.gif)
 
 GUI.**slider**( x, y, width, primaryColor, secondaryColor, pipeColor, valueColor, minimumValue, maximumValue, value, [showCornerValues, currentValuePrefix, currentValuePostfix] ): *table* slider
 ------------------------------------------------------------------------
@@ -559,14 +585,18 @@ GUI.**slider**( x, y, width, primaryColor, secondaryColor, pipeColor, valueColor
 local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 
+------------------------------------------------------------------------------------------
+
 local mainContainer = GUI.fullScreenContainer()
 mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x2D2D2D))
 
-local slider = mainContainer:addChild(GUI.slider(4, 2, 30, 0xFFDB40, 0xEEEEEE, 0xFFDB80, 0xBBBBBB, 0, 100, 50, true, "Prefix: ", " postfix"))
+local slider = mainContainer:addChild(GUI.slider(4, 2, 30, 0x66DB80, 0x0, 0xFFFFFF, 0xAAAAAA, 0, 100, 50, true, "Prefix: ", " postfix"))
 slider.roundValues = true
 slider.onValueChanged = function(value)
 	-- Do something when slider's value changed
 end
+
+------------------------------------------------------------------------------------------
 
 mainContainer:draw()
 buffer.draw(true)
@@ -575,7 +605,7 @@ mainContainer:startEventHandling()
 
 Результат:
 
-![Imgur](http://i.imgur.com/P4vQmNA.png?1)
+![Imgur](http://i.imgur.com/F7jrTPM.gif)
 
 GUI.**switch**( x, y, width, primaryColor, secondaryColor, pipeColor, state ): *table* switch
 ------------------------------------------------------------------------
@@ -601,24 +631,73 @@ GUI.**switch**( x, y, width, primaryColor, secondaryColor, pipeColor, state ): *
 local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 
+------------------------------------------------------------------------------------------
+
 local mainContainer = GUI.fullScreenContainer()
 mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x2D2D2D))
 
-local switch1 = mainContainer:addChild(GUI.switch(2, 2, 8, 0xFFDB40, 0xAAAAAA, 0xEEEEEE, true))
-local switch2 = mainContainer:addChild(GUI.switch(12, 2, 8, 0xFFDB40, 0xAAAAAA, 0xEEEEEE, false))
+local switch1 = mainContainer:addChild(GUI.switch(3, 2, 8, 0x66DB80, 0x1D1D1D, 0xEEEEEE, true))
+local switch2 = mainContainer:addChild(GUI.switch(3, 4, 8, 0x66DB80, 0x1D1D1D, 0xEEEEEE, false))
 switch2.onStateChanged = function(state)
-	-- Do something when switch's state changed
+	GUI.error("Switch state changed!")
 end
+
+------------------------------------------------------------------------------------------
 
 mainContainer:draw()
 buffer.draw(true)
 mainContainer:startEventHandling()
-
 ```
 
 Результат:
 
-![Imgur](http://i.imgur.com/wpJNU2F.png?1)
+![Imgur](http://i.imgur.com/prBIAsL.gif)
+
+GUI.**switchAndLabel**( x, y, width, switchWidth, primaryColor, secondaryColor, pipeColor, textColor, text, switchState ): *table* switch
+------------------------------------------------------------------------
+| Тип | Аргумент | Описание |
+| ------ | ------ | ------ |
+| *int* | x | Координата объекта по оси x |
+| *int* | y | Координата объекта по оси y |
+| *int* | width | Общая ширина |
+| *int* | width | Ширина переключателя |
+| *int* | primaryColor | Основной цвет переключателя |
+| *int* | secondaryColor | Вторичный цвет переключателя |
+| *int* | pipeColor | Цвет "пимпочки" переключателя |
+| *int* | textColor | Цвет текста лейбла |
+| *string* | text | Текст лейбла |
+| *boolean* | state | Состояние переключателя |
+
+Быстрый способ создания пары из свитча и лейбла одновременно. Идеально подходит для визуального отображения параметров типа *boolean* у любых объектов .
+
+| Тип свойства | Свойство | Описание |
+| ------ | ------ | ------ |
+| *table* | .**switch**| Указатель на объект свитча |
+| *table* | .**label**| Указатель на объект лейбла |
+
+Пример реализации свитча и лейбла:
+
+```lua
+local buffer = require("doubleBuffering")
+local GUI = require("GUI")
+
+------------------------------------------------------------------------------------------
+
+local mainContainer = GUI.fullScreenContainer()
+mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x2D2D2D))
+
+mainContainer:addChild(GUI.switchAndLabel(2, 2, 25, 8, 0x66DB80, 0x1D1D1D, 0xEEEEEE, 0x999999, "Sample text 1:", true))
+mainContainer:addChild(GUI.switchAndLabel(2, 4, 25, 8, 0x66DB80, 0x1D1D1D, 0xEEEEEE, 0x999999, "Sample text 2:", false))
+
+------------------------------------------------------------------------------------------
+
+mainContainer:draw()
+buffer.draw(true)
+mainContainer:startEventHandling()
+```
+
+Результат:
+![Imgur](http://i.imgur.com/ABGKNPI.gif)
 
 GUI.**colorSelector**( x, y, width, height, color, text ): *table* colorSelector
 ------------------------------------------------------------------------
@@ -643,12 +722,16 @@ GUI.**colorSelector**( x, y, width, height, color, text ): *table* colorSelector
 local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 
+------------------------------------------------------------------------------------------
+
 local mainContainer = GUI.fullScreenContainer()
 mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x2D2D2D))
 
 mainContainer:addChild(GUI.colorSelector(2, 2, 30, 3, 0xFF55FF, "Choose color")).onTouch = function()
 	-- Do something after choosing color
 end
+
+------------------------------------------------------------------------------------------
 
 mainContainer:draw()
 buffer.draw(true)
@@ -657,7 +740,7 @@ mainContainer:startEventHandling()
 
 Результат:
 
-![Imgur](http://i.imgur.com/n0nLIzx.png?1)
+![Imgur](http://i.imgur.com/QVxu2N0.gif)
 
 GUI.**comboBox**( x, y, width, elementHeight, backgroundColor, textColor, arrowBackgroundColor, arrowTextColor ): *table* comboBox
 ------------------------------------------------------------------------
@@ -687,21 +770,20 @@ GUI.**comboBox**( x, y, width, elementHeight, backgroundColor, textColor, arrowB
 local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 
+------------------------------------------------------------------------------------------
+
 local mainContainer = GUI.fullScreenContainer()
 mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x2D2D2D))
 
-local comboBox = mainContainer:addChild(GUI.comboBox(2, 2, 30, 3, 0xEEEEEE, 0x2D2D2D, 0xCCCCCC, 0x888888))
+local comboBox = mainContainer:addChild(GUI.comboBox(3, 2, 30, 3, 0xEEEEEE, 0x2D2D2D, 0xCCCCCC, 0x888888))
 comboBox:addItem(".PNG")
 comboBox:addItem(".JPG").onTouch = function()
 	-- Do something when .JPG was selected
 end
 comboBox:addItem(".GIF")
-comboBox:addSeparator()
-comboBox:addItem(".PSD")
+comboBox:addItem(".PIC")
 
-comboBox.onItemSelected = function(item)
-	-- Do something after item selection
-end
+------------------------------------------------------------------------------------------
 
 mainContainer:draw()
 buffer.draw(true)
@@ -710,7 +792,7 @@ mainContainer:startEventHandling()
 
 Результат:
 
-![Imgur](http://i.imgur.com/4oTgrUV.png?1)
+![Imgur](http://i.imgur.com/6ROzLAc.gif)
 
 GUI.**menu**( x, y, width, backgroundColor, textColor, backgroundPressedColor, textPressedColor, backgroundTransparency ): *table* menu
 ------------------------------------------------------------------------
@@ -738,16 +820,19 @@ GUI.**menu**( x, y, width, backgroundColor, textColor, backgroundPressedColor, t
 local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 
+------------------------------------------------------------------------------------------
+
 local mainContainer = GUI.fullScreenContainer()
 mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x2D2D2D))
 
-local menu = mainContainer:addChild(GUI.menu(1, 1, mainContainer.width, 0xEEEEEE, 0x2D2D2D, 0x3366CC, 0xFFFFFF, nil))
+local menu = mainContainer:addChild(GUI.menu(1, 1, mainContainer.width, 0xEEEEEE, 0x666666, 0x3366CC, 0xFFFFFF, nil))
 menu:addItem("MineCode IDE", 0x0)
-menu:addItem("File").onTouch = function(eventData)
-	local contextMenu = GUI.contextMenu(eventData[3], eventData[4] + 1)
+local item = menu:addItem("File")
+item.onTouch = function(eventData)
+	local contextMenu = GUI.contextMenu(item.x, item.y + 1)
 	contextMenu:addItem("New")
 	contextMenu:addItem("Open").onTouch = function()
-		-- Do something to open file or whatever
+		GUI.error("Open was pressed")
 	end
 	contextMenu:addSeparator()
 	contextMenu:addItem("Save")
@@ -758,6 +843,8 @@ menu:addItem("Edit")
 menu:addItem("View")
 menu:addItem("About")
 
+------------------------------------------------------------------------------------------
+
 mainContainer:draw()
 buffer.draw(true)
 mainContainer:startEventHandling()
@@ -765,7 +852,7 @@ mainContainer:startEventHandling()
 
 Результат:
 
-![Imgur](http://i.imgur.com/jWyVhTP.png?1)
+![Imgur](http://i.imgur.com/b1Tmge5.gif)
 
 GUI.**image**( x, y, loadedImage ): *table* image
 -------------------------------------------------
@@ -968,23 +1055,26 @@ GUI.**treeView**( x, y, width, height, backgroundColor, textColor, selectionBack
 local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 
+------------------------------------------------------------------------------------------
+
 local mainContainer = GUI.fullScreenContainer()
-mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x0))
+mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x262626))
 
 local treeView = mainContainer:addChild(GUI.treeView(2, 2, 30, 41, 0xCCCCCC, 0x2D2D2D, 0x3C3C3C, 0xEEEEEE, 0x666666, 0xEEEEEE, 0x3366CC, "/"))
-treeView.onFileSelected = function(filePath)
-	-- Do something when file was selected
+treeView.onFileSelected = function(path)
+   GUI.error("File was selected, the path is: \"" .. path .. "\"")
 end
+
+------------------------------------------------------------------------------------------
 
 mainContainer:draw()
 buffer.draw(true)
 mainContainer:startEventHandling()
-
 ```
 
 Результат:
 
-![enter image description here](http://i89.fastpic.ru/big/2017/0402/d2/25b46010c6050d65ed4894c9092a0fd2.png)
+![enter image description here](http://i.imgur.com/ycw6nrJ.gif)
 
 GUI.**codeView**( x, y, width, height, lines, fromSymbol, fromLine, maximumLineLength, selections, highlights, highlightLuaSyntax, indentationWidth ): *table* codeView
 ------------------------------------------------------------------------
@@ -1268,9 +1358,10 @@ end
 
 ```lua
 local buffer = require("doubleBuffering")
+local image = require("image")
 local GUI = require("GUI")
 
----------------------------------------------------------------------
+------------------------------------------------------------------------------------------
 
 -- Создаем полноэкранный контейнер, добавляем темно-серую панель
 local mainContainer = GUI.fullScreenContainer()
@@ -1284,7 +1375,7 @@ local backgroundPanel = window:addChild(GUI.panel(1, 1, window.width, window.hei
 local layout = window:addChild(GUI.layout(1, 1, window.width, window.height, 3, 1))
 
 -- В ячейку 2х1 добавляем загруженное изображение с лицом Стива
-layout:setCellPosition(2, 1, layout:addChild(GUI.image(1, 1, image.load("/MineOS/System/OS/Icons/Steve.pic"))))
+layout:setCellPosition(2, 1, layout:addChild(GUI.image(1, 1, image.load("/MineOS/System/Icons/Steve.pic"))))
 -- Туда же добавляем слайдер, с помощью которого будем регулировать изменение размера окна
 local slider = layout:setCellPosition(2, 1, layout:addChild(GUI.slider(1, 1, 30, 0x0, 0xAAAAAA, 0x1D1D1D, 0xAAAAAA, 1, 30, 10, true, "Изменять размер на: ", "px")))
 -- В ячейке 2х1 задаем вертикальную ориентацию объектов и расстояние между ними в 1 пиксель
@@ -1293,25 +1384,25 @@ layout:setCellSpacing(2, 1, 1)
 
 -- Cоздаем функцию, изменяющую размер окна на указанную величину
 local function resizeWindow(horizontalOffset, verticalOffset)
-	window.width, backgroundPanel.width, layout.width = window.width + horizontalOffset, backgroundPanel.width + horizontalOffset, layout.width + horizontalOffset
-	window.height, backgroundPanel.height, layout.height = window.height + verticalOffset, backgroundPanel.height + verticalOffset, layout.height + verticalOffset
+    window.width, backgroundPanel.width, layout.width = window.width + horizontalOffset, backgroundPanel.width + horizontalOffset, layout.width + horizontalOffset
+    window.height, backgroundPanel.height, layout.height = window.height + verticalOffset, backgroundPanel.height + verticalOffset, layout.height + verticalOffset
 
-	mainContainer:draw()
-	buffer.draw()
+    mainContainer:draw()
+    buffer.draw()
 end
 
 -- В ячейку 3х1 добавляем 4 кнопки с назначенными функциями по изменению размера окна
 layout:setCellPosition(3, 1, layout:addChild(GUI.adaptiveButton(1, 1, 3, 0, 0xFFFFFF, 0x000000, 0x444444, 0xFFFFFF, "Ниже"))).onTouch = function()
-	resizeWindow(0, -math.floor(slider.value))
+    resizeWindow(0, -math.floor(slider.value))
 end
 layout:setCellPosition(3, 1, layout:addChild(GUI.adaptiveButton(1, 1, 3, 0, 0xFFFFFF, 0x000000, 0x444444, 0xFFFFFF, "Выше"))).onTouch = function()
-	resizeWindow(0, math.floor(slider.value))
+    resizeWindow(0, math.floor(slider.value))
 end
 layout:setCellPosition(3, 1, layout:addChild(GUI.adaptiveButton(1, 1, 3, 0, 0xFFFFFF, 0x000000, 0x444444, 0xFFFFFF, "Уже"))).onTouch = function()
-	resizeWindow(-math.floor(slider.value), 0)
+    resizeWindow(-math.floor(slider.value), 0)
 end
 layout:setCellPosition(3, 1, layout:addChild(GUI.adaptiveButton(1, 1, 3, 0, 0x3392FF, 0xFFFFFF, 0x444444, 0xFFFFFF, "Шире"))).onTouch = function()
-	resizeWindow(math.floor(slider.value), 0)
+    resizeWindow(math.floor(slider.value), 0)
 end
 
 -- В ячейке 3x1 задаем горизонтальную ориентацию кнопок и расстояние между ними в 2 пикселя
@@ -1321,20 +1412,18 @@ layout:setCellSpacing(3, 1, 2)
 layout:setCellAlignment(3, 1, GUI.alignment.horizontal.right, GUI.alignment.vertical.bottom)
 layout:setCellMargin(3, 1, 2, 1)
 
+------------------------------------------------------------------------------------------
+
 mainContainer:draw()
 buffer.draw(true)
 mainContainer:startEventHandling()
 ```
 
-В результате получаем симпатичное окошко с четырьмя кнопками, автоматически расположенными в его правой части:
-
-![Imgur](http://i.imgur.com/NC5WU82.png?1)
+В результате получаем симпатичное окошко с четырьмя кнопками, автоматически расположенными в его правой части.
 
 Если несколько раз нажать на кнопку "Шире" и "Выше", то окошко растянется, однако все объекты останутся на законных местах. Причем без каких-либо хардкорных расчетов вручную:
 
-![Imgur](http://i.imgur.com/NncPObT.png?1)
-
-![Imgur](http://i.imgur.com/RCdBDgr.png?1)
+![Imgur](http://i.imgur.com/c8Ks91w.gif)
 
 Практический пример #5
 ======

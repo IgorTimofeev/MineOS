@@ -2410,8 +2410,8 @@ local function comboBoxAddItem(object, ...)
 	return object.dropDownMenu:addItem(...)
 end
 
-local function comboBoxAddSeparator(object, ...)
-	return object.dropDownMenu:addItem(...)
+local function comboBoxAddSeparator(object)
+	return object.dropDownMenu:addSeparator()
 end
 
 function GUI.comboBox(x, y, width, elementHeight, backgroundColor, textColor, arrowBackgroundColor, arrowTextColor)
