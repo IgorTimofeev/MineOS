@@ -1,3 +1,35 @@
+| Содержание |
+| ----- |
+| [О библиотеке](#О-библиотеке) |
+| [Установка](#Установка) |
+| [Параметры библиотеки](#Параметры-библиотеки) |
+| Методы библиотеки: |
+| [buffer.setResolution](#buffersetresolution-width-height-) |
+| [buffer.draw](#bufferdraw-force-) |
+| [buffer.setDrawLimit](#buffersetdrawlimit-x1-y1-x2-y2-) |
+| [buffer.getDrawLimit](#buffergetdrawlimit--int-x1-int-y1-int-x2-int-y2) |
+| [buffer.copy](#buffercopy-x-y-width-height--table-pixeldata) |
+| [buffer.paste](#bufferpaste-x-y-pixeldata-) |
+| Методы отрисовки: |
+| [buffer.set](#bufferpaste-x-y-pixeldata-) |
+| [buffer.get](#bufferpaste-x-y-pixeldata-) |
+| [buffer.square](#buffersquare-x-y-width-height-background-foreground-symbol-transparency-) |
+| [buffer.clear](#bufferclear-color-transparency-) |
+| [buffer.text](#buffertext-x-y-color-text-transparency-) |
+| [Методы полупиксельной отрисовки:](#Методы-полупиксельной-отрисовки) |
+| [buffer.semiPixelSet](#buffersemipixelset-x-y-color-) |
+| [buffer.semiPixelSquare](#buffersemipixelsquare-x-y-width-height-color-) |
+| [buffer.semiPixelLine](#buffersemipixelline-x1-y1-x2-y2-color-) |
+| [buffer.semiPixelCircle](#buffersemipixelcircle-xcenter-ycenter-radius-color-) |
+| [buffer.semiPixelBezierCurve](#buffersemipixelbeziercurve-points-color-precision-) |
+| [Вспомогательные методы:](#Вспомогательные-методы) |
+| [buffer.flush](#bufferflush-width-height-) |
+| [buffer.getIndexByCoordinates](#buffergetindexbycoordinates-x-y--int-index) |
+| [buffer.getCoordinatesByIndex](#buffergetcoordinatesbyindex-index--int-x-int-y) |
+| [buffer.rawSet](#bufferrawset-index-background-foreground-symbol-) |
+| [buffer.rawGet](#bufferrawget-index--int-background-int-foreground-char-symbol) |
+| [Практический пример #1](#Практический-пример-1) |
+
 
 О библиотеке
 ======
@@ -173,7 +205,7 @@ buffer.**image**( x, y, picture )
 Методы полупиксельной отрисовки
 ======
 
-Все полупиксельные методы позволяют избежать эффекта удвоения высоты пикселя консольной графики, используя специальные символы наподобие "▄". При этом передаваемые координаты по оси **Y** должны принадлежать промежутку **[0; buffer.height * 2]**. 
+Все методы полупиксельной отрисовки позволяют избежать эффекта удвоения высоты пикселя консольной графики, используя специальные символы наподобие "▄". При этом передаваемые координаты по оси **Y** должны принадлежать промежутку **[0; buffer.height * 2]**. 
 
 
 buffer.**semiPixelSet**( x, y, color )
@@ -291,7 +323,7 @@ buffer.image(1, 1, image.load("/MineOS/Pictures/Raspberry.pic"))
 -- Заполняем буфер черным цветом с прозрачностью 60%, чтобы малина на фоне  была чуть темнее
 buffer.clear(0x0, 60)
 
--- Рисуем 10 квадратиков, заполненных рандомным цветом
+-- Рисуем 10 квадратиков, заполненных случайным цветом
 local x, y, xStep, yStep = 2, 2, 4, 2
 for i = 1, 10 do
 	buffer.square(x, y, 6, 3, math.random(0x0, 0xFFFFFF), 0x0, " ")

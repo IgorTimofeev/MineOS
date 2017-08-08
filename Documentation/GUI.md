@@ -1,3 +1,34 @@
+| Содержание |
+| ----- |
+| [О библиотеке](#О-библиотеке) |
+| [Установка](#Установка) |
+| [Standalone-методы](#standalone-методы) |
+| [GUI.contextMenu](#guicontextmenu-x-y--table-contextmenu) |
+| [GUI.error](#guierror-text-) |
+| [GUI.container](#guicontainer-x-y-width-height--table-container) |
+| [GUI.layout](#guilayout-x-y-width-height-columns-rows--table-container) |
+| [Методы для создания виджетов](#Методы-для-создания-виджетов) |
+| [GUI.object](#guiobject-x-y-width-height--table-object) |
+| [GUI.panel](#guipanel-x-y-width-height-color-transparency--table-panel) |
+| [GUI.button](#guibutton-x-y-width-height-buttoncolor-textcolor-buttonpressedcolor-textpressedcolor-text--table-button) |
+| [GUI.label](#guilabel-x-y-width-height-textcolor-text--table-label) |
+| [GUI.inputField](#guiinputfield-x-y-width-height-backgroundcolor-textcolor-placeholdertextcolor-backgroundfocusedcolor-textfocusedcolor-text-placeholdertext-erasetextonfocus-textmask--table-inputfield) |
+| [GUI.slider](#guislider-x-y-width-primarycolor-secondarycolor-pipecolor-valuecolor-minimumvalue-maximumvalue-value-showcornervalues-currentvalueprefix-currentvaluepostfix--table-slider) |
+| [GUI.switch](#guiswitch-x-y-width-primarycolor-secondarycolor-pipecolor-state--table-switch) |
+| [GUI.colorSelector](#guicolorselector-x-y-width-height-color-text--table-colorselector) |
+| [GUI.comboBox](#guicombobox-x-y-width-elementheight-backgroundcolor-textcolor-arrowbackgroundcolor-arrowtextcolor--table-combobox) |
+| [GUI.menu](#guimenu-x-y-width-backgroundcolor-textcolor-backgroundpressedcolor-textpressedcolor-backgroundtransparency--table-menu) |
+| [GUI.image](#guiimage-x-y-loadedimage--table-image) |
+| [GUI.progressBar](#guiprogressbar-x-y-width-primarycolor-secondarycolor-valuecolor-value-thin-showvalue-valueprefix-valuepostfix--table-progressbar) |
+| [GUI.scrollBar](#guiscrollbar-x-y-width-height-backgroundcolor-foregroundcolor-minimumvalue-maximumvalue-value-shownvaluecount-onscrollvalueincrement-thinhorizontalmode--table-scrollbar) |
+| [GUI.textBox](#guitextboxx-y-width-height-backgroundcolor-textcolor-lines-currentline-horizontaloffset-verticaloffset-table-textbox) |
+| [GUI.treeView](#guitreeview-x-y-width-height-backgroundcolor-textcolor-selectionbackgroundcolor-selectiontextcolor-arrowcolor-scrollbarprimarycolor-scrollbarsecondarycolor-workpath--table-treeview) |
+| [GUI.codeView](#guicodeview-x-y-width-height-lines-fromsymbol-fromline-maximumlinelength-selections-highlights-highlightluasyntax-indentationwidth--table-codeview) |
+| [GUI.chart](#guichart-x-y-width-height-axiscolor-axisvaluecolor-axishelperscolor-chartcolor-xaxisvalueinterval-yaxisvalueinterval-xaxispostfix-yaxispostfix-fillchartarea-values--table-chart) |
+| [Практический пример #1](#Практический-пример-1) |
+| [Практический пример #2](#Практический-пример-2) |
+| [Практический пример #3](#Практический-пример-3) |
+| [Практический пример #4](#Практический-пример-4) |
 
 
 О библиотеке
@@ -19,7 +50,7 @@ GUI - многофункциональная графическая библио
 | ------ | ------ |
 | *[GUI](https://github.com/IgorTimofeev/OpenComputers/blob/master/lib/GUI.lua)* | Данная библиотека |
 | *[advancedLua](https://github.com/IgorTimofeev/OpenComputers/blob/master/lib/advancedLua.lua)* | Дополнение стандартных библиотек Lua множеством функций: быстрой сериализацией таблиц, переносом строк, методами обработки бинарных данных и т.д. |
-| *[doubleBuffering](https://github.com/IgorTimofeev/OpenComputers/blob/master/lib/doubleBuffering.lua)* | Низкоуровневая библиотека двойной буферизации для максималььно быстрой отрисовки графики с поддержкой полу-пиксельных методов |
+| *[doubleBuffering](https://github.com/IgorTimofeev/OpenComputers/blob/master/lib/doubleBuffering.lua)* | Низкоуровневая библиотека двойной буферизации для максималььно быстрой отрисовки графики с поддержкой методов полупиксельной отрисовки |
 | *[color](https://github.com/IgorTimofeev/OpenComputers/blob/master/lib/color.lua)* | Низкоуровневая библиотека для работы с цветом, предоставляющая методы получения цветовых каналов, различные палитры и конвертацию цвета в 8-битный формат |
 | *[image](https://github.com/IgorTimofeev/OpenComputers/blob/master/lib/image.lua)* | Библиотека, реализующая стандарт изображений для OpenComputers и методы их обработки: транспонирование, обрезку, поворот, отражение и т.д. |
 | *[OCIF](https://github.com/IgorTimofeev/OpenComputers/blob/master/lib/ImageFormatModules/OCIF.lua)* | Модуль формата изображения OCIF (OpenComputers Image Format) для библиотеки image, написанный с учетом особенностей мода и реализующий эффективное сжатие пиксельных данных |
@@ -1113,7 +1144,7 @@ mainContainer:startEventHandling()
 Практический пример #3
 ======
 
-Для демонстрации возможностей библиотеки предлагаю создать кастомный виджет с нуля. К примеру, создать панель, реагирующую на клики мыши, позволяющую рисовать на ней произвольным цветом по аналогии со школьной доской.
+Для демонстрации возможностей библиотеки предлагаю создать собственный виджет с нуля. К примеру, панель, реагирующую на клики мыши, позволяющую рисовать на ней произвольным цветом по аналогии со школьной доской.
  
 ```lua
 local buffer = require("doubleBuffering")
@@ -1137,7 +1168,7 @@ local function myWidgetEventHandler(mainContainer, object, eventData)
 	end
 end
 
--- Создаем метод, возвращающий кастомный виджет
+-- Создаем метод, возвращающий наш виджет
 local function createMyWidget(x, y, width, height, backgroundColor, paintColor)
 	-- Наследуемся от GUI.object, дополняем его параметрами цветов и пиксельной карты
 	local object = GUI.object(x, y, width, height)
@@ -1178,7 +1209,7 @@ mainContainer:startEventHandling()
 
 ![enter image description here](http://i89.fastpic.ru/big/2017/0402/fd/be80c13085824bebf68f64a329e226fd.png)
 
-Для разнообразия модифицируем код, создав несколько виджетов с рандомными цветами:
+Для разнообразия модифицируем код, создав несколько виджетов со случайными цветами:
 ```lua
 local x = 2
 for i = 1, 5 do
