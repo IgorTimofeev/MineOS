@@ -13,6 +13,7 @@
 | [Анимация](#Анимация) |
 | [Готовые виджеты](#Готовые-виджеты) |
 | [    GUI.panel](#guipanel-x-y-width-height-color-transparency--table-panel) |
+| [    GUI.image](#guiimage-x-y-loadedimage--table-image) |
 | [    GUI.button](#guibutton-x-y-width-height-buttoncolor-textcolor-buttonpressedcolor-textpressedcolor-text--table-button) |
 | [    GUI.label](#guilabel-x-y-width-height-textcolor-text--table-label) |
 | [    GUI.inputField](#guiinputfield-x-y-width-height-backgroundcolor-textcolor-placeholdertextcolor-backgroundfocusedcolor-textfocusedcolor-text-placeholdertext-erasetextonfocus-textmask--table-inputfield) |
@@ -21,12 +22,11 @@
 | [    GUI.switchAndLabel](#guiswitchandlabel-x-y-width-switchwidth-primarycolor-secondarycolor-pipecolor-textcolor-text-switchstate--table-switchandlabel) |
 | [    GUI.colorSelector](#guicolorselector-x-y-width-height-color-text--table-colorselector) |
 | [    GUI.comboBox](#guicombobox-x-y-width-elementheight-backgroundcolor-textcolor-arrowbackgroundcolor-arrowtextcolor--table-combobox) |
+| [    GUI.treeView](#guitreeview-x-y-width-height-backgroundcolor-textcolor-selectionbackgroundcolor-selectiontextcolor-arrowcolor-scrollbarprimarycolor-scrollbarsecondarycolor-workpath--table-treeview) |
 | [    GUI.menu](#guimenu-x-y-width-backgroundcolor-textcolor-backgroundpressedcolor-textpressedcolor-backgroundtransparency--table-menu) |
-| [    GUI.image](#guiimage-x-y-loadedimage--table-image) |
 | [    GUI.progressBar](#guiprogressbar-x-y-width-primarycolor-secondarycolor-valuecolor-value-thin-showvalue-valueprefix-valuepostfix--table-progressbar) |
 | [    GUI.scrollBar](#guiscrollbar-x-y-width-height-backgroundcolor-foregroundcolor-minimumvalue-maximumvalue-value-shownvaluecount-onscrollvalueincrement-thinhorizontalmode--table-scrollbar) |
 | [    GUI.textBox](#guitextboxx-y-width-height-backgroundcolor-textcolor-lines-currentline-horizontaloffset-verticaloffset-table-textbox) |
-| [    GUI.treeView](#guitreeview-x-y-width-height-backgroundcolor-textcolor-selectionbackgroundcolor-selectiontextcolor-arrowcolor-scrollbarprimarycolor-scrollbarsecondarycolor-workpath--table-treeview) |
 | [    GUI.codeView](#guicodeview-x-y-width-height-lines-fromsymbol-fromline-maximumlinelength-selections-highlights-highlightluasyntax-indentationwidth--table-codeview) |
 | [    GUI.chart](#guichart-x-y-width-height-axiscolor-axisvaluecolor-axishelperscolor-chartcolor-xaxisvalueinterval-yaxisvalueinterval-xaxispostfix-yaxispostfix-fillchartarea-values--table-chart) |
 | [Практические примеры](#Практический-пример-1) |
@@ -397,6 +397,42 @@ mainContainer:startEventHandling()
 
 ![Imgur](http://i.imgur.com/Rho1RTl.png?1)
 
+GUI.**image**( x, y, loadedImage ): *table* image
+-------------------------------------------------
+| Тип | Аргумент | Описание |
+| ------ | ------ | ------ |
+| *int* | x | Координата объекта по оси x |
+| *int* | y | Координата объекта по оси y |
+| *table* | loadedImage | Изображение, загруженное методом *image.load()* |
+
+Создать объект типа "изображение", представляющий из себя аналог объекта *panel* с тем лишь исключением, что вместо статичного цвета используется загруженное изображение.
+
+| Тип свойства | Свойство |Описание |
+| ------ | ------ | ------ |
+| *callback-function* | .**onTouch**( *table* eventData )| Метод, вызываемый после нажатия на изображение в обработчике событий |
+| *table* | .**image**| Таблица пиксельных данных изображения |
+
+Пример реализации изображения:
+
+```lua
+local image = require("image")
+local buffer = require("doubleBuffering")
+local GUI = require("GUI")
+
+local mainContainer = GUI.fullScreenContainer()
+mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x0))
+
+mainContainer:addChild(GUI.image(2, 2, image.load("/Furnance.pic")))
+
+mainContainer:draw()
+buffer.draw(true)
+mainContainer:startEventHandling()
+```
+
+Результат:
+
+![enter image description here](http://i91.fastpic.ru/big/2017/0402/80/3b0ec81c3b2f660b9a4c6f18908f4280.png)
+
 GUI.**button**( x, y, width, height, buttonColor, textColor, buttonPressedColor, textPressedColor, text ): *table* button
 ------------------------------------------------------------------------
 | Тип | Аргумент | Описание |
@@ -698,6 +734,7 @@ mainContainer:startEventHandling()
 ```
 
 Результат:
+
 ![Imgur](http://i.imgur.com/4zKOla9.gif)
 
 GUI.**colorSelector**( x, y, width, height, color, text ): *table* colorSelector
@@ -795,6 +832,56 @@ mainContainer:startEventHandling()
 
 ![Imgur](http://i.imgur.com/6ROzLAc.gif)
 
+GUI.**treeView**( x, y, width, height, backgroundColor, textColor, selectionBackgroundColor, selectionTextColor, arrowColor, scrollBarPrimaryColor, scrollBarSecondaryColor, workPath ): *table* treeView
+------------------------------------------------------------------------
+| Тип | Аргумент | Описание |
+| ------ | ------ | ------ |
+| *int* | x | Координата объекта по оси x |
+| *int* | y | Координата объекта по оси y |
+| *int* | width | Ширина объекта |
+| *int* | height | Высота объекта |
+| *int* or *nil* | backgroundColor | Цвет фона TreeView |
+| *int* | textColor | Цвет текста TreeView |
+| *int* | selectionBackgroundColor | Цвет выделения фона TreeView |
+| *int* | selectionTextColor | Цвет выделения текста TreeView |
+| *int* | arrowColor | Цвет стрелки директорий TreeView |
+| *int* | scrollBarPrimaryColor | Первичный цвет скроллбара TreeView |
+| *int* | scrollBarSecondaryColor | Вторичный цвет скроллбара TreeView |
+| *string* | workPath | Стартовая директория TreeView |
+
+Создать объект типа "TreeView", предназначенный для навигации по файловой системе в виде иерархического древа. При клике на директорию будет показано ее содержимое, а во время прокрутки колесиком мыши содержимое будет "скроллиться" в указанном направлении.
+
+| Тип свойства | Свойство |Описание |
+| ------ | ------ | ------ |
+| *callback-function* | .**onFileSelected**( *int* currentFile )| Метод, вызываемый после выбора файла в TreeView |
+
+Пример реализации TreeView:
+
+```lua
+local buffer = require("doubleBuffering")
+local GUI = require("GUI")
+
+------------------------------------------------------------------------------------------
+
+local mainContainer = GUI.fullScreenContainer()
+mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x262626))
+
+local treeView = mainContainer:addChild(GUI.treeView(2, 2, 30, 41, 0xCCCCCC, 0x2D2D2D, 0x3C3C3C, 0xEEEEEE, 0x666666, 0xEEEEEE, 0x3366CC, "/"))
+treeView.onFileSelected = function(path)
+   GUI.error("File was selected, the path is: \"" .. path .. "\"")
+end
+
+------------------------------------------------------------------------------------------
+
+mainContainer:draw()
+buffer.draw(true)
+mainContainer:startEventHandling()
+```
+
+Результат:
+
+![Imgur](http://i.imgur.com/bSaDYWg.gif)
+
 GUI.**menu**( x, y, width, backgroundColor, textColor, backgroundPressedColor, textPressedColor, backgroundTransparency ): *table* menu
 ------------------------------------------------------------------------
 | Тип | Аргумент | Описание |
@@ -854,42 +941,6 @@ mainContainer:startEventHandling()
 Результат:
 
 ![Imgur](http://i.imgur.com/b1Tmge5.gif)
-
-GUI.**image**( x, y, loadedImage ): *table* image
--------------------------------------------------
-| Тип | Аргумент | Описание |
-| ------ | ------ | ------ |
-| *int* | x | Координата объекта по оси x |
-| *int* | y | Координата объекта по оси y |
-| *table* | loadedImage | Изображение, загруженное методом *image.load()* |
-
-Создать объект типа "изображение", представляющий из себя аналог объекта *panel* с тем лишь исключением, что вместо статичного цвета используется загруженное изображение.
-
-| Тип свойства | Свойство |Описание |
-| ------ | ------ | ------ |
-| *callback-function* | .**onTouch**( *table* eventData )| Метод, вызываемый после нажатия на изображение в обработчике событий |
-| *table* | .**image**| Таблица пиксельных данных изображения |
-
-Пример реализации изображения:
-
-```lua
-local image = require("image")
-local buffer = require("doubleBuffering")
-local GUI = require("GUI")
-
-local mainContainer = GUI.fullScreenContainer()
-mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x0))
-
-mainContainer:addChild(GUI.image(2, 2, image.load("/Furnance.pic")))
-
-mainContainer:draw()
-buffer.draw(true)
-mainContainer:startEventHandling()
-```
-
-Результат:
-
-![enter image description here](http://i91.fastpic.ru/big/2017/0402/80/3b0ec81c3b2f660b9a4c6f18908f4280.png)
 
 GUI.**progressBar**( x, y, width, primaryColor, secondaryColor, valueColor, value, [thin, showValue, valuePrefix, valuePostfix] ): *table* progressBar
 ------------------------------------------------------------------------
@@ -1025,57 +1076,6 @@ mainContainer:startEventHandling()
 Результат:
 
 ![enter image description here](http://i89.fastpic.ru/big/2017/0402/ad/01cdcf7aec919051f64ac2b7d9daf0ad.png)
-
-
-GUI.**treeView**( x, y, width, height, backgroundColor, textColor, selectionBackgroundColor, selectionTextColor, arrowColor, scrollBarPrimaryColor, scrollBarSecondaryColor, workPath ): *table* treeView
-------------------------------------------------------------------------
-| Тип | Аргумент | Описание |
-| ------ | ------ | ------ |
-| *int* | x | Координата объекта по оси x |
-| *int* | y | Координата объекта по оси y |
-| *int* | width | Ширина объекта |
-| *int* | height | Высота объекта |
-| *int* or *nil* | backgroundColor | Цвет фона TreeView |
-| *int* | textColor | Цвет текста TreeView |
-| *int* | selectionBackgroundColor | Цвет выделения фона TreeView |
-| *int* | selectionTextColor | Цвет выделения текста TreeView |
-| *int* | arrowColor | Цвет стрелки директорий TreeView |
-| *int* | scrollBarPrimaryColor | Первичный цвет скроллбара TreeView |
-| *int* | scrollBarSecondaryColor | Вторичный цвет скроллбара TreeView |
-| *string* | workPath | Стартовая директория TreeView |
-
-Создать объект типа "TreeView", предназначенный для навигации по файловой системе в виде иерархического древа. При клике на директорию будет показано ее содержимое, а во время прокрутки колесиком мыши содержимое будет "скроллиться" в указанном направлении.
-
-| Тип свойства | Свойство |Описание |
-| ------ | ------ | ------ |
-| *callback-function* | .**onFileSelected**( *int* currentFile )| Метод, вызываемый после выбора файла в TreeView |
-
-Пример реализации TreeView:
-
-```lua
-local buffer = require("doubleBuffering")
-local GUI = require("GUI")
-
-------------------------------------------------------------------------------------------
-
-local mainContainer = GUI.fullScreenContainer()
-mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x262626))
-
-local treeView = mainContainer:addChild(GUI.treeView(2, 2, 30, 41, 0xCCCCCC, 0x2D2D2D, 0x3C3C3C, 0xEEEEEE, 0x666666, 0xEEEEEE, 0x3366CC, "/"))
-treeView.onFileSelected = function(path)
-   GUI.error("File was selected, the path is: \"" .. path .. "\"")
-end
-
-------------------------------------------------------------------------------------------
-
-mainContainer:draw()
-buffer.draw(true)
-mainContainer:startEventHandling()
-```
-
-Результат:
-
-![Imgur](http://i.imgur.com/bSaDYWg.gif)
 
 GUI.**codeView**( x, y, width, height, lines, fromSymbol, fromLine, maximumLineLength, selections, highlights, highlightLuaSyntax, indentationWidth ): *table* codeView
 ------------------------------------------------------------------------
