@@ -14,21 +14,22 @@
 | [Готовые виджеты](#Готовые-виджеты) |
 | [    GUI.panel](#guipanel-x-y-width-height-color-transparency--table-panel) |
 | [    GUI.image](#guiimage-x-y-loadedimage--table-image) |
-| [    GUI.button](#guibutton-x-y-width-height-buttoncolor-textcolor-buttonpressedcolor-textpressedcolor-text--table-button) |
 | [    GUI.label](#guilabel-x-y-width-height-textcolor-text--table-label) |
+| [    GUI.button](#guibutton-x-y-width-height-buttoncolor-textcolor-buttonpressedcolor-textpressedcolor-text--table-button) |
 | [    GUI.inputField](#guiinputfield-x-y-width-height-backgroundcolor-textcolor-placeholdertextcolor-backgroundfocusedcolor-textfocusedcolor-text-placeholdertext-erasetextonfocus-textmask--table-inputfield) |
 | [    GUI.slider](#guislider-x-y-width-primarycolor-secondarycolor-pipecolor-valuecolor-minimumvalue-maximumvalue-value-showcornervalues-currentvalueprefix-currentvaluepostfix--table-slider) |
 | [    GUI.switch](#guiswitch-x-y-width-primarycolor-secondarycolor-pipecolor-state--table-switch) |
 | [    GUI.switchAndLabel](#guiswitchandlabel-x-y-width-switchwidth-primarycolor-secondarycolor-pipecolor-textcolor-text-switchstate--table-switchandlabel) |
 | [    GUI.colorSelector](#guicolorselector-x-y-width-height-color-text--table-colorselector) |
 | [    GUI.comboBox](#guicombobox-x-y-width-elementheight-backgroundcolor-textcolor-arrowbackgroundcolor-arrowtextcolor--table-combobox) |
-| [    GUI.treeView](#guitreeview-x-y-width-height-backgroundcolor-textcolor-selectionbackgroundcolor-selectiontextcolor-arrowcolor-scrollbarprimarycolor-scrollbarsecondarycolor-workpath--table-treeview) |
 | [    GUI.menu](#guimenu-x-y-width-backgroundcolor-textcolor-backgroundpressedcolor-textpressedcolor-backgroundtransparency--table-menu) |
 | [    GUI.progressBar](#guiprogressbar-x-y-width-primarycolor-secondarycolor-valuecolor-value-thin-showvalue-valueprefix-valuepostfix--table-progressbar) |
-| [    GUI.scrollBar](#guiscrollbar-x-y-width-height-backgroundcolor-foregroundcolor-minimumvalue-maximumvalue-value-shownvaluecount-onscrollvalueincrement-thinhorizontalmode--table-scrollbar) |
-| [    GUI.textBox](#guitextboxx-y-width-height-backgroundcolor-textcolor-lines-currentline-horizontaloffset-verticaloffset-table-textbox) |
+| [    GUI.treeView](#guitreeview-x-y-width-height-backgroundcolor-textcolor-selectionbackgroundcolor-selectiontextcolor-arrowcolor-scrollbarprimarycolor-scrollbarsecondarycolor-workpath--table-treeview) |
 | [    GUI.codeView](#guicodeview-x-y-width-height-lines-fromsymbol-fromline-maximumlinelength-selections-highlights-highlightluasyntax-indentationwidth--table-codeview) |
 | [    GUI.chart](#guichart-x-y-width-height-axiscolor-axisvaluecolor-axishelperscolor-chartcolor-xaxisvalueinterval-yaxisvalueinterval-xaxispostfix-yaxispostfix-fillchartarea-values--table-chart) |
+| [    GUI.brailleCanvas](#guibraillecanvas-x-y-width-height-table-braillecanvas) |
+| [    GUI.scrollBar](#guiscrollbar-x-y-width-height-backgroundcolor-foregroundcolor-minimumvalue-maximumvalue-value-shownvaluecount-onscrollvalueincrement-thinhorizontalmode--table-scrollbar) |
+| [    GUI.textBox](#guitextboxx-y-width-height-backgroundcolor-textcolor-lines-currentline-horizontaloffset-verticaloffset-table-textbox) |
 | [Практические примеры](#Практические-примеры) |
 | [    Пример #1: Кнопочки](#Пример-1-Кнопочки) |
 | [    Пример #2: Окно авторизации](#Пример-2-Окно-авторизации) |
@@ -446,6 +447,43 @@ mainContainer:startEventHandling()
 
 ![enter image description here](http://i91.fastpic.ru/big/2017/0402/80/3b0ec81c3b2f660b9a4c6f18908f4280.png)
 
+GUI.**label**( x, y, width, height, textColor, text ): *table* label
+--------------------------------------------------------------------
+| Тип | Аргумент | Описание |
+| ------ | ------ | ------ |
+| *int* | x | Координата объекта по оси x |
+| *int* | y | Координата объекта по оси y |
+| *int* | width | Ширина объекта |
+| *int* | height | Высота объекта |
+| *int* | textColor | Цвет текста лейбла|
+| *string* | text | Текст лейбла |
+
+Создать объект типа "лейбл", предназначенный для отображения текстовой информации в различных вариациях расположения.
+
+| Тип свойства | Свойство |Описание |
+| ------ | ------ | ------ |
+| *callback-function* | .**onTouch**( *table* eventData )| Метод, вызываемый после нажатия на лейбл в обработчике событий |
+| *function* | :**setAlignment**( *enum* GUI.alignment.vertical, *enum* GUI.alignment.horizontal ): *table* label| Выбрать вариант отображения текста относительно границ лейбла |
+
+Пример реализации лейбла:
+```lua
+local buffer = require("doubleBuffering")
+local GUI = require("GUI")
+
+local mainContainer = GUI.fullScreenContainer()
+mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x2D2D2D))
+
+mainContainer:addChild(GUI.label(2, 2, mainContainer.width, mainContainer.height, 0xFFFFFF, "Centered text")):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.center)
+
+mainContainer:draw()
+buffer.draw(true)
+mainContainer:startEventHandling()
+```
+
+Результат:
+
+![Imgur](http://i.imgur.com/4Hl5G7l.png?1)
+
 GUI.**button**( x, y, width, height, buttonColor, textColor, buttonPressedColor, textPressedColor, text ): *table* button
 ------------------------------------------------------------------------
 | Тип | Аргумент | Описание |
@@ -515,43 +553,6 @@ mainContainer:startEventHandling()
 Результат:
 
 ![Imgur](http://i.imgur.com/yJ9V4c8.gif)
-
-GUI.**label**( x, y, width, height, textColor, text ): *table* label
---------------------------------------------------------------------
-| Тип | Аргумент | Описание |
-| ------ | ------ | ------ |
-| *int* | x | Координата объекта по оси x |
-| *int* | y | Координата объекта по оси y |
-| *int* | width | Ширина объекта |
-| *int* | height | Высота объекта |
-| *int* | textColor | Цвет текста лейбла|
-| *string* | text | Текст лейбла |
-
-Создать объект типа "лейбл", предназначенный для отображения текстовой информации в различных вариациях расположения.
-
-| Тип свойства | Свойство |Описание |
-| ------ | ------ | ------ |
-| *callback-function* | .**onTouch**( *table* eventData )| Метод, вызываемый после нажатия на лейбл в обработчике событий |
-| *function* | :**setAlignment**( *enum* GUI.alignment.vertical, *enum* GUI.alignment.horizontal ): *table* label| Выбрать вариант отображения текста относительно границ лейбла |
-
-Пример реализации лейбла:
-```lua
-local buffer = require("doubleBuffering")
-local GUI = require("GUI")
-
-local mainContainer = GUI.fullScreenContainer()
-mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x2D2D2D))
-
-mainContainer:addChild(GUI.label(2, 2, mainContainer.width, mainContainer.height, 0xFFFFFF, "Centered text")):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.center)
-
-mainContainer:draw()
-buffer.draw(true)
-mainContainer:startEventHandling()
-```
-
-Результат:
-
-![Imgur](http://i.imgur.com/4Hl5G7l.png?1)
 
 GUI.**inputField**( x, y, width, height, backgroundColor, textColor, placeholderTextColor, backgroundFocusedColor, textFocusedColor, text, [placeholderText, eraseTextOnFocus, textMask ): *table* inputField
 ------------------------------------------------------------------------
@@ -845,56 +846,6 @@ mainContainer:startEventHandling()
 
 ![Imgur](http://i.imgur.com/6ROzLAc.gif)
 
-GUI.**treeView**( x, y, width, height, backgroundColor, textColor, selectionBackgroundColor, selectionTextColor, arrowColor, scrollBarPrimaryColor, scrollBarSecondaryColor, workPath ): *table* treeView
-------------------------------------------------------------------------
-| Тип | Аргумент | Описание |
-| ------ | ------ | ------ |
-| *int* | x | Координата объекта по оси x |
-| *int* | y | Координата объекта по оси y |
-| *int* | width | Ширина объекта |
-| *int* | height | Высота объекта |
-| *int* or *nil* | backgroundColor | Цвет фона TreeView |
-| *int* | textColor | Цвет текста TreeView |
-| *int* | selectionBackgroundColor | Цвет выделения фона TreeView |
-| *int* | selectionTextColor | Цвет выделения текста TreeView |
-| *int* | arrowColor | Цвет стрелки директорий TreeView |
-| *int* | scrollBarPrimaryColor | Первичный цвет скроллбара TreeView |
-| *int* | scrollBarSecondaryColor | Вторичный цвет скроллбара TreeView |
-| *string* | workPath | Стартовая директория TreeView |
-
-Создать объект типа "TreeView", предназначенный для навигации по файловой системе в виде иерархического древа. При клике на директорию будет показано ее содержимое, а во время прокрутки колесиком мыши содержимое будет "скроллиться" в указанном направлении.
-
-| Тип свойства | Свойство |Описание |
-| ------ | ------ | ------ |
-| *callback-function* | .**onFileSelected**( *int* currentFile )| Метод, вызываемый после выбора файла в TreeView |
-
-Пример реализации TreeView:
-
-```lua
-local buffer = require("doubleBuffering")
-local GUI = require("GUI")
-
-------------------------------------------------------------------------------------------
-
-local mainContainer = GUI.fullScreenContainer()
-mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x262626))
-
-local treeView = mainContainer:addChild(GUI.treeView(2, 2, 30, 41, 0xCCCCCC, 0x2D2D2D, 0x3C3C3C, 0xEEEEEE, 0x666666, 0xEEEEEE, 0x3366CC, "/"))
-treeView.onFileSelected = function(path)
-   GUI.error("File was selected, the path is: \"" .. path .. "\"")
-end
-
-------------------------------------------------------------------------------------------
-
-mainContainer:draw()
-buffer.draw(true)
-mainContainer:startEventHandling()
-```
-
-Результат:
-
-![Imgur](http://i.imgur.com/bSaDYWg.gif)
-
 GUI.**menu**( x, y, width, backgroundColor, textColor, backgroundPressedColor, textPressedColor, backgroundTransparency ): *table* menu
 ------------------------------------------------------------------------
 | Тип | Аргумент | Описание |
@@ -995,7 +946,206 @@ mainContainer:startEventHandling()
 
 Результат:
 
-![enter image description here](http://i89.fastpic.ru/big/2017/0402/f1/ef1da27531ccf899eb9eb59c010180f1.png)
+![](http://i89.fastpic.ru/big/2017/0402/f1/ef1da27531ccf899eb9eb59c010180f1.png)
+
+GUI.**treeView**( x, y, width, height, backgroundColor, textColor, selectionBackgroundColor, selectionTextColor, arrowColor, scrollBarPrimaryColor, scrollBarSecondaryColor, workPath ): *table* treeView
+------------------------------------------------------------------------
+| Тип | Аргумент | Описание |
+| ------ | ------ | ------ |
+| *int* | x | Координата объекта по оси x |
+| *int* | y | Координата объекта по оси y |
+| *int* | width | Ширина объекта |
+| *int* | height | Высота объекта |
+| *int* or *nil* | backgroundColor | Цвет фона TreeView |
+| *int* | textColor | Цвет текста TreeView |
+| *int* | selectionBackgroundColor | Цвет выделения фона TreeView |
+| *int* | selectionTextColor | Цвет выделения текста TreeView |
+| *int* | arrowColor | Цвет стрелки директорий TreeView |
+| *int* | scrollBarPrimaryColor | Первичный цвет скроллбара TreeView |
+| *int* | scrollBarSecondaryColor | Вторичный цвет скроллбара TreeView |
+| *string* | workPath | Стартовая директория TreeView |
+
+Создать объект типа "TreeView", предназначенный для навигации по файловой системе в виде иерархического древа. При клике на директорию будет показано ее содержимое, а во время прокрутки колесиком мыши содержимое будет "скроллиться" в указанном направлении.
+
+| Тип свойства | Свойство |Описание |
+| ------ | ------ | ------ |
+| *callback-function* | .**onFileSelected**( *int* currentFile )| Метод, вызываемый после выбора файла в TreeView |
+
+Пример реализации TreeView:
+
+```lua
+local buffer = require("doubleBuffering")
+local GUI = require("GUI")
+
+------------------------------------------------------------------------------------------
+
+local mainContainer = GUI.fullScreenContainer()
+mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x262626))
+
+local treeView = mainContainer:addChild(GUI.treeView(2, 2, 30, 41, 0xCCCCCC, 0x2D2D2D, 0x3C3C3C, 0xEEEEEE, 0x666666, 0xEEEEEE, 0x3366CC, "/"))
+treeView.onFileSelected = function(path)
+   GUI.error("File was selected, the path is: \"" .. path .. "\"")
+end
+
+------------------------------------------------------------------------------------------
+
+mainContainer:draw()
+buffer.draw(true)
+mainContainer:startEventHandling()
+```
+
+Результат:
+
+![Imgur](http://i.imgur.com/bSaDYWg.gif)
+
+GUI.**codeView**( x, y, width, height, lines, fromSymbol, fromLine, maximumLineLength, selections, highlights, highlightLuaSyntax, indentationWidth ): *table* codeView
+------------------------------------------------------------------------
+| Тип | Аргумент | Описание |
+| ------ | ------ | ------ |
+| *int* | x | Координата объекта по оси x |
+| *int* | y | Координата объекта по оси y |
+| *int* | width | Ширина объекта |
+| *int* | height | Высота объекта |
+| *table* | lines | Таблица с отображаемыми строками |
+| *int* | fromSymbol | С какого символа начинать отображение кода |
+| *int* | fromLine | С какой строки начинать отображение кода |
+| *int* | maximumLineLength | Максимальная длина строки из имеющихся строк |
+| *table* | selections | Таблица вида { {from = {line = *int* line, symbol = *int* symbol}, to = {line = *int* line, symbol = *int* symbol}}, ... }, позволяющая осуществлять выделение кода таким образом, как если бы пользователь выделил бы его мышью |
+| *table* | highlights | Таблица вида { [*int* lineIndex] = *int* color, ... }, позволяющая подсвечивать указанные строки указанными цветом |
+| *boolean* | highlightLuaSyntax | Подсвечивать ли синтаксис Lua |
+| *int* | indentationWidth | Ширина индентации кода |
+
+Создать объект типа "CodeView", предназначенный для наглядного отображения Lua-кода с номерами строк, подсветкой синтаксиса, выделениям и скроллбарами.
+
+Пример реализации CodeView:
+
+```lua
+local buffer = require("doubleBuffering")
+local GUI = require("GUI")
+local unicode = require("unicode")
+
+local mainContainer = GUI.fullScreenContainer()
+mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x0))
+
+local codeView = mainContainer:addCodeView(2, 2, 130, 40, {}, 1, 1, 1, {}, {}, true, 2)
+local file = io.open("/lib/OpenComputersGL/Main.lua", "r")
+for line in file:lines() do
+	line = line:gsub("\t", " ")
+	table.insert(codeView.lines, line)
+	codeView.maximumLineLength = math.max(codeView.maximumLineLength, unicode.len(line))
+end
+file:close()
+
+mainContainer:draw()
+buffer.draw(true)
+mainContainer:startEventHandling()
+```
+
+Результат:
+
+![enter image description here](http://i89.fastpic.ru/big/2017/0402/a9/a00b12a34bf367940dccde93d28b03a9.png)
+
+GUI.**chart**( x, y, width, height, axisColor, axisValueColor, axisHelpersColor, chartColor, xAxisValueInterval, yAxisValueInterval, xAxisPostfix, yAxisPostfix, fillChartArea, values ): *table* chart
+------------------------------------------------------------------------
+| Тип | Аргумент | Описание |
+| ------ | ------ | ------ |
+| *int* | x | Координата объекта по оси x |
+| *int* | y | Координата объекта по оси y |
+| *int* | width | Ширина объекта |
+| *int* | height | Высота объекта |
+| *int* | axisColor | Цвет координатных осей |
+| *int* | axisValueColor | Цвет числовых значений координатных осей |
+| *int* | axisHelpersColor | Цвет вспомогательных линий координатных осей |
+| *int* | chartColor | Цвет графика |
+| *float* | xAxisValueInterval | Интервал от 0 до 1, с которым будут итерироваться значения графика на конкретной оси |
+| *float* | yAxisValueInterval | Интервал от 0 до 1, с которым будут итерироваться значения графика на конкретной оси |
+| *string* | xAxisPostfix | Текстовый постфикс для значений графика конкретной оси |
+| *string* | yAxisPostfix | Текстовый постфикс для значений графика конкретной оси |
+| *boolean* | fillChartArea | Необходимо ли закрашивать область графика или же рисовать его линией |
+| *table* | values | Таблица вида {{*float* x, *float* y}, ...} со значениями графика |
+
+Создать объект типа "график", предназначенный для отображения статистической информации в виде графика с подписью значений осей.
+
+Пример реализации Chart:
+
+```lua
+local buffer = require("doubleBuffering")
+local GUI = require("GUI")
+
+local mainContainer = GUI.fullScreenContainer()
+mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x0))
+
+local chart = mainContainer:addChild(GUI.chart(2, 2, 100, 30, 0xEEEEEE, 0xAAAAAA, 0x888888, 0xFFDB40, 0.25, 0.25, "s", "t", true, {}))
+for i = 1, 100 do
+	table.insert(chart.values, {i, math.random(0, 80)})
+end
+
+mainContainer:draw()
+buffer.draw(true)
+mainContainer:startEventHandling()
+
+```
+
+Результат:
+
+![enter image description here](http://i91.fastpic.ru/big/2017/0402/5b/66ff353492298f6a0c9b01c0fc8a525b.png)
+
+GUI.**brailleCanvas**( x, y, width, height ): *table* brailleCanvas
+------------------------------------------------------------------------
+| Тип | Аргумент | Описание |
+| ------ | ------ | ------ |
+| *int* | x | Координата объекта по оси x |
+| *int* | y | Координата объекта по оси y |
+| *int* | width | Ширина объекта |
+| *int* | height | Высота объекта |
+
+Данный объект по своей сути похож на пиксельный холст. Его отличительной особенностью является использование шрифта Брайля, создающего повышенное в сравнении с стандартным разрешение: каждый реальный пиксель может вмещать до 2х4 "мини-пикселей". Очень полезен для детальной отрисовки мелкой графики, с которой мод справиться не способен. К примеру, если создан BrailleCanvas размером 10x10 реальных пикселей, то он будет содержать 20x40 виртуальных.
+
+| Тип свойства | Свойство |Описание |
+| ------ | ------ | ------ |
+| *function* | :**set**( *int* x, *int* y, *boolean* state, *int* color )| Установить соответствующее значение пикселя по локальным координатам BrailleCanvas (не глобальным экранным). Если в данной позиции уже имеется установленный пиксель, то его значение цвета будет заменено на новое |
+
+Пример реализации BrailleCanvas:
+```lua
+local buffer = require("doubleBuffering")
+local GUI = dofile("/lib/GUI.lua")
+
+------------------------------------------------------------------------------------------
+
+local mainContainer = GUI.fullScreenContainer()
+mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x262626))
+
+mainContainer:addChild(GUI.label(2, 2, 30, 1, 0xFFFFFF, "Текст для сравнения размеров"))
+
+-- Создаем BrailleCanvas размером 30x15 пикселей
+local brailleCanvas = mainContainer:addChild(GUI.brailleCanvas(2, 4, 30, 15))
+-- Рисуем рамочку вокруг объекта. Для начала делаем две белых вертикальных линии
+local localCanvasWidth = brailleCanvas.width * 2
+for i = 1, brailleCanvas.height * 4 do
+	brailleCanvas:set(1, i, true, 0xFFFFFF)
+	brailleCanvas:set(localCanvasWidth, i, true, 0xFFFFFF)
+end
+-- А затем две горизонтальных
+local localCanvasHeight = brailleCanvas.height * 4
+for i = 1, brailleCanvas.width * 2 do
+	brailleCanvas:set(i, 1, true, 0xFFFFFF)
+	brailleCanvas:set(i, localCanvasHeight, true, 0xFFFFFF)
+end
+-- Рисуем диагональную линию красного цвета
+for i = 1, 60 do
+	brailleCanvas:set(i, i, true, 0xFF0000)
+end
+
+------------------------------------------------------------------------------------------
+
+mainContainer:draw()
+buffer.draw(true)
+mainContainer:startEventHandling()
+```
+
+Результат:
+
+![Imgur](http://i.imgur.com/3Oq1nzY.png)
 
 GUI.**scrollBar**( x, y, width, height, backgroundColor, foregroundColor, minimumValue, maximumValue, value, shownValueCount, onScrollValueIncrement, thinHorizontalMode ): *table* scrollBar
 ------------------------------------------------------------------------
@@ -1089,98 +1239,6 @@ mainContainer:startEventHandling()
 Результат:
 
 ![enter image description here](http://i89.fastpic.ru/big/2017/0402/ad/01cdcf7aec919051f64ac2b7d9daf0ad.png)
-
-GUI.**codeView**( x, y, width, height, lines, fromSymbol, fromLine, maximumLineLength, selections, highlights, highlightLuaSyntax, indentationWidth ): *table* codeView
-------------------------------------------------------------------------
-| Тип | Аргумент | Описание |
-| ------ | ------ | ------ |
-| *int* | x | Координата объекта по оси x |
-| *int* | y | Координата объекта по оси y |
-| *int* | width | Ширина объекта |
-| *int* | height | Высота объекта |
-| *table* | lines | Таблица с отображаемыми строками |
-| *int* | fromSymbol | С какого символа начинать отображение кода |
-| *int* | fromLine | С какой строки начинать отображение кода |
-| *int* | maximumLineLength | Максимальная длина строки из имеющихся строк |
-| *table* | selections | Таблица вида { {from = {line = *int* line, symbol = *int* symbol}, to = {line = *int* line, symbol = *int* symbol}}, ... }, позволяющая осуществлять выделение кода таким образом, как если бы пользователь выделил бы его мышью |
-| *table* | highlights | Таблица вида { [*int* lineIndex] = *int* color, ... }, позволяющая подсвечивать указанные строки указанными цветом |
-| *boolean* | highlightLuaSyntax | Подсвечивать ли синтаксис Lua |
-| *int* | indentationWidth | Ширина индентации кода |
-
-Создать объект типа "CodeView", предназначенный для наглядного отображения Lua-кода с номерами строк, подсветкой синтаксиса, выделениям и скроллбарами.
-
-Пример реализации CodeView:
-
-```lua
-local buffer = require("doubleBuffering")
-local GUI = require("GUI")
-local unicode = require("unicode")
-
-local mainContainer = GUI.fullScreenContainer()
-mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x0))
-
-local codeView = mainContainer:addCodeView(2, 2, 130, 40, {}, 1, 1, 1, {}, {}, true, 2)
-local file = io.open("/lib/OpenComputersGL/Main.lua", "r")
-for line in file:lines() do
-	line = line:gsub("\t", " ")
-	table.insert(codeView.lines, line)
-	codeView.maximumLineLength = math.max(codeView.maximumLineLength, unicode.len(line))
-end
-file:close()
-
-mainContainer:draw()
-buffer.draw(true)
-mainContainer:startEventHandling()
-```
-
-Результат:
-
-![enter image description here](http://i89.fastpic.ru/big/2017/0402/a9/a00b12a34bf367940dccde93d28b03a9.png)
-
-GUI.**chart**( x, y, width, height, axisColor, axisValueColor, axisHelpersColor, chartColor, xAxisValueInterval, yAxisValueInterval, xAxisPostfix, yAxisPostfix, fillChartArea, values ): *table* chart
-------------------------------------------------------------------------
-| Тип | Аргумент | Описание |
-| ------ | ------ | ------ |
-| *int* | x | Координата объекта по оси x |
-| *int* | y | Координата объекта по оси y |
-| *int* | width | Ширина объекта |
-| *int* | height | Высота объекта |
-| *int* | axisColor | Цвет координатных осей |
-| *int* | axisValueColor | Цвет числовых значений координатных осей |
-| *int* | axisHelpersColor | Цвет вспомогательных линий координатных осей |
-| *int* | chartColor | Цвет графика |
-| *float* | xAxisValueInterval | Интервал от 0 до 1, с которым будут итерироваться значения графика на конкретной оси |
-| *float* | yAxisValueInterval | Интервал от 0 до 1, с которым будут итерироваться значения графика на конкретной оси |
-| *string* | xAxisPostfix | Текстовый постфикс для значений графика конкретной оси |
-| *string* | yAxisPostfix | Текстовый постфикс для значений графика конкретной оси |
-| *boolean* | fillChartArea | Необходимо ли закрашивать область графика или же рисовать его линией |
-| *table* | values | Таблица вида {{*float* x, *float* y}, ...} со значениями графика |
-
-Создать объект типа "график", предназначенный для отображения статистической информации в виде графика с подписью значений осей.
-
-Пример реализации Chart:
-
-```lua
-local buffer = require("doubleBuffering")
-local GUI = require("GUI")
-
-local mainContainer = GUI.fullScreenContainer()
-mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x0))
-
-local chart = mainContainer:addChild(GUI.chart(2, 2, 100, 30, 0xEEEEEE, 0xAAAAAA, 0x888888, 0xFFDB40, 0.25, 0.25, "s", "t", true, {}))
-for i = 1, 100 do
-	table.insert(chart.values, {i, math.random(0, 80)})
-end
-
-mainContainer:draw()
-buffer.draw(true)
-mainContainer:startEventHandling()
-
-```
-
-Результат:
-
-![enter image description here](http://i91.fastpic.ru/big/2017/0402/5b/66ff353492298f6a0c9b01c0fc8a525b.png)
 
 Практические примеры
 ======
