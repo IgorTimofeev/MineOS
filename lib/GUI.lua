@@ -1190,7 +1190,7 @@ local function treeViewUpdateFileList(treeView)
 end
 
 local function treeViewDraw(treeView)
-	local y = treeView.y + 1
+	local y = treeView.y
 	local showScrollBar = #treeView.fileList > treeView.height
 	local textLimit = treeView.width - (showScrollBar and 2 or 1)
 
@@ -1213,7 +1213,9 @@ local function treeViewDraw(treeView)
 		end
 
 		y = y + 1
-		if y > treeView.y + treeView.height - 2 then break end
+		if y > treeView.y + treeView.height - 1 then
+			break
+		end
 	end
 
 	if showScrollBar then
@@ -1237,7 +1239,7 @@ end
 
 local function treeViewEventHandler(mainContainer, object, eventData)
 	if eventData[1] == "touch" then
-		local fileIndex = eventData[4] - object.y + object.fromFile - 1
+		local fileIndex = eventData[4] - object.y + object.fromFile
 		if object.fileList[fileIndex] then
 			if object.fileList[fileIndex].isDirectory then
 				if object.directoriesToShowContent[object.fileList[fileIndex].path] then
