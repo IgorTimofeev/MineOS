@@ -6,8 +6,12 @@ local image = require("image")
 
 --------------------------------------------------------------------------------------------------------------
 
-local gpu = component.gpu
-local buffer = {}
+local buffer = {
+	GPUProxy = component.getPrimary("gpu"),
+	currentFrame = {},
+	newFrame = {},
+	drawLimit = {},
+}
 
 --------------------------------------------------------------------------------------------------------------
 
@@ -19,6 +23,8 @@ end
 function buffer.getIndexByCoordinates(x, y)
 	return buffer.tripleWidth * (y - 1) + x * 3 - 2
 end
+
+--------------------------------------------------------------------------------------------------------------
 
 function buffer.setDrawLimit(x1, y1, x2, y2)
 	buffer.drawLimit.x1, buffer.drawLimit.y1, buffer.drawLimit.x2, buffer.drawLimit.y2 = x1, y1, x2, y2
@@ -32,17 +38,17 @@ function buffer.getDrawLimit()
 	return buffer.drawLimit.x1, buffer.drawLimit.y1, buffer.drawLimit.x2, buffer.drawLimit.y2
 end
 
+--------------------------------------------------------------------------------------------------------------
+
 function buffer.flush(width, height)
 	if not width or not height then
-		width, height = gpu.getResolution()
+		width, height = buffer.GPUProxy.getResolution()
 	end
 
-	buffer.currentFrame = {}
-	buffer.newFrame = {}
+	buffer.currentFrame, buffer.newFrame = {}, {}
 	buffer.width = width
 	buffer.height = height
 	buffer.tripleWidth = width * 3
-	buffer.drawLimit = {}
 	buffer.resetDrawLimit()
 
 	for y = 1, buffer.height do
@@ -59,8 +65,18 @@ function buffer.flush(width, height)
 end
 
 function buffer.setResolution(width, height)
-	gpu.setResolution(width, height)
+	buffer.GPUProxy.setResolution(width, height)
 	buffer.flush(width, height)
+end
+
+function buffer.bindScreen(...)
+	buffer.GPUProxy.bind(...)
+	buffer.flush(buffer.GPUProxy.getResolution())
+end
+
+function buffer.bindGPU(address)
+	buffer.GPUProxy = component.proxy(address)
+	buffer.flush(buffer.GPUProxy.getResolution())
 end
 
 --------------------------------------------------------------------------------------------------------------
@@ -488,14 +504,14 @@ local function info(...)
 		table.insert(text, tostring(args[i]))
 	end
 
-	local b = gpu.getBackground()
-	local f = gpu.getForeground()
-	gpu.setBackground(0x0)
-	gpu.setForeground(0xFFFFFF)
-	gpu.fill(1, buffer.height, buffer.width, 1, " ")
-	gpu.set(2, buffer.height, table.concat(text, ", "))
-	gpu.setBackground(b)
-	gpu.setForeground(f)
+	local b = buffer.GPUProxy.getBackground()
+	local f = buffer.GPUProxy.getForeground()
+	buffer.GPUProxy.setBackground(0x0)
+	buffer.GPUProxy.setForeground(0xFFFFFF)
+	buffer.GPUProxy.fill(1, buffer.height, buffer.width, 1, " ")
+	buffer.GPUProxy.set(2, buffer.height, table.concat(text, ", "))
+	buffer.GPUProxy.setBackground(b)
+	buffer.GPUProxy.setForeground(f)
 
 	require("event").pull("touch")
 end
@@ -561,16 +577,16 @@ function buffer.draw(force)
 	end
 	
 	for background in pairs(changes) do
-		gpu.setBackground(background)
+		buffer.GPUProxy.setBackground(background)
 
 		for foreground in pairs(changes[background]) do
 			if currentForeground ~= foreground then
-				gpu.setForeground(foreground)
+				buffer.GPUProxy.setForeground(foreground)
 				currentForeground = foreground
 			end
 
 			for i = 1, #changes[background][foreground], 3 do
-				gpu.set(changes[background][foreground][i], changes[background][foreground][i + 1], changes[background][foreground][i + 2])
+				buffer.GPUProxy.set(changes[background][foreground][i], changes[background][foreground][i + 1], changes[background][foreground][i + 2])
 			end
 		end
 	end
@@ -584,13 +600,21 @@ buffer.flush()
 
 ------------------------------------------------------------------------------------------------------
 
--- gpu.setBackground(0x0)
--- gpu.fill(1, 1, buffer.width, buffer.height, " ")
+-- buffer.GPUProxy.setBackground(0x0)
+-- buffer.GPUProxy.fill(1, 1, buffer.width, buffer.height, " ")
 
--- -- buffer.clear(0xFF8888)
+-- buffer.clear(0x1D1D1D)
+
+-- buffer.semiPixelBezierCurve({
+-- 	{x = 2, y = 2},
+-- 	{x = 20, y = 90},
+-- 	{x = 40, y = 60},
+-- 	{x = 120, y = 10},
+-- }, 0xFFFFFF, 0.01)
+-- buffer.semiPixelLine(2, 2, 100, 80, 0xFFFFFF)
 -- buffer.square(1, 1, buffer.width, buffer.height, 0xFF8888, 0x0, "Q")
--- -- buffer.square(1, 1, buffer.width, buffer.height, 0xFFFFFF, 0xFFFFFF, "Q")
--- -- buffer.square(3, 3, 10, 5, 0x00FF00, 0x0, "Q")
+-- buffer.square(1, 1, buffer.width, buffer.height, 0xFFFFFF, 0xFFFFFF, "Q")
+-- buffer.square(3, 3, 10, 5, 0x00FF00, 0x0, "Q")
 -- buffer.draw(true)
 
 -- buffer.image(1, 1, image.load("/MineOS/Pictures/Raspberry.pic"))
