@@ -2769,12 +2769,12 @@ end
 -- local mainContainer = GUI.fullScreenContainer()
 -- mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x262626))
 
--- local layout = mainContainer:addChild(GUI.layout(1, 1, mainContainer.width, mainContainer.height, 5, 3))
+-- local layout = mainContainer:addChild(GUI.layout(1, 1, mainContainer.width, mainContainer.height, 5, 1))
 -- for i = 1, 5 do
--- 	layout:setCellPosition(3, 2, layout:addChild(GUI.button(1, 1, 30, 3, 0xFFFFFF, 0x0, 0xAAAAAA, 0x0, "Text " .. i)))
+-- 	layout:setCellPosition(3, 1, layout:addChild(GUI.button(1, 1, 30, 3, 0xFFFFFF, 0x0, 0xAAAAAA, 0x0, "Text " .. i)))
 -- end
 -- layout.showGrid = true
--- layout:setCellFitting(3, 2, true, false)
+-- layout:setCellFitting(3, 1, true, false)
 
 -- local brailleCanvas = mainContainer:addChild(GUI.brailleCanvas(2, 2, 30, 15))
 -- for i = 1, brailleCanvas.width do
