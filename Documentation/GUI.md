@@ -238,6 +238,7 @@ Layout является наследником GUI.**container**, автомат
 
 | Тип свойства | Свойство |Описание |
 | ------ | ------ | ------ |
+|*boolean*| .**showGrid**| Включение или отключение отображения границ координатной сетки. По умолчанию равно false |
 | *function* | :**setGridSize**(*int* columnCount, *int* columnCount): *layout* layout | Установить размер сетки. Все объекты, находящиеся вне диапазона нового размера, должны быть размещены в сетке заново через :**setCellPosition**()  |
 | *function* | :**setColumnWidth**(*int* column, *enum* sizePolicy, *float* size): *layout* layout | Установить ширину указанного столбца. Ширина может быть двух типов: GUI.**sizePolicies.absolute** или GUI.**sizePolicies.percentage**. В первом случае ширина выражена в пикселях, и не меняется при изменении размеров layout, а во втором она выражена дробным числом в промежутке **[0; 1]**, обозначающим процентную ширину столбца. Если указана процентная ширина, и справа от выбранного столбца имеются другие, то их процентная ширина будет автоматически перерассчитана до нужных процентных значений. |
 | *function* | :**setRowHeight**(*int* row, *enum* sizePolicy, *float* size): *layout* layout | Установить высоту указанного ряда. Поведение метода аналогично **:setColumnWidth** |
@@ -250,6 +251,7 @@ Layout является наследником GUI.**container**, автомат
 | *function* | :**setCellAlignment**(*int* column, *int* row, *enum* GUI.alignment.vertical, *enum* GUI.alignment.horizontal): *layout* layout | Назначить ячейке сетки метод выравнивания дочерних объектов. Поддерживаются все 9 вариантов |
 | *function* | :**setCellSpacing**(*int* column, *int* row, *int* spacing): *layout* layout | Назначить ячейке сетки расстояние в пикселях между объектами. По умолчанию оно равняется 1 |
 | *function* | :**setCellMargin**(*int* column, *int* row, *int* horizontalMargin, *int* verticalMargin): *layout* layout | Назначить ячейке сетки отступы в пикселях в зависимости от текущего *alignment* этой ячейки |
+| *function* | :**setCellFitting**(*int* column, *int* row, *int* horizontalFitting, *int* verticalFitting): *layout* layout | Назначить ячейке сетки параметр автоматического назначения размера дочерних элементов равным размеру соответствующего ряда/столбца|
 
 Пример реализации layout:
 ```lua
@@ -291,9 +293,11 @@ mainContainer:startEventHandling()
 
 ![Imgur](http://i.imgur.com/4l7uK25.png)
 
-Также мы можем модифицировать код, чтобы кнопки группировались в 3 колонки, а расстояние между ними было равным 4 пикселям:
+Также мы можем модифицировать код, чтобы кнопки группировались в 3 колонки, а расстояние между ними было равным 4 пикселям. А заодно включим отображение координатной сетки и активируем автоматический расчет ширины объектов в 3 колонке:
 
 ```lua
+-- Включаем отображение границ сетки
+layout.showGrid = true
 -- Изменяем размер сетки на 3x1
 layout:setGridSize(3, 1)
 -- Устанавливаем расстояние между объектами для каждой колонки
@@ -304,10 +308,12 @@ end
 for child = 7, 9 do
 	layout:setCellPosition(3, 1, layout.children[child])
 end
+-- Включаем автоматическое изменение ширины дочерних элементов в ячейке 3x1
+layout:setCellFitting(3, 1, true, false)
 ```
 Результат:
 
-![Imgur](http://i.imgur.com/QD0BqWx.png?1)
+![Imgur](http://i.imgur.com/C2TWOJ7.png)
 
 Более подробно работа с layout рассмотрена в практическом примере 4 в конце документа.
 
