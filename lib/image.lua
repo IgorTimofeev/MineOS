@@ -424,7 +424,7 @@ end
 ------------------------------------------------------------------------------------------------------------------------
 
 image.loadFormatModule("/lib/ImageFormatModules/OCIF.lua", ".pic")
-image.loadFormatModule("/lib/ImageFormatModules/RAW.lua", ".rawpic")
+-- image.loadFormatModule("/lib/ImageFormatModules/RAW.lua", ".rawpic")
 
 ------------------------------------------------------------------------------------------------------------------------
 
