@@ -1199,19 +1199,21 @@ function MineOSCore.newFileFromURL(parentWindow, path)
 
 	container.inputFieldURL = container.layout:addChild(GUI.inputField(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0x666666, 0xEEEEEE, 0x262626, nil, "URL", false))
 	container.inputField.onInputFinished = function()
-		if fs.exists(path .. container.inputField.text) then
-			container.label.hidden = false
-			parentWindow:draw()
-			buffer.draw()
-		else
-			if container.inputFieldURL.text then
-				local success, reason = require("web").downloadFile(container.inputFieldURL.text, path .. container.inputField.text)
-				if not success then
-					GUI.error(reason)
-				end
+		if container.inputField.text then
+			if fs.exists(path .. container.inputField.text) then
+				container.label.hidden = false
+				parentWindow:draw()
+				buffer.draw()
+			else
+				if container.inputFieldURL.text then
+					local success, reason = require("web").downloadFile(container.inputFieldURL.text, path .. container.inputField.text)
+					if not success then
+						GUI.error(reason)
+					end
 
-				container:delete()
-				computer.pushSignal("MineOSCore", "updateFileList")
+					container:delete()
+					computer.pushSignal("MineOSCore", "updateFileList")
+				end
 			end
 		end
 	end
