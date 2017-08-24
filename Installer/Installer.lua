@@ -308,6 +308,7 @@ stages[5] = function()
 			"/MineOS/Applications/MineCode IDE.app/",
 			"/MineOS/Applications/Photoshop.app/",
 		}
+		OSSettings.backgroundColor = 0x1E1E1E
 
 		table.toFile(paths.OSSettings, OSSettings)
 

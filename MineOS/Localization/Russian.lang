@@ -43,6 +43,7 @@
 	newFolder = "Новая папка",
 	newFolderFromChosen = "Новая папка из выбранного",
 	newFile = "Новый файл",
+	newFileFromURL = "Загрузить файл по URL",
 	newApplication = "Новое приложение MineOS",
 	paste = "Вставить",
 	copy = "Копировать",

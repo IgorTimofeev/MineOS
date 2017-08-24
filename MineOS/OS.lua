@@ -793,6 +793,8 @@ local function createOSWindow()
 				MineOSCore.newApplication(MineOSCore.OSMainContainer, MineOSCore.OSMainContainer.iconField.workpath)
 			elseif eventData[2] == "newFile" then
 				MineOSCore.newFile(MineOSCore.OSMainContainer, MineOSCore.OSMainContainer.iconField.workpath)
+				elseif eventData[2] == "newFileFromURL" then
+				MineOSCore.newFileFromURL(MineOSCore.OSMainContainer, MineOSCore.OSMainContainer.iconField.workpath)
 			elseif eventData[2] == "newFolder" then
 				MineOSCore.newFolder(MineOSCore.OSMainContainer, MineOSCore.OSMainContainer.iconField.workpath)
 			elseif eventData[2] == "rename" then

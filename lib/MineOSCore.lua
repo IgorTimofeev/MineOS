@@ -12,8 +12,6 @@ local fs = require("filesystem")
 local unicode = require("unicode")
 local keyboard = require("keyboard")
 
-local gpu = component.gpu
-
 ----------------------------------------------------------------------------------------------------------------
 
 local MineOSCore = {}
@@ -26,7 +24,7 @@ MineOSCore.iconConfigFileName = "/.icons"
 MineOSCore.paths = {}
 MineOSCore.paths.OS = "/MineOS/"
 MineOSCore.paths.system = MineOSCore.paths.OS .. "System/"
-MineOSCore.paths.extensionAssociations = MineOSCore.paths.system .. "Extension associations/"
+MineOSCore.paths.extensionAssociations = MineOSCore.paths.system .. "ExtensionAssociations/"
 MineOSCore.paths.localizationFiles = MineOSCore.paths.system .. "Localization/"
 MineOSCore.paths.icons = MineOSCore.paths.system .. "Icons/"
 MineOSCore.paths.applications = MineOSCore.paths.OS .. "Applications/"
@@ -139,6 +137,7 @@ end
 -----------------------------------------------------------------------------------------------------------------------------------
 
 function MineOSCore.clearTerminal()
+	local gpu = component.gpu
 	gpu.setBackground(0x1D1D1D)
 	gpu.setForeground(0xFFFFFF)
 	local width, height = gpu.getResolution()
@@ -447,6 +446,10 @@ local function iconFieldBackgroundObjectEventHandler(mainContainer, object, even
 			
 			menu:addItem(MineOSCore.localization.newFolder).onTouch = function()
 				computer.pushSignal("MineOSCore", "newFolder")
+			end
+
+			menu:addItem(MineOSCore.localization.newFileFromURL, not component.isAvailable("internet")).onTouch = function()
+				computer.pushSignal("MineOSCore", "newFileFromURL")
 			end
 
 			menu:addItem(MineOSCore.localization.newApplication).onTouch = function()
@@ -1007,17 +1010,15 @@ local function addUniversalContainerWithInputTextBox(parentWindow, text, title, 
 	local container = MineOSCore.addUniversalContainer(parentWindow, title)
 	
 	container.inputField = container.layout:addChild(GUI.inputField(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0x666666, 0xEEEEEE, 0x262626, text, placeholder, false))
-	container.label = container.layout:addChild(GUI.label(1, 1, 36, 3, 0xFF4940, " ")):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
-
-	parentWindow:draw()
-	buffer.draw()
+	container.label = container.layout:addChild(GUI.label(1, 1, 36, 1, 0xFF4940, MineOSCore.localization.file .. " " .. MineOSCore.localization.alreadyExists)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+	container.label.hidden = true
 
 	return container
 end
 
 local function checkFileToExists(container, path)
 	if fs.exists(path) then
-		container.label.text = MineOSCore.localization.file .. " " .. MineOSCore.localization.alreadyExists
+		container.label.hidden = false
 		container.parent:draw()
 		buffer.draw()
 	else
@@ -1042,6 +1043,9 @@ function MineOSCore.newApplication(parentWindow, path)
 			computer.pushSignal("MineOSCore", "updateFileList")
 		end
 	end
+
+	parentWindow:draw()
+	buffer.draw()
 end
 
 function MineOSCore.newFile(parentWindow, path)
@@ -1055,6 +1059,9 @@ function MineOSCore.newFile(parentWindow, path)
 			computer.pushSignal("MineOSCore", "updateFileList")
 		end
 	end
+
+	parentWindow:draw()
+	buffer.draw()
 end
 
 function MineOSCore.newFolder(parentWindow, path)
@@ -1066,6 +1073,9 @@ function MineOSCore.newFolder(parentWindow, path)
 			computer.pushSignal("MineOSCore", "updateFileList")
 		end
 	end
+
+	parentWindow:draw()
+	buffer.draw()
 
 	return container
 end
@@ -1085,6 +1095,9 @@ function MineOSCore.newFolderFromChosen(parentWindow, selectedIcons)
 		end
 	end
 
+	parentWindow:draw()
+	buffer.draw()
+
 	return container
 end
 
@@ -1098,6 +1111,8 @@ function MineOSCore.rename(parentWindow, path)
 		end
 	end
 
+	parentWindow:draw()
+	buffer.draw()
 	container.inputField:startInput()
 end
 
@@ -1113,10 +1128,13 @@ function MineOSCore.editShortcut(parentWindow, path)
 			computer.pushSignal("MineOSCore", "updateFileList")
 		else
 			container.label.text = MineOSCore.localization.shortcutIsCorrupted
+			container.label.hidden = false
 			MineOSCore.OSDraw()
 		end
 	end
 
+	parentWindow:draw()
+	buffer.draw()
 	container.inputField:startInput()
 end
 
@@ -1137,7 +1155,8 @@ function MineOSCore.launchWithArguments(parentWindow, path)
 			MineOSCore.waitForPressingAnyKey()
 		end
 
-		MineOSCore.OSDraw(true)
+		parentWindow:draw()
+		buffer.draw(true)
 	end
 end
 
@@ -1170,6 +1189,33 @@ function MineOSCore.applicationHelp(parentWindow, path)
 	else
 		MineOSCore.safeLaunch(path .. "/Main.lua")
 	end
+
+	parentWindow:draw()
+	buffer.draw()
+end
+
+function MineOSCore.newFileFromURL(parentWindow, path)
+	local container = addUniversalContainerWithInputTextBox(parentWindow, nil, "Загрузить файл по URL", MineOSCore.localization.fileName)
+
+	container.inputFieldURL = container.layout:addChild(GUI.inputField(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0x666666, 0xEEEEEE, 0x262626, nil, "URL", false))
+	container.inputField.onInputFinished = function()
+		if fs.exists(path .. container.inputField.text) then
+			container.label.hidden = false
+			parentWindow:draw()
+			buffer.draw()
+		else
+			if container.inputFieldURL.text then
+				local success, reason = require("web").downloadFile(container.inputFieldURL.text, path .. container.inputField.text)
+				if not success then
+					GUI.error(reason)
+				end
+
+				container:delete()
+				computer.pushSignal("MineOSCore", "updateFileList")
+			end
+		end
+	end
+	container.inputFieldURL.onInputFinished = container.inputField.onInputFinished
 
 	parentWindow:draw()
 	buffer.draw()
@@ -1419,13 +1465,13 @@ function MineOSCore.init()
 	MineOSCore.loadIcon("trash", MineOSCore.paths.icons .. "Trash.pic")
 	MineOSCore.loadIcon("script", MineOSCore.paths.icons .. "Script.pic")
 
-	MineOSCore.associateExtension(".pic", MineOSCore.paths.applications .. "/Photoshop.app/Main.lua", MineOSCore.paths.icons .. "/Image.pic", MineOSCore.paths.extensionAssociations .. "Pic/Context menu.lua")
+	MineOSCore.associateExtension(".pic", MineOSCore.paths.applications .. "/Photoshop.app/Main.lua", MineOSCore.paths.icons .. "/Image.pic", MineOSCore.paths.extensionAssociations .. "Pic/ContextMenu.lua")
 	MineOSCore.associateExtension(".txt", MineOSCore.paths.editor, MineOSCore.paths.icons .. "/Text.pic")
 	MineOSCore.associateExtension(".cfg", MineOSCore.paths.editor, MineOSCore.paths.icons .. "/Config.pic")
 	MineOSCore.associateExtension(".3dm", MineOSCore.paths.applications .. "/3DPrint.app/Main.lua", MineOSCore.paths.icons .. "/3DModel.pic")
 
-	MineOSCore.associateExtension("script", MineOSCore.paths.extensionAssociations .. "Lua/Launcher.lua", MineOSCore.paths.icons .. "/Script.pic", MineOSCore.paths.extensionAssociations .. "Lua/Context menu.lua")
-	MineOSCore.associateExtension(".lua", MineOSCore.paths.extensionAssociations .. "Lua/Launcher.lua", MineOSCore.paths.icons .. "/Lua.pic", MineOSCore.paths.extensionAssociations .. "Lua/Context menu.lua")
+	MineOSCore.associateExtension("script", MineOSCore.paths.extensionAssociations .. "Lua/Launcher.lua", MineOSCore.paths.icons .. "/Script.pic", MineOSCore.paths.extensionAssociations .. "Lua/ContextMenu.lua")
+	MineOSCore.associateExtension(".lua", MineOSCore.paths.extensionAssociations .. "Lua/Launcher.lua", MineOSCore.paths.icons .. "/Lua.pic", MineOSCore.paths.extensionAssociations .. "Lua/ContextMenu.lua")
 	MineOSCore.associateExtension(".pkg", MineOSCore.paths.extensionAssociations .. "Pkg/Launcher.lua", MineOSCore.paths.icons .. "/Archive.pic")
 
 	MineOSCore.saveOSSettings()

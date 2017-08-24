@@ -6,6 +6,8 @@ local MineOSCore = require("MineOSCore")
 local fs = require("filesystem")
 
 local icon, menu = args[1], args[2]
+-- menu.colors.default.background = 0x0
+-- menu.colors.default.text = 0xFFFFFF
 menu:addItem(MineOSCore.localization.edit).onTouch = function()
 	MineOSCore.safeLaunch(MineOSCore.paths.editor, icon.path)
 end

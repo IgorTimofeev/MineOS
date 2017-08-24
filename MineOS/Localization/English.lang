@@ -43,6 +43,7 @@
 	newFolder = "New folder",
 	newFolderFromChosen = "New folder from chosen",
 	newFile = "New file",
+	newFileFromURL = "New file from URL",
 	newApplication = "New MineOS application",
 	paste = "Paste",
 	copy = "Copy",
