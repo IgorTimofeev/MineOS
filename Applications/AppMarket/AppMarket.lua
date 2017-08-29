@@ -31,12 +31,12 @@ local function newApp(x, y, width, applicationListElement, hideDownloadButton)
 	if applicationListElement.icon then
 		web.downloadFile(applicationListElement.icon, temproraryIconPath)
 		app.icon.image = image.load(temproraryIconPath)
-	else
-		if applicationListElement.type == "Wallpaper" then
-			app.icon.image = MineOSCore.icons.image
-		elseif applicationListElement.type == "Library" then
-			app.icon.image = MineOSCore.icons.lua
-		end
+	-- else
+		-- if applicationListElement.type == "Wallpaper" then
+		-- 	app.icon.image = MineOSCore.icons.image
+		-- elseif applicationListElement.type == "Library" then
+		-- 	app.icon.image = MineOSCore.icons.lua
+		-- end
 	end
 
 	app.downloadButton = app:addChild(GUI.button(1, 1, 13, 1, 0x66DB80, 0xFFFFFF, 0x339240, 0xFFFFFF, localization.download))
