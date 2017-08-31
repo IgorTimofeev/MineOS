@@ -42,7 +42,7 @@ public class Main extends Application {
     public Pane settingsPane;
     public Pane mainPane;
 
-    private String currentImagePath = "sample/Resources/Background.png";
+    private String currentImagePath = "sample/Resources/Background.jpg";
 
     @Override
     public void start(Stage primaryStage) throws Exception {
@@ -126,7 +126,7 @@ public class Main extends Application {
             Dragboard dragboard = event.getDragboard();
             if (dragboard.hasFiles()) {
                 File file = new File(dragboard.getFiles().get(0).getAbsolutePath());
-                if (file.getAbsolutePath().matches("^.+\\.(png)?(jpg)?(jpeg)?$")) {
+                if (file.getAbsolutePath().toLowerCase().matches("^.+\\.(png)?(jpg)?(jpeg)?$")) {
                     loadImage(file);
                 }
             }
@@ -154,9 +154,19 @@ public class Main extends Application {
     public void onTextFieldTextChanged() {
         boolean state = checkTextField(widthTextField) && checkTextField(heightTextField);
 
-        convertButton.setDisable(!state);
+//        convertButton.setDisable(!state);
         imageSizeText.setVisible(state);
         wrongSizesText.setVisible(!state);
+
+        encodingMethodComboBox.getItems().clear();
+        if (state) {
+            encodingMethodComboBox.setValue("OCIF6");
+            encodingMethodComboBox.getItems().add("OCIF5");
+            encodingMethodComboBox.getItems().add("OCIF6");
+        } else {
+            encodingMethodComboBox.setValue("OCIF5");
+            encodingMethodComboBox.getItems().add("OCIF5");
+        }
     }
 
     private void loadImage(File file) {
@@ -207,7 +217,7 @@ public class Main extends Application {
                     file.getPath(),
                     Integer.parseInt(widthTextField.getText()),
                     Integer.parseInt(heightTextField.getText()),
-                    encodingMethodComboBox.getValue().equals("OCIF6") ? 6 : 1,
+                    encodingMethodComboBox.getValue().equals("OCIF6") ? 6 : 5,
                     brailleCheckBox.isSelected(),
                     ditheringCheckBox.isSelected(),
                     ditheringSlider.getValue()

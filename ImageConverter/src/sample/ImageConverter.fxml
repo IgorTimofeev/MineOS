@@ -87,9 +87,9 @@
                </font>
             </TextField>
             <CheckBox fx:id="brailleCheckBox" layoutX="12.0" layoutY="304.0" mnemonicParsing="false" prefHeight="38.0" prefWidth="222.0" selected="true" styleClass="checkBox" stylesheets="@Styles/checkBox.css" text="Использовать шрифт Брайля" textFill="WHITE" />
-            <Text fx:id="wrongSizesText" fill="#ff5e5e" layoutX="33.0" layoutY="124.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Недопустимые значения размеров" textAlignment="CENTER" visible="false" wrappingWidth="180.97265625">
+            <Text fx:id="wrongSizesText" fill="WHITE" layoutX="23.0" layoutY="118.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Размер &gt; 256 поддерживается только форматом OCIF5" textAlignment="CENTER" visible="false" wrappingWidth="201.0">
                <font>
-                  <Font name="Arial" size="11.0" />
+                  <Font name="Arial" size="10.0" />
                </font>
             </Text>
             <CheckBox fx:id="ditheringCheckBox" layoutX="12.0" layoutY="342.0" mnemonicParsing="false" onMouseClicked="#onDitheringStateChanged" prefHeight="38.0" prefWidth="222.0" selected="true" styleClass="checkBox" stylesheets="@Styles/checkBox.css" text="Использовать дизеринг" textFill="WHITE" />
@@ -97,7 +97,7 @@
             <ComboBox fx:id="encodingMethodComboBox" layoutY="259.0" prefHeight="38.0" prefWidth="246.0" promptText="Формат" stylesheets="@Styles/comboBox.css">
                <items>
                   <FXCollections fx:factory="observableArrayList">
-                     <String fx:value="OCIF1" />
+                     <String fx:value="OCIF5" />
                      <String fx:value="OCIF6" />
                   </FXCollections>
                </items>

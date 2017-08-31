@@ -5,16 +5,21 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
+import sample.Palette;
 
 
 public class OCIF {
     private static void writePixelToFileAsOCIF1(FileOutputStream out, Pixel pixel) throws IOException {
-        out.write((byte) pixel.background.red);
-        out.write((byte) pixel.background.green);
-        out.write((byte) pixel.background.blue);
-        out.write((byte) pixel.foreground.red);
-        out.write((byte) pixel.foreground.green);
-        out.write((byte) pixel.foreground.blue);
+//        out.write((byte) pixel.background.red);
+//        out.write((byte) pixel.background.green);
+//        out.write((byte) pixel.background.blue);
+//        out.write((byte) pixel.foreground.red);
+//        out.write((byte) pixel.foreground.green);
+//        out.write((byte) pixel.foreground.blue);
+
+        out.write((byte) Palette.getClosestIndex(pixel.background));
+        out.write((byte) Palette.getClosestIndex(pixel.foreground));
+
         out.write((byte) pixel.alpha);
         out.write(pixel.symbol.getBytes(StandardCharsets.UTF_8));
     }
@@ -105,8 +110,14 @@ public class OCIF {
 
         out.write("OCIF".getBytes(StandardCharsets.US_ASCII));
         out.write((byte) encodingMethod);
-        out.write((byte) requestedWidth);
-        out.write((byte) requestedHeight);
+
+        if (encodingMethod == 5) {
+            out.write(integerToByteArray(requestedWidth, 2));
+            out.write(integerToByteArray(requestedHeight, 2));
+        } else {
+            out.write((byte) requestedWidth);
+            out.write((byte) requestedHeight);
+        }
 
         sample.Image image = new sample.Image(new javafx.scene.image.Image(imagePath,
                 requestedWidth * (convertAsBraille ? 2 : 1),
@@ -120,13 +131,13 @@ public class OCIF {
         }
 
         if (convertAsBraille) {
-            if (encodingMethod == 0x1) {
+            if (encodingMethod == 5) {
                 OCIF1ConvertAsBraille(out, image);
             } else {
                 writeGroupedImage(out, sample.Image.groupAsBraille(image));
             }
         } else {
-            if (encodingMethod == 0x1) {
+            if (encodingMethod == 5) {
                 OCIF1ConvertAsSemiPixel(out, image);
             } else {
                 writeGroupedImage(out, sample.Image.groupAsSemiPixel(image));
