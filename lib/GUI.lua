@@ -283,7 +283,11 @@ function GUI.addChildToContainer(container, object, atIndex)
 	object.parent = container
 	object.addAnimation = containerObjectAddAnimation
 
-	table.insert(container.children, object)
+	if atIndex then
+		table.insert(container.children, atIndex, object)
+	else
+		table.insert(container.children, object)
+	end
 	
 	return object
 end
@@ -1628,7 +1632,7 @@ local function inputBeginInput(input)
 			input.text = unicode.sub(input.text, 1, input.cursorPosition - 1) .. e[3] .. unicode.sub(input.text, input.cursorPosition, -1)
 			input:setCursorPosition(input.cursorPosition + unicode.len(e[3]))
 			input.cursorBlinkState = true; input:draw(); buffer.draw()
-		else
+		elseif not e[1] then
 			input.cursorBlinkState = not input.cursorBlinkState; input:draw(); buffer.draw()
 		end
 	end
@@ -2024,6 +2028,24 @@ local function drawComboBox(object)
 	return object
 end
 
+local function comboBoxGetItem(object, index)
+	return object.dropDownMenu.itemsContainer.children[index]
+end
+
+local function comboBoxClear(object)
+	object.dropDownMenu.itemsContainer:deleteChildren()
+
+	return object
+end
+
+local function comboBoxIndexOfItem(object, text)
+	for i = 1, #object.dropDownMenu.itemsContainer.children do
+		if object.dropDownMenu.itemsContainer.children[i].text == text then
+			return i
+		end
+	end
+end
+
 local function selectComboBoxItem(object)
 	object.pressed = true
 	object:draw()
@@ -2080,6 +2102,9 @@ function GUI.comboBox(x, y, width, elementHeight, backgroundColor, textColor, ar
 	object.addSeparator = comboBoxAddSeparator
 	object.draw = drawComboBox
 	object.selectItem = selectComboBoxItem
+	object.clear = comboBoxClear
+	object.indexOfItem = comboBoxIndexOfItem
+	object.getItem = comboBoxGetItem
 
 	return object
 end

@@ -156,6 +156,18 @@ function color.optimize(color24Bit)
 	return color.to24Bit(color.to8Bit(color24Bit))
 end
 
+function color.blendRGBA(c1, c2, a1, a2)
+	local oneMinusA1, oneMinusA2 = 1 - a1, 1 - a2
+	return
+		color.blend(c1, c2, a2),
+		1 - (oneMinusA1 + a1 * oneMinusA2)
+end
+
+-----------------------------------------------------------------------------------------------------------------------
+
+-- local c, a = color.blendRGBA(0x0000FF, 0xFF0000, 0.5, 0.5)
+-- print(string.format("0x%06X", c), a)
+
 -----------------------------------------------------------------------------------------------------------------------
 
 return color

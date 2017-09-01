@@ -38,19 +38,30 @@ end
 
 ---------------------------------------- Uncompressed OCIF1 encoding ----------------------------------------
 
-encodingMethods.save[1] = function(file, picture)
+encodingMethods.save[5] = function(file, picture)
 	for i = 3, #picture, 4 do
-		writeByteArrayToFile(file, {color.HEXToRGB(picture[i])})
-		writeByteArrayToFile(file, {color.HEXToRGB(picture[i + 1])})
+		-- writeByteArrayToFile(file, {color.HEXToRGB(picture[i])})
+		-- writeByteArrayToFile(file, {color.HEXToRGB(picture[i + 1])})
+
+		file:write(string.char(color.to8Bit(picture[i])))
+		file:write(string.char(color.to8Bit(picture[i + 1])))
+
 		file:write(string.char(picture[i + 2]))
 		writeByteArrayToFile(file, {string.byte(picture[i + 3], 1, 6)})
 	end
 end
 
-encodingMethods.load[1] = function(file, picture)
+encodingMethods.load[5] = function(file, picture)
+	table.insert(picture, readNumberFromFile(file, 2))
+	table.insert(picture, readNumberFromFile(file, 2))
+
 	for i = 1, image.getWidth(picture) * image.getHeight(picture) do
-		table.insert(picture, color.RGBToHEX(string.byte(file:read(1)), string.byte(file:read(1)), string.byte(file:read(1))))
-		table.insert(picture, color.RGBToHEX(string.byte(file:read(1)), string.byte(file:read(1)), string.byte(file:read(1))))
+		-- table.insert(picture, color.RGBToHEX(string.byte(file:read(1)), string.byte(file:read(1)), string.byte(file:read(1))))
+		-- table.insert(picture, color.RGBToHEX(string.byte(file:read(1)), string.byte(file:read(1)), string.byte(file:read(1))))
+			
+		table.insert(picture, color.to24Bit(string.byte(file:read(1))))
+		table.insert(picture, color.to24Bit(string.byte(file:read(1))))
+
 		table.insert(picture, string.byte(file:read(1)))
 		table.insert(picture, string.readUnicodeChar(file))
 	end
@@ -105,6 +116,9 @@ encodingMethods.save[6] = function(file, picture)
 end
 
 encodingMethods.load[6] = function(file, picture)
+	table.insert(picture, string.byte(file:read(1)))
+	table.insert(picture, string.byte(file:read(1)))
+
 	local currentAlpha, currentSymbol, currentBackground, currentForeground, currentY, currentX
 	local alphaSize, symbolSize, backgroundSize, foregroundSize, ySize, xSize
 
@@ -150,11 +164,10 @@ function module.load(path)
 		if readedSignature == OCIFSignature then
 			local encodingMethod = string.byte(file:read(1))
 			if encodingMethods.load[encodingMethod] then
-				-- Reading width and height of a picture
-				local picture = {string.byte(file:read(1)), string.byte(file:read(1))}
-				-- Continue parsing
+				local picture = {}
 				encodingMethods.load[encodingMethod](file, picture)
 				file:close()	
+				
 				return picture
 			else
 				file:close()
