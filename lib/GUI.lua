@@ -1810,7 +1810,7 @@ local function dropDownMenuCalculateSizes(menu)
 		totalHeight = totalHeight + (menu.itemsContainer.children[i].type == GUI.dropDownMenuElementTypes.separator and 1 or menu.itemHeight)
 		menu.itemsContainer.children[i].width = menu.width
 	end
-	menu.height = math.min(totalHeight, menu.maximumHeight)
+	menu.height = math.min(totalHeight, menu.maximumHeight, buffer.height - menu.y)
 	menu.itemsContainer.width, menu.itemsContainer.height = menu.width, menu.height
 
 	menu.nextButton.localPosition.y = menu.height

@@ -60,25 +60,15 @@ local function getLanguageIndex(text)
 	error("CYKA BLYAD LANG NOT FOUND")
 end
 
-local function translate(text, direction)
-	if text then
+local function translate()
+	if fromInputField.text and unicode.len(fromInputField.text) > 0 then
 		infoLabel.text = "Отправка запроса на перевод..."
 		mainContainer:draw()
 		buffer.draw()
 
-		local first, second = fromComboBox:getItem(fromComboBox.selectedItem).text, toComboBox:getItem(toComboBox.selectedItem).text
-		if not direction then
-			first, second = second, first
-		end
-
-		local result, reason = web.request("https://translate.yandex.net/api/v1.5/tr.json/translate?key=trnsl.1.1.20170831T153247Z.6ecf9d7198504994.8ce5a3aa9f9a2ecbe7b2377af37ffe5ad379f4ca&text=" .. string.optimizeForURLRequests(text) .. "&lang=" .. languages[getLanguageIndex(first)].short .. "-" .. languages[getLanguageIndex(second)].short)
+		local result, reason = web.request("https://translate.yandex.net/api/v1.5/tr.json/translate?key=trnsl.1.1.20170831T153247Z.6ecf9d7198504994.8ce5a3aa9f9a2ecbe7b2377af37ffe5ad379f4ca&text=" .. string.optimizeForURLRequests(fromInputField.text) .. "&lang=" .. languages[getLanguageIndex(fromComboBox:getItem(fromComboBox.selectedItem).text)].short .. "-" .. languages[getLanguageIndex(toComboBox:getItem(toComboBox.selectedItem).text)].short)
 		if result then
-			result = json:decode(result).text[1]
-			if direction then
-				toInputField.text = result
-			else
-				fromInputField.text = result
-			end
+			toInputField.text = json:decode(result).text[1]
 			infoLabel.text = " "
 		else
 			infoLabel.text = "Ошибка запроса на перевод: " .. tostring(reason)
@@ -89,19 +79,24 @@ local function translate(text, direction)
 	end
 end
 
-fromInputField.onInputFinished = function()
-	translate(fromInputField.text, true)
-end
-
-toInputField.onInputFinished = function()
-	translate(fromInputField.text, false)
-end
-
 switchButton.onTouch = function()
 	fromComboBox.selectedItem, toComboBox.selectedItem = toComboBox.selectedItem, fromComboBox.selectedItem
-	mainContainer:draw()
-	buffer.draw()
+	translate()
 end
+
+fromInputField.onInputFinished = function()
+	translate()
+end
+
+fromComboBox.onItemSelected = function()
+	translate()
+end
+
+toComboBox.onItemSelected = function()
+	translate()
+end
+
+toInputField.eventHandler = nil
 
 ------------------------------------------------------------------------------------------------------------------
 
