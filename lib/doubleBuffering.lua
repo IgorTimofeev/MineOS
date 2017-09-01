@@ -530,23 +530,24 @@ local function calculateDifference(index, indexPlus1, indexPlus2)
 end
 
 function buffer.draw(force)
-	local oldOSClock = os.clock()
 	local changes, index, indexStepOnEveryLine, indexPlus1, indexPlus2, sameCharArray, x, xCharCheck, indexCharCheck, indexCharCheckPlus1, indexCharCheckPlus2, currentForeground = {}, buffer.getIndexByCoordinates(buffer.drawLimit.x1, buffer.drawLimit.y1), (buffer.width - buffer.drawLimit.x2 + buffer.drawLimit.x1 - 1) * 3
-
+	
 	for y = buffer.drawLimit.y1, buffer.drawLimit.y2 do
 		x = buffer.drawLimit.x1
+		
 		while x <= buffer.drawLimit.x2 do
 			indexPlus1, indexPlus2 = index + 1, index + 2
+			
 			if calculateDifference(index, indexPlus1, indexPlus2) or force then
 				sameCharArray = { buffer.currentFrame[indexPlus2] }
 				xCharCheck, indexCharCheck = x + 1, index + 3
+				
 				while xCharCheck <= buffer.drawLimit.x2 do
 					indexCharCheckPlus1, indexCharCheckPlus2 = indexCharCheck + 1, indexCharCheck + 2
 					if	
 						buffer.currentFrame[index] == buffer.newFrame[indexCharCheck] and
 						(
-							buffer.newFrame[indexCharCheckPlus2] == " "
-							or
+							buffer.newFrame[indexCharCheckPlus2] == " " or
 							buffer.currentFrame[indexPlus1] == buffer.newFrame[indexCharCheckPlus1]
 						)
 					then
@@ -556,8 +557,7 @@ function buffer.draw(force)
 						break
 					end
 
-					indexCharCheck = indexCharCheck + 3
-					xCharCheck = xCharCheck + 1
+					indexCharCheck, xCharCheck = indexCharCheck + 3, xCharCheck + 1
 				end
 
 				changes[buffer.currentFrame[index]] = changes[buffer.currentFrame[index]] or {}
@@ -599,32 +599,6 @@ buffer.rectangle = buffer.square
 buffer.flush()
 
 ------------------------------------------------------------------------------------------------------
-
--- buffer.GPUProxy.setBackground(0x0)
--- buffer.GPUProxy.fill(1, 1, buffer.width, buffer.height, " ")
-
--- buffer.clear(0x1D1D1D)
-
--- buffer.semiPixelBezierCurve({
--- 	{x = 2, y = 2},
--- 	{x = 20, y = 90},
--- 	{x = 40, y = 60},
--- 	{x = 120, y = 10},
--- }, 0xFFFFFF, 0.01)
--- buffer.semiPixelLine(2, 2, 100, 80, 0xFFFFFF)
--- buffer.square(1, 1, buffer.width, buffer.height, 0xFF8888, 0x0, "Q")
--- buffer.square(1, 1, buffer.width, buffer.height, 0xFFFFFF, 0xFFFFFF, "Q")
--- buffer.square(3, 3, 10, 5, 0x00FF00, 0x0, "Q")
--- buffer.draw(true)
-
--- buffer.image(1, 1, image.load("/MineOS/Pictures/Raspberry.pic"))
--- buffer.clear(0x0, 60)
-
--- local x, y = 2, 2
--- for i = 1, 10 do
--- 	buffer.square(x, y, 6, 3, color.HSBToHEX(i * 36, 100, 100), 0x0, " ")
--- 	x, y = x + 4, y + 2
--- end
 
 -- buffer.semiPixelCircle(22, 22, 10, 0xFFDB40)
 -- buffer.semiPixelLine(2, 36, 35, 3, 0xFFFFFF)
