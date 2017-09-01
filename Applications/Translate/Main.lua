@@ -10,54 +10,89 @@ local unicode = require("unicode")
 
 ------------------------------------------------------------------------------------------------------------------
 
+local resourcesPath = fs.path(getCurrentScript()) .. "/Resources/"
+local configPath = resourcesPath .. "Config.cfg"
+local config = {
+	APIKey = "trnsl.1.1.20170831T153247Z.6ecf9d7198504994.8ce5a3aa9f9a2ecbe7b2377af37ffe5ad379f4ca",
+	fromLanguage = "Русский",
+	toLanguage = "Английский",
+	languages = {},
+}
+
+local function saveConfig()
+	table.toFile(configPath, config)
+end
+
+if fs.exists(configPath) then
+	config = table.fromFile(configPath)
+end
+
+------------------------------------------------------------------------------------------------------------------
+
 local mainContainer = GUI.fullScreenContainer()
 mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x1E1E1E))
 local layout = mainContainer:addChild(GUI.layout(1, 1, mainContainer.width, mainContainer.height, 1, 1))
 
-local logo = layout:addChild(GUI.image(1, 1, image.load(fs.path(getCurrentScript()) .. "/Resources/Logo.pic")))
+local logo = layout:addChild(GUI.image(1, 1, image.load(resourcesPath .. "Logo.pic")))
 local elementWidth = image.getWidth(logo.image)
 layout:addChild(GUI.object(1, 1, 1, 1))
 
 local fromComboBox = layout:addChild(GUI.comboBox(1, 1, elementWidth, 1, 0x2D2D2D, 0xAAAAAA, 0x444444, 0x888888))
-local fromInputField = layout:addChild(GUI.inputField(1, 1, elementWidth, 5, 0x2D2D2D, 0x666666, 0x444444, 0x3C3C3C, 0xBBBBBB, nil, "Введите текст"))
-local switchButton = layout:addChild(GUI.adaptiveRoundedButton(1, 1, 2, 1, 0x2D2D2D, 0xBBBBBB, 0x666666, 0xBBBBBB, "<>"))
+local fromInputField = layout:addChild(GUI.inputField(1, 1, elementWidth, 5, 0x2D2D2D, 0x666666, 0x444444, 0x3C3C3C, 0xBBBBBB, nil, "Введите текст", true))
+
+local switchButton = layout:addChild(GUI.adaptiveRoundedButton(1, 1, 3, 1, 0x2D2D2D, 0xBBBBBB, 0x666666, 0xBBBBBB, "←→"))
+
 local toComboBox = layout:addChild(GUI.comboBox(1, 1, elementWidth, 1, 0x2D2D2D, 0xAAAAAA, 0x444444, 0x888888))
-local toInputField = layout:addChild(GUI.inputField(1, 1, elementWidth, 5, 0x2D2D2D, 0x666666, 0x444444, 0x3C3C3C, 0xBBBBBB, nil, "Введите текст"))
-local infoLabel = layout:addChild(GUI.label(1, 1, layout.width, 1, 0xFF6D40, " "):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top))
+local toInputField = layout:addChild(GUI.inputField(1, 1, elementWidth, 5, 0x2D2D2D, 0x666666, 0x444444, 0x3C3C3C, 0xBBBBBB, nil, nil))
+
+layout:addChild(GUI.label(1, 1, elementWidth, 1, 0xAAAAAA, "API Key:"):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top))
+local APIKeyInputField = layout:addChild(GUI.inputField(1, 1, elementWidth, 1, 0x1E1E1E, 0x666666, 0x444444, 0x1E1E1E, 0xBBBBBB, config.APIKey, "Введите API Key", true))
+
+local infoLabel = layout:addChild(GUI.label(1, 1, elementWidth, 1, 0xFF6D40, " "):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top))
 
 ------------------------------------------------------------------------------------------------------------------
 
-local languages
-local function updateLanguages()
-	local result, reason = web.request("https://translate.yandex.net/api/v1.5/tr.json/getLangs?key=trnsl.1.1.20170831T153247Z.6ecf9d7198504994.8ce5a3aa9f9a2ecbe7b2377af37ffe5ad379f4ca&ui=ru")
-	if result then
-		fromComboBox:clear()
-		toComboBox:clear()
-		languages = {}
-
-		local yandexArray = json:decode(result)
-		for key, value in pairs(yandexArray.langs) do
-			table.insert(languages, {short = key, full = value})
-		end
-		table.sort(languages, function(a, b) return a.full < b.full end)
-		for i = 1, #languages do
-			fromComboBox:addItem(languages[i].full)
-			toComboBox:addItem(languages[i].full)
-		end
-	else
-		infoLabel.text = "Ошибка получения списка языков: " .. tostring(reason)
-		mainContainer:draw()
-		buffer.draw()
-	end
+local function status(text)
+	infoLabel.text = text
+	mainContainer:draw()
+	buffer.draw()
 end
 
 local function getLanguageIndex(text)
-	for i = 1, #languages do
-		if languages[i].full == text then
+	for i = 1, #config.languages do
+		if config.languages[i][2] == text then
 			return i
 		end
 	end
-	error("CYKA BLYAD LANG NOT FOUND")
+end
+
+local function fillLanguages()
+	for i = 1, #config.languages do
+		fromComboBox:addItem(config.languages[i][2])
+		toComboBox:addItem(config.languages[i][2])
+	end
+end
+
+local function checkLanguages()
+	if #config.languages == 0 then
+		local result, reason = web.request("https://translate.yandex.net/api/v1.5/tr.json/getLangs?key=" .. config.APIKey .. "&ui=ru")
+		if result then
+			fromComboBox:clear()
+			toComboBox:clear()
+
+			local yandexArray = json:decode(result)
+			for key, value in pairs(yandexArray.langs) do
+				table.insert(config.languages, {key, value})
+			end
+			table.sort(config.languages, function(a, b) return a[2] < b[2] end)
+			fillLanguages()
+			saveConfig()
+		else
+			error("Ошибка получения списка языков")
+		end
+	else
+		fillLanguages()
+	end
 end
 
 local function translate()
@@ -66,21 +101,23 @@ local function translate()
 		mainContainer:draw()
 		buffer.draw()
 
-		local result, reason = web.request("https://translate.yandex.net/api/v1.5/tr.json/translate?key=trnsl.1.1.20170831T153247Z.6ecf9d7198504994.8ce5a3aa9f9a2ecbe7b2377af37ffe5ad379f4ca&text=" .. string.optimizeForURLRequests(fromInputField.text) .. "&lang=" .. languages[getLanguageIndex(fromComboBox:getItem(fromComboBox.selectedItem).text)].short .. "-" .. languages[getLanguageIndex(toComboBox:getItem(toComboBox.selectedItem).text)].short)
+		local result, reason = web.request("https://translate.yandex.net/api/v1.5/tr.json/translate?key=" .. config.APIKey .. "&text=" .. string.optimizeForURLRequests(fromInputField.text) .. "&lang=" .. config.languages[getLanguageIndex(fromComboBox:getItem(fromComboBox.selectedItem).text)][1] .. "-" .. config.languages[getLanguageIndex(toComboBox:getItem(toComboBox.selectedItem).text)][1])
 		if result then
 			toInputField.text = json:decode(result).text[1]
-			infoLabel.text = " "
-		else
-			infoLabel.text = "Ошибка запроса на перевод: " .. tostring(reason)
-		end
+			status(" ")
 
-		mainContainer:draw()
-		buffer.draw()
+			config.fromLanguage = fromComboBox:getItem(fromComboBox.selectedItem).text
+			config.toLanguage = toComboBox:getItem(toComboBox.selectedItem).text
+			saveConfig()
+		else
+			status("Ошибка во время запроса на перевод")
+		end
 	end
 end
 
 switchButton.onTouch = function()
 	fromComboBox.selectedItem, toComboBox.selectedItem = toComboBox.selectedItem, fromComboBox.selectedItem
+	fromInputField.text, toInputField.text = toInputField.text, fromInputField.text
 	translate()
 end
 
@@ -96,13 +133,22 @@ toComboBox.onItemSelected = function()
 	translate()
 end
 
+APIKeyInputField.onInputFinished = function()
+	if APIKeyInputField.text then
+		config.APIKey = APIKeyInputField.text
+		translate()
+		saveConfig()
+	end
+end
+
 toInputField.eventHandler = nil
 
 ------------------------------------------------------------------------------------------------------------------
 
-updateLanguages()
-fromComboBox.selectedItem = getLanguageIndex("Русский")
-toComboBox.selectedItem = getLanguageIndex("Английский")
+checkLanguages()
+fromComboBox.selectedItem = getLanguageIndex(config.fromLanguage)
+toComboBox.selectedItem = getLanguageIndex(config.toLanguage)
+
 mainContainer:draw()
 buffer.draw(true)
 mainContainer:startEventHandling()
