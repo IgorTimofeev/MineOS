@@ -475,22 +475,30 @@ end
 local function buttonDraw(object)
 	local xText, yText = GUI.getAlignmentCoordinates(object, {width = unicode.len(object.text), height = 1})
 
-	local buttonColor, textColor, transparency = object.colors.default.background, object.colors.default.text, object.colors.default.transparency
+	local buttonColor, textColor = object.colors.default.background, object.colors.default.text
 	if object.disabled then
-		buttonColor, textColor, transparency = object.colors.disabled.background, object.colors.disabled.text, object.colors.disabled.transparency
+		buttonColor, textColor = object.colors.disabled.background, object.colors.disabled.text
 	else
 		if object.pressed then
-			buttonColor, textColor, transparency = object.colors.pressed.background, object.colors.pressed.text, object.colors.pressed.transparency
+			buttonColor, textColor = object.colors.pressed.background, object.colors.pressed.text
 		end
 	end
 
 	if buttonColor then
 		if object.buttonType == 1 then
-			buffer.square(object.x, object.y, object.width, object.height, buttonColor, textColor, " ", transparency)
+			buffer.square(object.x, object.y, object.width, object.height, buttonColor, textColor, " ")
 		elseif object.buttonType == 2 then
-			buffer.text(object.x + 1, object.y, buttonColor, string.rep("▄", object.width - 2), transparency)
-			buffer.square(object.x, object.y + 1, object.width, object.height - 2, buttonColor, textColor, " ", transparency)
-			buffer.text(object.x + 1, object.y + object.height - 1, buttonColor, string.rep("▀", object.width - 2), transparency)
+			local x2, y2 = object.x + object.width - 1, object.y + object.height - 1
+			
+			buffer.text(object.x + 1, object.y, buttonColor, string.rep("▄", object.width - 2))
+			buffer.text(object.x, object.y, buttonColor, "⣠")
+			buffer.text(x2, object.y, buttonColor, "⣄")
+			
+			buffer.square(object.x, object.y + 1, object.width, object.height - 2, buttonColor, textColor, " ")
+			
+			buffer.text(object.x + 1, y2, buttonColor, string.rep("▀", object.width - 2))
+			buffer.text(object.x, y2, buttonColor, "⠙")
+			buffer.text(x2, y2, buttonColor, "⠋")
 		else
 			buffer.frame(object.x, object.y, object.width, object.height, buttonColor)
 		end

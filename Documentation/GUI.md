@@ -510,11 +510,11 @@ GUI.**button**( x, y, width, height, buttonColor, textColor, buttonPressedColor,
 
  - GUI.**framedButton**(...) отрисовывается с рамкой по краям кнопки
 
- ![Imgur](http://i.imgur.com/xwuFWqG.png)
+ ![Imgur](https://i.imgur.com/ajmXYFR.png)
 
  - GUI.**roundedButton**(...) имеет симпатичные скругленные уголки
 
- ![Imgur](http://i.imgur.com/p2exfKn.png)
+ ![Imgur](https://i.imgur.com/0UO3Vbm.png)
  
 Для удобства имеется также альтернативные способы создания кнопки: 
 
@@ -558,7 +558,7 @@ mainContainer:startEventHandling()
 
 Результат:
 
-![Imgur](http://i.imgur.com/yJ9V4c8.gif)
+![Imgur](https://i.imgur.com/9zZvR6g.gif)
 
 GUI.**inputField**( x, y, width, height, backgroundColor, textColor, placeholderTextColor, backgroundFocusedColor, textFocusedColor, text, [placeholderText, eraseTextOnFocus, textMask ): *table* inputField
 ------------------------------------------------------------------------
