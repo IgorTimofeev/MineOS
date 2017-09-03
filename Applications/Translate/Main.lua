@@ -31,13 +31,17 @@ end
 
 local mainContainer = GUI.fullScreenContainer()
 mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x1E1E1E))
+local actionButtons = mainContainer:addChild(GUI.actionButtons(2, 1))
 local layout = mainContainer:addChild(GUI.layout(1, 1, mainContainer.width, mainContainer.height, 1, 1))
 
 local logo = layout:addChild(GUI.image(1, 1, image.load(resourcesPath .. "Logo.pic")))
 local elementWidth = image.getWidth(logo.image)
 layout:addChild(GUI.object(1, 1, 1, 1))
 
-local fromComboBox = layout:addChild(GUI.comboBox(1, 1, elementWidth, 1, 0x2D2D2D, 0xAAAAAA, 0x444444, 0x888888))
+local fromLanguageContainer = layout:addChild(GUI.container(1, 1, elementWidth, 1))
+local fromLanguageAutoDetectButton = fromLanguageContainer:addChild(GUI.adaptiveButton(1, 1, 2, 0, 0x2D2D2D, 0xBBBBBB, 0x666666, 0xBBBBBB, "Определить язык"))
+fromLanguageAutoDetectButton.localPosition.x = fromLanguageContainer.width - fromLanguageAutoDetectButton.width + 1
+local fromComboBox = fromLanguageContainer:addChild(GUI.comboBox(1, 1, fromLanguageAutoDetectButton.localPosition.x - 3, 1, 0x2D2D2D, 0xAAAAAA, 0x444444, 0x888888))
 local fromInputField = layout:addChild(GUI.inputField(1, 1, elementWidth, 5, 0x2D2D2D, 0x666666, 0x444444, 0x3C3C3C, 0xBBBBBB, nil, "Введите текст", true))
 
 local switchButton = layout:addChild(GUI.adaptiveRoundedButton(1, 1, 3, 1, 0x2D2D2D, 0xBBBBBB, 0x666666, 0xBBBBBB, "←→"))
@@ -58,9 +62,10 @@ local function status(text)
 	buffer.draw()
 end
 
-local function getLanguageIndex(text)
+local function getLanguageIndex(text, short)
+	local type = short and 1 or 2
 	for i = 1, #config.languages do
-		if config.languages[i][2] == text then
+		if config.languages[i][type] == text then
 			return i
 		end
 	end
@@ -96,12 +101,16 @@ local function checkLanguages()
 end
 
 local function translate()
-	if fromInputField.text and unicode.len(fromInputField.text) > 0 then
-		infoLabel.text = "Отправка запроса на перевод..."
-		mainContainer:draw()
-		buffer.draw()
+	if unicode.len(fromInputField.text or "") > 0 then
+		status("Отправка запроса на перевод...")
 
-		local result, reason = web.request("https://translate.yandex.net/api/v1.5/tr.json/translate?key=" .. config.APIKey .. "&text=" .. string.optimizeForURLRequests(fromInputField.text) .. "&lang=" .. config.languages[getLanguageIndex(fromComboBox:getItem(fromComboBox.selectedItem).text)][1] .. "-" .. config.languages[getLanguageIndex(toComboBox:getItem(toComboBox.selectedItem).text)][1])
+		local result, reason = web.request(
+			"https://translate.yandex.net/api/v1.5/tr.json/translate?key=" .. config.APIKey ..
+			"&text=" .. string.optimizeForURLRequests(fromInputField.text) ..
+			"&lang=" .. config.languages[getLanguageIndex(fromComboBox:getItem(fromComboBox.selectedItem).text, false)][1] .. "-" ..
+			config.languages[getLanguageIndex(toComboBox:getItem(toComboBox.selectedItem).text, false)][1]
+		)
+
 		if result then
 			toInputField.text = json:decode(result).text[1]
 			status(" ")
@@ -113,6 +122,33 @@ local function translate()
 			status("Ошибка во время запроса на перевод")
 		end
 	end
+end
+
+fromLanguageAutoDetectButton.onTouch = function()
+	if unicode.len(fromInputField.text or "") > 0 then
+		status("Отправка запроса на определение языка...")
+		
+		local result, reason = web.request(
+			"https://translate.yandex.net/api/v1.5/tr.json/detect?key=" .. config.APIKey ..
+			"&text=" .. string.optimizeForURLRequests(fromInputField.text)
+		)
+
+		if result then
+			result = json:decode(result)
+			if result.lang then
+				fromComboBox.selectedItem = getLanguageIndex(result.lang, true)
+				translate()
+			else
+				status("Невозможно определить язык")
+			end
+		else
+			status("Ошибка во время запроса на определение языка")
+		end
+	end
+end
+
+actionButtons.close.onTouch = function()
+	mainContainer:stopEventHandling()
 end
 
 switchButton.onTouch = function()
@@ -146,8 +182,8 @@ toInputField.eventHandler = nil
 ------------------------------------------------------------------------------------------------------------------
 
 checkLanguages()
-fromComboBox.selectedItem = getLanguageIndex(config.fromLanguage)
-toComboBox.selectedItem = getLanguageIndex(config.toLanguage)
+fromComboBox.selectedItem = getLanguageIndex(config.fromLanguage, false)
+toComboBox.selectedItem = getLanguageIndex(config.toLanguage, false)
 
 mainContainer:draw()
 buffer.draw(true)
