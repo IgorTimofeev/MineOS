@@ -9,11 +9,9 @@ local unicode = require("unicode")
 local bit32 = require("bit32")
 local gpu = components.gpu
 
-package.loaded.libPNGImage = nil
-
 --------------------------------------------------------------------------------------------------------------------------------------------
 
-local pathToMultiScreenFolder = "MultiScreen/"
+local pathToMultiScreenFolder = "/MultiScreen/"
 local pathToConfigFile = pathToMultiScreenFolder .. "Config.cfg"
 
 local colors = {
