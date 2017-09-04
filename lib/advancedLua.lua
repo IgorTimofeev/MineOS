@@ -258,36 +258,64 @@ end
 -------------------------------------------------- Table extensions --------------------------------------------------
 
 local function doSerialize(array, prettyLook, indentationSymbol, indentationSymbolAdder, equalsSymbol, currentRecusrionStack, recursionStackLimit)
-	local text, keyType, valueType, stringValue = {"{"}
-	table.insert(text, (prettyLook and "\n" or nil))
+	local text, indentationSymbolNext, keyType, valueType, stringValue = {"{"}, table.concat({indentationSymbol, indentationSymbolAdder})
+	if prettyLook then
+		table.insert(text, "\n")
+	end
 	
 	for key, value in pairs(array) do
 		keyType, valueType, stringValue = type(key), type(value), tostring(value)
 
-		if keyType == "number" or keyType == "string" then
-			table.insert(text, (prettyLook and table.concat({indentationSymbol, indentationSymbolAdder}) or nil))
+		if prettyLook then
+			table.insert(text, indentationSymbolNext)
+		end
+		
+		if keyType == "number" then
 			table.insert(text, "[")
-			table.insert(text, (keyType == "string" and table.concat({"\"", key, "\""}) or key))
+			table.insert(text, key)
 			table.insert(text, "]")
-			table.insert(text, equalsSymbol)
-			
-			if valueType == "number" or valueType == "boolean" or valueType == "nil" then
-				table.insert(text, stringValue)
-			elseif valueType == "string" or valueType == "function" then
-				table.insert(text, "\"")
-				table.insert(text, stringValue)
-				table.insert(text, "\"")
-			elseif valueType == "table" then
-				-- Ограничение стека рекурсии
-				if currentRecusrionStack < recursionStackLimit then
-					table.insert(text, table.concat(doSerialize(value, prettyLook, table.concat({indentationSymbol, indentationSymbolAdder}), indentationSymbolAdder, equalsSymbol, currentRecusrionStack + 1, recursionStackLimit)))
-				else
-					table.insert(text, "...")
-				end
+		elseif keyType == "string" then	
+			if key:match("^%a") and key:match("%w+") then
+				table.insert(text, key)
+			else
+				table.insert(text, "[\"")
+				table.insert(text, key)
+				table.insert(text, "\"]")
 			end
-			
-			table.insert(text, ",")
-			table.insert(text, (prettyLook and "\n" or nil))
+		end
+
+		table.insert(text, equalsSymbol)
+		
+		if valueType == "number" or valueType == "boolean" or valueType == "nil" or valueType == "function" then
+			table.insert(text, stringValue)
+		elseif valueType == "string"then
+			table.insert(text, "\"")
+			table.insert(text, stringValue)
+			table.insert(text, "\"")
+		elseif valueType == "table" then
+			if currentRecusrionStack < recursionStackLimit then
+				table.insert(
+					text,
+					table.concat(
+						doSerialize(
+							value,
+							prettyLook,
+							indentationSymbolNext,
+							indentationSymbolAdder,
+							equalsSymbol,
+							currentRecusrionStack + 1,
+							recursionStackLimit
+						)
+					)
+				)
+			else
+				table.insert(text, "…")
+			end
+		end
+		
+		table.insert(text, ",")
+		if prettyLook then
+			table.insert(text, "\n")
 		end
 	end
 
@@ -311,6 +339,7 @@ end
 
 function table.serialize(array, prettyLook, indentationWidth, indentUsingTabs, recursionStackLimit)
 	checkArg(1, array, "table")
+	
 	return table.concat(
 		doSerialize(
 			array,
@@ -326,8 +355,13 @@ end
 
 function table.unserialize(serializedString)
 	checkArg(1, serializedString, "string")
+	
 	local success, result = pcall(load("return " .. serializedString))
-	if success then return result else return nil, result end
+	if success then
+		return result
+	else
+		return nil, result
+	end
 end
 
 table.toString = table.serialize
@@ -336,14 +370,21 @@ table.fromString = table.unserialize
 function table.toFile(path, array, prettyLook, indentationWidth, indentUsingTabs, recursionStackLimit, appendToFile)
 	checkArg(1, path, "string")
 	checkArg(2, array, "table")
+	
 	filesystem.makeDirectory(filesystem.path(path) or "")
-	local file = io.open(path, appendToFile and "a" or "w")
-	file:write(table.serialize(array, prettyLook, indentationWidth, indentUsingTabs, recursionStackLimit))
-	file:close()
+	
+	local file, reason = io.open(path, appendToFile and "a" or "w")
+	if file then
+		file:write(table.serialize(array, prettyLook, indentationWidth, indentUsingTabs, recursionStackLimit))
+		file:close()
+	else
+		error("Failed to open file for writing: " .. tostring(reason))
+	end
 end
 
 function table.fromFile(path)
 	checkArg(1, path, "string")
+	
 	if filesystem.exists(path) then
 		if filesystem.isDirectory(path) then
 			error("\"" .. path .. "\" is a directory")
@@ -553,6 +594,8 @@ function string.wrap(strings, limit)
 end
 
 -------------------------------------------------- Playground --------------------------------------------------
+
+-- print(table.toString(require("MineOSCore").OSSettings, true, 2, true, 2))
 
 -- local t =  {
 -- 	abc = 123,

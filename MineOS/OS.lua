@@ -533,7 +533,6 @@ local function createOSWindow()
 
 		menu:addItem(MineOSCore.localization.reboot).onTouch = function()
 			require("computer").shutdown(true)
-			dofile("/bin/reboot.lua")
 		end
 
 		menu:addItem(MineOSCore.localization.shutdown).onTouch = function()
