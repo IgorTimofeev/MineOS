@@ -243,9 +243,19 @@ function MineOSCore.analyzeIconExtension(icon)
 end
 
 local function iconDraw(icon)
+	local text = string.limit(icon.showExtension and fs.name(icon.path) or fs.hideExtension(fs.name(icon.path)), icon.width, "center")
+	local textLength = unicode.len(text)
+	local textX, textY = math.floor(icon.x + icon.width / 2 - unicode.len(text) / 2), icon.y + icon.height - 1
 	if icon.selected then
-		buffer.square(icon.x, icon.y, icon.width, icon.height, icon.colors.selection, 0x000000, " ", 60)
+		local x, width = icon.x + 1, icon.width - 2
+		buffer.text(x, icon.y - 1, icon.colors.selection, string.rep("▄", width), icon.colors.selectionTransparency)
+		buffer.square(x, icon.y, width, icon.height - 2, icon.colors.selection, 0x000000, " ", icon.colors.selectionTransparency)
+		buffer.text(x, icon.y + icon.height - 2, icon.colors.selection, string.rep("▀", width), icon.colors.selectionTransparency)
+		
+		buffer.square(textX, textY, textLength, 1, icon.colors.selection, 0x000000, " ", icon.colors.selectionTransparency)
 	end
+
+	buffer.text(textX, textY, icon.colors.text, text)
 
 	if icon.cut then
 		if not icon.semiTransparentImage then
@@ -262,15 +272,6 @@ local function iconDraw(icon)
 	else
 		buffer.image(icon.x + 2, icon.y, icon.image)
 	end
-
-	local text
-	if icon.showExtension then
-		text = string.limit(fs.name(icon.path), icon.width, "center")
-	else
-		text = string.limit(fs.hideExtension(fs.name(icon.path)), icon.width, "center")
-	end
-	
-	buffer.text(math.floor(icon.x + icon.width / 2 - unicode.len(text) / 2), icon.y + icon.height - 1, icon.colors.text, text)
 
 	if icon.isShortcut then
 		buffer.set(icon.x + 9, icon.y + 3, 0xFFFFFF, 0x000000, "<")
@@ -327,6 +328,7 @@ function MineOSCore.icon(x, y, path, textColor, selectionColor, showExtension)
 	icon.colors = {
 		text = textColor,
 		selection = selectionColor,
+		selectionTransparency = 60
 	}
 	icon.path = path
 	icon.isDirectory = fs.isDirectory(icon.path)
@@ -562,10 +564,8 @@ local function iconFieldForegroundObjectDraw(object)
 		if y2 < y1 then
 			y1, y2 = y2, y1
 		end
-
-		local width, height = x2 - x1 + 1, y2 - y1 + 1
-		buffer.square(x1, y1, width, height, 0xFFFFFF, 0x0, " ", 70)
-		buffer.frame(x1, y1, width, height, 0xFFFFFF)
+		
+		buffer.square(x1, y1, x2 - x1 + 1, y2 - y1 + 1, 0xFFFFFF, 0x0, " ", 60)
 
 		local partialWidth, partialHeight = MineOSCore.iconWidth * MineOSCore.selectionIconPart, MineOSCore.iconHeight * MineOSCore.selectionIconPart
 		for i = 1, #object.parent.iconsContainer.children do
