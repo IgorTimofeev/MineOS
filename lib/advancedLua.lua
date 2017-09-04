@@ -275,7 +275,7 @@ local function doSerialize(array, prettyLook, indentationSymbol, indentationSymb
 			table.insert(text, key)
 			table.insert(text, "]")
 		elseif keyType == "string" then	
-			if key:match("^%a") and key:match("%w+") then
+			if key:match("^%a") and key:match("^%w+$") then
 				table.insert(text, key)
 			else
 				table.insert(text, "[\"")
