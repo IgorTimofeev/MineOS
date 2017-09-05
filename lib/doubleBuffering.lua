@@ -183,30 +183,29 @@ function buffer.paste(x, y, copyArray)
 	end
 end
 
-function buffer.line(x1, y1, x2, y2, background, foreground, symbol)
-	local deltaX = math.abs(x2 - x1)
-	local deltaY = math.abs(y2 - y1)
-	local signX = (x1 < x2) and 1 or -1
-	local signY = (y1 < y2) and 1 or -1
+function buffer.line(x1, y1, x2, y2, background, foreground, alpha, symbol)
+	local inLoopValueFrom, inLoopValueTo, outLoopValueFrom, outLoopValueTo, isReversed, inLoopValueDelta, outLoopValueDelta = x1, x2, y1, y2, false, math.abs(x2 - x1), math.abs(y2 - y1)
+	if inLoopValueDelta < outLoopValueDelta then
+		inLoopValueFrom, inLoopValueTo, outLoopValueFrom, outLoopValueTo, isReversed, inLoopValueDelta, outLoopValueDelta = y1, y2, x1, x2, true, outLoopValueDelta, inLoopValueDelta
+	end
 
-	local errorCyka = deltaX - deltaY
-	local errorCyka2
+	if outLoopValueFrom > outLoopValueTo then
+		outLoopValueFrom, outLoopValueTo = outLoopValueTo, outLoopValueFrom
+		inLoopValueFrom, inLoopValueTo = inLoopValueTo, inLoopValueFrom
+	end
 
-	buffer.set(x2, y2, background, foreground, symbol)
-
-	while(x1 ~= x2 or y1 ~= y2) do
-		buffer.set(x1, y1, background, foreground, symbol)
-
-		errorCyka2 = errorCyka * 2
-
-		if (errorCyka2 > -deltaY) then
-			errorCyka = errorCyka - deltaY
-			x1 = x1 + signX
+	local outLoopValue, outLoopValueCounter, outLoopValueTriggerIncrement = outLoopValueFrom, 1, inLoopValueDelta / outLoopValueDelta
+	local outLoopValueTrigger = outLoopValueTriggerIncrement
+	for inLoopValue = inLoopValueFrom, inLoopValueTo, inLoopValueFrom < inLoopValueTo and 1 or -1 do
+		if isReversed then
+			buffer.set(outLoopValue, inLoopValue, background, foreground, alpha, symbol)
+		else
+			buffer.set(inLoopValue, outLoopValue, background, foreground, alpha, symbol)
 		end
 
-		if (errorCyka2 < deltaX) then
-			errorCyka = errorCyka + deltaX
-			y1 = y1 + signY
+		outLoopValueCounter = outLoopValueCounter + 1
+		if outLoopValueCounter > outLoopValueTrigger then
+			outLoopValue, outLoopValueTrigger = outLoopValue + 1, outLoopValueTrigger + outLoopValueTriggerIncrement
 		end
 	end
 end
@@ -408,28 +407,28 @@ function buffer.semiPixelSquare(x, y, width, height, color)
 end
 
 function buffer.semiPixelLine(x1, y1, x2, y2, color)
-	local incycleValueFrom, incycleValueTo, outcycleValueFrom, outcycleValueTo, isReversed, incycleValueDelta, outcycleValueDelta = x1, x2, y1, y2, false, math.abs(x2 - x1), math.abs(y2 - y1)
-	if incycleValueDelta < outcycleValueDelta then
-		incycleValueFrom, incycleValueTo, outcycleValueFrom, outcycleValueTo, isReversed, incycleValueDelta, outcycleValueDelta = y1, y2, x1, x2, true, outcycleValueDelta, incycleValueDelta
+	local inLoopValueFrom, inLoopValueTo, outLoopValueFrom, outLoopValueTo, isReversed, inLoopValueDelta, outLoopValueDelta = x1, x2, y1, y2, false, math.abs(x2 - x1), math.abs(y2 - y1)
+	if inLoopValueDelta < outLoopValueDelta then
+		inLoopValueFrom, inLoopValueTo, outLoopValueFrom, outLoopValueTo, isReversed, inLoopValueDelta, outLoopValueDelta = y1, y2, x1, x2, true, outLoopValueDelta, inLoopValueDelta
 	end
 
-	if outcycleValueFrom > outcycleValueTo then
-		outcycleValueFrom, outcycleValueTo = swap(outcycleValueFrom, outcycleValueTo)
-		incycleValueFrom, incycleValueTo = swap(incycleValueFrom, incycleValueTo)
+	if outLoopValueFrom > outLoopValueTo then
+		outLoopValueFrom, outLoopValueTo = outLoopValueTo, outLoopValueFrom
+		inLoopValueFrom, inLoopValueTo = inLoopValueTo, inLoopValueFrom
 	end
 
-	local outcycleValue, outcycleValueCounter, outcycleValueTriggerIncrement = outcycleValueFrom, 1, incycleValueDelta / outcycleValueDelta
-	local outcycleValueTrigger = outcycleValueTriggerIncrement
-	for incycleValue = incycleValueFrom, incycleValueTo, incycleValueFrom < incycleValueTo and 1 or -1 do
+	local outLoopValue, outLoopValueCounter, outLoopValueTriggerIncrement = outLoopValueFrom, 1, inLoopValueDelta / outLoopValueDelta
+	local outLoopValueTrigger = outLoopValueTriggerIncrement
+	for inLoopValue = inLoopValueFrom, inLoopValueTo, inLoopValueFrom < inLoopValueTo and 1 or -1 do
 		if isReversed then
-			buffer.semiPixelSet(outcycleValue, incycleValue, color)
+			buffer.semiPixelSet(outLoopValue, inLoopValue, color)
 		else
-			buffer.semiPixelSet(incycleValue, outcycleValue, color)
+			buffer.semiPixelSet(inLoopValue, outLoopValue, color)
 		end
 
-		outcycleValueCounter = outcycleValueCounter + 1
-		if outcycleValueCounter > outcycleValueTrigger then
-			outcycleValue, outcycleValueTrigger = outcycleValue + 1, outcycleValueTrigger + outcycleValueTriggerIncrement
+		outLoopValueCounter = outLoopValueCounter + 1
+		if outLoopValueCounter > outLoopValueTrigger then
+			outLoopValue, outLoopValueTrigger = outLoopValue + 1, outLoopValueTrigger + outLoopValueTriggerIncrement
 		end
 	end
 end
