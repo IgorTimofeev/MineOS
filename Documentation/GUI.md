@@ -972,12 +972,14 @@ GUI.**treeView**( x, y, width, height, backgroundColor, textColor, selectionBack
 | *int* | scrollBarPrimaryColor | Первичный цвет скроллбара TreeView |
 | *int* | scrollBarSecondaryColor | Вторичный цвет скроллбара TreeView |
 | *string* | workPath | Стартовая директория TreeView |
+| [*enum* | filesystemShowMode] | Опциональный режим отображения содержимого текущей директориии. Может принимать значения GUI.**filesystemModes**.**file**, GUI.**filesystemModes**.**directory** или GUI.**filesystemModes**.**both**  |
+| [*enum* | filesystemSelectionMode] | Опциональный режим выбора содепжимого текущей директориии. Значения принимает те же, что и у filesystemShowMode  |
 
 Создать объект типа "TreeView", предназначенный для навигации по файловой системе в виде иерархического древа. При клике на директорию будет показано ее содержимое, а во время прокрутки колесиком мыши содержимое будет "скроллиться" в указанном направлении.
 
 | Тип свойства | Свойство |Описание |
 | ------ | ------ | ------ |
-| *callback-function* | .**onFileSelected**( *int* currentFile )| Метод, вызываемый после выбора файла в TreeView |
+| *callback-function* | .**onItemSelected**( *string* path )| Метод, вызываемый после выбора элемента в TreeView. В качестве аргумента передается абсолютный путь выбранного элемента |
 
 Пример реализации TreeView:
 
@@ -987,12 +989,19 @@ local GUI = require("GUI")
 
 ------------------------------------------------------------------------------------------
 
-local mainContainer = GUI.fullScreenContainer()
-mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x262626))
+local treeView1 = mainContainer:addChild(GUI.treeView(2, 2, 30, 41, 0xCCCCCC, 0x2D2D2D, 0x3C3C3C, 0xEEEEEE, 0x666666, 0xC3C3C3, 0x393939, "/", GUI.filesystemModes.both, GUI.filesystemModes.both))
+treeView1.onItemSelected = function(path)
+	GUI.error("Something was selected, the path is: \"" .. path .. "\"")
+end
 
-local treeView = mainContainer:addChild(GUI.treeView(2, 2, 30, 41, 0xCCCCCC, 0x2D2D2D, 0x3C3C3C, 0xEEEEEE, 0x666666, 0xEEEEEE, 0x3366CC, "/"))
-treeView.onFileSelected = function(path)
-   GUI.error("File was selected, the path is: \"" .. path .. "\"")
+local treeView2 = mainContainer:addChild(GUI.treeView(34, 2, 30, 41, 0xCCCCCC, 0x2D2D2D, 0x3C3C3C, 0xEEEEEE, 0x666666, 0xC3C3C3, 0x393939, "/", GUI.filesystemModes.file, GUI.filesystemModes.file))
+treeView2.onItemSelected = function(path)
+	GUI.error("File was selected, the path is: \"" .. path .. "\"")
+end
+
+local treeView3 = mainContainer:addChild(GUI.treeView(66, 2, 30, 41, 0xCCCCCC, 0x2D2D2D, 0x3C3C3C, 0xEEEEEE, 0x666666, 0xC3C3C3, 0x393939, "/", GUI.filesystemModes.directory, GUI.filesystemModes.directory))
+treeView3.onItemSelected = function(path)
+	GUI.error("Directory was selected, the path is: \"" .. path .. "\"")
 end
 
 ------------------------------------------------------------------------------------------
@@ -1004,7 +1013,7 @@ mainContainer:startEventHandling()
 
 Результат:
 
-![Imgur](http://i.imgur.com/bSaDYWg.gif)
+![Imgur](https://i.imgur.com/igGozFP.gif)
 
 GUI.**codeView**( x, y, width, height, lines, fromSymbol, fromLine, maximumLineLength, selections, highlights, highlightLuaSyntax, indentationWidth ): *table* codeView
 ------------------------------------------------------------------------
