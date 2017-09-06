@@ -2,12 +2,12 @@ local component = require("component")
 local gpu = component.gpu
 local event = require("event")
 local ecs = require("ECSAPI")
-local colorlib = require("colorlib")
+local color = require("color")
 
 ---------------------------
 local xOld, yOld = gpu.getResolution()
-gpu.setResolution(160, 50)
 local xSize, ySize = 160, 50
+gpu.setResolution(xSize, ySize)
 
 local players = {}
 local xCenter, yCenter = math.floor(xSize/4 - 15), math.floor(ySize/2)
@@ -147,7 +147,7 @@ end
 
 local function AddPlayer(name)
 	if not players[name] then
-		players[name] = {0, colorlib.HSBtoHEX(math.random(0, 359), 100, math.random(50, 100))}
+		players[name] = {0, color.HSBToHEX(math.random(0, 359), 100, math.random(50, 100))}
 	end
 end
 
@@ -272,6 +272,9 @@ local function Tir()
 end
 
 --------------------------
+
+gpu.setBackground(0x262626)
+gpu.fill(1, 1, xSize, ySize, " ")
 
 while true do
 	local exit = Tir()

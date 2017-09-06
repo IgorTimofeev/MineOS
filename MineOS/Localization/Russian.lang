@@ -17,6 +17,7 @@
 	yes = "Да",
 	no = "Нет",
 	cancel = "Отмена",
+	open = "Открыть",
 	applyToAll = "Применить ко всем",
 	toDirectory = "в директории",
 	copying = "Копирование",

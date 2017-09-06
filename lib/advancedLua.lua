@@ -154,8 +154,9 @@ function filesystem.name(path)
 	return path:match("%/?([^%/]+)%/?$")
 end
 
-function filesystem.extension(path)
-	return path:match("[^%/]+(%.[^%/]+)%/?$")
+function filesystem.extension(path, lower)
+	local extension = path:match("[^%/]+(%.[^%/]+)%/?$")
+	return (lower and extension) and (unicode.lower(extension)) or extension
 end
 
 function filesystem.hideExtension(path)

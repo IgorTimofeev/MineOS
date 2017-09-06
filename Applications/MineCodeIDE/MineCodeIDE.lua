@@ -1,1501 +1,1840 @@
 
----------------------------------------------- Libraries ------------------------------------------------------------------------
+---------------------------------------------------- Libraries ----------------------------------------------------
 
-local component = require("component")
+-- "/MineOS/Applications/MineCode IDE.app/MineCode IDE.lua" -o /OS.lua
+
+-- package.loaded.syntax = nil
+-- package.loaded.ECSAPI = nil
+-- package.loaded.GUI = nil
+-- package.loaded.MineOSCore = nil
+
+local args = {...}
+require("advancedLua")
 local computer = require("computer")
-local event = require("event")
-local advancedLua = require("advancedLua")
-local image = require("image")
+local component = require("component")
+local fs = require("filesystem")
 local buffer = require("doubleBuffering")
 local GUI = require("GUI")
-local fs = require("filesystem")
+local MineOSCore = require("MineOSCore")
+local event = require("event")
+local syntax = require("syntax")
 local unicode = require("unicode")
+local web = require("web")
+local image = require("image")
 local keyboard = require("keyboard")
+local palette = require("palette")
+local term = require("term")
 
-----------------------------------------------------------------------------------------------------------------
+---------------------------------------------------- Constants ----------------------------------------------------
 
-local MineOSCore = {}
-MineOSCore.iconWidth = 12
-MineOSCore.iconHeight = 6
-MineOSCore.selectionIconPart = 0.4
-MineOSCore.iconClickDelay = 0.2
-MineOSCore.iconConfigFileName = ".icons"
+local about = {
+	"MineCode IDE",
+	"Copyright © 2014-2017 ECS Inc.",
+	" ",
+	"Developers:",
+	" ",
+	"Timofeev Igor, vk.com/id7799889",
+	"Trifonov Gleb, vk.com/id88323331",
+	" ",
+	"Testers:",
+	" ",
+	"Semyonov Semyon, vk.com/id92656626",
+	"Prosin Mihail, vk.com/id75667079",
+	"Shestakov Timofey, vk.com/id113499693",
+	"Bogushevich Victoria, vk.com/id171497518",
+	"Vitvitskaya Yana, vk.com/id183425349",
+	"Golovanova Polina, vk.com/id226251826",
+}
 
-MineOSCore.paths = {}
-MineOSCore.paths.OS = "/MineOS/"
-MineOSCore.paths.system = MineOSCore.paths.OS .. "System/"
-MineOSCore.paths.extensionAssociations = MineOSCore.paths.system .. "ExtensionAssociations/"
-MineOSCore.paths.localizationFiles = MineOSCore.paths.system .. "Localization/"
-MineOSCore.paths.icons = MineOSCore.paths.system .. "Icons/"
-MineOSCore.paths.applications = MineOSCore.paths.OS .. "Applications/"
-MineOSCore.paths.pictures = MineOSCore.paths.OS .. "Pictures/"
-MineOSCore.paths.desktop = MineOSCore.paths.OS .. "Desktop/"
-MineOSCore.paths.applicationList = MineOSCore.paths.system .. "Applications.cfg"
-MineOSCore.paths.trash = MineOSCore.paths.OS .. "Trash/"
-MineOSCore.paths.OSSettings = MineOSCore.paths.system .. "Settings.cfg"
-MineOSCore.paths.editor = MineOSCore.paths.applications .. "/MineCode IDE.app/Main.lua"
+local config = {
+	syntaxColorScheme = syntax.colorScheme,
+	scrollSpeed = 8,
+	cursorColor = 0x00A8FF,
+	cursorSymbol = "┃",
+	cursorBlinkDelay = 0.5,
+	doubleClickDelay = 0.4,
+	screenResolution = {},
+	enableAutoBrackets = true,
+	highlightLuaSyntax = true,
+	enableAutocompletion = true,
+}
+config.screenResolution.width, config.screenResolution.height = component.gpu.getResolution()
 
-MineOSCore.localization = {}
-
-----------------------------------------------------------------------------------------------------------------
-
-function MineOSCore.getCurrentScriptDirectory()
-	return fs.path(getCurrentScript())
-end
-
-function MineOSCore.getCurrentApplicationResourcesDirectory() 
-	return MineOSCore.getCurrentScriptDirectory() .. "/Resources/"
-end
-
-function MineOSCore.getLocalization(pathToLocalizationFolder)
-	local localizationFileName = pathToLocalizationFolder .. MineOSCore.OSSettings.language .. ".lang"
-	if fs.exists(localizationFileName) then
-		return table.fromFile(localizationFileName)
-	else
-		error("Localization file \"" .. localizationFileName .. "\" doesn't exists")
-	end
-end
-
-function MineOSCore.getCurrentApplicationLocalization()
-	return MineOSCore.getLocalization(MineOSCore.getCurrentApplicationResourcesDirectory() .. "Localization/")	
-end
-
------------------------------------------------------------------------------------------------------------------------------------
-
-function MineOSCore.createShortcut(where, forWhat)
-	fs.makeDirectory(fs.path(where))
-	local file = io.open(where, "w")
-	file:write(forWhat)
-	file:close()
-end
-
-function MineOSCore.readShortcut(path)
-	local file = io.open(path, "r")
-	local data = file:read("*a")
-	file:close()
-	
-	return data
-end
-
------------------------------------------------------------------------------------------------------------------------------------
-
-function MineOSCore.saveOSSettings()
-	table.toFile(MineOSCore.paths.OSSettings, MineOSCore.OSSettings, true)
-end
-
-function MineOSCore.loadOSSettings()
-	MineOSCore.OSSettings = table.fromFile(MineOSCore.paths.OSSettings)
-end
-
------------------------------------------------------------------------------------------------------------------------------------
-
-function MineOSCore.associateExtensionLauncher(extension, pathToLauncher)
-	MineOSCore.OSSettings.extensionAssociations[extension] = MineOSCore.OSSettings.extensionAssociations[extension] or {}
-	MineOSCore.OSSettings.extensionAssociations[extension].launcher = pathToLauncher
-end
-
-function MineOSCore.associateExtensionIcon(extension, pathToIcon)
-	MineOSCore.OSSettings.extensionAssociations[extension] = MineOSCore.OSSettings.extensionAssociations[extension] or {}
-	MineOSCore.OSSettings.extensionAssociations[extension].icon = pathToIcon
-end
-
-function MineOSCore.associateExtensionContextMenu(extension, pathToContextMenu)
-	MineOSCore.OSSettings.extensionAssociations[extension] = MineOSCore.OSSettings.extensionAssociations[extension] or {}
-	MineOSCore.OSSettings.extensionAssociations[extension].contextMenu = pathToContextMenu
-end
-
-function MineOSCore.associateExtension(extension, pathToLauncher, pathToIcon, pathToContextMenu)
-	MineOSCore.associateExtensionLauncher(extension, pathToLauncher)
-	MineOSCore.associateExtensionIcon(extension, pathToIcon)
-	MineOSCore.associateExtensionContextMenu(extension, pathToContextMenu)
-end
-
-function MineOSCore.associationsExtensionAutomatically()
-	local path, extension = MineOSCore.paths.extensionAssociations
-	for file in fs.list(path) do
-		if fs.isDirectory(path .. file) then
-			extension = "." .. unicode.sub(file, 1, -2)
-
-			if fs.exists(path .. file .. "Context menu.lua") then
-				MineOSCore.associateExtensionContextMenu(extension, path .. file .. "Context menu.lua")
-			end
-
-			if fs.exists(path .. file .. "Launcher.lua") then
-				MineOSCore.associateExtensionLauncher(extension, path .. file .. "Launcher.lua")
-			end
-		end
-	end
-end
-
------------------------------------------------------------------------------------------------------------------------------------
-
-function MineOSCore.loadIcon(name, path)
-	if not MineOSCore.icons[name] then MineOSCore.icons[name] = image.load(path) end
-	return MineOSCore.icons[name]
-end
-
------------------------------------------------------------------------------------------------------------------------------------
-
-function MineOSCore.clearTerminal()
-	local gpu = component.gpu
-	gpu.setBackground(0x1D1D1D)
-	gpu.setForeground(0xFFFFFF)
-	local width, height = gpu.getResolution()
-	gpu.fill(1, 1, width, height, " ")
-	require("term").setCursor(1, 1)
-end
-
-function MineOSCore.waitForPressingAnyKey()
-	print(" ")
-	print(MineOSCore.localization.pressAnyKeyToContinue)
-	while true do
-		local eventType = event.pull()
-		if eventType == "key_down" or eventType == "touch" then
-			break
-		end
-	end
-end
-
-function MineOSCore.launchScript(path)
-	MineOSCore.clearTerminal()
-	if MineOSCore.safeLaunch(path) then
-		MineOSCore.waitForPressingAnyKey()
-	end
-end
-
------------------------------------------------------------------------------------------------------------------------------------
-
-local function launchApp(icon)
-	computer.pushSignal("MineOSCore", "applicationHelp", icon.path)
-end
-
-local function launchDirectory(icon)
-	computer.pushSignal("MineOSCore", "changeWorkpath", icon.path)
-end
-
-local function launchLnk(icon)
-	local oldPath = icon.path
-	icon.path = icon.shortcutPath
-	icon:shortcutLaunch()
-	icon.path = oldPath
-end
-
-local function launchCorrupted(icon)
-	GUI.error("Application is corrupted")
-end
-
-local function launchExtension(icon)
-	MineOSCore.safeLaunch(MineOSCore.OSSettings.extensionAssociations[icon.extension].launcher, icon.path, "-o")
-end
-
-local function launchScript(icon)
-	MineOSCore.launchScript(icon.path)
-end
-
-function MineOSCore.analyzeIconExtension(icon)
-	if icon.isDirectory then
-		if icon.extension == ".app" then
-			if MineOSCore.OSSettings.showApplicationIcons then
-				icon.image = image.load(icon.path .. "/Resources/Icon.pic")
-			else
-				icon.image = MineOSCore.icons.application
-			end
-
-			icon.launch = launchApp
-		else
-			icon.image = MineOSCore.icons.folder
-			icon.launch = launchDirectory
-		end
-	else
-		if icon.extension == ".lnk" then
-			icon.shortcutPath = MineOSCore.readShortcut(icon.path)
-			icon.shortcutExtension = fs.extension(icon.shortcutPath)
-			icon.shortcutIsDirectory = fs.isDirectory(icon.shortcutPath)
-			icon.isShortcut = true
-
-			local shortcutIcon = MineOSCore.analyzeIconExtension({
-				path = icon.shortcutPath,
-				extension = icon.shortcutExtension,
-				isDirectory = icon.shortcutIsDirectory,
-				iconImage = icon.iconImage
-			})
-
-			icon.image = shortcutIcon.image
-			icon.shortcutLaunch = shortcutIcon.launch
-			icon.launch = launchLnk
-
-			shortcutIcon = nil
-		elseif not fs.exists(icon.path) then
-			icon.image = MineOSCore.icons.fileNotExists
-			icon.launch = launchCorrupted
-		else
-			if MineOSCore.OSSettings.extensionAssociations[icon.extension] then
-				icon.launch = launchExtension
-				icon.image = MineOSCore.loadIcon(icon.extension, MineOSCore.OSSettings.extensionAssociations[icon.extension].icon)
-			else
-				icon.launch = launchScript
-				icon.image = MineOSCore.icons.script
-			end
-		end
-	end
-
-	return icon
-end
-
-local function iconDraw(icon)
-	local text = string.limit(icon.showExtension and fs.name(icon.path) or fs.hideExtension(fs.name(icon.path)), icon.width, "center")
-	local textLength = unicode.len(text)
-	local textX, textY = math.floor(icon.x + icon.width / 2 - unicode.len(text) / 2), icon.y + icon.height - 1
-	if icon.selected then
-		local x, width = icon.x + 1, icon.width - 2
-		buffer.text(x, icon.y - 1, icon.colors.selection, string.rep("▄", width), icon.colors.selectionTransparency)
-		buffer.square(x, icon.y, width, icon.height - 2, icon.colors.selection, 0x000000, " ", icon.colors.selectionTransparency)
-		buffer.text(x, icon.y + icon.height - 2, icon.colors.selection, string.rep("▀", width), icon.colors.selectionTransparency)
-		
-		buffer.square(textX, textY, textLength, 1, icon.colors.selection, 0x000000, " ", icon.colors.selectionTransparency)
-	end
-
-	buffer.text(textX, textY, icon.colors.text, text)
-
-	if icon.cut then
-		if not icon.semiTransparentImage then
-			icon.semiTransparentImage = image.copy(icon.image)
-			for i = 3, #icon.semiTransparentImage, 4 do
-				icon.semiTransparentImage[i + 2] = icon.semiTransparentImage[i + 2] + 0.6
-				if icon.semiTransparentImage[i + 2] > 1 then
-					icon.semiTransparentImage[i + 2] = 1
-				end
-			end
-		end
-		
-		buffer.image(icon.x + 2, icon.y, icon.semiTransparentImage, true)
-	else
-		buffer.image(icon.x + 2, icon.y, icon.image)
-	end
-
-	if icon.isShortcut then
-		buffer.set(icon.x + 9, icon.y + 3, 0xFFFFFF, 0x000000, "<")
-	end
-
-	if icon.window then
-		buffer.text(icon.x + 5, icon.y + 4, 0x66DBFF, "╺╸")
-	end
-end
-
-local function iconEventHandler(mainContainer, object, eventData)
-	if eventData[1] == "touch" then
-		object.lastTouchPosition = object.lastTouchPosition or {}
-		object.lastTouchPosition.x, object.lastTouchPosition.y = eventData[3], eventData[4]
-		object:moveToFront()
-
-		object.selected = true
-		MineOSCore.OSDraw()
-
-		if eventData[5] == 0 then
-			object.onLeftClick(object, eventData)
-		else
-			object.onRightClick(object, eventData)
-			object.selected = false
-			MineOSCore.OSDraw()
-		end
-	elseif eventData[1] == "double_touch" and object:isClicked(eventData[3], eventData[4]) and eventData[5] == 0 then
-		object.onDoubleClick(object, eventData)
-	elseif eventData[1] == "drag" and object.lastTouchPosition then
-		object.localPosition.x = object.localPosition.x + eventData[3] - object.lastTouchPosition.x
-		object.localPosition.y = object.localPosition.y + eventData[4] - object.lastTouchPosition.y
-		object.lastTouchPosition.x, object.lastTouchPosition.y = eventData[3], eventData[4]
-
-		MineOSCore.OSDraw()
-	elseif eventData[1] == "drop" then
-		-- Сейвим позицию иконки на дисочек. Юзаем ручной поиск вместо :indexOf(), ибо
-		-- иконки из-за перемещения вперед могут иметь отличный от файллиста индекс
-		for i = 1, #object.parent.parent.fileList do
-			if object.parent.parent.workpath .. object.parent.parent.fileList[i] == object.path then
-				object.parent.parent.iconConfig[object.parent.parent.fileList[i]] = {
-					x = object.localPosition.x,
-					y = object.localPosition.y
-				}
-				object.parent.parent:saveIconConfig()
-				break
-			end
-		end
-	end
-end
-
-function MineOSCore.icon(x, y, path, textColor, selectionColor, showExtension)
-	local icon = GUI.object(x, y, MineOSCore.iconWidth, MineOSCore.iconHeight)
-	
-	icon.colors = {
-		text = textColor,
-		selection = selectionColor,
-		selectionTransparency = 60
+local colors = {
+	topToolBar = 0xDDDDDD,
+	bottomToolBar = {
+		background = 0x3C3C3C,
+		buttons = 0x2D2D2D,
+		buttonsText = 0xFFFFFF,
+	},
+	topMenu = {
+		backgroundColor = 0xEEEEEE,
+		textColor = 0x444444,
+		backgroundPressedColor = 0x3366CC,
+		textPressedColor = 0xFFFFFF,
+	},
+	title = {
+		default = {
+			sides = 0x555555,
+			background = 0x3C3C3C,
+			text = 0xEEEEEE,
+		},
+		onError = {
+			sides = 0xCC4940,
+			background = 0x880000,
+			text = 0xEEEEEE,
+		},
+	},
+	highlights = {
+		onError = 0xFF4940,
+		onBreakpoint = 0x990000,
 	}
-	icon.path = path
-	icon.isDirectory = fs.isDirectory(icon.path)
-	icon.extension = fs.extension(icon.path) or "script"
-	icon.showExtension = showExtension
-	icon.isShortcut = false
-	icon.selected = false
+}
 
-	icon.draw = iconDraw
+local possibleBrackets = {
+	openers = {
+		["{"] = "}",
+		["["] = "]",
+		["("] = ")",
+		["\""] = "\"",
+		["\'"] = "\'"
+	},
+	closers = {
+		["}"] = "{",
+		["]"] = "[",
+		[")"] = "(",
+		["\""] = "\"",
+		["\'"] = "\'"
+	}
+}
 
-	-- Поддержка изменяемых извне функций правого и левого кликов
-	icon.onLeftClick = MineOSCore.iconLeftClick
-	icon.onRightClick = MineOSCore.iconRightClick
-	icon.onDoubleClick = MineOSCore.iconDoubleClick
-	icon.eventHandler = iconEventHandler
+local cursor = {
+	position = {
+		symbol = 1,
+		line = 1
+	},
+	blinkState = false
+}
 
-	-- Онализ формата и прочего говна иконки для последующего получения изображения иконки и функции-лаунчера
-	MineOSCore.analyzeIconExtension(icon)
+local scriptCoroutine
+local resourcesPath = MineOSCore.getCurrentApplicationResourcesDirectory() 
+local configPath = resourcesPath .. "ConfigVersion2.cfg"
+local localization = MineOSCore.getLocalization(resourcesPath .. "Localization/")
+local findStartFrom
+local clipboard
+local breakpointLines
+local lastErrorLine
+local autocompleteDatabase
+
+------------------------------------------------------------------------------------------------------------------
+
+local function convertTextPositionToScreenCoordinates(symbol, line)
+	return
+		mainContainer.codeView.codeAreaPosition + symbol - mainContainer.codeView.fromSymbol + 1,
+		mainContainer.codeView.y + line - mainContainer.codeView.fromLine
+end
+
+local function convertScreenCoordinatesToTextPosition(x, y)
+	return x - mainContainer.codeView.codeAreaPosition + mainContainer.codeView.fromSymbol - 1, y - mainContainer.codeView.y + mainContainer.codeView.fromLine
+end
+
+------------------------------------------------------------------------------------------------------------------
+
+local function saveConfig()
+	table.toFile(configPath, config)
+end
+
+local function loadConfig()
+	if fs.exists(configPath) then
+		config = table.fromFile(configPath)
+		syntax.colorScheme = config.syntaxColorScheme
+	else
+		saveConfig()
+	end
+end
+
+------------------------------------------------------------------------------------------------------------------
+
+local function updateAutocompleteDatabaseFromString(str, value)
+	for word in str:gmatch("[%a%d%_]+") do
+		if not word:match("^%d+$") then
+			autocompleteDatabase[word] = value
+		end
+	end
+end
+
+local function updateAutocompleteDatabaseFromFile()
+	if config.enableAutocompletion then
+		autocompleteDatabase = {}
+		for line = 1, #mainContainer.codeView.lines do
+			updateAutocompleteDatabaseFromString(mainContainer.codeView.lines[line], true)
+		end
+	end
+end
+
+local function getCurrentWordStartingAndEnding(fromSymbol)
+	local shittySymbolsRegexp, from, to = "[%s%c%p]"
+
+	for i = fromSymbol, 1, -1 do
+		if unicode.sub(mainContainer.codeView.lines[cursor.position.line], i, i):match(shittySymbolsRegexp) then break end
+		from = i
+	end
+
+	for i = fromSymbol, unicode.len(mainContainer.codeView.lines[cursor.position.line]) do
+		if unicode.sub(mainContainer.codeView.lines[cursor.position.line], i, i):match(shittySymbolsRegexp) then break end
+		to = i
+	end
+
+	return from, to
+end
+
+local function aplhabeticalSort(t)
+	table.sort(t, function(a, b) return a[1] < b[1] end)
+end
+
+local function getAutocompleteDatabaseMatches(stringToSearch)
+	local matches = {}
+
+	for word in pairs(autocompleteDatabase) do
+		if word ~= stringToSearch then
+			local match = word:match("^" .. stringToSearch)
+			if match then
+				table.insert(matches, { word, match })
+			end
+		end
+	end
+
+	aplhabeticalSort(matches)
+	return matches
+end
+
+local function hideAutocompleteWindow()
+	mainContainer.autocompleteWindow.hidden = true
+end
+
+local function showAutocompleteWindow()
+	if config.enableAutocompletion then
+		mainContainer.autocompleteWindow.currentWordStarting, mainContainer.autocompleteWindow.currentWordEnding = getCurrentWordStartingAndEnding(cursor.position.symbol - 1)
+
+		if mainContainer.autocompleteWindow.currentWordStarting then
+			mainContainer.autocompleteWindow.matches = getAutocompleteDatabaseMatches(
+				unicode.sub(
+					mainContainer.codeView.lines[cursor.position.line],
+					mainContainer.autocompleteWindow.currentWordStarting,
+					mainContainer.autocompleteWindow.currentWordEnding
+				)
+			)
+
+			if #mainContainer.autocompleteWindow.matches > 0 then
+				mainContainer.autocompleteWindow.fromMatch, mainContainer.autocompleteWindow.currentMatch = 1, 1
+				mainContainer.autocompleteWindow.hidden = false
+			else
+				hideAutocompleteWindow()
+			end
+		else
+			hideAutocompleteWindow()
+		end
+	end
+end
+
+local function toggleEnableAutocompleteDatabase()
+	config.enableAutocompletion = not config.enableAutocompletion
+	autocompleteDatabase = {}
+	saveConfig()
+end
+
+------------------------------------------------------------------------------------------------------------------
+
+local function calculateSizes()
+	mainContainer.width, mainContainer.height = buffer.width, buffer.height
+	mainContainer.leftTreeView.width = math.floor(mainContainer.width * 0.165)
+
+	if mainContainer.leftTreeView.hidden then
+		mainContainer.codeView.localPosition.x, mainContainer.codeView.width = 1, mainContainer.width
+		mainContainer.bottomToolBar.localPosition.x, mainContainer.bottomToolBar.width = mainContainer.codeView.localPosition.x, mainContainer.codeView.width
+	else
+		mainContainer.codeView.localPosition.x, mainContainer.codeView.width = mainContainer.leftTreeView.width + 1, mainContainer.width - mainContainer.leftTreeView.width
+		mainContainer.bottomToolBar.localPosition.x, mainContainer.bottomToolBar.width = mainContainer.codeView.localPosition.x, mainContainer.codeView.width
+	end
+
+	if mainContainer.topToolBar.hidden then
+		mainContainer.leftTreeView.localPosition.y, mainContainer.leftTreeView.height = 2, mainContainer.height - 1
+		mainContainer.codeView.localPosition.y, mainContainer.codeView.height = 2, mainContainer.height - 1
+		mainContainer.errorContainer.localPosition.y = 2
+	else
+		mainContainer.leftTreeView.localPosition.y, mainContainer.leftTreeView.height = 5, mainContainer.height - 4
+		mainContainer.codeView.localPosition.y, mainContainer.codeView.height = 5, mainContainer.height - 4
+		mainContainer.errorContainer.localPosition.y = 5
+	end
+
+	if mainContainer.bottomToolBar.hidden then
+
+	else
+		mainContainer.codeView.height = mainContainer.codeView.height - 3
+	end
+
+	mainContainer.settingsContainer.width, mainContainer.settingsContainer.height = mainContainer.width, mainContainer.height
+	mainContainer.settingsContainer.backgroundPanel.width, mainContainer.settingsContainer.backgroundPanel.height = mainContainer.settingsContainer.width, mainContainer.settingsContainer.height
+
+	mainContainer.bottomToolBar.localPosition.y = mainContainer.height - 2
+	mainContainer.bottomToolBar.findButton.localPosition.x = mainContainer.bottomToolBar.width - mainContainer.bottomToolBar.findButton.width + 1
+	mainContainer.bottomToolBar.inputField.width = mainContainer.bottomToolBar.width - mainContainer.bottomToolBar.inputField.localPosition.x - mainContainer.bottomToolBar.findButton.width + 1
+
+	mainContainer.topToolBar.width, mainContainer.topToolBar.backgroundPanel.width = mainContainer.width, mainContainer.width
+	mainContainer.titleTextBox.width = math.floor(mainContainer.topToolBar.width * 0.32)
+	mainContainer.titleTextBox.localPosition.x = math.floor(mainContainer.topToolBar.width / 2 - mainContainer.titleTextBox.width / 2)
+	mainContainer.runButton.localPosition.x = mainContainer.titleTextBox.localPosition.x - mainContainer.runButton.width - 2
+	mainContainer.toggleSyntaxHighlightingButton.localPosition.x = mainContainer.runButton.localPosition.x - mainContainer.toggleSyntaxHighlightingButton.width - 2
+	mainContainer.addBreakpointButton.localPosition.x = mainContainer.toggleSyntaxHighlightingButton.localPosition.x - mainContainer.addBreakpointButton.width - 2
+	mainContainer.toggleLeftToolBarButton.localPosition.x = mainContainer.titleTextBox.localPosition.x + mainContainer.titleTextBox.width + 2
+	mainContainer.toggleBottomToolBarButton.localPosition.x = mainContainer.toggleLeftToolBarButton.localPosition.x + mainContainer.toggleLeftToolBarButton.width + 2
+	mainContainer.toggleTopToolBarButton.localPosition.x = mainContainer.toggleBottomToolBarButton.localPosition.x + mainContainer.toggleBottomToolBarButton.width + 2
+
+	mainContainer.RAMUsageProgressBar.localPosition.x = mainContainer.toggleTopToolBarButton.localPosition.x + mainContainer.toggleTopToolBarButton.width + 3
+	mainContainer.RAMUsageProgressBar.width = mainContainer.topToolBar.width - mainContainer.RAMUsageProgressBar.localPosition.x - 3
+
+	mainContainer.errorContainer.localPosition.x, mainContainer.errorContainer.width = mainContainer.titleTextBox.localPosition.x, mainContainer.titleTextBox.width
+	mainContainer.errorContainer.backgroundPanel.width, mainContainer.errorContainer.errorTextBox.width = mainContainer.errorContainer.width, mainContainer.errorContainer.width - 4
+
+	mainContainer.topMenu.width = mainContainer.width
+end
+
+local function updateTitle()
+	if not mainContainer.topToolBar.hidden then
+		if mainContainer.errorContainer.hidden then
+			mainContainer.titleTextBox.lines[1] = string.limit(localization.file .. ": " .. (mainContainer.leftTreeView.currentFile or localization.none), mainContainer.titleTextBox.width - 4)
+			mainContainer.titleTextBox.lines[2] = string.limit(localization.cursor .. cursor.position.line .. localization.line .. cursor.position.symbol .. localization.symbol, mainContainer.titleTextBox.width - 4)
+			if mainContainer.codeView.selections[1] then
+				local countOfSelectedLines = mainContainer.codeView.selections[1].to.line - mainContainer.codeView.selections[1].from.line + 1
+				local countOfSelectedSymbols
+				if mainContainer.codeView.selections[1].from.line == mainContainer.codeView.selections[1].to.line then
+					countOfSelectedSymbols = unicode.len(unicode.sub(mainContainer.codeView.lines[mainContainer.codeView.selections[1].from.line], mainContainer.codeView.selections[1].from.symbol, mainContainer.codeView.selections[1].to.symbol))
+				else
+					countOfSelectedSymbols = unicode.len(unicode.sub(mainContainer.codeView.lines[mainContainer.codeView.selections[1].from.line], mainContainer.codeView.selections[1].from.symbol, -1))
+					for line = mainContainer.codeView.selections[1].from.line + 1, mainContainer.codeView.selections[1].to.line - 1 do
+						countOfSelectedSymbols = countOfSelectedSymbols + unicode.len(mainContainer.codeView.lines[line])
+					end
+					countOfSelectedSymbols = countOfSelectedSymbols + unicode.len(unicode.sub(mainContainer.codeView.lines[mainContainer.codeView.selections[1].to.line], 1, mainContainer.codeView.selections[1].to.symbol))
+				end
+				mainContainer.titleTextBox.lines[3] = string.limit(localization.selection .. countOfSelectedLines .. localization.lines .. countOfSelectedSymbols .. localization.symbols, mainContainer.titleTextBox.width - 4)
+			else
+				mainContainer.titleTextBox.lines[3] = string.limit(localization.selection .. localization.none, mainContainer.titleTextBox.width - 4)
+			end
+		else
+			mainContainer.titleTextBox.lines[1], mainContainer.titleTextBox.lines[3] = " ", " "
+			if lastErrorLine then
+				mainContainer.titleTextBox.lines[2] = localization.runtimeError
+			else
+				mainContainer.titleTextBox.lines[2] = localization.debugging .. (_G.MineCodeIDEDebugInfo and _G.MineCodeIDEDebugInfo.line or "N/A")
+			end
+		end
+	end
+end
+
+local function gotoLine(line)
+	mainContainer.codeView.fromLine = math.ceil(line - mainContainer.codeView.height / 2)
+	if mainContainer.codeView.fromLine < 1 then
+		mainContainer.codeView.fromLine = 1
+	elseif mainContainer.codeView.fromLine > #mainContainer.codeView.lines then
+		mainContainer.codeView.fromLine = #mainContainer.codeView.lines
+	end
+end
+
+local function updateHighlights()
+	mainContainer.codeView.highlights = {}
+
+	if breakpointLines then
+		for i = 1, #breakpointLines do
+			mainContainer.codeView.highlights[breakpointLines[i]] = colors.highlights.onBreakpoint
+		end
+	end
+
+	if lastErrorLine then
+		mainContainer.codeView.highlights[lastErrorLine] = colors.highlights.onError
+	end
+end
+
+local function calculateErrorContainerSizeAndBeep(hideBreakpointButtons, frequency, times)
+	mainContainer.errorContainer.errorTextBox.height = #mainContainer.errorContainer.errorTextBox.lines
+	mainContainer.errorContainer.height = 2 + mainContainer.errorContainer.errorTextBox.height
+	mainContainer.errorContainer.backgroundPanel.height = mainContainer.errorContainer.height
+
+	mainContainer.errorContainer.breakpointExitButton.hidden, mainContainer.errorContainer.breakpointContinueButton.hidden = hideBreakpointButtons, hideBreakpointButtons
+	if not hideBreakpointButtons then
+		mainContainer.errorContainer.height = mainContainer.errorContainer.height + 1
+		mainContainer.errorContainer.breakpointExitButton.localPosition.y, mainContainer.errorContainer.breakpointContinueButton.localPosition.y = mainContainer.errorContainer.height, mainContainer.errorContainer.height
+		mainContainer.errorContainer.breakpointExitButton.width = math.floor(mainContainer.errorContainer.width / 2)
+		mainContainer.errorContainer.breakpointContinueButton.localPosition.x, mainContainer.errorContainer.breakpointContinueButton.width = mainContainer.errorContainer.breakpointExitButton.width + 1, mainContainer.errorContainer.width - mainContainer.errorContainer.breakpointExitButton.width
+	end
+
+	updateTitle()
+	mainContainer:draw()
+	buffer.draw()
+
+	for i = 1, times do component.computer.beep(frequency, 0.08) end	
+end
+
+local function showBreakpointMessage(variables)
+	mainContainer.titleTextBox.colors.background, mainContainer.titleTextBox.colors.text = colors.title.onError.background, colors.title.onError.text
+	mainContainer.errorContainer.hidden = false
+
+	mainContainer.errorContainer.errorTextBox:setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+	mainContainer.errorContainer.errorTextBox.lines = {}
+
+	for variable, value in pairs(variables) do
+		table.insert(mainContainer.errorContainer.errorTextBox.lines, variable .. " = " .. value)
+	end
+
+	if #mainContainer.errorContainer.errorTextBox.lines > 0 then
+		table.insert(mainContainer.errorContainer.errorTextBox.lines, 1, " ")
+		table.insert(mainContainer.errorContainer.errorTextBox.lines, 1, {text = localization.variables, color = 0x0})
+	else
+		table.insert(mainContainer.errorContainer.errorTextBox.lines, 1, {text = localization.variablesNotAvailable, color = 0x0})
+	end
+
+	calculateErrorContainerSizeAndBeep(false, 1800, 1)
+end
+
+local function showErrorContainer(errorCode)
+	mainContainer.titleTextBox.colors.background, mainContainer.titleTextBox.colors.text = colors.title.onError.background, colors.title.onError.text
+	mainContainer.errorContainer.hidden = false
+
+	mainContainer.errorContainer.errorTextBox:setAlignment(GUI.alignment.horizontal.left, GUI.alignment.vertical.top)
+	mainContainer.errorContainer.errorTextBox.lines = string.wrap({errorCode}, mainContainer.errorContainer.errorTextBox.width)	
 	
-	return icon
-end
-
-local function iconFieldUpdate(iconField)
-	iconField.backgroundObject.width, iconField.backgroundObject.height = iconField.width, iconField.height
-	iconField.foregroundObject.width, iconField.foregroundObject.height = iconField.width, iconField.height
-	iconField.iconsContainer.width, iconField.iconsContainer.height = iconField.width, iconField.height
-
-	iconField.iconCount.horizontal = math.floor(iconField.width / (MineOSCore.iconWidth + iconField.spaceBetweenIcons.horizontal))
-	iconField.iconCount.vertical = math.floor(iconField.height / (MineOSCore.iconHeight + iconField.spaceBetweenIcons.vertical))
-	iconField.iconCount.total = iconField.iconCount.horizontal * iconField.iconCount.vertical
-
-	return iconField
-end
-
-local function iconFieldLoadIconConfig(iconField)
-	if fs.exists(iconField.workpath .. MineOSCore.iconConfigFileName) then
-		iconField.iconConfig = table.fromFile(iconField.workpath .. MineOSCore.iconConfigFileName)
-		
-		-- Чистим конфиг от файлов, которых более нет в иконфилде
-		local iconConfigItemExistsInFileList
-		for key in pairs(iconField.iconConfig) do
-			local iconConfigItemExistsInFileList = false
-			for i = 1, #iconField.fileList do
-				if key == iconField.fileList[i] then
-					iconConfigItemExistsInFileList = true
+	-- Извлекаем ошибочную строку текущего скрипта
+	lastErrorLine = tonumber(errorCode:match("%:(%d+)%: in main chunk"))
+	if lastErrorLine then
+		-- Делаем поправку на количество брейкпоинтов в виде вставленных дебаг-строк
+		if breakpointLines then
+			local countOfBreakpointsBeforeLastErrorLine = 0
+			for i = 1, #breakpointLines do
+				if breakpointLines[i] < lastErrorLine then
+					countOfBreakpointsBeforeLastErrorLine = countOfBreakpointsBeforeLastErrorLine + 1
+				else
 					break
 				end
 			end
-
-			if not iconConfigItemExistsInFileList then
-				iconField.iconConfig[key] = nil
-			end
+			lastErrorLine = lastErrorLine - countOfBreakpointsBeforeLastErrorLine
 		end
-
-		iconField:saveIconConfig()
-	else
-		iconField.iconConfig = {}
+		gotoLine(lastErrorLine)
 	end
+	updateHighlights()
+	calculateErrorContainerSizeAndBeep(true, 1500, 3)
 end
 
-local function iconFieldSaveIconConfig(iconField)
-	table.toFile(iconField.workpath .. MineOSCore.iconConfigFileName, iconField.iconConfig)
+local function hideErrorContainer()
+	mainContainer.titleTextBox.colors.background, mainContainer.titleTextBox.colors.text = colors.title.default.background, colors.title.default.text
+	mainContainer.errorContainer.hidden = true
+	lastErrorLine, scriptCoroutine = nil, nil
+	updateHighlights()
 end
 
-local function iconFieldUpdateFileList(iconField)
-	-- Обновление файлового списка
-	iconField.fileList = fs.sortedList(iconField.workpath, iconField.sortingMethod, iconField.showHiddenFiles)
-	-- Грузим инфу об иконочках
-	iconField:loadIconConfig()
-	-- Подсчет числа влезаемых иконочек
-	iconField:update()
-	-- Заполнение дочернего контейнера
-	iconField.iconsContainer:deleteChildren()
-	local xPos, yPos, horizontalIconCounter = 1, 1, 1
-	for i = iconField.fromFile, iconField.fromFile + iconField.iconCount.total - 1 do
-		if iconField.fileList[i] then
-			local xIcon, yIcon = xPos, yPos
-			if iconField.iconConfig[iconField.fileList[i]] then
-				xIcon, yIcon = iconField.iconConfig[iconField.fileList[i]].x, iconField.iconConfig[iconField.fileList[i]].y
-			else
-				xPos, horizontalIconCounter = xPos + MineOSCore.iconWidth + iconField.spaceBetweenIcons.horizontal, horizontalIconCounter + 1
-				if horizontalIconCounter > iconField.iconCount.horizontal then
-					xPos, horizontalIconCounter = 1, 1
-					yPos = yPos + MineOSCore.iconHeight + iconField.spaceBetweenIcons.vertical
-				end
-			end
-
-			iconField.iconsContainer:addChild(
-				MineOSCore.icon(
-					xIcon, yIcon,
-					iconField.workpath .. iconField.fileList[i],
-					iconField.colors.text,
-					iconField.colors.selection,
-					iconField.showExtension
-				)
-			)
-		else
-			break
-		end
-	end
-
-	return iconField
-end
-
-local function iconFieldBackgroundObjectEventHandler(mainContainer, object, eventData)
-	if eventData[1] == "touch" then
-		if eventData[5] == 0 then
-			object.parent:deselectAll()
-			object.parent.selection.firstReady, object.parent.selection.x1, object.parent.selection.y1 = true, eventData[3], eventData[4]
-			MineOSCore.OSDraw()
-		else
-			local menu = MineOSCore.contextMenu(eventData[3], eventData[4])
-
-			menu:addItem(MineOSCore.localization.newFile).onTouch = function()
-				computer.pushSignal("MineOSCore", "newFile")
-			end
-			
-			menu:addItem(MineOSCore.localization.newFolder).onTouch = function()
-				computer.pushSignal("MineOSCore", "newFolder")
-			end
-
-			menu:addItem(MineOSCore.localization.newFileFromURL, not component.isAvailable("internet")).onTouch = function()
-				computer.pushSignal("MineOSCore", "newFileFromURL")
-			end
-
-			menu:addItem(MineOSCore.localization.newApplication).onTouch = function()
-				computer.pushSignal("MineOSCore", "newApplication")
-			end
-
-			menu:addSeparator()
-
-			local subMenu = menu:addSubMenu(MineOSCore.localization.view)
-
-			subMenu:addItem(MineOSCore.OSMainContainer.iconField.showExtension and MineOSCore.localization.hideExtension or MineOSCore.localization.showExtension).onTouch = function()
-				MineOSCore.OSMainContainer.iconField.showExtension = not MineOSCore.OSMainContainer.iconField.showExtension
-				MineOSCore.OSSettings.showExtension = MineOSCore.OSMainContainer.iconField.showExtension
-				MineOSCore.saveOSSettings()
-				computer.pushSignal("MineOSCore", "updateFileList")
-			end
-
-			subMenu:addItem(MineOSCore.OSMainContainer.iconField.showHiddenFiles and MineOSCore.localization.hideHiddenFiles or MineOSCore.localization.showHiddenFiles).onTouch = function()
-				MineOSCore.OSMainContainer.iconField.showHiddenFiles = not MineOSCore.OSMainContainer.iconField.showHiddenFiles
-				MineOSCore.OSSettings.showHiddenFiles = MineOSCore.OSMainContainer.iconField.showHiddenFiles
-				MineOSCore.saveOSSettings()
-				computer.pushSignal("MineOSCore", "updateFileList")
-			end
-
-			subMenu:addItem(MineOSCore.OSSettings.showApplicationIcons and MineOSCore.localization.hideApplicationIcons or MineOSCore.localization.showApplicationIcons).onTouch = function()
-				MineOSCore.OSSettings.showApplicationIcons = not MineOSCore.OSSettings.showApplicationIcons
-				MineOSCore.saveOSSettings()
-				computer.pushSignal("MineOSCore", "updateFileList")
-			end
-			
-			local subMenu = menu:addSubMenu(MineOSCore.localization.sortBy)
-			subMenu:addItem(MineOSCore.localization.sortByName).onTouch = function()
-				MineOSCore.OSSettings.sortingMethod = "name"
-				MineOSCore.saveOSSettings()
-				MineOSCore.OSMainContainer.iconField.sortingMethod = MineOSCore.OSSettings.sortingMethod
-				computer.pushSignal("MineOSCore", "updateFileList")
-			end
-
-			menu:addItem(MineOSCore.localization.sortAutomatically).onTouch = function()
-				object.parent.iconConfig = {}
-				object.parent:saveIconConfig()
-				computer.pushSignal("MineOSCore", "updateFileList")
-			end
-
-			subMenu:addItem(MineOSCore.localization.sortByDate).onTouch = function()
-				MineOSCore.OSSettings.sortingMethod = "date"
-				MineOSCore.saveOSSettings()
-				MineOSCore.OSMainContainer.iconField.sortingMethod = MineOSCore.OSSettings.sortingMethod
-				computer.pushSignal("MineOSCore", "updateFileList")
-			end
-
-			subMenu:addItem(MineOSCore.localization.sortByType).onTouch = function()
-				MineOSCore.OSSettings.sortingMethod = "type"
-				MineOSCore.saveOSSettings()
-				MineOSCore.OSMainContainer.iconField.sortingMethod = MineOSCore.OSSettings.sortingMethod
-				computer.pushSignal("MineOSCore", "updateFileList")
-			end
-
-			menu:addSeparator()
-
-			menu:addItem(MineOSCore.localization.paste, not MineOSCore.clipboard).onTouch = function()
-				local i = 1
-				while i <= #MineOSCore.clipboard do
-					if fs.exists(MineOSCore.clipboard[i]) then
-						i = i + 1
-					else
-						table.remove(MineOSCore.clipboard, i)
-					end
-				end
-
-				MineOSCore.copy(MineOSCore.clipboard, object.parent.workpath)
-
-				if MineOSCore.clipboard.cut then
-					for i = 1, #MineOSCore.clipboard do
-						fs.remove(MineOSCore.clipboard[i])
-					end
-					MineOSCore.clipboard = nil
-				end
-
-				computer.pushSignal("MineOSCore", "updateFileList")
-			end
-
-			menu:show()
-		end
-	elseif eventData[1] == "drag" then
-		object.parent.foregroundObject.hidden = false
-		computer.pushSignal(table.unpack(eventData))
-	end
-end
-
-local function iconFieldForegroundObjectEventHandler(mainContainer, object, eventData)
-	if eventData[1] == "drag" then
-		object.parent.selection.secondReady, object.parent.selection.x2, object.parent.selection.y2 = true, eventData[3], eventData[4]
-		MineOSCore.OSDraw()
-	elseif eventData[1] == "touch" or eventData[1] == "drop" then
-		object.parent.selection.firstReady, object.parent.selection.secondReady = false, false
-		object.parent.foregroundObject.hidden = true
-		MineOSCore.OSDraw()
-	end
-end
-
-local function iconFieldForegroundObjectDraw(object)
-	if object.parent.selection.firstReady and object.parent.selection.secondReady then
-		local x1, y1, x2, y2 = object.parent.selection.x1, object.parent.selection.y1, object.parent.selection.x2, object.parent.selection.y2
-
-		if x2 < x1 then
-			x1, x2 = x2, x1
-		end
-
-		if y2 < y1 then
-			y1, y2 = y2, y1
-		end
-		
-		buffer.square(x1, y1, x2 - x1 + 1, y2 - y1 + 1, 0xFFFFFF, 0x0, " ", 60)
-
-		local partialWidth, partialHeight = MineOSCore.iconWidth * MineOSCore.selectionIconPart, MineOSCore.iconHeight * MineOSCore.selectionIconPart
-		for i = 1, #object.parent.iconsContainer.children do
-			object.parent.iconsContainer.children[i].selected = 
-				object.parent.iconsContainer.children[i].x + partialWidth >= x1 and
-				object.parent.iconsContainer.children[i].x + object.parent.iconsContainer.children[i].width - 1 - partialWidth <= x2 and
-				object.parent.iconsContainer.children[i].y + partialHeight >= y1 and
-				object.parent.iconsContainer.children[i].y + object.parent.iconsContainer.children[i].height - 1 - partialHeight <= y2
-		end
-	end
-end
-
-local function iconFieldDeselectAll(iconField)
-	for i = 1, #iconField.iconsContainer.children do
-		iconField.iconsContainer.children[i].selected = false
-	end
-end
-
-local function iconFieldGetSelectedIcons(iconField)
-	local selectedIcons = {}
-	
-	for i = 1, #iconField.iconsContainer.children do
-		if iconField.iconsContainer.children[i].selected then
-			table.insert(selectedIcons, iconField.iconsContainer.children[i])
-		end
-	end
-
-	return selectedIcons
-end
-
-function MineOSCore.iconField(x, y, width, height, xSpaceBetweenIcons, ySpaceBetweenIcons, textColor, selectionColor, showExtension, showHiddenFiles, sortingMethod, workpath)
-	local iconField = GUI.container(x, y, width, height)
-
-	iconField.colors = {
-		text = textColor,
-		selection = selectionColor
-	}
-
-	iconField.spaceBetweenIcons = {
-		horizontal = xSpaceBetweenIcons,
-		vertical = ySpaceBetweenIcons
-	}
-
-	iconField.iconConfig = {}
-	iconField.selection = {}
-	iconField.iconCount = {}
-	iconField.fileList = {}
-	iconField.fromFile = 1
-
-	iconField.backgroundObject = iconField:addChild(GUI.object(1, 1, width, height))
-	iconField.backgroundObject.eventHandler = iconFieldBackgroundObjectEventHandler
-
-	iconField.iconsContainer = iconField:addChild(GUI.container(1, 1, width, height))
-
-	iconField.foregroundObject = iconField:addChild(GUI.object(1, 1, width, height))
-	iconField.foregroundObject.eventHandler = iconFieldForegroundObjectEventHandler
-	iconField.foregroundObject.hidden = true
-	iconField.foregroundObject.draw = iconFieldForegroundObjectDraw
-
-	iconField.workpath = workpath
-	iconField.showExtension = showExtension
-	iconField.showHiddenFiles = showHiddenFiles
-	iconField.sortingMethod = sortingMethod
-	iconField.updateFileList = iconFieldUpdateFileList
-	iconField.update = iconFieldUpdate
-	iconField.eventHandler = iconFieldEventHandler
-	iconField.deselectAll = iconFieldDeselectAll
-	iconField.loadIconConfig = iconFieldLoadIconConfig
-	iconField.saveIconConfig = iconFieldSaveIconConfig
-	iconField.getSelectedIcons = iconFieldGetSelectedIcons
-
-	return iconField
-end
-
------------------------------------------------------------------------------------------------------------------------------------
-
---Функция парсинга Lua-сообщения об ошибке. Конвертирует из строки в массив.
-function MineOSCore.parseErrorMessage(error, indentationWidth)
-	local parsedError = {}
-
-	--Замена /r/n и табсов
-	error = string.gsub(error, "\r\n", "\n")
-	error = string.gsub(error, "	", string.rep(" ", indentationWidth or 4))
-
-	--Удаление энтеров
-	local searchFrom, starting, ending = 1
-	for i = 1, unicode.len(error) do
-		starting, ending = string.find(error, "\n", searchFrom)
-		if starting then
-			table.insert(parsedError, unicode.sub(error, searchFrom, starting - 1))
-			searchFrom = ending + 1
-		else
-			break
-		end
-	end
-
-	--На всякий случай, если сообщение об ошибке без энтеров вообще, т.е. однострочное
-	if #parsedError == 0 then table.insert(parsedError, error) end
-
-	return parsedError
-end
-
-function MineOSCore.showErrorWindow(path, errorLine, reason)
-	buffer.clear(0x0, 50)
-
-	local mainContainer = GUI.container(1, 1, buffer.width, math.floor(buffer.height * 0.45))
-	mainContainer.y = math.floor(buffer.height / 2 - mainContainer.height / 2)
-	
-	mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, 3, 0x383838))
-	mainContainer:addChild(GUI.label(1, 2, mainContainer.width, 1, 0xFFFFFF, MineOSCore.localization.errorWhileRunningProgram .. "\"" .. fs.name(path) .. "\"")):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
-	local actionButtons = mainContainer:addChild(GUI.actionButtons(2, 2, false))
-	local sendToDeveloperButton = mainContainer:addChild(GUI.adaptiveButton(9, 1, 2, 1, 0x444444, 0xFFFFFF, 0x343434, 0xFFFFFF, MineOSCore.localization.sendFeedback))
-
-	local codeView = mainContainer:addChild(GUI.codeView(1, 4, math.floor(mainContainer.width * 0.62), mainContainer.height - 3, {}, 1, 1, 100, {}, {[errorLine] = 0xFF4444}, true, 2))
-	codeView.scrollBars.horizontal.hidden = true
-
-	codeView.fromLine = errorLine - math.floor((mainContainer.height - 3) / 2) + 1
-	if codeView.fromLine <= 0 then codeView.fromLine = 1 end
-	local toLine, lineCounter = codeView.fromLine + codeView.height - 1, 1
-	for line in io.lines(path) do
-		if lineCounter >= codeView.fromLine and lineCounter <= toLine then
-			codeView.lines[lineCounter] = string.gsub(line, "	", "  ")
-		elseif lineCounter < codeView.fromLine then
-			codeView.lines[lineCounter] = " "
-		elseif lineCounter > toLine then
-			break
-		end
-		lineCounter = lineCounter + 1
-	end
-
-	mainContainer:addChild(GUI.textBox(codeView.width + 1, 4, mainContainer.width - codeView.width, codeView.height, 0xFFFFFF, 0x000000, string.wrap(MineOSCore.parseErrorMessage(reason, 4), mainContainer.width - codeView.width - 2), 1, 1, 0))
-	
-	actionButtons.close.onTouch = function()
-		mainContainer:stopEventHandling()
-	end
-
-	mainContainer.eventHandler = function(mainContainer, object, eventData)
-		if eventData[1] == "key_down" and eventData[4] == 28 then
-			actionButtons.close.onTouch()
-		end
-	end
-
-	sendToDeveloperButton.onTouch = function()
-		if component.isAvailable("internet") then
-			local url = "https://api.mcmodder.ru/ECS/report.php?path=" .. path .. "&errorMessage=" .. string.optimizeForURLRequests(reason)
-			local success, reason = component.internet.request(url)
-			if success then
-				success:close()
-			end
-
-			sendToDeveloperButton.text = MineOSCore.localization.sendedFeedback
-			mainContainer:draw()
-			buffer.draw()
-			os.sleep(1)
-		end
-		actionButtons.close.onTouch()
-	end
-
+local function hideSettingsContainer()
+	for childIndex = 2, #mainContainer.settingsContainer.children do mainContainer.settingsContainer.children[childIndex] = nil end
+	mainContainer.settingsContainer.hidden = true
 	mainContainer:draw()
 	buffer.draw()
-	for i = 1, 3 do
-		component.computer.beep(1500, 0.08)
-	end
-	mainContainer:startEventHandling()
 end
 
-function MineOSCore.call(method, ...)
-	local args = {...}
-	local function launchMethod()
-		method(table.unpack(args))
-	end
+local function clearSelection()
+	mainContainer.codeView.selections[1] = nil
+end
 
-	local function tracebackMethod(xpcallTraceback)
-		local traceback, info, firstMatch = tostring(xpcallTraceback) .. "\n" .. debug.traceback()
-		for runLevel = 0, math.huge do
-			info = debug.getinfo(runLevel)
-			if info then
-				if (info.what == "main" or info.what == "Lua") and info.source ~= "=machine" then
-					if firstMatch then
-						return {
-							path = info.source:sub(2, -1),
-							line = info.currentline,
-							traceback = traceback
-						}
-					else
-						firstMatch = true
-					end
-				end
-			else
-				error("Failed to get debug info for runlevel " .. runLevel)
-			end
-		end
-	end
+local function clearBreakpoints()
+	breakpointLines = nil
+	updateHighlights()
+end
+
+local function addBreakpoint()
+	hideErrorContainer()
+	breakpointLines = breakpointLines or {}
 	
-	local xpcallSuccess, xpcallReason = xpcall(launchMethod, tracebackMethod)
-	if type(xpcallReason) == "string" or type(xpcallReason) == "nil" then xpcallReason = {path = "/lib/MineOSCore.lua", line = 1, traceback = "MineOSCore fatal error: " .. tostring(xpcallReason)} end
-	if not xpcallSuccess and not xpcallReason.traceback:match("^table") and not xpcallReason.traceback:match("interrupted") then
-		return false, xpcallReason.path, xpcallReason.line, xpcallReason.traceback
-	end
-
-	return true
-end
-
-function MineOSCore.safeLaunch(path, ...)
-	local oldResolutionWidth, oldResolutionHeight = buffer.width, buffer.height
-	local finalSuccess, finalPath, finalLine, finalTraceback = true
-	
-	if fs.exists(path) then
-		local loadSuccess, loadReason = loadfile("/" .. path)
-		if loadSuccess then
-			local success, path, line, traceback = MineOSCore.call(loadSuccess, ...)
-			if not success then
-				finalSuccess, finalPath, finalLine, finalTraceback = false, path, line, traceback
-			end
-		else
-			local match = string.match(loadReason, ":(%d+)%:")
-			finalSuccess, finalPath, finalLine, finalTraceback = false, path, tonumber(match) or 1, loadReason
-		end
-	else
-		GUI.error("Failed to safely launch file that doesn't exists: \"" .. path .. "\"")
-	end
-
-	component.screen.setPrecise(false)
-	buffer.setResolution(oldResolutionWidth, oldResolutionHeight)
-
-	if not finalSuccess then
-		MineOSCore.showErrorWindow(finalPath, finalLine, finalTraceback)
-	end
-
-	return finalSuccess, finalPath, finalLine, finalTraceback
-end
-
------------------------------------------------------------------------------------------------------------------------------------
-
-function MineOSCore.contextMenu(...)
-	local menu = GUI.contextMenu(...)
-	
-	menu.colors.transparency.background = MineOSCore.OSSettings.transparencyEnabled and GUI.colors.contextMenu.transparency.background
-	menu.colors.transparency.shadow = MineOSCore.OSSettings.transparencyEnabled and GUI.colors.contextMenu.transparency.shadow
-
-	return menu
-end
-
-function MineOSCore.iconLeftClick(icon, eventData)
-	if not keyboard.isKeyDown(29) and not keyboard.isKeyDown(219) then
-		icon.parent.parent:deselectAll()
-	end
-	icon.selected = true
-
-	MineOSCore.OSDraw()
-end
-
-function MineOSCore.iconDoubleClick(icon, eventData)
-	MineOSCore.lastLaunchPath = icon.path
-	icon:launch()
-	computer.pushSignal("MineOSCore", "updateFileList")
-end
-
-function MineOSCore.iconRightClick(icon, eventData)
-	icon.selected = true
-	MineOSCore.OSDraw()
-
-	local selectedIcons = icon.parent.parent:getSelectedIcons()
-
-	local menu = MineOSCore.contextMenu(eventData[3], eventData[4])
-	if #selectedIcons == 1 then
-		if icon.isDirectory then
-			if icon.extension == ".app" then
-				menu:addItem(MineOSCore.localization.showPackageContent).onTouch = function()
-					computer.pushSignal("MineOSCore", "changeWorkpath", icon.path)
-					computer.pushSignal("MineOSCore", "updateFileList")
-				end		
-				menu:addItem(MineOSCore.localization.launchWithArguments).onTouch = function()
-					MineOSCore.launchWithArguments(MineOSCore.OSMainContainer, icon.path)
-				end
-			end
-
-			menu:addItem(MineOSCore.localization.archive).onTouch = function()
-				require("compressor").pack(fs.path(icon.path) .. fs.hideExtension(fs.name(icon.path)) .. ".pkg", icon.path)
-				computer.pushSignal("MineOSCore", "updateFileList")
-			end
-			
-			menu:addSeparator()
-		else
-			if icon.isShortcut then
-				menu:addItem(MineOSCore.localization.editShortcut).onTouch = function()
-					MineOSCore.editShortcut(MineOSCore.OSMainContainer, icon.path)
-					computer.pushSignal("MineOSCore", "updateFileList")
-				end
-
-				menu:addItem(MineOSCore.localization.showContainingFolder).onTouch = function()
-					computer.pushSignal("MineOSCore", "changeWorkpath", fs.path(icon.shortcutPath))
-					computer.pushSignal("MineOSCore", "updateFileList")
-				end
-
-				menu:addSeparator()
-			else
-				if MineOSCore.OSSettings.extensionAssociations[icon.extension] and MineOSCore.OSSettings.extensionAssociations[icon.extension].contextMenu then
-					pcall(loadfile(MineOSCore.OSSettings.extensionAssociations[icon.extension].contextMenu), icon, menu)
-					menu:addSeparator()
-				end
-
-				-- local subMenu = menu:addSubMenu(MineOSCore.localization.openWith)
-				-- local fileList = fs.sortedList(MineOSCore.paths.applications, "name")
-				-- subMenu:addItem(MineOSCore.localization.select)
-				-- subMenu:addSeparator()
-				-- for i = 1, #fileList do
-				-- 	subMenu:addItem(fs.hideExtension(fileList[i]))
-				-- end
-			end
-		end
-	end
-
-	if #selectedIcons > 1 then
-		menu:addItem(MineOSCore.localization.newFolderFromChosen .. " (" .. #selectedIcons .. ")").onTouch = function()
-			MineOSCore.newFolderFromChosen(MineOSCore.OSMainContainer, selectedIcons)
-		end
-		menu:addSeparator()
-	end
-
-	local function cutOrCopy(cut)
-		for i = 1, #icon.parent.children do
-			icon.parent.children[i].cut = nil
-		end
-
-		MineOSCore.clipboard = {cut = cut}
-		for i = 1, #selectedIcons do
-			selectedIcons[i].cut = cut
-			table.insert(MineOSCore.clipboard, selectedIcons[i].path)
-		end
-	end
-
-	menu:addItem(MineOSCore.localization.cut).onTouch = function()
-		cutOrCopy(true)
-	end
-
-	menu:addItem(MineOSCore.localization.copy).onTouch = function()
-		cutOrCopy()
-	end
-
-	if not icon.isShortcut or #selectedIcons > 1 then
-		local subMenu = menu:addSubMenu(MineOSCore.localization.createShortcut)
-		
-		subMenu:addItem(MineOSCore.localization.inCurrentDirectory).onTouch = function()
-			for i = 1, #selectedIcons do
-				if not selectedIcons[i].isShortcut then
-					MineOSCore.createShortcut(
-						fs.path(selectedIcons[i].path) .. "/" .. fs.hideExtension(fs.name(selectedIcons[i].path)) .. ".lnk",
-						selectedIcons[i].path
-					)
-				end
-			end
-			
-			computer.pushSignal("MineOSCore", "updateFileList")
-		end
-
-		subMenu:addItem(MineOSCore.localization.onDesktop).onTouch = function()
-			for i = 1, #selectedIcons do
-				if not selectedIcons[i].isShortcut then
-					MineOSCore.createShortcut(
-						fs.path(MineOSCore.paths.desktop) .. "/" .. fs.hideExtension(fs.name(selectedIcons[i].path)) .. ".lnk",
-						selectedIcons[i].path
-					)
-				end
-			end
-			
-			computer.pushSignal("MineOSCore", "updateFileList")
-		end
-	end
-
-	if #selectedIcons == 1 then
-		menu:addItem(MineOSCore.localization.rename).onTouch = function()
-			computer.pushSignal("MineOSCore", "rename", icon.path)
-		end
-	end
-
-	menu:addItem(MineOSCore.localization.delete).onTouch = function()
-		for i = 1, #selectedIcons do
-			if fs.path(selectedIcons[i].path) == MineOSCore.paths.trash then
-				fs.remove(selectedIcons[i].path)
-			else
-				local newName = MineOSCore.paths.trash .. fs.name(selectedIcons[i].path)
-				local clearName = fs.hideExtension(fs.name(selectedIcons[i].path))
-				local repeats = 1
-				while fs.exists(newName) do
-					newName, repeats = MineOSCore.paths.trash .. clearName .. string.rep("-copy", repeats) .. selectedIcons[i].extension, repeats + 1
-				end
-				fs.rename(selectedIcons[i].path, newName)
-			end
-		end
-
-		computer.pushSignal("MineOSCore", "updateFileList")
-	end
-
-	menu:addSeparator()
-
-	if #selectedIcons == 1 then
-		menu:addItem(MineOSCore.localization.addToDock).onTouch = function()
-			MineOSCore.OSMainContainer.dockContainer.addIcon(icon.path).keepInDock = true
-			MineOSCore.OSMainContainer.dockContainer.saveToOSSettings()
-		end
-	end
-
-	menu:addItem(MineOSCore.localization.properties).onTouch = function()
-		for i = 1, #selectedIcons do
-			MineOSCore.propertiesWindow(eventData[3], eventData[4], 40, selectedIcons[i])
-		end
-	end
-
-	menu:show()
-
-	icon.parent.parent:deselectAll()
-	MineOSCore.OSDraw()
-end
-
------------------------------------------------------------------------------------------------------------------------------------
-
-function MineOSCore.addUniversalContainer(parentContainer, title)
-	local container = parentContainer:addChild(GUI.container(1, 1, parentContainer.width, parentContainer.height))
-	
-	container.panel = container:addChild(GUI.panel(1, 1, container.width, container.height, MineOSCore.OSSettings.transparencyEnabled and 0x0 or (MineOSCore.OSSettings.backgroundColor or 0x0F0F0F), MineOSCore.OSSettings.transparencyEnabled and 20))
-	container.layout = container:addChild(GUI.layout(1, 1, container.width, container.height, 1, 1))
-	
-	if title then
-		container.layout:addChild(GUI.label(1, 1, unicode.len(title), 1, 0xEEEEEE, title)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
-	end
-
-	container.panel.eventHandler = function(mainContainer, object, eventData)
-		if eventData[1] == "touch" then
-			container:delete()
-			mainContainer:draw()
-			buffer.draw()
-		end
-	end
-
-	return container
-end
-
------------------------------------------------------------------------------------------------------------------------------------
-
-local function addUniversalContainerWithInputTextBox(parentWindow, text, title, placeholder)
-	local container = MineOSCore.addUniversalContainer(parentWindow, title)
-	
-	container.inputField = container.layout:addChild(GUI.inputField(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0x666666, 0xEEEEEE, 0x262626, text, placeholder, false))
-	container.label = container.layout:addChild(GUI.label(1, 1, 36, 1, 0xFF4940, MineOSCore.localization.file .. " " .. MineOSCore.localization.alreadyExists)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
-	container.label.hidden = true
-
-	return container
-end
-
-local function checkFileToExists(container, path)
-	if fs.exists(path) then
-		container.label.hidden = false
-		container.parent:draw()
-		buffer.draw()
-	else
-		container:delete()
-		fs.makeDirectory(fs.path(path))
-		return true
-	end
-end
-
-function MineOSCore.newApplication(parentWindow, path)
-	local container = addUniversalContainerWithInputTextBox(parentWindow, nil, MineOSCore.localization.newApplication, MineOSCore.localization.applicationName)
-
-	container.inputField.onInputFinished = function()
-		local finalPath = path .. container.inputField.text .. ".app/"
-		if checkFileToExists(container, finalPath) then
-			fs.makeDirectory(finalPath .. "/Resources/")
-			fs.copy(MineOSCore.paths.icons .. "SampleIcon.pic", finalPath .. "/Resources/Icon.pic")
-			local file = io.open(finalPath .. "Main.lua", "w")
-			file:write("require('GUI').error('Hello world')")
-			file:close()
-
-			computer.pushSignal("MineOSCore", "updateFileList")
-		end
-	end
-
-	parentWindow:draw()
-	buffer.draw()
-end
-
-function MineOSCore.newFile(parentWindow, path)
-	local container = addUniversalContainerWithInputTextBox(parentWindow, nil, MineOSCore.localization.newFile, MineOSCore.localization.fileName)
-
-	container.inputField.onInputFinished = function()
-		if checkFileToExists(container, path .. container.inputField.text) then
-			local file = io.open(path .. container.inputField.text, "w")
-			file:close()
-			MineOSCore.safeLaunch(MineOSCore.paths.editor, path .. container.inputField.text)	
-			computer.pushSignal("MineOSCore", "updateFileList")
-		end
-	end
-
-	parentWindow:draw()
-	buffer.draw()
-end
-
-function MineOSCore.newFolder(parentWindow, path)
-	local container = addUniversalContainerWithInputTextBox(parentWindow, nil, MineOSCore.localization.newFolder, MineOSCore.localization.folderName)
-
-	container.inputField.onInputFinished = function()
-		if checkFileToExists(container, path .. container.inputField.text) then
-			fs.makeDirectory(path .. container.inputField.text)
-			computer.pushSignal("MineOSCore", "updateFileList")
-		end
-	end
-
-	parentWindow:draw()
-	buffer.draw()
-
-	return container
-end
-
-function MineOSCore.newFolderFromChosen(parentWindow, selectedIcons)
-	local container = addUniversalContainerWithInputTextBox(parentWindow, nil, MineOSCore.localization.newFolderFromChosen .. " (" .. #selectedIcons .. ")", MineOSCore.localization.folderName)
-
-	container.inputField.onInputFinished = function()
-		local path = fs.path(selectedIcons[1].path) .. container.inputField.text
-		if checkFileToExists(container, path) then
-			fs.makeDirectory(path)
-			for i = 1, #selectedIcons do
-				fs.rename(selectedIcons[i].path, path .. "/" .. fs.name(selectedIcons[i].path))
-			end
-
-			computer.pushSignal("MineOSCore", "updateFileList")
-		end
-	end
-
-	parentWindow:draw()
-	buffer.draw()
-
-	return container
-end
-
-function MineOSCore.rename(parentWindow, path)
-	local container = addUniversalContainerWithInputTextBox(parentWindow, fs.name(path), MineOSCore.localization.rename, MineOSCore.localization.newName)
-
-	container.inputField.onInputFinished = function()
-		if checkFileToExists(container, fs.path(path) .. container.inputField.text) then
-			fs.rename(path, fs.path(path) .. container.inputField.text)
-			computer.pushSignal("MineOSCore", "updateFileList")
-		end
-	end
-
-	parentWindow:draw()
-	buffer.draw()
-	container.inputField:startInput()
-end
-
-function MineOSCore.editShortcut(parentWindow, path)
-	local text = MineOSCore.readShortcut(path)
-	local container = addUniversalContainerWithInputTextBox(parentWindow, text, MineOSCore.localization.editShortcut, MineOSCore.localization.rename)
-
-	container.panel.eventHandler = nil
-	container.inputField.onInputFinished = function()
-		if fs.exists(container.inputField.text) then
-			MineOSCore.createShortcut(path, container.inputField.text)
-			container:delete()
-			computer.pushSignal("MineOSCore", "updateFileList")
-		else
-			container.label.text = MineOSCore.localization.shortcutIsCorrupted
-			container.label.hidden = false
-			MineOSCore.OSDraw()
-		end
-	end
-
-	parentWindow:draw()
-	buffer.draw()
-	container.inputField:startInput()
-end
-
-function MineOSCore.launchWithArguments(parentWindow, path)
-	local container = addUniversalContainerWithInputTextBox(parentWindow, nil, MineOSCore.localization.launchWithArguments)
-
-	container.inputField.onInputFinished = function()
-		local args = {}
-		if container.inputField.text then
-			for arg in container.inputField.text:gmatch("[^%s]+") do
-				table.insert(args, arg)
-			end
-		end
-		container:delete()
-
-		MineOSCore.clearTerminal()
-		if MineOSCore.safeLaunch(path, table.unpack(args)) then
-			MineOSCore.waitForPressingAnyKey()
-		end
-
-		parentWindow:draw()
-		buffer.draw(true)
-	end
-end
-
-function MineOSCore.applicationHelp(parentWindow, path)
-	local pathToAboutFile = path .. "/resources/About/" .. MineOSCore.OSSettings.language .. ".txt"
-	if MineOSCore.OSSettings.showHelpOnApplicationStart and fs.exists(pathToAboutFile) then
-		local container = MineOSCore.addUniversalContainer(parentWindow, MineOSCore.localization.applicationHelp .. "\"" .. fs.name(path) .. "\"")
-		
-		local lines = {}
-		for line in io.lines(pathToAboutFile) do
-			table.insert(lines, line)
-		end
-		
-		container.layout:addChild(GUI.textBox(1, 1, 50, 1, nil, 0xcccccc, lines, 1, 0, 0, true, true))
-		local button = container.layout:addChild(GUI.button(1, 1, 30, 1, 0xEEEEEE, 0x262626, 0xAAAAAA, 0x262626, MineOSCore.localization.dontShowAnymore))	
-		
-		container.panel.eventHandler = function(mainContainer, object, eventData)
-			if eventData[1] == "touch" then
-				container:delete()
-				MineOSCore.safeLaunch(path .. "/Main.lua")
-			end
-		end
-
-		button.onTouch = function()
-			MineOSCore.OSSettings.showHelpOnApplicationStart = false
-			MineOSCore.saveOSSettings()
-			container:delete()
-			MineOSCore.safeLaunch(path .. "/Main.lua")
-		end
-	else
-		MineOSCore.safeLaunch(path .. "/Main.lua")
-	end
-
-	parentWindow:draw()
-	buffer.draw()
-end
-
-function MineOSCore.newFileFromURL(parentWindow, path)
-	local container = addUniversalContainerWithInputTextBox(parentWindow, nil, "Загрузить файл по URL", MineOSCore.localization.fileName)
-
-	container.inputFieldURL = container.layout:addChild(GUI.inputField(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0x666666, 0xEEEEEE, 0x262626, nil, "URL", false))
-	container.inputField.onInputFinished = function()
-		if container.inputField.text then
-			if fs.exists(path .. container.inputField.text) then
-				container.label.hidden = false
-				parentWindow:draw()
-				buffer.draw()
-			else
-				if container.inputFieldURL.text then
-					local success, reason = require("web").downloadFile(container.inputFieldURL.text, path .. container.inputField.text)
-					if not success then
-						GUI.error(reason)
-					end
-
-					container:delete()
-					computer.pushSignal("MineOSCore", "updateFileList")
-				end
-			end
-		end
-	end
-	container.inputFieldURL.onInputFinished = container.inputField.onInputFinished
-
-	parentWindow:draw()
-	buffer.draw()
-end
-
------------------------------------------ Windows patterns -----------------------------------------
-
-local function onWindowResize(window, width, height)
-	if window.titleLabel then
-		window.titleLabel.width = width
-	end
-
-	if window.titlePanel then
-		window.titlePanel.width = height
-	end
-
-	if window.tabBar then
-		window.tabBar.width = width
-	end
-
-	window.backgroundPanel.width, window.backgroundPanel.height = width, height - (window.titlePanel and 1 or 0)
-end
-
-local function windowResize(window, width, height)
-	window.width, window.height = width, height
-	window:onResize(width, height)
-
-	return window
-end
-
-function MineOSCore.addWindow(window)
-	window.x = window.x or math.floor(MineOSCore.OSMainContainer.windowsContainer.width / 2 - window.width / 2)
-	window.y = window.y or math.floor(MineOSCore.OSMainContainer.windowsContainer.height / 2 - window.height / 2)
-	
-	MineOSCore.OSMainContainer.windowsContainer:addChild(window)
-
-	-- Dock
-	local dockPath = MineOSCore.lastLaunchPath or "/lib/MineOSCore.lua"
-	MineOSCore.lastLaunchPath = nil
-
-	local dockIcon
-	for i = 1, #MineOSCore.OSMainContainer.dockContainer.children do
-		if MineOSCore.OSMainContainer.dockContainer.children[i].path == dockPath then
-			dockIcon = MineOSCore.OSMainContainer.dockContainer.children[i]
+	local lineExists
+	for i = 1, #breakpointLines do
+		if breakpointLines[i] == cursor.position.line then
+			lineExists = i
 			break
 		end
 	end
-	dockIcon = dockIcon or MineOSCore.OSMainContainer.dockContainer.addIcon(dockPath, window)
-	dockIcon.window = dockIcon.window or window
+	
+	if lineExists then
+		table.remove(breakpointLines, lineExists)
+	else
+		table.insert(breakpointLines, cursor.position.line)
+	end
 
-	window.resize = windowResize
-	window.onResize = onWindowResize
-	window.close = function(window)
-		local sameIconExists = false
-		for i = 1, #MineOSCore.OSMainContainer.dockContainer.children do
-			if MineOSCore.OSMainContainer.dockContainer.children[i].path == dockPath and MineOSCore.OSMainContainer.dockContainer.children[i].window and MineOSCore.OSMainContainer.dockContainer.children[i].window ~= window then
-				sameIconExists = true
+	if #breakpointLines > 0 then
+		table.sort(breakpointLines, function(a, b) return a < b end)
+	else
+		breakpointLines = nil
+	end
+
+	updateHighlights()
+end
+
+local function fixFromLineByCursorPosition()
+	if mainContainer.codeView.fromLine > cursor.position.line then
+		mainContainer.codeView.fromLine = cursor.position.line
+	elseif mainContainer.codeView.fromLine + mainContainer.codeView.height - 2 < cursor.position.line then
+		mainContainer.codeView.fromLine = cursor.position.line - mainContainer.codeView.height + 2
+	end
+end
+
+local function fixFromSymbolByCursorPosition()
+	if mainContainer.codeView.fromSymbol > cursor.position.symbol then
+		mainContainer.codeView.fromSymbol = cursor.position.symbol
+	elseif mainContainer.codeView.fromSymbol + mainContainer.codeView.codeAreaWidth - 3 < cursor.position.symbol then
+		mainContainer.codeView.fromSymbol = cursor.position.symbol - mainContainer.codeView.codeAreaWidth + 3
+	end
+end
+
+local function fixCursorPosition(symbol, line)
+	if line < 1 then
+		line = 1
+	elseif line > #mainContainer.codeView.lines then
+		line = #mainContainer.codeView.lines
+	end
+
+	local lineLength = unicode.len(mainContainer.codeView.lines[line])
+	if symbol < 1 or lineLength == 0 then
+		symbol = 1
+	elseif symbol > lineLength then
+		symbol = lineLength + 1
+	end
+
+	return symbol, line
+end
+
+local function setCursorPosition(symbol, line)
+	cursor.position.symbol, cursor.position.line = fixCursorPosition(symbol, line)
+	fixFromLineByCursorPosition()
+	fixFromSymbolByCursorPosition()
+	hideAutocompleteWindow()
+	hideErrorContainer()
+end
+
+local function setCursorPositionAndClearSelection(symbol, line)
+	setCursorPosition(symbol, line)
+	clearSelection()
+end
+
+local function moveCursor(symbolOffset, lineOffset)
+	if mainContainer.autocompleteWindow.hidden or lineOffset == 0 then
+		if mainContainer.codeView.selections[1] then
+			if symbolOffset < 0 or lineOffset < 0 then
+				setCursorPositionAndClearSelection(mainContainer.codeView.selections[1].from.symbol, mainContainer.codeView.selections[1].from.line)
+			else
+				setCursorPositionAndClearSelection(mainContainer.codeView.selections[1].to.symbol, mainContainer.codeView.selections[1].to.line)
+			end
+		else
+			local newSymbol, newLine = cursor.position.symbol + symbolOffset, cursor.position.line + lineOffset
+			
+			if symbolOffset < 0 and newSymbol < 1 then
+				newLine, newSymbol = newLine - 1, math.huge
+			elseif symbolOffset > 0 and newSymbol > unicode.len(mainContainer.codeView.lines[newLine] or "") + 1 then
+				newLine, newSymbol = newLine + 1, 1
+			end
+
+			setCursorPositionAndClearSelection(newSymbol, newLine)
+		end
+	elseif not mainContainer.autocompleteWindow.hidden then
+		mainContainer.autocompleteWindow.currentMatch = mainContainer.autocompleteWindow.currentMatch + lineOffset
+		
+		if mainContainer.autocompleteWindow.currentMatch < 1 then
+			mainContainer.autocompleteWindow.currentMatch = 1
+		elseif mainContainer.autocompleteWindow.currentMatch > #mainContainer.autocompleteWindow.matches then
+			mainContainer.autocompleteWindow.currentMatch = #mainContainer.autocompleteWindow.matches
+		elseif mainContainer.autocompleteWindow.currentMatch < mainContainer.autocompleteWindow.fromMatch then
+			mainContainer.autocompleteWindow.fromMatch = mainContainer.autocompleteWindow.currentMatch
+		elseif mainContainer.autocompleteWindow.currentMatch > mainContainer.autocompleteWindow.fromMatch + mainContainer.autocompleteWindow.height - 1 then
+			mainContainer.autocompleteWindow.fromMatch = mainContainer.autocompleteWindow.currentMatch - mainContainer.autocompleteWindow.height + 1
+		end
+	end
+end
+
+local function setCursorPositionToHome()
+	setCursorPositionAndClearSelection(1, 1)
+end
+
+local function setCursorPositionToEnd()
+	setCursorPositionAndClearSelection(unicode.len(mainContainer.codeView.lines[#mainContainer.codeView.lines]) + 1, #mainContainer.codeView.lines)
+end
+
+local function scroll(direction, speed)
+	if direction == 1 then
+		if mainContainer.codeView.fromLine > speed then
+			mainContainer.codeView.fromLine = mainContainer.codeView.fromLine - speed
+		else
+			mainContainer.codeView.fromLine = 1
+		end
+	else
+		if mainContainer.codeView.fromLine < #mainContainer.codeView.lines - speed then
+			mainContainer.codeView.fromLine = mainContainer.codeView.fromLine + speed
+		else
+			mainContainer.codeView.fromLine = #mainContainer.codeView.lines
+		end
+	end
+end
+
+local function pageUp()
+	scroll(1, mainContainer.codeView.height - 2)
+end
+
+local function pageDown()
+	scroll(-1, mainContainer.codeView.height - 2)
+end
+
+local function selectWord()
+	local from, to = getCurrentWordStartingAndEnding(cursor.position.symbol)
+	if from and to then
+		mainContainer.codeView.selections[1] = {
+			from = {symbol = from, line = cursor.position.line},
+			to = {symbol = to, line = cursor.position.line},
+		}
+		cursor.position.symbol = to
+	end
+end
+
+local function removeTabs(text)
+	local result = text:gsub("\t", string.rep(" ", mainContainer.codeView.indentationWidth))
+	return result
+end
+
+local function removeWindowsLineEndings(text)
+	local result = text:gsub("\r\n", "\n")
+	return result
+end
+
+local function changeResolution(width, height)
+	buffer.setResolution(width, height)
+	calculateSizes()
+	mainContainer:draw()
+	buffer.draw()
+	config.screenResolution.width = width
+	config.screenResolution.height = height
+end
+
+local function changeResolutionWindow()
+	mainContainer.settingsContainer.hidden = false
+	local textBoxesWidth = math.floor(mainContainer.width * 0.3)
+	local textBoxWidth, x, y = math.floor(textBoxesWidth / 2), math.floor(mainContainer.width / 2 - textBoxesWidth / 2), math.floor(mainContainer.height / 2) - 3
+	
+	mainContainer.settingsContainer:addChild(GUI.label(1, y, mainContainer.width, 1, 0xFFFFFF, localization.changeResolution)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); y = y + 3
+	local inputFieldWidth = mainContainer.settingsContainer:addChild(GUI.inputField(x, y, textBoxWidth, 3, 0xCCCCCC, 0x777777, 0x777777, 0xCCCCCC, 0x2D2D2D, tostring(config.screenResolution.width))); x = x + textBoxWidth + 2
+	local inputFieldHeight = mainContainer.settingsContainer:addChild(GUI.inputField(x, y, textBoxWidth, 3, 0xCCCCCC, 0x777777, 0x777777, 0xCCCCCC, 0x2D2D2D, tostring(config.screenResolution.height)))
+	
+	local maxResolutionWidth, maxResolutionHeight = component.gpu.maxResolution()
+	inputFieldWidth.validator = function(text)
+		local number = tonumber(text)
+		if number and number >= 1 and number <= maxResolutionWidth then return true end
+	end
+	inputFieldHeight.validator = function(text)
+		local number = tonumber(text)
+		if number and number >= 1 and number <= maxResolutionHeight then return true end
+	end
+
+	mainContainer.settingsContainer.backgroundPanel.eventHandler = function(mainContainer, object, eventData)
+		if eventData[1] == "touch" then
+			config.screenResolution.width, config.screenResolution.height = tonumber(inputFieldWidth.text), tonumber(inputFieldHeight.text)
+			saveConfig()
+			hideSettingsContainer()
+			changeResolution(config.screenResolution.width, config.screenResolution.height)
+		end
+	end
+end
+
+local function createInputTextBoxForSettingsWindow(title, placeholder, onInputFinishedMethod, validatorMethod)
+	mainContainer.settingsContainer.hidden = false
+	local textBoxWidth = math.floor(mainContainer.width * 0.3)
+	local x, y = math.floor(mainContainer.width / 2 - textBoxWidth / 2), math.floor(mainContainer.height / 2) - 3
+	
+	mainContainer.settingsContainer:addChild(GUI.label(1, y, mainContainer.width, 1, 0xFFFFFF, title)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); y = y + 3
+	mainContainer.settingsContainer.inputField = mainContainer.settingsContainer:addChild(GUI.inputField(x, y, textBoxWidth, 3, 0xCCCCCC, 0x777777, 0x777777, 0xCCCCCC, 0x2D2D2D, "", placeholder))
+	
+	mainContainer.settingsContainer.inputField.validator = validatorMethod
+	mainContainer.settingsContainer.inputField.onInputFinished = function(...)
+		onInputFinishedMethod(...)
+		hideSettingsContainer()
+	end
+end
+
+local function newFile()
+	autocompleteDatabase = {}
+	mainContainer.codeView.lines = {""}
+	mainContainer.codeView.maximumLineLength = 1
+	setCursorPositionAndClearSelection(1, 1)
+	mainContainer.leftTreeView.currentFile = nil
+	clearBreakpoints()
+end
+
+local function loadFile(path)
+	newFile()
+	
+	local file = io.open(path, "r")
+	for line in file:lines() do
+		line = removeWindowsLineEndings(removeTabs(line))
+		table.insert(mainContainer.codeView.lines, line)
+		mainContainer.codeView.maximumLineLength = math.max(mainContainer.codeView.maximumLineLength, unicode.len(line))
+	end
+	file:close()
+	
+	if #mainContainer.codeView.lines > 1 then
+		table.remove(mainContainer.codeView.lines, 1)
+	end
+	
+	mainContainer.leftTreeView.currentFile = path
+	updateAutocompleteDatabaseFromFile()
+end
+
+local function saveFile(path)
+	fs.makeDirectory(fs.path(path))
+	local file = io.open(path, "w")
+	for line = 1, #mainContainer.codeView.lines do
+		file:write(mainContainer.codeView.lines[line], "\n")
+	end
+	file:close()
+end
+
+local function gotoLineWindow()
+	createInputTextBoxForSettingsWindow(localization.gotoLine, localization.lineNumber,
+		function()
+			gotoLine(tonumber(mainContainer.settingsContainer.inputField.text))
+		end,
+		function()
+			if mainContainer.settingsContainer.inputField.text:match("%d+") then return true end
+		end
+	)
+end
+
+local function openFileWindow()
+	createInputTextBoxForSettingsWindow(localization.openFile, localization.pathToFile,
+		function()
+			loadFile(mainContainer.settingsContainer.inputField.text)
+		end,
+		function()
+			if fs.exists(mainContainer.settingsContainer.inputField.text) then return true end
+		end
+	)
+end
+
+local function saveFileAsWindow()
+	createInputTextBoxForSettingsWindow(localization.saveAs, localization.pathToFile,
+		function()
+			saveFile(mainContainer.settingsContainer.inputField.text)
+			mainContainer.leftTreeView.currentFile = mainContainer.settingsContainer.inputField.text
+			if unicode.sub(mainContainer.leftTreeView.currentFile, 1, 1) ~= "/" then
+				mainContainer.leftTreeView.currentFile = "/" .. mainContainer.leftTreeView.currentFile
+			end
+			mainContainer.leftTreeView:updateFileList()
+		end
+	)
+end
+
+local function saveFileWindow()
+	saveFile(mainContainer.leftTreeView.currentFile)
+end
+
+local function splitStringIntoLines(s)
+	s = removeWindowsLineEndings(removeTabs(s))
+
+	local lines, searchLineEndingFrom, maximumLineLength, lineEndingFoundAt, line = {}, 1, 0
+	repeat
+		lineEndingFoundAt = string.unicodeFind(s, "\n", searchLineEndingFrom)
+		if lineEndingFoundAt then
+			line = unicode.sub(s, searchLineEndingFrom, lineEndingFoundAt - 1)
+			searchLineEndingFrom = lineEndingFoundAt + 1
+		else
+			line = unicode.sub(s, searchLineEndingFrom, -1)
+		end
+
+		table.insert(lines, line)
+		maximumLineLength = math.max(maximumLineLength, unicode.len(line))
+	until not lineEndingFoundAt
+
+	return lines, maximumLineLength
+end
+
+local function downloadFileFromWeb()
+	createInputTextBoxForSettingsWindow(localization.getFromWeb, localization.url,
+		function()
+			local result, reason = web.request(mainContainer.settingsContainer.inputField.text)
+			if result then
+				newFile()
+				mainContainer.codeView.lines, mainContainer.codeView.maximumLineLength = splitStringIntoLines(result)
+			else
+				GUI.error("Failed to connect to URL: " .. tostring(reason))
+			end
+			hideSettingsContainer()
+		end
+	)
+end
+
+------------------------------------------------------------------------------------------------------------------
+
+local function getVariables(codePart)
+	local variables = {}
+	-- Сначала мы проверяем участок кода на наличие комментариев
+	if
+		not codePart:match("^%-%-") and
+		not codePart:match("^[\t%s]+%-%-")
+	then
+		-- Затем заменяем все строковые куски в участке кода на "ничего", чтобы наш "прекрасный" парсер не искал переменных в строках
+		codePart = codePart:gsub("\"[^\"]+\"", "")
+		-- Потом разбиваем код на отдельные буквенно-цифровые слова, не забыв точечку с двоеточием
+		for word in codePart:gmatch("[%a%d%.%:%_]+") do
+			-- Далее проверяем, не совпадает ли это слово с одним из луа-шаблонов, то бишь, не является ли оно частью синтаксиса
+			if
+				word ~= "local" and
+				word ~= "return" and
+				word ~= "while" and
+				word ~= "repeat" and
+				word ~= "until" and
+				word ~= "for" and
+				word ~= "in" and
+				word ~= "do" and
+				word ~= "if" and
+				word ~= "then" and
+				word ~= "else" and
+				word ~= "elseif" and
+				word ~= "end" and
+				word ~= "function" and
+				word ~= "true" and
+				word ~= "false" and
+				word ~= "nil" and
+				word ~= "not" and
+				word ~= "and" and
+				word ~= "or"  and
+				-- Также проверяем, не число ли это в чистом виде
+				not word:match("^[%d%.]+$") and
+				not word:match("^0x%x+$") and
+				-- Или символ конкатенации, например
+				not word:match("^%.+$")
+			then
+				variables[word] = true
+			end
+		end
+	end
+
+	return variables
+end
+
+local function continue()
+	-- Готовим экран к запуску
+	local oldResolutionX, oldResolutionY = component.gpu.getResolution()
+	component.gpu.setBackground(0x1B1B1B)
+	component.gpu.setForeground(0xFFFFFF)
+	component.gpu.fill(1, 1, oldResolutionX, oldResolutionY, " ")
+	term.setCursor(1, 1)
+
+	-- Запускаем
+	_G.MineCodeIDEDebugInfo = nil
+	local coroutineResumeSuccess, coroutineResumeReason = coroutine.resume(scriptCoroutine)
+
+	-- Анализируем результат запуска
+	if coroutineResumeSuccess then
+		if coroutine.status(scriptCoroutine) == "dead" then
+			MineOSCore.waitForPressingAnyKey()
+			hideErrorContainer()
+			buffer.setResolution(oldResolutionX, oldResolutionY); mainContainer:draw(); buffer.draw(true)
+		else
+			-- Тест на пидора, мало ли у чувака в проге тоже есть yield
+			if _G.MineCodeIDEDebugInfo then
+				buffer.setResolution(oldResolutionX, oldResolutionY); mainContainer:draw(); buffer.draw(true)
+				gotoLine(_G.MineCodeIDEDebugInfo.line)
+				showBreakpointMessage(_G.MineCodeIDEDebugInfo.variables)
+			end
+		end
+	else
+		buffer.setResolution(oldResolutionX, oldResolutionY); mainContainer:draw(); buffer.draw(true)
+		showErrorContainer(debug.traceback(scriptCoroutine, coroutineResumeReason))
+	end
+end
+
+local function run()
+	hideErrorContainer()
+
+	-- Инсертим брейкпоинты
+	if breakpointLines then
+		local offset = 0
+		for i = 1, #breakpointLines do
+			local variables = getVariables(mainContainer.codeView.lines[breakpointLines[i] + offset])
+			
+			local breakpointMessage = "_G.MineCodeIDEDebugInfo = {variables = {"
+			for variable in pairs(variables) do
+				breakpointMessage = breakpointMessage .. "[\"" .. variable .. "\"] = type(" .. variable .. ") == 'string' and '\"' .. " .. variable .. " .. '\"' or tostring(" .. variable .. "), "
+			end
+			breakpointMessage =  breakpointMessage .. "}, line = " .. breakpointLines[i] .. "}; coroutine.yield()"
+
+			table.insert(mainContainer.codeView.lines, breakpointLines[i] + offset, breakpointMessage)
+			offset = offset + 1
+		end
+	end
+
+	-- Лоадим кодыч
+	local loadSuccess, loadReason = load(table.concat(mainContainer.codeView.lines, "\n"))
+	
+	-- Чистим дерьмо вилочкой, чистим
+	if breakpointLines then
+		for i = 1, #breakpointLines do
+			table.remove(mainContainer.codeView.lines, breakpointLines[i])
+		end
+	end
+
+	-- Запускаем кодыч
+	if loadSuccess then
+		scriptCoroutine = coroutine.create(loadSuccess)
+		continue()
+	else
+		showErrorContainer(loadReason)
+	end
+end
+
+local function deleteLine(line)
+	if #mainContainer.codeView.lines > 1 then
+		table.remove(mainContainer.codeView.lines, line)
+		setCursorPositionAndClearSelection(1, cursor.position.line)
+
+		updateAutocompleteDatabaseFromFile()
+	end
+end
+
+local function deleteSpecifiedData(fromSymbol, fromLine, toSymbol, toLine)
+	local upperLine = unicode.sub(mainContainer.codeView.lines[fromLine], 1, fromSymbol - 1)
+	local lowerLine = unicode.sub(mainContainer.codeView.lines[toLine], toSymbol + 1, -1)
+	for line = fromLine + 1, toLine do
+		table.remove(mainContainer.codeView.lines, fromLine + 1)
+	end
+	mainContainer.codeView.lines[fromLine] = upperLine .. lowerLine
+	setCursorPositionAndClearSelection(fromSymbol, fromLine)
+
+	updateAutocompleteDatabaseFromFile()
+end
+
+local function deleteSelectedData()
+	if mainContainer.codeView.selections[1] then
+		deleteSpecifiedData(
+			mainContainer.codeView.selections[1].from.symbol,
+			mainContainer.codeView.selections[1].from.line,
+			mainContainer.codeView.selections[1].to.symbol,
+			mainContainer.codeView.selections[1].to.line
+		)
+
+		clearSelection()
+	end
+end
+
+local function copy()
+	if mainContainer.codeView.selections[1] then
+		if mainContainer.codeView.selections[1].to.line == mainContainer.codeView.selections[1].from.line then
+			clipboard = { unicode.sub(mainContainer.codeView.lines[mainContainer.codeView.selections[1].from.line], mainContainer.codeView.selections[1].from.symbol, mainContainer.codeView.selections[1].to.symbol) }
+		else
+			clipboard = { unicode.sub(mainContainer.codeView.lines[mainContainer.codeView.selections[1].from.line], mainContainer.codeView.selections[1].from.symbol, -1) }
+			for line = mainContainer.codeView.selections[1].from.line + 1, mainContainer.codeView.selections[1].to.line - 1 do
+				table.insert(clipboard, mainContainer.codeView.lines[line])
+			end
+			table.insert(clipboard, unicode.sub(mainContainer.codeView.lines[mainContainer.codeView.selections[1].to.line], 1, mainContainer.codeView.selections[1].to.symbol))
+		end
+	end
+end
+
+local function cut()
+	if mainContainer.codeView.selections[1] then
+		copy()
+		deleteSelectedData()
+	end
+end
+
+local function pasteSelectedAutocompletion()
+	local firstPart = unicode.sub(mainContainer.codeView.lines[cursor.position.line], 1, mainContainer.autocompleteWindow.currentWordStarting - 1)
+	local secondPart = unicode.sub(mainContainer.codeView.lines[cursor.position.line], mainContainer.autocompleteWindow.currentWordEnding + 1, -1)
+	mainContainer.codeView.lines[cursor.position.line] = firstPart .. mainContainer.autocompleteWindow.matches[mainContainer.autocompleteWindow.currentMatch][1] .. secondPart
+	setCursorPositionAndClearSelection(unicode.len(firstPart .. mainContainer.autocompleteWindow.matches[mainContainer.autocompleteWindow.currentMatch][1]) + 1, cursor.position.line)
+	hideAutocompleteWindow()
+end
+
+local function paste(pasteLines)
+	if pasteLines then
+		if mainContainer.codeView.selections[1] then
+			deleteSelectedData()
+		end
+
+		local firstPart = unicode.sub(mainContainer.codeView.lines[cursor.position.line], 1, cursor.position.symbol - 1)
+		local secondPart = unicode.sub(mainContainer.codeView.lines[cursor.position.line], cursor.position.symbol, -1)
+
+		if #pasteLines == 1 then
+			mainContainer.codeView.lines[cursor.position.line] = firstPart .. pasteLines[1] .. secondPart
+			setCursorPositionAndClearSelection(cursor.position.symbol + unicode.len(pasteLines[1]), cursor.position.line)
+		else
+			mainContainer.codeView.lines[cursor.position.line] = firstPart .. pasteLines[1]
+			for pasteLine = #pasteLines - 1, 2, -1 do
+				table.insert(mainContainer.codeView.lines, cursor.position.line + 1, pasteLines[pasteLine])
+			end
+			table.insert(mainContainer.codeView.lines, cursor.position.line + #pasteLines - 1, pasteLines[#pasteLines] .. secondPart)
+			setCursorPositionAndClearSelection(unicode.len(pasteLines[#pasteLines]) + 1, cursor.position.line + #pasteLines - 1)
+		end
+
+		updateAutocompleteDatabaseFromFile()
+	end
+end
+
+local function selectAndPasteColor()
+	local startColor = 0xFF0000
+	if mainContainer.codeView.selections[1] and mainContainer.codeView.selections[1].from.line == mainContainer.codeView.selections[1].to.line then
+		startColor = tonumber(unicode.sub(mainContainer.codeView.lines[mainContainer.codeView.selections[1].from.line], mainContainer.codeView.selections[1].from.symbol, mainContainer.codeView.selections[1].to.symbol)) or startColor
+	end
+
+	local selectedColor = require("palette").show("auto", "auto", startColor)
+	if selectedColor then
+		paste({string.format("0x%06X", selectedColor)})
+	end
+end
+
+local function pasteRegularChar(unicodeByte, char)
+	if not keyboard.isControl(unicodeByte) then
+		paste({char})
+		if char == " " then
+			updateAutocompleteDatabaseFromFile()
+		end
+		showAutocompleteWindow()
+	end
+end
+
+local function pasteAutoBrackets(unicodeByte)
+	local char = unicode.char(unicodeByte)
+	local currentSymbol = unicode.sub(mainContainer.codeView.lines[cursor.position.line], cursor.position.symbol, cursor.position.symbol)
+
+	-- Если у нас вообще врублен режим автоскобок, то чекаем их
+	if config.enableAutoBrackets then
+		-- Ситуация, когда курсор находится на закрывающей скобке, и нехуй ее еще раз вставлять
+		if possibleBrackets.closers[char] and currentSymbol == char then
+			deleteSelectedData()
+			setCursorPosition(cursor.position.symbol + 1, cursor.position.line)
+		-- Если нажата открывающая скобка
+		elseif possibleBrackets.openers[char] then
+			-- А вот тут мы берем в скобочки уже выделенный текст
+			if mainContainer.codeView.selections[1] then
+				local firstPart = unicode.sub(mainContainer.codeView.lines[mainContainer.codeView.selections[1].from.line], 1, mainContainer.codeView.selections[1].from.symbol - 1)
+				local secondPart = unicode.sub(mainContainer.codeView.lines[mainContainer.codeView.selections[1].from.line], mainContainer.codeView.selections[1].from.symbol, -1)
+				mainContainer.codeView.lines[mainContainer.codeView.selections[1].from.line] = firstPart .. char .. secondPart
+				mainContainer.codeView.selections[1].from.symbol = mainContainer.codeView.selections[1].from.symbol + 1
+
+				if mainContainer.codeView.selections[1].to.line == mainContainer.codeView.selections[1].from.line then
+					mainContainer.codeView.selections[1].to.symbol = mainContainer.codeView.selections[1].to.symbol + 1
+				end
+
+				firstPart = unicode.sub(mainContainer.codeView.lines[mainContainer.codeView.selections[1].to.line], 1, mainContainer.codeView.selections[1].to.symbol)
+				secondPart = unicode.sub(mainContainer.codeView.lines[mainContainer.codeView.selections[1].to.line], mainContainer.codeView.selections[1].to.symbol + 1, -1)
+				mainContainer.codeView.lines[mainContainer.codeView.selections[1].to.line] = firstPart .. possibleBrackets.openers[char] .. secondPart
+				cursor.position.symbol = cursor.position.symbol + 2
+			-- А тут мы делаем двойную автоскобку, если можем
+			elseif possibleBrackets.openers[char] and not currentSymbol:match("[%a%d%_]") then
+				paste({char .. possibleBrackets.openers[char]})
+				setCursorPosition(cursor.position.symbol - 1, cursor.position.line)
+				cursor.blinkState = false
+			-- Ну, и если нет ни выделений, ни можем ебануть автоскобочку по регулярке
+			else
+				pasteRegularChar(unicodeByte, char)
+			end
+		-- Если мы вообще на скобку не нажимали
+		else
+			pasteRegularChar(unicodeByte, char)
+		end
+	-- Если оффнуты афтоскобки
+	else
+		pasteRegularChar(unicodeByte, char)
+	end
+end
+
+local function backspaceAutoBrackets()	
+	local previousSymbol = unicode.sub(mainContainer.codeView.lines[cursor.position.line], cursor.position.symbol - 1, cursor.position.symbol - 1)
+	local currentSymbol = unicode.sub(mainContainer.codeView.lines[cursor.position.line], cursor.position.symbol, cursor.position.symbol)
+	if config.enableAutoBrackets and possibleBrackets.openers[previousSymbol] and possibleBrackets.openers[previousSymbol] == currentSymbol then
+		deleteSpecifiedData(cursor.position.symbol, cursor.position.line, cursor.position.symbol, cursor.position.line)
+	end
+end
+
+local function delete()
+	if mainContainer.codeView.selections[1] then
+		deleteSelectedData()
+	else
+		if cursor.position.symbol < unicode.len(mainContainer.codeView.lines[cursor.position.line]) + 1 then
+			deleteSpecifiedData(cursor.position.symbol, cursor.position.line, cursor.position.symbol, cursor.position.line)
+		else
+			if cursor.position.line > 1 then
+				deleteSpecifiedData(unicode.len(mainContainer.codeView.lines[cursor.position.line]) + 1, cursor.position.line, 0, cursor.position.line + 1)
+			end
+		end
+
+		-- updateAutocompleteDatabaseFromFile()
+		showAutocompleteWindow()
+	end
+end
+
+local function backspace()
+	if mainContainer.codeView.selections[1] then
+		deleteSelectedData()
+	else
+		if cursor.position.symbol > 1 then
+			backspaceAutoBrackets()
+			deleteSpecifiedData(cursor.position.symbol - 1, cursor.position.line, cursor.position.symbol - 1, cursor.position.line)
+		else
+			if cursor.position.line > 1 then
+				deleteSpecifiedData(unicode.len(mainContainer.codeView.lines[cursor.position.line - 1]) + 1, cursor.position.line - 1, 0, cursor.position.line)
+			end
+		end
+
+		-- updateAutocompleteDatabaseFromFile()
+		showAutocompleteWindow()
+	end
+end
+
+local function enter()
+	local firstPart = unicode.sub(mainContainer.codeView.lines[cursor.position.line], 1, cursor.position.symbol - 1)
+	local secondPart = unicode.sub(mainContainer.codeView.lines[cursor.position.line], cursor.position.symbol, -1)
+	mainContainer.codeView.lines[cursor.position.line] = firstPart
+	table.insert(mainContainer.codeView.lines, cursor.position.line + 1, secondPart)
+	setCursorPositionAndClearSelection(1, cursor.position.line + 1)
+end
+
+local function selectAll()
+	mainContainer.codeView.selections[1] = {
+		from = {
+			symbol = 1, line = 1
+		},
+		to = {
+			symbol = unicode.len(mainContainer.codeView.lines[#mainContainer.codeView.lines]), line = #mainContainer.codeView.lines
+		}
+	}
+end
+
+local function isLineCommented(line)
+	if mainContainer.codeView.lines[line] == "" or mainContainer.codeView.lines[line]:match("%-%-%s?") then return true end
+end
+
+local function commentLine(line)
+	mainContainer.codeView.lines[line] = "-- " .. mainContainer.codeView.lines[line]
+end
+
+local function uncommentLine(line)
+	local countOfReplaces
+	mainContainer.codeView.lines[line], countOfReplaces = mainContainer.codeView.lines[line]:gsub("%-%-%s?", "", 1)
+	return countOfReplaces
+end
+
+local function toggleComment()
+	if mainContainer.codeView.selections[1] then
+		local allLinesAreCommented = true
+		
+		for line = mainContainer.codeView.selections[1].from.line, mainContainer.codeView.selections[1].to.line do
+			if not isLineCommented(line) then
+				allLinesAreCommented = false
 				break
 			end
 		end
-
-		if not sameIconExists then
-			dockIcon.window = nil
-			if not dockIcon.keepInDock then
-				dockIcon:delete()
-				MineOSCore.OSMainContainer.dockContainer.sort()
+		
+		for line = mainContainer.codeView.selections[1].from.line, mainContainer.codeView.selections[1].to.line do
+			if allLinesAreCommented then
+				uncommentLine(line)
+			else
+				commentLine(line)
 			end
 		end
+
+		local modifyer = 3
+		if allLinesAreCommented then modifyer = -modifyer end
+		setCursorPosition(cursor.position.symbol + modifyer, cursor.position.line)
+		mainContainer.codeView.selections[1].from.symbol, mainContainer.codeView.selections[1].to.symbol = mainContainer.codeView.selections[1].from.symbol + modifyer, mainContainer.codeView.selections[1].to.symbol + modifyer
+	else
+		if isLineCommented(cursor.position.line) then
+			if uncommentLine(cursor.position.line) > 0 then
+				setCursorPositionAndClearSelection(cursor.position.symbol - 3, cursor.position.line)
+			end
+		else
+			commentLine(cursor.position.line)
+			setCursorPositionAndClearSelection(cursor.position.symbol + 3, cursor.position.line)
+		end
+	end
+end
+
+local function indentLine(line)
+	mainContainer.codeView.lines[line] = string.rep(" ", mainContainer.codeView.indentationWidth) .. mainContainer.codeView.lines[line]
+end
+
+local function unindentLine(line)
+	mainContainer.codeView.lines[line], countOfReplaces = string.gsub(mainContainer.codeView.lines[line], "^" .. string.rep("%s", mainContainer.codeView.indentationWidth), "")
+	return countOfReplaces
+end
+
+local function indentOrUnindent(isIndent)
+	if mainContainer.codeView.selections[1] then
+		local countOfReplacesInFirstLine, countOfReplacesInLastLine
 		
-		window:delete()
-		MineOSCore.OSDraw()
+		for line = mainContainer.codeView.selections[1].from.line, mainContainer.codeView.selections[1].to.line do
+			if isIndent then
+				indentLine(line)
+			else
+				local countOfReplaces = unindentLine(line)
+				if line == mainContainer.codeView.selections[1].from.line then
+					countOfReplacesInFirstLine = countOfReplaces
+				elseif line == mainContainer.codeView.selections[1].to.line then
+					countOfReplacesInLastLine = countOfReplaces
+				end
+			end
+		end		
+
+		if isIndent then
+			setCursorPosition(cursor.position.symbol + mainContainer.codeView.indentationWidth, cursor.position.line)
+			mainContainer.codeView.selections[1].from.symbol, mainContainer.codeView.selections[1].to.symbol = mainContainer.codeView.selections[1].from.symbol + mainContainer.codeView.indentationWidth, mainContainer.codeView.selections[1].to.symbol + mainContainer.codeView.indentationWidth
+		else
+			if countOfReplacesInFirstLine > 0 then
+				mainContainer.codeView.selections[1].from.symbol = mainContainer.codeView.selections[1].from.symbol - mainContainer.codeView.indentationWidth
+				if cursor.position.line == mainContainer.codeView.selections[1].from.line then
+					setCursorPosition(cursor.position.symbol - mainContainer.codeView.indentationWidth, cursor.position.line)
+				end
+			end
+
+			if countOfReplacesInLastLine > 0 then
+				mainContainer.codeView.selections[1].to.symbol = mainContainer.codeView.selections[1].to.symbol - mainContainer.codeView.indentationWidth
+				if cursor.position.line == mainContainer.codeView.selections[1].to.line then
+					setCursorPosition(cursor.position.symbol - mainContainer.codeView.indentationWidth, cursor.position.line)
+				end
+			end
+		end
+	else
+		if isIndent then
+			indentLine(cursor.position.line)
+			setCursorPositionAndClearSelection(cursor.position.symbol + mainContainer.codeView.indentationWidth, cursor.position.line)
+		else
+			if unindentLine(cursor.position.line) > 0 then
+				setCursorPositionAndClearSelection(cursor.position.symbol - mainContainer.codeView.indentationWidth, cursor.position.line)
+			end
+		end
 	end
+end
+
+local function updateRAMProgressBar()
+	if not mainContainer.topToolBar.hidden then
+		local totalMemory = computer.totalMemory()
+		mainContainer.RAMUsageProgressBar.value = math.ceil((totalMemory - computer.freeMemory()) / totalMemory * 100)
+	end
+end
+
+local function find()
+	if not mainContainer.bottomToolBar.hidden and mainContainer.bottomToolBar.inputField.text ~= "" then
+		findStartFrom = findStartFrom + 1
 	
-	window.maximize = function(window)
-		window.localPosition.x, window.localPosition.y = 1, 1
-		window:resize(window.parent.width, window.parent.height)
-		MineOSCore.OSDraw()
-	end
+		for line = findStartFrom, #mainContainer.codeView.lines do
+			local whereToFind, whatToFind = mainContainer.codeView.lines[line], mainContainer.bottomToolBar.inputField.text
+			if not mainContainer.bottomToolBar.caseSensitiveButton.pressed then
+				whereToFind, whatToFind = unicode.lower(whereToFind), unicode.lower(whatToFind)
+			end
 
-	window.minimize = function(window)
-		window.hidden = true
-		MineOSCore.OSDraw()
-	end
+			local success, starting, ending = pcall(string.unicodeFind, whereToFind, whatToFind)
+			if success then
+				if starting then
+					mainContainer.codeView.selections[1] = {
+						from = {symbol = starting, line = line},
+						to = {symbol = ending, line = line},
+						color = 0xCC9200
+					}
+					findStartFrom = line
+					gotoLine(line)
+					return
+				end
+			else
+				GUI.error("Wrong searching regex")
+			end
+		end
 
-	if window.actionButtons then
-		window.actionButtons.close.onTouch = function()
-			window.close(window)
-		end
-		window.actionButtons.maximize.onTouch = function()
-			window.maximize(window)
-		end
-		window.actionButtons.minimize.onTouch = function()
-			window.minimize(window)
-		end
+		findStartFrom = 0
 	end
-
-	return MineOSCore.OSMainContainer, window
 end
 
------------------------------------------------------------------------------------------------------------------------------------
-
-local function addKeyAndValue(window, x, y, key, value)
-	x = x + window:addChild(GUI.label(x, y, unicode.len(key) + 1, 1, 0x333333, key .. ":")).width + 1
-	return window:addChild(GUI.label(x, y, unicode.len(value), 1, 0x555555, value))
+local function findFromFirstDisplayedLine()
+	findStartFrom = mainContainer.codeView.fromLine
+	find()
 end
 
-function MineOSCore.propertiesWindow(x, y, width, icon)
-	local mainContainer, window = MineOSCore.addWindow(GUI.titledWindow(x, y, width, 1, package.loaded.MineOSCore.localization.properties))
+local function toggleBottomToolBar()
+	mainContainer.bottomToolBar.hidden = not mainContainer.bottomToolBar.hidden
+	mainContainer.toggleBottomToolBarButton.pressed = not mainContainer.bottomToolBar.hidden
+	calculateSizes()
+		
+	if not mainContainer.bottomToolBar.hidden then
+		mainContainer:draw()
+		mainContainer.bottomToolBar.inputField:startInput()
+		findFromFirstDisplayedLine()
+	end
+end
 
-	-- window.backgroundPanel.colors.transparency = 25
-	window:addChild(GUI.image(2, 3, icon.image))
+local function toggleTopToolBar()
+	mainContainer.topToolBar.hidden = not mainContainer.topToolBar.hidden
+	mainContainer.toggleTopToolBarButton.pressed = not mainContainer.topToolBar.hidden
+	calculateSizes()
+end
 
-	local x, y = 11, 3
-	addKeyAndValue(window, x, y, package.loaded.MineOSCore.localization.type, icon.extension and icon.extension or (icon.isDirectory and package.loaded.MineOSCore.localization.folder or package.loaded.MineOSCore.localization.unknown)); y = y + 1
-	local fileSizeLabel = addKeyAndValue(window, x, y, package.loaded.MineOSCore.localization.size, icon.isDirectory and package.loaded.MineOSCore.localization.calculatingSize or string.format("%.2f", fs.size(icon.path) / 1024) .. " KB"); y = y + 1
-	addKeyAndValue(window, x, y, package.loaded.MineOSCore.localization.date, os.date("%d.%m.%y, %H:%M", math.floor(fs.lastModified(icon.path) / 1000))); y = y + 1
-	addKeyAndValue(window, x, y, package.loaded.MineOSCore.localization.path, " ")
+local function toggleLeftToolBar()
+	mainContainer.leftTreeView.hidden = not mainContainer.leftTreeView.hidden
+	mainContainer.toggleLeftToolBarButton.pressed = not mainContainer.leftTreeView.hidden
+	calculateSizes()
+end
 
-	local textBox = window:addChild(GUI.textBox(17, y, window.width - 18, 1, nil, 0x555555, {icon.path}, 1, 0, 0, true, true))
-	window:resize(window.width, textBox.y + textBox.height)
-	textBox.eventHandler = nil
-
-	mainContainer:draw()
-	buffer.draw()
-
-	if icon.isDirectory then
-		fileSizeLabel.text = string.format("%.2f", fs.directorySize(icon.path) / 1024) .. " KB"
+local function createEditOrRightClickMenu(x, y)
+	local editOrRightClickMenu = GUI.contextMenu(x, y)
+	editOrRightClickMenu:addItem(localization.cut, not mainContainer.codeView.selections[1], "^X").onTouch = function()
+		cut()
+	end
+	editOrRightClickMenu:addItem(localization.copy, not mainContainer.codeView.selections[1], "^C").onTouch = function()
+		copy()
+	end
+	editOrRightClickMenu:addItem(localization.paste, not clipboard, "^V").onTouch = function()
+		paste(clipboard)
+	end
+	editOrRightClickMenu:addSeparator()
+	editOrRightClickMenu:addItem(localization.comment, false, "^/").onTouch = function()
+		toggleComment()
+	end
+	editOrRightClickMenu:addItem(localization.indent, false, "Tab").onTouch = function()
+		indentOrUnindent(true)
+	end
+	editOrRightClickMenu:addItem(localization.unindent, false, "⇧Tab").onTouch = function()
+		indentOrUnindent(false)
+	end
+	editOrRightClickMenu:addItem(localization.deleteLine, false, "^Del").onTouch = function()
+		deleteLine(cursor.position.line)
+	end
+	editOrRightClickMenu:addSeparator()
+	editOrRightClickMenu:addItem(localization.addBreakpoint, false, "F9").onTouch = function()
+		addBreakpoint()
 		mainContainer:draw()
 		buffer.draw()
 	end
+	editOrRightClickMenu:addItem(localization.clearBreakpoints, not breakpointLines, "^F9").onTouch = function()
+		clearBreakpoints()
+	end
+	editOrRightClickMenu:addSeparator()
+	editOrRightClickMenu:addItem(localization.selectAndPasteColor, false, "^⇧C").onTouch = function()
+		selectAndPasteColor()
+	end
+	editOrRightClickMenu:addItem(localization.selectWord).onTouch = function()
+		selectWord()
+	end
+	editOrRightClickMenu:addItem(localization.selectAll, false, "^A").onTouch = function()
+		selectAll()
+	end
+	editOrRightClickMenu:show()
 end
 
------------------------------------------------------------------------------------------------------------------------------------
-
-local function GUICopy(parentContainer, fileList, toPath)
-	local applyYes, breakRecursion
-
-	local container = MineOSCore.addUniversalContainer(parentContainer, MineOSCore.localization.copying)
-	local textBox = container.layout:addChild(GUI.textBox(1, 1, container.width, 1, nil, 0x777777, {}, 1, 0, 0, true, true):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top))
-	local switchAndLabel = container.layout:addChild(GUI.switchAndLabel(1, 1, 37, 8, 0x66DB80, 0x2D2D2D, 0xEEEEEE, 0x777777, MineOSCore.localization.applyToAll .. ":", false))
-	container.panel.eventHandler = nil
-
-	local buttonsLayout = container.layout:addChild(GUI.layout(1, 1, 1, 1, 1, 1))
-	buttonsLayout:addChild(GUI.button(1, 1, 11, 1, 0xEEEEEE, 0x262626, 0xAAAAAA, 0x262626, MineOSCore.localization.yes)).onTouch = function()
-		applyYes = true
-		parentContainer:stopEventHandling()
-	end
-	buttonsLayout:addChild(GUI.button(1, 1, 11, 1, 0xEEEEEE, 0x262626, 0xAAAAAA, 0x262626, MineOSCore.localization.no)).onTouch = function()
-		parentContainer:stopEventHandling()
-	end
-	buttonsLayout:addChild(GUI.button(1, 1, 11, 1, 0xEEEEEE, 0x262626, 0xAAAAAA, 0x262626, MineOSCore.localization.cancel)).onTouch = function()
-		breakRecursion = true
-		parentContainer:stopEventHandling()
-	end
-	buttonsLayout:setCellDirection(1, 1, GUI.directions.horizontal)
-	buttonsLayout:setCellSpacing(1, 1, 2)
-	buttonsLayout:fitToChildrenSize(1, 1)
-
-	local function copyOrMove(path, finalPath)
-		switchAndLabel.hidden = true
-		buttonsLayout.hidden = true
-
-		textBox.lines = {
-			MineOSCore.localization.copying .. " " .. MineOSCore.localization.faylaBlyad .. " " .. fs.name(path) .. " " .. MineOSCore.localization.toDirectory .. " " .. string.canonicalPath(toPath),
-		}
-		textBox.height = #textBox.lines
-
-		parentContainer:draw()
-		buffer.draw()
-
-		fs.remove(finalPath)
-		fs.copy(path, finalPath)
-	end
-
-	local function recursiveCopy(path, toPath)
-		local finalPath = toPath .. "/" .. fs.name(path)
-
-		if fs.isDirectory(path) then
-			fs.makeDirectory(finalPath)
-
-			for file in fs.list(path) do
-				if breakRecursion then
-					return
-				end
-				recursiveCopy(path .. "/" .. file, finalPath)
-			end
-		else
-			if fs.exists(finalPath) then
-				if not switchAndLabel.switch.state then
-					switchAndLabel.hidden = false
-					buttonsLayout.hidden = false
-					applyYes = false
-
-					textBox.lines = {
-						MineOSCore.localization.file .. " " .. fs.name(path) .. " " .. MineOSCore.localization.alreadyExists .. " " ..  MineOSCore.localization.inDirectory .. " " .. string.canonicalPath(toPath),
-						MineOSCore.localization.needReplace,
-					}
-					textBox.height = #textBox.lines
-
-					parentContainer:draw()
-					buffer.draw()
-					
-					parentContainer:startEventHandling()
-
-					parentContainer:draw()
-					buffer.draw()
-				end
-
-				if applyYes then
-					copyOrMove(path, finalPath)
-				end
-			else
-				copyOrMove(path, finalPath)
-			end
+local function tick()
+	updateTitle()
+	updateRAMProgressBar()
+	mainContainer:draw()
+	
+	if cursor.blinkState and mainContainer.settingsContainer.hidden then
+		local x, y = convertTextPositionToScreenCoordinates(cursor.position.symbol, cursor.position.line)
+		if
+			x >= mainContainer.codeView.codeAreaPosition + 1 and
+			y >= mainContainer.codeView.y and
+			x <= mainContainer.codeView.codeAreaPosition + mainContainer.codeView.codeAreaWidth - 2 and
+			y <= mainContainer.codeView.y + mainContainer.codeView.height - 2
+		then
+			buffer.text(x, y, config.cursorColor, config.cursorSymbol)
 		end
 	end
 
-	for i = 1, #fileList do
-		recursiveCopy(fileList[i], toPath)
-	end
-
-	container:delete()
-	parentContainer:draw()
 	buffer.draw()
 end
 
-function MineOSCore.copy(what, toPath)
-	if type(what) == "string" then
-		what = {what}
+local function createMainContainer()
+	mainContainer = GUI.fullScreenContainer()
+	
+	mainContainer.codeView = mainContainer:addChild(GUI.codeView(1, 1, 1, 1, {""}, 1, 1, 1, {}, {}, config.highlightLuaSyntax, 2))
+	mainContainer.codeView.scrollBars.vertical.onTouch = function()
+		mainContainer.codeView.fromLine = mainContainer.codeView.scrollBars.vertical.value
+	end
+	mainContainer.codeView.scrollBars.horizontal.onTouch = function()
+		mainContainer.codeView.fromSymbol = mainContainer.codeView.scrollBars.horizontal.value
 	end
 
-	GUICopy(MineOSCore.OSMainContainer, what, toPath)
+	mainContainer.topMenu = mainContainer:addChild(GUI.menu(1, 1, 1, colors.topMenu.backgroundColor, colors.topMenu.textColor, colors.topMenu.backgroundPressedColor, colors.topMenu.textPressedColor))
+	
+	local item1 = mainContainer.topMenu:addItem("MineCode", 0x0)
+	item1.onTouch = function()
+		local menu = GUI.contextMenu(item1.x, item1.y + 1)
+		menu:addItem(localization.about).onTouch = function()
+			mainContainer.settingsContainer.hidden = false
+			local y = math.floor(mainContainer.settingsContainer.height / 2 - #about / 2)
+			mainContainer.settingsContainer:addChild(GUI.textBox(1, y, mainContainer.settingsContainer.width, #about, nil, 0xEEEEEE, about, 1)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+		end
+		menu:addItem(localization.quit, false, "^W").onTouch = function()
+			mainContainer:stopEventHandling()
+		end
+		menu:show()
+	end
+
+	local item2 = mainContainer.topMenu:addItem(localization.file)
+	item2.onTouch = function()
+		local menu = GUI.contextMenu(item2.x, item2.y + 1)
+		menu:addItem(localization.new, false, "^N").onTouch = function()
+			newFile()
+			mainContainer:draw()
+			buffer.draw()
+		end
+		menu:addItem(localization.open, false, "^O").onTouch = function()
+			openFileWindow()
+		end
+		if component.isAvailable("internet") then
+			menu:addItem(localization.getFromWeb, false, "^U").onTouch = function()
+				downloadFileFromWeb()
+			end
+		end
+		menu:addSeparator()
+		menu:addItem(localization.save, not mainContainer.leftTreeView.currentFile, "^S").onTouch = function()
+			saveFileWindow()
+		end
+		menu:addItem(localization.saveAs, false, "^⇧S").onTouch = function()
+			saveFileAsWindow()
+		end
+		menu:show()
+	end
+
+	local item3 = mainContainer.topMenu:addItem(localization.edit)
+	item3.onTouch = function()
+		createEditOrRightClickMenu(item3.x, item3.y + 1)
+	end
+
+	local item4 = mainContainer.topMenu:addItem(localization.properties)
+	item4.onTouch = function()
+		local menu = GUI.contextMenu(item4.x, item4.y + 1)
+		menu:addItem(localization.colorScheme).onTouch = function()
+			mainContainer.settingsContainer.hidden = false
+			
+			local colorSelectorsCount, colorSelectorCountX = 0, 4; for key in pairs(config.syntaxColorScheme) do colorSelectorsCount = colorSelectorsCount + 1 end
+			local colorSelectorCountY = math.ceil(colorSelectorsCount / colorSelectorCountX)
+			local colorSelectorWidth, colorSelectorHeight, colorSelectorSpaceX, colorSelectorSpaceY = math.floor(mainContainer.settingsContainer.width / colorSelectorCountX * 0.8), 3, 2, 1
+			
+			local startX, y = math.floor(mainContainer.settingsContainer.width / 2 - (colorSelectorCountX * (colorSelectorWidth + colorSelectorSpaceX) - colorSelectorSpaceX) / 2), math.floor(mainContainer.settingsContainer.height / 2 - (colorSelectorCountY * (colorSelectorHeight + colorSelectorSpaceY) - colorSelectorSpaceY + 3) / 2)
+			mainContainer.settingsContainer:addChild(GUI.label(1, y, mainContainer.settingsContainer.width, 1, 0xFFFFFF, localization.colorScheme)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); y = y + 3
+			local x, counter = startX, 1
+
+			local colors = {}
+			for key in pairs(config.syntaxColorScheme) do
+				table.insert(colors, {key})
+			end
+
+			aplhabeticalSort(colors)
+
+			for i = 1, #colors do
+				local colorSelector = mainContainer.settingsContainer:addChild(GUI.colorSelector(x, y, colorSelectorWidth, colorSelectorHeight, config.syntaxColorScheme[colors[i][1]], colors[i][1]))
+				colorSelector.onTouch = function()
+					config.syntaxColorScheme[colors[i][1]] = colorSelector.color
+					syntax.colorScheme = config.syntaxColorScheme
+					saveConfig()
+				end
+
+				x, counter = x + colorSelectorWidth + colorSelectorSpaceX, counter + 1
+				if counter > colorSelectorCountX then
+					x, y, counter = startX, y + colorSelectorHeight + colorSelectorSpaceY, 1
+				end
+			end
+		end
+		menu:addItem(localization.cursorProperties).onTouch = function()
+			mainContainer.settingsContainer.hidden = false
+
+			local elementWidth = math.floor(mainContainer.width * 0.3)
+			local x, y = math.floor(mainContainer.width / 2 - elementWidth / 2), math.floor(mainContainer.height / 2) - 7
+			mainContainer.settingsContainer:addChild(GUI.label(1, y, mainContainer.settingsContainer.width, 1, 0xFFFFFF, localization.cursorProperties)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); y = y + 3
+			local inputField = mainContainer.settingsContainer:addChild(GUI.inputField(x, y, elementWidth, 3, 0xCCCCCC, 0x777777, 0x777777, 0xCCCCCC, 0x2D2D2D, config.cursorSymbol, localization.cursorSymbol)); y = y + 5
+			inputField.validator = function(text)
+				if unicode.len(text) == 1 then return true end
+			end
+			inputField.onInputFinished = function()
+				config.cursorSymbol = inputField.text; saveConfig()
+			end
+			local colorSelector = mainContainer.settingsContainer:addChild(GUI.colorSelector(x, y, elementWidth, 3, config.cursorColor, localization.cursorColor)); y = y + 5
+			colorSelector.onTouch = function()
+				config.cursorColor = colorSelector.color; saveConfig()
+			end
+			local horizontalSlider = mainContainer.settingsContainer:addChild(GUI.slider(x, y, elementWidth, 0xFFDB80, 0x000000, 0xFFDB40, 0xDDDDDD, 1, 1000, config.cursorBlinkDelay * 1000, false, localization.cursorBlinkDelay .. ": ", " ms"))
+			horizontalSlider.onValueChanged = function()
+				config.cursorBlinkDelay = horizontalSlider.value / 1000; saveConfig()
+			end
+		end
+
+		if mainContainer.topToolBar.hidden then
+			menu:addItem(localization.toggleTopToolBar).onTouch = function()
+				toggleTopToolBar()
+			end
+		end
+		menu:addSeparator()
+		menu:addItem(config.enableAutoBrackets and localization.disableAutoBrackets or localization.enableAutoBrackets, false, "^]").onTouch = function()
+			config.enableAutoBrackets = not config.enableAutoBrackets
+			saveConfig()
+		end
+		menu:addItem(config.enableAutocompletion and localization.disableAutocompletion or localization.enableAutocompletion, false, "^I").onTouch = function()
+			toggleEnableAutocompleteDatabase()
+		end
+		menu:addSeparator()
+		menu:addItem(localization.changeResolution, false, "^R").onTouch = function()
+			changeResolutionWindow()
+		end
+		menu:show()
+	end
+
+	local item5 = mainContainer.topMenu:addItem(localization.gotoCyka)
+	item5.onTouch = function()
+		local menu = GUI.contextMenu(item5.x, item5.y + 1)
+		menu:addItem(localization.pageUp, false, "PgUp").onTouch = function()
+			pageUp()
+		end
+		menu:addItem(localization.pageDown, false, "PgDn").onTouch = function()
+			pageDown()
+		end
+		menu:addItem(localization.gotoStart, false, "Home").onTouch = function()
+			setCursorPositionToHome()
+		end
+		menu:addItem(localization.gotoEnd, false, "End").onTouch = function()
+			setCursorPositionToEnd()
+		end
+		menu:addSeparator()
+		menu:addItem(localization.gotoLine, false, "^L").onTouch = function()
+			gotoLineWindow()
+		end
+		menu:show()
+	end
+
+	mainContainer.topToolBar = mainContainer:addChild(GUI.container(1, 2, 1, 3))
+	mainContainer.topToolBar.backgroundPanel = mainContainer.topToolBar:addChild(GUI.panel(1, 1, 1, 3, colors.topToolBar))
+	mainContainer.titleTextBox = mainContainer.topToolBar:addChild(GUI.textBox(1, 1, 1, 3, 0x0, 0x0, {}, 1):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top))
+	local titleTextBoxOldDraw = mainContainer.titleTextBox.draw
+	mainContainer.titleTextBox.draw = function(titleTextBox)
+		titleTextBoxOldDraw(titleTextBox)
+		local sidesColor = mainContainer.errorContainer.hidden and colors.title.default.sides or colors.title.onError.sides
+		buffer.square(titleTextBox.x, titleTextBox.y, 1, titleTextBox.height, sidesColor, titleTextBox.colors.text, " ")
+		buffer.square(titleTextBox.x + titleTextBox.width - 1, titleTextBox.y, 1, titleTextBox.height, sidesColor, titleTextBox.colors.text, " ")
+	end
+
+	mainContainer.RAMUsageProgressBar = mainContainer.topToolBar:addChild(GUI.progressBar(1, 2, 1, 0x777777, 0xBBBBBB, 0xAAAAAA, 50, true, true, "RAM: ", "%"))
+
+	--☯◌☺
+	mainContainer.addBreakpointButton = mainContainer.topToolBar:addChild(GUI.adaptiveButton(1, 1, 3, 1, 0x878787, 0xEEEEEE, 0xCCCCCC, 0x444444, "x"))
+	mainContainer.addBreakpointButton.onTouch = function()
+		addBreakpoint()
+		mainContainer:draw()
+		buffer.draw()
+	end
+
+	mainContainer.toggleSyntaxHighlightingButton = mainContainer.topToolBar:addChild(GUI.adaptiveButton(1, 1, 3, 1, 0xCCCCCC, 0x444444, 0x696969, 0xEEEEEE, "◌"))
+	mainContainer.toggleSyntaxHighlightingButton.switchMode, mainContainer.toggleSyntaxHighlightingButton.pressed = true, true
+	mainContainer.toggleSyntaxHighlightingButton.onTouch = function()
+		mainContainer.codeView.highlightLuaSyntax = not mainContainer.codeView.highlightLuaSyntax
+		config.highlightLuaSyntax = mainContainer.codeView.highlightLuaSyntax
+		saveConfig()
+		mainContainer:draw()
+		buffer.draw()
+	end
+
+	mainContainer.runButton = mainContainer.topToolBar:addChild(GUI.adaptiveButton(1, 1, 3, 1, 0x4B4B4B, 0xEEEEEE, 0xCCCCCC, 0x444444, "▷"))
+	mainContainer.runButton.onTouch = function()
+		run()
+	end
+
+	mainContainer.toggleLeftToolBarButton = mainContainer.topToolBar:addChild(GUI.adaptiveButton(1, 1, 3, 1, 0xCCCCCC, 0x444444, 0x4B4B4B, 0xEEEEEE, "⇦"))
+	mainContainer.toggleLeftToolBarButton.switchMode, mainContainer.toggleLeftToolBarButton.pressed = true, true
+	mainContainer.toggleLeftToolBarButton.onTouch = function()
+		mainContainer.leftTreeView.hidden = not mainContainer.toggleLeftToolBarButton.pressed
+		calculateSizes()
+		mainContainer:draw()
+		buffer.draw()
+	end
+
+	mainContainer.toggleBottomToolBarButton = mainContainer.topToolBar:addChild(GUI.adaptiveButton(1, 1, 3, 1, 0xCCCCCC, 0x444444, 0x696969, 0xEEEEEE, "⇩"))
+	mainContainer.toggleBottomToolBarButton.switchMode, mainContainer.toggleBottomToolBarButton.pressed = true, false
+	mainContainer.toggleBottomToolBarButton.onTouch = function()
+		mainContainer.bottomToolBar.hidden = not mainContainer.toggleBottomToolBarButton.pressed
+		calculateSizes()
+		mainContainer:draw()
+		buffer.draw()
+	end
+
+	mainContainer.toggleTopToolBarButton = mainContainer.topToolBar:addChild(GUI.adaptiveButton(1, 1, 3, 1, 0xCCCCCC, 0x444444, 0x878787, 0xEEEEEE, "⇧"))
+	mainContainer.toggleTopToolBarButton.switchMode, mainContainer.toggleTopToolBarButton.pressed = true, true
+	mainContainer.toggleTopToolBarButton.onTouch = function()
+		mainContainer.topToolBar.hidden = not mainContainer.toggleTopToolBarButton.pressed
+		calculateSizes()
+		mainContainer:draw()
+		buffer.draw()
+	end
+
+	mainContainer.bottomToolBar = mainContainer:addChild(GUI.container(1, 1, 1, 3))
+	mainContainer.bottomToolBar.caseSensitiveButton = mainContainer.bottomToolBar:addChild(GUI.adaptiveButton(1, 1, 2, 1, 0x3C3C3C, 0xEEEEEE, 0xBBBBBB, 0x2D2D2D, "Aa"))
+	mainContainer.bottomToolBar.caseSensitiveButton.switchMode = true
+	mainContainer.bottomToolBar.onTouch = function()
+		find()
+	end
+	mainContainer.bottomToolBar.inputField = mainContainer.bottomToolBar:addChild(GUI.inputField(7, 1, 10, 3, 0xCCCCCC, 0x999999, 0x999999, 0xCCCCCC, 0x2D2D2D, "", localization.findSomeShit))
+	mainContainer.bottomToolBar.inputField.onInputFinished = function()
+		findFromFirstDisplayedLine()
+	end
+	mainContainer.bottomToolBar.findButton = mainContainer.bottomToolBar:addChild(GUI.adaptiveButton(1, 1, 3, 1, 0x3C3C3C, 0xEEEEEE, 0xBBBBBB, 0x2D2D2D, localization.find))
+	mainContainer.bottomToolBar.findButton.onTouch = function()
+		find()
+	end
+	mainContainer.bottomToolBar.hidden = true
+
+	mainContainer.leftTreeView = mainContainer:addChild(GUI.treeView(1, 1, 1, 1, 0xCCCCCC, 0x3C3C3C, 0x3C3C3C, 0x999999, 0x3C3C3C, 0xE1E1E1, 0xBBBBBB, 0xAAAAAA, 0xC3C3C3, 0x444444, "/"))
+	mainContainer.leftTreeView.onItemSelected = function(path)
+		loadFile(path)
+		mainContainer:draw()
+		buffer.draw()
+	end
+
+	mainContainer.errorContainer = mainContainer:addChild(GUI.container(1, 1, 1, 1))
+	mainContainer.errorContainer.backgroundPanel = mainContainer.errorContainer:addChild(GUI.panel(1, 1, 1, 1, 0xFFFFFF, 30))
+	mainContainer.errorContainer.errorTextBox = mainContainer.errorContainer:addChild(GUI.textBox(3, 2, 1, 1, nil, 0x4B4B4B, {}, 1))
+	mainContainer.errorContainer.breakpointExitButton = mainContainer.errorContainer:addChild(GUI.button(1, 1, 1, 1, 0x3C3C3C, 0xCCCCCC, 0x2D2D2D, 0x888888, localization.finishDebug))
+	mainContainer.errorContainer.breakpointContinueButton = mainContainer.errorContainer:addChild(GUI.button(1, 1, 1, 1, 0x444444, 0xCCCCCC, 0x2D2D2D, 0x888888, localization.continueDebug))
+	mainContainer.errorContainer.breakpointExitButton.onTouch = hideErrorContainer
+	mainContainer.errorContainer.breakpointContinueButton.onTouch = continue
+	hideErrorContainer()
+
+	mainContainer.settingsContainer = mainContainer:addChild(GUI.container(1, 1, 1, 1))
+	mainContainer.settingsContainer.backgroundPanel = mainContainer.settingsContainer:addChild(GUI.panel(1, 1, mainContainer.settingsContainer.width, mainContainer.settingsContainer.height, 0x0, 30))
+	mainContainer.settingsContainer.backgroundPanel.eventHandler = function(mainContainer, object, eventData)
+		if eventData[1] == "touch" then
+			hideSettingsContainer()
+		end
+	end
+	mainContainer.settingsContainer.hidden = true
+	
+	mainContainer.autocompleteWindow = mainContainer:addChild(GUI.object(1, 1, 40, 1))
+	mainContainer.autocompleteWindow.maximumHeight = 8
+	mainContainer.autocompleteWindow.matches = {}
+	mainContainer.autocompleteWindow.fromMatch = 1
+	mainContainer.autocompleteWindow.currentMatch = 1
+	mainContainer.autocompleteWindow.hidden = true
+	mainContainer.autocompleteWindow.draw = function(object)
+		mainContainer.autocompleteWindow.x, mainContainer.autocompleteWindow.y = convertTextPositionToScreenCoordinates(mainContainer.autocompleteWindow.currentWordStarting, cursor.position.line)
+		mainContainer.autocompleteWindow.x, mainContainer.autocompleteWindow.y = mainContainer.autocompleteWindow.x, mainContainer.autocompleteWindow.y + 1
+
+		object.height = object.maximumHeight
+		if object.height > #object.matches then object.height = #object.matches end
+		
+		buffer.square(object.x, object.y, object.width, object.height, 0xFFFFFF, 0x0, " ")
+
+		local y = object.y
+		for i = object.fromMatch, #object.matches do
+			local firstColor, secondColor = 0x3C3C3C, 0x999999
+			
+			if i == object.currentMatch then
+				buffer.square(object.x, y, object.width, 1, 0x2D2D2D, 0xEEEEEE, " ")
+				firstColor, secondColor = 0xEEEEEE, 0x999999
+			end
+
+			buffer.text(object.x + 1, y, secondColor, unicode.sub(object.matches[i][1], 1, object.width - 2))
+			buffer.text(object.x + 1, y, firstColor, unicode.sub(object.matches[i][2], 1, object.width - 2))
+
+			y = y + 1
+			if y > object.y + object.height - 1 then break end
+		end
+
+		if object.height < #object.matches then
+			GUI.scrollBar(object.x + object.width - 1, object.y, 1, object.height, 0x444444, 0x00DBFF, 1, #object.matches, object.currentMatch, object.height, 1, true):draw()
+		end
+	end
+
+	mainContainer.codeView.eventHandler = function(mainContainer, object, eventData)
+		if eventData[1] == "touch" then
+			if eventData[5] == 1 then
+				createEditOrRightClickMenu(eventData[3], eventData[4])
+			else
+				setCursorPositionAndClearSelection(convertScreenCoordinatesToTextPosition(eventData[3], eventData[4]))
+			end
+
+			cursor.blinkState = true
+			tick()
+		elseif eventData[1] == "double_touch" then
+			cursor.blinkState = true
+			selectWord()
+			
+			mainContainer:draw()
+			buffer.draw()
+		elseif eventData[1] == "drag" then
+			if eventData[5] ~= 1 then
+				mainContainer.codeView.selections[1] = mainContainer.codeView.selections[1] or {from = {}, to = {}}
+				mainContainer.codeView.selections[1].from.symbol, mainContainer.codeView.selections[1].from.line = cursor.position.symbol, cursor.position.line
+				mainContainer.codeView.selections[1].to.symbol, mainContainer.codeView.selections[1].to.line = fixCursorPosition(convertScreenCoordinatesToTextPosition(eventData[3], eventData[4]))
+				
+				if mainContainer.codeView.selections[1].from.line > mainContainer.codeView.selections[1].to.line then
+					mainContainer.codeView.selections[1].from.line, mainContainer.codeView.selections[1].to.line = swap(mainContainer.codeView.selections[1].from.line, mainContainer.codeView.selections[1].to.line)
+					mainContainer.codeView.selections[1].from.symbol, mainContainer.codeView.selections[1].to.symbol = swap(mainContainer.codeView.selections[1].from.symbol, mainContainer.codeView.selections[1].to.symbol)
+				elseif mainContainer.codeView.selections[1].from.line == mainContainer.codeView.selections[1].to.line then
+					if mainContainer.codeView.selections[1].from.symbol > mainContainer.codeView.selections[1].to.symbol then
+						mainContainer.codeView.selections[1].from.symbol, mainContainer.codeView.selections[1].to.symbol = swap(mainContainer.codeView.selections[1].from.symbol, mainContainer.codeView.selections[1].to.symbol)
+					end
+				end
+			end
+
+			cursor.blinkState = true
+			tick()
+		elseif eventData[1] == "key_down" then
+			-- Ctrl or CMD
+			if keyboard.isKeyDown(29) or keyboard.isKeyDown(219) then
+				-- Slash
+				if eventData[4] == 53 then
+					toggleComment()
+				-- ]
+				elseif eventData[4] == 27 then
+					config.enableAutoBrackets = not config.enableAutoBrackets
+					saveConfig()
+				-- I
+				elseif eventData[4] == 23 then
+					toggleEnableAutocompleteDatabase()
+				-- A
+				elseif eventData[4] == 30 then
+					selectAll()
+				-- C
+				elseif eventData[4] == 46 then
+					-- Shift
+					if keyboard.isKeyDown(42) then
+						selectAndPasteColor()
+					else
+						copy()
+					end
+				-- V
+				elseif eventData[4] == 47 then
+					paste(clipboard)
+				-- X
+				elseif eventData[4] == 45 then
+					cut()
+				-- W
+				elseif eventData[4] == 17 then
+					mainContainer:stopEventHandling()
+				-- N
+				elseif eventData[4] == 49 then
+					newFile()
+				-- O
+				elseif eventData[4] == 24 then
+					openFileWindow()
+				-- U
+				elseif eventData[4] == 22 and component.isAvailable("internet") then
+					downloadFileFromWeb()
+				-- S
+				elseif eventData[4] == 31 then
+					-- Shift
+					if mainContainer.leftTreeView.currentFile and not keyboard.isKeyDown(42) then
+						saveFileWindow()
+					else
+						saveFileAsWindow()
+					end
+				-- F
+				elseif eventData[4] == 33 then
+					toggleBottomToolBar()
+				-- G
+				elseif eventData[4] == 34 then
+					find()
+				-- L
+				elseif eventData[4] == 38 then
+					gotoLineWindow()
+				-- Backspace
+				elseif eventData[4] == 14 then
+					deleteLine(cursor.position.line)
+				-- Delete
+				elseif eventData[4] == 211 then
+					deleteLine(cursor.position.line)
+				-- R
+				elseif eventData[4] == 19 then
+					changeResolutionWindow()
+				end
+			-- Arrows up, down, left, right
+			elseif eventData[4] == 200 then
+				moveCursor(0, -1)
+			elseif eventData[4] == 208 then
+				moveCursor(0, 1)
+			elseif eventData[4] == 203 then
+				moveCursor(-1, 0)
+			elseif eventData[4] == 205 then
+				moveCursor(1, 0)
+			-- Backspace
+			elseif eventData[4] == 14 then
+				backspace()
+			-- Tab
+			elseif eventData[4] == 15 then
+				if keyboard.isKeyDown(42) then
+					indentOrUnindent(false)
+				else
+					indentOrUnindent(true)
+				end
+			-- Enter
+			elseif eventData[4] == 28 then
+				if mainContainer.autocompleteWindow.hidden then
+					enter()
+				else
+					pasteSelectedAutocompletion()
+				end
+			-- F5
+			elseif eventData[4] == 63 then
+				run()
+			-- F9
+			elseif eventData[4] == 67 then
+				-- Shift
+				if keyboard.isKeyDown(42) then
+					clearBreakpoints()
+				else
+					addBreakpoint()
+				end
+			-- Home
+			elseif eventData[4] == 199 then
+				setCursorPositionToHome()
+			-- End
+			elseif eventData[4] == 207 then
+				setCursorPositionToEnd()
+			-- Page Up
+			elseif eventData[4] == 201 then
+				pageUp()
+			-- Page Down
+			elseif eventData[4] == 209 then
+				pageDown()
+			-- Delete
+			elseif eventData[4] == 211 then
+				delete()
+			else
+				pasteAutoBrackets(eventData[3])
+			end
+
+			cursor.blinkState = true
+			tick()
+		elseif eventData[1] == "scroll" then
+			scroll(eventData[5], config.scrollSpeed)
+			tick()
+		elseif eventData[1] == "clipboard" then
+			paste(splitStringIntoLines(eventData[3]))
+			tick()
+		elseif not eventData[1] then
+			cursor.blinkState = not cursor.blinkState
+			tick()
+		end
+	end
 end
 
------------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------- RUSH B! ----------------------------------------------------
 
-function MineOSCore.init()
-	MineOSCore.icons = {}
-	MineOSCore.loadOSSettings()
-	MineOSCore.localization = table.fromFile(MineOSCore.paths.localizationFiles .. MineOSCore.OSSettings.language .. ".lang")
-	fs.makeDirectory(MineOSCore.paths.trash)
+loadConfig()
+createMainContainer()
+changeResolution(config.screenResolution.width, config.screenResolution.height)
+updateTitle()
+updateRAMProgressBar()
+mainContainer:draw()
 
-	MineOSCore.OSSettings.extensionAssociations = MineOSCore.OSSettings.extensionAssociations or {}
-	MineOSCore.loadIcon("folder", MineOSCore.paths.icons .. "Folder.pic")
-	MineOSCore.loadIcon("fileNotExists", MineOSCore.paths.icons .. "FileNotExists.pic")
-	MineOSCore.loadIcon("application", MineOSCore.paths.icons .. "Application.pic")
-	MineOSCore.loadIcon("trash", MineOSCore.paths.icons .. "Trash.pic")
-	MineOSCore.loadIcon("script", MineOSCore.paths.icons .. "Script.pic")
-
-	MineOSCore.associateExtension(".pic", MineOSCore.paths.applications .. "/Photoshop.app/Main.lua", MineOSCore.paths.icons .. "/Image.pic", MineOSCore.paths.extensionAssociations .. "Pic/ContextMenu.lua")
-	MineOSCore.associateExtension(".txt", MineOSCore.paths.editor, MineOSCore.paths.icons .. "/Text.pic")
-	MineOSCore.associateExtension(".cfg", MineOSCore.paths.editor, MineOSCore.paths.icons .. "/Config.pic")
-	MineOSCore.associateExtension(".3dm", MineOSCore.paths.applications .. "/3DPrint.app/Main.lua", MineOSCore.paths.icons .. "/3DModel.pic")
-
-	MineOSCore.associateExtension("script", MineOSCore.paths.extensionAssociations .. "Lua/Launcher.lua", MineOSCore.paths.icons .. "/Script.pic", MineOSCore.paths.extensionAssociations .. "Lua/ContextMenu.lua")
-	MineOSCore.associateExtension(".lua", MineOSCore.paths.extensionAssociations .. "Lua/Launcher.lua", MineOSCore.paths.icons .. "/Lua.pic", MineOSCore.paths.extensionAssociations .. "Lua/ContextMenu.lua")
-	MineOSCore.associateExtension(".pkg", MineOSCore.paths.extensionAssociations .. "Pkg/Launcher.lua", MineOSCore.paths.icons .. "/Archive.pic")
-
-	MineOSCore.saveOSSettings()
+if args[1] and fs.exists(args[1]) then
+	loadFile(args[1])
+else
+	newFile()
 end
 
------------------------------------------------------------------------------------------------------------------------------------
-
-MineOSCore.init()
-
--- buffer.clear(0x0)
--- buffer.draw(true)
-
--- local cykaContainer = GUI.fullScreenContainer()
--- cykaContainer:addChild(GUI.panel(1, 1, cykaContainer.width, cykaContainer.height, 0xFF0000))
-
--- GUICopy(cykaContainer, "/MineOS/papka/", "/MineOS/mamka/", true)
-
------------------------------------------------------------------------------------------------------------------------------------
-
-return MineOSCore
-
-
-
+mainContainer:draw()
+buffer.draw()
+mainContainer:startEventHandling(config.cursorBlinkDelay)
 
 

@@ -17,6 +17,7 @@
 	yes = "Yes",
 	no = "No",
 	cancel = "Cancel",
+	open = "Open",
 	applyToAll = "Apply to all",
 	toDirectory = "to directory",
 	copying = "Copying",

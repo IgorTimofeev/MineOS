@@ -19,7 +19,7 @@ MineOSCore.iconWidth = 12
 MineOSCore.iconHeight = 6
 MineOSCore.selectionIconPart = 0.4
 MineOSCore.iconClickDelay = 0.2
-MineOSCore.iconConfigFileName = "/.icons"
+MineOSCore.iconConfigFileName = ".icons"
 
 MineOSCore.paths = {}
 MineOSCore.paths.OS = "/MineOS/"
@@ -366,7 +366,7 @@ end
 local function iconFieldLoadIconConfig(iconField)
 	if fs.exists(iconField.workpath .. MineOSCore.iconConfigFileName) then
 		iconField.iconConfig = table.fromFile(iconField.workpath .. MineOSCore.iconConfigFileName)
-
+		
 		-- Чистим конфиг от файлов, которых более нет в иконфилде
 		local iconConfigItemExistsInFileList
 		for key in pairs(iconField.iconConfig) do

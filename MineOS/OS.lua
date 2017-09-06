@@ -190,7 +190,7 @@ end
 local function setProtectionMethod()
 	local container = MineOSCore.addUniversalContainer(MineOSCore.OSMainContainer, MineOSCore.localization.protectYourComputer)
 
-	local comboBox = container.layout:addChild(GUI.comboBox(1, 1, 36, 3, 0xEEEEEE, 0x262626, 0x666666, 0xEEEEEE))
+	local comboBox = container.layout:addChild(GUI.comboBox(1, 1, 36, 3, 0xEEEEEE, 0x262626, 0x444444, 0x999999))
 	comboBox:addItem(MineOSCore.localization.biometricProtection)
 	comboBox:addItem(MineOSCore.localization.passwordProtection)
 	comboBox:addItem(MineOSCore.localization.withoutProtection)
@@ -586,12 +586,17 @@ local function createOSWindow()
 		menu:addItem(MineOSCore.localization.wallpaper).onTouch = function()
 			local container = MineOSCore.addUniversalContainer(MineOSCore.OSMainContainer, MineOSCore.localization.wallpaper)
 
-			local inputField = container.layout:addChild(GUI.inputField(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0x999999, 0xEEEEEE, 0x262626, MineOSCore.OSSettings.wallpaper, MineOSCore.localization.wallpaperPath, false))
-			
-			local label = container.layout:addChild(GUI.label(1, 1, 36, 1, 0xFF4940, MineOSCore.localization.file .. " " .. MineOSCore.localization.notExists)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
-			label.hidden = fs.exists(inputField.text)
+			local filesystemChooser = container.layout:addChild(GUI.filesystemChooser(1, 1, 36, 3, 0xEEEEEE, 0x262626, 0x444444, 0x999999, MineOSCore.localization.open, MineOSCore.localization.cancel, MineOSCore.localization.wallpaperPath, GUI.filesystemModes.file, "/", MineOSCore.OSSettings.wallpaper))
+			filesystemChooser:addExtensionFilter(".pic")
+			filesystemChooser.onItemSelected = function(path)
+				MineOSCore.OSSettings.wallpaper = path
+				MineOSCore.saveOSSettings()
+				changeWallpaper()
 
-			local comboBox = container.layout:addChild(GUI.comboBox(1, 1, 36, 3, 0xEEEEEE, 0x262626, 0x666666, 0xEEEEEE))
+				MineOSCore.OSDraw()
+			end
+
+			local comboBox = container.layout:addChild(GUI.comboBox(1, 1, 36, 3, 0xEEEEEE, 0x262626, 0x444444, 0x999999))
 			comboBox.selectedItem = MineOSCore.OSSettings.wallpaperMode or 1
 			comboBox:addItem(MineOSCore.localization.wallpaperModeStretch)
 			comboBox:addItem(MineOSCore.localization.wallpaperModeCenter)
@@ -606,15 +611,6 @@ local function createOSWindow()
 
 				MineOSCore.OSDraw()
 			end
-			inputField.onInputFinished = function()
-				MineOSCore.OSSettings.wallpaper = inputField.text
-				MineOSCore.saveOSSettings()
-				changeWallpaper()
-
-				label.hidden = fs.exists(inputField.text)
-
-				MineOSCore.OSDraw()
-			end
 			comboBox.onItemSelected = function()
 				MineOSCore.OSSettings.wallpaperMode = comboBox.selectedItem
 				MineOSCore.saveOSSettings()
@@ -626,7 +622,7 @@ local function createOSWindow()
 		menu:addItem(MineOSCore.localization.screensaver).onTouch = function()
 			local container = MineOSCore.addUniversalContainer(MineOSCore.OSMainContainer, MineOSCore.localization.screensaver)
 
-			local comboBox = container.layout:addChild(GUI.comboBox(1, 1, 36, 3, 0xEEEEEE, 0x262626, 0x666666, 0xEEEEEE))
+			local comboBox = container.layout:addChild(GUI.comboBox(1, 1, 36, 3, 0xEEEEEE, 0x262626, 0x444444, 0x999999))
 			local fileList = fs.sortedList(screensaversPath, "name", false)
 			for i = 1, #fileList do
 				comboBox:addItem(fs.hideExtension(fileList[i]))
