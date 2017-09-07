@@ -89,22 +89,6 @@ GUI.colors = {
 			}
 		},
 	},
-	filesystemDialog = {
-		default = {
-			background = 0xE1E1E1,
-			file = 0x3C3C3C,
-			directory = 0x3C3C3C,
-			arrow = 0xAAAAAA
-		},
-		selected = {
-			background = 0x3C3C3C,
-			fileOrDirectory = 0xE1E1E1,
-			arrow = 0xBBBBBB
-		},
-		wrongExtension = 0xAAAAAA,
-		scrollBarBackground = 0xC3C3C3,
-		scrollBarForeground = 0x444444
-	}
 }
 
 ----------------------------------------- Interface objects -----------------------------------------
@@ -330,6 +314,8 @@ local function getRectangleIntersection(R1X1, R1Y1, R1X2, R1Y2, R2X1, R2Y1, R2X2
 			math.max(R2Y1, R1Y1),
 			math.min(R2X2, R1X2),
 			math.min(R2Y2, R1Y2)
+	else
+		return
 	end
 end
 
@@ -339,10 +325,10 @@ end
 
 function GUI.drawContainerContent(container)
 	local R1X1, R1Y1, R1X2, R1Y2 = buffer.getDrawLimit()
-	local x1, y1, x2, y2 = getRectangleIntersection(R1X1, R1Y1, R1X2, R1Y2, container.x, container.y, container.x + container.width - 1, container.y + container.height - 1)
+	local intersectionX1, intersectionY1, intersectionX2, intersectionY2 = getRectangleIntersection(R1X1, R1Y1, R1X2, R1Y2, container.x, container.y, container.x + container.width - 1, container.y + container.height - 1)
 
-	if x1 then
-		buffer.setDrawLimit(x1, y1, x2, y2)
+	if intersectionX1 then
+		buffer.setDrawLimit(intersectionX1, intersectionY1, intersectionX2, intersectionY2)
 		
 		for objectIndex = 1, #container.children do
 			if not container.children[objectIndex].hidden then
@@ -359,21 +345,24 @@ end
 
 local function containerHandler(isScreenEvent, mainContainer, currentContainer, eventData, x1, y1, x2, y2)
 	local breakRecursion = false
-	
+
 	if not isScreenEvent or x1 and eventData[3] >= x1 and eventData[4] >= y1 and eventData[3] <= x2 and eventData[4] <= y2 then
 		for i = #currentContainer.children, 1, -1 do
 			if not currentContainer.children[i].hidden then
 				if currentContainer.children[i].children then
-					if containerHandler(isScreenEvent, mainContainer, currentContainer.children[i], eventData, getRectangleIntersection(
-							x1, y1, x2, y2,
-							currentContainer.children[i].x,
-							currentContainer.children[i].y,
-							currentContainer.children[i].x + currentContainer.children[i].width - 1,
-							currentContainer.children[i].y + currentContainer.children[i].height - 1
-						))
-					then
-						breakRecursion = true
-						break
+					local intersectionX1, intersectionY1, intersectionX2, intersectionY2 = getRectangleIntersection(
+						x1, y1, x2, y2,
+						currentContainer.children[i].x,
+						currentContainer.children[i].y,
+						currentContainer.children[i].x + currentContainer.children[i].width - 1,
+						currentContainer.children[i].y + currentContainer.children[i].height - 1
+					)
+
+					if intersectionX1 then
+						if containerHandler(isScreenEvent, mainContainer, currentContainer.children[i], eventData, intersectionX1, intersectionY1, intersectionX2, intersectionY2) then
+							breakRecursion = true
+							break
+						end
 					end
 				else
 					if isScreenEvent then
@@ -2954,16 +2943,7 @@ function GUI.filesystemDialog(x, y, width, height, submitButtonText, cancelButto
 
 	filesystemDialog.treeView = filesystemDialog:addChild(GUI.treeView(
 		1, 1, width, height - 3,
-		GUI.colors.filesystemDialog.default.background,
-		GUI.colors.filesystemDialog.default.file,
-		GUI.colors.filesystemDialog.default.directory,
-		GUI.colors.filesystemDialog.default.arrow,
-		GUI.colors.filesystemDialog.selected.background,
-		GUI.colors.filesystemDialog.selected.fileOrDirectory,
-		GUI.colors.filesystemDialog.selected.arrow,
-		GUI.colors.filesystemDialog.wrongExtension,
-		GUI.colors.filesystemDialog.scrollBarBackground,
-		GUI.colors.filesystemDialog.scrollBarForeground,
+		0xE1E1E1, 0x3C3C3C, 0x3C3C3C, 0xAAAAAA, 0x3C3C3C, 0xE1E1E1, 0xBBBBBB, 0xAAAAAA, 0xC3C3C3, 0x444444,
 		path
 	))
 
@@ -2971,34 +2951,55 @@ function GUI.filesystemDialog(x, y, width, height, submitButtonText, cancelButto
 	filesystemDialog.setMode = filesystemDialogSetMode
 	filesystemDialog.addExtensionFilter = filesystemDialogAddExtensionFilter
 
-	filesystemDialog:setMode(GUI.filesystemModes.save, GUI.filesystemModes.file)
+	filesystemDialog:setMode(GUI.filesystemModes.open, GUI.filesystemModes.file)
 
 	return filesystemDialog
 end
 
-function GUI.showFilesystemDialog(parentContainer, ...)
+local function filesystemDialogShow(filesystemDialog)
+	filesystemDialog:addAnimation(
+		function(mainContainer, object, animation)
+			object.localPosition.y = math.floor(1 + (1.0 - animation.position) * (-object.height))
+		end,
+		function(mainContainer, switch, animation)
+			animation:delete()
+		end
+	):start(0.5)
+
+	return filesystemDialog
+end
+
+--------------------------------------------------------------------------------------------------------------------------------
+
+function GUI.addFilesystemDialogToContainer(parentContainer, ...)
 	local container = parentContainer:addChild(GUI.container(1, 1, parentContainer.width, parentContainer.height))
 	container:addChild(GUI.object(1, 1, container.width, container.height))
 	
 	local filesystemDialog = container:addChild(GUI.filesystemDialog(1, 1, math.floor(container.width * 0.35), math.floor(container.height * 0.8), ...))
 	filesystemDialog.localPosition.x = math.floor(container.width / 2 - filesystemDialog.width / 2)
+	filesystemDialog.localPosition.y = -filesystemDialog.height
 
-	filesystemDialog.cancelButton.onTouch = function()
+	local function onAnyTouch()
 		local firstParent = filesystemDialog:getFirstParent()
-		filesystemDialog.parent:delete()
+		container:delete()
 		firstParent:draw()
 		buffer.draw()
 	end
 
+	filesystemDialog.cancelButton.onTouch = function()
+		onAnyTouch()
+		callMethod(filesystemDialog.onCancel)
+	end
+
 	filesystemDialog.submitButton.onTouch = function()
-		filesystemDialog.cancelButton.onTouch()
+		onAnyTouch()
 		
 		local path = filesystemDialog.treeView.selectedItem
 		if filesystemDialog.IOMode == GUI.filesystemModes.save then
 			path = path .. filesystemDialog.inputField.text
 			
 			if filesystemDialog.filesystemMode == GUI.filesystemModes.file then
-				path = path ..  filesystemDialog.extensionComboBox:getItem(filesystemDialog.extensionComboBox.selectedItem).text
+				path = path .. filesystemDialog.extensionComboBox:getItem(filesystemDialog.extensionComboBox.selectedItem).text
 			else
 				path = path .. "/"
 			end
@@ -3006,6 +3007,8 @@ function GUI.showFilesystemDialog(parentContainer, ...)
 
 		callMethod(filesystemDialog.onSubmit, path)
 	end
+
+	filesystemDialog.show = filesystemDialogShow
 
 	return filesystemDialog
 end
@@ -3031,27 +3034,38 @@ end
 
 local function filesystemChooserEventHandler(mainContainer, object, eventData)
 	if eventData[1] == "touch" then
-		object.state = true
+		object.pressed = true
+		mainContainer:draw()
+		buffer.draw()
 
-		local filesystemDialog = GUI.showFilesystemDialog(mainContainer, object.submitButtonText, object.cancelButtonText, object.placeholderText, object.filesystemDialogPath)		
+		local filesystemDialog = GUI.addFilesystemDialogToContainer(mainContainer, object.submitButtonText, object.cancelButtonText, object.placeholderText, object.filesystemDialogPath)		
+		
 		for key in pairs(object.extensionFilters) do
 			filesystemDialog:addExtensionFilter(key)
 		end
 		filesystemDialog:setMode(GUI.filesystemModes.open, object.filesystemMode)
+		
+		filesystemDialog.onCancel = function()
+			object.pressed = false
+
+			mainContainer:draw()
+			buffer.draw()
+		end
+
 		filesystemDialog.onSubmit = function(path)
 			object.path = path
+			object.pressed = false
 
 			mainContainer:draw()
 			buffer.draw()
 			callMethod(object.onItemSelected, object.path)
 		end
 
-		mainContainer:draw()
-		buffer.draw()
+		filesystemDialog:show()
 	end
 end
 
-function GUI.filesystemChooser(x, y, width, height, backgroundColor, textColor, tipBackgroundColor, tipTextColor, submitButtonText, cancelButtonText, placeholderText, filesystemMode, filesystemDialogPath, path)
+function GUI.filesystemChooser(x, y, width, height, backgroundColor, textColor, tipBackgroundColor, tipTextColor, path, submitButtonText, cancelButtonText, placeholderText, filesystemMode, filesystemDialogPath)
 	local object = GUI.object(x, y, width, height)
 	
 	object.eventHandler = comboBoxEventHandler
@@ -3094,9 +3108,11 @@ end
 -- 	GUI.error(path)
 -- end
 
--- local chooser = mainContainer:addChild(GUI.filesystemChooser(2, 2, 30, 3, 0xE1E1E1, 0x888888, 0x3C3C3C, 0x888888, "Open", "Cancel", "File name", GUI.filesystemModes.file, "/", "/MineOS/Desktop/Test.pic"))
-
--- chooser:addExtensionFilter(".pic")
+-- local filesystemChooser = mainContainer:addChild(GUI.filesystemChooser(2, 2, 30, 3, 0xE1E1E1, 0x888888, 0x3C3C3C, 0x888888, nil, "Open", "Cancel", "Choose file", GUI.filesystemModes.file, "/"))
+-- filesystemChooser:addExtensionFilter(".cfg")
+-- filesystemChooser.onItemSelected = function(path)
+-- 	GUI.error("File \"" .. path .. "\" was selected")
+-- end
 
 -- mainContainer:draw()
 -- buffer.draw(true)

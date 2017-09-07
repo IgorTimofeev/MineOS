@@ -980,6 +980,7 @@ GUI.**treeView**( x, y, width, height, backgroundColor, textColor, selectionBack
 | Тип свойства | Свойство |Описание |
 | ------ | ------ | ------ |
 | *callback-function* | .**onItemSelected**( *string* path )| Метод, вызываемый после выбора элемента в TreeView. В качестве аргумента передается абсолютный путь выбранного элемента |
+| *function* | :**addExtensionFilter**( *string* extension )| Добавить фильтр на указанное расширение файла. После этого в диалоговом окне пользователь сможет выбирать лишь те файлы, которые имеют соответствующее расширение |
 
 Пример реализации TreeView:
 
@@ -988,6 +989,9 @@ local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 
 ------------------------------------------------------------------------------------------
+
+local mainContainer = GUI.fullScreenContainer()
+mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x262626))
 
 local treeView1 = mainContainer:addChild(GUI.treeView(2, 2, 30, 41, 0xCCCCCC, 0x2D2D2D, 0x3C3C3C, 0xEEEEEE, 0x666666, 0xC3C3C3, 0x393939, "/", GUI.filesystemModes.both, GUI.filesystemModes.both))
 treeView1.onItemSelected = function(path)
@@ -1014,6 +1018,63 @@ mainContainer:startEventHandling()
 Результат:
 
 ![Imgur](https://i.imgur.com/igGozFP.gif)
+
+GUI.**filesystemChooser**( x, y, width, height, backgroundColor, textColor, tipBackgroundColor, tipTextColor, initialText, sumbitButtonText, cancelButtonText, placeholderText, filesystemDialogMode, filesystemDialogPath ): *table* filesystemChooser
+------------------------------------------------------------------------
+| Тип | Аргумент | Описание |
+| ------ | ------ | ------ |
+| *int* | x | Координата объекта по оси x |
+| *int* | y | Координата объекта по оси y |
+| *int* | width | Ширина объекта |
+| *int* | height | Высота объекта |
+| *int* | backgroundColor | Цвет фона |
+| *int* | textColor | Цвет текста |
+| *int* | tipBackgroundColor | Цвет фона "пимпочки" в правой части filesystemChooser |
+| *int* | tipTextgroundColor | Цвет текста "пимпочки" в правой части filesystemChooser |
+| *string* | sumbitButtonText | Стартовый текст filesystemChooser |
+| *string* | sumbitButtonText | Текст кнопки подтверждения выбора в диалоговом окне |
+| *string* | cancelButtonText | Текст кнопки отмены выбора в диалоговом окне |
+| *string* | placeholderText | Текст, появляющийся в случае отсутствия выбора конкретного пути |
+| *enum* | filesystemDialogMode | Режим выбора содержимого в диалоговом окне. Может принимать значения GUI.**filesystemModes**.**file**, GUI.**filesystemModes**.**directory** или GUI.**filesystemModes**.**both** |
+| *string* | filesystemDialogPath | Стартовая директория диалогового окна |
+
+FilesystemChooser  предназначен для удобного выбора файла или директории. При нажатии на объект всплывает диалоговое окно с уже знакомым нам TreeView, позволяющее выбрать необходимый элемент путем навигации по файловой системе.
+
+| Тип свойства | Свойство |Описание |
+| ------ | ------ | ------ |
+| *callback-function* | .**onSubmit**( *string* path )| Метод, вызываемый после выбора файла или директории, а также нажатии кнопки подтверждения в диалоговом окне. В качестве аргумента передается абсолютный путь до выбранного элемента |
+| *callback-function* | .**onCancel**(  )| Метод, вызываемый после нажатия на кнопку отмены в диалоговом окне |
+| *function* | :**addExtensionFilter**( *string* extension )| Добавить фильтр на указанное расширение файла. После этого в диалоговом окне пользователь сможет выбирать лишь те файлы, которые имеют соответствующее расширение |
+
+Пример реализации FilesystemChooser:
+
+```lua
+local buffer = require("doubleBuffering")
+local GUI = require("GUI")
+
+------------------------------------------------------------------------------------------
+
+local mainContainer = GUI.fullScreenContainer()
+mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x262626))
+
+local filesystemChooser = mainContainer:addChild(GUI.filesystemChooser(2, 2, 30, 3, 0xE1E1E1, 0x888888, 0x3C3C3C, 0x888888, "Open", "Cancel", "Choose file", GUI.filesystemModes.file, "/", nil))
+
+filesystemChooser:addExtensionFilter(".cfg")
+
+filesystemChooser.onItemSelected = function(path)
+	GUI.error("File \"" .. path .. "\" was selected")
+end
+
+------------------------------------------------------------------------------------------
+
+mainContainer:draw()
+buffer.draw(true)
+mainContainer:startEventHandling()
+```
+
+Результат:
+
+![Imgur](https://i.imgur.com/F0ch8yQ.gif)
 
 GUI.**codeView**( x, y, width, height, lines, fromSymbol, fromLine, maximumLineLength, selections, highlights, highlightLuaSyntax, indentationWidth ): *table* codeView
 ------------------------------------------------------------------------
