@@ -145,7 +145,7 @@ local function drawTransparentZone(x, y)
 				buffer.square(x, y + i, image.getWidth(masterPixels), 1, colors.transparencyWhite, colors.transparencyGray, " ")
 				buffer.text(x + 1, y + i, colors.transparencyGray, stro4ka1)
 			else
-				buffer.square(x, y + i, image.getWidth(masterPixels), 1, colors.transparencyWhite, colors.transparencyGray)
+				buffer.square(x, y + i, image.getWidth(masterPixels), 1, colors.transparencyWhite, colors.transparencyGray, " ")
 				buffer.text(x, y + i, colors.transparencyGray, stro4ka2)
 			end
 		end
@@ -235,10 +235,10 @@ local function drawPixel(x, y, xPixel, yPixel, iterator)
 	--Получаем тукущие данные о пикселе
 	local background, foreground, alpha, symbol = masterPixels[iterator], masterPixels[iterator + 1], masterPixels[iterator + 2], masterPixels[iterator + 3]
 	--Если пиксель не прозрачный
-	if alpha == 0x00 then
+	if alpha == 0 then
 		buffer.set(x, y, background, foreground, symbol)
 	--Если пиксель прозрачнее непрозрачного
-	elseif alpha > 0x00 then
+	elseif alpha > 0 then
 		local blendColor
 		if xPixel % 2 == 0 then
 			if yPixel % 2 == 0 then
@@ -254,7 +254,7 @@ local function drawPixel(x, y, xPixel, yPixel, iterator)
 			end
 		end
 
-		buffer.set(x, y, color.blend(blendColor, background, alpha / 0xFF), foreground, symbol)
+		buffer.set(x, y, color.blend(blendColor, background, alpha), foreground, symbol)
 	end
 	background, foreground, alpha, symbol = nil, nil, nil, nil
 end
@@ -265,7 +265,7 @@ local function drawTooltip(x, y, ...)
 	--Рассчитываем ширину пиздюлинки
 	local maxWidth = 0; for i = 1, #texts do maxWidth = math.max(maxWidth, unicode.len(texts[i])) end
 	--Рисуем пиздюлинку
-	buffer.square(x, y, maxWidth + 2, #texts, 0x000000, 0xFFFFFF, " ", 69); x = x + 1		
+	buffer.square(x, y, maxWidth + 2, #texts, 0x000000, 0xFFFFFF, " ", 0.69); x = x + 1		
 	for i = 1, #texts do buffer.text(x, y, 0xFFFFFF, texts[i]); y = y + 1 end
 end
 
@@ -783,30 +783,30 @@ local function brush(x, y, background, foreground, alpha, symbol)
 				newIterator = image.getImageIndexByCoordinates(x, y, image.getWidth(masterPixels))
 
 				--Если прозрачности кисти ВАЩЕ НЕТ, то просто рисуем как обычненько все
-				if alpha == 0x00 then
+				if alpha == 0 then
 					setPixel(newIterator, background, foreground, alpha, symbol)
 				--Если прозрачности кисти есть какая-то, но она не абсолютная
-				elseif alpha < 0xFF and alpha > 0x00 then
+				elseif alpha < 1 and alpha > 0 then
 					--Если пиксель в массиве ни хуя не прозрачный, то оставляем его таким же, разве что цвет меняем на сблендированный
-					if masterPixels[newIterator + 2] == 0x00 then
-						local gettedBackground = color.blend(masterPixels[newIterator], background, alpha / 0xFF)
-						setPixel(newIterator, gettedBackground, foreground, 0x00, symbol)
+					if masterPixels[newIterator + 2] == 0 then
+						local gettedBackground = color.blend(masterPixels[newIterator], background, alpha)
+						setPixel(newIterator, gettedBackground, foreground, 0, symbol)
 					--А если прозрачный, то смешиваем прозрачности
 					--Пиздануться вообще, сук
 					else
 						--Если его прозрачность максимальная
-						if masterPixels[newIterator + 2] == 0xFF then
+						if masterPixels[newIterator + 2] == 1 then
 							setPixel(newIterator, background, foreground, alpha, symbol)
 						--Если не максимальная
 						else
-							local newAlpha = masterPixels[newIterator + 2] - (0xFF - alpha)
-							if newAlpha < 0x00 then newAlpha = 0x00 end
+							local newAlpha = masterPixels[newIterator + 2] - (1 - alpha)
+							if newAlpha < 0 then newAlpha = 0 end
 							setPixel(newIterator, background, foreground, newAlpha, symbol)
 						end
 					end
 				--Если указанная прозрачность максимальна, т.е. равна 0xFF
 				else
-					setPixel(newIterator, 0x000000, 0x000000, 0xFF, " ")
+					setPixel(newIterator, 0x000000, 0x000000, 1, " ")
 				end
 				
 				--Рисуем пиксель из мастерпиксельса

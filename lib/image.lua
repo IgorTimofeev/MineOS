@@ -63,7 +63,7 @@ function image.draw(x, y, picture)
 	for alpha in pairs(groupedPicture) do
 		for symbol in pairs(groupedPicture[alpha]) do
 			
-			if not (symbol == " " and alpha == 0xFF) then
+			if not (symbol == " " and alpha == 1) then
 				for background in pairs(groupedPicture[alpha][symbol]) do
 					
 					if background ~= currentBackground then
@@ -82,14 +82,14 @@ function image.draw(x, y, picture)
 							for xPos = 1, #groupedPicture[alpha][symbol][background][foreground][yPos] do
 								imageX, imageY = x + groupedPicture[alpha][symbol][background][foreground][yPos][xPos] - 1, y + yPos - 1
 
-								if alpha > 0x0 then
+								if alpha > 0 then
 									_, _, gpuGetBackground = gpu.get(imageX, imageY)
 									
-									if alpha == 0xFF then
+									if alpha == 1 then
 										currentBackground = gpuGetBackground
 										gpu.setBackground(currentBackground)
 									else
-										currentBackground = color.blend(gpuGetBackground, background, alpha / 0xFF)
+										currentBackground = color.blend(gpuGetBackground, background, alpha)
 										gpu.setBackground(currentBackground)
 									end
 								end

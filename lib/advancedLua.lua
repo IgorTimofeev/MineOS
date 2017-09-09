@@ -466,6 +466,10 @@ end
 
 -------------------------------------------------- String extensions --------------------------------------------------
 
+function string.brailleChar(a, b, c, d, e, f, g, h)
+	return unicode.char(10240 + 128*h + 64*g + 32*f + 16*d + 8*b + 4*e + 2*c + a)
+end
+
 function string.readUnicodeChar(file)
 	local byteArray = {string.byte(file:read(1))}
 
