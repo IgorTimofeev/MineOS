@@ -1,7 +1,4 @@
 
--- package.loaded.web = nil
--- package.loaded.GUI = nil
-
 local fs = require("filesystem")
 local component = require("component")
 local computer = require("computer")
@@ -10,6 +7,8 @@ local shell = require("shell")
 local serialization = require("serialization")
 local gpu = component.gpu
 local screen = component.screen
+
+local args, options = shell.parse(...)
 
 ------------------------------------------------------------------------------------------------------------------------------------
 
@@ -35,7 +34,7 @@ if computer.totalMemory() < 2097152 then
 	table.insert(reasons, "Not enough RAM: MineOS requires at least 2MB (2x Tier 3.5 RAM modules) to work properly.")
 end
 
-if #reasons > 0 then
+if #reasons > 0 and not options.skiphardwarecheck then
 	print(" ")
 	for i = 1, #reasons do
 		print(reasons[i])
