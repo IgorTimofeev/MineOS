@@ -1591,7 +1591,7 @@ local function createMainContainer()
 	end
 
 	mainContainer.errorContainer = mainContainer:addChild(GUI.container(1, 1, 1, 1))
-	mainContainer.errorContainer.backgroundPanel = mainContainer.errorContainer:addChild(GUI.panel(1, 1, 1, 1, 0xFFFFFF, 30))
+	mainContainer.errorContainer.backgroundPanel = mainContainer.errorContainer:addChild(GUI.panel(1, 1, 1, 1, 0xFFFFFF, 0.3))
 	mainContainer.errorContainer.errorTextBox = mainContainer.errorContainer:addChild(GUI.textBox(3, 2, 1, 1, nil, 0x4B4B4B, {}, 1))
 	mainContainer.errorContainer.breakpointExitButton = mainContainer.errorContainer:addChild(GUI.button(1, 1, 1, 1, 0x3C3C3C, 0xCCCCCC, 0x2D2D2D, 0x888888, localization.finishDebug))
 	mainContainer.errorContainer.breakpointContinueButton = mainContainer.errorContainer:addChild(GUI.button(1, 1, 1, 1, 0x444444, 0xCCCCCC, 0x2D2D2D, 0x888888, localization.continueDebug))
@@ -1600,7 +1600,7 @@ local function createMainContainer()
 	hideErrorContainer()
 
 	mainContainer.settingsContainer = mainContainer:addChild(GUI.container(1, 1, 1, 1))
-	mainContainer.settingsContainer.backgroundPanel = mainContainer.settingsContainer:addChild(GUI.panel(1, 1, mainContainer.settingsContainer.width, mainContainer.settingsContainer.height, 0x0, 30))
+	mainContainer.settingsContainer.backgroundPanel = mainContainer.settingsContainer:addChild(GUI.panel(1, 1, mainContainer.settingsContainer.width, mainContainer.settingsContainer.height, 0x0, 0.3))
 	mainContainer.settingsContainer.backgroundPanel.eventHandler = function(mainContainer, object, eventData)
 		if eventData[1] == "touch" then
 			hideSettingsContainer()

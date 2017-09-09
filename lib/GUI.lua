@@ -68,8 +68,8 @@ GUI.colors = {
 			text = 0xFFFFFF
 		},
 		transparency = {
-			background = 30,
-			shadow = 40
+			background = 0.3,
+			shadow = 0.4
 		}
 	},
 	windows = {
@@ -87,8 +87,8 @@ GUI.colors = {
 				background = 0xCCCCCC,
 				text = 0x3C3C3C
 			}
-		},
-	},
+		}
+	}
 }
 
 ----------------------------------------- Interface objects -----------------------------------------
@@ -97,12 +97,13 @@ local function callMethod(method, ...)
 	if method then method(...) end
 end
 
-function GUI.point(x, y)
-	return { x = x, y = y }
-end
-
 function GUI.rectangle(x, y, width, height)
-	return { x = x, y = y, width = width, height = height}
+	return {
+		x = x,
+		y = y,
+		width = width,
+		height = height
+	}
 end
 
 local function isObjectClicked(object, x, y)
@@ -134,6 +135,7 @@ function GUI.setAlignment(object, horizontalAlignment, verticalAlignment)
 		horizontal = horizontalAlignment,
 		vertical = verticalAlignment
 	}
+
 	return object
 end
 
@@ -701,7 +703,10 @@ end
 function GUI.panel(x, y, width, height, color, transparency)
 	local object = GUI.object(x, y, width, height)
 	
-	object.colors = {background = color, transparency = transparency}
+	object.colors = {
+		background = color,
+		transparency = transparency
+	}
 	object.draw = drawPanel
 	
 	return object
@@ -808,8 +813,8 @@ local function drawProgressBar(object)
 		buffer.text(object.x, object.y, object.colors.passive, string.rep("━", object.width))
 		buffer.text(object.x, object.y, object.colors.active, string.rep("━", activeWidth))
 	else
-		buffer.square(object.x, object.y, object.width, object.height, object.colors.passive)
-		buffer.square(object.x, object.y, activeWidth, object.height, object.colors.active)
+		buffer.square(object.x, object.y, object.width, object.height, object.colors.passive, 0x0, " ")
+		buffer.square(object.x, object.y, activeWidth, object.height, object.colors.active, 0x0, " ")
 	end
 
 	if object.showValue then
@@ -1033,7 +1038,7 @@ local function codeViewDraw(codeView)
 		if codeView.lines[line] then
 			local text = tostring(line)
 			if codeView.highlights[line] then
-				buffer.square(codeView.x, y, codeView.lineNumbersWidth, 1, codeView.highlights[line], require("syntax").colorScheme.text, " ", 30)
+				buffer.square(codeView.x, y, codeView.lineNumbersWidth, 1, codeView.highlights[line], require("syntax").colorScheme.text, " ", 0.3)
 				buffer.square(codeView.codeAreaPosition, y, codeView.codeAreaWidth, 1, codeView.highlights[line], require("syntax").colorScheme.text, " ")
 			end
 			buffer.text(codeView.codeAreaPosition - unicode.len(text) - 1, y, require("syntax").colorScheme.lineNumbersText, text)
@@ -1086,6 +1091,7 @@ local function codeViewDraw(codeView)
 				for i = 1, dy - 1 do
 					buffer.square(codeView.codeAreaPosition, y + codeView.selections[selectionIndex].from.line - codeView.fromLine, codeView.codeAreaWidth, 1, codeView.selections[selectionIndex].color or require("syntax").colorScheme.selection, require("syntax").colorScheme.text, " "); y = y + 1
 				end
+
 				drawLowerSelection(y, selectionIndex)
 			end
 		end
@@ -1161,10 +1167,10 @@ local function colorSelectorDraw(colorSelector)
 	local overlayColor = colorSelector.color < 0x7FFFFF and 0xFFFFFF or 0x000000
 	buffer.square(colorSelector.x, colorSelector.y, colorSelector.width, colorSelector.height, colorSelector.color, overlayColor, " ")
 	if colorSelector.pressed then
-		buffer.square(colorSelector.x, colorSelector.y, colorSelector.width, colorSelector.height, overlayColor, overlayColor, " ", 80)
+		buffer.square(colorSelector.x, colorSelector.y, colorSelector.width, colorSelector.height, overlayColor, overlayColor, " ", 0.8)
 	end
 	if colorSelector.height > 1 then
-		buffer.text(colorSelector.x, colorSelector.y + colorSelector.height - 1, overlayColor, string.rep("▄", colorSelector.width), 80)
+		buffer.text(colorSelector.x, colorSelector.y + colorSelector.height - 1, overlayColor, string.rep("▄", colorSelector.width), 0.8)
 	end
 	buffer.text(colorSelector.x + 1, colorSelector.y + math.floor(colorSelector.height / 2), overlayColor, string.limit(colorSelector.text, colorSelector.width - 2))
 	return colorSelector
@@ -1889,7 +1895,7 @@ end
 ----------------------------------------- Combo Box Object -----------------------------------------
 
 local function drawComboBox(object)
-	buffer.square(object.x, object.y, object.width, object.height, object.colors.default.background)
+	buffer.square(object.x, object.y, object.width, object.height, object.colors.default.background, object.colors.default.text, " ")
 	local x, y, limit, arrowSize = object.x + 1, math.floor(object.y + object.height / 2), object.width - 3, object.height
 	if object.dropDownMenu.itemsContainer.children[object.selectedItem] then
 		buffer.text(x, y, object.colors.default.text, string.limit(object.dropDownMenu.itemsContainer.children[object.selectedItem].text, limit, "right"))
@@ -1967,7 +1973,16 @@ function GUI.comboBox(x, y, width, elementHeight, backgroundColor, textColor, ar
 		}
 	}
 
-	object.dropDownMenu = GUI.dropDownMenu(1, 1, 1, math.ceil(buffer.height * 0.5), elementHeight, object.colors.default.background, object.colors.default.text, object.colors.pressed.background, object.colors.pressed.text, GUI.colors.contextMenu.disabled, GUI.colors.contextMenu.separator, GUI.colors.contextMenu.transparency.background, GUI.colors.contextMenu.transparency.shadow)
+	object.dropDownMenu = GUI.dropDownMenu(1, 1, 1, math.ceil(buffer.height * 0.5), elementHeight,
+		object.colors.default.background, 
+		object.colors.default.text, 
+		object.colors.pressed.background,
+		object.colors.pressed.text,
+		GUI.colors.contextMenu.disabled,
+		GUI.colors.contextMenu.separator,
+		GUI.colors.contextMenu.transparency.background, 
+		GUI.colors.contextMenu.transparency.shadow
+	)
 	object.selectedItem = 1
 	object.addItem = comboBoxAddItem
 	object.addSeparator = comboBoxAddSeparator
@@ -2725,7 +2740,7 @@ local function treeViewDraw(treeView)
 	local textLimit = treeView.width - (showScrollBar and 2 or 1)
 
 	if treeView.colors.default.background then
-		buffer.square(treeView.x, treeView.y, treeView.width, treeView.height, treeView.colors.default.background, treeView.colors.default.text, " ")
+		buffer.square(treeView.x, treeView.y, treeView.width, treeView.height, treeView.colors.default.background, treeView.colors.default.directory, " ")
 	end
 
 	for fileIndex = treeView.fromFile, #treeView.fileList do
@@ -3028,8 +3043,11 @@ local function filesystemChooserDraw(object)
 end
 
 local function filesystemChooserAddExtensionFilter(object, extension)
-	object.extensionFilters = object.extensionFilters or {}
 	object.extensionFilters[unicode.lower(extension)] = true
+end
+
+local function filesystemChooserSetMode(object, filesystemMode)
+	object.filesystemMode = filesystemMode
 end
 
 local function filesystemChooserEventHandler(mainContainer, object, eventData)
@@ -3058,14 +3076,14 @@ local function filesystemChooserEventHandler(mainContainer, object, eventData)
 
 			mainContainer:draw()
 			buffer.draw()
-			callMethod(object.onItemSelected, object.path)
+			callMethod(object.onSubmit, object.path)
 		end
 
 		filesystemDialog:show()
 	end
 end
 
-function GUI.filesystemChooser(x, y, width, height, backgroundColor, textColor, tipBackgroundColor, tipTextColor, path, submitButtonText, cancelButtonText, placeholderText, filesystemMode, filesystemDialogPath)
+function GUI.filesystemChooser(x, y, width, height, backgroundColor, textColor, tipBackgroundColor, tipTextColor, path, submitButtonText, cancelButtonText, placeholderText, filesystemDialogPath)
 	local object = GUI.object(x, y, width, height)
 	
 	object.eventHandler = comboBoxEventHandler
@@ -3082,10 +3100,13 @@ function GUI.filesystemChooser(x, y, width, height, backgroundColor, textColor, 
 	object.pressed = false
 	object.path = path
 	object.filesystemDialogPath = filesystemDialogPath
+	object.filesystemMode = GUI.filesystemModes.file
+	object.extensionFilters = {}
+
 	object.draw = filesystemChooserDraw
 	object.eventHandler = filesystemChooserEventHandler
-	object.filesystemMode = filesystemMode
 	object.addExtensionFilter = filesystemChooserAddExtensionFilter
+	object.setMode = filesystemChooserSetMode
 
 	return object
 end
@@ -3098,7 +3119,7 @@ end
 -- local mainContainer = GUI.fullScreenContainer()
 -- mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x262626))
 
--- local dialog = GUI.showFilesystemDialog(mainContainer, "Save", "Cancel", "File name", "/")
+-- local dialog = GUI.addFilesystemDialogToContainer(mainContainer, "Save", "Cancel", "File name", "/")
 
 -- dialog:setMode(GUI.filesystemModes.open, GUI.filesystemModes.file)
 -- dialog:addExtensionFilter(".pic")
@@ -3108,9 +3129,9 @@ end
 -- 	GUI.error(path)
 -- end
 
--- local filesystemChooser = mainContainer:addChild(GUI.filesystemChooser(2, 2, 30, 3, 0xE1E1E1, 0x888888, 0x3C3C3C, 0x888888, nil, "Open", "Cancel", "Choose file", GUI.filesystemModes.file, "/"))
+-- local filesystemChooser = mainContainer:addChild(GUI.filesystemChooser(2, 2, 30, 3, 0xE1E1E1, 0x888888, 0x3C3C3C, 0x888888, nil, "Open", "Cancel", "Choose file", "/"))
 -- filesystemChooser:addExtensionFilter(".cfg")
--- filesystemChooser.onItemSelected = function(path)
+-- filesystemChooser.onSubmit = function(path)
 -- 	GUI.error("File \"" .. path .. "\" was selected")
 -- end
 

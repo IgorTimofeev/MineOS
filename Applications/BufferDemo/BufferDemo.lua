@@ -6,7 +6,7 @@ local image = require("image")
 local currentBackground = 0x990000
 local risovatKartinku = true
 local showPanel = true
-local transparency = 25
+local transparency = 0.25
 local xWindow, yWindow = 5, 5
 
 local fon = image.load("MineOS/Applications/BufferDemo.app/Resources/Wallpaper.pic")
@@ -31,7 +31,7 @@ local width, height = 82, 25
 local function drawWindow(x, y)
 
 	--Тени
-	local shadowTransparency = 60
+	local shadowTransparency = 0.6
 	buffer.square(x + width, y + 1, 2, height, 0x000000, 0xFFFFFF, " ", shadowTransparency)
 	buffer.square(x + 2, y + height, width - 2, 1, 0x000000, 0xFFFFFF, " ", shadowTransparency)
 
@@ -135,15 +135,15 @@ while true do
 		end
 	elseif e[1] == "scroll" then
 		if e[5] == 1 then
-			if transparency > 5 then
-				transparency = transparency - 5
+			if transparency > 0.05 then
+				transparency = transparency - 0.05
 				drawBackground()
 				drawWindow(xWindow, yWindow)
 				buffer.draw()
 			end
 		else
-			if transparency < 100 then
-				transparency = transparency + 5
+			if transparency < 1 then
+				transparency = transparency + 0.05
 				drawBackground()
 				drawWindow(xWindow, yWindow)
 				buffer.draw()

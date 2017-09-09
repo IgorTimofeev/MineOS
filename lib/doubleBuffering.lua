@@ -106,38 +106,31 @@ function buffer.set(x, y, background, foreground, symbol)
 end
 
 function buffer.square(x, y, width, height, background, foreground, symbol, transparency) 
-	if transparency then
-		if transparency == 0 then
-			transparency = nil
-		else
-			transparency = transparency / 100
-		end
-	end
-	if not foreground then foreground = 0x000000 end
-	if not symbol then symbol = " " end
-
 	local index, indexStepForward, indexPlus1 = buffer.getIndexByCoordinates(x, y), (buffer.width - width) * 3
+	
 	for j = y, (y + height - 1) do
 		for i = x, (x + width - 1) do
 			if i >= buffer.drawLimit.x1 and j >= buffer.drawLimit.y1 and i <= buffer.drawLimit.x2 and j <= buffer.drawLimit.y2 then
 				indexPlus1 = index + 1
+				
 				if transparency then
-					buffer.newFrame[index] = color.blend(buffer.newFrame[index], background, transparency)
-					buffer.newFrame[indexPlus1] = color.blend(buffer.newFrame[indexPlus1], background, transparency)
+					buffer.newFrame[index], buffer.newFrame[indexPlus1] =
+						color.blend(buffer.newFrame[index], background, transparency),
+						color.blend(buffer.newFrame[indexPlus1], background, transparency)
 				else
-					buffer.newFrame[index] = background
-					buffer.newFrame[indexPlus1] = foreground
-					buffer.newFrame[index + 2] = symbol
+					buffer.newFrame[index], buffer.newFrame[indexPlus1], buffer.newFrame[index + 2] = background, foreground, symbol
 				end
 			end
+
 			index = index + 3
 		end
+
 		index = index + indexStepForward
 	end
 end
 
 function buffer.clear(color, transparency)
-	buffer.square(1, 1, buffer.width, buffer.height, color or 0x262626, 0x000000, " ", transparency)
+	buffer.square(1, 1, buffer.width, buffer.height, color or 0x0, 0x000000, " ", transparency)
 end
 
 function buffer.copy(x, y, width, height)
@@ -211,22 +204,20 @@ function buffer.line(x1, y1, x2, y2, background, foreground, alpha, symbol)
 end
 
 function buffer.text(x, y, textColor, text, transparency)
-	if transparency then
-		if transparency == 0 then
-			transparency = nil
-		else
-			transparency = transparency / 100
-		end
-	end
-
 	local index, sText = buffer.getIndexByCoordinates(x, y), unicode.len(text)
+
 	for i = 1, sText do
 		if x >= buffer.drawLimit.x1 and y >= buffer.drawLimit.y1 and x <= buffer.drawLimit.x2 and y <= buffer.drawLimit.y2 then
-			buffer.newFrame[index + 1] = not transparency and textColor or color.blend(buffer.newFrame[index], textColor, transparency)
+			if transparency then
+				buffer.newFrame[index + 1] = color.blend(buffer.newFrame[index], textColor, transparency)
+			else
+				buffer.newFrame[index + 1] = textColor
+			end
+
 			buffer.newFrame[index + 2] = unicode.sub(text, i, i)
 		end
-		index = index + 3
-		x = x + 1
+
+		x, index = x + 1, index + 3
 	end
 end
 
@@ -239,10 +230,10 @@ function buffer.image(x, y, picture, blendForeground)
 		if xPos >= buffer.drawLimit.x1 and y >= buffer.drawLimit.y1 and xPos <= buffer.drawLimit.x2 and y <= buffer.drawLimit.y2 then
 			bufferIndexPlus1, imageIndexPlus1, imageIndexPlus2, imageIndexPlus3 = bufferIndex + 1, imageIndex + 1, imageIndex + 2, imageIndex + 3
 			
-			if picture[imageIndexPlus2] == 0x00 then
+			if picture[imageIndexPlus2] == 0 then
 				buffer.newFrame[bufferIndex] = picture[imageIndex]
 				buffer.newFrame[bufferIndex + 1] = picture[imageIndex + 1]
-			elseif picture[imageIndexPlus2] > 0x00 and picture[imageIndexPlus2] < 0xFF then
+			elseif picture[imageIndexPlus2] > 0 and picture[imageIndexPlus2] < 1 then
 				buffer.newFrame[bufferIndex] = color.blend(buffer.newFrame[bufferIndex], picture[imageIndex], picture[imageIndexPlus2])
 				
 				if blendForeground then
@@ -250,7 +241,7 @@ function buffer.image(x, y, picture, blendForeground)
 				else
 					buffer.newFrame[bufferIndex + 1] = picture[imageIndex + 1]
 				end
-			elseif picture[imageIndexPlus2] == 0xFF and picture[imageIndexPlus3] ~= " " then
+			elseif picture[imageIndexPlus2] == 1 and picture[imageIndexPlus3] ~= " " then
 				buffer.newFrame[bufferIndex + 1] = picture[imageIndex + 1]
 			end
 
@@ -272,72 +263,8 @@ function buffer.frame(x, y, width, height, color)
 		buffer.text(x2, y, color, "│")
 		y = y + 1
 	end
+
 	buffer.text(x, y, color, stringDown)
-end
-
-function buffer.button(x, y, width, height, background, foreground, text)
-	local textLength = unicode.len(text)
-	if textLength > width - 2 then text = unicode.sub(text, 1, width - 2) end
-	
-	local textPosX = math.floor(x + width / 2 - textLength / 2)
-	local textPosY = math.floor(y + height / 2)
-	buffer.square(x, y, width, height, background, foreground, " ")
-	buffer.text(textPosX, textPosY, foreground, text)
-
-	return x, y, (x + width - 1), (y + height - 1)
-end
-
-function buffer.adaptiveButton(x, y, xOffset, yOffset, background, foreground, text)
-	local width = xOffset * 2 + unicode.len(text)
-	local height = yOffset * 2 + 1
-
-	buffer.square(x, y, width, height, background, 0xFFFFFF, " ")
-	buffer.text(x + xOffset, y + yOffset, foreground, text)
-
-	return x, y, (x + width - 1), (y + height - 1)
-end
-
-function buffer.framedButton(x, y, width, height, backColor, buttonColor, text)
-	buffer.square(x, y, width, height, backColor, buttonColor, " ")
-	buffer.frame(x, y, width, height, buttonColor)
-	
-	x = math.floor(x + width / 2 - unicode.len(text) / 2)
-	y = math.floor(y + height / 2)
-
-	buffer.text(x, y, buttonColor, text)
-end
-
-function buffer.scrollBar(x, y, width, height, countOfAllElements, currentElement, backColor, frontColor)
-	local sizeOfScrollBar = math.ceil(height / countOfAllElements)
-	local displayBarFrom = math.floor(y + height * ((currentElement - 1) / countOfAllElements))
-
-	buffer.square(x, y, width, height, backColor, 0xFFFFFF, " ")
-	buffer.square(x, displayBarFrom, width, sizeOfScrollBar, frontColor, 0xFFFFFF, " ")
-
-	sizeOfScrollBar, displayBarFrom = nil, nil
-end
-
-function buffer.horizontalScrollBar(x, y, width, countOfAllElements, currentElement, background, foreground)
-	local pipeSize = math.ceil(width / countOfAllElements)
-	local displayBarFrom = math.floor(x + width * ((currentElement - 1) / countOfAllElements))
-
-	buffer.text(x, y, background, string.rep("▄", width))
-	buffer.text(displayBarFrom, y, foreground, string.rep("▄", pipeSize))
-end
-
-function buffer.customImage(x, y, pixels)
-	x = x - 1
-	y = y - 1
-
-	for i=1, #pixels do
-		for j=1, #pixels[1] do
-			if pixels[i][j][3] ~= "#" then
-				buffer.set(x + j, y + i, pixels[i][j][1], pixels[i][j][2], pixels[i][j][3])
-			end
-		end
-	end
-
-	return (x + 1), (y + 1), (x + #pixels[1]), (y + #pixels)
 end
 
 --------------------------------------------------------------------------------------------------------------
@@ -492,6 +419,73 @@ function buffer.semiPixelBezierCurve(points, color, precision)
 	for point = 1, #linePoints - 1 do
 		buffer.semiPixelLine(math.floor(linePoints[point].x), math.floor(linePoints[point].y), math.floor(linePoints[point + 1].x), math.floor(linePoints[point + 1].y), color)
 	end
+end
+
+--------------------------------------------------------------------------------------------------------------
+
+function buffer.button(x, y, width, height, background, foreground, text)
+	local textLength = unicode.len(text)
+	if textLength > width - 2 then text = unicode.sub(text, 1, width - 2) end
+	
+	local textPosX = math.floor(x + width / 2 - textLength / 2)
+	local textPosY = math.floor(y + height / 2)
+	buffer.square(x, y, width, height, background, foreground, " ")
+	buffer.text(textPosX, textPosY, foreground, text)
+
+	return x, y, (x + width - 1), (y + height - 1)
+end
+
+function buffer.adaptiveButton(x, y, xOffset, yOffset, background, foreground, text)
+	local width = xOffset * 2 + unicode.len(text)
+	local height = yOffset * 2 + 1
+
+	buffer.square(x, y, width, height, background, 0xFFFFFF, " ")
+	buffer.text(x + xOffset, y + yOffset, foreground, text)
+
+	return x, y, (x + width - 1), (y + height - 1)
+end
+
+function buffer.framedButton(x, y, width, height, backColor, buttonColor, text)
+	buffer.square(x, y, width, height, backColor, buttonColor, " ")
+	buffer.frame(x, y, width, height, buttonColor)
+	
+	x = math.floor(x + width / 2 - unicode.len(text) / 2)
+	y = math.floor(y + height / 2)
+
+	buffer.text(x, y, buttonColor, text)
+end
+
+function buffer.scrollBar(x, y, width, height, countOfAllElements, currentElement, backColor, frontColor)
+	local sizeOfScrollBar = math.ceil(height / countOfAllElements)
+	local displayBarFrom = math.floor(y + height * ((currentElement - 1) / countOfAllElements))
+
+	buffer.square(x, y, width, height, backColor, 0xFFFFFF, " ")
+	buffer.square(x, displayBarFrom, width, sizeOfScrollBar, frontColor, 0xFFFFFF, " ")
+
+	sizeOfScrollBar, displayBarFrom = nil, nil
+end
+
+function buffer.horizontalScrollBar(x, y, width, countOfAllElements, currentElement, background, foreground)
+	local pipeSize = math.ceil(width / countOfAllElements)
+	local displayBarFrom = math.floor(x + width * ((currentElement - 1) / countOfAllElements))
+
+	buffer.text(x, y, background, string.rep("▄", width))
+	buffer.text(displayBarFrom, y, foreground, string.rep("▄", pipeSize))
+end
+
+function buffer.customImage(x, y, pixels)
+	x = x - 1
+	y = y - 1
+
+	for i=1, #pixels do
+		for j=1, #pixels[1] do
+			if pixels[i][j][3] ~= "#" then
+				buffer.set(x + j, y + i, pixels[i][j][1], pixels[i][j][2], pixels[i][j][3])
+			end
+		end
+	end
+
+	return (x + 1), (y + 1), (x + #pixels[1]), (y + #pixels)
 end
 
 --------------------------------------------------------------------------------------------------------------

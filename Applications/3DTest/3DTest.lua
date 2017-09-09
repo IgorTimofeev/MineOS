@@ -386,7 +386,7 @@ mainContainer:addChild(GUI.textBox(1, mainContainer.height - #lines + 1, mainCon
 local elementY = 2
 mainContainer.toolbar = mainContainer:addChild(GUI.container(mainContainer.width - 31, 1, 32, mainContainer.height))
 local elementWidth = mainContainer.toolbar.width - 2
-mainContainer.toolbar:addChild(GUI.panel(1, 1, mainContainer.toolbar.width, mainContainer.toolbar.height, 0x0, 50))
+mainContainer.toolbar:addChild(GUI.panel(1, 1, mainContainer.toolbar.width, mainContainer.toolbar.height, 0x0, 0.5))
 
 mainContainer.toolbar:addChild(GUI.label(2, elementY, elementWidth, 1, 0xEEEEEE, "Render mode")):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); elementY = elementY + 2
 mainContainer.toolbar.renderModeComboBox = mainContainer.toolbar:addChild(GUI.comboBox(2, elementY, elementWidth, 1, 0x2D2D2D, 0xAAAAAA, 0x555555, 0x888888)); elementY = elementY + mainContainer.toolbar.renderModeComboBox.height + 1

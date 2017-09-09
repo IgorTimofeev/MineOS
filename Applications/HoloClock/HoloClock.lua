@@ -193,7 +193,7 @@ local function getDate()
 end
 
 local function flashback()
-	buffer.square(1, 1, buffer.width, buffer.height, 0x000000, 0x000000, " ", 50)
+	buffer.clear(0x0, 0.3)
 end
 
 local function drawOnScreen()

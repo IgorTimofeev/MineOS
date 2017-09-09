@@ -29,22 +29,22 @@ local mainContainer = GUI.fullScreenContainer()
 
 --------------------------------------------------------------------------------------------------------------------
 
-local function getOpenGLValidColorChannels(color)
-	local r, g, b = color.HEXToRGB(color)
+local function getOpenGLValidColorChannels(cykaColor)
+	local r, g, b = color.HEXToRGB(cykaColor)
 	return r / 255, g / 255, b / 255
 end
 
-local function createCube(x, y, z, color, isVisThrObj)
+local function createCube(x, y, z, cykaColor, isVisThrObj)
 	local cube = component.glasses.addCube3D()
 	cube.set3DPos(x, y, z)
 	cube.setVisibleThroughObjects(isVisThrObj)
-	cube.setColor(getOpenGLValidColorChannels(color))
+	cube.setColor(getOpenGLValidColorChannels(cykaColor))
 	cube.setAlpha(0.23)
 	return cube
 end
 
-local function glassesCreateCube(x, y, z, color, text)
-	local cube = createCube(x, y, z, color, true)
+local function glassesCreateCube(x, y, z, cykaColor, text)
+	local cube = createCube(x, y, z, cykaColor, true)
 	cube.setVisibleThroughObjects(true)
 
 	local floatingText = component.glasses.addFloatingText()
@@ -181,7 +181,7 @@ objectY = objectY + 2
 
 mainContainer:addChild(GUI.button(buffer.width, 1, 1, 1, nil, 0xEEEEEE, nil, 0xFF2222, "X")).onTouch = function()
 	mainContainer:stopEventHandling()
-	createDick(math.random(-48, 48), math.random(1, 32), math.random(-48, 48), 100, false)
+	createDick(math.random(-48, 48), math.random(1, 32), math.random(-48, 48), 100, true)
 end
 
 mainContainer:addChild(GUI.button(panelX, buffer.height - 5, panelWidth, 3, 0x353535, 0xEEEEEE, 0xAAAAAA, 0x262626, "Update")).onTouch = function()
@@ -193,7 +193,7 @@ mainContainer.scanButton.onTouch = function()
 	local horizontalRange, verticalRange = math.floor(mainContainer.horizontalScanRangeSlider.value), math.floor(mainContainer.verticalScanRangeSlider.value)
 	local total, current = (horizontalRange * 2 + 1) ^ 2, 0
 
-	buffer.clear(0x0, 0x30)
+	buffer.clear(0x0, 0.48)
 	for x = -horizontalRange, horizontalRange do
 		scanResult[x] = {}
 		for z = -horizontalRange, horizontalRange do

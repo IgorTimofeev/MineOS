@@ -1,5 +1,5 @@
 
-package.loaded.rayEngine, package.loaded.GUI, _G.rayEngine, _G.GUI = nil, nil, nil, nil, nil, nil
+package.loaded.rayEngine = nil
 
 local fs = require("filesystem")
 local component = require("component")
@@ -21,7 +21,7 @@ local rayWalkVersion = "RayWalk Tech Demo v3.5"
 
 local function menuBackground()
 	rayEngine.drawWorld()
-	buffer.clear(0x000000, 50)
+	buffer.clear(0x000000, 0.5)
 end
 
 local function settings()

@@ -4,6 +4,7 @@ local computer = require("computer")
 local advancedLua = require("advancedLua")
 local color = require("color")
 local image = require("image")
+local unicode = require("unicode")
 local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 local event = require("event")
@@ -84,7 +85,7 @@ end
 local function getTileColor(basecolor, distance)
 	local limitedDistance = math.floor(distance * rayEngine.properties.shadingCascades / rayEngine.properties.shadingDistance)
 	local transparency = rayEngine.currentShadingTransparencyMapValue - limitedDistance / rayEngine.properties.shadingCascades
-	transparency = (transparency >= rayEngine.properties.shadingTransparencyMap[1] and transparency <= 1) and transparency or rayEngine.properties.shadingTransparencyMap[1]
+	transparency = (transparency >= rayEngine.properties.shadingTransparencyMap[1] and transparency <= 1) and transparency or rayEngine.properties.shadingTransparencyMap[1]	
 	return color.blend(basecolor, 0x000000, transparency)
 end
 
@@ -347,8 +348,8 @@ end
 
 function rayEngine.chat(transparency)
 	local x, y = 1, buffer.height - rayEngine.chatPanelHeight - 3
-	buffer.square(x, y, rayEngine.chatPanelWidth, rayEngine.chatPanelHeight, 0x000000, 0xFFFFFF, " ", transparency or 50)
-	buffer.setDrawLimit(x, y, rayEngine.chatPanelWidth, rayEngine.chatPanelHeight)
+	buffer.square(x, y, rayEngine.chatPanelWidth, rayEngine.chatPanelHeight, 0x000000, 0xFFFFFF, " ", transparency or 0.5)
+	buffer.setDrawLimit(x, y, x + rayEngine.chatPanelWidth - 1, y + rayEngine.chatPanelHeight - 1)
 	local yMessage = y + rayEngine.chatPanelHeight - 1
 	x = x + 1
 
@@ -374,8 +375,9 @@ function rayEngine.commandLine(transparency)
 	buffer.square(x, y, buffer.width, inputPanelHeight, 0x000000, 0xFFFFFF, " ", transparency)
 
 	--Ввод данных
-	local text = GUI.input(x + 2, y + 1, buffer.width - 4, 0xFFFFFF, "")
-	local words = {}; for word in string.gmatch(text, "[^%s]+") do table.insert(words, unicode.lower(word)) end
+	local input = GUI.input(x + 2, y + 1, buffer.width - 4, 0xFFFFFF, "")
+	input:startInput()
+	local words = {}; for word in string.gmatch(input.text, "[^%s]+") do table.insert(words, unicode.lower(word)) end
 	if #words > 0 then
 		if unicode.sub(words[1], 1, 1) == "/" then
 			words[1] = unicode.sub(words[1], 2, -1)
@@ -421,7 +423,7 @@ function rayEngine.commandLine(transparency)
 				addItemToChatHistory("Неизвестная команда. Введите /help для получения списка команд", 0xFF8888)
 			end
 		else
-			addItemToChatHistory("> " .. text, 0xFFFFFF)
+			addItemToChatHistory("> " .. input.text, 0xFFFFFF)
 		end
 	end
 
@@ -459,7 +461,7 @@ function rayEngine.drawStats()
 	local width = math.floor(buffer.width * 0.3)
 	local height = 5
 	local x, y = buffer.width - width - 1, 2
-	buffer.square(x, y, width, height, 0x000000, 0xFFFFFF, " ", 50)
+	buffer.square(x, y, width, height, 0x000000, 0xFFFFFF, " ", 0.5)
 
 	GUI.progressBar(x + 1, y + 4, width - 2, 1, 0x000000, 0xFF5555, rayEngine.player.health.current, rayEngine.player.health.maximum, true)
 end
@@ -489,7 +491,7 @@ function rayEngine.drawWorld()
 	--Земля
 	buffer.clear(rayEngine.world.colors.groundByTime)
 	--Небо
-	buffer.square(1, 1, buffer.width, rayEngine.horizonPosition, rayEngine.world.colors.sky.current)
+	buffer.square(1, 1, buffer.width, rayEngine.horizonPosition, rayEngine.world.colors.sky.current, 0x0, " ")
 	--Сцена
 	local startAngle, endAngle, startX, distanceToTile, tileID, height, startY, tileColor = rayEngine.player.rotation - rayEngine.player.fieldOfView / 2, rayEngine.player.rotation + rayEngine.player.fieldOfView / 2, 1
 	for angle = startAngle, endAngle, rayEngine.raycastStep do
@@ -526,7 +528,7 @@ function rayEngine.update()
 	
 	rayEngine.drawWorld()
 	if rayEngine.currentWeapon then rayEngine.drawWeapon() end
-	if rayEngine.minimapEnabled then rayEngine.drawMap(3, 2, 24, 24, 50) end
+	if rayEngine.minimapEnabled then rayEngine.drawMap(3, 2, 24, 24, 0.5) end
 	-- rayEngine.drawStats()
 	local xTools, yTools = 3, buffer.height - 25
 	if rayEngine.compassEnabled then rayEngine.compass(xTools, yTools); xTools = xTools + 30 end
@@ -535,7 +537,7 @@ function rayEngine.update()
 	doDayNightCycle()
 
 	if rayEngine.debugInformationEnabled then
-		rayEngine.drawDebugInformation(3, 2 + (rayEngine.minimapEnabled and 12 or 0), 24, 60, 
+		rayEngine.drawDebugInformation(3, 2 + (rayEngine.minimapEnabled and 12 or 0), 24, 0.6, 
 			"renderTime: " .. math.doubleToString((os.clock() - frameRenderClock) * 1000, 2) .. " ms",
 			"freeRAM: " .. math.doubleToString(computer.freeMemory() / 1024, 2) .. " KB",
 			"pos: " .. math.doubleToString(rayEngine.player.position.x) .. " x " .. math.doubleToString(rayEngine.player.position.y)

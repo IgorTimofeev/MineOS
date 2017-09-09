@@ -8,6 +8,7 @@ local fs = require("filesystem")
 local advancedLua = require("advancedLua")
 local color = require("color")
 local image = require("image")
+local MineOSCore = require("MineOSCore")
 local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 
@@ -16,7 +17,7 @@ local GUI = require("GUI")
 if not component.isAvailable("printer3d") then GUI.error("This program requires at least one 3D-printer"); return end
 local args, options = require("shell").parse(...)
 local startImagePath = args[1] == "open" and args[2] or "/MineOS/System/Icons/Steve.pic"
-local configPath = "/MineOS/System/PrintImage/Config.cfg"
+local configPath = MineOSCore.paths.system .. "PrintImage/Config.cfg"
 local panelWidth = 34
 local mainContainer
 local mainImage
@@ -189,27 +190,22 @@ local function createWindow()
 	local textBoxesWidth = math.floor(panelWidth * 0.55)
 	
 	mainContainer.shadeContainer = mainContainer:addChild(GUI.container(mainContainer.width - panelWidth + 1, 1, panelWidth, mainContainer.height))
-	mainContainer.shadeContainer:addChild(GUI.panel(1, 1, mainContainer.shadeContainer.width, mainContainer.shadeContainer.height, 0x0000000, 40))
+	mainContainer.shadeContainer:addChild(GUI.panel(1, 1, mainContainer.shadeContainer.width, mainContainer.shadeContainer.height, 0x0000000, 0.4))
 	
 	local y = 2
 	mainContainer.shadeContainer:addChild(GUI.label(1, y, mainContainer.shadeContainer.width, 1, 0xFFFFFF, "Main properties")):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
 	
 	y = y + 2
 	mainContainer.shadeContainer:addChild(GUI.label(3, y, mainContainer.shadeContainer.width, 1, 0xCCCCCC, "Image path:"))
-	mainContainer.shadeContainer:addChild(GUI.inputField(mainContainer.shadeContainer.width - textBoxesWidth - 1, y, textBoxesWidth, 1, 0xEEEEEE, 0x555555, 0x555555, 0xEEEEEE, 0x262626, startImagePath, nil, true)).validator = function(text)
-		if text and fs.exists(text) then
-			if unicode.sub(text, -4, -1) == ".pic" then
-				mainImage = image.load(text)
-				getStatus()
-				return true
-			else
-				GUI.error("File \"" .. text .. "\" is not in .pic format")
-			end
-		else
-			GUI.error("File \"" .. text .. "\" doesn't exists")
-		end
+	local filesystemChooser = mainContainer.shadeContainer:addChild(GUI.filesystemChooser(mainContainer.shadeContainer.width - textBoxesWidth - 1, y, textBoxesWidth, 1, 0xEEEEEE, 0x262626, 0x444444, 0x999999, startImagePath, MineOSCore.localization.open, MineOSCore.localization.cancel, "Image path", "/"))
+	filesystemChooser:addExtensionFilter(".pic")
+	filesystemChooser.onSubmit = function(path)
+		mainImage = image.load(path)
+		getStatus()
+		mainContainer:draw()
+		buffer.draw()
 	end
-	
+
 	y = y + 2
 	mainContainer.shadeContainer:addChild(GUI.label(3, y, mainContainer.shadeContainer.width, 1, 0xCCCCCC, "Material:"))
 	local mainMaterialTextBox = mainContainer.shadeContainer:addChild(GUI.inputField(mainContainer.shadeContainer.width - textBoxesWidth - 1, y, textBoxesWidth, 1, 0xEEEEEE, 0x555555, 0x555555, 0xEEEEEE, 0x262626, config.mainMaterial, nil, false))

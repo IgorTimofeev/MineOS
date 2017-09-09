@@ -37,8 +37,8 @@ local MineOSCore = require("MineOSCore")
 
 ---------------------------------------------- Всякая константная залупа ------------------------------------------------------------------------
 
-local menuTransparency = 20
-local dockTransparency = 50
+local menuTransparency = 0.2
+local dockTransparency = 0.5
 
 local computerUptimeOnBoot = computer.uptime()
 local computerDateUptime = computerUptimeOnBoot
@@ -498,9 +498,9 @@ local function createOSWindow()
 			buffer.square(xPos + 1, yPos, currentDockWidth - 2, 1, color, 0xFFFFFF, " ", MineOSCore.OSSettings.transparencyEnabled and currentDockTransparency)
 			buffer.text(xPos + currentDockWidth - 1, yPos, color, "◣", MineOSCore.OSSettings.transparencyEnabled and currentDockTransparency)
 
-			currentDockTransparency, currentDockWidth, xPos, yPos = currentDockTransparency + 8, currentDockWidth - 2, xPos + 1, yPos - 1
-			if currentDockTransparency > 100 then
-				currentDockTransparency = 100
+			currentDockTransparency, currentDockWidth, xPos, yPos = currentDockTransparency + 0.08, currentDockWidth - 2, xPos + 1, yPos - 1
+			if currentDockTransparency > 1 then
+				currentDockTransparency = 1
 			end
 		end
 
@@ -586,9 +586,9 @@ local function createOSWindow()
 		menu:addItem(MineOSCore.localization.wallpaper).onTouch = function()
 			local container = MineOSCore.addUniversalContainer(MineOSCore.OSMainContainer, MineOSCore.localization.wallpaper)
 
-			local filesystemChooser = container.layout:addChild(GUI.filesystemChooser(1, 1, 36, 3, 0xEEEEEE, 0x262626, 0x444444, 0x999999, MineOSCore.localization.open, MineOSCore.localization.cancel, MineOSCore.localization.wallpaperPath, GUI.filesystemModes.file, "/", MineOSCore.OSSettings.wallpaper))
+			local filesystemChooser = container.layout:addChild(GUI.filesystemChooser(1, 1, 36, 3, 0xEEEEEE, 0x262626, 0x444444, 0x999999, MineOSCore.OSSettings.wallpaper, MineOSCore.localization.open, MineOSCore.localization.cancel, MineOSCore.localization.wallpaperPath, "/"))
 			filesystemChooser:addExtensionFilter(".pic")
-			filesystemChooser.onItemSelected = function(path)
+			filesystemChooser.onSubmit = function(path)
 				MineOSCore.OSSettings.wallpaper = path
 				MineOSCore.saveOSSettings()
 				changeWallpaper()

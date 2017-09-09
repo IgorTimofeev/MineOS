@@ -5,7 +5,7 @@ local color = {}
 
 -----------------------------------------------------------------------------------------------------------------------
 
--- Yoba-fix for PIDORS
+-- Optimized Lua 5.3 bitwise support
 if computer.getArchitecture and computer.getArchitecture() == "Lua 5.3" then
 	color.RGBToHEX = load([[
 		return function(r, g, b)
@@ -24,76 +24,55 @@ function color.HEXToRGB(HEXColor)
 	return bit32.rshift(HEXColor, 16), bit32.band(bit32.rshift(HEXColor, 8), 0xFF), bit32.band(HEXColor, 0xFF)
 end
 
-function color.RGBToHSB(rr, gg, bb)
-	local max = math.max(rr, math.max(gg, bb))
-	local min = math.min(rr, math.min(gg, bb))
-	local delta = max - min
+-----------------------------------------------------------------------------------------------------------------------
 
-	local h = 0
-	if ( max == rr and gg >= bb) then h = 60 * (gg - bb) / delta end
-	if ( max == rr and gg <= bb ) then h = 60 * (gg - bb) / delta + 360 end
-	if ( max == gg ) then h = 60 * (bb - rr) / delta + 120 end
-	if ( max == bb ) then h = 60 * (rr - gg) / delta + 240 end
+function color.RGBToHSB(r, g, b)
+	local max, min = math.max(r, g, b), math.min(r, g, b)
 
-	local s = 0
-	if ( max ~= 0 ) then s = 1 - (min / max) end
-
-	local b = max * 100 / 255
-
-	if delta == 0 then h = 0 end
-
-	return h, s * 100, b
+	if max == min then
+		return 0, max == 0 and 0 or (1 - min / max) * 100, max / 255 * 100
+	elseif max == r and g >= b then
+		return 60 * (g - b) / (max - min), max == 0 and 0 or (1 - min / max) * 100, max / 255 * 100
+	elseif max == r and g < b then
+		return 60 * (g - b) / (max - min) + 360, max == 0 and 0 or (1 - min / max) * 100, max / 255 * 100
+	elseif max == g then
+		return 60 * (b - r) / (max - min) + 120, max == 0 and 0 or (1 - min / max) * 100, max / 255 * 100
+	elseif max == b then
+		return 60 * (r - g) / (max - min) + 240, max == 0 and 0 or (1 - min / max) * 100, max / 255 * 100
+	else
+		return 0, max == 0 and 0 or (1 - min / max) * 100, max / 255 * 100
+	end
 end
 
-function color.HSBToRGB(h, s, v)
-	if h > 359 then h = 0 end
-	local rr, gg, bb = 0, 0, 0
-	local const = 255
+function color.HSBToRGB(h, s, b)
+	s, b = s / 100, b / 100
+	local integer, fractional = math.modf(h / 60)	
+	local p, q, t = b * (1 - s), b * (1 - s * fractional), b * (1 - (1 - fractional) * s)
 
-	s = s / 100
-	v = v / 100
-	
-	local i = math.floor(h / 60)
-	local f = h / 60 - i
-	
-	local p = v * (1 - s)
-	local q = v * (1 - s * f)
-	local t = v * (1 - (1 - f) * s)
-
-	if ( i == 0 ) then rr, gg, bb = v, t, p end
-	if ( i == 1 ) then rr, gg, bb = q, v, p end
-	if ( i == 2 ) then rr, gg, bb = p, v, t end
-	if ( i == 3 ) then rr, gg, bb = p, q, v end
-	if ( i == 4 ) then rr, gg, bb = t, p, v end
-	if ( i == 5 ) then rr, gg, bb = v, p, q end
-
-	return math.floor(rr * const), math.floor(gg * const), math.floor(bb * const)
+	if integer == 0 then
+		return math.floor(b * 255), math.floor(t * 255), math.floor(p * 255)
+	elseif integer == 1 then
+		return math.floor(q * 255), math.floor(b * 255), math.floor(p * 255)
+	elseif integer == 2 then
+		return math.floor(p * 255), math.floor(b * 255), math.floor(t * 255)
+	elseif integer == 3 then
+		return math.floor(p * 255), math.floor(q * 255), math.floor(b * 255)
+	elseif integer == 4 then
+		return math.floor(t * 255), math.floor(p * 255), math.floor(b * 255)
+	else
+		return math.floor(b * 255), math.floor(p * 255), math.floor(q * 255)
+	end
 end
 
 function color.HEXToHSB(HEXColor)
-	local rr, gg, bb = color.HEXToRGB(HEXColor)
-	local h, s, b = color.RGBToHSB( rr, gg, bb )
-	
-	return h, s, b
+	return color.RGBToHSB(color.HEXToRGB(HEXColor))
 end
 
 function color.HSBToHEX(h, s, b)
-	local rr, gg, bb = color.HSBToRGB(h, s, b)
-	local color = color.RGBToHEX(rr, gg, bb)
-
-	return color
+	return color.RGBToHEX(color.HSBToRGB(h, s, b))
 end
 
-function color.average(colors)
-	local sColors, averageRed, averageGreen, averageBlue, r, g, b = #colors, 0, 0, 0
-
-	for i = 1, sColors do
-		r, g, b = color.HEXToRGB(colors[i])
-		averageRed, averageGreen, averageBlue = averageRed + r, averageGreen + g, averageBlue + b
-	end
-
-	return color.RGBToHEX(math.floor(averageRed / sColors), math.floor(averageGreen / sColors), math.floor(averageBlue / sColors))
-end
+-----------------------------------------------------------------------------------------------------------------------
 
 function color.blend(firstColor, secondColor, secondColorTransparency)
 	local invertedTransparency, firstColorR, firstColorG, firstColorB = 1 - secondColorTransparency, color.HEXToRGB(firstColor)
@@ -104,6 +83,13 @@ function color.blend(firstColor, secondColor, secondColorTransparency)
 		secondColorG * invertedTransparency + firstColorG * secondColorTransparency,
 		secondColorB * invertedTransparency + firstColorB * secondColorTransparency
 	)
+end
+
+function color.blendRGBA(c1, c2, a1, a2)
+	local oneMinusA1, oneMinusA2 = 1 - a1, 1 - a2
+	return
+		color.blend(c1, c2, a2),
+		1 - (oneMinusA1 + a1 * oneMinusA2)
 end
 
 -----------------------------------------------------------------------------------------------------------------------
@@ -123,6 +109,17 @@ function color.multiply(r, g, b, multiplyer)
 	if b > 255 then b = 255 end
 
 	return r, g, b
+end
+
+function color.average(colors)
+	local sColors, averageRed, averageGreen, averageBlue, r, g, b = #colors, 0, 0, 0
+
+	for i = 1, sColors do
+		r, g, b = color.HEXToRGB(colors[i])
+		averageRed, averageGreen, averageBlue = averageRed + r, averageGreen + g, averageBlue + b
+	end
+
+	return color.RGBToHEX(math.floor(averageRed / sColors), math.floor(averageGreen / sColors), math.floor(averageBlue / sColors))
 end
 
 -----------------------------------------------------------------------------------------------------------------------
@@ -154,13 +151,6 @@ end
 
 function color.optimize(color24Bit)
 	return color.to24Bit(color.to8Bit(color24Bit))
-end
-
-function color.blendRGBA(c1, c2, a1, a2)
-	local oneMinusA1, oneMinusA2 = 1 - a1, 1 - a2
-	return
-		color.blend(c1, c2, a2),
-		1 - (oneMinusA1 + a1 * oneMinusA2)
 end
 
 -----------------------------------------------------------------------------------------------------------------------

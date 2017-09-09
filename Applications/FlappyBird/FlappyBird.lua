@@ -48,18 +48,18 @@ local xScore, yScore = math.floor(buffer.width / 2 - 6), math.floor(buffer.heigh
 
 local function drawColumn(x, upperCornerStartPosition)
 	local y = 1
-	buffer.square(x + 1, y, config.columnWidth, upperCornerStartPosition - config.columnPipeHeight, colors.columnMain)
-	buffer.square(x, upperCornerStartPosition - config.columnPipeHeight, config.columnPipeWidth, config.columnPipeHeight, colors.columnAlternative)
+	buffer.square(x + 1, y, config.columnWidth, upperCornerStartPosition - config.columnPipeHeight, colors.columnMain, 0x0, " ")
+	buffer.square(x, upperCornerStartPosition - config.columnPipeHeight, config.columnPipeWidth, config.columnPipeHeight, colors.columnAlternative, 0x0, " ")
 
 	y = upperCornerStartPosition + config.columnFreeSpace
-	buffer.square(x, y, config.columnPipeWidth, config.columnPipeHeight, colors.columnAlternative)
+	buffer.square(x, y, config.columnPipeWidth, config.columnPipeHeight, colors.columnAlternative, 0x0, " ")
 	y = y + config.columnPipeHeight
-	buffer.square(x + 1, y, config.columnWidth, buffer.height - y + 1, colors.columnMain)
+	buffer.square(x + 1, y, config.columnWidth, buffer.height - y + 1, colors.columnMain, 0x0, " ")
 end
 
 local function dieBirdDie()
 	if birdIsAlive then
-		bird = image.blend(bird, 0x880000, 50)
+		bird = image.blend(bird, 0x880000, 0.5)
 		birdIsAlive = false
 	end
 end
@@ -113,7 +113,7 @@ local function drawBigCenterText(y, textColor, usePseudoShadow, text)
 	local width = bigLetters.getTextSize(text)
 	local x = math.floor(buffer.width / 2 - width / 2)
 
-	if usePseudoShadow then buffer.square(x - 2, y - 1, width + 4, 7, colors.scoreTextBackground) end
+	if usePseudoShadow then buffer.square(x - 2, y - 1, width + 4, 7, colors.scoreTextBackground, 0x0, " ") end
 	bigLetters.drawText(x, y, textColor, text)
 end
 
@@ -200,7 +200,7 @@ local function finalGUI()
 		
 		drawAll()
 		
-		buffer.square(x, y, widthOfBoard, heightOfBoard, colors.board, 0xFFFFFF, " ", 30)
+		buffer.square(x, y, widthOfBoard, heightOfBoard, colors.board, 0xFFFFFF, " ", 0.3)
 
 		y = y + 2
 		drawBigCenterText(y, colors.boardText, false, "score")

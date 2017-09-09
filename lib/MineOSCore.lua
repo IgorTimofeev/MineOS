@@ -328,7 +328,7 @@ function MineOSCore.icon(x, y, path, textColor, selectionColor, showExtension)
 	icon.colors = {
 		text = textColor,
 		selection = selectionColor,
-		selectionTransparency = 60
+		selectionTransparency = 0.6
 	}
 	icon.path = path
 	icon.isDirectory = fs.isDirectory(icon.path)
@@ -393,6 +393,11 @@ local function iconFieldSaveIconConfig(iconField)
 	table.toFile(iconField.workpath .. MineOSCore.iconConfigFileName, iconField.iconConfig)
 end
 
+local function iconFieldDeleteIconConfig(iconField)
+	iconField.iconConfig = {}
+	fs.remove(iconField.workpath .. MineOSCore.iconConfigFileName, iconField.iconConfig)
+end
+
 local function iconFieldUpdateFileList(iconField)
 	-- Обновление файлового списка
 	iconField.fileList = fs.sortedList(iconField.workpath, iconField.sortingMethod, iconField.showHiddenFiles)
@@ -405,6 +410,7 @@ local function iconFieldUpdateFileList(iconField)
 	local xPos, yPos, horizontalIconCounter = 1, 1, 1
 	for i = iconField.fromFile, iconField.fromFile + iconField.iconCount.total - 1 do
 		if iconField.fileList[i] then
+			-- Выставление позиций иконок на основании конфига
 			local xIcon, yIcon = xPos, yPos
 			if iconField.iconConfig[iconField.fileList[i]] then
 				xIcon, yIcon = iconField.iconConfig[iconField.fileList[i]].x, iconField.iconConfig[iconField.fileList[i]].y
@@ -483,20 +489,20 @@ local function iconFieldBackgroundObjectEventHandler(mainContainer, object, even
 			end
 			
 			local subMenu = menu:addSubMenu(MineOSCore.localization.sortBy)
+			
 			subMenu:addItem(MineOSCore.localization.sortByName).onTouch = function()
+				object.parent:deleteIconConfig()
+
 				MineOSCore.OSSettings.sortingMethod = "name"
 				MineOSCore.saveOSSettings()
 				MineOSCore.OSMainContainer.iconField.sortingMethod = MineOSCore.OSSettings.sortingMethod
 				computer.pushSignal("MineOSCore", "updateFileList")
 			end
 
-			menu:addItem(MineOSCore.localization.sortAutomatically).onTouch = function()
-				object.parent.iconConfig = {}
-				object.parent:saveIconConfig()
-				computer.pushSignal("MineOSCore", "updateFileList")
-			end
-
+			
 			subMenu:addItem(MineOSCore.localization.sortByDate).onTouch = function()
+				object.parent:deleteIconConfig()
+
 				MineOSCore.OSSettings.sortingMethod = "date"
 				MineOSCore.saveOSSettings()
 				MineOSCore.OSMainContainer.iconField.sortingMethod = MineOSCore.OSSettings.sortingMethod
@@ -504,9 +510,16 @@ local function iconFieldBackgroundObjectEventHandler(mainContainer, object, even
 			end
 
 			subMenu:addItem(MineOSCore.localization.sortByType).onTouch = function()
+				object.parent:deleteIconConfig()
+
 				MineOSCore.OSSettings.sortingMethod = "type"
 				MineOSCore.saveOSSettings()
 				MineOSCore.OSMainContainer.iconField.sortingMethod = MineOSCore.OSSettings.sortingMethod
+				computer.pushSignal("MineOSCore", "updateFileList")
+			end
+
+			menu:addItem(MineOSCore.localization.sortAutomatically).onTouch = function()
+				object.parent:deleteIconConfig()
 				computer.pushSignal("MineOSCore", "updateFileList")
 			end
 
@@ -565,7 +578,7 @@ local function iconFieldForegroundObjectDraw(object)
 			y1, y2 = y2, y1
 		end
 		
-		buffer.square(x1, y1, x2 - x1 + 1, y2 - y1 + 1, 0xFFFFFF, 0x0, " ", 60)
+		buffer.square(x1, y1, x2 - x1 + 1, y2 - y1 + 1, 0xFFFFFF, 0x0, " ", 0.6)
 
 		local partialWidth, partialHeight = MineOSCore.iconWidth * MineOSCore.selectionIconPart, MineOSCore.iconHeight * MineOSCore.selectionIconPart
 		for i = 1, #object.parent.iconsContainer.children do
@@ -635,6 +648,7 @@ function MineOSCore.iconField(x, y, width, height, xSpaceBetweenIcons, ySpaceBet
 	iconField.deselectAll = iconFieldDeselectAll
 	iconField.loadIconConfig = iconFieldLoadIconConfig
 	iconField.saveIconConfig = iconFieldSaveIconConfig
+	iconField.deleteIconConfig = iconFieldDeleteIconConfig
 	iconField.getSelectedIcons = iconFieldGetSelectedIcons
 
 	return iconField
@@ -669,7 +683,7 @@ function MineOSCore.parseErrorMessage(error, indentationWidth)
 end
 
 function MineOSCore.showErrorWindow(path, errorLine, reason)
-	buffer.clear(0x0, 50)
+	buffer.clear(0x0, 0.5)
 
 	local mainContainer = GUI.container(1, 1, buffer.width, math.floor(buffer.height * 0.45))
 	mainContainer.y = math.floor(buffer.height / 2 - mainContainer.height / 2)
@@ -926,7 +940,7 @@ function MineOSCore.iconRightClick(icon, eventData)
 			for i = 1, #selectedIcons do
 				if not selectedIcons[i].isShortcut then
 					MineOSCore.createShortcut(
-						fs.path(MineOSCore.paths.desktop) .. "/" .. fs.hideExtension(fs.name(selectedIcons[i].path)) .. ".lnk",
+						MineOSCore.paths.desktop .. "/" .. fs.hideExtension(fs.name(selectedIcons[i].path)) .. ".lnk",
 						selectedIcons[i].path
 					)
 				end
@@ -986,7 +1000,7 @@ end
 function MineOSCore.addUniversalContainer(parentContainer, title)
 	local container = parentContainer:addChild(GUI.container(1, 1, parentContainer.width, parentContainer.height))
 	
-	container.panel = container:addChild(GUI.panel(1, 1, container.width, container.height, MineOSCore.OSSettings.transparencyEnabled and 0x0 or (MineOSCore.OSSettings.backgroundColor or 0x0F0F0F), MineOSCore.OSSettings.transparencyEnabled and 20))
+	container.panel = container:addChild(GUI.panel(1, 1, container.width, container.height, MineOSCore.OSSettings.transparencyEnabled and 0x0 or (MineOSCore.OSSettings.backgroundColor or 0x0F0F0F), MineOSCore.OSSettings.transparencyEnabled and 0.2))
 	container.layout = container:addChild(GUI.layout(1, 1, container.width, container.height, 1, 1))
 	
 	if title then
@@ -1327,7 +1341,7 @@ end
 function MineOSCore.propertiesWindow(x, y, width, icon)
 	local mainContainer, window = MineOSCore.addWindow(GUI.titledWindow(x, y, width, 1, package.loaded.MineOSCore.localization.properties))
 
-	-- window.backgroundPanel.colors.transparency = 25
+	-- window.backgroundPanel.colors.transparency = 0.25
 	window:addChild(GUI.image(2, 3, icon.image))
 
 	local x, y = 11, 3

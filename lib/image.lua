@@ -196,7 +196,7 @@ function image.toString(picture)
 	for i = 3, #picture, 4 do
 		table.insert(charArray, string.format("%02X", color.to8Bit(picture[i])))
 		table.insert(charArray, string.format("%02X", color.to8Bit(picture[i + 1])))
-		table.insert(charArray, string.format("%02X", picture[i + 2]))
+		table.insert(charArray, string.format("%02X", math.floor(picture[i + 2] * 255)))
 		table.insert(charArray, picture[i + 3])
 
 		image.iterationYield(i)
@@ -214,7 +214,7 @@ function image.fromString(pictureString)
 	for i = 5, unicode.len(pictureString), 7 do
 		table.insert(picture, color.to24Bit(tonumber("0x" .. unicode.sub(pictureString, i, i + 1))))
 		table.insert(picture, color.to24Bit(tonumber("0x" .. unicode.sub(pictureString, i + 2, i + 3))))
-		table.insert(picture, tonumber("0x" .. unicode.sub(pictureString, i + 4, i + 5)))
+		table.insert(picture, tonumber("0x" .. unicode.sub(pictureString, i + 4, i + 5)) / 255)
 		table.insert(picture, unicode.sub(pictureString, i + 6, i + 6))
 	end
 
@@ -335,8 +335,8 @@ function image.blend(picture, blendColor, transparency)
 	local newPicture = {picture[1], picture[2]}
 
 	for i = 3, #picture, 4 do
-		table.insert(newPicture, color.blend(picture[i], blendColor, transparency / 100))
-		table.insert(newPicture, color.blend(picture[i + 1], blendColor, transparency / 100))
+		table.insert(newPicture, color.blend(picture[i], blendColor, transparency))
+		table.insert(newPicture, color.blend(picture[i + 1], blendColor, transparency))
 		table.insert(newPicture, picture[i + 2])
 		table.insert(newPicture, picture[i + 3])
 	end

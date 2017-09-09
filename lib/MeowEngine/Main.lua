@@ -490,7 +490,7 @@ function meowEngine.intro(vector3Position, size)
 	scene:addObject(meowEngine.newFloatingText(vector.newVector3(vector3Position[1] + 2, vector3Position[2] - size, vector3Position[3] + size * 0.1), 0xBBBBBB, "Powered by MeowEngine™"))
 
 	local from, to, speed = -30, 20, 4
-	local transparency, transparencyStep = 0, 100 / math.abs(to - from) * speed
+	local transparency, transparencyStep = 0, 1 / math.abs(to - from) * speed
 
 	scene.camera:setPosition(from, 0, -32)
 	while scene.camera.position[1] < to do
@@ -507,7 +507,7 @@ function meowEngine.intro(vector3Position, size)
 
 	os.sleep(2)
 
-	for i = 100, 0, -20 do
+	for i = 1, 0, -0.2 do
 		scene:render()
 		buffer.clear(0x0, i)
 		buffer.draw()
