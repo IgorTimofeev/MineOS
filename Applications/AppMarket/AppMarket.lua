@@ -149,7 +149,7 @@ local function displayApps(fromPage, typeFilter, nameFilter, updateCheck)
 		end
 
 		for i = 1, #applicationList do
-			if (not typeFilter or typeFilter == applicationList[i].type) and (not nameFilter or unicode.find(unicode.lower(fs.name(applicationList[i].path)), unicode.lower(nameFilter))) then
+			if (not typeFilter or typeFilter == applicationList[i].type) and (not nameFilter or string.unicodeFind(unicode.lower(fs.name(applicationList[i].path)), unicode.lower(nameFilter))) then
 				table.insert(finalApplicationList, applicationList[i])
 			end
 		end
