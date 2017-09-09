@@ -34,11 +34,7 @@ if computer.totalMemory() < 2097152 then
 	table.insert(reasons, "Not enough RAM: MineOS requires at least 2MB (2x Tier 3.5 RAM modules) to work properly.")
 end
 
-<<<<<<< HEAD
 if #reasons > 0 and not options.skiphardwarecheck and not options.s then
-=======
-if #reasons > 0 and not options.skiphardwarecheck then
->>>>>>> origin/master
 	print(" ")
 	for i = 1, #reasons do
 		print(reasons[i])
