@@ -40,13 +40,9 @@ end
 
 encodingMethods.save[5] = function(file, picture)
 	for i = 3, #picture, 4 do
-		-- writeByteArrayToFile(file, {color.HEXToRGB(picture[i])})
-		-- writeByteArrayToFile(file, {color.HEXToRGB(picture[i + 1])})
-
 		file:write(string.char(color.to8Bit(picture[i])))
 		file:write(string.char(color.to8Bit(picture[i + 1])))
-
-		file:write(string.char(picture[i + 2]))
+		file:write(string.char(math.floor(picture[i + 2] * 255)))
 		writeByteArrayToFile(file, {string.byte(picture[i + 3], 1, 6)})
 	end
 end
@@ -56,13 +52,9 @@ encodingMethods.load[5] = function(file, picture)
 	table.insert(picture, readNumberFromFile(file, 2))
 
 	for i = 1, image.getWidth(picture) * image.getHeight(picture) do
-		-- table.insert(picture, color.RGBToHEX(string.byte(file:read(1)), string.byte(file:read(1)), string.byte(file:read(1))))
-		-- table.insert(picture, color.RGBToHEX(string.byte(file:read(1)), string.byte(file:read(1)), string.byte(file:read(1))))
-			
 		table.insert(picture, color.to24Bit(string.byte(file:read(1))))
 		table.insert(picture, color.to24Bit(string.byte(file:read(1))))
-
-		table.insert(picture, string.byte(file:read(1)))
+		table.insert(picture, string.byte(file:read(1)) / 255)
 		table.insert(picture, string.readUnicodeChar(file))
 	end
 end
@@ -77,7 +69,7 @@ encodingMethods.save[6] = function(file, picture)
 
 	for alpha in pairs(groupedPicture) do
 		-- Writing 1 byte for current alpha value
-		file:write(string.char(alpha))
+		file:write(string.char(math.floor(alpha * 255)))
 		-- Writing 2 bytes for symbols array size
 		writeByteArrayToFile(file, bit32.numberToFixedSizeByteArray(table.size(groupedPicture[alpha]), 2))
 
@@ -125,7 +117,7 @@ encodingMethods.load[6] = function(file, picture)
 	alphaSize = string.byte(file:read(1))
 	
 	for alpha = 1, alphaSize do
-		currentAlpha = string.byte(file:read(1))
+		currentAlpha = string.byte(file:read(1)) / 255
 		symbolSize = readNumberFromFile(file, 2)
 		
 		for symbol = 1, symbolSize do
