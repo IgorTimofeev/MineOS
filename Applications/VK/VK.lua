@@ -369,20 +369,20 @@ local function drawPersonalAvatar(x, y, width, height)
 end
 
 local function status(text)
-	buffer.square(mainZoneX, buffer.height, mainZoneWidth, 1, colors.statusBar)
+	buffer.square(mainZoneX, buffer.height, mainZoneWidth, 1, colors.statusBar, 0x0, " ")
 	buffer.text(mainZoneX + 1, buffer.height, colors.statusBarText, text)
 	buffer.draw()
 end
 
 local function drawTopBar(text)
-	buffer.square(mainZoneX, 1, mainZoneWidth, 3, colors.topBar)
+	buffer.square(mainZoneX, 1, mainZoneWidth, 3, colors.topBar, 0x0, " ")
 	local x = math.floor(mainZoneX + mainZoneWidth / 2 - unicode.len(text) / 2 - 1)
 	buffer.text(x, 2, colors.topBarText, text)
 end
 
 --Рисуем главную зону
 local function clearGUIZone()
-	buffer.square(mainZoneX, mainZoneY, mainZoneWidth, mainZoneHeight, colors.mainZone)
+	buffer.square(mainZoneX, mainZoneY, mainZoneWidth, mainZoneHeight, colors.mainZone, 0x0, " ")
 end
 
 local function drawEmptyCloud(x, y, cloudWidth, cloudHeight, cloudColor, fromYou)
@@ -445,7 +445,7 @@ end
 
 local function drawMessageInputBar(currentText)
 	local x, y = mainZoneX, buffer.height - 5
-	buffer.square(x, y, mainZoneWidth, 5, colors.messageInputBarColor)
+	buffer.square(x, y, mainZoneWidth, 5, colors.messageInputBarColor, 0x0, " ")
 	obj.messageInputBar = GUI.inputField(x + 2, y + 1, mainZoneWidth - 4, 3, 0xFFFFFF, 0x444444, 0x444444, 0xFFFFFF, 0x262626, nil, "Введите сообщение", true)
 	obj.messageInputBar:draw()
 end
@@ -537,7 +537,7 @@ end
 
 local function drawDialog(y, dialogBackground, avatarID, avatarText, text1, text2, text3)
 	--Рисуем подложку под диалог нужного цвета
-	buffer.square(mainZoneX, y, mainZoneWidth, 5, dialogBackground)
+	buffer.square(mainZoneX, y, mainZoneWidth, 5, dialogBackground, 0x0, " ")
 	--Рисуем аватарку, чо уж
 	drawAvatar(mainZoneX + 2, y + 1, 6, 3, avatarID, avatarText)
 	--Пишем все, что нужно
@@ -628,7 +628,7 @@ local function dialogsGUI()
 				local cyka = tostring(dialogs.response.items[i].unread)
 				local cykaWidth = unicode.len(cyka) + 2
 				local cykaX = buffer.width - cykaWidth - 2
-				buffer.square(cykaX, y + 2, cykaWidth, 1, ecs.colors.blue)
+				buffer.square(cykaX, y + 2, cykaWidth, 1, ecs.colors.blue, 0x0, " ")
 				buffer.text(cykaX + 1, y + 2, 0xFFFFFF, cyka)
 			end
 
@@ -659,7 +659,7 @@ local function audioGUI(ID)
 			color = 0xFFFFFF
 			if i % 2 == 0 then color = 0xEEEEEE end
 
-			buffer.square(mainZoneX, y, mainZoneWidth, 5, color)
+			buffer.square(mainZoneX, y, mainZoneWidth, 5, color, 0x0, " ")
 			obj.audio[i] = GUI.button(mainZoneX + 2, y + 1, 5, 3, colors.audioPlayButton, colors.audioPlayButtonText, 0x66FF80, colors.audioPlayButton, ">")
 			obj.audio[i][5] = audios.response.items[i]
 
@@ -794,7 +794,7 @@ local function userProfileGUI()
 
 	-- А ВОТ И СТЕНОЧКА ПОДЪЕХАЛА НА ПРАЗДНИК ДУШИ
 	y = y + 1
-	buffer.square(x, y, buffer.width - x - 2, 1, 0xCCCCCC); buffer.text(x + 1, y, 0x262626, "Стена"); y = y + 2
+	buffer.square(x, y, buffer.width - x - 2, 1, 0xCCCCCC, 0x0, " "); buffer.text(x + 1, y, 0x262626, "Стена"); y = y + 2
 	--Перебираем всю стенку
 	for i = 1, #currentProfile.wall.response.items do
 		--Если это не репост или еще не хуйня какая-то
@@ -834,7 +834,7 @@ local function userProfileGUI()
 
 	--Друзяшки, ЕПТАААААА, АХАХАХАХАХАХАХАХАХА		
 	y = y + 1
-	buffer.square(x, y, avatarWidth, 1, 0xCCCCCC); buffer.text(x + 1, y, 0x262626, "Друзья (" .. currentProfile.userProfile.response[1].counters.friends .. ")"); y = y + 2
+	buffer.square(x, y, avatarWidth, 1, 0xCCCCCC, 0x0, " "); buffer.text(x + 1, y, 0x262626, "Друзья (" .. currentProfile.userProfile.response[1].counters.friends .. ")"); y = y + 2
 	local xPos, yPos = x + 1, y
 	local count = 1
 	for i = 1, #currentProfile.friends.response.items do
@@ -882,7 +882,7 @@ local function friendsGUI()
 		local x, y = mainZoneX + 2, mainZoneY
 		for i = 1, #friends.response.items do
 			--Падложка
-			if i % 2 == 0 then buffer.square(mainZoneX, y, mainZoneWidth, 5 + (friends.response.items[i].lists and 1 or 0), 0xEEEEEE) end
+			if i % 2 == 0 then buffer.square(mainZoneX, y, mainZoneWidth, 5 + (friends.response.items[i].lists and 1 or 0), 0xEEEEEE, 0x0, " ") end
 			--Юзер
 			y = y + 1
 			local subbedName = unicode.sub(friends.response.items[i].first_name, 1, 1) .. unicode.sub(friends.response.items[i].last_name, 1, 1)
@@ -972,7 +972,7 @@ local function newsGUI()
 			if #text > 2 then yShift = yShift + #text - 2 end
 			
 			--Рисуем авку и название хуйни
-			if item % 2 == 0 then buffer.square(mainZoneX, y, mainZoneWidth, yShift, 0xEEEEEE) end
+			if item % 2 == 0 then buffer.square(mainZoneX, y, mainZoneWidth, yShift, 0xEEEEEE, 0x0, " ") end
 			drawAvatar(x, y + 1, 6, 3, math.abs(news.response.items[item].source_id), avatarText)
 			buffer.text(x + 7, y + 1, colors.topBar, name)
 			--Рисуем текст
