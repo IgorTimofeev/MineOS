@@ -1,0 +1,1 @@
+Program that allows to draw images using Braille chars simple and quickly. At this moment default Photoshop.app doesn't have support of this awesome feature.

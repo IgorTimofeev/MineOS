@@ -766,13 +766,17 @@ end
 
 local function menuItemEventHandler(mainContainer, object, eventData)
 	if eventData[1] == "touch" then
-		object.pressed = true
-		mainContainer:draw()
-		buffer.draw()
-		callMethod(object.onTouch, eventData)
-		object.pressed = false
-		mainContainer:draw()
-		buffer.draw()
+		if object.onTouch then
+			object.pressed = true
+			mainContainer:draw()
+			buffer.draw()
+
+			object.onTouch(eventData)
+			
+			object.pressed = false
+			mainContainer:draw()
+			buffer.draw()
+		end
 	end
 end
 
@@ -2896,11 +2900,12 @@ local function filesystemDialogDraw(filesystemDialog)
 		filesystemDialog.inputField.width = filesystemDialog.extensionComboBox.localPosition.x - 3
 	end
 
-	if not (filesystemDialog.IOMode == GUI.filesystemModes.save) then
+	if filesystemDialog.IOMode == GUI.filesystemModes.save then
+		filesystemDialog.submitButton.disabled = not filesystemDialog.inputField.text
+	else
 		filesystemDialog.inputField.text = filesystemDialog.treeView.selectedItem
+		filesystemDialog.submitButton.disabled = not filesystemDialog.treeView.selectedItem
 	end
-
-	filesystemDialog.submitButton.disabled = not (filesystemDialog.treeView.selectedItem and filesystemDialog.inputField.text)
 	
 	GUI.drawContainerContent(filesystemDialog)
 	GUI.windowShadow(filesystemDialog.x, filesystemDialog.y, filesystemDialog.width, filesystemDialog.height, GUI.colors.contextMenu.transparency.shadow, true)
@@ -3009,7 +3014,7 @@ function GUI.addFilesystemDialogToContainer(parentContainer, ...)
 	filesystemDialog.submitButton.onTouch = function()
 		onAnyTouch()
 		
-		local path = filesystemDialog.treeView.selectedItem
+		local path = filesystemDialog.treeView.selectedItem or filesystemDialog.treeView.workPath or "/"
 		if filesystemDialog.IOMode == GUI.filesystemModes.save then
 			path = path .. filesystemDialog.inputField.text
 			
@@ -3121,13 +3126,13 @@ end
 
 -- local dialog = GUI.addFilesystemDialogToContainer(mainContainer, "Save", "Cancel", "File name", "/")
 
--- dialog:setMode(GUI.filesystemModes.open, GUI.filesystemModes.file)
+-- dialog:setMode(GUI.filesystemModes.save, GUI.filesystemModes.file)
 -- dialog:addExtensionFilter(".pic")
 -- dialog:addExtensionFilter(".app")
-
 -- dialog.onSubmit = function(path)
 -- 	GUI.error(path)
 -- end
+-- dialog:show()
 
 -- local filesystemChooser = mainContainer:addChild(GUI.filesystemChooser(2, 2, 30, 3, 0xE1E1E1, 0x888888, 0x3C3C3C, 0x888888, nil, "Open", "Cancel", "Choose file", "/"))
 -- filesystemChooser:addExtensionFilter(".cfg")
