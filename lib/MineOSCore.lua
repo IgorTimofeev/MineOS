@@ -448,19 +448,23 @@ local function iconFieldBackgroundObjectEventHandler(mainContainer, object, even
 		else
 			local menu = MineOSCore.contextMenu(eventData[3], eventData[4])
 
-			menu:addItem(MineOSCore.localization.newFile).onTouch = function()
+			local subMenu = menu:addSubMenu(MineOSCore.localization.create)
+
+			subMenu:addItem(MineOSCore.localization.newFile).onTouch = function()
 				computer.pushSignal("MineOSCore", "newFile")
 			end
 			
-			menu:addItem(MineOSCore.localization.newFolder).onTouch = function()
+			subMenu:addItem(MineOSCore.localization.newFolder).onTouch = function()
 				computer.pushSignal("MineOSCore", "newFolder")
 			end
 
-			menu:addItem(MineOSCore.localization.newFileFromURL, not component.isAvailable("internet")).onTouch = function()
+			subMenu:addItem(MineOSCore.localization.newFileFromURL, not component.isAvailable("internet")).onTouch = function()
 				computer.pushSignal("MineOSCore", "newFileFromURL")
 			end
 
-			menu:addItem(MineOSCore.localization.newApplication).onTouch = function()
+			subMenu:addSeparator()
+
+			subMenu:addItem(MineOSCore.localization.newApplication).onTouch = function()
 				computer.pushSignal("MineOSCore", "newApplication")
 			end
 
@@ -1045,16 +1049,30 @@ end
 function MineOSCore.newApplication(parentWindow, path)
 	local container = addUniversalContainerWithInputTextBox(parentWindow, nil, MineOSCore.localization.newApplication, MineOSCore.localization.applicationName)
 
-	container.inputField.onInputFinished = function()
-		local finalPath = path .. container.inputField.text .. ".app/"
-		if checkFileToExists(container, finalPath) then
-			fs.makeDirectory(finalPath .. "/Resources/")
-			fs.copy(MineOSCore.paths.icons .. "SampleIcon.pic", finalPath .. "/Resources/Icon.pic")
-			local file = io.open(finalPath .. "Main.lua", "w")
-			file:write("require('GUI').error('Hello world')")
-			file:close()
+	local filesystemChooser = container.layout:addChild(GUI.filesystemChooser(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0x444444, 0x999999, nil, MineOSCore.localization.open, MineOSCore.localization.cancel, MineOSCore.localization.iconPath, "/"))
+	filesystemChooser:addExtensionFilter(".pic")
+	filesystemChooser:moveBackward()
 
-			computer.pushSignal("MineOSCore", "updateFileList")
+	container.panel.eventHandler = function(mainContainer, object, eventData)
+		if eventData[1] == "touch" then
+			container:delete()
+
+			if container.inputField.text then
+				local finalPath = path .. container.inputField.text .. ".app/"
+				if checkFileToExists(container, finalPath) then
+					fs.makeDirectory(finalPath .. "/Resources/")
+					fs.copy(filesystemChooser.path or MineOSCore.paths.icons .. "SampleIcon.pic", finalPath .. "/Resources/Icon.pic")
+					
+					local file = io.open(finalPath .. "Main.lua", "w")
+					file:write("require(\"GUI\").error(\"Hello world\")")
+					file:close()
+
+					computer.pushSignal("MineOSCore", "updateFileList")
+				end
+			else
+				parentWindow:draw()
+				buffer.draw()
+			end
 		end
 	end
 
