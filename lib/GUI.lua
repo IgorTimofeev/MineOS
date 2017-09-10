@@ -1845,6 +1845,7 @@ local function contextMenuCalculate(menu)
 		end
 	end
 	menu.width = 2 + widestItem + (widestShortcut > 0 and 3 + widestShortcut or 0)
+	menu.height = #menu.itemsContainer.children
 end
 
 local function contextMenuShow(menu)

@@ -310,7 +310,7 @@ local function changeResolution()
 	)
 	MineOSCore.OSMainContainer.iconField.localPosition.y = 3
 
-	MineOSCore.OSMainContainer.dockContainer.localPosition.x = math.floor(MineOSCore.OSMainContainer.width / 2 - MineOSCore.OSMainContainer.dockContainer.width / 2)
+	MineOSCore.OSMainContainer.dockContainer.sort()
 	MineOSCore.OSMainContainer.dockContainer.localPosition.y = MineOSCore.OSMainContainer.height - MineOSCore.OSMainContainer.dockContainer.height + 1
 
 	MineOSCore.OSMainContainer.menu.width = MineOSCore.OSMainContainer.width
@@ -375,6 +375,7 @@ local function createOSWindow()
 		end
 
 		MineOSCore.OSMainContainer.dockContainer.width = (#MineOSCore.OSMainContainer.dockContainer.children) * (MineOSCore.iconWidth + MineOSCore.OSMainContainer.iconField.spaceBetweenIcons.horizontal) - MineOSCore.OSMainContainer.iconField.spaceBetweenIcons.horizontal
+		MineOSCore.OSMainContainer.dockContainer.localPosition.x = math.floor(MineOSCore.OSMainContainer.width / 2 - MineOSCore.OSMainContainer.dockContainer.width / 2)
 	end
 
 	local function dockIconEventHandler(mainContainer, icon, eventData)
