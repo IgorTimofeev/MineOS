@@ -213,7 +213,7 @@ local function createEmptyMasterPixels()
 	for j = 1, image.getHeight(masterPixels) * image.getWidth(masterPixels) do
 		table.insert(masterPixels, 0x010101)
 		table.insert(masterPixels, 0x010101)
-		table.insert(masterPixels, 0xFF)
+		table.insert(masterPixels, 1.0)
 		table.insert(masterPixels, " ")
 	end
 end
@@ -532,7 +532,7 @@ local function drawImage()
 	for i = 3, #masterPixels, 4 do
 		--Рисуем пиксель, если у него прозрачность не абсолютная, ЛИБО имеется какой-то символ
 		--Т.е. даже если прозрачность и охуела, но символ есть, то рисуем его
-		if masterPixels[i + 2] ~= 0xFF or masterPixels[i + 3] ~= " " then
+		if masterPixels[i + 2] ~= 1 or masterPixels[i + 3] ~= " " then
 			drawPixel(xPos, yPos, xPixel, yPixel, i)
 		end
 		--Всякие расчеты координат
@@ -850,7 +850,7 @@ local function expand()
 				data[2] == localization.fromBottom and countOfPixels or 0,
 				data[2] == localization.fromLeft and countOfPixels or 0,
 				data[2] == localization.fromRight and countOfPixels or 0,
-				0x010101, 0x010101, 0xFF, " "
+				0x010101, 0x010101, 1, " "
 			)
 			reCalculateImageSizes(sizes.xStartOfImage, sizes.yStartOfImage)
 			drawAll()
@@ -979,7 +979,7 @@ while true do
 					end
 				--Ластик
 				elseif instruments[currentInstrument] == "E" then
-					brush(x, y, currentBackground, currentForeground, 0xFF, currentSymbol)
+					brush(x, y, currentBackground, currentForeground, 1, currentSymbol)
 					console("Ластик: клик на точку "..e[3].."x"..e[4]..", координаты в изображении: "..x.."x"..y..", индекс массива изображения: "..iterator)
 					buffer.draw()
 				--Текст
@@ -1295,7 +1295,7 @@ while true do
 					elseif action == localization.crop then
 						crop()
 					elseif action == localization.clear then
-						fillSelection(0x0, 0x0, 0xFF, " ")
+						fillSelection(0x0, 0x0, 1, " ")
 					elseif action == localization.fill then
 						fillSelection(currentBackground, 0x0, 0x0, " ")
 					elseif action == localization.border then
