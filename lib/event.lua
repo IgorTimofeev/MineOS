@@ -7,13 +7,6 @@
 local computer = require("computer")
 
 local event = {
-	lastTouch = {
-		x = 0,
-		y = 0,
-		button = 0,
-		uptime = 0
-	},
-	doubleTouchInterval = 0.3,
 	push = computer.pushSignal,
 	handlers = {},
 	interruptingEnabled = true,
@@ -53,7 +46,7 @@ function event.register(callback, signalType, times, interval)
 		ID = ID,
 		signalType = signalType,
 		callback = callback,
-		times = times,
+		times = times or math.huge,
 		interval = interval,
 		nextTriggerTime = interval and (computer.uptime() + interval) or nil
 	})
@@ -128,10 +121,9 @@ end
 
 local function eventTick(timeout)
 	local eventData, handlerIndex, uptime = {computer.pullSignal(timeout)}, 1, computer.uptime()
-
-	-- Process every registered event handlers 
+	
 	while handlerIndex <= #event.handlers do		
-		if not event.handlers[handlerIndex].times or event.handlers[handlerIndex].times > 0 then
+		if event.handlers[handlerIndex].times > 0 then
 			if
 				(not event.handlers[handlerIndex].signalType or event.handlers[handlerIndex].signalType == eventData[1]) and
 				(not event.handlers[handlerIndex].nextTriggerTime or event.handlers[handlerIndex].nextTriggerTime <= uptime)
@@ -139,9 +131,7 @@ local function eventTick(timeout)
 				executeHandlerCallback(event.handlers[handlerIndex].callback, table.unpack(eventData))
 				uptime = computer.uptime()
 
-				if event.handlers[handlerIndex].times then
-					event.handlers[handlerIndex].times = event.handlers[handlerIndex].times - 1
-				end
+				event.handlers[handlerIndex].times = event.handlers[handlerIndex].times - 1
 
 				if event.handlers[handlerIndex].nextTriggerTime then
 					event.handlers[handlerIndex].nextTriggerTime = uptime + event.handlers[handlerIndex].interval
@@ -221,20 +211,21 @@ function event.pull(...)
 	end
 end
 
--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------
 
-event.listen("touch", function(...)
-	local eventData = {...}
+local doubleTouchInterval, lastTouchX, lastTouchY, lastTouchButton, lastTouchUptime, lastTouchScreenAddress = 0.3, 0, 0, 0, 0
+
+event.listen("touch", function(signalType, screenAddress, x, y, button, user)
 	local uptime = computer.uptime()
 	
-	if event.lastTouch.x == eventData[3] and event.lastTouch.y == eventData[4] and event.lastTouch.button == eventData[5] and uptime - event.lastTouch.uptime <= event.doubleTouchInterval then
+	if lastTouchX == x and lastTouchY == y and lastTouchButton == button and lastTouchScreenAddress == screenAddress and uptime - lastTouchUptime <= doubleTouchInterval then
 		event.skip("touch")
-		computer.pushSignal("double_touch", table.unpack(eventData, 2))
+		computer.pushSignal("double_touch", screenAddress, x, y, button, user)
 	end
 
-	event.lastTouch.x, event.lastTouch.y, event.lastTouch.button, event.lastTouch.uptime = eventData[3], eventData[4], eventData[5], uptime
+	lastTouchX, lastTouchY, lastTouchButton, lastTouchUptime, lastTouchScreenAddress = x, y, button, uptime, screenAddress
 end)
 
--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------
 
 return event
