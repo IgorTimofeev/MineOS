@@ -217,12 +217,12 @@ local tabs = {
 	window.tabBar:addItem(localization.updates)
 }
 
-local oldResize = window.onResize
-window.onResize = function(window, width, height)
-	window.contentContainer.width, window.contentContainer.height = width - 4, height - 3
-	oldResize(window, width, height)	
-	tabs[window.tabBar.selectedItem].onTouch()
-end
+-- local oldResize = window.onResize
+-- window.onResize = function(window, width, height)
+-- 	window.contentContainer.width, window.contentContainer.height = width - 4, height - 3
+-- 	oldResize(window, width, height)	
+-- 	tabs[window.tabBar.selectedItem].onTouch()
+-- end
 
 tabs[1].onTouch = function() displayApps(1, "Application") end
 tabs[2].onTouch = function() displayApps(1, "Library") end
