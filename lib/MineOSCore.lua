@@ -394,6 +394,27 @@ end
 
 -----------------------------------------------------------------------------------------------------------------------------------
 
+local function getCykaIconPosition(iconField)
+	local y = iconField.yOffset
+	for i = 1, #iconField.iconsContainer.children do
+		y = math.max(y, iconField.iconsContainer.children[i].localPosition.y)
+	end
+
+	local x = iconField.xOffset
+	for i = 1, #iconField.iconsContainer.children do
+		if iconField.iconsContainer.children[i].localPosition.y == y then
+			x = math.max(x, iconField.iconsContainer.children[i].localPosition.x)
+		end
+	end
+
+	x = x + MineOSCore.iconWidth + iconField.spaceBetweenIcons.horizontal
+	if x + MineOSCore.iconWidth + iconField.spaceBetweenIcons.horizontal > iconField.iconsContainer.width then
+		x, y = iconField.xOffset, y + MineOSCore.iconHeight + iconField.spaceBetweenIcons.vertical
+	end
+
+	return x, y
+end
+
 local function iconFieldUpdateFileList(iconField)
 	iconField.fileList = fs.sortedList(iconField.workpath, iconField.sortingMethod, MineOSCore.OSSettings.showHiddenFiles)
 	iconField:update()
@@ -403,46 +424,54 @@ local function iconFieldUpdateFileList(iconField)
 		iconField:loadIconConfig()
 	end
 	
-	-- Заполнение дочернего контейнера
-	iconField.iconsContainer:deleteChildren()
-	local xPos, yPos, horizontalIconCounter = iconField.xOffset, iconField.yOffset, 1
+	local configList, notConfigList = {}, {}
 	for i = iconField.fromFile, iconField.fromFile + iconField.iconCount.total - 1 do
 		if iconField.fileList[i] then
 			if not iconField.filenameMatcher or string.unicodeFind(unicode.lower(iconField.fileList[i]), unicode.lower(iconField.filenameMatcher)) then
-				-- Выставление позиций иконок на основании конфига
-				local xIcon, yIcon, filename = xPos, yPos, fs.name(iconField.fileList[i])
-				if iconField.iconConfig[filename] then
-					xIcon, yIcon = iconField.iconConfig[filename].x, iconField.iconConfig[filename].y
+				if iconField.iconConfigEnabled and iconField.iconConfig[iconField.fileList[i]] then
+					table.insert(configList, iconField.fileList[i])
 				else
-					xPos, horizontalIconCounter = xPos + MineOSCore.iconWidth + iconField.spaceBetweenIcons.horizontal, horizontalIconCounter + 1
-					if horizontalIconCounter > iconField.iconCount.horizontal then
-						xPos, horizontalIconCounter = iconField.xOffset, 1
-						yPos = yPos + MineOSCore.iconHeight + iconField.spaceBetweenIcons.vertical
-					end
-
-					if iconField.iconConfigEnabled then
-						iconField.iconConfig[filename] = {
-							x = xIcon,
-							y = yIcon
-						}
-					end
+					table.insert(notConfigList, iconField.fileList[i])
 				end
-
-				local icon = iconField.iconsContainer:addChild(
-					MineOSCore.icon(
-						xIcon, yIcon,
-						iconField.workpath .. iconField.fileList[i],
-						iconField.colors.text,
-						iconField.colors.selection
-					)
-				)
-
-				icon.eventHandler = iconEventHandler
-				icon.launchers = iconField.launchers
-				icon:analyseExtension()
 			end
 		else
 			break
+		end
+	end
+
+	-- Заполнение дочернего контейнера
+	iconField.iconsContainer:deleteChildren()
+	for i = 1, #configList do
+		local icon = iconField.iconsContainer:addChild(MineOSCore.icon(
+			iconField.iconConfig[configList[i]].x,
+			iconField.iconConfig[configList[i]].y,
+			iconField.workpath .. configList[i],
+			iconField.colors.text,
+			iconField.colors.selection
+		))
+
+		icon.eventHandler = iconEventHandler
+		icon.launchers = iconField.launchers
+		icon:analyseExtension()
+	end
+
+	local x, y
+	if #configList > 0 then
+		x, y = getCykaIconPosition(iconField, configList)
+	else
+		x, y = iconField.xOffset, iconField.yOffset
+	end
+	for i = 1, #notConfigList do
+		local icon = iconField.iconsContainer:addChild(MineOSCore.icon(x, y, iconField.workpath .. notConfigList[i], iconField.colors.text, iconField.colors.selection))
+		iconField.iconConfig[notConfigList[i]] = {x = x, y = y}
+
+		icon.eventHandler = iconEventHandler
+		icon.launchers = iconField.launchers
+		icon:analyseExtension()
+
+		x = x + MineOSCore.iconWidth + iconField.spaceBetweenIcons.horizontal
+		if x + MineOSCore.iconWidth + iconField.spaceBetweenIcons.horizontal - 1 > iconField.iconsContainer.width then
+			x, y = iconField.xOffset, y + MineOSCore.iconHeight + iconField.spaceBetweenIcons.vertical
 		end
 	end
 

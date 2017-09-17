@@ -336,8 +336,6 @@ local function createOSWindow()
 
 			icon.selected = false
 			MineOSCore.OSDraw()
-		elseif eventData[1] == "double_touch" then
-			icon.onDoubleClick(icon, eventData)
 		end
 	end
 
@@ -359,10 +357,6 @@ local function createOSWindow()
 				-- os.sleep(MineOSCore.iconClickDelay)
 				MineOSCore.iconDoubleClick(icon, eventData)
 			end
-		end
-
-		icon.onDoubleClick = function(icon, eventData)
-			MineOSCore.iconDoubleClick(icon, eventData)
 		end
 
 		icon.onRightClick = function(icon, eventData)
