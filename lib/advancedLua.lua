@@ -276,7 +276,7 @@ local function doSerialize(array, prettyLook, indentationSymbol, indentationSymb
 			table.insert(text, key)
 			table.insert(text, "]")
 		elseif keyType == "string" then	
-			if key:match("^%a") and key:match("^%w+$") then
+			if prettyLook and key:match("^%a") and key:match("^%w+$") then
 				table.insert(text, key)
 			else
 				table.insert(text, "[\"")
@@ -400,20 +400,20 @@ function table.fromFile(path)
 	end
 end
 
-function table.copy(tableToCopy)
-	local function recursiveCopy(source, destination)
-		for key, value in pairs(source) do
-			if type(value) == "table" then
-				destination[key] = {}
-				recursiveCopy(source[key], destination[key])
-			else
-				destination[key] = value
-			end
+local function doTableCopy(source, destination)
+	for key, value in pairs(source) do
+		if type(value) == "table" then
+			destination[key] = {}
+			doTableCopy(source[key], destination[key])
+		else
+			destination[key] = value
 		end
 	end
+end
 
+function table.copy(tableToCopy)
 	local tableThatCopied = {}
-	recursiveCopy(tableToCopy, tableThatCopied)
+	doTableCopy(tableToCopy, tableThatCopied)
 
 	return tableThatCopied
 end
@@ -529,24 +529,28 @@ function string.unicodeFind(str, pattern, init, plain)
 	end
 end
 
-function string.limit(text, limit, mode, noDots)
-	local length = unicode.len(text)
-	if length <= limit then return text end
+function string.limit(s, limit, mode, noDots)
+	local length = unicode.len(s)
+	if length <= limit then return s end
 
 	if mode == "left" then
 		if noDots then
-			return unicode.sub(text, length - limit + 1, -1)
+			return unicode.sub(s, length - limit + 1, -1)
 		else
-			return "…" .. unicode.sub(text, length - limit + 2, -1)
+			return "…" .. unicode.sub(s, length - limit + 2, -1)
 		end
 	elseif mode == "center" then
-		local partSize = math.ceil(limit / 2)
-		return unicode.sub(text, 1, partSize) .. "…" .. unicode.sub(text, -partSize + 1, -1)
+		local integer, fractional = math.modf(limit / 2)
+		if fractional == 0 then
+			return unicode.sub(s, 1, integer) .. "…" .. unicode.sub(s, -integer + 1, -1)
+		else
+			return unicode.sub(s, 1, integer) .. "…" .. unicode.sub(s, -integer, -1)
+		end
 	else
 		if noDots then
-			return unicode.sub(text, 1, limit)
+			return unicode.sub(s, 1, limit)
 		else
-			return unicode.sub(text, 1, limit - 1) .. "…"
+			return unicode.sub(s, 1, limit - 1) .. "…"
 		end
 	end
 end

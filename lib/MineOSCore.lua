@@ -15,9 +15,9 @@ local keyboard = require("keyboard")
 ----------------------------------------------------------------------------------------------------------------
 
 local MineOSCore = {}
+
 MineOSCore.iconWidth = 12
 MineOSCore.iconHeight = 6
-MineOSCore.selectionIconPart = 0.4
 MineOSCore.iconClickDelay = 0.2
 MineOSCore.iconConfigFileName = ".icons"
 
@@ -116,7 +116,7 @@ function MineOSCore.associationsExtensionAutomatically()
 		if fs.isDirectory(path .. file) then
 			extension = "." .. unicode.sub(file, 1, -2)
 
-			if fs.exists(path .. file .. "Context menu.lua") then
+			if fs.exists(path .. file .. "ContextMenu.lua") then
 				MineOSCore.associateExtensionContextMenu(extension, path .. file .. "Context menu.lua")
 			end
 
@@ -165,85 +165,8 @@ end
 
 -----------------------------------------------------------------------------------------------------------------------------------
 
-local function launchApp(icon)
-	computer.pushSignal("MineOSCore", "applicationHelp", icon.path)
-end
-
-local function launchDirectory(icon)
-	computer.pushSignal("MineOSCore", "changeWorkpath", icon.path)
-end
-
-local function launchLnk(icon)
-	local oldPath = icon.path
-	icon.path = icon.shortcutPath
-	icon:shortcutLaunch()
-	icon.path = oldPath
-end
-
-local function launchCorrupted(icon)
-	GUI.error("Application is corrupted")
-end
-
-local function launchExtension(icon)
-	MineOSCore.safeLaunch(MineOSCore.OSSettings.extensionAssociations[icon.extension].launcher, icon.path, "-o")
-end
-
-local function launchScript(icon)
-	MineOSCore.launchScript(icon.path)
-end
-
-function MineOSCore.analyzeIconExtension(icon)
-	if icon.isDirectory then
-		if icon.extension == ".app" then
-			if MineOSCore.OSSettings.showApplicationIcons then
-				icon.image = image.load(icon.path .. "/Resources/Icon.pic")
-			else
-				icon.image = MineOSCore.icons.application
-			end
-
-			icon.launch = launchApp
-		else
-			icon.image = MineOSCore.icons.folder
-			icon.launch = launchDirectory
-		end
-	else
-		if icon.extension == ".lnk" then
-			icon.shortcutPath = MineOSCore.readShortcut(icon.path)
-			icon.shortcutExtension = fs.extension(icon.shortcutPath)
-			icon.shortcutIsDirectory = fs.isDirectory(icon.shortcutPath)
-			icon.isShortcut = true
-
-			local shortcutIcon = MineOSCore.analyzeIconExtension({
-				path = icon.shortcutPath,
-				extension = icon.shortcutExtension,
-				isDirectory = icon.shortcutIsDirectory,
-				iconImage = icon.iconImage
-			})
-
-			icon.image = shortcutIcon.image
-			icon.shortcutLaunch = shortcutIcon.launch
-			icon.launch = launchLnk
-
-			shortcutIcon = nil
-		elseif not fs.exists(icon.path) then
-			icon.image = MineOSCore.icons.fileNotExists
-			icon.launch = launchCorrupted
-		else
-			if MineOSCore.OSSettings.extensionAssociations[icon.extension] then
-				icon.launch = launchExtension
-				icon.image = MineOSCore.loadIcon(icon.extension, MineOSCore.OSSettings.extensionAssociations[icon.extension].icon)
-			else
-				icon.launch = launchScript
-				icon.image = MineOSCore.icons.script
-			end
-		end
-	end
-
-	return icon
-end
-
 local function iconDraw(icon)
-	local text = string.limit(icon.showExtension and fs.name(icon.path) or fs.hideExtension(fs.name(icon.path)), icon.width, "center")
+	local text = string.limit(MineOSCore.OSSettings.showExtension and fs.name(icon.path) or fs.hideExtension(fs.name(icon.path)), icon.width, "center")
 	local textLength = unicode.len(text)
 	local textX, textY = math.floor(icon.x + icon.width / 2 - unicode.len(text) / 2), icon.y + icon.height - 1
 	if icon.selected then
@@ -277,7 +200,7 @@ local function iconDraw(icon)
 		buffer.set(icon.x + 9, icon.y + 3, 0xFFFFFF, 0x000000, "<")
 	end
 
-	if icon.window then
+	if icon.windows then
 		buffer.text(icon.x + 5, icon.y + 4, 0x66DBFF, "╺╸")
 	end
 end
@@ -289,40 +212,38 @@ local function iconEventHandler(mainContainer, object, eventData)
 		object:moveToFront()
 
 		object.selected = true
-		MineOSCore.OSDraw()
+
+		mainContainer:draw()
+		buffer.draw()
 
 		if eventData[5] == 0 then
-			object.onLeftClick(object, eventData)
+			object.parent.parent.onLeftClick(object, eventData)
 		else
-			object.onRightClick(object, eventData)
+			object.parent.parent.onRightClick(object, eventData)
 			object.selected = false
-			MineOSCore.OSDraw()
+
+			mainContainer:draw()
+			buffer.draw()
 		end
 	elseif eventData[1] == "double_touch" and object:isClicked(eventData[3], eventData[4]) and eventData[5] == 0 then
-		object.onDoubleClick(object, eventData)
-	elseif eventData[1] == "drag" and object.lastTouchPosition then
+		object.parent.parent.onDoubleClick(object, eventData)
+	elseif eventData[1] == "drag" and object.parent.parent.iconConfigEnabled and object.lastTouchPosition then
 		object.localPosition.x = object.localPosition.x + eventData[3] - object.lastTouchPosition.x
 		object.localPosition.y = object.localPosition.y + eventData[4] - object.lastTouchPosition.y
 		object.lastTouchPosition.x, object.lastTouchPosition.y = eventData[3], eventData[4]
 
-		MineOSCore.OSDraw()
-	elseif eventData[1] == "drop" then
-		-- Сейвим позицию иконки на дисочек. Юзаем ручной поиск вместо :indexOf(), ибо
-		-- иконки из-за перемещения вперед могут иметь отличный от файллиста индекс
-		for i = 1, #object.parent.parent.fileList do
-			if object.parent.parent.workpath .. object.parent.parent.fileList[i] == object.path then
-				object.parent.parent.iconConfig[object.parent.parent.fileList[i]] = {
-					x = object.localPosition.x,
-					y = object.localPosition.y
-				}
-				object.parent.parent:saveIconConfig()
-				break
-			end
-		end
+		mainContainer:draw()
+		buffer.draw()
+	elseif eventData[1] == "drop" and object.parent.parent.iconConfigEnabled then
+		object.parent.parent.iconConfig[fs.name(object.path)] = {
+			x = object.localPosition.x,
+			y = object.localPosition.y
+		}
+		object.parent.parent:saveIconConfig()
 	end
 end
 
-function MineOSCore.icon(x, y, path, textColor, selectionColor, showExtension)
+function MineOSCore.icon(x, y, path, textColor, selectionColor)
 	local icon = GUI.object(x, y, MineOSCore.iconWidth, MineOSCore.iconHeight)
 	
 	icon.colors = {
@@ -333,31 +254,22 @@ function MineOSCore.icon(x, y, path, textColor, selectionColor, showExtension)
 	icon.path = path
 	icon.isDirectory = fs.isDirectory(icon.path)
 	icon.extension = fs.extension(icon.path) or "script"
-	icon.showExtension = showExtension
 	icon.isShortcut = false
 	icon.selected = false
 
 	icon.draw = iconDraw
+	icon.launchers = table.copy(MineOSCore.iconLaunchers)
+	icon.analyseExtension = iconAnalyseExtension
 
-	-- Поддержка изменяемых извне функций правого и левого кликов
-	icon.onLeftClick = MineOSCore.iconLeftClick
-	icon.onRightClick = MineOSCore.iconRightClick
-	icon.onDoubleClick = MineOSCore.iconDoubleClick
-	icon.eventHandler = iconEventHandler
-
-	-- Онализ формата и прочего говна иконки для последующего получения изображения иконки и функции-лаунчера
-	MineOSCore.analyzeIconExtension(icon)
-	
 	return icon
 end
 
 local function iconFieldUpdate(iconField)
 	iconField.backgroundObject.width, iconField.backgroundObject.height = iconField.width, iconField.height
-	iconField.foregroundObject.width, iconField.foregroundObject.height = iconField.width, iconField.height
 	iconField.iconsContainer.width, iconField.iconsContainer.height = iconField.width, iconField.height
 
-	iconField.iconCount.horizontal = math.floor(iconField.width / (MineOSCore.iconWidth + iconField.spaceBetweenIcons.horizontal))
-	iconField.iconCount.vertical = math.floor(iconField.height / (MineOSCore.iconHeight + iconField.spaceBetweenIcons.vertical))
+	iconField.iconCount.horizontal = math.floor((iconField.width - iconField.xOffset) / (MineOSCore.iconWidth + iconField.spaceBetweenIcons.horizontal))
+	iconField.iconCount.vertical = math.floor((iconField.height - iconField.yOffset) / (MineOSCore.iconHeight + iconField.spaceBetweenIcons.vertical))
 	iconField.iconCount.total = iconField.iconCount.horizontal * iconField.iconCount.vertical
 
 	return iconField
@@ -366,24 +278,6 @@ end
 local function iconFieldLoadIconConfig(iconField)
 	if fs.exists(iconField.workpath .. MineOSCore.iconConfigFileName) then
 		iconField.iconConfig = table.fromFile(iconField.workpath .. MineOSCore.iconConfigFileName)
-		
-		-- Чистим конфиг от файлов, которых более нет в иконфилде
-		local iconConfigItemExistsInFileList
-		for key in pairs(iconField.iconConfig) do
-			local iconConfigItemExistsInFileList = false
-			for i = 1, #iconField.fileList do
-				if key == iconField.fileList[i] then
-					iconConfigItemExistsInFileList = true
-					break
-				end
-			end
-
-			if not iconConfigItemExistsInFileList then
-				iconField.iconConfig[key] = nil
-			end
-		end
-
-		iconField:saveIconConfig()
 	else
 		iconField.iconConfig = {}
 	end
@@ -398,42 +292,161 @@ local function iconFieldDeleteIconConfig(iconField)
 	fs.remove(iconField.workpath .. MineOSCore.iconConfigFileName, iconField.iconConfig)
 end
 
-local function iconFieldUpdateFileList(iconField)
-	-- Обновление файлового списка
-	iconField.fileList = fs.sortedList(iconField.workpath, iconField.sortingMethod, iconField.showHiddenFiles)
-	-- Грузим инфу об иконочках
-	iconField:loadIconConfig()
-	-- Подсчет числа влезаемых иконочек
-	iconField:update()
-	-- Заполнение дочернего контейнера
-	iconField.iconsContainer:deleteChildren()
-	local xPos, yPos, horizontalIconCounter = 1, 1, 1
-	for i = iconField.fromFile, iconField.fromFile + iconField.iconCount.total - 1 do
-		if iconField.fileList[i] then
-			-- Выставление позиций иконок на основании конфига
-			local xIcon, yIcon = xPos, yPos
-			if iconField.iconConfig[iconField.fileList[i]] then
-				xIcon, yIcon = iconField.iconConfig[iconField.fileList[i]].x, iconField.iconConfig[iconField.fileList[i]].y
+-----------------------------------------------------------------------------------------------------------------------------------
+
+MineOSCore.iconLaunchers = {}
+
+function MineOSCore.iconLaunchers.application(icon)
+	MineOSCore.applicationHelp(MineOSCore.OSMainContainer, icon.path)
+end
+
+function MineOSCore.iconLaunchers.directory(icon)
+	icon.parent.parent:setWorkpath(icon.path)
+	icon.parent.parent:updateFileList()
+	icon:getFirstParent():draw()
+	buffer.draw()
+end
+
+function MineOSCore.iconLaunchers.shortcut(icon)
+	local oldPath = icon.path
+	icon.path = icon.shortcutPath
+	icon:shortcutLaunch()
+	icon.path = oldPath
+end
+
+function MineOSCore.iconLaunchers.corrupted(icon)
+	GUI.error("Application is corrupted")
+end
+
+function MineOSCore.iconLaunchers.extension(icon)
+	MineOSCore.safeLaunch(MineOSCore.OSSettings.extensionAssociations[icon.extension].launcher, icon.path, "-o")
+end
+
+function MineOSCore.iconLaunchers.script(icon)
+	MineOSCore.launchScript(icon.path)
+end
+
+function MineOSCore.iconLaunchers.showPackageContent(icon)
+	icon.parent.parent:setWorkpath(icon.path)
+	icon.parent.parent:updateFileList()
+	icon:getFirstParent():draw()
+	buffer.draw()
+end
+
+function MineOSCore.iconLaunchers.showContainingFolder(icon)
+	icon.parent.parent:setWorkpath(icon.shortcutPath)
+	icon.parent.parent:updateFileList()
+	icon:getFirstParent():draw()
+	buffer.draw()
+end
+
+function iconAnalyseExtension(icon)
+	if icon.isDirectory then
+		if icon.extension == ".app" then
+			if MineOSCore.OSSettings.showApplicationIcons then
+				icon.image = image.load(icon.path .. "/Resources/Icon.pic")
 			else
-				xPos, horizontalIconCounter = xPos + MineOSCore.iconWidth + iconField.spaceBetweenIcons.horizontal, horizontalIconCounter + 1
-				if horizontalIconCounter > iconField.iconCount.horizontal then
-					xPos, horizontalIconCounter = 1, 1
-					yPos = yPos + MineOSCore.iconHeight + iconField.spaceBetweenIcons.vertical
-				end
+				icon.image = MineOSCore.icons.application
 			end
 
-			iconField.iconsContainer:addChild(
-				MineOSCore.icon(
-					xIcon, yIcon,
-					iconField.workpath .. iconField.fileList[i],
-					iconField.colors.text,
-					iconField.colors.selection,
-					iconField.showExtension
+			icon.launch = icon.launchers.application
+		else
+			icon.image = MineOSCore.icons.folder
+			icon.launch = icon.launchers.directory
+		end
+	else
+		if icon.extension == ".lnk" then
+			icon.shortcutPath = MineOSCore.readShortcut(icon.path)
+			icon.shortcutExtension = fs.extension(icon.shortcutPath)
+			icon.shortcutIsDirectory = fs.isDirectory(icon.shortcutPath)
+			icon.isShortcut = true
+
+			local shortcutIcon = iconAnalyseExtension({
+				path = icon.shortcutPath,
+				extension = icon.shortcutExtension,
+				isDirectory = icon.shortcutIsDirectory,
+				iconImage = icon.iconImage,
+				launchers = icon.launchers
+			})
+
+			icon.image = shortcutIcon.image
+			icon.shortcutLaunch = shortcutIcon.launch
+			icon.launch = icon.launchers.shortcut
+
+			shortcutIcon = nil
+		elseif not fs.exists(icon.path) then
+			icon.image = MineOSCore.icons.fileNotExists
+			icon.launch = icon.launchers.corrupted
+		else
+			if MineOSCore.OSSettings.extensionAssociations[icon.extension] then
+				icon.launch = icon.launchers.extension
+				icon.image = MineOSCore.loadIcon(icon.extension, MineOSCore.OSSettings.extensionAssociations[icon.extension].icon)
+			else
+				icon.launch = icon.launchers.script
+				icon.image = MineOSCore.icons.script
+			end
+		end
+	end
+
+	return icon
+end
+
+-----------------------------------------------------------------------------------------------------------------------------------
+
+local function iconFieldUpdateFileList(iconField)
+	iconField.fileList = fs.sortedList(iconField.workpath, iconField.sortingMethod, MineOSCore.OSSettings.showHiddenFiles)
+	iconField:update()
+
+	-- Грузим инфу об иконочках
+	if iconField.iconConfigEnabled then
+		iconField:loadIconConfig()
+	end
+	
+	-- Заполнение дочернего контейнера
+	iconField.iconsContainer:deleteChildren()
+	local xPos, yPos, horizontalIconCounter = iconField.xOffset, iconField.yOffset, 1
+	for i = iconField.fromFile, iconField.fromFile + iconField.iconCount.total - 1 do
+		if iconField.fileList[i] then
+			if not iconField.filenameMatcher or string.unicodeFind(unicode.lower(iconField.fileList[i]), unicode.lower(iconField.filenameMatcher)) then
+				-- Выставление позиций иконок на основании конфига
+				local xIcon, yIcon, filename = xPos, yPos, fs.name(iconField.fileList[i])
+				if iconField.iconConfig[filename] then
+					xIcon, yIcon = iconField.iconConfig[filename].x, iconField.iconConfig[filename].y
+				else
+					xPos, horizontalIconCounter = xPos + MineOSCore.iconWidth + iconField.spaceBetweenIcons.horizontal, horizontalIconCounter + 1
+					if horizontalIconCounter > iconField.iconCount.horizontal then
+						xPos, horizontalIconCounter = iconField.xOffset, 1
+						yPos = yPos + MineOSCore.iconHeight + iconField.spaceBetweenIcons.vertical
+					end
+
+					if iconField.iconConfigEnabled then
+						iconField.iconConfig[filename] = {
+							x = xIcon,
+							y = yIcon
+						}
+					end
+				end
+
+				local icon = iconField.iconsContainer:addChild(
+					MineOSCore.icon(
+						xIcon, yIcon,
+						iconField.workpath .. iconField.fileList[i],
+						iconField.colors.text,
+						iconField.colors.selection
+					)
 				)
-			)
+
+				icon.eventHandler = iconEventHandler
+				icon.launchers = iconField.launchers
+				icon:analyseExtension()
+			end
 		else
 			break
 		end
+	end
+
+	if iconField.iconConfigEnabled then
+		iconField:saveIconConfig()
 	end
 
 	return iconField
@@ -443,45 +456,48 @@ local function iconFieldBackgroundObjectEventHandler(mainContainer, object, even
 	if eventData[1] == "touch" then
 		if eventData[5] == 0 then
 			object.parent:deselectAll()
-			object.parent.selection.firstReady, object.parent.selection.x1, object.parent.selection.y1 = true, eventData[3], eventData[4]
-			MineOSCore.OSDraw()
+			object.parent.selection = {
+				x1 = eventData[3],
+				y1 = eventData[4]
+			}
+
+			mainContainer:draw()
+			buffer.draw()
 		else
 			local menu = MineOSCore.contextMenu(eventData[3], eventData[4])
 
 			local subMenu = menu:addSubMenu(MineOSCore.localization.create)
 
 			subMenu:addItem(MineOSCore.localization.newFile).onTouch = function()
-				computer.pushSignal("MineOSCore", "newFile")
+				MineOSCore.newFile(MineOSCore.OSMainContainer, MineOSCore.OSMainContainer.iconField.workpath)
 			end
 			
 			subMenu:addItem(MineOSCore.localization.newFolder).onTouch = function()
-				computer.pushSignal("MineOSCore", "newFolder")
+				MineOSCore.newFolder(MineOSCore.OSMainContainer, MineOSCore.OSMainContainer.iconField.workpath)
 			end
 
 			subMenu:addItem(MineOSCore.localization.newFileFromURL, not component.isAvailable("internet")).onTouch = function()
-				computer.pushSignal("MineOSCore", "newFileFromURL")
+				MineOSCore.newFileFromURL(MineOSCore.OSMainContainer, MineOSCore.OSMainContainer.iconField.workpath)
 			end
 
 			subMenu:addSeparator()
 
 			subMenu:addItem(MineOSCore.localization.newApplication).onTouch = function()
-				computer.pushSignal("MineOSCore", "newApplication")
+				MineOSCore.newApplication(MineOSCore.OSMainContainer, MineOSCore.OSMainContainer.iconField.workpath)
 			end
 
 			menu:addSeparator()
 
 			local subMenu = menu:addSubMenu(MineOSCore.localization.view)
 
-			subMenu:addItem(MineOSCore.OSMainContainer.iconField.showExtension and MineOSCore.localization.hideExtension or MineOSCore.localization.showExtension).onTouch = function()
-				MineOSCore.OSMainContainer.iconField.showExtension = not MineOSCore.OSMainContainer.iconField.showExtension
-				MineOSCore.OSSettings.showExtension = MineOSCore.OSMainContainer.iconField.showExtension
+			subMenu:addItem(MineOSCore.OSSettings.showExtension and MineOSCore.localization.hideExtension or MineOSCore.localization.showExtension).onTouch = function()
+				MineOSCore.OSSettings.showExtension = not MineOSCore.OSSettings.showExtension
 				MineOSCore.saveOSSettings()
 				computer.pushSignal("MineOSCore", "updateFileList")
 			end
 
-			subMenu:addItem(MineOSCore.OSMainContainer.iconField.showHiddenFiles and MineOSCore.localization.hideHiddenFiles or MineOSCore.localization.showHiddenFiles).onTouch = function()
-				MineOSCore.OSMainContainer.iconField.showHiddenFiles = not MineOSCore.OSMainContainer.iconField.showHiddenFiles
-				MineOSCore.OSSettings.showHiddenFiles = MineOSCore.OSMainContainer.iconField.showHiddenFiles
+			subMenu:addItem(MineOSCore.OSSettings.showHiddenFiles and MineOSCore.localization.hideHiddenFiles or MineOSCore.localization.showHiddenFiles).onTouch = function()
+				MineOSCore.OSSettings.showHiddenFiles = not MineOSCore.OSSettings.showHiddenFiles
 				MineOSCore.saveOSSettings()
 				computer.pushSignal("MineOSCore", "updateFileList")
 			end
@@ -554,24 +570,25 @@ local function iconFieldBackgroundObjectEventHandler(mainContainer, object, even
 			menu:show()
 		end
 	elseif eventData[1] == "drag" then
-		object.parent.foregroundObject.hidden = false
-		computer.pushSignal(table.unpack(eventData))
+		if object.parent.selection then
+			object.parent.selection.x2 = eventData[3]
+			object.parent.selection.y2 = eventData[4]
+			object:moveToFront()
+
+			mainContainer:draw()
+			buffer.draw()
+		end
+	elseif eventData[1] == "drop" then
+		object.parent.selection = nil
+		object:moveToBack()
+
+		mainContainer:draw()
+		buffer.draw()
 	end
 end
 
-local function iconFieldForegroundObjectEventHandler(mainContainer, object, eventData)
-	if eventData[1] == "drag" then
-		object.parent.selection.secondReady, object.parent.selection.x2, object.parent.selection.y2 = true, eventData[3], eventData[4]
-		MineOSCore.OSDraw()
-	elseif eventData[1] == "touch" or eventData[1] == "drop" then
-		object.parent.selection.firstReady, object.parent.selection.secondReady = false, false
-		object.parent.foregroundObject.hidden = true
-		MineOSCore.OSDraw()
-	end
-end
-
-local function iconFieldForegroundObjectDraw(object)
-	if object.parent.selection.firstReady and object.parent.selection.secondReady then
+local function iconFieldBackgroundObjectDraw(object)
+	if object.parent.selection and object.parent.selection.x2 then
 		local x1, y1, x2, y2 = object.parent.selection.x1, object.parent.selection.y1, object.parent.selection.x2, object.parent.selection.y2
 
 		if x2 < x1 then
@@ -582,15 +599,15 @@ local function iconFieldForegroundObjectDraw(object)
 			y1, y2 = y2, y1
 		end
 		
-		buffer.square(x1, y1, x2 - x1 + 1, y2 - y1 + 1, 0xFFFFFF, 0x0, " ", 0.6)
+		buffer.square(x1, y1, x2 - x1 + 1, y2 - y1 + 1, object.parent.colors.selection, 0x0, " ", 0.6)
 
-		local partialWidth, partialHeight = MineOSCore.iconWidth * MineOSCore.selectionIconPart, MineOSCore.iconHeight * MineOSCore.selectionIconPart
 		for i = 1, #object.parent.iconsContainer.children do
+			local xCenter, yCenter = object.parent.iconsContainer.children[i].x + MineOSCore.iconWidth / 2, object.parent.iconsContainer.children[i].y + MineOSCore.iconHeight / 2
 			object.parent.iconsContainer.children[i].selected = 
-				object.parent.iconsContainer.children[i].x + partialWidth >= x1 and
-				object.parent.iconsContainer.children[i].x + object.parent.iconsContainer.children[i].width - 1 - partialWidth <= x2 and
-				object.parent.iconsContainer.children[i].y + partialHeight >= y1 and
-				object.parent.iconsContainer.children[i].y + object.parent.iconsContainer.children[i].height - 1 - partialHeight <= y2
+				xCenter >= x1 and
+				xCenter <= x2 and
+				yCenter >= y1 and
+				yCenter <= y2
 		end
 	end
 end
@@ -613,7 +630,15 @@ local function iconFieldGetSelectedIcons(iconField)
 	return selectedIcons
 end
 
-function MineOSCore.iconField(x, y, width, height, xSpaceBetweenIcons, ySpaceBetweenIcons, textColor, selectionColor, showExtension, showHiddenFiles, sortingMethod, workpath)
+local function iconFieldSetWorkpath(iconField, path)
+	iconField.workpath = path
+	iconField.filenameMatcher = nil
+	iconField.fromFile = 1
+
+	return iconField
+end
+
+function MineOSCore.iconField(x, y, width, height, xSpaceBetweenIcons, ySpaceBetweenIcons, xOffset, yOffset, textColor, selectionColor, sortingMethod, workpath)
 	local iconField = GUI.container(x, y, width, height)
 
 	iconField.colors = {
@@ -627,25 +652,22 @@ function MineOSCore.iconField(x, y, width, height, xSpaceBetweenIcons, ySpaceBet
 	}
 
 	iconField.iconConfig = {}
-	iconField.selection = {}
 	iconField.iconCount = {}
 	iconField.fileList = {}
 	iconField.fromFile = 1
+	iconField.iconConfigEnabled = false
+	iconField.xOffset = xOffset
+	iconField.yOffset = yOffset
+	iconField.workpath = workpath
+	iconField.sortingMethod = sortingMethod
+	iconField.filenameMatcher = nil
 
 	iconField.backgroundObject = iconField:addChild(GUI.object(1, 1, width, height))
 	iconField.backgroundObject.eventHandler = iconFieldBackgroundObjectEventHandler
+	iconField.backgroundObject.draw = iconFieldBackgroundObjectDraw
 
-	iconField.iconsContainer = iconField:addChild(GUI.container(1, 1, width, height))
+	iconField.iconsContainer = iconField:addChild(GUI.container(1, 1, width, height))	
 
-	iconField.foregroundObject = iconField:addChild(GUI.object(1, 1, width, height))
-	iconField.foregroundObject.eventHandler = iconFieldForegroundObjectEventHandler
-	iconField.foregroundObject.hidden = true
-	iconField.foregroundObject.draw = iconFieldForegroundObjectDraw
-
-	iconField.workpath = workpath
-	iconField.showExtension = showExtension
-	iconField.showHiddenFiles = showHiddenFiles
-	iconField.sortingMethod = sortingMethod
 	iconField.updateFileList = iconFieldUpdateFileList
 	iconField.update = iconFieldUpdate
 	iconField.eventHandler = iconFieldEventHandler
@@ -654,6 +676,13 @@ function MineOSCore.iconField(x, y, width, height, xSpaceBetweenIcons, ySpaceBet
 	iconField.saveIconConfig = iconFieldSaveIconConfig
 	iconField.deleteIconConfig = iconFieldDeleteIconConfig
 	iconField.getSelectedIcons = iconFieldGetSelectedIcons
+	iconField.setWorkpath = iconFieldSetWorkpath
+
+	iconField.onLeftClick = MineOSCore.iconLeftClick
+	iconField.onRightClick = MineOSCore.iconRightClick
+	iconField.onDoubleClick = MineOSCore.iconDoubleClick
+
+	iconField.launchers = table.copy(MineOSCore.iconLaunchers)
 
 	return iconField
 end
@@ -788,6 +817,9 @@ function MineOSCore.call(method, ...)
 end
 
 function MineOSCore.safeLaunch(path, ...)
+	path = path:gsub("/+", "/") 
+	MineOSCore.lastLaunchPath = path
+
 	local oldResolutionWidth, oldResolutionHeight = buffer.width, buffer.height
 	local finalSuccess, finalPath, finalLine, finalTraceback = true
 	
@@ -837,7 +869,6 @@ function MineOSCore.iconLeftClick(icon, eventData)
 end
 
 function MineOSCore.iconDoubleClick(icon, eventData)
-	MineOSCore.lastLaunchPath = icon.path
 	icon:launch()
 	computer.pushSignal("MineOSCore", "updateFileList")
 end
@@ -853,8 +884,7 @@ function MineOSCore.iconRightClick(icon, eventData)
 		if icon.isDirectory then
 			if icon.extension == ".app" then
 				menu:addItem(MineOSCore.localization.showPackageContent).onTouch = function()
-					computer.pushSignal("MineOSCore", "changeWorkpath", icon.path)
-					computer.pushSignal("MineOSCore", "updateFileList")
+					icon.parent.parent.launchers.showPackageContent(icon)
 				end		
 				menu:addItem(MineOSCore.localization.launchWithArguments).onTouch = function()
 					MineOSCore.launchWithArguments(MineOSCore.OSMainContainer, icon.path)
@@ -875,8 +905,7 @@ function MineOSCore.iconRightClick(icon, eventData)
 				end
 
 				menu:addItem(MineOSCore.localization.showContainingFolder).onTouch = function()
-					computer.pushSignal("MineOSCore", "changeWorkpath", fs.path(icon.shortcutPath))
-					computer.pushSignal("MineOSCore", "updateFileList")
+					icon.parent.parent.launchers.showContainingFolder(icon)
 				end
 
 				menu:addSeparator()
@@ -956,7 +985,7 @@ function MineOSCore.iconRightClick(icon, eventData)
 
 	if #selectedIcons == 1 then
 		menu:addItem(MineOSCore.localization.rename).onTouch = function()
-			computer.pushSignal("MineOSCore", "rename", icon.path)
+			MineOSCore.rename(MineOSCore.OSMainContainer, icon.path)
 		end
 	end
 
@@ -1257,25 +1286,9 @@ end
 
 ----------------------------------------- Windows patterns -----------------------------------------
 
-local function onWindowResize(window, width, height)
-	if window.titleLabel then
-		window.titleLabel.width = width
-	end
-
-	if window.titlePanel then
-		window.titlePanel.width = height
-	end
-
-	if window.tabBar then
-		window.tabBar.width = width
-	end
-
-	window.backgroundPanel.width, window.backgroundPanel.height = width, height - (window.titlePanel and 1 or 0)
-end
-
 local function windowResize(window, width, height)
 	window.width, window.height = width, height
-	window:onResize(width, height)
+	if window.onResize then window.onResize(width, height) end
 
 	return window
 end
@@ -1286,33 +1299,41 @@ function MineOSCore.addWindow(window)
 	
 	MineOSCore.OSMainContainer.windowsContainer:addChild(window)
 
-	-- Dock
-	local dockPath = MineOSCore.lastLaunchPath or "/lib/MineOSCore.lua"
-	MineOSCore.lastLaunchPath = nil
-
+	-- Получаем путь исполняемого файла
+	MineOSCore.lastLaunchPath = MineOSCore.lastLaunchPath or "/OS.lua"
+	local lastLaunchPathPath = fs.path(MineOSCore.lastLaunchPath)
+	if fs.extension(lastLaunchPathPath) == ".app" then
+		MineOSCore.lastLaunchPath = lastLaunchPathPath
+	end
+	-- Хуячим иконку в докыч, если такой еще не существует
 	local dockIcon
 	for i = 1, #MineOSCore.OSMainContainer.dockContainer.children do
-		if MineOSCore.OSMainContainer.dockContainer.children[i].path == dockPath then
+		if MineOSCore.OSMainContainer.dockContainer.children[i].path == MineOSCore.lastLaunchPath then
 			dockIcon = MineOSCore.OSMainContainer.dockContainer.children[i]
 			break
 		end
 	end
-	dockIcon = dockIcon or MineOSCore.OSMainContainer.dockContainer.addIcon(dockPath, window)
-	dockIcon.window = dockIcon.window or window
+	dockIcon = dockIcon or MineOSCore.OSMainContainer.dockContainer.addIcon(MineOSCore.lastLaunchPath, window)
+	-- Ебурим ссылку на окно в иконку
+	dockIcon.windows = dockIcon.windows or {}
+	dockIcon.windows[window] = true
 
 	window.resize = windowResize
-	window.onResize = onWindowResize
 	window.close = function(window)
 		local sameIconExists = false
 		for i = 1, #MineOSCore.OSMainContainer.dockContainer.children do
-			if MineOSCore.OSMainContainer.dockContainer.children[i].path == dockPath and MineOSCore.OSMainContainer.dockContainer.children[i].window and MineOSCore.OSMainContainer.dockContainer.children[i].window ~= window then
+			if 
+				MineOSCore.OSMainContainer.dockContainer.children[i].path == MineOSCore.lastLaunchPath and
+				MineOSCore.OSMainContainer.dockContainer.children[i].windows and
+				table.size(MineOSCore.OSMainContainer.dockContainer.children[i].windows) > 1
+			then
 				sameIconExists = true
 				break
 			end
 		end
 
 		if not sameIconExists then
-			dockIcon.window = nil
+			dockIcon.windows = nil
 			if not dockIcon.keepInDock then
 				dockIcon:delete()
 				MineOSCore.OSMainContainer.dockContainer.sort()
@@ -1324,8 +1345,22 @@ function MineOSCore.addWindow(window)
 	end
 	
 	window.maximize = function(window)
-		window.localPosition.x, window.localPosition.y = 1, 1
-		window:resize(window.parent.width, window.parent.height)
+		if window.maximized then
+			window.localPosition.x = window.oldGeometry.x
+			window.localPosition.y = window.oldGeometry.y
+			window:resize(window.oldGeometry.width, window.oldGeometry.height)
+		else
+			window.oldGeometry = {
+				x = window.localPosition.x,
+				y = window.localPosition.y,
+				width = window.width,
+				height = window.height
+			}
+			window.localPosition.x, window.localPosition.y = 1, 1
+			window:resize(window.parent.width, window.parent.height)
+		end
+
+		window.maximized = not window.maximized
 		MineOSCore.OSDraw()
 	end
 
@@ -1345,6 +1380,8 @@ function MineOSCore.addWindow(window)
 			window.minimize(window)
 		end
 	end
+
+	MineOSCore.lastLaunchPath = nil
 
 	return MineOSCore.OSMainContainer, window
 end
@@ -1369,6 +1406,9 @@ function MineOSCore.propertiesWindow(x, y, width, icon)
 	addKeyAndValue(window, x, y, package.loaded.MineOSCore.localization.path, " ")
 
 	local textBox = window:addChild(GUI.textBox(17, y, window.width - 18, 1, nil, 0x555555, {icon.path}, 1, 0, 0, true, true))
+	window.onResize = function(width, height)
+		window.backgroundPanel.width, window.backgroundPanel.height = width, height
+	end
 	window:resize(window.width, textBox.y + textBox.height)
 	textBox.eventHandler = nil
 

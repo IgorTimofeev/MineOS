@@ -47,11 +47,6 @@ local timezoneCorrection
 local screensaversPath = MineOSCore.paths.system .. "Screensavers/"
 local screensaverUptime = computerUptimeOnBoot
 
-local currentWorkpathHistoryIndex = 1
-local workpathHistory = { MineOSCore.paths.desktop }
-local currentDesktop = 1
-local countOfDesktops = 1
-
 ---------------------------------------------- Система защиты пекарни ------------------------------------------------------------------------
 
 local function biometry(creatingNew)
@@ -159,7 +154,7 @@ local function setPassword()
 	local container = MineOSCore.addUniversalContainer(MineOSCore.OSMainContainer, MineOSCore.localization.passwordProtection)
 	local inputField1 = container.layout:addChild(GUI.inputField(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0x666666, 0xEEEEEE, 0x262626, nil, MineOSCore.localization.inputPassword, true, "*"))
 	local inputField2 = container.layout:addChild(GUI.inputField(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0x666666, 0xEEEEEE, 0x262626, nil, MineOSCore.localization.confirmInputPassword, true, "*"))
-	local label = container.layout:addChild(GUI.label(1, 1, 36, 1, 0xFF4940, MineOSCore.localization.passwordsAreDifferent)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+	local label = container.layout:addChild(GUI.label(1, 1, 36, 1, 0x6340FF, MineOSCore.localization.passwordsAreDifferent)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
 	label.hidden = true
 
 	MineOSCore.OSDraw()
@@ -243,72 +238,16 @@ local function changeWallpaper()
 	end
 end
 
-local function changeWorkpath(newWorkpathHistoryIndex)
-	currentDesktop = 1
-	currentWorkpathHistoryIndex = newWorkpathHistoryIndex
-	MineOSCore.OSMainContainer.iconField.workpath = workpathHistory[currentWorkpathHistoryIndex]
-end
-
-local function updateDesktopCounters()
-	countOfDesktops = math.ceil(#MineOSCore.OSMainContainer.iconField.fileList / MineOSCore.OSMainContainer.iconField.iconCount.total)
-	MineOSCore.OSMainContainer.desktopCounters.children = {}
-	local x = 1
-	if #workpathHistory > 1 then
-		MineOSCore.OSMainContainer.desktopCounters:addChild(GUI.button(x, 1, 1, 1, nil, 0xEEEEEE, nil, 0x888888, "<")).onTouch = function()
-			table.remove(workpathHistory, #workpathHistory)
-			changeWorkpath(#workpathHistory)
-			MineOSCore.OSMainContainer.updateFileListAndDraw()
-		end; x = x + 3
-	end
-	if workpathHistory[currentWorkpathHistoryIndex] ~= "/" then
-		MineOSCore.OSMainContainer.desktopCounters:addChild(GUI.button(x, 1, 4, 1, nil, 0xEEEEEE, nil, 0x888888, "Root")).onTouch = function()
-			table.insert(workpathHistory, "/")
-			changeWorkpath(#workpathHistory)
-			MineOSCore.OSMainContainer.updateFileListAndDraw()
-		end; x = x + 6
-	end
-	if workpathHistory[currentWorkpathHistoryIndex] ~= MineOSCore.paths.desktop then
-		MineOSCore.OSMainContainer.desktopCounters:addChild(GUI.button(x, 1, 7, 1, nil, 0xEEEEEE, nil, 0x888888, "Desktop")).onTouch = function()
-			table.insert(workpathHistory, MineOSCore.paths.desktop)
-			changeWorkpath(#workpathHistory)
-			MineOSCore.OSMainContainer.updateFileListAndDraw()
-		end; x = x + 9
-	end
-	if countOfDesktops > 1 then
-		for i = 1, countOfDesktops do
-			MineOSCore.OSMainContainer.desktopCounters:addChild(GUI.button(x, 1, 1, 1, nil, i == currentDesktop and 0xEEEEEE or 0xBBBBBB, nil, 0x888888, "●")).onTouch = function()
-				if currentDesktop ~= i then
-					currentDesktop = i
-					MineOSCore.OSMainContainer.updateFileListAndDraw()
-				end
-			end; x = x + 3
-		end
-	end
-
-	MineOSCore.OSMainContainer.desktopCounters.width = x - 3
-	MineOSCore.OSMainContainer.desktopCounters.localPosition.x = math.floor(MineOSCore.OSMainContainer.width / 2 - MineOSCore.OSMainContainer.desktopCounters.width / 2)
-	MineOSCore.OSMainContainer.desktopCounters.localPosition.y = MineOSCore.OSMainContainer.height - MineOSCore.OSMainContainer.dockContainer.height - 2
-end
-
 ---------------------------------------------- Всякая параша для ОС-контейнера ------------------------------------------------------------------------
 
 local function changeResolution()
-	currentDesktop = 1
 	buffer.setResolution(table.unpack(MineOSCore.OSSettings.resolution or {160, 50}))
 
 	MineOSCore.OSMainContainer.width, MineOSCore.OSMainContainer.height = buffer.width, buffer.height
 
-	MineOSCore.OSMainContainer.iconField.width, MineOSCore.OSMainContainer.iconField.height = MineOSCore.OSMainContainer.width, MineOSCore.OSMainContainer.height - MineOSCore.OSMainContainer.dockContainer.height - 5
-	MineOSCore.OSMainContainer.iconField:update()
-	MineOSCore.OSMainContainer.iconField.localPosition.x = math.floor(
-		MineOSCore.OSMainContainer.width / 2 -
-		(
-			MineOSCore.OSMainContainer.iconField.iconCount.horizontal *
-			(MineOSCore.iconWidth + MineOSCore.OSMainContainer.iconField.spaceBetweenIcons.horizontal) -
-			MineOSCore.OSMainContainer.iconField.spaceBetweenIcons.horizontal
-		) / 2
-	)
-	MineOSCore.OSMainContainer.iconField.localPosition.y = 3
+	MineOSCore.OSMainContainer.iconField.width = MineOSCore.OSMainContainer.width
+	MineOSCore.OSMainContainer.iconField.height = MineOSCore.OSMainContainer.height
+	MineOSCore.OSMainContainer.iconField:updateFileList()
 
 	MineOSCore.OSMainContainer.dockContainer.sort()
 	MineOSCore.OSMainContainer.dockContainer.localPosition.y = MineOSCore.OSMainContainer.height - MineOSCore.OSMainContainer.dockContainer.height + 1
@@ -342,19 +281,25 @@ local function createOSWindow()
 		end
 	end
 
-	MineOSCore.OSMainContainer.desktopCounters = MineOSCore.OSMainContainer:addChild(GUI.container(1, 1, 1, 1))
-
 	MineOSCore.OSMainContainer.iconField = MineOSCore.OSMainContainer:addChild(
 		MineOSCore.iconField(
-			1, 1, 1, 1, 2, 1,
+			1, 2, 1, 1, 2, 1, 3, 2,
 			0xFFFFFF,
 			0xFFFFFF,
-			MineOSCore.OSSettings.showExtension,
-			MineOSCore.OSSettings.showHiddenFiles,
 			MineOSCore.OSSettings.sortingMethod or "type",
-			"/"
+			MineOSCore.paths.desktop
 		)
 	)
+	MineOSCore.OSMainContainer.iconField.iconConfigEnabled = true
+	MineOSCore.OSMainContainer.iconField.launchers.directory = function(icon)
+		MineOSCore.safeLaunch("/MineOS/Desktop/Finder.app/Main.lua", "-o", icon.path)
+	end
+	MineOSCore.OSMainContainer.iconField.launchers.showContainingFolder = function(icon)
+		MineOSCore.safeLaunch("/MineOS/Desktop/Finder.app/Main.lua", "-o", fs.path(icon.path))
+	end
+	MineOSCore.OSMainContainer.iconField.launchers.showPackageContent = function(icon)
+		MineOSCore.safeLaunch("/MineOS/Desktop/Finder.app/Main.lua", "-o", icon.path)
+	end
 
 	-- Dock
 	MineOSCore.OSMainContainer.dockContainer = MineOSCore.OSMainContainer:addChild(GUI.container(1, 1, MineOSCore.OSMainContainer.width, 6))
@@ -390,32 +335,42 @@ local function createOSWindow()
 			end
 
 			icon.selected = false
+			MineOSCore.OSDraw()
+		elseif eventData[1] == "double_touch" then
+			icon.onDoubleClick(icon, eventData)
 		end
 	end
 
 	MineOSCore.OSMainContainer.dockContainer.addIcon = function(path, window)
-		local icon = MineOSCore.OSMainContainer.dockContainer:addChild(MineOSCore.icon(1, 1, path, 0x262626, 0xFFFFFF, MineOSCore.OSSettings.showExtension))
+		local icon = MineOSCore.OSMainContainer.dockContainer:addChild(MineOSCore.icon(1, 1, path, 0x262626, 0xFFFFFF))
+		icon:analyseExtension()
 		icon:moveBackward()
-		icon.window = window
 
 		icon.eventHandler = dockIconEventHandler
+		
 		icon.onLeftClick = function(icon, eventData)
-			if icon.window then
-				icon.window.hidden = false
-				icon.window:moveToFront()
+			if icon.windows then
+				for window in pairs(icon.windows) do
+					window.hidden = false
+					window:moveToFront()
+				end
+				MineOSCore.OSDraw()
 			else
-				os.sleep(MineOSCore.iconClickDelay)
+				-- os.sleep(MineOSCore.iconClickDelay)
 				MineOSCore.iconDoubleClick(icon, eventData)
 			end
 		end
+
+		icon.onDoubleClick = function(icon, eventData)
+			MineOSCore.iconDoubleClick(icon, eventData)
+		end
+
 		icon.onRightClick = function(icon, eventData)
 			local indexOf = icon:indexOf()
 
 			local menu = MineOSCore.contextMenu(eventData[3], eventData[4])
 			menu:addItem(MineOSCore.localization.showContainingFolder).onTouch = function()
-				table.insert(workpathHistory, fs.path(icon.path))
-				changeWorkpath(#workpathHistory)
-				MineOSCore.OSMainContainer.updateFileListAndDraw()
+				
 			end
 			menu:addSeparator()
 			menu:addItem(MineOSCore.localization.moveRight, indexOf >= #MineOSCore.OSMainContainer.dockContainer.children - 1).onTouch = function()
@@ -428,7 +383,7 @@ local function createOSWindow()
 			if icon.keepInDock then
 				if #MineOSCore.OSMainContainer.dockContainer.children > 1 then
 					menu:addItem(MineOSCore.localization.removeFromDock).onTouch = function()
-						if icon.window then
+						if icon.windows then
 							icon.keepInDock = nil
 						else
 							icon:delete()
@@ -439,7 +394,7 @@ local function createOSWindow()
 					end
 				end
 			else
-				if icon.window then
+				if icon.windows then
 					menu:addItem(MineOSCore.localization.keepInDock).onTouch = function()
 						icon.keepInDock = true
 						MineOSCore.OSMainContainer.dockContainer.saveToOSSettings()
@@ -457,12 +412,18 @@ local function createOSWindow()
 
 	-- Trash
 	local icon = MineOSCore.OSMainContainer.dockContainer.addIcon(MineOSCore.paths.trash)
+	icon.launchers.directory = function(icon)
+		MineOSCore.safeLaunch("/MineOS/Desktop/Finder.app/Main.lua", "-o", icon.path)
+	end
+	icon:analyseExtension()
 	icon.image = MineOSCore.icons.trash
+	
 	icon.eventHandler = dockIconEventHandler
+	
 	icon.onLeftClick = function(icon, eventData)
-		os.sleep(MineOSCore.iconClickDelay)
 		MineOSCore.iconDoubleClick(icon, eventData)
 	end
+
 	icon.onRightClick = function(icon, eventData)
 		local menu = MineOSCore.contextMenu(eventData[3], eventData[4])
 		menu:addItem(MineOSCore.localization.emptyTrash).onTouch = function()
@@ -663,7 +624,7 @@ local function createOSWindow()
 				MineOSCore.saveOSSettings()
 				MineOSCore.OSMainContainer.menu.colors.transparency = MineOSCore.OSSettings.transparencyEnabled and menuTransparency
 				container.panel.colors.background = switch.state and 0x0 or (MineOSCore.OSSettings.backgroundColor or 0x0F0F0F)
-				container.panel.colors.transparency = switch.state and 20
+				container.panel.colors.transparency = switch.state and 0.2
 
 				MineOSCore.OSDraw()
 			end
@@ -745,58 +706,25 @@ local function createOSWindow()
 		dateButton.localPosition.x = dateLabel.localPosition.x - dateButton.width - 1
 	end
 
-	MineOSCore.OSMainContainer.updateFileList = function()
-		MineOSCore.OSMainContainer.iconField.fromFile = (currentDesktop - 1) * MineOSCore.OSMainContainer.iconField.iconCount.total + 1
-		MineOSCore.OSMainContainer.iconField:updateFileList()
-		updateDesktopCounters()
-	end
-
 	MineOSCore.OSDraw = function(force)
 		MineOSCore.OSMainContainer:draw()
 		buffer.draw(force)
 	end
 
 	MineOSCore.OSMainContainer.updateFileListAndDraw = function(forceRedraw)
-		MineOSCore.OSMainContainer.updateFileList()
+		MineOSCore.OSMainContainer.iconField:updateFileList()
 		MineOSCore.OSDraw(forceRedraw)
 	end
 
 	MineOSCore.OSMainContainer.eventHandler = function(mainContainer, object, eventData)
-		if eventData[1] == "scroll" then
-			if eventData[5] == 1 then
-				if currentDesktop < countOfDesktops then
-					currentDesktop = currentDesktop + 1
-					MineOSCore.OSMainContainer.updateFileListAndDraw()
-				end
-			else
-				if currentDesktop > 1 then
-					currentDesktop = currentDesktop - 1
-					MineOSCore.OSMainContainer.updateFileListAndDraw()
-				end
-			end
-		elseif eventData[1] == "MineOSCore" then
+		if eventData[1] == "MineOSCore" then
 			if eventData[2] == "updateFileList" then
 				MineOSCore.OSMainContainer.updateFileListAndDraw()
 			elseif eventData[2] == "updateFileListAndBufferTrueRedraw" then
 				MineOSCore.OSMainContainer.updateFileListAndDraw(true)
-			elseif eventData[2] == "changeWorkpath" then
-				table.insert(workpathHistory, eventData[3])
-				changeWorkpath(#workpathHistory)
 			elseif eventData[2] == "updateWallpaper" then
 				changeWallpaper()
 				MineOSCore.OSDraw()
-			elseif eventData[2] == "newApplication" then
-				MineOSCore.newApplication(MineOSCore.OSMainContainer, MineOSCore.OSMainContainer.iconField.workpath)
-			elseif eventData[2] == "newFile" then
-				MineOSCore.newFile(MineOSCore.OSMainContainer, MineOSCore.OSMainContainer.iconField.workpath)
-				elseif eventData[2] == "newFileFromURL" then
-				MineOSCore.newFileFromURL(MineOSCore.OSMainContainer, MineOSCore.OSMainContainer.iconField.workpath)
-			elseif eventData[2] == "newFolder" then
-				MineOSCore.newFolder(MineOSCore.OSMainContainer, MineOSCore.OSMainContainer.iconField.workpath)
-			elseif eventData[2] == "rename" then
-				MineOSCore.rename(MineOSCore.OSMainContainer, eventData[3])
-			elseif eventData[2] == "applicationHelp" then
-				MineOSCore.applicationHelp(MineOSCore.OSMainContainer, eventData[3])
 			end
 		end
 
@@ -829,9 +757,8 @@ end
 
 createOSWindow()
 changeResolution()
-changeWorkpath(1)
 changeWallpaper()
-MineOSCore.OSMainContainer.updateFileList()
+MineOSCore.OSMainContainer.iconField:updateFileList()
 MineOSCore.OSUpdateTimezone()
 MineOSCore.OSUpdateDate()
 login()
@@ -847,7 +774,6 @@ while true do
 	else
 		createOSWindow()
 		changeResolution()
-		changeWorkpath(1)
 		changeWallpaper()
 		MineOSCore.OSMainContainer.updateFileListAndDraw()
 

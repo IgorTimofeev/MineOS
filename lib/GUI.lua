@@ -93,7 +93,7 @@ GUI.colors = {
 
 ----------------------------------------- Interface objects -----------------------------------------
 
-local function callMethod(method, ...)
+function GUI.callMethod(method, ...)
 	if method then method(...) end
 end
 
@@ -369,23 +369,32 @@ local function containerHandler(isScreenEvent, mainContainer, currentContainer, 
 				else
 					if isScreenEvent then
 						if currentContainer.children[i]:isClicked(eventData[3], eventData[4]) then
-							callMethod(currentContainer.children[i].eventHandler, mainContainer, currentContainer.children[i], eventData)
+							GUI.callMethod(currentContainer.children[i].eventHandler, mainContainer, currentContainer.children[i], eventData)
 							breakRecursion = true
 							break
 						end
 					else
-						callMethod(currentContainer.children[i].eventHandler, mainContainer, currentContainer.children[i], eventData)
+						GUI.callMethod(currentContainer.children[i].eventHandler, mainContainer, currentContainer.children[i], eventData)
 					end
 				end
 			end
 		end
 
-		callMethod(currentContainer.eventHandler, mainContainer, currentContainer, eventData)
+		GUI.callMethod(currentContainer.eventHandler, mainContainer, currentContainer, eventData)
 	end
 
 	if breakRecursion then
 		return true
 	end
+end
+
+function GUI.isScreenEvent(eventType)
+	return 
+		eventType == "touch" or
+		eventType == "drag" or
+		eventType == "drop" or
+		eventType == "scroll" or
+		eventType == "double_touch"
 end
 
 local function containerStartEventHandling(container, eventHandlingDelay)
@@ -395,10 +404,7 @@ local function containerStartEventHandling(container, eventHandlingDelay)
 	while true do
 		eventData = {event.pull(container.animations and 0 or container.eventHandlingDelay)}
 		containerHandler(
-			eventData[1] == "touch" or
-			eventData[1] == "drag" or
-			eventData[1] == "drop" or
-			eventData[1] == "scroll",
+			GUI.isScreenEvent(eventData[1]),
 			container,
 			container,
 			eventData,
@@ -553,7 +559,7 @@ local function buttonEventHandler(mainContainer, object, eventData)
 			object.pressed = not object.pressed
 			mainContainer:draw()
 			buffer.draw()
-			callMethod(object.onTouch, mainContainer, object, eventData)
+			GUI.callMethod(object.onTouch, mainContainer, object, eventData)
 		else
 			object.pressed = true
 			mainContainer:draw()
@@ -562,7 +568,7 @@ local function buttonEventHandler(mainContainer, object, eventData)
 			object.pressed = false
 			mainContainer:draw()
 			buffer.draw()
-			callMethod(object.onTouch, mainContainer, object, eventData)
+			GUI.callMethod(object.onTouch, mainContainer, object, eventData)
 		end
 	end
 end
@@ -631,7 +637,7 @@ local function tabBarTabEventHandler(mainContainer, object, eventData)
 		object.parent.selectedItem = object:indexOf() - 1
 		mainContainer:draw()
 		buffer.draw()
-		callMethod(object.onTouch, mainContainer, object, eventData)
+		GUI.callMethod(object.onTouch, mainContainer, object, eventData)
 	end
 end
 
@@ -868,7 +874,7 @@ function GUI.error(...)
 	local args = {...}
 	for i = 1, #args do
 		if type(args[i]) == "table" then
-			args[i] = table.toString(args[i])
+			args[i] = table.toString(args[i], true)
 		else
 			args[i] = tostring(args[i])
 		end
@@ -997,7 +1003,7 @@ local function scrollBarEventHandler(mainContainer, object, eventData)
 
 	if eventData[1] == "touch" or eventData[1] == "drag" or eventData[1] == "scroll" then
 		object.value = newValue
-		callMethod(object.onTouch, eventData)
+		GUI.callMethod(object.onTouch, eventData)
 		mainContainer:draw()
 		buffer.draw()
 	end
@@ -1191,7 +1197,7 @@ local function colorSelectorEventHandler(mainContainer, object, eventData)
 		object.pressed = false
 		mainContainer:draw()
 		buffer.draw()
-		callMethod(object.onTouch, eventData)
+		GUI.callMethod(object.onTouch, eventData)
 	end
 end
 
@@ -1588,7 +1594,7 @@ local function inputFieldStartInput(inputField)
 	inputField.isFocused = true
 	inputField:draw()
 	inputField.isFocused = false
-	callMethod(inputField.onInputFinished, inputField.text)
+	GUI.callMethod(inputField.onInputFinished, inputField.text)
 
 	return inputField
 end
@@ -1676,7 +1682,7 @@ local function dropDownMenuItemEventHandler(mainContainer, object, eventData)
 			buffer.draw()
 			mainContainer.selectedItem = object:indexOf()
 
-			callMethod(object.onTouch)
+			GUI.callMethod(object.onTouch)
 		end
 
 		mainContainer:stopEventHandling()
@@ -1947,7 +1953,7 @@ end
 local function comboBoxEventHandler(mainContainer, object, eventData)
 	if eventData[1] == "touch" then
 		object:selectItem()
-		callMethod(object.onItemSelected, object.dropDownMenu.itemsContainer.children[object.selectedItem], eventData)
+		GUI.callMethod(object.onItemSelected, object.dropDownMenu.itemsContainer.children[object.selectedItem], eventData)
 	end
 end
 
@@ -2185,7 +2191,7 @@ local function sliderEventHandler(mainContainer, object, eventData)
 		object.value = object.minimumValue + (clickPosition * (object.maximumValue - object.minimumValue) / object.width)
 		mainContainer:draw()
 		buffer.draw()
-		callMethod(object.onValueChanged, object.value, eventData)
+		GUI.callMethod(object.onValueChanged, object.value, eventData)
 	end
 end
 
@@ -2240,7 +2246,7 @@ local function switchEventHandler(mainContainer, switch, eventData)
 			end,
 			function(mainContainer, switch, animation)
 				animation:delete()
-				callMethod(switch.onStateChanged)
+				GUI.callMethod(switch.onStateChanged)
 			end
 		):start(switch.animationDuration)
 	end
@@ -2825,7 +2831,7 @@ local function treeViewEventHandler(mainContainer, treeView, eventData)
 					
 					mainContainer:draw()
 					buffer.draw()
-					callMethod(treeView.onItemSelected, treeView.selectedItem, eventData)
+					GUI.callMethod(treeView.onItemSelected, treeView.selectedItem, eventData)
 				end
 			end
 		end
@@ -3009,7 +3015,7 @@ function GUI.addFilesystemDialogToContainer(parentContainer, ...)
 
 	filesystemDialog.cancelButton.onTouch = function()
 		onAnyTouch()
-		callMethod(filesystemDialog.onCancel)
+		GUI.callMethod(filesystemDialog.onCancel)
 	end
 
 	filesystemDialog.submitButton.onTouch = function()
@@ -3026,7 +3032,7 @@ function GUI.addFilesystemDialogToContainer(parentContainer, ...)
 			end
 		end
 
-		callMethod(filesystemDialog.onSubmit, path)
+		GUI.callMethod(filesystemDialog.onSubmit, path)
 	end
 
 	filesystemDialog.show = filesystemDialogShow
@@ -3082,7 +3088,7 @@ local function filesystemChooserEventHandler(mainContainer, object, eventData)
 
 			mainContainer:draw()
 			buffer.draw()
-			callMethod(object.onSubmit, object.path)
+			GUI.callMethod(object.onSubmit, object.path)
 		end
 
 		filesystemDialog:show()
@@ -3113,6 +3119,68 @@ function GUI.filesystemChooser(x, y, width, height, backgroundColor, textColor, 
 	object.eventHandler = filesystemChooserEventHandler
 	object.addExtensionFilter = filesystemChooserAddExtensionFilter
 	object.setMode = filesystemChooserSetMode
+
+	return object
+end
+
+------------------------------------------------------------------------------------------------------
+
+local function resizerDraw(object)
+	local horizontalMode = object.width >= object.height
+	local x, y, symbol
+	if horizontalMode then
+		buffer.text(object.x, math.floor(object.y + object.height / 2), object.colors.helper, string.rep("━", object.width))
+	else
+		local x = math.floor(object.x + object.width / 2)
+		for i = object.y, object.y + object.height - 1 do
+			local index = buffer.getIndexByCoordinates(x, i)
+			buffer.rawSet(index, buffer.rawGet(index), object.colors.helper, "┃")
+		end
+	end
+
+	if object.touchPosition then
+		buffer.text(object.touchPosition.x - 1, object.touchPosition.y, object.colors.arrow, "←→")
+	end
+end
+
+function resizerEventHandler(mainContainer, object, eventData)
+	if eventData[1] == "touch" then
+		object.touchPosition = {x = eventData[3], y = eventData[4]}
+		
+		mainContainer:draw()
+		buffer.draw()
+	elseif eventData[1] == "drag" and object.touchPosition then
+		local x, y = object.touchPosition.x, object.touchPosition.y
+		object.touchPosition.x, object.touchPosition.y = eventData[3], eventData[4]
+		
+		if object.onResize then
+			object.onResize(eventData[3] - x, eventData[4] - y)
+		end
+
+		mainContainer:draw()
+		buffer.draw()
+	elseif eventData[1] == "drop" then
+		object.touchPosition = nil
+
+		if object.onResizeFinished then
+			object.onResizeFinished()
+		end
+
+		mainContainer:draw()
+		buffer.draw()
+	end
+end
+
+function GUI.resizer(x, y, width, height, helperColor, arrowColor)
+	local object = GUI.object(x, y, width, height)
+	
+	object.colors = {
+		helper = helperColor,
+		arrow = arrowColor
+	}
+
+	object.draw = resizerDraw
+	object.eventHandler = resizerEventHandler
 
 	return object
 end
