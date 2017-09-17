@@ -301,6 +301,7 @@ stages[5] = function()
 		OSSettings.dockShortcuts = {
 			"/MineOS/Applications/AppMarket.app/",
 			"/MineOS/Applications/MineCode IDE.app/",
+			"/MineOS/Applications/Finder.app/",
 			"/MineOS/Applications/Photoshop.app/",
 		}
 		OSSettings.backgroundColor = 0x1E1E1E
