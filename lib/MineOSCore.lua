@@ -1330,20 +1330,20 @@ function MineOSCore.addWindow(window)
 	MineOSCore.OSMainContainer.windowsContainer:addChild(window)
 
 	-- Получаем путь исполняемого файла
-	MineOSCore.lastLaunchPath = MineOSCore.lastLaunchPath or "/OS.lua"
-	local lastLaunchPathPath = fs.path(MineOSCore.lastLaunchPath)
-	if fs.extension(lastLaunchPathPath) == ".app" then
-		MineOSCore.lastLaunchPath = lastLaunchPathPath
+	local dockPath = MineOSCore.lastLaunchPath or "/OS.lua"
+	local dockPathPath = fs.path(dockPath)
+	if fs.extension(dockPathPath) == ".app" then
+		dockPath = dockPathPath
 	end
 	-- Хуячим иконку в докыч, если такой еще не существует
 	local dockIcon
 	for i = 1, #MineOSCore.OSMainContainer.dockContainer.children do
-		if MineOSCore.OSMainContainer.dockContainer.children[i].path == MineOSCore.lastLaunchPath then
+		if MineOSCore.OSMainContainer.dockContainer.children[i].path == dockPath then
 			dockIcon = MineOSCore.OSMainContainer.dockContainer.children[i]
 			break
 		end
 	end
-	dockIcon = dockIcon or MineOSCore.OSMainContainer.dockContainer.addIcon(MineOSCore.lastLaunchPath, window)
+	dockIcon = dockIcon or MineOSCore.OSMainContainer.dockContainer.addIcon(dockPath, window)
 	-- Ебурим ссылку на окно в иконку
 	dockIcon.windows = dockIcon.windows or {}
 	dockIcon.windows[window] = true
@@ -1353,10 +1353,11 @@ function MineOSCore.addWindow(window)
 		local sameIconExists = false
 		for i = 1, #MineOSCore.OSMainContainer.dockContainer.children do
 			if 
-				MineOSCore.OSMainContainer.dockContainer.children[i].path == MineOSCore.lastLaunchPath and
+				MineOSCore.OSMainContainer.dockContainer.children[i].path == dockPath and
 				MineOSCore.OSMainContainer.dockContainer.children[i].windows and
 				table.size(MineOSCore.OSMainContainer.dockContainer.children[i].windows) > 1
 			then
+				MineOSCore.OSMainContainer.dockContainer.children[i].windows[window] = nil
 				sameIconExists = true
 				break
 			end
