@@ -292,13 +292,13 @@ local function createOSWindow()
 	)
 	MineOSCore.OSMainContainer.iconField.iconConfigEnabled = true
 	MineOSCore.OSMainContainer.iconField.launchers.directory = function(icon)
-		MineOSCore.safeLaunch("/MineOS/Desktop/Finder.app/Main.lua", "-o", icon.path)
+		MineOSCore.safeLaunch(MineOSCore.paths.explorer, "-o", icon.path)
 	end
 	MineOSCore.OSMainContainer.iconField.launchers.showContainingFolder = function(icon)
-		MineOSCore.safeLaunch("/MineOS/Desktop/Finder.app/Main.lua", "-o", fs.path(icon.path))
+		MineOSCore.safeLaunch(MineOSCore.paths.explorer, "-o", fs.path(icon.path))
 	end
 	MineOSCore.OSMainContainer.iconField.launchers.showPackageContent = function(icon)
-		MineOSCore.safeLaunch("/MineOS/Desktop/Finder.app/Main.lua", "-o", icon.path)
+		MineOSCore.safeLaunch(MineOSCore.paths.explorer, "-o", icon.path)
 	end
 
 	-- Dock
@@ -413,11 +413,11 @@ local function createOSWindow()
 	-- Trash
 	local icon = MineOSCore.OSMainContainer.dockContainer.addIcon(MineOSCore.paths.trash)
 	icon.launchers.directory = function(icon)
-		MineOSCore.safeLaunch("/MineOS/Desktop/Finder.app/Main.lua", "-o", icon.path)
+		MineOSCore.safeLaunch(MineOSCore.paths.explorer, "-o", icon.path)
 	end
 	icon:analyseExtension()
 	icon.image = MineOSCore.icons.trash
-	
+
 	icon.eventHandler = dockIconEventHandler
 	
 	icon.onLeftClick = function(icon, eventData)

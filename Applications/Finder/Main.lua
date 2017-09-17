@@ -191,8 +191,6 @@ window.iconField.eventHandler = function(mainContainer, object, eventData)
 			window.iconField.yOffset = 2
 		end
 
-		-- window.iconField.fromFile = math.floor((-window.iconField.yOffset) / (MineOSCore.iconHeight + window.iconField.spaceBetweenIcons.vertical)) * window.iconField.iconCount.horizontal + 1
-
 		if scrollTimerID then
 			event.cancel(scrollTimerID)
 		end
@@ -277,6 +275,12 @@ end
 
 window.sidebarResizer.onResizeFinished = function()
 	window.iconField:updateFileList()
+end
+
+local oldMaximize = window.actionButtons.maximize.onTouch
+window.actionButtons.maximize.onTouch = function()
+	window.iconField.yOffset = 2
+	oldMaximize()
 end
 
 ------------------------------------------------------------------------------------------------------

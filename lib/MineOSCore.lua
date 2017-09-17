@@ -34,6 +34,7 @@ MineOSCore.paths.applicationList = MineOSCore.paths.system .. "Applications.cfg"
 MineOSCore.paths.trash = MineOSCore.paths.OS .. "Trash/"
 MineOSCore.paths.OSSettings = MineOSCore.paths.system .. "Settings.cfg"
 MineOSCore.paths.editor = MineOSCore.paths.applications .. "/MineCode IDE.app/Main.lua"
+MineOSCore.paths.explorer = MineOSCore.paths.applications .. "/Finder.app/Main.lua"
 
 MineOSCore.localization = {}
 
