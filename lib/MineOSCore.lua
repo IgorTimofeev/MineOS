@@ -439,6 +439,16 @@ local function iconFieldUpdateFileList(iconField)
 		end
 	end
 
+	local function checkClipboard(icon)
+		if MineOSCore.clipboard and MineOSCore.clipboard.cut then
+			for i = 1, #MineOSCore.clipboard do
+				if MineOSCore.clipboard[i] == icon.path then
+					icon.cut = true
+				end
+			end
+		end
+	end
+
 	-- Заполнение дочернего контейнера
 	iconField.iconsContainer:deleteChildren()
 	for i = 1, #configList do
@@ -450,6 +460,7 @@ local function iconFieldUpdateFileList(iconField)
 			iconField.colors.selection
 		))
 
+		checkClipboard(icon)
 		icon.eventHandler = iconEventHandler
 		icon.launchers = iconField.launchers
 		icon:analyseExtension()
@@ -465,6 +476,7 @@ local function iconFieldUpdateFileList(iconField)
 		local icon = iconField.iconsContainer:addChild(MineOSCore.icon(x, y, iconField.workpath .. notConfigList[i], iconField.colors.text, iconField.colors.selection))
 		iconField.iconConfig[notConfigList[i]] = {x = x, y = y}
 
+		checkClipboard(icon)
 		icon.eventHandler = iconEventHandler
 		icon.launchers = iconField.launchers
 		icon:analyseExtension()
