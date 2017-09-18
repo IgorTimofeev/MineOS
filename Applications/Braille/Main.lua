@@ -10,14 +10,17 @@ local MineOSCore = require("MineOSCore")
 
 ---------------------------------------------------------------------------------------------------------
 
-local mainContainer = GUI.fullScreenContainer()
-mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x1E1E1E))
+local mainContainer, window = MineOSCore.addWindow(GUI.window(nil, nil, 32, 19))
+local panel = window:addChild(GUI.panel(1, 1, 1, 3, 0x2D2D2D, 0.2))
 
-local menu = mainContainer:addChild(GUI.menu(1, 1, mainContainer.width, 0xBBBBBB, 0x444444, 0x3366CC, 0xFFFFFF))
+local layout = window:addChild(GUI.layout(1, 2, 1, 1, 1, 1))
+layout:setCellDirection(1, 1, GUI.directions.horizontal)
 
-local layout = mainContainer:addChild(GUI.layout(1, 1, mainContainer.width, mainContainer.height, 1, 1))
-local colorSelector1 = layout:addChild(GUI.colorSelector(1, 1, 20, 1, 0xFF4940, "Background"))
-local colorSelector2 = layout:addChild(GUI.colorSelector(1, 1, 20, 1, 0x9924FF, "Foreground"))
+local actionButtons = window:addChild(GUI.actionButtons(2, 1))
+local newButton = layout:addChild(GUI.button(1, 1, 3, 1, 0x444444, 0xE1E1E1, 0xE1E1E1, 0x444444, "N"))
+local saveButton = layout:addChild(GUI.button(1, 1, 3, 1, 0x444444, 0xE1E1E1, 0xE1E1E1, 0x444444, "S"))
+local colorSelector1 = layout:addChild(GUI.colorSelector(1, 1, 3, 1, 0xFF4940, "B"))
+local colorSelector2 = layout:addChild(GUI.colorSelector(1, 1, 3, 1, 0x9924FF, "F"))
 
 local function newCell(x, y, shaded)
 	local object = GUI.object(x, y, 4, 4)
@@ -67,13 +70,13 @@ local function newCell(x, y, shaded)
 end
 
 
-local drawingArea = layout:addChild(GUI.container(2, 2, 1, 1))
+local drawingArea = window:addChild(GUI.container(1, 4, 1, 1))
 
-local lines = {
-	"LMB/RMB - draw with foreground/background",
-	"Ctrl+LMB - erase"
-}
-layout:addChild(GUI.textBox(1, 1, mainContainer.width, #lines, nil, 0x555555, lines, 1, 0, 0)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+-- local lines = {
+-- 	"LMB/RMB - draw with foreground/background",
+-- 	"Ctrl+LMB - erase"
+-- }
+-- window:addChild(GUI.textBox(1, 1, window.width, #lines, nil, 0x555555, lines, 1, 0, 0)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
 
 
 local function getBrailleChar(a, b, c, d, e, f, g, h)
@@ -82,8 +85,9 @@ end
 
 local function newNoGUI(width, height)
 	drawingArea.width, drawingArea.height = width * 4, height * 4
-	colorSelector1.width = drawingArea.width
-	colorSelector2.width = drawingArea.width
+	window.width, window.height = drawingArea.width, drawingArea.height + 3
+	panel.width = window.width
+	layout.width = panel.width
 
 	drawingArea:deleteChildren()
 
@@ -188,23 +192,14 @@ local function saveAs()
 	filesystemDialog:show()
 end
 
-menu:addItem("Braille", 0x0)
-local item = menu:addItem("File")
-item.onTouch = function()
-	local contextMenu = GUI.contextMenu(item.x, item.y + 1)
-	
-	contextMenu:addItem("New").onTouch = function()
-		new()
-	end
-	contextMenu:addItem("Save as").onTouch = function()
-		saveAs()
-	end
-	contextMenu:addSeparator()
-	contextMenu:addItem("Exit").onTouch = function()
-		mainContainer:stopEventHandling()
-	end
-
-	contextMenu:show()
+newButton.onTouch = function()
+	new()
+end
+saveButton.onTouch = function()
+	saveAs()
+end
+actionButtons.close.onTouch = function()
+	window:close()
 end
 
 
@@ -214,7 +209,6 @@ newNoGUI(8, 4)
 
 mainContainer:draw()
 buffer.draw(true)
-mainContainer:startEventHandling()
 
 
 
