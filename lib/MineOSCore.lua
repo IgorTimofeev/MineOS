@@ -416,7 +416,7 @@ local function getCykaIconPosition(iconField)
 end
 
 local function iconFieldUpdateFileList(iconField)
-	iconField.fileList = fs.sortedList(iconField.workpath, iconField.sortingMethod, MineOSCore.OSSettings.showHiddenFiles)
+	iconField.fileList = fs.sortedList(iconField.workpath, MineOSCore.OSSettings.sortingMethod or "type", MineOSCore.OSSettings.showHiddenFiles)
 	iconField:update()
 
 	-- Грузим инфу об иконочках
@@ -499,21 +499,21 @@ local function iconFieldBackgroundObjectEventHandler(mainContainer, object, even
 			local subMenu = menu:addSubMenu(MineOSCore.localization.create)
 
 			subMenu:addItem(MineOSCore.localization.newFile).onTouch = function()
-				MineOSCore.newFile(MineOSCore.OSMainContainer, MineOSCore.OSMainContainer.iconField.workpath)
+				MineOSCore.newFile(MineOSCore.OSMainContainer, object.parent.workpath)
 			end
 			
 			subMenu:addItem(MineOSCore.localization.newFolder).onTouch = function()
-				MineOSCore.newFolder(MineOSCore.OSMainContainer, MineOSCore.OSMainContainer.iconField.workpath)
+				MineOSCore.newFolder(MineOSCore.OSMainContainer, object.parent.workpath)
 			end
 
 			subMenu:addItem(MineOSCore.localization.newFileFromURL, not component.isAvailable("internet")).onTouch = function()
-				MineOSCore.newFileFromURL(MineOSCore.OSMainContainer, MineOSCore.OSMainContainer.iconField.workpath)
+				MineOSCore.newFileFromURL(MineOSCore.OSMainContainer, object.parent.workpath)
 			end
 
 			subMenu:addSeparator()
 
 			subMenu:addItem(MineOSCore.localization.newApplication).onTouch = function()
-				MineOSCore.newApplication(MineOSCore.OSMainContainer, MineOSCore.OSMainContainer.iconField.workpath)
+				MineOSCore.newApplication(MineOSCore.OSMainContainer, object.parent.workpath)
 			end
 
 			menu:addSeparator()
@@ -545,7 +545,6 @@ local function iconFieldBackgroundObjectEventHandler(mainContainer, object, even
 
 				MineOSCore.OSSettings.sortingMethod = "name"
 				MineOSCore.saveOSSettings()
-				MineOSCore.OSMainContainer.iconField.sortingMethod = MineOSCore.OSSettings.sortingMethod
 				computer.pushSignal("MineOSCore", "updateFileList")
 			end
 
@@ -555,7 +554,6 @@ local function iconFieldBackgroundObjectEventHandler(mainContainer, object, even
 
 				MineOSCore.OSSettings.sortingMethod = "date"
 				MineOSCore.saveOSSettings()
-				MineOSCore.OSMainContainer.iconField.sortingMethod = MineOSCore.OSSettings.sortingMethod
 				computer.pushSignal("MineOSCore", "updateFileList")
 			end
 
@@ -564,7 +562,6 @@ local function iconFieldBackgroundObjectEventHandler(mainContainer, object, even
 
 				MineOSCore.OSSettings.sortingMethod = "type"
 				MineOSCore.saveOSSettings()
-				MineOSCore.OSMainContainer.iconField.sortingMethod = MineOSCore.OSSettings.sortingMethod
 				computer.pushSignal("MineOSCore", "updateFileList")
 			end
 
@@ -668,7 +665,7 @@ local function iconFieldSetWorkpath(iconField, path)
 	return iconField
 end
 
-function MineOSCore.iconField(x, y, width, height, xSpaceBetweenIcons, ySpaceBetweenIcons, xOffset, yOffset, textColor, selectionColor, sortingMethod, workpath)
+function MineOSCore.iconField(x, y, width, height, xSpaceBetweenIcons, ySpaceBetweenIcons, xOffset, yOffset, textColor, selectionColor, workpath)
 	local iconField = GUI.container(x, y, width, height)
 
 	iconField.colors = {
@@ -689,7 +686,6 @@ function MineOSCore.iconField(x, y, width, height, xSpaceBetweenIcons, ySpaceBet
 	iconField.xOffset = xOffset
 	iconField.yOffset = yOffset
 	iconField.workpath = workpath
-	iconField.sortingMethod = sortingMethod
 	iconField.filenameMatcher = nil
 
 	iconField.backgroundObject = iconField:addChild(GUI.object(1, 1, width, height))

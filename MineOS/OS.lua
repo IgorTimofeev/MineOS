@@ -286,7 +286,6 @@ local function createOSWindow()
 			1, 2, 1, 1, 2, 1, 3, 2,
 			0xFFFFFF,
 			0xFFFFFF,
-			MineOSCore.OSSettings.sortingMethod or "type",
 			MineOSCore.paths.desktop
 		)
 	)
@@ -692,7 +691,7 @@ local function createOSWindow()
 			"%d %b %Y  %T",
 			realTimestamp + computerDateUptime - computerUptimeOnBoot + timezoneCorrection
 		):match("(%d+%s)(%a+)(.+)")
-
+		
 		dateLabel.text = firstPart .. (MineOSCore.localization.months[month] or "monthNotAvailable:" .. month) .. secondPart
 		dateLabel.width = unicode.len(dateLabel.text)
 		dateButton.width = unicode.len(dateButton.text) + 2
