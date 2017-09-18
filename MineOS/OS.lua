@@ -428,7 +428,7 @@ local function createOSWindow()
 					fs.remove(MineOSCore.paths.trash .. file)
 				end
 				container:delete()
-				MineOSCore.OSMainContainer.updateFileListAndDraw()
+				computer.pushSignal("MineOSCore", "updateFileList")
 			end
 
 			container.panel.onTouch = function()

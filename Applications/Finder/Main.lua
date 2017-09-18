@@ -152,7 +152,7 @@ end
 window.nextButton.colors.disabled = window.prevButton.colors.disabled
 
 window.sidebarContainer = window:addChild(GUI.container(1, 4, 20, 1))
-window.sidebarContainer.panel = window.sidebarContainer:addChild(GUI.panel(1, 1, window.sidebarContainer.width, 1, 0xFFFFFF, 0.35))
+window.sidebarContainer.panel = window.sidebarContainer:addChild(GUI.panel(1, 1, window.sidebarContainer.width, 1, 0xFFFFFF, 0.24))
 window.sidebarContainer.itemsContainer = window.sidebarContainer:addChild(GUI.container(1, 1, window.sidebarContainer.width, 1))
 
 window.iconField = window:addChild(
