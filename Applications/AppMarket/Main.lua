@@ -51,8 +51,7 @@ local function newApp(x, y, width, applicationListElement, hideDownloadButton)
 		web.downloadMineOSApplication(applicationListElement, MineOSCore.OSSettings.language)
 
 		app.downloadButton.text = localization.downloaded
-		mainContainer:draw()
-		buffer.draw()
+		computer.pushSignal("MineOSCore", "updateFileList")
 	end
 	app.downloadButton.hidden = hideDownloadButton
 
