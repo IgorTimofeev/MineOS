@@ -42,14 +42,18 @@ function event.register(callback, signalType, times, interval)
 		end
 	end
 
-	table.insert(event.handlers, {
+	local handler = {
 		ID = ID,
 		signalType = signalType,
 		callback = callback,
 		times = times or math.huge,
 		interval = interval,
 		nextTriggerTime = interval and (computer.uptime() + interval) or nil
-	})
+	}
+	
+	table.insert(event.handlers, handler)
+
+	return handler
 end
 
 function event.cancel(ID)

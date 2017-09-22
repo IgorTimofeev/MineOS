@@ -1,6 +1,7 @@
 
 local GUI = require("GUI")
 local MineOSCore = require("MineOSCore")
+local MineOSNetwork = require("MineOSNetwork")
 local buffer = require("doubleBuffering")
 local fs = require("filesystem")
 local event = require("event")
@@ -16,6 +17,7 @@ local scrollTimerID
 local favourites = {
 	{text = "Root", path = "/"},
 	{text = "Desktop", path = MineOSCore.paths.desktop},
+	{text = "Downloads", path = MineOSCore.paths.downloads},
 	{text = "Applications", path = MineOSCore.paths.applications},
 	{text = "Pictures", path = MineOSCore.paths.pictures},
 	{text = "System", path = MineOSCore.paths.system},
@@ -126,12 +128,23 @@ local function updateSidebar()
 		window.sidebarContainer.itemsContainer:addChild(newSidebarItem(" " .. fs.name(favourites[i].text), 0x555555, favourites[i].path)).onTouch = sidebarItemOnTouch
 	end
 
+	if MineOSCore.OSSettings.network.enabled and MineOSNetwork.getProxyCount() > 0 then
+		window.sidebarContainer.itemsContainer:addChild(newSidebarItem(" ", 0x3C3C3C))
+		window.sidebarContainer.itemsContainer:addChild(newSidebarItem("Network", 0x3C3C3C))
+
+		for proxy, path in fs.mounts() do
+			if proxy.network then
+				window.sidebarContainer.itemsContainer:addChild(newSidebarItem(" " .. MineOSNetwork.getProxyName(proxy), 0x555555, path .. "/")).onTouch = sidebarItemOnTouch
+			end
+		end
+	end
+
 	window.sidebarContainer.itemsContainer:addChild(newSidebarItem(" ", 0x3C3C3C))
 
 	window.sidebarContainer.itemsContainer:addChild(newSidebarItem("Mounts", 0x3C3C3C))
 	for proxy, path in fs.mounts() do
-		if path ~= "/" then
-			window.sidebarContainer.itemsContainer:addChild(newSidebarItem(" " .. fs.name(path), 0x555555, path .. "/")).onTouch = sidebarItemOnTouch
+		if path ~= "/" and not proxy.network then
+			window.sidebarContainer.itemsContainer:addChild(newSidebarItem(" " .. proxy.getLabel() or fs.name(path), 0x555555, path .. "/")).onTouch = sidebarItemOnTouch
 		end
 	end
 end
@@ -223,6 +236,13 @@ window.statusBar.eventHandler = function(mainContainer, object, eventData)
 
 		mainContainer:draw()
 		buffer.draw()
+	elseif eventData[1] == "MineOSNetwork" then
+		if eventData[2] == "updateProxyList" or eventData[2] == "timeout" then
+			updateSidebar()
+
+			mainContainer:draw()
+			buffer.draw()
+		end
 	end
 end
 window.sidebarResizer = window:addChild(GUI.resizer(1, 4, 3, 7, 0xFFFFFF, 0x0))

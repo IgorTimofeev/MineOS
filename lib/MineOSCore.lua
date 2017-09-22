@@ -23,6 +23,7 @@ MineOSCore.iconConfigFileName = ".icons"
 
 MineOSCore.paths = {}
 MineOSCore.paths.OS = "/MineOS/"
+MineOSCore.paths.downloads = MineOSCore.paths.OS .. "Downloads/"
 MineOSCore.paths.system = MineOSCore.paths.OS .. "System/"
 MineOSCore.paths.extensionAssociations = MineOSCore.paths.system .. "ExtensionAssociations/"
 MineOSCore.paths.localizationFiles = MineOSCore.paths.system .. "Localization/"
@@ -1561,6 +1562,13 @@ function MineOSCore.copy(what, toPath)
 	end
 
 	GUICopy(MineOSCore.OSMainContainer, what, toPath)
+end
+
+function MineOSCore.addMenuWidget(object)
+	MineOSCore.OSMainContainer.menuLayout:addChild(object)
+	object:moveToBack()
+
+	return object
 end
 
 -----------------------------------------------------------------------------------------------------------------------------------

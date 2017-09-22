@@ -448,8 +448,8 @@ function table.size(t)
 end
 
 function table.contains(t, object)
-	for key in pairs(t) do
-		if t[key] == object then
+	for _, value in pairs(t) do
+		if value == object then
 			return true
 		end
 	end
@@ -462,6 +462,10 @@ function table.indexOf(t, object)
 			return i
 		end
 	end
+end
+
+function table.sortAlphabetically(t)
+	table.sort(t, function(a, b) return a < b end)
 end
 
 -------------------------------------------------- String extensions --------------------------------------------------

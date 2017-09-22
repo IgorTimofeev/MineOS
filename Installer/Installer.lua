@@ -306,6 +306,11 @@ stages[5] = function()
 			"/MineOS/Applications/Photoshop.app/",
 		}
 		OSSettings.backgroundColor = 0x1E1E1E
+		OSSettings.network = {
+			users = {},
+			enabled = true,
+			signalStrength = 512,
+		}
 
 		table.toFile(paths.OSSettings, OSSettings)
 
