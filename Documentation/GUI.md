@@ -957,7 +957,7 @@ mainContainer:startEventHandling()
 
 ![](http://i89.fastpic.ru/big/2017/0402/f1/ef1da27531ccf899eb9eb59c010180f1.png)
 
-GUI.**treeView**( x, y, width, height, backgroundColor, textColor, selectionBackgroundColor, selectionTextColor, arrowColor, scrollBarPrimaryColor, scrollBarSecondaryColor, workPath ): *table* treeView
+GUI.**treeView**( x, y, width, height, backgroundColor, directoryColor, fileColor, arrowColor, backgroundSelectionColor, textSelectedColor, arrowSelectionColor, wrongExtensionColor, scrollBarBackground, scrollBarForeground, workPath, showMode, selectionMode ): *table* treeView
 ------------------------------------------------------------------------
 | Тип | Аргумент | Описание |
 | ------ | ------ | ------ |
@@ -966,10 +966,13 @@ GUI.**treeView**( x, y, width, height, backgroundColor, textColor, selectionBack
 | *int* | width | Ширина объекта |
 | *int* | height | Высота объекта |
 | *int* or *nil* | backgroundColor | Цвет фона TreeView |
-| *int* | textColor | Цвет текста TreeView |
-| *int* | selectionBackgroundColor | Цвет выделения фона TreeView |
-| *int* | selectionTextColor | Цвет выделения текста TreeView |
+| *int* | directoryColor | Цвет директорий TreeView |
+| *int* | fileColor | Цвет файлов TreeView |
 | *int* | arrowColor | Цвет стрелки директорий TreeView |
+| *int* | backgroundSelectionColor | Цвет выделения фона TreeView |
+| *int* | textSelectionColor | Цвет выделения текста TreeView |
+| *int* | arrowSelectionColor | Цвет выделения стрелки TreeView |
+| *int* | wrongExtensionColor | Цвет файла с неподдерживаемым расширением TreeView |
 | *int* | scrollBarPrimaryColor | Первичный цвет скроллбара TreeView |
 | *int* | scrollBarSecondaryColor | Вторичный цвет скроллбара TreeView |
 | *string* | workPath | Стартовая директория TreeView |
