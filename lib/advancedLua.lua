@@ -194,14 +194,14 @@ function filesystem.sortedList(path, sortingMethod, showHiddenFiles)
 				fileList[i] = {fileList[i], extension}
 			end
 
-			table.sort(fileList, function(a, b) return a[2] < b[2] end)
+			table.sort(fileList, function(a, b) return unicode.lower(a[2]) < unicode.lower(b[2]) end)
 
 			local currentExtensionList, currentExtension = {}, fileList[1][2]
 			for i = 1, #fileList do
 				if currentExtension == fileList[i][2] then
 					table.insert(currentExtensionList, fileList[i][1])
 				else
-					table.sort(currentExtensionList, function(a, b) return a < b end)
+					table.sort(currentExtensionList, function(a, b) return unicode.lower(a) < unicode.lower(b) end)
 					for j = 1, #currentExtensionList do
 						table.insert(sortedFileList, currentExtensionList[j])
 					end
@@ -209,19 +209,19 @@ function filesystem.sortedList(path, sortingMethod, showHiddenFiles)
 				end
 			end
 			
-			table.sort(currentExtensionList, function(a, b) return a < b end)
+			table.sort(currentExtensionList, function(a, b) return unicode.lower(a) < unicode.lower(b) end)
 			for j = 1, #currentExtensionList do
 				table.insert(sortedFileList, currentExtensionList[j])
 			end
 		elseif sortingMethod == "name" then
 			sortedFileList = fileList
-			table.sort(sortedFileList, function(a, b) return a < b end)
+			table.sort(sortedFileList, function(a, b) return unicode.lower(a) < unicode.lower(b) end)
 		elseif sortingMethod == "date" then
 			for i = 1, #fileList do
 				fileList[i] = {fileList[i], filesystem.lastModified(path .. fileList[i])}
 			end
 
-			table.sort(fileList, function(a, b) return a[2] > b[2] end)
+			table.sort(fileList, function(a, b) return unicode.lower(a[2]) > unicode.lower(b[2]) end)
 
 			for i = 1, #fileList do
 				table.insert(sortedFileList, fileList[i][1])

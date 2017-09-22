@@ -383,7 +383,7 @@ if not MineOSCore.OSSettings.network then
 	MineOSCore.OSSettings.network = {
 		users = {},
 		enabled = true,
-    	signalStrength = 512,
+		signalStrength = 512,
 	}
 	MineOSCore.saveOSSettings()
 end

@@ -466,7 +466,6 @@ end
 
 local function containerReturnData(container, ...)
 	container.dataToReturn = {...}
-	computer.pushSignal("containerAction")
 end
 
 local function containerStopEventHandling(container)

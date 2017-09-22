@@ -43,6 +43,7 @@ function event.register(callback, signalType, times, interval)
 	end
 
 	local handler = {
+		alive = true,
 		ID = ID,
 		signalType = signalType,
 		callback = callback,
@@ -61,7 +62,7 @@ function event.cancel(ID)
 
 	for handlerIndex = 1, #event.handlers do
 		if event.handlers[handlerIndex].ID == ID then
-			table.remove(event.handlers, handlerIndex)
+			event.handlers[handlerIndex].alive = false
 			return true
 		end
 	end
@@ -90,7 +91,7 @@ function event.ignore(signalType, callback)
 
 	for handlerIndex = 1, #event.handlers do
 		if event.handlers[handlerIndex].signalType == signalType and event.handlers[handlerIndex].callback == callback then
-			table.remove(event.handlers, handlerIndex)
+			event.handlers[handlerIndex].alive = false
 			return true
 		end
 	end
@@ -105,9 +106,7 @@ function event.timer(interval, callback, times)
 	checkArg(2, callback, "function")
 	checkArg(3, times, "number", "nil")
 
-	event.register(callback, nil, times, interval)
-	
-	return event.handlers[#event.handlers].ID
+	return event.register(callback, nil, times, interval).ID
 end
 
 --------------------------------------------------------------------------------------------------------
@@ -126,8 +125,8 @@ end
 local function eventTick(timeout)
 	local eventData, handlerIndex, uptime = {computer.pullSignal(timeout)}, 1, computer.uptime()
 	
-	while handlerIndex <= #event.handlers do		
-		if event.handlers[handlerIndex].times > 0 then
+	while handlerIndex <= #event.handlers do
+		if event.handlers[handlerIndex].times > 0 and event.handlers[handlerIndex].alive then
 			if
 				(not event.handlers[handlerIndex].signalType or event.handlers[handlerIndex].signalType == eventData[1]) and
 				(not event.handlers[handlerIndex].nextTriggerTime or event.handlers[handlerIndex].nextTriggerTime <= uptime)

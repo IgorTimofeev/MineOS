@@ -3,6 +3,7 @@ local GUI = require("GUI")
 local MineOSCore = require("MineOSCore")
 local MineOSNetwork = require("MineOSNetwork")
 local buffer = require("doubleBuffering")
+local computer = require("computer")
 local fs = require("filesystem")
 local event = require("event")
 
@@ -192,7 +193,6 @@ end
 
 window.iconField.eventHandler = function(mainContainer, object, eventData)
 	if eventData[1] == "scroll" then
-		
 		eventData[5] = eventData[5] * 2
 		window.iconField.yOffset = window.iconField.yOffset + eventData[5]
 		if window.iconField.yOffset <= 2 then
@@ -203,25 +203,22 @@ window.iconField.eventHandler = function(mainContainer, object, eventData)
 			window.iconField.yOffset = 2
 		end
 
-		if scrollTimerID then
-			event.cancel(scrollTimerID)
-		end
-		scrollTimerID = event.timer(0.2, function()
-			window.iconField:updateFileList()
-			
-			mainContainer:draw()
-			buffer.draw()
-		end, 1)
-
 		mainContainer:draw()
 		buffer.draw()
-	elseif eventData[1] == "MineOSCore" then
-		if eventData[2] == "updateFileList" then
-			window.iconField:updateFileList()
-						
-			mainContainer:draw()
-			buffer.draw()
+
+		if scrollTimerID then
+			event.cancel(scrollTimerID)
+			scrollTimerID = nil
 		end
+
+		scrollTimerID = event.timer(0.3, function()
+			computer.pushSignal("Finder", "updateFileList")
+		end, 1)		
+	elseif (eventData[1] == "MineOSCore" or eventData[1] == "Finder") and eventData[2] == "updateFileList" then
+		window.iconField:updateFileList()
+					
+		mainContainer:draw()
+		buffer.draw()
 	end
 end
 
