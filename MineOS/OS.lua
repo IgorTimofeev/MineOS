@@ -855,7 +855,6 @@ end
 createOSWindow()
 changeResolution()
 changeWallpaper()
-MineOSCore.OSMainContainer.iconField:updateFileList()
 MineOSCore.OSUpdateTimezone()
 MineOSCore.OSUpdateDate()
 login()

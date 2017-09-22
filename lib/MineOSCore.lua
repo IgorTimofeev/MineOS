@@ -304,9 +304,6 @@ end
 
 function MineOSCore.iconLaunchers.directory(icon)
 	icon.parent.parent:setWorkpath(icon.path)
-	icon.parent.parent:updateFileList()
-	icon:getFirstParent():draw()
-	buffer.draw()
 end
 
 function MineOSCore.iconLaunchers.shortcut(icon)
@@ -336,7 +333,7 @@ function MineOSCore.iconLaunchers.showPackageContent(icon)
 end
 
 function MineOSCore.iconLaunchers.showContainingFolder(icon)
-	icon.parent.parent:setWorkpath(icon.shortcutPath)
+	icon.parent.parent:setWorkpath(fs.path(icon.shortcutPath))
 	icon.parent.parent:updateFileList()
 	icon:getFirstParent():draw()
 	buffer.draw()
@@ -417,6 +414,7 @@ local function getCykaIconPosition(iconField)
 end
 
 local function iconFieldUpdateFileList(iconField)
+	-- GUI.error(debug.traceback())
 	iconField.fileList = fs.sortedList(iconField.workpath, MineOSCore.OSSettings.sortingMethod or "type", MineOSCore.OSSettings.showHiddenFiles)
 	iconField:update()
 

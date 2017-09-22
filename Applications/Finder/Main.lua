@@ -18,7 +18,6 @@ local scrollTimerID
 local favourites = {
 	{text = "Root", path = "/"},
 	{text = "Desktop", path = MineOSCore.paths.desktop},
-	{text = "Downloads", path = MineOSCore.paths.downloads},
 	{text = "Applications", path = MineOSCore.paths.applications},
 	{text = "Pictures", path = MineOSCore.paths.pictures},
 	{text = "System", path = MineOSCore.paths.system},
@@ -111,7 +110,6 @@ end
 local function sidebarItemOnTouch(object, eventData)
 	if eventData[5] == 0 then
 		addWorkpath(object.path)
-		window.iconField.yOffset = 2
 		window.iconField:updateFileList()
 
 		mainContainer:draw()
@@ -175,9 +173,13 @@ window.iconField = window:addChild(
 		MineOSCore.paths.desktop
 	)
 )
+local oldSetWorkPath = window.iconField.setWorkpath
+window.iconField.setWorkpath = function(...)
+	window.iconField.yOffset = 2
+	oldSetWorkPath(...)
+end
 window.iconField.launchers.directory = function(icon)
 	addWorkpath(icon.path)
-	window.iconField:updateFileList()
 	mainContainer:draw()
 	buffer.draw()
 end
