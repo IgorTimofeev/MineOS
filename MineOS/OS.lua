@@ -57,69 +57,64 @@ local function biometry(creatingNew)
 	local text = creatingNew and MineOSCore.localization.putFingerToRegister or MineOSCore.localization.putFingerToVerify
 	local label = container.layout:addChild(GUI.label(1, 1, container.width, 1, 0xEEEEEE, text):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top))
 
-	local lineWidth = image.getWidth(fingerImage.image) + 6
-	local scanLine = container:addChild(GUI.label(1, 1, container.width, 1, 0xFFFFFF, string.rep("─", lineWidth)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top))
+	local scanLine = container:addChild(GUI.label(1, 1, container.width, 1, 0xFFFFFF, string.rep("─", image.getWidth(fingerImage.image) + 6)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top))
+	local fingerImageHeight = image.getHeight(fingerImage.image) + 1
+	local delay = 0.5
 	scanLine.hidden = true
-
-	local delay = 0.8
-
-	local function scanLineCycle(reverse, step)
-		local top = fingerImage.y - 1
-		local bottom = fingerImage.y + image.getHeight(fingerImage.image)
-
-		local from = reverse and bottom or top
-		local to = reverse and top + 1 or bottom
-		local step = reverse and -step or step
-
-		for i = from, to, step do
-			scanLine.localPosition.y = i
-			MineOSCore.OSDraw()
-		end
-	end
 
 	fingerImage.eventHandler = function(mainContainer, object, eventData)
 		if eventData[1] == "touch" then
 			scanLine.hidden = false
-			scanLineCycle(true, 1)
-			scanLineCycle(false, 1)
-			scanLine.hidden = true
+			scanLine:addAnimation(
+				function(mainContainer, object, animation)
+					if animation.position <= 0.5 then
+						scanLine.localPosition.y = math.floor(fingerImage.localPosition.y + fingerImageHeight - fingerImageHeight * animation.position * 2 - 1)
+					else
+						scanLine.localPosition.y = math.floor(fingerImage.localPosition.y + fingerImageHeight * (animation.position - 0.5) * 2 - 1)
+					end
+				end,
+				function(mainContainer, switch, animation)
+					scanLine.hidden = true
+					animation:delete()
 
-			local touchedHash = require("SHA2").hash(eventData[6])
+					local touchedHash = require("SHA2").hash(eventData[6])
 
-			if creatingNew then
-				label.text = MineOSCore.localization.fingerprintCreated
+					if creatingNew then
+						label.text = MineOSCore.localization.fingerprintCreated
 
-				MineOSCore.OSDraw()
+						MineOSCore.OSDraw()
 
-				MineOSCore.OSSettings.protectionMethod = "biometric"
-				MineOSCore.OSSettings.biometryHash = touchedHash
-				MineOSCore.saveOSSettings()
+						MineOSCore.OSSettings.protectionMethod = "biometric"
+						MineOSCore.OSSettings.biometryHash = touchedHash
+						MineOSCore.saveOSSettings()
 
-				container:delete()
-				os.sleep(delay)
-			else
-				if touchedHash == MineOSCore.OSSettings.biometryHash then
-					label.text = MineOSCore.localization.welcomeBack .. eventData[6]
+						container:delete()
+						os.sleep(delay)
+					else
+						if touchedHash == MineOSCore.OSSettings.biometryHash then
+							label.text = MineOSCore.localization.welcomeBack .. eventData[6]
+
+							MineOSCore.OSDraw()
+
+							container:delete()
+							os.sleep(delay)
+						else
+							label.text = MineOSCore.localization.accessDenied
+							local oldBackground = container.panel.colors.background
+							container.panel.colors.background = 0x550000
+
+							MineOSCore.OSDraw()
+
+							os.sleep(delay)
+
+							label.text = text
+							container.panel.colors.background = oldBackground
+						end
+					end
 
 					MineOSCore.OSDraw()
-
-					container:delete()
-					os.sleep(delay)
-				else
-					label.text = MineOSCore.localization.accessDenied
-					local oldBackground = container.panel.colors.background
-					container.panel.colors.background = 0x550000
-
-					MineOSCore.OSDraw()
-
-					os.sleep(delay)
-
-					label.text = text
-					container.panel.colors.background = oldBackground
 				end
-			end
-
-			MineOSCore.OSDraw()
+			):start(3)
 		end
 	end
 	label.eventHandler, container.panel.eventHandler = fingerImage.eventHandler, fingerImage.eventHandler
