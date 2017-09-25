@@ -12,6 +12,19 @@ local args, options = shell.parse(...)
 
 ------------------------------------------------------------------------------------------------------------------------------------
 
+local paths = {
+	applicationList = "/MineOS/System/Applications.cfg",
+}
+
+local URLs = {
+	applicationList = "https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/Applications.cfg",
+	installer = "https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/Installer/",
+	EFI = "https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/EFI.lua",
+	license = "https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/License/",
+}
+
+------------------------------------------------------------------------------------------------------------------------------------
+
 local reasons = {}
 
 if not _G._OSVERSION or tonumber(_G._OSVERSION:sub(8, 10)) < 1.5 then
@@ -46,19 +59,6 @@ end
 
 ------------------------------------------------------------------------------------------------------------------------------------
 
-local paths = {
-	applicationList = "/MineOS/System/Applications.cfg",
-	OSSettings = "/MineOS/System/Properties.cfg",
-}
-
-local urls = {
-	applicationList = "https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/Applications.cfg",
-	installer = "https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/Installer/",
-	EFI = "https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/MineOS/EFI.lua",
-}
-
-------------------------------------------------------------------------------------------------------------------------------------
-
 local function unserializeFile(path)
 	local file = io.open(path, "r")
 	local data = serialization.unserialize(file:read("*a"))
@@ -68,11 +68,11 @@ end
 
 local function wget(url, path)
 	fs.makeDirectory(fs.path(path))
-	shell.execute("wget " ..url .. " " .. path .. " -fq")
+	shell.execute("wget " .. url .. " " .. path .. " -fq")
 end
 
 print("Downloading MineOS file list...")
-wget(urls.applicationList, paths.applicationList)
+wget(URLs.applicationList, paths.applicationList)
 applicationList = unserializeFile(paths.applicationList)
 
 print(" ")
@@ -107,6 +107,8 @@ end
 local web = require("web")
 local buffer = require("doubleBuffering")
 local GUI = require("GUI")
+local MineOSPaths = require("MineOSPaths")
+local MineOSCore = require("MineOSCore")
 
 buffer.setResolution(gpu.maxResolution())
 local mainContainer = GUI.fullScreenContainer()
@@ -117,7 +119,6 @@ stageContainer:addChild(GUI.panel(1, 1, stageContainer.width, stageContainer.hei
 
 ------------------------------------------------------------------------------------------------------------------------------------
 
-local OSSettings = {}
 local stages = {current = 1}
 local localization
 
@@ -167,8 +168,8 @@ end
 ------------------------------------------------------------------------------------------------------------------------------------
 
 local function loadLocalization(language)
-	OSSettings.language = language
-	localization = serialization.unserialize(web.request(urls.installer .. OSSettings.language .. ".lang"))
+	MineOSCore.properties.language = language
+	localization = serialization.unserialize(web.request(URLs.installer .. MineOSCore.properties.language .. ".lang"))
 end
 
 stages[1] = function()
@@ -212,7 +213,7 @@ end
 
 stages[3] = function()
 	addButtonsToStage()
-	local data = web.request("https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/MineOS/License/" .. OSSettings.language .. ".lang")
+	local data = web.request(URLs.license .. MineOSCore.properties.language .. ".lang")
 	local lines = {}
 	for line in data:gmatch("[^\n]+") do
 		table.insert(lines, line)
@@ -243,7 +244,7 @@ stages[4] = function()
 	local thingsToDownload = {}
 	for i = 1, #applicationList do
 		if
-			not applicationList[i].preLoadFile and
+			not applicationList[i].preloadFile and
 			(
 				(applicationList[i].type == "Library" or applicationList[i].type == "Icon")
 				or
@@ -269,7 +270,7 @@ stages[4] = function()
 		mainContainer:draw()
 		buffer.draw()
 
-		web.downloadMineOSApplication(thingsToDownload[i], OSSettings.language)
+		web.downloadMineOSApplication(thingsToDownload[i], MineOSCore.properties.language)
 	end
 
 	stageContainer:deleteChildren(2)
@@ -278,7 +279,7 @@ stages[4] = function()
 	mainContainer:draw()
 	buffer.draw()
 
-	component.eeprom.set(web.request(urls.EFI))
+	component.eeprom.set(web.request(URLs.EFI))
 
 	stages.load(5)
 end
@@ -291,31 +292,9 @@ stages[5] = function()
 	
 	stageContainer:addChild(GUI.label(1, 22, stageContainer.width, 1, 0x666666, localization.needToReboot)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
 	stageContainer:addChild(GUI.adaptiveRoundedButton(math.floor(stageContainer.width / 2 - (unicode.len(localization.reboot) + 4) / 2), stageContainer.height - 4, 2, 1, 0xAAAAAA, 0xDDDDDD, 0x777777, 0xDDDDDD, localization.reboot)).onTouch = function()
-		fs.makeDirectory("/MineOS/Pictures/")
-		fs.makeDirectory("/MineOS/Application data/")
-		fs.makeDirectory("/MineOS/Trash/")
-
-		OSSettings.wallpaper = stageContainer.downloadWallpapersSwitch.state and "/MineOS/Pictures/Road.pic" or nil
-		OSSettings.wallpaperEnabled = true
-		OSSettings.transparencyEnabled = true
-		OSSettings.showApplicationIcons = true
-		OSSettings.screensaver = "Matrix"
-		OSSettings.screensaverDelay = 20
-		OSSettings.showHelpOnApplicationStart = stageContainer.showApplicationsHelpSwitch.state
-		OSSettings.dockShortcuts = {
-			"/MineOS/Applications/AppMarket.app/",
-			"/MineOS/Applications/MineCode IDE.app/",
-			"/MineOS/Applications/Finder.app/",
-			"/MineOS/Applications/Photoshop.app/",
-		}
-		OSSettings.backgroundColor = 0x1E1E1E
-		OSSettings.network = {
-			users = {},
-			enabled = true,
-			signalStrength = 512,
-		}
-
-		table.toFile(paths.OSSettings, OSSettings)
+		MineOSCore.properties.wallpaper = stageContainer.downloadWallpapersSwitch.state and MineOSPaths.pictures .. "Road.pic" or nil
+		MineOSCore.properties.showHelpOnApplicationStart = stageContainer.showApplicationsHelpSwitch.state
+		MineOSCore.saveProperties()
 
 		local file = io.open("/autorun.lua", "w")
 		file:write("dofile(\"/OS.lua\")")

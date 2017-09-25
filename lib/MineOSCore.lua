@@ -2,8 +2,7 @@
 require("advancedLua")
 local component = require("component")
 local buffer = require("doubleBuffering")
-local GUI = require("GUI")
-local fs = require("filesystem")
+local filesystem = require("filesystem")
 local unicode = require("unicode")
 local MineOSPaths = require("MineOSPaths")
 
@@ -15,7 +14,7 @@ MineOSCore.localization = {}
 ----------------------------------------------------------------------------------------------------------------
 
 function MineOSCore.getCurrentScriptDirectory()
-	return fs.path(getCurrentScript())
+	return filesystem.path(getCurrentScript())
 end
 
 function MineOSCore.getCurrentApplicationResourcesDirectory() 
@@ -24,7 +23,7 @@ end
 
 function MineOSCore.getLocalization(pathToLocalizationFolder)
 	local localizationFileName = pathToLocalizationFolder .. MineOSCore.properties.language .. ".lang"
-	if fs.exists(localizationFileName) then
+	if filesystem.exists(localizationFileName) then
 		return table.fromFile(localizationFileName)
 	else
 		error("Localization file \"" .. localizationFileName .. "\" doesn't exists")
@@ -38,7 +37,7 @@ end
 -----------------------------------------------------------------------------------------------------------------------------------
 
 function MineOSCore.createShortcut(where, forWhat)
-	fs.makeDirectory(fs.path(where))
+	filesystem.makeDirectory(filesystem.path(where))
 	local file = io.open(where, "w")
 	file:write(forWhat)
 	file:close()
@@ -59,7 +58,42 @@ function MineOSCore.saveProperties()
 end
 
 function MineOSCore.loadPropeties()
-	MineOSCore.properties = table.fromFile(MineOSPaths.properties)
+	if filesystem.exists(MineOSPaths.properties) then
+		MineOSCore.properties = table.fromFile(MineOSPaths.properties)
+	else
+		MineOSCore.properties = {
+			language = "Russian",
+			transparencyEnabled = true,
+			showApplicationIcons = true,
+			screensaver = "Matrix",
+			screensaverDelay = 20,
+			showHelpOnApplicationStart = true,
+			dockShortcuts = {
+				MineOSPaths.applications .. "AppMarket.app/",
+				MineOSPaths.applications .. "MineCode IDE.app/",
+				MineOSPaths.applications .. "Finder.app/",
+				MineOSPaths.applications .. "Photoshop.app/",
+			},
+			backgroundColor = 0x1E1E1E,
+			network = {
+				users = {},
+				enabled = true,
+				signalStrength = 512,
+			},
+			extensionAssociations = {},
+		}
+
+		MineOSCore.associateExtension(".pic", MineOSPaths.applications .. "/Photoshop.app/Main.lua", MineOSPaths.icons .. "/Image.pic", MineOSPaths.extensionAssociations .. "Pic/ContextMenu.lua")
+		MineOSCore.associateExtension(".txt", MineOSPaths.editor, MineOSPaths.icons .. "/Text.pic")
+		MineOSCore.associateExtension(".cfg", MineOSPaths.editor, MineOSPaths.icons .. "/Config.pic")
+		MineOSCore.associateExtension(".3dm", MineOSPaths.applications .. "/3DPrint.app/Main.lua", MineOSPaths.icons .. "/3DModel.pic")
+
+		MineOSCore.associateExtension("script", MineOSPaths.extensionAssociations .. "Lua/Launcher.lua", MineOSPaths.icons .. "/Script.pic", MineOSPaths.extensionAssociations .. "Lua/ContextMenu.lua")
+		MineOSCore.associateExtension(".lua", MineOSPaths.extensionAssociations .. "Lua/Launcher.lua", MineOSPaths.icons .. "/Lua.pic", MineOSPaths.extensionAssociations .. "Lua/ContextMenu.lua")
+		MineOSCore.associateExtension(".pkg", MineOSPaths.extensionAssociations .. "Pkg/Launcher.lua", MineOSPaths.icons .. "/Archive.pic")
+
+		MineOSCore.saveProperties()
+	end
 end
 
 -----------------------------------------------------------------------------------------------------------------------------------
@@ -87,15 +121,15 @@ end
 
 function MineOSCore.associationsExtensionAutomatically()
 	local path, extension = MineOSPaths.extensionAssociations
-	for file in fs.list(path) do
-		if fs.isDirectory(path .. file) then
+	for file in filesystem.list(path) do
+		if filesystem.isDirectory(path .. file) then
 			extension = "." .. unicode.sub(file, 1, -2)
 
-			if fs.exists(path .. file .. "ContextMenu.lua") then
+			if filesystem.exists(path .. file .. "ContextMenu.lua") then
 				MineOSCore.associateExtensionContextMenu(extension, path .. file .. "Context menu.lua")
 			end
 
-			if fs.exists(path .. file .. "Launcher.lua") then
+			if filesystem.exists(path .. file .. "Launcher.lua") then
 				MineOSCore.associateExtensionLauncher(extension, path .. file .. "Launcher.lua")
 			end
 		end
@@ -174,7 +208,7 @@ function MineOSCore.safeLaunch(path, ...)
 	local oldResolutionWidth, oldResolutionHeight = buffer.width, buffer.height
 	local finalSuccess, finalPath, finalLine, finalTraceback = true
 	
-	if fs.exists(path) then
+	if filesystem.exists(path) then
 		local loadSuccess, loadReason = loadfile("/" .. path)
 		if loadSuccess then
 			local success, path, line, traceback = MineOSCore.call(loadSuccess, ...)
@@ -186,7 +220,7 @@ function MineOSCore.safeLaunch(path, ...)
 			finalSuccess, finalPath, finalLine, finalTraceback = false, path, tonumber(match) or 1, loadReason
 		end
 	else
-		GUI.error("Failed to safely launch file that doesn't exists: \"" .. path .. "\"")
+		require("GUI").error("Failed to safely launch file that doesn't exists: \"" .. path .. "\"")
 	end
 
 	component.screen.setPrecise(false)
@@ -198,29 +232,6 @@ end
 -----------------------------------------------------------------------------------------------------------------------------------
 
 MineOSCore.loadPropeties()
-MineOSCore.localization = table.fromFile(MineOSPaths.localizationFiles .. MineOSCore.properties.language .. ".lang")
-fs.makeDirectory(MineOSPaths.trash)
-
-MineOSCore.properties.extensionAssociations = MineOSCore.properties.extensionAssociations or {}
-
-MineOSCore.associateExtension(".pic", MineOSPaths.applications .. "/Photoshop.app/Main.lua", MineOSPaths.icons .. "/Image.pic", MineOSPaths.extensionAssociations .. "Pic/ContextMenu.lua")
-MineOSCore.associateExtension(".txt", MineOSPaths.editor, MineOSPaths.icons .. "/Text.pic")
-MineOSCore.associateExtension(".cfg", MineOSPaths.editor, MineOSPaths.icons .. "/Config.pic")
-MineOSCore.associateExtension(".3dm", MineOSPaths.applications .. "/3DPrint.app/Main.lua", MineOSPaths.icons .. "/3DModel.pic")
-
-MineOSCore.associateExtension("script", MineOSPaths.extensionAssociations .. "Lua/Launcher.lua", MineOSPaths.icons .. "/Script.pic", MineOSPaths.extensionAssociations .. "Lua/ContextMenu.lua")
-MineOSCore.associateExtension(".lua", MineOSPaths.extensionAssociations .. "Lua/Launcher.lua", MineOSPaths.icons .. "/Lua.pic", MineOSPaths.extensionAssociations .. "Lua/ContextMenu.lua")
-MineOSCore.associateExtension(".pkg", MineOSPaths.extensionAssociations .. "Pkg/Launcher.lua", MineOSPaths.icons .. "/Archive.pic")
-
-MineOSCore.saveProperties()
-
--- buffer.clear(0x0)
--- buffer.draw(true)
-
--- local cykaContainer = GUI.fullScreenContainer()
--- cykaContainer:addChild(GUI.panel(1, 1, cykaContainer.width, cykaContainer.height, 0xFF0000))
-
--- GUICopy(cykaContainer, "/MineOS/papka/", "/MineOS/mamka/", true)
 
 -----------------------------------------------------------------------------------------------------------------------------------
 

@@ -849,6 +849,8 @@ end
 
 ---------------------------------------------- Сама ОС ------------------------------------------------------------------------
 
+MineOSCore.localization = table.fromFile(MineOSPaths.localizationFiles .. MineOSCore.properties.language .. ".lang")
+
 createOSWindow()
 changeResolution()
 changeWallpaper()
