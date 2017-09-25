@@ -496,7 +496,7 @@ local function createOSWindow()
 		menu:addItem(MineOSCore.localization.returnToShell).onTouch = function()
 			MineOSNetwork.broadcastComputerState(false)
 			MineOSInterface.mainContainer:stopEventHandling()
-			MineOSCore.clearTerminal()
+			MineOSInterface.clearTerminal()
 			os.exit()
 		end
 
