@@ -359,7 +359,7 @@ function MineOSNetwork.enable()
 
 				if not MineOSCore.properties.network.users[eventData[3]] then
 					MineOSCore.properties.network.users[eventData[3]] = {}
-					MineOSCore.saveOSSettings()
+					MineOSCore.saveProperties()
 				end
 
 				computer.pushSignal("MineOSNetwork", "updateProxyList")
@@ -385,7 +385,7 @@ if not MineOSCore.properties.network then
 		enabled = true,
 		signalStrength = 512,
 	}
-	MineOSCore.saveOSSettings()
+	MineOSCore.saveProperties()
 end
 
 MineOSNetwork.updateModemState()
