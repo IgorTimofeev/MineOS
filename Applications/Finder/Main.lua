@@ -246,7 +246,7 @@ window.statusBar.eventHandler = function(mainContainer, object, eventData)
 		end
 	end
 end
-window.sidebarResizer = window:addChild(GUI.resizer(1, 4, 3, 7, 0xFFFFFF, 0x0))
+window.sidebarResizer = window:addChild(GUI.resizer(1, 4, 3, 5, 0xFFFFFF, 0x0))
 
 local function calculateSizes(width, height)
 	window.sidebarContainer.height = height - 3
@@ -288,7 +288,7 @@ end
 
 window.sidebarResizer.onResize = function(dragWidth, dragHeight)
 	window.sidebarContainer.width = window.sidebarContainer.width + dragWidth
-	window.sidebarContainer.width = window.sidebarContainer.width >= 4 and window.sidebarContainer.width or 4
+	window.sidebarContainer.width = window.sidebarContainer.width >= 5 and window.sidebarContainer.width or 5
 
 	calculateSizes(window.width, window.height)
 end
