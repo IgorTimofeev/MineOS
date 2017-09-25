@@ -112,6 +112,9 @@ end
 local function sidebarItemOnTouch(object, eventData)
 	if eventData[5] == 0 then
 		addWorkpath(object.path)
+		mainContainer:draw()
+		buffer.draw()
+		
 		window.iconField:updateFileList()
 
 		mainContainer:draw()
