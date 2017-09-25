@@ -115,19 +115,19 @@ local function displayApps(fromPage, typeFilter, nameFilter, updateCheck)
 			local progressBarWidth = math.floor(window.contentContainer.width * 0.65)
 			local progressBar = window.contentContainer:addChild(GUI.progressBar(math.floor(window.contentContainer.width / 2 - progressBarWidth / 2), y, progressBarWidth, 0x33B6FF, 0xDDDDDD, 0x0, 0, true, false))
 			local label = window.contentContainer:addChild(GUI.label(1, y + 1, window.contentContainer.width, 1, 0x888888, "")):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
-			
-			mainContainer:draw()
-			buffer.draw()
 
 			for i = 1, #finalApplicationList do
 				progressBar.value = math.floor(i / #finalApplicationList * 100)
 				label.text = localization.updating .. fs.name(finalApplicationList[i].path)
 				
-				web.downloadMineOSApplication(finalApplicationList[i], MineOSCore.properties.language)
-
 				mainContainer:draw()
 				buffer.draw()
+
+				web.downloadMineOSApplication(finalApplicationList[i], MineOSCore.properties.language)
 			end
+
+			mainContainer:draw()
+			buffer.draw()
 
 			computer.shutdown(true)
 		end
