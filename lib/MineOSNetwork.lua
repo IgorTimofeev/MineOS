@@ -104,7 +104,7 @@ function MineOSNetwork.updateModemState()
 end
 
 function MineOSNetwork.broadcastComputerState(state)
-	return MineOSNetwork.broadcastMessage("MineOSNetwork", state and "computerAvailable" or "computerNotAvailable", MineOSCore.OSSettings.network.name)
+	return MineOSNetwork.broadcastMessage("MineOSNetwork", state and "computerAvailable" or "computerNotAvailable", MineOSCore.properties.network.name)
 end
 
 ----------------------------------------------------------------------------------------------------------------
@@ -266,7 +266,7 @@ end
 
 local exceptionMethods = {
 	getLabel = function()
-		return MineOSCore.OSSettings.network.name or MineOSNetwork.modemProxy.address
+		return MineOSCore.properties.network.name or MineOSNetwork.modemProxy.address
 	end,
 
 	list = function(path)
@@ -311,7 +311,7 @@ local exceptionMethods = {
 local function handleRequest(eventData)
 	-- print("REQ", table.unpack(eventData, 6))
 	
-	if MineOSCore.OSSettings.network.users[eventData[3]].allowReadAndWrite then
+	if MineOSCore.properties.network.users[eventData[3]].allowReadAndWrite then
 		local result = { pcall(exceptionMethods[eventData[8]] or filesystemComponent[eventData[8]], table.unpack(eventData, 9)) }
 		if result[1] then
 			MineOSNetwork.sendMessage(eventData[3], "MineOSNetwork", "response", eventData[8], table.unpack(result, 2))
@@ -339,7 +339,7 @@ function MineOSNetwork.enable()
 		local eventData = {...}
 		if eventData[1] == "component_added" or eventData[1] == "component_removed" then
 			MineOSNetwork.updateModemState()
-		elseif eventData[1] == "modem_message" and MineOSCore.OSSettings.network.enabled and eventData[6] == "MineOSNetwork" then
+		elseif eventData[1] == "modem_message" and MineOSCore.properties.network.enabled and eventData[6] == "MineOSNetwork" then
 			if eventData[7] == "request" then
 				handleRequest(eventData)
 			elseif eventData[7] == "computerAvailable" or eventData[7] == "computerAvailableRedirect" then
@@ -354,11 +354,11 @@ function MineOSNetwork.enable()
 				filesystemLibrary.mount(proxy, MineOSNetwork.mountPath .. eventData[3]:sub(1, 3) .. "/")
 
 				if eventData[7] == "computerAvailable" then
-					MineOSNetwork.sendMessage(eventData[3], "MineOSNetwork", "computerAvailableRedirect", MineOSCore.OSSettings.network.name)
+					MineOSNetwork.sendMessage(eventData[3], "MineOSNetwork", "computerAvailableRedirect", MineOSCore.properties.network.name)
 				end
 
-				if not MineOSCore.OSSettings.network.users[eventData[3]] then
-					MineOSCore.OSSettings.network.users[eventData[3]] = {}
+				if not MineOSCore.properties.network.users[eventData[3]] then
+					MineOSCore.properties.network.users[eventData[3]] = {}
 					MineOSCore.saveOSSettings()
 				end
 
@@ -370,7 +370,7 @@ function MineOSNetwork.enable()
 				end
 
 				computer.pushSignal("MineOSNetwork", "updateProxyList")
-			elseif eventData[7] == "message" and MineOSCore.OSSettings.network.users[eventData[3]].allowMessages then
+			elseif eventData[7] == "message" and MineOSCore.properties.network.users[eventData[3]].allowMessages then
 				computer.pushSignal("MineOSNetwork", "message", eventData[3], eventData[8])
 			end
 		end
@@ -379,8 +379,8 @@ end
 
 ----------------------------------------------------------------------------------------------------------------
 
-if not MineOSCore.OSSettings.network then
-	MineOSCore.OSSettings.network = {
+if not MineOSCore.properties.network then
+	MineOSCore.properties.network = {
 		users = {},
 		enabled = true,
 		signalStrength = 512,

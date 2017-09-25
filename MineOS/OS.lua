@@ -33,8 +33,10 @@ local event = require("event")
 local image = require("image")
 local buffer = require("doubleBuffering")
 local GUI = require("GUI")
+local MineOSPaths = require("MineOSPaths")
 local MineOSCore = require("MineOSCore")
 local MineOSNetwork = require("MineOSNetwork")
+local MineOSInterface = require("MineOSInterface")
 
 ---------------------------------------------- Всякая константная залупа ------------------------------------------------------------------------
 
@@ -45,13 +47,13 @@ local computerUptimeOnBoot = computer.uptime()
 local computerDateUptime = computerUptimeOnBoot
 local realTimestamp
 local timezoneCorrection
-local screensaversPath = MineOSCore.paths.system .. "Screensavers/"
+local screensaversPath = MineOSPaths.system .. "Screensavers/"
 local screensaverUptime = computerUptimeOnBoot
 
 ---------------------------------------------- Система защиты пекарни ------------------------------------------------------------------------
 
 local function biometry(creatingNew)
-	local container = MineOSCore.addUniversalContainer(MineOSCore.OSMainContainer)
+	local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer)
 
 	local fingerImage = container.layout:addChild(GUI.image(1, 1, image.fromString([[180E0000FF 0000FF 0000FF 0000FF 0000FF 00FFFF▄00FFFF▄00FFFF▄00FFFF▄FFFFFF▀FFFFFF▀FFFFFF▀FFFFFF▀FFFFFF▀FFFFFF▀00FFFF▄00FFFF▄00FFFF▄0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 00FFFF▄FFFF00▄FFFFFF▀0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF FFFFFF▀FFFFFF▀FFFF00▄00FFFF▄0000FF 0000FF 0000FF 0000FF 0000FF FFFF00▄FFFFFF▀0000FF 0000FF 0000FF 00FFFF▄00FFFF▄FFFF00▄FFFFFF▀FFFFFF▀FFFFFF▀FFFFFF▀FFFFFF▀FFFFFF▀FFFF00▄00FFFF▄0000FF 0000FF FFFFFF▀FFFF00▄00FFFF▄0000FF 0000FF FFFF00▄FFFFFF▀0000FF 0000FF 00FFFF▄FFFF00▄FFFFFF▀0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF FFFF00▄00FFFF▄0000FF 0000FF FFFF00▄0000FF 00FFFF▄FFFF00▄0000FF 0000FF 00FFFF▄FFFF00▄0000FF 0000FF 0000FF 00FFFF▄00FFFF▄FFFFFF▀FFFFFF▀FFFFFF▀FFFFFF▀FFFFFF▀FFFFFF▀00FFFF▄0000FF FFFF00▄00FFFF▄0000FF FFFFFF▀FFFF00▄FFFF00▄0000FF 0000FF 0000FF FFFF00▄0000FF 0000FF 0000FF FFFF00▄0000FF 0000FF 0000FF 00FFFF▄00FFFF▄00FFFF▄0000FF 0000FF FFFF00▄0000FF 0000FF FFFF00▄0000FF 0000FF FFFF00▄FFFF00▄0000FF 0000FF 0000FF FFFF00▄0000FF 0000FF 00FFFF▄FFFFFF▀0000FF 0000FF 0000FF 0000FF 00FFFF▄FFFF00▄0000FF 0000FF FFFF00▄0000FF 0000FF FFFF00▄0000FF 0000FF FFFF00▄FFFF00▄0000FF 0000FF 0000FF FFFF00▄0000FF 0000FF FFFF00▄0000FF 0000FF 0000FF 0000FF 00FFFF▄FFFF00▄0000FF 0000FF 0000FF FFFF00▄0000FF 0000FF FFFF00▄0000FF 00FFFF▄FFFF00▄FFFF00▄00FFFF▄0000FF 0000FF FFFF00▄00FFFF▄0000FF FFFFFF▀FFFF00▄0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF FFFF00▄0000FF 0000FF FFFF00▄FFFFFF▀0000FF FFFF00▄0000FF 0000FF FFFF00▄0000FF 0000FF 0000FF FFFF00▄00FFFF▄0000FF FFFFFF▀FFFF00▄0000FF 0000FF 0000FF 0000FF 0000FF FFFF00▄0000FF 0000FF 00FFFF▄FFFF00▄0000FF 00FFFF▄FFFFFF▀0000FF 0000FF FFFF00▄00FFFF▄0000FF 0000FF 0000FF FFFF00▄00FFFF▄0000FF FFFF00▄00FFFF▄0000FF 0000FF 0000FF FFFF00▄0000FF 0000FF 00FFFF▄FFFFFF▀0000FF 0000FF FFFF00▄0000FF 0000FF 0000FF 0000FF FFFF00▄00FFFF▄0000FF 0000FF 0000FF FFFF00▄0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF FFFF00▄FFFFFF▀0000FF 0000FF FFFF00▄FFFFFF▀0000FF 0000FF 0000FF 0000FF 0000FF FFFF00▄0000FF 0000FF 0000FF FFFFFF▀FFFF00▄00FFFF▄0000FF 0000FF 0000FF 0000FF 00FFFF▄FFFFFF▀0000FF 0000FF 0000FF 00FFFF▄FFFF00▄0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF FFFF00▄00FFFF▄0000FF 0000FF 0000FF FFFFFF▀0000FF 0000FF 0000FF 0000FF FFFFFF▀0000FF 0000FF 00FFFF▄FFFF00▄FFFFFF▀0000FF 0000FF 0000FF 0000FF ]])))
 	local text = creatingNew and MineOSCore.localization.putFingerToRegister or MineOSCore.localization.putFingerToVerify
@@ -64,9 +66,9 @@ local function biometry(creatingNew)
 
 	fingerImage.eventHandler = function(mainContainer, object, eventData)
 		if eventData[1] == "touch" then
-			scanLine.hidden = false
 			scanLine:addAnimation(
 				function(mainContainer, object, animation)
+					scanLine.hidden = false
 					if animation.position <= 0.5 then
 						scanLine.localPosition.y = math.floor(fingerImage.localPosition.y + fingerImageHeight - fingerImageHeight * animation.position * 2 - 1)
 					else
@@ -82,19 +84,19 @@ local function biometry(creatingNew)
 					if creatingNew then
 						label.text = MineOSCore.localization.fingerprintCreated
 
-						MineOSCore.OSDraw()
+						MineOSInterface.OSDraw()
 
-						MineOSCore.OSSettings.protectionMethod = "biometric"
-						MineOSCore.OSSettings.biometryHash = touchedHash
-						MineOSCore.saveOSSettings()
+						MineOSCore.properties.protectionMethod = "biometric"
+						MineOSCore.properties.biometryHash = touchedHash
+						MineOSCore.saveProperties()
 
 						container:delete()
 						os.sleep(delay)
 					else
-						if touchedHash == MineOSCore.OSSettings.biometryHash then
+						if touchedHash == MineOSCore.properties.biometryHash then
 							label.text = MineOSCore.localization.welcomeBack .. eventData[6]
 
-							MineOSCore.OSDraw()
+							MineOSInterface.OSDraw()
 
 							container:delete()
 							os.sleep(delay)
@@ -103,7 +105,7 @@ local function biometry(creatingNew)
 							local oldBackground = container.panel.colors.background
 							container.panel.colors.background = 0x550000
 
-							MineOSCore.OSDraw()
+							MineOSInterface.OSDraw()
 
 							os.sleep(delay)
 
@@ -112,25 +114,25 @@ local function biometry(creatingNew)
 						end
 					end
 
-					MineOSCore.OSDraw()
+					MineOSInterface.OSDraw()
 				end
 			):start(3)
 		end
 	end
 	label.eventHandler, container.panel.eventHandler = fingerImage.eventHandler, fingerImage.eventHandler
 
-	MineOSCore.OSDraw()
+	MineOSInterface.OSDraw()
 end
 
 local function checkPassword()
-	local container = MineOSCore.addUniversalContainer(MineOSCore.OSMainContainer, MineOSCore.localization.inputPassword)
+	local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer, MineOSCore.localization.inputPassword)
 	local inputField = container.layout:addChild(GUI.inputField(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0x666666, 0xEEEEEE, 0x262626, nil, nil, true, "*"))
 	local label = container.layout:addChild(GUI.label(1, 1, 36, 1, 0xFF4940, MineOSCore.localization.incorrectPassword)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
 	label.hidden = true
 
 	inputField.onInputFinished = function()
 		local hash = require("SHA2").hash(inputField.text or "")
-		if hash == MineOSCore.OSSettings.passwordHash then
+		if hash == MineOSCore.properties.passwordHash then
 			container:delete()
 		elseif hash == "c925be318b0530650b06d7f0f6a51d8289b5925f1b4117a43746bc99f1f81bc1" then
 			GUI.error(MineOSCore.localization.mineOSCreatorUsedMasterPassword)
@@ -139,47 +141,47 @@ local function checkPassword()
 			label.hidden = false
 		end
 
-		MineOSCore.OSDraw()
+		MineOSInterface.OSDraw()
 	end
 
-	MineOSCore.OSDraw()
+	MineOSInterface.OSDraw()
 	inputField:startInput()
 end
 
 local function setPassword()
-	local container = MineOSCore.addUniversalContainer(MineOSCore.OSMainContainer, MineOSCore.localization.passwordProtection)
+	local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer, MineOSCore.localization.passwordProtection)
 	local inputField1 = container.layout:addChild(GUI.inputField(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0x666666, 0xEEEEEE, 0x262626, nil, MineOSCore.localization.inputPassword, true, "*"))
 	local inputField2 = container.layout:addChild(GUI.inputField(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0x666666, 0xEEEEEE, 0x262626, nil, MineOSCore.localization.confirmInputPassword, true, "*"))
 	local label = container.layout:addChild(GUI.label(1, 1, 36, 1, 0x6340FF, MineOSCore.localization.passwordsAreDifferent)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
 	label.hidden = true
 
-	MineOSCore.OSDraw()
+	MineOSInterface.OSDraw()
 
 	container.panel.eventHandler = function(mainContainer, object, eventData)
 		if eventData[1] == "touch" then
 			if inputField1.text == inputField2.text then
 				container:delete()
 
-				MineOSCore.OSSettings.protectionMethod = "password"
-				MineOSCore.OSSettings.passwordHash = require("SHA2").hash(inputField1.text or "")
-				MineOSCore.saveOSSettings()
+				MineOSCore.properties.protectionMethod = "password"
+				MineOSCore.properties.passwordHash = require("SHA2").hash(inputField1.text or "")
+				MineOSCore.saveProperties()
 			else
 				label.hidden = false
 			end
 
-			MineOSCore.OSDraw()
+			MineOSInterface.OSDraw()
 		end
 	end
 end
 
 local function setWithoutProtection()
-	MineOSCore.OSSettings.passwordHash = nil
-	MineOSCore.OSSettings.protectionMethod = "withoutProtection"
-	MineOSCore.saveOSSettings()
+	MineOSCore.properties.passwordHash = nil
+	MineOSCore.properties.protectionMethod = "withoutProtection"
+	MineOSCore.saveProperties()
 end
 
 local function setProtectionMethod()
-	local container = MineOSCore.addUniversalContainer(MineOSCore.OSMainContainer, MineOSCore.localization.protectYourComputer)
+	local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer, MineOSCore.localization.protectYourComputer)
 
 	local comboBox = container.layout:addChild(GUI.comboBox(1, 1, 36, 3, 0xEEEEEE, 0x262626, 0x444444, 0x999999))
 	comboBox:addItem(MineOSCore.localization.biometricProtection)
@@ -189,7 +191,7 @@ local function setProtectionMethod()
 	container.panel.eventHandler = function(mainContainer, object, eventData)
 		if eventData[1] == "touch" then
 			container:delete()
-			MineOSCore.OSDraw()
+			MineOSInterface.OSDraw()
 
 			if comboBox.selectedItem == 1 then
 				biometry(true)
@@ -205,31 +207,31 @@ end
 local function login()
 	event.interruptingEnabled = false
 
-	if not MineOSCore.OSSettings.protectionMethod then
+	if not MineOSCore.properties.protectionMethod then
 		setProtectionMethod()
-	elseif MineOSCore.OSSettings.protectionMethod == "password" then
+	elseif MineOSCore.properties.protectionMethod == "password" then
 		checkPassword()
-	elseif MineOSCore.OSSettings.protectionMethod == "biometric" then
+	elseif MineOSCore.properties.protectionMethod == "biometric" then
 		biometry()
 	end
 
 	event.interruptingEnabled = true
-	MineOSCore.OSDraw()
+	MineOSInterface.OSDraw()
 end
 
 ---------------------------------------------- Основные функции ------------------------------------------------------------------------
 
 local function changeWallpaper()
-	MineOSCore.OSMainContainer.background.wallpaper = nil
+	MineOSInterface.mainContainer.background.wallpaper = nil
 
-	if MineOSCore.OSSettings.wallpaperEnabled and MineOSCore.OSSettings.wallpaper and fs.exists(MineOSCore.OSSettings.wallpaper) then
-		if MineOSCore.OSSettings.wallpaperMode == 1 then
-			MineOSCore.OSMainContainer.background.wallpaper = image.transform(image.load(MineOSCore.OSSettings.wallpaper), MineOSCore.OSMainContainer.width, MineOSCore.OSMainContainer.height)
-			MineOSCore.OSMainContainer.background.wallpaperPosition.x, MineOSCore.OSMainContainer.background.wallpaperPosition.y = 1, 1
+	if MineOSCore.properties.wallpaperEnabled and MineOSCore.properties.wallpaper and fs.exists(MineOSCore.properties.wallpaper) then
+		if MineOSCore.properties.wallpaperMode == 1 then
+			MineOSInterface.mainContainer.background.wallpaper = image.transform(image.load(MineOSCore.properties.wallpaper), MineOSInterface.mainContainer.width, MineOSInterface.mainContainer.height)
+			MineOSInterface.mainContainer.background.wallpaperPosition.x, MineOSInterface.mainContainer.background.wallpaperPosition.y = 1, 1
 		else
-			MineOSCore.OSMainContainer.background.wallpaper = image.load(MineOSCore.OSSettings.wallpaper)
-			MineOSCore.OSMainContainer.background.wallpaperPosition.x = math.floor(1 + MineOSCore.OSMainContainer.width / 2 - image.getWidth(MineOSCore.OSMainContainer.background.wallpaper) / 2)
-			MineOSCore.OSMainContainer.background.wallpaperPosition.y = math.floor(1 + MineOSCore.OSMainContainer.height / 2 - image.getHeight(MineOSCore.OSMainContainer.background.wallpaper) / 2)
+			MineOSInterface.mainContainer.background.wallpaper = image.load(MineOSCore.properties.wallpaper)
+			MineOSInterface.mainContainer.background.wallpaperPosition.x = math.floor(1 + MineOSInterface.mainContainer.width / 2 - image.getWidth(MineOSInterface.mainContainer.background.wallpaper) / 2)
+			MineOSInterface.mainContainer.background.wallpaperPosition.y = math.floor(1 + MineOSInterface.mainContainer.height / 2 - image.getHeight(MineOSInterface.mainContainer.background.wallpaper) / 2)
 		end
 	end
 end
@@ -237,88 +239,88 @@ end
 ---------------------------------------------- Всякая параша для ОС-контейнера ------------------------------------------------------------------------
 
 local function changeResolution()
-	buffer.setResolution(table.unpack(MineOSCore.OSSettings.resolution or {160, 50}))
+	buffer.setResolution(table.unpack(MineOSCore.properties.resolution or {160, 50}))
 
-	MineOSCore.OSMainContainer.width, MineOSCore.OSMainContainer.height = buffer.width, buffer.height
+	MineOSInterface.mainContainer.width, MineOSInterface.mainContainer.height = buffer.width, buffer.height
 
-	MineOSCore.OSMainContainer.iconField.width = MineOSCore.OSMainContainer.width
-	MineOSCore.OSMainContainer.iconField.height = MineOSCore.OSMainContainer.height
-	MineOSCore.OSMainContainer.iconField:updateFileList()
+	MineOSInterface.mainContainer.iconField.width = MineOSInterface.mainContainer.width
+	MineOSInterface.mainContainer.iconField.height = MineOSInterface.mainContainer.height
+	MineOSInterface.mainContainer.iconField:updateFileList()
 
-	MineOSCore.OSMainContainer.dockContainer.sort()
-	MineOSCore.OSMainContainer.dockContainer.localPosition.y = MineOSCore.OSMainContainer.height - MineOSCore.OSMainContainer.dockContainer.height + 1
+	MineOSInterface.mainContainer.dockContainer.sort()
+	MineOSInterface.mainContainer.dockContainer.localPosition.y = MineOSInterface.mainContainer.height - MineOSInterface.mainContainer.dockContainer.height + 1
 
-	MineOSCore.OSMainContainer.menu.width = MineOSCore.OSMainContainer.width
-	MineOSCore.OSMainContainer.menuLayout.width = MineOSCore.OSMainContainer.width
-	MineOSCore.OSMainContainer.background.width, MineOSCore.OSMainContainer.background.height = MineOSCore.OSMainContainer.width, MineOSCore.OSMainContainer.height
+	MineOSInterface.mainContainer.menu.width = MineOSInterface.mainContainer.width
+	MineOSInterface.mainContainer.menuLayout.width = MineOSInterface.mainContainer.width
+	MineOSInterface.mainContainer.background.width, MineOSInterface.mainContainer.background.height = MineOSInterface.mainContainer.width, MineOSInterface.mainContainer.height
 
-	MineOSCore.OSMainContainer.windowsContainer.width, MineOSCore.OSMainContainer.windowsContainer.height = MineOSCore.OSMainContainer.width, MineOSCore.OSMainContainer.height - 1
+	MineOSInterface.mainContainer.windowsContainer.width, MineOSInterface.mainContainer.windowsContainer.height = MineOSInterface.mainContainer.width, MineOSInterface.mainContainer.height - 1
 end
 
 local function moveDockIcon(index, direction)
-	MineOSCore.OSMainContainer.dockContainer.children[index], MineOSCore.OSMainContainer.dockContainer.children[index + direction] = MineOSCore.OSMainContainer.dockContainer.children[index + direction], MineOSCore.OSMainContainer.dockContainer.children[index]
-	MineOSCore.OSMainContainer.dockContainer.sort()
-	MineOSCore.OSMainContainer.dockContainer.saveToOSSettings()
-	MineOSCore.OSDraw()
+	MineOSInterface.mainContainer.dockContainer.children[index], MineOSInterface.mainContainer.dockContainer.children[index + direction] = MineOSInterface.mainContainer.dockContainer.children[index + direction], MineOSInterface.mainContainer.dockContainer.children[index]
+	MineOSInterface.mainContainer.dockContainer.sort()
+	MineOSInterface.mainContainer.dockContainer.saveToOSSettings()
+	MineOSInterface.OSDraw()
 end
 
 local function createOSWindow()
-	MineOSCore.OSMainContainer = GUI.fullScreenContainer()
+	MineOSInterface.mainContainer = GUI.fullScreenContainer()
 
-	MineOSCore.OSMainContainer.background = MineOSCore.OSMainContainer:addChild(GUI.object(1, 1, 1, 1))
-	MineOSCore.OSMainContainer.background.wallpaperPosition = {x = 1, y = 1}
-	MineOSCore.OSMainContainer.background.draw = function(object)
-		buffer.square(object.x, object.y, object.width, object.height, MineOSCore.OSSettings.backgroundColor or 0x0F0F0F, 0x0, " ")
+	MineOSInterface.mainContainer.background = MineOSInterface.mainContainer:addChild(GUI.object(1, 1, 1, 1))
+	MineOSInterface.mainContainer.background.wallpaperPosition = {x = 1, y = 1}
+	MineOSInterface.mainContainer.background.draw = function(object)
+		buffer.square(object.x, object.y, object.width, object.height, MineOSCore.properties.backgroundColor or 0x0F0F0F, 0x0, " ")
 		if object.wallpaper then
 			buffer.image(object.wallpaperPosition.x, object.wallpaperPosition.y, object.wallpaper)
 		end
 	end
 
-	MineOSCore.OSMainContainer.iconField = MineOSCore.OSMainContainer:addChild(
-		MineOSCore.iconField(
+	MineOSInterface.mainContainer.iconField = MineOSInterface.mainContainer:addChild(
+		MineOSInterface.iconField(
 			1, 2, 1, 1, 2, 1, 3, 2,
 			0xFFFFFF,
 			0xFFFFFF,
-			MineOSCore.paths.desktop
+			MineOSPaths.desktop
 		)
 	)
-	MineOSCore.OSMainContainer.iconField.iconConfigEnabled = true
-	MineOSCore.OSMainContainer.iconField.launchers.directory = function(icon)
-		MineOSCore.safeLaunch(MineOSCore.paths.explorer, "-o", icon.path)
+	MineOSInterface.mainContainer.iconField.iconConfigEnabled = true
+	MineOSInterface.mainContainer.iconField.launchers.directory = function(icon)
+		MineOSInterface.safeLaunch(MineOSPaths.explorer, "-o", icon.path)
 	end
-	MineOSCore.OSMainContainer.iconField.launchers.showContainingFolder = function(icon)
-		MineOSCore.safeLaunch(MineOSCore.paths.explorer, "-o", fs.path(icon.path))
+	MineOSInterface.mainContainer.iconField.launchers.showContainingFolder = function(icon)
+		MineOSInterface.safeLaunch(MineOSPaths.explorer, "-o", fs.path(icon.path))
 	end
-	MineOSCore.OSMainContainer.iconField.launchers.showPackageContent = function(icon)
-		MineOSCore.safeLaunch(MineOSCore.paths.explorer, "-o", icon.path)
+	MineOSInterface.mainContainer.iconField.launchers.showPackageContent = function(icon)
+		MineOSInterface.safeLaunch(MineOSPaths.explorer, "-o", icon.path)
 	end
 
 	-- Dock
-	MineOSCore.OSMainContainer.dockContainer = MineOSCore.OSMainContainer:addChild(GUI.container(1, 1, MineOSCore.OSMainContainer.width, 6))
-	MineOSCore.OSMainContainer.dockContainer.saveToOSSettings = function()
-		MineOSCore.OSSettings.dockShortcuts = {}
-		for i = 1, #MineOSCore.OSMainContainer.dockContainer.children do
-			if MineOSCore.OSMainContainer.dockContainer.children[i].keepInDock then
-				table.insert(MineOSCore.OSSettings.dockShortcuts, MineOSCore.OSMainContainer.dockContainer.children[i].path)
+	MineOSInterface.mainContainer.dockContainer = MineOSInterface.mainContainer:addChild(GUI.container(1, 1, MineOSInterface.mainContainer.width, 6))
+	MineOSInterface.mainContainer.dockContainer.saveToOSSettings = function()
+		MineOSCore.properties.dockShortcuts = {}
+		for i = 1, #MineOSInterface.mainContainer.dockContainer.children do
+			if MineOSInterface.mainContainer.dockContainer.children[i].keepInDock then
+				table.insert(MineOSCore.properties.dockShortcuts, MineOSInterface.mainContainer.dockContainer.children[i].path)
 			end
 		end
-		MineOSCore.saveOSSettings()
+		MineOSCore.saveProperties()
 	end
-	MineOSCore.OSMainContainer.dockContainer.sort = function()
+	MineOSInterface.mainContainer.dockContainer.sort = function()
 		local x = 1
-		for i = 1, #MineOSCore.OSMainContainer.dockContainer.children do
-			MineOSCore.OSMainContainer.dockContainer.children[i].localPosition.x = x
-			x = x + MineOSCore.iconWidth + MineOSCore.OSMainContainer.iconField.spaceBetweenIcons.horizontal
+		for i = 1, #MineOSInterface.mainContainer.dockContainer.children do
+			MineOSInterface.mainContainer.dockContainer.children[i].localPosition.x = x
+			x = x + MineOSInterface.iconWidth + MineOSInterface.mainContainer.iconField.spaceBetweenIcons.horizontal
 		end
 
-		MineOSCore.OSMainContainer.dockContainer.width = (#MineOSCore.OSMainContainer.dockContainer.children) * (MineOSCore.iconWidth + MineOSCore.OSMainContainer.iconField.spaceBetweenIcons.horizontal) - MineOSCore.OSMainContainer.iconField.spaceBetweenIcons.horizontal
-		MineOSCore.OSMainContainer.dockContainer.localPosition.x = math.floor(MineOSCore.OSMainContainer.width / 2 - MineOSCore.OSMainContainer.dockContainer.width / 2)
+		MineOSInterface.mainContainer.dockContainer.width = (#MineOSInterface.mainContainer.dockContainer.children) * (MineOSInterface.iconWidth + MineOSInterface.mainContainer.iconField.spaceBetweenIcons.horizontal) - MineOSInterface.mainContainer.iconField.spaceBetweenIcons.horizontal
+		MineOSInterface.mainContainer.dockContainer.localPosition.x = math.floor(MineOSInterface.mainContainer.width / 2 - MineOSInterface.mainContainer.dockContainer.width / 2)
 	end
 
 	local function dockIconEventHandler(mainContainer, icon, eventData)
 		if eventData[1] == "touch" then
 			icon.selected = true
-			MineOSCore.OSDraw()
+			MineOSInterface.OSDraw()
 
 			if eventData[5] == 1 then
 				icon.onRightClick(icon, eventData)
@@ -327,12 +329,12 @@ local function createOSWindow()
 			end
 
 			icon.selected = false
-			MineOSCore.OSDraw()
+			MineOSInterface.OSDraw()
 		end
 	end
 
-	MineOSCore.OSMainContainer.dockContainer.addIcon = function(path, window)
-		local icon = MineOSCore.OSMainContainer.dockContainer:addChild(MineOSCore.icon(1, 1, path, 0x262626, 0xFFFFFF))
+	MineOSInterface.mainContainer.dockContainer.addIcon = function(path, window)
+		local icon = MineOSInterface.mainContainer.dockContainer:addChild(MineOSInterface.icon(1, 1, path, 0x262626, 0xFFFFFF))
 		icon:analyseExtension()
 		icon:moveBackward()
 
@@ -344,22 +346,22 @@ local function createOSWindow()
 					window.hidden = false
 					window:moveToFront()
 				end
-				MineOSCore.OSDraw()
+				MineOSInterface.OSDraw()
 			else
 				-- os.sleep(MineOSCore.iconClickDelay)
-				MineOSCore.iconDoubleClick(icon, eventData)
+				MineOSInterface.iconDoubleClick(icon, eventData)
 			end
 		end
 
 		icon.onRightClick = function(icon, eventData)
 			local indexOf = icon:indexOf()
 
-			local menu = MineOSCore.contextMenu(eventData[3], eventData[4])
+			local menu = MineOSInterface.contextMenu(eventData[3], eventData[4])
 			menu:addItem(MineOSCore.localization.showContainingFolder).onTouch = function()
 
 			end
 			menu:addSeparator()
-			menu:addItem(MineOSCore.localization.moveRight, indexOf >= #MineOSCore.OSMainContainer.dockContainer.children - 1).onTouch = function()
+			menu:addItem(MineOSCore.localization.moveRight, indexOf >= #MineOSInterface.mainContainer.dockContainer.children - 1).onTouch = function()
 				moveDockIcon(indexOf, 1)
 			end
 			menu:addItem(MineOSCore.localization.moveLeft, indexOf <= 1).onTouch = function()
@@ -367,23 +369,23 @@ local function createOSWindow()
 			end
 			menu:addSeparator()
 			if icon.keepInDock then
-				if #MineOSCore.OSMainContainer.dockContainer.children > 1 then
+				if #MineOSInterface.mainContainer.dockContainer.children > 1 then
 					menu:addItem(MineOSCore.localization.removeFromDock).onTouch = function()
 						if icon.windows then
 							icon.keepInDock = nil
 						else
 							icon:delete()
-							MineOSCore.OSMainContainer.dockContainer.sort()
+							MineOSInterface.mainContainer.dockContainer.sort()
 						end
-						MineOSCore.OSMainContainer.dockContainer.saveToOSSettings()
-						MineOSCore.OSDraw()
+						MineOSInterface.mainContainer.dockContainer.saveToOSSettings()
+						MineOSInterface.OSDraw()
 					end
 				end
 			else
 				if icon.windows then
 					menu:addItem(MineOSCore.localization.keepInDock).onTouch = function()
 						icon.keepInDock = true
-						MineOSCore.OSMainContainer.dockContainer.saveToOSSettings()
+						MineOSInterface.mainContainer.dockContainer.saveToOSSettings()
 					end
 				end
 			end
@@ -391,33 +393,33 @@ local function createOSWindow()
 			menu:show()
 		end
 
-		MineOSCore.OSMainContainer.dockContainer.sort()
+		MineOSInterface.mainContainer.dockContainer.sort()
 
 		return icon
 	end
 
 	-- Trash
-	local icon = MineOSCore.OSMainContainer.dockContainer.addIcon(MineOSCore.paths.trash)
+	local icon = MineOSInterface.mainContainer.dockContainer.addIcon(MineOSPaths.trash)
 	icon.launchers.directory = function(icon)
-		MineOSCore.safeLaunch(MineOSCore.paths.explorer, "-o", icon.path)
+		MineOSInterface.safeLaunch(MineOSPaths.explorer, "-o", icon.path)
 	end
 	icon:analyseExtension()
-	icon.image = MineOSCore.icons.trash
+	icon.image = MineOSInterface.iconsCache.trash
 
 	icon.eventHandler = dockIconEventHandler
 
 	icon.onLeftClick = function(icon, eventData)
-		MineOSCore.iconDoubleClick(icon, eventData)
+		MineOSInterface.iconDoubleClick(icon, eventData)
 	end
 
 	icon.onRightClick = function(icon, eventData)
-		local menu = MineOSCore.contextMenu(eventData[3], eventData[4])
+		local menu = MineOSInterface.contextMenu(eventData[3], eventData[4])
 		menu:addItem(MineOSCore.localization.emptyTrash).onTouch = function()
-			local container = MineOSCore.addUniversalContainer(MineOSCore.OSMainContainer, MineOSCore.localization.areYouSure)
+			local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer, MineOSCore.localization.areYouSure)
 
 			container.layout:addChild(GUI.button(1, 1, 30, 1, 0xEEEEEE, 0x262626, 0xA, 0x262626, "OK")).onTouch = function()
-				for file in fs.list(MineOSCore.paths.trash) do
-					fs.remove(MineOSCore.paths.trash .. file)
+				for file in fs.list(MineOSPaths.trash) do
+					fs.remove(MineOSPaths.trash .. file)
 				end
 				container:delete()
 				computer.pushSignal("MineOSCore", "updateFileList")
@@ -425,26 +427,26 @@ local function createOSWindow()
 
 			container.panel.onTouch = function()
 				container:delete()
-				MineOSCore.OSDraw()
+				MineOSInterface.OSDraw()
 			end
 
-			MineOSCore.OSDraw()
+			MineOSInterface.OSDraw()
 		end
 
 		menu:show()
 	end
 
-	for i = 1, #MineOSCore.OSSettings.dockShortcuts do
-		MineOSCore.OSMainContainer.dockContainer.addIcon(MineOSCore.OSSettings.dockShortcuts[i]).keepInDock = true
+	for i = 1, #MineOSCore.properties.dockShortcuts do
+		MineOSInterface.mainContainer.dockContainer.addIcon(MineOSCore.properties.dockShortcuts[i]).keepInDock = true
 	end
 
-	MineOSCore.OSMainContainer.dockContainer.draw = function(dockContainer)
-		local color, currentDockTransparency, currentDockWidth, xPos, yPos = MineOSCore.OSSettings.dockColor or 0xFFFFFF, dockTransparency, dockContainer.width + 6, dockContainer.x - 3, dockContainer.y + dockContainer.height - 1
+	MineOSInterface.mainContainer.dockContainer.draw = function(dockContainer)
+		local color, currentDockTransparency, currentDockWidth, xPos, yPos = MineOSCore.properties.dockColor or 0xFFFFFF, dockTransparency, dockContainer.width + 6, dockContainer.x - 3, dockContainer.y + dockContainer.height - 1
 
 		for i = 1, dockContainer.height - 2 do
-			buffer.text(xPos, yPos, color, "◢", MineOSCore.OSSettings.transparencyEnabled and currentDockTransparency)
-			buffer.square(xPos + 1, yPos, currentDockWidth - 2, 1, color, 0xFFFFFF, " ", MineOSCore.OSSettings.transparencyEnabled and currentDockTransparency)
-			buffer.text(xPos + currentDockWidth - 1, yPos, color, "◣", MineOSCore.OSSettings.transparencyEnabled and currentDockTransparency)
+			buffer.text(xPos, yPos, color, "◢", MineOSCore.properties.transparencyEnabled and currentDockTransparency)
+			buffer.square(xPos + 1, yPos, currentDockWidth - 2, 1, color, 0xFFFFFF, " ", MineOSCore.properties.transparencyEnabled and currentDockTransparency)
+			buffer.text(xPos + currentDockWidth - 1, yPos, color, "◣", MineOSCore.properties.transparencyEnabled and currentDockTransparency)
 
 			currentDockTransparency, currentDockWidth, xPos, yPos = currentDockTransparency + 0.08, currentDockWidth - 2, xPos + 1, yPos - 1
 			if currentDockTransparency > 1 then
@@ -456,26 +458,26 @@ local function createOSWindow()
 	end
 
 	-- Custom windows support
-	MineOSCore.OSMainContainer.windowsContainer = MineOSCore.OSMainContainer:addChild(GUI.container(1, 2, 1, 1))
+	MineOSInterface.mainContainer.windowsContainer = MineOSInterface.mainContainer:addChild(GUI.container(1, 2, 1, 1))
 
 	-- Main menu
-	MineOSCore.OSMainContainer.menu = MineOSCore.OSMainContainer:addChild(GUI.menu(1, 1, MineOSCore.OSMainContainer.width, MineOSCore.OSSettings.menuColor or 0xFFFFFF, 0x555555, 0x3366CC, 0xFFFFFF, MineOSCore.OSSettings.transparencyEnabled and menuTransparency))
-	local item1 = MineOSCore.OSMainContainer.menu:addItem("MineOS", 0x000000)
+	MineOSInterface.mainContainer.menu = MineOSInterface.mainContainer:addChild(GUI.menu(1, 1, MineOSInterface.mainContainer.width, MineOSCore.properties.menuColor or 0xFFFFFF, 0x555555, 0x3366CC, 0xFFFFFF, MineOSCore.properties.transparencyEnabled and menuTransparency))
+	local item1 = MineOSInterface.mainContainer.menu:addItem("MineOS", 0x000000)
 	item1.onTouch = function()
-		local menu = MineOSCore.contextMenu(item1.x, item1.y + 1)
+		local menu = MineOSInterface.contextMenu(item1.x, item1.y + 1)
 
 		menu:addItem(MineOSCore.localization.aboutSystem).onTouch = function()
-			local container = MineOSCore.addUniversalContainer(MineOSCore.OSMainContainer, MineOSCore.localization.aboutSystem)
+			local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer, MineOSCore.localization.aboutSystem)
 			container.layout:addChild(GUI.textBox(1, 1, 53, #copyright, nil, 0xBBBBBB, copyright, 1, 0, 0))
 		end
 
 		menu:addItem(MineOSCore.localization.updates).onTouch = function()
-			MineOSCore.safeLaunch("/MineOS/Applications/AppMarket.app/Main.lua", "updates")
+			MineOSInterface.safeLaunch("/MineOS/Applications/AppMarket.app/Main.lua", "updates")
 		end
 
 		menu:addSeparator()
 
-		menu:addItem(MineOSCore.localization.logout, MineOSCore.OSSettings.protectionMethod == "withoutProtection").onTouch = function()
+		menu:addItem(MineOSCore.localization.logout, MineOSCore.properties.protectionMethod == "withoutProtection").onTouch = function()
 			login()
 		end
 
@@ -493,7 +495,7 @@ local function createOSWindow()
 
 		menu:addItem(MineOSCore.localization.returnToShell).onTouch = function()
 			MineOSNetwork.broadcastComputerState(false)
-			MineOSCore.OSMainContainer:stopEventHandling()
+			MineOSInterface.mainContainer:stopEventHandling()
 			MineOSCore.clearTerminal()
 			os.exit()
 		end
@@ -501,35 +503,35 @@ local function createOSWindow()
 		menu:show()
 	end
 
-	local item2 = MineOSCore.OSMainContainer.menu:addItem(MineOSCore.localization.network)
+	local item2 = MineOSInterface.mainContainer.menu:addItem(MineOSCore.localization.network)
 	item2.onTouch = function()
-		local menu = MineOSCore.contextMenu(item2.x, item2.y + 1)
+		local menu = MineOSInterface.contextMenu(item2.x, item2.y + 1)
 
 		if component.isAvailable("modem") then
-			menu:addItem(MineOSCore.OSSettings.network.enabled and MineOSCore.localization.networkDisable or MineOSCore.localization.networkEnable).onTouch = function()
-				MineOSCore.OSSettings.network.enabled = not MineOSCore.OSSettings.network.enabled
-				MineOSCore.saveOSSettings()
-				if MineOSCore.OSSettings.network.enabled then
+			menu:addItem(MineOSCore.properties.network.enabled and MineOSCore.localization.networkDisable or MineOSCore.localization.networkEnable).onTouch = function()
+				MineOSCore.properties.network.enabled = not MineOSCore.properties.network.enabled
+				MineOSCore.saveProperties()
+				if MineOSCore.properties.network.enabled then
 					MineOSNetwork.enable()
 				else
 					MineOSNetwork.disable()
 				end
-				MineOSNetwork.broadcastComputerState(MineOSCore.OSSettings.network.enabled)
+				MineOSNetwork.broadcastComputerState(MineOSCore.properties.network.enabled)
 			end
 
 			menu:addItem(MineOSCore.localization.networkName).onTouch = function()
-				local container = MineOSCore.addUniversalContainer(MineOSCore.OSMainContainer, MineOSCore.localization.networkName)
+				local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer, MineOSCore.localization.networkName)
 
-				local textBox = container.layout:addChild(GUI.inputField(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0x666666, 0xEEEEEE, 0x262626, MineOSCore.OSSettings.network.name, nil))
+				local textBox = container.layout:addChild(GUI.inputField(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0x666666, 0xEEEEEE, 0x262626, MineOSCore.properties.network.name, nil))
 				textBox.onInputFinished = function()
 					if textBox.text then
 						MineOSNetwork.broadcastComputerState(false)
-						MineOSCore.OSSettings.network.name = textBox.text
-						MineOSCore.saveOSSettings()
-						MineOSNetwork.broadcastComputerState(MineOSCore.OSSettings.network.enabled)
+						MineOSCore.properties.network.name = textBox.text
+						MineOSCore.saveProperties()
+						MineOSNetwork.broadcastComputerState(MineOSCore.properties.network.enabled)
 						
 						container:delete()
-						MineOSCore.OSDraw()
+						MineOSInterface.OSDraw()
 					end
 				end
 			end
@@ -539,15 +541,15 @@ local function createOSWindow()
 				local i = 2
 				while i <= 512 do
 					subMenu:addItem(tostring(i)).onTouch = function()
-						MineOSCore.OSSettings.network.signalStrength = i
-						MineOSCore.saveOSSettings()
+						MineOSCore.properties.network.signalStrength = i
+						MineOSCore.saveProperties()
 						MineOSNetwork.setSignalStrength(i)
 					end
 					i = i * 2
 				end
 			end
 
-			if MineOSCore.OSSettings.network.enabled then
+			if MineOSCore.properties.network.enabled then
 				menu:addSeparator()
 				
 				if MineOSNetwork.getProxyCount() > 0 then
@@ -555,20 +557,20 @@ local function createOSWindow()
 						if proxy.network then
 							local subMenu = menu:addSubMenu(string.limit(MineOSNetwork.getProxyName(proxy), 25, "end"))
 
-							subMenu:addItem(MineOSCore.OSSettings.network.users[proxy.address].allowReadAndWrite and MineOSCore.localization.networkDenyReadAndWrite or MineOSCore.localization.networkAllowReadAndWrite).onTouch = function()
-								MineOSCore.OSSettings.network.users[proxy.address].allowReadAndWrite = not MineOSCore.OSSettings.network.users[proxy.address].allowReadAndWrite
-								MineOSCore.saveOSSettings()
+							subMenu:addItem(MineOSCore.properties.network.users[proxy.address].allowReadAndWrite and MineOSCore.localization.networkDenyReadAndWrite or MineOSCore.localization.networkAllowReadAndWrite).onTouch = function()
+								MineOSCore.properties.network.users[proxy.address].allowReadAndWrite = not MineOSCore.properties.network.users[proxy.address].allowReadAndWrite
+								MineOSCore.saveProperties()
 							end
 
-							subMenu:addItem(MineOSCore.OSSettings.network.users[proxy.address].allowMessages and MineOSCore.localization.networkDenyMessages or MineOSCore.localization.networkAllowMessages).onTouch = function()
-								MineOSCore.OSSettings.network.users[proxy.address].allowMessages = not MineOSCore.OSSettings.network.users[proxy.address].allowMessages
-								MineOSCore.saveOSSettings()
+							subMenu:addItem(MineOSCore.properties.network.users[proxy.address].allowMessages and MineOSCore.localization.networkDenyMessages or MineOSCore.localization.networkAllowMessages).onTouch = function()
+								MineOSCore.properties.network.users[proxy.address].allowMessages = not MineOSCore.properties.network.users[proxy.address].allowMessages
+								MineOSCore.saveProperties()
 							end
 
 							subMenu:addSeparator()
 
 							subMenu:addItem(MineOSCore.localization.networkSendMessage).onTouch = function()
-								local container = MineOSCore.addUniversalContainer(MineOSCore.OSMainContainer, MineOSCore.localization.networkSendMessage)
+								local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer, MineOSCore.localization.networkSendMessage)
 
 								local textBox = container.layout:addChild(GUI.inputField(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0x666666, 0xEEEEEE, 0x262626, nil, nil, true))
 								textBox.onInputFinished = function()
@@ -576,7 +578,7 @@ local function createOSWindow()
 										MineOSNetwork.sendMessage(proxy.address, "MineOSNetwork", "message", textBox.text)
 										
 										container:delete()
-										MineOSCore.OSDraw()
+										MineOSInterface.OSDraw()
 									end
 								end
 							end
@@ -593,20 +595,20 @@ local function createOSWindow()
 		menu:show()
 	end
 
-	local item3 = MineOSCore.OSMainContainer.menu:addItem(MineOSCore.localization.settings)
+	local item3 = MineOSInterface.mainContainer.menu:addItem(MineOSCore.localization.settings)
 	item3.onTouch = function()
-		local menu = MineOSCore.contextMenu(item3.x, item3.y + 1)
+		local menu = MineOSInterface.contextMenu(item3.x, item3.y + 1)
 
 		menu:addItem(MineOSCore.localization.screenResolution).onTouch = function()
-			local container = MineOSCore.addUniversalContainer(MineOSCore.OSMainContainer, MineOSCore.localization.screenResolution)
+			local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer, MineOSCore.localization.screenResolution)
 
-			local widthTextBox = container.layout:addChild(GUI.inputField(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0x666666, 0xEEEEEE, 0x262626, tostring(MineOSCore.OSSettings.resolution and MineOSCore.OSSettings.resolution[1] or 160), "Width", true))
+			local widthTextBox = container.layout:addChild(GUI.inputField(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0x666666, 0xEEEEEE, 0x262626, tostring(MineOSCore.properties.resolution and MineOSCore.properties.resolution[1] or 160), "Width", true))
 			widthTextBox.validator = function(text)
 				local number = tonumber(text)
 				if number then return number >= 1 and number <= 160 end
 			end
 
-			local heightTextBox = container.layout:addChild(GUI.inputField(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0x666666, 0xEEEEEE, 0x262626, tostring(MineOSCore.OSSettings.resolution and MineOSCore.OSSettings.resolution[2] or 50), "Height", true))
+			local heightTextBox = container.layout:addChild(GUI.inputField(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0x666666, 0xEEEEEE, 0x262626, tostring(MineOSCore.properties.resolution and MineOSCore.properties.resolution[2] or 50), "Height", true))
 			heightTextBox.validator = function(text)
 				local number = tonumber(text)
 				if number then return number >= 1 and number <= 50 end
@@ -615,11 +617,11 @@ local function createOSWindow()
 			container.panel.eventHandler = function(mainContainer, object, eventData)
 				if eventData[1] == "touch" then
 					container:delete()
-					MineOSCore.OSSettings.resolution = {tonumber(widthTextBox.text), tonumber(heightTextBox.text)}
-					MineOSCore.saveOSSettings()
+					MineOSCore.properties.resolution = {tonumber(widthTextBox.text), tonumber(heightTextBox.text)}
+					MineOSCore.saveProperties()
 					changeResolution()
 					changeWallpaper()
-					MineOSCore.OSMainContainer.updateFileListAndDraw()
+					MineOSInterface.mainContainer.updateFileListAndDraw()
 				end
 			end
 		end
@@ -627,98 +629,98 @@ local function createOSWindow()
 		menu:addSeparator()
 
 		menu:addItem(MineOSCore.localization.wallpaper).onTouch = function()
-			local container = MineOSCore.addUniversalContainer(MineOSCore.OSMainContainer, MineOSCore.localization.wallpaper)
+			local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer, MineOSCore.localization.wallpaper)
 
-			local filesystemChooser = container.layout:addChild(GUI.filesystemChooser(1, 1, 36, 3, 0xEEEEEE, 0x262626, 0x444444, 0x999999, MineOSCore.OSSettings.wallpaper, MineOSCore.localization.open, MineOSCore.localization.cancel, MineOSCore.localization.wallpaperPath, "/"))
+			local filesystemChooser = container.layout:addChild(GUI.filesystemChooser(1, 1, 36, 3, 0xEEEEEE, 0x262626, 0x444444, 0x999999, MineOSCore.properties.wallpaper, MineOSCore.localization.open, MineOSCore.localization.cancel, MineOSCore.localization.wallpaperPath, "/"))
 			filesystemChooser:addExtensionFilter(".pic")
 			filesystemChooser.onSubmit = function(path)
-				MineOSCore.OSSettings.wallpaper = path
-				MineOSCore.saveOSSettings()
+				MineOSCore.properties.wallpaper = path
+				MineOSCore.saveProperties()
 				changeWallpaper()
 
-				MineOSCore.OSDraw()
+				MineOSInterface.OSDraw()
 			end
 
 			local comboBox = container.layout:addChild(GUI.comboBox(1, 1, 36, 3, 0xEEEEEE, 0x262626, 0x444444, 0x999999))
-			comboBox.selectedItem = MineOSCore.OSSettings.wallpaperMode or 1
+			comboBox.selectedItem = MineOSCore.properties.wallpaperMode or 1
 			comboBox:addItem(MineOSCore.localization.wallpaperModeStretch)
 			comboBox:addItem(MineOSCore.localization.wallpaperModeCenter)
 
-			local switch = container.layout:addChild(GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0x2D2D2D, 0xEEEEEE, 0xBBBBBB, MineOSCore.localization.wallpaperEnabled .. ":", MineOSCore.OSSettings.wallpaperEnabled)).switch
+			local switch = container.layout:addChild(GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0x2D2D2D, 0xEEEEEE, 0xBBBBBB, MineOSCore.localization.wallpaperEnabled .. ":", MineOSCore.properties.wallpaperEnabled)).switch
 			container.layout:addChild(GUI.textBox(1, 1, 36, 1, nil, 0x555555, {MineOSCore.localization.wallpaperSwitchInfo}, 1, 0, 0, true, true))
 
 			switch.onStateChanged = function()
-				MineOSCore.OSSettings.wallpaperEnabled = switch.state
-				MineOSCore.saveOSSettings()
+				MineOSCore.properties.wallpaperEnabled = switch.state
+				MineOSCore.saveProperties()
 				changeWallpaper()
 
-				MineOSCore.OSDraw()
+				MineOSInterface.OSDraw()
 			end
 			comboBox.onItemSelected = function()
-				MineOSCore.OSSettings.wallpaperMode = comboBox.selectedItem
-				MineOSCore.saveOSSettings()
+				MineOSCore.properties.wallpaperMode = comboBox.selectedItem
+				MineOSCore.saveProperties()
 				changeWallpaper()
 
-				MineOSCore.OSDraw()
+				MineOSInterface.OSDraw()
 			end
 		end
 		menu:addItem(MineOSCore.localization.screensaver).onTouch = function()
-			local container = MineOSCore.addUniversalContainer(MineOSCore.OSMainContainer, MineOSCore.localization.screensaver)
+			local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer, MineOSCore.localization.screensaver)
 
 			local comboBox = container.layout:addChild(GUI.comboBox(1, 1, 36, 3, 0xEEEEEE, 0x262626, 0x444444, 0x999999))
 			local fileList = fs.sortedList(screensaversPath, "name", false)
 			for i = 1, #fileList do
 				comboBox:addItem(fs.hideExtension(fileList[i]))
-				if MineOSCore.OSSettings.screensaver == fileList[i] then
+				if MineOSCore.properties.screensaver == fileList[i] then
 					comboBox.selectedItem = i
 				end
 			end
-			local switch = container.layout:addChild(GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0x2D2D2D, 0xEEEEEE, 0xBBBBBB, MineOSCore.localization.screensaverEnabled .. ":", MineOSCore.OSSettings.screensaverEnabled)).switch
-			local slider = container.layout:addChild(GUI.slider(1, 1, 36, 0x66DB80, 0x2D2D2D, 0xEEEEEE, 0xBBBBBB, 1, 100, MineOSCore.OSSettings.screensaverDelay or 20, false, MineOSCore.localization.screensaverDelay .. ": ", ""))
+			local switch = container.layout:addChild(GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0x2D2D2D, 0xEEEEEE, 0xBBBBBB, MineOSCore.localization.screensaverEnabled .. ":", MineOSCore.properties.screensaverEnabled)).switch
+			local slider = container.layout:addChild(GUI.slider(1, 1, 36, 0x66DB80, 0x2D2D2D, 0xEEEEEE, 0xBBBBBB, 1, 100, MineOSCore.properties.screensaverDelay or 20, false, MineOSCore.localization.screensaverDelay .. ": ", ""))
 
 			container.panel.eventHandler = function(mainContainer, object, eventData)
 				if eventData[1] == "touch" then
 					container:delete()
-					MineOSCore.OSDraw()
+					MineOSInterface.OSDraw()
 
-					MineOSCore.OSSettings.screensaverEnabled = switch.state
-					MineOSCore.OSSettings.screensaver = fileList[comboBox.selectedItem]
-					MineOSCore.OSSettings.screensaverDelay = slider.value
+					MineOSCore.properties.screensaverEnabled = switch.state
+					MineOSCore.properties.screensaver = fileList[comboBox.selectedItem]
+					MineOSCore.properties.screensaverDelay = slider.value
 
-					MineOSCore.saveOSSettings()
+					MineOSCore.saveProperties()
 				end
 			end
 
-			MineOSCore.OSDraw()
+			MineOSInterface.OSDraw()
 		end
 
 		menu:addItem(MineOSCore.localization.colorScheme).onTouch = function()
-			local container = MineOSCore.addUniversalContainer(MineOSCore.OSMainContainer, MineOSCore.localization.colorScheme)
+			local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer, MineOSCore.localization.colorScheme)
 
-			local backgroundColorSelector = container.layout:addChild(GUI.colorSelector(1, 1, 36, 3, MineOSCore.OSSettings.backgroundColor or 0x0F0F0F, MineOSCore.localization.backgroundColor))
-			local menuColorSelector = container.layout:addChild(GUI.colorSelector(1, 1, 36, 3, MineOSCore.OSSettings.menuColor or 0xFFFFFF, MineOSCore.localization.menuColor))
-			local dockColorSelector = container.layout:addChild(GUI.colorSelector(1, 1, 36, 3, MineOSCore.OSSettings.dockColor or 0xFFFFFF, MineOSCore.localization.dockColor))
+			local backgroundColorSelector = container.layout:addChild(GUI.colorSelector(1, 1, 36, 3, MineOSCore.properties.backgroundColor or 0x0F0F0F, MineOSCore.localization.backgroundColor))
+			local menuColorSelector = container.layout:addChild(GUI.colorSelector(1, 1, 36, 3, MineOSCore.properties.menuColor or 0xFFFFFF, MineOSCore.localization.menuColor))
+			local dockColorSelector = container.layout:addChild(GUI.colorSelector(1, 1, 36, 3, MineOSCore.properties.dockColor or 0xFFFFFF, MineOSCore.localization.dockColor))
 
-			local switch = container.layout:addChild(GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0x2D2D2D, 0xEEEEEE, 0xEEEEEE, MineOSCore.localization.transparencyEnabled .. ":", MineOSCore.OSSettings.transparencyEnabled)).switch
+			local switch = container.layout:addChild(GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0x2D2D2D, 0xEEEEEE, 0xEEEEEE, MineOSCore.localization.transparencyEnabled .. ":", MineOSCore.properties.transparencyEnabled)).switch
 			switch.onStateChanged = function()
-				MineOSCore.OSSettings.transparencyEnabled = switch.state
-				MineOSCore.saveOSSettings()
-				MineOSCore.OSMainContainer.menu.colors.transparency = MineOSCore.OSSettings.transparencyEnabled and menuTransparency
-				container.panel.colors.background = switch.state and 0x0 or (MineOSCore.OSSettings.backgroundColor or 0x0F0F0F)
+				MineOSCore.properties.transparencyEnabled = switch.state
+				MineOSCore.saveProperties()
+				MineOSInterface.mainContainer.menu.colors.transparency = MineOSCore.properties.transparencyEnabled and menuTransparency
+				container.panel.colors.background = switch.state and 0x0 or (MineOSCore.properties.backgroundColor or 0x0F0F0F)
 				container.panel.colors.transparency = switch.state and 0.2
 
-				MineOSCore.OSDraw()
+				MineOSInterface.OSDraw()
 			end
 			container.layout:addChild(GUI.textBox(1, 1, 36, 1, nil, 0x555555, {MineOSCore.localization.transparencySwitchInfo}, 1, 0, 0, true, true))
 
 			-- Шоб рисовалось в реальном времени
 			backgroundColorSelector.onTouch = function()
-				MineOSCore.OSSettings.backgroundColor = backgroundColorSelector.color
-				MineOSCore.OSSettings.menuColor = menuColorSelector.color
-				MineOSCore.OSSettings.dockColor = dockColorSelector.color
-				MineOSCore.OSMainContainer.menu.colors.default.background = MineOSCore.OSSettings.menuColor
+				MineOSCore.properties.backgroundColor = backgroundColorSelector.color
+				MineOSCore.properties.menuColor = menuColorSelector.color
+				MineOSCore.properties.dockColor = dockColorSelector.color
+				MineOSInterface.mainContainer.menu.colors.default.background = MineOSCore.properties.menuColor
 
-				MineOSCore.OSDraw()
+				MineOSInterface.OSDraw()
 			end
 			menuColorSelector.onTouch = backgroundColorSelector.onTouch
 			dockColorSelector.onTouch = backgroundColorSelector.onTouch
@@ -726,9 +728,9 @@ local function createOSWindow()
 			container.panel.eventHandler = function(mainContainer, object, eventData)
 				if eventData[1] == "touch" then
 					container:delete()
-					MineOSCore.OSDraw()
+					MineOSInterface.OSDraw()
 
-					MineOSCore.saveOSSettings()
+					MineOSCore.saveProperties()
 				end
 			end
 		end
@@ -742,39 +744,39 @@ local function createOSWindow()
 		menu:show()
 	end
 
-	MineOSCore.OSMainContainer.menuLayout = MineOSCore.OSMainContainer:addChild(GUI.layout(1, 1, 1, 1, 1, 1))
-	MineOSCore.OSMainContainer.menuLayout:setCellSpacing(1, 1, 0)
-	MineOSCore.OSMainContainer.menuLayout:setCellDirection(1, 1, GUI.directions.horizontal)
-	MineOSCore.OSMainContainer.menuLayout:setCellAlignment(1, 1, GUI.alignment.horizontal.right, GUI.alignment.vertical.top)
+	MineOSInterface.mainContainer.menuLayout = MineOSInterface.mainContainer:addChild(GUI.layout(1, 1, 1, 1, 1, 1))
+	MineOSInterface.mainContainer.menuLayout:setCellSpacing(1, 1, 0)
+	MineOSInterface.mainContainer.menuLayout:setCellDirection(1, 1, GUI.directions.horizontal)
+	MineOSInterface.mainContainer.menuLayout:setCellAlignment(1, 1, GUI.alignment.horizontal.right, GUI.alignment.vertical.top)
 
-	local dateButton = MineOSCore.addMenuWidget(GUI.button(1, 1, 1, 1, nil, 0x0, 0x3366CC, 0xFFFFFF, " "))
+	local dateButton = MineOSInterface.addMenuWidget(GUI.button(1, 1, 1, 1, nil, 0x0, 0x3366CC, 0xFFFFFF, " "))
 	dateButton.switchMode = true
 
 	dateButton.onTouch = function()
-		local menu = MineOSCore.contextMenu(dateButton.x, dateButton.y + 1)
+		local menu = MineOSInterface.contextMenu(dateButton.x, dateButton.y + 1)
 		for i = -12, 12 do
 			menu:addItem("GMT" .. (i >= 0 and "+" or "") .. i).onTouch = function()
-				MineOSCore.OSSettings.timezone = i
-				MineOSCore.saveOSSettings()
+				MineOSCore.properties.timezone = i
+				MineOSCore.saveProperties()
 
 				MineOSCore.OSUpdateTimezone()
 				MineOSCore.OSUpdateDate()
-				MineOSCore.OSDraw()
+				MineOSInterface.OSDraw()
 			end
 		end
 		menu:show()
 		dateButton.pressed = false
-		MineOSCore.OSDraw()
+		MineOSInterface.OSDraw()
 	end
 
 	MineOSCore.OSUpdateTimezone = function()
-		local timezone = MineOSCore.OSSettings.timezone or 0
+		local timezone = MineOSCore.properties.timezone or 0
 		timezoneCorrection = timezone * 3600
 	end
 
 	MineOSCore.OSUpdateDate = function()
 		if not realTimestamp then
-			local name = MineOSCore.paths.system .. "/Timestamp.tmp"
+			local name = MineOSPaths.system .. "/Timestamp.tmp"
 			local file = io.open(name, "w")
 			file:close()
 			realTimestamp = math.floor(fs.lastModified(name) / 1000)
@@ -790,25 +792,25 @@ local function createOSWindow()
 		dateButton.width = unicode.len(dateButton.text) + 2
 	end
 
-	MineOSCore.OSDraw = function(force)
-		MineOSCore.OSMainContainer:draw()
+	MineOSInterface.OSDraw = function(force)
+		MineOSInterface.mainContainer:draw()
 		buffer.draw(force)
 	end
 
-	MineOSCore.OSMainContainer.updateFileListAndDraw = function(forceRedraw)
-		MineOSCore.OSMainContainer.iconField:updateFileList()
-		MineOSCore.OSDraw(forceRedraw)
+	MineOSInterface.mainContainer.updateFileListAndDraw = function(forceRedraw)
+		MineOSInterface.mainContainer.iconField:updateFileList()
+		MineOSInterface.OSDraw(forceRedraw)
 	end
 
-	MineOSCore.OSMainContainer.eventHandler = function(mainContainer, object, eventData)
+	MineOSInterface.mainContainer.eventHandler = function(mainContainer, object, eventData)
 		if eventData[1] == "MineOSCore" then
 			if eventData[2] == "updateFileList" then
-				MineOSCore.OSMainContainer.updateFileListAndDraw()
+				MineOSInterface.mainContainer.updateFileListAndDraw()
 			elseif eventData[2] == "updateFileListAndBufferTrueRedraw" then
-				MineOSCore.OSMainContainer.updateFileListAndDraw(true)
+				MineOSInterface.mainContainer.updateFileListAndDraw(true)
 			elseif eventData[2] == "updateWallpaper" then
 				changeWallpaper()
-				MineOSCore.OSDraw()
+				MineOSInterface.OSDraw()
 			end
 		elseif eventData[1] == "MineOSNetwork" then
 			if eventData[2] == "accessDenied" then
@@ -824,19 +826,19 @@ local function createOSWindow()
 
 		if computerUptime - computerDateUptime >= 1 then
 			MineOSCore.OSUpdateDate()
-			MineOSCore.OSDraw()
+			MineOSInterface.OSDraw()
 			computerDateUptime = computerUptime
 		end
 
-		if MineOSCore.OSSettings.screensaverEnabled then
+		if MineOSCore.properties.screensaverEnabled then
 			if eventData[1] then
 				screensaverUptime = computer.uptime()
 			end
 
-			if computerUptime - screensaverUptime >= MineOSCore.OSSettings.screensaverDelay then
-				if fs.exists(screensaversPath .. MineOSCore.OSSettings.screensaver) then
-					MineOSCore.safeLaunch(screensaversPath .. MineOSCore.OSSettings.screensaver)
-					MineOSCore.OSDraw(true)
+			if computerUptime - screensaverUptime >= MineOSCore.properties.screensaverDelay then
+				if fs.exists(screensaversPath .. MineOSCore.properties.screensaver) then
+					MineOSInterface.safeLaunch(screensaversPath .. MineOSCore.properties.screensaver)
+					MineOSInterface.OSDraw(true)
 				end
 
 				screensaverUptime = computer.uptime()
@@ -854,16 +856,16 @@ MineOSCore.OSUpdateTimezone()
 MineOSCore.OSUpdateDate()
 login()
 
-if MineOSCore.OSSettings.network.enabled then
-	MineOSNetwork.setSignalStrength(MineOSCore.OSSettings.network.signalStrength)
+if MineOSCore.properties.network.enabled then
+	MineOSNetwork.setSignalStrength(MineOSCore.properties.network.signalStrength)
 	MineOSNetwork.enable()
 	MineOSNetwork.broadcastComputerState(true)
 end
 
 while true do
 	local success, path, line, traceback = MineOSCore.call(
-		MineOSCore.OSMainContainer.startEventHandling,
-		MineOSCore.OSMainContainer,
+		MineOSInterface.mainContainer.startEventHandling,
+		MineOSInterface.mainContainer,
 		1
 	)
 	if success then
@@ -872,10 +874,10 @@ while true do
 		createOSWindow()
 		changeResolution()
 		changeWallpaper()
-		MineOSCore.OSMainContainer.updateFileListAndDraw()
+		MineOSInterface.mainContainer.updateFileListAndDraw()
 
-		MineOSCore.showErrorWindow(path, line, traceback)
+		MineOSInterface.showErrorWindow(path, line, traceback)
 
-		MineOSCore.OSDraw()
+		MineOSInterface.OSDraw()
 	end
 end

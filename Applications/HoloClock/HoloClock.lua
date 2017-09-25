@@ -5,7 +5,7 @@ local component = require("component")
 local unicode = require("unicode")
 local event = require("event")
 local buffer = require("doubleBuffering")
-local MineOSCore = require("MineOSCore")
+local MineOSPaths = require("MineOSPaths")
 local GUI = require("GUI")
 
 --------------------------------------------------------------------------------------------
@@ -18,7 +18,7 @@ end
 --------------------------------------------------------------------------------------------
 
 local date
-local path = MineOSCore.paths.system .. "/HoloClock/Settings.cfg"
+local path = MineOSPaths.applicationData .. "/HoloClock/Settings.cfg"
 local config = {
 	dateColor = 0xFFFFFF,
 	holoScale = 1

@@ -95,6 +95,7 @@
 
 	aboutSystem = "Об этом ПК",
 	updates = "Обновления",
+	update = "Обновить",
 	shutdown = "Выключить",
 	logout = "Выйти",
 	reboot = "Перезагрузить",

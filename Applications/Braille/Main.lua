@@ -6,11 +6,11 @@ local GUI = require("GUI")
 local unicode = require("unicode")
 local image = require("image")
 local keyboard = require("keyboard")
-local MineOSCore = require("MineOSCore")
+local MineOSInterface = require("MineOSInterface")
 
 ---------------------------------------------------------------------------------------------------------
 
-local mainContainer, window = MineOSCore.addWindow(GUI.window(nil, nil, 32, 19))
+local mainContainer, window = MineOSInterface.addWindow(GUI.window(nil, nil, 32, 19))
 local panel = window:addChild(GUI.panel(1, 1, 1, 3, 0x2D2D2D, 0.2))
 
 local layout = window:addChild(GUI.layout(1, 2, 1, 1, 1, 1))
@@ -102,7 +102,7 @@ local function newNoGUI(width, height)
 end
 
 local function new()
-	local container = MineOSCore.addUniversalContainer(mainContainer, "Create")
+	local container = MineOSInterface.addUniversalContainer(mainContainer, "Create")
 
 	local widthTextBox = container.layout:addChild(GUI.inputField(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0x666666, 0xEEEEEE, 0x262626, "8", "Width", true))
 	widthTextBox.validator = function(text)

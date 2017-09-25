@@ -6,11 +6,12 @@ local color = require("color")
 local image = require("image")
 local buffer = require("doubleBuffering")
 local GUI = require("GUI")
+local MineOSPaths = require("MineOSPaths")
 
 --------------------------------------------------------------------------------------------------------------
 
 local palette = {}
-local pathToFavouritesConfig, favourites = "/MineOS/System/Palette/Favourites.cfg"
+local pathToFavouritesConfig, favourites = MineOSPaths.applicationData .. "Palette/Favourites.cfg"
 
 --------------------------------------------------------------------------------------------------------------
 

@@ -14,8 +14,6 @@ local computer = require("computer")
 local component = require("component")
 local fs = require("filesystem")
 local buffer = require("doubleBuffering")
-local GUI = require("GUI")
-local MineOSCore = require("MineOSCore")
 local event = require("event")
 local syntax = require("syntax")
 local unicode = require("unicode")
@@ -23,7 +21,10 @@ local web = require("web")
 local image = require("image")
 local keyboard = require("keyboard")
 local palette = require("palette")
-local term = require("term")
+local GUI = require("GUI")
+local MineOSPaths = require("MineOSPaths")
+local MineOSCore = require("MineOSCore")
+local MineOSInterface = require("MineOSInterface")
 
 ---------------------------------------------------- Constants ----------------------------------------------------
 
@@ -47,6 +48,7 @@ local about = {
 }
 
 local config = {
+	leftTreeViewWidth = 26,
 	syntaxColorScheme = syntax.colorScheme,
 	scrollSpeed = 8,
 	cursorColor = 0x00A8FF,
@@ -118,7 +120,7 @@ local cursor = {
 
 local scriptCoroutine
 local resourcesPath = MineOSCore.getCurrentApplicationResourcesDirectory() 
-local configPath = resourcesPath .. "ConfigVersion2.cfg"
+local configPath = MineOSPaths.applicationData .. "MineCode IDE/Config.cfg"
 local localization = MineOSCore.getLocalization(resourcesPath .. "Localization/")
 local findStartFrom
 local clipboard
@@ -247,7 +249,6 @@ end
 
 local function calculateSizes()
 	mainContainer.width, mainContainer.height = buffer.width, buffer.height
-	mainContainer.leftTreeView.width = math.floor(mainContainer.width * 0.165)
 
 	if mainContainer.leftTreeView.hidden then
 		mainContainer.codeView.localPosition.x, mainContainer.codeView.width = 1, mainContainer.width
@@ -272,6 +273,9 @@ local function calculateSizes()
 	else
 		mainContainer.codeView.height = mainContainer.codeView.height - 3
 	end
+
+	mainContainer.leftTreeViewResizer.localPosition.x = mainContainer.leftTreeView.width - 1
+	mainContainer.leftTreeViewResizer.localPosition.y = math.floor(mainContainer.leftTreeView.localPosition.y + mainContainer.leftTreeView.height / 2 - mainContainer.leftTreeViewResizer.height / 2)
 
 	mainContainer.settingsContainer.width, mainContainer.settingsContainer.height = mainContainer.width, mainContainer.height
 	mainContainer.settingsContainer.backgroundPanel.width, mainContainer.settingsContainer.backgroundPanel.height = mainContainer.settingsContainer.width, mainContainer.settingsContainer.height
@@ -822,10 +826,7 @@ end
 local function continue()
 	-- Готовим экран к запуску
 	local oldResolutionX, oldResolutionY = component.gpu.getResolution()
-	component.gpu.setBackground(0x1B1B1B)
-	component.gpu.setForeground(0xFFFFFF)
-	component.gpu.fill(1, 1, oldResolutionX, oldResolutionY, " ")
-	term.setCursor(1, 1)
+	MineOSInterface.clearTerminal()
 
 	-- Запускаем
 	_G.MineCodeIDEDebugInfo = nil
@@ -834,7 +835,7 @@ local function continue()
 	-- Анализируем результат запуска
 	if coroutineResumeSuccess then
 		if coroutine.status(scriptCoroutine) == "dead" then
-			MineOSCore.waitForPressingAnyKey()
+			MineOSInterface.waitForPressingAnyKey()
 			hideErrorContainer()
 			buffer.setResolution(oldResolutionX, oldResolutionY); mainContainer:draw(); buffer.draw(true)
 		else
@@ -1274,12 +1275,6 @@ local function toggleTopToolBar()
 	calculateSizes()
 end
 
-local function toggleLeftToolBar()
-	mainContainer.leftTreeView.hidden = not mainContainer.leftTreeView.hidden
-	mainContainer.toggleLeftToolBarButton.pressed = not mainContainer.leftTreeView.hidden
-	calculateSizes()
-end
-
 local function createEditOrRightClickMenu(x, y)
 	local editOrRightClickMenu = GUI.contextMenu(x, y)
 	editOrRightClickMenu:addItem(localization.cut, not mainContainer.codeView.selections[1], "^X").onTouch = function()
@@ -1544,6 +1539,7 @@ local function createMainContainer()
 	mainContainer.toggleLeftToolBarButton.switchMode, mainContainer.toggleLeftToolBarButton.pressed = true, true
 	mainContainer.toggleLeftToolBarButton.onTouch = function()
 		mainContainer.leftTreeView.hidden = not mainContainer.toggleLeftToolBarButton.pressed
+		mainContainer.leftTreeViewResizer.hidden = mainContainer.leftTreeView.hidden
 		calculateSizes()
 		mainContainer:draw()
 		buffer.draw()
@@ -1583,11 +1579,24 @@ local function createMainContainer()
 	end
 	mainContainer.bottomToolBar.hidden = true
 
-	mainContainer.leftTreeView = mainContainer:addChild(GUI.treeView(1, 1, 1, 1, 0xCCCCCC, 0x3C3C3C, 0x3C3C3C, 0x999999, 0x3C3C3C, 0xE1E1E1, 0xBBBBBB, 0xAAAAAA, 0xC3C3C3, 0x444444, "/"))
+	mainContainer.leftTreeView = mainContainer:addChild(GUI.treeView(1, 1, config.leftTreeViewWidth, 1, 0xCCCCCC, 0x3C3C3C, 0x3C3C3C, 0x999999, 0x3C3C3C, 0xE1E1E1, 0xBBBBBB, 0xAAAAAA, 0xC3C3C3, 0x444444, "/"))
 	mainContainer.leftTreeView.onItemSelected = function(path)
 		loadFile(path)
 		mainContainer:draw()
 		buffer.draw()
+	end
+	mainContainer.leftTreeViewResizer = mainContainer:addChild(GUI.resizer(1, 1, 3, 5, 0x888888, 0x0))
+	mainContainer.leftTreeViewResizer.onResize = function(dragWidth, dragHeight)
+		mainContainer.leftTreeView.width = mainContainer.leftTreeView.width + dragWidth
+		calculateSizes()
+		
+		mainContainer:draw()
+		buffer.draw()
+	end
+
+	mainContainer.leftTreeViewResizer.onResizeFinished = function()
+		config.leftTreeViewWidth = mainContainer.leftTreeView.width
+		saveConfig()
 	end
 
 	mainContainer.errorContainer = mainContainer:addChild(GUI.container(1, 1, 1, 1))

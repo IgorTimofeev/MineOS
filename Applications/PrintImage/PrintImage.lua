@@ -8,16 +8,17 @@ local fs = require("filesystem")
 local advancedLua = require("advancedLua")
 local color = require("color")
 local image = require("image")
-local MineOSCore = require("MineOSCore")
 local buffer = require("doubleBuffering")
 local GUI = require("GUI")
+local MineOSPaths = require("MineOSPaths")
+local MineOSCore = require("MineOSCore")
 
 ----------------------------------------- cyka -----------------------------------------
 
 if not component.isAvailable("printer3d") then GUI.error("This program requires at least one 3D-printer"); return end
 local args, options = require("shell").parse(...)
 local startImagePath = args[1] == "open" and args[2] or "/MineOS/System/Icons/Steve.pic"
-local configPath = MineOSCore.paths.system .. "PrintImage/Config.cfg"
+local configPath = MineOSPaths.applicationData .. "PrintImage/Config.cfg"
 local panelWidth = 34
 local mainContainer
 local mainImage

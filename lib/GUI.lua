@@ -68,7 +68,7 @@ GUI.colors = {
 			text = 0xFFFFFF
 		},
 		transparency = {
-			background = 0.3,
+			background = 0.24,
 			shadow = 0.4
 		}
 	},
@@ -1441,7 +1441,7 @@ local function inputDraw(input)
 	buffer.text(
 		input.x,
 		input.y,
-		input.colors.text,
+		input.textColor,
 		unicode.sub(
 			input.textMask and string.rep(input.textMask, unicode.len(input.text)) or input.text,
 			input.textCutFrom,
@@ -1532,7 +1532,7 @@ function GUI.input(x, y, width, textColor, text, textMask)
 	input.cursorBlinkDelay = 0.4
 	input.cursorBlinkState = false
 
-	input.colors = {text = textColor}
+	input.textColor = textColor
 	input.text = text
 	input.textMask = textMask
 

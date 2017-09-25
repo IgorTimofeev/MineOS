@@ -17,7 +17,7 @@ local event = {
 		[56] = true
 	},
 	onError = function(errorMessage)
-		-- require("ECSAPI").error("CYKA: " .. tostring(errorMessage))
+		require("ECSAPI").error("CYKA: " .. tostring(errorMessage))
 	end
 }
 

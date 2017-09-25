@@ -1,6 +1,5 @@
 
 require("advancedLua")
-local MineOSCore = require("MineOSCore")
 local component = require("component")
 local computer = require("computer")
 local image = require("image")
@@ -9,6 +8,9 @@ local GUI = require("GUI")
 local fs = require("filesystem")
 local unicode = require("unicode")
 local web = require("web")
+local MineOSPaths = require("MineOSPaths")
+local MineOSCore = require("MineOSCore")
+local MineOSInterface = require("MineOSInterface")
 
 ----------------------------------------------------------------------------------------------------------------
 
@@ -17,26 +19,20 @@ local applicationList
 local localization = MineOSCore.getCurrentApplicationLocalization()
 local resources = MineOSCore.getCurrentApplicationResourcesDirectory()
 local updateImage = image.load(resources .. "Update.pic")
-local temproraryIconPath = "/MineOS/System/AppMarket/TempIcon.pic"
+local temproraryIconPath = resources .. "TempIcon.pic"
 local appsPerPage = 6
 
-local mainContainer, window = MineOSCore.addWindow(GUI.tabbedWindow(nil, nil, 80, 32))
+local mainContainer, window = MineOSInterface.addWindow(GUI.tabbedWindow(nil, nil, 80, 32))
 
 ----------------------------------------------------------------------------------------------------------------
 
 local function newApp(x, y, width, applicationListElement, hideDownloadButton)
 	local app = GUI.container(x, y, width, 4)
 	
-	app.icon = app:addChild(GUI.image(1, 1, MineOSCore.icons.script))
+	app.icon = app:addChild(GUI.image(1, 1, MineOSInterface.iconsCache.script))
 	if applicationListElement.icon then
 		web.downloadFile(applicationListElement.icon, temproraryIconPath)
 		app.icon.image = image.load(temproraryIconPath)
-	-- else
-		-- if applicationListElement.type == "Wallpaper" then
-		-- 	app.icon.image = MineOSCore.icons.image
-		-- elseif applicationListElement.type == "Library" then
-		-- 	app.icon.image = MineOSCore.icons.lua
-		-- end
 	end
 
 	app.downloadButton = app:addChild(GUI.button(1, 1, 13, 1, 0x66DB80, 0xFFFFFF, 0x339240, 0xFFFFFF, localization.download))
@@ -48,7 +44,7 @@ local function newApp(x, y, width, applicationListElement, hideDownloadButton)
 		mainContainer:draw()
 		buffer.draw()
 
-		web.downloadMineOSApplication(applicationListElement, MineOSCore.OSSettings.language)
+		web.downloadMineOSApplication(applicationListElement, MineOSCore.properties.language)
 
 		app.downloadButton.text = localization.downloaded
 		computer.pushSignal("MineOSCore", "updateFileList")
@@ -58,7 +54,7 @@ local function newApp(x, y, width, applicationListElement, hideDownloadButton)
 	app.pathLabel = app:addChild(GUI.label(app.icon.width + 2, 1, width - app.icon.width - app.downloadButton.width - 3, 1, 0x0, fs.name(applicationListElement.path)))
 	app.versionLabel = app:addChild(GUI.label(app.icon.width + 2, 2, app.pathLabel.width, 1, 0x555555, localization.version .. applicationListElement.version))
 	if applicationListElement.about then
-		local lines = string.wrap({web.request(applicationListElement.about .. MineOSCore.OSSettings.language .. ".txt")}, app.pathLabel.width)
+		local lines = string.wrap({web.request(applicationListElement.about .. MineOSCore.properties.language .. ".txt")}, app.pathLabel.width)
 		app.aboutTextBox = app:addChild(GUI.textBox(app.icon.width + 2, 3, app.pathLabel.width, #lines, nil, 0x999999, lines, 1, 0, 0))
 		app.aboutTextBox.eventHandler = nil
 		if #lines > 2 then
@@ -92,7 +88,7 @@ local function displayApps(fromPage, typeFilter, nameFilter, updateCheck)
 	local finalApplicationList = {}
 
 	if updateCheck then
-		local oldApplicationList = table.fromFile(MineOSCore.paths.applicationList)
+		local oldApplicationList = table.fromFile(MineOSPaths.applicationList)
 
 		for j = 1, #applicationList do
 			local pathFound = false
@@ -120,11 +116,14 @@ local function displayApps(fromPage, typeFilter, nameFilter, updateCheck)
 			local progressBar = window.contentContainer:addChild(GUI.progressBar(math.floor(window.contentContainer.width / 2 - progressBarWidth / 2), y, progressBarWidth, 0x33B6FF, 0xDDDDDD, 0x0, 0, true, false))
 			local label = window.contentContainer:addChild(GUI.label(1, y + 1, window.contentContainer.width, 1, 0x888888, "")):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
 			
+			mainContainer:draw()
+			buffer.draw()
+
 			for i = 1, #finalApplicationList do
 				progressBar.value = math.floor(i / #finalApplicationList * 100)
 				label.text = localization.updating .. fs.name(finalApplicationList[i].path)
 				
-				web.downloadMineOSApplication(finalApplicationList[i], MineOSCore.OSSettings.language)
+				web.downloadMineOSApplication(finalApplicationList[i], MineOSCore.properties.language)
 
 				mainContainer:draw()
 				buffer.draw()

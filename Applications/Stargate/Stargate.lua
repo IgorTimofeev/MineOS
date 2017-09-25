@@ -5,7 +5,9 @@ local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 local component = require("component")
 local unicode = require("unicode")
+local MineOSPaths = require("MineOSPaths")
 local MineOSCore = require("MineOSCore")
+local MineOSInterface = require("MineOSInterface")
 if not component.isAvailable("stargate") then
 	GUI.error("This program requires stargate from mod \"SGCraft\"")
 	return
@@ -15,7 +17,7 @@ local stargate = component.stargate
 ---------------------------------------------------------------------------------------------
 
 local resources = MineOSCore.getCurrentApplicationResourcesDirectory()
-local pathToContacts = "MineOS/System/Stargate/Contacts3.cfg"
+local pathToContacts = MineOSPaths.applicationData .. "Stargate/Contacts.cfg"
 local contacts = {}
 local Ch1Image = image.load(resources .. "Ch1.pic")
 local Ch2Image = image.load(resources .. "Ch2.pic")
@@ -157,7 +159,7 @@ mainContainer.connectedToLabel = mainContainer:addChild(GUI.label(x, y, width, 1
 mainContainer.connectionButton = mainContainer:addChild(GUI.framedButton(x, y, width, 3, 0xEEEEEE, 0xEEEEEE, 0xBBBBBB, 0xBBBBBB, "Connect")); y = y + 3
 mainContainer.connectionButton.onTouch = function()
 	if stargate.stargateState() == "Idle" then
-		local container = MineOSCore.addUniversalContainer(mainContainer, "Connect")
+		local container = MineOSInterface.addUniversalContainer(mainContainer, "Connect")
 		local inputField = container.layout:addChild(GUI.inputField(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0x666666, 0xEEEEEE, 0x262626, contacts.last, "Type address here"))
 		inputField.onInputFinished = function()
 			if inputField.text then
@@ -193,7 +195,7 @@ end
 
 mainContainer.messageContactButton = mainContainer:addChild(GUI.framedButton(x, y, width, 3, 0xEEEEEE, 0xEEEEEE, 0xBBBBBB, 0xBBBBBB, "Message")); y = y + 4
 mainContainer.messageContactButton.onTouch = function()
-	local container = MineOSCore.addUniversalContainer(mainContainer, "Message")
+	local container = MineOSInterface.addUniversalContainer(mainContainer, "Message")
 	local inputField = container.layout:addChild(GUI.inputField(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0x666666, 0xEEEEEE, 0x262626, nil, "Type message text here"))
 	inputField.onInputFinished = function()
 		if inputField.text then
@@ -225,7 +227,7 @@ end
 
 mainContainer.addContactButton = mainContainer:addChild(GUI.framedButton(x, y, width, 3, 0xEEEEEE, 0xEEEEEE, 0xBBBBBB, 0xBBBBBB, "Add contact")); y = y + 3
 mainContainer.addContactButton.onTouch = function()
-	local container = MineOSCore.addUniversalContainer(mainContainer, "Add contact")
+	local container = MineOSInterface.addUniversalContainer(mainContainer, "Add contact")
 	local inputField1 = container.layout:addChild(GUI.inputField(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0x666666, 0xEEEEEE, 0x262626, nil, "Name"))
 	local inputField2 = container.layout:addChild(GUI.inputField(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0x666666, 0xEEEEEE, 0x262626, contacts.last, "Address"))
 

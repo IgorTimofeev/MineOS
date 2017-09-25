@@ -179,8 +179,8 @@ end
 
 local function drawWeather()
 	--Рисуем обоинку или просто говнофон ССАНЫЙ
-	if fs.exists(MineOSCore.OSSettings.wallpaper or "---aefaefaefaefae") then
-		buffer.image(1, 1, image.load(MineOSCore.OSSettings.wallpaper))
+	if fs.exists(MineOSCore.properties.wallpaper or "---aefaefaefaefae") then
+		buffer.image(1, 1, image.load(MineOSCore.properties.wallpaper))
 		buffer.square(1, 1, buffer.width, buffer.height, 0x0, 0x0, " ", 0.6)
 	else
 		buffer.clear(0x262626)

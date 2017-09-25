@@ -1,8 +1,8 @@
 
 local args = {...}
-local MineOSCore = require("MineOSCore")
+local MineOSInterface = require("MineOSInterface")
 
-MineOSCore.clearTerminal()
-if MineOSCore.safeLaunch(args[1]) then
-	MineOSCore.waitForPressingAnyKey()
+MineOSInterface.clearTerminal()
+if MineOSInterface.safeLaunch(args[1]) then
+	MineOSInterface.waitForPressingAnyKey()
 end

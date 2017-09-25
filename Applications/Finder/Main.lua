@@ -1,27 +1,29 @@
 
 local GUI = require("GUI")
-local MineOSCore = require("MineOSCore")
-local MineOSNetwork = require("MineOSNetwork")
 local buffer = require("doubleBuffering")
 local computer = require("computer")
 local fs = require("filesystem")
 local event = require("event")
+local MineOSPaths = require("MineOSPaths")
+local MineOSCore = require("MineOSCore")
+local MineOSNetwork = require("MineOSNetwork")
+local MineOSInterface = require("MineOSInterface")
 
 local args, options = require("shell").parse(...)
 
 ------------------------------------------------------------------------------------------------------
 
-local mainContainer, window = MineOSCore.addWindow(GUI.filledWindow(nil, nil, 88, 26, 0xF0F0F0))
+local mainContainer, window = MineOSInterface.addWindow(GUI.filledWindow(nil, nil, 88, 26, 0xF0F0F0))
 
 local scrollTimerID
 
 local favourites = {
 	{text = "Root", path = "/"},
-	{text = "Desktop", path = MineOSCore.paths.desktop},
-	{text = "Applications", path = MineOSCore.paths.applications},
-	{text = "Pictures", path = MineOSCore.paths.pictures},
-	{text = "System", path = MineOSCore.paths.system},
-	{text = "Trash", path = MineOSCore.paths.trash},
+	{text = "Desktop", path = MineOSPaths.desktop},
+	{text = "Applications", path = MineOSPaths.applications},
+	{text = "Pictures", path = MineOSPaths.pictures},
+	{text = "System", path = MineOSPaths.system},
+	{text = "Trash", path = MineOSPaths.trash},
 }
 local resourcesPath = MineOSCore.getCurrentApplicationResourcesDirectory()
 local favouritesPath = resourcesPath .. "Favourites.cfg"
@@ -127,7 +129,7 @@ local function updateSidebar()
 		window.sidebarContainer.itemsContainer:addChild(newSidebarItem(" " .. fs.name(favourites[i].text), 0x555555, favourites[i].path)).onTouch = sidebarItemOnTouch
 	end
 
-	if MineOSCore.OSSettings.network.enabled and MineOSNetwork.getProxyCount() > 0 then
+	if MineOSCore.properties.network.enabled and MineOSNetwork.getProxyCount() > 0 then
 		window.sidebarContainer.itemsContainer:addChild(newSidebarItem(" ", 0x3C3C3C))
 		window.sidebarContainer.itemsContainer:addChild(newSidebarItem("Network", 0x3C3C3C))
 
@@ -168,9 +170,9 @@ window.sidebarContainer.panel = window.sidebarContainer:addChild(GUI.panel(1, 1,
 window.sidebarContainer.itemsContainer = window.sidebarContainer:addChild(GUI.container(1, 1, window.sidebarContainer.width, 1))
 
 window.iconField = window:addChild(
-	MineOSCore.iconField(
+	MineOSInterface.iconField(
 		1, 4, 1, 1, 1, 1, 2, 2, 0x3C3C3C, 0x3C3C3C,
-		MineOSCore.paths.desktop
+		MineOSPaths.desktop
 	)
 )
 local oldSetWorkPath = window.iconField.setWorkpath

@@ -95,6 +95,7 @@
 
 	aboutSystem = "About this PC",
 	updates = "Updates",
+	update = "Refresh",
 	shutdown = "Shutdown",
 	logout = "Logout",
 	reboot = "Reboot",
