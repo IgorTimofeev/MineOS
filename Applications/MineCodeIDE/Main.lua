@@ -306,7 +306,7 @@ end
 local function updateTitle()
 	if not mainContainer.topToolBar.hidden then
 		if mainContainer.errorContainer.hidden then
-			mainContainer.titleTextBox.lines[1] = string.limit(localization.file .. ": " .. (mainContainer.leftTreeView.currentFile or localization.none), mainContainer.titleTextBox.width - 4)
+			mainContainer.titleTextBox.lines[1] = string.limit(localization.file .. ": " .. (mainContainer.leftTreeView.selectedItem or localization.none), mainContainer.titleTextBox.width - 4)
 			mainContainer.titleTextBox.lines[2] = string.limit(localization.cursor .. cursor.position.line .. localization.line .. cursor.position.symbol .. localization.symbol, mainContainer.titleTextBox.width - 4)
 			if mainContainer.codeView.selections[1] then
 				local countOfSelectedLines = mainContainer.codeView.selections[1].to.line - mainContainer.codeView.selections[1].from.line + 1
@@ -668,7 +668,7 @@ local function newFile()
 	mainContainer.codeView.lines = {""}
 	mainContainer.codeView.maximumLineLength = 1
 	setCursorPositionAndClearSelection(1, 1)
-	mainContainer.leftTreeView.currentFile = nil
+	mainContainer.leftTreeView.selectedItem = nil
 	clearBreakpoints()
 end
 
@@ -687,17 +687,21 @@ local function loadFile(path)
 		table.remove(mainContainer.codeView.lines, 1)
 	end
 	
-	mainContainer.leftTreeView.currentFile = path
+	mainContainer.leftTreeView.selectedItem = path
 	updateAutocompleteDatabaseFromFile()
 end
 
 local function saveFile(path)
 	fs.makeDirectory(fs.path(path))
-	local file = io.open(path, "w")
-	for line = 1, #mainContainer.codeView.lines do
-		file:write(mainContainer.codeView.lines[line], "\n")
+	local file, reason = io.open(path, "w")
+		if file then
+		for line = 1, #mainContainer.codeView.lines do
+			file:write(mainContainer.codeView.lines[line], "\n")
+		end
+		file:close()
+	else
+		GUI.error("Failed to open file for writing: " .. tostring(reason))
 	end
-	file:close()
 end
 
 local function gotoLineWindow()
@@ -725,18 +729,22 @@ end
 local function saveFileAsWindow()
 	createInputTextBoxForSettingsWindow(localization.saveAs, localization.pathToFile,
 		function()
-			saveFile(mainContainer.settingsContainer.inputField.text)
-			mainContainer.leftTreeView.currentFile = mainContainer.settingsContainer.inputField.text
-			if unicode.sub(mainContainer.leftTreeView.currentFile, 1, 1) ~= "/" then
-				mainContainer.leftTreeView.currentFile = "/" .. mainContainer.leftTreeView.currentFile
+			if unicode.len(mainContainer.settingsContainer.inputField.text or "") > 0 then
+				saveFile(mainContainer.settingsContainer.inputField.text)
+				mainContainer.leftTreeView:updateFileList()
+				mainContainer.leftTreeView.selectedItem = mainContainer.leftTreeView.workPath .. mainContainer.settingsContainer.inputField.text
+				
+				updateTitle()
+				mainContainer:draw()
+				buffer.draw()
 			end
-			mainContainer.leftTreeView:updateFileList()
 		end
 	)
 end
 
 local function saveFileWindow()
-	saveFile(mainContainer.leftTreeView.currentFile)
+	saveFile(mainContainer.leftTreeView.selectedItem)
+	mainContainer.leftTreeView:updateFileList()
 end
 
 local function splitStringIntoLines(s)
@@ -1385,7 +1393,7 @@ local function createMainContainer()
 			end
 		end
 		menu:addSeparator()
-		menu:addItem(localization.save, not mainContainer.leftTreeView.currentFile, "^S").onTouch = function()
+		menu:addItem(localization.save, not mainContainer.leftTreeView.selectedItem, "^S").onTouch = function()
 			saveFileWindow()
 		end
 		menu:addItem(localization.saveAs, false, "^⇧S").onTouch = function()
@@ -1582,6 +1590,8 @@ local function createMainContainer()
 	mainContainer.leftTreeView = mainContainer:addChild(GUI.treeView(1, 1, config.leftTreeViewWidth, 1, 0xCCCCCC, 0x3C3C3C, 0x3C3C3C, 0x999999, 0x3C3C3C, 0xE1E1E1, 0xBBBBBB, 0xAAAAAA, 0xC3C3C3, 0x444444, "/"))
 	mainContainer.leftTreeView.onItemSelected = function(path)
 		loadFile(path)
+
+		updateTitle()
 		mainContainer:draw()
 		buffer.draw()
 	end
@@ -1732,7 +1742,7 @@ local function createMainContainer()
 				-- S
 				elseif eventData[4] == 31 then
 					-- Shift
-					if mainContainer.leftTreeView.currentFile and not keyboard.isKeyDown(42) then
+					if mainContainer.leftTreeView.selectedItem and not keyboard.isKeyDown(42) then
 						saveFileWindow()
 					else
 						saveFileAsWindow()
