@@ -1038,7 +1038,7 @@ end
 function MineOSInterface.applicationHelp(parentWindow, path)
 	local pathToAboutFile = path .. "/resources/About/" .. MineOSCore.properties.language .. ".txt"
 	if MineOSCore.properties.showHelpOnApplicationStart and fs.exists(pathToAboutFile) then
-		local container = MineOSInterface.addUniversalContainer(parentWindow, MineOSCore.localization.applicationHelp .. "\"" .. fs.name(path) .. "\"")
+		local container = MineOSInterface.addUniversalContainer(parentWindow, MineOSCore.localization.applicationHelp .. " \"" .. fs.name(path) .. "\"")
 		
 		local lines = {}
 		for line in io.lines(pathToAboutFile) do
@@ -1057,7 +1057,7 @@ function MineOSInterface.applicationHelp(parentWindow, path)
 
 		button.onTouch = function()
 			MineOSCore.properties.showHelpOnApplicationStart = false
-			MineOSCore.savePropeties()
+			MineOSCore.saveProperties()
 			container:delete()
 			MineOSInterface.safeLaunch(path .. "/Main.lua")
 		end
