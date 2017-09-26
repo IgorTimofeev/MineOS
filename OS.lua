@@ -239,7 +239,7 @@ end
 ---------------------------------------------- Всякая параша для ОС-контейнера ------------------------------------------------------------------------
 
 local function changeResolution()
-	buffer.setResolution(table.unpack(MineOSCore.properties.resolution or {160, 50}))
+	buffer.setResolution(table.unpack(MineOSCore.properties.resolution or {buffer.GPUProxy.maxResolution()}))
 
 	MineOSInterface.mainContainer.width, MineOSInterface.mainContainer.height = buffer.width, buffer.height
 
