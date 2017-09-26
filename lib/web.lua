@@ -91,7 +91,7 @@ function web.downloadMineOSApplication(application, language)
 			web.downloadFile(application.about .. language .. ".txt", application.path .. ".app/Resources/About/" .. language .. ".txt")
 		end 
 
-		if application.createShortcut == "desktop" then
+		if application.createShortcut then
 			local path = "/MineOS/Desktop/" .. fs.name(application.path) .. ".lnk"
 			fs.makeDirectory(fs.path(path))
 
