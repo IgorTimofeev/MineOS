@@ -112,5 +112,6 @@
             </Text>
          </children>
       </Pane>
+      <ColorPicker editable="true" prefHeight="57.0" prefWidth="123.0" promptText="afae" />
    </children>
 </Pane>

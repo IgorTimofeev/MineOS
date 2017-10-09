@@ -89,7 +89,12 @@ local function iconDraw(icon)
 		
 		buffer.image(icon.x + 2, icon.y, icon.semiTransparentImage, true)
 	else
-		buffer.image(icon.x + 2, icon.y, icon.image)
+
+		if icon.image then
+			buffer.image(icon.x + 2, icon.y, icon.image)
+		elseif icon.liveImage then
+			icon.liveImage(icon.x + 2, icon.y)
+		end
 	end
 
 	if icon.isShortcut then
@@ -148,6 +153,7 @@ function MineOSInterface.icon(x, y, path, textColor, selectionColor)
 		selection = selectionColor,
 		selectionTransparency = 0.6
 	}
+
 	icon.path = path
 	icon.isDirectory = fs.isDirectory(icon.path)
 	icon.extension = fs.extension(icon.path) or "script"
@@ -238,7 +244,23 @@ function iconAnalyseExtension(icon)
 	if icon.isDirectory then
 		if icon.extension == ".app" then
 			if MineOSCore.properties.showApplicationIcons then
-				icon.image = image.load(icon.path .. "/Resources/Icon.pic")
+				if fs.exists(icon.path .. "/Resources/Icon.pic") then
+					icon.image = image.load(icon.path .. "/Resources/Icon.pic")
+				elseif fs.exists(icon.path .. "/Resources/Icon.lua") then
+					local data, reason = loadfile(icon.path .. "/Resources/Icon.lua")
+					if data then
+						data, reason = data()
+						if data then
+							icon.liveImage = data
+						else
+							error("Failed to load live icon image: " .. tostring(reason))
+						end
+					else
+						error("Failed to load live icon image: " .. tostring(reason))
+					end
+				else
+					icon.image = MineOSInterface.iconsCache.fileNotExists
+				end
 			else
 				icon.image = MineOSInterface.iconsCache.application
 			end
@@ -793,7 +815,7 @@ function MineOSInterface.iconRightClick(icon, eventData)
 
 	menu:addItem(MineOSCore.localization.properties).onTouch = function()
 		for i = 1, #selectedIcons do
-			MineOSCore.propertiesWindow(eventData[3], eventData[4], 40, selectedIcons[i])
+			MineOSInterface.propertiesWindow(eventData[3], eventData[4], 40, selectedIcons[i])
 		end
 	end
 
