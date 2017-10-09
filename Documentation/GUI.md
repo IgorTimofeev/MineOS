@@ -1065,7 +1065,7 @@ local filesystemChooser = mainContainer:addChild(GUI.filesystemChooser(2, 2, 30,
 
 filesystemChooser:addExtensionFilter(".cfg")
 
-filesystemChooser.onItemSelected = function(path)
+filesystemChooser.onSubmit = function(path)
 	GUI.error("File \"" .. path .. "\" was selected")
 end
 
