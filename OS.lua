@@ -349,7 +349,6 @@ local function createOSWindow()
 				end
 				MineOSInterface.OSDraw()
 			else
-				-- os.sleep(MineOSCore.iconClickDelay)
 				MineOSInterface.iconDoubleClick(icon, eventData)
 			end
 		end
@@ -359,7 +358,7 @@ local function createOSWindow()
 
 			local menu = MineOSInterface.contextMenu(eventData[3], eventData[4])
 			menu:addItem(MineOSCore.localization.showContainingFolder).onTouch = function()
-
+				MineOSInterface.safeLaunch(MineOSPaths.explorer, "-o", fs.path(icon.path))			
 			end
 			menu:addSeparator()
 			menu:addItem(MineOSCore.localization.moveRight, indexOf >= #MineOSInterface.mainContainer.dockContainer.children - 1).onTouch = function()
