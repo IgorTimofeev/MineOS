@@ -23,6 +23,7 @@ local copyright = {
 
 ---------------------------------------------- Либсы-хуибсы ------------------------------------------------------------------------
 
+-- package.loaded.MineOSInterface = nil
 -- package.loaded.MineOSCore = nil
 
 local computer = require("computer")
@@ -41,7 +42,7 @@ local MineOSInterface = require("MineOSInterface")
 ---------------------------------------------- Всякая константная залупа ------------------------------------------------------------------------
 
 local menuTransparency = 0.2
-local dockTransparency = 0.5
+local dockTransparency = 0.4
 
 local computerUptimeOnBoot = computer.uptime()
 local computerDateUptime = computerUptimeOnBoot
@@ -529,7 +530,7 @@ local function createOSWindow()
 						MineOSCore.properties.network.name = textBox.text
 						MineOSCore.saveProperties()
 						MineOSNetwork.broadcastComputerState(MineOSCore.properties.network.enabled)
-						
+
 						container:delete()
 						MineOSInterface.OSDraw()
 					end
@@ -551,7 +552,7 @@ local function createOSWindow()
 
 			if MineOSCore.properties.network.enabled then
 				menu:addSeparator()
-				
+
 				if MineOSNetwork.getProxyCount() > 0 then
 					for proxy, path in fs.mounts() do
 						if proxy.network then
@@ -576,7 +577,7 @@ local function createOSWindow()
 								textBox.onInputFinished = function()
 									if textBox.text then
 										MineOSNetwork.sendMessage(proxy.address, "MineOSNetwork", "message", textBox.text)
-										
+
 										container:delete()
 										MineOSInterface.OSDraw()
 									end
@@ -876,6 +877,7 @@ while true do
 		createOSWindow()
 		changeResolution()
 		changeWallpaper()
+		MineOSCore.OSUpdateDate()
 		MineOSInterface.mainContainer.updateFileListAndDraw()
 
 		MineOSInterface.showErrorWindow(path, line, traceback)

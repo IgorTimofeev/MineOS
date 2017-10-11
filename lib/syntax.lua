@@ -22,8 +22,8 @@ syntax.colorScheme = {
 	compares = 0xffff98,
 	lineNumbersBackground = 0x2D2D2D,
 	lineNumbersText = 0xCCCCCC,
-	scrollBarBackground = 0x444444,
-	scrollBarForeground = 0x33B6FF,
+	scrollBarBackground = 0x2D2D2D,
+	scrollBarForeground = 0x5A5A5A,
 	selection = 0x555555,
 	indentation = 0x3C3C3C,
 }

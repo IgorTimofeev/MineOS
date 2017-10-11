@@ -76,25 +76,24 @@ local function iconDraw(icon)
 
 	buffer.text(textX, textY, icon.colors.text, text)
 
-	if icon.cut then
-		if not icon.semiTransparentImage then
-			icon.semiTransparentImage = image.copy(icon.image)
-			for i = 3, #icon.semiTransparentImage, 4 do
-				icon.semiTransparentImage[i + 2] = icon.semiTransparentImage[i + 2] + 0.6
-				if icon.semiTransparentImage[i + 2] > 1 then
-					icon.semiTransparentImage[i + 2] = 1
+	if icon.image then
+		if icon.cut then
+			if not icon.semiTransparentImage then
+				icon.semiTransparentImage = image.copy(icon.image)
+				for i = 3, #icon.semiTransparentImage, 4 do
+					icon.semiTransparentImage[i + 2] = icon.semiTransparentImage[i + 2] + 0.6
+					if icon.semiTransparentImage[i + 2] > 1 then
+						icon.semiTransparentImage[i + 2] = 1
+					end
 				end
 			end
-		end
-		
-		buffer.image(icon.x + 2, icon.y, icon.semiTransparentImage, true)
-	else
-
-		if icon.image then
+			
+			buffer.image(icon.x + 2, icon.y, icon.semiTransparentImage, true)
+		else
 			buffer.image(icon.x + 2, icon.y, icon.image)
-		elseif icon.liveImage then
-			icon.liveImage(icon.x + 2, icon.y)
 		end
+	elseif icon.liveImage then
+		icon.liveImage(icon.x + 2, icon.y)
 	end
 
 	if icon.isShortcut then

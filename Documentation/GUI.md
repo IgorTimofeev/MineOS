@@ -1106,17 +1106,22 @@ local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 local unicode = require("unicode")
 
+------------------------------------------------------------------------------------------
+
 local mainContainer = GUI.fullScreenContainer()
 mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x0))
 
-local codeView = mainContainer:addCodeView(2, 2, 130, 40, {}, 1, 1, 1, {}, {}, true, 2)
-local file = io.open("/lib/OpenComputersGL/Main.lua", "r")
+local codeView = mainContainer:addChild(GUI.codeView(2, 2, 130, 30, {}, 1, 1, 1, {}, {}, true, 2))
+
+local file = io.open("/lib/color.lua", "r")
 for line in file:lines() do
-	line = line:gsub("\t", " ")
+	line = line:gsub("\t", "  "):gsub("\r\n", "\n")
 	table.insert(codeView.lines, line)
 	codeView.maximumLineLength = math.max(codeView.maximumLineLength, unicode.len(line))
 end
 file:close()
+
+------------------------------------------------------------------------------------------
 
 mainContainer:draw()
 buffer.draw(true)
@@ -1125,7 +1130,7 @@ mainContainer:startEventHandling()
 
 Результат:
 
-![enter image description here](http://i89.fastpic.ru/big/2017/0402/a9/a00b12a34bf367940dccde93d28b03a9.png)
+![](https://i.imgur.com/o1yLMJr.png)
 
 GUI.**chart**( x, y, width, height, axisColor, axisValueColor, axisHelpersColor, chartColor, xAxisValueInterval, yAxisValueInterval, xAxisPostfix, yAxisPostfix, fillChartArea, values ): *table* chart
 ------------------------------------------------------------------------
@@ -1229,7 +1234,7 @@ mainContainer:startEventHandling()
 
 ![Imgur](http://i.imgur.com/3Oq1nzY.png)
 
-GUI.**scrollBar**( x, y, width, height, backgroundColor, foregroundColor, minimumValue, maximumValue, value, shownValueCount, onScrollValueIncrement, thinHorizontalMode ): *table* scrollBar
+GUI.**scrollBar**( x, y, width, height, backgroundColor, foregroundColor, minimumValue, maximumValue, value, shownValueCount, onScrollValueIncrement, thinMode ): *table* scrollBar
 ------------------------------------------------------------------------
 | Тип | Аргумент | Описание |
 | ------ | ------ | ------ |
@@ -1244,7 +1249,7 @@ GUI.**scrollBar**( x, y, width, height, backgroundColor, foregroundColor, minimu
 | *int* | value | Текущее значение scrollBar |
 | *int* | shownValueCount | Число "отображаемых" значений scrollBar |
 | *int* | onScrollValueIncrement | Количество строк, пролистываемых при прокрутке |
-| *boolean* | thinHorizontalMode | Режим отображения scrollBar в полупиксельном виде при горизонтальной ориентации |
+| *boolean* | thinMode | Режим отображения scrollBar в тонком пиксельном виде |
 
 Создать объект типа "ScrollBar", предназначенный для визуальной демонстрации числа показанных объектов на экране. Сам по себе практически не используется, полезен в совокупности с другими виджетами.
 
@@ -1259,13 +1264,24 @@ GUI.**scrollBar**( x, y, width, height, backgroundColor, foregroundColor, minimu
 local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 
-local mainContainer = GUI.fullScreenContainer()
-mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x0))
+------------------------------------------------------------------------------------------
 
-local scrollBar = mainContainer:addChild(GUI.scrollBar(2, 2, 1, 30, 0xEEEEEE, 0x3366CC, 1, 100, 1, 10, 1, false))
-scrollBar.onTouch = function()
-	-- Do something on scrollBar touch
+local mainContainer = GUI.fullScreenContainer()
+mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x2D2D2D))
+
+-- Добавляем вертикальный скроллбар в главный контейнер
+local verticalScrollBar = mainContainer:addChild(GUI.scrollBar(2, 3, 1, 15, 0x444444, 0x888888, 1, 100, 1, 10, 1, true))
+verticalScrollBar.onTouch = function()
+	GUI.error("Vertical scrollbar was touched")
 end
+
+-- И горизонтальный заодно тоже
+local horizontalScrollBar = mainContainer:addChild(GUI.scrollBar(3, 2, 60, 1, 0x444444, 0x888888, 1, 100, 1, 10, 1, true))
+horizontalScrollBar.onTouch = function()
+	GUI.error("Horizontal scrollbar was touched")
+end
+
+------------------------------------------------------------------------------------------
 
 mainContainer:draw()
 buffer.draw(true)
@@ -1274,7 +1290,7 @@ mainContainer:startEventHandling()
 
 Результат:
 
-![enter image description here](http://i89.fastpic.ru/big/2017/0402/90/b78e291e777f9bcb84802ef6451bc790.png)
+![enter image description here](https://i.imgur.com/XrqDvBk.png)
 
 GUI.**textBox**(x, y, width, height, backgroundColor, textColor, lines, currentLine, horizontalOffset, verticalOffset): *table* textBox
 ------------------------------------------------------------------------

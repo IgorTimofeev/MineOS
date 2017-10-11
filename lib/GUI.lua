@@ -4,12 +4,13 @@
 require("advancedLua")
 local computer = require("computer")
 local keyboard = require("keyboard")
+local fs = require("filesystem")
 local unicode = require("unicode")
 local event = require("event")
-local fs = require("filesystem")
 local color = require("color")
 local image = require("image")
 local buffer = require("doubleBuffering")
+local syntax = require("syntax")
 
 ----------------------------------------- Constants -----------------------------------------
 
@@ -920,114 +921,6 @@ function GUI.error(...)
 	mainContainer:startEventHandling()
 end
 
------------------------------------------ Scrollbar object -----------------------------------------
-
-local function scrollBarDraw(scrollBar)
-	local isVertical = scrollBar.height > scrollBar.width
-	local valuesDelta = scrollBar.maximumValue - scrollBar.minimumValue + 1
-	local part = scrollBar.value / valuesDelta
-
-	if not isVertical and scrollBar.thinHorizontalMode then
-		buffer.text(scrollBar.x, scrollBar.y, scrollBar.colors.background, string.rep("▄", scrollBar.width))
-	else
-		buffer.square(scrollBar.x, scrollBar.y, scrollBar.width, scrollBar.height, scrollBar.colors.background, 0x0, " ")
-	end
-
-	if isVertical then
-		local barSize = math.ceil(scrollBar.shownValueCount / valuesDelta * scrollBar.height)
-		local halfBarSize = math.floor(barSize / 2)
-		
-		scrollBar.ghostPosition.x = scrollBar.x
-		scrollBar.ghostPosition.y = scrollBar.y + halfBarSize
-		scrollBar.ghostPosition.width = scrollBar.width
-		scrollBar.ghostPosition.height = scrollBar.height - barSize
-
-		buffer.square(
-			scrollBar.ghostPosition.x,
-			math.floor(scrollBar.ghostPosition.y + part * scrollBar.ghostPosition.height - halfBarSize),
-			scrollBar.ghostPosition.width,
-			barSize,
-			scrollBar.colors.foreground, 0x0, " "
-		)
-	else
-		local barSize = math.ceil(scrollBar.shownValueCount / valuesDelta * scrollBar.width)
-		local halfBarSize = math.floor(barSize / 2)
-		
-		scrollBar.ghostPosition.x = scrollBar.x + halfBarSize
-		scrollBar.ghostPosition.y = scrollBar.y
-		scrollBar.ghostPosition.width = scrollBar.width - barSize
-		scrollBar.ghostPosition.height = scrollBar.height
-
-		if not isVertical and scrollBar.thinHorizontalMode then
-			buffer.text(math.floor(scrollBar.ghostPosition.x + part * scrollBar.ghostPosition.width - halfBarSize), scrollBar.ghostPosition.y, scrollBar.colors.foreground, string.rep("▄", barSize))
-		else
-			buffer.square(
-				math.floor(scrollBar.ghostPosition.x + part * scrollBar.ghostPosition.width - halfBarSize),
-				scrollBar.ghostPosition.y,
-				barSize,
-				scrollBar.ghostPosition.height,
-				scrollBar.colors.foreground, 0x0, " "
-			)
-		end
-	end
-
-	return scrollBar
-end
-
-local function scrollBarEventHandler(mainContainer, object, eventData)
-	local newValue = object.value
-
-	if eventData[1] == "touch" or eventData[1] == "drag" then
-		local delta = object.maximumValue - object.minimumValue + 1
-		if object.height > object.width then
-			newValue = math.floor((eventData[4] - object.y + 1) / object.height * delta)
-		else
-			newValue = math.floor((eventData[3] - object.x + 1) / object.width * delta)
-		end
-	elseif eventData[1] == "scroll" then
-		if eventData[5] == 1 then
-			if object.value >= object.minimumValue + object.onScrollValueIncrement then
-				newValue = object.value - object.onScrollValueIncrement
-			else
-				newValue = object.minimumValue
-			end
-		else
-			if object.value <= object.maximumValue - object.onScrollValueIncrement then
-				newValue = object.value + object.onScrollValueIncrement
-			else
-				newValue = object.maximumValue
-			end
-		end
-	end
-
-	if eventData[1] == "touch" or eventData[1] == "drag" or eventData[1] == "scroll" then
-		object.value = newValue
-		GUI.callMethod(object.onTouch, eventData)
-		mainContainer:draw()
-		buffer.draw()
-	end
-end
-
-function GUI.scrollBar(x, y, width, height, backgroundColor, foregroundColor, minimumValue, maximumValue, value, shownValueCount, onScrollValueIncrement, thinHorizontalMode)
-	local scrollBar = GUI.object(x, y, width, height)
-
-	scrollBar.eventHandler = scrollBarEventHandler
-	scrollBar.maximumValue = maximumValue
-	scrollBar.minimumValue = minimumValue
-	scrollBar.value = value
-	scrollBar.onScrollValueIncrement = onScrollValueIncrement
-	scrollBar.shownValueCount = shownValueCount
-	scrollBar.thinHorizontalMode = thinHorizontalMode
-	scrollBar.colors = {
-		background = backgroundColor,
-		foreground = foregroundColor,
-	}
-	scrollBar.ghostPosition = {}
-	scrollBar.draw = scrollBarDraw
-
-	return scrollBar
-end
-
 ----------------------------------------- CodeView object -----------------------------------------
 
 local function codeViewDraw(codeView)
@@ -1038,8 +931,8 @@ local function codeViewDraw(codeView)
 	codeView.lineNumbersWidth = unicode.len(tostring(toLine)) + 2
 	codeView.codeAreaPosition = codeView.x + codeView.lineNumbersWidth
 	codeView.codeAreaWidth = codeView.width - codeView.lineNumbersWidth
-	buffer.square(codeView.x, codeView.y, codeView.lineNumbersWidth, codeView.height, require("syntax").colorScheme.lineNumbersBackground, require("syntax").colorScheme.lineNumbersText, " ")	
-	buffer.square(codeView.codeAreaPosition, codeView.y, codeView.codeAreaWidth, codeView.height, require("syntax").colorScheme.background, require("syntax").colorScheme.text, " ")
+	buffer.square(codeView.x, codeView.y, codeView.lineNumbersWidth, codeView.height, syntax.colorScheme.lineNumbersBackground, syntax.colorScheme.lineNumbersText, " ")	
+	buffer.square(codeView.codeAreaPosition, codeView.y, codeView.codeAreaWidth, codeView.height, syntax.colorScheme.background, syntax.colorScheme.text, " ")
 
 	-- Line numbers texts
 	local y = codeView.y
@@ -1047,10 +940,10 @@ local function codeViewDraw(codeView)
 		if codeView.lines[line] then
 			local text = tostring(line)
 			if codeView.highlights[line] then
-				buffer.square(codeView.x, y, codeView.lineNumbersWidth, 1, codeView.highlights[line], require("syntax").colorScheme.text, " ", 0.3)
-				buffer.square(codeView.codeAreaPosition, y, codeView.codeAreaWidth, 1, codeView.highlights[line], require("syntax").colorScheme.text, " ")
+				buffer.square(codeView.x, y, codeView.lineNumbersWidth, 1, codeView.highlights[line], syntax.colorScheme.text, " ", 0.3)
+				buffer.square(codeView.codeAreaPosition, y, codeView.codeAreaWidth, 1, codeView.highlights[line], syntax.colorScheme.text, " ")
 			end
-			buffer.text(codeView.codeAreaPosition - unicode.len(text) - 1, y, require("syntax").colorScheme.lineNumbersText, text)
+			buffer.text(codeView.codeAreaPosition - unicode.len(text) - 1, y, syntax.colorScheme.lineNumbersText, text)
 			y = y + 1
 		else
 			break
@@ -1066,7 +959,7 @@ local function codeViewDraw(codeView)
 			y + codeView.selections[selectionIndex].from.line - codeView.fromLine,
 			codeView.codeAreaWidth - codeView.selections[selectionIndex].from.symbol + codeView.fromSymbol - 1,
 			1,
-			codeView.selections[selectionIndex].color or require("syntax").colorScheme.selection, require("syntax").colorScheme.text, " "
+			codeView.selections[selectionIndex].color or syntax.colorScheme.selection, syntax.colorScheme.text, " "
 		)
 	end
 
@@ -1076,7 +969,7 @@ local function codeViewDraw(codeView)
 			y + codeView.selections[selectionIndex].from.line - codeView.fromLine,
 			codeView.selections[selectionIndex].to.symbol - codeView.fromSymbol + 2,
 			1,
-			codeView.selections[selectionIndex].color or require("syntax").colorScheme.selection, require("syntax").colorScheme.text, " "
+			codeView.selections[selectionIndex].color or syntax.colorScheme.selection, syntax.colorScheme.text, " "
 		)
 	end
 
@@ -1090,7 +983,7 @@ local function codeViewDraw(codeView)
 					y + codeView.selections[selectionIndex].from.line - codeView.fromLine,
 					codeView.selections[selectionIndex].to.symbol - codeView.selections[selectionIndex].from.symbol + 1,
 					1,
-					codeView.selections[selectionIndex].color or require("syntax").colorScheme.selection, require("syntax").colorScheme.text, " "
+					codeView.selections[selectionIndex].color or syntax.colorScheme.selection, syntax.colorScheme.text, " "
 				)
 			elseif dy == 1 then
 				drawUpperSelection(y, selectionIndex); y = y + 1
@@ -1098,7 +991,7 @@ local function codeViewDraw(codeView)
 			else
 				drawUpperSelection(y, selectionIndex); y = y + 1
 				for i = 1, dy - 1 do
-					buffer.square(codeView.codeAreaPosition, y + codeView.selections[selectionIndex].from.line - codeView.fromLine, codeView.codeAreaWidth, 1, codeView.selections[selectionIndex].color or require("syntax").colorScheme.selection, require("syntax").colorScheme.text, " "); y = y + 1
+					buffer.square(codeView.codeAreaPosition, y + codeView.selections[selectionIndex].from.line - codeView.fromLine, codeView.codeAreaWidth, 1, codeView.selections[selectionIndex].color or syntax.colorScheme.selection, syntax.colorScheme.text, " "); y = y + 1
 				end
 
 				drawLowerSelection(y, selectionIndex)
@@ -1112,9 +1005,9 @@ local function codeViewDraw(codeView)
 	for i = codeView.fromLine, toLine do
 		if codeView.lines[i] then
 			if codeView.highlightLuaSyntax then
-				require("syntax").highlightString(codeView.codeAreaPosition - codeView.fromSymbol + 2, y, codeView.lines[i], codeView.indentationWidth)
+				syntax.highlightString(codeView.codeAreaPosition - codeView.fromSymbol + 2, y, codeView.lines[i], codeView.indentationWidth)
 			else
-				buffer.text(codeView.codeAreaPosition - codeView.fromSymbol + 2, y, require("syntax").colorScheme.text, codeView.lines[i])
+				buffer.text(codeView.codeAreaPosition - codeView.fromSymbol + 2, y, syntax.colorScheme.text, codeView.lines[i])
 			end
 			y = y + 1
 		else
@@ -1125,21 +1018,22 @@ local function codeViewDraw(codeView)
 
 	if #codeView.lines > codeView.height then
 		codeView.scrollBars.vertical.hidden = false
-		codeView.scrollBars.vertical.colors.background, codeView.scrollBars.vertical.colors.foreground = require("syntax").colorScheme.scrollBarBackground, require("syntax").colorScheme.scrollBarForeground
+		codeView.scrollBars.vertical.colors.background, codeView.scrollBars.vertical.colors.foreground = syntax.colorScheme.scrollBarBackground, syntax.colorScheme.scrollBarForeground
 		codeView.scrollBars.vertical.minimumValue, codeView.scrollBars.vertical.maximumValue, codeView.scrollBars.vertical.value, codeView.scrollBars.vertical.shownValueCount = 1, #codeView.lines, codeView.fromLine, codeView.height
 		codeView.scrollBars.vertical.localPosition.x = codeView.width
 		codeView.scrollBars.vertical.localPosition.y = 1
-		codeView.scrollBars.vertical.height = codeView.height
+		codeView.scrollBars.vertical.height = codeView.height - 1
 	else
 		codeView.scrollBars.vertical.hidden = true
 	end
 
 	if codeView.maximumLineLength > codeView.codeAreaWidth - 2 then
 		codeView.scrollBars.horizontal.hidden = false
-		codeView.scrollBars.horizontal.colors.background, codeView.scrollBars.horizontal.colors.foreground = require("syntax").colorScheme.scrollBarBackground, require("syntax").colorScheme.scrollBarForeground
+		codeView.scrollBars.horizontal.colors.background, codeView.scrollBars.horizontal.colors.foreground = syntax.colorScheme.scrollBarBackground, syntax.colorScheme.scrollBarForeground
 		codeView.scrollBars.horizontal.minimumValue, codeView.scrollBars.horizontal.maximumValue, codeView.scrollBars.horizontal.value, codeView.scrollBars.horizontal.shownValueCount = 1, codeView.maximumLineLength, codeView.fromSymbol, codeView.codeAreaWidth - 2
-		codeView.scrollBars.horizontal.localPosition.x, codeView.scrollBars.horizontal.width = codeView.lineNumbersWidth + 1, codeView.codeAreaWidth - 1
+		codeView.scrollBars.horizontal.localPosition.x = codeView.lineNumbersWidth + 1
 		codeView.scrollBars.horizontal.localPosition.y = codeView.height
+		codeView.scrollBars.horizontal.width = codeView.codeAreaWidth - 1
 	else
 		codeView.scrollBars.horizontal.hidden = true
 	end
@@ -1160,7 +1054,7 @@ function GUI.codeView(x, y, width, height, lines, fromSymbol, fromLine, maximumL
 	codeView.indentationWidth = indentationWidth
 
 	codeView.scrollBars = {
-		vertical = codeView:addChild(GUI.scrollBar(1, 1, 1, 1, 0x0, 0x0, 1, 1, 1, 1, 1, false)),
+		vertical = codeView:addChild(GUI.scrollBar(1, 1, 1, 1, 0x0, 0x0, 1, 1, 1, 1, 1, true)),
 		horizontal = codeView:addChild(GUI.scrollBar(1, 1, 1, 1, 0x0, 0x0, 1, 1, 1, 1, 1, true))
 	}
 
@@ -3184,29 +3078,146 @@ function GUI.resizer(x, y, width, height, helperColor, arrowColor)
 	return object
 end
 
+----------------------------------------- Scrollbar object -----------------------------------------
+
+local function scrollBarDraw(scrollBar)
+	local isVertical = scrollBar.height > scrollBar.width
+	local valuesDelta = scrollBar.maximumValue - scrollBar.minimumValue + 1
+	local part = scrollBar.value / valuesDelta
+
+	if isVertical then
+		local barSize = math.ceil(scrollBar.shownValueCount / valuesDelta * scrollBar.height)
+		local halfBarSize = math.floor(barSize / 2)
+		
+		scrollBar.ghostPosition.y = scrollBar.y + halfBarSize
+		scrollBar.ghostPosition.height = scrollBar.height - barSize
+
+		if scrollBar.thin then
+			local y1 = math.floor(scrollBar.ghostPosition.y + part * scrollBar.ghostPosition.height - halfBarSize)
+			local y2 = y1 + barSize - 1
+			local background
+
+			for y = scrollBar.y, scrollBar.y + scrollBar.height - 1 do
+				background = buffer.get(scrollBar.x, y)
+				buffer.set(scrollBar.x, y, background, y >= y1 and y <= y2 and scrollBar.colors.foreground or scrollBar.colors.background, "┃")
+			end
+		else
+			buffer.square(scrollBar.x, scrollBar.y, scrollBar.width, scrollBar.height, scrollBar.colors.background, scrollBar.colors.foreground, " ")
+			buffer.square(
+				scrollBar.x,
+				math.floor(scrollBar.ghostPosition.y + part * scrollBar.ghostPosition.height - halfBarSize),
+				scrollBar.width,
+				barSize,
+				scrollBar.colors.foreground, 0x0, " "
+			)
+		end
+	else
+		local barSize = math.ceil(scrollBar.shownValueCount / valuesDelta * scrollBar.width)
+		local halfBarSize = math.floor(barSize / 2)
+		
+		scrollBar.ghostPosition.x = scrollBar.x + halfBarSize
+		scrollBar.ghostPosition.width = scrollBar.width - barSize
+
+		if scrollBar.thin then
+			local x1 = math.floor(scrollBar.ghostPosition.x + part * scrollBar.ghostPosition.width - halfBarSize)
+			local x2 = x1 + barSize - 1
+			local background
+
+			for x = scrollBar.x, scrollBar.x + scrollBar.width - 1 do
+				background = buffer.get(x, scrollBar.y)
+				buffer.set(x, scrollBar.y, background, x >= x1 and x <= x2 and scrollBar.colors.foreground or scrollBar.colors.background, "⠤")
+			end
+		else
+			buffer.square(scrollBar.x, scrollBar.y, scrollBar.width, scrollBar.height, scrollBar.colors.background, scrollBar.colors.foreground, " ")
+			buffer.square(
+				math.floor(scrollBar.ghostPosition.x + part * scrollBar.ghostPosition.width - halfBarSize),
+				scrollBar.y,
+				barSize,
+				scrollBar.height,
+				scrollBar.colors.foreground, 0x0, " "
+			)
+		end
+	end
+
+	return scrollBar
+end
+
+local function scrollBarEventHandler(mainContainer, object, eventData)
+	local newValue = object.value
+
+	if eventData[1] == "touch" or eventData[1] == "drag" then
+		local delta = object.maximumValue - object.minimumValue + 1
+		if object.height > object.width then
+			newValue = math.floor((eventData[4] - object.y + 1) / object.height * delta)
+		else
+			newValue = math.floor((eventData[3] - object.x + 1) / object.width * delta)
+		end
+	elseif eventData[1] == "scroll" then
+		if eventData[5] == 1 then
+			if object.value >= object.minimumValue + object.onScrollValueIncrement then
+				newValue = object.value - object.onScrollValueIncrement
+			else
+				newValue = object.minimumValue
+			end
+		else
+			if object.value <= object.maximumValue - object.onScrollValueIncrement then
+				newValue = object.value + object.onScrollValueIncrement
+			else
+				newValue = object.maximumValue
+			end
+		end
+	end
+
+	if eventData[1] == "touch" or eventData[1] == "drag" or eventData[1] == "scroll" then
+		object.value = newValue
+		GUI.callMethod(object.onTouch, eventData)
+		mainContainer:draw()
+		buffer.draw()
+	end
+end
+
+function GUI.scrollBar(x, y, width, height, backgroundColor, foregroundColor, minimumValue, maximumValue, value, shownValueCount, onScrollValueIncrement, thin)
+	local scrollBar = GUI.object(x, y, width, height)
+
+	scrollBar.eventHandler = scrollBarEventHandler
+	scrollBar.maximumValue = maximumValue
+	scrollBar.minimumValue = minimumValue
+	scrollBar.value = value
+	scrollBar.onScrollValueIncrement = onScrollValueIncrement
+	scrollBar.shownValueCount = shownValueCount
+	scrollBar.thin = thin
+	scrollBar.colors = {
+		background = backgroundColor,
+		foreground = foregroundColor,
+	}
+	scrollBar.ghostPosition = {}
+	scrollBar.draw = scrollBarDraw
+
+	return scrollBar
+end
+
 --------------------------------------------------------------------------------------------------------------------------------
 
 -- buffer.flush()
 -- buffer.draw(true)
 
+
+-- ------------------------------------------------------------------------------------------
+
 -- local mainContainer = GUI.fullScreenContainer()
--- mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x262626))
+-- mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x0))
 
--- local dialog = GUI.addFilesystemDialogToContainer(mainContainer, "Save", "Cancel", "File name", "/")
+-- local codeView = mainContainer:addChild(GUI.codeView(2, 2, 130, 30, {}, 1, 1, 1, {}, {}, true, 2))
 
--- dialog:setMode(GUI.filesystemModes.save, GUI.filesystemModes.file)
--- dialog:addExtensionFilter(".pic")
--- dialog:addExtensionFilter(".app")
--- dialog.onSubmit = function(path)
--- 	GUI.error(path)
+-- local file = io.open("/lib/color.lua", "r")
+-- for line in file:lines() do
+-- 	line = line:gsub("\t", "  "):gsub("\r\n", "\n")
+-- 	table.insert(codeView.lines, line)
+-- 	codeView.maximumLineLength = math.max(codeView.maximumLineLength, unicode.len(line))
 -- end
--- dialog:show()
+-- file:close()
 
--- local filesystemChooser = mainContainer:addChild(GUI.filesystemChooser(2, 2, 30, 3, 0xE1E1E1, 0x888888, 0x3C3C3C, 0x888888, nil, "Open", "Cancel", "Choose file", "/"))
--- filesystemChooser:addExtensionFilter(".cfg")
--- filesystemChooser.onSubmit = function(path)
--- 	GUI.error("File \"" .. path .. "\" was selected")
--- end
+-- ------------------------------------------------------------------------------------------
 
 -- mainContainer:draw()
 -- buffer.draw(true)

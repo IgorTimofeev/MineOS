@@ -54,8 +54,8 @@ local function newCell(x, y, shaded)
 			object.background = colorSelector1.color
 			object.foreground = colorSelector2.color
 
-			-- CTRL or CMD
-			if keyboard.isKeyDown(29) or keyboard.isKeyDown(219) then
+			-- CTRL or CMD or ALT
+			if keyboard.isKeyDown(29) or keyboard.isKeyDown(219) or keyboard.isKeyDown(56) then
 				object.pixels[y][x] = nil	
 			else
 				object.pixels[y][x] = eventData[5] == 0 and 1 or 0
@@ -72,22 +72,19 @@ end
 
 local drawingArea = window:addChild(GUI.container(1, 4, 1, 1))
 
--- local lines = {
--- 	"LMB/RMB - draw with foreground/background",
--- 	"Ctrl+LMB - erase"
--- }
--- window:addChild(GUI.textBox(1, 1, window.width, #lines, nil, 0x555555, lines, 1, 0, 0)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
-
-
 local function getBrailleChar(a, b, c, d, e, f, g, h)
 	return unicode.char(10240 + 128*h + 64*g + 32*f + 16*d + 8*b + 4*e + 2*c + a)
 end
 
 local function newNoGUI(width, height)
 	drawingArea.width, drawingArea.height = width * 4, height * 4
-	window.width, window.height = drawingArea.width, drawingArea.height + 3
+	
+	window.width = drawingArea.width
+	window.height = drawingArea.height + 3
+
 	panel.width = window.width
 	layout.width = panel.width
+	
 
 	drawingArea:deleteChildren()
 
@@ -201,6 +198,8 @@ end
 actionButtons.close.onTouch = function()
 	window:close()
 end
+actionButtons.minimize:delete()
+actionButtons.maximize:delete()
 
 
 ---------------------------------------------------------------------------------------------------------
