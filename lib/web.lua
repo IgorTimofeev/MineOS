@@ -5,18 +5,39 @@ local web = {}
 
 ----------------------------------------------------------------------------------------------------
 
+local function serializeTableToURL(existentData, table)
+	local result = ""
+
+	for key, value in pairs(table) do
+		local keyType, valueType = type(key), type(value)
+
+		if keyType == "number" then
+			key = key - 1
+		-- elseif keyType == "string" then
+		-- 	key = "\"" .. key .. "\""
+		end
+
+		if valueType == "table" then
+			result = result .. serializeTableToURL(existentData .. "[" .. key .. "]", value)
+		else
+			result = result .. existentData .. "[" .. key .. "]=" .. value .. "&"
+		end
+	end
+
+	return result
+end
+
 local function rawRequest(url, postData, headers, chunkHandler)
 	local stringPostData
 	if postData then
 		if type(postData) == "table" then
 			stringPostData = ""
-			for key, value in pairs(postData) do
+
+			for key, value in pairs(postData) do	
 				if type(value) == "table" then
-					for i = 1, #value do
-						stringPostData = stringPostData .. "&" .. key .. "[" .. (i - 1) .. "]=" .. value[i]
-					end
+					stringPostData = stringPostData .. serializeTableToURL(key, value)
 				else
-					stringPostData = stringPostData .. "&" .. key .. "=" .. value
+					stringPostData = stringPostData .. key .. "=" .. value .. "&"
 				end
 			end
 		elseif type(postData) == "string" then
@@ -137,10 +158,14 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
--- print(web.request("http://94.242.34.251:8888/MineOS/AppMarket/test.php", {
+-- print(web.request("http://test.php", {
 -- 	abc = "siski",
--- 	def = {"meow", "sex", "pizda"},
--- 	ghi = 123
+-- 	pizda = "test",
+-- 	def = {
+-- 		{name = "Test1.png", data = "F0"},
+-- 		{name = "Test2.png", data = "FF"},
+-- 		{hello = "world", meow = "meow-meow"}
+-- 	},
 -- }))
 
 -- web.downloadFile("https://github.com/IgorTimofeev/OpenComputers/raw/master/Wallpapers/CloudyEvening.pic", "Clouds.pic")
