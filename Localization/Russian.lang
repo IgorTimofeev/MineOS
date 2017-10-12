@@ -17,6 +17,7 @@
 	openWith = "Открыть с помощью",
 	select = "Выбрать программу…",
 	keepInDock = "Оставить в Dock",
+	closeAllWindows = "Закрыть все окна",
 	launchWithArguments = "Запустить с аргументами",
 	dontShowAnymore = "Больше не показывать",
 	applicationHelp = "О приложении",
