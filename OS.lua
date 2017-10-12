@@ -368,6 +368,14 @@ local function createOSWindow()
 				moveDockIcon(indexOf, -1)
 			end
 			menu:addSeparator()
+			if icon.windows then
+				menu:addItem(MineOSCore.localization.closeAllWindows).onTouch = function()
+					for window in pairs(icon.windows) do
+						window:close()
+					end
+					MineOSInterface.OSDraw()
+				end
+			end
 			if icon.keepInDock then
 				if #MineOSInterface.mainContainer.dockContainer.children > 1 then
 					menu:addItem(MineOSCore.localization.removeFromDock).onTouch = function()

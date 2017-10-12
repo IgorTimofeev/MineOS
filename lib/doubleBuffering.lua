@@ -176,7 +176,7 @@ function buffer.paste(x, y, copyArray)
 	end
 end
 
-function buffer.line(x1, y1, x2, y2, background, foreground, alpha, symbol)
+function buffer.rasterizeLine(x1, y1, x2, y2, method)
 	local inLoopValueFrom, inLoopValueTo, outLoopValueFrom, outLoopValueTo, isReversed, inLoopValueDelta, outLoopValueDelta = x1, x2, y1, y2, false, math.abs(x2 - x1), math.abs(y2 - y1)
 	if inLoopValueDelta < outLoopValueDelta then
 		inLoopValueFrom, inLoopValueTo, outLoopValueFrom, outLoopValueTo, isReversed, inLoopValueDelta, outLoopValueDelta = y1, y2, x1, x2, true, outLoopValueDelta, inLoopValueDelta
@@ -191,9 +191,9 @@ function buffer.line(x1, y1, x2, y2, background, foreground, alpha, symbol)
 	local outLoopValueTrigger = outLoopValueTriggerIncrement
 	for inLoopValue = inLoopValueFrom, inLoopValueTo, inLoopValueFrom < inLoopValueTo and 1 or -1 do
 		if isReversed then
-			buffer.set(outLoopValue, inLoopValue, background, foreground, alpha, symbol)
+			method(outLoopValue, inLoopValue)
 		else
-			buffer.set(inLoopValue, outLoopValue, background, foreground, alpha, symbol)
+			method(inLoopValue, outLoopValue)
 		end
 
 		outLoopValueCounter = outLoopValueCounter + 1
@@ -201,6 +201,12 @@ function buffer.line(x1, y1, x2, y2, background, foreground, alpha, symbol)
 			outLoopValue, outLoopValueTrigger = outLoopValue + 1, outLoopValueTrigger + outLoopValueTriggerIncrement
 		end
 	end
+end
+
+function buffer.line(x1, y1, x2, y2, background, foreground, alpha, symbol)
+	buffer.rasterizeLine(x1, y1, x2, y2, function(x, y)
+		buffer.set(x, y, background, foreground, alpha, symbol)
+	end)
 end
 
 function buffer.text(x, y, textColor, text, transparency)
@@ -332,30 +338,9 @@ function buffer.semiPixelSquare(x, y, width, height, color)
 end
 
 function buffer.semiPixelLine(x1, y1, x2, y2, color)
-	local inLoopValueFrom, inLoopValueTo, outLoopValueFrom, outLoopValueTo, isReversed, inLoopValueDelta, outLoopValueDelta = x1, x2, y1, y2, false, math.abs(x2 - x1), math.abs(y2 - y1)
-	if inLoopValueDelta < outLoopValueDelta then
-		inLoopValueFrom, inLoopValueTo, outLoopValueFrom, outLoopValueTo, isReversed, inLoopValueDelta, outLoopValueDelta = y1, y2, x1, x2, true, outLoopValueDelta, inLoopValueDelta
-	end
-
-	if outLoopValueFrom > outLoopValueTo then
-		outLoopValueFrom, outLoopValueTo = outLoopValueTo, outLoopValueFrom
-		inLoopValueFrom, inLoopValueTo = inLoopValueTo, inLoopValueFrom
-	end
-
-	local outLoopValue, outLoopValueCounter, outLoopValueTriggerIncrement = outLoopValueFrom, 1, inLoopValueDelta / outLoopValueDelta
-	local outLoopValueTrigger = outLoopValueTriggerIncrement
-	for inLoopValue = inLoopValueFrom, inLoopValueTo, inLoopValueFrom < inLoopValueTo and 1 or -1 do
-		if isReversed then
-			buffer.semiPixelSet(outLoopValue, inLoopValue, color)
-		else
-			buffer.semiPixelSet(inLoopValue, outLoopValue, color)
-		end
-
-		outLoopValueCounter = outLoopValueCounter + 1
-		if outLoopValueCounter > outLoopValueTrigger then
-			outLoopValue, outLoopValueTrigger = outLoopValue + 1, outLoopValueTrigger + outLoopValueTriggerIncrement
-		end
-	end
+	buffer.rasterizeLine(x1, y1, x2, y2, function(x, y)
+		buffer.semiPixelSet(x, y, color)
+	end)
 end
 
 function buffer.semiPixelCircle(xCenter, yCenter, radius, color)

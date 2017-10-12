@@ -15,15 +15,15 @@ local xOffset, yOffset, xDrag, yDrag, points = 0, 0, 1, 1
 ---------------------------------------------------------------------------------------------------------
 
 window.backgroundPanel.localPosition.y, window.backgroundPanel.height = 4, window.backgroundPanel.height - 3
-local titlePanel = window:addChild(GUI.panel(1, 1, window.width, 3, 0x2D2D2D, 0.1))
+local titlePanel = window:addChild(GUI.panel(1, 1, window.width, 3, 0x2D2D2D))
 local layout = window:addChild(GUI.layout(1, 1, window.width, 3, 1, 1))
 layout:setCellDirection(1, 1, GUI.directions.horizontal)
 layout:setCellSpacing(1, 1, 3)
 
-local switchAndLabel = layout:addChild(GUI.switchAndLabel(1, 1, 16, 6, 0x66DB80, 0x1D1D1D, 0xEEEEEE, 0x999999, "Quants:", false))
-local scaleSlider = layout:addChild(GUI.slider(1, 1, 12, 0x66DB80, 0x0, 0xFFFFFF, 0x999999, 1, 1000, 400, false, "Scale: ", "%"))
-local rangeSlider = layout:addChild(GUI.slider(1, 1, 12, 0x66DB80, 0x0, 0xFFFFFF, 0x999999, 5, 60, 25, false, "Range: ", ""))
-local precisionSlider = layout:addChild(GUI.slider(1, 1, 12, 0x66DB80, 0x0, 0xFFFFFF, 0x999999, 10, 100, 72, false, "Precision: ", ""))
+local switchAndLabel = layout:addChild(GUI.switchAndLabel(1, 1, 16, 6, 0x66DB80, 0x1D1D1D, 0xE1E1E1, 0xBBBBBB, "Quants:", false))
+local scaleSlider = layout:addChild(GUI.slider(1, 1, 12, 0x66DB80, 0x0, 0xFFFFFF, 0xBBBBBB, 1, 1000, 400, false, "Scale: ", "%"))
+local rangeSlider = layout:addChild(GUI.slider(1, 1, 12, 0x66DB80, 0x0, 0xFFFFFF, 0xBBBBBB, 2, 60, 25, false, "Range: ", ""))
+local precisionSlider = layout:addChild(GUI.slider(1, 1, 12, 0x66DB80, 0x0, 0xFFFFFF, 0xBBBBBB, 10, 99, 72, false, "Step: 0.", ""))
 local functionButton = window:addChild(GUI.button(1, 1, 1, 3, 0xE1E1E1, 0x3C3C3C, 0xCCCCCC, 0x3C3C3C, ""))
 
 window.actionButtons:moveToFront()
@@ -102,6 +102,8 @@ scaleSlider.onValueChanged = function()
 end
 rangeSlider.onValueChanged = scaleSlider.onValueChanged
 precisionSlider.onValueChanged = scaleSlider.onValueChanged
+
+scaleSlider.roundValues, rangeSlider.roundValues, precisionSlider.roundValues = true, true, true
 
 window.onResize = function(width, height)
 	window.backgroundPanel.width, window.backgroundPanel.height = width, height - 3

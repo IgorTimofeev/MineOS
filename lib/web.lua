@@ -1,35 +1,42 @@
 
------------------------------------------ Libraries -----------------------------------------
-
 local fs = require("filesystem")
 local component = require("component")
 local web = {}
 
------------------------------------------ Main methods -----------------------------------------
+----------------------------------------------------------------------------------------------------
 
-function web.request(url)
-	local pcallSuccess, requestHandle, requestReason = pcall(component.internet.request, url)
-	
-	-- Если функция компонента была вызвана верно, то идем дальше
-	if pcallSuccess then
-		-- Если компонент вернул там хендл соединения, то читаем ответ из него
-		-- Хендл может не вернуться в случае хуевой урл-ки, которая не нравится компоненту
-		if requestHandle then
-			local responseData = ""
-			-- Читаем данные из хендла по кусочкам
-			while true do
-				local data, reason = requestHandle.read(math.huge)	
-				-- Если прочтение удалость, то записываем кусочек в буфер
-				if data then
-					responseData = responseData .. data
+local function rawRequest(url, postData, headers, chunkHandler)
+	local stringPostData
+	if postData then
+		if type(postData) == "table" then
+			stringPostData = ""
+			for key, value in pairs(postData) do
+				if type(value) == "table" then
+					for i = 1, #value do
+						stringPostData = stringPostData .. "&" .. key .. "[" .. (i - 1) .. "]=" .. value[i]
+					end
 				else
-					-- Если чтение не удалось, и существует некий прочитанный кусочек, то в нем стопудова содержится ошибка чтения
+					stringPostData = stringPostData .. "&" .. key .. "=" .. value
+				end
+			end
+		elseif type(postData) == "string" then
+			stringPostData = postData
+		end
+	end
+
+	local pcallSuccess, requestHandle, requestReason = pcall(component.internet.request, url, stringPostData, headers)
+	if pcallSuccess then
+		if requestHandle then
+			while true do
+				local chunk, reason = requestHandle.read(math.huge)	
+				if chunk then
+					chunkHandler(chunk)
+				else
 					requestHandle:close()
 					if reason then
 						return false, reason
-					-- А если кусочка нет, то это значит, что соединение можно закрывать с чистой совестью и возвращать всю инфу
 					else
-						return responseData
+						return true
 					end
 				end
 			end
@@ -41,18 +48,38 @@ function web.request(url)
 	end
 end
 
-function web.downloadFile(url, path)
-	local result, reason = web.request(url)
-	if result then
-		fs.makeDirectory(fs.path(path) or "")
-		local file = io.open(path, "w")
-		file:write(result)
-		file:close()
+----------------------------------------------------------------------------------------------------
 
-		return result
+function web.request(url, postData, headers)
+	local data = ""
+	local success, reason = rawRequest(url, postData, headers, function(chunk)
+		data = data .. chunk
+	end)
+
+	if success then
+		return data
 	else
-		return false, "Could not connect to to URL-address \"" .. tostring(url) .. "\", the reason is \"" .. tostring(reason) .. "\""
+		return false, reason
 	end
+end
+
+function web.downloadFile(url, path)
+	fs.makeDirectory(fs.path(path) or "")
+	local file, reason = io.open(path, "w")
+	if file then
+		local success, reason = rawRequest(url, nil, nil, function(chunk)
+			file:write(chunk)
+		end)
+
+		file:close()
+		if success then
+			return true
+		else
+			return false, "Could not connect to to URL-address \"" .. tostring(url) .. "\", the reason is \"" .. tostring(reason) .. "\""
+		end
+	else
+		return false, "Failed to open file for writing: " .. tostring(reason)
+	end	
 end
 
 function web.runScript(url)
@@ -108,20 +135,17 @@ function web.downloadMineOSApplication(application, language)
 	end
 end
 
-----------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
 
--- web.downloadMineOSApplication({
--- 	path="/MineOS/Applications/3DTest",
--- 	url="https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/Applications/3DTest/3DTest.lua",
--- 	about="https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/Applications/3DTest/About/",
--- 	type="Application",
--- 	icon="https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/Applications/3DTest/Icon.pic",
--- 	createShortcut="desktop",
--- 	forceDownload=true,
--- 	version=1.16,
--- })
+-- print(web.request("http://94.242.34.251:8888/MineOS/AppMarket/test.php", {
+-- 	abc = "siski",
+-- 	def = {"meow", "sex", "pizda"},
+-- 	ghi = 123
+-- }))
 
------------------------------------------ Cyka -----------------------------------------
+-- web.downloadFile("https://github.com/IgorTimofeev/OpenComputers/raw/master/Wallpapers/CloudyEvening.pic", "Clouds.pic")
+
+----------------------------------------------------------------------------------------------------
 
 return web
 
