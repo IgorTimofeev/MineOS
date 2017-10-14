@@ -1,0 +1,16 @@
+{
+	moduleDisk = "Дисковая утилита",
+	moduleRAM = "Управление памятью",
+	moduleEvent = "Анализ событий",
+
+	diskLabel = "Имя диска",
+	bootable = "Загрузочный",
+	of = "из",
+	free = "Свободно",
+	options = "Опции",
+	arguments = "Аргументы",
+	format = "Форматировать",
+	execute = "Выполнить",
+	waitingEvents = "Ожидание событий",
+	processingEnabled = "Обработка событий",
+}

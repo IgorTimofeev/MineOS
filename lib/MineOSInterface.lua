@@ -1236,7 +1236,7 @@ local function GUICopy(parentContainer, fileList, toPath)
 
 	local container = MineOSInterface.addUniversalContainer(parentContainer, MineOSCore.localization.copying)
 	local textBox = container.layout:addChild(GUI.textBox(1, 1, container.width, 1, nil, 0x777777, {}, 1, 0, 0, true, true):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top))
-	local switchAndLabel = container.layout:addChild(GUI.switchAndLabel(1, 1, 37, 8, 0x66DB80, 0x2D2D2D, 0xEEEEEE, 0x777777, MineOSCore.localization.applyToAll .. ":", false))
+	local switchAndLabel = container.layout:addChild(GUI.switchAndLabel(1, 1, 37, 8, 0x66DB80, 0x1E1E1E, 0xEEEEEE, 0x777777, MineOSCore.localization.applyToAll .. ":", false))
 	container.panel.eventHandler = nil
 
 	local buttonsLayout = container.layout:addChild(GUI.layout(1, 1, 1, 1, 1, 1))

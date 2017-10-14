@@ -1,0 +1,16 @@
+{	
+	moduleDisk = "Disk utility",
+	moduleRAM = "RAM control",
+	moduleEvent = "Event processing",
+
+	diskLabel = "Disk label",
+	bootable = "Bootable",
+	of = "of",
+	free = "Free",
+	options = "Options",
+	arguments = "Arguments",
+	format = "Format",
+	execute = "Execute",
+	waitingEvents = "Waiting for events",
+	processingEnabled = "Event processing enabled",
+}
