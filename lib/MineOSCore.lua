@@ -73,6 +73,7 @@ function MineOSCore.loadPropeties()
 				MineOSPaths.applications .. "MineCode IDE.app/",
 				MineOSPaths.applications .. "Finder.app/",
 				MineOSPaths.applications .. "Photoshop.app/",
+				MineOSPaths.applications .. "Control.app/",
 			},
 			backgroundColor = 0x1E1E1E,
 			network = {
