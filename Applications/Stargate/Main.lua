@@ -160,11 +160,11 @@ mainContainer.connectionButton = mainContainer:addChild(GUI.framedButton(x, y, w
 mainContainer.connectionButton.onTouch = function()
 	if stargate.stargateState() == "Idle" then
 		local container = MineOSInterface.addUniversalContainer(mainContainer, "Connect")
-		local inputField = container.layout:addChild(GUI.inputField(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0x666666, 0xEEEEEE, 0x262626, contacts.last, "Type address here"))
-		inputField.onInputFinished = function()
-			if inputField.text then
-				dial(inputField.text)
-				contacts.last = inputField.text
+		local input = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0x666666, 0xEEEEEE, 0x262626, contacts.last, "Type address here"))
+		input.onInputFinished = function()
+			if input.text then
+				dial(input.text)
+				contacts.last = input.text
 				saveContacts()
 				container:delete()
 
@@ -174,7 +174,7 @@ mainContainer.connectionButton.onTouch = function()
 		end
 
 		container.panel.eventHandler = function()
-			inputField.onInputFinished()
+			input.onInputFinished()
 		end
 
 		mainContainer:draw()
@@ -196,11 +196,11 @@ end
 mainContainer.messageContactButton = mainContainer:addChild(GUI.framedButton(x, y, width, 3, 0xEEEEEE, 0xEEEEEE, 0xBBBBBB, 0xBBBBBB, "Message")); y = y + 4
 mainContainer.messageContactButton.onTouch = function()
 	local container = MineOSInterface.addUniversalContainer(mainContainer, "Message")
-	local inputField = container.layout:addChild(GUI.inputField(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0x666666, 0xEEEEEE, 0x262626, nil, "Type message text here"))
-	inputField.onInputFinished = function()
-		if inputField.text then
+	local input = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0x666666, 0xEEEEEE, 0x262626, nil, "Type message text here"))
+	input.onInputFinished = function()
+		if input.text then
 			container:delete()
-			stargate.sendMessage(inputField.text)
+			stargate.sendMessage(input.text)
 
 			mainContainer:draw()
 			buffer.draw()
@@ -208,7 +208,7 @@ mainContainer.messageContactButton.onTouch = function()
 	end
 
 	container.panel.eventHandler = function()
-		inputField.onInputFinished()
+		input.onInputFinished()
 	end
 
 	mainContainer:draw()
@@ -228,21 +228,21 @@ end
 mainContainer.addContactButton = mainContainer:addChild(GUI.framedButton(x, y, width, 3, 0xEEEEEE, 0xEEEEEE, 0xBBBBBB, 0xBBBBBB, "Add contact")); y = y + 3
 mainContainer.addContactButton.onTouch = function()
 	local container = MineOSInterface.addUniversalContainer(mainContainer, "Add contact")
-	local inputField1 = container.layout:addChild(GUI.inputField(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0x666666, 0xEEEEEE, 0x262626, nil, "Name"))
-	local inputField2 = container.layout:addChild(GUI.inputField(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0x666666, 0xEEEEEE, 0x262626, contacts.last, "Address"))
+	local input1 = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0x666666, 0xEEEEEE, 0x262626, nil, "Name"))
+	local input2 = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0x666666, 0xEEEEEE, 0x262626, contacts.last, "Address"))
 
 	container.panel.eventHandler = function(mainContainer, object, eventData)
 		if eventData[1] == "touch" then
-			if inputField1.text and inputField2.text then
+			if input1.text and input2.text then
 				local exists = false
 				for i = 1, #contacts do
-					if contacts[i].address == inputField2.text then
+					if contacts[i].address == input2.text then
 						exists = true
 						break
 					end
 				end
 				if not exists then
-					table.insert(contacts, {name = inputField1.text, address = inputField2.text})
+					table.insert(contacts, {name = input1.text, address = input2.text})
 					updateContacts()
 					saveContacts()	
 				end

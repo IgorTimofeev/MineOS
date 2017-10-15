@@ -209,7 +209,7 @@ local function createWindow()
 
 	y = y + 2
 	mainContainer.shadeContainer:addChild(GUI.label(3, y, mainContainer.shadeContainer.width, 1, 0xCCCCCC, "Material:"))
-	local mainMaterialTextBox = mainContainer.shadeContainer:addChild(GUI.inputField(mainContainer.shadeContainer.width - textBoxesWidth - 1, y, textBoxesWidth, 1, 0xEEEEEE, 0x555555, 0x555555, 0xEEEEEE, 0x262626, config.mainMaterial, nil, false))
+	local mainMaterialTextBox = mainContainer.shadeContainer:addChild(GUI.input(mainContainer.shadeContainer.width - textBoxesWidth - 1, y, textBoxesWidth, 1, 0xEEEEEE, 0x555555, 0x555555, 0xEEEEEE, 0x262626, config.mainMaterial, nil, false))
 	mainMaterialTextBox.onInputFinished = function()
 		config.mainMaterial = mainMaterialTextBox.text
 		save()
@@ -217,7 +217,7 @@ local function createWindow()
 
 	y = y + 2
 	mainContainer.shadeContainer:addChild(GUI.label(3, y, mainContainer.shadeContainer.width, 1, 0xCCCCCC, "Print name:"))
-	local printNameTextBox = mainContainer.shadeContainer:addChild(GUI.inputField(mainContainer.shadeContainer.width - textBoxesWidth - 1, y, textBoxesWidth, 1, 0xEEEEEE, 0x555555, 0x555555, 0xEEEEEE, 0x262626, config.printName, nil, false))
+	local printNameTextBox = mainContainer.shadeContainer:addChild(GUI.input(mainContainer.shadeContainer.width - textBoxesWidth - 1, y, textBoxesWidth, 1, 0xEEEEEE, 0x555555, 0x555555, 0xEEEEEE, 0x262626, config.printName, nil, false))
 	printNameTextBox.onInputFinished = function()
 		config.printName = printNameTextBox.text
 		save()
@@ -251,7 +251,7 @@ local function createWindow()
 	end
 	y = y + 2
 	mainContainer.shadeContainer:addChild(GUI.label(3, y, mainContainer.shadeContainer.width, 1, 0xCCCCCC, "Material:"))
-	local frameMaterialTextBox = mainContainer.shadeContainer:addChild(GUI.inputField(mainContainer.shadeContainer.width - textBoxesWidth - 1, y, textBoxesWidth, 1, 0xEEEEEE, 0x555555, 0x555555, 0xEEEEEE, 0x262626, config.frame.material, nil, false))
+	local frameMaterialTextBox = mainContainer.shadeContainer:addChild(GUI.input(mainContainer.shadeContainer.width - textBoxesWidth - 1, y, textBoxesWidth, 1, 0xEEEEEE, 0x555555, 0x555555, 0xEEEEEE, 0x262626, config.frame.material, nil, false))
 	frameMaterialTextBox.onInputFinished = function()
 		config.frame.material = frameMaterialTextBox.text
 		save()

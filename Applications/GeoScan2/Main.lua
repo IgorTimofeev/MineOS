@@ -132,9 +132,9 @@ objectY = objectY + 4
 mainContainer:addChild(GUI.label(buttonX, objectY, buttonWidth, 1, 0xFFFFFF, "Rendering properties")):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
 objectY = objectY + 2
 
-mainContainer.minimumHardnessTextBox = mainContainer:addChild(GUI.inputField(buttonX, objectY, 12, 3, 0x262626, 0xBBBBBB, 0xBBBBBB, 0x262626, 0xFFFFFF, tostring(2.7), nil, true))
+mainContainer.minimumHardnessTextBox = mainContainer:addChild(GUI.input(buttonX, objectY, 12, 3, 0x262626, 0xBBBBBB, 0xBBBBBB, 0x262626, 0xFFFFFF, tostring(2.7), nil, true))
 mainContainer.minimumHardnessTextBox.validator = function(text) if tonumber(text) then return true end end
-mainContainer.maximumHardnessTextBox = mainContainer:addChild(GUI.inputField(buttonX + 14, objectY, 12, 3, 0x262626, 0xBBBBBB, 0xBBBBBB, 0x262626, 0xFFFFFF, tostring(10), nil, true))
+mainContainer.maximumHardnessTextBox = mainContainer:addChild(GUI.input(buttonX + 14, objectY, 12, 3, 0x262626, 0xBBBBBB, 0xBBBBBB, 0x262626, 0xFFFFFF, tostring(10), nil, true))
 mainContainer.maximumHardnessTextBox.validator = function(text) if tonumber(text) then return true end end
 objectY = objectY + 3
 mainContainer:addChild(GUI.label(buttonX, objectY, buttonWidth, 1, 0xBBBBBB, "Hardness min  Hardness max")):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)

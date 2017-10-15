@@ -98,16 +98,7 @@ function GUI.callMethod(method, ...)
 	if method then method(...) end
 end
 
-function GUI.rectangle(x, y, width, height)
-	return {
-		x = x,
-		y = y,
-		width = width,
-		height = height
-	}
-end
-
-local function isObjectClicked(object, x, y)
+local function objectIsClicked(object, x, y)
 	return
 		x >= object.x and
 		y >= object.y and
@@ -122,11 +113,14 @@ local function objectDraw(object)
 end
 
 function GUI.object(x, y, width, height)
-	local rectangle = GUI.rectangle(x, y, width, height)
-	rectangle.isClicked = isObjectClicked
-	rectangle.draw = objectDraw
-
-	return rectangle
+	return {
+		x = x,
+		y = y,
+		width = width,
+		height = height,
+		isClicked = objectIsClicked,
+		draw = objectDraw
+	}
 end
 
 ----------------------------------------- Object alignment -----------------------------------------
@@ -191,6 +185,7 @@ end
 
 local function containerObjectIndexOf(object)
 	checkObjectParentExists(object)
+
 	for objectIndex = 1, #object.parent.children do
 		if object.parent.children[objectIndex] == object then
 			return objectIndex
@@ -203,6 +198,7 @@ local function containerObjectMoveForward(object)
 	if objectIndex < #object.parent.children then
 		object.parent.children[index], object.parent.children[index + 1] = swap(object.parent.children[index], object.parent.children[index + 1])
 	end
+	
 	return object
 end
 
@@ -211,6 +207,7 @@ local function containerObjectMoveBackward(object)
 	if objectIndex > 1 then
 		object.parent.children[objectIndex], object.parent.children[objectIndex - 1] = swap(object.parent.children[objectIndex], object.parent.children[objectIndex - 1])
 	end
+	
 	return object
 end
 
@@ -218,6 +215,7 @@ local function containerObjectMoveToFront(object)
 	local objectIndex = object:indexOf()
 	table.insert(object.parent.children, object)
 	table.remove(object.parent.children, objectIndex)
+	
 	return object
 end
 
@@ -225,6 +223,7 @@ local function containerObjectMoveToBack(object)
 	local objectIndex = object:indexOf()
 	table.insert(object.parent.children, 1, object)
 	table.remove(object.parent.children, objectIndex + 1)
+	
 	return object
 end
 
@@ -234,6 +233,7 @@ local function containerObjectGetFirstParent(object)
 		while currentParent.parent do
 			currentParent = currentParent.parent
 		end
+
 		return currentParent
 	else
 		error("Object doesn't have any parents")
@@ -263,7 +263,7 @@ local function containerObjectAnimationDelete(animation)
 	animation.deleteLater = true
 end
 
-function containerObjectAddAnimation(object, frameHandler, onFinish)
+local function containerObjectAddAnimation(object, frameHandler, onFinish)
 	local firstParent = object:getFirstParent()
 	firstParent.animations = firstParent.animations or {}
 	table.insert(firstParent.animations, {
@@ -1323,208 +1323,6 @@ function GUI.tabbedWindow(x, y, width, height, ...)
 	return window
 end
 
------------------------------------------ Universal keyboard-input function -----------------------------------------
-
-local function inputDraw(input)
-	if input.oldPixels then
-		buffer.paste(input.x, input.y, input.oldPixels)
-	else
-		input.oldPixels = buffer.copy(input.x, input.y, input.width, 1)
-	end
-	
-	buffer.text(
-		input.x,
-		input.y,
-		input.textColor,
-		unicode.sub(
-			input.textMask and string.rep(input.textMask, unicode.len(input.text)) or input.text,
-			input.textCutFrom,
-			input.textCutFrom + input.width - 1
-		)
-	)
-
-	if input.cursorBlinkState then
-		buffer.text(input.x + input.cursorPosition - input.textCutFrom, input.y, input.cursorColor, input.cursorSymbol)
-	end
-
-	return input
-end
-
-local function inputSetCursorPosition(input, newPosition)
-	if newPosition < 1 then
-		newPosition = 1
-	elseif newPosition > unicode.len(input.text) + 1 then
-		newPosition = unicode.len(input.text) + 1
-	end
-
-	if newPosition > input.textCutFrom + input.width - 1 then
-		input.textCutFrom = input.textCutFrom + newPosition - (input.textCutFrom + input.width - 1)
-	elseif newPosition < input.textCutFrom then
-		input.textCutFrom = newPosition
-	end
-
-	input.cursorPosition = newPosition
-
-	return input
-end
-
-local function inputBeginInput(input)
-	input.cursorBlinkState = true; input:draw(); buffer.draw()
-
-	while true do
-		local e = { event.pull(input.cursorBlinkDelay) }
-		if e[1] == "touch" or e[1] == "drag" then
-			if input:isClicked(e[3], e[4]) then
-				input:setCursorPosition(input.textCutFrom + e[3] - input.x)
-				input.cursorBlinkState = true; input:draw(); buffer.draw()
-			else
-				input.cursorBlinkState = false; input:draw(); buffer.draw()
-				return input
-			end
-		elseif e[1] == "key_down" then
-			-- Return
-			if e[4] == 28 then
-				input.cursorBlinkState = false; input:draw(); buffer.draw()
-				return input
-			-- Arrows left/right
-			elseif e[4] == 203 then
-				input:setCursorPosition(input.cursorPosition - 1)
-			elseif e[4] == 205 then	
-				input:setCursorPosition(input.cursorPosition + 1)
-			-- Backspace
-			elseif e[4] == 14 then
-				input.text = unicode.sub(unicode.sub(input.text, 1, input.cursorPosition - 1), 1, -2) .. unicode.sub(input.text, input.cursorPosition, -1)
-				input:setCursorPosition(input.cursorPosition - 1)
-			-- Delete
-			elseif e[4] == 211 then
-				input.text = unicode.sub(input.text, 1, input.cursorPosition - 1) .. unicode.sub(input.text, input.cursorPosition + 1, -1)
-			else
-				if not keyboard.isControl(e[3]) then
-					input.text = unicode.sub(input.text, 1, input.cursorPosition - 1) .. unicode.char(e[3]) .. unicode.sub(input.text, input.cursorPosition, -1)
-					input:setCursorPosition(input.cursorPosition + 1)
-				end
-			end
-
-			input.cursorBlinkState = true; input:draw(); buffer.draw()
-		elseif e[1] == "clipboard" then
-			input.text = unicode.sub(input.text, 1, input.cursorPosition - 1) .. e[3] .. unicode.sub(input.text, input.cursorPosition, -1)
-			input:setCursorPosition(input.cursorPosition + unicode.len(e[3]))
-			input.cursorBlinkState = true; input:draw(); buffer.draw()
-		elseif not e[1] then
-			input.cursorBlinkState = not input.cursorBlinkState; input:draw(); buffer.draw()
-		end
-	end
-end
-
-function GUI.input(x, y, width, textColor, text, textMask)
-	local input = GUI.object(x, y, width, 1)
-
-	input.textCutFrom = 1
-	input.cursorPosition = 1
-	input.cursorColor = 0x00A8FF
-	input.cursorSymbol = "┃"
-	input.cursorBlinkDelay = 0.4
-	input.cursorBlinkState = false
-
-	input.textColor = textColor
-	input.text = text
-	input.textMask = textMask
-
-	input.setCursorPosition = inputSetCursorPosition
-	input.draw = inputDraw
-	input.startInput = inputBeginInput
-
-	input:setCursorPosition(unicode.len(input.text) + 1)
-
-	return input
-end
-
------------------------------------------ Input Text Box object -----------------------------------------
-
-local function drawInputTextBox(inputField)
-	local background = inputField.isFocused and inputField.colors.focused.background or inputField.colors.default.background
-	local y = math.floor(inputField.y + inputField.height / 2)
-	
-	local text, foreground, textMask = inputField.text or "", inputField.colors.default.text, inputField.textMask
-	if inputField.isFocused then
-		if inputField.eraseTextOnFocus then
-			text = ""
-		else
-			text = inputField.text or ""
-		end
-
-		foreground = inputField.colors.focused.text
-	else
-		if inputField.text == "" or not inputField.text then
-			text, foreground, textMask = inputField.placeholderText or "", inputField.colors.placeholderText, nil
-		end
-	end
-
-	if background then
-		buffer.square(inputField.x, inputField.y, inputField.width, inputField.height, background, foreground, " ")
-	end
-
-	local input = GUI.input(inputField.x + 1, y, inputField.width - 2, foreground, text, textMask)	
-	input.onKeyDown = inputField.onKeyDown
-
-	if inputField.isFocused then
-		input:startInput()
-		if inputField.validator then
-			if inputField.validator(input.text) then
-				inputField.text = input.text
-			end
-		else
-			inputField.text = input.text
-		end
-	else
-		input:draw()
-	end
-
-	return inputField
-end
-
-local function inputFieldStartInput(inputField)
-	inputField.isFocused = true
-	inputField:draw()
-	inputField.isFocused = false
-	GUI.callMethod(inputField.onInputFinished, inputField.text)
-
-	return inputField
-end
-
-local function inputFieldEventHandler(mainContainer, object, eventData)
-	if eventData[1] == "touch" then
-		object:startInput()
-		mainContainer:draw()
-		buffer.draw()
-	end
-end
-
-function GUI.inputField(x, y, width, height, backgroundColor, textColor, placeholderTextColor, backgroundFocusedColor, textFocusedColor, text, placeholderText, eraseTextOnFocus, textMask)
-	local inputField = GUI.object(x, y, width, height)
-	inputField.colors = {
-		default = {
-			background = backgroundColor,
-			text = textColor
-		},
-		focused = {
-			background = backgroundFocusedColor,
-			text = textFocusedColor
-		},
-		placeholderText = placeholderTextColor
-	}
-
-	inputField.eventHandler = inputFieldEventHandler
-	inputField.text = text
-	inputField.placeholderText = placeholderText
-	inputField.draw = drawInputTextBox
-	inputField.startInput = inputFieldStartInput
-	inputField.eraseTextOnFocus = eraseTextOnFocus
-	inputField.textMask = textMask
-
-	return inputField
-end
-
 ----------------------------------------- Dropdown Menu -----------------------------------------
 
 local function dropDownMenuItemDraw(item)
@@ -1925,6 +1723,7 @@ end
 ----------------------------------------- Text Box object -----------------------------------------
 
 local function textBoxCalculate(object)
+	local doubleVerticalOffset = object.offset.vertical * 2
 	object.textWidth = object.width - object.offset.horizontal * 2
 
 	object.linesCopy = {}
@@ -1937,10 +1736,10 @@ local function textBoxCalculate(object)
 	end
 
 	if object.autoHeight then
-		object.height = #object.linesCopy
+		object.height = #object.linesCopy + doubleVerticalOffset
 	end
 
-	object.textHeight = object.height - object.offset.vertical * 2
+	object.textHeight = object.height - doubleVerticalOffset
 end
 
 local function textBoxDraw(object)
@@ -2258,8 +2057,6 @@ local function layoutUpdate(layout)
 	-- Подготавливаем объекты к расположению и подсчитываем тотальные размеры
 	for i = 1, #layout.children do
 		if not layout.children[i].hidden then
-			layout.children[i].layoutGridPosition = layout.children[i].layoutGridPosition or {column = 1, row = 1}
-
 			-- Проверка на позицию в сетке
 			if layout.children[i].layoutGridPosition.row >= 1 and layout.children[i].layoutGridPosition.row <= #layout.grid.rowSizes and layout.children[i].layoutGridPosition.column >= 1 and layout.children[i].layoutGridPosition.column <= #layout.grid.columnSizes then
 				-- Авто-фиттинг объектов
@@ -2270,7 +2067,7 @@ local function layoutUpdate(layout)
 					layout.children[i].height = math.round(layout.grid.rowSizes[layout.children[i].layoutGridPosition.row].calculatedSize - layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].fitting.verticalRemove)
 				end
 
-				-- Алигнмент и расчет размеров
+				-- Направление и расчет размеров
 				if layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].direction == GUI.directions.horizontal then
 					layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].totalWidth = layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].totalWidth + layout.children[i].width + layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].spacing
 					layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].totalHeight = math.max(layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].totalHeight, layout.children[i].height)
@@ -2315,12 +2112,14 @@ local function layoutUpdate(layout)
 	for i = 1, #layout.children do
 		if not layout.children[i].hidden then
 			if layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].direction == GUI.directions.horizontal then
-				layout.children[i].localPosition.x = math.floor(layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].x)
-				layout.children[i].localPosition.y = math.floor(layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].y + layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].totalHeight / 2 - layout.children[i].height / 2)
+				layout.children[i].localPosition.x = math.round(layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].x)
+				layout.children[i].localPosition.y = math.round(layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].y + layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].totalHeight / 2 - layout.children[i].height / 2)
+				
 				layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].x = layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].x + layout.children[i].width + layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].spacing
 			else
-				layout.children[i].localPosition.x = math.floor(layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].x + layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].totalWidth / 2 - layout.children[i].width / 2)
-				layout.children[i].localPosition.y = math.floor(layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].y)
+				layout.children[i].localPosition.x = math.round(layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].x + layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].totalWidth / 2 - layout.children[i].width / 2)
+				layout.children[i].localPosition.y = math.round(layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].y)
+				
 				layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].y = layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].y + layout.children[i].height + layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].spacing
 			end
 		end
@@ -2556,8 +2355,20 @@ local function layoutSetCellFitting(layout, column, row, horizontal, vertical, h
 	return layout
 end
 
+local function layoutAddChild(layout, object, ...)
+	GUI.addChildToContainer(layout, object, ...).layoutGridPosition = {
+		column = layout.defaultColumn,
+		row = layout.defaultRow
+	}
+
+	return object
+end
+
 function GUI.layout(x, y, width, height, columnCount, rowCount)
 	local layout = GUI.container(x, y, width, height)
+
+	layout.defaultRow = 1
+	layout.defaultColumn = 1
 
 	layout.addRow = layoutAddRow
 	layout.addColumn = layoutAddColumn
@@ -2567,16 +2378,17 @@ function GUI.layout(x, y, width, height, columnCount, rowCount)
 	layout.setRowHeight = layoutSetRowHeight
 	layout.setColumnWidth = layoutSetColumnWidth
 
-	layout.update = layoutUpdate
 	layout.setCellPosition = layoutSetCellPosition
 	layout.setCellDirection = layoutSetCellDirection
 	layout.setGridSize = layoutSetGridSize
 	layout.setCellSpacing = layoutSetCellSpacing
 	layout.setCellAlignment = layoutSetCellAlignment
 	layout.setCellMargin = layoutSetCellMargin
+	
 	layout.fitToChildrenSize = layoutFitToChildrenSize
 	layout.setCellFitting = layoutSetCellFitting
 
+	layout.addChild = layoutAddChild
 	layout.draw = layoutDraw
 
 	layoutSetGridSize(layout, columnCount, rowCount)
@@ -2588,15 +2400,15 @@ end
 
 local function filesystemDialogDraw(filesystemDialog)
 	if filesystemDialog.extensionComboBox.hidden then
-		filesystemDialog.inputField.width = filesystemDialog.cancelButton.localPosition.x - 4
+		filesystemDialog.input.width = filesystemDialog.cancelButton.localPosition.x - 4
 	else
-		filesystemDialog.inputField.width = filesystemDialog.extensionComboBox.localPosition.x - 3
+		filesystemDialog.input.width = filesystemDialog.extensionComboBox.localPosition.x - 3
 	end
 
 	if filesystemDialog.IOMode == GUI.filesystemModes.save then
-		filesystemDialog.submitButton.disabled = not filesystemDialog.inputField.text
+		filesystemDialog.submitButton.disabled = not filesystemDialog.input.text
 	else
-		filesystemDialog.inputField.text = filesystemDialog.filesystemTree.selectedItem
+		filesystemDialog.input.text = filesystemDialog.filesystemTree.selectedItem
 		filesystemDialog.submitButton.disabled = not filesystemDialog.filesystemTree.selectedItem
 	end
 	
@@ -2613,7 +2425,7 @@ local function filesystemDialogSetMode(filesystemDialog, IOMode, filesystemMode)
 	if filesystemDialog.IOMode == GUI.filesystemModes.save then
 		filesystemDialog.filesystemTree.showMode = GUI.filesystemModes.directory
 		filesystemDialog.filesystemTree.selectionMode = GUI.filesystemModes.directory
-		filesystemDialog.inputField.eventHandler = inputFieldEventHandler
+		filesystemDialog.input.eventHandler = inputEventHandler
 		filesystemDialog.extensionComboBox.hidden = not (filesystemDialog.filesystemMode == GUI.filesystemModes.file)
 	else
 		if filesystemDialog.filesystemMode == GUI.filesystemModes.file then
@@ -2624,7 +2436,7 @@ local function filesystemDialogSetMode(filesystemDialog, IOMode, filesystemMode)
 			filesystemDialog.filesystemTree.selectionMode = GUI.filesystemModes.directory
 		end
 
-		filesystemDialog.inputField.eventHandler = nil
+		filesystemDialog.input.eventHandler = nil
 		filesystemDialog.extensionComboBox.hidden = true
 	end
 
@@ -2652,7 +2464,7 @@ function GUI.filesystemDialog(x, y, width, height, submitButtonText, cancelButto
 	filesystemDialog.extensionComboBox = filesystemDialog:addChild(GUI.comboBox(1, height - 1, 1, 1, 0xE1E1E1, 0x555555, 0xC3C3C3, 0x888888))
 	filesystemDialog.extensionComboBox.hidden = true
 
-	filesystemDialog.inputField = filesystemDialog:addChild(GUI.inputField(2, height - 1, 1, 1, 0xE1E1E1, 0x555555, 0x888888, 0xE1E1E1, 0x777777, nil, placeholderText))
+	filesystemDialog.input = filesystemDialog:addChild(GUI.input(2, height - 1, 1, 1, 0xE1E1E1, 0x555555, 0x888888, 0xE1E1E1, 0x777777, "", placeholderText))
 
 	filesystemDialog.filesystemTree = filesystemDialog:addChild(GUI.filesystemTree(1, 1, width, height - 3, 0xE1E1E1, 0x3C3C3C, 0x3C3C3C, 0xAAAAAA, 0x3C3C3C, 0xE1E1E1, 0xBBBBBB, 0xAAAAAA, 0xC3C3C3, 0x444444))
 	filesystemDialog.filesystemTree.workPath = path
@@ -2706,7 +2518,7 @@ function GUI.addFilesystemDialogToContainer(parentContainer, ...)
 		
 		local path = filesystemDialog.filesystemTree.selectedItem or filesystemDialog.filesystemTree.workPath or "/"
 		if filesystemDialog.IOMode == GUI.filesystemModes.save then
-			path = path .. filesystemDialog.inputField.text
+			path = path .. filesystemDialog.input.text
 			
 			if filesystemDialog.filesystemMode == GUI.filesystemModes.file then
 				path = path .. filesystemDialog.extensionComboBox:getItem(filesystemDialog.extensionComboBox.selectedItem).text
@@ -2826,7 +2638,7 @@ local function resizerDraw(object)
 	end
 end
 
-function resizerEventHandler(mainContainer, object, eventData)
+local function resizerEventHandler(mainContainer, object, eventData)
 	if eventData[1] == "touch" then
 		object.touchPosition = {x = eventData[3], y = eventData[4]}
 		
@@ -3198,22 +3010,242 @@ function GUI.filesystemTree(...)
 	return tree
 end
 
+----------------------------------------- Input object -----------------------------------------
+
+local function inputSetCursorPosition(input, newPosition)
+	if newPosition < 1 then
+		newPosition = 1
+	elseif newPosition > unicode.len(input.text) + 1 then
+		newPosition = unicode.len(input.text) + 1
+	end
+
+	if newPosition > input.textCutFrom + input.width - 1 - input.textOffset * 2 then
+		input.textCutFrom = input.textCutFrom + newPosition - (input.textCutFrom + input.width - 1 - input.textOffset * 2)
+	elseif newPosition < input.textCutFrom then
+		input.textCutFrom = newPosition
+	end
+
+	input.cursorPosition = newPosition
+
+	return input
+end
+
+local function inputTextDrawMethod(x, y, color, text)
+	buffer.text(x, y, color, text)
+end
+
+local function inputDraw(input)
+	local background, foreground, transparency, text = input.colors.default.background, input.colors.default.text, input.colors.default.transparency, input.text
+
+	if input.focused then
+		background, foreground, transparency = input.colors.focused.background, input.colors.focused.text, input.colors.focused.transparency
+	elseif input.text == "" then
+		text, foreground = input.placeholderText or "", input.colors.placeholderText
+	end
+
+	if background then
+		buffer.square(input.x, input.y, input.width, input.height, background, foreground, " ", transparency)
+	end
+
+	local y = input.y + math.floor(input.height / 2)
+
+	input.textDrawMethod(
+		input.x + input.textOffset,
+		y,
+		foreground,
+		unicode.sub(
+			input.textMask and string.rep(input.textMask, unicode.len(text)) or text,
+			input.textCutFrom,
+			input.textCutFrom + input.width - 1 - input.textOffset * 2
+		)
+	)
+
+	if input.cursorBlinkState then
+		local index = buffer.getIndexByCoordinates(input.x + input.cursorPosition - input.textCutFrom + input.textOffset, y)
+		local background = buffer.rawGet(index)
+		buffer.rawSet(index, background, input.colors.cursor, input.cursorSymbol)
+	end
+end
+
+local function inputEventHandler(mainContainer, input, mainEventData)
+	if mainEventData[1] == "touch" then
+		input.focused = true
+		input.historyIndex = input.historyIndex + 1
+		if input.eraseTextOnFocus then
+			input.text = ""
+		end
+		input.cursorBlinkState = true
+		input:setCursorPosition(unicode.len(input.text) + 1)
+
+		mainContainer:draw()
+		buffer.draw()
+
+		while true do
+			local eventData = { event.pull(input.cursorBlinkDelay) }
+			
+			if eventData[1] == "touch" or eventData[1] == "drag" then
+				if input:isClicked(eventData[3], eventData[4]) then
+					input:setCursorPosition(input.textCutFrom + eventData[3] - input.x - input.textOffset)
+					
+					input.cursorBlinkState = true
+					mainContainer:draw()
+					buffer.draw()
+				else
+					input.cursorBlinkState = false
+					break
+				end
+			elseif eventData[1] == "key_down" then
+				-- Return
+				if eventData[4] == 28 then
+					if input.historyEnabled then
+						-- Очистка истории
+						for i = 1, (#input.history - input.historyLimit) do
+							table.remove(input.history, 1)
+						end
+
+						-- Добавление введенных данных в историю
+						if input.history[#input.history] ~= input.text and unicode.len(input.text) > 0 then
+							table.insert(input.history, input.text)
+						end
+						input.historyIndex = #input.history
+					end
+
+					input.cursorBlinkState = false
+					break
+				-- Arrows up/down/left/right
+				elseif eventData[4] == 200 and input.historyEnabled then
+					if #input.history > 0 then
+						-- Добавление уже введенного текста в историю при стрелке вверх
+						if input.historyIndex == #input.history + 1 and unicode.len(input.text) > 0 then
+							table.insert(input.history, input.text)
+						end
+
+						input.historyIndex = input.historyIndex - 1
+						if input.historyIndex > #input.history then
+							input.historyIndex = #input.history
+						elseif input.historyIndex < 1 then
+							input.historyIndex = 1
+						end
+
+						input.text = input.history[input.historyIndex]
+						input:setCursorPosition(unicode.len(input.text) + 1)
+					end
+				elseif eventData[4] == 208 and input.historyEnabled then
+					if #input.history > 0 then
+						input.historyIndex = input.historyIndex + 1
+						if input.historyIndex > #input.history then
+							input.historyIndex = #input.history
+						elseif input.historyIndex < 1 then
+							input.historyIndex = 1
+						end
+						
+						input.text = input.history[input.historyIndex]
+						input:setCursorPosition(unicode.len(input.text) + 1)
+					end
+				elseif eventData[4] == 203 then
+					input:setCursorPosition(input.cursorPosition - 1)
+				elseif eventData[4] == 205 then	
+					input:setCursorPosition(input.cursorPosition + 1)
+				-- Backspace
+				elseif eventData[4] == 14 then
+					input.text = unicode.sub(unicode.sub(input.text, 1, input.cursorPosition - 1), 1, -2) .. unicode.sub(input.text, input.cursorPosition, -1)
+					input:setCursorPosition(input.cursorPosition - 1)
+				-- Delete
+				elseif eventData[4] == 211 then
+					input.text = unicode.sub(input.text, 1, input.cursorPosition - 1) .. unicode.sub(input.text, input.cursorPosition + 1, -1)
+				else
+					local char = unicode.char(eventData[3])
+					if not keyboard.isControl(eventData[3]) then
+						input.text = unicode.sub(input.text, 1, input.cursorPosition - 1) .. char .. unicode.sub(input.text, input.cursorPosition, -1)
+						input:setCursorPosition(input.cursorPosition + 1)
+					end
+				end
+
+				input.cursorBlinkState = true
+				mainContainer:draw()
+				buffer.draw()
+			elseif eventData[1] == "clipboard" then
+				input.text = unicode.sub(input.text, 1, input.cursorPosition - 1) .. eventData[3] .. unicode.sub(input.text, input.cursorPosition, -1)
+				input:setCursorPosition(input.cursorPosition + unicode.len(eventData[3]))
+				
+				input.cursorBlinkState = true
+				mainContainer:draw()
+				buffer.draw()
+			elseif not eventData[1] then
+				input.cursorBlinkState = not input.cursorBlinkState
+				mainContainer:draw()
+				buffer.draw()
+			end
+		end
+
+		input.focused = false
+		
+		GUI.callMethod(input.onInputFinished, mainContainer, input, mainEventData, input.text)
+		
+		mainContainer:draw()
+		buffer.draw()
+	end
+end
+
+function GUI.input(x, y, width, height, backgroundColor, textColor, placeholderTextColor, backgroundFocusedColor, textFocusedColor, text, placeholderText, eraseTextOnFocus, textMask)
+	local input = GUI.object(x, y, width, height)
+	
+	input.colors = {
+		default = {
+			background = backgroundColor,
+			text = textColor
+		},
+		focused = {
+			background = backgroundFocusedColor,
+			text = textFocusedColor
+		},
+		placeholderText = placeholderTextColor,
+		cursor = 0x00A8FF
+	}
+
+	input.text = text or ""
+	input.placeholderText = placeholderText
+	input.eraseTextOnFocus = eraseTextOnFocus
+	input.textMask = textMask
+
+	input.textOffset = 1
+	input.textCutFrom = 1
+	input.cursorPosition = 1
+	input.cursorSymbol = "┃"
+	input.cursorBlinkDelay = 0.4
+	input.cursorBlinkState = false
+	input.textMask = textMask
+	input.setCursorPosition = inputSetCursorPosition
+
+	input.history = {}
+	input.historyLimit = 20
+	input.historyIndex = 0
+	input.historyEnabled = true
+
+	input.textDrawMethod = inputTextDrawMethod
+	input.draw = inputDraw
+	input.eventHandler = inputEventHandler
+
+	return input
+end
+
 --------------------------------------------------------------------------------------------------------------------------------
 
 -- buffer.flush()
 -- buffer.draw(true)
 
-------------------------------------------------------------------------------------------
+-- ------------------------------------------------------------------------------------------
 
 -- local mainContainer = GUI.fullScreenContainer()
--- mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x0))
+-- mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x2D2D2D))
 
--- local tree = mainContainer:addChild(GUI.filesystemTree(1, 1, 30, 30, 0xE1E1E1, 0x3C3C3C, 0x3C3C3C, 0xAAAAAA, 0x3C3C3C, 0xE1E1E1, 0xBBBBBB, 0xAAAAAA, 0xC3C3C3, 0x444444, GUI.filesystemModes.both, GUI.filesystemModes.file))
+-- local input = mainContainer:addChild(GUI.input(2, 2, 100, 3, 0x3C3C3C, 0xAAAAAA, 0x555555, 0x444444, 0xE1E1E1, "", "Enter command here", true))
 
--- tree:addExtensionFilter(".pic")
--- tree:updateFileList()
+-- input.onInputFinished = function()
+-- 	input.text = ""
+-- end
 
-------------------------------------------------------------------------------------------
+-- ------------------------------------------------------------------------------------------
 
 -- mainContainer:draw()
 -- buffer.draw(true)

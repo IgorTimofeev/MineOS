@@ -148,7 +148,7 @@ local function updateSidebar()
 	window.sidebarContainer.itemsContainer:addChild(newSidebarItem("Mounts", 0x3C3C3C))
 	for proxy, path in fs.mounts() do
 		if path ~= "/" and not proxy.network then
-			window.sidebarContainer.itemsContainer:addChild(newSidebarItem(" " .. proxy.getLabel() or fs.name(path), 0x555555, path .. "/")).onTouch = sidebarItemOnTouch
+			window.sidebarContainer.itemsContainer:addChild(newSidebarItem(" " .. (proxy.getLabel() or fs.name(path)), 0x555555, path .. "/")).onTouch = sidebarItemOnTouch
 		end
 	end
 end
@@ -189,7 +189,7 @@ window.iconField.launchers.directory = function(icon)
 	buffer.draw()
 end
 
-window.searchInputField = window:addChild(GUI.inputField(1, 2, 36, 1, 0xEEEEEE, 0x666666, 0xAAAAAA, 0xEEEEEE, 0x262626, nil, "Search", true))
+window.searchInputField = window:addChild(GUI.input(1, 2, 36, 1, 0xEEEEEE, 0x666666, 0xAAAAAA, 0xEEEEEE, 0x262626, nil, "Search", true))
 window.searchInputField.onInputFinished = function()
 	window.iconField.filenameMatcher = window.searchInputField.text
 	window.iconField:updateFileList()

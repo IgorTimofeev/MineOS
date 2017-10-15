@@ -39,7 +39,7 @@ module.onTouch = function()
 	itemsLayout:setCellFitting(1, 2, true, true)
 
 	local infoLabel = itemsLayout:setCellPosition(1, 1, itemsLayout:addChild(GUI.label(1, 1, 1, 1, 0x3C3C3C, "nil")):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top))
-	local argumentsInputField = itemsLayout:setCellPosition(1, 1, itemsLayout:addChild(GUI.inputField(1, 1, 1, 3, 0xFFFFFF, 0x666666, 0x888888, 0xFFFFFF, 0x262626, nil, localization.arguments)))
+	local argumentsInputField = itemsLayout:setCellPosition(1, 1, itemsLayout:addChild(GUI.input(1, 1, 1, 3, 0xFFFFFF, 0x666666, 0x888888, 0xFFFFFF, 0x262626, nil, localization.arguments)))
 	local executeButton = itemsLayout:setCellPosition(1, 1, itemsLayout:addChild(GUI.button(1, 1, 1, 3, 0x3C3C3C, 0xFFFFFF, 0x0, 0xFFFFFF, localization.execute)))
 	local outputTextBox = itemsLayout:setCellPosition(1, 2, itemsLayout:addChild(GUI.textBox(1, 1, 1, 1, 0xFFFFFF, 0x888888, {"nil"}, 1, 1, 0)))
 
@@ -72,7 +72,7 @@ module.onTouch = function()
 		end
 
 		for i = 1, #list do
-			tree:addItem(tostring(list[i]) .. ": " .. type(t[list[i]]), {key = list[i], value = t[list[i]]}, offset, false)
+			tree:addItem(tostring(list[i]), {key = list[i], value = t[list[i]]}, offset, false)
 		end
 	end
 

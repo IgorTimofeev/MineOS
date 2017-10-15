@@ -625,8 +625,8 @@ local function changeResolutionWindow()
 	local textBoxWidth, x, y = math.floor(textBoxesWidth / 2), math.floor(mainContainer.width / 2 - textBoxesWidth / 2), math.floor(mainContainer.height / 2) - 3
 	
 	mainContainer.settingsContainer:addChild(GUI.label(1, y, mainContainer.width, 1, 0xFFFFFF, localization.changeResolution)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); y = y + 3
-	local inputFieldWidth = mainContainer.settingsContainer:addChild(GUI.inputField(x, y, textBoxWidth, 3, 0xCCCCCC, 0x777777, 0x777777, 0xCCCCCC, 0x2D2D2D, tostring(config.screenResolution.width))); x = x + textBoxWidth + 2
-	local inputFieldHeight = mainContainer.settingsContainer:addChild(GUI.inputField(x, y, textBoxWidth, 3, 0xCCCCCC, 0x777777, 0x777777, 0xCCCCCC, 0x2D2D2D, tostring(config.screenResolution.height)))
+	local inputFieldWidth = mainContainer.settingsContainer:addChild(GUI.input(x, y, textBoxWidth, 3, 0xCCCCCC, 0x777777, 0x777777, 0xCCCCCC, 0x2D2D2D, tostring(config.screenResolution.width))); x = x + textBoxWidth + 2
+	local inputFieldHeight = mainContainer.settingsContainer:addChild(GUI.input(x, y, textBoxWidth, 3, 0xCCCCCC, 0x777777, 0x777777, 0xCCCCCC, 0x2D2D2D, tostring(config.screenResolution.height)))
 	
 	local maxResolutionWidth, maxResolutionHeight = component.gpu.maxResolution()
 	inputFieldWidth.validator = function(text)
@@ -654,7 +654,7 @@ local function createInputTextBoxForSettingsWindow(title, placeholder, onInputFi
 	local x, y = math.floor(mainContainer.width / 2 - textBoxWidth / 2), math.floor(mainContainer.height / 2) - 3
 	
 	mainContainer.settingsContainer:addChild(GUI.label(1, y, mainContainer.width, 1, 0xFFFFFF, title)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); y = y + 3
-	mainContainer.settingsContainer.inputField = mainContainer.settingsContainer:addChild(GUI.inputField(x, y, textBoxWidth, 3, 0xCCCCCC, 0x777777, 0x777777, 0xCCCCCC, 0x2D2D2D, "", placeholder))
+	mainContainer.settingsContainer.inputField = mainContainer.settingsContainer:addChild(GUI.input(x, y, textBoxWidth, 3, 0xCCCCCC, 0x777777, 0x777777, 0xCCCCCC, 0x2D2D2D, "", placeholder))
 	
 	mainContainer.settingsContainer.inputField.validator = validatorMethod
 	mainContainer.settingsContainer.inputField.onInputFinished = function(...)
@@ -1448,7 +1448,7 @@ local function createMainContainer()
 			local elementWidth = math.floor(mainContainer.width * 0.3)
 			local x, y = math.floor(mainContainer.width / 2 - elementWidth / 2), math.floor(mainContainer.height / 2) - 7
 			mainContainer.settingsContainer:addChild(GUI.label(1, y, mainContainer.settingsContainer.width, 1, 0xFFFFFF, localization.cursorProperties)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); y = y + 3
-			local inputField = mainContainer.settingsContainer:addChild(GUI.inputField(x, y, elementWidth, 3, 0xCCCCCC, 0x777777, 0x777777, 0xCCCCCC, 0x2D2D2D, config.cursorSymbol, localization.cursorSymbol)); y = y + 5
+			local inputField = mainContainer.settingsContainer:addChild(GUI.input(x, y, elementWidth, 3, 0xCCCCCC, 0x777777, 0x777777, 0xCCCCCC, 0x2D2D2D, config.cursorSymbol, localization.cursorSymbol)); y = y + 5
 			inputField.validator = function(text)
 				if unicode.len(text) == 1 then return true end
 			end
@@ -1577,7 +1577,7 @@ local function createMainContainer()
 	mainContainer.bottomToolBar.onTouch = function()
 		find()
 	end
-	mainContainer.bottomToolBar.inputField = mainContainer.bottomToolBar:addChild(GUI.inputField(7, 1, 10, 3, 0xCCCCCC, 0x999999, 0x999999, 0xCCCCCC, 0x2D2D2D, "", localization.findSomeShit))
+	mainContainer.bottomToolBar.inputField = mainContainer.bottomToolBar:addChild(GUI.input(7, 1, 10, 3, 0xCCCCCC, 0x999999, 0x999999, 0xCCCCCC, 0x2D2D2D, "", localization.findSomeShit))
 	mainContainer.bottomToolBar.inputField.onInputFinished = function()
 		findFromFirstDisplayedLine()
 	end
@@ -1587,7 +1587,7 @@ local function createMainContainer()
 	end
 	mainContainer.bottomToolBar.hidden = true
 
-	mainContainer.leftTreeView = mainContainer:addChild(GUI.treeView(1, 1, config.leftTreeViewWidth, 1, 0xCCCCCC, 0x3C3C3C, 0x3C3C3C, 0x999999, 0x3C3C3C, 0xE1E1E1, 0xBBBBBB, 0xAAAAAA, 0xC3C3C3, 0x444444, "/"))
+	mainContainer.leftTreeView = mainContainer:addChild(GUI.filesystemTree(1, 1, config.leftTreeViewWidth, 1, 0xCCCCCC, 0x3C3C3C, 0x3C3C3C, 0x999999, 0x3C3C3C, 0xE1E1E1, 0xBBBBBB, 0xAAAAAA, 0xC3C3C3, 0x444444, GUI.filesystemModes.both, GUI.filesystemModes.file))
 	mainContainer.leftTreeView.onItemSelected = function(path)
 		loadFile(path)
 
@@ -1595,6 +1595,7 @@ local function createMainContainer()
 		mainContainer:draw()
 		buffer.draw()
 	end
+	mainContainer.leftTreeView:updateFileList()
 	mainContainer.leftTreeViewResizer = mainContainer:addChild(GUI.resizer(1, 1, 3, 5, 0x888888, 0x0))
 	mainContainer.leftTreeViewResizer.onResize = function(dragWidth, dragHeight)
 		mainContainer.leftTreeView.width = mainContainer.leftTreeView.width + dragWidth

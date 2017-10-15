@@ -8,7 +8,7 @@ local MineOSInterface = require("MineOSInterface")
 
 ---------------------------------------------------------------------------------------------------------
 
-local mainContainer, window = MineOSInterface.addWindow(GUI.filledWindow(nil, nil, 110, 25, 0xE1E1E1))
+local mainContainer, window = MineOSInterface.addWindow(GUI.filledWindow(nil, nil, 110, 25, 0xF0F0F0))
 local yDependencyString = "math.sin(x)"
 local xOffset, yOffset, xDrag, yDrag, points = 0, 0, 1, 1
 
@@ -20,11 +20,11 @@ local layout = window:addChild(GUI.layout(1, 1, window.width, 3, 1, 1))
 layout:setCellDirection(1, 1, GUI.directions.horizontal)
 layout:setCellSpacing(1, 1, 3)
 
-local switchAndLabel = layout:addChild(GUI.switchAndLabel(1, 1, 16, 6, 0x66DB80, 0x1D1D1D, 0xE1E1E1, 0xBBBBBB, "Quants:", false))
+local switchAndLabel = layout:addChild(GUI.switchAndLabel(1, 1, 16, 6, 0x66DB80, 0x1E1E1E, 0xF0F0F0, 0xBBBBBB, "Quants:", false))
 local scaleSlider = layout:addChild(GUI.slider(1, 1, 12, 0x66DB80, 0x0, 0xFFFFFF, 0xBBBBBB, 1, 1000, 400, false, "Scale: ", "%"))
 local rangeSlider = layout:addChild(GUI.slider(1, 1, 12, 0x66DB80, 0x0, 0xFFFFFF, 0xBBBBBB, 2, 60, 25, false, "Range: ", ""))
 local precisionSlider = layout:addChild(GUI.slider(1, 1, 12, 0x66DB80, 0x0, 0xFFFFFF, 0xBBBBBB, 10, 99, 72, false, "Step: 0.", ""))
-local functionButton = window:addChild(GUI.button(1, 1, 1, 3, 0xE1E1E1, 0x3C3C3C, 0xCCCCCC, 0x3C3C3C, ""))
+local functionButton = window:addChild(GUI.button(1, 1, 1, 3, 0xF0F0F0, 0x3C3C3C, 0xCCCCCC, 0x3C3C3C, ""))
 
 window.actionButtons:moveToFront()
 
@@ -79,7 +79,7 @@ end
 
 functionButton.onTouch = function()
 	local container = MineOSInterface.addUniversalContainer(window, "Set function f(x)")
-	local inputField = container.layout:addChild(GUI.inputField(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0x666666, 0xEEEEEE, 0x262626, yDependencyString, "f(x)", false))
+	local inputField = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0x666666, 0xEEEEEE, 0x262626, yDependencyString, "f(x)", false))
 	inputField.onInputFinished = function()
 		if inputField.text then
 			yDependencyString = inputField.text

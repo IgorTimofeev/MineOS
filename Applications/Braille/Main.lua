@@ -101,12 +101,12 @@ end
 local function new()
 	local container = MineOSInterface.addUniversalContainer(mainContainer, "Create")
 
-	local widthTextBox = container.layout:addChild(GUI.inputField(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0x666666, 0xEEEEEE, 0x262626, "8", "Width", true))
+	local widthTextBox = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0x666666, 0xEEEEEE, 0x262626, "8", "Width", true))
 	widthTextBox.validator = function(text)
 		return tonumber(text)
 	end
 
-	local heightTextBox = container.layout:addChild(GUI.inputField(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0x666666, 0xEEEEEE, 0x262626, "4", "Height", true))
+	local heightTextBox = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0x666666, 0xEEEEEE, 0x262626, "4", "Height", true))
 	heightTextBox.validator = function(text)
 		return tonumber(text)
 	end

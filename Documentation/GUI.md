@@ -16,7 +16,7 @@
 | [    GUI.image](#guiimage-x-y-loadedimage--table-image) |
 | [    GUI.label](#guilabel-x-y-width-height-textcolor-text--table-label) |
 | [    GUI.button](#guibutton-x-y-width-height-buttoncolor-textcolor-buttonpressedcolor-textpressedcolor-text--table-button) |
-| [    GUI.inputField](#guiinputfield-x-y-width-height-backgroundcolor-textcolor-placeholdertextcolor-backgroundfocusedcolor-textfocusedcolor-text-placeholdertext-erasetextonfocus-textmask--table-inputfield) |
+| [    GUI.input](#guiinput-x-y-width-height-backgroundcolor-textcolor-placeholdertextcolor-backgroundfocusedcolor-textfocusedcolor-text-placeholdertext-erasetextonfocus-textmask--table-input) |
 | [    GUI.slider](#guislider-x-y-width-primarycolor-secondarycolor-pipecolor-valuecolor-minimumvalue-maximumvalue-value-showcornervalues-currentvalueprefix-currentvaluepostfix--table-slider) |
 | [    GUI.switch](#guiswitch-x-y-width-primarycolor-secondarycolor-pipecolor-state--table-switch) |
 | [    GUI.switchAndLabel](#guiswitchandlabel-x-y-width-switchwidth-primarycolor-secondarycolor-pipecolor-textcolor-text-switchstate--table-switchandlabel) |
@@ -561,7 +561,7 @@ mainContainer:startEventHandling()
 
 ![Imgur](https://i.imgur.com/9zZvR6g.gif)
 
-GUI.**inputField**( x, y, width, height, backgroundColor, textColor, placeholderTextColor, backgroundFocusedColor, textFocusedColor, text, [placeholderText, eraseTextOnFocus, textMask ): *table* inputField
+GUI.**input**( x, y, width, height, backgroundColor, textColor, placeholderTextColor, backgroundFocusedColor, textFocusedColor, text, [placeholderText, eraseTextOnFocus, textMask ): *table* input
 ------------------------------------------------------------------------
 | Тип | Аргумент | Описание |
 | ------ | ------ | ------ |
@@ -598,7 +598,7 @@ local GUI = require("GUI")
 local mainContainer = GUI.fullScreenContainer()
 mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x2D2D2D))
 
-mainContainer:addChild(GUI.inputField(2, 2, 30, 3, 0xEEEEEE, 0x555555, 0x999999, 0xFFFFFF, 0x2D2D2D, "Hello world", "Placeholder text")).onInputFinished = function()
+mainContainer:addChild(GUI.input(2, 2, 30, 3, 0xEEEEEE, 0x555555, 0x999999, 0xFFFFFF, 0x2D2D2D, "Hello world", "Placeholder text")).onInputFinished = function()
 	GUI.error("Input finished!")
 end
 
@@ -1411,13 +1411,13 @@ mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height
 local layout = mainContainer:addChild(GUI.layout(1, 1, mainContainer.width, mainContainer.height, 1, 1))
 
 -- Добавляем в layout поле для ввода почтового адреса
-local emailInputField = layout:addChild(GUI.inputField(1, 1, 40, 3, 0xEEEEEE, 0x555555, 0x888888, 0xEEEEEE, 0x262626, nil, "E-mail", false, nil, nil, nil))
+local emailInput = layout:addChild(GUI.input(1, 1, 40, 3, 0xEEEEEE, 0x555555, 0x888888, 0xEEEEEE, 0x262626, nil, "E-mail", false, nil, nil, nil))
 -- Добавляем красный текстовый лейбл, показывающийся только в том случае, когда адрес почты невалиден
 local invalidEmailLabel = layout:addChild(GUI.label(1, 1, mainContainer.width, 1, 0xFF5555, "Incorrect e-mail")):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
 invalidEmailLabel.hidden = true
 
 -- Добавляем аналогичное текстовое поле с лейблом для ввода пароля
-local passwordInputField = layout:addChild(GUI.inputField(1, 1, 40, 3, 0xEEEEEE, 0x555555, 0x888888, 0xEEEEEE, 0x262626, nil, "Password", false, "*", nil, nil))
+local passwordInput = layout:addChild(GUI.input(1, 1, 40, 3, 0xEEEEEE, 0x555555, 0x888888, 0xEEEEEE, 0x262626, nil, "Password", false, "*", nil, nil))
 local invalidPasswordLabel = layout:addChild(GUI.label(1, 1, mainContainer.width, 1, 0xFF5555, "Password is too short")):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
 invalidPasswordLabel.hidden = true
 
@@ -1429,7 +1429,7 @@ loginButton.colors.disabled.background = 0xAAAAAA
 loginButton.colors.disabled.text = 0xDDDDDD
 -- При нажатии на кнопку логина идет сверка введенных данных с переменными выше, и выводится дебаг-сообщение
 loginButton.onTouch = function()
-	GUI.error(emailInputField.text == userEmail and passwordInputField.text == userPassword and "Login successfull" or "Login failed")
+	GUI.error(emailInput.text == userEmail and passwordInput.text == userPassword and "Login successfull" or "Login failed")
 end
 
 -- Создаем две переменных, в которых будут храниться состояния валидности введенных данных
@@ -1444,15 +1444,15 @@ local function checkLoginButton()
 end
 
 -- Создаем callback-функцию, вызывающуюся после ввода текста и проверяющую корректность введенного адреса
-emailInputField.onInputFinished = function()
-	emailValid = emailInputField.text and emailInputField.text:match(emailRegex)
+emailInput.onInputFinished = function()
+	emailValid = emailInput.text and emailInput.text:match(emailRegex)
 	invalidEmailLabel.hidden = emailValid
 	checkLoginButton() 
 end
 
 -- Аналогично поступаем с полем для ввода пароля
-passwordInputField.onInputFinished = function()
-	passwordValid = passwordInputField.text and passwordInputField.text:len() > minimumPasswordLength
+passwordInput.onInputFinished = function()
+	passwordValid = passwordInput.text and passwordInput.text:len() > minimumPasswordLength
 	invalidPasswordLabel.hidden = passwordValid
 	checkLoginButton() 
 end

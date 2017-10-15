@@ -139,7 +139,7 @@ local function displayApps(fromPage, typeFilter, nameFilter, updateCheck)
 			return
 		end
 	else
-		window.contentContainer.searchInputTextBox = window.contentContainer:addChild(GUI.inputField(math.floor(window.contentContainer.width / 2 - 10), y, 20, 1, 0xEEEEEE, 0x444444, 0xAAAAAA, 0xEEEEEE, 0x2D2D2D, nil, localization.search, true))
+		window.contentContainer.searchInputTextBox = window.contentContainer:addChild(GUI.input(math.floor(window.contentContainer.width / 2 - 10), y, 20, 1, 0xEEEEEE, 0x444444, 0xAAAAAA, 0xEEEEEE, 0x2D2D2D, "", localization.search, true))
 		window.contentContainer.searchInputTextBox.onInputFinished = function()
 			if window.contentContainer.searchInputTextBox.text then
 				displayApps(1, typeFilter, window.contentContainer.searchInputTextBox.text)

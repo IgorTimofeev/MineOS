@@ -144,6 +144,73 @@ local function iconEventHandler(mainContainer, object, eventData)
 	end
 end
 
+local function iconAnalyseExtension(icon)
+	if icon.isDirectory then
+		if icon.extension == ".app" then
+			if MineOSCore.properties.showApplicationIcons then
+				if fs.exists(icon.path .. "/Resources/Icon.pic") then
+					icon.image = image.load(icon.path .. "/Resources/Icon.pic")
+				elseif fs.exists(icon.path .. "/Resources/Icon.lua") then
+					local data, reason = loadfile(icon.path .. "/Resources/Icon.lua")
+					if data then
+						data, reason = data()
+						if data then
+							icon.liveImage = data
+						else
+							error("Failed to load live icon image: " .. tostring(reason))
+						end
+					else
+						error("Failed to load live icon image: " .. tostring(reason))
+					end
+				else
+					icon.image = MineOSInterface.iconsCache.fileNotExists
+				end
+			else
+				icon.image = MineOSInterface.iconsCache.application
+			end
+
+			icon.launch = icon.launchers.application
+		else
+			icon.image = MineOSInterface.iconsCache.folder
+			icon.launch = icon.launchers.directory
+		end
+	else
+		if icon.extension == ".lnk" then
+			icon.shortcutPath = MineOSCore.readShortcut(icon.path)
+			icon.shortcutExtension = fs.extension(icon.shortcutPath)
+			icon.shortcutIsDirectory = fs.isDirectory(icon.shortcutPath)
+			icon.isShortcut = true
+
+			local shortcutIcon = iconAnalyseExtension({
+				path = icon.shortcutPath,
+				extension = icon.shortcutExtension,
+				isDirectory = icon.shortcutIsDirectory,
+				iconImage = icon.iconImage,
+				launchers = icon.launchers
+			})
+
+			icon.image = shortcutIcon.image
+			icon.shortcutLaunch = shortcutIcon.launch
+			icon.launch = icon.launchers.shortcut
+
+			shortcutIcon = nil
+		elseif not fs.exists(icon.path) then
+			icon.image = MineOSInterface.iconsCache.fileNotExists
+			icon.launch = icon.launchers.corrupted
+		else
+			if MineOSCore.properties.extensionAssociations[icon.extension] then
+				icon.launch = icon.launchers.extension
+				icon.image = MineOSInterface.cacheIconSource(icon.extension, MineOSCore.properties.extensionAssociations[icon.extension].icon)
+			else
+				icon.launch = icon.launchers.script
+				icon.image = MineOSInterface.iconsCache.script
+			end
+		end
+	end
+
+	return icon
+end
+
 function MineOSInterface.icon(x, y, path, textColor, selectionColor)
 	local icon = GUI.object(x, y, MineOSInterface.iconWidth, MineOSInterface.iconHeight)
 	
@@ -237,73 +304,6 @@ function MineOSInterface.iconLaunchers.showContainingFolder(icon)
 	icon.parent.parent:updateFileList()
 	icon:getFirstParent():draw()
 	buffer.draw()
-end
-
-function iconAnalyseExtension(icon)
-	if icon.isDirectory then
-		if icon.extension == ".app" then
-			if MineOSCore.properties.showApplicationIcons then
-				if fs.exists(icon.path .. "/Resources/Icon.pic") then
-					icon.image = image.load(icon.path .. "/Resources/Icon.pic")
-				elseif fs.exists(icon.path .. "/Resources/Icon.lua") then
-					local data, reason = loadfile(icon.path .. "/Resources/Icon.lua")
-					if data then
-						data, reason = data()
-						if data then
-							icon.liveImage = data
-						else
-							error("Failed to load live icon image: " .. tostring(reason))
-						end
-					else
-						error("Failed to load live icon image: " .. tostring(reason))
-					end
-				else
-					icon.image = MineOSInterface.iconsCache.fileNotExists
-				end
-			else
-				icon.image = MineOSInterface.iconsCache.application
-			end
-
-			icon.launch = icon.launchers.application
-		else
-			icon.image = MineOSInterface.iconsCache.folder
-			icon.launch = icon.launchers.directory
-		end
-	else
-		if icon.extension == ".lnk" then
-			icon.shortcutPath = MineOSCore.readShortcut(icon.path)
-			icon.shortcutExtension = fs.extension(icon.shortcutPath)
-			icon.shortcutIsDirectory = fs.isDirectory(icon.shortcutPath)
-			icon.isShortcut = true
-
-			local shortcutIcon = iconAnalyseExtension({
-				path = icon.shortcutPath,
-				extension = icon.shortcutExtension,
-				isDirectory = icon.shortcutIsDirectory,
-				iconImage = icon.iconImage,
-				launchers = icon.launchers
-			})
-
-			icon.image = shortcutIcon.image
-			icon.shortcutLaunch = shortcutIcon.launch
-			icon.launch = icon.launchers.shortcut
-
-			shortcutIcon = nil
-		elseif not fs.exists(icon.path) then
-			icon.image = MineOSInterface.iconsCache.fileNotExists
-			icon.launch = icon.launchers.corrupted
-		else
-			if MineOSCore.properties.extensionAssociations[icon.extension] then
-				icon.launch = icon.launchers.extension
-				icon.image = MineOSInterface.cacheIconSource(icon.extension, MineOSCore.properties.extensionAssociations[icon.extension].icon)
-			else
-				icon.launch = icon.launchers.script
-				icon.image = MineOSInterface.iconsCache.script
-			end
-		end
-	end
-
-	return icon
 end
 
 -----------------------------------------------------------------------------------------------------------------------------------
@@ -830,10 +830,15 @@ function MineOSInterface.addUniversalContainer(parentContainer, title)
 	local container = parentContainer:addChild(GUI.container(1, 1, parentContainer.width, parentContainer.height))
 	
 	container.panel = container:addChild(GUI.panel(1, 1, container.width, container.height, MineOSCore.properties.transparencyEnabled and 0x0 or (MineOSCore.properties.backgroundColor or 0x0F0F0F), MineOSCore.properties.transparencyEnabled and 0.2))
-	container.layout = container:addChild(GUI.layout(1, 1, container.width, container.height, 1, 1))
-	
+	container.layout = container:addChild(GUI.layout(1, 1, container.width, container.height, 3, 1))
+	container.layout.defaultColumn = 2
+	container.layout:setColumnWidth(1, GUI.sizePolicies.percentage, 0.375)
+	container.layout:setColumnWidth(2, GUI.sizePolicies.percentage, 0.25)
+	container.layout:setColumnWidth(3, GUI.sizePolicies.percentage, 0.375)
+	container.layout:setCellFitting(2, 1, true, false)
+
 	if title then
-		container.layout:addChild(GUI.label(1, 1, unicode.len(title), 1, 0xEEEEEE, title)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+		container.layout:addChild(GUI.label(1, 1, 1, 1, 0xEEEEEE, title)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
 	end
 
 	container.panel.eventHandler = function(mainContainer, object, eventData)
@@ -850,7 +855,7 @@ end
 local function addUniversalContainerWithInputTextBox(parentWindow, text, title, placeholder)
 	local container = MineOSInterface.addUniversalContainer(parentWindow, title)
 	
-	container.inputField = container.layout:addChild(GUI.inputField(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0x666666, 0xEEEEEE, 0x262626, text, placeholder, false))
+	container.inputField = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0x666666, 0xEEEEEE, 0x262626, text, placeholder, false))
 	container.label = container.layout:addChild(GUI.label(1, 1, 36, 1, 0xFF4940, MineOSCore.localization.file .. " " .. MineOSCore.localization.alreadyExists)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
 	container.label.hidden = true
 
@@ -913,7 +918,7 @@ end
 function MineOSInterface.newFileFromURL(parentWindow, iconField, x, y, path)
 	local container = addUniversalContainerWithInputTextBox(parentWindow, nil, "Загрузить файл по URL", MineOSCore.localization.fileName)
 
-	container.inputFieldURL = container.layout:addChild(GUI.inputField(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0x666666, 0xEEEEEE, 0x262626, nil, "URL", false))
+	container.inputFieldURL = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0x666666, 0xEEEEEE, 0x262626, nil, "URL", false))
 	container.inputField.onInputFinished = function()
 		if container.inputField.text then
 			if fs.exists(path .. container.inputField.text) then

@@ -36,7 +36,7 @@ module.onTouch = function()
 		local button = diskContainer:addChild(GUI.adaptiveRoundedButton(1, 3, 2, 0, 0x2D2D2D, 0xE1E1E1, 0x0, 0xE1E1E1, localization.options))
 		button.onTouch = function()
 			local container = MineOSInterface.addUniversalContainer(mainContainer, localization.options)
-			local inputField = container.layout:addChild(GUI.inputField(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0x666666, 0xEEEEEE, 0x262626, proxy.getLabel(), localization.diskLabel))
+			local inputField = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0x666666, 0xEEEEEE, 0x262626, proxy.getLabel() or "", localization.diskLabel))
 			inputField.onInputFinished = function()
 				if inputField.text and inputField.text:len() > 0 then
 					proxy.setLabel(inputField.text)

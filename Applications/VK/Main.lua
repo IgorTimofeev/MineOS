@@ -319,8 +319,8 @@ local function loginGUI(startUsername, startPassword)
 	obj.button = GUI.button(x, y, textFieldWidth, textFieldHeight, buttonColor, 0xEEEEEE, 0xEEEEEE, buttonColor, "Войти")
 
 	local VKLogoImage = image.load(VKLogoImagePath)
-	local loginTextBox = GUI.inputField(x, obj.username[2], textFieldWidth, 3, 0xEEEEEE, 0x777777, 0x777777, 0xEEEEEE, 0x262626, username, "E-Mail", false)
-	local passwordTextBox = GUI.inputField(x, obj.password[2], textFieldWidth, 3, 0xEEEEEE, 0x777777, 0x777777, 0xEEEEEE, 0x262626, password, "Password", false, "*")
+	local loginTextBox = GUI.input(x, obj.username[2], textFieldWidth, 3, 0xEEEEEE, 0x777777, 0x777777, 0xEEEEEE, 0x262626, username, "E-Mail", false)
+	local passwordTextBox = GUI.input(x, obj.password[2], textFieldWidth, 3, 0xEEEEEE, 0x777777, 0x777777, 0xEEEEEE, 0x262626, password, "Password", false, "*")
 
 	local function draw()
 		buffer.clear(colors.loginGUIBackground)
@@ -338,11 +338,11 @@ local function loginGUI(startUsername, startPassword)
 		local e = {event.pull()}
 		if e[1] == "touch" then
 			if clickedAtZone(e[3], e[4], obj.username) then
-				loginTextBox:startInput()
+				loginTextBox.eventHandler({draw = function() loginTextBox:draw() end}, loginTextBox, {[1] = "touch", [3] = loginTextBox.x, [4] = loginTextBox.y})
 				username = loginTextBox.text
 
 			elseif clickedAtZone(e[3], e[4], obj.password) then
-				passwordTextBox:startInput()
+				passwordTextBox.eventHandler({draw = function() passwordTextBox:draw() end}, passwordTextBox, {[1] = "touch", [3] = passwordTextBox.x, [4] = passwordTextBox.y})
 				password = passwordTextBox.text
 			
 			elseif obj.button:isClicked(e[3], e[4]) then
@@ -446,7 +446,7 @@ end
 local function drawMessageInputBar(currentText)
 	local x, y = mainZoneX, buffer.height - 5
 	buffer.square(x, y, mainZoneWidth, 5, colors.messageInputBarColor, 0x0, " ")
-	obj.messageInputBar = GUI.inputField(x + 2, y + 1, mainZoneWidth - 4, 3, 0xFFFFFF, 0x444444, 0x444444, 0xFFFFFF, 0x262626, nil, "Введите сообщение", true)
+	obj.messageInputBar = GUI.input(x + 2, y + 1, mainZoneWidth - 4, 3, 0xFFFFFF, 0x444444, 0x444444, 0xFFFFFF, 0x262626, nil, "Введите сообщение", true)
 	obj.messageInputBar:draw()
 end
 
@@ -1169,7 +1169,7 @@ while true do
 
 		if whatIsOnScreen == "messages" then
 			if obj.messageInputBar:isClicked(e[3], e[4]) then
-				obj.messageInputBar:startInput()
+				obj.messageInputBar.eventHandler({draw = function() obj.messageInputBar:draw() end}, obj.messageInputBar, {[1] = "touch", [3] = obj.messageInputBar.x, [4] = obj.messageInputBar.y})
 				local newText = obj.messageInputBar.text
 				if newText and newText ~= " " and newText ~= "" then
 					computer.beep(1700)

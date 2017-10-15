@@ -371,12 +371,11 @@ function rayEngine.commandLine(transparency)
 	--Врубаем чат и рисуем все, включая его
 	rayEngine.chatEnabled = true
 	rayEngine.update()
-	--Рисуем панель ввода
-	buffer.square(x, y, buffer.width, inputPanelHeight, 0x000000, 0xFFFFFF, " ", transparency)
 
 	--Ввод данных
-	local input = GUI.input(x + 2, y + 1, buffer.width - 4, 0xFFFFFF, "")
-	input:startInput()
+	local input = GUI.input(x, y, buffer.width, 3, 0xFFFFFF, 0x3C3C3C, 0x666666, 0xFFFFFF, 0x3C3C3C, "")
+	input.eventHandler({draw = function() input:draw() end}, input, {[1] = "touch", [3] = input.x, [4] = input.y})
+	
 	local words = {}; for word in string.gmatch(input.text, "[^%s]+") do table.insert(words, unicode.lower(word)) end
 	if #words > 0 then
 		if unicode.sub(words[1], 1, 1) == "/" then

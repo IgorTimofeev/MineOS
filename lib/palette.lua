@@ -22,13 +22,13 @@ end
 --------------------------------------------------------------------------------------------------------------
 
 local function changeInputsValueToCurrentColor(window)
-	window.inputs[1].inputField.text = tostring(window.color.rgb.red)
-	window.inputs[2].inputField.text = tostring(window.color.rgb.green)
-	window.inputs[3].inputField.text = tostring(window.color.rgb.blue)
-	window.inputs[4].inputField.text = tostring(math.floor(window.color.hsb.hue))
-	window.inputs[5].inputField.text = tostring(math.floor(window.color.hsb.saturation))
-	window.inputs[6].inputField.text = tostring(math.floor(window.color.hsb.brightness))
-	window.inputs[7].inputField.text = string.format("%06X", window.color.hex)
+	window.inputs[1].input.text = tostring(window.color.rgb.red)
+	window.inputs[2].input.text = tostring(window.color.rgb.green)
+	window.inputs[3].input.text = tostring(window.color.rgb.blue)
+	window.inputs[4].input.text = tostring(math.floor(window.color.hsb.hue))
+	window.inputs[5].input.text = tostring(math.floor(window.color.hsb.saturation))
+	window.inputs[6].input.text = tostring(math.floor(window.color.hsb.brightness))
+	window.inputs[7].input.text = string.format("%06X", window.color.hex)
 	window.colorPanel.colors.background = window.color.hex
 end
 
@@ -141,8 +141,8 @@ function palette.window(x, y, startColor)
 	end
 	
 	window.colorPanel = window:addChild(GUI.panel(58, 2, 12, 3, 0x0))
-	window.OKButton = window:addChild(GUI.button(58, 6, 12, 1, 0x444444, 0xFFFFFF, 0x88FF88, 0xFFFFFF, "OK"))
-	window.cancelButton = window:addChild(GUI.button(58, 8, 12, 1, 0xFFFFFF, 0x444444, 0x88FF88, 0xFFFFFF, "Cancel"))
+	window.OKButton = window:addChild(GUI.roundedButton(58, 6, 12, 1, 0x444444, 0xFFFFFF, 0x88FF88, 0xFFFFFF, "OK"))
+	window.cancelButton = window:addChild(GUI.roundedButton(58, 8, 12, 1, 0xFFFFFF, 0x444444, 0x88FF88, 0xFFFFFF, "Cancel"))
 
 	local function onAnyInputFinished()
 		refreshBigRainbow(window)
@@ -152,17 +152,17 @@ function palette.window(x, y, startColor)
 	end
 
 	local function onHexInputFinished()
-		switchColorFromHex(window, tonumber("0x" .. window.inputs[7].inputField.text))
+		switchColorFromHex(window, tonumber("0x" .. window.inputs[7].input.text))
 		onAnyInputFinished()
 	end
 
 	local function onRgbInputFinished()
-		switchColorFromRgb(window, tonumber(window.inputs[1].inputField.text), tonumber(window.inputs[2].inputField.text), tonumber(window.inputs[3].inputField.text))
+		switchColorFromRgb(window, tonumber(window.inputs[1].input.text), tonumber(window.inputs[2].input.text), tonumber(window.inputs[3].input.text))
 		onAnyInputFinished()
 	end
 
 	local function onHsbInputFinished()
-		switchColorFromHsb(window, tonumber(window.inputs[4].inputField.text), tonumber(window.inputs[5].inputField.text), tonumber(window.inputs[6].inputField.text))
+		switchColorFromHsb(window, tonumber(window.inputs[4].input.text), tonumber(window.inputs[5].input.text), tonumber(window.inputs[6].input.text))
 		onAnyInputFinished()
 	end
 
@@ -198,9 +198,9 @@ function palette.window(x, y, startColor)
 	for i = 1, #window.inputs do
 		window:addChild(GUI.label(58, y, 2, 1, 0x000000, window.inputs[i].shortcut))
 		
-		window.inputs[i].inputField = window:addChild(GUI.inputField(61, y, 9, 1, 0xFFFFFF, 0x444444, 0x444444, 0xFFFFFF, 0x000000, "", "", true))
-		window.inputs[i].inputField.validator = window.inputs[i].validator
-		window.inputs[i].inputField.onInputFinished = window.inputs[i].onInputFinished
+		window.inputs[i].input = window:addChild(GUI.input(61, y, 9, 1, 0xFFFFFF, 0x444444, 0x444444, 0xFFFFFF, 0x000000, "", "", true))
+		window.inputs[i].input.validator = window.inputs[i].validator
+		window.inputs[i].input.onInputFinished = window.inputs[i].onInputFinished
 		
 		y = y + 2
 	end
