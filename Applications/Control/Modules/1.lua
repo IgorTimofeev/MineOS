@@ -96,10 +96,11 @@ module.onTouch = function()
 				end
 			end
 
-			input.autoComplete.result = unicode.sub(input.text, 1, left - 1)
+			input.autoComplete.resultLeft = unicode.sub(input.text, 1, left - 1)
 			if wordCount > 0 then
-				input.autoComplete.result = input.autoComplete.result .. table.concat(words, ".", 1, wordCount) .. "."
+				input.autoComplete.resultLeft = input.autoComplete.resultLeft .. table.concat(words, ".", 1, wordCount) .. "."
 			end
+			input.autoComplete.resultRight = unicode.sub(input.text, right + 1, -1)
 
 			if dotInEnd then
 				for key, value in pairs(t) do
@@ -113,7 +114,8 @@ module.onTouch = function()
 				input.autoComplete:match(array, words[#words])
 			end
 		elseif input.text == "" then
-			input.autoComplete.result = ""
+			input.autoComplete.resultLeft = ""
+			input.autoComplete.resultRight = ""
 			for key, value in pairs(t) do
 				table.insert(array, tostring(key))
 			end
@@ -122,8 +124,9 @@ module.onTouch = function()
 	end
 
 	input.autoComplete.onItemSelected = function()
-		input.text = input.autoComplete.result .. input.autoComplete.items[input.autoComplete.selectedItem]
+		input.text = input.autoComplete.resultLeft .. input.autoComplete.items[input.autoComplete.selectedItem]
 		input:setCursorPosition(unicode.len(input.text) + 1)
+		input.text = input.text .. input.autoComplete.resultRight
 		
 		if input.autoCompleteEnabled then
 			input.autoCompleteMatchMethod()
