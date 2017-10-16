@@ -1233,8 +1233,8 @@ end
 ----------------------------------------- Window object -----------------------------------------
 
 local function windowDraw(window)
-	GUI.drawContainerContent(window)
 	GUI.windowShadow(window.x, window.y, window.width, window.height, nil, true)
+	GUI.drawContainerContent(window)
 	return window
 end
 
@@ -1718,138 +1718,6 @@ function GUI.switchAndLabel(x, y, width, switchWidth, activeColor, passiveColor,
 	switchAndLabel.draw = switchAndLabelDraw
 
 	return switchAndLabel 
-end
-
------------------------------------------ Text Box object -----------------------------------------
-
-local function textBoxCalculate(object)
-	local doubleVerticalOffset = object.offset.vertical * 2
-	object.textWidth = object.width - object.offset.horizontal * 2
-
-	object.linesCopy = {}
-	for i = 1, #object.lines do
-		table.insert(object.linesCopy, object.lines[i])
-	end
-
-	if object.autoWrap then
-		object.linesCopy = string.wrap(object.linesCopy, object.textWidth)
-	end
-
-	if object.autoHeight then
-		object.height = #object.linesCopy + doubleVerticalOffset
-	end
-
-	object.textHeight = object.height - doubleVerticalOffset
-end
-
-local function textBoxDraw(object)
-	textBoxCalculate(object)
-
-	if object.colors.background then
-		buffer.square(object.x, object.y, object.width, object.height, object.colors.background, object.colors.text, " ", object.colors.transparency)
-	end
-
-	local x, y = nil, object.y + object.offset.vertical
-	local lineType, text, textColor
-	for i = object.currentLine, object.currentLine + object.textHeight - 1 do
-		if object.linesCopy[i] then
-			lineType = type(object.linesCopy[i])
-			if lineType == "string" then
-				text, textColor = string.limit(object.linesCopy[i], object.textWidth), object.colors.text
-			elseif lineType == "table" then
-				text, textColor = string.limit(object.linesCopy[i].text, object.textWidth), object.linesCopy[i].color
-			else
-				error("Unknown TextBox line type: " .. tostring(lineType))
-			end
-
-			x = GUI.getAlignmentCoordinates(
-				{
-					x = object.x + object.offset.horizontal,
-					y = 1,
-					width = object.textWidth,
-					height = 1,
-					alignment = object.alignment
-				},
-				{
-					width = unicode.len(text),
-					height = 1
-				}
-			)
-			buffer.text(x, y, textColor, text)
-			y = y + 1
-		else
-			break
-		end
-	end
-
-	return object
-end
-
-local function scrollDownTextBox(object, count)
-	count = count or 1
-	local maxCountAvailableToScroll = #object.lines - object.height - object.currentLine + 1
-	count = math.min(count, maxCountAvailableToScroll)
-	if #object.lines >= object.height and object.currentLine < #object.lines - count then
-		object.currentLine = object.currentLine + count
-	end
-
-	return object
-end
-
-local function scrollUpTextBox(object, count)
-	count = count or 1
-	if object.currentLine > count and object.currentLine >= 1 then object.currentLine = object.currentLine - count end
-	return object
-end
-
-local function scrollToStartTextBox(object)
-	object.currentLine = 1
-	return object
-end
-
-local function scrollToEndTextBox(object)
-	object.currentLine = #object.lines
-	return object
-end
-
-local function textBoxScrollEventHandler(mainContainer, object, eventData)
-	if eventData[1] == "scroll" then
-		if eventData[5] == 1 then
-			object:scrollUp()
-			mainContainer:draw()
-			buffer.draw()
-		else
-			object:scrollDown()
-			mainContainer:draw()
-			buffer.draw()
-		end
-	end
-end
-
-function GUI.textBox(x, y, width, height, backgroundColor, textColor, lines, currentLine, horizontalOffset, verticalOffset, autoWrap, autoHeight)
-	local object = GUI.object(x, y, width, height)
-	
-	object.eventHandler = textBoxScrollEventHandler
-	object.colors = {
-		text = textColor,
-		background = backgroundColor
-	}
-	object.setAlignment = GUI.setAlignment
-	object:setAlignment(GUI.alignment.horizontal.left, GUI.alignment.vertical.top)
-	object.lines = lines
-	object.currentLine = currentLine or 1
-	object.draw = textBoxDraw
-	object.scrollUp = scrollUpTextBox
-	object.scrollDown = scrollDownTextBox
-	object.scrollToStart = scrollToStartTextBox
-	object.scrollToEnd = scrollToEndTextBox
-	object.offset = {horizontal = horizontalOffset or 0, vertical = verticalOffset or 0}
-	object.autoWrap = autoWrap
-	object.autoHeight = autoHeight
-
-	textBoxCalculate(object)
-
-	return object
 end
 
 ----------------------------------------- Horizontal Slider Object -----------------------------------------
@@ -2911,7 +2779,7 @@ local function treeAddItem(tree, name, definition, offset, expandable, disabled)
 	return tree
 end
 
-function GUI.tree(x, y, width, height, backgroundColor, expandableColor, notExpandableColor, arrowColor, backgroundSelectionColor, anySelectionColor, arrowSelectionColor, disabledColor, scrollBarBackground, scrollBarForeground, showMode, selectionMode)
+function GUI.tree(x, y, width, height, backgroundColor, expandableColor, notExpandableColor, arrowColor, backgroundSelectedColor, anySelectionColor, arrowSelectionColor, disabledColor, scrollBarBackground, scrollBarForeground, showMode, selectionMode)
 	local tree = GUI.container(x, y, width, height)
 	
 	tree.eventHandler = treeEventHandler
@@ -2923,7 +2791,7 @@ function GUI.tree(x, y, width, height, backgroundColor, expandableColor, notExpa
 			arrow = arrowColor,
 		},
 		selected = {
-			background = backgroundSelectionColor,
+			background = backgroundSelectedColor,
 			any = anySelectionColor,
 			arrow = arrowSelectionColor,
 		},
@@ -3010,6 +2878,161 @@ function GUI.filesystemTree(...)
 	return tree
 end
 
+----------------------------------------- Text Box object -----------------------------------------
+
+local function textBoxCalculate(object)
+	local doubleVerticalOffset = object.offset.vertical * 2
+	object.textWidth = object.width - object.offset.horizontal * 2 - (object.scrollBarEnabled and 1 or 0)
+
+	object.linesCopy = {}
+
+	if object.autoWrap then
+		for i = 1, #object.lines do
+			local isTable = type(object.lines[i]) == "table"
+			for subLine in (isTable and object.lines[i].text or object.lines[i]):gmatch("[^\n]+") do
+				local wrappedLine = string.wrap(subLine, object.textWidth)
+				for j = 1, #wrappedLine do
+					table.insert(object.linesCopy, isTable and {text = wrappedLine[j], color = object.lines[i].color} or wrappedLine[j])
+				end
+			end
+		end
+	else
+		for i = 1, #object.lines do
+			table.insert(object.linesCopy, object.lines[i])
+		end
+	end
+
+	if object.autoHeight then
+		object.height = #object.linesCopy + doubleVerticalOffset
+	end
+
+	object.textHeight = object.height - doubleVerticalOffset
+end
+
+local function textBoxDraw(object)
+	textBoxCalculate(object)
+
+	if object.colors.background then
+		buffer.square(object.x, object.y, object.width, object.height, object.colors.background, object.colors.text, " ", object.colors.transparency)
+	end
+
+	local x, y = nil, object.y + object.offset.vertical
+	local lineType, text, textColor
+	for i = object.currentLine, object.currentLine + object.textHeight - 1 do
+		if object.linesCopy[i] then
+			lineType = type(object.linesCopy[i])
+			if lineType == "string" then
+				text, textColor = string.limit(object.linesCopy[i], object.textWidth), object.colors.text
+			elseif lineType == "table" then
+				text, textColor = string.limit(object.linesCopy[i].text, object.textWidth), object.linesCopy[i].color
+			else
+				error("Unknown TextBox line type: " .. tostring(lineType))
+			end
+
+			x = GUI.getAlignmentCoordinates(
+				{
+					x = object.x + object.offset.horizontal,
+					y = 1,
+					width = object.textWidth,
+					height = 1,
+					alignment = object.alignment
+				},
+				{
+					width = unicode.len(text),
+					height = 1
+				}
+			)
+			buffer.text(x, y, textColor, text)
+			y = y + 1
+		else
+			break
+		end
+	end
+
+	if object.scrollBarEnabled and object.textHeight < #object.lines then
+		object.scrollBar.x = object.x + object.width - 1
+		object.scrollBar.y = object.y
+		object.scrollBar.height = object.height
+		object.scrollBar.maximumValue = #object.lines - object.textHeight + 1
+		object.scrollBar.value = object.currentLine
+		object.scrollBar.shownValueCount = object.textHeight
+
+		object.scrollBar:draw()
+	end
+
+	return object
+end
+
+local function scrollDownTextBox(object, count)
+	count = math.min(count or 1, #object.lines - object.height - object.currentLine + object.offset.vertical * 2 + 1)
+	if #object.lines >= object.height and object.currentLine < #object.lines - count then
+		object.currentLine = object.currentLine + count
+	end
+
+	return object
+end
+
+local function scrollUpTextBox(object, count)
+	count = count or 1
+	if object.currentLine > count and object.currentLine >= 1 then object.currentLine = object.currentLine - count end
+	return object
+end
+
+local function scrollToStartTextBox(object)
+	object.currentLine = 1
+	return object
+end
+
+local function scrollToEndTextBox(object)
+	if #object.lines > object.textHeight then
+		object.currentLine = #object.lines - object.textHeight + 1
+	end
+
+	return object
+end
+
+local function textBoxScrollEventHandler(mainContainer, object, eventData)
+	if eventData[1] == "scroll" then
+		if eventData[5] == 1 then
+			object:scrollUp()
+			mainContainer:draw()
+			buffer.draw()
+		else
+			object:scrollDown()
+			mainContainer:draw()
+			buffer.draw()
+		end
+	end
+end
+
+function GUI.textBox(x, y, width, height, backgroundColor, textColor, lines, currentLine, horizontalOffset, verticalOffset, autoWrap, autoHeight)
+	local object = GUI.object(x, y, width, height)
+	
+	object.eventHandler = textBoxScrollEventHandler
+	object.colors = {
+		text = textColor,
+		background = backgroundColor
+	}
+	object.setAlignment = GUI.setAlignment
+	object:setAlignment(GUI.alignment.horizontal.left, GUI.alignment.vertical.top)
+	object.lines = lines
+	object.currentLine = currentLine or 1
+	object.draw = textBoxDraw
+	object.scrollUp = scrollUpTextBox
+	object.scrollDown = scrollDownTextBox
+	object.scrollToStart = scrollToStartTextBox
+	object.scrollToEnd = scrollToEndTextBox
+	object.offset = {horizontal = horizontalOffset or 0, vertical = verticalOffset or 0}
+	object.autoWrap = autoWrap
+	object.autoHeight = autoHeight
+	object.scrollBar = GUI.scrollBar(1, 1, 1, 1, 0xC3C3C3, 0x444444, 1, 1, 1, 1, 1, true)
+	object.scrollBarEnabled = false
+
+	textBoxCalculate(object)
+
+	return object
+end
+
 ----------------------------------------- Input object -----------------------------------------
 
 local function inputSetCursorPosition(input, newPosition)
@@ -3065,6 +3088,17 @@ local function inputDraw(input)
 		local background = buffer.rawGet(index)
 		buffer.rawSet(index, background, input.colors.cursor, input.cursorSymbol)
 	end
+
+	if input.autoCompleteEnabled then
+		input.autoComplete.x = input.x
+		if input.autoCompleteVerticalAlignment == GUI.alignment.vertical.top then
+			input.autoComplete.y = input.y - input.autoComplete.height
+		else
+			input.autoComplete.y = input.y + input.height
+		end
+		input.autoComplete.width = input.width
+		input.autoComplete:draw()
+	end
 end
 
 local function inputEventHandler(mainContainer, input, mainEventData)
@@ -3076,6 +3110,10 @@ local function inputEventHandler(mainContainer, input, mainEventData)
 		end
 		input.cursorBlinkState = true
 		input:setCursorPosition(unicode.len(input.text) + 1)
+
+		if input.autoCompleteEnabled then
+			input.autoCompleteMatchMethod()
+		end
 
 		mainContainer:draw()
 		buffer.draw()
@@ -3090,57 +3128,85 @@ local function inputEventHandler(mainContainer, input, mainEventData)
 					input.cursorBlinkState = true
 					mainContainer:draw()
 					buffer.draw()
+				elseif input.autoComplete:isClicked(eventData[3], eventData[4]) then
+					input.autoComplete.eventHandler(mainContainer, input.autoComplete, eventData)
 				else
 					input.cursorBlinkState = false
 					break
 				end
+			elseif eventData[1] == "scroll" then
+				input.autoComplete.eventHandler(mainContainer, input.autoComplete, eventData)
 			elseif eventData[1] == "key_down" then
+				-- Tab
+				if eventData[4] == 15 then					
+
+
 				-- Return
-				if eventData[4] == 28 then
-					if input.historyEnabled then
-						-- Очистка истории
-						for i = 1, (#input.history - input.historyLimit) do
-							table.remove(input.history, 1)
+				elseif eventData[4] == 28 then
+					if input.autoCompleteEnabled and input.autoComplete.itemCount > 0 then
+						input.autoComplete.eventHandler(mainContainer, input.autoComplete, eventData)
+					else
+						if input.historyEnabled then
+							-- Очистка истории
+							for i = 1, (#input.history - input.historyLimit) do
+								table.remove(input.history, 1)
+							end
+
+							-- Добавление введенных данных в историю
+							if input.history[#input.history] ~= input.text and unicode.len(input.text) > 0 then
+								table.insert(input.history, input.text)
+							end
+							input.historyIndex = #input.history
 						end
 
-						-- Добавление введенных данных в историю
-						if input.history[#input.history] ~= input.text and unicode.len(input.text) > 0 then
-							table.insert(input.history, input.text)
-						end
-						input.historyIndex = #input.history
+						input.cursorBlinkState = false
+						break
 					end
-
-					input.cursorBlinkState = false
-					break
 				-- Arrows up/down/left/right
-				elseif eventData[4] == 200 and input.historyEnabled then
-					if #input.history > 0 then
-						-- Добавление уже введенного текста в историю при стрелке вверх
-						if input.historyIndex == #input.history + 1 and unicode.len(input.text) > 0 then
-							table.insert(input.history, input.text)
-						end
+				elseif eventData[4] == 200 then
+					if input.autoCompleteEnabled and input.autoComplete.selectedItem > 1 then
+						input.autoComplete.eventHandler(mainContainer, input.autoComplete, eventData)
+					else
+						if input.historyEnabled and #input.history > 0 then
+							-- Добавление уже введенного текста в историю при стрелке вверх
+							if input.historyIndex == #input.history + 1 and unicode.len(input.text) > 0 then
+								input.history[input.historyIndex] = input.text
+							end
 
-						input.historyIndex = input.historyIndex - 1
-						if input.historyIndex > #input.history then
-							input.historyIndex = #input.history
-						elseif input.historyIndex < 1 then
-							input.historyIndex = 1
-						end
+							input.historyIndex = input.historyIndex - 1
+							if input.historyIndex > #input.history then
+								input.historyIndex = #input.history
+							elseif input.historyIndex < 1 then
+								input.historyIndex = 1
+							end
 
-						input.text = input.history[input.historyIndex]
-						input:setCursorPosition(unicode.len(input.text) + 1)
+							input.text = input.history[input.historyIndex]
+							input:setCursorPosition(unicode.len(input.text) + 1)
+
+							if input.autoCompleteEnabled then
+								input.autoCompleteMatchMethod()
+							end
+						end
 					end
-				elseif eventData[4] == 208 and input.historyEnabled then
-					if #input.history > 0 then
-						input.historyIndex = input.historyIndex + 1
-						if input.historyIndex > #input.history then
-							input.historyIndex = #input.history
-						elseif input.historyIndex < 1 then
-							input.historyIndex = 1
+				elseif eventData[4] == 208 then
+					if input.autoCompleteEnabled and input.historyIndex == #input.history + 1 then
+						input.autoComplete.eventHandler(mainContainer, input.autoComplete, eventData)
+					else
+						if input.historyEnabled and #input.history > 0 then
+							input.historyIndex = input.historyIndex + 1
+							if input.historyIndex > #input.history then
+								input.historyIndex = #input.history
+							elseif input.historyIndex < 1 then
+								input.historyIndex = 1
+							end
+							
+							input.text = input.history[input.historyIndex]
+							input:setCursorPosition(unicode.len(input.text) + 1)
+
+							if input.autoCompleteEnabled then
+								input.autoCompleteMatchMethod()
+							end
 						end
-						
-						input.text = input.history[input.historyIndex]
-						input:setCursorPosition(unicode.len(input.text) + 1)
 					end
 				elseif eventData[4] == 203 then
 					input:setCursorPosition(input.cursorPosition - 1)
@@ -3150,14 +3216,26 @@ local function inputEventHandler(mainContainer, input, mainEventData)
 				elseif eventData[4] == 14 then
 					input.text = unicode.sub(unicode.sub(input.text, 1, input.cursorPosition - 1), 1, -2) .. unicode.sub(input.text, input.cursorPosition, -1)
 					input:setCursorPosition(input.cursorPosition - 1)
+					
+					if input.autoCompleteEnabled then
+						input.autoCompleteMatchMethod()
+					end
 				-- Delete
 				elseif eventData[4] == 211 then
 					input.text = unicode.sub(input.text, 1, input.cursorPosition - 1) .. unicode.sub(input.text, input.cursorPosition + 1, -1)
+					
+					if input.autoCompleteEnabled then
+						input.autoCompleteMatchMethod()
+					end
 				else
 					local char = unicode.char(eventData[3])
 					if not keyboard.isControl(eventData[3]) then
 						input.text = unicode.sub(input.text, 1, input.cursorPosition - 1) .. char .. unicode.sub(input.text, input.cursorPosition, -1)
 						input:setCursorPosition(input.cursorPosition + 1)
+
+						if input.autoCompleteEnabled then
+							input.autoCompleteMatchMethod()
+						end
 					end
 				end
 
@@ -3179,6 +3257,9 @@ local function inputEventHandler(mainContainer, input, mainEventData)
 		end
 
 		input.focused = false
+		if input.autoCompleteEnabled then
+			input.autoComplete:clear()
+		end
 		
 		GUI.callMethod(input.onInputFinished, mainContainer, input, mainEventData, input.text)
 		
@@ -3217,6 +3298,8 @@ function GUI.input(x, y, width, height, backgroundColor, textColor, placeholderT
 	input.textMask = textMask
 	input.setCursorPosition = inputSetCursorPosition
 
+	
+
 	input.history = {}
 	input.historyLimit = 20
 	input.historyIndex = 0
@@ -3226,7 +3309,170 @@ function GUI.input(x, y, width, height, backgroundColor, textColor, placeholderT
 	input.draw = inputDraw
 	input.eventHandler = inputEventHandler
 
+	input.autoComplete = GUI.autoComplete(1, 1, 30, 7, 0xE1E1E1, 0x999999, 0x3C3C3C, 0x3C3C3C, 0x999999, 0xE1E1E1, 0xC3C3C3, 0x444444)
+	input.autoCompleteEnabled = false
+	input.autoCompleteVerticalAlignment = GUI.alignment.vertical.bottom
+
 	return input
+end
+
+--------------------------------------------------------------------------------------------------------------------------------
+
+local function autoCompleteDraw(object)
+	local y, yEnd = object.y, object.y + object.height - 1
+
+	buffer.square(object.x, object.y, object.width, object.height, object.colors.default.background, object.colors.default.text, " ")
+
+	for i = object.fromItem, object.itemCount do
+		local textColor, textMatchColor = object.colors.default.text, object.colors.default.textMatch
+		if i == object.selectedItem then
+			buffer.square(object.x, y, object.width, 1, object.colors.selected.background, object.colors.selected.text, " ")
+			textColor, textMatchColor = object.colors.selected.text, object.colors.selected.textMatch
+		end
+
+		buffer.text(object.x + 1, y, textMatchColor, object.matchText)
+		buffer.text(object.x + 1 + object.matchTextLength, y, textColor, unicode.sub(object.items[i], object.matchTextLength + 1, object.width - 2 - object.matchTextLength))
+
+		y = y + 1
+		if y > yEnd then
+			break
+		end
+	end
+
+	if object.itemCount > object.height then
+		object.scrollBar.x = object.x + object.width - 1
+		object.scrollBar.y = object.y
+		object.scrollBar.height = object.height
+		object.scrollBar.maximumValue = object.itemCount - object.height + 1
+		object.scrollBar.value = object.fromItem
+		object.scrollBar.shownValueCount = object.height
+
+		object.scrollBar:draw()
+	end
+end
+
+local function autoCompleteScroll(mainContainer, object, direction)
+	if object.itemCount >= object.height then
+		object.fromItem = object.fromItem + direction
+		if object.fromItem < 1 then
+			object.fromItem = 1
+		elseif object.fromItem > object.itemCount - object.height + 1 then
+			object.fromItem = object.itemCount - object.height + 1
+		end
+	end
+end
+
+local function autoCompleteEventHandler(mainContainer, object, eventData)
+	if eventData[1] == "touch" then
+		object.selectedItem = eventData[4] - object.y + object.fromItem
+		mainContainer:draw()
+		buffer.draw()
+
+		GUI.callMethod(object.onItemSelected, mainContainer, object, eventData, object.selectedItem)
+	elseif eventData[1] == "scroll" then
+		autoCompleteScroll(mainContainer, object, -eventData[5])
+		mainContainer:draw()
+		buffer.draw()
+	elseif eventData[1] == "key_down" then
+		if eventData[4] == 28 then
+			GUI.callMethod(object.onItemSelected, mainContainer, object, eventData, object.selectedItem)
+		elseif eventData[4] == 200 then
+			object.selectedItem = object.selectedItem - 1
+			if object.selectedItem < 1 then
+				object.selectedItem = 1
+			end
+
+			if object.selectedItem == object.fromItem - 1 then
+				autoCompleteScroll(mainContainer, object, -1)
+			end
+
+			mainContainer:draw()
+			buffer.draw()
+		elseif eventData[4] == 208 then
+			object.selectedItem = object.selectedItem + 1
+			if object.selectedItem > object.itemCount then
+				object.selectedItem = object.itemCount
+			end
+
+			if object.selectedItem == object.fromItem + object.height then
+				autoCompleteScroll(mainContainer, object, 1)
+			end
+			
+			mainContainer:draw()
+			buffer.draw()
+		end
+	end
+end
+
+local function autoCompleteClear(object)
+	object.items = {}
+	object.itemCount = 0
+	object.fromItem = 1
+	object.selectedItem = 1
+	object.height = 0
+end
+
+local function autoCompleteMatch(object, variants, text)
+	object:clear()
+	
+	if text then
+		object.matchText = text
+		object.matchTextLength = unicode.len(text)
+		for i = 1, #variants do
+			if variants[i] ~= text and variants[i]:match("^" .. text) then
+				table.insert(object.items, variants[i])
+			end
+		end
+	else
+		object.matchText = ""
+		object.matchTextLength = 0
+		for i = 1, #variants do
+			table.insert(object.items, variants[i])
+		end
+	end
+
+	table.sort(object.items, function(a, b) return unicode.lower(a) < unicode.lower(b) end)
+
+	object.itemCount = #object.items
+	object.height = math.min(object.itemCount, object.maximumHeight)
+
+	return object
+end
+
+function GUI.autoComplete(x, y, width, maximumHeight, backgroundColor, textColor, textMatchColor, backgroundSelectedColor, textSelectedColor, textMatchSelectedColor, scrollBarBackground, scrollBarForeground)
+	local object = GUI.object(x, y, width, maximumHeight)
+
+	object.colors = {
+		default = {
+			background = backgroundColor,
+			text = textColor,
+			textMatch = textMatchColor	
+		},
+		selected = {
+			background = backgroundSelectedColor,
+			text = textSelectedColor,
+			textMatch = textMatchSelectedColor
+		}
+	}
+
+	object.maximumHeight = maximumHeight
+	object.fromItem = 1
+	object.selectedItem = 1
+	object.items = {}
+	object.matchText = " "
+	object.matchTextLength = 1
+	object.itemCount = 0
+
+	object.scrollBar = GUI.scrollBar(1, 1, 1, 1, scrollBarBackground, scrollBarForeground, 1, 1, 1, 1, 1, true)
+
+	object.match = autoCompleteMatch
+	object.draw = autoCompleteDraw
+	object.eventHandler = autoCompleteEventHandler
+	object.clear = autoCompleteClear
+
+	object:clear()
+
+	return object
 end
 
 --------------------------------------------------------------------------------------------------------------------------------
@@ -3239,11 +3485,93 @@ end
 -- local mainContainer = GUI.fullScreenContainer()
 -- mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x2D2D2D))
 
--- local input = mainContainer:addChild(GUI.input(2, 2, 100, 3, 0x3C3C3C, 0xAAAAAA, 0x555555, 0x444444, 0xE1E1E1, "", "Enter command here", true))
+-- local input = mainContainer:addChild(GUI.input(3, 2, 30, 3, 0xFFFFFF, 0x555555, 0x888888, 0xFFFFFF, 0x777777, "", "Placeholder"))
+
+-- input.autoCompleteEnabled = true
+-- input.autoCompleteMatchMethod = function()
+-- 	local inputTextLength = unicode.len(input.text)
+
+-- 	local left, right = 1, inputTextLength
+-- 	for i = input.cursorPosition - 1, 1, -1 do
+-- 		if unicode.sub(input.text, i, i) == " " then
+-- 			left = i + 1
+-- 			break
+-- 		end
+-- 	end
+-- 	for i = input.cursorPosition, inputTextLength do
+-- 		if unicode.sub(input.text, i, i) == " " then
+-- 			right = i - 1
+-- 			break
+-- 		end
+-- 	end
+-- 	local cykaText = unicode.sub(input.text, left, right)
+
+-- 	if cykaText:match("^[%w%.]+$") then
+-- 		local array = {}
+-- 		for word in cykaText:gmatch("[^%.]+") do
+-- 			table.insert(array, word)
+-- 		end
+
+-- 		local t = _G
+-- 		for i = 1, #array - 1 do
+-- 			if t[array[i]] and type(t[array[i]]) == "table" then
+-- 				t = t[array[i]]
+-- 			else
+-- 				input.autoComplete:clear()
+-- 				return
+-- 			end
+-- 		end
+
+-- 		input.autoComplete.result = unicode.sub(input.text, 1, left - 1)
+-- 		if #array - 1 > 0 then
+-- 			input.autoComplete.result = input.autoComplete.result .. table.concat(array, ".", 1, #array - 1) .. "."
+-- 		end
+
+-- 		local lastWord = array[#array]
+-- 		array = {}
+-- 		for key, value in pairs(t) do
+-- 			table.insert(array, tostring(key))
+-- 		end
+-- 		input.autoComplete:match(array, lastWord)
+-- 	end
+-- end
+
+-- input.autoComplete.onItemSelected = function()
+-- 	input.text = input.autoComplete.result .. input.autoComplete.items[input.autoComplete.selectedItem]
+-- 	input:setCursorPosition(unicode.len(input.text) + 1)
+	
+-- 	if input.autoCompleteEnabled then
+-- 		input.autoCompleteMatchMethod()
+-- 	end
+
+-- 	mainContainer:draw()
+-- 	buffer.draw()
+-- end
 
 -- input.onInputFinished = function()
 -- 	input.text = ""
+-- 	input.textCutFrom = 1
+-- 	input:setCursorPosition(1)
+
+-- 	mainContainer:draw()
+-- 	buffer.draw()
 -- end
+
+-- -- local textBox = mainContainer:addChild(GUI.textBox(2, 2, 40, 16, 0xEEEEEE, 0x2D2D2D, {}, 1, 2, 1, true))
+-- -- table.insert(textBox.lines, {text = "Sample colored line ", color = 0x880000})
+
+-- -- for i = 1, 30 do
+-- -- 	table.insert(textBox.lines, "cyak " .. i)
+-- -- end
+
+-- -- local file = io.open("/lib/doubleBuffering.lua")
+-- -- for line in file:lines() do
+-- -- 	line = line:gsub("\t", "  "):gsub("\r\n", "\n")
+-- -- 	table.insert(textBox.lines, line)
+-- -- end
+-- -- file:close()
+
+-- -- textBox:scrollToEnd()
 
 -- ------------------------------------------------------------------------------------------
 

@@ -287,9 +287,9 @@ local function doSerialize(array, prettyLook, indentationSymbol, indentationSymb
 
 		table.insert(text, equalsSymbol)
 		
-		if valueType == "number" or valueType == "boolean" or valueType == "nil" or valueType == "function" then
+		if valueType == "number" or valueType == "boolean" or valueType == "nil" then
 			table.insert(text, stringValue)
-		elseif valueType == "string"then
+		elseif valueType == "string" or valueType == "function" then
 			table.insert(text, "\"")
 			table.insert(text, stringValue)
 			table.insert(text, "\"")
@@ -310,7 +310,7 @@ local function doSerialize(array, prettyLook, indentationSymbol, indentationSymb
 					)
 				)
 			else
-				table.insert(text, "…")
+				table.insert(text, "\"…\"")
 			end
 		end
 		

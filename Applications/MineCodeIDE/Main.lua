@@ -274,7 +274,7 @@ local function calculateSizes()
 		mainContainer.codeView.height = mainContainer.codeView.height - 3
 	end
 
-	mainContainer.leftTreeViewResizer.localPosition.x = mainContainer.leftTreeView.width - 1
+	mainContainer.leftTreeViewResizer.localPosition.x = mainContainer.leftTreeView.width - 2
 	mainContainer.leftTreeViewResizer.localPosition.y = math.floor(mainContainer.leftTreeView.localPosition.y + mainContainer.leftTreeView.height / 2 - mainContainer.leftTreeViewResizer.height / 2)
 
 	mainContainer.settingsContainer.width, mainContainer.settingsContainer.height = mainContainer.width, mainContainer.height
@@ -1587,7 +1587,7 @@ local function createMainContainer()
 	end
 	mainContainer.bottomToolBar.hidden = true
 
-	mainContainer.leftTreeView = mainContainer:addChild(GUI.filesystemTree(1, 1, config.leftTreeViewWidth, 1, 0xCCCCCC, 0x3C3C3C, 0x3C3C3C, 0x999999, 0x3C3C3C, 0xE1E1E1, 0xBBBBBB, 0xAAAAAA, 0xC3C3C3, 0x444444, GUI.filesystemModes.both, GUI.filesystemModes.file))
+	mainContainer.leftTreeView = mainContainer:addChild(GUI.filesystemTree(1, 1, config.leftTreeViewWidth, 1, 0xCCCCCC, 0x3C3C3C, 0x3C3C3C, 0x999999, 0x3C3C3C, 0xE1E1E1, 0xBBBBBB, 0xAAAAAA, 0xBBBBBB, 0x444444, GUI.filesystemModes.both, GUI.filesystemModes.file))
 	mainContainer.leftTreeView.onItemSelected = function(path)
 		loadFile(path)
 

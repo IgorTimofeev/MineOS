@@ -10,94 +10,168 @@ local buffer = require("doubleBuffering")
 local image = require("image")
 local MineOSPaths = require("MineOSPaths")
 local MineOSInterface = require("MineOSInterface")
+local unicode = require("unicode")
+local syntax = require("syntax")
 
 ----------------------------------------------------------------------------------------------------------------
 
 local module = {}
-module.name = localization.moduleDisk
-
-local HDDImage = image.load(MineOSPaths.icons .. "HDD.pic")
-local floppyImage = image.load(MineOSPaths.icons .. "Floppy.pic")
+module.name = localization.moduleLua
 
 ----------------------------------------------------------------------------------------------------------------
 
 module.onTouch = function()
 	window.contentContainer:deleteChildren()
-	local container = window.contentContainer:addChild(GUI.container(1, 1, window.contentContainer.width, window.contentContainer.height))
+
+	local textBox = window.contentContainer:addChild(GUI.textBox(1, 1, window.contentContainer.width, window.contentContainer.height - 3, nil, 0x444444, localization.luaInfo, 1, 2, 1))
+	textBox.scrollBarEnabled = true
+
+	local placeholder = localization.luaType
+	local input = window.contentContainer:addChild(GUI.input(1, window.contentContainer.height - 2, window.contentContainer.width, 3, 0x2D2D2D, 0xE1E1E1, 0x666666, 0x2D2D2D, 0xE1E1E1, "", placeholder, true))
 	
-	local y = 2
-	for address in component.list("filesystem") do
-		local proxy = component.proxy(address)
-		local isBoot = computer.getBootAddress() == proxy.address
-		local isReadOnly = proxy.isReadOnly()
-
-		local diskContainer = container:addChild(GUI.container(1, y, container.width, 4))
-		
-		local button = diskContainer:addChild(GUI.adaptiveRoundedButton(1, 3, 2, 0, 0x2D2D2D, 0xE1E1E1, 0x0, 0xE1E1E1, localization.options))
-		button.onTouch = function()
-			local container = MineOSInterface.addUniversalContainer(mainContainer, localization.options)
-			local inputField = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0x666666, 0xEEEEEE, 0x262626, proxy.getLabel() or "", localization.diskLabel))
-			inputField.onInputFinished = function()
-				if inputField.text and inputField.text:len() > 0 then
-					proxy.setLabel(inputField.text)
-
-					container:delete()
-					module.onTouch()
-				end
-			end
-			
-			local button = container.layout:addChild(GUI.roundedButton(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0x666666, 0xEEEEEE, localization.format))
-			button.onTouch = function()
-				local list = proxy.list("/")
-				for i = 1, #list do
-					proxy.remove(list[i])
-				end
-
-				container:delete()
-				module.onTouch()
-			end
-			button.disabled = isReadOnly
-
-			local switch = container.layout:addChild(GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0x1E1E1E, 0xEEEEEE, 0xBBBBBB, localization.bootable .. ":", isBoot)).switch
-			switch.onStateChanged = function()
-				if switch.state then
-					computer.setBootAddress(proxy.address)
-
-					container:delete()
-					module.onTouch()
-				end
-			end
-
-			mainContainer:draw()
-			buffer.draw()
+	input.textDrawMethod = function(x, y, color, text)
+		if text == placeholder then
+			buffer.text(x, y, color, text)
+		else
+			syntax.highlightString(x, y, text, 2)
 		end
-		button.localPosition.x = diskContainer.width - button.width - 1
-
-		local width = diskContainer.width - button.width - 17
-		local x = 13
-		local spaceTotal = proxy.spaceTotal()
-		local spaceUsed = proxy.spaceUsed()
-
-		diskContainer:addChild(GUI.image(3, 1, isReadOnly and floppyImage or HDDImage))
-		diskContainer:addChild(GUI.label(x, 1, width, 1, 0x2D2D2D, (proxy.getLabel() or "Unknown") .. " (" .. (isBoot and (localization.bootable .. ", ") or "") .. proxy.address .. ")"))
-		diskContainer:addChild(GUI.progressBar(x, 3, width, 0x66DB80, 0xD2D2D2, 0xD2D2D2, spaceUsed / spaceTotal * 100, true))
-		diskContainer:addChild(GUI.label(x, 4, width, 1, 0xBBBBBB, localization.free .. " " .. math.roundToDecimalPlaces((spaceTotal - spaceUsed) / 1024 / 1024, 2) .. " MB " .. localization.of .. " " .. math.roundToDecimalPlaces(spaceTotal / 1024 / 1024, 2) .. " MB")):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
-
-		y = y + diskContainer.height + 1
 	end
 
-	container.eventHandler = function(mainContainer, object, eventData)
-		if eventData[1] == "scroll" then
-			if eventData[5] < 0 or container.children[1].localPosition.y < 2 then
-				for i = 1, #container.children do
-					container.children[i].localPosition.y = container.children[i].localPosition.y + eventData[5]
-				end
-
-				mainContainer:draw()
-				buffer.draw()
+	local function add(data, color)
+		for line in data:gmatch("[^\n]+") do
+			local wrappedLine = string.wrap(line, textBox.textWidth)
+			for i = 1, #wrappedLine do
+				table.insert(textBox.lines, color and {color = color, text = wrappedLine[i]} or wrappedLine[i])
 			end
-		elseif eventData[1] == "component_added" or eventData[1] == "component_removed" and eventData[3] == "filesystem" then
-			module.onTouch()
+		end
+
+		textBox:scrollToEnd()
+		-- local abc = " "; for i = 1, 30 do abc = abc .. "p " end; print(abc)
+	end
+
+	input.autoComplete.colors.default.background = 0x4B4B4B
+	input.autoComplete.colors.default.text = 0xC3C3C3
+	input.autoComplete.colors.default.textMatch = 0xFFFFFF
+	input.autoComplete.colors.selected.background = 0x777777
+	input.autoComplete.colors.selected.text = 0xD2D2D2
+	input.autoComplete.colors.selected.textMatch = 0xFFFFFF
+	input.autoComplete.scrollBar.colors.background = 0x666666
+	input.autoComplete.scrollBar.colors.foreground = 0xAAAAAA
+
+	input.autoCompleteVerticalAlignment = GUI.alignment.vertical.top
+	input.autoCompleteEnabled = true
+	input.autoCompleteMatchMethod = function()
+		local inputTextLength = unicode.len(input.text)
+		local left, right = 1, inputTextLength
+		for i = input.cursorPosition - 1, 1, -1 do
+			if not unicode.sub(input.text, i, i):match("[%w%.]+") then
+				left = i + 1
+				break
+			end
+		end
+		for i = input.cursorPosition, inputTextLength do
+			if not unicode.sub(input.text, i, i):match("[%w%.]+") then
+				right = i - 1
+				break
+			end
+		end
+		local cykaText = unicode.sub(input.text, left, right)
+
+		local array = {}
+		local t = _G
+		if cykaText:match("^[%w%.]+$") then
+			local words = {}
+			for word in cykaText:gmatch("[^%.]+") do
+				table.insert(words, word)
+			end
+			local dotInEnd = unicode.sub(cykaText, -1, -1) == "."
+			local wordCount = #words - (dotInEnd and 0 or 1)
+			
+			for i = 1, wordCount do
+				if t[words[i]] and type(t[words[i]]) == "table" then
+					t = t[words[i]]
+				else
+					input.autoComplete:clear()
+					return
+				end
+			end
+
+			input.autoComplete.result = unicode.sub(input.text, 1, left - 1)
+			if wordCount > 0 then
+				input.autoComplete.result = input.autoComplete.result .. table.concat(words, ".", 1, wordCount) .. "."
+			end
+
+			if dotInEnd then
+				for key, value in pairs(t) do
+					table.insert(array, tostring(key))
+				end
+				input.autoComplete:match(array)
+			else
+				for key, value in pairs(t) do
+					table.insert(array, tostring(key))
+				end
+				input.autoComplete:match(array, words[#words])
+			end
+		elseif input.text == "" then
+			input.autoComplete.result = ""
+			for key, value in pairs(t) do
+				table.insert(array, tostring(key))
+			end
+			input.autoComplete:match(array)
+		end
+	end
+
+	input.autoComplete.onItemSelected = function()
+		input.text = input.autoComplete.result .. input.autoComplete.items[input.autoComplete.selectedItem]
+		input:setCursorPosition(unicode.len(input.text) + 1)
+		
+		if input.autoCompleteEnabled then
+			input.autoCompleteMatchMethod()
+		end
+
+		mainContainer:draw()
+		buffer.draw()
+	end
+
+	input.onInputFinished = function()
+		if input.text:len() > 0 then
+			local oldPrint = print
+			
+			print = function(...)
+				local args = {...}
+				for i = 1, #args do
+					if type(args[i]) == "table" then
+						args[i] = table.toString(args[i], true, 2, false, 2)
+					else
+						args[i] = tostring(args[i])
+					end
+				end
+				add(table.concat(args, " "))
+			end
+
+			add("> " .. input.text, 0xAAAAAA)
+
+			if unicode.sub(input.text, 1, 1) == "=" then
+				input.text = "return " .. unicode.sub(input.text, 2, -1)
+			end
+
+			local result, reason = load(input.text)
+			if result then
+				local data = {xpcall(result, debug.traceback())}
+				if data[1] then
+					print(table.unpack(data, 2))
+				else
+					add(tostring(data[2]), 0x880000)
+				end
+			else
+				add(tostring(reason), 0x880000)
+			end
+
+			print = oldPrint
+
+			input.text = ""
+			input.textCutFrom = 1
+			input:setCursorPosition(1)
 		end
 	end
 

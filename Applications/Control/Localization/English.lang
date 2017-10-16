@@ -1,7 +1,8 @@
 {	
-	moduleDisk = "Disk utility",
-	moduleRAM = "RAM control",
-	moduleEvent = "Event processing",
+	moduleDisk = "Disks",
+	moduleRAM = "RAM",
+	moduleEvent = "Events",
+	moduleLua = "Lua interpreter",
 
 	diskLabel = "Disk label",
 	bootable = "Bootable",
@@ -13,4 +14,11 @@
 	execute = "Execute",
 	waitingEvents = "Waiting for events",
 	processingEnabled = "Event processing enabled",
+	luaInfo = {
+		{color = 0x880000, text = _G._VERSION .. " Copyright (C) 1994-2017 Lua.org, PUC-Rio"},
+		"Type a statement and hit Enter to evaluate it",
+		"Prefix an expression with \"=\" to show its value",
+		" "
+	},
+	luaType = "Type statement here"
 }

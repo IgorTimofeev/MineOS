@@ -10,39 +10,135 @@ local buffer = require("doubleBuffering")
 local image = require("image")
 local MineOSPaths = require("MineOSPaths")
 local MineOSInterface = require("MineOSInterface")
+local unicode = require("unicode")
 
 ----------------------------------------------------------------------------------------------------------------
 
 local module = {}
-module.name = localization.moduleEvent
+module.name = localization.moduleRAM
 
 ----------------------------------------------------------------------------------------------------------------
 
-module.onTouch = function()
+module.onTouch = function()	
 	window.contentContainer:deleteChildren()
-
-	local container = window.contentContainer:addChild(GUI.container(1, 1, window.contentContainer.width, window.contentContainer.height))
-
-	local layout = container:addChild(GUI.layout(1, 1, container.width, window.contentContainer.height, 1, 1))
-	layout:setCellAlignment(1, 1, GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
-	layout:setCellMargin(1, 1, 0, 1)
-
-	local textBox = layout:addChild(GUI.textBox(1, 1, container.width - 4, container.height - 4, nil, 0x888888, {localization.waitingEvents .. "..."}, 1, 0, 0))
-	local switch = layout:addChild(GUI.switchAndLabel(1, 1, 27, 6, 0x66DB80, 0x1E1E1E, 0xFFFFFF, 0x2D2D2D, localization.processingEnabled .. ": ", true)).switch
 	
-	container.eventHandler = function(mainContainer, object, eventData)
-		if switch.state and eventData[1] then
-			local lines = table.concat(eventData, " ")
-			lines = string.wrap(lines, textBox.width)
-			for i = 1, #lines do
-				table.insert(textBox.lines, lines[i])
-			end
-			textBox:scrollDown(#lines)
+	local cykaPanel = window.contentContainer:addChild(GUI.panel(1, 1, 1, 1, 0xE1E1E1))
 
-			mainContainer:draw()
-			buffer.draw()
+	local mainLayout = window.contentContainer:addChild(GUI.layout(1, 1, window.contentContainer.width, window.contentContainer.height, 2, 1))
+	mainLayout:setColumnWidth(1, GUI.sizePolicies.percentage, 0.3)
+	mainLayout:setColumnWidth(2, GUI.sizePolicies.percentage, 0.7)
+	mainLayout:setCellFitting(1, 1, true, true)
+	mainLayout:setCellFitting(2, 1, true, true)
+
+	local tree = mainLayout:setCellPosition(1, 1, mainLayout:addChild(GUI.tree(1, 1, 1, 1, 0xE1E1E1, 0x3C3C3C, 0x3C3C3C, 0xAAAAAA, 0x3C3C3C, 0xFFFFFF, 0xBBBBBB, 0xAAAAAA, 0xC3C3C3, 0x444444, GUI.filesystemModes.both, GUI.filesystemModes.file)))
+
+	local itemsLayout = mainLayout:setCellPosition(2, 1, mainLayout:addChild(GUI.layout(1, 1, 1, 1, 1, 2)))
+	itemsLayout:setRowHeight(1, GUI.sizePolicies.percentage, 0.6)
+	itemsLayout:setRowHeight(2, GUI.sizePolicies.percentage, 0.4)
+	itemsLayout:setCellFitting(1, 1, true, false, 4, 0)
+	itemsLayout:setCellFitting(1, 2, true, true)
+
+	local infoLabel = itemsLayout:setCellPosition(1, 1, itemsLayout:addChild(GUI.label(1, 1, 1, 1, 0x3C3C3C, "nil")):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top))
+	local argumentsInputField = itemsLayout:setCellPosition(1, 1, itemsLayout:addChild(GUI.input(1, 1, 1, 3, 0xFFFFFF, 0x666666, 0x888888, 0xFFFFFF, 0x262626, nil, localization.arguments)))
+	local executeButton = itemsLayout:setCellPosition(1, 1, itemsLayout:addChild(GUI.button(1, 1, 1, 3, 0x3C3C3C, 0xFFFFFF, 0x0, 0xFFFFFF, localization.execute)))
+	local outputTextBox = itemsLayout:setCellPosition(1, 2, itemsLayout:addChild(GUI.textBox(1, 1, 1, 1, 0xFFFFFF, 0x888888, {"nil"}, 1, 1, 0)))
+
+	local function updateList(tree, t, definitionName, offset)
+		local list = {}
+		for key in pairs(t) do
+			table.insert(list, key)
+		end
+
+		local i, expandables = 1, {}
+		while i <= #list do
+			if type(t[list[i]]) == "table" then
+				table.insert(expandables, list[i])
+				table.remove(list, i)
+			else
+				i = i + 1
+			end
+		end
+
+		table.sort(expandables, function(a, b) return unicode.lower(tostring(a)) < unicode.lower(tostring(b)) end)
+		table.sort(list, function(a, b) return unicode.lower(tostring(a)) < unicode.lower(tostring(b)) end)
+
+		for i = 1, #expandables do
+			local definition = definitionName .. expandables[i]
+
+			tree:addItem(tostring(expandables[i]), definition, offset, true)
+			if tree.expandedItems[definition] then
+				updateList(tree, t[expandables[i]], definition, offset + 2)
+			end
+		end
+
+		for i = 1, #list do
+			tree:addItem(tostring(list[i]), {key = list[i], value = t[list[i]]}, offset, false)
 		end
 	end
+
+	local function out(text)		
+		local wrappedLines = string.wrap(text, outputTextBox.width - 2)
+		for i = 1, #wrappedLines do
+			table.insert(outputTextBox.lines, wrappedLines[i])
+		end
+	end
+
+	tree.onItemExpanded = function()
+		tree.items = {}
+		updateList(tree, _G, "_G", 1)
+	end
+
+	tree.onItemSelected = function()
+		local valueType = type(tree.selectedItem.value)
+		local valueIsFunction = valueType == "function"
+		
+		executeButton.disabled = not valueIsFunction
+		argumentsInputField.disabled = executeButton.disabled
+
+		infoLabel.text = tostring(tree.selectedItem.key) .. " (" .. valueType .. ")"
+		outputTextBox.lines = {}
+
+		if valueIsFunction then
+			out("nil")
+		else
+			out(tostring(tree.selectedItem.value))
+		end
+	end
+
+	executeButton.onTouch = function()
+		outputTextBox.lines = {}
+
+		local data = "local method = ({...})[1]; return method(" .. (argumentsInputField.text or "") .. ")"
+		local success, reason = load(data)
+		if success then
+			local success, reason = pcall(success, tree.selectedItem.value)
+			if success then
+				if type(reason) == "table" then
+					local serialized = table.toString(reason, true, 2, false, 3)
+					for line in serialized:gmatch("[^\n]+") do
+						out(line)
+					end
+				else
+					out(tostring(reason))
+				end
+			else
+				out("Failed to pcall loaded string \"" .. data .. "\": " .. reason)
+			end
+		else
+			out("Failed to load string \"" .. data .. "\": " .. reason)
+		end
+
+		mainContainer:draw()
+		buffer.draw()
+	end
+
+
+	executeButton.disabled = true
+	argumentsInputField.disabled = true
+	executeButton.colors.disabled.background = 0x777777
+	executeButton.colors.disabled.text = 0xD2D2D2
+
+	tree.onItemExpanded()
 
 	mainContainer:draw()
 	buffer.draw()
