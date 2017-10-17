@@ -2298,8 +2298,8 @@ local function filesystemDialogSetMode(filesystemDialog, IOMode, filesystemMode)
 	if filesystemDialog.IOMode == GUI.filesystemModes.save then
 		filesystemDialog.filesystemTree.showMode = GUI.filesystemModes.directory
 		filesystemDialog.filesystemTree.selectionMode = GUI.filesystemModes.directory
-		filesystemDialog.input.eventHandler = inputEventHandler
-		filesystemDialog.extensionComboBox.hidden = not (filesystemDialog.filesystemMode == GUI.filesystemModes.file)
+		filesystemDialog.input.disabled = false
+		filesystemDialog.extensionComboBox.hidden = filesystemDialog.filesystemMode ~= GUI.filesystemModes.file or not filesystemDialog.filesystemTree.extensionFilters
 	else
 		if filesystemDialog.filesystemMode == GUI.filesystemModes.file then
 			filesystemDialog.filesystemTree.showMode = GUI.filesystemModes.both
@@ -2309,7 +2309,7 @@ local function filesystemDialogSetMode(filesystemDialog, IOMode, filesystemMode)
 			filesystemDialog.filesystemTree.selectionMode = GUI.filesystemModes.directory
 		end
 
-		filesystemDialog.input.eventHandler = nil
+		filesystemDialog.input.disabled = true
 		filesystemDialog.extensionComboBox.hidden = true
 	end
 
@@ -2320,8 +2320,9 @@ local function filesystemDialogAddExtensionFilter(filesystemDialog, extension)
 	filesystemDialog.extensionComboBox:addItem(extension)
 	filesystemDialog.extensionComboBox.width = math.max(filesystemDialog.extensionComboBox.width, unicode.len(extension) + 3)
 	filesystemDialog.extensionComboBox.localPosition.x = filesystemDialog.cancelButton.localPosition.x - filesystemDialog.extensionComboBox.width - 2
-
 	filesystemDialog.filesystemTree:addExtensionFilter(extension)
+
+	filesystemDialog:setMode(filesystemDialog.IOMode, filesystemDialog.filesystemMode)
 end
 
 function GUI.filesystemDialog(x, y, width, height, submitButtonText, cancelButtonText, placeholderText, path)
@@ -2334,10 +2335,10 @@ function GUI.filesystemDialog(x, y, width, height, submitButtonText, cancelButto
 	filesystemDialog.submitButton.localPosition.x = filesystemDialog.width - filesystemDialog.submitButton.width - 1
 	filesystemDialog.cancelButton.localPosition.x = filesystemDialog.submitButton.localPosition.x - filesystemDialog.cancelButton.width - 2
 
-	filesystemDialog.extensionComboBox = filesystemDialog:addChild(GUI.comboBox(1, height - 1, 1, 1, 0xE1E1E1, 0x555555, 0xC3C3C3, 0x888888))
+	filesystemDialog.extensionComboBox = filesystemDialog:addChild(GUI.comboBox(1, height - 1, 1, 1, 0xE1E1E1, 0x666666, 0xC3C3C3, 0x888888))
 	filesystemDialog.extensionComboBox.hidden = true
 
-	filesystemDialog.input = filesystemDialog:addChild(GUI.input(2, height - 1, 1, 1, 0xE1E1E1, 0x555555, 0x888888, 0xE1E1E1, 0x777777, "", placeholderText))
+	filesystemDialog.input = filesystemDialog:addChild(GUI.input(2, height - 1, 1, 1, 0xE1E1E1, 0x666666, 0x999999, 0xE1E1E1, 0x3C3C3C, "", placeholderText))
 
 	filesystemDialog.filesystemTree = filesystemDialog:addChild(GUI.filesystemTree(1, 1, width, height - 3, 0xE1E1E1, 0x3C3C3C, 0x3C3C3C, 0xAAAAAA, 0x3C3C3C, 0xE1E1E1, 0xBBBBBB, 0xAAAAAA, 0xC3C3C3, 0x444444))
 	filesystemDialog.filesystemTree.workPath = path
@@ -2394,7 +2395,8 @@ function GUI.addFilesystemDialogToContainer(parentContainer, ...)
 			path = path .. filesystemDialog.input.text
 			
 			if filesystemDialog.filesystemMode == GUI.filesystemModes.file then
-				path = path .. filesystemDialog.extensionComboBox:getItem(filesystemDialog.extensionComboBox.selectedItem).text
+				local selectedItem = filesystemDialog.extensionComboBox:getItem(filesystemDialog.extensionComboBox.selectedItem)
+				path = path .. (selectedItem and selectedItem.text or "")
 			else
 				path = path .. "/"
 			end
@@ -3486,6 +3488,29 @@ function GUI.autoComplete(x, y, width, maximumHeight, backgroundColor, textColor
 
 	return object
 end
+
+--------------------------------------------------------------------------------------------------------------------------------
+
+
+-- buffer.clear()
+-- buffer.draw(true)
+
+-- -- Создаем полноэкранный контейнер, добавляем на него загруженное изображение и полупрозрачную черную панель
+-- local mainContainer = GUI.fullScreenContainer()
+-- mainContainer:addChild(GUI.image(1, 1, image.load("/MineOS/Pictures/Raspberry.pic")))
+
+-- local filesystemDialog = GUI.addFilesystemDialogToContainer(mainContainer, "Save", "Cancel", "File name", "/")
+-- filesystemDialog:setMode(GUI.filesystemModes.save, GUI.filesystemModes.file)
+-- filesystemDialog:addExtensionFilter(".pic")
+-- filesystemDialog:show()
+-- filesystemDialog.onSubmit = function(path)
+-- 	GUI.error(path)
+-- end
+
+-- mainContainer:draw()
+-- buffer.draw(true)
+-- mainContainer:startEventHandling()
+
 
 --------------------------------------------------------------------------------------------------------------------------------
 

@@ -260,10 +260,12 @@ local image = require("image")
 local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 
+------------------------------------------------------------------------------------------
+
 -- Создаем полноэкранный контейнер, добавляем на него загруженное изображение и полупрозрачную черную панель
 local mainContainer = GUI.fullScreenContainer()
 mainContainer:addChild(GUI.image(1, 1, image.load("/MineOS/Pictures/Raspberry.pic")))
-mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x000000, 40))
+mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x000000, 0.4))
 
 -- Добавляем в созданный контейнер layout с сеткой размером 5x1
 local layout = mainContainer:addChild(GUI.layout(1, 1, mainContainer.width, mainContainer.height, 5, 1))
@@ -280,6 +282,8 @@ layout:setCellPosition(3, 1, layout:addChild(GUI.button(1, 1, 26, 3, 0xEEEEEE, 0
 layout:setCellPosition(4, 1, layout:addChild(GUI.button(1, 1, 26, 3, 0xEEEEEE, 0x000000, 0xAAAAAA, 0x000000, "Button 7")))
 layout:setCellPosition(4, 1, layout:addChild(GUI.button(1, 1, 26, 3, 0xEEEEEE, 0x000000, 0xAAAAAA, 0x000000, "Button 8")))
 layout:setCellPosition(5, 1, layout:addChild(GUI.button(1, 1, 26, 3, 0xEEEEEE, 0x000000, 0xAAAAAA, 0x000000, "Button 9")))
+
+------------------------------------------------------------------------------------------
 
 mainContainer:draw()
 buffer.draw(true)
