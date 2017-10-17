@@ -3063,6 +3063,7 @@ local function inputDraw(input)
 	if input.focused then
 		background, foreground, transparency = input.colors.focused.background, input.colors.focused.text, input.colors.focused.transparency
 	elseif input.text == "" then
+		input.textCutFrom = 1
 		text, foreground = input.placeholderText or "", input.colors.placeholderText
 	end
 
@@ -3104,10 +3105,15 @@ end
 local function inputEventHandler(mainContainer, input, mainEventData)
 	if mainEventData[1] == "touch" then
 		input.focused = true
-		input.historyIndex = input.historyIndex + 1
+		
+		if input.historyEnabled then
+			input.historyIndex = input.historyIndex + 1
+		end
+
 		if input.eraseTextOnFocus then
 			input.text = ""
 		end
+
 		input.cursorBlinkState = true
 		input:setCursorPosition(unicode.len(input.text) + 1)
 
@@ -3137,12 +3143,8 @@ local function inputEventHandler(mainContainer, input, mainEventData)
 			elseif eventData[1] == "scroll" then
 				input.autoComplete.eventHandler(mainContainer, input.autoComplete, eventData)
 			elseif eventData[1] == "key_down" then
-				-- Tab
-				if eventData[4] == 15 then					
-
-
 				-- Return
-				elseif eventData[4] == 28 then
+				if eventData[4] == 28 then
 					if input.autoCompleteEnabled and input.autoComplete.itemCount > 0 then
 						input.autoComplete.eventHandler(mainContainer, input.autoComplete, eventData)
 					else
@@ -3298,12 +3300,10 @@ function GUI.input(x, y, width, height, backgroundColor, textColor, placeholderT
 	input.textMask = textMask
 	input.setCursorPosition = inputSetCursorPosition
 
-	
-
 	input.history = {}
 	input.historyLimit = 20
 	input.historyIndex = 0
-	input.historyEnabled = true
+	input.historyEnabled = false
 
 	input.textDrawMethod = inputTextDrawMethod
 	input.draw = inputDraw
@@ -3474,110 +3474,6 @@ function GUI.autoComplete(x, y, width, maximumHeight, backgroundColor, textColor
 
 	return object
 end
-
---------------------------------------------------------------------------------------------------------------------------------
-
--- buffer.flush()
--- buffer.draw(true)
-
--- ------------------------------------------------------------------------------------------
-
--- local mainContainer = GUI.fullScreenContainer()
--- mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x2D2D2D))
-
--- local input = mainContainer:addChild(GUI.input(3, 2, 30, 3, 0xFFFFFF, 0x555555, 0x888888, 0xFFFFFF, 0x777777, "", "Placeholder"))
-
--- input.autoCompleteEnabled = true
--- input.autoCompleteMatchMethod = function()
--- 	local inputTextLength = unicode.len(input.text)
-
--- 	local left, right = 1, inputTextLength
--- 	for i = input.cursorPosition - 1, 1, -1 do
--- 		if unicode.sub(input.text, i, i) == " " then
--- 			left = i + 1
--- 			break
--- 		end
--- 	end
--- 	for i = input.cursorPosition, inputTextLength do
--- 		if unicode.sub(input.text, i, i) == " " then
--- 			right = i - 1
--- 			break
--- 		end
--- 	end
--- 	local cykaText = unicode.sub(input.text, left, right)
-
--- 	if cykaText:match("^[%w%.]+$") then
--- 		local array = {}
--- 		for word in cykaText:gmatch("[^%.]+") do
--- 			table.insert(array, word)
--- 		end
-
--- 		local t = _G
--- 		for i = 1, #array - 1 do
--- 			if t[array[i]] and type(t[array[i]]) == "table" then
--- 				t = t[array[i]]
--- 			else
--- 				input.autoComplete:clear()
--- 				return
--- 			end
--- 		end
-
--- 		input.autoComplete.result = unicode.sub(input.text, 1, left - 1)
--- 		if #array - 1 > 0 then
--- 			input.autoComplete.result = input.autoComplete.result .. table.concat(array, ".", 1, #array - 1) .. "."
--- 		end
-
--- 		local lastWord = array[#array]
--- 		array = {}
--- 		for key, value in pairs(t) do
--- 			table.insert(array, tostring(key))
--- 		end
--- 		input.autoComplete:match(array, lastWord)
--- 	end
--- end
-
--- input.autoComplete.onItemSelected = function()
--- 	input.text = input.autoComplete.result .. input.autoComplete.items[input.autoComplete.selectedItem]
--- 	input:setCursorPosition(unicode.len(input.text) + 1)
-	
--- 	if input.autoCompleteEnabled then
--- 		input.autoCompleteMatchMethod()
--- 	end
-
--- 	mainContainer:draw()
--- 	buffer.draw()
--- end
-
--- input.onInputFinished = function()
--- 	input.text = ""
--- 	input.textCutFrom = 1
--- 	input:setCursorPosition(1)
-
--- 	mainContainer:draw()
--- 	buffer.draw()
--- end
-
--- -- local textBox = mainContainer:addChild(GUI.textBox(2, 2, 40, 16, 0xEEEEEE, 0x2D2D2D, {}, 1, 2, 1, true))
--- -- table.insert(textBox.lines, {text = "Sample colored line ", color = 0x880000})
-
--- -- for i = 1, 30 do
--- -- 	table.insert(textBox.lines, "cyak " .. i)
--- -- end
-
--- -- local file = io.open("/lib/doubleBuffering.lua")
--- -- for line in file:lines() do
--- -- 	line = line:gsub("\t", "  "):gsub("\r\n", "\n")
--- -- 	table.insert(textBox.lines, line)
--- -- end
--- -- file:close()
-
--- -- textBox:scrollToEnd()
-
--- ------------------------------------------------------------------------------------------
-
--- mainContainer:draw()
--- buffer.draw(true)
--- mainContainer:startEventHandling()
 
 --------------------------------------------------------------------------------------------------------------------------------
 
