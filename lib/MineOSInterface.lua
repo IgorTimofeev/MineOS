@@ -331,7 +331,7 @@ end
 
 local function iconFieldUpdateFileList(iconField)
 	-- GUI.error(debug.traceback())
-	iconField.fileList = fs.sortedList(iconField.workpath, MineOSCore.properties.sortingMethod or "type", MineOSCore.properties.showHiddenFiles)
+	iconField.fileList = fs.sortedList(iconField.workpath, MineOSCore.properties.sortingMethod or "type", MineOSCore.properties.showHiddenFiles, iconField.filenameMatcher, false)
 	iconField:update()
 
 	-- Грузим инфу об иконочках
@@ -342,12 +342,10 @@ local function iconFieldUpdateFileList(iconField)
 	local configList, notConfigList = {}, {}
 	for i = iconField.fromFile, iconField.fromFile + iconField.iconCount.total - 1 do
 		if iconField.fileList[i] then
-			if not iconField.filenameMatcher or string.unicodeFind(unicode.lower(iconField.fileList[i]), unicode.lower(iconField.filenameMatcher)) then
-				if iconField.iconConfigEnabled and iconField.iconConfig[iconField.fileList[i]] then
-					table.insert(configList, iconField.fileList[i])
-				else
-					table.insert(notConfigList, iconField.fileList[i])
-				end
+			if iconField.iconConfigEnabled and iconField.iconConfig[iconField.fileList[i]] then
+				table.insert(configList, iconField.fileList[i])
+			else
+				table.insert(notConfigList, iconField.fileList[i])
 			end
 		else
 			break
@@ -1014,7 +1012,6 @@ function MineOSInterface.rename(parentWindow, path)
 
 	parentWindow:draw()
 	buffer.draw()
-	container.inputField:startInput()
 end
 
 function MineOSInterface.editShortcut(parentWindow, path)
@@ -1036,7 +1033,6 @@ function MineOSInterface.editShortcut(parentWindow, path)
 
 	parentWindow:draw()
 	buffer.draw()
-	container.inputField:startInput()
 end
 
 function MineOSInterface.launchWithArguments(parentWindow, path)

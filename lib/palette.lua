@@ -1,19 +1,16 @@
 
-local advancedLua = require("advancedLua")
+require("advancedLua")
 local component = require("component")
 local fs = require("filesystem")
 local color = require("color")
 local image = require("image")
 local buffer = require("doubleBuffering")
 local GUI = require("GUI")
-local MineOSPaths = require("MineOSPaths")
 
 --------------------------------------------------------------------------------------------------------------
 
 local palette = {}
-local pathToFavouritesConfig, favourites = MineOSPaths.applicationData .. "Palette/Favourites.cfg"
-
---------------------------------------------------------------------------------------------------------------
+local pathToFavouritesConfig, favourites = fs.path(getCurrentScript()) .. ".palette.cfg"
 
 local function saveFavourites()
 	table.toFile(pathToFavouritesConfig, favourites)

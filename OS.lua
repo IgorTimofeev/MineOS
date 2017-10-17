@@ -146,7 +146,6 @@ local function checkPassword()
 	end
 
 	MineOSInterface.OSDraw()
-	inputField:startInput()
 end
 
 local function setPassword()

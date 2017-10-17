@@ -10,7 +10,6 @@ local event = require("event")
 local color = require("color")
 local image = require("image")
 local buffer = require("doubleBuffering")
-local syntax = require("syntax")
 
 ----------------------------------------- Constants -----------------------------------------
 
@@ -924,7 +923,7 @@ end
 ----------------------------------------- CodeView object -----------------------------------------
 
 local function codeViewDraw(codeView)
-	-- local toLine = codeView.fromLine + codeView.height - (codeView.scrollBars.horizontal.hidden and 1 or 2)
+	local syntax = require("syntax")
 	local toLine = codeView.fromLine + codeView.height - 1
 
 	-- Line numbers bar and code area
@@ -1251,31 +1250,38 @@ local function windowCheck(container, x, y)
 end
 
 local function windowEventHandler(mainContainer, object, eventData)
-	if eventData ~= mainContainer.focusedWindowEventData then
-		mainContainer.focusedWindowEventData = eventData
+	if eventData[1] == "touch" then
+		object.lastTouchPosition = object.lastTouchPosition or {}
+		object.lastTouchPosition.x, object.lastTouchPosition.y = eventData[3], eventData[4]
+		
+		if object ~= object.parent.children[#object.parent.children] then
+			object:moveToFront()
+			mainContainer:draw()
+			buffer.draw()
+		end
+	elseif eventData[1] == "drag" and object.lastTouchPosition and not windowCheck(object, eventData[3], eventData[4]) then
+		local xOffset, yOffset = eventData[3] - object.lastTouchPosition.x, eventData[4] - object.lastTouchPosition.y
+		object.lastTouchPosition.x, object.lastTouchPosition.y = eventData[3], eventData[4]
 
-		if eventData[1] == "touch" then
-			mainContainer.focusedWindow = object
-			object.lastTouchPosition = object.lastTouchPosition or {}
-			object.lastTouchPosition.x, object.lastTouchPosition.y = eventData[3], eventData[4]
-			
-			if object ~= object.parent.children[#object.parent.children] then
-				object:moveToFront()
-				mainContainer:draw()
-				buffer.draw()
+		if xOffset ~= 0 or yOffset ~= 0 then
+			object.localPosition.x, object.localPosition.y = object.localPosition.x + xOffset, object.localPosition.y + yOffset
+			mainContainer:draw()
+			buffer.draw()
+		end
+	elseif eventData[1] == "drop" then
+		object.lastTouchPosition = nil
+	elseif eventData[1] == "key_down" then
+		-- Ctrl or CMD
+		if keyboard.isKeyDown(29) or keyboard.isKeyDown(219) then
+			-- W
+			if eventData[4] == 17 then
+				if object == object.parent.children[#object.parent.children] and not eventData.windowHandled then
+					eventData.windowHandled = true
+					object:close()
+					mainContainer:draw()
+					buffer.draw()
+				end
 			end
-		elseif eventData[1] == "drag" and object == mainContainer.focusedWindow and object.lastTouchPosition and not windowCheck(object, eventData[3], eventData[4]) then
-			local xOffset, yOffset = eventData[3] - object.lastTouchPosition.x, eventData[4] - object.lastTouchPosition.y
-			object.lastTouchPosition.x, object.lastTouchPosition.y = eventData[3], eventData[4]
-
-			if xOffset ~= 0 or yOffset ~= 0 then
-				object.localPosition.x, object.localPosition.y = object.localPosition.x + xOffset, object.localPosition.y + yOffset
-				mainContainer:draw()
-				buffer.draw()
-			end
-		elseif eventData[1] == "drop" then
-			mainContainer.focusedWindow = nil
-			object.lastTouchPosition = nil
 		end
 	end
 end
@@ -1284,7 +1290,6 @@ function GUI.window(x, y, width, height)
 	local window = GUI.container(x, y, width, height)
 	
 	window.eventHandler = windowEventHandler
-	window.allowDragMovement = true
 	window.draw = windowDraw
 
 	return window
@@ -3104,6 +3109,7 @@ end
 
 local function inputEventHandler(mainContainer, input, mainEventData)
 	if mainEventData[1] == "touch" then
+		local textOnStart = input.text
 		input.focused = true
 		
 		if input.historyEnabled then
@@ -3262,6 +3268,13 @@ local function inputEventHandler(mainContainer, input, mainEventData)
 		if input.autoCompleteEnabled then
 			input.autoComplete:clear()
 		end
+
+		if input.validator then
+			if not input.validator(input.text) then
+				input.text = textOnStart
+				input:setCursorPosition(unicode.len(input.text) + 1)
+			end
+		end
 		
 		GUI.callMethod(input.onInputFinished, mainContainer, input, mainEventData, input.text)
 		
@@ -3416,20 +3429,19 @@ local function autoCompleteMatch(object, variants, text)
 	object:clear()
 	
 	if text then
-		object.matchText = text
-		object.matchTextLength = unicode.len(text)
 		for i = 1, #variants do
 			if variants[i] ~= text and variants[i]:match("^" .. text) then
 				table.insert(object.items, variants[i])
 			end
 		end
 	else
-		object.matchText = ""
-		object.matchTextLength = 0
 		for i = 1, #variants do
 			table.insert(object.items, variants[i])
 		end
 	end
+
+	object.matchText = text or ""
+	object.matchTextLength = unicode.len(object.matchText)
 
 	table.sort(object.items, function(a, b) return unicode.lower(a) < unicode.lower(b) end)
 

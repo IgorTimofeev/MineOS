@@ -49,6 +49,8 @@ module.onTouch = function()
 		-- local abc = " "; for i = 1, 30 do abc = abc .. "p " end; print(abc)
 	end
 
+	input.historyEnabled = true
+
 	input.autoComplete.colors.default.background = 0x4B4B4B
 	input.autoComplete.colors.default.text = 0xC3C3C3
 	input.autoComplete.colors.default.textMatch = 0xFFFFFF
@@ -154,7 +156,7 @@ module.onTouch = function()
 
 			add("> " .. input.text, 0xAAAAAA)
 
-			if unicode.sub(input.text, 1, 1) == "=" then
+			if input.text:match("^%=") then
 				input.text = "return " .. unicode.sub(input.text, 2, -1)
 			end
 
@@ -173,8 +175,6 @@ module.onTouch = function()
 			print = oldPrint
 
 			input.text = ""
-			input.textCutFrom = 1
-			input:setCursorPosition(1)
 		end
 	end
 

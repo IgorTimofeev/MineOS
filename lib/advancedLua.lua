@@ -170,7 +170,7 @@ function filesystem.isFileHidden(path)
 	return false
 end
 
-function filesystem.sortedList(path, sortingMethod, showHiddenFiles)
+function filesystem.sortedList(path, sortingMethod, showHiddenFiles, filenameMatcher, filenameMatcherCaseSensitive)
 	if not filesystem.exists(path) then
 		error("Failed to get file list: directory \"" .. tostring(path) .. "\" doesn't exists")
 	end
@@ -180,7 +180,9 @@ function filesystem.sortedList(path, sortingMethod, showHiddenFiles)
 
 	local fileList, sortedFileList = {}, {}
 	for file in filesystem.list(path) do
-		table.insert(fileList, file)
+		if not filenameMatcher or string.unicodeFind(filenameMatcherCaseSensitive and file or unicode.lower(file), filenameMatcherCaseSensitive and filenameMatcher or unicode.lower(filenameMatcher)) then
+			table.insert(fileList, file)
+		end
 	end
 
 	if #fileList > 0 then
