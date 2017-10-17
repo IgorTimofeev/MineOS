@@ -1371,6 +1371,9 @@ function MineOSInterface.showErrorWindow(path, line, traceback)
 			break
 		end
 		lineCounter = lineCounter + 1
+		if lineCounter % 200 == 0 then
+			os.sleep(0.1)
+		end
 	end
 
 	mainContainer:addChild(GUI.textBox(codeView.width + 1, 4, mainContainer.width - codeView.width, codeView.height, 0xFFFFFF, 0x000000, string.wrap(MineOSCore.parseErrorMessage(traceback, 4), mainContainer.width - codeView.width - 2), 1, 1, 0))

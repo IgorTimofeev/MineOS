@@ -192,6 +192,8 @@ end
 window.searchInputField = window:addChild(GUI.input(1, 2, 36, 1, 0xEEEEEE, 0x666666, 0xAAAAAA, 0xEEEEEE, 0x262626, nil, "Search", true))
 window.searchInputField.onInputFinished = function()
 	window.iconField.filenameMatcher = window.searchInputField.text
+	window.iconField.fromFile = 1
+	window.iconField.yOffset = 2
 	window.iconField:updateFileList()
 	
 	mainContainer:draw()

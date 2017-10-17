@@ -2281,7 +2281,7 @@ local function filesystemDialogDraw(filesystemDialog)
 	if filesystemDialog.IOMode == GUI.filesystemModes.save then
 		filesystemDialog.submitButton.disabled = not filesystemDialog.input.text
 	else
-		filesystemDialog.input.text = filesystemDialog.filesystemTree.selectedItem
+		filesystemDialog.input.text = filesystemDialog.filesystemTree.selectedItem or ""
 		filesystemDialog.submitButton.disabled = not filesystemDialog.filesystemTree.selectedItem
 	end
 	

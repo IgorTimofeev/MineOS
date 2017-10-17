@@ -65,6 +65,7 @@ function MineOSCore.loadPropeties()
 			language = "Russian",
 			transparencyEnabled = true,
 			showApplicationIcons = true,
+			wallpaper = MineOSPaths.pictures .. "TyanSunset.pic",
 			screensaver = "Matrix",
 			screensaverDelay = 20,
 			showHelpOnApplicationStart = true,
