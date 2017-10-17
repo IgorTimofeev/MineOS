@@ -1299,7 +1299,7 @@ function GUI.filledWindow(x, y, width, height, backgroundColor)
 	local window = GUI.window(x, y, width, height)
 
 	window.backgroundPanel = window:addChild(GUI.panel(1, 1, width, height, backgroundColor))
-	window.actionButtons = window:addChild(GUI.actionButtons(2, 1, false))
+	window.actionButtons = window:addChild(GUI.actionButtons(2, 2, false))
 
 	return window
 end

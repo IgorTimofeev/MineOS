@@ -283,6 +283,7 @@ local function calculateSizes(width, height)
 	window.iconField.localPosition.x = window.backgroundPanel.localPosition.x
 	window.iconField.localPosition.y = window.backgroundPanel.localPosition.y
 
+	window.actionButtons.localPosition.y = 1
 	window.actionButtons:moveToFront()
 end
 

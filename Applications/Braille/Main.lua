@@ -10,13 +10,11 @@ local MineOSInterface = require("MineOSInterface")
 
 ---------------------------------------------------------------------------------------------------------
 
-local mainContainer, window = MineOSInterface.addWindow(GUI.window(nil, nil, 32, 19))
-local panel = window:addChild(GUI.panel(1, 1, 1, 3, 0x2D2D2D))
+local mainContainer, window = MineOSInterface.addWindow(GUI.filledWindow(nil, nil, 32, 19, 0x2D2D2D))
 
 local layout = window:addChild(GUI.layout(1, 2, 1, 1, 1, 1))
 layout:setCellDirection(1, 1, GUI.directions.horizontal)
 
-local actionButtons = window:addChild(GUI.actionButtons(2, 1))
 local newButton = layout:addChild(GUI.button(1, 1, 3, 1, 0x444444, 0xE1E1E1, 0xE1E1E1, 0x444444, "N"))
 local saveButton = layout:addChild(GUI.button(1, 1, 3, 1, 0x444444, 0xE1E1E1, 0xE1E1E1, 0x444444, "S"))
 local colorSelector1 = layout:addChild(GUI.colorSelector(1, 1, 3, 1, 0xFF4940, "B"))
@@ -82,8 +80,8 @@ local function newNoGUI(width, height)
 	window.width = drawingArea.width
 	window.height = drawingArea.height + 3
 
-	panel.width = window.width
-	layout.width = panel.width
+	window.backgroundPanel.width = window.width
+	layout.width = window.backgroundPanel.width
 	
 
 	drawingArea:deleteChildren()
@@ -195,11 +193,9 @@ end
 saveButton.onTouch = function()
 	saveAs()
 end
-actionButtons.close.onTouch = function()
-	window:close()
-end
-actionButtons.minimize:delete()
-actionButtons.maximize:delete()
+
+window.actionButtons.minimize:delete()
+window.actionButtons.maximize:delete()
 
 
 ---------------------------------------------------------------------------------------------------------

@@ -22,7 +22,7 @@ local colors = {
 	selectionBetween = 0xD2D2D2,
 	selectionBetweenText = 0x000000,
 	separator = 0xCCCCCC,
-	titleBackground = 0xCC4940,
+	titleBackground = 0x990000,
 	titleText = 0xFFFFFF,
 	titleText2 = 0xE1E1E1,
 }
@@ -212,7 +212,7 @@ end
 
 ------------------------------------------------------------------------------------------------------------------
 
-window:addChild(GUI.panel(1, 1, window.width, 3, 0xFFFFFF, 0.3)):moveToBack()
+window:addChild(GUI.panel(1, 1, window.width, 3, 0x444444)):moveToBack()
 
 local byteField = window:addChild(newByteField(13, 6, 64, 20, 4, 2, false))
 local charField = window:addChild(newByteField(byteField.localPosition.x + byteField.width + 3, 6, 16, 20, 1, 2, true))
@@ -275,7 +275,7 @@ scrollBar.eventHandler = nil
 
 titleTextBox = window:addChild(
 	GUI.textBox(
-		1, 1, math.floor(window.width * 0.36), 3,
+		1, 1, math.floor(window.width * 0.35), 3,
 		colors.titleBackground,
 		colors.titleText,
 		{
@@ -348,6 +348,7 @@ saveFileButton.onTouch = function()
 	end
 end
 
+window.actionButtons.localPosition.y = 2
 window.actionButtons.maximize.onTouch = function()
 	window.height = window.parent.height
 	byteField.height = window.height - 6
