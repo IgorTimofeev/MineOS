@@ -58,32 +58,12 @@ function MineOSCore.saveProperties()
 end
 
 function MineOSCore.loadPropeties()
+	local saveLater = false
+
 	if filesystem.exists(MineOSPaths.properties) then
 		MineOSCore.properties = table.fromFile(MineOSPaths.properties)
 	else
-		MineOSCore.properties = {
-			language = "Russian",
-			transparencyEnabled = true,
-			showApplicationIcons = true,
-			wallpaper = MineOSPaths.pictures .. "TyanSunset.pic",
-			screensaver = "Matrix",
-			screensaverDelay = 20,
-			showHelpOnApplicationStart = true,
-			dockShortcuts = {
-				MineOSPaths.applications .. "AppMarket.app/",
-				MineOSPaths.applications .. "MineCode IDE.app/",
-				MineOSPaths.applications .. "Finder.app/",
-				MineOSPaths.applications .. "Photoshop.app/",
-				MineOSPaths.applications .. "Control.app/",
-			},
-			backgroundColor = 0x1E1E1E,
-			network = {
-				users = {},
-				enabled = true,
-				signalStrength = 512,
-			},
-			extensionAssociations = {},
-		}
+		MineOSCore.properties = {}
 
 		MineOSCore.associateExtension(".pic", MineOSPaths.applications .. "/Photoshop.app/Main.lua", MineOSPaths.icons .. "/Image.pic", MineOSPaths.extensionAssociations .. "Pic/ContextMenu.lua")
 		MineOSCore.associateExtension(".txt", MineOSPaths.editor, MineOSPaths.icons .. "/Text.pic")
@@ -94,6 +74,45 @@ function MineOSCore.loadPropeties()
 		MineOSCore.associateExtension(".lua", MineOSPaths.extensionAssociations .. "Lua/Launcher.lua", MineOSPaths.icons .. "/Lua.pic", MineOSPaths.extensionAssociations .. "Lua/ContextMenu.lua")
 		MineOSCore.associateExtension(".pkg", MineOSPaths.extensionAssociations .. "Pkg/Launcher.lua", MineOSPaths.icons .. "/Archive.pic")
 
+		saveLater = true
+	end
+
+	local defaultValues = {
+		language = "Russian",
+		showHelpOnApplicationStart = true,
+		transparencyEnabled = true,
+		showApplicationIcons = true,
+		horizontalSpaceBetweenIcons = 1,
+		verticalSpaceBetweenIcons = 1,
+		showExtension = false,
+		backgroundColor = 0x1E1E1E,
+		wallpaper = MineOSPaths.pictures .. "TyanSunset.pic",
+		wallpaperMode = 1,
+		screensaver = "Matrix",
+		screensaverDelay = 20,
+		timezone = 3,		
+		dockShortcuts = {
+			MineOSPaths.applications .. "AppMarket.app/",
+			MineOSPaths.applications .. "MineCode IDE.app/",
+			MineOSPaths.applications .. "Finder.app/",
+			MineOSPaths.applications .. "Photoshop.app/",
+			MineOSPaths.applications .. "Control.app/",
+		},
+		network = {
+			users = {},
+			enabled = true,
+			signalStrength = 512,
+		},
+	}
+
+	for key, value in pairs(defaultValues) do
+		if not MineOSCore.properties[key] then
+			MineOSCore.properties[key] = value
+			saveLater = true
+		end
+	end
+
+	if saveLater then
 		MineOSCore.saveProperties()
 	end
 end
@@ -101,6 +120,7 @@ end
 -----------------------------------------------------------------------------------------------------------------------------------
 
 function MineOSCore.associateExtensionLauncher(extension, pathToLauncher)
+	MineOSCore.properties.extensionAssociations = MineOSCore.properties.extensionAssociations or {}
 	MineOSCore.properties.extensionAssociations[extension] = MineOSCore.properties.extensionAssociations[extension] or {}
 	MineOSCore.properties.extensionAssociations[extension].launcher = pathToLauncher
 end

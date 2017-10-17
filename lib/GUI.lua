@@ -1312,6 +1312,7 @@ function GUI.titledWindow(x, y, width, height, title, addTitlePanel)
 		window.backgroundPanel.localPosition.y, window.backgroundPanel.height = 2, window.height - 1
 	end
 	window.titleLabel = window:addChild(GUI.label(1, 1, width, height, GUI.colors.windows.title.text, title)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+	window.actionButtons.localPosition.y = 1
 	window.actionButtons:moveToFront()
 
 	return window

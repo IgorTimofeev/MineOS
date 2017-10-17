@@ -237,8 +237,8 @@ local function iconFieldUpdate(iconField)
 	iconField.backgroundObject.width, iconField.backgroundObject.height = iconField.width, iconField.height
 	iconField.iconsContainer.width, iconField.iconsContainer.height = iconField.width, iconField.height
 
-	iconField.iconCount.horizontal = math.floor((iconField.width - iconField.xOffset) / (MineOSInterface.iconWidth + iconField.spaceBetweenIcons.horizontal))
-	iconField.iconCount.vertical = math.floor((iconField.height - iconField.yOffset) / (MineOSInterface.iconHeight + iconField.spaceBetweenIcons.vertical))
+	iconField.iconCount.horizontal = math.floor((iconField.width - iconField.xOffset) / (MineOSInterface.iconWidth + MineOSCore.properties.horizontalSpaceBetweenIcons))
+	iconField.iconCount.vertical = math.floor((iconField.height - iconField.yOffset) / (MineOSInterface.iconHeight + MineOSCore.properties.verticalSpaceBetweenIcons))
 	iconField.iconCount.total = iconField.iconCount.horizontal * iconField.iconCount.vertical
 
 	return iconField
@@ -321,9 +321,9 @@ local function getCykaIconPosition(iconField)
 		end
 	end
 
-	x = x + MineOSInterface.iconWidth + iconField.spaceBetweenIcons.horizontal
-	if x + MineOSInterface.iconWidth + iconField.spaceBetweenIcons.horizontal > iconField.iconsContainer.width then
-		x, y = iconField.xOffset, y + MineOSInterface.iconHeight + iconField.spaceBetweenIcons.vertical
+	x = x + MineOSInterface.iconWidth + MineOSCore.properties.horizontalSpaceBetweenIcons
+	if x + MineOSInterface.iconWidth + MineOSCore.properties.horizontalSpaceBetweenIcons > iconField.iconsContainer.width then
+		x, y = iconField.xOffset, y + MineOSInterface.iconHeight + MineOSCore.properties.verticalSpaceBetweenIcons
 	end
 
 	return x, y
@@ -394,9 +394,9 @@ local function iconFieldUpdateFileList(iconField)
 		icon.launchers = iconField.launchers
 		icon:analyseExtension()
 
-		x = x + MineOSInterface.iconWidth + iconField.spaceBetweenIcons.horizontal
-		if x + MineOSInterface.iconWidth + iconField.spaceBetweenIcons.horizontal - 1 > iconField.iconsContainer.width then
-			x, y = iconField.xOffset, y + MineOSInterface.iconHeight + iconField.spaceBetweenIcons.vertical
+		x = x + MineOSInterface.iconWidth + MineOSCore.properties.horizontalSpaceBetweenIcons
+		if x + MineOSInterface.iconWidth + MineOSCore.properties.horizontalSpaceBetweenIcons - 1 > iconField.iconsContainer.width then
+			x, y = iconField.xOffset, y + MineOSInterface.iconHeight + MineOSCore.properties.verticalSpaceBetweenIcons
 		end
 	end
 
@@ -594,17 +594,12 @@ local function iconFieldSetWorkpath(iconField, path)
 	return iconField
 end
 
-function MineOSInterface.iconField(x, y, width, height, xSpaceBetweenIcons, ySpaceBetweenIcons, xOffset, yOffset, textColor, selectionColor, workpath)
+function MineOSInterface.iconField(x, y, width, height, xOffset, yOffset, textColor, selectionColor, workpath)
 	local iconField = GUI.container(x, y, width, height)
 
 	iconField.colors = {
 		text = textColor,
 		selection = selectionColor
-	}
-
-	iconField.spaceBetweenIcons = {
-		horizontal = xSpaceBetweenIcons,
-		vertical = ySpaceBetweenIcons
 	}
 
 	iconField.iconConfig = {}
@@ -1204,7 +1199,7 @@ end
 function MineOSInterface.propertiesWindow(x, y, width, icon)
 	local mainContainer, window = MineOSInterface.addWindow(GUI.titledWindow(x, y, width, 1, package.loaded.MineOSCore.localization.properties))
 
-	-- window.backgroundPanel.colors.transparency = 0.25
+	window.backgroundPanel.colors.transparency = 0.2
 	window:addChild(GUI.image(2, 3, icon.image))
 
 	local x, y = 11, 3
@@ -1214,11 +1209,14 @@ function MineOSInterface.propertiesWindow(x, y, width, icon)
 	addKeyAndValue(window, x, y, package.loaded.MineOSCore.localization.path, " ")
 
 	local textBox = window:addChild(GUI.textBox(17, y, window.width - 18, 1, nil, 0x555555, {icon.path}, 1, 0, 0, true, true))
-	window.onResize = function(width, height)
-		window.backgroundPanel.width, window.backgroundPanel.height = width, height
-	end
-	window:resize(window.width, textBox.y + textBox.height)
 	textBox.eventHandler = nil
+
+	window.actionButtons.minimize:delete()
+	window.actionButtons.maximize:delete()
+
+	window.height = textBox.y + textBox.height
+	window.backgroundPanel.width = window.width
+	window.backgroundPanel.height = textBox.y + textBox.height
 
 	mainContainer:draw()
 	buffer.draw()

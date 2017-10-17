@@ -174,7 +174,7 @@ window.sidebarContainer.itemsContainer = window.sidebarContainer:addChild(GUI.co
 
 window.iconField = window:addChild(
 	MineOSInterface.iconField(
-		1, 4, 1, 1, 1, 1, 2, 2, 0x3C3C3C, 0x3C3C3C,
+		1, 4, 1, 1, 2, 2, 0x3C3C3C, 0x3C3C3C,
 		MineOSPaths.desktop
 	)
 )

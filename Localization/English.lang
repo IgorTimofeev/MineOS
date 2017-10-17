@@ -123,7 +123,10 @@
 	mineOSCreatorUsedMasterPassword = "The creator of this operating system has used Master-Password",
 	loginToSystem = "Login",
 
-	colorScheme = "Color scheme",
+	colorScheme = "Appearance",
+	spaceBetweenIcons = "Space bewteen icons",
+	byHorizontal = "Horizontal",
+	byVertical = "Vertical",
 	wallpaper = "Wallpaper",
 	wallpaperPath = "Path to wallpaper",
 	iconPath = "Path to icon",

@@ -123,7 +123,10 @@
 	mineOSCreatorUsedMasterPassword = "Создатель операционной системы использовал мастер-ключ",
 	loginToSystem = "Вход в систему",
 
-	colorScheme = "Цветовая схема",
+	colorScheme = "Внешний вид",
+	spaceBetweenIcons = "Расстояние между иконками",
+	byHorizontal = "По горизонтали",
+	byVertical = "По вертикали",
 	wallpaper = "Обои",
 	wallpaperPath = "Путь к обоям",
 	iconPath = "Путь к иконке",
