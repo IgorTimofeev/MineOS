@@ -18,6 +18,7 @@
 	select = "Choose application…",
 	keepInDock = "Keep in dock",
 	closeAllWindows = "Close all windows",
+	newWindow = "New window",
 	launchWithArguments = "Launch with arguments",
 	dontShowAnymore = "Don't show again",
 	applicationHelp = "About application",

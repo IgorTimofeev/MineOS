@@ -1096,8 +1096,8 @@ local function windowResize(window, width, height)
 end
 
 function MineOSInterface.addWindow(window)
-	window.x = window.x or math.floor(MineOSInterface.mainContainer.windowsContainer.width / 2 - window.width / 2)
-	window.y = window.y or math.floor(MineOSInterface.mainContainer.windowsContainer.height / 2 - window.height / 2)
+	window.x = math.floor(MineOSInterface.mainContainer.windowsContainer.width / 2 - window.width / 2)
+	window.y = math.floor(MineOSInterface.mainContainer.windowsContainer.height / 2 - window.height / 2)
 	
 	MineOSInterface.mainContainer.windowsContainer:addChild(window)
 
@@ -1119,6 +1119,18 @@ function MineOSInterface.addWindow(window)
 	-- Ебурим ссылку на окно в иконку
 	dockIcon.windows = dockIcon.windows or {}
 	dockIcon.windows[window] = true
+
+	-- Смещаем окно правее и ниже, если уже есть открыте окна этой софтины
+	local lastIndex
+	for i = #MineOSInterface.mainContainer.windowsContainer.children, 1, -1 do
+		if MineOSInterface.mainContainer.windowsContainer.children[i] ~= window and dockIcon.windows[MineOSInterface.mainContainer.windowsContainer.children[i]] then
+			lastIndex = i
+			break
+		end
+	end
+	if lastIndex then
+		window.localPosition.x, window.localPosition.y = MineOSInterface.mainContainer.windowsContainer.children[lastIndex].localPosition.x + 4, MineOSInterface.mainContainer.windowsContainer.children[lastIndex].localPosition.y + 2
+	end
 
 	window.resize = windowResize
 	window.close = function(window)
