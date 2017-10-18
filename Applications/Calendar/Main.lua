@@ -280,7 +280,7 @@ local function drawCalendar(xPos, yPos, year)
     drawMonth(xPos, yPos, massivGoda[i].firstDayPosition, massivGoda[i].countOfDays, year, i)
     --Корректируем коорды
     xPos = xPos + constants.xSpaceBetweenMonths + 27
-    if i % 4 == 0 then xPos = 2; yPos = yPos + constants.ySpaceBetweenMonths + 15 end
+    if i % 4 == 0 then xPos = 3; yPos = yPos + constants.ySpaceBetweenMonths + 15 end
   end
 end
 
@@ -325,7 +325,7 @@ local function drawAll()
   --Очищаем экран
   ecs.square(1, 1, xMax, yMax, constants.backgroundColor)
   --Рисуем календарик
-  drawCalendar(2, 2, constants.programYear)
+  drawCalendar(3, 2, constants.programYear)
   --Рисуем парашу
   drawInfo()
 end
@@ -362,7 +362,7 @@ while true do
         end
 
         drawInfo()
-        drawCalendar(2, 2, constants.programYear)
+        drawCalendar(3, 2, constants.programYear)
 
         break
       end
