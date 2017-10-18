@@ -158,7 +158,7 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
--- print(web.request("http://test.php", {
+-- print(web.request("http://94.242.34.251:8888/MineOS/AppMarket/test.php", {
 -- 	abc = "siski",
 -- 	pizda = "test",
 -- 	def = {
