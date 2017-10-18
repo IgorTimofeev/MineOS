@@ -30,7 +30,7 @@ local function calculateIconSizes()
 end
 
 function MineOSInterface.setIconProperties(width, height, horizontalSpaceBetween, verticalSpaceBetween)
-	MineOSCore.properties.iconWidth, MineOSCore.properties.height, MineOSCore.properties.iconHorizontalSpaceBetween, MineOSCore.properties.iconVerticalSpaceBetween = width, height, horizontalSpaceBetween, verticalSpaceBetween
+	MineOSCore.properties.iconWidth, MineOSCore.properties.iconHeight, MineOSCore.properties.iconHorizontalSpaceBetween, MineOSCore.properties.iconVerticalSpaceBetween = width, height, horizontalSpaceBetween, verticalSpaceBetween
 	MineOSCore.saveProperties()
 	calculateIconSizes()
 
