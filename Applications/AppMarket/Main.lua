@@ -109,37 +109,39 @@ local function displayApps(fromPage, typeFilter, nameFilter, updateCheck)
 			end
 		end
 
-		window.contentContainer:addChild(GUI.button(math.floor(window.contentContainer.width / 2 - 10), y, 20, 1, 0xBBBBBB, 0xFFFFFF, 0x999999, 0xFFFFFF, localization.updateAll)).onTouch = function()
-			y = addUpdateImage()
-
-			local progressBarWidth = math.floor(window.contentContainer.width * 0.65)
-			local progressBar = window.contentContainer:addChild(GUI.progressBar(math.floor(window.contentContainer.width / 2 - progressBarWidth / 2), y, progressBarWidth, 0x33B6FF, 0xDDDDDD, 0x0, 0, true, false))
-			local label = window.contentContainer:addChild(GUI.label(1, y + 1, window.contentContainer.width, 1, 0x888888, "")):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
-
-			for i = 1, #finalApplicationList do
-				progressBar.value = math.floor(i / #finalApplicationList * 100)
-				label.text = localization.updating .. fs.name(finalApplicationList[i].path)
-				
-				mainContainer:draw()
-				buffer.draw()
-
-				web.downloadMineOSApplication(finalApplicationList[i], MineOSCore.properties.language)
-			end
-
-			mainContainer:draw()
-			buffer.draw()
-
-			computer.shutdown(true)
-		end
-
 		if #finalApplicationList == 0 then
 			window.contentContainer:addChild(GUI.label(1, 1, window.contentContainer.width, window.contentContainer.height, 0x888888, localization.youHaveNewestApps)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.center)
 			mainContainer:draw()
 			buffer.draw()
 			return
+		else
+			window.contentContainer:addChild(GUI.button(math.floor(window.contentContainer.width / 2 - 10), y, 20, 1, 0xBBBBBB, 0xFFFFFF, 0x999999, 0xFFFFFF, localization.updateAll)).onTouch = function()
+				y = addUpdateImage()
+
+				local progressBarWidth = math.floor(window.contentContainer.width * 0.65)
+				local progressBar = window.contentContainer:addChild(GUI.progressBar(math.floor(window.contentContainer.width / 2 - progressBarWidth / 2), y, progressBarWidth, 0x33B6FF, 0xDDDDDD, 0x0, 0, true, false))
+				local label = window.contentContainer:addChild(GUI.label(1, y + 1, window.contentContainer.width, 1, 0x888888, "")):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+
+				for i = 1, #finalApplicationList do
+					progressBar.value = math.floor(i / #finalApplicationList * 100)
+					label.text = localization.updating .. fs.name(finalApplicationList[i].path)
+					
+					mainContainer:draw()
+					buffer.draw()
+
+					web.downloadMineOSApplication(finalApplicationList[i], MineOSCore.properties.language)
+				end
+
+				mainContainer:draw()
+				buffer.draw()
+
+				table.toFile(MineOSPaths.applicationList, applicationList)
+
+				computer.shutdown(true)
+			end
 		end
 	else
-		window.contentContainer.searchInputTextBox = window.contentContainer:addChild(GUI.input(math.floor(window.contentContainer.width / 2 - 10), y, 20, 1, 0xEEEEEE, 0x444444, 0xAAAAAA, 0xEEEEEE, 0x2D2D2D, "", localization.search, true))
+		window.contentContainer.searchInputTextBox = window.contentContainer:addChild(GUI.input(math.floor(window.contentContainer.width / 2 - 10), y, 20, 1, 0xFFFFFF, 0x444444, 0xAAAAAA, 0xFFFFFF, 0x2D2D2D, "", localization.search, true))
 		window.contentContainer.searchInputTextBox.onInputFinished = function()
 			if window.contentContainer.searchInputTextBox.text then
 				displayApps(1, typeFilter, window.contentContainer.searchInputTextBox.text)
