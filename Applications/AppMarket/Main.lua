@@ -35,8 +35,8 @@ local function newApp(x, y, width, applicationListElement, hideDownloadButton)
 		app.icon.image = image.load(temproraryIconPath)
 	end
 
-	app.downloadButton = app:addChild(GUI.button(1, 1, 13, 1, 0x66DB80, 0xFFFFFF, 0x339240, 0xFFFFFF, localization.download))
-	app.downloadButton.localPosition.x = app.width - app.downloadButton.width + 1
+	app.downloadButton = app:addChild(GUI.roundedButton(1, 1, 13, 1, 0x66DB80, 0xFFFFFF, 0x339240, 0xFFFFFF, localization.download))
+	app.downloadButton.localPosition.x = app.width - app.downloadButton.width
 	app.downloadButton.onTouch = function()
 		app.downloadButton.disabled = true
 		app.downloadButton.colors.disabled.background, app.downloadButton.colors.disabled.text = 0xBBBBBB, 0xFFFFFF
@@ -115,7 +115,7 @@ local function displayApps(fromPage, typeFilter, nameFilter, updateCheck)
 			buffer.draw()
 			return
 		else
-			window.contentContainer:addChild(GUI.button(math.floor(window.contentContainer.width / 2 - 10), y, 20, 1, 0xBBBBBB, 0xFFFFFF, 0x999999, 0xFFFFFF, localization.updateAll)).onTouch = function()
+			window.contentContainer:addChild(GUI.roundedButton(math.floor(window.contentContainer.width / 2 - 9), y, 18, 1, 0xBBBBBB, 0xFFFFFF, 0x999999, 0xFFFFFF, localization.updateAll)).onTouch = function()
 				y = addUpdateImage()
 
 				local progressBarWidth = math.floor(window.contentContainer.width * 0.65)
@@ -177,10 +177,10 @@ local function displayApps(fromPage, typeFilter, nameFilter, updateCheck)
 	end
 
 	-- Pages buttons CYKA
-	local buttonWidth, text = 7, localization.page .. fromPage
+	local buttonWidth, text = 5, localization.page .. fromPage
 	local textLength = unicode.len(text)
 	local x = math.floor(window.contentContainer.width / 2 - (buttonWidth * 2 + textLength + 4) / 2)
-	window.contentContainer:addChild(GUI.button(x, y, buttonWidth, 1, 0xBBBBBB, 0xFFFFFF, 0x999999, 0xFFFFFF, "<")).onTouch = function()
+	window.contentContainer:addChild(GUI.roundedButton(x, y, buttonWidth, 1, 0xBBBBBB, 0xFFFFFF, 0x999999, 0xFFFFFF, "<")).onTouch = function()
 		if fromPage > 1 then
 			displayApps(fromPage - 1, typeFilter, nameFilter)
 		end
@@ -190,7 +190,7 @@ local function displayApps(fromPage, typeFilter, nameFilter, updateCheck)
 	window.contentContainer:addChild(GUI.label(x, y, textLength, 1, 0x3C3C3C, text))
 	x = x + textLength + 2
 
-	window.contentContainer:addChild(GUI.button(x, y, buttonWidth, 1, 0xBBBBBB, 0xFFFFFF, 0x999999, 0xFFFFFF, ">")).onTouch = function()
+	window.contentContainer:addChild(GUI.roundedButton(x, y, buttonWidth, 1, 0xBBBBBB, 0xFFFFFF, 0x999999, 0xFFFFFF, ">")).onTouch = function()
 		displayApps(fromPage + 1, typeFilter, nameFilter)
 	end
 
