@@ -14,6 +14,7 @@ local unicode = require("unicode")
 local component = require("component")
 local GUI = require("GUI")
 local MineOSCore = require("MineOSCore")
+local MineOSPaths = require("MineOSPaths")
 
 ---------------------------------------------------- Константы ----------------------------------------------------------------
 
@@ -22,7 +23,7 @@ local changeCityButton = {}
 local exitButton = {}
 
 local resources = MineOSCore.getCurrentApplicationResourcesDirectory()
-local pathToWeatherFile = "/MineOS/System/Weather/Forecast.cfg"
+local pathToWeatherFile = MineOSPaths.applicationData .. "Weather/Forecast.cfg"
 
 local pathsToWeatherTypes = {
 	sunny = resources .. "Sunny.pic",

@@ -14,6 +14,8 @@ local unicode = require("unicode")
 local component = require("component")
 local computer = require("computer")
 local GUI = require("GUI")
+local MineOSCore = require("MineOSCore")
+local MineOSPaths = require("MineOSPaths")
 
 ---------------------------------------------------- Константы ----------------------------------------------------------------
 
@@ -67,8 +69,8 @@ local cloudWidth = math.floor(mainZoneWidth * 0.7)
 
 -------------------------------------------------------------------------------------------------------------------------------
 
-local settingsPath = "/MineOS/System/VK/Settings.cfg"
-local VKLogoImagePath = "/MineOS/Applications/VK.app/Resources/VKLogo.pic"
+local settingsPath = MineOSPaths.applicationData .. "VK/Settings.cfg"
+local VKLogoImagePath = MineOSCore.getCurrentApplicationResourcesDirectory() .. "VKLogo.pic"
 -- local leftBarElements = {"Новости", "Друзья", "Сообщения", "Настройки", "Выход"}
 local leftBarElements = { "Моя страница", "Друзья", "Сообщения", "Аудиозаписи", "Новости", "Настройки", "Выход" }
 local currentLeftBarElement = 3

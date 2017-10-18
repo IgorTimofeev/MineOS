@@ -6,6 +6,8 @@ local fs = require("filesystem")
 local serialization = require("serialization")
 local ecs = require("ECSAPI")
 local event = require("event")
+local MineOSCore = require("MineOSCore")
+local MineOSPaths = require("MineOSPaths")
 --afaefa
 
 buffer.start()
@@ -36,8 +38,8 @@ local colors = {
 
 local columns = {}
 
-local pathToHighScores = "/MineOS/System/FlappyBird/Scores.txt"
-local pathToFlappyImage = "/MineOS/Applications/FlappyBird.app/Resources/Flappy.pic"
+local pathToHighScores = MineOSPaths.applicationData .. "/FlappyBird/Scores.cfg"
+local pathToFlappyImage = MineOSCore.getCurrentApplicationResourcesDirectory() .. "Flappy.pic"
 local bird = image.load(pathToFlappyImage)
 local xBird, yBird = 8, math.floor(buffer.height / 2 - 3)
 local birdIsAlive = true

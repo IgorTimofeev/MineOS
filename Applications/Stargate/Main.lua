@@ -67,6 +67,11 @@ local function updateChevrons(state)
 	end
 end
 
+local function updateButtons()
+	mainContainer.removeContactButton.disabled = #contacts == 0
+	mainContainer.connectContactButton.disabled = #contacts == 0
+end
+
 local function update()
 	local stargateState, irisState, imagePath = stargate.stargateState(), stargate.irisState()
 	mainContainer.irisButton.text = irisState == "Closed" and "Open Iris" or "Close Iris"
@@ -92,11 +97,13 @@ local function update()
 			imagePath = "OffOff.pic"
 		end
 	end
+
+	updateButtons()
 	mainContainer.SGImage.image = image.load(resources .. imagePath)
 end
 
 local function updateContacts()
-	mainContainer.contactsComboBox.items = {}
+	mainContainer.contactsComboBox:clear()
 	if #contacts == 0 then
 		mainContainer.contactsComboBox:addItem("No contacts found")
 	else
@@ -220,9 +227,7 @@ mainContainer.contactsComboBox = mainContainer:addChild(GUI.comboBox(x, y, width
 
 mainContainer.connectContactButton = mainContainer:addChild(GUI.framedButton(x, y, width, 3, 0xEEEEEE, 0xEEEEEE, 0xBBBBBB, 0xBBBBBB, "Connect")); y = y + 3
 mainContainer.connectContactButton.onTouch = function()
-	if #contacts > 0 then
-		dial(contacts[mainContainer.contactsComboBox.selectedItem].address)
-	end
+	dial(contacts[mainContainer.contactsComboBox.selectedItem].address)
 end
 
 mainContainer.addContactButton = mainContainer:addChild(GUI.framedButton(x, y, width, 3, 0xEEEEEE, 0xEEEEEE, 0xBBBBBB, 0xBBBBBB, "Add contact")); y = y + 3
@@ -245,6 +250,7 @@ mainContainer.addContactButton.onTouch = function()
 					table.insert(contacts, {name = input1.text, address = input2.text})
 					updateContacts()
 					saveContacts()	
+					updateButtons()
 				end
 
 				container:delete()
@@ -264,6 +270,7 @@ mainContainer.removeContactButton.onTouch = function()
 		table.remove(contacts, mainContainer.contactsComboBox.selectedItem)
 		updateContacts()
 		saveContacts()
+		updateButtons()
 
 		mainContainer:draw()
 		buffer.draw()
