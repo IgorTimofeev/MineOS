@@ -106,7 +106,7 @@ function MineOSCore.loadPropeties()
 	}
 
 	for key, value in pairs(defaultValues) do
-		if not MineOSCore.properties[key] then
+		if MineOSCore.properties[key] == nil then
 			MineOSCore.properties[key] = value
 			saveLater = true
 		end

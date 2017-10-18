@@ -744,7 +744,11 @@ local function createOSWindow()
 			end
 
 			verticalSpaceBetweenIconsSlider.onValueChanged = function()
-				GUI.error(verticalSpaceBetweenIconsSlider.value)
+				MineOSCore.properties.verticalSpaceBetweenIcons = math.floor(verticalSpaceBetweenIconsSlider.value)
+				MineOSInterface.mainContainer.iconField:deleteIconConfig()
+				MineOSInterface.mainContainer.dockContainer.sort()
+				
+				computer.pushSignal("MineOSCore", "updateFileList")
 			end
 
 			-- Шоб рисовалось в реальном времени
