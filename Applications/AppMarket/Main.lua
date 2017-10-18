@@ -233,12 +233,11 @@ tabs[5].onTouch = function() displayApps(1, nil, nil, true) end
 
 ----------------------------------------------------------------------------------------------------------------
 
-updateApplicationList()
-
 if select(1, ...) == "updates" then
 	window.tabBar.selectedItem = 5
 end
 
+updateApplicationList()
 tabs[window.tabBar.selectedItem].onTouch()
 
 
