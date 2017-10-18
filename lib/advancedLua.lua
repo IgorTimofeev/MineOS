@@ -561,51 +561,44 @@ function string.limit(s, limit, mode, noDots)
 	end
 end
 
-function string.wrap(strings, limit)
-	strings = type(strings) == "string" and {strings} or strings
+function string.wrap(data, limit)
+	if type(data) == "string" then data = {data} end
 
-	local currentString = 1
-	while currentString <= #strings do
-		local words = {}; for word in string.gmatch(tostring(strings[currentString]), "[^%s]+") do table.insert(words, word) end
+	local wrappedLines, result, preResult, preResultLength = {}
+	for i = 1, #data do
+		for subLine in data[i]:gmatch("[^\n]+") do
+			result = ""
+			
+			for word in subLine:gmatch("[^%s]+") do
+				preResult = result .. word
+				preResultLength = unicode.len(preResult)
 
-		local newStringThatFormedFromWords, oldStringThatFormedFromWords = "", ""
-		local word = 1
-		local overflow = false
-		while word <= #words do
-			oldStringThatFormedFromWords = oldStringThatFormedFromWords .. (word > 1 and " " or "") .. words[word]
-			if unicode.len(oldStringThatFormedFromWords) > limit then
-				if unicode.len(words[word]) > limit then
-					local left = unicode.sub(oldStringThatFormedFromWords, 1, limit)
-					local right = unicode.sub(strings[currentString], unicode.len(left) + 1, -1)
-					overflow = true
-					strings[currentString] = left
-					if strings[currentString + 1] then
-						strings[currentString + 1] = right .. " " .. strings[currentString + 1]
+				if preResultLength > limit then
+					if unicode.len(word) > limit then
+						table.insert(wrappedLines, unicode.sub(preResult, 1, limit))
+						for i = limit + 1, preResultLength, limit do
+							table.insert(wrappedLines, unicode.sub(preResult, i, i + limit - 1))
+						end
+						
+						result = wrappedLines[#wrappedLines] .. " "
+						wrappedLines[#wrappedLines] = nil
 					else
-						strings[currentString + 1] = right
-					end 
+						result = result:gsub("%s+$", "")
+						table.insert(wrappedLines, result)
+						
+						result = word .. " "
+					end
+				else
+					result = preResult .. " "
 				end
-				break
-			else
-				newStringThatFormedFromWords = oldStringThatFormedFromWords
 			end
-			word = word + 1
-		end
 
-		if word <= #words and not overflow then
-			local fuckToAdd = table.concat(words, " ", word, #words)
-			if strings[currentString + 1] then
-				strings[currentString + 1] = fuckToAdd .. " " .. strings[currentString + 1]
-			else
-				strings[currentString + 1] = fuckToAdd
-			end
-			strings[currentString] = newStringThatFormedFromWords
+			result = result:gsub("%s+$", "")
+			table.insert(wrappedLines, result)
 		end
-
-		currentString = currentString + 1
 	end
 
-	return strings
+	return wrappedLines
 end
 
 -------------------------------------------------- Playground --------------------------------------------------

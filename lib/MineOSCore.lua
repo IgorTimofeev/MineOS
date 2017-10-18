@@ -79,11 +79,12 @@ function MineOSCore.loadPropeties()
 
 	local defaultValues = {
 		language = "Russian",
-		showHelpOnApplicationStart = true,
 		transparencyEnabled = true,
 		showApplicationIcons = true,
-		horizontalSpaceBetweenIcons = 1,
-		verticalSpaceBetweenIcons = 1,
+		iconHorizontalSpaceBetween = 1,
+		iconVerticalSpaceBetween = 1,
+		iconWidth = 12,
+		iconHeight = 6,
 		showExtension = false,
 		backgroundColor = 0x1E1E1E,
 		wallpaper = MineOSPaths.pictures .. "TyanSunset.pic",

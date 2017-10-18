@@ -16,10 +16,31 @@ local MineOSInterface = {}
 -----------------------------------------------------------------------------------------------------------------------------------
 
 MineOSInterface.iconsCache = {}
-MineOSInterface.iconWidth = 12
-MineOSInterface.iconHeight = 6
 MineOSInterface.iconClickDelay = 0.2
 MineOSInterface.iconConfigFileName = ".icons"
+MineOSInterface.iconImageWidth = 8
+MineOSInterface.iconImageHeight = 4
+
+-----------------------------------------------------------------------------------------------------------------------------------
+
+local function calculateIconSizes()
+	MineOSInterface.iconHalfWidth = math.floor(MineOSCore.properties.iconWidth / 2)
+	MineOSInterface.iconTextHeight = MineOSCore.properties.iconHeight - MineOSInterface.iconImageHeight - 1
+	MineOSInterface.iconImageHorizontalOffset = math.floor(MineOSInterface.iconHalfWidth - MineOSInterface.iconImageWidth / 2)
+end
+
+function MineOSInterface.setIconProperties(width, height, horizontalSpaceBetween, verticalSpaceBetween)
+	MineOSCore.properties.iconWidth, MineOSCore.properties.height, MineOSCore.properties.iconHorizontalSpaceBetween, MineOSCore.properties.iconVerticalSpaceBetween = width, height, horizontalSpaceBetween, verticalSpaceBetween
+	MineOSCore.saveProperties()
+	calculateIconSizes()
+
+	MineOSInterface.mainContainer.iconField:deleteIconConfig()
+	MineOSInterface.mainContainer.dockContainer.sort()
+	
+	computer.pushSignal("MineOSCore", "updateFileList")
+end
+
+calculateIconSizes()
 
 -----------------------------------------------------------------------------------------------------------------------------------
 
@@ -60,21 +81,36 @@ function MineOSInterface.cacheIconSource(name, path)
 	return MineOSInterface.iconsCache[name]
 end
 
-local function iconDraw(icon)
-	local text = string.limit(MineOSCore.properties.showExtension and fs.name(icon.path) or fs.hideExtension(fs.name(icon.path)), icon.width, "center")
-	local textLength = unicode.len(text)
-	local textX, textY = math.floor(icon.x + icon.width / 2 - unicode.len(text) / 2), icon.y + icon.height - 1
+local function iconDrawNameLine(x, y, line, icon)
+	local lineLength = unicode.len(line)
+	local x = math.floor(x - lineLength / 2)
 	if icon.selected then
-		local x, width = icon.x + 1, icon.width - 2
-		buffer.text(x, icon.y - 1, icon.colors.selection, string.rep("▄", width), icon.colors.selectionTransparency)
-		buffer.square(x, icon.y, width, icon.height - 2, icon.colors.selection, 0x000000, " ", icon.colors.selectionTransparency)
-		buffer.text(x, icon.y + icon.height - 2, icon.colors.selection, string.rep("▀", width), icon.colors.selectionTransparency)
-		
-		buffer.square(textX, textY, textLength, 1, icon.colors.selection, 0x000000, " ", icon.colors.selectionTransparency)
+		buffer.square(x, y, lineLength, 1, icon.colors.selection, 0x0, " ", icon.colors.selectionTransparency)
+	end
+	buffer.text(x, y, icon.colors.text, line)
+end
+
+local function iconDraw(icon)
+	local text = MineOSCore.properties.showExtension and icon.name or icon.nameWithoutExtension
+	local xCenter, yText = icon.x + MineOSInterface.iconHalfWidth, icon.y + MineOSInterface.iconImageHeight + 1
+
+	local charIndex = 1
+	for lineIndex = 1, MineOSInterface.iconTextHeight do
+		if lineIndex < MineOSInterface.iconTextHeight then
+			iconDrawNameLine(xCenter, yText, unicode.sub(text, charIndex, charIndex + icon.width - 1), icon)
+			charIndex, yText = charIndex + icon.width, yText + 1
+		else
+			iconDrawNameLine(xCenter, yText, string.limit(unicode.sub(text, charIndex, -1), icon.width, "center"), icon)
+		end
 	end
 
-
-	buffer.text(textX, textY, icon.colors.text, text)
+	local xImage = icon.x + MineOSInterface.iconImageHorizontalOffset
+	if icon.selected then
+		local xSelection = xImage - 1
+		buffer.text(xSelection, icon.y - 1, icon.colors.selection, string.rep("▄", MineOSInterface.iconImageWidth + 2), icon.colors.selectionTransparency)
+		buffer.text(xSelection, icon.y + MineOSInterface.iconImageHeight, icon.colors.selection, string.rep("▀", MineOSInterface.iconImageWidth + 2), icon.colors.selectionTransparency)
+		buffer.square(xSelection, icon.y, MineOSInterface.iconImageWidth + 2, MineOSInterface.iconImageHeight, icon.colors.selection, 0x0, " ", icon.colors.selectionTransparency)
+	end
 
 	if icon.image then
 		if icon.cut then
@@ -88,20 +124,20 @@ local function iconDraw(icon)
 				end
 			end
 			
-			buffer.image(icon.x + 2, icon.y, icon.semiTransparentImage, true)
+			buffer.image(xImage, icon.y, icon.semiTransparentImage, true)
 		else
-			buffer.image(icon.x + 2, icon.y, icon.image)
+			buffer.image(xImage, icon.y, icon.image)
 		end
 	elseif icon.liveImage then
-		icon.liveImage(icon.x + 2, icon.y)
+		icon.liveImage(xImage, icon.y)
 	end
 
 	if icon.isShortcut then
-		buffer.set(icon.x + 9, icon.y + 3, 0xFFFFFF, 0x000000, "<")
+		buffer.set(xImage + MineOSInterface.iconImageWidth - 1, icon.y + MineOSInterface.iconImageHeight - 1, 0xFFFFFF, 0x0, "<")
 	end
 
 	if icon.windows then
-		buffer.text(icon.x + 5, icon.y + 4, 0x66DBFF, "╺╸")
+		buffer.text(xCenter - 1, icon.y + MineOSInterface.iconImageHeight, 0x66DBFF, "╺╸")
 	end
 end
 
@@ -135,7 +171,7 @@ local function iconEventHandler(mainContainer, object, eventData)
 		mainContainer:draw()
 		buffer.draw()
 	elseif eventData[1] == "drop" and object.parent.parent.iconConfigEnabled then
-		object.parent.parent.iconConfig[fs.name(object.path) .. (object.isDirectory and "/" or "")] = {
+		object.parent.parent.iconConfig[object.name .. (object.isDirectory and "/" or "")] = {
 			x = object.localPosition.x,
 			y = object.localPosition.y
 		}
@@ -184,6 +220,8 @@ local function iconAnalyseExtension(icon)
 			local shortcutIcon = iconAnalyseExtension({
 				path = icon.shortcutPath,
 				extension = icon.shortcutExtension,
+				name = icon.name,
+				nameWithoutExtension = icon.nameWithoutExtension,
 				isDirectory = icon.shortcutIsDirectory,
 				iconImage = icon.iconImage,
 				launchers = icon.launchers
@@ -212,7 +250,7 @@ local function iconAnalyseExtension(icon)
 end
 
 function MineOSInterface.icon(x, y, path, textColor, selectionColor)
-	local icon = GUI.object(x, y, MineOSInterface.iconWidth, MineOSInterface.iconHeight)
+	local icon = GUI.object(x, y, MineOSCore.properties.iconWidth, MineOSCore.properties.iconHeight)
 	
 	icon.colors = {
 		text = textColor,
@@ -221,8 +259,10 @@ function MineOSInterface.icon(x, y, path, textColor, selectionColor)
 	}
 
 	icon.path = path
-	icon.isDirectory = fs.isDirectory(icon.path)
 	icon.extension = fs.extension(icon.path) or "script"
+	icon.name = fs.name(path)
+	icon.nameWithoutExtension = fs.hideExtension(icon.name)
+	icon.isDirectory = fs.isDirectory(icon.path)
 	icon.isShortcut = false
 	icon.selected = false
 
@@ -237,8 +277,8 @@ local function iconFieldUpdate(iconField)
 	iconField.backgroundObject.width, iconField.backgroundObject.height = iconField.width, iconField.height
 	iconField.iconsContainer.width, iconField.iconsContainer.height = iconField.width, iconField.height
 
-	iconField.iconCount.horizontal = math.floor((iconField.width - iconField.xOffset) / (MineOSInterface.iconWidth + MineOSCore.properties.horizontalSpaceBetweenIcons))
-	iconField.iconCount.vertical = math.floor((iconField.height - iconField.yOffset) / (MineOSInterface.iconHeight + MineOSCore.properties.verticalSpaceBetweenIcons))
+	iconField.iconCount.horizontal = math.floor((iconField.width - iconField.xOffset) / (MineOSCore.properties.iconWidth + MineOSCore.properties.iconHorizontalSpaceBetween))
+	iconField.iconCount.vertical = math.floor((iconField.height - iconField.yOffset) / (MineOSCore.properties.iconHeight + MineOSCore.properties.iconVerticalSpaceBetween))
 	iconField.iconCount.total = iconField.iconCount.horizontal * iconField.iconCount.vertical
 
 	return iconField
@@ -321,9 +361,9 @@ local function getCykaIconPosition(iconField)
 		end
 	end
 
-	x = x + MineOSInterface.iconWidth + MineOSCore.properties.horizontalSpaceBetweenIcons
-	if x + MineOSInterface.iconWidth + MineOSCore.properties.horizontalSpaceBetweenIcons > iconField.iconsContainer.width then
-		x, y = iconField.xOffset, y + MineOSInterface.iconHeight + MineOSCore.properties.verticalSpaceBetweenIcons
+	x = x + MineOSCore.properties.iconWidth + MineOSCore.properties.iconHorizontalSpaceBetween
+	if x + MineOSCore.properties.iconWidth + MineOSCore.properties.iconHorizontalSpaceBetween > iconField.iconsContainer.width then
+		x, y = iconField.xOffset, y + MineOSCore.properties.iconHeight + MineOSCore.properties.iconVerticalSpaceBetween
 	end
 
 	return x, y
@@ -394,9 +434,9 @@ local function iconFieldUpdateFileList(iconField)
 		icon.launchers = iconField.launchers
 		icon:analyseExtension()
 
-		x = x + MineOSInterface.iconWidth + MineOSCore.properties.horizontalSpaceBetweenIcons
-		if x + MineOSInterface.iconWidth + MineOSCore.properties.horizontalSpaceBetweenIcons - 1 > iconField.iconsContainer.width then
-			x, y = iconField.xOffset, y + MineOSInterface.iconHeight + MineOSCore.properties.verticalSpaceBetweenIcons
+		x = x + MineOSCore.properties.iconWidth + MineOSCore.properties.iconHorizontalSpaceBetween
+		if x + MineOSCore.properties.iconWidth + MineOSCore.properties.iconHorizontalSpaceBetween - 1 > iconField.iconsContainer.width then
+			x, y = iconField.xOffset, y + MineOSCore.properties.iconHeight + MineOSCore.properties.iconVerticalSpaceBetween
 		end
 	end
 
@@ -442,27 +482,7 @@ local function iconFieldBackgroundObjectEventHandler(mainContainer, object, even
 			end
 
 			menu:addSeparator()
-
-			local subMenu = menu:addSubMenu(MineOSCore.localization.view)
-
-			subMenu:addItem(MineOSCore.properties.showExtension and MineOSCore.localization.hideExtension or MineOSCore.localization.showExtension).onTouch = function()
-				MineOSCore.properties.showExtension = not MineOSCore.properties.showExtension
-				MineOSCore.saveProperties()
-				computer.pushSignal("MineOSCore", "updateFileList")
-			end
-
-			subMenu:addItem(MineOSCore.properties.showHiddenFiles and MineOSCore.localization.hideHiddenFiles or MineOSCore.localization.showHiddenFiles).onTouch = function()
-				MineOSCore.properties.showHiddenFiles = not MineOSCore.properties.showHiddenFiles
-				MineOSCore.saveProperties()
-				computer.pushSignal("MineOSCore", "updateFileList")
-			end
-
-			subMenu:addItem(MineOSCore.properties.showApplicationIcons and MineOSCore.localization.hideApplicationIcons or MineOSCore.localization.showApplicationIcons).onTouch = function()
-				MineOSCore.properties.showApplicationIcons = not MineOSCore.properties.showApplicationIcons
-				MineOSCore.saveProperties()
-				computer.pushSignal("MineOSCore", "updateFileList")
-			end
-			
+						
 			local subMenu = menu:addSubMenu(MineOSCore.localization.sortBy)
 			
 			subMenu:addItem(MineOSCore.localization.sortByName).onTouch = function()
@@ -558,7 +578,7 @@ local function iconFieldBackgroundObjectDraw(object)
 		buffer.square(x1, y1, x2 - x1 + 1, y2 - y1 + 1, object.parent.colors.selection, 0x0, " ", 0.6)
 
 		for i = 1, #object.parent.iconsContainer.children do
-			local xCenter, yCenter = object.parent.iconsContainer.children[i].x + MineOSInterface.iconWidth / 2, object.parent.iconsContainer.children[i].y + MineOSInterface.iconHeight / 2
+			local xCenter, yCenter = object.parent.iconsContainer.children[i].x + MineOSCore.properties.iconWidth / 2, object.parent.iconsContainer.children[i].y + MineOSCore.properties.iconHeight / 2
 			object.parent.iconsContainer.children[i].selected = 
 				xCenter >= x1 and
 				xCenter <= x2 and
@@ -681,7 +701,7 @@ function MineOSInterface.iconRightClick(icon, eventData)
 			end
 
 			menu:addItem(MineOSCore.localization.archive).onTouch = function()
-				require("compressor").pack(fs.path(icon.path) .. fs.hideExtension(fs.name(icon.path)) .. ".pkg", icon.path)
+				require("compressor").pack(fs.path(icon.path) .. icon.nameWithoutExtension .. ".pkg", icon.path)
 				computer.pushSignal("MineOSCore", "updateFileList")
 			end
 			
@@ -709,7 +729,7 @@ function MineOSInterface.iconRightClick(icon, eventData)
 				-- subMenu:addItem(MineOSCore.localization.select)
 				-- subMenu:addSeparator()
 				-- for i = 1, #fileList do
-				-- 	subMenu:addItem(fs.hideExtension(fileList[i]))
+				-- 	subMenu:addItem(fileList[i].nameWithoutExtension)
 				-- end
 			end
 		end
@@ -749,7 +769,7 @@ function MineOSInterface.iconRightClick(icon, eventData)
 			for i = 1, #selectedIcons do
 				if not selectedIcons[i].isShortcut then
 					MineOSCore.createShortcut(
-						fs.path(selectedIcons[i].path) .. "/" .. fs.hideExtension(fs.name(selectedIcons[i].path)) .. ".lnk",
+						fs.path(selectedIcons[i].path) .. "/" .. selectedIcons[i].nameWithoutExtension .. ".lnk",
 						selectedIcons[i].path
 					)
 				end
@@ -762,7 +782,7 @@ function MineOSInterface.iconRightClick(icon, eventData)
 			for i = 1, #selectedIcons do
 				if not selectedIcons[i].isShortcut then
 					MineOSCore.createShortcut(
-						MineOSPaths.desktop .. "/" .. fs.hideExtension(fs.name(selectedIcons[i].path)) .. ".lnk",
+						MineOSPaths.desktop .. "/" .. selectedIcons[i].nameWithoutExtension .. ".lnk",
 						selectedIcons[i].path
 					)
 				end
@@ -783,8 +803,8 @@ function MineOSInterface.iconRightClick(icon, eventData)
 			if fs.path(selectedIcons[i].path) == MineOSPaths.trash then
 				fs.remove(selectedIcons[i].path)
 			else
-				local newName = MineOSPaths.trash .. fs.name(selectedIcons[i].path)
-				local clearName = fs.hideExtension(fs.name(selectedIcons[i].path))
+				local newName = MineOSPaths.trash .. selectedIcons[i].name
+				local clearName = selectedIcons[i].nameWithoutExtension
 				local repeats = 1
 				while fs.exists(newName) do
 					newName, repeats = MineOSPaths.trash .. clearName .. string.rep("-copy", repeats) .. selectedIcons[i].extension, repeats + 1
@@ -981,7 +1001,7 @@ function MineOSInterface.newFolderFromChosen(parentWindow, iconField, x, y, sele
 		if checkFileToExists(container, path) then
 			fs.makeDirectory(path)
 			for i = 1, #selectedIcons do
-				fs.rename(selectedIcons[i].path, path .. "/" .. fs.name(selectedIcons[i].path))
+				fs.rename(selectedIcons[i].path, path .. "/" .. selectedIcons[i].name)
 			end
 
 			checkIconConfigCanSavePosition(iconField, x, y, container.inputField.text)
@@ -1386,7 +1406,7 @@ function MineOSInterface.showErrorWindow(path, line, traceback)
 		end
 	end
 
-	mainContainer:addChild(GUI.textBox(codeView.width + 1, 4, mainContainer.width - codeView.width, codeView.height, 0xFFFFFF, 0x000000, string.wrap(MineOSCore.parseErrorMessage(traceback, 4), mainContainer.width - codeView.width - 2), 1, 1, 0))
+	mainContainer:addChild(GUI.textBox(codeView.width + 1, 4, mainContainer.width - codeView.width, codeView.height, 0xFFFFFF, 0x0, string.wrap(MineOSCore.parseErrorMessage(traceback, 4), mainContainer.width - codeView.width - 2), 1, 1, 0))
 	
 	actionButtons.close.onTouch = function()
 		mainContainer:stopEventHandling()
