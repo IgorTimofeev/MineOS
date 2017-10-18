@@ -212,7 +212,7 @@ end
 
 ------------------------------------------------------------------------------------------------------------------
 
-window:addChild(GUI.panel(1, 1, window.width, 3, 0x444444)):moveToBack()
+window:addChild(GUI.panel(1, 1, window.width, 3, 0x3C3C3C)):moveToBack()
 
 local byteField = window:addChild(newByteField(13, 6, 64, 20, 4, 2, false))
 local charField = window:addChild(newByteField(byteField.localPosition.x + byteField.width + 3, 6, 16, 20, 1, 2, true))
