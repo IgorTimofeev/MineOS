@@ -249,6 +249,19 @@ local function iconAnalyseExtension(icon)
 	return icon
 end
 
+local function iconIsClicked(icon, x, y)
+	return
+		x >= icon.x + MineOSInterface.iconImageHorizontalOffset and
+		y >= icon.y and
+		x <= icon.x + MineOSInterface.iconImageHorizontalOffset + MineOSInterface.iconImageWidth - 1 and
+		y <= icon.y + MineOSInterface.iconImageHeight - 1
+		or
+		x >= icon.x and 
+		y >= icon.y + MineOSInterface.iconImageHeight + 1 and
+		x <= icon.x + MineOSCore.properties.iconWidth - 1 and
+		y <= icon.y + MineOSCore.properties.iconHeight - 1
+end
+
 function MineOSInterface.icon(x, y, path, textColor, selectionColor)
 	local icon = GUI.object(x, y, MineOSCore.properties.iconWidth, MineOSCore.properties.iconHeight)
 	
@@ -266,6 +279,7 @@ function MineOSInterface.icon(x, y, path, textColor, selectionColor)
 	icon.isShortcut = false
 	icon.selected = false
 
+	icon.isClicked = iconIsClicked
 	icon.draw = iconDraw
 	icon.launchers = table.copy(MineOSInterface.iconLaunchers)
 	icon.analyseExtension = iconAnalyseExtension
