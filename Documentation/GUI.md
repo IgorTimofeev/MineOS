@@ -24,7 +24,7 @@
 | [    GUI.comboBox](#guicombobox-x-y-width-elementheight-backgroundcolor-textcolor-arrowbackgroundcolor-arrowtextcolor--table-combobox) |
 | [    GUI.menu](#guimenu-x-y-width-backgroundcolor-textcolor-backgroundpressedcolor-textpressedcolor-backgroundtransparency--table-menu) |
 | [    GUI.progressBar](#guiprogressbar-x-y-width-primarycolor-secondarycolor-valuecolor-value-thin-showvalue-valueprefix-valuepostfix--table-progressbar) |
-| [    GUI.treeView](#guitreeview-x-y-width-height-backgroundcolor-textcolor-selectionbackgroundcolor-selectiontextcolor-arrowcolor-scrollbarprimarycolor-scrollbarsecondarycolor-workpath--table-treeview) |
+| [    GUI.filesystemTree](#guifilesystemTree-x-y-width-height-backgroundcolor-textcolor-selectionbackgroundcolor-selectiontextcolor-arrowcolor-scrollbarprimarycolor-scrollbarsecondarycolor-workpath--table-filesystemTree) |
 | [    GUI.filesystemChooser](#guifilesystemchooser-x-y-width-height-backgroundcolor-textcolor-tipbackgroundcolor-tiptextcolor-initialtext-sumbitbuttontext-cancelbuttontext-placeholdertext-filesystemdialogmode-filesystemdialogpath--table-filesystemchooser) |
 | [    GUI.codeView](#guicodeview-x-y-width-height-lines-fromsymbol-fromline-maximumlinelength-selections-highlights-highlightluasyntax-indentationwidth--table-codeview) |
 | [    GUI.chart](#guichart-x-y-width-height-axiscolor-axisvaluecolor-axishelperscolor-chartcolor-xaxisvalueinterval-yaxisvalueinterval-xaxispostfix-yaxispostfix-fillchartarea-values--table-chart) |
@@ -597,7 +597,6 @@ GUI.**input**( x, y, width, height, backgroundColor, textColor, placeholderTextC
 
 | Тип свойства | Свойство |Описание |
 | ------ | ------ | ------ |
-| *function* | :**startInput**()| Начать ввод в текстовое поле. Метод полезен, если хочется сразу сделать  |
 | *callback-function* | .**validator**( *string* text )| Метод, вызывающийся после окончания ввода текста в поле. Если возвращает *true*, то текст в текстовом поле меняется на введенный, в противном случае введенные данные игнорируются. К примеру, в данном методе удобно проверять, является ли введенная текстовая информация числом через *tonumber()* |
 | *callback-function* | .**onInputFinished**( *string* text, *table* eventData )| Метод, вызываемый после ввода данных в обработчике событий. Удобная штука, если хочется выполнить какие-либо действия сразу после ввода текста. Если у объекта имеется *validator*, и текст не прошел проверку через него, то *onInputFinished* вызван не будет. |
 
@@ -975,7 +974,7 @@ mainContainer:startEventHandling()
 
 ![](http://i89.fastpic.ru/big/2017/0402/f1/ef1da27531ccf899eb9eb59c010180f1.png)
 
-GUI.**treeView**( x, y, width, height, backgroundColor, directoryColor, fileColor, arrowColor, backgroundSelectionColor, textSelectedColor, arrowSelectionColor, wrongExtensionColor, scrollBarBackground, scrollBarForeground, workPath, showMode, selectionMode ): *table* treeView
+GUI.**filesystemTree**( x, y, width, height, backgroundColor, directoryColor, fileColor, arrowColor, backgroundSelectionColor, textSelectedColor, arrowSelectionColor, wrongExtensionColor, scrollBarBackground, scrollBarForeground, workPath, showMode, selectionMode ): *table* filesystemTree
 ------------------------------------------------------------------------
 | Тип | Аргумент | Описание |
 | ------ | ------ | ------ |
@@ -983,28 +982,28 @@ GUI.**treeView**( x, y, width, height, backgroundColor, directoryColor, fileColo
 | *int* | y | Координата объекта по оси y |
 | *int* | width | Ширина объекта |
 | *int* | height | Высота объекта |
-| *int* or *nil* | backgroundColor | Цвет фона TreeView |
-| *int* | directoryColor | Цвет директорий TreeView |
-| *int* | fileColor | Цвет файлов TreeView |
-| *int* | arrowColor | Цвет стрелки директорий TreeView |
-| *int* | backgroundSelectionColor | Цвет выделения фона TreeView |
-| *int* | textSelectionColor | Цвет выделения текста TreeView |
-| *int* | arrowSelectionColor | Цвет выделения стрелки TreeView |
-| *int* | wrongExtensionColor | Цвет файла с неподдерживаемым расширением TreeView |
-| *int* | scrollBarPrimaryColor | Первичный цвет скроллбара TreeView |
-| *int* | scrollBarSecondaryColor | Вторичный цвет скроллбара TreeView |
-| *string* | workPath | Стартовая директория TreeView |
+| *int* or *nil* | backgroundColor | Цвет фона filesystemTree |
+| *int* | directoryColor | Цвет директорий filesystemTree |
+| *int* | fileColor | Цвет файлов filesystemTree |
+| *int* | arrowColor | Цвет стрелки директорий filesystemTree |
+| *int* | backgroundSelectionColor | Цвет выделения фона filesystemTree |
+| *int* | textSelectionColor | Цвет выделения текста filesystemTree |
+| *int* | arrowSelectionColor | Цвет выделения стрелки filesystemTree |
+| *int* | wrongExtensionColor | Цвет файла с неподдерживаемым расширением filesystemTree |
+| *int* | scrollBarPrimaryColor | Первичный цвет скроллбара filesystemTree |
+| *int* | scrollBarSecondaryColor | Вторичный цвет скроллбара filesystemTree |
+| *string* | workPath | Стартовая директория filesystemTree |
 | [*enum* | filesystemShowMode] | Опциональный режим отображения содержимого текущей директориии. Может принимать значения GUI.**filesystemModes**.**file**, GUI.**filesystemModes**.**directory** или GUI.**filesystemModes**.**both**  |
 | [*enum* | filesystemSelectionMode] | Опциональный режим выбора содепжимого текущей директориии. Значения принимает те же, что и у filesystemShowMode  |
 
-Создать объект типа "TreeView", предназначенный для навигации по файловой системе в виде иерархического древа. При клике на директорию будет показано ее содержимое, а во время прокрутки колесиком мыши содержимое будет "скроллиться" в указанном направлении.
+Создать объект типа "filesystemTree", предназначенный для навигации по файловой системе в виде иерархического древа. При клике на директорию будет показано ее содержимое, а во время прокрутки колесиком мыши содержимое будет "скроллиться" в указанном направлении.
 
 | Тип свойства | Свойство |Описание |
 | ------ | ------ | ------ |
-| *callback-function* | .**onItemSelected**( *string* path )| Метод, вызываемый после выбора элемента в TreeView. В качестве аргумента передается абсолютный путь выбранного элемента |
+| *callback-function* | .**onItemSelected**( *string* path )| Метод, вызываемый после выбора элемента в filesystemTree. В качестве аргумента передается абсолютный путь выбранного элемента |
 | *function* | :**addExtensionFilter**( *string* extension )| Добавить фильтр на указанное расширение файла. После этого в диалоговом окне пользователь сможет выбирать лишь те файлы, которые имеют соответствующее расширение |
 
-Пример реализации TreeView:
+Пример реализации filesystemTree:
 
 ```lua
 local buffer = require("doubleBuffering")
@@ -1015,18 +1014,18 @@ local GUI = require("GUI")
 local mainContainer = GUI.fullScreenContainer()
 mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x262626))
 
-local treeView1 = mainContainer:addChild(GUI.treeView(2, 2, 30, 41, 0xCCCCCC, 0x2D2D2D, 0x3C3C3C, 0xEEEEEE, 0x666666, 0xC3C3C3, 0x393939, "/", GUI.filesystemModes.both, GUI.filesystemModes.both))
-treeView1.onItemSelected = function(path)
+local filesystemTree1 = mainContainer:addChild(GUI.filesystemTree(2, 2, 30, 41, 0xCCCCCC, 0x2D2D2D, 0x3C3C3C, 0xEEEEEE, 0x666666, 0xC3C3C3, 0x393939, "/", GUI.filesystemModes.both, GUI.filesystemModes.both))
+filesystemTree1.onItemSelected = function(path)
 	GUI.error("Something was selected, the path is: \"" .. path .. "\"")
 end
 
-local treeView2 = mainContainer:addChild(GUI.treeView(34, 2, 30, 41, 0xCCCCCC, 0x2D2D2D, 0x3C3C3C, 0xEEEEEE, 0x666666, 0xC3C3C3, 0x393939, "/", GUI.filesystemModes.file, GUI.filesystemModes.file))
-treeView2.onItemSelected = function(path)
+local filesystemTree2 = mainContainer:addChild(GUI.filesystemTree(34, 2, 30, 41, 0xCCCCCC, 0x2D2D2D, 0x3C3C3C, 0xEEEEEE, 0x666666, 0xC3C3C3, 0x393939, "/", GUI.filesystemModes.file, GUI.filesystemModes.file))
+filesystemTree2.onItemSelected = function(path)
 	GUI.error("File was selected, the path is: \"" .. path .. "\"")
 end
 
-local treeView3 = mainContainer:addChild(GUI.treeView(66, 2, 30, 41, 0xCCCCCC, 0x2D2D2D, 0x3C3C3C, 0xEEEEEE, 0x666666, 0xC3C3C3, 0x393939, "/", GUI.filesystemModes.directory, GUI.filesystemModes.directory))
-treeView3.onItemSelected = function(path)
+local filesystemTree3 = mainContainer:addChild(GUI.filesystemTree(66, 2, 30, 41, 0xCCCCCC, 0x2D2D2D, 0x3C3C3C, 0xEEEEEE, 0x666666, 0xC3C3C3, 0x393939, "/", GUI.filesystemModes.directory, GUI.filesystemModes.directory))
+filesystemTree3.onItemSelected = function(path)
 	GUI.error("Directory was selected, the path is: \"" .. path .. "\"")
 end
 
@@ -1060,7 +1059,7 @@ GUI.**filesystemChooser**( x, y, width, height, backgroundColor, textColor, tipB
 | *enum* | filesystemDialogMode | Режим выбора содержимого в диалоговом окне. Может принимать значения GUI.**filesystemModes**.**file**, GUI.**filesystemModes**.**directory** или GUI.**filesystemModes**.**both** |
 | *string* | filesystemDialogPath | Стартовая директория диалогового окна |
 
-FilesystemChooser  предназначен для удобного выбора файла или директории. При нажатии на объект всплывает диалоговое окно с уже знакомым нам TreeView, позволяющее выбрать необходимый элемент путем навигации по файловой системе.
+FilesystemChooser  предназначен для удобного выбора файла или директории. При нажатии на объект всплывает диалоговое окно с уже знакомым нам filesystemTree, позволяющее выбрать необходимый элемент путем навигации по файловой системе.
 
 | Тип свойства | Свойство |Описание |
 | ------ | ------ | ------ |
