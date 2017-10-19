@@ -1475,17 +1475,17 @@ local function dropDownMenuShow(menu)
 	local mainContainer = GUI.fullScreenContainer()
 	mainContainer:addChild(GUI.object(1, 1, mainContainer.width, mainContainer.height)).eventHandler = function(mainContainer, object, eventData)
 		if eventData[1] == "touch" then
+			buffer.paste(menu.x, menu.y, menu.oldPixels)
+			buffer.draw()
 			mainContainer:stopEventHandling()
 		end
 	end
 	mainContainer:addChild(menu)
-
+	
 	menu:draw()
 	buffer.draw()
 	mainContainer:startEventHandling()
-
-	buffer.paste(menu.x, menu.y, menu.oldPixels)
-	buffer.draw()
+	
 	if mainContainer.selectedItem then
 		return menu.itemsContainer.children[mainContainer.selectedItem].text, mainContainer.selectedItem
 	end

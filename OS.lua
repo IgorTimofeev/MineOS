@@ -41,7 +41,6 @@ local MineOSInterface = require("MineOSInterface")
 
 ---------------------------------------------- Всякая константная залупа ------------------------------------------------------------------------
 
-local menuTransparency = 0.2
 local dockTransparency = 0.4
 
 local computerUptimeOnBoot = computer.uptime()
@@ -270,7 +269,7 @@ local function createOSWindow()
 	MineOSInterface.mainContainer.background = MineOSInterface.mainContainer:addChild(GUI.object(1, 1, 1, 1))
 	MineOSInterface.mainContainer.background.wallpaperPosition = {x = 1, y = 1}
 	MineOSInterface.mainContainer.background.draw = function(object)
-		buffer.square(object.x, object.y, object.width, object.height, MineOSCore.properties.backgroundColor or 0x0F0F0F, 0x0, " ")
+		buffer.square(object.x, object.y, object.width, object.height, MineOSCore.properties.backgroundColor, 0x0, " ")
 		if object.wallpaper then
 			buffer.image(object.wallpaperPosition.x, object.wallpaperPosition.y, object.wallpaper)
 		end
@@ -296,7 +295,7 @@ local function createOSWindow()
 	end
 
 	-- Dock
-	MineOSInterface.mainContainer.dockContainer = MineOSInterface.mainContainer:addChild(GUI.container(1, 1, MineOSInterface.mainContainer.width, 6))
+	MineOSInterface.mainContainer.dockContainer = MineOSInterface.mainContainer:addChild(GUI.container(1, 1, MineOSInterface.mainContainer.width, 7))
 	MineOSInterface.mainContainer.dockContainer.saveToOSSettings = function()
 		MineOSCore.properties.dockShortcuts = {}
 		for i = 1, #MineOSInterface.mainContainer.dockContainer.children do
@@ -307,13 +306,13 @@ local function createOSWindow()
 		MineOSCore.saveProperties()
 	end
 	MineOSInterface.mainContainer.dockContainer.sort = function()
-		local x = 1
+		local x = 4
 		for i = 1, #MineOSInterface.mainContainer.dockContainer.children do
 			MineOSInterface.mainContainer.dockContainer.children[i].localPosition.x = x
 			x = x + MineOSCore.properties.iconWidth + MineOSCore.properties.iconHorizontalSpaceBetween
 		end
 
-		MineOSInterface.mainContainer.dockContainer.width = #MineOSInterface.mainContainer.dockContainer.children * (MineOSCore.properties.iconWidth + MineOSCore.properties.iconHorizontalSpaceBetween) - MineOSCore.properties.iconHorizontalSpaceBetween
+		MineOSInterface.mainContainer.dockContainer.width = #MineOSInterface.mainContainer.dockContainer.children * (MineOSCore.properties.iconWidth + MineOSCore.properties.iconHorizontalSpaceBetween) - MineOSCore.properties.iconHorizontalSpaceBetween + 6
 		MineOSInterface.mainContainer.dockContainer.localPosition.x = math.floor(MineOSInterface.mainContainer.width / 2 - MineOSInterface.mainContainer.dockContainer.width / 2)
 	end
 
@@ -334,7 +333,7 @@ local function createOSWindow()
 	end
 
 	MineOSInterface.mainContainer.dockContainer.addIcon = function(path, window)
-		local icon = MineOSInterface.mainContainer.dockContainer:addChild(MineOSInterface.icon(1, 1, path, 0x2D2D2D, 0xFFFFFF))
+		local icon = MineOSInterface.mainContainer.dockContainer:addChild(MineOSInterface.icon(1, 2, path, 0x2D2D2D, 0xFFFFFF))
 		icon:analyseExtension()
 		icon:moveBackward()
 
@@ -452,14 +451,14 @@ local function createOSWindow()
 
 	-- Draw dock drawDock dockDraw cyka заебался искать, блядь
 	MineOSInterface.mainContainer.dockContainer.draw = function(dockContainer)
-		local color, currentDockTransparency, currentDockWidth, xPos, yPos = MineOSCore.properties.dockColor or 0xFFFFFF, dockTransparency, dockContainer.width + 6, dockContainer.x - 3, dockContainer.y + dockContainer.height - 1
+		local color, currentDockTransparency, currentDockWidth, xPos = MineOSCore.properties.dockColor, dockTransparency, dockContainer.width - 2, dockContainer.x
 
-		for i = 1, dockContainer.height - 2 do
-			buffer.text(xPos, yPos, color, "◢", MineOSCore.properties.transparencyEnabled and currentDockTransparency)
-			buffer.square(xPos + 1, yPos, currentDockWidth - 2, 1, color, 0xFFFFFF, " ", MineOSCore.properties.transparencyEnabled and currentDockTransparency)
-			buffer.text(xPos + currentDockWidth - 1, yPos, color, "◣", MineOSCore.properties.transparencyEnabled and currentDockTransparency)
+		for y = dockContainer.y + dockContainer.height - 1, dockContainer.y + dockContainer.height - 4, -1 do
+			buffer.text(xPos, y, color, "◢", MineOSCore.properties.transparencyEnabled and currentDockTransparency)
+			buffer.square(xPos + 1, y, currentDockWidth, 1, color, 0xFFFFFF, " ", MineOSCore.properties.transparencyEnabled and currentDockTransparency)
+			buffer.text(xPos + currentDockWidth + 1, y, color, "◣", MineOSCore.properties.transparencyEnabled and currentDockTransparency)
 
-			currentDockTransparency, currentDockWidth, xPos, yPos = currentDockTransparency + 0.08, currentDockWidth - 2, xPos + 1, yPos - 1
+			currentDockTransparency, currentDockWidth, xPos = currentDockTransparency + 0.08, currentDockWidth - 2, xPos + 1
 			if currentDockTransparency > 1 then
 				currentDockTransparency = 1
 			end
@@ -472,7 +471,7 @@ local function createOSWindow()
 	MineOSInterface.mainContainer.windowsContainer = MineOSInterface.mainContainer:addChild(GUI.container(1, 2, 1, 1))
 
 	-- Main menu
-	MineOSInterface.mainContainer.menu = MineOSInterface.mainContainer:addChild(GUI.menu(1, 1, MineOSInterface.mainContainer.width, MineOSCore.properties.menuColor or 0xFFFFFF, 0x555555, 0x3366CC, 0xFFFFFF, MineOSCore.properties.transparencyEnabled and menuTransparency))
+	MineOSInterface.mainContainer.menu = MineOSInterface.mainContainer:addChild(GUI.menu(1, 1, MineOSInterface.mainContainer.width, MineOSCore.properties.menuColor, 0x555555, 0x3366CC, 0xFFFFFF))
 	local item1 = MineOSInterface.mainContainer.menu:addItem("MineOS", 0x000000)
 	item1.onTouch = function()
 		local menu = MineOSInterface.contextMenu(item1.x, item1.y + 1)
@@ -709,16 +708,16 @@ local function createOSWindow()
 		menu:addItem(MineOSCore.localization.colorScheme).onTouch = function()
 			local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer, MineOSCore.localization.colorScheme)
 
-			local backgroundColorSelector = container.layout:addChild(GUI.colorSelector(1, 1, 36, 3, MineOSCore.properties.backgroundColor or 0x0F0F0F, MineOSCore.localization.backgroundColor))
-			local menuColorSelector = container.layout:addChild(GUI.colorSelector(1, 1, 36, 3, MineOSCore.properties.menuColor or 0xFFFFFF, MineOSCore.localization.menuColor))
-			local dockColorSelector = container.layout:addChild(GUI.colorSelector(1, 1, 36, 3, MineOSCore.properties.dockColor or 0xFFFFFF, MineOSCore.localization.dockColor))
+			local backgroundColorSelector = container.layout:addChild(GUI.colorSelector(1, 1, 36, 3, MineOSCore.properties.backgroundColor, MineOSCore.localization.backgroundColor))
+			local menuColorSelector = container.layout:addChild(GUI.colorSelector(1, 1, 36, 3, MineOSCore.properties.menuColor, MineOSCore.localization.menuColor))
+			local dockColorSelector = container.layout:addChild(GUI.colorSelector(1, 1, 36, 3, MineOSCore.properties.dockColor, MineOSCore.localization.dockColor))
 
 			local switch = container.layout:addChild(GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0xE1E1E1, MineOSCore.localization.transparencyEnabled .. ":", MineOSCore.properties.transparencyEnabled)).switch
 			switch.onStateChanged = function()
 				MineOSCore.properties.transparencyEnabled = switch.state
 				MineOSCore.saveProperties()
 				MineOSInterface.mainContainer.menu.colors.transparency = MineOSCore.properties.transparencyEnabled and menuTransparency
-				container.panel.colors.background = switch.state and 0x0 or (MineOSCore.properties.backgroundColor or 0x0F0F0F)
+				container.panel.colors.background = switch.state and 0x0 or (MineOSCore.properties.backgroundColor)
 				container.panel.colors.transparency = switch.state and 0.2
 
 				MineOSInterface.OSDraw()

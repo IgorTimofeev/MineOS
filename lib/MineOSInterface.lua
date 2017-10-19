@@ -132,12 +132,24 @@ local function iconDraw(icon)
 		icon.liveImage(xImage, icon.y)
 	end
 
+	local xShortcut = xImage + MineOSInterface.iconImageWidth
 	if icon.isShortcut then
-		buffer.set(xImage + MineOSInterface.iconImageWidth - 1, icon.y + MineOSInterface.iconImageHeight - 1, 0xFFFFFF, 0x0, "<")
+		buffer.set(xShortcut - 1, icon.y + MineOSInterface.iconImageHeight - 1, 0xFFFFFF, 0x0, "<")
 	end
 
 	if icon.windows then
 		buffer.text(xCenter - 1, icon.y + MineOSInterface.iconImageHeight, 0x66DBFF, "╺╸")
+
+		local windowCount = tostring(table.size(icon.windows))
+		local windowCountLength = #windowCount
+		local xTip, yTip = xShortcut - windowCountLength, icon.y
+
+		buffer.square(xTip, yTip, windowCountLength, 1, 0xFF4940, 0xFFFFFF, " ")
+		buffer.text(xTip, yTip, 0xFFFFFF, windowCount)
+		buffer.text(xTip - 1, yTip, 0xFF4940, "⢸")
+		buffer.text(xTip +windowCountLength, yTip, 0xFF4940, "⡇")
+		buffer.text(xTip, yTip - 1, 0xFF4940, string.rep("⣀", windowCountLength))
+		buffer.text(xTip, yTip + 1, 0xFF4940, string.rep("⠉", windowCountLength))
 	end
 end
 
@@ -856,7 +868,7 @@ end
 function MineOSInterface.addUniversalContainer(parentContainer, title)
 	local container = parentContainer:addChild(GUI.container(1, 1, parentContainer.width, parentContainer.height))
 	
-	container.panel = container:addChild(GUI.panel(1, 1, container.width, container.height, MineOSCore.properties.transparencyEnabled and 0x0 or (MineOSCore.properties.backgroundColor or 0x0F0F0F), MineOSCore.properties.transparencyEnabled and 0.2))
+	container.panel = container:addChild(GUI.panel(1, 1, container.width, container.height, MineOSCore.properties.transparencyEnabled and 0x0 or MineOSCore.properties.backgroundColor, MineOSCore.properties.transparencyEnabled and 0.2))
 	container.layout = container:addChild(GUI.layout(1, 1, container.width, container.height, 3, 1))
 	container.layout.defaultColumn = 2
 	container.layout:setColumnWidth(1, GUI.sizePolicies.percentage, 0.375)
@@ -1190,7 +1202,6 @@ function MineOSInterface.addWindow(window)
 		end
 		
 		window:delete()
-		MineOSInterface.OSDraw()
 	end
 	
 	window.maximize = function(window)
