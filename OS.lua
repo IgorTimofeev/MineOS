@@ -289,7 +289,7 @@ local function createOSWindow()
 		MineOSInterface.safeLaunch(MineOSPaths.explorer, "-o", icon.path)
 	end
 	MineOSInterface.mainContainer.iconField.launchers.showContainingFolder = function(icon)
-		MineOSInterface.safeLaunch(MineOSPaths.explorer, "-o", fs.path(icon.shortcutPath))
+		MineOSInterface.safeLaunch(MineOSPaths.explorer, "-o", fs.path(icon.shortcutPath or icon.path))
 	end
 	MineOSInterface.mainContainer.iconField.launchers.showPackageContent = function(icon)
 		MineOSInterface.safeLaunch(MineOSPaths.explorer, "-o", icon.path)
@@ -368,7 +368,7 @@ local function createOSWindow()
 				end
 			end
 			menu:addItem(MineOSCore.localization.showContainingFolder).onTouch = function()
-				MineOSInterface.safeLaunch(MineOSPaths.explorer, "-o", fs.path(icon.shortcutPath))			
+				MineOSInterface.safeLaunch(MineOSPaths.explorer, "-o", fs.path(icon.shortcutPath or icon.path))			
 			end
 			menu:addSeparator()
 			menu:addItem(MineOSCore.localization.moveRight, indexOf >= #MineOSInterface.mainContainer.dockContainer.children - 1).onTouch = function()
