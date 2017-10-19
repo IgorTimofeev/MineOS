@@ -146,6 +146,8 @@ GUI.**error**( text )
 local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 
+------------------------------------------------------------------------------------------
+
 buffer.clear(0x2D2D2D)
 GUI.error("Something went wrong here, my friend")
 ```
@@ -252,7 +254,7 @@ Layout является наследником GUI.**container**, автомат
 | *function* | :**setCellAlignment**(*int* column, *int* row, *enum* GUI.alignment.vertical, *enum* GUI.alignment.horizontal): *layout* layout | Назначить ячейке сетки метод выравнивания дочерних объектов. Поддерживаются все 9 вариантов |
 | *function* | :**setCellSpacing**(*int* column, *int* row, *int* spacing): *layout* layout | Назначить ячейке сетки расстояние в пикселях между объектами. По умолчанию оно равняется 1 |
 | *function* | :**setCellMargin**(*int* column, *int* row, *int* horizontalMargin, *int* verticalMargin): *layout* layout | Назначить ячейке сетки отступы в пикселях в зависимости от текущего *alignment* этой ячейки |
-| *function* | :**setCellFitting**(*int* column, *int* row, *int* horizontalFitting, *int* verticalFitting): *layout* layout | Назначить ячейке сетки параметр автоматического назначения размера дочерних элементов равным размеру соответствующего ряда/столбца|
+| *function* | :**setCellFitting**(*int* column, *int* row, *int* horizontalFitting, *int* verticalFitting [, *int* horizontalOffset, *int* verticalOffset] ): *layout* layout | Назначить ячейке сетки параметр автоматического назначения размера дочерних элементов равным размеру соответствующего ряда/столбца. Если указаны опциональные параметры, то имеется возможноть установки отступа по ширине и высоте, т.е. размер объектов будет равен "размер_ячейки - величина_отступа" |
 
 Пример реализации layout:
 ```lua
@@ -265,7 +267,7 @@ local GUI = require("GUI")
 -- Создаем полноэкранный контейнер, добавляем на него загруженное изображение и полупрозрачную черную панель
 local mainContainer = GUI.fullScreenContainer()
 mainContainer:addChild(GUI.image(1, 1, image.load("/MineOS/Pictures/Raspberry.pic")))
-mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x000000, 0.4))
+mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x2D2D2D, 0.4))
 
 -- Добавляем в созданный контейнер layout с сеткой размером 5x1
 local layout = mainContainer:addChild(GUI.layout(1, 1, mainContainer.width, mainContainer.height, 5, 1))
@@ -444,10 +446,14 @@ local image = require("image")
 local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 
+------------------------------------------------------------------------------------------
+
 local mainContainer = GUI.fullScreenContainer()
-mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x0))
+mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x2D2D2D))
 
 mainContainer:addChild(GUI.image(2, 2, image.load("/Furnance.pic")))
+
+------------------------------------------------------------------------------------------
 
 mainContainer:draw()
 buffer.draw(true)
@@ -481,10 +487,14 @@ GUI.**label**( x, y, width, height, textColor, text ): *table* label
 local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 
+------------------------------------------------------------------------------------------
+
 local mainContainer = GUI.fullScreenContainer()
 mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x2D2D2D))
 
 mainContainer:addChild(GUI.label(2, 2, mainContainer.width, mainContainer.height, 0xFFFFFF, "Centered text")):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.center)
+
+------------------------------------------------------------------------------------------
 
 mainContainer:draw()
 buffer.draw(true)
@@ -947,10 +957,14 @@ GUI.**progressBar**( x, y, width, primaryColor, secondaryColor, valueColor, valu
 local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 
+------------------------------------------------------------------------------------------
+
 local mainContainer = GUI.fullScreenContainer()
-mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x0))
+mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x2D2D2D))
 
 mainContainer:addChild(GUI.progressBar(2, 2, 50, 0x3366CC, 0xEEEEEE, 0xEEEEEE, 80, true, true, "Value prefix: ", " value postfix"))
+
+------------------------------------------------------------------------------------------
 
 mainContainer:draw()
 buffer.draw(true)
@@ -1113,7 +1127,7 @@ local unicode = require("unicode")
 ------------------------------------------------------------------------------------------
 
 local mainContainer = GUI.fullScreenContainer()
-mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x0))
+mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x2D2D2D))
 
 local codeView = mainContainer:addChild(GUI.codeView(2, 2, 130, 30, {}, 1, 1, 1, {}, {}, true, 2))
 
@@ -1163,13 +1177,17 @@ GUI.**chart**( x, y, width, height, axisColor, axisValueColor, axisHelpersColor,
 local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 
+------------------------------------------------------------------------------------------
+
 local mainContainer = GUI.fullScreenContainer()
-mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x0))
+mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x2D2D2D))
 
 local chart = mainContainer:addChild(GUI.chart(2, 2, 100, 30, 0xEEEEEE, 0xAAAAAA, 0x888888, 0xFFDB40, 0.25, 0.25, "s", "t", true, {}))
 for i = 1, 100 do
 	table.insert(chart.values, {i, math.random(0, 80)})
 end
+
+------------------------------------------------------------------------------------------
 
 mainContainer:draw()
 buffer.draw(true)
@@ -1324,14 +1342,18 @@ GUI.**textBox**(x, y, width, height, backgroundColor, textColor, lines, currentL
 local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 
+------------------------------------------------------------------------------------------
+
 local mainContainer = GUI.fullScreenContainer()
-mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x0))
+mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x2D2D2D))
 
 local textBox = mainContainer:addChild(GUI.textBox(2, 2, 32, 16, 0xEEEEEE, 0x2D2D2D, {}, 1, 1, 0))
 table.insert(textBox.lines, {text = "Sample colored line ", color = 0x880000})
 for i = 1, 100 do
 	table.insert(textBox.lines, "Sample line " .. i)
 end
+
+------------------------------------------------------------------------------------------
 
 mainContainer:draw()
 buffer.draw(true)
