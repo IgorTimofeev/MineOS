@@ -106,26 +106,30 @@ function buffer.set(x, y, background, foreground, symbol)
 end
 
 function buffer.square(x, y, width, height, background, foreground, symbol, transparency) 
-	local index, indexStepForward, indexPlus1 = buffer.getIndexByCoordinates(x, y), (buffer.width - width) * 3
+	local index, indexStepOnEveryLine, indexPlus1 = buffer.getIndexByCoordinates(x, y), (buffer.width - width) * 3
 	
-	for j = y, (y + height - 1) do
-		for i = x, (x + width - 1) do
-			if i >= buffer.drawLimit.x1 and j >= buffer.drawLimit.y1 and i <= buffer.drawLimit.x2 and j <= buffer.drawLimit.y2 then
-				indexPlus1 = index + 1
-				
-				if transparency then
-					buffer.newFrame[index], buffer.newFrame[indexPlus1] =
-						color.blend(buffer.newFrame[index], background, transparency),
-						color.blend(buffer.newFrame[indexPlus1], background, transparency)
-				else
-					buffer.newFrame[index], buffer.newFrame[indexPlus1], buffer.newFrame[index + 2] = background, foreground, symbol
+	for j = y, y + height - 1 do
+		if j >= buffer.drawLimit.y1 and j <= buffer.drawLimit.y2 then
+			for i = x, x + width - 1 do
+				if i >= buffer.drawLimit.x1 and i <= buffer.drawLimit.x2 then
+					indexPlus1 = index + 1
+					
+					if transparency then
+						buffer.newFrame[index], buffer.newFrame[indexPlus1] =
+							color.blend(buffer.newFrame[index], background, transparency),
+							color.blend(buffer.newFrame[indexPlus1], background, transparency)
+					else
+						buffer.newFrame[index], buffer.newFrame[indexPlus1], buffer.newFrame[index + 2] = background, foreground, symbol
+					end
 				end
+
+				index = index + 3
 			end
 
-			index = index + 3
+			index = index + indexStepOnEveryLine
+		else
+			index = index + buffer.tripleWidth
 		end
-
-		index = index + indexStepForward
 	end
 end
 
@@ -137,8 +141,8 @@ function buffer.copy(x, y, width, height)
 	local copyArray = { width = width, height = height }
 
 	local index
-	for j = y, (y + height - 1) do
-		for i = x, (x + width - 1) do
+	for j = y, y + height - 1 do
+		for i = x, x + width - 1 do
 			if i >= 1 and j >= 1 and i <= buffer.width and j <= buffer.height then
 				index = buffer.getIndexByCoordinates(i, j)
 				table.insert(copyArray, buffer.newFrame[index])
@@ -159,8 +163,8 @@ function buffer.paste(x, y, copyArray)
 	local index, arrayIndex
 	if not copyArray or #copyArray == 0 then error("Массив области экрана пуст.") end
 
-	for j = y, (y + copyArray.height - 1) do
-		for i = x, (x + copyArray.width - 1) do
+	for j = y, y + copyArray.height - 1 do
+		for i = x, x + copyArray.width - 1 do
 			if i >= buffer.drawLimit.x1 and j >= buffer.drawLimit.y1 and i <= buffer.drawLimit.x2 and j <= buffer.drawLimit.y2 then
 				--Рассчитываем индекс массива основного изображения
 				index = buffer.getIndexByCoordinates(i, j)
@@ -210,20 +214,46 @@ function buffer.line(x1, y1, x2, y2, background, foreground, alpha, symbol)
 end
 
 function buffer.text(x, y, textColor, text, transparency)
-	local index, sText = buffer.getIndexByCoordinates(x, y), unicode.len(text)
+	if y >= buffer.drawLimit.y1 and y <= buffer.drawLimit.y2 then
+		local charIndex, bufferIndex = 1, buffer.getIndexByCoordinates(x, y) + 1
+		
+		for charIndex = 1, unicode.len(text) do
+			if x >= buffer.drawLimit.x1 and x <= buffer.drawLimit.x2 then
+				if transparency then
+					buffer.newFrame[bufferIndex] = color.blend(buffer.newFrame[bufferIndex - 1], textColor, transparency)
+				else
+					buffer.newFrame[bufferIndex] = textColor
+				end
 
-	for i = 1, sText do
-		if x >= buffer.drawLimit.x1 and y >= buffer.drawLimit.y1 and x <= buffer.drawLimit.x2 and y <= buffer.drawLimit.y2 then
-			if transparency then
-				buffer.newFrame[index + 1] = color.blend(buffer.newFrame[index], textColor, transparency)
-			else
-				buffer.newFrame[index + 1] = textColor
+				buffer.newFrame[bufferIndex + 1] = unicode.sub(text, charIndex, charIndex)
 			end
 
-			buffer.newFrame[index + 2] = unicode.sub(text, i, i)
+			x, bufferIndex = x + 1, bufferIndex + 3
 		end
+	end
+end
 
-		x, index = x + 1, index + 3
+function buffer.formattedText(x, y, text)
+	if y >= buffer.drawLimit.y1 and y <= buffer.drawLimit.y2 then
+		local charIndex, bufferIndex, textColor, char, number = 1, buffer.getIndexByCoordinates(x, y) + 1, 0xFFFFFF
+		
+		while charIndex <= unicode.len(text) do
+			if x >= buffer.drawLimit.x1 and x <= buffer.drawLimit.x2 then
+				char = unicode.sub(text, charIndex, charIndex)
+				if char == "#" then
+					local number = tonumber("0x" .. unicode.sub(text, charIndex + 1, charIndex + 6))
+					if number then
+						textColor, charIndex = number, charIndex + 7
+					else
+						buffer.newFrame[bufferIndex], buffer.newFrame[bufferIndex + 1], x, charIndex, bufferIndex = textColor, char, x + 1, charIndex + 1, bufferIndex + 3
+					end
+				else
+					buffer.newFrame[bufferIndex], buffer.newFrame[bufferIndex + 1], x, charIndex, bufferIndex = textColor, char, x + 1, charIndex + 1, bufferIndex + 3
+				end
+			else
+				x, charIndex, bufferIndex = x + 1, charIndex + 1, bufferIndex + 3
+			end
+		end
 	end
 end
 
@@ -262,7 +292,7 @@ end
 function buffer.frame(x, y, width, height, color)
 	local stringUp, stringDown, x2 = "┌" .. string.rep("─", width - 2) .. "┐", "└" .. string.rep("─", width - 2) .. "┘", x + width - 1
 	buffer.text(x, y, color, stringUp); y = y + 1
-	for i = 1, (height - 2) do
+	for i = 1, height - 2 do
 		buffer.text(x, y, color, "│")
 		buffer.text(x2, y, color, "│")
 		y = y + 1
@@ -576,18 +606,8 @@ buffer.flush()
 
 ------------------------------------------------------------------------------------------------------
 
--- buffer.semiPixelCircle(22, 22, 10, 0xFFDB40)
--- buffer.semiPixelLine(2, 36, 35, 3, 0xFFFFFF)
--- buffer.semiPixelBezierCurve(
--- 	{
--- 		{ x = 2, y = 63},
--- 		{ x = 63, y = 63},
--- 		{ x = 63, y = 2}
--- 	},
--- 	0x44FF44,
--- 	0.01
--- )
--- buffer.draw()
+-- buffer.formattedText(2, 2, "Hello world #FFDB40meow! #FF4940This is colored #44FF44text")
+-- buffer.draw(true)
 
 ------------------------------------------------------------------------------------------------------
 
