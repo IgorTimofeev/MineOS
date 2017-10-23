@@ -102,7 +102,7 @@ function event.timer(interval, callback, times)
 	checkArg(2, callback, "function")
 	checkArg(3, times, "number", "nil")
 
-	return event.addHandler(callback, nil, times, interval)
+	return event.addHandler(callback, nil, times or 1, interval)
 end
 
 event.cancel = event.removeHandler
@@ -134,7 +134,7 @@ function event.pull(...)
 		preferredTimeout, signalType = args[1], type(args[2]) == "string" and args[2] or nil
 	end
 	
-	local uptime, eventData, timeout = computer.uptime()
+	local uptime, signalData, timeout = computer.uptime()
 	local deadline = uptime + (preferredTimeout or math.huge)
 	
 	while uptime <= deadline do
@@ -147,7 +147,7 @@ function event.pull(...)
 		end
 
 		-- Pulling signal data
-		eventData = { computer.pullSignal(timeout - computer.uptime()) }
+		signalData = { computer.pullSignal(timeout - computer.uptime()) }
 				
 		-- Handlers processing
 		for ID, handler in pairs(handlers) do
@@ -155,7 +155,7 @@ function event.pull(...)
 				uptime = computer.uptime()
 
 				if
-					(not handler.signalType or handler.signalType == eventData[1]) and
+					(not handler.signalType or handler.signalType == signalData[1]) and
 					(not handler.nextTriggerTime or handler.nextTriggerTime <= uptime)
 				then
 					handler.times = handler.times - 1
@@ -163,7 +163,7 @@ function event.pull(...)
 						handler.nextTriggerTime = uptime + handler.interval
 					end
 
-					executeHandlerCallback(handler.callback, table.unpack(eventData))
+					executeHandlerCallback(handler.callback, table.unpack(signalData))
 				end
 			else
 				handlers[ID] = nil
@@ -173,13 +173,13 @@ function event.pull(...)
 		-- Interruption support
 		if event.interruptingEnabled then
 			-- Analysing for which interrupting key is pressed - we don't need keyboard API for this
-			if eventData[1] == "key_down" then
-				if event.interruptingKeyCodes[eventData[4]] then
-					interruptingKeysDown[eventData[4]] = true
+			if signalData[1] == "key_down" then
+				if event.interruptingKeyCodes[signalData[4]] then
+					interruptingKeysDown[signalData[4]] = true
 				end
-			elseif eventData[1] == "key_up" then
-				if event.interruptingKeyCodes[eventData[4]] then
-					interruptingKeysDown[eventData[4]] = nil
+			elseif signalData[1] == "key_up" then
+				if event.interruptingKeyCodes[signalData[4]] then
+					interruptingKeysDown[signalData[4]] = nil
 				end
 			end
 
@@ -197,11 +197,11 @@ function event.pull(...)
 		end
 		
 		-- Loop-breaking conditions
-		if eventData[1] and (not signalType or signalType == eventData[1]) then
-			if eventData[1] == event.skipSignalType then
+		if signalData[1] and (not signalType or signalType == signalData[1]) then
+			if signalData[1] == event.skipSignalType then
 				event.skipSignalType = nil
 			else
-				return table.unpack(eventData)
+				return table.unpack(signalData)
 			end
 		end
 	end
