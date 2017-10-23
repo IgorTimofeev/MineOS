@@ -326,8 +326,8 @@ end
 ----------------------------------------------------------------------------------------------------------------
 
 function MineOSNetwork.disable()
-	if MineOSNetwork.eventHandler then
-		event.cancel(MineOSNetwork.eventHandler.ID)
+	if MineOSNetwork.eventHandlerID then
+		event.cancel(MineOSNetwork.eventHandlerID)
 	end
 	MineOSNetwork.unmountAll()
 end
@@ -335,7 +335,7 @@ end
 function MineOSNetwork.enable()
 	MineOSNetwork.disable()
 
-	MineOSNetwork.eventHandler = event.register(function(...)
+	MineOSNetwork.eventHandlerID = event.register(function(...)
 		local eventData = {...}
 		if eventData[1] == "component_added" or eventData[1] == "component_removed" then
 			MineOSNetwork.updateModemState()

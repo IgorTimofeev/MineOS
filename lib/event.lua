@@ -17,7 +17,7 @@ local event = {
 		[56] = true
 	},
 	onError = function(errorMessage)
-		-- require("ECSAPI").error("CYKA: " .. tostring(errorMessage))
+		-- require("GUI").error("CYKA: " .. tostring(errorMessage))
 	end
 }
 
@@ -31,43 +31,27 @@ function event.register(callback, signalType, times, interval)
 	checkArg(3, times, "number", "nil")
 	checkArg(4, nextTriggerTime, "number", "nil")
 
-	local ID
-	while not ID do
-		ID = math.random(1, 0x7FFFFFFF)
-		for handlerIndex = 1, #event.handlers do
-			if event.handlers[handlerIndex].ID == ID then
-				ID = nil
+	local newID
+	while not newID do
+		newID = math.random(1, 0x7FFFFFFF)
+		for ID, handler in pairs(event.handlers) do
+			if ID == newID then
+				newID = nil
 				break
 			end
 		end
 	end
 
-	local handler = {
+	event.handlers[newID] = {
 		alive = true,
-		ID = ID,
 		signalType = signalType,
 		callback = callback,
 		times = times or math.huge,
 		interval = interval,
 		nextTriggerTime = interval and (computer.uptime() + interval) or nil
 	}
-	
-	table.insert(event.handlers, handler)
 
-	return handler
-end
-
-function event.cancel(ID)
-	checkArg(1, ID, "number")
-
-	for handlerIndex = 1, #event.handlers do
-		if event.handlers[handlerIndex].ID == ID then
-			event.handlers[handlerIndex].alive = false
-			return true
-		end
-	end
-
-	return false, "No registered handlers found for ID \"" .. ID .. "\""
+	return newID
 end
 
 --------------------------------------------------------------------------------------------------------
@@ -76,22 +60,23 @@ function event.listen(signalType, callback)
 	checkArg(1, signalType, "string")
 	checkArg(2, callback, "function")
 
-	for handlerIndex = 1, #event.handlers do
-		if event.handlers[handlerIndex].callback == callback then
+	for ID, handler in pairs(event.handlers) do
+		if handler.callback == callback then
 			return false, "Callback method " .. tostring(callback) .. " is already registered"
 		end
 	end
 
 	event.register(callback, signalType)
+	return true
 end
 
 function event.ignore(signalType, callback)
 	checkArg(1, signalType, "string")
 	checkArg(2, callback, "function")
 
-	for handlerIndex = 1, #event.handlers do
-		if event.handlers[handlerIndex].signalType == signalType and event.handlers[handlerIndex].callback == callback then
-			event.handlers[handlerIndex].alive = false
+	for ID, handler in pairs(event.handlers) do
+		if handler.signalType == signalType and handler.callback == callback then
+			handler.alive = false
 			return true
 		end
 	end
@@ -106,7 +91,18 @@ function event.timer(interval, callback, times)
 	checkArg(2, callback, "function")
 	checkArg(3, times, "number", "nil")
 
-	return event.register(callback, nil, times, interval).ID
+	return event.register(callback, nil, times, interval)
+end
+
+function event.cancel(ID)
+	checkArg(1, ID, "number")
+
+	if event.handlers[ID] then
+		event.handlers[ID].alive = false
+		return true
+	else
+		return false, "No registered handlers found for ID \"" .. ID .. "\""
+	end
 end
 
 --------------------------------------------------------------------------------------------------------
@@ -122,65 +118,11 @@ local function executeHandlerCallback(callback, ...)
 	end
 end
 
-local function eventTick(timeout)
-	local eventData, handlerIndex, uptime = {computer.pullSignal(timeout)}, 1, computer.uptime()
-	
-	while handlerIndex <= #event.handlers do
-		if event.handlers[handlerIndex].times > 0 and event.handlers[handlerIndex].alive then
-			if
-				(not event.handlers[handlerIndex].signalType or event.handlers[handlerIndex].signalType == eventData[1]) and
-				(not event.handlers[handlerIndex].nextTriggerTime or event.handlers[handlerIndex].nextTriggerTime <= uptime)
-			then
-				executeHandlerCallback(event.handlers[handlerIndex].callback, table.unpack(eventData))
-				uptime = computer.uptime()
-
-				event.handlers[handlerIndex].times = event.handlers[handlerIndex].times - 1
-
-				if event.handlers[handlerIndex].nextTriggerTime then
-					event.handlers[handlerIndex].nextTriggerTime = uptime + event.handlers[handlerIndex].interval
-				end
-			end
-
-			handlerIndex = handlerIndex + 1
-		else
-			table.remove(event.handlers, handlerIndex)
-		end
-	end
-
-	-- Interruption support
-	if event.interruptingEnabled then
-		-- Analysing for which interrupting key is pressed - we don't need keyboard API for this
-		if eventData[1] == "key_down" then
-			if event.interruptingKeyCodes[eventData[4]] then
-				interruptingKeysDown[eventData[4]] = true
-			end
-		elseif eventData[1] == "key_up" then
-			if event.interruptingKeyCodes[eventData[4]] then
-				interruptingKeysDown[eventData[4]] = nil
-			end
-		end
-
-		local shouldInterrupt = true
-		for keyCode in pairs(event.interruptingKeyCodes) do
-			if not interruptingKeysDown[keyCode] then
-				shouldInterrupt = false
-			end
-		end
-		
-		if shouldInterrupt and uptime - lastInterrupt > event.interruptingDelay then
-			lastInterrupt = uptime
-			error("interrupted", 0)
-		end
-	end
-
-	return eventData
-end
-
 local function getNearestHandlerTriggerTime()
 	local nearestTriggerTime
-	for handlerIndex = 1, #event.handlers do
-		if event.handlers[handlerIndex].nextTriggerTime then
-			nearestTriggerTime = math.min(nearestTriggerTime or math.huge, event.handlers[handlerIndex].nextTriggerTime)
+	for ID, handler in pairs(event.handlers) do
+		if handler.nextTriggerTime then
+			nearestTriggerTime = math.min(nearestTriggerTime or math.huge, handler.nextTriggerTime)
 		end
 	end
 
@@ -201,9 +143,60 @@ function event.pull(...)
 		timeout, signalType = args[1], type(args[2]) == "string" and args[2] or nil
 	end
 	
-	local deadline = computer.uptime() + (timeout or math.huge)
-	while computer.uptime() <= deadline do
-		local eventData = eventTick((getNearestHandlerTriggerTime() or deadline) - computer.uptime())
+	local uptime, eventData = computer.uptime()
+	local deadline = uptime + (timeout or math.huge)
+	while uptime <= deadline do
+		uptime = computer.uptime()
+		eventData = {computer.pullSignal((getNearestHandlerTriggerTime() or deadline) - computer.uptime())}
+		
+		-- Handlers processing
+		for ID, handler in pairs(event.handlers) do
+			if handler.times > 0 and handler.alive then
+				if
+					(not handler.signalType or handler.signalType == eventData[1]) and
+					(not handler.nextTriggerTime or handler.nextTriggerTime <= uptime)
+				then
+					executeHandlerCallback(handler.callback, table.unpack(eventData))
+					uptime = computer.uptime()
+
+					handler.times = handler.times - 1
+
+					if handler.nextTriggerTime then
+						handler.nextTriggerTime = uptime + handler.interval
+					end
+				end
+			else
+				event.handlers[ID] = nil
+			end
+		end
+
+		-- Interruption support
+		if event.interruptingEnabled then
+			-- Analysing for which interrupting key is pressed - we don't need keyboard API for this
+			if eventData[1] == "key_down" then
+				if event.interruptingKeyCodes[eventData[4]] then
+					interruptingKeysDown[eventData[4]] = true
+				end
+			elseif eventData[1] == "key_up" then
+				if event.interruptingKeyCodes[eventData[4]] then
+					interruptingKeysDown[eventData[4]] = nil
+				end
+			end
+
+			local shouldInterrupt = true
+			for keyCode in pairs(event.interruptingKeyCodes) do
+				if not interruptingKeysDown[keyCode] then
+					shouldInterrupt = false
+				end
+			end
+			
+			if shouldInterrupt and uptime - lastInterrupt > event.interruptingDelay then
+				lastInterrupt = uptime
+				error("interrupted", 0)
+			end
+		end
+		
+		-- Loop-breaking conditions
 		if eventData[1] and (not signalType or signalType == eventData[1]) then
 			if eventData[1] == event.skipSignalType then
 				event.skipSignalType = nil
