@@ -15,6 +15,7 @@ local args, options = require("shell").parse(...)
 
 local mainContainer, window = MineOSInterface.addWindow(GUI.filledWindow(nil, nil, 88, 26, 0xF0F0F0))
 
+local iconFieldYOffset = 2
 local scrollTimerID
 
 local favourites = {
@@ -52,6 +53,7 @@ local function addWorkpath(path)
 	end
 
 	workpathHistoryButtonsUpdate()
+	window.iconField.yOffset = iconFieldYOffset
 	window.iconField:setWorkpath(path)
 end
 
@@ -67,6 +69,7 @@ local function prevOrNextWorkpath(next)
 	end
 
 	workpathHistoryButtonsUpdate()
+	window.iconField.yOffset = iconFieldYOffset
 	window.iconField:setWorkpath(workpathHistory[workpathHistoryCurrent])
 	window.iconField:updateFileList()
 
@@ -111,14 +114,16 @@ end
 
 local function sidebarItemOnTouch(object, eventData)
 	if eventData[5] == 0 then
-		addWorkpath(object.path)
-		mainContainer:draw()
-		buffer.draw()
-		
-		window.iconField:updateFileList()
+		if fs.isDirectory(object.path) then
+			addWorkpath(object.path)
+			mainContainer:draw()
+			buffer.draw()
+			
+			window.iconField:updateFileList()
 
-		mainContainer:draw()
-		buffer.draw()
+			mainContainer:draw()
+			buffer.draw()
+		end
 	else
 
 	end
@@ -178,38 +183,56 @@ window.iconField = window:addChild(
 		MineOSPaths.desktop
 	)
 )
-local oldSetWorkPath = window.iconField.setWorkpath
-window.iconField.setWorkpath = function(...)
-	window.iconField.yOffset = 2
-	oldSetWorkPath(...)
-end
+
+window.scrollBar = window:addChild(GUI.scrollBar(1, 4, 1, 1, 0xC3C3C3, 0x444444, iconFieldYOffset, 1, 1, 1, 1, true))
+
 window.iconField.launchers.directory = function(icon)
 	addWorkpath(icon.path)
 	mainContainer:draw()
 	buffer.draw()
 end
 
-window.searchInputField = window:addChild(GUI.input(1, 2, 36, 1, 0xEEEEEE, 0x666666, 0xAAAAAA, 0xEEEEEE, 0x262626, nil, "Search", true))
-window.searchInputField.onInputFinished = function()
-	window.iconField.filenameMatcher = window.searchInputField.text
+window.searchInput = window:addChild(GUI.input(1, 2, 36, 1, 0xFFFFFF, 0x666666, 0xAAAAAA, 0xFFFFFF, 0x2D2D2D, nil, "Search", true))
+window.searchInput.onInputFinished = function()
+	window.iconField.filenameMatcher = window.searchInput.text
 	window.iconField.fromFile = 1
-	window.iconField.yOffset = 2
+	window.iconField.yOffset = iconFieldYOffset
 	window.iconField:updateFileList()
 	
 	mainContainer:draw()
 	buffer.draw()
 end
 
+local function updateScrollBar()
+	local horizontalLines = math.ceil((#window.iconField.fileList - window.iconField.fromFile + 1) / window.iconField.iconCount.horizontal)
+	local minimumOffset = 3 - (horizontalLines - 1) * (MineOSCore.properties.iconHeight + MineOSCore.properties.iconVerticalSpaceBetween) - MineOSCore.properties.iconVerticalSpaceBetween
+	
+	if window.iconField.yOffset > iconFieldYOffset then
+		window.iconField.yOffset = iconFieldYOffset
+	elseif window.iconField.yOffset < minimumOffset then
+		window.iconField.yOffset = minimumOffset
+	end
+
+	window.scrollBar.maximumValue = math.abs(minimumOffset)
+	window.scrollBar.value = math.abs(window.iconField.yOffset - iconFieldYOffset)
+end
+
+local overrideUpdateFileList = window.iconField.updateFileList
+window.iconField.updateFileList = function(...)
+	overrideUpdateFileList(...)
+	updateScrollBar()
+end
+
 window.iconField.eventHandler = function(mainContainer, object, eventData)
 	if eventData[1] == "scroll" then
 		eventData[5] = eventData[5] * 2
 		window.iconField.yOffset = window.iconField.yOffset + eventData[5]
-		if window.iconField.yOffset <= 2 then
-			for i = 1, #window.iconField.iconsContainer.children do
-				window.iconField.iconsContainer.children[i].localPosition.y = window.iconField.iconsContainer.children[i].localPosition.y + eventData[5]
-			end
-		else
-			window.iconField.yOffset = 2
+
+		updateScrollBar()
+
+		local delta = window.iconField.yOffset - window.iconField.iconsContainer.children[1].localPosition.y
+		for i = 1, #window.iconField.iconsContainer.children do
+			window.iconField.iconsContainer.children[i].localPosition.y = window.iconField.iconsContainer.children[i].localPosition.y + delta
 		end
 
 		mainContainer:draw()
@@ -222,7 +245,7 @@ window.iconField.eventHandler = function(mainContainer, object, eventData)
 
 		scrollTimerID = event.timer(0.3, function()
 			computer.pushSignal("Finder", "updateFileList")
-		end, 1)		
+		end, 1)
 	elseif (eventData[1] == "MineOSCore" or eventData[1] == "Finder") and eventData[2] == "updateFileList" then
 		window.iconField:updateFileList()
 					
@@ -275,13 +298,17 @@ local function calculateSizes(width, height)
 	window.statusBar.width = window.backgroundPanel.width
 
 	window.titlePanel.width = width
-	window.searchInputField.width = math.floor(width * 0.25)
-	window.searchInputField.localPosition.x = width - window.searchInputField.width - 1
+	window.searchInput.width = math.floor(width * 0.25)
+	window.searchInput.localPosition.x = width - window.searchInput.width - 1
 
 	window.iconField.width = window.backgroundPanel.width
 	window.iconField.height = height + 4
 	window.iconField.localPosition.x = window.backgroundPanel.localPosition.x
 	window.iconField.localPosition.y = window.backgroundPanel.localPosition.y
+
+	window.scrollBar.localPosition.x = window.width
+	window.scrollBar.height = window.backgroundPanel.height
+	window.scrollBar.shownValueCount = window.scrollBar.height - 1
 
 	window.actionButtons.localPosition.y = 1
 	window.actionButtons:moveToFront()
@@ -303,10 +330,10 @@ window.sidebarResizer.onResizeFinished = function()
 	window.iconField:updateFileList()
 end
 
-local oldMaximize = window.actionButtons.maximize.onTouch
+local overrideMaximize = window.actionButtons.maximize.onTouch
 window.actionButtons.maximize.onTouch = function()
-	window.iconField.yOffset = 2
-	oldMaximize()
+	window.iconField.yOffset = iconFieldYOffset
+	overrideMaximize()
 end
 
 ------------------------------------------------------------------------------------------------------
@@ -319,5 +346,4 @@ end
 
 updateSidebar()
 window:resize(window.width, window.height)
-window.iconField:updateFileList()
 
