@@ -204,7 +204,9 @@ window.searchInput.onInputFinished = function()
 end
 
 local function updateScrollBar()
-	local horizontalLines = math.ceil((#window.iconField.fileList - window.iconField.fromFile + 1) / window.iconField.iconCount.horizontal)
+	local shownFilesCount = #window.iconField.fileList - window.iconField.fromFile + 1
+	
+	local horizontalLines = math.ceil(shownFilesCount / window.iconField.iconCount.horizontal)
 	local minimumOffset = 3 - (horizontalLines - 1) * (MineOSCore.properties.iconHeight + MineOSCore.properties.iconVerticalSpaceBetween) - MineOSCore.properties.iconVerticalSpaceBetween
 	
 	if window.iconField.yOffset > iconFieldYOffset then
@@ -213,8 +215,13 @@ local function updateScrollBar()
 		window.iconField.yOffset = minimumOffset
 	end
 
-	window.scrollBar.maximumValue = math.abs(minimumOffset)
-	window.scrollBar.value = math.abs(window.iconField.yOffset - iconFieldYOffset)
+	if shownFilesCount > window.iconField.iconCount.total then
+		window.scrollBar.hidden = false
+		window.scrollBar.maximumValue = math.abs(minimumOffset)
+		window.scrollBar.value = math.abs(window.iconField.yOffset - iconFieldYOffset)
+	else
+		window.scrollBar.hidden = true
+	end
 end
 
 local overrideUpdateFileList = window.iconField.updateFileList

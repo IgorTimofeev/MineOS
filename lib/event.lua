@@ -6,9 +6,8 @@
 
 local computer = require("computer")
 
-local event = {
+local event, handlers, interruptingKeysDown, lastInterrupt = {
 	push = computer.pushSignal,
-	handlers = {},
 	interruptingEnabled = true,
 	interruptingDelay = 1,
 	interruptingKeyCodes = {
@@ -17,33 +16,24 @@ local event = {
 		[56] = true
 	},
 	onError = function(errorMessage)
-		-- require("GUI").error("CYKA: " .. tostring(errorMessage))
+		-- require("GUI").error("Event handler error: \"" .. tostring(errorMessage) .. "\"")
 	end
-}
-
-local lastInterrupt, interruptingKeysDown = 0, {}
+}, {}, {}, 0
 
 --------------------------------------------------------------------------------------------------------
 
-function event.register(callback, signalType, times, interval)
+function event.addHandler(callback, signalType, times, interval)
 	checkArg(1, callback, "function")
 	checkArg(2, signalType, "string", "nil")
 	checkArg(3, times, "number", "nil")
 	checkArg(4, nextTriggerTime, "number", "nil")
 
-	local newID
-	while not newID do
-		newID = math.random(1, 0x7FFFFFFF)
-		for ID, handler in pairs(event.handlers) do
-			if ID == newID then
-				newID = nil
-				break
-			end
-		end
+	local ID = math.random(1, 0x7FFFFFFF)
+	while handlers[ID] do
+		ID = math.random(1, 0x7FFFFFFF)
 	end
 
-	event.handlers[newID] = {
-		alive = true,
+	handlers[ID] = {
 		signalType = signalType,
 		callback = callback,
 		times = times or math.huge,
@@ -51,7 +41,28 @@ function event.register(callback, signalType, times, interval)
 		nextTriggerTime = interval and (computer.uptime() + interval) or nil
 	}
 
-	return newID
+	return ID
+end
+
+function event.removeHandler(ID)
+	checkArg(1, ID, "number")
+
+	if handlers[ID] then
+		handlers[ID] = nil
+		return true
+	else
+		return false, "No registered handlers found for ID \"" .. ID .. "\""
+	end
+end
+
+function event.getHandler(ID)
+	checkArg(1, ID, "number")
+
+	if handlers[ID] then
+		return handlers[ID]
+	else
+		return false, "No registered handlers found for ID \"" .. ID .. "\""
+	end
 end
 
 --------------------------------------------------------------------------------------------------------
@@ -60,13 +71,13 @@ function event.listen(signalType, callback)
 	checkArg(1, signalType, "string")
 	checkArg(2, callback, "function")
 
-	for ID, handler in pairs(event.handlers) do
+	for ID, handler in pairs(handlers) do
 		if handler.callback == callback then
 			return false, "Callback method " .. tostring(callback) .. " is already registered"
 		end
 	end
 
-	event.register(callback, signalType)
+	event.addHandler(callback, signalType)
 	return true
 end
 
@@ -74,9 +85,9 @@ function event.ignore(signalType, callback)
 	checkArg(1, signalType, "string")
 	checkArg(2, callback, "function")
 
-	for ID, handler in pairs(event.handlers) do
+	for ID, handler in pairs(handlers) do
 		if handler.signalType == signalType and handler.callback == callback then
-			handler.alive = false
+			handlers[ID] = nil
 			return true
 		end
 	end
@@ -91,19 +102,10 @@ function event.timer(interval, callback, times)
 	checkArg(2, callback, "function")
 	checkArg(3, times, "number", "nil")
 
-	return event.register(callback, nil, times, interval)
+	return event.addHandler(callback, nil, times, interval)
 end
 
-function event.cancel(ID)
-	checkArg(1, ID, "number")
-
-	if event.handlers[ID] then
-		event.handlers[ID].alive = false
-		return true
-	else
-		return false, "No registered handlers found for ID \"" .. ID .. "\""
-	end
-end
+event.cancel = event.removeHandler
 
 --------------------------------------------------------------------------------------------------------
 
@@ -118,17 +120,6 @@ local function executeHandlerCallback(callback, ...)
 	end
 end
 
-local function getNearestHandlerTriggerTime()
-	local nearestTriggerTime
-	for ID, handler in pairs(event.handlers) do
-		if handler.nextTriggerTime then
-			nearestTriggerTime = math.min(nearestTriggerTime or math.huge, handler.nextTriggerTime)
-		end
-	end
-
-	return nearestTriggerTime
-end
-
 function event.skip(signalType)
 	event.skipSignalType = signalType
 end
@@ -136,37 +127,46 @@ end
 function event.pull(...)
 	local args = {...}
 
-	local args1Type, timeout, signalType = type(args[1])
+	local args1Type, preferredTimeout, signalType = type(args[1])
 	if args1Type == "string" then
-		timeout, signalType = math.huge, args[1]
+		preferredTimeout, signalType = math.huge, args[1]
 	elseif args1Type == "number" then
-		timeout, signalType = args[1], type(args[2]) == "string" and args[2] or nil
+		preferredTimeout, signalType = args[1], type(args[2]) == "string" and args[2] or nil
 	end
 	
-	local uptime, eventData = computer.uptime()
-	local deadline = uptime + (timeout or math.huge)
+	local uptime, eventData, timeout = computer.uptime()
+	local deadline = uptime + (preferredTimeout or math.huge)
+	
 	while uptime <= deadline do
-		uptime = computer.uptime()
-		eventData = {computer.pullSignal((getNearestHandlerTriggerTime() or deadline) - computer.uptime())}
-		
+		-- Determining pullSignal timeout
+		timeout = deadline
+		for ID, handler in pairs(handlers) do
+			if handler.nextTriggerTime then
+				timeout = math.min(timeout, handler.nextTriggerTime)
+			end
+		end
+
+		-- Pulling signal data
+		eventData = { computer.pullSignal(timeout - computer.uptime()) }
+				
 		-- Handlers processing
-		for ID, handler in pairs(event.handlers) do
-			if handler.times > 0 and handler.alive then
+		for ID, handler in pairs(handlers) do
+			if handler.times > 0 then
+				uptime = computer.uptime()
+
 				if
 					(not handler.signalType or handler.signalType == eventData[1]) and
 					(not handler.nextTriggerTime or handler.nextTriggerTime <= uptime)
 				then
-					executeHandlerCallback(handler.callback, table.unpack(eventData))
-					uptime = computer.uptime()
-
 					handler.times = handler.times - 1
-
 					if handler.nextTriggerTime then
 						handler.nextTriggerTime = uptime + handler.interval
 					end
+
+					executeHandlerCallback(handler.callback, table.unpack(eventData))
 				end
 			else
-				event.handlers[ID] = nil
+				handlers[ID] = nil
 			end
 		end
 
