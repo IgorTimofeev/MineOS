@@ -730,6 +730,12 @@ function MineOSInterface.iconRightClick(icon, eventData)
 				require("compressor").pack(fs.path(icon.path) .. icon.nameWithoutExtension .. ".pkg", icon.path)
 				computer.pushSignal("MineOSCore", "updateFileList")
 			end
+
+			if icon.extension ~= ".app" then
+				menu:addItem(MineOSCore.localization.addToFavourites).onTouch = function()
+					
+				end
+			end
 			
 			menu:addSeparator()
 		else
@@ -877,7 +883,7 @@ function MineOSInterface.addUniversalContainer(parentContainer, title)
 	container.layout:setCellFitting(2, 1, true, false)
 
 	if title then
-		container.layout:addChild(GUI.label(1, 1, 1, 1, 0xEEEEEE, title)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+		container.layout:addChild(GUI.label(1, 1, 1, 1, 0xE1E1E1, title)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
 	end
 
 	container.panel.eventHandler = function(mainContainer, object, eventData)
@@ -894,7 +900,7 @@ end
 local function addUniversalContainerWithInputTextBox(parentWindow, text, title, placeholder)
 	local container = MineOSInterface.addUniversalContainer(parentWindow, title)
 	
-	container.inputField = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0x666666, 0xEEEEEE, 0x262626, text, placeholder, false))
+	container.inputField = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x666666, 0x666666, 0xE1E1E1, 0x2D2D2D, text, placeholder, false))
 	container.label = container.layout:addChild(GUI.label(1, 1, 36, 1, 0xFF4940, MineOSCore.localization.file .. " " .. MineOSCore.localization.alreadyExists)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
 	container.label.hidden = true
 
@@ -957,7 +963,7 @@ end
 function MineOSInterface.newFileFromURL(parentWindow, iconField, x, y, path)
 	local container = addUniversalContainerWithInputTextBox(parentWindow, nil, "Загрузить файл по URL", MineOSCore.localization.fileName)
 
-	container.inputFieldURL = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0x666666, 0xEEEEEE, 0x262626, nil, "URL", false))
+	container.inputFieldURL = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x666666, 0x666666, 0xE1E1E1, 0x2D2D2D, nil, "URL", false))
 	container.inputField.onInputFinished = function()
 		if container.inputField.text then
 			if fs.exists(path .. container.inputField.text) then
@@ -987,7 +993,7 @@ end
 function MineOSInterface.newApplication(parentWindow, iconField, x, y, path)
 	local container = addUniversalContainerWithInputTextBox(parentWindow, nil, MineOSCore.localization.newApplication, MineOSCore.localization.applicationName)
 
-	local filesystemChooser = container.layout:addChild(GUI.filesystemChooser(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0x444444, 0x999999, nil, MineOSCore.localization.open, MineOSCore.localization.cancel, MineOSCore.localization.iconPath, "/"))
+	local filesystemChooser = container.layout:addChild(GUI.filesystemChooser(1, 1, 36, 3, 0xE1E1E1, 0x666666, 0x444444, 0x999999, nil, MineOSCore.localization.open, MineOSCore.localization.cancel, MineOSCore.localization.iconPath, "/"))
 	filesystemChooser:addExtensionFilter(".pic")
 	filesystemChooser:moveBackward()
 
@@ -1109,7 +1115,7 @@ function MineOSInterface.applicationHelp(parentWindow, path)
 		end
 		
 		container.layout:addChild(GUI.textBox(1, 1, 50, 1, nil, 0xcccccc, lines, 1, 0, 0, true, true))
-		local button = container.layout:addChild(GUI.button(1, 1, 30, 1, 0xEEEEEE, 0x262626, 0xAAAAAA, 0x262626, MineOSCore.localization.dontShowAnymore))	
+		local button = container.layout:addChild(GUI.button(1, 1, 30, 1, 0xE1E1E1, 0x2D2D2D, 0xAAAAAA, 0x2D2D2D, MineOSCore.localization.dontShowAnymore))	
 		
 		container.panel.eventHandler = function(mainContainer, object, eventData)
 			if eventData[1] == "touch" then
@@ -1292,18 +1298,18 @@ local function GUICopy(parentContainer, fileList, toPath)
 
 	local container = MineOSInterface.addUniversalContainer(parentContainer, MineOSCore.localization.copying)
 	local textBox = container.layout:addChild(GUI.textBox(1, 1, container.width, 1, nil, 0x777777, {}, 1, 0, 0, true, true):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top))
-	local switchAndLabel = container.layout:addChild(GUI.switchAndLabel(1, 1, 37, 8, 0x66DB80, 0x1E1E1E, 0xEEEEEE, 0x777777, MineOSCore.localization.applyToAll .. ":", false))
+	local switchAndLabel = container.layout:addChild(GUI.switchAndLabel(1, 1, 37, 8, 0x66DB80, 0x1E1E1E, 0xE1E1E1, 0x777777, MineOSCore.localization.applyToAll .. ":", false))
 	container.panel.eventHandler = nil
 
 	local buttonsLayout = container.layout:addChild(GUI.layout(1, 1, 1, 1, 1, 1))
-	buttonsLayout:addChild(GUI.button(1, 1, 11, 1, 0xEEEEEE, 0x262626, 0xAAAAAA, 0x262626, MineOSCore.localization.yes)).onTouch = function()
+	buttonsLayout:addChild(GUI.button(1, 1, 11, 1, 0xE1E1E1, 0x2D2D2D, 0xAAAAAA, 0x2D2D2D, MineOSCore.localization.yes)).onTouch = function()
 		applyYes = true
 		parentContainer:stopEventHandling()
 	end
-	buttonsLayout:addChild(GUI.button(1, 1, 11, 1, 0xEEEEEE, 0x262626, 0xAAAAAA, 0x262626, MineOSCore.localization.no)).onTouch = function()
+	buttonsLayout:addChild(GUI.button(1, 1, 11, 1, 0xE1E1E1, 0x2D2D2D, 0xAAAAAA, 0x2D2D2D, MineOSCore.localization.no)).onTouch = function()
 		parentContainer:stopEventHandling()
 	end
-	buttonsLayout:addChild(GUI.button(1, 1, 11, 1, 0xEEEEEE, 0x262626, 0xAAAAAA, 0x262626, MineOSCore.localization.cancel)).onTouch = function()
+	buttonsLayout:addChild(GUI.button(1, 1, 11, 1, 0xE1E1E1, 0x2D2D2D, 0xAAAAAA, 0x2D2D2D, MineOSCore.localization.cancel)).onTouch = function()
 		breakRecursion = true
 		parentContainer:stopEventHandling()
 	end
@@ -1400,8 +1406,8 @@ end
 function MineOSInterface.showErrorWindow(path, line, traceback)
 	buffer.clear(0x0, 0.5)
 
-	local mainContainer = GUI.container(1, 1, buffer.width, math.floor(buffer.height * 0.45))
-	mainContainer.y = math.floor(buffer.height / 2 - mainContainer.height / 2)
+	local mainContainer = GUI.container(1, 1, buffer.getWidth(), math.floor(buffer.getHeight() * 0.45))
+	mainContainer.y = math.floor(buffer.getHeight() / 2 - mainContainer.height / 2)
 	
 	mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, 3, 0x383838))
 	mainContainer:addChild(GUI.label(1, 2, mainContainer.width, 1, 0xFFFFFF, MineOSCore.localization.errorWhileRunningProgram .. "\"" .. fs.name(path) .. "\"")):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)

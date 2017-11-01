@@ -24,7 +24,7 @@ local meowEngine = require("MeowEngine/Main")
 
 -- /MineOS/Desktop/3DTest.app/3DTest.lua
 
-buffer.start()
+buffer.flush()
 meowEngine.intro(vector.newVector3(0, 0, 0), 20)
 
 local mainContainer = GUI.fullScreenContainer()
@@ -317,7 +317,7 @@ local controls = {
 local OCGLView = GUI.object(1, 1, mainContainer.width, mainContainer.height)
 
 local function drawInvertedText(x, y, text)
-	local index = buffer.getIndexByCoordinates(x, y)
+	local index = buffer.getIndex(x, y)
 	local background, foreground = buffer.rawGet(index)
 	buffer.rawSet(index, background, 0xFFFFFF - foreground, text)
 end

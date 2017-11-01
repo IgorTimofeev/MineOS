@@ -51,7 +51,7 @@ local colors = {
 local xOld, yOld = gpu.getResolution()
 local xSize, ySize = 160, 50
 gpu.setResolution(160, 50)
-buffer.start()
+buffer.flush()
 
 local widthOfToolbar = 33
 local xToolbar = xSize - widthOfToolbar + 1
@@ -659,7 +659,7 @@ while true do
 						drawModelOnHologram()
 					elseif action == "Выход" then
 						gpu.setResolution(xOld, yOld)
-						buffer.start()	
+						buffer.flush()	
 						buffer.draw(true)
 						if hologramAvailable then component.hologram.clear() end
 						return

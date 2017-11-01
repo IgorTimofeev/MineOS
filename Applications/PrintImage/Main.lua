@@ -104,7 +104,7 @@ local function beginPrint()
 							addShapePixel(i, jReplacer - 1, foreground, xImage, yImage * 2)
 						end
 
-						GUI.progressBar(math.floor(buffer.width / 2 - 25), math.floor(buffer.height / 2), 50, 0x3366CC, 0xFFFFFF, 0xFFFFFF, math.ceil(counter * 100 / (xShapeCount * yShapeCount)), true, true, "Progress: ", "%"):draw()
+						GUI.progressBar(math.floor(buffer.getWidth() / 2 - 25), math.floor(buffer.getHeight() / 2), 50, 0x3366CC, 0xFFFFFF, 0xFFFFFF, math.ceil(counter * 100 / (xShapeCount * yShapeCount)), true, true, "Progress: ", "%"):draw()
 						buffer.draw()
 					-- else
 					-- 	error("Printing out of mainImage range")
@@ -172,8 +172,8 @@ end
 
 local function drawMainImageObject(object)
 	if mainImage then
-		local xImage = image.getWidth(mainImage) < buffer.width and math.floor(buffer.width / 2 - image.getWidth(mainImage) / 2) or 1
-		local yImage = image.getHeight(mainImage) < buffer.height and math.floor(buffer.height / 2 - image.getHeight(mainImage) / 2) or 1
+		local xImage = image.getWidth(mainImage) < buffer.getWidth() and math.floor(buffer.getWidth() / 2 - image.getWidth(mainImage) / 2) or 1
+		local yImage = image.getHeight(mainImage) < buffer.getHeight() and math.floor(buffer.getHeight() / 2 - image.getHeight(mainImage) / 2) or 1
 		buffer.image(xImage, yImage, mainImage)
 		GUI.windowShadow(xImage, yImage, image.getWidth(mainImage), image.getHeight(mainImage), 50, true)
 		if config.showGrid then
@@ -308,7 +308,7 @@ end
 
 ----------------------------------------- Shitty meatball rolls -----------------------------------------
 
-buffer.start()
+buffer.flush()
 load()
 getPrinters()
 createWindow()

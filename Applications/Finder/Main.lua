@@ -160,14 +160,14 @@ end
 
 window.titlePanel = window:addChild(GUI.panel(1, 1, 1, 3, 0xDDDDDD))
 
-window.prevButton = window:addChild(GUI.adaptiveRoundedButton(3, 2, 1, 0, 0xFFFFFF, 0x3C3C3C, 0x3C3C3C, 0xFFFFFF, "<"))
+window.prevButton = window:addChild(GUI.adaptiveRoundedButton(9, 2, 1, 0, 0xFFFFFF, 0x3C3C3C, 0x3C3C3C, 0xFFFFFF, "<"))
 window.prevButton.onTouch = function()
 	prevOrNextWorkpath(false)
 end
 window.prevButton.colors.disabled.background = window.prevButton.colors.default.background
 window.prevButton.colors.disabled.text = 0xCCCCCC
 
-window.nextButton = window:addChild(GUI.adaptiveRoundedButton(8, 2, 1, 0, 0xFFFFFF, 0x3C3C3C, 0x3C3C3C, 0xFFFFFF, ">"))
+window.nextButton = window:addChild(GUI.adaptiveRoundedButton(14, 2, 1, 0, 0xFFFFFF, 0x3C3C3C, 0x3C3C3C, 0xFFFFFF, ">"))
 window.nextButton.onTouch = function()
 	prevOrNextWorkpath(true)
 end
@@ -316,8 +316,7 @@ local function calculateSizes(width, height)
 	window.scrollBar.localPosition.x = window.width
 	window.scrollBar.height = window.backgroundPanel.height
 	window.scrollBar.shownValueCount = window.scrollBar.height - 1
-
-	window.actionButtons.localPosition.y = 1
+	
 	window.actionButtons:moveToFront()
 end
 

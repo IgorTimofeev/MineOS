@@ -6,120 +6,159 @@ local image = require("image")
 
 --------------------------------------------------------------------------------------------------------------
 
-local buffer = {
-	GPUProxy = component.getPrimary("gpu"),
-	currentFrame = {},
-	newFrame = {},
-	drawLimit = {},
-}
+local buffer = {}
+
+local bufferWidth, bufferHeight, bufferTripleWidth
+local currentFrame, newFrame
+local drawLimitX1, drawLimitX2, drawLimitY1, drawLimitY2
+
+local GPUProxy, GPUProxyGetResolution, GPUProxySetResolution, GPUProxyBind, GPUProxyGetBackground, GPUProxyGetForeground, GPUProxySetBackground, GPUProxySetForeground, GPUProxyGet, GPUProxySet
+local mathCeil, mathFloor, mathModf, mathAbs = math.ceil, math.floor, math.modf, math.abs
+local tableInsert = table.insert
+local colorBlend = color.blend
+local unicodeLen, unicodeSub = unicode.len, unicode.sub
 
 --------------------------------------------------------------------------------------------------------------
 
-function buffer.getCoordinatesByIndex(index)
-	local integer, fractional = math.modf(index / (buffer.tripleWidth))
-	return math.ceil(fractional * buffer.width), integer + 1
+local function getCoordinates(index)
+	local integer, fractional = mathModf(index / bufferTripleWidth)
+	return mathCeil(fractional * bufferWidth), integer + 1
 end
 
-function buffer.getIndexByCoordinates(x, y)
-	return buffer.tripleWidth * (y - 1) + x * 3 - 2
-end
-
---------------------------------------------------------------------------------------------------------------
-
-function buffer.setDrawLimit(x1, y1, x2, y2)
-	buffer.drawLimit.x1, buffer.drawLimit.y1, buffer.drawLimit.x2, buffer.drawLimit.y2 = x1, y1, x2, y2
-end
-
-function buffer.resetDrawLimit()
-	buffer.drawLimit.x1, buffer.drawLimit.y1, buffer.drawLimit.x2, buffer.drawLimit.y2 = 1, 1, buffer.width, buffer.height
-end
-
-function buffer.getDrawLimit()
-	return buffer.drawLimit.x1, buffer.drawLimit.y1, buffer.drawLimit.x2, buffer.drawLimit.y2
+local function getIndex(x, y)
+	return bufferTripleWidth * (y - 1) + x * 3 - 2
 end
 
 --------------------------------------------------------------------------------------------------------------
 
-function buffer.flush(width, height)
+local function setDrawLimit(x1, y1, x2, y2)
+	drawLimitX1, drawLimitY1, drawLimitX2, drawLimitY2 = x1, y1, x2, y2
+end
+
+local function resetDrawLimit()
+	drawLimitX1, drawLimitY1, drawLimitX2, drawLimitY2 = 1, 1, bufferWidth, bufferHeight
+end
+
+local function getDrawLimit()
+	return drawLimitX1, drawLimitY1, drawLimitX2, drawLimitY2
+end
+
+--------------------------------------------------------------------------------------------------------------
+
+local function flush(width, height)
 	if not width or not height then
-		width, height = buffer.GPUProxy.getResolution()
+		width, height = GPUProxyGetResolution()
 	end
 
-	buffer.currentFrame, buffer.newFrame = {}, {}
-	buffer.width = width
-	buffer.height = height
-	buffer.tripleWidth = width * 3
-	buffer.resetDrawLimit()
+	currentFrame, newFrame = {}, {}
+	bufferWidth = width
+	bufferHeight = height
+	bufferTripleWidth = width * 3
+	resetDrawLimit()
 
-	for y = 1, buffer.height do
-		for x = 1, buffer.width do
-			table.insert(buffer.currentFrame, 0x010101)
-			table.insert(buffer.currentFrame, 0xFEFEFE)
-			table.insert(buffer.currentFrame, " ")
+	for y = 1, bufferHeight do
+		for x = 1, bufferWidth do
+			tableInsert(currentFrame, 0x010101)
+			tableInsert(currentFrame, 0xFEFEFE)
+			tableInsert(currentFrame, " ")
 
-			table.insert(buffer.newFrame, 0x010101)
-			table.insert(buffer.newFrame, 0xFEFEFE)
-			table.insert(buffer.newFrame, " ")
+			tableInsert(newFrame, 0x010101)
+			tableInsert(newFrame, 0xFEFEFE)
+			tableInsert(newFrame, " ")
 		end
 	end
 end
 
-function buffer.setResolution(width, height)
-	buffer.GPUProxy.setResolution(width, height)
-	buffer.flush(width, height)
+local function setResolution(width, height)
+	GPUProxySetResolution(width, height)
+	flush(width, height)
 end
 
-function buffer.bindScreen(...)
-	buffer.GPUProxy.bind(...)
-	buffer.flush(buffer.GPUProxy.getResolution())
+local function getResolution()
+	return bufferWidth, bufferHeight
 end
 
-function buffer.bindGPU(address)
-	buffer.GPUProxy = component.proxy(address)
-	buffer.flush(buffer.GPUProxy.getResolution())
+local function getWidth()
+	return bufferWidth
+end
+
+local function getHeight()
+	return bufferHeight
+end
+
+local function bindScreen(...)
+	GPUProxyBind(...)
+	flush(GPUProxyGetResolution())
+end
+
+local function getGPUProxy()
+	return GPUProxy
+end
+
+local function updateGPUProxyMethods()
+	GPUProxyGet = GPUProxy.get
+	GPUProxyGetResolution = GPUProxy.getResolution
+	GPUProxyGetBackground = GPUProxy.getBackground
+	GPUProxyGetForeground = GPUProxy.getForeground
+
+	GPUProxySet = GPUProxy.set
+	GPUProxySetResolution = GPUProxy.setResolution
+	GPUProxySetBackground = GPUProxy.setBackground
+	GPUProxySetForeground = GPUProxy.setForeground
+
+	GPUProxyBind = GPUProxy.bind
+	GPUProxyFill = GPUProxy.fill
+end
+
+local function bindGPU(address)
+	GPUProxy = component.proxy(address)
+	updateGPUProxyMethods()
+	flush(GPUProxyGetResolution())
 end
 
 --------------------------------------------------------------------------------------------------------------
 
-function buffer.rawSet(index, background, foreground, symbol)
-	buffer.newFrame[index], buffer.newFrame[index + 1], buffer.newFrame[index + 2] = background, foreground, symbol
+local function rawSet(index, background, foreground, symbol)
+	newFrame[index], newFrame[index + 1], newFrame[index + 2] = background, foreground, symbol
 end
 
-function buffer.rawGet(index)
-	return buffer.newFrame[index], buffer.newFrame[index + 1], buffer.newFrame[index + 2]
+local function rawGet(index)
+	return newFrame[index], newFrame[index + 1], newFrame[index + 2]
 end
 
-function buffer.get(x, y)
-	local index = buffer.getIndexByCoordinates(x, y)
-	if x >= 1 and y >= 1 and x <= buffer.width and y <= buffer.height then
-		return buffer.rawGet(index)
+local function get(x, y)
+	local index = getIndex(x, y)
+	if x >= 1 and y >= 1 and x <= bufferWidth and y <= bufferHeight then
+		return newFrame[index], newFrame[index + 1], newFrame[index + 2]
 	else
 		return 0x000000, 0x000000, " "
 	end
 end
 
-function buffer.set(x, y, background, foreground, symbol)
-	local index = buffer.getIndexByCoordinates(x, y)
-	if x >= buffer.drawLimit.x1 and y >= buffer.drawLimit.y1 and x <= buffer.drawLimit.x2 and y <= buffer.drawLimit.y2 then
-		buffer.rawSet(index, background, foreground or 0x0, symbol or " ")
+local function set(x, y, background, foreground, symbol)
+	local index = getIndex(x, y)
+	if x >= drawLimitX1 and y >= drawLimitY1 and x <= drawLimitX2 and y <= drawLimitY2 then
+		newFrame[index] = background
+		newFrame[index + 1] = foreground
+		newFrame[index + 2] = symbol
 	end
 end
 
-function buffer.square(x, y, width, height, background, foreground, symbol, transparency) 
-	local index, indexStepOnEveryLine, indexPlus1 = buffer.getIndexByCoordinates(x, y), (buffer.width - width) * 3
+local function square(x, y, width, height, background, foreground, symbol, transparency) 
+	local index, indexStepOnEveryLine, indexPlus1 = getIndex(x, y), (bufferWidth - width) * 3
 	
 	for j = y, y + height - 1 do
-		if j >= buffer.drawLimit.y1 and j <= buffer.drawLimit.y2 then
+		if j >= drawLimitY1 and j <= drawLimitY2 then
 			for i = x, x + width - 1 do
-				if i >= buffer.drawLimit.x1 and i <= buffer.drawLimit.x2 then
+				if i >= drawLimitX1 and i <= drawLimitX2 then
 					indexPlus1 = index + 1
 					
 					if transparency then
-						buffer.newFrame[index], buffer.newFrame[indexPlus1] =
-							color.blend(buffer.newFrame[index], background, transparency),
-							color.blend(buffer.newFrame[indexPlus1], background, transparency)
+						newFrame[index], newFrame[indexPlus1] =
+							colorBlend(newFrame[index], background, transparency),
+							colorBlend(newFrame[indexPlus1], background, transparency)
 					else
-						buffer.newFrame[index], buffer.newFrame[indexPlus1], buffer.newFrame[index + 2] = background, foreground, symbol
+						newFrame[index], newFrame[indexPlus1], newFrame[index + 2] = background, foreground, symbol
 					end
 				end
 
@@ -128,30 +167,30 @@ function buffer.square(x, y, width, height, background, foreground, symbol, tran
 
 			index = index + indexStepOnEveryLine
 		else
-			index = index + buffer.tripleWidth
+			index = index + bufferTripleWidth
 		end
 	end
 end
 
-function buffer.clear(color, transparency)
-	buffer.square(1, 1, buffer.width, buffer.height, color or 0x0, 0x000000, " ", transparency)
+local function clear(color, transparency)
+	square(1, 1, bufferWidth, bufferHeight, color or 0x0, 0x000000, " ", transparency)
 end
 
-function buffer.copy(x, y, width, height)
+local function copy(x, y, width, height)
 	local copyArray = { width = width, height = height }
 
 	local index
 	for j = y, y + height - 1 do
 		for i = x, x + width - 1 do
-			if i >= 1 and j >= 1 and i <= buffer.width and j <= buffer.height then
-				index = buffer.getIndexByCoordinates(i, j)
-				table.insert(copyArray, buffer.newFrame[index])
-				table.insert(copyArray, buffer.newFrame[index + 1])
-				table.insert(copyArray, buffer.newFrame[index + 2])
+			if i >= 1 and j >= 1 and i <= bufferWidth and j <= bufferHeight then
+				index = getIndex(i, j)
+				tableInsert(copyArray, newFrame[index])
+				tableInsert(copyArray, newFrame[index + 1])
+				tableInsert(copyArray, newFrame[index + 2])
 			else
-				table.insert(copyArray, 0x0)
-				table.insert(copyArray, 0x0)
-				table.insert(copyArray, " ")
+				tableInsert(copyArray, 0x0)
+				tableInsert(copyArray, 0x0)
+				tableInsert(copyArray, " ")
 			end
 		end
 	end
@@ -159,29 +198,29 @@ function buffer.copy(x, y, width, height)
 	return copyArray
 end
 
-function buffer.paste(x, y, copyArray)
+local function paste(x, y, copyArray)
 	local index, arrayIndex
 	if not copyArray or #copyArray == 0 then error("Массив области экрана пуст.") end
 
 	for j = y, y + copyArray.height - 1 do
 		for i = x, x + copyArray.width - 1 do
-			if i >= buffer.drawLimit.x1 and j >= buffer.drawLimit.y1 and i <= buffer.drawLimit.x2 and j <= buffer.drawLimit.y2 then
+			if i >= drawLimitX1 and j >= drawLimitY1 and i <= drawLimitX2 and j <= drawLimitY2 then
 				--Рассчитываем индекс массива основного изображения
-				index = buffer.getIndexByCoordinates(i, j)
+				index = getIndex(i, j)
 				--Копипаст формулы, аккуратнее!
 				--Рассчитываем индекс массива вставочного изображения
 				arrayIndex = (copyArray.width * (j - y) + (i - x + 1)) * 3 - 2
 				--Вставляем данные
-				buffer.newFrame[index] = copyArray[arrayIndex]
-				buffer.newFrame[index + 1] = copyArray[arrayIndex + 1]
-				buffer.newFrame[index + 2] = copyArray[arrayIndex + 2]
+				newFrame[index] = copyArray[arrayIndex]
+				newFrame[index + 1] = copyArray[arrayIndex + 1]
+				newFrame[index + 2] = copyArray[arrayIndex + 2]
 			end
 		end
 	end
 end
 
-function buffer.rasterizeLine(x1, y1, x2, y2, method)
-	local inLoopValueFrom, inLoopValueTo, outLoopValueFrom, outLoopValueTo, isReversed, inLoopValueDelta, outLoopValueDelta = x1, x2, y1, y2, false, math.abs(x2 - x1), math.abs(y2 - y1)
+local function rasterizeLine(x1, y1, x2, y2, method)
+	local inLoopValueFrom, inLoopValueTo, outLoopValueFrom, outLoopValueTo, isReversed, inLoopValueDelta, outLoopValueDelta = x1, x2, y1, y2, false, mathAbs(x2 - x1), mathAbs(y2 - y1)
 	if inLoopValueDelta < outLoopValueDelta then
 		inLoopValueFrom, inLoopValueTo, outLoopValueFrom, outLoopValueTo, isReversed, inLoopValueDelta, outLoopValueDelta = y1, y2, x1, x2, true, outLoopValueDelta, inLoopValueDelta
 	end
@@ -207,25 +246,25 @@ function buffer.rasterizeLine(x1, y1, x2, y2, method)
 	end
 end
 
-function buffer.line(x1, y1, x2, y2, background, foreground, alpha, symbol)
-	buffer.rasterizeLine(x1, y1, x2, y2, function(x, y)
-		buffer.set(x, y, background, foreground, alpha, symbol)
+local function line(x1, y1, x2, y2, background, foreground, alpha, symbol)
+	rasterizeLine(x1, y1, x2, y2, function(x, y)
+		set(x, y, background, foreground, alpha, symbol)
 	end)
 end
 
-function buffer.text(x, y, textColor, text, transparency)
-	if y >= buffer.drawLimit.y1 and y <= buffer.drawLimit.y2 then
-		local charIndex, bufferIndex = 1, buffer.getIndexByCoordinates(x, y) + 1
+local function text(x, y, textColor, data, transparency)
+	if y >= drawLimitY1 and y <= drawLimitY2 then
+		local charIndex, bufferIndex = 1, getIndex(x, y) + 1
 		
-		for charIndex = 1, unicode.len(text) do
-			if x >= buffer.drawLimit.x1 and x <= buffer.drawLimit.x2 then
+		for charIndex = 1, unicodeLen(data) do
+			if x >= drawLimitX1 and x <= drawLimitX2 then
 				if transparency then
-					buffer.newFrame[bufferIndex] = color.blend(buffer.newFrame[bufferIndex - 1], textColor, transparency)
+					newFrame[bufferIndex] = colorBlend(newFrame[bufferIndex - 1], textColor, transparency)
 				else
-					buffer.newFrame[bufferIndex] = textColor
+					newFrame[bufferIndex] = textColor
 				end
 
-				buffer.newFrame[bufferIndex + 1] = unicode.sub(text, charIndex, charIndex)
+				newFrame[bufferIndex + 1] = unicodeSub(data, charIndex, charIndex)
 			end
 
 			x, bufferIndex = x + 1, bufferIndex + 3
@@ -233,22 +272,22 @@ function buffer.text(x, y, textColor, text, transparency)
 	end
 end
 
-function buffer.formattedText(x, y, text)
-	if y >= buffer.drawLimit.y1 and y <= buffer.drawLimit.y2 then
-		local charIndex, bufferIndex, textColor, char, number = 1, buffer.getIndexByCoordinates(x, y) + 1, 0xFFFFFF
+local function formattedText(x, y, data)
+	if y >= drawLimitY1 and y <= drawLimitY2 then
+		local charIndex, bufferIndex, textColor, char, number = 1, getIndex(x, y) + 1, 0xFFFFFF
 		
-		while charIndex <= unicode.len(text) do
-			if x >= buffer.drawLimit.x1 and x <= buffer.drawLimit.x2 then
-				char = unicode.sub(text, charIndex, charIndex)
+		while charIndex <= unicodeLen(text) do
+			if x >= drawLimitX1 and x <= drawLimitX2 then
+				char = unicodeSub(data, charIndex, charIndex)
 				if char == "#" then
-					local number = tonumber("0x" .. unicode.sub(text, charIndex + 1, charIndex + 6))
+					number = tonumber("0x" .. unicodeSub(data, charIndex + 1, charIndex + 6))
 					if number then
 						textColor, charIndex = number, charIndex + 7
 					else
-						buffer.newFrame[bufferIndex], buffer.newFrame[bufferIndex + 1], x, charIndex, bufferIndex = textColor, char, x + 1, charIndex + 1, bufferIndex + 3
+						newFrame[bufferIndex], newFrame[bufferIndex + 1], x, charIndex, bufferIndex = textColor, char, x + 1, charIndex + 1, bufferIndex + 3
 					end
 				else
-					buffer.newFrame[bufferIndex], buffer.newFrame[bufferIndex + 1], x, charIndex, bufferIndex = textColor, char, x + 1, charIndex + 1, bufferIndex + 3
+					newFrame[bufferIndex], newFrame[bufferIndex + 1], x, charIndex, bufferIndex = textColor, char, x + 1, charIndex + 1, bufferIndex + 3
 				end
 			else
 				x, charIndex, bufferIndex = x + 1, charIndex + 1, bufferIndex + 3
@@ -257,29 +296,29 @@ function buffer.formattedText(x, y, text)
 	end
 end
 
-function buffer.image(x, y, picture, blendForeground)
-	local xPos, xEnd, bufferIndexStepOnReachOfImageWidth = x, x + picture[1] - 1, (buffer.width - picture[1]) * 3
-	local bufferIndex, bufferIndexPlus1, imageIndexPlus1, imageIndexPlus2, imageIndexPlus3 = buffer.getIndexByCoordinates(x, y)
+local function image(x, y, picture, blendForeground)
+	local xPos, xEnd, bufferIndexStepOnReachOfImageWidth = x, x + picture[1] - 1, (bufferWidth - picture[1]) * 3
+	local bufferIndex, bufferIndexPlus1, imageIndexPlus1, imageIndexPlus2, imageIndexPlus3 = getIndex(x, y)
 
 	for imageIndex = 3, #picture, 4 do
-		if xPos >= buffer.drawLimit.x1 and y >= buffer.drawLimit.y1 and xPos <= buffer.drawLimit.x2 and y <= buffer.drawLimit.y2 then
+		if xPos >= drawLimitX1 and y >= drawLimitY1 and xPos <= drawLimitX2 and y <= drawLimitY2 then
 			bufferIndexPlus1, imageIndexPlus1, imageIndexPlus2, imageIndexPlus3 = bufferIndex + 1, imageIndex + 1, imageIndex + 2, imageIndex + 3
 			
 			if picture[imageIndexPlus2] == 0 then
-				buffer.newFrame[bufferIndex], buffer.newFrame[bufferIndexPlus1] = picture[imageIndex], picture[imageIndexPlus1]
+				newFrame[bufferIndex], newFrame[bufferIndexPlus1] = picture[imageIndex], picture[imageIndexPlus1]
 			elseif picture[imageIndexPlus2] > 0 and picture[imageIndexPlus2] < 1 then
-				buffer.newFrame[bufferIndex] = color.blend(buffer.newFrame[bufferIndex], picture[imageIndex], picture[imageIndexPlus2])
+				newFrame[bufferIndex] = colorBlend(newFrame[bufferIndex], picture[imageIndex], picture[imageIndexPlus2])
 				
 				if blendForeground then
-					buffer.newFrame[bufferIndexPlus1] = color.blend(buffer.newFrame[bufferIndexPlus1], picture[imageIndexPlus1], picture[imageIndexPlus2])
+					newFrame[bufferIndexPlus1] = colorBlend(newFrame[bufferIndexPlus1], picture[imageIndexPlus1], picture[imageIndexPlus2])
 				else
-					buffer.newFrame[bufferIndexPlus1] = picture[imageIndexPlus1]
+					newFrame[bufferIndexPlus1] = picture[imageIndexPlus1]
 				end
 			elseif picture[imageIndexPlus2] == 1 and picture[imageIndexPlus3] ~= " " then
-				buffer.newFrame[bufferIndexPlus1] = picture[imageIndexPlus1]
+				newFrame[bufferIndexPlus1] = picture[imageIndexPlus1]
 			end
 
-			buffer.newFrame[bufferIndex + 2] = picture[imageIndexPlus3]
+			newFrame[bufferIndex + 2] = picture[imageIndexPlus3]
 		end
 		
 		xPos, bufferIndex = xPos + 1, bufferIndex + 3
@@ -289,72 +328,72 @@ function buffer.image(x, y, picture, blendForeground)
 	end
 end
 
-function buffer.frame(x, y, width, height, color)
+local function frame(x, y, width, height, color)
 	local stringUp, stringDown, x2 = "┌" .. string.rep("─", width - 2) .. "┐", "└" .. string.rep("─", width - 2) .. "┘", x + width - 1
-	buffer.text(x, y, color, stringUp); y = y + 1
+	text(x, y, color, stringUp); y = y + 1
 	for i = 1, height - 2 do
-		buffer.text(x, y, color, "│")
-		buffer.text(x2, y, color, "│")
+		text(x, y, color, "│")
+		text(x2, y, color, "│")
 		y = y + 1
 	end
 
-	buffer.text(x, y, color, stringDown)
+	text(x, y, color, stringDown)
 end
 
 --------------------------------------------------------------------------------------------------------------
 
-function buffer.semiPixelRawSet(index, color, yPercentTwoEqualsZero)
+local function semiPixelRawSet(index, color, yPercentTwoEqualsZero)
 	local upperPixel, lowerPixel, bothPixel, indexPlus1, indexPlus2 = "▀", "▄", " ", index + 1, index + 2
-	local background, foreground, symbol = buffer.newFrame[index], buffer.newFrame[indexPlus1], buffer.newFrame[indexPlus2]
+	local background, foreground, symbol = newFrame[index], newFrame[indexPlus1], newFrame[indexPlus2]
 
 	if yPercentTwoEqualsZero then
 		if symbol == upperPixel then
 			if color == foreground then
-				buffer.newFrame[index], buffer.newFrame[indexPlus1], buffer.newFrame[indexPlus2] = color, foreground, bothPixel
+				newFrame[index], newFrame[indexPlus1], newFrame[indexPlus2] = color, foreground, bothPixel
 			else
-				buffer.newFrame[index], buffer.newFrame[indexPlus1], buffer.newFrame[indexPlus2] = color, foreground, symbol
+				newFrame[index], newFrame[indexPlus1], newFrame[indexPlus2] = color, foreground, symbol
 			end
 		elseif symbol == bothPixel then
 			if color ~= background then
-				buffer.newFrame[index], buffer.newFrame[indexPlus1], buffer.newFrame[indexPlus2] = background, color, lowerPixel
+				newFrame[index], newFrame[indexPlus1], newFrame[indexPlus2] = background, color, lowerPixel
 			end
 		else
-			buffer.newFrame[index], buffer.newFrame[indexPlus1], buffer.newFrame[indexPlus2] = background, color, lowerPixel
+			newFrame[index], newFrame[indexPlus1], newFrame[indexPlus2] = background, color, lowerPixel
 		end
 	else
 		if symbol == lowerPixel then
 			if color == foreground then
-				buffer.newFrame[index], buffer.newFrame[indexPlus1], buffer.newFrame[indexPlus2] = color, foreground, bothPixel
+				newFrame[index], newFrame[indexPlus1], newFrame[indexPlus2] = color, foreground, bothPixel
 			else
-				buffer.newFrame[index], buffer.newFrame[indexPlus1], buffer.newFrame[indexPlus2] = color, foreground, symbol
+				newFrame[index], newFrame[indexPlus1], newFrame[indexPlus2] = color, foreground, symbol
 			end
 		elseif symbol == bothPixel then
 			if color ~= background then
-				buffer.newFrame[index], buffer.newFrame[indexPlus1], buffer.newFrame[indexPlus2] = background, color, upperPixel
+				newFrame[index], newFrame[indexPlus1], newFrame[indexPlus2] = background, color, upperPixel
 			end
 		else
-			buffer.newFrame[index], buffer.newFrame[indexPlus1], buffer.newFrame[indexPlus2] = background, color, upperPixel
+			newFrame[index], newFrame[indexPlus1], newFrame[indexPlus2] = background, color, upperPixel
 		end
 	end
 end
 
-function buffer.semiPixelSet(x, y, color)
-	local yFixed = math.ceil(y / 2)
-	if x >= buffer.drawLimit.x1 and yFixed >= buffer.drawLimit.y1 and x <= buffer.drawLimit.x2 and yFixed <= buffer.drawLimit.y2 then
-		buffer.semiPixelRawSet(buffer.getIndexByCoordinates(x, yFixed), color, y % 2 == 0)
+local function semiPixelSet(x, y, color)
+	local yFixed = mathCeil(y / 2)
+	if x >= drawLimitX1 and yFixed >= drawLimitY1 and x <= drawLimitX2 and yFixed <= drawLimitY2 then
+		semiPixelRawSet(getIndex(x, yFixed), color, y % 2 == 0)
 	end
 end
 
-function buffer.semiPixelSquare(x, y, width, height, color)
-	-- for j = y, y + height - 1 do for i = x, x + width - 1 do buffer.semiPixelSet(i, j, color) end end
-	local index, indexStepForward, indexStepBackward, jPercentTwoEqualsZero, jFixed = buffer.getIndexByCoordinates(x, math.ceil(y / 2)), (buffer.width - width) * 3, width * 3
+local function semiPixelSquare(x, y, width, height, color)
+	-- for j = y, y + height - 1 do for i = x, x + width - 1 do semiPixelSet(i, j, color) end end
+	local index, indexStepForward, indexStepBackward, jPercentTwoEqualsZero, jFixed = getIndex(x, mathCeil(y / 2)), (bufferWidth - width) * 3, width * 3
 	for j = y, y + height - 1 do
 		jPercentTwoEqualsZero = j % 2 == 0
 		
 		for i = x, x + width - 1 do
-			jFixed = math.ceil(j / 2)
-			-- if x >= buffer.drawLimit.x1 and jFixed >= buffer.drawLimit.y1 and x <= buffer.drawLimit.x2 and jFixed <= buffer.drawLimit.y2 then
-				buffer.semiPixelRawSet(index, color, jPercentTwoEqualsZero)
+			jFixed = mathCeil(j / 2)
+			-- if x >= drawLimitX1 and jFixed >= drawLimitY1 and x <= drawLimitX2 and jFixed <= drawLimitY2 then
+				semiPixelRawSet(index, color, jPercentTwoEqualsZero)
 			-- end
 			index = index + 3
 		end
@@ -367,18 +406,18 @@ function buffer.semiPixelSquare(x, y, width, height, color)
 	end
 end
 
-function buffer.semiPixelLine(x1, y1, x2, y2, color)
-	buffer.rasterizeLine(x1, y1, x2, y2, function(x, y)
-		buffer.semiPixelSet(x, y, color)
+local function semiPixelLine(x1, y1, x2, y2, color)
+	rasterizeLine(x1, y1, x2, y2, function(x, y)
+		semiPixelSet(x, y, color)
 	end)
 end
 
-function buffer.semiPixelCircle(xCenter, yCenter, radius, color)
+local function semiPixelCircle(xCenter, yCenter, radius, color)
 	local function insertPoints(x, y)
-		buffer.semiPixelSet(xCenter + x, yCenter + y, color)
-		buffer.semiPixelSet(xCenter + x, yCenter - y, color)
-		buffer.semiPixelSet(xCenter - x, yCenter + y, color)
-		buffer.semiPixelSet(xCenter - x, yCenter - y, color)
+		semiPixelSet(xCenter + x, yCenter + y, color)
+		semiPixelSet(xCenter + x, yCenter - y, color)
+		semiPixelSet(xCenter - x, yCenter + y, color)
+		semiPixelSet(xCenter - x, yCenter - y, color)
 	end
 
 	local x, y = 0, radius
@@ -410,7 +449,7 @@ end
 local function getConnectionPoints(points, time)
 	local connectionPoints = {}
 	for point = 1, #points - 1 do
-		table.insert(connectionPoints, getPointTimedPosition(points[point], points[point + 1], time))
+		tableInsert(connectionPoints, getPointTimedPosition(points[point], points[point + 1], time))
 	end
 	return connectionPoints
 end
@@ -423,77 +462,77 @@ local function getMainPointPosition(points, time)
 	end
 end
 
-function buffer.semiPixelBezierCurve(points, color, precision)
+local function semiPixelBezierCurve(points, color, precision)
 	local linePoints = {}
 	for time = 0, 1, precision or 0.01 do
-		table.insert(linePoints, getMainPointPosition(points, time))
+		tableInsert(linePoints, getMainPointPosition(points, time))
 	end
 	
 	for point = 1, #linePoints - 1 do
-		buffer.semiPixelLine(math.floor(linePoints[point].x), math.floor(linePoints[point].y), math.floor(linePoints[point + 1].x), math.floor(linePoints[point + 1].y), color)
+		semiPixelLine(mathFloor(linePoints[point].x), mathFloor(linePoints[point].y), mathFloor(linePoints[point + 1].x), mathFloor(linePoints[point + 1].y), color)
 	end
 end
 
---------------------------------------------------------------------------------------------------------------
+-- DELETE THIS CYKA BLYAD NAHOOOY ZAEBAL GOVNOKOD PLODIT ----------------------------------------------
 
-function buffer.button(x, y, width, height, background, foreground, text)
-	local textLength = unicode.len(text)
-	if textLength > width - 2 then text = unicode.sub(text, 1, width - 2) end
+local function button(x, y, width, height, background, foreground, data)
+	local textLength = unicodeLen(data)
+	if textLength > width - 2 then data = unicodeSub(data, 1, width - 2) end
 	
-	local textPosX = math.floor(x + width / 2 - textLength / 2)
-	local textPosY = math.floor(y + height / 2)
-	buffer.square(x, y, width, height, background, foreground, " ")
-	buffer.text(textPosX, textPosY, foreground, text)
+	local textPosX = mathFloor(x + width / 2 - textLength / 2)
+	local textPosY = mathFloor(y + height / 2)
+	square(x, y, width, height, background, foreground, " ")
+	text(textPosX, textPosY, foreground, data)
 
 	return x, y, (x + width - 1), (y + height - 1)
 end
 
-function buffer.adaptiveButton(x, y, xOffset, yOffset, background, foreground, text)
-	local width = xOffset * 2 + unicode.len(text)
+local function adaptiveButton(x, y, xOffset, yOffset, background, foreground, data)
+	local width = xOffset * 2 + unicodeLen(data)
 	local height = yOffset * 2 + 1
 
-	buffer.square(x, y, width, height, background, 0xFFFFFF, " ")
-	buffer.text(x + xOffset, y + yOffset, foreground, text)
+	square(x, y, width, height, background, 0xFFFFFF, " ")
+	text(x + xOffset, y + yOffset, foreground, data)
 
 	return x, y, (x + width - 1), (y + height - 1)
 end
 
-function buffer.framedButton(x, y, width, height, backColor, buttonColor, text)
-	buffer.square(x, y, width, height, backColor, buttonColor, " ")
-	buffer.frame(x, y, width, height, buttonColor)
+local function framedButton(x, y, width, height, backColor, buttonColor, data)
+	square(x, y, width, height, backColor, buttonColor, " ")
+	frame(x, y, width, height, buttonColor)
 	
-	x = math.floor(x + width / 2 - unicode.len(text) / 2)
-	y = math.floor(y + height / 2)
+	x = mathFloor(x + width / 2 - unicodeLen(data) / 2)
+	y = mathFloor(y + height / 2)
 
-	buffer.text(x, y, buttonColor, text)
+	text(x, y, buttonColor, data)
 end
 
-function buffer.scrollBar(x, y, width, height, countOfAllElements, currentElement, backColor, frontColor)
-	local sizeOfScrollBar = math.ceil(height / countOfAllElements)
-	local displayBarFrom = math.floor(y + height * ((currentElement - 1) / countOfAllElements))
+local function scrollBar(x, y, width, height, countOfAllElements, currentElement, backColor, frontColor)
+	local sizeOfScrollBar = mathCeil(height / countOfAllElements)
+	local displayBarFrom = mathFloor(y + height * ((currentElement - 1) / countOfAllElements))
 
-	buffer.square(x, y, width, height, backColor, 0xFFFFFF, " ")
-	buffer.square(x, displayBarFrom, width, sizeOfScrollBar, frontColor, 0xFFFFFF, " ")
+	square(x, y, width, height, backColor, 0xFFFFFF, " ")
+	square(x, displayBarFrom, width, sizeOfScrollBar, frontColor, 0xFFFFFF, " ")
 
 	sizeOfScrollBar, displayBarFrom = nil, nil
 end
 
-function buffer.horizontalScrollBar(x, y, width, countOfAllElements, currentElement, background, foreground)
-	local pipeSize = math.ceil(width / countOfAllElements)
-	local displayBarFrom = math.floor(x + width * ((currentElement - 1) / countOfAllElements))
+local function horizontalScrollBar(x, y, width, countOfAllElements, currentElement, background, foreground)
+	local pipeSize = mathCeil(width / countOfAllElements)
+	local displayBarFrom = mathFloor(x + width * ((currentElement - 1) / countOfAllElements))
 
-	buffer.text(x, y, background, string.rep("▄", width))
-	buffer.text(displayBarFrom, y, foreground, string.rep("▄", pipeSize))
+	text(x, y, background, string.rep("▄", width))
+	text(displayBarFrom, y, foreground, string.rep("▄", pipeSize))
 end
 
-function buffer.customImage(x, y, pixels)
+local function customImage(x, y, pixels)
 	x = x - 1
 	y = y - 1
 
 	for i=1, #pixels do
 		for j=1, #pixels[1] do
 			if pixels[i][j][3] ~= "#" then
-				buffer.set(x + j, y + i, pixels[i][j][1], pixels[i][j][2], pixels[i][j][3])
+				set(x + j, y + i, pixels[i][j][1], pixels[i][j][2], pixels[i][j][3])
 			end
 		end
 	end
@@ -507,58 +546,57 @@ local function info(...)
 	local args = {...}
 	local text = {}
 	for i = 1, #args do
-		table.insert(text, tostring(args[i]))
+		tableInsert(text, tostring(args[i]))
 	end
 
-	local b = buffer.GPUProxy.getBackground()
-	local f = buffer.GPUProxy.getForeground()
-	buffer.GPUProxy.setBackground(0x0)
-	buffer.GPUProxy.setForeground(0xFFFFFF)
-	buffer.GPUProxy.fill(1, buffer.height, buffer.width, 1, " ")
-	buffer.GPUProxy.set(2, buffer.height, table.concat(text, ", "))
-	buffer.GPUProxy.setBackground(b)
-	buffer.GPUProxy.setForeground(f)
-
-	require("event").pull("touch")
+	local b = GPUProxyGetBackground()
+	local f = GPUProxyGetForeground()
+	GPUProxySetBackground(0x0)
+	GPUProxySetForeground(0xFFFFFF)
+	GPUProxyFill(1, bufferHeight, bufferWidth, 1, " ")
+	GPUProxySet(2, bufferHeight, table.concat(text, ", "))
+	GPUProxySetBackground(b)
+	GPUProxySetForeground(f)
 end
 
 local function calculateDifference(index, indexPlus1, indexPlus2)
 	local somethingIsChanged =
-		buffer.currentFrame[index] ~= buffer.newFrame[index] or
-		buffer.currentFrame[indexPlus1] ~= buffer.newFrame[indexPlus1] or
-		buffer.currentFrame[indexPlus2] ~= buffer.newFrame[indexPlus2]
+		currentFrame[index] ~= newFrame[index] or
+		currentFrame[indexPlus1] ~= newFrame[indexPlus1] or
+		currentFrame[indexPlus2] ~= newFrame[indexPlus2]
 
-	buffer.currentFrame[index] = buffer.newFrame[index]
-	buffer.currentFrame[indexPlus1] = buffer.newFrame[indexPlus1]
-	buffer.currentFrame[indexPlus2] = buffer.newFrame[indexPlus2]
+	currentFrame[index] = newFrame[index]
+	currentFrame[indexPlus1] = newFrame[indexPlus1]
+	currentFrame[indexPlus2] = newFrame[indexPlus2]
 
 	return somethingIsChanged
 end
 
-function buffer.draw(force)
-	local changes, index, indexStepOnEveryLine, indexPlus1, indexPlus2, sameCharArray, x, xCharCheck, indexCharCheck, indexCharCheckPlus1, indexCharCheckPlus2, currentForeground = {}, buffer.getIndexByCoordinates(buffer.drawLimit.x1, buffer.drawLimit.y1), (buffer.width - buffer.drawLimit.x2 + buffer.drawLimit.x1 - 1) * 3
+local function draw(force)
+	-- local oldClock = os.clock()
+	local changes, index, indexStepOnEveryLine, indexPlus1, indexPlus2, sameCharArray, x, xCharCheck, indexCharCheck, indexCharCheckPlus1, indexCharCheckPlus2, currentForeground = {}, getIndex(drawLimitX1, drawLimitY1), (bufferWidth - drawLimitX2 + drawLimitX1 - 1) * 3
 	
-	for y = buffer.drawLimit.y1, buffer.drawLimit.y2 do
-		x = buffer.drawLimit.x1
+	for y = drawLimitY1, drawLimitY2 do
+		x = drawLimitX1
 		
-		while x <= buffer.drawLimit.x2 do
+		while x <= drawLimitX2 do
 			indexPlus1, indexPlus2 = index + 1, index + 2
 			
 			if calculateDifference(index, indexPlus1, indexPlus2) or force then
-				sameCharArray = { buffer.currentFrame[indexPlus2] }
+				sameCharArray = { currentFrame[indexPlus2] }
 				xCharCheck, indexCharCheck = x + 1, index + 3
 				
-				while xCharCheck <= buffer.drawLimit.x2 do
+				while xCharCheck <= drawLimitX2 do
 					indexCharCheckPlus1, indexCharCheckPlus2 = indexCharCheck + 1, indexCharCheck + 2
 					if	
-						buffer.currentFrame[index] == buffer.newFrame[indexCharCheck] and
+						currentFrame[index] == newFrame[indexCharCheck] and
 						(
-							buffer.newFrame[indexCharCheckPlus2] == " " or
-							buffer.currentFrame[indexPlus1] == buffer.newFrame[indexCharCheckPlus1]
+							newFrame[indexCharCheckPlus2] == " " or
+							currentFrame[indexPlus1] == newFrame[indexCharCheckPlus1]
 						)
 					then
 					 	calculateDifference(indexCharCheck, indexCharCheckPlus1, indexCharCheckPlus2)
-					 	table.insert(sameCharArray, buffer.currentFrame[indexCharCheckPlus2])
+					 	tableInsert(sameCharArray, currentFrame[indexCharCheckPlus2])
 					else
 						break
 					end
@@ -566,12 +604,12 @@ function buffer.draw(force)
 					indexCharCheck, xCharCheck = indexCharCheck + 3, xCharCheck + 1
 				end
 
-				changes[buffer.currentFrame[index]] = changes[buffer.currentFrame[index]] or {}
-				changes[buffer.currentFrame[index]][buffer.currentFrame[indexPlus1]] = changes[buffer.currentFrame[index]][buffer.currentFrame[indexPlus1]] or {}
+				changes[currentFrame[index]] = changes[currentFrame[index]] or {}
+				changes[currentFrame[index]][currentFrame[indexPlus1]] = changes[currentFrame[index]][currentFrame[indexPlus1]] or {}
 				
-				table.insert(changes[buffer.currentFrame[index]][buffer.currentFrame[indexPlus1]], x)
-				table.insert(changes[buffer.currentFrame[index]][buffer.currentFrame[indexPlus1]], y)
-				table.insert(changes[buffer.currentFrame[index]][buffer.currentFrame[indexPlus1]], table.concat(sameCharArray))
+				tableInsert(changes[currentFrame[index]][currentFrame[indexPlus1]], x)
+				tableInsert(changes[currentFrame[index]][currentFrame[indexPlus1]], y)
+				tableInsert(changes[currentFrame[index]][currentFrame[indexPlus1]], table.concat(sameCharArray))
 				
 				x, index = x + #sameCharArray - 1, index + #sameCharArray * 3 - 3
 			end
@@ -583,35 +621,73 @@ function buffer.draw(force)
 	end
 	
 	for background in pairs(changes) do
-		buffer.GPUProxy.setBackground(background)
+		GPUProxySetBackground(background)
 
 		for foreground in pairs(changes[background]) do
 			if currentForeground ~= foreground then
-				buffer.GPUProxy.setForeground(foreground)
+				GPUProxySetForeground(foreground)
 				currentForeground = foreground
 			end
 
 			for i = 1, #changes[background][foreground], 3 do
-				buffer.GPUProxy.set(changes[background][foreground][i], changes[background][foreground][i + 1], changes[background][foreground][i + 2])
+				GPUProxySet(changes[background][foreground][i], changes[background][foreground][i + 1], changes[background][foreground][i + 2])
 			end
 		end
 	end
+
+	changes = nil
+	-- info("clock: " .. (os.clock() - oldClock))
 end
 
 ------------------------------------------------------------------------------------------------------
 
-buffer.start = buffer.flush
-buffer.rectangle = buffer.square
-buffer.flush()
+bindGPU(component.getPrimary("gpu").address)
 
 ------------------------------------------------------------------------------------------------------
 
--- buffer.formattedText(2, 2, "Hello world #FFDB40meow! #FF4940This is colored #44FF44text")
--- buffer.draw(true)
+return {
+	getCoordinates = getCoordinates,
+	getIndex = getIndex,
+	setDrawLimit = setDrawLimit,
+	resetDrawLimit = resetDrawLimit,
+	getDrawLimit = getDrawLimit,
+	flush = flush,
+	setResolution = setResolution,
+	bindScreen = bindScreen,
+	bindGPU = bindGPU,
+	getGPUProxy = getGPUProxy,
+	getResolution = getResolution,
+	getWidth = getWidth,
+	getHeight = getHeight,
+	rawSet = rawSet,
+	rawGet = rawGet,
+	get = get,
+	set = set,
+	square = square,
+	clear = clear,
+	copy = copy,
+	paste = paste,
+	rasterizeLine = rasterizeLine,
+	line = line,
+	text = text,
+	formattedText = formattedText,
+	image = image,
+	frame = frame,
+	semiPixelRawSet = semiPixelRawSet,
+	semiPixelSet = semiPixelSet,
+	semiPixelSquare = semiPixelSquare,
+	semiPixelLine = semiPixelLine,
+	semiPixelCircle = semiPixelCircle,
+	semiPixelBezierCurve = semiPixelBezierCurve,
+	draw = draw,
 
-------------------------------------------------------------------------------------------------------
-
-return buffer
+	button = button,
+	adaptiveButton = adaptiveButton,
+	framedButton = framedButton,
+	scrollBar = scrollBar,
+	horizontalScrollBar = horizontalScrollBar,
+	customImage = customImage,
+}
 
 
 

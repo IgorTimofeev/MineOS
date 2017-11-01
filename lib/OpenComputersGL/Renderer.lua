@@ -43,7 +43,7 @@ function renderer.setPixelUsingDepthBuffer(x, y, pixelDepthValue, pixelColor)
 	then
 		if pixelDepthValue < renderer.depthBuffer[y][x] then
 			renderer.depthBuffer[y][x] = pixelDepthValue
-			buffer.semiPixelRawSet(buffer.getIndexByCoordinates(x, math.ceil(y / 2)), pixelColor, y % 2 == 0)
+			buffer.semiPixelRawSet(buffer.getIndex(x, math.ceil(y / 2)), pixelColor, y % 2 == 0)
 			-- buffer.set(x, y, pixelColor, 0x0, " ")
 		end
 	end
@@ -271,7 +271,7 @@ function renderer.renderFloatingText(x, y, z, color, text)
 					end
 				end
 
-				index = buffer.getIndexByCoordinates(x, yInteger)
+				index = buffer.getIndex(x, yInteger)
 				background = buffer.rawGet(index)
 				buffer.rawSet(index, background, color, unicode.sub(text, i, i))
 			end

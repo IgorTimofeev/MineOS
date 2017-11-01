@@ -17,12 +17,13 @@ if not component.isAvailable("hologram") then
 end
 
 component.gpu.setResolution(component.gpu.maxResolution())
-buffer.start()
+buffer.flush()
+local bufferWidth, bufferHeight = buffer.getResolution()
 
 local resourcesDirectory = MineOSCore.getCurrentApplicationResourcesDirectory() 
 local earthImage = image.load(resourcesDirectory .. "Earth.pic")
 
-local onScreenDataXOffset, onScreenDataYOffset = math.floor(buffer.width / 2), buffer.height
+local onScreenDataXOffset, onScreenDataYOffset = math.floor(bufferWidth / 2), bufferHeight
 local onProjectorDataYOffset = 0
 local scanResult = {horizontalRange = 0, verticalRange = 0}
 local mainContainer = GUI.fullScreenContainer()
@@ -69,7 +70,7 @@ end
 
 local function progressReport(value, text)
 	local width = 40
-	local x, y = math.floor(buffer.width / 2 - width / 2), math.floor(buffer.height / 2)
+	local x, y = math.floor(bufferWidth / 2 - width / 2), math.floor(bufferHeight / 2)
 	GUI.progressBar(x, y, width, 0x00B6FF, 0xFFFFFF, 0xEEEEEE, value, true, true, text, "%"):draw()
 	buffer.draw()
 end
@@ -111,10 +112,10 @@ mainContainer.draw = function()
 end
 
 local panelWidth = 30
-local panelX = buffer.width - panelWidth + 1
+local panelX = bufferWidth - panelWidth + 1
 local buttonX, objectY = panelX + 2, 2
 local buttonWidth = panelWidth - 4
-mainContainer:addChild(GUI.panel(panelX, 1, panelWidth, buffer.height, 0x444444))
+mainContainer:addChild(GUI.panel(panelX, 1, panelWidth, bufferHeight, 0x444444))
 
 mainContainer.planetImage = mainContainer:addChild(GUI.image(buttonX, objectY, earthImage))
 objectY = objectY + mainContainer.planetImage.image[2] + 1
@@ -173,21 +174,21 @@ end
 objectY = objectY + 2
 
 mainContainer:addChild(GUI.label(buttonX, objectY, buttonWidth, 1, 0xBBBBBB, "Projector update:"))
-mainContainer.projectorUpdateSwitch = mainContainer:addChild(GUI.switch(buffer.width - 8, objectY, 7, 0xFFDB40, 0xAAAAAA, 0xFFFFFF, true))
+mainContainer.projectorUpdateSwitch = mainContainer:addChild(GUI.switch(bufferWidth - 8, objectY, 7, 0xFFDB40, 0xAAAAAA, 0xFFFFFF, true))
 objectY = objectY + 2
 mainContainer:addChild(GUI.label(buttonX, objectY, buttonWidth, 1, 0xBBBBBB, "Glasses update:"))
-mainContainer.glassesUpdateSwitch = mainContainer:addChild(GUI.switch(buffer.width - 8, objectY, 7, 0xFFDB40, 0xAAAAAA, 0xFFFFFF, true))
+mainContainer.glassesUpdateSwitch = mainContainer:addChild(GUI.switch(bufferWidth - 8, objectY, 7, 0xFFDB40, 0xAAAAAA, 0xFFFFFF, true))
 objectY = objectY + 2
 
-mainContainer:addChild(GUI.button(buffer.width, 1, 1, 1, nil, 0xEEEEEE, nil, 0xFF2222, "X")).onTouch = function()
+mainContainer:addChild(GUI.button(bufferWidth, 1, 1, 1, nil, 0xEEEEEE, nil, 0xFF2222, "X")).onTouch = function()
 	mainContainer:stopEventHandling()
 	createDick(math.random(-48, 48), math.random(1, 32), math.random(-48, 48), 100, true)
 end
 
-mainContainer:addChild(GUI.button(panelX, buffer.height - 5, panelWidth, 3, 0x353535, 0xEEEEEE, 0xAAAAAA, 0x262626, "Update")).onTouch = function()
+mainContainer:addChild(GUI.button(panelX, bufferHeight - 5, panelWidth, 3, 0x353535, 0xEEEEEE, 0xAAAAAA, 0x262626, "Update")).onTouch = function()
 	updateData(false, true, true)
 end
-mainContainer.scanButton = mainContainer:addChild(GUI.button(panelX, buffer.height - 2, panelWidth, 3, 0x262626, 0xEEEEEE, 0xAAAAAA, 0x262626, "Scan"))
+mainContainer.scanButton = mainContainer:addChild(GUI.button(panelX, bufferHeight - 2, panelWidth, 3, 0x262626, 0xEEEEEE, 0xAAAAAA, 0x262626, "Scan"))
 mainContainer.scanButton.onTouch = function()
 	scanResult = {}
 	local horizontalRange, verticalRange = math.floor(mainContainer.horizontalScanRangeSlider.value), math.floor(mainContainer.verticalScanRangeSlider.value)

@@ -230,7 +230,7 @@ function MineOSCore.safeLaunch(path, ...)
 	path = path:gsub("/+", "/") 
 	MineOSCore.lastLaunchPath = path
 
-	local oldResolutionWidth, oldResolutionHeight = buffer.width, buffer.height
+	local oldResolutionWidth, oldResolutionHeight = buffer.getResolution()
 	local finalSuccess, finalPath, finalLine, finalTraceback = true
 	
 	if filesystem.exists(path) then

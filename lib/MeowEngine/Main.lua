@@ -296,7 +296,7 @@ local function sceneAddObjects(scene, objects)
 end
 
 local function sceneRender(scene)
-	renderer.setViewport( 1, 1, buffer.width, buffer.height * 2, scene.camera.nearClippingSurface, scene.camera.farClippingSurface, scene.camera.projectionSurface)
+	renderer.setViewport( 1, 1, buffer.getWidth(), buffer.getHeight() * 2, scene.camera.nearClippingSurface, scene.camera.farClippingSurface, scene.camera.projectionSurface)
 	OCGL.clearBuffer(scene.backgroundColor)
 	OCGL.renderMode = scene.renderMode
 	OCGL.auxiliaryMode = scene.auxiliaryMode

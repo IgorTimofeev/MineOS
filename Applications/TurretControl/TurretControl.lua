@@ -11,7 +11,7 @@ local unicode = require("unicode")
 
 -- /MineOS/Applications/TurretControl.app/TurretControl.lua
 
-buffer.start()
+buffer.flush()
 local pathToTurretPicture = "MineOS/Applications/TurretControl.app/Resources/Turret.pic"
 local turretImage = image.load(pathToTurretPicture)
 local turrets = {}
@@ -29,8 +29,8 @@ local spaceBetweenTurretsHorizontal = 2
 local spaceBetweenTurretsVertical = 1
 local turretHeight = turretImage[2] + 12
 local turretWidth = turretImage[1] + 8
-local countOfTurretsCanBeShowByWidth = math.floor(buffer.width / (turretWidth + spaceBetweenTurretsHorizontal))
-local xTurrets = math.floor(buffer.width / 2 - (countOfTurretsCanBeShowByWidth * (turretWidth + spaceBetweenTurretsHorizontal)) / 2 ) + math.floor(spaceBetweenTurretsHorizontal / 2)
+local countOfTurretsCanBeShowByWidth = math.floor(buffer.getWidth() / (turretWidth + spaceBetweenTurretsHorizontal))
+local xTurrets = math.floor(buffer.getWidth() / 2 - (countOfTurretsCanBeShowByWidth * (turretWidth + spaceBetweenTurretsHorizontal)) / 2 ) + math.floor(spaceBetweenTurretsHorizontal / 2)
 
 local yellowColor = 0xFFDB40
 
@@ -95,8 +95,8 @@ local function drawTurrets(y)
 
 	if #turrets <= 0 then 
 		local text = "Подключите турели из мода OpenModularTurrets"
-		local x = math.floor(buffer.width / 2 - unicode.len(text) / 2)
-		buffer.text(x, math.floor(buffer.height / 2 - 2), yellowColor, text)
+		local x = math.floor(buffer.getWidth() / 2 - unicode.len(text) / 2)
+		buffer.text(x, math.floor(buffer.getHeight() / 2 - 2), yellowColor, text)
 		return
 	end
 
@@ -130,7 +130,7 @@ local function drawTurrets(y)
 end
 
 local function drawSeparator(y)
-	buffer.text(1, y, yellowColor, string.rep("─", buffer.width))
+	buffer.text(1, y, yellowColor, string.rep("─", buffer.getWidth()))
 end
 
 local function drawButtonWithState(x, y, width, height, text, state)
@@ -145,18 +145,18 @@ end
 
 local function drawBottomBar()
 	local height = 6
-	local y = buffer.height - height + 1
-	buffer.square(1, y, buffer.width, height, 0x000000, yellowColor, " ")
+	local y = buffer.getHeight() - height + 1
+	buffer.square(1, y, buffer.getWidth(), height, 0x000000, yellowColor, " ")
 	drawSeparator(y)
 	local text = " ECS® Security Systems™ "
-	local x = math.floor(buffer.width / 2 - unicode.len(text) / 2)
+	local x = math.floor(buffer.getWidth() / 2 - unicode.len(text) / 2)
 	buffer.text(x, y, yellowColor, text)
 
 	y = y + 2
 
 	local widthOfButton = 19
 	local totalWidth = (widthOfButton + 2) * 6
-	local x = math.floor(buffer.width / 2 - totalWidth / 2) + 1
+	local x = math.floor(buffer.getWidth() / 2 - totalWidth / 2) + 1
 
 	newObj("BottomButtons", "On", x, y, x + widthOfButton - 1, y + 2)
 	x = drawButtonWithState(x, y, widthOfButton, 3, turretConfig.turretsOn and "Турели ВКЛ" or "Турели ВЫКЛ", turretConfig.turretsOn)

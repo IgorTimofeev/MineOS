@@ -248,7 +248,7 @@ end
 ------------------------------------------------------------------------------------------------------------------
 
 local function calculateSizes()
-	mainContainer.width, mainContainer.height = buffer.width, buffer.height
+	mainContainer.width, mainContainer.height = buffer.getResolution()
 
 	if mainContainer.leftTreeView.hidden then
 		mainContainer.codeView.localPosition.x, mainContainer.codeView.width = 1, mainContainer.width

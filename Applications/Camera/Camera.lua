@@ -122,7 +122,7 @@ end
 
 local xOld, yOld = gpu.getResolution()
 gpu.setResolution(100, 50)
-buffer.start()
+buffer.flush()
 
 gui()
 ecs.square(1, 2, widthOfImage, heightOfImage - 1, 0x000000)

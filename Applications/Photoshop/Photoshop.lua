@@ -21,7 +21,7 @@ local event = require("event")
 ------------------------------------------------ Переменные --------------------------------------------------------------
 
 --Инициализируем библиотеку двойного буфера
-buffer.start()
+buffer.flush()
 
 --Массив локалиации
 local localization = MineOSCore.getCurrentApplicationLocalization()
@@ -61,12 +61,12 @@ local sizes = {
 	widthOfLeftBar = 6,
 }
 sizes.xStartOfDrawingArea = sizes.widthOfLeftBar + 1
-sizes.xEndOfDrawingArea = buffer.width
+sizes.xEndOfDrawingArea = buffer.getWidth()
 sizes.yStartOfDrawingArea = 2
-sizes.yEndOfDrawingArea = buffer.height - 1
+sizes.yEndOfDrawingArea = buffer.getHeight() - 1
 sizes.widthOfDrawingArea = sizes.xEndOfDrawingArea - sizes.xStartOfDrawingArea + 1
 sizes.heightOfDrawingArea = sizes.yEndOfDrawingArea - sizes.yStartOfDrawingArea + 1
-sizes.heightOfLeftBar = buffer.height - 1
+sizes.heightOfLeftBar = buffer.getHeight() - 1
 sizes.sizeOfPixelData = 4
 
 --Для изображения
@@ -161,7 +161,7 @@ end
 
 --Отрисовка цветов
 local function drawColors()
-	local xPos, yPos = 2, buffer.height - 4
+	local xPos, yPos = 2, buffer.getHeight() - 4
 	buffer.square(xPos, yPos, 3, 2, currentBackground, 0xFFFFFF, " ")
 	buffer.square(xPos + 3, yPos + 1, 1, 2, currentForeground, 0xFFFFFF, " ")
 	buffer.square(xPos + 1, yPos + 2, 2, 1, currentForeground, 0xFFFFFF, " ")
@@ -197,7 +197,7 @@ end
 
 --Отрисовка верхнего меню
 local function drawTopMenu()
-	obj.menu = GUI.menu(1, 1, buffer.width, colors.topMenu, colors.topMenuText, 0x3366CC, 0xFFFFFF, 0)
+	obj.menu = GUI.menu(1, 1, buffer.getWidth(), colors.topMenu, colors.topMenuText, 0x3366CC, 0xFFFFFF, 0)
 	obj.menu:addItem("PS", ecs.colors.blue)
 	obj.menu:addItem(localization.file)
 	obj.menu:addItem(localization.image)
@@ -220,13 +220,13 @@ end
 
 --Мини-консолька для отладки, сообщающая снизу, че происходит ваще
 local function console(text)
-	buffer.square(sizes.xStartOfDrawingArea, buffer.height, sizes.widthOfDrawingArea, 1, colors.console, colors.consoleText, " ")
+	buffer.square(sizes.xStartOfDrawingArea, buffer.getHeight(), sizes.widthOfDrawingArea, 1, colors.console, colors.consoleText, " ")
 	
 	local _, total, used = ecs.getInfoAboutRAM()
 	local RAMText = used .. "/" .. total .. " KB RAM"
-	buffer.text(sizes.xEndOfDrawingArea - unicode.len(RAMText), buffer.height, colors.consoleText, RAMText)
+	buffer.text(sizes.xEndOfDrawingArea - unicode.len(RAMText), buffer.getHeight(), colors.consoleText, RAMText)
 	
-	buffer.text(sizes.xStartOfDrawingArea + 1, buffer.height, colors.consoleText, text)
+	buffer.text(sizes.xStartOfDrawingArea + 1, buffer.getHeight(), colors.consoleText, text)
 end
 
 --Функция, берущая указанный пиксель из массива изображения и рисующая его в буфере корректно,
@@ -1007,10 +1007,10 @@ while true do
 			for key in pairs(obj["Colors"]) do
 				if ecs.clickedAtArea(e[3], e[4], obj["Colors"][key][1], obj["Colors"][key][2], obj["Colors"][key][3], obj["Colors"][key][4]) then
 					if key == 1 then
-						currentBackground = palette.show(math.floor(buffer.width / 2 - 35), math.floor(buffer.height / 2 - 12), currentBackground) or currentBackground
+						currentBackground = palette.show(math.floor(buffer.getWidth() / 2 - 35), math.floor(buffer.getHeight() / 2 - 12), currentBackground) or currentBackground
 						drawAll()
 					elseif key == 2 or key == 3 then
-						currentForeground = palette.show(math.floor(buffer.width / 2 - 35), math.floor(buffer.height / 2 - 12), currentForeground) or currentForeground
+						currentForeground = palette.show(math.floor(buffer.getWidth() / 2 - 35), math.floor(buffer.getHeight() / 2 - 12), currentForeground) or currentForeground
 						drawAll()
 					elseif key == 4 then
 						buffer.text(obj["Colors"][key][1], obj["Colors"][key][2], 0xFF0000, "←→")
@@ -1305,8 +1305,8 @@ while true do
 				else
 					local x, y, width, height = e[3], e[4], 30, 12
 					--А это чтоб за края экрана не лезло
-					if y + height >= buffer.height then y = buffer.height - height end
-					if x + width + 1 >= buffer.width then x = buffer.width - width - 1 end
+					if y + height >= buffer.getHeight() then y = buffer.getHeight() - height end
+					if x + width + 1 >= buffer.getWidth() then x = buffer.getWidth() - width - 1 end
 
 					currentBrushSize, currentAlpha = table.unpack(ecs.universalWindow(x, y, width, 0xeeeeee, true, {"EmptyLine"}, {"CenterText", 0x880000, localization.brushParameters}, {"Slider", 0x262626, 0x880000, 1, 10, currentBrushSize, localization.size ..  ": ", " px"}, {"Slider", 0x262626, 0x880000, 0, 255, currentAlpha, localization.transparency .. ": ", ""}, {"EmptyLine"}, {"Button", {0xbbbbbb, 0xffffff, "OK"}}))
 					buffer.draw()

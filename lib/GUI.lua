@@ -487,7 +487,7 @@ function GUI.container(x, y, width, height)
 end
 
 function GUI.fullScreenContainer()
-	return GUI.container(1, 1, buffer.width, buffer.height)
+	return GUI.container(1, 1, buffer.getResolution())
 end
 
 ----------------------------------------- Buttons -----------------------------------------
@@ -883,7 +883,8 @@ function GUI.error(...)
 	local sign = image.fromString([[06030000FF 0000FF 00F7FF▟00F7FF▙0000FF 0000FF 0000FF 00F7FF▟F7FF00 F7FF00 00F7FF▙0000FF 00F7FF▟F7FF00CF7FF00yF7FF00kF7FF00a00F7FF▙]])
 	local offset = 2
 	local lines = #args > 1 and "\"" .. table.concat(args, "\", \"") .. "\"" or args[1]
-	local width = math.floor(buffer.width * 0.5)
+	local bufferWidth, bufferHeight = buffer.getResolution()
+	local width = math.floor(bufferWidth * 0.5)
 	local textWidth = width - image.getWidth(sign) - 2
 
 	lines = string.wrap(lines, textWidth)
@@ -892,10 +893,10 @@ function GUI.error(...)
 		height = #lines + 2
 	end
 
-	local mainContainer = GUI.container(1, math.floor(buffer.height / 2 - height / 2), buffer.width, height + offset * 2)
+	local mainContainer = GUI.container(1, math.floor(bufferHeight / 2 - height / 2), bufferWidth, height + offset * 2)
 	local oldPixels = buffer.copy(mainContainer.x, mainContainer.y, mainContainer.width, mainContainer.height)
 
-	local x, y = math.floor(buffer.width / 2 - width / 2), offset + 1
+	local x, y = math.floor(bufferWidth / 2 - width / 2), offset + 1
 	mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x1D1D1D))
 	mainContainer:addChild(GUI.image(x, y, sign))
 	mainContainer:addChild(GUI.textBox(x + image.getWidth(sign) + 2, y, textWidth, #lines, 0x1D1D1D, 0xE1E1E1, lines, 1, 0, 0)).eventHandler = nil
@@ -1365,7 +1366,7 @@ local function dropDownMenuItemEventHandler(mainContainer, object, eventData)
 			if object.subMenu then
 				object.subMenu.y = object.parent.y + object.localPosition.y - 1
 				object.subMenu.x = object.parent.x + object.parent.width
-				if buffer.width - object.parent.x - object.parent.width + 1 < object.subMenu.width then
+				if buffer.getWidth() - object.parent.x - object.parent.width + 1 < object.subMenu.width then
 					object.subMenu.x = object.parent.x - object.subMenu.width
 				end
 
@@ -1392,7 +1393,7 @@ local function dropDownMenuCalculateSizes(menu)
 		totalHeight = totalHeight + (menu.itemsContainer.children[i].type == GUI.dropDownMenuElementTypes.separator and 1 or menu.itemHeight)
 		menu.itemsContainer.children[i].width = menu.width
 	end
-	menu.height = math.min(totalHeight, menu.maximumHeight, buffer.height - menu.y)
+	menu.height = math.min(totalHeight, menu.maximumHeight, buffer.getHeight() - menu.y)
 	menu.itemsContainer.width, menu.itemsContainer.height = menu.width, menu.height
 
 	menu.nextButton.localPosition.y = menu.height
@@ -1475,6 +1476,8 @@ local function dropDownMenuShow(menu)
 	local mainContainer = GUI.fullScreenContainer()
 	mainContainer:addChild(GUI.object(1, 1, mainContainer.width, mainContainer.height)).eventHandler = function(mainContainer, object, eventData)
 		if eventData[1] == "touch" then
+			buffer.paste(menu.x, menu.y, menu.oldPixels)
+			buffer.draw()
 			mainContainer:stopEventHandling()
 		end
 	end
@@ -1553,8 +1556,10 @@ end
 
 local function contextMenuShow(menu)
 	contextMenuCalculate(menu)
-	if menu.y + menu.height >= buffer.height then menu.y = buffer.height - menu.height end
-	if menu.x + menu.width + 1 >= buffer.width then menu.x = buffer.width - menu.width - 1 end
+
+	local bufferWidth, bufferHeight = buffer.getResolution()
+	if menu.y + menu.height >= bufferHeight then menu.y = bufferHeight - menu.height end
+	if menu.x + menu.width + 1 >= bufferWidth then menu.x = bufferWidth - menu.width - 1 end
 
 	return dropDownMenuShow(menu)
 end
@@ -1578,7 +1583,7 @@ local function contextMenuAddSubMenu(menu, text)
 end
 
 function GUI.contextMenu(x, y, backgroundColor, textColor, backgroundPressedColor, textPressedColor, disabledColor, separatorColor, backgroundTransparency, shadowTransparency)
-	local menu = GUI.dropDownMenu(x, y, 1, math.ceil(buffer.height * 0.5), 1,
+	local menu = GUI.dropDownMenu(x, y, 1, math.ceil(buffer.getHeight() * 0.5), 1,
 		backgroundColor or GUI.colors.contextMenu.default.background,
 		textColor or GUI.colors.contextMenu.default.text,
 		backgroundPressedColor or GUI.colors.contextMenu.pressed.background,
@@ -1681,7 +1686,7 @@ function GUI.comboBox(x, y, width, elementHeight, backgroundColor, textColor, ar
 		}
 	}
 
-	object.dropDownMenu = GUI.dropDownMenu(1, 1, 1, math.ceil(buffer.height * 0.5), elementHeight,
+	object.dropDownMenu = GUI.dropDownMenu(1, 1, 1, math.ceil(buffer.getHeight() * 0.5), elementHeight,
 		object.colors.default.background, 
 		object.colors.default.text, 
 		object.colors.pressed.background,
@@ -1845,7 +1850,7 @@ local function brailleCanvasDraw(brailleCanvas)
 	local index, background, foreground, symbol
 	for y = 1, brailleCanvas.height do
 		for x = 1, brailleCanvas.width do
-			index = buffer.getIndexByCoordinates(brailleCanvas.x + x - 1, brailleCanvas.y + y - 1)
+			index = buffer.getIndex(brailleCanvas.x + x - 1, brailleCanvas.y + y - 1)
 			background, foreground, symbol = buffer.rawGet(index)
 			buffer.rawSet(index, background, brailleCanvas.pixels[y][x][9], brailleCanvas.pixels[y][x][10])
 		end
@@ -2504,7 +2509,7 @@ local function resizerDraw(object)
 	else
 		local x = math.floor(object.x + object.width / 2)
 		for i = object.y, object.y + object.height - 1 do
-			local index = buffer.getIndexByCoordinates(x, i)
+			local index = buffer.getIndex(x, i)
 			buffer.rawSet(index, buffer.rawGet(index), object.colors.helper, "┃")
 		end
 	end
@@ -3093,7 +3098,7 @@ local function inputDraw(input)
 	)
 
 	if input.cursorBlinkState then
-		local index = buffer.getIndexByCoordinates(input.x + input.cursorPosition - input.textCutFrom + input.textOffset, y)
+		local index = buffer.getIndex(input.x + input.cursorPosition - input.textCutFrom + input.textOffset, y)
 		local background = buffer.rawGet(index)
 		buffer.rawSet(index, background, input.colors.cursor, input.cursorSymbol)
 	end

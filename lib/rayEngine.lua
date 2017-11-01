@@ -25,33 +25,33 @@ rayEngine.chatHistory = {}
 
 -- Позиция горизонта, относительно которой рисуется мир
 function rayEngine.calculateHorizonPosition()
-	rayEngine.horizonPosition = math.floor(buffer.height / 2)
+	rayEngine.horizonPosition = math.floor(buffer.getHeight() / 2)
 end
 
 -- Размер панели чата и лимита его истории
 function rayEngine.calculateChatSize()
-	rayEngine.chatPanelWidth, rayEngine.chatPanelHeight = math.floor(buffer.width * 0.4), math.floor(buffer.height * 0.4)
+	rayEngine.chatPanelWidth, rayEngine.chatPanelHeight = math.floor(buffer.getWidth() * 0.4), math.floor(buffer.getHeight() * 0.4)
 	rayEngine.chatHistoryLimit = rayEngine.chatPanelHeight
 end
 
 -- Шаг, с которым будет изменяться угол рейкаста
 function rayEngine.calculateRaycastStep()
-	rayEngine.raycastStep = rayEngine.player.fieldOfView / buffer.width
+	rayEngine.raycastStep = rayEngine.player.fieldOfView / buffer.getWidth()
 end
 
 -- Позиция оружия на экране и всех его вспомогательных текстур
 function rayEngine.calculateWeaponPosition()
-	rayEngine.currentWeapon.xWeapon = buffer.width - rayEngine.currentWeapon.weaponTexture[1] + 1
-	rayEngine.currentWeapon.yWeapon = buffer.height - rayEngine.currentWeapon.weaponTexture[2] + 1
+	rayEngine.currentWeapon.xWeapon = buffer.getWidth() - rayEngine.currentWeapon.weaponTexture[1] + 1
+	rayEngine.currentWeapon.yWeapon = buffer.getHeight() - rayEngine.currentWeapon.weaponTexture[2] + 1
 	rayEngine.currentWeapon.xFire = rayEngine.currentWeapon.xWeapon + rayEngine.weapons[rayEngine.currentWeapon.ID].firePosition.x
 	rayEngine.currentWeapon.yFire = rayEngine.currentWeapon.yWeapon + rayEngine.weapons[rayEngine.currentWeapon.ID].firePosition.y
-	rayEngine.currentWeapon.xCrosshair = math.floor(buffer.width / 2 - rayEngine.currentWeapon.crosshairTexture[1] / 2)
-	rayEngine.currentWeapon.yCrosshair = math.floor(buffer.height / 2 - rayEngine.currentWeapon.crosshairTexture[2] / 2)
+	rayEngine.currentWeapon.xCrosshair = math.floor(buffer.getWidth() / 2 - rayEngine.currentWeapon.crosshairTexture[1] / 2)
+	rayEngine.currentWeapon.yCrosshair = math.floor(buffer.getHeight() / 2 - rayEngine.currentWeapon.crosshairTexture[2] / 2)
 end
 
 -- Грубо говоря, это расстояние от камеры до виртуального экрана, на котором рисуется весь наш мир, влияет на размер блоков
 function rayEngine.calculateDistanceToProjectionPlane()
-	rayEngine.distanceToProjectionPlane = (buffer.width / 2) / math.tan(math.rad((rayEngine.player.fieldOfView / 2)))
+	rayEngine.distanceToProjectionPlane = (buffer.getWidth() / 2) / math.tan(math.rad((rayEngine.player.fieldOfView / 2)))
 end
 
 -- Быстрый перерасчет всего, что нужно
@@ -287,11 +287,11 @@ end
 
 function rayEngine.intro()
 	local logo = image.fromString("17060000FF 0000FF 0000FF 0000FF 007EFF▄007EFF▄007EFF▄007EFF▀007EFF▀007EFF▀007EFF▀007EFF▀007EFF▀007EFF▀007EFF▄007EFF▄007EFF▄0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 007EFF▄007EFF▀007EFF▀0000FF 0000FF 0000FF 0000FF 0053FF▄0053FF▀0053FF▀0053FF▀0053FF▄0000FF 0000FF 0000FF 0000FF 007EFF▀007EFF▀007EFF▄0000FF 0000FF 0000FF 007EFF▀007EFF▄0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 530000 0000FF 0078FF▀0000FF 537800▀0078FF▀0078FF▀0078FF▀0078FF▀0078FF▀0078FF▀7E7800▀0078FF▀0000FF 0078FF▀0000FF 0000FF 007EFF▀007EFF▀007EFF▄007EFF▄007EFF▄0000FF 0000FF 0053FF▀0053FF▀0053FF▀0000FF 0000FF 007EFF▄007EFF▄007EFF▄007EFF▀007EFF▀0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 007EFF▀007EFF▀007EFF▀007EFF▀007EFF▀007EFF▀007EFF▀0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 007EFFP007EFFo007EFFw007EFFe007EFFr007EFFe007EFFd0000FF 007EFFb007EFFy0000FF 007EFFR007EFFa007EFFy007EFFE007EFFn007EFFg007EFFi007EFFn007EFFe007EFF™0000FF 0000FF ")
-	local x, y = math.floor(buffer.width / 2 - logo[1] / 2), math.floor(buffer.height / 2 - logo[2] / 2)
+	local x, y = math.floor(buffer.getWidth() / 2 - logo[1] / 2), math.floor(buffer.getHeight() / 2 - logo[2] / 2)
 	local function draw(transparency)
 		buffer.clear(0xF0F0F0);
 		buffer.image(x, y, logo)
-		buffer.square(1, 1, buffer.width, buffer.height, 0x000000, 0x000000, " ", transparency)
+		buffer.square(1, 1, buffer.getWidth(), buffer.getHeight(), 0x000000, 0x000000, " ", transparency)
 		buffer.draw()
 		os.sleep(0)
 	end
@@ -347,7 +347,7 @@ local function addItemToChatHistory(text, color)
 end
 
 function rayEngine.chat(transparency)
-	local x, y = 1, buffer.height - rayEngine.chatPanelHeight - 3
+	local x, y = 1, buffer.getHeight() - rayEngine.chatPanelHeight - 3
 	buffer.square(x, y, rayEngine.chatPanelWidth, rayEngine.chatPanelHeight, 0x000000, 0xFFFFFF, " ", transparency or 0.5)
 	buffer.setDrawLimit(x, y, x + rayEngine.chatPanelWidth - 1, y + rayEngine.chatPanelHeight - 1)
 	local yMessage = y + rayEngine.chatPanelHeight - 1
@@ -367,13 +367,13 @@ end
 function rayEngine.commandLine(transparency)
 	transparency = transparency or 50
 	local inputPanelHeight = 3
-	local x, y = 1, buffer.height - inputPanelHeight + 1
+	local x, y = 1, buffer.getHeight() - inputPanelHeight + 1
 	--Врубаем чат и рисуем все, включая его
 	rayEngine.chatEnabled = true
 	rayEngine.update()
 
 	--Ввод данных
-	local input = GUI.input(x, y, buffer.width, 3, 0xFFFFFF, 0x3C3C3C, 0x666666, 0xFFFFFF, 0x3C3C3C, "")
+	local input = GUI.input(x, y, buffer.getWidth(), 3, 0xFFFFFF, 0x3C3C3C, 0x666666, 0xFFFFFF, 0x3C3C3C, "")
 	input.eventHandler({draw = function() input:draw() end}, input, {[1] = "touch", [3] = input.x, [4] = input.y})
 	
 	local words = {}; for word in string.gmatch(input.text, "[^%s]+") do table.insert(words, unicode.lower(word)) end
@@ -457,9 +457,9 @@ function rayEngine.drawWeapon()
 end
 
 function rayEngine.drawStats()
-	local width = math.floor(buffer.width * 0.3)
+	local width = math.floor(buffer.getWidth() * 0.3)
 	local height = 5
-	local x, y = buffer.width - width - 1, 2
+	local x, y = buffer.getWidth() - width - 1, 2
 	buffer.square(x, y, width, height, 0x000000, 0xFFFFFF, " ", 0.5)
 
 	GUI.progressBar(x + 1, y + 4, width - 2, 1, 0x000000, 0xFF5555, rayEngine.player.health.current, rayEngine.player.health.maximum, true)
@@ -490,7 +490,7 @@ function rayEngine.drawWorld()
 	--Земля
 	buffer.clear(rayEngine.world.colors.groundByTime)
 	--Небо
-	buffer.square(1, 1, buffer.width, rayEngine.horizonPosition, rayEngine.world.colors.sky.current, 0x0, " ")
+	buffer.square(1, 1, buffer.getWidth(), rayEngine.horizonPosition, rayEngine.world.colors.sky.current, 0x0, " ")
 	--Сцена
 	local startAngle, endAngle, startX, distanceToTile, tileID, height, startY, tileColor = rayEngine.player.rotation - rayEngine.player.fieldOfView / 2, rayEngine.player.rotation + rayEngine.player.fieldOfView / 2, 1
 	for angle = startAngle, endAngle, rayEngine.raycastStep do
@@ -512,7 +512,7 @@ function rayEngine.drawWorld()
 
 			--ТИКСТУРКА)))00
 			-- local xTexture = startX % rayEngine.properties.tileWidth + 1
-			-- if xTexture >= 1 and xTexture <= buffer.width then
+			-- if xTexture >= 1 and xTexture <= buffer.getWidth() then
 			-- 	local column = image.getColumn(rayEngine.wallsTexture, xTexture)
 			-- 	column = image.transform(column, 1, height)
 			-- 	buffer.image(math.floor(startX), math.floor(startY), column)
@@ -529,7 +529,7 @@ function rayEngine.update()
 	if rayEngine.currentWeapon then rayEngine.drawWeapon() end
 	if rayEngine.minimapEnabled then rayEngine.drawMap(3, 2, 24, 24, 0.5) end
 	-- rayEngine.drawStats()
-	local xTools, yTools = 3, buffer.height - 25
+	local xTools, yTools = 3, buffer.getHeight() - 25
 	if rayEngine.compassEnabled then rayEngine.compass(xTools, yTools); xTools = xTools + 30 end
 	if rayEngine.watchEnabled then rayEngine.watch(xTools, yTools) end
 	if rayEngine.chatEnabled then rayEngine.chat() end
@@ -550,7 +550,7 @@ end
 
 function rayEngine.changeResolution(width, height)
 	component.gpu.setResolution(width, height)
-	buffer.start()
+	buffer.flush()
 	rayEngine.calculateAllParameters()
 end
 

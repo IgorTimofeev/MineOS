@@ -55,13 +55,13 @@ local colors = {
 	messsageInputBarTextColor = 0x262626,
 }
 
-local leftBarHeight = buffer.height - 9
-local leftBarWidth = math.floor(buffer.width * 0.20)
+local leftBarHeight = buffer.getHeight() - 9
+local leftBarWidth = math.floor(buffer.getWidth() * 0.20)
 
 local topBarHeight = 3
 
-local mainZoneWidth = buffer.width - leftBarWidth
-local mainZoneHeight = buffer.height - topBarHeight - 1
+local mainZoneWidth = buffer.getWidth() - leftBarWidth
+local mainZoneHeight = buffer.getHeight() - topBarHeight - 1
 local mainZoneX = leftBarWidth + 1
 local mainZoneY = topBarHeight + 1
 
@@ -313,7 +313,7 @@ local function loginGUI(startUsername, startPassword)
 
 	local textFieldWidth = 50
 	local textFieldHeight = 3
-	local x, y = math.floor(buffer.width / 2 - textFieldWidth / 2), math.floor(buffer.height / 2)
+	local x, y = math.floor(buffer.getWidth() / 2 - textFieldWidth / 2), math.floor(buffer.getHeight() / 2)
 
 	local obj = {}
 	obj.username = {x, y, x + textFieldWidth - 1, y + 2}; y = y + textFieldHeight + 1
@@ -371,8 +371,8 @@ local function drawPersonalAvatar(x, y, width, height)
 end
 
 local function status(text)
-	buffer.square(mainZoneX, buffer.height, mainZoneWidth, 1, colors.statusBar, 0x0, " ")
-	buffer.text(mainZoneX + 1, buffer.height, colors.statusBarText, text)
+	buffer.square(mainZoneX, buffer.getHeight(), mainZoneWidth, 1, colors.statusBar, 0x0, " ")
+	buffer.text(mainZoneX + 1, buffer.getHeight(), colors.statusBarText, text)
 	buffer.draw()
 end
 
@@ -446,7 +446,7 @@ local function getAttachments(messageArray)
 end
 
 local function drawMessageInputBar(currentText)
-	local x, y = mainZoneX, buffer.height - 5
+	local x, y = mainZoneX, buffer.getHeight() - 5
 	buffer.square(x, y, mainZoneWidth, 5, colors.messageInputBarColor, 0x0, " ")
 	obj.messageInputBar = GUI.input(x + 2, y + 1, mainZoneWidth - 4, 3, 0xFFFFFF, 0x444444, 0x444444, 0xFFFFFF, 0x262626, nil, "Введите сообщение", true)
 	obj.messageInputBar:draw()
@@ -494,9 +494,9 @@ local function messagesGUI()
 
 		buffer.setDrawLimit(mainZoneX, mainZoneY, mainZoneX + mainZoneWidth - 1, mainZoneY + mainZoneHeight - 1)
 
-		local y = buffer.height - 7
+		local y = buffer.getHeight() - 7
 		local xSender = mainZoneX + 2
-		local xYou = buffer.width - 7
+		local xYou = buffer.getWidth() - 7
 
 		for i = 1, #messages.response.items do
 
@@ -629,7 +629,7 @@ local function dialogsGUI()
 			if dialogs.response.items[i].unread and dialogs.response.items[i].unread ~= 0 then
 				local cyka = tostring(dialogs.response.items[i].unread)
 				local cykaWidth = unicode.len(cyka) + 2
-				local cykaX = buffer.width - cykaWidth - 2
+				local cykaX = buffer.getWidth() - cykaWidth - 2
 				buffer.square(cykaX, y + 2, cykaWidth, 1, ecs.colors.blue, 0x0, " ")
 				buffer.text(cykaX + 1, y + 2, 0xFFFFFF, cyka)
 			end
@@ -754,7 +754,7 @@ local function userProfileGUI()
 	local function drawInfo(x, y2, key, value)
 		if checkField(value) then
 			value = {value}
-			value = string.wrap(value, buffer.width - x - 4 - informationOffset)
+			value = string.wrap(value, buffer.getWidth() - x - 4 - informationOffset)
 			buffer.text(x, y2, informationKeyColor, key)
 			for i = 1, #value do
 				buffer.text(x + informationOffset, y2, informationValueColor, value[i])
@@ -766,7 +766,7 @@ local function userProfileGUI()
 
 	local function drawSeparator(x, y2, text)
 		buffer.text(x, y2, informationTitleColor, text)
-		buffer.text(x + unicode.len(text) + 1, y2, informationSeparatorColor, string.rep("─", buffer.width - x - unicode.len(text)))
+		buffer.text(x + unicode.len(text) + 1, y2, informationSeparatorColor, string.rep("─", buffer.getWidth() - x - unicode.len(text)))
 		y = y + 1
 	end
 
@@ -796,7 +796,7 @@ local function userProfileGUI()
 
 	-- А ВОТ И СТЕНОЧКА ПОДЪЕХАЛА НА ПРАЗДНИК ДУШИ
 	y = y + 1
-	buffer.square(x, y, buffer.width - x - 2, 1, 0xCCCCCC, 0x0, " "); buffer.text(x + 1, y, 0x262626, "Стена"); y = y + 2
+	buffer.square(x, y, buffer.getWidth() - x - 2, 1, 0xCCCCCC, 0x0, " "); buffer.text(x + 1, y, 0x262626, "Стена"); y = y + 2
 	--Перебираем всю стенку
 	for i = 1, #currentProfile.wall.response.items do
 		--Если это не репост или еще не хуйня какая-то
@@ -805,10 +805,10 @@ local function userProfileGUI()
 			drawAvatar(x, y, 6, 3, currentProfile.wall.response.items[i].from_id, unicode.sub(currentProfile.userNames[currentProfile.wall.response.items[i].from_id].first_name, 1, 1) .. unicode.sub(currentProfile.userNames[currentProfile.wall.response.items[i].from_id].last_name, 1, 1))
 			buffer.text(x + 8, y, informationValueColor, currentProfile.userNames[currentProfile.wall.response.items[i].from_id].first_name .. " " .. currentProfile.userNames[currentProfile.wall.response.items[i].from_id].last_name)
 			local date = os.date("%d.%m.%y в %H:%M", currentProfile.wall.response.items[i].date)
-			buffer.text(buffer.width - unicode.len(date) - 2, y, 0xCCCCCC, date)
+			buffer.text(buffer.getWidth() - unicode.len(date) - 2, y, 0xCCCCCC, date)
 			y = y + 1
 			local text = {currentProfile.wall.response.items[i].text}
-			text = string.wrap(text, buffer.width - x - 10)
+			text = string.wrap(text, buffer.getWidth() - x - 10)
 			for i = 1, #text do
 				buffer.text(x + 8, y, 0x000000, text[i])
 				y = y + 1
@@ -966,7 +966,7 @@ local function newsGUI()
 				end
 			end
 			--Делаем его еще пизже
-			local text = {news.response.items[item].text}; text = string.wrap(text, buffer.width - x - 10)
+			local text = {news.response.items[item].text}; text = string.wrap(text, buffer.getWidth() - x - 10)
 			--Получаем инфу нужную
 			local avatarText, name = getAvatarTextAndNameForNews(news.response.items[item].source_id)
 			--Сместиться потом на стока вот
@@ -1003,7 +1003,7 @@ end
 
 local function drawLeftBar()
 	--Подложка под элементы
-	buffer.square(1, 1, leftBarWidth, buffer.height, colors.leftBar, 0xFFFFFF, " ")
+	buffer.square(1, 1, leftBarWidth, buffer.getHeight(), colors.leftBar, 0xFFFFFF, " ")
 	
 	if personalInfo then
 		drawPersonalAvatar(3, 2, 6, 3)
@@ -1085,7 +1085,7 @@ end
 
 --Инициализируем библиотеку двойного буффера
 --Эх, что бы я делал, если б не накодил ее? 0.2 фпс на GPU мертвеца!
-buffer.start()
+buffer.flush()
 --Хуярим настррррроечки
 loadSettings()
 --Активируем форму логина

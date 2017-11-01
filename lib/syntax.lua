@@ -25,7 +25,7 @@ syntax.colorScheme = {
 	scrollBarBackground = 0x2D2D2D,
 	scrollBarForeground = 0x5A5A5A,
 	selection = 0x555555,
-	indentation = 0x3C3C3C,
+	indentation = 0x2D2D2D,
 }
 
 syntax.patterns = {
@@ -86,8 +86,10 @@ syntax.patterns = {
 
 -- Отрисовка строки с подсвеченным синтаксисом
 function syntax.highlightString(x, y, str, indentationWidth)
-	if y >= buffer.drawLimit.y1 and y <= buffer.drawLimit.y2 then
-		local stringLength, symbols, colors, searchFrom, starting, ending, bufferIndex = unicode.len(str), {}, {}
+	local x1, y1, x2, y2 = buffer.getDrawLimit()
+
+	if y >= y1 and y <= y2 then
+		local stringLength, symbols, colors, searchFrom, starting, ending, bufferIndex, background = unicode.len(str), {}, {}
 
 		for symbol = 1, stringLength do
 			symbols[symbol] = unicode.sub(str, symbol, symbol)
@@ -124,12 +126,13 @@ function syntax.highlightString(x, y, str, indentationWidth)
 				indentationSymbolCounter = indentationSymbolCounter - 1
 			end
 
-			if x > buffer.drawLimit.x2 then
+			if x > x2 then
 				break
-			elseif x >= buffer.drawLimit.x1 then
-				bufferIndex = bufferIndex or buffer.getIndexByCoordinates(x, y)
-				buffer.newFrame[bufferIndex + 1] = colors[symbol] or syntax.colorScheme.text
-				buffer.newFrame[bufferIndex + 2] = symbols[symbol]
+			elseif x >= x1 then
+				bufferIndex = bufferIndex or buffer.getIndex(x, y)
+				background = buffer.rawGet(bufferIndex)
+				buffer.rawSet(bufferIndex, background, colors[symbol] or syntax.colorScheme.text, symbols[symbol])
+				
 				bufferIndex = bufferIndex + 3
 			end
 			

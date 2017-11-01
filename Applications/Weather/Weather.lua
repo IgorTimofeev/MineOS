@@ -182,13 +182,13 @@ local function drawWeather()
 	--Рисуем обоинку или просто говнофон ССАНЫЙ
 	if fs.exists(MineOSCore.properties.wallpaper or "---aefaefaefaefae") then
 		buffer.image(1, 1, image.load(MineOSCore.properties.wallpaper))
-		buffer.square(1, 1, buffer.width, buffer.height, 0x0, 0x0, " ", 0.6)
+		buffer.square(1, 1, buffer.getWidth(), buffer.getHeight(), 0x0, 0x0, " ", 0.6)
 	else
 		buffer.clear(0x262626)
 	end
 
 	--Рисуем текущую температуру
-	local x, y = 10, buffer.height - 25
+	local x, y = 10, buffer.getHeight() - 25
 	bigLetters.drawText(x, y, 0xFFFFFF, weather.temperature, drawWithSymbol)
 	y = y + 6
 	--Рисуем название города
@@ -203,7 +203,7 @@ local function drawWeather()
 	--Рисуем КНОПАЧКИ
 	y = y + 2
 	changeCityButton = {buffer.button(x, y, 22, 1, 0xEEEEEE, 0x262626, "Другой город")}
-	exitButton = {buffer.button(buffer.width - 4, 2, 3, 1, 0xEEEEEE, 0x262626, "X")}
+	exitButton = {buffer.button(buffer.getWidth() - 4, 2, 3, 1, 0xEEEEEE, 0x262626, "X")}
 
 	--Рисуем долгосрочный прогноз
 	y = y + 3
