@@ -1272,7 +1272,6 @@ local function toggleBottomToolBar()
 		
 	if not mainContainer.bottomToolBar.hidden then
 		mainContainer:draw()
-		mainContainer.bottomToolBar.inputField:startInput()
 		findFromFirstDisplayedLine()
 	end
 end
