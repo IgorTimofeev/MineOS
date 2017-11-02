@@ -14,7 +14,7 @@ local drawLimitX1, drawLimitX2, drawLimitY1, drawLimitY2
 
 local GPUProxy, GPUProxyGetResolution, GPUProxySetResolution, GPUProxyBind, GPUProxyGetBackground, GPUProxyGetForeground, GPUProxySetBackground, GPUProxySetForeground, GPUProxyGet, GPUProxySet
 local mathCeil, mathFloor, mathModf, mathAbs = math.ceil, math.floor, math.modf, math.abs
-local tableInsert = table.insert
+local tableInsert, tableConcat = table.insert, table.concat
 local colorBlend = color.blend
 local unicodeLen, unicodeSub = unicode.len, unicode.sub
 
@@ -554,64 +554,67 @@ local function info(...)
 	GPUProxySetBackground(0x0)
 	GPUProxySetForeground(0xFFFFFF)
 	GPUProxyFill(1, bufferHeight, bufferWidth, 1, " ")
-	GPUProxySet(2, bufferHeight, table.concat(text, ", "))
+	GPUProxySet(2, bufferHeight, tableConcat(text, ", "))
 	GPUProxySetBackground(b)
 	GPUProxySetForeground(f)
 end
 
-local function calculateDifference(index, indexPlus1, indexPlus2)
-	local somethingIsChanged =
-		currentFrame[index] ~= newFrame[index] or
-		currentFrame[indexPlus1] ~= newFrame[indexPlus1] or
-		currentFrame[indexPlus2] ~= newFrame[indexPlus2]
-
-	currentFrame[index] = newFrame[index]
-	currentFrame[indexPlus1] = newFrame[indexPlus1]
-	currentFrame[indexPlus2] = newFrame[indexPlus2]
-
-	return somethingIsChanged
-end
-
 local function draw(force)
 	-- local oldClock = os.clock()
-	local changes, index, indexStepOnEveryLine, indexPlus1, indexPlus2, sameCharArray, x, xCharCheck, indexCharCheck, indexCharCheckPlus1, indexCharCheckPlus2, currentForeground = {}, getIndex(drawLimitX1, drawLimitY1), (bufferWidth - drawLimitX2 + drawLimitX1 - 1) * 3
+	local changes, index, indexStepOnEveryLine, indexPlus1, indexPlus2, equalChars, x, charX, charIndex, charIndexPlus1, charIndexPlus2, currentForeground = {}, getIndex(drawLimitX1, drawLimitY1), (bufferWidth - drawLimitX2 + drawLimitX1 - 1) * 3
 	
 	for y = drawLimitY1, drawLimitY2 do
 		x = drawLimitX1
-		
 		while x <= drawLimitX2 do
 			indexPlus1, indexPlus2 = index + 1, index + 2
 			
-			if calculateDifference(index, indexPlus1, indexPlus2) or force then
-				sameCharArray = { currentFrame[indexPlus2] }
-				xCharCheck, indexCharCheck = x + 1, index + 3
-				
-				while xCharCheck <= drawLimitX2 do
-					indexCharCheckPlus1, indexCharCheckPlus2 = indexCharCheck + 1, indexCharCheck + 2
+			-- Determine if some pixel data was changed (or if <force> argument was passed)
+			if
+				currentFrame[index] ~= newFrame[index] or
+				currentFrame[indexPlus1] ~= newFrame[indexPlus1] or
+				currentFrame[indexPlus2] ~= newFrame[indexPlus2] or
+				force
+			then
+				-- Make pixel at both frames equal
+				currentFrame[index] = newFrame[index]
+				currentFrame[indexPlus1] = newFrame[indexPlus1]
+				currentFrame[indexPlus2] = newFrame[indexPlus2]
+
+				-- Look for pixels with equal chars from right of current pixel
+				equalChars = {currentFrame[indexPlus2]}
+				charX, charIndex = x + 1, index + 3
+				while charX <= drawLimitX2 do
+					charIndexPlus1, charIndexPlus2 = charIndex + 1, charIndex + 2
+					-- Pixels becomes equal only if they have same background and (whitespace char or same foreground)
 					if	
-						currentFrame[index] == newFrame[indexCharCheck] and
+						currentFrame[index] == newFrame[charIndex] and
 						(
-							newFrame[indexCharCheckPlus2] == " " or
-							currentFrame[indexPlus1] == newFrame[indexCharCheckPlus1]
+							newFrame[charIndexPlus2] == " " or
+							currentFrame[indexPlus1] == newFrame[charIndexPlus1]
 						)
 					then
-					 	calculateDifference(indexCharCheck, indexCharCheckPlus1, indexCharCheckPlus2)
-					 	tableInsert(sameCharArray, currentFrame[indexCharCheckPlus2])
+						-- Make pixel at both frames equal
+					 	currentFrame[charIndex] = newFrame[charIndex]
+					 	currentFrame[charIndexPlus1] = newFrame[charIndexPlus1]
+					 	currentFrame[charIndexPlus2] = newFrame[charIndexPlus2]
+
+					 	tableInsert(equalChars, currentFrame[charIndexPlus2])
 					else
 						break
 					end
 
-					indexCharCheck, xCharCheck = indexCharCheck + 3, xCharCheck + 1
+					charIndex, charX = charIndex + 3, charX + 1
 				end
 
+				-- Group pixels that need to be drawn by background and foreground
 				changes[currentFrame[index]] = changes[currentFrame[index]] or {}
 				changes[currentFrame[index]][currentFrame[indexPlus1]] = changes[currentFrame[index]][currentFrame[indexPlus1]] or {}
-				
+
 				tableInsert(changes[currentFrame[index]][currentFrame[indexPlus1]], x)
 				tableInsert(changes[currentFrame[index]][currentFrame[indexPlus1]], y)
-				tableInsert(changes[currentFrame[index]][currentFrame[indexPlus1]], table.concat(sameCharArray))
+				tableInsert(changes[currentFrame[index]][currentFrame[indexPlus1]], tableConcat(equalChars))
 				
-				x, index = x + #sameCharArray - 1, index + #sameCharArray * 3 - 3
+				x, index = x + #equalChars - 1, index + (#equalChars - 1) * 3
 			end
 
 			x, index = x + 1, index + 3
@@ -620,17 +623,18 @@ local function draw(force)
 		index = index + indexStepOnEveryLine
 	end
 	
-	for background in pairs(changes) do
+	-- Draw grouped pixels on screen
+	for background, foregrounds in pairs(changes) do
 		GPUProxySetBackground(background)
 
-		for foreground in pairs(changes[background]) do
+		for foreground, pixels in pairs(foregrounds) do
 			if currentForeground ~= foreground then
 				GPUProxySetForeground(foreground)
 				currentForeground = foreground
 			end
 
-			for i = 1, #changes[background][foreground], 3 do
-				GPUProxySet(changes[background][foreground][i], changes[background][foreground][i + 1], changes[background][foreground][i + 2])
+			for i = 1, #pixels, 3 do
+				GPUProxySet(pixels[i], pixels[i + 1], pixels[i + 2])
 			end
 		end
 	end
@@ -688,16 +692,3 @@ return {
 	horizontalScrollBar = horizontalScrollBar,
 	customImage = customImage,
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
