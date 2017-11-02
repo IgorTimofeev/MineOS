@@ -7,6 +7,7 @@ local event = require("event")
 local lineCount = 10
 local backgroundColor = 0x0
 local lineColor = 0xFFFFFF
+local bufferWidth, bufferHeight = buffer.getResolution()
 
 -------------------------------------------------------------------------------------
 
@@ -22,8 +23,8 @@ end
  
 for i = 1, lineCount do
 	t[i] = {
-		x = math.random(1, buffer.width),
-		y = math.random(1, buffer.height * 2),
+		x = math.random(1, bufferWidth),
+		y = math.random(1, bufferHeight * 2),
 		dx = rnd(),
 		dy = rnd()
 	}
@@ -44,8 +45,8 @@ while true do
 		t[i].x = t[i].x + t[i].dx
 		t[i].y = t[i].y + t[i].dy
 
-		if t[i].x > buffer.width then t[i].dx = -1 end
-		if t[i].y > buffer.height * 2 then t[i].dy = -1 end
+		if t[i].x > bufferWidth then t[i].dx = -1 end
+		if t[i].y > bufferHeight * 2 then t[i].dy = -1 end
 		if t[i].x < 1 then t[i].dx = 1 end
 		if t[i].y < 1 then t[i].dy = 1 end
 	end
