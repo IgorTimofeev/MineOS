@@ -46,8 +46,8 @@ module.onTouch = function()
 				end
 			end
 			
-			local button = container.layout:addChild(GUI.roundedButton(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0x666666, 0xEEEEEE, localization.format))
-			button.onTouch = function()
+			local formatButton = container.layout:addChild(GUI.roundedButton(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0x666666, 0xEEEEEE, localization.format))
+			formatButton.onTouch = function()
 				local list = proxy.list("/")
 				for i = 1, #list do
 					proxy.remove(list[i])
@@ -56,7 +56,13 @@ module.onTouch = function()
 				container:delete()
 				module.onTouch()
 			end
-			button.disabled = isReadOnly
+			formatButton.disabled = isReadOnly
+
+			local duplicateButton = container.layout:addChild(GUI.roundedButton(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0x666666, 0xEEEEEE, localization.format))
+			duplicateButton.onTouch = function()
+				
+			end
+			duplicateButton.disabled = isReadOnly
 
 			local switch = container.layout:addChild(GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0x1E1E1E, 0xEEEEEE, 0xBBBBBB, localization.bootable .. ":", isBoot)).switch
 			switch.onStateChanged = function()
@@ -71,7 +77,7 @@ module.onTouch = function()
 			mainContainer:draw()
 			buffer.draw()
 		end
-		button.localPosition.x = diskContainer.width - button.width - 1
+		button.localX = diskContainer.width - button.width - 1
 
 		local width = diskContainer.width - button.width - 17
 		local x = 13
@@ -88,9 +94,9 @@ module.onTouch = function()
 
 	container.eventHandler = function(mainContainer, object, eventData)
 		if eventData[1] == "scroll" then
-			if eventData[5] < 0 or container.children[1].localPosition.y < 2 then
+			if eventData[5] < 0 or container.children[1].localY < 2 then
 				for i = 1, #container.children do
-					container.children[i].localPosition.y = container.children[i].localPosition.y + eventData[5]
+					container.children[i].localY = container.children[i].localY + eventData[5]
 				end
 
 				mainContainer:draw()

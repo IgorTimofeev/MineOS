@@ -82,7 +82,7 @@ end
 local function newSidebarItem(text, textColor, path)
 	local y = 1
 	if #window.sidebarContainer.itemsContainer.children > 0 then
-		y = window.sidebarContainer.itemsContainer.children[#window.sidebarContainer.itemsContainer.children].localPosition.y + 1
+		y = window.sidebarContainer.itemsContainer.children[#window.sidebarContainer.itemsContainer.children].localY + 1
 	end
 	local object = window.sidebarContainer.itemsContainer:addChild(GUI.object(1, y, 1, 1))
 	
@@ -237,9 +237,9 @@ window.iconField.eventHandler = function(mainContainer, object, eventData)
 
 		updateScrollBar()
 
-		local delta = window.iconField.yOffset - window.iconField.iconsContainer.children[1].localPosition.y
+		local delta = window.iconField.yOffset - window.iconField.iconsContainer.children[1].localY
 		for i = 1, #window.iconField.iconsContainer.children do
-			window.iconField.iconsContainer.children[i].localPosition.y = window.iconField.iconsContainer.children[i].localPosition.y + delta
+			window.iconField.iconsContainer.children[i].localY = window.iconField.iconsContainer.children[i].localY + delta
 		end
 
 		mainContainer:draw()
@@ -292,28 +292,28 @@ local function calculateSizes(width, height)
 	window.sidebarContainer.itemsContainer.width = window.sidebarContainer.width
 	window.sidebarContainer.itemsContainer.height = window.sidebarContainer.height
 
-	window.sidebarResizer.localPosition.x = window.sidebarContainer.width - 1
-	window.sidebarResizer.localPosition.y = math.floor(window.sidebarContainer.localPosition.y + window.sidebarContainer.height / 2 - window.sidebarResizer.height / 2 - 1)
+	window.sidebarResizer.localX = window.sidebarContainer.width - 1
+	window.sidebarResizer.localY = math.floor(window.sidebarContainer.localY + window.sidebarContainer.height / 2 - window.sidebarResizer.height / 2 - 1)
 
 	window.backgroundPanel.width = width - window.sidebarContainer.width
 	window.backgroundPanel.height = height - 4
-	window.backgroundPanel.localPosition.x = window.sidebarContainer.width + 1
-	window.backgroundPanel.localPosition.y = 4
+	window.backgroundPanel.localX = window.sidebarContainer.width + 1
+	window.backgroundPanel.localY = 4
 
-	window.statusBar.localPosition.x = window.sidebarContainer.width + 1
-	window.statusBar.localPosition.y = height
+	window.statusBar.localX = window.sidebarContainer.width + 1
+	window.statusBar.localY = height
 	window.statusBar.width = window.backgroundPanel.width
 
 	window.titlePanel.width = width
 	window.searchInput.width = math.floor(width * 0.25)
-	window.searchInput.localPosition.x = width - window.searchInput.width - 1
+	window.searchInput.localX = width - window.searchInput.width - 1
 
 	window.iconField.width = window.backgroundPanel.width
 	window.iconField.height = height + 4
-	window.iconField.localPosition.x = window.backgroundPanel.localPosition.x
-	window.iconField.localPosition.y = window.backgroundPanel.localPosition.y
+	window.iconField.localX = window.backgroundPanel.localX
+	window.iconField.localY = window.backgroundPanel.localY
 
-	window.scrollBar.localPosition.x = window.width
+	window.scrollBar.localX = window.width
 	window.scrollBar.height = window.backgroundPanel.height
 	window.scrollBar.shownValueCount = window.scrollBar.height - 1
 	

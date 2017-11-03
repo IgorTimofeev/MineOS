@@ -36,7 +36,7 @@ local function newApp(x, y, width, applicationListElement, hideDownloadButton)
 	end
 
 	app.downloadButton = app:addChild(GUI.roundedButton(1, 1, 13, 1, 0x66DB80, 0xFFFFFF, 0x339240, 0xFFFFFF, localization.download))
-	app.downloadButton.localPosition.x = app.width - app.downloadButton.width
+	app.downloadButton.localX = app.width - app.downloadButton.width
 	app.downloadButton.onTouch = function()
 		app.downloadButton.disabled = true
 		app.downloadButton.colors.disabled.background, app.downloadButton.colors.disabled.text = 0xBBBBBB, 0xFFFFFF
@@ -68,7 +68,7 @@ end
 local function addUpdateImage()
 	window.contentContainer:deleteChildren()
 	local cyka = window.contentContainer:addChild(GUI.image(math.floor(window.contentContainer.width / 2 - image.getWidth(updateImage) / 2), math.floor(window.contentContainer.height / 2 - image.getHeight(updateImage) / 2) - 1, updateImage))
-	return cyka.localPosition.y + cyka.height + 2
+	return cyka.localY + cyka.height + 2
 end
 
 local function updateApplicationList()
@@ -200,9 +200,9 @@ end
 
 window.contentContainer = window:addChild(GUI.container(3, 4, window.width - 4, window.height - 3))
 window.contentContainer.eventHandler = function(mainContainer, object, eventData)
-	if eventData[1] == "scroll" and (eventData[5] == -1 or window.contentContainer.children[1].localPosition.y <= 1) then
+	if eventData[1] == "scroll" and (eventData[5] == -1 or window.contentContainer.children[1].localY <= 1) then
 		for i = 1, #window.contentContainer.children do
-			window.contentContainer.children[i].localPosition.y = window.contentContainer.children[i].localPosition.y + eventData[5]
+			window.contentContainer.children[i].localY = window.contentContainer.children[i].localY + eventData[5]
 		end
 		mainContainer:draw()
 		buffer.draw()

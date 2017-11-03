@@ -40,8 +40,8 @@ layout:addChild(GUI.object(1, 1, 1, 1))
 
 local fromLanguageContainer = layout:addChild(GUI.container(1, 1, elementWidth, 1))
 local fromLanguageAutoDetectButton = fromLanguageContainer:addChild(GUI.adaptiveButton(1, 1, 2, 0, 0x2D2D2D, 0xBBBBBB, 0x666666, 0xBBBBBB, "Определить язык"))
-fromLanguageAutoDetectButton.localPosition.x = fromLanguageContainer.width - fromLanguageAutoDetectButton.width + 1
-local fromComboBox = fromLanguageContainer:addChild(GUI.comboBox(1, 1, fromLanguageAutoDetectButton.localPosition.x - 3, 1, 0x2D2D2D, 0xAAAAAA, 0x444444, 0x888888))
+fromLanguageAutoDetectButton.localX = fromLanguageContainer.width - fromLanguageAutoDetectButton.width + 1
+local fromComboBox = fromLanguageContainer:addChild(GUI.comboBox(1, 1, fromLanguageAutoDetectButton.localX - 3, 1, 0x2D2D2D, 0xAAAAAA, 0x444444, 0x888888))
 local fromInputField = layout:addChild(GUI.input(1, 1, elementWidth, 5, 0x2D2D2D, 0x666666, 0x444444, 0x3C3C3C, 0xBBBBBB, nil, "Введите текст", true))
 
 local switchButton = layout:addChild(GUI.adaptiveRoundedButton(1, 1, 3, 1, 0x2D2D2D, 0xBBBBBB, 0x666666, 0xBBBBBB, "←→"))

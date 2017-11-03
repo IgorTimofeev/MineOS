@@ -542,7 +542,7 @@ end
 
 --------------------------------------------------------------------------------------------------------------
 
-local function info(...)
+local function debug(...)
 	local args = {...}
 	local text = {}
 	for i = 1, #args do
@@ -640,7 +640,7 @@ local function draw(force)
 	end
 
 	changes = nil
-	-- info("clock: " .. (os.clock() - oldClock))
+	-- debug("clock: " .. (os.clock() - oldClock))
 end
 
 ------------------------------------------------------------------------------------------------------
@@ -684,6 +684,7 @@ return {
 	semiPixelCircle = semiPixelCircle,
 	semiPixelBezierCurve = semiPixelBezierCurve,
 	draw = draw,
+	debug = debug,
 
 	button = button,
 	adaptiveButton = adaptiveButton,

@@ -14,7 +14,7 @@ local xOffset, yOffset, xDrag, yDrag, points = 0, 0, 1, 1
 
 ---------------------------------------------------------------------------------------------------------
 
-window.backgroundPanel.localPosition.y, window.backgroundPanel.height = 4, window.backgroundPanel.height - 3
+window.backgroundPanel.localY, window.backgroundPanel.height = 4, window.backgroundPanel.height - 3
 local titlePanel = window:addChild(GUI.panel(1, 1, window.width, 3, 0x2D2D2D))
 local layout = window:addChild(GUI.layout(1, 1, window.width, 3, 1, 1))
 layout:setCellDirection(1, 1, GUI.directions.horizontal)
@@ -52,7 +52,7 @@ end
 local function update()
 	functionButton.text = "f(x)=" .. yDependencyString:gsub("%s+", "")
 	functionButton.width = unicode.len(functionButton.text) + 4
-	functionButton.localPosition.x = window.width - functionButton.width + 1
+	functionButton.localX = window.width - functionButton.width + 1
 	titlePanel.width = window.width - functionButton.width
 	layout.width = titlePanel.width
 

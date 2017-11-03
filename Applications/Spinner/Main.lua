@@ -73,8 +73,8 @@ for i = 1, spinnerLimit do
 end
 spinnerImage.width = image.getWidth(spinners[currentSpinner])
 spinnerImage.height = image.getHeight(spinners[currentSpinner]) 
-spinnerImage.localPosition.x = math.floor(mainContainer.width / 2 - spinnerImage.width / 2)
-spinnerImage.localPosition.y = math.floor(mainContainer.height / 2 - spinnerImage.height/ 2)
+spinnerImage.localX = math.floor(mainContainer.width / 2 - spinnerImage.width / 2)
+spinnerImage.localY = math.floor(mainContainer.height / 2 - spinnerImage.height/ 2)
 
 changeColor(spinnerHue, 100)
 buffer.flush()

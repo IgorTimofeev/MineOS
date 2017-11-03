@@ -1,6 +1,4 @@
 
------------------------------------------ Libraries -----------------------------------------
-
 require("advancedLua")
 local computer = require("computer")
 local keyboard = require("keyboard")
@@ -11,7 +9,7 @@ local color = require("color")
 local image = require("image")
 local buffer = require("doubleBuffering")
 
------------------------------------------ Constants -----------------------------------------
+-----------------------------------------------------------------------------------------------------
 
 local GUI = {}
 
@@ -93,7 +91,7 @@ GUI.colors = {
 
 ----------------------------------------- Interface objects -----------------------------------------
 
-function GUI.callMethod(method, ...)
+local function callMethod(method, ...)
 	if method then method(...) end
 end
 
@@ -178,12 +176,8 @@ end
 
 ----------------------------------------- Containers -----------------------------------------
 
-local function checkObjectParentExists(object)
-	if not object.parent then error("Object doesn't have a parent container") end
-end
-
 local function containerObjectIndexOf(object)
-	checkObjectParentExists(object)
+	if not object.parent then error("Object doesn't have a parent container") end
 
 	for objectIndex = 1, #object.parent.children do
 		if object.parent.children[objectIndex] == object then
@@ -195,7 +189,7 @@ end
 local function containerObjectMoveForward(object)
 	local objectIndex = object:indexOf()
 	if objectIndex < #object.parent.children then
-		object.parent.children[index], object.parent.children[index + 1] = swap(object.parent.children[index], object.parent.children[index + 1])
+		object.parent.children[index], object.parent.children[index + 1] = object.parent.children[index + 1], object.parent.children[index]
 	end
 	
 	return object
@@ -204,7 +198,7 @@ end
 local function containerObjectMoveBackward(object)
 	local objectIndex = object:indexOf()
 	if objectIndex > 1 then
-		object.parent.children[objectIndex], object.parent.children[objectIndex - 1] = swap(object.parent.children[objectIndex], object.parent.children[objectIndex - 1])
+		object.parent.children[objectIndex], object.parent.children[objectIndex - 1] = object.parent.children[objectIndex - 1], object.parent.children[objectIndex]
 	end
 	
 	return object
@@ -227,30 +221,26 @@ local function containerObjectMoveToBack(object)
 end
 
 local function containerObjectGetFirstParent(object)
-	if object.parent then
-		local currentParent = object.parent
-		while currentParent.parent do
-			currentParent = currentParent.parent
-		end
-
-		return currentParent
-	else
-		error("Object doesn't have any parents")
+	local currentParent = object.parent
+	while currentParent.parent do
+		currentParent = currentParent.parent
 	end
+
+	return currentParent
 end
 
 local function containerObjectSelfDelete(object)
 	table.remove(object.parent.children, containerObjectIndexOf(object))
 end
 
---------------------------------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------
 
 local function containerObjectAnimationStart(animation, duration)
 	animation.position = 0
 	animation.duration = duration
 	animation.started = true
 	animation.startUptime = computer.uptime()
-	computer.pushSignal("GUIAnimationStart")
+	computer.pushSignal("GUI", "animationStarted")
 end
 
 local function containerObjectAnimationStop(animation)
@@ -279,10 +269,8 @@ local function containerObjectAddAnimation(object, frameHandler, onFinish)
 end
 
 function GUI.addChildToContainer(container, object, atIndex)
-	object.localPosition = {
-		x = object.x,
-		y = object.y
-	}
+	object.localX = object.x
+	object.localY = object.y
 	object.indexOf = containerObjectIndexOf
 	object.moveToFront = containerObjectMoveToFront
 	object.moveToBack = containerObjectMoveToBack
@@ -321,20 +309,25 @@ local function getRectangleIntersection(R1X1, R1Y1, R1X2, R1Y2, R2X1, R2Y1, R2X2
 	end
 end
 
-function GUI.calculateChildAbsolutePosition(object)
-	object.x, object.y = object.parent.x + object.localPosition.x - 1, object.parent.y + object.localPosition.y - 1
-end
-
 function GUI.drawContainerContent(container)
 	local R1X1, R1Y1, R1X2, R1Y2 = buffer.getDrawLimit()
-	local intersectionX1, intersectionY1, intersectionX2, intersectionY2 = getRectangleIntersection(R1X1, R1Y1, R1X2, R1Y2, container.x, container.y, container.x + container.width - 1, container.y + container.height - 1)
+	local intersectionX1, intersectionY1, intersectionX2, intersectionY2 = getRectangleIntersection(
+		R1X1,
+		R1Y1,
+		R1X2,
+		R1Y2,
+		container.x,
+		container.y,
+		container.x + container.width - 1,
+		container.y + container.height - 1
+	)
 
 	if intersectionX1 then
 		buffer.setDrawLimit(intersectionX1, intersectionY1, intersectionX2, intersectionY2)
 		
 		for objectIndex = 1, #container.children do
 			if not container.children[objectIndex].hidden then
-				GUI.calculateChildAbsolutePosition(container.children[objectIndex])
+				container.children[objectIndex].x, container.children[objectIndex].y = container.x + container.children[objectIndex].localX - 1, container.y + container.children[objectIndex].localY - 1
 				container.children[objectIndex]:draw()
 			end
 		end
@@ -345,23 +338,27 @@ function GUI.drawContainerContent(container)
 	return container
 end
 
-local function containerHandler(isScreenEvent, mainContainer, currentContainer, eventData, x1, y1, x2, y2)
+local function containerHandler(isScreenEvent, mainContainer, currentContainer, eventData, intersectionX1, intersectionY1, intersectionX2, intersectionY2)
 	local breakRecursion = false
 
-	if not isScreenEvent or x1 and eventData[3] >= x1 and eventData[4] >= y1 and eventData[3] <= x2 and eventData[4] <= y2 then
+	if not isScreenEvent or intersectionX1 and eventData[3] >= intersectionX1 and eventData[4] >= intersectionY1 and eventData[3] <= intersectionX2 and eventData[4] <= intersectionY2 then
 		for i = #currentContainer.children, 1, -1 do
 			if not currentContainer.children[i].hidden then
 				if currentContainer.children[i].children then
-					local intersectionX1, intersectionY1, intersectionX2, intersectionY2 = getRectangleIntersection(
-						x1, y1, x2, y2,
+					local newIntersectionX1, newIntersectionY1, newIntersectionX2, newIntersectionY2 = getRectangleIntersection(
+						intersectionX1,
+						intersectionY1,
+						intersectionX2,
+						intersectionY2,
+
 						currentContainer.children[i].x,
 						currentContainer.children[i].y,
 						currentContainer.children[i].x + currentContainer.children[i].width - 1,
 						currentContainer.children[i].y + currentContainer.children[i].height - 1
 					)
 
-					if intersectionX1 then
-						if containerHandler(isScreenEvent, mainContainer, currentContainer.children[i], eventData, intersectionX1, intersectionY1, intersectionX2, intersectionY2) then
+					if newIntersectionX1 then
+						if containerHandler(isScreenEvent, mainContainer, currentContainer.children[i], eventData, newIntersectionX1, newIntersectionY1, newIntersectionX2, newIntersectionY2) then
 							breakRecursion = true
 							break
 						end
@@ -369,18 +366,18 @@ local function containerHandler(isScreenEvent, mainContainer, currentContainer, 
 				else
 					if isScreenEvent then
 						if currentContainer.children[i]:isClicked(eventData[3], eventData[4]) then
-							GUI.callMethod(currentContainer.children[i].eventHandler, mainContainer, currentContainer.children[i], eventData)
+							callMethod(currentContainer.children[i].eventHandler, mainContainer, currentContainer.children[i], eventData)
 							breakRecursion = true
 							break
 						end
 					else
-						GUI.callMethod(currentContainer.children[i].eventHandler, mainContainer, currentContainer.children[i], eventData)
+						callMethod(currentContainer.children[i].eventHandler, mainContainer, currentContainer.children[i], eventData)
 					end
 				end
 			end
 		end
 
-		GUI.callMethod(currentContainer.eventHandler, mainContainer, currentContainer, eventData)
+		callMethod(currentContainer.eventHandler, mainContainer, currentContainer, eventData)
 	end
 
 	if breakRecursion then
@@ -388,23 +385,21 @@ local function containerHandler(isScreenEvent, mainContainer, currentContainer, 
 	end
 end
 
-function GUI.isScreenEvent(eventType)
-	return 
-		eventType == "touch" or
-		eventType == "drag" or
-		eventType == "drop" or
-		eventType == "scroll" or
-		eventType == "double_touch"
-end
-
 local function containerStartEventHandling(container, eventHandlingDelay)
 	container.eventHandlingDelay = eventHandlingDelay
 
-	local eventData, animationIndex, needDraw
+	local eventData, animationIndex, animationNeedDraw
 	while true do
 		eventData = {event.pull(container.animations and 0 or container.eventHandlingDelay)}
+		
 		containerHandler(
-			GUI.isScreenEvent(eventData[1]),
+			(
+				eventData[1] == "touch" or
+				eventData[1] == "drag" or
+				eventData[1] == "drop" or
+				eventData[1] == "scroll" or
+				eventData[1] == "double_touch"
+			),
 			container,
 			container,
 			eventData,
@@ -418,7 +413,7 @@ local function containerStartEventHandling(container, eventHandlingDelay)
 			animationIndex = 1
 			while animationIndex <= #container.animations do
 				if container.animations[animationIndex].started then
-					needDraw = true
+					animationNeedDraw = true
 					container.animations[animationIndex].position = (computer.uptime() - container.animations[animationIndex].startUptime) / container.animations[animationIndex].duration
 					
 					if container.animations[animationIndex].position <= 1 then
@@ -429,7 +424,7 @@ local function containerStartEventHandling(container, eventHandlingDelay)
 						container.animations[animationIndex].frameHandler(container, container.animations[animationIndex].object, container.animations[animationIndex])
 						
 						if container.animations[animationIndex].onFinish then
-							needDraw = false
+							animationNeedDraw = false
 							container:draw()
 							buffer.draw()
 							container.animations[animationIndex].onFinish(container, container.animations[animationIndex].object, container.animations[animationIndex])
@@ -445,7 +440,7 @@ local function containerStartEventHandling(container, eventHandlingDelay)
 				animationIndex = animationIndex + 1
 			end
 
-			if needDraw then
+			if animationNeedDraw then
 				container:draw()
 				buffer.draw()
 			end
@@ -558,7 +553,7 @@ local function buttonEventHandler(mainContainer, object, eventData)
 			object.pressed = not object.pressed
 			mainContainer:draw()
 			buffer.draw()
-			GUI.callMethod(object.onTouch, mainContainer, object, eventData)
+			callMethod(object.onTouch, mainContainer, object, eventData)
 		else
 			object.pressed = true
 			mainContainer:draw()
@@ -567,7 +562,7 @@ local function buttonEventHandler(mainContainer, object, eventData)
 			object.pressed = false
 			mainContainer:draw()
 			buffer.draw()
-			GUI.callMethod(object.onTouch, mainContainer, object, eventData)
+			callMethod(object.onTouch, mainContainer, object, eventData)
 		end
 	end
 end
@@ -636,7 +631,7 @@ local function tabBarTabEventHandler(mainContainer, object, eventData)
 		object.parent.selectedItem = object:indexOf() - 1
 		mainContainer:draw()
 		buffer.draw()
-		GUI.callMethod(object.onTouch, mainContainer, object, eventData)
+		callMethod(object.onTouch, mainContainer, object, eventData)
 	end
 end
 
@@ -651,7 +646,7 @@ local function tabBarDraw(tabBar)
 
 	local x = math.floor(tabBar.width / 2 - totalWidth / 2)
 	for i = 2, #tabBar.children do
-		tabBar.children[i].localPosition.x = x
+		tabBar.children[i].localX = x
 		x = x + tabBar.children[i].width + tabBar.spaceBetweenTabs
 		tabBar.children[i].pressed = (i - 1) == tabBar.selectedItem
 	end
@@ -1020,8 +1015,8 @@ local function codeViewDraw(codeView)
 		codeView.scrollBars.vertical.hidden = false
 		codeView.scrollBars.vertical.colors.background, codeView.scrollBars.vertical.colors.foreground = syntax.colorScheme.scrollBarBackground, syntax.colorScheme.scrollBarForeground
 		codeView.scrollBars.vertical.minimumValue, codeView.scrollBars.vertical.maximumValue, codeView.scrollBars.vertical.value, codeView.scrollBars.vertical.shownValueCount = 1, #codeView.lines, codeView.fromLine, codeView.height
-		codeView.scrollBars.vertical.localPosition.x = codeView.width
-		codeView.scrollBars.vertical.localPosition.y = 1
+		codeView.scrollBars.vertical.localX = codeView.width
+		codeView.scrollBars.vertical.localY = 1
 		codeView.scrollBars.vertical.height = codeView.height - 1
 	else
 		codeView.scrollBars.vertical.hidden = true
@@ -1031,8 +1026,8 @@ local function codeViewDraw(codeView)
 		codeView.scrollBars.horizontal.hidden = false
 		codeView.scrollBars.horizontal.colors.background, codeView.scrollBars.horizontal.colors.foreground = syntax.colorScheme.scrollBarBackground, syntax.colorScheme.scrollBarForeground
 		codeView.scrollBars.horizontal.minimumValue, codeView.scrollBars.horizontal.maximumValue, codeView.scrollBars.horizontal.value, codeView.scrollBars.horizontal.shownValueCount = 1, codeView.maximumLineLength, codeView.fromSymbol, codeView.codeAreaWidth - 2
-		codeView.scrollBars.horizontal.localPosition.x = codeView.lineNumbersWidth + 1
-		codeView.scrollBars.horizontal.localPosition.y = codeView.height
+		codeView.scrollBars.horizontal.localX = codeView.lineNumbersWidth + 1
+		codeView.scrollBars.horizontal.localY = codeView.height
 		codeView.scrollBars.horizontal.width = codeView.codeAreaWidth - 1
 	else
 		codeView.scrollBars.horizontal.hidden = true
@@ -1090,7 +1085,7 @@ local function colorSelectorEventHandler(mainContainer, object, eventData)
 		object.pressed = false
 		mainContainer:draw()
 		buffer.draw()
-		GUI.callMethod(object.onTouch, eventData)
+		callMethod(object.onTouch, eventData)
 	end
 end
 
@@ -1265,7 +1260,7 @@ local function windowEventHandler(mainContainer, object, eventData)
 		object.lastTouchPosition.x, object.lastTouchPosition.y = eventData[3], eventData[4]
 
 		if xOffset ~= 0 or yOffset ~= 0 then
-			object.localPosition.x, object.localPosition.y = object.localPosition.x + xOffset, object.localPosition.y + yOffset
+			object.localX, object.localY = object.localX + xOffset, object.localY + yOffset
 			mainContainer:draw()
 			buffer.draw()
 		end
@@ -1310,10 +1305,10 @@ function GUI.titledWindow(x, y, width, height, title, addTitlePanel)
 
 	if addTitlePanel then
 		window.titlePanel = window:addChild(GUI.panel(1, 1, width, 1, GUI.colors.windows.title.background))
-		window.backgroundPanel.localPosition.y, window.backgroundPanel.height = 2, window.height - 1
+		window.backgroundPanel.localY, window.backgroundPanel.height = 2, window.height - 1
 	end
 	window.titleLabel = window:addChild(GUI.label(1, 1, width, height, GUI.colors.windows.title.text, title)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
-	window.actionButtons.localPosition.y = 1
+	window.actionButtons.localY = 1
 	window.actionButtons:moveToFront()
 
 	return window
@@ -1323,9 +1318,9 @@ function GUI.tabbedWindow(x, y, width, height, ...)
 	local window = GUI.filledWindow(x, y, width, height, GUI.colors.windows.backgroundPanel)
 
 	window.tabBar = window:addChild(GUI.tabBar(1, 1, window.width, 3, 2, 0, GUI.colors.windows.tabBar.default.background, GUI.colors.windows.tabBar.default.text, GUI.colors.windows.tabBar.selected.background, GUI.colors.windows.tabBar.selected.text, ...))
-	window.backgroundPanel.localPosition.y, window.backgroundPanel.height = 4, window.height - 3
+	window.backgroundPanel.localY, window.backgroundPanel.height = 4, window.height - 3
 	window.actionButtons:moveToFront()
-	window.actionButtons.localPosition.y = 2
+	window.actionButtons.localY = 2
 
 	return window
 end
@@ -1364,7 +1359,7 @@ local function dropDownMenuItemEventHandler(mainContainer, object, eventData)
 			buffer.draw()
 
 			if object.subMenu then
-				object.subMenu.y = object.parent.y + object.localPosition.y - 1
+				object.subMenu.y = object.parent.y + object.localY - 1
 				object.subMenu.x = object.parent.x + object.parent.width
 				if buffer.getWidth() - object.parent.x - object.parent.width + 1 < object.subMenu.width then
 					object.subMenu.x = object.parent.x - object.subMenu.width
@@ -1380,7 +1375,7 @@ local function dropDownMenuItemEventHandler(mainContainer, object, eventData)
 			buffer.draw()
 			mainContainer.selectedItem = object:indexOf()
 
-			GUI.callMethod(object.onTouch)
+			callMethod(object.onTouch)
 		end
 
 		mainContainer:stopEventHandling()
@@ -1396,14 +1391,14 @@ local function dropDownMenuCalculateSizes(menu)
 	menu.height = math.min(totalHeight, menu.maximumHeight, buffer.getHeight() - menu.y)
 	menu.itemsContainer.width, menu.itemsContainer.height = menu.width, menu.height
 
-	menu.nextButton.localPosition.y = menu.height
+	menu.nextButton.localY = menu.height
 	menu.prevButton.width, menu.nextButton.width = menu.width, menu.width
-	menu.prevButton.hidden = menu.itemsContainer.children[1].localPosition.y >= 1
-	menu.nextButton.hidden = menu.itemsContainer.children[#menu.itemsContainer.children].localPosition.y + menu.itemsContainer.children[#menu.itemsContainer.children].height - 1 <= menu.height
+	menu.prevButton.hidden = menu.itemsContainer.children[1].localY >= 1
+	menu.nextButton.hidden = menu.itemsContainer.children[#menu.itemsContainer.children].localY + menu.itemsContainer.children[#menu.itemsContainer.children].height - 1 <= menu.height
 end
 
 local function dropDownMenuAddItem(menu, text, disabled, shortcut, color)
-	local item = menu.itemsContainer:addChild(GUI.object(1, #menu.itemsContainer.children == 0 and 1 or menu.itemsContainer.children[#menu.itemsContainer.children].localPosition.y + menu.itemsContainer.children[#menu.itemsContainer.children].height, menu.width, menu.itemHeight))
+	local item = menu.itemsContainer:addChild(GUI.object(1, #menu.itemsContainer.children == 0 and 1 or menu.itemsContainer.children[#menu.itemsContainer.children].localY + menu.itemsContainer.children[#menu.itemsContainer.children].height, menu.width, menu.itemHeight))
 
 	item.type = GUI.dropDownMenuElementTypes.default
 	item.text = text
@@ -1427,9 +1422,9 @@ local function dropDownMenuAddSeparator(menu)
 end
 
 local function dropDownMenuScrollDown(menu)
-	if menu.itemsContainer.children[1].localPosition.y < 1 then
+	if menu.itemsContainer.children[1].localY < 1 then
 		for i = 1, #menu.itemsContainer.children do
-			menu.itemsContainer.children[i].localPosition.y = menu.itemsContainer.children[i].localPosition.y + 1
+			menu.itemsContainer.children[i].localY = menu.itemsContainer.children[i].localY + 1
 		end
 	end
 	menu:draw()
@@ -1437,9 +1432,9 @@ local function dropDownMenuScrollDown(menu)
 end
 
 local function dropDownMenuScrollUp(menu)
-	if menu.itemsContainer.children[#menu.itemsContainer.children].localPosition.y + menu.itemsContainer.children[#menu.itemsContainer.children].height - 1 > menu.height then
+	if menu.itemsContainer.children[#menu.itemsContainer.children].localY + menu.itemsContainer.children[#menu.itemsContainer.children].height - 1 > menu.height then
 		for i = 1, #menu.itemsContainer.children do
-			menu.itemsContainer.children[i].localPosition.y = menu.itemsContainer.children[i].localPosition.y - 1
+			menu.itemsContainer.children[i].localY = menu.itemsContainer.children[i].localY - 1
 		end
 	end
 	menu:draw()
@@ -1655,7 +1650,7 @@ end
 local function comboBoxEventHandler(mainContainer, object, eventData)
 	if eventData[1] == "touch" then
 		object:selectItem()
-		GUI.callMethod(object.onItemSelected, object.dropDownMenu.itemsContainer.children[object.selectedItem], eventData)
+		callMethod(object.onItemSelected, object.dropDownMenu.itemsContainer.children[object.selectedItem], eventData)
 	end
 end
 
@@ -1712,9 +1707,11 @@ end
 
 local function switchAndLabelDraw(switchAndLabel)
 	switchAndLabel.label.width = switchAndLabel.width
-	switchAndLabel.switch.localPosition.x = switchAndLabel.width - switchAndLabel.switch.width
-	GUI.calculateChildAbsolutePosition(switchAndLabel.label)
-	GUI.calculateChildAbsolutePosition(switchAndLabel.switch)
+	switchAndLabel.switch.localX = switchAndLabel.width - switchAndLabel.switch.width
+
+	switchAndLabel.label.x, switchAndLabel.label.y = switchAndLabel.x + switchAndLabel.label.localX - 1, switchAndLabel.y + switchAndLabel.label.localY - 1
+	switchAndLabel.switch.x, switchAndLabel.switch.y = switchAndLabel.x + switchAndLabel.switch.localX - 1, switchAndLabel.y + switchAndLabel.switch.localY - 1
+	
 	switchAndLabel.label:draw()
 	switchAndLabel.switch:draw()
 
@@ -1762,7 +1759,7 @@ local function sliderEventHandler(mainContainer, object, eventData)
 		object.value = object.minimumValue + (clickPosition * (object.maximumValue - object.minimumValue) / object.width)
 		mainContainer:draw()
 		buffer.draw()
-		GUI.callMethod(object.onValueChanged, object.value, eventData)
+		callMethod(object.onValueChanged, object.value, eventData)
 	end
 end
 
@@ -1817,7 +1814,7 @@ local function switchEventHandler(mainContainer, switch, eventData)
 			end,
 			function(mainContainer, switch, animation)
 				animation:delete()
-				GUI.callMethod(switch.onStateChanged)
+				callMethod(switch.onStateChanged)
 			end
 		):start(switch.animationDuration)
 	end
@@ -1844,7 +1841,7 @@ function GUI.switch(x, y, width, activeColor, passiveColor, pipeColor, state)
 	return switch
 end
 
---------------------------------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------
 
 local function brailleCanvasDraw(brailleCanvas)
 	local index, background, foreground, symbol
@@ -1900,7 +1897,7 @@ end
 ----------------------------------------- Layout object -----------------------------------------
 
 local function layoutCheckCell(layout, column, row)
-	if column < 1 or column > #layout.grid.columnSizes or row < 1 or row > #layout.grid.rowSizes then
+	if column < 1 or column > #layout.columnSizes or row < 1 or row > #layout.rowSizes then
 		error("Specified grid position (" .. tostring(column) .. "x" .. tostring(row) .. ") is out of layout grid range")
 	end
 end
@@ -1924,82 +1921,89 @@ local function layoutGetCalculatedSize(array, index, dependency)
 end
 
 local function layoutUpdate(layout)
-	local columnPercentageTotalSize, rowPercentageTotalSize = layout.width - layoutGetAbsoluteTotalSize(layout.grid.columnSizes), layout.height - layoutGetAbsoluteTotalSize(layout.grid.rowSizes)
-	for row = 1, #layout.grid.rowSizes do
-		layoutGetCalculatedSize(layout.grid.rowSizes, row, rowPercentageTotalSize)
-		for column = 1, #layout.grid.columnSizes do
-			layoutGetCalculatedSize(layout.grid.columnSizes, column, columnPercentageTotalSize)
-			layout.grid[row][column].totalWidth, layout.grid[row][column].totalHeight = 0, 0
+	local columnPercentageTotalSize, rowPercentageTotalSize = layout.width - layoutGetAbsoluteTotalSize(layout.columnSizes), layout.height - layoutGetAbsoluteTotalSize(layout.rowSizes)
+	for row = 1, #layout.rowSizes do
+		layoutGetCalculatedSize(layout.rowSizes, row, rowPercentageTotalSize)
+		for column = 1, #layout.columnSizes do
+			layoutGetCalculatedSize(layout.columnSizes, column, columnPercentageTotalSize)
+			layout.cells[row][column].totalWidth, layout.cells[row][column].totalHeight = 0, 0
 		end
 	end
 
 	-- Подготавливаем объекты к расположению и подсчитываем тотальные размеры
+	local child, layoutRow, layoutColumn, cell
 	for i = 1, #layout.children do
-		if not layout.children[i].hidden then
+		child = layout.children[i]
+		if not child.hidden then
+			layoutRow, layoutColumn = child.layoutRow, child.layoutColumn
+
 			-- Проверка на позицию в сетке
-			if layout.children[i].layoutGridPosition.row >= 1 and layout.children[i].layoutGridPosition.row <= #layout.grid.rowSizes and layout.children[i].layoutGridPosition.column >= 1 and layout.children[i].layoutGridPosition.column <= #layout.grid.columnSizes then
+			if layoutRow >= 1 and layoutRow <= #layout.rowSizes and layoutColumn >= 1 and layoutColumn <= #layout.columnSizes then
+				cell = layout.cells[layoutRow][layoutColumn]
 				-- Авто-фиттинг объектов
-				if layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].fitting.horizontal then
-					layout.children[i].width = math.round(layout.grid.columnSizes[layout.children[i].layoutGridPosition.column].calculatedSize - layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].fitting.horizontalRemove)
+				if cell.fitting.horizontal then
+					child.width = math.round(layout.columnSizes[layoutColumn].calculatedSize - cell.fitting.horizontalRemove)
 				end
-				if layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].fitting.vertical then
-					layout.children[i].height = math.round(layout.grid.rowSizes[layout.children[i].layoutGridPosition.row].calculatedSize - layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].fitting.verticalRemove)
+				if cell.fitting.vertical then
+					child.height = math.round(layout.rowSizes[layoutRow].calculatedSize - cell.fitting.verticalRemove)
 				end
 
 				-- Направление и расчет размеров
-				if layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].direction == GUI.directions.horizontal then
-					layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].totalWidth = layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].totalWidth + layout.children[i].width + layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].spacing
-					layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].totalHeight = math.max(layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].totalHeight, layout.children[i].height)
+				if cell.direction == GUI.directions.horizontal then
+					cell.totalWidth = cell.totalWidth + child.width + cell.spacing
+					cell.totalHeight = math.max(cell.totalHeight, child.height)
 				else
-					layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].totalWidth = math.max(layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].totalWidth, layout.children[i].width)
-					layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].totalHeight = layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].totalHeight + layout.children[i].height + layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].spacing
+					cell.totalWidth = math.max(cell.totalWidth, child.width)
+					cell.totalHeight = cell.totalHeight + child.height + cell.spacing
 				end
 			else
-				error("Layout child with index " .. i .. " has been assigned to cell (" .. layout.children[i].layoutGridPosition.column .. "x" .. layout.children[i].layoutGridPosition.row .. ") out of layout grid range")
+				error("Layout child with index " .. i .. " has been assigned to cell (" .. layoutColumn .. "x" .. layoutRow .. ") out of layout grid range")
 			end
 		end
 	end
 
 	-- Высчитываем позицицию объектов
 	local x, y = 1, 1
-	for row = 1, #layout.grid.rowSizes do
-		for column = 1, #layout.grid.columnSizes do
-			layout.grid[row][column].x, layout.grid[row][column].y = GUI.getAlignmentCoordinates(
+	for row = 1, #layout.rowSizes do
+		for column = 1, #layout.columnSizes do
+			local cell = layout.cells[row][column]
+			cell.x, cell.y = GUI.getAlignmentCoordinates(
 				{
 					x = x,
 					y = y,
-					width = layout.grid.columnSizes[column].calculatedSize,
-					height = layout.grid.rowSizes[row].calculatedSize,
-					alignment = layout.grid[row][column].alignment,
+					width = layout.columnSizes[column].calculatedSize,
+					height = layout.rowSizes[row].calculatedSize,
+					alignment = cell.alignment,
 				},
 				{
-					width = layout.grid[row][column].totalWidth - (layout.grid[row][column].direction == GUI.directions.horizontal and layout.grid[row][column].spacing or 0),
-					height = layout.grid[row][column].totalHeight - (layout.grid[row][column].direction == GUI.directions.vertical and layout.grid[row][column].spacing or 0),
+					width = cell.totalWidth - (cell.direction == GUI.directions.horizontal and cell.spacing or 0),
+					height = cell.totalHeight - (cell.direction == GUI.directions.vertical and cell.spacing or 0),
 				}
 			)
-			if layout.grid[row][column].margin then
-				layout.grid[row][column].x, layout.grid[row][column].y = GUI.getMarginCoordinates(layout.grid[row][column])
+			if cell.margin then
+				cell.x, cell.y = GUI.getMarginCoordinates(cell)
 			end
 
-			x = x + layout.grid.columnSizes[column].calculatedSize
+			x = x + layout.columnSizes[column].calculatedSize
 		end
 
-		x, y = 1, y + layout.grid.rowSizes[row].calculatedSize
+		x, y = 1, y + layout.rowSizes[row].calculatedSize
 	end
 
 	-- Размещаем все объекты
 	for i = 1, #layout.children do
-		if not layout.children[i].hidden then
-			if layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].direction == GUI.directions.horizontal then
-				layout.children[i].localPosition.x = math.round(layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].x)
-				layout.children[i].localPosition.y = math.round(layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].y + layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].totalHeight / 2 - layout.children[i].height / 2)
+		child = layout.children[i]
+		if not child.hidden then
+			if cell.direction == GUI.directions.horizontal then
+				child.localX = math.round(cell.x)
+				child.localY = math.round(cell.y + cell.totalHeight / 2 - child.height / 2)
 				
-				layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].x = layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].x + layout.children[i].width + layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].spacing
+				cell.x = cell.x + child.width + cell.spacing
 			else
-				layout.children[i].localPosition.x = math.round(layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].x + layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].totalWidth / 2 - layout.children[i].width / 2)
-				layout.children[i].localPosition.y = math.round(layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].y)
+				child.localX = math.round(cell.x + cell.totalWidth / 2 - child.width / 2)
+				child.localY = math.round(cell.y)
 				
-				layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].y = layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].y + layout.children[i].height + layout.grid[layout.children[i].layoutGridPosition.row][layout.children[i].layoutGridPosition.column].spacing
+				cell.y = cell.y + child.height + cell.spacing
 			end
 		end
 	end
@@ -2007,35 +2011,36 @@ end
 
 local function layoutSetCellPosition(layout, column, row, object)
 	layoutCheckCell(layout, column, row)
-	object.layoutGridPosition = {column = column, row = row}
+	object.layoutRow = row
+	object.layoutColumn = column
 
 	return object
 end
 
 local function layoutSetCellDirection(layout, column, row, direction)
 	layoutCheckCell(layout, column, row)
-	layout.grid[row][column].direction = direction
+	layout.cells[row][column].direction = direction
 
 	return layout
 end
 
 local function layoutSetCellSpacing(layout, column, row, spacing)
 	layoutCheckCell(layout, column, row)
-	layout.grid[row][column].spacing = spacing
+	layout.cells[row][column].spacing = spacing
 
 	return layout
 end
 
 local function layoutSetCellAlignment(layout, column, row, horizontalAlignment, verticalAlignment)
 	layoutCheckCell(layout, column, row)
-	layout.grid[row][column].alignment.horizontal, layout.grid[row][column].alignment.vertical = horizontalAlignment, verticalAlignment
+	layout.cells[row][column].alignment.horizontal, layout.cells[row][column].alignment.vertical = horizontalAlignment, verticalAlignment
 
 	return layout
 end
 
 local function layoutSetCellMargin(layout, column, row, horizontalMargin, verticalMargin)
 	layoutCheckCell(layout, column, row)
-	layout.grid[row][column].margin = {
+	layout.cells[row][column].margin = {
 		horizontal = horizontalMargin,
 		vertical = verticalMargin
 	}
@@ -2088,81 +2093,80 @@ local function layoutCalculatePercentageSize(changingExistent, array, index)
 end
 
 local function layoutSetColumnWidth(layout, column, sizePolicy, size)
-	layout.grid.columnSizes[column].sizePolicy, layout.grid.columnSizes[column].size = sizePolicy, size
-	layoutCalculatePercentageSize(true, layout.grid.columnSizes, column)
+	layout.columnSizes[column].sizePolicy, layout.columnSizes[column].size = sizePolicy, size
+	layoutCalculatePercentageSize(true, layout.columnSizes, column)
 
 	return layout
 end
 
 local function layoutSetRowHeight(layout, row, sizePolicy, size)
-	layout.grid.rowSizes[row].sizePolicy, layout.grid.rowSizes[row].size = sizePolicy, size
-	layoutCalculatePercentageSize(true, layout.grid.rowSizes, row)
+	layout.rowSizes[row].sizePolicy, layout.rowSizes[row].size = sizePolicy, size
+	layoutCalculatePercentageSize(true, layout.rowSizes, row)
 
 	return layout
 end
 
 local function layoutAddColumn(layout, sizePolicy, size)
-	for i = 1, #layout.grid.rowSizes do
-		table.insert(layout.grid[i], layoutNewCell())
+	for i = 1, #layout.rowSizes do
+		table.insert(layout.cells[i], layoutNewCell())
 	end
 
-	table.insert(layout.grid.columnSizes, {
+	table.insert(layout.columnSizes, {
 		sizePolicy = sizePolicy,
 		size = size
 	})
-	layoutCalculatePercentageSize(false, layout.grid.columnSizes, #layout.grid.columnSizes)
-	-- GUI.error(layout.grid.columnSizes)
+	layoutCalculatePercentageSize(false, layout.columnSizes, #layout.columnSizes)
+	-- GUI.error(layout.columnSizes)
 
 	return layout
 end
 
 local function layoutAddRow(layout, sizePolicy, size)
 	local row = {}
-	for i = 1, #layout.grid.columnSizes do
+	for i = 1, #layout.columnSizes do
 		table.insert(row, layoutNewCell())
 	end
 
-	table.insert(layout.grid, row)
-	table.insert(layout.grid.rowSizes, {
+	table.insert(layout.cells, row)
+	table.insert(layout.rowSizes, {
 		sizePolicy = sizePolicy,
 		size = size
 	})
 
-	layoutCalculatePercentageSize(false, layout.grid.rowSizes, #layout.grid.rowSizes)
-	-- GUI.error(layout.grid.rowSizes)
+	layoutCalculatePercentageSize(false, layout.rowSizes, #layout.rowSizes)
+	-- GUI.error(layout.rowSizes)
 
 	return layout
 end
 
 local function layoutRemoveRow(layout, row)
-	table.remove(layout.grid, row)
+	table.remove(layout.cells, row)
 
-	layout.grid.rowSizes[row].size = 0
-	layoutCalculatePercentageSize(false, layout.grid.rowSizes, row)
+	layout.rowSizes[row].size = 0
+	layoutCalculatePercentageSize(false, layout.rowSizes, row)
 
-	table.remove(layout.grid.rowSizes, row)
+	table.remove(layout.rowSizes, row)
 
 	return layout
 end
 
 local function layoutRemoveColumn(layout, column)
-	for i = 1, #layout.grid.rowSizes do
-		table.remove(layout.grid[i], column)
+	for i = 1, #layout.rowSizes do
+		table.remove(layout.cells[i], column)
 	end
 
-	layout.grid.columnSizes[column].size = 0
-	layoutCalculatePercentageSize(false, layout.grid.columnSizes, column)
+	layout.columnSizes[column].size = 0
+	layoutCalculatePercentageSize(false, layout.columnSizes, column)
 
-	table.remove(layout.grid.columnSizes, column)
+	table.remove(layout.columnSizes, column)
 
 	return layout
 end
 
 local function layoutSetGridSize(layout, columnCount, rowCount)
-	layout.grid = {
-		rowSizes = {},
-		columnSizes = {}
-	}
+	layout.cells = {}
+	layout.rowSizes = {}
+	layout.columnSizes = {}
 
 	local rowSize, columnSize = 1 / rowCount, 1 / columnCount
 	for i = 1, rowCount do
@@ -2182,18 +2186,18 @@ local function layoutDraw(layout)
 	
 	if layout.showGrid then
 		local x, y = layout.x, layout.y
-		for j = 1, #layout.grid.columnSizes do
-			for i = 1, #layout.grid.rowSizes do
+		for j = 1, #layout.columnSizes do
+			for i = 1, #layout.rowSizes do
 				buffer.frame(
 					math.round(x),
 					math.round(y),
-					math.round(layout.grid.columnSizes[j].calculatedSize),
-					math.round(layout.grid.rowSizes[i].calculatedSize),
+					math.round(layout.columnSizes[j].calculatedSize),
+					math.round(layout.rowSizes[i].calculatedSize),
 					0xFF0000
 				)
-				y = y + layout.grid.rowSizes[i].calculatedSize
+				y = y + layout.rowSizes[i].calculatedSize
 			end
-			x, y = x + layout.grid.columnSizes[j].calculatedSize, layout.y
+			x, y = x + layout.columnSizes[j].calculatedSize, layout.y
 		end
 	end
 end
@@ -2203,20 +2207,20 @@ local function layoutFitToChildrenSize(layout, column, row)
 
 	for i = 1, #layout.children do
 		if not layout.children[i].hidden then
-			if layout.grid[row][column].direction == GUI.directions.horizontal then
-				layout.width = layout.width + layout.children[i].width + layout.grid[row][column].spacing
+			if layout.cells[row][column].direction == GUI.directions.horizontal then
+				layout.width = layout.width + layout.children[i].width + layout.cells[row][column].spacing
 				layout.height = math.max(layout.height, layout.children[i].height)
 			else
 				layout.width = math.max(layout.width, layout.children[i].width)
-				layout.height = layout.height + layout.children[i].height + layout.grid[row][column].spacing
+				layout.height = layout.height + layout.children[i].height + layout.cells[row][column].spacing
 			end
 		end
 	end
 
-	if layout.grid[row][column].direction == GUI.directions.horizontal then
-		layout.width = layout.width - layout.grid[row][column].spacing
+	if layout.cells[row][column].direction == GUI.directions.horizontal then
+		layout.width = layout.width - layout.cells[row][column].spacing
 	else
-		layout.height = layout.height - layout.grid[row][column].spacing
+		layout.height = layout.height - layout.cells[row][column].spacing
 	end
 
 	return layout
@@ -2224,7 +2228,7 @@ end
 
 local function layoutSetCellFitting(layout, column, row, horizontal, vertical, horizontalRemove, verticalRemove )
 	layoutCheckCell(layout, column, row)
-	layout.grid[row][column].fitting = {
+	layout.cells[row][column].fitting = {
 		horizontal = horizontal,
 		vertical = vertical,
 		horizontalRemove = horizontalRemove or 0,
@@ -2235,10 +2239,9 @@ local function layoutSetCellFitting(layout, column, row, horizontal, vertical, h
 end
 
 local function layoutAddChild(layout, object, ...)
-	GUI.addChildToContainer(layout, object, ...).layoutGridPosition = {
-		column = layout.defaultColumn,
-		row = layout.defaultRow
-	}
+	object.layoutRow = layout.defaultRow
+	object.layoutColumn = layout.defaultColumn
+	GUI.addChildToContainer(layout, object, ...)
 
 	return object
 end
@@ -2275,13 +2278,13 @@ function GUI.layout(x, y, width, height, columnCount, rowCount)
 	return layout
 end
 
---------------------------------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------
 
 local function filesystemDialogDraw(filesystemDialog)
 	if filesystemDialog.extensionComboBox.hidden then
-		filesystemDialog.input.width = filesystemDialog.cancelButton.localPosition.x - 4
+		filesystemDialog.input.width = filesystemDialog.cancelButton.localX - 4
 	else
-		filesystemDialog.input.width = filesystemDialog.extensionComboBox.localPosition.x - 3
+		filesystemDialog.input.width = filesystemDialog.extensionComboBox.localX - 3
 	end
 
 	if filesystemDialog.IOMode == GUI.filesystemModes.save then
@@ -2325,7 +2328,7 @@ end
 local function filesystemDialogAddExtensionFilter(filesystemDialog, extension)
 	filesystemDialog.extensionComboBox:addItem(extension)
 	filesystemDialog.extensionComboBox.width = math.max(filesystemDialog.extensionComboBox.width, unicode.len(extension) + 3)
-	filesystemDialog.extensionComboBox.localPosition.x = filesystemDialog.cancelButton.localPosition.x - filesystemDialog.extensionComboBox.width - 2
+	filesystemDialog.extensionComboBox.localX = filesystemDialog.cancelButton.localX - filesystemDialog.extensionComboBox.width - 2
 	filesystemDialog.filesystemTree:addExtensionFilter(extension)
 
 	filesystemDialog:setMode(filesystemDialog.IOMode, filesystemDialog.filesystemMode)
@@ -2338,8 +2341,8 @@ function GUI.filesystemDialog(x, y, width, height, submitButtonText, cancelButto
 	
 	filesystemDialog.cancelButton = filesystemDialog:addChild(GUI.adaptiveRoundedButton(1, height - 1, 2, 0, 0xE1E1E1, 0x3C3C3C, 0x3C3C3C, 0xE1E1E1, cancelButtonText))
 	filesystemDialog.submitButton = filesystemDialog:addChild(GUI.adaptiveRoundedButton(1, height - 1, 2, 0, 0x3C3C3C, 0xE1E1E1, 0xE1E1E1, 0x3C3C3C, submitButtonText))
-	filesystemDialog.submitButton.localPosition.x = filesystemDialog.width - filesystemDialog.submitButton.width - 1
-	filesystemDialog.cancelButton.localPosition.x = filesystemDialog.submitButton.localPosition.x - filesystemDialog.cancelButton.width - 2
+	filesystemDialog.submitButton.localX = filesystemDialog.width - filesystemDialog.submitButton.width - 1
+	filesystemDialog.cancelButton.localX = filesystemDialog.submitButton.localX - filesystemDialog.cancelButton.width - 2
 
 	filesystemDialog.extensionComboBox = filesystemDialog:addChild(GUI.comboBox(1, height - 1, 1, 1, 0xE1E1E1, 0x666666, 0xC3C3C3, 0x888888))
 	filesystemDialog.extensionComboBox.hidden = true
@@ -2361,7 +2364,7 @@ end
 local function filesystemDialogShow(filesystemDialog)
 	filesystemDialog:addAnimation(
 		function(mainContainer, object, animation)
-			object.localPosition.y = math.floor(1 + (1.0 - animation.position) * (-object.height))
+			object.localY = math.floor(1 + (1.0 - animation.position) * (-object.height))
 		end,
 		function(mainContainer, switch, animation)
 			animation:delete()
@@ -2371,15 +2374,15 @@ local function filesystemDialogShow(filesystemDialog)
 	return filesystemDialog
 end
 
---------------------------------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------
 
 function GUI.addFilesystemDialogToContainer(parentContainer, ...)
 	local container = parentContainer:addChild(GUI.container(1, 1, parentContainer.width, parentContainer.height))
 	container:addChild(GUI.object(1, 1, container.width, container.height))
 	
 	local filesystemDialog = container:addChild(GUI.filesystemDialog(1, 1, math.floor(container.width * 0.35), math.floor(container.height * 0.8), ...))
-	filesystemDialog.localPosition.x = math.floor(container.width / 2 - filesystemDialog.width / 2)
-	filesystemDialog.localPosition.y = -filesystemDialog.height
+	filesystemDialog.localX = math.floor(container.width / 2 - filesystemDialog.width / 2)
+	filesystemDialog.localY = -filesystemDialog.height
 
 	local function onAnyTouch()
 		local firstParent = filesystemDialog:getFirstParent()
@@ -2390,7 +2393,7 @@ function GUI.addFilesystemDialogToContainer(parentContainer, ...)
 
 	filesystemDialog.cancelButton.onTouch = function()
 		onAnyTouch()
-		GUI.callMethod(filesystemDialog.onCancel)
+		callMethod(filesystemDialog.onCancel)
 	end
 
 	filesystemDialog.submitButton.onTouch = function()
@@ -2408,7 +2411,7 @@ function GUI.addFilesystemDialogToContainer(parentContainer, ...)
 			end
 		end
 
-		GUI.callMethod(filesystemDialog.onSubmit, path)
+		callMethod(filesystemDialog.onSubmit, path)
 	end
 
 	filesystemDialog.show = filesystemDialogShow
@@ -2416,7 +2419,7 @@ function GUI.addFilesystemDialogToContainer(parentContainer, ...)
 	return filesystemDialog
 end
 
---------------------------------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------
 
 local function filesystemChooserDraw(object)
 	local tipWidth = object.height * 2 - 1
@@ -2464,7 +2467,7 @@ local function filesystemChooserEventHandler(mainContainer, object, eventData)
 
 			mainContainer:draw()
 			buffer.draw()
-			GUI.callMethod(object.onSubmit, object.path)
+			callMethod(object.onSubmit, object.path)
 		end
 
 		filesystemDialog:show()
@@ -2499,7 +2502,7 @@ function GUI.filesystemChooser(x, y, width, height, backgroundColor, textColor, 
 	return object
 end
 
-------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------
 
 local function resizerDraw(object)
 	local horizontalMode = object.width >= object.height
@@ -2653,7 +2656,7 @@ local function scrollBarEventHandler(mainContainer, object, eventData)
 
 	if eventData[1] == "touch" or eventData[1] == "drag" or eventData[1] == "scroll" then
 		object.value = newValue
-		GUI.callMethod(object.onTouch, eventData)
+		callMethod(object.onTouch, eventData)
 		mainContainer:draw()
 		buffer.draw()
 	end
@@ -2707,7 +2710,7 @@ local function treeDraw(tree)
 			buffer.text(tree.x + tree.items[i].offset, y, arrowColor, tree.expandedItems[tree.items[i].definition] and "▽" or "▷")
 		end
 
-		buffer.text(tree.x + tree.items[i].offset + 2, y, textColor, unicode.sub(text .. fs.name(tree.items[i].name), 1, textLimit - tree.items[i].offset - 2))
+		buffer.text(tree.x + tree.items[i].offset + 2, y, textColor, unicode.sub(text .. tree.items[i].name, 1, textLimit - tree.items[i].offset - 2))
 
 		y = y + 1
 		if y > yEnd then break end
@@ -2751,7 +2754,7 @@ local function treeEventHandler(mainContainer, tree, eventData)
 					tree.expandedItems[tree.items[i].definition] = true
 				end
 
-				GUI.callMethod(tree.onItemExpanded, tree.selectedItem, eventData)
+				callMethod(tree.onItemExpanded, tree.selectedItem, eventData)
 			else
 				if
 					(
@@ -2763,7 +2766,7 @@ local function treeEventHandler(mainContainer, tree, eventData)
 					)
 				then
 					tree.selectedItem = tree.items[i].definition
-					GUI.callMethod(tree.onItemSelected, tree.selectedItem, eventData)
+					callMethod(tree.onItemSelected, tree.selectedItem, eventData)
 				end
 			end
 
@@ -2853,7 +2856,7 @@ local function filesystemTreeUpdateFileListRecursively(tree, path, offset)
 
 	if tree.showMode == GUI.filesystemModes.both or tree.showMode == GUI.filesystemModes.directory then
 		for i = 1, #expandables do
-			tree:addItem(expandables[i], path .. expandables[i], offset, true)
+			tree:addItem(fs.name(expandables[i]), path .. expandables[i], offset, true)
 
 			if tree.expandedItems[path .. expandables[i]] then
 				filesystemTreeUpdateFileListRecursively(tree, path .. expandables[i], offset + 2)
@@ -3284,7 +3287,7 @@ local function inputEventHandler(mainContainer, input, mainEventData)
 			end
 		end
 		
-		GUI.callMethod(input.onInputFinished, mainContainer, input, mainEventData, input.text)
+		callMethod(input.onInputFinished, mainContainer, input, mainEventData, input.text)
 		
 		mainContainer:draw()
 		buffer.draw()
@@ -3337,7 +3340,7 @@ function GUI.input(x, y, width, height, backgroundColor, textColor, placeholderT
 	return input
 end
 
---------------------------------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------
 
 local function autoCompleteDraw(object)
 	local y, yEnd = object.y, object.y + object.height - 1
@@ -3389,14 +3392,14 @@ local function autoCompleteEventHandler(mainContainer, object, eventData)
 		mainContainer:draw()
 		buffer.draw()
 
-		GUI.callMethod(object.onItemSelected, mainContainer, object, eventData, object.selectedItem)
+		callMethod(object.onItemSelected, mainContainer, object, eventData, object.selectedItem)
 	elseif eventData[1] == "scroll" then
 		autoCompleteScroll(mainContainer, object, -eventData[5])
 		mainContainer:draw()
 		buffer.draw()
 	elseif eventData[1] == "key_down" then
 		if eventData[4] == 28 then
-			GUI.callMethod(object.onItemSelected, mainContainer, object, eventData, object.selectedItem)
+			callMethod(object.onItemSelected, mainContainer, object, eventData, object.selectedItem)
 		elseif eventData[4] == 200 then
 			object.selectedItem = object.selectedItem - 1
 			if object.selectedItem < 1 then
@@ -3495,7 +3498,7 @@ function GUI.autoComplete(x, y, width, maximumHeight, backgroundColor, textColor
 	return object
 end
 
---------------------------------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------
 
 
 -- buffer.clear()
@@ -3518,7 +3521,7 @@ end
 -- mainContainer:startEventHandling()
 
 
---------------------------------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------
 
 return GUI
 

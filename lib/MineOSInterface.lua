@@ -176,16 +176,16 @@ local function iconEventHandler(mainContainer, object, eventData)
 	elseif eventData[1] == "double_touch" and object:isClicked(eventData[3], eventData[4]) and eventData[5] == 0 then
 		object.parent.parent.onDoubleClick(object, eventData)
 	elseif eventData[1] == "drag" and object.parent.parent.iconConfigEnabled and object.lastTouchPosition then
-		object.localPosition.x = object.localPosition.x + eventData[3] - object.lastTouchPosition.x
-		object.localPosition.y = object.localPosition.y + eventData[4] - object.lastTouchPosition.y
+		object.localX = object.localX + eventData[3] - object.lastTouchPosition.x
+		object.localY = object.localY + eventData[4] - object.lastTouchPosition.y
 		object.lastTouchPosition.x, object.lastTouchPosition.y = eventData[3], eventData[4]
 
 		mainContainer:draw()
 		buffer.draw()
 	elseif eventData[1] == "drop" and object.parent.parent.iconConfigEnabled then
 		object.parent.parent.iconConfig[object.name .. (object.isDirectory and "/" or "")] = {
-			x = object.localPosition.x,
-			y = object.localPosition.y
+			x = object.localX,
+			y = object.localY
 		}
 		object.parent.parent:saveIconConfig()
 		object.lastTouchPosition = nil
@@ -377,13 +377,13 @@ end
 local function getCykaIconPosition(iconField)
 	local y = iconField.yOffset
 	for i = 1, #iconField.iconsContainer.children do
-		y = math.max(y, iconField.iconsContainer.children[i].localPosition.y)
+		y = math.max(y, iconField.iconsContainer.children[i].localY)
 	end
 
 	local x = iconField.xOffset
 	for i = 1, #iconField.iconsContainer.children do
-		if iconField.iconsContainer.children[i].localPosition.y == y then
-			x = math.max(x, iconField.iconsContainer.children[i].localPosition.x)
+		if iconField.iconsContainer.children[i].localY == y then
+			x = math.max(x, iconField.iconsContainer.children[i].localX)
 		end
 	end
 
@@ -1181,7 +1181,7 @@ function MineOSInterface.addWindow(window)
 		end
 	end
 	if lastIndex then
-		window.localPosition.x, window.localPosition.y = MineOSInterface.mainContainer.windowsContainer.children[lastIndex].localPosition.x + 4, MineOSInterface.mainContainer.windowsContainer.children[lastIndex].localPosition.y + 2
+		window.localX, window.localY = MineOSInterface.mainContainer.windowsContainer.children[lastIndex].localX + 4, MineOSInterface.mainContainer.windowsContainer.children[lastIndex].localY + 2
 	end
 
 	window.resize = windowResize
@@ -1212,17 +1212,17 @@ function MineOSInterface.addWindow(window)
 	
 	window.maximize = function(window)
 		if window.maximized then
-			window.localPosition.x = window.oldGeometry.x
-			window.localPosition.y = window.oldGeometry.y
+			window.localX = window.oldGeometry.x
+			window.localY = window.oldGeometry.y
 			window:resize(window.oldGeometry.width, window.oldGeometry.height)
 		else
 			window.oldGeometry = {
-				x = window.localPosition.x,
-				y = window.localPosition.y,
+				x = window.localX,
+				y = window.localY,
 				width = window.width,
 				height = window.height
 			}
-			window.localPosition.x, window.localPosition.y = 1, 1
+			window.localX, window.localY = 1, 1
 			window:resize(window.parent.width, window.parent.height)
 		end
 

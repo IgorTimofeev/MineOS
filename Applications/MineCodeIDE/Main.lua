@@ -251,21 +251,21 @@ local function calculateSizes()
 	mainContainer.width, mainContainer.height = buffer.getResolution()
 
 	if mainContainer.leftTreeView.hidden then
-		mainContainer.codeView.localPosition.x, mainContainer.codeView.width = 1, mainContainer.width
-		mainContainer.bottomToolBar.localPosition.x, mainContainer.bottomToolBar.width = mainContainer.codeView.localPosition.x, mainContainer.codeView.width
+		mainContainer.codeView.localX, mainContainer.codeView.width = 1, mainContainer.width
+		mainContainer.bottomToolBar.localX, mainContainer.bottomToolBar.width = mainContainer.codeView.localX, mainContainer.codeView.width
 	else
-		mainContainer.codeView.localPosition.x, mainContainer.codeView.width = mainContainer.leftTreeView.width + 1, mainContainer.width - mainContainer.leftTreeView.width
-		mainContainer.bottomToolBar.localPosition.x, mainContainer.bottomToolBar.width = mainContainer.codeView.localPosition.x, mainContainer.codeView.width
+		mainContainer.codeView.localX, mainContainer.codeView.width = mainContainer.leftTreeView.width + 1, mainContainer.width - mainContainer.leftTreeView.width
+		mainContainer.bottomToolBar.localX, mainContainer.bottomToolBar.width = mainContainer.codeView.localX, mainContainer.codeView.width
 	end
 
 	if mainContainer.topToolBar.hidden then
-		mainContainer.leftTreeView.localPosition.y, mainContainer.leftTreeView.height = 2, mainContainer.height - 1
-		mainContainer.codeView.localPosition.y, mainContainer.codeView.height = 2, mainContainer.height - 1
-		mainContainer.errorContainer.localPosition.y = 2
+		mainContainer.leftTreeView.localY, mainContainer.leftTreeView.height = 2, mainContainer.height - 1
+		mainContainer.codeView.localY, mainContainer.codeView.height = 2, mainContainer.height - 1
+		mainContainer.errorContainer.localY = 2
 	else
-		mainContainer.leftTreeView.localPosition.y, mainContainer.leftTreeView.height = 5, mainContainer.height - 4
-		mainContainer.codeView.localPosition.y, mainContainer.codeView.height = 5, mainContainer.height - 4
-		mainContainer.errorContainer.localPosition.y = 5
+		mainContainer.leftTreeView.localY, mainContainer.leftTreeView.height = 5, mainContainer.height - 4
+		mainContainer.codeView.localY, mainContainer.codeView.height = 5, mainContainer.height - 4
+		mainContainer.errorContainer.localY = 5
 	end
 
 	if mainContainer.bottomToolBar.hidden then
@@ -274,30 +274,30 @@ local function calculateSizes()
 		mainContainer.codeView.height = mainContainer.codeView.height - 3
 	end
 
-	mainContainer.leftTreeViewResizer.localPosition.x = mainContainer.leftTreeView.width - 2
-	mainContainer.leftTreeViewResizer.localPosition.y = math.floor(mainContainer.leftTreeView.localPosition.y + mainContainer.leftTreeView.height / 2 - mainContainer.leftTreeViewResizer.height / 2)
+	mainContainer.leftTreeViewResizer.localX = mainContainer.leftTreeView.width - 2
+	mainContainer.leftTreeViewResizer.localY = math.floor(mainContainer.leftTreeView.localY + mainContainer.leftTreeView.height / 2 - mainContainer.leftTreeViewResizer.height / 2)
 
 	mainContainer.settingsContainer.width, mainContainer.settingsContainer.height = mainContainer.width, mainContainer.height
 	mainContainer.settingsContainer.backgroundPanel.width, mainContainer.settingsContainer.backgroundPanel.height = mainContainer.settingsContainer.width, mainContainer.settingsContainer.height
 
-	mainContainer.bottomToolBar.localPosition.y = mainContainer.height - 2
-	mainContainer.bottomToolBar.findButton.localPosition.x = mainContainer.bottomToolBar.width - mainContainer.bottomToolBar.findButton.width + 1
-	mainContainer.bottomToolBar.inputField.width = mainContainer.bottomToolBar.width - mainContainer.bottomToolBar.inputField.localPosition.x - mainContainer.bottomToolBar.findButton.width + 1
+	mainContainer.bottomToolBar.localY = mainContainer.height - 2
+	mainContainer.bottomToolBar.findButton.localX = mainContainer.bottomToolBar.width - mainContainer.bottomToolBar.findButton.width + 1
+	mainContainer.bottomToolBar.inputField.width = mainContainer.bottomToolBar.width - mainContainer.bottomToolBar.inputField.localX - mainContainer.bottomToolBar.findButton.width + 1
 
 	mainContainer.topToolBar.width, mainContainer.topToolBar.backgroundPanel.width = mainContainer.width, mainContainer.width
 	mainContainer.titleTextBox.width = math.floor(mainContainer.topToolBar.width * 0.32)
-	mainContainer.titleTextBox.localPosition.x = math.floor(mainContainer.topToolBar.width / 2 - mainContainer.titleTextBox.width / 2)
-	mainContainer.runButton.localPosition.x = mainContainer.titleTextBox.localPosition.x - mainContainer.runButton.width - 2
-	mainContainer.toggleSyntaxHighlightingButton.localPosition.x = mainContainer.runButton.localPosition.x - mainContainer.toggleSyntaxHighlightingButton.width - 2
-	mainContainer.addBreakpointButton.localPosition.x = mainContainer.toggleSyntaxHighlightingButton.localPosition.x - mainContainer.addBreakpointButton.width - 2
-	mainContainer.toggleLeftToolBarButton.localPosition.x = mainContainer.titleTextBox.localPosition.x + mainContainer.titleTextBox.width + 2
-	mainContainer.toggleBottomToolBarButton.localPosition.x = mainContainer.toggleLeftToolBarButton.localPosition.x + mainContainer.toggleLeftToolBarButton.width + 2
-	mainContainer.toggleTopToolBarButton.localPosition.x = mainContainer.toggleBottomToolBarButton.localPosition.x + mainContainer.toggleBottomToolBarButton.width + 2
+	mainContainer.titleTextBox.localX = math.floor(mainContainer.topToolBar.width / 2 - mainContainer.titleTextBox.width / 2)
+	mainContainer.runButton.localX = mainContainer.titleTextBox.localX - mainContainer.runButton.width - 2
+	mainContainer.toggleSyntaxHighlightingButton.localX = mainContainer.runButton.localX - mainContainer.toggleSyntaxHighlightingButton.width - 2
+	mainContainer.addBreakpointButton.localX = mainContainer.toggleSyntaxHighlightingButton.localX - mainContainer.addBreakpointButton.width - 2
+	mainContainer.toggleLeftToolBarButton.localX = mainContainer.titleTextBox.localX + mainContainer.titleTextBox.width + 2
+	mainContainer.toggleBottomToolBarButton.localX = mainContainer.toggleLeftToolBarButton.localX + mainContainer.toggleLeftToolBarButton.width + 2
+	mainContainer.toggleTopToolBarButton.localX = mainContainer.toggleBottomToolBarButton.localX + mainContainer.toggleBottomToolBarButton.width + 2
 
-	mainContainer.RAMUsageProgressBar.localPosition.x = mainContainer.toggleTopToolBarButton.localPosition.x + mainContainer.toggleTopToolBarButton.width + 3
-	mainContainer.RAMUsageProgressBar.width = mainContainer.topToolBar.width - mainContainer.RAMUsageProgressBar.localPosition.x - 3
+	mainContainer.RAMUsageProgressBar.localX = mainContainer.toggleTopToolBarButton.localX + mainContainer.toggleTopToolBarButton.width + 3
+	mainContainer.RAMUsageProgressBar.width = mainContainer.topToolBar.width - mainContainer.RAMUsageProgressBar.localX - 3
 
-	mainContainer.errorContainer.localPosition.x, mainContainer.errorContainer.width = mainContainer.titleTextBox.localPosition.x, mainContainer.titleTextBox.width
+	mainContainer.errorContainer.localX, mainContainer.errorContainer.width = mainContainer.titleTextBox.localX, mainContainer.titleTextBox.width
 	mainContainer.errorContainer.backgroundPanel.width, mainContainer.errorContainer.errorTextBox.width = mainContainer.errorContainer.width, mainContainer.errorContainer.width - 4
 
 	mainContainer.topMenu.width = mainContainer.width
@@ -366,9 +366,9 @@ local function calculateErrorContainerSizeAndBeep(hideBreakpointButtons, frequen
 	mainContainer.errorContainer.breakpointExitButton.hidden, mainContainer.errorContainer.breakpointContinueButton.hidden = hideBreakpointButtons, hideBreakpointButtons
 	if not hideBreakpointButtons then
 		mainContainer.errorContainer.height = mainContainer.errorContainer.height + 1
-		mainContainer.errorContainer.breakpointExitButton.localPosition.y, mainContainer.errorContainer.breakpointContinueButton.localPosition.y = mainContainer.errorContainer.height, mainContainer.errorContainer.height
+		mainContainer.errorContainer.breakpointExitButton.localY, mainContainer.errorContainer.breakpointContinueButton.localY = mainContainer.errorContainer.height, mainContainer.errorContainer.height
 		mainContainer.errorContainer.breakpointExitButton.width = math.floor(mainContainer.errorContainer.width / 2)
-		mainContainer.errorContainer.breakpointContinueButton.localPosition.x, mainContainer.errorContainer.breakpointContinueButton.width = mainContainer.errorContainer.breakpointExitButton.width + 1, mainContainer.errorContainer.width - mainContainer.errorContainer.breakpointExitButton.width
+		mainContainer.errorContainer.breakpointContinueButton.localX, mainContainer.errorContainer.breakpointContinueButton.width = mainContainer.errorContainer.breakpointExitButton.width + 1, mainContainer.errorContainer.width - mainContainer.errorContainer.breakpointExitButton.width
 	end
 
 	updateTitle()

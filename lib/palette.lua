@@ -76,9 +76,9 @@ end
 --------------------------------------------------------------------------------------------------------------
 
 local function createCrestsCoordinates(window)
-	window.bigCrest.localPosition.x = math.floor((window.bigRainbow.width - 1) * window.color.hsb.saturation / 100) - 1
-	window.bigCrest.localPosition.y = math.floor((window.bigRainbow.height - 1) - (window.bigRainbow.height - 1) * window.color.hsb.brightness / 100)
-	window.miniCrest.localPosition.y = math.floor(window.color.hsb.hue / 360 * window.miniRainbow.height)
+	window.bigCrest.localX = math.floor((window.bigRainbow.width - 1) * window.color.hsb.saturation / 100) - 1
+	window.bigCrest.localY = math.floor((window.bigRainbow.height - 1) - (window.bigRainbow.height - 1) * window.color.hsb.brightness / 100)
+	window.miniCrest.localY = math.floor(window.color.hsb.hue / 360 * window.miniRainbow.height)
 end
 
 local function drawBigCrestPixel(window, x, y, symbol)
@@ -113,7 +113,7 @@ function palette.window(x, y, startColor)
 	end
 	window.bigRainbow.eventHandler = function(mainContainer, object, eventData)
 		if eventData[1] == "touch" or eventData[1] == "drag" and window.bigRainbow:isClicked(eventData[3], eventData[4]) then
-			window.bigCrest.localPosition.x, window.bigCrest.localPosition.y = eventData[3] - window.x - 1, eventData[4] - window.y
+			window.bigCrest.localX, window.bigCrest.localY = eventData[3] - window.x - 1, eventData[4] - window.y
 			switchColorFromHex(window, select(3, component.gpu.get(eventData[3], eventData[4])))
 			mainContainer:draw()
 			buffer.draw()
@@ -129,7 +129,7 @@ function palette.window(x, y, startColor)
 	end
 	window.miniRainbow.eventHandler = function(mainContainer, object, eventData)
 		if eventData[1] == "touch" or eventData[1] == "drag" then
-			window.miniCrest.localPosition.y = eventData[4] - window.y + 1
+			window.miniCrest.localY = eventData[4] - window.y + 1
 			switchColorFromHsb(window, (eventData[4] - window.miniRainbow.y) * 360 / window.miniRainbow.height, window.color.hsb.saturation, window.color.hsb.brightness)
 			refreshBigRainbow(window)
 			mainContainer:draw()

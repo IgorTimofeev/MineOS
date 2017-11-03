@@ -40,7 +40,7 @@ local scrollBar, titleTextBox
 
 local mainContainer, window = MineOSInterface.addWindow(GUI.filledWindow(nil, nil, 98, 25, colors.background))
 
-window.backgroundPanel.localPosition.x, window.backgroundPanel.localPosition.y = 11, 5
+window.backgroundPanel.localX, window.backgroundPanel.localY = 11, 5
 window.backgroundPanel.width, window.backgroundPanel.height = window.width - 10, window.height - 4
 
 local function status()
@@ -215,8 +215,8 @@ end
 window:addChild(GUI.panel(1, 1, window.width, 3, 0x3C3C3C)):moveToBack()
 
 local byteField = window:addChild(newByteField(13, 6, 64, 20, 4, 2, false))
-local charField = window:addChild(newByteField(byteField.localPosition.x + byteField.width + 3, 6, 16, 20, 1, 2, true))
-local separator = window:addChild(GUI.object(byteField.localPosition.x + byteField.width, 5, 1, 21))
+local charField = window:addChild(newByteField(byteField.localX + byteField.width + 3, 6, 16, 20, 1, 2, true))
+local separator = window:addChild(GUI.object(byteField.localX + byteField.width, 5, 1, 21))
 separator.draw = function(object)
 	for i = object.y, object.y + object.height - 1 do
 		buffer.text(object.x, i, colors.separator, "│")
@@ -286,12 +286,12 @@ titleTextBox = window:addChild(
 		1, 1, 0
 	)
 )
-titleTextBox.localPosition.x = math.floor(window.width / 2 - titleTextBox.width / 2)
+titleTextBox.localX = math.floor(window.width / 2 - titleTextBox.width / 2)
 titleTextBox:setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
 titleTextBox.eventHandler = nil
 
-local saveFileButton = window:addChild(GUI.adaptiveRoundedButton(titleTextBox.localPosition.x - 11, 2, 2, 0, colors.panel, colors.panelSelecitonText, colors.panelSelecitonText, colors.panel, "Save"))
-local openFileButton = window:addChild(GUI.adaptiveRoundedButton(saveFileButton.localPosition.x - 11, 2, 2, 0, colors.panel, colors.panelSelecitonText, colors.panelSelecitonText, colors.panel, "Open"))
+local saveFileButton = window:addChild(GUI.adaptiveRoundedButton(titleTextBox.localX - 11, 2, 2, 0, colors.panel, colors.panelSelecitonText, colors.panelSelecitonText, colors.panel, "Save"))
+local openFileButton = window:addChild(GUI.adaptiveRoundedButton(saveFileButton.localX - 11, 2, 2, 0, colors.panel, colors.panelSelecitonText, colors.panelSelecitonText, colors.panel, "Open"))
 
 ------------------------------------------------------------------------------------------------------------------
 
@@ -348,7 +348,7 @@ saveFileButton.onTouch = function()
 	end
 end
 
-window.actionButtons.localPosition.y = 2
+window.actionButtons.localY = 2
 window.actionButtons.maximize.onTouch = function()
 	window.height = window.parent.height
 	byteField.height = window.height - 6
@@ -358,7 +358,7 @@ window.actionButtons.maximize.onTouch = function()
 	verticalCounter.height = window.backgroundPanel.height + 1
 	separator.height = byteField.height + 2
 
-	window.localPosition.y = 1
+	window.localY = 1
 
 	mainContainer:draw()
 	buffer.draw()

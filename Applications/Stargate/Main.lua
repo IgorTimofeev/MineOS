@@ -143,7 +143,7 @@ end
 
 mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x1E1E1E))
 mainContainer.SGImage = mainContainer:addChild(GUI.image(1, 1, image.load(resources .. "OffOff.pic")))
-mainContainer.chevronsContainer = mainContainer:addChild(GUI.container(mainContainer.SGImage.localPosition.x, mainContainer.SGImage.localPosition.y, mainContainer.SGImage.width, mainContainer.SGImage.height))
+mainContainer.chevronsContainer = mainContainer:addChild(GUI.container(mainContainer.SGImage.localX, mainContainer.SGImage.localY, mainContainer.SGImage.width, mainContainer.SGImage.height))
 mainContainer.chevrons = {}
 addChevron(13, 30)
 addChevron(8, 17)
@@ -156,10 +156,10 @@ addChevron(79, 30)
 local width, height = 32, 37
 local x, y = mainContainer.width - width - 3, math.floor(mainContainer.height / 2 - height / 2)
 
-mainContainer.SGImage.localPosition.x, mainContainer.SGImage.localPosition.y = math.floor((x - 2) / 2 - image.getWidth(mainContainer.SGImage.image) / 2), mainContainer.height - image.getHeight(mainContainer.SGImage.image) + 1
+mainContainer.SGImage.localX, mainContainer.SGImage.localY = math.floor((x - 2) / 2 - image.getWidth(mainContainer.SGImage.image) / 2), mainContainer.height - image.getHeight(mainContainer.SGImage.image) + 1
 mainContainer.chevronsContainer.localPosition = mainContainer.SGImage.localPosition
 
-mainContainer:addChild(newThing(mainContainer.SGImage.localPosition.x + mainContainer.SGImage.width, y, mainContainer.width - mainContainer.SGImage.localPosition.x - mainContainer.SGImage.width - width - 7,  height))
+mainContainer:addChild(newThing(mainContainer.SGImage.localX + mainContainer.SGImage.width, y, mainContainer.width - mainContainer.SGImage.localX - mainContainer.SGImage.width - width - 7,  height))
 
 mainContainer:addChild(GUI.label(x, y, width, 1, 0xEEEEEE, "Stargate " .. stargate.localAddress())):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); y = y + 1
 mainContainer.connectedToLabel = mainContainer:addChild(GUI.label(x, y, width, 1, 0x555555, "(Not connected)")):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); y = y + 2
