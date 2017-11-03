@@ -288,7 +288,7 @@ end
 
 stages[5] = function()
 	addImageToStage(3, images.OK)
-	stageContainer.children[#stageContainer.children].localPosition.x = stageContainer.children[#stageContainer.children].localPosition.x + 3
+	stageContainer.children[#stageContainer.children].localX = stageContainer.children[#stageContainer.children].localX + 3
 	
 	stageContainer:addChild(GUI.label(1, 22, stageContainer.width, 1, 0x666666, localization.needToReboot)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
 	stageContainer:addChild(GUI.adaptiveRoundedButton(math.floor(stageContainer.width / 2 - (unicode.len(localization.reboot) + 4) / 2), stageContainer.height - 4, 2, 1, 0xAAAAAA, 0xDDDDDD, 0x777777, 0xDDDDDD, localization.reboot)).onTouch = function()
