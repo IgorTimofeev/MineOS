@@ -12,7 +12,7 @@ local bufferWidth, bufferHeight, bufferTripleWidth
 local currentFrame, newFrame
 local drawLimitX1, drawLimitX2, drawLimitY1, drawLimitY2
 
-local GPUProxy, GPUProxyGetResolution, GPUProxySetResolution, GPUProxyBind, GPUProxyGetBackground, GPUProxyGetForeground, GPUProxySetBackground, GPUProxySetForeground, GPUProxyGet, GPUProxySet
+local GPUProxy, GPUProxyGetResolution, GPUProxySetResolution, GPUProxyBind, GPUProxyGetBackground, GPUProxyGetForeground, GPUProxySetBackground, GPUProxySetForeground, GPUProxyGet, GPUProxySet, GPUProxyFill
 local mathCeil, mathFloor, mathModf, mathAbs = math.ceil, math.floor, math.modf, math.abs
 local tableInsert, tableConcat = table.insert, table.concat
 local colorBlend = color.blend
