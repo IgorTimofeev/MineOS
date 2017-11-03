@@ -30,6 +30,7 @@ local unicode = require("unicode")
 local fs = require("filesystem")
 local event = require("event")
 local image = require("image")
+local color = require("color")
 local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 local MineOSPaths = require("MineOSPaths")
@@ -229,6 +230,11 @@ local function changeWallpaper()
 			MineOSInterface.mainContainer.background.wallpaper = image.load(MineOSCore.properties.wallpaper)
 			MineOSInterface.mainContainer.background.wallpaperPosition.x = math.floor(1 + MineOSInterface.mainContainer.width / 2 - image.getWidth(MineOSInterface.mainContainer.background.wallpaper) / 2)
 			MineOSInterface.mainContainer.background.wallpaperPosition.y = math.floor(1 + MineOSInterface.mainContainer.height / 2 - image.getHeight(MineOSInterface.mainContainer.background.wallpaper) / 2)
+		end
+
+		for i = 3, #MineOSInterface.mainContainer.background.wallpaper, 4 do
+			MineOSInterface.mainContainer.background.wallpaper[i] = color.blend(MineOSInterface.mainContainer.background.wallpaper[i], 0x0, MineOSCore.properties.wallpaperBrightness)
+			MineOSInterface.mainContainer.background.wallpaper[i + 1] = color.blend(MineOSInterface.mainContainer.background.wallpaper[i + 1], 0x0, MineOSCore.properties.wallpaperBrightness)
 		end
 	end
 end
@@ -650,8 +656,6 @@ local function createOSWindow()
 			comboBox:addItem(MineOSCore.localization.wallpaperModeCenter)
 
 			local switch = container.layout:addChild(GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0xE1E1E1, MineOSCore.localization.wallpaperEnabled .. ":", MineOSCore.properties.wallpaperEnabled)).switch
-			container.layout:addChild(GUI.textBox(1, 1, 36, 1, nil, 0x555555, {MineOSCore.localization.wallpaperSwitchInfo}, 1, 0, 0, true, true))
-
 			switch.onStateChanged = function()
 				MineOSCore.properties.wallpaperEnabled = switch.state
 				MineOSCore.saveProperties()
@@ -659,6 +663,18 @@ local function createOSWindow()
 
 				MineOSInterface.OSDraw()
 			end
+
+			local slider = container.layout:addChild(GUI.slider(1, 1, 36, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x888888, 0, 100, MineOSCore.properties.wallpaperBrightness * 100, false, MineOSCore.localization.wallpaperBrightness .. ": ", "%"))
+			slider.roundValues = true
+			slider.onValueChanged = function()
+				MineOSCore.properties.wallpaperBrightness = slider.value / 100
+				MineOSCore.saveProperties()
+				changeWallpaper()
+
+				MineOSInterface.OSDraw()
+			end
+
+			container.layout:addChild(GUI.textBox(1, 1, 36, 1, nil, 0x555555, {MineOSCore.localization.wallpaperSwitchInfo}, 1, 0, 0, true, true))
 			
 			comboBox.onItemSelected = function()
 				MineOSCore.properties.wallpaperMode = comboBox.selectedItem

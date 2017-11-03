@@ -132,6 +132,7 @@
 	wallpaperModeStretch = "Растянуть",
 	wallpaperModeCenter = "По центру",
 	wallpaperEnabled = "Использовать обои",
+	wallpaperBrightness = "Яркость обоев",
 	wallpaperSwitchInfo = "Отключение этой опции существенно снизит расход оперативной памяти и увеличит производительность",
 	backgroundColor = "Цвет фона",
 	menuColor = "Цвет меню",

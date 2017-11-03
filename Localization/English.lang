@@ -132,6 +132,7 @@
 	wallpaperModeStretch = "Stretch",
 	wallpaperModeCenter = "Center",
 	wallpaperEnabled = "Wallpaper enabled",
+	wallpaperBrightness = "Wallpaper brightness",
 	wallpaperSwitchInfo = "Disabling this option will decrease RAM usage and increase system perfomance",
 	backgroundColor = "Background color",
 	menuColor = "Menu color",

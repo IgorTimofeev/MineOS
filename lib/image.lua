@@ -178,11 +178,7 @@ function image.save(path, picture, encodingMethod)
 end
 
 function image.load(path)
-	if fs.exists(path) then
-		return loadOrSave("load", path)
-	else
-		error("Failed to load image: file \"" .. tostring(path) .. "\" doesn't exists")
-	end
+	return loadOrSave("load", path)
 end
 
 -------------------------------------------------- Image serialization --------------------------------------------------

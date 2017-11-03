@@ -1764,7 +1764,7 @@ local function sliderEventHandler(mainContainer, object, eventData)
 end
 
 function GUI.slider(x, y, width, activeColor, passiveColor, pipeColor, valueColor, minimumValue, maximumValue, value, showMaximumAndMinimumValues, currentValuePrefix, currentValuePostfix)
-	local object = GUI.object(x, y, width, 1)
+	local object = GUI.object(x, y, width, 2)
 	
 	object.eventHandler = sliderEventHandler
 	object.colors = {active = activeColor, passive = passiveColor, pipe = pipeColor, value = valueColor}
