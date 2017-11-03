@@ -1966,7 +1966,7 @@ local function layoutUpdate(layout)
 	local x, y = 1, 1
 	for row = 1, #layout.rowSizes do
 		for column = 1, #layout.columnSizes do
-			local cell = layout.cells[row][column]
+			cell = layout.cells[row][column]
 			cell.x, cell.y = GUI.getAlignmentCoordinates(
 				{
 					x = x,
@@ -1994,6 +1994,7 @@ local function layoutUpdate(layout)
 	for i = 1, #layout.children do
 		child = layout.children[i]
 		if not child.hidden then
+			cell = layout.cells[child.layoutRow][child.layoutColumn]
 			if cell.direction == GUI.directions.horizontal then
 				child.localX = math.round(cell.x)
 				child.localY = math.round(cell.y + cell.totalHeight / 2 - child.height / 2)
@@ -3506,15 +3507,15 @@ end
 
 -- -- Создаем полноэкранный контейнер, добавляем на него загруженное изображение и полупрозрачную черную панель
 -- local mainContainer = GUI.fullScreenContainer()
--- mainContainer:addChild(GUI.image(1, 1, image.load("/MineOS/Pictures/Raspberry.pic")))
+-- mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x2D2D2D))
 
--- local filesystemDialog = GUI.addFilesystemDialogToContainer(mainContainer, "Save", "Cancel", "File name", "/")
--- filesystemDialog:setMode(GUI.filesystemModes.save, GUI.filesystemModes.file)
--- filesystemDialog:addExtensionFilter(".pic")
--- filesystemDialog:show()
--- filesystemDialog.onSubmit = function(path)
--- 	GUI.error(path)
--- end
+-- local layout = mainContainer:addChild(GUI.layout(1, 1, mainContainer.width, mainContainer.height, 3, 3))
+-- local button = layout:setCellPosition(2, 2, layout:addChild(GUI.button(1, 1, 10, 3, 0x0, 0xFFFFFF, 0x0, 0xFFFFFF, "AEFAEF")))
+-- layout.showGrid = true
+
+-- -- mainContainer.eventHandler = function()
+-- -- 	GUI.error(button.x, button.y, button.localX, button.localY)
+-- -- end
 
 -- mainContainer:draw()
 -- buffer.draw(true)
