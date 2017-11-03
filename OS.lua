@@ -16,10 +16,8 @@ local copyright = {
 -- Вычищаем копирайт из оперативки, ибо мы не можем тратить СТОЛЬКО памяти.
 -- Сколько тут, раз, два, три... 270 UTF-8 символов!
 -- А это, между прочим, 54 раза по слову "Пидор". Но один раз - не пидорас, поэтому вычищаем.
--- ...
--- Бля, передумал, не вычищаем, еще пригодится ниже. Вот же костыльная параша!
 
--- copyright = nil
+copyright = nil
 
 ---------------------------------------------- Либсы-хуибсы ------------------------------------------------------------------------
 
@@ -70,9 +68,9 @@ local function biometry(creatingNew)
 				function(mainContainer, object, animation)
 					scanLine.hidden = false
 					if animation.position <= 0.5 then
-						scanLine.localPosition.y = math.floor(fingerImage.localPosition.y + fingerImageHeight - fingerImageHeight * animation.position * 2 - 1)
+						scanLine.localY = math.floor(fingerImage.localY + fingerImageHeight - fingerImageHeight * animation.position * 2 - 1)
 					else
-						scanLine.localPosition.y = math.floor(fingerImage.localPosition.y + fingerImageHeight * (animation.position - 0.5) * 2 - 1)
+						scanLine.localY = math.floor(fingerImage.localY + fingerImageHeight * (animation.position - 0.5) * 2 - 1)
 					end
 				end,
 				function(mainContainer, switch, animation)
@@ -247,7 +245,7 @@ local function changeResolution()
 	MineOSInterface.mainContainer.iconField:updateFileList()
 
 	MineOSInterface.mainContainer.dockContainer.sort()
-	MineOSInterface.mainContainer.dockContainer.localPosition.y = MineOSInterface.mainContainer.height - MineOSInterface.mainContainer.dockContainer.height + 1
+	MineOSInterface.mainContainer.dockContainer.localY = MineOSInterface.mainContainer.height - MineOSInterface.mainContainer.dockContainer.height + 1
 
 	MineOSInterface.mainContainer.menu.width = MineOSInterface.mainContainer.width
 	MineOSInterface.mainContainer.menuLayout.width = MineOSInterface.mainContainer.width
@@ -265,7 +263,7 @@ end
 
 local function createOSWindow()
 	MineOSInterface.mainContainer = GUI.fullScreenContainer()
-
+	
 	MineOSInterface.mainContainer.background = MineOSInterface.mainContainer:addChild(GUI.object(1, 1, 1, 1))
 	MineOSInterface.mainContainer.background.wallpaperPosition = {x = 1, y = 1}
 	MineOSInterface.mainContainer.background.draw = function(object)
@@ -308,12 +306,12 @@ local function createOSWindow()
 	MineOSInterface.mainContainer.dockContainer.sort = function()
 		local x = 4
 		for i = 1, #MineOSInterface.mainContainer.dockContainer.children do
-			MineOSInterface.mainContainer.dockContainer.children[i].localPosition.x = x
+			MineOSInterface.mainContainer.dockContainer.children[i].localX = x
 			x = x + MineOSCore.properties.iconWidth + MineOSCore.properties.iconHorizontalSpaceBetween
 		end
 
 		MineOSInterface.mainContainer.dockContainer.width = #MineOSInterface.mainContainer.dockContainer.children * (MineOSCore.properties.iconWidth + MineOSCore.properties.iconHorizontalSpaceBetween) - MineOSCore.properties.iconHorizontalSpaceBetween + 6
-		MineOSInterface.mainContainer.dockContainer.localPosition.x = math.floor(MineOSInterface.mainContainer.width / 2 - MineOSInterface.mainContainer.dockContainer.width / 2)
+		MineOSInterface.mainContainer.dockContainer.localX = math.floor(MineOSInterface.mainContainer.width / 2 - MineOSInterface.mainContainer.dockContainer.width / 2)
 	end
 
 	local function dockIconEventHandler(mainContainer, icon, eventData)
@@ -475,11 +473,6 @@ local function createOSWindow()
 	local item1 = MineOSInterface.mainContainer.menu:addItem("MineOS", 0x000000)
 	item1.onTouch = function()
 		local menu = MineOSInterface.contextMenu(item1.x, item1.y + 1)
-
-		menu:addItem(MineOSCore.localization.aboutSystem).onTouch = function()
-			local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer, MineOSCore.localization.aboutSystem)
-			container.layout:addChild(GUI.textBox(1, 1, 53, #copyright, nil, 0x888888, copyright, 1, 0, 0))
-		end
 
 		menu:addItem(MineOSCore.localization.updates).onTouch = function()
 			MineOSInterface.safeLaunch("/MineOS/Applications/AppMarket.app/Main.lua", "updates")
