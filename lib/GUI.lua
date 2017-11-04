@@ -624,6 +624,18 @@ function GUI.adaptiveFramedButton(x, y, xOffset, yOffset, buttonColor, textColor
 	return buttonCreate(3, x, y, unicode.len(text) + xOffset * 2, yOffset * 2 + 1, buttonColor, textColor, buttonPressedColor, textPressedColor, text, ...)
 end
 
+function GUI.adaptiveTexturedButton(x, y, defaultTexture, pressedTexture)
+	local button = buttonCreate(4, x, y, defaultTexture[1], defaultTexture[2], 0x0, 0x0, 0x0, 0x0, "")
+	
+	button.defaultTexture = defaultTexture
+	button.pressedTexture = pressedTexture
+	button.draw = function(button)
+		buffer.image(button.x, button.y, button.pressed and button.pressedTexture or button.defaultTexture)
+	end
+
+	return button
+end
+
 ----------------------------------------- TabBar -----------------------------------------
 
 local function tabBarTabEventHandler(mainContainer, object, eventData)
@@ -1764,7 +1776,7 @@ local function sliderEventHandler(mainContainer, object, eventData)
 end
 
 function GUI.slider(x, y, width, activeColor, passiveColor, pipeColor, valueColor, minimumValue, maximumValue, value, showMaximumAndMinimumValues, currentValuePrefix, currentValuePostfix)
-	local object = GUI.object(x, y, width, 2)
+	local object = GUI.object(x, y, width, 1)
 	
 	object.eventHandler = sliderEventHandler
 	object.colors = {active = activeColor, passive = passiveColor, pipe = pipeColor, value = valueColor}

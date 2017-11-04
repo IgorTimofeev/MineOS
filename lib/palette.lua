@@ -253,7 +253,7 @@ function palette.window(x, y, startColor)
 end
 
 function palette.show(x, y, startColor)
-	local mainContainer = GUI.container(1, 1, buffer.width, buffer.height)
+	local mainContainer = GUI.container(1, 1, buffer.getResolution())
 
 	local selectedColor
 	local window = mainContainer:addChild(palette.window(x, y, startColor))
