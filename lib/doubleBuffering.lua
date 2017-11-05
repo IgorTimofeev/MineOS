@@ -6,8 +6,6 @@ local image = require("image")
 
 --------------------------------------------------------------------------------------------------------------
 
-local buffer = {}
-
 local bufferWidth, bufferHeight, bufferTripleWidth
 local currentFrame, newFrame
 local drawLimitX1, drawLimitX2, drawLimitY1, drawLimitY2
@@ -561,8 +559,11 @@ end
 
 local function draw(force)
 	-- local oldClock = os.clock()
-	local changes, index, indexStepOnEveryLine, indexPlus1, indexPlus2, equalChars, x, charX, charIndex, charIndexPlus1, charIndexPlus2, currentForeground = {}, getIndex(drawLimitX1, drawLimitY1), (bufferWidth - drawLimitX2 + drawLimitX1 - 1) * 3
 	
+	local changes, index, indexStepOnEveryLine = {}, getIndex(drawLimitX1, drawLimitY1), (bufferWidth - drawLimitX2 + drawLimitX1 - 1) * 3
+	local x, indexPlus1, indexPlus2, equalChars, charX, charIndex, charIndexPlus1, charIndexPlus2, currentForeground
+	local currentFrameIndex, currentFrameIndexPlus1, currentFrameIndexPlus2, changesCurrentFrameIndex, changesCurrentFrameIndexCurrentFrameIndexPlus1
+
 	for y = drawLimitY1, drawLimitY2 do
 		x = drawLimitX1
 		while x <= drawLimitX2 do
@@ -576,21 +577,22 @@ local function draw(force)
 				force
 			then
 				-- Make pixel at both frames equal
-				currentFrame[index] = newFrame[index]
-				currentFrame[indexPlus1] = newFrame[indexPlus1]
-				currentFrame[indexPlus2] = newFrame[indexPlus2]
+				currentFrameIndex, currentFrameIndexPlus1, currentFrameIndexPlus2 = newFrame[index], newFrame[indexPlus1], newFrame[indexPlus2]
+				currentFrame[index] = currentFrameIndex
+				currentFrame[indexPlus1] = currentFrameIndexPlus1
+				currentFrame[indexPlus2] = currentFrameIndexPlus2
 
 				-- Look for pixels with equal chars from right of current pixel
-				equalChars = {currentFrame[indexPlus2]}
+				equalChars = {currentFrameIndexPlus2}
 				charX, charIndex = x + 1, index + 3
 				while charX <= drawLimitX2 do
 					charIndexPlus1, charIndexPlus2 = charIndex + 1, charIndex + 2
 					-- Pixels becomes equal only if they have same background and (whitespace char or same foreground)
 					if	
-						currentFrame[index] == newFrame[charIndex] and
+						currentFrameIndex == newFrame[charIndex] and
 						(
 							newFrame[charIndexPlus2] == " " or
-							currentFrame[indexPlus1] == newFrame[charIndexPlus1]
+							currentFrameIndexPlus1 == newFrame[charIndexPlus1]
 						)
 					then
 						-- Make pixel at both frames equal
@@ -607,12 +609,14 @@ local function draw(force)
 				end
 
 				-- Group pixels that need to be drawn by background and foreground
-				changes[currentFrame[index]] = changes[currentFrame[index]] or {}
-				changes[currentFrame[index]][currentFrame[indexPlus1]] = changes[currentFrame[index]][currentFrame[indexPlus1]] or {}
+				changes[currentFrameIndex] = changes[currentFrameIndex] or {}
+				changesCurrentFrameIndex = changes[currentFrameIndex]
+				changesCurrentFrameIndex[currentFrameIndexPlus1] = changesCurrentFrameIndex[currentFrameIndexPlus1] or {}
+				changesCurrentFrameIndexCurrentFrameIndexPlus1 = changesCurrentFrameIndex[currentFrameIndexPlus1]
 
-				tableInsert(changes[currentFrame[index]][currentFrame[indexPlus1]], x)
-				tableInsert(changes[currentFrame[index]][currentFrame[indexPlus1]], y)
-				tableInsert(changes[currentFrame[index]][currentFrame[indexPlus1]], tableConcat(equalChars))
+				tableInsert(changesCurrentFrameIndexCurrentFrameIndexPlus1, x)
+				tableInsert(changesCurrentFrameIndexCurrentFrameIndexPlus1, y)
+				tableInsert(changesCurrentFrameIndexCurrentFrameIndexPlus1, tableConcat(equalChars))
 				
 				x, index = x + #equalChars - 1, index + (#equalChars - 1) * 3
 			end
@@ -640,7 +644,8 @@ local function draw(force)
 	end
 
 	changes = nil
-	-- debug("clock: " .. (os.clock() - oldClock))
+
+	-- debug("os.clock() delta: " .. (os.clock() - oldClock))
 end
 
 ------------------------------------------------------------------------------------------------------
