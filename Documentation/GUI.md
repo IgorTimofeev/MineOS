@@ -58,8 +58,8 @@ GUI - многофункциональная графическая библио
 | ------ | ------ |
 | *[GUI](https://github.com/IgorTimofeev/OpenComputers/blob/master/lib/GUI.lua)* | Данная библиотека |
 | *[advancedLua](https://github.com/IgorTimofeev/OpenComputers/blob/master/lib/advancedLua.lua)* | Дополнение стандартных библиотек Lua множеством функций: быстрой сериализацией таблиц, переносом строк, методами обработки бинарных данных и т.д. |
-| *[doubleBuffering](https://github.com/IgorTimofeev/OpenComputers/blob/master/lib/doubleBuffering.lua)* | Низкоуровневая библиотека двойной буферизации для максималььно быстрой отрисовки графики с поддержкой методов полупиксельной отрисовки |
-| *[color](https://github.com/IgorTimofeev/OpenComputers/blob/master/lib/color.lua)* | Низкоуровневая библиотека для работы с цветом, предоставляющая методы получения цветовых каналов, различные палитры и конвертацию цвета в 8-битный формат |
+| *[doubleBuffering](https://github.com/IgorTimofeev/OpenComputers/blob/master/lib/doubleBuffering.lua)* | Библиотека двойной буферизации для максимально быстрой отрисовки графики с поддержкой методов полупиксельной отрисовки |
+| *[color](https://github.com/IgorTimofeev/OpenComputers/blob/master/lib/color.lua)* | Библиотека для работы с цветом, предоставляющая методы получения цветовых каналов, различные палитры и конвертацию цвета в 8-битный формат |
 | *[image](https://github.com/IgorTimofeev/OpenComputers/blob/master/lib/image.lua)* | Библиотека, реализующая стандарт изображений для OpenComputers и методы их обработки: транспонирование, обрезку, поворот, отражение и т.д. |
 | *[OCIF](https://github.com/IgorTimofeev/OpenComputers/blob/master/lib/ImageFormatModules/OCIF.lua)* | Модуль формата изображения OCIF (OpenComputers Image Format) для библиотеки image, написанный с учетом особенностей мода и реализующий эффективное сжатие пиксельных данных |
 | *[syntax](https://github.com/IgorTimofeev/OpenComputers/blob/master/lib/syntax.lua)* | Подсветка lua-синтаксиса для виджета CodeView |
@@ -598,6 +598,7 @@ GUI.**input**( x, y, width, height, backgroundColor, textColor, placeholderTextC
 
 | Тип свойства | Свойство |Описание |
 | ------ | ------ | ------ |
+| *function* | :**startInput**() | Метод для принудительной активации ввода данных в текстовое поле |
 | *callback-function* | .**validator**( *string* text )| Метод, вызывающийся после окончания ввода текста в поле. Если возвращает *true*, то текст в текстовом поле меняется на введенный, в противном случае введенные данные игнорируются. К примеру, в данном методе удобно проверять, является ли введенная текстовая информация числом через *tonumber()* |
 | *callback-function* | .**onInputFinished**( *string* text, *table* eventData )| Метод, вызываемый после ввода данных в обработчике событий. Удобная штука, если хочется выполнить какие-либо действия сразу после ввода текста. Если у объекта имеется *validator*, и текст не прошел проверку через него, то *onInputFinished* вызван не будет. |
 

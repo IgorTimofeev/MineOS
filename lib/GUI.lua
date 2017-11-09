@@ -3087,13 +3087,33 @@ local function inputTextDrawMethod(x, y, color, text)
 end
 
 local function inputDraw(input)
-	local background, foreground, transparency, text = input.colors.default.background, input.colors.default.text, input.colors.default.transparency, input.text
-
+	local background, foreground, transparency, text
 	if input.focused then
-		background, foreground, transparency = input.colors.focused.background, input.colors.focused.text, input.colors.focused.transparency
-	elseif input.text == "" then
-		input.textCutFrom = 1
-		text, foreground = input.placeholderText or "", input.colors.placeholderText
+		background, transparency = input.colors.focused.background, input.colors.focused.transparency
+		if input.text == "" then
+			input.textCutFrom = 1
+			foreground, text = input.colors.placeholderText, input.text
+		else
+			foreground = input.colors.focused.text
+			if input.textMask then
+				text = string.rep(input.textMask, unicode.len(input.text))
+			else
+				text = input.text
+			end
+		end
+	else
+		background, transparency = input.colors.default.background, input.colors.default.transparency
+		if input.text == "" then
+			input.textCutFrom = 1
+			foreground, text = input.colors.placeholderText, input.placeholderText
+		else
+			foreground = input.colors.default.text
+			if input.textMask then
+				text = string.rep(input.textMask, unicode.len(input.text))
+			else
+				text = input.text
+			end
+		end
 	end
 
 	if background then
@@ -3107,7 +3127,7 @@ local function inputDraw(input)
 		y,
 		foreground,
 		unicode.sub(
-			input.textMask and string.rep(input.textMask, unicode.len(text)) or text,
+			text or "",
 			input.textCutFrom,
 			input.textCutFrom + input.width - 1 - input.textOffset * 2
 		)
@@ -3131,179 +3151,185 @@ local function inputDraw(input)
 	end
 end
 
-local function inputEventHandler(mainContainer, input, mainEventData)
-	if mainEventData[1] == "touch" then
-		local textOnStart = input.text
-		input.focused = true
+local function inputStartInput(input)
+	local mainContainer = input:getFirstParent()
+
+	local textOnStart = input.text
+	input.focused = true
+	
+	if input.historyEnabled then
+		input.historyIndex = input.historyIndex + 1
+	end
+
+	if input.eraseTextOnFocus then
+		input.text = ""
+	end
+
+	input.cursorBlinkState = true
+	input:setCursorPosition(unicode.len(input.text) + 1)
+
+	if input.autoCompleteEnabled then
+		input.autoCompleteMatchMethod()
+	end
+
+	mainContainer:draw()
+	buffer.draw()
+
+	while true do
+		local eventData = { event.pull(input.cursorBlinkDelay) }
 		
-		if input.historyEnabled then
-			input.historyIndex = input.historyIndex + 1
-		end
-
-		if input.eraseTextOnFocus then
-			input.text = ""
-		end
-
-		input.cursorBlinkState = true
-		input:setCursorPosition(unicode.len(input.text) + 1)
-
-		if input.autoCompleteEnabled then
-			input.autoCompleteMatchMethod()
-		end
-
-		mainContainer:draw()
-		buffer.draw()
-
-		while true do
-			local eventData = { event.pull(input.cursorBlinkDelay) }
-			
-			if eventData[1] == "touch" or eventData[1] == "drag" then
-				if input:isClicked(eventData[3], eventData[4]) then
-					input:setCursorPosition(input.textCutFrom + eventData[3] - input.x - input.textOffset)
-					
-					input.cursorBlinkState = true
-					mainContainer:draw()
-					buffer.draw()
-				elseif input.autoComplete:isClicked(eventData[3], eventData[4]) then
+		if eventData[1] == "touch" or eventData[1] == "drag" then
+			if input:isClicked(eventData[3], eventData[4]) then
+				input:setCursorPosition(input.textCutFrom + eventData[3] - input.x - input.textOffset)
+				
+				input.cursorBlinkState = true
+				mainContainer:draw()
+				buffer.draw()
+			elseif input.autoComplete:isClicked(eventData[3], eventData[4]) then
+				input.autoComplete.eventHandler(mainContainer, input.autoComplete, eventData)
+			else
+				input.cursorBlinkState = false
+				break
+			end
+		elseif eventData[1] == "scroll" then
+			input.autoComplete.eventHandler(mainContainer, input.autoComplete, eventData)
+		elseif eventData[1] == "key_down" then
+			-- Return
+			if eventData[4] == 28 then
+				if input.autoCompleteEnabled and input.autoComplete.itemCount > 0 then
 					input.autoComplete.eventHandler(mainContainer, input.autoComplete, eventData)
 				else
+					if input.historyEnabled then
+						-- Очистка истории
+						for i = 1, (#input.history - input.historyLimit) do
+							table.remove(input.history, 1)
+						end
+
+						-- Добавление введенных данных в историю
+						if input.history[#input.history] ~= input.text and unicode.len(input.text) > 0 then
+							table.insert(input.history, input.text)
+						end
+						input.historyIndex = #input.history
+					end
+
 					input.cursorBlinkState = false
 					break
 				end
-			elseif eventData[1] == "scroll" then
-				input.autoComplete.eventHandler(mainContainer, input.autoComplete, eventData)
-			elseif eventData[1] == "key_down" then
-				-- Return
-				if eventData[4] == 28 then
-					if input.autoCompleteEnabled and input.autoComplete.itemCount > 0 then
-						input.autoComplete.eventHandler(mainContainer, input.autoComplete, eventData)
-					else
-						if input.historyEnabled then
-							-- Очистка истории
-							for i = 1, (#input.history - input.historyLimit) do
-								table.remove(input.history, 1)
-							end
-
-							-- Добавление введенных данных в историю
-							if input.history[#input.history] ~= input.text and unicode.len(input.text) > 0 then
-								table.insert(input.history, input.text)
-							end
-							input.historyIndex = #input.history
-						end
-
-						input.cursorBlinkState = false
-						break
-					end
-				-- Arrows up/down/left/right
-				elseif eventData[4] == 200 then
-					if input.autoCompleteEnabled and input.autoComplete.selectedItem > 1 then
-						input.autoComplete.eventHandler(mainContainer, input.autoComplete, eventData)
-					else
-						if input.historyEnabled and #input.history > 0 then
-							-- Добавление уже введенного текста в историю при стрелке вверх
-							if input.historyIndex == #input.history + 1 and unicode.len(input.text) > 0 then
-								input.history[input.historyIndex] = input.text
-							end
-
-							input.historyIndex = input.historyIndex - 1
-							if input.historyIndex > #input.history then
-								input.historyIndex = #input.history
-							elseif input.historyIndex < 1 then
-								input.historyIndex = 1
-							end
-
-							input.text = input.history[input.historyIndex]
-							input:setCursorPosition(unicode.len(input.text) + 1)
-
-							if input.autoCompleteEnabled then
-								input.autoCompleteMatchMethod()
-							end
-						end
-					end
-				elseif eventData[4] == 208 then
-					if input.autoCompleteEnabled and input.historyIndex == #input.history + 1 then
-						input.autoComplete.eventHandler(mainContainer, input.autoComplete, eventData)
-					else
-						if input.historyEnabled and #input.history > 0 then
-							input.historyIndex = input.historyIndex + 1
-							if input.historyIndex > #input.history then
-								input.historyIndex = #input.history
-							elseif input.historyIndex < 1 then
-								input.historyIndex = 1
-							end
-							
-							input.text = input.history[input.historyIndex]
-							input:setCursorPosition(unicode.len(input.text) + 1)
-
-							if input.autoCompleteEnabled then
-								input.autoCompleteMatchMethod()
-							end
-						end
-					end
-				elseif eventData[4] == 203 then
-					input:setCursorPosition(input.cursorPosition - 1)
-				elseif eventData[4] == 205 then	
-					input:setCursorPosition(input.cursorPosition + 1)
-				-- Backspace
-				elseif eventData[4] == 14 then
-					input.text = unicode.sub(unicode.sub(input.text, 1, input.cursorPosition - 1), 1, -2) .. unicode.sub(input.text, input.cursorPosition, -1)
-					input:setCursorPosition(input.cursorPosition - 1)
-					
-					if input.autoCompleteEnabled then
-						input.autoCompleteMatchMethod()
-					end
-				-- Delete
-				elseif eventData[4] == 211 then
-					input.text = unicode.sub(input.text, 1, input.cursorPosition - 1) .. unicode.sub(input.text, input.cursorPosition + 1, -1)
-					
-					if input.autoCompleteEnabled then
-						input.autoCompleteMatchMethod()
-					end
+			-- Arrows up/down/left/right
+			elseif eventData[4] == 200 then
+				if input.autoCompleteEnabled and input.autoComplete.selectedItem > 1 then
+					input.autoComplete.eventHandler(mainContainer, input.autoComplete, eventData)
 				else
-					local char = unicode.char(eventData[3])
-					if not keyboard.isControl(eventData[3]) then
-						input.text = unicode.sub(input.text, 1, input.cursorPosition - 1) .. char .. unicode.sub(input.text, input.cursorPosition, -1)
-						input:setCursorPosition(input.cursorPosition + 1)
+					if input.historyEnabled and #input.history > 0 then
+						-- Добавление уже введенного текста в историю при стрелке вверх
+						if input.historyIndex == #input.history + 1 and unicode.len(input.text) > 0 then
+							input.history[input.historyIndex] = input.text
+						end
+
+						input.historyIndex = input.historyIndex - 1
+						if input.historyIndex > #input.history then
+							input.historyIndex = #input.history
+						elseif input.historyIndex < 1 then
+							input.historyIndex = 1
+						end
+
+						input.text = input.history[input.historyIndex]
+						input:setCursorPosition(unicode.len(input.text) + 1)
 
 						if input.autoCompleteEnabled then
 							input.autoCompleteMatchMethod()
 						end
 					end
 				end
+			elseif eventData[4] == 208 then
+				if input.autoCompleteEnabled and input.historyIndex == #input.history + 1 then
+					input.autoComplete.eventHandler(mainContainer, input.autoComplete, eventData)
+				else
+					if input.historyEnabled and #input.history > 0 then
+						input.historyIndex = input.historyIndex + 1
+						if input.historyIndex > #input.history then
+							input.historyIndex = #input.history
+						elseif input.historyIndex < 1 then
+							input.historyIndex = 1
+						end
+						
+						input.text = input.history[input.historyIndex]
+						input:setCursorPosition(unicode.len(input.text) + 1)
 
-				input.cursorBlinkState = true
-				mainContainer:draw()
-				buffer.draw()
-			elseif eventData[1] == "clipboard" then
-				input.text = unicode.sub(input.text, 1, input.cursorPosition - 1) .. eventData[3] .. unicode.sub(input.text, input.cursorPosition, -1)
-				input:setCursorPosition(input.cursorPosition + unicode.len(eventData[3]))
+						if input.autoCompleteEnabled then
+							input.autoCompleteMatchMethod()
+						end
+					end
+				end
+			elseif eventData[4] == 203 then
+				input:setCursorPosition(input.cursorPosition - 1)
+			elseif eventData[4] == 205 then	
+				input:setCursorPosition(input.cursorPosition + 1)
+			-- Backspace
+			elseif eventData[4] == 14 then
+				input.text = unicode.sub(unicode.sub(input.text, 1, input.cursorPosition - 1), 1, -2) .. unicode.sub(input.text, input.cursorPosition, -1)
+				input:setCursorPosition(input.cursorPosition - 1)
 				
-				input.cursorBlinkState = true
-				mainContainer:draw()
-				buffer.draw()
-			elseif not eventData[1] then
-				input.cursorBlinkState = not input.cursorBlinkState
-				mainContainer:draw()
-				buffer.draw()
-			end
-		end
+				if input.autoCompleteEnabled then
+					input.autoCompleteMatchMethod()
+				end
+			-- Delete
+			elseif eventData[4] == 211 then
+				input.text = unicode.sub(input.text, 1, input.cursorPosition - 1) .. unicode.sub(input.text, input.cursorPosition + 1, -1)
+				
+				if input.autoCompleteEnabled then
+					input.autoCompleteMatchMethod()
+				end
+			else
+				local char = unicode.char(eventData[3])
+				if not keyboard.isControl(eventData[3]) then
+					input.text = unicode.sub(input.text, 1, input.cursorPosition - 1) .. char .. unicode.sub(input.text, input.cursorPosition, -1)
+					input:setCursorPosition(input.cursorPosition + 1)
 
-		input.focused = false
-		if input.autoCompleteEnabled then
-			input.autoComplete:clear()
-		end
-
-		if input.validator then
-			if not input.validator(input.text) then
-				input.text = textOnStart
-				input:setCursorPosition(unicode.len(input.text) + 1)
+					if input.autoCompleteEnabled then
+						input.autoCompleteMatchMethod()
+					end
+				end
 			end
+
+			input.cursorBlinkState = true
+			mainContainer:draw()
+			buffer.draw()
+		elseif eventData[1] == "clipboard" then
+			input.text = unicode.sub(input.text, 1, input.cursorPosition - 1) .. eventData[3] .. unicode.sub(input.text, input.cursorPosition, -1)
+			input:setCursorPosition(input.cursorPosition + unicode.len(eventData[3]))
+			
+			input.cursorBlinkState = true
+			mainContainer:draw()
+			buffer.draw()
+		elseif not eventData[1] then
+			input.cursorBlinkState = not input.cursorBlinkState
+			mainContainer:draw()
+			buffer.draw()
 		end
-		
-		callMethod(input.onInputFinished, mainContainer, input, mainEventData, input.text)
-		
-		mainContainer:draw()
-		buffer.draw()
+	end
+
+	input.focused = false
+	if input.autoCompleteEnabled then
+		input.autoComplete:clear()
+	end
+
+	if input.validator then
+		if not input.validator(input.text) then
+			input.text = textOnStart
+			input:setCursorPosition(unicode.len(input.text) + 1)
+		end
+	end
+	
+	callMethod(input.onInputFinished, mainContainer, input, mainEventData, input.text)
+	
+	mainContainer:draw()
+	buffer.draw()
+end
+
+local function inputEventHandler(mainContainer, input, mainEventData)
+	if mainEventData[1] == "touch" then
+		input:startInput()
 	end
 end
 
@@ -3345,6 +3371,7 @@ function GUI.input(x, y, width, height, backgroundColor, textColor, placeholderT
 	input.textDrawMethod = inputTextDrawMethod
 	input.draw = inputDraw
 	input.eventHandler = inputEventHandler
+	input.startInput = inputStartInput
 
 	input.autoComplete = GUI.autoComplete(1, 1, 30, 7, 0xE1E1E1, 0x999999, 0x3C3C3C, 0x3C3C3C, 0x999999, 0xE1E1E1, 0xC3C3C3, 0x444444)
 	input.autoCompleteEnabled = false
@@ -3517,17 +3544,12 @@ end
 -- buffer.clear()
 -- buffer.draw(true)
 
--- -- Создаем полноэкранный контейнер, добавляем на него загруженное изображение и полупрозрачную черную панель
 -- local mainContainer = GUI.fullScreenContainer()
 -- mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x2D2D2D))
 
--- local layout = mainContainer:addChild(GUI.layout(1, 1, mainContainer.width, mainContainer.height, 3, 3))
--- local button = layout:setCellPosition(2, 2, layout:addChild(GUI.button(1, 1, 10, 3, 0x0, 0xFFFFFF, 0x0, 0xFFFFFF, "AEFAEF")))
--- layout.showGrid = true
-
--- -- mainContainer.eventHandler = function()
--- -- 	GUI.error(button.x, button.y, button.localX, button.localY)
--- -- end
+-- mainContainer:addChild(GUI.input(2, 2, 30, 3, 0xEEEEEE, 0x555555, 0x999999, 0xFFFFFF, 0x2D2D2D, "Hello world", "Placeholder text", true)).onInputFinished = function()
+-- 	-- GUI.error("Input finished!")
+-- end
 
 -- mainContainer:draw()
 -- buffer.draw(true)

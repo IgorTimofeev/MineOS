@@ -52,7 +52,12 @@ local screensaverUptime = computerUptimeOnBoot
 ---------------------------------------------- Система защиты пекарни ------------------------------------------------------------------------
 
 local function biometry(creatingNew)
+	if not creatingNew then
+		event.interruptingEnabled = false
+	end
+
 	local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer)
+	container.layout:setCellFitting(2, 1, false, false)
 
 	local fingerImage = container.layout:addChild(GUI.image(1, 1, image.fromString([[180E0000FF 0000FF 0000FF 0000FF 0000FF 00FFFF▄00FFFF▄00FFFF▄00FFFF▄FFFFFF▀FFFFFF▀FFFFFF▀FFFFFF▀FFFFFF▀FFFFFF▀00FFFF▄00FFFF▄00FFFF▄0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 00FFFF▄FFFF00▄FFFFFF▀0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF FFFFFF▀FFFFFF▀FFFF00▄00FFFF▄0000FF 0000FF 0000FF 0000FF 0000FF FFFF00▄FFFFFF▀0000FF 0000FF 0000FF 00FFFF▄00FFFF▄FFFF00▄FFFFFF▀FFFFFF▀FFFFFF▀FFFFFF▀FFFFFF▀FFFFFF▀FFFF00▄00FFFF▄0000FF 0000FF FFFFFF▀FFFF00▄00FFFF▄0000FF 0000FF FFFF00▄FFFFFF▀0000FF 0000FF 00FFFF▄FFFF00▄FFFFFF▀0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF FFFF00▄00FFFF▄0000FF 0000FF FFFF00▄0000FF 00FFFF▄FFFF00▄0000FF 0000FF 00FFFF▄FFFF00▄0000FF 0000FF 0000FF 00FFFF▄00FFFF▄FFFFFF▀FFFFFF▀FFFFFF▀FFFFFF▀FFFFFF▀FFFFFF▀00FFFF▄0000FF FFFF00▄00FFFF▄0000FF FFFFFF▀FFFF00▄FFFF00▄0000FF 0000FF 0000FF FFFF00▄0000FF 0000FF 0000FF FFFF00▄0000FF 0000FF 0000FF 00FFFF▄00FFFF▄00FFFF▄0000FF 0000FF FFFF00▄0000FF 0000FF FFFF00▄0000FF 0000FF FFFF00▄FFFF00▄0000FF 0000FF 0000FF FFFF00▄0000FF 0000FF 00FFFF▄FFFFFF▀0000FF 0000FF 0000FF 0000FF 00FFFF▄FFFF00▄0000FF 0000FF FFFF00▄0000FF 0000FF FFFF00▄0000FF 0000FF FFFF00▄FFFF00▄0000FF 0000FF 0000FF FFFF00▄0000FF 0000FF FFFF00▄0000FF 0000FF 0000FF 0000FF 00FFFF▄FFFF00▄0000FF 0000FF 0000FF FFFF00▄0000FF 0000FF FFFF00▄0000FF 00FFFF▄FFFF00▄FFFF00▄00FFFF▄0000FF 0000FF FFFF00▄00FFFF▄0000FF FFFFFF▀FFFF00▄0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF FFFF00▄0000FF 0000FF FFFF00▄FFFFFF▀0000FF FFFF00▄0000FF 0000FF FFFF00▄0000FF 0000FF 0000FF FFFF00▄00FFFF▄0000FF FFFFFF▀FFFF00▄0000FF 0000FF 0000FF 0000FF 0000FF FFFF00▄0000FF 0000FF 00FFFF▄FFFF00▄0000FF 00FFFF▄FFFFFF▀0000FF 0000FF FFFF00▄00FFFF▄0000FF 0000FF 0000FF FFFF00▄00FFFF▄0000FF FFFF00▄00FFFF▄0000FF 0000FF 0000FF FFFF00▄0000FF 0000FF 00FFFF▄FFFFFF▀0000FF 0000FF FFFF00▄0000FF 0000FF 0000FF 0000FF FFFF00▄00FFFF▄0000FF 0000FF 0000FF FFFF00▄0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF FFFF00▄FFFFFF▀0000FF 0000FF FFFF00▄FFFFFF▀0000FF 0000FF 0000FF 0000FF 0000FF FFFF00▄0000FF 0000FF 0000FF FFFFFF▀FFFF00▄00FFFF▄0000FF 0000FF 0000FF 0000FF 00FFFF▄FFFFFF▀0000FF 0000FF 0000FF 00FFFF▄FFFF00▄0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF FFFF00▄00FFFF▄0000FF 0000FF 0000FF FFFFFF▀0000FF 0000FF 0000FF 0000FF FFFFFF▀0000FF 0000FF 00FFFF▄FFFF00▄FFFFFF▀0000FF 0000FF 0000FF 0000FF ]])))
 	local text = creatingNew and MineOSCore.localization.putFingerToRegister or MineOSCore.localization.putFingerToVerify
@@ -99,6 +104,8 @@ local function biometry(creatingNew)
 
 							container:delete()
 							os.sleep(delay)
+
+							event.interruptingEnabled = true
 						else
 							label.text = MineOSCore.localization.accessDenied
 							local oldBackground = container.panel.colors.background
@@ -124,18 +131,24 @@ local function biometry(creatingNew)
 end
 
 local function checkPassword()
+	event.interruptingEnabled = false
+
 	local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer, MineOSCore.localization.inputPassword)
 	local inputField = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x666666, 0x666666, 0xE1E1E1, 0x2D2D2D, nil, nil, true, "*"))
 	local label = container.layout:addChild(GUI.label(1, 1, 36, 1, 0xFF4940, MineOSCore.localization.incorrectPassword)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
 	label.hidden = true
 
+	container.panel.eventHandler = nil
+
 	inputField.onInputFinished = function()
 		local hash = require("SHA2").hash(inputField.text or "")
 		if hash == MineOSCore.properties.passwordHash then
 			container:delete()
+			event.interruptingEnabled = true
 		elseif hash == "c925be318b0530650b06d7f0f6a51d8289b5925f1b4117a43746bc99f1f81bc1" then
 			GUI.error(MineOSCore.localization.mineOSCreatorUsedMasterPassword)
 			container:delete()
+			event.interruptingEnabled = true
 		else
 			label.hidden = false
 		end
@@ -144,32 +157,40 @@ local function checkPassword()
 	end
 
 	MineOSInterface.OSDraw()
+	inputField:startInput()
 end
 
 local function setPassword()
 	local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer, MineOSCore.localization.passwordProtection)
 	local inputField1 = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x666666, 0x666666, 0xE1E1E1, 0x2D2D2D, nil, MineOSCore.localization.inputPassword, true, "*"))
 	local inputField2 = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x666666, 0x666666, 0xE1E1E1, 0x2D2D2D, nil, MineOSCore.localization.confirmInputPassword, true, "*"))
-	local label = container.layout:addChild(GUI.label(1, 1, 36, 1, 0x6340FF, MineOSCore.localization.passwordsAreDifferent)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+	local label = container.layout:addChild(GUI.label(1, 1, 36, 1, 0xFF4940, MineOSCore.localization.passwordsAreDifferent)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
 	label.hidden = true
 
-	MineOSInterface.OSDraw()
+	local function check()
+		if inputField1.text ~= "" and inputField1.text == inputField2.text then
+			container:delete()
+
+			MineOSCore.properties.protectionMethod = "password"
+			MineOSCore.properties.passwordHash = require("SHA2").hash(inputField1.text or "")
+			MineOSCore.saveProperties()
+		else
+			label.hidden = false
+		end
+
+		MineOSInterface.OSDraw()
+	end
+
+	inputField1.onInputFinished = check
+	inputField2.onInputFinished = check
 
 	container.panel.eventHandler = function(mainContainer, object, eventData)
 		if eventData[1] == "touch" then
-			if inputField1.text == inputField2.text then
-				container:delete()
-
-				MineOSCore.properties.protectionMethod = "password"
-				MineOSCore.properties.passwordHash = require("SHA2").hash(inputField1.text or "")
-				MineOSCore.saveProperties()
-			else
-				label.hidden = false
-			end
-
-			MineOSInterface.OSDraw()
+			check()
 		end
 	end
+
+	MineOSInterface.OSDraw()
 end
 
 local function setWithoutProtection()
@@ -182,29 +203,27 @@ local function setProtectionMethod()
 	local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer, MineOSCore.localization.protectYourComputer)
 
 	local comboBox = container.layout:addChild(GUI.comboBox(1, 1, 36, 3, 0xE1E1E1, 0x2D2D2D, 0x444444, 0x999999))
-	comboBox:addItem(MineOSCore.localization.biometricProtection)
-	comboBox:addItem(MineOSCore.localization.passwordProtection)
-	comboBox:addItem(MineOSCore.localization.withoutProtection)
+	comboBox:addItem(MineOSCore.localization.biometricProtection).onTouch = function()
+		container:delete()
+		biometry(true)
+	end
+	comboBox:addItem(MineOSCore.localization.passwordProtection).onTouch = function()
+		container:delete()
+		setPassword()
+	end
+	comboBox:addItem(MineOSCore.localization.withoutProtection).onTouch = function()
+		container:delete()
+		setWithoutProtection()
+	end
 
 	container.panel.eventHandler = function(mainContainer, object, eventData)
 		if eventData[1] == "touch" then
-			container:delete()
-			MineOSInterface.OSDraw()
-
-			if comboBox.selectedItem == 1 then
-				biometry(true)
-			elseif comboBox.selectedItem == 2 then
-				setPassword()
-			elseif comboBox.selectedItem == 3 then
-				setWithoutProtection()
-			end
+			comboBox:getItem(comboBox.selectedItem).onTouch()
 		end
-	end
+	end 
 end
 
 local function login()
-	event.interruptingEnabled = false
-
 	if not MineOSCore.properties.protectionMethod then
 		setProtectionMethod()
 	elseif MineOSCore.properties.protectionMethod == "password" then
@@ -213,7 +232,6 @@ local function login()
 		biometry()
 	end
 
-	event.interruptingEnabled = true
 	MineOSInterface.OSDraw()
 end
 
@@ -531,11 +549,11 @@ local function createOSWindow()
 			menu:addItem(MineOSCore.localization.networkName).onTouch = function()
 				local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer, MineOSCore.localization.networkName)
 
-				local textBox = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x666666, 0x666666, 0xE1E1E1, 0x2D2D2D, MineOSCore.properties.network.name, nil))
-				textBox.onInputFinished = function()
-					if textBox.text then
+				local input = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x666666, 0x666666, 0xE1E1E1, 0x2D2D2D, MineOSCore.properties.network.name or MineOSNetwork.modemProxy.address))
+				input.onInputFinished = function()
+					if input.text then
 						MineOSNetwork.broadcastComputerState(false)
-						MineOSCore.properties.network.name = textBox.text
+						MineOSCore.properties.network.name = input.text
 						MineOSCore.saveProperties()
 						MineOSNetwork.broadcastComputerState(MineOSCore.properties.network.enabled)
 
@@ -543,6 +561,8 @@ local function createOSWindow()
 						MineOSInterface.OSDraw()
 					end
 				end
+
+				input:startInput()
 			end
 
 			if MineOSNetwork.modemProxy.isWireless() then
@@ -581,7 +601,7 @@ local function createOSWindow()
 							subMenu:addItem(MineOSCore.localization.networkSendMessage).onTouch = function()
 								local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer, MineOSCore.localization.networkSendMessage)
 
-								local textBox = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x666666, 0x666666, 0xE1E1E1, 0x2D2D2D, nil, nil, true))
+								local textBox = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x666666, 0x666666, 0xE1E1E1, 0x2D2D2D, "", nil, true))
 								textBox.onInputFinished = function()
 									if textBox.text then
 										MineOSNetwork.sendMessage(proxy.address, "MineOSNetwork", "message", textBox.text)
@@ -664,6 +684,8 @@ local function createOSWindow()
 				MineOSInterface.OSDraw()
 			end
 
+			container.layout:addChild(GUI.textBox(1, 1, 36, 1, nil, 0x555555, {MineOSCore.localization.wallpaperSwitchInfo}, 1, 0, 0, true, true))
+
 			local slider = container.layout:addChild(GUI.slider(1, 1, 36, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x888888, 0, 100, MineOSCore.properties.wallpaperBrightness * 100, false, MineOSCore.localization.wallpaperBrightness .. ": ", "%"))
 			slider.roundValues = true
 			slider.onValueChanged = function()
@@ -673,8 +695,7 @@ local function createOSWindow()
 
 				MineOSInterface.OSDraw()
 			end
-
-			container.layout:addChild(GUI.textBox(1, 1, 36, 1, nil, 0x555555, {MineOSCore.localization.wallpaperSwitchInfo}, 1, 0, 0, true, true))
+			container.layout:addChild(GUI.object(1, 1, 1, 1))
 			
 			comboBox.onItemSelected = function()
 				MineOSCore.properties.wallpaperMode = comboBox.selectedItem
