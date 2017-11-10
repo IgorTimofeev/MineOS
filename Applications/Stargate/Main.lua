@@ -22,7 +22,7 @@ local contacts = {}
 local Ch1Image = image.load(resources .. "Ch1.pic")
 local Ch2Image = image.load(resources .. "Ch2.pic")
 
-buffer.start()
+buffer.flush()
 local mainContainer = GUI.fullScreenContainer()
 
 ---------------------------------------------------------------------------------------------
