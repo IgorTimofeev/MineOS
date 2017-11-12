@@ -22,7 +22,6 @@ local contacts = {}
 local Ch1Image = image.load(resources .. "Ch1.pic")
 local Ch2Image = image.load(resources .. "Ch2.pic")
 
-buffer.flush()
 local mainContainer = GUI.fullScreenContainer()
 
 ---------------------------------------------------------------------------------------------
@@ -141,8 +140,14 @@ end
 
 ---------------------------------------------------------------------------------------------
 
+local width, height = 32, 37
+local x, y = mainContainer.width - width - 3, math.floor(mainContainer.height / 2 - height / 2)
+
 mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x1E1E1E))
+
 mainContainer.SGImage = mainContainer:addChild(GUI.image(1, 1, image.load(resources .. "OffOff.pic")))
+mainContainer.SGImage.localX, mainContainer.SGImage.localY = math.floor((x - 2) / 2 - image.getWidth(mainContainer.SGImage.image) / 2), mainContainer.height - image.getHeight(mainContainer.SGImage.image) + 1
+
 mainContainer.chevronsContainer = mainContainer:addChild(GUI.container(mainContainer.SGImage.localX, mainContainer.SGImage.localY, mainContainer.SGImage.width, mainContainer.SGImage.height))
 mainContainer.chevrons = {}
 addChevron(13, 30)
@@ -152,12 +157,6 @@ addChevron(45, 1)
 addChevron(72, 6)
 addChevron(83, 17)
 addChevron(79, 30)
-
-local width, height = 32, 37
-local x, y = mainContainer.width - width - 3, math.floor(mainContainer.height / 2 - height / 2)
-
-mainContainer.SGImage.localX, mainContainer.SGImage.localY = math.floor((x - 2) / 2 - image.getWidth(mainContainer.SGImage.image) / 2), mainContainer.height - image.getHeight(mainContainer.SGImage.image) + 1
-mainContainer.chevronsContainer.localPosition = mainContainer.SGImage.localPosition
 
 mainContainer:addChild(newThing(mainContainer.SGImage.localX + mainContainer.SGImage.width, y, mainContainer.width - mainContainer.SGImage.localX - mainContainer.SGImage.width - width - 7,  height))
 
@@ -312,8 +311,9 @@ loadContacts()
 updateContacts()
 update()
 updateChevrons(stargate.stargateState() == "Connected")
+
 mainContainer:draw()
-buffer.draw()
+buffer.draw(true)
 mainContainer:startEventHandling()
 
 
