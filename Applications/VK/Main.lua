@@ -322,7 +322,13 @@ local function loginGUI(startUsername, startPassword)
 
 	local VKLogoImage = image.load(VKLogoImagePath)
 	local loginTextBox = GUI.input(x, obj.username[2], textFieldWidth, 3, 0xEEEEEE, 0x777777, 0x777777, 0xEEEEEE, 0x262626, username, "E-Mail", false)
+	loginTextBox.parent = { draw = function() loginTextBox:draw() end }
+	loginTextBox.getFirstParent = function() return loginTextBox.parent end
+	
 	local passwordTextBox = GUI.input(x, obj.password[2], textFieldWidth, 3, 0xEEEEEE, 0x777777, 0x777777, 0xEEEEEE, 0x262626, password, "Password", false, "*")
+	passwordTextBox.parent = { draw = function() passwordTextBox:draw() end }
+	passwordTextBox.getFirstParent = function() return passwordTextBox.parent end
+	
 
 	local function draw()
 		buffer.clear(colors.loginGUIBackground)
@@ -449,6 +455,8 @@ local function drawMessageInputBar(currentText)
 	local x, y = mainZoneX, buffer.getHeight() - 5
 	buffer.square(x, y, mainZoneWidth, 5, colors.messageInputBarColor, 0x0, " ")
 	obj.messageInputBar = GUI.input(x + 2, y + 1, mainZoneWidth - 4, 3, 0xFFFFFF, 0x444444, 0x444444, 0xFFFFFF, 0x262626, nil, "Введите сообщение", true)
+	obj.messageInputBar.parent = { draw = function() obj.messageInputBar:draw() end }
+	obj.messageInputBar.getFirstParent = function() return obj.messageInputBar.parent end
 	obj.messageInputBar:draw()
 end
 
