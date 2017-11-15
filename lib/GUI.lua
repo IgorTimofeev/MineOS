@@ -1853,59 +1853,6 @@ function GUI.switch(x, y, width, activeColor, passiveColor, pipeColor, state)
 	return switch
 end
 
------------------------------------------------------------------------------------------------------
-
-local function brailleCanvasDraw(brailleCanvas)
-	local index, background, foreground, symbol
-	for y = 1, brailleCanvas.height do
-		for x = 1, brailleCanvas.width do
-			index = buffer.getIndex(brailleCanvas.x + x - 1, brailleCanvas.y + y - 1)
-			background, foreground, symbol = buffer.rawGet(index)
-			buffer.rawSet(index, background, brailleCanvas.pixels[y][x][9], brailleCanvas.pixels[y][x][10])
-		end
-	end
-
-	return brailleCanvas
-end
-
-local function brailleCanvasSet(brailleCanvas, x, y, state, color)
-	local xReal, yReal = math.ceil(x / 2), math.ceil(y / 4)
-	if xReal <= brailleCanvas.width and yReal <= brailleCanvas.height then
-		brailleCanvas.pixels[yReal][xReal][(y - (yReal - 1) * 4 - 1) * 2 + x - (xReal - 1) * 2] = state and 1 or 0
-		brailleCanvas.pixels[yReal][xReal][9] = color
-		brailleCanvas.pixels[yReal][xReal][10] = unicode.char(
-			10240 +
-			128 * brailleCanvas.pixels[yReal][xReal][8] +
-			64 * brailleCanvas.pixels[yReal][xReal][7] +
-			32 * brailleCanvas.pixels[yReal][xReal][6] +
-			16 * brailleCanvas.pixels[yReal][xReal][4] +
-			8 * brailleCanvas.pixels[yReal][xReal][2] +
-			4 * brailleCanvas.pixels[yReal][xReal][5] +
-			2 * brailleCanvas.pixels[yReal][xReal][3] +
-			brailleCanvas.pixels[yReal][xReal][1]
-		)
-	end
-
-	return brailleCanvas
-end
-
-function GUI.brailleCanvas(x, y, width, height)
-	local brailleCanvas = GUI.object(x, y, width, height)
-	
-	brailleCanvas.pixels = {}
-	brailleCanvas.set = brailleCanvasSet
-	brailleCanvas.draw = brailleCanvasDraw
-
-	for j = 1, height * 4 do
-		brailleCanvas.pixels[j] = {}
-		for i = 1, width * 2 do
-			brailleCanvas.pixels[j][i] = { 0, 0, 0, 0, 0, 0, 0, 0, 0x0, " " }
-		end
-	end
-
-	return brailleCanvas
-end
-
 ----------------------------------------- Layout object -----------------------------------------
 
 local function layoutCheckCell(layout, column, row)
@@ -3540,17 +3487,114 @@ end
 
 -----------------------------------------------------------------------------------------------------
 
+local function brailleCanvasDraw(brailleCanvas)
+	local index, background, foreground, symbol
+	for y = 1, brailleCanvas.height do
+		for x = 1, brailleCanvas.width do
+			index = buffer.getIndex(brailleCanvas.x + x - 1, brailleCanvas.y + y - 1)
+			background, foreground, symbol = buffer.rawGet(index)
+			buffer.rawSet(index, background, brailleCanvas.pixels[y][x][9], brailleCanvas.pixels[y][x][10])
+		end
+	end
+
+	return brailleCanvas
+end
+
+local function brailleCanvasSet(brailleCanvas, x, y, state, color)
+	local xReal, yReal = math.ceil(x / 2), math.ceil(y / 4)
+	
+	brailleCanvas.pixels[yReal][xReal][(y - (yReal - 1) * 4 - 1) * 2 + x - (xReal - 1) * 2] = state and 1 or 0
+	brailleCanvas.pixels[yReal][xReal][9] = color or brailleCanvas.pixels[yReal][xReal][9]
+	brailleCanvas.pixels[yReal][xReal][10] = unicode.char(
+		10240 +
+		128 * brailleCanvas.pixels[yReal][xReal][8] +
+		64 * brailleCanvas.pixels[yReal][xReal][7] +
+		32 * brailleCanvas.pixels[yReal][xReal][6] +
+		16 * brailleCanvas.pixels[yReal][xReal][4] +
+		8 * brailleCanvas.pixels[yReal][xReal][2] +
+		4 * brailleCanvas.pixels[yReal][xReal][5] +
+		2 * brailleCanvas.pixels[yReal][xReal][3] +
+		brailleCanvas.pixels[yReal][xReal][1]
+	)
+
+	return brailleCanvas
+end
+
+local function brailleCanvasGet(brailleCanvas, x, y)
+	local xReal, yReal = math.ceil(x / 2), math.ceil(y / 4)
+	return brailleCanvas.pixels[yReal][xReal][(y - (yReal - 1) * 4 - 1) * 2 + x - (xReal - 1) * 2], brailleCanvas.pixels[yReal][xReal][9], brailleCanvas.pixels[yReal][xReal][10]
+end
+
+local function brailleCanvasFill(brailleCanvas, x, y, width, height, state, color)
+	for j = y, y + height - 1 do
+		for i = x, x + width - 1 do
+			brailleCanvas:set(i, j, state, color)
+		end
+	end
+end
+
+local function brailleCanvasClear(brailleCanvas)
+	for j = 1, brailleCanvas.height * 4 do
+		brailleCanvas.pixels[j] = {}
+		for i = 1, brailleCanvas.width * 2 do
+			brailleCanvas.pixels[j][i] = { 0, 0, 0, 0, 0, 0, 0, 0, 0x0, " " }
+		end
+	end
+end
+
+function GUI.brailleCanvas(x, y, width, height)
+	local brailleCanvas = GUI.object(x, y, width, height)
+	
+	brailleCanvas.pixels = {}
+
+	brailleCanvas.get = brailleCanvasGet
+	brailleCanvas.set = brailleCanvasSet
+	brailleCanvas.fill = brailleCanvasFill
+	brailleCanvas.clear = brailleCanvasClear
+
+	brailleCanvas.draw = brailleCanvasDraw
+
+	brailleCanvas:clear()
+
+	return brailleCanvas
+end
+
+-----------------------------------------------------------------------------------------------------
+
 
 -- buffer.clear()
 -- buffer.draw(true)
 
 -- local mainContainer = GUI.fullScreenContainer()
--- mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x2D2D2D))
+-- mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x262626))
 
--- local input = mainContainer:addChild(GUI.input(2, 2, 30, 3, 0xEEEEEE, 0x555555, 0x999999, 0xFFFFFF, 0x2D2D2D, "Hello world", "Placeholder text", true))
--- input.onInputFinished = function(mainContainer, object, eventData, text)
--- 	if text:
+-- -- Добавляем текстовый лейбл, чтобы можно было убедиться в графонистости канвас-виджета
+-- mainContainer:addChild(GUI.label(3, 2, 30, 1, 0xFFFFFF, "Текст для сравнения размеров"))
+
+-- -- Создаем BrailleCanvas размером 30x15 экранных пикселей
+-- local brailleCanvas = mainContainer:addChild(GUI.brailleCanvas(3, 4, 30, 15))
+-- -- Рисуем рамочку вокруг объекта. Для начала делаем две белых вертикальных линии
+-- local canvasWidthInBraillePixels = brailleCanvas.width * 2
+-- for i = 1, brailleCanvas.height * 4 do
+-- 	brailleCanvas:set(1, i, true, 0xFFFFFF)
+-- 	brailleCanvas:set(canvasWidthInBraillePixels, i, true, 0xFFFFFF)
 -- end
+-- -- А затем две горизонтальных
+-- local canvasHeightInBraillePixels = brailleCanvas.height * 4
+-- for i = 1, brailleCanvas.width * 2 do
+-- 	brailleCanvas:set(i, 1, true, 0xFFFFFF)
+-- 	brailleCanvas:set(i, canvasHeightInBraillePixels, true, 0xFFFFFF)
+-- end
+-- -- Рисуем диагональную линию красного цвета
+-- for i = 1, 60 do
+-- 	brailleCanvas:set(i, i, true, 0xFF4940)
+-- end
+-- -- Рисуем желтый прямоугольник
+-- brailleCanvas:fill(20, 20, 20, 20, true, 0xFFDB40)
+-- -- Рисуем чуть меньший прямоугольник, но с состоянием пикселей = false
+-- brailleCanvas:fill(25, 25, 10, 10, false)
+
+-- ------------------------------------------------------------------------------------------
 
 -- mainContainer:draw()
 -- buffer.draw(true)
