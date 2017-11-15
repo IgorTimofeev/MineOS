@@ -8,7 +8,7 @@ local MineOSInterface = require("MineOSInterface")
 
 ---------------------------------------------------------------------------------------------------------
 
-local mainContainer, window = MineOSInterface.addWindow(GUI.filledWindow(nil, nil, 110, 25, 0xF0F0F0))
+local mainContainer, window = MineOSInterface.addWindow(MineOSInterface.filledWindow(1, 1, 110, 25, 0xF0F0F0))
 local yDependencyString = "math.sin(x)"
 local xOffset, yOffset, xDrag, yDrag, points = 0, 0, 1, 1
 

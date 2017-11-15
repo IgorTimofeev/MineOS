@@ -22,7 +22,7 @@ local updateImage = image.load(resources .. "Update.pic")
 local temproraryIconPath = resources .. "TempIcon.pic"
 local appsPerPage = 6
 
-local mainContainer, window = MineOSInterface.addWindow(GUI.tabbedWindow(nil, nil, 80, 32))
+local mainContainer, window = MineOSInterface.addWindow(MineOSInterface.tabbedWindow(1, 1, 80, 32))
 
 ----------------------------------------------------------------------------------------------------------------
 

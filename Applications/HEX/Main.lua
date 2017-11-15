@@ -38,7 +38,7 @@ local scrollBar, titleTextBox
 
 ------------------------------------------------------------------------------------------------------------------
 
-local mainContainer, window = MineOSInterface.addWindow(GUI.filledWindow(nil, nil, 98, 25, colors.background))
+local mainContainer, window = MineOSInterface.addWindow(MineOSInterface.filledWindow(1, 1, 98, 25, colors.background))
 
 window.backgroundPanel.localX, window.backgroundPanel.localY = 11, 5
 window.backgroundPanel.width, window.backgroundPanel.height = window.width - 10, window.height - 4

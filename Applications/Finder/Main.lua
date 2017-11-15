@@ -13,7 +13,7 @@ local args, options = require("shell").parse(...)
 
 ------------------------------------------------------------------------------------------------------
 
-local mainContainer, window = MineOSInterface.addWindow(GUI.filledWindow(nil, nil, 88, 26, 0xF0F0F0))
+local mainContainer, window = MineOSInterface.addWindow(MineOSInterface.filledWindow(1, 1, 88, 26, 0xF0F0F0))
 
 local iconFieldYOffset = 2
 local scrollTimerID

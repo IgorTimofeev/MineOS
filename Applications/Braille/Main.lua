@@ -10,7 +10,7 @@ local MineOSInterface = require("MineOSInterface")
 
 ---------------------------------------------------------------------------------------------------------
 
-local mainContainer, window = MineOSInterface.addWindow(GUI.filledWindow(nil, nil, 32, 19, 0x2D2D2D))
+local mainContainer, window = MineOSInterface.addWindow(MineOSInterface.filledWindow(1, 1, 32, 19, 0x2D2D2D))
 
 local layout = window:addChild(GUI.layout(1, 2, 1, 1, 1, 1))
 layout:setCellDirection(1, 1, GUI.directions.horizontal)

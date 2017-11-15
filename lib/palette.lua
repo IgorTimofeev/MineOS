@@ -96,7 +96,7 @@ end
 --------------------------------------------------------------------------------------------------------------
 
 function palette.window(x, y, startColor)
-	local window = GUI.window(x, y, 71, 25)
+	local window = require("MineOSInterface").window(x, y, 71, 25)
 	
 	window.color = {hsb = {}, rgb = {}}
 	window:addChild(GUI.panel(1, 1, window.width, window.height, 0xEEEEEE))

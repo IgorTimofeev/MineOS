@@ -21,6 +21,26 @@ MineOSInterface.iconConfigFileName = ".icons"
 MineOSInterface.iconImageWidth = 8
 MineOSInterface.iconImageHeight = 4
 
+MineOSInterface.colors = {
+	windows = {
+		title = {
+			background = 0xE1E1E1,
+			text = 0x2D2D2D
+		},
+		backgroundPanel = 0xF0F0F0,
+		tabBar = {
+			default = {
+				background = 0x2D2D2D,
+				text = 0xF0F0F0
+			},
+			selected = {
+				background = 0xF0F0F0,
+				text = 0x2D2D2D
+			}
+		}
+	}
+}
+
 -----------------------------------------------------------------------------------------------------------------------------------
 
 local function calculateIconSizes()
@@ -1483,6 +1503,106 @@ function MineOSInterface.safeLaunch(...)
 	end
 
 	return success, path, line, traceback
+end
+
+----------------------------------------- Window object -----------------------------------------
+
+local function windowDraw(window)
+	GUI.windowShadow(window.x, window.y, window.width, window.height, nil, true)
+	GUI.drawContainerContent(window)
+	return window
+end
+
+local function windowCheck(container, x, y)
+	for i = #container.children, 1, -1 do
+		if container.children[i].children then
+			if windowCheck(container.children[i], x, y) then
+				return true
+			end
+		elseif container.children[i].eventHandler and container.children[i]:isClicked(x, y) then
+			return true
+		end
+	end
+end
+
+local function windowEventHandler(mainContainer, object, eventData)
+	if eventData[1] == "touch" then
+		object.lastTouchPosition = object.lastTouchPosition or {}
+		object.lastTouchPosition.x, object.lastTouchPosition.y = eventData[3], eventData[4]
+		
+		if object ~= object.parent.children[#object.parent.children] then
+			object:moveToFront()
+			mainContainer:draw()
+			buffer.draw()
+		end
+	elseif eventData[1] == "drag" and object.lastTouchPosition and not windowCheck(object, eventData[3], eventData[4]) then
+		local xOffset, yOffset = eventData[3] - object.lastTouchPosition.x, eventData[4] - object.lastTouchPosition.y
+		object.lastTouchPosition.x, object.lastTouchPosition.y = eventData[3], eventData[4]
+
+		if xOffset ~= 0 or yOffset ~= 0 then
+			object.localX, object.localY = object.localX + xOffset, object.localY + yOffset
+			mainContainer:draw()
+			buffer.draw()
+		end
+	elseif eventData[1] == "drop" then
+		object.lastTouchPosition = nil
+	elseif eventData[1] == "key_down" then
+		-- Ctrl or CMD
+		if keyboard.isKeyDown(29) or keyboard.isKeyDown(219) then
+			-- W
+			if eventData[4] == 17 then
+				if object == object.parent.children[#object.parent.children] and not eventData.windowHandled then
+					eventData.windowHandled = true
+					object:close()
+					mainContainer:draw()
+					buffer.draw()
+				end
+			end
+		end
+	end
+end
+
+function MineOSInterface.window(x, y, width, height)
+	local window = GUI.container(x, y, width, height)
+	
+	window.eventHandler = windowEventHandler
+	window.draw = windowDraw
+
+	return window
+end
+
+function MineOSInterface.filledWindow(x, y, width, height, backgroundColor)
+	local window = MineOSInterface.window(x, y, width, height)
+
+	window.backgroundPanel = window:addChild(GUI.panel(1, 1, width, height, backgroundColor))
+	window.actionButtons = window:addChild(GUI.actionButtons(2, 2, false))
+
+	return window
+end
+
+function MineOSInterface.titledWindow(x, y, width, height, title, addTitlePanel)
+	local window = MineOSInterface.filledWindow(x, y, width, height, MineOSInterface.colors.windows.backgroundPanel)
+
+	if addTitlePanel then
+		window.titlePanel = window:addChild(GUI.panel(1, 1, width, 1, MineOSInterface.colors.windows.title.background))
+		window.backgroundPanel.localY, window.backgroundPanel.height = 2, window.height - 1
+	end
+	window.titleLabel = window:addChild(GUI.label(1, 1, width, height, MineOSInterface.colors.windows.title.text, title)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+	window.actionButtons.localY = 1
+	window.actionButtons:moveToFront()
+
+	return window
+end
+
+function MineOSInterface.tabbedWindow(x, y, width, height, ...)
+	local window = MineOSInterface.filledWindow(x, y, width, height, MineOSInterface.colors.windows.backgroundPanel)
+
+	window.tabBar = window:addChild(GUI.tabBar(1, 1, window.width, 3, 2, 0, MineOSInterface.colors.windows.tabBar.default.background, MineOSInterface.colors.windows.tabBar.default.text, MineOSInterface.colors.windows.tabBar.selected.background, MineOSInterface.colors.windows.tabBar.selected.text, ...))
+	window.backgroundPanel.localY, window.backgroundPanel.height = 4, window.height - 3
+	window.actionButtons:moveToFront()
+	window.actionButtons.localY = 2
+
+	return window
 end
 
 -----------------------------------------------------------------------------------------------------------------------------------

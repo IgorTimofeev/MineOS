@@ -58,7 +58,7 @@ local thermal = {
 }
 local palette = grayscale
 
-local mainContainer, window = MineOSInterface.addWindow(GUI.filledWindow(nil, nil, 100, 25, 0x2D2D2D))
+local mainContainer, window = MineOSInterface.addWindow(MineOSInterface.filledWindow(1, 1, 100, 25, 0x2D2D2D))
 
 window.backgroundPanel.width = 22
 window.backgroundPanel.height = window.height
@@ -96,7 +96,7 @@ local function takePicture()
 	local x, y = 1, 1
 	for yRotation = FOV, -FOV, -(doubleFOV / (cameraView.height * (semiPixelSwitch.state and 2 or 1))) do
 		cameraView.pixels[y] = {}
-		for xRotation = -FOV, FOV, (doubleFOV / cameraView.width) do
+		for xRotation = FOV, -FOV, -(doubleFOV / cameraView.width) do
 			cameraView.pixels[y][x] = cameraProxy.distance(xRotation, yRotation)
 			
 			x = x + 1
@@ -136,14 +136,8 @@ end
 
 window.actionButtons:moveToFront()
 
-semiPixelSwitch.onStateChanged = function()
-	takePicture()
-end
-
-FOVSlider.onValueChanged = function()
-	takePicture()
-end
-
+semiPixelSwitch.onStateChanged = takePicture
+FOVSlider.onValueChanged = takePicture
 shootButton.onTouch = takePicture
 
 paletteSwitch.onStateChanged = function()
