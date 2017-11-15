@@ -1,5 +1,6 @@
 
-#Oписание
+Oписание
+======
 
 MineOSInterface - это библиотека, поставляющаяся в комплекте с операционной системой MineOS. Она реализует основные системные виджеты, а также отвечает за оконные манипуляции. В качестве интерфейсной основы используются библиотеки **GUI** и **doubleBuffering**.
 
@@ -13,9 +14,11 @@ MineOSInterface - это библиотека, поставляющаяся в �
 <окно>.backgroundPanel.colors.background = 0xFF00FF
 ```
 
-#Основные методы
+Основные методы
+======
 
-##MineOSInterface.**addWindow**(*table* window): *table* mainContainer, *table* window
+MineOSInterface.**addWindow**(*table* window): *table* mainContainer, *table* window
+-----------------------------------------------------------
 
 | Тип | Аргумент | Описание |
 | ------ | ------ | ------ |
@@ -33,9 +36,11 @@ MineOSInterface - это библиотека, поставляющаяся в �
 
 Примеры реализации описаны ниже.
 
-#Методы для создания окон
+Методы для создания окон
+======
 
-##MineOSInterface.**window**(*int* x, *int* y, *int* width, *int* height): *table* window
+MineOSInterface.**window**(*int* x, *int* y, *int* width, *int* height): *table* window
+-----------------------------------------------------------
 
 | Тип | Аргумент | Описание |
 | ------ | ------ | ------ |
@@ -62,7 +67,8 @@ window:addChild(GUI.panel(1, 1, window.width, window.height, 0x888888))
 
 ![](https://i.imgur.com/lhrm0z6.png?1)
 
-##MineOSInterface.**filledWindow**(*int* x, *int* y, *int* width, *int* height, [*int* color]): *table* window
+MineOSInterface.**filledWindow**(*int* x, *int* y, *int* width, *int* height, [*int* color]): *table* window
+-----------------------------------------------------------
 
 | Тип | Аргумент | Описание |
 | ------ | ------ | ------ |
@@ -93,7 +99,8 @@ local mainContainer, window = MineOSInterface.addWindow(MineOSInterface.filledWi
 
 ![](https://i.imgur.com/YlCOx68.png?1)
 
-##MineOSInterface.**tabbedWindow**(*int* x, *int* y, *int* width, *int* height): *table* window
+MineOSInterface.**tabbedWindow**(*int* x, *int* y, *int* width, *int* height): *table* window
+-----------------------------------------------------------
 
 | Тип | Аргумент | Описание |
 | ------ | ------ | ------ |
