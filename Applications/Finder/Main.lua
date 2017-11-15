@@ -192,6 +192,20 @@ window.iconField.launchers.directory = function(icon)
 	buffer.draw()
 end
 
+window.iconField.launchers.showPackageContent = function(icon)
+	addWorkpath(icon.path)
+	window.iconField:updateFileList()
+	mainContainer:draw()
+	buffer.draw()
+end
+
+window.iconField.launchers.showContainingFolder = function(icon)
+	addWorkpath(fs.path(icon.path))
+	window.iconField:updateFileList()
+	mainContainer:draw()
+	buffer.draw()
+end
+
 window.searchInput = window:addChild(GUI.input(1, 2, 36, 1, 0xFFFFFF, 0x666666, 0xAAAAAA, 0xFFFFFF, 0x2D2D2D, nil, "Search", true))
 window.searchInput.onInputFinished = function()
 	window.iconField.filenameMatcher = window.searchInput.text
