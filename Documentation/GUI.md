@@ -46,7 +46,7 @@ GUI - многофункциональная графическая библио
 
 К примеру, моя операционная система, среда разработки и 3D-приложение полностью реализованы методами данной библиотеки:
 
-![Imgur](http://i.imgur.com/hTFGCqj.gif)
+![Imgur](https://i.imgur.com/Ki5bX0I.gif)
 
 ![Imgur](http://i.imgur.com/tHAiTmF.gif)
 
