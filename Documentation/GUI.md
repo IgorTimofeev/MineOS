@@ -1307,7 +1307,10 @@ GUI.**brailleCanvas**( x, y, width, height ): *table* brailleCanvas
 
 | Тип свойства | Свойство |Описание |
 | ------ | ------ | ------ |
-| *function* | :**set**( *int* x, *int* y, *boolean* state, *int* color )| Установить соответствующее значение пикселя по локальным координатам BrailleCanvas (не глобальным экранным). Если в данной позиции уже имеется установленный пиксель, то значение его цвета будет заменено на новое |
+| *function* | :**set**( *int* x, *int* y, *boolean* state, [*int* color] )| Установить соответствующее значение пикселя по локальным координатам BrailleCanvas. Если в данной позиции уже имеется установленный пиксель, то значение его цвета будет заменено на новое. Если аргумент цвета не указывается, то цвет пикселя останется прежним |
+| *function* | :**get**( *int* x, *int* y ): *boolean* state, *int* color, *char* symbol | Получить состояние, цвет, а также символ текущего брайль-пикселя |
+| *function* | :**fill**( *int* x, *int* y, *int* width, *int* height, *boolean* state, *int* color ) | Работает аналогично методу :**set**, однако позволяет редактировать целые области BrailleCanvas |
+| *function* | :**clear**() | Очищает содержимое BrailleCanvasе |
 
 Пример реализации BrailleCanvas:
 ```lua
@@ -1319,26 +1322,31 @@ local GUI = dofile("/lib/GUI.lua")
 local mainContainer = GUI.fullScreenContainer()
 mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x262626))
 
-mainContainer:addChild(GUI.label(2, 2, 30, 1, 0xFFFFFF, "Текст для сравнения размеров"))
+-- Добавляем текстовый лейбл, чтобы можно было убедиться в графонистости канвас-виджета
+mainContainer:addChild(GUI.label(3, 2, 30, 1, 0xFFFFFF, "Текст для сравнения размеров"))
 
 -- Создаем BrailleCanvas размером 30x15 экранных пикселей
-local brailleCanvas = mainContainer:addChild(GUI.brailleCanvas(2, 4, 30, 15))
+local brailleCanvas = mainContainer:addChild(GUI.brailleCanvas(3, 4, 30, 15))
 -- Рисуем рамочку вокруг объекта. Для начала делаем две белых вертикальных линии
-local localCanvasWidth = brailleCanvas.width * 2
+local canvasWidthInBraillePixels = brailleCanvas.width * 2
 for i = 1, brailleCanvas.height * 4 do
 	brailleCanvas:set(1, i, true, 0xFFFFFF)
-	brailleCanvas:set(localCanvasWidth, i, true, 0xFFFFFF)
+	brailleCanvas:set(canvasWidthInBraillePixels, i, true, 0xFFFFFF)
 end
 -- А затем две горизонтальных
-local localCanvasHeight = brailleCanvas.height * 4
+local canvasHeightInBraillePixels = brailleCanvas.height * 4
 for i = 1, brailleCanvas.width * 2 do
 	brailleCanvas:set(i, 1, true, 0xFFFFFF)
-	brailleCanvas:set(i, localCanvasHeight, true, 0xFFFFFF)
+	brailleCanvas:set(i, canvasHeightInBraillePixels, true, 0xFFFFFF)
 end
 -- Рисуем диагональную линию красного цвета
 for i = 1, 60 do
-	brailleCanvas:set(i, i, true, 0xFF0000)
+	brailleCanvas:set(i, i, true, 0xFF4940)
 end
+-- Рисуем желтый прямоугольник
+brailleCanvas:fill(20, 20, 20, 20, true, 0xFFDB40)
+-- Рисуем чуть меньший прямоугольник, но с состоянием пикселей = false
+brailleCanvas:fill(25, 25, 10, 10, false)
 
 ------------------------------------------------------------------------------------------
 
@@ -1349,7 +1357,7 @@ mainContainer:startEventHandling()
 
 Результат:
 
-![Imgur](http://i.imgur.com/3Oq1nzY.png)
+![Imgur](https://i.imgur.com/FPWbQkv.png)
 
 GUI.**scrollBar**( x, y, width, height, backgroundColor, foregroundColor, minimumValue, maximumValue, value, shownValueCount, onScrollValueIncrement, thinMode ): *table* scrollBar
 ------------------------------------------------------------------------
