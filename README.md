@@ -46,7 +46,7 @@
 
 ![](https://i.imgur.com/S16oFce.png)
 
-Вам будет предложено выбрать имя вашего приложения, а также его иконку. Если иконка не выбрана, то будет использована системная. Для изменения исходного кода приложения достаточно отредактировать файл **Main.lua**. В примере ниже мы будем использовать методы системных библиотек **GUI** и **MineOSInterface**, поэтому базовое ознакомление с ними крайне рекомендуется:
+Вам будет предложено выбрать имя вашего приложения, а также его иконку. Если иконка не выбрана, то будет использована системная. Для изменения исходного кода приложения достаточно отредактировать файл **Main.lua**. В примере ниже мы будем использовать методы системных библиотек **[GUI](https://github.com/IgorTimofeev/OpenComputers/blob/master/Documentation/GUI.md)**, **[MineOSInterface](https://github.com/IgorTimofeev/OpenComputers/blob/master/Documentation/MineOSInterface.md)** и **[doubleBuffering](https://github.com/IgorTimofeev/OpenComputers/blob/master/Documentation/doubleBuffering.md)**, поэтому базовое ознакомление с ними крайне рекомендуется:
 
 ```lua
 
