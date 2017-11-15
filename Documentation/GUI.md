@@ -23,9 +23,9 @@
 | [    GUI.colorSelector](#guicolorselector-x-y-width-height-color-text--table-colorselector) |
 | [    GUI.comboBox](#guicombobox-x-y-width-elementheight-backgroundcolor-textcolor-arrowbackgroundcolor-arrowtextcolor--table-combobox) |
 | [    GUI.menu](#guimenu-x-y-width-backgroundcolor-textcolor-backgroundpressedcolor-textpressedcolor-backgroundtransparency--table-menu) |
-| [    GUI.resizer](#guiprogressbar-x-y-width-height-resizerColor-arrowColor--table-resizer) |
+| [    GUI.resizer](#guiresizer-x-y-width-height-resizerColor-arrowColor--table-resizer) |
 | [    GUI.progressBar](#guiprogressbar-x-y-width-primarycolor-secondarycolor-valuecolor-value-thin-showvalue-valueprefix-valuepostfix--table-progressbar) |
-| [    GUI.filesystemTree](#guifilesystemTree-x-y-width-height-backgroundcolor-textcolor-selectionbackgroundcolor-selectiontextcolor-arrowcolor-scrollbarprimarycolor-scrollbarsecondarycolor-workpath--table-filesystemTree) |
+| [    GUI.filesystemTree](#guifilesystemTree-x-y-width-height-backgroundColor-directoryColor-fileColor-arrowColor-backgroundSelectionColor-textSelectionColor-arrowSelectionColor-disabledColor-scrollBarBackground-scrollBarForeground-showMode-selectionMode--table-filesystemTree) |
 | [    GUI.filesystemChooser](#guifilesystemchooser-x-y-width-height-backgroundcolor-textcolor-tipbackgroundcolor-tiptextcolor-initialtext-sumbitbuttontext-cancelbuttontext-placeholdertext-filesystemdialogmode-filesystemdialogpath--table-filesystemchooser) |
 | [    GUI.codeView](#guicodeview-x-y-width-height-lines-fromsymbol-fromline-maximumlinelength-selections-highlights-highlightluasyntax-indentationwidth--table-codeview) |
 | [    GUI.chart](#guichart-x-y-width-height-axiscolor-axisvaluecolor-axishelperscolor-chartcolor-xaxisvalueinterval-yaxisvalueinterval-xaxispostfix-yaxispostfix-fillchartarea-values--table-chart) |
@@ -1067,7 +1067,7 @@ mainContainer:startEventHandling()
 
 ![](http://i89.fastpic.ru/big/2017/0402/f1/ef1da27531ccf899eb9eb59c010180f1.png)
 
-GUI.**filesystemTree**( x, y, width, height, backgroundColor, directoryColor, fileColor, arrowColor, backgroundSelectionColor, textSelectedColor, arrowSelectionColor, wrongExtensionColor, scrollBarBackground, scrollBarForeground, workPath, showMode, selectionMode ): *table* filesystemTree
+GUI.**filesystemTree**( x, y, width, height, backgroundColor, directoryColor, fileColor, arrowColor, backgroundSelectionColor, textSelectionColor, arrowSelectionColor, disabledColor, scrollBarBackground, scrollBarForeground, showMode, selectionMode ): *table* filesystemTree
 ------------------------------------------------------------------------
 | Тип | Аргумент | Описание |
 | ------ | ------ | ------ |
@@ -1075,17 +1075,16 @@ GUI.**filesystemTree**( x, y, width, height, backgroundColor, directoryColor, fi
 | *int* | y | Координата объекта по оси y |
 | *int* | width | Ширина объекта |
 | *int* | height | Высота объекта |
-| *int* or *nil* | backgroundColor | Цвет фона filesystemTree |
-| *int* | directoryColor | Цвет директорий filesystemTree |
-| *int* | fileColor | Цвет файлов filesystemTree |
-| *int* | arrowColor | Цвет стрелки директорий filesystemTree |
-| *int* | backgroundSelectionColor | Цвет выделения фона filesystemTree |
-| *int* | textSelectionColor | Цвет выделения текста filesystemTree |
-| *int* | arrowSelectionColor | Цвет выделения стрелки filesystemTree |
-| *int* | wrongExtensionColor | Цвет файла с неподдерживаемым расширением filesystemTree |
-| *int* | scrollBarPrimaryColor | Первичный цвет скроллбара filesystemTree |
-| *int* | scrollBarSecondaryColor | Вторичный цвет скроллбара filesystemTree |
-| *string* | workPath | Стартовая директория filesystemTree |
+| *int* or *nil* | backgroundColor | Цвет фона файлового древа |
+| *int* | directoryColor | Цвет текста директорий |
+| *int* | fileColor | Цвет текста файлов |
+| *int* | arrowColor | Цвет текста стрелки директорий |
+| *int* | backgroundSelectionColor | Цвет фона при выделении |
+| *int* | textSelectionColor | Цвет текста при выделении |
+| *int* | arrowSelectionColor | Цвет стрелки при выделении |
+| *int* | disabledColor | Цвет файла, не соответствующего выбранному extensionFilter |
+| *int* | scrollBarBackground | Первичный цвет скроллбара |
+| *int* | scrollBarForeground | Вторичный цвет скроллбара |
 | [*enum* | filesystemShowMode] | Опциональный режим отображения содержимого текущей директориии. Может принимать значения GUI.**filesystemModes**.**file**, GUI.**filesystemModes**.**directory** или GUI.**filesystemModes**.**both**  |
 | [*enum* | filesystemSelectionMode] | Опциональный режим выбора содепжимого текущей директориии. Значения принимает те же, что и у filesystemShowMode  |
 
@@ -1107,18 +1106,21 @@ local GUI = require("GUI")
 local mainContainer = GUI.fullScreenContainer()
 mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x262626))
 
-local filesystemTree1 = mainContainer:addChild(GUI.filesystemTree(2, 2, 30, 41, 0xCCCCCC, 0x2D2D2D, 0x3C3C3C, 0xEEEEEE, 0x666666, 0xC3C3C3, 0x393939, "/", GUI.filesystemModes.both, GUI.filesystemModes.both))
-filesystemTree1.onItemSelected = function(path)
+local tree1 = mainContainer:addChild(GUI.filesystemTree(3, 2, 30, 41, 0xCCCCCC, 0x3C3C3C, 0x3C3C3C, 0x999999, 0x3C3C3C, 0xE1E1E1, 0xBBBBBB, 0xAAAAAA, 0xBBBBBB, 0x444444, GUI.filesystemModes.both, GUI.filesystemModes.file))
+tree1:updateFileList()
+tree1.onItemSelected = function(path)
 	GUI.error("Something was selected, the path is: \"" .. path .. "\"")
 end
 
-local filesystemTree2 = mainContainer:addChild(GUI.filesystemTree(34, 2, 30, 41, 0xCCCCCC, 0x2D2D2D, 0x3C3C3C, 0xEEEEEE, 0x666666, 0xC3C3C3, 0x393939, "/", GUI.filesystemModes.file, GUI.filesystemModes.file))
-filesystemTree2.onItemSelected = function(path)
+local tree2 = mainContainer:addChild(GUI.filesystemTree(34, 2, 30, 41, 0xCCCCCC, 0x3C3C3C, 0x3C3C3C, 0x999999, 0x3C3C3C, 0xE1E1E1, 0xBBBBBB, 0xAAAAAA, 0xBBBBBB, 0x444444, GUI.filesystemModes.file, GUI.filesystemModes.file))
+tree2:updateFileList()
+tree2.onItemSelected = function(path)
 	GUI.error("File was selected, the path is: \"" .. path .. "\"")
 end
 
-local filesystemTree3 = mainContainer:addChild(GUI.filesystemTree(66, 2, 30, 41, 0xCCCCCC, 0x2D2D2D, 0x3C3C3C, 0xEEEEEE, 0x666666, 0xC3C3C3, 0x393939, "/", GUI.filesystemModes.directory, GUI.filesystemModes.directory))
-filesystemTree3.onItemSelected = function(path)
+local tree3 = mainContainer:addChild(GUI.filesystemTree(66, 2, 30, 41, 0xCCCCCC, 0x3C3C3C, 0x3C3C3C, 0x999999, 0x3C3C3C, 0xE1E1E1, 0xBBBBBB, 0xAAAAAA, 0xBBBBBB, 0x444444, GUI.filesystemModes.directory, GUI.filesystemModes.directory))
+tree3:updateFileList()
+tree3.onItemSelected = function(path)
 	GUI.error("Directory was selected, the path is: \"" .. path .. "\"")
 end
 
