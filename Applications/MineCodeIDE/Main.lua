@@ -1596,7 +1596,7 @@ local function createMainContainer()
 	end
 	mainContainer.leftTreeView:updateFileList()
 	mainContainer.leftTreeViewResizer = mainContainer:addChild(GUI.resizer(1, 1, 3, 5, 0x888888, 0x0))
-	mainContainer.leftTreeViewResizer.onResize = function(dragWidth, dragHeight)
+	mainContainer.leftTreeViewResizer.onResize = function(mainContainer, object, eventData, dragWidth, dragHeight)
 		mainContainer.leftTreeView.width = mainContainer.leftTreeView.width + dragWidth
 		calculateSizes()
 		

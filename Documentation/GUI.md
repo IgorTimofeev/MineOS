@@ -23,12 +23,13 @@
 | [    GUI.colorSelector](#guicolorselector-x-y-width-height-color-text--table-colorselector) |
 | [    GUI.comboBox](#guicombobox-x-y-width-elementheight-backgroundcolor-textcolor-arrowbackgroundcolor-arrowtextcolor--table-combobox) |
 | [    GUI.menu](#guimenu-x-y-width-backgroundcolor-textcolor-backgroundpressedcolor-textpressedcolor-backgroundtransparency--table-menu) |
+| [    GUI.resizer](#guiprogressbar-x-y-width-height-resizerColor-arrowColor--table-resizer) |
 | [    GUI.progressBar](#guiprogressbar-x-y-width-primarycolor-secondarycolor-valuecolor-value-thin-showvalue-valueprefix-valuepostfix--table-progressbar) |
 | [    GUI.filesystemTree](#guifilesystemTree-x-y-width-height-backgroundcolor-textcolor-selectionbackgroundcolor-selectiontextcolor-arrowcolor-scrollbarprimarycolor-scrollbarsecondarycolor-workpath--table-filesystemTree) |
 | [    GUI.filesystemChooser](#guifilesystemchooser-x-y-width-height-backgroundcolor-textcolor-tipbackgroundcolor-tiptextcolor-initialtext-sumbitbuttontext-cancelbuttontext-placeholdertext-filesystemdialogmode-filesystemdialogpath--table-filesystemchooser) |
 | [    GUI.codeView](#guicodeview-x-y-width-height-lines-fromsymbol-fromline-maximumlinelength-selections-highlights-highlightluasyntax-indentationwidth--table-codeview) |
 | [    GUI.chart](#guichart-x-y-width-height-axiscolor-axisvaluecolor-axishelperscolor-chartcolor-xaxisvalueinterval-yaxisvalueinterval-xaxispostfix-yaxispostfix-fillchartarea-values--table-chart) |
-| [    GUI.brailleCanvas](#guibraillecanvas-x-y-width-height-table--braillecanvas) |
+| [    GUI.brailleCanvas](#guibraillecanvas-x-y-width-height--table-braillecanvas) |
 | [    GUI.scrollBar](#guiscrollbar-x-y-width-height-backgroundcolor-foregroundcolor-minimumvalue-maximumvalue-value-shownvaluecount-onscrollvalueincrement-thinhorizontalmode--table-scrollbar) |
 | [    GUI.textBox](#guitextboxx-y-width-height-backgroundcolor-textcolor-lines-currentline-horizontaloffset-verticaloffset-table-textbox) |
 | [Практические примеры](#Практические-примеры) |
@@ -45,7 +46,7 @@ GUI - многофункциональная графическая библио
 
 К примеру, моя операционная система, среда разработки и 3D-приложение полностью реализованы методами данной библиотеки:
 
-![Imgur](https://i.imgur.com/Ki5bX0I.gif)
+![Imgur](http://i.imgur.com/hTFGCqj.gif)
 
 ![Imgur](http://i.imgur.com/tHAiTmF.gif)
 
@@ -961,6 +962,65 @@ mainContainer:startEventHandling()
 
 ![Imgur](http://i.imgur.com/b1Tmge5.gif)
 
+GUI.**resizer**( x, y, width, height, resizerColor, arrowColor ): *table* resizer
+------------------------------------------------------------------------
+| Тип | Аргумент | Описание |
+| ------ | ------ | ------ |
+| *int* | x | Координата объекта по оси x |
+| *int* | y | Координата объекта по оси y |
+| *int* | width | Ширина объекта |
+| *int* | height | Высота объекта |
+| *int* | resizerColor | Цвет "полоски" ресайзера |
+| *int* | arrowColor | Цвет стрелки, возникающей при событиях drag/drop |
+
+Ресайзер предназначен для автоматизации изменения размеров каких-либо объектов. При перемещении указателя мыши с зажатой левой кнопкой ресайзер будет вызывать соответствующие callback-методы.
+
+| Тип свойства | Свойство |Описание |
+| ------ | ------ | ------ |
+| *callback-function* | .**onResize**(*table* mainContainer, *table* resizer, *table* eventData, *int* dragWidth, *int* dragHeight) | Данная функция вызывается во время перемещения указателя мыши с зажатой левой клавишей по ресайзеру. Последние два аргумента представляют из себя дистанцию, пройденную указателем мыши |
+| *callback-function* | .**onResizeFinished**(*table* mainContainer, *table* resizer, *table* eventData) | Данная функция вызывается после прекращения перемещения указателя мыши по ресайзеру |
+
+Пример реализации ресайзера:
+
+```lua
+local buffer = require("doubleBuffering")
+local GUI = require("GUI")
+
+------------------------------------------------------------------------------------------
+
+local mainContainer = GUI.fullScreenContainer()
+mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x2D2D2D))
+
+-- Добавляем панель, символизирующую системное окно, размер которого мы будем изменять
+local panel = mainContainer:addChild(GUI.panel(3, 2, 30, 10, 0xE1E1E1))
+-- Добавляем объект-ресайзер, по умолчанию находящийся в правой части окна. Для обработки событий "drag/drop" в обе стороны делаем ширину ресайзера как минимум 3
+local resizer = mainContainer:addChild(GUI.resizer(panel.localX + panel.width - 2, panel.localY + math.floor(panel.height / 2 - 2), 3, 4, 0xAAAAAA, 0x0))
+
+-- Данная функция будет вызываться во время события "drag", когда пользователь перемещает курсор мыши по ресайзеру
+resizer.onResize = function(mainContainer, resizer, eventData, dragWidth, dragHeight)
+	panel.width = panel.width + dragWidth
+	resizer.localX = resizer.localX + dragWidth
+
+	mainContainer:draw()
+	buffer.draw()
+end
+
+-- А вот это событие вызовется при событии "drop"
+resizer.onResizeFinished = function(mainContainer, resizer, eventData, dragWidth, dragHeight)
+	GUI.error("Resize finished!")
+end
+
+------------------------------------------------------------------------------------------
+
+mainContainer:draw()
+buffer.draw(true)
+mainContainer:startEventHandling()
+```
+
+Результат:
+
+![Imgur](https://i.imgur.com/PvARN8j.gif)
+
 GUI.**progressBar**( x, y, width, primaryColor, secondaryColor, valueColor, value, [thin, showValue, valuePrefix, valuePostfix] ): *table* progressBar
 ------------------------------------------------------------------------
 | Тип | Аргумент | Описание |
@@ -1240,11 +1300,11 @@ GUI.**brailleCanvas**( x, y, width, height ): *table* brailleCanvas
 | *int* | width | Ширина объекта |
 | *int* | height | Высота объекта |
 
-Данный объект по своей сути похож на пиксельный холст. Его отличительной особенностью является использование шрифта Брайля, создающего повышенное в сравнении с стандартным разрешение: каждый реальный пиксель может вмещать до 2х4 "мини-пикселей". Очень полезен для детальной отрисовки мелкой графики, с которой мод справиться не способен. К примеру, если создан BrailleCanvas размером 10x10 реальных пикселей, то он будет содержать 20x40 виртуальных.
+Данный объект по своей сути похож на пиксельный холст. Его отличительной особенностью является использование шрифта Брайля, создающего повышенное в сравнении с стандартным разрешение: каждый реальный пиксель может вмещать до 2х4 "мини-пикселей". Очень полезен для детальной отрисовки мелкой графики, с которой мод справиться не способен. К примеру, если создан BrailleCanvas размером 10x10 реальных пикселей, то он будет содержать 20x40 брайль-пикселей.
 
 | Тип свойства | Свойство |Описание |
 | ------ | ------ | ------ |
-| *function* | :**set**( *int* x, *int* y, *boolean* state, *int* color )| Установить соответствующее значение пикселя по локальным координатам BrailleCanvas (не глобальным экранным). Если в данной позиции уже имеется установленный пиксель, то его значение цвета будет заменено на новое |
+| *function* | :**set**( *int* x, *int* y, *boolean* state, *int* color )| Установить соответствующее значение пикселя по локальным координатам BrailleCanvas (не глобальным экранным). Если в данной позиции уже имеется установленный пиксель, то значение его цвета будет заменено на новое |
 
 Пример реализации BrailleCanvas:
 ```lua
@@ -1258,7 +1318,7 @@ mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height
 
 mainContainer:addChild(GUI.label(2, 2, 30, 1, 0xFFFFFF, "Текст для сравнения размеров"))
 
--- Создаем BrailleCanvas размером 30x15 пикселей
+-- Создаем BrailleCanvas размером 30x15 экранных пикселей
 local brailleCanvas = mainContainer:addChild(GUI.brailleCanvas(2, 4, 30, 15))
 -- Рисуем рамочку вокруг объекта. Для начала делаем две белых вертикальных линии
 local localCanvasWidth = brailleCanvas.width * 2
@@ -1365,7 +1425,7 @@ GUI.**textBox**(x, y, width, height, backgroundColor, textColor, lines, currentL
 
 | Тип свойства | Свойство |Описание |
 | ------ | ------ | ------ |
-| *function* | :**setAlignment**( *enum* GUI.alignment.vertical, *enum* GUI.alignment.horizontal ): *table* textBox| Выбрать вариант отображения текста относительно границ текстбокса |
+| *function* | :**setAlignment**(*enum* GUI.alignment.vertical, *enum* GUI.alignment.horizontal): *table* textBox| Выбрать вариант отображения текста относительно границ текстбокса |
 | *table* | .**lines**| Таблица со строковыми данными текстбокса |
 
 Пример реализации текстбокса:

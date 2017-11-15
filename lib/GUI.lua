@@ -2546,7 +2546,7 @@ local function resizerEventHandler(mainContainer, object, eventData)
 		object.touchPosition.x, object.touchPosition.y = eventData[3], eventData[4]
 		
 		if object.onResize then
-			object.onResize(eventData[3] - x, eventData[4] - y)
+			object.onResize(mainContainer, object, eventData, eventData[3] - x, eventData[4] - y)
 		end
 
 		mainContainer:draw()
@@ -2555,7 +2555,7 @@ local function resizerEventHandler(mainContainer, object, eventData)
 		object.touchPosition = nil
 
 		if object.onResizeFinished then
-			object.onResizeFinished()
+			object.onResizeFinished(mainContainer, object, eventData)
 		end
 
 		mainContainer:draw()
@@ -3547,8 +3547,9 @@ end
 -- local mainContainer = GUI.fullScreenContainer()
 -- mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x2D2D2D))
 
--- mainContainer:addChild(GUI.input(2, 2, 30, 3, 0xEEEEEE, 0x555555, 0x999999, 0xFFFFFF, 0x2D2D2D, "Hello world", "Placeholder text", true)).onInputFinished = function()
--- 	-- GUI.error("Input finished!")
+-- local input = mainContainer:addChild(GUI.input(2, 2, 30, 3, 0xEEEEEE, 0x555555, 0x999999, 0xFFFFFF, 0x2D2D2D, "Hello world", "Placeholder text", true))
+-- input.onInputFinished = function(mainContainer, object, eventData, text)
+-- 	if text:
 -- end
 
 -- mainContainer:draw()

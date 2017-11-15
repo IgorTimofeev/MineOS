@@ -339,7 +339,7 @@ window.onResize = function(width, height)
 	window.iconField:updateFileList()
 end
 
-window.sidebarResizer.onResize = function(dragWidth, dragHeight)
+window.sidebarResizer.onResize = function(mainContainer, object, eventData, dragWidth, dragHeight)
 	window.sidebarContainer.width = window.sidebarContainer.width + dragWidth
 	window.sidebarContainer.width = window.sidebarContainer.width >= 5 and window.sidebarContainer.width or 5
 
