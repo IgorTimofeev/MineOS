@@ -2,13 +2,13 @@
 Oписание
 ======
 
-MineOSInterface - это библиотека, поставляющаяся в комплекте с операционной системой MineOS. Она реализует основные системные виджеты, а также отвечает за все оконные манипуляции. В качестве интерфейсной основы она использует библиотеки **[GUI](https://github.com/IgorTimofeev/OpenComputers/blob/master/Documentation/GUI.md)** и **[doubleBuffering](https://github.com/IgorTimofeev/OpenComputers/blob/master/Documentation/doubleBuffering.md)**.
+MineOSInterface - это библиотека, поставляющаяся в комплекте с операционной системой MineOS. Она реализует основные системные виджеты, а также отвечает за все манипуляции с окнами. В качестве интерфейсной основы она использует библиотеки **[GUI](https://github.com/IgorTimofeev/OpenComputers/blob/master/Documentation/GUI.md)** и **[doubleBuffering](https://github.com/IgorTimofeev/OpenComputers/blob/master/Documentation/doubleBuffering.md)**.
 
 Кроме того, она предоставляет таблицу с цветами интерфейса ОС по умолчанию:
 
 ![](https://i.imgur.com/xm40hG3.png)
 
-Для произвольного изменения цветов отдельных элементов окон обращайтесь к ним напрямую: к примеру, через:
+Для произвольного изменения цветов отдельных элементов окон обращайтесь к ним напрямую. К примеру, через:
 
 ```lua
 <окно>.backgroundPanel.colors.background = 0xFF00FF
@@ -47,7 +47,7 @@ MineOSInterface.**window**(*int* x, *int* y, *int* width, *int* height): *table*
 | *int* | x | Координата окна по оси X |
 | *int* | x | Координата окна по оси Y |
 | *int* | width | Ширина окна |
-| *int* | height | Ширина окна |
+| *int* | height | Высота окна |
 
 Создает пустое окно без каких-либо элементов интерфейса. Данный объект является шаблоном для всех остальных, описанных ниже.
 
@@ -75,7 +75,7 @@ MineOSInterface.**filledWindow**(*int* x, *int* y, *int* width, *int* height, [*
 | *int* | x | Координата окна по оси X |
 | *int* | x | Координата окна по оси Y |
 | *int* | width | Ширина окна |
-| *int* | height | Ширина окна |
+| *int* | height | Высота окна |
 | [*int* | color] | Опциональный цвет фоновой панели |
 
 Создает окно с добавленной фоновой панелью, а также кнопками для закрытия/минимизации/максимизации, являющееся наследником  *MineOSInterface*.**window**. Если цвет панели не указывается, то используется *MineOSInterface.colors.windows.backgroundPanel*.
@@ -107,7 +107,7 @@ MineOSInterface.**tabbedWindow**(*int* x, *int* y, *int* width, *int* height): *
 | *int* | x | Координата окна по оси X |
 | *int* | x | Координата окна по оси Y |
 | *int* | width | Ширина окна |
-| *int* | height | Ширина окна |
+| *int* | height | Высота окна |
 
 Создает окно с панелью вкладок по шаблонным цветам.
 
