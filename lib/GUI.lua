@@ -619,75 +619,6 @@ function GUI.adaptiveTexturedButton(x, y, defaultTexture, pressedTexture)
 	return button
 end
 
------------------------------------------ TabBar -----------------------------------------
-
-local function tabBarTabEventHandler(mainContainer, object, eventData)
-	if eventData[1] == "touch" then
-		object.parent.selectedItem = object:indexOf() - 1
-		mainContainer:draw()
-		buffer.draw()
-		callMethod(object.onTouch, mainContainer, object, eventData)
-	end
-end
-
-local function tabBarDraw(tabBar)
-	tabBar.backgroundPanel.width, tabBar.backgroundPanel.height, tabBar.backgroundPanel.colors.background = tabBar.width, tabBar.height, tabBar.colors.default.background
-	
-	local totalWidth = 0
-	for i = 2, #tabBar.children do
-		totalWidth = totalWidth + tabBar.children[i].width + tabBar.spaceBetweenTabs
-	end
-	totalWidth = totalWidth - tabBar.spaceBetweenTabs
-
-	local x = math.floor(tabBar.width / 2 - totalWidth / 2)
-	for i = 2, #tabBar.children do
-		tabBar.children[i].localX = x
-		x = x + tabBar.children[i].width + tabBar.spaceBetweenTabs
-		tabBar.children[i].pressed = (i - 1) == tabBar.selectedItem
-	end
-
-	GUI.drawContainerContent(tabBar)
-
-	return tabBar
-end
-
-local function tabBarAddItem(tabBar, text)
-	local item = tabBar:addChild(GUI.button(1, 1, unicode.len(text) + tabBar.horizontalTabOffset * 2, tabBar.height, tabBar.colors.default.background, tabBar.colors.default.text, tabBar.colors.selected.background, tabBar.colors.selected.text, text))
-	
-	item.switchMode = true
-	item.eventHandler = tabBarTabEventHandler
-
-	return item
-end
-
-function GUI.tabBar(x, y, width, height, horizontalTabOffset, spaceBetweenTabs, backgroundColor, textColor, backgroundSelectedColor, textSelectedColor, ...)
-	local tabBar = GUI.container(x, y, width, height)
-
-	tabBar.backgroundPanel = tabBar:addChild(GUI.panel(1, 1, 1, 1, backgroundColor))
-	tabBar.horizontalTabOffset = horizontalTabOffset
-	tabBar.spaceBetweenTabs = spaceBetweenTabs
-	tabBar.colors = {
-		default = {
-			background = backgroundColor,
-			text = textColor
-		},
-		selected = {
-			background = backgroundSelectedColor,
-			text = textSelectedColor
-		}
-	}
-	tabBar.selectedItem = 1
-	tabBar.draw = tabBarDraw
-	tabBar.addItem = tabBarAddItem
-
-	local items = {...}
-	for i = 1, #items do
-		tabBar:addItem(items[i])
-	end
-
-	return tabBar
-end
-
 ----------------------------------------- Panel -----------------------------------------
 
 local function drawPanel(object)
@@ -1364,6 +1295,8 @@ end
 
 local function dropDownMenuShow(menu)
 	local mainContainer = GUI.fullScreenContainer()
+	-- Удаляем олдпиксельсы, чтоб старое дерьмое не рисовалось во всяких комбобоксах
+	menu.oldPixels = nil
 	mainContainer:addChild(GUI.object(1, 1, mainContainer.width, mainContainer.height)).eventHandler = function(mainContainer, object, eventData)
 		if eventData[1] == "touch" then
 			buffer.paste(menu.x, menu.y, menu.oldPixels)
@@ -1378,6 +1311,8 @@ local function dropDownMenuShow(menu)
 	mainContainer:startEventHandling()
 	buffer.paste(menu.x, menu.y, menu.oldPixels)
 	buffer.draw()
+	-- А вот тут удаляем чисто шоб память не грузить
+	menu.oldPixels = nil
 	
 	if mainContainer.selectedItem then
 		return menu.itemsContainer.children[mainContainer.selectedItem].text, mainContainer.selectedItem
@@ -1499,11 +1434,10 @@ end
 
 local function drawComboBox(object)
 	buffer.square(object.x, object.y, object.width, object.height, object.colors.default.background, object.colors.default.text, " ")
-	local x, y, limit, arrowSize = object.x + 1, math.floor(object.y + object.height / 2), object.width - 3, object.height
 	if object.dropDownMenu.itemsContainer.children[object.selectedItem] then
-		buffer.text(x, y, object.colors.default.text, string.limit(object.dropDownMenu.itemsContainer.children[object.selectedItem].text, limit, "right"))
+		buffer.text(object.x + 1, math.floor(object.y + object.height / 2), object.colors.default.text, string.limit(object.dropDownMenu.itemsContainer.children[object.selectedItem].text, object.width - object.height - 4, "right"))
 	end
-	GUI.button(object.x + object.width - arrowSize * 2 + 1, object.y, arrowSize * 2 - 1, arrowSize, object.colors.arrow.background, object.colors.arrow.text, 0x0, 0x0, object.pressed and "▲" or "▼"):draw()
+	GUI.button(object.x + object.width - object.height * 2 + 1, object.y, object.height * 2 - 1, object.height, object.colors.arrow.background, object.colors.arrow.text, 0x0, 0x0, object.pressed and "▲" or "▼"):draw()
 
 	return object
 end
@@ -1512,8 +1446,13 @@ local function comboBoxGetItem(object, index)
 	return object.dropDownMenu.itemsContainer.children[index]
 end
 
+local function comboBoxCount(object)
+	return #object.dropDownMenu.itemsContainer.children
+end
+
 local function comboBoxClear(object)
 	object.dropDownMenu.itemsContainer:deleteChildren()
+	object.selectedItem = 1
 
 	return object
 end
@@ -1594,6 +1533,7 @@ function GUI.comboBox(x, y, width, elementHeight, backgroundColor, textColor, ar
 	object.clear = comboBoxClear
 	object.indexOfItem = comboBoxIndexOfItem
 	object.getItem = comboBoxGetItem
+	object.count = comboBoxCount
 
 	return object
 end
@@ -1692,8 +1632,11 @@ local function switchDraw(switch)
 	return switch
 end
 
-local function switchUpdate(switch)
+local function switchSetState(switch, state)
+	switch.state = state
 	switch.pipePosition = switch.state and switch.width - 1 or 1
+
+	return switch
 end
 
 local function switchEventHandler(mainContainer, switch, eventData)
@@ -1709,7 +1652,7 @@ local function switchEventHandler(mainContainer, switch, eventData)
 			end,
 			function(mainContainer, switch, animation)
 				animation:delete()
-				callMethod(switch.onStateChanged)
+				callMethod(switch.onStateChanged, mainContainer, switch, eventData, switch.state)
 			end
 		):start(switch.animationDuration)
 	end
@@ -1730,8 +1673,9 @@ function GUI.switch(x, y, width, activeColor, passiveColor, pipeColor, state)
 	switch.update = switchUpdate
 	switch.animated = true
 	switch.animationDuration = 0.3
+	switch.setState = switchSetState
 
-	switch:update()
+	switch:setState(state)
 	
 	return switch
 end
@@ -3442,6 +3386,83 @@ function GUI.brailleCanvas(x, y, width, height)
 	return brailleCanvas
 end
 
+----------------------------------------- TabBar -----------------------------------------
+
+local function tabBarDraw(tabBar)
+	local totalWidth = 0
+	for i = 1, #tabBar.children do
+		totalWidth = totalWidth + tabBar.children[i].width + tabBar.spaceBetweenTabs
+	end
+
+	local x = math.floor(tabBar.width / 2 - (totalWidth - tabBar.spaceBetweenTabs) / 2)
+	for i = 1, #tabBar.children do
+		tabBar.children[i].localX = x
+		tabBar.children[i].colors.default.background = tabBar.colors.default.background
+		tabBar.children[i].colors.default.text = tabBar.colors.default.text
+		tabBar.children[i].colors.pressed.background = tabBar.colors.selected.background
+		tabBar.children[i].colors.pressed.text = tabBar.colors.selected.text
+		tabBar.children[i].pressed = i == tabBar.selectedItem
+
+		x = x + tabBar.children[i].width + tabBar.spaceBetweenTabs
+	end
+
+	buffer.square(tabBar.x, tabBar.y, tabBar.width, tabBar.height, tabBar.colors.default.background, tabBar.colors.default.text, " ")
+	GUI.drawContainerContent(tabBar)
+
+	return tabBar
+end
+
+local function tabBarTabEventHandler(mainContainer, object, eventData)
+	if eventData[1] == "touch" then
+		object.parent.selectedItem = object:indexOf()
+		mainContainer:draw()
+		buffer.draw()
+		
+		callMethod(object.onTouch, mainContainer, object, eventData)
+	end
+end
+
+local function tabBarAddItem(tabBar, text)
+	local item = tabBar:addChild(GUI.button(1, 1, unicode.len(text) + tabBar.horizontalTabOffset * 2, tabBar.height, tabBar.colors.default.background, tabBar.colors.default.text, tabBar.colors.selected.background, tabBar.colors.selected.text, text))
+	
+	item.switchMode = true
+	item.eventHandler = tabBarTabEventHandler
+
+	return item
+end
+
+local function tabBarGetItem(tabBar, index)
+	return tabBar.children[index]
+end
+
+function GUI.tabBar(x, y, width, height, horizontalTabOffset, spaceBetweenTabs, backgroundColor, textColor, backgroundSelectedColor, textSelectedColor, ...)
+	local tabBar = GUI.container(x, y, width, height)
+
+	tabBar.horizontalTabOffset = horizontalTabOffset
+	tabBar.spaceBetweenTabs = spaceBetweenTabs
+	tabBar.colors = {
+		default = {
+			background = backgroundColor,
+			text = textColor
+		},
+		selected = {
+			background = backgroundSelectedColor,
+			text = textSelectedColor
+		}
+	}
+	tabBar.selectedItem = 1
+	tabBar.draw = tabBarDraw
+	tabBar.addItem = tabBarAddItem
+	tabBar.getItem = tabBarGetItem
+
+	local items = {...}
+	for i = 1, #items do
+		tabBar:addItem(items[i])
+	end
+
+	return tabBar
+end
+
 -----------------------------------------------------------------------------------------------------
 
 
@@ -3451,33 +3472,12 @@ end
 -- local mainContainer = GUI.fullScreenContainer()
 -- mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x262626))
 
--- -- Добавляем текстовый лейбл, чтобы можно было убедиться в графонистости канвас-виджета
--- mainContainer:addChild(GUI.label(3, 2, 30, 1, 0xFFFFFF, "Текст для сравнения размеров"))
-
--- -- Создаем BrailleCanvas размером 30x15 экранных пикселей
--- local brailleCanvas = mainContainer:addChild(GUI.brailleCanvas(3, 4, 30, 15))
--- -- Рисуем рамочку вокруг объекта. Для начала делаем две белых вертикальных линии
--- local canvasWidthInBraillePixels = brailleCanvas.width * 2
--- for i = 1, brailleCanvas.height * 4 do
--- 	brailleCanvas:set(1, i, true, 0xFFFFFF)
--- 	brailleCanvas:set(canvasWidthInBraillePixels, i, true, 0xFFFFFF)
+-- local tabBar = mainContainer:addChild(GUI.tabBar(3, 2, 80, 3, 4, 0, 0xE1E1E1, 0x2D2D2D, 0xC3C3C3, 0x2D2D2D))
+-- tabBar:addItem("Вкладка 1")
+-- tabBar:addItem("Вкладка 2")
+-- tabBar:addItem("Вкладка 3").onTouch = function()
+-- 	-- Do something
 -- end
--- -- А затем две горизонтальных
--- local canvasHeightInBraillePixels = brailleCanvas.height * 4
--- for i = 1, brailleCanvas.width * 2 do
--- 	brailleCanvas:set(i, 1, true, 0xFFFFFF)
--- 	brailleCanvas:set(i, canvasHeightInBraillePixels, true, 0xFFFFFF)
--- end
--- -- Рисуем диагональную линию красного цвета
--- for i = 1, 60 do
--- 	brailleCanvas:set(i, i, true, 0xFF4940)
--- end
--- -- Рисуем желтый прямоугольник
--- brailleCanvas:fill(20, 20, 20, 20, true, 0xFFDB40)
--- -- Рисуем чуть меньший прямоугольник, но с состоянием пикселей = false
--- brailleCanvas:fill(25, 25, 10, 10, false)
-
--- ------------------------------------------------------------------------------------------
 
 -- mainContainer:draw()
 -- buffer.draw(true)

@@ -22,6 +22,7 @@
 | [    GUI.switchAndLabel](#guiswitchandlabel-x-y-width-switchwidth-primarycolor-secondarycolor-pipecolor-textcolor-text-switchstate--table-switchandlabel) |
 | [    GUI.colorSelector](#guicolorselector-x-y-width-height-color-text--table-colorselector) |
 | [    GUI.comboBox](#guicombobox-x-y-width-elementheight-backgroundcolor-textcolor-arrowbackgroundcolor-arrowtextcolor--table-combobox) |
+| [    GUI.tabBar](#guitabbar-x-y-width-height-horizontaltextoffset-spacebetweentabs-backgroundcolor-textcolor-backgroundselectedcolor-textselectedcolor--table-tabbar) |
 | [    GUI.menu](#guimenu-x-y-width-backgroundcolor-textcolor-backgroundpressedcolor-textpressedcolor-backgroundtransparency--table-menu) |
 | [    GUI.resizer](#guiresizer-x-y-width-height-resizercolor-arrowcolor--table-resizer) |
 | [    GUI.progressBar](#guiprogressbar-x-y-width-primarycolor-secondarycolor-valuecolor-value-thin-showvalue-valueprefix-valuepostfix--table-progressbar) |
@@ -728,7 +729,8 @@ GUI.**switch**( x, y, width, primaryColor, secondaryColor, pipeColor, state ): *
 
 | Тип свойства | Свойство |Описание |
 | ------ | ------ | ------ |
-| *callback-function* | .**onStateChanged**( *boolean* state, *table* eventData )| Метод, вызывающийся после изменения состояния переключателя |
+| *function* | :**setState**( *boolean* state )| Изменить состояние переключателя на указанное |
+| *callback-function* | .**onStateChanged**( *table* mainContainer, *table* switch, *table* eventData, *boolean* state )| Метод, вызывающийся после изменения состояния переключателя |
 
 Пример реализации свитча:
 
@@ -866,11 +868,12 @@ GUI.**comboBox**( x, y, width, elementHeight, backgroundColor, textColor, arrowB
 | Тип свойства | Свойство |Описание |
 | ------ | ------ | ------ |
 | *int* | .**currentItem** | Индекс выбранного элемента комбо-бокса |
-| *function* | :**addItem**( *string* text, *boolean* disabled, *string* shortcut, *int* color )| Добавить в комбо-бокс элемент с указанными параметрами. При параметре disabled элемент не будет реагировать на клики мышью. Каждый элемент может иметь собственный callback-метод .**onTouch** для последующей обработки данных |
+| *function* | :**addItem**( *string* text, *boolean* disabled, *string* shortcut, *int* color ): *table* item| Добавить в комбо-бокс элемент с указанными параметрами. При параметре disabled элемент не будет реагировать на клики мышью. Каждый элемент может иметь собственный callback-метод .**onTouch** для последующей обработки данных |
 | *function* | :**addSeparator**()| Добавить визуальный в комбо-бокс разделитель |
-| *function* | :**clear**()| Очистить элементы комбо-бокса |
-| *function* | :**getItem**(*int* index)| Получить элемент комбо-бокса с соответствующим индексом |
-| *function* | :**indexOfItem**(*string* itemText)| Получить индекс элемента комбо-бокса с соответствующим текстом |
+| *function* | :**getItem**( *int* index ): *table* item| Получить элемент комбо-бокса с соответствующим индексом |
+| *function* | :**indexOfItem**( *string* itemText ): *int* index | Получить индекс элемента комбо-бокса с соответствующим текстом |
+| *function* | :**clear**()| Удалить все имеющиеся элементы комбо-бокса |
+| *function* | :**count**(): *int* count| Получить число элементов комбо-бокса |
 
 Пример реализации комбо-бокса:
 
@@ -901,6 +904,57 @@ mainContainer:startEventHandling()
 Результат:
 
 ![Imgur](http://i.imgur.com/6ROzLAc.gif)
+
+GUI.**tabBar**( x, y, width, height, horizontalTextOffset, spaceBetweenTabs, backgroundColor, textColor, backgroundSelectedColor, textSelectedColor ): *table* tabBar
+------------------------------------------------------------------------
+| Тип | Аргумент | Описание |
+| ------ | ------ | ------ |
+| *int* | x | Координата объекта по оси x |
+| *int* | y | Координата объекта по оси y |
+| *int* | width | Ширина объекта |
+| *int* | width | Высота объекта |
+| *int* | horizontalTextOffset | Отступ в пикселях от текста каждой вкладки до ее границ |
+| *int* | spaceBetweenTabs | Расстояине менжду соседними вкладками |
+| *int* | backgroundColor | Цвет фона панели вкладок |
+| *int* | textColor | Цвет текста панели вкладок |
+| *int* | backgroundSelectedColor | Цвет фона выбранной вкладки |
+| *int* | textSelectedColor | Цвет текста выбранной вкладки  |
+
+Панель вкладок предназначена для быстрого переключения между различными состояниями объектов - к примеру, магазин AppMarket с его категориями приложений реализован именно на TabBar.
+
+| Тип свойства | Свойство |Описание |
+| ------ | ------ | ------ |
+| *function* | :**addItem**( *string* text ): *table* item | Добавить в панель вкладок элемент с указанными параметрами. Каждый элемент имеет собственный callback-метод .**onTouch** |
+| *function* | :**getItem**( *int* index )| Получить объект вкладки по указанному индексу |
+
+Пример реализации:
+
+```lua
+local buffer = require("doubleBuffering")
+local GUI = require("GUI")
+
+------------------------------------------------------------------------------------------
+
+local mainContainer = GUI.fullScreenContainer()
+mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x2D2D2D))
+
+local tabBar = mainContainer:addChild(GUI.tabBar(3, 2, 80, 3, 4, 0, 0xE1E1E1, 0x2D2D2D, 0xC3C3C3, 0x2D2D2D))
+tabBar:addItem("Вкладка 1")
+tabBar:addItem("Вкладка 2")
+tabBar:addItem("Вкладка 3").onTouch = function()
+	-- Do something
+end
+
+------------------------------------------------------------------------------------------
+
+mainContainer:draw()
+buffer.draw(true)
+mainContainer:startEventHandling()
+```
+
+Результат:
+
+![](https://i.imgur.com/9wtLagO.gif)
 
 GUI.**menu**( x, y, width, backgroundColor, textColor, backgroundPressedColor, textPressedColor, backgroundTransparency ): *table* menu
 ------------------------------------------------------------------------

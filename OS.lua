@@ -287,6 +287,16 @@ end
 
 local function createOSWindow()
 	MineOSInterface.mainContainer = GUI.fullScreenContainer()
+	-- MineOSInterface.mainContainer.draw = function()
+	-- 	GUI.drawContainerContent(MineOSInterface.mainContainer)
+		
+	-- 	local limit = 70
+	-- 	local lines = string.wrap(debug.traceback(), limit)
+	-- 	buffer.square(1, 1, limit, #lines, 0x0, 0xFFFFFF, " ", 0.2)
+	-- 	for i = 1, #lines do
+	-- 		buffer.text(1, i, 0xFFFFFF, lines[i])
+	-- 	end
+	-- end
 	
 	MineOSInterface.mainContainer.background = MineOSInterface.mainContainer:addChild(GUI.object(1, 1, 1, 1))
 	MineOSInterface.mainContainer.background.wallpaperPosition = {x = 1, y = 1}
@@ -532,96 +542,105 @@ local function createOSWindow()
 
 	local item2 = MineOSInterface.mainContainer.menu:addItem(MineOSCore.localization.network)
 	item2.onTouch = function()
-		local menu = MineOSInterface.contextMenu(item2.x, item2.y + 1)
+		local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer, MineOSCore.localization.network)
+		local insertModemTextBox = container.layout:addChild(GUI.textBox(1, 1, 36, 1, nil, 0x555555, {MineOSCore.localization.networkModemNotAvailable}, 1, 0, 0, true, true))
+		
+		local networkNameInput = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x666666, 0x666666, 0xE1E1E1, 0x2D2D2D, MineOSCore.properties.network.name or "", MineOSCore.localization.networkName))		
+		local stateSwitchAndLabel = container.layout:addChild(GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x888888, MineOSCore.localization.networkState .. ":", MineOSCore.properties.network.enabled))
+		local signalStrengthSlider = container.layout:addChild(GUI.slider(1, 1, 36, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x888888, 0, 512, MineOSCore.properties.network.signalStrength, false, MineOSCore.localization.networkSearchRadius ..": ", ""))
+		signalStrengthSlider.roundValues = true
+		signalStrengthSlider.height = 2
 
-		if component.isAvailable("modem") then
-			menu:addItem(MineOSCore.properties.network.enabled and MineOSCore.localization.networkDisable or MineOSCore.localization.networkEnable).onTouch = function()
-				MineOSCore.properties.network.enabled = not MineOSCore.properties.network.enabled
-				MineOSCore.saveProperties()
-				if MineOSCore.properties.network.enabled then
-					MineOSNetwork.enable()
-				else
-					MineOSNetwork.disable()
-				end
-				MineOSNetwork.broadcastComputerState(MineOSCore.properties.network.enabled)
+		container.layout:addChild(GUI.object(1, 1, 1, 1))
+
+		container.layout:addChild(GUI.label(1, 1, container.width, 1, 0xE1E1E1, MineOSCore.localization.networkComputers):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top))
+		local comboBox = container.layout:addChild(GUI.comboBox(1, 1, 36, 3, 0xE1E1E1, 0x2D2D2D, 0x444444, 0x999999))
+		local allowReadAndWriteSwitchAndLabel = container.layout:addChild(GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x888888, MineOSCore.localization.networkAllowReadAndWrite .. ":", false))
+		local noPCDetectedLabel = container.layout:addChild(GUI.label(1, 1, container.width, 1, 0x888888, MineOSCore.localization.networkComputersNotFound):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top))
+
+		local function check()
+			local modemAvailable = component.isAvailable("modem")
+			for i = 3, #container.layout.children do
+				container.layout.children[i].hidden = not modemAvailable
 			end
+			insertModemTextBox.hidden = modemAvailable
 
-			menu:addItem(MineOSCore.localization.networkName).onTouch = function()
-				local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer, MineOSCore.localization.networkName)
-
-				local input = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x666666, 0x666666, 0xE1E1E1, 0x2D2D2D, MineOSCore.properties.network.name or MineOSNetwork.modemProxy.address))
-				input.onInputFinished = function()
-					if input.text then
-						MineOSNetwork.broadcastComputerState(false)
-						MineOSCore.properties.network.name = input.text
-						MineOSCore.saveProperties()
-						MineOSNetwork.broadcastComputerState(MineOSCore.properties.network.enabled)
-
-						container:delete()
-						MineOSInterface.OSDraw()
+			if modemAvailable then
+				local stateSwitchAndLabelIndexOf = stateSwitchAndLabel:indexOf()
+				for i = 3, #container.layout.children do
+					if i ~= stateSwitchAndLabelIndexOf then
+						container.layout.children[i].hidden = not stateSwitchAndLabel.switch.state
 					end
 				end
 
-				input:startInput()
-			end
+				if stateSwitchAndLabel.switch.state then
+					signalStrengthSlider.hidden = not MineOSNetwork.modemProxy.isWireless()
 
-			if MineOSNetwork.modemProxy.isWireless() then
-				local subMenu = menu:addSubMenu(MineOSCore.localization.networkSearchRadius)
-				local i = 2
-				while i <= 512 do
-					subMenu:addItem(tostring(i)).onTouch = function()
-						MineOSCore.properties.network.signalStrength = i
-						MineOSCore.saveProperties()
-						MineOSNetwork.setSignalStrength(i)
-					end
-					i = i * 2
-				end
-			end
-
-			if MineOSCore.properties.network.enabled then
-				menu:addSeparator()
-
-				if MineOSNetwork.getProxyCount() > 0 then
+					comboBox:clear()
 					for proxy, path in fs.mounts() do
 						if proxy.network then
-							local subMenu = menu:addSubMenu(string.limit(MineOSNetwork.getProxyName(proxy), 25, "end"))
-
-							subMenu:addItem(MineOSCore.properties.network.users[proxy.address].allowReadAndWrite and MineOSCore.localization.networkDenyReadAndWrite or MineOSCore.localization.networkAllowReadAndWrite).onTouch = function()
-								MineOSCore.properties.network.users[proxy.address].allowReadAndWrite = not MineOSCore.properties.network.users[proxy.address].allowReadAndWrite
-								MineOSCore.saveProperties()
-							end
-
-							subMenu:addItem(MineOSCore.properties.network.users[proxy.address].allowMessages and MineOSCore.localization.networkDenyMessages or MineOSCore.localization.networkAllowMessages).onTouch = function()
-								MineOSCore.properties.network.users[proxy.address].allowMessages = not MineOSCore.properties.network.users[proxy.address].allowMessages
-								MineOSCore.saveProperties()
-							end
-
-							subMenu:addSeparator()
-
-							subMenu:addItem(MineOSCore.localization.networkSendMessage).onTouch = function()
-								local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer, MineOSCore.localization.networkSendMessage)
-
-								local textBox = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x666666, 0x666666, 0xE1E1E1, 0x2D2D2D, "", nil, true))
-								textBox.onInputFinished = function()
-									if textBox.text then
-										MineOSNetwork.sendMessage(proxy.address, "MineOSNetwork", "message", textBox.text)
-
-										container:delete()
-										MineOSInterface.OSDraw()
-									end
-								end
+							local item = comboBox:addItem(MineOSNetwork.getProxyName(proxy))
+							item.proxyAddress = proxy.address
+							item.onTouch = function()
+								allowReadAndWriteSwitchAndLabel.switch:setState(MineOSCore.properties.network.users[item.proxyAddress].allowReadAndWrite)
 							end
 						end
 					end
-				else
-					menu:addItem(MineOSCore.localization.networkComputersNotFound, true)
+					
+					noPCDetectedLabel.hidden = comboBox:count() > 0
+					allowReadAndWriteSwitchAndLabel.hidden = not noPCDetectedLabel.hidden
+					comboBox.hidden = not noPCDetectedLabel.hidden
+
+					if noPCDetectedLabel.hidden then
+						comboBox:getItem(comboBox.selectedItem).onTouch()
+					end
 				end
 			end
-		else
-			menu:addItem(MineOSCore.localization.networkModemNotAvailable, true)
+
+			MineOSInterface.OSDraw()
 		end
 
-		menu:show()
+		networkNameInput.onInputFinished = function()
+			if #networkNameInput.text > 0 then
+				MineOSCore.properties.network.name = networkNameInput.text
+				MineOSCore.saveProperties()
+				
+				MineOSNetwork.broadcastComputerState(MineOSCore.properties.network.enabled)
+			end
+		end
+
+		signalStrengthSlider.onValueChanged = function()
+			MineOSCore.properties.network.signalStrength = math.floor(signalStrengthSlider.value)
+			MineOSCore.saveProperties()
+		end
+
+		stateSwitchAndLabel.switch.onStateChanged = function()
+			if stateSwitchAndLabel.switch.state then
+				MineOSNetwork.enable()
+			else
+				MineOSNetwork.disable()
+			end
+
+			check()
+		end
+
+		allowReadAndWriteSwitchAndLabel.switch.onStateChanged = function()
+			MineOSCore.properties.network.users[comboBox:getItem(comboBox.selectedItem).proxyAddress].allowReadAndWrite = allowReadAndWriteSwitchAndLabel.switch.state
+			MineOSCore.saveProperties()
+		end
+
+		container.panel.eventHandler = function(mainContainer, object, eventData)
+			if eventData[1] == "touch" then
+				container:delete()
+				MineOSInterface.OSDraw()
+			elseif (eventData[1] == "component_added" or eventData[1] == "component_removed") and eventData[3] == "modem" then
+				check()
+			elseif eventData[1] == "MineOSNetwork" and eventData[2] == "updateProxyList" then
+				check()
+			end
+		end
+
+		check()
 	end
 
 	local item3 = MineOSInterface.mainContainer.menu:addItem(MineOSCore.localization.settings)
@@ -898,8 +917,6 @@ local function createOSWindow()
 		elseif eventData[1] == "MineOSNetwork" then
 			if eventData[2] == "accessDenied" then
 				GUI.error(MineOSCore.localization.networkAccessDenied)
-			elseif eventData[2] == "message" then
-				GUI.error(MineOSCore.localization.networkMessage .. eventData[3] .. ": " .. eventData[4])
 			elseif eventData[2] == "timeout" then
 				GUI.error(MineOSCore.localization.networkTimeout)
 			end
@@ -941,17 +958,13 @@ MineOSCore.OSUpdateTimezone()
 MineOSCore.OSUpdateDate()
 login()
 
-if MineOSCore.properties.network.enabled then
-	MineOSNetwork.setSignalStrength(MineOSCore.properties.network.signalStrength)
-	MineOSNetwork.enable()
-	MineOSNetwork.broadcastComputerState(true)
-end
+MineOSNetwork.update()
 
 while true do
 	local success, path, line, traceback = MineOSCore.call(
 		MineOSInterface.mainContainer.startEventHandling,
 		MineOSInterface.mainContainer,
-		1
+		0
 	)
 	if success then
 		break

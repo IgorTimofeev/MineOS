@@ -281,7 +281,7 @@ window.statusBar.draw = function(object)
 	buffer.text(object.x + 1, object.y, 0x3C3C3C, string.limit(("root/" .. window.iconField.workpath):gsub("/+$", ""):gsub("%/+", " ► "), object.width - 1, "start"))
 end
 window.statusBar.eventHandler = function(mainContainer, object, eventData)
-	if eventData[1] == "component_added" or eventData[1] == "component_removed" and eventData[3] == "filesystem" then
+	if (eventData[1] == "component_added" or eventData[1] == "component_removed") and eventData[3] == "filesystem" then
 		updateSidebar()
 
 		mainContainer:draw()

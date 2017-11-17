@@ -325,71 +325,70 @@ end
 
 ----------------------------------------------------------------------------------------------------------------
 
-function MineOSNetwork.disable()
+function MineOSNetwork.update()
+	MineOSNetwork.unmountAll()
+	MineOSNetwork.updateModemState()
+	MineOSNetwork.setSignalStrength(MineOSCore.properties.network.signalStrength)
+	MineOSNetwork.broadcastComputerState(MineOSCore.properties.network.enabled)
+
 	if MineOSNetwork.eventHandlerID then
 		event.removeHandler(MineOSNetwork.eventHandlerID)
 	end
-	MineOSNetwork.unmountAll()
+
+	if MineOSCore.properties.network.enabled then
+		MineOSNetwork.eventHandlerID = event.addHandler(function(...)
+			local eventData = {...}
+			
+			if (eventData[1] == "component_added" or eventData[1] == "component_removed") and eventData[3] == "modem" then
+				MineOSNetwork.updateModemState()
+			elseif eventData[1] == "modem_message" and MineOSCore.properties.network.enabled and eventData[6] == "MineOSNetwork" then
+				if eventData[7] == "request" then
+					handleRequest(eventData)
+				elseif eventData[7] == "computerAvailable" or eventData[7] == "computerAvailableRedirect" then
+					for proxy in filesystemLibrary.mounts() do
+						if proxy.network and proxy.address == eventData[3] then
+							filesystemLibrary.unmount(proxy)
+						end
+					end
+
+					proxy = newFilesystemProxy(eventData[3])
+					proxy.name = eventData[8]
+					filesystemLibrary.mount(proxy, MineOSNetwork.mountPath .. eventData[3]:sub(1, 3) .. "/")
+
+					if eventData[7] == "computerAvailable" then
+						MineOSNetwork.sendMessage(eventData[3], "MineOSNetwork", "computerAvailableRedirect", MineOSCore.properties.network.name)
+					end
+
+					if not MineOSCore.properties.network.users[eventData[3]] then
+						MineOSCore.properties.network.users[eventData[3]] = {}
+						MineOSCore.saveProperties()
+					end
+
+					computer.pushSignal("MineOSNetwork", "updateProxyList")
+				elseif eventData[7] == "computerNotAvailable" then
+					local proxy = MineOSNetwork.getProxy(eventData[3])
+					if proxy then
+						filesystemLibrary.unmount(proxy)
+					end
+
+					computer.pushSignal("MineOSNetwork", "updateProxyList")
+				end
+			end
+		end)
+	end
+end
+
+function MineOSNetwork.disable()
+	MineOSCore.properties.network.enabled = false
+	MineOSCore.saveProperties()
+	MineOSNetwork.update()
 end
 
 function MineOSNetwork.enable()
-	MineOSNetwork.disable()
-
-	MineOSNetwork.eventHandlerID = event.addHandler(function(...)
-		local eventData = {...}
-		
-		if eventData[1] == "component_added" or eventData[1] == "component_removed" then
-			MineOSNetwork.updateModemState()
-		elseif eventData[1] == "modem_message" and MineOSCore.properties.network.enabled and eventData[6] == "MineOSNetwork" then
-			if eventData[7] == "request" then
-				handleRequest(eventData)
-			elseif eventData[7] == "computerAvailable" or eventData[7] == "computerAvailableRedirect" then
-				for proxy in filesystemLibrary.mounts() do
-					if proxy.network and proxy.address == eventData[3] then
-						filesystemLibrary.unmount(proxy)
-					end
-				end
-
-				proxy = newFilesystemProxy(eventData[3])
-				proxy.name = eventData[8]
-				filesystemLibrary.mount(proxy, MineOSNetwork.mountPath .. eventData[3]:sub(1, 3) .. "/")
-
-				if eventData[7] == "computerAvailable" then
-					MineOSNetwork.sendMessage(eventData[3], "MineOSNetwork", "computerAvailableRedirect", MineOSCore.properties.network.name)
-				end
-
-				if not MineOSCore.properties.network.users[eventData[3]] then
-					MineOSCore.properties.network.users[eventData[3]] = {}
-					MineOSCore.saveProperties()
-				end
-
-				computer.pushSignal("MineOSNetwork", "updateProxyList")
-			elseif eventData[7] == "computerNotAvailable" then
-				local proxy = MineOSNetwork.getProxy(eventData[3])
-				if proxy then
-					filesystemLibrary.unmount(proxy)
-				end
-
-				computer.pushSignal("MineOSNetwork", "updateProxyList")
-			elseif eventData[7] == "message" and MineOSCore.properties.network.users[eventData[3]].allowMessages then
-				computer.pushSignal("MineOSNetwork", "message", eventData[3], eventData[8])
-			end
-		end
-	end)
-end
-
-----------------------------------------------------------------------------------------------------------------
-
-if not MineOSCore.properties.network then
-	MineOSCore.properties.network = {
-		users = {},
-		enabled = true,
-		signalStrength = 512,
-	}
+	MineOSCore.properties.network.enabled = true
 	MineOSCore.saveProperties()
+	MineOSNetwork.update()
 end
-
-MineOSNetwork.updateModemState()
 
 ----------------------------------------------------------------------------------------------------------------
 

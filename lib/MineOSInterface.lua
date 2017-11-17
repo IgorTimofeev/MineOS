@@ -179,19 +179,10 @@ local function iconEventHandler(mainContainer, object, eventData)
 		object.lastTouchPosition.x, object.lastTouchPosition.y = eventData[3], eventData[4]
 		object:moveToFront()
 
-		object.selected = true
-
-		mainContainer:draw()
-		buffer.draw()
-
 		if eventData[5] == 0 then
 			object.parent.parent.onLeftClick(object, eventData)
 		else
 			object.parent.parent.onRightClick(object, eventData)
-			object.selected = false
-
-			mainContainer:draw()
-			buffer.draw()
 		end
 	elseif eventData[1] == "double_touch" and object:isClicked(eventData[3], eventData[4]) and eventData[5] == 0 then
 		object.parent.parent.onDoubleClick(object, eventData)
@@ -352,7 +343,37 @@ end
 MineOSInterface.iconLaunchers = {}
 
 function MineOSInterface.iconLaunchers.application(icon)
-	MineOSInterface.applicationHelp(MineOSInterface.mainContainer, icon.path)
+	local pathToAboutFile = icon.path .. "/resources/About/" .. MineOSCore.properties.language .. ".txt"
+	if MineOSCore.properties.showHelpOnApplicationStart and fs.exists(pathToAboutFile) then
+		local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer, MineOSCore.localization.applicationHelp .. " \"" .. fs.name(icon.path) .. "\"")
+		
+		local lines = {}
+		for line in io.lines(pathToAboutFile) do
+			table.insert(lines, line)
+		end
+		
+		container.layout:addChild(GUI.textBox(1, 1, 50, 1, nil, 0xcccccc, lines, 1, 0, 0, true, true))
+		local button = container.layout:addChild(GUI.button(1, 1, 30, 1, 0xE1E1E1, 0x2D2D2D, 0xAAAAAA, 0x2D2D2D, MineOSCore.localization.dontShowAnymore))	
+		
+		local function onExit()
+			container:delete()
+			MineOSInterface.safeLaunch(icon.path .. "/Main.lua")
+		end
+
+		container.panel.eventHandler = function(mainContainer, object, eventData)
+			if eventData[1] == "touch" then
+				onExit()
+			end
+		end
+
+		button.onTouch = function()
+			MineOSCore.properties.showHelpOnApplicationStart = false
+			MineOSCore.saveProperties()
+			onExit()
+		end
+	else
+		MineOSInterface.safeLaunch(icon.path .. "/Main.lua")
+	end
 end
 
 function MineOSInterface.iconLaunchers.directory(icon)
@@ -724,8 +745,10 @@ function MineOSInterface.iconLeftClick(icon, eventData)
 end
 
 function MineOSInterface.iconDoubleClick(icon, eventData)
+	icon.selected = false
 	icon:launch()
-	computer.pushSignal("MineOSCore", "updateFileList")
+	MineOSInterface.OSDraw()
+	-- computer.pushSignal("MineOSCore", "updateFileList")
 end
 
 function MineOSInterface.iconRightClick(icon, eventData)
@@ -1122,40 +1145,6 @@ function MineOSInterface.launchWithArguments(parentWindow, path)
 		parentWindow:draw()
 		buffer.draw(true)
 	end
-end
-
-function MineOSInterface.applicationHelp(parentWindow, path)
-	local pathToAboutFile = path .. "/resources/About/" .. MineOSCore.properties.language .. ".txt"
-	if MineOSCore.properties.showHelpOnApplicationStart and fs.exists(pathToAboutFile) then
-		local container = MineOSInterface.addUniversalContainer(parentWindow, MineOSCore.localization.applicationHelp .. " \"" .. fs.name(path) .. "\"")
-		
-		local lines = {}
-		for line in io.lines(pathToAboutFile) do
-			table.insert(lines, line)
-		end
-		
-		container.layout:addChild(GUI.textBox(1, 1, 50, 1, nil, 0xcccccc, lines, 1, 0, 0, true, true))
-		local button = container.layout:addChild(GUI.button(1, 1, 30, 1, 0xE1E1E1, 0x2D2D2D, 0xAAAAAA, 0x2D2D2D, MineOSCore.localization.dontShowAnymore))	
-		
-		container.panel.eventHandler = function(mainContainer, object, eventData)
-			if eventData[1] == "touch" then
-				container:delete()
-				MineOSInterface.safeLaunch(path .. "/Main.lua")
-			end
-		end
-
-		button.onTouch = function()
-			MineOSCore.properties.showHelpOnApplicationStart = false
-			MineOSCore.saveProperties()
-			container:delete()
-			MineOSInterface.safeLaunch(path .. "/Main.lua")
-		end
-	else
-		MineOSInterface.safeLaunch(path .. "/Main.lua")
-	end
-
-	parentWindow:draw()
-	buffer.draw()
 end
 
 ----------------------------------------- Windows patterns -----------------------------------------
