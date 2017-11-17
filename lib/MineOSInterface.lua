@@ -158,18 +158,21 @@ local function iconDraw(icon)
 	end
 
 	if icon.windows then
-		buffer.text(xCenter - 1, icon.y + MineOSInterface.iconImageHeight, 0x66DBFF, "╺╸")
+		local windowCount = table.size(icon.windows)
+		if windowCount > 1 then
+			buffer.text(xCenter - 1, icon.y + MineOSInterface.iconImageHeight, 0x66DBFF, "╺╸")
 
-		local windowCount = tostring(table.size(icon.windows))
-		local windowCountLength = #windowCount
-		local xTip, yTip = xShortcut - windowCountLength, icon.y
+			windowCount = tostring(windowCount)
+			local windowCountLength = #windowCount
+			local xTip, yTip = xShortcut - windowCountLength, icon.y
 
-		buffer.square(xTip, yTip, windowCountLength, 1, 0xFF4940, 0xFFFFFF, " ")
-		buffer.text(xTip, yTip, 0xFFFFFF, windowCount)
-		buffer.text(xTip - 1, yTip, 0xFF4940, "⢸")
-		buffer.text(xTip +windowCountLength, yTip, 0xFF4940, "⡇")
-		buffer.text(xTip, yTip - 1, 0xFF4940, string.rep("⣀", windowCountLength))
-		buffer.text(xTip, yTip + 1, 0xFF4940, string.rep("⠉", windowCountLength))
+			buffer.square(xTip, yTip, windowCountLength, 1, 0xFF4940, 0xFFFFFF, " ")
+			buffer.text(xTip, yTip, 0xFFFFFF, windowCount)
+			buffer.text(xTip - 1, yTip, 0xFF4940, "⢸")
+			buffer.text(xTip +windowCountLength, yTip, 0xFF4940, "⡇")
+			buffer.text(xTip, yTip - 1, 0xFF4940, string.rep("⣀", windowCountLength))
+			buffer.text(xTip, yTip + 1, 0xFF4940, string.rep("⠉", windowCountLength))
+		end
 	end
 end
 

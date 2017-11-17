@@ -40,6 +40,12 @@ end
 local workpathHistory = {}
 local workpathHistoryCurrent = 0
 
+local function updateFileListAndDraw()
+	window.iconField:updateFileList()
+	mainContainer:draw()
+	buffer.draw()
+end
+
 local function workpathHistoryButtonsUpdate()
 	window.prevButton.disabled = workpathHistoryCurrent <= 1
 	window.nextButton.disabled = workpathHistoryCurrent >= #workpathHistory
@@ -71,10 +77,8 @@ local function prevOrNextWorkpath(next)
 	workpathHistoryButtonsUpdate()
 	window.iconField.yOffset = iconFieldYOffset
 	window.iconField:setWorkpath(workpathHistory[workpathHistoryCurrent])
-	window.iconField:updateFileList()
-
-	mainContainer:draw()
-	buffer.draw()
+	
+	updateFileListAndDraw()
 end
 
 ------------------------------------------------------------------------------------------------------
@@ -119,10 +123,7 @@ local function sidebarItemOnTouch(object, eventData)
 			mainContainer:draw()
 			buffer.draw()
 			
-			window.iconField:updateFileList()
-
-			mainContainer:draw()
-			buffer.draw()
+			updateFileListAndDraw()
 		end
 	else
 
@@ -184,37 +185,30 @@ window.iconField = window:addChild(
 	)
 )
 
-window.scrollBar = window:addChild(GUI.scrollBar(1, 4, 1, 1, 0xC3C3C3, 0x444444, iconFieldYOffset, 1, 1, 1, 1, true))
-
 window.iconField.launchers.directory = function(icon)
 	addWorkpath(icon.path)
-	mainContainer:draw()
-	buffer.draw()
+	updateFileListAndDraw()
 end
 
 window.iconField.launchers.showPackageContent = function(icon)
 	addWorkpath(icon.path)
-	window.iconField:updateFileList()
-	mainContainer:draw()
-	buffer.draw()
+	updateFileListAndDraw()
 end
 
 window.iconField.launchers.showContainingFolder = function(icon)
 	addWorkpath(fs.path(icon.path))
-	window.iconField:updateFileList()
-	mainContainer:draw()
-	buffer.draw()
+	updateFileListAndDraw()
 end
+
+window.scrollBar = window:addChild(GUI.scrollBar(1, 4, 1, 1, 0xC3C3C3, 0x444444, iconFieldYOffset, 1, 1, 1, 1, true))
 
 window.searchInput = window:addChild(GUI.input(1, 2, 36, 1, 0xFFFFFF, 0x666666, 0xAAAAAA, 0xFFFFFF, 0x2D2D2D, nil, "Search", true))
 window.searchInput.onInputFinished = function()
 	window.iconField.filenameMatcher = window.searchInput.text
 	window.iconField.fromFile = 1
 	window.iconField.yOffset = iconFieldYOffset
-	window.iconField:updateFileList()
-	
-	mainContainer:draw()
-	buffer.draw()
+
+	updateFileListAndDraw()
 end
 
 local function updateScrollBar()
@@ -268,10 +262,7 @@ window.iconField.eventHandler = function(mainContainer, object, eventData)
 			computer.pushSignal("Finder", "updateFileList")
 		end, 1)
 	elseif (eventData[1] == "MineOSCore" or eventData[1] == "Finder") and eventData[2] == "updateFileList" then
-		window.iconField:updateFileList()
-					
-		mainContainer:draw()
-		buffer.draw()
+		updateFileListAndDraw()
 	end
 end
 
@@ -342,7 +333,6 @@ end
 window.sidebarResizer.onResize = function(mainContainer, object, eventData, dragWidth, dragHeight)
 	window.sidebarContainer.width = window.sidebarContainer.width + dragWidth
 	window.sidebarContainer.width = window.sidebarContainer.width >= 5 and window.sidebarContainer.width or 5
-
 	calculateSizes(window.width, window.height)
 end
 

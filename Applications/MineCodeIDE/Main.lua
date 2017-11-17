@@ -1599,9 +1599,6 @@ local function createMainContainer()
 	mainContainer.leftTreeViewResizer.onResize = function(mainContainer, object, eventData, dragWidth, dragHeight)
 		mainContainer.leftTreeView.width = mainContainer.leftTreeView.width + dragWidth
 		calculateSizes()
-		
-		mainContainer:draw()
-		buffer.draw()
 	end
 
 	mainContainer.leftTreeViewResizer.onResizeFinished = function()
