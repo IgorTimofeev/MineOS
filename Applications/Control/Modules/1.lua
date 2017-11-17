@@ -23,6 +23,9 @@ module.name = localization.moduleLua
 module.onTouch = function()
 	window.contentContainer:deleteChildren()
 
+	_G.component = require("component")
+	_G.computer = require("computer")
+
 	local textBox = window.contentContainer:addChild(GUI.textBox(1, 1, window.contentContainer.width, window.contentContainer.height - 3, nil, 0x444444, localization.luaInfo, 1, 2, 1))
 	textBox.scrollBarEnabled = true
 
@@ -66,13 +69,13 @@ module.onTouch = function()
 		local inputTextLength = unicode.len(input.text)
 		local left, right = 1, inputTextLength
 		for i = input.cursorPosition - 1, 1, -1 do
-			if not unicode.sub(input.text, i, i):match("[%w%.]+") then
+			if not unicode.sub(input.text, i, i):match("[%w%_%.]+") then
 				left = i + 1
 				break
 			end
 		end
 		for i = input.cursorPosition, inputTextLength do
-			if not unicode.sub(input.text, i, i):match("[%w%.]+") then
+			if not unicode.sub(input.text, i, i):match("[%w%_%.]+") then
 				right = i - 1
 				break
 			end
@@ -81,7 +84,7 @@ module.onTouch = function()
 
 		local array = {}
 		local t = _G
-		if cykaText:match("^[%w%.]+$") then
+		if cykaText:match("^[%w%_%.]+$") then
 			local words = {}
 			for word in cykaText:gmatch("[^%.]+") do
 				table.insert(words, word)

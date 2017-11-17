@@ -36,7 +36,7 @@ module.onTouch = function()
 		local button = diskContainer:addChild(GUI.adaptiveRoundedButton(1, 3, 2, 0, 0x2D2D2D, 0xE1E1E1, 0x0, 0xE1E1E1, localization.options))
 		button.onTouch = function()
 			local container = MineOSInterface.addUniversalContainer(mainContainer, localization.options)
-			local inputField = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0x666666, 0xEEEEEE, 0x262626, proxy.getLabel() or "", localization.diskLabel))
+			local inputField = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x666666, 0x666666, 0xE1E1E1, 0x2D2D2D, proxy.getLabel() or "", localization.diskLabel))
 			inputField.onInputFinished = function()
 				if inputField.text and inputField.text:len() > 0 then
 					proxy.setLabel(inputField.text)
@@ -46,7 +46,7 @@ module.onTouch = function()
 				end
 			end
 			
-			local formatButton = container.layout:addChild(GUI.roundedButton(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0x666666, 0xEEEEEE, localization.format))
+			local formatButton = container.layout:addChild(GUI.button(1, 1, 36, 3, 0xC3C3C3, 0x2D2D2D, 0x666666, 0xE1E1E1, localization.format))
 			formatButton.onTouch = function()
 				local list = proxy.list("/")
 				for i = 1, #list do
@@ -58,13 +58,7 @@ module.onTouch = function()
 			end
 			formatButton.disabled = isReadOnly
 
-			local duplicateButton = container.layout:addChild(GUI.roundedButton(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0x666666, 0xEEEEEE, localization.format))
-			duplicateButton.onTouch = function()
-				
-			end
-			duplicateButton.disabled = isReadOnly
-
-			local switch = container.layout:addChild(GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0x1E1E1E, 0xEEEEEE, 0xBBBBBB, localization.bootable .. ":", isBoot)).switch
+			local switch = container.layout:addChild(GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0x1E1E1E, 0xE1E1E1, 0xBBBBBB, localization.bootable .. ":", isBoot)).switch
 			switch.onStateChanged = function()
 				if switch.state then
 					computer.setBootAddress(proxy.address)
