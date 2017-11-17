@@ -1269,7 +1269,7 @@ local function addKeyAndValue(window, x, y, key, value)
 end
 
 function MineOSInterface.propertiesWindow(x, y, width, icon)
-	local mainContainer, window = MineOSInterface.addWindow(GUI.titledWindow(x, y, width, 1, package.loaded.MineOSCore.localization.properties))
+	local mainContainer, window = MineOSInterface.addWindow(MineOSInterface.titledWindow(x, y, width, 1, package.loaded.MineOSCore.localization.properties))
 
 	window.backgroundPanel.colors.transparency = 0.2
 	window:addChild(GUI.image(2, 3, icon.image))
