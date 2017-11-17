@@ -17,7 +17,7 @@ MineOSInterface - это библиотека, поставляющаяся в �
 Основные методы
 ======
 
-MineOSInterface.**addWindow**(*table* window): *table* mainContainer, *table* window
+MineOSInterface.**addWindow**( window ): *table* mainContainer, *table* window
 -----------------------------------------------------------
 
 | Тип | Аргумент | Описание |
@@ -39,7 +39,7 @@ MineOSInterface.**addWindow**(*table* window): *table* mainContainer, *table* wi
 Методы для создания окон
 ======
 
-MineOSInterface.**window**(*int* x, *int* y, *int* width, *int* height): *table* window
+MineOSInterface.**window**( x, y, width, height ): *table* window
 -----------------------------------------------------------
 
 | Тип | Аргумент | Описание |
@@ -67,7 +67,7 @@ window:addChild(GUI.panel(1, 1, window.width, window.height, 0x888888))
 
 ![](https://i.imgur.com/lhrm0z6.png?1)
 
-MineOSInterface.**filledWindow**(*int* x, *int* y, *int* width, *int* height, [*int* color]): *table* window
+MineOSInterface.**filledWindow**( x, y, width, height [, color]): *table* window
 -----------------------------------------------------------
 
 | Тип | Аргумент | Описание |
@@ -99,7 +99,7 @@ local mainContainer, window = MineOSInterface.addWindow(MineOSInterface.filledWi
 
 ![](https://i.imgur.com/YlCOx68.png?1)
 
-MineOSInterface.**tabbedWindow**(*int* x, *int* y, *int* width, *int* height): *table* window
+MineOSInterface.**tabbedWindow**( x, y, width, height ): *table* window
 -----------------------------------------------------------
 
 | Тип | Аргумент | Описание |
