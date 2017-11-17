@@ -7,7 +7,7 @@
 	networkState = "Enable network mode",
 	networkComputers = "Network PCs options",
 	networkComputersNotFound = "Computers not fount",
-	networkName = "Network name",
+	networkName = "Name of this PC",
 	networkSearchRadius = "Searching radius",
 	openWith = "Open with",
 	select = "Choose application…",

@@ -7,7 +7,7 @@
 	networkState = "Включить сетевой режим",
 	networkComputers = "Параметры удаленных ПК",
 	networkComputersNotFound = "Компьютеры в сети не обнаружены",
-	networkName = "Имя компьютера",
+	networkName = "Имя данного ПК",
 	networkSearchRadius = "Радиус обнаружения",
 	openWith = "Открыть с помощью",
 	select = "Выбрать программу…",
