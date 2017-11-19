@@ -28,6 +28,7 @@ local computer = require("computer")
 local component = require("component")
 local unicode = require("unicode")
 local fs = require("filesystem")
+local keyboard = require("keyboard")
 local event = require("event")
 local image = require("image")
 local color = require("color")
@@ -907,7 +908,34 @@ local function createOSWindow()
 	end
 
 	MineOSInterface.mainContainer.eventHandler = function(mainContainer, object, eventData)
-		if eventData[1] == "MineOSCore" then
+		if eventData[1] == "key_down" then
+			local windowsCount = #MineOSInterface.mainContainer.windowsContainer.children
+			-- Ctrl or CMD
+			if windowsCount > 0 and not eventData.lastWindowHandled and (keyboard.isKeyDown(29) or keyboard.isKeyDown(219)) then
+				-- W
+				if eventData[4] == 17 then
+					eventData.lastWindowHandled = true
+					MineOSInterface.mainContainer.windowsContainer.children[windowsCount]:close()
+
+					mainContainer:draw()
+					buffer.draw()
+				-- H
+				elseif eventData[4] == 35 then
+					eventData.lastWindowHandled = true
+					
+					local lastUnhiddenWindowIndex = 1
+					for i = 1, #MineOSInterface.mainContainer.windowsContainer.children do
+						if not MineOSInterface.mainContainer.windowsContainer.children[i].hidden then
+							lastUnhiddenWindowIndex = i
+						end
+					end
+					MineOSInterface.mainContainer.windowsContainer.children[lastUnhiddenWindowIndex]:minimize()
+
+					mainContainer:draw()
+					buffer.draw()
+				end
+			end
+		elseif eventData[1] == "MineOSCore" then
 			if eventData[2] == "updateFileList" then
 				MineOSInterface.mainContainer.updateFileListAndDraw()
 			elseif eventData[2] == "updateFileListAndBufferTrueRedraw" then

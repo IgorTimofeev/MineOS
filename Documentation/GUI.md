@@ -16,6 +16,7 @@
 | [    GUI.image](#guiimage-x-y-loadedimage--table-image) |
 | [    GUI.label](#guilabel-x-y-width-height-textcolor-text--table-label) |
 | [    GUI.button](#guibutton-x-y-width-height-buttoncolor-textcolor-buttonpressedcolor-textpressedcolor-text--table-button) |
+| [    GUI.actionButtons](#guiactionbuttons-x-y-fat--table-actionbuttons) |
 | [    GUI.input](#guiinput-x-y-width-height-backgroundcolor-textcolor-placeholdertextcolor-backgroundfocusedcolor-textfocusedcolor-text-placeholdertext-erasetextonfocus-textmask--table-input) |
 | [    GUI.slider](#guislider-x-y-width-primarycolor-secondarycolor-pipecolor-valuecolor-minimumvalue-maximumvalue-value-showcornervalues-currentvalueprefix-currentvaluepostfix--table-slider) |
 | [    GUI.switch](#guiswitch-x-y-width-primarycolor-secondarycolor-pipecolor-state--table-switch) |
@@ -608,6 +609,51 @@ mainContainer:startEventHandling()
 Результат:
 
 ![Imgur](https://i.imgur.com/9zZvR6g.gif)
+
+GUI.**actionButtons**( x, y, fat ): *table* actionButtons
+------------------------------------------------------------------------
+| Тип | Аргумент | Описание |
+| ------ | ------ | ------ |
+| *int* | x | Координата объекта по оси x |
+| *int* | y | Координата объекта по оси y |
+| *boolean* | fat | Вариант отрисовки кнопок с большим размером |
+
+Создать объект-контейнер, содержащий 3 круглых кнопки. По большей части используется для управления состояниями окон: для закрытия, сворачивания и т.п.
+
+| Тип свойства | Свойство |Описание |
+| ------ | ------ | ------ |
+| *table* | .**close** | Указатель на объект красной кнопки |
+| *table* | .**minimize** | Указатель на объект желтой кнопки |
+| *table* | .**maximize** | Указатель на объект зеленой кнопки |
+
+Пример реализации:
+
+```lua
+local buffer = require("doubleBuffering")
+local GUI = require("GUI")
+
+------------------------------------------------------------------------------------------
+
+local mainContainer = GUI.fullScreenContainer()
+mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x2D2D2D))
+
+local actionButtonsRegular = mainContainer:addChild(GUI.actionButtons(3, 2, false))
+local actionButtonsFat = mainContainer:addChild(GUI.actionButtons(3, 4, true))
+
+actionButtonsRegular.close.onTouch = function()
+	-- Do something when "close" button was touched
+end
+
+------------------------------------------------------------------------------------------
+
+mainContainer:draw()
+buffer.draw(true)
+mainContainer:startEventHandling()
+```
+
+Результат:
+
+![](https://i.imgur.com/lYUS7fl.png)
 
 GUI.**input**( x, y, width, height, backgroundColor, textColor, placeholderTextColor, backgroundFocusedColor, textFocusedColor, text, [placeholderText, eraseTextOnFocus, textMask ): *table* input
 ------------------------------------------------------------------------

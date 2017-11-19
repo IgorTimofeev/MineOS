@@ -99,6 +99,41 @@ local mainContainer, window = MineOSInterface.addWindow(MineOSInterface.filledWi
 
 ![](https://i.imgur.com/YlCOx68.png?1)
 
+MineOSInterface.**titledWindow**( x, y, width, height, titleText, [addTitlePanel]): *table* window
+-----------------------------------------------------------
+
+| Тип | Аргумент | Описание |
+| ------ | ------ | ------ |
+| *int* | x | Координата окна по оси X |
+| *int* | x | Координата окна по оси Y |
+| *int* | width | Ширина окна |
+| *int* | height | Высота окна |
+| *string* | titleText | Текст заголовка |
+| [*int* | addTitlePanel] | Опциональное добавление подложки под текст заголовка |
+
+Создает окно с текстовым заголовком. Если указан аргумент, добавляющий подложку, то текст будет находиться на сером прямоугольнике.
+
+| Тип свойства | Свойство |Описание |
+| ------ | ------ | ------ |
+| *table* | .**backgroundPanel** | Указатель на объект фоновой панели (GUI.**panel**) |
+| *table* | .**actionButtons** | Указатель на объект кнопок действия (GUI.**actionButtons**) |
+| *table* | .**titleLabel** | Указатель на объект лейбла заголовка (GUI.**label**) |
+| *table* | .**titlePanel** | Указатель на объект лейбла заголовка (GUI.**panel**). Создается только при наличии соответствующего аршумента |
+
+Пример реализации:
+
+```lua
+local MineOSInterface = require("MineOSInterface")
+
+------------------------------------------------------------------------------------------------------
+
+local mainContainer, window = MineOSInterface.addWindow(MineOSInterface.titledWindow(1, 1, 88, 25, "Hello world", true))
+```
+
+Результат:
+
+![](https://i.imgur.com/4q7DCDD.png?1)
+
 MineOSInterface.**tabbedWindow**( x, y, width, height ): *table* window
 -----------------------------------------------------------
 
