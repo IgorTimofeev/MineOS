@@ -100,9 +100,6 @@ module.onTouch = function()
 			module.onTouch()
 		end
 	end
-
-	mainContainer:draw()
-	buffer.draw()
 end
 
 ----------------------------------------------------------------------------------------------------------------

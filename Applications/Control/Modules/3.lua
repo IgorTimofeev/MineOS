@@ -139,9 +139,6 @@ module.onTouch = function()
 	executeButton.colors.disabled.text = 0xD2D2D2
 
 	tree.onItemExpanded()
-
-	mainContainer:draw()
-	buffer.draw()
 end
 
 ----------------------------------------------------------------------------------------------------------------

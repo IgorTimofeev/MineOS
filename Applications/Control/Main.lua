@@ -49,20 +49,12 @@ window.onResize = function(width, height)
 	window.contentContainer.width = width
 	window.contentContainer.height = window.backgroundPanel.height
 
-	window.tabBar.children[window.tabBar.selectedItem].onTouch()
+	window.tabBar:getItem(window.tabBar.selectedItem).onTouch()
 end
 
 ----------------------------------------------------------------------------------------------------------------
 
 loadModules()
 window.onResize(80, 25)
-
-mainContainer:draw()
-buffer.draw()
-
-
-
-
-
 
 

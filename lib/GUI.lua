@@ -3390,56 +3390,62 @@ end
 
 local function tabBarDraw(tabBar)
 	local totalWidth = 0
-	for i = 1, #tabBar.children do
+	for i = 2, #tabBar.children do
 		totalWidth = totalWidth + tabBar.children[i].width + tabBar.spaceBetweenTabs
 	end
 
 	local x = math.floor(tabBar.width / 2 - (totalWidth - tabBar.spaceBetweenTabs) / 2)
-	for i = 1, #tabBar.children do
-		tabBar.children[i].localX = x
+	for i = 2, #tabBar.children do
 		tabBar.children[i].colors.default.background = tabBar.colors.default.background
 		tabBar.children[i].colors.default.text = tabBar.colors.default.text
 		tabBar.children[i].colors.pressed.background = tabBar.colors.selected.background
 		tabBar.children[i].colors.pressed.text = tabBar.colors.selected.text
-		tabBar.children[i].pressed = i == tabBar.selectedItem
+		tabBar.children[i].localX = x
 
 		x = x + tabBar.children[i].width + tabBar.spaceBetweenTabs
 	end
 
-	buffer.square(tabBar.x, tabBar.y, tabBar.width, tabBar.height, tabBar.colors.default.background, tabBar.colors.default.text, " ")
+	tabBar.backgroundPanel.colors.background = tabBar.colors.default.background
+	tabBar.backgroundPanel.width, tabBar.backgroundPanel.height = tabBar.width, tabBar.height
+
 	GUI.drawContainerContent(tabBar)
 
 	return tabBar
 end
 
-local function tabBarTabEventHandler(mainContainer, object, eventData)
+local function tabBarTabEventHandler(mainContainer, tabBarTab, eventData)
 	if eventData[1] == "touch" then
-		object.parent.selectedItem = object:indexOf()
+		tabBarTab.parent.selectedItem = tabBarTab:indexOf() - 1
+		for i = 2, #tabBarTab.parent.children do
+			tabBarTab.parent.children[i].pressed = tabBarTab.parent.selectedItem == i - 1
+		end
+
+		callMethod(tabBarTab.onTouch, mainContainer, tabBarTab, eventData)
+		
 		mainContainer:draw()
 		buffer.draw()
-		
-		callMethod(object.onTouch, mainContainer, object, eventData)
 	end
 end
 
 local function tabBarAddItem(tabBar, text)
 	local item = tabBar:addChild(GUI.button(1, 1, unicode.len(text) + tabBar.horizontalTabOffset * 2, tabBar.height, tabBar.colors.default.background, tabBar.colors.default.text, tabBar.colors.selected.background, tabBar.colors.selected.text, text))
-	
 	item.switchMode = true
 	item.eventHandler = tabBarTabEventHandler
+
+	if #tabBar.children - 1 == tabBar.selectedItem then
+		item.pressed = true
+	end
 
 	return item
 end
 
 local function tabBarGetItem(tabBar, index)
-	return tabBar.children[index]
+	return tabBar.children[index + 1]
 end
 
 function GUI.tabBar(x, y, width, height, horizontalTabOffset, spaceBetweenTabs, backgroundColor, textColor, backgroundSelectedColor, textSelectedColor, ...)
 	local tabBar = GUI.container(x, y, width, height)
 
-	tabBar.horizontalTabOffset = horizontalTabOffset
-	tabBar.spaceBetweenTabs = spaceBetweenTabs
 	tabBar.colors = {
 		default = {
 			background = backgroundColor,
@@ -3450,21 +3456,20 @@ function GUI.tabBar(x, y, width, height, horizontalTabOffset, spaceBetweenTabs, 
 			text = textSelectedColor
 		}
 	}
+
+	tabBar.horizontalTabOffset = horizontalTabOffset
+	tabBar.spaceBetweenTabs = spaceBetweenTabs
 	tabBar.selectedItem = 1
-	tabBar.draw = tabBarDraw
+	tabBar.backgroundPanel = tabBar:addChild(GUI.panel(1, 1, 1, 1, backgroundColor))
+
 	tabBar.addItem = tabBarAddItem
 	tabBar.getItem = tabBarGetItem
-
-	local items = {...}
-	for i = 1, #items do
-		tabBar:addItem(items[i])
-	end
+	tabBar.draw = tabBarDraw
 
 	return tabBar
 end
 
 -----------------------------------------------------------------------------------------------------
-
 
 -- buffer.clear()
 -- buffer.draw(true)
@@ -3472,11 +3477,11 @@ end
 -- local mainContainer = GUI.fullScreenContainer()
 -- mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x262626))
 
--- local tabBar = mainContainer:addChild(GUI.tabBar(3, 2, 80, 3, 4, 0, 0xE1E1E1, 0x2D2D2D, 0xC3C3C3, 0x2D2D2D))
+-- local tabBar = mainContainer:addChild(GUI.tabBar(3, 2, 80, 3, 3, 0, 0xE1E1E1, 0x2D2D2D, 0xC3C3C3, 0x2D2D2D))
 -- tabBar:addItem("Вкладка 1")
 -- tabBar:addItem("Вкладка 2")
 -- tabBar:addItem("Вкладка 3").onTouch = function()
--- 	-- Do something
+-- 	GUI.error("aefae")
 -- end
 
 -- mainContainer:draw()

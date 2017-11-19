@@ -43,9 +43,6 @@ module.onTouch = function()
 			buffer.draw()
 		end
 	end
-
-	mainContainer:draw()
-	buffer.draw()
 end
 
 ----------------------------------------------------------------------------------------------------------------

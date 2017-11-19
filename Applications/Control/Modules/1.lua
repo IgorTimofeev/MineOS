@@ -180,9 +180,6 @@ module.onTouch = function()
 			input.text = ""
 		end
 	end
-
-	mainContainer:draw()
-	buffer.draw()
 end
 
 ----------------------------------------------------------------------------------------------------------------
