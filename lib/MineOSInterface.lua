@@ -1519,12 +1519,15 @@ local function windowCheck(container, x, y)
 end
 
 local function windowEventHandler(mainContainer, object, eventData)
-	if eventData[1] == "touch" then
-		object.lastTouchPosition = object.lastTouchPosition or {}
-		object.lastTouchPosition.x, object.lastTouchPosition.y = eventData[3], eventData[4]
+	if eventData[1] == "touch" and not windowCheck(object, eventData[3], eventData[4]) then
+		object.lastTouchPosition = {
+			x = eventData[3],
+			y = eventData[4]
+		}
 		
 		if object ~= object.parent.children[#object.parent.children] then
 			object:moveToFront()
+			
 			mainContainer:draw()
 			buffer.draw()
 		end
@@ -1534,6 +1537,7 @@ local function windowEventHandler(mainContainer, object, eventData)
 
 		if xOffset ~= 0 or yOffset ~= 0 then
 			object.localX, object.localY = object.localX + xOffset, object.localY + yOffset
+			
 			mainContainer:draw()
 			buffer.draw()
 		end
@@ -1547,6 +1551,7 @@ local function windowEventHandler(mainContainer, object, eventData)
 				if object == object.parent.children[#object.parent.children] and not eventData.windowHandled then
 					eventData.windowHandled = true
 					object:close()
+
 					mainContainer:draw()
 					buffer.draw()
 				end
