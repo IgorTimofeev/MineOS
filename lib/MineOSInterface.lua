@@ -772,20 +772,17 @@ function MineOSInterface.iconRightClick(icon, eventData)
 				menu:addItem(MineOSCore.localization.launchWithArguments).onTouch = function()
 					MineOSCore.launchWithArguments(MineOSInterface.mainContainer, icon.path)
 				end
+
+				menu:addSeparator()
 			end
 
-			menu:addItem(MineOSCore.localization.archive).onTouch = function()
-				require("compressor").pack(fs.path(icon.path) .. icon.nameWithoutExtension .. ".pkg", icon.path)
-				computer.pushSignal("MineOSCore", "updateFileList")
-			end
-
-			if icon.extension ~= ".app" then
-				menu:addItem(MineOSCore.localization.addToFavourites).onTouch = function()
+			-- if icon.extension ~= ".app" then
+			-- 	menu:addItem(MineOSCore.localization.addToFavourites).onTouch = function()
 					
-				end
-			end
+			-- 	end
+			-- end
 			
-			menu:addSeparator()
+			
 		else
 			if icon.isShortcut then
 				menu:addItem(MineOSCore.localization.editShortcut).onTouch = function()
@@ -820,6 +817,16 @@ function MineOSInterface.iconRightClick(icon, eventData)
 			MineOSInterface.newFolderFromChosen(MineOSInterface.mainContainer, icon.parent.parent, eventData[3], eventData[4], selectedIcons)
 		end
 		menu:addSeparator()
+	end
+
+	menu:addItem(MineOSCore.localization.archive .. (#selectedIcons > 1 and " (" .. #selectedIcons .. ")" or "")).onTouch = function()
+		local itemsToArchive = {}
+		for i = 1, #selectedIcons do
+			table.insert(itemsToArchive, selectedIcons[i].path)
+		end
+
+		require("archive").pack(fs.path(icon.path) .. "/Archive.arc", itemsToArchive)
+		computer.pushSignal("MineOSCore", "updateFileList")
 	end
 
 	local function cutOrCopy(cut)

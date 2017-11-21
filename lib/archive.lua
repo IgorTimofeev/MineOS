@@ -1,92 +1,96 @@
+
 local fs = require("filesystem")
-local unicode = require("unicode")
-local package = {}
-package.debugMode = false
-local packageSignature = "--@luaPackageFileSignature"
-local packageFileSeparator = "--@luaPackageFileSeparator"
-local packageFileEnd = "--@luaPackageFileEnd"
+local computer = require("computer")
+local component = require("component")
 
-------------------------------------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------
 
-local function debug(text)
-	if package.debugMode then
-		print(text)
+local archive = {
+	formatModules = {},
+}
+
+-----------------------------------------------------------------------------------------------
+
+function archive.pack(archivePath, fileList, formatModuleID)
+	if type(fileList) ~= "table" then
+		fileList = {fileList}
+	end
+	formatModuleID = formatModuleID or 1
+
+	if archive.formatModules[formatModuleID] then
+		if archive.formatModules[formatModuleID].pack then
+			return archive.formatModules[formatModuleID].pack(archivePath, fileList)
+		else
+			return false, "Format module doesn't have .pack() method"
+		end
+	else
+		return false, "Format module with " .. tostring(formatModuleID) .. " doesn't exists"
 	end
 end
 
-local function doPack(packageFileStream, path, packageFilePath, whereToSavePackedPackage)
-	local fileList = fs.list(path)
-	for file in fileList do
-		if fs.isDirectory(path .. file) then
-			doPack(packageFileStream, path .. file, packageFilePath .. file, whereToSavePackedPackage)
-		else
-			if (path .. file) ~= ("/" .. whereToSavePackedPackage) then
-				debug("Упаковка файла \"" .. path .. file .. "\"")
+function archive.unpack(archivePath, unpackPath, formatModuleID)
+	if fs.exists(archivePath) then
+		formatModuleID = formatModuleID or 1
 
-				packageFileStream:write(packageFileSeparator, "\n")
-				packageFileStream:write("--@" .. packageFilePath .. file, "\n")
-				
-				local fileFileStream = io.open(path .. file, "r")
-				for line in fileFileStream:lines() do
-					packageFileStream:write(line, "\n")
-				end
-				packageFileStream:write(packageFileEnd, "\n")
-				fileFileStream:close()
+		if archive.formatModules[formatModuleID] then
+			if archive.formatModules[formatModuleID].pack then
+				return archive.formatModules[formatModuleID].unpack(archivePath, unpackPath)
+			else
+				return false, "Format module doesn't have .unpack() method"
 			end
-		end
-	end
-end
-
-------------------------------------------------------------------------------------------------------------------------------------
-
-function package.pack(whereToSavePackedPackage, pathThatContainsFilesToPack)
-	local packageFileStream = io.open(whereToSavePackedPackage, "w")
-	packageFileStream:write(packageSignature, "\n")
-
-	doPack(packageFileStream, pathThatContainsFilesToPack .. "/", "", whereToSavePackedPackage)
-
-	packageFileStream:close()
-end
-
-function package.unpack(pathToPackedPackage, whereToSaveUnpackedFiles)
-	fs.makeDirectory(whereToSaveUnpackedFiles)
-
-	local packageFileStream = io.open(pathToPackedPackage, "r")
-	
-	--Проверка сигнатуры файла пакета
-	local readedSignature = packageFileStream:read("*l")
-	if readedSignature ~= packageSignature then error("Ошибка чтения файла пакета: неверная сигнатура. Возможно, вы пытаетесь наебать эту программу и подсовываете ей левый файл?\n") end
-
-	--Распаковка файла пакета на основе записей из него
-	local line = ""
-	local fileFileStream
-	while line do
-		line = packageFileStream:read("*l")
-		
-		if line == packageFileSeparator then
-			local path = unicode.sub(packageFileStream:read("*l"), 4, -1)
-			fs.makeDirectory(whereToSaveUnpackedFiles .. "/" .. (fs.path(path) or ""))
-
-			debug("Распаковка файла \"" .. whereToSaveUnpackedFiles .. "/" .. path .. "\"")		
-			fileFileStream = io.open(whereToSaveUnpackedFiles .. "/" .. path, "w")
-		elseif line == packageFileEnd then
-			fileFileStream:close()
 		else
-			fileFileStream:write(line, "\n")
+			return false, "Format module with " .. tostring(formatModuleID) .. " doesn't exists"
 		end
+	else
+		return false, "Archive file \"" .. tostring(archivePath) .. "\" doesn't exists"
 	end
-
-	packageFileStream:close()
 end
 
-------------------------------------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------
 
---package.pack("1.pkg", "MineOS")
---package.unpack("1.pkg", "unpackedFiles")
+function archive.loadFormatModule(path)
+	local loadedModule, result = loadfile(path)
+	if loadedModule then
+		local success, result = pcall(loadedModule, image)
+		if success then
+			table.insert(archive.formatModules, result)
+			return archive.formatModules[#archive.formatModules]
+		else
+			return false, "Failed to call format module: " .. tostring(result)
+		end
+	else
+		return false, "Failed to load format module: " .. tostring(result)
+	end
+end
 
-------------------------------------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------
 
-return package
+archive.loadFormatModule("/lib/FormatModules/OCAF.lua")
+
+-----------------------------------------------------------------------------------------------
+
+-- print("Packing...")
+-- print(
+-- 	archive.pack("/1.pkg", {
+-- 		"/MineOS/Applications/Finder.app/",
+-- 		"/OS.lua",
+-- 		"/usr/",
+-- 		"/lib/",
+-- 	})
+-- )
+
+-- print("Unpacking...")
+-- fs.remove("/unpacked/")
+-- fs.makeDirectory("/unpacked/")
+-- print(
+-- 	archive.unpack("/1.pkg", "/unpacked/")
+-- )
+
+-----------------------------------------------------------------------------------------------
+
+return archive
+
+
 
 
 

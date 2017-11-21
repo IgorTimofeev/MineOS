@@ -72,7 +72,7 @@ function MineOSCore.loadPropeties()
 
 		MineOSCore.associateExtension("script", MineOSPaths.extensionAssociations .. "Lua/Launcher.lua", MineOSPaths.icons .. "/Script.pic", MineOSPaths.extensionAssociations .. "Lua/ContextMenu.lua")
 		MineOSCore.associateExtension(".lua", MineOSPaths.extensionAssociations .. "Lua/Launcher.lua", MineOSPaths.icons .. "/Lua.pic", MineOSPaths.extensionAssociations .. "Lua/ContextMenu.lua")
-		MineOSCore.associateExtension(".pkg", MineOSPaths.extensionAssociations .. "Pkg/Launcher.lua", MineOSPaths.icons .. "/Archive.pic")
+		MineOSCore.associateExtension(".arc", MineOSPaths.extensionAssociations .. "Arc/Launcher.lua", MineOSPaths.icons .. "/Archive.pic")
 
 		saveLater = true
 	end

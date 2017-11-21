@@ -262,6 +262,9 @@ window.iconField.eventHandler = function(mainContainer, object, eventData)
 			computer.pushSignal("Finder", "updateFileList")
 		end, 1)
 	elseif (eventData[1] == "MineOSCore" or eventData[1] == "Finder") and eventData[2] == "updateFileList" then
+		if eventData[1] == "MineOSCore" then
+			window.iconField.yOffset = iconFieldYOffset
+		end
 		updateFileListAndDraw()
 	end
 end
