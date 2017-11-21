@@ -64,16 +64,6 @@ function MineOSCore.loadPropeties()
 		MineOSCore.properties = table.fromFile(MineOSPaths.properties)
 	else
 		MineOSCore.properties = {}
-
-		MineOSCore.associateExtension(".pic", MineOSPaths.applications .. "/Photoshop.app/Main.lua", MineOSPaths.icons .. "/Image.pic", MineOSPaths.extensionAssociations .. "Pic/ContextMenu.lua")
-		MineOSCore.associateExtension(".txt", MineOSPaths.editor, MineOSPaths.icons .. "/Text.pic")
-		MineOSCore.associateExtension(".cfg", MineOSPaths.editor, MineOSPaths.icons .. "/Config.pic")
-		MineOSCore.associateExtension(".3dm", MineOSPaths.applications .. "/3DPrint.app/Main.lua", MineOSPaths.icons .. "/3DModel.pic")
-
-		MineOSCore.associateExtension("script", MineOSPaths.extensionAssociations .. "Lua/Launcher.lua", MineOSPaths.icons .. "/Script.pic", MineOSPaths.extensionAssociations .. "Lua/ContextMenu.lua")
-		MineOSCore.associateExtension(".lua", MineOSPaths.extensionAssociations .. "Lua/Launcher.lua", MineOSPaths.icons .. "/Lua.pic", MineOSPaths.extensionAssociations .. "Lua/ContextMenu.lua")
-		MineOSCore.associateExtension(".arc", MineOSPaths.extensionAssociations .. "Arc/Launcher.lua", MineOSPaths.icons .. "/Archive.pic")
-
 		saveLater = true
 	end
 
@@ -108,6 +98,15 @@ function MineOSCore.loadPropeties()
 			signalStrength = 512,
 		},
 	}
+
+	MineOSCore.associateExtension(".pic", MineOSPaths.applications .. "/Photoshop.app/Main.lua", MineOSPaths.icons .. "/Image.pic", MineOSPaths.extensionAssociations .. "Pic/ContextMenu.lua")
+	MineOSCore.associateExtension(".txt", MineOSPaths.editor, MineOSPaths.icons .. "/Text.pic")
+	MineOSCore.associateExtension(".cfg", MineOSPaths.editor, MineOSPaths.icons .. "/Config.pic")
+	MineOSCore.associateExtension(".3dm", MineOSPaths.applications .. "/3DPrint.app/Main.lua", MineOSPaths.icons .. "/3DModel.pic")
+
+	MineOSCore.associateExtension("script", MineOSPaths.extensionAssociations .. "Lua/Launcher.lua", MineOSPaths.icons .. "/Script.pic", MineOSPaths.extensionAssociations .. "Lua/ContextMenu.lua")
+	MineOSCore.associateExtension(".lua", MineOSPaths.extensionAssociations .. "Lua/Launcher.lua", MineOSPaths.icons .. "/Lua.pic", MineOSPaths.extensionAssociations .. "Lua/ContextMenu.lua")
+	MineOSCore.associateExtension(".arc", MineOSPaths.extensionAssociations .. "Arc/Launcher.lua", MineOSPaths.icons .. "/Archive.pic")
 
 	for key, value in pairs(defaultValues) do
 		if MineOSCore.properties[key] == nil then
