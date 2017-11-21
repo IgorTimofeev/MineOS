@@ -63,7 +63,7 @@ GUI - многофункциональная графическая библио
 | *[color](https://github.com/IgorTimofeev/OpenComputers/blob/master/lib/color.lua)* | Экструзия цветовых каналов, альфа-блендинг, поддержка различных палитр и конвертации цвета в 8-битный формат |
 | *[doubleBuffering](https://github.com/IgorTimofeev/OpenComputers/blob/master/lib/doubleBuffering.lua)* | Двойная буферизация графического контекста и различные методы растеризации примитивов |
 | *[image](https://github.com/IgorTimofeev/OpenComputers/blob/master/lib/image.lua)* | Реализация стандарта изображений для OpenComputers и базовые методы их обработки: транспонирование, обрезка, поворот, отражение и т.д. |
-| *[OCIF](https://github.com/IgorTimofeev/OpenComputers/blob/master/lib/ImageFormatModules/OCIF.lua)* | Модуль формата изображения OCIF (OpenComputers Image Format) для библиотеки image, написанный с учетом особенностей мода и реализующий эффективное сжатие пиксельных данных |
+| *[OCIF](https://github.com/IgorTimofeev/OpenComputers/blob/master/lib/FormatModules/OCIF.lua)* | Модуль формата изображения OCIF (OpenComputers Image Format) для библиотеки image, написанный с учетом особенностей мода и реализующий эффективное сжатие пиксельных данных |
 | *[syntax](https://github.com/IgorTimofeev/OpenComputers/blob/master/lib/syntax.lua)* | Подсветка lua-синтаксиса для виджета CodeView |
 | *[palette](https://github.com/IgorTimofeev/OpenComputers/blob/master/lib/palette.lua)* | Окно для работы с цветом в режиме HSV и выборе конкретных цветовых данных для виджета ColorSelector |
 | *[GUI](https://github.com/IgorTimofeev/OpenComputers/blob/master/lib/GUI.lua)* | Данная библиотека |
