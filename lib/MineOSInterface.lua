@@ -825,7 +825,11 @@ function MineOSInterface.iconRightClick(icon, eventData)
 			table.insert(itemsToArchive, selectedIcons[i].path)
 		end
 
-		require("archive").pack(fs.path(icon.path) .. "/Archive.arc", itemsToArchive)
+		local success, reason = require("archive").pack(fs.path(icon.path) .. "/Archive.arc", itemsToArchive)
+		if not success then
+			GUI.error(reason)
+		end
+
 		computer.pushSignal("MineOSCore", "updateFileList")
 	end
 
