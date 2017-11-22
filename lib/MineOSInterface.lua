@@ -1558,13 +1558,15 @@ local function windowEventHandler(mainContainer, window, eventData)
 	end
 end
 
-function MineOSInterface.window(x, y, width, height)
-	local window = GUI.container(x, y, width, height)
-	
-	window.eventHandler = windowEventHandler
-	window.draw = windowDraw
+function MineOSInterface.windowFromContainer(container)
+	container.eventHandler = windowEventHandler
+	container.draw = windowDraw
 
-	return window
+	return container
+end
+
+function MineOSInterface.window(x, y, width, height)
+	return MineOSInterface.windowFromContainer(GUI.container(x, y, width, height))
 end
 
 function MineOSInterface.filledWindow(x, y, width, height, backgroundColor)

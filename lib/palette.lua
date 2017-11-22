@@ -95,8 +95,8 @@ end
 
 --------------------------------------------------------------------------------------------------------------
 
-function palette.window(x, y, startColor)
-	local window = require("MineOSInterface").window(x, y, 71, 25)
+function palette.container(x, y, startColor)
+	local window = GUI.container(x, y, 71, 25)
 	
 	window.color = {hsb = {}, rgb = {}}
 	window:addChild(GUI.panel(1, 1, window.width, window.height, 0xEEEEEE))
@@ -253,11 +253,10 @@ function palette.window(x, y, startColor)
 end
 
 function palette.show(x, y, startColor)
-	local mainContainer = GUI.container(1, 1, buffer.getResolution())
+	local mainContainer = GUI.fullScreenContainer()
 
 	local selectedColor
-	local window = mainContainer:addChild(palette.window(x, y, startColor))
-	window.eventHandler = nil
+	local window = mainContainer:addChild(palette.container(x, y, startColor))
 	window.OKButton.onTouch = function(mainContainer, object, eventData)
 		mainContainer:stopEventHandling()
 		selectedColor = window.color.hex
@@ -269,6 +268,8 @@ function palette.show(x, y, startColor)
 	mainContainer:draw()
 	buffer.draw()
 	mainContainer:startEventHandling()
+
+	window = nil
 
 	return selectedColor
 end

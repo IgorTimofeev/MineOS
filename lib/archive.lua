@@ -11,7 +11,24 @@ local archive = {
 
 -----------------------------------------------------------------------------------------------
 
-function archive.pack(archivePath, fileList, formatModuleID)
+function archive.loadFormatModule(path)
+	local loadedModule, result = loadfile(path)
+	if loadedModule then
+		local success, result = pcall(loadedModule, image)
+		if success then
+			table.insert(archive.formatModules, result)
+			return archive.formatModules[#archive.formatModules]
+		else
+			error("Failed to call format module: " .. tostring(result))
+		end
+	else
+		error("Failed to load format module: " .. tostring(result))
+	end
+end
+
+-----------------------------------------------------------------------------------------------
+
+function archive.pack(archivePath, fileList, formatModuleID, encodingMethod)
 	if type(fileList) ~= "table" then
 		fileList = {fileList}
 	end
@@ -19,7 +36,7 @@ function archive.pack(archivePath, fileList, formatModuleID)
 
 	if archive.formatModules[formatModuleID] then
 		if archive.formatModules[formatModuleID].pack then
-			return archive.formatModules[formatModuleID].pack(archivePath, fileList)
+			return archive.formatModules[formatModuleID].pack(archivePath, fileList, encodingMethod or 0)
 		else
 			return false, "Format module doesn't have .pack() method"
 		end
@@ -48,30 +65,13 @@ end
 
 -----------------------------------------------------------------------------------------------
 
-function archive.loadFormatModule(path)
-	local loadedModule, result = loadfile(path)
-	if loadedModule then
-		local success, result = pcall(loadedModule, image)
-		if success then
-			table.insert(archive.formatModules, result)
-			return archive.formatModules[#archive.formatModules]
-		else
-			return false, "Failed to call format module: " .. tostring(result)
-		end
-	else
-		return false, "Failed to load format module: " .. tostring(result)
-	end
-end
-
------------------------------------------------------------------------------------------------
-
 archive.loadFormatModule("/lib/FormatModules/OCAF.lua")
 
 -----------------------------------------------------------------------------------------------
 
 -- print("Packing...")
 -- print(
--- 	archive.pack("/1.pkg", {
+-- 	archive.pack("/1.arc", {
 -- 		"/MineOS/Applications/Finder.app/",
 -- 		"/OS.lua",
 -- 		"/usr/",
@@ -83,7 +83,7 @@ archive.loadFormatModule("/lib/FormatModules/OCAF.lua")
 -- fs.remove("/unpacked/")
 -- fs.makeDirectory("/unpacked/")
 -- print(
--- 	archive.unpack("/1.pkg", "/unpacked/")
+-- 	archive.unpack("/1.arc", "/unpacked/")
 -- )
 
 -----------------------------------------------------------------------------------------------

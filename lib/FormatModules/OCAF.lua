@@ -7,11 +7,13 @@ local fs = require("filesystem")
 -----------------------------------------------------------------------------------------------
 
 local module = {}
+
+local encodingMethods = {}
 local OCAFSignature = "OCAF"
+local readBufferSize = 1024
 local ignoredFiles = {
 	[".DS_Store"] = true
 }
-local readBufferSize = 1024
 
 -----------------------------------------------------------------------------------------------
 
@@ -24,7 +26,14 @@ local function getFileList(path)
 	return fileList
 end
 
------------------------------------------------------------------------------------------------
+local function readPath(archiveFileHandle)
+	local sizeOfSizeArray = {}
+	for i = 1, string.byte(archiveFileHandle:read(1)) do
+		table.insert(sizeOfSizeArray, string.byte(archiveFileHandle:read(1)))
+	end
+
+	return archiveFileHandle:read(bit32.byteArrayToNumber(sizeOfSizeArray))
+end
 
 -- Записываем путь в виде <кол-во байт для размера пути> <размер пути> <путь>
 local function writePath(archiveFileHandle, path)
@@ -50,10 +59,14 @@ local function writePath(archiveFileHandle, path)
 	end
 end
 
-local function recursivePack(archiveFileHandle, fileList, localPath)
+-----------------------------------------------------------------------------------------------
+
+encodingMethods[0] = {}
+
+encodingMethods[0].pack = function(archiveFileHandle, fileList, localPath)
 	for i = 1, #fileList do
 		local filename = fs.name(fileList[i]) or ""
-		local currentLocalPath = localPath .. "/" .. filename
+		local currentLocalPath = (localPath or "") .. "/" .. filename
 		-- print("Writing path:", currentLocalPath)
 
 		if not ignoredFiles[filename] then
@@ -61,9 +74,9 @@ local function recursivePack(archiveFileHandle, fileList, localPath)
 				archiveFileHandle:write(string.char(1))
 				writePath(archiveFileHandle, currentLocalPath)
 
-				local success, reason = recursivePack(archiveFileHandle, getFileList(fileList[i]), currentLocalPath)
+				local success, reason = encodingMethods[0].pack(archiveFileHandle, getFileList(fileList[i]), currentLocalPath)
 				if not success then
-					return reason
+					return success, reason
 				end
 			else
 				archiveFileHandle:write(string.char(0))
@@ -101,79 +114,89 @@ local function recursivePack(archiveFileHandle, fileList, localPath)
 	return true
 end
 
-module.pack = function(archivePath, fileList)
-	local archiveFileHandle, reason = io.open(archivePath, "wb")
-	if archiveFileHandle then
-		archiveFileHandle:write(OCAFSignature)
-		local success, reason = recursivePack(archiveFileHandle, fileList, "")
-		archiveFileHandle:close()
-		
-		return success, reason
-	else
-		return false, "Failed to open archive file for writing: " .. tostring(reason)
+encodingMethods[0].unpack = function(archiveFileHandle, unpackPath)
+	while true do
+		local typeData = archiveFileHandle:read(1)
+		if typeData then
+			local type = string.byte(typeData)
+			local localPath = unpackPath .. readPath(archiveFileHandle)
+			-- print("Readed path:", localPath)
+
+			if type == 0 then
+				-- Читаем размер файлика
+				local sizeOfSizeArray = {}
+				for i = 1, string.byte(archiveFileHandle:read(1)) do
+					table.insert(sizeOfSizeArray, string.byte(archiveFileHandle:read(1)))
+				end
+				local fileSize = bit32.byteArrayToNumber(sizeOfSizeArray)
+				-- print("Readed file size:", fileSize)
+
+				-- Читаем и записываем содержимое файлика
+				local fileHandle, reason = io.open(localPath, "wb")
+				if fileHandle then
+					local readedCount, needToRead, data = 0
+					while readedCount < fileSize do
+						needToRead = math.min(readBufferSize, fileSize - readedCount)
+						fileHandle:write(archiveFileHandle:read(needToRead))
+						readedCount = readedCount + needToRead
+					end
+					
+					fileHandle:close()
+				else
+					return false, "Failed to open file for writing: " .. tostring(reason)
+				end
+			else
+				fs.makeDirectory(localPath)
+			end
+		else
+			return true
+		end
 	end
 end
 
 -----------------------------------------------------------------------------------------------
 
-local function readPath(archiveFileHandle)
-	local sizeOfSizeArray = {}
-	for i = 1, string.byte(archiveFileHandle:read(1)) do
-		table.insert(sizeOfSizeArray, string.byte(archiveFileHandle:read(1)))
+module.pack = function(archivePath, fileList, encodingMethod)
+	local archiveFileHandle, reason = io.open(archivePath, "wb")
+	if archiveFileHandle then
+		archiveFileHandle:write(OCAFSignature)
+		archiveFileHandle:write(string.char(encodingMethod))
+		
+		if encodingMethods[encodingMethod] then
+			local success, reason = encodingMethods[encodingMethod].pack(archiveFileHandle, fileList)
+			archiveFileHandle:close()
+			
+			return success, reason
+		else
+			archiveFileHandle:close()
+			
+			return false, "Encoding method " .. tostring(encodingMethod) .. " doesn't supported"
+		end
+	else
+		return false, "Failed to open archive file for writing: " .. tostring(reason)
 	end
-
-	return archiveFileHandle:read(bit32.byteArrayToNumber(sizeOfSizeArray))
 end
+
 
 module.unpack = function(archivePath, unpackPath)
 	local archiveFileHandle, reason = io.open(archivePath, "rb")
 	if archiveFileHandle then
 		local readedSignature = archiveFileHandle:read(#OCAFSignature)
 		if readedSignature == OCAFSignature then
-			while true do
-				local typeData = archiveFileHandle:read(1)
-				if typeData then
-					local type = string.byte(typeData)
-					local localPath = unpackPath .. readPath(archiveFileHandle)
-					-- print("Readed path:", localPath)
-
-					if type == 0 then
-						-- Читаем размер файлика
-						local sizeOfSizeArray = {}
-						for i = 1, string.byte(archiveFileHandle:read(1)) do
-							table.insert(sizeOfSizeArray, string.byte(archiveFileHandle:read(1)))
-						end
-						local fileSize = bit32.byteArrayToNumber(sizeOfSizeArray)
-						-- print("Readed file size:", fileSize)
-
-						-- Читаем и записываем содержимое файлика
-						local fileHandle, reason = io.open(localPath, "wb")
-						if fileHandle then
-							local readedCount, needToRead, data = 0
-							while readedCount < fileSize do
-								needToRead = math.min(readBufferSize, fileSize - readedCount)
-								fileHandle:write(archiveFileHandle:read(needToRead))
-								readedCount = readedCount + needToRead
-							end
-							
-							fileHandle:close()
-						else
-							fileHandle:close()
-							return false, "Failed to open file for writing: " .. tostring(reason)
-						end
-					else
-						fs.makeDirectory(localPath)
-					end
-				else
-					break
-				end
+			local readedEncodingMethod = string.byte(archiveFileHandle:read(1))
+			if encodingMethods[readedEncodingMethod] then
+				local success, reason = encodingMethods[readedEncodingMethod].unpack(archiveFileHandle, unpackPath)
+				archiveFileHandle:close()
+				
+				return success, reason
+			else
+				archiveFileHandle:close()
+				
+				return false, "Encoding method " .. tostring(encodingMethod) .. " doesn't supported"
 			end
-
-			archiveFileHandle:close()
-			
-			return true
 		else
 			archiveFileHandle:close()
+			
 			return false, "Archive signature doesn't match OCAF"
 		end
 	else
