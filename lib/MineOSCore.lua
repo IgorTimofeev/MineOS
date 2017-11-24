@@ -259,7 +259,7 @@ end
 
 function MineOSCore.downloadApplication(application, language, createShortcut)
     if application.type == "Application" then
-		fs.remove(application.path .. ".app")
+		filesystem.remove(application.path .. ".app")
 
 		web.download(application.url, application.path .. ".app/Main.lua")
 		web.download(application.icon, application.path .. ".app/Resources/Icon.pic")
@@ -275,7 +275,7 @@ function MineOSCore.downloadApplication(application, language, createShortcut)
 		end 
 
 		if application.createShortcut or createShortcut then
-			MineOSCore.createShortcut(MineOSPaths.desktop .. fs.name(application.path) .. ".lnk", application.path .. ".app/")
+			MineOSCore.createShortcut(MineOSPaths.desktop .. filesystem.name(application.path) .. ".lnk", application.path .. ".app/")
 		end
 	else
 		web.download(application.url, application.path)
