@@ -837,7 +837,7 @@ local function userProfileGUI()
 	currentProfile.audiosButton = GUI.button(x, y, avatarWidth, 1, 0xCCCCCC, 0x000000, 0x888888, 0x000000, "Аудиозаписи")
 	y = y + 2
 
-	drawInfo(x, y, "Подписчики: ", currentProfile.userProfile.response[1].counters.followers)
+	drawInfo(x, y, "Подписчики: ", tostring(currentProfile.userProfile.response[1].counters.followers))
 	drawInfo(x, y, "Фотографии: ", currentProfile.userProfile.response[1].counters.photos)
 	drawInfo(x, y, "Видеозаписи: ", currentProfile.userProfile.response[1].counters.videos)
 	drawInfo(x, y, "Аудиозаписи: ", currentProfile.userProfile.response[1].counters.audios)
