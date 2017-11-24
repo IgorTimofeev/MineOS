@@ -31,7 +31,7 @@ local function newApp(x, y, width, applicationListElement, hideDownloadButton)
 	
 	app.icon = app:addChild(GUI.image(1, 1, MineOSInterface.iconsCache.script))
 	if applicationListElement.icon then
-		web.downloadFile(applicationListElement.icon, temproraryIconPath)
+		web.download(applicationListElement.icon, temproraryIconPath)
 		app.icon.image = image.load(temproraryIconPath)
 	end
 
@@ -44,7 +44,7 @@ local function newApp(x, y, width, applicationListElement, hideDownloadButton)
 		mainContainer:draw()
 		buffer.draw()
 
-		web.downloadMineOSApplication(applicationListElement, MineOSCore.properties.language)
+		MineOSCore.downloadApplication(applicationListElement, MineOSCore.properties.language)
 
 		app.downloadButton.text = localization.downloaded
 		computer.pushSignal("MineOSCore", "updateFileList")
@@ -129,7 +129,7 @@ local function displayApps(fromPage, typeFilter, nameFilter, updateCheck)
 					mainContainer:draw()
 					buffer.draw()
 
-					web.downloadMineOSApplication(finalApplicationList[i], MineOSCore.properties.language)
+					MineOSCore.downloadApplication(finalApplicationList[i], MineOSCore.properties.language)
 				end
 
 				mainContainer:draw()

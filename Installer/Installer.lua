@@ -270,7 +270,7 @@ stages[4] = function()
 		mainContainer:draw()
 		buffer.draw()
 
-		web.downloadMineOSApplication(thingsToDownload[i], MineOSCore.properties.language)
+		MineOSCore.downloadApplication(thingsToDownload[i], MineOSCore.properties.language)
 	end
 
 	stageContainer:deleteChildren(2)

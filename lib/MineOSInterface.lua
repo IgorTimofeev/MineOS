@@ -1031,7 +1031,7 @@ function MineOSInterface.newFileFromURL(parentWindow, iconField, x, y, path)
 				buffer.draw()
 			else
 				if container.inputFieldURL.text then
-					local success, reason = require("web").downloadFile(container.inputFieldURL.text, path .. container.inputField.text)
+					local success, reason = require("web").download(container.inputFieldURL.text, path .. container.inputField.text)
 					if not success then
 						GUI.error(reason)
 					end

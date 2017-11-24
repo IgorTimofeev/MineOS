@@ -1,5 +1,6 @@
 
 require("advancedLua")
+local web = require("web")
 local component = require("component")
 local buffer = require("doubleBuffering")
 local filesystem = require("filesystem")
@@ -252,6 +253,33 @@ function MineOSCore.safeLaunch(path, ...)
 	buffer.setResolution(oldResolutionWidth, oldResolutionHeight)
 
 	return finalSuccess, finalPath, finalLine, finalTraceback
+end
+
+-----------------------------------------------------------------------------------------------------------------------------------
+
+function MineOSCore.downloadApplication(application, language, createShortcut)
+    if application.type == "Application" then
+		fs.remove(application.path .. ".app")
+
+		web.download(application.url, application.path .. ".app/Main.lua")
+		web.download(application.icon, application.path .. ".app/Resources/Icon.pic")
+
+		if application.resources then
+			for i = 1, #application.resources do
+				web.download(application.resources[i].url, application.path .. ".app/Resources/" .. application.resources[i].path)
+			end
+		end
+
+		if application.about then
+			web.download(application.about .. language .. ".txt", application.path .. ".app/Resources/About/" .. language .. ".txt")
+		end 
+
+		if application.createShortcut or createShortcut then
+			MineOSCore.createShortcut(MineOSPaths.desktop .. fs.name(application.path) .. ".lnk", application.path .. ".app/")
+		end
+	else
+		web.download(application.url, application.path)
+	end
 end
 
 -----------------------------------------------------------------------------------------------------------------------------------

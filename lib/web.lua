@@ -1,11 +1,11 @@
 
-local fs = require("filesystem")
 local component = require("component")
+local fs = require("filesystem")
 local web = {}
 
 ----------------------------------------------------------------------------------------------------
 
-local function serializeTableToURL(existentData, table)
+local function serializeTable(table, currentData)
 	local result = ""
 
 	for key, value in pairs(table) do
@@ -13,43 +13,59 @@ local function serializeTableToURL(existentData, table)
 
 		if keyType == "number" then
 			key = key - 1
-		-- elseif keyType == "string" then
-		-- 	key = "\"" .. key .. "\""
 		end
 
 		if valueType == "table" then
-			result = result .. serializeTableToURL(existentData .. "[" .. key .. "]", value)
+			result = result .. serializeTable(value, currentData .. "[" .. key .. "]")
 		else
-			result = result .. existentData .. "[" .. key .. "]=" .. value .. "&"
+			result = result .. currentData .. "[" .. key .. "]=" .. value .. "&"
 		end
 	end
 
 	return result
 end
 
-local function rawRequest(url, postData, headers, chunkHandler)
-	local stringPostData
-	if postData then
-		if type(postData) == "table" then
-			stringPostData = ""
-
-			for key, value in pairs(postData) do	
-				if type(value) == "table" then
-					stringPostData = stringPostData .. serializeTableToURL(key, value)
-				else
-					stringPostData = stringPostData .. key .. "=" .. value .. "&"
-				end
+function web.serialize(data)
+	if type(data) == "table" then
+		local serializedData = ""
+		
+		for key, value in pairs(data) do	
+			if type(value) == "table" then
+				serializedData = serializedData .. serializeTable(value, key)
+			else
+				serializedData = serializedData .. key .. "=" .. value .. "&"
 			end
-		elseif type(postData) == "string" then
-			stringPostData = postData
 		end
+
+		return serializedData
+	else
+		return tostring(data)
+	end
+end
+
+function web.encode(data)
+	if data then
+		data = string.gsub(data, "([^%w ])", function(char)
+			return string.format("%%%02X", string.byte(char))
+		end)
+		data = string.gsub(data, " ", "+")
 	end
 
-	local pcallSuccess, requestHandle, requestReason = pcall(component.internet.request, url, stringPostData, headers)
+	return data 
+end
+
+----------------------------------------------------------------------------------------------------
+
+function web.rawRequest(url, postData, headers, chunkHandler, chunkSize)
+	if postData then
+		postData = web.serialize(postData)
+	end
+
+	local pcallSuccess, requestHandle, requestReason = pcall(component.internet.request, url, postData, headers)
 	if pcallSuccess then
 		if requestHandle then
 			while true do
-				local chunk, reason = requestHandle.read(math.huge)	
+				local chunk, reason = requestHandle.read(chunkSize or math.huge)	
 				if chunk then
 					chunkHandler(chunk)
 				else
@@ -62,18 +78,16 @@ local function rawRequest(url, postData, headers, chunkHandler)
 				end
 			end
 		else
-			return false, "Invalid URL-addess"
+			return false, "Invalid URL-address"
 		end
 	else
-		return false, "Usage: web.request(string url)"
+		return false, "Invalid arguments to component.internet.request"
 	end
 end
 
-----------------------------------------------------------------------------------------------------
-
 function web.request(url, postData, headers)
 	local data = ""
-	local success, reason = rawRequest(url, postData, headers, function(chunk)
+	local success, reason = web.rawRequest(url, postData, headers, function(chunk)
 		data = data .. chunk
 	end)
 
@@ -84,91 +98,67 @@ function web.request(url, postData, headers)
 	end
 end
 
-function web.downloadFile(url, path)
+function web.download(url, path)
 	fs.makeDirectory(fs.path(path) or "")
-	local file, reason = io.open(path, "w")
-	if file then
-		local success, reason = rawRequest(url, nil, nil, function(chunk)
-			file:write(chunk)
+	
+	local handle, reason = io.open(path, "w")
+	if handle then
+		local success, reason = web.rawRequest(url, nil, nil, function(chunk)
+			handle:write(chunk)
 		end)
 
-		file:close()
+		handle:close()
 		if success then
 			return true
 		else
-			return false, "Could not connect to to URL-address \"" .. tostring(url) .. "\", the reason is \"" .. tostring(reason) .. "\""
+			return false, reason
 		end
 	else
 		return false, "Failed to open file for writing: " .. tostring(reason)
 	end	
 end
 
-function web.runScript(url)
+function web.run(url, ...)
 	local result, reason = web.request(url)
-	if success then
-		local loadSucces, loadReason = load(result)
-		if loadSucces then
-			local xpcallSuccess, xpcallSuccessReason = xpcall(loadSucces, debug.traceback)
-			if xpcallSuccess then
-				return true
+	if result then
+		result, reason = load(result)
+		if result then
+			result = { pcall(result, ...) }
+			if result[1] then
+				return table.unpack(result, 2)
 			else
-				return false, "Failed to run script: " .. tostring(xpcallSuccessReason)
+				return false, "Failed to run script: " .. tostring(result[2])
 			end
 		else
 			return false, "Failed to run script: " .. tostring(loadReason)
 		end
 	else
-		return false, "Could not connect to to URL-address \"" .. tostring(url) .. "\", the reason is \"" .. tostring(reason) .. "\""
-	end
-end
-
-function web.downloadMineOSApplication(application, language)
-    if application.type == "Application" then
-		fs.remove(application.path .. ".app")
-
-		web.downloadFile(application.url, application.path .. ".app/Main.lua")
-		web.downloadFile(application.icon, application.path .. ".app/Resources/Icon.pic")
-
-		if application.resources then
-			for i = 1, #application.resources do
-				web.downloadFile(application.resources[i].url, application.path .. ".app/Resources/" .. application.resources[i].path)
-			end
-		end
-
-		if application.about then
-			web.downloadFile(application.about .. language .. ".txt", application.path .. ".app/Resources/About/" .. language .. ".txt")
-		end 
-
-		if application.createShortcut then
-			local path = "/MineOS/Desktop/" .. fs.name(application.path) .. ".lnk"
-			fs.makeDirectory(fs.path(path))
-
-			local file, reason = io.open(path, "w")
-			if file then
-				file:write(application.path .. ".app/")
-				file:close()
-			else
-				print(reason)
-			end
-		end
-	else
-		web.downloadFile(application.url, application.path)
+		return false, reason
 	end
 end
 
 ----------------------------------------------------------------------------------------------------
 
--- print(web.request("http://94.242.34.251:8888/MineOS/AppMarket/test.php", {
--- 	abc = "siski",
--- 	pizda = "test",
--- 	def = {
--- 		{name = "Test1.png", data = "F0"},
--- 		{name = "Test2.png", data = "FF"},
--- 		{hello = "world", meow = "meow-meow"}
--- 	},
--- }))
+-- print(
+-- 	web.serialize({
+-- 		string = "Hello world",
+-- 		number = 123,
+-- 		array = {
+-- 			arrayString = "Meow",
+-- 			arrayInArray = {
+-- 				arrayInArrayNumber = 456
+-- 			}
+-- 		}
+-- 	})
+-- )
 
--- web.downloadFile("https://github.com/IgorTimofeev/OpenComputers/raw/master/Wallpapers/CloudyEvening.pic", "Clouds.pic")
+-- print(
+-- 	web.run(
+-- 		"https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/Screensavers/Matrix.lua"
+-- 	)
+-- )
+
+-- print(result)
 
 ----------------------------------------------------------------------------------------------------
 
