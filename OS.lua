@@ -251,9 +251,13 @@ local function changeWallpaper()
 			MineOSInterface.mainContainer.background.wallpaperPosition.y = math.floor(1 + MineOSInterface.mainContainer.height / 2 - image.getHeight(MineOSInterface.mainContainer.background.wallpaper) / 2)
 		end
 
+		local r, g, b
 		for i = 3, #MineOSInterface.mainContainer.background.wallpaper, 4 do
-			MineOSInterface.mainContainer.background.wallpaper[i] = color.blend(MineOSInterface.mainContainer.background.wallpaper[i], 0x0, MineOSCore.properties.wallpaperBrightness)
-			MineOSInterface.mainContainer.background.wallpaper[i + 1] = color.blend(MineOSInterface.mainContainer.background.wallpaper[i + 1], 0x0, MineOSCore.properties.wallpaperBrightness)
+			r, g, b = color.HEXToRGB(MineOSInterface.mainContainer.background.wallpaper[i])
+			MineOSInterface.mainContainer.background.wallpaper[i] = color.RGBToHEX(math.floor(r * MineOSCore.properties.wallpaperBrightness), math.floor(g * MineOSCore.properties.wallpaperBrightness), math.floor(b * MineOSCore.properties.wallpaperBrightness))
+			
+			r, g, b = color.HEXToRGB(MineOSInterface.mainContainer.background.wallpaper[i + 1])
+			MineOSInterface.mainContainer.background.wallpaper[i + 1] = color.RGBToHEX(math.floor(r * MineOSCore.properties.wallpaperBrightness), math.floor(g * MineOSCore.properties.wallpaperBrightness), math.floor(b * MineOSCore.properties.wallpaperBrightness))
 		end
 	end
 end
