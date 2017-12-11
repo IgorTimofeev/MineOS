@@ -45,8 +45,8 @@ local files = {
 
 local properties = {
 	-- Comment any coordinate to calculate it automatically (will centerize window on screen by specified axis)
-	windowX = 2,
-	windowY = 2,
+	-- windowX = 2,
+	-- windowY = 2,
 	-- Set window width value lower than zero (0.5 for example) to calculate it dependent on screen width
 	windowWidth = 54,
 	-- Customize offset by X axis from window corners
@@ -125,6 +125,7 @@ local function centerizedText(y, color, text)
 	local textLength = unicode.len(text)
 	if textLength > progressBarWidth then
 		text = unicode.sub(text, 1, progressBarWidth)
+		textLength = progressBarWidth
 	end
 
 	setForeground(color)

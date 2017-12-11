@@ -146,13 +146,13 @@ end
 
 ---------------------------------------------- Filesystem extensions ------------------------------------------------------------------------
 
-function filesystem.path(path)
-	return path:match("^(.+%/).") or ""
-end
+-- function filesystem.path(path)
+-- 	return path:match("^(.+%/).") or ""
+-- end
 
-function filesystem.name(path)
-	return path:match("%/?([^%/]+)%/?$")
-end
+-- function filesystem.name(path)
+-- 	return path:match("%/?([^%/]+)%/?$")
+-- end
 
 function filesystem.extension(path, lower)
 	local extension = path:match("[^%/]+(%.[^%/]+)%/?$")
