@@ -50,7 +50,7 @@ local properties = {
 	-- Set window width value lower than zero (0.5 for example) to calculate it dependent on screen width
 	windowWidth = 54,
 	-- Customize offset by X axis from window corners
-	GUIElementsOffset = 1,
+	GUIElementsOffset = 2,
 	-- Customize localization as you want to
 	localization = {
 		-- Specify title of your installer
