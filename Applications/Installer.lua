@@ -55,10 +55,9 @@ local properties = {
 	localization = {
 		-- Specify title of your installer
 		title = "GUI framework installer",
-		-- Use %s for current file path
-		currentFile = "Downloading \"%s\"",
-		-- Use %s for total (rounded) progress
-		totalProgress = "Total progress: %s%%",
+		-- Use <currentProgress>, <totalProgress> and <currentFile> text insertions to automatically display their values
+		currentFile = "Downloading \"<currentFile>\"",
+		totalProgress = "Total progress: <totalProgress>%",
 		-- Comment this lines to automatically close installer window
 		finished1 = "GUI framework has been successfully installed",
 		finished2 = "Press any key to quit"
@@ -133,16 +132,20 @@ local function centerizedText(y, color, text)
 	gpu.set(math.floor(properties.windowX + properties.GUIElementsOffset + progressBarWidth / 2 - textLength / 2), y, text)
 end
 
-local function progressBar(y, percent, text)
+local function progressBar(y, percent, text, totalProgress, currentProgress, currentFile)
 	setForeground(properties.colors.progressBar.passive)
 	gpu.set(properties.windowX + properties.GUIElementsOffset, y, string.rep("━", progressBarWidth))
 	setForeground(properties.colors.progressBar.active)
 	gpu.set(properties.windowX + properties.GUIElementsOffset, y, string.rep("━", math.ceil(progressBarWidth * percent)))
 
+	text = text:gsub("<totalProgress>", totalProgress)
+	text = text:gsub("<currentProgress>", currentProgress)
+	text = text:gsub("<currentFile>", currentFile)
+
 	centerizedText(y + 1, properties.colors.window.text, text)
 end
 
-local function download(url, path)
+local function download(url, path, totalProgress)
 	fs.makeDirectory(fs.path(path))
 
 	local file, fileReason = io.open(path, "w")
@@ -152,7 +155,7 @@ local function download(url, path)
 			if requestHandle then
 				-- Drawing progressbar once with zero percentage
 				local y = properties.windowY + 2
-				progressBar(y, 0, string.format(properties.localization.currentFile, path))
+				progressBar(y, 0, properties.localization.currentFile, totalProgress, "0", path)
 				
 				-- Waiting for any response code
 				local responseCode, responseName, responseData
@@ -168,7 +171,8 @@ local function download(url, path)
 						local data, reason = requestHandle.read(math.huge)
 						if data then
 							currentLength = currentLength + unicode.len(data)
-							progressBar(y, currentLength / contentLength, string.format(properties.localization.currentFile, path))
+							local percent = currentLength / contentLength
+							progressBar(y, percent, properties.localization.currentFile, totalProgress, tostring(math.ceil(percent)), path)
 
 							file:write(data)
 						else
@@ -233,11 +237,12 @@ setBackground(properties.colors.window.background)
 
 -- Downloading
 local y = properties.windowY + 5
-progressBar(y, 0, string.format(properties.localization.totalProgress, "0"))
+progressBar(y, 0, properties.localization.totalProgress, "0", "0", files[1].path)
 for i = 1, #files do
 	local percent = i / #files
-	download(files[i].url, files[i].path)
-	progressBar(y, percent, string.format(properties.localization.totalProgress, tostring(math.ceil(percent * 100))))
+	local totalProgress = tostring(math.ceil(percent * 100))
+	download(files[i].url, files[i].path, totalProgress)
+	progressBar(y, percent, properties.localization.totalProgress, totalProgress, "0", files[i].path)
 end
 
 -- On exit
