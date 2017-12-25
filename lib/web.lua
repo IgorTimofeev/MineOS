@@ -18,7 +18,7 @@ local function serializeTable(table, currentData)
 		if valueType == "table" then
 			result = result .. serializeTable(value, currentData .. "[" .. key .. "]")
 		else
-			result = result .. currentData .. "[" .. key .. "]=" .. value .. "&"
+			result = result .. currentData .. "[" .. key .. "]=" .. tostring(value) .. "&"
 		end
 	end
 
@@ -33,7 +33,7 @@ function web.serialize(data)
 			if type(value) == "table" then
 				serializedData = serializedData .. serializeTable(value, key)
 			else
-				serializedData = serializedData .. key .. "=" .. value .. "&"
+				serializedData = serializedData .. key .. "=" .. tostring(value) .. "&"
 			end
 		end
 
@@ -140,25 +140,10 @@ end
 ----------------------------------------------------------------------------------------------------
 
 -- print(
--- 	web.serialize({
--- 		string = "Hello world",
--- 		number = 123,
--- 		array = {
--- 			arrayString = "Meow",
--- 			arrayInArray = {
--- 				arrayInArrayNumber = 456
--- 			}
--- 		}
--- 	})
--- )
-
--- print(
 -- 	web.run(
 -- 		"https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/Screensavers/Matrix.lua"
 -- 	)
 -- )
-
--- print(result)
 
 ----------------------------------------------------------------------------------------------------
 

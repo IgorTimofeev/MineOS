@@ -5,7 +5,6 @@ local keyboard = require("keyboard")
 local fs = require("filesystem")
 local unicode = require("unicode")
 local event = require("event")
-local color = require("color")
 local image = require("image")
 local buffer = require("doubleBuffering")
 
@@ -281,7 +280,7 @@ local function deleteContainersContent(container, from, to)
 end
 
 local function getRectangleIntersection(R1X1, R1Y1, R1X2, R1Y2, R2X1, R2Y1, R2X2, R2Y2)
-	if R2X1 <= R1X2 and R2Y1 <= R2Y2 and R2X2 >= R1X1 and R2Y2 >= R1Y1 then
+	if R2X1 <= R1X2 and R2Y1 <= R1Y2 and R2X2 >= R1X1 and R2Y2 >= R1Y1 then
 		return
 			math.max(R2X1, R1X1),
 			math.max(R2Y1, R1Y1),
