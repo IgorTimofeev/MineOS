@@ -74,26 +74,26 @@ public class Main extends Application {
 
     private void playAnimation(boolean start, double targetOpacity, double fromScale, double toScale) {
         Timeline timeline = newTimeLine(
-                150,
-                new KeyValue[] {
-                        // Прозрачность ебалы
-                        new KeyValue(hintsGridPane.opacityProperty(), hintsGridPane.getOpacity()),
-                        // Масштаб пикчи с драг дропом
-                        new KeyValue(dragDropFilesImageView.fitWidthProperty(), dragDropFilesImageView.getImage().getWidth() * fromScale),
-                        // Масштаб пикчи и поля конвертации строки
-                        new KeyValue(OCIFStringResultImageView.fitWidthProperty(), OCIFStringResultImageView.getImage().getWidth() * fromScale),
-                        new KeyValue(OCIFStringResultGridPane.maxWidthProperty(), 312 * fromScale),
-                        // Сдвигание хуйни с настройками
-                        new KeyValue(settingsPane.layoutXProperty(), start ? mainPane.getWidth() - settingsPane.getWidth() : mainPane.getWidth())
-                },
-                new KeyValue[] {
-                        new KeyValue(hintsGridPane.opacityProperty(), targetOpacity),
-                        new KeyValue(dragDropFilesImageView.fitWidthProperty(),  dragDropFilesImageView.getImage().getWidth() * toScale),
-                        new KeyValue(settingsPane.layoutXProperty(), start ? mainPane.getWidth() : mainPane.getWidth() - settingsPane.getWidth()),
-                        // Масштаб пикчи и поля конвертации строки
-                        new KeyValue(OCIFStringResultImageView.fitWidthProperty(), OCIFStringResultImageView.getImage().getWidth() * toScale),
-                        new KeyValue(OCIFStringResultGridPane.maxWidthProperty(), 312 * toScale),
-                }
+            150,
+            new KeyValue[] {
+                // Прозрачность ебалы
+                new KeyValue(hintsGridPane.opacityProperty(), hintsGridPane.getOpacity()),
+                // Масштаб пикчи с драг дропом
+                new KeyValue(dragDropFilesImageView.fitWidthProperty(), dragDropFilesImageView.getImage().getWidth() * fromScale),
+                // Сдвигание хуйни с настройками
+                new KeyValue(settingsPane.layoutXProperty(), start ? mainPane.getWidth() - settingsPane.getWidth() : mainPane.getWidth()),
+                // Масштаб пикчи и поля конвертации строки
+                new KeyValue(OCIFStringResultImageView.fitWidthProperty(), OCIFStringResultImageView.getImage().getWidth() * fromScale),
+                new KeyValue(OCIFStringResultGridPane.maxWidthProperty(), 312 * fromScale)
+            },
+            new KeyValue[] {
+                new KeyValue(hintsGridPane.opacityProperty(), targetOpacity),
+                new KeyValue(dragDropFilesImageView.fitWidthProperty(),  dragDropFilesImageView.getImage().getWidth() * toScale),
+                new KeyValue(settingsPane.layoutXProperty(), start ? mainPane.getWidth() : mainPane.getWidth() - settingsPane.getWidth()),
+                // Масштаб пикчи и поля конвертации строки
+                new KeyValue(OCIFStringResultImageView.fitWidthProperty(), OCIFStringResultImageView.getImage().getWidth() * toScale),
+                new KeyValue(OCIFStringResultGridPane.maxWidthProperty(), 312 * toScale),
+            }
         );
 
         timeline.play();
@@ -213,15 +213,18 @@ public class Main extends Application {
             if (image.getWidth() >= image.getHeight()) {
                 if (image.getWidth() <= imageGridPane.getWidth()) {
                     imageView.setFitWidth(image.getWidth());
-                } else {
+                }
+                else {
                     imageView.setFitWidth(imageGridPane.getWidth());
                 }
-            } else {
+            }
+            else {
                 double proportion = image.getWidth() / image.getHeight();
 
                 if (image.getHeight() <= imageGridPane.getHeight()) {
                     imageView.setFitWidth(image.getHeight() * proportion);
-                } else {
+                }
+                else {
                     imageView.setFitWidth(imageGridPane.getWidth() * proportion);
                 }
             }
@@ -230,8 +233,8 @@ public class Main extends Application {
 
     public void open() {
         FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Открыть файл");
-        fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Файлы изображений (JPG, PNG)", "*.jpg", "*.jpeg", "*.png"));
+        fileChooser.setTitle("Open file");
+        fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Images (JPG, PNG)", "*.jpg", "*.jpeg", "*.png"));
         File file = fileChooser.showOpenDialog(convertButton.getScene().getWindow());
 
         if (file != null) {
@@ -258,20 +261,20 @@ public class Main extends Application {
         }
         else {
             FileChooser fileChooser = new FileChooser();
-            fileChooser.setTitle("Сохранить файл");
-            fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Изображение OpenComputers", "*.pic"));
+            fileChooser.setTitle("Save file");
+            fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("OpenComputers image", "*.pic"));
             File file = fileChooser.showSaveDialog(openButton.getScene().getWindow());
 
             if (file != null) {
                 OCIF.convert(
-                        currentImagePath,
-                        file.getPath(),
-                        Integer.parseInt(widthTextField.getText()),
-                        Integer.parseInt(heightTextField.getText()),
-                        encodingMethodComboBox.getValue().contains("OCIF6") ? 6 : 5,
-                        brailleCheckBox.isSelected(),
-                        ditheringCheckBox.isSelected(),
-                        ditheringSlider.getValue()
+                    currentImagePath,
+                    file.getPath(),
+                    Integer.parseInt(widthTextField.getText()),
+                    Integer.parseInt(heightTextField.getText()),
+                    encodingMethodComboBox.getValue().contains("OCIF6") ? 6 : 5,
+                    brailleCheckBox.isSelected(),
+                    ditheringCheckBox.isSelected(),
+                    ditheringSlider.getValue()
                 );
             }
         }
