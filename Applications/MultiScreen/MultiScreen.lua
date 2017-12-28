@@ -1,5 +1,5 @@
 
-local advancedLua = require("advancedLua")
+require("advancedLua")
 local ecs = require("ECSAPI")
 local components = require("component")
 local serialization = require("serialization")
@@ -201,14 +201,7 @@ local function getMonitorAndCoordinates(x, y)
 	local yMonitor = math.ceil(y / monitors.screenResolutionByHeight)
 	local xPos = x - (xMonitor - 1) * monitors.screenResolutionByWidth
 	local yPos = y - (yMonitor - 1) * monitors.screenResolutionByHeight
-
-	-- print("x = " .. x)
-	-- print("y = " .. y)
-	-- print("xMonitor = " .. xMonitor)
-	-- print("yMonitor = " .. yMonitor)
-	-- print("xPos = " .. xPos)
-	-- print("yPos = " .. yPos)
-
+	
 	return xMonitor, yMonitor, xPos, yPos
 end
 
@@ -246,73 +239,9 @@ end
 
 --------------------------------------------------------------------------------------------------------------------------------------------
 
---Склеить байты и создать из них число
-local function mergeBytesToNumber(...)
-	local bytes = {...}
-	local finalNumber = bytes[1]
-	for i = 2, #bytes do
-		finalNumber = bit32.bor(bit32.lshift(finalNumber, 8), bytes[i])
-	end
-	return finalNumber
-end
-
 --Прочитать n байтов из файла, возвращает прочитанные байты как число, если не удалось прочитать, то возвращает 0
-local function readBytes(file, count)
-	local readedBytes = file:read(count)
-	return mergeBytesToNumber(string.byte(readedBytes, 1, count))
-end
-
-local function selectTerminateBit_l()
-	local prevByte = nil
-	local prevTerminateBit = nil
-
-	return function( byte )
-		local x, terminateBit = nil
-		if ( prevByte == byte ) then
-			return prevTerminateBit
-		end
-
-		x = bit32.band( bit32.bnot(byte), 0x000000FF )
-		x = bit32.bor( x, bit32.rshift(x, 1) )
-		x = bit32.bor( x, bit32.rshift(x, 2) )
-		x = bit32.bor( x, bit32.rshift(x, 4) )
-		x = bit32.bor( x, bit32.rshift(x, 8) )
-		x = bit32.bor( x, bit32.rshift(x, 16) )
-
-		terminateBit = x - bit32.rshift(x, 1)
-
-		prevByte = byte
-		prevTerminateBit = terminateBit
-
-		return terminateBit
-	end
-end
-local selectTerminateBit = selectTerminateBit_l()
-
---Декодирование UTF-8 символа
-local function decodeChar(file)
-	local first_byte = readBytes(file, 1)
-	local charcode_array = {first_byte}
-	local len = 1
-
-	local middle = selectTerminateBit(first_byte)
-	if ( middle == 32 ) then
-		len = 2
-	elseif ( middle == 16 ) then 
-		len = 3
-	elseif ( middle == 8 ) then
-		len = 4
-	elseif ( middle == 4 ) then
-		len = 5
-	elseif ( middle == 2 ) then
-		len = 6
-	end
-
-	for i = 1, len-1 do
-		table.insert( charcode_array, readBytes(file, 1) )
-	end
-
-	return string.char( table.unpack( charcode_array ) )
+local function readNumber(file, count)
+	return bit32.byteArrayToNumber({string.byte(file:read(count), 1, count)})
 end
 
 local function drawBigImageFromOCIFRawFile(x, y, path)
@@ -328,8 +257,8 @@ local function drawBigImageFromOCIFRawFile(x, y, path)
 		file:close()
 	end
 
-	local width = readBytes(file, 2)
-	local height = readBytes(file, 2)
+	local width = readNumber(file, 2)
+	local height = readNumber(file, 2)
 
 	print("Ширина пикчи: " .. tostring(width))
 	print("Высота пикчи: " .. tostring(height))
@@ -341,7 +270,7 @@ local function drawBigImageFromOCIFRawFile(x, y, path)
 			local background = color.to24Bit(string.byte(file:read(1)))
 			local foreground = color.to24Bit(string.byte(file:read(1)))
 			local alpha = string.byte(file:read(1))
-			local symbol = decodeChar(file)
+			local symbol = string.readUnicodeChar(file)
 
 			multiScreen.setBackground(background)
 			multiScreen.setForeground(foreground)
