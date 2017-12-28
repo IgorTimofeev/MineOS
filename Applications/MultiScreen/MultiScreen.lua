@@ -201,7 +201,7 @@ local function getMonitorAndCoordinates(x, y)
 	local yMonitor = math.ceil(y / monitors.screenResolutionByHeight)
 	local xPos = x - (xMonitor - 1) * monitors.screenResolutionByWidth
 	local yPos = y - (yMonitor - 1) * monitors.screenResolutionByHeight
-	
+
 	return xMonitor, yMonitor, xPos, yPos
 end
 
@@ -291,7 +291,11 @@ local args = {...}
 if args[1] == "draw" and args[2] then
 	loadConfig()
 	multiScreen.clear(0x000000)
-	drawBigImageFromOCIFRawFile(1, 1, args[2])
+	if fs.exists(args[2]) then
+		drawBigImageFromOCIFRawFile(1, 1, args[2])
+	else
+		print("Файл " .. tostring(args[2]) .. " не найден. Используйте абсолютный путь к файлу, добавив / в начало")
+	end
 elseif args[1] == "calibrate" then
 	fs.remove(pathToConfigFile)
 	loadConfig()
