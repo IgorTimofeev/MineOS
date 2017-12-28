@@ -5,18 +5,10 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
-import sample.Palette;
 
 
 public class OCIF {
-    private static void writePixelToFileAsOCIF1(FileOutputStream out, Pixel pixel) throws IOException {
-//        out.write((byte) pixel.background.red);
-//        out.write((byte) pixel.background.green);
-//        out.write((byte) pixel.background.blue);
-//        out.write((byte) pixel.foreground.red);
-//        out.write((byte) pixel.foreground.green);
-//        out.write((byte) pixel.foreground.blue);
-
+    private static void writePixelToFileAsOCIF5(FileOutputStream out, Pixel pixel) throws IOException {
         out.write((byte) Palette.getClosestIndex(pixel.background));
         out.write((byte) Palette.getClosestIndex(pixel.foreground));
 
@@ -89,36 +81,7 @@ public class OCIF {
         }
     }
 
-    private static void OCIF1ConvertAsBraille(FileOutputStream out, sample.Image image) throws IOException {
-        for (int y = 0; y < image.height; y += 4) {
-            for (int x = 0; x < image.width; x += 2) {
-                writePixelToFileAsOCIF1(out, sample.Image.getBraillePixel(image, x, y));
-            }
-        }
-    }
-
-    private static void OCIF1ConvertAsSemiPixel(FileOutputStream out, sample.Image image) throws IOException {
-        for (int y = 0; y < image.height; y += 2) {
-            for (int x = 0; x < image.width; x++) {
-                writePixelToFileAsOCIF1(out, sample.Image.getSemiPixel(image, x, y));
-            }
-        }
-    }
-
-    public static void convert(String imagePath, String convertedImagePath, int requestedWidth, int requestedHeight, int encodingMethod, boolean convertAsBraille, boolean enableDithering, double ditheringIntensity) throws IOException {
-        FileOutputStream out = new FileOutputStream(convertedImagePath);
-
-        out.write("OCIF".getBytes(StandardCharsets.US_ASCII));
-        out.write((byte) encodingMethod);
-
-        if (encodingMethod == 5) {
-            out.write(integerToByteArray(requestedWidth, 2));
-            out.write(integerToByteArray(requestedHeight, 2));
-        } else {
-            out.write((byte) requestedWidth);
-            out.write((byte) requestedHeight);
-        }
-
+    private static sample.Image loadImage(String imagePath, int requestedWidth, int requestedHeight, boolean convertAsBraille, boolean enableDithering, double ditheringIntensity) {
         sample.Image image = new sample.Image(new javafx.scene.image.Image(imagePath,
                 requestedWidth * (convertAsBraille ? 2 : 1),
                 requestedHeight * (convertAsBraille ? 4 : 2),
@@ -130,16 +93,79 @@ public class OCIF {
             image = sample.Image.dither(image, ditheringIntensity);
         }
 
+        return image;
+    }
+
+    private static void appendPixel(StringBuilder result, Pixel pixel) {
+        result.append(String.format("%02X", Palette.getClosestIndex(pixel.background)));
+        result.append(String.format("%02X", Palette.getClosestIndex(pixel.foreground)));
+        result.append(String.format("%02X", pixel.alpha));
+        result.append(pixel.symbol);
+    }
+
+    static String convertToString(String imagePath, int requestedWidth, int requestedHeight, boolean convertAsBraille, boolean enableDithering, double ditheringIntensity) {
+        sample.Image image = loadImage(imagePath, requestedWidth, requestedHeight, convertAsBraille, enableDithering, ditheringIntensity);
+
+        StringBuilder result = new StringBuilder();
+        result.append(String.format("%02X", requestedWidth));
+        result.append(String.format("%02X", requestedHeight));
+
+        if (convertAsBraille) {
+            for (int y = 0; y < image.height; y += 4) {
+                for (int x = 0; x < image.width; x += 2) {
+                    appendPixel(result, sample.Image.getBraillePixel(image, x, y));
+                }
+            }
+        }
+        else {
+            for (int y = 0; y < image.height; y += 2) {
+                for (int x = 0; x < image.width; x += 1) {
+                    appendPixel(result, sample.Image.getSemiPixel(image, x, y));
+                }
+            }
+        }
+
+        return result.toString();
+    }
+
+    static void convert(String imagePath, String convertedImagePath, int requestedWidth, int requestedHeight, int encodingMethod, boolean convertAsBraille, boolean enableDithering, double ditheringIntensity) throws IOException {
+        FileOutputStream out = new FileOutputStream(convertedImagePath);
+
+        out.write("OCIF".getBytes(StandardCharsets.US_ASCII));
+        out.write((byte) encodingMethod);
+
+        if (encodingMethod == 5) {
+            out.write(integerToByteArray(requestedWidth, 2));
+            out.write(integerToByteArray(requestedHeight, 2));
+        }
+        else{
+            out.write((byte) requestedWidth);
+            out.write((byte) requestedHeight);
+        }
+
+        sample.Image image = loadImage(imagePath, requestedWidth, requestedHeight, convertAsBraille, enableDithering, ditheringIntensity);
+
         if (convertAsBraille) {
             if (encodingMethod == 5) {
-                OCIF1ConvertAsBraille(out, image);
-            } else {
+                for (int y = 0; y < image.height; y += 4) {
+                    for (int x = 0; x < image.width; x += 2) {
+                        writePixelToFileAsOCIF5(out, sample.Image.getBraillePixel(image, x, y));
+                    }
+                }
+            }
+            else {
                 writeGroupedImage(out, sample.Image.groupAsBraille(image));
             }
-        } else {
+        }
+        else {
             if (encodingMethod == 5) {
-                OCIF1ConvertAsSemiPixel(out, image);
-            } else {
+                for (int y = 0; y < image.height; y += 2) {
+                    for (int x = 0; x < image.width; x += 1) {
+                        writePixelToFileAsOCIF5(out, sample.Image.getSemiPixel(image, x, y));
+                    }
+                }
+            }
+            else {
                 writeGroupedImage(out, sample.Image.groupAsSemiPixel(image));
             }
         }

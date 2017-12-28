@@ -6,7 +6,6 @@
     -fx-border-radius: 0;
     -fx-background-radius: 0;
 
-    -fx-font-family: "Graphon", Arial, sans-serif;
     -fx-font-size: 10pt;
     -fx-text-fill: #FFFFFF88;
 }
@@ -16,5 +15,11 @@
     -fx-background-color: #FFFFFF;
     -fx-effect: dropshadow( three-pass-box , rgba(255,255,255,0.6) , 10, 0.2 , 0 , 1 );
 }
+
+.defaultButton:disabled {
+    -fx-background-color: #FFFFFF22;
+    -fx-text-fill: #FFFFFF77;
+}
+
 
 

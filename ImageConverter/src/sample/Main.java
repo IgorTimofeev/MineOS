@@ -10,8 +10,10 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
+import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.text.Text;
@@ -21,6 +23,7 @@ import javafx.util.Callback;
 import javafx.util.Duration;
 import java.io.File;
 import java.io.IOException;
+import java.util.Locale;
 import java.util.regex.Pattern;
 
 public class Main extends Application {
@@ -36,19 +39,23 @@ public class Main extends Application {
     public Text imageSizeText;
     public Slider ditheringSlider;
     public ComboBox<String> encodingMethodComboBox;
-    public Pane dragDropAnimationGridPane;
     public GridPane imageGridPane;
     public ImageView dragDropFilesImageView;
     public Pane settingsPane;
     public Pane mainPane;
 
-    private String currentImagePath = "sample/Resources/Background.jpg";
+    public GridPane hintsGridPane;
+    public GridPane dragImageGridPane;
+    public FlowPane OCIFStringResultFlowPane;
+    public TextField OCIFStringResultTextField;
+
+
+    private String currentImagePath = "sample/Resources/Background.png";
 
     @Override
     public void start(Stage primaryStage) throws Exception {
         primaryStage.setResizable(false);
-        Scene scene = new Scene(FXMLLoader.load(getClass().getResource("ImageConverter.fxml")));
-        primaryStage.setScene(scene);
+        primaryStage.setScene(new Scene(FXMLLoader.load(getClass().getResource("ImageConverter.fxml")), 840, 489));
         primaryStage.show();
     }
 
@@ -61,27 +68,34 @@ public class Main extends Application {
         return timeline;
     }
 
-    private void playDragDropFileAnimation(boolean start, boolean moveSettingsPane, double targetOpacity, double fromScale, double toScale)
-    {
+    private void playAnimation(boolean start, double targetOpacity, double fromScale, double toScale) {
         Timeline timeline = newTimeLine(
                 150,
                 new KeyValue[] {
-                        new KeyValue(dragDropAnimationGridPane.opacityProperty(), dragDropAnimationGridPane.getOpacity()),
+                        new KeyValue(hintsGridPane.opacityProperty(), hintsGridPane.getOpacity()),
                         new KeyValue(dragDropFilesImageView.fitWidthProperty(), dragDropFilesImageView.getImage().getWidth() * fromScale),
-                        moveSettingsPane ? new KeyValue(settingsPane.layoutXProperty(), start ? mainPane.getWidth() - settingsPane.getWidth() : mainPane.getWidth()) : null
+                        new KeyValue(settingsPane.layoutXProperty(), start ? mainPane.getWidth() - settingsPane.getWidth() : mainPane.getWidth())
                 },
                 new KeyValue[] {
-                        new KeyValue(dragDropAnimationGridPane.opacityProperty(), targetOpacity),
+                        new KeyValue(hintsGridPane.opacityProperty(), targetOpacity),
                         new KeyValue(dragDropFilesImageView.fitWidthProperty(),  dragDropFilesImageView.getImage().getWidth() * toScale),
-                        moveSettingsPane ? new KeyValue(settingsPane.layoutXProperty(), start ? mainPane.getWidth() : mainPane.getWidth() - settingsPane.getWidth()) : null
+                        new KeyValue(settingsPane.layoutXProperty(), start ? mainPane.getWidth() : mainPane.getWidth() - settingsPane.getWidth())
                 }
         );
 
         timeline.play();
     }
 
+    private void playAnimationStart() {
+        playAnimation(true, 1.0d, 0.8d, 1.0d);
+    }
+
+    private void playAnimationEnd() {
+        playAnimation(false, 0.0d, 1.0d, 0.8d);
+    }
+
     public void initialize() {
-        // Пидорасим текст по центру комбобокса
+        // Центрируем хуйню самого комбобокса
         encodingMethodComboBox.setButtonCell(new ListCell<String>() {
             @Override
             public void updateItem(String item, boolean empty) {
@@ -95,7 +109,7 @@ public class Main extends Application {
             }
         });
 
-        // А это уже в выпадающем списке
+        // Центрируем хуйню в выпадающем списке комбобокса
         encodingMethodComboBox.setCellFactory(new Callback<ListView<String>, ListCell<String>>() {
             @Override
             public ListCell<String> call(ListView<String> list) {
@@ -112,25 +126,38 @@ public class Main extends Application {
             }
         });
 
-        //Ебучий драг-дроп
-        dragDropAnimationGridPane.setOnDragEntered(event -> {
-            if (event.getDragboard().hasFiles()) {
-                playDragDropFileAnimation(true, true,1.0d, 0.8d, 1.0d);
-                event.acceptTransferModes(TransferMode.COPY);
-            }
-        });
+        encodingMethodComboBox.setValue("OCIF6 (Optimized)");
+    }
 
-        dragDropAnimationGridPane.setOnDragExited(event -> {
-            playDragDropFileAnimation(false, true, 0.0d, 1.0d, 0.8d);
+    //Ебучий драг-дроп
+    public void onHintsGridPaneDragEntered(DragEvent event) {
+        dragImageGridPane.setVisible(true);
+        OCIFStringResultFlowPane.setVisible(false);
 
-            Dragboard dragboard = event.getDragboard();
-            if (dragboard.hasFiles()) {
-                File file = new File(dragboard.getFiles().get(0).getAbsolutePath());
-                if (file.getAbsolutePath().toLowerCase().matches("^.+\\.(png)?(jpg)?(jpeg)?$")) {
-                    loadImage(file);
-                }
+        if (event.getDragboard().hasFiles()) {
+            playAnimationStart();
+            event.acceptTransferModes(TransferMode.COPY);
+        }
+    }
+
+    public void onHintsGridPaneDragExited(DragEvent event) {
+        playAnimationEnd();
+
+        Dragboard dragboard = event.getDragboard();
+        if (dragboard.hasFiles()) {
+            File file = new File(dragboard.getFiles().get(0).getAbsolutePath());
+            if (file.getAbsolutePath().toLowerCase().matches("^.+\\.(png)?(jpg)?(jpeg)?$")) {
+                loadImage(file);
             }
-        });
+        }
+
+        dragImageGridPane.setVisible(false);
+    }
+
+    public void onHintsGridPaneDragMouseClicked() {
+        if (hintsGridPane.getOpacity() == 1) {
+            playAnimationEnd();
+        }
     }
 
     public static void main(String[] args) {
@@ -152,21 +179,11 @@ public class Main extends Application {
     }
 
     public void onTextFieldTextChanged() {
-        boolean state = checkTextField(widthTextField) && checkTextField(heightTextField);
+        boolean state = (checkTextField(widthTextField) && checkTextField(heightTextField)) || encodingMethodComboBox.getValue().contains("OCIF5");
 
-//        convertButton.setDisable(!state);
         imageSizeText.setVisible(state);
         wrongSizesText.setVisible(!state);
-
-        encodingMethodComboBox.getItems().clear();
-        if (state) {
-            encodingMethodComboBox.setValue("OCIF6");
-            encodingMethodComboBox.getItems().add("OCIF5");
-            encodingMethodComboBox.getItems().add("OCIF6");
-        } else {
-            encodingMethodComboBox.setValue("OCIF5");
-            encodingMethodComboBox.getItems().add("OCIF5");
-        }
+        convertButton.setDisable(!state);
     }
 
     private void loadImage(File file) {
@@ -206,22 +223,40 @@ public class Main extends Application {
     }
 
     public void save() throws IOException {
-        FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Сохранить файл");
-        fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Изображение OpenComputers", "*.pic"));
-        File file = fileChooser.showSaveDialog(openButton.getScene().getWindow());
-
-        if (file != null) {
-            OCIF.convert(
-                    currentImagePath,
-                    file.getPath(),
-                    Integer.parseInt(widthTextField.getText()),
-                    Integer.parseInt(heightTextField.getText()),
-                    encodingMethodComboBox.getValue().equals("OCIF6") ? 6 : 5,
-                    brailleCheckBox.isSelected(),
-                    ditheringCheckBox.isSelected(),
-                    ditheringSlider.getValue()
+        if (encodingMethodComboBox.getValue().contains("OCIFString")) {
+            String result = OCIF.convertToString(
+                currentImagePath,
+                Integer.parseInt(widthTextField.getText()),
+                Integer.parseInt(heightTextField.getText()),
+                brailleCheckBox.isSelected(),
+                ditheringCheckBox.isSelected(),
+                ditheringSlider.getValue()
             );
+
+            dragImageGridPane.setVisible(false);
+            OCIFStringResultFlowPane.setVisible(true);
+            playAnimationStart();
+
+            OCIFStringResultTextField.setText(result);
+        }
+        else {
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setTitle("Сохранить файл");
+            fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Изображение OpenComputers", "*.pic"));
+            File file = fileChooser.showSaveDialog(openButton.getScene().getWindow());
+
+            if (file != null) {
+                OCIF.convert(
+                        currentImagePath,
+                        file.getPath(),
+                        Integer.parseInt(widthTextField.getText()),
+                        Integer.parseInt(heightTextField.getText()),
+                        encodingMethodComboBox.getValue().contains("OCIF6") ? 6 : 5,
+                        brailleCheckBox.isSelected(),
+                        ditheringCheckBox.isSelected(),
+                        ditheringSlider.getValue()
+                );
+            }
         }
     }
 }
