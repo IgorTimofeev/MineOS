@@ -23,8 +23,8 @@ local colors = {
 }
 
 local baseResolution = {
-	width = 135,
-	height = 50,
+	width = 146,
+	height = 54,
 }
 
 local monitors = {}
@@ -97,13 +97,13 @@ local function configurator()
 
 	for address in components.list("screen") do
 		if address ~= mainScreenAddress then
-			gpu.bind(address)
+			gpu.bind(address, false)
 			gpu.setBackground(0x0)
 			gpu.setForeground(0x0)
-			gpu.fill(1, 1, 160, 50, " ")
+			gpu.fill(1, 1, 160, 60, " ")
 		end
 	end
-	gpu.bind(mainScreenAddress)
+	gpu.bind(mainScreenAddress, false)
 
 	monitors = {}
 	local monitorCount = width * height
@@ -112,14 +112,14 @@ local function configurator()
 		drawMonitors()
 		local e = {event.pull("touch")}
 		if e[2] ~= mainScreenAddress then
-			gpu.bind(e[2])
+			gpu.bind(e[2], false)
 			gpu.setResolution(baseResolution.width, baseResolution.height)
 			local color = color.HSBToHEX(counter / monitorCount * 360, 100, 100)
 			ecs.square(1,1,baseResolution.width, baseResolution.height,color)
 			gpu.setForeground(0xffffff - color)
 			ecs.centerText("xy", 0, "Монитор " .. xC .. "x" .. yC .. " откалиброван!")
 
-			gpu.bind(mainScreenAddress)
+			gpu.bind(mainScreenAddress, false)
 
 			monitors[xC] = monitors[xC] or {}
 			monitors[xC][yC] = {address = e[2]}
@@ -144,15 +144,6 @@ local function configurator()
 
 	ecs.prepareToExit()
 	ecs.universalWindow("auto", "auto", 40, 0xeeeeee, true, {"EmptyLine"}, {"CenterText", 0x262626, "Калибровка успешно завершена!"}, {"EmptyLine"}, {"Button", {ecs.colors.orange, 0xffffff, "Отлично"}})
-
-	gpu.setBackground(0x000000)
-	for x = 1, #monitors do
-		for y = 1, #monitors[x] do
-			gpu.bind(monitors[x][y].address)
-			gpu.fill(1, 1, 160, 50, " ")
-		end
-	end
-	gpu.bind(mainScreenAddress)
 	ecs.prepareToExit()
 end
 
@@ -205,36 +196,33 @@ local function getMonitorAndCoordinates(x, y)
 	return xMonitor, yMonitor, xPos, yPos
 end
 
+function multiScreen.set(x, y, text)
+	local xMonitor, yMonitor, xPos, yPos = getMonitorAndCoordinates(x, y)
+			
+	if monitors[xMonitor] and monitors[xMonitor][yMonitor] then
+		if currentAddress ~= monitors[xMonitor][yMonitor].address then
+			gpu.bind(monitors[xMonitor][yMonitor].address, false)
+			currentAddress = monitors[xMonitor][yMonitor].address
+		end
+		
+		if gpu.getBackground() ~= currentBackground then gpu.setBackground(currentBackground) end
+		if gpu.getForeground() ~= currentForeground then gpu.setForeground(currentForeground) end
+		
+		gpu.set(xPos, yPos, text)
+	end
+end
+
 function multiScreen.clear(color)
 	for x = 1, #monitors do
 		for y = 1, #monitors[x] do
-			gpu.bind(monitors[x][y].address, true)
+			gpu.bind(monitors[x][y].address, false)
 			gpu.setResolution(monitors.screenResolutionByWidth, monitors.screenResolutionByHeight)
 			gpu.setBackground(color)
-			gpu.fill(1, 1, 160, 50, " ")
+			gpu.fill(1, 1, 160, 60, " ")
 		end
 	end
 
-	gpu.bind(mainScreenAddress)
-end
-
-function multiScreen.set(x, y, text)
-	for i = 1, unicode.len(text) do
-		local xMonitor, yMonitor, xPos, yPos = getMonitorAndCoordinates(x + i - 1, y)
-		
-		if monitors[xMonitor] and monitors[xMonitor][yMonitor] then
-			if currentAddress ~= monitors[xMonitor][yMonitor].address then
-				gpu.bind(monitors[xMonitor][yMonitor].address)
-				currentAddress = monitors[xMonitor][yMonitor].address
-				gpu.setResolution(monitors.screenResolutionByWidth, monitors.screenResolutionByHeight)
-			end
-			
-			if gpu.getBackground() ~= currentBackground then gpu.setBackground(currentBackground) end
-			if gpu.getForeground() ~= currentForeground then gpu.setForeground(currentForeground) end
-			
-			gpu.set(xPos, yPos, unicode.sub(text, i, i))
-		end
-	end
+	gpu.bind(mainScreenAddress, false)
 end
 
 --------------------------------------------------------------------------------------------------------------------------------------------
@@ -279,7 +267,7 @@ local function drawBigImageFromOCIFRawFile(x, y, path)
 	end
 
 	file:close()
-	gpu.bind(mainScreenAddress)
+	gpu.bind(mainScreenAddress, false)
 
 	print("Отрисовка пикчи завершена")
 end
@@ -290,6 +278,7 @@ local args = {...}
 
 if args[1] == "draw" and args[2] then
 	loadConfig()
+	print("Идет очистка мониторов...")
 	multiScreen.clear(0x000000)
 	if fs.exists(args[2]) then
 		drawBigImageFromOCIFRawFile(1, 1, args[2])
