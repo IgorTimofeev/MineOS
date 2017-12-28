@@ -7,12 +7,13 @@ local fs = require("filesystem")
 local event = require("event")
 local unicode = require("unicode")
 local bit32 = require("bit32")
+local color = require("color")
 local gpu = components.gpu
 
 --------------------------------------------------------------------------------------------------------------------------------------------
 
-local pathToMultiScreenFolder = "/MultiScreen/"
-local pathToConfigFile = pathToMultiScreenFolder .. "Config.cfg"
+local mainScreenAddress = gpu.getScreen()
+local pathToConfigFile = "/MultiScreen.cfg"
 
 local colors = {
 	background = 0x262626,
@@ -39,9 +40,7 @@ local function getAllConnectedScreens()
 end
 
 local function configurator()
-	fs.makeDirectory(pathToMultiScreenFolder)
-	
-	ecs.setScale(0.7)
+	fs.makeDirectory(fs.path(pathToConfigFile))
 
 	local data = ecs.universalWindow("auto", "auto", 40, 0xeeeeee, true, {"EmptyLine"}, {"CenterText", 0x880000, "Здорово, ебана!"}, {"EmptyLine"}, {"WrappedText", 0x262626, "Добро пожаловать в программу конфигурации мультимонитора. Вам необходимо указать количество мониторов по ширине и высоте, которые вы желаете объединить, а также выбрать желаемый масштаб."}, {"EmptyLine"}, {"Input", 0x262626, 0x880000, "Ширина"}, {"Input", 0x262626, 0x880000, "Высота"},  {"Slider", 0x262626, 0x880000, 1, 100, 100, "Масштаб: ", "%"}, {"EmptyLine"}, {"Button", {ecs.colors.orange, 0xffffff, "Подтвердить"}, {0x777777, 0xffffff, "Отмена"}})
 	local width, height, scale = tonumber(data[1]), tonumber(data[2]), tonumber(data[3]) / 100
@@ -57,7 +56,7 @@ local function configurator()
 
 	local countOfConnectedScreens = #getAllConnectedScreens()
 
-	while ((countOfConnectedScreens - 1) ~= width * height) do
+	while ((countOfConnectedScreens - 1) < width * height) do
 		data = ecs.universalWindow("auto", "auto", 44, 0xeeeeee, true, {"EmptyLine"}, {"WrappedText", 0x262626, "Теперь вам необходимо подключить внешние мониторы. Вы указали, что собираетесь сделать мультимонитор из " .. width*height .. " мониторов, но на данный момент вы подключили " .. countOfConnectedScreens - 1 .. " мониторов. Так что подключайте все так, как указали, и жмите \"Далее\"."}, {"EmptyLine"}, {"Button", {ecs.colors.orange, 0xffffff, "Далее"}, {0x777777, 0xffffff, "Отмена"}})
 		if data[1] == "Отмена" then
 			ecs.prepareToExit()
@@ -72,7 +71,6 @@ local function configurator()
 	local w, h = 8, 3
 	local xC, yC = 1, 1
 	local xSize, ySize = gpu.getResolution()
-	local mainScreenAddress = gpu.getScreen()
 
 	local function drawMonitors()
 		ecs.clearScreen(colors.background)
@@ -97,48 +95,46 @@ local function configurator()
 		ecs.centerText("x", ySize - 4, "Не нарушайте порядок прокосновений!")
 	end
 
-	local touchArray = {}
-
-	while xC <= width and yC <= height do
-		drawMonitors()
-		local e = {event.pull()}
-		if e[1] == "touch" then
-			if e[2] ~= mainScreenAddress then
-				local success = true
-				for i = 1, #touchArray do
-					if touchArray[i] == e[2] then
-						success = false
-						break
-					end
-				end
-				if success then
-					ecs.rebindGPU(e[2])
-					gpu.setResolution(baseResolution.width, baseResolution.height)
-					local color = math.random(0x555555, 0xffffff)
-					ecs.square(1,1,160,50,color)
-					gpu.setForeground(0xffffff - color)
-					ecs.centerText("xy", 0, "Монитор " .. xC .. "x" .. yC .. " откалиброван!")
-					
-					-- table.insert(touchArray, {address = e[2], position = {x = xC, y = yC}})
-					touchArray[xC] = touchArray[xC] or {}
-					touchArray[xC][yC] = touchArray[xC][yC] or {}
-					touchArray[xC][yC].address = e[2]
-
-					ecs.rebindGPU(mainScreenAddress)
-					ecs.setScale(0.7)
-
-					xC = xC + 1
-					if xC > width and yC < height then xC = 1; yC = yC + 1 end
-				else
-					ecs.error("Тупая скотина, зачем ты тыкаешь на монитор, которого уже касался? На твое счастье в этой проге есть защита от конченных дебилов вроде тебя.")
-				end
-			else
-				ecs.error("Ну что ты за мудак криворукий! Сказано же, каких мониторов касаться. Не трогай этот монитор.")
-			end
+	for address in components.list("screen") do
+		if address ~= mainScreenAddress then
+			gpu.bind(address)
+			gpu.setBackground(0x0)
+			gpu.setForeground(0x0)
+			gpu.fill(1, 1, 160, 50, " ")
 		end
 	end
+	gpu.bind(mainScreenAddress)
 
-	monitors = touchArray
+	monitors = {}
+	local monitorCount = width * height
+	local counter = 1
+	while counter <= monitorCount do
+		drawMonitors()
+		local e = {event.pull("touch")}
+		if e[2] ~= mainScreenAddress then
+			gpu.bind(e[2])
+			gpu.setResolution(baseResolution.width, baseResolution.height)
+			local color = color.HSBToHEX(counter / monitorCount * 360, 100, 100)
+			ecs.square(1,1,baseResolution.width, baseResolution.height,color)
+			gpu.setForeground(0xffffff - color)
+			ecs.centerText("xy", 0, "Монитор " .. xC .. "x" .. yC .. " откалиброван!")
+
+			gpu.bind(mainScreenAddress)
+
+			monitors[xC] = monitors[xC] or {}
+			monitors[xC][yC] = {address = e[2]}
+
+			xC = xC + 1
+			if xC > width and yC < height then
+				xC, yC = 1, yC + 1
+			end
+		else
+			ecs.error("Ну что ты за мудак криворукий! Сказано же, каких мониторов касаться. Не трогай этот монитор.")
+		end
+
+		counter = counter + 1
+	end
+
 	monitors.countOfScreensByWidth = width
 	monitors.countOfScreensByHeight = height
 	monitors.screenResolutionByWidth = baseResolution.width
@@ -176,7 +172,8 @@ local function loadConfig()
 		print(" ")
 		print("Количество экранов: " .. monitors.countOfScreensByWidth .. "x" .. monitors.countOfScreensByHeight .. " шт")
 		print("Разрешение каждого экрана: " .. monitors.screenResolutionByWidth .. "x" .. monitors.screenResolutionByHeight .. " px")
-		print("Суммарного разрешение кластера: ".. monitors.totalResolutionByWidth .. "x" .. monitors.totalResolutionByHeight .. " px")
+		print("Суммарное разрешение кластера: " .. monitors.totalResolutionByWidth .. "x" .. monitors.totalResolutionByHeight .. " px")
+		-- print("Суммарное разрешение кластера через шрифт Брайля: ".. monitors.totalResolutionByWidth * 2 .. "x" .. monitors.totalResolutionByHeight * 4 .. " px")
 		print(" ")
 	else
 		configurator()
@@ -218,12 +215,14 @@ end
 function multiScreen.clear(color)
 	for x = 1, #monitors do
 		for y = 1, #monitors[x] do
-			gpu.bind(monitors[x][y].address)
+			gpu.bind(monitors[x][y].address, true)
 			gpu.setResolution(monitors.screenResolutionByWidth, monitors.screenResolutionByHeight)
 			gpu.setBackground(color)
 			gpu.fill(1, 1, 160, 50, " ")
 		end
 	end
+
+	gpu.bind(mainScreenAddress)
 end
 
 function multiScreen.set(x, y, text)
@@ -237,8 +236,8 @@ function multiScreen.set(x, y, text)
 				gpu.setResolution(monitors.screenResolutionByWidth, monitors.screenResolutionByHeight)
 			end
 			
-			if gpu.getBackground ~= currentBackground then gpu.setBackground(currentBackground) end
-			if gpu.getForeground ~= currentForeground then gpu.setForeground(currentForeground) end
+			if gpu.getBackground() ~= currentBackground then gpu.setBackground(currentBackground) end
+			if gpu.getForeground() ~= currentForeground then gpu.setForeground(currentForeground) end
 			
 			gpu.set(xPos, yPos, unicode.sub(text, i, i))
 		end
@@ -319,13 +318,15 @@ end
 local function drawBigImageFromOCIFRawFile(x, y, path)
 	local file = io.open(path, "rb")
 	print("Открываем файл " .. path)
-	--Читаем ширину и высоту файла
 	local signature = file:read(4)
 	print("Читаем сигнатуру файла: " .. signature)
 	local encodingMethod = string.byte(file:read(1))
-	print("Читаем метод кодирования: " .. encodingMethod)
+	print("Читаем метод кодирования: " .. tostring(encodingMethod))
 
-	if encodingMethod ~= 5 then error("Неподдерживаемый метод кодирования: " .. encodingMethod) end
+	if encodingMethod ~= 5 then
+		print("Неподдерживаемый метод кодирования. Откройте конвертер, измените формат на OCIF5 (Multiscreen) и повторите попытку")
+		file:close()
+	end
 
 	local width = readBytes(file, 2)
 	local height = readBytes(file, 2)
@@ -337,10 +338,10 @@ local function drawBigImageFromOCIFRawFile(x, y, path)
 
 	for j = 1, height do
 		for i = 1, width do
-			local background = readBytes(file, 3)
-			local foreground = readBytes(file, 3)
-			local alpha = readBytes(file, 1)
-			local symbol = decodeChar( file )
+			local background = color.to24Bit(string.byte(file:read(1)))
+			local foreground = color.to24Bit(string.byte(file:read(1)))
+			local alpha = string.byte(file:read(1))
+			local symbol = decodeChar(file)
 
 			multiScreen.setBackground(background)
 			multiScreen.setForeground(foreground)
@@ -349,6 +350,7 @@ local function drawBigImageFromOCIFRawFile(x, y, path)
 	end
 
 	file:close()
+	gpu.bind(mainScreenAddress)
 
 	print("Отрисовка пикчи завершена")
 end
@@ -362,7 +364,7 @@ if args[1] == "draw" and args[2] then
 	multiScreen.clear(0x000000)
 	drawBigImageFromOCIFRawFile(1, 1, args[2])
 elseif args[1] == "calibrate" then
-	fs.remove(pathToMultiScreenFolder)
+	fs.remove(pathToConfigFile)
 	loadConfig()
 elseif args[1] == "clear" then
 	loadConfig()
@@ -377,7 +379,6 @@ end
 --------------------------------------------------------------------------------------------------------------------------------------------
 
 return multiScreen
-
 
 
 
