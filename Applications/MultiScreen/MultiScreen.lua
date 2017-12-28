@@ -179,14 +179,6 @@ local currentBackground, currentForeground, currentAddress = 0x000000, 0xffffff,
 
 local multiScreen = {}
 
-function multiScreen.setBackground(color)
-	currentBackground = color
-end
-
-function multiScreen.setForeground(color)
-	currentForeground = color
-end
-
 local function getMonitorAndCoordinates(x, y)
 	local xMonitor = math.ceil(x / monitors.screenResolutionByWidth)
 	local yMonitor = math.ceil(y / monitors.screenResolutionByHeight)
@@ -196,17 +188,29 @@ local function getMonitorAndCoordinates(x, y)
 	return xMonitor, yMonitor, xPos, yPos
 end
 
-function multiScreen.set(x, y, text)
+function multiScreen.set(x, y, background, foreground, text)
 	local xMonitor, yMonitor, xPos, yPos = getMonitorAndCoordinates(x, y)
 			
 	if monitors[xMonitor] and monitors[xMonitor][yMonitor] then
 		if currentAddress ~= monitors[xMonitor][yMonitor].address then
 			gpu.bind(monitors[xMonitor][yMonitor].address, false)
+			gpu.setBackground(background)
+			gpu.setForeground(foreground)
+
+			currentBackground, currentForeground = background, foreground
+
 			currentAddress = monitors[xMonitor][yMonitor].address
 		end
-		
-		if gpu.getBackground() ~= currentBackground then gpu.setBackground(currentBackground) end
-		if gpu.getForeground() ~= currentForeground then gpu.setForeground(currentForeground) end
+
+		if currentBackground ~= background then
+			gpu.setBackground(background)
+			currentBackground = background
+		end
+
+		if currentForeground ~= foreground then
+			gpu.setForeground(foreground)
+			currentForeground = foreground
+		end
 		
 		gpu.set(xPos, yPos, text)
 	end
@@ -257,12 +261,10 @@ local function drawBigImageFromOCIFRawFile(x, y, path)
 		for i = 1, width do
 			local background = color.to24Bit(string.byte(file:read(1)))
 			local foreground = color.to24Bit(string.byte(file:read(1)))
-			local alpha = string.byte(file:read(1))
+			file:read(1)
 			local symbol = string.readUnicodeChar(file)
 
-			multiScreen.setBackground(background)
-			multiScreen.setForeground(foreground)
-			multiScreen.set(x + i - 1, y + j - 1, symbol)
+			multiScreen.set(x + i - 1, y + j - 1, background, foreground, symbol)
 		end
 	end
 
