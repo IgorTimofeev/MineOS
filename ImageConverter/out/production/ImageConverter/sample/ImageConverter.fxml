@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.geometry.*?>
 <?import javafx.scene.paint.*?>
 <?import javafx.scene.*?>
 <?import java.net.*?>
@@ -61,20 +62,41 @@
                   </ImageView>
                </children>
             </GridPane>
-            <FlowPane fx:id="OCIFStringResultFlowPane" alignment="CENTER" orientation="VERTICAL" vgap="10.0" visible="false">
+            <GridPane fx:id="OCIFStringResutGridPane" visible="false">
+              <columnConstraints>
+                  <ColumnConstraints hgrow="SOMETIMES" />
+              </columnConstraints>
+              <rowConstraints>
+                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+              </rowConstraints>
                <children>
-                  <Text fx:id="imageSizeText1" fill="WHITE" strokeType="OUTSIDE" strokeWidth="0.0" text="OCIFString result" textAlignment="CENTER" wrappingWidth="312.90771484375">
-                     <font>
-                        <Font name="Arial" size="13.0" />
-                     </font>
-                  </Text>
-                  <TextField fx:id="OCIFStringResultTextField" editable="false" onKeyReleased="#onTextFieldTextChanged" prefHeight="38.0" prefWidth="299.0" promptText="Ширина" styleClass="textField" stylesheets="@Styles/textField.css" text="FFAABBCCAAFFAAFFRRAAVVAAA">
-                     <font>
-                        <Font size="12.0" />
-                     </font>
-                  </TextField>
+                  <ImageView fx:id="OCIFStringResultImageView" fitHeight="150.0" fitWidth="369.0" pickOnBounds="true" preserveRatio="true" GridPane.halignment="CENTER" GridPane.valignment="CENTER">
+                     <image>
+                        <Image url="@Resources/StringResult.png" />
+                     </image>
+                  </ImageView>
+                  <GridPane fx:id="OCIFStringResultGridPane" maxHeight="38.0" maxWidth="312.0" GridPane.halignment="CENTER" GridPane.valignment="CENTER">
+                    <columnConstraints>
+                      <ColumnConstraints hgrow="SOMETIMES" />
+                      <ColumnConstraints hgrow="SOMETIMES" maxWidth="-Infinity" minWidth="-Infinity" prefWidth="38.0" />
+                    </columnConstraints>
+                    <rowConstraints>
+                      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                    </rowConstraints>
+                     <children>
+                        <TextField fx:id="OCIFStringResultTextField" editable="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" onKeyReleased="#onTextFieldTextChanged" promptText="Ширина" styleClass="textField" stylesheets="@Styles/OCIFStringTextField.css" text="FFAABBCCAAFFAAFFRRAAVVAAA" GridPane.halignment="LEFT" GridPane.valignment="TOP">
+                           <font>
+                              <Font size="12.0" />
+                           </font>
+                           <GridPane.margin>
+                              <Insets right="8.0" />
+                           </GridPane.margin>
+                        </TextField>
+                        <Button fx:id="OCIFStringResultButton" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onMousePressed="#copyOCIFResultToClipboard" styleClass="defaultButton" stylesheets="@Styles/OCIFStringButton.css" GridPane.columnIndex="1" />
+                     </children>
+                  </GridPane>
                </children>
-            </FlowPane>
+            </GridPane>
          </children>
       </GridPane>
       <Pane fx:id="settingsPane" layoutX="594.0" prefHeight="489.0" prefWidth="246.0">

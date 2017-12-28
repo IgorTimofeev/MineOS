@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 
-public class OCIF {
+class OCIF {
     private static void writePixelToFileAsOCIF5(FileOutputStream out, Pixel pixel) throws IOException {
         out.write((byte) Palette.getClosestIndex(pixel.background));
         out.write((byte) Palette.getClosestIndex(pixel.foreground));
@@ -72,7 +72,6 @@ public class OCIF {
                             for (Integer x : groupedImage.get(alpha).get(symbol).get(background).get(foreground).get(y)) {
                                 // X
                                 out.write(x.byteValue());
-
                             }
                         }
                     }
@@ -129,6 +128,8 @@ public class OCIF {
     }
 
     static void convert(String imagePath, String convertedImagePath, int requestedWidth, int requestedHeight, int encodingMethod, boolean convertAsBraille, boolean enableDithering, double ditheringIntensity) throws IOException {
+        sample.Image image = loadImage(imagePath, requestedWidth, requestedHeight, convertAsBraille, enableDithering, ditheringIntensity);
+
         FileOutputStream out = new FileOutputStream(convertedImagePath);
 
         out.write("OCIF".getBytes(StandardCharsets.US_ASCII));
@@ -142,8 +143,6 @@ public class OCIF {
             out.write((byte) requestedWidth);
             out.write((byte) requestedHeight);
         }
-
-        sample.Image image = loadImage(imagePath, requestedWidth, requestedHeight, convertAsBraille, enableDithering, ditheringIntensity);
 
         if (convertAsBraille) {
             if (encodingMethod == 5) {

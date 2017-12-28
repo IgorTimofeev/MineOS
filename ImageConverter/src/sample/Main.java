@@ -9,11 +9,12 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.TextField;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
-import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.text.Text;
@@ -21,9 +22,11 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Callback;
 import javafx.util.Duration;
+
+import java.awt.*;
+import java.awt.datatransfer.StringSelection;
 import java.io.File;
 import java.io.IOException;
-import java.util.Locale;
 import java.util.regex.Pattern;
 
 public class Main extends Application {
@@ -46,9 +49,10 @@ public class Main extends Application {
 
     public GridPane hintsGridPane;
     public GridPane dragImageGridPane;
-    public FlowPane OCIFStringResultFlowPane;
+    public GridPane OCIFStringResutGridPane;
     public TextField OCIFStringResultTextField;
-
+    public ImageView OCIFStringResultImageView;
+    public GridPane OCIFStringResultGridPane;
 
     private String currentImagePath = "sample/Resources/Background.png";
 
@@ -72,14 +76,23 @@ public class Main extends Application {
         Timeline timeline = newTimeLine(
                 150,
                 new KeyValue[] {
+                        // Прозрачность ебалы
                         new KeyValue(hintsGridPane.opacityProperty(), hintsGridPane.getOpacity()),
+                        // Масштаб пикчи с драг дропом
                         new KeyValue(dragDropFilesImageView.fitWidthProperty(), dragDropFilesImageView.getImage().getWidth() * fromScale),
+                        // Масштаб пикчи и поля конвертации строки
+                        new KeyValue(OCIFStringResultImageView.fitWidthProperty(), OCIFStringResultImageView.getImage().getWidth() * fromScale),
+                        new KeyValue(OCIFStringResultGridPane.maxWidthProperty(), 312 * fromScale),
+                        // Сдвигание хуйни с настройками
                         new KeyValue(settingsPane.layoutXProperty(), start ? mainPane.getWidth() - settingsPane.getWidth() : mainPane.getWidth())
                 },
                 new KeyValue[] {
                         new KeyValue(hintsGridPane.opacityProperty(), targetOpacity),
                         new KeyValue(dragDropFilesImageView.fitWidthProperty(),  dragDropFilesImageView.getImage().getWidth() * toScale),
-                        new KeyValue(settingsPane.layoutXProperty(), start ? mainPane.getWidth() : mainPane.getWidth() - settingsPane.getWidth())
+                        new KeyValue(settingsPane.layoutXProperty(), start ? mainPane.getWidth() : mainPane.getWidth() - settingsPane.getWidth()),
+                        // Масштаб пикчи и поля конвертации строки
+                        new KeyValue(OCIFStringResultImageView.fitWidthProperty(), OCIFStringResultImageView.getImage().getWidth() * toScale),
+                        new KeyValue(OCIFStringResultGridPane.maxWidthProperty(), 312 * toScale),
                 }
         );
 
@@ -129,10 +142,14 @@ public class Main extends Application {
         encodingMethodComboBox.setValue("OCIF6 (Optimized)");
     }
 
+    public void copyOCIFResultToClipboard() {
+        Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(OCIFStringResultTextField.getText()), null);
+    }
+
     //Ебучий драг-дроп
     public void onHintsGridPaneDragEntered(DragEvent event) {
         dragImageGridPane.setVisible(true);
-        OCIFStringResultFlowPane.setVisible(false);
+        OCIFStringResutGridPane.setVisible(false);
 
         if (event.getDragboard().hasFiles()) {
             playAnimationStart();
@@ -234,7 +251,7 @@ public class Main extends Application {
             );
 
             dragImageGridPane.setVisible(false);
-            OCIFStringResultFlowPane.setVisible(true);
+            OCIFStringResutGridPane.setVisible(true);
             playAnimationStart();
 
             OCIFStringResultTextField.setText(result);
