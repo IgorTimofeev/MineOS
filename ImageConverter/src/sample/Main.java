@@ -254,6 +254,7 @@ public class Main extends Application {
 
             javafx.scene.image.Image image = new javafx.scene.image.Image(currentImagePath);
             imageView.setImage(image);
+            checkToCalculateHeight();
         }
     }
 
