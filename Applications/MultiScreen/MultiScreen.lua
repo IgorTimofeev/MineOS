@@ -31,6 +31,51 @@ local monitors = {}
 
 --------------------------------------------------------------------------------------------------------------------------------------------
 
+local currentBackground, currentForeground, currentAddress = 0x000000, 0xffffff, ""
+
+local function multiScreenSet(x, y, background, foreground, text)
+	local xMonitor = math.ceil(x / monitors.screenResolutionByWidth)
+	local yMonitor = math.ceil(y / monitors.screenResolutionByHeight)
+		
+	if monitors[xMonitor] and monitors[xMonitor][yMonitor] then
+		if currentAddress ~= monitors[xMonitor][yMonitor].address then
+			gpu.bind(monitors[xMonitor][yMonitor].address, false)
+			gpu.setBackground(background)
+			gpu.setForeground(foreground)
+
+			currentBackground, currentForeground = background, foreground
+
+			currentAddress = monitors[xMonitor][yMonitor].address
+		end
+
+		if currentBackground ~= background then
+			gpu.setBackground(background)
+			currentBackground = background
+		end
+
+		if currentForeground ~= foreground then
+			gpu.setForeground(foreground)
+			currentForeground = foreground
+		end
+
+		gpu.set(x - (xMonitor - 1) * monitors.screenResolutionByWidth, y - (yMonitor - 1) * monitors.screenResolutionByHeight, text)
+	end
+end
+
+local function multiScreenClear(color)
+	for address in components.list("screen") do
+		if address ~= mainScreenAddress then
+			gpu.bind(address, false)
+			gpu.setResolution(baseResolution.width, baseResolution.height)
+			gpu.setBackground(color)
+			gpu.fill(1, 1, baseResolution.width, baseResolution.height, " ")
+		end
+	end
+	gpu.bind(mainScreenAddress, false)
+end
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+
 local function getAllConnectedScreens()
 	local massiv = {}
 	for address in pairs(components.list("screen")) do
@@ -95,15 +140,7 @@ local function configurator()
 		ecs.centerText("x", ySize - 4, "Не нарушайте порядок прокосновений!")
 	end
 
-	for address in components.list("screen") do
-		if address ~= mainScreenAddress then
-			gpu.bind(address, false)
-			gpu.setBackground(0x0)
-			gpu.setForeground(0x0)
-			gpu.fill(1, 1, 160, 60, " ")
-		end
-	end
-	gpu.bind(mainScreenAddress, false)
+	multiScreenClear(0x0)
 
 	monitors = {}
 	local monitorCount = width * height
@@ -159,7 +196,7 @@ local function loadConfig()
 		monitors = serialization.unserialize(file:read("*a"))
 		file:close()
 		print(" ")
-		print("Файл конфигурации мультимонитора успешно загружен.")
+		print("Файл конфигурации мультимонитора загружен")
 		print(" ")
 		print("Количество экранов: " .. monitors.countOfScreensByWidth .. "x" .. monitors.countOfScreensByHeight .. " шт")
 		print("Разрешение каждого экрана: " .. monitors.screenResolutionByWidth .. "x" .. monitors.screenResolutionByHeight .. " px")
@@ -171,62 +208,6 @@ local function loadConfig()
 		saveConfig()
 		loadConfig()
 	end
-end
-
---------------------------------------------------------------------------------------------------------------------------------------------
-
-local currentBackground, currentForeground, currentAddress = 0x000000, 0xffffff, ""
-
-local multiScreen = {}
-
-local function getMonitorAndCoordinates(x, y)
-	local xMonitor = math.ceil(x / monitors.screenResolutionByWidth)
-	local yMonitor = math.ceil(y / monitors.screenResolutionByHeight)
-	local xPos = x - (xMonitor - 1) * monitors.screenResolutionByWidth
-	local yPos = y - (yMonitor - 1) * monitors.screenResolutionByHeight
-
-	return xMonitor, yMonitor, xPos, yPos
-end
-
-function multiScreen.set(x, y, background, foreground, text)
-	local xMonitor, yMonitor, xPos, yPos = getMonitorAndCoordinates(x, y)
-			
-	if monitors[xMonitor] and monitors[xMonitor][yMonitor] then
-		if currentAddress ~= monitors[xMonitor][yMonitor].address then
-			gpu.bind(monitors[xMonitor][yMonitor].address, false)
-			gpu.setBackground(background)
-			gpu.setForeground(foreground)
-
-			currentBackground, currentForeground = background, foreground
-
-			currentAddress = monitors[xMonitor][yMonitor].address
-		end
-
-		if currentBackground ~= background then
-			gpu.setBackground(background)
-			currentBackground = background
-		end
-
-		if currentForeground ~= foreground then
-			gpu.setForeground(foreground)
-			currentForeground = foreground
-		end
-		
-		gpu.set(xPos, yPos, text)
-	end
-end
-
-function multiScreen.clear(color)
-	for x = 1, #monitors do
-		for y = 1, #monitors[x] do
-			gpu.bind(monitors[x][y].address, false)
-			gpu.setResolution(monitors.screenResolutionByWidth, monitors.screenResolutionByHeight)
-			gpu.setBackground(color)
-			gpu.fill(1, 1, 160, 60, " ")
-		end
-	end
-
-	gpu.bind(mainScreenAddress, false)
 end
 
 --------------------------------------------------------------------------------------------------------------------------------------------
@@ -264,13 +245,13 @@ local function drawBigImageFromOCIFRawFile(x, y, path)
 			file:read(1)
 			local symbol = string.readUnicodeChar(file)
 
-			multiScreen.set(x + i - 1, y + j - 1, background, foreground, symbol)
+			multiScreenSet(x + i - 1, y + j - 1, background, foreground, symbol)
 		end
 	end
 
 	file:close()
+	
 	gpu.bind(mainScreenAddress, false)
-
 	print("Отрисовка пикчи завершена")
 end
 
@@ -281,7 +262,7 @@ local args = {...}
 if args[1] == "draw" and args[2] then
 	loadConfig()
 	print("Идет очистка мониторов...")
-	multiScreen.clear(0x000000)
+	multiScreenClear(0x000000)
 	if fs.exists(args[2]) then
 		drawBigImageFromOCIFRawFile(1, 1, args[2])
 	else
@@ -292,8 +273,9 @@ elseif args[1] == "calibrate" then
 	loadConfig()
 elseif args[1] == "clear" then
 	loadConfig()
-	multiScreen.clear(tonumber(args[2] or 0x000000))
+	multiScreenClear(tonumber(args[2] or 0x000000))
 else
+	loadConfig()
 	print("Использование программы:")
 	print("  MultiScreen calibrate - перекалибровать мониторы")
 	print("  MultiScreen draw <путь к изображению> - отобразить изображение из файла на мониторах")
