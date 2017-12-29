@@ -63,11 +63,11 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="Main.java" pinned="false" current-in-tab="true">
+      <file leaf-file-name="Main.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/sample/Main.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="277">
-              <caret line="251" column="34" lean-forward="true" selection-start-line="251" selection-start-column="34" selection-end-line="251" selection-end-column="34" />
+            <state relative-caret-position="864">
+              <caret line="277" column="45" lean-forward="true" selection-start-line="277" selection-start-column="45" selection-end-line="277" selection-end-column="45" />
               <folding>
                 <element signature="imports" expanded="true" />
               </folding>
@@ -95,11 +95,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="OCIF.java" pinned="false" current-in-tab="false">
+      <file leaf-file-name="OCIF.java" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/sample/OCIF.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="780">
-              <caret line="56" column="39" lean-forward="false" selection-start-line="56" selection-start-column="39" selection-end-line="56" selection-end-column="39" />
+            <state relative-caret-position="314">
+              <caret line="137" column="34" lean-forward="true" selection-start-line="137" selection-start-column="34" selection-end-line="137" selection-end-column="34" />
               <folding>
                 <element signature="imports" expanded="true" />
                 <marker date="1514453485000" expanded="true" signature="4152:5205" ph="..." />
@@ -208,6 +208,9 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="Scope" />
+      <pane id="PackagesPane" />
+      <pane id="Scratches" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -244,9 +247,6 @@
           <select />
         </subPane>
       </pane>
-      <pane id="PackagesPane" />
-      <pane id="Scratches" />
-      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -869,17 +869,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/sample/OCIF.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="780">
-          <caret line="56" column="39" lean-forward="false" selection-start-line="56" selection-start-column="39" selection-end-line="56" selection-end-column="39" />
-          <folding>
-            <element signature="imports" expanded="true" />
-            <marker date="1514453485000" expanded="true" signature="4152:5205" ph="..." />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/sample/Resources/StringResultButton.psd">
       <provider selected="true" editor-type-id="images">
         <state />
@@ -903,10 +892,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="235">
           <caret line="526" column="24" lean-forward="false" selection-start-line="526" selection-start-column="24" selection-end-line="526" selection-end-column="24" />
-          <folding>
-            <element signature="e#22780#22781#0" expanded="false" />
-            <element signature="e#22810#22811#0" expanded="false" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -936,10 +921,21 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/sample/Main.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="277">
-          <caret line="251" column="34" lean-forward="true" selection-start-line="251" selection-start-column="34" selection-end-line="251" selection-end-column="34" />
+        <state relative-caret-position="864">
+          <caret line="277" column="45" lean-forward="true" selection-start-line="277" selection-start-column="45" selection-end-line="277" selection-end-column="45" />
           <folding>
             <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/sample/OCIF.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="314">
+          <caret line="137" column="34" lean-forward="true" selection-start-line="137" selection-start-column="34" selection-end-line="137" selection-end-column="34" />
+          <folding>
+            <element signature="imports" expanded="true" />
+            <marker date="1514453485000" expanded="true" signature="4152:5205" ph="..." />
           </folding>
         </state>
       </provider>

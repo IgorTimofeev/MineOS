@@ -17,8 +17,10 @@ layout:setCellDirection(1, 1, GUI.directions.horizontal)
 
 local newButton = layout:addChild(GUI.button(1, 1, 3, 1, 0x444444, 0xE1E1E1, 0xE1E1E1, 0x444444, "N"))
 local saveButton = layout:addChild(GUI.button(1, 1, 3, 1, 0x444444, 0xE1E1E1, 0xE1E1E1, 0x444444, "S"))
+local openButton = layout:addChild(GUI.button(1, 1, 3, 1, 0x444444, 0xE1E1E1, 0xE1E1E1, 0x444444, "O"))
 local colorSelector1 = layout:addChild(GUI.colorSelector(1, 1, 3, 1, 0xFF4940, "B"))
 local colorSelector2 = layout:addChild(GUI.colorSelector(1, 1, 3, 1, 0x9924FF, "F"))
+local keepSwitch = layout:addChild(GUI.switchAndLabel(1, 1, 16, 5, 0x66DB80, 0x1E1E1E, 0xE1E1E1, 0x888888, "Replace: ", true)).switch
 
 local function newCell(x, y, shaded)
 	local object = GUI.object(x, y, 4, 4)
@@ -49,8 +51,13 @@ local function newCell(x, y, shaded)
 		if eventData[1] == "touch" or eventData[1] == "drag" then
 			local x, y = math.ceil((eventData[3] - object.x + 1) / 2), eventData[4] - object.y + 1
 			
-			object.background = colorSelector1.color
-			object.foreground = colorSelector2.color
+			if (object.background ~= colorSelector1.color and keepSwitch.state) or object.background == colorSelector1.color then
+				object.background = colorSelector1.color
+			end
+
+			if (object.foreground ~= colorSelector2.color and keepSwitch.state) or object.foreground == colorSelector2.color then
+				object.foreground = colorSelector2.color
+			end
 
 			-- CTRL or CMD or ALT
 			if keyboard.isKeyDown(29) or keyboard.isKeyDown(219) or keyboard.isKeyDown(56) then
@@ -69,6 +76,11 @@ end
 
 
 local drawingArea = window:addChild(GUI.container(1, 4, 1, 1))
+local overrideDraw = drawingArea.draw
+drawingArea.draw = function(...)
+	GUI.windowShadow(drawingArea.x, drawingArea.y, drawingArea.width, drawingArea.height, GUI.colors.contextMenu.transparency.shadow, true)
+	overrideDraw(...)
+end
 
 local function getBrailleChar(a, b, c, d, e, f, g, h)
 	return unicode.char(10240 + 128*h + 64*g + 32*f + 16*d + 8*b + 4*e + 2*c + a)
@@ -77,10 +89,14 @@ end
 local function newNoGUI(width, height)
 	drawingArea.width, drawingArea.height = width * 4, height * 4
 	
-	window.width = drawingArea.width
-	window.height = drawingArea.height + 3
+	window.width = math.max(50, drawingArea.width)
+	window.height = drawingArea.height + 4
+
+	drawingArea.localX = math.floor(window.width / 2 - drawingArea.width / 2)
 
 	window.backgroundPanel.width = window.width
+	window.backgroundPanel.height = window.height
+
 	layout.width = window.backgroundPanel.width
 	
 
@@ -145,53 +161,96 @@ local function fillBrailleArray(source, inverted)
 	return brailleArray, transparencyCyka, backgroundCyka, foregroundCyka
 end
 
-local function saveAs()
-	local filesystemDialog = GUI.addFilesystemDialogToContainer(mainContainer, "OK", "Cancel", "Path", "/")
-	filesystemDialog:setMode(GUI.filesystemModes.save, GUI.filesystemModes.file)
-	filesystemDialog:addExtensionFilter(".pic")
-	filesystemDialog.onSubmit = function(path)
-		local picture = {drawingArea.width / 4, drawingArea.height / 4}
-
-		local x, y = 1, 1
-		for childIndex = 1, #drawingArea.children do
-			local background, foreground = drawingArea.children[childIndex].background, drawingArea.children[childIndex].foreground
-			
-			local brailleArray, transparencyCyka, backgroundCyka, foregroundCyka = fillBrailleArray(drawingArea.children[childIndex].pixels)
-			if transparencyCyka then
-				if backgroundCyka and foregroundCyka then
-					GUI.error("Пиксель " .. x .. "x" .. y .. " имеет два цвета и прозрачность. Убирай любой из цветов и наслаждайся")
-					return
-				else
-					background = 0x0
-					if backgroundCyka then
-						foreground = drawingArea.children[childIndex].background
-						brailleArray = fillBrailleArray(drawingArea.children[childIndex].pixels, true)
-					end
-				end
-			end
-
-			image.set(
-				picture, x, y, background, foreground,
-				transparencyCyka and 1 or 0,
-				string.brailleChar(table.unpack(brailleArray))
-			)
-
-			x = x + 1
-			if x > picture[1] then
-				x, y = 1, y + 1
-			end
-		end
-
-		image.save(path, picture)
-	end
-	filesystemDialog:show()
-end
-
 newButton.onTouch = function()
 	new()
 end
+
 saveButton.onTouch = function()
-	saveAs()
+	local filesystemDialog = GUI.addFilesystemDialogToContainer(mainContainer, "OK", "Cancel", "Path", "/")
+	
+	filesystemDialog:setMode(GUI.filesystemModes.save, GUI.filesystemModes.file)
+	filesystemDialog:addExtensionFilter(".pic")
+	filesystemDialog:addExtensionFilter(".braiile")
+	
+	filesystemDialog.onSubmit = function(path)
+		if fs.extension(path) == ".pic" then
+			local picture = {drawingArea.width / 4, drawingArea.height / 4}
+
+			local x, y = 1, 1
+			for childIndex = 1, #drawingArea.children do
+				local background, foreground = drawingArea.children[childIndex].background, drawingArea.children[childIndex].foreground
+				
+				local brailleArray, transparencyCyka, backgroundCyka, foregroundCyka = fillBrailleArray(drawingArea.children[childIndex].pixels)
+				if transparencyCyka then
+					if backgroundCyka and foregroundCyka then
+						GUI.error("Пиксель " .. x .. "x" .. y .. " имеет два цвета и прозрачность. Убирай любой из цветов и наслаждайся")
+						return
+					else
+						background = 0x0
+						if backgroundCyka then
+							foreground = drawingArea.children[childIndex].background
+							brailleArray = fillBrailleArray(drawingArea.children[childIndex].pixels, true)
+						end
+					end
+				end
+
+				image.set(
+					picture, x, y, background, foreground,
+					transparencyCyka and 1 or 0,
+					string.brailleChar(table.unpack(brailleArray))
+				)
+
+				x = x + 1
+				if x > picture[1] then
+					x, y = 1, y + 1
+				end
+			end
+
+			image.save(path, picture)
+		else
+			local pizda = {
+				width = drawingArea.width / 4,
+				height = drawingArea.height / 4,
+			}
+
+			for i = 1, #drawingArea.children do
+				table.insert(pizda, {
+					background = drawingArea.children[i].background,
+					foreground = drawingArea.children[i].foreground,
+					pixels = drawingArea.children[i].pixels,
+				})
+			end
+
+			table.toFile(path, pizda, true)
+		end
+	end
+
+	filesystemDialog:show()
+end
+
+openButton.onTouch = function()
+	local filesystemDialog = GUI.addFilesystemDialogToContainer(mainContainer, "OK", "Cancel", "Path", "/")
+	
+	filesystemDialog:setMode(GUI.filesystemModes.open, GUI.filesystemModes.file)
+	filesystemDialog:addExtensionFilter(".braiile")
+
+	filesystemDialog.onSubmit = function(path)
+		local pizda = table.fromFile(path)
+		drawingArea:deleteChildren()
+
+		newNoGUI(pizda.width, pizda.height)
+
+		for i = 1, #drawingArea.children do
+			drawingArea.children[i].background = pizda[i].background
+			drawingArea.children[i].foreground = pizda[i].foreground
+			drawingArea.children[i].pixels = pizda[i].pixels
+		end
+
+		mainContainer:draw()
+		buffer.draw()
+	end
+
+	filesystemDialog:show()
 end
 
 window.actionButtons.minimize:delete()
