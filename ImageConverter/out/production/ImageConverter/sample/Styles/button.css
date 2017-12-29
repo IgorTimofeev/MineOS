@@ -17,7 +17,7 @@
 }
 
 .defaultButton:disabled {
-    -fx-background-color: #FFFFFF22;
+    -fx-background-color: #FFFFFF15;
     -fx-text-fill: #FFFFFF77;
 }
 

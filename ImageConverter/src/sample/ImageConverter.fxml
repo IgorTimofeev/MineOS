@@ -13,22 +13,17 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.collections.*?>
 
-<Pane fx:id="mainPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="489.0" prefWidth="840.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sample.Main">
+<GridPane fx:id="mainPane" onDragEntered="#onHintsGridPaneDragEntered" prefHeight="544.0" prefWidth="1056.0" styleClass="cyka" stylesheets="@Styles/Cells.css" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sample.Main">
+   <columnConstraints>
+      <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" />
+   </columnConstraints>
+   <rowConstraints>
+      <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
+   </rowConstraints>
    <children>
-      <ImageView fx:id="imageView1" fitWidth="840.0" pickOnBounds="true" preserveRatio="true">
-         <image>
-            <Image url="@Resources/Cells.png" />
-         </image>
-      </ImageView>
-      <GridPane fx:id="imageGridPane" alignment="CENTER" prefHeight="489.0" prefWidth="840.0">
-        <columnConstraints>
-          <ColumnConstraints hgrow="SOMETIMES" />
-        </columnConstraints>
-        <rowConstraints>
-          <RowConstraints maxHeight="1.7976931348623157E308" vgrow="SOMETIMES" />
-        </rowConstraints>
+      <Pane>
          <children>
-            <ImageView fx:id="imageView" fitHeight="489.0" fitWidth="840.0" nodeOrientation="INHERIT" pickOnBounds="true" preserveRatio="true" GridPane.halignment="CENTER" GridPane.valignment="CENTER">
+            <ImageView fx:id="imageView" fitHeight="706.0" fitWidth="1248.0" nodeOrientation="INHERIT" onMouseDragged="#onImageDrag" onMousePressed="#onImageClick" onScroll="#onImageScroll" pickOnBounds="true" preserveRatio="true" GridPane.halignment="CENTER" GridPane.valignment="CENTER">
                <image>
                   <Image url="@Resources/Background.png" />
                </image>
@@ -37,8 +32,8 @@
                </effect>
             </ImageView>
          </children>
-      </GridPane>
-      <GridPane fx:id="hintsGridPane" onDragEntered="#onHintsGridPaneDragEntered" onDragExited="#onHintsGridPaneDragExited" onMousePressed="#onHintsGridPaneDragMouseClicked" opacity="0.0" prefHeight="489.0" prefWidth="840.0">
+      </Pane>
+      <GridPane fx:id="hintsGridPane" onDragExited="#onHintsGridPaneDragExited" onMousePressed="#onHintsGridPaneDragMouseClicked" prefHeight="489.0" prefWidth="840.0" style="-fx-background-color: #000000D0;" visible="false">
         <columnConstraints>
           <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
         </columnConstraints>
@@ -46,8 +41,7 @@
             <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
         </rowConstraints>
          <children>
-            <Rectangle fx:id="dragFilesRectangle" fill="#000000d0" height="489.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="840.0" GridPane.halignment="LEFT" GridPane.hgrow="ALWAYS" GridPane.valignment="TOP" GridPane.vgrow="ALWAYS" />
-            <GridPane fx:id="dragImageGridPane" visible="false">
+            <GridPane fx:id="dragImageGridPane">
               <columnConstraints>
                 <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
               </columnConstraints>
@@ -99,62 +93,108 @@
             </GridPane>
          </children>
       </GridPane>
-      <Pane fx:id="settingsPane" layoutX="594.0" prefHeight="489.0" prefWidth="246.0">
+      <GridPane fx:id="settingsPane" maxHeight="1.7976931348623157E308" maxWidth="-Infinity" minWidth="0.0" prefWidth="250.0" style="-fx-background-color: #000000D0;" GridPane.halignment="RIGHT" GridPane.valignment="TOP">
+         <columnConstraints>
+            <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" />
+         </columnConstraints>
+         <rowConstraints>
+            <RowConstraints vgrow="SOMETIMES" />
+            <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" prefHeight="40.0" vgrow="SOMETIMES" />
+         </rowConstraints>
          <children>
-            <Rectangle fill="#000000d0" height="489.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="246.0" />
-            <Button fx:id="openButton" layoutY="62.0" mnemonicParsing="false" onMouseClicked="#open" prefHeight="38.0" prefWidth="246.0" styleClass="defaultButton" stylesheets="@Styles/button.css" text="Open">
+            <FlowPane orientation="VERTICAL">
+               <children>
+                  <Label alignment="CENTER" maxWidth="1.7976931348623157E308" prefHeight="20.0" prefWidth="250.0" text="OC Image Converter" textFill="WHITE">
+                     <font>
+                        <Font name="Arial" size="16.0" />
+                     </font>
+                     <FlowPane.margin>
+                        <Insets top="18.0" />
+                     </FlowPane.margin>
+                  </Label>
+                  <Button fx:id="openButton" maxHeight="-Infinity" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onMousePressed="#open" prefHeight="38.0" styleClass="defaultButton" stylesheets="@Styles/button.css" text="Open">
+                     <font>
+                        <Font size="11.0" />
+                     </font>
+                     <FlowPane.margin>
+                        <Insets top="18.0" />
+                     </FlowPane.margin>
+                  </Button>
+                  <Label fx:id="imageSizeInfoLabel" alignment="CENTER" maxWidth="1.7976931348623157E308" text="N/A" textFill="WHITE">
+                     <FlowPane.margin>
+                        <Insets top="10.0" />
+                     </FlowPane.margin>
+                     <font>
+                        <Font name="Arial" size="11.0" />
+                     </font>
+                  </Label>
+                  <TextField fx:id="widthTextField" alignment="CENTER" maxHeight="-Infinity" maxWidth="1.7976931348623157E308" onKeyReleased="#onTextFieldTextChanged" prefHeight="38.0" promptText="Ширина" styleClass="textField" stylesheets="@Styles/textField.css" text="160">
+                     <font>
+                        <Font size="12.0" />
+                     </font>
+                     <FlowPane.margin>
+                        <Insets top="10.0" />
+                     </FlowPane.margin>
+                  </TextField>
+                  <TextField fx:id="heightTextField" alignment="CENTER" disable="true" maxHeight="-Infinity" maxWidth="1.7976931348623157E308" onKeyReleased="#onTextFieldTextChanged" prefHeight="38.0" promptText="Высота" styleClass="textField" stylesheets="@Styles/textField.css" text="50">
+                     <font>
+                        <Font size="12.0" />
+                     </font>
+                     <FlowPane.margin>
+                        <Insets top="5.0" />
+                     </FlowPane.margin>
+                  </TextField>
+                  <Label alignment="CENTER" maxWidth="1.7976931348623157E308" text="Format" textFill="WHITE">
+                     <font>
+                        <Font name="Arial" size="11.0" />
+                     </font>
+                     <FlowPane.margin>
+                        <Insets top="10.0" />
+                     </FlowPane.margin>
+                  </Label>
+                  <ComboBox fx:id="encodingMethodComboBox" maxHeight="38.0" maxWidth="1.7976931348623157E308" onAction="#onTextFieldTextChanged" stylesheets="@Styles/comboBox.css">
+                     <items>
+                        <FXCollections fx:factory="observableArrayList">
+                           <String fx:value="OCIFString" />
+                           <String fx:value="OCIF5 (Multiscreen)" />
+                           <String fx:value="OCIF6 (Optimized)" />
+                        </FXCollections>
+                     </items>
+                     <FlowPane.margin>
+                        <Insets top="10.0" />
+                     </FlowPane.margin>
+                  </ComboBox>
+                  <CheckBox fx:id="keepProportionsCheckBox" maxHeight="-Infinity" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onMouseClicked="#onProportionsCheckBoxClicked" selected="true" styleClass="checkBox" stylesheets="@Styles/checkBox.css" text="Keep proportions" textFill="WHITE">
+                     <FlowPane.margin>
+                        <Insets left="10.0" top="15.0" />
+                     </FlowPane.margin>
+                  </CheckBox>
+                  <CheckBox fx:id="brailleCheckBox" maxHeight="-Infinity" maxWidth="1.7976931348623157E308" mnemonicParsing="false" selected="true" styleClass="checkBox" stylesheets="@Styles/checkBox.css" text="Enable Braille font" textFill="WHITE">
+                     <FlowPane.margin>
+                        <Insets left="10.0" top="15.0" />
+                     </FlowPane.margin>
+                  </CheckBox>
+                  <CheckBox fx:id="ditheringCheckBox" maxHeight="-Infinity" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onMouseClicked="#onDitheringStateChanged" selected="true" styleClass="checkBox" stylesheets="@Styles/checkBox.css" text="Enable dithering" textFill="WHITE">
+                     <FlowPane.margin>
+                        <Insets left="10.0" top="15.0" />
+                     </FlowPane.margin>
+                  </CheckBox>
+                  <Slider fx:id="ditheringSlider" maxWidth="1.7976931348623157E308" minorTickCount="2" showTickLabels="true" showTickMarks="true" stylesheets="@Styles/slider.css" value="100.0">
+                     <FlowPane.margin>
+                        <Insets left="5.0" right="5.0" top="15.0" />
+                     </FlowPane.margin>
+                  </Slider>
+               </children>
+            </FlowPane>
+            <Button fx:id="convertButton" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onMousePressed="#save" styleClass="defaultButton" stylesheets="@Styles/button.css" text="Convert" GridPane.rowIndex="1">
                <font>
                   <Font size="11.0" />
                </font>
             </Button>
-            <Text fill="WHITE" layoutY="39.0" strokeType="OUTSIDE" strokeWidth="0.0" text="OC Image Converter" textAlignment="CENTER" wrappingWidth="246.0">
-               <font>
-                  <Font size="16.0" />
-               </font>
-            </Text>
-            <TextField fx:id="widthTextField" alignment="CENTER" layoutY="139.0" onKeyReleased="#onTextFieldTextChanged" prefHeight="38.0" prefWidth="246.0" promptText="Ширина" styleClass="textField" stylesheets="@Styles/textField.css" text="160">
-               <font>
-                  <Font size="12.0" />
-               </font>
-            </TextField>
-            <Text fx:id="imageSizeText" fill="WHITE" layoutX="33.0" layoutY="124.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Output size for OpenComputers" textAlignment="CENTER" wrappingWidth="180.97265625">
-               <font>
-                  <Font name="Arial" size="11.0" />
-               </font>
-            </Text>
-            <Button fx:id="convertButton" layoutY="442.0" mnemonicParsing="false" onMouseClicked="#save" prefHeight="46.0" prefWidth="246.0" styleClass="defaultButton" stylesheets="@Styles/button.css" text="Convert">
-               <font>
-                  <Font size="11.0" />
-               </font>
-            </Button>
-            <TextField fx:id="heightTextField" alignment="CENTER" layoutY="185.0" onKeyReleased="#onTextFieldTextChanged" prefHeight="38.0" prefWidth="246.0" promptText="Высота" styleClass="textField" stylesheets="@Styles/textField.css" text="50">
-               <font>
-                  <Font size="12.0" />
-               </font>
-            </TextField>
-            <CheckBox fx:id="brailleCheckBox" layoutX="12.0" layoutY="304.0" mnemonicParsing="false" prefHeight="38.0" prefWidth="222.0" selected="true" styleClass="checkBox" stylesheets="@Styles/checkBox.css" text="Enable Braille font" textFill="WHITE" />
-            <Text fx:id="wrongSizesText" fill="WHITE" layoutY="124.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Size &gt; 255 is only supported with OCIF5 format" textAlignment="CENTER" visible="false" wrappingWidth="246.0">
-               <font>
-                  <Font name="Arial" size="11.0" />
-               </font>
-            </Text>
-            <CheckBox fx:id="ditheringCheckBox" layoutX="12.0" layoutY="342.0" mnemonicParsing="false" onMouseClicked="#onDitheringStateChanged" prefHeight="38.0" prefWidth="222.0" selected="true" styleClass="checkBox" stylesheets="@Styles/checkBox.css" text="Enable dithering" textFill="WHITE" />
-            <Slider fx:id="ditheringSlider" layoutX="7.0" layoutY="392.0" minorTickCount="2" prefHeight="16.0" prefWidth="232.0" showTickLabels="true" showTickMarks="true" stylesheets="@Styles/slider.css" value="100.0" />
-            <ComboBox fx:id="encodingMethodComboBox" layoutY="259.0" onAction="#onTextFieldTextChanged" prefHeight="38.0" prefWidth="246.0" stylesheets="@Styles/comboBox.css">
-               <items>
-                  <FXCollections fx:factory="observableArrayList">
-                     <String fx:value="OCIFString" />
-                     <String fx:value="OCIF5 (Multiscreen)" />
-                     <String fx:value="OCIF6 (Optimized)" />
-                  </FXCollections>
-               </items>
-            </ComboBox>
-            <Text fill="WHITE" layoutX="33.0" layoutY="245.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Format" textAlignment="CENTER" wrappingWidth="180.97265625">
-               <font>
-                  <Font name="Arial" size="11.0" />
-               </font>
-            </Text>
          </children>
-      </Pane>
+         <GridPane.margin>
+            <Insets />
+         </GridPane.margin>
+      </GridPane>
    </children>
-</Pane>
+</GridPane>

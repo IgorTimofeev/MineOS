@@ -14,3 +14,8 @@
     -fx-background-color: #FFF;
     -fx-effect: dropshadow(three-pass-box, rgba(255, 255, 255, 0.6), 10, 0.2, 0, 1);
 }
+
+.textField:disabled {
+    -fx-background-color: #FFFFFF10;
+    -fx-text-fill: #FFFFFF77;
+}

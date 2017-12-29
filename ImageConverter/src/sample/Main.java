@@ -8,16 +8,14 @@ import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.*;
 import javafx.scene.control.Button;
+import javafx.scene.control.*;
+import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.DragEvent;
-import javafx.scene.input.Dragboard;
-import javafx.scene.input.TransferMode;
+import javafx.scene.input.*;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.Pane;
-import javafx.scene.text.Text;
+import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Callback;
@@ -31,6 +29,7 @@ import java.util.regex.Pattern;
 
 public class Main extends Application {
 
+    public CheckBox keepProportionsCheckBox;
     public Button openButton;
     public Button convertButton;
     public TextField widthTextField;
@@ -38,14 +37,12 @@ public class Main extends Application {
     public ImageView imageView;
     public CheckBox brailleCheckBox;
     public CheckBox ditheringCheckBox;
-    public Text wrongSizesText;
-    public Text imageSizeText;
+    public Label imageSizeInfoLabel;
     public Slider ditheringSlider;
     public ComboBox<String> encodingMethodComboBox;
-    public GridPane imageGridPane;
     public ImageView dragDropFilesImageView;
-    public Pane settingsPane;
-    public Pane mainPane;
+    public GridPane settingsPane;
+    public GridPane mainPane;
 
     public GridPane hintsGridPane;
     public GridPane dragImageGridPane;
@@ -58,8 +55,7 @@ public class Main extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-        primaryStage.setResizable(false);
-        primaryStage.setScene(new Scene(FXMLLoader.load(getClass().getResource("ImageConverter.fxml")), 840, 489));
+        primaryStage.setScene(new Scene(FXMLLoader.load(getClass().getResource("ImageConverter.fxml"))));
         primaryStage.show();
     }
 
@@ -81,7 +77,7 @@ public class Main extends Application {
                 // Масштаб пикчи с драг дропом
                 new KeyValue(dragDropFilesImageView.fitWidthProperty(), dragDropFilesImageView.getImage().getWidth() * fromScale),
                 // Сдвигание хуйни с настройками
-                new KeyValue(settingsPane.layoutXProperty(), start ? mainPane.getWidth() - settingsPane.getWidth() : mainPane.getWidth()),
+                new KeyValue(settingsPane.prefWidthProperty(), start ? 250 : 0),
                 // Масштаб пикчи и поля конвертации строки
                 new KeyValue(OCIFStringResultImageView.fitWidthProperty(), OCIFStringResultImageView.getImage().getWidth() * fromScale),
                 new KeyValue(OCIFStringResultGridPane.maxWidthProperty(), 312 * fromScale)
@@ -89,12 +85,18 @@ public class Main extends Application {
             new KeyValue[] {
                 new KeyValue(hintsGridPane.opacityProperty(), targetOpacity),
                 new KeyValue(dragDropFilesImageView.fitWidthProperty(),  dragDropFilesImageView.getImage().getWidth() * toScale),
-                new KeyValue(settingsPane.layoutXProperty(), start ? mainPane.getWidth() : mainPane.getWidth() - settingsPane.getWidth()),
+                new KeyValue(settingsPane.prefWidthProperty(), start ? 0 : 250),
                 // Масштаб пикчи и поля конвертации строки
                 new KeyValue(OCIFStringResultImageView.fitWidthProperty(), OCIFStringResultImageView.getImage().getWidth() * toScale),
                 new KeyValue(OCIFStringResultGridPane.maxWidthProperty(), 312 * toScale),
             }
         );
+
+        timeline.setOnFinished(event -> {
+            if (!start) {
+                hintsGridPane.setVisible(false);
+            }
+        });
 
         timeline.play();
     }
@@ -140,6 +142,7 @@ public class Main extends Application {
         });
 
         encodingMethodComboBox.setValue("OCIF6 (Optimized)");
+        onTextFieldTextChanged();
     }
 
     public void copyOCIFResultToClipboard() {
@@ -148,6 +151,7 @@ public class Main extends Application {
 
     //Ебучий драг-дроп
     public void onHintsGridPaneDragEntered(DragEvent event) {
+        hintsGridPane.setVisible(true);
         dragImageGridPane.setVisible(true);
         OCIFStringResutGridPane.setVisible(false);
 
@@ -162,17 +166,15 @@ public class Main extends Application {
 
         Dragboard dragboard = event.getDragboard();
         if (dragboard.hasFiles()) {
-            File file = new File(dragboard.getFiles().get(0).getAbsolutePath());
+            File file = dragboard.getFiles().get(0);
             if (file.getAbsolutePath().toLowerCase().matches("^.+\\.(png)?(jpg)?(jpeg)?$")) {
                 loadImage(file);
             }
         }
-
-        dragImageGridPane.setVisible(false);
     }
 
     public void onHintsGridPaneDragMouseClicked() {
-        if (hintsGridPane.getOpacity() == 1) {
+        if (hintsGridPane.isVisible()) {
             playAnimationEnd();
         }
     }
@@ -186,21 +188,64 @@ public class Main extends Application {
     }
 
     private boolean checkTextField(TextField textField) {
-        if (Pattern.matches("\\d{1,3}", textField.getText())) {
-            if (Integer.parseInt(textField.getText()) <= 255) {
-                return true;
-            }
-        }
+        return Pattern.matches("\\d+", textField.getText());
+    }
 
-        return false;
+    private void checkToCalculateHeight() {
+        if (keepProportionsCheckBox.isSelected()) {
+            double width = Double.parseDouble(widthTextField.getText());
+            double imageProportion = imageView.getImage().getWidth() / imageView.getImage().getHeight();
+            double height = width / imageProportion / 2;
+
+            heightTextField.setText(Integer.toString((int) Math.round(height)));
+        }
+    }
+
+    public void onProportionsCheckBoxClicked() {
+        heightTextField.setDisable(keepProportionsCheckBox.isSelected());
+        checkToCalculateHeight();
     }
 
     public void onTextFieldTextChanged() {
-        boolean state = (checkTextField(widthTextField) && checkTextField(heightTextField)) || encodingMethodComboBox.getValue().contains("OCIF5");
+        boolean textFieldsOK = checkTextField(widthTextField) && checkTextField(heightTextField);
 
-        imageSizeText.setVisible(state);
-        wrongSizesText.setVisible(!state);
-        convertButton.setDisable(!state);
+        if (textFieldsOK) {
+            checkToCalculateHeight();
+        }
+
+        boolean sizesOK = (textFieldsOK && Integer.parseInt(widthTextField.getText()) <= 255 && Integer.parseInt(heightTextField.getText()) <= 255) || encodingMethodComboBox.getValue().contains("OCIF5");
+        boolean allOK = sizesOK && textFieldsOK;
+
+        imageSizeInfoLabel.setTextFill(allOK ? Color.color(1, 1, 1) : Color.color(1,0.2431,0.2549));
+        imageSizeInfoLabel.setText(sizesOK ? "Output size for OpenComputers" : (textFieldsOK ? "Size > 255 is only supported by OCIF5 format" : "What the fuck did you write here?"));
+
+        convertButton.setDisable(!allOK);
+    }
+
+
+    private double xDrag = 0, yDrag = 0;
+    public void onImageDrag(MouseEvent mouseEvent) {
+        double x = mouseEvent.getScreenX(), y = mouseEvent.getScreenY();
+
+        imageView.setLayoutX(imageView.getLayoutX() + (x - xDrag));
+        imageView.setLayoutY(imageView.getLayoutY() + (y - yDrag));
+
+        xDrag = x;
+        yDrag = y;
+    }
+
+    public void onImageClick(MouseEvent mouseEvent) {
+        xDrag = mouseEvent.getScreenX();
+        yDrag = mouseEvent.getScreenY();
+    }
+
+    public void onImageScroll(ScrollEvent scrollEvent) {
+        double speed = 0.05;
+
+        double newWidth = imageView.getFitWidth() * (1 + (scrollEvent.getDeltaY() > 0 ? speed : -speed));
+
+        imageView.setFitWidth(newWidth);
+        imageView.setFitHeight(newWidth * (imageView.getImage().getWidth() / imageView.getImage().getHeight()));
     }
 
     private void loadImage(File file) {
@@ -209,25 +254,6 @@ public class Main extends Application {
 
             javafx.scene.image.Image image = new javafx.scene.image.Image(currentImagePath);
             imageView.setImage(image);
-
-            if (image.getWidth() >= image.getHeight()) {
-                if (image.getWidth() <= imageGridPane.getWidth()) {
-                    imageView.setFitWidth(image.getWidth());
-                }
-                else {
-                    imageView.setFitWidth(imageGridPane.getWidth());
-                }
-            }
-            else {
-                double proportion = image.getWidth() / image.getHeight();
-
-                if (image.getHeight() <= imageGridPane.getHeight()) {
-                    imageView.setFitWidth(image.getHeight() * proportion);
-                }
-                else {
-                    imageView.setFitWidth(imageGridPane.getWidth() * proportion);
-                }
-            }
         }
     }
 
@@ -244,20 +270,19 @@ public class Main extends Application {
 
     public void save() throws IOException {
         if (encodingMethodComboBox.getValue().contains("OCIFString")) {
-            String result = OCIF.convertToString(
+            OCIFStringResultTextField.setText(OCIF.convertToString(
                 currentImagePath,
                 Integer.parseInt(widthTextField.getText()),
                 Integer.parseInt(heightTextField.getText()),
                 brailleCheckBox.isSelected(),
                 ditheringCheckBox.isSelected(),
                 ditheringSlider.getValue()
-            );
+            ));
 
+            hintsGridPane.setVisible(true);
             dragImageGridPane.setVisible(false);
             OCIFStringResutGridPane.setVisible(true);
             playAnimationStart();
-
-            OCIFStringResultTextField.setText(result);
         }
         else {
             FileChooser fileChooser = new FileChooser();
