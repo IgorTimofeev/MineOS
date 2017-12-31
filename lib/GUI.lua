@@ -169,7 +169,7 @@ local function containerObjectIndexOf(object)
 end
 
 local function containerObjectMoveForward(object)
-	local objectIndex = object:indexOf()
+	local objectIndex = containerObjectIndexOf(object)
 	if objectIndex < #object.parent.children then
 		object.parent.children[index], object.parent.children[index + 1] = object.parent.children[index + 1], object.parent.children[index]
 	end
@@ -178,7 +178,7 @@ local function containerObjectMoveForward(object)
 end
 
 local function containerObjectMoveBackward(object)
-	local objectIndex = object:indexOf()
+	local objectIndex = containerObjectIndexOf(object)
 	if objectIndex > 1 then
 		object.parent.children[objectIndex], object.parent.children[objectIndex - 1] = object.parent.children[objectIndex - 1], object.parent.children[objectIndex]
 	end
@@ -187,17 +187,15 @@ local function containerObjectMoveBackward(object)
 end
 
 local function containerObjectMoveToFront(object)
-	local objectIndex = object:indexOf()
+	table.remove(object.parent.children, containerObjectIndexOf(object))
 	table.insert(object.parent.children, object)
-	table.remove(object.parent.children, objectIndex)
 	
 	return object
 end
 
 local function containerObjectMoveToBack(object)
-	local objectIndex = object:indexOf()
+	table.remove(object.parent.children, containerObjectIndexOf(object))
 	table.insert(object.parent.children, 1, object)
-	table.remove(object.parent.children, objectIndex + 1)
 	
 	return object
 end
@@ -222,6 +220,7 @@ local function containerObjectAnimationStart(animation, duration)
 	animation.duration = duration
 	animation.started = true
 	animation.startUptime = computer.uptime()
+
 	computer.pushSignal("GUI", "animationStarted")
 end
 
@@ -292,7 +291,7 @@ local function getRectangleIntersection(R1X1, R1Y1, R1X2, R1Y2, R2X1, R2Y1, R2X2
 end
 
 function GUI.drawContainerContent(container)
-	local R1X1, R1Y1, R1X2, R1Y2 = buffer.getDrawLimit()
+	local R1X1, R1Y1, R1X2, R1Y2, child = buffer.getDrawLimit()
 	local intersectionX1, intersectionY1, intersectionX2, intersectionY2 = getRectangleIntersection(
 		R1X1,
 		R1Y1,
@@ -307,10 +306,12 @@ function GUI.drawContainerContent(container)
 	if intersectionX1 then
 		buffer.setDrawLimit(intersectionX1, intersectionY1, intersectionX2, intersectionY2)
 		
-		for objectIndex = 1, #container.children do
-			if not container.children[objectIndex].hidden then
-				container.children[objectIndex].x, container.children[objectIndex].y = container.x + container.children[objectIndex].localX - 1, container.y + container.children[objectIndex].localY - 1
-				container.children[objectIndex]:draw()
+		for i = 1, #container.children do
+			child = container.children[i]
+			
+			if not child.hidden then
+				child.x, child.y = container.x + child.localX - 1, container.y + child.localY - 1
+				child:draw()
 			end
 		end
 
@@ -321,39 +322,40 @@ function GUI.drawContainerContent(container)
 end
 
 local function containerHandler(isScreenEvent, mainContainer, currentContainer, eventData, intersectionX1, intersectionY1, intersectionX2, intersectionY2)
-	local breakRecursion = false
+	local breakRecursion, child = false
 
 	if not isScreenEvent or intersectionX1 and eventData[3] >= intersectionX1 and eventData[4] >= intersectionY1 and eventData[3] <= intersectionX2 and eventData[4] <= intersectionY2 then
 		for i = #currentContainer.children, 1, -1 do
-			if not currentContainer.children[i].hidden then
-				if currentContainer.children[i].children then
+			child = currentContainer.children[i]
+
+			if not child.hidden then
+				if child.children then
 					local newIntersectionX1, newIntersectionY1, newIntersectionX2, newIntersectionY2 = getRectangleIntersection(
 						intersectionX1,
 						intersectionY1,
 						intersectionX2,
 						intersectionY2,
-
-						currentContainer.children[i].x,
-						currentContainer.children[i].y,
-						currentContainer.children[i].x + currentContainer.children[i].width - 1,
-						currentContainer.children[i].y + currentContainer.children[i].height - 1
+						child.x,
+						child.y,
+						child.x + child.width - 1,
+						child.y + child.height - 1
 					)
 
 					if newIntersectionX1 then
-						if containerHandler(isScreenEvent, mainContainer, currentContainer.children[i], eventData, newIntersectionX1, newIntersectionY1, newIntersectionX2, newIntersectionY2) then
+						if containerHandler(isScreenEvent, mainContainer, child, eventData, newIntersectionX1, newIntersectionY1, newIntersectionX2, newIntersectionY2) then
 							breakRecursion = true
 							break
 						end
 					end
 				else
 					if isScreenEvent then
-						if currentContainer.children[i]:isClicked(eventData[3], eventData[4]) then
-							callMethod(currentContainer.children[i].eventHandler, mainContainer, currentContainer.children[i], eventData)
+						if child:isClicked(eventData[3], eventData[4]) then
+							callMethod(child.eventHandler, mainContainer, child, eventData)
 							breakRecursion = true
 							break
 						end
 					else
-						callMethod(currentContainer.children[i].eventHandler, mainContainer, currentContainer.children[i], eventData)
+						callMethod(child.eventHandler, mainContainer, child, eventData)
 					end
 				end
 			end
@@ -370,8 +372,8 @@ end
 local function containerStartEventHandling(container, eventHandlingDelay)
 	container.eventHandlingDelay = eventHandlingDelay
 
-	local eventData, animationIndex, animationNeedDraw
-	while true do
+	local eventData, animationIndex, animation, animationOnFinishMethods
+	repeat
 		eventData = {event.pull(container.animations and 0 or container.eventHandlingDelay)}
 		
 		containerHandler(
@@ -392,53 +394,50 @@ local function containerStartEventHandling(container, eventHandlingDelay)
 		)
 
 		if container.animations then
-			animationIndex = 1
-			while animationIndex <= #container.animations do
-				if container.animations[animationIndex].started then
-					animationNeedDraw = true
-					container.animations[animationIndex].position = (computer.uptime() - container.animations[animationIndex].startUptime) / container.animations[animationIndex].duration
-					
-					if container.animations[animationIndex].position <= 1 then
-						container.animations[animationIndex].frameHandler(container, container.animations[animationIndex].object, container.animations[animationIndex])
-					else
-						container.animations[animationIndex].position = 1
-						container.animations[animationIndex].started = false
-						container.animations[animationIndex].frameHandler(container, container.animations[animationIndex].object, container.animations[animationIndex])
-						
-						if container.animations[animationIndex].onFinish then
-							animationNeedDraw = false
-							container:draw()
-							buffer.draw()
-							container.animations[animationIndex].onFinish(container, container.animations[animationIndex].object, container.animations[animationIndex])
-						end
+			animationIndex, animationOnFinishMethods = 1, {}
 
-						if container.animations[animationIndex].deleteLater then
-							table.remove(container.animations, animationIndex)
-							animationIndex = animationIndex - 1
+			-- Продрачиваем анимации и вызываем обработчики кадров
+			while animationIndex <= #container.animations do
+				animation = container.animations[animationIndex]
+
+				if animation.deleteLater then
+					table.remove(container.animations, animationIndex)
+				else
+					if animation.started then
+						animationNeedDraw = true
+						animation.position = (computer.uptime() - animation.startUptime) / animation.duration
+						
+						if animation.position < 1 then
+							animation.frameHandler(container, animation)
+						else
+							animation.position = 1
+							animation.started = false
+							animation.frameHandler(container, animation)
+							
+							if animation.onFinish then
+								table.insert(animationOnFinishMethods, animation)
+							end
 						end
 					end
+
+					animationIndex = animationIndex + 1
 				end
-
-				animationIndex = animationIndex + 1
 			end
 
-			if animationNeedDraw then
-				container:draw()
-				buffer.draw()
-			end
+			-- По завершению продрочки отрисовываем изменения на экране
+			container:draw()
+			buffer.draw()
 
-			if #container.animations == 0 then
-				container.animations = nil
+			-- Вызываем поочередно все методы .onFinish
+			for i = 1, #animationOnFinishMethods do
+				animationOnFinishMethods[i].onFinish(container, animationOnFinishMethods[i])
 			end
 		end
+	until container.dataToReturn
 
-		if container.dataToReturn then
-			local dataToReturn = container.dataToReturn
-			container.dataToReturn = nil
-			
-			return table.unpack(dataToReturn)
-		end
-	end
+	local dataToReturn = container.dataToReturn
+	container.dataToReturn = nil
+	return table.unpack(dataToReturn)
 end
 
 local function containerReturnData(container, ...)
@@ -1642,14 +1641,14 @@ local function switchEventHandler(mainContainer, switch, eventData)
 	if eventData[1] == "touch" then
 		switch.state = not switch.state
 		switch:addAnimation(
-			function(mainContainer, switch, animation)
+			function(mainContainer, animation)
 				if switch.state then
 					switch.pipePosition = math.round(1 + animation.position * (switch.width - 2))
 				else	
 					switch.pipePosition = math.round(1 + (1 - animation.position) * (switch.width - 2))
 				end
 			end,
-			function(mainContainer, switch, animation)
+			function(mainContainer, animation)
 				animation:delete()
 				callMethod(switch.onStateChanged, mainContainer, switch, eventData, switch.state)
 			end
@@ -1719,6 +1718,7 @@ local function layoutUpdate(layout)
 	local child, layoutRow, layoutColumn, cell
 	for i = 1, #layout.children do
 		child = layout.children[i]
+		
 		if not child.hidden then
 			layoutRow, layoutColumn = child.layoutRow, child.layoutColumn
 
@@ -1778,6 +1778,7 @@ local function layoutUpdate(layout)
 	-- Размещаем все объекты
 	for i = 1, #layout.children do
 		child = layout.children[i]
+		
 		if not child.hidden then
 			cell = layout.cells[child.layoutRow][child.layoutColumn]
 			if cell.direction == GUI.directions.horizontal then
@@ -2149,10 +2150,10 @@ end
 
 local function filesystemDialogShow(filesystemDialog)
 	filesystemDialog:addAnimation(
-		function(mainContainer, object, animation)
-			object.localY = math.floor(1 + (1.0 - animation.position) * (-object.height))
+		function(mainContainer, animation)
+			filesystemDialog.localY = math.floor(1 + (1.0 - animation.position) * (-filesystemDialog.height))
 		end,
-		function(mainContainer, switch, animation)
+		function(mainContainer, animation)
 			animation:delete()
 		end
 	):start(0.5)
