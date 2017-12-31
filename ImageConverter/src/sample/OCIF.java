@@ -80,7 +80,7 @@ class OCIF {
         }
     }
 
-    private static sample.Image loadImage(String imagePath, int requestedWidth, int requestedHeight, boolean convertAsBraille, boolean enableDithering, double ditheringIntensity) {
+    private static sample.Image loadImage(String imagePath, int requestedWidth, int requestedHeight, boolean convertAsBraille, boolean enableDithering, double opacity) {
         sample.Image image = new sample.Image(new javafx.scene.image.Image(imagePath,
                 requestedWidth * (convertAsBraille ? 2 : 1),
                 requestedHeight * (convertAsBraille ? 4 : 2),
@@ -89,7 +89,7 @@ class OCIF {
         ));
 
         if (enableDithering) {
-            image = sample.Image.dither(image, ditheringIntensity);
+            image = sample.Image.dither(image, opacity);
         }
 
         return image;
@@ -102,8 +102,8 @@ class OCIF {
         result.append(pixel.symbol);
     }
 
-    static String convertToString(String imagePath, int requestedWidth, int requestedHeight, boolean convertAsBraille, boolean enableDithering, double ditheringIntensity) {
-        sample.Image image = loadImage(imagePath, requestedWidth, requestedHeight, convertAsBraille, enableDithering, ditheringIntensity);
+    static String convertToString(String imagePath, int requestedWidth, int requestedHeight, boolean convertAsBraille, boolean enableDithering, double opacity) {
+        sample.Image image = loadImage(imagePath, requestedWidth, requestedHeight, convertAsBraille, enableDithering, opacity);
 
         StringBuilder result = new StringBuilder();
         result.append(String.format("%02X", requestedWidth));
@@ -127,8 +127,8 @@ class OCIF {
         return result.toString();
     }
 
-    static void convert(String imagePath, String convertedImagePath, int requestedWidth, int requestedHeight, int encodingMethod, boolean convertAsBraille, boolean enableDithering, double ditheringIntensity) throws IOException {
-        sample.Image image = loadImage(imagePath, requestedWidth, requestedHeight, convertAsBraille, enableDithering, ditheringIntensity);
+    static void convert(String imagePath, String convertedImagePath, int requestedWidth, int requestedHeight, int encodingMethod, boolean convertAsBraille, boolean enableDithering, double opacity) throws IOException {
+        sample.Image image = loadImage(imagePath, requestedWidth, requestedHeight, convertAsBraille, enableDithering, opacity);
 
         FileOutputStream out = new FileOutputStream(convertedImagePath);
 

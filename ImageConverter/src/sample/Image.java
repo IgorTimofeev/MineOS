@@ -96,6 +96,11 @@ public class Image {
         return new Pixel(minColor, maxColor, 0x00, brailleChar);
     }
 
+    private static final double Xp1Yp0 = 7.0d / 16.0d;
+    private static final double Xp1Yp1 = 1.0d / 16.0d;
+    private static final double Xp0Yp1 = 5.0d / 16.0d;
+    private static final double Xm1Y1 = 3.0d / 16.0d;
+
     static Image dither(Image image, double intensity) {
         for (int y = 0; y < image.height; y++) {
             for (int x = 0; x < image.width; x++) {
@@ -108,13 +113,13 @@ public class Image {
                 if (x < image.width - 1) {
                     image.pixels[y][x + 1] = Color.sum(
                             image.pixels[y][x + 1],
-                            Color.multiply(colorDifference, 7.0d / 16.0d * intensity / 100.0d)
+                            Color.multiply(colorDifference, Xp1Yp0 * intensity)
                     );
 
                     if (y < image.height - 1) {
                         image.pixels[y + 1][x + 1] = Color.sum(
                                 image.pixels[y + 1][x + 1],
-                                Color.multiply(colorDifference, 1.0d / 16.0d * intensity / 100.0d)
+                                Color.multiply(colorDifference, Xp1Yp1 * intensity)
                         );
                     }
                 }
@@ -122,13 +127,13 @@ public class Image {
                 if (y < image.height - 1) {
                     image.pixels[y + 1][x] = Color.sum(
                             image.pixels[y + 1][x],
-                            Color.multiply(colorDifference, 5.0d / 16.0d * intensity / 100.0d)
+                            Color.multiply(colorDifference, Xp0Yp1 * intensity)
                     );
 
                     if (x > 0) {
                         image.pixels[y + 1][x - 1] = Color.sum(
                                 image.pixels[y + 1][x - 1],
-                                Color.multiply(colorDifference, 3.0d / 16.0d * intensity / 100.0d)
+                                Color.multiply(colorDifference, Xm1Y1 * intensity)
                         );
                     }
                 }
@@ -137,6 +142,7 @@ public class Image {
 
         return image;
     }
+
 
     static Pixel getSemiPixel(Image image, int x, int y) {
         Color upper = image.pixels[y][x], lower = new Color(0xFF, 0x0, 0x0, 0x0);

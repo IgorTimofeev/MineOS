@@ -4,6 +4,8 @@ import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
 import javafx.application.Application;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -15,6 +17,8 @@ import javafx.scene.control.TextField;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.*;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
@@ -29,6 +33,8 @@ import java.util.regex.Pattern;
 
 public class Main extends Application {
 
+    public GridPane mainPane;
+
     public CheckBox keepProportionsCheckBox;
     public Button openButton;
     public Button convertButton;
@@ -36,13 +42,10 @@ public class Main extends Application {
     public TextField heightTextField;
     public ImageView imageView;
     public CheckBox brailleCheckBox;
-    public CheckBox ditheringCheckBox;
     public Label imageSizeInfoLabel;
-    public Slider ditheringSlider;
     public ComboBox<String> encodingMethodComboBox;
     public ImageView dragDropFilesImageView;
     public GridPane settingsPane;
-    public GridPane mainPane;
 
     public GridPane hintsGridPane;
     public GridPane dragImageGridPane;
@@ -50,6 +53,12 @@ public class Main extends Application {
     public TextField OCIFStringResultTextField;
     public ImageView OCIFStringResultImageView;
     public GridPane OCIFStringResultGridPane;
+
+    public CheckBox ditheringCheckBox;
+    public GridPane ditheringMainPane;
+    public Label ditheringOpacityLabel;
+    public Pane ditheringBackgroundPane;
+    public Slider ditheringOpacitySlider;
 
     private String currentImagePath = "sample/Resources/Background.png";
 
@@ -184,7 +193,29 @@ public class Main extends Application {
     }
 
     public void onDitheringStateChanged() {
-        ditheringSlider.setDisable(!ditheringCheckBox.isSelected());
+        boolean state = ditheringCheckBox.isSelected();
+
+        Timeline timeline = newTimeLine(
+                150,
+                new KeyValue[] {
+                        new KeyValue(ditheringBackgroundPane.opacityProperty(), state ? 0 : 1),
+                        new KeyValue(ditheringMainPane.prefHeightProperty(), state ? 38 : 120),
+                        new KeyValue(ditheringOpacitySlider.layoutYProperty(), state ? 38 : 65),
+                        new KeyValue(ditheringOpacityLabel.layoutYProperty(), state ? 38 : 45)
+
+                },
+                new KeyValue[] {
+                        new KeyValue(ditheringBackgroundPane.opacityProperty(), state ? 1 : 0),
+                        new KeyValue(ditheringMainPane.prefHeightProperty(), state ? 120 : 38),
+                        new KeyValue(ditheringOpacitySlider.layoutYProperty(), state ? 65 : 38),
+                        new KeyValue(ditheringOpacityLabel.layoutYProperty(), state ? 45 : 38)
+                }
+        );
+
+        timeline.setOnFinished(event -> ditheringOpacitySlider.setDisable(!state));
+
+        timeline.play();
+
     }
 
     private boolean checkTextField(TextField textField) {
@@ -272,12 +303,12 @@ public class Main extends Application {
     public void save() throws IOException {
         if (encodingMethodComboBox.getValue().contains("OCIFString")) {
             OCIFStringResultTextField.setText(OCIF.convertToString(
-                currentImagePath,
-                Integer.parseInt(widthTextField.getText()),
-                Integer.parseInt(heightTextField.getText()),
-                brailleCheckBox.isSelected(),
-                ditheringCheckBox.isSelected(),
-                ditheringSlider.getValue()
+                    currentImagePath,
+                    Integer.parseInt(widthTextField.getText()),
+                    Integer.parseInt(heightTextField.getText()),
+                    brailleCheckBox.isSelected(),
+                    ditheringCheckBox.isSelected(),
+                    ditheringOpacitySlider.getValue() / 100.0d
             ));
 
             hintsGridPane.setVisible(true);
@@ -293,14 +324,14 @@ public class Main extends Application {
 
             if (file != null) {
                 OCIF.convert(
-                    currentImagePath,
-                    file.getPath(),
-                    Integer.parseInt(widthTextField.getText()),
-                    Integer.parseInt(heightTextField.getText()),
-                    encodingMethodComboBox.getValue().contains("OCIF6") ? 6 : 5,
-                    brailleCheckBox.isSelected(),
-                    ditheringCheckBox.isSelected(),
-                    ditheringSlider.getValue()
+                        currentImagePath,
+                        file.getPath(),
+                        Integer.parseInt(widthTextField.getText()),
+                        Integer.parseInt(heightTextField.getText()),
+                        encodingMethodComboBox.getValue().contains("OCIF6") ? 6 : 5,
+                        brailleCheckBox.isSelected(),
+                        ditheringCheckBox.isSelected(),
+                        ditheringOpacitySlider.getValue() / 100.0d
                 );
             }
         }
