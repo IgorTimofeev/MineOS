@@ -67,10 +67,13 @@ local function multiScreenClear(color)
 		if address ~= mainScreenAddress then
 			gpu.bind(address, false)
 			gpu.setResolution(baseResolution.width, baseResolution.height)
-			gpu.setBackground(color)
+			gpu.setDepth(8)
+			gpu.setBackground(0x0)
+			gpu.setForeground(0xffffff)
 			gpu.fill(1, 1, baseResolution.width, baseResolution.height, " ")
 		end
 	end
+
 	gpu.bind(mainScreenAddress, false)
 end
 
@@ -140,6 +143,8 @@ local function configurator()
 		ecs.centerText("x", ySize - 4, "Не нарушайте порядок прокосновений!")
 	end
 
+	ecs.prepareToExit()
+	print("Идет подготовка мониторов...")
 	multiScreenClear(0x0)
 
 	monitors = {}
@@ -149,21 +154,37 @@ local function configurator()
 		drawMonitors()
 		local e = {event.pull("touch")}
 		if e[2] ~= mainScreenAddress then
-			gpu.bind(e[2], false)
-			gpu.setResolution(baseResolution.width, baseResolution.height)
-			local color = color.HSBToHEX(counter / monitorCount * 360, 100, 100)
-			ecs.square(1,1,baseResolution.width, baseResolution.height,color)
-			gpu.setForeground(0xffffff - color)
-			ecs.centerText("xy", 0, "Монитор " .. xC .. "x" .. yC .. " откалиброван!")
+			local exists = false
+			for x = 1, #monitors do
+				for y = 1, #monitors[x] do
+					if monitors[x][y].address == e[2] then
+						ecs.error("Ты уже кликал на этот монитор. Совсем уебок штоле?")
+						exists = true
+					end
+				end
+			end
 
-			gpu.bind(mainScreenAddress, false)
+			if not exists then
+				gpu.bind(e[2], false)
+				gpu.setResolution(baseResolution.width, baseResolution.height)
+				gpu.setDepth(8)
 
-			monitors[xC] = monitors[xC] or {}
-			monitors[xC][yC] = {address = e[2]}
+				local color = color.HSBToHEX(counter / monitorCount * 360, 100, 100)
+				gpu.setBackground(color)
+				gpu.setForeground(0xffffff - color)
+				gpu.fill(1, 1, baseResolution.width, baseResolution.height, " ")
+				
+				ecs.centerText("xy", 0, "Монитор " .. xC .. "x" .. yC .. " откалиброван!")
 
-			xC = xC + 1
-			if xC > width and yC < height then
-				xC, yC = 1, yC + 1
+				gpu.bind(mainScreenAddress, false)
+
+				monitors[xC] = monitors[xC] or {}
+				monitors[xC][yC] = {address = e[2]}
+
+				xC = xC + 1
+				if xC > width and yC < height then
+					xC, yC = 1, yC + 1
+				end
 			end
 		else
 			ecs.error("Ну что ты за мудак криворукий! Сказано же, каких мониторов касаться. Не трогай этот монитор.")
