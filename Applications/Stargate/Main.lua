@@ -163,6 +163,7 @@ mainContainer:addChild(newThing(mainContainer.SGImage.localX + mainContainer.SGI
 mainContainer:addChild(GUI.label(x, y, width, 1, 0xEEEEEE, "Stargate " .. stargate.localAddress())):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); y = y + 1
 mainContainer.connectedToLabel = mainContainer:addChild(GUI.label(x, y, width, 1, 0x555555, "(Not connected)")):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); y = y + 2
 mainContainer.connectionButton = mainContainer:addChild(GUI.framedButton(x, y, width, 3, 0xEEEEEE, 0xEEEEEE, 0xBBBBBB, 0xBBBBBB, "Connect")); y = y + 3
+-- mainContainer.connectionButton.animated = false
 mainContainer.connectionButton.onTouch = function()
 	if stargate.stargateState() == "Idle" then
 		local container = MineOSInterface.addUniversalContainer(mainContainer, "Connect")
@@ -179,8 +180,10 @@ mainContainer.connectionButton.onTouch = function()
 			end
 		end
 
-		container.panel.eventHandler = function()
-			input.onInputFinished()
+		container.panel.eventHandler = function(mainContainer, object, eventData)
+			if eventData[1] == "touch" then
+				input.onInputFinished()
+			end
 		end
 
 		mainContainer:draw()
@@ -213,8 +216,10 @@ mainContainer.messageContactButton.onTouch = function()
 		end
 	end
 
-	container.panel.eventHandler = function()
-		input.onInputFinished()
+	container.panel.eventHandler = function(mainContainer, object, eventData)
+		if eventData[1] == "touch" then
+			input.onInputFinished()
+		end
 	end
 
 	mainContainer:draw()

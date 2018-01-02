@@ -138,8 +138,8 @@ function palette.container(x, y, startColor)
 	end
 	
 	window.colorPanel = window:addChild(GUI.panel(58, 2, 12, 3, 0x0))
-	window.OKButton = window:addChild(GUI.roundedButton(58, 6, 12, 1, 0x444444, 0xFFFFFF, 0x88FF88, 0xFFFFFF, "OK"))
-	window.cancelButton = window:addChild(GUI.roundedButton(58, 8, 12, 1, 0xFFFFFF, 0x444444, 0x88FF88, 0xFFFFFF, "Cancel"))
+	window.OKButton = window:addChild(GUI.roundedButton(58, 6, 12, 1, 0x444444, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, "OK"))
+	window.cancelButton = window:addChild(GUI.roundedButton(58, 8, 12, 1, 0xFFFFFF, 0x444444, 0x2D2D2D, 0xFFFFFF, "Cancel"))
 
 	local function onAnyInputFinished()
 		refreshBigRainbow(window)

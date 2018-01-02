@@ -5,6 +5,7 @@ local keyboard = require("keyboard")
 local fs = require("filesystem")
 local unicode = require("unicode")
 local event = require("event")
+local color = require("color")
 local image = require("image")
 local buffer = require("doubleBuffering")
 
@@ -234,9 +235,7 @@ local function containerObjectAnimationDelete(animation)
 end
 
 local function containerObjectAddAnimation(object, frameHandler, onFinish)
-	local firstParent = object:getFirstParent()
-	firstParent.animations = firstParent.animations or {}
-	table.insert(firstParent.animations, {
+	local animation = {
 		object = object,
 		position = 0,
 		start = containerObjectAnimationStart,
@@ -244,9 +243,13 @@ local function containerObjectAddAnimation(object, frameHandler, onFinish)
 		delete = containerObjectAnimationDelete,
 		frameHandler = frameHandler,
 		onFinish = onFinish,
-	})
+	}
 
-	return firstParent.animations[#firstParent.animations]
+	local firstParent = object:getFirstParent()
+	firstParent.animations = firstParent.animations or {}
+	table.insert(firstParent.animations, animation)
+
+	return animation
 end
 
 function GUI.addChildToContainer(container, object, atIndex)
@@ -402,6 +405,10 @@ local function containerStartEventHandling(container, eventHandlingDelay)
 
 				if animation.deleteLater then
 					table.remove(container.animations, animationIndex)
+					if #container.animations == 0 then
+						container.animations = nil
+						break
+					end
 				else
 					if animation.started then
 						animationNeedDraw = true
@@ -468,152 +475,199 @@ end
 
 ----------------------------------------- Buttons -----------------------------------------
 
-local function buttonDraw(object)
-	local xText, yText = GUI.getAlignmentCoordinates(object, {width = unicode.len(object.text), height = 1})
-
-	local buttonColor, textColor = object.colors.default.background, object.colors.default.text
-	if object.disabled then
-		buttonColor, textColor = object.colors.disabled.background, object.colors.disabled.text
-	else
-		if object.pressed then
-			buttonColor, textColor = object.colors.pressed.background, object.colors.pressed.text
-		end
-	end
-
-	if buttonColor then
-		if object.buttonType == 1 then
-			buffer.square(object.x, object.y, object.width, object.height, buttonColor, textColor, " ")
-		elseif object.buttonType == 2 then
-			local x2, y2 = object.x + object.width - 1, object.y + object.height - 1
-			
-			if object.height > 1 then
-				buffer.text(object.x + 1, object.y, buttonColor, string.rep("▄", object.width - 2))
-				buffer.text(object.x, object.y, buttonColor, "⣠")
-				buffer.text(x2, object.y, buttonColor, "⣄")
-				
-				buffer.square(object.x, object.y + 1, object.width, object.height - 2, buttonColor, textColor, " ")
-				
-				buffer.text(object.x + 1, y2, buttonColor, string.rep("▀", object.width - 2))
-				buffer.text(object.x, y2, buttonColor, "⠙")
-				buffer.text(x2, y2, buttonColor, "⠋")
+local function buttonPlayAnimation(button, onFinish)
+	button.animationStarted = true
+	button:addAnimation(
+		function(mainContainer, animation)
+			if button.pressed then
+				if button.colors.default.background and button.colors.pressed.background then
+					button.animationCurrentBackground = color.transition(button.colors.pressed.background, button.colors.default.background, animation.position)
+				end
+				button.animationCurrentText = color.transition(button.colors.pressed.text, button.colors.default.text, animation.position)
 			else
-				buffer.square(object.x, object.y, object.width, object.height, buttonColor, textColor, " ")
-				GUI.roundedCorners(object.x, object.y, object.width, object.height, buttonColor)
+				if button.colors.default.background and button.colors.pressed.background then
+					button.animationCurrentBackground = color.transition(button.colors.default.background, button.colors.pressed.background, animation.position)
+				end
+				button.animationCurrentText = color.transition(button.colors.default.text, button.colors.pressed.text, animation.position)
 			end
-		else
-			buffer.frame(object.x, object.y, object.width, object.height, buttonColor)
+		end,
+		function(mainContainer, animation)
+			button.animationStarted = false
+			button.pressed = not button.pressed
+			onFinish(mainContainer, animation)
 		end
-	end
-
-	buffer.text(xText, yText, textColor, object.text)
-
-	return object
+	):start(button.animationDuration)
 end
 
-local function buttonPress(object)
-	object.pressed = true
-	buttonDraw(object)
-end
-
-local function buttonRelease(object)
-	object.pressed = nil
-	buttonDraw(object)
-end
-
-local function buttonPressAndRelease(object, pressTime)
-	buttonPress(object)
-	buffer.draw()
-	os.sleep(pressTime or 0.2)
-	buttonRelease(object)
-	buffer.draw()
-end
-
-local function buttonEventHandler(mainContainer, object, eventData)
+local function buttonEventHandler(mainContainer, button, eventData)
 	if eventData[1] == "touch" then
-		if object.switchMode then
-			object.pressed = not object.pressed
-			mainContainer:draw()
-			buffer.draw()
-			callMethod(object.onTouch, mainContainer, object, eventData)
+		if button.animated then
+			buttonPlayAnimation(button, function(mainContainer, animation)
+				if button.onTouch then
+					button.onTouch(mainContainer, button, eventData)
+				end
+
+				animation:delete()
+
+				if not button.switchMode then
+					buttonPlayAnimation(button, function(mainContainer, animation)
+						animation:delete()
+					end)
+				end
+			end)
 		else
-			object.pressed = true
-			mainContainer:draw()
-			buffer.draw()
-			os.sleep(0.2)
-			object.pressed = false
-			mainContainer:draw()
-			buffer.draw()
-			callMethod(object.onTouch, mainContainer, object, eventData)
+			button.pressed = not button.pressed
+			
+			if button.switchMode then
+				mainContainer:draw()
+				buffer.draw()
+			else
+				mainContainer:draw()
+				buffer.draw()
+				button.pressed = not button.pressed
+				
+				os.sleep(0.2)
+				
+				mainContainer:draw()
+				buffer.draw()
+			end
+
+			if button.onTouch then
+				button.onTouch(mainContainer, button, eventData)
+			end
 		end
 	end
 end
 
-local function buttonCreate(buttonType, x, y, width, height, buttonColor, textColor, buttonPressedColor, textPressedColor, text, disabledState)
-	local object = GUI.object(x, y, width, height)
+local function buttonGetColors(button)
+	if button.disabled then
+		return button.colors.disabled.background, button.colors.disabled.text
+	else
+		if button.animated and button.animationStarted then
+			return button.animationCurrentBackground, button.animationCurrentText
+		else
+			if button.pressed then
+				return button.colors.pressed.background, button.colors.pressed.text
+			else
+				return button.colors.default.background, button.colors.default.text
+			end
+		end
+	end
+end
 
-	object.colors = {
+local function buttonDrawText(button, textColor)
+	buffer.text(math.floor(button.x + button.width / 2 - unicode.len(button.text) / 2), math.floor(button.y + button.height / 2), textColor, button.text)
+end
+
+local function buttonDraw(button)
+	local backgroundColor, textColor = buttonGetColors(button)
+	if backgroundColor then
+		buffer.square(button.x, button.y, button.width, button.height, backgroundColor, textColor, " ")
+	end
+
+	buttonDrawText(button, textColor)
+end
+
+local function framedButtonDraw(button)
+	local backgroundColor, textColor = buttonGetColors(button)
+	if backgroundColor then
+		buffer.frame(button.x, button.y, button.width, button.height, backgroundColor)
+	end
+
+	buttonDrawText(button, textColor)
+end
+
+local function roundedButtonDraw(button)
+	local backgroundColor, textColor = buttonGetColors(button)
+
+	if backgroundColor then
+		local x2, y2 = button.x + button.width - 1, button.y + button.height - 1
+		if button.height > 1 then
+			buffer.text(button.x + 1, button.y, backgroundColor, string.rep("▄", button.width - 2))
+			buffer.text(button.x, button.y, backgroundColor, "⣠")
+			buffer.text(x2, button.y, backgroundColor, "⣄")
+			
+			buffer.square(button.x, button.y + 1, button.width, button.height - 2, backgroundColor, textColor, " ")
+			
+			buffer.text(button.x + 1, y2, backgroundColor, string.rep("▀", button.width - 2))
+			buffer.text(button.x, y2, backgroundColor, "⠙")
+			buffer.text(x2, y2, backgroundColor, "⠋")
+		else
+			buffer.square(button.x, button.y, button.width, button.height, backgroundColor, textColor, " ")
+			GUI.roundedCorners(button.x, button.y, button.width, button.height, backgroundColor)
+		end
+	end
+
+	buttonDrawText(button, textColor)
+end
+
+local function buttonCreate(x, y, width, height, backgroundColor, textColor, backgroundPressedColor, textPressedColor, text)
+	local button = GUI.object(x, y, width, height)
+
+	button.colors = {
 		default = {
-			background = buttonColor,
+			background = backgroundColor,
 			text = textColor
 		},
 		pressed = {
-			background = buttonPressedColor,
+			background = backgroundPressedColor,
 			text = textPressedColor
 		},
 		disabled = {
 			background = GUI.colors.disabled.background,
-			text = GUI.colors.disabled.text,
+			text = GUI.colors.disabled.text
 		}
 	}
+	button.animationCurrentBackground = backgroundColor
+	button.animationCurrentText = textColor
 
-	object.eventHandler = buttonEventHandler
-	object.buttonType = buttonType
-	object.disabled = disabledState
-	object.text = text
-	object.press = buttonPress
-	object.release = buttonRelease
-	object.pressAndRelease = buttonPressAndRelease
-	object.draw = buttonDraw
-	object.setAlignment = GUI.setAlignment
-	object:setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.center)
+	button.text = text
+	button.animationDuration = 0.2
+	button.animated = true
+	button.pressed = false
+	
+	button.eventHandler = buttonEventHandler
 
+	return button
+end
 
-	return object
+local function adaptiveButtonCreate(x, y, xOffset, yOffset, backgroundColor, textColor, backgroundPressedColor, textPressedColor, text)
+	return buttonCreate(x, y, unicode.len(text) + xOffset * 2, yOffset * 2 + 1, backgroundColor, textColor, backgroundPressedColor, textPressedColor, text)
 end
 
 function GUI.button(...)
-	return buttonCreate(1, ...)
+	local button = buttonCreate(...)
+	button.draw = buttonDraw
+	return button
 end
 
-function GUI.adaptiveButton(x, y, xOffset, yOffset, buttonColor, textColor, buttonPressedColor, textPressedColor, text, ...) 
-	return buttonCreate(1, x, y, unicode.len(text) + xOffset * 2, yOffset * 2 + 1, buttonColor, textColor, buttonPressedColor, textPressedColor, text, ...)
-end
-
-function GUI.roundedButton(...)
-	return buttonCreate(2, ...)
-end
-
-function GUI.adaptiveRoundedButton(x, y, xOffset, yOffset, buttonColor, textColor, buttonPressedColor, textPressedColor, text, ...)
-	return buttonCreate(2, x, y, unicode.len(text) + xOffset * 2, yOffset * 2 + 1, buttonColor, textColor, buttonPressedColor, textPressedColor, text, ...)
+function GUI.adaptiveButton(...)
+	local button = adaptiveButtonCreate(...)
+	button.draw = buttonDraw
+	return button
 end
 
 function GUI.framedButton(...)
-	return buttonCreate(3, ...)
+	local button = buttonCreate(...)
+	button.draw = framedButtonDraw
+	return button
 end
 
-function GUI.adaptiveFramedButton(x, y, xOffset, yOffset, buttonColor, textColor, buttonPressedColor, textPressedColor, text, ...)
-	return buttonCreate(3, x, y, unicode.len(text) + xOffset * 2, yOffset * 2 + 1, buttonColor, textColor, buttonPressedColor, textPressedColor, text, ...)
+function GUI.adaptiveFramedButton(...)
+	local button = adaptiveButtonCreate(...)
+	button.draw = framedButtonDraw
+	return button
 end
 
-function GUI.adaptiveTexturedButton(x, y, defaultTexture, pressedTexture)
-	local button = buttonCreate(4, x, y, defaultTexture[1], defaultTexture[2], 0x0, 0x0, 0x0, 0x0, "")
-	
-	button.defaultTexture = defaultTexture
-	button.pressedTexture = pressedTexture
-	button.draw = function(button)
-		buffer.image(button.x, button.y, button.pressed and button.pressedTexture or button.defaultTexture)
-	end
+function GUI.roundedButton(...)
+	local button = buttonCreate(...)
+	button.draw = roundedButtonDraw
+	return button
+end
 
+function GUI.adaptiveRoundedButton(...)
+	local button = adaptiveButtonCreate(...)
+	button.draw = roundedButtonDraw
 	return button
 end
 
@@ -707,6 +761,7 @@ end
 local function menuAddItem(menu, text, textColor)
 	local x = 2; for i = 1, #menu.children do x = x + unicode.len(menu.children[i].text) + 2; end
 	local item = menu:addChild(GUI.adaptiveButton(x, 1, 1, 0, nil, textColor or menu.colors.default.text, menu.colors.pressed.background, menu.colors.pressed.text, text))
+	item.animated = false
 	item.eventHandler = menuItemEventHandler
 
 	return item
@@ -3429,6 +3484,7 @@ end
 
 local function tabBarAddItem(tabBar, text)
 	local item = tabBar:addChild(GUI.button(1, 1, unicode.len(text) + tabBar.horizontalTabOffset * 2, tabBar.height, tabBar.colors.default.background, tabBar.colors.default.text, tabBar.colors.selected.background, tabBar.colors.selected.text, text))
+	item.animated = false
 	item.switchMode = true
 	item.eventHandler = tabBarTabEventHandler
 

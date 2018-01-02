@@ -76,13 +76,13 @@ end
 -----------------------------------------------------------------------------------------------------------------------
 
 local function blend(firstColor, secondColor, secondColorTransparency)
-	local invertedTransparency, firstColorR, firstColorG, firstColorB = 1 - secondColorTransparency, HEXToRGB(firstColor)
-	local secondColorR, secondColorG, secondColorB = HEXToRGB(secondColor)
+	local invertedTransparency, r1, g1, b1 = 1 - secondColorTransparency, HEXToRGB(firstColor)
+	local r2, g2, b2 = HEXToRGB(secondColor)
 
 	return RGBToHEX(
-		secondColorR * invertedTransparency + firstColorR * secondColorTransparency,
-		secondColorG * invertedTransparency + firstColorG * secondColorTransparency,
-		secondColorB * invertedTransparency + firstColorB * secondColorTransparency
+		r2 * invertedTransparency + r1 * secondColorTransparency,
+		g2 * invertedTransparency + g1 * secondColorTransparency,
+		b2 * invertedTransparency + b1 * secondColorTransparency
 	)
 end
 
@@ -95,21 +95,15 @@ end
 
 -----------------------------------------------------------------------------------------------------------------------
 
-local function difference(r1, g1, b1, r2, g2, b2)
-	return r2 - r1, g2 - g1, b2 - b1
-end
+local function transition(color1, color2, position)
+	local r1, g1, b1 = HEXToRGB(color1)
+	local r2, g2, b2 = HEXToRGB(color2)
 
-local function sum(r1, g1, b1, r2, g2, b2)
-	return r2 + r1, g2 + g1, b2 + b1
-end
-
-local function multiply(r, g, b, multiplyer)
-	r, g, b = r * multiplyer, g * multiplyer, b * multiplyer
-	if r > 255 then r = 255 end
-	if g > 255 then g = 255 end
-	if b > 255 then b = 255 end
-
-	return r, g, b
+	return RGBToHEX(
+		r1 + (r2 - r1) * position,
+		g1 + (g2 - g1) * position,
+		b1 + (b2 - b1) * position
+	)
 end
 
 local function average(colors)
@@ -170,10 +164,9 @@ return {
 	HSBToHEX = HSBToHEX,
 	blend = blend,
 	blendRGBA = blendRGBA,
-	difference = difference,
-	sum = sum,
-	multiply = multiply,
-	average = average,
+
+	transition = transition,
+
 	to8Bit = to8Bit,
 	to24Bit = to24Bit,
 	optimize = optimize,
