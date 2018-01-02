@@ -562,7 +562,7 @@ end
 local function buttonDraw(button)
 	local backgroundColor, textColor = buttonGetColors(button)
 	if backgroundColor then
-		buffer.square(button.x, button.y, button.width, button.height, backgroundColor, textColor, " ")
+		buffer.square(button.x, button.y, button.width, button.height, backgroundColor, textColor, " ", button.colors.transparency)
 	end
 
 	buttonDrawText(button, textColor)
@@ -1397,7 +1397,7 @@ function GUI.dropDownMenu(x, y, width, maximumHeight, itemHeight, backgroundColo
 	menu.itemsContainer = menu:addChild(GUI.container(1, 1, menu.width, menu.height))
 	menu.prevButton = menu:addChild(GUI.button(1, 1, menu.width, 1, backgroundColor, textColor, backgroundPressedColor, textPressedColor, "▲"))
 	menu.nextButton = menu:addChild(GUI.button(1, 1, menu.width, 1, backgroundColor, textColor, backgroundPressedColor, textPressedColor, "▼"))
-	menu.prevButton.colors.default.transparency, menu.nextButton.colors.default.transparency = backgroundTransparency, backgroundTransparency
+	menu.prevButton.colors.transparency, menu.nextButton.colors.transparency = backgroundTransparency, backgroundTransparency
 	menu.prevButton.onTouch = function()
 		dropDownMenuScrollDown(menu)
 	end
