@@ -586,15 +586,36 @@ local GUI = require("GUI")
 local mainContainer = GUI.fullScreenContainer()
 mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x2D2D2D))
 
-mainContainer:addChild(GUI.button(2, 2, 30, 3, 0xFFFFFF, 0x555555, 0xAAAAAA, 0x2D2D2D, "Regular button")).onTouch = function()
+-- Добавляем обычную кнопку
+mainContainer:addChild(GUI.button(2, 2, 30, 3, 0xFFFFFF, 0x555555, 0x880000, 0xFFFFFF, "Regular button")).onTouch = function()
 	GUI.error("Regular button was pressed")
 end
 
-mainContainer:addChild(GUI.roundedButton(2, 6, 30, 3, 0xFFFFFF, 0x555555, 0xAAAAAA, 0x2D2D2D, "Rounded button")).onTouch = function()
+-- Добавляем кнопку с состоянием disabled
+local disabledButton = mainContainer:addChild(GUI.button(2, 6, 30, 3, 0xFFFFFF, 0x555555, 0x880000, 0xFFFFFF, "Disabled button"))
+disabledButton.disabled = true
+
+-- Добавляем кнопку в режиме переключателя
+local switchButton = mainContainer:addChild(GUI.button(2, 10, 30, 3, 0xFFFFFF, 0x555555, 0x880000, 0xFFFFFF, "Switch button"))
+switchButton.switchMode = true
+switchButton.onTouch = function()
+	GUI.error("Switch button was pressed")
+end
+
+-- Добавляем кнопку с отключенной анимацией цветового перехода
+local notAnimatedButton = mainContainer:addChild(GUI.button(2, 14, 30, 3, 0xFFFFFF, 0x555555, 0x880000, 0xFFFFFF, "Not animated button"))
+notAnimatedButton.animated = false
+notAnimatedButton.onTouch = function()
+	GUI.error("Not animated button was pressed")
+end
+
+-- Добавляем скругленную кнопку
+mainContainer:addChild(GUI.roundedButton(2, 18, 30, 3, 0xFFFFFF, 0x555555, 0x880000, 0xFFFFFF, "Rounded button")).onTouch = function()
 	GUI.error("Rounded button was pressed")
 end
 
-mainContainer:addChild(GUI.framedButton(2, 10, 30, 3, 0xFFFFFF, 0xFFFFFF, 0xAAAAAA, 0xAAAAAA, "Framed button")).onTouch = function()
+-- Добавляем рамочную кнопку
+mainContainer:addChild(GUI.framedButton(2, 22, 30, 3, 0xFFFFFF, 0xFFFFFF, 0x880000, 0x880000, "Framed button")).onTouch = function()
 	GUI.error("Framed button was pressed")
 end
 
@@ -607,7 +628,7 @@ mainContainer:startEventHandling()
 
 Результат:
 
-![Imgur](https://i.imgur.com/9zZvR6g.gif)
+![Imgur](https://i.imgur.com/Q2sX0P5.gif)
 
 GUI.**actionButtons**( x, y, fat ): *table* actionButtons
 ------------------------------------------------------------------------
