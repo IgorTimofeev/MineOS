@@ -1063,7 +1063,7 @@ while true do
 				end
 			end
 			if object then
-				object:press()
+				object:press({draw = function() end}, object, {})
 				buffer.draw()
 				local action
 				if object.text == localization.file then
