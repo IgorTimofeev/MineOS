@@ -10,7 +10,6 @@ local buffer = require("doubleBuffering")
 local context = require("context")
 local bigLetters = require("bigLetters")
 local ecs = require("ECSAPI")
-local palette = require("palette")
 
 local printer
 local gpu = component.gpu
@@ -82,7 +81,7 @@ local shapeColors = {}
 local HUE = 0
 local HUEAdder = math.floor(360 / maxShapeCount)
 for i = 1, maxShapeCount do
-	shapeColors[i] = color.HSBToHEX(HUE, 100, 100)
+	shapeColors[i] = color.HSBToHEX(HUE, 1, 1)
 	HUE = HUE + HUEAdder
 end
 HUE, HUEAdder = nil, nil
@@ -375,7 +374,7 @@ local function drawDrawingZone()
 			if currentLayer >= selectionStartPoint.z and currentLayer <= selectionEndPoint.z then
 				if shape ~= currentShape then
 					local h, s, b = color.HEXToHSB(shapeColors[shape])
-					s = 30
+					s = 0.3
 					-- ecs.error("РИСУЮ")
 					drawPixel(selectionStartPoint.x, 18 - selectionStartPoint.y - yDifference, selectionEndPoint.x - selectionStartPoint.x + 1, yDifference, color.HSBToHEX(h, s, b))
 					-- drawPixel(selectionStartPoint.x, selectionStartPoint.z, selectionEndPoint.x - selectionStartPoint.x + 1, selectionEndPoint.z - selectionStartPoint.z + 1, shapeColors[shape], trasparency)

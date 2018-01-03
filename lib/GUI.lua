@@ -1,5 +1,6 @@
 
 require("advancedLua")
+local component = require("component")
 local computer = require("computer")
 local keyboard = require("keyboard")
 local fs = require("filesystem")
@@ -71,6 +72,8 @@ GUI.colors = {
 		}
 	},
 }
+
+GUI.paletteConfigPath = "/lib/.palette.cfg"
 
 ----------------------------------------- Interface objects -----------------------------------------
 
@@ -499,43 +502,45 @@ local function buttonPlayAnimation(button, onFinish)
 	):start(button.animationDuration)
 end
 
-local function buttonEventHandler(mainContainer, button, eventData)
-	if eventData[1] == "touch" then
-		if button.animated then
-			buttonPlayAnimation(button, function(mainContainer, animation)
-				if button.onTouch then
-					button.onTouch(mainContainer, button, eventData)
-				end
-
-				animation:delete()
-
-				if not button.switchMode then
-					buttonPlayAnimation(button, function(mainContainer, animation)
-						animation:delete()
-					end)
-				end
-			end)
-		else
-			button.pressed = not button.pressed
-			
-			if button.switchMode then
-				mainContainer:draw()
-				buffer.draw()
-			else
-				mainContainer:draw()
-				buffer.draw()
-				button.pressed = not button.pressed
-				
-				os.sleep(0.2)
-				
-				mainContainer:draw()
-				buffer.draw()
-			end
-
+local function buttonPress(button, mainContainer)
+	if button.animated then
+		buttonPlayAnimation(button, function(mainContainer, animation)
 			if button.onTouch then
 				button.onTouch(mainContainer, button, eventData)
 			end
+
+			animation:delete()
+
+			if not button.switchMode then
+				buttonPlayAnimation(button, function(mainContainer, animation)
+					animation:delete()
+				end)
+			end
+		end)
+	else
+		button.pressed = not button.pressed
+
+		mainContainer:draw()
+		buffer.draw()
+
+		if not button.switchMode then
+			button.pressed = not button.pressed
+			
+			os.sleep(0.2)
+			
+			mainContainer:draw()
+			buffer.draw()
 		end
+
+		if button.onTouch then
+			button.onTouch(mainContainer, button, eventData)
+		end
+	end
+end
+
+local function buttonEventHandler(mainContainer, button, eventData)
+	if eventData[1] == "touch" then
+		button:press()
 	end
 end
 
@@ -626,6 +631,7 @@ local function buttonCreate(x, y, width, height, backgroundColor, textColor, bac
 	button.animated = true
 	button.pressed = false
 	
+	button.press = buttonPress
 	button.eventHandler = buttonEventHandler
 
 	return button
@@ -885,8 +891,7 @@ function GUI.error(...)
 
 	mainContainer.eventHandler = function(mainContainer, object, eventData)
 		if eventData[1] == "key_down" and eventData[4] == 28 then
-			button:pressAndRelease()
-			button.onTouch()
+			button:press(mainContainer)
 		end
 	end
 
@@ -1059,7 +1064,7 @@ local function colorSelectorEventHandler(mainContainer, object, eventData)
 		mainContainer:draw()
 		buffer.draw()
 		
-		object.color = require("palette").show(math.floor(mainContainer.width / 2 - 35), math.floor(mainContainer.height / 2 - 12), object.color) or object.color
+		object.color = GUI.palette(math.floor(mainContainer.width / 2 - 35), math.floor(mainContainer.height / 2 - 12), object.color or object.color):show()
 		
 		object.pressed = false
 		mainContainer:draw()
@@ -3523,6 +3528,260 @@ function GUI.tabBar(x, y, width, height, horizontalTabOffset, spaceBetweenTabs, 
 	tabBar.draw = tabBarDraw
 
 	return tabBar
+end
+
+--------------------------------------------------------------------------------------------------------------
+
+local function paletteShow(palette)
+	local mainContainer = GUI.fullScreenContainer()
+	mainContainer:addChild(palette)
+
+	palette.OKButton.onTouch = function(mainContainer, object, eventData)
+		mainContainer:stopEventHandling()
+	end
+	
+	palette.cancelButton.onTouch = function(mainContainer, object, eventData)
+		mainContainer:stopEventHandling()
+	end
+
+	mainContainer:draw()
+	buffer.draw()
+	mainContainer:startEventHandling()	
+
+	return palette.color.hex
+end
+
+function GUI.palette(x, y, startColor)
+	local palette = GUI.container(x, y, 71, 25)
+	
+	palette.color = {hsb = {}, rgb = {}}
+	palette:addChild(GUI.panel(1, 1, palette.width, palette.height, 0xEEEEEE))
+	
+	local bigImage = palette:addChild(GUI.image(1, 1, image.create(50, 25)))
+	local bigCrest = palette:addChild(GUI.object(1, 1, 5, 3))
+
+	local function paletteDrawBigCrestPixel(x, y, symbol)
+		local background, foreground = buffer.get(x, y)
+		local r, g, b = color.HEXToRGB(background)
+		buffer.set(x, y, background, (r + g + b) / 3 >= 127 and 0x0 or 0xFFFFFF, symbol)
+	end
+
+	bigCrest.draw = function(object)
+		paletteDrawBigCrestPixel(object.x, object.y + 1, "─")
+		paletteDrawBigCrestPixel(object.x + 1, object.y + 1, "─")
+		paletteDrawBigCrestPixel(object.x + 3, object.y + 1, "─")
+		paletteDrawBigCrestPixel(object.x + 4, object.y + 1, "─")
+		paletteDrawBigCrestPixel(object.x + 2, object.y, "│")
+		paletteDrawBigCrestPixel(object.x + 2, object.y + 2, "│")
+	end
+	
+	local miniImage = palette:addChild(GUI.image(53, 1, image.create(3, 25)))
+	
+	local miniCrest = palette:addChild(GUI.object(52, 1, 5, 1))
+	miniCrest.draw = function(object)
+		buffer.text(object.x, object.y, 0x0, ">")
+		buffer.text(object.x + 4, object.y, 0x0, "<")
+	end
+
+	local colorPanel = palette:addChild(GUI.panel(58, 2, 12, 3, 0x0))
+	palette.OKButton = palette:addChild(GUI.roundedButton(58, 6, 12, 1, 0x444444, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, "OK"))
+	palette.cancelButton = palette:addChild(GUI.roundedButton(58, 8, 12, 1, 0xFFFFFF, 0x666666, 0x2D2D2D, 0xFFFFFF, "Cancel"))
+
+	local function paletteRefreshBigImage()
+		local saturationStep, brightnessStep, saturation, brightness = 1 / bigImage.width, 1 / bigImage.height, 0, 1
+		for j = 1, bigImage.height do
+			for i = 1, bigImage.width do
+				image.set(bigImage.image, i, j, color.optimize(color.HSBToHEX(palette.color.hsb.hue, saturation, brightness)), 0x0, 0x0, " ")
+				saturation = saturation + saturationStep
+			end
+			saturation, brightness = 0, brightness - brightnessStep
+		end
+	end
+
+	local function paletteRefreshMiniImage()
+		local hueStep, hue = 360 / miniImage.height, 0
+		for j = 1, miniImage.height do
+			for i = 1, miniImage.width do
+				image.set(miniImage.image, i, j, color.optimize(color.HSBToHEX(hue, 1, 1)), 0x0, 0, " ")
+			end
+			hue = hue + hueStep
+		end
+	end
+
+	local function paletteUpdateCrestsCoordinates()
+		bigCrest.localX = math.floor((bigImage.width - 1) * palette.color.hsb.saturation) - 1
+		bigCrest.localY = math.floor((bigImage.height - 1) - (bigImage.height - 1) * palette.color.hsb.brightness)
+		miniCrest.localY = math.floor(palette.color.hsb.hue / 360 * miniImage.height)
+	end
+
+	local inputs
+
+	local function paletteUpdateInputs()
+		inputs[1].text = tostring(palette.color.rgb.red)
+		inputs[2].text = tostring(palette.color.rgb.green)
+		inputs[3].text = tostring(palette.color.rgb.blue)
+		inputs[4].text = tostring(math.floor(palette.color.hsb.hue))
+		inputs[5].text = tostring(math.floor(palette.color.hsb.saturation * 100))
+		inputs[6].text = tostring(math.floor(palette.color.hsb.brightness * 100))
+		inputs[7].text = string.format("%06X", palette.color.hex)
+		colorPanel.colors.background = palette.color.hex
+	end
+
+	local function paletteSwitchColorFromHex(hex)
+		palette.color.hex = hex
+		palette.color.rgb.red, palette.color.rgb.green, palette.color.rgb.blue = color.HEXToRGB(hex)
+		palette.color.hsb.hue, palette.color.hsb.saturation, palette.color.hsb.brightness = color.RGBToHSB(palette.color.rgb.red, palette.color.rgb.green, palette.color.rgb.blue)
+		paletteUpdateInputs()
+	end
+
+	local function paletteSwitchColorFromHsb(hue, saturation, brightness)
+		palette.color.hsb.hue, palette.color.hsb.saturation, palette.color.hsb.brightness = hue, saturation, brightness
+		palette.color.rgb.red, palette.color.rgb.green, palette.color.rgb.blue = color.HSBToRGB(hue, saturation, brightness)
+		palette.color.hex = color.RGBToHEX(palette.color.rgb.red, palette.color.rgb.green, palette.color.rgb.blue)
+		paletteUpdateInputs()
+	end
+
+	local function paletteSwitchColorFromRgb(red, green, blue)
+		palette.color.rgb.red, palette.color.rgb.green, palette.color.rgb.blue = red, green, blue
+		palette.color.hsb.hue, palette.color.hsb.saturation, palette.color.hsb.brightness = color.RGBToHSB(red, green, blue)
+		palette.color.hex = color.RGBToHEX(red, green, blue)
+		paletteUpdateInputs()
+	end
+
+	local function onAnyInputFinished()
+		paletteRefreshBigImage()
+		paletteUpdateCrestsCoordinates()
+		palette:getFirstParent():draw()
+		buffer.draw()
+	end
+
+	local function onHexInputFinished()
+		paletteSwitchColorFromHex(tonumber("0x" .. inputs[7].text))
+		onAnyInputFinished()
+	end
+
+	local function onRgbInputFinished()
+		paletteSwitchColorFromRgb(tonumber(inputs[1].text), tonumber(inputs[2].text), tonumber(inputs[3].text))
+		onAnyInputFinished()
+	end
+
+	local function onHsbInputFinished()
+		paletteSwitchColorFromHsb(tonumber(inputs[4].text), tonumber(inputs[5].text) / 100, tonumber(inputs[6].text) / 100)
+		onAnyInputFinished()
+	end
+
+	local function rgbValidaror(text)
+		local number = tonumber(text) if number and number >= 0 and number <= 255 then return true end
+	end
+
+	local function hValidator(text)
+		local number = tonumber(text) if number and number >= 0 and number <= 359 then return true end
+	end
+
+	local function sbValidator(text)
+		local number = tonumber(text) if number and number >= 0 and number <= 100 then return true end
+	end
+
+	local function hexValidator(text)
+		if string.match(text, "^[0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F]$") then
+			return true
+		end
+	end
+
+	inputs = {
+		{ shortcut = "R:", validator = rgbValidaror, onInputFinished = onRgbInputFinished },
+		{ shortcut = "G:", validator = rgbValidaror, onInputFinished = onRgbInputFinished },
+		{ shortcut = "B:", validator = rgbValidaror, onInputFinished = onRgbInputFinished },
+		{ shortcut = "H:", validator = hValidator,   onInputFinished = onHsbInputFinished },
+		{ shortcut = "S:", validator = sbValidator,  onInputFinished = onHsbInputFinished },
+		{ shortcut = "L:", validator = sbValidator,  onInputFinished = onHsbInputFinished },
+		{ shortcut = "0x", validator = hexValidator, onInputFinished = onHexInputFinished }
+	}
+
+	local y = 10
+	for i = 1, #inputs do
+		palette:addChild(GUI.label(58, y, 2, 1, 0x000000, inputs[i].shortcut))
+		
+		local validator, onInputFinished = inputs[i].validator, inputs[i].onInputFinished
+		inputs[i] = palette:addChild(GUI.input(61, y, 9, 1, 0xFFFFFF, 0x666666, 0x666666, 0xFFFFFF, 0x000000, "", "", true))
+		inputs[i].validator = validator
+		inputs[i].onInputFinished = onInputFinished
+		
+		y = y + 2
+	end
+	
+	local favourites
+	if fs.exists(GUI.paletteConfigPath) then
+		favourites = table.fromFile(GUI.paletteConfigPath)
+	else
+		favourites = {}
+		for i = 1, 6 do favourites[i] = color.HSBToHEX(math.random(0, 360), 1, 1) end
+		table.toFile(GUI.paletteConfigPath, favourites)
+	end
+
+	local favouritesContainer = palette:addChild(GUI.container(58, 24, 12, 1))
+	for i = 1, #favourites do
+		favouritesContainer:addChild(GUI.button(i * 2 - 1, 1, 2, 1, favourites[i], 0x0, 0x0, 0x0, " ")).onTouch = function(mainContainer, object, eventData)
+			paletteSwitchColorFromHex(button.colors.default.background)
+			paletteRefreshBigImage()
+			paletteUpdateCrestsCoordinates()
+			mainContainer:draw()
+			buffer.draw()
+		end
+	end
+	
+	palette:addChild(GUI.button(58, 25, 12, 1, 0xFFFFFF, 0x444444, 0x2D2D2D, 0xFFFFFF, "+")).onTouch = function(mainContainer, object, eventData)
+		local favouriteExists = false
+		for i = 1, #favourites do
+			if favourites[i] == palette.color.hex then
+				favouriteExists = true
+				break
+			end
+		end
+		
+		if not favouriteExists then
+			table.insert(favourites, 1, palette.color.hex)
+			table.remove(favourites, #favourites)
+			for i = 1, #favourites do
+				favouritesContainer.children[i].colors.default.background = favourites[i]
+				favouritesContainer.children[i].colors.pressed.background = 0x0
+			end
+			
+			table.toFile(GUI.paletteConfigPath, favourites)
+
+			mainContainer:draw()
+			buffer.draw()
+		end
+	end
+
+	bigImage.eventHandler = function(mainContainer, object, eventData)
+		if eventData[1] == "touch" or eventData[1] == "drag" and bigImage:isClicked(eventData[3], eventData[4]) then
+			bigCrest.localX, bigCrest.localY = eventData[3] - palette.x - 1, eventData[4] - palette.y
+			paletteSwitchColorFromHex(select(3, component.gpu.get(eventData[3], eventData[4])))
+			mainContainer:draw()
+			buffer.draw()
+		end
+	end
+	bigCrest.eventHandler = bigImage.eventHandler
+	
+	miniImage.eventHandler = function(mainContainer, object, eventData)
+		if eventData[1] == "touch" or eventData[1] == "drag" then
+			miniCrest.localY = eventData[4] - palette.y + 1
+			paletteSwitchColorFromHsb((eventData[4] - miniImage.y) * 360 / miniImage.height, palette.color.hsb.saturation, palette.color.hsb.brightness)
+			paletteRefreshBigImage()
+			mainContainer:draw()
+			buffer.draw()
+		end
+	end
+
+	palette.show = paletteShow
+
+	paletteSwitchColorFromHex(startColor)
+	paletteUpdateCrestsCoordinates()
+	paletteRefreshBigImage()
+	paletteRefreshMiniImage()
+
+	return palette
 end
 
 -----------------------------------------------------------------------------------------------------

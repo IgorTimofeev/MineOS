@@ -12,8 +12,8 @@ materials.types = {
 function materials.newDebugTexture(width, height, h)
 	local texture = {width = width, height = height}
 		
-	local bStep = 100 / height
-	local sStep = 100 / width
+	local bStep = 1 / height
+	local sStep = 1 / width
 
 	local s, b = 0, 0
 	local blackSquare = false

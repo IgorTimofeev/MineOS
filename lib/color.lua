@@ -31,22 +31,21 @@ local function RGBToHSB(r, g, b)
 	local max, min = math.max(r, g, b), math.min(r, g, b)
 
 	if max == min then
-		return 0, max == 0 and 0 or (1 - min / max) * 100, max / 255 * 100
+		return 0, max == 0 and 0 or (1 - min / max), max / 255
 	elseif max == r and g >= b then
-		return 60 * (g - b) / (max - min), max == 0 and 0 or (1 - min / max) * 100, max / 255 * 100
+		return 60 * (g - b) / (max - min), max == 0 and 0 or (1 - min / max), max / 255
 	elseif max == r and g < b then
-		return 60 * (g - b) / (max - min) + 360, max == 0 and 0 or (1 - min / max) * 100, max / 255 * 100
+		return 60 * (g - b) / (max - min) + 360, max == 0 and 0 or (1 - min / max), max / 255
 	elseif max == g then
-		return 60 * (b - r) / (max - min) + 120, max == 0 and 0 or (1 - min / max) * 100, max / 255 * 100
+		return 60 * (b - r) / (max - min) + 120, max == 0 and 0 or (1 - min / max), max / 255
 	elseif max == b then
-		return 60 * (r - g) / (max - min) + 240, max == 0 and 0 or (1 - min / max) * 100, max / 255 * 100
+		return 60 * (r - g) / (max - min) + 240, max == 0 and 0 or (1 - min / max), max / 255
 	else
-		return 0, max == 0 and 0 or (1 - min / max) * 100, max / 255 * 100
+		return 0, max == 0 and 0 or (1 - min / max), max / 255
 	end
 end
 
 local function HSBToRGB(h, s, b)
-	s, b = s / 100, b / 100
 	local integer, fractional = math.modf(h / 60)	
 	local p, q, t = b * (1 - s), b * (1 - s * fractional), b * (1 - (1 - fractional) * s)
 

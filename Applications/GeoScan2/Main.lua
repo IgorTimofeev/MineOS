@@ -152,9 +152,10 @@ mainContainer.projectorYOffsetSlider.roundValues = true
 objectY = objectY + 3
 
 local function setButtonColorFromPalette(button)
-	local selectedColor = require("palette").show("auto", "auto", button.colors.default.background)
+	local selectedColor = GUI.palette(math.floor(mainContainer.width / 2 - 35), math.floor(mainContainer.height / 2 - 12), button.colors.default.background):show()
 	if selectedColor then button.colors.default.background = selectedColor end
-	mainContainer:draw(); buffer.draw() 
+	mainContainer:draw()
+	buffer.draw() 
 end
 
 local function updateProjectorColors()

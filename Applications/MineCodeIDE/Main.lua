@@ -20,7 +20,6 @@ local unicode = require("unicode")
 local web = require("web")
 local image = require("image")
 local keyboard = require("keyboard")
-local palette = require("palette")
 local GUI = require("GUI")
 local MineOSPaths = require("MineOSPaths")
 local MineOSCore = require("MineOSCore")
@@ -993,7 +992,7 @@ local function selectAndPasteColor()
 		startColor = tonumber(unicode.sub(mainContainer.codeView.lines[mainContainer.codeView.selections[1].from.line], mainContainer.codeView.selections[1].from.symbol, mainContainer.codeView.selections[1].to.symbol)) or startColor
 	end
 
-	local selectedColor = require("palette").show("auto", "auto", startColor)
+	local selectedColor = GUI.palette(math.floor(mainContainer.width / 2 - 35), math.floor(mainContainer.height / 2 - 12), startColor):show()
 	if selectedColor then
 		paste({string.format("0x%06X", selectedColor)})
 	end

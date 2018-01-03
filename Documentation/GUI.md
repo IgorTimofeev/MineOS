@@ -59,14 +59,13 @@ GUI - многофункциональная графическая библио
 
 | Библиотека | Функционал |
 | ------ | ------ |
+| *[GUI](https://github.com/IgorTimofeev/OpenComputers/blob/master/lib/GUI.lua)* | Данная библиотека |
 | *[advancedLua](https://github.com/IgorTimofeev/OpenComputers/blob/master/lib/advancedLua.lua)* | Дополнение стандартных библиотек Lua множеством функций: быстрой сериализацией таблиц, переносом строк, методами обработки бинарных данных и т.д. |
 | *[color](https://github.com/IgorTimofeev/OpenComputers/blob/master/lib/color.lua)* | Экструзия цветовых каналов, альфа-блендинг, поддержка различных палитр и конвертации цвета в 8-битный формат |
 | *[doubleBuffering](https://github.com/IgorTimofeev/OpenComputers/blob/master/lib/doubleBuffering.lua)* | Двойная буферизация графического контекста и различные методы растеризации примитивов |
 | *[image](https://github.com/IgorTimofeev/OpenComputers/blob/master/lib/image.lua)* | Реализация стандарта изображений для OpenComputers и базовые методы их обработки: транспонирование, обрезка, поворот, отражение и т.д. |
 | *[OCIF](https://github.com/IgorTimofeev/OpenComputers/blob/master/lib/FormatModules/OCIF.lua)* | Модуль формата изображения OCIF (OpenComputers Image Format) для библиотеки image, написанный с учетом особенностей мода и реализующий эффективное сжатие пиксельных данных |
 | *[syntax](https://github.com/IgorTimofeev/OpenComputers/blob/master/lib/syntax.lua)* | Подсветка lua-синтаксиса для виджета CodeView |
-| *[palette](https://github.com/IgorTimofeev/OpenComputers/blob/master/lib/palette.lua)* | Окно для работы с цветом в режиме HSV и выборе конкретных цветовых данных для виджета ColorSelector |
-| *[GUI](https://github.com/IgorTimofeev/OpenComputers/blob/master/lib/GUI.lua)* | Данная библиотека |
 
 Вы можете использовать имеющиеся выше ссылки для установки зависимостей вручную или запустить автоматический [установщик](https://pastebin.com/ryhyXUKZ), загружающий все необходимые файлы за вас:
 
@@ -554,7 +553,7 @@ GUI.**button**( x, y, width, height, buttonColor, textColor, buttonPressedColor,
 | *int* | textPressedColor | Цвет текста при нажатии |
 | *string* | text | Текст на кнопке |
 
-Создать объект типа "кнопка". Каждая кнопка имеет два состояния (*pressed = true/false*), автоматически переключаемые при нажатии. Для назначения какого-либо действия кнопке после ее нажатия создайте для нее метод *.onTouch()*.
+Привычный всем объект кнопки имеет два состояния (*pressed = true/false*), автоматически переключаемые при нажатии. Для назначения какого-либо действия кнопке после нажатия создайте для нее метод *.onTouch()*.
 
 Существует два дополнительных варианта кнопки, имеющие визуально разные стили:
 
@@ -1962,7 +1961,7 @@ local animationDurationStep = (animationDurationMax - animationDurationMin) / co
 
 -- Добавляем в главный контейнер указанное число свитчей
 for i = 1, count do
-	local switchColor = color.HSBToHEX(hue, 100, 100)
+	local switchColor = color.HSBToHEX(hue, 1, 1)
 	local switch = mainContainer:addChild(
 		newSwitch(
 			x,

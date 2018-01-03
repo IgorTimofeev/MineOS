@@ -15,7 +15,6 @@ local component = require("component")
 local keyboard = require("keyboard")
 local buffer = require("doubleBuffering")
 local color = require("color")
-local palette = require("palette")
 local event = require("event")
 
 ------------------------------------------------ Переменные --------------------------------------------------------------
@@ -1007,10 +1006,10 @@ while true do
 			for key in pairs(obj["Colors"]) do
 				if ecs.clickedAtArea(e[3], e[4], obj["Colors"][key][1], obj["Colors"][key][2], obj["Colors"][key][3], obj["Colors"][key][4]) then
 					if key == 1 then
-						currentBackground = palette.show(math.floor(buffer.getWidth() / 2 - 35), math.floor(buffer.getHeight() / 2 - 12), currentBackground) or currentBackground
+						currentBackground = GUI.palette(math.floor(buffer.getWidth() / 2 - 35), math.floor(buffer.getHeight() / 2 - 12), currentBackground):show() or currentBackground
 						drawAll()
 					elseif key == 2 or key == 3 then
-						currentForeground = palette.show(math.floor(buffer.getWidth() / 2 - 35), math.floor(buffer.getHeight() / 2 - 12), currentForeground) or currentForeground
+						currentForeground = GUI.palette(math.floor(buffer.getWidth() / 2 - 35), math.floor(buffer.getHeight() / 2 - 12), currentForeground):show() or currentForeground
 						drawAll()
 					elseif key == 4 then
 						buffer.text(obj["Colors"][key][1], obj["Colors"][key][2], 0xFF0000, "←→")

@@ -3,7 +3,7 @@ local MineOSInterface = require("MineOSInterface")
 
 local mainContainer, window = MineOSInterface.addWindow(
 	MineOSInterface.windowFromContainer(
-		require("palette").container(1, 1, 0x9900FF)
+		require("GUI").palette(1, 1, 0x9900FF)
 	)
 )
 
