@@ -81,7 +81,7 @@ local shapeColors = {}
 local HUE = 0
 local HUEAdder = math.floor(360 / maxShapeCount)
 for i = 1, maxShapeCount do
-	shapeColors[i] = color.HSBToHEX(HUE, 1, 1)
+	shapeColors[i] = color.HSBToInteger(HUE, 1, 1)
 	HUE = HUE + HUEAdder
 end
 HUE, HUEAdder = nil, nil
@@ -373,10 +373,10 @@ local function drawDrawingZone()
 
 			if currentLayer >= selectionStartPoint.z and currentLayer <= selectionEndPoint.z then
 				if shape ~= currentShape then
-					local h, s, b = color.HEXToHSB(shapeColors[shape])
+					local h, s, b = color.IntegerToHSB(shapeColors[shape])
 					s = 0.3
 					-- ecs.error("РИСУЮ")
-					drawPixel(selectionStartPoint.x, 18 - selectionStartPoint.y - yDifference, selectionEndPoint.x - selectionStartPoint.x + 1, yDifference, color.HSBToHEX(h, s, b))
+					drawPixel(selectionStartPoint.x, 18 - selectionStartPoint.y - yDifference, selectionEndPoint.x - selectionStartPoint.x + 1, yDifference, color.HSBToInteger(h, s, b))
 					-- drawPixel(selectionStartPoint.x, selectionStartPoint.z, selectionEndPoint.x - selectionStartPoint.x + 1, selectionEndPoint.z - selectionStartPoint.z + 1, shapeColors[shape], trasparency)
 				else
 					drawPixel(selectionStartPoint.x, 18 - selectionStartPoint.y - yDifference, selectionEndPoint.x - selectionStartPoint.x + 1, yDifference, shapeColors[shape])

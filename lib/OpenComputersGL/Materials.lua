@@ -20,7 +20,7 @@ function materials.newDebugTexture(width, height, h)
 	for y = 1, height do
 		texture[y] = {}
 		for x = 1, width do
-			texture[y][x] = blackSquare == true and 0x0 or color.HSBToHEX(h, s, b)
+			texture[y][x] = blackSquare == true and 0x0 or color.HSBToInteger(h, s, b)
 			blackSquare = not blackSquare
 			b = b + bStep
 		end

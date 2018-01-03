@@ -169,7 +169,7 @@ local function configurator()
 				gpu.setResolution(baseResolution.width, baseResolution.height)
 				gpu.setDepth(8)
 
-				local color = color.HSBToHEX(counter / monitorCount * 360, 1, 1)
+				local color = color.HSBToInteger(counter / monitorCount * 360, 1, 1)
 				gpu.setBackground(color)
 				gpu.setForeground(0xffffff - color)
 				gpu.fill(1, 1, baseResolution.width, baseResolution.height, " ")

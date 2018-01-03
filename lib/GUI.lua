@@ -502,7 +502,7 @@ local function buttonPlayAnimation(button, onFinish)
 	):start(button.animationDuration)
 end
 
-local function buttonPress(button, mainContainer)
+local function buttonPress(button, mainContainer, object, eventData)
 	if button.animated then
 		buttonPlayAnimation(button, function(mainContainer, animation)
 			if button.onTouch then
@@ -540,7 +540,7 @@ end
 
 local function buttonEventHandler(mainContainer, button, eventData)
 	if eventData[1] == "touch" then
-		button:press()
+		button:press(mainContainer, button, eventData)
 	end
 end
 
@@ -891,7 +891,8 @@ function GUI.error(...)
 
 	mainContainer.eventHandler = function(mainContainer, object, eventData)
 		if eventData[1] == "key_down" and eventData[4] == 28 then
-			button:press(mainContainer)
+			button.animated = false
+			button:press(mainContainer, object, eventData)
 		end
 	end
 
@@ -3562,7 +3563,7 @@ function GUI.palette(x, y, startColor)
 
 	local function paletteDrawBigCrestPixel(x, y, symbol)
 		local background, foreground = buffer.get(x, y)
-		local r, g, b = color.HEXToRGB(background)
+		local r, g, b = color.IntegerToRGB(background)
 		buffer.set(x, y, background, (r + g + b) / 3 >= 127 and 0x0 or 0xFFFFFF, symbol)
 	end
 
@@ -3591,7 +3592,7 @@ function GUI.palette(x, y, startColor)
 		local saturationStep, brightnessStep, saturation, brightness = 1 / bigImage.width, 1 / bigImage.height, 0, 1
 		for j = 1, bigImage.height do
 			for i = 1, bigImage.width do
-				image.set(bigImage.image, i, j, color.optimize(color.HSBToHEX(palette.color.hsb.hue, saturation, brightness)), 0x0, 0x0, " ")
+				image.set(bigImage.image, i, j, color.optimize(color.HSBToInteger(palette.color.hsb.hue, saturation, brightness)), 0x0, 0x0, " ")
 				saturation = saturation + saturationStep
 			end
 			saturation, brightness = 0, brightness - brightnessStep
@@ -3602,7 +3603,7 @@ function GUI.palette(x, y, startColor)
 		local hueStep, hue = 360 / miniImage.height, 0
 		for j = 1, miniImage.height do
 			for i = 1, miniImage.width do
-				image.set(miniImage.image, i, j, color.optimize(color.HSBToHEX(hue, 1, 1)), 0x0, 0, " ")
+				image.set(miniImage.image, i, j, color.optimize(color.HSBToInteger(hue, 1, 1)), 0x0, 0, " ")
 			end
 			hue = hue + hueStep
 		end
@@ -3629,7 +3630,7 @@ function GUI.palette(x, y, startColor)
 
 	local function paletteSwitchColorFromHex(hex)
 		palette.color.hex = hex
-		palette.color.rgb.red, palette.color.rgb.green, palette.color.rgb.blue = color.HEXToRGB(hex)
+		palette.color.rgb.red, palette.color.rgb.green, palette.color.rgb.blue = color.IntegerToRGB(hex)
 		palette.color.hsb.hue, palette.color.hsb.saturation, palette.color.hsb.brightness = color.RGBToHSB(palette.color.rgb.red, palette.color.rgb.green, palette.color.rgb.blue)
 		paletteUpdateInputs()
 	end
@@ -3637,14 +3638,14 @@ function GUI.palette(x, y, startColor)
 	local function paletteSwitchColorFromHsb(hue, saturation, brightness)
 		palette.color.hsb.hue, palette.color.hsb.saturation, palette.color.hsb.brightness = hue, saturation, brightness
 		palette.color.rgb.red, palette.color.rgb.green, palette.color.rgb.blue = color.HSBToRGB(hue, saturation, brightness)
-		palette.color.hex = color.RGBToHEX(palette.color.rgb.red, palette.color.rgb.green, palette.color.rgb.blue)
+		palette.color.hex = color.RGBToInteger(palette.color.rgb.red, palette.color.rgb.green, palette.color.rgb.blue)
 		paletteUpdateInputs()
 	end
 
 	local function paletteSwitchColorFromRgb(red, green, blue)
 		palette.color.rgb.red, palette.color.rgb.green, palette.color.rgb.blue = red, green, blue
 		palette.color.hsb.hue, palette.color.hsb.saturation, palette.color.hsb.brightness = color.RGBToHSB(red, green, blue)
-		palette.color.hex = color.RGBToHEX(red, green, blue)
+		palette.color.hex = color.RGBToInteger(red, green, blue)
 		paletteUpdateInputs()
 	end
 
@@ -3715,7 +3716,7 @@ function GUI.palette(x, y, startColor)
 		favourites = table.fromFile(GUI.paletteConfigPath)
 	else
 		favourites = {}
-		for i = 1, 6 do favourites[i] = color.HSBToHEX(math.random(0, 360), 1, 1) end
+		for i = 1, 6 do favourites[i] = color.HSBToInteger(math.random(0, 360), 1, 1) end
 		table.toFile(GUI.paletteConfigPath, favourites)
 	end
 

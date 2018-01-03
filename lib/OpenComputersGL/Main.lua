@@ -227,14 +227,14 @@ function OCGL.render()
 					-- OCGL.triangles[triangleIndex][5] = nil
 					-- renderer.renderFilledTriangle({ vertex1, vertex2, vertex3 }, finalColor)
 
-					local r, g, b = color.HEXToRGB(material.color)
+					local r, g, b = color.IntegerToRGB(material.color)
 					r, g, b = r * OCGL.triangles[triangleIndex][5], g * OCGL.triangles[triangleIndex][5], b * OCGL.triangles[triangleIndex][5]
 					if r > 255 then r = 255 end
 					if g > 255 then g = 255 end
 					if b > 255 then b = 255 end
 					OCGL.triangles[triangleIndex][5] = nil
 
-					renderer.renderFilledTriangle({ vertex1, vertex2, vertex3 }, color.RGBToHEX(r, g, b))
+					renderer.renderFilledTriangle({ vertex1, vertex2, vertex3 }, color.RGBToInteger(r, g, b))
 				end
 			elseif material.type == materials.types.textured then
 				vertex1[4], vertex1[5] = OCGL.vertices[OCGL.triangles[triangleIndex][1]][4], OCGL.vertices[OCGL.triangles[triangleIndex][1]][5]

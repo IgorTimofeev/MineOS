@@ -147,7 +147,7 @@ end
 
 local function AddPlayer(name)
 	if not players[name] then
-		players[name] = {0, color.HSBToHEX(math.random(0, 359), 1, math.random(50, 100) / 100)}
+		players[name] = {0, color.HSBToInteger(math.random(0, 359), 1, math.random(50, 100) / 100)}
 	end
 end
 
