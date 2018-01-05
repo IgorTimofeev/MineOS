@@ -59,6 +59,7 @@ local function addWorkpath(path)
 	end
 
 	workpathHistoryButtonsUpdate()
+	window.searchInput.text = ""
 	window.iconField.yOffset = iconFieldYOffset
 	window.iconField:setWorkpath(path)
 end
