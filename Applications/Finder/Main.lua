@@ -196,7 +196,7 @@ window.iconField.launchers.showPackageContent = function(icon)
 end
 
 window.iconField.launchers.showContainingFolder = function(icon)
-	addWorkpath(fs.path(icon.path))
+	addWorkpath(fs.path(MineOSCore.readShortcut(icon.path)))
 	updateFileListAndDraw()
 end
 

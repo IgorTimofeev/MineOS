@@ -770,7 +770,7 @@ function MineOSInterface.iconRightClick(icon, eventData)
 					icon.parent.parent.launchers.showPackageContent(icon)
 				end		
 				menu:addItem(MineOSCore.localization.launchWithArguments).onTouch = function()
-					MineOSCore.launchWithArguments(MineOSInterface.mainContainer, icon.path)
+					MineOSInterface.launchWithArguments(MineOSInterface.mainContainer, icon.path)
 				end
 
 				menu:addSeparator()
