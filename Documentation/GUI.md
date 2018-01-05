@@ -1,17 +1,17 @@
 | Содержание |
 | ----- |
-| [О библиотеке](#о-библиотеке) |
-| [Установка](#установка) |
+| [О библиотеке](#О-библиотеке) |
+| [Установка](#Установка) |
 | [Standalone-методы](#standalone-методы) |
 | [    GUI.contextMenu](#guicontextmenu-x-y--table-contextmenu) |
 | [    GUI.error](#guierror-text-) |
-| [Контейнеры](#контейнеры) |
+| [Контейнеры](#Контейнеры) |
 | [    GUI.container](#guicontainer-x-y-width-height--table-container) |
 | [    GUI.layout](#guilayout-x-y-width-height-columns-rows--table-container) |
-| [Виджеты](#виджеты) |
+| [Виджеты](#Виджеты) |
 | [    GUI.object](#guiobject-x-y-width-height--table-object) |
-| [Анимация](#анимация) |
-| [Готовые виджеты](#готовые-виджеты) |
+| [Анимация](#Анимация) |
+| [Готовые виджеты](#Готовые-виджеты) |
 | [    GUI.panel](#guipanel-x-y-width-height-color-transparency--table-panel) |
 | [    GUI.image](#guiimage-x-y-loadedimage--table-image) |
 | [    GUI.label](#guilabel-x-y-width-height-textcolor-text--table-label) |
@@ -34,11 +34,11 @@
 | [    GUI.brailleCanvas](#guibraillecanvas-x-y-width-height--table-braillecanvas) |
 | [    GUI.scrollBar](#guiscrollbar-x-y-width-height-backgroundcolor-foregroundcolor-minimumvalue-maximumvalue-value-shownvaluecount-onscrollvalueincrement-thinhorizontalmode--table-scrollbar) |
 | [    GUI.textBox](#guitextboxx-y-width-height-backgroundcolor-textcolor-lines-currentline-horizontaloffset-verticaloffset-table-textbox) |
-| [Практические примеры](#практические-примеры) |
-| [    Пример #1: Окно авторизации](#пример-1-окно-авторизации) |
-| [    Пример #2: Создание собственного виджета](#пример-2-создание-собственного-виджета) |
-| [    Пример #3: Углубленная работа с Layout](#пример-3-углубленная-работа-с-layout) |
-| [    Пример #4: Анимация собственного виджета](#пример-4-анимация-собственного-виджета) |
+| [Практические примеры](#Практические-примеры) |
+| [    Пример #1: Окно авторизации](#Пример-1-Окно-авторизации) |
+| [    Пример #2: Создание собственного виджета](#Пример-2-Создание-собственного-виджета) |
+| [    Пример #3: Углубленная работа с Layout](#Пример-3-Углубленная-работа-с-Layout) |
+| [    Пример #4: Анимация собственного виджета](#Пример-4-Анимация-собственного-виджета) |
 
 
 О библиотеке
