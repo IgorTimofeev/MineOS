@@ -797,7 +797,7 @@ end
 ----------------------------------------- ProgressBar Object -----------------------------------------
 
 local function drawProgressBar(object)
-	local activeWidth = math.floor(object.value * object.width / 100)
+	local activeWidth = math.floor(math.min(object.value, 100) / 100 * object.width)
 	if object.thin then
 		buffer.text(object.x, object.y, object.colors.passive, string.rep("━", object.width))
 		buffer.text(object.x, object.y, object.colors.active, string.rep("━", activeWidth))
@@ -807,7 +807,7 @@ local function drawProgressBar(object)
 	end
 
 	if object.showValue then
-		local stringValue = tostring((object.valuePrefix or "") .. object.value .. (object.valuePostfix or ""))
+		local stringValue = (object.valuePrefix or "") .. object.value .. (object.valuePostfix or "")
 		buffer.text(math.floor(object.x + object.width / 2 - unicode.len(stringValue) / 2), object.y + 1, object.colors.value, stringValue)
 	end
 
