@@ -80,10 +80,6 @@ autoupdateSlider.hidden = true
 local FOVSlider = layout:addChild(GUI.slider(1, 1, 12, 0x66DB80, 0x0, 0xFFFFFF, 0x666666, 10, 90, 90, false, "FOV: ", ""))
 local rangeSlider = layout:addChild(GUI.slider(1, 1, 12, 0x66DB80, 0x0, 0xFFFFFF, 0x666666, 0, 60, 32, false, "Range: ", ""))
 
-local buttonImage = image.load(fs.path(getCurrentScript()) .. "/Resources/Icon.pic")
-local buttonImagePressed = image.blend(buttonImage, 0x0, 0.6)
-local shootButton = window:addChild(GUI.adaptiveTexturedButton(1, 1, buttonImage, buttonImagePressed))
-
 local cameraView = window:addChild(GUI.object(window.backgroundPanel.width + 1, 1, 1, 1))
 cameraView.pixels = {}
 
@@ -107,6 +103,27 @@ local function takePicture()
 
 	mainContainer:draw()
 	buffer.draw()
+end
+
+local buttonImage = image.load(fs.path(getCurrentScript()) .. "/Resources/Icon.pic")
+local buttonImagePressed = image.blend(buttonImage, 0x0, 0.6)
+local shootButton = window:addChild(GUI.object(1, 1, 8, 4))
+shootButton.draw = function()
+	buffer.image(shootButton.x, shootButton.y, shootButton.pressed and buttonImagePressed or buttonImage)
+end
+
+shootButton.eventHandler = function(mainContainer, object, eventData)
+	if eventData[1] == "touch" then
+		shootButton.pressed = true
+		mainContainer:draw()
+		buffer.draw()
+		
+		takePicture()
+
+		shootButton.pressed = false
+		mainContainer:draw()
+		buffer.draw()
+	end
 end
 
 cameraView.draw = function(cameraView)
@@ -138,7 +155,6 @@ window.actionButtons:moveToFront()
 
 semiPixelSwitch.onStateChanged = takePicture
 FOVSlider.onValueChanged = takePicture
-shootButton.onTouch = takePicture
 
 paletteSwitch.onStateChanged = function()
 	palette = paletteSwitch.state and thermal or grayscale
