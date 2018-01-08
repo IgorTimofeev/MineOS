@@ -72,7 +72,7 @@ local function biometry(creatingNew)
 	fingerImage.eventHandler = function(mainContainer, object, eventData)
 		if eventData[1] == "touch" then
 			scanLine:addAnimation(
-				function(mainContainer, object, animation)
+				function(mainContainer, animation)
 					scanLine.hidden = false
 					if animation.position <= 0.5 then
 						scanLine.localY = math.floor(fingerImage.localY + fingerImageHeight - fingerImageHeight * animation.position * 2 - 1)
@@ -80,7 +80,7 @@ local function biometry(creatingNew)
 						scanLine.localY = math.floor(fingerImage.localY + fingerImageHeight * (animation.position - 0.5) * 2 - 1)
 					end
 				end,
-				function(mainContainer, switch, animation)
+				function(mainContainer, animation)
 					scanLine.hidden = true
 					animation:delete()
 
