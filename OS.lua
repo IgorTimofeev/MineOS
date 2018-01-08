@@ -253,11 +253,11 @@ local function changeWallpaper()
 
 		local r, g, b
 		for i = 3, #MineOSInterface.mainContainer.background.wallpaper, 4 do
-			r, g, b = color.HEXToRGB(MineOSInterface.mainContainer.background.wallpaper[i])
-			MineOSInterface.mainContainer.background.wallpaper[i] = color.RGBToHEX(math.floor(r * MineOSCore.properties.wallpaperBrightness), math.floor(g * MineOSCore.properties.wallpaperBrightness), math.floor(b * MineOSCore.properties.wallpaperBrightness))
+			r, g, b = color.IntegerToRGB(MineOSInterface.mainContainer.background.wallpaper[i])
+			MineOSInterface.mainContainer.background.wallpaper[i] = color.RGBToInteger(math.floor(r * MineOSCore.properties.wallpaperBrightness), math.floor(g * MineOSCore.properties.wallpaperBrightness), math.floor(b * MineOSCore.properties.wallpaperBrightness))
 			
-			r, g, b = color.HEXToRGB(MineOSInterface.mainContainer.background.wallpaper[i + 1])
-			MineOSInterface.mainContainer.background.wallpaper[i + 1] = color.RGBToHEX(math.floor(r * MineOSCore.properties.wallpaperBrightness), math.floor(g * MineOSCore.properties.wallpaperBrightness), math.floor(b * MineOSCore.properties.wallpaperBrightness))
+			r, g, b = color.IntegerToRGB(MineOSInterface.mainContainer.background.wallpaper[i + 1])
+			MineOSInterface.mainContainer.background.wallpaper[i + 1] = color.RGBToInteger(math.floor(r * MineOSCore.properties.wallpaperBrightness), math.floor(g * MineOSCore.properties.wallpaperBrightness), math.floor(b * MineOSCore.properties.wallpaperBrightness))
 		end
 	end
 end

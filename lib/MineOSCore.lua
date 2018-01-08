@@ -77,7 +77,7 @@ function MineOSCore.loadPropeties()
 		iconWidth = 12,
 		iconHeight = 6,
 		showExtension = false,
-		wallpaper = MineOSPaths.pictures .. "Tatu.pic",
+		wallpaper = MineOSPaths.pictures .. "Raspberry.pic",
 		wallpaperMode = 2,
 		wallpaperBrightness = 1.0,
 		screensaver = "Matrix",
