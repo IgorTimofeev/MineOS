@@ -1682,11 +1682,11 @@ local function createMainContainer()
 				mainContainer.codeView.selections[1].to.symbol, mainContainer.codeView.selections[1].to.line = fixCursorPosition(convertScreenCoordinatesToTextPosition(eventData[3], eventData[4]))
 				
 				if mainContainer.codeView.selections[1].from.line > mainContainer.codeView.selections[1].to.line then
-					mainContainer.codeView.selections[1].from.line, mainContainer.codeView.selections[1].to.line = swap(mainContainer.codeView.selections[1].from.line, mainContainer.codeView.selections[1].to.line)
-					mainContainer.codeView.selections[1].from.symbol, mainContainer.codeView.selections[1].to.symbol = swap(mainContainer.codeView.selections[1].from.symbol, mainContainer.codeView.selections[1].to.symbol)
+					mainContainer.codeView.selections[1].from.line, mainContainer.codeView.selections[1].to.line = mainContainer.codeView.selections[1].to.line, mainContainer.codeView.selections[1].from.line
+					mainContainer.codeView.selections[1].from.symbol, mainContainer.codeView.selections[1].to.symbol = mainContainer.codeView.selections[1].to.symbol, mainContainer.codeView.selections[1].from.symbol
 				elseif mainContainer.codeView.selections[1].from.line == mainContainer.codeView.selections[1].to.line then
 					if mainContainer.codeView.selections[1].from.symbol > mainContainer.codeView.selections[1].to.symbol then
-						mainContainer.codeView.selections[1].from.symbol, mainContainer.codeView.selections[1].to.symbol = swap(mainContainer.codeView.selections[1].from.symbol, mainContainer.codeView.selections[1].to.symbol)
+						mainContainer.codeView.selections[1].from.symbol, mainContainer.codeView.selections[1].to.symbol = mainContainer.codeView.selections[1].to.symbol, mainContainer.codeView.selections[1].from.symbol
 					end
 				end
 			end
