@@ -362,7 +362,7 @@ function MineOSInterface.iconLaunchers.application(icon)
 		
 		local function onExit()
 			container:delete()
-			MineOSInterface.safeLaunch(icon.path .. "/Main.lua")
+			MineOSInterface.safeLaunch((icon.shortcutPath or icon.path) .. "/Main.lua")
 		end
 
 		container.panel.eventHandler = function(mainContainer, object, eventData)
