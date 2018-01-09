@@ -409,8 +409,8 @@ end
 
 mainContainer.toolbar:addChild(GUI.label(2, elementY, elementWidth, 1, 0xAAAAAA, "Perspective proj:"))
 mainContainer.toolbar.perspectiveSwitch = mainContainer.toolbar:addChild(GUI.switch(mainContainer.toolbar.width - 8, elementY, 8, 0x66DB80, 0x2D2D2D, 0xEEEEEE, scene.camera.projectionEnabled)); elementY = elementY + 2
-mainContainer.toolbar.perspectiveSwitch.onStateChanged = function(state)
-	scene.camera.projectionEnabled = state
+mainContainer.toolbar.perspectiveSwitch.onStateChanged = function()
+	scene.camera.projectionEnabled = mainContainer.toolbar.perspectiveSwitch.state
 end
 
 mainContainer.toolbar:addChild(GUI.label(2, elementY, elementWidth, 1, 0xAAAAAA, "Z-buffer visualize:"))

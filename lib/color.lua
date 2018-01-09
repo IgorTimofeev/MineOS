@@ -6,11 +6,17 @@ local color = {}
 -----------------------------------------------------------------------------------------------------------------------
 
 -- Optimized Lua 5.3 bitwise support
-local RGBToInteger
+local RGBToInteger, IntegerToRGB
 if computer.getArchitecture and computer.getArchitecture() == "Lua 5.3" then
 	RGBToInteger = load([[
 		return function(r, g, b)
 			return (r // 1 << 16) | (g // 1 << 8) | b // 1
+		end
+	]])()
+
+	IntegerToRGB = load([[
+		return function(IntegerColor)
+			return IntegerColor >> 16, IntegerColor >> 8 & 0xFF, IntegerColor & 0xFF
 		end
 	]])()
 else
@@ -19,10 +25,12 @@ else
 			return bit32.bor(bit32.bor(bit32.lshift(r, 16), bit32.lshift(g, 8)), b)
 		end
 	]])()
-end
 
-local function IntegerToRGB(IntegerColor)
-	return bit32.rshift(IntegerColor, 16), bit32.band(bit32.rshift(IntegerColor, 8), 0xFF), bit32.band(IntegerColor, 0xFF)
+	IntegerToRGB = load([[
+		return function(IntegerColor)
+			return bit32.rshift(IntegerColor, 16), bit32.band(bit32.rshift(IntegerColor, 8), 0xFF), bit32.band(IntegerColor, 0xFF)
+		end
+	]])()
 end
 
 -----------------------------------------------------------------------------------------------------------------------
