@@ -5,7 +5,7 @@ local image = args[1]
 ---------------------------------------- Libraries ----------------------------------------
 
 local bit32 = require("bit32")
-local advancedLua = require("advancedLua")
+require("advancedLua")
 local unicode = require("unicode")
 local fs = require("filesystem")
 local color = require("color")
@@ -55,7 +55,7 @@ encodingMethods.load[5] = function(file, picture)
 		table.insert(picture, color.to24Bit(string.byte(file:read(1))))
 		table.insert(picture, color.to24Bit(string.byte(file:read(1))))
 		table.insert(picture, string.byte(file:read(1)) / 255)
-		table.insert(picture, string.readUnicodeChar(file))
+		table.insert(picture, fs.readUnicodeChar(file))
 	end
 end
 
@@ -121,7 +121,7 @@ encodingMethods.load[6] = function(file, picture)
 		symbolSize = readNumberFromFile(file, 2)
 		
 		for symbol = 1, symbolSize do
-			currentSymbol = string.readUnicodeChar(file)
+			currentSymbol = fs.readUnicodeChar(file)
 			backgroundSize = string.byte(file:read(1))
 			
 			for background = 1, backgroundSize do

@@ -126,7 +126,7 @@ function math.doubleToString(num, digitCount)
 	return string.format("%." .. (digitCount or 1) .. "f", num)
 end
 
-function math.shortenNumber(number, digitCount)
+function math.shorten(number, digitCount)
 	local shortcuts = {
 		"K",
 		"M",
@@ -146,13 +146,13 @@ end
 
 ---------------------------------------------- Filesystem extensions ------------------------------------------------------------------------
 
--- function filesystem.path(path)
--- 	return path:match("^(.+%/).") or ""
--- end
+function filesystem.path(path)
+	return path:match("^(.+%/).") or ""
+end
 
--- function filesystem.name(path)
--- 	return path:match("%/?([^%/]+)%/?$")
--- end
+function filesystem.name(path)
+	return path:match("%/?([^%/]+)%/?$")
+end
 
 function filesystem.extension(path, lower)
 	local extension = path:match("[^%/]+(%.[^%/]+)%/?$")
@@ -256,6 +256,24 @@ function filesystem.directorySize(path)
 	end
 	
 	return size
+end
+
+function filesystem.readUnicodeChar(file)
+	local byteArray = {string.byte(file:read(1))}
+
+	local nullBitPosition = 0
+	for i = 1, 7 do
+		if bit32.band(bit32.rshift(byteArray[1], 8 - i), 0x1) == 0x0 then
+			nullBitPosition = i
+			break
+		end
+	end
+
+	for i = 1, nullBitPosition - 2 do
+		table.insert(byteArray, string.byte(file:read(1)))
+	end
+
+	return string.char(table.unpack(byteArray))
 end
 
 -------------------------------------------------- Table extensions --------------------------------------------------
@@ -474,24 +492,6 @@ end
 
 function string.brailleChar(a, b, c, d, e, f, g, h)
 	return unicode.char(10240 + 128*h + 64*g + 32*f + 16*d + 8*b + 4*e + 2*c + a)
-end
-
-function string.readUnicodeChar(file)
-	local byteArray = {string.byte(file:read(1))}
-
-	local nullBitPosition = 0
-	for i = 1, 7 do
-		if bit32.band(bit32.rshift(byteArray[1], 8 - i), 0x1) == 0x0 then
-			nullBitPosition = i
-			break
-		end
-	end
-
-	for i = 1, nullBitPosition - 2 do
-		table.insert(byteArray, string.byte(file:read(1)))
-	end
-
-	return string.char(table.unpack(byteArray))
 end
 
 function string.canonicalPath(str)

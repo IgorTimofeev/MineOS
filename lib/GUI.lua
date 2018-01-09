@@ -380,7 +380,7 @@ local function containerStartEventHandling(container, eventHandlingDelay)
 
 	local eventData, animationIndex, animation, animationOnFinishMethods
 	repeat
-		eventData = {event.pull(container.animations and 0 or container.eventHandlingDelay)}
+		eventData = { event.pull(container.animations and 0 or container.eventHandlingDelay) }
 		
 		containerHandler(
 			(
@@ -1094,7 +1094,7 @@ local function getAxisValue(number, postfix, roundValues)
 		local integer, fractional = math.modf(number)
 		local firstPart, secondPart = "", ""
 		if math.abs(integer) >= 1000 then
-			return math.shortenNumber(integer, 2) .. postfix
+			return math.shorten(integer, 2) .. postfix
 		else
 			if math.abs(fractional) > 0 then
 				return string.format("%.2f", number) .. postfix

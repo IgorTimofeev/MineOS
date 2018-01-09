@@ -264,7 +264,7 @@ local function drawBigImageFromOCIFRawFile(x, y, path)
 			local background = color.to24Bit(string.byte(file:read(1)))
 			local foreground = color.to24Bit(string.byte(file:read(1)))
 			file:read(1)
-			local symbol = string.readUnicodeChar(file)
+			local symbol = fs.readUnicodeChar(file)
 
 			multiScreenSet(x + i - 1, y + j - 1, background, foreground, symbol)
 		end

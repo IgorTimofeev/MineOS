@@ -101,7 +101,7 @@ local function updateForecast(city)
 			object.draw = function()
 				bigLetters.drawText(object.x, object.y, 0xFFFFFF, math.round((currentDay.temp.max + currentDay.temp.min) / 2) .. "°")
 				buffer.text(object.x, object.y + 6, 0xFFFFFF, result.city.name .. ", " .. result.city.country)
-				buffer.text(object.x, object.y + 7, 0xFFFFFF, "Population: " .. math.shortenNumber(result.city.population, 2))
+				buffer.text(object.x, object.y + 7, 0xFFFFFF, "Population: " .. math.shorten(result.city.population, 2))
 			end
 
 			y = y + object.height + 1
