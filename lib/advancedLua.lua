@@ -1,20 +1,9 @@
 
---[[
-	
-	Advanced Lua Library v1.1 by ECS
-
-	This library extends a lot of default Lua methods
-	and adds some really cool features that haven't been
-	implemented yet, such as fastest table serialization,
-	table binary searching, string wrapping, numbers rounding, etc.
-
-]]
-
 local filesystem = require("filesystem")
 local unicode = require("unicode")
 local bit32 = require("bit32")
 
--------------------------------------------------- System extensions --------------------------------------------------
+----------------------------------------------------------------------------------------------------
 
 function _G.getCurrentScript()
 	local info
@@ -30,22 +19,18 @@ function _G.getCurrentScript()
 	end
 end
 
-function enum(...)
-	local args, enums = {...}, {}
-	for i = 1, #args do
-		if type(args[i]) ~= "string" then error("Function argument " .. i .. " have non-string type: " .. type(args[i])) end
-		enums[args[i]] = i
+function _G.enum(...)
+	local enums = {...}
+	for i = 1, #enums do
+		enums[enums[i]] = i
+		enums[i] = nil
 	end
+
 	return enums
 end
 
-function swap(a, b)
-	return b, a
-end
+----------------------------------------------------------------------------------------------------
 
--------------------------------------------------- Bit32 extensions --------------------------------------------------
-
--- Merge two numbers into one (0xAABB, 0xCCDD -> 0xAABBCCDD)
 function bit32.merge(number2, number1)
 	local cutter = math.ceil(math.log(number1 + 1, 256)) * 8
 	while number2 > 0 do
@@ -55,7 +40,6 @@ function bit32.merge(number2, number1)
 	return number1
 end
 
--- Split number to it's own bytes (0xAABBCC -> {0xAA, 0xBB, 0xCC})
 function bit32.numberToByteArray(number)
 	local byteArray = {}
 
@@ -67,7 +51,6 @@ function bit32.numberToByteArray(number)
 	return byteArray
 end
 
--- Split nubmer to it's own bytes with specified count of bytes (0xAABB, 5 -> {0x00, 0x00, 0x00, 0xAA, 0xBB})
 function bit32.numberToFixedSizeByteArray(number, size)
 	local byteArray, counter = {}, 0
 	
@@ -84,7 +67,6 @@ function bit32.numberToFixedSizeByteArray(number, size)
 	return byteArray
 end
 
--- Create number from it's own bytes ({0xAA, 0xBB, 0xCC} -> 0xAABBCC)
 function bit32.byteArrayToNumber(byteArray)
 	local result = byteArray[1]
 	for i = 2, #byteArray do
@@ -94,16 +76,16 @@ function bit32.byteArrayToNumber(byteArray)
 	return result
 end
 
--- Create byte from it's bits ({1, 0, 1, 0, 1, 0, 1, 1} -> 0xAB)
 function bit32.bitArrayToByte(bitArray)
-	local number = 0
+	local result = 0
 	for i = 1, #bitArray do
-		number = bit32.bor(bitArray[i], bit32.lshift(number, 1))
+		result = bit32.bor(bitArray[i], bit32.lshift(result, 1))
 	end
-	return number
+
+	return result
 end
 
--------------------------------------------------- Math extensions --------------------------------------------------
+----------------------------------------------------------------------------------------------------
 
 function math.round(num) 
 	if num >= 0 then
@@ -144,15 +126,15 @@ function math.shorten(number, digitCount)
 	return math.roundToDecimalPlaces(number / 1000 ^ index, digitCount) .. shortcuts[index]
 end
 
----------------------------------------------- Filesystem extensions ------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
 
-function filesystem.path(path)
-	return path:match("^(.+%/).") or ""
-end
+-- function filesystem.path(path)
+-- 	return path:match("^(.+%/).") or ""
+-- end
 
-function filesystem.name(path)
-	return path:match("%/?([^%/]+)%/?$")
-end
+-- function filesystem.name(path)
+-- 	return path:match("%/?([^%/]+)%/?$")
+-- end
 
 function filesystem.extension(path, lower)
 	local extension = path:match("[^%/]+(%.[^%/]+)%/?$")
@@ -167,6 +149,7 @@ function filesystem.isFileHidden(path)
 	if path:match("^%..+$") then
 		return true
 	end
+
 	return false
 end
 
@@ -174,6 +157,7 @@ function filesystem.sortedList(path, sortingMethod, showHiddenFiles, filenameMat
 	if not filesystem.exists(path) then
 		error("Failed to get file list: directory \"" .. tostring(path) .. "\" doesn't exists")
 	end
+
 	if not filesystem.isDirectory(path) then
 		error("Failed to get file list: path \"" .. tostring(path) .. "\" is not a directory")
 	end
@@ -212,6 +196,7 @@ function filesystem.sortedList(path, sortingMethod, showHiddenFiles, filenameMat
 			end
 			
 			table.sort(currentExtensionList, function(a, b) return unicode.lower(a) < unicode.lower(b) end)
+			
 			for j = 1, #currentExtensionList do
 				table.insert(sortedFileList, currentExtensionList[j])
 			end
@@ -276,112 +261,114 @@ function filesystem.readUnicodeChar(file)
 	return string.char(table.unpack(byteArray))
 end
 
--------------------------------------------------- Table extensions --------------------------------------------------
-
-local function doSerialize(array, prettyLook, indentationSymbol, indentationSymbolAdder, equalsSymbol, currentRecusrionStack, recursionStackLimit)
-	local text, indentationSymbolNext, keyType, valueType, stringValue = {"{"}, table.concat({indentationSymbol, indentationSymbolAdder})
-	if prettyLook then
-		table.insert(text, "\n")
-	end
-	
-	for key, value in pairs(array) do
-		keyType, valueType, stringValue = type(key), type(value), tostring(value)
-
-		if prettyLook then
-			table.insert(text, indentationSymbolNext)
-		end
-		
-		if keyType == "number" then
-			table.insert(text, "[")
-			table.insert(text, key)
-			table.insert(text, "]")
-		elseif keyType == "string" then	
-			if prettyLook and key:match("^%a") and key:match("^[%w%_]+$") then
-				table.insert(text, key)
-			else
-				table.insert(text, "[\"")
-				table.insert(text, key)
-				table.insert(text, "\"]")
-			end
-		end
-
-		table.insert(text, equalsSymbol)
-		
-		if valueType == "number" or valueType == "boolean" or valueType == "nil" then
-			table.insert(text, stringValue)
-		elseif valueType == "string" or valueType == "function" then
-			table.insert(text, "\"")
-			table.insert(text, stringValue)
-			table.insert(text, "\"")
-		elseif valueType == "table" then
-			if currentRecusrionStack < recursionStackLimit then
-				table.insert(
-					text,
-					table.concat(
-						doSerialize(
-							value,
-							prettyLook,
-							indentationSymbolNext,
-							indentationSymbolAdder,
-							equalsSymbol,
-							currentRecusrionStack + 1,
-							recursionStackLimit
-						)
-					)
-				)
-			else
-				table.insert(text, "\"…\"")
-			end
-		end
-		
-		table.insert(text, ",")
-		if prettyLook then
-			table.insert(text, "\n")
-		end
-	end
-
-	-- Удаляем запятую
-	if prettyLook then
-		if #text > 2 then
-			table.remove(text, #text - 1)
-		end
-		-- Вставляем заодно уж символ индентации, благо чек на притти лук идет
-		table.insert(text, indentationSymbol)
-	else
-		if #text > 1 then
-			table.remove(text, #text)
-		end
-	end
-
-	table.insert(text, "}")
-
-	return text
-end
+----------------------------------------------------------------------------------------------------
 
 function table.serialize(array, prettyLook, indentationWidth, indentUsingTabs, recursionStackLimit)
 	checkArg(1, array, "table")
+
+	recursionStackLimit = recursionStackLimit or math.huge
+	local indentationSymbolAdder = string.rep(indentUsingTabs and "	" or " ", indentationWidth or 2)
+	local equalsSymbol = prettyLook and " = " or "="
+
+	local function serializeRecursively(array, currentIndentationSymbol, currentRecusrionStack)
+		local result, nextIndentationSymbol, keyType, valueType, stringValue = {"{"}, currentIndentationSymbol .. indentationSymbolAdder
+		
+		if prettyLook then
+			table.insert(result, "\n")
+		end
+		
+		for key, value in pairs(array) do
+			keyType, valueType, stringValue = type(key), type(value), tostring(value)
+
+			if prettyLook then
+				table.insert(result, nextIndentationSymbol)
+			end
+			
+			if keyType == "number" then
+				if not prettyLook then
+					table.insert(result, "[")
+					table.insert(result, key)
+					table.insert(result, "]")
+
+					table.insert(result, equalsSymbol)
+				end
+			elseif keyType == "string" then
+				-- Короч, если типа начинается с буковки, а также если это алфавитно-нумерическая поеботня
+				if prettyLook and key:match("^%a") and key:match("^[%w%_]+$") then
+					table.insert(result, key)
+				else
+					table.insert(result, "[\"")
+					table.insert(result, key)
+					table.insert(result, "\"]")
+				end
+
+				table.insert(result, equalsSymbol)
+			end
+
+			if valueType == "number" or valueType == "boolean" or valueType == "nil" then
+				table.insert(result, stringValue)
+			elseif valueType == "string" or valueType == "function" then
+				table.insert(result, "\"")
+				table.insert(result, stringValue)
+				table.insert(result, "\"")
+			elseif valueType == "table" then
+				if currentRecusrionStack < recursionStackLimit then
+					table.insert(
+						result,
+						table.concat(
+							serializeRecursively(
+								value,
+								nextIndentationSymbol,
+								currentRecusrionStack + 1
+							)
+						)
+					)
+				else
+					table.insert(result, "\"…\"")
+				end
+			end
+			
+			table.insert(result, ",")
+
+			if prettyLook then
+				table.insert(result, "\n")
+			end
+		end
+
+		-- Удаляем запятую
+		if prettyLook then
+			if #result > 2 then
+				table.remove(result, #result - 1)
+			end
+
+			table.insert(result, currentIndentationSymbol)
+		else
+			if #result > 1 then
+				table.remove(result, #result)
+			end
+		end
+
+		table.insert(result, "}")
+
+		return result
+	end
 	
-	return table.concat(
-		doSerialize(
-			array,
-			prettyLook,
-			"",
-			string.rep(indentUsingTabs and "	" or " ", indentationWidth or 2),
-			prettyLook and " = " or "=",
-			1,
-			recursionStackLimit or math.huge
-		)
-	)
+	return table.concat(serializeRecursively(array, "", 1))
 end
 
 function table.unserialize(serializedString)
 	checkArg(1, serializedString, "string")
 	
-	local success, result = pcall(load("return " .. serializedString))
-	if success then
-		return result
+	local result, reason = load("return " .. serializedString)
+	if result then
+		result, reason = pcall(result)
+		if result then
+			return reason
+		else
+			return nil, reason
+		end
 	else
-		return nil, result
+		return nil, reason
 	end
 end
 
@@ -420,45 +407,22 @@ function table.fromFile(path)
 	end
 end
 
-local function doTableCopy(source, destination)
-	for key, value in pairs(source) do
-		if type(value) == "table" then
-			destination[key] = {}
-			doTableCopy(source[key], destination[key])
-		else
-			destination[key] = value
-		end
-	end
-end
-
 function table.copy(tableToCopy)
-	local tableThatCopied = {}
-	doTableCopy(tableToCopy, tableThatCopied)
-
-	return tableThatCopied
-end
-
-function table.binarySearch(t, requestedValue)
-	local function recursiveSearch(startIndex, endIndex)
-		local difference = endIndex - startIndex
-		local centerIndex = math.floor(difference / 2 + startIndex)
-
-		if difference > 1 then
-			if requestedValue >= t[centerIndex] then
-				return recursiveSearch(centerIndex, endIndex)
+	local function copyTableRecursively(source, destination)
+		for key, value in pairs(source) do
+			if type(value) == "table" then
+				destination[key] = {}
+				doTableCopy(source[key], destination[key])
 			else
-				return recursiveSearch(startIndex, centerIndex)
-			end
-		else
-			if math.abs(requestedValue - t[startIndex]) > math.abs(t[endIndex] - requestedValue) then
-				return t[endIndex]
-			else
-				return t[startIndex]
+				destination[key] = value
 			end
 		end
 	end
 
-	return recursiveSearch(1, #t)
+	local result = {}
+	copyTableRecursively(tableToCopy, result)
+
+	return result
 end
 
 function table.size(t)
@@ -488,7 +452,7 @@ function table.sortAlphabetically(t)
 	table.sort(t, function(a, b) return a < b end)
 end
 
--------------------------------------------------- String extensions --------------------------------------------------
+----------------------------------------------------------------------------------------------------
 
 function string.brailleChar(a, b, c, d, e, f, g, h)
 	return unicode.char(10240 + 128*h + 64*g + 32*f + 16*d + 8*b + 4*e + 2*c + a)
@@ -517,7 +481,7 @@ end
 function string.unicodeFind(str, pattern, init, plain)
 	if init then
 		if init < 0 then
-			init = -#unicode.sub(str,init)
+			init = -#unicode.sub(str, init)
 		elseif init > 0 then
 			init = #unicode.sub(str, 1, init - 1) + 1
 		end
@@ -564,48 +528,76 @@ end
 function string.wrap(data, limit)
 	if type(data) == "string" then data = {data} end
 
-	local wrappedLines, result, preResult, preResultLength = {}
+	local normalizedLines, wrappedLines, result, preResult, preResultLength = {}, {}
+
+	-- Дублируем таблицу строк, шоб не перекосоебить ченить переносами
 	for i = 1, #data do
-		for subLine in data[i]:gmatch("[^\n]+") do
-			result = ""
-			
-			for word in subLine:gmatch("[^%s]+") do
-				preResult = result .. word
-				preResultLength = unicode.len(preResult)
+		normalizedLines[i] = data[i]
+	end
 
-				if preResultLength > limit then
-					if unicode.len(word) > limit then
-						table.insert(wrappedLines, unicode.sub(preResult, 1, limit))
-						for i = limit + 1, preResultLength, limit do
-							table.insert(wrappedLines, unicode.sub(preResult, i, i + limit - 1))
-						end
-						
-						result = wrappedLines[#wrappedLines] .. " "
-						wrappedLines[#wrappedLines] = nil
-					else
-						result = result:gsub("%s+$", "")
-						table.insert(wrappedLines, result)
-						
-						result = word .. " "
-					end
-				else
-					result = preResult .. " "
-				end
-			end
-
-			result = result:gsub("%s+$", "")
-			table.insert(wrappedLines, result)
+	-- Отсечение возврата каретки-ебуретки
+	local i = 1
+	while i <= #normalizedLines do
+		local position = string.unicodeFind(normalizedLines[i], "\n")
+		if position then
+			table.insert(normalizedLines, i + 1, unicode.sub(normalizedLines[i], position + 1, -1))
+			normalizedLines[i] = unicode.sub(normalizedLines[i], 1, position - 1)
 		end
+
+		i = i + 1
+	end
+
+	-- Сам перенос
+	local i = 1
+	while i <= #normalizedLines do
+		result = ""
+
+		for word in normalizedLines[i]:gmatch("[^%s]+") do
+			preResult = result .. word
+			preResultLength = unicode.len(preResult)
+
+			if preResultLength > limit then
+				if unicode.len(word) > limit then
+					table.insert(wrappedLines, unicode.sub(preResult, 1, limit))
+					for i = limit + 1, preResultLength, limit do
+						table.insert(wrappedLines, unicode.sub(preResult, i, i + limit - 1))
+					end
+					
+					result = wrappedLines[#wrappedLines] .. " "
+					wrappedLines[#wrappedLines] = nil
+				else
+					result = result:gsub("%s+$", "")
+					table.insert(wrappedLines, result)
+					
+					result = word .. " "
+				end
+			else
+				result = preResult .. " "
+			end
+		end
+
+		result = result:gsub("%s+$", "")
+		table.insert(wrappedLines, result)
+
+		i = i + 1
 	end
 
 	return wrappedLines
 end
 
--------------------------------------------------- Playground --------------------------------------------------
+----------------------------------------------------------------------------------------------------
 
--- print(table.toString(require("MineOSCore").OSSettings, true, 2, true, 2))
+-- local text = "Ты пидор\n\n ебаный,\n как ты меня заманал, сын шелудивой блядоидной псины, лицензию он не читает, а? Где текст лицензии? Чекнул хоть ради приличия, хуй ты впернутый?"
+-- local limit = 20
+-- local result = string.wrap(text, 20)
+-- print(string.rep("-", limit))
+-- for i = 1, #result do
+-- 	print(result[i])
+-- end
 
 -- local t =  {
+-- 	"hello",
+-- 	"my",
 -- 	abc = 123,
 -- 	def = {
 -- 		cyka = "pidor",
@@ -617,16 +609,23 @@ end
 -- 				tripleTable = "aefaef",
 -- 				aaa = "bbb",
 -- 				ccc = 123,
+-- 				"mda",
+-- 				"lol",
+-- 				"kek",
+-- 				"cheburek",
 -- 			}
 -- 		}
 -- 	},
 -- 	ghi = "HEHE",
 -- 	emptyTable = {},
+-- 	"beautiful",
+-- 	"world",
+-- 	"meow",
 -- }
 
 -- print(table.toString(t, true))
 
-------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
 
 return {loaded = true}
 
