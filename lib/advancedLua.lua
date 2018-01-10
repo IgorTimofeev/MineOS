@@ -285,13 +285,10 @@ function table.serialize(array, prettyLook, indentationWidth, indentUsingTabs, r
 			end
 			
 			if keyType == "number" then
-				if not prettyLook then
-					table.insert(result, "[")
-					table.insert(result, key)
-					table.insert(result, "]")
-
-					table.insert(result, equalsSymbol)
-				end
+				table.insert(result, "[")
+				table.insert(result, key)
+				table.insert(result, "]")
+				table.insert(result, equalsSymbol)
 			elseif keyType == "string" then
 				-- Короч, если типа начинается с буковки, а также если это алфавитно-нумерическая поеботня
 				if prettyLook and key:match("^%a") and key:match("^[%w%_]+$") then
