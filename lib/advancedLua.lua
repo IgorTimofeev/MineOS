@@ -528,20 +528,20 @@ end
 function string.wrap(data, limit)
 	if type(data) == "string" then data = {data} end
 
-	local normalizedLines, wrappedLines, result, preResult, preResultLength = {}, {}
+	local wrappedLines, result, preResult, position = {}
 
 	-- Дублируем таблицу строк, шоб не перекосоебить ченить переносами
 	for i = 1, #data do
-		normalizedLines[i] = data[i]
+		wrappedLines[i] = data[i]
 	end
 
 	-- Отсечение возврата каретки-ебуретки
 	local i = 1
-	while i <= #normalizedLines do
-		local position = string.unicodeFind(normalizedLines[i], "\n")
+	while i <= #wrappedLines do
+		local position = string.unicodeFind(wrappedLines[i], "\n")
 		if position then
-			table.insert(normalizedLines, i + 1, unicode.sub(normalizedLines[i], position + 1, -1))
-			normalizedLines[i] = unicode.sub(normalizedLines[i], 1, position - 1)
+			table.insert(wrappedLines, i + 1, unicode.sub(wrappedLines[i], position + 1, -1))
+			wrappedLines[i] = unicode.sub(wrappedLines[i], 1, position - 1)
 		end
 
 		i = i + 1
@@ -549,35 +549,27 @@ function string.wrap(data, limit)
 
 	-- Сам перенос
 	local i = 1
-	while i <= #normalizedLines do
+	while i <= #wrappedLines do
 		result = ""
 
-		for word in normalizedLines[i]:gmatch("[^%s]+") do
+		for word in wrappedLines[i]:gmatch("[^%s]+") do
 			preResult = result .. word
-			preResultLength = unicode.len(preResult)
 
-			if preResultLength > limit then
+			if unicode.len(preResult) > limit then
 				if unicode.len(word) > limit then
-					table.insert(wrappedLines, unicode.sub(preResult, 1, limit))
-					for i = limit + 1, preResultLength, limit do
-						table.insert(wrappedLines, unicode.sub(preResult, i, i + limit - 1))
-					end
-					
-					result = wrappedLines[#wrappedLines] .. " "
-					wrappedLines[#wrappedLines] = nil
+					table.insert(wrappedLines, i + 1, unicode.sub(wrappedLines[i], limit + 1, -1))
+					result = unicode.sub(wrappedLines[i], 1, limit)
 				else
-					result = result:gsub("%s+$", "")
-					table.insert(wrappedLines, result)
-					
-					result = word .. " "
+					table.insert(wrappedLines, i + 1, unicode.sub(wrappedLines[i], unicode.len(result) + 1, -1))	
 				end
+
+				break	
 			else
 				result = preResult .. " "
 			end
 		end
 
-		result = result:gsub("%s+$", "")
-		table.insert(wrappedLines, result)
+		wrappedLines[i] = result:gsub("%s+$", ""):gsub("^%s+", "")
 
 		i = i + 1
 	end
@@ -587,7 +579,11 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
--- local text = "Ты пидор\n\n ебаный,\n как ты меня заманал, сын шелудивой блядоидной псины, лицензию он не читает, а? Где текст лицензии? Чекнул хоть ради приличия, хуй ты впернутый?"
+-- local text = {
+-- 	"Ты пидор\n\n ебаныйкактыменязаманал,сын шелудивой блядоидной псины, лицензию он не читает, а? Где текст лицензии? Чекнул хоть ради приличия, хуй ты впернутый?",
+-- 	"Вот это ебососина, вообще не ожидал. Как так можна? Д@ды ваивале!!11",
+-- 	"Тест мультипереноса еба-строчек. Кошка еще скребется, зараза"
+-- }
 -- local limit = 20
 -- local result = string.wrap(text, 20)
 -- print(string.rep("-", limit))
