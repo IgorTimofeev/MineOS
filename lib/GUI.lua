@@ -3462,6 +3462,7 @@ local function tabBarDraw(tabBar)
 		tabBar.children[i].colors.pressed.background = tabBar.colors.selected.background
 		tabBar.children[i].colors.pressed.text = tabBar.colors.selected.text
 		tabBar.children[i].localX = x
+		tabBar.children[i].pressed = tabBar.selectedItem == i - 1
 
 		x = x + tabBar.children[i].width + tabBar.spaceBetweenTabs
 	end
@@ -3474,12 +3475,11 @@ local function tabBarDraw(tabBar)
 	return tabBar
 end
 
+
+
 local function tabBarTabEventHandler(mainContainer, tabBarTab, eventData)
 	if eventData[1] == "touch" then
 		tabBarTab.parent.selectedItem = tabBarTab:indexOf() - 1
-		for i = 2, #tabBarTab.parent.children do
-			tabBarTab.parent.children[i].pressed = tabBarTab.parent.selectedItem == i - 1
-		end
 
 		callMethod(tabBarTab.onTouch, mainContainer, tabBarTab, eventData)
 		
