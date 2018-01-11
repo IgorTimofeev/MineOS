@@ -19,7 +19,6 @@ local applicationList
 local localization = MineOSCore.getCurrentApplicationLocalization()
 local resources = MineOSCore.getCurrentApplicationResourcesDirectory()
 local updateImage = image.load(resources .. "Update.pic")
-local temproraryIconPath = resources .. "TempIcon.pic"
 local appsPerPage = 6
 
 local mainContainer, window = MineOSInterface.addWindow(MineOSInterface.tabbedWindow(1, 1, 80, 32))
@@ -31,8 +30,7 @@ local function newApp(x, y, width, applicationListElement, hideDownloadButton)
 	
 	app.icon = app:addChild(GUI.image(1, 1, MineOSInterface.iconsCache.script))
 	if applicationListElement.icon then
-		web.download(applicationListElement.icon, temproraryIconPath)
-		app.icon.image = image.load(temproraryIconPath)
+		app.icon.image = MineOSCore.loadImageFromURL(applicationListElement.icon)
 	end
 
 	app.downloadButton = app:addChild(GUI.roundedButton(1, 1, 13, 1, 0x66DB80, 0xFFFFFF, 0x339240, 0xFFFFFF, localization.download))
@@ -51,11 +49,11 @@ local function newApp(x, y, width, applicationListElement, hideDownloadButton)
 	end
 	app.downloadButton.hidden = hideDownloadButton
 
-	app.pathLabel = app:addChild(GUI.label(app.icon.width + 2, 1, width - app.icon.width - app.downloadButton.width - 3, 1, 0x0, fs.name(applicationListElement.path)))
-	app.versionLabel = app:addChild(GUI.label(app.icon.width + 2, 2, app.pathLabel.width, 1, 0x555555, localization.version .. applicationListElement.version))
+	app.pathLabel = app:addChild(GUI.label(app.icon.width + 3, 1, width - app.icon.width - app.downloadButton.width - 5, 1, 0x0, fs.name(applicationListElement.path)))
+	app.versionLabel = app:addChild(GUI.label(app.icon.width + 3, 2, app.pathLabel.width, 1, 0x555555, localization.version .. applicationListElement.version))
 	if applicationListElement.about then
 		local lines = string.wrap({web.request(applicationListElement.about .. MineOSCore.properties.language .. ".txt")}, app.pathLabel.width)
-		app.aboutTextBox = app:addChild(GUI.textBox(app.icon.width + 2, 3, app.pathLabel.width, #lines, nil, 0x999999, lines, 1, 0, 0))
+		app.aboutTextBox = app:addChild(GUI.textBox(app.icon.width + 3, 3, app.pathLabel.width, #lines, nil, 0x999999, lines, 1, 0, 0))
 		app.aboutTextBox.eventHandler = nil
 		if #lines > 2 then
 			app.height = #lines + 2

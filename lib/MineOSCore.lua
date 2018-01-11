@@ -5,6 +5,8 @@ local component = require("component")
 local buffer = require("doubleBuffering")
 local filesystem = require("filesystem")
 local unicode = require("unicode")
+local image = require("image")
+local color = require("color")
 local MineOSPaths = require("MineOSPaths")
 
 ----------------------------------------------------------------------------------------------------------------
@@ -279,6 +281,85 @@ function MineOSCore.downloadApplication(application, language, createShortcut)
 		end
 	else
 		web.download(application.url, application.path)
+	end
+end
+
+-----------------------------------------------------------------------------------------------------------------------------------
+
+function MineOSCore.loadImageFromURL(url)
+	local bytes = web.request(url)
+	bytes = { string.byte(bytes, 1, #bytes) }
+
+	local signature = string.char(bytes[1], bytes[2], bytes[3], bytes[4])
+	if signature == "OCIF" then
+		local encodingMethod = bytes[5]
+		if encodingMethod == 6 then
+			local width, height = bytes[6], bytes[7]
+			local picture = {width, height}
+
+			local i = 8
+			while i <= #bytes do
+				local alphaSize = bytes[i]
+				i = i + 1
+
+				for a = 1, alphaSize do
+					local alpha = bytes[i] / 255
+					local symbolSize = bit32.bor(bit32.lshift(bytes[i + 1], 8), bytes[i + 2])
+					i = i + 3
+
+					for s = 1, symbolSize do
+						local utf8CharSize = 1
+						for j = 1, 7 do
+							if bit32.band(bit32.rshift(bytes[i], 8 - j), 0x1) == 0x0 then
+								utf8CharSize = j
+								break
+							end
+						end   
+
+						local symbol
+						if utf8CharSize == 1 then
+							symbol = string.char(bytes[i])
+							i = i + 1
+						else
+							symbol = string.char(table.unpack(bytes, i, i + utf8CharSize - 2))
+							i = i + utf8CharSize - 1
+						end
+
+						local backgroundSize = bytes[i]
+						i = i + 1
+						
+						for b = 1, backgroundSize do
+							local background = color.to24Bit(bytes[i])
+							local foregroundSize = bytes[i + 1]
+							i = i + 2
+
+							for f = 1, foregroundSize do
+								local foreground = color.to24Bit(bytes[i])
+								local ySize = bytes[i + 1]
+								i = i + 2
+
+								for ys = 1, ySize do
+									local y = bytes[i]
+									local xSize = bytes[i + 1]
+									i = i + 2
+
+									for xs = 1, xSize do
+										image.set(picture, bytes[i], y, background, foreground, alpha, symbol)
+										i = i + 1
+									end
+								end
+							end
+						end
+					end
+				end
+			end
+
+			return picture
+		else
+			return false, "Unsupported encoding method: " .. encodingMethod
+		end
+	else
+		return false, "Unsupported signature: " .. signature
 	end
 end
 
