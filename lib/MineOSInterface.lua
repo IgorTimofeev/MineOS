@@ -1434,7 +1434,7 @@ end
 function MineOSInterface.showErrorWindow(path, line, traceback)
 	buffer.clear(0x0, 0.5)
 
-	local mainContainer = GUI.container(1, 1, buffer.getWidth(), math.floor(buffer.getHeight() * 0.45))
+	local mainContainer = GUI.container(1, 1, buffer.getWidth(), math.floor(buffer.getHeight() * 0.5))
 	mainContainer.y = math.floor(buffer.getHeight() / 2 - mainContainer.height / 2)
 	
 	mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, 3, 0x383838))
