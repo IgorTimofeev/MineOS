@@ -192,13 +192,16 @@ local function iconEventHandler(mainContainer, object, eventData)
 	elseif eventData[1] == "double_touch" and object:isClicked(eventData[3], eventData[4]) and eventData[5] == 0 then
 		object.parent.parent.onDoubleClick(object, eventData)
 	elseif eventData[1] == "drag" and object.parent.parent.iconConfigEnabled and object.lastTouchPosition then
+		-- Ебучие авторы мода, ну на кой хуй было делать drop-ивент без наличия drag? ПИДОРЫ
+		object.dragStarted = true
 		object.localX = object.localX + eventData[3] - object.lastTouchPosition.x
 		object.localY = object.localY + eventData[4] - object.lastTouchPosition.y
 		object.lastTouchPosition.x, object.lastTouchPosition.y = eventData[3], eventData[4]
 
 		mainContainer:draw()
 		buffer.draw()
-	elseif eventData[1] == "drop" and object.parent.parent.iconConfigEnabled then
+	elseif eventData[1] == "drop" and object.parent.parent.iconConfigEnabled and object.dragStarted then
+		object.dragStarted = nil
 		object.parent.parent.iconConfig[object.name .. (object.isDirectory and "/" or "")] = {
 			x = object.localX,
 			y = object.localY
