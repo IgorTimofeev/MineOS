@@ -125,6 +125,8 @@ module.onTouch = function()
 				table.insert(array, tostring(key))
 			end
 			input.autoComplete:match(array)
+		else
+			input.autoComplete:clear()
 		end
 	end
 
