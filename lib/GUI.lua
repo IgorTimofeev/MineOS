@@ -122,7 +122,7 @@ function GUI.getAlignmentCoordinates(object, subObject)
 	if object.alignment.horizontal == GUI.alignment.horizontal.left then
 		x = object.x
 	elseif object.alignment.horizontal == GUI.alignment.horizontal.center then
-		x = math.floor(object.x + object.width / 2 - subObject.width / 2)
+		x = object.x + object.width / 2 - subObject.width / 2
 	elseif object.alignment.horizontal == GUI.alignment.horizontal.right then
 		x = object.x + object.width - subObject.width
 	else
@@ -132,7 +132,7 @@ function GUI.getAlignmentCoordinates(object, subObject)
 	if object.alignment.vertical == GUI.alignment.vertical.top then
 		y = object.y
 	elseif object.alignment.vertical == GUI.alignment.vertical.center then
-		y = math.floor(object.y + object.height / 2 - subObject.height / 2)
+		y = object.y + object.height / 2 - subObject.height / 2
 	elseif object.alignment.vertical == GUI.alignment.vertical.bottom then
 		y = object.y + object.height - subObject.height
 	else
@@ -700,7 +700,7 @@ end
 
 local function drawLabel(object)
 	local xText, yText = GUI.getAlignmentCoordinates(object, {width = unicode.len(object.text), height = 1})
-	buffer.text(xText, yText, object.colors.text, object.text)
+	buffer.text(math.floor(xText), math.floor(yText), object.colors.text, object.text)
 	return object
 end
 
@@ -1494,7 +1494,7 @@ end
 local function drawComboBox(object)
 	buffer.square(object.x, object.y, object.width, object.height, object.colors.default.background, object.colors.default.text, " ")
 	if object.dropDownMenu.itemsContainer.children[object.selectedItem] then
-		buffer.text(object.x + 1, math.floor(object.y + object.height / 2), object.colors.default.text, string.limit(object.dropDownMenu.itemsContainer.children[object.selectedItem].text, object.width - object.height - 4, "right"))
+		buffer.text(object.x + 1, math.floor(object.y + object.height / 2), object.colors.default.text, string.limit(object.dropDownMenu.itemsContainer.children[object.selectedItem].text, object.width - object.height - 2, "right"))
 	end
 	GUI.button(object.x + object.width - object.height * 2 + 1, object.y, object.height * 2 - 1, object.height, object.colors.arrow.background, object.colors.arrow.text, 0x0, 0x0, object.pressed and "▲" or "▼"):draw()
 
@@ -1541,7 +1541,7 @@ local function selectComboBoxItem(object)
 end
 
 local function comboBoxEventHandler(mainContainer, object, eventData)
-	if eventData[1] == "touch" then
+	if eventData[1] == "touch" and #object.dropDownMenu.itemsContainer.children > 0 then
 		object:selectItem()
 		callMethod(object.onItemSelected, object.dropDownMenu.itemsContainer.children[object.selectedItem], eventData)
 	end
@@ -1771,7 +1771,7 @@ local function layoutUpdate(layout)
 		layoutGetCalculatedSize(layout.rowSizes, row, rowPercentageTotalSize)
 		for column = 1, #layout.columnSizes do
 			layoutGetCalculatedSize(layout.columnSizes, column, columnPercentageTotalSize)
-			layout.cells[row][column].totalWidth, layout.cells[row][column].totalHeight = 0, 0
+			layout.cells[row][column].width, layout.cells[row][column].height = 0, 0
 		end
 	end
 
@@ -1796,11 +1796,11 @@ local function layoutUpdate(layout)
 
 				-- Направление и расчет размеров
 				if cell.direction == GUI.directions.horizontal then
-					cell.totalWidth = cell.totalWidth + child.width + cell.spacing
-					cell.totalHeight = math.max(cell.totalHeight, child.height)
+					cell.width = cell.width + child.width + cell.spacing
+					cell.height = math.max(cell.height, child.height)
 				else
-					cell.totalWidth = math.max(cell.totalWidth, child.width)
-					cell.totalHeight = cell.totalHeight + child.height + cell.spacing
+					cell.width = math.max(cell.width, child.width)
+					cell.height = cell.height + child.height + cell.spacing
 				end
 			else
 				error("Layout child with index " .. i .. " has been assigned to cell (" .. layoutColumn .. "x" .. layoutRow .. ") out of layout grid range")
@@ -1808,7 +1808,7 @@ local function layoutUpdate(layout)
 		end
 	end
 
-	-- Высчитываем позицицию объектов
+	-- Высчитываем стартовую позицию объектов ячейки
 	local x, y = 1, 1
 	for row = 1, #layout.rowSizes do
 		for column = 1, #layout.columnSizes do
@@ -1822,10 +1822,12 @@ local function layoutUpdate(layout)
 					alignment = cell.alignment,
 				},
 				{
-					width = cell.totalWidth - (cell.direction == GUI.directions.horizontal and cell.spacing or 0),
-					height = cell.totalHeight - (cell.direction == GUI.directions.vertical and cell.spacing or 0),
+					width = cell.width - (cell.direction == GUI.directions.horizontal and cell.spacing or 0),
+					height = cell.height - (cell.direction == GUI.directions.vertical and cell.spacing or 0),
 				}
 			)
+
+			-- Учитываем отступы от краев ячейки
 			if cell.margin then
 				cell.x, cell.y = GUI.getMarginCoordinates(cell)
 			end
@@ -1842,15 +1844,14 @@ local function layoutUpdate(layout)
 		
 		if not child.hidden then
 			cell = layout.cells[child.layoutRow][child.layoutColumn]
+			
+			child.localX, cell.localY = GUI.getAlignmentCoordinates(cell, child)
+
 			if cell.direction == GUI.directions.horizontal then
-				child.localX = math.round(cell.x)
-				child.localY = math.round(cell.y + cell.totalHeight / 2 - child.height / 2)
-				
+				child.localX, child.localY = math.floor(cell.x), math.floor(cell.localY)
 				cell.x = cell.x + child.width + cell.spacing
 			else
-				child.localX = math.round(cell.x + cell.totalWidth / 2 - child.width / 2)
-				child.localY = math.round(cell.y)
-				
+				child.localX, child.localY = math.floor(child.localX), math.floor(cell.y)
 				cell.y = cell.y + child.height + cell.spacing
 			end
 		end
@@ -2118,6 +2119,7 @@ function GUI.layout(x, y, width, height, columnCount, rowCount)
 	layout.fitToChildrenSize = layoutFitToChildrenSize
 	layout.setCellFitting = layoutSetCellFitting
 
+	layout.update = layoutUpdate
 	layout.addChild = layoutAddChild
 	layout.draw = layoutDraw
 
@@ -2359,9 +2361,13 @@ local function resizerDraw(object)
 		buffer.text(object.x, math.floor(object.y + object.height / 2), object.colors.helper, string.rep("━", object.width))
 	else
 		local x = math.floor(object.x + object.width / 2)
+		local bufferWidth, bufferHeight, index = buffer.getResolution()
+		
 		for i = object.y, object.y + object.height - 1 do
-			local index = buffer.getIndex(x, i)
-			buffer.rawSet(index, buffer.rawGet(index), object.colors.helper, "┃")
+			if x >= 1 and x <= bufferWidth and i >= 1 and i <= bufferHeight then
+				index = buffer.getIndex(x, i)
+				buffer.rawSet(index, buffer.rawGet(index), object.colors.helper, "┃")
+			end
 		end
 	end
 
@@ -2806,7 +2812,7 @@ local function textBoxDraw(object)
 					height = 1
 				}
 			)
-			buffer.text(x, y, textColor, text)
+			buffer.text(math.floor(x), y, textColor, text)
 			y = y + 1
 		else
 			break
@@ -3787,18 +3793,49 @@ end
 
 -----------------------------------------------------------------------------------------------------
 
+local function textUpdate(object)
+	object.width = unicode.len(object.text)
+	return object
+end
+
+local function textDraw(object)
+	object:update()
+	buffer.text(object.x, object.y, object.color, object.text)
+	return object
+end
+
+function GUI.text(x, y, color, text)
+	local object = GUI.object(x, y, 1, 1)
+
+	object.text = text
+	object.color = color
+	object.update = textUpdate
+	object.draw = textDraw
+	object:update()
+
+	return object
+end
+
+-----------------------------------------------------------------------------------------------------
+
 -- buffer.clear()
 -- buffer.draw(true)
 
 -- local mainContainer = GUI.fullScreenContainer()
--- mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x262626))
+-- mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x2D2D2D))
 
--- local tabBar = mainContainer:addChild(GUI.tabBar(3, 2, 80, 3, 3, 0, 0xE1E1E1, 0x2D2D2D, 0xC3C3C3, 0x2D2D2D))
--- tabBar:addItem("Вкладка 1")
--- tabBar:addItem("Вкладка 2")
--- tabBar:addItem("Вкладка 3").onTouch = function()
--- 	GUI.error("aefae")
--- end
+-- local w, h = 40, 20
+-- mainContainer:addChild(GUI.panel(3, 2, w, h, 0x3C3C3C))
+
+-- local layout = mainContainer:addChild(GUI.layout(3, 2, w, h, 1, 1))
+-- layout:setCellAlignment(1, 1, GUI.alignment.horizontal.center, GUI.alignment.vertical.center)
+-- layout.defaultRow, layout.defaultColumn = 1, 1
+
+-- layout:addChild(GUI.text(1, 1, 0xFFFFFF, "Мяу-мяу"))
+-- layout:addChild(GUI.text(1, 1, 0xFFFFFF, "Это всего лишь обычный текст"))
+-- layout:addChild(GUI.text(1, 1, 0xFFFFFF, "Текстик, как делы?"))
+-- layout:addChild(GUI.text(1, 1, 0xFFFFFF, "Вот уж мяу так мяу, мда, лол, кек, чебурек"))
+
 
 -- mainContainer:draw()
 -- buffer.draw(true)
