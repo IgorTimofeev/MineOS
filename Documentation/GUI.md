@@ -946,6 +946,7 @@ GUI.**comboBox**( x, y, width, elementHeight, backgroundColor, textColor, arrowB
 | *int* | .**currentItem** | Индекс выбранного элемента комбо-бокса |
 | *function* | :**addItem**( *string* text, *boolean* disabled, *string* shortcut, *int* color ): *table* item| Добавить в комбо-бокс элемент с указанными параметрами. При параметре disabled элемент не будет реагировать на клики мышью. Каждый элемент может иметь собственный callback-метод .**onTouch** для последующей обработки данных |
 | *function* | :**addSeparator**()| Добавить визуальный в комбо-бокс разделитель |
+| *function* | :**removeItem**( *int*  index) | Удалить из комбо-бокса элемент под указанным индексом |
 | *function* | :**getItem**( *int* index ): *table* item| Получить элемент комбо-бокса с соответствующим индексом |
 | *function* | :**indexOfItem**( *string* itemText ): *int* index | Получить индекс элемента комбо-бокса с соответствующим текстом |
 | *function* | :**clear**()| Удалить все имеющиеся элементы комбо-бокса |
