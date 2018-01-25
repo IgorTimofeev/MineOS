@@ -1268,10 +1268,13 @@ local function dropDownMenuItemEventHandler(mainContainer, object, eventData)
 end
 
 local function dropDownMenuCalculateSizes(menu)
-	local totalHeight = 0
+	local y, totalHeight = menu.itemsContainer.children[1].localY, 0
 	for i = 1, #menu.itemsContainer.children do
-		totalHeight = totalHeight + (menu.itemsContainer.children[i].type == GUI.dropDownMenuElementTypes.separator and 1 or menu.itemHeight)
 		menu.itemsContainer.children[i].width = menu.width
+		menu.itemsContainer.children[i].localY = y
+		
+		y = y + menu.itemsContainer.children[i].height
+		totalHeight = totalHeight + (menu.itemsContainer.children[i].type == GUI.dropDownMenuElementTypes.separator and 1 or menu.itemHeight)
 	end
 	menu.height = math.min(totalHeight, menu.maximumHeight, buffer.getHeight() - menu.y)
 	menu.itemsContainer.width, menu.itemsContainer.height = menu.width, menu.height
@@ -1282,8 +1285,14 @@ local function dropDownMenuCalculateSizes(menu)
 	menu.nextButton.hidden = menu.itemsContainer.children[#menu.itemsContainer.children].localY + menu.itemsContainer.children[#menu.itemsContainer.children].height - 1 <= menu.height
 end
 
+local function dropDownMenuRemoveItem(menu, index)
+	table.remove(menu.itemsContainer.children, index)
+	dropDownMenuCalculateSizes(menu)
+	return menu
+end
+
 local function dropDownMenuAddItem(menu, text, disabled, shortcut, color)
-	local item = menu.itemsContainer:addChild(GUI.object(1, #menu.itemsContainer.children == 0 and 1 or menu.itemsContainer.children[#menu.itemsContainer.children].localY + menu.itemsContainer.children[#menu.itemsContainer.children].height, menu.width, menu.itemHeight))
+	local item = menu.itemsContainer:addChild(GUI.object(1, 1, 1, menu.itemHeight))
 
 	item.type = GUI.dropDownMenuElementTypes.default
 	item.text = text
@@ -1414,6 +1423,7 @@ function GUI.dropDownMenu(x, y, width, maximumHeight, itemHeight, backgroundColo
 	menu.itemHeight = itemHeight
 	menu.addSeparator = dropDownMenuAddSeparator
 	menu.addItem = dropDownMenuAddItem
+	menu.removeItem = dropDownMenuRemoveItem
 	menu.draw = dropDownMenuDraw
 	menu.show = dropDownMenuShow
 	menu.maximumHeight = maximumHeight
@@ -1505,6 +1515,13 @@ local function comboBoxGetItem(object, index)
 	return object.dropDownMenu.itemsContainer.children[index]
 end
 
+local function comboBoxRemoveItem(object, index)
+	object.dropDownMenu:removeItem(index)
+	if object.selectedItem > #object.dropDownMenu.itemsContainer.children then
+		object.selectedItem = #object.dropDownMenu.itemsContainer.children
+	end
+end
+
 local function comboBoxCount(object)
 	return #object.dropDownMenu.itemsContainer.children
 end
@@ -1586,6 +1603,7 @@ function GUI.comboBox(x, y, width, elementHeight, backgroundColor, textColor, ar
 	)
 	object.selectedItem = 1
 	object.addItem = comboBoxAddItem
+	object.removeItem = comboBoxRemoveItem
 	object.addSeparator = comboBoxAddSeparator
 	object.draw = drawComboBox
 	object.selectItem = selectComboBoxItem
