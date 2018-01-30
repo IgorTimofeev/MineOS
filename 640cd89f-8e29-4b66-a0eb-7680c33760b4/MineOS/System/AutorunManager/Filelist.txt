@@ -1,1 +1,0 @@
-{[1]={["path"]="OS.lua",["enabled"]=true,["size"]=44},[2]={["path"]="/bin/resolution.lua",["enabled"]=true,["size"]=1}}
