@@ -1,0 +1,17 @@
+{
+	applications = "Applications",
+	libraries = "Libraries",
+	wallpapers = "Wallpapers",
+	other = "Other",
+	updates = "Updates",
+	checkingForUpdates = "Checking for updates",
+	version = "Version: ",
+	updateAll = "Update all",
+	download = "Install",
+	downloading = "Installing",
+	downloaded = "Installed",
+	search = "Search",
+	page = "Page ",
+	youHaveNewestApps = "You have no updates.",
+	updating = "Installing ",
+}

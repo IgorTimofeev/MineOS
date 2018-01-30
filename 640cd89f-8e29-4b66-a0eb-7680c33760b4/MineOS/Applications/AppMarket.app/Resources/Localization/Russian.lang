@@ -1,0 +1,17 @@
+{
+	applications = "Приложения",
+	libraries = "Библиотеки",
+	wallpapers = "Обои",
+	other = "Другое",
+	updates = "Обновления",
+	checkingForUpdates = "Проверка наличия обновлений",
+	version = "Версия: ",
+	updateAll = "Обновить все",
+	download = "Загрузить",
+	downloading = "Загрузка",
+	downloaded = "Установлено",
+	search = "Поиск",
+	page = "Страница ",
+	youHaveNewestApps = "У вас самое новое ПО",
+	updating = "Обновление ",
+}
