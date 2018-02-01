@@ -6,7 +6,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-
 class OCIF {
     private static void writePixelToFileAsOCIF5(FileOutputStream out, Pixel pixel) throws IOException {
         out.write((byte) Palette.getClosestIndex(pixel.background));
@@ -15,7 +14,6 @@ class OCIF {
         out.write((byte) pixel.alpha);
         out.write(pixel.symbol.getBytes(StandardCharsets.UTF_8));
     }
-
 
     private static byte[] integerToByteArray(int number, int arraySize) {
         byte[] array = new byte[arraySize];

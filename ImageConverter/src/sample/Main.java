@@ -4,8 +4,6 @@ import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
 import javafx.application.Application;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -18,7 +16,6 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.*;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
-import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
@@ -271,12 +268,23 @@ public class Main extends Application {
     }
 
     public void onImageScroll(ScrollEvent scrollEvent) {
-        double speed = 0.05;
+        double percentage = 0.15;
+        double newWidth = imageView.getFitWidth() * (1 + (scrollEvent.getDeltaY() > 0 ? percentage : -percentage));
+        double newHeight = newWidth * (imageView.getImage().getWidth() / imageView.getImage().getHeight());
 
-        double newWidth = imageView.getFitWidth() * (1 + (scrollEvent.getDeltaY() > 0 ? speed : -speed));
+        Timeline timeline = newTimeLine(
+            100,
+            new KeyValue[] {
+                new KeyValue(imageView.fitWidthProperty(), imageView.getFitWidth()),
+                new KeyValue(imageView.fitHeightProperty(), imageView.getFitHeight())
+            },
+            new KeyValue[] {
+                new KeyValue(imageView.fitWidthProperty(), newWidth),
+                new KeyValue(imageView.fitHeightProperty(), newHeight)
+            }
+        );
 
-        imageView.setFitWidth(newWidth);
-        imageView.setFitHeight(newWidth * (imageView.getImage().getWidth() / imageView.getImage().getHeight()));
+        timeline.play();
     }
 
     private void loadImage(File file) {
@@ -324,14 +332,14 @@ public class Main extends Application {
 
             if (file != null) {
                 OCIF.convert(
-                        currentImagePath,
-                        file.getPath(),
-                        Integer.parseInt(widthTextField.getText()),
-                        Integer.parseInt(heightTextField.getText()),
-                        encodingMethodComboBox.getValue().contains("OCIF6") ? 6 : 5,
-                        brailleCheckBox.isSelected(),
-                        ditheringCheckBox.isSelected(),
-                        ditheringOpacitySlider.getValue() / 100.0d
+                    currentImagePath,
+                    file.getPath(),
+                    Integer.parseInt(widthTextField.getText()),
+                    Integer.parseInt(heightTextField.getText()),
+                    encodingMethodComboBox.getValue().contains("OCIF6") ? 6 : 5,
+                    brailleCheckBox.isSelected(),
+                    ditheringCheckBox.isSelected(),
+                    ditheringOpacitySlider.getValue() / 100.0d
                 );
             }
         }
