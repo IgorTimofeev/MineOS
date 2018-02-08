@@ -1057,7 +1057,7 @@ while true do
 			--Верхний меню-бар
 			local object
 			for i = 1, #obj.menu.children do
-				if obj.menu.children[i]:isClicked(e[3], e[4]) then
+				if obj.menu.children[i]:isPointInside(e[3], e[4]) then
 					object = obj.menu.children[i]
 					break
 				end

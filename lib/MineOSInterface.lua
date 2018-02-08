@@ -189,7 +189,7 @@ local function iconEventHandler(mainContainer, object, eventData)
 		else
 			object.parent.parent.onRightClick(object, eventData)
 		end
-	elseif eventData[1] == "double_touch" and object:isClicked(eventData[3], eventData[4]) and eventData[5] == 0 then
+	elseif eventData[1] == "double_touch" and object:isPointInside(eventData[3], eventData[4]) and eventData[5] == 0 then
 		object.parent.parent.onDoubleClick(object, eventData)
 	elseif eventData[1] == "drag" and object.parent.parent.iconConfigEnabled and object.lastTouchPosition then
 		-- Ебучие авторы мода, ну на кой хуй было делать drop-ивент без наличия drag? ПИДОРЫ
@@ -280,7 +280,7 @@ local function iconAnalyseExtension(icon)
 	return icon
 end
 
-local function iconIsClicked(icon, x, y)
+local function iconIsPointInside(icon, x, y)
 	return
 		x >= icon.x + MineOSInterface.iconImageHorizontalOffset and
 		y >= icon.y and
@@ -310,7 +310,7 @@ function MineOSInterface.icon(x, y, path, textColor, selectionColor)
 	icon.isShortcut = false
 	icon.selected = false
 
-	icon.isClicked = iconIsClicked
+	icon.isPointInside = iconIsPointInside
 	icon.draw = iconDraw
 	icon.launchers = table.copy(MineOSInterface.iconLaunchers)
 	icon.analyseExtension = iconAnalyseExtension
@@ -360,8 +360,8 @@ function MineOSInterface.iconLaunchers.application(icon)
 			table.insert(lines, line)
 		end
 		
-		container.layout:addChild(GUI.textBox(1, 1, 50, 1, nil, 0xcccccc, lines, 1, 0, 0, true, true))
-		local button = container.layout:addChild(GUI.button(1, 1, 30, 1, 0xE1E1E1, 0x2D2D2D, 0xAAAAAA, 0x2D2D2D, MineOSCore.localization.dontShowAnymore))	
+		container.layout:addChild(GUI.textBox(1, 1, 50, 1, nil, 0xC3C3C3, lines, 1, 0, 0, true, true))
+		local button = container.layout:addChild(GUI.button(1, 1, 30, 1, 0xE1E1E1, 0x2D2D2D, 0xA5A5A5, 0x2D2D2D, MineOSCore.localization.dontShowAnymore))	
 		
 		local function onExit()
 			container:delete()
@@ -715,7 +715,6 @@ function MineOSInterface.iconField(x, y, width, height, xOffset, yOffset, textCo
 
 	iconField.updateFileList = iconFieldUpdateFileList
 	iconField.update = iconFieldUpdate
-	iconField.eventHandler = iconFieldEventHandler
 	iconField.deselectAll = iconFieldDeselectAll
 	iconField.loadIconConfig = iconFieldLoadIconConfig
 	iconField.saveIconConfig = iconFieldSaveIconConfig
@@ -962,7 +961,7 @@ end
 local function addUniversalContainerWithInputTextBox(parentWindow, text, title, placeholder)
 	local container = MineOSInterface.addUniversalContainer(parentWindow, title)
 	
-	container.inputField = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x666666, 0x666666, 0xE1E1E1, 0x2D2D2D, text, placeholder, false))
+	container.inputField = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x696969, 0xE1E1E1, 0x2D2D2D, text, placeholder, false))
 	container.label = container.layout:addChild(GUI.label(1, 1, 36, 1, 0xFF4940, MineOSCore.localization.file .. " " .. MineOSCore.localization.alreadyExists)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
 	container.label.hidden = true
 
@@ -1025,7 +1024,7 @@ end
 function MineOSInterface.newFileFromURL(parentWindow, iconField, x, y, path)
 	local container = addUniversalContainerWithInputTextBox(parentWindow, nil, "Загрузить файл по URL", MineOSCore.localization.fileName)
 
-	container.inputFieldURL = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x666666, 0x666666, 0xE1E1E1, 0x2D2D2D, nil, "URL", false))
+	container.inputFieldURL = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x696969, 0xE1E1E1, 0x2D2D2D, nil, "URL", false))
 	container.inputField.onInputFinished = function()
 		if container.inputField.text then
 			if fs.exists(path .. container.inputField.text) then
@@ -1055,7 +1054,7 @@ end
 function MineOSInterface.newApplication(parentWindow, iconField, x, y, path)
 	local container = addUniversalContainerWithInputTextBox(parentWindow, nil, MineOSCore.localization.newApplication, MineOSCore.localization.applicationName)
 
-	local filesystemChooser = container.layout:addChild(GUI.filesystemChooser(1, 1, 36, 3, 0xE1E1E1, 0x666666, 0x444444, 0x999999, nil, MineOSCore.localization.open, MineOSCore.localization.cancel, MineOSCore.localization.iconPath, "/"))
+	local filesystemChooser = container.layout:addChild(GUI.filesystemChooser(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x444444, 0x969696, nil, MineOSCore.localization.open, MineOSCore.localization.cancel, MineOSCore.localization.iconPath, "/"))
 	filesystemChooser:addExtensionFilter(".pic")
 	filesystemChooser:moveBackward()
 
@@ -1330,14 +1329,14 @@ local function GUICopy(parentContainer, fileList, toPath)
 	container.panel.eventHandler = nil
 
 	local buttonsLayout = container.layout:addChild(GUI.layout(1, 1, 1, 1, 1, 1))
-	buttonsLayout:addChild(GUI.button(1, 1, 11, 1, 0xE1E1E1, 0x2D2D2D, 0xAAAAAA, 0x2D2D2D, MineOSCore.localization.yes)).onTouch = function()
+	buttonsLayout:addChild(GUI.button(1, 1, 11, 1, 0xE1E1E1, 0x2D2D2D, 0xA5A5A5, 0x2D2D2D, MineOSCore.localization.yes)).onTouch = function()
 		applyYes = true
 		parentContainer:stopEventHandling()
 	end
-	buttonsLayout:addChild(GUI.button(1, 1, 11, 1, 0xE1E1E1, 0x2D2D2D, 0xAAAAAA, 0x2D2D2D, MineOSCore.localization.no)).onTouch = function()
+	buttonsLayout:addChild(GUI.button(1, 1, 11, 1, 0xE1E1E1, 0x2D2D2D, 0xA5A5A5, 0x2D2D2D, MineOSCore.localization.no)).onTouch = function()
 		parentContainer:stopEventHandling()
 	end
-	buttonsLayout:addChild(GUI.button(1, 1, 11, 1, 0xE1E1E1, 0x2D2D2D, 0xAAAAAA, 0x2D2D2D, MineOSCore.localization.cancel)).onTouch = function()
+	buttonsLayout:addChild(GUI.button(1, 1, 11, 1, 0xE1E1E1, 0x2D2D2D, 0xA5A5A5, 0x2D2D2D, MineOSCore.localization.cancel)).onTouch = function()
 		breakRecursion = true
 		parentContainer:stopEventHandling()
 	end
@@ -1522,19 +1521,22 @@ local function windowDraw(window)
 end
 
 local function windowCheck(window, x, y)
+	local child
 	for i = #window.children, 1, -1 do
-		if window.children[i].children then
-			if windowCheck(window.children[i], x, y) then
+		child = window.children[i]
+		
+		if child.children then
+			if windowCheck(child, x, y) then
 				return true
 			end
-		elseif window.children[i].eventHandler and window.children[i]:isClicked(x, y) then
+		elseif child.eventHandler and not child.hidden and not child.disabled and child:isPointInside(x, y) then
 			return true
 		end
 	end
 end
 
 local function windowEventHandler(mainContainer, window, eventData)
-	if eventData[1] == "touch" and not windowCheck(window, eventData[3], eventData[4]) then
+	if eventData[1] == "touch" then
 		window.lastTouchPosition = {
 			x = eventData[3],
 			y = eventData[4]
@@ -1548,10 +1550,9 @@ local function windowEventHandler(mainContainer, window, eventData)
 		end
 	elseif eventData[1] == "drag" and window.lastTouchPosition and not windowCheck(window, eventData[3], eventData[4]) then
 		local xOffset, yOffset = eventData[3] - window.lastTouchPosition.x, eventData[4] - window.lastTouchPosition.y
-		window.lastTouchPosition.x, window.lastTouchPosition.y = eventData[3], eventData[4]
-
 		if xOffset ~= 0 or yOffset ~= 0 then
 			window.localX, window.localY = window.localX + xOffset, window.localY + yOffset
+			window.lastTouchPosition.x, window.lastTouchPosition.y = eventData[3], eventData[4]
 			
 			mainContainer:draw()
 			buffer.draw()

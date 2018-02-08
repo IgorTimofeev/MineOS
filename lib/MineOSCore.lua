@@ -286,9 +286,8 @@ end
 
 -----------------------------------------------------------------------------------------------------------------------------------
 
-function MineOSCore.loadImageFromURL(url)
-	local bytes = web.request(url)
-	bytes = { string.byte(bytes, 1, #bytes) }
+function MineOSCore.loadImageFromString(bytes)
+	bytes = {string.byte(bytes, 1, #bytes)}
 
 	local signature = string.char(bytes[1], bytes[2], bytes[3], bytes[4])
 	if signature == "OCIF" then
@@ -309,9 +308,9 @@ function MineOSCore.loadImageFromURL(url)
 
 					for s = 1, symbolSize do
 						local utf8CharSize = 1
-						for j = 1, 7 do
-							if bit32.band(bit32.rshift(bytes[i], 8 - j), 0x1) == 0x0 then
-								utf8CharSize = j
+						for j = 7, 1, -1 do
+							if bit32.band(bit32.rshift(bytes[i], j), 1) == 0 then
+								utf8CharSize = 8 - j
 								break
 							end
 						end   

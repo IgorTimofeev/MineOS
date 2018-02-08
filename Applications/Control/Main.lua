@@ -26,10 +26,10 @@ window.contentContainer = window:addChild(GUI.container(1, 4, window.width, wind
 local function loadModules()
 	local fileList = fs.sortedList(modulesPath, "name", false)
 	for i = 1, #fileList do
-		local success, reason = loadfile(modulesPath .. fileList[i])
-		if success then
-			local success, reason = pcall(success, mainContainer, window, localization)
-			if success then
+		local loadedFile, reason = loadfile(modulesPath .. fileList[i])
+		if loadedFile then
+			local pcallSuccess, reason = pcall(loadedFile, mainContainer, window, localization)
+			if pcallSuccess then
 				window.tabBar:addItem(reason.name).onTouch = function()
 					reason.onTouch()
 				end

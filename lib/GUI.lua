@@ -52,16 +52,16 @@ GUI.filesystemModes = enum(
 
 GUI.colors = {
 	disabled = {
-		background = 0x888888,
-		text = 0xAAAAAA
+		background = 0x878787,
+		text = 0xA5A5A5
 	},
 	contextMenu = {
-		separator = 0x888888,
+		separator = 0x878787,
 		default = {
 			background = 0xFFFFFF,
 			text = 0x2D2D2D
 		},
-		disabled = 0x888888,
+		disabled = 0x878787,
 		pressed = {
 			background = 0x3366CC,
 			text = 0xFFFFFF
@@ -81,14 +81,12 @@ local function callMethod(method, ...)
 	if method then method(...) end
 end
 
-local function objectIsClicked(object, x, y)
+local function objectIsPointInside(object, x, y)
 	return
 		x >= object.x and
-		y >= object.y and
 		x <= object.x + object.width - 1 and
-		y <= object.y + object.height - 1 and
-		not object.disabled and
-		not object.hidden
+		y >= object.y and
+		y <= object.y + object.height - 1
 end
 
 local function objectDraw(object)
@@ -101,8 +99,8 @@ function GUI.object(x, y, width, height)
 		y = y,
 		width = width,
 		height = height,
-		isClicked = objectIsClicked,
-		draw = objectDraw
+		draw = objectDraw,
+		isPointInside = objectIsPointInside,
 	}
 end
 
@@ -327,16 +325,26 @@ function GUI.drawContainerContent(container)
 	return container
 end
 
-local function containerHandler(isScreenEvent, mainContainer, currentContainer, eventData, intersectionX1, intersectionY1, intersectionX2, intersectionY2)
-	local breakRecursion, child = false
+local function containerHandler(isScreenEvent, mainContainer, currentContainer, eventData, eventDataParameter3, eventDataParameter4, intersectionX1, intersectionY1, intersectionX2, intersectionY2)
+	local child, newIntersectionX1, newIntersectionY1, newIntersectionX2, newIntersectionY2
 
-	if not isScreenEvent or intersectionX1 and eventData[3] >= intersectionX1 and eventData[4] >= intersectionY1 and eventData[3] <= intersectionX2 and eventData[4] <= intersectionY2 then
+	if not isScreenEvent or intersectionX1 and eventDataParameter3 >= intersectionX1 and eventDataParameter4 >= intersectionY1 and eventDataParameter3 <= intersectionX2 and eventDataParameter4 <= intersectionY2 then
+		if currentContainer.eventHandler then
+			if isScreenEvent then
+				if currentContainer:isPointInside(eventDataParameter3, eventDataParameter4) and not currentContainer.disabled then
+					currentContainer.eventHandler(mainContainer, currentContainer, eventData)
+				end
+			else
+				currentContainer.eventHandler(mainContainer, currentContainer, eventData)
+			end
+		end
+
 		for i = #currentContainer.children, 1, -1 do
 			child = currentContainer.children[i]
 
 			if not child.hidden then
 				if child.children then
-					local newIntersectionX1, newIntersectionY1, newIntersectionX2, newIntersectionY2 = getRectangleIntersection(
+					newIntersectionX1, newIntersectionY1, newIntersectionX2, newIntersectionY2 = getRectangleIntersection(
 						intersectionX1,
 						intersectionY1,
 						intersectionX2,
@@ -347,31 +355,24 @@ local function containerHandler(isScreenEvent, mainContainer, currentContainer, 
 						child.y + child.height - 1
 					)
 
-					if newIntersectionX1 then
-						if containerHandler(isScreenEvent, mainContainer, child, eventData, newIntersectionX1, newIntersectionY1, newIntersectionX2, newIntersectionY2) then
-							breakRecursion = true
-							break
-						end
+					if newIntersectionX1 and containerHandler(isScreenEvent, mainContainer, child, eventData, eventDataParameter3, eventDataParameter4, newIntersectionX1, newIntersectionY1, newIntersectionX2, newIntersectionY2) then
+						return true
 					end
 				else
 					if isScreenEvent then
-						if child:isClicked(eventData[3], eventData[4]) then
-							callMethod(child.eventHandler, mainContainer, child, eventData)
-							breakRecursion = true
-							break
+						if child:isPointInside(eventDataParameter3, eventDataParameter4) then
+							if child.eventHandler and not child.disabled then
+								child.eventHandler(mainContainer, child, eventData)
+							end
+
+							return true
 						end
-					else
-						callMethod(child.eventHandler, mainContainer, child, eventData)
+					elseif child.eventHandler then
+						child.eventHandler(mainContainer, child, eventData)
 					end
 				end
 			end
 		end
-
-		callMethod(currentContainer.eventHandler, mainContainer, currentContainer, eventData)
-	end
-
-	if breakRecursion then
-		return true
 	end
 end
 
@@ -393,6 +394,8 @@ local function containerStartEventHandling(container, eventHandlingDelay)
 			container,
 			container,
 			eventData,
+			eventData[3],
+			eventData[4],
 			container.x,
 			container.y,
 			container.x + container.width - 1,
@@ -1268,21 +1271,23 @@ local function dropDownMenuItemEventHandler(mainContainer, object, eventData)
 end
 
 local function dropDownMenuCalculateSizes(menu)
-	local y, totalHeight = menu.itemsContainer.children[1].localY, 0
-	for i = 1, #menu.itemsContainer.children do
-		menu.itemsContainer.children[i].width = menu.width
-		menu.itemsContainer.children[i].localY = y
-		
-		y = y + menu.itemsContainer.children[i].height
-		totalHeight = totalHeight + (menu.itemsContainer.children[i].type == GUI.dropDownMenuElementTypes.separator and 1 or menu.itemHeight)
-	end
-	menu.height = math.min(totalHeight, menu.maximumHeight, buffer.getHeight() - menu.y)
-	menu.itemsContainer.width, menu.itemsContainer.height = menu.width, menu.height
+	if #menu.itemsContainer.children > 0 then
+		local y, totalHeight = menu.itemsContainer.children[1].localY or 1, 0
+		for i = 1, #menu.itemsContainer.children do
+			menu.itemsContainer.children[i].width = menu.width
+			menu.itemsContainer.children[i].localY = y
+			
+			y = y + menu.itemsContainer.children[i].height
+			totalHeight = totalHeight + (menu.itemsContainer.children[i].type == GUI.dropDownMenuElementTypes.separator and 1 or menu.itemHeight)
+		end
+		menu.height = math.min(totalHeight, menu.maximumHeight, buffer.getHeight() - menu.y)
+		menu.itemsContainer.width, menu.itemsContainer.height = menu.width, menu.height
 
-	menu.nextButton.localY = menu.height
-	menu.prevButton.width, menu.nextButton.width = menu.width, menu.width
-	menu.prevButton.hidden = menu.itemsContainer.children[1].localY >= 1
-	menu.nextButton.hidden = menu.itemsContainer.children[#menu.itemsContainer.children].localY + menu.itemsContainer.children[#menu.itemsContainer.children].height - 1 <= menu.height
+		menu.nextButton.localY = menu.height
+		menu.prevButton.width, menu.nextButton.width = menu.width, menu.width
+		menu.prevButton.hidden = menu.itemsContainer.children[1].localY >= 1
+		menu.nextButton.hidden = menu.itemsContainer.children[#menu.itemsContainer.children].localY + menu.itemsContainer.children[#menu.itemsContainer.children].height - 1 <= menu.height
+	end
 end
 
 local function dropDownMenuRemoveItem(menu, index)
@@ -1293,7 +1298,7 @@ end
 
 local function dropDownMenuAddItem(menu, text, disabled, shortcut, color)
 	local item = menu.itemsContainer:addChild(GUI.object(1, 1, 1, menu.itemHeight))
-
+	
 	item.type = GUI.dropDownMenuElementTypes.default
 	item.text = text
 	item.disabled = disabled
@@ -2189,8 +2194,6 @@ local function filesystemDialogSetMode(filesystemDialog, IOMode, filesystemMode)
 		filesystemDialog.input.disabled = true
 		filesystemDialog.extensionComboBox.hidden = true
 	end
-
-	filesystemDialog.filesystemTree:updateFileList()
 end
 
 local function filesystemDialogAddExtensionFilter(filesystemDialog, extension)
@@ -2216,12 +2219,12 @@ function GUI.filesystemDialog(x, y, width, height, submitButtonText, cancelButto
 	filesystemDialog.submitButton.localX = filesystemDialog.width - filesystemDialog.submitButton.width - 1
 	filesystemDialog.cancelButton.localX = filesystemDialog.submitButton.localX - filesystemDialog.cancelButton.width - 2
 
-	filesystemDialog.extensionComboBox = filesystemDialog:addChild(GUI.comboBox(1, height - 1, 1, 1, 0xE1E1E1, 0x666666, 0xC3C3C3, 0x888888))
+	filesystemDialog.extensionComboBox = filesystemDialog:addChild(GUI.comboBox(1, height - 1, 1, 1, 0xE1E1E1, 0x696969, 0xC3C3C3, 0x878787))
 	filesystemDialog.extensionComboBox.hidden = true
 
-	filesystemDialog.input = filesystemDialog:addChild(GUI.input(2, height - 1, 1, 1, 0xE1E1E1, 0x666666, 0x999999, 0xE1E1E1, 0x3C3C3C, "", placeholderText))
+	filesystemDialog.input = filesystemDialog:addChild(GUI.input(2, height - 1, 1, 1, 0xE1E1E1, 0x696969, 0x969696, 0xE1E1E1, 0x3C3C3C, "", placeholderText))
 
-	filesystemDialog.filesystemTree = filesystemDialog:addChild(GUI.filesystemTree(1, 1, width, height - 3, 0xE1E1E1, 0x3C3C3C, 0x3C3C3C, 0xAAAAAA, 0x3C3C3C, 0xE1E1E1, 0xBBBBBB, 0xAAAAAA, 0xC3C3C3, 0x444444))
+	filesystemDialog.filesystemTree = filesystemDialog:addChild(GUI.filesystemTree(1, 1, width, height - 3, 0xE1E1E1, 0x3C3C3C, 0x3C3C3C, 0xA5A5A5, 0x3C3C3C, 0xE1E1E1, 0xB4B4B4, 0xA5A5A5, 0xC3C3C3, 0x4B4B4B))
 	filesystemDialog.filesystemTree.workPath = path
 
 	filesystemDialog.draw = filesystemDialogDraw
@@ -2235,6 +2238,7 @@ function GUI.filesystemDialog(x, y, width, height, submitButtonText, cancelButto
 end
 
 local function filesystemDialogShow(filesystemDialog)
+	filesystemDialog.filesystemTree:updateFileList()
 	filesystemDialog:addAnimation(
 		function(mainContainer, animation)
 			filesystemDialog.localY = math.floor(1 + (1.0 - animation.position) * (-filesystemDialog.height))
@@ -2313,7 +2317,8 @@ local function filesystemChooserAddExtensionFilter(object, extension)
 	object.extensionFilters[unicode.lower(extension)] = true
 end
 
-local function filesystemChooserSetMode(object, filesystemMode)
+local function filesystemChooserSetMode(object, IOMode, filesystemMode)
+	object.IOMode = IOMode
 	object.filesystemMode = filesystemMode
 end
 
@@ -2328,7 +2333,15 @@ local function filesystemChooserEventHandler(mainContainer, object, eventData)
 		for key in pairs(object.extensionFilters) do
 			filesystemDialog:addExtensionFilter(key)
 		end
-		filesystemDialog:setMode(GUI.filesystemModes.open, object.filesystemMode)
+
+		filesystemDialog:setMode(object.IOMode, object.filesystemMode)
+
+		if #object.path > 0 then
+			-- local path = object.path:gsub("/+", "/")
+			filesystemDialog.filesystemTree.selectedItem = object.IOMode == GUI.filesystemModes.open and object.path or fs.path(object.path)
+			filesystemDialog.input.text = fs.name(object.path)
+			filesystemDialog:expandPath(object.IOMode == GUI.filesystemModes.open and fs.path(object.path) or fs.path(fs.path(object.path)))
+		end
 		
 		filesystemDialog.onCancel = function()
 			object.pressed = false
@@ -2339,10 +2352,7 @@ local function filesystemChooserEventHandler(mainContainer, object, eventData)
 
 		filesystemDialog.onSubmit = function(path)
 			object.path = path
-			object.pressed = false
-
-			mainContainer:draw()
-			buffer.draw()
+			filesystemDialog.onCancel()
 			callMethod(object.onSubmit, object.path)
 		end
 
@@ -2368,6 +2378,7 @@ function GUI.filesystemChooser(x, y, width, height, backgroundColor, textColor, 
 	object.path = path
 	object.filesystemDialogPath = filesystemDialogPath
 	object.filesystemMode = GUI.filesystemModes.file
+	object.IOMode = GUI.filesystemModes.open
 	object.extensionFilters = {}
 
 	object.draw = filesystemChooserDraw
@@ -2671,12 +2682,13 @@ local function treeEventHandler(mainContainer, tree, eventData)
 end
 
 local function treeAddItem(tree, name, definition, offset, expandable, disabled)
-	table.insert(tree.items, {name = name, expandable = expandable, offset = offset or 0, definition = definition, disabled = disabled})
-	return tree
+	local item =  {name = name, expandable = expandable, offset = offset or 0, definition = definition, disabled = disabled}
+	table.insert(tree.items, item)
+	return item
 end
 
 function GUI.tree(x, y, width, height, backgroundColor, expandableColor, notExpandableColor, arrowColor, backgroundSelectedColor, anySelectionColor, arrowSelectionColor, disabledColor, scrollBarBackground, scrollBarForeground, showMode, selectionMode)
-	local tree = GUI.container(x, y, width, height)
+	local tree = GUI.object(x, y, width, height)
 	
 	tree.eventHandler = treeEventHandler
 	tree.colors = {
@@ -2930,7 +2942,7 @@ function GUI.textBox(x, y, width, height, backgroundColor, textColor, lines, cur
 	object.offset = {horizontal = horizontalOffset or 0, vertical = verticalOffset or 0}
 	object.autoWrap = autoWrap
 	object.autoHeight = autoHeight
-	object.scrollBar = GUI.scrollBar(1, 1, 1, 1, 0xC3C3C3, 0x444444, 1, 1, 1, 1, 1, true)
+	object.scrollBar = GUI.scrollBar(1, 1, 1, 1, 0xC3C3C3, 0x4B4B4B, 1, 1, 1, 1, 1, true)
 	object.scrollBarEnabled = false
 
 	textBoxCalculate(object)
@@ -3055,13 +3067,13 @@ local function inputStartInput(input)
 		local eventData = { event.pull(input.cursorBlinkDelay) }
 		
 		if eventData[1] == "touch" or eventData[1] == "drag" then
-			if input:isClicked(eventData[3], eventData[4]) then
+			if input:isPointInside(eventData[3], eventData[4]) then
 				input:setCursorPosition(input.textCutFrom + eventData[3] - input.x - input.textOffset)
 				
 				input.cursorBlinkState = true
 				mainContainer:draw()
 				buffer.draw()
-			elseif input.autoComplete:isClicked(eventData[3], eventData[4]) then
+			elseif input.autoComplete:isPointInside(eventData[3], eventData[4]) then
 				input.autoComplete.eventHandler(mainContainer, input.autoComplete, eventData)
 			else
 				input.cursorBlinkState = false
@@ -3249,7 +3261,7 @@ function GUI.input(x, y, width, height, backgroundColor, textColor, placeholderT
 	input.eventHandler = inputEventHandler
 	input.startInput = inputStartInput
 
-	input.autoComplete = GUI.autoComplete(1, 1, 30, 7, 0xE1E1E1, 0x999999, 0x3C3C3C, 0x3C3C3C, 0x999999, 0xE1E1E1, 0xC3C3C3, 0x444444)
+	input.autoComplete = GUI.autoComplete(1, 1, 30, 7, 0xE1E1E1, 0x969696, 0x3C3C3C, 0x3C3C3C, 0x969696, 0xE1E1E1, 0xC3C3C3, 0x4B4B4B)
 	input.autoCompleteEnabled = false
 	input.autoCompleteVerticalAlignment = GUI.alignment.vertical.bottom
 
@@ -3597,7 +3609,7 @@ function GUI.palette(x, y, startColor)
 	local palette = GUI.container(x, y, 71, 25)
 	
 	palette.color = {hsb = {}, rgb = {}}
-	palette:addChild(GUI.panel(1, 1, palette.width, palette.height, 0xEEEEEE))
+	palette:addChild(GUI.panel(1, 1, palette.width, palette.height, 0xF0F0F0))
 	
 	local bigImage = palette:addChild(GUI.image(1, 1, image.create(50, 25)))
 	local bigCrest = palette:addChild(GUI.object(1, 1, 5, 3))
@@ -3626,8 +3638,8 @@ function GUI.palette(x, y, startColor)
 	end
 
 	local colorPanel = palette:addChild(GUI.panel(58, 2, 12, 3, 0x0))
-	palette.OKButton = palette:addChild(GUI.roundedButton(58, 6, 12, 1, 0x444444, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, "OK"))
-	palette.cancelButton = palette:addChild(GUI.roundedButton(58, 8, 12, 1, 0xFFFFFF, 0x666666, 0x2D2D2D, 0xFFFFFF, "Cancel"))
+	palette.OKButton = palette:addChild(GUI.roundedButton(58, 6, 12, 1, 0x4B4B4B, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, "OK"))
+	palette.cancelButton = palette:addChild(GUI.roundedButton(58, 8, 12, 1, 0xFFFFFF, 0x696969, 0x2D2D2D, 0xFFFFFF, "Cancel"))
 
 	local function paletteRefreshBigImage()
 		local saturationStep, brightnessStep, saturation, brightness = 1 / bigImage.width, 1 / bigImage.height, 0, 1
@@ -3745,7 +3757,7 @@ function GUI.palette(x, y, startColor)
 		palette:addChild(GUI.label(58, y, 2, 1, 0x000000, inputs[i].shortcut))
 		
 		local validator, onInputFinished = inputs[i].validator, inputs[i].onInputFinished
-		inputs[i] = palette:addChild(GUI.input(61, y, 9, 1, 0xFFFFFF, 0x666666, 0x666666, 0xFFFFFF, 0x000000, "", "", true))
+		inputs[i] = palette:addChild(GUI.input(61, y, 9, 1, 0xFFFFFF, 0x696969, 0x696969, 0xFFFFFF, 0x000000, "", "", true))
 		inputs[i].validator = validator
 		inputs[i].onInputFinished = onInputFinished
 		
@@ -3772,7 +3784,7 @@ function GUI.palette(x, y, startColor)
 		end
 	end
 	
-	palette:addChild(GUI.button(58, 25, 12, 1, 0xFFFFFF, 0x444444, 0x2D2D2D, 0xFFFFFF, "+")).onTouch = function(mainContainer, object, eventData)
+	palette:addChild(GUI.button(58, 25, 12, 1, 0xFFFFFF, 0x4B4B4B, 0x2D2D2D, 0xFFFFFF, "+")).onTouch = function(mainContainer, object, eventData)
 		local favouriteExists = false
 		for i = 1, #favourites do
 			if favourites[i] == palette.color.hex then
@@ -3797,7 +3809,7 @@ function GUI.palette(x, y, startColor)
 	end
 
 	bigImage.eventHandler = function(mainContainer, object, eventData)
-		if eventData[1] == "touch" or eventData[1] == "drag" and bigImage:isClicked(eventData[3], eventData[4]) then
+		if eventData[1] == "touch" or eventData[1] == "drag" then
 			bigCrest.localX, bigCrest.localY = eventData[3] - palette.x - 1, eventData[4] - palette.y
 			paletteSwitchColorFromHex(select(3, component.gpu.get(eventData[3], eventData[4])))
 			mainContainer:draw()

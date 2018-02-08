@@ -111,6 +111,7 @@ function web.download(url, path)
 		if success then
 			return true
 		else
+			fs.remove(path)
 			return false, reason
 		end
 	else
