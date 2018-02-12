@@ -2458,7 +2458,7 @@ end
 
 local function scrollBarDraw(scrollBar)
 	local isVertical = scrollBar.height > scrollBar.width
-	local valuesDelta = scrollBar.maximumValue - scrollBar.minimumValue + 1
+	local valuesDelta = scrollBar.maximumValue - scrollBar.minimumValue
 	local part = scrollBar.value / valuesDelta
 
 	if isVertical then
@@ -2522,11 +2522,18 @@ local function scrollBarEventHandler(mainContainer, object, eventData)
 	local newValue = object.value
 
 	if eventData[1] == "touch" or eventData[1] == "drag" then
-		local delta = object.maximumValue - object.minimumValue + 1
 		if object.height > object.width then
-			newValue = math.floor((eventData[4] - object.y + 1) / object.height * delta)
+			if eventData[4] == object.y + object.height - 1 then
+				newValue = object.maximumValue
+			else
+				newValue = object.minimumValue + (eventData[4] - object.y) / object.height * (object.maximumValue - object.minimumValue)
+			end
 		else
-			newValue = math.floor((eventData[3] - object.x + 1) / object.width * delta)
+			if eventData[3] == object.x + object.width - 1 then
+				newValue = object.maximumValue
+			else
+				newValue = object.minimumValue + (eventData[3] - object.x) / object.width * (object.maximumValue - object.minimumValue)
+			end
 		end
 	elseif eventData[1] == "scroll" then
 		if eventData[5] == 1 then
