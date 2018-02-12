@@ -417,7 +417,6 @@ local function containerStartEventHandling(container, eventHandlingDelay)
 					end
 				else
 					if animation.started then
-						animationNeedDraw = true
 						animation.position = (computer.uptime() - animation.startUptime) / animation.duration
 						
 						if animation.position < 1 then

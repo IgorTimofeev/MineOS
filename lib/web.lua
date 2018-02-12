@@ -5,39 +5,35 @@ local web = {}
 
 ----------------------------------------------------------------------------------------------------
 
-local function serializeTable(table, currentData)
-	local result = ""
-
-	for key, value in pairs(table) do
-		local keyType, valueType = type(key), type(value)
-
-		if keyType == "number" then
-			key = key - 1
-		end
-
-		if valueType == "table" then
-			result = result .. serializeTable(value, currentData .. "[" .. key .. "]")
-		else
-			result = result .. currentData .. "[" .. key .. "]=" .. tostring(value) .. "&"
-		end
-	end
-
-	return result
-end
-
 function web.serialize(data)
-	if type(data) == "table" then
-		local serializedData = ""
+	if type(data) == "table" then		
+		local result = ""
+
+		local function doSerialize(table, keyStack)
+			for key, value in pairs(table) do
+				local keyType, valueType = type(key), type(value)
+
+				if keyType == "number" then
+					key = key - 1
+				end
+
+				if valueType == "table" then
+					doSerialize(value, keyStack .. "[" .. key .. "]")
+				else
+					result = result .. keyStack .. "[" .. key .. "]=" .. tostring(value) .. "&"
+				end
+			end
+		end
 		
 		for key, value in pairs(data) do	
 			if type(value) == "table" then
-				serializedData = serializedData .. serializeTable(value, key)
+				doSerialize(value, key)
 			else
-				serializedData = serializedData .. key .. "=" .. tostring(value) .. "&"
+				result = result .. key .. "=" .. tostring(value) .. "&"
 			end
 		end
 
-		return serializedData
+		return result:sub(1, -2)
 	else
 		return tostring(data)
 	end
@@ -140,11 +136,16 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
--- print(
--- 	web.run(
--- 		"https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/Screensavers/Matrix.lua"
--- 	)
--- )
+-- print(web.serialize({
+-- 	array = {
+-- 		pidor = "Пизда хуйни",
+-- 		tyan = 512,
+-- 		second = {
+-- 			zalupa = 421,
+-- 			penis = "Член"
+-- 		}
+-- 	},
+-- }))
 
 ----------------------------------------------------------------------------------------------------
 
