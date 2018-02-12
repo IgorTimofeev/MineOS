@@ -18,7 +18,7 @@ local spacingSlider = container.layout:addChild(GUI.slider(1, 1, 36, 0x66DB80, 0
 scaleSlider.roundValues, delaySlider.roundValues, spacingSlider.roundValues = true, true, true
 spacingSlider.height = 2
 
-container.layout:addChild(GUI.button(1, 1, 36, 3, 0x2D2D2D, 0xFFFFFF, 0x0, 0xFFFFFF, "OK")).onTouch = function()
+container.layout:addChild(GUI.button(1, 1, 36, 3, 0x444444, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, "OK")).onTouch = function()
 	local text = textInput.text .. string.rep(" ", math.round(spacingSlider.value))
 	local gpu = buffer.getGPUProxy()
 	
