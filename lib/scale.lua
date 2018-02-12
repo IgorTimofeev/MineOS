@@ -17,8 +17,8 @@ end
 function screenScale.getResolution(scale, debug)
 	if scale > 1 then
 		scale = 1
-	elseif scale < 0.1 then
-		scale = 0.1
+	elseif scale <= 0.01 then
+		scale = 0.01
 	end
 
 	local xScreens, yScreens = component.proxy(component.gpu.getScreen()).getAspectRatio()

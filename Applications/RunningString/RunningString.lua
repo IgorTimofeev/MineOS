@@ -1,63 +1,47 @@
-local ecs = require("ECSAPI")
-local event = require("event")
-local gpu = require("component").gpu
+local MineOSInterface = require("MineOSInterface")
+local GUI = require("GUI")
+local buffer = require("doubleBuffering")
+local scale = require("scale")
 local unicode = require("unicode")
-local keyboard = require("keyboard")
+local event = require("event")
 
-local str,freq,speed,scale,bg,fg
+---------------------------------------------------------------------------------------------------------
 
--- gpu.setResolution(gpu.maxResolution())
--- ecs.prepareToExit()
+local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer, "Running string setup")
 
-local data = ecs.universalWindow("auto", "auto", 30, ecs.windowColors.background, true,
-	{"EmptyLine"},
-	{"CenterText", 0x880000, "Бегущая строка"},
-	{"EmptyLine"},
-	{"CenterText", 0x000000, "Для выхода из программы"},
-	{"CenterText", 0x000000, "удерживайте Enter"},
-	{"EmptyLine"},
-	{"Input", 0x262626, 0x880000, "Программист за работой, не мешай, сука!"},
-	{"Color", "Цвет фона", 0x000000},
-	{"Color", "Цвет текста", 0xFFFFFF},
-	{"Slider", 0x262626, 0x880000, 1, 100, 1, "Масштаб: ", "%"},
-    {"Slider", 0x262626, 0x880000, 1, 100, 40, "Скорость: ", "/100 FPS"},
-	{"EmptyLine"},
-	{"Button", {0xbbbbbb, 0xffffff, "OK"}, {0x999999, 0xffffff, "Отмена"}}
-)
+local textInput = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xFFFFFF, 0x696969, 0xB4B4B4, 0xFFFFFF, 0x2D2D2D, "Working on cool things, don't distract me", "Type text here", true))
+local backgroundColorSelector = container.layout:addChild(GUI.colorSelector(1, 1, 36, 3, 0x0, "Background color"))
+local textColorSelector = container.layout:addChild(GUI.colorSelector(1, 1, 36, 3, 0xFFFFFF, "Text color"))
+local scaleSlider = container.layout:addChild(GUI.slider(1, 1, 36, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x878787, 1, 1000, 100, false, "Scale: ", ""))
+local delaySlider = container.layout:addChild(GUI.slider(1, 1, 36, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x878787, 0, 500, 50, false, "Delay: ", " ms"))
+local spacingSlider = container.layout:addChild(GUI.slider(1, 1, 36, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x878787, 1, 50, 10, false, "Spacing: ", " char(s)"))
+scaleSlider.roundValues, delaySlider.roundValues, spacingSlider.roundValues = true, true, true
+spacingSlider.height = 2
 
--- ecs.error(table.unpack(data))
-if data[6] == "OK" then
-	str = data[1] or "Где текст, сука?"
-	bg = tonumber(data[2]) or 0x000000
-	fg = tonumber(data[3]) or 0xFFFFFF
-	scale = tonumber(data[4])/100 or 0.1
-	speed = tonumber(data[5])/100 or 0.4
-	freq = 5
-else
-	return
-end
-
-local xOld, yOld = gpu.getResolution()
-ecs.setScale(scale)
-local xSize, ySize = gpu.getResolution()
-gpu.setBackground(bg)
-gpu.setForeground(fg)
-gpu.fill(1, 1, xSize, ySize, " ")
-
-str = " " .. str .. string.rep(" ", freq)
-
-while true do
-	str = unicode.sub(str, 2, -1) .. unicode.sub(str, 1, 1)
-	gpu.set(math.ceil(xSize / 2 - unicode.len(str) / 2), math.ceil(ySize / 2), str)
+container.layout:addChild(GUI.button(1, 1, 36, 3, 0x2D2D2D, 0xFFFFFF, 0x0, 0xFFFFFF, "OK")).onTouch = function()
+	local text = textInput.text .. string.rep(" ", math.round(spacingSlider.value))
+	local gpu = buffer.getGPUProxy()
 	
-	if keyboard.isKeyDown(28) then
-		gpu.setResolution(xOld, yOld)
-		ecs.prepareToExit()
-		return
+	scale.set(scaleSlider.value / 1000)
+	local width, height = gpu.getResolution()
+	local y = math.round(height / 2)
+	
+	gpu.setBackground(backgroundColorSelector.color)
+	gpu.setForeground(textColorSelector.color)
+	gpu.fill(1, 1, width, height, " ")
+
+	while true do
+		local eventData = {event.pull(delaySlider.value / 1000)}
+		if eventData[1] == "touch" or eventData[1] == "key_down" then
+			break
+		end
+
+		text = unicode.sub(text, 2, -1) .. unicode.sub(text, 1, 1)
+		gpu.set(1, y, text)
 	end
 
-	local e = event.pull(speed)
-	if e == "key_down" or e == "touch" then return end
+	buffer.setResolution(buffer.getResolution())
+	MineOSInterface.OSDraw()
 end
 
 

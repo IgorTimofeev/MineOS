@@ -1661,18 +1661,18 @@ local function sliderDraw(object)
 		buffer.text(math.floor(object.x + object.width / 2 - unicode.len(stringCurrentValue) / 2), object.y + 1, object.colors.value, stringCurrentValue)
 	end
 
-	local activeWidth = math.floor(object.width - ((object.maximumValue - object.value) * object.width / (object.maximumValue - object.minimumValue)))
+	local activeWidth = math.round((object.value - object.minimumValue) / (object.maximumValue - object.minimumValue) * object.width)
 	buffer.text(object.x, object.y, object.colors.passive, string.rep("━", object.width))
 	buffer.text(object.x, object.y, object.colors.active, string.rep("━", activeWidth))
-	buffer.text(object.x + activeWidth - 1, object.y, object.colors.pipe, "⬤")
+	buffer.text(object.x + activeWidth, object.y, object.colors.pipe, "⬤")
 
 	return object
 end
 
 local function sliderEventHandler(mainContainer, object, eventData)
 	if eventData[1] == "touch" or eventData[1] == "drag" then
-		local clickPosition = eventData[3] - object.x + 1
-		object.value = object.minimumValue + (clickPosition * (object.maximumValue - object.minimumValue) / object.width)
+		local clickPosition = eventData[3] - object.x
+		object.value = object.minimumValue + (clickPosition / object.width * (object.maximumValue - object.minimumValue))
 		mainContainer:draw()
 		buffer.draw()
 		callMethod(object.onValueChanged, object.value, eventData)
