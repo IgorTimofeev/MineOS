@@ -30,7 +30,7 @@ local function newApp(x, y, width, applicationListElement, hideDownloadButton)
 	
 	app.icon = app:addChild(GUI.image(1, 1, MineOSInterface.iconsCache.script))
 	if applicationListElement.icon then
-		app.icon.image = MineOSCore.loadImageFromURL(applicationListElement.icon)
+		app.icon.image = MineOSCore.loadImageFromString(web.request(applicationListElement.icon))
 	end
 
 	app.downloadButton = app:addChild(GUI.roundedButton(1, 1, 13, 1, 0x66DB80, 0xFFFFFF, 0x339240, 0xFFFFFF, localization.download))
