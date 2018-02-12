@@ -1,69 +1,56 @@
+
 local component = require("component")
-local gpu, screen = component.gpu, component.screen
+local screenScale = {}
 
-local scale = {}
+------------------------------------------------------------------------------------------------------
 
-------------------------------------------------------------------------------------------
+local function calculateAspect(screens)
+	if screens == 2 then
+		return 28
+	elseif screens > 2 then
+		return 28 + (screens - 2) * 16
+	else
+		return 12
+	end
+end
 
---Изменить масштаб монитора
-function scale.set(scale, debug)
-	--Базовая коррекция масштаба, чтобы всякие умники не писали своими погаными ручонками, чего не следует
+function screenScale.getResolution(scale, debug)
 	if scale > 1 then
 		scale = 1
 	elseif scale < 0.1 then
 		scale = 0.1
 	end
 
-	--Просчет монитора в псевдопикселях - забей, даже объяснять не буду, работает как часы
-	local function calculateAspect(screens)
-	  local abc = 12
-
-	  if screens == 2 then
-	    abc = 28
-	  elseif screens > 2 then
-	    abc = 28 + (screens - 2) * 16
-	  end
-
-	  return abc
-	end
-
-	--Рассчитываем пропорцию монитора в псевдопикселях
-	local xScreens, yScreens = component.screen.getAspectRatio()
+	local xScreens, yScreens = component.proxy(component.gpu.getScreen()).getAspectRatio()
 	local xPixels, yPixels = calculateAspect(xScreens), calculateAspect(yScreens)
 	local proportion = xPixels / yPixels
 
-	--Получаем максимально возможное разрешение данной видеокарты
-	local xMax, yMax = gpu.maxResolution()
+	local xMax, yMax = component.gpu.maxResolution()
 
-	--Получаем теоретическое максимальное разрешение монитора с учетом его пропорции, но без учета лимита видеокарты
 	local newWidth, newHeight
 	if proportion >= 1 then
-		newWidth = math.floor(xMax)
+		newWidth = xMax
 		newHeight = math.floor(newWidth / proportion / 2)
 	else
-		newHeight = math.floor(yMax)
+		newHeight = yMax
 		newWidth = math.floor(newHeight * proportion * 2)
 	end
 
-	--Получаем оптимальное разрешение для данного монитора с поддержкой видеокарты
 	local optimalNewWidth, optimalNewHeight = newWidth, newHeight
-
 	if optimalNewWidth > xMax then
-		local difference = optimalNewWidth - xMax
+		local difference = newWidth / xMax
 		optimalNewWidth = xMax
-		optimalNewHeight = optimalNewHeight - math.ceil(difference / 2 )
+		optimalNewHeight = math.ceil(newHeight / difference)
 	end
 
 	if optimalNewHeight > yMax then
-		local difference = optimalNewHeight - yMax
+		local difference = newHeight / yMax
 		optimalNewHeight = yMax
-		optimalNewWidth = optimalNewWidth - difference * 2 - math.ceil(difference / 2)
+		optimalNewWidth = math.ceil(newWidth / difference)
 	end
 
-	--Корректируем идеальное разрешение по заданному масштабу
 	local finalNewWidth, finalNewHeight = math.floor(optimalNewWidth * scale), math.floor(optimalNewHeight * scale)
 
-	--Выводим инфу, если нужно
 	if debug then
 		print(" ")
 		print("Максимальное разрешение: "..xMax.."x"..yMax)
@@ -77,8 +64,24 @@ function scale.set(scale, debug)
 		print(" ")
 	end
 
-	--Устанавливаем выбранное разрешение
-	gpu.setResolution(finalNewWidth, finalNewHeight)
+	return finalNewWidth, finalNewHeight
 end
 
---scale.set(1, true)
+--Установка масштаба монитора
+function screenScale.set(scale, debug)
+	--Устанавливаем выбранное разрешение
+	component.gpu.setResolution(screenScale.getResolution(scale, debug))
+end
+
+------------------------------------------------------------------------------------------------------
+
+-- screenScale.set(0.8)
+
+------------------------------------------------------------------------------------------------------
+
+return screenScale
+
+
+
+
+
