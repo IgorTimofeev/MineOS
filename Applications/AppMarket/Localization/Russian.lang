@@ -69,6 +69,7 @@
 	updateAll = "Обновить все",
 	noUpdates = "У вас самое новое ПО",
 
+	changeReview = "Изменить отзыв",
 	developer = "Разработчик",
 	version = "Версия",
 	license = "Лицензия",

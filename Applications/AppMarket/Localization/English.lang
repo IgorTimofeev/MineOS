@@ -69,6 +69,7 @@
 	updateAll = "Update all",
 	noUpdates = "You have no updates",
 
+	changeReview = "Change review",
 	developer = "Developer",
 	version = "Version",
 	license = "License",

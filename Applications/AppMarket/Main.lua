@@ -693,11 +693,23 @@ local function newPublicationInfo(publication_name)
 		detailsContainer.height = textDetailsContainer.height
 
 		if config.user.token and config.user.name ~= publication.user_name then
-			layout:addChild(GUI.adaptiveRoundedButton(1, 1, 2, 0, 0x696969, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.writeReview)).onTouch = function()
-				local container = MineOSInterface.addUniversalContainer(window, localization.writeReview)
+
+
+			local existingReviewText
+			if publication.reviews then
+				for i = 1, #publication.reviews do
+					if publication.reviews[i].user_name == config.user.name then
+						existingReviewText = publication.reviews[i].comment
+						break
+					end
+				end
+			end
+
+			layout:addChild(GUI.adaptiveRoundedButton(1, 1, 2, 0, 0x696969, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, existingReviewText and localization.changeReview or localization.writeReview)).onTouch = function()
+				local container = MineOSInterface.addUniversalContainer(window, existingReviewText and localization.changeReview or localization.writeReview)
 				container.layout:setCellFitting(2, 1, false, false)
 
-				local input = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xFFFFFF, 0x696969, 0xB4B4B4, 0xFFFFFF, 0x2D2D2D, "", localization.writeReviewHere))
+				local input = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xFFFFFF, 0x696969, 0xB4B4B4, 0xFFFFFF, 0x2D2D2D, existingReviewText or "", localization.writeReviewHere))
 				
 				local pizda = container.layout:addChild(GUI.container(1, 1, 1, 1))
 				local eblo = pizda:addChild(GUI.text(1, 1, 0xE1E1E1, localization.yourRating .. ": "))
@@ -711,7 +723,7 @@ local function newPublicationInfo(publication_name)
 					end
 				end
 				
-				local govno = container.layout:addChild(GUI.button(1, 1, 36, 3, 0xFFFFFF, 0x2D2D2D, 0x0, 0xFFFFFF, "OK"))
+				local govno = container.layout:addChild(GUI.button(1, 1, 36, 3, 0x4B4B4B, 0xFFFFFF, 0x3C3C3C, 0xFFFFFF, "OK"))
 				govno.disabled = true
 				govno.colors.disabled.background = 0xA5A5A5
 				govno.colors.disabled.text = 0xC3C3C3
@@ -756,70 +768,68 @@ local function newPublicationInfo(publication_name)
 
 			-- Перечисляем все отзывы
 			for i = 1, #publication.reviews do
-				if publication.reviews[i].comment then
-					local reviewContainer = layout:addChild(GUI.container(1, 1, layout.width, 4))
-					addPanel(reviewContainer)
+				local reviewContainer = layout:addChild(GUI.container(1, 1, layout.width, 4))
+				addPanel(reviewContainer)
 
-					local y = 2
-					local nameLabel = reviewContainer:addChild(GUI.text(3, y, 0x2D2D2D, publication.reviews[i].user_name))
-					reviewContainer:addChild(GUI.text(nameLabel.localX + nameLabel.width + 1, y, 0xC3C3C3, "(" .. os.date("%d.%m.%Y", publication.reviews[i].timestamp) .. ")"))
+				local y = 2
+				local nameLabel = reviewContainer:addChild(GUI.text(3, y, 0x2D2D2D, publication.reviews[i].user_name))
+				reviewContainer:addChild(GUI.text(nameLabel.localX + nameLabel.width + 1, y, 0xC3C3C3, "(" .. os.date("%d.%m.%Y", publication.reviews[i].timestamp) .. ")"))
+				y = y + 1
+
+				reviewContainer:addChild(newRatingWidget(3, y, publication.reviews[i].rating))
+				y = y + 1
+
+				local lines = string.wrap(publication.reviews[i].comment, reviewContainer.width - 4)
+				local textBox = reviewContainer:addChild(GUI.textBox(3, y, reviewContainer.width - 4, #lines, nil, 0x878787, lines, 1, 0, 0))
+				textBox.eventHandler = nil
+				y = y + #lines
+
+				if publication.reviews[i].votes or config.user.token and config.user.name ~= publication.reviews[i].user_name then
 					y = y + 1
-
-					reviewContainer:addChild(newRatingWidget(3, y, publication.reviews[i].rating))
-					y = y + 1
-
-					local lines = string.wrap(publication.reviews[i].comment, reviewContainer.width - 4)
-					local textBox = reviewContainer:addChild(GUI.textBox(3, y, reviewContainer.width - 4, #lines, nil, 0x878787, lines, 1, 0, 0))
-					textBox.eventHandler = nil
-					y = y + #lines
-
-					if publication.reviews[i].votes or config.user.token then
-						y = y + 1
-					end
-
-					if publication.reviews[i].votes then
-						reviewContainer:addChild(GUI.text(3, y, 0xC3C3C3, publication.reviews[i].positive_votes .. " из " .. publication.reviews[i].votes .. " пользователей считают этот отзыв полезным"))
-						y = y + 1
-					end
-
-					if config.user.token then
-						local wasHelpText = reviewContainer:addChild(GUI.text(3, y, 0xC3C3C3, localization.wasReviewHelpful))
-						local yesButton = reviewContainer:addChild(GUI.adaptiveButton(wasHelpText.localX + wasHelpText.width + 1, y, 0, 0, nil, 0x696969, nil, 0x2D2D2D, localization.yes))
-						local stripLabel = reviewContainer:addChild(GUI.text(yesButton.localX + yesButton.width + 1, y, 0xC3C3C3, "|"))
-						local noButton = reviewContainer:addChild(GUI.adaptiveButton(stripLabel.localX + stripLabel.width + 1, y, 0, 0, nil, 0x696969, nil, 0x2D2D2D, localization.no))
-						
-						local function go(rating)
-							status(localization.statusVotingReview)
-							local success = fieldAPIRequest("result", "review_vote", {
-								token = config.user.token,
-								review_id = publication.reviews[i].id,
-								rating = rating
-							})
-
-							if success then
-								wasHelpText.text = localization.thanksForVote
-								wasHelpText.color = 0x696969
-								yesButton:delete()
-								stripLabel:delete()
-								noButton:delete()
-								status(localization.statusWaiting)
-							end
-						end
-
-						yesButton.onTouch = function()
-							go(1)
-						end
-
-						noButton.onTouch = function()
-							go(0)
-						end
-
-						y = y + 1
-					end
-
-					reviewContainer.height = y
-					reviewContainer.panel.height = reviewContainer.height
 				end
+
+				if publication.reviews[i].votes then
+					reviewContainer:addChild(GUI.text(3, y, 0xC3C3C3, publication.reviews[i].positive_votes .. " из " .. publication.reviews[i].votes .. " пользователей считают этот отзыв полезным"))
+					y = y + 1
+				end
+
+				if config.user.token and config.user.name ~= publication.reviews[i].user_name then
+					local wasHelpText = reviewContainer:addChild(GUI.text(3, y, 0xC3C3C3, localization.wasReviewHelpful))
+					local yesButton = reviewContainer:addChild(GUI.adaptiveButton(wasHelpText.localX + wasHelpText.width + 1, y, 0, 0, nil, 0x696969, nil, 0x2D2D2D, localization.yes))
+					local stripLabel = reviewContainer:addChild(GUI.text(yesButton.localX + yesButton.width + 1, y, 0xC3C3C3, "|"))
+					local noButton = reviewContainer:addChild(GUI.adaptiveButton(stripLabel.localX + stripLabel.width + 1, y, 0, 0, nil, 0x696969, nil, 0x2D2D2D, localization.no))
+					
+					local function go(rating)
+						status(localization.statusVotingReview)
+						local success = fieldAPIRequest("result", "review_vote", {
+							token = config.user.token,
+							review_id = publication.reviews[i].id,
+							rating = rating
+						})
+
+						if success then
+							wasHelpText.text = localization.thanksForVote
+							wasHelpText.color = 0x696969
+							yesButton:delete()
+							stripLabel:delete()
+							noButton:delete()
+							status(localization.statusWaiting)
+						end
+					end
+
+					yesButton.onTouch = function()
+						go(1)
+					end
+
+					noButton.onTouch = function()
+						go(0)
+					end
+
+					y = y + 1
+				end
+
+				reviewContainer.height = y
+				reviewContainer.panel.height = reviewContainer.height
 			end
 		end
 
@@ -1190,6 +1200,7 @@ updateFileList = function(category_id, updates)
 					search = input.text
 				end
 
+				currentPage = 0
 				updateFileList(category_id, updates)
 			end
 
