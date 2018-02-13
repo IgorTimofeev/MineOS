@@ -231,9 +231,17 @@ stages[4] = function()
 	local progressBar = stageContainer:addChild(GUI.progressBar(x, y, width, 0x3392FF, 0xBBBBBB, 0x555555, 0, true, false))
 	local fileLabel = stageContainer:addChild(GUI.label(x, y + 1, width, 1, 0x666666, "")):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
 
+	if stageContainer.downloadWallpapersSwitch.state then
+		for i = 1, #applicationList.wallpapers do
+			table.insert(applicationList.duringInstall, applicationList.wallpapers[i])
+			applicationList.wallpapers[i] = nil
+		end
+	end
+
+	local pizda = unicode.len(localization.downloading) + 1
 	for i = 1, #applicationList.duringInstall do
-		fileLabel.text = localization.downloading .. " " .. fs.name(applicationList.duringInstall[i].path)
-		progressBar.value = math.ceil(i / #applicationList.duringInstall * 100)
+		fileLabel.text = localization.downloading .. " " .. string.limit(applicationList.duringInstall[i].path, pizda, "center")
+		progressBar.value = math.round(i / #applicationList.duringInstall * 100)
 
 		mainContainer:draw()
 		buffer.draw()

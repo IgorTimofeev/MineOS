@@ -20,6 +20,7 @@ window.backgroundPanel.colors.transparency = 0.2
 
 local weatherContainer = window:addChild(GUI.container(1, 1, 1, 23))
 
+local configPath = MineOSPaths.applicationData .. "Weather/Config.cfg"
 local resources = MineOSCore.getCurrentApplicationResourcesDirectory()
 local weatherIcons = {
 	sunny = image.load(resources .. "Sunny.pic"),
@@ -29,6 +30,10 @@ local weatherIcons = {
 	cloudy = image.load(resources .. "Cloudy.pic"),
 	thundery = image.load(resources .. "Stormy.pic"),
 	foggy = image.load(resources .. "Foggy.pic"),
+}
+
+local config = {
+	lastCityName = "Санкт-Петербург"
 }
 
 --------------------------------------------------------------------------------------------------------
@@ -87,8 +92,8 @@ local function newWeather(x, y, day)
 	return object
 end
 
-local function updateForecast(city)
-	local result, reason = web.request("http://api.openweathermap.org/data/2.5/forecast/daily?&appid=98ba4333281c6d0711ca78d2d0481c3d&units=metric&cnt=17&q=" .. web.encode(city))
+local function updateForecast()
+	local result, reason = web.request("http://api.openweathermap.org/data/2.5/forecast/daily?&appid=98ba4333281c6d0711ca78d2d0481c3d&units=metric&cnt=17&q=" .. web.encode(config.lastCityName))
 	if result then
 		result = json:decode(result)
 		
@@ -106,13 +111,10 @@ local function updateForecast(city)
 
 			y = y + object.height + 1
 
-			local input = weatherContainer:addChild(GUI.input(x + 2, y, 25, 1, 0xE1E1E1, 0x666666, 0x666666, 0xE1E1E1, 0x2D2D2D, "", "Type city name here"))
+			local input = weatherContainer:addChild(GUI.input(x + 2, y, 25, 1, 0xE1E1E1, 0x696969, 0x878787, 0xE1E1E1, 0x2D2D2D, "", "Type city name here"))
 			input.onInputFinished = function()
-				updateForecast(input.text)
-				input.text = ""
-
-				mainContainer:draw()
-				buffer.draw()
+				config.lastCityName = input.text
+				updateForecast()
 			end
 
 			y = y + input.height + 2
@@ -120,7 +122,10 @@ local function updateForecast(city)
 			for i = 1, #result.list do
 				local object = weatherContainer:addChild(newWeather(x, y, result.list[i]))
 				x = x + object.width + 2
-			end	
+			end
+
+			MineOSInterface.OSDraw()
+			table.toFile(configPath, config)
 		else
 			GUI.error(result.message)
 		end
@@ -141,8 +146,13 @@ window.onResize = function(width, height)
 end
 
 window:resize(window.width, window.height)
+MineOSInterface.OSDraw()
 
-updateForecast("Санкт-Петербург")
+if fs.exists(configPath) then
+	config = table.fromFile(configPath)
+end
+
+updateForecast()
 
 
 
