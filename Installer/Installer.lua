@@ -188,7 +188,7 @@ end
 
 local function addSwitchToStage(x, y, color, text, state)
 	stageContainer:addChild(GUI.text(math.floor(x + 4 - unicode.len(text) / 2), y + 1, 0x555555, text))
-	return stageContainer:addChild(GUI.switch(x, y, 8, color, 0x444444, 0xFFFFFF, state))
+	return stageContainer:addChild(GUI.switch(x, y, 8, color, 0xAAAAAA, 0xFFFFFF, state))
 end
 
 stages[2] = function()
@@ -228,7 +228,7 @@ stages[4] = function()
 
 	local width = 62
 	local x = math.floor(stageContainer.width / 2 - width / 2)
-	local progressBar = stageContainer:addChild(GUI.progressBar(x, y, width, 0x3392FF, 0xBBBBBB, 0x555555, 0, true, false))
+	local progressBar = stageContainer:addChild(GUI.progressBar(x, y, width, 0x3392FF, 0xCCCCCC, 0x555555, 0, true, false))
 	local fileLabel = stageContainer:addChild(GUI.label(x, y + 1, width, 1, 0x666666, "")):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
 
 	if stageContainer.downloadWallpapersSwitch.state then
@@ -238,7 +238,7 @@ stages[4] = function()
 		end
 	end
 
-	local pizda = unicode.len(localization.downloading) + 1
+	local pizda = width - unicode.len(localization.downloading) - 1
 	for i = 1, #applicationList.duringInstall do
 		fileLabel.text = localization.downloading .. " " .. string.limit(applicationList.duringInstall[i].path, pizda, "center")
 		progressBar.value = math.round(i / #applicationList.duringInstall * 100)

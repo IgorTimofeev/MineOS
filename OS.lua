@@ -516,7 +516,7 @@ local function createOSWindow()
 		local menu = MineOSInterface.contextMenu(item1.x, item1.y + 1)
 
 		menu:addItem(MineOSCore.localization.updates).onTouch = function()
-			MineOSInterface.safeLaunch("/MineOS/Applications/AppMarket.app/Main.lua", "updates")
+			MineOSInterface.safeLaunch(MineOSPaths.applications .. "App Market.app/Main.lua", "updates")
 		end
 
 		menu:addSeparator()

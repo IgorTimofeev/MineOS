@@ -1,3 +1,4 @@
+local args = {...}
 
 require("advancedLua")
 local component = require("component")
@@ -723,7 +724,7 @@ local function newPublicationInfo(publication_name)
 					end
 				end
 				
-				local govno = container.layout:addChild(GUI.button(1, 1, 36, 3, 0x4B4B4B, 0xFFFFFF, 0x3C3C3C, 0xFFFFFF, "OK"))
+				local govno = container.layout:addChild(GUI.button(1, 1, 36, 3, 0x696969, 0xFFFFFF, 0x3C3C3C, 0xFFFFFF, "OK"))
 				govno.disabled = true
 				govno.colors.disabled.background = 0xA5A5A5
 				govno.colors.disabled.text = 0xC3C3C3
@@ -752,13 +753,15 @@ local function newPublicationInfo(publication_name)
 						govno.disabled = false
 					else
 						govno.disabled = true
-						GUI.error("Слишком охуевший высер. Его длина величиной в " .. textLength .. " символа выходит за границы допустимого диапазона [" .. from .. "; " .. to .. "]")
+						if textLength > to then
+							GUI.error("Too big review length (" .. textLength .. "). Maximum is " .. to)
+						end
 					end
 					
 					MineOSInterface.OSDraw()
 				end
 
-				MineOSInterface.OSDraw()
+				input.onInputFinished()
 			end
 		end
 
@@ -1242,14 +1245,17 @@ updateFileList = function(category_id, updates)
 			updateFileList(category_id, updates)
 		end
 
-		local backButton = navigationLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 1, 0, 0xFFFFFF, 0x696969, 0x2D2D2D, 0xFFFFFF, "<"))
+		local backButton = navigationLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 1, 0, 0xFFFFFF, 0x696969, 0xA5A5A5, 0xFFFFFF, "<"))
+		backButton.colors.disabled.background = 0xD2D2D2
+		backButton.colors.disabled.text = 0xB4B4B4
 		backButton.disabled = currentPage == 0
 		backButton.onTouch = function()
 			switchPage(false)
 		end
 
 		navigationLayout:addChild(GUI.text(1, 1, 0x696969, localization.page .. " " .. (currentPage + 1)))
-		local nextButton = navigationLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 1, 0, 0xFFFFFF, 0x696969, 0x2D2D2D, 0xFFFFFF, ">"))
+		local nextButton = navigationLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 1, 0, 0xFFFFFF, 0x696969, 0xA5A5A5, 0xFFFFFF, ">"))
+		nextButton.colors.disabled = backButton.colors.disabled
 		nextButton.disabled = #result <= appsPerPage
 		nextButton.onTouch = function()
 			switchPage(true)
@@ -1448,22 +1454,15 @@ local function account()
 	end
 end
 
-local function loadCategory(...)
-	currentPage = 0
-	search = nil
-	updateFileList(...)
+local function loadCategory(category_id, updates)
+	currentPage, search = 0, nil
+	updateFileList(category_id, updates)
 end
 
-window.tabBar:addItem(categories[1]).onTouch = function()
-	loadCategory(1)
-end
-
-window.tabBar:addItem(categories[2]).onTouch = function()
-	loadCategory(2)
-end
-
-window.tabBar:addItem(categories[3]).onTouch = function()
-	loadCategory(3)
+for i = 1, #categories do
+	window.tabBar:addItem(categories[i]).onTouch = function()
+		loadCategory(i)
+	end
 end
 
 window.tabBar:addItem(localization.categoryUpdates).onTouch = function()
@@ -1477,9 +1476,16 @@ end
 --------------------------------------------------------------------------------
 
 loadConfig()
-lastMethod, lastArguments = loadCategory, {1}
+
+lastMethod = loadCategory
+if args[1] == "updates" then
+	lastArguments = {nil, true}
+	window.tabBar.selectedItem = #categories + 1
+else
+	lastArguments = {1}
+end
+
 window:resize(window.width, window.height)
--- newPublicationInfo("MineCode IDE")
 
 
 
