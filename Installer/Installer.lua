@@ -13,11 +13,11 @@ local args, options = shell.parse(...)
 ------------------------------------------------------------------------------------------------------------------------------------
 
 local paths = {
-	applicationList = "/MineOS/System/Applications.cfg",
+	applicationList = "/MineOS/System/Files.cfg",
 }
 
 local URLs = {
-	applicationList = "https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/Applications.cfg",
+	applicationList = "https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/Files.cfg",
 	installer = "https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/Installer/",
 	EFI = "https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/EFI.lua",
 	license = "https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/License/",
@@ -76,11 +76,9 @@ wget(URLs.applicationList, paths.applicationList)
 applicationList = unserializeFile(paths.applicationList)
 
 print(" ")
-for i = 1, #applicationList do
-	if applicationList[i].preloadFile then
-		print("Downloading framework \"" .. fs.name(applicationList[i].path) .. "\"")
-		wget(applicationList[i].url, applicationList[i].path)
-	end
+for i = 1, #applicationList.preInstall do
+	print("Downloading framework \"" .. fs.name(applicationList.preInstall[i].path) .. "\"")
+	wget(applicationList.preInstall[i].url, applicationList.preInstall[i].path)
 end
 
 ------------------------------------------------------------------------------------------------------------------------------------
@@ -189,7 +187,7 @@ end
 ------------------------------------------------------------------------------------------------------------------------------------
 
 local function addSwitchToStage(x, y, color, text, state)
-	stageContainer:addChild(GUI.label(math.floor(x + 4 - unicode.len(text) / 2), y + 1, stageContainer.width, 1, 0x555555, text))
+	stageContainer:addChild(GUI.text(math.floor(x + 4 - unicode.len(text) / 2), y + 1, 0x555555, text))
 	return stageContainer:addChild(GUI.switch(x, y, 8, color, 0x444444, 0xFFFFFF, state))
 end
 
@@ -198,10 +196,7 @@ stages[2] = function()
 	stageContainer:addChild(GUI.image(1, 1, images.OS))
 	local y = 22
 	local spaceBetween = 22
-	local x = math.floor(stageContainer.width / 2 - 25)
-
-	stageContainer.fullInstallationSwitch = addSwitchToStage(x, y, 0xFF4940, localization.fullInstallation, true)
-	x = x + spaceBetween
+	local x = math.floor(stageContainer.width / 2 - 15)
 
 	stageContainer.downloadWallpapersSwitch = addSwitchToStage(x, y, 0x3392FF, localization.installWallpapers, true)
 	x = x + spaceBetween
@@ -236,36 +231,14 @@ stages[4] = function()
 	local progressBar = stageContainer:addChild(GUI.progressBar(x, y, width, 0x3392FF, 0xBBBBBB, 0x555555, 0, true, false))
 	local fileLabel = stageContainer:addChild(GUI.label(x, y + 1, width, 1, 0x666666, "")):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
 
-	local thingsToDownload = {}
-	for i = 1, #applicationList do
-		if
-			not applicationList[i].preloadFile and
-			(
-				(applicationList[i].type == "Library" or applicationList[i].type == "Icon")
-				or
-				(applicationList[i].forceDownload)
-				or
-				(applicationList[i].type == "Wallpaper" and stageContainer.downloadWallpapersSwitch.state == true)
-				or
-				(applicationList[i].type == "Application" and stageContainer.fullInstallationSwitch.state == true)
-			)
-		then
-			table.insert(thingsToDownload, applicationList[i])
-		end
-
-		applicationList[i] = nil
-	end
-
-	applicationList = nil
-
-	for i = 1, #thingsToDownload do
-		fileLabel.text = localization.downloading .. " " .. fs.name(thingsToDownload[i].path)
-		progressBar.value = math.ceil(i / #thingsToDownload * 100)
+	for i = 1, #applicationList.duringInstall do
+		fileLabel.text = localization.downloading .. " " .. fs.name(applicationList.duringInstall[i].path)
+		progressBar.value = math.ceil(i / #applicationList.duringInstall * 100)
 
 		mainContainer:draw()
 		buffer.draw()
 
-		MineOSCore.downloadApplication(thingsToDownload[i], MineOSCore.properties.language)
+		web.download(applicationList.duringInstall[i].url, applicationList.duringInstall[i].path)
 	end
 
 	stageContainer:deleteChildren(2)
@@ -290,9 +263,9 @@ stages[5] = function()
 		MineOSCore.properties.wallpaperEnabled = stageContainer.downloadWallpapersSwitch.state
 		MineOSCore.properties.showHelpOnApplicationStart = stageContainer.showApplicationsHelpSwitch.state
 		MineOSCore.saveProperties()
-
+		
 		local file = io.open("/autorun.lua", "w")
-		file:write("dofile(\"/OS.lua\")")
+		file:write("require(\"shell\").execute(\"OS\")")
 		file:close()
 
 		require("computer").shutdown(true)
