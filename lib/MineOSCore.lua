@@ -89,7 +89,7 @@ function MineOSCore.loadPropeties()
 		menuColor = 0xE1E1E1,
 		backgroundColor = 0x1E1E1E,
 		dockShortcuts = {
-			MineOSPaths.applications .. "AppMarket.app/",
+			MineOSPaths.applications .. "App Market.app/",
 			MineOSPaths.applications .. "MineCode IDE.app/",
 			MineOSPaths.applications .. "Finder.app/",
 			MineOSPaths.applications .. "Photoshop.app/",
