@@ -25,6 +25,7 @@ MineOSPaths.explorer = MineOSPaths.applications .. "/Finder.app/Main.lua"
 filesystem.makeDirectory(MineOSPaths.pictures)
 filesystem.makeDirectory(MineOSPaths.applicationData)
 filesystem.makeDirectory(MineOSPaths.trash)
+filesystem.makeDirectory(MineOSPaths.desktop)
 
 ----------------------------------------------------------------------------------------------------------------
 
