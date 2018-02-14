@@ -17,23 +17,13 @@ local unicode = require("unicode")
 --------------------------------------------------------------------------------
 
 local host = "http://eliteclubsessions.ru/mineos/appmarket/"
-local luaIcon = image.load(MineOSPaths.icons .. "Lua.pic")
-local fileNotExistsIcon = image.load(MineOSPaths.icons .. "FileNotExists.pic")
-local scriptIcon = image.load(MineOSPaths.icons .. "Script.pic")
-local localization = MineOSCore.getCurrentApplicationLocalization()
+local responseWaitTime = 1
 
-local appMarketPath = MineOSPaths.applicationData .. "AppMarket/"
+local appMarketPath = MineOSPaths.applicationData .. "App Market/"
 local configPath = appMarketPath .. "Config.cfg"
 local iconCachePath = appMarketPath .. "Cache/"
-fs.makeDirectory(iconCachePath)
 
-local config = {
-	language_id = 18,
-	orderBy = 1,
-	orderDirection = 1,
-	user = {},
-	versions = {},
-}
+local localization = MineOSCore.getCurrentApplicationLocalization()
 
 local categories = {
 	localization.categoryApplications,
@@ -70,39 +60,48 @@ local orderBys = {
 
 
 local languages = {
-	[3] = "Arabic",
-	[6] = "Belarusian",
-	[7] = "Bulgarian",
-	[12] = "Czech",
-	[15] = "German",
-	[16] = "Greek",
+	-- [3] = "Arabic",
+	-- [6] = "Belarusian",
+	-- [7] = "Bulgarian",
+	-- [12] = "Czech",
+	-- [15] = "German",
+	-- [16] = "Greek",
 	[18] = "English",
-	[20] = "Spanish",
-	[21] = "Estonian",
-	[24] = "Finnish",
-	[25] = "French",
-	[31] = "Hindi",
-	[38] = "Italian",
-	[39] = "Japanese",
-	[45] = "Korean",
-	[47] = "Latin",
-	[64] = "Dutch",
-	[65] = "Norwegian",
-	[68] = "Polish",
-	[69] = "Portuguese",
-	[70] = "Romanian",
+	-- [20] = "Spanish",
+	-- [21] = "Estonian",
+	-- [24] = "Finnish",
+	-- [25] = "French",
+	-- [31] = "Hindi",
+	-- [38] = "Italian",
+	-- [39] = "Japanese",
+	-- [45] = "Korean",
+	-- [47] = "Latin",
+	-- [64] = "Dutch",
+	-- [65] = "Norwegian",
+	-- [68] = "Polish",
+	-- [69] = "Portuguese",
+	-- [70] = "Romanian",
 	[71] = "Russian",
-	[78] = "Swedish",
-	[83] = "Thai",
-	[85] = "Turkish",
-	[88] = "Ukrainian",
-	[91] = "Vietnamese",
-	[94] = "Chinese",
+	-- [78] = "Swedish",
+	-- [83] = "Thai",
+	-- [85] = "Turkish",
+	-- [88] = "Ukrainian",
+	-- [91] = "Vietnamese",
+	-- [94] = "Chinese",
 }
+
+--------------------------------------------------------------------------------
+
+fs.makeDirectory(iconCachePath)
+
+local luaIcon = image.load(MineOSPaths.icons .. "Lua.pic")
+local fileNotExistsIcon = image.load(MineOSPaths.icons .. "FileNotExists.pic")
+local scriptIcon = image.load(MineOSPaths.icons .. "Script.pic")
 
 local search = ""
 local appWidth, appHeight, appHSpacing, appVSpacing, currentPage, appsPerPage, appsPerWidth, appsPerHeight  = 34, 6, 2, 1, 0
 local updateFileList, editPublication
+local config, fileVersions
 
 --------------------------------------------------------------------------------
 
@@ -118,14 +117,29 @@ end
 --------------------------------------------------------------------------------
 
 local function saveConfig()
-	table.toFile(configPath, config, true)
+	table.toFile(configPath, config)
+end
+
+local function saveFileVersions()
+	table.toFile(MineOSPaths.fileVersions, fileVersions)
 end
 
 local function loadConfig()
+	if fs.exists(MineOSPaths.fileVersions) then
+		fileVersions = table.fromFile(MineOSPaths.fileVersions)
+	else
+		fileVersions = {}
+	end
+
 	if fs.exists(configPath) then
 		config = table.fromFile(configPath)
 	else
-		saveConfig()
+		config = {
+			language_id = 18,
+			orderBy = 1,
+			orderDirection = 1,
+			user = {},
+		}
 	end
 end
 
@@ -177,17 +191,20 @@ end
 local function checkContentLength(url)
 	local handle = component.internet.request(url)
 	if handle then
-		local _, _, responseData
+		local uptime, _, _, responseData = computer.uptime()
 		repeat
 			_, _, responseData = handle:response()
-		until responseData
+		until responseData or computer.uptime() - uptime > responseWaitTime
 
-		local contentLength = tonumber(responseData["Content-Length"][1])
-		if contentLength <= 10240 then
-			return handle
+		if responseData and responseData["Content-Length"] then
+			if tonumber(responseData["Content-Length"][1]) <= 10240 then
+				return handle
+			else
+				handle:close()
+				return false, "Specified image size is too big"
+			end
 		else
-			handle:close()
-			return false, "Specified image size is too big"
+			return false, "Too long without response"
 		end
 	else
 		return false, "Invalid URL"
@@ -261,9 +278,9 @@ local function newButtonsLayout(x, y, width, spacing)
 end
 
 local function getUpdateState(publication)
-	if config.versions[publication.publication_name] then
-		if fs.exists(config.versions[publication.publication_name].path) then
-			if config.versions[publication.publication_name].version >= publication.version then
+	if fileVersions[publication.publication_name] then
+		if fs.exists(fileVersions[publication.publication_name].path) then
+			if fileVersions[publication.publication_name].version >= publication.version then
 				return 4
 			else
 				return 3
@@ -439,7 +456,7 @@ local function download(publication)
 			end
 
 			-- SAVED
-			config.versions[publication.publication_name] = {
+			fileVersions[publication.publication_name] = {
 				path = mainFilePathForDependencies,
 				version = publication.version,
 			}
@@ -455,7 +472,7 @@ local function download(publication)
 					govnoed(dependency, i + 1)
 					if dependency.publication_name then
 						if getUpdateState(dependency) < 4 then
-							config.versions[dependency.publication_name] = {
+							fileVersions[dependency.publication_name] = {
 								path = dependencyPath,
 								version = dependency.version,
 							}
@@ -475,7 +492,7 @@ local function download(publication)
 			end
 
 			computer.pushSignal("MineOSCore", "updateFileList")
-			saveConfig()
+			saveFileVersions()
 		end
 
 		filesystemChooser.onSubmit = updateTree
@@ -1120,7 +1137,7 @@ updateFileList = function(category_id, updates)
 	local publication_names
 	if updates then
 		publication_names = {}
-		for name in pairs(config.versions) do
+		for name in pairs(fileVersions) do
 			table.insert(publication_names, name)
 		end
 	end
@@ -1172,11 +1189,11 @@ updateFileList = function(category_id, updates)
 							language_id = config.language_id,
 						})
 						
-						config.versions[publication.publication_name].version = publication.version
-						tryToDownload(publication.source_url, config.versions[publication.publication_name].path .. (fs.extension(config.versions[publication.publication_name].path) == ".app" and "Main.lua" or ""))
+						fileVersions[publication.publication_name].version = publication.version
+						tryToDownload(publication.source_url, fileVersions[publication.publication_name].path .. (fs.extension(fileVersions[publication.publication_name].path) == ".app" and "Main.lua" or ""))
 
 						if publication then
-							local publicationPath = config.versions[publication.publication_name].path
+							local publicationPath = fileVersions[publication.publication_name].path
 
 							if publication.dependencies then
 								for j = 1, #publication.all_dependencies do
@@ -1194,7 +1211,7 @@ updateFileList = function(category_id, updates)
 					end
 
 					container:delete()
-					saveConfig()
+					saveFileVersions()
 					computer.shutdown(true)
 				end
 			else
@@ -1336,8 +1353,6 @@ local function account()
 				for file in fs.list(iconCachePath) do
 					fs.remove(iconCachePath .. file)
 				end
-				config.versions = {}
-				saveConfig()
 			end
 			buttonsLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 2, 0, 0xA5A5A5, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.exit)).onTouch = function()
 				config.user = {}
