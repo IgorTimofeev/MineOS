@@ -255,6 +255,8 @@ local function tryToDownload(...)
 	if not success then
 		GUI.error(reason)
 	end
+
+	return success
 end
 
 --------------------------------------------------------------------------------
@@ -343,6 +345,10 @@ end
 
 --------------------------------------------------------------------------------
 
+local function getApplicationPathFromVersions(versionsPath)
+	return versionsPath:gsub("%.app/Main%.lua", ".app")
+end
+
 local function getDependencyPath(mainFilePath, dependency)
 	local path
 	-- Если зависимость - эт публикация
@@ -355,7 +361,7 @@ local function getDependencyPath(mainFilePath, dependency)
 			path = dependency.path
 		-- Ресурсы по релятивному пути
 		else
-			path = mainFilePath .. "Resources/" .. dependency.path
+			path = getApplicationPathFromVersions(mainFilePath) .. "/Resources/" .. dependency.path
 		end
 	end
 
@@ -375,7 +381,7 @@ local function download(publication)
 		local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer, localization.choosePath)
 		container.layout:setCellFitting(2, 1, false, false)
 
-		local filesystemChooserPath = fileVersions[publication.publication_name] and fileVersions[publication.publication_name].path
+		local filesystemChooserPath = fileVersions[publication.publication_name] and getApplicationPathFromVersions(fileVersions[publication.publication_name].path)
 		if not filesystemChooserPath then
 			if publication.category_id == 1 then
 				filesystemChooserPath = downloadPaths[publication.category_id] .. publication.publication_name .. ".app"
@@ -386,19 +392,16 @@ local function download(publication)
 
 		local filesystemChooser = container.layout:addChild(GUI.filesystemChooser(1, 1, 44, 3, 0xE1E1E1, 0x2D2D2D, 0x4B4B4B, 0x969696, filesystemChooserPath, localization.save, localization.cancel, localization.fileName, "/"))
 		filesystemChooser:setMode(GUI.filesystemModes.save, GUI.filesystemModes.file)
-		
-		container.layout:addChild(GUI.text(1, 1, 0xE1E1E1, localization.tree))
 
+		container.layout:addChild(GUI.text(1, 1, 0xE1E1E1, localization.tree))
 		local tree = container.layout:addChild(GUI.tree(1, 1, 44, 10, 0xE1E1E1, 0xA5A5A5, 0x3C3C3C, 0xA5A5A5, 0x3C3C3C, 0xE1E1E1, 0xB4B4B4, 0xA5A5A5, 0xC3C3C3, 0x444444))
 
-		-- Хуйня, хуячащая ваще прям все - включая ТО, шо нужно загрузить
-		local mainFilePath, mainFilePathForDependencies
+		local mainFilePath
 		local function updateTree()
 			tree.items = {}
 			tree.fromItem = 1
 
 			mainFilePath = filesystemChooser.path .. (publication.category_id == 1 and "/Main.lua" or "")
-			mainFilePathForDependencies = filesystemChooser.path .. (publication.category_id == 1 and "/" or "")
 
 			-- Вот тута будет йоба-древо
 			local dependencyTree = {}
@@ -417,7 +420,7 @@ local function download(publication)
 
 			for i = 1, #treeData do
 				local idiNahooy = dependencyTree
-				local dependencyPath = getDependencyPath(mainFilePathForDependencies, treeData[i])
+				local dependencyPath = getDependencyPath(mainFilePath, treeData[i])
 				
 				for blyad in fs.path(dependencyPath):gmatch("[^/]+") do
 					if not idiNahooy[blyad] then
@@ -466,7 +469,7 @@ local function download(publication)
 
 			-- SAVED
 			fileVersions[publication.publication_name] = {
-				path = mainFilePathForDependencies,
+				path = mainFilePath,
 				version = publication.version,
 			}
 
@@ -476,9 +479,10 @@ local function download(publication)
 			if publication.dependencies then
 				for i = 1, #publication.all_dependencies do
 					local dependency = publication.dependencies_data[publication.all_dependencies[i]]
-					local dependencyPath = getDependencyPath(mainFilePathForDependencies, dependency)
+					local dependencyPath = getDependencyPath(mainFilePath, dependency)
 
 					govnoed(dependency, i + 1)
+
 					if dependency.publication_name then
 						if getUpdateState(dependency) < 4 then
 							fileVersions[dependency.publication_name] = {
@@ -497,7 +501,7 @@ local function download(publication)
 			callLastMethod()
 
 			if not shortcutSwitchAndLabel.hidden and shortcutSwitchAndLabel.switch.state then
-				MineOSCore.createShortcut(MineOSPaths.desktop .. fs.hideExtension(fs.name(mainFilePathForDependencies)) .. ".lnk", mainFilePathForDependencies)
+				MineOSCore.createShortcut(MineOSPaths.desktop .. fs.hideExtension(fs.name(filesystemChooser.path)) .. ".lnk", filesystemChooser.path .. "/")
 			end
 
 			computer.pushSignal("MineOSCore", "updateFileList")
@@ -1199,20 +1203,17 @@ updateFileList = function(category_id, updates)
 						})
 						
 						fileVersions[publication.publication_name].version = publication.version
-						tryToDownload(publication.source_url, fileVersions[publication.publication_name].path .. (fs.extension(fileVersions[publication.publication_name].path) == ".app" and "Main.lua" or ""))
+						tryToDownload(publication.source_url, fileVersions[publication.publication_name].path)
 
 						if publication then
-							local publicationPath = fileVersions[publication.publication_name].path
-
 							if publication.dependencies then
 								for j = 1, #publication.all_dependencies do
 									local dependency = publication.dependencies_data[publication.all_dependencies[j]]
 									if not dependency.publication_name then
-										local dependencyPath = getDependencyPath(publicationPath, dependency)
 										container.label.text = localization.downloading .. " " .. dependency.path
 										MineOSInterface.OSDraw()
 										
-										tryToDownload(dependency.source_url, dependencyPath)
+										tryToDownload(dependency.source_url, getDependencyPath(fileVersions[publication.publication_name].path, dependency))
 									end
 								end
 							end
