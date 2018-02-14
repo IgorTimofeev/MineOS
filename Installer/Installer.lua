@@ -256,7 +256,7 @@ stages[4] = function()
 		buffer.draw()
 
 		web.download(applicationList.duringInstall[i].url, applicationList.duringInstall[i].path)
-		storeFileVersion(applicationList.preInstall[i])
+		storeFileVersion(applicationList.duringInstall[i])
 	end
 
 	stageContainer:deleteChildren(2)
