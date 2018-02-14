@@ -279,7 +279,7 @@ end
 local function ratingWidgetDraw(object)
 	local x = 0
 	for i = 1, 5 do
-		buffer.text(object.x + x, object.y, math.round(object.rating) >= i and object.colors.first or object.colors.second, "*")
+		buffer.text(object.x + x, object.y, object.rating >= i and object.colors.first or object.colors.second, "*")
 		x = x + object.spacing
 	end
 
@@ -522,7 +522,7 @@ local function addApplicationInfo(container, publication)
 	container.image = container:addChild(GUI.image(3, 2, icon))
 	container.nameLabel = container:addChild(GUI.text(13, 2, 0x0, publication.publication_name))
 	container.versionLabel = container:addChild(GUI.text(13, 3, 0x878787, "©" .. publication.user_name))
-	container.rating = container:addChild(newRatingWidget(13, 4, publication.average_rating or 0))
+	container.rating = container:addChild(newRatingWidget(13, 4, publication.average_rating and math.round(publication.average_rating) or 0))
 
 	local updateState = getUpdateState(publication)
 	container.downloadButton = container:addChild(GUI.adaptiveRoundedButton(13, 5, 1, 0, 0xB4B4B4, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, updateState == 4 and localization.installed or updateState == 3 and localization.update or localization.install))
@@ -725,7 +725,7 @@ local function newPublicationInfo(publication_name)
 				local cyka = pizda:addChild(newRatingWidget(eblo.width + 1, 1, 4))
 				cyka.eventHandler = function(mainContainer, object, eventData)
 					if eventData[1] == "touch" then
-						cyka.rating = (eventData[3] - object.x + 1) / object.width * 5
+						cyka.rating = math.round((eventData[3] - object.x + 1) / object.width * 5)
 						MineOSInterface.OSDraw()
 					end
 				end
