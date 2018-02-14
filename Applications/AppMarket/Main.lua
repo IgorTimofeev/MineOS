@@ -375,7 +375,16 @@ local function download(publication)
 		local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer, localization.choosePath)
 		container.layout:setCellFitting(2, 1, false, false)
 
-		local filesystemChooser = container.layout:addChild(GUI.filesystemChooser(1, 1, 44, 3, 0xE1E1E1, 0x2D2D2D, 0x4B4B4B, 0x969696, downloadPaths[publication.category_id] .. (publication.category_id == 1 and publication.publication_name .. ".app" or publication.path), localization.save, localization.cancel, localization.fileName, "/"))
+		local filesystemChooserPath = fileVersions[publication.publication_name] and fileVersions[publication.publication_name].path
+		if not filesystemChooserPath then
+			if publication.category_id == 1 then
+				filesystemChooserPath = downloadPaths[publication.category_id] .. publication.publication_name .. ".app"
+			else
+				filesystemChooserPath = downloadPaths[publication.category_id] .. publication.path
+			end
+		end
+
+		local filesystemChooser = container.layout:addChild(GUI.filesystemChooser(1, 1, 44, 3, 0xE1E1E1, 0x2D2D2D, 0x4B4B4B, 0x969696, filesystemChooserPath, localization.save, localization.cancel, localization.fileName, "/"))
 		filesystemChooser:setMode(GUI.filesystemModes.save, GUI.filesystemModes.file)
 		
 		container.layout:addChild(GUI.text(1, 1, 0xE1E1E1, localization.tree))
