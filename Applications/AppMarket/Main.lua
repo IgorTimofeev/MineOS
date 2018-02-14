@@ -132,9 +132,15 @@ end
 --------------------------------------------------------------------------------
 
 local function RawAPIRequest(script, postData, notUnserialize)
-	local url = host .. script .. ".php?" .. web.serialize(postData)
-	-- table.toFile("/test.txt", {url})
-	local requestResult, requestReason = web.request(url)
+	-- local requestResult, requestReason = web.request(host .. script .. ".php?" .. web.serialize(postData))
+
+	local requestResult, requestReason = web.request(host .. script .. ".php?" .. web.serialize(postData), nil, { 
+		["User-Agent"] = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.119 Safari/537.36",
+		-- ["Accept"] = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8", 
+		-- ["Accept-Language"] = "en-us,en;q=0.5", 
+		-- ["Accept-Charset"] = "ISO-8859-1,utf-8;q=0.7,*;q=0.7" 
+	})
+
 	if requestResult then
 		if not notUnserialize then
 			local unserializeResult, unserializeReason = table.fromString(requestResult)
