@@ -131,10 +131,10 @@ end
 
 --------------------------------------------------------------------------------
 
-local function RawAPIRequest(script, postData, notUnserialize)
-	-- local requestResult, requestReason = web.request(host .. script .. ".php?" .. web.serialize(postData))
+local function RawAPIRequest(script, data, notUnserialize)
+	-- local requestResult, requestReason = web.request(host .. script .. ".php?" .. web.serialize(data))
 
-	local requestResult, requestReason = web.request(host .. script .. ".php?" .. web.serialize(postData), nil, { 
+	local requestResult, requestReason = web.request(host .. script .. ".php?" .. web.serialize(data, true), nil, { 
 		["User-Agent"] = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.119 Safari/537.36",
 		-- ["Accept"] = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8", 
 		-- ["Accept-Language"] = "en-us,en;q=0.5", 
@@ -151,7 +151,7 @@ local function RawAPIRequest(script, postData, notUnserialize)
 					return false, "API request not succeded: " .. tostring(unserializeResult.reason)
 				end
 			else
-				return false, "Failed to unserialize response data: " .. tostring(unserializeReason) .. ", the data was: " .. tostring(requestResult)
+				return false, "Failed to unserialize response data: " .. tostring(unserializeReason)
 			end
 		else
 			return result
@@ -161,8 +161,8 @@ local function RawAPIRequest(script, postData, notUnserialize)
 	end
 end
 
-local function fieldAPIRequest(fieldToReturn, script, postData)
-	local success, reason = RawAPIRequest(script, postData)
+local function fieldAPIRequest(fieldToReturn, script, data)
+	local success, reason = RawAPIRequest(script, data)
 	if success then
 		if success[fieldToReturn] then
 			return success[fieldToReturn]
@@ -1084,10 +1084,10 @@ editPublication = function(initialPublication)
 			publication_name = initialPublication and initialPublication.publication_name or nil,
 			-- А вот эта хня универсальная
 			token = config.user.token,
-			name = web.encode(nameInput.text),
+			name = nameInput.text,
 			source_url = mainUrlInput.text,
-			path = web.encode(categoryComboBox.selectedItem == 1 and "Main.lua" or mainPathInput.text),
-			description = web.encode(descriptionInput.text),
+			path = categoryComboBox.selectedItem == 1 and "Main.lua" or mainPathInput.text,
+			description = descriptionInput.text,
 			license_id = licenseComboBox.selectedItem,
 			dependencies = dependencies,
 			category_id = categoryComboBox.selectedItem,
@@ -1447,7 +1447,7 @@ local function account()
 				local result = fieldAPIRequest("result", "register", {
 					name = layout.nameInput.text,
 					email = layout.emailInput.text,
-					password = layout.passwordInput.text,
+					password =layout.passwordInput.text,
 				})
 
 				if result then

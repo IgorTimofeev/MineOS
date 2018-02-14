@@ -5,7 +5,13 @@ local web = {}
 
 ----------------------------------------------------------------------------------------------------
 
-function web.serialize(data)
+function web.encode(data)
+	return data:gsub("([^%w%s%-%_%.%~])", function(char)
+		return string.format("%%%02X", string.byte(char))
+	end):gsub("%s", "+")
+end
+
+function web.serialize(data, encodeFields)
 	if type(data) == "table" then		
 		local result = ""
 
@@ -20,7 +26,7 @@ function web.serialize(data)
 				if valueType == "table" then
 					doSerialize(value, keyStack .. "[" .. key .. "]")
 				else
-					result = result .. keyStack .. "[" .. key .. "]=" .. tostring(value) .. "&"
+					result = result .. keyStack .. "[" .. key .. "]=" .. (encodeFields and web.encode(tostring(value)) or tostring(value)) .. "&"
 				end
 			end
 		end
@@ -29,7 +35,7 @@ function web.serialize(data)
 			if type(value) == "table" then
 				doSerialize(value, key)
 			else
-				result = result .. key .. "=" .. tostring(value) .. "&"
+				result = result .. key .. "=" .. (encodeFields and web.encode(tostring(value)) or tostring(value)) .. "&"
 			end
 		end
 
@@ -37,17 +43,6 @@ function web.serialize(data)
 	else
 		return tostring(data)
 	end
-end
-
-function web.encode(data)
-	if data then
-		data = string.gsub(data, "([^%w ])", function(char)
-			return string.format("%%%02X", string.byte(char))
-		end)
-		data = string.gsub(data, " ", "+")
-	end
-
-	return data 
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -138,14 +133,14 @@ end
 
 -- print(web.serialize({
 -- 	array = {
--- 		pidor = "Пизда хуйни",
+-- 		pidor = "English Test 123-_.~",
 -- 		tyan = 512,
 -- 		second = {
 -- 			zalupa = 421,
 -- 			penis = "Член"
 -- 		}
 -- 	},
--- }))
+-- }, true))
 
 ----------------------------------------------------------------------------------------------------
 
