@@ -17,7 +17,7 @@ local unicode = require("unicode")
 --------------------------------------------------------------------------------
 
 local host = "http://eliteclubsessions.ru/mineos/appmarket/"
-local responseWaitTime = 1
+local responseWaitTime = 0.3
 
 local appMarketPath = MineOSPaths.applicationData .. "App Market/"
 local configPath = appMarketPath .. "Config.cfg"
@@ -534,7 +534,7 @@ local function addApplicationInfo(container, publication)
 
 					icon = image.load(path)
 				else
-					GUI.error("Failed to download publication icon: " .. reason)
+					-- GUI.error("Failed to download publication icon: " .. reason)
 					icon = fileNotExistsIcon
 				end
 			end
