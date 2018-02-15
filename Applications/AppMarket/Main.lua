@@ -502,9 +502,9 @@ local function download(publication)
 			if not shortcutSwitchAndLabel.hidden and shortcutSwitchAndLabel.switch.state then
 				MineOSCore.createShortcut(MineOSPaths.desktop .. fs.hideExtension(fs.name(filesystemChooser.path)) .. ".lnk", filesystemChooser.path .. "/")
 			end
-
-			computer.pushSignal("MineOSCore", "updateFileList")
+			
 			saveFileVersions()
+			computer.pushSignal("MineOSCore", "updateFileList")
 		end
 
 		filesystemChooser.onSubmit = updateTree
