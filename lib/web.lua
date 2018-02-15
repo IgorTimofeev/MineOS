@@ -1,41 +1,38 @@
 
 local component = require("component")
 local fs = require("filesystem")
-local web = {}
 
 ----------------------------------------------------------------------------------------------------
 
-function web.encode(data)
+local function encode(data)
 	return data:gsub("([^%w%s%-%_%.%~])", function(char)
 		return string.format("%%%02X", string.byte(char))
 	end):gsub("%s", "+")
 end
 
-function web.serialize(data, encodeFields)
+local function serialize(data)
 	if type(data) == "table" then		
 		local result = ""
 
 		local function doSerialize(table, keyStack)
 			for key, value in pairs(table) do
-				local keyType, valueType = type(key), type(value)
-
-				if keyType == "number" then
+				if type(key) == "number" then
 					key = key - 1
 				end
 
-				if valueType == "table" then
-					doSerialize(value, keyStack .. "[" .. key .. "]")
+				if type(value) == "table" then
+					doSerialize(value, keyStack .. "[" .. encode(tostring(key)) .. "]")
 				else
-					result = result .. keyStack .. "[" .. key .. "]=" .. (encodeFields and web.encode(tostring(value)) or tostring(value)) .. "&"
+					result = result .. keyStack .. "[" .. encode(tostring(key)) .. "]=" .. encode(tostring(value)) .. "&"
 				end
 			end
 		end
 		
 		for key, value in pairs(data) do	
 			if type(value) == "table" then
-				doSerialize(value, key)
+				doSerialize(value, encode(tostring(key)))
 			else
-				result = result .. key .. "=" .. (encodeFields and web.encode(tostring(value)) or tostring(value)) .. "&"
+				result = result .. key .. "=" .. encode(tostring(value)) .. "&"
 			end
 		end
 
@@ -47,11 +44,7 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
-function web.rawRequest(url, postData, headers, chunkHandler, chunkSize)
-	if postData then
-		postData = web.serialize(postData)
-	end
-
+local function rawRequest(url, postData, headers, chunkHandler, chunkSize)
 	local pcallSuccess, requestHandle, requestReason = pcall(component.internet.request, url, postData, headers)
 	if pcallSuccess then
 		if requestHandle then
@@ -76,9 +69,9 @@ function web.rawRequest(url, postData, headers, chunkHandler, chunkSize)
 	end
 end
 
-function web.request(url, postData, headers)
+local function request(url, postData, headers)
 	local data = ""
-	local success, reason = web.rawRequest(url, postData, headers, function(chunk)
+	local success, reason = rawRequest(url, postData, headers, function(chunk)
 		data = data .. chunk
 	end)
 
@@ -89,12 +82,12 @@ function web.request(url, postData, headers)
 	end
 end
 
-function web.download(url, path)
+local function download(url, path)
 	fs.makeDirectory(fs.path(path) or "")
 	
 	local handle, reason = io.open(path, "w")
 	if handle then
-		local success, reason = web.rawRequest(url, nil, nil, function(chunk)
+		local success, reason = rawRequest(url, nil, nil, function(chunk)
 			handle:write(chunk)
 		end)
 
@@ -110,12 +103,12 @@ function web.download(url, path)
 	end	
 end
 
-function web.run(url, ...)
-	local result, reason = web.request(url)
+local function run(url, ...)
+	local result, reason = request(url)
 	if result then
 		result, reason = load(result)
 		if result then
-			result = { pcall(result, ...) }
+			result = {pcall(result, ...)}
 			if result[1] then
 				return table.unpack(result, 2)
 			else
@@ -131,7 +124,7 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
--- print(web.serialize({
+-- print(serialize({
 -- 	array = {
 -- 		pidor = "English Test 123-_.~",
 -- 		tyan = 512,
@@ -144,7 +137,14 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
-return web
+return {
+	encode = encode,
+	serialize = serialize,
+	rawRequest = rawRequest,
+	request = request,
+	download = download,
+	run = run,
+}
 
 
 
