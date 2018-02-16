@@ -2,6 +2,7 @@
 	categoryApplications = "Applications",
 	categoryLibraries = "Libraries",
 	categoryScripts = "Scripts",
+	categoryWallpapers = "Wallpapers",
 	categoryUpdates = "Updates",
 	categoryAccount = "Account",
 
@@ -16,6 +17,7 @@
 	statusUser = "Obtaining user info...",
 	statusLoggingIn = "Logging in...",
 	statusRegistering = "Creating new user...",
+	statusRecovering = "Creating new password...",
 
 	areYouSure = "Are your sure want to delete publication?",
 	createShortcut = "Create desktop shortcut",
@@ -37,7 +39,7 @@
 	fileByURL = "File via URL",
 	add = "Add",
 	relativePath = "Relative path",
-
+	
 	login = "Log in",
 	profile = "Profile",
 	nickname = "Nickname",
@@ -49,6 +51,10 @@
 	open = "Open",
 	clearCache = "Clear cache",
 	exit = "Log out",
+	changePassword = "Change password",
+	newPassword = "New password",
+	singleSession = "It's not my computer",
+	currentPassword = "Current password",
 	language = "Descriptions language",
 	publications = "Publications",
 	notRegistered = "Not registered yet?",

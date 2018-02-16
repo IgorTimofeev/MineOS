@@ -16,11 +16,12 @@ local unicode = require("unicode")
 
 --------------------------------------------------------------------------------
 
-local host = "http://eliteclubsessions.ru/mineos/appmarket/"
-local responseWaitTime = 0.3
+local host = "http://eliteclubsessions.ru/mineos/2.0/"
+local responseWaitTime = 0.5
 
 local appMarketPath = MineOSPaths.applicationData .. "App Market/"
 local configPath = appMarketPath .. "Config.cfg"
+local userPath = appMarketPath .. "User.cfg"
 local iconCachePath = appMarketPath .. "Cache/"
 
 local localization = MineOSCore.getCurrentApplicationLocalization()
@@ -101,7 +102,7 @@ local scriptIcon = image.load(MineOSPaths.icons .. "Script.pic")
 local search = ""
 local appWidth, appHeight, appHSpacing, appVSpacing, currentPage, appsPerPage, appsPerWidth, appsPerHeight  = 34, 6, 2, 1, 0
 local updateFileList, editPublication
-local config, fileVersions
+local config, fileVersions, user
 
 --------------------------------------------------------------------------------
 
@@ -124,11 +125,21 @@ local function saveFileVersions()
 	table.toFile(MineOSPaths.fileVersions, fileVersions)
 end
 
+local function saveUser()
+	table.toFile(userPath, user)
+end
+
 local function loadConfig()
 	if fs.exists(MineOSPaths.fileVersions) then
 		fileVersions = table.fromFile(MineOSPaths.fileVersions)
 	else
 		fileVersions = {}
+	end
+
+	if fs.exists(userPath) then
+		user = table.fromFile(userPath)
+	else
+		user = {}
 	end
 
 	if fs.exists(configPath) then
@@ -138,7 +149,7 @@ local function loadConfig()
 			language_id = 18,
 			orderBy = 1,
 			orderDirection = 1,
-			user = {},
+			singleSession = false,
 		}
 	end
 end
@@ -147,8 +158,8 @@ end
 
 local function RawAPIRequest(script, data, notUnserialize)
 	local requestResult, requestReason = web.request(
-		host .. script .. ".php?" .. web.serialize(data),
-		nil,
+		host .. script .. ".php",
+		web.serialize(data),
 		{ 
 			["User-Agent"] = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.119 Safari/537.36"
 		}
@@ -265,6 +276,11 @@ local function callLastMethod()
 	lastMethod(table.unpack(lastArguments))
 end
 
+local function showLabelAsContent(text)
+	contentContainer:deleteChildren()
+	contentContainer:addChild(GUI.label(1, 1, contentContainer.width, contentContainer.height, 0x2D2D2D, text)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.center)
+end
+
 local function status(text)
 	statusWidget.text = text
 	MineOSInterface.OSDraw()
@@ -329,7 +345,7 @@ local function deletePublication(publication)
 
 	buttonsLayout:addChild(GUI.adaptiveButton(1, 1, 2, 0, 0xE1E1E1, 0x2D2D2D, 0x0, 0xE1E1E1, localization.yes)).onTouch = function()
 		local success, reason = RawAPIRequest("delete", {
-			token = config.user.token,
+			token = user.token,
 			publication_name = publication.publication_name,
 		})
 
@@ -554,11 +570,11 @@ local function addApplicationInfo(container, publication)
 	container.rating = container:addChild(newRatingWidget(13, 4, publication.average_rating and math.round(publication.average_rating) or 0))
 
 	local updateState = getUpdateState(publication)
-	container.downloadButton = container:addChild(GUI.adaptiveRoundedButton(13, 5, 1, 0, 0xB4B4B4, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, updateState == 4 and localization.installed or updateState == 3 and localization.update or localization.install))
+	container.downloadButton = container:addChild(GUI.adaptiveRoundedButton(13, 5, 1, 0, 0xC3C3C3, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, updateState == 4 and localization.installed or updateState == 3 and localization.update or localization.install))
 	container.downloadButton.onTouch = function()
 		download(publication)
 	end
-	container.downloadButton.colors.disabled.background = 0xD2D2D2
+	container.downloadButton.colors.disabled.background = 0xE1E1E1
 	container.downloadButton.colors.disabled.text = 0xFFFFFF
 	container.downloadButton.disabled = updateState == 4
 end
@@ -619,7 +635,6 @@ local function newPublicationInfo(publication_name)
 		
 		local infoContainer = contentContainer:addChild(GUI.container(1, 1, contentContainer.width, contentContainer.height))
 		infoContainer.eventHandler = containerScrollEventHandler
-		infoContainer.passScreenEvents = true
 
 		-- Жирный йоба-лейаут для отображения ВАЩЕ всего - и инфы, и отзыввов
 		local layout = infoContainer:addChild(GUI.layout(3, 2, infoContainer.width - 4, infoContainer.height, 1, 1))
@@ -636,7 +651,7 @@ local function newPublicationInfo(publication_name)
 		-- Всякая текстовая пизда
 		local y = 2
 		-- Фигачим кнопочки на изменение хуйни
-		if publication.user_name == config.user.name then
+		if publication.user_name == user.name then
 			local buttonsLayout = ratingsContainer:addChild(newButtonsLayout(2, y, ratingsContainer.width - 2, 2))
 			buttonsLayout:addChild(GUI.adaptiveRoundedButton(2, 1, 1, 0, 0x969696, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.edit)).onTouch = function()
 				editPublication(publication)
@@ -706,7 +721,7 @@ local function newPublicationInfo(publication_name)
 						if x + textLength + 4 > textDetailsContainer.width - 4 then
 							x, y = 3, y + 2
 						end
-						local button = textDetailsContainer:addChild(GUI.roundedButton(x, y, textLength + 2, 1, 0xB4B4B4, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, dependency.publication_name))
+						local button = textDetailsContainer:addChild(GUI.roundedButton(x, y, textLength + 2, 1, 0xC3C3C3, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, dependency.publication_name))
 						button.onTouch = function()
 							newPublicationInfo(dependency.publication_name)
 						end
@@ -728,13 +743,13 @@ local function newPublicationInfo(publication_name)
 		ratingsContainer.panel.height = textDetailsContainer.height
 		detailsContainer.height = textDetailsContainer.height
 
-		if config.user.token and config.user.name ~= publication.user_name then
+		if user.token and user.name ~= publication.user_name then
 
 
 			local existingReviewText
 			if publication.reviews then
 				for i = 1, #publication.reviews do
-					if publication.reviews[i].user_name == config.user.name then
+					if publication.reviews[i].user_name == user.name then
 						existingReviewText = publication.reviews[i].comment
 						break
 					end
@@ -766,18 +781,18 @@ local function newPublicationInfo(publication_name)
 				govno.onTouch = function()
 					status(localization.statusPublishingReview)
 					local success, reason = RawAPIRequest("review", {
-						token = config.user.token,
+						token = user.token,
 						publication_name = publication.publication_name,
 						rating = cyka.rating,
 						comment = input.text,
 					})
 
 					container:delete()
+					MineOSInterface.OSDraw()
 
-					if success then					
+					if success then
 						newPublicationInfo(publication.publication_name)
 					else
-						MineOSInterface.OSDraw()
 						GUI.error(reason)
 					end
 				end
@@ -822,7 +837,7 @@ local function newPublicationInfo(publication_name)
 				textBox.eventHandler = nil
 				y = y + #lines
 
-				if publication.reviews[i].votes or config.user.token and config.user.name ~= publication.reviews[i].user_name then
+				if publication.reviews[i].votes or user.token and user.name ~= publication.reviews[i].user_name then
 					y = y + 1
 				end
 
@@ -831,7 +846,7 @@ local function newPublicationInfo(publication_name)
 					y = y + 1
 				end
 
-				if config.user.token and config.user.name ~= publication.reviews[i].user_name then
+				if user.token and user.name ~= publication.reviews[i].user_name then
 					local wasHelpText = reviewContainer:addChild(GUI.text(3, y, 0xC3C3C3, localization.wasReviewHelpful))
 					local yesButton = reviewContainer:addChild(GUI.adaptiveButton(wasHelpText.localX + wasHelpText.width + 1, y, 0, 0, nil, 0x696969, nil, 0x2D2D2D, localization.yes))
 					local stripLabel = reviewContainer:addChild(GUI.text(yesButton.localX + yesButton.width + 1, y, 0xC3C3C3, "|"))
@@ -840,7 +855,7 @@ local function newPublicationInfo(publication_name)
 					local function go(rating)
 						status(localization.statusVotingReview)
 						local success = fieldAPIRequest("result", "review_vote", {
-							token = config.user.token,
+							token = user.token,
 							review_id = publication.reviews[i].id,
 							rating = rating
 						})
@@ -1112,7 +1127,7 @@ editPublication = function(initialPublication)
 			-- Вот эта хня чисто для апдейта
 			publication_name = initialPublication and initialPublication.publication_name or nil,
 			-- А вот эта хня универсальная
-			token = config.user.token,
+			token = user.token,
 			name = nameInput.text,
 			source_url = mainUrlInput.text,
 			path = categoryComboBox.selectedItem == 1 and "Main.lua" or mainPathInput.text,
@@ -1183,134 +1198,136 @@ updateFileList = function(category_id, updates)
 		layout:setCellDirection(1, 1, GUI.directions.horizontal)
 		layout:setCellSpacing(1, 1, 2)
 
-		if updates then
-			if #result > 0 then
-				layout:addChild(GUI.adaptiveRoundedButton(1, 1, 2, 0, 0x696969, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.updateAll)).onTouch = function()
-					local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer, "")
-					container.layout:setCellFitting(2, 1, false, false)
+		if not updates or updates and #result > 0 then
+			if updates then
+				if #result > 0 then
+					layout:addChild(GUI.adaptiveRoundedButton(1, 1, 2, 0, 0x696969, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.updateAll)).onTouch = function()
+						local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer, "")
+						container.layout:setCellFitting(2, 1, false, false)
 
-					local progressBar = container.layout:addChild(GUI.progressBar(1, 1, 40, 0x66DB80, 0x0, 0xE1E1E1, 0, true, true, "", "%"))
+						local progressBar = container.layout:addChild(GUI.progressBar(1, 1, 40, 0x66DB80, 0x0, 0xE1E1E1, 0, true, true, "", "%"))
 
-					for i = 1, #result do
-						container.label.text = localization.downloading .. " " .. result[i].publication_name
-						progressBar.value = math.round(i / #result * 100)
-						MineOSInterface.OSDraw()
+						for i = 1, #result do
+							container.label.text = localization.downloading .. " " .. result[i].publication_name
+							progressBar.value = math.round(i / #result * 100)
+							MineOSInterface.OSDraw()
 
-						local publication = fieldAPIRequest("result", "publication", {
-							publication_name = result[i].publication_name,
-							language_id = config.language_id,
-						})
-						
-						fileVersions[publication.publication_name].version = publication.version
-						tryToDownload(publication.source_url, fileVersions[publication.publication_name].path)
+							local publication = fieldAPIRequest("result", "publication", {
+								publication_name = result[i].publication_name,
+								language_id = config.language_id,
+							})
+							
+							fileVersions[publication.publication_name].version = publication.version
+							tryToDownload(publication.source_url, fileVersions[publication.publication_name].path)
 
-						if publication then
-							if publication.dependencies then
-								for j = 1, #publication.all_dependencies do
-									local dependency = publication.dependencies_data[publication.all_dependencies[j]]
-									if not dependency.publication_name then
-										container.label.text = localization.downloading .. " " .. dependency.path
-										MineOSInterface.OSDraw()
-										
-										tryToDownload(dependency.source_url, getDependencyPath(fileVersions[publication.publication_name].path, dependency))
+							if publication then
+								if publication.dependencies then
+									for j = 1, #publication.all_dependencies do
+										local dependency = publication.dependencies_data[publication.all_dependencies[j]]
+										if not dependency.publication_name then
+											container.label.text = localization.downloading .. " " .. dependency.path
+											MineOSInterface.OSDraw()
+											
+											tryToDownload(dependency.source_url, getDependencyPath(fileVersions[publication.publication_name].path, dependency))
+										end
 									end
 								end
 							end
 						end
+
+						container:delete()
+						saveFileVersions()
+						computer.shutdown(true)
+					end
+				end
+			else
+				local input = layout:addChild(GUI.input(1, 1, 20, layout.height, 0xFFFFFF, 0x2D2D2D, 0x696969, 0xFFFFFF, 0x2D2D2D, search or "", localization.search, true))
+				input.onInputFinished = function()
+					if #input.text == 0 then
+						search = nil
+					else
+						search = input.text
 					end
 
-					container:delete()
-					saveFileVersions()
-					computer.shutdown(true)
+					currentPage = 0
+					updateFileList(category_id, updates)
 				end
-			else
-				contentContainer:addChild(GUI.label(1, 1, contentContainer.width, contentContainer.height, 0x2D2D2D, localization.noUpdates)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.center)
+
+				local orderByComboBox = layout:addChild(GUI.comboBox(1, 1, 18, layout.height, 0xFFFFFF, 0x696969, 0x969696, 0xE1E1E1))
+				orderByComboBox:addItem(localization.byRating)
+				orderByComboBox:addItem(localization.byName)
+				orderByComboBox:addItem(localization.byDate)
+				
+				orderByComboBox.selectedItem = config.orderBy
+
+				local orderDirectionComboBox = layout:addChild(GUI.comboBox(1, 1, 18, layout.height, 0xFFFFFF, 0x696969, 0x969696, 0xE1E1E1))
+				orderDirectionComboBox:addItem(localization.desc)
+				orderDirectionComboBox:addItem(localization.asc)
+				orderDirectionComboBox.selectedItem = config.orderDirection
+
+				orderByComboBox.onItemSelected = function()
+					config.orderBy = orderByComboBox.selectedItem
+					config.orderDirection = orderDirectionComboBox.selectedItem
+					updateFileList(category_id, updates)
+					saveConfig()
+				end
+				orderDirectionComboBox.onItemSelected = orderByComboBox.onItemSelected
+
+				if user.token then
+					layout:addChild(GUI.adaptiveRoundedButton(1, 1, 1, 0, 0x696969, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.publish)).onTouch = function()
+						editPublication()
+					end
+				end
+			end
+
+			y = y + layout.height + 1
+
+			local navigationLayout = contentContainer:addChild(GUI.layout(1, contentContainer.height - 1, contentContainer.width, 1, 1, 1))
+			navigationLayout:setCellDirection(1, 1, GUI.directions.horizontal)
+			navigationLayout:setCellSpacing(1, 1, 2)
+
+			local function switchPage(forward)
+				currentPage = currentPage + (forward and 1 or -1)
+				updateFileList(category_id, updates)
+			end
+
+			local backButton = navigationLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 1, 0, 0xFFFFFF, 0x696969, 0xA5A5A5, 0xFFFFFF, "<"))
+			backButton.colors.disabled.background = 0xD2D2D2
+			backButton.colors.disabled.text = 0xB4B4B4
+			backButton.disabled = currentPage == 0
+			backButton.onTouch = function()
+				switchPage(false)
+			end
+
+			navigationLayout:addChild(GUI.text(1, 1, 0x696969, localization.page .. " " .. (currentPage + 1)))
+			local nextButton = navigationLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 1, 0, 0xFFFFFF, 0x696969, 0xA5A5A5, 0xFFFFFF, ">"))
+			nextButton.colors.disabled = backButton.colors.disabled
+			nextButton.disabled = #result <= appsPerPage
+			nextButton.onTouch = function()
+				switchPage(true)
+			end
+
+			local xStart = math.floor(1 + contentContainer.width / 2 - (appsPerWidth * (appWidth + appHSpacing) - appHSpacing) / 2)
+			local x, counter = xStart, 1
+			for i = 1, #result do
+				contentContainer:addChild(newApplicationPreview(x, y, result[i]))
+				
+				if counter >= appsPerPage then
+					break
+				elseif counter % appsPerWidth == 0 then
+					x, y = xStart, y + appHeight + appVSpacing
+				else
+					x = x + appWidth + appHSpacing
+				end
+				counter = counter + 1
+
+				-- Если мы тока шо создали приложеньку, от отрисовываем содержимое сразу же
+				if category_id == 1 then
+					MineOSInterface.OSDraw()
+				end
 			end
 		else
-			local input = layout:addChild(GUI.input(1, 1, 20, layout.height, 0xFFFFFF, 0x2D2D2D, 0x696969, 0xFFFFFF, 0x2D2D2D, search or "", localization.search, true))
-			input.onInputFinished = function()
-				if #input.text == 0 then
-					search = nil
-				else
-					search = input.text
-				end
-
-				currentPage = 0
-				updateFileList(category_id, updates)
-			end
-
-			local orderByComboBox = layout:addChild(GUI.comboBox(1, 1, 18, layout.height, 0xFFFFFF, 0x696969, 0x969696, 0xE1E1E1))
-			orderByComboBox:addItem(localization.byRating)
-			orderByComboBox:addItem(localization.byName)
-			orderByComboBox:addItem(localization.byDate)
-			
-			orderByComboBox.selectedItem = config.orderBy
-
-			local orderDirectionComboBox = layout:addChild(GUI.comboBox(1, 1, 18, layout.height, 0xFFFFFF, 0x696969, 0x969696, 0xE1E1E1))
-			orderDirectionComboBox:addItem(localization.desc)
-			orderDirectionComboBox:addItem(localization.asc)
-			orderDirectionComboBox.selectedItem = config.orderDirection
-
-			orderByComboBox.onItemSelected = function()
-				config.orderBy = orderByComboBox.selectedItem
-				config.orderDirection = orderDirectionComboBox.selectedItem
-				updateFileList(category_id, updates)
-				saveConfig()
-			end
-			orderDirectionComboBox.onItemSelected = orderByComboBox.onItemSelected
-
-			if config.user.token then
-				layout:addChild(GUI.adaptiveRoundedButton(1, 1, 1, 0, 0x696969, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.publish)).onTouch = function()
-					editPublication()
-				end
-			end
-		end
-
-		y = y + layout.height + 1
-
-		local navigationLayout = contentContainer:addChild(GUI.layout(1, contentContainer.height - 1, contentContainer.width, 1, 1, 1))
-		navigationLayout:setCellDirection(1, 1, GUI.directions.horizontal)
-		navigationLayout:setCellSpacing(1, 1, 2)
-
-		local function switchPage(forward)
-			currentPage = currentPage + (forward and 1 or -1)
-			updateFileList(category_id, updates)
-		end
-
-		local backButton = navigationLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 1, 0, 0xFFFFFF, 0x696969, 0xA5A5A5, 0xFFFFFF, "<"))
-		backButton.colors.disabled.background = 0xD2D2D2
-		backButton.colors.disabled.text = 0xB4B4B4
-		backButton.disabled = currentPage == 0
-		backButton.onTouch = function()
-			switchPage(false)
-		end
-
-		navigationLayout:addChild(GUI.text(1, 1, 0x696969, localization.page .. " " .. (currentPage + 1)))
-		local nextButton = navigationLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 1, 0, 0xFFFFFF, 0x696969, 0xA5A5A5, 0xFFFFFF, ">"))
-		nextButton.colors.disabled = backButton.colors.disabled
-		nextButton.disabled = #result <= appsPerPage
-		nextButton.onTouch = function()
-			switchPage(true)
-		end
-
-		local xStart = math.floor(1 + contentContainer.width / 2 - (appsPerWidth * (appWidth + appHSpacing) - appHSpacing) / 2)
-		local x, counter = xStart, 1
-		for i = 1, #result do
-			contentContainer:addChild(newApplicationPreview(x, y, result[i]))
-			
-			if counter >= appsPerPage then
-				break
-			elseif counter % appsPerWidth == 0 then
-				x, y = xStart, y + appHeight + appVSpacing
-			else
-				x = x + appWidth + appHSpacing
-			end
-			counter = counter + 1
-
-			-- Если мы тока шо создали приложеньку, от отрисовываем содержимое сразу же
-			if category_id == 1 then
-				MineOSInterface.OSDraw()
-			end
+			showLabelAsContent(localization.noUpdates)
 		end
 
 		status(localization.statusWaiting)
@@ -1338,11 +1355,101 @@ end
 local function account()
 	lastMethod, lastArguments = account, {}
 
-	if config.user.token then
+	local function logout()
+		user = {}
+		saveUser()
+		account()
+	end
+
+	local function addAccountShit(login, register, recover)
+		contentContainer:deleteChildren()
+		local layout = contentContainer:addChild(GUI.layout(1, 1, contentContainer.width, contentContainer.height, 1, 1))
+		
+		layout:addChild(GUI.label(1, 1, 36, 1, 0x0, login and localization.login or register and localization.createAccount or recover and localization.changePassword)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+		local nameInput = layout:addChild(GUI.input(1, 1, 36, 3, 0xFFFFFF, 0x696969, 0xB4B4B4, 0xFFFFFF, 0x2D2D2D, "", localization.nickname))
+		local emailInput = layout:addChild(GUI.input(1, 1, 36, 3, 0xFFFFFF, 0x696969, 0xB4B4B4, 0xFFFFFF, 0x2D2D2D, "", login and localization.nicknameOrEmail or "E-mail"))
+		local currentPasswordInput = layout:addChild(GUI.input(1, 1, 36, 3, 0xFFFFFF, 0x696969, 0xB4B4B4, 0xFFFFFF, 0x2D2D2D, "", localization.currentPassword, false, "*"))
+		local passwordInput = layout:addChild(GUI.input(1, 1, 36, 3, 0xFFFFFF, 0x696969, 0xB4B4B4, 0xFFFFFF, 0x2D2D2D, "", recover and localization.newPassword or localization.password, false, "*"))
+
+		local singleSessionSwitchAndLabel = layout:addChild(GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0xC3C3C3, 0xFFFFFF, 0xA5A5A5, localization.singleSession .. ":", config.singleSession))
+
+		layout:addChild(GUI.button(1, 1, 36, 3, 0xA5A5A5, 0xFFFFFF, 0x696969, 0xFFFFFF, "OK")).onTouch = function()
+			if login then
+				status(localization.statusLoggingIn)
+
+				local result = fieldAPIRequest("result", "login", {
+					[(string.find(emailInput.text, "@") and "email" or "name")] = emailInput.text,
+					password = passwordInput.text
+				})
+
+				if result then
+					user = {
+						token = result.token,
+						name = result.name,
+						id = result.id,
+						email = result.email,
+						timestamp = result.timestamp,
+					}
+
+					account()
+
+					config.singleSession = singleSessionSwitchAndLabel.switch.state
+					if not config.singleSession then
+						saveUser()
+					end
+					saveConfig()
+				end
+			elseif register then
+				status(localization.statusRegistering)
+
+				local result = fieldAPIRequest("result", "register", {
+					name = nameInput.text,
+					email = emailInput.text,
+					password = passwordInput.text,
+				})
+
+				if result then
+					showLabelAsContent(localization.registrationSuccessfull)
+					status(localization.statusWaiting)
+				end
+			else
+				status(localization.statusRecovering)
+
+				local success, reason = RawAPIRequest("change_password", {
+					email = user.email,
+					current_password = currentPasswordInput.text,
+					new_password = passwordInput.text,
+				})
+
+				if success then
+					logout()
+					status(localization.statusWaiting)
+				else
+					GUI.error(reason)
+				end
+			end
+		end
+
+		if login then
+			local registerLayout = layout:addChild(GUI.layout(1, 1, layout.width, 1, 1, 1))
+			registerLayout:setCellDirection(1, 1, GUI.directions.horizontal)
+			registerLayout:addChild(GUI.text(1, 1, 0xA5A5A5, localization.notRegistered))
+			registerLayout:addChild(GUI.adaptiveButton(1, 1, 0, 0, nil, 0x696969, nil, 0x0, localization.createAccount)).onTouch = function()
+				addAccountShit(false, true, false)
+			end
+		end
+
+		currentPasswordInput.hidden = not recover
+		emailInput.hidden = recover
+		nameInput.hidden = login or recover
+		singleSessionSwitchAndLabel.hidden = not login
+	end
+
+	if user.token then
 		status(localization.statusUser)
 
 		local result = fieldAPIRequest("result", "publications", {
-			user_name = config.user.name,
+			user_name = user.name,
 			order_by = "name",
 			order_direction = "asc",
 		})
@@ -1353,20 +1460,24 @@ local function account()
 
 			layout:addChild(GUI.text(1, 1, 0x2D2D2D, localization.profile))
 
-			layout:addChild(newKeyValueWidget(1, 1, 36, 0x4B4B4B, 0x878787, localization.nickname, ": " .. config.user.name))
-			layout:addChild(newKeyValueWidget(1, 1, 36, 0x4B4B4B, 0x878787, "E-Mail", ": " .. config.user.email))
-			layout:addChild(newKeyValueWidget(1, 1, 36, 0x4B4B4B, 0x878787, localization.registrationDate, ": " .. os.date("%d.%m.%Y", config.user.timestamp)))
+			layout:addChild(newKeyValueWidget(1, 1, 36, 0x4B4B4B, 0x878787, localization.nickname, ": " .. user.name))
+			layout:addChild(newKeyValueWidget(1, 1, 36, 0x4B4B4B, 0x878787, "E-Mail", ": " .. user.email))
+			layout:addChild(newKeyValueWidget(1, 1, 36, 0x4B4B4B, 0x878787, localization.registrationDate, ": " .. os.date("%d.%m.%Y", user.timestamp)))
 
-			local buttonsLayout = layout:addChild(newButtonsLayout(1, 1, layout.width, 3))
-			buttonsLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 1, 0, 0xA5A5A5, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.clearCache)).onTouch = function()
+			local buttonsLayout = layout:addChild(newButtonsLayout(1, 1, layout.width, 2))
+			
+			buttonsLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 1, 0, 0xC3C3C3, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.changePassword)).onTouch = function()
+				addAccountShit(false, false, true)
+			end
+
+			buttonsLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 1, 0, 0xC3C3C3, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.clearCache)).onTouch = function()
 				for file in fs.list(iconCachePath) do
 					fs.remove(iconCachePath .. file)
 				end
 			end
-			buttonsLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 2, 0, 0xA5A5A5, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.exit)).onTouch = function()
-				config.user = {}
-				saveConfig()
-				account()
+
+			buttonsLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 2, 0, 0xC3C3C3, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.exit)).onTouch = function()
+				logout()
 			end
 
 			layout:addChild(GUI.text(1, 1, 0x2D2D2D, localization.language))
@@ -1391,11 +1502,11 @@ local function account()
 					comboBox:addItem(result[i].publication_name)
 				end
 
-				local buttonsLayout = layout:addChild(newButtonsLayout(1, 1, layout.width, 3))
-				buttonsLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 1, 0, 0xA5A5A5, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.open)).onTouch = function()
+				local buttonsLayout = layout:addChild(newButtonsLayout(1, 1, layout.width, 2))
+				buttonsLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 1, 0, 0xC3C3C3, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.open)).onTouch = function()
 					newPublicationInfo(result[comboBox.selectedItem].publication_name)
 				end
-				buttonsLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 1, 0, 0xA5A5A5, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.edit)).onTouch = function()
+				buttonsLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 1, 0, 0xC3C3C3, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.edit)).onTouch = function()
 					status(localization.statusApplicationInfo)
 
 					local result = fieldAPIRequest("result", "publication", {
@@ -1407,7 +1518,7 @@ local function account()
 						editPublication(result)
 					end
 				end
-				buttonsLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 1, 0, 0xA5A5A5, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.remove)).onTouch = function()
+				buttonsLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 1, 0, 0xC3C3C3, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.remove)).onTouch = function()
 					deletePublication(result[comboBox.selectedItem])
 				end
 			end
@@ -1415,72 +1526,7 @@ local function account()
 			status(localization.statusWaiting)
 		end
 	else
-		contentContainer:deleteChildren()
-		local layout = contentContainer:addChild(GUI.layout(1, 1, contentContainer.width, contentContainer.height, 1, 1))
-
-		local function addShit(register)
-			layout:deleteChildren()
-			
-			layout:addChild(GUI.label(1, 1, 36, 1, 0x0, register and localization.createAccount or localization.login)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
-			
-			if register then
-				layout.nameInput = layout:addChild(GUI.input(1, 1, 36, 3, 0xFFFFFF, 0x696969, 0xB4B4B4, 0xFFFFFF, 0x2D2D2D, "", localization.nickname))
-			end
-
-			layout.emailInput = layout:addChild(GUI.input(1, 1, 36, 3, 0xFFFFFF, 0x696969, 0xB4B4B4, 0xFFFFFF, 0x2D2D2D, config.user.email or "", register and "E-mail" or localization.nicknameOrEmail))
-			layout.passwordInput = layout:addChild(GUI.input(1, 1, 36, 3, 0xFFFFFF, 0x696969, 0xB4B4B4, 0xFFFFFF, 0x2D2D2D, "", localization.password, false, "*"))
-			
-			if register then
-				layout.submit = layout:addChild(GUI.button(1, 1, 36, 3, 0xA5A5A5, 0xFFFFFF, 0x696969, 0xFFFFFF, "OK"))
-			end
-		end
-
-		addShit(false)
-
-		layout:addChild(GUI.button(1, 1, 36, 3, 0xA5A5A5, 0xFFFFFF, 0x696969, 0xFFFFFF, "OK")).onTouch = function()
-			status(localization.statusLoggingIn)
-
-			local result = fieldAPIRequest("result", "login", {
-				[(string.find(layout.emailInput.text, "@") and "email" or "name")] = layout.emailInput.text,
-				password = layout.passwordInput.text
-			})
-
-			if result then
-				config.user = {
-					token = result.token,
-					name = result.name,
-					id = result.id,
-					email = result.email,
-					timestamp = result.timestamp,
-				}
-				saveConfig()
-				account()
-			end
-		end
-
-		local registerLayout = layout:addChild(GUI.layout(1, 1, layout.width, 1, 1, 1))
-		registerLayout:setCellDirection(1, 1, GUI.directions.horizontal)
-
-		local registerText = registerLayout:addChild(GUI.text(1, 1, 0xA5A5A5, localization.notRegistered))
-		registerLayout:addChild(GUI.adaptiveButton(1, 1, 0, 0, nil, 0x696969, nil, 0x0, localization.createAccount)).onTouch = function()
-			addShit(true)
-
-			layout.submit.onTouch = function()
-				status(localization.statusRegistering)
-
-				local result = fieldAPIRequest("result", "register", {
-					name = layout.nameInput.text,
-					email = layout.emailInput.text,
-					password =layout.passwordInput.text,
-				})
-
-				if result then
-					contentContainer:deleteChildren()
-					contentContainer:addChild(GUI.label(1, 1, contentContainer.width, contentContainer.height, 0x2D2D2D, localization.registrationSuccessfull)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.center)
-					MineOSInterface.OSDraw()
-				end
-			end
-		end
+		addAccountShit(true, false, false)
 	end
 end
 

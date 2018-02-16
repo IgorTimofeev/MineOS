@@ -2,6 +2,7 @@
 	categoryApplications = "Приложения",
 	categoryLibraries = "Библиотеки",
 	categoryScripts = "Скрипты",
+	categoryWallpapers = "Обои",
 	categoryUpdates = "Обновления",
 	categoryAccount = "Аккаунт",
 
@@ -16,6 +17,7 @@
 	statusUser = "Получение информации о пользователе...",
 	statusLoggingIn = "Авторизация пользователя...",
 	statusRegistering = "Регистрация нового пользователя...",
+	statusRecovering = "Создание нового пароля...",
 
 	areYouSure = "Вы уверены, что хотите удалить публикацию?",
 	createShortcut = "Создать ярлык на рабочем столе",
@@ -49,6 +51,10 @@
 	open = "Открыть",
 	clearCache = "Очистить кэш",
 	exit = "Выход",
+	changePassword = "Изменить пароль",
+	newPassword = "Новый пароль",
+	singleSession = "Это не мой компьютер",
+	currentPassword = "Текущий пароль",
 	language = "Язык описаний",
 	publications = "Публикации",
 	notRegistered = "Еще не зарегистрированы?",
