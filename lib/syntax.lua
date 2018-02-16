@@ -34,6 +34,7 @@ syntax.patterns = {
 	
 	-- Строки
 	{ "\"[^\"]+\"", "strings", 0, 0 },
+	{ "\'[^\']+\'", "strings", 0, 0 },
 	
 	-- Циклы, условия и прочая поебень
 	{ "while ", "loops", 0, 1 },
@@ -133,7 +134,7 @@ function syntax.highlightString(x, y, str, indentationWidth)
 				background = buffer.rawGet(bufferIndex)
 				buffer.rawSet(bufferIndex, background, colors[symbol] or syntax.colorScheme.text, symbols[symbol])
 				
-				bufferIndex = bufferIndex + 3
+				bufferIndex = bufferIndex + 1
 			end
 			
 			x = x + 1
