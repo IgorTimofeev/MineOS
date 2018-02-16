@@ -169,7 +169,7 @@ local function clear(color, transparency)
 end
 
 local function copy(x, y, width, height)
-	local copyArray, index = { width = width, height = height }
+	local copyArray, index = { width, height }
 
 	for j = y, y + height - 1 do
 		for i = x, x + width - 1 do
@@ -189,22 +189,25 @@ local function copy(x, y, width, height)
 	return copyArray
 end
 
-local function paste(x, y, copyArray)
-	local index, arrayIndex
+local function paste(xStart, yStart, picture)
+	local imageWidth = picture[1]
+	local bufferIndex, imageIndex, bufferIndexStepOnReachOfImageWidth = getIndex(xStart, yStart), 3, bufferWidth - imageWidth
 
-	for j = y, y + copyArray.height - 1 do
-		for i = x, x + copyArray.width - 1 do
-			if i >= drawLimitX1 and j >= drawLimitY1 and i <= drawLimitX2 and j <= drawLimitY2 then
-				--Рассчитываем индекс массива основного изображения
-				index = getIndex(i, j)
-				--Копипаст формулы, аккуратнее!
-				--Рассчитываем индекс массива вставочного изображения
-				arrayIndex = (copyArray.width * (j - y) + (i - x + 1))
-				--Вставляем данные
-				newFrameBackgrounds[index] = copyArray[arrayIndex]
-				newFrameForegrounds[index] = copyArray[arrayIndex]
-				newFrameSymbols[index] = copyArray[arrayIndex]
+	for y = yStart, yStart + picture[2] - 1 do
+		if y >= drawLimitY1 and y <= drawLimitY2 then
+			for x = xStart, xStart + imageWidth - 1 do
+				if x >= drawLimitX1 and x <= drawLimitX2 then
+					newFrameBackgrounds[bufferIndex] = picture[imageIndex]
+					newFrameForegrounds[bufferIndex] = picture[imageIndex + 1]
+					newFrameSymbols[bufferIndex] = picture[imageIndex + 2]
+				end
+
+				bufferIndex, imageIndex = bufferIndex + 1, imageIndex + 3
 			end
+
+			bufferIndex = bufferIndex + bufferIndexStepOnReachOfImageWidth
+		else
+			bufferIndex, imageIndex = bufferIndex + bufferWidth, imageIndex + imageWidth * 3
 		end
 	end
 end
@@ -286,7 +289,7 @@ local function formattedText(x, y, data)
 	end
 end
 
-function image(xStart, yStart, picture, blendForeground)
+local function image(xStart, yStart, picture, blendForeground)
 	local imageWidth = picture[1]
 	local bufferIndex, imageIndex, bufferIndexStepOnReachOfImageWidth, imageIndexPlus1, imageIndexPlus2, imageIndexPlus3 = getIndex(xStart, yStart), 3, bufferWidth - imageWidth
 
