@@ -1,72 +1,60 @@
-
-local ecs = require("ECSAPI")
+local MineOSInterface = require("MineOSInterface")
+local GUI = require("GUI")
 local event = require("event")
 local component = require("component")
-local computer = component.computer
-local debug
+local computer = require("computer")
 
-_G.fuckTheRainSound = true
+---------------------------------------------------------------------------------------------------------
 
-if not component.isAvailable("debug") then
-	ecs.error("Этой программе требуется дебаг-карта (не крафтится, только креативный режим)")
-	return
+local world
+if component.isAvailable("debug") then
+	world = component.debug.getWorld()
 else
-	debug = component.debug
+	GUI.error("This program requires debug card to run")
+	return
 end
 
-local world = debug.getWorld()
+local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer, "Fuck The Rain")
 
-local function dro4er()
-  if world.isRaining() or world.isThundering() then
-  	world.setThundering(false)
-  	world.setRaining(false)
-  	if _G.fuckTheRainSound then computer.beep(1500) end
-  end
-end
+local lines = string.wrap("This script works as background daemon and checks rain condition in specified interval", 36)
+container.layout:addChild(GUI.textBox(1, 1, 36, #lines, nil, 0xA5A5A5, lines, 1, 0, 0))
 
-local function addDro4er(howOften)
-	_G.fuckTheRainDro4erID = event.timer(howOften, dro4er, math.huge)
-end
+local daemonSwitch = container.layout:addChild(GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x696969, "Daemon enabled:", _G.fuckTheRainTimerID and true or false)).switch
+local signalSwitch = container.layout:addChild(GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x696969, "Sound signal:", _G.fuckTheRainSignal)).switch
 
-local function removeDro4er()
-	event.cancel(_G.fuckTheRainDro4erID)
-end
+local intervalSlider = container.layout:addChild(GUI.slider(1, 1, 36, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x696969, 1, 10, 2, false, "Interval: ", " s"))
+intervalSlider.roundValues = true
+intervalSlider.height = 2
 
-local function ask()
-	local cyka1, cyka2
-	if _G.fuckTheRainDro4erID then cyka1 = "Отключить"; cyka2 = "Активировать" else cyka1 = "Активировать"; cyka2 = "Отключить" end
+container.layout:addChild(GUI.button(1, 1, 36, 3, 0x444444, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, "OK")).onTouch = function()
+	_G.fuckTheRainSignal = signalSwitch.state and true or nil
 
-	local data = ecs.universalWindow("auto", "auto", 36, 0x373737, true,
-		{"EmptyLine"},
-		{"CenterText", ecs.colors.orange, "FuckTheRain"},
-		{"EmptyLine"},
-		{"CenterText", 0xffffff, "Данная программа работает в отдельном"},
-		{"CenterText", 0xffffff, "потоке и атоматически отключает дождь,"},
-		{"CenterText", 0xffffff, "если он начался"},
-		{"EmptyLine"},
-		{"Selector", 0xffffff, ecs.colors.orange, cyka1, cyka2},
-		{"EmptyLine"},
-		{"Switch", ecs.colors.orange, 0xffffff, 0xffffff, "Звуковой сигнал", _G.fuckTheRainSound},
-		{"EmptyLine"},
-		{"Slider", 0xffffff, ecs.colors.orange, 1, 100, 10, "Частота проверки: раз в ", " сек"},
-		{"EmptyLine"},
-		{"Button", {ecs.colors.orange, 0xffffff, "OK"}, {0x999999, 0xffffff, "Отмена"}}
-	)
+	if daemonSwitch.state then
+		if not _G.fuckTheRainTimerID then
+			_G.fuckTheRainTimerID = event.timer(intervalSlider.value, function()
+				if world.isRaining() or world.isThundering() then
+					world.setThundering(false)
+					world.setRaining(false)
 
-	if data[4] == "OK" then
-
-
-		if data[1] == "Активировать" then
-			addDro4er(data[3])
-		else
-			removeDro4er()
+					if _G.fuckTheRainSignal then
+						computer.beep(1500)
+					end
+				end
+			end, math.huge)
 		end
-
-		_G.fuckTheRainSound = data[2] 
+	else
+		if _G.fuckTheRainTimerID then
+			event.cancel(_G.fuckTheRainTimerID)
+			_G.fuckTheRainTimerID = nil
+		end
 	end
+
+	container:delete()
+	MineOSInterface.OSDraw()
 end
 
-ask()
+
+
 
 
 
