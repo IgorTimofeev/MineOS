@@ -533,7 +533,7 @@ local function addPanel(container, color)
 	container.panel = container:addChild(GUI.panel(1, 1, container.width, container.height, color or 0xFFFFFF))
 end
 
-local function addApplicationInfo(container, publication)
+local function addApplicationInfo(container, publication, limit)
 	local icon
 	if publication.category_id == 1 then
 		if publication.icon_url then
@@ -565,8 +565,8 @@ local function addApplicationInfo(container, publication)
 
 	addPanel(container)
 	container.image = container:addChild(GUI.image(3, 2, icon))
-	container.nameLabel = container:addChild(GUI.text(13, 2, 0x0, publication.publication_name))
-	container.versionLabel = container:addChild(GUI.text(13, 3, 0x878787, "©" .. publication.user_name))
+	container.nameLabel = container:addChild(GUI.text(13, 2, 0x0, string.limit(publication.publication_name, limit, "right")))
+	container.developerLabel = container:addChild(GUI.text(13, 3, 0x878787, string.limit("©" .. publication.user_name, limit, "right")))
 	container.rating = container:addChild(newRatingWidget(13, 4, publication.average_rating and math.round(publication.average_rating) or 0))
 
 	local updateState = getUpdateState(publication)
@@ -644,7 +644,7 @@ local function newPublicationInfo(publication_name)
 		local detailsContainer = layout:addChild(GUI.container(3, 2, layout.width, 6))
 				
 		-- Тут будут находиться ваще пизда подробности о публикации
-		local ratingsContainer = detailsContainer:addChild(GUI.container(1, 1, 26, 6))
+		local ratingsContainer = detailsContainer:addChild(GUI.container(1, 1, 28, 6))
 		ratingsContainer.localX = detailsContainer.width - ratingsContainer.width + 1
 		addPanel(ratingsContainer, 0xE1E1E1)
 		
@@ -652,7 +652,7 @@ local function newPublicationInfo(publication_name)
 		local y = 2
 		-- Фигачим кнопочки на изменение хуйни
 		if publication.user_name == user.name then
-			local buttonsLayout = ratingsContainer:addChild(newButtonsLayout(2, y, ratingsContainer.width - 2, 2))
+			local buttonsLayout = ratingsContainer:addChild(newButtonsLayout(2, y, ratingsContainer.width - 2, 3))
 			buttonsLayout:addChild(GUI.adaptiveRoundedButton(2, 1, 1, 0, 0x969696, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.edit)).onTouch = function()
 				editPublication(publication)
 			end
@@ -692,7 +692,7 @@ local function newPublicationInfo(publication_name)
 		-- Добавляем контейнер под описание и прочую пизду
 		local textDetailsContainer = detailsContainer:addChild(GUI.container(1, 1, detailsContainer.width - ratingsContainer.width, detailsContainer.height))
 		-- Ебурим саму пизду
-		addApplicationInfo(textDetailsContainer, publication)
+		addApplicationInfo(textDetailsContainer, publication, math.huge)
 		-- Ебурим описание
 		local x, y = 3, 7
 		local lines = string.wrap(publication.translated_description, textDetailsContainer.width - 4)
@@ -907,12 +907,12 @@ local function newApplicationPreview(x, y, publication)
 	local container = GUI.container(x, y, appWidth, appHeight)
 
 	container.publication_name = publication.publication_name
-	addApplicationInfo(container, publication)
+	addApplicationInfo(container, publication, appWidth - 14)
 
 	container.panel.eventHandler,
 	container.image.eventHandler,
 	container.nameLabel.eventHandler,
-	container.versionLabel.eventHandler,
+	container.developerLabel.eventHandler,
 	container.rating.eventHandler =
 	applicationWidgetEventHandler,
 	applicationWidgetEventHandler,
