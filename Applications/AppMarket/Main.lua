@@ -519,8 +519,8 @@ local function download(publication)
 				MineOSCore.createShortcut(MineOSPaths.desktop .. fs.hideExtension(fs.name(filesystemChooser.path)) .. ".lnk", filesystemChooser.path .. "/")
 			end
 			
-			saveFileVersions()
 			computer.pushSignal("MineOSCore", "updateFileList")
+			saveFileVersions()
 		end
 
 		filesystemChooser.onSubmit = updateTree
@@ -570,13 +570,26 @@ local function addApplicationInfo(container, publication, limit)
 	container.rating = container:addChild(newRatingWidget(13, 4, publication.average_rating and math.round(publication.average_rating) or 0))
 
 	local updateState = getUpdateState(publication)
-	container.downloadButton = container:addChild(GUI.adaptiveRoundedButton(13, 5, 1, 0, 0xC3C3C3, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, updateState == 4 and localization.installed or updateState == 3 and localization.update or localization.install))
+	container.downloadButton = container:addChild(GUI.adaptiveRoundedButton(13, 5, 1, 0, 0xC3C3C3, 0xFFFFFF, 0x969696, 0xFFFFFF, updateState == 4 and localization.installed or updateState == 3 and localization.update or localization.install))
 	container.downloadButton.onTouch = function()
 		download(publication)
 	end
 	container.downloadButton.colors.disabled.background = 0xE1E1E1
 	container.downloadButton.colors.disabled.text = 0xFFFFFF
 	container.downloadButton.disabled = updateState == 4
+
+	if updateState == 4 then
+		container.downloadButton.width = container.downloadButton.width + 1
+		container:addChild(GUI.adaptiveRoundedButton(container.downloadButton.localX + container.downloadButton.width, container.downloadButton.localY, 1, 0, 0xC3C3C3, 0xFFFFFF, 0x969696, 0xFFFFFF, "x")).onTouch = function()
+			fs.remove(getApplicationPathFromVersions(fileVersions[publication.publication_name].path))
+			fs.remove(MineOSPaths.desktop .. publication.publication_name .. ".lnk")
+			fileVersions[publication.publication_name] = nil
+			
+			callLastMethod()
+			computer.pushSignal("MineOSCore", "updateFileList")
+			saveFileVersions()
+		end
+	end
 end
 
 local function keyValueWidgetDraw(object)
