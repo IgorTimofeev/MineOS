@@ -4,7 +4,7 @@ local unicode = require("unicode")
 local color = require("color")
 local image = require("image")
 
---------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 local bufferWidth, bufferHeight
 local currentFrameBackgrounds, currentFrameForegrounds, currentFrameSymbols, newFrameBackgrounds, newFrameForegrounds, newFrameSymbols
@@ -16,7 +16,7 @@ local tableInsert, tableConcat = table.insert, table.concat
 local colorBlend = color.blend
 local unicodeLen, unicodeSub = unicode.len, unicode.sub
 
---------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 local function getCoordinates(index)
 	local integer, fractional = mathModf(index / bufferWidth)
@@ -27,7 +27,7 @@ local function getIndex(x, y)
 	return bufferWidth * (y - 1) + x
 end
 
---------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 local function setDrawLimit(x1, y1, x2, y2)
 	drawLimitX1, drawLimitY1, drawLimitX2, drawLimitY2 = x1, y1, x2, y2
@@ -41,7 +41,7 @@ local function getDrawLimit()
 	return drawLimitX1, drawLimitY1, drawLimitX2, drawLimitY2
 end
 
---------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 local function flush(width, height)
 	if not width or not height then
@@ -113,7 +113,7 @@ local function bindGPU(address)
 	flush(GPUProxyGetResolution())
 end
 
---------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 local function rawSet(index, background, foreground, symbol)
 	newFrameBackgrounds[index], newFrameForegrounds[index], newFrameSymbols[index] = background, foreground, symbol
@@ -338,7 +338,7 @@ local function frame(x, y, width, height, color)
 	text(x, y, color, stringDown)
 end
 
---------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 local function semiPixelRawSet(index, color, yPercentTwoEqualsZero)
 	local upperPixel, lowerPixel, bothPixel = "▀", "▄", " "
@@ -432,7 +432,7 @@ local function semiPixelCircle(xCenter, yCenter, radius, color)
 	if x == y then insertPoints(x, y) end
 end
 
---------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 local function getPointTimedPosition(firstPoint, secondPoint, time)
 	return {
@@ -535,7 +535,7 @@ local function customImage(x, y, pixels)
 	return (x + 1), (y + 1), (x + #pixels[1]), (y + #pixels)
 end
 
---------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 local function debug(...)
 	local args = {...}
@@ -641,11 +641,11 @@ local function draw(force)
 	-- debug("os.clock() delta: " .. (os.clock() - oldClock))
 end
 
-------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 bindGPU(component.getPrimary("gpu").address)
 
-------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 return {
 	getCoordinates = getCoordinates,

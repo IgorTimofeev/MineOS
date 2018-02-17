@@ -70,6 +70,7 @@
 	publish = "Publish software",
 	install = "Install",
 	installed = "Installed",
+	reinstall = "Reinstall",
 	update = "Update",
 	page = "Page",
 	updateAll = "Update all",

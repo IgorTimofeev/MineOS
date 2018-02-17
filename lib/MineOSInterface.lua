@@ -1536,11 +1536,13 @@ local function windowCheck(window, x, y)
 end
 
 local function windowEventHandler(mainContainer, window, eventData)
-	if eventData[1] == "touch" and not windowCheck(window, eventData[3], eventData[4]) then
-		window.lastTouchPosition = {
-			x = eventData[3],
-			y = eventData[4]
-		}
+	if eventData[1] == "touch" then
+		if not windowCheck(window, eventData[3], eventData[4]) then
+			window.lastTouchPosition = {
+				x = eventData[3],
+				y = eventData[4]
+			}
+		end
 		
 		if window ~= window.parent.children[#window.parent.children] then
 			window:moveToFront()

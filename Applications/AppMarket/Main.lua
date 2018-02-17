@@ -578,9 +578,9 @@ local function addApplicationInfo(container, publication, limit)
 	container.downloadButton.colors.disabled.text = 0xFFFFFF
 	container.downloadButton.disabled = updateState == 4
 
-	if updateState == 4 then
+	if updateState > 2 then
 		container.downloadButton.width = container.downloadButton.width + 1
-		container:addChild(GUI.adaptiveRoundedButton(container.downloadButton.localX + container.downloadButton.width, container.downloadButton.localY, 1, 0, 0xC3C3C3, 0xFFFFFF, 0x969696, 0xFFFFFF, "x")).onTouch = function()
+		container:addChild(GUI.adaptiveRoundedButton(container.downloadButton.localX + container.downloadButton.width, container.downloadButton.localY, 1, 0, 0xF0F0F0, 0x969696, 0x969696, 0xFFFFFF, "x")).onTouch = function()
 			fs.remove(getApplicationPathFromVersions(fileVersions[publication.publication_name].path))
 			fs.remove(MineOSPaths.desktop .. publication.publication_name .. ".lnk")
 			fileVersions[publication.publication_name] = nil
@@ -1305,8 +1305,8 @@ updateFileList = function(category_id, updates)
 			end
 
 			local backButton = navigationLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 1, 0, 0xFFFFFF, 0x696969, 0xA5A5A5, 0xFFFFFF, "<"))
-			backButton.colors.disabled.background = 0xD2D2D2
-			backButton.colors.disabled.text = 0xB4B4B4
+			backButton.colors.disabled.background = 0xE1E1E1
+			backButton.colors.disabled.text = 0xC3C3C3
 			backButton.disabled = currentPage == 0
 			backButton.onTouch = function()
 				switchPage(false)
@@ -1575,9 +1575,3 @@ else
 end
 
 window:resize(window.width, window.height)
-
-
-
-
-
-
