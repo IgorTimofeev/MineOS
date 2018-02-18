@@ -1155,14 +1155,14 @@ editPublication = function(initialPublication)
 		})
 
 		if success then
-			window.tabBar.selectedItem = categoryComboBox.selectedItem
+			window.tabBar.selectedItem = categoryComboBox.selectedItem + 1
 			
 			if initialPublication then
 				newPublicationInfo(nameInput.text)
 			else
 				config.orderBy = 3
 				saveConfig()
-				updateFileList(window.tabBar.selectedItem)
+				updateFileList(categoryComboBox.selectedItem)
 			end
 		else
 			GUI.error(reason)
@@ -1671,9 +1671,9 @@ lastMethod = statistics
 
 if args[1] == "updates" then
 	lastArguments = {nil, true}
-	window.tabBar.selectedItem = #categories + 1
+	window.tabBar.selectedItem = #categories + 2
 else
-	lastArguments = {1}
+	lastArguments = {}
 end
 
 window:resize(window.width, window.height)
