@@ -1,8 +1,8 @@
 {
+	categoryOverview = "Overview",
 	categoryApplications = "Applications",
 	categoryLibraries = "Libraries",
 	categoryScripts = "Scripts",
-	categoryWallpapers = "Wallpapers",
 	categoryUpdates = "Updates",
 	categoryAccount = "Account",
 
@@ -18,6 +18,14 @@
 	statusLoggingIn = "Logging in...",
 	statusRegistering = "Creating new user...",
 	statusRecovering = "Creating new password...",
+	statusStatistics = "Updating statistics...",
+
+	statisticsNewUser = "New user",
+	statisticsMostPopularUser = "Most active",
+	statisticsUsersCount = "Users count",
+	statisticsPublicationsCount = "Publications count",
+	statisticsReviewsCount = "Reviews count",
+	statisticsPopularPublication = "(popular publication)",
 
 	areYouSure = "Are your sure want to delete publication?",
 	createShortcut = "Create desktop shortcut",
@@ -70,7 +78,6 @@
 	publish = "Publish software",
 	install = "Install",
 	installed = "Installed",
-	reinstall = "Reinstall",
 	update = "Update",
 	page = "Page",
 	updateAll = "Update all",

@@ -1,8 +1,8 @@
 {
+	categoryOverview = "Главная",
 	categoryApplications = "Приложения",
 	categoryLibraries = "Библиотеки",
 	categoryScripts = "Скрипты",
-	categoryWallpapers = "Обои",
 	categoryUpdates = "Обновления",
 	categoryAccount = "Аккаунт",
 
@@ -13,11 +13,19 @@
 	statusUpdatingPublication = "Обновление информации о публикации...",
 	statusUploadingPublication = "Создание публикации...",
 	statusSearchingUpdates = "Поиск новых версий ПО...",
-	statusUpdatingList = "Обновление списка приложений...",
+	statusUpdatingList = "Получение списка приложений...",
 	statusUser = "Получение информации о пользователе...",
 	statusLoggingIn = "Авторизация пользователя...",
 	statusRegistering = "Регистрация нового пользователя...",
 	statusRecovering = "Создание нового пароля...",
+	statusStatistics = "Получение статистики...",
+
+	statisticsNewUser = "Новый пользователь",
+	statisticsMostPopularUser = "Наиболее активный",
+	statisticsUsersCount = "Число пользователей",
+	statisticsPublicationsCount = "Число публикаций",
+	statisticsReviewsCount = "Число отзывов",
+	statisticsPopularPublication = "(популярная публикация)",
 
 	areYouSure = "Вы уверены, что хотите удалить публикацию?",
 	createShortcut = "Создать ярлык на рабочем столе",
@@ -70,7 +78,6 @@
 	publish = "Опубликовать ПО",
 	install = "Установить",
 	installed = "Установлено",
-	reinstall = "Переустановить",
 	update = "Обновить",
 	page = "Страница",
 	updateAll = "Обновить все",

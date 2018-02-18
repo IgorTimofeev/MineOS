@@ -17,14 +17,17 @@ local unicode = require("unicode")
 --------------------------------------------------------------------------------
 
 local host = "http://eliteclubsessions.ru/mineos/2.0/"
-local responseWaitTime = 0.5
+local iconCheckReponseTime = 0.5
+local overviewAnimationDelay = 0.05
+local overviewIconsCount = 10
 
 local appMarketPath = MineOSPaths.applicationData .. "App Market/"
 local configPath = appMarketPath .. "Config.cfg"
 local userPath = appMarketPath .. "User.cfg"
 local iconCachePath = appMarketPath .. "Cache/"
 
-local localization = MineOSCore.getCurrentApplicationLocalization()
+local resourcesPath = MineOSCore.getCurrentApplicationResourcesDirectory() 
+local localization = MineOSCore.getLocalization(resourcesPath .. "Localization/") 
 
 local categories = {
 	localization.categoryApplications,
@@ -159,7 +162,7 @@ end
 local function RawAPIRequest(script, data, notUnserialize)
 	local requestResult, requestReason = web.request(
 		host .. script .. ".php",
-		web.serialize(data),
+		data and web.serialize(data) or nil,
 		{ 
 			["User-Agent"] = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.119 Safari/537.36"
 		}
@@ -204,7 +207,7 @@ local function checkContentLength(url)
 		local uptime, _, _, responseData = computer.uptime()
 		repeat
 			_, _, responseData = handle:response()
-		until responseData or computer.uptime() - uptime > responseWaitTime
+		until responseData or computer.uptime() - uptime > iconCheckReponseTime
 
 		if responseData and responseData["Content-Length"] then
 			if tonumber(responseData["Content-Length"][1]) <= 10240 then
@@ -533,14 +536,13 @@ local function addPanel(container, color)
 	container.panel = container:addChild(GUI.panel(1, 1, container.width, container.height, color or 0xFFFFFF))
 end
 
-local function addApplicationInfo(container, publication, limit)
-	local icon
+local function getPublicationIcon(publication)
 	if publication.category_id == 1 then
 		if publication.icon_url then
 			local path = iconCachePath .. publication.publication_name .. "@" .. publication.version .. ".pic"
 
 			if fs.exists(path) then
-				icon = image.load(path)
+				return image.load(path)
 			else
 				local data, reason = checkImage(publication.icon_url)
 				if data then
@@ -548,23 +550,25 @@ local function addApplicationInfo(container, publication, limit)
 					file:write(data)
 					file:close()
 
-					icon = image.load(path)
+					return image.load(path)
 				else
 					-- GUI.error("Failed to download publication icon: " .. reason)
-					icon = fileNotExistsIcon
+					return fileNotExistsIcon
 				end
 			end
 		else
-			icon = fileNotExistsIcon
+			return fileNotExistsIcon
 		end
 	elseif publication.category_id == 2 then
-		icon = luaIcon
+		return luaIcon
 	else
-		icon = scriptIcon
+		return scriptIcon
 	end
+end
 
+local function addApplicationInfo(container, publication, limit)
 	addPanel(container)
-	container.image = container:addChild(GUI.image(3, 2, icon))
+	container.image = container:addChild(GUI.image(3, 2, getPublicationIcon(publication)))
 	container.nameLabel = container:addChild(GUI.text(13, 2, 0x0, string.limit(publication.publication_name, limit, "right")))
 	container.developerLabel = container:addChild(GUI.text(13, 3, 0x878787, string.limit("©" .. publication.user_name, limit, "right")))
 	container.rating = container:addChild(newRatingWidget(13, 4, publication.average_rating and math.round(publication.average_rating) or 0))
@@ -1347,23 +1351,7 @@ updateFileList = function(category_id, updates)
 	end
 end
 
-window.onResize = function(width, height)
-	window.backgroundPanel.width = width
-	window.backgroundPanel.height = height - 4
-	contentContainer.width = width
-	contentContainer.height = window.height - 4
-	window.tabBar.width = width
-	statusWidget.width = window.width
-	statusWidget.localY = window.height
-
-	appsPerWidth = math.floor((contentContainer.width + appHSpacing) / (appWidth + appHSpacing))
-	appsPerHeight = math.floor((contentContainer.height - 6 + appVSpacing) / (appHeight + appVSpacing))
-	appsPerPage = appsPerWidth * appsPerHeight
-	currentPage = 0
-
-	contentContainer:deleteChildren()
-	callLastMethod()
-end
+--------------------------------------------------------------------------------
 
 local function account()
 	lastMethod, lastArguments = account, {}
@@ -1548,6 +1536,102 @@ local function loadCategory(category_id, updates)
 	updateFileList(category_id, updates)
 end
 
+--------------------------------------------------------------------------------
+
+local function statistics()
+	lastMethod, lastArguments = statistics, {}
+
+	status(localization.statusStatistics)
+	local statistics = fieldAPIRequest("result", "statistics")
+
+	if statistics then
+		status(localization.statusUpdatingList)
+
+		local publications = fieldAPIRequest("result", "publications", {
+			order_by = "rating",
+			order_direction = "desc",
+			offset = 0,
+			count = overviewIconsCount + 1,
+			category_id = 1,
+		})
+
+		if publications then
+			contentContainer:deleteChildren()
+
+			local layout = contentContainer:addChild(GUI.layout(1, 1, contentContainer.width, contentContainer.height, 1, 1))
+			
+			local container = layout:addChild(GUI.container(1, 1, 40, contentContainer.height))
+			container:addChild(GUI.panel(1, 1, container.width, container.height, 0xFFFFFF))
+			local statisticsLayout = container:addChild(GUI.layout(1, 1, container.width, container.height, 1, 1))
+
+			statisticsLayout:addChild(GUI.image(1, 1, image.load(resourcesPath .. "Icon.pic"))).height = 5
+
+			statisticsLayout:addChild(newKeyValueWidget(1, 1, container.width - 8, 0x4B4B4B, 0xA5A5A5, localization.statisticsUsersCount, ": " .. statistics.users_count))
+			statisticsLayout:addChild(newKeyValueWidget(1, 1, container.width - 8, 0x4B4B4B, 0xA5A5A5, localization.statisticsNewUser, ": " .. statistics.last_registered_user))
+			statisticsLayout:addChild(newKeyValueWidget(1, 1, container.width - 8, 0x4B4B4B, 0xA5A5A5, localization.statisticsMostPopularUser, ": " .. statistics.most_popular_user))
+			statisticsLayout:addChild(newKeyValueWidget(1, 1, container.width - 8, 0x4B4B4B, 0xA5A5A5, localization.statisticsPublicationsCount, ": " .. statistics.publications_count))
+			statisticsLayout:addChild(newKeyValueWidget(1, 1, container.width - 8, 0x4B4B4B, 0xA5A5A5, localization.statisticsReviewsCount, ": " .. statistics.reviews_count))
+			
+			local applicationPreview = statisticsLayout:addChild(newApplicationPreview(1, 1, publications[1]))
+			applicationPreview.panel.colors.background = 0xF0F0F0
+			statisticsLayout:addChild(GUI.label(1, 1, statisticsLayout.width, 1, 0xA5A5A5, localization.statisticsPopularPublication)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.center)
+
+			MineOSInterface.OSDraw()
+
+			local uptime, newUptime = computer.uptime()
+			local function tick()
+				newUptime = computer.uptime()
+				if newUptime - uptime > overviewAnimationDelay then
+					uptime = newUptime
+
+					local child
+					for i = 1, #contentContainer.children - 1 do
+						child = contentContainer.children[i]
+						child.localX = child.localX + child.moveX
+						child.localY = child.localY + child.moveY
+
+						if child.localX < 1 or child.localX + child.width - 1 > contentContainer.width then
+							child.localX = child.localX - child.moveX
+							child.moveX = -child.moveX
+						end
+
+						if child.localY < 1 or child.localY + child.height - 1 > contentContainer.height then
+							child.localY = child.localY - child.moveY
+							child.moveY = -child.moveY
+						end
+					end
+
+					MineOSInterface.OSDraw()
+				end
+			end
+
+			container.eventHandler = tick
+
+			local function makeBlyad(object)
+				object.localX = math.random(1, contentContainer.width - object.width + 1)
+				object.localY = math.random(1, contentContainer.height - object.width + 1)
+				object.moveX = math.random(2) == 2 and 1 or -1
+				object.moveY = math.random(2) == 2 and 1 or -1
+				tick()
+				MineOSInterface.OSDraw()
+			end
+
+			for i = 2, #publications do
+				makeBlyad(contentContainer:addChild(GUI.image(1, 1, getPublicationIcon(publications[i])), 1))
+			end
+			makeBlyad(contentContainer:addChild(GUI.text(1, 1, 0xC3C3C3, ".!."), 1))
+			
+			status(localization.statusWaiting)
+		end
+	end
+end
+
+--------------------------------------------------------------------------------
+
+window.tabBar:addItem(localization.categoryOverview).onTouch = function()
+	statistics()
+end
+
 for i = 1, #categories do
 	window.tabBar:addItem(categories[i]).onTouch = function()
 		loadCategory(i)
@@ -1562,11 +1646,29 @@ window.tabBar:addItem(localization.categoryAccount).onTouch = function()
 	account()
 end
 
+window.onResize = function(width, height)
+	window.backgroundPanel.width = width
+	window.backgroundPanel.height = height - 4
+	contentContainer.width = width
+	contentContainer.height = window.height - 4
+	window.tabBar.width = width
+	statusWidget.width = window.width
+	statusWidget.localY = window.height
+
+	appsPerWidth = math.floor((contentContainer.width + appHSpacing) / (appWidth + appHSpacing))
+	appsPerHeight = math.floor((contentContainer.height - 6 + appVSpacing) / (appHeight + appVSpacing))
+	appsPerPage = appsPerWidth * appsPerHeight
+	currentPage = 0
+
+	contentContainer:deleteChildren()
+	callLastMethod()
+end
+
 --------------------------------------------------------------------------------
 
 loadConfig()
+lastMethod = statistics
 
-lastMethod = loadCategory
 if args[1] == "updates" then
 	lastArguments = {nil, true}
 	window.tabBar.selectedItem = #categories + 1
