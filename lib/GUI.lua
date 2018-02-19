@@ -1,4 +1,9 @@
 
+-- Detailed documentation can be found here:
+-- https://github.com/IgorTimofeev/OpenComputers/blob/master/Documentation/GUI.md
+
+-----------------------------------------------------------------------
+
 require("advancedLua")
 local component = require("component")
 local computer = require("computer")
@@ -10,7 +15,7 @@ local color = require("color")
 local image = require("image")
 local buffer = require("doubleBuffering")
 
------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------
 
 local GUI = {}
 
@@ -75,7 +80,7 @@ GUI.colors = {
 
 GUI.paletteConfigPath = "/lib/.palette.cfg"
 
------------------------------------------ Interface objects -----------------------------------------
+-----------------------------------------------------------------------
 
 local function callMethod(method, ...)
 	if method then method(...) end
@@ -104,7 +109,7 @@ function GUI.object(x, y, width, height)
 	}
 end
 
------------------------------------------ Object alignment -----------------------------------------
+-----------------------------------------------------------------------
 
 function GUI.setAlignment(object, horizontalAlignment, verticalAlignment)
 	object.alignment = {
@@ -158,7 +163,7 @@ function GUI.getMarginCoordinates(object)
 	return x, y
 end
 
------------------------------------------ Containers -----------------------------------------
+-----------------------------------------------------------------------
 
 local function containerObjectIndexOf(object)
 	if not object.parent then error("Object doesn't have a parent container") end
@@ -215,7 +220,7 @@ local function containerObjectSelfDelete(object)
 	table.remove(object.parent.children, containerObjectIndexOf(object))
 end
 
------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------
 
 local function containerObjectAnimationStart(animation, duration)
 	animation.position = 0
@@ -478,7 +483,7 @@ function GUI.fullScreenContainer()
 	return GUI.container(1, 1, buffer.getResolution())
 end
 
------------------------------------------ Buttons -----------------------------------------
+-----------------------------------------------------------------------
 
 local function buttonPlayAnimation(button, onFinish)
 	button.animationStarted = true
@@ -541,7 +546,7 @@ local function buttonPress(button, mainContainer, object, eventData)
 end
 
 local function buttonEventHandler(mainContainer, button, eventData)
-	if eventData[1] == "touch" then
+	if eventData[1] == "touch" and (not button.animated or not button.animationStarted) then
 		button:press(mainContainer, button, eventData)
 	end
 end
@@ -679,7 +684,7 @@ function GUI.adaptiveRoundedButton(...)
 	return button
 end
 
------------------------------------------ Panel -----------------------------------------
+-----------------------------------------------------------------------
 
 local function drawPanel(object)
 	buffer.square(object.x, object.y, object.width, object.height, object.colors.background, 0x000000, " ", object.colors.transparency)
@@ -698,7 +703,7 @@ function GUI.panel(x, y, width, height, color, transparency)
 	return object
 end
 
------------------------------------------ Label -----------------------------------------
+-----------------------------------------------------------------------
 
 local function drawLabel(object)
 	local xText, yText = GUI.getAlignmentCoordinates(object, {width = unicode.len(object.text), height = 1})
@@ -716,7 +721,7 @@ function GUI.label(x, y, width, height, textColor, text)
 	return object
 end
 
------------------------------------------ Image -----------------------------------------
+-----------------------------------------------------------------------
 
 local function drawImage(object)
 	buffer.image(object.x, object.y, object.image)
@@ -730,7 +735,7 @@ function GUI.image(x, y, image)
 	return object
 end
 
------------------------------------------ Action buttons -----------------------------------------
+-----------------------------------------------------------------------
 
 function GUI.actionButtons(x, y, fatSymbol)
 	local symbol = fatSymbol and "⬤" or "●"
@@ -743,7 +748,7 @@ function GUI.actionButtons(x, y, fatSymbol)
 	return container
 end
 
------------------------------------------ Menu -----------------------------------------
+-----------------------------------------------------------------------
 
 local function menuDraw(menu)
 	buffer.square(menu.x, menu.y, menu.width, 1, menu.colors.default.background, menu.colors.default.text, " ", menu.colors.transparency)
@@ -796,7 +801,7 @@ function GUI.menu(x, y, width, backgroundColor, textColor, backgroundPressedColo
 	return menu
 end
 
------------------------------------------ ProgressBar Object -----------------------------------------
+-----------------------------------------------------------------------
 
 local function drawProgressBar(object)
 	local activeWidth = math.floor(math.min(object.value, 100) / 100 * object.width)
@@ -830,7 +835,7 @@ function GUI.progressBar(x, y, width, activeColor, passiveColor, valueColor, val
 	return object
 end
 
------------------------------------------ Other GUI elements -----------------------------------------
+-----------------------------------------------------------------------
 
 function GUI.windowShadow(x, y, width, height, transparency, thin)
 	transparency = transparency
@@ -849,7 +854,7 @@ function GUI.roundedCorners(x, y, width, height, color, transparency)
 	buffer.text(x + width, y, color, "⠆", transparency)
 end
 
-------------------------------------------------- Error window -------------------------------------------------------------------
+-----------------------------------------------------------------------
 
 function GUI.error(...)
 	local args = {...}
@@ -903,7 +908,7 @@ function GUI.error(...)
 	mainContainer:startEventHandling()
 end
 
------------------------------------------ CodeView object -----------------------------------------
+-----------------------------------------------------------------------
 
 local function codeViewDraw(codeView)
 	local syntax = require("syntax")
@@ -1046,7 +1051,7 @@ function GUI.codeView(x, y, width, height, lines, fromSymbol, fromLine, maximumL
 	return codeView
 end 
 
------------------------------------------ Color Selector object -----------------------------------------
+-----------------------------------------------------------------------
 
 local function colorSelectorDraw(colorSelector)
 	local overlayColor = colorSelector.color < 0x7FFFFF and 0xFFFFFF or 0x000000
@@ -1087,7 +1092,7 @@ function GUI.colorSelector(x, y, width, height, color, text)
 	return colorSelector
 end 
 
------------------------------------------ Chart object -----------------------------------------
+-----------------------------------------------------------------------
 
 local function getAxisValue(number, postfix, roundValues)
 	if roundValues then
@@ -1212,7 +1217,7 @@ function GUI.chart(x, y, width, height, axisColor, axisValueColor, axisHelpersCo
 	return object
 end
 
------------------------------------------ Dropdown Menu -----------------------------------------
+-----------------------------------------------------------------------
 
 local function dropDownMenuItemDraw(item)
 	local yText = item.y + math.floor(item.height / 2)
@@ -1436,7 +1441,7 @@ function GUI.dropDownMenu(x, y, width, maximumHeight, itemHeight, backgroundColo
 	return menu
 end
 
------------------------------------------ Context Menu -----------------------------------------
+-----------------------------------------------------------------------
 
 local function contextMenuCalculate(menu)
 	local widestItem, widestShortcut = 0, 0
@@ -1503,7 +1508,7 @@ function GUI.contextMenu(x, y, backgroundColor, textColor, backgroundPressedColo
 	return menu
 end
 
------------------------------------------ Combo Box Object -----------------------------------------
+-----------------------------------------------------------------------
 
 local function drawComboBox(object)
 	buffer.square(object.x, object.y, object.width, object.height, object.colors.default.background, object.colors.default.text, " ")
@@ -1619,7 +1624,7 @@ function GUI.comboBox(x, y, width, elementHeight, backgroundColor, textColor, ar
 	return object
 end
 
------------------------------------------ Switch and label object -----------------------------------------
+-----------------------------------------------------------------------
 
 local function switchAndLabelDraw(switchAndLabel)
 	switchAndLabel.label.width = switchAndLabel.width
@@ -1644,7 +1649,7 @@ function GUI.switchAndLabel(x, y, width, switchWidth, activeColor, passiveColor,
 	return switchAndLabel 
 end
 
------------------------------------------ Horizontal Slider Object -----------------------------------------
+-----------------------------------------------------------------------
 
 local function sliderDraw(object)
 	-- На всякий случай делаем значение не меньше минимального и не больше максимального
@@ -1696,7 +1701,7 @@ function GUI.slider(x, y, width, activeColor, passiveColor, pipeColor, valueColo
 	return object
 end
 
------------------------------------------ Switch object -----------------------------------------
+-----------------------------------------------------------------------
 
 local function switchDraw(switch)
 	buffer.text(switch.x - 1, switch.y, switch.colors.passive, "⠰")
@@ -1761,7 +1766,7 @@ function GUI.switch(x, y, width, activeColor, passiveColor, pipeColor, state)
 	return switch
 end
 
------------------------------------------ Layout object -----------------------------------------
+-----------------------------------------------------------------------
 
 local function layoutCheckCell(layout, column, row)
 	if column < 1 or column > #layout.columnSizes or row < 1 or row > #layout.rowSizes then
@@ -2150,7 +2155,7 @@ function GUI.layout(x, y, width, height, columnCount, rowCount)
 	return layout
 end
 
------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------
 
 local function filesystemDialogDraw(filesystemDialog)
 	if filesystemDialog.extensionComboBox.hidden then
@@ -2250,7 +2255,7 @@ local function filesystemDialogShow(filesystemDialog)
 	return filesystemDialog
 end
 
------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------
 
 function GUI.addFilesystemDialogToContainer(parentContainer, width, height, addPanel, ...)
 	local container = parentContainer:addChild(GUI.container(1, 1, parentContainer.width, parentContainer.height))
@@ -2298,7 +2303,7 @@ function GUI.addFilesystemDialogToContainer(parentContainer, width, height, addP
 	return filesystemDialog
 end
 
------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------
 
 local function filesystemChooserDraw(object)
 	local tipWidth = object.height * 2 - 1
@@ -2388,7 +2393,7 @@ function GUI.filesystemChooser(x, y, width, height, backgroundColor, textColor, 
 	return object
 end
 
------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------
 
 local function resizerDraw(object)
 	local horizontalMode = object.width >= object.height
@@ -2454,7 +2459,7 @@ function GUI.resizer(x, y, width, height, helperColor, arrowColor)
 	return object
 end
 
------------------------------------------ Scrollbar object -----------------------------------------
+-----------------------------------------------------------------------
 
 local function scrollBarDraw(scrollBar)
 	local isVertical = scrollBar.height > scrollBar.width
@@ -2579,7 +2584,7 @@ function GUI.scrollBar(x, y, width, height, backgroundColor, foregroundColor, mi
 	return scrollBar
 end
 
------------------------------------------ Tree object -----------------------------------------
+-----------------------------------------------------------------------
 
 local function treeDraw(tree)	
 	local y, yEnd, showScrollBar = tree.y, tree.y + tree.height - 1, #tree.items > tree.height
@@ -2731,7 +2736,7 @@ function GUI.tree(x, y, width, height, backgroundColor, expandableColor, notExpa
 	return tree
 end
 
------------------------------------------ FilesystemTree object -----------------------------------------
+-----------------------------------------------------------------------
 
 local function filesystemTreeUpdateFileListRecursively(tree, path, offset)
 	local list = {}
@@ -2801,7 +2806,7 @@ function GUI.filesystemTree(...)
 	return tree
 end
 
------------------------------------------ Text Box object -----------------------------------------
+-----------------------------------------------------------------------
 
 local function textBoxCalculate(object)
 	local doubleVerticalOffset = object.offset.vertical * 2
@@ -2956,7 +2961,7 @@ function GUI.textBox(x, y, width, height, backgroundColor, textColor, lines, cur
 	return object
 end
 
------------------------------------------ Input object -----------------------------------------
+-----------------------------------------------------------------------
 
 local function inputSetCursorPosition(input, newPosition)
 	if newPosition < 1 then
@@ -3274,7 +3279,7 @@ function GUI.input(x, y, width, height, backgroundColor, textColor, placeholderT
 	return input
 end
 
------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------
 
 local function autoCompleteDraw(object)
 	local y, yEnd = object.y, object.y + object.height - 1
@@ -3432,7 +3437,7 @@ function GUI.autoComplete(x, y, width, maximumHeight, backgroundColor, textColor
 	return object
 end
 
------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------
 
 local function brailleCanvasDraw(brailleCanvas)
 	local index, background, foreground, symbol
@@ -3506,7 +3511,7 @@ function GUI.brailleCanvas(x, y, width, height)
 	return brailleCanvas
 end
 
------------------------------------------ TabBar -----------------------------------------
+-----------------------------------------------------------------------
 
 local function tabBarDraw(tabBar)
 	local totalWidth = 0
@@ -3533,8 +3538,6 @@ local function tabBarDraw(tabBar)
 
 	return tabBar
 end
-
-
 
 local function tabBarTabEventHandler(mainContainer, tabBarTab, eventData)
 	if eventData[1] == "touch" then
@@ -3590,7 +3593,7 @@ function GUI.tabBar(x, y, width, height, horizontalTabOffset, spaceBetweenTabs, 
 	return tabBar
 end
 
---------------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------
 
 local function paletteShow(palette)
 	local mainContainer = GUI.fullScreenContainer()
@@ -3844,7 +3847,7 @@ function GUI.palette(x, y, startColor)
 	return palette
 end
 
------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------
 
 local function textUpdate(object)
 	object.width = unicode.len(object.text)
@@ -3869,38 +3872,6 @@ function GUI.text(x, y, color, text)
 	return object
 end
 
------------------------------------------------------------------------------------------------------
-
--- buffer.clear()
--- buffer.draw(true)
-
--- local mainContainer = GUI.fullScreenContainer()
--- mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x2D2D2D))
-
--- local w, h = 40, 20
--- mainContainer:addChild(GUI.panel(3, 2, w, h, 0x3C3C3C))
-
--- local layout = mainContainer:addChild(GUI.layout(3, 2, w, h, 1, 1))
--- layout:setCellAlignment(1, 1, GUI.alignment.horizontal.center, GUI.alignment.vertical.center)
--- layout.defaultRow, layout.defaultColumn = 1, 1
-
--- layout:addChild(GUI.text(1, 1, 0xFFFFFF, "Мяу-мяу"))
--- layout:addChild(GUI.text(1, 1, 0xFFFFFF, "Это всего лишь обычный текст"))
--- layout:addChild(GUI.text(1, 1, 0xFFFFFF, "Текстик, как делы?"))
--- layout:addChild(GUI.text(1, 1, 0xFFFFFF, "Вот уж мяу так мяу, мда, лол, кек, чебурек"))
-
-
--- mainContainer:draw()
--- buffer.draw(true)
--- mainContainer:startEventHandling()
-
-
------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------
 
 return GUI
-
-
-
-
-
-
