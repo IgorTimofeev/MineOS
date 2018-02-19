@@ -116,8 +116,8 @@ local contentContainer = window:addChild(GUI.container(1, 4, 1, 1))
 local activityWidget = window:addChild(GUI.object(1, 1, 4, 3))
 activityWidget.hidden = true
 activityWidget.position = 0
-activityWidget.color1 = 0x00DBFF
-activityWidget.color2 = 0x0092FF
+activityWidget.color1 = 0x99FF80
+activityWidget.color2 = 0x00B640
 activityWidget.draw = function(activityWidget)
 	buffer.text(activityWidget.x + 1, activityWidget.y, activityWidget.position == 1 and activityWidget.color1 or activityWidget.color2, "⢀")
 	buffer.text(activityWidget.x + 2, activityWidget.y, activityWidget.position == 1 and activityWidget.color1 or activityWidget.color2, "⡀")
