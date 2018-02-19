@@ -1700,13 +1700,12 @@ end
 --------------------------------------------------------------------------------
 
 loadConfig()
-lastMethod = statistics
 
 if args[1] == "updates" then
-	lastArguments = {nil, true}
+	lastMethod, lastArguments = updateFileList, {nil, true}
 	window.tabBar.selectedItem = #categories + 2
 else
-	lastArguments = {}
+	lastMethod, lastArguments = statistics, {}
 end
 
 window:resize(window.width, window.height)
