@@ -109,13 +109,44 @@ local config, fileVersions, user
 
 --------------------------------------------------------------------------------
 
-local mainContainer, window = MineOSInterface.addWindow(MineOSInterface.tabbedWindow(1, 1, 110, 30))
+local mainContainer, window = MineOSInterface.addWindow(MineOSInterface.tabbedWindow(1, 1, 110, 29))
 
 local contentContainer = window:addChild(GUI.container(1, 4, 1, 1))
-local statusWidget = window:addChild(GUI.object(1, 1, 1, 1))
-statusWidget.draw = function()
-	buffer.square(statusWidget.x, statusWidget.y, statusWidget.width, 1, 0x2D2D2D, 0xF0F0F0, " ")
-	buffer.text(statusWidget.x + 1, statusWidget.y, 0xF0F0F0, statusWidget.text)
+
+local activityWidget = window:addChild(GUI.object(1, 1, 4, 3))
+activityWidget.hidden = true
+activityWidget.position = 0
+activityWidget.color1 = 0x00DBFF
+activityWidget.color2 = 0x0092FF
+activityWidget.draw = function(activityWidget)
+	buffer.text(activityWidget.x + 1, activityWidget.y, activityWidget.position == 1 and activityWidget.color1 or activityWidget.color2, "⢀")
+	buffer.text(activityWidget.x + 2, activityWidget.y, activityWidget.position == 1 and activityWidget.color1 or activityWidget.color2, "⡀")
+
+	buffer.text(activityWidget.x + 3, activityWidget.y + 1, activityWidget.position == 2 and activityWidget.color1 or activityWidget.color2, "⠆")
+	buffer.text(activityWidget.x + 2, activityWidget.y + 1, activityWidget.position == 2 and activityWidget.color1 or activityWidget.color2, "⢈")
+
+	buffer.text(activityWidget.x + 1, activityWidget.y + 2, activityWidget.position == 3 and activityWidget.color1 or activityWidget.color2, "⠈")
+	buffer.text(activityWidget.x + 2, activityWidget.y + 2, activityWidget.position == 3 and activityWidget.color1 or activityWidget.color2, "⠁")
+
+	buffer.text(activityWidget.x, activityWidget.y + 1, activityWidget.position == 4 and activityWidget.color1 or activityWidget.color2, "⠰")
+	buffer.text(activityWidget.x + 1, activityWidget.y + 1, activityWidget.position == 4 and activityWidget.color1 or activityWidget.color2, "⡁")
+end
+
+local overrideWindowDraw = window.draw
+window.draw = function(...)
+	if not activityWidget.hidden then
+		activityWidget.position = activityWidget.position + 1
+		if activityWidget.position > 4 then
+			activityWidget.position = 1
+		end
+	end
+
+	return overrideWindowDraw(...)
+end
+
+local function activity(state)
+	activityWidget.hidden = not state
+	MineOSInterface.OSDraw()
 end
 
 --------------------------------------------------------------------------------
@@ -284,11 +315,6 @@ local function showLabelAsContent(text)
 	contentContainer:addChild(GUI.label(1, 1, contentContainer.width, contentContainer.height, 0x2D2D2D, text)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.center)
 end
 
-local function status(text)
-	statusWidget.text = text
-	MineOSInterface.OSDraw()
-end
-
 local function newButtonsLayout(x, y, width, spacing)
 	local buttonsLayout = GUI.layout(x, y, width, 1, 1, 1)
 	buttonsLayout:setCellDirection(1, 1, GUI.directions.horizontal)
@@ -387,8 +413,9 @@ local function getDependencyPath(mainFilePath, dependency)
 end
 
 local function download(publication)
+	activity(true)
+
 	if not publication.translated_description then
-		status(localization.statusApplicationInfo)
 		publication = fieldAPIRequest("result", "publication", {
 			publication_name = publication.publication_name,
 			language_id = config.language_id,
@@ -528,8 +555,9 @@ local function download(publication)
 
 		filesystemChooser.onSubmit = updateTree
 		updateTree()
-		status(localization.statusWaiting)
 	end
+
+	activity()
 end
 
 local function addPanel(container, color)
@@ -640,7 +668,7 @@ end
 
 local function newPublicationInfo(publication_name)
 	lastMethod, lastArguments = newPublicationInfo, {publication_name}
-	status(localization.statusApplicationInfo)
+	activity(true)
 
 	local publication = fieldAPIRequest("result", "publication", {
 		publication_name = publication_name,
@@ -796,7 +824,8 @@ local function newPublicationInfo(publication_name)
 				govno.colors.disabled.background = 0xA5A5A5
 				govno.colors.disabled.text = 0xC3C3C3
 				govno.onTouch = function()
-					status(localization.statusPublishingReview)
+					activity(true)
+
 					local success, reason = RawAPIRequest("review", {
 						token = user.token,
 						publication_name = publication.publication_name,
@@ -812,6 +841,8 @@ local function newPublicationInfo(publication_name)
 					else
 						GUI.error(reason)
 					end
+
+					activity()
 				end
 
 				input.onInputFinished = function()
@@ -870,7 +901,8 @@ local function newPublicationInfo(publication_name)
 					local noButton = reviewContainer:addChild(GUI.adaptiveButton(stripLabel.localX + stripLabel.width + 1, y, 0, 0, nil, 0x696969, nil, 0x2D2D2D, localization.no))
 					
 					local function go(rating)
-						status(localization.statusVotingReview)
+						activity(true)
+						
 						local success = fieldAPIRequest("result", "review_vote", {
 							token = user.token,
 							review_id = publication.reviews[i].id,
@@ -883,8 +915,9 @@ local function newPublicationInfo(publication_name)
 							yesButton:delete()
 							stripLabel:delete()
 							noButton:delete()
-							status(localization.statusWaiting)
 						end
+
+						activity()
 					end
 
 					yesButton.onTouch = function()
@@ -905,9 +938,9 @@ local function newPublicationInfo(publication_name)
 
 		layout:update()
 		layout.height = layout.children[#layout.children].localY + layout.children[#layout.children].height - 1
-
-		status(localization.statusWaiting)
 	end
+
+	activity()
 end
 
 --------------------------------------------------------------------------------
@@ -1138,7 +1171,7 @@ editPublication = function(initialPublication)
 			})
 		end
 
-		status(initialPublication and localization.statusUpdatingPublication or localization.statusUploadingPublication)
+		activity(true)
 		
 		local success, reason = RawAPIRequest(initialPublication and "update" or "upload", {
 			-- Вот эта хня чисто для апдейта
@@ -1167,16 +1200,18 @@ editPublication = function(initialPublication)
 		else
 			GUI.error(reason)
 		end
+
+		activity()
 	end
 
-	status(localization.statusWaiting)
+	activity()
 end
 
 --------------------------------------------------------------------------------
 
 updateFileList = function(category_id, updates)
 	lastMethod, lastArguments = updateFileList, {category_id, updates}
-	status(updates and localization.statusSearchingUpdates or localization.statusUpdatingList)
+	activity(true)
 
 	local publication_names
 	if updates then
@@ -1338,17 +1373,14 @@ updateFileList = function(category_id, updates)
 				end
 				counter = counter + 1
 
-				-- Если мы тока шо создали приложеньку, от отрисовываем содержимое сразу же
-				if category_id == 1 then
-					MineOSInterface.OSDraw()
-				end
+				MineOSInterface.OSDraw()
 			end
 		else
 			showLabelAsContent(localization.noUpdates)
 		end
-
-		status(localization.statusWaiting)
 	end
+
+	activity()
 end
 
 --------------------------------------------------------------------------------
@@ -1375,9 +1407,9 @@ local function account()
 		local singleSessionSwitchAndLabel = layout:addChild(GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0xC3C3C3, 0xFFFFFF, 0xA5A5A5, localization.singleSession .. ":", config.singleSession))
 
 		layout:addChild(GUI.button(1, 1, 36, 3, 0xA5A5A5, 0xFFFFFF, 0x696969, 0xFFFFFF, "OK")).onTouch = function()
-			if login then
-				status(localization.statusLoggingIn)
+			activity(true)
 
+			if login then
 				local result = fieldAPIRequest("result", "login", {
 					[(string.find(emailInput.text, "@") and "email" or "name")] = emailInput.text,
 					password = passwordInput.text
@@ -1401,8 +1433,6 @@ local function account()
 					saveConfig()
 				end
 			elseif register then
-				status(localization.statusRegistering)
-
 				local result = fieldAPIRequest("result", "register", {
 					name = nameInput.text,
 					email = emailInput.text,
@@ -1411,11 +1441,8 @@ local function account()
 
 				if result then
 					showLabelAsContent(localization.registrationSuccessfull)
-					status(localization.statusWaiting)
 				end
 			else
-				status(localization.statusRecovering)
-
 				local success, reason = RawAPIRequest("change_password", {
 					email = user.email,
 					current_password = currentPasswordInput.text,
@@ -1424,11 +1451,12 @@ local function account()
 
 				if success then
 					logout()
-					status(localization.statusWaiting)
 				else
 					GUI.error(reason)
 				end
 			end
+
+			activity()
 		end
 
 		if login then
@@ -1447,7 +1475,7 @@ local function account()
 	end
 
 	if user.token then
-		status(localization.statusUser)
+		activity(true)
 
 		local result = fieldAPIRequest("result", "publications", {
 			user_name = user.name,
@@ -1508,7 +1536,7 @@ local function account()
 					newPublicationInfo(result[comboBox.selectedItem].publication_name)
 				end
 				buttonsLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 1, 0, 0xC3C3C3, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.edit)).onTouch = function()
-					status(localization.statusApplicationInfo)
+					activity(true)
 
 					local result = fieldAPIRequest("result", "publication", {
 						publication_name = result[comboBox.selectedItem].publication_name,
@@ -1518,14 +1546,16 @@ local function account()
 					if result then
 						editPublication(result)
 					end
+
+					activity()
 				end
 				buttonsLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 1, 0, 0xC3C3C3, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.remove)).onTouch = function()
 					deletePublication(result[comboBox.selectedItem])
 				end
 			end
-
-			status(localization.statusWaiting)
 		end
+
+		activity()
 	else
 		addAccountShit(true, false, false)
 	end
@@ -1541,11 +1571,11 @@ end
 local function statistics()
 	lastMethod, lastArguments = statistics, {}
 
-	status(localization.statusStatistics)
-	local statistics = fieldAPIRequest("result", "statistics")
+	activity(true)
 
+	local statistics = fieldAPIRequest("result", "statistics")
 	if statistics then
-		status(localization.statusUpdatingList)
+		MineOSInterface.OSDraw()
 
 		local publications = fieldAPIRequest("result", "publications", {
 			order_by = "rating",
@@ -1602,6 +1632,8 @@ local function statistics()
 					end
 
 					MineOSInterface.OSDraw()
+
+					return true
 				end
 			end
 
@@ -1612,18 +1644,19 @@ local function statistics()
 				object.localY = math.random(1, contentContainer.height - object.width + 1)
 				object.moveX = math.random(2) == 2 and 1 or -1
 				object.moveY = math.random(2) == 2 and 1 or -1
-				tick()
-				MineOSInterface.OSDraw()
+				if not tick() then
+					MineOSInterface.OSDraw()
+				end
 			end
 
 			for i = 2, #publications do
 				makeBlyad(contentContainer:addChild(GUI.image(1, 1, getPublicationIcon(publications[i])), 1))
 			end
 			makeBlyad(contentContainer:addChild(GUI.text(1, 1, 0xC3C3C3, ".!."), 1))
-			
-			status(localization.statusWaiting)
 		end
 	end
+
+	activity()
 end
 
 --------------------------------------------------------------------------------
@@ -1648,12 +1681,12 @@ end
 
 window.onResize = function(width, height)
 	window.backgroundPanel.width = width
-	window.backgroundPanel.height = height - 4
+	window.backgroundPanel.height = height - 3
 	contentContainer.width = width
-	contentContainer.height = window.height - 4
+	contentContainer.height = window.backgroundPanel.height
 	window.tabBar.width = width
-	statusWidget.width = window.width
-	statusWidget.localY = window.height
+
+	activityWidget.localX = window.width - activityWidget.width
 
 	appsPerWidth = math.floor((contentContainer.width + appHSpacing) / (appWidth + appHSpacing))
 	appsPerHeight = math.floor((contentContainer.height - 6 + appVSpacing) / (appHeight + appVSpacing))
