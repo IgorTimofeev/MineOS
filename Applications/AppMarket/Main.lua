@@ -18,8 +18,12 @@ local unicode = require("unicode")
 
 local host = "http://eliteclubsessions.ru/mineos/2.0/"
 local iconCheckReponseTime = 0.5
-local overviewAnimationDelay = 0.05
+
 local overviewIconsCount = 10
+local overviewAnimationDelay = 0.05
+local overviewForceDecay = 0.15
+local overviewForceLimit = 0.5
+local overviewMaximumTouchAcceleration = 5
 
 local appMarketPath = MineOSPaths.applicationData .. "App Market/"
 local configPath = appMarketPath .. "Config.cfg"
@@ -1588,14 +1592,20 @@ local function statistics()
 		if publications then
 			contentContainer:deleteChildren()
 
-			local layout = contentContainer:addChild(GUI.layout(1, 1, contentContainer.width, contentContainer.height, 1, 1))
-			
-			local container = layout:addChild(GUI.container(1, 1, 40, contentContainer.height))
+			-- local y = math.floor(contentContainer.height / 2) - 3
+			-- local overviewMaximumTouchAccelerationSlider = contentContainer:addChild(GUI.slider(3, y, 12, 0xD2D2D2, 0xB4B4B4, 0xFFFFFF, 0xD2D2D2, 1, 10, 5, false, "ACCL: ", "")); y = y + 2
+			-- local forceSlider = contentContainer:addChild(GUI.slider(3, y, 12, 0xD2D2D2, 0xB4B4B4, 0xFFFFFF, 0xD2D2D2, 1, 100, 50, false, "LIMT: ", "")); y = y + 2
+			-- local overviewForceDecaySlider = contentContainer:addChild(GUI.slider(3, y, 12, 0xD2D2D2, 0xB4B4B4, 0xFFFFFF, 0xD2D2D2, 1, 100, 15, false, "DECY: ", "")); y = y + 2
+			-- overviewMaximumTouchAccelerationSlider.roundValues, forceSlider.roundValues, overviewForceDecaySlider.roundValues = true, true, true
+
+			local iconsContainer = contentContainer:addChild(GUI.container(1, 1, contentContainer.width, contentContainer.height))
+
+			local width = 40
+			local container = contentContainer:addChild(GUI.container(math.floor(contentContainer.width / 2 - width / 2), 1, width, contentContainer.height))
 			container:addChild(GUI.panel(1, 1, container.width, container.height, 0xFFFFFF))
 			local statisticsLayout = container:addChild(GUI.layout(1, 1, container.width, container.height, 1, 1))
 
 			statisticsLayout:addChild(GUI.image(1, 1, image.load(resourcesPath .. "Icon.pic"))).height = 5
-
 			statisticsLayout:addChild(newKeyValueWidget(1, 1, container.width - 8, 0x4B4B4B, 0xA5A5A5, localization.statisticsUsersCount, ": " .. statistics.users_count))
 			statisticsLayout:addChild(newKeyValueWidget(1, 1, container.width - 8, 0x4B4B4B, 0xA5A5A5, localization.statisticsNewUser, ": " .. statistics.last_registered_user))
 			statisticsLayout:addChild(newKeyValueWidget(1, 1, container.width - 8, 0x4B4B4B, 0xA5A5A5, localization.statisticsMostPopularUser, ": " .. statistics.most_popular_user))
@@ -1615,20 +1625,52 @@ local function statistics()
 					uptime = newUptime
 
 					local child
-					for i = 1, #contentContainer.children - 1 do
-						child = contentContainer.children[i]
-						child.localX = child.localX + child.moveX
-						child.localY = child.localY + child.moveY
-
-						if child.localX < 1 or child.localX + child.width - 1 > contentContainer.width then
-							child.localX = child.localX - child.moveX
-							child.moveX = -child.moveX
+					for i = 1, #iconsContainer.children do
+						child = iconsContainer.children[i]
+						
+						child.moveX, child.moveY = child.moveX + child.forceX, child.moveY + child.forceY
+							
+						if child.forceX > 0 then
+							if child.forceX > overviewForceLimit then
+								child.forceX = child.forceX - overviewForceDecay
+							else
+								child.forceX = overviewForceLimit
+							end
+						else
+							if child.forceX < -overviewForceLimit then
+								child.forceX = child.forceX + overviewForceDecay
+							else
+								child.forceX = -overviewForceLimit
+							end
 						end
 
-						if child.localY < 1 or child.localY + child.height - 1 > contentContainer.height then
-							child.localY = child.localY - child.moveY
-							child.moveY = -child.moveY
+						if child.forceY > 0 then
+							if child.forceY > overviewForceLimit then
+								child.forceY = child.forceY - overviewForceDecay
+							else
+								child.forceY = overviewForceLimit
+							end
+						else
+							if child.forceY < -overviewForceLimit then
+								child.forceY = child.forceY + overviewForceDecay
+							else
+								child.forceY = -overviewForceLimit
+							end
 						end
+
+						if child.moveX <= 1 then
+							child.forceX, child.moveX = -child.forceX, 1
+						elseif child.moveX + child.width - 1 >= iconsContainer.width then
+							child.forceX, child.moveX = -child.forceX, iconsContainer.width - child.width + 1
+						end
+
+						if child.moveY <= 1 then
+							child.forceY, child.moveY = -child.forceY, 1
+						elseif child.moveY + child.height - 1 >= iconsContainer.height then
+							child.forceY, child.moveY = -child.forceY, iconsContainer.height - child.height + 1
+						end
+
+						child.localX, child.localY = math.floor(child.moveX), math.floor(child.moveY)
 					end
 
 					MineOSInterface.OSDraw()
@@ -1637,22 +1679,40 @@ local function statistics()
 				end
 			end
 
-			container.eventHandler = tick
+			iconsContainer.eventHandler = function(mainContainer, object, eventData)
+				if eventData[1] == "touch" or eventData[1] == "drag" then
+					local child, deltaX, deltaY, vectorLength
+					for i = 1, #iconsContainer.children do
+						child = iconsContainer.children[i]
+						
+						deltaX, deltaY = eventData[3] - child.x, eventData[4] - child.y
+						vectorLength = math.sqrt(deltaX ^ 2 + deltaY ^ 2)
+						if vectorLength > 0 then
+							child.forceX = deltaX / vectorLength * math.random(overviewMaximumTouchAcceleration)
+							child.forceY = deltaY / vectorLength * math.random(overviewMaximumTouchAcceleration)
+						end
+					end
+				end
+
+				tick()
+			end
 
 			local function makeBlyad(object)
-				object.localX = math.random(1, contentContainer.width - object.width + 1)
-				object.localY = math.random(1, contentContainer.height - object.width + 1)
-				object.moveX = math.random(2) == 2 and 1 or -1
-				object.moveY = math.random(2) == 2 and 1 or -1
+				object.localX = math.random(1, iconsContainer.width - object.width + 1)
+				object.localY = math.random(1, iconsContainer.height - object.width + 1)
+				object.moveX = object.localX
+				object.moveY = object.localY
+				object.forceX = math.random(-100, 100) / 100 * overviewForceLimit
+				object.forceY = math.random(-100, 100) / 100 * overviewForceLimit
+				
 				if not tick() then
 					MineOSInterface.OSDraw()
 				end
 			end
 
 			for i = 2, #publications do
-				makeBlyad(contentContainer:addChild(GUI.image(1, 1, getPublicationIcon(publications[i])), 1))
+				makeBlyad(iconsContainer:addChild(GUI.image(1, 1, getPublicationIcon(publications[i])), 1))
 			end
-			makeBlyad(contentContainer:addChild(GUI.text(1, 1, 0xC3C3C3, ".!."), 1))
 		end
 	end
 
