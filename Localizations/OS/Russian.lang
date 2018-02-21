@@ -115,6 +115,7 @@
 	mineOSCreatorUsedMasterPassword = "Создатель операционной системы использовал мастер-ключ",
 	loginToSystem = "Вход в систему",
 
+	systemLanguage = "Язык системы",
 	colorScheme = "Цветовая схема",
 	iconProperties = "Параметры иконок",
 	spaceBetweenIcons = "Расстояние между иконками",

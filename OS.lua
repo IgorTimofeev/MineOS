@@ -1,8 +1,7 @@
 
----------------------------------------------- Копирайт, епта ------------------------------------------------------------------------
+---------------------------------------- Копирайт, епта ----------------------------------------
 
 local copyright = {
-
 	"Тут можно было бы написать кучу текста, мол,",
 	"вы не имеете прав на использование этой хуйни в",
 	"коммерческих целях и прочую чушь, навеянную нам",
@@ -10,7 +9,6 @@ local copyright = {
 	"",
 	"Просто помни, что эту ОСь накодил Тимофеев Игорь,",
 	"ссылка на ВК: vk.com/id7799889"
-
 }
 
 -- Вычищаем копирайт из оперативки, ибо мы не можем тратить СТОЛЬКО памяти.
@@ -19,7 +17,7 @@ local copyright = {
 
 copyright = nil
 
----------------------------------------------- Либсы-хуибсы ------------------------------------------------------------------------
+---------------------------------------- Либсы-хуибсы ----------------------------------------
 
 -- package.loaded.MineOSInterface = nil
 -- package.loaded.MineOSCore = nil
@@ -39,7 +37,7 @@ local MineOSCore = require("MineOSCore")
 local MineOSNetwork = require("MineOSNetwork")
 local MineOSInterface = require("MineOSInterface")
 
----------------------------------------------- Всякая константная залупа ------------------------------------------------------------------------
+---------------------------------------- Всякая константная залупа ----------------------------------------
 
 local dockTransparency = 0.4
 
@@ -50,7 +48,7 @@ local timezoneCorrection
 local screensaversPath = MineOSPaths.system .. "Screensavers/"
 local screensaverUptime = computerUptimeOnBoot
 
----------------------------------------------- Система защиты пекарни ------------------------------------------------------------------------
+---------------------------------------- Система защиты пекарни ----------------------------------------
 
 local function biometry(creatingNew)
 	if not creatingNew then
@@ -236,7 +234,7 @@ local function login()
 	MineOSInterface.OSDraw()
 end
 
----------------------------------------------- Основные функции ------------------------------------------------------------------------
+---------------------------------------- Основные функции ----------------------------------------
 
 local function changeWallpaper()
 	MineOSInterface.mainContainer.background.wallpaper = nil
@@ -262,7 +260,7 @@ local function changeWallpaper()
 	end
 end
 
----------------------------------------------- Всякая параша для ОС-контейнера ------------------------------------------------------------------------
+---------------------------------------- Всякая параша для ОС-контейнера ----------------------------------------
 
 local function changeResolution()
 	buffer.setResolution(table.unpack(MineOSCore.properties.resolution or {buffer.getGPUProxy().maxResolution()}))
@@ -290,20 +288,8 @@ local function moveDockIcon(index, direction)
 	MineOSInterface.OSDraw()
 end
 
-local function createOSWindow()
-	MineOSInterface.mainContainer = GUI.fullScreenContainer()
-
-	-- local overrideDraw = MineOSInterface.mainContainer.draw
-	-- MineOSInterface.mainContainer.draw = function(...)
-	-- 	overrideDraw(...)
-
-	-- 	local freeMemory, totalMemory = computer.freeMemory() / 1024, computer.totalMemory() / 1024
-	-- 	local y = MineOSInterface.mainContainer.y
-	-- 	buffer.text(MineOSInterface.mainContainer.x, y, 0xFF0000, "Free: " .. string.format("%.2f", freeMemory)); y = y + 1
-	-- 	buffer.text(MineOSInterface.mainContainer.x, y, 0xFF0000, "Total: " .. string.format("%.2f", totalMemory)); y = y + 1
-	-- 	buffer.text(MineOSInterface.mainContainer.x, y, 0xFF0000, "Used: " .. string.format("%.2f", totalMemory - freeMemory)); y = y + 1
-	-- end
-	
+local function createOSWidgets()
+	MineOSInterface.mainContainer:deleteChildren()
 	MineOSInterface.mainContainer.background = MineOSInterface.mainContainer:addChild(GUI.object(1, 1, 1, 1))
 	MineOSInterface.mainContainer.background.wallpaperPosition = {x = 1, y = 1}
 	MineOSInterface.mainContainer.background.draw = function(object)
@@ -845,6 +831,30 @@ local function createOSWindow()
 			showHiddenFilesSwitch.onStateChanged, showApplicationIconsSwitch.onStateChanged = showExtensionSwitch.onStateChanged, showExtensionSwitch.onStateChanged
 		end
 
+		menu:addItem(MineOSCore.localization.systemLanguage).onTouch = function()
+			-- local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer, MineOSCore.localization.systemLanguage)
+
+			-- local comboBox = container.layout:addChild(GUI.comboBox(1, 1, 36, 3, 0xE1E1E1, 0x2D2D2D, 0x4B4B4B, 0x969696))
+			-- for file in fs.list(MineOSPaths.localizationFiles) do
+			-- 	local name = fs.hideExtension(file)
+			-- 	comboBox:addItem(name).onTouch = function()
+			-- 		MineOSCore.properties.language = name
+			-- 		MineOSCore.localization = MineOSCore.getLocalization(MineOSPaths.localizationFiles)
+
+			-- 		createOSWidgets()
+			-- 		changeResolution()
+			-- 		changeWallpaper()
+			-- 		MineOSCore.OSUpdateDate()
+			-- 		MineOSInterface.mainContainer.updateFileListAndDraw()
+			-- 	end
+
+			-- 	if name == MineOSCore.properties.language then
+			-- 		comboBox.selectedItem = comboBox:count()
+			-- 	end
+			-- end
+			error("aefafefe")
+		end
+
 		menu:addSeparator()
 
 		menu:addItem(MineOSCore.localization.setProtectionMethod).onTouch = function()
@@ -859,7 +869,7 @@ local function createOSWindow()
 	MineOSInterface.mainContainer.menuLayout:setCellDirection(1, 1, GUI.directions.horizontal)
 	MineOSInterface.mainContainer.menuLayout:setCellAlignment(1, 1, GUI.alignment.horizontal.right, GUI.alignment.vertical.top)
 
-	local dateButton = MineOSInterface.addMenuWidget(GUI.button(1, 1, 1, 1, nil, 0x0, 0x3366CC, 0xFFFFFF, " "))
+	local dateButton = MineOSInterface.addMenuWidget(GUI.button(1, 1, 1, 1, nil, 0x0, nil, 0x969696, " "))
 	dateButton.switchMode = true
 
 	dateButton.onTouch = function()
@@ -869,7 +879,7 @@ local function createOSWindow()
 				MineOSCore.properties.timezone = i
 				MineOSCore.saveProperties()
 
-				MineOSCore.OSUpdateTimezone()
+				MineOSCore.OSUpdateTimezone(i)
 				MineOSCore.OSUpdateDate()
 				MineOSInterface.OSDraw()
 			end
@@ -879,8 +889,7 @@ local function createOSWindow()
 		MineOSInterface.OSDraw()
 	end
 
-	MineOSCore.OSUpdateTimezone = function()
-		local timezone = MineOSCore.properties.timezone or 0
+	MineOSCore.OSUpdateTimezone = function(timezone)
 		timezoneCorrection = timezone * 3600
 	end
 
@@ -982,15 +991,32 @@ local function createOSWindow()
 	end
 end
 
----------------------------------------------- Сама ОС ------------------------------------------------------------------------
+local function createOSWindow()
+	MineOSInterface.mainContainer = GUI.fullScreenContainer()
+
+	-- local overrideDraw = MineOSInterface.mainContainer.draw
+	-- MineOSInterface.mainContainer.draw = function(...)
+	-- 	overrideDraw(...)
+
+	-- 	local freeMemory, totalMemory = computer.freeMemory() / 1024, computer.totalMemory() / 1024
+	-- 	local y = MineOSInterface.mainContainer.y
+	-- 	buffer.text(MineOSInterface.mainContainer.x, y, 0xFF0000, "Free: " .. string.format("%.2f", freeMemory)); y = y + 1
+	-- 	buffer.text(MineOSInterface.mainContainer.x, y, 0xFF0000, "Total: " .. string.format("%.2f", totalMemory)); y = y + 1
+	-- 	buffer.text(MineOSInterface.mainContainer.x, y, 0xFF0000, "Used: " .. string.format("%.2f", totalMemory - freeMemory)); y = y + 1
+	-- end
+
+	createOSWidgets()
+	changeResolution()
+	changeWallpaper()
+	MineOSCore.OSUpdateTimezone(MineOSCore.properties.timezone)
+	MineOSCore.OSUpdateDate()
+end
+
+---------------------------------------- Сама ОС ----------------------------------------
 
 MineOSCore.localization = MineOSCore.getLocalization(MineOSPaths.localizationFiles)
 
 createOSWindow()
-changeResolution()
-changeWallpaper()
-MineOSCore.OSUpdateTimezone()
-MineOSCore.OSUpdateDate()
 login()
 
 MineOSNetwork.update()
@@ -1001,17 +1027,13 @@ while true do
 		MineOSInterface.mainContainer,
 		0
 	)
+
 	if success then
 		break
 	else
 		createOSWindow()
-		changeResolution()
-		changeWallpaper()
-		MineOSCore.OSUpdateDate()
-		MineOSInterface.mainContainer.updateFileListAndDraw()
-
+		MineOSInterface.OSDraw()
 		MineOSInterface.showErrorWindow(path, line, traceback)
-
 		MineOSInterface.OSDraw()
 	end
 end

@@ -71,7 +71,6 @@ function MineOSCore.loadPropeties()
 	end
 
 	local defaultValues = {
-		language = "Russian",
 		transparencyEnabled = true,
 		showApplicationIcons = true,
 		iconHorizontalSpaceBetween = 1,

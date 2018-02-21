@@ -115,6 +115,7 @@
 	mineOSCreatorUsedMasterPassword = "The creator of this operating system has used Master-Password",
 	loginToSystem = "Login",
 
+	systemLanguage = "System language",
 	colorScheme = "Color scheme",
 	iconProperties = "Icons properties",
 	spaceBetweenIcons = "Space bewteen icons",

@@ -1181,7 +1181,7 @@ function MineOSInterface.addWindow(window)
 	MineOSInterface.mainContainer.windowsContainer:addChild(window)
 
 	-- Получаем путь исполняемого файла
-	local dockPath = MineOSCore.lastLaunchPath or "/OS.lua"
+	local dockPath = MineOSCore.lastLaunchPath or "/bin/OS.lua"
 	local dockPathPath = fs.path(dockPath)
 	if fs.extension(dockPathPath) == ".app" then
 		dockPath = dockPathPath
