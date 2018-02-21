@@ -13,7 +13,7 @@ local event = require("event")
 ----------------------------------------------------------------------------------------------------------------------------------
 
 local applicationResourcesDirectory = MineOSCore.getCurrentApplicationResourcesDirectory()
-local localization = MineOSCore.getLocalization(applicationResourcesDirectory .. "Localization/")
+local localization = MineOSCore.getLocalization(applicationResourcesDirectory .. "Localizations/")
 local worldsPath = applicationResourcesDirectory .. "Worlds/"
 local rayWalkVersion = "RayWalk Tech Demo v3.5"
 

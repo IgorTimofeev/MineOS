@@ -120,7 +120,7 @@ local cursor = {
 local scriptCoroutine
 local resourcesPath = MineOSCore.getCurrentApplicationResourcesDirectory() 
 local configPath = MineOSPaths.applicationData .. "MineCode IDE/Config.cfg"
-local localization = MineOSCore.getLocalization(resourcesPath .. "Localization/")
+local localization = MineOSCore.getLocalization(resourcesPath .. "Localizations/")
 local findStartFrom
 local clipboard
 local breakpointLines

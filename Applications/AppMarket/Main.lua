@@ -31,7 +31,7 @@ local userPath = appMarketPath .. "User.cfg"
 local iconCachePath = appMarketPath .. "Cache/"
 
 local resourcesPath = MineOSCore.getCurrentApplicationResourcesDirectory() 
-local localization = MineOSCore.getLocalization(resourcesPath .. "Localization/") 
+local localization = MineOSCore.getLocalization(resourcesPath .. "Localizations/") 
 
 local categories = {
 	localization.categoryApplications,
@@ -1132,7 +1132,7 @@ editPublication = function(initialPublication)
 		end
 
 		pathType.switch.onStateChanged = function()
-			pathInput.placeholderText = pathType.switch.state and "Localization/English.lang" or "/MineOS/Localization/English.lang"
+			pathInput.placeholderText = pathType.switch.state and "Localizations/English.lang" or "/MineOS/Localizations/English.lang"
 		end
 
 		publicationNameInput.onInputFinished()
