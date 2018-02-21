@@ -19,7 +19,7 @@
 	publicationName = "Publication name",
 	mainFileURL = "Main file URL",
 	mainFileName = "Main file name",
-	iconURL = "Mail file URL",
+	iconURL = "Icon URL",
 	description = "Description",
 	dependenciesAndResources = "Dependencies and resources",
 	save = "Save",

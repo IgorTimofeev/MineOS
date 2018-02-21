@@ -1009,7 +1009,7 @@ local function newPlusMinusCyka(width, disableLimit)
 	return layout
 end
 
-editPublication = function(initialPublication)
+editPublication = function(initialPublication, initialCategoryID)
 	lastMethod, lastArguments = editPublication, {initialPublication}
 	contentContainer:deleteChildren()
 
@@ -1039,7 +1039,11 @@ editPublication = function(initialPublication)
 	for i = 1, #categories do
 		categoryComboBox:addItem(categories[i])
 	end
-	if initialPublication then categoryComboBox.selectedItem = initialPublication.category_id end
+	if initialPublication then
+		categoryComboBox.selectedItem = initialPublication.category_id
+	elseif initialCategoryID then
+		categoryComboBox.selectedItem = initialCategoryID
+	end
 
 	local licenseComboBox = layout:addChild(GUI.comboBox(1, 1, 36, 1, 0xFFFFFF, 0x696969, 0x969696, 0xE1E1E1))
 	for i = 1, #licenses do
@@ -1331,7 +1335,7 @@ updateFileList = function(category_id, updates)
 
 				if user.token then
 					layout:addChild(GUI.adaptiveRoundedButton(1, 1, 1, 0, 0x696969, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.publish)).onTouch = function()
-						editPublication()
+						editPublication(nil, category_id)
 					end
 				end
 			end
