@@ -832,27 +832,26 @@ local function createOSWidgets()
 		end
 
 		menu:addItem(MineOSCore.localization.systemLanguage).onTouch = function()
-			-- local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer, MineOSCore.localization.systemLanguage)
+			local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer, MineOSCore.localization.systemLanguage)
 
-			-- local comboBox = container.layout:addChild(GUI.comboBox(1, 1, 36, 3, 0xE1E1E1, 0x2D2D2D, 0x4B4B4B, 0x969696))
-			-- for file in fs.list(MineOSPaths.localizationFiles) do
-			-- 	local name = fs.hideExtension(file)
-			-- 	comboBox:addItem(name).onTouch = function()
-			-- 		MineOSCore.properties.language = name
-			-- 		MineOSCore.localization = MineOSCore.getLocalization(MineOSPaths.localizationFiles)
+			local comboBox = container.layout:addChild(GUI.comboBox(1, 1, 36, 3, 0xE1E1E1, 0x2D2D2D, 0x4B4B4B, 0x969696))
+			for file in fs.list(MineOSPaths.localizationFiles) do
+				local name = fs.hideExtension(file)
+				comboBox:addItem(name).onTouch = function()
+					MineOSCore.properties.language = name
+					MineOSCore.localization = MineOSCore.getLocalization(MineOSPaths.localizationFiles)
 
-			-- 		createOSWidgets()
-			-- 		changeResolution()
-			-- 		changeWallpaper()
-			-- 		MineOSCore.OSUpdateDate()
-			-- 		MineOSInterface.mainContainer.updateFileListAndDraw()
-			-- 	end
+					createOSWidgets()
+					changeResolution()
+					changeWallpaper()
+					MineOSCore.OSUpdateDate()
+					MineOSInterface.mainContainer.updateFileListAndDraw()
+				end
 
-			-- 	if name == MineOSCore.properties.language then
-			-- 		comboBox.selectedItem = comboBox:count()
-			-- 	end
-			-- end
-			error("aefafefe")
+				if name == MineOSCore.properties.language then
+					comboBox.selectedItem = comboBox:count()
+				end
+			end
 		end
 
 		menu:addSeparator()
