@@ -292,17 +292,16 @@ end
 
 local function createOSWindow()
 	MineOSInterface.mainContainer = GUI.fullScreenContainer()
-	-- MineOSInterface.mainContainer.passScreenEvents = true
-	
-	-- MineOSInterface.mainContainer.draw = function()
-	-- 	GUI.drawContainerContent(MineOSInterface.mainContainer)
-		
-	-- 	local limit = 70
-	-- 	local lines = string.wrap(debug.traceback(), limit)
-	-- 	buffer.square(1, 1, limit, #lines, 0x0, 0xFFFFFF, " ", 0.2)
-	-- 	for i = 1, #lines do
-	-- 		buffer.text(1, i, 0xFFFFFF, lines[i])
-	-- 	end
+
+	-- local overrideDraw = MineOSInterface.mainContainer.draw
+	-- MineOSInterface.mainContainer.draw = function(...)
+	-- 	overrideDraw(...)
+
+	-- 	local freeMemory, totalMemory = computer.freeMemory() / 1024, computer.totalMemory() / 1024
+	-- 	local y = MineOSInterface.mainContainer.y
+	-- 	buffer.text(MineOSInterface.mainContainer.x, y, 0xFF0000, "Free: " .. string.format("%.2f", freeMemory)); y = y + 1
+	-- 	buffer.text(MineOSInterface.mainContainer.x, y, 0xFF0000, "Total: " .. string.format("%.2f", totalMemory)); y = y + 1
+	-- 	buffer.text(MineOSInterface.mainContainer.x, y, 0xFF0000, "Used: " .. string.format("%.2f", totalMemory - freeMemory)); y = y + 1
 	-- end
 	
 	MineOSInterface.mainContainer.background = MineOSInterface.mainContainer:addChild(GUI.object(1, 1, 1, 1))
@@ -985,7 +984,7 @@ end
 
 ---------------------------------------------- Сама ОС ------------------------------------------------------------------------
 
-MineOSCore.localization = table.fromFile(MineOSPaths.localizationFiles .. MineOSCore.properties.language .. ".lang")
+MineOSCore.localization = MineOSCore.getLocalization(MineOSPaths.localizationFiles)
 
 createOSWindow()
 changeResolution()

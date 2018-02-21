@@ -29,12 +29,12 @@ function MineOSCore.getLocalization(pathToLocalizationFolder)
 	if filesystem.exists(localizationFileName) then
 		return table.fromFile(localizationFileName)
 	else
-		error("Localization file \"" .. localizationFileName .. "\" doesn't exists")
+		return table.fromFile(pathToLocalizationFolder .. filesystem.list(pathToLocalizationFolder)())
 	end
 end
 
 function MineOSCore.getCurrentApplicationLocalization()
-	return MineOSCore.getLocalization(MineOSCore.getCurrentApplicationResourcesDirectory() .. "Localization/")	
+	return MineOSCore.getLocalization(MineOSCore.getCurrentApplicationResourcesDirectory() .. "Localizations/")	
 end
 
 -----------------------------------------------------------------------------------------------------------------------------------

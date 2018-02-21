@@ -13,7 +13,7 @@ local args, options = shell.parse(...)
 
 local URLs = {
 	applicationList = "https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/Files.cfg",
-	installer = "https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/Installer/",
+	installerLocalization = "https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/Localizations/Installer/",
 	EFI = "https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/EFI.lua",
 	license = "https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/License/",
 }
@@ -177,7 +177,7 @@ end
 
 local function loadLocalization(language)
 	MineOSCore.properties.language = language
-	localization = table.fromString(web.request(URLs.installer .. MineOSCore.properties.language .. ".lang"))
+	localization = table.fromString(web.request(URLs.installerLocalization .. MineOSCore.properties.language .. ".lang"))
 end
 
 stages[1] = function()
@@ -185,13 +185,15 @@ stages[1] = function()
 	local y = addImageToStage(3, images.languages)
 	y = y + 3
 	local comboBox = stageContainer:addChild(GUI.comboBox(math.floor(stageContainer.width / 2 - 15), y, 30, 3, 0xFFFFFF, 0x555555, 0xAAAAAA, 0xDDDDDD))
-	loadLocalization("Russian")
-	comboBox:addItem("Russian").onTouch = function()
-		loadLocalization("Russian")
+	
+	for i = 1, #applicationList.localizations do
+		local name = fs.name(applicationList.localizations[i].path)
+		comboBox:addItem(fs.hideExtension(name)).onTouch = function()
+			loadLocalization(name)
+		end
 	end
-	comboBox:addItem("English").onTouch = function()
-		loadLocalization("English")
-	end
+
+	comboBox:getItem(1).onTouch()
 end
 
 ------------------------------------------------------------------------------------------------------------------------------------
@@ -246,6 +248,11 @@ stages[4] = function()
 			table.insert(applicationList.duringInstall, applicationList.wallpapers[i])
 			applicationList.wallpapers[i] = nil
 		end
+	end
+
+	for i = 1, #applicationList.localizations do
+		table.insert(applicationList.duringInstall, applicationList.localizations[i])
+		applicationList.localizations[i] = nil
 	end
 
 	for i = 1, #applicationList.duringInstall do
