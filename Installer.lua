@@ -175,11 +175,6 @@ end
 
 ------------------------------------------------------------------------------------------------------------------------------------
 
-local function loadLocalization(language)
-	MineOSCore.properties.language = language
-	localization = table.fromString(web.request(URLs.installerLocalization .. MineOSCore.properties.language .. ".lang"))
-end
-
 stages[1] = function()
 	addButtonsToStage()
 	local y = addImageToStage(3, images.languages)
@@ -187,9 +182,10 @@ stages[1] = function()
 	local comboBox = stageContainer:addChild(GUI.comboBox(math.floor(stageContainer.width / 2 - 15), y, 30, 3, 0xFFFFFF, 0x555555, 0xAAAAAA, 0xDDDDDD))
 	
 	for i = 1, #applicationList.localizations do
-		local name = fs.name(applicationList.localizations[i].path)
-		comboBox:addItem(fs.hideExtension(name)).onTouch = function()
-			loadLocalization(name)
+		local name = fs.hideExtension(fs.name(applicationList.localizations[i].path))
+		comboBox:addItem(name).onTouch = function()
+			MineOSCore.properties.language = name
+			localization = table.fromString(web.request(URLs.installerLocalization .. name .. ".lang"))
 		end
 	end
 
