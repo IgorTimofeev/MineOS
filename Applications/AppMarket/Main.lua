@@ -1383,7 +1383,6 @@ updateFileList = function(category_id, updates)
 			local xStart = math.floor(1 + contentContainer.width / 2 - (appsPerWidth * (appWidth + appHSpacing) - appHSpacing) / 2)
 			local x, counter = xStart, 1
 			for i = 1, #result do
-				result[i].category_id = category_id
 				contentContainer:addChild(newApplicationPreview(x, y, result[i]))
 				
 				if counter >= appsPerPage then
