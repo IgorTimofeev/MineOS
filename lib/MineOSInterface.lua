@@ -217,6 +217,8 @@ local function iconAnalyseExtension(icon)
 			if MineOSCore.properties.showApplicationIcons then
 				if fs.exists(icon.path .. "Icon.pic") then
 					icon.image = image.load(icon.path .. "Icon.pic")
+				elseif fs.exists(icon.path .. "Resources/Icon.pic") then
+					icon.image = image.load(icon.path .. "Resources/Icon.pic")
 				elseif fs.exists(icon.path .. "Icon.lua") then
 					local data, reason = loadfile(icon.path .. "Icon.lua")
 					if data then

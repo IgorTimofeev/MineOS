@@ -33,6 +33,14 @@ function MineOSCore.getCurrentScriptLocalization()
 	return MineOSCore.getLocalization(MineOSCore.getCurrentScriptDirectory() .. "Localizations/")	
 end
 
+function MineOSCore.getCurrentApplicationResourcesDirectory() 
+	return MineOSCore.getCurrentScriptDirectory() .. "/Resources/"
+end
+
+function MineOSCore.getCurrentApplicationLocalization()
+	return MineOSCore.getLocalization(MineOSCore.getCurrentApplicationResourcesDirectory() .. "Localizations/")	
+end
+
 -----------------------------------------------------------------------------------------------------------------------------------
 
 function MineOSCore.createShortcut(where, forWhat)
