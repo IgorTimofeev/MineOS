@@ -34,7 +34,7 @@ function MineOSCore.getCurrentScriptLocalization()
 end
 
 function MineOSCore.getCurrentApplicationResourcesDirectory() 
-	return MineOSCore.getCurrentScriptDirectory() .. "/Resources/"
+	return MineOSCore.getCurrentScriptDirectory()
 end
 
 function MineOSCore.getCurrentApplicationLocalization()
