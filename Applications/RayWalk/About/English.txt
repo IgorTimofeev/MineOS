@@ -1,1 +1,0 @@
-This application demonstrates the power of our tribleBuffering library, power of RayEngine and OOP-based windows library that allows us to render graphics like in a DOOM and Wolfenstein.

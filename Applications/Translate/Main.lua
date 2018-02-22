@@ -10,7 +10,7 @@ local unicode = require("unicode")
 
 ------------------------------------------------------------------------------------------------------------------
 
-local resourcesPath = fs.path(getCurrentScript()) .. "/Resources/"
+local resourcesPath = fs.path(getCurrentScript())
 local configPath = resourcesPath .. "Config.cfg"
 local config = {
 	APIKey = "trnsl.1.1.20170831T153247Z.6ecf9d7198504994.8ce5a3aa9f9a2ecbe7b2377af37ffe5ad379f4ca",

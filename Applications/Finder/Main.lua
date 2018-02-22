@@ -26,8 +26,8 @@ local favourites = {
 	{text = "System", path = MineOSPaths.system},
 	{text = "Trash", path = MineOSPaths.trash},
 }
-local resourcesPath = MineOSCore.getCurrentApplicationResourcesDirectory()
-local favouritesPath = resourcesPath .. "Favourites.cfg"
+local resourcesPath = MineOSCore.getCurrentScriptDirectory()
+local favouritesPath = MineOSPaths.applicationData .. "Finder/Favourites.cfg"
 
 if fs.exists(favouritesPath) then
 	favourites = table.fromFile(favouritesPath)
@@ -160,14 +160,14 @@ local function updateSidebar()
 	end
 end
 
-window.titlePanel = window:addChild(GUI.panel(1, 1, 1, 3, 0xDDDDDD))
+window.titlePanel = window:addChild(GUI.panel(1, 1, 1, 3, 0xE1E1E1))
 
 window.prevButton = window:addChild(GUI.adaptiveRoundedButton(9, 2, 1, 0, 0xFFFFFF, 0x3C3C3C, 0x3C3C3C, 0xFFFFFF, "<"))
 window.prevButton.onTouch = function()
 	prevOrNextWorkpath(false)
 end
 window.prevButton.colors.disabled.background = window.prevButton.colors.default.background
-window.prevButton.colors.disabled.text = 0xCCCCCC
+window.prevButton.colors.disabled.text = 0xC3C3C3
 
 window.nextButton = window:addChild(GUI.adaptiveRoundedButton(14, 2, 1, 0, 0xFFFFFF, 0x3C3C3C, 0x3C3C3C, 0xFFFFFF, ">"))
 window.nextButton.onTouch = function()
@@ -185,32 +185,6 @@ window.iconField = window:addChild(
 		MineOSPaths.desktop
 	)
 )
-
-window.iconField.launchers.directory = function(icon)
-	addWorkpath(icon.path)
-	updateFileListAndDraw()
-end
-
-window.iconField.launchers.showPackageContent = function(icon)
-	addWorkpath(icon.path)
-	updateFileListAndDraw()
-end
-
-window.iconField.launchers.showContainingFolder = function(icon)
-	addWorkpath(fs.path(MineOSCore.readShortcut(icon.path)))
-	updateFileListAndDraw()
-end
-
-window.scrollBar = window:addChild(GUI.scrollBar(1, 4, 1, 1, 0xC3C3C3, 0x444444, iconFieldYOffset, 1, 1, 1, 1, true))
-
-window.searchInput = window:addChild(GUI.input(1, 2, 36, 1, 0xFFFFFF, 0x666666, 0xAAAAAA, 0xFFFFFF, 0x2D2D2D, nil, "Search", true))
-window.searchInput.onInputFinished = function()
-	window.iconField.filenameMatcher = window.searchInput.text
-	window.iconField.fromFile = 1
-	window.iconField.yOffset = iconFieldYOffset
-
-	updateFileListAndDraw()
-end
 
 local function updateScrollBar()
 	local shownFilesCount = #window.iconField.fileList - window.iconField.fromFile + 1
@@ -233,16 +207,9 @@ local function updateScrollBar()
 	end
 end
 
-local overrideUpdateFileList = window.iconField.updateFileList
-window.iconField.updateFileList = function(...)
-	overrideUpdateFileList(...)
-	updateScrollBar()
-end
-
 window.iconField.eventHandler = function(mainContainer, object, eventData)
 	if eventData[1] == "scroll" then
-		eventData[5] = eventData[5] * 2
-		window.iconField.yOffset = window.iconField.yOffset + eventData[5]
+		window.iconField.yOffset = window.iconField.yOffset + eventData[5] * 2
 
 		updateScrollBar()
 
@@ -268,6 +235,38 @@ window.iconField.eventHandler = function(mainContainer, object, eventData)
 		end
 		updateFileListAndDraw()
 	end
+end
+
+window.iconField.launchers.directory = function(icon)
+	addWorkpath(icon.path)
+	updateFileListAndDraw()
+end
+
+window.iconField.launchers.showPackageContent = function(icon)
+	addWorkpath(icon.path)
+	updateFileListAndDraw()
+end
+
+window.iconField.launchers.showContainingFolder = function(icon)
+	addWorkpath(fs.path(MineOSCore.readShortcut(icon.path)))
+	updateFileListAndDraw()
+end
+
+window.scrollBar = window:addChild(GUI.scrollBar(1, 4, 1, 1, 0xC3C3C3, 0x444444, iconFieldYOffset, 1, 1, 1, 1, true))
+
+window.searchInput = window:addChild(GUI.input(1, 2, 36, 1, 0xFFFFFF, 0x696969, 0xA5A5A5, 0xFFFFFF, 0x2D2D2D, nil, "Search", true))
+window.searchInput.onInputFinished = function()
+	window.iconField.filenameMatcher = window.searchInput.text
+	window.iconField.fromFile = 1
+	window.iconField.yOffset = iconFieldYOffset
+
+	updateFileListAndDraw()
+end
+
+local overrideUpdateFileList = window.iconField.updateFileList
+window.iconField.updateFileList = function(...)
+	overrideUpdateFileList(...)
+	updateScrollBar()
 end
 
 window.statusBar = window:addChild(GUI.object(1, 1, 1, 1))
@@ -320,7 +319,6 @@ local function calculateSizes(width, height)
 	window.iconField.width = window.backgroundPanel.width
 	window.iconField.height = height + 4
 	window.iconField.localX = window.backgroundPanel.localX
-	window.iconField.localY = window.backgroundPanel.localY
 
 	window.scrollBar.localX = window.width
 	window.scrollBar.height = window.backgroundPanel.height

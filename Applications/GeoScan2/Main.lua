@@ -20,7 +20,7 @@ component.gpu.setResolution(component.gpu.maxResolution())
 buffer.flush()
 local bufferWidth, bufferHeight = buffer.getResolution()
 
-local resourcesDirectory = MineOSCore.getCurrentApplicationResourcesDirectory() 
+local resourcesDirectory = MineOSCore.getCurrentScriptDirectory() 
 local earthImage = image.load(resourcesDirectory .. "Earth.pic")
 
 local onScreenDataXOffset, onScreenDataYOffset = math.floor(bufferWidth / 2), bufferHeight

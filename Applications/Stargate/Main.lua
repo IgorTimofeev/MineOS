@@ -16,7 +16,7 @@ local stargate = component.stargate
 
 ---------------------------------------------------------------------------------------------
 
-local resources = MineOSCore.getCurrentApplicationResourcesDirectory()
+local resources = MineOSCore.getCurrentScriptDirectory()
 local pathToContacts = MineOSPaths.applicationData .. "Stargate/Contacts.cfg"
 local contacts = {}
 local Ch1Image = image.load(resources .. "Ch1.pic")

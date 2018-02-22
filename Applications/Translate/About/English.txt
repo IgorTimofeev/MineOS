@@ -1,1 +1,0 @@
-Fully functional Yandex translate tool that supports almost all existing languages

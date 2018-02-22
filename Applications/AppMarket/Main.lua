@@ -30,7 +30,7 @@ local configPath = appMarketPath .. "Config.cfg"
 local userPath = appMarketPath .. "User.cfg"
 local iconCachePath = appMarketPath .. "Cache/"
 
-local resourcesPath = MineOSCore.getCurrentApplicationResourcesDirectory() 
+local resourcesPath = MineOSCore.getCurrentScriptDirectory() 
 local localization = MineOSCore.getLocalization(resourcesPath .. "Localizations/") 
 
 local categories = {
@@ -409,7 +409,7 @@ local function getDependencyPath(mainFilePath, dependency)
 			path = dependency.path
 		-- Ресурсы по релятивному пути
 		else
-			path = getApplicationPathFromVersions(mainFilePath) .. "/Resources/" .. dependency.path
+			path = getApplicationPathFromVersions(mainFilePath) .. "/" .. dependency.path
 		end
 	end
 

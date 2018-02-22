@@ -118,7 +118,7 @@ local cursor = {
 }
 
 local scriptCoroutine
-local resourcesPath = MineOSCore.getCurrentApplicationResourcesDirectory() 
+local resourcesPath = MineOSCore.getCurrentScriptDirectory() 
 local configPath = MineOSPaths.applicationData .. "MineCode IDE/Config.cfg"
 local localization = MineOSCore.getLocalization(resourcesPath .. "Localizations/")
 local findStartFrom

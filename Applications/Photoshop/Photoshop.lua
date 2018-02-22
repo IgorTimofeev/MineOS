@@ -23,7 +23,7 @@ local event = require("event")
 buffer.flush()
 
 --Массив локалиации
-local localization = MineOSCore.getCurrentApplicationLocalization()
+local localization = MineOSCore.getCurrentScriptLocalization()
 
 --Массив инфы о выделении
 local selection

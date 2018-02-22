@@ -13,7 +13,7 @@ local MineOSInterface = require("MineOSInterface")
 
 ----------------------------------------------------------------------------------------------------------------
 
-local resourcesPath = MineOSCore.getCurrentApplicationResourcesDirectory()
+local resourcesPath = MineOSCore.getCurrentScriptDirectory()
 local modulesPath = resourcesPath .. "Modules/"
 local localization = MineOSCore.getLocalization(resourcesPath .. "Localizations/")
 

@@ -40,7 +40,7 @@ local colors = {
 local columns = {}
 
 local pathToHighScores = MineOSPaths.applicationData .. "/FlappyBird/Scores.cfg"
-local pathToFlappyImage = MineOSCore.getCurrentApplicationResourcesDirectory() .. "Flappy.pic"
+local pathToFlappyImage = MineOSCore.getCurrentScriptDirectory() .. "Flappy.pic"
 local bird = image.load(pathToFlappyImage)
 local xBird, yBird = 8, math.floor(bufferHeight / 2 - 3)
 local birdIsAlive = true

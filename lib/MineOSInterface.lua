@@ -215,10 +215,10 @@ local function iconAnalyseExtension(icon)
 	if icon.isDirectory then
 		if icon.extension == ".app" then
 			if MineOSCore.properties.showApplicationIcons then
-				if fs.exists(icon.path .. "/Resources/Icon.pic") then
-					icon.image = image.load(icon.path .. "/Resources/Icon.pic")
-				elseif fs.exists(icon.path .. "/Resources/Icon.lua") then
-					local data, reason = loadfile(icon.path .. "/Resources/Icon.lua")
+				if fs.exists(icon.path .. "Icon.pic") then
+					icon.image = image.load(icon.path .. "Icon.pic")
+				elseif fs.exists(icon.path .. "Icon.lua") then
+					local data, reason = loadfile(icon.path .. "Icon.lua")
 					if data then
 						data, reason = data()
 						if data then
@@ -365,7 +365,7 @@ function MineOSInterface.iconLaunchers.application(icon)
 		
 		local function onExit()
 			container:delete()
-			MineOSInterface.safeLaunch((icon.shortcutPath or icon.path) .. "/Main.lua")
+			MineOSInterface.safeLaunch((icon.shortcutPath or icon.path) .. "Main.lua")
 		end
 
 		container.panel.eventHandler = function(mainContainer, object, eventData)
@@ -380,7 +380,7 @@ function MineOSInterface.iconLaunchers.application(icon)
 			onExit()
 		end
 	else
-		MineOSInterface.safeLaunch(icon.path .. "/Main.lua")
+		MineOSInterface.safeLaunch(icon.path .. "Main.lua")
 	end
 end
 
@@ -1065,8 +1065,7 @@ function MineOSInterface.newApplication(parentWindow, iconField, x, y, path)
 			if container.inputField.text then
 				local finalPath = path .. container.inputField.text .. ".app/"
 				if checkFileToExists(container, finalPath) then
-					fs.makeDirectory(finalPath .. "/Resources/")
-					fs.copy(filesystemChooser.path or MineOSPaths.icons .. "SampleIcon.pic", finalPath .. "/Resources/Icon.pic")
+					fs.copy(filesystemChooser.path or MineOSPaths.icons .. "SampleIcon.pic", finalPath .. "Icon.pic")
 					
 					local file = io.open(finalPath .. "Main.lua", "w")
 					file:write("require(\"GUI\").error(\"Hello world\")")

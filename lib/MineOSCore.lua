@@ -20,10 +20,6 @@ function MineOSCore.getCurrentScriptDirectory()
 	return filesystem.path(getCurrentScript())
 end
 
-function MineOSCore.getCurrentApplicationResourcesDirectory() 
-	return MineOSCore.getCurrentScriptDirectory() .. "/Resources/"
-end
-
 function MineOSCore.getLocalization(pathToLocalizationFolder)
 	local localizationFileName = pathToLocalizationFolder .. MineOSCore.properties.language .. ".lang"
 	if filesystem.exists(localizationFileName) then
@@ -33,8 +29,8 @@ function MineOSCore.getLocalization(pathToLocalizationFolder)
 	end
 end
 
-function MineOSCore.getCurrentApplicationLocalization()
-	return MineOSCore.getLocalization(MineOSCore.getCurrentApplicationResourcesDirectory() .. "Localizations/")	
+function MineOSCore.getCurrentScriptLocalization()
+	return MineOSCore.getLocalization(MineOSCore.getCurrentScriptDirectory() .. "Localizations/")	
 end
 
 -----------------------------------------------------------------------------------------------------------------------------------
@@ -254,111 +250,6 @@ function MineOSCore.safeLaunch(path, ...)
 	buffer.setResolution(oldResolutionWidth, oldResolutionHeight)
 
 	return finalSuccess, finalPath, finalLine, finalTraceback
-end
-
------------------------------------------------------------------------------------------------------------------------------------
-
-function MineOSCore.downloadApplication(application, language, createShortcut)
-    if application.type == "Application" then
-		filesystem.remove(application.path .. ".app")
-
-		web.download(application.url, application.path .. ".app/Main.lua")
-		web.download(application.icon, application.path .. ".app/Resources/Icon.pic")
-
-		if application.resources then
-			for i = 1, #application.resources do
-				web.download(application.resources[i].url, application.path .. ".app/Resources/" .. application.resources[i].path)
-			end
-		end
-
-		if application.about then
-			web.download(application.about .. language .. ".txt", application.path .. ".app/Resources/About/" .. language .. ".txt")
-		end 
-
-		if application.createShortcut or createShortcut then
-			MineOSCore.createShortcut(MineOSPaths.desktop .. filesystem.name(application.path) .. ".lnk", application.path .. ".app/")
-		end
-	else
-		web.download(application.url, application.path)
-	end
-end
-
------------------------------------------------------------------------------------------------------------------------------------
-
-function MineOSCore.loadImageFromString(bytes)
-	bytes = {string.byte(bytes, 1, #bytes)}
-
-	local signature = string.char(bytes[1], bytes[2], bytes[3], bytes[4])
-	if signature == "OCIF" then
-		local encodingMethod = bytes[5]
-		if encodingMethod == 6 then
-			local width, height = bytes[6], bytes[7]
-			local picture = {width, height}
-
-			local i = 8
-			while i <= #bytes do
-				local alphaSize = bytes[i]
-				i = i + 1
-
-				for a = 1, alphaSize do
-					local alpha = bytes[i] / 255
-					local symbolSize = bit32.bor(bit32.lshift(bytes[i + 1], 8), bytes[i + 2])
-					i = i + 3
-
-					for s = 1, symbolSize do
-						local utf8CharSize = 1
-						for j = 7, 1, -1 do
-							if bit32.band(bit32.rshift(bytes[i], j), 1) == 0 then
-								utf8CharSize = 8 - j
-								break
-							end
-						end   
-
-						local symbol
-						if utf8CharSize == 1 then
-							symbol = string.char(bytes[i])
-							i = i + 1
-						else
-							symbol = string.char(table.unpack(bytes, i, i + utf8CharSize - 2))
-							i = i + utf8CharSize - 1
-						end
-
-						local backgroundSize = bytes[i]
-						i = i + 1
-						
-						for b = 1, backgroundSize do
-							local background = color.to24Bit(bytes[i])
-							local foregroundSize = bytes[i + 1]
-							i = i + 2
-
-							for f = 1, foregroundSize do
-								local foreground = color.to24Bit(bytes[i])
-								local ySize = bytes[i + 1]
-								i = i + 2
-
-								for ys = 1, ySize do
-									local y = bytes[i]
-									local xSize = bytes[i + 1]
-									i = i + 2
-
-									for xs = 1, xSize do
-										image.set(picture, bytes[i], y, background, foreground, alpha, symbol)
-										i = i + 1
-									end
-								end
-							end
-						end
-					end
-				end
-			end
-
-			return picture
-		else
-			return false, "Unsupported encoding method: " .. encodingMethod
-		end
-	else
-		return false, "Unsupported signature: " .. signature
-	end
 end
 
 -----------------------------------------------------------------------------------------------------------------------------------

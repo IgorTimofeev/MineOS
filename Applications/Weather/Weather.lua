@@ -21,7 +21,7 @@ window.backgroundPanel.colors.transparency = 0.2
 local weatherContainer = window:addChild(GUI.container(1, 1, 1, 23))
 
 local configPath = MineOSPaths.applicationData .. "Weather/Config.cfg"
-local resources = MineOSCore.getCurrentApplicationResourcesDirectory()
+local resources = MineOSCore.getCurrentScriptDirectory()
 local weatherIcons = {
 	sunny = image.load(resources .. "Sunny.pic"),
 	sunnyAndCloudy = image.load(resources .. "Icon.pic"),

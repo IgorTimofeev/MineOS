@@ -11,7 +11,7 @@ local fs = require('filesystem')
 local com = require('component')
 local gpu = com.gpu
 
-local lang = MineOSCore.getCurrentApplicationLocalization()
+local lang = MineOSCore.getCurrentScriptLocalization()
 
 --   Константы   --
 HOLOH = 32
