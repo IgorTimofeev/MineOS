@@ -538,6 +538,8 @@ local function download(publication)
 							version = dependency.version,
 						}
 						tryToDownload(dependency.source_url, dependencyPath)
+					else
+						os.sleep(0.05)
 					end
 				end
 			end
@@ -1296,6 +1298,8 @@ updateFileList = function(category_id, updates)
 												}
 
 												tryToDownload(dependency.source_url, dependencyPath)
+											else
+												os.sleep(0.05)
 											end
 										end
 									end
