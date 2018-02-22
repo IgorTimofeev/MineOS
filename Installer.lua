@@ -57,8 +57,8 @@ end
 local fileVersions = {}
 
 local function storeFileVersion(application)
-	if application.publicationName then
-		fileVersions[application.publicationName] = {
+	if application.fileID then
+		fileVersions[application.fileID] = {
 			path = application.path,
 			version = application.version or 1
 		}

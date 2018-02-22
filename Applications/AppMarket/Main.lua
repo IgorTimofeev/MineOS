@@ -16,7 +16,7 @@ local unicode = require("unicode")
 
 --------------------------------------------------------------------------------
 
-local host = "http://eliteclubsessions.ru/mineos/2.0/"
+local host = "http://eliteclubsessions.ru/MineOSAPI/2.01/"
 local iconCheckReponseTime = 0.5
 
 local overviewIconsCount = 10
@@ -64,8 +64,8 @@ local orderBys = {
 	"rating",
 	"name",
 	"date",
+	"reviews_count",
 }
-
 
 local languages = {
 	-- [3] = "Arabic",
@@ -328,9 +328,9 @@ local function newButtonsLayout(x, y, width, spacing)
 end
 
 local function getUpdateState(publication)
-	if fileVersions[publication.publication_name] then
-		if fs.exists(fileVersions[publication.publication_name].path) then
-			if fileVersions[publication.publication_name].version >= publication.version then
+	if fileVersions[publication.file_id] then
+		if fs.exists(fileVersions[publication.file_id].path) then
+			if fileVersions[publication.file_id].version >= publication.version then
 				return 4
 			else
 				return 3
@@ -379,7 +379,7 @@ local function deletePublication(publication)
 	buttonsLayout:addChild(GUI.adaptiveButton(1, 1, 2, 0, 0xE1E1E1, 0x2D2D2D, 0x0, 0xE1E1E1, localization.yes)).onTouch = function()
 		local success, reason = RawAPIRequest("delete", {
 			token = user.token,
-			publication_name = publication.publication_name,
+			file_id = publication.file_id,
 		})
 
 		if success then		
@@ -421,7 +421,7 @@ local function download(publication)
 
 	if not publication.translated_description then
 		publication = fieldAPIRequest("result", "publication", {
-			publication_name = publication.publication_name,
+			file_id = publication.file_id,
 			language_id = config.language_id,
 		})
 	end
@@ -430,7 +430,7 @@ local function download(publication)
 		local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer, localization.choosePath)
 		container.layout:setCellFitting(2, 1, false, false)
 
-		local filesystemChooserPath = fileVersions[publication.publication_name] and getApplicationPathFromVersions(fileVersions[publication.publication_name].path)
+		local filesystemChooserPath = fileVersions[publication.file_id] and getApplicationPathFromVersions(fileVersions[publication.file_id].path)
 		if not filesystemChooserPath then
 			if publication.category_id == 1 then
 				filesystemChooserPath = downloadPaths[publication.category_id] .. publication.publication_name .. ".app"
@@ -517,7 +517,7 @@ local function download(publication)
 			end
 
 			-- SAVED
-			fileVersions[publication.publication_name] = {
+			fileVersions[publication.file_id] = {
 				path = mainFilePath,
 				version = publication.version,
 			}
@@ -532,15 +532,11 @@ local function download(publication)
 
 					govnoed(dependency, i + 1)
 
-					if dependency.publication_name then
-						if getUpdateState(dependency) < 4 then
-							fileVersions[dependency.publication_name] = {
-								path = dependencyPath,
-								version = dependency.version,
-							}
-							tryToDownload(dependency.source_url, dependencyPath)
-						end
-					else
+					if getUpdateState(dependency) < 4 then
+						fileVersions[dependency.file_id] = {
+							path = dependencyPath,
+							version = dependency.version,
+						}
 						tryToDownload(dependency.source_url, dependencyPath)
 					end
 				end
@@ -569,27 +565,22 @@ local function addPanel(container, color)
 end
 
 local function getPublicationIcon(publication)
-	if publication.category_id == 1 then
-		if publication.icon_url then
-			local path = iconCachePath .. publication.publication_name .. "@" .. publication.version .. ".pic"
+	if publication.icon_url then
+		local path = iconCachePath .. publication.publication_name .. "@" .. publication.version .. ".pic"
 
-			if fs.exists(path) then
+		if fs.exists(path) then
+			return image.load(path)
+		else
+			local data, reason = checkImage(publication.icon_url)
+			if data then
+				local file = io.open(path, "w")
+				file:write(data)
+				file:close()
+
 				return image.load(path)
 			else
-				local data, reason = checkImage(publication.icon_url)
-				if data then
-					local file = io.open(path, "w")
-					file:write(data)
-					file:close()
-
-					return image.load(path)
-				else
-					-- GUI.error("Failed to download publication icon: " .. reason)
-					return fileNotExistsIcon
-				end
+				return fileNotExistsIcon
 			end
-		else
-			return fileNotExistsIcon
 		end
 	elseif publication.category_id == 2 then
 		return luaIcon
@@ -617,9 +608,9 @@ local function addApplicationInfo(container, publication, limit)
 	if updateState > 2 then
 		container.downloadButton.width = container.downloadButton.width + 1
 		container:addChild(GUI.adaptiveRoundedButton(container.downloadButton.localX + container.downloadButton.width, container.downloadButton.localY, 1, 0, 0xF0F0F0, 0x969696, 0x969696, 0xFFFFFF, "x")).onTouch = function()
-			fs.remove(getApplicationPathFromVersions(fileVersions[publication.publication_name].path))
+			fs.remove(getApplicationPathFromVersions(fileVersions[publication.file_id].path))
 			fs.remove(MineOSPaths.desktop .. publication.publication_name .. ".lnk")
-			fileVersions[publication.publication_name] = nil
+			fileVersions[publication.file_id] = nil
 			
 			callLastMethod()
 			computer.pushSignal("MineOSCore", "updateFileList")
@@ -670,12 +661,12 @@ local function containerScrollEventHandler(mainContainer, object, eventData)
 	end
 end
 
-local function newPublicationInfo(publication_name)
-	lastMethod, lastArguments = newPublicationInfo, {publication_name}
+local function newPublicationInfo(file_id)
+	lastMethod, lastArguments = newPublicationInfo, {file_id}
 	activity(true)
 
 	local publication = fieldAPIRequest("result", "publication", {
-		publication_name = publication_name,
+		file_id = file_id,
 		language_id = config.language_id,
 	})
 
@@ -772,7 +763,7 @@ local function newPublicationInfo(publication_name)
 						end
 						local button = textDetailsContainer:addChild(GUI.roundedButton(x, y, textLength + 2, 1, 0xC3C3C3, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, dependency.publication_name))
 						button.onTouch = function()
-							newPublicationInfo(dependency.publication_name)
+							newPublicationInfo(publication.all_dependencies[i])
 						end
 						x = x + button.width + 2
 					end
@@ -832,7 +823,7 @@ local function newPublicationInfo(publication_name)
 
 					local success, reason = RawAPIRequest("review", {
 						token = user.token,
-						publication_name = publication.publication_name,
+						file_id = publication.file_id,
 						rating = cyka.rating,
 						comment = input.text,
 					})
@@ -841,7 +832,7 @@ local function newPublicationInfo(publication_name)
 					MineOSInterface.OSDraw()
 
 					if success then
-						newPublicationInfo(publication.publication_name)
+						newPublicationInfo(publication.file_id)
 					else
 						GUI.error(reason)
 					end
@@ -953,14 +944,14 @@ local function applicationWidgetEventHandler(mainContainer, object, eventData)
 	if eventData[1] == "touch" then
 		object.parent.panel.colors.background = 0xE1E1E1
 		MineOSInterface.OSDraw()
-		newPublicationInfo(object.parent.publication_name)
+		newPublicationInfo(object.parent.file_id)
 	end
 end
 
 local function newApplicationPreview(x, y, publication)
 	local container = GUI.container(x, y, appWidth, appHeight)
 
-	container.publication_name = publication.publication_name
+	container.file_id = publication.file_id
 	addApplicationInfo(container, publication, appWidth - 14)
 
 	container.panel.eventHandler,
@@ -1105,7 +1096,7 @@ editPublication = function(initialPublication, initialCategoryID)
 		button.onTouch = function()
 			addDependency({
 				publication_name = lastDependencyType > 1 and publicationNameInput.text or nil,
-				path = lastDependencyType == 1 and (pathType.switch.state and pathInput.text:gsub("^/+", "") or "/" .. pathInput.text:gsub("/+", "/")) or nil,
+				path = lastDependencyType == 1 and (not pathType.hidden and pathType.switch.state and pathInput.text:gsub("^/+", "") or "/" .. pathInput.text:gsub("/+", "/")) or nil,
 				source_url = lastDependencyType == 1 and urlInput.text or nil,
 			})
 
@@ -1183,7 +1174,7 @@ editPublication = function(initialPublication, initialCategoryID)
 		
 		local success, reason = RawAPIRequest(initialPublication and "update" or "upload", {
 			-- Вот эта хня чисто для апдейта
-			publication_name = initialPublication and initialPublication.publication_name or nil,
+			file_id = initialPublication and initialPublication.file_id or nil,
 			-- А вот эта хня универсальная
 			token = user.token,
 			name = nameInput.text,
@@ -1199,7 +1190,7 @@ editPublication = function(initialPublication, initialCategoryID)
 			window.tabBar.selectedItem = categoryComboBox.selectedItem + 1
 			
 			if initialPublication then
-				newPublicationInfo(nameInput.text)
+				newPublicationInfo(initialPublication.file_id)
 			else
 				config.orderBy = 3
 				saveConfig()
@@ -1221,22 +1212,22 @@ updateFileList = function(category_id, updates)
 	lastMethod, lastArguments = updateFileList, {category_id, updates}
 	activity(true)
 
-	local publication_names
+	local publication_ids
 	if updates then
-		publication_names = {}
-		for name in pairs(fileVersions) do
-			table.insert(publication_names, name)
+		publication_ids = {}
+		for id in pairs(fileVersions) do
+			table.insert(publication_ids, id)
 		end
 	end
 
 	local result = fieldAPIRequest("result", "publications", {
 		category_id = category_id,
-		order_by = updates and "date" or orderBys[config.orderBy],
+		order_bys = updates and {"date"} or {orderBys[config.orderBy], config.orderBy == 1 and "reviews_count" or nil},
 		order_direction = updates and "desc" or orderDirections[config.orderDirection],
 		offset = currentPage * appsPerPage,
 		count = updates and 100 or appsPerPage + 1,
 		search = search,
-		publication_names = publication_names,
+		publication_ids = publication_ids,
 	})
 
 	if result then
@@ -1273,12 +1264,12 @@ updateFileList = function(category_id, updates)
 							MineOSInterface.OSDraw()
 
 							local publication = fieldAPIRequest("result", "publication", {
-								publication_name = result[i].publication_name,
+								file_id = result[i].file_id,
 								language_id = config.language_id,
 							})
 							
-							fileVersions[publication.publication_name].version = publication.version
-							tryToDownload(publication.source_url, fileVersions[publication.publication_name].path)
+							fileVersions[publication.file_id].version = publication.version
+							tryToDownload(publication.source_url, fileVersions[publication.file_id].path)
 
 							if publication then
 								if publication.dependencies then
@@ -1288,7 +1279,13 @@ updateFileList = function(category_id, updates)
 											container.label.text = localization.downloading .. " " .. dependency.path
 											MineOSInterface.OSDraw()
 											
-											tryToDownload(dependency.source_url, getDependencyPath(fileVersions[publication.publication_name].path, dependency))
+											if getUpdateState(dependency) < 4 then
+												fileVersions[dependency.file_id] = {
+													path = dependencyPath,
+													version = dependency.version,
+												}
+												tryToDownload(dependency.source_url, getDependencyPath(fileVersions[publication.file_id].path, dependency))
+											end
 										end
 									end
 								end
@@ -1317,6 +1314,7 @@ updateFileList = function(category_id, updates)
 				orderByComboBox:addItem(localization.byRating)
 				orderByComboBox:addItem(localization.byName)
 				orderByComboBox:addItem(localization.byDate)
+				orderByComboBox:addItem(localization.byReviewsCount)
 				
 				orderByComboBox.selectedItem = config.orderBy
 
@@ -1370,6 +1368,7 @@ updateFileList = function(category_id, updates)
 			local xStart = math.floor(1 + contentContainer.width / 2 - (appsPerWidth * (appWidth + appHSpacing) - appHSpacing) / 2)
 			local x, counter = xStart, 1
 			for i = 1, #result do
+				result[i].category_id = category_id
 				contentContainer:addChild(newApplicationPreview(x, y, result[i]))
 				
 				if counter >= appsPerPage then
@@ -1487,7 +1486,7 @@ local function account()
 
 		local result = fieldAPIRequest("result", "publications", {
 			user_name = user.name,
-			order_by = "name",
+			order_bys = {"name"},
 			order_direction = "asc",
 		})
 
@@ -1541,24 +1540,33 @@ local function account()
 
 				local buttonsLayout = layout:addChild(newButtonsLayout(1, 1, layout.width, 2))
 				buttonsLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 1, 0, 0xC3C3C3, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.open)).onTouch = function()
-					newPublicationInfo(result[comboBox.selectedItem].publication_name)
+					newPublicationInfo(result[comboBox.selectedItem].file_id)
 				end
-				buttonsLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 1, 0, 0xC3C3C3, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.edit)).onTouch = function()
+
+				local function editOrDelete(edit)
 					activity(true)
 
 					local result = fieldAPIRequest("result", "publication", {
-						publication_name = result[comboBox.selectedItem].publication_name,
+						file_id = result[comboBox.selectedItem].file_id,
 						language_id = config.language_id,
 					})
 
 					if result then
-						editPublication(result)
+						if edit then
+							editPublication(result)
+						else
+							deletePublication(result)
+						end
 					end
 
 					activity()
 				end
+
+				buttonsLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 1, 0, 0xC3C3C3, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.edit)).onTouch = function()
+					editOrDelete(true)
+				end
 				buttonsLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 1, 0, 0xC3C3C3, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.remove)).onTouch = function()
-					deletePublication(result[comboBox.selectedItem])
+					editOrDelete(false)
 				end
 			end
 		end
@@ -1586,7 +1594,7 @@ local function statistics()
 		MineOSInterface.OSDraw()
 
 		local publications = fieldAPIRequest("result", "publications", {
-			order_by = "rating",
+			order_bys = {"rating", "reviews_count"},
 			order_direction = "desc",
 			offset = 0,
 			count = overviewIconsCount + 1,

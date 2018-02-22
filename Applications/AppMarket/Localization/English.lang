@@ -59,6 +59,7 @@
 	byRating = "By rating",
 	byDate = "By date",
 	byName = "By name",
+	byReviewsCount = "By reviews count",
 	desc = "Descending",
 	asc = "Ascending",
 	publish = "Publish software",
