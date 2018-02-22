@@ -353,37 +353,7 @@ end
 MineOSInterface.iconLaunchers = {}
 
 function MineOSInterface.iconLaunchers.application(icon)
-	local pathToAboutFile = icon.path .. "/resources/About/" .. MineOSCore.properties.language .. ".txt"
-	if MineOSCore.properties.showHelpOnApplicationStart and fs.exists(pathToAboutFile) then
-		local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer, MineOSCore.localization.applicationHelp .. " \"" .. fs.name(icon.path) .. "\"")
-		
-		local lines = {}
-		for line in io.lines(pathToAboutFile) do
-			table.insert(lines, line)
-		end
-		
-		container.layout:addChild(GUI.textBox(1, 1, 50, 1, nil, 0xC3C3C3, lines, 1, 0, 0, true, true))
-		local button = container.layout:addChild(GUI.button(1, 1, 30, 1, 0xE1E1E1, 0x2D2D2D, 0xA5A5A5, 0x2D2D2D, MineOSCore.localization.dontShowAnymore))	
-		
-		local function onExit()
-			container:delete()
-			MineOSInterface.safeLaunch((icon.shortcutPath or icon.path) .. "Main.lua")
-		end
-
-		container.panel.eventHandler = function(mainContainer, object, eventData)
-			if eventData[1] == "touch" then
-				onExit()
-			end
-		end
-
-		button.onTouch = function()
-			MineOSCore.properties.showHelpOnApplicationStart = false
-			MineOSCore.saveProperties()
-			onExit()
-		end
-	else
-		MineOSInterface.safeLaunch(icon.path .. "Main.lua")
-	end
+	MineOSInterface.safeLaunch(icon.path .. "Main.lua")
 end
 
 function MineOSInterface.iconLaunchers.directory(icon)

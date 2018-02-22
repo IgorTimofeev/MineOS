@@ -202,14 +202,7 @@ end
 stages[2] = function()
 	addButtonsToStage()
 	stageContainer:addChild(GUI.image(1, 1, images.OS))
-	local y = 22
-	local spaceBetween = 22
-	local x = math.floor(stageContainer.width / 2 - 15)
-
-	stageContainer.downloadWallpapersSwitch = addSwitchToStage(x, y, 0x3392FF, localization.installWallpapers, true)
-	x = x + spaceBetween
-
-	stageContainer.showApplicationsHelpSwitch = addSwitchToStage(x, y, 0x66DB80, localization.showApplicationsHelp, true)
+	stageContainer.downloadWallpapersSwitch = addSwitchToStage(math.floor(stageContainer.width / 2 - 4), 22, 0x3392FF, localization.installWallpapers, true)
 end
 
 ------------------------------------------------------------------------------------------------------------------------------------
@@ -284,7 +277,6 @@ stages[5] = function()
 		table.toFile(MineOSPaths.fileVersions, fileVersions)
 
 		MineOSCore.properties.wallpaperEnabled = stageContainer.downloadWallpapersSwitch.state
-		MineOSCore.properties.showHelpOnApplicationStart = stageContainer.showApplicationsHelpSwitch.state
 		MineOSCore.saveProperties()
 		
 		local file = io.open("/autorun.lua", "w")

@@ -2,7 +2,6 @@
 	fullInstallation = "Полная установка",
 	mustHaveInstallation = "Установка основных приложений",
 	installWallpapers = "Загрузить обои",
-	showApplicationsHelp = "Помощь в приложениях",
 	downloading = "Загрузка",
 	reboot = "Перезагрузить",
 	needToReboot = "Система установлена, наслаждайтесь",

@@ -2,7 +2,6 @@
 	fullInstallation = "Full installation",
 	mustHaveInstallation = "Install only must-have apps",
 	installWallpapers = "Download wallpapers",
-	showApplicationsHelp = "Show applications help",
 	downloading = "Downloading",
 	reboot = "Reboot",
 	needToReboot = "MineOS has been successfully installed, enjoy",
