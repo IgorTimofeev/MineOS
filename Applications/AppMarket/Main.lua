@@ -1280,11 +1280,14 @@ updateFileList = function(category_id, updates)
 											MineOSInterface.OSDraw()
 											
 											if getUpdateState(dependency) < 4 then
+												local dependencyPath = getDependencyPath(fileVersions[publication.file_id].path, dependency)
+												
 												fileVersions[dependency.file_id] = {
 													path = dependencyPath,
 													version = dependency.version,
 												}
-												tryToDownload(dependency.source_url, getDependencyPath(fileVersions[publication.file_id].path, dependency))
+												
+												tryToDownload(dependency.source_url, dependencyPath)
 											end
 										end
 									end
