@@ -1212,11 +1212,11 @@ updateFileList = function(category_id, updates)
 	lastMethod, lastArguments = updateFileList, {category_id, updates}
 	activity(true)
 
-	local publication_ids
+	local file_ids
 	if updates then
-		publication_ids = {}
+		file_ids = {}
 		for id in pairs(fileVersions) do
-			table.insert(publication_ids, id)
+			table.insert(file_ids, id)
 		end
 	end
 
@@ -1227,7 +1227,7 @@ updateFileList = function(category_id, updates)
 		offset = currentPage * appsPerPage,
 		count = updates and 100 or appsPerPage + 1,
 		search = search,
-		publication_ids = publication_ids,
+		file_ids = file_ids,
 	})
 
 	if result then
