@@ -16,7 +16,7 @@ local unicode = require("unicode")
 
 --------------------------------------------------------------------------------
 
-local host = "http://eliteclubsessions.ru/MineOSAPI/2.01/"
+local host = "http://eliteclubsessions.ru/MineOSAPI/2.02/"
 local iconCheckReponseTime = 0.5
 
 local overviewIconsCount = 10
@@ -533,7 +533,7 @@ local function download(publication)
 					govnoed(dependency, i + 1)
 
 					if getUpdateState(dependency) < 4 then
-						fileVersions[dependency.file_id] = {
+						fileVersions[publication.all_dependencies[i]] = {
 							path = dependencyPath,
 							version = dependency.version,
 						}
@@ -1292,7 +1292,7 @@ updateFileList = function(category_id, updates)
 											if getUpdateState(dependency) < 4 then
 												local dependencyPath = getDependencyPath(fileVersions[publication.file_id].path, dependency)
 												
-												fileVersions[dependency.file_id] = {
+												fileVersions[publication.all_dependencies[j]] = {
 													path = dependencyPath,
 													version = dependency.version,
 												}
