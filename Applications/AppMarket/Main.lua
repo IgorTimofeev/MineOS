@@ -327,10 +327,10 @@ local function newButtonsLayout(x, y, width, spacing)
 	return buttonsLayout
 end
 
-local function getUpdateState(publication)
-	if fileVersions[publication.file_id] then
-		if fs.exists(fileVersions[publication.file_id].path) then
-			if fileVersions[publication.file_id].version >= publication.version then
+local function getUpdateState(file_id, version)
+	if fileVersions[file_id] then
+		if fs.exists(fileVersions[file_id].path) then
+			if fileVersions[file_id].version >= version then
 				return 4
 			else
 				return 3
@@ -532,7 +532,7 @@ local function download(publication)
 
 					govnoed(dependency, i + 1)
 
-					if getUpdateState(dependency) < 4 then
+					if getUpdateState(publication.all_dependencies[i], dependency.version) < 4 then
 						fileVersions[publication.all_dependencies[i]] = {
 							path = dependencyPath,
 							version = dependency.version,
@@ -598,7 +598,7 @@ local function addApplicationInfo(container, publication, limit)
 	container.developerLabel = container:addChild(GUI.text(13, 3, 0x878787, string.limit("©" .. publication.user_name, limit, "right")))
 	container.rating = container:addChild(newRatingWidget(13, 4, publication.average_rating and math.round(publication.average_rating) or 0))
 
-	local updateState = getUpdateState(publication)
+	local updateState = getUpdateState(publication.file_id, publication.version)
 	container.downloadButton = container:addChild(GUI.adaptiveRoundedButton(13, 5, 1, 0, 0xC3C3C3, 0xFFFFFF, 0x969696, 0xFFFFFF, updateState == 4 and localization.installed or updateState == 3 and localization.update or localization.install))
 	container.downloadButton.onTouch = function()
 		download(publication)
@@ -1246,7 +1246,7 @@ updateFileList = function(category_id, updates)
 		if updates then
 			local i = 1
 			while i <= #result do
-				if getUpdateState(result[i]) ~= 3 then
+				if getUpdateState(result[i].file_id, result[i].version) ~= 3 then
 					table.remove(result, i)
 				else
 					i = i + 1
@@ -1289,7 +1289,7 @@ updateFileList = function(category_id, updates)
 											container.label.text = localization.downloading .. " " .. dependency.path
 											MineOSInterface.OSDraw()
 											
-											if getUpdateState(dependency) < 4 then
+											if getUpdateState(publication.all_dependencies[j], dependency.version) < 4 then
 												local dependencyPath = getDependencyPath(fileVersions[publication.file_id].path, dependency)
 												
 												fileVersions[publication.all_dependencies[j]] = {
