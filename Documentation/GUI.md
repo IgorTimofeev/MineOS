@@ -13,8 +13,9 @@
 | [Анимация](#Анимация) |
 | [Готовые виджеты](#Готовые-виджеты) |
 | [    GUI.panel](#guipanel-x-y-width-height-color-transparency--table-panel) |
-| [    GUI.image](#guiimage-x-y-loadedimage--table-image) |
+| [    GUI.text](#guitext-x-y-textcolor-text--table-text) |
 | [    GUI.label](#guilabel-x-y-width-height-textcolor-text--table-label) |
+| [    GUI.image](#guiimage-x-y-loadedimage--table-image) |
 | [    GUI.button](#guibutton-x-y-width-height-buttoncolor-textcolor-buttonpressedcolor-textpressedcolor-text--table-button) |
 | [    GUI.actionButtons](#guiactionbuttons-x-y-fat--table-actionbuttons) |
 | [    GUI.input](#guiinput-x-y-width-height-backgroundcolor-textcolor-placeholdertextcolor-backgroundfocusedcolor-textfocusedcolor-text-placeholdertext-erasetextonfocus-textmask--table-input) |
@@ -465,6 +466,89 @@ mainContainer:startEventHandling()
 
 ![Imgur](http://i.imgur.com/Rho1RTl.png?1)
 
+GUI.**text**( x, y, textColor, text ): *table* text
+--------------------------------------------------------------------
+| Тип | Аргумент | Описание |
+| ------ | ------ | ------ |
+| *int* | x | Координата объекта по оси x |
+| *int* | y | Координата объекта по оси y |
+| *int* | textColor | Цвет текста лейбла|
+| *string* | text | Текст лейбла |
+
+Простой текстовый виджет для отображения информации. Ширина объекта рассчитывается автоматически в зависимости от длины текста, а сам текст выравнивается по левому верхнему краю
+
+Пример реализации:
+```lua
+local buffer = require("doubleBuffering")
+local GUI = require("GUI")
+
+---------------------------------------------------------------
+
+local mainContainer = GUI.fullScreenContainer()
+mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x2D2D2D))
+
+mainContainer:addChild(GUI.text(3, 2, 0xFFFFFF, "Hello, world!"))
+mainContainer:addChild(GUI.text(3, 3, 0xFFFFFF, "How are you? Wanna cast some EEWRD meatballs?"))
+
+---------------------------------------------------------------
+
+mainContainer:draw()
+buffer.draw(true)
+mainContainer:startEventHandling()
+```
+
+Результат:
+
+![Imgur](https://i.imgur.com/ygqLguM.png)
+
+GUI.**label**( x, y, width, height, textColor, text ): *table* label
+--------------------------------------------------------------------
+| Тип | Аргумент | Описание |
+| ------ | ------ | ------ |
+| *int* | x | Координата объекта по оси x |
+| *int* | y | Координата объекта по оси y |
+| *int* | width | Ширина объекта |
+| *int* | height | Высота объекта |
+| *int* | textColor | Цвет текста лейбла|
+| *string* | text | Текст лейбла |
+
+Текстовый лейбл - это продвинутый вариант GUI.**text** с поддержкой различных вариантов выравнивания
+
+| Тип свойства | Свойство |Описание |
+| ------ | ------ | ------ |
+| *function* | :**setAlignment**( *enum* GUI.alignment.vertical, *enum* GUI.alignment.horizontal ): *table* label| Выбрать вариант отображения текста относительно границ лейбла |
+
+Пример реализации:
+```lua
+local buffer = require("doubleBuffering")
+local GUI = require("GUI")
+
+------------------------------------------------------------------------------------------
+
+local mainContainer = GUI.fullScreenContainer()
+mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x2D2D2D))
+
+mainContainer:addChild(GUI.label(1, 1, mainContainer.width, mainContainer.height, 0xFFFFFF, "Label with [left, top] alighment")):setAlignment(GUI.alignment.horizontal.left, GUI.alignment.vertical.top)
+mainContainer:addChild(GUI.label(1, 1, mainContainer.width, mainContainer.height, 0xFFFFFF, "Label with [center, top] alighment")):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+mainContainer:addChild(GUI.label(1, 1, mainContainer.width, mainContainer.height, 0xFFFFFF, "Label with [right, top] alighment")):setAlignment(GUI.alignment.horizontal.right, GUI.alignment.vertical.top)
+mainContainer:addChild(GUI.label(1, 1, mainContainer.width, mainContainer.height, 0xFFFFFF, "Label with [left, center] alighment")):setAlignment(GUI.alignment.horizontal.left, GUI.alignment.vertical.center)
+mainContainer:addChild(GUI.label(1, 1, mainContainer.width, mainContainer.height, 0xFFFFFF, "Label with [center, center] alighment")):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.center)
+mainContainer:addChild(GUI.label(1, 1, mainContainer.width, mainContainer.height, 0xFFFFFF, "Label with [right, center] alighment")):setAlignment(GUI.alignment.horizontal.right, GUI.alignment.vertical.center)
+mainContainer:addChild(GUI.label(1, 1, mainContainer.width, mainContainer.height, 0xFFFFFF, "Label with [left, bottom] alighment")):setAlignment(GUI.alignment.horizontal.left, GUI.alignment.vertical.bottom)
+mainContainer:addChild(GUI.label(1, 1, mainContainer.width, mainContainer.height, 0xFFFFFF, "Label with [center, bottom] alighment")):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.bottom)
+mainContainer:addChild(GUI.label(1, 1, mainContainer.width, mainContainer.height, 0xFFFFFF, "Label with [right, bottom] alighment")):setAlignment(GUI.alignment.horizontal.right, GUI.alignment.vertical.bottom)
+
+------------------------------------------------------------------------------------------
+
+mainContainer:draw()
+buffer.draw(true)
+mainContainer:startEventHandling()
+```
+
+Результат:
+
+![Imgur](https://i.imgur.com/ftonciY.png)
+
 GUI.**image**( x, y, loadedImage ): *table* image
 -------------------------------------------------
 | Тип | Аргумент | Описание |
@@ -473,14 +557,13 @@ GUI.**image**( x, y, loadedImage ): *table* image
 | *int* | y | Координата объекта по оси y |
 | *table* | loadedImage | Изображение, загруженное методом *image.load()* |
 
-Создать объект типа "изображение", представляющий из себя аналог объекта *panel* с тем лишь исключением, что вместо статичного цвета используется загруженное изображение.
+Этот виджет предназначен для отображения загруженного ранее изображения
 
 | Тип свойства | Свойство |Описание |
 | ------ | ------ | ------ |
-| *callback-function* | .**onTouch**( *table* eventData )| Метод, вызываемый после нажатия на изображение в обработчике событий |
 | *table* | .**image**| Таблица пиксельных данных изображения |
 
-Пример реализации изображения:
+Пример реализации:
 
 ```lua
 local image = require("image")
@@ -505,47 +588,6 @@ mainContainer:startEventHandling()
 
 ![enter image description here](http://i91.fastpic.ru/big/2017/0402/80/3b0ec81c3b2f660b9a4c6f18908f4280.png)
 
-GUI.**label**( x, y, width, height, textColor, text ): *table* label
---------------------------------------------------------------------
-| Тип | Аргумент | Описание |
-| ------ | ------ | ------ |
-| *int* | x | Координата объекта по оси x |
-| *int* | y | Координата объекта по оси y |
-| *int* | width | Ширина объекта |
-| *int* | height | Высота объекта |
-| *int* | textColor | Цвет текста лейбла|
-| *string* | text | Текст лейбла |
-
-Текстовый лейбл предназначен для отображения информации с поддержкой различных вариантов выравнивания. Удобная штука для быстрого вывода данных
-
-| Тип свойства | Свойство |Описание |
-| ------ | ------ | ------ |
-| *callback-function* | .**onTouch**( *table* eventData )| Метод, вызываемый после нажатия на лейбл в обработчике событий |
-| *function* | :**setAlignment**( *enum* GUI.alignment.vertical, *enum* GUI.alignment.horizontal ): *table* label| Выбрать вариант отображения текста относительно границ лейбла |
-
-Пример реализации лейбла:
-```lua
-local buffer = require("doubleBuffering")
-local GUI = require("GUI")
-
-------------------------------------------------------------------------------------------
-
-local mainContainer = GUI.fullScreenContainer()
-mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x2D2D2D))
-
-mainContainer:addChild(GUI.label(2, 2, mainContainer.width, mainContainer.height, 0xFFFFFF, "Centered text")):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.center)
-
-------------------------------------------------------------------------------------------
-
-mainContainer:draw()
-buffer.draw(true)
-mainContainer:startEventHandling()
-```
-
-Результат:
-
-![Imgur](http://i.imgur.com/4Hl5G7l.png?1)
-
 GUI.**button**( x, y, width, height, buttonColor, textColor, buttonPressedColor, textPressedColor, text ): *table* button
 ------------------------------------------------------------------------
 | Тип | Аргумент | Описание |
@@ -562,8 +604,6 @@ GUI.**button**( x, y, width, height, buttonColor, textColor, buttonPressedColor,
 
 Привычный всем объект кнопки имеет два состояния (*pressed = true/false*), автоматически переключаемые при нажатии. Для назначения какого-либо действия кнопке после нажатия создайте для нее метод *.onTouch()*.
 
-Для удобства имеется адаптивный вариант кнопки GUI.**adaptiveButton**(...). Он отличается тем, что вместо *width* и *height* использует отступ в пикселях со всех сторон от текста. Этот способ удобен для автоматического расчета размера кнопки без ручного расчета размеров
-
 Помимо стандартного дизайна существуют также альтернативные варианты кнопок:
 
  - GUI.**framedButton**(...) отрисовывается с рамкой по краям кнопки
@@ -573,8 +613,8 @@ GUI.**button**( x, y, width, height, buttonColor, textColor, buttonPressedColor,
  - GUI.**roundedButton**(...) имеет симпатичные скругленные уголки
 
  ![Imgur](https://i.imgur.com/0UO3Vbm.png)
- 
-Разумеется, поддерживаются также GUI.**adaptiveFramedButton**(...) и  GUI.**adaptiveRoundedButton**(...)
+
+Для удобства имеется адаптивный вариант кнопки GUI.**adaptiveButton**(...). Он отличается тем, что вместо *width* и *height* использует отступ в пикселях со всех сторон от текста. Этот способ удобен для автоматического расчета размера кнопки без ручного расчета размеров. Разумеется, поддерживаются также GUI.**adaptiveFramedButton**(...) и  GUI.**adaptiveRoundedButton**(...)
 
 | Тип свойства | Свойство |Описание |
 | ------ | ------ | ------ |
