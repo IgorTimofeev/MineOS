@@ -101,11 +101,10 @@ local function takePicture()
 		x, y = 1, y + 1
 	end
 
-	mainContainer:draw()
-	buffer.draw()
+	MineOSInterface.OSDraw()
 end
 
-local buttonImage = image.load(fs.path(getCurrentScript()) .. "/Resources/Icon.pic")
+local buttonImage = image.load(fs.path(getCurrentScript()) .. "Icon.pic")
 local buttonImagePressed = image.blend(buttonImage, 0x0, 0.6)
 local shootButton = window:addChild(GUI.object(1, 1, 8, 4))
 shootButton.draw = function()
@@ -115,18 +114,17 @@ end
 shootButton.eventHandler = function(mainContainer, object, eventData)
 	if eventData[1] == "touch" then
 		shootButton.pressed = true
-		mainContainer:draw()
-		buffer.draw()
+		MineOSInterface.OSDraw()
 		
 		takePicture()
 
 		shootButton.pressed = false
-		mainContainer:draw()
-		buffer.draw()
+		MineOSInterface.OSDraw()
 	end
 end
 
 cameraView.draw = function(cameraView)
+	buffer.square(cameraView.x, cameraView.y, cameraView.width, cameraView.height, 0xF0F0F0, 0x878787, " ")
 	local x, y = 0, 0
 	for y = 1, #cameraView.pixels do
 		for x = 1, #cameraView.pixels[y] do
@@ -158,14 +156,12 @@ FOVSlider.onValueChanged = takePicture
 
 paletteSwitch.onStateChanged = function()
 	palette = paletteSwitch.state and thermal or grayscale
-	mainContainer:draw()
-	buffer.draw()
+	MineOSInterface.OSDraw()
 end
 
 autoupdateSwitch.onStateChanged = function()
 	autoupdateSlider.hidden = not autoupdateSwitch.state
-	mainContainer:draw()
-	buffer.draw()
+	MineOSInterface.OSDraw()
 end
 
 for address in component.list("camera") do
@@ -184,8 +180,8 @@ window.onResize = function(width, height)
 	shootButton.localX = math.floor(1 + window.backgroundPanel.width / 2 - shootButton.width / 2)
 	shootButton.localY = window.height - shootButton.height
 
+	MineOSInterface.OSDraw()
 	takePicture()
 end
 
 window:resize(window.width, window.height)
-takePicture()
