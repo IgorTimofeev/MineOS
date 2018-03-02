@@ -164,4 +164,8 @@
 	yourContacts = "Ваши контакты",
 	additionalInfo = "Дополнительная информация",
 	stackTraceback = "Стек ошибки",
+
+	favourite = "Избранное",
+	search = "Поиск",
+	mounts = "Устройства",
 }
