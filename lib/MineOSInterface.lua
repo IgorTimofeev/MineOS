@@ -750,12 +750,11 @@ function MineOSInterface.iconRightClick(icon, eventData)
 				menu:addSeparator()
 			end
 
-			-- if icon.extension ~= ".app" then
-			-- 	menu:addItem(MineOSCore.localization.addToFavourites).onTouch = function()
-					
-			-- 	end
-			-- end
-			
+			if icon.extension ~= ".app" then
+			 	menu:addItem(MineOSCore.localization.addToFavourites).onTouch = function()
+					computer.pushSignal("Finder", "updateFavourites", {text = icon.name, path = icon.path})
+			 	end
+			end
 			
 		else
 			if icon.isShortcut then
