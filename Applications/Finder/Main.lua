@@ -137,7 +137,7 @@ end
 local function updateSidebar()
 	window.sidebarContainer.itemsContainer:deleteChildren()
 	
-	window.sidebarContainer.itemsContainer:addChild(newSidebarItem("Favourites", 0x3C3C3C))
+	window.sidebarContainer.itemsContainer:addChild(newSidebarItem(MineOSCore.localization.favourite, 0x3C3C3C))
 	for i = 1, #favourites do
 		favourite = window.sidebarContainer.itemsContainer:addChild(newSidebarItem(" " .. fs.name(favourites[i].text), 0x555555, favourites[i].path))
 		favourite.onTouch = sidebarItemOnTouch
@@ -146,7 +146,7 @@ local function updateSidebar()
 
 	if MineOSCore.properties.network.enabled and MineOSNetwork.getProxyCount() > 0 then
 		window.sidebarContainer.itemsContainer:addChild(newSidebarItem(" ", 0x3C3C3C))
-		window.sidebarContainer.itemsContainer:addChild(newSidebarItem("Network", 0x3C3C3C))
+		window.sidebarContainer.itemsContainer:addChild(newSidebarItem(MineOSCore.localization.favourite.network, 0x3C3C3C))
 
 		for proxy, path in fs.mounts() do
 			if proxy.network then
@@ -157,7 +157,7 @@ local function updateSidebar()
 
 	window.sidebarContainer.itemsContainer:addChild(newSidebarItem(" ", 0x3C3C3C))
 
-	window.sidebarContainer.itemsContainer:addChild(newSidebarItem("Mounts", 0x3C3C3C))
+	window.sidebarContainer.itemsContainer:addChild(newSidebarItem(MineOSCore.localization.mounts, 0x3C3C3C))
 	for proxy, path in fs.mounts() do
 		if path ~= "/" and not proxy.network then
 			window.sidebarContainer.itemsContainer:addChild(newSidebarItem(" " .. (proxy.getLabel() or fs.name(path)), 0x555555, path .. "/")).onTouch = sidebarItemOnTouch
@@ -264,7 +264,7 @@ end
 
 window.scrollBar = window:addChild(GUI.scrollBar(1, 4, 1, 1, 0xC3C3C3, 0x444444, iconFieldYOffset, 1, 1, 1, 1, true))
 
-window.searchInput = window:addChild(GUI.input(1, 2, 36, 1, 0xFFFFFF, 0x696969, 0xA5A5A5, 0xFFFFFF, 0x2D2D2D, nil, "Search", true))
+window.searchInput = window:addChild(GUI.input(1, 2, 36, 1, 0xFFFFFF, 0x696969, 0xA5A5A5, 0xFFFFFF, 0x2D2D2D, nil, MineOSCore.localization.search, true))
 window.searchInput.onInputFinished = function()
 	window.iconField.filenameMatcher = window.searchInput.text
 	window.iconField.fromFile = 1
