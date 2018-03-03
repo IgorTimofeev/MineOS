@@ -1069,7 +1069,7 @@ local function delete()
 		if cursor.position.symbol < unicode.len(mainContainer.codeView.lines[cursor.position.line]) + 1 then
 			deleteSpecifiedData(cursor.position.symbol, cursor.position.line, cursor.position.symbol, cursor.position.line)
 		else
-			if cursor.position.line > 1 then
+			if cursor.position.line > 1 and mainContainer.codeView.lines[cursor.position.line + 1] then
 				deleteSpecifiedData(unicode.len(mainContainer.codeView.lines[cursor.position.line]) + 1, cursor.position.line, 0, cursor.position.line + 1)
 			end
 		end
