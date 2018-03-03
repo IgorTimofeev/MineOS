@@ -117,6 +117,8 @@ local function newSidebarItem(text, textColor, path)
 	return object
 end
 
+local kostyl = nil
+
 local function sidebarItemOnTouch(object, eventData)
 	if eventData[5] == 0 then
 		if fs.isDirectory(object.path) then
@@ -126,22 +128,25 @@ local function sidebarItemOnTouch(object, eventData)
 			
 			updateFileListAndDraw()
 		end
-	else
-
+	elseif eventData[5] == 1.0 and object.rawFavourite ~= nil then
+		table.remove(favourites, table.indexOf(favourites, object.rawFavourite))
+		kostyl()
 	end
 end
 
 local function updateSidebar()
 	window.sidebarContainer.itemsContainer:deleteChildren()
 	
-	window.sidebarContainer.itemsContainer:addChild(newSidebarItem("Favourites", 0x3C3C3C))
+	window.sidebarContainer.itemsContainer:addChild(newSidebarItem(MineOSCore.localization.favourite, 0x3C3C3C))
 	for i = 1, #favourites do
-		window.sidebarContainer.itemsContainer:addChild(newSidebarItem(" " .. fs.name(favourites[i].text), 0x555555, favourites[i].path)).onTouch = sidebarItemOnTouch
+		favourite = window.sidebarContainer.itemsContainer:addChild(newSidebarItem(" " .. fs.name(favourites[i].text), 0x555555, favourites[i].path))
+		favourite.onTouch = sidebarItemOnTouch
+		favourite.rawFavourite = favourites[i]
 	end
 
 	if MineOSCore.properties.network.enabled and MineOSNetwork.getProxyCount() > 0 then
 		window.sidebarContainer.itemsContainer:addChild(newSidebarItem(" ", 0x3C3C3C))
-		window.sidebarContainer.itemsContainer:addChild(newSidebarItem("Network", 0x3C3C3C))
+		window.sidebarContainer.itemsContainer:addChild(newSidebarItem(MineOSCore.localization.favourite.network, 0x3C3C3C))
 
 		for proxy, path in fs.mounts() do
 			if proxy.network then
@@ -152,13 +157,15 @@ local function updateSidebar()
 
 	window.sidebarContainer.itemsContainer:addChild(newSidebarItem(" ", 0x3C3C3C))
 
-	window.sidebarContainer.itemsContainer:addChild(newSidebarItem("Mounts", 0x3C3C3C))
+	window.sidebarContainer.itemsContainer:addChild(newSidebarItem(MineOSCore.localization.mounts, 0x3C3C3C))
 	for proxy, path in fs.mounts() do
 		if path ~= "/" and not proxy.network then
 			window.sidebarContainer.itemsContainer:addChild(newSidebarItem(" " .. (proxy.getLabel() or fs.name(path)), 0x555555, path .. "/")).onTouch = sidebarItemOnTouch
 		end
 	end
 end
+
+kostyl = updateSidebar
 
 window.titlePanel = window:addChild(GUI.panel(1, 1, 1, 3, 0xE1E1E1))
 
@@ -226,14 +233,17 @@ window.iconField.eventHandler = function(mainContainer, object, eventData)
 			scrollTimerID = nil
 		end
 
-		scrollTimerID = event.timer(0.3, function()
-			computer.pushSignal("Finder", "updateFileList")
-		end, 1)
-	elseif (eventData[1] == "MineOSCore" or eventData[1] == "Finder") and eventData[2] == "updateFileList" then
-		if eventData[1] == "MineOSCore" then
+	scrollTimerID = event.timer(0.3, function()
+		computer.pushSignal("Finder", "updateFileList")
+	end, 1)
+	elseif eventData[1] == "MineOSCore" or eventData[1] == "Finder" then
+		if eventData[2] == "updateFileList" then
 			window.iconField.yOffset = iconFieldYOffset
-		end
-		updateFileListAndDraw()
+			updateFileListAndDraw()
+		elseif eventData[2] == "updateFavourites" then
+			table.insert(favourites, eventData[3])
+			updateSidebar()
+		end	
 	end
 end
 
@@ -254,7 +264,7 @@ end
 
 window.scrollBar = window:addChild(GUI.scrollBar(1, 4, 1, 1, 0xC3C3C3, 0x444444, iconFieldYOffset, 1, 1, 1, 1, true))
 
-window.searchInput = window:addChild(GUI.input(1, 2, 36, 1, 0xFFFFFF, 0x696969, 0xA5A5A5, 0xFFFFFF, 0x2D2D2D, nil, "Search", true))
+window.searchInput = window:addChild(GUI.input(1, 2, 36, 1, 0xFFFFFF, 0x696969, 0xA5A5A5, 0xFFFFFF, 0x2D2D2D, nil, MineOSCore.localization.search, true))
 window.searchInput.onInputFinished = function()
 	window.iconField.filenameMatcher = window.searchInput.text
 	window.iconField.fromFile = 1
@@ -346,6 +356,12 @@ local overrideMaximize = window.actionButtons.maximize.onTouch
 window.actionButtons.maximize.onTouch = function()
 	window.iconField.yOffset = iconFieldYOffset
 	overrideMaximize()
+end
+
+window.actionButtons.close.onTouch = function()
+	-- Cохраняем наши избранные пункты
+	table.toFile(favouritesPath, favourites)
+	window.close(window)
 end
 
 ------------------------------------------------------------------------------------------------------
