@@ -164,4 +164,8 @@
 	yourContacts = "Your contacts",
 	additionalInfo = "Additional information",
 	stackTraceback = "Stack traceback",
+
+	favourite = "Favourite",
+	search = "Search",
+	mounts = "Mounts",
 }
