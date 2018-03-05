@@ -29,10 +29,14 @@ local favourites = {
 local resourcesPath = MineOSCore.getCurrentScriptDirectory()
 local favouritesPath = MineOSPaths.applicationData .. "Finder/Favourites.cfg"
 
+local function saveFavourites()
+	table.toFile(favouritesPath, favourites)
+end
+
 if fs.exists(favouritesPath) then
 	favourites = table.fromFile(favouritesPath)
 else
-	table.toFile(favouritesPath, favourites)
+	saveFavourites()
 end
 
 ------------------------------------------------------------------------------------------------------
@@ -84,32 +88,49 @@ end
 
 ------------------------------------------------------------------------------------------------------
 
-local function newSidebarItem(text, textColor, path)
-	local y = 1
-	if #window.sidebarContainer.itemsContainer.children > 0 then
-		y = window.sidebarContainer.itemsContainer.children[#window.sidebarContainer.itemsContainer.children].localY + 1
-	end
-	local object = window.sidebarContainer.itemsContainer:addChild(GUI.object(1, y, 1, 1))
+local function newSidebarItem(textColor, text, path)
+	local object = window.sidebarContainer.itemsContainer:addChild(
+		GUI.object(
+			1,
+			#window.sidebarContainer.itemsContainer.children > 0 and window.sidebarContainer.itemsContainer.children[#window.sidebarContainer.itemsContainer.children].localY + 1 or 1,
+			1,
+			1
+		)
+	)
 	
-	object.text = text
-	object.textColor = textColor
-	object.path = path
+	if text then
+		object.text = text
+		object.textColor = textColor
+		object.path = path
 
-	object.draw = function(object)
-		object.width = window.sidebarContainer.itemsContainer.width
+		object.draw = function(object)
+			object.width = window.sidebarContainer.itemsContainer.width
 
-		local textColor = object.textColor
-		if object.path == window.iconField.workpath then
-			textColor = 0xFFFFFF
-			buffer.square(object.x, object.y, object.width, 1, 0x3366CC, textColor, " ")
+			if object.path == window.iconField.workpath then
+				buffer.square(object.x, object.y, object.width, 1, 0x3366CC, 0xFFFFFF, " ")
+				buffer.text(object.x + 1, object.y, 0xFFFFFF, string.limit(object.text, object.width - 4, "center"))
+				buffer.text(object.x + object.width - 2, object.y, 0xCCFFFF, "x")
+			else
+				buffer.text(object.x + 1, object.y, object.textColor, string.limit(object.text, object.width - 2, "center"))
+			end
+			
 		end
-		buffer.text(object.x + 1, object.y, textColor, string.limit(object.text, object.width - 1, "center"))
-	end
 
-	object.eventHandler = function(mainContainer, object, eventData)
-		if eventData[1] == "touch" then
-			if object.onTouch then
-				object.onTouch(object, eventData)
+		object.eventHandler = function(mainContainer, object, eventData)
+			if eventData[1] == "touch" then
+				if eventData[3] == object.x + object.width - 2 and object.favouriteIndex then
+					table.remove(favourites, object.favouriteIndex)
+					saveFavourites()
+
+					computer.pushSignal("Finder", "updateFavourites")
+				elseif fs.isDirectory(object.path) then
+					addWorkpath(object.path)
+
+					mainContainer:draw()
+					buffer.draw()
+					
+					updateFileListAndDraw()
+				end
 			end
 		end
 	end
@@ -117,55 +138,35 @@ local function newSidebarItem(text, textColor, path)
 	return object
 end
 
-local kostyl = nil
-
-local function sidebarItemOnTouch(object, eventData)
-	if eventData[5] == 0 then
-		if fs.isDirectory(object.path) then
-			addWorkpath(object.path)
-			mainContainer:draw()
-			buffer.draw()
-			
-			updateFileListAndDraw()
-		end
-	elseif eventData[5] == 1.0 and object.rawFavourite ~= nil then
-		table.remove(favourites, table.indexOf(favourites, object.rawFavourite))
-		kostyl()
-	end
-end
-
 local function updateSidebar()
 	window.sidebarContainer.itemsContainer:deleteChildren()
 	
-	window.sidebarContainer.itemsContainer:addChild(newSidebarItem(MineOSCore.localization.favourite, 0x3C3C3C))
+	window.sidebarContainer.itemsContainer:addChild(newSidebarItem(0x3C3C3C, MineOSCore.localization.favourite))
 	for i = 1, #favourites do
-		favourite = window.sidebarContainer.itemsContainer:addChild(newSidebarItem(" " .. fs.name(favourites[i].text), 0x555555, favourites[i].path))
-		favourite.onTouch = sidebarItemOnTouch
-		favourite.rawFavourite = favourites[i]
+		local object = window.sidebarContainer.itemsContainer:addChild(newSidebarItem(0x555555, " " .. fs.name(favourites[i].text), favourites[i].path))
+		object.favouriteIndex = i
 	end
 
 	if MineOSCore.properties.network.enabled and MineOSNetwork.getProxyCount() > 0 then
-		window.sidebarContainer.itemsContainer:addChild(newSidebarItem(" ", 0x3C3C3C))
-		window.sidebarContainer.itemsContainer:addChild(newSidebarItem(MineOSCore.localization.favourite.network, 0x3C3C3C))
+		window.sidebarContainer.itemsContainer:addChild(newSidebarItem(0x3C3C3C))
+		window.sidebarContainer.itemsContainer:addChild(newSidebarItem(0x3C3C3C, MineOSCore.localization.network))
 
 		for proxy, path in fs.mounts() do
 			if proxy.network then
-				window.sidebarContainer.itemsContainer:addChild(newSidebarItem(" " .. MineOSNetwork.getProxyName(proxy), 0x555555, path .. "/")).onTouch = sidebarItemOnTouch
+				window.sidebarContainer.itemsContainer:addChild(newSidebarItem(0x555555, " " .. MineOSNetwork.getProxyName(proxy), path .. "/"))
 			end
 		end
 	end
 
-	window.sidebarContainer.itemsContainer:addChild(newSidebarItem(" ", 0x3C3C3C))
+	window.sidebarContainer.itemsContainer:addChild(newSidebarItem(0x3C3C3C))
 
-	window.sidebarContainer.itemsContainer:addChild(newSidebarItem(MineOSCore.localization.mounts, 0x3C3C3C))
+	window.sidebarContainer.itemsContainer:addChild(newSidebarItem(0x3C3C3C, MineOSCore.localization.mounts))
 	for proxy, path in fs.mounts() do
 		if path ~= "/" and not proxy.network then
-			window.sidebarContainer.itemsContainer:addChild(newSidebarItem(" " .. (proxy.getLabel() or fs.name(path)), 0x555555, path .. "/")).onTouch = sidebarItemOnTouch
+			window.sidebarContainer.itemsContainer:addChild(newSidebarItem(0x555555, " " .. (proxy.getLabel() or fs.name(path)), path .. "/"))
 		end
 	end
 end
-
-kostyl = updateSidebar
 
 window.titlePanel = window:addChild(GUI.panel(1, 1, 1, 3, 0xE1E1E1))
 
@@ -241,8 +242,14 @@ window.iconField.eventHandler = function(mainContainer, object, eventData)
 			window.iconField.yOffset = iconFieldYOffset
 			updateFileListAndDraw()
 		elseif eventData[2] == "updateFavourites" then
-			table.insert(favourites, eventData[3])
+			if eventData[3] then
+				table.insert(favourites, eventData[3])
+			end
+			saveFavourites()
 			updateSidebar()
+
+			mainContainer:draw()
+			buffer.draw()
 		end	
 	end
 end
@@ -359,9 +366,7 @@ window.actionButtons.maximize.onTouch = function()
 end
 
 window.actionButtons.close.onTouch = function()
-	-- Cохраняем наши избранные пункты
-	table.toFile(favouritesPath, favourites)
-	window.close(window)
+	window:close()
 end
 
 ------------------------------------------------------------------------------------------------------
