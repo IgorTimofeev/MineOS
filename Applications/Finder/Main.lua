@@ -14,16 +14,16 @@ local args, options = require("shell").parse(...)
 ------------------------------------------------------------------------------------------------------
 
 local favourites = {
-	{text = "Root", path = "/"},
-	{text = "Desktop", path = MineOSPaths.desktop},
-	{text = "Applications", path = MineOSPaths.applications},
-	{text = "Pictures", path = MineOSPaths.pictures},
-	{text = "System", path = MineOSPaths.system},
-	{text = "Libraries", path = "/lib/"},
-	{text = "Trash", path = MineOSPaths.trash},
+	{name = "Root", path = "/"},
+	{name = "Desktop", path = MineOSPaths.desktop},
+	{name = "Applications", path = MineOSPaths.applications},
+	{name = "Pictures", path = MineOSPaths.pictures},
+	{name = "System", path = MineOSPaths.system},
+	{name = "Libraries", path = "/lib/"},
+	{name = "Trash", path = MineOSPaths.trash},
 }
 local resourcesPath = MineOSCore.getCurrentScriptDirectory()
-local favouritesPath = MineOSPaths.applicationData .. "Finder/Favourites2.cfg"
+local favouritesPath = MineOSPaths.applicationData .. "Finder/Favourites3.cfg"
 
 local iconFieldYOffset = 2
 local scrollTimerID
@@ -38,16 +38,10 @@ local mainContainer, window = MineOSInterface.addWindow(MineOSInterface.filledWi
 local titlePanel = window:addChild(GUI.panel(1, 1, 1, 3, 0xE1E1E1))
 
 local prevButton = window:addChild(GUI.adaptiveRoundedButton(9, 2, 1, 0, 0xFFFFFF, 0x3C3C3C, 0x3C3C3C, 0xFFFFFF, "<"))
-prevButton.onTouch = function()
-	prevOrNextWorkpath(false)
-end
 prevButton.colors.disabled.background = prevButton.colors.default.background
 prevButton.colors.disabled.text = 0xC3C3C3
 
 local nextButton = window:addChild(GUI.adaptiveRoundedButton(14, 2, 1, 0, 0xFFFFFF, 0x3C3C3C, 0x3C3C3C, 0xFFFFFF, ">"))
-nextButton.onTouch = function()
-	prevOrNextWorkpath(true)
-end
 nextButton.colors.disabled = prevButton.colors.disabled
 
 local sidebarContainer = window:addChild(GUI.container(1, 4, 20, 1))
@@ -55,13 +49,6 @@ sidebarContainer.panel = sidebarContainer:addChild(GUI.panel(1, 1, sidebarContai
 sidebarContainer.itemsContainer = sidebarContainer:addChild(GUI.container(1, 1, sidebarContainer.width, 1))
 
 local searchInput = window:addChild(GUI.input(1, 2, 36, 1, 0xFFFFFF, 0x696969, 0xA5A5A5, 0xFFFFFF, 0x2D2D2D, nil, MineOSCore.localization.search, true))
-searchInput.onInputFinished = function()
-	iconField.filenameMatcher = searchInput.text
-	iconField.fromFile = 1
-	iconField.yOffset = iconFieldYOffset
-
-	updateFileListAndDraw()
-end
 
 local iconField = window:addChild(
 	MineOSInterface.iconField(
@@ -71,22 +58,13 @@ local iconField = window:addChild(
 )
 
 local scrollBar = window:addChild(GUI.scrollBar(1, 4, 1, 1, 0xC3C3C3, 0x444444, iconFieldYOffset, 1, 1, 1, 1, true))
+scrollBar.eventHandler = nil
 
 local statusBar = window:addChild(GUI.object(1, 1, 1, 1))
+
 statusBar.draw = function(object)
 	buffer.square(object.x, object.y, object.width, object.height, 0xFFFFFF, 0x3C3C3C, " ")
 	buffer.text(object.x + 1, object.y, 0x3C3C3C, string.limit(("root/" .. iconField.workpath):gsub("/+$", ""):gsub("%/+", " ► "), object.width - 1, "start"))
-end
-statusBar.eventHandler = function(mainContainer, object, eventData)
-	if (eventData[1] == "component_added" or eventData[1] == "component_removed") and eventData[3] == "filesystem" then
-		updateSidebar()
-		MineOSInterface.OSDraw()
-	elseif eventData[1] == "MineOSNetwork" then
-		if eventData[2] == "updateProxyList" or eventData[2] == "timeout" then
-			updateSidebar()
-			MineOSInterface.OSDraw()
-		end
-	end
 end
 
 local sidebarResizer = window:addChild(GUI.resizer(1, 4, 3, 5, 0xFFFFFF, 0x0))
@@ -107,19 +85,6 @@ local function workpathHistoryButtonsUpdate()
 	nextButton.disabled = workpathHistoryCurrent >= #workpathHistory
 end
 
-local function addWorkpath(path)
-	workpathHistoryCurrent = workpathHistoryCurrent + 1
-	table.insert(workpathHistory, workpathHistoryCurrent, path)
-	for i = workpathHistoryCurrent + 1, #workpathHistory do
-		workpathHistory[i] = nil
-	end
-
-	workpathHistoryButtonsUpdate()
-	searchInput.text = ""
-	iconField.yOffset = iconFieldYOffset
-	iconField:setWorkpath(path)
-end
-
 local function prevOrNextWorkpath(next)
 	if next then
 		if workpathHistoryCurrent < #workpathHistory then
@@ -138,7 +103,18 @@ local function prevOrNextWorkpath(next)
 	updateFileListAndDraw()
 end
 
-------------------------------------------------------------------------------------------------------
+local function addWorkpath(path)
+	workpathHistoryCurrent = workpathHistoryCurrent + 1
+	table.insert(workpathHistory, workpathHistoryCurrent, path)
+	for i = workpathHistoryCurrent + 1, #workpathHistory do
+		workpathHistory[i] = nil
+	end
+
+	workpathHistoryButtonsUpdate()
+	searchInput.text = ""
+	iconField.yOffset = iconFieldYOffset
+	iconField:setWorkpath(path)
+end
 
 local function newSidebarItem(textColor, text, path)
 	local object = sidebarContainer.itemsContainer:addChild(
@@ -195,7 +171,7 @@ local function updateSidebar()
 	
 	sidebarContainer.itemsContainer:addChild(newSidebarItem(0x3C3C3C, MineOSCore.localization.favourite))
 	for i = 1, #favourites do
-		local object = sidebarContainer.itemsContainer:addChild(newSidebarItem(0x555555, " " .. fs.name(favourites[i].text), favourites[i].path))
+		local object = sidebarContainer.itemsContainer:addChild(newSidebarItem(0x555555, " " .. fs.name(favourites[i].name), favourites[i].path))
 		object.favouriteIndex = i
 	end
 
@@ -238,6 +214,34 @@ local function updateScrollBar()
 		scrollBar.value = math.abs(iconField.yOffset - iconFieldYOffset)
 	else
 		scrollBar.hidden = true
+	end
+end
+
+searchInput.onInputFinished = function()
+	iconField.filenameMatcher = searchInput.text
+	iconField.fromFile = 1
+	iconField.yOffset = iconFieldYOffset
+
+	updateFileListAndDraw()
+end
+
+nextButton.onTouch = function()
+	prevOrNextWorkpath(true)
+end
+
+prevButton.onTouch = function()
+	prevOrNextWorkpath(false)
+end
+
+statusBar.eventHandler = function(mainContainer, object, eventData)
+	if (eventData[1] == "component_added" or eventData[1] == "component_removed") and eventData[3] == "filesystem" then
+		updateSidebar()
+		MineOSInterface.OSDraw()
+	elseif eventData[1] == "MineOSNetwork" then
+		if eventData[2] == "updateProxyList" or eventData[2] == "timeout" then
+			updateSidebar()
+			MineOSInterface.OSDraw()
+		end
 	end
 end
 

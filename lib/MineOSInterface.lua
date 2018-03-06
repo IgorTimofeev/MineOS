@@ -417,11 +417,9 @@ local function getCykaIconPosition(iconField)
 end
 
 local function iconFieldUpdateFileList(iconField)
-	-- GUI.error(debug.traceback())
 	iconField.fileList = fs.sortedList(iconField.workpath, MineOSCore.properties.sortingMethod or "type", MineOSCore.properties.showHiddenFiles, iconField.filenameMatcher, false)
 	iconField:update()
 
-	-- Грузим инфу об иконочках
 	if iconField.iconConfigEnabled then
 		iconField:loadIconConfig()
 	end
@@ -472,6 +470,7 @@ local function iconFieldUpdateFileList(iconField)
 	else
 		x, y = iconField.xOffset, iconField.yOffset
 	end
+
 	for i = 1, #notConfigList do
 		local icon = iconField.iconsContainer:addChild(MineOSInterface.icon(x, y, iconField.workpath .. notConfigList[i], iconField.colors.text, iconField.colors.selection))
 		iconField.iconConfig[notConfigList[i]] = {x = x, y = y}
@@ -751,8 +750,21 @@ function MineOSInterface.iconRightClick(icon, eventData)
 			end
 
 			if icon.extension ~= ".app" then
-			 	menu:addItem(MineOSCore.localization.addToFavourites).onTouch = function()
-					computer.pushSignal("Finder", "updateFavourites", {text = icon.name, path = icon.path})
+				menu:addItem(MineOSCore.localization.addToFavourites).onTouch = function()
+					local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer, MineOSCore.localization.addToFavourites)
+
+					local input = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x696969, 0xE1E1E1, 0x2D2D2D, icon.name, MineOSCore.localization.name))
+					container.panel.eventHandler = function(mainContainer, object, eventData)
+						if eventData[1] == "touch" then
+							container:delete()
+
+							if eventData[1] == "touch" and #input.text > 0 then
+								computer.pushSignal("Finder", "updateFavourites", {name = input.text, path = icon.path})
+							else
+								MineOSInterface.OSDraw()
+							end
+						end
+					end					
 			 	end
 			end
 			
