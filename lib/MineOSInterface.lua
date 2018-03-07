@@ -1008,27 +1008,27 @@ function MineOSInterface.newFileFromURL(parentWindow, iconField, x, y, path)
 	local container = addUniversalContainerWithInputTextBox(parentWindow, nil, "Загрузить файл по URL", MineOSCore.localization.fileName)
 
 	container.inputFieldURL = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x696969, 0xE1E1E1, 0x2D2D2D, nil, "URL", false))
-	container.inputField.onInputFinished = function()
-		if container.inputField.text then
-			if fs.exists(path .. container.inputField.text) then
+	container.panel.eventHandler = function(mainContainer, object, eventData)
+		if eventData[1] == "touch" then
+			if fs.exists(container.inputField.text) then
 				container.label.hidden = false
-				parentWindow:draw()
+				mainContainer:draw()
 				buffer.draw()
 			else
-				if container.inputFieldURL.text then
-					local success, reason = require("web").download(container.inputFieldURL.text, path .. container.inputField.text)
-					if not success then
-						GUI.error(reason)
-					end
+				local success, reason = require("web").download(container.inputFieldURL.text, path .. container.inputField.text)
+				container:delete()
 
-					container:delete()
+				if success then
 					checkIconConfigCanSavePosition(iconField, x, y, container.inputField.text)
 					computer.pushSignal("MineOSCore", "updateFileList")
+				else
+					GUI.error(reason)
+					mainContainer:draw()
+					buffer.draw()
 				end
 			end
 		end
 	end
-	container.inputFieldURL.onInputFinished = container.inputField.onInputFinished
 
 	parentWindow:draw()
 	buffer.draw()
