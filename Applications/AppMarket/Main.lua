@@ -68,34 +68,8 @@ local orderBys = {
 }
 
 local languages = {
-	-- [3] = "Arabic",
-	-- [6] = "Belarusian",
-	-- [7] = "Bulgarian",
-	-- [12] = "Czech",
-	-- [15] = "German",
-	-- [16] = "Greek",
 	[18] = "English",
-	-- [20] = "Spanish",
-	-- [21] = "Estonian",
-	-- [24] = "Finnish",
-	-- [25] = "French",
-	-- [31] = "Hindi",
-	-- [38] = "Italian",
-	-- [39] = "Japanese",
-	-- [45] = "Korean",
-	-- [47] = "Latin",
-	-- [64] = "Dutch",
-	-- [65] = "Norwegian",
-	-- [68] = "Polish",
-	-- [69] = "Portuguese",
-	-- [70] = "Romanian",
 	[71] = "Russian",
-	-- [78] = "Swedish",
-	-- [83] = "Thai",
-	-- [85] = "Turkish",
-	-- [88] = "Ukrainian",
-	-- [91] = "Vietnamese",
-	-- [94] = "Chinese",
 }
 
 --------------------------------------------------------------------------------
@@ -894,7 +868,7 @@ local function newPublicationInfo(file_id)
 					end
 
 					if reviews[i].votes then
-						reviewContainer:addChild(GUI.text(3, y, 0xC3C3C3, reviews[i].positive_votes .. " из " .. reviews[i].votes .. " пользователей считают этот отзыв полезным"))
+						reviewContainer:addChild(GUI.text(3, y, 0xC3C3C3, reviews[i].votes.positive .. " из " .. reviews[i].votes.total .. " пользователей считают этот отзыв полезным"))
 						y = y + 1
 					end
 

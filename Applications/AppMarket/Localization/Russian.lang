@@ -53,7 +53,7 @@
 	publications = "Публикации",
 	notRegistered = "Еще не зарегистрированы?",
 	createAccount = "Создать аккаунт",
-	registrationSuccessfull = "Проверьте свою почту и папку спама, чтобы подтвердить подтвердить аккаунт",
+	registrationSuccessfull = "Проверьте свою почту и папку спама, чтобы подтвердить аккаунт",
 
 	search = "Поиск",
 	byRating = "По рейтингу",
