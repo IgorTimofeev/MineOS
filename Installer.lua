@@ -86,7 +86,7 @@ fs.remove(path)
 print(" ")
 
 for i = 1, #applicationList.preInstall do
-	print("Downloading framework \"" .. fs.name(applicationList.preInstall[i].path) .. "\"")
+	print("Downloading library \"" .. fs.name(applicationList.preInstall[i].path) .. "\"")
 	wget(applicationList.preInstall[i].url, applicationList.preInstall[i].path)
 	storeFileVersion(applicationList.preInstall[i])
 end
@@ -128,7 +128,7 @@ stageContainer:addChild(GUI.panel(1, 1, stageContainer.width, stageContainer.hei
 local overrideDraw = stageContainer.draw
 stageContainer.draw = function(...)
 	overrideDraw(...)
-	GUI.windowShadow(stageContainer.x, stageContainer.y, stageContainer.width, stageContainer.height, 0.5, true)
+	GUI.windowShadow(stageContainer.x, stageContainer.y, stageContainer.width, stageContainer.height, 0.6, true)
 end
 
 ------------------------------------------------------------------------------------------------------------------------------------
@@ -209,8 +209,8 @@ stages[2] = function()
 	addButtonsToStage()
 	stageContainer:addChild(GUI.image(1, 1, images.OS))
 	local x = math.floor(stageContainer.width / 2)
-	stageContainer.downloadWallpapersSwitch = addSwitchToStage(x - 12, 22, 0xFF4940, localization.installWallpapers, true)
-	stageContainer.flashEEPROMSwitch = addSwitchToStage(x + 12, 22, 0x3392FF, localization.flashEEPROM, true)
+	stageContainer.downloadWallpapersSwitch = addSwitchToStage(x - 13, 22, 0xFF4940, localization.installWallpapers, true)
+	stageContainer.flashEEPROMSwitch = addSwitchToStage(x + 6, 22, 0x3392FF, localization.flashEEPROM, true)
 end
 
 ------------------------------------------------------------------------------------------------------------------------------------
