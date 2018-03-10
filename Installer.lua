@@ -125,6 +125,12 @@ mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height
 local stageContainer = mainContainer:addChild(GUI.container(math.floor(mainContainer.width / 2 - 90 / 2), math.floor(mainContainer.height / 2 - 28 / 2), 90, 28))
 stageContainer:addChild(GUI.panel(1, 1, stageContainer.width, stageContainer.height, 0xDDDDDD))
 
+local overrideDraw = stageContainer.draw
+stageContainer.draw = function(...)
+	overrideDraw(...)
+	GUI.windowShadow(stageContainer.x, stageContainer.y, stageContainer.width, stageContainer.height, 0.5, true)
+end
+
 ------------------------------------------------------------------------------------------------------------------------------------
 
 local stages = {current = 1}
