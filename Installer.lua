@@ -202,7 +202,9 @@ end
 stages[2] = function()
 	addButtonsToStage()
 	stageContainer:addChild(GUI.image(1, 1, images.OS))
-	stageContainer.downloadWallpapersSwitch = addSwitchToStage(math.floor(stageContainer.width / 2 - 4), 22, 0x3392FF, localization.installWallpapers, true)
+	local x = math.floor(stageContainer.width / 2)
+	stageContainer.downloadWallpapersSwitch = addSwitchToStage(x - 24, 22, 0xFF4940, localization.installWallpapers, true)
+	stageContainer.flashEEPROMSwitch = addSwitchToStage(x + 24, 22, 0x3392FF, localization.flashEEPROM, true)
 end
 
 ------------------------------------------------------------------------------------------------------------------------------------
@@ -255,13 +257,15 @@ stages[4] = function()
 		storeFileVersion(applicationList.duringInstall[i])
 	end
 
-	stageContainer:deleteChildren(2)
-	y = addImageToStage(4, images.EEPROM)
-	stageContainer:addChild(GUI.label(1, y + 3, stageContainer.width, 1, 0x666666, localization.flashingEEPROM)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
-	mainContainer:draw()
-	buffer.draw()
+	if stageContainer.flashEEPROMSwitch.state then
+		stageContainer:deleteChildren(2)
+		y = addImageToStage(4, images.EEPROM)
+		stageContainer:addChild(GUI.label(1, y + 3, stageContainer.width, 1, 0x666666, localization.flashingEEPROM)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+		mainContainer:draw()
+		buffer.draw()
 
-	component.eeprom.set(web.request(URLs.EFI))
+		component.eeprom.set(web.request(URLs.EFI))
+	end
 
 	stages.load(5)
 end

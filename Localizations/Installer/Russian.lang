@@ -6,5 +6,6 @@
 	reboot = "Перезагрузить",
 	needToReboot = "Система установлена, наслаждайтесь",
 	terms = "Я принимаю условия соглашения",
-	flashingEEPROM = "Идет прошивка BIOS...",
+	flashingEEPROM = "Идет установка EFI...",
+	flashEEPROM = "Установить EFI",
 }
