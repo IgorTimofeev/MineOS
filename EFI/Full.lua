@@ -3,16 +3,15 @@
 -- local component, computer, unicode = require("component"), require("computer"), require("unicode")
 
 local stringsMain, stringsBootFromURL, stringsChangeLabel, stringKeyDown, stringsInit, stringsFilesystem, componentProxy, componentList, pullSignal, uptime, tableInsert, mathMax, mathMin, mathHuge = "UEFI v2.0", "Internet boot", "Change label", "key_down", "/init.lua", "filesystem", component.proxy, component.list, computer.pullSignal, computer.uptime, table.insert, math.max, math.min, math.huge
-local eeprom, gpu, internetAddress, colorsTitle, colorsBackground, colorsText, colorsSelectionBackground, colorsSelectionText = componentProxy(componentList("eeprom")()), componentProxy(componentList("gpu")()), componentList("internet")()
-local shutdown, gpuSet, gpuFill, eepromSetData, eepromGetData, depth, screenWidth, screenHeight, curentBackground, currentForeground, NIL = computer.shutdown, gpu.set, gpu.fill, eeprom.setData, eeprom.getData, gpu.getDepth(), gpu.maxResolution()
+local colorsTitle, colorsBackground, colorsText, colorsSelectionBackground, colorsSelectionText, eeprom, gpu, internetAddress = 1, 0, 1, 1, 0, componentProxy(componentList("eeprom")()), componentProxy(componentList("gpu")()), componentList("internet")()
+gpu.bind(componentList("screen")(), true)
+local shutdown, gpuSet, gpuFill, eepromSetData, eepromGetData, depth, screenWidth, screenHeight, curentBackground, currentForeground, NIL = computer.shutdown, gpu.set, gpu.fill, eeprom.setData, eeprom.getData, gpu.getDepth(), gpu.getResolution()
 
 computer.getBootAddress, computer.setBootAddress = eepromGetData, eepromSetData
 
-if depth == 1 then
-	colorsTitle, colorsBackground, colorsText, colorsSelectionBackground, colorsSelectionText = 1, 0, 1, 1, 0
-elseif depth == 4 then
+if depth == 4 then
 	colorsTitle, colorsBackground, colorsText, colorsSelectionBackground, colorsSelectionText = 0x333333, 0xFFFFFF, 0x333333, 0x333333, 0xFFFFFF
-else
+elseif depth == 8 then
 	colorsTitle, colorsBackground, colorsText, colorsSelectionBackground, colorsSelectionText = 0x2D2D2D, 0xE1E1E1, 0x878787, 0x878787, 0xE1E1E1
 end
 
@@ -211,7 +210,6 @@ local loadInit, menuBack, menu, input, netboot =
 		end
 	end
 
-gpu.setResolution(screenWidth, screenHeight)
 status(NIL, stringsMain, "Hold Alt to show boot options menu")
 
 local deadline, eventData = uptime() + 1
