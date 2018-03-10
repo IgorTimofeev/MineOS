@@ -14,7 +14,7 @@ local args, options = shell.parse(...)
 local URLs = {
 	applicationList = "https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/Files.cfg",
 	installerLocalization = "https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/Localizations/Installer/",
-	EFI = "https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/EFI.lua",
+	EFI = "https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/EFI/Minified.lua",
 	license = "https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/License/",
 }
 
