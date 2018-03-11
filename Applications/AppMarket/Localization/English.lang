@@ -13,7 +13,6 @@
 	statisticsReviewsCount = "Reviews count",
 	statisticsPopularPublication = "(popular publication)",
 
-	shittyIcon = "Invalid icon file detected. Use proper URL or go fuck yourself",
 	areYouSure = "Are your sure want to delete publication?",
 	createShortcut = "Create desktop shortcut",
 	editing = "Edit publication",

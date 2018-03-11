@@ -1148,15 +1148,10 @@ editPublication = function(initialPublication, initialCategoryID)
 		end
 
 		if categoryComboBox.selectedItem == 1 then
-			if checkImage(iconUrlInput.text, true) then
-				table.insert(dependencies, {
-					source_url = iconUrlInput.text,
-					path = "Icon.pic"
-				})
-			else
-				GUI.error(localization.shittyIcon)
-				return
-			end
+			table.insert(dependencies, {
+				source_url = iconUrlInput.text,
+				path = "Icon.pic"
+			})
 		end
 
 		activity(true)
