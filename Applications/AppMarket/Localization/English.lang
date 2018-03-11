@@ -56,10 +56,10 @@
 	registrationSuccessfull = "Check your e-mail and spam folder to verify your account",
 
 	search = "Search",
+	byPopularity = "By popularity",
 	byRating = "By rating",
 	byDate = "By date",
 	byName = "By name",
-	byReviewsCount = "By reviews count",
 	desc = "Descending",
 	asc = "Ascending",
 	publish = "Publish software",

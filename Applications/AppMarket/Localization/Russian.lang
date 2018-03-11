@@ -56,10 +56,10 @@
 	registrationSuccessfull = "Проверьте свою почту и папку спама, чтобы подтвердить аккаунт",
 
 	search = "Поиск",
+	byPopularity = "По популярности",
 	byRating = "По рейтингу",
 	byDate = "По дате",
 	byName = "По имени",
-	byReviewsCount = "По числу отзывов",
 	desc = "По убыванию",
 	asc = "По возрастанию",
 	publish = "Опубликовать ПО",

@@ -16,7 +16,7 @@ local unicode = require("unicode")
 
 --------------------------------------------------------------------------------
 
-local host = "http://eliteclubsessions.ru/MineOSAPI/2.02/"
+local host = "http://eliteclubsessions.ru/MineOSAPI/2.03/"
 local iconCheckReponseTime = 0.5
 
 local overviewIconsCount = 10
@@ -61,10 +61,10 @@ local licenses = {
 }
 
 local orderBys = {
+	"popularity",
 	"rating",
 	"name",
 	"date",
-	"reviews_count",
 }
 
 local languages = {
@@ -1212,7 +1212,7 @@ updateFileList = function(category_id, updates)
 
 	local result = fieldAPIRequest("result", "publications", {
 		category_id = category_id,
-		order_bys = updates and {"date"} or {orderBys[config.orderBy], config.orderBy == 1 and "reviews_count" or nil},
+		order_by = updates and "date" or orderBys[config.orderBy],
 		order_direction = updates and "desc" or orderDirections[config.orderDirection],
 		offset = currentPage * appsPerPage,
 		count = updates and 100 or appsPerPage + 1,
@@ -1305,11 +1305,11 @@ updateFileList = function(category_id, updates)
 					updateFileList(category_id, updates)
 				end
 
-				local orderByComboBox = layout:addChild(GUI.comboBox(1, 1, 18, layout.height, 0xFFFFFF, 0x696969, 0x969696, 0xE1E1E1))
+				local orderByComboBox = layout:addChild(GUI.comboBox(1, 1, 20, layout.height, 0xFFFFFF, 0x696969, 0x969696, 0xE1E1E1))
+				orderByComboBox:addItem(localization.byPopularity)
 				orderByComboBox:addItem(localization.byRating)
 				orderByComboBox:addItem(localization.byName)
 				orderByComboBox:addItem(localization.byDate)
-				orderByComboBox:addItem(localization.byReviewsCount)
 				
 				orderByComboBox.selectedItem = config.orderBy
 
@@ -1480,7 +1480,7 @@ local function account()
 
 		local result = fieldAPIRequest("result", "publications", {
 			user_name = user.name,
-			order_bys = {"name"},
+			order_by = "name",
 			order_direction = "asc",
 		})
 
@@ -1588,7 +1588,7 @@ local function statistics()
 		MineOSInterface.OSDraw()
 
 		local publications = fieldAPIRequest("result", "publications", {
-			order_bys = {"rating", "reviews_count"},
+			order_by = "popularity",
 			order_direction = "desc",
 			offset = 0,
 			count = overviewIconsCount + 1,
@@ -1597,12 +1597,6 @@ local function statistics()
 
 		if publications then
 			contentContainer:deleteChildren()
-
-			-- local y = math.floor(contentContainer.height / 2) - 3
-			-- local overviewMaximumTouchAccelerationSlider = contentContainer:addChild(GUI.slider(3, y, 12, 0xD2D2D2, 0xB4B4B4, 0xFFFFFF, 0xD2D2D2, 1, 10, 5, false, "ACCL: ", "")); y = y + 2
-			-- local forceSlider = contentContainer:addChild(GUI.slider(3, y, 12, 0xD2D2D2, 0xB4B4B4, 0xFFFFFF, 0xD2D2D2, 1, 100, 50, false, "LIMT: ", "")); y = y + 2
-			-- local overviewForceDecaySlider = contentContainer:addChild(GUI.slider(3, y, 12, 0xD2D2D2, 0xB4B4B4, 0xFFFFFF, 0xD2D2D2, 1, 100, 15, false, "DECY: ", "")); y = y + 2
-			-- overviewMaximumTouchAccelerationSlider.roundValues, forceSlider.roundValues, overviewForceDecaySlider.roundValues = true, true, true
 
 			local iconsContainer = contentContainer:addChild(GUI.container(1, 1, contentContainer.width, contentContainer.height))
 
