@@ -265,7 +265,7 @@ local function checkImage(url, mneTolkoSprosit)
 				end
 			else
 				handle:close()
-				
+
 				if reason then
 					return false, reason
 				else
@@ -482,7 +482,7 @@ local function download(publication)
 		end
 
 		local shortcutSwitchAndLabel = container.layout:addChild(GUI.switchAndLabel(1, 1, 44, 8, 0x66DB80, 0x0, 0xE1E1E1, 0x878787, localization.createShortcut .. ":", true))
-		shortcutSwitchAndLabel.hidden = publication.category_id ~= 1
+		shortcutSwitchAndLabel.hidden = publication.category_id == 2
 
 		container.layout:addChild(GUI.button(1, 1, 44, 3, 0x696969, 0xFFFFFF, 0x0, 0xFFFFFF, localization.download)).onTouch = function()
 			container.layout:deleteChildren(2)
