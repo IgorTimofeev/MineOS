@@ -4,9 +4,10 @@
 
 local stringsMain, stringsBootFromURL, stringsChangeLabel, stringKeyDown, stringsInit, stringsFilesystem, componentProxy, componentList, pullSignal, uptime, tableInsert, mathMax, mathMin, mathHuge = "MineOS EFI", "Internet boot", "Change label", "key_down", "/init.lua", "filesystem", component.proxy, component.list, computer.pullSignal, computer.uptime, table.insert, math.max, math.min, math.huge
 local colorsTitle, colorsBackground, colorsText, colorsSelectionBackground, colorsSelectionText, eeprom, gpu, internetAddress = 1, 0, 1, 1, 0, componentProxy(componentList("eeprom")()), componentProxy(componentList("gpu")()), componentList("internet")()
-gpu.bind(componentList("screen")(), true)
-local shutdown, gpuSet, gpuFill, eepromSetData, eepromGetData, depth, screenWidth, screenHeight, curentBackground, currentForeground, NIL = computer.shutdown, gpu.set, gpu.fill, eeprom.setData, eeprom.getData, gpu.getDepth(), gpu.getResolution()
 
+gpu.bind(componentList("screen")(), true)
+
+local shutdown, gpuSet, gpuFill, eepromSetData, eepromGetData, depth, screenWidth, screenHeight, curentBackground, currentForeground, NIL = computer.shutdown, gpu.set, gpu.fill, eeprom.setData, eeprom.getData, gpu.getDepth(), gpu.getResolution()
 computer.getBootAddress, computer.setBootAddress = eepromGetData, eepromSetData
 
 if depth == 4 then
@@ -287,7 +288,7 @@ if data:sub(1, 1) == "#" then
 	netboot(data:sub(2, -1))
 else
 	proxy = componentProxy(data)
-	if proxy then
+	if proxy and proxy.exists(stringsInit) then
 		loadInit(proxy)
 	else
 		for address in componentList(stringsFilesystem) do
