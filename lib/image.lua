@@ -146,30 +146,31 @@ end
 
 -------------------------------------------------- Filesystem related methods --------------------------------------------------
 
-function image.loadFormatModule(path, fileExtension)
-	local loadSuccess, loadReason = loadfile(path)
-	if loadSuccess then
-		local xpcallSuccess, xpcallReason = pcall(loadSuccess, image)
-		if xpcallSuccess then
-			image.formatModules[fileExtension] = xpcallReason
+function image.loadFormatModule(path, extension)
+	local success, result = loadfile(path)
+	if success then
+		success, result = pcall(success, image)
+		if success then
+			image.formatModules[extension] = result
 		else
-			error("Failed to execute image format module: " .. tostring(xpcallReason))
+			error("Failed to execute image format module: " .. tostring(result))
 		end
 	else
-		error("Failed to load image format module: " .. tostring(loadReason))
+		error("Failed to load image format module: " .. tostring(result))
 	end
 end
 
-local function getFileExtension(path)
-	return string.match(path, "^.+(%.[^%/]+)%/?$")
-end
-
 local function loadOrSave(methodName, path, ...)
-	local fileExtension = getFileExtension(path)
-	if image.formatModules[fileExtension] then
-		return image.formatModules[fileExtension][methodName](path, ...)
+	local extension = fs.extension(path)
+	if image.formatModules[extension] then
+		local success, result = pcall(image.formatModules[extension][methodName], path, ...)
+		if success then
+			return result
+		else
+			return false, "Failed to " .. methodName .. " image file: " .. tostring(result)
+		end
 	else
-		error("Failed to open file \"" .. tostring(path) .. "\" as image: format module for extension \"" .. tostring(fileExtension) .. "\" is not loaded")
+		return false, "Failed to " .. methodName .. " image file: format module for extension \"" .. tostring(extension) .. "\" is not loaded"
 	end
 end
 
@@ -279,7 +280,7 @@ function image.crop(picture, fromX, fromY, width, height)
 
 		return newPicture
 	else
-		error("Failed to crop image: target coordinates are out of source range")
+		return false, "Failed to crop image: target coordinates are out of source range"
 	end
 end
 

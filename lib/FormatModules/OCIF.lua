@@ -158,19 +158,19 @@ function module.load(path)
 			if encodingMethods.load[encodingMethod] then
 				local picture = {}
 				encodingMethods.load[encodingMethod](file, picture)
+
 				file:close()	
-				
 				return picture
 			else
 				file:close()
-				error("Failed to load OCIF image: encoding method \"" .. tostring(encodingMethod) .. "\" is not supported")
+				return false, "Failed to load OCIF image: encoding method \"" .. tostring(encodingMethod) .. "\" is not supported"
 			end
 		else
 			file:close()
-			error("Failed to load OCIF image: wrong signature (\"" .. tostring(readedSignature) .. "\")")
+			return false, "Failed to load OCIF image: binary signature \"" .. tostring(readedSignature) .. "\" is not valid"
 		end
 	else
-		error("Failed to open file \"" .. tostring(path) .. "\" for reading: " .. tostring(reason))
+		return false, "Failed to open file \"" .. tostring(path) .. "\" for reading: " .. tostring(reason)
 	end
 end
 
@@ -180,17 +180,17 @@ function module.save(path, picture, encodingMethod)
 	local file, reason = io.open(path, "wb")
 	if file then	
 		if encodingMethods.save[encodingMethod] then
-			-- Writing signature, encoding method, image width and height
 			file:write(OCIFSignature, string.char(encodingMethod), string.char(picture[1]), string.char(picture[2]))
-			-- Executing selected encoding method
 			encodingMethods.save[encodingMethod](file, picture)
+			
 			file:close()
+			return true
 		else
 			file:close()
-			error("Failed to save file as OCIF image: encoding method \"" .. tostring(encodingMethod) .. "\" is not supported")
+			return false, "Failed to save file as OCIF image: encoding method \"" .. tostring(encodingMethod) .. "\" is not supported"
 		end
 	else
-		error("Failed to open file for writing: " .. tostring(reason))
+		return false, "Failed to open file for writing: " .. tostring(reason)
 	end
 end
 

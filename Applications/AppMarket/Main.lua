@@ -546,12 +546,21 @@ local function addPanel(container, color)
 	container.panel = container:addChild(GUI.panel(1, 1, container.width, container.height, color or 0xFFFFFF))
 end
 
+local function loadImage(path)
+	local picture, reason = image.load(path)
+	if picture then
+		return picture
+	else
+		return fileNotExistsIcon
+	end
+end
+
 local function getPublicationIcon(publication)
 	if publication.icon_url then
 		local path = iconCachePath .. publication.publication_name .. "@" .. publication.version .. ".pic"
 
 		if fs.exists(path) then
-			return image.load(path)
+			return loadImage(path)
 		else
 			local data, reason = checkImage(publication.icon_url)
 			if data then
@@ -559,7 +568,7 @@ local function getPublicationIcon(publication)
 				file:write(data)
 				file:close()
 
-				return image.load(path)
+				return loadImage(path)
 			else
 				return fileNotExistsIcon
 			end
