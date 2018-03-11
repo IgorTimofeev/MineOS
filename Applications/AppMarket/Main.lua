@@ -243,15 +243,20 @@ local function checkImage(url, mneTolkoSprosit)
 				data = data .. chunk
 				if needCheck and #data > 8 then
 					if data:sub(1, 4) == "OCIF" then
-						if string.byte(data:sub(6, 6)) <= 8 and string.byte(data:sub(7, 7)) <= 4 then
-							if mneTolkoSprosit then
+						if string.byte(data:sub(5, 5)) == 6 then
+							if string.byte(data:sub(6, 6)) == 8 and string.byte(data:sub(7, 7)) == 4 then
+								if mneTolkoSprosit then
+									handle:close()
+									return true								
+								end
+								needCheck = false
+							else
 								handle:close()
-								return true								
+								return false, "Image size is larger than 8x4"
 							end
-							needCheck = false
 						else
 							handle:close()
-							return false, "Image size is larger than 8x4"
+							return false, "Image encoding method is not supported"
 						end
 					else
 						handle:close()
@@ -260,6 +265,7 @@ local function checkImage(url, mneTolkoSprosit)
 				end
 			else
 				handle:close()
+				
 				if reason then
 					return false, reason
 				else
