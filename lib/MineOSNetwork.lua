@@ -216,179 +216,183 @@ local function check(...)
 end
 
 function MineOSNetwork.connectToFTP(address, port, user, password)
-	local socketHandle, reason = MineOSNetwork.internetProxy.connect(address, port)
-	if socketHandle then
-		FTPSocketRead(socketHandle)
+	if MineOSNetwork.internetProxy then
+		local socketHandle, reason = MineOSNetwork.internetProxy.connect(address, port)
+		if socketHandle then
+			FTPSocketRead(socketHandle)
 
-		local result, reason = FTPLogin(socketHandle, user, password)
-		if result then
+			local result, reason = FTPLogin(socketHandle, user, password)
+			if result then
 
-			local proxy, fileHandles, label = {}, {}, MineOSNetwork.getFTPProxyName(address, port, user)
+				local proxy, fileHandles, label = {}, {}, MineOSNetwork.getFTPProxyName(address, port, user)
 
-			proxy.type = "filesystem"
-			proxy.slot = 0
-			proxy.address = label
-			proxy.MineOSNetworkFTP = true
+				proxy.type = "filesystem"
+				proxy.slot = 0
+				proxy.address = label
+				proxy.MineOSNetworkFTP = true
 
-			proxy.getLabel = function()
-				return label
-			end
+				proxy.getLabel = function()
+					return label
+				end
 
-			proxy.spaceUsed = function()
-				return MineOSNetwork.proxySpaceUsed
-			end
+				proxy.spaceUsed = function()
+					return MineOSNetwork.proxySpaceUsed
+				end
 
-			proxy.spaceTotal = function()
-				return MineOSNetwork.proxySpaceTotal
-			end
+				proxy.spaceTotal = function()
+					return MineOSNetwork.proxySpaceTotal
+				end
 
-			proxy.setLabel = function(text)
-				label = text
-				return true
-			end
+				proxy.setLabel = function(text)
+					label = text
+					return true
+				end
 
-			proxy.isReadOnly = function()
-				return false
-			end
+				proxy.isReadOnly = function()
+					return false
+				end
 
-			proxy.closeSocketHandle = function()
-				fs.umount(proxy)
-				return socketHandle.close()
-			end
+				proxy.closeSocketHandle = function()
+					fs.umount(proxy)
+					return socketHandle.close()
+				end
 
-			proxy.list = function(path)
-				local success, result = FTPEnterPassiveModeAndRunCommand(socketHandle, "MLSD -a " .. path)
-				if success then
-					local list = FTPParseLines(result)
-					for i = 1, #list do
-						local success, name, isDirectory = FTPParseFileInfo(list[i])
-						if success then
-							list[i] = name .. (isDirectory and "/" or "")
+				proxy.list = function(path)
+					local success, result = FTPEnterPassiveModeAndRunCommand(socketHandle, "MLSD -a " .. path)
+					if success then
+						local list = FTPParseLines(result)
+						for i = 1, #list do
+							local success, name, isDirectory = FTPParseFileInfo(list[i])
+							if success then
+								list[i] = name .. (isDirectory and "/" or "")
+							end
 						end
+
+						return list
+					else
+						return {}
+					end
+				end
+
+				proxy.isDirectory = function(path)
+					local success, result = check(FTPFileInfo(socketHandle, path, "isDirectory"))
+					if success then
+						return result
+					else
+						return false
+					end
+				end
+
+				proxy.lastModified = function(path)
+					local success, result = check(FTPFileInfo(socketHandle, path, "lastModified"))
+					if success then
+						return result
+					else
+						return 0
+					end
+				end
+
+				proxy.size = function(path)
+					local success, result = check(FTPFileInfo(socketHandle, path, "size"))
+					if success then
+						return result
+					else
+						return 0
+					end
+				end
+
+				proxy.exists = function(path)
+					local success, result = check(FTPFileInfo(socketHandle, path))
+					if success then
+						return result
+					else
+						return false
+					end
+				end
+
+				proxy.open = function(path, mode)
+					local temporaryPath = MineOSCore.getTemporaryPath()
+					
+					if mode == "r" or mode == "rb" or mode == "a" or mode == "ab" then
+						local success, result = FTPEnterPassiveModeAndRunCommand(socketHandle, "RETR " .. path)		
+						local fileHandle = io.open(temporaryPath, "wb")
+						fileHandle:write(success and result or "")
+						fileHandle:close()
+					end
+					
+					local fileHandle, reason = filesystemProxy.open(temporaryPath, mode)
+					if fileHandle then
+						fileHandles[fileHandle] = {
+							temporaryPath = temporaryPath,
+							path = path,
+							needUpload = mode ~= "r" and mode ~= "rb",
+						}
 					end
 
-					return list
-				else
-					return {}
-				end
-			end
-
-			proxy.isDirectory = function(path)
-				local success, result = check(FTPFileInfo(socketHandle, path, "isDirectory"))
-				if success then
-					return result
-				else
-					return false
-				end
-			end
-
-			proxy.lastModified = function(path)
-				local success, result = check(FTPFileInfo(socketHandle, path, "lastModified"))
-				if success then
-					return result
-				else
-					return 0
-				end
-			end
-
-			proxy.size = function(path)
-				local success, result = check(FTPFileInfo(socketHandle, path, "size"))
-				if success then
-					return result
-				else
-					return 0
-				end
-			end
-
-			proxy.exists = function(path)
-				local success, result = check(FTPFileInfo(socketHandle, path))
-				if success then
-					return result
-				else
-					return false
-				end
-			end
-
-			proxy.open = function(path, mode)
-				local temporaryPath = MineOSCore.getTemporaryPath()
-				
-				if mode == "r" or mode == "rb" or mode == "a" or mode == "ab" then
-					local success, result = FTPEnterPassiveModeAndRunCommand(socketHandle, "RETR " .. path)		
-					local fileHandle = io.open(temporaryPath, "wb")
-					fileHandle:write(success and result or "")
-					fileHandle:close()
-				end
-				
-				local fileHandle, reason = filesystemProxy.open(temporaryPath, mode)
-				if fileHandle then
-					fileHandles[fileHandle] = {
-						temporaryPath = temporaryPath,
-						path = path,
-						needUpload = mode ~= "r" and mode ~= "rb",
-					}
+					return fileHandle, reason
 				end
 
-				return fileHandle, reason
-			end
+				proxy.close = function(fileHandle)
+					filesystemProxy.close(fileHandle)
 
-			proxy.close = function(fileHandle)
-				filesystemProxy.close(fileHandle)
+					if fileHandles[fileHandle].needUpload then
+						local file = io.open(fileHandles[fileHandle].temporaryPath, "rb")
+						local data = file:read("*a")
+						file:close()
 
-				if fileHandles[fileHandle].needUpload then
-					local file = io.open(fileHandles[fileHandle].temporaryPath, "rb")
-					local data = file:read("*a")
-					file:close()
-
-					check(FTPEnterPassiveModeAndRunCommand(socketHandle, "STOR " .. fileHandles[fileHandle].path, data))
-				end
-
-				fs.remove(fileHandles[fileHandle].temporaryPath)
-				fileHandles[fileHandle] = nil
-			end
-
-			proxy.write = function(...)
-				return filesystemProxy.write(...)
-			end
-
-			proxy.read = function(...)
-				return filesystemProxy.read(...)
-			end
-
-			proxy.seek = function(...)
-				return filesystemProxy.seek(...)
-			end
-
-			proxy.remove = function(path)
-				if proxy.isDirectory(path) then		
-					local list = proxy.list(path)
-					for i = 1, #list do
-						proxy.remove((path .. "/" .. list[i]):gsub("/+", "/"))
+						check(FTPEnterPassiveModeAndRunCommand(socketHandle, "STOR " .. fileHandles[fileHandle].path, data))
 					end
 
-					FTPSocketWrite(socketHandle, "RMD " .. path)
-				else
-					FTPSocketWrite(socketHandle, "DELE " .. path)
+					fs.remove(fileHandles[fileHandle].temporaryPath)
+					fileHandles[fileHandle] = nil
 				end
+
+				proxy.write = function(...)
+					return filesystemProxy.write(...)
+				end
+
+				proxy.read = function(...)
+					return filesystemProxy.read(...)
+				end
+
+				proxy.seek = function(...)
+					return filesystemProxy.seek(...)
+				end
+
+				proxy.remove = function(path)
+					if proxy.isDirectory(path) then		
+						local list = proxy.list(path)
+						for i = 1, #list do
+							proxy.remove((path .. "/" .. list[i]):gsub("/+", "/"))
+						end
+
+						FTPSocketWrite(socketHandle, "RMD " .. path)
+					else
+						FTPSocketWrite(socketHandle, "DELE " .. path)
+					end
+				end
+
+				proxy.makeDirectory = function(path)
+					FTPSocketWrite(socketHandle, "MKD " .. path)
+					return true
+				end
+
+				proxy.rename = function(oldPath, newPath)
+					FTPSocketWrite(socketHandle, "RNFR " .. oldPath)
+					FTPSocketWrite(socketHandle, "RNTO " .. newPath)
+
+					return true
+				end
+
+				return proxy
+			else
+				return false, reason
 			end
-
-			proxy.makeDirectory = function(path)
-				FTPSocketWrite(socketHandle, "MKD " .. path)
-				return true
-			end
-
-			proxy.rename = function(oldPath, newPath)
-				FTPSocketWrite(socketHandle, "RNFR " .. oldPath)
-				FTPSocketWrite(socketHandle, "RNTO " .. newPath)
-
-				return true
-			end
-
-			return proxy
 		else
 			return false, reason
 		end
 	else
-		return false, reason
+		return false, "Internet component is not available"
 	end
 end
 
@@ -672,7 +676,7 @@ function MineOSNetwork.update()
 		MineOSNetwork.eventHandlerID = event.addHandler(function(...)
 			local eventData = {...}
 			
-			if (eventData[1] == "component_added" or eventData[1] == "component_removed") and eventData[3] == "modem" then
+			if (eventData[1] == "component_added" or eventData[1] == "component_removed") and (eventData[3] == "modem" or eventData[3] == "internet") then
 				MineOSNetwork.updateComponents()
 			elseif eventData[1] == "modem_message" and MineOSCore.properties.network.enabled and eventData[6] == "MineOSNetwork" then
 				if eventData[7] == "request" then

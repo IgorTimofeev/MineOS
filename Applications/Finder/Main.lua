@@ -46,10 +46,11 @@ local nextButton = window:addChild(GUI.adaptiveRoundedButton(14, 2, 1, 0, 0xFFFF
 nextButton.colors.disabled = prevButton.colors.disabled
 
 local FTPButton = window:addChild(GUI.adaptiveRoundedButton(20, 2, 1, 0, 0xFFFFFF, 0x4B4B4B, 0x3C3C3C, 0xFFFFFF, MineOSCore.localization.networkFTPNewConnection))
-nextButton.colors.disabled = prevButton.colors.disabled
+FTPButton.colors.disabled = prevButton.colors.disabled
+FTPButton.disabled = not MineOSNetwork.internetProxy
 
 local sidebarContainer = window:addChild(GUI.container(1, 4, 20, 1))
-sidebarContainer.panel = sidebarContainer:addChild(GUI.panel(1, 1, sidebarContainer.width, 1, 0xFFFFFF, MineOSCore.properties.transparencyEnabled and 0.24))
+sidebarContainer.panel = sidebarContainer:addChild(GUI.panel(1, 1, sidebarContainer.width, 1, 0xFFFFFF, MineOSCore.properties.transparencyEnabled and 0.3))
 sidebarContainer.itemsContainer = sidebarContainer:addChild(GUI.container(1, 1, sidebarContainer.width, 1))
 
 local searchInput = window:addChild(GUI.input(1, 2, 36, 1, 0xFFFFFF, 0x4B4B4B, 0xA5A5A5, 0xFFFFFF, 0x2D2D2D, nil, MineOSCore.localization.search, true))
@@ -360,7 +361,8 @@ FTPButton.onTouch = function()
 end
 
 statusBar.eventHandler = function(mainContainer, object, eventData)
-	if (eventData[1] == "component_added" or eventData[1] == "component_removed") and eventData[3] == "filesystem" then
+	if eventData[1] == "component_added" or eventData[1] == "component_removed" then
+		FTPButton.disabled = not MineOSNetwork.internetProxy
 		updateSidebar()
 		MineOSInterface.OSDraw()
 	elseif eventData[1] == "MineOSNetwork" then
