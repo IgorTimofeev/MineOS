@@ -958,7 +958,6 @@ local function checkFileToExists(container, path)
 		buffer.draw()
 	else
 		container:delete()
-		fs.makeDirectory(fs.path(path))
 		return true
 	end
 end
@@ -1048,6 +1047,7 @@ function MineOSInterface.newApplication(parentWindow, iconField, x, y, path)
 			if container.inputField.text then
 				local finalPath = path .. container.inputField.text .. ".app/"
 				if checkFileToExists(container, finalPath) then
+					fs.makeDirectory(finalPath)
 					fs.copy(filesystemChooser.path or MineOSPaths.icons .. "SampleIcon.pic", finalPath .. "Icon.pic")
 					
 					local file = io.open(finalPath .. "Main.lua", "w")

@@ -3,7 +3,7 @@ require("advancedLua")
 local web = require("web")
 local component = require("component")
 local buffer = require("doubleBuffering")
-local filesystem = require("filesystem")
+local fs = require("filesystem")
 local unicode = require("unicode")
 local image = require("image")
 local color = require("color")
@@ -17,15 +17,24 @@ MineOSCore.localization = {}
 ----------------------------------------------------------------------------------------------------------------
 
 function MineOSCore.getCurrentScriptDirectory()
-	return filesystem.path(getCurrentScript())
+	return fs.path(getCurrentScript())
+end
+
+function MineOSCore.getTemporaryPath()
+	local temporaryPath
+	repeat
+		temporaryPath = MineOSPaths.temporary .. string.format("%08X", math.random(0xFFFFFFFF))
+	until not fs.exists(temporaryPath)
+
+	return temporaryPath
 end
 
 function MineOSCore.getLocalization(pathToLocalizationFolder)
 	local localizationFileName = pathToLocalizationFolder .. MineOSCore.properties.language .. ".lang"
-	if filesystem.exists(localizationFileName) then
+	if fs.exists(localizationFileName) then
 		return table.fromFile(localizationFileName)
 	else
-		return table.fromFile(pathToLocalizationFolder .. filesystem.list(pathToLocalizationFolder)())
+		return table.fromFile(pathToLocalizationFolder .. fs.list(pathToLocalizationFolder)())
 	end
 end
 
@@ -44,7 +53,7 @@ end
 -----------------------------------------------------------------------------------------------------------------------------------
 
 function MineOSCore.createShortcut(where, forWhat)
-	filesystem.makeDirectory(filesystem.path(where))
+	fs.makeDirectory(fs.path(where))
 	local file = io.open(where, "w")
 	file:write(forWhat)
 	file:close()
@@ -67,7 +76,7 @@ end
 function MineOSCore.loadPropeties()
 	local saveLater = false
 
-	if filesystem.exists(MineOSPaths.properties) then
+	if fs.exists(MineOSPaths.properties) then
 		MineOSCore.properties = table.fromFile(MineOSPaths.properties)
 	else
 		MineOSCore.properties = {}
@@ -103,6 +112,7 @@ function MineOSCore.loadPropeties()
 			enabled = true,
 			signalStrength = 512,
 		},
+		FTPConnections = {},
 	}
 
 	MineOSCore.associateExtension(".pic", MineOSPaths.applications .. "/Photoshop.app/Main.lua", MineOSPaths.icons .. "/Image.pic", MineOSPaths.extensionAssociations .. "Pic/ContextMenu.lua")
@@ -152,15 +162,15 @@ end
 
 function MineOSCore.associationsExtensionAutomatically()
 	local path, extension = MineOSPaths.extensionAssociations
-	for file in filesystem.list(path) do
-		if filesystem.isDirectory(path .. file) then
+	for file in fs.list(path) do
+		if fs.isDirectory(path .. file) then
 			extension = "." .. unicode.sub(file, 1, -2)
 
-			if filesystem.exists(path .. file .. "ContextMenu.lua") then
+			if fs.exists(path .. file .. "ContextMenu.lua") then
 				MineOSCore.associateExtensionContextMenu(extension, path .. file .. "Context menu.lua")
 			end
 
-			if filesystem.exists(path .. file .. "Launcher.lua") then
+			if fs.exists(path .. file .. "Launcher.lua") then
 				MineOSCore.associateExtensionLauncher(extension, path .. file .. "Launcher.lua")
 			end
 		end
@@ -239,7 +249,7 @@ function MineOSCore.safeLaunch(path, ...)
 	local oldResolutionWidth, oldResolutionHeight = buffer.getResolution()
 	local finalSuccess, finalPath, finalLine, finalTraceback = true
 	
-	if filesystem.exists(path) then
+	if fs.exists(path) then
 		local loadSuccess, loadReason = loadfile("/" .. path)
 		if loadSuccess then
 			local success, path, line, traceback = MineOSCore.call(loadSuccess, ...)
@@ -262,6 +272,8 @@ end
 
 -----------------------------------------------------------------------------------------------------------------------------------
 
+fs.remove(MineOSPaths.temporary)
+fs.makeDirectory(MineOSPaths.temporary)
 MineOSCore.loadPropeties()
 
 -----------------------------------------------------------------------------------------------------------------------------------

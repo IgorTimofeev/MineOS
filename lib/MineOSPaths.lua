@@ -2,7 +2,7 @@
 local filesystem = require("filesystem")
 local MineOSPaths = {}
 
-----------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------
 
 MineOSPaths.OS = "/MineOS/"
 MineOSPaths.downloads = MineOSPaths.OS .. "Downloads/"
@@ -19,14 +19,17 @@ MineOSPaths.trash = MineOSPaths.OS .. "Trash/"
 MineOSPaths.properties = MineOSPaths.system .. "Properties.cfg"
 MineOSPaths.editor = MineOSPaths.applications .. "/MineCode IDE.app/Main.lua"
 MineOSPaths.explorer = MineOSPaths.applications .. "/Finder.app/Main.lua"
+MineOSPaths.temporary = MineOSPaths.system .. "Temporary/"
+MineOSPaths.network = MineOSPaths.system .. "Network/"
 
-----------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------
 
 filesystem.makeDirectory(MineOSPaths.pictures)
 filesystem.makeDirectory(MineOSPaths.applicationData)
 filesystem.makeDirectory(MineOSPaths.trash)
 filesystem.makeDirectory(MineOSPaths.desktop)
+filesystem.makeDirectory(MineOSPaths.network)
 
-----------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------
 
 return MineOSPaths

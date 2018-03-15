@@ -572,8 +572,8 @@ local function createOSWidgets()
 
 					comboBox:clear()
 					for proxy, path in fs.mounts() do
-						if proxy.network then
-							local item = comboBox:addItem(MineOSNetwork.getProxyName(proxy))
+						if proxy.MineOSNetworkModem then
+							local item = comboBox:addItem(MineOSNetwork.getModemProxyName(proxy))
 							item.proxyAddress = proxy.address
 							item.onTouch = function()
 								allowReadAndWriteSwitchAndLabel.switch:setState(MineOSCore.properties.network.users[item.proxyAddress].allowReadAndWrite)

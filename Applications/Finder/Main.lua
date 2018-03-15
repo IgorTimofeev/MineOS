@@ -25,6 +25,7 @@ local favourites = {
 local resourcesPath = MineOSCore.getCurrentScriptDirectory()
 local favouritesPath = MineOSPaths.applicationData .. "Finder/Favourites3.cfg"
 
+local sidebarFromY = 1
 local iconFieldYOffset = 2
 local scrollTimerID
 
@@ -37,34 +38,35 @@ local mainContainer, window = MineOSInterface.addWindow(MineOSInterface.filledWi
 
 local titlePanel = window:addChild(GUI.panel(1, 1, 1, 3, 0xE1E1E1))
 
-local prevButton = window:addChild(GUI.adaptiveRoundedButton(9, 2, 1, 0, 0xFFFFFF, 0x3C3C3C, 0x3C3C3C, 0xFFFFFF, "<"))
+local prevButton = window:addChild(GUI.adaptiveRoundedButton(9, 2, 1, 0, 0xFFFFFF, 0x4B4B4B, 0x3C3C3C, 0xFFFFFF, "<"))
 prevButton.colors.disabled.background = prevButton.colors.default.background
 prevButton.colors.disabled.text = 0xC3C3C3
 
-local nextButton = window:addChild(GUI.adaptiveRoundedButton(14, 2, 1, 0, 0xFFFFFF, 0x3C3C3C, 0x3C3C3C, 0xFFFFFF, ">"))
+local nextButton = window:addChild(GUI.adaptiveRoundedButton(14, 2, 1, 0, 0xFFFFFF, 0x4B4B4B, 0x3C3C3C, 0xFFFFFF, ">"))
+nextButton.colors.disabled = prevButton.colors.disabled
+
+local FTPButton = window:addChild(GUI.adaptiveRoundedButton(20, 2, 1, 0, 0xFFFFFF, 0x4B4B4B, 0x3C3C3C, 0xFFFFFF, MineOSCore.localization.networkFTPNewConnection))
 nextButton.colors.disabled = prevButton.colors.disabled
 
 local sidebarContainer = window:addChild(GUI.container(1, 4, 20, 1))
 sidebarContainer.panel = sidebarContainer:addChild(GUI.panel(1, 1, sidebarContainer.width, 1, 0xFFFFFF, MineOSCore.properties.transparencyEnabled and 0.24))
 sidebarContainer.itemsContainer = sidebarContainer:addChild(GUI.container(1, 1, sidebarContainer.width, 1))
 
-local searchInput = window:addChild(GUI.input(1, 2, 36, 1, 0xFFFFFF, 0x696969, 0xA5A5A5, 0xFFFFFF, 0x2D2D2D, nil, MineOSCore.localization.search, true))
+local searchInput = window:addChild(GUI.input(1, 2, 36, 1, 0xFFFFFF, 0x4B4B4B, 0xA5A5A5, 0xFFFFFF, 0x2D2D2D, nil, MineOSCore.localization.search, true))
 
-local iconField = window:addChild(
-	MineOSInterface.iconField(
-		1, 4, 1, 1, 2, 2, 0x3C3C3C, 0x3C3C3C,
-		MineOSPaths.desktop
-	)
-)
+local updatingListLabel = window:addChild(GUI.label(1, 4, 1, 1, 0x696969, MineOSCore.localization.updatingFileList):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.center))
+updatingListLabel.hidden = true
 
-local scrollBar = window:addChild(GUI.scrollBar(1, 4, 1, 1, 0xC3C3C3, 0x444444, iconFieldYOffset, 1, 1, 1, 1, true))
+local iconField = window:addChild(MineOSInterface.iconField(1, 4, 1, 1, 2, 2, 0x3C3C3C, 0x3C3C3C, MineOSPaths.desktop))
+
+local scrollBar = window:addChild(GUI.scrollBar(1, 4, 1, 1, 0xC3C3C3, 0x4B4B4B, iconFieldYOffset, 1, 1, 1, 1, true))
 scrollBar.eventHandler = nil
 
 local statusBar = window:addChild(GUI.object(1, 1, 1, 1))
 
 statusBar.draw = function(object)
 	buffer.square(object.x, object.y, object.width, object.height, 0xFFFFFF, 0x3C3C3C, " ")
-	buffer.text(object.x + 1, object.y, 0x3C3C3C, string.limit(("root/" .. iconField.workpath):gsub("/+$", ""):gsub("%/+", " ► "), object.width - 1, "start"))
+	buffer.text(object.x + 1, object.y, 0x3C3C3C, string.limit(("root/" .. iconField.workpath):gsub("/+$", ""):gsub("%/+", " ► "), object.width - 2, "left"))
 end
 
 local sidebarResizer = window:addChild(GUI.resizer(1, 4, 3, 5, 0xFFFFFF, 0x0))
@@ -116,49 +118,25 @@ local function addWorkpath(path)
 	iconField:setWorkpath(path)
 end
 
-local function newSidebarItem(textColor, text, path)
-	local object = sidebarContainer.itemsContainer:addChild(
-		GUI.object(
-			1,
-			#sidebarContainer.itemsContainer.children > 0 and sidebarContainer.itemsContainer.children[#sidebarContainer.itemsContainer.children].localY + 1 or 1,
-			1,
-			1
-		)
-	)
+local function newSidebarItem(y, textColor, text, path)
+	local object = sidebarContainer.itemsContainer:addChild(GUI.object(1, y, 1, 1))
 	
 	if text then
-		object.text = text
-		object.textColor = textColor
-		object.path = path
-
 		object.draw = function(object)
 			object.width = sidebarContainer.itemsContainer.width
 
-			if object.path == iconField.workpath then
+			local currentTextColor = textColor
+			if path == iconField.workpath then
 				buffer.square(object.x, object.y, object.width, 1, 0x3366CC, 0xFFFFFF, " ")
-				buffer.text(object.x + 1, object.y, 0xFFFFFF, string.limit(object.text, object.width - 4, "center"))
-				if object.favouriteIndex and object.favouriteIndex > 1 then
-					buffer.text(object.x + object.width - 2, object.y, 0xCCFFFF, "x")
-				end
-			else
-				buffer.text(object.x + 1, object.y, object.textColor, string.limit(object.text, object.width - 2, "center"))
+				currentTextColor = 0xFFFFFF
 			end
 			
+			buffer.text(object.x + 1, object.y, currentTextColor, string.limit(text, object.width - 2, "center"))
 		end
 
 		object.eventHandler = function(mainContainer, object, eventData)
 			if eventData[1] == "touch" then
-				if object.favouriteIndex and object.favouriteIndex > 1 and eventData[3] == object.x + object.width - 2 then
-					table.remove(favourites, object.favouriteIndex)
-					saveFavourites()
-
-					computer.pushSignal("Finder", "updateFavourites")
-				elseif fs.isDirectory(object.path) then
-					addWorkpath(object.path)
-					MineOSInterface.OSDraw()
-					
-					updateFileListAndDraw()
-				end
+				object.onTouch(eventData)
 			end
 		end
 	end
@@ -166,32 +144,129 @@ local function newSidebarItem(textColor, text, path)
 	return object
 end
 
-local function updateSidebar()
+local function onFavouriteTouch(path)
+	if fs.exists(path) then
+		addWorkpath(path)
+		updateFileListAndDraw()
+	else
+		GUI.error("Path doesn't exists: " .. path)
+	end
+end
+
+local openFTP, updateSidebar
+
+openFTP = function(...)
+	local mountPath = MineOSNetwork.mountPaths.FTP .. MineOSNetwork.getFTPProxyName(...) .. "/"
+	local proxy, reason = MineOSNetwork.connectToFTP(...)
+	if proxy then
+		MineOSNetwork.umountFTPs()
+		fs.mount(proxy, mountPath)
+		addWorkpath(mountPath)
+		updateSidebar()
+		updateFileListAndDraw()
+	else
+		GUI.error(reason)
+	end
+end
+
+updateSidebar = function()
+	local y = sidebarFromY
 	sidebarContainer.itemsContainer:deleteChildren()
-	
-	sidebarContainer.itemsContainer:addChild(newSidebarItem(0x3C3C3C, MineOSCore.localization.favourite))
+
+	newSidebarItem(y, 0x3C3C3C, MineOSCore.localization.favourite)
+	y = y + 1
 	for i = 1, #favourites do
-		local object = sidebarContainer.itemsContainer:addChild(newSidebarItem(0x555555, " " .. fs.name(favourites[i].name), favourites[i].path))
-		object.favouriteIndex = i
+		local object = newSidebarItem(y, 0x555555, " " .. fs.name(favourites[i].name), favourites[i].path)
+		
+		object.onTouch = function(eventData)
+			if eventData[5] == 1 then
+				local menu = GUI.contextMenu(eventData[3], eventData[4])
+				
+				menu:addItem(MineOSCore.localization.removeFromFavourites).onTouch = function()
+					table.remove(favourites, i)
+					saveFavourites()
+					updateSidebar()
+					MineOSInterface.OSDraw()
+				end
+
+				menu:show()
+			else
+				onFavouriteTouch(favourites[i].path)
+			end
+		end
+
+		y = y + 1
 	end
 
-	if MineOSCore.properties.network.enabled and MineOSNetwork.getProxyCount() > 0 then
-		sidebarContainer.itemsContainer:addChild(newSidebarItem(0x3C3C3C))
-		sidebarContainer.itemsContainer:addChild(newSidebarItem(0x3C3C3C, MineOSCore.localization.network))
-
-		for proxy, path in fs.mounts() do
-			if proxy.network then
-				sidebarContainer.itemsContainer:addChild(newSidebarItem(0x555555, " " .. MineOSNetwork.getProxyName(proxy), path .. "/"))
+	local added = false
+	for proxy, path in fs.mounts() do
+		if proxy.MineOSNetworkModem then
+			if not added then
+				y = y + 1
+				newSidebarItem(y, 0x3C3C3C, MineOSCore.localization.network)
+				y, added = y + 1, true
 			end
+
+			newSidebarItem(y, 0x555555, " " .. MineOSNetwork.getModemProxyName(proxy), path .. "/").onTouch = function()
+				addWorkpath(path .. "/")
+				updateFileListAndDraw()
+			end
+
+			y = y + 1
 		end
 	end
 
-	sidebarContainer.itemsContainer:addChild(newSidebarItem(0x3C3C3C))
+	if #MineOSCore.properties.FTPConnections > 0 then
+		y = y + 1
+		newSidebarItem(y, 0x3C3C3C, MineOSCore.localization.networkFTPConnections)
+		y = y + 1
+		
+		for i = 1, #MineOSCore.properties.FTPConnections do
+			local connection = MineOSCore.properties.FTPConnections[i]
+			local name = MineOSNetwork.getFTPProxyName(connection.address, connection.port, connection.user)
+			local mountPath = MineOSNetwork.mountPaths.FTP .. name .. "/"
 
-	sidebarContainer.itemsContainer:addChild(newSidebarItem(0x3C3C3C, MineOSCore.localization.mounts))
+			newSidebarItem(y, 0x555555, " " .. name, mountPath).onTouch = function(eventData)
+				if eventData[5] == 1 then
+					local menu = GUI.contextMenu(eventData[3], eventData[4])
+					
+					menu:addItem(MineOSCore.localization.delete).onTouch = function()
+						table.remove(MineOSCore.properties.FTPConnections, i)
+						MineOSCore.saveProperties()
+						updateSidebar()
+						MineOSInterface.OSDraw()
+					end
+
+					menu:show()
+				else
+					openFTP(connection.address, connection.port, connection.user, connection.password)
+				end
+			end
+
+			y = y + 1
+		end
+	end
+
+	y = y + 1
+	newSidebarItem(y, 0x3C3C3C, MineOSCore.localization.mounts)
+	y = y + 1
 	for proxy, path in fs.mounts() do
-		if path ~= "/" and not proxy.network then
-			sidebarContainer.itemsContainer:addChild(newSidebarItem(0x555555, " " .. (proxy.getLabel() or fs.name(path)), path .. "/"))
+		if path ~= "/" and not proxy.MineOSNetworkModem and not proxy.MineOSNetworkFTP then
+			newSidebarItem(y, 0x555555, " " .. (proxy.getLabel() or fs.name(path)), path .. "/").onTouch = function()
+				onFavouriteTouch(path .. "/")
+			end
+
+			y = y + 1
+		end
+	end
+end
+
+sidebarContainer.itemsContainer.eventHandler = function(mainContainer, object, eventData)
+	if eventData[1] == "scroll" then
+		if (eventData[5] > 0 and sidebarFromY < 1) or (eventData[5] < 0 and sidebarContainer.itemsContainer.children[#sidebarContainer.itemsContainer.children].localY > 1) then
+			sidebarFromY = sidebarFromY + eventData[5]
+			updateSidebar()
+			MineOSInterface.OSDraw()
 		end
 	end
 end
@@ -231,6 +306,57 @@ end
 
 prevButton.onTouch = function()
 	prevOrNextWorkpath(false)
+end
+
+FTPButton.onTouch = function()
+	local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer, MineOSCore.localization.networkFTPNewConnection)
+
+	local ad, po, us, pa, la = "ftp.example.com", "21", "root", "1234"
+	if #MineOSCore.properties.FTPConnections > 0 then
+		local la = MineOSCore.properties.FTPConnections[#MineOSCore.properties.FTPConnections]
+		ad, po, us, pa = la.address, tostring(la.port), la.user, la.password
+	end
+
+	local addressInput = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x696969, 0xE1E1E1, 0x2D2D2D, ad, MineOSCore.localization.networkFTPAddress, true))
+	local portInput = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x696969, 0xE1E1E1, 0x2D2D2D, po, MineOSCore.localization.networkFTPPort, true))
+	local userInput = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x696969, 0xE1E1E1, 0x2D2D2D, us, MineOSCore.localization.networkFTPUser, true))
+	local passwordInput = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x696969, 0xE1E1E1, 0x2D2D2D, pa, MineOSCore.localization.networkFTPPassword, true, "*"))
+	container.layout:addChild(GUI.button(1, 1, 36, 3, 0xA5A5A5, 0xFFFFFF, 0x2D2D2D, 0xE1E1E1, "OK")).onTouch = function()
+		container:delete()
+
+		local port = tonumber(portInput.text)
+		if port then
+			local found = false
+			for i = 1, #MineOSCore.properties.FTPConnections do
+				if
+					MineOSCore.properties.FTPConnections[i].address == addressInput.text and
+					MineOSCore.properties.FTPConnections[i].port == port and
+					MineOSCore.properties.FTPConnections[i].user == userInput.text and
+					MineOSCore.properties.FTPConnections[i].password == passwordInput.text
+				then
+					found = true
+					break
+				end
+			end
+
+			if not found then
+				table.insert(MineOSCore.properties.FTPConnections, {
+					address = addressInput.text,
+					port = port,
+					user = userInput.text,
+					password = passwordInput.text
+				})
+				MineOSCore.saveProperties()
+
+				updateSidebar()
+				MineOSInterface.OSDraw()
+
+				openFTP(addressInput.text, port, userInput.text, passwordInput.text)
+			end
+		end
+	end
+
+	MineOSInterface.OSDraw()
 end
 
 statusBar.eventHandler = function(mainContainer, object, eventData)
@@ -278,7 +404,6 @@ iconField.eventHandler = function(mainContainer, object, eventData)
 			end
 			saveFavourites()
 			updateSidebar()
-
 			MineOSInterface.OSDraw()
 		end	
 	end
@@ -301,7 +426,12 @@ end
 
 local overrideUpdateFileList = iconField.updateFileList
 iconField.updateFileList = function(...)
+	iconField.hidden, updatingListLabel.hidden = true, false
+	MineOSInterface.OSDraw()
+
 	overrideUpdateFileList(...)
+	iconField.hidden, updatingListLabel.hidden = false, true
+	
 	updateScrollBar()
 end
 
@@ -321,6 +451,10 @@ local function calculateSizes(width, height)
 	window.backgroundPanel.height = height - 4
 	window.backgroundPanel.localX = sidebarContainer.width + 1
 	window.backgroundPanel.localY = 4
+
+	updatingListLabel.localX = window.backgroundPanel.localX
+	updatingListLabel.width = window.backgroundPanel.width
+	updatingListLabel.height = window.backgroundPanel.height
 
 	statusBar.localX = sidebarContainer.width + 1
 	statusBar.localY = height

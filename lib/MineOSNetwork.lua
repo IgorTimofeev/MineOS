@@ -1,62 +1,414 @@
 
 local component = require("component")
-local MineOSCore = require("MineOSCore")
 local computer = require("computer")
+local MineOSCore = require("MineOSCore")
+local MineOSPaths = require("MineOSPaths")
+local GUI = require("GUI")
 local event = require("event")
-local filesystemComponent = require("component").proxy(computer.getBootAddress())
-local filesystemLibrary = require("filesystem")
+local fs = require("filesystem")
+local MineOSNetwork = {}
 
--- Ебучие херолизы, с каких залупнинских хуев я должен учитывать их говнокод и синтаксические ошибки?
--- GGWP
-if not filesystemLibrary.unmount and filesystemLibrary.umount then
-	filesystemLibrary.unmount = filesystemLibrary.umount
+----------------------------------------------------------------------------------------------------------------
+
+local filesystemProxy = component.proxy(computer.getBootAddress())
+
+MineOSNetwork.filesystemHandles = {}
+
+MineOSNetwork.modemProxy = nil
+MineOSNetwork.modemPort = 1488
+MineOSNetwork.modemPacketReserve = 128
+MineOSNetwork.modemTimeout = 2
+
+MineOSNetwork.internetProxy = nil
+MineOSNetwork.internetDelay = 0.05
+MineOSNetwork.internetTimeout = 0.25
+
+MineOSNetwork.proxySpaceUsed = 0
+MineOSNetwork.proxySpaceTotal = 1073741824
+
+MineOSNetwork.mountPaths = {
+	modem = MineOSPaths.network .. "Modem/",
+	FTP = MineOSPaths.network .. "FTP/"
+}
+
+----------------------------------------------------------------------------------------------------------------
+
+local function umountProxy(type)
+	for proxy in fs.mounts() do
+		if proxy[type] then
+			fs.umount(proxy)
+		end
+	end
+end
+
+function MineOSNetwork.updateComponents()
+	local modemAddress, internetAddress = component.list("modem")(), component.list("internet")()
+	if modemAddress then
+		MineOSNetwork.modemProxy = component.proxy(modemAddress)
+		MineOSNetwork.modemProxy.open(MineOSNetwork.modemPort)
+	else
+		MineOSNetwork.modemProxy = nil
+		MineOSNetwork.umountModems()
+	end
+
+	if internetAddress then
+		MineOSNetwork.internetProxy = component.proxy(internetAddress)
+	else
+		MineOSNetwork.internetProxy = nil
+		MineOSNetwork.umountFTPs()
+	end
 end
 
 ----------------------------------------------------------------------------------------------------------------
 
-local MineOSNetwork = {}
+function MineOSNetwork.umountFTPs()
+	umountProxy("MineOSNetworkFTP")
+end
 
-MineOSNetwork.modemPort = 1488
-MineOSNetwork.modemProxy = nil
-MineOSNetwork.modemPacketReserve = 128
-MineOSNetwork.timeout = 2
-MineOSNetwork.filesystemHandles = {}
-MineOSNetwork.mountPath = "/ftp/"
+function MineOSNetwork.getFTPProxyName(address, port, user)
+	return user .. "@" .. address .. ":" .. port
+end
+
+local function FTPSocketWrite(socketHandle, data)
+	local success, result = pcall(socketHandle.write, data .. "\r\n")
+	if success then
+		return true, result
+	else
+		return false, result
+	end
+end
+
+local function FTPSocketRead(socketHandle)
+	os.sleep(MineOSNetwork.internetDelay)
+
+	local deadline, data, success, result = computer.uptime() + MineOSNetwork.internetTimeout, ""
+	while computer.uptime() < deadline do
+		success, result = pcall(socketHandle.read, math.huge)
+		if success then
+			if not result or #result == 0 then
+				if #data > 0 then
+					return true, data
+				end
+			else
+				data, deadline = data .. result, computer.uptime() + MineOSNetwork.internetTimeout
+			end
+		else
+			return false, result
+		end
+	end
+
+	return false, "Socket read time out"
+end
+
+local function FTPParseLines(data)
+	local lines = {}
+
+	for line in data:gmatch("[^\r\n]+") do
+		table.insert(lines, line)
+	end
+
+	return lines
+end
+
+local function FTPLogin(socketHandle, user, password)
+	FTPSocketWrite(socketHandle, "USER " .. user)
+	FTPSocketWrite(socketHandle, "PASS " .. password)
+	FTPSocketWrite(socketHandle, "TYPE I")
+	
+	local success, result = FTPSocketRead(socketHandle)
+	if success then
+		if result:match("TYPE okay") then
+			return true
+		else
+			return false, "Authentication failed"
+		end
+	else
+		return false, result
+	end
+end
+
+local function FTPEnterPassiveModeAndRunCommand(commandSocketHandle, command, dataToWrite)
+	FTPSocketWrite(commandSocketHandle, "PASV")
+
+	local success, result = FTPSocketRead(commandSocketHandle)
+	if success then
+		local digits = {result:match("Entering Passive Mode %((%d+),(%d+),(%d+),(%d+),(%d+),(%d+)%)")}
+		if #digits == 6 then
+			local address, port =  table.concat(digits, ".", 1, 4), tonumber(digits[5]) * 256 + tonumber(digits[6])
+
+			FTPSocketWrite(commandSocketHandle, command)
+
+			local dataSocketHandle = MineOSNetwork.internetProxy.connect(address, port)
+			if dataToWrite then
+				os.sleep(MineOSNetwork.internetDelay)
+				dataSocketHandle.read(1)
+				dataSocketHandle.write(dataToWrite)
+				dataSocketHandle.close()
+
+				return true
+			else
+				local success, result = FTPSocketRead(dataSocketHandle)
+				dataSocketHandle.close()
+
+				if success then
+					return true, result
+				else
+					return false, result
+				end
+			end
+		else
+			return false, "Entering passive mode failed: wrong address byte array. Socket response message was: " .. tostring(result)
+		end
+	else
+		return false, result
+	end
+end
+
+local function FTPParseFileInfo(result)
+	local size, year, month, day, hour, minute, sec, type, name = result:match("Size=(%d+);Modify=(%d%d%d%d)(%d%d)(%d%d)(%d%d)(%d%d)(%d%d)[^;]*;Type=([^;]+);%s([^\r\n]+)")
+	if size then
+		return
+			true,
+			name,
+			type == "dir",
+			tonumber(size),
+			os.time({
+				year = year,
+				day = day,
+				month = month,
+				hour = hour,
+				minute = minute,
+				sec = sec
+			})
+	else
+		return false, "File not exists"
+	end
+end
+
+local function FTPFileInfo(socketHandle, path, field)
+	FTPSocketWrite(socketHandle, "MLST " .. path)
+	
+	local success, result = FTPSocketRead(socketHandle)
+	if success then
+		local success, name, isDirectory, size, lastModified = FTPParseFileInfo(result)
+		if success then
+			if field == "isDirectory" then
+				return true, isDirectory
+			elseif field == "lastModified" then
+				return true, lastModified
+			else
+				return true, size
+			end
+		else
+			return true, false
+		end
+	else
+		return false, result
+	end
+end
+
+local function check(...)
+	local result = {...}
+	if not result[1] then
+		GUI.error(table.unpack(result, 2))
+	end
+	return table.unpack(result)
+end
+
+function MineOSNetwork.connectToFTP(address, port, user, password)
+	local socketHandle, reason = MineOSNetwork.internetProxy.connect(address, port)
+	if socketHandle then
+		FTPSocketRead(socketHandle)
+
+		local result, reason = FTPLogin(socketHandle, user, password)
+		if result then
+
+			local proxy, fileHandles, label = {}, {}, MineOSNetwork.getFTPProxyName(address, port, user)
+
+			proxy.type = "filesystem"
+			proxy.slot = 0
+			proxy.address = label
+			proxy.MineOSNetworkFTP = true
+
+			proxy.getLabel = function()
+				return label
+			end
+
+			proxy.spaceUsed = function()
+				return MineOSNetwork.proxySpaceUsed
+			end
+
+			proxy.spaceTotal = function()
+				return MineOSNetwork.proxySpaceTotal
+			end
+
+			proxy.setLabel = function(text)
+				label = text
+				return true
+			end
+
+			proxy.isReadOnly = function()
+				return false
+			end
+
+			proxy.closeSocketHandle = function()
+				fs.umount(proxy)
+				return socketHandle.close()
+			end
+
+			proxy.list = function(path)
+				local success, result = FTPEnterPassiveModeAndRunCommand(socketHandle, "MLSD -a " .. path)
+				if success then
+					local list = FTPParseLines(result)
+					for i = 1, #list do
+						local success, name, isDirectory = FTPParseFileInfo(list[i])
+						if success then
+							list[i] = name .. (isDirectory and "/" or "")
+						end
+					end
+
+					return list
+				else
+					return {}
+				end
+			end
+
+			proxy.isDirectory = function(path)
+				local success, result = check(FTPFileInfo(socketHandle, path, "isDirectory"))
+				if success then
+					return result
+				else
+					return false
+				end
+			end
+
+			proxy.lastModified = function(path)
+				local success, result = check(FTPFileInfo(socketHandle, path, "lastModified"))
+				if success then
+					return result
+				else
+					return 0
+				end
+			end
+
+			proxy.size = function(path)
+				local success, result = check(FTPFileInfo(socketHandle, path, "size"))
+				if success then
+					return result
+				else
+					return 0
+				end
+			end
+
+			proxy.exists = function(path)
+				local success, result = check(FTPFileInfo(socketHandle, path))
+				if success then
+					return result
+				else
+					return false
+				end
+			end
+
+			proxy.open = function(path, mode)
+				local temporaryPath = MineOSCore.getTemporaryPath()
+				
+				if mode == "r" or mode == "rb" or mode == "a" or mode == "ab" then
+					local success, result = FTPEnterPassiveModeAndRunCommand(socketHandle, "RETR " .. path)		
+					local fileHandle = io.open(temporaryPath, "wb")
+					fileHandle:write(success and result or "")
+					fileHandle:close()
+				end
+				
+				local fileHandle, reason = filesystemProxy.open(temporaryPath, mode)
+				if fileHandle then
+					fileHandles[fileHandle] = {
+						temporaryPath = temporaryPath,
+						path = path,
+						needUpload = mode ~= "r" and mode ~= "rb",
+					}
+				end
+
+				return fileHandle, reason
+			end
+
+			proxy.close = function(fileHandle)
+				filesystemProxy.close(fileHandle)
+
+				if fileHandles[fileHandle].needUpload then
+					local file = io.open(fileHandles[fileHandle].temporaryPath, "rb")
+					local data = file:read("*a")
+					file:close()
+
+					check(FTPEnterPassiveModeAndRunCommand(socketHandle, "STOR " .. fileHandles[fileHandle].path, data))
+				end
+
+				fs.remove(fileHandles[fileHandle].temporaryPath)
+				fileHandles[fileHandle] = nil
+			end
+
+			proxy.write = function(...)
+				return filesystemProxy.write(...)
+			end
+
+			proxy.read = function(...)
+				return filesystemProxy.read(...)
+			end
+
+			proxy.seek = function(...)
+				return filesystemProxy.seek(...)
+			end
+
+			proxy.remove = function(path)
+				if proxy.isDirectory(path) then		
+					local list = proxy.list(path)
+					for i = 1, #list do
+						proxy.remove((path .. "/" .. list[i]):gsub("/+", "/"))
+					end
+
+					FTPSocketWrite(socketHandle, "RMD " .. path)
+				else
+					FTPSocketWrite(socketHandle, "DELE " .. path)
+				end
+			end
+
+			proxy.makeDirectory = function(path)
+				FTPSocketWrite(socketHandle, "MKD " .. path)
+				return true
+			end
+
+			proxy.rename = function(oldPath, newPath)
+				FTPSocketWrite(socketHandle, "RNFR " .. oldPath)
+				FTPSocketWrite(socketHandle, "RNTO " .. newPath)
+
+				return true
+			end
+
+			return proxy
+		else
+			return false, reason
+		end
+	else
+		return false, reason
+	end
+end
 
 ----------------------------------------------------------------------------------------------------------------
 
-function MineOSNetwork.getProxyName(proxy)
+function MineOSNetwork.umountModems()
+	umountProxy("MineOSNetworkModem")
+end
+
+function MineOSNetwork.getModemProxyName(proxy)
 	return proxy.name and proxy.name .. " (" .. proxy.address .. ")" or proxy.address
 end
 
-function MineOSNetwork.getProxy(address)
-	for proxy, path in filesystemLibrary.mounts() do
-		if proxy.network and proxy.address == address then
+function MineOSNetwork.getMountedModemProxy(address)
+	for proxy, path in fs.mounts() do
+		if proxy.MineOSNetworkModem and proxy.address == address then
 			return proxy
 		end
 	end
 end
-
-function MineOSNetwork.getProxyCount()
-	local count = 0
-	for proxy, path in filesystemLibrary.mounts() do
-		if proxy.network then
-			count = count + 1
-		end
-	end
-
-	return count
-end
-
-function MineOSNetwork.unmountAll()
-	for proxy in filesystemLibrary.mounts() do
-		if proxy.network then
-			filesystemLibrary.unmount(proxy)
-		end
-	end
-end
-
-----------------------------------------------------------------------------------------------------------------
 
 function MineOSNetwork.sendMessage(address, ...)
 	if MineOSNetwork.modemProxy then
@@ -89,32 +441,16 @@ function MineOSNetwork.setSignalStrength(strength)
 	end
 end
 
-function MineOSNetwork.updateModemState()
-	if component.isAvailable("modem") then
-		MineOSNetwork.modemProxy = component.proxy(component.list("modem")())
-		MineOSNetwork.modemProxy.open(MineOSNetwork.modemPort)
-		
-		return true
-	else
-		MineOSNetwork.modemProxy = nil
-		MineOSNetwork.unmountAll()
-
-		return false, "Modem component is not available"
-	end
-end
-
 function MineOSNetwork.broadcastComputerState(state)
 	return MineOSNetwork.broadcastMessage("MineOSNetwork", state and "computerAvailable" or "computerNotAvailable", MineOSCore.properties.network.name)
 end
 
-----------------------------------------------------------------------------------------------------------------
-
-local function newFilesystemProxy(address)
+local function newModemProxy(address)
 	local function request(method, returnOnFailure, ...)
 		MineOSNetwork.sendMessage(address, "MineOSNetwork", "request", method, ...)
 		
 		while true do
-			local eventData = { event.pull(MineOSNetwork.timeout, "modem_message") }
+			local eventData = { event.pull(MineOSNetwork.modemTimeout, "modem_message") }
 			
 			if eventData[3] == address and eventData[6] == "MineOSNetwork" then
 				if eventData[7] == "response" and eventData[8] == method then
@@ -124,9 +460,9 @@ local function newFilesystemProxy(address)
 					return returnOnFailure, "Access denied"
 				end
 			elseif not eventData[1] then
-				local proxy = MineOSNetwork.getProxy(address)
+				local proxy = MineOSNetwork.getMountedModemProxy(address)
 				if proxy then
-					filesystemLibrary.unmount(proxy)
+					fs.umount(proxy)
 				end
 
 				computer.pushSignal("MineOSNetwork", "timeout")
@@ -136,132 +472,134 @@ local function newFilesystemProxy(address)
 		end
 	end
 
-	return {
-		type = "filesystem",
-		address = address,
-		slot = 0,
-		network = true,
-		
-		getLabel = function()
-			return request("getLabel", "N/A")
-		end,
+	local proxy = {}
 
-		isReadOnly = function()
-			return request("isReadOnly", "N/A")
-		end,
+	proxy.type = "filesystem"
+	proxy.address = address
+	proxy.slot = 0
+	proxy.MineOSNetworkModem = true
+	
+	proxy.getLabel = function()
+		return request("getLabel", "N/A")
+	end
 
-		spaceUsed = function()
-			return request("spaceUsed", "N/A")
-		end,
+	proxy.isReadOnly = function()
+		return request("isReadOnly", 0)
+	end
 
-		spaceTotal = function()
-			return request("spaceTotal", "N/A")
-		end,
+	proxy.spaceUsed = function()
+		return request("spaceUsed", MineOSNetwork.proxySpaceUsed)
+	end
 
-		exists = function(path)
-			return request("exists", false, path)
-		end,
+	proxy.spaceTotal = function()
+		return request("spaceTotal", MineOSNetwork.proxySpaceTotal)
+	end
 
-		isDirectory = function(path)
-			return request("isDirectory", false, path)
-		end,
+	proxy.exists = function(path)
+		return request("exists", false, path)
+	end
 
-		makeDirectory = function(path)
-			return request("makeDirectory", false, path)
-		end,
+	proxy.isDirectory = function(path)
+		return request("isDirectory", false, path)
+	end
 
-		setLabel = function(name)
-			return request("setLabel", false, name)
-		end,
+	proxy.makeDirectory = function(path)
+		return request("makeDirectory", false, path)
+	end
 
-		remove = function(path)
-			return request("remove", false, path)
-		end,
+	proxy.setLabel = function(name)
+		return request("setLabel", false, name)
+	end
 
-		lastModified = function(path)
-			return request("lastModified", 0, path)
-		end,
+	proxy.remove = function(path)
+		return request("remove", false, path)
+	end
 
-		size = function(path)
-			return request("size", 0, path)
-		end,
+	proxy.lastModified = function(path)
+		return request("lastModified", 0, path)
+	end
 
-		list = function(path)
-			return table.fromString(request("list", "{}", path))
-		end,
+	proxy.size = function(path)
+		return request("size", 0, path)
+	end
 
-		seek = function(handle, whence, offset)
-			return request("seek", 0, handle, whence, offset)
-		end,
+	proxy.list = function(path)
+		return table.fromString(request("list", "{}", path))
+	end
 
-		open = function(path, mode)
-			return request("open", false, path, mode)
-		end,
+	proxy.open = function(path, mode)
+		return request("open", false, path, mode)
+	end
 
-		close = function(handle)
-			return request("close", false, handle)
-		end,
+	proxy.close = function(handle)
+		return request("close", false, handle)
+	end
 
-		read = function(handle, count)
-			return request("read", "", handle, count)
-		end,
+	proxy.seek = function(...)
+		return request("seek", 0, ...)
+	end
 
-		write = function(handle, data)
-			local maxPacketSize = MineOSNetwork.modemProxy.maxPacketSize() - MineOSNetwork.modemPacketReserve
-			repeat
-				if not request("write", false, handle, data:sub(1, maxPacketSize)) then
-					return false
-				end
-				data = data:sub(maxPacketSize + 1)
-			until #data == 0
+	proxy.read = function(...)
+		return request("read", "", ...)
+	end
 
-			return true
-		end,
+	write = function(handle, data)
+		local maxPacketSize = MineOSNetwork.modemProxy.maxPacketSize() - MineOSNetwork.modemPacketReserve
+		repeat
+			if not request("write", false, handle, data:sub(1, maxPacketSize)) then
+				return false
+			end
+			data = data:sub(maxPacketSize + 1)
+		until #data == 0
 
-		rename = function(from, to)
-			local proxyFrom = filesystemLibrary.get(from)
-			local proxyTo = filesystemLibrary.get(to)
+		return true
+	end
 
-			if proxyFrom.network or proxyTo.network then
-				local success, handleFrom, handleTo, data, reason = true
-				
-				handleFrom, reason = proxyFrom.open(from, "rb")
-				if handleFrom then
-					handleTo, reason = proxyTo.open(to, "wb")
-					if handleTo then
-						while true do
-							data, readReason = proxyFrom.read(handleFrom, 1024)
-							if data then
-								success, reason = proxyTo.write(handleTo, data)
-								if not success then
-									break
-								end
-							else
-								success = false
+	proxy.rename = function(from, to)
+		local proxyFrom = fs.get(from)
+		local proxyTo = fs.get(to)
+
+		if proxyFrom.MineOSNetworkModem or proxyTo.MineOSNetworkModem then
+			local success, handleFrom, handleTo, data, reason = true
+			
+			handleFrom, reason = proxyFrom.open(from, "rb")
+			if handleFrom then
+				handleTo, reason = proxyTo.open(to, "wb")
+				if handleTo then
+					while true do
+						data, readReason = proxyFrom.read(handleFrom, 1024)
+						if data then
+							success, reason = proxyTo.write(handleTo, data)
+							if not success then
 								break
 							end
+						else
+							success = false
+							break
 						end
-
-						proxyFrom.close(handleTo)
-					else
-						success = false
 					end
 
-					proxyFrom.close(handleFrom)
+					proxyFrom.close(handleTo)
 				else
 					success = false
 				end
 
-				if success then
-					success, reason = proxyFrom.remove(from)
-				end
-
-				return success, reason
+				proxyFrom.close(handleFrom)
 			else
-				return request("rename", false, from, to)
+				success = false
 			end
-		end,
-	}
+
+			if success then
+				success, reason = proxyFrom.remove(from)
+			end
+
+			return success, reason
+		else
+			return request("rename", false, from, to)
+		end
+	end
+
+	return proxy
 end
 
 local exceptionMethods = {
@@ -270,7 +608,7 @@ local exceptionMethods = {
 	end,
 
 	list = function(path)
-		return table.toString(filesystemComponent.list(path))
+		return table.toString(filesystemProxy.list(path))
 	end,
 
 	open = function(path, mode)
@@ -284,40 +622,34 @@ local exceptionMethods = {
 			end
 		end
 
-		MineOSNetwork.filesystemHandles[ID] = filesystemComponent.open(path, mode)
+		MineOSNetwork.filesystemHandles[ID] = filesystemProxy.open(path, mode)
 		
 		return ID
 	end,
 
 	close = function(ID)
-		local data, reason = filesystemComponent.close(MineOSNetwork.filesystemHandles[ID])
+		local data, reason = filesystemProxy.close(MineOSNetwork.filesystemHandles[ID])
 		MineOSNetwork.filesystemHandles[ID] = nil
 		return data, reason
 	end,
 
 	read = function(ID, ...)
-		return filesystemComponent.read(MineOSNetwork.filesystemHandles[ID], ...)
+		return filesystemProxy.read(MineOSNetwork.filesystemHandles[ID], ...)
 	end,
 
 	write = function(ID, ...)
-		return filesystemComponent.write(MineOSNetwork.filesystemHandles[ID], ...)
+		return filesystemProxy.write(MineOSNetwork.filesystemHandles[ID], ...)
 	end,
 
 	seek = function(ID, ...)
-		return filesystemComponent.seek(MineOSNetwork.filesystemHandles[ID], ...)
+		return filesystemProxy.seek(MineOSNetwork.filesystemHandles[ID], ...)
 	end,
 }
 
-local function handleRequest(eventData)
-	-- print("REQ", table.unpack(eventData, 6))
-	
+local function handleRequest(eventData)	
 	if MineOSCore.properties.network.users[eventData[3]].allowReadAndWrite then
-		local result = { pcall(exceptionMethods[eventData[8]] or filesystemComponent[eventData[8]], table.unpack(eventData, 9)) }
-		if result[1] then
-			MineOSNetwork.sendMessage(eventData[3], "MineOSNetwork", "response", eventData[8], table.unpack(result, 2))
-		else
-			MineOSNetwork.sendMessage(eventData[3], "MineOSNetwork", "response", eventData[8], result[1], result[2])
-		end
+		local result = { pcall(exceptionMethods[eventData[8]] or filesystemProxy[eventData[8]], table.unpack(eventData, 9)) }
+		MineOSNetwork.sendMessage(eventData[3], "MineOSNetwork", "response", eventData[8], table.unpack(result, result[1] and 2 or 1))
 	else
 		MineOSNetwork.sendMessage(eventData[3], "MineOSNetwork", "accessDenied")
 	end
@@ -326,8 +658,9 @@ end
 ----------------------------------------------------------------------------------------------------------------
 
 function MineOSNetwork.update()
-	MineOSNetwork.unmountAll()
-	MineOSNetwork.updateModemState()
+	MineOSNetwork.umountModems()
+	MineOSNetwork.umountFTPs()
+	MineOSNetwork.updateComponents()
 	MineOSNetwork.setSignalStrength(MineOSCore.properties.network.signalStrength)
 	MineOSNetwork.broadcastComputerState(MineOSCore.properties.network.enabled)
 
@@ -340,20 +673,20 @@ function MineOSNetwork.update()
 			local eventData = {...}
 			
 			if (eventData[1] == "component_added" or eventData[1] == "component_removed") and eventData[3] == "modem" then
-				MineOSNetwork.updateModemState()
+				MineOSNetwork.updateComponents()
 			elseif eventData[1] == "modem_message" and MineOSCore.properties.network.enabled and eventData[6] == "MineOSNetwork" then
 				if eventData[7] == "request" then
 					handleRequest(eventData)
 				elseif eventData[7] == "computerAvailable" or eventData[7] == "computerAvailableRedirect" then
-					for proxy in filesystemLibrary.mounts() do
-						if proxy.network and proxy.address == eventData[3] then
-							filesystemLibrary.unmount(proxy)
+					for proxy in fs.mounts() do
+						if proxy.MineOSNetworkModem and proxy.address == eventData[3] then
+							fs.umount(proxy)
 						end
 					end
 
-					proxy = newFilesystemProxy(eventData[3])
+					proxy = newModemProxy(eventData[3])
 					proxy.name = eventData[8]
-					filesystemLibrary.mount(proxy, MineOSNetwork.mountPath .. eventData[3]:sub(1, 3) .. "/")
+					fs.mount(proxy, MineOSNetwork.mountPaths.modem .. eventData[3] .. "/")
 
 					if eventData[7] == "computerAvailable" then
 						MineOSNetwork.sendMessage(eventData[3], "MineOSNetwork", "computerAvailableRedirect", MineOSCore.properties.network.name)
@@ -366,9 +699,9 @@ function MineOSNetwork.update()
 
 					computer.pushSignal("MineOSNetwork", "updateProxyList")
 				elseif eventData[7] == "computerNotAvailable" then
-					local proxy = MineOSNetwork.getProxy(eventData[3])
+					local proxy = MineOSNetwork.getMountedModemProxy(eventData[3])
 					if proxy then
-						filesystemLibrary.unmount(proxy)
+						fs.umount(proxy)
 					end
 
 					computer.pushSignal("MineOSNetwork", "updateProxyList")
@@ -389,6 +722,13 @@ function MineOSNetwork.enable()
 	MineOSCore.saveProperties()
 	MineOSNetwork.update()
 end
+
+----------------------------------------------------------------------------------------------------------------
+
+-- MineOSNetwork.updateComponents()
+
+-- local proxy, reason = MineOSNetwork.FTPProxy("localhost", 8888, "root", "1234")
+-- print(proxy, reason)
 
 ----------------------------------------------------------------------------------------------------------------
 

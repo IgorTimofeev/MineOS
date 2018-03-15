@@ -672,22 +672,25 @@ local function newFile()
 end
 
 local function loadFile(path)
-	newFile()
-	
-	local file = io.open(path, "r")
-	for line in file:lines() do
-		line = removeWindowsLineEndings(removeTabs(line))
-		table.insert(mainContainer.codeView.lines, line)
-		mainContainer.codeView.maximumLineLength = math.max(mainContainer.codeView.maximumLineLength, unicode.len(line))
+	local file, reason = io.open(path, "r")
+	if file then
+		newFile()
+		for line in file:lines() do
+			line = removeWindowsLineEndings(removeTabs(line))
+			table.insert(mainContainer.codeView.lines, line)
+			mainContainer.codeView.maximumLineLength = math.max(mainContainer.codeView.maximumLineLength, unicode.len(line))
+		end
+		file:close()
+		
+		if #mainContainer.codeView.lines > 1 then
+			table.remove(mainContainer.codeView.lines, 1)
+		end
+		
+		mainContainer.leftTreeView.selectedItem = path
+		updateAutocompleteDatabaseFromFile()
+	else
+		GUI.error(reason)
 	end
-	file:close()
-	
-	if #mainContainer.codeView.lines > 1 then
-		table.remove(mainContainer.codeView.lines, 1)
-	end
-	
-	mainContainer.leftTreeView.selectedItem = path
-	updateAutocompleteDatabaseFromFile()
 end
 
 local function saveFile(path)

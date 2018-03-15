@@ -2347,7 +2347,7 @@ local function filesystemChooserEventHandler(mainContainer, object, eventData)
 
 		filesystemDialog:setMode(object.IOMode, object.filesystemMode)
 
-		if #object.path > 0 then
+		if object.path and #object.path > 0 then
 			-- local path = object.path:gsub("/+", "/")
 			filesystemDialog.filesystemTree.selectedItem = object.IOMode == GUI.filesystemModes.open and object.path or fs.path(object.path)
 			filesystemDialog.input.text = fs.name(object.path)
