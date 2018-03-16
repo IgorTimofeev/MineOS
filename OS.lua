@@ -929,7 +929,7 @@ local function createOSWidgets()
 		end
 
 		local firstPart, month, secondPart = os.date(
-			"%d %b %Y  %T",
+			"%d %b %Y %T",
 			realTimestamp + computerDateUptime - computerUptimeOnBoot + timezoneCorrection
 		):match("(%d+%s)(%a+)(.+)")
 
