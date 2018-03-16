@@ -538,11 +538,6 @@ local function createOSWidgets()
 		local insertModemTextBox = container.layout:addChild(GUI.textBox(1, 1, 36, 1, nil, 0x555555, {MineOSCore.localization.networkModemNotAvailable}, 1, 0, 0, true, true))
 		
 		local stateSwitchAndLabel = container.layout:addChild(GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x878787, MineOSCore.localization.networkState .. ":", MineOSCore.properties.network.enabled))
-		local signalStrengthSlider = container.layout:addChild(GUI.slider(1, 1, 36, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x878787, 0, 512, MineOSCore.properties.network.signalStrength, false, MineOSCore.localization.networkSearchRadius ..": ", ""))
-		signalStrengthSlider.roundValues = true
-		signalStrengthSlider.height = 2
-
-		container.layout:addChild(GUI.object(1, 1, 1, 1))
 
 		container.layout:addChild(GUI.label(1, 1, container.width, 1, 0xE1E1E1, MineOSCore.localization.networkName):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top))
 		local networkNameInput = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x696969, 0xE1E1E1, 0x2D2D2D, MineOSCore.properties.network.name or ""))
@@ -551,6 +546,9 @@ local function createOSWidgets()
 		local comboBox = container.layout:addChild(GUI.comboBox(1, 1, 36, 3, 0xE1E1E1, 0x2D2D2D, 0x4B4B4B, 0x969696))
 		local allowReadAndWriteSwitchAndLabel = container.layout:addChild(GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x878787, MineOSCore.localization.networkAllowReadAndWrite .. ":", false))
 		local noPCDetectedLabel = container.layout:addChild(GUI.label(1, 1, container.width, 1, 0x878787, MineOSCore.localization.networkComputersNotFound):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top))
+
+		local signalStrengthSlider = container.layout:addChild(GUI.slider(1, 1, 36, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x878787, 0, 512, MineOSCore.properties.network.signalStrength, false, MineOSCore.localization.networkSearchRadius ..": ", ""))
+		signalStrengthSlider.roundValues = true
 
 		local function check()
 			local modemAvailable = component.isAvailable("modem")
