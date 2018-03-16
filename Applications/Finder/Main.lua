@@ -136,7 +136,7 @@ local function newSidebarItem(y, textColor, text, path)
 		end
 
 		object.eventHandler = function(mainContainer, object, eventData)
-			if eventData[1] == "touch" then
+			if eventData[1] == "touch" and object.onTouch then
 				object.onTouch(eventData)
 			end
 		end
@@ -217,7 +217,7 @@ updateSidebar = function()
 		end
 	end
 
-	if #MineOSCore.properties.FTPConnections > 0 then
+	if MineOSNetwork.internetProxy and #MineOSCore.properties.FTPConnections > 0 then
 		y = y + 1
 		newSidebarItem(y, 0x3C3C3C, MineOSCore.localization.networkFTPConnections)
 		y = y + 1
