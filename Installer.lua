@@ -292,8 +292,12 @@ stages[5] = function()
 		local file = io.open("/autorun.lua", "w")
 		file:write("require(\"shell\").execute(\"OS\")")
 		file:close()
+		
+		if computer.getArchitecture then
+			computer.setArchitecture("Lua 5.2")
+		end
 
-		require("computer").shutdown(true)
+		computer.shutdown(true)
 	end
 end
 
