@@ -293,7 +293,7 @@ local function createOSWidgets()
 	MineOSInterface.mainContainer.background = MineOSInterface.mainContainer:addChild(GUI.object(1, 1, 1, 1))
 	MineOSInterface.mainContainer.background.wallpaperPosition = {x = 1, y = 1}
 	MineOSInterface.mainContainer.background.draw = function(object)
-		buffer.square(object.x, object.y, object.width, object.height, MineOSCore.properties.backgroundColor, 0x0, " ")
+		buffer.square(object.x, object.y, object.width, object.height, MineOSCore.properties.backgroundColor, 0, " ")
 		if object.wallpaper then
 			buffer.image(object.wallpaperPosition.x, object.wallpaperPosition.y, object.wallpaper)
 		end
@@ -868,8 +868,35 @@ local function createOSWidgets()
 	MineOSInterface.mainContainer.menuLayout:setCellDirection(1, 1, GUI.directions.horizontal)
 	MineOSInterface.mainContainer.menuLayout:setCellAlignment(1, 1, GUI.alignment.horizontal.right, GUI.alignment.vertical.top)
 
-	local dateButton = MineOSInterface.addMenuWidget(GUI.button(1, 1, 1, 1, nil, 0x0, nil, 0x969696, " "))
+	local dateButton = MineOSInterface.addMenuWidget(GUI.button(1, 1, 1, 1, nil, 0, 0x3366CC, 0xFFFFFF, " "))
+	dateButton.animated = false
 	dateButton.switchMode = true
+
+	local batteryWidget = MineOSInterface.addMenuWidget(GUI.object(1, 1, 1, 1))
+	local batteryWidgetPercent, batteryWidgetText
+	batteryWidget.draw = function()
+		buffer.text(batteryWidget.x, 1, 0, batteryWidgetText)
+
+		local color = 0xFF4940
+		if batteryWidgetPercent >= 0.75 then
+			color = 0x00B640
+		elseif batteryWidgetPercent >= 0.5 then
+			color = 0xFFB640
+		elseif batteryWidgetPercent >= 0.25 then
+			color = 0xFF9240
+		end
+
+		local pixelPercent = math.round(batteryWidgetPercent * 4)
+		if pixelPercent == 0 then
+			pixelPercent = 1
+		end
+		
+		local index = buffer.getIndex(batteryWidget.x + #batteryWidgetText, 1)
+		for i = 1, 4 do
+			buffer.rawSet(index, buffer.rawGet(index), i <= pixelPercent and color or 0xB4B4B4, i < 4 and "⠶" or "╸")
+			index = index + 1
+		end
+	end
 
 	dateButton.onTouch = function()
 		local menu = MineOSInterface.contextMenu(dateButton.x, dateButton.y + 1)
@@ -908,6 +935,14 @@ local function createOSWidgets()
 
 		dateButton.text = firstPart .. (MineOSCore.localization.months[month] or "monthNotAvailable:" .. month) .. secondPart
 		dateButton.width = unicode.len(dateButton.text) + 2
+
+		batteryWidgetPercent = computer.energy() / computer.maxEnergy()
+		if batteryWidgetPercent == math.huge then
+			batteryWidgetPercent = 1
+		end
+		-- batteryWidgetPercent = 0.31
+		batteryWidgetText = math.ceil(batteryWidgetPercent * 100) .. "% "
+		batteryWidget.width = #batteryWidgetText + 4
 	end
 
 	MineOSInterface.OSDraw = function(force)
@@ -965,12 +1000,10 @@ local function createOSWidgets()
 			end
 		end
 
-		local computerUptime = computer.uptime()
-
-		if computerUptime - computerDateUptime >= 1 then
+		if computer.uptime() - computerDateUptime >= 1 then
 			MineOSCore.OSUpdateDate()
 			MineOSInterface.OSDraw()
-			computerDateUptime = computerUptime
+			computerDateUptime = computer.uptime()
 		end
 
 		if MineOSCore.properties.screensaverEnabled then
@@ -978,7 +1011,7 @@ local function createOSWidgets()
 				screensaverUptime = computer.uptime()
 			end
 
-			if computerUptime - screensaverUptime >= MineOSCore.properties.screensaverDelay then
+			if computerDateUptime - screensaverUptime >= MineOSCore.properties.screensaverDelay then
 				if fs.exists(screensaversPath .. MineOSCore.properties.screensaver) then
 					MineOSInterface.safeLaunch(screensaversPath .. MineOSCore.properties.screensaver)
 					MineOSInterface.OSDraw(true)
