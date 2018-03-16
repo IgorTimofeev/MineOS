@@ -495,7 +495,7 @@ local function createOSWidgets()
 	MineOSInterface.mainContainer.windowsContainer = MineOSInterface.mainContainer:addChild(GUI.container(1, 2, 1, 1))
 
 	-- Main menu
-	MineOSInterface.mainContainer.menu = MineOSInterface.mainContainer:addChild(GUI.menu(1, 1, MineOSInterface.mainContainer.width, MineOSCore.properties.menuColor, 0x555555, 0x3366CC, 0xFFFFFF))
+	MineOSInterface.mainContainer.menu = MineOSInterface.mainContainer:addChild(GUI.menu(1, 1, MineOSInterface.mainContainer.width, MineOSCore.properties.menuColor, 0x696969, 0x3366CC, 0xFFFFFF))
 	local item1 = MineOSInterface.mainContainer.menu:addItem("MineOS", 0x000000)
 	item1.onTouch = function()
 		local menu = MineOSInterface.contextMenu(item1.x, item1.y + 1)
