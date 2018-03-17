@@ -1,4 +1,5 @@
 {
+	unloadPackage = "Unload package",
 	networkFTPNewConnection = "FTP-connection",
 	networkFTPConnections = "FTP-connections",
 	networkFTPAddress = "Server address",

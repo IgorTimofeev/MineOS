@@ -1,4 +1,5 @@
 {
+	unloadPackage = "Выгрузить библиотеку",
 	networkFTPNewConnection = "FTP-подключение",
 	networkFTPConnections = "FTP-подключения",
 	networkFTPAddress = "Адрес сервера",

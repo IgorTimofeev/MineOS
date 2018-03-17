@@ -288,6 +288,20 @@ local function moveDockIcon(index, direction)
 	MineOSInterface.OSDraw()
 end
 
+local function getPercentageColor(pecent)
+	if pecent >= 0.75 then
+		return 0x00B640
+	elseif pecent >= 0.6 then
+		return 0x99DB40
+	elseif pecent >= 0.3 then
+		return 0xFFB640
+	elseif pecent >= 0.2 then
+		return 0xFF9240
+	else
+		return 0xFF4940
+	end
+end
+
 local function createOSWidgets()
 	MineOSInterface.mainContainer:deleteChildren()
 	MineOSInterface.mainContainer.background = MineOSInterface.mainContainer:addChild(GUI.object(1, 1, 1, 1))
@@ -318,7 +332,6 @@ local function createOSWidgets()
 		MineOSInterface.safeLaunch(MineOSPaths.explorer, "-o", icon.path)
 	end
 
-	-- Dock
 	MineOSInterface.mainContainer.dockContainer = MineOSInterface.mainContainer:addChild(GUI.container(1, 1, MineOSInterface.mainContainer.width, 7))
 	MineOSInterface.mainContainer.dockContainer.saveToOSSettings = function()
 		MineOSCore.properties.dockShortcuts = {}
@@ -491,10 +504,8 @@ local function createOSWidgets()
 		GUI.drawContainerContent(dockContainer)
 	end
 
-	-- Custom windows support
 	MineOSInterface.mainContainer.windowsContainer = MineOSInterface.mainContainer:addChild(GUI.container(1, 2, 1, 1))
 
-	-- Main menu
 	MineOSInterface.mainContainer.menu = MineOSInterface.mainContainer:addChild(GUI.menu(1, 1, MineOSInterface.mainContainer.width, MineOSCore.properties.menuColor, 0x696969, 0x3366CC, 0xFFFFFF))
 	local item1 = MineOSInterface.mainContainer.menu:addItem("MineOS", 0x000000)
 	item1.onTouch = function()
@@ -765,7 +776,6 @@ local function createOSWidgets()
 			end
 			container.layout:addChild(GUI.textBox(1, 1, 36, 1, nil, 0x555555, {MineOSCore.localization.transparencySwitchInfo}, 1, 0, 0, true, true))
 
-			-- Шоб рисовалось в реальном времени
 			backgroundColorSelector.onTouch = function()
 				MineOSCore.properties.backgroundColor = backgroundColorSelector.color
 				MineOSCore.properties.menuColor = menuColorSelector.color
@@ -862,27 +872,19 @@ local function createOSWidgets()
 	end
 
 	MineOSInterface.mainContainer.menuLayout = MineOSInterface.mainContainer:addChild(GUI.layout(1, 1, 1, 1, 1, 1))
-	MineOSInterface.mainContainer.menuLayout:setCellSpacing(1, 1, 0)
 	MineOSInterface.mainContainer.menuLayout:setCellDirection(1, 1, GUI.directions.horizontal)
 	MineOSInterface.mainContainer.menuLayout:setCellAlignment(1, 1, GUI.alignment.horizontal.right, GUI.alignment.vertical.top)
+	MineOSInterface.mainContainer.menuLayout:setCellMargin(1, 1, 1, 0)
+	MineOSInterface.mainContainer.menuLayout:setCellSpacing(1, 1, 2)
 
-	local dateButton = MineOSInterface.addMenuWidget(GUI.button(1, 1, 1, 1, nil, 0, 0x3366CC, 0xFFFFFF, " "))
-	dateButton.animated = false
-	dateButton.switchMode = true
+	local dateWidget, dateWidgetText = MineOSInterface.addMenuWidget(MineOSInterface.menuWidget(1))
+	dateWidget.drawContent = function()
+		buffer.text(dateWidget.x, 1, dateWidget.textColor, dateWidgetText)
+	end
 
-	local batteryWidget = MineOSInterface.addMenuWidget(GUI.object(1, 1, 1, 1))
-	local batteryWidgetPercent, batteryWidgetText
-	batteryWidget.draw = function()
-		buffer.text(batteryWidget.x, 1, 0, batteryWidgetText)
-
-		local color = 0xFF4940
-		if batteryWidgetPercent >= 0.75 then
-			color = 0x00B640
-		elseif batteryWidgetPercent >= 0.5 then
-			color = 0xFFB640
-		elseif batteryWidgetPercent >= 0.25 then
-			color = 0xFF9240
-		end
+	local batteryWidget, batteryWidgetPercent, batteryWidgetText = MineOSInterface.addMenuWidget(MineOSInterface.menuWidget(1))
+	batteryWidget.drawContent = function()
+		buffer.text(batteryWidget.x, 1, batteryWidget.textColor, batteryWidgetText)
 
 		local pixelPercent = math.round(batteryWidgetPercent * 4)
 		if pixelPercent == 0 then
@@ -891,26 +893,24 @@ local function createOSWidgets()
 		
 		local index = buffer.getIndex(batteryWidget.x + #batteryWidgetText, 1)
 		for i = 1, 4 do
-			buffer.rawSet(index, buffer.rawGet(index), i <= pixelPercent and color or 0xB4B4B4, i < 4 and "⠶" or "╸")
+			buffer.rawSet(index, buffer.rawGet(index), i <= pixelPercent and getPercentageColor(batteryWidgetPercent) or 0xB4B4B4, i < 4 and "⠶" or "╸")
 			index = index + 1
 		end
 	end
 
-	dateButton.onTouch = function()
-		local menu = MineOSInterface.contextMenu(dateButton.x, dateButton.y + 1)
-		for i = -12, 12 do
-			menu:addItem("GMT" .. (i >= 0 and "+" or "") .. i).onTouch = function()
-				MineOSCore.properties.timezone = i
-				MineOSCore.saveProperties()
+	local RAMWidget, RAMPercent = MineOSInterface.addMenuWidget(MineOSInterface.menuWidget(16))
+	RAMWidget.drawContent = function()
+		local text = "RAM: " .. math.ceil(RAMPercent * 100) .. "% "
+		local barWidth = RAMWidget.width - #text
+		local activeWidth = math.ceil(RAMPercent * barWidth)
 
-				MineOSCore.OSUpdateTimezone(i)
-				MineOSCore.OSUpdateDate()
-				MineOSInterface.OSDraw()
-			end
+		buffer.text(RAMWidget.x, 1, RAMWidget.textColor, text)
+		
+		local index = buffer.getIndex(RAMWidget.x + #text, 1)
+		for i = 1, barWidth do
+			buffer.rawSet(index, buffer.rawGet(index), i <= activeWidth and getPercentageColor(1 - RAMPercent) or 0xB4B4B4, "━")
+			index = index + 1
 		end
-		menu:show()
-		dateButton.pressed = false
-		MineOSInterface.OSDraw()
 	end
 
 	MineOSCore.OSUpdateTimezone = function(timezone)
@@ -931,16 +931,55 @@ local function createOSWidgets()
 			realTimestamp + computerDateUptime - computerUptimeOnBoot + timezoneCorrection
 		):match("(%d+%s)(%a+)(.+)")
 
-		dateButton.text = firstPart .. (MineOSCore.localization.months[month] or "monthNotAvailable:" .. month) .. secondPart
-		dateButton.width = unicode.len(dateButton.text) + 2
+		dateWidgetText = firstPart .. (MineOSCore.localization.months[month] or "monthNotAvailable:" .. month) .. secondPart
+		dateWidget.width = unicode.len(dateWidgetText)
 
 		batteryWidgetPercent = computer.energy() / computer.maxEnergy()
 		if batteryWidgetPercent == math.huge then
 			batteryWidgetPercent = 1
 		end
-		-- batteryWidgetPercent = 0.31
 		batteryWidgetText = math.ceil(batteryWidgetPercent * 100) .. "% "
 		batteryWidget.width = #batteryWidgetText + 4
+
+		local totalMemory = computer.totalMemory()
+		RAMPercent = (totalMemory - computer.freeMemory()) / totalMemory
+	end
+
+	dateWidget.onTouch = function()
+		local menu = MineOSInterface.contextMenu(dateWidget.x - 1, dateWidget.y + 1)
+		for i = -12, 12 do
+			menu:addItem("GMT" .. (i >= 0 and "+" or "") .. i).onTouch = function()
+				MineOSCore.properties.timezone = i
+				MineOSCore.saveProperties()
+
+				MineOSCore.OSUpdateTimezone(i)
+				MineOSCore.OSUpdateDate()
+				MineOSInterface.OSDraw()
+			end
+		end
+		menu:show()
+	end
+
+	RAMWidget.onTouch = function()
+		local menu = MineOSInterface.contextMenu(RAMWidget.x - 1, RAMWidget.y + 1)
+		menu:addItem(MineOSCore.localization.unloadPackage, true)
+		menu:addSeparator()
+
+		local libraries = {}
+		for key in pairs(package.loaded) do
+			if not _G[key] then
+				table.insert(libraries, key)
+			end
+		end
+		table.sort(libraries, function(a, b) return a < b end)
+
+		for i = 1, #libraries do
+			menu:addItem(libraries[i]).onTouch = function()
+				package.loaded[libraries[i]] = nil
+			end
+		end
+
+		menu:show()
 	end
 
 	MineOSInterface.OSDraw = function(force)
@@ -1023,17 +1062,6 @@ end
 
 local function createOSWindow()
 	MineOSInterface.mainContainer = GUI.fullScreenContainer()
-
-	-- local overrideDraw = MineOSInterface.mainContainer.draw
-	-- MineOSInterface.mainContainer.draw = function(...)
-	-- 	overrideDraw(...)
-
-	-- 	local freeMemory, totalMemory = computer.freeMemory() / 1024, computer.totalMemory() / 1024
-	-- 	local y = MineOSInterface.mainContainer.y
-	-- 	buffer.text(MineOSInterface.mainContainer.x, y, 0xFF0000, "Free: " .. string.format("%.2f", freeMemory)); y = y + 1
-	-- 	buffer.text(MineOSInterface.mainContainer.x, y, 0xFF0000, "Total: " .. string.format("%.2f", totalMemory)); y = y + 1
-	-- 	buffer.text(MineOSInterface.mainContainer.x, y, 0xFF0000, "Used: " .. string.format("%.2f", totalMemory - freeMemory)); y = y + 1
-	-- end
 
 	createOSWidgets()
 	changeResolution()

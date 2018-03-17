@@ -1402,13 +1402,45 @@ function MineOSInterface.copy(what, toPath)
 	GUICopy(MineOSInterface.mainContainer, what, toPath)
 end
 
+local function menuWidgetEventHandler(mainContainer, object, eventData)
+	if eventData[1] == "touch" and object.onTouch then
+		object.selected = true
+		MineOSInterface.OSDraw()
+
+		object.onTouch(mainContainer, object, eventData)
+
+		object.selected = false
+		MineOSInterface.OSDraw()
+	end
+end
+
+local function menuWidgetDraw(object)
+	if object.selected then
+		object.textColor = 0xFFFFFF
+		buffer.square(object.x - 1, object.y, object.width + 2, 1, 0x3366CC, object.textColor, " ")
+	else
+		object.textColor = 0x0
+	end
+
+	object.drawContent(object)
+end
+
+function MineOSInterface.menuWidget(width)
+	local object = GUI.object(1, 1, width, 1)
+	
+	object.selected = false
+	object.eventHandler = menuWidgetEventHandler
+	object.draw = menuWidgetDraw
+
+	return object
+end
+
 function MineOSInterface.addMenuWidget(object)
 	MineOSInterface.mainContainer.menuLayout:addChild(object)
 	object:moveToBack()
 
 	return object
 end
-
 
 -----------------------------------------------------------------------------------------------------------------------------------
 
