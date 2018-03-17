@@ -547,42 +547,33 @@ local function createOSWidgets()
 	item2.onTouch = function()
 		local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer, MineOSCore.localization.network)
 		local insertModemTextBox = container.layout:addChild(GUI.textBox(1, 1, 36, 1, nil, 0x555555, {MineOSCore.localization.networkModemNotAvailable}, 1, 0, 0, true, true))
-		
 		local stateSwitchAndLabel = container.layout:addChild(GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x878787, MineOSCore.localization.networkState .. ":", MineOSCore.properties.network.enabled))
-
-		container.layout:addChild(GUI.label(1, 1, container.width, 1, 0xE1E1E1, MineOSCore.localization.networkName):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top))
-		local networkNameInput = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x696969, 0xE1E1E1, 0x2D2D2D, MineOSCore.properties.network.name or ""))
-
-		container.layout:addChild(GUI.label(1, 1, container.width, 1, 0xE1E1E1, MineOSCore.localization.networkComputers):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top))
-		local comboBox = container.layout:addChild(GUI.comboBox(1, 1, 36, 3, 0xE1E1E1, 0x2D2D2D, 0x4B4B4B, 0x969696))
+		local networkNameInput = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x696969, 0xE1E1E1, 0x2D2D2D, MineOSCore.properties.network.name or "", MineOSCore.localization.networkName))
+		local remoteComputersLabel = container.layout:addChild(GUI.label(1, 1, container.width, 1, 0xE1E1E1, MineOSCore.localization.networkComputers):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top))
+		local remoteComputersComboBox = container.layout:addChild(GUI.comboBox(1, 1, 36, 3, 0xE1E1E1, 0x2D2D2D, 0x4B4B4B, 0x969696))
 		local allowReadAndWriteSwitchAndLabel = container.layout:addChild(GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x878787, MineOSCore.localization.networkAllowReadAndWrite .. ":", false))
-		local noPCDetectedLabel = container.layout:addChild(GUI.label(1, 1, container.width, 1, 0x878787, MineOSCore.localization.networkComputersNotFound):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top))
 
 		local signalStrengthSlider = container.layout:addChild(GUI.slider(1, 1, 36, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x878787, 0, 512, MineOSCore.properties.network.signalStrength, false, MineOSCore.localization.networkSearchRadius ..": ", ""))
 		signalStrengthSlider.roundValues = true
 
-		local function check()
-			local modemAvailable = component.isAvailable("modem")
+		local function check()			
 			for i = 3, #container.layout.children do
-				container.layout.children[i].hidden = not modemAvailable
+				container.layout.children[i].hidden = not MineOSNetwork.modemProxy
 			end
-			insertModemTextBox.hidden = modemAvailable
+			insertModemTextBox.hidden = MineOSNetwork.modemProxy
 
-			if modemAvailable then
-				local stateSwitchAndLabelIndexOf = stateSwitchAndLabel:indexOf()
-				for i = 3, #container.layout.children do
-					if i ~= stateSwitchAndLabelIndexOf then
-						container.layout.children[i].hidden = not stateSwitchAndLabel.switch.state
-					end
+			if MineOSNetwork.modemProxy then
+				for i = 4, #container.layout.children do
+					container.layout.children[i].hidden = not stateSwitchAndLabel.switch.state
 				end
 
 				if stateSwitchAndLabel.switch.state then
 					signalStrengthSlider.hidden = not MineOSNetwork.modemProxy.isWireless()
 
-					comboBox:clear()
+					remoteComputersComboBox:clear()
 					for proxy, path in fs.mounts() do
 						if proxy.MineOSNetworkModem then
-							local item = comboBox:addItem(MineOSNetwork.getModemProxyName(proxy))
+							local item = remoteComputersComboBox:addItem(MineOSNetwork.getModemProxyName(proxy))
 							item.proxyAddress = proxy.address
 							item.onTouch = function()
 								allowReadAndWriteSwitchAndLabel.switch:setState(MineOSCore.properties.network.users[item.proxyAddress].allowReadAndWrite)
@@ -590,12 +581,12 @@ local function createOSWidgets()
 						end
 					end
 					
-					noPCDetectedLabel.hidden = comboBox:count() > 0
-					allowReadAndWriteSwitchAndLabel.hidden = not noPCDetectedLabel.hidden
-					comboBox.hidden = not noPCDetectedLabel.hidden
+					remoteComputersLabel.hidden = remoteComputersComboBox:count() < 1
+					remoteComputersComboBox.hidden = remoteComputersLabel.hidden
+					allowReadAndWriteSwitchAndLabel.hidden = remoteComputersLabel.hidden
 
-					if noPCDetectedLabel.hidden then
-						comboBox:getItem(comboBox.selectedItem).onTouch()
+					if not remoteComputersLabel.hidden then
+						remoteComputersComboBox:getItem(remoteComputersComboBox.selectedItem).onTouch()
 					end
 				end
 			end
@@ -604,12 +595,9 @@ local function createOSWidgets()
 		end
 
 		networkNameInput.onInputFinished = function()
-			if #networkNameInput.text > 0 then
-				MineOSCore.properties.network.name = networkNameInput.text
-				MineOSCore.saveProperties()
-
-				MineOSNetwork.broadcastComputerState(MineOSCore.properties.network.enabled)
-			end
+			MineOSCore.properties.network.name = #networkNameInput.text > 0 and networkNameInput.text or nil
+			MineOSCore.saveProperties()
+			MineOSNetwork.broadcastComputerState(MineOSCore.properties.network.enabled)
 		end
 
 		signalStrengthSlider.onValueChanged = function()
@@ -673,6 +661,44 @@ local function createOSWidgets()
 					changeResolution()
 					changeWallpaper()
 					MineOSInterface.mainContainer.updateFileListAndDraw()
+				end
+			end
+		end
+
+		if computer.getArchitectures then
+			menu:addItem(MineOSCore.localization.architecture).onTouch = function()
+				local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer, MineOSCore.localization.architecture)
+				local comboBox = container.layout:addChild(GUI.comboBox(1, 1, 36, 3, 0xE1E1E1, 0x2D2D2D, 0x4B4B4B, 0x969696))
+				
+				local architectures = computer.getArchitectures()
+				for i = 1, #architectures do
+					comboBox:addItem(architectures[i]).onTouch = function()
+						computer.setArchitecture(architectures[i])
+						computer.shutdown(true)
+					end
+				end
+			end
+		end
+
+		menu:addItem(MineOSCore.localization.systemLanguage).onTouch = function()
+			local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer, MineOSCore.localization.systemLanguage)
+
+			local comboBox = container.layout:addChild(GUI.comboBox(1, 1, 36, 3, 0xE1E1E1, 0x2D2D2D, 0x4B4B4B, 0x969696))
+			for file in fs.list(MineOSPaths.localizationFiles) do
+				local name = fs.hideExtension(file)
+				comboBox:addItem(name).onTouch = function()
+					MineOSCore.properties.language = name
+					MineOSCore.localization = MineOSCore.getLocalization(MineOSPaths.localizationFiles)
+
+					createOSWidgets()
+					changeResolution()
+					changeWallpaper()
+					MineOSCore.OSUpdateDate()
+					MineOSInterface.mainContainer.updateFileListAndDraw()
+				end
+
+				if name == MineOSCore.properties.language then
+					comboBox.selectedItem = comboBox:count()
 				end
 			end
 		end
@@ -837,29 +863,6 @@ local function createOSWidgets()
 				computer.pushSignal("MineOSCore", "updateFileList")
 			end
 			showHiddenFilesSwitch.onStateChanged, showApplicationIconsSwitch.onStateChanged = showExtensionSwitch.onStateChanged, showExtensionSwitch.onStateChanged
-		end
-
-		menu:addItem(MineOSCore.localization.systemLanguage).onTouch = function()
-			local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer, MineOSCore.localization.systemLanguage)
-
-			local comboBox = container.layout:addChild(GUI.comboBox(1, 1, 36, 3, 0xE1E1E1, 0x2D2D2D, 0x4B4B4B, 0x969696))
-			for file in fs.list(MineOSPaths.localizationFiles) do
-				local name = fs.hideExtension(file)
-				comboBox:addItem(name).onTouch = function()
-					MineOSCore.properties.language = name
-					MineOSCore.localization = MineOSCore.getLocalization(MineOSPaths.localizationFiles)
-
-					createOSWidgets()
-					changeResolution()
-					changeWallpaper()
-					MineOSCore.OSUpdateDate()
-					MineOSInterface.mainContainer.updateFileListAndDraw()
-				end
-
-				if name == MineOSCore.properties.language then
-					comboBox.selectedItem = comboBox:count()
-				end
-			end
 		end
 
 		menu:addSeparator()
