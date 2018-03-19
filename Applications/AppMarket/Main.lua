@@ -17,7 +17,7 @@ local unicode = require("unicode")
 --------------------------------------------------------------------------------
 
 local host = "http://eliteclubsessions.ru/MineOSAPI/2.03/"
-local iconCheckReponseTime = 0.5
+local iconCheckReponseTime = 1
 
 local overviewIconsCount = 10
 local overviewAnimationDelay = 0.05
@@ -557,7 +557,7 @@ end
 
 local function getPublicationIcon(publication)
 	if publication.icon_url then
-		local path = iconCachePath .. publication.publication_name .. "@" .. publication.version .. ".pic"
+		local path = iconCachePath .. publication.file_id .. "@" .. publication.version .. ".pic"
 
 		if fs.exists(path) then
 			return loadImage(path)
