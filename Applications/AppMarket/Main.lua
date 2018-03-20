@@ -294,9 +294,9 @@ local function callLastMethod()
 	lastMethod(table.unpack(lastArguments))
 end
 
-local function showLabelAsContent(text)
-	contentContainer:deleteChildren()
-	contentContainer:addChild(GUI.label(1, 1, contentContainer.width, contentContainer.height, 0x2D2D2D, text)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.center)
+local function showLabelAsContent(container, text)
+	container:deleteChildren()
+	container:addChild(GUI.label(1, 1, container.width, container.height, 0x2D2D2D, text)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.center)
 end
 
 local function newButtonsLayout(x, y, width, spacing)
@@ -630,6 +630,7 @@ local function newKeyValueWidget(x, y, width, keyColor, valueColor, key, value)
 	return object
 end
 
+
 local function containerScrollEventHandler(mainContainer, object, eventData)
 	if eventData[1] == "scroll" then
 		local first, last = object.children[1], object.children[#object.children]
@@ -652,7 +653,599 @@ local function containerScrollEventHandler(mainContainer, object, eventData)
 	end
 end
 
-local function newPublicationInfo(file_id)
+local newApplicationPreview, newPublicationInfo, mainMenu
+
+local function applicationWidgetEventHandler(mainContainer, object, eventData)
+	if eventData[1] == "touch" then
+		object.parent.panel.colors.background = 0xE1E1E1
+		MineOSInterface.OSDraw()
+		newPublicationInfo(object.parent.file_id)
+	end
+end
+
+newApplicationPreview = function(x, y, publication)
+	local container = GUI.container(x, y, appWidth, appHeight)
+
+	container.file_id = publication.file_id
+	addApplicationInfo(container, publication, appWidth - 14)
+
+	container.panel.eventHandler,
+	container.image.eventHandler,
+	container.nameLabel.eventHandler,
+	container.developerLabel.eventHandler,
+	container.rating.eventHandler =
+	applicationWidgetEventHandler,
+	applicationWidgetEventHandler,
+	applicationWidgetEventHandler,
+	applicationWidgetEventHandler,
+	applicationWidgetEventHandler
+
+	return container
+end
+
+mainMenu = function(menuID, messageToUser)
+	window.tabBar.selectedItem = 1
+	lastMethod, lastArguments = mainMenu, {menuID, messageToUser}
+
+	contentContainer:deleteChildren()
+
+	local menuPanel = contentContainer:addChild(GUI.panel(1, 1, 22, contentContainer.height, 0xE1E1E1))
+	local menuLayout = contentContainer:addChild(GUI.layout(1, 1, menuPanel.width, contentContainer.height, 1, 1))
+	menuLayout:setCellAlignment(1, 1, GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+	menuLayout:setCellSpacing(1, 1, 0)
+	local menuContentContainer = contentContainer:addChild(GUI.container(menuPanel.width + 1, 1, contentContainer.width - menuPanel.width, contentContainer.height))
+
+	local function statistics()
+		activity(true)
+
+		local statistics = fieldAPIRequest("result", "statistics")
+		if statistics then
+			MineOSInterface.OSDraw()
+
+			local publications = fieldAPIRequest("result", "publications", {
+				order_by = "popularity",
+				order_direction = "desc",
+				offset = 0,
+				count = overviewIconsCount + 1,
+				category_id = 1,
+			})
+
+			if publications then
+				menuContentContainer:deleteChildren()
+
+				local iconsContainer = menuContentContainer:addChild(GUI.container(1, 1, menuContentContainer.width, menuContentContainer.height))
+
+				local width = 38
+				local container = menuContentContainer:addChild(GUI.container(math.floor(menuContentContainer.width / 2 - width / 2), 1, width, menuContentContainer.height))
+				container:addChild(GUI.panel(1, 1, container.width, container.height, 0xFFFFFF))
+				local statisticsLayout = container:addChild(GUI.layout(1, 1, container.width, container.height, 1, 1))
+
+				statisticsLayout:addChild(GUI.image(1, 1, image.load(resourcesPath .. "Icon.pic"))).height = 5
+				statisticsLayout:addChild(newKeyValueWidget(1, 1, container.width - 4, 0x4B4B4B, 0xA5A5A5, localization.statisticsUsersCount, ": " .. statistics.users_count))
+				statisticsLayout:addChild(newKeyValueWidget(1, 1, container.width - 4, 0x4B4B4B, 0xA5A5A5, localization.statisticsNewUser, ": " .. statistics.last_registered_user))
+				statisticsLayout:addChild(newKeyValueWidget(1, 1, container.width - 4, 0x4B4B4B, 0xA5A5A5, localization.statisticsMostPopularUser, ": " .. statistics.most_popular_user))
+				statisticsLayout:addChild(newKeyValueWidget(1, 1, container.width - 4, 0x4B4B4B, 0xA5A5A5, localization.statisticsPublicationsCount, ": " .. statistics.publications_count))
+				statisticsLayout:addChild(newKeyValueWidget(1, 1, container.width - 4, 0x4B4B4B, 0xA5A5A5, localization.statisticsReviewsCount, ": " .. statistics.reviews_count))
+				
+				local applicationPreview = statisticsLayout:addChild(newApplicationPreview(1, 1, publications[1]))
+				applicationPreview.panel.colors.background = 0xF0F0F0
+				statisticsLayout:addChild(GUI.label(1, 1, statisticsLayout.width, 1, 0xA5A5A5, localization.statisticsPopularPublication)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.center)
+
+				MineOSInterface.OSDraw()
+
+				local uptime, newUptime = computer.uptime()
+				local function tick()
+					newUptime = computer.uptime()
+					if newUptime - uptime > overviewAnimationDelay then
+						uptime = newUptime
+
+						local child
+						for i = 1, #iconsContainer.children do
+							child = iconsContainer.children[i]
+							
+							child.moveX, child.moveY = child.moveX + child.forceX, child.moveY + child.forceY
+								
+							if child.forceX > 0 then
+								if child.forceX > overviewForceLimit then
+									child.forceX = child.forceX - overviewForceDecay
+								else
+									child.forceX = overviewForceLimit
+								end
+							else
+								if child.forceX < -overviewForceLimit then
+									child.forceX = child.forceX + overviewForceDecay
+								else
+									child.forceX = -overviewForceLimit
+								end
+							end
+
+							if child.forceY > 0 then
+								if child.forceY > overviewForceLimit then
+									child.forceY = child.forceY - overviewForceDecay
+								else
+									child.forceY = overviewForceLimit
+								end
+							else
+								if child.forceY < -overviewForceLimit then
+									child.forceY = child.forceY + overviewForceDecay
+								else
+									child.forceY = -overviewForceLimit
+								end
+							end
+
+							if child.moveX <= 1 then
+								child.forceX, child.moveX = -child.forceX, 1
+							elseif child.moveX + child.width - 1 >= iconsContainer.width then
+								child.forceX, child.moveX = -child.forceX, iconsContainer.width - child.width + 1
+							end
+
+							if child.moveY <= 1 then
+								child.forceY, child.moveY = -child.forceY, 1
+							elseif child.moveY + child.height - 1 >= iconsContainer.height then
+								child.forceY, child.moveY = -child.forceY, iconsContainer.height - child.height + 1
+							end
+
+							child.localX, child.localY = math.floor(child.moveX), math.floor(child.moveY)
+						end
+
+						MineOSInterface.OSDraw()
+
+						return true
+					end
+				end
+
+				iconsContainer.eventHandler = function(mainContainer, object, eventData)
+					if eventData[1] == "touch" or eventData[1] == "drag" then
+						local child, deltaX, deltaY, vectorLength
+						for i = 1, #iconsContainer.children do
+							child = iconsContainer.children[i]
+							
+							deltaX, deltaY = eventData[3] - child.x, eventData[4] - child.y
+							vectorLength = math.sqrt(deltaX ^ 2 + deltaY ^ 2)
+							if vectorLength > 0 then
+								child.forceX = deltaX / vectorLength * math.random(overviewMaximumTouchAcceleration)
+								child.forceY = deltaY / vectorLength * math.random(overviewMaximumTouchAcceleration)
+							end
+						end
+					end
+
+					tick()
+				end
+
+				local function makeBlyad(object)
+					object.localX = math.random(1, iconsContainer.width - object.width + 1)
+					object.localY = math.random(1, iconsContainer.height - object.width + 1)
+					object.moveX = object.localX
+					object.moveY = object.localY
+					object.forceX = math.random(-100, 100) / 100 * overviewForceLimit
+					object.forceY = math.random(-100, 100) / 100 * overviewForceLimit
+					
+					if not tick() then
+						MineOSInterface.OSDraw()
+					end
+				end
+
+				for i = 2, #publications do
+					makeBlyad(iconsContainer:addChild(GUI.image(1, 1, getPublicationIcon(publications[i])), 1))
+				end
+			end
+		end
+
+		activity()
+	end
+
+	local function dialogGUI(to_user_name)
+		local messages
+		if to_user_name then
+			activity(true)
+
+			local result = fieldAPIRequest("result", "messages", {
+				token = user.token,
+				user_name = to_user_name
+			})
+
+			if result then
+				messages = result
+			end
+
+			activity()
+		end
+		messages = messages or {}
+
+		menuContentContainer:deleteChildren()
+
+		local button = menuContentContainer:addChild(GUI.adaptiveButton(1, menuContentContainer.height - 2, 2, 1, 0x4B4B4B, 0xE1E1E1, 0x2D2D2D, 0xE1E1E1, localization.send))
+		button.localX = menuContentContainer.width - button.width + 1
+		button.colors.disabled.background = 0xB4B4B4
+		button.colors.disabled.text = 0xFFFFFF
+		button.disabled = true
+
+		local input = menuContentContainer:addChild(GUI.input(1, button.localY, menuContentContainer.width - button.width, 3, 0xFFFFFF, 0x696969, 0xB4B4B4, 0xFFFFFF, 0x2D2D2D, "", localization.typeMessageText))
+
+		local function check()
+			button.disabled = not (to_user_name and #input.text > 0)
+		end
+
+		input.onInputFinished = check
+
+		button.onTouch = function()
+			activity(true)
+
+			local success, reason = RawAPIRequest("message", {
+				token = user.token,
+				user_name = to_user_name,
+				text = input.text
+			})
+
+			if success then
+				dialogGUI(to_user_name)
+			else
+				GUI.error(reason)
+			end
+
+			activity(false)
+		end
+
+		local messagesContainer = menuContentContainer:addChild(GUI.container(1, 1, menuContentContainer.width, menuContentContainer.height - 3))
+		messagesContainer.eventHandler = containerScrollEventHandler
+
+		local panel = menuContentContainer:addChild(GUI.panel(1, 1, menuContentContainer.width, 3, 0xFFFFFF, 0.3))
+		if not to_user_name then
+			panel.colors.transparency = nil
+			local text = menuContentContainer:addChild(GUI.text(3, 2, 0x0, localization.toWho))
+			local input = menuContentContainer:addChild(GUI.input(text.localX + text.width, 1, menuContentContainer.width - text.width - 4, 3, 0xFFFFFF, 0x878787, 0xC3C3C3, 0xFFFFFF, 0x878787, to_user_name or "", localization.typeUserName))
+			input.onInputFinished = function()
+				to_user_name = input.text
+				check()
+			end
+		else
+			local width = unicode.len(localization.dialogWith) + unicode.len(to_user_name)
+			menuContentContainer:addChild(newKeyValueWidget(math.floor(menuContentContainer.width / 2 - width / 2), 2, width, 0x878787, 0x0, localization.dialogWith, to_user_name))
+			-- menuContentContainer:addChild(GUI.label(1, 2, menuContentContainer.width, 1, 0x2D2D2D, to_user_name)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.center)
+		end
+
+		local function cloudDraw(object)
+			local backgroundColor, textColor = object.me and 0x6692FF or 0xFFFFFF, object.me and 0xFFFFFF or 0x4B4B4B
+			
+			buffer.square(object.x, object.y, object.width, object.height, backgroundColor, textColor, " ")
+			buffer.text(object.x, object.y - 1, backgroundColor, "⢀" .. string.rep("⣀", object.width - 2) .. "⡀")
+			buffer.text(object.x, object.y + object.height, backgroundColor, "⠈" .. string.rep("⠉", object.width - 2) .. "⠁")
+
+			local date = os.date("%d.%m.%Y, %H:%M", object.timestamp)
+			if object.me then
+				buffer.text(object.x - #date - 1, object.y, 0xC3C3C3, date)
+				buffer.text(object.x + object.width, object.y + object.height - 1, backgroundColor, "◤")
+			else
+				buffer.text(object.x + object.width + 1, object.y, 0xC3C3C3, date)
+				buffer.text(object.x - 1, object.y + object.height - 1, backgroundColor, "◥")
+			end
+
+			for i = 1, #object.lines do
+				buffer.text(object.x + 1, object.y + i - 1, textColor, object.lines[i])
+			end
+		end
+
+		local function newCloud(y, width, text, me, timestamp)
+			local lines =  string.wrap(text, width - 2)
+			local object = GUI.object(me and messagesContainer.width - width - 1 or 3, y - #lines + 1, width, 1)
+			
+			object.lines = lines
+			object.height = #lines
+			object.me = me
+			object.text = text
+			object.draw = cloudDraw
+			object.timestamp = timestamp
+
+			return object
+		end
+
+		local y = messagesContainer.height - 1
+		for j = 1, #messages do
+			local cloud = messagesContainer:addChild(newCloud(y, math.floor(messagesContainer.width * 0.6), messages[j].text, messages[j].user_name == user.name, messages[j].timestamp), 1)
+			y = y - cloud.height - 2
+		end
+
+		-- Пустой объект для прокрутки ниже этой прозрачной пизды
+		messagesContainer:addChild(GUI.object(1, y, 1, 2), 1)
+	end
+
+	local function dialogs()
+		activity(true)
+		
+		local dialogs = fieldAPIRequest("result", "dialogs", {
+			token = user.token,
+		})
+
+		if dialogs then
+			menuContentContainer:deleteChildren()
+
+			local dialogsContainer = menuContentContainer:addChild(GUI.container(1, 1, menuContentContainer.width, menuContentContainer.height))
+			dialogsContainer.eventHandler = containerScrollEventHandler
+
+			local sendMessageButton = dialogsContainer:addChild(GUI.adaptiveRoundedButton(1, #dialogs > 0 and 2 or math.floor(dialogsContainer.height / 2 + 1), 2, 0, 0x696969, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.newMessage))
+			sendMessageButton.localX = math.floor(dialogsContainer.width / 2 - sendMessageButton.width / 2)
+			sendMessageButton.onTouch = function()
+				dialogGUI(nil, {})
+			end
+
+			if #dialogs > 0 then
+				local y = sendMessageButton.localY + 2
+
+				for i = 1, #dialogs do
+					local backgroundColor, nicknameColor, timestampColor, textColor = 0xFFFFFF, 0x0, 0xC3C3C3, 0x969696
+					if dialogs[i].last_message_is_read == 0 and dialogs[i].last_message_user_name ~= user.name then
+						backgroundColor, nicknameColor, timestampColor, textColor = 0xCCDBFF, 0x0, 0x878787, 0x696969
+					end
+
+					local dialogContainer = dialogsContainer:addChild(GUI.container(3, y, dialogsContainer.width - 4, 4))
+					addPanel(dialogContainer,backgroundColor)
+					
+					dialogContainer:addChild(newKeyValueWidget(3, 2, dialogContainer.width, nicknameColor, timestampColor, dialogs[i].dialog_user_name, os.date(" (%d.%m.%Y, %H:%M)", dialogs[i].timestamp)))
+					dialogContainer:addChild(GUI.text(3, 3, textColor, string.limit((dialogs[i].last_message_user_name == user.name and localization.yourText .. " " or "") .. dialogs[i].text, dialogContainer.width - 4, "right")))
+
+					dialogContainer.eventHandler = function(mainContainer, object, eventData)
+						if eventData[1] == "touch" then
+							dialogContainer.panel.colors.background = 0xE1E1E1
+							dialogGUI(dialogs[i].dialog_user_name)
+						end
+					end
+
+					y = y + dialogContainer.height + 1
+				end
+			else
+				dialogsContainer:addChild(GUI.label(1, sendMessageButton.localY - 2, dialogsContainer.width, 1, 0xA5A5A5, localization.hereBeYourDialogs)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.center)
+			end
+		end
+
+		activity()
+	end
+
+	local function settings()
+		menuContentContainer:deleteChildren()
+		local layout = menuContentContainer:addChild(GUI.layout(1, 1, menuContentContainer.width, menuContentContainer.height, 1, 1))
+
+		layout:addChild(GUI.text(1, 1, 0x2D2D2D, localization.language))
+
+		local languageComboBox = layout:addChild(GUI.comboBox(1, 1, 36, 1, 0xFFFFFF, 0x696969, 0x969696, 0xE1E1E1))
+		for key, value in pairs(languages) do
+			languageComboBox:addItem(value).onTouch = function()
+				config.language_id = key
+				saveConfig()
+			end
+
+			if key == config.language_id then
+				languageComboBox.selectedItem = languageComboBox:count()
+			end
+		end
+
+		layout:addChild(GUI.adaptiveRoundedButton(1, 1, 2, 0, 0xC3C3C3, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.clearCache)).onTouch = function()
+			for file in fs.list(iconCachePath) do
+				fs.remove(iconCachePath .. file)
+			end
+		end
+
+		MineOSInterface.OSDraw()
+	end
+
+	local function account()
+		local function logout()
+			user = {}
+			saveUser()
+			mainMenu(2)
+		end
+
+		local function addAccountShit(login, register, recover)
+			menuContentContainer:deleteChildren()
+			local layout = menuContentContainer:addChild(GUI.layout(1, 1, menuContentContainer.width, menuContentContainer.height, 1, 1))
+			
+			layout:addChild(GUI.label(1, 1, 36, 1, 0x0, login and localization.login or register and localization.createAccount or recover and localization.changePassword)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+			local nameInput = layout:addChild(GUI.input(1, 1, 36, 3, 0xFFFFFF, 0x696969, 0xB4B4B4, 0xFFFFFF, 0x2D2D2D, "", localization.nickname))
+			local emailInput = layout:addChild(GUI.input(1, 1, 36, 3, 0xFFFFFF, 0x696969, 0xB4B4B4, 0xFFFFFF, 0x2D2D2D, "", login and localization.nicknameOrEmail or "E-mail"))
+			local currentPasswordInput = layout:addChild(GUI.input(1, 1, 36, 3, 0xFFFFFF, 0x696969, 0xB4B4B4, 0xFFFFFF, 0x2D2D2D, "", localization.currentPassword, false, "*"))
+			local passwordInput = layout:addChild(GUI.input(1, 1, 36, 3, 0xFFFFFF, 0x696969, 0xB4B4B4, 0xFFFFFF, 0x2D2D2D, "", recover and localization.newPassword or localization.password, false, "*"))
+
+			local singleSessionSwitchAndLabel = layout:addChild(GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0xC3C3C3, 0xFFFFFF, 0xA5A5A5, localization.singleSession .. ":", config.singleSession))
+
+			layout:addChild(GUI.button(1, 1, 36, 3, 0xA5A5A5, 0xFFFFFF, 0x696969, 0xFFFFFF, "OK")).onTouch = function()
+				activity(true)
+
+				if login then
+					local result = fieldAPIRequest("result", "login", {
+						[(string.find(emailInput.text, "@") and "email" or "name")] = emailInput.text,
+						password = passwordInput.text
+					})
+
+					if result then
+						user = {
+							token = result.token,
+							name = result.name,
+							id = result.id,
+							email = result.email,
+							timestamp = result.timestamp,
+						}
+
+						mainMenu(3)
+
+						config.singleSession = singleSessionSwitchAndLabel.switch.state
+						if not config.singleSession then
+							saveUser()
+						end
+						saveConfig()
+					end
+				elseif register then
+					local result = fieldAPIRequest("result", "register", {
+						name = nameInput.text,
+						email = emailInput.text,
+						password = passwordInput.text,
+					})
+
+					if result then
+						showLabelAsContent(menuContentContainer, localization.registrationSuccessfull)
+					end
+				else
+					local success, reason = RawAPIRequest("change_password", {
+						email = user.email,
+						current_password = currentPasswordInput.text,
+						new_password = passwordInput.text,
+					})
+
+					if success then
+						logout()
+					else
+						GUI.error(reason)
+					end
+				end
+
+				activity()
+			end
+
+			if login then
+				local registerLayout = layout:addChild(GUI.layout(1, 1, layout.width, 1, 1, 1))
+				registerLayout:setCellDirection(1, 1, GUI.directions.horizontal)
+				registerLayout:addChild(GUI.text(1, 1, 0xA5A5A5, localization.notRegistered))
+				registerLayout:addChild(GUI.adaptiveButton(1, 1, 0, 0, nil, 0x696969, nil, 0x0, localization.createAccount)).onTouch = function()
+					addAccountShit(false, true, false)
+				end
+			end
+
+			currentPasswordInput.hidden = not recover
+			emailInput.hidden = recover
+			nameInput.hidden = login or recover
+			singleSessionSwitchAndLabel.hidden = not login
+		end
+
+		if user.token then
+			activity(true)
+
+			local result = fieldAPIRequest("result", "publications", {
+				user_name = user.name,
+				order_by = "name",
+				order_direction = "asc",
+			})
+
+			if result then
+				menuContentContainer:deleteChildren()
+				local layout = menuContentContainer:addChild(GUI.layout(1, 1, menuContentContainer.width, menuContentContainer.height, 1, 1))
+
+				layout:addChild(GUI.text(1, 1, 0x2D2D2D, localization.profile))
+
+				layout:addChild(newKeyValueWidget(1, 1, 36, 0x4B4B4B, 0x878787, localization.nickname, ": " .. user.name))
+				layout:addChild(newKeyValueWidget(1, 1, 36, 0x4B4B4B, 0x878787, "E-Mail", ": " .. user.email))
+				layout:addChild(newKeyValueWidget(1, 1, 36, 0x4B4B4B, 0x878787, localization.registrationDate, ": " .. os.date("%d.%m.%Y", user.timestamp)))
+
+				local buttonsLayout = layout:addChild(newButtonsLayout(1, 1, layout.width, 2))
+				
+				buttonsLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 1, 0, 0xC3C3C3, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.changePassword)).onTouch = function()
+					addAccountShit(false, false, true)
+				end
+
+				buttonsLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 2, 0, 0xC3C3C3, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.exit)).onTouch = function()
+					logout()
+				end
+
+				if #result > 0 then
+					layout:addChild(GUI.text(1, 1, 0x2D2D2D, localization.publications))
+
+					local comboBox = layout:addChild(GUI.comboBox(1, 1, 36, 1, 0xFFFFFF, 0x696969, 0x969696, 0xE1E1E1))
+					for i = 1, #result do
+						comboBox:addItem(result[i].publication_name)
+					end
+
+					local buttonsLayout = layout:addChild(newButtonsLayout(1, 1, layout.width, 2))
+					buttonsLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 1, 0, 0xC3C3C3, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.open)).onTouch = function()
+						newPublicationInfo(result[comboBox.selectedItem].file_id)
+					end
+
+					local function editOrDelete(edit)
+						activity(true)
+
+						local result = fieldAPIRequest("result", "publication", {
+							file_id = result[comboBox.selectedItem].file_id,
+							language_id = config.language_id,
+						})
+
+						if result then
+							if edit then
+								editPublication(result)
+							else
+								deletePublication(result)
+							end
+						end
+
+						activity()
+					end
+
+					buttonsLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 1, 0, 0xC3C3C3, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.edit)).onTouch = function()
+						editOrDelete(true)
+					end
+					buttonsLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 1, 0, 0xC3C3C3, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.remove)).onTouch = function()
+						editOrDelete(false)
+					end
+				end
+			end
+
+			activity()
+		else
+			addAccountShit(true, false, false)
+			MineOSInterface.OSDraw()
+		end
+	end
+
+	local buttons = {}
+
+	table.insert(buttons, {
+		text = localization.statistics,
+		onTouch = statistics
+	})
+
+	if user.token then
+		table.insert(buttons, {
+			text = localization.messages,
+			onTouch = function()
+				if messageToUser then
+					dialogGUI(messageToUser)
+					messageToUser = nil
+				else
+					dialogs()
+				end
+			end
+		})
+	end
+
+	table.insert(buttons, {
+		text = localization.account,
+		onTouch = account
+	})
+
+	table.insert(buttons, {
+		text = localization.settings,
+		onTouch = settings
+	})
+
+	local step = false
+	for i = 1, #buttons do
+		local button = menuLayout:addChild(GUI.button(1, 1, menuPanel.width, 3, step and 0xD2D2D2 or 0xE1E1E1, 0x4B4B4B, 0x4B4B4B, 0xE1E1E1, buttons[i].text))
+		button.animated = false
+		button.switchMode = true
+		button.eventHandler = function(mainContainer, object, eventData)
+			if eventData[1] == "touch" then
+				for j = 1, #menuLayout.children do
+					menuLayout.children[j].pressed = j == i
+				end
+
+				MineOSInterface.OSDraw()
+				buttons[i].onTouch()
+			end
+		end
+
+		step = not step
+	end
+
+	menuLayout.children[lastArguments[1]].pressed = true
+	buttons[lastArguments[1]].onTouch()
+end
+
+newPublicationInfo = function(file_id)
 	lastMethod, lastArguments = newPublicationInfo, {file_id}
 	activity(true)
 
@@ -794,7 +1387,9 @@ local function newPublicationInfo(file_id)
 					end
 				end
 
-				layout:addChild(GUI.adaptiveRoundedButton(1, 1, 2, 0, 0x696969, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, existingReviewText and localization.changeReview or localization.writeReview)).onTouch = function()
+				local buttonsLayout = layout:addChild(newButtonsLayout(1, y, layout.width, 3))
+				
+				buttonsLayout:addChild(GUI.adaptiveRoundedButton(2, 1, 1, 0, 0x696969, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, existingReviewText and localization.changeReview or localization.writeReview)).onTouch = function()
 					local container = MineOSInterface.addUniversalContainer(window, existingReviewText and localization.changeReview or localization.writeReview)
 					container.layout:setCellFitting(2, 1, false, false)
 
@@ -853,6 +1448,10 @@ local function newPublicationInfo(file_id)
 					end
 
 					input.onInputFinished()
+				end
+
+				buttonsLayout:addChild(GUI.adaptiveRoundedButton(2, 1, 1, 0, 0x696969, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.newMessageToDeveloper)).onTouch = function()
+					mainMenu(2, publication.user_name)
 				end
 			end
 
@@ -935,36 +1534,6 @@ local function newPublicationInfo(file_id)
 	end
 
 	activity()
-end
-
---------------------------------------------------------------------------------
-
-local function applicationWidgetEventHandler(mainContainer, object, eventData)
-	if eventData[1] == "touch" then
-		object.parent.panel.colors.background = 0xE1E1E1
-		MineOSInterface.OSDraw()
-		newPublicationInfo(object.parent.file_id)
-	end
-end
-
-local function newApplicationPreview(x, y, publication)
-	local container = GUI.container(x, y, appWidth, appHeight)
-
-	container.file_id = publication.file_id
-	addApplicationInfo(container, publication, appWidth - 14)
-
-	container.panel.eventHandler,
-	container.image.eventHandler,
-	container.nameLabel.eventHandler,
-	container.developerLabel.eventHandler,
-	container.rating.eventHandler =
-	applicationWidgetEventHandler,
-	applicationWidgetEventHandler,
-	applicationWidgetEventHandler,
-	applicationWidgetEventHandler,
-	applicationWidgetEventHandler
-
-	return container
 end
 
 --------------------------------------------------------------------------------
@@ -1386,198 +1955,11 @@ updateFileList = function(category_id, updates)
 				MineOSInterface.OSDraw()
 			end
 		else
-			showLabelAsContent(localization.noUpdates)
+			showLabelAsContent(contentContainer, localization.noUpdates)
 		end
 	end
 
 	activity()
-end
-
---------------------------------------------------------------------------------
-
-local function account()
-	lastMethod, lastArguments = account, {}
-
-	local function logout()
-		user = {}
-		saveUser()
-		account()
-	end
-
-	local function addAccountShit(login, register, recover)
-		contentContainer:deleteChildren()
-		local layout = contentContainer:addChild(GUI.layout(1, 1, contentContainer.width, contentContainer.height, 1, 1))
-		
-		layout:addChild(GUI.label(1, 1, 36, 1, 0x0, login and localization.login or register and localization.createAccount or recover and localization.changePassword)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
-		local nameInput = layout:addChild(GUI.input(1, 1, 36, 3, 0xFFFFFF, 0x696969, 0xB4B4B4, 0xFFFFFF, 0x2D2D2D, "", localization.nickname))
-		local emailInput = layout:addChild(GUI.input(1, 1, 36, 3, 0xFFFFFF, 0x696969, 0xB4B4B4, 0xFFFFFF, 0x2D2D2D, "", login and localization.nicknameOrEmail or "E-mail"))
-		local currentPasswordInput = layout:addChild(GUI.input(1, 1, 36, 3, 0xFFFFFF, 0x696969, 0xB4B4B4, 0xFFFFFF, 0x2D2D2D, "", localization.currentPassword, false, "*"))
-		local passwordInput = layout:addChild(GUI.input(1, 1, 36, 3, 0xFFFFFF, 0x696969, 0xB4B4B4, 0xFFFFFF, 0x2D2D2D, "", recover and localization.newPassword or localization.password, false, "*"))
-
-		local singleSessionSwitchAndLabel = layout:addChild(GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0xC3C3C3, 0xFFFFFF, 0xA5A5A5, localization.singleSession .. ":", config.singleSession))
-
-		layout:addChild(GUI.button(1, 1, 36, 3, 0xA5A5A5, 0xFFFFFF, 0x696969, 0xFFFFFF, "OK")).onTouch = function()
-			activity(true)
-
-			if login then
-				local result = fieldAPIRequest("result", "login", {
-					[(string.find(emailInput.text, "@") and "email" or "name")] = emailInput.text,
-					password = passwordInput.text
-				})
-
-				if result then
-					user = {
-						token = result.token,
-						name = result.name,
-						id = result.id,
-						email = result.email,
-						timestamp = result.timestamp,
-					}
-
-					account()
-
-					config.singleSession = singleSessionSwitchAndLabel.switch.state
-					if not config.singleSession then
-						saveUser()
-					end
-					saveConfig()
-				end
-			elseif register then
-				local result = fieldAPIRequest("result", "register", {
-					name = nameInput.text,
-					email = emailInput.text,
-					password = passwordInput.text,
-				})
-
-				if result then
-					showLabelAsContent(localization.registrationSuccessfull)
-				end
-			else
-				local success, reason = RawAPIRequest("change_password", {
-					email = user.email,
-					current_password = currentPasswordInput.text,
-					new_password = passwordInput.text,
-				})
-
-				if success then
-					logout()
-				else
-					GUI.error(reason)
-				end
-			end
-
-			activity()
-		end
-
-		if login then
-			local registerLayout = layout:addChild(GUI.layout(1, 1, layout.width, 1, 1, 1))
-			registerLayout:setCellDirection(1, 1, GUI.directions.horizontal)
-			registerLayout:addChild(GUI.text(1, 1, 0xA5A5A5, localization.notRegistered))
-			registerLayout:addChild(GUI.adaptiveButton(1, 1, 0, 0, nil, 0x696969, nil, 0x0, localization.createAccount)).onTouch = function()
-				addAccountShit(false, true, false)
-			end
-		end
-
-		currentPasswordInput.hidden = not recover
-		emailInput.hidden = recover
-		nameInput.hidden = login or recover
-		singleSessionSwitchAndLabel.hidden = not login
-	end
-
-	if user.token then
-		activity(true)
-
-		local result = fieldAPIRequest("result", "publications", {
-			user_name = user.name,
-			order_by = "name",
-			order_direction = "asc",
-		})
-
-		if result then
-			contentContainer:deleteChildren()
-			local layout = contentContainer:addChild(GUI.layout(1, 1, contentContainer.width, contentContainer.height, 1, 1))
-
-			layout:addChild(GUI.text(1, 1, 0x2D2D2D, localization.profile))
-
-			layout:addChild(newKeyValueWidget(1, 1, 36, 0x4B4B4B, 0x878787, localization.nickname, ": " .. user.name))
-			layout:addChild(newKeyValueWidget(1, 1, 36, 0x4B4B4B, 0x878787, "E-Mail", ": " .. user.email))
-			layout:addChild(newKeyValueWidget(1, 1, 36, 0x4B4B4B, 0x878787, localization.registrationDate, ": " .. os.date("%d.%m.%Y", user.timestamp)))
-
-			local buttonsLayout = layout:addChild(newButtonsLayout(1, 1, layout.width, 2))
-			
-			buttonsLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 1, 0, 0xC3C3C3, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.changePassword)).onTouch = function()
-				addAccountShit(false, false, true)
-			end
-
-			buttonsLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 1, 0, 0xC3C3C3, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.clearCache)).onTouch = function()
-				for file in fs.list(iconCachePath) do
-					fs.remove(iconCachePath .. file)
-				end
-			end
-
-			buttonsLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 2, 0, 0xC3C3C3, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.exit)).onTouch = function()
-				logout()
-			end
-
-			layout:addChild(GUI.text(1, 1, 0x2D2D2D, localization.language))
-
-			local languageComboBox = layout:addChild(GUI.comboBox(1, 1, 36, 1, 0xFFFFFF, 0x696969, 0x969696, 0xE1E1E1))
-			for key, value in pairs(languages) do
-				languageComboBox:addItem(value).onTouch = function()
-					config.language_id = key
-					saveConfig()
-				end
-
-				if key == config.language_id then
-					languageComboBox.selectedItem = languageComboBox:count()
-				end
-			end
-
-			if #result > 0 then
-				layout:addChild(GUI.text(1, 1, 0x2D2D2D, localization.publications))
-
-				local comboBox = layout:addChild(GUI.comboBox(1, 1, 36, 1, 0xFFFFFF, 0x696969, 0x969696, 0xE1E1E1))
-				for i = 1, #result do
-					comboBox:addItem(result[i].publication_name)
-				end
-
-				local buttonsLayout = layout:addChild(newButtonsLayout(1, 1, layout.width, 2))
-				buttonsLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 1, 0, 0xC3C3C3, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.open)).onTouch = function()
-					newPublicationInfo(result[comboBox.selectedItem].file_id)
-				end
-
-				local function editOrDelete(edit)
-					activity(true)
-
-					local result = fieldAPIRequest("result", "publication", {
-						file_id = result[comboBox.selectedItem].file_id,
-						language_id = config.language_id,
-					})
-
-					if result then
-						if edit then
-							editPublication(result)
-						else
-							deletePublication(result)
-						end
-					end
-
-					activity()
-				end
-
-				buttonsLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 1, 0, 0xC3C3C3, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.edit)).onTouch = function()
-					editOrDelete(true)
-				end
-				buttonsLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 1, 0, 0xC3C3C3, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.remove)).onTouch = function()
-					editOrDelete(false)
-				end
-			end
-		end
-
-		activity()
-	else
-		addAccountShit(true, false, false)
-	end
 end
 
 local function loadCategory(category_id, updates)
@@ -1587,151 +1969,8 @@ end
 
 --------------------------------------------------------------------------------
 
-local function statistics()
-	lastMethod, lastArguments = statistics, {}
-
-	activity(true)
-
-	local statistics = fieldAPIRequest("result", "statistics")
-	if statistics then
-		MineOSInterface.OSDraw()
-
-		local publications = fieldAPIRequest("result", "publications", {
-			order_by = "popularity",
-			order_direction = "desc",
-			offset = 0,
-			count = overviewIconsCount + 1,
-			category_id = 1,
-		})
-
-		if publications then
-			contentContainer:deleteChildren()
-
-			local iconsContainer = contentContainer:addChild(GUI.container(1, 1, contentContainer.width, contentContainer.height))
-
-			local width = 40
-			local container = contentContainer:addChild(GUI.container(math.floor(contentContainer.width / 2 - width / 2), 1, width, contentContainer.height))
-			container:addChild(GUI.panel(1, 1, container.width, container.height, 0xFFFFFF))
-			local statisticsLayout = container:addChild(GUI.layout(1, 1, container.width, container.height, 1, 1))
-
-			statisticsLayout:addChild(GUI.image(1, 1, image.load(resourcesPath .. "Icon.pic"))).height = 5
-			statisticsLayout:addChild(newKeyValueWidget(1, 1, container.width - 8, 0x4B4B4B, 0xA5A5A5, localization.statisticsUsersCount, ": " .. statistics.users_count))
-			statisticsLayout:addChild(newKeyValueWidget(1, 1, container.width - 8, 0x4B4B4B, 0xA5A5A5, localization.statisticsNewUser, ": " .. statistics.last_registered_user))
-			statisticsLayout:addChild(newKeyValueWidget(1, 1, container.width - 8, 0x4B4B4B, 0xA5A5A5, localization.statisticsMostPopularUser, ": " .. statistics.most_popular_user))
-			statisticsLayout:addChild(newKeyValueWidget(1, 1, container.width - 8, 0x4B4B4B, 0xA5A5A5, localization.statisticsPublicationsCount, ": " .. statistics.publications_count))
-			statisticsLayout:addChild(newKeyValueWidget(1, 1, container.width - 8, 0x4B4B4B, 0xA5A5A5, localization.statisticsReviewsCount, ": " .. statistics.reviews_count))
-			
-			local applicationPreview = statisticsLayout:addChild(newApplicationPreview(1, 1, publications[1]))
-			applicationPreview.panel.colors.background = 0xF0F0F0
-			statisticsLayout:addChild(GUI.label(1, 1, statisticsLayout.width, 1, 0xA5A5A5, localization.statisticsPopularPublication)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.center)
-
-			MineOSInterface.OSDraw()
-
-			local uptime, newUptime = computer.uptime()
-			local function tick()
-				newUptime = computer.uptime()
-				if newUptime - uptime > overviewAnimationDelay then
-					uptime = newUptime
-
-					local child
-					for i = 1, #iconsContainer.children do
-						child = iconsContainer.children[i]
-						
-						child.moveX, child.moveY = child.moveX + child.forceX, child.moveY + child.forceY
-							
-						if child.forceX > 0 then
-							if child.forceX > overviewForceLimit then
-								child.forceX = child.forceX - overviewForceDecay
-							else
-								child.forceX = overviewForceLimit
-							end
-						else
-							if child.forceX < -overviewForceLimit then
-								child.forceX = child.forceX + overviewForceDecay
-							else
-								child.forceX = -overviewForceLimit
-							end
-						end
-
-						if child.forceY > 0 then
-							if child.forceY > overviewForceLimit then
-								child.forceY = child.forceY - overviewForceDecay
-							else
-								child.forceY = overviewForceLimit
-							end
-						else
-							if child.forceY < -overviewForceLimit then
-								child.forceY = child.forceY + overviewForceDecay
-							else
-								child.forceY = -overviewForceLimit
-							end
-						end
-
-						if child.moveX <= 1 then
-							child.forceX, child.moveX = -child.forceX, 1
-						elseif child.moveX + child.width - 1 >= iconsContainer.width then
-							child.forceX, child.moveX = -child.forceX, iconsContainer.width - child.width + 1
-						end
-
-						if child.moveY <= 1 then
-							child.forceY, child.moveY = -child.forceY, 1
-						elseif child.moveY + child.height - 1 >= iconsContainer.height then
-							child.forceY, child.moveY = -child.forceY, iconsContainer.height - child.height + 1
-						end
-
-						child.localX, child.localY = math.floor(child.moveX), math.floor(child.moveY)
-					end
-
-					MineOSInterface.OSDraw()
-
-					return true
-				end
-			end
-
-			iconsContainer.eventHandler = function(mainContainer, object, eventData)
-				if eventData[1] == "touch" or eventData[1] == "drag" then
-					local child, deltaX, deltaY, vectorLength
-					for i = 1, #iconsContainer.children do
-						child = iconsContainer.children[i]
-						
-						deltaX, deltaY = eventData[3] - child.x, eventData[4] - child.y
-						vectorLength = math.sqrt(deltaX ^ 2 + deltaY ^ 2)
-						if vectorLength > 0 then
-							child.forceX = deltaX / vectorLength * math.random(overviewMaximumTouchAcceleration)
-							child.forceY = deltaY / vectorLength * math.random(overviewMaximumTouchAcceleration)
-						end
-					end
-				end
-
-				tick()
-			end
-
-			local function makeBlyad(object)
-				object.localX = math.random(1, iconsContainer.width - object.width + 1)
-				object.localY = math.random(1, iconsContainer.height - object.width + 1)
-				object.moveX = object.localX
-				object.moveY = object.localY
-				object.forceX = math.random(-100, 100) / 100 * overviewForceLimit
-				object.forceY = math.random(-100, 100) / 100 * overviewForceLimit
-				
-				if not tick() then
-					MineOSInterface.OSDraw()
-				end
-			end
-
-			for i = 2, #publications do
-				makeBlyad(iconsContainer:addChild(GUI.image(1, 1, getPublicationIcon(publications[i])), 1))
-			end
-		end
-	end
-
-	activity()
-end
-
---------------------------------------------------------------------------------
-
 window.tabBar:addItem(localization.categoryOverview).onTouch = function()
-	statistics()
+	mainMenu(1)
 end
 
 for i = 1, #categories do
@@ -1742,10 +1981,6 @@ end
 
 window.tabBar:addItem(localization.categoryUpdates).onTouch = function()
 	loadCategory(nil, true)
-end
-
-window.tabBar:addItem(localization.categoryAccount).onTouch = function()
-	account()
 end
 
 window.onResize = function(width, height)
@@ -1774,7 +2009,7 @@ if args[1] == "updates" then
 	lastMethod, lastArguments = updateFileList, {nil, true}
 	window.tabBar.selectedItem = #categories + 2
 else
-	lastMethod, lastArguments = statistics, {}
+	lastMethod, lastArguments = mainMenu, {1}
 end
 
 window:resize(window.width, window.height)
