@@ -1334,7 +1334,7 @@ GUI.**filesystemChooser**( x, y, width, height, backgroundColor, textColor, tipB
 | *int* | textColor | Цвет текста |
 | *int* | tipBackgroundColor | Цвет фона "пимпочки" в правой части filesystemChooser |
 | *int* | tipTextgroundColor | Цвет текста "пимпочки" в правой части filesystemChooser |
-| *string* | sumbitButtonText | Стартовый текст filesystemChooser |
+| *string* | path | Стартовый выбранный путь. Может принимать значение nil, если он не требуется |
 | *string* | sumbitButtonText | Текст кнопки подтверждения выбора в диалоговом окне |
 | *string* | cancelButtonText | Текст кнопки отмены выбора в диалоговом окне |
 | *string* | placeholderText | Текст, появляющийся в случае отсутствия выбора конкретного пути |
@@ -1347,6 +1347,8 @@ FilesystemChooser  предназначен для удобного выбора
 | ------ | ------ | ------ |
 | *callback-function* | .**onSubmit**( *string* path )| Метод, вызываемый после выбора файла или директории, а также нажатии кнопки подтверждения в диалоговом окне. В качестве аргумента передается абсолютный путь до выбранного элемента |
 | *callback-function* | .**onCancel**(  )| Метод, вызываемый после нажатия на кнопку отмены в диалоговом окне |
+| *function* | :**setMode**( *enum* IOMode, *enum* typeMode )| Метод для выбора содержимого в диалоговом окне. Первый аргумент может принимать значения GUI.**filesystemModes**.**open** или GUI.**filesystemModes**.**save**. Второй аргумент принимает значения
+GUI.**filesystemModes**.**file**, GUI.**filesystemModes**.**directory** или GUI.**filesystemModes**.**both** |
 | *function* | :**addExtensionFilter**( *string* extension )| Добавить фильтр на указанное расширение файла. После этого в диалоговом окне пользователь сможет выбирать лишь те файлы, которые имеют соответствующее расширение |
 
 Пример реализации FilesystemChooser:
@@ -1360,10 +1362,8 @@ local GUI = require("GUI")
 local mainContainer = GUI.fullScreenContainer()
 mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x262626))
 
-local filesystemChooser = mainContainer:addChild(GUI.filesystemChooser(2, 2, 30, 3, 0xE1E1E1, 0x888888, 0x3C3C3C, 0x888888, "Open", "Cancel", "Choose file", GUI.filesystemModes.file, "/", nil))
-
-filesystemChooser:addExtensionFilter(".cfg")
-
+local filesystemChooser = mainContainer:addChild(GUI.filesystemChooser(2, 2, 30, 3, 0xE1E1E1, 0x888888, 0x3C3C3C, 0x888888, nil, "Open", "Cancel", "Choose", "/"))
+filesystemChooser:setMode(GUI.filesystemModes.open, GUI.filesystemModes.file)
 filesystemChooser.onSubmit = function(path)
 	GUI.error("File \"" .. path .. "\" was selected")
 end
