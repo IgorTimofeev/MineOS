@@ -974,7 +974,7 @@ mainMenu = function(menuID, messageToUser)
 				for i = 1, #dialogs do
 					local backgroundColor, nicknameColor, timestampColor, textColor = 0xFFFFFF, 0x0, 0xD2D2D2, 0x969696
 					if dialogs[i].last_message_is_read == 0 and dialogs[i].last_message_user_name ~= user.name then
-						backgroundColor, nicknameColor, timestampColor, textColor = 0xCCDBFF, 0x0, 0xA5A5A5, 0x787878
+						backgroundColor, nicknameColor, timestampColor, textColor = 0xCCDBFF, 0x0, 0xB4B4B4, 0x878787
 					end
 
 					local dialogContainer = dialogsContainer:addChild(GUI.container(3, y, dialogsContainer.width - 4, 4))
