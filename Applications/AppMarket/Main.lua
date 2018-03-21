@@ -1488,10 +1488,11 @@ newPublicationInfo = function(file_id)
 
 					if user.token and user.name ~= reviews[i].user_name then
 						local wasHelpText = reviewContainer:addChild(GUI.text(3, y, 0xC3C3C3, localization.wasReviewHelpful))
-						local yesButton = reviewContainer:addChild(GUI.adaptiveButton(wasHelpText.localX + wasHelpText.width + 1, y, 0, 0, nil, 0x696969, nil, 0x2D2D2D, localization.yes))
-						local stripLabel = reviewContainer:addChild(GUI.text(yesButton.localX + yesButton.width + 1, y, 0xC3C3C3, "|"))
-						local noButton = reviewContainer:addChild(GUI.adaptiveButton(stripLabel.localX + stripLabel.width + 1, y, 0, 0, nil, 0x696969, nil, 0x2D2D2D, localization.no))
 						
+						local layout = reviewContainer:addChild(GUI.layout(wasHelpText.localX + wasHelpText.width + 1, y, reviewContainer.width - wasHelpText.localX - wasHelpText.width - 1, 1, 1, 1))
+						layout:setCellDirection(1, 1, GUI.directions.horizontal)
+						layout:setCellAlignment(1, 1, GUI.alignment.horizontal.left, GUI.alignment.vertical.top)
+
 						local function go(rating)
 							activity(true)
 							
@@ -1504,20 +1505,22 @@ newPublicationInfo = function(file_id)
 							if success then
 								wasHelpText.text = localization.thanksForVote
 								wasHelpText.color = 0x696969
-								yesButton:delete()
-								stripLabel:delete()
-								noButton:delete()
+								layout:delete()
 							end
 
 							activity()
 						end
 
-						yesButton.onTouch = function()
+						layout:addChild(GUI.adaptiveButton(1, 1, 0, 0, nil, 0x696969, nil, 0x2D2D2D, localization.yes)).onTouch = function()
 							go(1)
 						end
-
-						noButton.onTouch = function()
+						layout:addChild(GUI.text(1, 1, 0xC3C3C3, "|"))
+						layout:addChild(GUI.adaptiveButton(1, 1, 0, 0, nil, 0x696969, nil, 0x2D2D2D, localization.no)).onTouch = function()
 							go(0)
+						end
+						layout:addChild(GUI.text(1, 1, 0xC3C3C3, "|"))
+						layout:addChild(GUI.adaptiveButton(1, 1, 0, 0, nil, 0x696969, nil, 0x2D2D2D, localization.newMessageToDeveloper)).onTouch = function()
+							mainMenu(2, reviews[i].user_name)
 						end
 
 						y = y + 1
