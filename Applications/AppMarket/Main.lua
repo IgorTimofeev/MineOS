@@ -926,7 +926,7 @@ mainMenu = function(menuID, messageToUser)
 		end
 
 		local function newCloud(y, width, text, me, timestamp)
-			local lines =  string.wrap(text, width - 2)
+			local lines = string.wrap(text, width - 2)
 			local object = GUI.object(me and messagesContainer.width - width - 1 or 3, y - #lines + 1, width, 1)
 			
 			object.lines = lines
@@ -941,7 +941,7 @@ mainMenu = function(menuID, messageToUser)
 
 		local y = messagesContainer.height - 1
 		for j = 1, #messages do
-			local cloud = messagesContainer:addChild(newCloud(y, math.floor(messagesContainer.width * 0.6), messages[j].text, messages[j].user_name == user.name, messages[j].timestamp), 1)
+			local cloud = messagesContainer:addChild(newCloud(y, math.floor(messagesContainer.width * 0.6), tostring(messages[j].text), messages[j].user_name == user.name, messages[j].timestamp), 1)
 			y = y - cloud.height - 2
 		end
 
@@ -1475,7 +1475,7 @@ newPublicationInfo = function(file_id)
 					reviewContainer:addChild(newRatingWidget(3, y, reviews[i].rating))
 					y = y + 1
 
-					local lines = string.wrap(reviews[i].comment, reviewContainer.width - 4)
+					local lines = string.wrap(tostring(reviews[i].comment), reviewContainer.width - 4)
 					local textBox = reviewContainer:addChild(GUI.textBox(3, y, reviewContainer.width - 4, #lines, nil, 0x878787, lines, 1, 0, 0))
 					textBox.eventHandler = nil
 					y = y + #lines
