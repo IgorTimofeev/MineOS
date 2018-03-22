@@ -349,14 +349,9 @@ end
 
 local function deletePublication(publication)
 	local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer, localization.areYouSure)
-	local buttonsLayout = container.layout:addChild(newButtonsLayout(1, 1, container.layout.width, 2))
+	local buttonsLayout = container.layout:addChild(newButtonsLayout(1, 1, container.layout.width, 3))
 	
-	buttonsLayout:addChild(GUI.adaptiveButton(1, 1, 2, 0, 0xA5A5A5, 0x2D2D2D, 0x0, 0xE1E1E1, localization.no)).onTouch = function()
-		container:delete()
-		MineOSInterface.OSDraw()
-	end
-
-	buttonsLayout:addChild(GUI.adaptiveButton(1, 1, 2, 0, 0xE1E1E1, 0x2D2D2D, 0x0, 0xE1E1E1, localization.yes)).onTouch = function()
+	buttonsLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 2, 0, 0xE1E1E1, 0x2D2D2D, 0x0, 0xE1E1E1, localization.yes)).onTouch = function()
 		local success, reason = RawAPIRequest("delete", {
 			token = user.token,
 			file_id = publication.file_id,
@@ -368,6 +363,11 @@ local function deletePublication(publication)
 		else
 			GUI.error(reason)
 		end
+	end
+
+	buttonsLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 2, 0, 0xA5A5A5, 0x2D2D2D, 0x0, 0xE1E1E1, localization.no)).onTouch = function()
+		container:delete()
+		MineOSInterface.OSDraw()
 	end
 end
 
