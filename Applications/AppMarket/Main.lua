@@ -1281,19 +1281,7 @@ newPublicationInfo = function(file_id)
 			ratingsContainer.localX = detailsContainer.width - ratingsContainer.width + 1
 			addPanel(ratingsContainer, 0xE1E1E1)
 			
-			-- Всякая текстовая пизда
 			local y = 2
-			-- Фигачим кнопочки на изменение хуйни
-			if publication.user_name == user.name then
-				local buttonsLayout = ratingsContainer:addChild(newButtonsLayout(2, y, ratingsContainer.width - 2, 3))
-				buttonsLayout:addChild(GUI.adaptiveRoundedButton(2, 1, 1, 0, 0x969696, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.edit)).onTouch = function()
-					editPublication(publication)
-				end
-				buttonsLayout:addChild(GUI.adaptiveRoundedButton(2, 1, 1, 0, 0x969696, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.remove)).onTouch = function()
-					deletePublication(publication)
-				end
-				y = y + 2
-			end
 
 			ratingsContainer:addChild(newKeyValueWidget(2, y, ratingsContainer.width - 2, 0x2D2D2D, 0x878787, localization.developer, ": " .. publication.user_name)); y = y + 1
 			ratingsContainer:addChild(newKeyValueWidget(2, y, ratingsContainer.width - 2, 0x2D2D2D, 0x878787, localization.license, ": " .. licenses[publication.license_id])); y = y + 1
@@ -1319,6 +1307,88 @@ newPublicationInfo = function(file_id)
 					ratingsContainer:addChild(GUI.progressBar(12, y, ratingsContainer.width - textLength - 13, 0x2D2D2D, 0xC3C3C3, 0xC3C3C3, ratings[i] / #reviews * 100, true))
 					ratingsContainer:addChild(GUI.text(ratingsContainer.width - textLength, y, 0x2D2D2D, text))
 					y = y + 1
+				end
+			end
+
+			-- Фигачим кнопочки на изменение хуйни
+			if user.token then
+				y = y + 1
+
+				local buttonsLayout = ratingsContainer:addChild(GUI.layout(1, y, ratingsContainer.width, 3, 1, 1))
+				
+				if publication.user_name == user.name then
+					buttonsLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 1, 0, 0xA5A5A5, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.edit)).onTouch = function()
+						editPublication(publication)
+					end
+
+					buttonsLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 1, 0, 0xA5A5A5, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.remove)).onTouch = function()
+						deletePublication(publication)
+					end
+				else
+					buttonsLayout:addChild(GUI.adaptiveRoundedButton(2, 1, 1, 0, 0xA5A5A5, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.newMessageToDeveloper)).onTouch = function()
+						mainMenu(2, publication.user_name)
+					end
+
+					buttonsLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 1, 0, 0xA5A5A5, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, existingReviewText and localization.changeReview or localization.writeReview)).onTouch = function()
+						local container = MineOSInterface.addUniversalContainer(window, existingReviewText and localization.changeReview or localization.writeReview)
+						container.layout:setCellFitting(2, 1, false, false)
+
+						local input = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xFFFFFF, 0x696969, 0xB4B4B4, 0xFFFFFF, 0x2D2D2D, existingReviewText or "", localization.writeReviewHere))
+						
+						local pizda = container.layout:addChild(GUI.container(1, 1, 1, 1))
+						local eblo = pizda:addChild(GUI.text(1, 1, 0xE1E1E1, localization.yourRating .. ": "))
+						pizda.width = eblo.width + 9
+						
+						local cyka = pizda:addChild(newRatingWidget(eblo.width + 1, 1, 4))
+						cyka.eventHandler = function(mainContainer, object, eventData)
+							if eventData[1] == "touch" then
+								cyka.rating = math.round((eventData[3] - object.x + 1) / object.width * 5)
+								MineOSInterface.OSDraw()
+							end
+						end
+						
+						local govno = container.layout:addChild(GUI.button(1, 1, 36, 3, 0x696969, 0xFFFFFF, 0x3C3C3C, 0xFFFFFF, "OK"))
+						govno.disabled = true
+						govno.colors.disabled.background = 0xA5A5A5
+						govno.colors.disabled.text = 0xC3C3C3
+						govno.onTouch = function()
+							activity(true)
+
+							local success, reason = RawAPIRequest("review", {
+								token = user.token,
+								file_id = publication.file_id,
+								rating = cyka.rating,
+								comment = input.text,
+							})
+
+							container:delete()
+							MineOSInterface.OSDraw()
+
+							if success then
+								newPublicationInfo(publication.file_id)
+							else
+								GUI.error(reason)
+							end
+
+							activity()
+						end
+
+						input.onInputFinished = function()
+							local textLength, from, to = unicode.len(input.text), 2, 1000
+							if textLength >= from and textLength <= to then
+								govno.disabled = false
+							else
+								govno.disabled = true
+								if textLength > to then
+									GUI.error("Too big review length (" .. textLength .. "). Maximum is " .. to)
+								end
+							end
+							
+							MineOSInterface.OSDraw()
+						end
+
+						input.onInputFinished()
+					end
 				end
 			end
 			
@@ -1386,73 +1456,6 @@ newPublicationInfo = function(file_id)
 						end
 					end
 				end
-
-				local buttonsLayout = layout:addChild(newButtonsLayout(1, y, layout.width, 3))
-				
-				buttonsLayout:addChild(GUI.adaptiveRoundedButton(2, 1, 1, 0, 0x696969, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, existingReviewText and localization.changeReview or localization.writeReview)).onTouch = function()
-					local container = MineOSInterface.addUniversalContainer(window, existingReviewText and localization.changeReview or localization.writeReview)
-					container.layout:setCellFitting(2, 1, false, false)
-
-					local input = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xFFFFFF, 0x696969, 0xB4B4B4, 0xFFFFFF, 0x2D2D2D, existingReviewText or "", localization.writeReviewHere))
-					
-					local pizda = container.layout:addChild(GUI.container(1, 1, 1, 1))
-					local eblo = pizda:addChild(GUI.text(1, 1, 0xE1E1E1, localization.yourRating .. ": "))
-					pizda.width = eblo.width + 9
-					
-					local cyka = pizda:addChild(newRatingWidget(eblo.width + 1, 1, 4))
-					cyka.eventHandler = function(mainContainer, object, eventData)
-						if eventData[1] == "touch" then
-							cyka.rating = math.round((eventData[3] - object.x + 1) / object.width * 5)
-							MineOSInterface.OSDraw()
-						end
-					end
-					
-					local govno = container.layout:addChild(GUI.button(1, 1, 36, 3, 0x696969, 0xFFFFFF, 0x3C3C3C, 0xFFFFFF, "OK"))
-					govno.disabled = true
-					govno.colors.disabled.background = 0xA5A5A5
-					govno.colors.disabled.text = 0xC3C3C3
-					govno.onTouch = function()
-						activity(true)
-
-						local success, reason = RawAPIRequest("review", {
-							token = user.token,
-							file_id = publication.file_id,
-							rating = cyka.rating,
-							comment = input.text,
-						})
-
-						container:delete()
-						MineOSInterface.OSDraw()
-
-						if success then
-							newPublicationInfo(publication.file_id)
-						else
-							GUI.error(reason)
-						end
-
-						activity()
-					end
-
-					input.onInputFinished = function()
-						local textLength, from, to = unicode.len(input.text), 2, 1000
-						if textLength >= from and textLength <= to then
-							govno.disabled = false
-						else
-							govno.disabled = true
-							if textLength > to then
-								GUI.error("Too big review length (" .. textLength .. "). Maximum is " .. to)
-							end
-						end
-						
-						MineOSInterface.OSDraw()
-					end
-
-					input.onInputFinished()
-				end
-
-				buttonsLayout:addChild(GUI.adaptiveRoundedButton(2, 1, 1, 0, 0x696969, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.newMessageToDeveloper)).onTouch = function()
-					mainMenu(2, publication.user_name)
-				end
 			end
 
 			if #reviews > 0 then
@@ -1519,7 +1522,7 @@ newPublicationInfo = function(file_id)
 							go(0)
 						end
 						layout:addChild(GUI.text(1, 1, 0xC3C3C3, "|"))
-						layout:addChild(GUI.adaptiveButton(1, 1, 0, 0, nil, 0x696969, nil, 0x2D2D2D, localization.newMessageToDeveloper)).onTouch = function()
+						layout:addChild(GUI.adaptiveButton(1, 1, 0, 0, nil, 0x696969, nil, 0x2D2D2D, localization.newMessagePersonal)).onTouch = function()
 							mainMenu(2, reviews[i].user_name)
 						end
 
