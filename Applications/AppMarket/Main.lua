@@ -1598,7 +1598,7 @@ editPublication = function(initialPublication, initialCategoryID)
 
 	layout.defaultColumn = 2
 
-	layout:addChild(GUI.label(1, 1, 36, 1, 0x0, initialPublication and localization.editPublication or localization.publish)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+	layout:addChild(GUI.label(1, 1, 36, 1, 0x0, initialPublication and localization.edit or localization.publish)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
 
 	local categoryComboBox = layout:addChild(GUI.comboBox(1, 1, 36, 1, 0xFFFFFF, 0x696969, 0x969696, 0xE1E1E1))
 	for i = 1, #categories do
