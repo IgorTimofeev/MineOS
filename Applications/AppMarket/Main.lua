@@ -1315,7 +1315,7 @@ newPublicationInfo = function(file_id)
 				y = y + 1
 
 				local buttonsLayout = ratingsContainer:addChild(GUI.layout(1, y, ratingsContainer.width, 3, 1, 1))
-				
+
 				if publication.user_name == user.name then
 					buttonsLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 1, 0, 0xA5A5A5, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.edit)).onTouch = function()
 						editPublication(publication)
@@ -1766,7 +1766,7 @@ editPublication = function(initialPublication, initialCategoryID)
 			if initialPublication then
 				newPublicationInfo(initialPublication.file_id)
 			else
-				config.orderBy = 3
+				config.orderBy = 4
 				saveConfig()
 				updateFileList(categoryComboBox.selectedItem)
 			end
