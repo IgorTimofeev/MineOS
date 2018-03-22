@@ -616,7 +616,7 @@ local function createOSWidgets()
 		end
 
 		allowReadAndWriteSwitchAndLabel.switch.onStateChanged = function()
-			MineOSCore.properties.network.users[comboBox:getItem(comboBox.selectedItem).proxyAddress].allowReadAndWrite = allowReadAndWriteSwitchAndLabel.switch.state
+			MineOSCore.properties.network.users[remoteComputersComboBox:getItem(remoteComputersComboBox.selectedItem).proxyAddress].allowReadAndWrite = allowReadAndWriteSwitchAndLabel.switch.state
 			MineOSCore.saveProperties()
 		end
 
