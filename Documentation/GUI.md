@@ -1603,7 +1603,7 @@ mainContainer:startEventHandling()
 
 ![enter image description here](https://i.imgur.com/XrqDvBk.png)
 
-GUI.**textBox**(x, y, width, height, backgroundColor, textColor, lines, currentLine, horizontalOffset, verticalOffset): *table* textBox
+GUI.**textBox**(x, y, width, height, backgroundColor, textColor, lines, currentLine, horizontalOffset, verticalOffset, autoWrap, autoHeight): *table* textBox
 ------------------------------------------------------------------------
 | Тип | Аргумент | Описание |
 | ------ | ------ | ------ |
@@ -1617,8 +1617,10 @@ GUI.**textBox**(x, y, width, height, backgroundColor, textColor, lines, currentL
 | *int* | currentLine | Текущая строка текстбокса, с которой осуществляется отображение текста |
 | *int* | horizontalOffset | Отступ отображения текста от левого и правого краев текстбокса |
 | *int* | verticalOffset | Отступ отображения текста от верхнего и нижнего краев текстбокса |
+| *boolean* | autoWrap | Автоматический перенос строк по ширине текстбокса |
+| *boolean* | autoHeight | Автоматический расчет высоты объекта в зависимости от количества строк текстбокса |
 
-Создать объект типа "текстбокс", предназначенный для отображения большого количества текстовых данных в небольшом контейнере с полосами прокрутки. При использовании колесика мыши и активации события *scroll* содержимое текстбокса будет автоматически "скроллиться" в нужном направлении.
+Текстбокс редназначен для отображения большого количества текстовых данных в небольшом контейнере с полосами прокрутки. При использовании колесика мыши и активации события *scroll* содержимое текстбокса будет автоматически "скроллиться" в нужном направлении.
 
 | Тип свойства | Свойство |Описание |
 | ------ | ------ | ------ |
