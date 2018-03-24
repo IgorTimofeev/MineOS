@@ -1329,6 +1329,16 @@ newPublicationInfo = function(file_id)
 						mainMenu(2, publication.user_name)
 					end
 
+					local existingReviewText
+					if #reviews > 0 then
+						for i = 1, #reviews do
+							if reviews[i].user_name == user.name then
+								existingReviewText = reviews[i].comment
+								break
+							end
+						end
+					end
+
 					buttonsLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 1, 0, 0xA5A5A5, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, existingReviewText and localization.changeReview or localization.writeReview)).onTouch = function()
 						local container = MineOSInterface.addUniversalContainer(window, existingReviewText and localization.changeReview or localization.writeReview)
 						container.layout:setCellFitting(2, 1, false, false)
@@ -1445,18 +1455,6 @@ newPublicationInfo = function(file_id)
 			ratingsContainer.height = textDetailsContainer.height
 			ratingsContainer.panel.height = textDetailsContainer.height
 			detailsContainer.height = textDetailsContainer.height
-
-			if user.token and user.name ~= publication.user_name then
-				local existingReviewText
-				if #reviews > 0 then
-					for i = 1, #reviews do
-						if reviews[i].user_name == user.name then
-							existingReviewText = reviews[i].comment
-							break
-						end
-					end
-				end
-			end
 
 			if #reviews > 0 then
 				-- Отображаем все оценки
