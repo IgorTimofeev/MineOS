@@ -118,7 +118,7 @@ MineOSInterface.**titledWindow**( x, y, width, height, titleText, [addTitlePanel
 | *table* | .**backgroundPanel** | Указатель на объект фоновой панели (GUI.**panel**) |
 | *table* | .**actionButtons** | Указатель на объект кнопок действия (GUI.**actionButtons**) |
 | *table* | .**titleLabel** | Указатель на объект лейбла заголовка (GUI.**label**) |
-| *table* | .**titlePanel** | Указатель на объект лейбла заголовка (GUI.**panel**). Создается только при наличии соответствующего аршумента |
+| *table* | .**titlePanel** | Указатель на объект лейбла заголовка (GUI.**panel**). Создается только при наличии соответствующего аргумента |
 
 Пример реализации:
 
