@@ -985,9 +985,9 @@ local function createOSWidgets()
 		menu:show()
 	end
 
-	MineOSInterface.mainContainer.updateFileListAndDraw = function(forceRedraw)
+	MineOSInterface.mainContainer.updateFileListAndDraw = function(...)
 		MineOSInterface.mainContainer.iconField:updateFileList()
-		MineOSInterface.OSDraw(forceRedraw)
+		MineOSInterface.mainContainer:drawOnScreen(...)
 	end
 
 	MineOSInterface.mainContainer.eventHandler = function(mainContainer, object, eventData)
@@ -1049,7 +1049,7 @@ local function createOSWidgets()
 			if computerDateUptime - screensaverUptime >= MineOSCore.properties.screensaverDelay then
 				if fs.exists(screensaversPath .. MineOSCore.properties.screensaver) then
 					MineOSInterface.safeLaunch(screensaversPath .. MineOSCore.properties.screensaver)
-					MineOSInterface.OSDraw(true)
+					MineOSInterface.mainContainer:drawOnScreen(true)
 				end
 
 				screensaverUptime = computer.uptime()
