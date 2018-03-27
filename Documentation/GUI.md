@@ -224,14 +224,12 @@ container:startEventHandling()
 button.eventHandler = function(mainContainer, button, eventData)
 	if eventData[1] == "touch" then
 		button.pressed = true
-		mainContainer:draw()
-		buffer.draw()
+		mainContainer:drawOnScreen()
 		
 		os.sleep(0.2)
 		
 		button.pressed = false
-		mainContainer:draw()
-		buffer.draw()
+		mainContainer:drawOnScreen()
 		
 		if button.onTouch then
 			button.onTouch(mainContainer, object, eventData)
@@ -249,6 +247,7 @@ end
 | *function* | :**addChild**(*table* child, [*int* atIndex]): *table* child| Добавить произвольный объект в контейнер в качестве дочернего - таким образом вы способны создавать собственные виджеты с индивидуальными особенностями. Уточняю, что у добавляемого объекта **обязательно** должен иметься метод *:draw* (подробнее см. ниже). При добавлении объекта его глобальные координаты становятся локальными. Если указан опциональный параметр *atIndex*, то элемент будет добавлен на соответствующую позицию |
 | *function* | :**deleteChildren**([*int* fromIndex, *int* toIndex]): *table* container | Удалить все дочерние элементы контейнера. Если указаны опциональные параметры индексов элементов, то удаление будет произведено в соответствующем диапазоне |
 | *function* | :**draw**(): *table* container | Рекурсивная отрисовка содержимого контейнера в порядке очереди его дочерних элементов. Обращаю внимание на то, что данный метод осуществляет отрисовку только в экранный буфер. Для отображения изменений на экране необходимо использовать метод библиотеки двойного буфера *.draw()* |
+| *function* | :**drawOnScreen**(*boolean* force): *table* container | Метод аналогичен :**draw**() с той лишь разницей, что после отрисовки контейнера в экранный буфер он автоматически отображает изменения на экране. То есть по факту он существует исключительно для удобства написания кода |
 | *function* | :**startEventHandling**([*float* delay]): *table* container | Запуск обработчика событий для данного контейнера и всех вложенных в него дочерних элементов. Параметр *delay* аналогичен таковому в computer.**pullSignal** |
 | *function* | :**stopEventHandling**(): *table* container | Остановка обработчика событий для данного контейнера |
 
