@@ -124,7 +124,7 @@ end
 
 local function activity(state)
 	activityWidget.hidden = not state
-	MineOSInterface.OSDraw()
+	MineOSInterface.mainContainer:drawOnScreen()
 end
 
 --------------------------------------------------------------------------------
@@ -367,7 +367,7 @@ local function deletePublication(publication)
 
 	buttonsLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 2, 0, 0xA5A5A5, 0x2D2D2D, 0x0, 0xE1E1E1, localization.no)).onTouch = function()
 		container:delete()
-		MineOSInterface.OSDraw()
+		MineOSInterface.mainContainer:drawOnScreen()
 	end
 end
 
@@ -493,7 +493,7 @@ local function download(publication)
 			local function govnoed(pizda, i)
 				container.label.text = localization.downloading .. " " .. fs.name(pizda.path)
 				progressBar.value = math.round(i / countOfShit * 100)
-				MineOSInterface.OSDraw()
+				MineOSInterface.mainContainer:drawOnScreen()
 			end
 
 			-- SAVED
@@ -630,7 +630,6 @@ local function newKeyValueWidget(x, y, width, keyColor, valueColor, key, value)
 	return object
 end
 
-
 local function containerScrollEventHandler(mainContainer, object, eventData)
 	if eventData[1] == "scroll" then
 		local first, last = object.children[1], object.children[#object.children]
@@ -640,14 +639,14 @@ local function containerScrollEventHandler(mainContainer, object, eventData)
 				for i = 1, #object.children do
 					object.children[i].localY = object.children[i].localY + 1
 				end
-				MineOSInterface.OSDraw()
+				MineOSInterface.mainContainer:drawOnScreen()
 			end
 		else
 			if last.localY + last.height - 1 >= object.height then
 				for i = 1, #object.children do
 					object.children[i].localY = object.children[i].localY - 1
 				end
-				MineOSInterface.OSDraw()
+				MineOSInterface.mainContainer:drawOnScreen()
 			end
 		end
 	end
@@ -658,7 +657,7 @@ local newApplicationPreview, newPublicationInfo, mainMenu
 local function applicationWidgetEventHandler(mainContainer, object, eventData)
 	if eventData[1] == "touch" then
 		object.parent.panel.colors.background = 0xE1E1E1
-		MineOSInterface.OSDraw()
+		MineOSInterface.mainContainer:drawOnScreen()
 		newPublicationInfo(object.parent.file_id)
 	end
 end
@@ -700,7 +699,7 @@ mainMenu = function(menuID, messageToUser)
 
 		local statistics = fieldAPIRequest("result", "statistics")
 		if statistics then
-			MineOSInterface.OSDraw()
+			MineOSInterface.mainContainer:drawOnScreen()
 
 			local publications = fieldAPIRequest("result", "publications", {
 				order_by = "popularity",
@@ -731,7 +730,7 @@ mainMenu = function(menuID, messageToUser)
 				applicationPreview.panel.colors.background = 0xF0F0F0
 				statisticsLayout:addChild(GUI.label(1, 1, statisticsLayout.width, 1, 0xA5A5A5, localization.statisticsPopularPublication)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.center)
 
-				MineOSInterface.OSDraw()
+				MineOSInterface.mainContainer:drawOnScreen()
 
 				local uptime, newUptime = computer.uptime()
 				local function tick()
@@ -788,7 +787,7 @@ mainMenu = function(menuID, messageToUser)
 							child.localX, child.localY = math.floor(child.moveX), math.floor(child.moveY)
 						end
 
-						MineOSInterface.OSDraw()
+						MineOSInterface.mainContainer:drawOnScreen()
 
 						return true
 					end
@@ -821,7 +820,7 @@ mainMenu = function(menuID, messageToUser)
 					object.forceY = math.random(-100, 100) / 100 * overviewForceLimit
 					
 					if not tick() then
-						MineOSInterface.OSDraw()
+						MineOSInterface.mainContainer:drawOnScreen()
 					end
 				end
 
@@ -1024,7 +1023,7 @@ mainMenu = function(menuID, messageToUser)
 			end
 		end
 
-		MineOSInterface.OSDraw()
+		MineOSInterface.mainContainer:drawOnScreen()
 	end
 
 	local function account()
@@ -1187,7 +1186,7 @@ mainMenu = function(menuID, messageToUser)
 			activity()
 		else
 			addAccountShit(true, false, false)
-			MineOSInterface.OSDraw()
+			MineOSInterface.mainContainer:drawOnScreen()
 		end
 	end
 
@@ -1233,7 +1232,7 @@ mainMenu = function(menuID, messageToUser)
 					menuLayout.children[j].pressed = j == i
 				end
 
-				MineOSInterface.OSDraw()
+				MineOSInterface.mainContainer:drawOnScreen()
 				buttons[i].onTouch()
 			end
 		end
@@ -1255,7 +1254,7 @@ newPublicationInfo = function(file_id)
 	})
 
 	if publication then
-		MineOSInterface.OSDraw()
+		MineOSInterface.mainContainer:drawOnScreen()
 
 		local reviews = fieldAPIRequest("result", "reviews", {
 			file_id = file_id,
@@ -1353,7 +1352,7 @@ newPublicationInfo = function(file_id)
 						cyka.eventHandler = function(mainContainer, object, eventData)
 							if eventData[1] == "touch" then
 								cyka.rating = math.round((eventData[3] - object.x + 1) / object.width * 5)
-								MineOSInterface.OSDraw()
+								MineOSInterface.mainContainer:drawOnScreen()
 							end
 						end
 						
@@ -1372,7 +1371,7 @@ newPublicationInfo = function(file_id)
 							})
 
 							container:delete()
-							MineOSInterface.OSDraw()
+							MineOSInterface.mainContainer:drawOnScreen()
 
 							if success then
 								newPublicationInfo(publication.file_id)
@@ -1394,7 +1393,7 @@ newPublicationInfo = function(file_id)
 								end
 							end
 							
-							MineOSInterface.OSDraw()
+							MineOSInterface.mainContainer:drawOnScreen()
 						end
 
 						input.onInputFinished()
@@ -1566,7 +1565,7 @@ local function newPlusMinusCyka(width, disableLimit)
 
 	layout.removeButton.onTouch = function()
 		layout.comboBox:removeItem(layout.comboBox.selectedItem)
-		MineOSInterface.OSDraw()
+		MineOSInterface.mainContainer:drawOnScreen()
 	end
 
 	return layout
@@ -1673,7 +1672,7 @@ editPublication = function(initialPublication, initialCategoryID)
 			})
 
 			container:delete()
-			MineOSInterface.OSDraw()
+			MineOSInterface.mainContainer:drawOnScreen()
 		end
 
 		publicationNameInput.onInputFinished = function()
@@ -1695,7 +1694,7 @@ editPublication = function(initialPublication, initialCategoryID)
 
 		dependencyTypeComboBox.onItemSelected = function()
 			onDependencyTypeComboBoxItemSelected()
-			MineOSInterface.OSDraw()
+			MineOSInterface.mainContainer:drawOnScreen()
 		end
 
 		pathType.switch.onStateChanged = function()
@@ -1705,7 +1704,7 @@ editPublication = function(initialPublication, initialCategoryID)
 		publicationNameInput.onInputFinished()
 		onDependencyTypeComboBoxItemSelected()
 		pathType.switch.onStateChanged()
-		MineOSInterface.OSDraw()
+		MineOSInterface.mainContainer:drawOnScreen()
 	end
 
 	local publishButton = layout:addChild(GUI.adaptiveRoundedButton(1, 1, 2, 0, 0x696969, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.save))
@@ -1724,7 +1723,7 @@ editPublication = function(initialPublication, initialCategoryID)
 		mainPathInput.hidden = pathHint.hidden
 
 		nameInput.onInputFinished()
-		MineOSInterface.OSDraw()
+		MineOSInterface.mainContainer:drawOnScreen()
 	end
 
 	categoryComboBox.onItemSelected()
@@ -1833,7 +1832,7 @@ updateFileList = function(category_id, updates)
 						for i = 1, #result do
 							container.label.text = localization.downloading .. " " .. result[i].publication_name
 							progressBar.value = math.round(i / #result * 100)
-							MineOSInterface.OSDraw()
+							MineOSInterface.mainContainer:drawOnScreen()
 
 							local publication = fieldAPIRequest("result", "publication", {
 								file_id = result[i].file_id,
@@ -1849,7 +1848,7 @@ updateFileList = function(category_id, updates)
 										local dependency = publication.dependencies_data[publication.all_dependencies[j]]
 										if not dependency.publication_name then
 											container.label.text = localization.downloading .. " " .. dependency.path
-											MineOSInterface.OSDraw()
+											MineOSInterface.mainContainer:drawOnScreen()
 											
 											if getUpdateState(publication.all_dependencies[j], dependency.version) < 4 then
 												local dependencyPath = getDependencyPath(fileVersions[publication.file_id].path, dependency)
@@ -1956,7 +1955,7 @@ updateFileList = function(category_id, updates)
 				end
 				counter = counter + 1
 
-				MineOSInterface.OSDraw()
+				MineOSInterface.mainContainer:drawOnScreen()
 			end
 		else
 			showLabelAsContent(contentContainer, localization.noUpdates)

@@ -719,19 +719,19 @@ function MineOSInterface.iconLeftClick(icon, eventData)
 	end
 	icon.selected = true
 
-	MineOSInterface.OSDraw()
+	MineOSInterface.mainContainer:drawOnScreen()
 end
 
 function MineOSInterface.iconDoubleClick(icon, eventData)
 	icon.selected = false
 	icon:launch()
-	MineOSInterface.OSDraw()
+	MineOSInterface.mainContainer:drawOnScreen()
 	-- computer.pushSignal("MineOSCore", "updateFileList")
 end
 
 function MineOSInterface.iconRightClick(icon, eventData)
 	icon.selected = true
-	MineOSInterface.OSDraw()
+	MineOSInterface.mainContainer:drawOnScreen()
 
 	local selectedIcons = icon.parent.parent:getSelectedIcons()
 
@@ -761,7 +761,7 @@ function MineOSInterface.iconRightClick(icon, eventData)
 							if eventData[1] == "touch" and #input.text > 0 then
 								computer.pushSignal("Finder", "updateFavourites", {name = input.text, path = icon.path})
 							else
-								MineOSInterface.OSDraw()
+								MineOSInterface.mainContainer:drawOnScreen()
 							end
 						end
 					end					
@@ -910,7 +910,7 @@ function MineOSInterface.iconRightClick(icon, eventData)
 	menu:show()
 
 	icon.parent.parent:deselectAll()
-	MineOSInterface.OSDraw()
+	MineOSInterface.mainContainer:drawOnScreen()
 end
 
 -----------------------------------------------------------------------------------------------------------------------------------
@@ -1117,7 +1117,7 @@ function MineOSInterface.editShortcut(parentWindow, path)
 		else
 			container.label.text = MineOSCore.localization.shortcutIsCorrupted
 			container.label.hidden = false
-			MineOSInterface.OSDraw()
+			MineOSInterface.mainContainer:drawOnScreen()
 		end
 	end
 
@@ -1236,12 +1236,12 @@ function MineOSInterface.addWindow(window)
 		end
 
 		window.maximized = not window.maximized
-		MineOSInterface.OSDraw()
+		MineOSInterface.mainContainer:drawOnScreen()
 	end
 
 	window.minimize = function(window)
 		window.hidden = true
-		MineOSInterface.OSDraw()
+		MineOSInterface.mainContainer:drawOnScreen()
 	end
 
 	if window.actionButtons then
@@ -1405,12 +1405,12 @@ end
 local function menuWidgetEventHandler(mainContainer, object, eventData)
 	if eventData[1] == "touch" and object.onTouch then
 		object.selected = true
-		MineOSInterface.OSDraw()
+		MineOSInterface.mainContainer:drawOnScreen()
 
 		object.onTouch(mainContainer, object, eventData)
 
 		object.selected = false
-		MineOSInterface.OSDraw()
+		MineOSInterface.mainContainer:drawOnScreen()
 	end
 end
 

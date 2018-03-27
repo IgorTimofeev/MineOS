@@ -527,13 +527,9 @@ mainContainer.eventHandler = function(mainContainer, object, eventData)
 		end
 	end
 
-	mainContainer:draw()
-	buffer.draw()
+	mainContainer:drawOnScreen()
 end
 
 -------------------------------------------------------- Ebat-kopat --------------------------------------------------------
 
 mainContainer:startEventHandling(0)
-
-
-

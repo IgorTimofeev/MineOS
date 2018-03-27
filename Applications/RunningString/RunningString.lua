@@ -41,7 +41,7 @@ container.layout:addChild(GUI.button(1, 1, 36, 3, 0x444444, 0xFFFFFF, 0x2D2D2D, 
 	end
 
 	buffer.setResolution(buffer.getResolution())
-	MineOSInterface.OSDraw()
+	MineOSInterface.mainContainer:drawOnScreen()
 end
 
 

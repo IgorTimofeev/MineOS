@@ -133,8 +133,7 @@ local function dial(address)
 	local success = stargate.dial(address)
 	if success then
 		mainContainer.fuelProgressBar.value = math.ceil(stargate.energyToDial(address) / stargate.energyAvailable() * 100)
-		mainContainer:draw()
-		buffer.draw()
+		mainContainer:drawOnScreen()
 	end
 end
 
@@ -175,8 +174,7 @@ mainContainer.connectionButton.onTouch = function()
 				saveContacts()
 				container:delete()
 
-				mainContainer:draw()
-				buffer.draw()
+				mainContainer:drawOnScreen()
 			end
 		end
 
@@ -186,8 +184,7 @@ mainContainer.connectionButton.onTouch = function()
 			end
 		end
 
-		mainContainer:draw()
-		buffer.draw()
+		mainContainer:drawOnScreen()
 	else
 		stargate.disconnect()
 	end
@@ -211,8 +208,7 @@ mainContainer.messageContactButton.onTouch = function()
 			container:delete()
 			stargate.sendMessage(input.text)
 
-			mainContainer:draw()
-			buffer.draw()
+			mainContainer:drawOnScreen()
 		end
 	end
 
@@ -222,8 +218,7 @@ mainContainer.messageContactButton.onTouch = function()
 		end
 	end
 
-	mainContainer:draw()
-	buffer.draw()
+	mainContainer:drawOnScreen()
 end
 
 mainContainer:addChild(GUI.label(x, y, width, 1, 0xEEEEEE, "Contacts")):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); y = y + 2
@@ -258,14 +253,12 @@ mainContainer.addContactButton.onTouch = function()
 				end
 
 				container:delete()
-				mainContainer:draw()
-				buffer.draw()
+				mainContainer:drawOnScreen()
 			end
 		end
 	end
 
-	mainContainer:draw()
-	buffer.draw()
+	mainContainer:drawOnScreen()
 end
 
 mainContainer.removeContactButton = mainContainer:addChild(GUI.framedButton(x, y, width, 3, 0xEEEEEE, 0xEEEEEE, 0xBBBBBB, 0xBBBBBB, "Remove contact")); y = y + 4
@@ -276,8 +269,7 @@ mainContainer.removeContactButton.onTouch = function()
 		saveContacts()
 		updateButtons()
 
-		mainContainer:draw()
-		buffer.draw()
+		mainContainer:drawOnScreen()
 	end
 end
 
@@ -291,21 +283,18 @@ end
 mainContainer.eventHandler = function(mainContainer, object, eventData)
 	if eventData[1] == "sgIrisStateChange" then
 		update()
-		mainContainer:draw()
-		buffer.draw()
+		mainContainer:drawOnScreen()
 	elseif eventData[1] == "sgStargateStateChange" then
 		if eventData[3] == "Idle" or eventData[3] == "Connected" then
 			update()
 			updateChevrons(eventData[3] == "Connected")
-			mainContainer:draw()
-			buffer.draw()
+			mainContainer:drawOnScreen()
 		end
 	elseif eventData[1] == "sgChevronEngaged" then
 		if mainContainer.chevrons[eventData[3]] then
 			mainContainer.chevrons[eventData[3]].isActivated = true
 			mainContainer.chevrons[eventData[3]].text = eventData[4]
-			mainContainer:draw()
-			buffer.draw()
+			mainContainer:drawOnScreen()
 		end
 	elseif eventData[1] == "sgMessageReceived" then
 		GUI.error(eventData[3])

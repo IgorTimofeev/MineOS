@@ -66,8 +66,7 @@ local function newCell(x, y, shaded)
 				object.pixels[y][x] = eventData[5] == 0 and 1 or 0
 			end
 
-			mainContainer:draw()
-			buffer.draw()
+			mainContainer:drawOnScreen()
 		end
 	end
 
@@ -131,13 +130,11 @@ local function new()
 
 			newNoGUI(tonumber(widthTextBox.text), tonumber(heightTextBox.text))
 
-			mainContainer:draw()
-			buffer.draw()
+			mainContainer:drawOnScreen()
 		end
 	end
 
-	mainContainer:draw()
-	buffer.draw()
+	mainContainer:drawOnScreen()
 end
 
 local function fillBrailleArray(source, inverted)
@@ -246,8 +243,7 @@ openButton.onTouch = function()
 			drawingArea.children[i].pixels = pizda[i].pixels
 		end
 
-		mainContainer:draw()
-		buffer.draw()
+		mainContainer:drawOnScreen()
 	end
 
 	filesystemDialog:show()
@@ -260,9 +256,7 @@ window.actionButtons.maximize:delete()
 ---------------------------------------------------------------------------------------------------------
 
 newNoGUI(8, 4)
-
-mainContainer:draw()
-buffer.draw(true)
+mainContainer:drawOnScreen()
 
 
 

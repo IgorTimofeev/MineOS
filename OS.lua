@@ -87,7 +87,7 @@ local function biometry(creatingNew)
 					if creatingNew then
 						label.text = MineOSCore.localization.fingerprintCreated
 
-						MineOSInterface.OSDraw()
+						MineOSInterface.mainContainer:drawOnScreen()
 
 						MineOSCore.properties.protectionMethod = "biometric"
 						MineOSCore.properties.biometryHash = touchedHash
@@ -99,7 +99,7 @@ local function biometry(creatingNew)
 						if touchedHash == MineOSCore.properties.biometryHash then
 							label.text = MineOSCore.localization.welcomeBack .. eventData[6]
 
-							MineOSInterface.OSDraw()
+							MineOSInterface.mainContainer:drawOnScreen()
 
 							container:delete()
 							os.sleep(delay)
@@ -110,7 +110,7 @@ local function biometry(creatingNew)
 							local oldBackground = container.panel.colors.background
 							container.panel.colors.background = 0x550000
 
-							MineOSInterface.OSDraw()
+							MineOSInterface.mainContainer:drawOnScreen()
 
 							os.sleep(delay)
 
@@ -119,14 +119,14 @@ local function biometry(creatingNew)
 						end
 					end
 
-					MineOSInterface.OSDraw()
+					MineOSInterface.mainContainer:drawOnScreen()
 				end
 			):start(3)
 		end
 	end
 	label.eventHandler, container.panel.eventHandler = fingerImage.eventHandler, fingerImage.eventHandler
 
-	MineOSInterface.OSDraw()
+	MineOSInterface.mainContainer:drawOnScreen()
 end
 
 local function checkPassword()
@@ -152,10 +152,10 @@ local function checkPassword()
 			label.hidden = false
 		end
 
-		MineOSInterface.OSDraw()
+		MineOSInterface.mainContainer:drawOnScreen()
 	end
 
-	MineOSInterface.OSDraw()
+	MineOSInterface.mainContainer:drawOnScreen()
 	inputField:startInput()
 end
 
@@ -177,7 +177,7 @@ local function setPassword()
 			label.hidden = false
 		end
 
-		MineOSInterface.OSDraw()
+		MineOSInterface.mainContainer:drawOnScreen()
 	end
 
 	inputField1.onInputFinished = check
@@ -189,7 +189,7 @@ local function setPassword()
 		end
 	end
 
-	MineOSInterface.OSDraw()
+	MineOSInterface.mainContainer:drawOnScreen()
 end
 
 local function setWithoutProtection()
@@ -231,7 +231,7 @@ local function login()
 		biometry()
 	end
 
-	MineOSInterface.OSDraw()
+	MineOSInterface.mainContainer:drawOnScreen()
 end
 
 ---------------------------------------- Основные функции ----------------------------------------
@@ -285,7 +285,7 @@ local function moveDockIcon(index, direction)
 	MineOSInterface.mainContainer.dockContainer.children[index], MineOSInterface.mainContainer.dockContainer.children[index + direction] = MineOSInterface.mainContainer.dockContainer.children[index + direction], MineOSInterface.mainContainer.dockContainer.children[index]
 	MineOSInterface.mainContainer.dockContainer.sort()
 	MineOSInterface.mainContainer.dockContainer.saveToOSSettings()
-	MineOSInterface.OSDraw()
+	MineOSInterface.mainContainer:drawOnScreen()
 end
 
 local function getPercentageColor(pecent)
@@ -356,7 +356,7 @@ local function createOSWidgets()
 	local function dockIconEventHandler(mainContainer, icon, eventData)
 		if eventData[1] == "touch" then
 			icon.selected = true
-			MineOSInterface.OSDraw()
+			MineOSInterface.mainContainer:drawOnScreen()
 
 			if eventData[5] == 1 then
 				icon.onRightClick(icon, eventData)
@@ -365,7 +365,7 @@ local function createOSWidgets()
 			end
 
 			icon.selected = false
-			MineOSInterface.OSDraw()
+			MineOSInterface.mainContainer:drawOnScreen()
 		end
 	end
 
@@ -382,7 +382,7 @@ local function createOSWidgets()
 					window.hidden = false
 					window:moveToFront()
 				end
-				MineOSInterface.OSDraw()
+				MineOSInterface.mainContainer:drawOnScreen()
 			else
 				MineOSInterface.iconDoubleClick(icon, eventData)
 			end
@@ -400,7 +400,7 @@ local function createOSWidgets()
 					for window in pairs(icon.windows) do
 						window:close()
 					end
-					MineOSInterface.OSDraw()
+					MineOSInterface.mainContainer:drawOnScreen()
 				end
 			end
 			menu:addItem(MineOSCore.localization.showContainingFolder).onTouch = function()
@@ -424,7 +424,7 @@ local function createOSWidgets()
 							MineOSInterface.mainContainer.dockContainer.sort()
 						end
 						MineOSInterface.mainContainer.dockContainer.saveToOSSettings()
-						MineOSInterface.OSDraw()
+						MineOSInterface.mainContainer:drawOnScreen()
 					end
 				end
 			else
@@ -473,10 +473,10 @@ local function createOSWidgets()
 
 			container.panel.onTouch = function()
 				container:delete()
-				MineOSInterface.OSDraw()
+				MineOSInterface.mainContainer:drawOnScreen()
 			end
 
-			MineOSInterface.OSDraw()
+			MineOSInterface.mainContainer:drawOnScreen()
 		end
 
 		menu:show()
@@ -591,7 +591,7 @@ local function createOSWidgets()
 				end
 			end
 
-			MineOSInterface.OSDraw()
+			MineOSInterface.mainContainer:drawOnScreen()
 		end
 
 		networkNameInput.onInputFinished = function()
@@ -623,7 +623,7 @@ local function createOSWidgets()
 		container.panel.eventHandler = function(mainContainer, object, eventData)
 			if eventData[1] == "touch" then
 				container:delete()
-				MineOSInterface.OSDraw()
+				MineOSInterface.mainContainer:drawOnScreen()
 			elseif (eventData[1] == "component_added" or eventData[1] == "component_removed") and eventData[3] == "modem" then
 				check()
 			elseif eventData[1] == "MineOSNetwork" and eventData[2] == "updateProxyList" then
@@ -715,7 +715,7 @@ local function createOSWidgets()
 				MineOSCore.saveProperties()
 				changeWallpaper()
 
-				MineOSInterface.OSDraw()
+				MineOSInterface.mainContainer:drawOnScreen()
 			end
 
 			local comboBox = container.layout:addChild(GUI.comboBox(1, 1, 36, 3, 0xE1E1E1, 0x2D2D2D, 0x4B4B4B, 0x969696))
@@ -729,7 +729,7 @@ local function createOSWidgets()
 				MineOSCore.saveProperties()
 				changeWallpaper()
 
-				MineOSInterface.OSDraw()
+				MineOSInterface.mainContainer:drawOnScreen()
 			end
 
 			container.layout:addChild(GUI.textBox(1, 1, 36, 1, nil, 0x555555, {MineOSCore.localization.wallpaperSwitchInfo}, 1, 0, 0, true, true))
@@ -741,7 +741,7 @@ local function createOSWidgets()
 				MineOSCore.saveProperties()
 				changeWallpaper()
 
-				MineOSInterface.OSDraw()
+				MineOSInterface.mainContainer:drawOnScreen()
 			end
 			container.layout:addChild(GUI.object(1, 1, 1, 1))
 			
@@ -750,7 +750,7 @@ local function createOSWidgets()
 				MineOSCore.saveProperties()
 				changeWallpaper()
 
-				MineOSInterface.OSDraw()
+				MineOSInterface.mainContainer:drawOnScreen()
 			end
 		end
 		menu:addItem(MineOSCore.localization.screensaver).onTouch = function()
@@ -770,7 +770,7 @@ local function createOSWidgets()
 			container.panel.eventHandler = function(mainContainer, object, eventData)
 				if eventData[1] == "touch" then
 					container:delete()
-					MineOSInterface.OSDraw()
+					MineOSInterface.mainContainer:drawOnScreen()
 
 					MineOSCore.properties.screensaverEnabled = switch.state
 					MineOSCore.properties.screensaver = fileList[comboBox.selectedItem]
@@ -780,7 +780,7 @@ local function createOSWidgets()
 				end
 			end
 
-			MineOSInterface.OSDraw()
+			MineOSInterface.mainContainer:drawOnScreen()
 		end
 
 		menu:addItem(MineOSCore.localization.colorScheme).onTouch = function()
@@ -798,7 +798,7 @@ local function createOSWidgets()
 				container.panel.colors.background = switch.state and 0x0 or (MineOSCore.properties.backgroundColor)
 				container.panel.colors.transparency = switch.state and 0.2
 
-				MineOSInterface.OSDraw()
+				MineOSInterface.mainContainer:drawOnScreen()
 			end
 			container.layout:addChild(GUI.textBox(1, 1, 36, 1, nil, 0x555555, {MineOSCore.localization.transparencySwitchInfo}, 1, 0, 0, true, true))
 
@@ -808,7 +808,7 @@ local function createOSWidgets()
 				MineOSCore.properties.dockColor = dockColorSelector.color
 				MineOSInterface.mainContainer.menu.colors.default.background = MineOSCore.properties.menuColor
 
-				MineOSInterface.OSDraw()
+				MineOSInterface.mainContainer:drawOnScreen()
 			end
 			menuColorSelector.onTouch = backgroundColorSelector.onTouch
 			dockColorSelector.onTouch = backgroundColorSelector.onTouch
@@ -816,7 +816,7 @@ local function createOSWidgets()
 			container.panel.eventHandler = function(mainContainer, object, eventData)
 				if eventData[1] == "touch" then
 					container:delete()
-					MineOSInterface.OSDraw()
+					MineOSInterface.mainContainer:drawOnScreen()
 
 					MineOSCore.saveProperties()
 				end
@@ -957,7 +957,7 @@ local function createOSWidgets()
 
 				MineOSCore.OSUpdateTimezone(i)
 				MineOSCore.OSUpdateDate()
-				MineOSInterface.OSDraw()
+				MineOSInterface.mainContainer:drawOnScreen()
 			end
 		end
 		menu:show()
@@ -983,11 +983,6 @@ local function createOSWidgets()
 		end
 
 		menu:show()
-	end
-
-	MineOSInterface.OSDraw = function(force)
-		MineOSInterface.mainContainer:draw()
-		buffer.draw(force)
 	end
 
 	MineOSInterface.mainContainer.updateFileListAndDraw = function(forceRedraw)
@@ -1030,7 +1025,7 @@ local function createOSWidgets()
 				MineOSInterface.mainContainer.updateFileListAndDraw(true)
 			elseif eventData[2] == "updateWallpaper" then
 				changeWallpaper()
-				MineOSInterface.OSDraw()
+				MineOSInterface.mainContainer:drawOnScreen()
 			end
 		elseif eventData[1] == "MineOSNetwork" then
 			if eventData[2] == "accessDenied" then
@@ -1042,7 +1037,7 @@ local function createOSWidgets()
 
 		if computer.uptime() - computerDateUptime >= 1 then
 			MineOSCore.OSUpdateDate()
-			MineOSInterface.OSDraw()
+			MineOSInterface.mainContainer:drawOnScreen()
 			computerDateUptime = computer.uptime()
 		end
 
@@ -1093,8 +1088,8 @@ while true do
 		break
 	else
 		createOSWindow()
-		MineOSInterface.OSDraw()
+		MineOSInterface.mainContainer:drawOnScreen()
 		MineOSInterface.showErrorWindow(path, line, traceback)
-		MineOSInterface.OSDraw()
+		MineOSInterface.mainContainer:drawOnScreen()
 	end
 end

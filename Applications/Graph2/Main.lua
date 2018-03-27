@@ -86,19 +86,16 @@ functionButton.onTouch = function()
 			update()
 
 			container:delete()
-			mainContainer:draw()
-			buffer.draw()
+			mainContainer:drawOnScreen()
 		end
 	end
 
-	mainContainer:draw()
-	buffer.draw()
+	mainContainer:drawOnScreen()
 end
 
 scaleSlider.onValueChanged = function()
 	update()
-	mainContainer:draw()
-	buffer.draw()
+	mainContainer:drawOnScreen()
 end
 rangeSlider.onValueChanged = scaleSlider.onValueChanged
 precisionSlider.onValueChanged = scaleSlider.onValueChanged
@@ -117,8 +114,7 @@ graph.eventHandler = function(mainContainer, graph, eventData)
 		xDrag, yDrag = eventData[3], eventData[4]
 	elseif eventData[1] == "drag" then
 		xOffset, yOffset = xOffset + (eventData[3] - xDrag), yOffset + (eventData[4] - yDrag)
-		mainContainer:draw()
-		buffer.draw()
+		mainContainer:drawOnScreen()
 
 		xDrag, yDrag = eventData[3], eventData[4]
 	elseif eventData[1] == "scroll" then
@@ -131,16 +127,14 @@ graph.eventHandler = function(mainContainer, graph, eventData)
 
 		update()
 
-		mainContainer:draw()
-		buffer.draw()
+		mainContainer:drawOnScreen()
 	end
 end
 
 ---------------------------------------------------------------------------------------------------------
 
 update()
-mainContainer:draw()
-buffer.draw()
+mainContainer:drawOnScreen()
 
 
 

@@ -124,7 +124,7 @@ local function updateForecast()
 				x = x + object.width + 2
 			end
 
-			MineOSInterface.OSDraw()
+			MineOSInterface.mainContainer:drawOnScreen()
 			table.toFile(configPath, config)
 		else
 			GUI.error(result.message)
@@ -146,7 +146,7 @@ window.onResize = function(width, height)
 end
 
 window:resize(window.width, window.height)
-MineOSInterface.OSDraw()
+MineOSInterface.mainContainer:drawOnScreen()
 
 if fs.exists(configPath) then
 	config = table.fromFile(configPath)

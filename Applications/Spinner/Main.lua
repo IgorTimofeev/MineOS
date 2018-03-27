@@ -62,8 +62,7 @@ mainContainer.eventHandler = function(mainContainer, object, eventData)
 	end
 	spinnerImage.image = spinners[currentSpinner]
 	
-	mainContainer:draw()
-	buffer.draw()
+	mainContainer:drawOnScreen()
 end
 
 ------------------------------------------------------------------------------------------

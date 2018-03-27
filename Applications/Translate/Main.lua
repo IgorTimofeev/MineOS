@@ -58,8 +58,7 @@ local infoLabel = layout:addChild(GUI.label(1, 1, elementWidth, 1, 0xFF6D40, " "
 
 local function status(text)
 	infoLabel.text = text
-	mainContainer:draw()
-	buffer.draw()
+	mainContainer:drawOnScreen()
 end
 
 local function getLanguageIndex(text, short)

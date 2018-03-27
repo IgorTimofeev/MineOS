@@ -203,8 +203,7 @@ local function createWindow()
 	filesystemChooser.onSubmit = function(path)
 		mainImage = image.load(path)
 		getStatus()
-		mainContainer:draw()
-		buffer.draw()
+		mainContainer:drawOnScreen()
 	end
 
 	y = y + 2
@@ -300,8 +299,7 @@ local function createWindow()
 		if (eventData[1] == "component_added" or eventData[1] == "component_removed") and eventData[3] == "printer3d" then
 			getPrinters()
 			getStatus()
-			mainContainer:draw()
-			buffer.draw()
+			mainContainer:drawOnScreen()
 		end
 	end
 end
@@ -314,9 +312,8 @@ getPrinters()
 createWindow()
 mainImage = image.load(startImagePath)
 getStatus()
-mainContainer:draw()
-buffer.draw()
 
+mainContainer:drawOnScreen()
 mainContainer:startEventHandling()
 
 

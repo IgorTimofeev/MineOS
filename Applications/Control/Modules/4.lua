@@ -39,8 +39,7 @@ module.onTouch = function()
 			end
 			textBox:scrollToEnd()
 
-			mainContainer:draw()
-			buffer.draw()
+			mainContainer:drawOnScreen()
 		end
 	end
 end

@@ -101,7 +101,7 @@ local function takePicture()
 		x, y = 1, y + 1
 	end
 
-	MineOSInterface.OSDraw()
+	MineOSInterface.mainContainer:drawOnScreen()
 end
 
 local buttonImage = image.load(fs.path(getCurrentScript()) .. "Icon.pic")
@@ -114,12 +114,12 @@ end
 shootButton.eventHandler = function(mainContainer, object, eventData)
 	if eventData[1] == "touch" then
 		shootButton.pressed = true
-		MineOSInterface.OSDraw()
+		MineOSInterface.mainContainer:drawOnScreen()
 		
 		takePicture()
 
 		shootButton.pressed = false
-		MineOSInterface.OSDraw()
+		MineOSInterface.mainContainer:drawOnScreen()
 	end
 end
 
@@ -156,12 +156,12 @@ FOVSlider.onValueChanged = takePicture
 
 paletteSwitch.onStateChanged = function()
 	palette = paletteSwitch.state and thermal or grayscale
-	MineOSInterface.OSDraw()
+	MineOSInterface.mainContainer:drawOnScreen()
 end
 
 autoupdateSwitch.onStateChanged = function()
 	autoupdateSlider.hidden = not autoupdateSwitch.state
-	MineOSInterface.OSDraw()
+	MineOSInterface.mainContainer:drawOnScreen()
 end
 
 for address in component.list("camera") do
@@ -180,7 +180,7 @@ window.onResize = function(width, height)
 	shootButton.localX = math.floor(1 + window.backgroundPanel.width / 2 - shootButton.width / 2)
 	shootButton.localY = window.height - shootButton.height
 
-	MineOSInterface.OSDraw()
+	MineOSInterface.mainContainer:drawOnScreen()
 	takePicture()
 end
 

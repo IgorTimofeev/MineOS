@@ -292,7 +292,6 @@ Layout является наследником GUI.**container**, автомат
 Пример реализации layout:
 ```lua
 local image = require("image")
-local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 
 ------------------------------------------------------------------------------------------
@@ -320,8 +319,7 @@ layout:setCellPosition(5, 1, layout:addChild(GUI.button(1, 1, 26, 3, 0xEEEEEE, 0
 
 ------------------------------------------------------------------------------------------
 
-mainContainer:draw()
-buffer.draw(true)
+mainContainer:drawOnScreen(true)
 mainContainer:startEventHandling()
 ```
 
@@ -445,7 +443,6 @@ panel.colors = {
 
 Пример реализации панели:
 ```lua
-local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 
 ------------------------------------------------------------------------------------------
@@ -457,8 +454,7 @@ mainContainer:addChild(GUI.panel(10, 10, mainContainer.width - 20, mainContainer
 
 ------------------------------------------------------------------------------------------
 
-mainContainer:draw()
-buffer.draw(true)
+mainContainer:drawOnScreen(true)
 mainContainer:startEventHandling()
 ```
 
@@ -479,7 +475,6 @@ GUI.**text**( x, y, textColor, text ): *table* text
 
 Пример реализации:
 ```lua
-local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 
 ---------------------------------------------------------------
@@ -492,8 +487,7 @@ mainContainer:addChild(GUI.text(3, 3, 0xFFFFFF, "How are you? Wanna cast some EE
 
 ---------------------------------------------------------------
 
-mainContainer:draw()
-buffer.draw(true)
+mainContainer:drawOnScreen(true)
 mainContainer:startEventHandling()
 ```
 
@@ -520,7 +514,6 @@ GUI.**label**( x, y, width, height, textColor, text ): *table* label
 
 Пример реализации:
 ```lua
-local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 
 ------------------------------------------------------------------------------------------
@@ -540,8 +533,7 @@ mainContainer:addChild(GUI.label(1, 1, mainContainer.width, mainContainer.height
 
 ------------------------------------------------------------------------------------------
 
-mainContainer:draw()
-buffer.draw(true)
+mainContainer:drawOnScreen(true)
 mainContainer:startEventHandling()
 ```
 
@@ -567,7 +559,6 @@ GUI.**image**( x, y, loadedImage ): *table* image
 
 ```lua
 local image = require("image")
-local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 
 ------------------------------------------------------------------------------------------
@@ -579,8 +570,7 @@ mainContainer:addChild(GUI.image(2, 2, image.load("/Furnance.pic")))
 
 ------------------------------------------------------------------------------------------
 
-mainContainer:draw()
-buffer.draw(true)
+mainContainer:drawOnScreen(true)
 mainContainer:startEventHandling()
 ```
 
@@ -627,7 +617,6 @@ GUI.**button**( x, y, width, height, buttonColor, textColor, buttonPressedColor,
 
 Пример реализации кнопки:
 ```lua
-local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 
 ------------------------------------------------------------------------------------------
@@ -670,8 +659,7 @@ end
 
 ------------------------------------------------------------------------------------------
 
-mainContainer:draw()
-buffer.draw(true)
+mainContainer:drawOnScreen(true)
 mainContainer:startEventHandling()
 ```
 
@@ -698,7 +686,6 @@ GUI.**actionButtons**( x, y, fat ): *table* actionButtons
 Пример реализации:
 
 ```lua
-local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 
 ------------------------------------------------------------------------------------------
@@ -715,8 +702,7 @@ end
 
 ------------------------------------------------------------------------------------------
 
-mainContainer:draw()
-buffer.draw(true)
+mainContainer:drawOnScreen(true)
 mainContainer:startEventHandling()
 ```
 
@@ -754,7 +740,6 @@ GUI.**input**( x, y, width, height, backgroundColor, textColor, placeholderTextC
 Пример реализации поля ввода:
 
 ```lua
-local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 
 ------------------------------------------------------------------------------------------
@@ -768,8 +753,7 @@ end
 
 ------------------------------------------------------------------------------------------
 
-mainContainer:draw()
-buffer.draw(true)
+mainContainer:drawOnScreen(true)
 mainContainer:startEventHandling()
 ```
 
@@ -804,7 +788,6 @@ GUI.**slider**( x, y, width, primaryColor, secondaryColor, pipeColor, valueColor
 Пример реализации слайдера:
 
 ```lua
-local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 
 ------------------------------------------------------------------------------------------
@@ -820,8 +803,7 @@ end
 
 ------------------------------------------------------------------------------------------
 
-mainContainer:draw()
-buffer.draw(true)
+mainContainer:drawOnScreen(true)
 mainContainer:startEventHandling()
 ```
 
@@ -851,7 +833,6 @@ GUI.**switch**( x, y, width, primaryColor, secondaryColor, pipeColor, state ): *
 Пример реализации свитча:
 
 ```lua
-local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 
 ------------------------------------------------------------------------------------------
@@ -866,9 +847,7 @@ switch2.onStateChanged = function(state)
 end
 
 ------------------------------------------------------------------------------------------
-
-mainContainer:draw()
-buffer.draw(true)
+mainContainer:drawOnScreen(true)
 mainContainer:startEventHandling()
 ```
 
@@ -901,7 +880,6 @@ GUI.**switchAndLabel**( x, y, width, switchWidth, primaryColor, secondaryColor, 
 Пример реализации свитча и лейбла:
 
 ```lua
-local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 
 ------------------------------------------------------------------------------------------
@@ -914,8 +892,7 @@ mainContainer:addChild(GUI.switchAndLabel(2, 4, 25, 8, 0x66DB80, 0x1D1D1D, 0xEEE
 
 ------------------------------------------------------------------------------------------
 
-mainContainer:draw()
-buffer.draw(true)
+mainContainer:drawOnScreen(true)
 mainContainer:startEventHandling()
 ```
 
@@ -943,7 +920,6 @@ GUI.**colorSelector**( x, y, width, height, color, text ): *table* colorSelector
 Пример реализации селектора цвета:
 
 ```lua
-local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 
 ------------------------------------------------------------------------------------------
@@ -957,8 +933,7 @@ end
 
 ------------------------------------------------------------------------------------------
 
-mainContainer:draw()
-buffer.draw(true)
+mainContainer:drawOnScreen(true)
 mainContainer:startEventHandling()
 ```
 
@@ -995,7 +970,6 @@ GUI.**comboBox**( x, y, width, elementHeight, backgroundColor, textColor, arrowB
 Пример реализации комбо-бокса:
 
 ```lua
-local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 
 ------------------------------------------------------------------------------------------
@@ -1013,8 +987,7 @@ comboBox:addItem(".PIC")
 
 ------------------------------------------------------------------------------------------
 
-mainContainer:draw()
-buffer.draw(true)
+mainContainer:drawOnScreen(true)
 mainContainer:startEventHandling()
 ```
 
@@ -1062,7 +1035,6 @@ tabBar.colors = {
 Пример реализации:
 
 ```lua
-local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 
 ------------------------------------------------------------------------------------------
@@ -1079,8 +1051,7 @@ end
 
 ------------------------------------------------------------------------------------------
 
-mainContainer:draw()
-buffer.draw(true)
+mainContainer:drawOnScreen(true)
 mainContainer:startEventHandling()
 ```
 
@@ -1111,7 +1082,6 @@ GUI.**menu**( x, y, width, backgroundColor, textColor, backgroundPressedColor, t
 Пример реализации меню:
 
 ```lua
-local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 
 ------------------------------------------------------------------------------------------
@@ -1139,8 +1109,7 @@ menu:addItem("About")
 
 ------------------------------------------------------------------------------------------
 
-mainContainer:draw()
-buffer.draw(true)
+mainContainer:drawOnScreen(true)
 mainContainer:startEventHandling()
 ```
 
@@ -1169,7 +1138,6 @@ GUI.**resizer**( x, y, width, height, resizerColor, arrowColor ): *table* resize
 Пример реализации ресайзера:
 
 ```lua
-local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 
 ------------------------------------------------------------------------------------------
@@ -1187,8 +1155,7 @@ resizer.onResize = function(mainContainer, resizer, eventData, dragWidth, dragHe
 	panel.width = panel.width + dragWidth
 	resizer.localX = resizer.localX + dragWidth
 
-	mainContainer:draw()
-	buffer.draw()
+	mainContainer:drawOnScreen()
 end
 
 -- А вот это событие вызовется при событии "drop"
@@ -1198,8 +1165,7 @@ end
 
 ------------------------------------------------------------------------------------------
 
-mainContainer:draw()
-buffer.draw(true)
+mainContainer:drawOnScreen(true)
 mainContainer:startEventHandling()
 ```
 
@@ -1232,7 +1198,6 @@ GUI.**progressBar**( x, y, width, primaryColor, secondaryColor, valueColor, valu
 Пример реализации шкалы прогресса:
 
 ```lua
-local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 
 ------------------------------------------------------------------------------------------
@@ -1244,8 +1209,7 @@ mainContainer:addChild(GUI.progressBar(2, 2, 50, 0x3366CC, 0xEEEEEE, 0xEEEEEE, 8
 
 ------------------------------------------------------------------------------------------
 
-mainContainer:draw()
-buffer.draw(true)
+mainContainer:drawOnScreen(true)
 mainContainer:startEventHandling()
 ```
 
@@ -1285,7 +1249,6 @@ GUI.**filesystemTree**( x, y, width, height, backgroundColor, directoryColor, fi
 Пример реализации filesystemTree:
 
 ```lua
-local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 
 ------------------------------------------------------------------------------------------
@@ -1313,8 +1276,7 @@ end
 
 ------------------------------------------------------------------------------------------
 
-mainContainer:draw()
-buffer.draw(true)
+mainContainer:drawOnScreen(true)
 mainContainer:startEventHandling()
 ```
 
@@ -1354,7 +1316,6 @@ GUI.**filesystemModes**.**file**, GUI.**filesystemModes**.**directory** или G
 Пример реализации FilesystemChooser:
 
 ```lua
-local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 
 ------------------------------------------------------------------------------------------
@@ -1370,8 +1331,7 @@ end
 
 ------------------------------------------------------------------------------------------
 
-mainContainer:draw()
-buffer.draw(true)
+mainContainer:drawOnScreen(true)
 mainContainer:startEventHandling()
 ```
 
@@ -1401,7 +1361,6 @@ GUI.**codeView**( x, y, width, height, lines, fromSymbol, fromLine, maximumLineL
 Пример реализации CodeView:
 
 ```lua
-local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 local unicode = require("unicode")
 
@@ -1422,8 +1381,7 @@ file:close()
 
 ------------------------------------------------------------------------------------------
 
-mainContainer:draw()
-buffer.draw(true)
+mainContainer:drawOnScreen(true)
 mainContainer:startEventHandling()
 ```
 
@@ -1455,7 +1413,6 @@ GUI.**chart**( x, y, width, height, axisColor, axisValueColor, axisHelpersColor,
 Пример реализации Chart:
 
 ```lua
-local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 
 ------------------------------------------------------------------------------------------
@@ -1470,10 +1427,8 @@ end
 
 ------------------------------------------------------------------------------------------
 
-mainContainer:draw()
-buffer.draw(true)
+mainContainer:drawOnScreen(true)
 mainContainer:startEventHandling()
-
 ```
 
 Результат:
@@ -1500,7 +1455,6 @@ GUI.**brailleCanvas**( x, y, width, height ): *table* brailleCanvas
 
 Пример реализации BrailleCanvas:
 ```lua
-local buffer = require("doubleBuffering")
 local GUI = dofile("/lib/GUI.lua")
 
 ------------------------------------------------------------------------------------------
@@ -1536,8 +1490,7 @@ brailleCanvas:fill(25, 25, 10, 10, false)
 
 ------------------------------------------------------------------------------------------
 
-mainContainer:draw()
-buffer.draw(true)
+mainContainer:drawOnScreen(true)
 mainContainer:startEventHandling()
 ```
 
@@ -1572,7 +1525,6 @@ GUI.**scrollBar**( x, y, width, height, backgroundColor, foregroundColor, minimu
 Пример реализации ScrollBar:
 
 ```lua
-local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 
 ------------------------------------------------------------------------------------------
@@ -1594,8 +1546,7 @@ end
 
 ------------------------------------------------------------------------------------------
 
-mainContainer:draw()
-buffer.draw(true)
+mainContainer:drawOnScreen(true)
 mainContainer:startEventHandling()
 ```
 
@@ -1630,7 +1581,6 @@ GUI.**textBox**(x, y, width, height, backgroundColor, textColor, lines, currentL
 Пример реализации текстбокса:
 
 ```lua
-local buffer = require("doubleBuffering")
 local GUI = require("GUI")
 
 ------------------------------------------------------------------------------------------
@@ -1646,8 +1596,7 @@ end
 
 ------------------------------------------------------------------------------------------
 
-mainContainer:draw()
-buffer.draw(true)
+mainContainer:drawOnScreen(true)
 mainContainer:startEventHandling()
 ```
 
@@ -1715,8 +1664,7 @@ local emailValid, passwordValid
 local function checkLoginButton()
 	loginButton.disabled = not emailValid or not passwordValid
 
-	mainContainer:draw()
-	buffer.draw()
+	mainContainer:drawOnScreen()
 end
 
 -- Создаем callback-функцию, вызывающуюся после ввода текста и проверяющую корректность введенного адреса
@@ -1742,8 +1690,7 @@ end
 
 ------------------------------------------------------------------------------------------
 
-mainContainer:draw()
-buffer.draw(true)
+mainContainer:drawOnScreen(true)
 mainContainer:startEventHandling()
 
 ```
@@ -1774,8 +1721,7 @@ local function myWidgetEventHandler(mainContainer, object, eventData)
 		object.pixels[y] = object.pixels[y] or {}
 		object.pixels[y][x] = eventData[5] == 0 and true or nil
 		
-		mainContainer:draw()
-		buffer.draw()
+		mainContainer:drawOnScreen()
 	end
 end
 
@@ -1822,8 +1768,7 @@ for j = 1, 3 do
 	x, y = 2, y + height + 1
 end
 
-mainContainer:draw()
-buffer.draw(true)
+mainContainer:drawOnScreen(true)
 mainContainer:startEventHandling()
 ```
 
@@ -1839,7 +1784,6 @@ mainContainer:startEventHandling()
 Предлагаю немного попрактиковаться в использовании layout. В качестве примера создадим контейнер-окно с четырьмя кнопками, изменяющими его размеры. Вы убедитесь, что нам ни разу не придется вручную считать координаты.
 
 ```lua
-local buffer = require("doubleBuffering")
 local image = require("image")
 local GUI = require("GUI")
 
@@ -1869,8 +1813,7 @@ local function resizeWindow(horizontalOffset, verticalOffset)
     window.width, backgroundPanel.width, layout.width = window.width + horizontalOffset, backgroundPanel.width + horizontalOffset, layout.width + horizontalOffset
     window.height, backgroundPanel.height, layout.height = window.height + verticalOffset, backgroundPanel.height + verticalOffset, layout.height + verticalOffset
 
-    mainContainer:draw()
-    buffer.draw()
+    mainContainer:drawOnScreen()
 end
 
 -- В ячейку 3х1 добавляем 4 кнопки с назначенными функциями по изменению размера окна
@@ -1896,8 +1839,7 @@ layout:setCellMargin(3, 1, 2, 1)
 
 ------------------------------------------------------------------------------------------
 
-mainContainer:draw()
-buffer.draw(true)
+mainContainer:drawOnScreen(true)
 mainContainer:startEventHandling()
 ```
 
@@ -2032,8 +1974,7 @@ for i = 1, count do
 end
 
 -- Отрисовываем содержимое главного контейнера в экранный буфер и выводим результат на экран
-mainContainer:draw()
-buffer.draw(true)
+mainContainer:drawOnScreen()
 -- Запускаем обработку событий главного контейнера
 mainContainer:startEventHandling()
 ```

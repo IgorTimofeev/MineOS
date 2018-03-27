@@ -8,27 +8,21 @@ local bit32Lshift, bit32Rshift, bit32Band, bit32Bor, mathFloor, mathMax, mathMin
 -----------------------------------------------------------------------------------------------------------------------
 
 -- Optimized Lua 5.3 bitwise support
-local RGBToInteger, IntegerToRGB
+local IntegerToRGB
 if computer.getArchitecture and computer.getArchitecture() == "Lua 5.3" then
-	RGBToInteger = load([[
-		return function(r, g, b)
-			return (r // 1 << 16) | (g // 1 << 8) | b // 1
-		end
-	]])()
-
 	IntegerToRGB = load([[
 		return function(IntegerColor)
 			return IntegerColor >> 16, IntegerColor >> 8 & 0xFF, IntegerColor & 0xFF
 		end
 	]])()
 else
-	RGBToInteger = function(r, g, b)
-		return bit32Bor(bit32Bor(bit32Lshift(r, 16), bit32Lshift(g, 8)), b)
-	end
-
 	IntegerToRGB = function(IntegerColor)
 		return bit32Rshift(IntegerColor, 16), bit32Band(bit32Rshift(IntegerColor, 8), 0xFF), bit32Band(IntegerColor, 0xFF)
 	end
+end
+
+local function RGBToInteger(r, g, b)
+	return r * 65536 + g * 256 + b
 end
 
 -----------------------------------------------------------------------------------------------------------------------
@@ -85,9 +79,9 @@ local function blend(firstColor, secondColor, secondColorTransparency)
 	local r2, g2, b2 = IntegerToRGB(secondColor)
 
 	return RGBToInteger(
-		r2 * invertedTransparency + r1 * secondColorTransparency,
-		g2 * invertedTransparency + g1 * secondColorTransparency,
-		b2 * invertedTransparency + b1 * secondColorTransparency
+		mathFloor(r2 * invertedTransparency + r1 * secondColorTransparency),
+		mathFloor(g2 * invertedTransparency + g1 * secondColorTransparency),
+		mathFloor(b2 * invertedTransparency + b1 * secondColorTransparency)
 	)
 end
 
@@ -145,11 +139,6 @@ end
 local function optimize(color24Bit)
 	return to24Bit(to8Bit(color24Bit))
 end
-
------------------------------------------------------------------------------------------------------------------------
-
--- local c, a = blendRGBA(0x0000FF, 0xFF0000, 0.5, 0.5)
--- print(string.format("0x%06X", c), a)
 
 -----------------------------------------------------------------------------------------------------------------------
 

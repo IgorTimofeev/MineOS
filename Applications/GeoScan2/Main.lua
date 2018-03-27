@@ -154,8 +154,7 @@ objectY = objectY + 3
 local function setButtonColorFromPalette(button)
 	local selectedColor = GUI.palette(math.floor(mainContainer.width / 2 - 35), math.floor(mainContainer.height / 2 - 12), button.colors.default.background):show()
 	if selectedColor then button.colors.default.background = selectedColor end
-	mainContainer:draw()
-	buffer.draw() 
+	mainContainer:drawOnScreen()
 end
 
 local function updateProjectorColors()
@@ -206,15 +205,13 @@ mainContainer.scanButton.onTouch = function()
 		end
 	end
 
-	mainContainer:draw()
-	buffer.draw()
+	mainContainer:drawOnScreen()
 	updateData(false, true, true)
 end
 
 --------------------------------------------------------------------------------------------------------------------
 
 buffer.clear(0x0)
-mainContainer:draw()
-buffer.draw()
+mainContainer:drawOnScreen()
 mainContainer:startEventHandling()
 

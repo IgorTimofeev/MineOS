@@ -128,8 +128,7 @@ module.onTouch = function()
 			out("Failed to load string \"" .. data .. "\": " .. reason)
 		end
 
-		mainContainer:draw()
-		buffer.draw()
+		mainContainer:drawOnScreen()
 	end
 
 

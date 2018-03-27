@@ -371,8 +371,7 @@ local function calculateErrorContainerSizeAndBeep(hideBreakpointButtons, frequen
 	end
 
 	updateTitle()
-	mainContainer:draw()
-	buffer.draw()
+	mainContainer:drawOnScreen()
 
 	for i = 1, times do component.computer.beep(frequency, 0.08) end	
 end
@@ -436,8 +435,7 @@ end
 local function hideSettingsContainer()
 	for childIndex = 2, #mainContainer.settingsContainer.children do mainContainer.settingsContainer.children[childIndex] = nil end
 	mainContainer.settingsContainer.hidden = true
-	mainContainer:draw()
-	buffer.draw()
+	mainContainer:drawOnScreen()
 end
 
 local function clearSelection()
@@ -612,8 +610,7 @@ end
 local function changeResolution(width, height)
 	buffer.setResolution(width, height)
 	calculateSizes()
-	mainContainer:draw()
-	buffer.draw()
+	mainContainer:drawOnScreen()
 	config.screenResolution.width = width
 	config.screenResolution.height = height
 end
@@ -737,8 +734,7 @@ local function saveFileAsWindow()
 				mainContainer.leftTreeView.selectedItem = mainContainer.leftTreeView.workPath .. mainContainer.settingsContainer.inputField.text
 				
 				updateTitle()
-				mainContainer:draw()
-				buffer.draw()
+				mainContainer:drawOnScreen()
 			end
 		end
 	)
@@ -1311,8 +1307,7 @@ local function createEditOrRightClickMenu(x, y)
 	editOrRightClickMenu:addSeparator()
 	editOrRightClickMenu:addItem(localization.addBreakpoint, false, "F9").onTouch = function()
 		addBreakpoint()
-		mainContainer:draw()
-		buffer.draw()
+		mainContainer:drawOnScreen()
 	end
 	editOrRightClickMenu:addItem(localization.clearBreakpoints, not breakpointLines, "^F9").onTouch = function()
 		clearBreakpoints()
@@ -1382,8 +1377,7 @@ local function createMainContainer()
 		local menu = GUI.contextMenu(item2.x, item2.y + 1)
 		menu:addItem(localization.new, false, "^N").onTouch = function()
 			newFile()
-			mainContainer:draw()
-			buffer.draw()
+			mainContainer:drawOnScreen()
 		end
 		menu:addItem(localization.open, false, "^O").onTouch = function()
 			openFileWindow()
@@ -1525,8 +1519,7 @@ local function createMainContainer()
 	mainContainer.addBreakpointButton = mainContainer.topToolBar:addChild(GUI.adaptiveButton(1, 1, 3, 1, 0x878787, 0xEEEEEE, 0xCCCCCC, 0x444444, "x"))
 	mainContainer.addBreakpointButton.onTouch = function()
 		addBreakpoint()
-		mainContainer:draw()
-		buffer.draw()
+		mainContainer:drawOnScreen()
 	end
 
 	mainContainer.toggleSyntaxHighlightingButton = mainContainer.topToolBar:addChild(GUI.adaptiveButton(1, 1, 3, 1, 0xCCCCCC, 0x444444, 0x696969, 0xEEEEEE, "◌"))
@@ -1535,8 +1528,7 @@ local function createMainContainer()
 		mainContainer.codeView.highlightLuaSyntax = not mainContainer.codeView.highlightLuaSyntax
 		config.highlightLuaSyntax = mainContainer.codeView.highlightLuaSyntax
 		saveConfig()
-		mainContainer:draw()
-		buffer.draw()
+		mainContainer:drawOnScreen()
 	end
 
 	mainContainer.runButton = mainContainer.topToolBar:addChild(GUI.adaptiveButton(1, 1, 3, 1, 0x4B4B4B, 0xEEEEEE, 0xCCCCCC, 0x444444, "▷"))
@@ -1550,8 +1542,7 @@ local function createMainContainer()
 		mainContainer.leftTreeView.hidden = not mainContainer.toggleLeftToolBarButton.pressed
 		mainContainer.leftTreeViewResizer.hidden = mainContainer.leftTreeView.hidden
 		calculateSizes()
-		mainContainer:draw()
-		buffer.draw()
+		mainContainer:drawOnScreen()
 	end
 
 	mainContainer.toggleBottomToolBarButton = mainContainer.topToolBar:addChild(GUI.adaptiveButton(1, 1, 3, 1, 0xCCCCCC, 0x444444, 0x696969, 0xEEEEEE, "⇩"))
@@ -1559,8 +1550,7 @@ local function createMainContainer()
 	mainContainer.toggleBottomToolBarButton.onTouch = function()
 		mainContainer.bottomToolBar.hidden = not mainContainer.toggleBottomToolBarButton.pressed
 		calculateSizes()
-		mainContainer:draw()
-		buffer.draw()
+		mainContainer:drawOnScreen()
 	end
 
 	mainContainer.toggleTopToolBarButton = mainContainer.topToolBar:addChild(GUI.adaptiveButton(1, 1, 3, 1, 0xCCCCCC, 0x444444, 0x878787, 0xEEEEEE, "⇧"))
@@ -1568,8 +1558,7 @@ local function createMainContainer()
 	mainContainer.toggleTopToolBarButton.onTouch = function()
 		mainContainer.topToolBar.hidden = not mainContainer.toggleTopToolBarButton.pressed
 		calculateSizes()
-		mainContainer:draw()
-		buffer.draw()
+		mainContainer:drawOnScreen()
 	end
 
 	mainContainer.bottomToolBar = mainContainer:addChild(GUI.container(1, 1, 1, 3))
@@ -1593,8 +1582,7 @@ local function createMainContainer()
 		loadFile(path)
 
 		updateTitle()
-		mainContainer:draw()
-		buffer.draw()
+		mainContainer:drawOnScreen()
 	end
 	mainContainer.leftTreeView:updateFileList()
 	mainContainer.leftTreeViewResizer = mainContainer:addChild(GUI.resizer(1, 1, 3, 5, 0x888888, 0x0))
@@ -1676,8 +1664,7 @@ local function createMainContainer()
 			cursor.blinkState = true
 			selectWord()
 			
-			mainContainer:draw()
-			buffer.draw()
+			mainContainer:drawOnScreen()
 		elseif eventData[1] == "drag" then
 			if eventData[5] ~= 1 then
 				mainContainer.codeView.selections[1] = mainContainer.codeView.selections[1] or {from = {}, to = {}}
@@ -1851,8 +1838,7 @@ else
 	newFile()
 end
 
-mainContainer:draw()
-buffer.draw()
+mainContainer:drawOnScreen()
 mainContainer:startEventHandling(config.cursorBlinkDelay)
 
 

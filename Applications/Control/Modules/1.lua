@@ -139,8 +139,7 @@ module.onTouch = function()
 			input.autoCompleteMatchMethod()
 		end
 
-		mainContainer:draw()
-		buffer.draw()
+		mainContainer:drawOnScreen()
 	end
 
 	input.onInputFinished = function()

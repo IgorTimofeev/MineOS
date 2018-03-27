@@ -68,8 +68,7 @@ module.onTouch = function()
 				end
 			end
 
-			mainContainer:draw()
-			buffer.draw()
+			mainContainer:drawOnScreen()
 		end
 		button.localX = diskContainer.width - button.width - 1
 
@@ -93,8 +92,7 @@ module.onTouch = function()
 					container.children[i].localY = container.children[i].localY + eventData[5]
 				end
 
-				mainContainer:draw()
-				buffer.draw()
+				mainContainer:drawOnScreen()
 			end
 		elseif eventData[1] == "component_added" or eventData[1] == "component_removed" and eventData[3] == "filesystem" then
 			module.onTouch()

@@ -9,7 +9,7 @@ local mainContainer, window = MineOSInterface.addWindow(
 
 window.OKButton.onTouch = function()
 	window:close()
-	MineOSInterface.OSDraw()
+	MineOSInterface.mainContainer:drawOnScreen()
 end
 
 window.cancelButton.onTouch = window.OKButton.onTouch

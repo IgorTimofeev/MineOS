@@ -93,8 +93,7 @@ local function byteFieldEventHandler(mainContainer, object, eventData)
 				selection.from = 1
 				selection.to = #bytes
 				
-				mainContainer:draw()
-				buffer.draw()
+				mainContainer:drawOnScreen()
 			end
 			menu:addSeparator()
 			menu:addItem("Edit").onTouch = function()
@@ -109,13 +108,11 @@ local function byteFieldEventHandler(mainContainer, object, eventData)
 						end
 
 						container:delete()
-						mainContainer:draw()
-						buffer.draw()
+						mainContainer:drawOnScreen()
 					end
 				end
 				
-				mainContainer:draw()
-				buffer.draw()
+				mainContainer:drawOnScreen()
 			end
 			menu:addItem("Insert").onTouch = function()
 				local container = MineOSInterface.addUniversalContainer(mainContainer, "Insert bytes at position " .. selection.from .. "")
@@ -138,13 +135,11 @@ local function byteFieldEventHandler(mainContainer, object, eventData)
 						end
 
 						container:delete()
-						mainContainer:draw()
-						buffer.draw()
+						mainContainer:drawOnScreen()
 					end
 				end
 				
-				mainContainer:draw()
-				buffer.draw()
+				mainContainer:drawOnScreen()
 			end
 			menu:addSeparator()
 			menu:addItem("Delete").onTouch = function()
@@ -179,8 +174,7 @@ local function byteFieldEventHandler(mainContainer, object, eventData)
 				end
 
 				status()
-				mainContainer:draw()
-				buffer.draw()
+				mainContainer:drawOnScreen()
 			end
 		end
 	elseif eventData[1] == "scroll" then
@@ -192,8 +186,7 @@ local function byteFieldEventHandler(mainContainer, object, eventData)
 		end
 		scrollBar.value = offset
 
-		mainContainer:draw()
-		buffer.draw()
+		mainContainer:drawOnScreen()
 	end
 end
 
@@ -326,8 +319,7 @@ openFileButton.onTouch = function()
 	filesystemDialog:show()
 	filesystemDialog.onSubmit = function(path)
 		load(path)
-		mainContainer:draw()
-		buffer.draw()
+		mainContainer:drawOnScreen()
 	end
 end
 
@@ -360,15 +352,13 @@ window.actionButtons.maximize.onTouch = function()
 
 	window.localY = 1
 
-	mainContainer:draw()
-	buffer.draw()
+	mainContainer:drawOnScreen()
 end
 
 ------------------------------------------------------------------------------------------------------------------
 
 load("/bin/resolution.lua")
-mainContainer:draw()
-buffer.draw()
+mainContainer:drawOnScreen()
 
 
 
