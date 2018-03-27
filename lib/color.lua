@@ -92,9 +92,9 @@ local function transition(color1, color2, position)
 	local r2, g2, b2 = IntegerToRGB(color2)
 
 	return RGBToInteger(
-		r1 + (r2 - r1) * position,
-		g1 + (g2 - g1) * position,
-		b1 + (b2 - b1) * position
+		mathFloor(r1 + (r2 - r1) * position),
+		mathFloor(g1 + (g2 - g1) * position),
+		mathFloor(b1 + (b2 - b1) * position)
 	)
 end
 
