@@ -140,8 +140,7 @@ local function beginPrint()
 	end
 
 	buffer.clear()
-	mainContainer:draw()
-	buffer.draw(true)
+	mainContainer:drawOnScreen()
 end
 
 ----------------------------------------- Window-zaluped parasha -----------------------------------------

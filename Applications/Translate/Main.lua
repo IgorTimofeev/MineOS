@@ -184,8 +184,7 @@ checkLanguages()
 fromComboBox.selectedItem = getLanguageIndex(config.fromLanguage, false)
 toComboBox.selectedItem = getLanguageIndex(config.toLanguage, false)
 
-mainContainer:draw()
-buffer.draw(true)
+mainContainer:drawOnScreen()
 mainContainer:startEventHandling()
 
 

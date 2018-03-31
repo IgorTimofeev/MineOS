@@ -843,17 +843,17 @@ local function continue()
 		if coroutine.status(scriptCoroutine) == "dead" then
 			MineOSInterface.waitForPressingAnyKey()
 			hideErrorContainer()
-			buffer.setResolution(oldResolutionX, oldResolutionY); mainContainer:draw(); buffer.draw(true)
+			buffer.setResolution(oldResolutionX, oldResolutionY); mainContainer:drawOnScreen();
 		else
 			-- Тест на пидора, мало ли у чувака в проге тоже есть yield
 			if _G.MineCodeIDEDebugInfo then
-				buffer.setResolution(oldResolutionX, oldResolutionY); mainContainer:draw(); buffer.draw(true)
+				buffer.setResolution(oldResolutionX, oldResolutionY); mainContainer:drawOnScreen();
 				gotoLine(_G.MineCodeIDEDebugInfo.line)
 				showBreakpointMessage(_G.MineCodeIDEDebugInfo.variables)
 			end
 		end
 	else
-		buffer.setResolution(oldResolutionX, oldResolutionY); mainContainer:draw(); buffer.draw(true)
+		buffer.setResolution(oldResolutionX, oldResolutionY); mainContainer:drawOnScreen();
 		showErrorContainer(debug.traceback(scriptCoroutine, coroutineResumeReason))
 	end
 end
