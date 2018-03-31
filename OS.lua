@@ -1000,8 +1000,7 @@ local function createOSWidgets()
 					eventData.lastWindowHandled = true
 					MineOSInterface.mainContainer.windowsContainer.children[windowsCount]:close()
 
-					mainContainer:draw()
-					buffer.draw()
+					mainContainer:drawOnScreen()
 				-- H
 				elseif eventData[4] == 35 then
 					eventData.lastWindowHandled = true
@@ -1014,8 +1013,7 @@ local function createOSWidgets()
 					end
 					MineOSInterface.mainContainer.windowsContainer.children[lastUnhiddenWindowIndex]:minimize()
 
-					mainContainer:draw()
-					buffer.draw()
+					mainContainer:drawOnScreen()
 				end
 			end
 		elseif eventData[1] == "MineOSCore" then

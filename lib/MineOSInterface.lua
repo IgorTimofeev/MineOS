@@ -198,8 +198,7 @@ local function iconEventHandler(mainContainer, object, eventData)
 		object.localY = object.localY + eventData[4] - object.lastTouchPosition.y
 		object.lastTouchPosition.x, object.lastTouchPosition.y = eventData[3], eventData[4]
 
-		mainContainer:draw()
-		buffer.draw()
+		mainContainer:drawOnScreen()
 	elseif eventData[1] == "drop" and object.parent.parent.iconConfigEnabled and object.dragStarted then
 		object.dragStarted = nil
 		object.parent.parent.iconConfig[object.name .. (object.isDirectory and "/" or "")] = {
@@ -382,15 +381,13 @@ end
 function MineOSInterface.iconLaunchers.showPackageContent(icon)
 	icon.parent.parent:setWorkpath(icon.path)
 	icon.parent.parent:updateFileList()
-	icon:getFirstParent():draw()
-	buffer.draw()
+	icon:getFirstParent():drawOnScreen()
 end
 
 function MineOSInterface.iconLaunchers.showContainingFolder(icon)
 	icon.parent.parent:setWorkpath(fs.path(icon.shortcutPath))
 	icon.parent.parent:updateFileList()
-	icon:getFirstParent():draw()
-	buffer.draw()
+	icon:getFirstParent():drawOnScreen()
 end
 
 -----------------------------------------------------------------------------------------------------------------------------------
@@ -502,8 +499,7 @@ local function iconFieldBackgroundObjectEventHandler(mainContainer, object, even
 				y1 = eventData[4]
 			}
 
-			mainContainer:draw()
-			buffer.draw()
+			mainContainer:drawOnScreen()
 		else
 			local menu = MineOSInterface.contextMenu(eventData[3], eventData[4])
 
@@ -597,15 +593,13 @@ local function iconFieldBackgroundObjectEventHandler(mainContainer, object, even
 			object.parent.selection.y2 = eventData[4]
 			object:moveToFront()
 
-			mainContainer:draw()
-			buffer.draw()
+			mainContainer:drawOnScreen()
 		end
 	elseif eventData[1] == "drop" then
 		object.parent.selection = nil
 		object:moveToBack()
 
-		mainContainer:draw()
-		buffer.draw()
+		mainContainer:drawOnScreen()
 	end
 end
 
@@ -933,8 +927,7 @@ function MineOSInterface.addUniversalContainer(parentContainer, title)
 	container.panel.eventHandler = function(mainContainer, object, eventData)
 		if eventData[1] == "touch" then
 			container:delete()
-			mainContainer:draw()
-			buffer.draw()
+			mainContainer:drawOnScreen()
 		end
 	end
 
@@ -954,8 +947,7 @@ end
 local function checkFileToExists(container, path)
 	if fs.exists(path) then
 		container.label.hidden = false
-		container.parent:draw()
-		buffer.draw()
+		container.parent:drawOnScreen()
 	else
 		container:delete()
 		return true
@@ -982,8 +974,7 @@ function MineOSInterface.newFile(parentWindow, iconField, x, y, path)
 		end
 	end
 
-	parentWindow:draw()
-	buffer.draw()
+	parentWindow:drawOnScreen()
 end
 
 function MineOSInterface.newFolder(parentWindow, iconField, x, y, path)
@@ -997,8 +988,7 @@ function MineOSInterface.newFolder(parentWindow, iconField, x, y, path)
 		end
 	end
 
-	parentWindow:draw()
-	buffer.draw()
+	parentWindow:drawOnScreen()
 
 	return container
 end
@@ -1011,8 +1001,7 @@ function MineOSInterface.newFileFromURL(parentWindow, iconField, x, y, path)
 		if eventData[1] == "touch" then
 			if fs.exists(container.inputField.text) then
 				container.label.hidden = false
-				mainContainer:draw()
-				buffer.draw()
+				mainContainer:drawOnScreen()
 			else
 				local success, reason = require("web").download(container.inputFieldURL.text, path .. container.inputField.text)
 				container:delete()
@@ -1022,15 +1011,13 @@ function MineOSInterface.newFileFromURL(parentWindow, iconField, x, y, path)
 					computer.pushSignal("MineOSCore", "updateFileList")
 				else
 					GUI.error(reason)
-					mainContainer:draw()
-					buffer.draw()
+					mainContainer:drawOnScreen()
 				end
 			end
 		end
 	end
 
-	parentWindow:draw()
-	buffer.draw()
+	parentWindow:drawOnScreen()
 end
 
 function MineOSInterface.newApplication(parentWindow, iconField, x, y, path)
@@ -1058,14 +1045,12 @@ function MineOSInterface.newApplication(parentWindow, iconField, x, y, path)
 					computer.pushSignal("MineOSCore", "updateFileList")
 				end
 			else
-				parentWindow:draw()
-				buffer.draw()
+				parentWindow:drawOnScreen()
 			end
 		end
 	end
 
-	parentWindow:draw()
-	buffer.draw()
+	parentWindow:drawOnScreen()
 end
 
 function MineOSInterface.newFolderFromChosen(parentWindow, iconField, x, y, selectedIcons)
@@ -1084,8 +1069,7 @@ function MineOSInterface.newFolderFromChosen(parentWindow, iconField, x, y, sele
 		end
 	end
 
-	parentWindow:draw()
-	buffer.draw()
+	parentWindow:drawOnScreen()
 
 	return container
 end
@@ -1100,8 +1084,7 @@ function MineOSInterface.rename(parentWindow, path)
 		end
 	end
 
-	parentWindow:draw()
-	buffer.draw()
+	parentWindow:drawOnScreen()
 end
 
 function MineOSInterface.editShortcut(parentWindow, path)
@@ -1121,8 +1104,7 @@ function MineOSInterface.editShortcut(parentWindow, path)
 		end
 	end
 
-	parentWindow:draw()
-	buffer.draw()
+	parentWindow:drawOnScreen()
 end
 
 function MineOSInterface.launchWithArguments(parentWindow, path)
@@ -1142,8 +1124,7 @@ function MineOSInterface.launchWithArguments(parentWindow, path)
 			MineOSInterface.waitForPressingAnyKey()
 		end
 
-		parentWindow:draw()
-		buffer.draw(true)
+		parentWindow:drawOnScreen(true)
 	end
 end
 
@@ -1290,13 +1271,11 @@ function MineOSInterface.propertiesWindow(x, y, width, icon)
 	window.backgroundPanel.width = window.width
 	window.backgroundPanel.height = textBox.y + textBox.height
 
-	mainContainer:draw()
-	buffer.draw()
+	mainContainer:drawOnScreen()
 
 	if icon.isDirectory then
 		fileSizeLabel.text = string.format("%.2f", fs.directorySize(icon.path) / 1024) .. " KB"
-		mainContainer:draw()
-		buffer.draw()
+		mainContainer:drawOnScreen()
 	end
 end
 
@@ -1335,8 +1314,7 @@ local function GUICopy(parentContainer, fileList, toPath)
 		}
 		textBox.height = #textBox.lines
 
-		parentContainer:draw()
-		buffer.draw()
+		parentContainer:drawOnScreen()
 
 		fs.remove(finalPath)
 		fs.copy(path, finalPath)
@@ -1367,13 +1345,9 @@ local function GUICopy(parentContainer, fileList, toPath)
 					}
 					textBox.height = #textBox.lines
 
-					parentContainer:draw()
-					buffer.draw()
-					
+					parentContainer:drawOnScreen()
 					parentContainer:startEventHandling()
-
-					parentContainer:draw()
-					buffer.draw()
+					parentContainer:drawOnScreen()
 				end
 
 				if applyYes then
@@ -1390,8 +1364,7 @@ local function GUICopy(parentContainer, fileList, toPath)
 	end
 
 	container:delete()
-	parentContainer:draw()
-	buffer.draw()
+	parentContainer:drawOnScreen()
 end
 
 function MineOSInterface.copy(what, toPath)
@@ -1499,16 +1472,14 @@ function MineOSInterface.showErrorWindow(path, line, traceback)
 			end
 
 			sendToDeveloperButton.text = MineOSCore.localization.sendedFeedback
-			mainContainer:draw()
-			buffer.draw()
+			mainContainer:drawOnScreen()
 			os.sleep(1)
 		end
 
 		actionButtons.close.onTouch()
 	end
 
-	mainContainer:draw()
-	buffer.draw()
+	mainContainer:drawOnScreen()
 
 	for i = 1, 3 do
 		component.computer.beep(1500, 0.08)
@@ -1528,7 +1499,7 @@ end
 
 ----------------------------------------- Window object -----------------------------------------
 
-local function windowDraw(window)
+function MineOSInterface.windowDraw(window)
 	GUI.windowShadow(window.x, window.y, window.width, window.height, MineOSInterface.colors.windows.shadowTransparency, true)
 	GUI.drawContainerContent(window)
 	return window
@@ -1549,7 +1520,7 @@ local function windowCheck(window, x, y)
 	end
 end
 
-local function windowEventHandler(mainContainer, window, eventData)
+function MineOSInterface.windowEventHandler(mainContainer, window, eventData)
 	if eventData[1] == "touch" then
 		if not windowCheck(window, eventData[3], eventData[4]) then
 			window.lastTouchPosition = {
@@ -1561,8 +1532,7 @@ local function windowEventHandler(mainContainer, window, eventData)
 		if window ~= window.parent.children[#window.parent.children] then
 			window:moveToFront()
 			
-			mainContainer:draw()
-			buffer.draw()
+			mainContainer:drawOnScreen()
 		end
 	elseif eventData[1] == "drag" and window.lastTouchPosition and not windowCheck(window, eventData[3], eventData[4]) then
 		local xOffset, yOffset = eventData[3] - window.lastTouchPosition.x, eventData[4] - window.lastTouchPosition.y
@@ -1570,8 +1540,7 @@ local function windowEventHandler(mainContainer, window, eventData)
 			window.localX, window.localY = window.localX + xOffset, window.localY + yOffset
 			window.lastTouchPosition.x, window.lastTouchPosition.y = eventData[3], eventData[4]
 			
-			mainContainer:draw()
-			buffer.draw()
+			mainContainer:drawOnScreen()
 		end
 	elseif eventData[1] == "drop" then
 		window.lastTouchPosition = nil
@@ -1579,8 +1548,8 @@ local function windowEventHandler(mainContainer, window, eventData)
 end
 
 function MineOSInterface.windowFromContainer(container)
-	container.eventHandler = windowEventHandler
-	container.draw = windowDraw
+	container.eventHandler = MineOSInterface.windowEventHandler
+	container.draw = MineOSInterface.windowDraw
 
 	return container
 end
