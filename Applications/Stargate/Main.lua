@@ -306,8 +306,7 @@ updateContacts()
 update()
 updateChevrons(stargate.stargateState() == "Connected")
 
-mainContainer:draw()
-buffer.draw(true)
+mainContainer:drawOnScreen()
 mainContainer:startEventHandling()
 
 

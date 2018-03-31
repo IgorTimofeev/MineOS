@@ -77,8 +77,7 @@ spinnerImage.localY = math.floor(mainContainer.height / 2 - spinnerImage.height/
 
 changeColor(spinnerHue, 1)
 buffer.flush()
-mainContainer:draw()
-buffer.draw(true)
+mainContainer:drawOnScreen()
 
 mainContainer:startEventHandling(0)
 
