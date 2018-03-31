@@ -17,7 +17,7 @@ local unicode = require("unicode")
 --------------------------------------------------------------------------------
 
 local host = "http://eliteclubsessions.ru/MineOSAPI/2.03/"
-local iconCheckReponseTime = 1
+local iconCheckReponseTime = 2
 
 local overviewIconsCount = 10
 local overviewAnimationDelay = 0.05
@@ -213,10 +213,10 @@ end
 local function checkContentLength(url)
 	local handle = component.internet.request(url)
 	if handle then
-		local uptime, _, _, responseData = computer.uptime()
+		local deadline, _, _, responseData = computer.uptime() + iconCheckReponseTime
 		repeat
 			_, _, responseData = handle:response()
-		until responseData or computer.uptime() - uptime > iconCheckReponseTime
+		until responseData or computer.uptime() >= deadline
 
 		if responseData and responseData["Content-Length"] then
 			if tonumber(responseData["Content-Length"][1]) <= 10240 then
