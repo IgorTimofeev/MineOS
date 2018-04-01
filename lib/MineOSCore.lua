@@ -244,7 +244,6 @@ end
 
 function MineOSCore.safeLaunch(path, ...)
 	path = path:gsub("/+", "/") 
-	MineOSCore.lastLaunchPath = path
 
 	local oldResolutionWidth, oldResolutionHeight = buffer.getResolution()
 	local finalSuccess, finalPath, finalLine, finalTraceback = true

@@ -1137,32 +1137,53 @@ local function windowResize(window, width, height)
 	return window
 end
 
-function MineOSInterface.addWindow(window)
-	window.x = math.floor(MineOSInterface.mainContainer.windowsContainer.width / 2 - window.width / 2)
-	window.y = math.floor(MineOSInterface.mainContainer.windowsContainer.height / 2 - window.height / 2)
-	
-	MineOSInterface.mainContainer.windowsContainer:addChild(window)
-
-	-- Получаем путь исполняемого файла
-	local dockPath = MineOSCore.lastLaunchPath or "/bin/OS.lua"
-	local dockPathPath = fs.path(dockPath)
-	if fs.extension(dockPathPath) == ".app" then
-		dockPath = dockPathPath
+function MineOSInterface.addWindow(window, preserveCoordinates)
+	-- Чекаем коорды
+	if not preserveCoordinates then
+		window.x, window.y = math.ceil(MineOSInterface.mainContainer.windowsContainer.width / 2 - window.width / 2), math.ceil(MineOSInterface.mainContainer.windowsContainer.height / 2 - window.height / 2)
 	end
-	-- Хуячим иконку в докыч, если такой еще не существует
-	local dockIcon
+	
+	-- Ебурим окно к окнам
+	MineOSInterface.mainContainer.windowsContainer:addChild(window)
+	
+	-- Получаем путь залупы
+	local dockPath, info, dockIcon
+	for i = 0, math.huge do
+		info = debug.getinfo(i)
+		if info then
+			if info.source then
+				dockPath = info.source:match("=(.+%.app/)Main%.lua$")
+				if dockPath then
+					break
+				end
+			end
+		else
+			break
+		end
+	end
+
+	dockPath = (dockPath or "/bin/OS.lua"):gsub("/+", "/")
+
+	-- GUI.error(dockPath)
+	
+	-- Чекаем наличие иконки в доке с таким же путем
 	for i = 1, #MineOSInterface.mainContainer.dockContainer.children do
 		if MineOSInterface.mainContainer.dockContainer.children[i].path == dockPath then
 			dockIcon = MineOSInterface.mainContainer.dockContainer.children[i]
 			break
 		end
 	end
-	dockIcon = dockIcon or MineOSInterface.mainContainer.dockContainer.addIcon(dockPath, window)
+
+	-- Если такой иконки ищо нет, то хуячим новую
+	if not dockIcon then
+		dockIcon = MineOSInterface.mainContainer.dockContainer.addIcon(dockPath, window)
+	end
+	
 	-- Ебурим ссылку на окно в иконку
 	dockIcon.windows = dockIcon.windows or {}
 	dockIcon.windows[window] = true
 
-	-- Смещаем окно правее и ниже, если уже есть открыте окна этой софтины
+	-- Смещаем окно правее и ниже, если уже есть открытые окна этой софтины
 	local lastIndex
 	for i = #MineOSInterface.mainContainer.windowsContainer.children, 1, -1 do
 		if MineOSInterface.mainContainer.windowsContainer.children[i] ~= window and dockIcon.windows[MineOSInterface.mainContainer.windowsContainer.children[i]] then
@@ -1170,6 +1191,7 @@ function MineOSInterface.addWindow(window)
 			break
 		end
 	end
+
 	if lastIndex then
 		window.localX, window.localY = MineOSInterface.mainContainer.windowsContainer.children[lastIndex].localX + 4, MineOSInterface.mainContainer.windowsContainer.children[lastIndex].localY + 2
 	end
@@ -1236,8 +1258,6 @@ function MineOSInterface.addWindow(window)
 			window.minimize(window)
 		end
 	end
-
-	MineOSCore.lastLaunchPath = nil
 
 	return MineOSInterface.mainContainer, window
 end
