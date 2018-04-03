@@ -17,7 +17,9 @@ if computer.getArchitecture and computer.getArchitecture() == "Lua 5.3" then
 	]])()
 else
 	IntegerToRGB = function(IntegerColor)
-		return bit32Rshift(IntegerColor, 16), bit32Band(bit32Rshift(IntegerColor, 8), 0xFF), bit32Band(IntegerColor, 0xFF)
+		local r = mathFloor(IntegerColor / 0x10000)
+		local g = mathFloor((IntegerColor - r * 0x10000) / 0x100)
+		return r, g, IntegerColor - r * 0x10000 - g * 0x100
 	end
 end
 
