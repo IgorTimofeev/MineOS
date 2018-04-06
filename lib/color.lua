@@ -8,11 +8,17 @@ local bit32Lshift, bit32Rshift, bit32Band, bit32Bor, mathFloor, mathMax, mathMin
 -----------------------------------------------------------------------------------------------------------------------
 
 -- Optimized Lua 5.3 bitwise support
-local IntegerToRGB
+local IntegerToRGB, RGBToInteger
 if computer.getArchitecture and computer.getArchitecture() == "Lua 5.3" then
 	IntegerToRGB = load([[
 		return function(IntegerColor)
 			return IntegerColor >> 16, IntegerColor >> 8 & 0xFF, IntegerColor & 0xFF
+		end
+	]])()
+
+	RGBToInteger = load([[
+		return function(r, g, b)
+			return r << 16 | g << 8 | b
 		end
 	]])()
 else
@@ -21,10 +27,10 @@ else
 		local g = mathFloor((IntegerColor - r * 0x10000) / 0x100)
 		return r, g, IntegerColor - r * 0x10000 - g * 0x100
 	end
-end
 
-local function RGBToInteger(r, g, b)
-	return r * 65536 + g * 256 + b
+	RGBToInteger = function(r, g, b)
+		return r * 65536 + g * 256 + b
+	end
 end
 
 -----------------------------------------------------------------------------------------------------------------------
