@@ -1054,14 +1054,23 @@ end
 
 local function colorSelectorDraw(colorSelector)
 	local overlayColor = colorSelector.color < 0x7FFFFF and 0xFFFFFF or 0x000000
-	buffer.square(colorSelector.x, colorSelector.y, colorSelector.width, colorSelector.height, colorSelector.color, overlayColor, " ")
-	if colorSelector.pressed then
-		buffer.square(colorSelector.x, colorSelector.y, colorSelector.width, colorSelector.height, overlayColor, overlayColor, " ", 0.8)
-	end
-	if colorSelector.height > 1 then
+		
+	buffer.square(
+		colorSelector.x,
+		colorSelector.y,
+		colorSelector.width,
+		colorSelector.height,
+		colorSelector.pressed and color.blend(colorSelector.color, overlayColor, 0.8) or colorSelector.color,
+		overlayColor,
+		" "
+	)
+	
+	if colorSelector.height > 1 and colorSelector.drawLine then
 		buffer.text(colorSelector.x, colorSelector.y + colorSelector.height - 1, overlayColor, string.rep("▄", colorSelector.width), 0.8)
 	end
+	
 	buffer.text(colorSelector.x + 1, colorSelector.y + math.floor(colorSelector.height / 2), overlayColor, string.limit(colorSelector.text, colorSelector.width - 2))
+	
 	return colorSelector
 end
 
@@ -1081,6 +1090,7 @@ end
 function GUI.colorSelector(x, y, width, height, color, text)
 	local colorSelector = GUI.object(x, y, width, height)
 	
+	colorSelector.drawLine = true
 	colorSelector.eventHandler = colorSelectorEventHandler
 	colorSelector.color = color
 	colorSelector.text = text
