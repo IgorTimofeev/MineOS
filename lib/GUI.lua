@@ -839,7 +839,6 @@ end
 -----------------------------------------------------------------------
 
 function GUI.windowShadow(x, y, width, height, transparency, thin)
-	transparency = transparency
 	if thin then
 		buffer.square(x + width, y + 1, 1, height - 1, 0x000000, 0x000000, " ", transparency)
 		buffer.text(x + 1, y + height, 0x000000, string.rep("▀", width), transparency)
@@ -2167,7 +2166,7 @@ local function filesystemDialogDraw(filesystemDialog)
 	end
 
 	if filesystemDialog.IOMode == GUI.filesystemModes.save then
-		filesystemDialog.submitButton.disabled = not filesystemDialog.input.text
+		filesystemDialog.submitButton.disabled = not filesystemDialog.input.text or filesystemDialog.input.text == ""
 	else
 		filesystemDialog.input.text = filesystemDialog.filesystemTree.selectedItem or ""
 		filesystemDialog.submitButton.disabled = not filesystemDialog.filesystemTree.selectedItem
