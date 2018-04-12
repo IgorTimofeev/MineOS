@@ -103,9 +103,9 @@ end
 
 local currentToolTitle = addTitle(mainContainer.sidebarLayout, "Tool properties")
 
-mainContainer.currentToolLayout = mainContainer.sidebarLayout:addChild(GUI.layout(1, 1, mainContainer.sidebarLayout.width - 2, 1, 1, 1))
+mainContainer.currentToolLayout = mainContainer.sidebarLayout:addChild(GUI.layout(1, 1, mainContainer.sidebarLayout.width, 1, 1, 1))
 mainContainer.currentToolLayout:setCellAlignment(1, 1, GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
-mainContainer.currentToolLayout:setCellFitting(1, 1, true, false)
+mainContainer.currentToolLayout:setCellFitting(1, 1, true, false, 2, 0)
 
 local aboutToolTitle = addTitle(mainContainer.sidebarLayout, "About tool")
 local aboutToolTextBox = mainContainer.sidebarLayout:addChild(GUI.textBox(1, 1, mainContainer.sidebarLayout.width - 2, 1, nil, 0x787878, {}, 1, 0, 0))
@@ -123,6 +123,7 @@ local function pressToolButton(button)
 		mainContainer.toolsLayout.children[i].pressed = mainContainer.toolsLayout.children[i] == button
 	end
 
+	mainContainer.currentToolOverlay:deleteChildren()
 	mainContainer.currentToolLayout:deleteChildren()
 
 	currentToolTitle.hidden = not button.tool.onSelection
@@ -445,6 +446,8 @@ mainContainer.menu:addItem("Hotkeys").onTouch = function()
 	container.layout:addChild(GUI.textBox(1, 1, 36, 1, nil, 0x787878, lines, 1, 0, 0, true, true)).eventHandler = nil
 	mainContainer:drawOnScreen()
 end
+
+mainContainer.currentToolOverlay = mainContainer:addChild(GUI.container(1, 1, mainContainer.width, mainContainer.height))
 
 ----------------------------------------------------------------
 
