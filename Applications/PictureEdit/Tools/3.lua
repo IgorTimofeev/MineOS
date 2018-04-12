@@ -1,0 +1,81 @@
+
+local unicode = require("unicode")
+local image = require("image")
+local GUI = require("GUI")
+local keyboard = require("keyboard")
+local tool = {}
+
+------------------------------------------------------
+
+tool.shortcut = "Bs"
+tool.keyCode = 48
+tool.about = "Classic brush tool to perform drawing with specified radius. Affecting on background and foreground can be configured. You can specify single symbol to draw with. Hold Alt key and click on image to pictk it's colors. You can specify what colors to pick."
+
+local backgroundSwitch = GUI.switchAndLabel(1, 1, width, 6, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x878787, "Draw background:", true)
+local foregroundSwitch = GUI.switchAndLabel(1, 1, width, 6, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x878787, "Draw foreground:", true)
+local alphaSwitch = GUI.switchAndLabel(1, 1, width, 6, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x878787, "Draw alpha:", true)
+local symbolSwitch = GUI.switchAndLabel(1, 1, width, 6, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x878787, "Draw symbol:", true)
+local symbolInput = GUI.input(1, 1, width, 1, 0xEEEEEE, 0x555555, 0x999999, 0xFFFFFF, 0x2D2D2D, "", "Type symbol")
+symbolInput.onInputFinished = function()
+	symbolInput.text = unicode.sub(symbolInput.text, 1, 1)
+end
+local alphaSlider = GUI.slider(1, 1, width, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x878787, 0, 255, 0, false, "Alpha value: ", "")
+alphaSlider.roundValues = true
+local pickBackgroundSwitch = GUI.switchAndLabel(1, 1, width, 6, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x878787, "Pick background:", true)
+local pickForegroundSwitch = GUI.switchAndLabel(1, 1, width, 6, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x878787, "Pick foreground:", true)
+
+local radiusSlider = GUI.slider(1, 1, width, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x878787, 1, 8, 1, false, "Radius: ", " px")
+radiusSlider.height = 2
+radiusSlider.roundValues = true
+
+tool.onSelection = function(mainContainer)
+	mainContainer.currentToolLayout:addChild(backgroundSwitch)
+	mainContainer.currentToolLayout:addChild(foregroundSwitch)
+	mainContainer.currentToolLayout:addChild(alphaSwitch)
+	mainContainer.currentToolLayout:addChild(symbolSwitch)
+	mainContainer.currentToolLayout:addChild(symbolInput)
+	mainContainer.currentToolLayout:addChild(alphaSlider)
+	mainContainer.currentToolLayout:addChild(radiusSlider)
+	mainContainer.currentToolLayout:addChild(pickBackgroundSwitch)
+	mainContainer.currentToolLayout:addChild(pickForegroundSwitch)
+end
+
+tool.eventHandler = function(mainContainer, object, eventData)
+	if eventData[1] == "touch" or eventData[1] == "drag" then
+		local x, y = eventData[3] - mainContainer.image.x + 1, eventData[4] - mainContainer.image.y + 1
+		
+		if keyboard.isKeyDown(56) then
+			local background, foreground = image.get(mainContainer.image.data, x, y)
+
+			if pickBackgroundSwitch.switch.state then
+				mainContainer.secondaryColorSelector.color = background
+			end
+
+			if pickForegroundSwitch.switch.state then
+				mainContainer.primaryColorSelector.color = foreground
+			end
+		else
+			local meow = math.floor(radiusSlider.value)
+
+			for j = y - meow + 1, y + meow - 1 do
+				for i = x - meow + 1, x + meow - 1 do
+					if i >= 1 and i <= mainContainer.image.width and j >= 1 and j <= mainContainer.image.height then
+						local background, foreground, alpha, symbol = image.get(mainContainer.image.data, i, j)
+						image.set(mainContainer.image.data, i, j,
+							backgroundSwitch.switch.state and mainContainer.primaryColorSelector.color or background,
+							foregroundSwitch.switch.state and mainContainer.secondaryColorSelector.color or foreground,
+							alphaSwitch.switch.state and alphaSlider.value / 255 or alpha,
+							symbolSwitch.switch.state and (symbolInput.text == "" and " " or symbolInput.text) or symbol
+						)
+					end
+				end
+			end
+		end
+
+		mainContainer:drawOnScreen()
+	end
+end
+
+------------------------------------------------------
+
+return tool
