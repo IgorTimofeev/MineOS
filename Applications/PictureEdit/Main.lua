@@ -13,11 +13,12 @@ local MineOSInterface = require("MineOSInterface")
 
 local resourcesPath = MineOSCore.getCurrentScriptDirectory()
 local toolsPath = resourcesPath .. "Tools/"
-local configPath = MineOSPaths.applicationData .. "Picture Edit/Config.cfg"
+local configPath = MineOSPaths.applicationData .. "Picture Edit/Config2.cfg"
 local savePath
 
 local config = {
 	recentColors = {},
+	recentFiles = {},
 	transparencyBackground = 0xFFFFFF,
 	transparencyForeground = 0xD2D2D2,
 }
@@ -49,6 +50,17 @@ local function loadConfig()
 
 		saveConfig()
 	end
+end
+
+local function addRecentFile(path)
+	for i = 1, #config.recentFiles do
+		if config.recentFiles[i] == path then
+			return
+		end
+	end
+
+	table.insert(config.recentFiles, 1, path)
+	saveConfig()
 end
 
 loadConfig()
@@ -318,6 +330,7 @@ local function loadImage(path)
 	local result, reason = image.load(path)
 	if result then
 		savePath = path
+		addRecentFile(path)
 		mainContainer.image.data = result
 		mainContainer.image.reposition()
 	else
@@ -329,11 +342,11 @@ local function saveImage(path)
 	local result, reason = image.save(path, mainContainer.image.data, 6)
 	if result then
 		savePath = path
+		addRecentFile(path)
 	else
 		GUI.error(reason)
 	end
 end
-
 
 mainContainer.menu:addItem("PE", 0x00B6FF)
 
@@ -357,6 +370,15 @@ fileItem.onTouch = function()
 			mainContainer:drawOnScreen()
 		end
 	end
+
+	local subMenu = menu:addSubMenu("Open recent", #config.recentFiles == 0)
+	for i = 1, #config.recentFiles do
+		subMenu:addItem(string.limit(config.recentFiles[i], 32, "left")).onTouch = function()
+			loadImage(config.recentFiles[i])
+		end
+	end
+
+	menu:addSeparator()
 
 	menu:addItem("Save", not savePath).onTouch = function()
 		saveImage(savePath)

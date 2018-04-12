@@ -1482,8 +1482,8 @@ local function contextMenuAddSeparator(menu, ...)
 	return dropDownMenuAddSeparator(menu, ...)
 end
 
-local function contextMenuAddSubMenu(menu, text)
-	local item = menu:addItem(text, false, "►")
+local function contextMenuAddSubMenu(menu, text, disabled)
+	local item = menu:addItem(text, disabled, "►")
 	item.subMenu = GUI.contextMenu(1, 1)
 	item.subMenu.colors = menu.colors
 	
