@@ -19,6 +19,7 @@ MineOSPaths.trash = MineOSPaths.OS .. "Trash/"
 MineOSPaths.properties = MineOSPaths.system .. "Properties.cfg"
 MineOSPaths.editor = MineOSPaths.applications .. "/MineCode IDE.app/Main.lua"
 MineOSPaths.explorer = MineOSPaths.applications .. "/Finder.app/Main.lua"
+MineOSPaths.imageEditor = MineOSPaths.applications .. "/Picture Edit.app/Main.lua"
 MineOSPaths.temporary = MineOSPaths.system .. "Temporary/"
 MineOSPaths.network = MineOSPaths.system .. "Network/"
 

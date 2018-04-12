@@ -104,7 +104,7 @@ function MineOSCore.loadPropeties()
 			MineOSPaths.applications .. "App Market.app/",
 			MineOSPaths.applications .. "MineCode IDE.app/",
 			MineOSPaths.applications .. "Finder.app/",
-			MineOSPaths.applications .. "Photoshop.app/",
+			MineOSPaths.applications .. "Picture Edit.app/",
 			MineOSPaths.applications .. "Control.app/",
 		},
 		network = {
@@ -115,7 +115,7 @@ function MineOSCore.loadPropeties()
 		FTPConnections = {},
 	}
 
-	MineOSCore.associateExtension(".pic", MineOSPaths.applications .. "/Photoshop.app/Main.lua", MineOSPaths.icons .. "/Image.pic", MineOSPaths.extensionAssociations .. "Pic/ContextMenu.lua")
+	MineOSCore.associateExtension(".pic", MineOSPaths.imageEditor, MineOSPaths.icons .. "/Image.pic", MineOSPaths.extensionAssociations .. "Pic/ContextMenu.lua")
 	MineOSCore.associateExtension(".txt", MineOSPaths.editor, MineOSPaths.icons .. "/Text.pic")
 	MineOSCore.associateExtension(".cfg", MineOSPaths.editor, MineOSPaths.icons .. "/Config.pic")
 	MineOSCore.associateExtension(".3dm", MineOSPaths.applications .. "/3DPrint.app/Main.lua", MineOSPaths.icons .. "/3DModel.pic")
