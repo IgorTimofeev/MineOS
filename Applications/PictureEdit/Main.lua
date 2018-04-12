@@ -4,6 +4,7 @@ local GUI = require("GUI")
 local MineOSCore = require("MineOSCore")
 local fs = require("filesystem")
 local image = require("image")
+local unicode = require("unicode")
 local color = require("color")
 local buffer = require("doubleBuffering")
 local MineOSPaths = require("MineOSPaths")
@@ -24,6 +25,7 @@ local config = {
 }
 
 local recentColorsLimit = 52
+local recentFilesLimit = 10
 
 --------------------------------------------------------------------
 
@@ -60,6 +62,10 @@ local function addRecentFile(path)
 	end
 
 	table.insert(config.recentFiles, 1, path)
+	if #config.recentFiles > recentFilesLimit then
+		table.remove(config.recentFiles, #config.recentFiles)
+	end
+
 	saveConfig()
 end
 
@@ -173,6 +179,14 @@ end
 
 mainContainer.image.draw = function(object)
 	GUI.windowShadow(object.x, object.y, object.width, object.height, nil, true)
+	
+	local y, text = object.y + object.height + 1, "Size: " .. object.width .. "x" .. object.height
+	buffer.text(math.floor(object.x + object.width / 2 - unicode.len(text) / 2), y, 0x5A5A5A, text)
+
+	if savePath then
+		text = "Path: " .. savePath
+		buffer.text(math.floor(object.x + object.width / 2 - unicode.len(text) / 2), y + 1, 0x5A5A5A, text)
+	end
 	
 	local x, y, step, notStep, background, foreground, symbol = object.x, object.y, false, mainContainer.image.width % 2
 	for i = 3, #mainContainer.image.data, 4 do
@@ -294,6 +308,7 @@ mainContainer.image.reposition = function()
 end
 
 local function newNoGUI(width, height)
+	savePath = nil
 	mainContainer.image.data = {width, height}
 	mainContainer.image.reposition()	
 	
