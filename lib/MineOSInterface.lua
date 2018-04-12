@@ -27,7 +27,6 @@ MineOSInterface.colors = {
 			background = 0xE1E1E1,
 			text = 0x2D2D2D
 		},
-		shadowTransparency = 0.5,
 		backgroundPanel = 0xF0F0F0,
 		tabBar = {
 			default = {
@@ -910,27 +909,10 @@ end
 -----------------------------------------------------------------------------------------------------------------------------------
 
 function MineOSInterface.addUniversalContainer(parentContainer, title)
-	local container = parentContainer:addChild(GUI.container(1, 1, parentContainer.width, parentContainer.height))
+	local container = GUI.addFadeContainer(parentContainer, true, true, title)
+	container.panel.colors.background = MineOSCore.properties.transparencyEnabled and 0x0 or MineOSCore.properties.backgroundColor
+	container.panel.colors.transparency = MineOSCore.properties.transparencyEnabled and GUI.colors.fadeContainer.transparency
 	
-	container.panel = container:addChild(GUI.panel(1, 1, container.width, container.height, MineOSCore.properties.transparencyEnabled and 0x0 or MineOSCore.properties.backgroundColor, MineOSCore.properties.transparencyEnabled and 0.2))
-	container.layout = container:addChild(GUI.layout(1, 1, container.width, container.height, 3, 1))
-	container.layout.defaultColumn = 2
-	container.layout:setColumnWidth(1, GUI.sizePolicies.percentage, 0.375)
-	container.layout:setColumnWidth(2, GUI.sizePolicies.percentage, 0.25)
-	container.layout:setColumnWidth(3, GUI.sizePolicies.percentage, 0.375)
-	container.layout:setCellFitting(2, 1, true, false)
-
-	if title then
-		container.label = container.layout:addChild(GUI.label(1, 1, 1, 1, 0xE1E1E1, title)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
-	end
-
-	container.panel.eventHandler = function(mainContainer, object, eventData)
-		if eventData[1] == "touch" then
-			container:delete()
-			mainContainer:drawOnScreen()
-		end
-	end
-
 	return container
 end
 
@@ -1519,64 +1501,7 @@ end
 
 ----------------------------------------- Window object -----------------------------------------
 
-function MineOSInterface.windowDraw(window)
-	GUI.windowShadow(window.x, window.y, window.width, window.height, MineOSInterface.colors.windows.shadowTransparency, true)
-	GUI.drawContainerContent(window)
-	return window
-end
-
-local function windowCheck(window, x, y)
-	local child
-	for i = #window.children, 1, -1 do
-		child = window.children[i]
-		
-		if child.children then
-			if windowCheck(child, x, y) then
-				return true
-			end
-		elseif child.eventHandler and not child.hidden and not child.disabled and child:isPointInside(x, y) then
-			return true
-		end
-	end
-end
-
-function MineOSInterface.windowEventHandler(mainContainer, window, eventData)
-	if eventData[1] == "touch" then
-		if not windowCheck(window, eventData[3], eventData[4]) then
-			window.lastTouchPosition = {
-				x = eventData[3],
-				y = eventData[4]
-			}
-		end
-		
-		if window ~= window.parent.children[#window.parent.children] then
-			window:moveToFront()
-			
-			mainContainer:drawOnScreen()
-		end
-	elseif eventData[1] == "drag" and window.lastTouchPosition and not windowCheck(window, eventData[3], eventData[4]) then
-		local xOffset, yOffset = eventData[3] - window.lastTouchPosition.x, eventData[4] - window.lastTouchPosition.y
-		if xOffset ~= 0 or yOffset ~= 0 then
-			window.localX, window.localY = window.localX + xOffset, window.localY + yOffset
-			window.lastTouchPosition.x, window.lastTouchPosition.y = eventData[3], eventData[4]
-			
-			mainContainer:drawOnScreen()
-		end
-	elseif eventData[1] == "drop" then
-		window.lastTouchPosition = nil
-	end
-end
-
-function MineOSInterface.windowFromContainer(container)
-	container.eventHandler = MineOSInterface.windowEventHandler
-	container.draw = MineOSInterface.windowDraw
-
-	return container
-end
-
-function MineOSInterface.window(x, y, width, height)
-	return MineOSInterface.windowFromContainer(GUI.container(x, y, width, height))
-end
+MineOSInterface.window = GUI.window
 
 function MineOSInterface.filledWindow(x, y, width, height, backgroundColor)
 	local window = MineOSInterface.window(x, y, width, height)
@@ -1594,6 +1519,7 @@ function MineOSInterface.titledWindow(x, y, width, height, title, addTitlePanel)
 		window.titlePanel = window:addChild(GUI.panel(1, 1, width, 1, MineOSInterface.colors.windows.title.background))
 		window.backgroundPanel.localY, window.backgroundPanel.height = 2, window.height - 1
 	end
+
 	window.titleLabel = window:addChild(GUI.label(1, 1, width, height, MineOSInterface.colors.windows.title.text, title)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
 	window.actionButtons.localY = 1
 	window.actionButtons:moveToFront()

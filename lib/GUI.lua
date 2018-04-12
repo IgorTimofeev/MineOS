@@ -76,6 +76,13 @@ GUI.colors = {
 			shadow = 0.4
 		}
 	},
+	fadeContainer = {
+		transparency = 0.3,
+		title = 0xFFFFFF
+	},
+	windows = {
+		shadowTransparency = 0.5
+	}
 }
 
 GUI.paletteConfigPath = "/lib/.palette.cfg"
@@ -1077,13 +1084,22 @@ end
 local function colorSelectorEventHandler(mainContainer, object, eventData)
 	if eventData[1] == "touch" then
 		object.pressed = true
-		mainContainer:drawOnScreen()
+
+		local palette = GUI.addPaletteWindowToContainer(mainContainer)
 		
-		object.color = GUI.palette(math.floor(mainContainer.width / 2 - 35), math.floor(mainContainer.height / 2 - 12), object.color or object.color):show()
+		palette.onCancel = function()
+			object.pressed = false
+			palette:delete()
+			mainContainer:drawOnScreen()
+			callMethod(object.onTouch, eventData)
+		end
+
+		palette.onSubmit = function()
+			object.color = palette.color.integer
+			palette.onCancel()
+		end
 		
-		object.pressed = false
 		mainContainer:drawOnScreen()
-		callMethod(object.onTouch, eventData)
 	end
 end
 
@@ -2269,12 +2285,8 @@ end
 -----------------------------------------------------------------------
 
 function GUI.addFilesystemDialogToContainer(parentContainer, width, height, addPanel, ...)
-	local container = parentContainer:addChild(GUI.container(1, 1, parentContainer.width, parentContainer.height))
-	
-	if addPanel then
-		container:addChild(GUI.panel(1, 1, container.width, container.height, 0x0, 0.3))
-	end
-	
+	local container = GUI.addFadeContainer(parentContainer, addPanel, false, nil)
+
 	local filesystemDialog = container:addChild(GUI.filesystemDialog(1, 1, width, height, ...))
 	filesystemDialog.localX = math.floor(container.width / 2 - filesystemDialog.width / 2)
 	filesystemDialog.localY = -filesystemDialog.height
@@ -3587,18 +3599,15 @@ local function paletteShow(palette)
 	local mainContainer = GUI.fullScreenContainer()
 	mainContainer:addChild(palette)
 
-	palette.OKButton.onTouch = function(mainContainer, object, eventData)
+	palette.onSubmit = function()
 		mainContainer:stopEventHandling()
 	end
-	
-	palette.cancelButton.onTouch = function(mainContainer, object, eventData)
-		mainContainer:stopEventHandling()
-	end
+	palette.cancelButton.onTouch = palette.onSubmit
 
 	mainContainer:drawOnScreen()
 	mainContainer:startEventHandling()	
 
-	return palette.color.hex
+	return palette.color.integer
 end
 
 function GUI.palette(x, y, startColor)
@@ -3634,8 +3643,17 @@ function GUI.palette(x, y, startColor)
 	end
 
 	local colorPanel = palette:addChild(GUI.panel(58, 2, 12, 3, 0x0))
-	palette.OKButton = palette:addChild(GUI.roundedButton(58, 6, 12, 1, 0x4B4B4B, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, "OK"))
-	palette.cancelButton = palette:addChild(GUI.roundedButton(58, 8, 12, 1, 0xFFFFFF, 0x696969, 0x2D2D2D, 0xFFFFFF, "Cancel"))
+	palette:addChild(GUI.roundedButton(58, 6, 12, 1, 0x4B4B4B, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, "OK")).onTouch = function()
+		if palette.onSubmit then
+			palette.onSubmit()
+		end
+	end
+
+	palette:addChild(GUI.roundedButton(58, 8, 12, 1, 0xFFFFFF, 0x696969, 0x2D2D2D, 0xFFFFFF, "Cancel")).onTouch = function()
+		if palette.onCancel then
+			palette.onCancel()
+		end
+	end
 
 	local function paletteRefreshBigImage()
 		local saturationStep, brightnessStep, saturation, brightness = 1 / bigImage.width, 1 / bigImage.height, 0, 1
@@ -3673,12 +3691,12 @@ function GUI.palette(x, y, startColor)
 		inputs[4].text = tostring(math.floor(palette.color.hsb.hue))
 		inputs[5].text = tostring(math.floor(palette.color.hsb.saturation * 100))
 		inputs[6].text = tostring(math.floor(palette.color.hsb.brightness * 100))
-		inputs[7].text = string.format("%06X", palette.color.hex)
-		colorPanel.colors.background = palette.color.hex
+		inputs[7].text = string.format("%06X", palette.color.integer)
+		colorPanel.colors.background = palette.color.integer
 	end
 
 	local function paletteSwitchColorFromHex(hex)
-		palette.color.hex = hex
+		palette.color.integer = hex
 		palette.color.rgb.red, palette.color.rgb.green, palette.color.rgb.blue = color.IntegerToRGB(hex)
 		palette.color.hsb.hue, palette.color.hsb.saturation, palette.color.hsb.brightness = color.RGBToHSB(palette.color.rgb.red, palette.color.rgb.green, palette.color.rgb.blue)
 		paletteUpdateInputs()
@@ -3687,14 +3705,14 @@ function GUI.palette(x, y, startColor)
 	local function paletteSwitchColorFromHsb(hue, saturation, brightness)
 		palette.color.hsb.hue, palette.color.hsb.saturation, palette.color.hsb.brightness = hue, saturation, brightness
 		palette.color.rgb.red, palette.color.rgb.green, palette.color.rgb.blue = color.HSBToRGB(hue, saturation, brightness)
-		palette.color.hex = color.RGBToInteger(palette.color.rgb.red, palette.color.rgb.green, palette.color.rgb.blue)
+		palette.color.integer = color.RGBToInteger(palette.color.rgb.red, palette.color.rgb.green, palette.color.rgb.blue)
 		paletteUpdateInputs()
 	end
 
 	local function paletteSwitchColorFromRgb(red, green, blue)
 		palette.color.rgb.red, palette.color.rgb.green, palette.color.rgb.blue = red, green, blue
 		palette.color.hsb.hue, palette.color.hsb.saturation, palette.color.hsb.brightness = color.RGBToHSB(red, green, blue)
-		palette.color.hex = color.RGBToInteger(red, green, blue)
+		palette.color.integer = color.RGBToInteger(red, green, blue)
 		paletteUpdateInputs()
 	end
 
@@ -3781,14 +3799,14 @@ function GUI.palette(x, y, startColor)
 	palette:addChild(GUI.button(58, 25, 12, 1, 0xFFFFFF, 0x4B4B4B, 0x2D2D2D, 0xFFFFFF, "+")).onTouch = function(mainContainer, object, eventData)
 		local favouriteExists = false
 		for i = 1, #favourites do
-			if favourites[i] == palette.color.hex then
+			if favourites[i] == palette.color.integer then
 				favouriteExists = true
 				break
 			end
 		end
 		
 		if not favouriteExists then
-			table.insert(favourites, 1, palette.color.hex)
+			table.insert(favourites, 1, palette.color.integer)
 			table.remove(favourites, #favourites)
 			for i = 1, #favourites do
 				favouritesContainer.children[i].colors.default.background = favourites[i]
@@ -3852,6 +3870,104 @@ function GUI.text(x, y, color, text)
 	object:update()
 
 	return object
+end
+
+-----------------------------------------------------------------------
+
+function GUI.addFadeContainer(parentContainer, addPanel, addLayout, title)
+	local container = parentContainer:addChild(GUI.container(1, 1, parentContainer.width, parentContainer.height))
+	
+	if addPanel then
+		container.panel = container:addChild(GUI.panel(1, 1, container.width, container.height, 0x0, GUI.colors.fadeContainer.transparency))
+		container.panel.eventHandler = function(parentContainer, object, eventData)
+			if eventData[1] == "touch" then
+				container:delete()
+				parentContainer:drawOnScreen()
+			end
+		end
+	end
+
+	if addLayout then
+		container.layout = container:addChild(GUI.layout(1, 1, container.width, container.height, 3, 1))
+		container.layout.defaultColumn = 2
+		container.layout:setColumnWidth(1, GUI.sizePolicies.percentage, 0.375)
+		container.layout:setColumnWidth(2, GUI.sizePolicies.percentage, 0.25)
+		container.layout:setColumnWidth(3, GUI.sizePolicies.percentage, 0.375)
+		container.layout:setCellFitting(2, 1, true, false)
+
+		if title then
+			container.label = container.layout:addChild(GUI.label(1, 1, 1, 1, GUI.colors.fadeContainer.title, title)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+		end
+	end
+
+	return container
+end
+
+-----------------------------------------------------------------------
+
+function windowDraw(window)
+	GUI.drawContainerContent(window)
+	GUI.windowShadow(window.x, window.y, window.width, window.height, GUI.colors.windows.shadowTransparency, true)
+
+	return window
+end
+
+local function windowCheck(window, x, y)
+	local child
+	for i = #window.children, 1, -1 do
+		child = window.children[i]
+		
+		if child.children then
+			if windowCheck(child, x, y) then
+				return true
+			end
+		elseif child.eventHandler and not child.hidden and not child.disabled and child:isPointInside(x, y) then
+			return true
+		end
+	end
+end
+
+local function windowEventHandler(mainContainer, window, eventData)
+	if eventData[1] == "touch" then
+		if not windowCheck(window, eventData[3], eventData[4]) then
+			window.lastTouchPosition = {x = eventData[3],y = eventData[4]}
+		end
+		
+		if window ~= window.parent.children[#window.parent.children] then
+			window:moveToFront()
+			mainContainer:drawOnScreen()
+		end
+	elseif eventData[1] == "drag" and window.lastTouchPosition and not windowCheck(window, eventData[3], eventData[4]) then
+		local xOffset, yOffset = eventData[3] - window.lastTouchPosition.x, eventData[4] - window.lastTouchPosition.y
+		if xOffset ~= 0 or yOffset ~= 0 then
+			window.localX, window.localY = window.localX + xOffset, window.localY + yOffset
+			window.lastTouchPosition.x, window.lastTouchPosition.y = eventData[3], eventData[4]
+			
+			mainContainer:drawOnScreen()
+		end
+	elseif eventData[1] == "drop" then
+		window.lastTouchPosition = nil
+	end
+end
+
+function GUI.windowFromContainer(container)
+	container.eventHandler = windowEventHandler
+	container.draw = windowDraw
+
+	return container
+end
+
+function GUI.window(x, y, width, height)
+	return GUI.windowFromContainer(GUI.container(x, y, width, height))
+end
+
+-----------------------------------------------------------------------
+
+function GUI.addPaletteWindowToContainer(parentContainer)
+	local palette = parentContainer:addChild(GUI.windowFromContainer(GUI.palette(1, 1, 0x9900FF)))
+	palette.localX, palette.localY = math.floor(parentContainer.width / 2 - palette.width / 2), math.floor(parentContainer.height / 2 - palette.height / 2)
+
+	return palette
 end
 
 -----------------------------------------------------------------------

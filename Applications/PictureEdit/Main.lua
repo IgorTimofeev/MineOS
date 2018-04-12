@@ -241,33 +241,24 @@ local function updateRecentColorsButtons()
 	end
 end
 
-mainContainer.secondaryColorSelector = mainContainer:addChild(GUI.colorSelector(3, mainContainer.toolsPanel.height - 2, 3, 2, 0xFFFFFF, " "))
-mainContainer.primaryColorSelector = mainContainer:addChild(GUI.colorSelector(2, mainContainer.toolsPanel.height - 3, 3, 2, 0x880000, " "))
-
-local function colorSelectorOnTouch(what)
-	for i = 1, #config.recentColors do
-		if config.recentColors[i] == mainContainer[what].color then
-			return
-		end
-	end
-
-	table.insert(config.recentColors, 1, mainContainer[what].color)
-	table.remove(config.recentColors, #config.recentColors)
-	updateRecentColorsButtons()
-
-	saveConfig()
+local function swapColors()
+	mainContainer.primaryColorSelector.color, mainContainer.secondaryColorSelector.color = mainContainer.secondaryColorSelector.color, mainContainer.primaryColorSelector.color
 	mainContainer:drawOnScreen()
 end
 
-mainContainer.primaryColorSelector.onTouch = function()
-	colorSelectorOnTouch("primaryColorSelector")
+local function colorSelectorDraw(object)
+	buffer.square(object.x + 1, object.y, object.width - 2, object.height, object.color, 0x0, " ")
+	for y = object.y, object.y + object.height - 1 do
+		buffer.text(object.x, y, object.color, "⢸")
+		buffer.text(object.x + object.width - 1, y, object.color, "⡇")
+	end
 end
 
-mainContainer.secondaryColorSelector.onTouch = function()
-	colorSelectorOnTouch("secondaryColorSelector")
-end
+mainContainer.secondaryColorSelector = mainContainer:addChild(GUI.colorSelector(2, mainContainer.toolsPanel.height - 3, 5, 2, 0xFFFFFF, " "))
+mainContainer.primaryColorSelector = mainContainer:addChild(GUI.colorSelector(1, mainContainer.toolsPanel.height - 4, 5, 2, 0x880000, " "))
+mainContainer.secondaryColorSelector.draw, mainContainer.primaryColorSelector.draw = colorSelectorDraw, colorSelectorDraw
 
-mainContainer.secondaryColorSelector.drawLine, mainContainer.primaryColorSelector.drawLine = false, false
+mainContainer:addChild(GUI.adaptiveButton(3, mainContainer.secondaryColorSelector.localY + mainContainer.secondaryColorSelector.height + 1, 0, 0, nil, 0xD2D2D2, nil, 0xA5A5A5, "<>")).onTouch = swapColors
 
 mainContainer.image.eventHandler = function(mainContainer, object, eventData)
 	if eventData[1] == "key_down" then
@@ -277,8 +268,7 @@ mainContainer.image.eventHandler = function(mainContainer, object, eventData)
 			mainContainer:drawOnScreen()
 		-- X
 		elseif eventData[4] == 45 then
-			mainContainer.primaryColorSelector.color, mainContainer.secondaryColorSelector.color = mainContainer.secondaryColorSelector.color, mainContainer.primaryColorSelector.color
-			mainContainer:drawOnScreen()
+			swapColors()
 		else
 			for i = 1, #mainContainer.toolsLayout.children do
 				if eventData[4] == mainContainer.toolsLayout.children[i].tool.keyCode then
