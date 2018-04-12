@@ -8,7 +8,7 @@ local tool = {}
 
 tool.shortcut = "Se"
 tool.keyCode = 50
-tool.about = "Selection tool allows you select preferred zone on image and perform some operations on it. For example, to crop, to fill, to clear and to outline in via selected primary color"
+tool.about = "Selection tool allows you to select preferred area on image and to perform some operations on it. Green dots mean start and end points (for example, it needs to line rasterization)"
 
 local selector, touchX, touchY, dragX, dragY = GUI.object(1, 1, 1, 1)
 
