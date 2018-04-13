@@ -78,7 +78,7 @@ GUI.colors = {
 	},
 	fadeContainer = {
 		transparency = 0.3,
-		title = 0xFFFFFF
+		title = 0xE1E1E1
 	},
 	windows = {
 		shadowTransparency = 0.5

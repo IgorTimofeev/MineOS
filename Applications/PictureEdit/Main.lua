@@ -1,6 +1,7 @@
 
 local args, options = require("shell").parse(...)
 local GUI = require("GUI")
+local web = require("web")
 local MineOSCore = require("MineOSCore")
 local fs = require("filesystem")
 local image = require("image")
@@ -382,6 +383,36 @@ fileItem.onTouch = function()
 		subMenu:addItem(string.limit(config.recentFiles[i], 32, "left")).onTouch = function()
 			loadImage(config.recentFiles[i])
 		end
+	end
+
+	menu:addItem("Open from URL").onTouch = function()
+		local container = MineOSInterface.addUniversalContainer(mainContainer, "Open from URL")
+
+		local input = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x969696, 0xE1E1E1, 0x2D2D2D, "", "http://example.com/test.pic"))
+		input.onInputFinished = function()
+			if #input.text > 0 then
+				input:delete()
+				container.layout:addChild(GUI.label(1, 1, container.width, 1, 0x787878, "Downloading file..."):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top))
+				mainContainer:drawOnScreen()
+
+				local temporaryPath = MineOSCore.getTemporaryPath() .. ".pic"
+				local result, reason = web.download(input.text, temporaryPath)
+
+				container:delete()
+
+				if result then
+					loadImage(temporaryPath)
+					fs.remove(temporaryPath)
+					savePath = nil
+				else
+					GUI.error(reason)
+				end
+
+				mainContainer:drawOnScreen()
+			end
+		end
+
+		mainContainer:drawOnScreen()
 	end
 
 	menu:addSeparator()

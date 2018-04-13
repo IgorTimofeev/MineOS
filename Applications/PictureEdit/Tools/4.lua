@@ -9,13 +9,13 @@ local tool = {}
 
 tool.shortcut = "Bs"
 tool.keyCode = 48
-tool.about = "Classic brush tool to perform drawing with specified radius. Affecting on background and foreground can be configured. You can specify single symbol to draw with. Hold Alt key and click on image to pick it's colors. You can specify what colors to pick."
+tool.about = "Classic brush tool to perform drawing with specified radius and transparency. You can configure of what data will be drawn. Also you can specify preferred symbol to draw with, otherwise whitespace will be used."
 
 local backgroundSwitch = GUI.switchAndLabel(1, 1, width, 6, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x878787, "Draw background:", true)
 local foregroundSwitch = GUI.switchAndLabel(1, 1, width, 6, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x878787, "Draw foreground:", true)
 local alphaSwitch = GUI.switchAndLabel(1, 1, width, 6, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x878787, "Draw alpha:", true)
 local symbolSwitch = GUI.switchAndLabel(1, 1, width, 6, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x878787, "Draw symbol:", true)
-local symbolInput = GUI.input(1, 1, width, 1, 0xEEEEEE, 0x555555, 0x999999, 0xFFFFFF, 0x2D2D2D, "", "Type symbol")
+local symbolInput = GUI.input(1, 1, width, 1, 0xEEEEEE, 0x555555, 0x999999, 0xFFFFFF, 0x2D2D2D, "", "Symbol to draw with")
 symbolInput.onInputFinished = function()
 	symbolInput.text = unicode.sub(symbolInput.text, 1, 1)
 end
