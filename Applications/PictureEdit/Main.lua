@@ -392,7 +392,7 @@ fileItem.onTouch = function()
 		input.onInputFinished = function()
 			if #input.text > 0 then
 				input:delete()
-				container.layout:addChild(GUI.label(1, 1, container.width, 1, 0x787878, "Downloading file..."):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top))
+				container.layout:addChild(GUI.label(1, 1, container.width, 1, 0x969696, "Downloading file..."):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top))
 				mainContainer:drawOnScreen()
 
 				local temporaryPath = MineOSCore.getTemporaryPath() .. ".pic"
@@ -480,7 +480,7 @@ mainContainer.menu:addItem("Hotkeys").onTouch = function()
 		"D - make colors B/W",
 	}
 
-	container.layout:addChild(GUI.textBox(1, 1, 36, 1, nil, 0x787878, lines, 1, 0, 0, true, true)).eventHandler = nil
+	container.layout:addChild(GUI.textBox(1, 1, 36, 1, nil, 0x969696, lines, 1, 0, 0, true, true)).eventHandler = nil
 	mainContainer:drawOnScreen()
 end
 
