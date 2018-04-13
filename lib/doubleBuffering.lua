@@ -239,6 +239,44 @@ local function rasterizeLine(x1, y1, x2, y2, method)
 	end
 end
 
+local function rasterizeEllipse(centerX, centerY, radiusX, radiusY, method)
+	local function rasterizeEllipsePoints(XP, YP)
+		method(centerX + XP, centerY + YP)
+		method(centerX - XP, centerY + YP)
+		method(centerX - XP, centerY - YP)
+		method(centerX + XP, centerY - YP) 
+	end
+
+	local x, y, changeX, changeY, ellipseError, twoASquare, twoBSquare = radiusX, 0, radiusY * radiusY * (1 - 2 * radiusX), radiusX * radiusX, 0, 2 * radiusX * radiusX, 2 * radiusY * radiusY
+	local stoppingX, stoppingY = twoBSquare * radiusX, 0
+
+	while stoppingX >= stoppingY do
+		rasterizeEllipsePoints(x, y)
+		
+		y, stoppingY, ellipseError = y + 1, stoppingY + twoASquare, ellipseError + changeY
+		changeY = changeY + twoASquare
+
+		if (2 * ellipseError + changeX) > 0 then
+			x, stoppingX, ellipseError = x - 1, stoppingX - twoBSquare, ellipseError + changeX
+			changeX = changeX + twoBSquare
+		end
+	end
+
+	x, y, changeX, changeY, ellipseError, stoppingX, stoppingY = 0, radiusY, radiusY * radiusY, radiusX * radiusX * (1 - 2 * radiusY), 0, 0, twoASquare * radiusY
+
+	while stoppingX <= stoppingY do 
+		rasterizeEllipsePoints(x, y)
+		
+		x, stoppingX, ellipseError = x + 1, stoppingX + twoBSquare, ellipseError + changeX
+		changeX = changeX + twoBSquare
+		
+		if (2 * ellipseError + changeY) > 0 then
+			y, stoppingY, ellipseError = y - 1, stoppingY - twoASquare, ellipseError + changeY
+			changeY = changeY + twoASquare
+		end
+	end
+end
+
 local function line(x1, y1, x2, y2, background, foreground, alpha, symbol)
 	rasterizeLine(x1, y1, x2, y2, function(x, y)
 		set(x, y, background, foreground, alpha, symbol)
@@ -670,6 +708,7 @@ return {
 	copy = copy,
 	paste = paste,
 	rasterizeLine = rasterizeLine,
+	rasterizeEllipse = rasterizeEllipse,
 	line = line,
 	text = text,
 	formattedText = formattedText,

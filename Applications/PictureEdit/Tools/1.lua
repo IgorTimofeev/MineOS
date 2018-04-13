@@ -13,9 +13,10 @@ tool.about = "Selection tool allows you to select preferred area on image and to
 local selector, touchX, touchY, dragX, dragY = GUI.object(1, 1, 1, 1)
 
 local fillButton = GUI.roundedButton(1, 1, 36, 1, 0xE1E1E1, 0x2D2D2D, 0x2D2D2D, 0xE1E1E1, "Fill")
-local clearButton = GUI.roundedButton(1, 1, 36, 1, 0xE1E1E1, 0x2D2D2D, 0x2D2D2D, 0xE1E1E1, "Clear")
 local outlineButton = GUI.roundedButton(1, 1, 36, 1, 0xE1E1E1, 0x2D2D2D, 0x2D2D2D, 0xE1E1E1, "Outline")
 local rasterizeLineButton = GUI.roundedButton(1, 1, 36, 1, 0xE1E1E1, 0x2D2D2D, 0x2D2D2D, 0xE1E1E1, "Rasterize line")
+local rasterizeEllipseButton = GUI.roundedButton(1, 1, 36, 1, 0xE1E1E1, 0x2D2D2D, 0x2D2D2D, 0xE1E1E1, "Rasterize ellipse")
+local clearButton = GUI.roundedButton(1, 1, 36, 1, 0x696969, 0xE1E1E1, 0x2D2D2D, 0xE1E1E1, "Clear")
 local cropButton = GUI.roundedButton(1, 1, 36, 1, 0x696969, 0xE1E1E1, 0x2D2D2D, 0xE1E1E1, "Crop")
 
 local function repositionSelector(mainContainer)
@@ -32,6 +33,11 @@ local function repositionSelector(mainContainer)
 	end
 	
 	mainContainer:drawOnScreen()
+end
+
+local function fitSelector(mainContainer)
+	touchX, touchY, dragX, dragY = mainContainer.image.localX, mainContainer.image.localY, mainContainer.image.localX + mainContainer.image.width - 1, mainContainer.image.localY + mainContainer.image.height - 1
+	repositionSelector(mainContainer)
 end
 
 tool.onSelection = function(mainContainer)
@@ -76,6 +82,23 @@ tool.onSelection = function(mainContainer)
 		mainContainer:drawOnScreen()
 	end
 
+	mainContainer.currentToolLayout:addChild(rasterizeEllipseButton).onTouch = function()
+		local minX, minY, maxX, maxY = math.min(touchX, dragX), math.min(touchY, dragY), math.max(touchX, dragX), math.max(touchY, dragY)
+		local centerX, centerY = math.ceil(minX + (maxX - minX) / 2), math.ceil(minY + (maxY - minY) / 2)
+				
+		buffer.rasterizeEllipse(
+			centerX - mainContainer.image.x + 1,
+			centerY - mainContainer.image.y + 1,
+			maxX - centerX,
+			maxY - centerY,
+			function(x, y)
+				image.set(mainContainer.image.data, x, y, mainContainer.primaryColorSelector.color, 0x0, 0, " ")
+			end
+		)
+
+		mainContainer:drawOnScreen()
+	end
+
 	mainContainer.currentToolLayout:addChild(clearButton).onTouch = function()
 		for j = selector.y, selector.y + selector.height - 1 do
 			for i = selector.x, selector.x + selector.width - 1 do
@@ -89,18 +112,15 @@ tool.onSelection = function(mainContainer)
 	mainContainer.currentToolLayout:addChild(cropButton).onTouch = function()
 		mainContainer.image.data = image.crop(mainContainer.image.data, selector.x - mainContainer.image.x + 1, selector.y - mainContainer.image.y + 1, selector.width, selector.height)
 		mainContainer.image.reposition()
-
-		touchX, touchY, dragX, dragY = mainContainer.image.localX, mainContainer.image.localY, mainContainer.image.localX + mainContainer.image.width - 1, mainContainer.image.localY + mainContainer.image.height - 1
-		repositionSelector(mainContainer)
+		fitSelector(mainContainer)
 	end
 
 	mainContainer.currentToolOverlay:addChild(selector)
-	selector.hidden = true
+	fitSelector(mainContainer)
 end
 
 tool.eventHandler = function(mainContainer, object, eventData)
 	if eventData[1] == "touch" then
-		selector.hidden = false
 		touchX, touchY, dragX, dragY = eventData[3], eventData[4], eventData[3], eventData[4]
 		repositionSelector(mainContainer)
 	elseif eventData[1] == "drag" then

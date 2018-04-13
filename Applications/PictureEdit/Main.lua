@@ -314,8 +314,8 @@ end
 local function new()
 	local container = MineOSInterface.addUniversalContainer(mainContainer, "New picture")
 
-	local widthInput = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x696969, 0xE1E1E1, 0x2D2D2D, "50", "Width"))
-	local heightInput = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x696969, 0xE1E1E1, 0x2D2D2D, "20", "Height"))
+	local widthInput = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x696969, 0xE1E1E1, 0x2D2D2D, "51", "Width"))
+	local heightInput = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x696969, 0xE1E1E1, 0x2D2D2D, "19", "Height"))
 	
 	widthInput.validator = function(text)
 		return tonumber(text)
@@ -497,7 +497,7 @@ pressToolButton(mainContainer.toolsLayout.children[4])
 if options.o or options.open and args[1] and fs.exists(args[1]) then
 	loadImage(args[1])
 else
-	newNoGUI(50, 20)
+	newNoGUI(51, 19)
 end
 
 mainContainer:drawOnScreen(true)
