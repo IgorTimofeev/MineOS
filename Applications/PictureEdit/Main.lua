@@ -12,10 +12,8 @@ local MineOSInterface = require("MineOSInterface")
 
 --------------------------------------------------------------------
 
-local resourcesPath = MineOSCore.getCurrentScriptDirectory()
-local toolsPath = resourcesPath .. "Tools/"
-local configPath = MineOSPaths.applicationData .. "Picture Edit/Config2.cfg"
-local savePath
+local recentColorsLimit = 52
+local recentFilesLimit = 10
 
 local config = {
 	recentColors = {},
@@ -24,8 +22,10 @@ local config = {
 	transparencyForeground = 0xD2D2D2,
 }
 
-local recentColorsLimit = 52
-local recentFilesLimit = 10
+local resourcesPath = MineOSCore.getCurrentScriptDirectory()
+local toolsPath = resourcesPath .. "Tools/"
+local configPath = MineOSPaths.applicationData .. "Picture Edit/Config2.cfg"
+local savePath
 
 --------------------------------------------------------------------
 
@@ -438,6 +438,7 @@ mainContainer.menu:addItem("Hotkeys").onTouch = function()
 		" ",
 		"M - selection tool",
 		"V - move tool",
+		"Alt - picker tool",
 		"B - brush tool",
 		"E - eraser tool",
 		"T - text tool",
@@ -460,7 +461,7 @@ mainContainer.image:moveToBack()
 mainContainer.backgroundPanel:moveToBack()
 
 updateRecentColorsButtons()
-pressToolButton(mainContainer.toolsLayout.children[3])
+pressToolButton(mainContainer.toolsLayout.children[4])
 
 if options.o or options.open and args[1] and fs.exists(args[1]) then
 	loadImage(args[1])

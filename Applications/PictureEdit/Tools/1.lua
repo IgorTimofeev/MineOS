@@ -44,16 +44,6 @@ tool.onSelection = function(mainContainer)
 
 		mainContainer:drawOnScreen()
 	end
-
-	mainContainer.currentToolLayout:addChild(clearButton).onTouch = function()
-		for j = selector.y, selector.y + selector.height - 1 do
-			for i = selector.x, selector.x + selector.width - 1 do
-				image.set(mainContainer.image.data, i - mainContainer.image.x + 1, j - mainContainer.image.y + 1, 0x0, 0x0, 1, " ")
-			end
-		end
-
-		mainContainer:drawOnScreen()
-	end
 	
 	mainContainer.currentToolLayout:addChild(outlineButton).onTouch = function()
 		local x1, y1 = selector.x - mainContainer.image.x + 1, selector.y - mainContainer.image.y + 1
@@ -82,6 +72,16 @@ tool.onSelection = function(mainContainer)
 				image.set(mainContainer.image.data, x, y, mainContainer.primaryColorSelector.color, 0x0, 0, " ")
 			end
 		)
+
+		mainContainer:drawOnScreen()
+	end
+
+	mainContainer.currentToolLayout:addChild(clearButton).onTouch = function()
+		for j = selector.y, selector.y + selector.height - 1 do
+			for i = selector.x, selector.x + selector.width - 1 do
+				image.set(mainContainer.image.data, i - mainContainer.image.x + 1, j - mainContainer.image.y + 1, 0x0, 0x0, 1, " ")
+			end
+		end
 
 		mainContainer:drawOnScreen()
 	end
