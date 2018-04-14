@@ -1,54 +1,41 @@
 
 local image = require("image")
-local GUI = require("GUI")
 local tool = {}
 
 ------------------------------------------------------
 
-tool.shortcut = "Br"
-tool.keyCode = 33
-tool.about = "Braille tool allows you to draw pixels with Braille symbols on your image. Select preferred mini-pixels via menu above, configure transparency affecting and \"Let's go fellas!\""
+tool.shortcut = "Fl"
+tool.keyCode = 34
+tool.about = "Fill tool allows you to automatically fill areas with selected primary color just like in Paint. Oh God, where is my RAM...?"
 
-local layout = GUI.layout(1, 1, 1, 8, 1, 1)
-local container, char, step = layout:addChild(GUI.container(1, 1, 8, 8)), " ", false
-for y = 1, 8, 2 do
-	for x = 1, 8, 4 do
-		local button = container:addChild(GUI.button(x, y, 4, 2, step and 0xFFFFFF or 0xD2D2D2, 0x0, step and 0x0 or 0x1E1E1E, 0x0, " "))
-		button.switchMode = true
-		button.onTouch = function()
-			local data = {}
-			for i = 1, #container.children do
-				data[i] = container.children[i].pressed and 1 or 0
-			end
 
-			char = string.brailleChar(table.unpack(data))
+local function check(x, y, picture, sourceB, sourceF, sourceA, sourceS, newB, newF, newA, newS)
+	if x >= 1 and x <= picture[1] and y >= 1 and y <= picture[2] then
+		local currentB, currentF, currentA, currentS = image.get(picture, x, y)
+		if
+			currentB == sourceB
+			and
+			currentB ~= newB
+		then
+			image.set(picture, x, y, newB, newF, newA, newS)
+			return true
 		end
-
-		step = not step
 	end
-
-	step = not step
 end
 
-local backgroundSwitch = GUI.switchAndLabel(1, 1, 1, 6, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x878787, "Draw background:", false)
-
-tool.onSelection = function(mainContainer)
-	mainContainer.currentToolLayout:addChild(layout)
-	mainContainer.currentToolLayout:addChild(backgroundSwitch)
+local function pizda(x, y, picture, sourceB, sourceF, sourceA, sourceS, newB, newF, newA, newS)
+	if check(x, y - 1, picture, sourceB, sourceF, sourceA, sourceS, newB, newF, newA, newS) then pizda(x, y - 1, picture, sourceB, sourceF, sourceA, sourceS, newB, newF, newA, newS) end
+	if check(x + 1, y, picture, sourceB, sourceF, sourceA, sourceS, newB, newF, newA, newS) then pizda(x + 1, y, picture, sourceB, sourceF, sourceA, sourceS, newB, newF, newA, newS) end
+	if check(x, y + 1, picture, sourceB, sourceF, sourceA, sourceS, newB, newF, newA, newS) then pizda(x, y + 1, picture, sourceB, sourceF, sourceA, sourceS, newB, newF, newA, newS) end
+	if check(x - 1, y, picture, sourceB, sourceF, sourceA, sourceS, newB, newF, newA, newS) then pizda(x - 1, y, picture, sourceB, sourceF, sourceA, sourceS, newB, newF, newA, newS) end
 end
 
 tool.eventHandler = function(mainContainer, object, eventData)
-	if eventData[1] == "touch" or eventData[1] == "drag" then
+	if eventData[1] == "touch" then
 		local x, y = eventData[3] - mainContainer.image.x + 1, eventData[4] - mainContainer.image.y + 1
-		local background, foreground, alpha, symbol = image.get(mainContainer.image.data, x, y)
+		local sourceB, sourceF, sourceA, sourceS = image.get(mainContainer.image.data, x, y)
+		pizda(x, y, mainContainer.image.data, sourceB, sourceF, sourceA, sourceS, mainContainer.primaryColorSelector.color, 0x0, 0, " ")
 		
-		image.set(mainContainer.image.data, x, y,
-			backgroundSwitch.switch.state and mainContainer.secondaryColorSelector.color or background,
-			mainContainer.primaryColorSelector.color,
-			alpha,
-			char
-		)
-
 		mainContainer:drawOnScreen()
 	end
 end

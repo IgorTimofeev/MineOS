@@ -492,7 +492,7 @@ mainContainer.image:moveToBack()
 mainContainer.backgroundPanel:moveToBack()
 
 updateRecentColorsButtons()
-pressToolButton(mainContainer.toolsLayout.children[4])
+pressToolButton(mainContainer.toolsLayout.children[5])
 
 if options.o or options.open and args[1] and fs.exists(args[1]) then
 	loadImage(args[1])
