@@ -469,6 +469,7 @@ mainContainer.menu:addItem("Hotkeys").onTouch = function()
 		" ",
 		"M - selection tool",
 		"V - move tool",
+		"C - resizer tool",
 		"Alt - picker tool",
 		"B - brush tool",
 		"E - eraser tool",
