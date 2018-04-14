@@ -754,6 +754,7 @@ local function createOSWidgets()
 					MineOSCore.OSUpdateDate()
 
 					MineOSInterface.mainContainer.updateFileListAndDraw()
+					MineOSCore.saveProperties()
 				end
 
 				if name == MineOSCore.properties.language then

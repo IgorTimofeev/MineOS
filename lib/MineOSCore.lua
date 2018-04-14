@@ -1,6 +1,5 @@
 
 require("advancedLua")
-local web = require("web")
 local component = require("component")
 local buffer = require("doubleBuffering")
 local fs = require("filesystem")
