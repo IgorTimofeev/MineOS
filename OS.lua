@@ -19,9 +19,6 @@ copyright = nil
 
 ---------------------------------------- Либсы-хуибсы ----------------------------------------
 
--- package.loaded.MineOSInterface = nil
--- package.loaded.MineOSCore = nil
-
 local computer = require("computer")
 local component = require("component")
 local unicode = require("unicode")
@@ -638,6 +635,60 @@ local function createOSWidgets()
 	item3.onTouch = function()
 		local menu = MineOSInterface.contextMenu(item3.x, item3.y + 1)
 
+		if computer.getArchitectures then
+			menu:addItem(MineOSCore.localization.CPUArchitecture).onTouch = function()
+				local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer, MineOSCore.localization.CPUArchitecture)
+				
+				local comboBox = container.layout:addChild(GUI.comboBox(1, 1, 36, 3, 0xE1E1E1, 0x2D2D2D, 0x4B4B4B, 0x969696))
+				local architectures = computer.getArchitectures()
+				for i = 1, #architectures do
+					comboBox:addItem(architectures[i]).onTouch = function()
+						computer.setArchitecture(architectures[i])
+						computer.shutdown(true)
+					end
+				end
+
+				MineOSInterface.mainContainer:drawOnScreen()
+			end
+		end
+
+		menu:addItem(MineOSCore.localization.RAMControl).onTouch = function()
+			local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer, MineOSCore.localization.RAMControl)
+
+			local comboBox = container.layout:addChild(GUI.comboBox(1, 1, 36, 3, 0xE1E1E1, 0x2D2D2D, 0x4B4B4B, 0x969696))
+			comboBox.dropDownMenu.itemHeight = 1
+
+			local function update()
+				local libraries = {}
+				for key in pairs(package.loaded) do
+					if not _G[key] then
+						table.insert(libraries, key)
+					end
+				end
+				
+				table.sort(libraries, function(a, b) return a < b end)
+
+				comboBox:clear()
+				for i = 1, #libraries do
+					comboBox:addItem(libraries[i]).onTouch = function()
+						package.loaded[libraries[i]] = nil
+						update()
+					end
+				end
+
+				MineOSInterface.mainContainer:drawOnScreen()
+			end
+
+			local switch = container.layout:addChild(GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x878787, MineOSCore.localization.packageUnloading .. ":", MineOSCore.properties.packageUnloading)).switch
+			switch.onStateChanged = function()
+				MineOSCore.properties.packageUnloading = switch.state
+				MineOSCore.setPackageUnloading(MineOSCore.properties.packageUnloading)
+				MineOSCore.saveProperties()
+			end
+
+			update()
+		end
+
 		menu:addItem(MineOSCore.localization.screenResolution).onTouch = function()
 			local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer, MineOSCore.localization.screenResolution)
 
@@ -665,19 +716,26 @@ local function createOSWidgets()
 			end
 		end
 
-		if computer.getArchitectures then
-			menu:addItem(MineOSCore.localization.architecture).onTouch = function()
-				local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer, MineOSCore.localization.architecture)
-				local comboBox = container.layout:addChild(GUI.comboBox(1, 1, 36, 3, 0xE1E1E1, 0x2D2D2D, 0x4B4B4B, 0x969696))
-				
-				local architectures = computer.getArchitectures()
-				for i = 1, #architectures do
-					comboBox:addItem(architectures[i]).onTouch = function()
-						computer.setArchitecture(architectures[i])
-						computer.shutdown(true)
-					end
+		menu:addSeparator()
+
+		menu:addItem(MineOSCore.localization.timezone).onTouch = function()
+			local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer, MineOSCore.localization.timezone)
+			
+			local comboBox = container.layout:addChild(GUI.comboBox(1, 1, 36, 3, 0xE1E1E1, 0x2D2D2D, 0x4B4B4B, 0x969696))
+			comboBox.dropDownMenu.itemHeight = 1
+
+			for i = -12, 12 do
+				comboBox:addItem("GMT" .. (i >= 0 and "+" or "") .. i).onTouch = function()
+					MineOSCore.properties.timezone = i
+					MineOSCore.saveProperties()
+
+					MineOSCore.OSUpdateTimezone(i)
+					MineOSCore.OSUpdateDate()
+					MineOSInterface.mainContainer:drawOnScreen()
 				end
 			end
+			
+			MineOSInterface.mainContainer:drawOnScreen()
 		end
 
 		menu:addItem(MineOSCore.localization.systemLanguage).onTouch = function()
@@ -694,6 +752,7 @@ local function createOSWidgets()
 					changeResolution()
 					changeWallpaper()
 					MineOSCore.OSUpdateDate()
+
 					MineOSInterface.mainContainer.updateFileListAndDraw()
 				end
 
@@ -702,8 +761,6 @@ local function createOSWidgets()
 				end
 			end
 		end
-
-		menu:addSeparator()
 
 		menu:addItem(MineOSCore.localization.wallpaper).onTouch = function()
 			local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer, MineOSCore.localization.wallpaper)
@@ -753,6 +810,7 @@ local function createOSWidgets()
 				MineOSInterface.mainContainer:drawOnScreen()
 			end
 		end
+
 		menu:addItem(MineOSCore.localization.screensaver).onTouch = function()
 			local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer, MineOSCore.localization.screensaver)
 
@@ -946,43 +1004,6 @@ local function createOSWidgets()
 
 		local totalMemory = computer.totalMemory()
 		RAMPercent = (totalMemory - computer.freeMemory()) / totalMemory
-	end
-
-	dateWidget.onTouch = function()
-		local menu = MineOSInterface.contextMenu(dateWidget.x - 1, dateWidget.y + 1)
-		for i = -12, 12 do
-			menu:addItem("GMT" .. (i >= 0 and "+" or "") .. i).onTouch = function()
-				MineOSCore.properties.timezone = i
-				MineOSCore.saveProperties()
-
-				MineOSCore.OSUpdateTimezone(i)
-				MineOSCore.OSUpdateDate()
-				MineOSInterface.mainContainer:drawOnScreen()
-			end
-		end
-		menu:show()
-	end
-
-	RAMWidget.onTouch = function()
-		local menu = MineOSInterface.contextMenu(RAMWidget.x - 1, RAMWidget.y + 1)
-		menu:addItem(MineOSCore.localization.unloadPackage, true)
-		menu:addSeparator()
-
-		local libraries = {}
-		for key in pairs(package.loaded) do
-			if not _G[key] then
-				table.insert(libraries, key)
-			end
-		end
-		table.sort(libraries, function(a, b) return a < b end)
-
-		for i = 1, #libraries do
-			menu:addItem(libraries[i]).onTouch = function()
-				package.loaded[libraries[i]] = nil
-			end
-		end
-
-		menu:show()
 	end
 
 	MineOSInterface.mainContainer.updateFileListAndDraw = function(...)

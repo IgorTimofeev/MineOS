@@ -1,6 +1,7 @@
 {
-	architecture = "CPU architecture",
-	unloadPackage = "Unload package",
+	CPUArchitecture = "CPU architecture",
+	RAMControl = "RAM control",
+	packageUnloading = "Automatic unloading",
 	networkFTPNewConnection = "FTP-connection",
 	networkFTPConnections = "FTP-connections",
 	networkFTPAddress = "Server address",

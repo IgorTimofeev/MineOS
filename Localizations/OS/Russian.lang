@@ -1,6 +1,7 @@
 {
-	architecture = "Архитектура ЦП",
-	unloadPackage = "Выгрузить библиотеку",
+	CPUArchitecture = "Архитектура ЦП",
+	RAMControl = "Управление памятью",
+	packageUnloading = "Автоматическая выгрузка",
 	networkFTPNewConnection = "FTP-подключение",
 	networkFTPConnections = "FTP-подключения",
 	networkFTPAddress = "Адрес сервера",
@@ -165,7 +166,7 @@
 		Nov = "Ноября",
 		Dec = "Декабря",
 	},
-	timezone = "Временная зона",
+	timezone = "Часовой пояс",
 
 	errorWhileRunningProgram = "Ошибка при выполнении ",
 	sendedFeedback = "Отчет отправлен",

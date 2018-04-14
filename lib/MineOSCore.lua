@@ -84,6 +84,7 @@ function MineOSCore.loadPropeties()
 	end
 
 	local defaultValues = {
+		packageUnloading = true,
 		transparencyEnabled = true,
 		showApplicationIcons = true,
 		iconHorizontalSpaceBetween = 1,
@@ -269,11 +270,34 @@ function MineOSCore.safeLaunch(path, ...)
 	return finalSuccess, finalPath, finalLine, finalTraceback
 end
 
+function MineOSCore.setPackageUnloading(value)
+	local metatable = getmetatable(package.loaded)
+
+	if value then
+		if metatable then
+			metatable.__mode = "v"
+		else
+			setmetatable(package.loaded, {__mode = "v"})
+		end
+	else
+		if metatable then
+			metatable.__mode = nil
+
+			for key in pairs(metatable) do
+				return
+			end
+			
+			setmetatable(package.loaded, nil)
+		end
+	end
+end
+
 -----------------------------------------------------------------------------------------------------------------------------------
 
 fs.remove(MineOSPaths.temporary)
 fs.makeDirectory(MineOSPaths.temporary)
 MineOSCore.loadPropeties()
+MineOSCore.setPackageUnloading(MineOSCore.properties.packageUnloading)
 
 -----------------------------------------------------------------------------------------------------------------------------------
 
