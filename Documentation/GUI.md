@@ -23,6 +23,7 @@
 | [    GUI.switch](#guiswitch-x-y-width-primarycolor-secondarycolor-pipecolor-state--table-switch) |
 | [    GUI.switchAndLabel](#guiswitchandlabel-x-y-width-switchwidth-primarycolor-secondarycolor-pipecolor-textcolor-text-switchstate--table-switchandlabel) |
 | [    GUI.colorSelector](#guicolorselector-x-y-width-height-color-text--table-colorselector) |
+| [    GUI.list](#x-y-width-height-itemsize-spacing-backgroundcolor-textcolor-alternatebackgroundcolor-alternatetextcolor-backgroundselectedcolor-textselectedcolor-multipleselection-offsetmode--table-list) |
 | [    GUI.comboBox](#guicombobox-x-y-width-elementheight-backgroundcolor-textcolor-arrowbackgroundcolor-arrowtextcolor--table-combobox) |
 | [    GUI.tabBar](#guitabbar-x-y-width-height-horizontaltextoffset-spacebetweentabs-backgroundcolor-textcolor-backgroundselectedcolor-textselectedcolor--table-tabbar) |
 | [    GUI.menu](#guimenu-x-y-width-backgroundcolor-textcolor-backgroundpressedcolor-textpressedcolor-backgroundtransparency--table-menu) |
@@ -34,7 +35,7 @@
 | [    GUI.chart](#guichart-x-y-width-height-axiscolor-axisvaluecolor-axishelperscolor-chartcolor-xaxisvalueinterval-yaxisvalueinterval-xaxispostfix-yaxispostfix-fillchartarea-values--table-chart) |
 | [    GUI.brailleCanvas](#guibraillecanvas-x-y-width-height--table-braillecanvas) |
 | [    GUI.scrollBar](#guiscrollbar-x-y-width-height-backgroundcolor-foregroundcolor-minimumvalue-maximumvalue-value-shownvaluecount-onscrollvalueincrement-thinhorizontalmode--table-scrollbar) |
-| [    GUI.textBox](#guitextboxx-y-width-height-backgroundcolor-textcolor-lines-currentline-horizontaloffset-verticaloffset-table-textbox) |
+| [    GUI.textBox](#guitextbox-x-y-width-height-backgroundcolor-textcolor-lines-currentline-horizontaloffset-verticaloffset-autowrap-autoheight-table-textbox) |
 | [Практические примеры](#Практические-примеры) |
 | [    Пример #1: Окно авторизации](#Пример-1-Окно-авторизации) |
 | [    Пример #2: Создание собственного виджета](#Пример-2-Создание-собственного-виджета) |
