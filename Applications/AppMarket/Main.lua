@@ -688,11 +688,8 @@ mainMenu = function(menuID, messageToUser)
 
 	contentContainer:deleteChildren()
 
-	local menuPanel = contentContainer:addChild(GUI.panel(1, 1, 22, contentContainer.height, 0xE1E1E1))
-	local menuLayout = contentContainer:addChild(GUI.layout(1, 1, menuPanel.width, contentContainer.height, 1, 1))
-	menuLayout:setCellAlignment(1, 1, GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
-	menuLayout:setCellSpacing(1, 1, 0)
-	local menuContentContainer = contentContainer:addChild(GUI.container(menuPanel.width + 1, 1, contentContainer.width - menuPanel.width, contentContainer.height))
+	local menuList = contentContainer:addChild(GUI.list(1, 1, 23, contentContainer.height, 3, 0, 0xE1E1E1, 0x4B4B4B, 0xD2D2D2, 0x4B4B4B, 0x4B4B4B, 0xE1E1E1))
+	local menuContentContainer = contentContainer:addChild(GUI.container(menuList.width + 1, 1, contentContainer.width - menuList.width, contentContainer.height))
 
 	local function statistics()
 		activity(true)
@@ -1190,58 +1187,30 @@ mainMenu = function(menuID, messageToUser)
 		end
 	end
 
-	local buttons = {}
-
-	table.insert(buttons, {
-		text = localization.statistics,
-		onTouch = statistics
-	})
+	menuList:addItem(localization.statistics).onTouch = function()
+		statistics()
+	end
 
 	if user.token then
-		table.insert(buttons, {
-			text = localization.messages,
-			onTouch = function()
-				if messageToUser then
-					dialogGUI(messageToUser)
-					messageToUser = nil
-				else
-					dialogs()
-				end
-			end
-		})
-	end
-
-	table.insert(buttons, {
-		text = localization.account,
-		onTouch = account
-	})
-
-	table.insert(buttons, {
-		text = localization.settings,
-		onTouch = settings
-	})
-
-	local step = false
-	for i = 1, #buttons do
-		local button = menuLayout:addChild(GUI.button(1, 1, menuPanel.width, 3, step and 0xD2D2D2 or 0xE1E1E1, 0x4B4B4B, 0x4B4B4B, 0xE1E1E1, buttons[i].text))
-		button.animated = false
-		button.switchMode = true
-		button.eventHandler = function(mainContainer, object, eventData)
-			if eventData[1] == "touch" then
-				for j = 1, #menuLayout.children do
-					menuLayout.children[j].pressed = j == i
-				end
-
-				MineOSInterface.mainContainer:drawOnScreen()
-				buttons[i].onTouch()
+		menuList:addItem(localization.messages).onTouch = function()
+			if messageToUser then
+				dialogGUI(messageToUser)
+				messageToUser = nil
+			else
+				dialogs()
 			end
 		end
-
-		step = not step
 	end
 
-	menuLayout.children[lastArguments[1]].pressed = true
-	buttons[lastArguments[1]].onTouch()
+	menuList:addItem(localization.account).onTouch = function()
+		account()
+	end
+
+	menuList:addItem(localization.settings).onTouch = function()
+		settings()
+	end
+	
+	menuList:getItem(1).onTouch()
 end
 
 newPublicationInfo = function(file_id)

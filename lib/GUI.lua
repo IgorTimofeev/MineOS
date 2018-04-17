@@ -42,7 +42,7 @@ GUI.sizePolicies = enum(
 	"absolute"
 )
 
-GUI.dropDownMenuElementTypes = enum(
+GUI.dropDownMenuItemTypes = enum(
 	"default",
 	"separator"
 )
@@ -1245,7 +1245,7 @@ end
 local function dropDownMenuItemDraw(item)
 	local yText = item.y + math.floor(item.height / 2)
 
-	if item.type == GUI.dropDownMenuElementTypes.default then
+	if item.type == GUI.dropDownMenuItemTypes.default then
 		local textColor = item.color or item.parent.parent.colors.default.text
 
 		if item.pressed then
@@ -1268,7 +1268,7 @@ end
 
 local function dropDownMenuItemEventHandler(mainContainer, object, eventData)
 	if eventData[1] == "touch" then
-		if object.type == GUI.dropDownMenuElementTypes.default then
+		if object.type == GUI.dropDownMenuItemTypes.default then
 			object.pressed = true
 			mainContainer:drawOnScreen()
 
@@ -1303,7 +1303,7 @@ local function dropDownMenuCalculateSizes(menu)
 			menu.itemsContainer.children[i].localY = y
 			
 			y = y + menu.itemsContainer.children[i].height
-			totalHeight = totalHeight + (menu.itemsContainer.children[i].type == GUI.dropDownMenuElementTypes.separator and 1 or menu.itemHeight)
+			totalHeight = totalHeight + (menu.itemsContainer.children[i].type == GUI.dropDownMenuItemTypes.separator and 1 or menu.itemHeight)
 		end
 		menu.height = math.min(totalHeight, menu.maximumHeight, buffer.getHeight() - menu.y)
 		menu.itemsContainer.width, menu.itemsContainer.height = menu.width, menu.height
@@ -1324,7 +1324,7 @@ end
 local function dropDownMenuAddItem(menu, text, disabled, shortcut, color)
 	local item = menu.itemsContainer:addChild(GUI.object(1, 1, 1, menu.itemHeight))
 	
-	item.type = GUI.dropDownMenuElementTypes.default
+	item.type = GUI.dropDownMenuItemTypes.default
 	item.text = text
 	item.disabled = disabled
 	item.shortcut = shortcut
@@ -1339,7 +1339,7 @@ end
 
 local function dropDownMenuAddSeparator(menu)
 	local item = dropDownMenuAddItem(menu)
-	item.type = GUI.dropDownMenuElementTypes.separator
+	item.type = GUI.dropDownMenuItemTypes.separator
 	item.height = 1
 
 	return item
@@ -1467,7 +1467,7 @@ end
 local function contextMenuCalculate(menu)
 	local widestItem, widestShortcut = 0, 0
 	for i = 1, #menu.itemsContainer.children do
-		if menu.itemsContainer.children[i].type == GUI.dropDownMenuElementTypes.default then
+		if menu.itemsContainer.children[i].type == GUI.dropDownMenuItemTypes.default then
 			widestItem = math.max(widestItem, unicode.len(menu.itemsContainer.children[i].text))
 			if menu.itemsContainer.children[i].shortcut then
 				widestShortcut = math.max(widestShortcut, unicode.len(menu.itemsContainer.children[i].shortcut))
@@ -1571,7 +1571,7 @@ local function comboBoxIndexOfItem(object, text)
 	end
 end
 
-local function selectComboBoxItem(object)
+local function comboBoxSelect(object)
 	object.pressed = true
 	object:draw()
 
@@ -1589,7 +1589,7 @@ end
 
 local function comboBoxEventHandler(mainContainer, object, eventData)
 	if eventData[1] == "touch" and #object.dropDownMenu.itemsContainer.children > 0 then
-		object:selectItem()
+		object:select()
 		callMethod(object.onItemSelected, object.dropDownMenu.itemsContainer.children[object.selectedItem], eventData)
 	end
 end
@@ -1602,8 +1602,8 @@ local function comboBoxAddSeparator(object)
 	return object.dropDownMenu:addSeparator()
 end
 
-function GUI.comboBox(x, y, width, elementHeight, backgroundColor, textColor, arrowBackgroundColor, arrowTextColor)
-	local object = GUI.object(x, y, width, elementHeight)
+function GUI.comboBox(x, y, width, itemSize, backgroundColor, textColor, arrowBackgroundColor, arrowTextColor)
+	local object = GUI.object(x, y, width, itemSize)
 	
 	object.eventHandler = comboBoxEventHandler
 	object.colors = {
@@ -1621,7 +1621,7 @@ function GUI.comboBox(x, y, width, elementHeight, backgroundColor, textColor, ar
 		}
 	}
 
-	object.dropDownMenu = GUI.dropDownMenu(1, 1, 1, math.ceil(buffer.getHeight() * 0.5), elementHeight,
+	object.dropDownMenu = GUI.dropDownMenu(1, 1, 1, math.ceil(buffer.getHeight() * 0.5), itemSize,
 		object.colors.default.background, 
 		object.colors.default.text, 
 		object.colors.pressed.background,
@@ -1636,7 +1636,7 @@ function GUI.comboBox(x, y, width, elementHeight, backgroundColor, textColor, ar
 	object.removeItem = comboBoxRemoveItem
 	object.addSeparator = comboBoxAddSeparator
 	object.draw = drawComboBox
-	object.selectItem = selectComboBoxItem
+	object.select = selectComboBox
 	object.clear = comboBoxClear
 	object.indexOfItem = comboBoxIndexOfItem
 	object.getItem = comboBoxGetItem
@@ -3514,87 +3514,6 @@ end
 
 -----------------------------------------------------------------------
 
-local function tabBarDraw(tabBar)
-	local totalWidth = 0
-	for i = 2, #tabBar.children do
-		totalWidth = totalWidth + tabBar.children[i].width + tabBar.spaceBetweenTabs
-	end
-
-	local x = math.floor(tabBar.width / 2 - (totalWidth - tabBar.spaceBetweenTabs) / 2)
-	for i = 2, #tabBar.children do
-		tabBar.children[i].colors.default.background = tabBar.colors.default.background
-		tabBar.children[i].colors.default.text = tabBar.colors.default.text
-		tabBar.children[i].colors.pressed.background = tabBar.colors.selected.background
-		tabBar.children[i].colors.pressed.text = tabBar.colors.selected.text
-		tabBar.children[i].localX = x
-		tabBar.children[i].pressed = tabBar.selectedItem == i - 1
-
-		x = x + tabBar.children[i].width + tabBar.spaceBetweenTabs
-	end
-
-	tabBar.backgroundPanel.colors.background = tabBar.colors.default.background
-	tabBar.backgroundPanel.width, tabBar.backgroundPanel.height = tabBar.width, tabBar.height
-
-	GUI.drawContainerContent(tabBar)
-
-	return tabBar
-end
-
-local function tabBarTabEventHandler(mainContainer, tabBarTab, eventData)
-	if eventData[1] == "touch" then
-		tabBarTab.parent.selectedItem = tabBarTab:indexOf() - 1
-
-		callMethod(tabBarTab.onTouch, mainContainer, tabBarTab, eventData)
-		
-		mainContainer:drawOnScreen()
-	end
-end
-
-local function tabBarAddItem(tabBar, text)
-	local item = tabBar:addChild(GUI.button(1, 1, unicode.len(text) + tabBar.horizontalTabOffset * 2, tabBar.height, tabBar.colors.default.background, tabBar.colors.default.text, tabBar.colors.selected.background, tabBar.colors.selected.text, text))
-	item.animated = false
-	item.switchMode = true
-	item.eventHandler = tabBarTabEventHandler
-
-	if #tabBar.children - 1 == tabBar.selectedItem then
-		item.pressed = true
-	end
-
-	return item
-end
-
-local function tabBarGetItem(tabBar, index)
-	return tabBar.children[index + 1]
-end
-
-function GUI.tabBar(x, y, width, height, horizontalTabOffset, spaceBetweenTabs, backgroundColor, textColor, backgroundSelectedColor, textSelectedColor, ...)
-	local tabBar = GUI.container(x, y, width, height)
-
-	tabBar.colors = {
-		default = {
-			background = backgroundColor,
-			text = textColor
-		},
-		selected = {
-			background = backgroundSelectedColor,
-			text = textSelectedColor
-		}
-	}
-
-	tabBar.horizontalTabOffset = horizontalTabOffset
-	tabBar.spaceBetweenTabs = spaceBetweenTabs
-	tabBar.selectedItem = 1
-	tabBar.backgroundPanel = tabBar:addChild(GUI.panel(1, 1, 1, 1, backgroundColor))
-
-	tabBar.addItem = tabBarAddItem
-	tabBar.getItem = tabBarGetItem
-	tabBar.draw = tabBarDraw
-
-	return tabBar
-end
-
------------------------------------------------------------------------
-
 local function paletteShow(palette)
 	local mainContainer = GUI.fullScreenContainer()
 	mainContainer:addChild(palette)
@@ -3968,6 +3887,165 @@ function GUI.addPaletteWindowToContainer(parentContainer)
 	palette.localX, palette.localY = math.floor(parentContainer.width / 2 - palette.width / 2), math.floor(parentContainer.height / 2 - palette.height / 2)
 
 	return palette
+end
+
+-----------------------------------------------------------------------
+
+local function listUpdate(object)
+	local step = false
+	for i = 1, #object.children do
+		-- Цвет залупы
+		if step then
+			object.children[i].colors.default = object.colors.alternating
+		else
+			object.children[i].colors.default = object.colors.default
+		end
+		object.children[i].colors.pressed, step = object.colors.pressed, not step
+		
+		-- Размеры хуйни
+		if object.cells[1][1].direction == GUI.directions.horizontal then
+			if object.offsetMode then
+				object.children[i].width, object.children[i].height = object.itemSize * 2 + unicode.len(object.children[i].text), object.height
+			else
+				object.children[i].width, object.children[i].height = object.itemSize, object.height
+			end
+		else
+			if object.offsetMode then
+				object.children[i].width, object.children[i].height = object.width, object.itemSize * 2 + 1
+			else
+				object.children[i].width, object.children[i].height = object.width, object.itemSize
+			end
+		end
+	end
+
+	return list
+end
+
+local function listDraw(object)
+	buffer.square(object.x, object.y, object.width, object.height, object.colors.default.background, object.colors.default.text, " ")
+	layoutDraw(object)
+
+	return object
+end
+
+local function listSelect(object, index)
+	for i = 1, #object.children do
+		object.children[i].pressed = false
+	end
+	object.children[index].pressed = true
+
+	return object
+end
+
+local function listGetSelectedIndex(object)
+	for i = 1, #object.children do
+		if object.children[i].pressed then
+			return i
+		end
+	end
+end
+
+local function listGetSelectedItem(object)
+	return object.children[object:getSelectedIndex()]
+end
+
+local function listItemEventHandler(mainContainer, object, eventData)
+	if eventData[1] == "touch" or eventData[1] == "drag" then
+		if object.parent.multipleSelection then
+			object.pressed = not object.pressed
+		else
+			object.parent:select(object:indexOf())
+		end
+
+		mainContainer:drawOnScreen()
+		callMethod(object.onTouch, mainContainer, object, eventData)
+	end
+end
+
+local function listAddItem(object, text)
+	local item = object:addChild(GUI.button(1, 1, 1, 1, 0, 0, 0, 0, text))
+	
+	if #object.children == 1 then
+		item.pressed = true
+	end
+	item.switchMode = true
+	item.animated = false
+	item.eventHandler = listItemEventHandler
+
+	object:update()
+
+	return item
+end
+
+local function listSetAlignment(object, ...)
+	object:setCellAlignment(1, 1, ...)
+	return object
+end
+
+local function listSetSpacing(object, ...)
+	object:setCellSpacing(1, 1, ...)
+	return object
+end
+
+local function listSetDirection(object, ...)
+	object:setCellDirection(1, 1, ...)
+	object:update()
+
+	return object
+end
+
+local function listGetItem(object, index)
+	return object.children[index]
+end
+
+function GUI.list(x, y, width, height, itemSize, spacing, backgroundColor, textColor, backgroundAlternatingColor, textAlternatingColor, backgroundSelectedColor, textSelectedColor, multipleSelection, offsetMode)
+	local object = GUI.layout(x, y, width, height, 1, 1)
+
+	object.multipleSelection = multipleSelection
+	object.colors = {
+		default = {
+			background = backgroundColor,
+			text = textColor
+		},
+		alternating = {
+			background = backgroundAlternatingColor,
+			text = textAlternatingColor
+		},
+		pressed = {
+			background = backgroundSelectedColor,
+			text = textSelectedColor
+		},
+	}
+
+	object.getSelectedIndex = listGetSelectedIndex
+	object.getSelectedItem = listGetSelectedItem
+	object.select = listSelect
+	object.offsetMode = offsetMode
+	object.itemSize = itemSize
+	object.update = listUpdate
+	object.addItem = listAddItem
+	object.getItem = listGetItem
+	object.setAlignment = listSetAlignment
+	object.setSpacing = listSetSpacing
+	object.setDirection = listSetDirection
+	object.draw = listDraw
+
+	object:setAlignment(GUI.alignment.horizontal.left, GUI.alignment.vertical.top)
+	object:setSpacing(spacing)
+	object:setDirection(GUI.directions.vertical)
+
+	return object
+end
+
+-----------------------------------------------------------------------
+
+function GUI.tabBar(x, y, width, height, offset, spacing, backgroundColor, textColor, backgroundSelectedColor, textSelectedColor)
+	local object = GUI.list(x, y, width, height, offset, spacing, backgroundColor, textColor, backgroundColor, textColor, backgroundSelectedColor, textSelectedColor, false, true)
+	
+	object:setDirection(GUI.directions.horizontal)
+	object:setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+
+	return object
 end
 
 -----------------------------------------------------------------------

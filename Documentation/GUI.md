@@ -940,6 +940,62 @@ mainContainer:startEventHandling()
 
 ![Imgur](http://i.imgur.com/QVxu2N0.gif)
 
+GUI.**list**( x, y, width, height, itemSize, spacing, backgroundColor, textColor, alternateBackgroundColor, alternateTextColor, backgroundSelectedColor, textSelectedColor [, multipleSelection, offsetMode] ): *table* list
+------------------------------------------------------------------------
+| Тип | Аргумент | Описание |
+| ------ | ------ | ------ |
+| *int* | x | Координата объекта по оси x |
+| *int* | y | Координата объекта по оси y |
+| *int* | width | Ширина объекта |
+| *int* | width | Высота объекта |
+| *int* | itemSize | Размер элемента по выбранной оси |
+| *int* | spacing | Расстояние между элементами |
+| *int* | backgroundColor | Цвет фона  |
+| *int* | textColor | Цвет текста |
+| *int* | alternateBackgroundColor | Промежуточный цвет фона  |
+| *int* | alternateTextColor | Промежуточный цвет текста |
+| *int* | backgroundSelectedColor | Цвет фона при выделении  |
+| *int* | textSelectedColor | Цвет текста при выделении |
+
+Объект **List** предназначен для выбора элементов из списка. Внешне он напоминает одноколонную таблицу Excel с возможностью изменения ориентации. List универсален и используется в качестве исходника для множества других виджетов.
+
+| Тип свойства | Свойство |Описание |
+| ------ | ------ | ------ |
+| *function* | :**addItem**(*string* text): *table* item| Добавить в List новый текстовый элемент. При необходимости ему можно назначить callback-функцию .**onTouch**() |
+| *function* | :**getItem**(*int* index): *table* item| Получить элемент по его индексу |
+| *function* | :**setAlignment**(*enum* GUI.alignment.vertical, *enum* GUI.alignment.horizontal): *table* textBox| Установить вариант выравнивания элементов List. По умолчанию вырванивание идет по левому верхнему углу |
+| *function* | :**setDirection**(*enum* GUI.directions): *table* textBox| Установить направление элементов List. По умолчанию направление вертикальное |
+| *function* | :**setSpacing**(*int* spacing): *table* textBox| Установить расстояние между элементами List |
+
+
+Пример реализации комбо-бокса:
+
+```lua
+local GUI = require("GUI")
+
+------------------------------------------------------------------------------------------
+
+local mainContainer = GUI.fullScreenContainer()
+mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x2D2D2D))
+
+local list = mainContainer:addChild(GUI.list(3, 2, 25, 30, 3, 0, 0xE1E1E1, 0x4B4B4B, 0xD2D2D2, 0x4B4B4B, 0x3366CC, 0xFFFFFF, false, false))
+list:addItem("Пидор")
+list:addItem("Сосни").onTouch = function()
+	GUI.error("Ты соснул!")
+end
+list:addItem("Хуйца")
+list:addItem("Мяу")
+
+------------------------------------------------------------------------------------------
+
+mainContainer:drawOnScreen(true)
+mainContainer:startEventHandling()
+```
+
+Результат:
+
+![Imgur](https://i.imgur.com/lPuRhnN.gif)
+
 GUI.**comboBox**( x, y, width, elementHeight, backgroundColor, textColor, arrowBackgroundColor, arrowTextColor ): *table* comboBox
 ------------------------------------------------------------------------
 | Тип | Аргумент | Описание |
