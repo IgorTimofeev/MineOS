@@ -32,6 +32,7 @@ local function loadModules()
 			if pcallSuccess then
 				window.tabBar:addItem(reason.name).onTouch = function()
 					reason.onTouch()
+					MineOSInterface.mainContainer:drawOnScreen()
 				end
 			else
 				error("Failed to call loaded module \"" .. tostring(fileList[i]) .. "\": " .. tostring(reason))
@@ -49,7 +50,7 @@ window.onResize = function(width, height)
 	window.contentContainer.width = width
 	window.contentContainer.height = window.backgroundPanel.height
 
-	window.tabBar:getItem(window.tabBar.selectedItem).onTouch()
+	window.tabBar:getItem(window.tabBar:getSelectedIndex()).onTouch()
 end
 
 ----------------------------------------------------------------------------------------------------------------
