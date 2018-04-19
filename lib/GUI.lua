@@ -1636,7 +1636,7 @@ function GUI.comboBox(x, y, width, itemSize, backgroundColor, textColor, arrowBa
 	object.removeItem = comboBoxRemoveItem
 	object.addSeparator = comboBoxAddSeparator
 	object.draw = drawComboBox
-	object.select = selectComboBox
+	object.select = comboBoxSelect
 	object.clear = comboBoxClear
 	object.indexOfItem = comboBoxIndexOfItem
 	object.getItem = comboBoxGetItem
