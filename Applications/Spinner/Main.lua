@@ -8,7 +8,7 @@ local GUI = require("GUI")
 
 ------------------------------------------------------------------------------------------
 
-local spinnersPath = fs.path(getCurrentScript()) .. "/Resources/"
+local spinnersPath = fs.path(getCurrentScript())
 local spinners = {}
 local currentSpinner = 1
 local spinnerLimit = 8
