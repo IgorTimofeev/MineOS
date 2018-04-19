@@ -960,14 +960,14 @@ GUI.**list**( x, y, width, height, itemSize, spacing, backgroundColor, textColor
 
 Объект **List** предназначен для выбора элементов из списка. Внешне он напоминает одноколонную таблицу Excel с возможностью изменения ориентации. List универсален и используется в качестве исходника для множества других виджетов.
 
-| Тип свойства | Свойство |Описание |
+| Тип свойства | Свойство | Описание |
 | ------ | ------ | ------ |
 | *int* | .**selectedItem** | Индекс выбранного элемента List |
 | *function* | :**addItem**(*string* text): *table* item| Добавить в List новый текстовый элемент. При необходимости ему можно назначить callback-функцию .**onTouch**() |
 | *function* | :**getItem**(*int* index): *table* item| Получить элемент по его индексу |
-| *function* | :**setAlignment**(*enum* horizontalAlignment, *enum* verticalAlignment): *table* textBox| Установить вариант выравнивания элементов List. По умолчанию вырванивание идет по левому верхнему углу |
-| *function* | :**setDirection**(*enum* direction): *table* textBox| Установить направление элементов List. По умолчанию направление вертикальное |
-| *function* | :**setSpacing**(*int* spacing): *table* textBox| Установить расстояние между элементами List |
+| *function* | :**setAlignment**(*enum* horizontalAlignment, *enum* verticalAlignment): *table* list| Установить вариант выравнивания элементов List. По умолчанию вырванивание идет по левому верхнему углу |
+| *function* | :**setDirection**(*enum* direction): *table* list| Установить направление элементов List. По умолчанию направление вертикальное |
+| *function* | :**setSpacing**(*int* spacing): *table* list| Установить расстояние между элементами List |
 
 Пример реализации:
 
