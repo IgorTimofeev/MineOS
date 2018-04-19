@@ -23,9 +23,8 @@
 | [    GUI.switch](#guiswitch-x-y-width-primarycolor-secondarycolor-pipecolor-state--table-switch) |
 | [    GUI.switchAndLabel](#guiswitchandlabel-x-y-width-switchwidth-primarycolor-secondarycolor-pipecolor-textcolor-text-switchstate--table-switchandlabel) |
 | [    GUI.colorSelector](#guicolorselector-x-y-width-height-color-text--table-colorselector) |
-| [    GUI.list](#guilist-x-y-width-height-itemsize-spacing-backgroundcolor-textcolor-alternatebackgroundcolor-alternatetextcolor-backgroundselectedcolor-textselectedcolor--multipleselection-offsetmode--table-list) |
+| [    GUI.list](#guilist-x-y-width-height-itemsize-spacing-backgroundcolor-textcolor-alternatebackgroundcolor-alternatetextcolor-backgroundselectedcolor-textselectedcolor--offsetmode--table-list) |
 | [    GUI.comboBox](#guicombobox-x-y-width-elementheight-backgroundcolor-textcolor-arrowbackgroundcolor-arrowtextcolor--table-combobox) |
-| [    GUI.tabBar](#guitabbar-x-y-width-height-horizontaltextoffset-spacebetweentabs-backgroundcolor-textcolor-backgroundselectedcolor-textselectedcolor--table-tabbar) |
 | [    GUI.menu](#guimenu-x-y-width-backgroundcolor-textcolor-backgroundpressedcolor-textpressedcolor-backgroundtransparency--table-menu) |
 | [    GUI.resizer](#guiresizer-x-y-width-height-resizercolor-arrowcolor--table-resizer) |
 | [    GUI.progressBar](#guiprogressbar-x-y-width-primarycolor-secondarycolor-valuecolor-value-thin-showvalue-valueprefix-valuepostfix--table-progressbar) |
@@ -510,7 +509,7 @@ GUI.**label**( x, y, width, height, textColor, text ): *table* label
 
 | Тип свойства | Свойство |Описание |
 | ------ | ------ | ------ |
-| *function* | :**setAlignment**( *enum* GUI.alignment.vertical, *enum* GUI.alignment.horizontal ): *table* label| Выбрать вариант отображения текста относительно границ лейбла |
+| *function* | :**setAlignment**(*enum* horizontalAlignment, *enum* verticalAlignment): *table* label| Выбрать вариант отображения текста относительно границ лейбла |
 
 Пример реализации:
 ```lua
@@ -941,7 +940,7 @@ mainContainer:startEventHandling()
 
 ![Imgur](http://i.imgur.com/QVxu2N0.gif)
 
-GUI.**list**( x, y, width, height, itemSize, spacing, backgroundColor, textColor, alternateBackgroundColor, alternateTextColor, backgroundSelectedColor, textSelectedColor [, multipleSelection, offsetMode] ): *table* list
+GUI.**list**( x, y, width, height, itemSize, spacing, backgroundColor, textColor, alternateBackgroundColor, alternateTextColor, backgroundSelectedColor, textSelectedColor [, offsetMode] ): *table* list
 ------------------------------------------------------------------------
 | Тип | Аргумент | Описание |
 | ------ | ------ | ------ |
@@ -957,19 +956,20 @@ GUI.**list**( x, y, width, height, itemSize, spacing, backgroundColor, textColor
 | *int* | alternateTextColor | Промежуточный цвет текста |
 | *int* | backgroundSelectedColor | Цвет фона при выделении  |
 | *int* | textSelectedColor | Цвет текста при выделении |
+| *boolean* | offsetMode | Опциональный режим, при котором размеры элемента создаются на основании пиксельного отступа от текста элементов |
 
 Объект **List** предназначен для выбора элементов из списка. Внешне он напоминает одноколонную таблицу Excel с возможностью изменения ориентации. List универсален и используется в качестве исходника для множества других виджетов.
 
 | Тип свойства | Свойство |Описание |
 | ------ | ------ | ------ |
+| *int* | .**selectedItem** | Индекс выбранного элемента List |
 | *function* | :**addItem**(*string* text): *table* item| Добавить в List новый текстовый элемент. При необходимости ему можно назначить callback-функцию .**onTouch**() |
 | *function* | :**getItem**(*int* index): *table* item| Получить элемент по его индексу |
-| *function* | :**setAlignment**(*enum* GUI.alignment.vertical, *enum* GUI.alignment.horizontal): *table* textBox| Установить вариант выравнивания элементов List. По умолчанию вырванивание идет по левому верхнему углу |
-| *function* | :**setDirection**(*enum* GUI.directions): *table* textBox| Установить направление элементов List. По умолчанию направление вертикальное |
+| *function* | :**setAlignment**(*enum* horizontalAlignment, *enum* verticalAlignment): *table* textBox| Установить вариант выравнивания элементов List. По умолчанию вырванивание идет по левому верхнему углу |
+| *function* | :**setDirection**(*enum* direction): *table* textBox| Установить направление элементов List. По умолчанию направление вертикальное |
 | *function* | :**setSpacing**(*int* spacing): *table* textBox| Установить расстояние между элементами List |
 
-
-Пример реализации комбо-бокса:
+Пример реализации:
 
 ```lua
 local GUI = require("GUI")
@@ -979,13 +979,23 @@ local GUI = require("GUI")
 local mainContainer = GUI.fullScreenContainer()
 mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x2D2D2D))
 
-local list = mainContainer:addChild(GUI.list(3, 2, 25, 30, 3, 0, 0xE1E1E1, 0x4B4B4B, 0xD2D2D2, 0x4B4B4B, 0x3366CC, 0xFFFFFF, false, false))
-list:addItem("Пидор")
-list:addItem("Сосни").onTouch = function()
-	GUI.error("Ты соснул!")
+-- Создаем вертикально ориентированный список
+local verticalList = mainContainer:addChild(GUI.list(3, 2, 25, 30, 3, 0, 0xE1E1E1, 0x4B4B4B, 0xD2D2D2, 0x4B4B4B, 0x3366CC, 0xFFFFFF, false))
+verticalList:addItem("Hello world")
+verticalList:addItem("This is test").onTouch = function()
+	GUI.error("Selected item: " .. verticalList.selectedItem)
 end
-list:addItem("Хуйца")
-list:addItem("Мяу")
+verticalList:addItem("Beautiful")
+verticalList:addItem("Like a shit")
+
+-- Создаем горизонтально ориентированный список
+local horizontalList = mainContainer:addChild(GUI.list(34, 2, 100, 3, 2, 0, 0xE1E1E1, 0x4B4B4B, 0xE1E1E1, 0x4B4B4B, 0x696969, 0xFFFFFF, true))
+horizontalList:setDirection(GUI.directions.horizontal)
+horizontalList:setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+horizontalList:addItem("Applications")
+horizontalList:addItem("Libraries")
+horizontalList:addItem("Scripts")
+horizontalList:addItem("Wallpapers")
 
 ------------------------------------------------------------------------------------------
 
@@ -995,7 +1005,7 @@ mainContainer:startEventHandling()
 
 Результат:
 
-![Imgur](https://i.imgur.com/lPuRhnN.gif)
+![Imgur](https://i.imgur.com/lYzufn2.gif)
 
 GUI.**comboBox**( x, y, width, elementHeight, backgroundColor, textColor, arrowBackgroundColor, arrowTextColor ): *table* comboBox
 ------------------------------------------------------------------------
@@ -1014,7 +1024,7 @@ GUI.**comboBox**( x, y, width, elementHeight, backgroundColor, textColor, arrowB
 
 | Тип свойства | Свойство |Описание |
 | ------ | ------ | ------ |
-| *int* | .**currentItem** | Индекс выбранного элемента комбо-бокса |
+| *int* | .**selectedItem** | Индекс выбранного элемента ComboBox |
 | *function* | :**addItem**( *string* text, *boolean* disabled, *string* shortcut, *int* color ): *table* item| Добавить в комбо-бокс элемент с указанными параметрами. При параметре disabled элемент не будет реагировать на клики мышью. Каждый элемент может иметь собственный callback-метод .**onTouch** для последующей обработки данных |
 | *function* | :**addSeparator**()| Добавить визуальный в комбо-бокс разделитель |
 | *function* | :**removeItem**( *int*  index) | Удалить из комбо-бокса элемент под указанным индексом |
@@ -1050,70 +1060,6 @@ mainContainer:startEventHandling()
 Результат:
 
 ![Imgur](http://i.imgur.com/6ROzLAc.gif)
-
-GUI.**tabBar**( x, y, width, height, horizontalTextOffset, spaceBetweenTabs, backgroundColor, textColor, backgroundSelectedColor, textSelectedColor ): *table* tabBar
-------------------------------------------------------------------------
-| Тип | Аргумент | Описание |
-| ------ | ------ | ------ |
-| *int* | x | Координата объекта по оси x |
-| *int* | y | Координата объекта по оси y |
-| *int* | width | Ширина объекта |
-| *int* | width | Высота объекта |
-| *int* | horizontalTextOffset | Отступ в пикселях от текста каждой вкладки до ее границ |
-| *int* | spaceBetweenTabs | Расстояине менжду соседними вкладками |
-| *int* | backgroundColor | Цвет фона панели вкладок |
-| *int* | textColor | Цвет текста панели вкладок |
-| *int* | backgroundSelectedColor | Цвет фона выбранной вкладки |
-| *int* | textSelectedColor | Цвет текста выбранной вкладки  |
-
-Панель вкладок предназначена для быстрого переключения между различными состояниями объектов - к примеру, магазин AppMarket с его категориями приложений реализован именно на TabBar.
-
-Для изменения внешнего вида панели вкладок через код достаточно обратиться к таблице объекта .**colors**, имеющей следующую структуру:
-```lua
-tabBar.colors = {
-	default = {
-		background = 0x2D2D2D,
-		text = 0xE1E1E1
-	},
-	selected = {
-		background = 0xE1E1E1,
-		text = 0x2D2D2D
-	}
-}
-```
-
-| Тип свойства | Свойство |Описание |
-| ------ | ------ | ------ |
-| *function* | :**addItem**( *string* text ): *table* item | Добавить в панель вкладок элемент с указанными параметрами. Каждый элемент имеет собственный callback-метод .**onTouch** |
-| *function* | :**getItem**( *int* index )| Получить объект вкладки по указанному индексу |
-| *table* | .**colors** | Указатель на таблицу с текущей цветовой схемой объекта |
-
-Пример реализации:
-
-```lua
-local GUI = require("GUI")
-
-------------------------------------------------------------------------------------------
-
-local mainContainer = GUI.fullScreenContainer()
-mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x2D2D2D))
-
-local tabBar = mainContainer:addChild(GUI.tabBar(3, 2, 80, 3, 4, 0, 0xE1E1E1, 0x2D2D2D, 0xC3C3C3, 0x2D2D2D))
-tabBar:addItem("Вкладка 1")
-tabBar:addItem("Вкладка 2")
-tabBar:addItem("Вкладка 3").onTouch = function()
-	-- Do something
-end
-
-------------------------------------------------------------------------------------------
-
-mainContainer:drawOnScreen(true)
-mainContainer:startEventHandling()
-```
-
-Результат:
-
-![](https://i.imgur.com/9wtLagO.gif)
 
 GUI.**menu**( x, y, width, backgroundColor, textColor, backgroundPressedColor, textPressedColor, backgroundTransparency ): *table* menu
 ------------------------------------------------------------------------
@@ -1631,7 +1577,7 @@ GUI.**textBox**(x, y, width, height, backgroundColor, textColor, lines, currentL
 
 | Тип свойства | Свойство |Описание |
 | ------ | ------ | ------ |
-| *function* | :**setAlignment**(*enum* GUI.alignment.vertical, *enum* GUI.alignment.horizontal): *table* textBox| Выбрать вариант отображения текста относительно границ текстбокса |
+| *function* | :**setAlignment**(*enum* horizontalAlignment, *enum* verticalAlignment): *table* textBox| Выбрать вариант отображения текста относительно границ текстбокса |
 | *table* | .**lines**| Таблица со строковыми данными текстбокса |
 
 Пример реализации текстбокса:

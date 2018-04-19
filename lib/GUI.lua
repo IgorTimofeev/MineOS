@@ -3894,6 +3894,8 @@ end
 local function listUpdate(object)
 	local step = false
 	for i = 1, #object.children do
+		-- Жмяканье пизды
+		object.children[i].pressed = i == object.selectedItem
 		-- Цвет залупы
 		if step then
 			object.children[i].colors.default = object.colors.alternating
@@ -3901,7 +3903,6 @@ local function listUpdate(object)
 			object.children[i].colors.default = object.colors.default
 		end
 		object.children[i].colors.pressed, step = object.colors.pressed, not step
-		
 		-- Размеры хуйни
 		if object.cells[1][1].direction == GUI.directions.horizontal then
 			if object.offsetMode then
@@ -3929,45 +3930,33 @@ local function listDraw(object)
 end
 
 local function listSelect(object, index)
-	for i = 1, #object.children do
-		object.children[i].pressed = false
-	end
-	object.children[index].pressed = true
+	object.selectedItem = index
+	object:update()
 
 	return object
 end
 
-local function listGetSelectedIndex(object)
-	for i = 1, #object.children do
-		if object.children[i].pressed then
-			return i
-		end
-	end
-end
+local function listDeselect(object)
+	object.selectedItem = nil
+	object:update()
 
-local function listGetSelectedItem(object)
-	return object.children[object:getSelectedIndex()]
+	return object
 end
 
 local function listItemEventHandler(mainContainer, object, eventData)
 	if eventData[1] == "touch" or eventData[1] == "drag" then
-		if object.parent.multipleSelection then
-			object.pressed = not object.pressed
-		else
-			object.parent:select(object:indexOf())
-		end
-
+		object.parent:select(object:indexOf())
 		mainContainer:drawOnScreen()
-		callMethod(object.onTouch, mainContainer, object, eventData)
+
+		if object.onTouch then
+			object.onTouch(mainContainer, object, eventDat)
+		end
 	end
 end
 
 local function listAddItem(object, text)
 	local item = object:addChild(GUI.button(1, 1, 1, 1, 0, 0, 0, 0, text))
 	
-	if #object.children == 1 then
-		item.pressed = true
-	end
 	item.switchMode = true
 	item.animated = false
 	item.eventHandler = listItemEventHandler
@@ -3998,10 +3987,9 @@ local function listGetItem(object, index)
 	return object.children[index]
 end
 
-function GUI.list(x, y, width, height, itemSize, spacing, backgroundColor, textColor, backgroundAlternatingColor, textAlternatingColor, backgroundSelectedColor, textSelectedColor, multipleSelection, offsetMode)
+function GUI.list(x, y, width, height, itemSize, spacing, backgroundColor, textColor, backgroundAlternatingColor, textAlternatingColor, backgroundSelectedColor, textSelectedColor, offsetMode)
 	local object = GUI.layout(x, y, width, height, 1, 1)
 
-	object.multipleSelection = multipleSelection
 	object.colors = {
 		default = {
 			background = backgroundColor,
@@ -4017,8 +4005,7 @@ function GUI.list(x, y, width, height, itemSize, spacing, backgroundColor, textC
 		},
 	}
 
-	object.getSelectedIndex = listGetSelectedIndex
-	object.getSelectedItem = listGetSelectedItem
+	object.selectedItem = 1
 	object.select = listSelect
 	object.offsetMode = offsetMode
 	object.itemSize = itemSize
@@ -4039,14 +4026,29 @@ end
 
 -----------------------------------------------------------------------
 
-function GUI.tabBar(x, y, width, height, offset, spacing, backgroundColor, textColor, backgroundSelectedColor, textSelectedColor)
-	local object = GUI.list(x, y, width, height, offset, spacing, backgroundColor, textColor, backgroundColor, textColor, backgroundSelectedColor, textSelectedColor, false, true)
-	
-	object:setDirection(GUI.directions.horizontal)
-	object:setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+-- local mainContainer = GUI.fullScreenContainer()
+-- mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x2D2D2D))
 
-	return object
-end
+-- -- Создаем вертикально ориентированный список
+-- local verticalList = mainContainer:addChild(GUI.list(3, 2, 25, 30, 3, 0, 0xE1E1E1, 0x4B4B4B, 0xD2D2D2, 0x4B4B4B, 0x3366CC, 0xFFFFFF, false))
+-- verticalList:addItem("Hello world")
+-- verticalList:addItem("This is test").onTouch = function()
+-- 	GUI.error("Selected item: " .. verticalList.selectedItem)
+-- end
+-- verticalList:addItem("Beautiful")
+-- verticalList:addItem("Like a shit")
+
+-- -- Создаем горизонтально ориентированный список
+-- local horizontalList = mainContainer:addChild(GUI.list(34, 2, 100, 3, 2, 0, 0xE1E1E1, 0x4B4B4B, 0xE1E1E1, 0x4B4B4B, 0x696969, 0xFFFFFF, true))
+-- horizontalList:setDirection(GUI.directions.horizontal)
+-- horizontalList:setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+-- horizontalList:addItem("Applications")
+-- horizontalList:addItem("Libraries")
+-- horizontalList:addItem("Scripts")
+-- horizontalList:addItem("Wallpapers")
+
+-- mainContainer:drawOnScreen(true)
+-- mainContainer:startEventHandling()
 
 -----------------------------------------------------------------------
 

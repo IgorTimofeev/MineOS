@@ -50,7 +50,7 @@ window.onResize = function(width, height)
 	window.contentContainer.width = width
 	window.contentContainer.height = window.backgroundPanel.height
 
-	window.tabBar:getItem(window.tabBar:getSelectedIndex()).onTouch()
+	window.tabBar:getItem(window.tabBar.selectedItem).onTouch()
 end
 
 ----------------------------------------------------------------------------------------------------------------

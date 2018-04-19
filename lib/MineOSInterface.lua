@@ -1530,7 +1530,10 @@ end
 function MineOSInterface.tabbedWindow(x, y, width, height, ...)
 	local window = MineOSInterface.filledWindow(x, y, width, height, MineOSInterface.colors.windows.backgroundPanel)
 
-	window.tabBar = window:addChild(GUI.tabBar(1, 1, window.width, 3, 2, 0, MineOSInterface.colors.windows.tabBar.default.background, MineOSInterface.colors.windows.tabBar.default.text, MineOSInterface.colors.windows.tabBar.selected.background, MineOSInterface.colors.windows.tabBar.selected.text, ...))
+	window.tabBar = window:addChild(GUI.list(1, 1, window.width, 3, 2, 0, MineOSInterface.colors.windows.tabBar.default.background, MineOSInterface.colors.windows.tabBar.default.text, MineOSInterface.colors.windows.tabBar.default.background, MineOSInterface.colors.windows.tabBar.default.text, MineOSInterface.colors.windows.tabBar.selected.background, MineOSInterface.colors.windows.tabBar.selected.text, true))
+	window.tabBar:setDirection(GUI.directions.horizontal)
+	window.tabBar:setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+	
 	window.backgroundPanel.localY, window.backgroundPanel.height = 4, window.height - 3
 	window.actionButtons:moveToFront()
 	window.actionButtons.localY = 2
