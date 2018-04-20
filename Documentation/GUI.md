@@ -965,6 +965,8 @@ GUI.**list**( x, y, width, height, itemSize, spacing, backgroundColor, textColor
 | *int* | .**selectedItem** | Индекс выбранного элемента List |
 | *function* | :**addItem**(*string* text): *table* item| Добавить в List новый текстовый элемент. При необходимости ему можно назначить callback-функцию .**onTouch**() |
 | *function* | :**getItem**(*int* index): *table* item| Получить элемент по его индексу |
+| *function* | :**select**(*int* index): *table* list| Выбрать существующий элемент List |
+| *function* | :**deselect**(): *table* list| Выбрать существующий элемент List |
 | *function* | :**setAlignment**(*enum* horizontalAlignment, *enum* verticalAlignment): *table* list| Установить вариант выравнивания элементов List. По умолчанию вырванивание идет по левому верхнему углу |
 | *function* | :**setDirection**(*enum* direction): *table* list| Установить направление элементов List. По умолчанию направление вертикальное |
 | *function* | :**setSpacing**(*int* spacing): *table* list| Установить расстояние между элементами List |

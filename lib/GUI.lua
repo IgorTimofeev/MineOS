@@ -89,10 +89,6 @@ GUI.paletteConfigPath = "/lib/.palette.cfg"
 
 -----------------------------------------------------------------------
 
-local function callMethod(method, ...)
-	if method then method(...) end
-end
-
 local function objectIsPointInside(object, x, y)
 	return
 		x >= object.x and
@@ -1091,7 +1087,10 @@ local function colorSelectorEventHandler(mainContainer, object, eventData)
 			object.pressed = false
 			palette:delete()
 			mainContainer:drawOnScreen()
-			callMethod(object.onTouch, eventData)
+
+			if object.onTouch then
+				object.onTouch(mainContainer, object, eventData)
+			end
 		end
 
 		palette.onSubmit = function()
@@ -1288,7 +1287,9 @@ local function dropDownMenuItemEventHandler(mainContainer, object, eventData)
 			mainContainer:drawOnScreen()
 			mainContainer.selectedItem = object:indexOf()
 
-			callMethod(object.onTouch)
+			if object.onTouch then
+				object.onTouch(mainContainer, object, eventData)
+			end
 		end
 
 		mainContainer:stopEventHandling()
@@ -1590,7 +1591,10 @@ end
 local function comboBoxEventHandler(mainContainer, object, eventData)
 	if eventData[1] == "touch" and #object.dropDownMenu.itemsContainer.children > 0 then
 		object:select()
-		callMethod(object.onItemSelected, object.dropDownMenu.itemsContainer.children[object.selectedItem], eventData)
+
+		if object.onItemSelected then
+			object.onItemSelected(mainContainer, object, eventData)
+		end
 	end
 end
 
@@ -1707,7 +1711,10 @@ local function sliderEventHandler(mainContainer, object, eventData)
 		end
 
 		mainContainer:drawOnScreen()
-		callMethod(object.onValueChanged, object.value, eventData)
+
+		if object.onValueChanged then
+			object.onValueChanged(mainContainer, object, eventData)
+		end
 	end
 end
 
@@ -1765,7 +1772,9 @@ local function switchEventHandler(mainContainer, switch, eventData)
 			end,
 			function(mainContainer, animation)
 				animation:delete()
-				callMethod(switch.onStateChanged, mainContainer, switch, eventData, switch.state)
+				if switch.onStateChanged then
+					switch.onStateChanged(mainContainer, switch, eventData, switch.state)
+				end
 			end
 		):start(switch.animationDuration)
 	end
@@ -2299,7 +2308,10 @@ function GUI.addFilesystemDialogToContainer(parentContainer, width, height, addP
 
 	filesystemDialog.cancelButton.onTouch = function()
 		onAnyTouch()
-		callMethod(filesystemDialog.onCancel)
+
+		if filesystemDialog.onCancel then
+			filesystemDialog.onCancel()
+		end
 	end
 
 	filesystemDialog.submitButton.onTouch = function()
@@ -2317,7 +2329,9 @@ function GUI.addFilesystemDialogToContainer(parentContainer, width, height, addP
 			end
 		end
 
-		callMethod(filesystemDialog.onSubmit, path)
+		if filesystemDialog.onSubmit then
+			filesystemDialog.onSubmit(path)
+		end
 	end
 
 	filesystemDialog.show = filesystemDialogShow
@@ -2377,7 +2391,10 @@ local function filesystemChooserEventHandler(mainContainer, object, eventData)
 		filesystemDialog.onSubmit = function(path)
 			object.path = path
 			filesystemDialog.onCancel()
-			callMethod(object.onSubmit, object.path)
+
+			if object.onSubmit then
+				object.onSubmit( object.path)
+			end
 		end
 
 		filesystemDialog:show()
@@ -2575,7 +2592,9 @@ local function scrollBarEventHandler(mainContainer, object, eventData)
 
 	if eventData[1] == "touch" or eventData[1] == "drag" or eventData[1] == "scroll" then
 		object.value = newValue
-		callMethod(object.onTouch, eventData)
+		if object.onTouch then
+			object.onTouch(mainContainer, object, eventData)
+		end
 		mainContainer:drawOnScreen()
 	end
 end
@@ -2672,19 +2691,22 @@ local function treeEventHandler(mainContainer, tree, eventData)
 					tree.expandedItems[tree.items[i].definition] = true
 				end
 
-				callMethod(tree.onItemExpanded, tree.selectedItem, eventData)
+				if tree.onItemExpanded then
+					tree.onItemExpanded(tree.selectedItem, eventData)
+				end
 			else
 				if
 					(
-						(
-							tree.selectionMode == GUI.filesystemModes.both or
-							tree.selectionMode == GUI.filesystemModes.directory and tree.items[i].expandable or
-							tree.selectionMode == GUI.filesystemModes.file
-						) and not tree.items[i].disabled
-					)
+						tree.selectionMode == GUI.filesystemModes.both or
+						tree.selectionMode == GUI.filesystemModes.directory and tree.items[i].expandable or
+						tree.selectionMode == GUI.filesystemModes.file
+					) and not tree.items[i].disabled
 				then
 					tree.selectedItem = tree.items[i].definition
-					callMethod(tree.onItemSelected, tree.selectedItem, eventData)
+
+					if tree.onItemSelectedh then
+						tree.onItemSelected(tree.selectedItem, eventData)
+					end
 				end
 			end
 
@@ -3226,8 +3248,10 @@ local function inputStartInput(input)
 		end
 	end
 	
-	callMethod(input.onInputFinished, mainContainer, input, mainEventData, input.text)
-	
+	if input.onInputFinished then
+		input.onInputFinished( mainContainer, input, mainEventData, input.text)
+	end
+
 	mainContainer:drawOnScreen()
 end
 
@@ -3335,13 +3359,17 @@ local function autoCompleteEventHandler(mainContainer, object, eventData)
 		object.selectedItem = eventData[4] - object.y + object.fromItem
 		mainContainer:drawOnScreen()
 
-		callMethod(object.onItemSelected, mainContainer, object, eventData, object.selectedItem)
+		if object.onItemSelected then
+			object.onItemSelected(mainContainer, object, eventData, object.selectedItem)
+		end
 	elseif eventData[1] == "scroll" then
 		autoCompleteScroll(mainContainer, object, -eventData[5])
 		mainContainer:drawOnScreen()
 	elseif eventData[1] == "key_down" then
 		if eventData[4] == 28 then
-			callMethod(object.onItemSelected, mainContainer, object, eventData, object.selectedItem)
+			if object.onItemSelected then
+				object.onItemSelected(mainContainer, object, eventData, object.selectedItem)
+			end
 		elseif eventData[4] == 200 then
 			object.selectedItem = object.selectedItem - 1
 			if object.selectedItem < 1 then
@@ -4007,6 +4035,7 @@ function GUI.list(x, y, width, height, itemSize, spacing, backgroundColor, textC
 
 	object.selectedItem = 1
 	object.select = listSelect
+	object.deselect = listDeselect
 	object.offsetMode = offsetMode
 	object.itemSize = itemSize
 	object.update = listUpdate
@@ -4023,32 +4052,6 @@ function GUI.list(x, y, width, height, itemSize, spacing, backgroundColor, textC
 
 	return object
 end
-
------------------------------------------------------------------------
-
--- local mainContainer = GUI.fullScreenContainer()
--- mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x2D2D2D))
-
--- -- Создаем вертикально ориентированный список
--- local verticalList = mainContainer:addChild(GUI.list(3, 2, 25, 30, 3, 0, 0xE1E1E1, 0x4B4B4B, 0xD2D2D2, 0x4B4B4B, 0x3366CC, 0xFFFFFF, false))
--- verticalList:addItem("Hello world")
--- verticalList:addItem("This is test").onTouch = function()
--- 	GUI.error("Selected item: " .. verticalList.selectedItem)
--- end
--- verticalList:addItem("Beautiful")
--- verticalList:addItem("Like a shit")
-
--- -- Создаем горизонтально ориентированный список
--- local horizontalList = mainContainer:addChild(GUI.list(34, 2, 100, 3, 2, 0, 0xE1E1E1, 0x4B4B4B, 0xE1E1E1, 0x4B4B4B, 0x696969, 0xFFFFFF, true))
--- horizontalList:setDirection(GUI.directions.horizontal)
--- horizontalList:setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
--- horizontalList:addItem("Applications")
--- horizontalList:addItem("Libraries")
--- horizontalList:addItem("Scripts")
--- horizontalList:addItem("Wallpapers")
-
--- mainContainer:drawOnScreen(true)
--- mainContainer:startEventHandling()
 
 -----------------------------------------------------------------------
 
