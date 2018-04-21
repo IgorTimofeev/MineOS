@@ -31,7 +31,7 @@ local mainContainer = GUI.fullScreenContainer()
 --------------------------------------------------------------------------------------------------------------------
 
 local function getOpenGLValidColorChannels(cykaColor)
-	local r, g, b = color.HEXToRGB(cykaColor)
+	local r, g, b = color.IntegerToRGB(cykaColor)
 	return r / 255, g / 255, b / 255
 end
 
@@ -83,21 +83,23 @@ local function updateData(onScreen, onProjector, onGlasses)
 	if onGlasses and glassesAvailable then component.glasses.removeAll() end
 
 	local min, max = tonumber(mainContainer.minimumHardnessTextBox.text), tonumber(mainContainer.maximumHardnessTextBox.text)
-	local horizontalRange, verticalRange = math.floor(mainContainer.horizontalScanRangeSlider.value), math.floor(mainContainer.verticalScanRangeSlider.value)
+	if min and max then
+		local horizontalRange, verticalRange = math.floor(mainContainer.horizontalScanRangeSlider.value), math.floor(mainContainer.verticalScanRangeSlider.value)
 
-	for x = -horizontalRange, horizontalRange do
-		for z = -horizontalRange, horizontalRange do
-			for y = 32 - verticalRange, 32 + verticalRange do
-				if scanResult[x] and scanResult[x][z] and scanResult[x][z][y] and scanResult[x][z][y] >= min and scanResult[x][z][y] <= max then
-					if onScreen then
-						buffer.semiPixelSet(onScreenDataXOffset + x, onScreenDataYOffset + 32 - y, 0x454545)
-					end
-					if onProjector and mainContainer.projectorUpdateSwitch.state then
-						component.hologram.set(horizontalRange + x, math.floor(mainContainer.projectorYOffsetSlider.value) + y - 32, horizontalRange + z, 1)
-					end
-					if onGlasses and mainContainer.glassesUpdateSwitch.state and glassesAvailable then
-						glassesCreateCube(x, y - 32, z, mainContainer.glassesOreColorButton.colors.default.background, "Hardness: " .. string.format("%.2f", scanResult[x][z][y]))
-						os.sleep(0)
+		for x = -horizontalRange, horizontalRange do
+			for z = -horizontalRange, horizontalRange do
+				for y = 32 - verticalRange, 32 + verticalRange do
+					if scanResult[x] and scanResult[x][z] and scanResult[x][z][y] and scanResult[x][z][y] >= min and scanResult[x][z][y] <= max then
+						if onScreen then
+							buffer.semiPixelSet(onScreenDataXOffset + x, onScreenDataYOffset + 32 - y, 0x454545)
+						end
+						if onProjector and mainContainer.projectorUpdateSwitch.state then
+							component.hologram.set(horizontalRange + x, math.floor(mainContainer.projectorYOffsetSlider.value) + y - 32, horizontalRange + z, 1)
+						end
+						if onGlasses and mainContainer.glassesUpdateSwitch.state and glassesAvailable then
+							glassesCreateCube(x, y - 32, z, mainContainer.glassesOreColorButton.colors.default.background, "Hardness: " .. string.format("%.2f", scanResult[x][z][y]))
+							os.sleep(0)
+						end
 					end
 				end
 			end
@@ -134,9 +136,7 @@ mainContainer:addChild(GUI.label(buttonX, objectY, buttonWidth, 1, 0xFFFFFF, "Re
 objectY = objectY + 2
 
 mainContainer.minimumHardnessTextBox = mainContainer:addChild(GUI.input(buttonX, objectY, 12, 3, 0x262626, 0xBBBBBB, 0xBBBBBB, 0x262626, 0xFFFFFF, tostring(2.7), nil, true))
-mainContainer.minimumHardnessTextBox.validator = function(text) if tonumber(text) then return true end end
 mainContainer.maximumHardnessTextBox = mainContainer:addChild(GUI.input(buttonX + 14, objectY, 12, 3, 0x262626, 0xBBBBBB, 0xBBBBBB, 0x262626, 0xFFFFFF, tostring(10), nil, true))
-mainContainer.maximumHardnessTextBox.validator = function(text) if tonumber(text) then return true end end
 objectY = objectY + 3
 mainContainer:addChild(GUI.label(buttonX, objectY, buttonWidth, 1, 0xBBBBBB, "Hardness min  Hardness max")):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
 objectY = objectY + 2
