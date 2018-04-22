@@ -981,10 +981,14 @@ function MineOSInterface.newFileFromURL(parentWindow, iconField, x, y, path)
 	container.inputFieldURL = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x696969, 0xE1E1E1, 0x2D2D2D, nil, "URL", false))
 	container.panel.eventHandler = function(mainContainer, object, eventData)
 		if eventData[1] == "touch" then
-			if fs.exists(container.inputField.text) then
+			if fs.exists(path .. container.inputField.text) then
 				container.label.hidden = false
 				mainContainer:drawOnScreen()
 			else
+				container.layout:deleteChildren(2)
+				container.layout:addChild(GUI.label(1, 1, container.width, 1, 0x787878, MineOSCore.localization.downloading .. "...")):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+				mainContainer:drawOnScreen()
+
 				local success, reason = require("web").download(container.inputFieldURL.text, path .. container.inputField.text)
 				container:delete()
 
@@ -1008,12 +1012,10 @@ function MineOSInterface.newApplication(parentWindow, iconField, x, y, path)
 	local filesystemChooser = container.layout:addChild(GUI.filesystemChooser(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x444444, 0x969696, nil, MineOSCore.localization.open, MineOSCore.localization.cancel, MineOSCore.localization.iconPath, "/"))
 	filesystemChooser:addExtensionFilter(".pic")
 	filesystemChooser:moveBackward()
-
+	
 	container.panel.eventHandler = function(mainContainer, object, eventData)
-		if eventData[1] == "touch" then
-			container:delete()
-
-			if container.inputField.text then
+		if eventData[1] == "touch" then	
+			if #container.inputField.text > 0 then
 				local finalPath = path .. container.inputField.text .. ".app/"
 				if checkFileToExists(container, finalPath) then
 					fs.makeDirectory(finalPath)
@@ -1023,10 +1025,12 @@ function MineOSInterface.newApplication(parentWindow, iconField, x, y, path)
 					file:write("require(\"GUI\").error(\"Hello world\")")
 					file:close()
 
+					container:delete()
 					checkIconConfigCanSavePosition(iconField, x, y, container.inputField.text .. ".app/")
 					computer.pushSignal("MineOSCore", "updateFileList")
 				end
 			else
+				container:delete()
 				parentWindow:drawOnScreen()
 			end
 		end
@@ -1287,8 +1291,8 @@ local function GUICopy(parentContainer, fileList, toPath)
 	local applyYes, breakRecursion
 
 	local container = MineOSInterface.addUniversalContainer(parentContainer, MineOSCore.localization.copying)
-	local textBox = container.layout:addChild(GUI.textBox(1, 1, container.width, 1, nil, 0x777777, {}, 1, 0, 0, true, true):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top))
-	local switchAndLabel = container.layout:addChild(GUI.switchAndLabel(1, 1, 37, 8, 0x66DB80, 0x1E1E1E, 0xE1E1E1, 0x777777, MineOSCore.localization.applyToAll .. ":", false))
+	local textBox = container.layout:addChild(GUI.textBox(1, 1, container.width, 1, nil, 0x787878, {}, 1, 0, 0, true, true):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top))
+	local switchAndLabel = container.layout:addChild(GUI.switchAndLabel(1, 1, 37, 8, 0x66DB80, 0x1E1E1E, 0xE1E1E1, 0x787878, MineOSCore.localization.applyToAll .. ":", false))
 	container.panel.eventHandler = nil
 
 	local buttonsLayout = container.layout:addChild(GUI.layout(1, 1, 1, 1, 1, 1))

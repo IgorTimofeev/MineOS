@@ -1,4 +1,5 @@
 {
+	downloading = "Downloading in progress",
 	CPUArchitecture = "CPU architecture",
 	RAMControl = "RAM control",
 	packageUnloading = "Automatic unloading",

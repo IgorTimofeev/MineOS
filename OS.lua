@@ -1094,7 +1094,6 @@ MineOSCore.localization = MineOSCore.getLocalization(MineOSPaths.localizationFil
 
 createOSWindow()
 login()
-
 MineOSNetwork.update()
 
 while true do

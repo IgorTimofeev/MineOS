@@ -2391,16 +2391,14 @@ local function filesystemChooserEventHandler(mainContainer, object, eventData)
 		
 		filesystemDialog.onCancel = function()
 			object.pressed = false
-
 			mainContainer:drawOnScreen()
 		end
 
 		filesystemDialog.onSubmit = function(path)
 			object.path = path
 			filesystemDialog.onCancel()
-
 			if object.onSubmit then
-				object.onSubmit( object.path)
+				object.onSubmit(object.path)
 			end
 		end
 

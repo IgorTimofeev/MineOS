@@ -1,4 +1,5 @@
 {
+	downloading = "Идет загрузка файла",
 	CPUArchitecture = "Архитектура ЦП",
 	RAMControl = "Управление памятью",
 	packageUnloading = "Автоматическая выгрузка",
