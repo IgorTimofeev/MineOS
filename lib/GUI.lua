@@ -1283,13 +1283,7 @@ local function dropDownMenuItemEventHandler(mainContainer, object, eventData)
 				os.sleep(0.2)
 			end
 
-			object.pressed = false
-			mainContainer:drawOnScreen()
 			mainContainer.selectedItem = object:indexOf()
-
-			if object.onTouch then
-				object.onTouch(mainContainer, object, eventData)
-			end
 		end
 
 		mainContainer:stopEventHandling()
@@ -1405,16 +1399,23 @@ local function dropDownMenuShow(menu)
 	end
 	mainContainer:addChild(menu)
 	
-	menu:draw()
-	buffer.draw()
+	mainContainer:drawOnScreen()
 	mainContainer:startEventHandling()
-	buffer.paste(menu.x, menu.y, menu.oldPixels)
-	buffer.draw()
-	-- А вот тут удаляем чисто шоб память не грузить
-	menu.oldPixels = nil
 	
 	if mainContainer.selectedItem then
-		return menu.itemsContainer.children[mainContainer.selectedItem].text, mainContainer.selectedItem
+		local item = menu.itemsContainer.children[mainContainer.selectedItem]
+		
+		if not item.subMenu then
+			buffer.paste(menu.x, menu.y, menu.oldPixels)
+			buffer.draw()
+		end
+		menu.oldPixels = nil
+
+		if item.onTouch then
+			item.onTouch()
+		end
+
+		return item
 	end
 end
 
@@ -1483,20 +1484,26 @@ local function contextMenuShow(menu)
 	contextMenuCalculate(menu)
 
 	local bufferWidth, bufferHeight = buffer.getResolution()
-	if menu.y + menu.height >= bufferHeight then menu.y = bufferHeight - menu.height end
-	if menu.x + menu.width + 1 >= bufferWidth then menu.x = bufferWidth - menu.width - 1 end
+	if menu.y + menu.height >= bufferHeight then
+		menu.y = bufferHeight - menu.height
+	end
+	if menu.x + menu.width + 1 >= bufferWidth then
+		menu.x = bufferWidth - menu.width - 1
+	end
 
 	return dropDownMenuShow(menu)
 end
 
 local function contextMenuAddItem(menu, ...)
+	local item = dropDownMenuAddItem(menu, ...)
 	contextMenuCalculate(menu)
-	return dropDownMenuAddItem(menu, ...)
+	return item
 end
 
 local function contextMenuAddSeparator(menu, ...)
+	local item = dropDownMenuAddSeparator(menu, ...)
 	contextMenuCalculate(menu)
-	return dropDownMenuAddSeparator(menu, ...)
+	return item
 end
 
 local function contextMenuAddSubMenu(menu, text, disabled)
@@ -4053,6 +4060,6 @@ function GUI.list(x, y, width, height, itemSize, spacing, backgroundColor, textC
 	return object
 end
 
------------------------------------------------------------------------
+------------------------------------------------------------------------------------------
 
 return GUI
