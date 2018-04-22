@@ -3,6 +3,7 @@ local args = {...}
 local component = require("component")
 local computer = require("computer")
 local fs = require("filesystem")
+local GUI = require("GUI")
 local MineOSPaths = require("MineOSPaths")
 local MineOSCore = require("MineOSCore")
 local MineOSInterface = require("MineOSInterface")
@@ -19,11 +20,14 @@ menu:addItem(MineOSCore.localization.launchWithArguments).onTouch = function()
 end
 
 menu:addItem(MineOSCore.localization.flashEEPROM, not component.isAvailable("eeprom") or fs.size(icon.path) > 4096).onTouch = function()
-	computer.beep(1500, 0.2)
+	local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer, MineOSCore.localization.flashEEPROM)
+	container.layout:addChild(GUI.label(1, 1, container.width, 1, 0x969696, MineOSCore.localization.flashingEEPROM .. "...")):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+	MineOSInterface.mainContainer:drawOnScreen()
+
 	local file = io.open(icon.path, "r")
 	component.eeprom.set(file:read("*a"))
 	file:close()
-	for i = 1, 2 do
-		computer.beep(2000, 0.2)
-	end
+	
+	container:delete()
+	MineOSInterface.mainContainer:drawOnScreen()
 end

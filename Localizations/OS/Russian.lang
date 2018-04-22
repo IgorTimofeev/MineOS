@@ -87,6 +87,7 @@
 	showPackageContent = "Показать содержимое пакета",
 	showContainingFolder = "Открыть содержащую папку",
 	flashEEPROM = "Записать на EEPROM",
+	flashingEEPROM = "Идет прошивка. Не отключайте компьютер",
 
 	sortBy = "Упорядочить",
 	sortByType = "По типу",

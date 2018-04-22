@@ -86,7 +86,8 @@
 	setAsWallpaper = "Set as wallpaper",
 	showPackageContent = "Show package content",
 	showContainingFolder = "Show containing folder",
-	flashEEPROM = "Write on EEPROM",
+	flashEEPROM = "Flash to EEPROM",
+	flashingEEPROM = "Flashing in progress. Don't turn off computer",
 
 	sortBy = "Sort",
 	sortByType = "By type",

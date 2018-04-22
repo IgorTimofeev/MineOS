@@ -130,7 +130,7 @@ local function checkPassword()
 	event.interruptingEnabled = false
 
 	local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer, MineOSCore.localization.inputPassword)
-	local inputField = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x696969, 0xE1E1E1, 0x2D2D2D, nil, nil, true, "*"))
+	local inputField = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x878787, 0xE1E1E1, 0x2D2D2D, nil, nil, true, "*"))
 	local label = container.layout:addChild(GUI.label(1, 1, 36, 1, 0xFF4940, MineOSCore.localization.incorrectPassword)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
 	label.hidden = true
 
@@ -158,8 +158,8 @@ end
 
 local function setPassword()
 	local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer, MineOSCore.localization.passwordProtection)
-	local inputField1 = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x696969, 0xE1E1E1, 0x2D2D2D, nil, MineOSCore.localization.inputPassword, true, "*"))
-	local inputField2 = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x696969, 0xE1E1E1, 0x2D2D2D, nil, MineOSCore.localization.confirmInputPassword, true, "*"))
+	local inputField1 = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x878787, 0xE1E1E1, 0x2D2D2D, nil, MineOSCore.localization.inputPassword, true, "*"))
+	local inputField2 = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x878787, 0xE1E1E1, 0x2D2D2D, nil, MineOSCore.localization.confirmInputPassword, true, "*"))
 	local label = container.layout:addChild(GUI.label(1, 1, 36, 1, 0xFF4940, MineOSCore.localization.passwordsAreDifferent)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
 	label.hidden = true
 
@@ -545,7 +545,7 @@ local function createOSWidgets()
 		local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer, MineOSCore.localization.network)
 		local insertModemTextBox = container.layout:addChild(GUI.textBox(1, 1, 36, 1, nil, 0x555555, {MineOSCore.localization.networkModemNotAvailable}, 1, 0, 0, true, true))
 		local stateSwitchAndLabel = container.layout:addChild(GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x878787, MineOSCore.localization.networkState .. ":", MineOSCore.properties.network.enabled))
-		local networkNameInput = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x696969, 0xE1E1E1, 0x2D2D2D, MineOSCore.properties.network.name or "", MineOSCore.localization.networkName))
+		local networkNameInput = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x878787, 0xE1E1E1, 0x2D2D2D, MineOSCore.properties.network.name or "", MineOSCore.localization.networkName))
 		local remoteComputersLabel = container.layout:addChild(GUI.label(1, 1, container.width, 1, 0xE1E1E1, MineOSCore.localization.networkComputers):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top))
 		local remoteComputersComboBox = container.layout:addChild(GUI.comboBox(1, 1, 36, 3, 0xE1E1E1, 0x2D2D2D, 0x4B4B4B, 0x969696))
 		local allowReadAndWriteSwitchAndLabel = container.layout:addChild(GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x878787, MineOSCore.localization.networkAllowReadAndWrite .. ":", false))
@@ -692,13 +692,13 @@ local function createOSWidgets()
 		menu:addItem(MineOSCore.localization.screenResolution).onTouch = function()
 			local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer, MineOSCore.localization.screenResolution)
 
-			local widthTextBox = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x696969, 0xE1E1E1, 0x2D2D2D, tostring(MineOSCore.properties.resolution and MineOSCore.properties.resolution[1] or 160), "Width", true))
+			local widthTextBox = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x878787, 0xE1E1E1, 0x2D2D2D, tostring(MineOSCore.properties.resolution and MineOSCore.properties.resolution[1] or 160), "Width", true))
 			widthTextBox.validator = function(text)
 				local number = tonumber(text)
 				if number then return number >= 1 and number <= 160 end
 			end
 
-			local heightTextBox = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x696969, 0xE1E1E1, 0x2D2D2D, tostring(MineOSCore.properties.resolution and MineOSCore.properties.resolution[2] or 50), "Height", true))
+			local heightTextBox = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x878787, 0xE1E1E1, 0x2D2D2D, tostring(MineOSCore.properties.resolution and MineOSCore.properties.resolution[2] or 50), "Height", true))
 			heightTextBox.validator = function(text)
 				local number = tonumber(text)
 				if number then return number >= 1 and number <= 50 end

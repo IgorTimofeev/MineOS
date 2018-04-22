@@ -746,7 +746,7 @@ function MineOSInterface.iconRightClick(icon, eventData)
 				menu:addItem(MineOSCore.localization.addToFavourites).onTouch = function()
 					local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer, MineOSCore.localization.addToFavourites)
 
-					local input = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x696969, 0xE1E1E1, 0x2D2D2D, icon.name, MineOSCore.localization.name))
+					local input = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x878787, 0xE1E1E1, 0x2D2D2D, icon.name, MineOSCore.localization.name))
 					container.panel.eventHandler = function(mainContainer, object, eventData)
 						if eventData[1] == "touch" then
 							container:delete()
@@ -919,7 +919,7 @@ end
 local function addUniversalContainerWithInputTextBox(parentWindow, text, title, placeholder)
 	local container = MineOSInterface.addUniversalContainer(parentWindow, title)
 	
-	container.inputField = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x696969, 0xE1E1E1, 0x2D2D2D, text, placeholder, false))
+	container.inputField = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x878787, 0xE1E1E1, 0x2D2D2D, text, placeholder, false))
 	container.label = container.layout:addChild(GUI.label(1, 1, 36, 1, 0xFF4940, MineOSCore.localization.file .. " " .. MineOSCore.localization.alreadyExists)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
 	container.label.hidden = true
 
@@ -978,27 +978,32 @@ end
 function MineOSInterface.newFileFromURL(parentWindow, iconField, x, y, path)
 	local container = addUniversalContainerWithInputTextBox(parentWindow, nil, "Загрузить файл по URL", MineOSCore.localization.fileName)
 
-	container.inputFieldURL = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x696969, 0xE1E1E1, 0x2D2D2D, nil, "URL", false))
+	container.inputFieldURL = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x878787, 0xE1E1E1, 0x2D2D2D, nil, "URL", false))
 	container.panel.eventHandler = function(mainContainer, object, eventData)
 		if eventData[1] == "touch" then
-			if fs.exists(path .. container.inputField.text) then
-				container.label.hidden = false
-				mainContainer:drawOnScreen()
-			else
-				container.layout:deleteChildren(2)
-				container.layout:addChild(GUI.label(1, 1, container.width, 1, 0x787878, MineOSCore.localization.downloading .. "...")):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
-				mainContainer:drawOnScreen()
-
-				local success, reason = require("web").download(container.inputFieldURL.text, path .. container.inputField.text)
-				container:delete()
-
-				if success then
-					checkIconConfigCanSavePosition(iconField, x, y, container.inputField.text)
-					computer.pushSignal("MineOSCore", "updateFileList")
-				else
-					GUI.error(reason)
+			if #container.inputField.text > 0 and #container.inputFieldURL > 0 then
+				if fs.exists(path .. container.inputField.text) then
+					container.label.hidden = false
 					mainContainer:drawOnScreen()
+				else
+					container.layout:deleteChildren(2)
+					container.layout:addChild(GUI.label(1, 1, container.width, 1, 0x787878, MineOSCore.localization.downloading .. "...")):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+					mainContainer:drawOnScreen()
+
+					local success, reason = require("web").download(container.inputFieldURL.text, path .. container.inputField.text)
+					container:delete()
+
+					if success then
+						checkIconConfigCanSavePosition(iconField, x, y, container.inputField.text)
+						computer.pushSignal("MineOSCore", "updateFileList")
+					else
+						GUI.error(reason)
+						mainContainer:drawOnScreen()
+					end
 				end
+			else
+				container:delete()
+				mainContainer:drawOnScreen()
 			end
 		end
 	end
