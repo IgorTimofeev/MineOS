@@ -2709,7 +2709,7 @@ local function treeEventHandler(mainContainer, tree, eventData)
 				then
 					tree.selectedItem = tree.items[i].definition
 
-					if tree.onItemSelectedh then
+					if tree.onItemSelected then
 						tree.onItemSelected(tree.selectedItem, eventData)
 					end
 				end
