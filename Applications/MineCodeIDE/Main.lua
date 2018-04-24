@@ -449,10 +449,14 @@ local function calculateErrorContainerSizeAndBeep(hideBreakpointButtons, frequen
 	for i = 1, times do component.computer.beep(frequency, 0.08) end	
 end
 
-local function showBreakpointMessage(variables)
+local function pizda()
 	titleTextBox.colors.background, titleTextBox.colors.text = 0x880000, 0xE1E1E1
 	errorContainer.hidden = false
 	errorContainer.localX = titleTextBox.localX
+end
+
+local function showBreakpointMessage(variables)
+	pizda()
 
 	errorContainerTextBox:setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
 	errorContainerTextBox.lines = {}
@@ -471,10 +475,8 @@ local function showBreakpointMessage(variables)
 end
 
 local function showErrorContainer(errorCode)
-	titleTextBox.colors.background, titleTextBox.colors.text = 0x880000, 0xE1E1E1
-	errorContainer.hidden = false
-	errorContainer.localX = titleTextBox.localX
-
+	pizda()
+	
 	errorContainerTextBox:setAlignment(GUI.alignment.horizontal.left, GUI.alignment.vertical.top)
 	errorContainerTextBox.lines = string.wrap({errorCode}, errorContainerTextBox.width)	
 	
