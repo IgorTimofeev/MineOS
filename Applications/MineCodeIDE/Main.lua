@@ -1,14 +1,6 @@
 
----------------------------------------------------- Libraries ----------------------------------------------------
-
--- "/MineOS/Applications/MineCode IDE.app/MineCode IDE.lua" -o /OS.lua
-
--- package.loaded.syntax = nil
--- package.loaded.ECSAPI = nil
--- package.loaded.GUI = nil
--- package.loaded.MineOSCore = nil
-
 local args = {...}
+
 require("advancedLua")
 local computer = require("computer")
 local component = require("component")
@@ -25,7 +17,7 @@ local MineOSPaths = require("MineOSPaths")
 local MineOSCore = require("MineOSCore")
 local MineOSInterface = require("MineOSInterface")
 
----------------------------------------------------- Constants ----------------------------------------------------
+------------------------------------------------------------
 
 local about = {
 	"MineCode IDE",
@@ -47,7 +39,7 @@ local about = {
 }
 
 local config = {
-	leftTreeViewWidth = 26,
+	leftTreeViewWidth = 27,
 	syntaxColorScheme = syntax.colorScheme,
 	scrollSpeed = 8,
 	cursorColor = 0x00A8FF,
@@ -61,85 +53,229 @@ local config = {
 }
 config.screenResolution.width, config.screenResolution.height = component.gpu.getResolution()
 
-local colors = {
-	topToolBar = 0xDDDDDD,
-	bottomToolBar = {
-		background = 0x3C3C3C,
-		buttons = 0x2D2D2D,
-		buttonsText = 0xFFFFFF,
-	},
-	topMenu = {
-		backgroundColor = 0xEEEEEE,
-		textColor = 0x444444,
-		backgroundPressedColor = 0x3366CC,
-		textPressedColor = 0xFFFFFF,
-	},
-	title = {
-		default = {
-			sides = 0x555555,
-			background = 0x3C3C3C,
-			text = 0xEEEEEE,
-		},
-		onError = {
-			sides = 0xCC4940,
-			background = 0x880000,
-			text = 0xEEEEEE,
-		},
-	},
-	highlights = {
-		onError = 0xFF4940,
-		onBreakpoint = 0x990000,
-	}
+local openBrackets = {
+	["{"] = "}",
+	["["] = "]",
+	["("] = ")",
+	["\""] = "\"",
+	["\'"] = "\'"
 }
 
-local possibleBrackets = {
-	openers = {
-		["{"] = "}",
-		["["] = "]",
-		["("] = ")",
-		["\""] = "\"",
-		["\'"] = "\'"
-	},
-	closers = {
-		["}"] = "{",
-		["]"] = "[",
-		[")"] = "(",
-		["\""] = "\"",
-		["\'"] = "\'"
-	}
+local closeBrackets = {
+	["}"] = "{",
+	["]"] = "[",
+	[")"] = "(",
+	["\""] = "\"",
+	["\'"] = "\'"
 }
 
-local cursor = {
-	position = {
-		symbol = 1,
-		line = 1
-	},
-	blinkState = false
-}
+local cursorPositionSymbol = 1
+local cursorPositionLine = 1
+local cursorBlinkState = false
 
 local scriptCoroutine
 local resourcesPath = MineOSCore.getCurrentScriptDirectory() 
-local configPath = MineOSPaths.applicationData .. "MineCode IDE/Config.cfg"
-local localization = MineOSCore.getLocalization(resourcesPath .. "Localizations/")
+local configPath = MineOSPaths.applicationData .. "MineCode IDE/Config3.cfg"
+local localization = MineOSCore.getCurrentScriptLocalization()
 local findStartFrom
 local clipboard
 local breakpointLines
 local lastErrorLine
 local autocompleteDatabase
 
-------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------
+
+local mainContainer = GUI.fullScreenContainer()
+
+local codeView = mainContainer:addChild(GUI.codeView(1, 1, 1, 1, {""}, 1, 1, 1, {}, {}, config.highlightLuaSyntax, 2))
 
 local function convertTextPositionToScreenCoordinates(symbol, line)
 	return
-		mainContainer.codeView.codeAreaPosition + symbol - mainContainer.codeView.fromSymbol + 1,
-		mainContainer.codeView.y + line - mainContainer.codeView.fromLine
+		codeView.codeAreaPosition + symbol - codeView.fromSymbol + 1,
+		codeView.y + line - codeView.fromLine
 end
 
 local function convertScreenCoordinatesToTextPosition(x, y)
-	return x - mainContainer.codeView.codeAreaPosition + mainContainer.codeView.fromSymbol - 1, y - mainContainer.codeView.y + mainContainer.codeView.fromLine
+	return x - codeView.codeAreaPosition + codeView.fromSymbol - 1, y - codeView.y + codeView.fromLine
 end
 
-------------------------------------------------------------------------------------------------------------------
+local topMenu = mainContainer:addChild(GUI.menu(1, 1, 1, 0xF0F0F0, 0x696969, 0x3366CC, 0xFFFFFF))
+
+local topToolBar = mainContainer:addChild(GUI.container(1, 2, 1, 3))
+local topToolBarPanel = topToolBar:addChild(GUI.panel(1, 1, 1, 3, 0xE1E1E1))
+local topLayout = topToolBar:addChild(GUI.layout(1, 1, 1, 3, 1, 1))
+topLayout:setCellDirection(1, 1, GUI.directions.horizontal)
+topLayout:setCellSpacing(1, 1, 2)
+topLayout:setCellAlignment(1, 1, GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+
+local errorContainer = mainContainer:addChild(GUI.container(1, 1, 1, 1))
+local errorContainerPanel = errorContainer:addChild(GUI.panel(1, 1, 1, 1, 0xFFFFFF, 0.3))
+
+local errorContainerTextBox = errorContainer:addChild(GUI.textBox(3, 2, 1, 1, nil, 0x4B4B4B, {}, 1))
+errorContainerTextBox:setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+
+local errorContainerExitButton = errorContainer:addChild(GUI.button(1, 1, 1, 1, 0x3C3C3C, 0xC3C3C3, 0x2D2D2D, 0x878787, localization.finishDebug))
+local errorContainerContinueButton = errorContainer:addChild(GUI.button(1, 1, 1, 1, 0x4B4B4B, 0xC3C3C3, 0x2D2D2D, 0x878787, localization.continueDebug))
+
+local autocompleteWindow = mainContainer:addChild(GUI.object(1, 1, 40, 1))
+autocompleteWindow.maximumHeight = 8
+autocompleteWindow.matches = {}
+autocompleteWindow.fromMatch = 1
+autocompleteWindow.currentMatch = 1
+autocompleteWindow.hidden = true
+
+autocompleteWindow.draw = function(object)
+	autocompleteWindow.x, autocompleteWindow.y = convertTextPositionToScreenCoordinates(autocompleteWindow.currentWordStarting, cursorPositionLine)
+	autocompleteWindow.x, autocompleteWindow.y = autocompleteWindow.x, autocompleteWindow.y + 1
+
+	object.height = object.maximumHeight
+	if object.height > #object.matches then object.height = #object.matches end
+	
+	buffer.square(object.x, object.y, object.width, object.height, 0xFFFFFF, 0x0, " ")
+
+	local y = object.y
+	for i = object.fromMatch, #object.matches do
+		local firstColor, secondColor = 0x3C3C3C, 0x969696
+		
+		if i == object.currentMatch then
+			buffer.square(object.x, y, object.width, 1, 0x2D2D2D, 0xE1E1E1, " ")
+			firstColor, secondColor = 0xE1E1E1, 0x969696
+		end
+
+		buffer.text(object.x + 1, y, secondColor, unicode.sub(object.matches[i][1], 1, object.width - 2))
+		buffer.text(object.x + 1, y, firstColor, unicode.sub(object.matches[i][2], 1, object.width - 2))
+
+		y = y + 1
+		if y > object.y + object.height - 1 then break end
+	end
+
+	if object.height < #object.matches then
+		GUI.scrollBar(object.x + object.width - 1, object.y, 1, object.height, 0x4B4B4B, 0x00DBFF, 1, #object.matches, object.currentMatch, object.height, 1, true):draw()
+	end
+end
+
+--☯◌☺
+local addBreakpointButton = topLayout:addChild(GUI.adaptiveButton(1, 1, 3, 1, 0x878787, 0xE1E1E1, 0xD2D2D2, 0x4B4B4B, "x"))
+
+local syntaxHighlightingButton = topLayout:addChild(GUI.adaptiveButton(1, 1, 3, 1, 0xD2D2D2, 0x4B4B4B, 0x696969, 0xE1E1E1, "◌"))
+syntaxHighlightingButton.switchMode, syntaxHighlightingButton.pressed = true, true
+
+local runButton = topLayout:addChild(GUI.adaptiveButton(1, 1, 3, 1, 0x4B4B4B, 0xE1E1E1, 0xD2D2D2, 0x4B4B4B, "▷"))
+
+local titleTextBox = topLayout:addChild(GUI.textBox(1, 1, 1, 3, 0x0, 0x0, {}, 1):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top))
+local titleTextBoxOldDraw = titleTextBox.draw
+titleTextBox.draw = function(titleTextBox)
+	titleTextBoxOldDraw(titleTextBox)
+	
+	local sidesColor = errorContainer.hidden and 0x5A5A5A or 0xCC4940
+	buffer.square(titleTextBox.x, titleTextBox.y, 1, titleTextBox.height, sidesColor, titleTextBox.colors.text, " ")
+	buffer.square(titleTextBox.x + titleTextBox.width - 1, titleTextBox.y, 1, titleTextBox.height, sidesColor, titleTextBox.colors.text, " ")
+end
+
+local toggleLeftToolBarButton = topLayout:addChild(GUI.adaptiveButton(1, 1, 3, 1, 0xD2D2D2, 0x4B4B4B, 0x4B4B4B, 0xE1E1E1, "⇦"))
+toggleLeftToolBarButton.switchMode, toggleLeftToolBarButton.pressed = true, true
+
+local toggleBottomToolBarButton = topLayout:addChild(GUI.adaptiveButton(1, 1, 3, 1, 0xD2D2D2, 0x4B4B4B, 0x696969, 0xE1E1E1, "⇩"))
+toggleBottomToolBarButton.switchMode, toggleBottomToolBarButton.pressed = true, false
+
+local toggleTopToolBarButton = topLayout:addChild(GUI.adaptiveButton(1, 1, 3, 1, 0xD2D2D2, 0x4B4B4B, 0x878787, 0xE1E1E1, "⇧"))
+toggleTopToolBarButton.switchMode, toggleTopToolBarButton.pressed = true, true
+
+local RAMProgressBar = topToolBar:addChild(GUI.progressBar(1, 2, 20, 0x787878, 0xC3C3C3, 0xC3C3C3, 50, true, true, "RAM: ", "%"))
+
+local bottomToolBar = mainContainer:addChild(GUI.container(1, 1, 1, 3))
+bottomToolBar.hidden = true
+
+local caseSensitiveButton = bottomToolBar:addChild(GUI.adaptiveButton(1, 1, 2, 1, 0x3C3C3C, 0xE1E1E1, 0xB4B4B4, 0x2D2D2D, "Aa"))
+caseSensitiveButton.switchMode = true
+
+local searchInput = bottomToolBar:addChild(GUI.input(7, 1, 10, 3, 0xC3C3C3, 0x969696, 0x969696, 0xC3C3C3, 0x2D2D2D, "", localization.findSomeShit))
+
+local searchButton = bottomToolBar:addChild(GUI.adaptiveButton(1, 1, 3, 1, 0x3C3C3C, 0xE1E1E1, 0xB4B4B4, 0x2D2D2D, localization.find))
+
+local leftTreeView = mainContainer:addChild(GUI.filesystemTree(1, 1, config.leftTreeViewWidth, 1, 0xD2D2D2, 0x3C3C3C, 0x3C3C3C, 0x969696, 0x3C3C3C, 0xE1E1E1, 0xB4B4B4, 0xA5A5A5, 0xB4B4B4, 0x4B4B4B, GUI.filesystemModes.both, GUI.filesystemModes.file))
+
+local leftTreeViewResizer = mainContainer:addChild(GUI.resizer(1, 1, 3, 5, 0xA5A5A5, 0x0))
+
+local function updateHighlights()
+	codeView.highlights = {}
+
+	if breakpointLines then
+		for i = 1, #breakpointLines do
+			codeView.highlights[breakpointLines[i]] = 0x990000
+		end
+	end
+
+	if lastErrorLine then
+		codeView.highlights[lastErrorLine] = 0xFF4940
+	end
+end
+
+local function hideErrorContainer()
+	titleTextBox.colors.background, titleTextBox.colors.text = 0x3C3C3C, 0xE1E1E1
+	errorContainer.hidden = true
+	lastErrorLine, scriptCoroutine = nil, nil
+	updateHighlights()
+end
+
+local function updateTitle()
+	if not topToolBar.hidden then
+		if errorContainer.hidden then
+			titleTextBox.lines[1] = string.limit(localization.file .. ": " .. (leftTreeView.selectedItem or localization.none), titleTextBox.width - 4)
+			titleTextBox.lines[2] = string.limit(localization.cursor .. cursorPositionLine .. localization.line .. cursorPositionSymbol .. localization.symbol, titleTextBox.width - 4)
+			if codeView.selections[1] then
+				local countOfSelectedLines = codeView.selections[1].to.line - codeView.selections[1].from.line + 1
+				local countOfSelectedSymbols
+				if codeView.selections[1].from.line == codeView.selections[1].to.line then
+					countOfSelectedSymbols = unicode.len(unicode.sub(codeView.lines[codeView.selections[1].from.line], codeView.selections[1].from.symbol, codeView.selections[1].to.symbol))
+				else
+					countOfSelectedSymbols = unicode.len(unicode.sub(codeView.lines[codeView.selections[1].from.line], codeView.selections[1].from.symbol, -1))
+					for line = codeView.selections[1].from.line + 1, codeView.selections[1].to.line - 1 do
+						countOfSelectedSymbols = countOfSelectedSymbols + unicode.len(codeView.lines[line])
+					end
+					countOfSelectedSymbols = countOfSelectedSymbols + unicode.len(unicode.sub(codeView.lines[codeView.selections[1].to.line], 1, codeView.selections[1].to.symbol))
+				end
+				titleTextBox.lines[3] = string.limit(localization.selection .. countOfSelectedLines .. localization.lines .. countOfSelectedSymbols .. localization.symbols, titleTextBox.width - 4)
+			else
+				titleTextBox.lines[3] = string.limit(localization.selection .. localization.none, titleTextBox.width - 4)
+			end
+		else
+			titleTextBox.lines[1], titleTextBox.lines[3] = " ", " "
+			if lastErrorLine then
+				titleTextBox.lines[2] = localization.runtimeError
+			else
+				titleTextBox.lines[2] = localization.debugging .. (_G.MineCodeIDEDebugInfo and _G.MineCodeIDEDebugInfo.line or "N/A")
+			end
+		end
+	end
+end
+
+local function updateRAMProgressBar()
+	if not topToolBar.hidden then
+		local totalMemory = computer.totalMemory()
+		RAMProgressBar.value = math.ceil((totalMemory - computer.freeMemory()) / totalMemory * 100)
+	end
+end
+
+local function tick()
+	updateTitle()
+	updateRAMProgressBar()
+	mainContainer:draw()
+	
+	if cursorBlinkState then
+		local x, y = convertTextPositionToScreenCoordinates(cursorPositionSymbol, cursorPositionLine)
+		if
+			x >= codeView.codeAreaPosition + 1 and
+			y >= codeView.y and
+			x <= codeView.codeAreaPosition + codeView.codeAreaWidth - 2 and
+			y <= codeView.y + codeView.height - 2
+		then
+			buffer.text(x, y, config.cursorColor, config.cursorSymbol)
+		end
+	end
+
+	buffer.draw()
+end
 
 local function saveConfig()
 	table.toFile(configPath, config)
@@ -154,8 +290,6 @@ local function loadConfig()
 	end
 end
 
-------------------------------------------------------------------------------------------------------------------
-
 local function updateAutocompleteDatabaseFromString(str, value)
 	for word in str:gmatch("[%a%d%_]+") do
 		if not word:match("^%d+$") then
@@ -167,8 +301,8 @@ end
 local function updateAutocompleteDatabaseFromFile()
 	if config.enableAutocompletion then
 		autocompleteDatabase = {}
-		for line = 1, #mainContainer.codeView.lines do
-			updateAutocompleteDatabaseFromString(mainContainer.codeView.lines[line], true)
+		for line = 1, #codeView.lines do
+			updateAutocompleteDatabaseFromString(codeView.lines[line], true)
 		end
 	end
 end
@@ -177,12 +311,12 @@ local function getCurrentWordStartingAndEnding(fromSymbol)
 	local shittySymbolsRegexp, from, to = "[%s%c%p]"
 
 	for i = fromSymbol, 1, -1 do
-		if unicode.sub(mainContainer.codeView.lines[cursor.position.line], i, i):match(shittySymbolsRegexp) then break end
+		if unicode.sub(codeView.lines[cursorPositionLine], i, i):match(shittySymbolsRegexp) then break end
 		from = i
 	end
 
-	for i = fromSymbol, unicode.len(mainContainer.codeView.lines[cursor.position.line]) do
-		if unicode.sub(mainContainer.codeView.lines[cursor.position.line], i, i):match(shittySymbolsRegexp) then break end
+	for i = fromSymbol, unicode.len(codeView.lines[cursorPositionLine]) do
+		if unicode.sub(codeView.lines[cursorPositionLine], i, i):match(shittySymbolsRegexp) then break end
 		to = i
 	end
 
@@ -210,25 +344,25 @@ local function getAutocompleteDatabaseMatches(stringToSearch)
 end
 
 local function hideAutocompleteWindow()
-	mainContainer.autocompleteWindow.hidden = true
+	autocompleteWindow.hidden = true
 end
 
 local function showAutocompleteWindow()
 	if config.enableAutocompletion then
-		mainContainer.autocompleteWindow.currentWordStarting, mainContainer.autocompleteWindow.currentWordEnding = getCurrentWordStartingAndEnding(cursor.position.symbol - 1)
+		autocompleteWindow.currentWordStarting, autocompleteWindow.currentWordEnding = getCurrentWordStartingAndEnding(cursorPositionSymbol - 1)
 
-		if mainContainer.autocompleteWindow.currentWordStarting then
-			mainContainer.autocompleteWindow.matches = getAutocompleteDatabaseMatches(
+		if autocompleteWindow.currentWordStarting then
+			autocompleteWindow.matches = getAutocompleteDatabaseMatches(
 				unicode.sub(
-					mainContainer.codeView.lines[cursor.position.line],
-					mainContainer.autocompleteWindow.currentWordStarting,
-					mainContainer.autocompleteWindow.currentWordEnding
+					codeView.lines[cursorPositionLine],
+					autocompleteWindow.currentWordStarting,
+					autocompleteWindow.currentWordEnding
 				)
 			)
 
-			if #mainContainer.autocompleteWindow.matches > 0 then
-				mainContainer.autocompleteWindow.fromMatch, mainContainer.autocompleteWindow.currentMatch = 1, 1
-				mainContainer.autocompleteWindow.hidden = false
+			if #autocompleteWindow.matches > 0 then
+				autocompleteWindow.fromMatch, autocompleteWindow.currentMatch = 1, 1
+				autocompleteWindow.hidden = false
 			else
 				hideAutocompleteWindow()
 			end
@@ -244,130 +378,71 @@ local function toggleEnableAutocompleteDatabase()
 	saveConfig()
 end
 
-------------------------------------------------------------------------------------------------------------------
-
 local function calculateSizes()
 	mainContainer.width, mainContainer.height = buffer.getResolution()
 
-	if mainContainer.leftTreeView.hidden then
-		mainContainer.codeView.localX, mainContainer.codeView.width = 1, mainContainer.width
-		mainContainer.bottomToolBar.localX, mainContainer.bottomToolBar.width = mainContainer.codeView.localX, mainContainer.codeView.width
+	if leftTreeView.hidden then
+		codeView.localX, codeView.width = 1, mainContainer.width
+		bottomToolBar.localX, bottomToolBar.width = codeView.localX, codeView.width
 	else
-		mainContainer.codeView.localX, mainContainer.codeView.width = mainContainer.leftTreeView.width + 1, mainContainer.width - mainContainer.leftTreeView.width
-		mainContainer.bottomToolBar.localX, mainContainer.bottomToolBar.width = mainContainer.codeView.localX, mainContainer.codeView.width
+		codeView.localX, codeView.width = leftTreeView.width + 1, mainContainer.width - leftTreeView.width
+		bottomToolBar.localX, bottomToolBar.width = codeView.localX, codeView.width
 	end
 
-	if mainContainer.topToolBar.hidden then
-		mainContainer.leftTreeView.localY, mainContainer.leftTreeView.height = 2, mainContainer.height - 1
-		mainContainer.codeView.localY, mainContainer.codeView.height = 2, mainContainer.height - 1
-		mainContainer.errorContainer.localY = 2
+	if topToolBar.hidden then
+		leftTreeView.localY, leftTreeView.height = 2, mainContainer.height - 1
+		codeView.localY, codeView.height = 2, mainContainer.height - 1
+		errorContainer.localY = 2
 	else
-		mainContainer.leftTreeView.localY, mainContainer.leftTreeView.height = 5, mainContainer.height - 4
-		mainContainer.codeView.localY, mainContainer.codeView.height = 5, mainContainer.height - 4
-		mainContainer.errorContainer.localY = 5
+		leftTreeView.localY, leftTreeView.height = 5, mainContainer.height - 4
+		codeView.localY, codeView.height = 5, mainContainer.height - 4
+		errorContainer.localY = 5
 	end
 
-	if mainContainer.bottomToolBar.hidden then
+	if bottomToolBar.hidden then
 
 	else
-		mainContainer.codeView.height = mainContainer.codeView.height - 3
+		codeView.height = codeView.height - 3
 	end
 
-	mainContainer.leftTreeViewResizer.localX = mainContainer.leftTreeView.width - 2
-	mainContainer.leftTreeViewResizer.localY = math.floor(mainContainer.leftTreeView.localY + mainContainer.leftTreeView.height / 2 - mainContainer.leftTreeViewResizer.height / 2)
+	leftTreeViewResizer.localX = leftTreeView.width - 2
+	leftTreeViewResizer.localY = math.floor(leftTreeView.localY + leftTreeView.height / 2 - leftTreeViewResizer.height / 2)
 
-	mainContainer.settingsContainer.width, mainContainer.settingsContainer.height = mainContainer.width, mainContainer.height
-	mainContainer.settingsContainer.backgroundPanel.width, mainContainer.settingsContainer.backgroundPanel.height = mainContainer.settingsContainer.width, mainContainer.settingsContainer.height
+	bottomToolBar.localY = mainContainer.height - 2
+	searchButton.localX = bottomToolBar.width - searchButton.width + 1
+	searchInput.width = bottomToolBar.width - searchInput.localX - searchButton.width + 1
 
-	mainContainer.bottomToolBar.localY = mainContainer.height - 2
-	mainContainer.bottomToolBar.findButton.localX = mainContainer.bottomToolBar.width - mainContainer.bottomToolBar.findButton.width + 1
-	mainContainer.bottomToolBar.inputField.width = mainContainer.bottomToolBar.width - mainContainer.bottomToolBar.inputField.localX - mainContainer.bottomToolBar.findButton.width + 1
+	topToolBar.width, topToolBarPanel.width, topLayout.width = mainContainer.width, mainContainer.width, mainContainer.width
+	titleTextBox.width = math.floor(topToolBar.width * 0.32)
+	
+	RAMProgressBar.localX = topToolBar.width - RAMProgressBar.width - 1
 
-	mainContainer.topToolBar.width, mainContainer.topToolBar.backgroundPanel.width = mainContainer.width, mainContainer.width
-	mainContainer.titleTextBox.width = math.floor(mainContainer.topToolBar.width * 0.32)
-	mainContainer.titleTextBox.localX = math.floor(mainContainer.topToolBar.width / 2 - mainContainer.titleTextBox.width / 2)
-	mainContainer.runButton.localX = mainContainer.titleTextBox.localX - mainContainer.runButton.width - 2
-	mainContainer.toggleSyntaxHighlightingButton.localX = mainContainer.runButton.localX - mainContainer.toggleSyntaxHighlightingButton.width - 2
-	mainContainer.addBreakpointButton.localX = mainContainer.toggleSyntaxHighlightingButton.localX - mainContainer.addBreakpointButton.width - 2
-	mainContainer.toggleLeftToolBarButton.localX = mainContainer.titleTextBox.localX + mainContainer.titleTextBox.width + 2
-	mainContainer.toggleBottomToolBarButton.localX = mainContainer.toggleLeftToolBarButton.localX + mainContainer.toggleLeftToolBarButton.width + 2
-	mainContainer.toggleTopToolBarButton.localX = mainContainer.toggleBottomToolBarButton.localX + mainContainer.toggleBottomToolBarButton.width + 2
+	errorContainer.width = titleTextBox.width
+	errorContainerPanel.width, errorContainerTextBox.width = errorContainer.width, errorContainer.width - 4
 
-	mainContainer.RAMUsageProgressBar.localX = mainContainer.toggleTopToolBarButton.localX + mainContainer.toggleTopToolBarButton.width + 3
-	mainContainer.RAMUsageProgressBar.width = mainContainer.topToolBar.width - mainContainer.RAMUsageProgressBar.localX - 3
-
-	mainContainer.errorContainer.localX, mainContainer.errorContainer.width = mainContainer.titleTextBox.localX, mainContainer.titleTextBox.width
-	mainContainer.errorContainer.backgroundPanel.width, mainContainer.errorContainer.errorTextBox.width = mainContainer.errorContainer.width, mainContainer.errorContainer.width - 4
-
-	mainContainer.topMenu.width = mainContainer.width
-end
-
-local function updateTitle()
-	if not mainContainer.topToolBar.hidden then
-		if mainContainer.errorContainer.hidden then
-			mainContainer.titleTextBox.lines[1] = string.limit(localization.file .. ": " .. (mainContainer.leftTreeView.selectedItem or localization.none), mainContainer.titleTextBox.width - 4)
-			mainContainer.titleTextBox.lines[2] = string.limit(localization.cursor .. cursor.position.line .. localization.line .. cursor.position.symbol .. localization.symbol, mainContainer.titleTextBox.width - 4)
-			if mainContainer.codeView.selections[1] then
-				local countOfSelectedLines = mainContainer.codeView.selections[1].to.line - mainContainer.codeView.selections[1].from.line + 1
-				local countOfSelectedSymbols
-				if mainContainer.codeView.selections[1].from.line == mainContainer.codeView.selections[1].to.line then
-					countOfSelectedSymbols = unicode.len(unicode.sub(mainContainer.codeView.lines[mainContainer.codeView.selections[1].from.line], mainContainer.codeView.selections[1].from.symbol, mainContainer.codeView.selections[1].to.symbol))
-				else
-					countOfSelectedSymbols = unicode.len(unicode.sub(mainContainer.codeView.lines[mainContainer.codeView.selections[1].from.line], mainContainer.codeView.selections[1].from.symbol, -1))
-					for line = mainContainer.codeView.selections[1].from.line + 1, mainContainer.codeView.selections[1].to.line - 1 do
-						countOfSelectedSymbols = countOfSelectedSymbols + unicode.len(mainContainer.codeView.lines[line])
-					end
-					countOfSelectedSymbols = countOfSelectedSymbols + unicode.len(unicode.sub(mainContainer.codeView.lines[mainContainer.codeView.selections[1].to.line], 1, mainContainer.codeView.selections[1].to.symbol))
-				end
-				mainContainer.titleTextBox.lines[3] = string.limit(localization.selection .. countOfSelectedLines .. localization.lines .. countOfSelectedSymbols .. localization.symbols, mainContainer.titleTextBox.width - 4)
-			else
-				mainContainer.titleTextBox.lines[3] = string.limit(localization.selection .. localization.none, mainContainer.titleTextBox.width - 4)
-			end
-		else
-			mainContainer.titleTextBox.lines[1], mainContainer.titleTextBox.lines[3] = " ", " "
-			if lastErrorLine then
-				mainContainer.titleTextBox.lines[2] = localization.runtimeError
-			else
-				mainContainer.titleTextBox.lines[2] = localization.debugging .. (_G.MineCodeIDEDebugInfo and _G.MineCodeIDEDebugInfo.line or "N/A")
-			end
-		end
-	end
+	topMenu.width = mainContainer.width
 end
 
 local function gotoLine(line)
-	mainContainer.codeView.fromLine = math.ceil(line - mainContainer.codeView.height / 2)
-	if mainContainer.codeView.fromLine < 1 then
-		mainContainer.codeView.fromLine = 1
-	elseif mainContainer.codeView.fromLine > #mainContainer.codeView.lines then
-		mainContainer.codeView.fromLine = #mainContainer.codeView.lines
-	end
-end
-
-local function updateHighlights()
-	mainContainer.codeView.highlights = {}
-
-	if breakpointLines then
-		for i = 1, #breakpointLines do
-			mainContainer.codeView.highlights[breakpointLines[i]] = colors.highlights.onBreakpoint
-		end
-	end
-
-	if lastErrorLine then
-		mainContainer.codeView.highlights[lastErrorLine] = colors.highlights.onError
+	codeView.fromLine = math.ceil(line - codeView.height / 2)
+	if codeView.fromLine < 1 then
+		codeView.fromLine = 1
+	elseif codeView.fromLine > #codeView.lines then
+		codeView.fromLine = #codeView.lines
 	end
 end
 
 local function calculateErrorContainerSizeAndBeep(hideBreakpointButtons, frequency, times)
-	mainContainer.errorContainer.errorTextBox.height = #mainContainer.errorContainer.errorTextBox.lines
-	mainContainer.errorContainer.height = 2 + mainContainer.errorContainer.errorTextBox.height
-	mainContainer.errorContainer.backgroundPanel.height = mainContainer.errorContainer.height
+	errorContainerTextBox.height = #errorContainerTextBox.lines
+	errorContainer.height = 2 + errorContainerTextBox.height
+	errorContainerPanel.height = errorContainer.height
 
-	mainContainer.errorContainer.breakpointExitButton.hidden, mainContainer.errorContainer.breakpointContinueButton.hidden = hideBreakpointButtons, hideBreakpointButtons
+	errorContainerExitButton.hidden, errorContainerContinueButton.hidden = hideBreakpointButtons, hideBreakpointButtons
 	if not hideBreakpointButtons then
-		mainContainer.errorContainer.height = mainContainer.errorContainer.height + 1
-		mainContainer.errorContainer.breakpointExitButton.localY, mainContainer.errorContainer.breakpointContinueButton.localY = mainContainer.errorContainer.height, mainContainer.errorContainer.height
-		mainContainer.errorContainer.breakpointExitButton.width = math.floor(mainContainer.errorContainer.width / 2)
-		mainContainer.errorContainer.breakpointContinueButton.localX, mainContainer.errorContainer.breakpointContinueButton.width = mainContainer.errorContainer.breakpointExitButton.width + 1, mainContainer.errorContainer.width - mainContainer.errorContainer.breakpointExitButton.width
+		errorContainer.height = errorContainer.height + 1
+		errorContainerExitButton.localY, errorContainerContinueButton.localY = errorContainer.height, errorContainer.height
+		errorContainerExitButton.width = math.floor(errorContainer.width / 2)
+		errorContainerContinueButton.localX, errorContainerContinueButton.width = errorContainerExitButton.width + 1, errorContainer.width - errorContainerExitButton.width
 	end
 
 	updateTitle()
@@ -377,32 +452,31 @@ local function calculateErrorContainerSizeAndBeep(hideBreakpointButtons, frequen
 end
 
 local function showBreakpointMessage(variables)
-	mainContainer.titleTextBox.colors.background, mainContainer.titleTextBox.colors.text = colors.title.onError.background, colors.title.onError.text
-	mainContainer.errorContainer.hidden = false
+	titleTextBox.colors.background, titleTextBox.colors.text = 0x880000, 0xE1E1E1
+	errorContainer.hidden = false
+	errorContainer.localX = titleTextBox.localX
 
-	mainContainer.errorContainer.errorTextBox:setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
-	mainContainer.errorContainer.errorTextBox.lines = {}
-
+	errorContainerTextBox.lines = {}
 	for variable, value in pairs(variables) do
-		table.insert(mainContainer.errorContainer.errorTextBox.lines, variable .. " = " .. value)
+		table.insert(errorContainerTextBox.lines, variable .. " = " .. value)
 	end
 
-	if #mainContainer.errorContainer.errorTextBox.lines > 0 then
-		table.insert(mainContainer.errorContainer.errorTextBox.lines, 1, " ")
-		table.insert(mainContainer.errorContainer.errorTextBox.lines, 1, {text = localization.variables, color = 0x0})
+	if #errorContainerTextBox.lines > 0 then
+		table.insert(errorContainerTextBox.lines, 1, " ")
+		table.insert(errorContainerTextBox.lines, 1, {text = localization.variables, color = 0x0})
 	else
-		table.insert(mainContainer.errorContainer.errorTextBox.lines, 1, {text = localization.variablesNotAvailable, color = 0x0})
+		table.insert(errorContainerTextBox.lines, 1, {text = localization.variablesNotAvailable, color = 0x0})
 	end
 
 	calculateErrorContainerSizeAndBeep(false, 1800, 1)
 end
 
 local function showErrorContainer(errorCode)
-	mainContainer.titleTextBox.colors.background, mainContainer.titleTextBox.colors.text = colors.title.onError.background, colors.title.onError.text
-	mainContainer.errorContainer.hidden = false
+	titleTextBox.colors.background, titleTextBox.colors.text = 0x880000, 0xE1E1E1
+	errorContainer.hidden = false
 
-	mainContainer.errorContainer.errorTextBox:setAlignment(GUI.alignment.horizontal.left, GUI.alignment.vertical.top)
-	mainContainer.errorContainer.errorTextBox.lines = string.wrap({errorCode}, mainContainer.errorContainer.errorTextBox.width)	
+	errorContainerTextBox:setAlignment(GUI.alignment.horizontal.left, GUI.alignment.vertical.top)
+	errorContainerTextBox.lines = string.wrap({errorCode}, errorContainerTextBox.width)	
 	
 	-- Извлекаем ошибочную строку текущего скрипта
 	lastErrorLine = tonumber(errorCode:match("%:(%d+)%: in main chunk"))
@@ -425,21 +499,8 @@ local function showErrorContainer(errorCode)
 	calculateErrorContainerSizeAndBeep(true, 1500, 3)
 end
 
-local function hideErrorContainer()
-	mainContainer.titleTextBox.colors.background, mainContainer.titleTextBox.colors.text = colors.title.default.background, colors.title.default.text
-	mainContainer.errorContainer.hidden = true
-	lastErrorLine, scriptCoroutine = nil, nil
-	updateHighlights()
-end
-
-local function hideSettingsContainer()
-	for childIndex = 2, #mainContainer.settingsContainer.children do mainContainer.settingsContainer.children[childIndex] = nil end
-	mainContainer.settingsContainer.hidden = true
-	mainContainer:drawOnScreen()
-end
-
 local function clearSelection()
-	mainContainer.codeView.selections[1] = nil
+	codeView.selections[1] = nil
 end
 
 local function clearBreakpoints()
@@ -453,7 +514,7 @@ local function addBreakpoint()
 	
 	local lineExists
 	for i = 1, #breakpointLines do
-		if breakpointLines[i] == cursor.position.line then
+		if breakpointLines[i] == cursorPositionLine then
 			lineExists = i
 			break
 		end
@@ -462,7 +523,7 @@ local function addBreakpoint()
 	if lineExists then
 		table.remove(breakpointLines, lineExists)
 	else
-		table.insert(breakpointLines, cursor.position.line)
+		table.insert(breakpointLines, cursorPositionLine)
 	end
 
 	if #breakpointLines > 0 then
@@ -475,29 +536,29 @@ local function addBreakpoint()
 end
 
 local function fixFromLineByCursorPosition()
-	if mainContainer.codeView.fromLine > cursor.position.line then
-		mainContainer.codeView.fromLine = cursor.position.line
-	elseif mainContainer.codeView.fromLine + mainContainer.codeView.height - 2 < cursor.position.line then
-		mainContainer.codeView.fromLine = cursor.position.line - mainContainer.codeView.height + 2
+	if codeView.fromLine > cursorPositionLine then
+		codeView.fromLine = cursorPositionLine
+	elseif codeView.fromLine + codeView.height - 2 < cursorPositionLine then
+		codeView.fromLine = cursorPositionLine - codeView.height + 2
 	end
 end
 
 local function fixFromSymbolByCursorPosition()
-	if mainContainer.codeView.fromSymbol > cursor.position.symbol then
-		mainContainer.codeView.fromSymbol = cursor.position.symbol
-	elseif mainContainer.codeView.fromSymbol + mainContainer.codeView.codeAreaWidth - 3 < cursor.position.symbol then
-		mainContainer.codeView.fromSymbol = cursor.position.symbol - mainContainer.codeView.codeAreaWidth + 3
+	if codeView.fromSymbol > cursorPositionSymbol then
+		codeView.fromSymbol = cursorPositionSymbol
+	elseif codeView.fromSymbol + codeView.codeAreaWidth - 3 < cursorPositionSymbol then
+		codeView.fromSymbol = cursorPositionSymbol - codeView.codeAreaWidth + 3
 	end
 end
 
 local function fixCursorPosition(symbol, line)
 	if line < 1 then
 		line = 1
-	elseif line > #mainContainer.codeView.lines then
-		line = #mainContainer.codeView.lines
+	elseif line > #codeView.lines then
+		line = #codeView.lines
 	end
 
-	local lineLength = unicode.len(mainContainer.codeView.lines[line])
+	local lineLength = unicode.len(codeView.lines[line])
 	if symbol < 1 or lineLength == 0 then
 		symbol = 1
 	elseif symbol > lineLength then
@@ -508,7 +569,7 @@ local function fixCursorPosition(symbol, line)
 end
 
 local function setCursorPosition(symbol, line)
-	cursor.position.symbol, cursor.position.line = fixCursorPosition(symbol, line)
+	cursorPositionSymbol, cursorPositionLine = fixCursorPosition(symbol, line)
 	fixFromLineByCursorPosition()
 	fixFromSymbolByCursorPosition()
 	hideAutocompleteWindow()
@@ -521,35 +582,35 @@ local function setCursorPositionAndClearSelection(symbol, line)
 end
 
 local function moveCursor(symbolOffset, lineOffset)
-	if mainContainer.autocompleteWindow.hidden or lineOffset == 0 then
-		if mainContainer.codeView.selections[1] then
+	if autocompleteWindow.hidden or lineOffset == 0 then
+		if codeView.selections[1] then
 			if symbolOffset < 0 or lineOffset < 0 then
-				setCursorPositionAndClearSelection(mainContainer.codeView.selections[1].from.symbol, mainContainer.codeView.selections[1].from.line)
+				setCursorPositionAndClearSelection(codeView.selections[1].from.symbol, codeView.selections[1].from.line)
 			else
-				setCursorPositionAndClearSelection(mainContainer.codeView.selections[1].to.symbol, mainContainer.codeView.selections[1].to.line)
+				setCursorPositionAndClearSelection(codeView.selections[1].to.symbol, codeView.selections[1].to.line)
 			end
 		else
-			local newSymbol, newLine = cursor.position.symbol + symbolOffset, cursor.position.line + lineOffset
+			local newSymbol, newLine = cursorPositionSymbol + symbolOffset, cursorPositionLine + lineOffset
 			
 			if symbolOffset < 0 and newSymbol < 1 then
 				newLine, newSymbol = newLine - 1, math.huge
-			elseif symbolOffset > 0 and newSymbol > unicode.len(mainContainer.codeView.lines[newLine] or "") + 1 then
+			elseif symbolOffset > 0 and newSymbol > unicode.len(codeView.lines[newLine] or "") + 1 then
 				newLine, newSymbol = newLine + 1, 1
 			end
 
 			setCursorPositionAndClearSelection(newSymbol, newLine)
 		end
-	elseif not mainContainer.autocompleteWindow.hidden then
-		mainContainer.autocompleteWindow.currentMatch = mainContainer.autocompleteWindow.currentMatch + lineOffset
+	elseif not autocompleteWindow.hidden then
+		autocompleteWindow.currentMatch = autocompleteWindow.currentMatch + lineOffset
 		
-		if mainContainer.autocompleteWindow.currentMatch < 1 then
-			mainContainer.autocompleteWindow.currentMatch = 1
-		elseif mainContainer.autocompleteWindow.currentMatch > #mainContainer.autocompleteWindow.matches then
-			mainContainer.autocompleteWindow.currentMatch = #mainContainer.autocompleteWindow.matches
-		elseif mainContainer.autocompleteWindow.currentMatch < mainContainer.autocompleteWindow.fromMatch then
-			mainContainer.autocompleteWindow.fromMatch = mainContainer.autocompleteWindow.currentMatch
-		elseif mainContainer.autocompleteWindow.currentMatch > mainContainer.autocompleteWindow.fromMatch + mainContainer.autocompleteWindow.height - 1 then
-			mainContainer.autocompleteWindow.fromMatch = mainContainer.autocompleteWindow.currentMatch - mainContainer.autocompleteWindow.height + 1
+		if autocompleteWindow.currentMatch < 1 then
+			autocompleteWindow.currentMatch = 1
+		elseif autocompleteWindow.currentMatch > #autocompleteWindow.matches then
+			autocompleteWindow.currentMatch = #autocompleteWindow.matches
+		elseif autocompleteWindow.currentMatch < autocompleteWindow.fromMatch then
+			autocompleteWindow.fromMatch = autocompleteWindow.currentMatch
+		elseif autocompleteWindow.currentMatch > autocompleteWindow.fromMatch + autocompleteWindow.height - 1 then
+			autocompleteWindow.fromMatch = autocompleteWindow.currentMatch - autocompleteWindow.height + 1
 		end
 	end
 end
@@ -559,46 +620,46 @@ local function setCursorPositionToHome()
 end
 
 local function setCursorPositionToEnd()
-	setCursorPositionAndClearSelection(unicode.len(mainContainer.codeView.lines[#mainContainer.codeView.lines]) + 1, #mainContainer.codeView.lines)
+	setCursorPositionAndClearSelection(unicode.len(codeView.lines[#codeView.lines]) + 1, #codeView.lines)
 end
 
 local function scroll(direction, speed)
 	if direction == 1 then
-		if mainContainer.codeView.fromLine > speed then
-			mainContainer.codeView.fromLine = mainContainer.codeView.fromLine - speed
+		if codeView.fromLine > speed then
+			codeView.fromLine = codeView.fromLine - speed
 		else
-			mainContainer.codeView.fromLine = 1
+			codeView.fromLine = 1
 		end
 	else
-		if mainContainer.codeView.fromLine < #mainContainer.codeView.lines - speed then
-			mainContainer.codeView.fromLine = mainContainer.codeView.fromLine + speed
+		if codeView.fromLine < #codeView.lines - speed then
+			codeView.fromLine = codeView.fromLine + speed
 		else
-			mainContainer.codeView.fromLine = #mainContainer.codeView.lines
+			codeView.fromLine = #codeView.lines
 		end
 	end
 end
 
 local function pageUp()
-	scroll(1, mainContainer.codeView.height - 2)
+	scroll(1, codeView.height - 2)
 end
 
 local function pageDown()
-	scroll(-1, mainContainer.codeView.height - 2)
+	scroll(-1, codeView.height - 2)
 end
 
 local function selectWord()
-	local from, to = getCurrentWordStartingAndEnding(cursor.position.symbol)
+	local from, to = getCurrentWordStartingAndEnding(cursorPositionSymbol)
 	if from and to then
-		mainContainer.codeView.selections[1] = {
-			from = {symbol = from, line = cursor.position.line},
-			to = {symbol = to, line = cursor.position.line},
+		codeView.selections[1] = {
+			from = {symbol = from, line = cursorPositionLine},
+			to = {symbol = to, line = cursorPositionLine},
 		}
-		cursor.position.symbol = to
+		cursorPositionSymbol = to
 	end
 end
 
 local function removeTabs(text)
-	local result = text:gsub("\t", string.rep(" ", mainContainer.codeView.indentationWidth))
+	local result = text:gsub("\t", string.rep(" ", codeView.indentationWidth))
 	return result
 end
 
@@ -615,14 +676,22 @@ local function changeResolution(width, height)
 	config.screenResolution.height = height
 end
 
+local function addFadeContainer(title)
+	return GUI.addFadeContainer(mainContainer, true, true, title)
+end
+
+local function addInputFadeContainer(title, placeholder)
+	local container = addFadeContainer(title)
+	container.input = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xC3C3C3, 0x787878, 0x787878, 0xC3C3C3, 0x2D2D2D, "", placeholder))
+
+	return container
+end
+
+
 local function changeResolutionWindow()
-	mainContainer.settingsContainer.hidden = false
-	local textBoxesWidth = math.floor(mainContainer.width * 0.3)
-	local textBoxWidth, x, y = math.floor(textBoxesWidth / 2), math.floor(mainContainer.width / 2 - textBoxesWidth / 2), math.floor(mainContainer.height / 2) - 3
-	
-	mainContainer.settingsContainer:addChild(GUI.label(1, y, mainContainer.width, 1, 0xFFFFFF, localization.changeResolution)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); y = y + 3
-	local inputFieldWidth = mainContainer.settingsContainer:addChild(GUI.input(x, y, textBoxWidth, 3, 0xCCCCCC, 0x777777, 0x777777, 0xCCCCCC, 0x2D2D2D, tostring(config.screenResolution.width))); x = x + textBoxWidth + 2
-	local inputFieldHeight = mainContainer.settingsContainer:addChild(GUI.input(x, y, textBoxWidth, 3, 0xCCCCCC, 0x777777, 0x777777, 0xCCCCCC, 0x2D2D2D, tostring(config.screenResolution.height)))
+	local container = addFadeContainer(localization.changeResolution)
+	local inputFieldWidth = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xC3C3C3, 0x787878, 0x787878, 0xC3C3C3, 0x2D2D2D, tostring(config.screenResolution.width)))
+	local inputFieldHeight = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xC3C3C3, 0x787878, 0x787878, 0xC3C3C3, 0x2D2D2D, tostring(config.screenResolution.height)))
 	
 	local maxResolutionWidth, maxResolutionHeight = component.gpu.maxResolution()
 	inputFieldWidth.validator = function(text)
@@ -634,37 +703,24 @@ local function changeResolutionWindow()
 		if number and number >= 1 and number <= maxResolutionHeight then return true end
 	end
 
-	mainContainer.settingsContainer.backgroundPanel.eventHandler = function(mainContainer, object, eventData)
+	container.panel.eventHandler = function(mainContainer, object, eventData)
 		if eventData[1] == "touch" then
 			config.screenResolution.width, config.screenResolution.height = tonumber(inputFieldWidth.text), tonumber(inputFieldHeight.text)
 			saveConfig()
-			hideSettingsContainer()
+			container:delete()
 			changeResolution(config.screenResolution.width, config.screenResolution.height)
 		end
 	end
-end
 
-local function createInputTextBoxForSettingsWindow(title, placeholder, onInputFinishedMethod, validatorMethod)
-	mainContainer.settingsContainer.hidden = false
-	local textBoxWidth = math.floor(mainContainer.width * 0.3)
-	local x, y = math.floor(mainContainer.width / 2 - textBoxWidth / 2), math.floor(mainContainer.height / 2) - 3
-	
-	mainContainer.settingsContainer:addChild(GUI.label(1, y, mainContainer.width, 1, 0xFFFFFF, title)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); y = y + 3
-	mainContainer.settingsContainer.inputField = mainContainer.settingsContainer:addChild(GUI.input(x, y, textBoxWidth, 3, 0xCCCCCC, 0x777777, 0x777777, 0xCCCCCC, 0x2D2D2D, "", placeholder))
-	
-	mainContainer.settingsContainer.inputField.validator = validatorMethod
-	mainContainer.settingsContainer.inputField.onInputFinished = function(...)
-		onInputFinishedMethod(...)
-		hideSettingsContainer()
-	end
+	mainContainer:drawOnScreen()
 end
 
 local function newFile()
 	autocompleteDatabase = {}
-	mainContainer.codeView.lines = {""}
-	mainContainer.codeView.maximumLineLength = 1
+	codeView.lines = {""}
+	codeView.maximumLineLength = 1
 	setCursorPositionAndClearSelection(1, 1)
-	mainContainer.leftTreeView.selectedItem = nil
+	leftTreeView.selectedItem = nil
 	clearBreakpoints()
 end
 
@@ -674,16 +730,16 @@ local function loadFile(path)
 		newFile()
 		for line in file:lines() do
 			line = removeWindowsLineEndings(removeTabs(line))
-			table.insert(mainContainer.codeView.lines, line)
-			mainContainer.codeView.maximumLineLength = math.max(mainContainer.codeView.maximumLineLength, unicode.len(line))
+			table.insert(codeView.lines, line)
+			codeView.maximumLineLength = math.max(codeView.maximumLineLength, unicode.len(line))
 		end
 		file:close()
 		
-		if #mainContainer.codeView.lines > 1 then
-			table.remove(mainContainer.codeView.lines, 1)
+		if #codeView.lines > 1 then
+			table.remove(codeView.lines, 1)
 		end
 		
-		mainContainer.leftTreeView.selectedItem = path
+		leftTreeView.selectedItem = path
 		updateAutocompleteDatabaseFromFile()
 	else
 		GUI.error(reason)
@@ -694,8 +750,8 @@ local function saveFile(path)
 	fs.makeDirectory(fs.path(path))
 	local file, reason = io.open(path, "w")
 		if file then
-		for line = 1, #mainContainer.codeView.lines do
-			file:write(mainContainer.codeView.lines[line], "\n")
+		for line = 1, #codeView.lines do
+			file:write(codeView.lines[line], "\n")
 		end
 		file:close()
 	else
@@ -704,45 +760,47 @@ local function saveFile(path)
 end
 
 local function gotoLineWindow()
-	createInputTextBoxForSettingsWindow(localization.gotoLine, localization.lineNumber,
-		function()
-			gotoLine(tonumber(mainContainer.settingsContainer.inputField.text))
-		end,
-		function()
-			if mainContainer.settingsContainer.inputField.text:match("%d+") then return true end
+	local container = addInputFadeContainer(localization.gotoLine, localization.lineNumber)
+
+	container.input.onInputFinished = function()
+		if container.input.text:match("%d+") then
+			gotoLine(tonumber(container.input.text))
+			container:delete()
+			mainContainer:drawOnScreen()
 		end
-	)
+	end
+
+	mainContainer:drawOnScreen()
 end
 
 local function openFileWindow()
-	createInputTextBoxForSettingsWindow(localization.openFile, localization.pathToFile,
-		function()
-			loadFile(mainContainer.settingsContainer.inputField.text)
-		end,
-		function()
-			if fs.exists(mainContainer.settingsContainer.inputField.text) then return true end
-		end
-	)
+	local filesystemDialog = GUI.addFilesystemDialogToContainer(mainContainer, 50, math.floor(mainContainer.height * 0.8), true, "Open", "Cancel", "File name", "/")
+	filesystemDialog:setMode(GUI.filesystemModes.open, GUI.filesystemModes.file)
+	filesystemDialog.onSubmit = function(path)
+		loadFile(path)
+		mainContainer:drawOnScreen()
+	end
+	filesystemDialog:show()
 end
 
 local function saveFileAsWindow()
-	createInputTextBoxForSettingsWindow(localization.saveAs, localization.pathToFile,
-		function()
-			if unicode.len(mainContainer.settingsContainer.inputField.text or "") > 0 then
-				saveFile(mainContainer.settingsContainer.inputField.text)
-				mainContainer.leftTreeView:updateFileList()
-				mainContainer.leftTreeView.selectedItem = mainContainer.leftTreeView.workPath .. mainContainer.settingsContainer.inputField.text
-				
-				updateTitle()
-				mainContainer:drawOnScreen()
-			end
-		end
-	)
+	local filesystemDialog = GUI.addFilesystemDialogToContainer(mainContainer, 50, math.floor(mainContainer.height * 0.8), true, "Save", "Cancel", "File name", "/")
+	filesystemDialog:setMode(GUI.filesystemModes.save, GUI.filesystemModes.file)
+	filesystemDialog.onSubmit = function(path)
+		saveFile(path)
+		leftTreeView:updateFileList()
+		leftTreeView.selectedItem = (leftTreeView.workPath .. path):gsub("/+", "/")
+
+		updateTitle()
+		updateAutocompleteDatabaseFromFile()
+		mainContainer:drawOnScreen()
+	end
+	filesystemDialog:show()
 end
 
 local function saveFileWindow()
-	saveFile(mainContainer.leftTreeView.selectedItem)
-	mainContainer.leftTreeView:updateFileList()
+	saveFile(leftTreeView.selectedItem)
+	leftTreeView:updateFileList()
 end
 
 local function splitStringIntoLines(s)
@@ -766,21 +824,25 @@ local function splitStringIntoLines(s)
 end
 
 local function downloadFileFromWeb()
-	createInputTextBoxForSettingsWindow(localization.getFromWeb, localization.url,
-		function()
-			local result, reason = web.request(mainContainer.settingsContainer.inputField.text)
+	local container = addInputFadeContainer(localization.gotoLine, localization.lineNumber)
+
+	container.input.onInputFinished = function()
+		if #container.input.text > 0 then
+			local result, reason = web.request(container.input.text)
 			if result then
 				newFile()
-				mainContainer.codeView.lines, mainContainer.codeView.maximumLineLength = splitStringIntoLines(result)
+				codeView.lines, codeView.maximumLineLength = splitStringIntoLines(result)
 			else
 				GUI.error("Failed to connect to URL: " .. tostring(reason))
 			end
-			hideSettingsContainer()
-		end
-	)
-end
 
-------------------------------------------------------------------------------------------------------------------
+			container:delete()
+			mainContainer:drawOnScreen()
+		end
+	end
+
+	mainContainer:drawOnScreen()
+end
 
 local function getVariables(codePart)
 	local variables = {}
@@ -829,14 +891,14 @@ local function getVariables(codePart)
 	return variables
 end
 
-local function continue()
+local function continue(...)
 	-- Готовим экран к запуску
 	local oldResolutionX, oldResolutionY = component.gpu.getResolution()
 	MineOSInterface.clearTerminal()
 
 	-- Запускаем
 	_G.MineCodeIDEDebugInfo = nil
-	local coroutineResumeSuccess, coroutineResumeReason = coroutine.resume(scriptCoroutine)
+	local coroutineResumeSuccess, coroutineResumeReason = coroutine.resume(scriptCoroutine, ...)
 
 	-- Анализируем результат запуска
 	if coroutineResumeSuccess then
@@ -858,14 +920,14 @@ local function continue()
 	end
 end
 
-local function run()
+local function run(...)
 	hideErrorContainer()
 
 	-- Инсертим брейкпоинты
 	if breakpointLines then
 		local offset = 0
 		for i = 1, #breakpointLines do
-			local variables = getVariables(mainContainer.codeView.lines[breakpointLines[i] + offset])
+			local variables = getVariables(codeView.lines[breakpointLines[i] + offset])
 			
 			local breakpointMessage = "_G.MineCodeIDEDebugInfo = {variables = {"
 			for variable in pairs(variables) do
@@ -873,60 +935,79 @@ local function run()
 			end
 			breakpointMessage =  breakpointMessage .. "}, line = " .. breakpointLines[i] .. "}; coroutine.yield()"
 
-			table.insert(mainContainer.codeView.lines, breakpointLines[i] + offset, breakpointMessage)
+			table.insert(codeView.lines, breakpointLines[i] + offset, breakpointMessage)
 			offset = offset + 1
 		end
 	end
 
 	-- Лоадим кодыч
-	local loadSuccess, loadReason = load(table.concat(mainContainer.codeView.lines, "\n"))
+	local loadSuccess, loadReason = load(table.concat(codeView.lines, "\n"))
 	
 	-- Чистим дерьмо вилочкой, чистим
 	if breakpointLines then
 		for i = 1, #breakpointLines do
-			table.remove(mainContainer.codeView.lines, breakpointLines[i])
+			table.remove(codeView.lines, breakpointLines[i])
 		end
 	end
 
 	-- Запускаем кодыч
 	if loadSuccess then
 		scriptCoroutine = coroutine.create(loadSuccess)
-		continue()
+		continue(...)
 	else
 		showErrorContainer(loadReason)
 	end
 end
 
-local function deleteLine(line)
-	if #mainContainer.codeView.lines > 1 then
-		table.remove(mainContainer.codeView.lines, line)
-	else
-		mainContainer.codeView.lines[1] = ""
+local function launchWithArgumentsWindow()
+	local container = addInputFadeContainer(localization.launchWithArguments, localization.arguments)
+
+	container.input.onInputFinished = function()
+		local arguments = {}
+		container.input.text = container.input.text:gsub(",%s+", ",")
+		for argument in container.input.text:gmatch("[^,]+") do
+			table.insert(arguments, argument)
+		end
+
+		container:delete()
+		mainContainer:drawOnScreen()
+
+		run(table.unpack(arguments))
 	end
 
-	setCursorPositionAndClearSelection(1, cursor.position.line)
+	mainContainer:drawOnScreen()
+end
+
+local function deleteLine(line)
+	if #codeView.lines > 1 then
+		table.remove(codeView.lines, line)
+	else
+		codeView.lines[1] = ""
+	end
+
+	setCursorPositionAndClearSelection(1, cursorPositionLine)
 	updateAutocompleteDatabaseFromFile()
 end
 
 local function deleteSpecifiedData(fromSymbol, fromLine, toSymbol, toLine)
-	local upperLine = unicode.sub(mainContainer.codeView.lines[fromLine], 1, fromSymbol - 1)
-	local lowerLine = unicode.sub(mainContainer.codeView.lines[toLine], toSymbol + 1, -1)
+	local upperLine = unicode.sub(codeView.lines[fromLine], 1, fromSymbol - 1)
+	local lowerLine = unicode.sub(codeView.lines[toLine], toSymbol + 1, -1)
 	for line = fromLine + 1, toLine do
-		table.remove(mainContainer.codeView.lines, fromLine + 1)
+		table.remove(codeView.lines, fromLine + 1)
 	end
-	mainContainer.codeView.lines[fromLine] = upperLine .. lowerLine
+	codeView.lines[fromLine] = upperLine .. lowerLine
 	setCursorPositionAndClearSelection(fromSymbol, fromLine)
 
 	updateAutocompleteDatabaseFromFile()
 end
 
 local function deleteSelectedData()
-	if mainContainer.codeView.selections[1] then
+	if codeView.selections[1] then
 		deleteSpecifiedData(
-			mainContainer.codeView.selections[1].from.symbol,
-			mainContainer.codeView.selections[1].from.line,
-			mainContainer.codeView.selections[1].to.symbol,
-			mainContainer.codeView.selections[1].to.line
+			codeView.selections[1].from.symbol,
+			codeView.selections[1].from.line,
+			codeView.selections[1].to.symbol,
+			codeView.selections[1].to.line
 		)
 
 		clearSelection()
@@ -934,53 +1015,53 @@ local function deleteSelectedData()
 end
 
 local function copy()
-	if mainContainer.codeView.selections[1] then
-		if mainContainer.codeView.selections[1].to.line == mainContainer.codeView.selections[1].from.line then
-			clipboard = { unicode.sub(mainContainer.codeView.lines[mainContainer.codeView.selections[1].from.line], mainContainer.codeView.selections[1].from.symbol, mainContainer.codeView.selections[1].to.symbol) }
+	if codeView.selections[1] then
+		if codeView.selections[1].to.line == codeView.selections[1].from.line then
+			clipboard = { unicode.sub(codeView.lines[codeView.selections[1].from.line], codeView.selections[1].from.symbol, codeView.selections[1].to.symbol) }
 		else
-			clipboard = { unicode.sub(mainContainer.codeView.lines[mainContainer.codeView.selections[1].from.line], mainContainer.codeView.selections[1].from.symbol, -1) }
-			for line = mainContainer.codeView.selections[1].from.line + 1, mainContainer.codeView.selections[1].to.line - 1 do
-				table.insert(clipboard, mainContainer.codeView.lines[line])
+			clipboard = { unicode.sub(codeView.lines[codeView.selections[1].from.line], codeView.selections[1].from.symbol, -1) }
+			for line = codeView.selections[1].from.line + 1, codeView.selections[1].to.line - 1 do
+				table.insert(clipboard, codeView.lines[line])
 			end
-			table.insert(clipboard, unicode.sub(mainContainer.codeView.lines[mainContainer.codeView.selections[1].to.line], 1, mainContainer.codeView.selections[1].to.symbol))
+			table.insert(clipboard, unicode.sub(codeView.lines[codeView.selections[1].to.line], 1, codeView.selections[1].to.symbol))
 		end
 	end
 end
 
 local function cut()
-	if mainContainer.codeView.selections[1] then
+	if codeView.selections[1] then
 		copy()
 		deleteSelectedData()
 	end
 end
 
 local function pasteSelectedAutocompletion()
-	local firstPart = unicode.sub(mainContainer.codeView.lines[cursor.position.line], 1, mainContainer.autocompleteWindow.currentWordStarting - 1)
-	local secondPart = unicode.sub(mainContainer.codeView.lines[cursor.position.line], mainContainer.autocompleteWindow.currentWordEnding + 1, -1)
-	mainContainer.codeView.lines[cursor.position.line] = firstPart .. mainContainer.autocompleteWindow.matches[mainContainer.autocompleteWindow.currentMatch][1] .. secondPart
-	setCursorPositionAndClearSelection(unicode.len(firstPart .. mainContainer.autocompleteWindow.matches[mainContainer.autocompleteWindow.currentMatch][1]) + 1, cursor.position.line)
+	local firstPart = unicode.sub(codeView.lines[cursorPositionLine], 1, autocompleteWindow.currentWordStarting - 1)
+	local secondPart = unicode.sub(codeView.lines[cursorPositionLine], autocompleteWindow.currentWordEnding + 1, -1)
+	codeView.lines[cursorPositionLine] = firstPart .. autocompleteWindow.matches[autocompleteWindow.currentMatch][1] .. secondPart
+	setCursorPositionAndClearSelection(unicode.len(firstPart .. autocompleteWindow.matches[autocompleteWindow.currentMatch][1]) + 1, cursorPositionLine)
 	hideAutocompleteWindow()
 end
 
 local function paste(pasteLines)
 	if pasteLines then
-		if mainContainer.codeView.selections[1] then
+		if codeView.selections[1] then
 			deleteSelectedData()
 		end
 
-		local firstPart = unicode.sub(mainContainer.codeView.lines[cursor.position.line], 1, cursor.position.symbol - 1)
-		local secondPart = unicode.sub(mainContainer.codeView.lines[cursor.position.line], cursor.position.symbol, -1)
+		local firstPart = unicode.sub(codeView.lines[cursorPositionLine], 1, cursorPositionSymbol - 1)
+		local secondPart = unicode.sub(codeView.lines[cursorPositionLine], cursorPositionSymbol, -1)
 
 		if #pasteLines == 1 then
-			mainContainer.codeView.lines[cursor.position.line] = firstPart .. pasteLines[1] .. secondPart
-			setCursorPositionAndClearSelection(cursor.position.symbol + unicode.len(pasteLines[1]), cursor.position.line)
+			codeView.lines[cursorPositionLine] = firstPart .. pasteLines[1] .. secondPart
+			setCursorPositionAndClearSelection(cursorPositionSymbol + unicode.len(pasteLines[1]), cursorPositionLine)
 		else
-			mainContainer.codeView.lines[cursor.position.line] = firstPart .. pasteLines[1]
+			codeView.lines[cursorPositionLine] = firstPart .. pasteLines[1]
 			for pasteLine = #pasteLines - 1, 2, -1 do
-				table.insert(mainContainer.codeView.lines, cursor.position.line + 1, pasteLines[pasteLine])
+				table.insert(codeView.lines, cursorPositionLine + 1, pasteLines[pasteLine])
 			end
-			table.insert(mainContainer.codeView.lines, cursor.position.line + #pasteLines - 1, pasteLines[#pasteLines] .. secondPart)
-			setCursorPositionAndClearSelection(unicode.len(pasteLines[#pasteLines]) + 1, cursor.position.line + #pasteLines - 1)
+			table.insert(codeView.lines, cursorPositionLine + #pasteLines - 1, pasteLines[#pasteLines] .. secondPart)
+			setCursorPositionAndClearSelection(unicode.len(pasteLines[#pasteLines]) + 1, cursorPositionLine + #pasteLines - 1)
 		end
 
 		updateAutocompleteDatabaseFromFile()
@@ -989,8 +1070,8 @@ end
 
 local function selectAndPasteColor()
 	local startColor = 0xFF0000
-	if mainContainer.codeView.selections[1] and mainContainer.codeView.selections[1].from.line == mainContainer.codeView.selections[1].to.line then
-		startColor = tonumber(unicode.sub(mainContainer.codeView.lines[mainContainer.codeView.selections[1].from.line], mainContainer.codeView.selections[1].from.symbol, mainContainer.codeView.selections[1].to.symbol)) or startColor
+	if codeView.selections[1] and codeView.selections[1].from.line == codeView.selections[1].to.line then
+		startColor = tonumber(unicode.sub(codeView.lines[codeView.selections[1].from.line], codeView.selections[1].from.symbol, codeView.selections[1].to.symbol)) or startColor
 	end
 
 	local selectedColor = GUI.palette(math.floor(mainContainer.width / 2 - 35), math.floor(mainContainer.height / 2 - 12), startColor):show()
@@ -1011,36 +1092,36 @@ end
 
 local function pasteAutoBrackets(unicodeByte)
 	local char = unicode.char(unicodeByte)
-	local currentSymbol = unicode.sub(mainContainer.codeView.lines[cursor.position.line], cursor.position.symbol, cursor.position.symbol)
+	local currentSymbol = unicode.sub(codeView.lines[cursorPositionLine], cursorPositionSymbol, cursorPositionSymbol)
 
 	-- Если у нас вообще врублен режим автоскобок, то чекаем их
 	if config.enableAutoBrackets then
 		-- Ситуация, когда курсор находится на закрывающей скобке, и нехуй ее еще раз вставлять
-		if possibleBrackets.closers[char] and currentSymbol == char then
+		if closeBrackets[char] and currentSymbol == char then
 			deleteSelectedData()
-			setCursorPosition(cursor.position.symbol + 1, cursor.position.line)
+			setCursorPosition(cursorPositionSymbol + 1, cursorPositionLine)
 		-- Если нажата открывающая скобка
-		elseif possibleBrackets.openers[char] then
+		elseif openBrackets[char] then
 			-- А вот тут мы берем в скобочки уже выделенный текст
-			if mainContainer.codeView.selections[1] then
-				local firstPart = unicode.sub(mainContainer.codeView.lines[mainContainer.codeView.selections[1].from.line], 1, mainContainer.codeView.selections[1].from.symbol - 1)
-				local secondPart = unicode.sub(mainContainer.codeView.lines[mainContainer.codeView.selections[1].from.line], mainContainer.codeView.selections[1].from.symbol, -1)
-				mainContainer.codeView.lines[mainContainer.codeView.selections[1].from.line] = firstPart .. char .. secondPart
-				mainContainer.codeView.selections[1].from.symbol = mainContainer.codeView.selections[1].from.symbol + 1
+			if codeView.selections[1] then
+				local firstPart = unicode.sub(codeView.lines[codeView.selections[1].from.line], 1, codeView.selections[1].from.symbol - 1)
+				local secondPart = unicode.sub(codeView.lines[codeView.selections[1].from.line], codeView.selections[1].from.symbol, -1)
+				codeView.lines[codeView.selections[1].from.line] = firstPart .. char .. secondPart
+				codeView.selections[1].from.symbol = codeView.selections[1].from.symbol + 1
 
-				if mainContainer.codeView.selections[1].to.line == mainContainer.codeView.selections[1].from.line then
-					mainContainer.codeView.selections[1].to.symbol = mainContainer.codeView.selections[1].to.symbol + 1
+				if codeView.selections[1].to.line == codeView.selections[1].from.line then
+					codeView.selections[1].to.symbol = codeView.selections[1].to.symbol + 1
 				end
 
-				firstPart = unicode.sub(mainContainer.codeView.lines[mainContainer.codeView.selections[1].to.line], 1, mainContainer.codeView.selections[1].to.symbol)
-				secondPart = unicode.sub(mainContainer.codeView.lines[mainContainer.codeView.selections[1].to.line], mainContainer.codeView.selections[1].to.symbol + 1, -1)
-				mainContainer.codeView.lines[mainContainer.codeView.selections[1].to.line] = firstPart .. possibleBrackets.openers[char] .. secondPart
-				cursor.position.symbol = cursor.position.symbol + 2
+				firstPart = unicode.sub(codeView.lines[codeView.selections[1].to.line], 1, codeView.selections[1].to.symbol)
+				secondPart = unicode.sub(codeView.lines[codeView.selections[1].to.line], codeView.selections[1].to.symbol + 1, -1)
+				codeView.lines[codeView.selections[1].to.line] = firstPart .. openBrackets[char] .. secondPart
+				cursorPositionSymbol = cursorPositionSymbol + 2
 			-- А тут мы делаем двойную автоскобку, если можем
-			elseif possibleBrackets.openers[char] and not currentSymbol:match("[%a%d%_]") then
-				paste({char .. possibleBrackets.openers[char]})
-				setCursorPosition(cursor.position.symbol - 1, cursor.position.line)
-				cursor.blinkState = false
+			elseif openBrackets[char] and not currentSymbol:match("[%a%d%_]") then
+				paste({char .. openBrackets[char]})
+				setCursorPosition(cursorPositionSymbol - 1, cursorPositionLine)
+				cursorBlinkState = false
 			-- Ну, и если нет ни выделений, ни можем ебануть автоскобочку по регулярке
 			else
 				pasteRegularChar(unicodeByte, char)
@@ -1056,22 +1137,22 @@ local function pasteAutoBrackets(unicodeByte)
 end
 
 local function backspaceAutoBrackets()	
-	local previousSymbol = unicode.sub(mainContainer.codeView.lines[cursor.position.line], cursor.position.symbol - 1, cursor.position.symbol - 1)
-	local currentSymbol = unicode.sub(mainContainer.codeView.lines[cursor.position.line], cursor.position.symbol, cursor.position.symbol)
-	if config.enableAutoBrackets and possibleBrackets.openers[previousSymbol] and possibleBrackets.openers[previousSymbol] == currentSymbol then
-		deleteSpecifiedData(cursor.position.symbol, cursor.position.line, cursor.position.symbol, cursor.position.line)
+	local previousSymbol = unicode.sub(codeView.lines[cursorPositionLine], cursorPositionSymbol - 1, cursorPositionSymbol - 1)
+	local currentSymbol = unicode.sub(codeView.lines[cursorPositionLine], cursorPositionSymbol, cursorPositionSymbol)
+	if config.enableAutoBrackets and openBrackets[previousSymbol] and openBrackets[previousSymbol] == currentSymbol then
+		deleteSpecifiedData(cursorPositionSymbol, cursorPositionLine, cursorPositionSymbol, cursorPositionLine)
 	end
 end
 
 local function delete()
-	if mainContainer.codeView.selections[1] then
+	if codeView.selections[1] then
 		deleteSelectedData()
 	else
-		if cursor.position.symbol < unicode.len(mainContainer.codeView.lines[cursor.position.line]) + 1 then
-			deleteSpecifiedData(cursor.position.symbol, cursor.position.line, cursor.position.symbol, cursor.position.line)
+		if cursorPositionSymbol < unicode.len(codeView.lines[cursorPositionLine]) + 1 then
+			deleteSpecifiedData(cursorPositionSymbol, cursorPositionLine, cursorPositionSymbol, cursorPositionLine)
 		else
-			if cursor.position.line > 1 and mainContainer.codeView.lines[cursor.position.line + 1] then
-				deleteSpecifiedData(unicode.len(mainContainer.codeView.lines[cursor.position.line]) + 1, cursor.position.line, 0, cursor.position.line + 1)
+			if cursorPositionLine > 1 and codeView.lines[cursorPositionLine + 1] then
+				deleteSpecifiedData(unicode.len(codeView.lines[cursorPositionLine]) + 1, cursorPositionLine, 0, cursorPositionLine + 1)
 			end
 		end
 
@@ -1081,15 +1162,15 @@ local function delete()
 end
 
 local function backspace()
-	if mainContainer.codeView.selections[1] then
+	if codeView.selections[1] then
 		deleteSelectedData()
 	else
-		if cursor.position.symbol > 1 then
+		if cursorPositionSymbol > 1 then
 			backspaceAutoBrackets()
-			deleteSpecifiedData(cursor.position.symbol - 1, cursor.position.line, cursor.position.symbol - 1, cursor.position.line)
+			deleteSpecifiedData(cursorPositionSymbol - 1, cursorPositionLine, cursorPositionSymbol - 1, cursorPositionLine)
 		else
-			if cursor.position.line > 1 then
-				deleteSpecifiedData(unicode.len(mainContainer.codeView.lines[cursor.position.line - 1]) + 1, cursor.position.line - 1, 0, cursor.position.line)
+			if cursorPositionLine > 1 then
+				deleteSpecifiedData(unicode.len(codeView.lines[cursorPositionLine - 1]) + 1, cursorPositionLine - 1, 0, cursorPositionLine)
 			end
 		end
 
@@ -1099,50 +1180,50 @@ local function backspace()
 end
 
 local function enter()
-	local firstPart = unicode.sub(mainContainer.codeView.lines[cursor.position.line], 1, cursor.position.symbol - 1)
-	local secondPart = unicode.sub(mainContainer.codeView.lines[cursor.position.line], cursor.position.symbol, -1)
-	mainContainer.codeView.lines[cursor.position.line] = firstPart
-	table.insert(mainContainer.codeView.lines, cursor.position.line + 1, secondPart)
-	setCursorPositionAndClearSelection(1, cursor.position.line + 1)
+	local firstPart = unicode.sub(codeView.lines[cursorPositionLine], 1, cursorPositionSymbol - 1)
+	local secondPart = unicode.sub(codeView.lines[cursorPositionLine], cursorPositionSymbol, -1)
+	codeView.lines[cursorPositionLine] = firstPart
+	table.insert(codeView.lines, cursorPositionLine + 1, secondPart)
+	setCursorPositionAndClearSelection(1, cursorPositionLine + 1)
 end
 
 local function selectAll()
-	mainContainer.codeView.selections[1] = {
+	codeView.selections[1] = {
 		from = {
 			symbol = 1, line = 1
 		},
 		to = {
-			symbol = unicode.len(mainContainer.codeView.lines[#mainContainer.codeView.lines]), line = #mainContainer.codeView.lines
+			symbol = unicode.len(codeView.lines[#codeView.lines]), line = #codeView.lines
 		}
 	}
 end
 
 local function isLineCommented(line)
-	if mainContainer.codeView.lines[line] == "" or mainContainer.codeView.lines[line]:match("%-%-%s?") then return true end
+	if codeView.lines[line] == "" or codeView.lines[line]:match("%-%-%s?") then return true end
 end
 
 local function commentLine(line)
-	mainContainer.codeView.lines[line] = "-- " .. mainContainer.codeView.lines[line]
+	codeView.lines[line] = "-- " .. codeView.lines[line]
 end
 
 local function uncommentLine(line)
 	local countOfReplaces
-	mainContainer.codeView.lines[line], countOfReplaces = mainContainer.codeView.lines[line]:gsub("%-%-%s?", "", 1)
+	codeView.lines[line], countOfReplaces = codeView.lines[line]:gsub("%-%-%s?", "", 1)
 	return countOfReplaces
 end
 
 local function toggleComment()
-	if mainContainer.codeView.selections[1] then
+	if codeView.selections[1] then
 		local allLinesAreCommented = true
 		
-		for line = mainContainer.codeView.selections[1].from.line, mainContainer.codeView.selections[1].to.line do
+		for line = codeView.selections[1].from.line, codeView.selections[1].to.line do
 			if not isLineCommented(line) then
 				allLinesAreCommented = false
 				break
 			end
 		end
 		
-		for line = mainContainer.codeView.selections[1].from.line, mainContainer.codeView.selections[1].to.line do
+		for line = codeView.selections[1].from.line, codeView.selections[1].to.line do
 			if allLinesAreCommented then
 				uncommentLine(line)
 			else
@@ -1152,97 +1233,90 @@ local function toggleComment()
 
 		local modifyer = 3
 		if allLinesAreCommented then modifyer = -modifyer end
-		setCursorPosition(cursor.position.symbol + modifyer, cursor.position.line)
-		mainContainer.codeView.selections[1].from.symbol, mainContainer.codeView.selections[1].to.symbol = mainContainer.codeView.selections[1].from.symbol + modifyer, mainContainer.codeView.selections[1].to.symbol + modifyer
+		setCursorPosition(cursorPositionSymbol + modifyer, cursorPositionLine)
+		codeView.selections[1].from.symbol, codeView.selections[1].to.symbol = codeView.selections[1].from.symbol + modifyer, codeView.selections[1].to.symbol + modifyer
 	else
-		if isLineCommented(cursor.position.line) then
-			if uncommentLine(cursor.position.line) > 0 then
-				setCursorPositionAndClearSelection(cursor.position.symbol - 3, cursor.position.line)
+		if isLineCommented(cursorPositionLine) then
+			if uncommentLine(cursorPositionLine) > 0 then
+				setCursorPositionAndClearSelection(cursorPositionSymbol - 3, cursorPositionLine)
 			end
 		else
-			commentLine(cursor.position.line)
-			setCursorPositionAndClearSelection(cursor.position.symbol + 3, cursor.position.line)
+			commentLine(cursorPositionLine)
+			setCursorPositionAndClearSelection(cursorPositionSymbol + 3, cursorPositionLine)
 		end
 	end
 end
 
 local function indentLine(line)
-	mainContainer.codeView.lines[line] = string.rep(" ", mainContainer.codeView.indentationWidth) .. mainContainer.codeView.lines[line]
+	codeView.lines[line] = string.rep(" ", codeView.indentationWidth) .. codeView.lines[line]
 end
 
 local function unindentLine(line)
-	mainContainer.codeView.lines[line], countOfReplaces = string.gsub(mainContainer.codeView.lines[line], "^" .. string.rep("%s", mainContainer.codeView.indentationWidth), "")
+	codeView.lines[line], countOfReplaces = string.gsub(codeView.lines[line], "^" .. string.rep("%s", codeView.indentationWidth), "")
 	return countOfReplaces
 end
 
 local function indentOrUnindent(isIndent)
-	if mainContainer.codeView.selections[1] then
+	if codeView.selections[1] then
 		local countOfReplacesInFirstLine, countOfReplacesInLastLine
 		
-		for line = mainContainer.codeView.selections[1].from.line, mainContainer.codeView.selections[1].to.line do
+		for line = codeView.selections[1].from.line, codeView.selections[1].to.line do
 			if isIndent then
 				indentLine(line)
 			else
 				local countOfReplaces = unindentLine(line)
-				if line == mainContainer.codeView.selections[1].from.line then
+				if line == codeView.selections[1].from.line then
 					countOfReplacesInFirstLine = countOfReplaces
-				elseif line == mainContainer.codeView.selections[1].to.line then
+				elseif line == codeView.selections[1].to.line then
 					countOfReplacesInLastLine = countOfReplaces
 				end
 			end
 		end		
 
 		if isIndent then
-			setCursorPosition(cursor.position.symbol + mainContainer.codeView.indentationWidth, cursor.position.line)
-			mainContainer.codeView.selections[1].from.symbol, mainContainer.codeView.selections[1].to.symbol = mainContainer.codeView.selections[1].from.symbol + mainContainer.codeView.indentationWidth, mainContainer.codeView.selections[1].to.symbol + mainContainer.codeView.indentationWidth
+			setCursorPosition(cursorPositionSymbol + codeView.indentationWidth, cursorPositionLine)
+			codeView.selections[1].from.symbol, codeView.selections[1].to.symbol = codeView.selections[1].from.symbol + codeView.indentationWidth, codeView.selections[1].to.symbol + codeView.indentationWidth
 		else
 			if countOfReplacesInFirstLine > 0 then
-				mainContainer.codeView.selections[1].from.symbol = mainContainer.codeView.selections[1].from.symbol - mainContainer.codeView.indentationWidth
-				if cursor.position.line == mainContainer.codeView.selections[1].from.line then
-					setCursorPosition(cursor.position.symbol - mainContainer.codeView.indentationWidth, cursor.position.line)
+				codeView.selections[1].from.symbol = codeView.selections[1].from.symbol - codeView.indentationWidth
+				if cursorPositionLine == codeView.selections[1].from.line then
+					setCursorPosition(cursorPositionSymbol - codeView.indentationWidth, cursorPositionLine)
 				end
 			end
 
 			if countOfReplacesInLastLine > 0 then
-				mainContainer.codeView.selections[1].to.symbol = mainContainer.codeView.selections[1].to.symbol - mainContainer.codeView.indentationWidth
-				if cursor.position.line == mainContainer.codeView.selections[1].to.line then
-					setCursorPosition(cursor.position.symbol - mainContainer.codeView.indentationWidth, cursor.position.line)
+				codeView.selections[1].to.symbol = codeView.selections[1].to.symbol - codeView.indentationWidth
+				if cursorPositionLine == codeView.selections[1].to.line then
+					setCursorPosition(cursorPositionSymbol - codeView.indentationWidth, cursorPositionLine)
 				end
 			end
 		end
 	else
 		if isIndent then
-			indentLine(cursor.position.line)
-			setCursorPositionAndClearSelection(cursor.position.symbol + mainContainer.codeView.indentationWidth, cursor.position.line)
+			indentLine(cursorPositionLine)
+			setCursorPositionAndClearSelection(cursorPositionSymbol + codeView.indentationWidth, cursorPositionLine)
 		else
-			if unindentLine(cursor.position.line) > 0 then
-				setCursorPositionAndClearSelection(cursor.position.symbol - mainContainer.codeView.indentationWidth, cursor.position.line)
+			if unindentLine(cursorPositionLine) > 0 then
+				setCursorPositionAndClearSelection(cursorPositionSymbol - codeView.indentationWidth, cursorPositionLine)
 			end
 		end
 	end
 end
 
-local function updateRAMProgressBar()
-	if not mainContainer.topToolBar.hidden then
-		local totalMemory = computer.totalMemory()
-		mainContainer.RAMUsageProgressBar.value = math.ceil((totalMemory - computer.freeMemory()) / totalMemory * 100)
-	end
-end
-
 local function find()
-	if not mainContainer.bottomToolBar.hidden and mainContainer.bottomToolBar.inputField.text ~= "" then
+	if not bottomToolBar.hidden and searchInput.text ~= "" then
 		findStartFrom = findStartFrom + 1
 	
-		for line = findStartFrom, #mainContainer.codeView.lines do
-			local whereToFind, whatToFind = mainContainer.codeView.lines[line], mainContainer.bottomToolBar.inputField.text
-			if not mainContainer.bottomToolBar.caseSensitiveButton.pressed then
+		for line = findStartFrom, #codeView.lines do
+			local whereToFind, whatToFind = codeView.lines[line], searchInput.text
+			if not caseSensitiveButton.pressed then
 				whereToFind, whatToFind = unicode.lower(whereToFind), unicode.lower(whatToFind)
 			end
 
 			local success, starting, ending = pcall(string.unicodeFind, whereToFind, whatToFind)
 			if success then
 				if starting then
-					mainContainer.codeView.selections[1] = {
+					codeView.selections[1] = {
 						from = {symbol = starting, line = line},
 						to = {symbol = ending, line = line},
 						color = 0xCC9200
@@ -1261,33 +1335,33 @@ local function find()
 end
 
 local function findFromFirstDisplayedLine()
-	findStartFrom = mainContainer.codeView.fromLine
+	findStartFrom = codeView.fromLine
 	find()
 end
 
 local function toggleBottomToolBar()
-	mainContainer.bottomToolBar.hidden = not mainContainer.bottomToolBar.hidden
-	mainContainer.toggleBottomToolBarButton.pressed = not mainContainer.bottomToolBar.hidden
+	bottomToolBar.hidden = not bottomToolBar.hidden
+	toggleBottomToolBarButton.pressed = not bottomToolBar.hidden
 	calculateSizes()
 		
-	if not mainContainer.bottomToolBar.hidden then
+	if not bottomToolBar.hidden then
 		mainContainer:draw()
 		findFromFirstDisplayedLine()
 	end
 end
 
 local function toggleTopToolBar()
-	mainContainer.topToolBar.hidden = not mainContainer.topToolBar.hidden
-	mainContainer.toggleTopToolBarButton.pressed = not mainContainer.topToolBar.hidden
+	topToolBar.hidden = not topToolBar.hidden
+	toggleTopToolBarButton.pressed = not topToolBar.hidden
 	calculateSizes()
 end
 
 local function createEditOrRightClickMenu(x, y)
 	local editOrRightClickMenu = GUI.contextMenu(x, y)
-	editOrRightClickMenu:addItem(localization.cut, not mainContainer.codeView.selections[1], "^X").onTouch = function()
+	editOrRightClickMenu:addItem(localization.cut, not codeView.selections[1], "^X").onTouch = function()
 		cut()
 	end
-	editOrRightClickMenu:addItem(localization.copy, not mainContainer.codeView.selections[1], "^C").onTouch = function()
+	editOrRightClickMenu:addItem(localization.copy, not codeView.selections[1], "^C").onTouch = function()
 		copy()
 	end
 	editOrRightClickMenu:addItem(localization.paste, not clipboard, "^V").onTouch = function()
@@ -1304,7 +1378,7 @@ local function createEditOrRightClickMenu(x, y)
 		indentOrUnindent(false)
 	end
 	editOrRightClickMenu:addItem(localization.deleteLine, false, "^Del").onTouch = function()
-		deleteLine(cursor.position.line)
+		deleteLine(cursorPositionLine)
 	end
 	editOrRightClickMenu:addSeparator()
 	editOrRightClickMenu:addItem(localization.addBreakpoint, false, "F9").onTouch = function()
@@ -1327,512 +1401,435 @@ local function createEditOrRightClickMenu(x, y)
 	editOrRightClickMenu:show()
 end
 
-local function tick()
-	updateTitle()
-	updateRAMProgressBar()
-	mainContainer:draw()
-	
-	if cursor.blinkState and mainContainer.settingsContainer.hidden then
-		local x, y = convertTextPositionToScreenCoordinates(cursor.position.symbol, cursor.position.line)
-		if
-			x >= mainContainer.codeView.codeAreaPosition + 1 and
-			y >= mainContainer.codeView.y and
-			x <= mainContainer.codeView.codeAreaPosition + mainContainer.codeView.codeAreaWidth - 2 and
-			y <= mainContainer.codeView.y + mainContainer.codeView.height - 2
-		then
-			buffer.text(x, y, config.cursorColor, config.cursorSymbol)
-		end
-	end
-
-	buffer.draw()
-end
-
-local function createMainContainer()
-	mainContainer = GUI.fullScreenContainer()
-	
-	mainContainer.codeView = mainContainer:addChild(GUI.codeView(1, 1, 1, 1, {""}, 1, 1, 1, {}, {}, config.highlightLuaSyntax, 2))
-	mainContainer.codeView.scrollBars.vertical.onTouch = function()
-		mainContainer.codeView.fromLine = math.ceil(mainContainer.codeView.scrollBars.vertical.value)
-	end
-	mainContainer.codeView.scrollBars.horizontal.onTouch = function()
-		mainContainer.codeView.fromSymbol = math.ceil(mainContainer.codeView.scrollBars.horizontal.value)
-	end
-
-	mainContainer.topMenu = mainContainer:addChild(GUI.menu(1, 1, 1, colors.topMenu.backgroundColor, colors.topMenu.textColor, colors.topMenu.backgroundPressedColor, colors.topMenu.textPressedColor))
-	
-	local item1 = mainContainer.topMenu:addItem("MineCode", 0x0)
-	item1.onTouch = function()
-		local menu = GUI.contextMenu(item1.x, item1.y + 1)
-		menu:addItem(localization.about).onTouch = function()
-			mainContainer.settingsContainer.hidden = false
-			local y = math.floor(mainContainer.settingsContainer.height / 2 - #about / 2)
-			mainContainer.settingsContainer:addChild(GUI.textBox(1, y, mainContainer.settingsContainer.width, #about, nil, 0xEEEEEE, about, 1)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
-		end
-		menu:addItem(localization.quit, false, "^W").onTouch = function()
-			mainContainer:stopEventHandling()
-		end
-		menu:show()
-	end
-
-	local item2 = mainContainer.topMenu:addItem(localization.file)
-	item2.onTouch = function()
-		local menu = GUI.contextMenu(item2.x, item2.y + 1)
-		menu:addItem(localization.new, false, "^N").onTouch = function()
-			newFile()
-			mainContainer:drawOnScreen()
-		end
-		menu:addItem(localization.open, false, "^O").onTouch = function()
-			openFileWindow()
-		end
-		if component.isAvailable("internet") then
-			menu:addItem(localization.getFromWeb, false, "^U").onTouch = function()
-				downloadFileFromWeb()
-			end
-		end
-		menu:addSeparator()
-		menu:addItem(localization.save, not mainContainer.leftTreeView.selectedItem, "^S").onTouch = function()
-			saveFileWindow()
-		end
-		menu:addItem(localization.saveAs, false, "^⇧S").onTouch = function()
-			saveFileAsWindow()
-		end
-		menu:show()
-	end
-
-	local item3 = mainContainer.topMenu:addItem(localization.edit)
-	item3.onTouch = function()
-		createEditOrRightClickMenu(item3.x, item3.y + 1)
-	end
-
-	local item4 = mainContainer.topMenu:addItem(localization.properties)
-	item4.onTouch = function()
-		local menu = GUI.contextMenu(item4.x, item4.y + 1)
-		menu:addItem(localization.colorScheme).onTouch = function()
-			mainContainer.settingsContainer.hidden = false
-			
-			local colorSelectorsCount, colorSelectorCountX = 0, 4; for key in pairs(config.syntaxColorScheme) do colorSelectorsCount = colorSelectorsCount + 1 end
-			local colorSelectorCountY = math.ceil(colorSelectorsCount / colorSelectorCountX)
-			local colorSelectorWidth, colorSelectorHeight, colorSelectorSpaceX, colorSelectorSpaceY = math.floor(mainContainer.settingsContainer.width / colorSelectorCountX * 0.8), 3, 2, 1
-			
-			local startX, y = math.floor(mainContainer.settingsContainer.width / 2 - (colorSelectorCountX * (colorSelectorWidth + colorSelectorSpaceX) - colorSelectorSpaceX) / 2), math.floor(mainContainer.settingsContainer.height / 2 - (colorSelectorCountY * (colorSelectorHeight + colorSelectorSpaceY) - colorSelectorSpaceY + 3) / 2)
-			mainContainer.settingsContainer:addChild(GUI.label(1, y, mainContainer.settingsContainer.width, 1, 0xFFFFFF, localization.colorScheme)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); y = y + 3
-			local x, counter = startX, 1
-
-			local colors = {}
-			for key in pairs(config.syntaxColorScheme) do
-				table.insert(colors, {key})
-			end
-
-			aplhabeticalSort(colors)
-
-			for i = 1, #colors do
-				local colorSelector = mainContainer.settingsContainer:addChild(GUI.colorSelector(x, y, colorSelectorWidth, colorSelectorHeight, config.syntaxColorScheme[colors[i][1]], colors[i][1]))
-				colorSelector.onTouch = function()
-					config.syntaxColorScheme[colors[i][1]] = colorSelector.color
-					syntax.colorScheme = config.syntaxColorScheme
-					saveConfig()
-				end
-
-				x, counter = x + colorSelectorWidth + colorSelectorSpaceX, counter + 1
-				if counter > colorSelectorCountX then
-					x, y, counter = startX, y + colorSelectorHeight + colorSelectorSpaceY, 1
-				end
-			end
-		end
-		menu:addItem(localization.cursorProperties).onTouch = function()
-			mainContainer.settingsContainer.hidden = false
-
-			local elementWidth = math.floor(mainContainer.width * 0.3)
-			local x, y = math.floor(mainContainer.width / 2 - elementWidth / 2), math.floor(mainContainer.height / 2) - 7
-			mainContainer.settingsContainer:addChild(GUI.label(1, y, mainContainer.settingsContainer.width, 1, 0xFFFFFF, localization.cursorProperties)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); y = y + 3
-			local inputField = mainContainer.settingsContainer:addChild(GUI.input(x, y, elementWidth, 3, 0xCCCCCC, 0x777777, 0x777777, 0xCCCCCC, 0x2D2D2D, config.cursorSymbol, localization.cursorSymbol)); y = y + 5
-			inputField.validator = function(text)
-				if unicode.len(text) == 1 then return true end
-			end
-			inputField.onInputFinished = function()
-				config.cursorSymbol = inputField.text; saveConfig()
-			end
-			local colorSelector = mainContainer.settingsContainer:addChild(GUI.colorSelector(x, y, elementWidth, 3, config.cursorColor, localization.cursorColor)); y = y + 5
-			colorSelector.onTouch = function()
-				config.cursorColor = colorSelector.color; saveConfig()
-			end
-			local horizontalSlider = mainContainer.settingsContainer:addChild(GUI.slider(x, y, elementWidth, 0xFFDB80, 0x000000, 0xFFDB40, 0xDDDDDD, 1, 1000, config.cursorBlinkDelay * 1000, false, localization.cursorBlinkDelay .. ": ", " ms"))
-			horizontalSlider.onValueChanged = function()
-				config.cursorBlinkDelay = horizontalSlider.value / 1000; saveConfig()
-			end
+codeView.eventHandler = function(mainContainer, object, eventData)
+	if eventData[1] == "touch" then
+		if eventData[5] == 1 then
+			createEditOrRightClickMenu(eventData[3], eventData[4])
+		else
+			setCursorPositionAndClearSelection(convertScreenCoordinatesToTextPosition(eventData[3], eventData[4]))
 		end
 
-		if mainContainer.topToolBar.hidden then
-			menu:addItem(localization.toggleTopToolBar).onTouch = function()
-				toggleTopToolBar()
-			end
-		end
-		menu:addSeparator()
-		menu:addItem(config.enableAutoBrackets and localization.disableAutoBrackets or localization.enableAutoBrackets, false, "^]").onTouch = function()
-			config.enableAutoBrackets = not config.enableAutoBrackets
-			saveConfig()
-		end
-		menu:addItem(config.enableAutocompletion and localization.disableAutocompletion or localization.enableAutocompletion, false, "^I").onTouch = function()
-			toggleEnableAutocompleteDatabase()
-		end
-		menu:addSeparator()
-		menu:addItem(localization.changeResolution, false, "^R").onTouch = function()
-			changeResolutionWindow()
-		end
-		menu:show()
-	end
-
-	local item5 = mainContainer.topMenu:addItem(localization.gotoCyka)
-	item5.onTouch = function()
-		local menu = GUI.contextMenu(item5.x, item5.y + 1)
-		menu:addItem(localization.pageUp, false, "PgUp").onTouch = function()
-			pageUp()
-		end
-		menu:addItem(localization.pageDown, false, "PgDn").onTouch = function()
-			pageDown()
-		end
-		menu:addItem(localization.gotoStart, false, "Home").onTouch = function()
-			setCursorPositionToHome()
-		end
-		menu:addItem(localization.gotoEnd, false, "End").onTouch = function()
-			setCursorPositionToEnd()
-		end
-		menu:addSeparator()
-		menu:addItem(localization.gotoLine, false, "^L").onTouch = function()
-			gotoLineWindow()
-		end
-		menu:show()
-	end
-
-	mainContainer.topToolBar = mainContainer:addChild(GUI.container(1, 2, 1, 3))
-	mainContainer.topToolBar.backgroundPanel = mainContainer.topToolBar:addChild(GUI.panel(1, 1, 1, 3, colors.topToolBar))
-	mainContainer.titleTextBox = mainContainer.topToolBar:addChild(GUI.textBox(1, 1, 1, 3, 0x0, 0x0, {}, 1):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top))
-	local titleTextBoxOldDraw = mainContainer.titleTextBox.draw
-	mainContainer.titleTextBox.draw = function(titleTextBox)
-		titleTextBoxOldDraw(titleTextBox)
-		local sidesColor = mainContainer.errorContainer.hidden and colors.title.default.sides or colors.title.onError.sides
-		buffer.square(titleTextBox.x, titleTextBox.y, 1, titleTextBox.height, sidesColor, titleTextBox.colors.text, " ")
-		buffer.square(titleTextBox.x + titleTextBox.width - 1, titleTextBox.y, 1, titleTextBox.height, sidesColor, titleTextBox.colors.text, " ")
-	end
-
-	mainContainer.RAMUsageProgressBar = mainContainer.topToolBar:addChild(GUI.progressBar(1, 2, 1, 0x777777, 0xBBBBBB, 0xAAAAAA, 50, true, true, "RAM: ", "%"))
-
-	--☯◌☺
-	mainContainer.addBreakpointButton = mainContainer.topToolBar:addChild(GUI.adaptiveButton(1, 1, 3, 1, 0x878787, 0xEEEEEE, 0xCCCCCC, 0x444444, "x"))
-	mainContainer.addBreakpointButton.onTouch = function()
-		addBreakpoint()
-		mainContainer:drawOnScreen()
-	end
-
-	mainContainer.toggleSyntaxHighlightingButton = mainContainer.topToolBar:addChild(GUI.adaptiveButton(1, 1, 3, 1, 0xCCCCCC, 0x444444, 0x696969, 0xEEEEEE, "◌"))
-	mainContainer.toggleSyntaxHighlightingButton.switchMode, mainContainer.toggleSyntaxHighlightingButton.pressed = true, true
-	mainContainer.toggleSyntaxHighlightingButton.onTouch = function()
-		mainContainer.codeView.highlightLuaSyntax = not mainContainer.codeView.highlightLuaSyntax
-		config.highlightLuaSyntax = mainContainer.codeView.highlightLuaSyntax
-		saveConfig()
-		mainContainer:drawOnScreen()
-	end
-
-	mainContainer.runButton = mainContainer.topToolBar:addChild(GUI.adaptiveButton(1, 1, 3, 1, 0x4B4B4B, 0xEEEEEE, 0xCCCCCC, 0x444444, "▷"))
-	mainContainer.runButton.onTouch = function()
-		run()
-	end
-
-	mainContainer.toggleLeftToolBarButton = mainContainer.topToolBar:addChild(GUI.adaptiveButton(1, 1, 3, 1, 0xCCCCCC, 0x444444, 0x4B4B4B, 0xEEEEEE, "⇦"))
-	mainContainer.toggleLeftToolBarButton.switchMode, mainContainer.toggleLeftToolBarButton.pressed = true, true
-	mainContainer.toggleLeftToolBarButton.onTouch = function()
-		mainContainer.leftTreeView.hidden = not mainContainer.toggleLeftToolBarButton.pressed
-		mainContainer.leftTreeViewResizer.hidden = mainContainer.leftTreeView.hidden
-		calculateSizes()
-		mainContainer:drawOnScreen()
-	end
-
-	mainContainer.toggleBottomToolBarButton = mainContainer.topToolBar:addChild(GUI.adaptiveButton(1, 1, 3, 1, 0xCCCCCC, 0x444444, 0x696969, 0xEEEEEE, "⇩"))
-	mainContainer.toggleBottomToolBarButton.switchMode, mainContainer.toggleBottomToolBarButton.pressed = true, false
-	mainContainer.toggleBottomToolBarButton.onTouch = function()
-		mainContainer.bottomToolBar.hidden = not mainContainer.toggleBottomToolBarButton.pressed
-		calculateSizes()
-		mainContainer:drawOnScreen()
-	end
-
-	mainContainer.toggleTopToolBarButton = mainContainer.topToolBar:addChild(GUI.adaptiveButton(1, 1, 3, 1, 0xCCCCCC, 0x444444, 0x878787, 0xEEEEEE, "⇧"))
-	mainContainer.toggleTopToolBarButton.switchMode, mainContainer.toggleTopToolBarButton.pressed = true, true
-	mainContainer.toggleTopToolBarButton.onTouch = function()
-		mainContainer.topToolBar.hidden = not mainContainer.toggleTopToolBarButton.pressed
-		calculateSizes()
-		mainContainer:drawOnScreen()
-	end
-
-	mainContainer.bottomToolBar = mainContainer:addChild(GUI.container(1, 1, 1, 3))
-	mainContainer.bottomToolBar.caseSensitiveButton = mainContainer.bottomToolBar:addChild(GUI.adaptiveButton(1, 1, 2, 1, 0x3C3C3C, 0xEEEEEE, 0xBBBBBB, 0x2D2D2D, "Aa"))
-	mainContainer.bottomToolBar.caseSensitiveButton.switchMode = true
-	mainContainer.bottomToolBar.onTouch = function()
-		find()
-	end
-	mainContainer.bottomToolBar.inputField = mainContainer.bottomToolBar:addChild(GUI.input(7, 1, 10, 3, 0xCCCCCC, 0x999999, 0x999999, 0xCCCCCC, 0x2D2D2D, "", localization.findSomeShit))
-	mainContainer.bottomToolBar.inputField.onInputFinished = function()
-		findFromFirstDisplayedLine()
-	end
-	mainContainer.bottomToolBar.findButton = mainContainer.bottomToolBar:addChild(GUI.adaptiveButton(1, 1, 3, 1, 0x3C3C3C, 0xEEEEEE, 0xBBBBBB, 0x2D2D2D, localization.find))
-	mainContainer.bottomToolBar.findButton.onTouch = function()
-		find()
-	end
-	mainContainer.bottomToolBar.hidden = true
-
-	mainContainer.leftTreeView = mainContainer:addChild(GUI.filesystemTree(1, 1, config.leftTreeViewWidth, 1, 0xCCCCCC, 0x3C3C3C, 0x3C3C3C, 0x999999, 0x3C3C3C, 0xE1E1E1, 0xBBBBBB, 0xAAAAAA, 0xBBBBBB, 0x444444, GUI.filesystemModes.both, GUI.filesystemModes.file))
-	mainContainer.leftTreeView.onItemSelected = function(path)
-		loadFile(path)
-
-		updateTitle()
-		mainContainer:drawOnScreen()
-	end
-	mainContainer.leftTreeView:updateFileList()
-	mainContainer.leftTreeViewResizer = mainContainer:addChild(GUI.resizer(1, 1, 3, 5, 0x888888, 0x0))
-	mainContainer.leftTreeViewResizer.onResize = function(mainContainer, object, eventData, dragWidth, dragHeight)
-		mainContainer.leftTreeView.width = mainContainer.leftTreeView.width + dragWidth
-		calculateSizes()
-	end
-
-	mainContainer.leftTreeViewResizer.onResizeFinished = function()
-		config.leftTreeViewWidth = mainContainer.leftTreeView.width
-		saveConfig()
-	end
-
-	mainContainer.errorContainer = mainContainer:addChild(GUI.container(1, 1, 1, 1))
-	mainContainer.errorContainer.backgroundPanel = mainContainer.errorContainer:addChild(GUI.panel(1, 1, 1, 1, 0xFFFFFF, 0.3))
-	mainContainer.errorContainer.errorTextBox = mainContainer.errorContainer:addChild(GUI.textBox(3, 2, 1, 1, nil, 0x4B4B4B, {}, 1))
-	mainContainer.errorContainer.breakpointExitButton = mainContainer.errorContainer:addChild(GUI.button(1, 1, 1, 1, 0x3C3C3C, 0xCCCCCC, 0x2D2D2D, 0x888888, localization.finishDebug))
-	mainContainer.errorContainer.breakpointContinueButton = mainContainer.errorContainer:addChild(GUI.button(1, 1, 1, 1, 0x444444, 0xCCCCCC, 0x2D2D2D, 0x888888, localization.continueDebug))
-	mainContainer.errorContainer.breakpointExitButton.onTouch = hideErrorContainer
-	mainContainer.errorContainer.breakpointContinueButton.onTouch = continue
-	hideErrorContainer()
-
-	mainContainer.settingsContainer = mainContainer:addChild(GUI.container(1, 1, 1, 1))
-	mainContainer.settingsContainer.backgroundPanel = mainContainer.settingsContainer:addChild(GUI.panel(1, 1, mainContainer.settingsContainer.width, mainContainer.settingsContainer.height, 0x0, 0.3))
-	mainContainer.settingsContainer.backgroundPanel.eventHandler = function(mainContainer, object, eventData)
-		if eventData[1] == "touch" then
-			hideSettingsContainer()
-		end
-	end
-	mainContainer.settingsContainer.hidden = true
-	
-	mainContainer.autocompleteWindow = mainContainer:addChild(GUI.object(1, 1, 40, 1))
-	mainContainer.autocompleteWindow.maximumHeight = 8
-	mainContainer.autocompleteWindow.matches = {}
-	mainContainer.autocompleteWindow.fromMatch = 1
-	mainContainer.autocompleteWindow.currentMatch = 1
-	mainContainer.autocompleteWindow.hidden = true
-	mainContainer.autocompleteWindow.draw = function(object)
-		mainContainer.autocompleteWindow.x, mainContainer.autocompleteWindow.y = convertTextPositionToScreenCoordinates(mainContainer.autocompleteWindow.currentWordStarting, cursor.position.line)
-		mainContainer.autocompleteWindow.x, mainContainer.autocompleteWindow.y = mainContainer.autocompleteWindow.x, mainContainer.autocompleteWindow.y + 1
-
-		object.height = object.maximumHeight
-		if object.height > #object.matches then object.height = #object.matches end
+		cursorBlinkState = true
+		tick()
+	elseif eventData[1] == "double_touch" then
+		cursorBlinkState = true
+		selectWord()
 		
-		buffer.square(object.x, object.y, object.width, object.height, 0xFFFFFF, 0x0, " ")
-
-		local y = object.y
-		for i = object.fromMatch, #object.matches do
-			local firstColor, secondColor = 0x3C3C3C, 0x999999
+		mainContainer:drawOnScreen()
+	elseif eventData[1] == "drag" then
+		if eventData[5] ~= 1 then
+			codeView.selections[1] = codeView.selections[1] or {from = {}, to = {}}
+			codeView.selections[1].from.symbol, codeView.selections[1].from.line = cursorPositionSymbol, cursorPositionLine
+			codeView.selections[1].to.symbol, codeView.selections[1].to.line = fixCursorPosition(convertScreenCoordinatesToTextPosition(eventData[3], eventData[4]))
 			
-			if i == object.currentMatch then
-				buffer.square(object.x, y, object.width, 1, 0x2D2D2D, 0xEEEEEE, " ")
-				firstColor, secondColor = 0xEEEEEE, 0x999999
+			if codeView.selections[1].from.line > codeView.selections[1].to.line then
+				codeView.selections[1].from.line, codeView.selections[1].to.line = codeView.selections[1].to.line, codeView.selections[1].from.line
+				codeView.selections[1].from.symbol, codeView.selections[1].to.symbol = codeView.selections[1].to.symbol, codeView.selections[1].from.symbol
+			elseif codeView.selections[1].from.line == codeView.selections[1].to.line then
+				if codeView.selections[1].from.symbol > codeView.selections[1].to.symbol then
+					codeView.selections[1].from.symbol, codeView.selections[1].to.symbol = codeView.selections[1].to.symbol, codeView.selections[1].from.symbol
+				end
 			end
-
-			buffer.text(object.x + 1, y, secondColor, unicode.sub(object.matches[i][1], 1, object.width - 2))
-			buffer.text(object.x + 1, y, firstColor, unicode.sub(object.matches[i][2], 1, object.width - 2))
-
-			y = y + 1
-			if y > object.y + object.height - 1 then break end
 		end
 
-		if object.height < #object.matches then
-			GUI.scrollBar(object.x + object.width - 1, object.y, 1, object.height, 0x444444, 0x00DBFF, 1, #object.matches, object.currentMatch, object.height, 1, true):draw()
-		end
-	end
-
-	mainContainer.codeView.eventHandler = function(mainContainer, object, eventData)
-		if eventData[1] == "touch" then
-			if eventData[5] == 1 then
-				createEditOrRightClickMenu(eventData[3], eventData[4])
-			else
-				setCursorPositionAndClearSelection(convertScreenCoordinatesToTextPosition(eventData[3], eventData[4]))
-			end
-
-			cursor.blinkState = true
-			tick()
-		elseif eventData[1] == "double_touch" then
-			cursor.blinkState = true
-			selectWord()
-			
-			mainContainer:drawOnScreen()
-		elseif eventData[1] == "drag" then
-			if eventData[5] ~= 1 then
-				mainContainer.codeView.selections[1] = mainContainer.codeView.selections[1] or {from = {}, to = {}}
-				mainContainer.codeView.selections[1].from.symbol, mainContainer.codeView.selections[1].from.line = cursor.position.symbol, cursor.position.line
-				mainContainer.codeView.selections[1].to.symbol, mainContainer.codeView.selections[1].to.line = fixCursorPosition(convertScreenCoordinatesToTextPosition(eventData[3], eventData[4]))
-				
-				if mainContainer.codeView.selections[1].from.line > mainContainer.codeView.selections[1].to.line then
-					mainContainer.codeView.selections[1].from.line, mainContainer.codeView.selections[1].to.line = mainContainer.codeView.selections[1].to.line, mainContainer.codeView.selections[1].from.line
-					mainContainer.codeView.selections[1].from.symbol, mainContainer.codeView.selections[1].to.symbol = mainContainer.codeView.selections[1].to.symbol, mainContainer.codeView.selections[1].from.symbol
-				elseif mainContainer.codeView.selections[1].from.line == mainContainer.codeView.selections[1].to.line then
-					if mainContainer.codeView.selections[1].from.symbol > mainContainer.codeView.selections[1].to.symbol then
-						mainContainer.codeView.selections[1].from.symbol, mainContainer.codeView.selections[1].to.symbol = mainContainer.codeView.selections[1].to.symbol, mainContainer.codeView.selections[1].from.symbol
-					end
-				end
-			end
-
-			cursor.blinkState = true
-			tick()
-		elseif eventData[1] == "key_down" then
-			-- Ctrl or CMD
-			if keyboard.isKeyDown(29) or keyboard.isKeyDown(219) then
-				-- Slash
-				if eventData[4] == 53 then
-					toggleComment()
-				-- ]
-				elseif eventData[4] == 27 then
-					config.enableAutoBrackets = not config.enableAutoBrackets
-					saveConfig()
-				-- I
-				elseif eventData[4] == 23 then
-					toggleEnableAutocompleteDatabase()
-				-- A
-				elseif eventData[4] == 30 then
-					selectAll()
-				-- C
-				elseif eventData[4] == 46 then
-					-- Shift
-					if keyboard.isKeyDown(42) then
-						selectAndPasteColor()
-					else
-						copy()
-					end
-				-- V
-				elseif eventData[4] == 47 then
-					paste(clipboard)
-				-- X
-				elseif eventData[4] == 45 then
-					cut()
-				-- W
-				elseif eventData[4] == 17 then
-					mainContainer:stopEventHandling()
-				-- N
-				elseif eventData[4] == 49 then
-					newFile()
-				-- O
-				elseif eventData[4] == 24 then
-					openFileWindow()
-				-- U
-				elseif eventData[4] == 22 and component.isAvailable("internet") then
-					downloadFileFromWeb()
-				-- S
-				elseif eventData[4] == 31 then
-					-- Shift
-					if mainContainer.leftTreeView.selectedItem and not keyboard.isKeyDown(42) then
-						saveFileWindow()
-					else
-						saveFileAsWindow()
-					end
-				-- F
-				elseif eventData[4] == 33 then
-					toggleBottomToolBar()
-				-- G
-				elseif eventData[4] == 34 then
-					find()
-				-- L
-				elseif eventData[4] == 38 then
-					gotoLineWindow()
-				-- Backspace
-				elseif eventData[4] == 14 then
-					deleteLine(cursor.position.line)
-				-- Delete
-				elseif eventData[4] == 211 then
-					deleteLine(cursor.position.line)
-				-- R
-				elseif eventData[4] == 19 then
-					changeResolutionWindow()
-				end
-			-- Arrows up, down, left, right
-			elseif eventData[4] == 200 then
-				moveCursor(0, -1)
-			elseif eventData[4] == 208 then
-				moveCursor(0, 1)
-			elseif eventData[4] == 203 then
-				moveCursor(-1, 0)
-			elseif eventData[4] == 205 then
-				moveCursor(1, 0)
-			-- Backspace
-			elseif eventData[4] == 14 then
-				backspace()
-			-- Tab
-			elseif eventData[4] == 15 then
-				if keyboard.isKeyDown(42) then
-					indentOrUnindent(false)
-				else
-					indentOrUnindent(true)
-				end
-			-- Enter
-			elseif eventData[4] == 28 then
-				if mainContainer.autocompleteWindow.hidden then
-					enter()
-				else
-					pasteSelectedAutocompletion()
-				end
-			-- F5
-			elseif eventData[4] == 63 then
-				run()
-			-- F9
-			elseif eventData[4] == 67 then
+		cursorBlinkState = true
+		tick()
+	elseif eventData[1] == "key_down" then
+		-- Ctrl or CMD
+		if keyboard.isKeyDown(29) or keyboard.isKeyDown(219) then
+			-- Slash
+			if eventData[4] == 53 then
+				toggleComment()
+			-- ]
+			elseif eventData[4] == 27 then
+				config.enableAutoBrackets = not config.enableAutoBrackets
+				saveConfig()
+			-- I
+			elseif eventData[4] == 23 then
+				toggleEnableAutocompleteDatabase()
+			-- A
+			elseif eventData[4] == 30 then
+				selectAll()
+			-- C
+			elseif eventData[4] == 46 then
 				-- Shift
 				if keyboard.isKeyDown(42) then
-					clearBreakpoints()
+					selectAndPasteColor()
 				else
-					addBreakpoint()
+					copy()
 				end
-			-- Home
-			elseif eventData[4] == 199 then
-				setCursorPositionToHome()
-			-- End
-			elseif eventData[4] == 207 then
-				setCursorPositionToEnd()
-			-- Page Up
-			elseif eventData[4] == 201 then
-				pageUp()
-			-- Page Down
-			elseif eventData[4] == 209 then
-				pageDown()
+			-- V
+			elseif eventData[4] == 47 then
+				paste(clipboard)
+			-- X
+			elseif eventData[4] == 45 then
+				cut()
+			-- W
+			elseif eventData[4] == 17 then
+				mainContainer:stopEventHandling()
+			-- N
+			elseif eventData[4] == 49 then
+				newFile()
+			-- O
+			elseif eventData[4] == 24 then
+				openFileWindow()
+			-- U
+			elseif eventData[4] == 22 and component.isAvailable("internet") then
+				downloadFileFromWeb()
+			-- S
+			elseif eventData[4] == 31 then
+				-- Shift
+				if leftTreeView.selectedItem and not keyboard.isKeyDown(42) then
+					saveFileWindow()
+				else
+					saveFileAsWindow()
+				end
+			-- F
+			elseif eventData[4] == 33 then
+				toggleBottomToolBar()
+			-- G
+			elseif eventData[4] == 34 then
+				find()
+			-- L
+			elseif eventData[4] == 38 then
+				gotoLineWindow()
+			-- Backspace
+			elseif eventData[4] == 14 then
+				deleteLine(cursorPositionLine)
 			-- Delete
 			elseif eventData[4] == 211 then
-				delete()
-			else
-				pasteAutoBrackets(eventData[3])
+				deleteLine(cursorPositionLine)
+			-- R
+			elseif eventData[4] == 19 then
+				changeResolutionWindow()
+			-- F5
+			elseif eventData[4] == 63 then
+				launchWithArgumentsWindow()
 			end
-
-			cursor.blinkState = true
-			tick()
-		elseif eventData[1] == "scroll" then
-			scroll(eventData[5], config.scrollSpeed)
-			tick()
-		elseif eventData[1] == "clipboard" then
-			paste(splitStringIntoLines(eventData[3]))
-			tick()
-		elseif not eventData[1] then
-			cursor.blinkState = not cursor.blinkState
-			tick()
+		-- Arrows up, down, left, right
+		elseif eventData[4] == 200 then
+			moveCursor(0, -1)
+		elseif eventData[4] == 208 then
+			moveCursor(0, 1)
+		elseif eventData[4] == 203 then
+			moveCursor(-1, 0)
+		elseif eventData[4] == 205 then
+			moveCursor(1, 0)
+		-- Backspace
+		elseif eventData[4] == 14 then
+			backspace()
+		-- Tab
+		elseif eventData[4] == 15 then
+			if keyboard.isKeyDown(42) then
+				indentOrUnindent(false)
+			else
+				indentOrUnindent(true)
+			end
+		-- Enter
+		elseif eventData[4] == 28 then
+			if autocompleteWindow.hidden then
+				enter()
+			else
+				pasteSelectedAutocompletion()
+			end
+		-- F5
+		elseif eventData[4] == 63 then
+			run()
+		-- F9
+		elseif eventData[4] == 67 then
+			-- Shift
+			if keyboard.isKeyDown(42) then
+				clearBreakpoints()
+			else
+				addBreakpoint()
+			end
+		-- Home
+		elseif eventData[4] == 199 then
+			setCursorPositionToHome()
+		-- End
+		elseif eventData[4] == 207 then
+			setCursorPositionToEnd()
+		-- Page Up
+		elseif eventData[4] == 201 then
+			pageUp()
+		-- Page Down
+		elseif eventData[4] == 209 then
+			pageDown()
+		-- Delete
+		elseif eventData[4] == 211 then
+			delete()
+		else
+			pasteAutoBrackets(eventData[3])
 		end
+
+		cursorBlinkState = true
+		tick()
+	elseif eventData[1] == "scroll" then
+		scroll(eventData[5], config.scrollSpeed)
+		tick()
+	elseif eventData[1] == "clipboard" then
+		paste(splitStringIntoLines(eventData[3]))
+		tick()
+	elseif not eventData[1] then
+		cursorBlinkState = not cursorBlinkState
+		tick()
 	end
 end
 
----------------------------------------------------- RUSH B! ----------------------------------------------------
+leftTreeView.onItemSelected = function(path)
+	loadFile(path)
 
-loadConfig()
-createMainContainer()
+	updateTitle()
+	mainContainer:drawOnScreen()
+end
+
+local topMenuMineCode = topMenu:addItem("MineCode", 0x0)
+topMenuMineCode.onTouch = function()
+	local menu = GUI.contextMenu(topMenuMineCode.x, topMenuMineCode.y + 1)
+	
+	menu:addItem(localization.about).onTouch = function()
+		local container = addFadeContainer(localization.about)
+
+		local textBox = container.layout:addChild(GUI.textBox(1, 1, 36, #about, nil, 0xB4B4B4, about, 1, 0, 0, true, false))
+		textBox:setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+		textBox.eventHandler = nil
+
+		mainContainer:drawOnScreen()
+	end
+
+	menu:addItem(localization.quit, false, "^W").onTouch = function()
+		mainContainer:stopEventHandling()
+	end
+
+	menu:show()
+end
+
+local topMenuFile = topMenu:addItem(localization.file)
+topMenuFile.onTouch = function()
+	local menu = GUI.contextMenu(topMenuFile.x, topMenuFile.y + 1)
+	
+	menu:addItem(localization.new, false, "^N").onTouch = function()
+		newFile()
+		mainContainer:drawOnScreen()
+	end
+
+	menu:addItem(localization.open, false, "^O").onTouch = function()
+		openFileWindow()
+	end
+
+	if component.isAvailable("internet") then
+		menu:addItem(localization.getFromWeb, false, "^U").onTouch = function()
+			downloadFileFromWeb()
+		end
+	end
+
+	menu:addSeparator()
+
+	menu:addItem(localization.save, not leftTreeView.selectedItem, "^S").onTouch = function()
+		saveFileWindow()
+	end
+
+	menu:addItem(localization.saveAs, false, "^⇧S").onTouch = function()
+		saveFileAsWindow()
+	end
+
+	menu:addItem(localization.launchWithArguments, false, "^F5").onTouch = function()
+		launchWithArgumentsWindow()
+	end
+
+	menu:show()
+end
+
+local topMenuEdit = topMenu:addItem(localization.edit)
+topMenuEdit.onTouch = function()
+	createEditOrRightClickMenu(topMenuEdit.x, topMenuEdit.y + 1)
+end
+
+local topMenuGoto = topMenu:addItem(localization.gotoCyka)
+topMenuGoto.onTouch = function()
+	local menu = GUI.contextMenu(topMenuGoto.x, topMenuGoto.y + 1)
+	
+	menu:addItem(localization.pageUp, false, "PgUp").onTouch = function()
+		pageUp()
+	end
+	
+	menu:addItem(localization.pageDown, false, "PgDn").onTouch = function()
+		pageDown()
+	end
+
+	menu:addItem(localization.gotoStart, false, "Home").onTouch = function()
+		setCursorPositionToHome()
+	end
+
+	menu:addItem(localization.gotoEnd, false, "End").onTouch = function()
+		setCursorPositionToEnd()
+	end
+
+	menu:addSeparator()
+
+	menu:addItem(localization.gotoLine, false, "^L").onTouch = function()
+		gotoLineWindow()
+	end
+
+	menu:show()
+end
+
+local topMenuProperties = topMenu:addItem(localization.properties)
+topMenuProperties.onTouch = function()
+	local menu = GUI.contextMenu(topMenuProperties.x, topMenuProperties.y + 1)
+	
+	menu:addItem(localization.colorScheme).onTouch = function()
+		local container = GUI.addFadeContainer(mainContainer, true, false, localization.colorScheme)
+					
+		local colorSelectorsCount, colorSelectorCountX = 0, 4; for key in pairs(config.syntaxColorScheme) do colorSelectorsCount = colorSelectorsCount + 1 end
+		local colorSelectorCountY = math.ceil(colorSelectorsCount / colorSelectorCountX)
+		local colorSelectorWidth, colorSelectorHeight, colorSelectorSpaceX, colorSelectorSpaceY = math.floor(container.width / colorSelectorCountX * 0.8), 3, 2, 1
+		
+		local startX, y = math.floor(container.width / 2 - (colorSelectorCountX * (colorSelectorWidth + colorSelectorSpaceX) - colorSelectorSpaceX) / 2), math.floor(container.height / 2 - (colorSelectorCountY * (colorSelectorHeight + colorSelectorSpaceY) - colorSelectorSpaceY + 3) / 2)
+		container:addChild(GUI.label(1, y, container.width, 1, 0xFFFFFF, localization.colorScheme)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); y = y + 3
+		local x, counter = startX, 1
+
+		local colors = {}
+		for key in pairs(config.syntaxColorScheme) do
+			table.insert(colors, {key})
+		end
+
+		aplhabeticalSort(colors)
+
+		for i = 1, #colors do
+			local colorSelector = container:addChild(GUI.colorSelector(x, y, colorSelectorWidth, colorSelectorHeight, config.syntaxColorScheme[colors[i][1]], colors[i][1]))
+			colorSelector.onTouch = function()
+				config.syntaxColorScheme[colors[i][1]] = colorSelector.color
+				syntax.colorScheme = config.syntaxColorScheme
+				saveConfig()
+			end
+
+			x, counter = x + colorSelectorWidth + colorSelectorSpaceX, counter + 1
+			if counter > colorSelectorCountX then
+				x, y, counter = startX, y + colorSelectorHeight + colorSelectorSpaceY, 1
+			end
+		end
+
+		mainContainer:drawOnScreen()
+	end
+
+	menu:addItem(localization.cursorProperties).onTouch = function()
+		local container = addFadeContainer(localization.cursorProperties)
+
+		local input = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xC3C3C3, 0x787878, 0x787878, 0xC3C3C3, 0x2D2D2D, config.cursorSymbol, localization.cursorSymbol))
+		input.onInputFinished = function()
+			if #input.text == 1 then
+				config.cursorSymbol = input.text
+				saveConfig()
+			end
+		end
+
+		local colorSelector = container.layout:addChild(GUI.colorSelector(1, 1, 36, 3, config.cursorColor, localization.cursorColor))
+		colorSelector.onTouch = function()
+			config.cursorColor = colorSelector.color
+			saveConfig()
+		end
+
+		local slider = container.layout:addChild(GUI.slider(1, 1, 36, 0xFFDB80, 0x000000, 0xFFDB40, 0xDDDDDD, 1, 1000, config.cursorBlinkDelay * 1000, false, localization.cursorBlinkDelay .. ": ", " ms"))
+		slider.onValueChanged = function()
+			config.cursorBlinkDelay = slider.value / 1000
+			saveConfig()
+		end
+
+		mainContainer:drawOnScreen()
+	end
+
+	if topToolBar.hidden then
+		menu:addItem(localization.toggleTopToolBar).onTouch = function()
+			toggleTopToolBar()
+		end
+	end
+
+	menu:addSeparator()
+
+	menu:addItem(config.enableAutoBrackets and localization.disableAutoBrackets or localization.enableAutoBrackets, false, "^]").onTouch = function()
+		config.enableAutoBrackets = not config.enableAutoBrackets
+		saveConfig()
+	end
+
+	menu:addItem(config.enableAutocompletion and localization.disableAutocompletion or localization.enableAutocompletion, false, "^I").onTouch = function()
+		toggleEnableAutocompleteDatabase()
+	end
+
+	menu:addSeparator()
+
+	menu:addItem(localization.changeResolution, false, "^R").onTouch = function()
+		changeResolutionWindow()
+	end
+
+	menu:show()
+end
+
+leftTreeViewResizer.onResize = function(mainContainer, object, eventData, dragWidth, dragHeight)
+	leftTreeView.width = leftTreeView.width + dragWidth
+	calculateSizes()
+end
+
+leftTreeViewResizer.onResizeFinished = function()
+	config.leftTreeViewWidth = leftTreeView.width
+	saveConfig()
+end
+
+addBreakpointButton.onTouch = function()
+	addBreakpoint()
+	mainContainer:drawOnScreen()
+end
+
+syntaxHighlightingButton.onTouch = function()
+	codeView.highlightLuaSyntax = not codeView.highlightLuaSyntax
+	config.highlightLuaSyntax = codeView.highlightLuaSyntax
+	saveConfig()
+	mainContainer:drawOnScreen()
+end
+
+toggleLeftToolBarButton.onTouch = function()
+	leftTreeView.hidden = not toggleLeftToolBarButton.pressed
+	leftTreeViewResizer.hidden = leftTreeView.hidden
+	calculateSizes()
+	mainContainer:drawOnScreen()
+end
+
+toggleBottomToolBarButton.onTouch = function()
+	bottomToolBar.hidden = not toggleBottomToolBarButton.pressed
+	calculateSizes()
+	mainContainer:drawOnScreen()
+end
+
+toggleTopToolBarButton.onTouch = function()
+	topToolBar.hidden = not toggleTopToolBarButton.pressed
+	calculateSizes()
+	mainContainer:drawOnScreen()
+end
+
+codeView.scrollBars.vertical.onTouch = function()
+	codeView.fromLine = math.ceil(codeView.scrollBars.vertical.value)
+end
+codeView.scrollBars.horizontal.onTouch = function()
+	codeView.fromSymbol = math.ceil(codeView.scrollBars.horizontal.value)
+end
+
+errorContainerExitButton.onTouch = hideErrorContainer
+errorContainerContinueButton.onTouch = continue
+searchInput.onInputFinished = findFromFirstDisplayedLine
+caseSensitiveButton.onTouch = find
+searchButton.onTouch = find
+runButton.onTouch = run
+
+------------------------------------------------------------
+
+hideErrorContainer()
+errorContainer:moveToFront()
+leftTreeView:updateFileList()
+
 changeResolution(config.screenResolution.width, config.screenResolution.height)
 updateTitle()
 updateRAMProgressBar()
-mainContainer:draw()
+mainContainer:drawOnScreen()
 
 if args[1] and fs.exists(args[1]) then
 	loadFile(args[1])

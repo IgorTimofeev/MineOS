@@ -277,9 +277,9 @@ local function rasterizeEllipse(centerX, centerY, radiusX, radiusY, method)
 	end
 end
 
-local function line(x1, y1, x2, y2, background, foreground, alpha, symbol)
+local function line(x1, y1, x2, y2, background, foreground, symbol)
 	rasterizeLine(x1, y1, x2, y2, function(x, y)
-		set(x, y, background, foreground, alpha, symbol)
+		set(x, y, background, foreground, symbol)
 	end)
 end
 

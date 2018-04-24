@@ -1081,7 +1081,7 @@ local function colorSelectorEventHandler(mainContainer, object, eventData)
 	if eventData[1] == "touch" then
 		object.pressed = true
 
-		local palette = GUI.addPaletteWindowToContainer(mainContainer)
+		local palette = GUI.addPaletteWindowToContainer(mainContainer, object.color)
 		
 		palette.onCancel = function()
 			object.pressed = false
@@ -3915,8 +3915,8 @@ end
 
 -----------------------------------------------------------------------
 
-function GUI.addPaletteWindowToContainer(parentContainer)
-	local palette = parentContainer:addChild(GUI.windowFromContainer(GUI.palette(1, 1, 0x9900FF)))
+function GUI.addPaletteWindowToContainer(parentContainer, color)
+	local palette = parentContainer:addChild(GUI.windowFromContainer(GUI.palette(1, 1, color or 0x9900FF)))
 	palette.localX, palette.localY = math.floor(parentContainer.width / 2 - palette.width / 2), math.floor(parentContainer.height / 2 - palette.height / 2)
 
 	return palette

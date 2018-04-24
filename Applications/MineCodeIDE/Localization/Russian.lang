@@ -1,4 +1,6 @@
 {
+	arguments = "Укажите аргументы через запятую",
+	launchWithArguments = "Запустить с аргументами",
 	addBreakpoint = "Точка останова",
 	clearBreakpoints = "Удалить точки останова",
 	finishDebug = "Стоп",
