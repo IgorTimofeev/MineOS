@@ -843,20 +843,17 @@ local function continue()
 		if coroutine.status(scriptCoroutine) == "dead" then
 			MineOSInterface.waitForPressingAnyKey()
 			hideErrorContainer()
-			buffer.setResolution(oldResolutionX, oldResolutionY)
-			mainContainer:drawOnScreen(true);
+			buffer.setResolution(oldResolutionX, oldResolutionY); mainContainer:draw(); buffer.draw(true)
 		else
 			-- Тест на пидора, мало ли у чувака в проге тоже есть yield
 			if _G.MineCodeIDEDebugInfo then
-				buffer.setResolution(oldResolutionX, oldResolutionY)
-				mainContainer:drawOnScreen(true);
+				buffer.setResolution(oldResolutionX, oldResolutionY); mainContainer:draw(); buffer.draw(true)
 				gotoLine(_G.MineCodeIDEDebugInfo.line)
 				showBreakpointMessage(_G.MineCodeIDEDebugInfo.variables)
 			end
 		end
 	else
-		buffer.setResolution(oldResolutionX, oldResolutionY)
-		mainContainer:drawOnScreen(true);
+		buffer.setResolution(oldResolutionX, oldResolutionY); mainContainer:draw(); buffer.draw(true)
 		showErrorContainer(debug.traceback(scriptCoroutine, coroutineResumeReason))
 	end
 end
@@ -903,10 +900,12 @@ end
 local function deleteLine(line)
 	if #mainContainer.codeView.lines > 1 then
 		table.remove(mainContainer.codeView.lines, line)
-		setCursorPositionAndClearSelection(1, cursor.position.line)
-
-		updateAutocompleteDatabaseFromFile()
+	else
+		mainContainer.codeView.lines[1] = ""
 	end
+
+	setCursorPositionAndClearSelection(1, cursor.position.line)
+	updateAutocompleteDatabaseFromFile()
 end
 
 local function deleteSpecifiedData(fromSymbol, fromLine, toSymbol, toLine)
@@ -1353,10 +1352,10 @@ local function createMainContainer()
 	
 	mainContainer.codeView = mainContainer:addChild(GUI.codeView(1, 1, 1, 1, {""}, 1, 1, 1, {}, {}, config.highlightLuaSyntax, 2))
 	mainContainer.codeView.scrollBars.vertical.onTouch = function()
-		mainContainer.codeView.fromLine = mainContainer.codeView.scrollBars.vertical.value
+		mainContainer.codeView.fromLine = math.ceil(mainContainer.codeView.scrollBars.vertical.value)
 	end
 	mainContainer.codeView.scrollBars.horizontal.onTouch = function()
-		mainContainer.codeView.fromSymbol = mainContainer.codeView.scrollBars.horizontal.value
+		mainContainer.codeView.fromSymbol = math.ceil(mainContainer.codeView.scrollBars.horizontal.value)
 	end
 
 	mainContainer.topMenu = mainContainer:addChild(GUI.menu(1, 1, 1, colors.topMenu.backgroundColor, colors.topMenu.textColor, colors.topMenu.backgroundPressedColor, colors.topMenu.textPressedColor))

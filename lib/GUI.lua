@@ -1415,7 +1415,7 @@ local function dropDownMenuShow(menu)
 			item.onTouch()
 		end
 
-		return item
+		return item, mainContainer.selectedItem
 	end
 end
 
