@@ -112,8 +112,6 @@ local errorContainer = mainContainer:addChild(GUI.container(1, 1, 1, 1))
 local errorContainerPanel = errorContainer:addChild(GUI.panel(1, 1, 1, 1, 0xFFFFFF, 0.3))
 
 local errorContainerTextBox = errorContainer:addChild(GUI.textBox(3, 2, 1, 1, nil, 0x4B4B4B, {}, 1))
-errorContainerTextBox:setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
-
 local errorContainerExitButton = errorContainer:addChild(GUI.button(1, 1, 1, 1, 0x3C3C3C, 0xC3C3C3, 0x2D2D2D, 0x878787, localization.finishDebug))
 local errorContainerContinueButton = errorContainer:addChild(GUI.button(1, 1, 1, 1, 0x4B4B4B, 0xC3C3C3, 0x2D2D2D, 0x878787, localization.continueDebug))
 
@@ -456,6 +454,7 @@ local function showBreakpointMessage(variables)
 	errorContainer.hidden = false
 	errorContainer.localX = titleTextBox.localX
 
+	errorContainerTextBox:setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
 	errorContainerTextBox.lines = {}
 	for variable, value in pairs(variables) do
 		table.insert(errorContainerTextBox.lines, variable .. " = " .. value)
@@ -474,6 +473,7 @@ end
 local function showErrorContainer(errorCode)
 	titleTextBox.colors.background, titleTextBox.colors.text = 0x880000, 0xE1E1E1
 	errorContainer.hidden = false
+	errorContainer.localX = titleTextBox.localX
 
 	errorContainerTextBox:setAlignment(GUI.alignment.horizontal.left, GUI.alignment.vertical.top)
 	errorContainerTextBox.lines = string.wrap({errorCode}, errorContainerTextBox.width)	
@@ -905,24 +905,25 @@ local function continue(...)
 		if coroutine.status(scriptCoroutine) == "dead" then
 			MineOSInterface.waitForPressingAnyKey()
 			hideErrorContainer()
-			buffer.setResolution(oldResolutionX, oldResolutionY); mainContainer:draw(); buffer.draw(true)
+			buffer.setResolution(oldResolutionX, oldResolutionY)
+			mainContainer:drawOnScreen(true)
 		else
 			-- Тест на пидора, мало ли у чувака в проге тоже есть yield
 			if _G.MineCodeIDEDebugInfo then
-				buffer.setResolution(oldResolutionX, oldResolutionY); mainContainer:draw(); buffer.draw(true)
+				buffer.setResolution(oldResolutionX, oldResolutionY)
+				mainContainer:drawOnScreen(true)
 				gotoLine(_G.MineCodeIDEDebugInfo.line)
 				showBreakpointMessage(_G.MineCodeIDEDebugInfo.variables)
 			end
 		end
 	else
-		buffer.setResolution(oldResolutionX, oldResolutionY); mainContainer:draw(); buffer.draw(true)
+		buffer.setResolution(oldResolutionX, oldResolutionY)
+		mainContainer:drawOnScreen(true)
 		showErrorContainer(debug.traceback(scriptCoroutine, coroutineResumeReason))
 	end
 end
 
 local function run(...)
-	hideErrorContainer()
-
 	-- Инсертим брейкпоинты
 	if breakpointLines then
 		local offset = 0
@@ -1809,8 +1810,13 @@ end
 codeView.scrollBars.vertical.onTouch = function()
 	codeView.fromLine = math.ceil(codeView.scrollBars.vertical.value)
 end
+
 codeView.scrollBars.horizontal.onTouch = function()
 	codeView.fromSymbol = math.ceil(codeView.scrollBars.horizontal.value)
+end
+
+runButton.onTouch = function()
+	run()
 end
 
 errorContainerExitButton.onTouch = hideErrorContainer
@@ -1818,7 +1824,6 @@ errorContainerContinueButton.onTouch = continue
 searchInput.onInputFinished = findFromFirstDisplayedLine
 caseSensitiveButton.onTouch = find
 searchButton.onTouch = find
-runButton.onTouch = run
 
 ------------------------------------------------------------
 
