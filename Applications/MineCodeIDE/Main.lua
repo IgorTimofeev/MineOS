@@ -83,9 +83,18 @@ local autocompleteDatabase
 
 ------------------------------------------------------------
 
+if fs.exists(configPath) then
+	config = table.fromFile(configPath)
+	syntax.colorScheme = config.syntaxColorScheme
+end
+
 local mainContainer = GUI.fullScreenContainer()
 
 local codeView = mainContainer:addChild(GUI.codeView(1, 1, 1, 1, {""}, 1, 1, 1, {}, {}, config.highlightLuaSyntax, 2))
+
+local function saveConfig()
+	table.toFile(configPath, config)
+end
 
 local function convertTextPositionToScreenCoordinates(symbol, line)
 	return
@@ -155,7 +164,7 @@ local addBreakpointButton = topLayout:addChild(GUI.adaptiveButton(1, 1, 3, 1, 0x
 
 local syntaxHighlightingButton = topLayout:addChild(GUI.adaptiveButton(1, 1, 3, 1, 0xD2D2D2, 0x4B4B4B, 0x696969, 0xE1E1E1, "◌"))
 syntaxHighlightingButton.switchMode = true
-syntaxHighlightingButton.pressed = config.highlightLuaSyntax
+syntaxHighlightingButton.pressed = codeView.highlightLuaSyntax
 
 local runButton = topLayout:addChild(GUI.adaptiveButton(1, 1, 3, 1, 0x4B4B4B, 0xE1E1E1, 0xD2D2D2, 0x4B4B4B, "▷"))
 
@@ -272,19 +281,6 @@ local function tick()
 	end
 
 	buffer.draw()
-end
-
-local function saveConfig()
-	table.toFile(configPath, config)
-end
-
-local function loadConfig()
-	if fs.exists(configPath) then
-		config = table.fromFile(configPath)
-		syntax.colorScheme = config.syntaxColorScheme
-	else
-		saveConfig()
-	end
 end
 
 local function updateAutocompleteDatabaseFromString(str, value)
