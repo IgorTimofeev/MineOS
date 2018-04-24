@@ -8,7 +8,6 @@ tool.shortcut = "Fl"
 tool.keyCode = 34
 tool.about = "Fill tool allows you to automatically fill areas with selected primary color just like in Paint. Oh God, where is my RAM...?"
 
-
 local function check(x, y, picture, sourceB, sourceF, sourceA, sourceS, newB, newF, newA, newS)
 	if x >= 1 and x <= picture[1] and y >= 1 and y <= picture[2] then
 		local currentB, currentF, currentA, currentS = image.get(picture, x, y)

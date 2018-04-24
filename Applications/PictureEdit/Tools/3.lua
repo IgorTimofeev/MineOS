@@ -74,11 +74,13 @@ tool.onSelection = function(mainContainer)
 	mainContainer.currentToolLayout:addChild(cropButton)
 
 	widthInput.onInputFinished = function()
-		expandButton.disabled = not widthInput.text:match("%d+") or not heightInput.text:match("%d+")
+		expandButton.disabled = not widthInput.text:match("^%d+$") or not heightInput.text:match("^%d+$")
 		cropButton.disabled = expandButton.disabled
 
 		mainContainer:drawOnScreen()
 	end
+	heightInput.onInputFinished = widthInput.onInputFinished
+	widthInput.onInputFinished()
 
 	expandButton.onTouch = function()
 		local width, height = tonumber(widthInput.text), tonumber(heightInput.text)
@@ -107,9 +109,6 @@ tool.onSelection = function(mainContainer)
 		mainContainer.image.reposition()
 		mainContainer:drawOnScreen()
 	end
-
-	heightInput.onInputFinished = widthInput.onInputFinished
-	widthInput.onInputFinished()
 end
 
 tool.eventHandler = function(mainContainer, object, eventData)

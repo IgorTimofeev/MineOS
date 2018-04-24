@@ -45,7 +45,7 @@ tool.eventHandler = function(mainContainer, object, eventData)
 		image.set(mainContainer.image.data, x, y,
 			backgroundSwitch.switch.state and mainContainer.secondaryColorSelector.color or background,
 			mainContainer.primaryColorSelector.color,
-			alpha,
+			backgroundSwitch.switch.state and 0 or alpha,
 			char
 		)
 

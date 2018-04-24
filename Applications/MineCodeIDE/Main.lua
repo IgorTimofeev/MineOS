@@ -9,8 +9,6 @@ local buffer = require("doubleBuffering")
 local event = require("event")
 local syntax = require("syntax")
 local unicode = require("unicode")
-local web = require("web")
-local image = require("image")
 local keyboard = require("keyboard")
 local GUI = require("GUI")
 local MineOSPaths = require("MineOSPaths")
@@ -156,7 +154,8 @@ end
 local addBreakpointButton = topLayout:addChild(GUI.adaptiveButton(1, 1, 3, 1, 0x878787, 0xE1E1E1, 0xD2D2D2, 0x4B4B4B, "x"))
 
 local syntaxHighlightingButton = topLayout:addChild(GUI.adaptiveButton(1, 1, 3, 1, 0xD2D2D2, 0x4B4B4B, 0x696969, 0xE1E1E1, "◌"))
-syntaxHighlightingButton.switchMode, syntaxHighlightingButton.pressed = true, true
+syntaxHighlightingButton.switchMode = true
+syntaxHighlightingButton.pressed = config.highlightLuaSyntax
 
 local runButton = topLayout:addChild(GUI.adaptiveButton(1, 1, 3, 1, 0x4B4B4B, 0xE1E1E1, 0xD2D2D2, 0x4B4B4B, "▷"))
 
@@ -830,7 +829,7 @@ local function downloadFileFromWeb()
 
 	container.input.onInputFinished = function()
 		if #container.input.text > 0 then
-			local result, reason = web.request(container.input.text)
+			local result, reason = require("web").request(container.input.text)
 			if result then
 				newFile()
 				codeView.lines, codeView.maximumLineLength = splitStringIntoLines(result)
