@@ -189,7 +189,7 @@ bottomToolBar.hidden = true
 local caseSensitiveButton = bottomToolBar:addChild(GUI.adaptiveButton(1, 1, 2, 1, 0x3C3C3C, 0xE1E1E1, 0xB4B4B4, 0x2D2D2D, "Aa"))
 caseSensitiveButton.switchMode = true
 
-local searchInput = bottomToolBar:addChild(GUI.input(7, 1, 10, 3, 0xC3C3C3, 0x969696, 0x969696, 0xC3C3C3, 0x2D2D2D, "", localization.findSomeShit))
+local searchInput = bottomToolBar:addChild(GUI.input(7, 1, 10, 3, 0xE1E1E1, 0x969696, 0x969696, 0xE1E1E1, 0x2D2D2D, "", localization.findSomeShit))
 
 local searchButton = bottomToolBar:addChild(GUI.adaptiveButton(1, 1, 3, 1, 0x3C3C3C, 0xE1E1E1, 0xB4B4B4, 0x2D2D2D, localization.find))
 
