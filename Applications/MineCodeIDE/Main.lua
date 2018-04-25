@@ -816,7 +816,8 @@ end
 
 local function pizda(lines, debug)
 	local container = mainContainer:addChild(GUI.container(1, 1, mainContainer.width, mainContainer.height))
-	
+
+	local backgroundObject = container:addChild(GUI.object(1, 1, mainContainer.width, mainContainer.height))
 	local errorContainer = container:addChild(GUI.container(title.localX, topToolBar.hidden and 2 or 5, title.width, #lines + 2))
 	local panel = errorContainer:addChild(GUI.panel(1, 1, errorContainer.width, errorContainer.height, 0xFFFFFF, 0.3))
 	local textBox = errorContainer:addChild(GUI.textBox(3, 2, errorContainer.width - 4, #lines, nil, 0x4B4B4B, lines, 1))
@@ -825,7 +826,7 @@ local function pizda(lines, debug)
 		lastErrorLine = nil
 		titleDebugMode = false
 		updateHighlights()
-
+		
 		container:delete()
 		mainContainer:drawOnScreen()
 	end
@@ -837,12 +838,15 @@ local function pizda(lines, debug)
 		panel.height = errorContainer.height
 		
 		local exitButton = errorContainer:addChild(GUI.button(1, errorContainer.height, math.floor(errorContainer.width / 2), 1, 0x3C3C3C, 0xC3C3C3, 0x2D2D2D, 0x878787, localization.finishDebug))
+		exitButton.animated = false
 		exitButton.onTouch = function()
 			scriptCoroutine = nil
 			close()
 		end
 		
-		errorContainer:addChild(GUI.button(exitButton.width + 1, exitButton.localY, errorContainer.width - exitButton.width, 1, 0x4B4B4B, 0xC3C3C3, 0x2D2D2D, 0x878787, localization.continueDebug)).onTouch = function()
+		local continueButton = errorContainer:addChild(GUI.button(exitButton.width + 1, exitButton.localY, errorContainer.width - exitButton.width, 1, 0x4B4B4B, 0xC3C3C3, 0x2D2D2D, 0x878787, localization.continueDebug))
+		continueButton.animated = false
+		continueButton.onTouch = function()
 			close()
 			continue()
 		end
@@ -850,7 +854,7 @@ local function pizda(lines, debug)
 		textBox:setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
 	end
 
-	container.eventHandler = function(mainContainer, object, eventData)
+	backgroundObject.eventHandler = function(mainContainer, object, eventData)
 		if eventData[1] == "touch" then
 			close()
 		end
@@ -1770,9 +1774,11 @@ autocomplete.onItemSelected = function(mainContainer, object, eventData)
 	codeView.lines[cursorPositionLine] = middle .. secondPart
 
 	setCursorPositionAndClearSelection(unicode.len(middle) + 1, cursorPositionLine)
+	
 	if eventData[1] == "key_down" then
 		autocomplete.hidden = false
 	end
+
 	tick(true)
 end
 
