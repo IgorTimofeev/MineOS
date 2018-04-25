@@ -48,6 +48,7 @@ local config = {
 	enableAutoBrackets = true,
 	highlightLuaSyntax = true,
 	enableAutocompletion = true,
+	linesToShowOpenProgress = 100,
 }
 config.screenResolution.width, config.screenResolution.height = component.gpu.getResolution()
 
@@ -73,7 +74,7 @@ local cursorBlinkState = false
 
 local scriptCoroutine
 local resourcesPath = MineOSCore.getCurrentScriptDirectory() 
-local configPath = MineOSPaths.applicationData .. "MineCode IDE/Config3.cfg"
+local configPath = MineOSPaths.applicationData .. "MineCode IDE/Config4.cfg"
 local localization = MineOSCore.getCurrentScriptLocalization()
 local findStartFrom
 local clipboard
@@ -81,6 +82,7 @@ local breakpointLines
 local lastErrorLine
 local autocompleteDatabase
 local autoCompleteWordStart, autoCompleteWordEnd
+local continue, showBreakpointMessage, showErrorContainer
 
 ------------------------------------------------------------
 
@@ -92,6 +94,19 @@ end
 local mainContainer = GUI.fullScreenContainer()
 
 local codeView = mainContainer:addChild(GUI.codeView(1, 1, 1, 1, {""}, 1, 1, 1, {}, {}, config.highlightLuaSyntax, 2))
+local cursor = mainContainer:addChild(GUI.object(1, 1, 1, 1))
+cursor.draw = function()
+	if cursorBlinkState then
+		if
+			cursor.x >= codeView.codeAreaPosition + 1 and
+			cursor.y >= codeView.y and
+			cursor.x <= codeView.codeAreaPosition + codeView.codeAreaWidth - 2 and
+			cursor.y <= codeView.y + codeView.height - 2
+		then
+			buffer.text(cursor.x, cursor.y, config.cursorColor, config.cursorSymbol)
+		end
+	end
+end
 
 local function saveConfig()
 	table.toFile(configPath, config)
@@ -116,13 +131,6 @@ topLayout:setCellDirection(1, 1, GUI.directions.horizontal)
 topLayout:setCellSpacing(1, 1, 2)
 topLayout:setCellAlignment(1, 1, GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
 
-local errorContainer = mainContainer:addChild(GUI.container(1, 1, 1, 1))
-local errorContainerPanel = errorContainer:addChild(GUI.panel(1, 1, 1, 1, 0xFFFFFF, 0.3))
-
-local errorContainerTextBox = errorContainer:addChild(GUI.textBox(3, 2, 1, 1, nil, 0x4B4B4B, {}, 1))
-local errorContainerExitButton = errorContainer:addChild(GUI.button(1, 1, 1, 1, 0x3C3C3C, 0xC3C3C3, 0x2D2D2D, 0x878787, localization.finishDebug))
-local errorContainerContinueButton = errorContainer:addChild(GUI.button(1, 1, 1, 1, 0x4B4B4B, 0xC3C3C3, 0x2D2D2D, 0x878787, localization.continueDebug))
-
 -- Autocomplete
 local autocomplete = mainContainer:addChild(GUI.autoComplete(1, 1, 36, 7, 0xE1E1E1, 0xA5A5A5, 0x3C3C3C, 0x3C3C3C, 0xA5A5A5, 0xE1E1E1, 0xC3C3C3, 0x4B4B4B))
 
@@ -135,14 +143,23 @@ syntaxHighlightingButton.pressed = codeView.highlightLuaSyntax
 
 local runButton = topLayout:addChild(GUI.adaptiveButton(1, 1, 3, 1, 0x4B4B4B, 0xE1E1E1, 0xD2D2D2, 0x4B4B4B, "▷"))
 
-local titleTextBox = topLayout:addChild(GUI.textBox(1, 1, 1, 3, 0x0, 0x0, {}, 1):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top))
-local titleTextBoxOldDraw = titleTextBox.draw
-titleTextBox.draw = function(titleTextBox)
-	titleTextBoxOldDraw(titleTextBox)
-	
-	local sidesColor = errorContainer.hidden and 0x5A5A5A or 0xCC4940
-	buffer.square(titleTextBox.x, titleTextBox.y, 1, titleTextBox.height, sidesColor, titleTextBox.colors.text, " ")
-	buffer.square(titleTextBox.x + titleTextBox.width - 1, titleTextBox.y, 1, titleTextBox.height, sidesColor, titleTextBox.colors.text, " ")
+local title = topLayout:addChild(GUI.textBox(1, 1, 1, 3, 0x0, 0x0, {}, 1):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top))
+local titleLines = {}
+local titleDebugMode = false
+title.draw = function()	
+	local sides = titleDebugMode and 0xCC4940 or 0x5A5A5A
+	buffer.square(title.x, 2, 1, title.height, sides, 0x0, " ")
+	buffer.square(title.x + title.width - 1, 2, 1, title.height, sides, 0x0, " ")
+	buffer.square(title.x + 1, 2, title.width - 2, 3, titleDebugMode and 0x880000 or 0x3C3C3C, 0xE1E1E1, " ")
+
+	if titleDebugMode then
+		local text = lastErrorLine and localization.runtimeError or localization.debugging .. (_G.MineCodeIDEDebugInfo and _G.MineCodeIDEDebugInfo.line or "N/A")
+		buffer.text(math.floor(title.x + title.width / 2 - unicode.len(text) / 2), 3, 0xE1E1E1, text)
+	else
+		for i = 1, #titleLines do
+			buffer.text(math.floor(title.x + title.width / 2 - unicode.len(titleLines[i]) / 2), i + 1, 0xE1E1E1, titleLines[i])
+		end
+	end
 end
 
 local toggleLeftToolBarButton = topLayout:addChild(GUI.adaptiveButton(1, 1, 3, 1, 0xD2D2D2, 0x4B4B4B, 0x4B4B4B, 0xE1E1E1, "⇦"))
@@ -154,7 +171,7 @@ toggleBottomToolBarButton.switchMode, toggleBottomToolBarButton.pressed = true, 
 local toggleTopToolBarButton = topLayout:addChild(GUI.adaptiveButton(1, 1, 3, 1, 0xD2D2D2, 0x4B4B4B, 0x878787, 0xE1E1E1, "⇧"))
 toggleTopToolBarButton.switchMode, toggleTopToolBarButton.pressed = true, true
 
-local RAMProgressBar = topToolBar:addChild(GUI.progressBar(1, 2, 20, 0x787878, 0xC3C3C3, 0xC3C3C3, 50, true, true, "RAM: ", "%"))
+local RAMProgressBar = topToolBar:addChild(GUI.progressBar(1, 2, 20, 0x787878, 0xC3C3C3, 0xB4B4B4, 50, true, true, "RAM: ", "%"))
 
 local bottomToolBar = mainContainer:addChild(GUI.container(1, 1, 1, 3))
 bottomToolBar.hidden = true
@@ -168,7 +185,7 @@ local searchButton = bottomToolBar:addChild(GUI.adaptiveButton(1, 1, 3, 1, 0x3C3
 
 local leftTreeView = mainContainer:addChild(GUI.filesystemTree(1, 1, config.leftTreeViewWidth, 1, 0xD2D2D2, 0x3C3C3C, 0x3C3C3C, 0x969696, 0x3C3C3C, 0xE1E1E1, 0xB4B4B4, 0xA5A5A5, 0xB4B4B4, 0x4B4B4B, GUI.filesystemModes.both, GUI.filesystemModes.file))
 
-local leftTreeViewResizer = mainContainer:addChild(GUI.resizer(1, 1, 3, 5, 0xA5A5A5, 0x0))
+local leftTreeViewResizer = mainContainer:addChild(GUI.resizer(1, 1, 3, 5, 0x696969, 0x0))
 
 local function updateHighlights()
 	codeView.highlights = {}
@@ -184,41 +201,29 @@ local function updateHighlights()
 	end
 end
 
-local function hideErrorContainer()
-	titleTextBox.colors.background, titleTextBox.colors.text = 0x3C3C3C, 0xE1E1E1
-	errorContainer.hidden = true
-	lastErrorLine, scriptCoroutine = nil, nil
-	updateHighlights()
-end
-
 local function updateTitle()
 	if not topToolBar.hidden then
-		if errorContainer.hidden then
-			titleTextBox.lines[1] = string.limit(localization.file .. ": " .. (leftTreeView.selectedItem or localization.none), titleTextBox.width - 4)
-			titleTextBox.lines[2] = string.limit(localization.cursor .. cursorPositionLine .. localization.line .. cursorPositionSymbol .. localization.symbol, titleTextBox.width - 4)
-			if codeView.selections[1] then
-				local countOfSelectedLines = codeView.selections[1].to.line - codeView.selections[1].from.line + 1
-				local countOfSelectedSymbols
-				if codeView.selections[1].from.line == codeView.selections[1].to.line then
-					countOfSelectedSymbols = unicode.len(unicode.sub(codeView.lines[codeView.selections[1].from.line], codeView.selections[1].from.symbol, codeView.selections[1].to.symbol))
-				else
-					countOfSelectedSymbols = unicode.len(unicode.sub(codeView.lines[codeView.selections[1].from.line], codeView.selections[1].from.symbol, -1))
-					for line = codeView.selections[1].from.line + 1, codeView.selections[1].to.line - 1 do
-						countOfSelectedSymbols = countOfSelectedSymbols + unicode.len(codeView.lines[line])
-					end
-					countOfSelectedSymbols = countOfSelectedSymbols + unicode.len(unicode.sub(codeView.lines[codeView.selections[1].to.line], 1, codeView.selections[1].to.symbol))
+		titleLines[1] = string.limit(localization.file .. ": " .. (leftTreeView.selectedItem or localization.none), title.width - 4)
+		titleLines[2] = string.limit(localization.cursor .. cursorPositionLine .. localization.line .. cursorPositionSymbol .. localization.symbol, title.width - 4)
+		
+		if codeView.selections[1] then
+			local countOfSelectedLines, countOfSelectedSymbols = codeView.selections[1].to.line - codeView.selections[1].from.line + 1
+			
+			if codeView.selections[1].from.line == codeView.selections[1].to.line then
+				countOfSelectedSymbols = unicode.len(unicode.sub(codeView.lines[codeView.selections[1].from.line], codeView.selections[1].from.symbol, codeView.selections[1].to.symbol))
+			else
+				countOfSelectedSymbols = unicode.len(unicode.sub(codeView.lines[codeView.selections[1].from.line], codeView.selections[1].from.symbol, -1))
+				
+				for line = codeView.selections[1].from.line + 1, codeView.selections[1].to.line - 1 do
+					countOfSelectedSymbols = countOfSelectedSymbols + unicode.len(codeView.lines[line])
 				end
-				titleTextBox.lines[3] = string.limit(localization.selection .. countOfSelectedLines .. localization.lines .. countOfSelectedSymbols .. localization.symbols, titleTextBox.width - 4)
-			else
-				titleTextBox.lines[3] = string.limit(localization.selection .. localization.none, titleTextBox.width - 4)
+				
+				countOfSelectedSymbols = countOfSelectedSymbols + unicode.len(unicode.sub(codeView.lines[codeView.selections[1].to.line], 1, codeView.selections[1].to.symbol))
 			end
+
+			titleLines[3] = string.limit(localization.selection .. countOfSelectedLines .. localization.lines .. countOfSelectedSymbols .. localization.symbols, title.width - 4)
 		else
-			titleTextBox.lines[1], titleTextBox.lines[3] = " ", " "
-			if lastErrorLine then
-				titleTextBox.lines[2] = localization.runtimeError
-			else
-				titleTextBox.lines[2] = localization.debugging .. (_G.MineCodeIDEDebugInfo and _G.MineCodeIDEDebugInfo.line or "N/A")
-			end
+			titleLines[3] = string.limit(localization.selection .. localization.none, title.width - 4)
 		end
 	end
 end
@@ -234,21 +239,7 @@ local function tick(state)
 	cursorBlinkState = state
 	updateTitle()
 	updateRAMProgressBar()
-	mainContainer:draw()
-	
-	if cursorBlinkState then
-		local x, y = convertTextPositionToScreenCoordinates(cursorPositionSymbol, cursorPositionLine)
-		if
-			x >= codeView.codeAreaPosition + 1 and
-			y >= codeView.y and
-			x <= codeView.codeAreaPosition + codeView.codeAreaWidth - 2 and
-			y <= codeView.y + codeView.height - 2
-		then
-			buffer.text(x, y, config.cursorColor, config.cursorSymbol)
-		end
-	end
-
-	buffer.draw()
+	mainContainer:drawOnScreen()
 end
 
 local function updateAutocompleteDatabaseFromString(str, value)
@@ -331,11 +322,9 @@ local function calculateSizes()
 	if topToolBar.hidden then
 		leftTreeView.localY, leftTreeView.height = 2, mainContainer.height - 1
 		codeView.localY, codeView.height = 2, mainContainer.height - 1
-		errorContainer.localY = 2
 	else
 		leftTreeView.localY, leftTreeView.height = 5, mainContainer.height - 4
 		codeView.localY, codeView.height = 5, mainContainer.height - 4
-		errorContainer.localY = 5
 	end
 
 	if bottomToolBar.hidden then
@@ -344,7 +333,7 @@ local function calculateSizes()
 		codeView.height = codeView.height - 3
 	end
 
-	leftTreeViewResizer.localX = leftTreeView.width - 1
+	leftTreeViewResizer.localX = leftTreeView.width
 	leftTreeViewResizer.localY = math.floor(leftTreeView.localY + leftTreeView.height / 2 - leftTreeViewResizer.height / 2)
 
 	bottomToolBar.localY = mainContainer.height - 2
@@ -352,12 +341,9 @@ local function calculateSizes()
 	searchInput.width = bottomToolBar.width - searchInput.localX - searchButton.width + 1
 
 	topToolBar.width, topToolBarPanel.width, topLayout.width = mainContainer.width, mainContainer.width, mainContainer.width
-	titleTextBox.width = math.floor(topToolBar.width * 0.32)
+	title.width = math.floor(topToolBar.width * 0.32)
 	
 	RAMProgressBar.localX = topToolBar.width - RAMProgressBar.width - 1
-
-	errorContainer.width = titleTextBox.width
-	errorContainerPanel.width, errorContainerTextBox.width = errorContainer.width, errorContainer.width - 4
 
 	topMenu.width = mainContainer.width
 end
@@ -371,77 +357,6 @@ local function gotoLine(line)
 	end
 end
 
-local function calculateErrorContainerSizeAndBeep(hideBreakpointButtons, frequency, times)
-	errorContainerTextBox.height = #errorContainerTextBox.lines
-	errorContainer.height = 2 + errorContainerTextBox.height
-	errorContainerPanel.height = errorContainer.height
-
-	errorContainerExitButton.hidden, errorContainerContinueButton.hidden = hideBreakpointButtons, hideBreakpointButtons
-	if not hideBreakpointButtons then
-		errorContainer.height = errorContainer.height + 1
-		errorContainerExitButton.localY, errorContainerContinueButton.localY = errorContainer.height, errorContainer.height
-		errorContainerExitButton.width = math.floor(errorContainer.width / 2)
-		errorContainerContinueButton.localX, errorContainerContinueButton.width = errorContainerExitButton.width + 1, errorContainer.width - errorContainerExitButton.width
-	end
-
-	updateTitle()
-	mainContainer:drawOnScreen()
-
-	for i = 1, times do component.computer.beep(frequency, 0.08) end	
-end
-
-local function pizda()
-	titleTextBox.colors.background, titleTextBox.colors.text = 0x880000, 0xE1E1E1
-	errorContainer.hidden = false
-	errorContainer.localX = titleTextBox.localX
-end
-
-local function showBreakpointMessage(variables)
-	pizda()
-
-	errorContainerTextBox:setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
-	errorContainerTextBox.lines = {}
-	for variable, value in pairs(variables) do
-		table.insert(errorContainerTextBox.lines, variable .. " = " .. value)
-	end
-
-	if #errorContainerTextBox.lines > 0 then
-		table.insert(errorContainerTextBox.lines, 1, " ")
-		table.insert(errorContainerTextBox.lines, 1, {text = localization.variables, color = 0x0})
-	else
-		table.insert(errorContainerTextBox.lines, 1, {text = localization.variablesNotAvailable, color = 0x0})
-	end
-
-	calculateErrorContainerSizeAndBeep(false, 1800, 1)
-end
-
-local function showErrorContainer(errorCode)
-	pizda()
-	
-	errorContainerTextBox:setAlignment(GUI.alignment.horizontal.left, GUI.alignment.vertical.top)
-	errorContainerTextBox.lines = string.wrap({errorCode}, errorContainerTextBox.width)	
-	
-	-- Извлекаем ошибочную строку текущего скрипта
-	lastErrorLine = tonumber(errorCode:match("%:(%d+)%: in main chunk"))
-	if lastErrorLine then
-		-- Делаем поправку на количество брейкпоинтов в виде вставленных дебаг-строк
-		if breakpointLines then
-			local countOfBreakpointsBeforeLastErrorLine = 0
-			for i = 1, #breakpointLines do
-				if breakpointLines[i] < lastErrorLine then
-					countOfBreakpointsBeforeLastErrorLine = countOfBreakpointsBeforeLastErrorLine + 1
-				else
-					break
-				end
-			end
-			lastErrorLine = lastErrorLine - countOfBreakpointsBeforeLastErrorLine
-		end
-		gotoLine(lastErrorLine)
-	end
-	updateHighlights()
-	calculateErrorContainerSizeAndBeep(true, 1500, 3)
-end
-
 local function clearSelection()
 	codeView.selections[1] = nil
 end
@@ -452,7 +367,6 @@ local function clearBreakpoints()
 end
 
 local function addBreakpoint()
-	hideErrorContainer()
 	breakpointLines = breakpointLines or {}
 	
 	local lineExists
@@ -515,7 +429,7 @@ local function setCursorPosition(symbol, line)
 	cursorPositionSymbol, cursorPositionLine = fixCursorPosition(symbol, line)
 	fixFromLineByCursorPosition()
 	fixFromSymbolByCursorPosition()
-	hideErrorContainer()
+	cursor.localX, cursor.localY = convertTextPositionToScreenCoordinates(cursorPositionSymbol, cursorPositionLine)
 	autocomplete.hidden = true
 end
 
@@ -650,8 +564,8 @@ local function newFile()
 	autocompleteDatabase = {}
 	codeView.lines = {""}
 	codeView.maximumLineLength = 1
-	setCursorPositionAndClearSelection(1, 1)
 	leftTreeView.selectedItem = nil
+	setCursorPositionAndClearSelection(1, 1)
 	clearBreakpoints()
 end
 
@@ -659,19 +573,44 @@ local function loadFile(path)
 	local file, reason = io.open(path, "r")
 	if file then
 		newFile()
+		leftTreeView.selectedItem = path
+		codeView.hidden = true
+
+		local container = mainContainer:addChild(GUI.container(codeView.localX, codeView.localY, codeView.width, codeView.height))
+		container:addChild(GUI.panel(1, 1, container.width, container.height, 0x1E1E1E))
+		local layout = container:addChild(GUI.layout(1, 1, container.width, container.height, 1, 1))
+		layout:addChild(GUI.label(1, 1, layout.width, 1, 0xD2D2D2, localization.openingFile .. " " .. path):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top))
+		local progressBar = layout:addChild(GUI.progressBar(1, 1, 36, 0x969696, 0x2D2D2D, 0x787878, 0, true, true, "", "%"))
+
+		local counter, currentSize, totalSize = 1, 0, fs.size(path)
 		for line in file:lines() do
 			line = removeWindowsLineEndings(removeTabs(line))
 			table.insert(codeView.lines, line)
 			codeView.maximumLineLength = math.max(codeView.maximumLineLength, unicode.len(line))
+			
+			counter, currentSize = counter + 1, currentSize + #line
+			if counter % config.linesToShowOpenProgress == 0 then
+				progressBar.value = math.floor(currentSize / totalSize * 100)
+				computer.pullSignal(0)
+				mainContainer:drawOnScreen()
+			end
 		end
-		file:close()
-		
+
 		if #codeView.lines > 1 then
 			table.remove(codeView.lines, 1)
 		end
-		
-		leftTreeView.selectedItem = path
+
+		if counter > config.linesToShowOpenProgress then
+			progressBar.value = 100
+			mainContainer:drawOnScreen()
+		end
+
+		codeView.hidden = false
+		container:delete()
 		updateAutocompleteDatabaseFromFile()
+		updateTitle()
+
+		file:close()
 	else
 		GUI.error(reason)
 	end
@@ -822,7 +761,7 @@ local function getVariables(codePart)
 	return variables
 end
 
-local function continue(...)
+continue = function(...)
 	-- Готовим экран к запуску
 	local oldResolutionX, oldResolutionY = component.gpu.getResolution()
 	MineOSInterface.clearTerminal()
@@ -835,7 +774,6 @@ local function continue(...)
 	if coroutineResumeSuccess then
 		if coroutine.status(scriptCoroutine) == "dead" then
 			MineOSInterface.waitForPressingAnyKey()
-			hideErrorContainer()
 			buffer.setResolution(oldResolutionX, oldResolutionY)
 			mainContainer:drawOnScreen(true)
 		else
@@ -889,6 +827,100 @@ local function run(...)
 	else
 		showErrorContainer(loadReason)
 	end
+end
+
+local function pizda(lines, debug)
+	local container = mainContainer:addChild(GUI.container(1, 1, mainContainer.width, mainContainer.height))
+	
+	local errorContainer = container:addChild(GUI.container(title.localX, topToolBar.hidden and 2 or 5, title.width, #lines + 2))
+	local panel = errorContainer:addChild(GUI.panel(1, 1, errorContainer.width, errorContainer.height, 0xFFFFFF, 0.3))
+	local textBox = errorContainer:addChild(GUI.textBox(3, 2, errorContainer.width - 4, #lines, nil, 0x4B4B4B, lines, 1))
+
+	local function close()
+		lastErrorLine = nil
+		titleDebugMode = false
+		updateHighlights()
+
+		container:delete()
+		mainContainer:drawOnScreen()
+	end
+
+	local times, frequency = 3, 1500
+	if debug then
+		times, frequency = 1, 1800
+		errorContainer.height = errorContainer.height + 1
+		panel.height = errorContainer.height
+		
+		local exitButton = errorContainer:addChild(GUI.button(1, errorContainer.height, math.floor(errorContainer.width / 2), 1, 0x3C3C3C, 0xC3C3C3, 0x2D2D2D, 0x878787, localization.finishDebug))
+		exitButton.onTouch = function()
+			scriptCoroutine = nil
+			close()
+		end
+		
+		errorContainer:addChild(GUI.button(exitButton.width + 1, exitButton.localY, errorContainer.width - exitButton.width, 1, 0x4B4B4B, 0xC3C3C3, 0x2D2D2D, 0x878787, localization.continueDebug)).onTouch = function()
+			close()
+			continue()
+		end
+		
+		textBox:setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+	end
+
+	container.eventHandler = function(mainContainer, object, eventData)
+		if eventData[1] == "touch" then
+			close()
+		end
+	end
+
+	titleDebugMode = true
+	mainContainer:drawOnScreen()
+
+	for i = 1, times do
+		computer.beep(frequency, 0.08)
+	end
+end
+
+showErrorContainer = function(errorCode)
+	local lines = string.wrap({errorCode}, title.width - 4)
+	
+	-- Извлекаем ошибочную строку текущего скрипта
+	lastErrorLine = tonumber(errorCode:match("%:(%d+)%: in main chunk"))
+	if lastErrorLine then
+		-- Делаем поправку на количество брейкпоинтов в виде вставленных дебаг-строк
+		if breakpointLines then
+			local countOfBreakpointsBeforeLastErrorLine = 0
+			for i = 1, #breakpointLines do
+				if breakpointLines[i] < lastErrorLine then
+					countOfBreakpointsBeforeLastErrorLine = countOfBreakpointsBeforeLastErrorLine + 1
+				else
+					break
+				end
+			end
+		
+			lastErrorLine = lastErrorLine - countOfBreakpointsBeforeLastErrorLine
+		end
+
+		gotoLine(lastErrorLine)
+	end
+
+	updateHighlights()
+	pizda(lines)
+end
+
+showBreakpointMessage = function(variables)
+	local lines = {}
+	
+	for variable, value in pairs(variables) do
+		table.insert(lines, variable .. " = " .. value)
+	end
+
+	if #lines > 0 then
+		table.insert(lines, 1, {text = localization.variables, color = 0x0})
+		table.insert(lines, 2, " ")
+	else
+		table.insert(lines, 1, {text = localization.variablesNotAvailable, color = 0x0})
+	end
+
+	pizda(lines, true)
 end
 
 local function launchWithArgumentsWindow()
@@ -1488,9 +1520,8 @@ codeView.eventHandler = function(mainContainer, object, eventData)
 end
 
 leftTreeView.onItemSelected = function(path)
+	mainContainer:drawOnScreen()
 	loadFile(path)
-
-	updateTitle()
 	mainContainer:drawOnScreen()
 end
 
@@ -1742,17 +1773,13 @@ autocomplete.onItemSelected = function(mainContainer, object, eventData)
 	tick(true)
 end
 
-errorContainerExitButton.onTouch = hideErrorContainer
-errorContainerContinueButton.onTouch = continue
 searchInput.onInputFinished = findFromFirstDisplayedLine
 caseSensitiveButton.onTouch = find
 searchButton.onTouch = find
 
 ------------------------------------------------------------
 
-hideErrorContainer()
 autocomplete:moveToFront()
-errorContainer:moveToFront()
 leftTreeView:updateFileList()
 
 changeResolution(config.screenResolution.width, config.screenResolution.height)

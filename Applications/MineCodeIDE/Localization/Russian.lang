@@ -1,4 +1,5 @@
 {
+	openingFile = "Открытие файла",
 	arguments = "Укажите аргументы через запятую",
 	launchWithArguments = "Запустить с аргументами",
 	addBreakpoint = "Точка останова",

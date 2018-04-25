@@ -1,4 +1,5 @@
-{	
+{
+	openingFile = "Opening",
 	arguments = "Separate arguments via comma",
 	launchWithArguments = "Run with arguments",	
 	addBreakpoint = "Add breakpoint",
