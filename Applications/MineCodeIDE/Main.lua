@@ -80,6 +80,7 @@ local clipboard
 local breakpointLines
 local lastErrorLine
 local autocompleteDatabase
+local autoCompleteWordStart, autoCompleteWordEnd
 
 ------------------------------------------------------------
 
@@ -122,42 +123,8 @@ local errorContainerTextBox = errorContainer:addChild(GUI.textBox(3, 2, 1, 1, ni
 local errorContainerExitButton = errorContainer:addChild(GUI.button(1, 1, 1, 1, 0x3C3C3C, 0xC3C3C3, 0x2D2D2D, 0x878787, localization.finishDebug))
 local errorContainerContinueButton = errorContainer:addChild(GUI.button(1, 1, 1, 1, 0x4B4B4B, 0xC3C3C3, 0x2D2D2D, 0x878787, localization.continueDebug))
 
-local autocompleteWindow = mainContainer:addChild(GUI.object(1, 1, 40, 1))
-autocompleteWindow.maximumHeight = 8
-autocompleteWindow.matches = {}
-autocompleteWindow.fromMatch = 1
-autocompleteWindow.currentMatch = 1
-autocompleteWindow.hidden = true
-
-autocompleteWindow.draw = function(object)
-	autocompleteWindow.x, autocompleteWindow.y = convertTextPositionToScreenCoordinates(autocompleteWindow.currentWordStarting, cursorPositionLine)
-	autocompleteWindow.x, autocompleteWindow.y = autocompleteWindow.x, autocompleteWindow.y + 1
-
-	object.height = object.maximumHeight
-	if object.height > #object.matches then object.height = #object.matches end
-	
-	buffer.square(object.x, object.y, object.width, object.height, 0xFFFFFF, 0x0, " ")
-
-	local y = object.y
-	for i = object.fromMatch, #object.matches do
-		local firstColor, secondColor = 0x3C3C3C, 0x969696
-		
-		if i == object.currentMatch then
-			buffer.square(object.x, y, object.width, 1, 0x2D2D2D, 0xE1E1E1, " ")
-			firstColor, secondColor = 0xE1E1E1, 0x969696
-		end
-
-		buffer.text(object.x + 1, y, secondColor, unicode.sub(object.matches[i][1], 1, object.width - 2))
-		buffer.text(object.x + 1, y, firstColor, unicode.sub(object.matches[i][2], 1, object.width - 2))
-
-		y = y + 1
-		if y > object.y + object.height - 1 then break end
-	end
-
-	if object.height < #object.matches then
-		GUI.scrollBar(object.x + object.width - 1, object.y, 1, object.height, 0x4B4B4B, 0x00DBFF, 1, #object.matches, object.currentMatch, object.height, 1, true):draw()
-	end
-end
+-- Autocomplete
+local autocomplete = mainContainer:addChild(GUI.autoComplete(1, 1, 36, 7, 0xE1E1E1, 0xA5A5A5, 0x3C3C3C, 0x3C3C3C, 0xA5A5A5, 0xE1E1E1, 0xC3C3C3, 0x4B4B4B))
 
 --☯◌☺
 local addBreakpointButton = topLayout:addChild(GUI.adaptiveButton(1, 1, 3, 1, 0x878787, 0xE1E1E1, 0xD2D2D2, 0x4B4B4B, "x"))
@@ -263,7 +230,8 @@ local function updateRAMProgressBar()
 	end
 end
 
-local function tick()
+local function tick(state)
+	cursorBlinkState = state
 	updateTitle()
 	updateRAMProgressBar()
 	mainContainer:draw()
@@ -300,7 +268,7 @@ local function updateAutocompleteDatabaseFromFile()
 	end
 end
 
-local function getCurrentWordStartingAndEnding(fromSymbol)
+local function getautoCompleteWordStartAndEnding(fromSymbol)
 	local shittySymbolsRegexp, from, to = "[%s%c%p]"
 
 	for i = fromSymbol, 1, -1 do
@@ -320,47 +288,25 @@ local function aplhabeticalSort(t)
 	table.sort(t, function(a, b) return a[1] < b[1] end)
 end
 
-local function getAutocompleteDatabaseMatches(stringToSearch)
-	local matches = {}
-
-	for word in pairs(autocompleteDatabase) do
-		if word ~= stringToSearch then
-			local match = word:match("^" .. stringToSearch)
-			if match then
-				table.insert(matches, { word, match })
-			end
-		end
-	end
-
-	aplhabeticalSort(matches)
-	return matches
-end
-
-local function hideAutocompleteWindow()
-	autocompleteWindow.hidden = true
-end
-
-local function showAutocompleteWindow()
+local function showAutocomplete()
 	if config.enableAutocompletion then
-		autocompleteWindow.currentWordStarting, autocompleteWindow.currentWordEnding = getCurrentWordStartingAndEnding(cursorPositionSymbol - 1)
-
-		if autocompleteWindow.currentWordStarting then
-			autocompleteWindow.matches = getAutocompleteDatabaseMatches(
+		autoCompleteWordStart, autoCompleteWordEnd = getautoCompleteWordStartAndEnding(cursorPositionSymbol - 1)
+		if autoCompleteWordStart then
+			autocomplete:match(
+				autocompleteDatabase,
 				unicode.sub(
 					codeView.lines[cursorPositionLine],
-					autocompleteWindow.currentWordStarting,
-					autocompleteWindow.currentWordEnding
-				)
+					autoCompleteWordStart,
+					autoCompleteWordEnd
+				),
+				true
 			)
 
-			if #autocompleteWindow.matches > 0 then
-				autocompleteWindow.fromMatch, autocompleteWindow.currentMatch = 1, 1
-				autocompleteWindow.hidden = false
-			else
-				hideAutocompleteWindow()
+			if #autocomplete.items > 0 then
+				autocomplete.fromItem, autocomplete.selectedItem = 1, 1
+				autocomplete.localX, autocomplete.localY = convertTextPositionToScreenCoordinates(autoCompleteWordStart - 1, cursorPositionLine + 1)
+				autocomplete.hidden = false
 			end
-		else
-			hideAutocompleteWindow()
 		end
 	end
 end
@@ -398,7 +344,7 @@ local function calculateSizes()
 		codeView.height = codeView.height - 3
 	end
 
-	leftTreeViewResizer.localX = leftTreeView.width - 2
+	leftTreeViewResizer.localX = leftTreeView.width - 1
 	leftTreeViewResizer.localY = math.floor(leftTreeView.localY + leftTreeView.height / 2 - leftTreeViewResizer.height / 2)
 
 	bottomToolBar.localY = mainContainer.height - 2
@@ -569,8 +515,8 @@ local function setCursorPosition(symbol, line)
 	cursorPositionSymbol, cursorPositionLine = fixCursorPosition(symbol, line)
 	fixFromLineByCursorPosition()
 	fixFromSymbolByCursorPosition()
-	hideAutocompleteWindow()
 	hideErrorContainer()
+	autocomplete.hidden = true
 end
 
 local function setCursorPositionAndClearSelection(symbol, line)
@@ -579,7 +525,7 @@ local function setCursorPositionAndClearSelection(symbol, line)
 end
 
 local function moveCursor(symbolOffset, lineOffset)
-	if autocompleteWindow.hidden or lineOffset == 0 then
+	if autocomplete.hidden then
 		if codeView.selections[1] then
 			if symbolOffset < 0 or lineOffset < 0 then
 				setCursorPositionAndClearSelection(codeView.selections[1].from.symbol, codeView.selections[1].from.line)
@@ -596,18 +542,6 @@ local function moveCursor(symbolOffset, lineOffset)
 			end
 
 			setCursorPositionAndClearSelection(newSymbol, newLine)
-		end
-	elseif not autocompleteWindow.hidden then
-		autocompleteWindow.currentMatch = autocompleteWindow.currentMatch + lineOffset
-		
-		if autocompleteWindow.currentMatch < 1 then
-			autocompleteWindow.currentMatch = 1
-		elseif autocompleteWindow.currentMatch > #autocompleteWindow.matches then
-			autocompleteWindow.currentMatch = #autocompleteWindow.matches
-		elseif autocompleteWindow.currentMatch < autocompleteWindow.fromMatch then
-			autocompleteWindow.fromMatch = autocompleteWindow.currentMatch
-		elseif autocompleteWindow.currentMatch > autocompleteWindow.fromMatch + autocompleteWindow.height - 1 then
-			autocompleteWindow.fromMatch = autocompleteWindow.currentMatch - autocompleteWindow.height + 1
 		end
 	end
 end
@@ -645,7 +579,7 @@ local function pageDown()
 end
 
 local function selectWord()
-	local from, to = getCurrentWordStartingAndEnding(cursorPositionSymbol)
+	local from, to = getautoCompleteWordStartAndEnding(cursorPositionSymbol)
 	if from and to then
 		codeView.selections[1] = {
 			from = {symbol = from, line = cursorPositionLine},
@@ -1033,14 +967,6 @@ local function cut()
 	end
 end
 
-local function pasteSelectedAutocompletion()
-	local firstPart = unicode.sub(codeView.lines[cursorPositionLine], 1, autocompleteWindow.currentWordStarting - 1)
-	local secondPart = unicode.sub(codeView.lines[cursorPositionLine], autocompleteWindow.currentWordEnding + 1, -1)
-	codeView.lines[cursorPositionLine] = firstPart .. autocompleteWindow.matches[autocompleteWindow.currentMatch][1] .. secondPart
-	setCursorPositionAndClearSelection(unicode.len(firstPart .. autocompleteWindow.matches[autocompleteWindow.currentMatch][1]) + 1, cursorPositionLine)
-	hideAutocompleteWindow()
-end
-
 local function paste(pasteLines)
 	if pasteLines then
 		if codeView.selections[1] then
@@ -1084,7 +1010,7 @@ local function pasteRegularChar(unicodeByte, char)
 		if char == " " then
 			updateAutocompleteDatabaseFromFile()
 		end
-		showAutocompleteWindow()
+		showAutocomplete()
 	end
 end
 
@@ -1155,34 +1081,8 @@ local function delete()
 		end
 
 		-- updateAutocompleteDatabaseFromFile()
-		showAutocompleteWindow()
+		showAutocomplete()
 	end
-end
-
-local function backspace()
-	if codeView.selections[1] then
-		deleteSelectedData()
-	else
-		if cursorPositionSymbol > 1 then
-			backspaceAutoBrackets()
-			deleteSpecifiedData(cursorPositionSymbol - 1, cursorPositionLine, cursorPositionSymbol - 1, cursorPositionLine)
-		else
-			if cursorPositionLine > 1 then
-				deleteSpecifiedData(unicode.len(codeView.lines[cursorPositionLine - 1]) + 1, cursorPositionLine - 1, 0, cursorPositionLine)
-			end
-		end
-
-		-- updateAutocompleteDatabaseFromFile()
-		showAutocompleteWindow()
-	end
-end
-
-local function enter()
-	local firstPart = unicode.sub(codeView.lines[cursorPositionLine], 1, cursorPositionSymbol - 1)
-	local secondPart = unicode.sub(codeView.lines[cursorPositionLine], cursorPositionSymbol, -1)
-	codeView.lines[cursorPositionLine] = firstPart
-	table.insert(codeView.lines, cursorPositionLine + 1, secondPart)
-	setCursorPositionAndClearSelection(1, cursorPositionLine + 1)
 end
 
 local function selectAll()
@@ -1407,13 +1307,11 @@ codeView.eventHandler = function(mainContainer, object, eventData)
 			setCursorPositionAndClearSelection(convertScreenCoordinatesToTextPosition(eventData[3], eventData[4]))
 		end
 
-		cursorBlinkState = true
-		tick()
+		tick(true)
 	elseif eventData[1] == "double_touch" then
-		cursorBlinkState = true
 		selectWord()
 		
-		mainContainer:drawOnScreen()
+		tick(true)
 	elseif eventData[1] == "drag" then
 		if eventData[5] ~= 1 then
 			codeView.selections[1] = codeView.selections[1] or {from = {}, to = {}}
@@ -1430,8 +1328,7 @@ codeView.eventHandler = function(mainContainer, object, eventData)
 			end
 		end
 
-		cursorBlinkState = true
-		tick()
+		tick(true)
 	elseif eventData[1] == "key_down" then
 		-- Ctrl or CMD
 		if keyboard.isKeyDown(29) or keyboard.isKeyDown(219) then
@@ -1515,7 +1412,21 @@ codeView.eventHandler = function(mainContainer, object, eventData)
 			moveCursor(1, 0)
 		-- Backspace
 		elseif eventData[4] == 14 then
-			backspace()
+			if codeView.selections[1] then
+				deleteSelectedData()
+			else
+				if cursorPositionSymbol > 1 then
+					backspaceAutoBrackets()
+					deleteSpecifiedData(cursorPositionSymbol - 1, cursorPositionLine, cursorPositionSymbol - 1, cursorPositionLine)
+				else
+					if cursorPositionLine > 1 then
+						deleteSpecifiedData(unicode.len(codeView.lines[cursorPositionLine - 1]) + 1, cursorPositionLine - 1, 0, cursorPositionLine)
+					end
+				end
+
+				-- updateAutocompleteDatabaseFromFile()
+				showAutocomplete()
+			end
 		-- Tab
 		elseif eventData[4] == 15 then
 			if keyboard.isKeyDown(42) then
@@ -1525,10 +1436,14 @@ codeView.eventHandler = function(mainContainer, object, eventData)
 			end
 		-- Enter
 		elseif eventData[4] == 28 then
-			if autocompleteWindow.hidden then
-				enter()
+			if autocomplete.hidden then
+				local firstPart = unicode.sub(codeView.lines[cursorPositionLine], 1, cursorPositionSymbol - 1)
+				local secondPart = unicode.sub(codeView.lines[cursorPositionLine], cursorPositionSymbol, -1)
+				codeView.lines[cursorPositionLine] = firstPart
+				table.insert(codeView.lines, cursorPositionLine + 1, secondPart)
+				setCursorPositionAndClearSelection(1, cursorPositionLine + 1)
 			else
-				pasteSelectedAutocompletion()
+				autocomplete.hidden = true
 			end
 		-- F5
 		elseif eventData[4] == 63 then
@@ -1560,17 +1475,15 @@ codeView.eventHandler = function(mainContainer, object, eventData)
 			pasteAutoBrackets(eventData[3])
 		end
 
-		cursorBlinkState = true
-		tick()
+		tick(true)
 	elseif eventData[1] == "scroll" then
 		scroll(eventData[5], config.scrollSpeed)
-		tick()
+		tick(cursorBlinkState)
 	elseif eventData[1] == "clipboard" then
 		paste(splitStringIntoLines(eventData[3]))
-		tick()
+		tick(cursorBlinkState)
 	elseif not eventData[1] then
-		cursorBlinkState = not cursorBlinkState
-		tick()
+		tick(not cursorBlinkState)
 	end
 end
 
@@ -1816,6 +1729,19 @@ runButton.onTouch = function()
 	run()
 end
 
+autocomplete.onItemSelected = function(mainContainer, object, eventData)
+	local firstPart = unicode.sub(codeView.lines[cursorPositionLine], 1, autoCompleteWordStart - 1)
+	local secondPart = unicode.sub(codeView.lines[cursorPositionLine], autoCompleteWordEnd + 1, -1)
+	local middle = firstPart .. autocomplete.items[autocomplete.selectedItem]
+	codeView.lines[cursorPositionLine] = middle .. secondPart
+
+	setCursorPositionAndClearSelection(unicode.len(middle) + 1, cursorPositionLine)
+	if eventData[1] == "key_down" then
+		autocomplete.hidden = false
+	end
+	tick(true)
+end
+
 errorContainerExitButton.onTouch = hideErrorContainer
 errorContainerContinueButton.onTouch = continue
 searchInput.onInputFinished = findFromFirstDisplayedLine
@@ -1825,6 +1751,7 @@ searchButton.onTouch = find
 ------------------------------------------------------------
 
 hideErrorContainer()
+autocomplete:moveToFront()
 errorContainer:moveToFront()
 leftTreeView:updateFileList()
 

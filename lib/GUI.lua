@@ -3327,8 +3327,8 @@ local function autoCompleteDraw(object)
 			textColor, textMatchColor = object.colors.selected.text, object.colors.selected.textMatch
 		end
 
-		buffer.text(object.x + 1, y, textMatchColor, object.matchText)
-		buffer.text(object.x + 1 + object.matchTextLength, y, textColor, unicode.sub(object.items[i], object.matchTextLength + 1, object.width - 2 - object.matchTextLength))
+		buffer.text(object.x + 1, y, textMatchColor, unicode.sub(object.matchText, 1, object.width - 2))
+		buffer.text(object.x + object.matchTextLength + 1, y, textColor, unicode.sub(object.items[i], object.matchTextLength + 1, object.matchTextLength + object.width - object.matchTextLength - 2))
 
 		y = y + 1
 		if y > yEnd then
@@ -3340,7 +3340,7 @@ local function autoCompleteDraw(object)
 		object.scrollBar.x = object.x + object.width - 1
 		object.scrollBar.y = object.y
 		object.scrollBar.height = object.height
-		object.scrollBar.maximumValue = object.itemCount - object.height + 1
+		object.scrollBar.maximumValue = object.itemCount - object.height + 2
 		object.scrollBar.value = object.fromItem
 		object.scrollBar.shownValueCount = object.height
 
@@ -3365,6 +3365,7 @@ local function autoCompleteEventHandler(mainContainer, object, eventData)
 		mainContainer:drawOnScreen()
 
 		if object.onItemSelected then
+			os.sleep(0.2)
 			object.onItemSelected(mainContainer, object, eventData, object.selectedItem)
 		end
 	elseif eventData[1] == "scroll" then
@@ -3409,18 +3410,32 @@ local function autoCompleteClear(object)
 	object.height = 0
 end
 
-local function autoCompleteMatch(object, variants, text)
+local function autoCompleteMatch(object, variants, text, asKey)
 	object:clear()
 	
-	if text then
-		for i = 1, #variants do
-			if variants[i] ~= text and variants[i]:match("^" .. text) then
-				table.insert(object.items, variants[i])
+	if asKey then
+		if text then
+			for key in pairs(variants) do
+				if key ~= text and key:match("^" .. text) then
+					table.insert(object.items,key)
+				end
+			end
+		else
+			for key in pairs(variants) do
+				table.insert(object.items, key)
 			end
 		end
 	else
-		for i = 1, #variants do
-			table.insert(object.items, variants[i])
+		if text then
+			for i = 1, #variants do
+				if variants[i] ~= text and variants[i]:match("^" .. text) then
+					table.insert(object.items, variants[i])
+				end
+			end
+		else
+			for i = 1, #variants do
+				table.insert(object.items, variants[i])
+			end
 		end
 	end
 
