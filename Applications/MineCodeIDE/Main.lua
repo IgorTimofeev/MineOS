@@ -17,25 +17,6 @@ local MineOSInterface = require("MineOSInterface")
 
 ------------------------------------------------------------
 
-local about = {
-	"MineCode IDE",
-	"Copyright © 2014-2017 ECS Inc.",
-	" ",
-	"Developers:",
-	" ",
-	"Timofeev Igor, vk.com/id7799889",
-	"Trifonov Gleb, vk.com/id88323331",
-	" ",
-	"Testers:",
-	" ",
-	"Semyonov Semyon, vk.com/id92656626",
-	"Prosin Mihail, vk.com/id75667079",
-	"Shestakov Timofey, vk.com/id113499693",
-	"Bogushevich Victoria, vk.com/id171497518",
-	"Vitvitskaya Yana, vk.com/id183425349",
-	"Golovanova Polina, vk.com/id226251826",
-}
-
 local config = {
 	leftTreeViewWidth = 27,
 	syntaxColorScheme = syntax.colorScheme,
@@ -94,23 +75,6 @@ end
 local mainContainer = GUI.fullScreenContainer()
 
 local codeView = mainContainer:addChild(GUI.codeView(1, 1, 1, 1, {""}, 1, 1, 1, {}, {}, config.highlightLuaSyntax, 2))
-local cursor = mainContainer:addChild(GUI.object(1, 1, 1, 1))
-cursor.draw = function()
-	if cursorBlinkState then
-		if
-			cursor.x >= codeView.codeAreaPosition + 1 and
-			cursor.y >= codeView.y and
-			cursor.x <= codeView.codeAreaPosition + codeView.codeAreaWidth - 2 and
-			cursor.y <= codeView.y + codeView.height - 2
-		then
-			buffer.text(cursor.x, cursor.y, config.cursorColor, config.cursorSymbol)
-		end
-	end
-end
-
-local function saveConfig()
-	table.toFile(configPath, config)
-end
 
 local function convertTextPositionToScreenCoordinates(symbol, line)
 	return
@@ -119,7 +83,30 @@ local function convertTextPositionToScreenCoordinates(symbol, line)
 end
 
 local function convertScreenCoordinatesToTextPosition(x, y)
-	return x - codeView.codeAreaPosition + codeView.fromSymbol - 1, y - codeView.y + codeView.fromLine
+	return
+		x - codeView.codeAreaPosition + codeView.fromSymbol - 1,
+		y - codeView.y + codeView.fromLine
+end
+
+local overrideCodeViewDraw = codeView.draw
+codeView.draw = function(...)
+	overrideCodeViewDraw(...)
+	
+	if cursorBlinkState then
+		local x, y = convertTextPositionToScreenCoordinates(cursorPositionSymbol, cursorPositionLine)
+		if
+			x >= codeView.codeAreaPosition + 1 and
+			y >= codeView.y and
+			x <= codeView.codeAreaPosition + codeView.codeAreaWidth - 2 and
+			y <= codeView.y + codeView.height - 2
+		then
+			buffer.text(x, y, config.cursorColor, config.cursorSymbol)
+		end
+	end
+end
+
+local function saveConfig()
+	table.toFile(configPath, config)
 end
 
 local topMenu = mainContainer:addChild(GUI.menu(1, 1, 1, 0xF0F0F0, 0x696969, 0x3366CC, 0xFFFFFF))
@@ -427,7 +414,6 @@ local function setCursorPosition(symbol, line)
 	cursorPositionSymbol, cursorPositionLine = fixCursorPosition(symbol, line)
 	fixFromLineByCursorPosition()
 	fixFromSymbolByCursorPosition()
-	cursor.localX, cursor.localY = convertTextPositionToScreenCoordinates(cursorPositionSymbol, cursorPositionLine)
 	autocomplete.hidden = true
 end
 
@@ -1340,7 +1326,6 @@ codeView.eventHandler = function(mainContainer, object, eventData)
 		tick(true)
 	elseif eventData[1] == "double_touch" then
 		selectWord()
-		
 		tick(true)
 	elseif eventData[1] == "drag" then
 		if eventData[5] ~= 1 then
@@ -1529,8 +1514,27 @@ topMenuMineCode.onTouch = function()
 	
 	menu:addItem(localization.about).onTouch = function()
 		local container = addFadeContainer(localization.about)
+		
+		local lines = {
+			"MineCode IDE",
+			"Copyright © 2014-2018 ECS Inc.",
+			" ",
+			"Developers:",
+			" ",
+			"Timofeev Igor, vk.com/id7799889",
+			"Trifonov Gleb, vk.com/id88323331",
+			" ",
+			"Testers:",
+			" ",
+			"Semyonov Semyon, vk.com/id92656626",
+			"Prosin Mihail, vk.com/id75667079",
+			"Shestakov Timofey, vk.com/id113499693",
+			"Bogushevich Victoria, vk.com/id171497518",
+			"Vitvitskaya Yana, vk.com/id183425349",
+			"Golovanova Polina, vk.com/id226251826",
+		}
 
-		local textBox = container.layout:addChild(GUI.textBox(1, 1, 36, #about, nil, 0xB4B4B4, about, 1, 0, 0, true, false))
+		local textBox = container.layout:addChild(GUI.textBox(1, 1, 36, #lines, nil, 0xB4B4B4, lines, 1, 0, 0, true, false))
 		textBox:setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
 		textBox.eventHandler = nil
 
