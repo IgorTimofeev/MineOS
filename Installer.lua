@@ -293,9 +293,9 @@ stages[5] = function()
 		file:write("require(\"shell\").execute(\"OS\")")
 		file:close()
 		
-		-- if computer.getArchitecture then
-		-- 	computer.setArchitecture("Lua 5.2")
-		-- end
+		if computer.getArchitecture then
+			computer.setArchitecture("Lua 5.2")
+		end
 
 		computer.shutdown(true)
 	end
