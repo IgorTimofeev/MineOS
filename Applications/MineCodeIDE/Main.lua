@@ -91,7 +91,7 @@ end
 local overrideCodeViewDraw = codeView.draw
 codeView.draw = function(...)
 	overrideCodeViewDraw(...)
-	
+
 	if cursorBlinkState then
 		local x, y = convertTextPositionToScreenCoordinates(cursorPositionSymbol, cursorPositionLine)
 		if
@@ -551,6 +551,7 @@ local function newFile()
 	leftTreeView.selectedItem = nil
 	setCursorPositionAndClearSelection(1, 1)
 	clearBreakpoints()
+	updateTitle()
 end
 
 local function loadFile(path)
