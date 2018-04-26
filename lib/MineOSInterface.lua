@@ -1438,8 +1438,7 @@ function MineOSInterface.showErrorWindow(path, line, traceback)
 	local sendToDeveloperButton = mainContainer:addChild(GUI.adaptiveButton(9, 1, 2, 1, 0x444444, 0xFFFFFF, 0x343434, 0xFFFFFF, MineOSCore.localization.sendFeedback))
 
 	local codeView = mainContainer:addChild(GUI.codeView(1, 4, math.floor(mainContainer.width * 0.62), mainContainer.height - 3, {}, 1, 1, 100, {}, {[line] = 0xFF4444}, true, 2))
-	codeView.scrollBars.horizontal.hidden = true
-
+	
 	codeView.fromLine = line - math.floor((mainContainer.height - 3) / 2) + 1
 	if codeView.fromLine <= 0 then
 		codeView.fromLine = 1
