@@ -1,4 +1,7 @@
 {
+	toUpperCase = "В верхний",
+	toLowerCase = "В нижний",
+	convertCase = "Преобразовать регистр",
 	openingFile = "Открытие файла",
 	arguments = "Укажите аргументы через запятую",
 	launchWithArguments = "Запустить с аргументами",

@@ -1,4 +1,7 @@
 {
+	toUpperCase = "To upper",
+	toLowerCase = "To lower",
+	convertCase = "Convert case",
 	openingFile = "Opening",
 	arguments = "Separate arguments via comma",
 	launchWithArguments = "Run with arguments",	

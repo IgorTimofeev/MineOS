@@ -55,7 +55,7 @@ local cursorBlinkState = false
 
 local scriptCoroutine
 local resourcesPath = MineOSCore.getCurrentScriptDirectory() 
-local configPath = MineOSPaths.applicationData .. "MineCode IDE/Config4.cfg"
+local configPath = MineOSPaths.applicationData .. "MineCode IDE/Config6.cfg"
 local localization = MineOSCore.getCurrentScriptLocalization()
 local findStartFrom
 local clipboard
@@ -113,6 +113,9 @@ local topMenu = mainContainer:addChild(GUI.menu(1, 1, 1, 0xF0F0F0, 0x696969, 0x3
 
 local topToolBar = mainContainer:addChild(GUI.container(1, 2, 1, 3))
 local topToolBarPanel = topToolBar:addChild(GUI.panel(1, 1, 1, 3, 0xE1E1E1))
+
+local RAMProgressBar = topToolBar:addChild(GUI.progressBar(1, 2, 20, 0x787878, 0xC3C3C3, 0xB4B4B4, 50, true, true, "RAM: ", "%"))
+
 local topLayout = topToolBar:addChild(GUI.layout(1, 1, 1, 3, 1, 1))
 topLayout:setCellDirection(1, 1, GUI.directions.horizontal)
 topLayout:setCellSpacing(1, 1, 2)
@@ -155,8 +158,6 @@ toggleBottomToolBarButton.switchMode, toggleBottomToolBarButton.pressed = true, 
 
 local toggleTopToolBarButton = topLayout:addChild(GUI.adaptiveButton(1, 1, 3, 1, 0xD2D2D2, 0x4B4B4B, 0x878787, 0xE1E1E1, "⇧"))
 toggleTopToolBarButton.switchMode, toggleTopToolBarButton.pressed = true, true
-
-local RAMProgressBar = topToolBar:addChild(GUI.progressBar(1, 2, 20, 0x787878, 0xC3C3C3, 0xB4B4B4, 50, true, true, "RAM: ", "%"))
 
 local bottomToolBar = mainContainer:addChild(GUI.container(1, 1, 1, 3))
 bottomToolBar.hidden = true
@@ -1019,9 +1020,25 @@ local function selectAndPasteColor()
 		startColor = tonumber(unicode.sub(codeView.lines[codeView.selections[1].from.line], codeView.selections[1].from.symbol, codeView.selections[1].to.symbol)) or startColor
 	end
 
-	local selectedColor = GUI.palette(math.floor(mainContainer.width / 2 - 35), math.floor(mainContainer.height / 2 - 12), startColor):show()
-	if selectedColor then
-		paste({string.format("0x%06X", selectedColor)})
+	local palette = GUI.addPaletteWindowToContainer(mainContainer, startColor)
+	palette.onSubmit = function()
+		palette:delete()
+		paste({string.format("0x%06X", palette.color.integer)})
+	end
+end
+
+local function convertCase(method)
+	if codeView.selections[1] then
+		local from, to = codeView.selections[1].from, codeView.selections[1].to
+		if from.line == to.line then
+			codeView.lines[from.line] = unicode.sub(codeView.lines[from.line], 1, from.symbol - 1) .. unicode[method](unicode.sub(codeView.lines[from.line], from.symbol, to.symbol)) .. unicode.sub(codeView.lines[from.line], to.symbol + 1, -1)
+		else
+			codeView.lines[from.line] = unicode.sub(codeView.lines[from.line], 1, from.symbol - 1) .. unicode[method](unicode.sub(codeView.lines[from.line], from.symbol, -1))
+			codeView.lines[to.line] = unicode[method](unicode.sub(codeView.lines[to.line], 1, to.symbol)) .. unicode.sub(codeView.lines[to.line], to.symbol + 1, -1)
+			for line = from.line + 1, to.line - 1 do
+				codeView.lines[line] = unicode[method](codeView.lines[line])
+			end
+		end
 	end
 end
 
@@ -1276,48 +1293,74 @@ local function toggleTopToolBar()
 end
 
 local function createEditOrRightClickMenu(x, y)
-	local editOrRightClickMenu = GUI.contextMenu(x, y)
-	editOrRightClickMenu:addItem(localization.cut, not codeView.selections[1], "^X").onTouch = function()
+	local menu = GUI.contextMenu(x, y)
+	
+	menu:addItem(localization.cut, not codeView.selections[1], "^X").onTouch = function()
 		cut()
 	end
-	editOrRightClickMenu:addItem(localization.copy, not codeView.selections[1], "^C").onTouch = function()
+
+	menu:addItem(localization.copy, not codeView.selections[1], "^C").onTouch = function()
 		copy()
 	end
-	editOrRightClickMenu:addItem(localization.paste, not clipboard, "^V").onTouch = function()
+
+	menu:addItem(localization.paste, not clipboard, "^V").onTouch = function()
 		paste(clipboard)
 	end
-	editOrRightClickMenu:addSeparator()
-	editOrRightClickMenu:addItem(localization.comment, false, "^/").onTouch = function()
+
+	menu:addSeparator()
+
+	menu:addItem(localization.selectWord).onTouch = function()
+		selectWord()
+	end
+
+	menu:addItem(localization.selectAll, false, "^A").onTouch = function()
+		selectAll()
+	end
+
+	menu:addSeparator()
+
+	menu:addItem(localization.comment, false, "^/").onTouch = function()
 		toggleComment()
 	end
-	editOrRightClickMenu:addItem(localization.indent, false, "Tab").onTouch = function()
+
+	menu:addItem(localization.indent, false, "Tab").onTouch = function()
 		indentOrUnindent(true)
 	end
-	editOrRightClickMenu:addItem(localization.unindent, false, "⇧Tab").onTouch = function()
+
+	menu:addItem(localization.unindent, false, "⇧Tab").onTouch = function()
 		indentOrUnindent(false)
 	end
-	editOrRightClickMenu:addItem(localization.deleteLine, false, "^Del").onTouch = function()
+
+	menu:addItem(localization.deleteLine, false, "^Del").onTouch = function()
 		deleteLine(cursorPositionLine)
 	end
-	editOrRightClickMenu:addSeparator()
-	editOrRightClickMenu:addItem(localization.addBreakpoint, false, "F9").onTouch = function()
+
+	menu:addItem(localization.selectAndPasteColor, false, "^⇧C").onTouch = function()
+		selectAndPasteColor()
+	end
+	
+	local subMenu = menu:addSubMenu(localization.convertCase)
+	
+	subMenu:addItem(localization.toUpperCase, false, "^U").onTouch = function()
+		convertCase("upper")
+	end
+
+	subMenu:addItem(localization.toLowerCase, false, "^L").onTouch = function()
+		convertCase("lower")
+	end
+
+	menu:addSeparator()
+
+	menu:addItem(localization.addBreakpoint, false, "F9").onTouch = function()
 		addBreakpoint()
 		mainContainer:drawOnScreen()
 	end
-	editOrRightClickMenu:addItem(localization.clearBreakpoints, not breakpointLines, "^F9").onTouch = function()
+
+	menu:addItem(localization.clearBreakpoints, not breakpointLines, "^F9").onTouch = function()
 		clearBreakpoints()
 	end
-	editOrRightClickMenu:addSeparator()
-	editOrRightClickMenu:addItem(localization.selectAndPasteColor, false, "^⇧C").onTouch = function()
-		selectAndPasteColor()
-	end
-	editOrRightClickMenu:addItem(localization.selectWord).onTouch = function()
-		selectWord()
-	end
-	editOrRightClickMenu:addItem(localization.selectAll, false, "^A").onTouch = function()
-		selectAll()
-	end
-	editOrRightClickMenu:show()
+
+	menu:show()
 end
 
 codeView.eventHandler = function(mainContainer, object, eventData)
