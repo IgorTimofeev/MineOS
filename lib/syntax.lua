@@ -2,157 +2,157 @@
 require("advancedLua")
 local buffer = require("doubleBuffering")
 local unicode = require("unicode")
+local unicodeLen, unicodeSub, unicodeFind = unicode.len, unicode.sub, string.unicodeFind
 
 local syntax = {}
 
 ----------------------------------------------------------------------------------------------------------------------------------------
 
-syntax.indentationSeparator = "│"
+local indentationSymbol = "│"
 
-syntax.colorScheme = {
+local colorScheme = {
 	background = 0x1E1E1E,
-	text = 0xEEEEEE,
+	text = 0xE1E1E1,
 	strings = 0x99FF80,
-	loops = 0xffff98,
-	comments = 0x888888,
+	loops = 0xFFFF98,
+	comments = 0x898989,
 	boolean = 0xFFDB40,
-	logic = 0xffcc66,
+	logic = 0xffCC66,
 	numbers = 0x66DBFF,
-	functions = 0xffcc66,
-	compares = 0xffff98,
+	functions = 0xFFCC66,
+	compares = 0xFFFF98,
 	lineNumbersBackground = 0x2D2D2D,
-	lineNumbersText = 0xCCCCCC,
+	lineNumbersText = 0xC3C3C3,
 	scrollBarBackground = 0x2D2D2D,
 	scrollBarForeground = 0x5A5A5A,
-	selection = 0x555555,
+	selection = 0x4B4B4B,
 	indentation = 0x2D2D2D,
 }
 
-syntax.patterns = {
-	-- Комментарии
-	{ "%-%-.+", "comments", 0, 0 },
-	
-	-- Строки
-	{ "\"[^\"]+\"", "strings", 0, 0 },
-	{ "\'[^\']+\'", "strings", 0, 0 },
-	
-	-- Циклы, условия и прочая поебень
-	{ "while ", "loops", 0, 1 },
-	{ "do$", "loops", 0, 0 },
-	{ "do ", "loops", 0, 1 },
-	{ "end$", "loops", 0, 0 },
-	{ "end[%s%;]", "loops", 0, 1 },
-	{ "for ", "loops", 0, 1 },
-	{ " in ", "loops", 0, 1 },
-	{ "repeat$", "loops", 0, 0 },
-	{ "if ", "loops", 0, 1 },
-	{ "then", "loops", 0, 0 },
-	{ "until ", "loops", 0, 1 },
-	{ "return", "loops", 0, 0 },
-	{ "local ", "loops", 0, 1 },
-	{ "function ", "loops", 0, 1 },
-	{ "else$", "loops", 0, 0 },
-	{ "else[%s%;]", "loops", 0, 1 },
-	{ "elseif ", "loops", 0, 1 },
-	{ " break$", "loops", 0, 0 },
-	{ " break ", "loops", 0, 0 },
-
-	-- Истина, ложь, нулл
-	{ "true", "boolean", 0, 0 },
-	{ "false", "boolean", 0, 0 },
-	{ "nil", "boolean", 0, 0 },
-			
-	--Функции
-	{ "[%s%=%{%(][^%s%(%)%{%}%[%]]+%(", "functions", 1, 1 },
-	{ "^[^%s%(%)%{%}%[%]]+%(", "functions", 0, 1 },
-	
-	-- Логические выражения
-	{ " and ", "logic", 0, 1 },
-	{ " or ", "logic", 0, 1 },
-	{ " not ", "logic", 0, 1 },
-
-	-- Конкатенация строк
-	{ "[^%d]%.+[^%d]", "logic", 1, 1 },
-
+local patterns = {
+	-- Числа
+	{ "[^%a%d][%.%d]+[^%a%d]", "numbers", 1, 1 },
+	{ "[^%a%d][%.%d]+$", "numbers", 1, 0 },
+	{ "0x%w+", "numbers", 0, 0 },
 	-- Сравнения и мат. операции
 	{ "[%>%<%=%~%+%-%*%/%^%#%%%&]", "compares", 0, 0 },
-
-	-- Числа
-	{ "0x%w+", "numbers", 0, 0 },
-	{ "[^%a%d][%.%d]+$", "numbers", 1, 0 },
-	{ "[^%a%d][%.%d]+[^%a%d]", "numbers", 1, 1 },
+	-- Конкатенация строк
+	{ "[^%d]%.+[^%d]", "logic", 1, 1 },
+	-- Логические выражения
+	{ " not ", "logic", 0, 1 },
+	{ " or ", "logic", 0, 1 },
+	{ " and ", "logic", 0, 1 },
+	--Функции
+	{ "^[^%s%(%)%{%}%[%]]+%(", "functions", 0, 1 },
+	{ "[%s%=%{%(][^%s%(%)%{%}%[%]]+%(", "functions", 1, 1 },
+	-- Истина, ложь, нулл
+	{ "nil", "boolean", 0, 0 },
+	{ "false", "boolean", 0, 0 },
+	{ "true", "boolean", 0, 0 },
+	-- Циклы, условия и прочая поебень
+	{ " break ", "loops", 0, 0 },
+	{ " break$", "loops", 0, 0 },
+	{ "elseif ", "loops", 0, 1 },
+	{ "else[%s%;]", "loops", 0, 1 },
+	{ "else$", "loops", 0, 0 },
+	{ "function ", "loops", 0, 1 },
+	{ "local ", "loops", 0, 1 },
+	{ "return", "loops", 0, 0 },
+	{ "until ", "loops", 0, 1 },
+	{ "then", "loops", 0, 0 },
+	{ "if ", "loops", 0, 1 },
+	{ "repeat$", "loops", 0, 0 },
+	{ " in ", "loops", 0, 1 },
+	{ "for ", "loops", 0, 1 },
+	{ "end[%s%;]", "loops", 0, 1 },
+	{ "end$", "loops", 0, 0 },
+	{ "do ", "loops", 0, 1 },
+	{ "do$", "loops", 0, 0 },
+	{ "while ", "loops", 0, 1 },
+	-- Строки
+	{ "\'[^\']+\'", "strings", 0, 0 },
+	{ "\"[^\"]+\"", "strings", 0, 0 },
+	-- Комментарии
+	{ "%-%-.+", "comments", 0, 0 },
 }
 
 ----------------------------------------------------------------------------------------------------------------------------------------
 
 -- Отрисовка строки с подсвеченным синтаксисом
-function syntax.highlightString(x, y, str, indentationWidth)
-	local x1, y1, x2, y2 = buffer.getDrawLimit()
+function syntax.highlightString(x, y, fromChar, limit, indentationWidth, s)
+	fromChar = fromChar or 1
+	
+	local counter, symbols, colors, stringLength, bufferIndex, newFrameBackgrounds, newFrameForegrounds, newFrameSymbols, searchFrom, starting, ending = indentationWidth, {}, {}, unicodeLen(s), buffer.getIndex(x, y), buffer.getNewFrameTables()
+	local toChar = math.min(stringLength, fromChar + limit - 1)
 
-	if y >= y1 and y <= y2 then
-		local stringLength, symbols, colors, searchFrom, starting, ending, bufferIndex, background = unicode.len(str), {}, {}
+	for i = 1, stringLength do
+		symbols[i] = unicodeSub(s, i, i)
+	end
 
-		for symbol = 1, stringLength do
-			symbols[symbol] = unicode.sub(str, symbol, symbol)
-		end
-
-		for patternIndex = #syntax.patterns, 1, -1 do
-			searchFrom = 1
-			while true do
-				starting, ending = string.unicodeFind(str, syntax.patterns[patternIndex][1], searchFrom)
-				if starting then
-					for symbol = starting + syntax.patterns[patternIndex][3], ending - syntax.patterns[patternIndex][4] do
-						colors[symbol] = syntax.colorScheme[syntax.patterns[patternIndex][2]]
-					end
-				else
-					break
-				end	
-				searchFrom = ending + 1 - syntax.patterns[patternIndex][4]
-			end
-		end
-
-		local notSpaceNotFound, indentationSymbolCounter = true, 1
-
-		for symbol = 1, stringLength do
-			if notSpaceNotFound then
-				if symbols[symbol] == " " then
-					colors[symbol] = syntax.colorScheme.indentation
-					if indentationSymbolCounter == 1 then
-						symbols[symbol] = syntax.indentationSeparator
-						indentationSymbolCounter = indentationWidth + 1
-					end
-				else
-					notSpaceNotFound = false
-				end
-				indentationSymbolCounter = indentationSymbolCounter - 1
-			end
-
-			if x > x2 then
-				break
-			elseif x >= x1 then
-				bufferIndex = bufferIndex or buffer.getIndex(x, y)
-				background = buffer.rawGet(bufferIndex)
-				buffer.rawSet(bufferIndex, background, colors[symbol] or syntax.colorScheme.text, symbols[symbol])
-				
-				bufferIndex = bufferIndex + 1
-			end
+	for j = 1, #patterns do
+		searchFrom = 1
+		
+		while true do
+			starting, ending = unicodeFind(s, patterns[j][1], searchFrom)
 			
-			x = x + 1
+			if starting then
+				for i = starting + patterns[j][3], ending - patterns[j][4] do
+					colors[i] = colorScheme[patterns[j][2]]
+				end
+			else
+				break
+			end
+
+			searchFrom = ending + 1 - patterns[j][4]
 		end
 	end
+
+	-- Ебошим индентейшны
+	for i = fromChar, toChar do
+		if symbols[i] == " " then
+			colors[i] = colorScheme.indentation
+			
+			if counter == indentationWidth then
+				symbols[i], counter = indentationSymbol, 0
+			end
+
+			counter = counter + 1
+		else
+			break
+		end
+	end
+
+	-- А тута уже сам текст
+	for i = fromChar, toChar do
+		newFrameForegrounds[bufferIndex], newFrameSymbols[bufferIndex] = colors[i] or colorScheme.text, symbols[i] or " "
+		bufferIndex = bufferIndex + 1
+	end
+end
+
+function syntax.getColorScheme(t)
+	return colorScheme
+end
+
+function syntax.setColorScheme(t)
+	colorScheme = t
 end
 
 ----------------------------------------------------------------------------------------------------------------
 
--- buffer.start()
+-- buffer.flush()
 -- buffer.clear(0x1b1b1b)
 
--- buffer.square(5, 5, 30, 3, syntax.colorScheme.background, 0x0, " ")
--- -- syntax.highlightString(5, 6, "if not fs.exists(path) then error(\"File \\\"\"..path..\"\\\" doesnt't exsists.\\n\") end")
--- syntax.highlightString(5, 6, "for i = 1, 10 do", 2)
--- syntax.highlightString(5, 7, "  local abc = print(123)", 2)
--- syntax.highlightString(5, 8, "    local abc = print(123)", 2)
--- syntax.highlightString(5, 9, "end", 2)
+-- buffer.square(5, 5, 30, 3, colorScheme.background, 0x0, " ")
+
+-- local counter = 2
+-- for line in io.lines("/g.lua") do
+-- 	pcall(syntax.highlightString, 2, counter, 1, 160, 2, line)
+	
+-- 	counter = counter + 1
+-- 	if counter > 50 then
+-- 		break
+-- 	end
+-- end
 
 -- buffer.draw(true)
 

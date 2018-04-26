@@ -19,7 +19,7 @@ local MineOSInterface = require("MineOSInterface")
 
 local config = {
 	leftTreeViewWidth = 27,
-	syntaxColorScheme = syntax.colorScheme,
+	syntaxColorScheme = syntax.getColorScheme(),
 	scrollSpeed = 8,
 	cursorColor = 0x00A8FF,
 	cursorSymbol = "┃",
@@ -69,7 +69,7 @@ local continue, showBreakpointMessage, showErrorContainer
 
 if fs.exists(configPath) then
 	config = table.fromFile(configPath)
-	syntax.colorScheme = config.syntaxColorScheme
+	syntax.setColorScheme(config.syntaxColorScheme)
 end
 
 local mainContainer = GUI.fullScreenContainer()
@@ -1341,11 +1341,11 @@ local function createEditOrRightClickMenu(x, y)
 	
 	local subMenu = menu:addSubMenu(localization.convertCase)
 	
-	subMenu:addItem(localization.toUpperCase, false, "^U").onTouch = function()
+	subMenu:addItem(localization.toUpperCase, false, "^▲").onTouch = function()
 		convertCase("upper")
 	end
 
-	subMenu:addItem(localization.toLowerCase, false, "^L").onTouch = function()
+	subMenu:addItem(localization.toLowerCase, false, "^▼").onTouch = function()
 		convertCase("lower")
 	end
 
@@ -1434,6 +1434,12 @@ codeView.eventHandler = function(mainContainer, object, eventData)
 			-- U
 			elseif eventData[4] == 22 and component.isAvailable("internet") then
 				downloadFileFromWeb()
+			-- Arrow UP
+			elseif eventData[4] == 200 then
+				convertCase("upper")
+			-- Arrow DOWN
+			elseif eventData[4] == 208 then
+				convertCase("lower")
 			-- S
 			elseif eventData[4] == 31 then
 				-- Shift
@@ -1692,7 +1698,7 @@ topMenuProperties.onTouch = function()
 			local colorSelector = container:addChild(GUI.colorSelector(x, y, colorSelectorWidth, colorSelectorHeight, config.syntaxColorScheme[colors[i][1]], colors[i][1]))
 			colorSelector.onTouch = function()
 				config.syntaxColorScheme[colors[i][1]] = colorSelector.color
-				syntax.colorScheme = config.syntaxColorScheme
+				syntax.setColorScheme(config.syntaxColorScheme)
 				saveConfig()
 			end
 
@@ -1798,12 +1804,12 @@ toggleTopToolBarButton.onTouch = function()
 	mainContainer:drawOnScreen()
 end
 
-codeView.scrollBars.vertical.onTouch = function()
-	codeView.fromLine = math.ceil(codeView.scrollBars.vertical.value)
+codeView.verticalScrollBar.onTouch = function()
+	codeView.fromLine = math.ceil(codeView.verticalScrollBar.value)
 end
 
-codeView.scrollBars.horizontal.onTouch = function()
-	codeView.fromSymbol = math.ceil(codeView.scrollBars.horizontal.value)
+codeView.horizontalScrollBar.onTouch = function()
+	codeView.fromSymbol = math.ceil(codeView.horizontalScrollBar.value)
 end
 
 runButton.onTouch = function()

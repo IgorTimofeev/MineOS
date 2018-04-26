@@ -27,6 +27,14 @@ local function getIndex(x, y)
 	return bufferWidth * (y - 1) + x
 end
 
+local function getCurrentFrameTables()
+	return currentFrameBackgrounds, currentFrameForegrounds, currentFrameSymbols
+end
+
+local function getNewFrameTables()
+	return newFrameBackgrounds, newFrameForegrounds, newFrameSymbols
+end
+
 --------------------------------------------------------------------------------
 
 local function setDrawLimit(x1, y1, x2, y2)
@@ -722,6 +730,8 @@ return {
 	semiPixelBezierCurve = semiPixelBezierCurve,
 	draw = draw,
 	debug = debug,
+	getCurrentFrameTables = getCurrentFrameTables,
+	getNewFrameTables = getNewFrameTables,
 
 	button = button,
 	adaptiveButton = adaptiveButton,

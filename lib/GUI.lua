@@ -13,6 +13,7 @@ local unicode = require("unicode")
 local event = require("event")
 local color = require("color")
 local image = require("image")
+local syntax = require("syntax")
 local buffer = require("doubleBuffering")
 
 -----------------------------------------------------------------------
@@ -913,34 +914,30 @@ end
 -----------------------------------------------------------------------
 
 local function codeViewDraw(codeView)
-	local syntax = require("syntax")
-	local toLine = codeView.fromLine + codeView.height - 1
-
+	local toLine, colorScheme = codeView.fromLine + codeView.height - 1, syntax.getColorScheme()
 	-- Line numbers bar and code area
 	codeView.lineNumbersWidth = unicode.len(tostring(toLine)) + 2
 	codeView.codeAreaPosition = codeView.x + codeView.lineNumbersWidth
 	codeView.codeAreaWidth = codeView.width - codeView.lineNumbersWidth
-	buffer.square(codeView.x, codeView.y, codeView.lineNumbersWidth, codeView.height, syntax.colorScheme.lineNumbersBackground, syntax.colorScheme.lineNumbersText, " ")	
-	buffer.square(codeView.codeAreaPosition, codeView.y, codeView.codeAreaWidth, codeView.height, syntax.colorScheme.background, syntax.colorScheme.text, " ")
-
+	-- Line numbers 
+	buffer.square(codeView.x, codeView.y, codeView.lineNumbersWidth, codeView.height, colorScheme.lineNumbersBackground, colorScheme.lineNumbersText, " ")	
+	-- Background
+	buffer.square(codeView.codeAreaPosition, codeView.y, codeView.codeAreaWidth, codeView.height, colorScheme.background, colorScheme.text, " ")
 	-- Line numbers texts
 	local y = codeView.y
 	for line = codeView.fromLine, toLine do
 		if codeView.lines[line] then
 			local text = tostring(line)
 			if codeView.highlights[line] then
-				buffer.square(codeView.x, y, codeView.lineNumbersWidth, 1, codeView.highlights[line], syntax.colorScheme.text, " ", 0.3)
-				buffer.square(codeView.codeAreaPosition, y, codeView.codeAreaWidth, 1, codeView.highlights[line], syntax.colorScheme.text, " ")
+				buffer.square(codeView.x, y, codeView.lineNumbersWidth, 1, codeView.highlights[line], colorScheme.text, " ", 0.3)
+				buffer.square(codeView.codeAreaPosition, y, codeView.codeAreaWidth, 1, codeView.highlights[line], colorScheme.text, " ")
 			end
-			buffer.text(codeView.codeAreaPosition - unicode.len(text) - 1, y, syntax.colorScheme.lineNumbersText, text)
+			buffer.text(codeView.codeAreaPosition - unicode.len(text) - 1, y, colorScheme.lineNumbersText, text)
 			y = y + 1
 		else
 			break
 		end	
 	end
-
-	local oldDrawLimitX1, oldDrawLimitY1, oldDrawLimitX2, oldDrawLimitY2 = buffer.getDrawLimit()
-	buffer.setDrawLimit(codeView.codeAreaPosition, codeView.y, codeView.codeAreaPosition + codeView.codeAreaWidth - 1, codeView.y + codeView.height - 1)
 
 	local function drawUpperSelection(y, selectionIndex)
 		buffer.square(
@@ -948,7 +945,7 @@ local function codeViewDraw(codeView)
 			y + codeView.selections[selectionIndex].from.line - codeView.fromLine,
 			codeView.codeAreaWidth - codeView.selections[selectionIndex].from.symbol + codeView.fromSymbol - 1,
 			1,
-			codeView.selections[selectionIndex].color or syntax.colorScheme.selection, syntax.colorScheme.text, " "
+			codeView.selections[selectionIndex].color or colorScheme.selection, colorScheme.text, " "
 		)
 	end
 
@@ -958,9 +955,12 @@ local function codeViewDraw(codeView)
 			y + codeView.selections[selectionIndex].from.line - codeView.fromLine,
 			codeView.selections[selectionIndex].to.symbol - codeView.fromSymbol + 2,
 			1,
-			codeView.selections[selectionIndex].color or syntax.colorScheme.selection, syntax.colorScheme.text, " "
+			codeView.selections[selectionIndex].color or colorScheme.selection, colorScheme.text, " "
 		)
 	end
+
+	local oldDrawLimitX1, oldDrawLimitY1, oldDrawLimitX2, oldDrawLimitY2 = buffer.getDrawLimit()
+	buffer.setDrawLimit(codeView.codeAreaPosition, codeView.y, codeView.codeAreaPosition + codeView.codeAreaWidth - 1, codeView.y + codeView.height - 1)
 
 	if #codeView.selections > 0 then
 		for selectionIndex = 1, #codeView.selections do
@@ -972,7 +972,7 @@ local function codeViewDraw(codeView)
 					y + codeView.selections[selectionIndex].from.line - codeView.fromLine,
 					codeView.selections[selectionIndex].to.symbol - codeView.selections[selectionIndex].from.symbol + 1,
 					1,
-					codeView.selections[selectionIndex].color or syntax.colorScheme.selection, syntax.colorScheme.text, " "
+					codeView.selections[selectionIndex].color or colorScheme.selection, colorScheme.text, " "
 				)
 			elseif dy == 1 then
 				drawUpperSelection(y, selectionIndex); y = y + 1
@@ -980,7 +980,7 @@ local function codeViewDraw(codeView)
 			else
 				drawUpperSelection(y, selectionIndex); y = y + 1
 				for i = 1, dy - 1 do
-					buffer.square(codeView.codeAreaPosition, y + codeView.selections[selectionIndex].from.line - codeView.fromLine, codeView.codeAreaWidth, 1, codeView.selections[selectionIndex].color or syntax.colorScheme.selection, syntax.colorScheme.text, " "); y = y + 1
+					buffer.square(codeView.codeAreaPosition, y + codeView.selections[selectionIndex].from.line - codeView.fromLine, codeView.codeAreaWidth, 1, codeView.selections[selectionIndex].color or colorScheme.selection, colorScheme.text, " "); y = y + 1
 				end
 
 				drawLowerSelection(y, selectionIndex)
@@ -991,40 +991,43 @@ local function codeViewDraw(codeView)
 	-- Code strings
 	y = codeView.y
 	buffer.setDrawLimit(codeView.codeAreaPosition + 1, y, codeView.codeAreaPosition + codeView.codeAreaWidth - 2, y + codeView.height - 1)
+	
 	for i = codeView.fromLine, toLine do
 		if codeView.lines[i] then
 			if codeView.highlightLuaSyntax then
-				syntax.highlightString(codeView.codeAreaPosition - codeView.fromSymbol + 2, y, codeView.lines[i], codeView.indentationWidth)
+				syntax.highlightString(codeView.codeAreaPosition + 1, y, codeView.fromSymbol, codeView.codeAreaWidth - 2, codeView.indentationWidth, codeView.lines[i])
 			else
-				buffer.text(codeView.codeAreaPosition - codeView.fromSymbol + 2, y, syntax.colorScheme.text, codeView.lines[i])
+				buffer.text(codeView.codeAreaPosition - codeView.fromSymbol + 2, y, colorScheme.text, codeView.lines[i])
 			end
 			y = y + 1
 		else
 			break
 		end
 	end
+
 	buffer.setDrawLimit(oldDrawLimitX1, oldDrawLimitY1, oldDrawLimitX2, oldDrawLimitY2)
 
 	if #codeView.lines > codeView.height then
-		codeView.scrollBars.vertical.hidden = false
-		codeView.scrollBars.vertical.colors.background, codeView.scrollBars.vertical.colors.foreground = syntax.colorScheme.scrollBarBackground, syntax.colorScheme.scrollBarForeground
-		codeView.scrollBars.vertical.minimumValue, codeView.scrollBars.vertical.maximumValue, codeView.scrollBars.vertical.value, codeView.scrollBars.vertical.shownValueCount = 1, #codeView.lines, codeView.fromLine, codeView.height
-		codeView.scrollBars.vertical.localX = codeView.width
-		codeView.scrollBars.vertical.localY = 1
-		codeView.scrollBars.vertical.height = codeView.height - 1
+		codeView.verticalScrollBar.colors.background, codeView.verticalScrollBar.colors.foreground = colorScheme.scrollBarBackground, colorScheme.scrollBarForeground
+		codeView.verticalScrollBar.minimumValue, codeView.verticalScrollBar.maximumValue, codeView.verticalScrollBar.value, codeView.verticalScrollBar.shownValueCount = 1, #codeView.lines, codeView.fromLine, codeView.height
+		codeView.verticalScrollBar.localX = codeView.width
+		codeView.verticalScrollBar.localY = 1
+		codeView.verticalScrollBar.height = codeView.height - 1
+		codeView.verticalScrollBar.hidden = false
 	else
-		codeView.scrollBars.vertical.hidden = true
+		codeView.verticalScrollBar.hidden = true
 	end
 
 	if codeView.maximumLineLength > codeView.codeAreaWidth - 2 then
-		codeView.scrollBars.horizontal.hidden = false
-		codeView.scrollBars.horizontal.colors.background, codeView.scrollBars.horizontal.colors.foreground = syntax.colorScheme.scrollBarBackground, syntax.colorScheme.scrollBarForeground
-		codeView.scrollBars.horizontal.minimumValue, codeView.scrollBars.horizontal.maximumValue, codeView.scrollBars.horizontal.value, codeView.scrollBars.horizontal.shownValueCount = 1, codeView.maximumLineLength, codeView.fromSymbol, codeView.codeAreaWidth - 2
-		codeView.scrollBars.horizontal.localX = codeView.lineNumbersWidth + 1
-		codeView.scrollBars.horizontal.localY = codeView.height
-		codeView.scrollBars.horizontal.width = codeView.codeAreaWidth - 1
+		codeView.horizontalScrollBar.colors.background, codeView.horizontalScrollBar.colors.foreground = colorScheme.scrollBarBackground, colorScheme.scrollBarForeground
+		codeView.horizontalScrollBar.minimumValue, codeView.horizontalScrollBar.maximumValue, codeView.horizontalScrollBar.value, codeView.horizontalScrollBar.shownValueCount = 1, codeView.maximumLineLength, codeView.fromSymbol, codeView.codeAreaWidth - 2
+		codeView.horizontalScrollBar.localX = codeView.lineNumbersWidth + 1
+		codeView.horizontalScrollBar.localY = codeView.height
+		codeView.horizontalScrollBar.width = codeView.codeAreaWidth - 1
+		codeView.horizontalScrollBar:draw()
+		codeView.horizontalScrollBar.hidden = false
 	else
-		codeView.scrollBars.horizontal.hidden = true
+		codeView.horizontalScrollBar.hidden = true
 	end
 
 	codeView:reimplementedDraw()
@@ -1042,10 +1045,8 @@ function GUI.codeView(x, y, width, height, lines, fromSymbol, fromLine, maximumL
 	codeView.highlightLuaSyntax = highlightLuaSyntax
 	codeView.indentationWidth = indentationWidth
 
-	codeView.scrollBars = {
-		vertical = codeView:addChild(GUI.scrollBar(1, 1, 1, 1, 0x0, 0x0, 1, 1, 1, 1, 1, true)),
-		horizontal = codeView:addChild(GUI.scrollBar(1, 1, 1, 1, 0x0, 0x0, 1, 1, 1, 1, 1, true))
-	}
+	codeView.verticalScrollBar = codeView:addChild(GUI.scrollBar(1, 1, 1, 1, 0x0, 0x0, 1, 1, 1, 1, 1, true))
+	codeView.horizontalScrollBar = codeView:addChild(GUI.scrollBar(1, 1, 1, 1, 0x0, 0x0, 1, 1, 1, 1, 1, true))
 
 	codeView.reimplementedDraw = codeView.draw
 	codeView.draw = codeViewDraw
