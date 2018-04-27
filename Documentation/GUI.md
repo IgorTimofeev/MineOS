@@ -65,7 +65,6 @@ GUI - многофункциональная графическая библио
 | *[doubleBuffering](https://github.com/IgorTimofeev/OpenComputers/blob/master/lib/doubleBuffering.lua)* | Двойная буферизация графического контекста и различные методы растеризации примитивов | [https://github.com/Igor...](https://github.com/IgorTimofeev/OpenComputers/blob/master/Documentation/doubleBuffering.md) | 
 | *[image](https://github.com/IgorTimofeev/OpenComputers/blob/master/lib/image.lua)* | Реализация стандарта изображений для OpenComputers и базовые методы их обработки: транспонирование, обрезка, поворот, отражение и т.д. | - | 
 | *[OCIF](https://github.com/IgorTimofeev/OpenComputers/blob/master/lib/FormatModules/OCIF.lua)* | Модуль формата изображения OCIF (OpenComputers Image Format) для библиотеки image, написанный с учетом особенностей мода и реализующий эффективное сжатие пиксельных данных | - | 
-| *[syntax](https://github.com/IgorTimofeev/OpenComputers/blob/master/lib/syntax.lua)* | Подсветка lua-синтаксиса для виджета CodeView | - | 
 
 Вы можете использовать имеющиеся выше ссылки для установки зависимостей вручную или запустить автоматический [установщик](https://pastebin.com/ryhyXUKZ), загружающий все необходимые файлы за вас:
 
