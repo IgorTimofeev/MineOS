@@ -1505,11 +1505,17 @@ codeView.eventHandler = function(mainContainer, object, eventData)
 		-- Enter
 		elseif eventData[4] == 28 then
 			if autocomplete.hidden then
-				local firstPart = unicode.sub(codeView.lines[cursorPositionLine], 1, cursorPositionSymbol - 1)
 				local secondPart = unicode.sub(codeView.lines[cursorPositionLine], cursorPositionSymbol, -1)
-				codeView.lines[cursorPositionLine] = firstPart
+				
+				local match = codeView.lines[cursorPositionLine]:match("^(%s+)")
+				if match then
+					secondPart = match .. secondPart
+				end
+				
+				codeView.lines[cursorPositionLine] = unicode.sub(codeView.lines[cursorPositionLine], 1, cursorPositionSymbol - 1)
 				table.insert(codeView.lines, cursorPositionLine + 1, secondPart)
-				setCursorPositionAndClearSelection(1, cursorPositionLine + 1)
+				
+				setCursorPositionAndClearSelection(unicode.len(secondPart) + 1, cursorPositionLine + 1)
 			else
 				autocomplete.hidden = true
 			end
