@@ -11,7 +11,6 @@ local image = require("image")
 local MineOSPaths = require("MineOSPaths")
 local MineOSInterface = require("MineOSInterface")
 local unicode = require("unicode")
-local syntax = require("syntax")
 
 ----------------------------------------------------------------------------------------------------------------
 
@@ -36,7 +35,7 @@ module.onTouch = function()
 		if text == placeholder then
 			buffer.text(x, y, color, text)
 		else
-			syntax.highlightString(x, y, text, 2)
+			GUI.highlightString(x, y, 1, input.width - 2, 2, GUI.colors.syntaxHighlighting, GUI.luaSyntaxPatterns, text)
 		end
 	end
 

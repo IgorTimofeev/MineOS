@@ -7,7 +7,6 @@ local component = require("component")
 local fs = require("filesystem")
 local buffer = require("doubleBuffering")
 local event = require("event")
-local syntax = require("syntax")
 local unicode = require("unicode")
 local keyboard = require("keyboard")
 local GUI = require("GUI")
@@ -19,7 +18,7 @@ local MineOSInterface = require("MineOSInterface")
 
 local config = {
 	leftTreeViewWidth = 27,
-	syntaxColorScheme = syntax.getColorScheme(),
+	syntaxColorScheme = GUI.colors.syntaxHighlighting,
 	scrollSpeed = 8,
 	cursorColor = 0x00A8FF,
 	cursorSymbol = "┃",
@@ -29,7 +28,7 @@ local config = {
 	enableAutoBrackets = true,
 	highlightLuaSyntax = true,
 	enableAutocompletion = true,
-	linesToShowOpenProgress = 100,
+	linesToShowOpenProgress = 150,
 }
 config.screenResolution.width, config.screenResolution.height = component.gpu.getResolution()
 
@@ -55,7 +54,7 @@ local cursorBlinkState = false
 
 local scriptCoroutine
 local resourcesPath = MineOSCore.getCurrentScriptDirectory() 
-local configPath = MineOSPaths.applicationData .. "MineCode IDE/Config6.cfg"
+local configPath = MineOSPaths.applicationData .. "MineCode IDE/Config7.cfg"
 local localization = MineOSCore.getCurrentScriptLocalization()
 local findStartFrom
 local clipboard
@@ -69,7 +68,7 @@ local continue, showBreakpointMessage, showErrorContainer
 
 if fs.exists(configPath) then
 	config = table.fromFile(configPath)
-	syntax.setColorScheme(config.syntaxColorScheme)
+	GUI.colors.syntaxHighlighting = config.syntaxColorScheme
 end
 
 local mainContainer = GUI.fullScreenContainer()
@@ -1698,7 +1697,7 @@ topMenuProperties.onTouch = function()
 			local colorSelector = container:addChild(GUI.colorSelector(x, y, colorSelectorWidth, colorSelectorHeight, config.syntaxColorScheme[colors[i][1]], colors[i][1]))
 			colorSelector.onTouch = function()
 				config.syntaxColorScheme[colors[i][1]] = colorSelector.color
-				syntax.setColorScheme(config.syntaxColorScheme)
+				GUI.colors.syntaxHighlighting = config.syntaxColorScheme
 				saveConfig()
 			end
 

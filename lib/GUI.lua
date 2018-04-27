@@ -14,7 +14,6 @@ local event = require("event")
 local color = require("color")
 local image = require("image")
 local buffer = require("doubleBuffering")
-local syntax
 
 -----------------------------------------------------------------------
 
@@ -83,7 +82,63 @@ GUI.colors = {
 	},
 	windows = {
 		shadowTransparency = 0.5
+	},
+	syntaxHighlighting = {
+		background = 0x1E1E1E,
+		text = 0xE1E1E1,
+		strings = 0x99FF80,
+		loops = 0xFFFF98,
+		comments = 0x898989,
+		boolean = 0xFFDB40,
+		logic = 0xffCC66,
+		numbers = 0x66DBFF,
+		functions = 0xFFCC66,
+		compares = 0xFFFF98,
+		lineNumbersBackground = 0x2D2D2D,
+		lineNumbersText = 0xC3C3C3,
+		scrollBarBackground = 0x2D2D2D,
+		scrollBarForeground = 0x5A5A5A,
+		selection = 0x4B4B4B,
+		indentation = 0x2D2D2D,
 	}
+}
+
+GUI.luaSyntaxPatterns = {
+	{"[^%a%d][%.%d]+[^%a%d]", "numbers", 1, 1},
+	{"[^%a%d][%.%d]+$", "numbers", 1, 0},
+	{"0x%w+", "numbers", 0, 0},
+	{"[%>%<%=%~%+%-%*%/%^%#%%%&]", "compares", 0, 0},
+	{"[^%d]%.+[^%d]", "logic", 1, 1},
+	{" not ", "logic", 0, 1},
+	{" or ", "logic", 0, 1},
+	{" and ", "logic", 0, 1},
+	{"function%(", "functions", 0, 1},
+	{"function%s[^%s%(%)%{%}%[%]]+%(", "functions", 9, 1},
+	{"nil", "boolean", 0, 0},
+	{"false", "boolean", 0, 0},
+	{"true", "boolean", 0, 0},
+	{" break ", "loops", 0, 0},
+	{" break$", "loops", 0, 0},
+	{"elseif ", "loops", 0, 1},
+	{"else[%s%;]", "loops", 0, 1},
+	{"else$", "loops", 0, 0},
+	{"function ", "loops", 0, 1},
+	{"local ", "loops", 0, 1},
+	{"return", "loops", 0, 0},
+	{"until ", "loops", 0, 1},
+	{"then", "loops", 0, 0},
+	{"if ", "loops", 0, 1},
+	{"repeat$", "loops", 0, 0},
+	{" in ", "loops", 0, 1},
+	{"for ", "loops", 0, 1},
+	{"end[%s%;]", "loops", 0, 1},
+	{"end$", "loops", 0, 0},
+	{"do ", "loops", 0, 1},
+	{"do$", "loops", 0, 0},
+	{"while ", "loops", 0, 1},
+	{"\'[^\']+\'", "strings", 0, 0},
+	{"\"[^\"]+\"", "strings", 0, 0},
+	{"%-%-.+", "comments", 0, 0},
 }
 
 GUI.paletteConfigPath = "/lib/.palette.cfg"
@@ -914,7 +969,7 @@ end
 -----------------------------------------------------------------------
 
 local function codeViewDraw(codeView)
-	local toLine, colorScheme = codeView.fromLine + codeView.height - 1, syntax.getColorScheme()
+	local toLine, colorScheme = codeView.fromLine + codeView.height - 1, GUI.colors.syntaxHighlighting
 	-- Line numbers bar and code area
 	codeView.lineNumbersWidth = unicode.len(tostring(toLine)) + 2
 	codeView.codeAreaPosition = codeView.x + codeView.lineNumbersWidth
@@ -995,10 +1050,19 @@ local function codeViewDraw(codeView)
 	for i = codeView.fromLine, toLine do
 		if codeView.lines[i] then
 			if codeView.highlightLuaSyntax then
-				syntax.highlightString(codeView.codeAreaPosition + 1, y, codeView.fromSymbol, codeView.codeAreaWidth - 2, codeView.indentationWidth, codeView.lines[i])
+				GUI.highlightString(codeView.codeAreaPosition + 1,
+					y,
+					codeView.fromSymbol,
+					codeView.codeAreaWidth - 2,
+					codeView.indentationWidth,
+					colorScheme,
+					GUI.luaSyntaxPatterns,
+					codeView.lines[i]
+				)
 			else
 				buffer.text(codeView.codeAreaPosition - codeView.fromSymbol + 2, y, colorScheme.text, codeView.lines[i])
 			end
+
 			y = y + 1
 		else
 			break
@@ -1033,11 +1097,7 @@ local function codeViewDraw(codeView)
 	codeView:reimplementedDraw()
 end
 
-function GUI.codeView(x, y, width, height, lines, fromSymbol, fromLine, maximumLineLength, selections, highlights, highlightLuaSyntax, indentationWidth)
-	if not syntax then
-		syntax = require("syntax")
-	end
-	
+function GUI.codeView(x, y, width, height, lines, fromSymbol, fromLine, maximumLineLength, selections, highlights, highlightLuaSyntax, indentationWidth)	
 	local codeView = GUI.container(x, y, width, height)
 	
 	codeView.lines = lines
@@ -4077,6 +4137,77 @@ function GUI.list(x, y, width, height, itemSize, spacing, backgroundColor, textC
 
 	return object
 end
+
+------------------------------------------------------------------------------------------
+
+function GUI.highlightString(x, y, fromChar, limit, indentationWidth, colorScheme, patterns, s)
+	fromChar = fromChar or 1
+	
+	local counter, symbols, colors, stringLength, bufferIndex, newFrameBackgrounds, newFrameForegrounds, newFrameSymbols, searchFrom, starting, ending = indentationWidth, {}, {}, unicode.len(s), buffer.getIndex(x, y), buffer.getNewFrameTables()
+	local toChar = math.min(stringLength, fromChar + limit - 1)
+
+	for i = 1, stringLength do
+		symbols[i] = unicode.sub(s, i, i)
+	end
+
+	for j = 1, #patterns do
+		searchFrom = 1
+		
+		while true do
+			starting, ending = string.unicodeFind(s, patterns[j][1], searchFrom)
+			
+			if starting then
+				for i = starting + patterns[j][3], ending - patterns[j][4] do
+					colors[i] = colorScheme[patterns[j][2]]
+				end
+			else
+				break
+			end
+
+			searchFrom = ending + 1 - patterns[j][4]
+		end
+	end
+
+	-- Ебошим индентейшны
+	for i = fromChar, toChar do
+		if symbols[i] == " " then
+			colors[i] = colorScheme.indentation
+			
+			if counter == indentationWidth then
+				symbols[i], counter = "│", 0
+			end
+
+			counter = counter + 1
+		else
+			break
+		end
+	end
+
+	-- А тута уже сам текст
+	for i = fromChar, toChar do
+		newFrameForegrounds[bufferIndex], newFrameSymbols[bufferIndex] = colors[i] or colorScheme.text, symbols[i] or " "
+		bufferIndex = bufferIndex + 1
+	end
+end
+
+------------------------------------------------------------------------------------------
+
+-- buffer.flush()
+-- local mainContainer = GUI.fullScreenContainer()
+-- mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x2D2D2D))
+
+-- local codeView = mainContainer:addChild(GUI.codeView(2, 2, 130, 30, {}, 1, 1, 1, {}, {}, true, 2))
+
+-- local file = io.open("/lib/color.lua", "r")
+-- for line in file:lines() do
+-- 	line = line:gsub("\t", "  "):gsub("\r\n", "\n")
+-- 	table.insert(codeView.lines, line)
+-- 	codeView.maximumLineLength = math.max(codeView.maximumLineLength, unicode.len(line))
+-- end
+-- file:close()
+
+-- mainContainer:drawOnScreen(true)
+-- mainContainer:startEventHandling()
 
 ------------------------------------------------------------------------------------------
 
