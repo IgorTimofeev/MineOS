@@ -48,13 +48,14 @@ local closeBrackets = {
 	["\'"] = "\'"
 }
 
+local lines = {""}
 local cursorPositionSymbol = 1
 local cursorPositionLine = 1
 local cursorBlinkState = false
 
 local scriptCoroutine
 local resourcesPath = MineOSCore.getCurrentScriptDirectory() 
-local configPath = MineOSPaths.applicationData .. "MineCode IDE/Config7.cfg"
+local configPath = MineOSPaths.applicationData .. "MineCode IDE/Config8.cfg"
 local localization = MineOSCore.getCurrentScriptLocalization()
 local findStartFrom
 local clipboard
@@ -73,7 +74,7 @@ end
 
 local mainContainer = GUI.fullScreenContainer()
 
-local codeView = mainContainer:addChild(GUI.codeView(1, 1, 1, 1, {""}, 1, 1, 1, {}, {}, config.highlightLuaSyntax, 2))
+local codeView = mainContainer:addChild(GUI.codeView(1, 1, 1, 1, lines, 1, 1, 1, {}, {}, config.highlightLuaSyntax, 2))
 
 local function convertTextPositionToScreenCoordinates(symbol, line)
 	return
@@ -500,9 +501,7 @@ end
 local function changeResolution(width, height)
 	buffer.setResolution(width, height)
 	calculateSizes()
-	mainContainer:drawOnScreen()
-	config.screenResolution.width = width
-	config.screenResolution.height = height
+	config.screenResolution.width, config.screenResolution.height = width, height
 end
 
 local function addFadeContainer(title)
@@ -538,6 +537,7 @@ local function changeResolutionWindow()
 			saveConfig()
 			container:delete()
 			changeResolution(config.screenResolution.width, config.screenResolution.height)
+			mainContainer:drawOnScreen()
 		end
 	end
 
@@ -546,7 +546,8 @@ end
 
 local function newFile()
 	autocompleteDatabase = {}
-	codeView.lines = {""}
+	lines = {""}
+	codeView.lines = lines
 	codeView.maximumLineLength = 1
 	leftTreeView.selectedItem = nil
 	setCursorPositionAndClearSelection(1, 1)
@@ -661,7 +662,7 @@ end
 local function splitStringIntoLines(s)
 	s = removeWindowsLineEndings(removeTabs(s))
 
-	local lines, searchLineEndingFrom, maximumLineLength, lineEndingFoundAt, line = {}, 1, 0
+	local splitLines, searchLineEndingFrom, maximumLineLength, lineEndingFoundAt, line = {}, 1, 0
 	repeat
 		lineEndingFoundAt = string.unicodeFind(s, "\n", searchLineEndingFrom)
 		if lineEndingFoundAt then
@@ -671,11 +672,11 @@ local function splitStringIntoLines(s)
 			line = unicode.sub(s, searchLineEndingFrom, -1)
 		end
 
-		table.insert(lines, line)
+		table.insert(splitLines, line)
 		maximumLineLength = math.max(maximumLineLength, unicode.len(line))
 	until not lineEndingFoundAt
 
-	return lines, maximumLineLength
+	return splitLines, maximumLineLength
 end
 
 local function downloadFileFromWeb()
@@ -869,8 +870,6 @@ local function pizda(lines, debug)
 end
 
 showErrorContainer = function(errorCode)
-	local lines = string.wrap({errorCode}, title.width - 4)
-	
 	-- Извлекаем ошибочную строку текущего скрипта
 	lastErrorLine = tonumber(errorCode:match("%:(%d+)%: in main chunk"))
 	if lastErrorLine then
@@ -892,7 +891,7 @@ showErrorContainer = function(errorCode)
 	end
 
 	updateHighlights()
-	pizda(lines)
+	pizda(string.wrap({errorCode}, title.width - 4))
 end
 
 showBreakpointMessage = function(variables)
@@ -942,15 +941,14 @@ local function deleteLine(line)
 	updateAutocompleteDatabaseFromFile()
 end
 
-local function deleteSpecifiedData(fromSymbol, fromLine, toSymbol, toLine)
-	local upperLine = unicode.sub(codeView.lines[fromLine], 1, fromSymbol - 1)
-	local lowerLine = unicode.sub(codeView.lines[toLine], toSymbol + 1, -1)
+local function deleteSpecifiedData(fromSymbol, fromLine, toSymbol, toLine)	
+	codeView.lines[fromLine] = unicode.sub(codeView.lines[fromLine], 1, fromSymbol - 1) .. unicode.sub(codeView.lines[toLine], toSymbol + 1, -1)
+
 	for line = fromLine + 1, toLine do
 		table.remove(codeView.lines, fromLine + 1)
 	end
-	codeView.lines[fromLine] = upperLine .. lowerLine
+	
 	setCursorPositionAndClearSelection(fromSymbol, fromLine)
-
 	updateAutocompleteDatabaseFromFile()
 end
 
@@ -988,29 +986,27 @@ local function cut()
 	end
 end
 
-local function paste(pasteLines)
-	if pasteLines then
-		if codeView.selections[1] then
-			deleteSelectedData()
-		end
-
-		local firstPart = unicode.sub(codeView.lines[cursorPositionLine], 1, cursorPositionSymbol - 1)
-		local secondPart = unicode.sub(codeView.lines[cursorPositionLine], cursorPositionSymbol, -1)
-
-		if #pasteLines == 1 then
-			codeView.lines[cursorPositionLine] = firstPart .. pasteLines[1] .. secondPart
-			setCursorPositionAndClearSelection(cursorPositionSymbol + unicode.len(pasteLines[1]), cursorPositionLine)
-		else
-			codeView.lines[cursorPositionLine] = firstPart .. pasteLines[1]
-			for pasteLine = #pasteLines - 1, 2, -1 do
-				table.insert(codeView.lines, cursorPositionLine + 1, pasteLines[pasteLine])
-			end
-			table.insert(codeView.lines, cursorPositionLine + #pasteLines - 1, pasteLines[#pasteLines] .. secondPart)
-			setCursorPositionAndClearSelection(unicode.len(pasteLines[#pasteLines]) + 1, cursorPositionLine + #pasteLines - 1)
-		end
-
-		updateAutocompleteDatabaseFromFile()
+local function paste(data, notTable)
+	if codeView.selections[1] then
+		deleteSelectedData()
 	end
+
+	local firstPart = unicode.sub(codeView.lines[cursorPositionLine], 1, cursorPositionSymbol - 1)
+	local secondPart = unicode.sub(codeView.lines[cursorPositionLine], cursorPositionSymbol, -1)
+
+	if notTable then
+		codeView.lines[cursorPositionLine] = firstPart .. data .. secondPart
+		setCursorPositionAndClearSelection(cursorPositionSymbol + unicode.len(data), cursorPositionLine)
+	else
+		codeView.lines[cursorPositionLine] = firstPart .. data[1]
+		for pasteLine = #data - 1, 2, -1 do
+			table.insert(codeView.lines, cursorPositionLine + 1, data[pasteLine])
+		end
+		table.insert(codeView.lines, cursorPositionLine + #data - 1, data[#data] .. secondPart)
+		setCursorPositionAndClearSelection(unicode.len(data[#data]) + 1, cursorPositionLine + #data - 1)
+	end
+
+	updateAutocompleteDatabaseFromFile()
 end
 
 local function selectAndPasteColor()
@@ -1022,7 +1018,7 @@ local function selectAndPasteColor()
 	local palette = GUI.addPaletteWindowToContainer(mainContainer, startColor)
 	palette.onSubmit = function()
 		palette:delete()
-		paste({string.format("0x%06X", palette.color.integer)})
+		paste(string.format("0x%06X", palette.color.integer), true)
 	end
 end
 
@@ -1043,7 +1039,7 @@ end
 
 local function pasteRegularChar(unicodeByte, char)
 	if not keyboard.isControl(unicodeByte) then
-		paste({char})
+		paste(char, true)
 		if char == " " then
 			updateAutocompleteDatabaseFromFile()
 		end
@@ -1080,7 +1076,7 @@ local function pasteAutoBrackets(unicodeByte)
 				cursorPositionSymbol = cursorPositionSymbol + 2
 			-- А тут мы делаем двойную автоскобку, если можем
 			elseif openBrackets[char] and not currentSymbol:match("[%a%d%_]") then
-				paste({char .. openBrackets[char]})
+				paste(char .. openBrackets[char], true)
 				setCursorPosition(cursorPositionSymbol - 1, cursorPositionLine)
 				cursorBlinkState = false
 			-- Ну, и если нет ни выделений, ни можем ебануть автоскобочку по регулярке
@@ -1094,14 +1090,6 @@ local function pasteAutoBrackets(unicodeByte)
 	-- Если оффнуты афтоскобки
 	else
 		pasteRegularChar(unicodeByte, char)
-	end
-end
-
-local function backspaceAutoBrackets()	
-	local previousSymbol = unicode.sub(codeView.lines[cursorPositionLine], cursorPositionSymbol - 1, cursorPositionSymbol - 1)
-	local currentSymbol = unicode.sub(codeView.lines[cursorPositionLine], cursorPositionSymbol, cursorPositionSymbol)
-	if config.enableAutoBrackets and openBrackets[previousSymbol] and openBrackets[previousSymbol] == currentSymbol then
-		deleteSpecifiedData(cursorPositionSymbol, cursorPositionLine, cursorPositionSymbol, cursorPositionLine)
 	end
 end
 
@@ -1228,8 +1216,7 @@ local function indentOrUnindent(isIndent)
 		end
 	else
 		if isIndent then
-			indentLine(cursorPositionLine)
-			setCursorPositionAndClearSelection(cursorPositionSymbol + codeView.indentationWidth, cursorPositionLine)
+			paste(string.rep(" ", codeView.indentationWidth), true)
 		else
 			if unindentLine(cursorPositionLine) > 0 then
 				setCursorPositionAndClearSelection(cursorPositionSymbol - codeView.indentationWidth, cursorPositionLine)
@@ -1478,29 +1465,40 @@ codeView.eventHandler = function(mainContainer, object, eventData)
 			moveCursor(-1, 0)
 		elseif eventData[4] == 205 then
 			moveCursor(1, 0)
-		-- Backspace
-		elseif eventData[4] == 14 then
-			if codeView.selections[1] then
-				deleteSelectedData()
-			else
-				if cursorPositionSymbol > 1 then
-					backspaceAutoBrackets()
-					deleteSpecifiedData(cursorPositionSymbol - 1, cursorPositionLine, cursorPositionSymbol - 1, cursorPositionLine)
-				else
-					if cursorPositionLine > 1 then
-						deleteSpecifiedData(unicode.len(codeView.lines[cursorPositionLine - 1]) + 1, cursorPositionLine - 1, 0, cursorPositionLine)
-					end
-				end
-
-				-- updateAutocompleteDatabaseFromFile()
-				showAutocomplete()
-			end
 		-- Tab
 		elseif eventData[4] == 15 then
 			if keyboard.isKeyDown(42) then
 				indentOrUnindent(false)
 			else
 				indentOrUnindent(true)
+			end
+		-- Backspace
+		elseif eventData[4] == 14 then
+			if codeView.selections[1] then
+				deleteSelectedData()
+			else
+				if cursorPositionSymbol > 1 then
+					-- Удаляем автоскобочки))0
+					if config.enableAutoBrackets and unicode.sub(codeView.lines[cursorPositionLine], cursorPositionSymbol, cursorPositionSymbol) == openBrackets[unicode.sub(codeView.lines[cursorPositionLine], cursorPositionSymbol - 1, cursorPositionSymbol - 1)] then
+						deleteSpecifiedData(cursorPositionSymbol - 1, cursorPositionLine, cursorPositionSymbol, cursorPositionLine)
+					else
+						-- Удаляем индентацию
+						local match = unicode.sub(codeView.lines[cursorPositionLine], 1, cursorPositionSymbol - 1):match("^(%s+)$")
+						if match and #match % codeView.indentationWidth == 0 then
+							deleteSpecifiedData(cursorPositionSymbol - codeView.indentationWidth, cursorPositionLine, cursorPositionSymbol - 1, cursorPositionLine)
+						-- Удаляем обычные символы
+						else
+							deleteSpecifiedData(cursorPositionSymbol - 1, cursorPositionLine, cursorPositionSymbol - 1, cursorPositionLine)
+						end
+					end
+				else
+					-- Удаление типа с обратным энтером
+					if cursorPositionLine > 1 then
+						deleteSpecifiedData(unicode.len(codeView.lines[cursorPositionLine - 1]) + 1, cursorPositionLine - 1, 0, cursorPositionLine)
+					end
+				end
+
+				showAutocomplete()
 			end
 		-- Enter
 		elseif eventData[4] == 28 then
@@ -1574,7 +1572,7 @@ topMenuMineCode.onTouch = function()
 	menu:addItem(localization.about).onTouch = function()
 		local container = addFadeContainer(localization.about)
 		
-		local lines = {
+		local about = {
 			"MineCode IDE",
 			"Copyright © 2014-2018 ECS Inc.",
 			" ",
@@ -1593,7 +1591,7 @@ topMenuMineCode.onTouch = function()
 			"Golovanova Polina, vk.com/id226251826",
 		}
 
-		local textBox = container.layout:addChild(GUI.textBox(1, 1, 36, #lines, nil, 0xB4B4B4, lines, 1, 0, 0, true, false))
+		local textBox = container.layout:addChild(GUI.textBox(1, 1, 36, #about, nil, 0xB4B4B4, about, 1, 0, 0, true, false))
 		textBox:setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
 		textBox.eventHandler = nil
 
