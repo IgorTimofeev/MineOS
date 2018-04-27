@@ -13,8 +13,8 @@ local unicode = require("unicode")
 local event = require("event")
 local color = require("color")
 local image = require("image")
-local syntax = require("syntax")
 local buffer = require("doubleBuffering")
+local syntax
 
 -----------------------------------------------------------------------
 
@@ -1034,6 +1034,10 @@ local function codeViewDraw(codeView)
 end
 
 function GUI.codeView(x, y, width, height, lines, fromSymbol, fromLine, maximumLineLength, selections, highlights, highlightLuaSyntax, indentationWidth)
+	if not syntax then
+		syntax = require("syntax")
+	end
+	
 	local codeView = GUI.container(x, y, width, height)
 	
 	codeView.lines = lines
