@@ -104,11 +104,10 @@ GUI.colors = {
 }
 
 GUI.luaSyntaxPatterns = {
-	{"[^%a%d][%.%d]+[^%a%d]", "numbers", 1, 1},
-	{"[^%a%d][%.%d]+$", "numbers", 1, 0},
+	{"[^%a%d][%.%d]+", "numbers", 1, 0},
 	{"0x%w+", "numbers", 0, 0},
+	{"[%.%,]+", "compares", 0, 0},
 	{"[%>%<%=%~%+%-%*%/%^%#%%%&]", "compares", 0, 0},
-	{"[^%d][%.%,]+[^%d]", "logic", 1, 1},
 	{" not ", "logic", 0, 1},
 	{" or ", "logic", 0, 1},
 	{" and ", "logic", 0, 1},

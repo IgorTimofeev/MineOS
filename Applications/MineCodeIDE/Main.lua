@@ -196,15 +196,15 @@ local function updateTitle()
 			local countOfSelectedLines, countOfSelectedSymbols = codeView.selections[1].to.line - codeView.selections[1].from.line + 1
 			
 			if codeView.selections[1].from.line == codeView.selections[1].to.line then
-				countOfSelectedSymbols = unicode.len(unicode.sub(codeView.lines[codeView.selections[1].from.line], codeView.selections[1].from.symbol, codeView.selections[1].to.symbol))
+				countOfSelectedSymbols = unicode.len(unicode.sub(lines[codeView.selections[1].from.line], codeView.selections[1].from.symbol, codeView.selections[1].to.symbol))
 			else
-				countOfSelectedSymbols = unicode.len(unicode.sub(codeView.lines[codeView.selections[1].from.line], codeView.selections[1].from.symbol, -1))
+				countOfSelectedSymbols = unicode.len(unicode.sub(lines[codeView.selections[1].from.line], codeView.selections[1].from.symbol, -1))
 				
 				for line = codeView.selections[1].from.line + 1, codeView.selections[1].to.line - 1 do
-					countOfSelectedSymbols = countOfSelectedSymbols + unicode.len(codeView.lines[line])
+					countOfSelectedSymbols = countOfSelectedSymbols + unicode.len(lines[line])
 				end
 				
-				countOfSelectedSymbols = countOfSelectedSymbols + unicode.len(unicode.sub(codeView.lines[codeView.selections[1].to.line], 1, codeView.selections[1].to.symbol))
+				countOfSelectedSymbols = countOfSelectedSymbols + unicode.len(unicode.sub(lines[codeView.selections[1].to.line], 1, codeView.selections[1].to.symbol))
 			end
 
 			titleLines[3] = string.limit(localization.selection .. countOfSelectedLines .. localization.lines .. countOfSelectedSymbols .. localization.symbols, title.width - 4)
@@ -239,8 +239,8 @@ end
 local function updateAutocompleteDatabaseFromFile()
 	if config.enableAutocompletion then
 		autocompleteDatabase = {}
-		for line = 1, #codeView.lines do
-			updateAutocompleteDatabaseFromString(codeView.lines[line], true)
+		for line = 1, #lines do
+			updateAutocompleteDatabaseFromString(lines[line], true)
 		end
 	end
 end
@@ -249,12 +249,12 @@ local function getautoCompleteWordStartAndEnding(fromSymbol)
 	local shittySymbolsRegexp, from, to = "[%s%c%p]"
 
 	for i = fromSymbol, 1, -1 do
-		if unicode.sub(codeView.lines[cursorPositionLine], i, i):match(shittySymbolsRegexp) then break end
+		if unicode.sub(lines[cursorPositionLine], i, i):match(shittySymbolsRegexp) then break end
 		from = i
 	end
 
-	for i = fromSymbol, unicode.len(codeView.lines[cursorPositionLine]) do
-		if unicode.sub(codeView.lines[cursorPositionLine], i, i):match(shittySymbolsRegexp) then break end
+	for i = fromSymbol, unicode.len(lines[cursorPositionLine]) do
+		if unicode.sub(lines[cursorPositionLine], i, i):match(shittySymbolsRegexp) then break end
 		to = i
 	end
 
@@ -272,7 +272,7 @@ local function showAutocomplete()
 			autocomplete:match(
 				autocompleteDatabase,
 				unicode.sub(
-					codeView.lines[cursorPositionLine],
+					lines[cursorPositionLine],
 					autoCompleteWordStart,
 					autoCompleteWordEnd
 				),
@@ -338,8 +338,8 @@ local function gotoLine(line)
 	codeView.fromLine = math.ceil(line - codeView.height / 2)
 	if codeView.fromLine < 1 then
 		codeView.fromLine = 1
-	elseif codeView.fromLine > #codeView.lines then
-		codeView.fromLine = #codeView.lines
+	elseif codeView.fromLine > #lines then
+		codeView.fromLine = #lines
 	end
 end
 
@@ -397,11 +397,11 @@ end
 local function fixCursorPosition(symbol, line)
 	if line < 1 then
 		line = 1
-	elseif line > #codeView.lines then
-		line = #codeView.lines
+	elseif line > #lines then
+		line = #lines
 	end
 
-	local lineLength = unicode.len(codeView.lines[line])
+	local lineLength = unicode.len(lines[line])
 	if symbol < 1 or lineLength == 0 then
 		symbol = 1
 	elseif symbol > lineLength then
@@ -436,7 +436,7 @@ local function moveCursor(symbolOffset, lineOffset)
 			
 			if symbolOffset < 0 and newSymbol < 1 then
 				newLine, newSymbol = newLine - 1, math.huge
-			elseif symbolOffset > 0 and newSymbol > unicode.len(codeView.lines[newLine] or "") + 1 then
+			elseif symbolOffset > 0 and newSymbol > unicode.len(lines[newLine] or "") + 1 then
 				newLine, newSymbol = newLine + 1, 1
 			end
 
@@ -450,7 +450,7 @@ local function setCursorPositionToHome()
 end
 
 local function setCursorPositionToEnd()
-	setCursorPositionAndClearSelection(unicode.len(codeView.lines[#codeView.lines]) + 1, #codeView.lines)
+	setCursorPositionAndClearSelection(unicode.len(lines[#lines]) + 1, #lines)
 end
 
 local function scroll(direction, speed)
@@ -461,10 +461,10 @@ local function scroll(direction, speed)
 			codeView.fromLine = 1
 		end
 	else
-		if codeView.fromLine < #codeView.lines - speed then
+		if codeView.fromLine < #lines - speed then
 			codeView.fromLine = codeView.fromLine + speed
 		else
-			codeView.fromLine = #codeView.lines
+			codeView.fromLine = #lines
 		end
 	end
 end
@@ -571,7 +571,7 @@ local function loadFile(path)
 		local counter, currentSize, totalSize = 1, 0, fs.size(path)
 		for line in file:lines() do
 			line = removeWindowsLineEndings(removeTabs(line))
-			table.insert(codeView.lines, line)
+			table.insert(lines, line)
 			codeView.maximumLineLength = math.max(codeView.maximumLineLength, unicode.len(line))
 			
 			counter, currentSize = counter + 1, currentSize + #line
@@ -582,8 +582,8 @@ local function loadFile(path)
 			end
 		end
 
-		if #codeView.lines > 1 then
-			table.remove(codeView.lines, 1)
+		if #lines > 1 then
+			table.remove(lines, 1)
 		end
 
 		if counter > config.linesToShowOpenProgress then
@@ -606,8 +606,8 @@ local function saveFile(path)
 	fs.makeDirectory(fs.path(path))
 	local file, reason = io.open(path, "w")
 		if file then
-		for line = 1, #codeView.lines do
-			file:write(codeView.lines[line], "\n")
+		for line = 1, #lines do
+			file:write(lines[line], "\n")
 		end
 		file:close()
 	else
@@ -687,7 +687,7 @@ local function downloadFileFromWeb()
 			local result, reason = require("web").request(container.input.text)
 			if result then
 				newFile()
-				codeView.lines, codeView.maximumLineLength = splitStringIntoLines(result)
+				lines, codeView.maximumLineLength = splitStringIntoLines(result)
 			else
 				GUI.error("Failed to connect to URL: " .. tostring(reason))
 			end
@@ -783,7 +783,7 @@ local function run(...)
 	if breakpointLines then
 		local offset = 0
 		for i = 1, #breakpointLines do
-			local variables = getVariables(codeView.lines[breakpointLines[i] + offset])
+			local variables = getVariables(lines[breakpointLines[i] + offset])
 			
 			local breakpointMessage = "_G.MineCodeIDEDebugInfo = {variables = {"
 			for variable in pairs(variables) do
@@ -791,18 +791,18 @@ local function run(...)
 			end
 			breakpointMessage =  breakpointMessage .. "}, line = " .. breakpointLines[i] .. "}; coroutine.yield()"
 
-			table.insert(codeView.lines, breakpointLines[i] + offset, breakpointMessage)
+			table.insert(lines, breakpointLines[i] + offset, breakpointMessage)
 			offset = offset + 1
 		end
 	end
 
 	-- Лоадим кодыч
-	local loadSuccess, loadReason = load(table.concat(codeView.lines, "\n"))
+	local loadSuccess, loadReason = load(table.concat(lines, "\n"))
 	
 	-- Чистим дерьмо вилочкой, чистим
 	if breakpointLines then
 		for i = 1, #breakpointLines do
-			table.remove(codeView.lines, breakpointLines[i])
+			table.remove(lines, breakpointLines[i])
 		end
 	end
 
@@ -931,10 +931,10 @@ local function launchWithArgumentsWindow()
 end
 
 local function deleteLine(line)
-	if #codeView.lines > 1 then
-		table.remove(codeView.lines, line)
+	if #lines > 1 then
+		table.remove(lines, line)
 	else
-		codeView.lines[1] = ""
+		lines[1] = ""
 	end
 
 	setCursorPositionAndClearSelection(1, cursorPositionLine)
@@ -942,10 +942,10 @@ local function deleteLine(line)
 end
 
 local function deleteSpecifiedData(fromSymbol, fromLine, toSymbol, toLine)	
-	codeView.lines[fromLine] = unicode.sub(codeView.lines[fromLine], 1, fromSymbol - 1) .. unicode.sub(codeView.lines[toLine], toSymbol + 1, -1)
+	lines[fromLine] = unicode.sub(lines[fromLine], 1, fromSymbol - 1) .. unicode.sub(lines[toLine], toSymbol + 1, -1)
 
 	for line = fromLine + 1, toLine do
-		table.remove(codeView.lines, fromLine + 1)
+		table.remove(lines, fromLine + 1)
 	end
 	
 	setCursorPositionAndClearSelection(fromSymbol, fromLine)
@@ -968,13 +968,13 @@ end
 local function copy()
 	if codeView.selections[1] then
 		if codeView.selections[1].to.line == codeView.selections[1].from.line then
-			clipboard = { unicode.sub(codeView.lines[codeView.selections[1].from.line], codeView.selections[1].from.symbol, codeView.selections[1].to.symbol) }
+			clipboard = { unicode.sub(lines[codeView.selections[1].from.line], codeView.selections[1].from.symbol, codeView.selections[1].to.symbol) }
 		else
-			clipboard = { unicode.sub(codeView.lines[codeView.selections[1].from.line], codeView.selections[1].from.symbol, -1) }
+			clipboard = { unicode.sub(lines[codeView.selections[1].from.line], codeView.selections[1].from.symbol, -1) }
 			for line = codeView.selections[1].from.line + 1, codeView.selections[1].to.line - 1 do
-				table.insert(clipboard, codeView.lines[line])
+				table.insert(clipboard, lines[line])
 			end
-			table.insert(clipboard, unicode.sub(codeView.lines[codeView.selections[1].to.line], 1, codeView.selections[1].to.symbol))
+			table.insert(clipboard, unicode.sub(lines[codeView.selections[1].to.line], 1, codeView.selections[1].to.symbol))
 		end
 	end
 end
@@ -991,18 +991,18 @@ local function paste(data, notTable)
 		deleteSelectedData()
 	end
 
-	local firstPart = unicode.sub(codeView.lines[cursorPositionLine], 1, cursorPositionSymbol - 1)
-	local secondPart = unicode.sub(codeView.lines[cursorPositionLine], cursorPositionSymbol, -1)
+	local firstPart = unicode.sub(lines[cursorPositionLine], 1, cursorPositionSymbol - 1)
+	local secondPart = unicode.sub(lines[cursorPositionLine], cursorPositionSymbol, -1)
 
 	if notTable then
-		codeView.lines[cursorPositionLine] = firstPart .. data .. secondPart
+		lines[cursorPositionLine] = firstPart .. data .. secondPart
 		setCursorPositionAndClearSelection(cursorPositionSymbol + unicode.len(data), cursorPositionLine)
 	else
-		codeView.lines[cursorPositionLine] = firstPart .. data[1]
+		lines[cursorPositionLine] = firstPart .. data[1]
 		for pasteLine = #data - 1, 2, -1 do
-			table.insert(codeView.lines, cursorPositionLine + 1, data[pasteLine])
+			table.insert(lines, cursorPositionLine + 1, data[pasteLine])
 		end
-		table.insert(codeView.lines, cursorPositionLine + #data - 1, data[#data] .. secondPart)
+		table.insert(lines, cursorPositionLine + #data - 1, data[#data] .. secondPart)
 		setCursorPositionAndClearSelection(unicode.len(data[#data]) + 1, cursorPositionLine + #data - 1)
 	end
 
@@ -1012,7 +1012,7 @@ end
 local function selectAndPasteColor()
 	local startColor = 0xFF0000
 	if codeView.selections[1] and codeView.selections[1].from.line == codeView.selections[1].to.line then
-		startColor = tonumber(unicode.sub(codeView.lines[codeView.selections[1].from.line], codeView.selections[1].from.symbol, codeView.selections[1].to.symbol)) or startColor
+		startColor = tonumber(unicode.sub(lines[codeView.selections[1].from.line], codeView.selections[1].from.symbol, codeView.selections[1].to.symbol)) or startColor
 	end
 
 	local palette = GUI.addPaletteWindowToContainer(mainContainer, startColor)
@@ -1026,12 +1026,12 @@ local function convertCase(method)
 	if codeView.selections[1] then
 		local from, to = codeView.selections[1].from, codeView.selections[1].to
 		if from.line == to.line then
-			codeView.lines[from.line] = unicode.sub(codeView.lines[from.line], 1, from.symbol - 1) .. unicode[method](unicode.sub(codeView.lines[from.line], from.symbol, to.symbol)) .. unicode.sub(codeView.lines[from.line], to.symbol + 1, -1)
+			lines[from.line] = unicode.sub(lines[from.line], 1, from.symbol - 1) .. unicode[method](unicode.sub(lines[from.line], from.symbol, to.symbol)) .. unicode.sub(lines[from.line], to.symbol + 1, -1)
 		else
-			codeView.lines[from.line] = unicode.sub(codeView.lines[from.line], 1, from.symbol - 1) .. unicode[method](unicode.sub(codeView.lines[from.line], from.symbol, -1))
-			codeView.lines[to.line] = unicode[method](unicode.sub(codeView.lines[to.line], 1, to.symbol)) .. unicode.sub(codeView.lines[to.line], to.symbol + 1, -1)
+			lines[from.line] = unicode.sub(lines[from.line], 1, from.symbol - 1) .. unicode[method](unicode.sub(lines[from.line], from.symbol, -1))
+			lines[to.line] = unicode[method](unicode.sub(lines[to.line], 1, to.symbol)) .. unicode.sub(lines[to.line], to.symbol + 1, -1)
 			for line = from.line + 1, to.line - 1 do
-				codeView.lines[line] = unicode[method](codeView.lines[line])
+				lines[line] = unicode[method](lines[line])
 			end
 		end
 	end
@@ -1049,7 +1049,7 @@ end
 
 local function pasteAutoBrackets(unicodeByte)
 	local char = unicode.char(unicodeByte)
-	local currentSymbol = unicode.sub(codeView.lines[cursorPositionLine], cursorPositionSymbol, cursorPositionSymbol)
+	local currentSymbol = unicode.sub(lines[cursorPositionLine], cursorPositionSymbol, cursorPositionSymbol)
 
 	-- Если у нас вообще врублен режим автоскобок, то чекаем их
 	if config.enableAutoBrackets then
@@ -1061,18 +1061,18 @@ local function pasteAutoBrackets(unicodeByte)
 		elseif openBrackets[char] then
 			-- А вот тут мы берем в скобочки уже выделенный текст
 			if codeView.selections[1] then
-				local firstPart = unicode.sub(codeView.lines[codeView.selections[1].from.line], 1, codeView.selections[1].from.symbol - 1)
-				local secondPart = unicode.sub(codeView.lines[codeView.selections[1].from.line], codeView.selections[1].from.symbol, -1)
-				codeView.lines[codeView.selections[1].from.line] = firstPart .. char .. secondPart
+				local firstPart = unicode.sub(lines[codeView.selections[1].from.line], 1, codeView.selections[1].from.symbol - 1)
+				local secondPart = unicode.sub(lines[codeView.selections[1].from.line], codeView.selections[1].from.symbol, -1)
+				lines[codeView.selections[1].from.line] = firstPart .. char .. secondPart
 				codeView.selections[1].from.symbol = codeView.selections[1].from.symbol + 1
 
 				if codeView.selections[1].to.line == codeView.selections[1].from.line then
 					codeView.selections[1].to.symbol = codeView.selections[1].to.symbol + 1
 				end
 
-				firstPart = unicode.sub(codeView.lines[codeView.selections[1].to.line], 1, codeView.selections[1].to.symbol)
-				secondPart = unicode.sub(codeView.lines[codeView.selections[1].to.line], codeView.selections[1].to.symbol + 1, -1)
-				codeView.lines[codeView.selections[1].to.line] = firstPart .. openBrackets[char] .. secondPart
+				firstPart = unicode.sub(lines[codeView.selections[1].to.line], 1, codeView.selections[1].to.symbol)
+				secondPart = unicode.sub(lines[codeView.selections[1].to.line], codeView.selections[1].to.symbol + 1, -1)
+				lines[codeView.selections[1].to.line] = firstPart .. openBrackets[char] .. secondPart
 				cursorPositionSymbol = cursorPositionSymbol + 2
 			-- А тут мы делаем двойную автоскобку, если можем
 			elseif openBrackets[char] and not currentSymbol:match("[%a%d%_]") then
@@ -1097,11 +1097,11 @@ local function delete()
 	if codeView.selections[1] then
 		deleteSelectedData()
 	else
-		if cursorPositionSymbol < unicode.len(codeView.lines[cursorPositionLine]) + 1 then
+		if cursorPositionSymbol < unicode.len(lines[cursorPositionLine]) + 1 then
 			deleteSpecifiedData(cursorPositionSymbol, cursorPositionLine, cursorPositionSymbol, cursorPositionLine)
 		else
-			if cursorPositionLine > 1 and codeView.lines[cursorPositionLine + 1] then
-				deleteSpecifiedData(unicode.len(codeView.lines[cursorPositionLine]) + 1, cursorPositionLine, 0, cursorPositionLine + 1)
+			if cursorPositionLine > 1 and lines[cursorPositionLine + 1] then
+				deleteSpecifiedData(unicode.len(lines[cursorPositionLine]) + 1, cursorPositionLine, 0, cursorPositionLine + 1)
 			end
 		end
 
@@ -1116,22 +1116,22 @@ local function selectAll()
 			symbol = 1, line = 1
 		},
 		to = {
-			symbol = unicode.len(codeView.lines[#codeView.lines]), line = #codeView.lines
+			symbol = unicode.len(lines[#lines]), line = #lines
 		}
 	}
 end
 
 local function isLineCommented(line)
-	if codeView.lines[line] == "" or codeView.lines[line]:match("%-%-%s?") then return true end
+	if lines[line] == "" or lines[line]:match("%-%-%s?") then return true end
 end
 
 local function commentLine(line)
-	codeView.lines[line] = "-- " .. codeView.lines[line]
+	lines[line] = "-- " .. lines[line]
 end
 
 local function uncommentLine(line)
 	local countOfReplaces
-	codeView.lines[line], countOfReplaces = codeView.lines[line]:gsub("%-%-%s?", "", 1)
+	lines[line], countOfReplaces = lines[line]:gsub("%-%-%s?", "", 1)
 	return countOfReplaces
 end
 
@@ -1171,11 +1171,11 @@ local function toggleComment()
 end
 
 local function indentLine(line)
-	codeView.lines[line] = string.rep(" ", codeView.indentationWidth) .. codeView.lines[line]
+	lines[line] = string.rep(" ", codeView.indentationWidth) .. lines[line]
 end
 
 local function unindentLine(line)
-	codeView.lines[line], countOfReplaces = string.gsub(codeView.lines[line], "^" .. string.rep("%s", codeView.indentationWidth), "")
+	lines[line], countOfReplaces = string.gsub(lines[line], "^" .. string.rep("%s", codeView.indentationWidth), "")
 	return countOfReplaces
 end
 
@@ -1229,8 +1229,8 @@ local function find()
 	if not bottomToolBar.hidden and searchInput.text ~= "" then
 		findStartFrom = findStartFrom + 1
 	
-		for line = findStartFrom, #codeView.lines do
-			local whereToFind, whatToFind = codeView.lines[line], searchInput.text
+		for line = findStartFrom, #lines do
+			local whereToFind, whatToFind = lines[line], searchInput.text
 			if not caseSensitiveButton.pressed then
 				whereToFind, whatToFind = unicode.lower(whereToFind), unicode.lower(whatToFind)
 			end
@@ -1479,11 +1479,11 @@ codeView.eventHandler = function(mainContainer, object, eventData)
 			else
 				if cursorPositionSymbol > 1 then
 					-- Удаляем автоскобочки))0
-					if config.enableAutoBrackets and unicode.sub(codeView.lines[cursorPositionLine], cursorPositionSymbol, cursorPositionSymbol) == openBrackets[unicode.sub(codeView.lines[cursorPositionLine], cursorPositionSymbol - 1, cursorPositionSymbol - 1)] then
+					if config.enableAutoBrackets and unicode.sub(lines[cursorPositionLine], cursorPositionSymbol, cursorPositionSymbol) == openBrackets[unicode.sub(lines[cursorPositionLine], cursorPositionSymbol - 1, cursorPositionSymbol - 1)] then
 						deleteSpecifiedData(cursorPositionSymbol - 1, cursorPositionLine, cursorPositionSymbol, cursorPositionLine)
 					else
 						-- Удаляем индентацию
-						local match = unicode.sub(codeView.lines[cursorPositionLine], 1, cursorPositionSymbol - 1):match("^(%s+)$")
+						local match = unicode.sub(lines[cursorPositionLine], 1, cursorPositionSymbol - 1):match("^(%s+)$")
 						if match and #match % codeView.indentationWidth == 0 then
 							deleteSpecifiedData(cursorPositionSymbol - codeView.indentationWidth, cursorPositionLine, cursorPositionSymbol - 1, cursorPositionLine)
 						-- Удаляем обычные символы
@@ -1494,7 +1494,7 @@ codeView.eventHandler = function(mainContainer, object, eventData)
 				else
 					-- Удаление типа с обратным энтером
 					if cursorPositionLine > 1 then
-						deleteSpecifiedData(unicode.len(codeView.lines[cursorPositionLine - 1]) + 1, cursorPositionLine - 1, 0, cursorPositionLine)
+						deleteSpecifiedData(unicode.len(lines[cursorPositionLine - 1]) + 1, cursorPositionLine - 1, 0, cursorPositionLine)
 					end
 				end
 
@@ -1503,15 +1503,15 @@ codeView.eventHandler = function(mainContainer, object, eventData)
 		-- Enter
 		elseif eventData[4] == 28 then
 			if autocomplete.hidden then
-				local secondPart = unicode.sub(codeView.lines[cursorPositionLine], cursorPositionSymbol, -1)
+				local secondPart = unicode.sub(lines[cursorPositionLine], cursorPositionSymbol, -1)
 				
-				local match = codeView.lines[cursorPositionLine]:match("^(%s+)")
+				local match = lines[cursorPositionLine]:match("^(%s+)")
 				if match then
 					secondPart = match .. secondPart
 				end
 				
-				codeView.lines[cursorPositionLine] = unicode.sub(codeView.lines[cursorPositionLine], 1, cursorPositionSymbol - 1)
-				table.insert(codeView.lines, cursorPositionLine + 1, secondPart)
+				lines[cursorPositionLine] = unicode.sub(lines[cursorPositionLine], 1, cursorPositionSymbol - 1)
+				table.insert(lines, cursorPositionLine + 1, secondPart)
 				
 				setCursorPositionAndClearSelection(unicode.len(secondPart) + 1, cursorPositionLine + 1)
 			else
@@ -1820,10 +1820,10 @@ runButton.onTouch = function()
 end
 
 autocomplete.onItemSelected = function(mainContainer, object, eventData)
-	local firstPart = unicode.sub(codeView.lines[cursorPositionLine], 1, autoCompleteWordStart - 1)
-	local secondPart = unicode.sub(codeView.lines[cursorPositionLine], autoCompleteWordEnd + 1, -1)
+	local firstPart = unicode.sub(lines[cursorPositionLine], 1, autoCompleteWordStart - 1)
+	local secondPart = unicode.sub(lines[cursorPositionLine], autoCompleteWordEnd + 1, -1)
 	local middle = firstPart .. autocomplete.items[autocomplete.selectedItem]
-	codeView.lines[cursorPositionLine] = middle .. secondPart
+	lines[cursorPositionLine] = middle .. secondPart
 
 	setCursorPositionAndClearSelection(unicode.len(middle) + 1, cursorPositionLine)
 	
