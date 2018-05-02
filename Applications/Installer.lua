@@ -30,14 +30,6 @@ local files = {
 		path = "/lib/doubleBuffering.lua"
 	},
 	{
-		url = "https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/lib/syntax.lua",
-		path = "/lib/syntax.lua"
-	},
-	{
-		url = "https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/lib/palette.lua",
-		path = "/lib/palette.lua"
-	},
-	{
 		url = "https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/lib/GUI.lua",
 		path = "/lib/GUI.lua"
 	},
@@ -165,29 +157,30 @@ local function download(url, path, totalProgress)
 				until responseCode
 
 				-- Downloading file by chunks
-				if responseData and responseData["Content-Length"] then
-					local contentLength = tonumber(responseData["Content-Length"][1])
-					local currentLength = 0
-					while true do
-						local data, reason = requestHandle.read(math.huge)
-						if data then
-							currentLength = currentLength + unicode.len(data)
-							local percent = currentLength / contentLength
-							progressBar(y, percent, properties.localization.currentFile, totalProgress, tostring(math.ceil(percent)), path)
+				local contentLength = 100
+				local currentLength = 0
 
-							file:write(data)
+				if responseData and responseData["Content-Length"] then
+					contentLength = tonumber(responseData["Content-Length"][1])
+				end
+				
+				while true do
+					local data, reason = requestHandle.read(math.huge)
+					if data then
+						currentLength = currentLength + unicode.len(data)
+						local percent = currentLength / contentLength
+						progressBar(y, percent, properties.localization.currentFile, totalProgress, tostring(math.ceil(percent)), path)
+
+						file:write(data)
+					else
+						requestHandle:close()
+						if reason then
+							error(reason)
 						else
-							requestHandle:close()
-							if reason then
-								error(reason)
-							else
-								file:close()
-								return
-							end
+							file:close()
+							return
 						end
 					end
-				else
-					error("Response Content-Length header is missing: " .. tostring(responseCode) .. " " .. tostring(responseName))
 				end
 			else
 				error("Invalid URL-address: " .. tostring(url))

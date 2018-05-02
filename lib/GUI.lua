@@ -3980,6 +3980,15 @@ local function windowEventHandler(mainContainer, window, eventData)
 	end
 end
 
+local function windowResize(window, width, height)
+	window.width, window.height = width, height
+	if window.onResize then
+		window.onResize(width, height)
+	end
+
+	return window
+end
+
 function GUI.windowFromContainer(container)
 	container.eventHandler = windowEventHandler
 	container.draw = windowDraw
@@ -3988,7 +3997,10 @@ function GUI.windowFromContainer(container)
 end
 
 function GUI.window(x, y, width, height)
-	return GUI.windowFromContainer(GUI.container(x, y, width, height))
+	local window = GUI.windowFromContainer(GUI.container(x, y, width, height))
+	window.resize = windowResize
+
+	return window
 end
 
 -----------------------------------------------------------------------
