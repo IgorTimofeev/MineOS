@@ -157,7 +157,7 @@ local function download(url, path, totalProgress)
 				until responseCode
 
 				-- Downloading file by chunks
-				local contentLength = 100
+				local contentLength = 12 * 1024 * 1024
 				local currentLength = 0
 
 				if responseData and responseData["Content-Length"] then
@@ -167,7 +167,7 @@ local function download(url, path, totalProgress)
 				while true do
 					local data, reason = requestHandle.read(math.huge)
 					if data then
-						currentLength = currentLength + unicode.len(data)
+						currentLength = currentLength + #data
 						local percent = currentLength / contentLength
 						progressBar(y, percent, properties.localization.currentFile, totalProgress, tostring(math.ceil(percent)), path)
 
