@@ -3651,7 +3651,7 @@ function GUI.palette(x, y, startColor)
 
 	local function paletteDrawBigCrestPixel(x, y, symbol)
 		local background, foreground = buffer.get(x, y)
-		local r, g, b = color.IntegerToRGB(background)
+		local r, g, b = color.integerToRGB(background)
 		buffer.set(x, y, background, (r + g + b) / 3 >= 127 and 0x0 or 0xFFFFFF, symbol)
 	end
 
@@ -3727,7 +3727,7 @@ function GUI.palette(x, y, startColor)
 
 	local function paletteSwitchColorFromHex(hex)
 		palette.color.integer = hex
-		palette.color.rgb.red, palette.color.rgb.green, palette.color.rgb.blue = color.IntegerToRGB(hex)
+		palette.color.rgb.red, palette.color.rgb.green, palette.color.rgb.blue = color.integerToRGB(hex)
 		palette.color.hsb.hue, palette.color.hsb.saturation, palette.color.hsb.brightness = color.RGBToHSB(palette.color.rgb.red, palette.color.rgb.green, palette.color.rgb.blue)
 		paletteUpdateInputs()
 	end
