@@ -640,11 +640,15 @@ local function createOSWidgets()
 				local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer, MineOSCore.localization.CPUArchitecture)
 				
 				local comboBox = container.layout:addChild(GUI.comboBox(1, 1, 36, 3, 0xE1E1E1, 0x2D2D2D, 0x4B4B4B, 0x969696))
-				local architectures = computer.getArchitectures()
+				local architectures, architecture = computer.getArchitectures(), computer.getArchitecture()
 				for i = 1, #architectures do
 					comboBox:addItem(architectures[i]).onTouch = function()
 						computer.setArchitecture(architectures[i])
 						computer.shutdown(true)
+					end
+
+					if architecture == architectures[i] then
+						comboBox.selectedItem = i
 					end
 				end
 
