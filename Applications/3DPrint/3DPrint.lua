@@ -373,7 +373,7 @@ local function drawDrawingZone()
 
 			if currentLayer >= selectionStartPoint.z and currentLayer <= selectionEndPoint.z then
 				if shape ~= currentShape then
-					local h, s, b = color.IntegerToHSB(shapeColors[shape])
+					local h, s, b = color.integerToHSB(shapeColors[shape])
 					s = 0.3
 					-- ecs.error("РИСУЮ")
 					drawPixel(selectionStartPoint.x, 18 - selectionStartPoint.y - yDifference, selectionEndPoint.x - selectionStartPoint.x + 1, yDifference, color.HSBToInteger(h, s, b))

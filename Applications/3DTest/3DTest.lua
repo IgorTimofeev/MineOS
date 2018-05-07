@@ -1,386 +1,535 @@
 
 -------------------------------------------------------- Libraries --------------------------------------------------------
 
+-- package.loaded["GUI"] = nil
+-- package.loaded["doubleBuffering"] = nil
+-- package.loaded["vector"] = nil
+-- package.loaded["OpenComputersGL/Main"] = nil
+-- package.loaded["OpenComputersGL/Materials"] = nil
+-- package.loaded["OpenComputersGL/Renderer"] = nil
+-- package.loaded["MeowEngine/Main"] = nil
+
 local color = require("color")
-local vector = require("vector")
+local computer = require("computer")
 local buffer = require("doubleBuffering")
+local event = require("event")
+local GUI = require("GUI")
+local vector = require("vector")
 local materials = require("OpenComputersGL/Materials")
 local renderer = require("OpenComputersGL/Renderer")
-local OCGL = {}
+local OCGL = require("OpenComputersGL/Main")
+local meowEngine = require("MeowEngine/Main")
 
--------------------------------------------------------- Constants --------------------------------------------------------
+---------------------------------------------- Anus preparing ----------------------------------------------
 
-OCGL.axis = {
-	x = 1,
-	y = 2,
-	z = 3,
+-- /MineOS/Desktop/3DTest.app/3DTest.lua
+
+buffer.flush()
+meowEngine.intro(vector.newVector3(0, 0, 0), 20)
+
+local mainContainer = GUI.fullScreenContainer()
+local scene = meowEngine.newScene(0x1D1D1D)
+
+scene.renderMode = OCGL.renderModes.flatShading
+scene.auxiliaryMode = OCGL.auxiliaryModes.disabled
+
+scene.camera:translate(-2.5, 8.11, -19.57)
+scene.camera:rotate(math.rad(30), 0, 0)
+scene:addLight(meowEngine.newLight(vector.newVector3(0, 20, 0), 1.0, 200))
+
+---------------------------------------------- Constants ----------------------------------------------
+
+local blockSize = 5
+local rotationAngle = math.rad(5)
+local translationOffset = 1
+
+---------------------------------------------- Voxel-world system ----------------------------------------------
+
+local world = {{{}}}
+
+local worldMesh = scene:addObject(
+	meowEngine.newMesh(
+		vector.newVector3(0, 0, 0), { }, { },
+		materials.newSolidMaterial(0xFF00FF)
+	)
+)
+
+local function checkBlock(x, y, z)
+	if world[z] and world[z][y] and world[z][y][x] then
+		return true
+	end
+	return false
+end
+
+local function setBlock(x, y, z, value)
+	world[z] = world[z] or {}
+	world[z][y] = world[z][y] or {}
+	world[z][y][x] = value
+end
+
+local blockSides = {
+	front = 1,
+	left = 2,
+	back = 3,
+	right = 4,
+	up = 5,
+	down = 6
 }
 
-OCGL.colors = {
-	axis = {
-		x = 0xFF0000,
-		y = 0x00FF00,
-		z = 0x0000FF,
-	},
-	pivotPoint = 0xFFFFFF,
-	wireframe = 0x000000,
-	vertices = 0xFFDB40,
-	lights = 0x44FF44
-}
+local function renderWorld()
+	worldMesh.vertices = {}
+	worldMesh.triangles = {}
 
-OCGL.renderModes = {
-	disabled = 1,
-	constantShading = 2,
-	flatShading = 3,
-}
+	for z in pairs(world) do
+		for y in pairs(world[z]) do
+			for x in pairs(world[z][y]) do
+				local firstVertexIndex = #worldMesh.vertices + 1
+				local xBlock, yBlock, zBlock = (x - 1) * blockSize, (y - 1) * blockSize, (z - 1) * blockSize
+				local material = materials.newSolidMaterial(world[z][y][x])
 
-OCGL.auxiliaryModes = {
-	disabled = 1,
-	wireframe = 2,
-	vertices = 3,
-}
+				table.insert(worldMesh.vertices, vector.newVector3(xBlock, yBlock, zBlock))
+				table.insert(worldMesh.vertices, vector.newVector3(xBlock, yBlock + blockSize, zBlock))
+				table.insert(worldMesh.vertices, vector.newVector3(xBlock + blockSize, yBlock + blockSize, zBlock))
+				table.insert(worldMesh.vertices, vector.newVector3(xBlock + blockSize, yBlock, zBlock))
+				table.insert(worldMesh.vertices, vector.newVector3(xBlock, yBlock, zBlock + blockSize))
+				table.insert(worldMesh.vertices, vector.newVector3(xBlock, yBlock + blockSize, zBlock + blockSize))
+				table.insert(worldMesh.vertices, vector.newVector3(xBlock + blockSize, yBlock + blockSize, zBlock + blockSize))
+				table.insert(worldMesh.vertices, vector.newVector3(xBlock + blockSize, yBlock, zBlock + blockSize))
 
-OCGL.renderMode = 3
-OCGL.auxiliaryMode = 1
-
-OCGL.vertices = {}
-OCGL.triangles = {}
-OCGL.lines = {}
-OCGL.floatingTexts = {}
-OCGL.lights = {}
-
-local sinTable, cosTable = {}, {}
-
--------------------------------------------------------- Sin / Cos optimization --------------------------------------------------------
-
-function OCGL.sin(angle)
-	sinTable[angle] = sinTable[angle] or math.sin(angle)
-	return sinTable[angle]
-end
-
-function OCGL.cos(angle)
-	cosTable[angle] = cosTable[angle] or math.cos(angle)
-	return cosTable[angle]
-end
-
--------------------------------------------------------- Vertex field methods --------------------------------------------------------
-
-function OCGL.rotateVectorRelativeToXAxis(vector, angle)
-	local sin, cos = OCGL.sin(angle), OCGL.cos(angle)
-	vector[2], vector[3] = cos * vector[2] - sin * vector[3], sin * vector[2] + cos * vector[3]
-end
-
-function OCGL.rotateVectorRelativeToYAxis(vector, angle)
-	local sin, cos = OCGL.sin(angle), OCGL.cos(angle)
-	vector[1], vector[3] = cos * vector[1] + sin * vector[3], cos * vector[3] - sin * vector[1]
-end
-
-function OCGL.rotateVectorRelativeToZAxis(vector, angle)
-	local sin, cos = OCGL.sin(angle), OCGL.cos(angle)
-	vector[1], vector[2] = cos * vector[1] - sin * vector[2], sin * vector[1] + cos * vector[2]
-end
-
-function OCGL.translate(xTranslation, yTranslation, zTranslation)
-	for vertexIndex = 1, #OCGL.vertices do
-		OCGL.vertices[vertexIndex][1], OCGL.vertices[vertexIndex][2], OCGL.vertices[vertexIndex][3] = OCGL.vertices[vertexIndex][1] + xTranslation, OCGL.vertices[vertexIndex][2] + yTranslation, OCGL.vertices[vertexIndex][3] + zTranslation
-	end
-end
-
-function OCGL.rotate(vectorRotationMethod, angle)
-	for vertexIndex = 1, #OCGL.vertices do
-		vectorRotationMethod(OCGL.vertices[vertexIndex], angle)
-	end
-end
-
--------------------------------------------------------- Render queue methods --------------------------------------------------------
-
-function OCGL.newIndexedLight(indexOfVertex1, intensity, emissionDistance)
-	return { indexOfVertex1, intensity, emissionDistance }
-end
-
-function OCGL.newIndexedTriangle(indexOfVertex1, indexOfVertex2, indexOfVertex3, material)
-	return { indexOfVertex1, indexOfVertex2, indexOfVertex3, material }
-end
-
-function OCGL.newIndexedLine(indexOfVertex1, indexOfVertex2, color)
-	return { indexOfVertex1, indexOfVertex2, color }
-end
-
-function OCGL.newIndexedFloatingText(indexOfVertex, color, text)
-	return {indexOfVertex, text, color}
-end
-
-function OCGL.pushLightToRenderQueue(vector3Vertex, intensity, emissionDistance)
-	table.insert(OCGL.vertices, vector3Vertex)
-	table.insert(OCGL.lights, OCGL.newIndexedLight(OCGL.nextVertexIndex, intensity, emissionDistance))
-	OCGL.nextVertexIndex = OCGL.nextVertexIndex + 1
-end
-
-function OCGL.pushTriangleToRenderQueue(vector3Vertex1, vector3Vertex2, vector3Vertex3, material)
-	table.insert(OCGL.vertices, vector3Vertex1)
-	table.insert(OCGL.vertices, vector3Vertex2)
-	table.insert(OCGL.vertices, vector3Vertex3)
-	table.insert(OCGL.triangles, OCGL.newIndexedTriangle(OCGL.nextVertexIndex, OCGL.nextVertexIndex + 1, OCGL.nextVertexIndex + 2, material))
-	OCGL.nextVertexIndex = OCGL.nextVertexIndex + 3
-end
-
-function OCGL.pushLineToRenderQueue(vector3Vertex1, vector3Vertex2, color)
-	table.insert(OCGL.vertices, vector3Vertex1)
-	table.insert(OCGL.vertices, vector3Vertex2)
-	table.insert(OCGL.lines, OCGL.newIndexedLine(OCGL.nextVertexIndex, OCGL.nextVertexIndex + 1, color))
-	OCGL.nextVertexIndex = OCGL.nextVertexIndex + 2
-end
-
-function OCGL.pushFloatingTextToRenderQueue(vector3Vertex, color, text)
-	table.insert(OCGL.vertices, vector3Vertex)
-	table.insert(OCGL.floatingTexts, OCGL.newIndexedFloatingText(OCGL.nextVertexIndex, color, text))
-	OCGL.nextVertexIndex = OCGL.nextVertexIndex + 1
-end
-
--------------------------------------------------------- Rendering methods --------------------------------------------------------
-
-function OCGL.clearBuffer(backgroundColor)
-	OCGL.nextVertexIndex, OCGL.vertices, OCGL.triangles, OCGL.lines, OCGL.floatingTexts, OCGL.lights = 1, {}, {}, {}, {}, {}
-	renderer.clearDepthBuffer()
-	buffer.clear(backgroundColor)
-end
-
-function OCGL.createPerspectiveProjection() 
-	local zProjectionDivZ
-	for vertexIndex = 1, #OCGL.vertices do
-		zProjectionDivZ = math.abs(renderer.viewport.projectionSurface / OCGL.vertices[vertexIndex][3])
-		OCGL.vertices[vertexIndex][1] = zProjectionDivZ * OCGL.vertices[vertexIndex][1]
-		OCGL.vertices[vertexIndex][2] = zProjectionDivZ * OCGL.vertices[vertexIndex][2]
-	end
-end
-
-function OCGL.getTriangleLightIntensity(vertex1, vertex2, vertex3, indexedLight)
-	local lightVector = {
-		OCGL.vertices[indexedLight[1]][1] - (vertex1[1] + vertex2[1] + vertex3[1]) / 3,
-		OCGL.vertices[indexedLight[1]][2] - (vertex1[2] + vertex2[2] + vertex3[2]) / 3,
-		OCGL.vertices[indexedLight[1]][3] - (vertex1[3] + vertex2[3] + vertex3[3]) / 3
-	}
-	local lightDistance = vector.length(lightVector)
-
-	if lightDistance <= indexedLight[3] then
-		local normalVector = vector.getSurfaceNormal(vertex1, vertex2, vertex3)
-		-- buffer.text(2, buffer.height - 2, 0x0, "normalVector: " .. normalVector[1] .. " x " .. normalVector[2] .. " x " .. normalVector[3])
-
-		local cameraScalar = vector.scalarMultiply({0, 0, 100}, normalVector)
-		local lightScalar = vector.scalarMultiply(lightVector, normalVector )
-
-		-- buffer.text(2, buffer.height - 1, 0xFFFFFF, "Scalars: " .. cameraScalar .. " x " .. lightScalar)
-		if cameraScalar < 0 and lightScalar >= 0 or cameraScalar >= 0 and lightScalar < 0 then			
-			local absAngle = math.abs(math.acos(lightScalar / (lightDistance * vector.length(normalVector))))
-			if absAngle > 1.5707963267949 then
-				absAngle = 3.1415926535898 - absAngle
-			end
-			-- buffer.text(2, buffer.height, 0xFFFFFF, "Angle: " .. math.deg(angle) .. ", newAngle: " .. math.deg(absAngle) .. ", intensity: " .. absAngle / 1.5707963267949)
-			return indexedLight[2] * (1 - lightDistance / indexedLight[3]) * (1 - absAngle / 1.5707963267949)
-		else
-			return 0
-		end
-	else
-		-- buffer.text(2, buffer.height, 0x0, "Out of light range: " .. lightDistance .. " vs " .. indexedLight[2])
-		return 0
-	end
-end
-
-function OCGL.calculateLights()
-	for triangleIndex = 1, #OCGL.triangles do
-		for lightIndex = 1, #OCGL.lights do
-			local intensity = OCGL.getTriangleLightIntensity(
-				OCGL.vertices[OCGL.triangles[triangleIndex][1]], 
-				OCGL.vertices[OCGL.triangles[triangleIndex][2]], 
-				OCGL.vertices[OCGL.triangles[triangleIndex][3]], 
-				OCGL.lights[lightIndex]
-			)
-			if OCGL.triangles[triangleIndex][5] then
-				OCGL.triangles[triangleIndex][5] = OCGL.triangles[triangleIndex][5] + intensity
-			else
-				OCGL.triangles[triangleIndex][5] = intensity
-			end
-		end
-	end
-end
-
-function OCGL.render()
-	local vertex1, vertex2, vertex3, material, auxiliaryColor = {}, {}, {}
-
-	for triangleIndex = 1, #OCGL.triangles do
-		vertex1[1], vertex1[2], vertex1[3] = renderer.viewport.xCenter + OCGL.vertices[OCGL.triangles[triangleIndex][1]][1], renderer.viewport.yCenter - OCGL.vertices[OCGL.triangles[triangleIndex][1]][2], OCGL.vertices[OCGL.triangles[triangleIndex][1]][3]
-		vertex2[1], vertex2[2], vertex2[3] = renderer.viewport.xCenter + OCGL.vertices[OCGL.triangles[triangleIndex][2]][1], renderer.viewport.yCenter - OCGL.vertices[OCGL.triangles[triangleIndex][2]][2], OCGL.vertices[OCGL.triangles[triangleIndex][2]][3]
-		vertex3[1], vertex3[2], vertex3[3] = renderer.viewport.xCenter + OCGL.vertices[OCGL.triangles[triangleIndex][3]][1], renderer.viewport.yCenter - OCGL.vertices[OCGL.triangles[triangleIndex][3]][2], OCGL.vertices[OCGL.triangles[triangleIndex][3]][3]
-		material = OCGL.triangles[triangleIndex][4]
-
-		if
-			renderer.isVertexInViewRange(vertex1[1], vertex1[2], vertex1[3]) or
-			renderer.isVertexInViewRange(vertex2[1], vertex2[2], vertex2[3]) or
-			renderer.isVertexInViewRange(vertex3[1], vertex3[2], vertex3[3])
-		then
-			if material.type == materials.types.solid then
-				if OCGL.renderMode == OCGL.renderModes.constantShading then
-					renderer.renderFilledTriangle({ vertex1, vertex2, vertex3 }, material.color)
-				elseif OCGL.renderMode == OCGL.renderModes.flatShading then
-					-- local finalColor = 0x0
-					-- finalColor = color.blend(material.color, 0x0, OCGL.triangles[triangleIndex][5])
-					-- OCGL.triangles[triangleIndex][5] = nil
-					-- renderer.renderFilledTriangle({ vertex1, vertex2, vertex3 }, finalColor)
-
-					local r, g, b = color.IntegerToRGB(material.color)
-					r, g, b = math.floor(r * OCGL.triangles[triangleIndex][5]), math.floor(g * OCGL.triangles[triangleIndex][5]), math.floor(b * OCGL.triangles[triangleIndex][5])
-					if r > 255 then r = 255 end
-					if g > 255 then g = 255 end
-					if b > 255 then b = 255 end
-					OCGL.triangles[triangleIndex][5] = nil
-
-					renderer.renderFilledTriangle({ vertex1, vertex2, vertex3 }, color.RGBToInteger(r, g, b))
+				-- Front (1, 2)
+				if not checkBlock(x, y, z - 1) then
+					table.insert(worldMesh.triangles, OCGL.newIndexedTriangle(firstVertexIndex, firstVertexIndex + 1, firstVertexIndex + 2, material))
+					table.insert(worldMesh.triangles, OCGL.newIndexedTriangle(firstVertexIndex + 3, firstVertexIndex, firstVertexIndex + 2, material))
 				end
-			elseif material.type == materials.types.textured then
-				vertex1[4], vertex1[5] = OCGL.vertices[OCGL.triangles[triangleIndex][1]][4], OCGL.vertices[OCGL.triangles[triangleIndex][1]][5]
-				vertex2[4], vertex2[5] = OCGL.vertices[OCGL.triangles[triangleIndex][2]][4], OCGL.vertices[OCGL.triangles[triangleIndex][2]][5]
-				vertex3[4], vertex3[5] = OCGL.vertices[OCGL.triangles[triangleIndex][3]][4], OCGL.vertices[OCGL.triangles[triangleIndex][3]][5]
-				
-				renderer.renderTexturedTriangle({ vertex1, vertex2, vertex3 }, material.texture)
-			else
-				error("Material type " .. tostring(material.type) .. " doesn't supported for rendering triangles")
-			end
 
-			if OCGL.auxiliaryMode ~= OCGL.auxiliaryModes.disabled then
-				vertex1[1], vertex1[2], vertex1[3] = math.floor(renderer.viewport.xCenter + OCGL.vertices[OCGL.triangles[triangleIndex][1]][1]), math.floor(renderer.viewport.yCenter - OCGL.vertices[OCGL.triangles[triangleIndex][1]][2]), math.floor(OCGL.vertices[OCGL.triangles[triangleIndex][1]][3])
-				vertex2[1], vertex2[2], vertex2[3] = math.floor(renderer.viewport.xCenter + OCGL.vertices[OCGL.triangles[triangleIndex][2]][1]), math.floor(renderer.viewport.yCenter - OCGL.vertices[OCGL.triangles[triangleIndex][2]][2]), math.floor(OCGL.vertices[OCGL.triangles[triangleIndex][2]][3])
-				vertex3[1], vertex3[2], vertex3[3] = math.floor(renderer.viewport.xCenter + OCGL.vertices[OCGL.triangles[triangleIndex][3]][1]), math.floor(renderer.viewport.yCenter - OCGL.vertices[OCGL.triangles[triangleIndex][3]][2]), math.floor(OCGL.vertices[OCGL.triangles[triangleIndex][3]][3])
+				-- Left (3, 4)
+				if not checkBlock(x - 1, y, z) then
+					table.insert(worldMesh.triangles, OCGL.newIndexedTriangle(firstVertexIndex + 5, firstVertexIndex + 1, firstVertexIndex + 4, material))
+					table.insert(worldMesh.triangles, OCGL.newIndexedTriangle(firstVertexIndex + 1, firstVertexIndex, firstVertexIndex + 4, material))
+				end
 
-				if OCGL.auxiliaryMode == OCGL.auxiliaryModes.wireframe then
-					renderer.renderLine(vertex1[1], vertex1[2], vertex1[3], vertex2[1], vertex2[2], vertex2[3], OCGL.colors.wireframe)
-					renderer.renderLine(vertex2[1], vertex2[2], vertex2[3], vertex3[1], vertex3[2], vertex3[3], OCGL.colors.wireframe)
-					renderer.renderLine(vertex1[1], vertex1[2], vertex1[3], vertex3[1], vertex3[2], vertex3[3], OCGL.colors.wireframe)
-				elseif OCGL.auxiliaryMode == OCGL.auxiliaryModes.vertices then
-					renderer.renderDot(vertex1[1], vertex1[2], vertex1[3], OCGL.colors.vertices)
-					renderer.renderDot(vertex2[1], vertex2[2], vertex2[3], OCGL.colors.vertices)
-					renderer.renderDot(vertex3[1], vertex3[2], vertex3[3], OCGL.colors.vertices)
+				-- Back (5, 6)
+				if not checkBlock(x, y, z + 1) then
+					table.insert(worldMesh.triangles, OCGL.newIndexedTriangle(firstVertexIndex + 6, firstVertexIndex + 5, firstVertexIndex + 7, material))
+					table.insert(worldMesh.triangles, OCGL.newIndexedTriangle(firstVertexIndex + 5, firstVertexIndex + 4, firstVertexIndex + 7, material))
+				end
+
+				-- Right (7, 8)
+				if not checkBlock(x + 1, y, z) then
+					table.insert(worldMesh.triangles, OCGL.newIndexedTriangle(firstVertexIndex + 3, firstVertexIndex + 2, firstVertexIndex + 6, material))
+					table.insert(worldMesh.triangles, OCGL.newIndexedTriangle(firstVertexIndex + 7, firstVertexIndex + 3, firstVertexIndex + 6, material))
+				end
+
+				-- Up (9, 10)
+				if not checkBlock(x, y + 1, z) then
+					table.insert(worldMesh.triangles, OCGL.newIndexedTriangle(firstVertexIndex + 1, firstVertexIndex + 5, firstVertexIndex + 6, material))
+					table.insert(worldMesh.triangles, OCGL.newIndexedTriangle(firstVertexIndex + 2, firstVertexIndex + 1, firstVertexIndex + 6, material))
+				end
+
+				-- Down (11, 12)
+				if not checkBlock(x, y - 1, z) then
+					table.insert(worldMesh.triangles, OCGL.newIndexedTriangle(firstVertexIndex + 4, firstVertexIndex, firstVertexIndex + 7, material))
+					table.insert(worldMesh.triangles, OCGL.newIndexedTriangle(firstVertexIndex, firstVertexIndex + 3, firstVertexIndex + 7, material))
 				end
 			end
 		end
 	end
+end
 
-	if OCGL.auxiliaryMode ~= OCGL.auxiliaryModes.disabled then
-		for lightIndex = 1, #OCGL.lights do
-			renderer.renderDot(
-				math.floor(renderer.viewport.xCenter + OCGL.vertices[OCGL.lights[lightIndex][1]][1]),
-				math.floor(renderer.viewport.yCenter - OCGL.vertices[OCGL.lights[lightIndex][1]][2]),
-				math.floor(OCGL.vertices[OCGL.lights[lightIndex][1]][3]),
-				OCGL.colors.lights
-			)
+-- Mode 1
+local hue, hueStep = 0, 360 / 9
+for z = -1, 1 do
+	for x = -1, 1 do
+		if not (x == 0 and z == 0) then
+			setBlock(x, 0, z, color.HSBToInteger(hue, 1, 1))
+			hue = hue + hueStep
 		end
 	end
-
-	for floatingTextIndex = 1, #OCGL.floatingTexts do
-		vertex1 = OCGL.vertices[OCGL.floatingTexts[floatingTextIndex][1]]
-		renderer.renderFloatingText(
-			renderer.viewport.xCenter + vertex1[1],
-			renderer.viewport.yCenter - vertex1[2],
-			vertex1[3],
-			OCGL.floatingTexts[floatingTextIndex][2],
-			OCGL.floatingTexts[floatingTextIndex][3]
-		)
-	end
-
-	-- for lineIndex = 1, #OCGL.lines do
-	-- 	vertex1, vertex2, material = OCGL.vertices[OCGL.lines[lineIndex][1]], OCGL.vertices[OCGL.lines[lineIndex][2]], OCGL.lines[lineIndex][3]
-
-	-- 	if OCGL.renderMode == renderer.renderModes.vertices then
-	-- 		renderer.renderDot(vertex1, material)
-	-- 		renderer.renderDot(vertex2, material)
-	-- 	else
-	-- 		renderer.renderLine(
-	-- 			math.floor(vertex1[1]),
-	-- 			math.floor(vertex1[2]),
-	-- 			vertex1[3],
-	-- 			math.floor(vertex2[1]),
-	-- 			math.floor(vertex2[2]),
-	-- 			vertex2[3],
-	-- 			material
-	-- 		)
-	-- 	end
-	-- end
 end
 
--------------------------------------------------------- Raycasting methods --------------------------------------------------------
+-- -- Mode 2
+-- for z = 1, 7 do
+-- 	for x = -3, 3 do
+-- 		setBlock(x, 0, z, 0xFFFFFF)
+-- 	end
+-- end
 
-local function vectorMultiply(a, b)
-	return vector.newVector3(a[2] * b[3] - a[3] * b[2], a[3] * b[1] - a[1] * b[3], a[1] * b[2] - a[2] * b[1])
-end
+---------------------------------------------- Cat ----------------------------------------------
 
-local function getVectorDistance(a)
-	return math.sqrt(a[1] ^ 2 + a[2] ^ 2 + a[3] ^ 2)
-end
+-- scene:addObject(meowEngine.newPolyCatMesh(vector.newVector3(0, 5, 0), 5))
+-- scene:addObject(meowEngine.newFloatingText(vector.newVector3(0, -2, 0), 0xEEEEEE, "Тест плавающего текста"))
 
--- В случае попадания лучика этот метод вернет сам треугольник, а также дистанцию до его плоскости
-function OCGL.triangleRaycast(vector3RayStart, vector3RayEnd)
-	local minimalDistance, closestTriangleIndex
-	for triangleIndex = 1, #OCGL.triangles do
-		-- Это вершины треугольника
-		local A, B, C = OCGL.vertices[OCGL.triangles[triangleIndex][1]], OCGL.vertices[OCGL.triangles[triangleIndex][3]], OCGL.vertices[OCGL.triangles[triangleIndex][3]]
-		-- ecs.error(A[1], A[2], A[3], vector3RayStart[1], vector3RayStart[2], vector3RayStart[3])
-		-- Это хз че
-		local ABC = vectorMultiply(vector.newVector3(C[1] - A[1], C[2] - A[2], C[3] - A[3]), vector.newVector3(B[1] - A[1], B[2] - A[2], B[3] - A[3]))
-		-- Рассчитываем удаленность виртуальной плоскости треугольника от старта нашего луча
-		local D = -ABC[1] * A[1] - ABC[2] * A[2] - ABC[3] * A[3]
-		local firstPart = D + ABC[1] * vector3RayStart[1] + ABC[2] * vector3RayStart[2] + ABC[3] * vector3RayStart[3]
-		local secondPart = ABC[1] * vector3RayStart[1] - ABC[1] * vector3RayEnd[1] + ABC[2] * vector3RayStart[2] - ABC[2] * vector3RayEnd[2] + ABC[3] * vector3RayStart[3] - ABC[3] * vector3RayEnd[3]
-		
-		-- ecs.error(firstPart, secondPart)
+---------------------------------------------- Texture ----------------------------------------------
 
-		-- if firstPart ~= 0 or secondPart ~= 0 then ecs.error(firstPart, secondPart) end
-		-- Если наш лучик не параллелен той ебучей плоскости треугольника
-		if secondPart ~= 0 then
-			local distance = firstPart / secondPart
-			-- И если этот объект находится ближе к старту луча, нежели предыдущий
-			if (distance >= 0 and distance <= 1) and (not minimalDistance or distance < minimalDistance) then
-	
-				-- То считаем точку попадания луча в данную плоскость (но ни хуя не факт, что он попадет в треугольник!)
-				local S = vector.newVector3(
-					vector3RayStart[1] + (vector3RayEnd[1] - vector3RayStart[1]) * distance,
-					vector3RayStart[2] + (vector3RayEnd[2] - vector3RayStart[2]) * distance,
-					vector3RayStart[3] + (vector3RayEnd[3] - vector3RayStart[3]) * distance
-				)
+-- scene.camera:translate(0, 20, 0)
+-- scene.camera:rotate(math.rad(90), 0, 0)
+-- local texturedPlane = scene:addObject(meowEngine.newTexturedPlane(vector.newVector3(0, 0, 0), 20, 20, materials.newDebugTexture(16, 16, 40)))
 
-				-- Далее считаем сумму площадей параллелограммов, образованных тремя треугольниками, образовавшихся при попадании точки в треугольник
-				-- Нууу тип кароч смари: точка ебанула в центр, и треугольник распидорасило на три мелких. Ну, и три мелких могут образовать параллелограммы свои
-				-- И, кароч, если сумма трех площадей этих мелких уебков будет сильно отличаться от площади жирного треугольника, то луч не попал
-				-- Ну, а площадь считается через sqrt(x^2+y^2+z^2) для каждого йоба-вектора
+---------------------------------------------- Wave ----------------------------------------------
 
-				---- *A                      *B
-
-
-				--                  * Shotxyz
-
-
-				---                   *C
-
-				local SA = vector.newVector3(A[1] - S[1], A[2] - S[2], A[3] - S[3])
-				local SB = vector.newVector3(B[1] - S[1], B[2] - S[2], B[3] - S[3])
-				local SC = vector.newVector3(C[1] - S[1], C[2] - S[2], C[3] - S[3])
+-- local xCells, yCells = 4, 1
+-- local plane = meowEngine.newPlane(vector.newVector3(0, 0, 0), 40, 15, xCells, yCells, materials.newSolidMaterial(0xFFFFFF))
+-- plane.nextWave = function(mesh)
+-- 	for xCell = 1, xCells do
+-- 		for yCell = 1, yCells do
 			
-				local vectorDistanceSum = getVectorDistance(vectorMultiply(SA, SB)) + getVectorDistance(vectorMultiply(SB, SC)) + getVectorDistance(vectorMultiply(SC, SA))
-				local ABCDistance = getVectorDistance(ABC)
+-- 		end
+-- 	end
+-- end
 
-				-- Вот тут мы чекаем погрешность расчетов. Если все заебок, то кидаем этот треугольник в "проверенные""
-				if math.abs(vectorDistanceSum - ABCDistance) < 1 then
-					closestTriangleIndex = triangleIndex
-					minimalDistance = distance
-				end
-			end 
-		end
+---------------------------------------------- Fractal field ----------------------------------------------
+
+-- local function createField(vector3Position, xCellCount, yCellCount, cellSize)
+-- 	local totalWidth, totalHeight = xCellCount * cellSize, yCellCount * cellSize
+-- 	local halfWidth, halfHeight = totalWidth / 2, totalHeight / 2
+-- 	xCellCount, yCellCount = xCellCount + 1, yCellCount + 1
+-- 	local vertices, triangles = {}, {}
+
+-- 	local vertexIndex = 1
+-- 	for yCell = 1, yCellCount do
+-- 		for xCell = 1, xCellCount do
+-- 			table.insert(vertices, vector.newVector3(xCell * cellSize - cellSize - halfWidth, yCell * cellSize - cellSize - halfHeight, 0))
+
+-- 			if xCell < xCellCount and yCell < yCellCount then
+-- 				table.insert(triangles,
+-- 					OCGL.newIndexedTriangle(
+-- 						vertexIndex,
+-- 						vertexIndex + 1,
+-- 						vertexIndex + xCellCount
+-- 					)
+-- 				)
+-- 				table.insert(triangles,
+-- 					OCGL.newIndexedTriangle(
+-- 						vertexIndex + 1,
+-- 						vertexIndex + xCellCount + 1,
+-- 						vertexIndex + xCellCount
+-- 					)
+-- 				)
+-- 			end
+
+-- 			vertexIndex = vertexIndex + 1
+-- 		end
+-- 	end
+
+-- 	local mesh = meowEngine.newMesh(vector3Position, vertices, triangles,materials.newSolidMaterial(0xFF8888))
+	
+-- 	local function getRandomSignedInt(from, to)
+-- 		return (math.random(0, 1) == 1 and 1 or -1) * (math.random(from, to))
+-- 	end
+
+-- 	local function getRandomDirection()
+-- 		return getRandomSignedInt(5, 100) / 100
+-- 	end
+
+-- 	mesh.randomizeTrianglesColor = function(mesh, hueChangeSpeed, brightnessChangeSpeed, minimumBrightness)
+-- 		mesh.hue = mesh.hue and mesh.hue + hueChangeSpeed or math.random(0, 360)
+-- 		if mesh.hue > 359 then mesh.hue = 0 end
+
+-- 		for triangleIndex = 1, #mesh.triangles do
+-- 			mesh.triangles[triangleIndex].brightness = mesh.triangles[triangleIndex].brightness and mesh.triangles[triangleIndex].brightness + getRandomSignedInt(1, brightnessChangeSpeed) or math.random(minimumBrightness, 100)
+-- 			if mesh.triangles[triangleIndex].brightness > 100 then
+-- 				mesh.triangles[triangleIndex].brightness = 100
+-- 			elseif mesh.triangles[triangleIndex].brightness < minimumBrightness then
+-- 				mesh.triangles[triangleIndex].brightness = minimumBrightness
+-- 			end
+-- 			mesh.triangles[triangleIndex][4] = materials.newSolidMaterial(color.HSBToInteger(mesh.hue, 1, mesh.triangles[triangleIndex].brightness))
+-- 		end
+-- 	end
+
+-- 	mesh.randomizeVerticesPosition = function(mesh, speed)
+-- 		local vertexIndex = 1
+-- 		for yCell = 1, yCellCount do
+-- 			for xCell = 1, xCellCount do
+-- 				if xCell > 1 and xCell < xCellCount and yCell > 1 and yCell < yCellCount then
+-- 					mesh.vertices[vertexIndex].offset = mesh.vertices[vertexIndex].offset or {0, 0}
+-- 					mesh.vertices[vertexIndex].direction = mesh.vertices[vertexIndex].direction or {getRandomDirection(), getRandomDirection()}
+
+-- 					local newOffset = {
+-- 						mesh.vertices[vertexIndex].direction[1] * (speed * cellSize),
+-- 						mesh.vertices[vertexIndex].direction[1] * (speed * cellSize)
+-- 					}
+					
+-- 					for i = 1, 2 do
+-- 						if math.abs(mesh.vertices[vertexIndex].offset[i] + newOffset[i]) < cellSize / 2 then
+-- 							mesh.vertices[vertexIndex].offset[i] = mesh.vertices[vertexIndex].offset[i] + newOffset[i]
+-- 							mesh.vertices[vertexIndex][i] = mesh.vertices[vertexIndex][i] + newOffset[i]
+-- 						else
+-- 							mesh.vertices[vertexIndex].direction[i] = getRandomDirection()
+-- 						end
+-- 					end
+-- 				end
+-- 				vertexIndex = vertexIndex + 1
+-- 			end
+-- 		end
+-- 	end
+
+-- 	return mesh
+-- end
+
+-- local plane = createField(vector.newVector3(0, 0, 0), 8, 4, 4)
+-- scene:addObject(plane)
+-- plane:randomizeTrianglesColor(10, 10, 50)
+
+-------------------------------------------------------- Controls --------------------------------------------------------
+
+local function move(x, y, z)
+	local moveVector = vector.newVector3(x, y, z)
+	OCGL.rotateVectorRelativeToXAxis(moveVector, scene.camera.rotation[1])
+	OCGL.rotateVectorRelativeToYAxis(moveVector, scene.camera.rotation[2])
+	scene.camera:translate(moveVector[1], moveVector[2], moveVector[3])
+end
+
+local function moveLight(x, y, z)
+	scene.lights[mainContainer.toolbar.lightSelectComboBox.selectedItem].position[1] = scene.lights[mainContainer.toolbar.lightSelectComboBox.selectedItem].position[1] + x
+	scene.lights[mainContainer.toolbar.lightSelectComboBox.selectedItem].position[2] = scene.lights[mainContainer.toolbar.lightSelectComboBox.selectedItem].position[2] + y
+	scene.lights[mainContainer.toolbar.lightSelectComboBox.selectedItem].position[3] = scene.lights[mainContainer.toolbar.lightSelectComboBox.selectedItem].position[3] + z
+end
+
+local controls = {
+	-- F1
+	[59 ] = function() mainContainer.toolbar.hidden = not mainContainer.toolbar.hidden; mainContainer.infoTextBox.hidden = not mainContainer.infoTextBox.hidden end,
+	-- Arrows
+	[200] = function() scene.camera:rotate(-rotationAngle, 0, 0) end,
+	[208] = function() scene.camera:rotate(rotationAngle, 0, 0) end,
+	[203] = function() scene.camera:rotate(0, -rotationAngle, 0) end,
+	[205] = function() scene.camera:rotate(0, rotationAngle, 0) end,
+	[16 ] = function() scene.camera:rotate(0, 0, rotationAngle) end,
+	[18 ] = function() scene.camera:rotate(0, 0, -rotationAngle) end,
+	-- WASD
+	[17 ] = function() move(0, 0, translationOffset) end,
+	[31 ] = function() move(0, 0, -translationOffset) end,
+	[30 ] = function() move(-translationOffset, 0, 0) end,
+	[32 ] = function() move(translationOffset, 0, 0) end,
+	-- RSHIFT, SPACE
+	[42 ] = function() move(0, -translationOffset, 0) end,
+	[57 ] = function() move(0, translationOffset, 0) end,
+	-- NUM 4 6 8 5 1 3
+	[75 ] = function() moveLight(-translationOffset, 0, 0) end,
+	[77 ] = function() moveLight(translationOffset, 0, 0) end,
+	[72 ] = function() moveLight(0, 0, translationOffset) end,
+	[80 ] = function() moveLight(0, 0, -translationOffset) end,
+	[79 ] = function() moveLight(0, -translationOffset, 0) end,
+	[81 ] = function() moveLight(0, translationOffset, 0) end,
+}
+
+-------------------------------------------------------- GUI --------------------------------------------------------
+
+local OCGLView = GUI.object(1, 1, mainContainer.width, mainContainer.height)
+
+local function drawInvertedText(x, y, text)
+	local index = buffer.getIndex(x, y)
+	local background, foreground = buffer.rawGet(index)
+	buffer.rawSet(index, background, 0xFFFFFF - foreground, text)
+end
+
+local function drawCross(x, y)
+	drawInvertedText(x - 2, y, "━")
+	drawInvertedText(x - 1, y, "━")
+	drawInvertedText(x + 2, y, "━")
+	drawInvertedText(x + 1, y, "━")
+	drawInvertedText(x, y - 1, "┃")
+	drawInvertedText(x, y + 1, "┃")
+end
+
+OCGLView.draw = function(object)
+	mainContainer.oldClock = os.clock()
+	if world then renderWorld() end
+	scene:render()
+	if mainContainer.toolbar.zBufferSwitch.state then
+		renderer.visualizeDepthBuffer()
 	end
+	drawCross(renderer.viewport.xCenter, math.floor(renderer.viewport.yCenter / 2))
+end
 
-	-- ecs.error(closestTriangleIndex)
-	if OCGL.triangles[closestTriangleIndex] then
-		return OCGL.triangles[closestTriangleIndex][5], OCGL.triangles[closestTriangleIndex][6], minimalDistance
+OCGLView.eventHandler = function(mainContainer, object, eventData)
+	if eventData[1] == "touch" then
+		local targetVector = vector.newVector3(scene.camera.position[1], scene.camera.position[2], scene.camera.position[3] + 1000)
+		OCGL.rotateVectorRelativeToXAxis(targetVector, scene.camera.rotation[1])
+		OCGL.rotateVectorRelativeToYAxis(targetVector, scene.camera.rotation[2])
+		local objectIndex, triangleIndex, distance = meowEngine.sceneRaycast(scene, scene.camera.position, targetVector)
+
+		if objectIndex then
+			local triangle = scene.objects[objectIndex].triangles[triangleIndex]
+			local xWorld = math.floor(((scene.objects[objectIndex].vertices[scene.objects[objectIndex].triangles[triangleIndex][1]][1] + scene.objects[objectIndex].vertices[scene.objects[objectIndex].triangles[triangleIndex][2]][1] + scene.objects[objectIndex].vertices[scene.objects[objectIndex].triangles[triangleIndex][3]][1]) / 3) / blockSize) + 1
+			local yWorld = math.floor(((scene.objects[objectIndex].vertices[triangle[1]][2] + scene.objects[objectIndex].vertices[triangle[2]][2] + scene.objects[objectIndex].vertices[triangle[3]][2]) / 3) / blockSize) + 1
+			local zWorld = math.floor(((scene.objects[objectIndex].vertices[triangle[1]][3] + scene.objects[objectIndex].vertices[triangle[2]][3] + scene.objects[objectIndex].vertices[triangle[3]][3]) / 3) / blockSize) + 1
+
+			local normalVector = vector.getSurfaceNormal(
+				scene.objects[objectIndex].vertices[triangle[1]],
+				scene.objects[objectIndex].vertices[triangle[2]],
+				scene.objects[objectIndex].vertices[triangle[3]]
+			)
+
+			if normalVector[1] > 0 and eventData[5] ~= 1 or normalVector[1] < 0 and eventData[5] == 1 then
+				xWorld = xWorld - 1
+			elseif normalVector[2] > 0 and eventData[5] ~= 1 or normalVector[2] < 0 and eventData[5] == 1 then
+				yWorld = yWorld - 1
+			elseif normalVector[3] > 0 and eventData[5] ~= 1 or normalVector[3] < 0 and eventData[5] == 1 then
+				zWorld = zWorld - 1
+			end
+
+			setBlock(xWorld, yWorld, zWorld, eventData[5] == 1 and mainContainer.toolbar.blockColorSelector.color or nil)
+		end
 	end
 end
 
--------------------------------------------------------- Constants --------------------------------------------------------
+mainContainer:addChild(OCGLView)
 
-return OCGL
+mainContainer.infoTextBox = mainContainer:addChild(GUI.textBox(2, 4, 45, mainContainer.height, nil, 0xEEEEEE, {}, 1, 0, 0))
+local lines = {
+	"Copyright © 2016-2017 - Developed by ECS Inc.",
+	"Timofeef Igor (vk.com/id7799889), Trifonov Gleb (vk.com/id88323331), Verevkin Yakov (vk.com/id60991376), Bogushevich Victoria (vk.com/id171497518)",
+	"All rights reserved",
+}
+mainContainer:addChild(GUI.textBox(1, mainContainer.height - #lines + 1, mainContainer.width, #lines, nil, 0x3C3C3C, lines, 1)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+
+local elementY = 2
+mainContainer.toolbar = mainContainer:addChild(GUI.container(mainContainer.width - 31, 1, 32, mainContainer.height))
+local elementWidth = mainContainer.toolbar.width - 2
+mainContainer.toolbar:addChild(GUI.panel(1, 1, mainContainer.toolbar.width, mainContainer.toolbar.height, 0x0, 0.5))
+
+mainContainer.toolbar:addChild(GUI.label(2, elementY, elementWidth, 1, 0xEEEEEE, "Render mode")):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); elementY = elementY + 2
+mainContainer.toolbar.renderModeComboBox = mainContainer.toolbar:addChild(GUI.comboBox(2, elementY, elementWidth, 1, 0x2D2D2D, 0xAAAAAA, 0x555555, 0x888888)); elementY = elementY + mainContainer.toolbar.renderModeComboBox.height + 1
+mainContainer.toolbar.renderModeComboBox:addItem("disabled")
+mainContainer.toolbar.renderModeComboBox:addItem("constantShading")
+mainContainer.toolbar.renderModeComboBox:addItem("flatShading")
+mainContainer.toolbar.renderModeComboBox.selectedItem = scene.renderMode
+mainContainer.toolbar.renderModeComboBox.onItemSelected = function()
+	scene.renderMode = mainContainer.toolbar.renderModeComboBox.selectedItem
+end
+
+mainContainer.toolbar.auxiliaryModeComboBox = mainContainer.toolbar:addChild(GUI.comboBox(2, elementY, elementWidth, 1, 0x2D2D2D, 0xAAAAAA, 0x555555, 0x888888)); elementY = elementY + mainContainer.toolbar.auxiliaryModeComboBox.height + 1
+mainContainer.toolbar.auxiliaryModeComboBox:addItem("disabled")
+mainContainer.toolbar.auxiliaryModeComboBox:addItem("wireframe")
+mainContainer.toolbar.auxiliaryModeComboBox:addItem("vertices")
+mainContainer.toolbar.auxiliaryModeComboBox.selectedItem = scene.auxiliaryMode
+mainContainer.toolbar.auxiliaryModeComboBox.onItemSelected = function()
+	scene.auxiliaryMode = mainContainer.toolbar.auxiliaryModeComboBox.selectedItem
+end
+
+mainContainer.toolbar:addChild(GUI.label(2, elementY, elementWidth, 1, 0xAAAAAA, "Perspective proj:"))
+mainContainer.toolbar.perspectiveSwitch = mainContainer.toolbar:addChild(GUI.switch(mainContainer.toolbar.width - 8, elementY, 8, 0x66DB80, 0x2D2D2D, 0xEEEEEE, scene.camera.projectionEnabled)); elementY = elementY + 2
+mainContainer.toolbar.perspectiveSwitch.onStateChanged = function()
+	scene.camera.projectionEnabled = mainContainer.toolbar.perspectiveSwitch.state
+end
+
+mainContainer.toolbar:addChild(GUI.label(2, elementY, elementWidth, 1, 0xAAAAAA, "Z-buffer visualize:"))
+mainContainer.toolbar.zBufferSwitch = mainContainer.toolbar:addChild(GUI.switch(mainContainer.toolbar.width - 8, elementY, 8, 0x66DB80, 0x2D2D2D, 0xEEEEEE, false)); elementY = elementY + 2
+
+
+local function calculateLightComboBox()
+	mainContainer.toolbar.lightSelectComboBox.dropDownMenu.itemsContainer.children = {}
+	for i = 1, #scene.lights do
+		mainContainer.toolbar.lightSelectComboBox:addItem(tostring(i))
+	end
+	mainContainer.toolbar.lightSelectComboBox.selectedItem = #mainContainer.toolbar.lightSelectComboBox.dropDownMenu.itemsContainer.children
+	mainContainer.toolbar.lightIntensitySlider.value = scene.lights[mainContainer.toolbar.lightSelectComboBox.selectedItem].intensity * 100
+	mainContainer.toolbar.lightEmissionSlider.value = scene.lights[mainContainer.toolbar.lightSelectComboBox.selectedItem].emissionDistance
+end
+
+mainContainer.toolbar:addChild(GUI.label(2, elementY, elementWidth, 1, 0xEEEEEE, "Light control")):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); elementY = elementY + 2
+mainContainer.toolbar.lightSelectComboBox = mainContainer.toolbar:addChild(GUI.comboBox(2, elementY, elementWidth, 1, 0x2D2D2D, 0xAAAAAA, 0x555555, 0x888888)); elementY = elementY + mainContainer.toolbar.lightSelectComboBox.height + 1
+
+mainContainer.toolbar.addLightButton = mainContainer.toolbar:addChild(GUI.button(2, elementY, elementWidth, 1, 0x2D2D2D, 0xAAAAAA, 0x555555, 0xAAAAAA, "Add light")); elementY = elementY + 2
+mainContainer.toolbar.addLightButton.onTouch = function()
+	scene:addLight(meowEngine.newLight(vector.newVector3(0, 10, 0), mainContainer.toolbar.lightIntensitySlider.value / 100,  mainContainer.toolbar.lightEmissionSlider.value))
+	calculateLightComboBox()
+end
+
+mainContainer.toolbar.removeLightButton = mainContainer.toolbar:addChild(GUI.button(2, elementY, elementWidth, 1, 0x2D2D2D, 0xAAAAAA, 0x555555, 0xAAAAAA, "Remove light")); elementY = elementY + 2
+mainContainer.toolbar.removeLightButton.onTouch = function()
+	if #scene.lights > 1 then
+		table.remove(scene.lights, mainContainer.toolbar.lightSelectComboBox.selectedItem)
+		calculateLightComboBox()
+	end
+end
+
+mainContainer.toolbar.lightIntensitySlider = mainContainer.toolbar:addChild(GUI.slider(2, elementY, elementWidth, 0xCCCCCC, 0x2D2D2D, 0xEEEEEE, 0xAAAAAA, 0, 500, 100, false, "Intensity: ", "")); elementY = elementY + 3
+mainContainer.toolbar.lightIntensitySlider.onValueChanged = function()
+	scene.lights[mainContainer.toolbar.lightSelectComboBox.selectedItem].intensity = mainContainer.toolbar.lightIntensitySlider.value / 100
+end
+mainContainer.toolbar.lightEmissionSlider = mainContainer.toolbar:addChild(GUI.slider(2, elementY, elementWidth, 0xCCCCCC, 0x2D2D2D, 0xEEEEEE, 0xAAAAAA, 0, scene.lights[mainContainer.toolbar.lightSelectComboBox.selectedItem].emissionDistance, scene.lights[mainContainer.toolbar.lightSelectComboBox.selectedItem].emissionDistance, false, "Distance: ", "")); elementY = elementY + 3
+mainContainer.toolbar.lightEmissionSlider.onValueChanged = function()
+	scene.lights[mainContainer.toolbar.lightSelectComboBox.selectedItem].emissionDistance = mainContainer.toolbar.lightEmissionSlider.value
+end
+calculateLightComboBox()
+
+mainContainer.toolbar.blockColorSelector = mainContainer.toolbar:addChild(GUI.colorSelector(2, elementY, elementWidth, 1, 0xEEEEEE, "Block color")); elementY = elementY + mainContainer.toolbar.blockColorSelector.height + 1
+mainContainer.toolbar.backgroundColorSelector = mainContainer.toolbar:addChild(GUI.colorSelector(2, elementY, elementWidth, 1, scene.backgroundColor, "Background color")); elementY = elementY + mainContainer.toolbar.blockColorSelector.height + 1
+mainContainer.toolbar.backgroundColorSelector.onTouch = function()
+	scene.backgroundColor = mainContainer.toolbar.backgroundColorSelector.color
+end
+
+mainContainer.toolbar:addChild(GUI.label(2, elementY, elementWidth, 1, 0xEEEEEE, "RAM monitoring")):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); elementY = elementY + 2
+mainContainer.toolbar.RAMChart = mainContainer.toolbar:addChild(GUI.chart(2, elementY, elementWidth, mainContainer.toolbar.height - elementY - 3, 0xEEEEEE, 0xAAAAAA, 0x555555, 0x66DB80, 0.35, 0.25, "s", "%", true, {})); elementY = elementY + mainContainer.toolbar.RAMChart.height + 1
+mainContainer.toolbar.RAMChart.roundValues = true
+-- mainContainer.toolbar.RAMChart.showXAxisValues = false
+mainContainer.toolbar.RAMChart.counter = 1
+
+mainContainer.toolbar:addChild(GUI.button(1, mainContainer.toolbar.height - 2, mainContainer.toolbar.width, 3, 0x2D2D2D, 0xEEEEEE, 0x444444, 0xEEEEEE, "Exit")).onTouch = function()
+	mainContainer:stopEventHandling()
+end
+
+local FPSCounter = GUI.object(2, 2, 8, 3)
+FPSCounter.draw = function(FPSCounter)
+	renderer.renderFPSCounter(FPSCounter.x, FPSCounter.y, tostring(math.ceil(1 / (os.clock() - mainContainer.oldClock) / 10)), 0xFFFF00)
+end
+mainContainer:addChild(FPSCounter)
+
+mainContainer.eventHandler = function(mainContainer, object, eventData)
+	if not mainContainer.toolbar.hidden then
+		local totalMemory = computer.totalMemory()
+		table.insert(mainContainer.toolbar.RAMChart.values, {mainContainer.toolbar.RAMChart.counter, math.ceil((totalMemory - computer.freeMemory()) / totalMemory * 100)})
+		mainContainer.toolbar.RAMChart.counter = mainContainer.toolbar.RAMChart.counter + 1
+		if #mainContainer.toolbar.RAMChart.values > 20 then table.remove(mainContainer.toolbar.RAMChart.values, 1) end
+
+		mainContainer.infoTextBox.lines = {
+			" ",
+			"SceneObjects: " .. #scene.objects,
+			" ",
+			"OCGLVertices: " .. #OCGL.vertices,
+			"OCGLTriangles: " .. #OCGL.triangles,
+			"OCGLLines: " .. #OCGL.lines,
+			"OCGLFloatingTexts: " .. #OCGL.floatingTexts,
+			"OCGLLights: " .. #OCGL.lights,
+			" ",
+			"CameraFOV: " .. string.format("%.2f", math.deg(scene.camera.FOV)),
+			"СameraPosition: " .. string.format("%.2f", scene.camera.position[1]) .. " x " .. string.format("%.2f", scene.camera.position[2]) .. " x " .. string.format("%.2f", scene.camera.position[3]),
+			"СameraRotation: " .. string.format("%.2f", math.deg(scene.camera.rotation[1])) .. " x " .. string.format("%.2f", math.deg(scene.camera.rotation[2])) .. " x " .. string.format("%.2f", math.deg(scene.camera.rotation[3])),
+			"CameraNearClippingSurface: " .. string.format("%.2f", scene.camera.nearClippingSurface),
+			"CameraFarClippingSurface: " .. string.format("%.2f", scene.camera.farClippingSurface),
+			"CameraProjectionSurface: " .. string.format("%.2f", scene.camera.projectionSurface),
+			"CameraPerspectiveProjection: " .. tostring(scene.camera.projectionEnabled),
+			" ",
+			"Controls:",
+			" ",
+			"Arrows - camera rotation",
+			"WASD/Shift/Space - camera movement",
+			"LMB/RMB - destroy/place block",
+			"NUM 8/2/4/6/1/3 - selected light movement",
+			"F1 - toggle GUI overlay",
+		}
+
+		mainContainer.infoTextBox.height = #mainContainer.infoTextBox.lines
+	end
+
+	if eventData[1] == "key_down" then
+		if controls[eventData[4]] then controls[eventData[4]]() end
+	elseif eventData[1] == "scroll" then
+		if eventData[5] == 1 then
+			if scene.camera.FOV < math.rad(170) then
+				scene.camera:setFOV(scene.camera.FOV + math.rad(5))
+			end
+		else
+			if scene.camera.FOV > math.rad(5) then
+				scene.camera:setFOV(scene.camera.FOV - math.rad(5))
+			end
+		end
+	end
+
+	mainContainer:drawOnScreen()
+end
+
+-------------------------------------------------------- Ebat-kopat --------------------------------------------------------
+
+mainContainer:startEventHandling(0)

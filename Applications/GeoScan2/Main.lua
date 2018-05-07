@@ -31,7 +31,7 @@ local mainContainer = GUI.fullScreenContainer()
 --------------------------------------------------------------------------------------------------------------------
 
 local function getOpenGLValidColorChannels(cykaColor)
-	local r, g, b = color.IntegerToRGB(cykaColor)
+	local r, g, b = color.integerToRGB(cykaColor)
 	return r / 255, g / 255, b / 255
 end
 

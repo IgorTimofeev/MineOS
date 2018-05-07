@@ -25,7 +25,7 @@ color.**RGBToInteger**( red, green, blue ): *int* IntegerColor
 
 Метод упаковывает три цветовых канала и возвращает 24-битную целочисленную переменную
 
-color.**IntegerToRGB**( IntegerColor ): *byte* red, *byte* green, *byte* blue
+color.**integerToRGB**( IntegerColor ): *byte* red, *byte* green, *byte* blue
 -----------------------------------------------------------
 | Тип | Аргумент | Описание |
 | ------ | ------ | ------ |
@@ -69,7 +69,7 @@ color.**RGBToHSB**( red, green, blue ): *int* hue, *float* saturation, *float* b
 
 Метод преобразует три цветовых канала цветовой модели RGB в цветовую модель HSB (HSV) и возвращает соответствующий результат. Значения возвращаемых данных *hue* находится в диапазоне [0; 360], а *saturation* и *brightness* - в диапазоне [0.0; 1.0].
 
-Для удобства также имеется метод color.**IntegerToHSB**(*int* integerColor): *int* hue, *float* saturation, *float* brightness
+Для удобства также имеется метод color.**integerToHSB**(*int* integerColor): *int* hue, *float* saturation, *float* brightness
 
 color.**HSBToRGB**( hue, saturation, brightness ): *byte* red, *byte* green, *byte* blue
 -----------------------------------------------------------

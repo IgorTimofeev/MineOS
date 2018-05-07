@@ -26,8 +26,8 @@ local function changeColor(hue, saturation)
 		for y = 1, image.getHeight(spinners[i]) do
 			for x = 1, image.getWidth(spinners[i]) do
 				local background, foreground, alpha, symbol = image.get(spinners[i], x, y)
-				local hBackground, sBackground, bBackground = color.IntegerToHSB(background)
-				local hForeground, sForeground, bForeground = color.IntegerToHSB(foreground)
+				local hBackground, sBackground, bBackground = color.integerToHSB(background)
+				local hForeground, sForeground, bForeground = color.integerToHSB(foreground)
 				image.set(
 					spinners[i],
 					x,

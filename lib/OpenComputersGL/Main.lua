@@ -227,8 +227,8 @@ function OCGL.render()
 					-- OCGL.triangles[triangleIndex][5] = nil
 					-- renderer.renderFilledTriangle({ vertex1, vertex2, vertex3 }, finalColor)
 
-					local r, g, b = color.IntegerToRGB(material.color)
-					r, g, b = r * OCGL.triangles[triangleIndex][5], g * OCGL.triangles[triangleIndex][5], b * OCGL.triangles[triangleIndex][5]
+					local r, g, b = color.integerToRGB(material.color)
+					r, g, b = math.floor(r * OCGL.triangles[triangleIndex][5]), math.floor(g * OCGL.triangles[triangleIndex][5]), math.floor(b * OCGL.triangles[triangleIndex][5])
 					if r > 255 then r = 255 end
 					if g > 255 then g = 255 end
 					if b > 255 then b = 255 end
