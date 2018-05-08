@@ -3935,6 +3935,207 @@ end
 
 -----------------------------------------------------------------------
 
+function GUI.addPaletteWindowToContainer(parentContainer, color)
+	local palette = parentContainer:addChild(GUI.windowFromContainer(GUI.palette(1, 1, color or 0x9900FF)))
+	palette.localX, palette.localY = math.floor(parentContainer.width / 2 - palette.width / 2), math.floor(parentContainer.height / 2 - palette.height / 2)
+
+	return palette
+end
+
+-----------------------------------------------------------------------
+
+local function listUpdate(object)
+	object.backgroundPanel.width, object.backgroundPanel.height = object.width, object.height
+	object.backgroundPanel.colors.background = object.colors.default.background
+	object.itemsLayout.width, object.itemsLayout.height = object.width, object.height
+
+	local step, child = false
+	for i = 1, #object.itemsLayout.children do
+		child = object.itemsLayout.children[i]
+		
+		-- Жмяканье пизды
+		child.pressed = i == object.selectedItem
+		
+		-- Цвет залупы
+		if step then
+			child.colors.default = object.colors.alternating
+		else
+			child.colors.default = object.colors.default
+		end
+		child.colors.pressed, step = object.colors.pressed, not step
+		
+		-- Размеры хуйни
+		if object.itemsLayout.cells[1][1].direction == GUI.directions.horizontal then
+			if object.offsetMode then
+				child.width, child.height = object.itemSize * 2 + unicode.len(child.text), object.height
+			else
+				child.width, child.height = object.itemSize, object.height
+			end
+		else
+			if object.offsetMode then
+				child.width, child.height = object.width, object.itemSize * 2 + 1
+			else
+				child.width, child.height = object.width, object.itemSize
+			end
+		end
+	end
+
+	return list
+end
+
+local function listSelect(object, index)
+	object.selectedItem = index
+	object:update()
+
+	return object
+end
+
+local function listDeselect(object)
+	object.selectedItem = nil
+	object:update()
+
+	return object
+end
+
+local function listItemEventHandler(mainContainer, object, eventData)
+	if eventData[1] == "touch" or eventData[1] == "drag" then
+		object.parent.parent:select(object:indexOf())
+		mainContainer:drawOnScreen()
+
+		if object.onTouch then
+			object.onTouch(mainContainer, object, eventDat)
+		end
+	end
+end
+
+local function listAddItem(object, text)
+	local item = object.itemsLayout:addChild(GUI.button(1, 1, 1, 1, 0, 0, 0, 0, text))
+	
+	item.switchMode = true
+	item.animated = false
+	item.eventHandler = listItemEventHandler
+
+	object:update()
+
+	return item
+end
+
+local function listSetAlignment(object, ...)
+	object.itemsLayout:setCellAlignment(1, 1, ...)
+	return object
+end
+
+local function listSetSpacing(object, ...)
+	object.itemsLayout:setCellSpacing(1, 1, ...)
+	return object
+end
+
+local function listSetDirection(object, ...)
+	object.itemsLayout:setCellDirection(1, 1, ...)
+	object:update()
+
+	return object
+end
+
+local function listGetItem(object, index)
+	return object.itemsLayout.children[index]
+end
+
+function GUI.list(x, y, width, height, itemSize, spacing, backgroundColor, textColor, backgroundAlternatingColor, textAlternatingColor, backgroundSelectedColor, textSelectedColor, offsetMode)
+	local object = GUI.container(x, y, width, height)
+
+	object.colors = {
+		default = {
+			background = backgroundColor,
+			text = textColor
+		},
+		alternating = {
+			background = backgroundAlternatingColor,
+			text = textAlternatingColor
+		},
+		pressed = {
+			background = backgroundSelectedColor,
+			text = textSelectedColor
+		},
+	}
+
+	object.selectedItem = 1
+	object.select = listSelect
+	object.deselect = listDeselect
+	object.offsetMode = offsetMode
+	object.itemSize = itemSize
+
+	object.backgroundPanel = object:addChild(GUI.panel(1, 1, width, height, backgroundColor))
+	object.itemsLayout = object:addChild(GUI.layout(1, 1, width, height, 1, 1))
+	
+	object.update = listUpdate
+	object.addItem = listAddItem
+	object.getItem = listGetItem
+	object.setAlignment = listSetAlignment
+	object.setSpacing = listSetSpacing
+	object.setDirection = listSetDirection
+
+	object:setAlignment(GUI.alignment.horizontal.left, GUI.alignment.vertical.top)
+	object:setSpacing(spacing)
+	object:setDirection(GUI.directions.vertical)
+
+	return object
+end
+
+------------------------------------------------------------------------------------------
+
+function GUI.highlightString(x, y, fromChar, limit, indentationWidth, colorScheme, patterns, s)
+	fromChar = fromChar or 1
+	
+	local counter, symbols, colors, stringLength, bufferIndex, newFrameBackgrounds, newFrameForegrounds, newFrameSymbols, searchFrom, starting, ending = indentationWidth, {}, {}, unicode.len(s), buffer.getIndex(x, y), buffer.getNewFrameTables()
+	local toChar = math.min(stringLength, fromChar + limit - 1)
+
+	for i = 1, stringLength do
+		symbols[i] = unicode.sub(s, i, i)
+	end
+
+	for j = 1, #patterns do
+		searchFrom = 1
+		
+		while true do
+			starting, ending = string.unicodeFind(s, patterns[j][1], searchFrom)
+			
+			if starting then
+				for i = starting + patterns[j][3], ending - patterns[j][4] do
+					colors[i] = colorScheme[patterns[j][2]]
+				end
+			else
+				break
+			end
+
+			searchFrom = ending + 1 - patterns[j][4]
+		end
+	end
+
+	-- Ебошим индентейшны
+	for i = fromChar, toChar do
+		if symbols[i] == " " then
+			colors[i] = colorScheme.indentation
+			
+			if counter == indentationWidth then
+				symbols[i], counter = "│", 0
+			end
+
+			counter = counter + 1
+		else
+			break
+		end
+	end
+
+	-- А тута уже сам текст
+	for i = fromChar, toChar do
+		newFrameForegrounds[bufferIndex], newFrameSymbols[bufferIndex] = colors[i] or colorScheme.text, symbols[i] or " "
+		bufferIndex = bufferIndex + 1
+	end
+end
+
+-----------------------------------------------------------------------
+
 function windowDraw(window)
 	GUI.drawContainerContent(window)
 	GUI.windowShadow(window.x, window.y, window.width, window.height, GUI.colors.windows.shadowTransparency, true)
@@ -4003,218 +4204,28 @@ function GUI.window(x, y, width, height)
 	return window
 end
 
------------------------------------------------------------------------
-
-function GUI.addPaletteWindowToContainer(parentContainer, color)
-	local palette = parentContainer:addChild(GUI.windowFromContainer(GUI.palette(1, 1, color or 0x9900FF)))
-	palette.localX, palette.localY = math.floor(parentContainer.width / 2 - palette.width / 2), math.floor(parentContainer.height / 2 - palette.height / 2)
-
-	return palette
-end
-
------------------------------------------------------------------------
-
-local function listUpdate(object)
-	local step = false
-	for i = 1, #object.children do
-		-- Жмяканье пизды
-		object.children[i].pressed = i == object.selectedItem
-		-- Цвет залупы
-		if step then
-			object.children[i].colors.default = object.colors.alternating
-		else
-			object.children[i].colors.default = object.colors.default
-		end
-		object.children[i].colors.pressed, step = object.colors.pressed, not step
-		-- Размеры хуйни
-		if object.cells[1][1].direction == GUI.directions.horizontal then
-			if object.offsetMode then
-				object.children[i].width, object.children[i].height = object.itemSize * 2 + unicode.len(object.children[i].text), object.height
-			else
-				object.children[i].width, object.children[i].height = object.itemSize, object.height
-			end
-		else
-			if object.offsetMode then
-				object.children[i].width, object.children[i].height = object.width, object.itemSize * 2 + 1
-			else
-				object.children[i].width, object.children[i].height = object.width, object.itemSize
-			end
-		end
-	end
-
-	return list
-end
-
-local function listDraw(object)
-	buffer.square(object.x, object.y, object.width, object.height, object.colors.default.background, object.colors.default.text, " ")
-	layoutDraw(object)
-
-	return object
-end
-
-local function listSelect(object, index)
-	object.selectedItem = index
-	object:update()
-
-	return object
-end
-
-local function listDeselect(object)
-	object.selectedItem = nil
-	object:update()
-
-	return object
-end
-
-local function listItemEventHandler(mainContainer, object, eventData)
-	if eventData[1] == "touch" or eventData[1] == "drag" then
-		object.parent:select(object:indexOf())
-		mainContainer:drawOnScreen()
-
-		if object.onTouch then
-			object.onTouch(mainContainer, object, eventDat)
-		end
-	end
-end
-
-local function listAddItem(object, text)
-	local item = object:addChild(GUI.button(1, 1, 1, 1, 0, 0, 0, 0, text))
-	
-	item.switchMode = true
-	item.animated = false
-	item.eventHandler = listItemEventHandler
-
-	object:update()
-
-	return item
-end
-
-local function listSetAlignment(object, ...)
-	object:setCellAlignment(1, 1, ...)
-	return object
-end
-
-local function listSetSpacing(object, ...)
-	object:setCellSpacing(1, 1, ...)
-	return object
-end
-
-local function listSetDirection(object, ...)
-	object:setCellDirection(1, 1, ...)
-	object:update()
-
-	return object
-end
-
-local function listGetItem(object, index)
-	return object.children[index]
-end
-
-function GUI.list(x, y, width, height, itemSize, spacing, backgroundColor, textColor, backgroundAlternatingColor, textAlternatingColor, backgroundSelectedColor, textSelectedColor, offsetMode)
-	local object = GUI.layout(x, y, width, height, 1, 1)
-
-	object.colors = {
-		default = {
-			background = backgroundColor,
-			text = textColor
-		},
-		alternating = {
-			background = backgroundAlternatingColor,
-			text = textAlternatingColor
-		},
-		pressed = {
-			background = backgroundSelectedColor,
-			text = textSelectedColor
-		},
-	}
-
-	object.selectedItem = 1
-	object.select = listSelect
-	object.deselect = listDeselect
-	object.offsetMode = offsetMode
-	object.itemSize = itemSize
-	object.update = listUpdate
-	object.addItem = listAddItem
-	object.getItem = listGetItem
-	object.setAlignment = listSetAlignment
-	object.setSpacing = listSetSpacing
-	object.setDirection = listSetDirection
-	object.draw = listDraw
-
-	object:setAlignment(GUI.alignment.horizontal.left, GUI.alignment.vertical.top)
-	object:setSpacing(spacing)
-	object:setDirection(GUI.directions.vertical)
-
-	return object
-end
-
 ------------------------------------------------------------------------------------------
 
-function GUI.highlightString(x, y, fromChar, limit, indentationWidth, colorScheme, patterns, s)
-	fromChar = fromChar or 1
-	
-	local counter, symbols, colors, stringLength, bufferIndex, newFrameBackgrounds, newFrameForegrounds, newFrameSymbols, searchFrom, starting, ending = indentationWidth, {}, {}, unicode.len(s), buffer.getIndex(x, y), buffer.getNewFrameTables()
-	local toChar = math.min(stringLength, fromChar + limit - 1)
-
-	for i = 1, stringLength do
-		symbols[i] = unicode.sub(s, i, i)
-	end
-
-	for j = 1, #patterns do
-		searchFrom = 1
-		
-		while true do
-			starting, ending = string.unicodeFind(s, patterns[j][1], searchFrom)
-			
-			if starting then
-				for i = starting + patterns[j][3], ending - patterns[j][4] do
-					colors[i] = colorScheme[patterns[j][2]]
-				end
-			else
-				break
-			end
-
-			searchFrom = ending + 1 - patterns[j][4]
-		end
-	end
-
-	-- Ебошим индентейшны
-	for i = fromChar, toChar do
-		if symbols[i] == " " then
-			colors[i] = colorScheme.indentation
-			
-			if counter == indentationWidth then
-				symbols[i], counter = "│", 0
-			end
-
-			counter = counter + 1
-		else
-			break
-		end
-	end
-
-	-- А тута уже сам текст
-	for i = fromChar, toChar do
-		newFrameForegrounds[bufferIndex], newFrameSymbols[bufferIndex] = colors[i] or colorScheme.text, symbols[i] or " "
-		bufferIndex = bufferIndex + 1
-	end
-end
-
-------------------------------------------------------------------------------------------
-
--- buffer.flush()
 -- local mainContainer = GUI.fullScreenContainer()
 -- mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x2D2D2D))
 
--- local codeView = mainContainer:addChild(GUI.codeView(2, 2, 130, 30, {}, 1, 1, 1, {}, {}, true, 2))
-
--- local file = io.open("/lib/color.lua", "r")
--- for line in file:lines() do
--- 	line = line:gsub("\t", "  "):gsub("\r\n", "\n")
--- 	table.insert(codeView.lines, line)
--- 	codeView.maximumLineLength = math.max(codeView.maximumLineLength, unicode.len(line))
+-- -- Создаем вертикально ориентированный список
+-- local verticalList = mainContainer:addChild(GUI.list(3, 2, 25, 30, 3, 0, 0xE1E1E1, 0x4B4B4B, 0xD2D2D2, 0x4B4B4B, 0x3366CC, 0xFFFFFF, false))
+-- verticalList:addItem("Hello world")
+-- verticalList:addItem("This is test").onTouch = function()
+-- 	GUI.error("Selected item: " .. verticalList.selectedItem)
 -- end
--- file:close()
+-- verticalList:addItem("Beautiful")
+-- verticalList:addItem("Like a shit")
+
+-- -- Создаем горизонтально ориентированный список
+-- local horizontalList = mainContainer:addChild(GUI.list(34, 2, 100, 3, 2, 0, 0xE1E1E1, 0x4B4B4B, 0xE1E1E1, 0x4B4B4B, 0x696969, 0xFFFFFF, true))
+-- horizontalList:setDirection(GUI.directions.horizontal)
+-- horizontalList:setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+-- horizontalList:addItem("Applications")
+-- horizontalList:addItem("Libraries")
+-- horizontalList:addItem("Scripts")
+-- horizontalList:addItem("Wallpapers")
 
 -- mainContainer:drawOnScreen(true)
 -- mainContainer:startEventHandling()

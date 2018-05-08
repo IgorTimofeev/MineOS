@@ -1121,13 +1121,6 @@ end
 
 ----------------------------------------- Windows patterns -----------------------------------------
 
-local function windowResize(window, width, height)
-	window.width, window.height = width, height
-	if window.onResize then window.onResize(width, height) end
-
-	return window
-end
-
 function MineOSInterface.addWindow(window, preserveCoordinates)
 	-- Чекаем коорды
 	if not preserveCoordinates then
@@ -1187,7 +1180,6 @@ function MineOSInterface.addWindow(window, preserveCoordinates)
 		window.localX, window.localY = MineOSInterface.mainContainer.windowsContainer.children[lastIndex].localX + 4, MineOSInterface.mainContainer.windowsContainer.children[lastIndex].localY + 2
 	end
 
-	window.resize = windowResize
 	window.close = function(window)
 		local sameIconExists = false
 		for i = 1, #MineOSInterface.mainContainer.dockContainer.children do
@@ -1455,7 +1447,7 @@ function MineOSInterface.showErrorWindow(path, line, traceback)
 		end
 		lineCounter = lineCounter + 1
 		if lineCounter % 200 == 0 then
-			os.sleep(0.1)
+			computer.pullSignal(0)
 		end
 	end
 
