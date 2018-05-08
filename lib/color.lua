@@ -148,11 +148,11 @@ else
 					if color24Bit == paletteColor then
 						return index - 1
 					else
-						paletteR = color24Bit / 65536
+						paletteR = paletteColor / 65536
 						paletteR = paletteR - paletteR % 1
-						paletteG = (color24Bit - paletteR * 65536) / 256
+						paletteG = (paletteColor - paletteR * 65536) / 256
 						paletteG = paletteG - paletteG % 1
-						paletteB = color24Bit - paletteR * 65536 - paletteG * 256
+						paletteB = paletteColor - paletteR * 65536 - paletteG * 256
 
 						delta = (paletteR - r) ^ 2 + (paletteG - g) ^ 2 + (paletteB - b) ^ 2
 						if delta < closestDelta then
