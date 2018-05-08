@@ -374,7 +374,7 @@ function rayEngine.commandLine(transparency)
 
 	--Ввод данных
 	local input = GUI.input(x, y, buffer.getWidth(), 3, 0xFFFFFF, 0x3C3C3C, 0x666666, 0xFFFFFF, 0x3C3C3C, "")
-	input.eventHandler({draw = function() input:draw() end}, input, {[1] = "touch", [3] = input.x, [4] = input.y})
+	input.eventHandler({draw = function() input:draw() end}, input, "touch", input.x, input.y)
 	
 	local words = {}; for word in string.gmatch(input.text, "[^%s]+") do table.insert(words, unicode.lower(word)) end
 	if #words > 0 then

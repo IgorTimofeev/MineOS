@@ -630,11 +630,11 @@ local function newKeyValueWidget(x, y, width, keyColor, valueColor, key, value)
 	return object
 end
 
-local function containerScrollEventHandler(mainContainer, object, eventData)
-	if eventData[1] == "scroll" then
+local function containerScrollEventHandler(mainContainer, object, e1, e2, e3, e4, e5)
+	if e1 == "scroll" then
 		local first, last = object.children[1], object.children[#object.children]
 		
-		if eventData[5] == 1 then
+		if e5 == 1 then
 			if first.localY < 2 then
 				for i = 1, #object.children do
 					object.children[i].localY = object.children[i].localY + 1
@@ -654,8 +654,8 @@ end
 
 local newApplicationPreview, newPublicationInfo, mainMenu
 
-local function applicationWidgetEventHandler(mainContainer, object, eventData)
-	if eventData[1] == "touch" then
+local function applicationWidgetEventHandler(mainContainer, object, e1)
+	if e1 == "touch" then
 		object.parent.panel.colors.background = 0xE1E1E1
 		MineOSInterface.mainContainer:drawOnScreen()
 		newPublicationInfo(object.parent.file_id)
@@ -790,13 +790,13 @@ mainMenu = function(menuID, messageToUser)
 					end
 				end
 
-				iconsContainer.eventHandler = function(mainContainer, object, eventData)
-					if eventData[1] == "touch" or eventData[1] == "drag" then
+				iconsContainer.eventHandler = function(mainContainer, object, e1, e2, e3, e4)
+					if e1 == "touch" or e1 == "drag" then
 						local child, deltaX, deltaY, vectorLength
 						for i = 1, #iconsContainer.children do
 							child = iconsContainer.children[i]
 							
-							deltaX, deltaY = eventData[3] - child.x, eventData[4] - child.y
+							deltaX, deltaY = e3 - child.x, e4 - child.y
 							vectorLength = math.sqrt(deltaX ^ 2 + deltaY ^ 2)
 							if vectorLength > 0 then
 								child.forceX = deltaX / vectorLength * math.random(overviewMaximumTouchAcceleration)
@@ -979,8 +979,8 @@ mainMenu = function(menuID, messageToUser)
 					dialogContainer:addChild(newKeyValueWidget(3, 2, dialogContainer.width, nicknameColor, timestampColor, dialogs[i].dialog_user_name, os.date(" (%d.%m.%Y, %H:%M)", dialogs[i].timestamp)))
 					dialogContainer:addChild(GUI.text(3, 3, textColor, string.limit((dialogs[i].last_message_user_name == user.name and localization.yourText .. " " or "") .. dialogs[i].text, dialogContainer.width - 4, "right")))
 
-					dialogContainer.eventHandler = function(mainContainer, object, eventData)
-						if eventData[1] == "touch" then
+					dialogContainer.eventHandler = function(mainContainer, object, e1)
+						if e1 == "touch" then
 							dialogContainer.panel.colors.background = 0xE1E1E1
 							dialogGUI(dialogs[i].dialog_user_name)
 						end
@@ -1318,9 +1318,9 @@ newPublicationInfo = function(file_id)
 						pizda.width = eblo.width + 9
 						
 						local cyka = pizda:addChild(newRatingWidget(eblo.width + 1, 1, 4))
-						cyka.eventHandler = function(mainContainer, object, eventData)
-							if eventData[1] == "touch" then
-								cyka.rating = math.round((eventData[3] - object.x + 1) / object.width * 5)
+						cyka.eventHandler = function(mainContainer, object, e1, e2, e3)
+							if e1 == "touch" then
+								cyka.rating = math.round((e3 - object.x + 1) / object.width * 5)
 								MineOSInterface.mainContainer:drawOnScreen()
 							end
 						end

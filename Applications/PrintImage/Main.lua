@@ -140,7 +140,8 @@ local function beginPrint()
 	end
 
 	buffer.clear()
-	mainContainer:drawOnScreen()
+	mainContainer:draw()
+	buffer.draw(true)
 end
 
 ----------------------------------------- Window-zaluped parasha -----------------------------------------
@@ -294,8 +295,8 @@ local function createWindow()
 		beginPrint()
 	end
 
-	mainContainer.eventHandler = function(mainContainer, object, eventData)
-		if (eventData[1] == "component_added" or eventData[1] == "component_removed") and eventData[3] == "printer3d" then
+	mainContainer.eventHandler = function(mainContainer, object, e1, e2, e3)
+		if (e1 == "component_added" or e1 == "component_removed") and e3 == "printer3d" then
 			getPrinters()
 			getStatus()
 			mainContainer:drawOnScreen()
@@ -314,13 +315,3 @@ getStatus()
 
 mainContainer:drawOnScreen()
 mainContainer:startEventHandling()
-
-
-
-
-
-
-
-
-
-

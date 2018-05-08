@@ -215,13 +215,13 @@ container.addChild(GUI.button(5, 10, ...))
 container:startEventHandling()
 ```
 
-Если метод-обработчик у анализируемого объекта имеется, то он будет вызван со следующими аргументами: *container* **mainContainer**, *object* **object**, *table* **eventData**. Первым аргументом является контейнер, обрабатывающий события, вторым - текущий рассматриваемый объект обработчика событий, а третьим - таблица с данными события.
+Если метод-обработчик у анализируемого объекта имеется, то он будет вызван со следующими аргументами: *container* **mainContainer**, *object* **object**, ... *varargs* **eventData**. Первым аргументом является контейнер, обрабатывающий события, вторым - текущий рассматриваемый объект обработчика событий, а все остальные - это множество данных события. Например, у события **key_down** этими данными будут **key_down**, **<адрес компонента клавиатуры>**, **<код символа>**, **<код клавиши>**, **<имя пользователя>**.
 
-В качестве примера ниже приведен исходный код обработчика событий GUI.**button**. Как видите, в начале событие анализируется на соответствие "touch", затем кнопка визуально "нажимается", а в конце вызывается метод кнопки .*onTouch*, если он вообще имеется.
+Ниже приведен исходный код обработчика событий GUI.**button**. Как видите, в начале событие анализируется на соответствие "touch", затем кнопка визуально "нажимается", а в конце вызывается метод кнопки .*onTouch*, если он вообще имеется.
 
 ```lua
-button.eventHandler = function(mainContainer, button, eventData)
-	if eventData[1] == "touch" then
+button.eventHandler = function(mainContainer, button, event, ...)
+	if event == "touch" then
 		button.pressed = true
 		mainContainer:drawOnScreen()
 		
@@ -231,7 +231,7 @@ button.eventHandler = function(mainContainer, button, eventData)
 		mainContainer:drawOnScreen()
 		
 		if button.onTouch then
-			button.onTouch(mainContainer, object, eventData)
+			button.onTouch(mainContainer, object, event, ...)
 		end
 	end
 end
@@ -391,7 +391,7 @@ GUI.**object**( x, y, width, height ): *table* object
 | *function* | :**getFirstParent**() | Рекурсивно получить первый родительский контейнер. При существовании множества вложенных контейнеров метод вернет первый в иерархии и "главный" из них |
 | *function* | :**delete**() | Удалить этот объект из родительского контейнера. Грубо говоря, это удобный способ самоуничтожения |
 | *function* | :**addAnimation**(*function* frameHandler, *function* onFinish): *table* animation | Добавить к этому объекту анимацию. Подробнее об анимациях и их создании см. ниже  |
-| [*callback-function* | .**eventHandler**(*container* mainContainer, *object* object, *table* eventData) ]| Необязательный метод для обработки системных событий, вызываемый обработчиком родительского контейнера. Если он имеется у рассматриваемого объекта, то будет вызван с соотвествующими аргументами |
+| [*callback-function* | .**eventHandler**(*container* mainContainer, *object* object, ... *varargs* eventData) ]| Необязательный метод для обработки системных событий, вызываемый обработчиком родительского контейнера. Если он имеется у рассматриваемого объекта, то будет вызван с соотвествующими аргументами |
 
 Анимация
 ======
@@ -606,7 +606,7 @@ GUI.**button**( x, y, width, height, buttonColor, textColor, buttonPressedColor,
 
 | Тип свойства | Свойство |Описание |
 | ------ | ------ | ------ |
-| *callback-function* | .**onTouch**( *table* eventData )| Метод, вызываемый после нажатия на кнопку |
+| *callback-function* | .**onTouch**()| Метод, вызываемый после нажатия на кнопку |
 | *boolean* | .**pressed**| Параметр, отвечающий за состояние "нажатости" кнопки |
 | *boolean* | .**switchMode**| Режим, при котором кнопка будет вести себя как переключатель: при нажатии она будет изменять свое состояние на противоположное. По умолчанию имеет значение *false* |
 | *boolean* | .**animated**| Параметр, отвечающий за активность анимации перехода цветов кнопки при нажатии. По умолчанию имеет значение *true* |
@@ -733,7 +733,7 @@ GUI.**input**( x, y, width, height, backgroundColor, textColor, placeholderTextC
 | *string* | .**text** | Переменная, содержащая введенный текст поля |
 | *function* | :**startInput**() | Метод для принудительной активации ввода данных в текстовое поле |
 | *callback-function* | .**validator**( *string* text )| Метод, вызывающийся после окончания ввода текста в поле. Если возвращает *true*, то текст в текстовом поле меняется на введенный, в противном случае введенные данные игнорируются. К примеру, в данном методе удобно проверять, является ли введенная текстовая информация числом через *tonumber()* |
-| *callback-function* | .**onInputFinished**( *table* mainContainer, *table* input, *table* eventData, *string* text )| Метод, вызываемый после ввода данных в обработчике событий. Удобная штука, если хочется выполнить какие-либо действия сразу после ввода текста. Если у объекта имеется *validator*, и текст не прошел проверку через него, то *onInputFinished* вызван не будет. |
+| *callback-function* | .**onInputFinished**( *table* mainContainer, *table* input, ... *varargs* eventData )| Метод, вызываемый после ввода данных в обработчике событий. Удобная штука, если хочется выполнить какие-либо действия сразу после ввода текста. Если у объекта имеется *validator*, и текст не прошел проверку через него, то *onInputFinished* вызван не будет. |
 
 Пример реализации поля ввода:
 
@@ -745,7 +745,7 @@ local GUI = require("GUI")
 local mainContainer = GUI.fullScreenContainer()
 mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x2D2D2D))
 
-mainContainer:addChild(GUI.input(2, 2, 30, 3, 0xEEEEEE, 0x555555, 0x999999, 0xFFFFFF, 0x2D2D2D, "Hello world", "Placeholder text")).onInputFinished = function(mainContainer, input, eventData, text)
+mainContainer:addChild(GUI.input(2, 2, 30, 3, 0xEEEEEE, 0x555555, 0x999999, 0xFFFFFF, 0x2D2D2D, "Hello world", "Placeholder text")).onInputFinished = function()
 	GUI.error("Input finished!")
 end
 
@@ -781,7 +781,7 @@ GUI.**slider**( x, y, width, primaryColor, secondaryColor, pipeColor, valueColor
 
 | Тип свойства | Свойство |Описание |
 | ------ | ------ | ------ |
-| *callback-function* | .**onValueChanged**( *float* value, *table* eventData )| Метод, вызывающийся после изменения значения слайдера |
+| *callback-function* | .**onValueChanged**()| Метод, вызывающийся после изменения значения слайдера |
 
 Пример реализации слайдера:
 
@@ -826,7 +826,7 @@ GUI.**switch**( x, y, width, primaryColor, secondaryColor, pipeColor, state ): *
 | Тип свойства | Свойство |Описание |
 | ------ | ------ | ------ |
 | *function* | :**setState**( *boolean* state )| Изменить состояние переключателя на указанное |
-| *callback-function* | .**onStateChanged**( *table* mainContainer, *table* switch, *table* eventData, *boolean* state )| Метод, вызывающийся после изменения состояния переключателя |
+| *callback-function* | .**onStateChanged**( *table* mainContainer, *table* switch, ... *varargs* eventData )| Метод, вызывающийся после изменения состояния переключателя |
 
 Пример реализации свитча:
 
@@ -913,7 +913,7 @@ GUI.**colorSelector**( x, y, width, height, color, text ): *table* colorSelector
 
 | Тип свойства | Свойство |Описание |
 | ------ | ------ | ------ |
-| *callback-function* | .**onTouch**( *table* eventData )| Метод, вызываемый после нажатия на селектор цвета в обработчике событий |
+| *callback-function* | .**onTouch**()| Метод, вызываемый после нажатия на селектор цвета в обработчике событий |
 
 Пример реализации селектора цвета:
 
@@ -1080,7 +1080,7 @@ GUI.**menu**( x, y, width, backgroundColor, textColor, backgroundPressedColor, t
 | Тип свойства | Свойство |Описание |
 | ------ | ------ | ------ |
 | *function* | :**addItem**( *string* text, *int* color ): *table* item | Добавить в меню элемент с указанными параметрами. Каждый элемент имеет собственный callback-метод .**onTouch** |
-| *callback-function* | .**onItemSelected**( *table* item, *table* eventData )| Метод, вызывающийся после выборе какого-либо элемента комбо-бокса |
+| *callback-function* | .**onItemSelected**( *table* item )| Метод, вызывающийся после выборе какого-либо элемента комбо-бокса |
 
 Пример реализации меню:
 
@@ -1095,7 +1095,7 @@ mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height
 local menu = mainContainer:addChild(GUI.menu(1, 1, mainContainer.width, 0xEEEEEE, 0x666666, 0x3366CC, 0xFFFFFF, nil))
 menu:addItem("MineCode IDE", 0x0)
 local item = menu:addItem("File")
-item.onTouch = function(eventData)
+item.onTouch = function()
 	local contextMenu = GUI.contextMenu(item.x, item.y + 1)
 	contextMenu:addItem("New")
 	contextMenu:addItem("Open").onTouch = function()
@@ -1135,8 +1135,8 @@ GUI.**resizer**( x, y, width, height, resizerColor, arrowColor ): *table* resize
 
 | Тип свойства | Свойство |Описание |
 | ------ | ------ | ------ |
-| *callback-function* | .**onResize**(*table* mainContainer, *table* resizer, *table* eventData, *int* dragWidth, *int* dragHeight) | Данная функция вызывается во время перемещения указателя мыши с зажатой левой клавишей по ресайзеру. Последние два аргумента представляют из себя дистанцию, пройденную указателем мыши |
-| *callback-function* | .**onResizeFinished**(*table* mainContainer, *table* resizer, *table* eventData) | Данная функция вызывается после прекращения перемещения указателя мыши по ресайзеру |
+| *callback-function* | .**onResize**( *table* mainContainer, *table* resizer, *int* dragWidth, *int* dragHeight ) | Данная функция вызывается во время перемещения указателя мыши с зажатой левой клавишей по ресайзеру. Последние два аргумента представляют из себя дистанцию, пройденную указателем мыши |
+| *callback-function* | .**onResizeFinished**( *table* mainContainer, *table* resizer ) | Данная функция вызывается после прекращения перемещения указателя мыши по ресайзеру |
 
 Пример реализации ресайзера:
 
@@ -1154,7 +1154,7 @@ local panel = mainContainer:addChild(GUI.panel(3, 2, 30, 10, 0xE1E1E1))
 local resizer = mainContainer:addChild(GUI.resizer(panel.localX + panel.width - 2, panel.localY + math.floor(panel.height / 2 - 2), 3, 4, 0xAAAAAA, 0x0))
 
 -- Данная функция будет вызываться во время события "drag", когда пользователь перемещает курсор мыши по ресайзеру
-resizer.onResize = function(mainContainer, resizer, eventData, dragWidth, dragHeight)
+resizer.onResize = function(mainContainer, resizer, dragWidth, dragHeight)
 	panel.width = panel.width + dragWidth
 	resizer.localX = resizer.localX + dragWidth
 
@@ -1162,7 +1162,7 @@ resizer.onResize = function(mainContainer, resizer, eventData, dragWidth, dragHe
 end
 
 -- А вот это событие вызовется при событии "drop"
-resizer.onResizeFinished = function(mainContainer, resizer, eventData, dragWidth, dragHeight)
+resizer.onResizeFinished = function(mainContainer, resizer, dragWidth, dragHeight)
 	GUI.error("Resize finished!")
 end
 
@@ -1522,8 +1522,8 @@ GUI.**scrollBar**( x, y, width, height, backgroundColor, foregroundColor, minimu
 
 | Тип свойства | Свойство |Описание |
 | ------ | ------ | ------ |
-| *callback-function* | .**onTouch**( *table* eventData )| Метод, вызываемый при клике на скорллбар. Значение скроллбара будет изменяться автоматически в указанном диапазоне |
-| *callback-function* | .**onScroll**( *table* eventData )| Метод, вызываемый при использовании колеса мыши на скроллбаре. Значение скроллбара будет изменяться в зависимости от величины *.onScrollValueIncrement* |
+| *callback-function* | .**onTouch**( )| Метод, вызываемый при клике на скорллбар. Значение скроллбара будет изменяться автоматически в указанном диапазоне |
+| *callback-function* | .**onScroll**( )| Метод, вызываемый при использовании колеса мыши на скроллбаре. Значение скроллбара будет изменяться в зависимости от величины *.onScrollValueIncrement* |
 
 Пример реализации ScrollBar:
 
@@ -1718,11 +1718,11 @@ local mainContainer = GUI.fullScreenContainer()
 
 -- Создаем метод-обработчик событий для нашего виджета
 -- Грамотнее будет вынести его создание вне функции-конструктора, дабы не засорять память
-local function myWidgetEventHandler(mainContainer, object, eventData)
-	if eventData[1] == "touch" or eventData[1] == "drag" then
-		local x, y = eventData[3] - object.x + 1, eventData[4] - object.y + 1
+local function myWidgetEventHandler(mainContainer, object, event, screenAddress, screenX, screenY, buttonCode)
+	if event == "touch" or event == "drag" then
+		local x, y = screenX - object.x + 1, screenY - object.y + 1
 		object.pixels[y] = object.pixels[y] or {}
-		object.pixels[y][x] = eventData[5] == 0 and true or nil
+		object.pixels[y][x] = buttonCode == 0 and true or nil
 		
 		mainContainer:drawOnScreen()
 	end
@@ -1883,8 +1883,8 @@ local function switchDraw(switch)
 end
 
 -- Создаем функцию-обработчик событий, вызываемую при клике на свитч
-local function switchEventHandler(mainContainer, switch, eventData)
-	if eventData[1] == "touch" then
+local function switchEventHandler(mainContainer, switch, event)
+	if event == "touch" then
 		-- Изменяем "состояние" свитча на противоположное и
 		-- создаем анимацию, плавно перемещающую "пимпочку"
 		switch.state = not switch.state

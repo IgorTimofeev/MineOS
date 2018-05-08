@@ -392,17 +392,17 @@ local function containerDrawOnScreen(container, ...)
 	buffer.draw(...)
 end
 
-local function containerHandler(isScreenEvent, mainContainer, currentContainer, eventData, eventDataParameter3, eventDataParameter4, intersectionX1, intersectionY1, intersectionX2, intersectionY2)
+local function containerHandler(isScreenEvent, mainContainer, currentContainer, intersectionX1, intersectionY1, intersectionX2, intersectionY2, e1, e2, e3, e4, ...)
 	local child, newIntersectionX1, newIntersectionY1, newIntersectionX2, newIntersectionY2
 
-	if not isScreenEvent or intersectionX1 and eventDataParameter3 >= intersectionX1 and eventDataParameter4 >= intersectionY1 and eventDataParameter3 <= intersectionX2 and eventDataParameter4 <= intersectionY2 then
+	if not isScreenEvent or intersectionX1 and e3 >= intersectionX1 and e4 >= intersectionY1 and e3 <= intersectionX2 and e4 <= intersectionY2 then
 		if currentContainer.eventHandler then
 			if isScreenEvent then
-				if currentContainer:isPointInside(eventDataParameter3, eventDataParameter4) and not currentContainer.disabled then
-					currentContainer.eventHandler(mainContainer, currentContainer, eventData)
+				if currentContainer:isPointInside(e3, e4) and not currentContainer.disabled then
+					currentContainer.eventHandler(mainContainer, currentContainer, e1, e2, e3, e4, ...)
 				end
 			else
-				currentContainer.eventHandler(mainContainer, currentContainer, eventData)
+				currentContainer.eventHandler(mainContainer, currentContainer, e1, e2, e3, e4, ...)
 			end
 		end
 
@@ -422,20 +422,20 @@ local function containerHandler(isScreenEvent, mainContainer, currentContainer, 
 						child.y + child.height - 1
 					)
 
-					if newIntersectionX1 and containerHandler(isScreenEvent, mainContainer, child, eventData, eventDataParameter3, eventDataParameter4, newIntersectionX1, newIntersectionY1, newIntersectionX2, newIntersectionY2) then
+					if newIntersectionX1 and containerHandler(isScreenEvent, mainContainer, child, newIntersectionX1, newIntersectionY1, newIntersectionX2, newIntersectionY2, e1, e2, e3, e4, ...) then
 						return true
 					end
 				else
 					if isScreenEvent then
-						if child:isPointInside(eventDataParameter3, eventDataParameter4) then
+						if child:isPointInside(e3, e4) then
 							if child.eventHandler and not child.disabled then
-								child.eventHandler(mainContainer, child, eventData)
+								child.eventHandler(mainContainer, child, e1, e2, e3, e4, ...)
 							end
 
 							return true
 						end
 					elseif child.eventHandler then
-						child.eventHandler(mainContainer, child, eventData)
+						child.eventHandler(mainContainer, child, e1, e2, e3, e4, ...)
 					end
 				end
 			end
@@ -446,27 +446,25 @@ end
 local function containerStartEventHandling(container, eventHandlingDelay)
 	container.eventHandlingDelay = eventHandlingDelay
 
-	local eventData, animationIndex, animation, animationOnFinishMethods
+	local animationIndex, animation, animationOnFinishMethods, e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12, e13, e14, e15, e16, e17, e18, e19, e20, e21, e22, e23, e24, e25, e26, e27, e28, e29, e30, e31, e32
 	repeat
-		eventData = { event.pull(container.animations and 0 or container.eventHandlingDelay) }
+		e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12, e13, e14, e15, e16, e17, e18, e19, e20, e21, e22, e23, e24, e25, e26, e27, e28, e29, e30, e31, e32 = event.pull(container.animations and 0 or container.eventHandlingDelay)
 		
 		containerHandler(
 			(
-				eventData[1] == "touch" or
-				eventData[1] == "drag" or
-				eventData[1] == "drop" or
-				eventData[1] == "scroll" or
-				eventData[1] == "double_touch"
+				e1 == "touch" or
+				e1 == "drag" or
+				e1 == "drop" or
+				e1 == "scroll" or
+				e1 == "double_touch"
 			),
 			container,
 			container,
-			eventData,
-			eventData[3],
-			eventData[4],
 			container.x,
 			container.y,
 			container.x + container.width - 1,
-			container.y + container.height - 1
+			container.y + container.height - 1,
+			e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12, e13, e14, e15, e16, e17, e18, e19, e20, e21, e22, e23, e24, e25, e26, e27, e28, e29, e30, e31, e32
 		)
 
 		if container.animations then
@@ -511,19 +509,11 @@ local function containerStartEventHandling(container, eventHandlingDelay)
 				animationOnFinishMethods[i].onFinish(container, animationOnFinishMethods[i])
 			end
 		end
-	until container.dataToReturn
-
-	local dataToReturn = container.dataToReturn
-	container.dataToReturn = nil
-	return table.unpack(dataToReturn)
-end
-
-local function containerReturnData(container, ...)
-	container.dataToReturn = {...}
+	until container.needClose
 end
 
 local function containerStopEventHandling(container)
-	containerReturnData(container, nil)
+	container.needClose = true
 end
 
 function GUI.container(x, y, width, height)
@@ -571,11 +561,13 @@ local function buttonPlayAnimation(button, onFinish)
 	):start(button.animationDuration)
 end
 
-local function buttonPress(button, mainContainer, object, eventData)
+local function buttonPress(button, mainContainer, object, ...)
 	if button.animated then
+		local eventData = {...}
+		
 		buttonPlayAnimation(button, function(mainContainer, animation)
 			if button.onTouch then
-				button.onTouch(mainContainer, button, eventData)
+				button.onTouch(mainContainer, button, table.unpack(eventData))
 			end
 
 			animation:delete()
@@ -600,14 +592,14 @@ local function buttonPress(button, mainContainer, object, eventData)
 		end
 
 		if button.onTouch then
-			button.onTouch(mainContainer, button, eventData)
+			button.onTouch(mainContainer, button, ...)
 		end
 	end
 end
 
-local function buttonEventHandler(mainContainer, button, eventData)
-	if eventData[1] == "touch" and (not button.animated or not button.animationStarted) then
-		button:press(mainContainer, button, eventData)
+local function buttonEventHandler(mainContainer, button, e1, ...)
+	if e1 == "touch" and (not button.animated or not button.animationStarted) then
+		button:press(mainContainer, button, e1, ...)
 	end
 end
 
@@ -815,13 +807,13 @@ local function menuDraw(menu)
 	menu:reimplementedDraw()
 end
 
-local function menuItemEventHandler(mainContainer, object, eventData)
-	if eventData[1] == "touch" then
+local function menuItemEventHandler(mainContainer, object, e1, ...)
+	if e1 == "touch" then
 		if object.onTouch then
 			object.pressed = true
 			mainContainer:drawOnScreen()
 
-			object.onTouch(eventData)
+			object.onTouch(e1, ...)
 			
 			object.pressed = false
 			mainContainer:drawOnScreen()
@@ -953,10 +945,10 @@ function GUI.error(...)
 		buffer.draw()
 	end
 
-	mainContainer.eventHandler = function(mainContainer, object, eventData)
-		if eventData[1] == "key_down" and eventData[4] == 28 then
+	mainContainer.eventHandler = function(mainContainer, object, e1, e2, e3, e4, ...)
+		if e1 == "key_down" and e4 == 28 then
 			button.animated = false
-			button:press(mainContainer, object, eventData)
+			button:press(mainContainer, object, e1, e2, e3, e4, ...)
 		end
 	end
 
@@ -1140,8 +1132,9 @@ local function colorSelectorDraw(colorSelector)
 	return colorSelector
 end
 
-local function colorSelectorEventHandler(mainContainer, object, eventData)
-	if eventData[1] == "touch" then
+local function colorSelectorEventHandler(mainContainer, object, e1, ...)
+	if e1 == "touch" then
+		local eventData = {...}
 		object.pressed = true
 
 		local palette = GUI.addPaletteWindowToContainer(mainContainer, object.color)
@@ -1152,7 +1145,7 @@ local function colorSelectorEventHandler(mainContainer, object, eventData)
 			mainContainer:drawOnScreen()
 
 			if object.onTouch then
-				object.onTouch(mainContainer, object, eventData)
+				object.onTouch(mainContainer, object, e1, table.unpack(eventData))
 			end
 		end
 
@@ -1328,8 +1321,8 @@ local function dropDownMenuItemDraw(item)
 	return item
 end
 
-local function dropDownMenuItemEventHandler(mainContainer, object, eventData)
-	if eventData[1] == "touch" then
+local function dropDownMenuItemEventHandler(mainContainer, object, event)
+	if event == "touch" then
 		if object.type == GUI.dropDownMenuItemTypes.default then
 			object.pressed = true
 			mainContainer:drawOnScreen()
@@ -1423,9 +1416,9 @@ local function dropDownMenuScrollUp(menu)
 	buffer.draw()
 end
 
-local function dropDownMenuEventHandler(mainContainer, object, eventData)
-	if eventData[1] == "scroll" then
-		if eventData[5] == 1 then
+local function dropDownMenuEventHandler(mainContainer, object, e1, e2, e3, e4, e5)
+	if e1 == "scroll" then
+		if e5 == 1 then
 			dropDownMenuScrollDown(object)
 		else
 			dropDownMenuScrollUp(object)
@@ -1453,8 +1446,8 @@ local function dropDownMenuShow(menu)
 	local mainContainer = GUI.fullScreenContainer()
 	-- Удаляем олдпиксельсы, чтоб старое дерьмое не рисовалось во всяких комбобоксах
 	menu.oldPixels = nil
-	mainContainer:addChild(GUI.object(1, 1, mainContainer.width, mainContainer.height)).eventHandler = function(mainContainer, object, eventData)
-		if eventData[1] == "touch" then
+	mainContainer:addChild(GUI.object(1, 1, mainContainer.width, mainContainer.height)).eventHandler = function(mainContainer, object, event)
+		if event == "touch" then
 			buffer.paste(menu.x, menu.y, menu.oldPixels)
 			buffer.draw()
 			mainContainer:stopEventHandling()
@@ -1658,12 +1651,12 @@ local function comboBoxSelect(object)
 	return object
 end
 
-local function comboBoxEventHandler(mainContainer, object, eventData)
-	if eventData[1] == "touch" and #object.dropDownMenu.itemsContainer.children > 0 then
+local function comboBoxEventHandler(mainContainer, object, e1, ...)
+	if e1 == "touch" and #object.dropDownMenu.itemsContainer.children > 0 then
 		object:select()
 
 		if object.onItemSelected then
-			object.onItemSelected(mainContainer, object, eventData)
+			object.onItemSelected(mainContainer, object, e1, ...)
 		end
 	end
 end
@@ -1769,9 +1762,10 @@ local function sliderDraw(object)
 	return object
 end
 
-local function sliderEventHandler(mainContainer, object, eventData)
-	if eventData[1] == "touch" or eventData[1] == "drag" then
-		local clickPosition = eventData[3] - object.x
+local function sliderEventHandler(mainContainer, object, e1, e2, e3, ...)
+	if e1 == "touch" or e1 == "drag" then
+		local clickPosition = e3 - object.x
+
 		if clickPosition == 0 then
 			object.value = object.minimumValue
 		elseif clickPosition == object.width - 1 then
@@ -1783,7 +1777,7 @@ local function sliderEventHandler(mainContainer, object, eventData)
 		mainContainer:drawOnScreen()
 
 		if object.onValueChanged then
-			object.onValueChanged(mainContainer, object, eventData)
+			object.onValueChanged(mainContainer, object, e1, e2, e3, ...)
 		end
 	end
 end
@@ -1829,8 +1823,10 @@ local function switchSetState(switch, state)
 	return switch
 end
 
-local function switchEventHandler(mainContainer, switch, eventData)
-	if eventData[1] == "touch" then
+local function switchEventHandler(mainContainer, switch, e1, ...)
+	if e1 == "touch" then
+		local eventData = {...}
+
 		switch.state = not switch.state
 		switch:addAnimation(
 			function(mainContainer, animation)
@@ -1843,7 +1839,7 @@ local function switchEventHandler(mainContainer, switch, eventData)
 			function(mainContainer, animation)
 				animation:delete()
 				if switch.onStateChanged then
-					switch.onStateChanged(mainContainer, switch, eventData, switch.state)
+					switch.onStateChanged(mainContainer, switch, e1, table.unpack(eventData))
 				end
 			end
 		):start(switch.animationDuration)
@@ -2432,8 +2428,8 @@ local function filesystemChooserSetMode(object, IOMode, filesystemMode)
 	object.filesystemMode = filesystemMode
 end
 
-local function filesystemChooserEventHandler(mainContainer, object, eventData)
-	if eventData[1] == "touch" then
+local function filesystemChooserEventHandler(mainContainer, object, event)
+	if event == "touch" then
 		object.pressed = true
 		mainContainer:drawOnScreen()
 
@@ -2501,10 +2497,14 @@ end
 -----------------------------------------------------------------------
 
 local function resizerDraw(object)
-	local horizontalMode = object.width >= object.height
-	local x, y, symbol
+	local horizontalMode, x, y, symbol = object.width >= object.height
+
 	if horizontalMode then
 		buffer.text(object.x, math.floor(object.y + object.height / 2), object.colors.helper, string.rep("━", object.width))
+		
+		if object.lastTouchX then
+			buffer.text(object.lastTouchX - 1, object.lastTouchY, object.colors.arrow, "↑")
+		end
 	else
 		local x = math.floor(object.x + object.width / 2)
 		local bufferWidth, bufferHeight, index = buffer.getResolution()
@@ -2515,34 +2515,30 @@ local function resizerDraw(object)
 				buffer.rawSet(index, buffer.rawGet(index), object.colors.helper, "┃")
 			end
 		end
-	end
 
-	if object.touchPosition then
-		buffer.text(object.touchPosition.x - 1, object.touchPosition.y, object.colors.arrow, "←→")
+		if object.lastTouchX then
+			buffer.text(object.lastTouchX, object.lastTouchY, object.colors.arrow, "←→")
+		end
 	end
 end
 
-local function resizerEventHandler(mainContainer, object, eventData)
-	if eventData[1] == "touch" then
-		object.touchPosition = {x = eventData[3], y = eventData[4]}
-		
+local function resizerEventHandler(mainContainer, object, e1, e2, e3, e4)
+	if e1 == "touch" then
+		object.lastTouchX, object.lastTouchY = e3, e4
 		mainContainer:drawOnScreen()
-	elseif eventData[1] == "drag" and object.touchPosition then
-		local x, y = object.touchPosition.x, object.touchPosition.y
-		object.touchPosition.x, object.touchPosition.y = eventData[3], eventData[4]
-		
+	elseif e1 == "drag" and object.lastTouchX then		
 		if object.onResize then
-			object.onResize(mainContainer, object, eventData, eventData[3] - x, eventData[4] - y)
+			object.onResize(mainContainer, object, e3 - object.lastTouchX, e4 - object.lastTouchY)
 		end
-
+		
+		object.lastTouchX, object.lastTouchY = e3, e4
 		mainContainer:drawOnScreen()
-	elseif eventData[1] == "drop" then
-		object.touchPosition = nil
-
+	elseif e1 == "drop" then
 		if object.onResizeFinished then
-			object.onResizeFinished(mainContainer, object, eventData)
+			object.onResizeFinished(mainContainer, object)
 		end
 
+		object.lastTouchX, object.lastTouchY = nil, nil
 		mainContainer:drawOnScreen()
 	end
 end
@@ -2625,25 +2621,25 @@ local function scrollBarDraw(scrollBar)
 	return scrollBar
 end
 
-local function scrollBarEventHandler(mainContainer, object, eventData)
+local function scrollBarEventHandler(mainContainer, object, e1, e2, e3, e4, e5, ...)
 	local newValue = object.value
 
-	if eventData[1] == "touch" or eventData[1] == "drag" then
+	if e1 == "touch" or e1 == "drag" then
 		if object.height > object.width then
-			if eventData[4] == object.y + object.height - 1 then
+			if e4 == object.y + object.height - 1 then
 				newValue = object.maximumValue
 			else
-				newValue = object.minimumValue + (eventData[4] - object.y) / object.height * (object.maximumValue - object.minimumValue)
+				newValue = object.minimumValue + (e4 - object.y) / object.height * (object.maximumValue - object.minimumValue)
 			end
 		else
-			if eventData[3] == object.x + object.width - 1 then
+			if e3 == object.x + object.width - 1 then
 				newValue = object.maximumValue
 			else
-				newValue = object.minimumValue + (eventData[3] - object.x) / object.width * (object.maximumValue - object.minimumValue)
+				newValue = object.minimumValue + (e3 - object.x) / object.width * (object.maximumValue - object.minimumValue)
 			end
 		end
-	elseif eventData[1] == "scroll" then
-		if eventData[5] == 1 then
+	elseif e1 == "scroll" then
+		if e5 == 1 then
 			if object.value >= object.minimumValue + object.onScrollValueIncrement then
 				newValue = object.value - object.onScrollValueIncrement
 			else
@@ -2658,11 +2654,12 @@ local function scrollBarEventHandler(mainContainer, object, eventData)
 		end
 	end
 
-	if eventData[1] == "touch" or eventData[1] == "drag" or eventData[1] == "scroll" then
+	if e1 == "touch" or e1 == "drag" or e1 == "scroll" then
 		object.value = newValue
 		if object.onTouch then
-			object.onTouch(mainContainer, object, eventData)
+			object.onTouch(mainContainer, object, e1, e2, e3, e4, e5, ...)
 		end
+
 		mainContainer:drawOnScreen()
 	end
 end
@@ -2742,15 +2739,15 @@ local function treeDraw(tree)
 	return tree
 end
 
-local function treeEventHandler(mainContainer, tree, eventData)
-	if eventData[1] == "touch" then
-		local i = eventData[4] - tree.y + tree.fromItem
+local function treeEventHandler(mainContainer, tree, e1, e2, e3, e4, e5, ...)
+	if e1 == "touch" then
+		local i = e4 - tree.y + tree.fromItem
 		if tree.items[i] then
 			if
 				tree.items[i].expandable and
 				(
 					tree.selectionMode == GUI.filesystemModes.file or
-					eventData[3] >= tree.x + tree.items[i].offset - 1 and eventData[3] <= tree.x + tree.items[i].offset + 1
+					e3 >= tree.x + tree.items[i].offset - 1 and e3 <= tree.x + tree.items[i].offset + 1
 				)
 			then
 				if tree.expandedItems[tree.items[i].definition] then
@@ -2760,7 +2757,7 @@ local function treeEventHandler(mainContainer, tree, eventData)
 				end
 
 				if tree.onItemExpanded then
-					tree.onItemExpanded(tree.selectedItem, eventData)
+					tree.onItemExpanded(tree.selectedItem, e1, e2, e3, e4, e5, ...)
 				end
 			else
 				if
@@ -2773,15 +2770,15 @@ local function treeEventHandler(mainContainer, tree, eventData)
 					tree.selectedItem = tree.items[i].definition
 
 					if tree.onItemSelected then
-						tree.onItemSelected(tree.selectedItem, eventData)
+						tree.onItemSelected(tree.selectedItem, e1, e2, e3, e4, e5, ...)
 					end
 				end
 			end
 
 			mainContainer:drawOnScreen()
 		end
-	elseif eventData[1] == "scroll" then
-		if eventData[5] == 1 then
+	elseif e1 == "scroll" then
+		if e5 == 1 then
 			if tree.fromItem > 1 then
 				tree.fromItem = tree.fromItem - 1
 				mainContainer:drawOnScreen()
@@ -2796,8 +2793,15 @@ local function treeEventHandler(mainContainer, tree, eventData)
 end
 
 local function treeAddItem(tree, name, definition, offset, expandable, disabled)
-	local item =  {name = name, expandable = expandable, offset = offset or 0, definition = definition, disabled = disabled}
+	local item = {
+		name = name, 
+		expandable = expandable,
+		offset = offset or 0,
+		definition = definition,
+		disabled = disabled
+	}
 	table.insert(tree.items, item)
+
 	return item
 end
 
@@ -3022,9 +3026,9 @@ local function scrollToEndTextBox(object)
 	return object
 end
 
-local function textBoxScrollEventHandler(mainContainer, object, eventData)
-	if eventData[1] == "scroll" then
-		if eventData[5] == 1 then
+local function textBoxScrollEventHandler(mainContainer, object, e1, e2, e3, e4, e5)
+	if e1 == "scroll" then
+		if e5 == 1 then
 			object:scrollUp()
 		else
 			object:scrollDown()
@@ -3174,28 +3178,29 @@ local function inputStartInput(input)
 
 	mainContainer:drawOnScreen()
 
+	local e1, e2, e3, e4, e5, e6
 	while true do
-		local eventData = { event.pull(input.cursorBlinkDelay) }
+		e1, e2, e3, e4, e5, e6 = event.pull(input.cursorBlinkDelay)
 		
-		if eventData[1] == "touch" or eventData[1] == "drag" then
-			if input:isPointInside(eventData[3], eventData[4]) then
-				input:setCursorPosition(input.textCutFrom + eventData[3] - input.x - input.textOffset)
+		if e1 == "touch" or e1 == "drag" then
+			if input:isPointInside(e3, e4) then
+				input:setCursorPosition(input.textCutFrom + e3 - input.x - input.textOffset)
 				
 				input.cursorBlinkState = true
 				mainContainer:drawOnScreen()
-			elseif input.autoComplete:isPointInside(eventData[3], eventData[4]) then
-				input.autoComplete.eventHandler(mainContainer, input.autoComplete, eventData)
+			elseif input.autoComplete:isPointInside(e3, e4) then
+				input.autoComplete.eventHandler(mainContainer, input.autoComplete, e1, e2, e3, e4, e5, e6)
 			else
 				input.cursorBlinkState = false
 				break
 			end
-		elseif eventData[1] == "scroll" then
-			input.autoComplete.eventHandler(mainContainer, input.autoComplete, eventData)
-		elseif eventData[1] == "key_down" then
+		elseif e1 == "scroll" then
+			input.autoComplete.eventHandler(mainContainer, input.autoComplete, e1, e2, e3, e4, e5, e6)
+		elseif e1 == "key_down" then
 			-- Return
-			if eventData[4] == 28 then
+			if e4 == 28 then
 				if input.autoCompleteEnabled and input.autoComplete.itemCount > 0 then
-					input.autoComplete.eventHandler(mainContainer, input.autoComplete, eventData)
+					input.autoComplete.eventHandler(mainContainer, input.autoComplete, e1, e2, e3, e4, e5, e6)
 				else
 					if input.historyEnabled then
 						-- Очистка истории
@@ -3214,9 +3219,9 @@ local function inputStartInput(input)
 					break
 				end
 			-- Arrows up/down/left/right
-			elseif eventData[4] == 200 then
+			elseif e4 == 200 then
 				if input.autoCompleteEnabled and input.autoComplete.selectedItem > 1 then
-					input.autoComplete.eventHandler(mainContainer, input.autoComplete, eventData)
+					input.autoComplete.eventHandler(mainContainer, input.autoComplete, e1, e2, e3, e4, e5, e6)
 				else
 					if input.historyEnabled and #input.history > 0 then
 						-- Добавление уже введенного текста в историю при стрелке вверх
@@ -3239,9 +3244,9 @@ local function inputStartInput(input)
 						end
 					end
 				end
-			elseif eventData[4] == 208 then
+			elseif e4 == 208 then
 				if input.autoCompleteEnabled and input.historyIndex == #input.history + 1 then
-					input.autoComplete.eventHandler(mainContainer, input.autoComplete, eventData)
+					input.autoComplete.eventHandler(mainContainer, input.autoComplete, e1, e2, e3, e4, e5, e6)
 				else
 					if input.historyEnabled and #input.history > 0 then
 						input.historyIndex = input.historyIndex + 1
@@ -3259,12 +3264,12 @@ local function inputStartInput(input)
 						end
 					end
 				end
-			elseif eventData[4] == 203 then
+			elseif e4 == 203 then
 				input:setCursorPosition(input.cursorPosition - 1)
-			elseif eventData[4] == 205 then	
+			elseif e4 == 205 then	
 				input:setCursorPosition(input.cursorPosition + 1)
 			-- Backspace
-			elseif eventData[4] == 14 then
+			elseif e4 == 14 then
 				input.text = unicode.sub(unicode.sub(input.text, 1, input.cursorPosition - 1), 1, -2) .. unicode.sub(input.text, input.cursorPosition, -1)
 				input:setCursorPosition(input.cursorPosition - 1)
 				
@@ -3272,15 +3277,15 @@ local function inputStartInput(input)
 					input.autoCompleteMatchMethod()
 				end
 			-- Delete
-			elseif eventData[4] == 211 then
+			elseif e4 == 211 then
 				input.text = unicode.sub(input.text, 1, input.cursorPosition - 1) .. unicode.sub(input.text, input.cursorPosition + 1, -1)
 				
 				if input.autoCompleteEnabled then
 					input.autoCompleteMatchMethod()
 				end
 			else
-				local char = unicode.char(eventData[3])
-				if not keyboard.isControl(eventData[3]) then
+				local char = unicode.char(e3)
+				if not keyboard.isControl(e3) then
 					input.text = unicode.sub(input.text, 1, input.cursorPosition - 1) .. char .. unicode.sub(input.text, input.cursorPosition, -1)
 					input:setCursorPosition(input.cursorPosition + 1)
 
@@ -3292,13 +3297,13 @@ local function inputStartInput(input)
 
 			input.cursorBlinkState = true
 			mainContainer:drawOnScreen()
-		elseif eventData[1] == "clipboard" then
-			input.text = unicode.sub(input.text, 1, input.cursorPosition - 1) .. eventData[3] .. unicode.sub(input.text, input.cursorPosition, -1)
-			input:setCursorPosition(input.cursorPosition + unicode.len(eventData[3]))
+		elseif e1 == "clipboard" then
+			input.text = unicode.sub(input.text, 1, input.cursorPosition - 1) .. e3 .. unicode.sub(input.text, input.cursorPosition, -1)
+			input:setCursorPosition(input.cursorPosition + unicode.len(e3))
 			
 			input.cursorBlinkState = true
 			mainContainer:drawOnScreen()
-		elseif not eventData[1] then
+		elseif not e1 then
 			input.cursorBlinkState = not input.cursorBlinkState
 			mainContainer:drawOnScreen()
 		end
@@ -3317,14 +3322,14 @@ local function inputStartInput(input)
 	end
 	
 	if input.onInputFinished then
-		input.onInputFinished( mainContainer, input, mainEventData, input.text)
+		input.onInputFinished(mainContainer, input)
 	end
 
 	mainContainer:drawOnScreen()
 end
 
-local function inputEventHandler(mainContainer, input, mainEventData)
-	if mainEventData[1] == "touch" then
+local function inputEventHandler(mainContainer, input, event)
+	if event == "touch" then
 		input:startInput()
 	end
 end
@@ -3422,24 +3427,24 @@ local function autoCompleteScroll(mainContainer, object, direction)
 	end
 end
 
-local function autoCompleteEventHandler(mainContainer, object, eventData)
-	if eventData[1] == "touch" then
-		object.selectedItem = eventData[4] - object.y + object.fromItem
+local function autoCompleteEventHandler(mainContainer, object, e1, e2, e3, e4, ...)
+	if e1 == "touch" then
+		object.selectedItem = e4 - object.y + object.fromItem
 		mainContainer:drawOnScreen()
 
 		if object.onItemSelected then
 			os.sleep(0.2)
-			object.onItemSelected(mainContainer, object, eventData, object.selectedItem)
+			object.onItemSelected(mainContainer, object, e1, e2, e3, e4, ...)
 		end
-	elseif eventData[1] == "scroll" then
-		autoCompleteScroll(mainContainer, object, -eventData[5])
+	elseif e1 == "scroll" then
+		autoCompleteScroll(mainContainer, object, -e5)
 		mainContainer:drawOnScreen()
-	elseif eventData[1] == "key_down" then
-		if eventData[4] == 28 then
+	elseif e1 == "key_down" then
+		if e4 == 28 then
 			if object.onItemSelected then
-				object.onItemSelected(mainContainer, object, eventData, object.selectedItem)
+				object.onItemSelected(mainContainer, object, e1, e2, e3, e4, ...)
 			end
-		elseif eventData[4] == 200 then
+		elseif e4 == 200 then
 			object.selectedItem = object.selectedItem - 1
 			if object.selectedItem < 1 then
 				object.selectedItem = 1
@@ -3450,7 +3455,7 @@ local function autoCompleteEventHandler(mainContainer, object, eventData)
 			end
 
 			mainContainer:drawOnScreen()
-		elseif eventData[4] == 208 then
+		elseif e4 == 208 then
 			object.selectedItem = object.selectedItem + 1
 			if object.selectedItem > object.itemCount then
 				object.selectedItem = object.itemCount
@@ -3818,7 +3823,7 @@ function GUI.palette(x, y, startColor)
 
 	local favouritesContainer = palette:addChild(GUI.container(58, 24, 12, 1))
 	for i = 1, #favourites do
-		favouritesContainer:addChild(GUI.button(i * 2 - 1, 1, 2, 1, favourites[i], 0x0, 0x0, 0x0, " ")).onTouch = function(mainContainer, object, eventData)
+		favouritesContainer:addChild(GUI.button(i * 2 - 1, 1, 2, 1, favourites[i], 0x0, 0x0, 0x0, " ")).onTouch = function(mainContainer)
 			paletteSwitchColorFromHex(favourites[i])
 			paletteRefreshBigImage()
 			paletteUpdateCrestsCoordinates()
@@ -3826,7 +3831,7 @@ function GUI.palette(x, y, startColor)
 		end
 	end
 	
-	palette:addChild(GUI.button(58, 25, 12, 1, 0xFFFFFF, 0x4B4B4B, 0x2D2D2D, 0xFFFFFF, "+")).onTouch = function(mainContainer, object, eventData)
+	palette:addChild(GUI.button(58, 25, 12, 1, 0xFFFFFF, 0x4B4B4B, 0x2D2D2D, 0xFFFFFF, "+")).onTouch = function(mainContainer)
 		local favouriteExists = false
 		for i = 1, #favourites do
 			if favourites[i] == palette.color.integer then
@@ -3849,19 +3854,19 @@ function GUI.palette(x, y, startColor)
 		end
 	end
 
-	bigImage.eventHandler = function(mainContainer, object, eventData)
-		if eventData[1] == "touch" or eventData[1] == "drag" then
-			bigCrest.localX, bigCrest.localY = eventData[3] - palette.x - 1, eventData[4] - palette.y
-			paletteSwitchColorFromHex(select(3, component.gpu.get(eventData[3], eventData[4])))
+	bigImage.eventHandler = function(mainContainer, object, e1, e2, e3, e4)
+		if e1 == "touch" or e1 == "drag" then
+			bigCrest.localX, bigCrest.localY = e3 - palette.x - 1, e4 - palette.y
+			paletteSwitchColorFromHex(select(3, component.gpu.get(e3, e4)))
 			mainContainer:drawOnScreen()
 		end
 	end
 	bigCrest.eventHandler = bigImage.eventHandler
 	
-	miniImage.eventHandler = function(mainContainer, object, eventData)
-		if eventData[1] == "touch" or eventData[1] == "drag" then
-			miniCrest.localY = eventData[4] - palette.y + 1
-			paletteSwitchColorFromHsb((eventData[4] - miniImage.y) * 360 / miniImage.height, palette.color.hsb.saturation, palette.color.hsb.brightness)
+	miniImage.eventHandler = function(mainContainer, object, e1, e2, e3, e4)
+		if event == "touch" or event == "drag" then
+			miniCrest.localY = e4 - palette.y + 1
+			paletteSwitchColorFromHsb((e4 - miniImage.y) * 360 / miniImage.height, palette.color.hsb.saturation, palette.color.hsb.brightness)
 			paletteRefreshBigImage()
 			mainContainer:drawOnScreen()
 		end
@@ -3909,8 +3914,8 @@ function GUI.addFadeContainer(parentContainer, addPanel, addLayout, title)
 	
 	if addPanel then
 		container.panel = container:addChild(GUI.panel(1, 1, container.width, container.height, 0x0, GUI.colors.fadeContainer.transparency))
-		container.panel.eventHandler = function(parentContainer, object, eventData)
-			if eventData[1] == "touch" then
+		container.panel.eventHandler = function(parentContainer, object, event)
+			if event == "touch" then
 				container:delete()
 				parentContainer:drawOnScreen()
 			end
@@ -3997,13 +4002,13 @@ local function listDeselect(object)
 	return object
 end
 
-local function listItemEventHandler(mainContainer, object, eventData)
-	if eventData[1] == "touch" or eventData[1] == "drag" then
+local function listItemEventHandler(mainContainer, object, e1, ...)
+	if e1 == "touch" or e1 == "drag" then
 		object.parent.parent:select(object:indexOf())
 		mainContainer:drawOnScreen()
 
 		if object.onTouch then
-			object.onTouch(mainContainer, object, eventDat)
+			object.onTouch(mainContainer, object, e1, ...)
 		end
 	end
 end
@@ -4158,26 +4163,26 @@ local function windowCheck(window, x, y)
 	end
 end
 
-local function windowEventHandler(mainContainer, window, eventData)
-	if eventData[1] == "touch" then
-		if not windowCheck(window, eventData[3], eventData[4]) then
-			window.lastTouchPosition = {x = eventData[3],y = eventData[4]}
+local function windowEventHandler(mainContainer, window, e1, e2, e3, e4)
+	if e1 == "touch" then
+		if not windowCheck(window, e3, e4) then
+			window.lastTouchX, window.lastTouchY = e3, e4
 		end
 		
 		if window ~= window.parent.children[#window.parent.children] then
 			window:moveToFront()
 			mainContainer:drawOnScreen()
 		end
-	elseif eventData[1] == "drag" and window.lastTouchPosition and not windowCheck(window, eventData[3], eventData[4]) then
-		local xOffset, yOffset = eventData[3] - window.lastTouchPosition.x, eventData[4] - window.lastTouchPosition.y
+	elseif e1 == "drag" and window.lastTouchX and not windowCheck(window, e3, e4) then
+		local xOffset, yOffset = e3 - window.lastTouchX, e4 - window.lastTouchY
 		if xOffset ~= 0 or yOffset ~= 0 then
 			window.localX, window.localY = window.localX + xOffset, window.localY + yOffset
-			window.lastTouchPosition.x, window.lastTouchPosition.y = eventData[3], eventData[4]
+			window.lastTouchX, window.lastTouchY = e3, e4
 			
 			mainContainer:drawOnScreen()
 		end
-	elseif eventData[1] == "drop" then
-		window.lastTouchPosition = nil
+	elseif e1 == "drop" then
+		window.lastTouchX, window.lastTouchY = nil, nil
 	end
 end
 
@@ -4203,32 +4208,6 @@ function GUI.window(x, y, width, height)
 
 	return window
 end
-
-------------------------------------------------------------------------------------------
-
--- local mainContainer = GUI.fullScreenContainer()
--- mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x2D2D2D))
-
--- -- Создаем вертикально ориентированный список
--- local verticalList = mainContainer:addChild(GUI.list(3, 2, 25, 30, 3, 0, 0xE1E1E1, 0x4B4B4B, 0xD2D2D2, 0x4B4B4B, 0x3366CC, 0xFFFFFF, false))
--- verticalList:addItem("Hello world")
--- verticalList:addItem("This is test").onTouch = function()
--- 	GUI.error("Selected item: " .. verticalList.selectedItem)
--- end
--- verticalList:addItem("Beautiful")
--- verticalList:addItem("Like a shit")
-
--- -- Создаем горизонтально ориентированный список
--- local horizontalList = mainContainer:addChild(GUI.list(34, 2, 100, 3, 2, 0, 0xE1E1E1, 0x4B4B4B, 0xE1E1E1, 0x4B4B4B, 0x696969, 0xFFFFFF, true))
--- horizontalList:setDirection(GUI.directions.horizontal)
--- horizontalList:setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
--- horizontalList:addItem("Applications")
--- horizontalList:addItem("Libraries")
--- horizontalList:addItem("Scripts")
--- horizontalList:addItem("Wallpapers")
-
--- mainContainer:drawOnScreen(true)
--- mainContainer:startEventHandling()
 
 ------------------------------------------------------------------------------------------
 

@@ -64,8 +64,8 @@ local function biometry(creatingNew)
 	local delay = 0.5
 	scanLine.hidden = true
 
-	fingerImage.eventHandler = function(mainContainer, object, eventData)
-		if eventData[1] == "touch" then
+	fingerImage.eventHandler = function(mainContainer, object, e1, e2, e3, e4, e5, e6, ...)
+		if e1 == "touch" then
 			scanLine:addAnimation(
 				function(mainContainer, animation)
 					scanLine.hidden = false
@@ -79,7 +79,7 @@ local function biometry(creatingNew)
 					scanLine.hidden = true
 					animation:delete()
 
-					local touchedHash = require("SHA2").hash(eventData[6])
+					local touchedHash = require("SHA2").hash(e6)
 
 					if creatingNew then
 						label.text = MineOSCore.localization.fingerprintCreated
@@ -94,7 +94,7 @@ local function biometry(creatingNew)
 						os.sleep(delay)
 					else
 						if touchedHash == MineOSCore.properties.biometryHash then
-							label.text = MineOSCore.localization.welcomeBack .. eventData[6]
+							label.text = MineOSCore.localization.welcomeBack .. e6
 
 							MineOSInterface.mainContainer:drawOnScreen()
 
@@ -180,8 +180,8 @@ local function setPassword()
 	inputField1.onInputFinished = check
 	inputField2.onInputFinished = check
 
-	container.panel.eventHandler = function(mainContainer, object, eventData)
-		if eventData[1] == "touch" then
+	container.panel.eventHandler = function(mainContainer, object, e1)
+		if e1 == "touch" then
 			check()
 		end
 	end
@@ -212,8 +212,8 @@ local function setProtectionMethod()
 		setWithoutProtection()
 	end
 
-	container.panel.eventHandler = function(mainContainer, object, eventData)
-		if eventData[1] == "touch" then
+	container.panel.eventHandler = function(mainContainer, object, e1)
+		if e1 == "touch" then
 			comboBox:getItem(comboBox.selectedItem).onTouch()
 		end
 	end 
@@ -350,15 +350,15 @@ local function createOSWidgets()
 		MineOSInterface.mainContainer.dockContainer.localX = math.floor(MineOSInterface.mainContainer.width / 2 - MineOSInterface.mainContainer.dockContainer.width / 2)
 	end
 
-	local function dockIconEventHandler(mainContainer, icon, eventData)
-		if eventData[1] == "touch" then
+	local function dockIconEventHandler(mainContainer, icon, e1, e2, e3, e4, e5, e6, ...)
+		if e1 == "touch" then
 			icon.selected = true
 			MineOSInterface.mainContainer:drawOnScreen()
 
-			if eventData[5] == 1 then
-				icon.onRightClick(icon, eventData)
+			if e5 == 1 then
+				icon.onRightClick(icon, e1, e2, e3, e4, e5, e6, ...)
 			else
-				icon.onLeftClick(icon, eventData)
+				icon.onLeftClick(icon, e1, e2, e3, e4, e5, e6, ...)
 			end
 
 			icon.selected = false
@@ -373,7 +373,7 @@ local function createOSWidgets()
 
 		icon.eventHandler = dockIconEventHandler
 
-		icon.onLeftClick = function(icon, eventData)
+		icon.onLeftClick = function(icon, ...)
 			if icon.windows then
 				for window in pairs(icon.windows) do
 					window.hidden = false
@@ -381,17 +381,18 @@ local function createOSWidgets()
 				end
 				MineOSInterface.mainContainer:drawOnScreen()
 			else
-				MineOSInterface.iconDoubleClick(icon, eventData)
+				MineOSInterface.iconDoubleClick(icon, ...)
 			end
 		end
 
-		icon.onRightClick = function(icon, eventData)
+		icon.onRightClick = function(icon, e1, e2, e3, e4, ...)
 			local indexOf = icon:indexOf()
 
-			local menu = MineOSInterface.contextMenu(eventData[3], eventData[4])
+			local menu = MineOSInterface.contextMenu(e3, e4, ...)
 			if icon.windows then
+				local eventData = {...}
 				menu:addItem(MineOSCore.localization.newWindow).onTouch = function()
-					MineOSInterface.iconDoubleClick(icon, eventData)
+					MineOSInterface.iconDoubleClick(icon, e1, e2, e3, e4, table.unpack(eventData))
 				end
 				menu:addItem(MineOSCore.localization.closeAllWindows).onTouch = function()
 					for window in pairs(icon.windows) do
@@ -451,12 +452,12 @@ local function createOSWidgets()
 
 	icon.eventHandler = dockIconEventHandler
 
-	icon.onLeftClick = function(icon, eventData)
-		MineOSInterface.iconDoubleClick(icon, eventData)
+	icon.onLeftClick = function(icon, ...)
+		MineOSInterface.iconDoubleClick(icon, ...)
 	end
 
-	icon.onRightClick = function(icon, eventData)
-		local menu = MineOSInterface.contextMenu(eventData[3], eventData[4])
+	icon.onRightClick = function(icon, e1, e2, e3, e4)
+		local menu = MineOSInterface.contextMenu(e3, e4)
 		menu:addItem(MineOSCore.localization.emptyTrash).onTouch = function()
 			local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer, MineOSCore.localization.areYouSure)
 
@@ -617,13 +618,13 @@ local function createOSWidgets()
 			MineOSCore.saveProperties()
 		end
 
-		container.panel.eventHandler = function(mainContainer, object, eventData)
-			if eventData[1] == "touch" then
+		container.panel.eventHandler = function(mainContainer, object, e1, e2, e3)
+			if e1 == "touch" then
 				container:delete()
 				MineOSInterface.mainContainer:drawOnScreen()
-			elseif (eventData[1] == "component_added" or eventData[1] == "component_removed") and eventData[3] == "modem" then
+			elseif (e1 == "component_added" or e1 == "component_removed") and e3 == "modem" then
 				check()
-			elseif eventData[1] == "MineOSNetwork" and eventData[2] == "updateProxyList" then
+			elseif e1 == "MineOSNetwork" and e2 == "updateProxyList" then
 				check()
 			end
 		end
@@ -708,8 +709,8 @@ local function createOSWidgets()
 				if number then return number >= 1 and number <= 50 end
 			end
 
-			container.panel.eventHandler = function(mainContainer, object, eventData)
-				if eventData[1] == "touch" then
+			container.panel.eventHandler = function(mainContainer, object, e1)
+				if e1 == "touch" then
 					container:delete()
 					MineOSCore.properties.resolution = {tonumber(widthTextBox.text), tonumber(heightTextBox.text)}
 					MineOSCore.saveProperties()
@@ -830,8 +831,8 @@ local function createOSWidgets()
 			local switch = container.layout:addChild(GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0xE1E1E1, MineOSCore.localization.screensaverEnabled .. ":", MineOSCore.properties.screensaverEnabled)).switch
 			local slider = container.layout:addChild(GUI.slider(1, 1, 36, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x878787, 1, 80, MineOSCore.properties.screensaverDelay, false, MineOSCore.localization.screensaverDelay .. ": ", ""))
 
-			container.panel.eventHandler = function(mainContainer, object, eventData)
-				if eventData[1] == "touch" then
+			container.panel.eventHandler = function(mainContainer, object, e1)
+				if e1 == "touch" then
 					container:delete()
 					MineOSInterface.mainContainer:drawOnScreen()
 
@@ -876,8 +877,8 @@ local function createOSWidgets()
 			menuColorSelector.onTouch = backgroundColorSelector.onTouch
 			dockColorSelector.onTouch = backgroundColorSelector.onTouch
 
-			container.panel.eventHandler = function(mainContainer, object, eventData)
-				if eventData[1] == "touch" then
+			container.panel.eventHandler = function(mainContainer, object, e1)
+				if e1 == "touch" then
 					container:delete()
 					MineOSInterface.mainContainer:drawOnScreen()
 
@@ -1016,21 +1017,20 @@ local function createOSWidgets()
 		MineOSInterface.mainContainer:drawOnScreen(...)
 	end
 
-	MineOSInterface.mainContainer.eventHandler = function(mainContainer, object, eventData)
-		if eventData[1] == "key_down" then
+	local lastWindowHandled
+	MineOSInterface.mainContainer.eventHandler = function(mainContainer, object, e1, e2, e3, e4)
+		if e1 == "key_down" then
 			local windowsCount = #MineOSInterface.mainContainer.windowsContainer.children
 			-- Ctrl or CMD
-			if windowsCount > 0 and not eventData.lastWindowHandled and (keyboard.isKeyDown(29) or keyboard.isKeyDown(219)) then
+			if windowsCount > 0 and not lastWindowHandled and (keyboard.isKeyDown(29) or keyboard.isKeyDown(219)) then
 				-- W
-				if eventData[4] == 17 then
-					eventData.lastWindowHandled = true
+				if e4 == 17 then
 					MineOSInterface.mainContainer.windowsContainer.children[windowsCount]:close()
+					lastWindowHandled = true
 
 					mainContainer:drawOnScreen()
 				-- H
-				elseif eventData[4] == 35 then
-					eventData.lastWindowHandled = true
-					
+				elseif e4 == 35 then
 					local lastUnhiddenWindowIndex = 1
 					for i = 1, #MineOSInterface.mainContainer.windowsContainer.children do
 						if not MineOSInterface.mainContainer.windowsContainer.children[i].hidden then
@@ -1038,23 +1038,26 @@ local function createOSWidgets()
 						end
 					end
 					MineOSInterface.mainContainer.windowsContainer.children[lastUnhiddenWindowIndex]:minimize()
+					lastWindowHandled = true
 
 					mainContainer:drawOnScreen()
 				end
 			end
-		elseif eventData[1] == "MineOSCore" then
-			if eventData[2] == "updateFileList" then
+		elseif lastWindowHandled and e1 == "key_up" and (e4 == 17 or e4 == 35) then
+			lastWindowHandled = false
+		elseif e1 == "MineOSCore" then
+			if e2 == "updateFileList" then
 				MineOSInterface.mainContainer.updateFileListAndDraw()
-			elseif eventData[2] == "updateFileListAndBufferTrueRedraw" then
+			elseif e2 == "updateFileListAndBufferTrueRedraw" then
 				MineOSInterface.mainContainer.updateFileListAndDraw(true)
-			elseif eventData[2] == "updateWallpaper" then
+			elseif e2 == "updateWallpaper" then
 				changeWallpaper()
 				MineOSInterface.mainContainer:drawOnScreen()
 			end
-		elseif eventData[1] == "MineOSNetwork" then
-			if eventData[2] == "accessDenied" then
+		elseif e1 == "MineOSNetwork" then
+			if e2 == "accessDenied" then
 				GUI.error(MineOSCore.localization.networkAccessDenied)
-			elseif eventData[2] == "timeout" then
+			elseif e2 == "timeout" then
 				GUI.error(MineOSCore.localization.networkTimeout)
 			end
 		end
@@ -1066,7 +1069,7 @@ local function createOSWidgets()
 		end
 
 		if MineOSCore.properties.screensaverEnabled then
-			if eventData[1] then
+			if e1 then
 				screensaverUptime = computer.uptime()
 			end
 

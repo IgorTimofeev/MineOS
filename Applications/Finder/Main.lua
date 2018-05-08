@@ -135,9 +135,9 @@ local function newSidebarItem(y, textColor, text, path)
 			buffer.text(object.x + 1, object.y, currentTextColor, string.limit(text, object.width - 2, "center"))
 		end
 
-		object.eventHandler = function(mainContainer, object, eventData)
-			if eventData[1] == "touch" and object.onTouch then
-				object.onTouch(eventData)
+		object.eventHandler = function(mainContainer, object, e1, ...)
+			if e1 == "touch" and object.onTouch then
+				object.onTouch(e1, ...)
 			end
 		end
 	end
@@ -179,9 +179,9 @@ updateSidebar = function()
 	for i = 1, #favourites do
 		local object = newSidebarItem(y, 0x555555, " " .. fs.name(favourites[i].name), favourites[i].path)
 		
-		object.onTouch = function(eventData)
-			if eventData[5] == 1 then
-				local menu = GUI.contextMenu(eventData[3], eventData[4])
+		object.onTouch = function(e1, e2, e3, e4, e5)
+			if e5 == 1 then
+				local menu = GUI.contextMenu(e3, e4)
 				
 				menu:addItem(MineOSCore.localization.removeFromFavourites).onTouch = function()
 					table.remove(favourites, i)
@@ -227,9 +227,9 @@ updateSidebar = function()
 			local name = MineOSNetwork.getFTPProxyName(connection.address, connection.port, connection.user)
 			local mountPath = MineOSNetwork.mountPaths.FTP .. name .. "/"
 
-			newSidebarItem(y, 0x555555, " " .. name, mountPath).onTouch = function(eventData)
-				if eventData[5] == 1 then
-					local menu = GUI.contextMenu(eventData[3], eventData[4])
+			newSidebarItem(y, 0x555555, " " .. name, mountPath).onTouch = function(e1, e2, e3, e4, e5)
+				if e5 == 1 then
+					local menu = GUI.contextMenu(e3, e4)
 					
 					menu:addItem(MineOSCore.localization.delete).onTouch = function()
 						table.remove(MineOSCore.properties.FTPConnections, i)
@@ -262,10 +262,10 @@ updateSidebar = function()
 	end
 end
 
-sidebarContainer.itemsContainer.eventHandler = function(mainContainer, object, eventData)
-	if eventData[1] == "scroll" then
-		if (eventData[5] > 0 and sidebarFromY < 1) or (eventData[5] < 0 and sidebarContainer.itemsContainer.children[#sidebarContainer.itemsContainer.children].localY > 1) then
-			sidebarFromY = sidebarFromY + eventData[5]
+sidebarContainer.itemsContainer.eventHandler = function(mainContainer, object, e1, e2, e3, e4, e5)
+	if e1 == "scroll" then
+		if (e5 > 0 and sidebarFromY < 1) or (e5 < 0 and sidebarContainer.itemsContainer.children[#sidebarContainer.itemsContainer.children].localY > 1) then
+			sidebarFromY = sidebarFromY + e5
 			updateSidebar()
 			MineOSInterface.mainContainer:drawOnScreen()
 		end
@@ -360,22 +360,22 @@ FTPButton.onTouch = function()
 	MineOSInterface.mainContainer:drawOnScreen()
 end
 
-statusBar.eventHandler = function(mainContainer, object, eventData)
-	if eventData[1] == "component_added" or eventData[1] == "component_removed" then
+statusBar.eventHandler = function(mainContainer, object, e1, e2)
+	if e1 == "component_added" or e1 == "component_removed" then
 		FTPButton.disabled = not MineOSNetwork.internetProxy
 		updateSidebar()
 		MineOSInterface.mainContainer:drawOnScreen()
-	elseif eventData[1] == "MineOSNetwork" then
-		if eventData[2] == "updateProxyList" or eventData[2] == "timeout" then
+	elseif e1 == "MineOSNetwork" then
+		if e2 == "updateProxyList" or e2 == "timeout" then
 			updateSidebar()
 			MineOSInterface.mainContainer:drawOnScreen()
 		end
 	end
 end
 
-iconField.eventHandler = function(mainContainer, object, eventData)
-	if eventData[1] == "scroll" then
-		iconField.yOffset = iconField.yOffset + eventData[5] * 2
+iconField.eventHandler = function(mainContainer, object, e1, e2, e3, e4, e5)
+	if e1 == "scroll" then
+		iconField.yOffset = iconField.yOffset + e5 * 2
 
 		updateScrollBar()
 
@@ -394,15 +394,15 @@ iconField.eventHandler = function(mainContainer, object, eventData)
 		scrollTimerID = event.timer(0.3, function()
 			computer.pushSignal("Finder", "updateFileList")
 		end, 1)
-	elseif eventData[1] == "MineOSCore" or eventData[1] == "Finder" then
-		if eventData[2] == "updateFileList" then
-			if eventData[1] == "MineOSCore" then
+	elseif e1 == "MineOSCore" or e1 == "Finder" then
+		if e2 == "updateFileList" then
+			if e1 == "MineOSCore" then
 				iconField.yOffset = iconFieldYOffset
 			end
 			updateFileListAndDraw()
-		elseif eventData[2] == "updateFavourites" then
-			if eventData[3] then
-				table.insert(favourites, eventData[3])
+		elseif e2 == "updateFavourites" then
+			if e3 then
+				table.insert(favourites, e3)
 			end
 			saveFavourites()
 			updateSidebar()
@@ -483,7 +483,7 @@ window.onResize = function(width, height)
 	updateFileListAndDraw()
 end
 
-sidebarResizer.onResize = function(mainContainer, object, eventData, dragWidth, dragHeight)
+sidebarResizer.onResize = function(mainContainer, object, dragWidth, dragHeight)
 	sidebarContainer.width = sidebarContainer.width + dragWidth
 	sidebarContainer.width = sidebarContainer.width >= 5 and sidebarContainer.width or 5
 	calculateSizes(window.width, window.height)

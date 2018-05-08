@@ -1,79 +1,118 @@
 
-local unicode = require("unicode")
-local image = require("image")
 local GUI = require("GUI")
-local keyboard = require("keyboard")
+local image = require("image")
 local tool = {}
 
 ------------------------------------------------------
 
-tool.shortcut = "Bs"
-tool.keyCode = 48
-tool.about = "Classic brush tool to perform drawing with specified radius. Affecting on background and foreground can be configured. You can specify single symbol to draw with. Hold Alt key and click on image to pick it's colors. You can specify what colors to pick."
+tool.shortcut = "Re"
+tool.keyCode = 46
+tool.about = "Resizer tool allows to change picture size in real time. You can specify preffered direction, input width and height modifiers and smart script will do the rest."
 
-local backgroundSwitch = GUI.switchAndLabel(1, 1, width, 6, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x878787, "Draw background:", true)
-local foregroundSwitch = GUI.switchAndLabel(1, 1, width, 6, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x878787, "Draw foreground:", true)
-local alphaSwitch = GUI.switchAndLabel(1, 1, width, 6, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x878787, "Draw alpha:", true)
-local symbolSwitch = GUI.switchAndLabel(1, 1, width, 6, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x878787, "Draw symbol:", true)
-local symbolInput = GUI.input(1, 1, width, 1, 0xEEEEEE, 0x555555, 0x999999, 0xFFFFFF, 0x2D2D2D, "", "Type symbol")
-symbolInput.onInputFinished = function()
-	symbolInput.text = unicode.sub(symbolInput.text, 1, 1)
+local x, y, stepX, stepY, buttonWidth, buttonHeight, buttonCount, buttons, currentX, currentY = 1, 1, 2, 1, 7, 3, 3, {}
+
+local buttonsContainer = GUI.container(1, 1, (buttonWidth + stepX) * buttonCount - stepX, (buttonHeight + stepY) * buttonCount - stepY)
+local buttonsLayout = GUI.layout(1, 1, buttonsContainer.width, buttonsContainer.height, 1, 1)
+buttonsLayout:setCellAlignment(1, 1, GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+buttonsLayout:addChild(buttonsContainer)
+
+local widthInput = GUI.input(1, 1, 1, 1, 0x2D2D2D, 0xC3C3C3, 0x5A5A5A, 0x2D2D2D, 0xD2D2D2, "", "Width")
+local heightInput = GUI.input(1, 1, 1, 1, 0x2D2D2D, 0xC3C3C3, 0x5A5A5A, 0x2D2D2D, 0xD2D2D2, "", "Height")
+
+local expandButton = GUI.roundedButton(1, 1, 36, 1, 0x696969, 0xE1E1E1, 0x2D2D2D, 0xE1E1E1, "Expand")
+local cropButton = GUI.roundedButton(1, 1, 36, 1, 0x696969, 0xE1E1E1, 0x2D2D2D, 0xE1E1E1, "Crop")
+
+expandButton.colors.disabled.background, expandButton.colors.disabled.text = 0x4B4B4B, 0x787878
+cropButton.colors = expandButton.colors
+
+local function try(x, y, symbol)
+	if buttons[y] and buttons[y][x] then
+		buttons[y][x].text = symbol
+	end
 end
-local alphaSlider = GUI.slider(1, 1, width, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x878787, 0, 255, 0, false, "Alpha value: ", "")
-alphaSlider.roundValues = true
-local pickBackgroundSwitch = GUI.switchAndLabel(1, 1, width, 6, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x878787, "Pick background:", true)
-local pickForegroundSwitch = GUI.switchAndLabel(1, 1, width, 6, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x878787, "Pick foreground:", true)
 
-local radiusSlider = GUI.slider(1, 1, width, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x878787, 1, 8, 1, false, "Radius: ", " px")
-radiusSlider.height = 2
-radiusSlider.roundValues = true
+local function set(x, y)
+	for i = 1, #buttonsContainer.children do
+		buttonsContainer.children[i].text = " "
+	end
+
+	currentX, currentY = x, y
+
+	try(x, y, "⬤")
+	try(x + 1, y, "▶")
+	try(x - 1, y, "◀")
+	try(x, y + 1, "▼")
+	try(x, y - 1, "▲")
+	try(x + 1, y + 1, "↘")
+	try(x + 1, y - 1, "↗")
+	try(x - 1, y + 1, "↙")
+	try(x - 1, y - 1, "↖")
+end
+
+for j = 1, buttonCount do
+	buttons[j] = {}
+	for i = 1, buttonCount do
+		buttons[j][i] = buttonsContainer:addChild(GUI.button(x, y, buttonWidth, buttonHeight, 0x2D2D2D, 0xB4B4B4, 0x696969, 0xD2D2D2, " "))
+		buttons[j][i].onTouch = function()
+			set(i, j)
+			buttons[j][i]:getFirstParent():drawOnScreen()
+		end
+
+		x = x + buttonWidth + stepX
+	end
+
+	x, y = 1, y + buttonHeight + stepY
+end
+
+set(2, 2)
 
 tool.onSelection = function(mainContainer)
-	mainContainer.currentToolLayout:addChild(backgroundSwitch)
-	mainContainer.currentToolLayout:addChild(foregroundSwitch)
-	mainContainer.currentToolLayout:addChild(alphaSwitch)
-	mainContainer.currentToolLayout:addChild(symbolSwitch)
-	mainContainer.currentToolLayout:addChild(symbolInput)
-	mainContainer.currentToolLayout:addChild(alphaSlider)
-	mainContainer.currentToolLayout:addChild(radiusSlider)
-	mainContainer.currentToolLayout:addChild(pickBackgroundSwitch)
-	mainContainer.currentToolLayout:addChild(pickForegroundSwitch)
-end
+	mainContainer.currentToolLayout:addChild(buttonsLayout)
+	mainContainer.currentToolLayout:addChild(widthInput)
+	mainContainer.currentToolLayout:addChild(heightInput)
+	mainContainer.currentToolLayout:addChild(expandButton)
+	mainContainer.currentToolLayout:addChild(cropButton)
 
-tool.eventHandler = function(mainContainer, object, eventData)
-	if eventData[1] == "touch" or eventData[1] == "drag" then
-		local x, y = eventData[3] - mainContainer.image.x + 1, eventData[4] - mainContainer.image.y + 1
-		
-		if keyboard.isKeyDown(56) then
-			local background, foreground = image.get(mainContainer.image.data, x, y)
-
-			if pickBackgroundSwitch.switch.state then
-				mainContainer.secondaryColorSelector.color = background
-			end
-
-			if pickForegroundSwitch.switch.state then
-				mainContainer.primaryColorSelector.color = foreground
-			end
-		else
-			local meow = math.floor(radiusSlider.value)
-
-			for j = y - meow + 1, y + meow - 1 do
-				for i = x - meow + 1, x + meow - 1 do
-					if i >= 1 and i <= mainContainer.image.width and j >= 1 and j <= mainContainer.image.height then
-						local background, foreground, alpha, symbol = image.get(mainContainer.image.data, i, j)
-						image.set(mainContainer.image.data, i, j,
-							backgroundSwitch.switch.state and mainContainer.primaryColorSelector.color or background,
-							foregroundSwitch.switch.state and mainContainer.secondaryColorSelector.color or foreground,
-							alphaSwitch.switch.state and alphaSlider.value / 255 or alpha,
-							symbolSwitch.switch.state and (symbolInput.text == "" and " " or symbolInput.text) or symbol
-						)
-					end
-				end
-			end
-		end
+	widthInput.onInputFinished = function()
+		expandButton.disabled = not widthInput.text:match("^%d+$") or not heightInput.text:match("^%d+$")
+		cropButton.disabled = expandButton.disabled
 
 		mainContainer:drawOnScreen()
 	end
+	heightInput.onInputFinished = widthInput.onInputFinished
+	widthInput.onInputFinished()
+
+	expandButton.onTouch = function()
+		local width, height = tonumber(widthInput.text), tonumber(heightInput.text)
+		
+		mainContainer.image.data = image.expand(mainContainer.image.data,
+			currentY > 1 and height or 0,
+			currentY < 3 and height or 0,
+			currentX > 1 and width or 0,
+			currentX < 3 and width or 0,
+		0x0, 0x0, 1, " ")
+
+		mainContainer.image.reposition()
+		mainContainer:drawOnScreen()
+	end
+
+	cropButton.onTouch = function()
+		local width, height = tonumber(widthInput.text), tonumber(heightInput.text)
+		
+		mainContainer.image.data = image.crop(mainContainer.image.data,
+			currentX == 1 and 1 or width + 1,
+			currentY == 1 and 1 or height + 1,
+			(currentX == 1 or currentX == 3) and mainContainer.image.width - width or mainContainer.image.width - width * 2,
+			(currentY == 1 or currentY == 3) and mainContainer.image.height - height or mainContainer.image.height - height * 2
+		)
+
+		mainContainer.image.reposition()
+		mainContainer:drawOnScreen()
+	end
+end
+
+tool.eventHandler = function(mainContainer, object, e1)
+	
 end
 
 ------------------------------------------------------

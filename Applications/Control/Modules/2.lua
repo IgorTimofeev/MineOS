@@ -85,16 +85,16 @@ module.onTouch = function()
 		y = y + diskContainer.height + 1
 	end
 
-	container.eventHandler = function(mainContainer, object, eventData)
-		if eventData[1] == "scroll" then
-			if eventData[5] < 0 or container.children[1].localY < 2 then
+	container.eventHandler = function(mainContainer, object, e1, e2, e3, e4, e5)
+		if e1 == "scroll" then
+			if e5 < 0 or container.children[1].localY < 2 then
 				for i = 1, #container.children do
-					container.children[i].localY = container.children[i].localY + eventData[5]
+					container.children[i].localY = container.children[i].localY + e5
 				end
 
 				mainContainer:drawOnScreen()
 			end
-		elseif eventData[1] == "component_added" or eventData[1] == "component_removed" and eventData[3] == "filesystem" then
+		elseif e1 == "component_added" or e1 == "component_removed" and e3 == "filesystem" then
 			module.onTouch()
 		end
 	end

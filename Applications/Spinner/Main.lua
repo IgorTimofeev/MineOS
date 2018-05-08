@@ -43,11 +43,11 @@ local function changeColor(hue, saturation)
 	spinnerImage.image = spinners[currentSpinner]
 end
 
-mainContainer.eventHandler = function(mainContainer, object, eventData)
-	if eventData[1] == "key_down" then
+mainContainer.eventHandler = function(mainContainer, object, e1, e2, e3, e4, e5)
+	if e1 == "key_down" then
 		mainContainer:stopEventHandling()
-	elseif eventData[1] == "touch" then
-		spinnerHue = spinnerHue + spinnerHueStep * (eventData[5] == 1 and -1 or 1)
+	elseif e1 == "touch" then
+		spinnerHue = spinnerHue + spinnerHueStep * (e5 == 1 and -1 or 1)
 		if spinnerHue > 360 then
 			spinnerHue = 0
 		elseif spinnerHue < 0 then

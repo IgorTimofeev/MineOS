@@ -177,28 +177,28 @@ local function iconDraw(icon)
 	end
 end
 
-local function iconEventHandler(mainContainer, object, eventData)
-	if eventData[1] == "touch" then
+local function iconEventHandler(mainContainer, object, e1, e2, e3, e4, e5, ...)
+	if e1 == "touch" then
 		object.lastTouchPosition = object.lastTouchPosition or {}
-		object.lastTouchPosition.x, object.lastTouchPosition.y = eventData[3], eventData[4]
+		object.lastTouchPosition.x, object.lastTouchPosition.y = e3, e4
 		object:moveToFront()
 
-		if eventData[5] == 0 then
-			object.parent.parent.onLeftClick(object, eventData)
+		if e5 == 0 then
+			object.parent.parent.onLeftClick(object, e1, e2, e3, e4, e5, ...)
 		else
-			object.parent.parent.onRightClick(object, eventData)
+			object.parent.parent.onRightClick(object, e1, e2, e3, e4, e5, ...)
 		end
-	elseif eventData[1] == "double_touch" and object:isPointInside(eventData[3], eventData[4]) and eventData[5] == 0 then
-		object.parent.parent.onDoubleClick(object, eventData)
-	elseif eventData[1] == "drag" and object.parent.parent.iconConfigEnabled and object.lastTouchPosition then
+	elseif e1 == "double_touch" and object:isPointInside(e3, e4) and e5 == 0 then
+		object.parent.parent.onDoubleClick(object, e1, e2, e3, e4, e5, ...)
+	elseif e1 == "drag" and object.parent.parent.iconConfigEnabled and object.lastTouchPosition then
 		-- Ебучие авторы мода, ну на кой хуй было делать drop-ивент без наличия drag? ПИДОРЫ
 		object.dragStarted = true
-		object.localX = object.localX + eventData[3] - object.lastTouchPosition.x
-		object.localY = object.localY + eventData[4] - object.lastTouchPosition.y
-		object.lastTouchPosition.x, object.lastTouchPosition.y = eventData[3], eventData[4]
+		object.localX = object.localX + e3 - object.lastTouchPosition.x
+		object.localY = object.localY + e4 - object.lastTouchPosition.y
+		object.lastTouchPosition.x, object.lastTouchPosition.y = e3, e4
 
 		mainContainer:drawOnScreen()
-	elseif eventData[1] == "drop" and object.parent.parent.iconConfigEnabled and object.dragStarted then
+	elseif e1 == "drop" and object.parent.parent.iconConfigEnabled and object.dragStarted then
 		object.dragStarted = nil
 		object.parent.parent.iconConfig[object.name .. (object.isDirectory and "/" or "")] = {
 			x = object.localX,
@@ -489,37 +489,37 @@ local function iconFieldUpdateFileList(iconField)
 	return iconField
 end
 
-local function iconFieldBackgroundObjectEventHandler(mainContainer, object, eventData)
-	if eventData[1] == "touch" then
-		if eventData[5] == 0 then
+local function iconFieldBackgroundObjectEventHandler(mainContainer, object, e1, e2, e3, e4, e5, ...)
+	if e1 == "touch" then
+		if e5 == 0 then
 			object.parent:deselectAll()
 			object.parent.selection = {
-				x1 = eventData[3],
-				y1 = eventData[4]
+				x1 = e3,
+				y1 = e4
 			}
 
 			mainContainer:drawOnScreen()
 		else
-			local menu = MineOSInterface.contextMenu(eventData[3], eventData[4])
+			local menu = MineOSInterface.contextMenu(e3, e4)
 
 			local subMenu = menu:addSubMenu(MineOSCore.localization.create)
 
 			subMenu:addItem(MineOSCore.localization.newFile).onTouch = function()
-				MineOSInterface.newFile(MineOSInterface.mainContainer, object.parent, eventData[3], eventData[4], object.parent.workpath)
+				MineOSInterface.newFile(MineOSInterface.mainContainer, object.parent, e3, e4, object.parent.workpath)
 			end
 			
 			subMenu:addItem(MineOSCore.localization.newFolder).onTouch = function()
-				MineOSInterface.newFolder(MineOSInterface.mainContainer, object.parent, eventData[3], eventData[4], object.parent.workpath)
+				MineOSInterface.newFolder(MineOSInterface.mainContainer, object.parent, e3, e4, object.parent.workpath)
 			end
 
 			subMenu:addItem(MineOSCore.localization.newFileFromURL, not component.isAvailable("internet")).onTouch = function()
-				MineOSInterface.newFileFromURL(MineOSInterface.mainContainer, object.parent, eventData[3], eventData[4], object.parent.workpath)
+				MineOSInterface.newFileFromURL(MineOSInterface.mainContainer, object.parent, e3, e4, object.parent.workpath)
 			end
 
 			subMenu:addSeparator()
 
 			subMenu:addItem(MineOSCore.localization.newApplication).onTouch = function()
-				MineOSInterface.newApplication(MineOSInterface.mainContainer, object.parent, eventData[3], eventData[4], object.parent.workpath)
+				MineOSInterface.newApplication(MineOSInterface.mainContainer, object.parent, e3, e4, object.parent.workpath)
 			end
 
 			menu:addSeparator()
@@ -586,15 +586,14 @@ local function iconFieldBackgroundObjectEventHandler(mainContainer, object, even
 
 			menu:show()
 		end
-	elseif eventData[1] == "drag" then
+	elseif e1 == "drag" then
 		if object.parent.selection then
-			object.parent.selection.x2 = eventData[3]
-			object.parent.selection.y2 = eventData[4]
+			object.parent.selection.x2, object.parent.selection.y2 = e3, e4
 			object:moveToFront()
 
 			mainContainer:drawOnScreen()
 		end
-	elseif eventData[1] == "drop" then
+	elseif e1 == "drop" then
 		object.parent.selection = nil
 		object:moveToBack()
 
@@ -706,7 +705,7 @@ function MineOSInterface.contextMenu(...)
 	return menu
 end
 
-function MineOSInterface.iconLeftClick(icon, eventData)
+function MineOSInterface.iconLeftClick(icon)
 	if not keyboard.isKeyDown(29) and not keyboard.isKeyDown(219) then
 		icon.parent.parent:deselectAll()
 	end
@@ -715,20 +714,20 @@ function MineOSInterface.iconLeftClick(icon, eventData)
 	MineOSInterface.mainContainer:drawOnScreen()
 end
 
-function MineOSInterface.iconDoubleClick(icon, eventData)
+function MineOSInterface.iconDoubleClick(icon)
 	icon.selected = false
 	icon:launch()
 	MineOSInterface.mainContainer:drawOnScreen()
 	-- computer.pushSignal("MineOSCore", "updateFileList")
 end
 
-function MineOSInterface.iconRightClick(icon, eventData)
+function MineOSInterface.iconRightClick(icon, e1, e2, e3, e4)
 	icon.selected = true
 	MineOSInterface.mainContainer:drawOnScreen()
 
 	local selectedIcons = icon.parent.parent:getSelectedIcons()
 
-	local menu = MineOSInterface.contextMenu(eventData[3], eventData[4])
+	local menu = MineOSInterface.contextMenu(e3, e4)
 	if #selectedIcons == 1 then
 		if icon.isDirectory then
 			if icon.extension == ".app" then
@@ -747,11 +746,11 @@ function MineOSInterface.iconRightClick(icon, eventData)
 					local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer, MineOSCore.localization.addToFavourites)
 
 					local input = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x878787, 0xE1E1E1, 0x2D2D2D, icon.name, MineOSCore.localization.name))
-					container.panel.eventHandler = function(mainContainer, object, eventData)
-						if eventData[1] == "touch" then
+					container.panel.eventHandler = function(mainContainer, object, e1)
+						if e1 == "touch" then
 							container:delete()
 
-							if eventData[1] == "touch" and #input.text > 0 then
+							if e1 == "touch" and #input.text > 0 then
 								computer.pushSignal("Finder", "updateFavourites", {name = input.text, path = icon.path})
 							else
 								MineOSInterface.mainContainer:drawOnScreen()
@@ -792,7 +791,7 @@ function MineOSInterface.iconRightClick(icon, eventData)
 
 	if #selectedIcons > 1 then
 		menu:addItem(MineOSCore.localization.newFolderFromChosen .. " (" .. #selectedIcons .. ")").onTouch = function()
-			MineOSInterface.newFolderFromChosen(MineOSInterface.mainContainer, icon.parent.parent, eventData[3], eventData[4], selectedIcons)
+			MineOSInterface.newFolderFromChosen(MineOSInterface.mainContainer, icon.parent.parent, e3, e4, selectedIcons)
 		end
 		menu:addSeparator()
 	end
@@ -896,7 +895,7 @@ function MineOSInterface.iconRightClick(icon, eventData)
 
 	menu:addItem(MineOSCore.localization.properties).onTouch = function()
 		for i = 1, #selectedIcons do
-			MineOSInterface.propertiesWindow(eventData[3], eventData[4], 40, selectedIcons[i])
+			MineOSInterface.propertiesWindow(e3, e4, 40, selectedIcons[i])
 		end
 	end
 
@@ -979,8 +978,8 @@ function MineOSInterface.newFileFromURL(parentWindow, iconField, x, y, path)
 	local container = addUniversalContainerWithInputTextBox(parentWindow, nil, "Загрузить файл по URL", MineOSCore.localization.fileName)
 
 	container.inputFieldURL = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x878787, 0xE1E1E1, 0x2D2D2D, nil, "URL", false))
-	container.panel.eventHandler = function(mainContainer, object, eventData)
-		if eventData[1] == "touch" then
+	container.panel.eventHandler = function(mainContainer, object, e1)
+		if e1 == "touch" then
 			if #container.inputField.text > 0 and #container.inputFieldURL > 0 then
 				if fs.exists(path .. container.inputField.text) then
 					container.label.hidden = false
@@ -1018,8 +1017,8 @@ function MineOSInterface.newApplication(parentWindow, iconField, x, y, path)
 	filesystemChooser:addExtensionFilter(".pic")
 	filesystemChooser:moveBackward()
 	
-	container.panel.eventHandler = function(mainContainer, object, eventData)
-		if eventData[1] == "touch" then	
+	container.panel.eventHandler = function(mainContainer, object, e1)
+		if e1 == "touch" then	
 			if #container.inputField.text > 0 then
 				local finalPath = path .. container.inputField.text .. ".app/"
 				if checkFileToExists(container, finalPath) then
@@ -1378,12 +1377,12 @@ function MineOSInterface.copy(what, toPath)
 	GUICopy(MineOSInterface.mainContainer, what, toPath)
 end
 
-local function menuWidgetEventHandler(mainContainer, object, eventData)
-	if eventData[1] == "touch" and object.onTouch then
+local function menuWidgetEventHandler(mainContainer, object, e1, ...)
+	if e1 == "touch" and object.onTouch then
 		object.selected = true
 		MineOSInterface.mainContainer:drawOnScreen()
 
-		object.onTouch(mainContainer, object, eventData)
+		object.onTouch(mainContainer, object, e1, ...)
 
 		object.selected = false
 		MineOSInterface.mainContainer:drawOnScreen()
@@ -1457,8 +1456,8 @@ function MineOSInterface.showErrorWindow(path, line, traceback)
 		mainContainer:stopEventHandling()
 	end
 
-	mainContainer.eventHandler = function(mainContainer, object, eventData)
-		if eventData[1] == "key_down" and eventData[4] == 28 then
+	mainContainer.eventHandler = function(mainContainer, object, e1, e2, e3, e4)
+		if e1 == "key_down" and e4 == 28 then
 			actionButtons.close.onTouch()
 		end
 	end

@@ -1,33 +1,34 @@
 
-local GUI = require("GUI")
 local image = require("image")
+local GUI = require("GUI")
 local tool = {}
 
 ------------------------------------------------------
 
-tool.shortcut = "Er"
-tool.keyCode = 18
-tool.about = "Eraser tool will erase all your pixels just like brush tool. But it's eraser!!1"
+tool.shortcut = "Pi"
+tool.keyCode = 56
+tool.about = "Picker tool allows to select interested data from image as primary or secondary color. You can configure of what colors to pick."
 
-local radiusSlider = GUI.slider(1, 1, 1, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x878787, 1, 8, 1, false, "Radius: ", " px")
-radiusSlider.height = 2
-radiusSlider.roundValues = true
+local pickBackgroundSwitch = GUI.switchAndLabel(1, 1, width, 6, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x878787, "Pick background:", true)
+local pickForegroundSwitch = GUI.switchAndLabel(1, 1, width, 6, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x878787, "Pick foreground:", true)
 
 tool.onSelection = function(mainContainer)
-	mainContainer.currentToolLayout:addChild(radiusSlider)
+	mainContainer.currentToolLayout:addChild(pickBackgroundSwitch)
+	mainContainer.currentToolLayout:addChild(pickForegroundSwitch)
 end
 
-tool.eventHandler = function(mainContainer, object, eventData)
-	if eventData[1] == "touch" or eventData[1] == "drag" then
-		local x, y = eventData[3] - mainContainer.image.x + 1, eventData[4] - mainContainer.image.y + 1
-		local meow = math.floor(radiusSlider.value)
+tool.eventHandler = function(mainContainer, object, e1, e2, e3, e4)
+	if e1 == "touch" or e1 == "drag" then
+		local x, y = e3 - mainContainer.image.x + 1, e4 - mainContainer.image.y + 1
+		
+		local background, foreground = image.get(mainContainer.image.data, x, y)
 
-		for j = y - meow + 1, y + meow - 1 do
-			for i = x - meow + 1, x + meow - 1 do
-				if i >= 1 and i <= mainContainer.image.width and j >= 1 and j <= mainContainer.image.height then
-					image.set(mainContainer.image.data, i, j, 0x0, 0x0, 1, " ")
-				end
-			end
+		if pickBackgroundSwitch.switch.state then
+			mainContainer.secondaryColorSelector.color = background
+		end
+
+		if pickForegroundSwitch.switch.state then
+			mainContainer.primaryColorSelector.color = foreground
 		end
 
 		mainContainer:drawOnScreen()

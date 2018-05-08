@@ -247,18 +247,18 @@ mainContainer.secondaryColorSelector.draw, mainContainer.primaryColorSelector.dr
 
 mainContainer:addChild(GUI.adaptiveButton(3, mainContainer.secondaryColorSelector.localY + mainContainer.secondaryColorSelector.height + 1, 0, 0, nil, 0xD2D2D2, nil, 0xA5A5A5, "<>")).onTouch = swapColors
 
-mainContainer.image.eventHandler = function(mainContainer, object, eventData)
-	if eventData[1] == "key_down" then
+mainContainer.image.eventHandler = function(mainContainer, object, e1, e2, e3, e4, ...)
+	if e1 == "key_down" then
 		-- D
-		if eventData[4] == 32 then
+		if e4 == 32 then
 			mainContainer.primaryColorSelector.color, mainContainer.secondaryColorSelector.color = 0x0, 0xFFFFFF
 			mainContainer:drawOnScreen()
 		-- X
-		elseif eventData[4] == 45 then
+		elseif e4 == 45 then
 			swapColors()
 		else
 			for i = 1, #mainContainer.toolsList.itemsLayout.children do
-				if eventData[4] == mainContainer.toolsList.itemsLayout.children[i].tool.keyCode then
+				if e4 == mainContainer.toolsList.itemsLayout.children[i].tool.keyCode then
 					onToolTouch(i)
 					return
 				end
@@ -266,7 +266,7 @@ mainContainer.image.eventHandler = function(mainContainer, object, eventData)
 		end
 	end
 
-	local result, reason = pcall(tool.eventHandler, mainContainer, object, eventData)
+	local result, reason = pcall(tool.eventHandler, mainContainer, object, e1, e2, e3, e4, ...)
 	if not result then
 		GUI.error("Tool eventHandler() failed: " .. reason)
 	end
@@ -306,8 +306,8 @@ local function new()
 	end
 	heightInput.validator = widthInput.validator
 
-	container.panel.eventHandler = function(mainContainer, object, eventData)
-		if eventData[1] == "touch" then
+	container.panel.eventHandler = function(mainContainer, object, e1)
+		if e1 == "touch" then
 			newNoGUI(tonumber(widthInput.text), tonumber(heightInput.text))
 			container:delete()
 			mainContainer:drawOnScreen()
@@ -434,8 +434,8 @@ mainContainer.menu:addItem("View").onTouch = function()
 	local colorSelector1 = container.layout:addChild(GUI.colorSelector(1, 1, 36, 3, config.transparencyBackground, "Transparency background"))
 	local colorSelector2 = container.layout:addChild(GUI.colorSelector(1, 1, 36, 3, config.transparencyForeground, "Transparency foreground"))
 
-	container.panel.eventHandler = function(mainContainer, object, eventData)
-		if eventData[1] == "touch" then
+	container.panel.eventHandler = function(mainContainer, object, e1)
+		if e1 == "touch" then
 			config.transparencyBackground, config.transparencyForeground = colorSelector1.color, colorSelector2.color
 			
 			container:delete()

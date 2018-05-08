@@ -178,8 +178,8 @@ mainContainer.connectionButton.onTouch = function()
 			end
 		end
 
-		container.panel.eventHandler = function(mainContainer, object, eventData)
-			if eventData[1] == "touch" then
+		container.panel.eventHandler = function(mainContainer, object, e1)
+			if e1 == "touch" then
 				input.onInputFinished()
 			end
 		end
@@ -212,8 +212,8 @@ mainContainer.messageContactButton.onTouch = function()
 		end
 	end
 
-	container.panel.eventHandler = function(mainContainer, object, eventData)
-		if eventData[1] == "touch" then
+	container.panel.eventHandler = function(mainContainer, object, e1)
+		if e1 == "touch" then
 			input.onInputFinished()
 		end
 	end
@@ -235,8 +235,8 @@ mainContainer.addContactButton.onTouch = function()
 	local input1 = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0x666666, 0xEEEEEE, 0x262626, nil, "Name"))
 	local input2 = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0x666666, 0xEEEEEE, 0x262626, contacts.last, "Address"))
 
-	container.panel.eventHandler = function(mainContainer, object, eventData)
-		if eventData[1] == "touch" then
+	container.panel.eventHandler = function(mainContainer, object, e1)
+		if e1 == "touch" then
 			if input1.text and input2.text then
 				local exists = false
 				for i = 1, #contacts do
@@ -280,24 +280,24 @@ mainContainer.exitButton.onTouch = function()
 	mainContainer:stopEventHandling()
 end
 
-mainContainer.eventHandler = function(mainContainer, object, eventData)
-	if eventData[1] == "sgIrisStateChange" then
+mainContainer.eventHandler = function(mainContainer, object, e1, e2, e3, e4)
+	if e1 == "sgIrisStateChange" then
 		update()
 		mainContainer:drawOnScreen()
-	elseif eventData[1] == "sgStargateStateChange" then
-		if eventData[3] == "Idle" or eventData[3] == "Connected" then
+	elseif e1 == "sgStargateStateChange" then
+		if e3 == "Idle" or e3 == "Connected" then
 			update()
-			updateChevrons(eventData[3] == "Connected")
+			updateChevrons(e3 == "Connected")
 			mainContainer:drawOnScreen()
 		end
-	elseif eventData[1] == "sgChevronEngaged" then
-		if mainContainer.chevrons[eventData[3]] then
-			mainContainer.chevrons[eventData[3]].isActivated = true
-			mainContainer.chevrons[eventData[3]].text = eventData[4]
+	elseif e1 == "sgChevronEngaged" then
+		if mainContainer.chevrons[e3] then
+			mainContainer.chevrons[e3].isActivated = true
+			mainContainer.chevrons[e3].text = e4
 			mainContainer:drawOnScreen()
 		end
-	elseif eventData[1] == "sgMessageReceived" then
-		GUI.error(eventData[3])
+	elseif e1 == "sgMessageReceived" then
+		GUI.error(e3)
 	end
 end
 
@@ -306,13 +306,6 @@ updateContacts()
 update()
 updateChevrons(stargate.stargateState() == "Connected")
 
-mainContainer:drawOnScreen()
+mainContainer:draw()
+buffer.draw(true)
 mainContainer:startEventHandling()
-
-
-
-
-
-
-
-

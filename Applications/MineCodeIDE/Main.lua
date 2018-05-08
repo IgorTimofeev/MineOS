@@ -531,8 +531,8 @@ local function changeResolutionWindow()
 		if number and number >= 1 and number <= maxResolutionHeight then return true end
 	end
 
-	container.panel.eventHandler = function(mainContainer, object, eventData)
-		if eventData[1] == "touch" then
+	container.panel.eventHandler = function(mainContainer, object, e1)
+		if e1 == "touch" then
 			config.screenResolution.width, config.screenResolution.height = tonumber(inputFieldWidth.text), tonumber(inputFieldHeight.text)
 			saveConfig()
 			container:delete()
@@ -855,8 +855,8 @@ local function pizda(lines, debug)
 		textBox:setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
 	end
 
-	backgroundObject.eventHandler = function(mainContainer, object, eventData)
-		if eventData[1] == "touch" then
+	backgroundObject.eventHandler = function(mainContainer, object, e1)
+		if e1 == "touch" then
 			close()
 		end
 	end
@@ -1349,23 +1349,23 @@ local function createEditOrRightClickMenu(x, y)
 	menu:show()
 end
 
-codeView.eventHandler = function(mainContainer, object, eventData)
-	if eventData[1] == "touch" then
-		if eventData[5] == 1 then
-			createEditOrRightClickMenu(eventData[3], eventData[4])
+codeView.eventHandler = function(mainContainer, object, e1, e2, e3, e4, e5)
+	if e1 == "touch" then
+		if e5 == 1 then
+			createEditOrRightClickMenu(e3, e4)
 		else
-			setCursorPositionAndClearSelection(convertScreenCoordinatesToTextPosition(eventData[3], eventData[4]))
+			setCursorPositionAndClearSelection(convertScreenCoordinatesToTextPosition(e3, e4))
 		end
 
 		tick(true)
-	elseif eventData[1] == "double_touch" then
+	elseif e1 == "double_touch" then
 		selectWord()
 		tick(true)
-	elseif eventData[1] == "drag" then
-		if eventData[5] ~= 1 then
+	elseif e1 == "drag" then
+		if e5 ~= 1 then
 			codeView.selections[1] = codeView.selections[1] or {from = {}, to = {}}
 			codeView.selections[1].from.symbol, codeView.selections[1].from.line = cursorPositionSymbol, cursorPositionLine
-			codeView.selections[1].to.symbol, codeView.selections[1].to.line = fixCursorPosition(convertScreenCoordinatesToTextPosition(eventData[3], eventData[4]))
+			codeView.selections[1].to.symbol, codeView.selections[1].to.line = fixCursorPosition(convertScreenCoordinatesToTextPosition(e3, e4))
 			
 			if codeView.selections[1].from.line > codeView.selections[1].to.line then
 				codeView.selections[1].from.line, codeView.selections[1].to.line = codeView.selections[1].to.line, codeView.selections[1].from.line
@@ -1378,24 +1378,24 @@ codeView.eventHandler = function(mainContainer, object, eventData)
 		end
 
 		tick(true)
-	elseif eventData[1] == "key_down" then
+	elseif e1 == "key_down" then
 		-- Ctrl or CMD
 		if keyboard.isKeyDown(29) or keyboard.isKeyDown(219) then
 			-- Slash
-			if eventData[4] == 53 then
+			if e4 == 53 then
 				toggleComment()
 			-- ]
-			elseif eventData[4] == 27 then
+			elseif e4 == 27 then
 				config.enableAutoBrackets = not config.enableAutoBrackets
 				saveConfig()
 			-- I
-			elseif eventData[4] == 23 then
+			elseif e4 == 23 then
 				toggleEnableAutocompleteDatabase()
 			-- A
-			elseif eventData[4] == 30 then
+			elseif e4 == 30 then
 				selectAll()
 			-- C
-			elseif eventData[4] == 46 then
+			elseif e4 == 46 then
 				-- Shift
 				if keyboard.isKeyDown(42) then
 					selectAndPasteColor()
@@ -1403,31 +1403,31 @@ codeView.eventHandler = function(mainContainer, object, eventData)
 					copy()
 				end
 			-- V
-			elseif eventData[4] == 47 then
+			elseif e4 == 47 then
 				paste(clipboard)
 			-- X
-			elseif eventData[4] == 45 then
+			elseif e4 == 45 then
 				cut()
 			-- W
-			elseif eventData[4] == 17 then
+			elseif e4 == 17 then
 				mainContainer:stopEventHandling()
 			-- N
-			elseif eventData[4] == 49 then
+			elseif e4 == 49 then
 				newFile()
 			-- O
-			elseif eventData[4] == 24 then
+			elseif e4 == 24 then
 				openFileWindow()
 			-- U
-			elseif eventData[4] == 22 and component.isAvailable("internet") then
+			elseif e4 == 22 and component.isAvailable("internet") then
 				downloadFileFromWeb()
 			-- Arrow UP
-			elseif eventData[4] == 200 then
+			elseif e4 == 200 then
 				convertCase("upper")
 			-- Arrow DOWN
-			elseif eventData[4] == 208 then
+			elseif e4 == 208 then
 				convertCase("lower")
 			-- S
-			elseif eventData[4] == 31 then
+			elseif e4 == 31 then
 				-- Shift
 				if leftTreeView.selectedItem and not keyboard.isKeyDown(42) then
 					saveFileWindow()
@@ -1435,45 +1435,45 @@ codeView.eventHandler = function(mainContainer, object, eventData)
 					saveFileAsWindow()
 				end
 			-- F
-			elseif eventData[4] == 33 then
+			elseif e4 == 33 then
 				toggleBottomToolBar()
 			-- G
-			elseif eventData[4] == 34 then
+			elseif e4 == 34 then
 				find()
 			-- L
-			elseif eventData[4] == 38 then
+			elseif e4 == 38 then
 				gotoLineWindow()
 			-- Backspace
-			elseif eventData[4] == 14 then
+			elseif e4 == 14 then
 				deleteLine(cursorPositionLine)
 			-- Delete
-			elseif eventData[4] == 211 then
+			elseif e4 == 211 then
 				deleteLine(cursorPositionLine)
 			-- R
-			elseif eventData[4] == 19 then
+			elseif e4 == 19 then
 				changeResolutionWindow()
 			-- F5
-			elseif eventData[4] == 63 then
+			elseif e4 == 63 then
 				launchWithArgumentsWindow()
 			end
 		-- Arrows up, down, left, right
-		elseif eventData[4] == 200 then
+		elseif e4 == 200 then
 			moveCursor(0, -1)
-		elseif eventData[4] == 208 then
+		elseif e4 == 208 then
 			moveCursor(0, 1)
-		elseif eventData[4] == 203 then
+		elseif e4 == 203 then
 			moveCursor(-1, 0)
-		elseif eventData[4] == 205 then
+		elseif e4 == 205 then
 			moveCursor(1, 0)
 		-- Tab
-		elseif eventData[4] == 15 then
+		elseif e4 == 15 then
 			if keyboard.isKeyDown(42) then
 				indentOrUnindent(false)
 			else
 				indentOrUnindent(true)
 			end
 		-- Backspace
-		elseif eventData[4] == 14 then
+		elseif e4 == 14 then
 			if codeView.selections[1] then
 				deleteSelectedData()
 			else
@@ -1501,7 +1501,7 @@ codeView.eventHandler = function(mainContainer, object, eventData)
 				showAutocomplete()
 			end
 		-- Enter
-		elseif eventData[4] == 28 then
+		elseif e4 == 28 then
 			if autocomplete.hidden then
 				local secondPart = unicode.sub(lines[cursorPositionLine], cursorPositionSymbol, -1)
 				
@@ -1518,10 +1518,10 @@ codeView.eventHandler = function(mainContainer, object, eventData)
 				autocomplete.hidden = true
 			end
 		-- F5
-		elseif eventData[4] == 63 then
+		elseif e4 == 63 then
 			run()
 		-- F9
-		elseif eventData[4] == 67 then
+		elseif e4 == 67 then
 			-- Shift
 			if keyboard.isKeyDown(42) then
 				clearBreakpoints()
@@ -1529,32 +1529,32 @@ codeView.eventHandler = function(mainContainer, object, eventData)
 				addBreakpoint()
 			end
 		-- Home
-		elseif eventData[4] == 199 then
+		elseif e4 == 199 then
 			setCursorPositionToHome()
 		-- End
-		elseif eventData[4] == 207 then
+		elseif e4 == 207 then
 			setCursorPositionToEnd()
 		-- Page Up
-		elseif eventData[4] == 201 then
+		elseif e4 == 201 then
 			pageUp()
 		-- Page Down
-		elseif eventData[4] == 209 then
+		elseif e4 == 209 then
 			pageDown()
 		-- Delete
-		elseif eventData[4] == 211 then
+		elseif e4 == 211 then
 			delete()
 		else
-			pasteAutoBrackets(eventData[3])
+			pasteAutoBrackets(e3)
 		end
 
 		tick(true)
-	elseif eventData[1] == "scroll" then
-		scroll(eventData[5], config.scrollSpeed)
+	elseif e1 == "scroll" then
+		scroll(e5, config.scrollSpeed)
 		tick(cursorBlinkState)
-	elseif eventData[1] == "clipboard" then
-		paste(splitStringIntoLines(eventData[3]))
+	elseif e1 == "clipboard" then
+		paste(splitStringIntoLines(e3))
 		tick(cursorBlinkState)
-	elseif not eventData[1] then
+	elseif not e1 then
 		tick(not cursorBlinkState)
 	end
 end
@@ -1766,7 +1766,7 @@ topMenuProperties.onTouch = function()
 	menu:show()
 end
 
-leftTreeViewResizer.onResize = function(mainContainer, object, eventData, dragWidth, dragHeight)
+leftTreeViewResizer.onResize = function(mainContainer, object, dragWidth, dragHeight)
 	leftTreeView.width = leftTreeView.width + dragWidth
 	calculateSizes()
 end
@@ -1819,7 +1819,7 @@ runButton.onTouch = function()
 	run()
 end
 
-autocomplete.onItemSelected = function(mainContainer, object, eventData)
+autocomplete.onItemSelected = function(mainContainer, object, e1)
 	local firstPart = unicode.sub(lines[cursorPositionLine], 1, autoCompleteWordStart - 1)
 	local secondPart = unicode.sub(lines[cursorPositionLine], autoCompleteWordEnd + 1, -1)
 	local middle = firstPart .. autocomplete.items[autocomplete.selectedItem]
@@ -1827,7 +1827,7 @@ autocomplete.onItemSelected = function(mainContainer, object, eventData)
 
 	setCursorPositionAndClearSelection(unicode.len(middle) + 1, cursorPositionLine)
 	
-	if eventData[1] == "key_down" then
+	if e1 == "key_down" then
 		autocomplete.hidden = false
 	end
 

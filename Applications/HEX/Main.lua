@@ -84,10 +84,10 @@ local function byteFieldDraw(object)
 	return object
 end
 
-local function byteFieldEventHandler(mainContainer, object, eventData)
-	if eventData[1] == "touch" or eventData[1] == "drag" then
-		if eventData[5] == 1 then
-			local menu = GUI.contextMenu(eventData[3], eventData[4])
+local function byteFieldEventHandler(mainContainer, object, e1, e2, e3, e4, e5)
+	if e1 == "touch" or e1 == "drag" then
+		if e5 == 1 then
+			local menu = GUI.contextMenu(e3, e4)
 			
 			menu:addItem("Select all").onTouch = function()
 				selection.from = 1
@@ -154,10 +154,10 @@ local function byteFieldEventHandler(mainContainer, object, eventData)
 			end
 			menu:show()
 		else
-			local index = (math.ceil((eventData[4] - object.y + 1) / 2) - 1) * 16 + math.ceil((eventData[3] - object.x + 1 + object.offset) / object.elementWidth) + offset
+			local index = (math.ceil((e4 - object.y + 1) / 2) - 1) * 16 + math.ceil((e3 - object.x + 1 + object.offset) / object.elementWidth) + offset
 			
 			if bytes[index] then
-				if eventData[1] == "touch" then
+				if e1 == "touch" then
 					selection.to = index
 					selection.from = index
 					selection.touchIndex = index
@@ -177,8 +177,8 @@ local function byteFieldEventHandler(mainContainer, object, eventData)
 				mainContainer:drawOnScreen()
 			end
 		end
-	elseif eventData[1] == "scroll" then
-		offset = offset - 16 * eventData[5]
+	elseif e1 == "scroll" then
+		offset = offset - 16 * e5
 		if offset < 0 then
 			offset = 0
 		elseif offset > math.floor(#bytes / 16) * 16 then

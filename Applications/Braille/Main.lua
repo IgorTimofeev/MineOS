@@ -47,9 +47,9 @@ local function newCell(x, y, shaded)
 		end
 	end
 
-	object.eventHandler = function(mainContainer, object, eventData)
-		if eventData[1] == "touch" or eventData[1] == "drag" then
-			local x, y = math.ceil((eventData[3] - object.x + 1) / 2), eventData[4] - object.y + 1
+	object.eventHandler = function(mainContainer, object, e1, e2, e3, e4)
+		if e1 == "touch" or e1 == "drag" then
+			local x, y = math.ceil((e3 - object.x + 1) / 2), e4 - object.y + 1
 			
 			if (object.background ~= colorSelector1.color and keepSwitch.state) or object.background == colorSelector1.color then
 				object.background = colorSelector1.color
@@ -63,7 +63,7 @@ local function newCell(x, y, shaded)
 			if keyboard.isKeyDown(29) or keyboard.isKeyDown(219) or keyboard.isKeyDown(56) then
 				object.pixels[y][x] = nil	
 			else
-				object.pixels[y][x] = eventData[5] == 0 and 1 or 0
+				object.pixels[y][x] = e5 == 0 and 1 or 0
 			end
 
 			mainContainer:drawOnScreen()
@@ -124,8 +124,8 @@ local function new()
 		return tonumber(text)
 	end
 
-	container.panel.eventHandler = function(mainContainer, object, eventData)
-		if eventData[1] == "touch" then
+	container.panel.eventHandler = function(mainContainer, object, e1)
+		if e1 == "touch" then
 			container:delete()
 
 			newNoGUI(tonumber(widthTextBox.text), tonumber(heightTextBox.text))

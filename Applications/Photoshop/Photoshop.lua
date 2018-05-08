@@ -1,9 +1,11 @@
 
 local args, options = require("shell").parse(...)
 local GUI = require("GUI")
+local web = require("web")
 local MineOSCore = require("MineOSCore")
 local fs = require("filesystem")
 local image = require("image")
+local unicode = require("unicode")
 local color = require("color")
 local buffer = require("doubleBuffering")
 local MineOSPaths = require("MineOSPaths")
@@ -11,10 +13,8 @@ local MineOSInterface = require("MineOSInterface")
 
 --------------------------------------------------------------------
 
-local resourcesPath = MineOSCore.getCurrentScriptDirectory()
-local toolsPath = resourcesPath .. "Tools/"
-local configPath = MineOSPaths.applicationData .. "Picture Edit/Config2.cfg"
-local savePath
+local recentColorsLimit = 52
+local recentFilesLimit = 10
 
 local config = {
 	recentColors = {},
@@ -23,7 +23,11 @@ local config = {
 	transparencyForeground = 0xD2D2D2,
 }
 
-local recentColorsLimit = 52
+local resourcesPath = MineOSCore.getCurrentScriptDirectory()
+local toolsPath = resourcesPath .. "Tools/"
+local configPath = MineOSPaths.applicationData .. "Picture Edit/Config2.cfg"
+local savePath
+local tool
 
 --------------------------------------------------------------------
 
@@ -60,6 +64,10 @@ local function addRecentFile(path)
 	end
 
 	table.insert(config.recentFiles, 1, path)
+	if #config.recentFiles > recentFilesLimit then
+		table.remove(config.recentFiles, #config.recentFiles)
+	end
+
 	saveConfig()
 end
 
@@ -68,8 +76,6 @@ loadConfig()
 local mainContainer = GUI.fullScreenContainer()
 
 mainContainer.menu = mainContainer:addChild(GUI.menu(1, 1, mainContainer.width, 0xE1E1E1, 0x5A5A5A, 0x3366CC, 0xFFFFFF, nil))
-
-mainContainer.toolsPanel = mainContainer:addChild(GUI.panel(1, 2, 6, mainContainer.height - 1, 0x3C3C3C))
 
 local function addTitle(container, text)
 	local titleContainer = container:addChild(GUI.container(1, 1, container.width, 1))
@@ -103,32 +109,30 @@ end
 
 local currentToolTitle = addTitle(mainContainer.sidebarLayout, "Tool properties")
 
-mainContainer.currentToolLayout = mainContainer.sidebarLayout:addChild(GUI.layout(1, 1, mainContainer.sidebarLayout.width - 2, 1, 1, 1))
+mainContainer.currentToolLayout = mainContainer.sidebarLayout:addChild(GUI.layout(1, 1, mainContainer.sidebarLayout.width, 1, 1, 1))
 mainContainer.currentToolLayout:setCellAlignment(1, 1, GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
-mainContainer.currentToolLayout:setCellFitting(1, 1, true, false)
+mainContainer.currentToolLayout:setCellFitting(1, 1, true, false, 2, 0)
 
 local aboutToolTitle = addTitle(mainContainer.sidebarLayout, "About tool")
 local aboutToolTextBox = mainContainer.sidebarLayout:addChild(GUI.textBox(1, 1, mainContainer.sidebarLayout.width - 2, 1, nil, 0x787878, {}, 1, 0, 0))
 
-mainContainer.backgroundPanel = mainContainer:addChild(GUI.panel(mainContainer.toolsPanel.width + 1, 2, mainContainer.width - mainContainer.toolsPanel.width - mainContainer.sidebarPanel.width, mainContainer.height - 1, 0x1E1E1E))
-
+mainContainer.toolsList = mainContainer:addChild(GUI.list(1, 2, 6, mainContainer.height - 1, 3, 0, 0x3C3C3C, 0xD2D2D2, 0x3C3C3C, 0xD2D2D2, 0x2D2D2D, 0xD2D2D2))
+mainContainer.backgroundPanel = mainContainer:addChild(GUI.panel(mainContainer.toolsList.width + 1, 2, mainContainer.width - mainContainer.toolsList.width - mainContainer.sidebarPanel.width, mainContainer.height - 1, 0x1E1E1E))
 mainContainer.image = mainContainer:addChild(GUI.object(1, 1, 1, 1))
+mainContainer.image.data = {}
 
-mainContainer.toolsLayout = mainContainer:addChild(GUI.layout(1, 2, mainContainer.toolsPanel.width, mainContainer.toolsPanel.height, 1, 1))
-mainContainer.toolsLayout:setCellAlignment(1, 1, GUI.alignment.horizontal.left, GUI.alignment.vertical.top)
-mainContainer.toolsLayout:setCellSpacing(1, 1, 0)
-
-local function pressToolButton(button)
-	for i = 1, #mainContainer.toolsLayout.children do
-		mainContainer.toolsLayout.children[i].pressed = mainContainer.toolsLayout.children[i] == button
-	end
-
+local function onToolTouch(index)
+	tool = mainContainer.toolsList.itemsLayout.children[index].tool
+	
+	mainContainer.toolsList:select(index)
+	mainContainer.currentToolOverlay:deleteChildren()
 	mainContainer.currentToolLayout:deleteChildren()
 
-	currentToolTitle.hidden = not button.tool.onSelection
+	currentToolTitle.hidden = not tool.onSelection
 	mainContainer.currentToolLayout.hidden = currentToolTitle.hidden
-	if button.tool.onSelection then
-		local result, reason = pcall(button.tool.onSelection, mainContainer)
+	
+	if tool.onSelection then
+		local result, reason = pcall(tool.onSelection, mainContainer)
 		if result then
 			mainContainer.currentToolLayout:update()
 			local lastChild = mainContainer.currentToolLayout.children[#mainContainer.currentToolLayout.children]
@@ -140,12 +144,15 @@ local function pressToolButton(button)
 		end
 	end
 
-	aboutToolTitle.hidden = not button.tool.about
+	aboutToolTitle.hidden = not tool.about
 	aboutToolTextBox.hidden = aboutToolTitle.hidden
-	if button.tool.about then
-		aboutToolTextBox.lines = string.wrap({button.tool.about}, aboutToolTextBox.width)
+	
+	if tool.about then
+		aboutToolTextBox.lines = string.wrap({tool.about}, aboutToolTextBox.width)
 		aboutToolTextBox.height = #aboutToolTextBox.lines
 	end
+
+	mainContainer:drawOnScreen()
 end
 
 local modules = fs.sortedList(toolsPath, "name", false)
@@ -154,13 +161,10 @@ for i = 1, #modules do
 	if result then
 		result, reason = pcall(result)
 		if result then
-			local button = mainContainer.toolsLayout:addChild(GUI.button(1, 1, mainContainer.toolsLayout.width, 3, nil, 0xD2D2D2, 0x2D2D2D, 0xD2D2D2, reason.shortcut))
-			button.switchMode = true
-			button.animated = false
-			button.tool = reason
-			button.onTouch = function()
-				pressToolButton(button)
-				mainContainer:drawOnScreen()
+			local item = mainContainer.toolsList:addItem(reason.shortcut)
+			item.tool = reason
+			item.onTouch = function()
+				onToolTouch(i)
 			end
 		else
 			error("Failed to perform pcall() on module " .. modules[i] .. ": " .. reason)
@@ -172,6 +176,14 @@ end
 
 mainContainer.image.draw = function(object)
 	GUI.windowShadow(object.x, object.y, object.width, object.height, nil, true)
+	
+	local y, text = object.y + object.height + 1, "Size: " .. object.width .. "x" .. object.height
+	buffer.text(math.floor(object.x + object.width / 2 - unicode.len(text) / 2), y, 0x5A5A5A, text)
+
+	if savePath then
+		text = "Path: " .. savePath
+		buffer.text(math.floor(object.x + object.width / 2 - unicode.len(text) / 2), y + 1, 0x5A5A5A, text)
+	end
 	
 	local x, y, step, notStep, background, foreground, symbol = object.x, object.y, false, mainContainer.image.width % 2
 	for i = 3, #mainContainer.image.data, 4 do
@@ -209,16 +221,6 @@ mainContainer.image.draw = function(object)
 	end
 end
 
-local function getCurrentTool()
-	for i = 1, #mainContainer.toolsLayout.children do
-		if mainContainer.toolsLayout.children[i].pressed then
-			return mainContainer.toolsLayout.children[i]
-		end
-	end
-
-	error("No current tool found")
-end
-
 local function updateRecentColorsButtons()
 	for i = 1, #config.recentColors do
 		recentColorsContainer.children[i].colors.default.background = config.recentColors[i]
@@ -226,57 +228,45 @@ local function updateRecentColorsButtons()
 	end
 end
 
-mainContainer.secondaryColorSelector = mainContainer:addChild(GUI.colorSelector(3, mainContainer.toolsPanel.height - 2, 3, 2, 0xFFFFFF, " "))
-mainContainer.primaryColorSelector = mainContainer:addChild(GUI.colorSelector(2, mainContainer.toolsPanel.height - 3, 3, 2, 0x880000, " "))
-
-local function colorSelectorOnTouch(what)
-	for i = 1, #config.recentColors do
-		if config.recentColors[i] == mainContainer[what].color then
-			return
-		end
-	end
-
-	table.insert(config.recentColors, 1, mainContainer[what].color)
-	table.remove(config.recentColors, #config.recentColors)
-	updateRecentColorsButtons()
-
-	saveConfig()
+local function swapColors()
+	mainContainer.primaryColorSelector.color, mainContainer.secondaryColorSelector.color = mainContainer.secondaryColorSelector.color, mainContainer.primaryColorSelector.color
 	mainContainer:drawOnScreen()
 end
 
-mainContainer.primaryColorSelector.onTouch = function()
-	colorSelectorOnTouch("primaryColorSelector")
+local function colorSelectorDraw(object)
+	buffer.square(object.x + 1, object.y, object.width - 2, object.height, object.color, 0x0, " ")
+	for y = object.y, object.y + object.height - 1 do
+		buffer.text(object.x, y, object.color, "⢸")
+		buffer.text(object.x + object.width - 1, y, object.color, "⡇")
+	end
 end
 
-mainContainer.secondaryColorSelector.onTouch = function()
-	colorSelectorOnTouch("secondaryColorSelector")
-end
+mainContainer.secondaryColorSelector = mainContainer:addChild(GUI.colorSelector(2, mainContainer.toolsList.height - 3, 5, 2, 0xFFFFFF, " "))
+mainContainer.primaryColorSelector = mainContainer:addChild(GUI.colorSelector(1, mainContainer.toolsList.height - 4, 5, 2, 0x880000, " "))
+mainContainer.secondaryColorSelector.draw, mainContainer.primaryColorSelector.draw = colorSelectorDraw, colorSelectorDraw
 
-mainContainer.secondaryColorSelector.drawLine, mainContainer.primaryColorSelector.drawLine = false, false
+mainContainer:addChild(GUI.adaptiveButton(3, mainContainer.secondaryColorSelector.localY + mainContainer.secondaryColorSelector.height + 1, 0, 0, nil, 0xD2D2D2, nil, 0xA5A5A5, "<>")).onTouch = swapColors
 
-mainContainer.image.eventHandler = function(mainContainer, object, eventData)
-	if eventData[1] == "key_down" then
+mainContainer.image.eventHandler = function(mainContainer, object, e1, e2, e3, e4, ...)
+	if e1 == "key_down" then
 		-- D
-		if eventData[4] == 32 then
+		if e4 == 32 then
 			mainContainer.primaryColorSelector.color, mainContainer.secondaryColorSelector.color = 0x0, 0xFFFFFF
 			mainContainer:drawOnScreen()
 		-- X
-		elseif eventData[4] == 45 then
-			mainContainer.primaryColorSelector.color, mainContainer.secondaryColorSelector.color = mainContainer.secondaryColorSelector.color, mainContainer.primaryColorSelector.color
-			mainContainer:drawOnScreen()
+		elseif e4 == 45 then
+			swapColors()
 		else
-			for i = 1, #mainContainer.toolsLayout.children do
-				if eventData[4] == mainContainer.toolsLayout.children[i].tool.keyCode then
-					pressToolButton(mainContainer.toolsLayout.children[i])
-					mainContainer:drawOnScreen()
+			for i = 1, #mainContainer.toolsList.itemsLayout.children do
+				if e4 == mainContainer.toolsList.itemsLayout.children[i].tool.keyCode then
+					onToolTouch(i)
 					return
 				end
 			end
 		end
 	end
 
-	local button = getCurrentTool()
-	local result, reason = pcall(button.tool.eventHandler, mainContainer, object, eventData)
+	local result, reason = pcall(tool.eventHandler, mainContainer, object, e1, e2, e3, e4, ...)
 	if not result then
 		GUI.error("Tool eventHandler() failed: " .. reason)
 	end
@@ -293,6 +283,7 @@ mainContainer.image.reposition = function()
 end
 
 local function newNoGUI(width, height)
+	savePath = nil
 	mainContainer.image.data = {width, height}
 	mainContainer.image.reposition()	
 	
@@ -315,8 +306,8 @@ local function new()
 	end
 	heightInput.validator = widthInput.validator
 
-	container.panel.eventHandler = function(mainContainer, object, eventData)
-		if eventData[1] == "touch" then
+	container.panel.eventHandler = function(mainContainer, object, e1)
+		if e1 == "touch" then
 			newNoGUI(tonumber(widthInput.text), tonumber(heightInput.text))
 			container:delete()
 			mainContainer:drawOnScreen()
@@ -375,7 +366,38 @@ fileItem.onTouch = function()
 	for i = 1, #config.recentFiles do
 		subMenu:addItem(string.limit(config.recentFiles[i], 32, "left")).onTouch = function()
 			loadImage(config.recentFiles[i])
+			mainContainer:drawOnScreen()
 		end
+	end
+
+	menu:addItem("Open from URL").onTouch = function()
+		local container = MineOSInterface.addUniversalContainer(mainContainer, "Open from URL")
+
+		local input = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x969696, 0xE1E1E1, 0x2D2D2D, "", "http://example.com/test.pic"))
+		input.onInputFinished = function()
+			if #input.text > 0 then
+				input:delete()
+				container.layout:addChild(GUI.label(1, 1, container.width, 1, 0x969696, "Downloading file..."):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top))
+				mainContainer:drawOnScreen()
+
+				local temporaryPath = MineOSCore.getTemporaryPath() .. ".pic"
+				local result, reason = web.download(input.text, temporaryPath)
+
+				container:delete()
+
+				if result then
+					loadImage(temporaryPath)
+					fs.remove(temporaryPath)
+					savePath = nil
+				else
+					GUI.error(reason)
+				end
+
+				mainContainer:drawOnScreen()
+			end
+		end
+
+		mainContainer:drawOnScreen()
 	end
 
 	menu:addSeparator()
@@ -412,8 +434,8 @@ mainContainer.menu:addItem("View").onTouch = function()
 	local colorSelector1 = container.layout:addChild(GUI.colorSelector(1, 1, 36, 3, config.transparencyBackground, "Transparency background"))
 	local colorSelector2 = container.layout:addChild(GUI.colorSelector(1, 1, 36, 3, config.transparencyForeground, "Transparency foreground"))
 
-	container.panel.eventHandler = function(mainContainer, object, eventData)
-		if eventData[1] == "touch" then
+	container.panel.eventHandler = function(mainContainer, object, e1)
+		if e1 == "touch" then
 			config.transparencyBackground, config.transparencyForeground = colorSelector1.color, colorSelector2.color
 			
 			container:delete()
@@ -432,6 +454,8 @@ mainContainer.menu:addItem("Hotkeys").onTouch = function()
 		" ",
 		"M - selection tool",
 		"V - move tool",
+		"C - resizer tool",
+		"Alt - picker tool",
 		"B - brush tool",
 		"E - eraser tool",
 		"T - text tool",
@@ -442,9 +466,11 @@ mainContainer.menu:addItem("Hotkeys").onTouch = function()
 		"D - make colors B/W",
 	}
 
-	container.layout:addChild(GUI.textBox(1, 1, 36, 1, nil, 0x787878, lines, 1, 0, 0, true, true)).eventHandler = nil
+	container.layout:addChild(GUI.textBox(1, 1, 36, 1, nil, 0x969696, lines, 1, 0, 0, true, true)).eventHandler = nil
 	mainContainer:drawOnScreen()
 end
+
+mainContainer.currentToolOverlay = mainContainer:addChild(GUI.container(1, 1, mainContainer.width, mainContainer.height))
 
 ----------------------------------------------------------------
 
@@ -452,7 +478,7 @@ mainContainer.image:moveToBack()
 mainContainer.backgroundPanel:moveToBack()
 
 updateRecentColorsButtons()
-pressToolButton(mainContainer.toolsLayout.children[3])
+onToolTouch(5)
 
 if options.o or options.open and args[1] and fs.exists(args[1]) then
 	loadImage(args[1])

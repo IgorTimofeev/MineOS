@@ -341,8 +341,8 @@ OCGLView.draw = function(object)
 	drawCross(renderer.viewport.xCenter, math.floor(renderer.viewport.yCenter / 2))
 end
 
-OCGLView.eventHandler = function(mainContainer, object, eventData)
-	if eventData[1] == "touch" then
+OCGLView.eventHandler = function(mainContainer, object, e1, e2, e3, e4, e5)
+	if e1 == "touch" then
 		local targetVector = vector.newVector3(scene.camera.position[1], scene.camera.position[2], scene.camera.position[3] + 1000)
 		OCGL.rotateVectorRelativeToXAxis(targetVector, scene.camera.rotation[1])
 		OCGL.rotateVectorRelativeToYAxis(targetVector, scene.camera.rotation[2])
@@ -360,15 +360,15 @@ OCGLView.eventHandler = function(mainContainer, object, eventData)
 				scene.objects[objectIndex].vertices[triangle[3]]
 			)
 
-			if normalVector[1] > 0 and eventData[5] ~= 1 or normalVector[1] < 0 and eventData[5] == 1 then
+			if normalVector[1] > 0 and e5 ~= 1 or normalVector[1] < 0 and e5 == 1 then
 				xWorld = xWorld - 1
-			elseif normalVector[2] > 0 and eventData[5] ~= 1 or normalVector[2] < 0 and eventData[5] == 1 then
+			elseif normalVector[2] > 0 and e5 ~= 1 or normalVector[2] < 0 and e5 == 1 then
 				yWorld = yWorld - 1
-			elseif normalVector[3] > 0 and eventData[5] ~= 1 or normalVector[3] < 0 and eventData[5] == 1 then
+			elseif normalVector[3] > 0 and e5 ~= 1 or normalVector[3] < 0 and e5 == 1 then
 				zWorld = zWorld - 1
 			end
 
-			setBlock(xWorld, yWorld, zWorld, eventData[5] == 1 and mainContainer.toolbar.blockColorSelector.color or nil)
+			setBlock(xWorld, yWorld, zWorld, e5 == 1 and mainContainer.toolbar.blockColorSelector.color or nil)
 		end
 	end
 end
@@ -476,7 +476,7 @@ FPSCounter.draw = function(FPSCounter)
 end
 mainContainer:addChild(FPSCounter)
 
-mainContainer.eventHandler = function(mainContainer, object, eventData)
+mainContainer.eventHandler = function(mainContainer, object, e1, e2, e3, e4, e5)
 	if not mainContainer.toolbar.hidden then
 		local totalMemory = computer.totalMemory()
 		table.insert(mainContainer.toolbar.RAMChart.values, {mainContainer.toolbar.RAMChart.counter, math.ceil((totalMemory - computer.freeMemory()) / totalMemory * 100)})
@@ -513,10 +513,12 @@ mainContainer.eventHandler = function(mainContainer, object, eventData)
 		mainContainer.infoTextBox.height = #mainContainer.infoTextBox.lines
 	end
 
-	if eventData[1] == "key_down" then
-		if controls[eventData[4]] then controls[eventData[4]]() end
-	elseif eventData[1] == "scroll" then
-		if eventData[5] == 1 then
+	if e1 == "key_down" then
+		if controls[e4] then
+			controls[e4]()
+		end
+	elseif e1 == "scroll" then
+		if e5 == 1 then
 			if scene.camera.FOV < math.rad(170) then
 				scene.camera:setFOV(scene.camera.FOV + math.rad(5))
 			end

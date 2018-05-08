@@ -111,12 +111,9 @@ tool.onSelection = function(mainContainer)
 	end
 end
 
-tool.eventHandler = function(mainContainer, object, eventData)
-	if eventData[1] == "touch" then
-		
-	end
+tool.eventHandler = function(mainContainer, object, e1)
+	
 end
-
 
 ------------------------------------------------------
 

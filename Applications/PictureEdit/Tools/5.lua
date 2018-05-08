@@ -35,9 +35,9 @@ tool.onSelection = function(mainContainer)
 	mainContainer.currentToolLayout:addChild(radiusSlider)
 end
 
-tool.eventHandler = function(mainContainer, object, eventData)
-	if eventData[1] == "touch" or eventData[1] == "drag" then
-		local x, y = eventData[3] - mainContainer.image.x + 1, eventData[4] - mainContainer.image.y + 1
+tool.eventHandler = function(mainContainer, object, e1, e2, e3, e4)
+	if e1 == "touch" or e1 == "drag" then
+		local x, y = e3 - mainContainer.image.x + 1, e4 - mainContainer.image.y + 1
 		local meow = math.floor(radiusSlider.value)
 
 		for j = y - meow + 1, y + meow - 1 do

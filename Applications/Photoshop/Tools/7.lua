@@ -1,58 +1,51 @@
 
+local unicode = require("unicode")
 local image = require("image")
 local GUI = require("GUI")
 local tool = {}
 
 ------------------------------------------------------
 
-tool.shortcut = "Br"
-tool.keyCode = 33
-tool.about = "Braille tool allows you to draw pixels with Braille symbols on your image. Select preferred mini-pixels via menu above, configure transparency affecting and \"Let's go fellas!\""
+tool.shortcut = "Tx"
+tool.keyCode = 20
+tool.about = "Text tool allows you to type some text data with selected primary color right on your image! It's time to say \"ur mom gay\" to everyone <3"
 
-local layout = GUI.layout(1, 1, 1, 8, 1, 1)
-local container, char, step = layout:addChild(GUI.container(1, 1, 8, 8)), " ", false
-for y = 1, 8, 2 do
-	for x = 1, 8, 4 do
-		local button = container:addChild(GUI.button(x, y, 4, 2, step and 0xFFFFFF or 0xD2D2D2, 0x0, step and 0x0 or 0x1E1E1E, 0x0, " "))
-		button.switchMode = true
-		button.onTouch = function()
-			local data = {}
-			for i = 1, #container.children do
-				data[i] = container.children[i].pressed and 1 or 0
+tool.eventHandler = function(mainContainer, object, e1, e2, e3, e4)
+	if e1 == "touch" then
+		local input = mainContainer:addChild(GUI.input(
+			e3 - 1,
+			e4,
+			mainContainer.image.x + mainContainer.image.width - e3 + 2,
+			1,
+			nil,
+			mainContainer.primaryColorSelector.color,
+			mainContainer.primaryColorSelector.color,
+			nil,
+			mainContainer.primaryColorSelector.color,
+			""
+		))
+		
+		input.onInputFinished = function()
+			if #input.text > 0 then
+				local x, y = e3 - mainContainer.image.x + 1, e4 - mainContainer.image.y + 1
+				for i = 1, unicode.len(input.text) do
+					if x <= mainContainer.image.width then
+						local background, foreground, alpha = image.get(mainContainer.image.data, x, y)
+						image.set(mainContainer.image.data, x, y, background, mainContainer.primaryColorSelector.color, alpha, unicode.sub(input.text, i, i))
+						x = x + 1
+					else
+						break
+					end
+				end
 			end
 
-			char = string.brailleChar(table.unpack(data))
+			input:delete()
+			mainContainer:drawOnScreen()
 		end
 
-		step = not step
-	end
-
-	step = not step
-end
-
-local transparencySwitch = GUI.switchAndLabel(1, 1, 1, 6, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x878787, "Transparency:", false)
-
-tool.onSelection = function(mainContainer)
-	mainContainer.currentToolLayout:addChild(layout)
-	mainContainer.currentToolLayout:addChild(transparencySwitch)
-end
-
-tool.eventHandler = function(mainContainer, object, eventData)
-	if eventData[1] == "touch" or eventData[1] == "drag" then
-		local x, y = eventData[3] - mainContainer.image.x + 1, eventData[4] - mainContainer.image.y + 1
-		local background, foreground, alpha, symbol = image.get(mainContainer.image.data, x, y)
-		
-		image.set(mainContainer.image.data, x, y,
-			transparencySwitch.switch.state and background or mainContainer.secondaryColorSelector.color,
-			mainContainer.primaryColorSelector.color,
-			transparencySwitch.switch.state and 1 or 0,
-			char
-		)
-
-		mainContainer:drawOnScreen()
+		input:startInput()
 	end
 end
-
 
 ------------------------------------------------------
 

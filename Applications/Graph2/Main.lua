@@ -109,16 +109,16 @@ window.onResize = function(width, height)
 	update()
 end
 
-graph.eventHandler = function(mainContainer, graph, eventData)
-	if eventData[1] == "touch" then
-		xDrag, yDrag = eventData[3], eventData[4]
-	elseif eventData[1] == "drag" then
-		xOffset, yOffset = xOffset + (eventData[3] - xDrag), yOffset + (eventData[4] - yDrag)
+graph.eventHandler = function(mainContainer, graph, e1, e2, e3, e4)
+	if e1 == "touch" then
+		xDrag, yDrag = e3, e4
+	elseif e1 == "drag" then
+		xOffset, yOffset = xOffset + (e3 - xDrag), yOffset + (e4 - yDrag)
 		mainContainer:drawOnScreen()
 
-		xDrag, yDrag = eventData[3], eventData[4]
-	elseif eventData[1] == "scroll" then
-		scaleSlider.value = scaleSlider.value + eventData[5] * 10
+		xDrag, yDrag = e3, e4
+	elseif e1 == "scroll" then
+		scaleSlider.value = scaleSlider.value + e5 * 10
 		if scaleSlider.value < scaleSlider.minimumValue then
 			scaleSlider.value = scaleSlider.minimumValue
 		elseif scaleSlider.value > scaleSlider.maximumValue then
@@ -126,7 +126,6 @@ graph.eventHandler = function(mainContainer, graph, eventData)
 		end
 
 		update()
-
 		mainContainer:drawOnScreen()
 	end
 end

@@ -111,8 +111,8 @@ shootButton.draw = function()
 	buffer.image(shootButton.x, shootButton.y, shootButton.pressed and buttonImagePressed or buttonImage)
 end
 
-shootButton.eventHandler = function(mainContainer, object, eventData)
-	if eventData[1] == "touch" then
+shootButton.eventHandler = function(mainContainer, object, e1)
+	if e1 == "touch" then
 		shootButton.pressed = true
 		MineOSInterface.mainContainer:drawOnScreen()
 		

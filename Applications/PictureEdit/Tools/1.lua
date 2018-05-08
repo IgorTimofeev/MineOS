@@ -119,12 +119,12 @@ tool.onSelection = function(mainContainer)
 	fitSelector(mainContainer)
 end
 
-tool.eventHandler = function(mainContainer, object, eventData)
-	if eventData[1] == "touch" then
-		touchX, touchY, dragX, dragY = eventData[3], eventData[4], eventData[3], eventData[4]
+tool.eventHandler = function(mainContainer, object, e1, e2, e3, e4)
+	if e1 == "touch" then
+		touchX, touchY, dragX, dragY = e3, e4, e3, e4
 		repositionSelector(mainContainer)
-	elseif eventData[1] == "drag" then
-		dragX, dragY = eventData[3], eventData[4]
+	elseif e1 == "drag" then
+		dragX, dragY = e3, e4
 		repositionSelector(mainContainer)
 	end
 end
