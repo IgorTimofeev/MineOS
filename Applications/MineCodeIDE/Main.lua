@@ -662,19 +662,11 @@ end
 local function splitStringIntoLines(s)
 	s = removeWindowsLineEndings(removeTabs(s))
 
-	local splitLines, searchLineEndingFrom, maximumLineLength, lineEndingFoundAt, line = {}, 1, 0
-	repeat
-		lineEndingFoundAt = string.unicodeFind(s, "\n", searchLineEndingFrom)
-		if lineEndingFoundAt then
-			line = unicode.sub(s, searchLineEndingFrom, lineEndingFoundAt - 1)
-			searchLineEndingFrom = lineEndingFoundAt + 1
-		else
-			line = unicode.sub(s, searchLineEndingFrom, -1)
-		end
-
-		table.insert(splitLines, line)
+	local splitLines, maximumLineLength = {}, 0
+	for line in s:gmatch("[^\n]+") do
 		maximumLineLength = math.max(maximumLineLength, unicode.len(line))
-	until not lineEndingFoundAt
+		table.insert(splitLines, line)
+	end
 
 	return splitLines, maximumLineLength
 end
@@ -998,12 +990,21 @@ local function paste(data, notTable)
 		lines[cursorPositionLine] = firstPart .. data .. secondPart
 		setCursorPositionAndClearSelection(cursorPositionSymbol + unicode.len(data), cursorPositionLine)
 	else
-		lines[cursorPositionLine] = firstPart .. data[1]
-		for pasteLine = #data - 1, 2, -1 do
-			table.insert(lines, cursorPositionLine + 1, data[pasteLine])
+		if #data == 1 then
+			lines[cursorPositionLine] = firstPart .. data[1] .. secondPart
+			setCursorPositionAndClearSelection(unicode.len(firstPart .. data[1]) + 1, cursorPositionLine)
+		else
+			lines[cursorPositionLine] = firstPart .. data[1]
+
+			if #data > 2 then
+				for pasteLine = #data - 1, 2, -1 do
+					table.insert(lines, cursorPositionLine + 1, data[pasteLine])
+				end
+			end
+
+			table.insert(lines, cursorPositionLine + #data - 1, data[#data] .. secondPart)
+			setCursorPositionAndClearSelection(unicode.len(data[#data]) + 1, cursorPositionLine + #data - 1)
 		end
-		table.insert(lines, cursorPositionLine + #data - 1, data[#data] .. secondPart)
-		setCursorPositionAndClearSelection(unicode.len(data[#data]) + 1, cursorPositionLine + #data - 1)
 	end
 
 	updateAutocompleteDatabaseFromFile()
@@ -1552,7 +1553,10 @@ codeView.eventHandler = function(mainContainer, object, e1, e2, e3, e4, e5)
 		scroll(e5, config.scrollSpeed)
 		tick(cursorBlinkState)
 	elseif e1 == "clipboard" then
-		paste(splitStringIntoLines(e3))
+		local lines = splitStringIntoLines(e3)
+		table.insert(lines, "")
+		paste(lines)
+		
 		tick(cursorBlinkState)
 	elseif not e1 then
 		tick(not cursorBlinkState)
