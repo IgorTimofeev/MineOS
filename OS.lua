@@ -494,6 +494,7 @@ local function createOSWidgets()
 		menu:addItem(MineOSCore.localization.aboutSystem).onTouch = function()
 			local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer, MineOSCore.localization.aboutSystem)
 			container.layout:setCellFitting(2, 1, false, false)
+			container.layout:deleteChildren()
 			
 			local lines = {
 				"MineOS",
