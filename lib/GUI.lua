@@ -1339,6 +1339,7 @@ local function dropDownMenuItemEventHandler(mainContainer, object, event)
 				os.sleep(0.2)
 			end
 
+			object.pressed = false
 			mainContainer.selectedItem = object:indexOf()
 		end
 
