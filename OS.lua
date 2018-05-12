@@ -504,27 +504,28 @@ local function createOSWidgets()
 				"Timofeev Igor, vk.com/id7799889",
 				"Trifonov Gleb, vk.com/id88323331",
 				"Verevkin Yakov, vk.com/id60991376",
-				"Shestakov Timofei, vk.com/id113499693",
 				"Alexey Smirnov, vk.com/id23897419",
+				"Shestakov Timofei, vk.com/id113499693",
+				" ",
+				"UX-advisers:",
+				" ",
 				"Yarichev Nikita, vk.com/id65873873",
 				"Sazonov Vyacheslav, vk.com/id21321257",
 				"Prosin Michail, vk.com/id75667079",
 				"Tiunov Dmitrii, vk.com/id151541414",
 				"Paliev Egor, vk.com/id83795932",
-				"Omelaenko Maxim, vk.com/id54662296",
 				"Pakin Maxim, vk.com/id100687922",
-				"Mayakovsky Konstantin, vk.com/id10069748",
-				"Bogushevich Victoria, vk.com/id171497518",
-				"Vitvitskaya Yana, vk.com/id183425349",
-				"Chernyshova Daria, vk.com/id33609611",
 				"Kakoito Andrey, vk.com/id201043162",
-				"Dmitrieva Yana, vk.com/id155326634",
+				"Omelaenko Maxim, vk.com/id54662296",
+				"Mayakovsky Konstantin, vk.com/id10069748",
 				" ",
-				"French translation:",
+				"Translators:",
 				" ",
 				"06Games, github.com/06Games",
+				"Mazneva Ksenia, vk.com/id5564402",
+				"Dmitrieva Yana, vk.com/id155326634",
 			}
-			
+
 			local textBox = container.layout:addChild(GUI.textBox(1, 1, 40, #lines, nil, 0x969696, lines, 1, 0, 0))
 			textBox:setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
 			textBox.eventHandler = container.panel.eventHandler
