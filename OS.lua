@@ -501,6 +501,47 @@ local function createOSWidgets()
 	item1.onTouch = function()
 		local menu = MineOSInterface.contextMenu(item1.x, item1.y + 1)
 
+		menu:addItem(MineOSCore.localization.aboutSystem).onTouch = function()
+			local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer, MineOSCore.localization.aboutSystem)
+			container.layout:setCellFitting(2, 1, false, false)
+			
+			local lines = {
+				"MineOS",
+				"Copyright © 2014-" .. os.date("%Y", realTimestamp),
+				" ",
+				"Developers:",
+				" ",
+				"Timofeev Igor, vk.com/id7799889",
+				"Trifonov Gleb, vk.com/id88323331",
+				"Verevkin Yakov, vk.com/id60991376",
+				"Shestakov Timofei, vk.com/id113499693",
+				"Alexey Smirnov, vk.com/id23897419",
+				"Yarichev Nikita, vk.com/id65873873",
+				"Sazonov Vyacheslav, vk.com/id21321257",
+				"Prosin Michail, vk.com/id75667079",
+				"Tiunov Dmitrii, vk.com/id151541414",
+				"Paliev Egor, vk.com/id83795932",
+				"Omelaenko Maxim, vk.com/id54662296",
+				"Pakin Maxim, vk.com/id100687922",
+				"Mayakovsky Konstantin, vk.com/id10069748",
+				"Bogushevich Victoria, vk.com/id171497518",
+				"Vitvitskaya Yana, vk.com/id183425349",
+				"Chernyshova Daria, vk.com/id33609611",
+				"Kakoito Andrey, vk.com/id201043162",
+				"Dmitrieva Yana, vk.com/id155326634",
+				" ",
+				"French translation:",
+				" ",
+				"06Games, github.com/06Games",
+			}
+
+			local textBox = container.layout:addChild(GUI.textBox(1, 1, 40, #lines, nil, 0x969696, lines, 1, 0, 0))
+			textBox:setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+			textBox.eventHandler = nil
+
+			MineOSInterface.mainContainer:drawOnScreen()
+		end
+
 		menu:addItem(MineOSCore.localization.updates).onTouch = function()
 			MineOSInterface.safeLaunch(MineOSPaths.applications .. "App Market.app/Main.lua", "updates")
 		end
@@ -536,7 +577,7 @@ local function createOSWidgets()
 	local item2 = MineOSInterface.mainContainer.menu:addItem(MineOSCore.localization.network)
 	item2.onTouch = function()
 		local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer, MineOSCore.localization.network)
-		local insertModemTextBox = container.layout:addChild(GUI.textBox(1, 1, 36, 1, nil, 0x555555, {MineOSCore.localization.networkModemNotAvailable}, 1, 0, 0, true, true))
+		local insertModemTextBox = container.layout:addChild(GUI.textBox(1, 1, 36, 1, nil, 0x5A5A5A, {MineOSCore.localization.networkModemNotAvailable}, 1, 0, 0, true, true))
 		local stateSwitchAndLabel = container.layout:addChild(GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x878787, MineOSCore.localization.networkState .. ":", MineOSCore.properties.network.enabled))
 		local networkNameInput = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x878787, 0xE1E1E1, 0x2D2D2D, MineOSCore.properties.network.name or "", MineOSCore.localization.networkName))
 		local remoteComputersLabel = container.layout:addChild(GUI.label(1, 1, container.width, 1, 0xE1E1E1, MineOSCore.localization.networkComputers):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top))
@@ -767,7 +808,7 @@ local function createOSWidgets()
 				MineOSInterface.mainContainer:drawOnScreen()
 			end
 
-			container.layout:addChild(GUI.textBox(1, 1, 36, 1, nil, 0x555555, {MineOSCore.localization.wallpaperSwitchInfo}, 1, 0, 0, true, true))
+			container.layout:addChild(GUI.textBox(1, 1, 36, 1, nil, 0x5A5A5A, {MineOSCore.localization.wallpaperSwitchInfo}, 1, 0, 0, true, true))
 
 			local slider = container.layout:addChild(GUI.slider(1, 1, 36, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x878787, 0, 100, MineOSCore.properties.wallpaperBrightness * 100, false, MineOSCore.localization.wallpaperBrightness .. ": ", "%"))
 			slider.roundValues = true
@@ -836,7 +877,7 @@ local function createOSWidgets()
 
 				MineOSInterface.mainContainer:drawOnScreen()
 			end
-			container.layout:addChild(GUI.textBox(1, 1, 36, 1, nil, 0x555555, {MineOSCore.localization.transparencySwitchInfo}, 1, 0, 0, true, true))
+			container.layout:addChild(GUI.textBox(1, 1, 36, 1, nil, 0x5A5A5A, {MineOSCore.localization.transparencySwitchInfo}, 1, 0, 0, true, true))
 
 			backgroundColorSelector.onTouch = function()
 				MineOSCore.properties.backgroundColor = backgroundColorSelector.color

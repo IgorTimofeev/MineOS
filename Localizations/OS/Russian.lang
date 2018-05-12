@@ -97,7 +97,7 @@
 	showHiddenFiles = "Скрытые файлы",
 	showApplicationIcons = "Иконки приложений",
 
-	aboutSystem = "Об этом ПК",
+	aboutSystem = "О системе",
 	updates = "Обновления",
 	update = "Обновить",
 	shutdown = "Выключить",

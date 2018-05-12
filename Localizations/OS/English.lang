@@ -97,7 +97,7 @@
 	showHiddenFiles = "Hidden files",
 	showApplicationIcons = "Application icons",
 
-	aboutSystem = "About this PC",
+	aboutSystem = "About system",
 	updates = "Updates",
 	update = "Refresh",
 	shutdown = "Shutdown",
