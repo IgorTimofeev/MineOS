@@ -29,9 +29,11 @@ function MineOSCore.getTemporaryPath()
 end
 
 function MineOSCore.getLocalization(pathToLocalizationFolder)
-	local localizationFileName = pathToLocalizationFolder .. MineOSCore.properties.language .. ".lang"
-	if fs.exists(localizationFileName) then
-		return table.fromFile(localizationFileName)
+	local required, english = pathToLocalizationFolder .. MineOSCore.properties.language .. ".lang", pathToLocalizationFolder .. "English.lang"
+	if fs.exists(required) then
+		return table.fromFile(required)
+	elseif fs.exists(english) then
+		return table.fromFile(english)
 	else
 		return table.fromFile(pathToLocalizationFolder .. fs.list(pathToLocalizationFolder)())
 	end

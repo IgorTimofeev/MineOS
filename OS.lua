@@ -715,26 +715,6 @@ local function createOSWidgets()
 
 		menu:addSeparator()
 
-		menu:addItem(MineOSCore.localization.timezone).onTouch = function()
-			local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer, MineOSCore.localization.timezone)
-			
-			local comboBox = container.layout:addChild(GUI.comboBox(1, 1, 36, 3, 0xE1E1E1, 0x2D2D2D, 0x4B4B4B, 0x969696))
-			comboBox.dropDownMenu.itemHeight = 1
-
-			for i = -12, 12 do
-				comboBox:addItem("GMT" .. (i >= 0 and "+" or "") .. i).onTouch = function()
-					MineOSCore.properties.timezone = i
-					MineOSCore.saveProperties()
-
-					MineOSCore.OSUpdateTimezone(i)
-					MineOSCore.OSUpdateDate()
-					MineOSInterface.mainContainer:drawOnScreen()
-				end
-			end
-			
-			MineOSInterface.mainContainer:drawOnScreen()
-		end
-
 		menu:addItem(MineOSCore.localization.systemLanguage).onTouch = function()
 			local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer, MineOSCore.localization.systemLanguage)
 
@@ -919,6 +899,26 @@ local function createOSWidgets()
 				computer.pushSignal("MineOSCore", "updateFileList")
 			end
 			showHiddenFilesSwitch.onStateChanged, showApplicationIconsSwitch.onStateChanged = showExtensionSwitch.onStateChanged, showExtensionSwitch.onStateChanged
+		end
+
+		menu:addItem(MineOSCore.localization.timezone).onTouch = function()
+			local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer, MineOSCore.localization.timezone)
+			
+			local comboBox = container.layout:addChild(GUI.comboBox(1, 1, 36, 3, 0xE1E1E1, 0x2D2D2D, 0x4B4B4B, 0x969696))
+			comboBox.dropDownMenu.itemHeight = 1
+
+			for i = -12, 12 do
+				comboBox:addItem("GMT" .. (i >= 0 and "+" or "") .. i).onTouch = function()
+					MineOSCore.properties.timezone = i
+					MineOSCore.saveProperties()
+
+					MineOSCore.OSUpdateTimezone(i)
+					MineOSCore.OSUpdateDate()
+					MineOSInterface.mainContainer:drawOnScreen()
+				end
+			end
+			
+			MineOSInterface.mainContainer:drawOnScreen()
 		end
 
 		menu:addSeparator()
