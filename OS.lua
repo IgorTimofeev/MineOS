@@ -524,10 +524,10 @@ local function createOSWidgets()
 				" ",
 				"06Games, github.com/06Games",
 			}
-
+			
 			local textBox = container.layout:addChild(GUI.textBox(1, 1, 40, #lines, nil, 0x969696, lines, 1, 0, 0))
 			textBox:setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
-			textBox.eventHandler = nil
+			textBox.eventHandler = container.panel.eventHandler
 
 			MineOSInterface.mainContainer:drawOnScreen()
 		end
