@@ -2504,7 +2504,7 @@ local function resizerDraw(object)
 		buffer.text(object.x, math.floor(object.y + object.height / 2), object.colors.helper, string.rep("━", object.width))
 		
 		if object.lastTouchX then
-			buffer.text(object.lastTouchX - 1, object.lastTouchY, object.colors.arrow, "↑")
+			buffer.text(object.lastTouchX, object.lastTouchY, object.colors.arrow, "↑")
 		end
 	else
 		local x = math.floor(object.x + object.width / 2)
@@ -2518,7 +2518,7 @@ local function resizerDraw(object)
 		end
 
 		if object.lastTouchX then
-			buffer.text(object.lastTouchX, object.lastTouchY, object.colors.arrow, "←→")
+			buffer.text(object.lastTouchX - 1, object.lastTouchY, object.colors.arrow, "←→")
 		end
 	end
 end
@@ -4208,6 +4208,37 @@ function GUI.window(x, y, width, height)
 	window.resize = windowResize
 
 	return window
+end
+
+------------------------------------------------------------------------------------------
+
+local function keyAndValueUpdate(object)
+	object.keyLength, object.valueLength = unicode.len(object.key), unicode.len(object.value)
+	object.width = object.keyLength + object.valueLength
+end
+
+local function keyAndValueDraw(object)
+	keyAndValueUpdate(object)
+	buffer.text(object.x, object.y, object.colors.key, object.key)
+	buffer.text(object.x + object.keyLength, object.y, object.colors.value, object.value)
+end
+
+function GUI.keyAndValue(x, y, keyColor, valueColor, key, value)
+	local object = GUI.object(x, y, 1, 1)
+	
+	object.colors = {
+		key = keyColor,
+		value = valueColor
+	}
+	object.key = key
+	object.value = value
+
+	object.update = keyAndValueUpdate
+	object.draw = keyAndValueDraw
+
+	object:update()
+
+	return object
 end
 
 ------------------------------------------------------------------------------------------

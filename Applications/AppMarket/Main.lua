@@ -30,8 +30,8 @@ local configPath = appMarketPath .. "Config.cfg"
 local userPath = appMarketPath .. "User.cfg"
 local iconCachePath = appMarketPath .. "Cache/"
 
-local resourcesPath = MineOSCore.getCurrentScriptDirectory() 
-local localization = MineOSCore.getLocalization(resourcesPath .. "Localizations/") 
+local currentScriptDirectory = MineOSCore.getCurrentScriptDirectory() 
+local localization = MineOSCore.getLocalization(currentScriptDirectory .. "Localizations/") 
 
 local categories = {
 	localization.categoryApplications,
@@ -610,26 +610,6 @@ local function addApplicationInfo(container, publication, limit)
 	end
 end
 
-local function keyValueWidgetDraw(object)
-	buffer.text(object.x, object.y, object.colors.key, object.key)
-	buffer.text(object.x + unicode.len(object.key), object.y, object.colors.value, object.value)
-end
-
-local function newKeyValueWidget(x, y, width, keyColor, valueColor, key, value)
-	local object = GUI.object(x, y, width, 1)
-	
-	object.colors = {
-		key = keyColor,
-		value = valueColor
-	}
-	object.key = key
-	object.value = value
-
-	object.draw = keyValueWidgetDraw
-
-	return object
-end
-
 local function containerScrollEventHandler(mainContainer, object, e1, e2, e3, e4, e5)
 	if e1 == "scroll" then
 		local first, last = object.children[1], object.children[#object.children]
@@ -714,15 +694,21 @@ mainMenu = function(menuID, messageToUser)
 				local width = 38
 				local container = menuContentContainer:addChild(GUI.container(math.floor(menuContentContainer.width / 2 - width / 2), 1, width, menuContentContainer.height))
 				container:addChild(GUI.panel(1, 1, container.width, container.height, 0xFFFFFF))
+				
 				local statisticsLayout = container:addChild(GUI.layout(1, 1, container.width, container.height, 1, 1))
 
-				statisticsLayout:addChild(GUI.image(1, 1, image.load(resourcesPath .. "Icon.pic"))).height = 5
-				statisticsLayout:addChild(newKeyValueWidget(1, 1, container.width - 4, 0x4B4B4B, 0xA5A5A5, localization.statisticsUsersCount, ": " .. statistics.users_count))
-				statisticsLayout:addChild(newKeyValueWidget(1, 1, container.width - 4, 0x4B4B4B, 0xA5A5A5, localization.statisticsNewUser, ": " .. statistics.last_registered_user))
-				statisticsLayout:addChild(newKeyValueWidget(1, 1, container.width - 4, 0x4B4B4B, 0xA5A5A5, localization.statisticsMostPopularUser, ": " .. statistics.most_popular_user))
-				statisticsLayout:addChild(newKeyValueWidget(1, 1, container.width - 4, 0x4B4B4B, 0xA5A5A5, localization.statisticsPublicationsCount, ": " .. statistics.publications_count))
-				statisticsLayout:addChild(newKeyValueWidget(1, 1, container.width - 4, 0x4B4B4B, 0xA5A5A5, localization.statisticsReviewsCount, ": " .. statistics.reviews_count))
+				statisticsLayout:addChild(GUI.image(1, 1, image.load(currentScriptDirectory .. "Icon.pic"))).height = 5
 				
+				local textLayout = statisticsLayout:addChild(GUI.layout(1, 1, container.width - 4, 1, 1, 1))
+				textLayout:setCellAlignment(1, 1, GUI.alignment.horizontal.left, GUI.alignment.vertical.top)
+
+				textLayout:addChild(GUI.keyAndValue(1, 1, 0x4B4B4B, 0xA5A5A5, localization.statisticsUsersCount, ": " .. statistics.users_count))
+				textLayout:addChild(GUI.keyAndValue(1, 1, 0x4B4B4B, 0xA5A5A5, localization.statisticsNewUser, ": " .. statistics.last_registered_user))
+				textLayout:addChild(GUI.keyAndValue(1, 1, 0x4B4B4B, 0xA5A5A5, localization.statisticsMostPopularUser, ": " .. statistics.most_popular_user))
+				textLayout:addChild(GUI.keyAndValue(1, 1, 0x4B4B4B, 0xA5A5A5, localization.statisticsPublicationsCount, ": " .. statistics.publications_count))
+				textLayout:addChild(GUI.keyAndValue(1, 1, 0x4B4B4B, 0xA5A5A5, localization.statisticsReviewsCount, ": " .. statistics.reviews_count))
+				textLayout.height = #textLayout.children * 2 - 1
+
 				local applicationPreview = statisticsLayout:addChild(newApplicationPreview(1, 1, publications[1]))
 				applicationPreview.panel.colors.background = 0xF0F0F0
 				statisticsLayout:addChild(GUI.label(1, 1, statisticsLayout.width, 1, 0xA5A5A5, localization.statisticsPopularPublication)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.center)
@@ -895,8 +881,8 @@ mainMenu = function(menuID, messageToUser)
 				check()
 			end
 		else
-			local width = unicode.len(localization.dialogWith) + unicode.len(to_user_name)
-			menuContentContainer:addChild(newKeyValueWidget(math.floor(menuContentContainer.width / 2 - width / 2), 2, width, 0x878787, 0x0, localization.dialogWith, to_user_name))
+			local keyAndValue = menuContentContainer:addChild(GUI.keyAndValue(1, 2, 0x878787, 0x0, localization.dialogWith, to_user_name))
+			keyAndValue.localX = math.floor(menuContentContainer.width / 2 - (keyAndValue.keyLength + keyAndValue.valueLength) / 2)
 			-- menuContentContainer:addChild(GUI.label(1, 2, menuContentContainer.width, 1, 0x2D2D2D, to_user_name)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.center)
 		end
 
@@ -976,7 +962,7 @@ mainMenu = function(menuID, messageToUser)
 					local dialogContainer = dialogsContainer:addChild(GUI.container(3, y, dialogsContainer.width - 4, 4))
 					addPanel(dialogContainer,backgroundColor)
 					
-					dialogContainer:addChild(newKeyValueWidget(3, 2, dialogContainer.width, nicknameColor, timestampColor, dialogs[i].dialog_user_name, os.date(" (%d.%m.%Y, %H:%M)", dialogs[i].timestamp)))
+					dialogContainer:addChild(GUI.keyAndValue(3, 2, nicknameColor, timestampColor, dialogs[i].dialog_user_name, os.date(" (%d.%m.%Y, %H:%M)", dialogs[i].timestamp)))
 					dialogContainer:addChild(GUI.text(3, 3, textColor, string.limit((dialogs[i].last_message_user_name == user.name and localization.yourText .. " " or "") .. dialogs[i].text, dialogContainer.width - 4, "right")))
 
 					dialogContainer.eventHandler = function(mainContainer, object, e1)
@@ -1125,9 +1111,13 @@ mainMenu = function(menuID, messageToUser)
 
 				layout:addChild(GUI.text(1, 1, 0x2D2D2D, localization.profile))
 
-				layout:addChild(newKeyValueWidget(1, 1, 36, 0x4B4B4B, 0x878787, localization.nickname, ": " .. user.name))
-				layout:addChild(newKeyValueWidget(1, 1, 36, 0x4B4B4B, 0x878787, "E-Mail", ": " .. user.email))
-				layout:addChild(newKeyValueWidget(1, 1, 36, 0x4B4B4B, 0x878787, localization.registrationDate, ": " .. os.date("%d.%m.%Y", user.timestamp)))
+				local textLayout = layout:addChild(GUI.layout(1, 1, 36, 5, 1, 1))
+				textLayout:setCellAlignment(1, 1, GUI.alignment.horizontal.left, GUI.alignment.vertical.top)
+				
+				textLayout:addChild(GUI.keyAndValue(1, 1, 0x696969, 0x969696, localization.nickname, ": " .. user.name))
+				textLayout:addChild(GUI.keyAndValue(1, 1, 0x696969, 0x969696, "E-Mail", ": " .. user.email))
+				textLayout:addChild(GUI.keyAndValue(1, 1, 0x696969, 0x969696, localization.registrationDate, ": " .. os.date("%d.%m.%Y", user.timestamp)))
+				textLayout.height = #textLayout.children * 2 - 1
 
 				local buttonsLayout = layout:addChild(newButtonsLayout(1, 1, layout.width, 2))
 				
@@ -1251,11 +1241,11 @@ newPublicationInfo = function(file_id)
 			
 			local y = 2
 
-			ratingsContainer:addChild(newKeyValueWidget(2, y, ratingsContainer.width - 2, 0x2D2D2D, 0x878787, localization.developer, ": " .. publication.user_name)); y = y + 1
-			ratingsContainer:addChild(newKeyValueWidget(2, y, ratingsContainer.width - 2, 0x2D2D2D, 0x878787, localization.license, ": " .. licenses[publication.license_id])); y = y + 1
-			ratingsContainer:addChild(newKeyValueWidget(2, y, ratingsContainer.width - 2, 0x2D2D2D, 0x878787, localization.category, ": " .. categories[publication.category_id])); y = y + 1
-			ratingsContainer:addChild(newKeyValueWidget(2, y, ratingsContainer.width - 2, 0x2D2D2D, 0x878787, localization.version, ": " .. publication.version)); y = y + 1
-			ratingsContainer:addChild(newKeyValueWidget(2, y, ratingsContainer.width - 2, 0x2D2D2D, 0x878787, localization.updated, ": " .. os.date("%d.%m.%Y", publication.timestamp))); y = y + 1
+			ratingsContainer:addChild(GUI.keyAndValue(2, y, 0x2D2D2D, 0x878787, localization.developer, ": " .. publication.user_name)); y = y + 1
+			ratingsContainer:addChild(GUI.keyAndValue(2, y, 0x2D2D2D, 0x878787, localization.license, ": " .. licenses[publication.license_id])); y = y + 1
+			ratingsContainer:addChild(GUI.keyAndValue(2, y, 0x2D2D2D, 0x878787, localization.category, ": " .. categories[publication.category_id])); y = y + 1
+			ratingsContainer:addChild(GUI.keyAndValue(2, y, 0x2D2D2D, 0x878787, localization.version, ": " .. publication.version)); y = y + 1
+			ratingsContainer:addChild(GUI.keyAndValue(2, y, 0x2D2D2D, 0x878787, localization.updated, ": " .. os.date("%d.%m.%Y", publication.timestamp))); y = y + 1
 			
 			-- Добавляем инфу с общими рейтингами
 			if #reviews > 0 then
@@ -1265,8 +1255,8 @@ newPublicationInfo = function(file_id)
 				end
 
 				y = y + 1
-				ratingsContainer:addChild(newKeyValueWidget(2, y, ratingsContainer.width - 2, 0x2D2D2D, 0x878787, localization.reviews, ": " .. #reviews)); y = y + 1
-				ratingsContainer:addChild(newKeyValueWidget(2, y, ratingsContainer.width - 2, 0x2D2D2D, 0x878787, localization.averageRating, ": " .. string.format("%.1f", publication.average_rating or 0))); y = y + 1
+				ratingsContainer:addChild(GUI.keyAndValue(2, y, 0x2D2D2D, 0x878787, localization.reviews, ": " .. #reviews)); y = y + 1
+				ratingsContainer:addChild(GUI.keyAndValue(2, y, 0x2D2D2D, 0x878787, localization.averageRating, ": " .. string.format("%.1f", publication.average_rating or 0))); y = y + 1
 
 				for i = #ratings, 1, -1 do
 					local text = tostring(ratings[i])
