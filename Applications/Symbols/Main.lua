@@ -1,11 +1,7 @@
-local component = require("component")
-local computer = require("computer")
+
 local GUI = require("GUI")
 local fs = require("filesystem")
 local unicode = require("unicode")
-local color = require("color")
-local buffer = require("doubleBuffering")
-local event = require("event")
 local MineOSPaths = require("MineOSPaths")
 local MineOSInterface = require("MineOSInterface")
 
