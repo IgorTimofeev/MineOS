@@ -1321,8 +1321,8 @@ local function dropDownMenuItemDraw(item)
 	return item
 end
 
-local function dropDownMenuItemEventHandler(mainContainer, object, event)
-	if event == "touch" then
+local function dropDownMenuItemEventHandler(mainContainer, object, e1)
+	if e1 == "touch" then
 		if object.type == GUI.dropDownMenuItemTypes.default then
 			object.pressed = true
 			mainContainer:drawOnScreen()
@@ -1447,8 +1447,8 @@ local function dropDownMenuShow(menu)
 	local mainContainer = GUI.fullScreenContainer()
 	-- Удаляем олдпиксельсы, чтоб старое дерьмое не рисовалось во всяких комбобоксах
 	menu.oldPixels = nil
-	mainContainer:addChild(GUI.object(1, 1, mainContainer.width, mainContainer.height)).eventHandler = function(mainContainer, object, event)
-		if event == "touch" then
+	mainContainer:addChild(GUI.object(1, 1, mainContainer.width, mainContainer.height)).eventHandler = function(mainContainer, object, e1)
+		if e1 == "touch" then
 			buffer.paste(menu.x, menu.y, menu.oldPixels)
 			buffer.draw()
 			mainContainer:stopEventHandling()
@@ -2429,8 +2429,8 @@ local function filesystemChooserSetMode(object, IOMode, filesystemMode)
 	object.filesystemMode = filesystemMode
 end
 
-local function filesystemChooserEventHandler(mainContainer, object, event)
-	if event == "touch" then
+local function filesystemChooserEventHandler(mainContainer, object, e1)
+	if e1 == "touch" then
 		object.pressed = true
 		mainContainer:drawOnScreen()
 
@@ -3329,8 +3329,8 @@ local function inputStartInput(input)
 	mainContainer:drawOnScreen()
 end
 
-local function inputEventHandler(mainContainer, input, event)
-	if event == "touch" then
+local function inputEventHandler(mainContainer, input, e1)
+	if e1 == "touch" then
 		input:startInput()
 	end
 end
@@ -3428,14 +3428,14 @@ local function autoCompleteScroll(mainContainer, object, direction)
 	end
 end
 
-local function autoCompleteEventHandler(mainContainer, object, e1, e2, e3, e4, ...)
+local function autoCompleteEventHandler(mainContainer, object, e1, e2, e3, e4, e5, ...)
 	if e1 == "touch" then
 		object.selectedItem = e4 - object.y + object.fromItem
 		mainContainer:drawOnScreen()
 
 		if object.onItemSelected then
 			os.sleep(0.2)
-			object.onItemSelected(mainContainer, object, e1, e2, e3, e4, ...)
+			object.onItemSelected(mainContainer, object, e1, e2, e3, e4, e5, ...)
 		end
 	elseif e1 == "scroll" then
 		autoCompleteScroll(mainContainer, object, -e5)
@@ -3443,7 +3443,7 @@ local function autoCompleteEventHandler(mainContainer, object, e1, e2, e3, e4, .
 	elseif e1 == "key_down" then
 		if e4 == 28 then
 			if object.onItemSelected then
-				object.onItemSelected(mainContainer, object, e1, e2, e3, e4, ...)
+				object.onItemSelected(mainContainer, object, e1, e2, e3, e4, e5, ...)
 			end
 		elseif e4 == 200 then
 			object.selectedItem = object.selectedItem - 1
@@ -3715,7 +3715,7 @@ function GUI.palette(x, y, startColor)
 	local function paletteUpdateCrestsCoordinates()
 		bigCrest.localX = math.floor((bigImage.width - 1) * palette.color.hsb.saturation) - 1
 		bigCrest.localY = math.floor((bigImage.height - 1) - (bigImage.height - 1) * palette.color.hsb.brightness)
-		miniCrest.localY = math.floor(palette.color.hsb.hue / 360 * miniImage.height)
+		miniCrest.localY = math.ceil(palette.color.hsb.hue / 360 * miniImage.height + 0.5)
 	end
 
 	local inputs
@@ -3865,7 +3865,7 @@ function GUI.palette(x, y, startColor)
 	bigCrest.eventHandler = bigImage.eventHandler
 	
 	miniImage.eventHandler = function(mainContainer, object, e1, e2, e3, e4)
-		if event == "touch" or event == "drag" then
+		if e1 == "touch" or e1 == "drag" then
 			miniCrest.localY = e4 - palette.y + 1
 			paletteSwitchColorFromHsb((e4 - miniImage.y) * 360 / miniImage.height, palette.color.hsb.saturation, palette.color.hsb.brightness)
 			paletteRefreshBigImage()
@@ -3915,8 +3915,8 @@ function GUI.addFadeContainer(parentContainer, addPanel, addLayout, title)
 	
 	if addPanel then
 		container.panel = container:addChild(GUI.panel(1, 1, container.width, container.height, 0x0, GUI.colors.fadeContainer.transparency))
-		container.panel.eventHandler = function(parentContainer, object, event)
-			if event == "touch" then
+		container.panel.eventHandler = function(parentContainer, object, e1)
+			if e1 == "touch" then
 				container:delete()
 				parentContainer:drawOnScreen()
 			end

@@ -19,8 +19,8 @@ local unicodeLen, unicodeSub = unicode.len, unicode.sub
 --------------------------------------------------------------------------------
 
 local function getCoordinates(index)
-	local integer, fractional = mathModf(index / bufferWidth)
-	return mathCeil(fractional * bufferWidth), integer + 1
+	local integer, fractional = index / bufferWidth, index % bufferWidth
+	return fractional, integer - fractional + 1
 end
 
 local function getIndex(x, y)
@@ -133,7 +133,7 @@ end
 
 local function get(x, y)
 	if x >= 1 and y >= 1 and x <= bufferWidth and y <= bufferHeight then
-		local index = getIndex(x, y)
+		local index = bufferWidth * (y - 1) + x
 		return newFrameBackgrounds[index], newFrameForegrounds[index], newFrameSymbols[index]
 	else
 		return 0x000000, 0x000000, " "
@@ -142,13 +142,13 @@ end
 
 local function set(x, y, background, foreground, symbol)
 	if x >= drawLimitX1 and y >= drawLimitY1 and x <= drawLimitX2 and y <= drawLimitY2 then
-		local index = getIndex(x, y)
+		local index = bufferWidth * (y - 1) + x
 		newFrameBackgrounds[index], newFrameForegrounds[index], newFrameSymbols[index] = background, foreground, symbol
 	end
 end
 
 local function square(x, y, width, height, background, foreground, symbol, transparency) 
-	local index, indexStepOnReachOfSquareWidth = getIndex(x, y), bufferWidth - width
+	local index, indexStepOnReachOfSquareWidth = bufferWidth * (y - 1) + x, bufferWidth - width
 	for j = y, y + height - 1 do
 		if j >= drawLimitY1 and j <= drawLimitY2 then
 			for i = x, x + width - 1 do
@@ -182,7 +182,7 @@ local function copy(x, y, width, height)
 	for j = y, y + height - 1 do
 		for i = x, x + width - 1 do
 			if i >= 1 and j >= 1 and i <= bufferWidth and j <= bufferHeight then
-				index = getIndex(i, j)
+				index = bufferWidth * (j - 1) + i
 				tableInsert(copyArray, newFrameBackgrounds[index])
 				tableInsert(copyArray, newFrameForegrounds[index])
 				tableInsert(copyArray, newFrameSymbols[index])
@@ -197,13 +197,13 @@ local function copy(x, y, width, height)
 	return copyArray
 end
 
-local function paste(xStart, yStart, picture)
+local function paste(startX, startY, picture)
 	local imageWidth = picture[1]
-	local bufferIndex, imageIndex, bufferIndexStepOnReachOfImageWidth = getIndex(xStart, yStart), 3, bufferWidth - imageWidth
+	local bufferIndex, imageIndex, bufferIndexStepOnReachOfImageWidth = bufferWidth * (startY - 1) + startX, 3, bufferWidth - imageWidth
 
-	for y = yStart, yStart + picture[2] - 1 do
+	for y = startY, startY + picture[2] - 1 do
 		if y >= drawLimitY1 and y <= drawLimitY2 then
-			for x = xStart, xStart + imageWidth - 1 do
+			for x = startX, startX + imageWidth - 1 do
 				if x >= drawLimitX1 and x <= drawLimitX2 then
 					newFrameBackgrounds[bufferIndex] = picture[imageIndex]
 					newFrameForegrounds[bufferIndex] = picture[imageIndex + 1]
@@ -293,7 +293,7 @@ end
 
 local function text(x, y, textColor, data, transparency)
 	if y >= drawLimitY1 and y <= drawLimitY2 then
-		local charIndex, bufferIndex = 1, getIndex(x, y)
+		local charIndex, bufferIndex = 1, bufferWidth * (y - 1) + x
 		
 		for charIndex = 1, unicodeLen(data) do
 			if x >= drawLimitX1 and x <= drawLimitX2 then
@@ -313,7 +313,7 @@ end
 
 local function formattedText(x, y, data)
 	if y >= drawLimitY1 and y <= drawLimitY2 then
-		local charIndex, bufferIndex, textColor, char, number = 1, getIndex(x, y), 0xFFFFFF
+		local charIndex, bufferIndex, textColor, char, number = 1, bufferWidth * (y - 1) + x, 0xFFFFFF
 		
 		while charIndex <= unicodeLen(text) do
 			if x >= drawLimitX1 and x <= drawLimitX2 then
@@ -335,13 +335,13 @@ local function formattedText(x, y, data)
 	end
 end
 
-local function image(xStart, yStart, picture, blendForeground)
+local function image(startX, startY, picture, blendForeground)
 	local imageWidth = picture[1]
-	local bufferIndex, imageIndex, bufferIndexStepOnReachOfImageWidth, imageIndexPlus1, imageIndexPlus2, imageIndexPlus3 = getIndex(xStart, yStart), 3, bufferWidth - imageWidth
+	local bufferIndex, imageIndex, bufferIndexStepOnReachOfImageWidth, imageIndexPlus1, imageIndexPlus2, imageIndexPlus3 = bufferWidth * (startY - 1) + startX, 3, bufferWidth - imageWidth
 
-	for y = yStart, yStart + picture[2] - 1 do
+	for y = startY, startY + picture[2] - 1 do
 		if y >= drawLimitY1 and y <= drawLimitY2 then
-			for x = xStart, xStart + imageWidth - 1 do
+			for x = startX, startX + imageWidth - 1 do
 				if x >= drawLimitX1 and x <= drawLimitX2 then
 					imageIndexPlus1, imageIndexPlus2, imageIndexPlus3 = imageIndex + 1, imageIndex + 2, imageIndex + 3
 					
@@ -424,12 +424,12 @@ end
 local function semiPixelSet(x, y, color)
 	local yFixed = mathCeil(y / 2)
 	if x >= drawLimitX1 and yFixed >= drawLimitY1 and x <= drawLimitX2 and yFixed <= drawLimitY2 then
-		semiPixelRawSet(getIndex(x, yFixed), color, y % 2 == 0)
+		semiPixelRawSet(bufferWidth * (yFixed - 1) + x, color, y % 2 == 0)
 	end
 end
 
 local function semiPixelSquare(x, y, width, height, color)
-	local index, indexStepForward, indexStepBackward, jPercentTwoEqualsZero, jFixed = getIndex(x, mathCeil(y / 2)), (bufferWidth - width), width
+	local index, indexStepForward, indexStepBackward, jPercentTwoEqualsZero, jFixed = bufferWidth * (mathCeil(y / 2) - 1) + x, (bufferWidth - width), width
 	for j = y, y + height - 1 do
 		jPercentTwoEqualsZero = j % 2 == 0
 		
@@ -603,9 +603,11 @@ end
 local function draw(force)
 	-- local oldClock = os.clock()
 	
-	local index, indexStepOnEveryLine, changes = getIndex(drawLimitX1, drawLimitY1), (bufferWidth - drawLimitX2 + drawLimitX1 - 1), {}
-	local x, equalChars, charX, charIndex, currentForeground
+	local index, indexStepOnEveryLine, changes = bufferWidth * (drawLimitY1 - 1) + drawLimitX1, (bufferWidth - drawLimitX2 + drawLimitX1 - 1), {}
+	local x, equalChars, equalCharsIndex, charX, charIndex, currentForeground
 	local currentFrameBackground, currentFrameForeground, currentFrameSymbol, changesCurrentFrameBackground, changesCurrentFrameBackgroundCurrentFrameForeground
+
+	local changesCurrentFrameBackgroundCurrentFrameForegroundIndex
 
 	for y = drawLimitY1, drawLimitY2 do
 		x = drawLimitX1
@@ -624,7 +626,7 @@ local function draw(force)
 				currentFrameSymbols[index] = currentFrameSymbol
 
 				-- Look for pixels with equal chars from right of current pixel
-				equalChars, charX, charIndex = {currentFrameSymbol}, x + 1, index + 1
+				equalChars, equalCharsIndex, charX, charIndex = {currentFrameSymbol}, 2, x + 1, index + 1
 				while charX <= drawLimitX2 do
 					-- Pixels becomes equal only if they have same background and (whitespace char or same foreground)
 					if	
@@ -639,7 +641,7 @@ local function draw(force)
 					 	currentFrameForegrounds[charIndex] = newFrameForegrounds[charIndex]
 					 	currentFrameSymbols[charIndex] = newFrameSymbols[charIndex]
 
-					 	tableInsert(equalChars, currentFrameSymbols[charIndex])
+					 	equalChars[equalCharsIndex], equalCharsIndex = currentFrameSymbols[charIndex], equalCharsIndex + 1
 					else
 						break
 					end
@@ -650,14 +652,15 @@ local function draw(force)
 				-- Group pixels that need to be drawn by background and foreground
 				changes[currentFrameBackground] = changes[currentFrameBackground] or {}
 				changesCurrentFrameBackground = changes[currentFrameBackground]
-				changesCurrentFrameBackground[currentFrameForeground] = changesCurrentFrameBackground[currentFrameForeground] or {}
+				changesCurrentFrameBackground[currentFrameForeground] = changesCurrentFrameBackground[currentFrameForeground] or {index = 1}
 				changesCurrentFrameBackgroundCurrentFrameForeground = changesCurrentFrameBackground[currentFrameForeground]
-
-				tableInsert(changesCurrentFrameBackgroundCurrentFrameForeground, x)
-				tableInsert(changesCurrentFrameBackgroundCurrentFrameForeground, y)
-				tableInsert(changesCurrentFrameBackgroundCurrentFrameForeground, tableConcat(equalChars))
+				changesCurrentFrameBackgroundCurrentFrameForegroundIndex = changesCurrentFrameBackgroundCurrentFrameForeground.index
 				
-				x, index = x + #equalChars - 1, index + #equalChars - 1
+				changesCurrentFrameBackgroundCurrentFrameForeground[changesCurrentFrameBackgroundCurrentFrameForegroundIndex], changesCurrentFrameBackgroundCurrentFrameForegroundIndex = x, changesCurrentFrameBackgroundCurrentFrameForegroundIndex + 1
+				changesCurrentFrameBackgroundCurrentFrameForeground[changesCurrentFrameBackgroundCurrentFrameForegroundIndex], changesCurrentFrameBackgroundCurrentFrameForegroundIndex = y, changesCurrentFrameBackgroundCurrentFrameForegroundIndex + 1
+				changesCurrentFrameBackgroundCurrentFrameForeground[changesCurrentFrameBackgroundCurrentFrameForegroundIndex], changesCurrentFrameBackgroundCurrentFrameForegroundIndex = tableConcat(equalChars), changesCurrentFrameBackgroundCurrentFrameForegroundIndex + 1
+				
+				x, index, changesCurrentFrameBackgroundCurrentFrameForeground.index = x + equalCharsIndex - 2, index + equalCharsIndex - 2, changesCurrentFrameBackgroundCurrentFrameForegroundIndex
 			end
 
 			x, index = x + 1, index + 1

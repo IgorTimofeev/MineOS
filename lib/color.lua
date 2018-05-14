@@ -14,8 +14,7 @@ local color = {}
 -- Optimized Lua 5.3 bitwise support
 if computer.getArchitecture and computer.getArchitecture() == "Lua 5.3" then
 	integerToRGB, RGBToInteger, blend, transition, to8Bit = load([[
-		local palette = select(1, ...)
-		local mathHuge = math.huge
+		local mathHuge, palette = math.huge, select(1, ...)
 
 		return
 			function(integerColor)
@@ -27,21 +26,19 @@ if computer.getArchitecture and computer.getArchitecture() == "Lua 5.3" then
 			end,
 
 			function(color1, color2, transparency)
-				local invertedTransparency, r1, g1, b1, r2, g2, b2 = 1 - transparency, color1 >> 16, color1 >> 8 & 0xFF, color1 & 0xFF, color2 >> 16, color2 >> 8 & 0xFF, color2 & 0xFF
-
+				local invertedTransparency = 1 - transparency
 				return
-					(r2 * invertedTransparency + r1 * transparency) // 1 << 16 |
-					(g2 * invertedTransparency + g1 * transparency) // 1 << 8 |
-					(b2 * invertedTransparency + b1 * transparency) // 1
+					((color2 >> 16) * invertedTransparency + (color1 >> 16) * transparency) // 1 << 16 |
+					((color2 >> 8 & 0xFF) * invertedTransparency + (color1 >> 8 & 0xFF) * transparency) // 1 << 8 |
+					((color2 & 0xFF) * invertedTransparency + (color1 & 0xFF) * transparency) // 1
 			end,
 
 			function(color1, color2, position)
-				local r1, g1, b1, r2, g2, b2 = color1 >> 16, color1 >> 8 & 0xFF, color1 & 0xFF, color2 >> 16, color2 >> 8 & 0xFF, color2 & 0xFF
-
+				local r1, g1, b1 = color1 >> 16, color1 >> 8 & 0xFF, color1 & 0xFF
 				return
-					(r1 + (r2 - r1) * position) // 1 << 16 |
-					(g1 + (g2 - g1) * position) // 1 << 8 |
-					(b1 + (b2 - b1) * position) // 1
+					(r1 + ((color2 >> 16) - r1) * position) // 1 << 16 |
+					(g1 + ((color2 >> 8 & 0xFF) - g1) * position) // 1 << 8 |
+					(b1 + ((color2 & 0xFF) - b1) * position) // 1
 			end,
 
 			function(color24Bit)
@@ -67,8 +64,7 @@ if computer.getArchitecture and computer.getArchitecture() == "Lua 5.3" then
 	]])(palette)
 else
 	integerToRGB, RGBToInteger, blend, transition, to8Bit = load([[
-		local palette = select(1, ...)
-		local mathHuge = math.huge
+		local mathHuge, palette = math.huge, select(1, ...)
 
 		return
 			function(integerColor)
@@ -91,18 +87,16 @@ else
 				r1 = r1 - r1 % 1
 				local g1 = (color1 - r1 * 65536) / 256
 				g1 = g1 - g1 % 1
-				local b1 = color1 - r1 * 65536 - g1 * 256
 
 				local r2 = color2 / 65536
 				r2 = r2 - r2 % 1
 				local g2 = (color2 - r2 * 65536) / 256
 				g2 = g2 - g2 % 1
-				local b2 = color2 - r2 * 65536 - g2 * 256
 
 				local r, g, b =
 					r2 * invertedTransparency + r1 * transparency,
 					g2 * invertedTransparency + g1 * transparency,
-					b2 * invertedTransparency + b1 * transparency
+					(color2 - r2 * 65536 - g2 * 256) * invertedTransparency + (color1 - r1 * 65536 - g1 * 256) * transparency
 
 				return
 					(r - r % 1) * 65536 +
@@ -121,12 +115,11 @@ else
 				r2 = r2 - r2 % 1
 				local g2 = (color2 - r2 * 65536) / 256
 				g2 = g2 - g2 % 1
-				local b2 = color2 - r2 * 65536 - g2 * 256
 
 				local r, g, b =
 					r1 + (r2 - r1) * position,
 					g1 + (g2 - g1) * position,
-					b1 + (b2 - b1) * position
+					b1 + (color2 - r2 * 65536 - g2 * 256 - b1) * position
 
 				return
 					(r - r % 1) * 65536 +
