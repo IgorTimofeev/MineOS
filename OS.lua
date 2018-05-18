@@ -871,8 +871,8 @@ local function createOSWidgets()
 				MineOSCore.properties.transparencyEnabled = switch.state
 				MineOSCore.saveProperties()
 				MineOSInterface.mainContainer.menu.colors.transparency = MineOSCore.properties.transparencyEnabled and menuTransparency
-				container.panel.colors.background = switch.state and 0x0 or (MineOSCore.properties.backgroundColor)
-				container.panel.colors.transparency = switch.state and 0.2
+				container.panel.colors.background = switch.state and GUI.BACKGROUND_CONTAINER_PANEL_COLOR or (MineOSCore.properties.backgroundColor)
+				container.panel.colors.transparency = switch.state and GUI.BACKGROUND_CONTAINER_PANEL_TRANSPARENCY
 
 				MineOSInterface.mainContainer:drawOnScreen()
 			end
