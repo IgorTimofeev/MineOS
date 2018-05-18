@@ -13,7 +13,7 @@ MineOS is half the operating system and half the graphical environment for OpenO
 * Error reporting system with the possibility to send information to developers
 * Store applications with the possibility to publish their own creations and a system of user ratings
 * An integrated IDE with a debugger and a significant amount of applications
-* Open system API and detailed illustrated documentations
+* Open source system API and detailed illustrated documentations
 * Custom EEPROM firmware with the possibility to select/format the boot volume and Internet recovery
 * Almost complete compatibility with OpenOS software
 
@@ -63,6 +63,6 @@ MineOS uses the most advanced libraries to create UI applications. Below is a ta
 | ------- | ------- |
 | GUI | https://github.com/IgorTimofeev/GUI |
 | MineOSInterface | https://github.com/IgorTimofeev/MineOS/Documentaion/MineOSInterface.md |
-| Double Buffering | https://github.com/IgorTimofeev/DoubleBuffering |
+| DoubleBuffering | https://github.com/IgorTimofeev/DoubleBuffering |
 | Image | https://github.com/IgorTimofeev/Image |
 | Color | https://github.com/IgorTimofeev/Color |
