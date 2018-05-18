@@ -1,89 +1,68 @@
 About
-=======
-
-
-
-Инструкция по установке MineOS:
 -----------------------------------------------------------
 
-Перед установкой убедитесь, что ваш компьютер соответствует минимальной конфигурации:
+MineOS is half the operating system and half the graphical environment for OpenOS, which comes in OpenComputers mod by default. It has following features:
 
-| Устройство | Tier | Количество, шт |
+* Multitasking
+* Windowed interface with double buffered graphics context
+* Animations, wallpapers, screensavers and color schemes
+* Language packs and software localization
+* User authorization by password and biometrics
+* Support for file sharing over the local network via modems
+* Support for client connection to real FTP servers
+* Error reporting system with the possibility to send information to developers
+* Store applications with the possibility to publish their own creations and a system of user ratings
+* An integrated IDE with a debugger and a significant amount of applications
+* Open system API and detailed illustrated documentations
+* Custom EEPROM firmware with the possibility to select/format the boot volume and Internet recovery
+* Almost complete compatibility with OpenOS software
+
+Installation
+-----------------------------------------------------------
+
+Make sure that your computer meets the minimum configuration before installation:
+
+| Device | Tier | Count |
 | ----- | ----- | ----- |
-| Системный блок | 3 | 1 |
-| Экран | 3 | 1 |
-| Клавиатура | 1 | 1 |
-| Центральный процессор | 3 | 1 |
-| Видеокарта | 3 | 1 |
-| Оперативная память | 3.5 | 2 |
-| Интернет-карта | 2 | 1 |
-| EEPROM (Lua BIOS) | 1 | 1 |
-| Дискета с OpenOS | 1 | 1 |
+| Computer case | 3 | 1 |
+| Screen | 3 | 1 |
+| Keyboard | - | 1 |
+| CPU | 3 | 1 |
+| GPU | 3 | 1 |
+| RAM | 3.5 | 2 |
+| Internet card | - | 1 |
+| EEPROM (Lua BIOS) | - | 1 |
+| OpenOS floppy | - | 1 |
 
-Также рекомендуется добавить беспроводной модем для объединения компьютеров в домашнюю сеть.
-
-Если вы используете какие-либо модификации, предоставляющие энерго-систему (IC2, TE, IE, Mekanism и т.п.), то вам также потребуется преобразователь энергии и ее источник. В итоге собранная система и конфигурация компонентов системного блока должны выглядеть схожим образом:
-
-![](https://i.imgur.com/5O5dDSQ.png?1)
-
-![](https://i.imgur.com/fIAa6m8.png?1)
-
-Теперь вы можете включить компьютер. По умолчанию загрузится операционная система OpenOS со вставленной дискеты, вам остается лишь установить ее на жесткий диск по аналогии с установкой реальной ОС. Используйте команду **install**:
+It is also recommended to add a wireless modem to connect computers to the home network. Now you can turn on the computer. By default, the OpenOS boots from the inserted floppy, you just have to install it on your hard disk, similar to installing a real OS. Use the **install** command:
 
 ![](https://i.imgur.com/lpwwQD4.png?1)
 
-После окончания процедуры установки вам будет предложено сделать жесткий диск загрузочным, а также перезагрузить компьютер. Соглашайтесь, после перезагрузки вы можете приступать к установке MineOS. Для этого введите в консоль команду:
+After the installation is complete, you will be prompted to make the hard disk bootable, and restart the computer. After rebooting, you can start installing MineOS. To do this, enter the following command in the console:
 
     pastebin run 0nm5b1ju
 
-Компьютер будет проанализирован на соответствие минимальным требованиям, после чего перед вами откроется симпатичный установщик. Вы можете изменить некоторые системные опции на свой вкус, и, согласившись с лицензионным соглашением, установить MineOS:
+The computer will be analyzed for compliance with the minimum requirements, after which a pretty installer will be launched. You can change some system options to your taste, and, agreeing with the license agreement, install MineOS.
 
-![](https://i.imgur.com/tN9ua0J.gif)
-
-Как создавать приложения MineOS
+How to develop MineOS applications
 -----------------------------------------------------------
 
-Каждое приложение MineOS - это директория с расширением **.app**, имеющая следующее содержимое:
+Each MineOS application is a directory with **.app** extension, which has the following contents:
 
 ![](https://i.imgur.com/o6uiNBJ.png)
 
-Файл **Main.lua** исполняется при запуске приложения, а **Icon.pic** используется для отображения иконки на рабочем столе и в проводнике. Самый простой способ создать приложение - это кликнуть на соответствующую опцию в контекстом меню:
+The **Main.lua** file is launched on application start, and **Icon.pic** is used to display application icon. The easiest way to create an application is to click on the corresponding option in the context menu:
 
-![](https://i.imgur.com/S16oFce.png)
+![](https://i.imgur.com/SqBAlJo.png)
 
-Вам будет предложено выбрать имя вашего приложения, а также его иконку. Если иконка не выбрана, то будет использована системная. Для изменения исходного кода приложения достаточно отредактировать файл **Main.lua**. В примере ниже мы будем использовать методы системных библиотек **[GUI](https://github.com/IgorTimofeev/OpenComputers/blob/master/Documentation/GUI.md)**, **[MineOSInterface](https://github.com/IgorTimofeev/OpenComputers/blob/master/Documentation/MineOSInterface.md)** и **[doubleBuffering](https://github.com/IgorTimofeev/OpenComputers/blob/master/Documentation/doubleBuffering.md)**, поэтому базовое ознакомление с ними крайне рекомендуется:
+You will be asked to choose the name of your application, as well as its icon. If the icon is not choosen, then the system icon will be used. To modify the source code of an application, just edit the **Main.lua** file.
 
-```lua
+MineOS uses the most advanced libraries to create UI applications. Below is a table with illustrated documentation for libraries that are highly recommended for reading:
 
-local GUI = require("GUI")
-local buffer = require("doubleBuffering")
-local MineOSInterface = require("MineOSInterface")
-
-------------------------------------------------------------------------------------------------------
-
-local mainContainer, window = MineOSInterface.addWindow(MineOSInterface.filledWindow(1, 1, 88, 26, 0xF0F0F0))
-
--- Создаем лейаут для автоматического расположения элементов интерфейса
-local layout = window:addChild(GUI.layout(1, 1, window.width, window.height, 1, 1))
--- Создаем текстовый лейбл, в котором будем отображать количество нажатий на кнопку
-local label = layout:addChild(GUI.label(1, 1, window.width, 1, 0x0, "")):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
--- Создаем саму кнопку
-local button = layout:addChild(GUI.roundedButton(1, 1, 32, 3, 0xBBBBBB, 0xFFFFFF, 0x999999, 0xFFFFFF, "Нажми на меня"))
-
--- Создаем callback-функцию, вызываемую при нажатии на кнопку
-local counter = 0
-button.onTouch = function()
-	label.text = "Число нажатий: " .. counter
-	counter = counter + 1
-
-	mainContainer:draw()
-	buffer.draw()
-end
-
--- Разово обновляем текстовые данные лейбла
-button.onTouch()
-```
-
-Вуаля! Ваше первое оконное приложение готово:
-
-![](https://i.imgur.com/vNhLcbX.gif)
+| Library | Documentation |
+| ------- | ------- |
+| GUI | https://github.com/IgorTimofeev/GUI |
+| MineOSInterface | https://github.com/IgorTimofeev/MineOS/Documentaion/MineOSInterface.md |
+| Double Buffering | https://github.com/IgorTimofeev/DoubleBuffering |
+| Image | https://github.com/IgorTimofeev/Image |
+| Color | https://github.com/IgorTimofeev/Color |
