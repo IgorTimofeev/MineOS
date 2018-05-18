@@ -20,7 +20,7 @@ module.name = localization.moduleLua
 ----------------------------------------------------------------------------------------------------------------
 
 module.onTouch = function()
-	window.contentContainer:deleteChildren()
+	window.contentContainer:removeChildren()
 
 	_G.component = require("component")
 	_G.computer = require("computer")
@@ -33,9 +33,9 @@ module.onTouch = function()
 	
 	input.textDrawMethod = function(x, y, color, text)
 		if text == placeholder then
-			buffer.text(x, y, color, text)
+			buffer.drawText(x, y, color, text)
 		else
-			GUI.highlightString(x, y, 1, input.width - 2, 2, GUI.colors.syntaxHighlighting, GUI.luaSyntaxPatterns, text)
+			GUI.highlightString(x, y, input.width - 2, 1, 2, GUI.LUA_SYNTAX_PATTERNS, GUI.LUA_SYNTAX_COLOR_SCHEME, text)
 		end
 	end
 
@@ -62,7 +62,7 @@ module.onTouch = function()
 	input.autoComplete.scrollBar.colors.background = 0x666666
 	input.autoComplete.scrollBar.colors.foreground = 0xAAAAAA
 
-	input.autoCompleteVerticalAlignment = GUI.alignment.vertical.top
+	input.autoCompleteVerticalAlignment = GUI.ALIGNMENT_VERTICAL_TOP
 	input.autoCompleteEnabled = true
 	input.autoCompleteMatchMethod = function()
 		local inputTextLength = unicode.len(input.text)

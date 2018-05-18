@@ -21,7 +21,7 @@ local recent = {
 
 --------------------------------------------------------------------
 
-local mainContainer, window = MineOSInterface.addWindow(MineOSInterface.filledWindow(1, 1, 90, 23, 0xE1E1E1))
+local mainContainer, window = MineOSInterface.addWindow(GUI.filledWindow(1, 1, 90, 23, 0xE1E1E1))
 
 local sidePanel = window:addChild(GUI.panel(1, 1, 17, 1, 0x2D2D2D))
 local buttonsContainer = window:addChild(GUI.container(3, 2, 1, 1))
@@ -29,8 +29,8 @@ local horizontalResizer = window:addChild(GUI.resizer(1, 1, 10, 3, 0x969696, 0x0
 local verticalResizer = window:addChild(GUI.resizer(1, 1, 3, 5, 0x969696, 0x0))
 
 local sideLayout = window:addChild(GUI.layout(1, 4, sidePanel.width, 1, 1, 1))
-sideLayout:setCellAlignment(1, 1, GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
-sideLayout:setCellFitting(1, 1, true, false, 2, 0)
+sideLayout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
+sideLayout:setFitting(1, 1, true, false, 2, 0)
 
 local texts = {}
 for i = 1, 5 do
@@ -60,9 +60,9 @@ local function updateChars()
 end
 
 local recentLayout = sideLayout:addChild(GUI.layout(1, 1, 1, 1, 1, 1))
-recentLayout:setCellDirection(1, 1, GUI.directions.horizontal)
-recentLayout:setCellSpacing(1, 1, 0)
-recentLayout:setCellAlignment(1, 1, GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+recentLayout:setDirection(1, 1, GUI.DIRECTION_HORIZONTAL)
+recentLayout:setSpacing(1, 1, 0)
+recentLayout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
 
 local function onRecentButtonTouch(mainContainer, object)
 	fromChar = object.code
@@ -110,7 +110,7 @@ window.onResize = function(width, height)
 	nextButton.localY = height - 2
 	prevButton.localY = height - 5
 
-	buttonsContainer:deleteChildren()
+	buttonsContainer:removeChildren()
 
 	local horizontalCount = math.floor((buttonsContainer.width + horizontalSpacing) / (buttonWidth + horizontalSpacing))
 	local verticalCount = math.floor((buttonsContainer.height + verticalSpacing) / (buttonHeight + verticalSpacing))
@@ -184,11 +184,11 @@ gotoInput.onInputFinished = function()
 	end
 end
 
-horizontalResizer.onResize = function(mainContainer, object, dragX, dragY)
+horizontalResizer.onResize = function(dragX, dragY)
 	window:resize(window.width, window.height + dragY)
 end
 
-verticalResizer.onResize = function(mainContainer, object, dragX, dragY)
+verticalResizer.onResize = function(dragX, dragY)
 	window:resize(window.width + dragX, window.height)
 end
 

@@ -20,28 +20,28 @@ module.name = localization.moduleRAM
 ----------------------------------------------------------------------------------------------------------------
 
 module.onTouch = function()	
-	window.contentContainer:deleteChildren()
+	window.contentContainer:removeChildren()
 	
 	local cykaPanel = window.contentContainer:addChild(GUI.panel(1, 1, 1, 1, 0xE1E1E1))
 
 	local mainLayout = window.contentContainer:addChild(GUI.layout(1, 1, window.contentContainer.width, window.contentContainer.height, 2, 1))
-	mainLayout:setColumnWidth(1, GUI.sizePolicies.percentage, 0.3)
-	mainLayout:setColumnWidth(2, GUI.sizePolicies.percentage, 0.7)
-	mainLayout:setCellFitting(1, 1, true, true)
-	mainLayout:setCellFitting(2, 1, true, true)
+	mainLayout:setColumnWidth(1, GUI.SIZE_POLICY_RELATIVE, 0.3)
+	mainLayout:setColumnWidth(2, GUI.SIZE_POLICY_RELATIVE, 0.7)
+	mainLayout:setFitting(1, 1, true, true)
+	mainLayout:setFitting(2, 1, true, true)
 
-	local tree = mainLayout:setCellPosition(1, 1, mainLayout:addChild(GUI.tree(1, 1, 1, 1, 0xE1E1E1, 0x3C3C3C, 0x3C3C3C, 0xAAAAAA, 0x3C3C3C, 0xFFFFFF, 0xBBBBBB, 0xAAAAAA, 0xC3C3C3, 0x444444, GUI.filesystemModes.both, GUI.filesystemModes.file)))
+	local tree = mainLayout:setPosition(1, 1, mainLayout:addChild(GUI.tree(1, 1, 1, 1, 0xE1E1E1, 0x3C3C3C, 0x3C3C3C, 0xAAAAAA, 0x3C3C3C, 0xFFFFFF, 0xBBBBBB, 0xAAAAAA, 0xC3C3C3, 0x444444, GUI.IO_MODE_BOTH, GUI.IO_MODE_FILE)))
 
-	local itemsLayout = mainLayout:setCellPosition(2, 1, mainLayout:addChild(GUI.layout(1, 1, 1, 1, 1, 2)))
-	itemsLayout:setRowHeight(1, GUI.sizePolicies.percentage, 0.6)
-	itemsLayout:setRowHeight(2, GUI.sizePolicies.percentage, 0.4)
-	itemsLayout:setCellFitting(1, 1, true, false, 4, 0)
-	itemsLayout:setCellFitting(1, 2, true, true)
+	local itemsLayout = mainLayout:setPosition(2, 1, mainLayout:addChild(GUI.layout(1, 1, 1, 1, 1, 2)))
+	itemsLayout:setRowHeight(1, GUI.SIZE_POLICY_RELATIVE, 0.6)
+	itemsLayout:setRowHeight(2, GUI.SIZE_POLICY_RELATIVE, 0.4)
+	itemsLayout:setFitting(1, 1, true, false, 4, 0)
+	itemsLayout:setFitting(1, 2, true, true)
 
-	local infoLabel = itemsLayout:setCellPosition(1, 1, itemsLayout:addChild(GUI.label(1, 1, 1, 1, 0x3C3C3C, "nil")):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top))
-	local argumentsInputField = itemsLayout:setCellPosition(1, 1, itemsLayout:addChild(GUI.input(1, 1, 1, 3, 0xFFFFFF, 0x666666, 0x888888, 0xFFFFFF, 0x262626, nil, localization.arguments)))
-	local executeButton = itemsLayout:setCellPosition(1, 1, itemsLayout:addChild(GUI.button(1, 1, 1, 3, 0x3C3C3C, 0xFFFFFF, 0x0, 0xFFFFFF, localization.execute)))
-	local outputTextBox = itemsLayout:setCellPosition(1, 2, itemsLayout:addChild(GUI.textBox(1, 1, 1, 1, 0xFFFFFF, 0x888888, {"nil"}, 1, 1, 0)))
+	local infoLabel = itemsLayout:setPosition(1, 1, itemsLayout:addChild(GUI.label(1, 1, 1, 1, 0x3C3C3C, "nil")):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP))
+	local argumentsInputField = itemsLayout:setPosition(1, 1, itemsLayout:addChild(GUI.input(1, 1, 1, 3, 0xFFFFFF, 0x666666, 0x888888, 0xFFFFFF, 0x262626, nil, localization.arguments)))
+	local executeButton = itemsLayout:setPosition(1, 1, itemsLayout:addChild(GUI.button(1, 1, 1, 3, 0x3C3C3C, 0xFFFFFF, 0x0, 0xFFFFFF, localization.execute)))
+	local outputTextBox = itemsLayout:setPosition(1, 2, itemsLayout:addChild(GUI.textBox(1, 1, 1, 1, 0xFFFFFF, 0x888888, {"nil"}, 1, 1, 0)))
 
 	local function updateList(tree, t, definitionName, offset)
 		local list = {}

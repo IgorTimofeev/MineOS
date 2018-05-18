@@ -15,7 +15,7 @@ local URLs = {
 	applicationList = "https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/Files.cfg",
 	installerLocalization = "https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/Localizations/Installer/",
 	EFI = "https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/EFI/Minified.lua",
-	license = "https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/License/",
+	license = "https://raw.githubusercontent.com/IgorTimofeev/OpenComputers/master/LICENSE",
 }
 
 ------------------------------------------------------------------------------------------------------------------------------------
@@ -217,7 +217,7 @@ end
 
 stages[3] = function()
 	addButtonsToStage()
-	stageContainer:addChild(GUI.textBox(1, 1, 90, 20, 0xFFFFFF, 0x444444, string.wrap(web.request(URLs.license .. MineOSCore.properties.language .. ".lang"), 88), 1, 1, 1))
+	stageContainer:addChild(GUI.textBox(1, 1, 90, 20, 0xFFFFFF, 0x444444, string.wrap(web.request(URLs.license), 88), 1, 1, 1))
 
 	stageContainer.nextStageButton.disabled = true
 	local switch = addSwitchToStage(41, 22, 0x666666, localization.terms, false)

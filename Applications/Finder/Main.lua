@@ -34,7 +34,7 @@ local workpathHistoryCurrent = 0
 
 ------------------------------------------------------------------------------------------------------
 
-local mainContainer, window = MineOSInterface.addWindow(MineOSInterface.filledWindow(1, 1, 88, 26, 0xF0F0F0))
+local mainContainer, window = MineOSInterface.addWindow(GUI.filledWindow(1, 1, 88, 26, 0xF0F0F0))
 
 local titlePanel = window:addChild(GUI.panel(1, 1, 1, 3, 0xE1E1E1))
 
@@ -55,9 +55,6 @@ sidebarContainer.itemsContainer = sidebarContainer:addChild(GUI.container(1, 1, 
 
 local searchInput = window:addChild(GUI.input(1, 2, 36, 1, 0xFFFFFF, 0x4B4B4B, 0xA5A5A5, 0xFFFFFF, 0x2D2D2D, nil, MineOSCore.localization.search, true))
 
-local updatingListLabel = window:addChild(GUI.label(1, 4, 1, 1, 0x696969, MineOSCore.localization.updatingFileList):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.center))
-updatingListLabel.hidden = true
-
 local iconField = window:addChild(MineOSInterface.iconField(1, 4, 1, 1, 2, 2, 0x3C3C3C, 0x3C3C3C, MineOSPaths.desktop))
 
 local scrollBar = window:addChild(GUI.scrollBar(1, 4, 1, 1, 0xC3C3C3, 0x4B4B4B, iconFieldYOffset, 1, 1, 1, 1, true))
@@ -66,8 +63,8 @@ scrollBar.eventHandler = nil
 local statusBar = window:addChild(GUI.object(1, 1, 1, 1))
 
 statusBar.draw = function(object)
-	buffer.square(object.x, object.y, object.width, object.height, 0xFFFFFF, 0x3C3C3C, " ")
-	buffer.text(object.x + 1, object.y, 0x3C3C3C, string.limit(("root/" .. iconField.workpath):gsub("/+$", ""):gsub("%/+", " ► "), object.width - 2, "left"))
+	buffer.drawRectangle(object.x, object.y, object.width, object.height, 0xFFFFFF, 0x3C3C3C, " ")
+	buffer.drawText(object.x + 1, object.y, 0x3C3C3C, string.limit(("root/" .. iconField.workpath):gsub("/+$", ""):gsub("%/+", " ► "), object.width - 2, "left"))
 end
 
 local sidebarResizer = window:addChild(GUI.resizer(1, 4, 3, 5, 0xFFFFFF, 0x0))
@@ -128,11 +125,11 @@ local function newSidebarItem(y, textColor, text, path)
 
 			local currentTextColor = textColor
 			if path == iconField.workpath then
-				buffer.square(object.x, object.y, object.width, 1, 0x3366CC, 0xFFFFFF, " ")
+				buffer.drawRectangle(object.x, object.y, object.width, 1, 0x3366CC, 0xFFFFFF, " ")
 				currentTextColor = 0xFFFFFF
 			end
 			
-			buffer.text(object.x + 1, object.y, currentTextColor, string.limit(text, object.width - 2, "center"))
+			buffer.drawText(object.x + 1, object.y, currentTextColor, string.limit(text, object.width - 2, "center"))
 		end
 
 		object.eventHandler = function(mainContainer, object, e1, ...)
@@ -172,7 +169,7 @@ end
 
 updateSidebar = function()
 	local y = sidebarFromY
-	sidebarContainer.itemsContainer:deleteChildren()
+	sidebarContainer.itemsContainer:removeChildren()
 
 	newSidebarItem(y, 0x3C3C3C, MineOSCore.localization.favourite)
 	y = y + 1
@@ -181,7 +178,7 @@ updateSidebar = function()
 		
 		object.onTouch = function(e1, e2, e3, e4, e5)
 			if e5 == 1 then
-				local menu = GUI.contextMenu(e3, e4)
+				local menu = GUI.addContextMenu(mainContainer, e3, e4)
 				
 				menu:addItem(MineOSCore.localization.removeFromFavourites).onTouch = function()
 					table.remove(favourites, i)
@@ -190,7 +187,7 @@ updateSidebar = function()
 					MineOSInterface.mainContainer:drawOnScreen()
 				end
 
-				menu:show()
+				mainContainer:drawOnScreen()
 			else
 				onFavouriteTouch(favourites[i].path)
 			end
@@ -229,7 +226,7 @@ updateSidebar = function()
 
 			newSidebarItem(y, 0x555555, " " .. name, mountPath).onTouch = function(e1, e2, e3, e4, e5)
 				if e5 == 1 then
-					local menu = GUI.contextMenu(e3, e4)
+					local menu = GUI.addContextMenu(mainContainer, e3, e4)
 					
 					menu:addItem(MineOSCore.localization.delete).onTouch = function()
 						table.remove(MineOSCore.properties.FTPConnections, i)
@@ -238,7 +235,7 @@ updateSidebar = function()
 						MineOSInterface.mainContainer:drawOnScreen()
 					end
 
-					menu:show()
+					mainContainer:drawOnScreen()
 				else
 					openFTP(connection.address, connection.port, connection.user, connection.password)
 				end
@@ -323,7 +320,7 @@ FTPButton.onTouch = function()
 	local userInput = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x696969, 0xE1E1E1, 0x2D2D2D, us, MineOSCore.localization.networkFTPUser, true))
 	local passwordInput = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x696969, 0xE1E1E1, 0x2D2D2D, pa, MineOSCore.localization.networkFTPPassword, true, "*"))
 	container.layout:addChild(GUI.button(1, 1, 36, 3, 0xA5A5A5, 0xFFFFFF, 0x2D2D2D, 0xE1E1E1, "OK")).onTouch = function()
-		container:delete()
+		container:remove()
 
 		local port = tonumber(portInput.text)
 		if port then
@@ -428,12 +425,7 @@ end
 
 local overrideUpdateFileList = iconField.updateFileList
 iconField.updateFileList = function(...)
-	iconField.hidden, updatingListLabel.hidden = true, false
-	MineOSInterface.mainContainer:drawOnScreen()
-
 	overrideUpdateFileList(...)
-	iconField.hidden, updatingListLabel.hidden = false, true
-	
 	updateScrollBar()
 end
 
@@ -453,10 +445,6 @@ local function calculateSizes(width, height)
 	window.backgroundPanel.height = height - 4
 	window.backgroundPanel.localX = sidebarContainer.width + 1
 	window.backgroundPanel.localY = 4
-
-	updatingListLabel.localX = window.backgroundPanel.localX
-	updatingListLabel.width = window.backgroundPanel.width
-	updatingListLabel.height = window.backgroundPanel.height
 
 	statusBar.localX = sidebarContainer.width + 1
 	statusBar.localY = height
@@ -483,7 +471,7 @@ window.onResize = function(width, height)
 	updateFileListAndDraw()
 end
 
-sidebarResizer.onResize = function(mainContainer, object, dragWidth, dragHeight)
+sidebarResizer.onResize = function(dragWidth, dragHeight)
 	sidebarContainer.width = sidebarContainer.width + dragWidth
 	sidebarContainer.width = sidebarContainer.width >= 5 and sidebarContainer.width or 5
 	calculateSizes(window.width, window.height)

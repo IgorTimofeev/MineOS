@@ -381,14 +381,14 @@ local lines = {
 	"Timofeef Igor (vk.com/id7799889), Trifonov Gleb (vk.com/id88323331), Verevkin Yakov (vk.com/id60991376), Bogushevich Victoria (vk.com/id171497518)",
 	"All rights reserved",
 }
-mainContainer:addChild(GUI.textBox(1, mainContainer.height - #lines + 1, mainContainer.width, #lines, nil, 0x3C3C3C, lines, 1)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+mainContainer:addChild(GUI.textBox(1, mainContainer.height - #lines + 1, mainContainer.width, #lines, nil, 0x3C3C3C, lines, 1)):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
 
 local elementY = 2
 mainContainer.toolbar = mainContainer:addChild(GUI.container(mainContainer.width - 31, 1, 32, mainContainer.height))
 local elementWidth = mainContainer.toolbar.width - 2
 mainContainer.toolbar:addChild(GUI.panel(1, 1, mainContainer.toolbar.width, mainContainer.toolbar.height, 0x0, 0.5))
 
-mainContainer.toolbar:addChild(GUI.label(2, elementY, elementWidth, 1, 0xEEEEEE, "Render mode")):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); elementY = elementY + 2
+mainContainer.toolbar:addChild(GUI.label(2, elementY, elementWidth, 1, 0xEEEEEE, "Render mode")):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP); elementY = elementY + 2
 mainContainer.toolbar.renderModeComboBox = mainContainer.toolbar:addChild(GUI.comboBox(2, elementY, elementWidth, 1, 0x2D2D2D, 0xAAAAAA, 0x555555, 0x888888)); elementY = elementY + mainContainer.toolbar.renderModeComboBox.height + 1
 mainContainer.toolbar.renderModeComboBox:addItem("disabled")
 mainContainer.toolbar.renderModeComboBox:addItem("constantShading")
@@ -427,7 +427,7 @@ local function calculateLightComboBox()
 	mainContainer.toolbar.lightEmissionSlider.value = scene.lights[mainContainer.toolbar.lightSelectComboBox.selectedItem].emissionDistance
 end
 
-mainContainer.toolbar:addChild(GUI.label(2, elementY, elementWidth, 1, 0xEEEEEE, "Light control")):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); elementY = elementY + 2
+mainContainer.toolbar:addChild(GUI.label(2, elementY, elementWidth, 1, 0xEEEEEE, "Light control")):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP); elementY = elementY + 2
 mainContainer.toolbar.lightSelectComboBox = mainContainer.toolbar:addChild(GUI.comboBox(2, elementY, elementWidth, 1, 0x2D2D2D, 0xAAAAAA, 0x555555, 0x888888)); elementY = elementY + mainContainer.toolbar.lightSelectComboBox.height + 1
 
 mainContainer.toolbar.addLightButton = mainContainer.toolbar:addChild(GUI.button(2, elementY, elementWidth, 1, 0x2D2D2D, 0xAAAAAA, 0x555555, 0xAAAAAA, "Add light")); elementY = elementY + 2
@@ -460,7 +460,7 @@ mainContainer.toolbar.backgroundColorSelector.onTouch = function()
 	scene.backgroundColor = mainContainer.toolbar.backgroundColorSelector.color
 end
 
-mainContainer.toolbar:addChild(GUI.label(2, elementY, elementWidth, 1, 0xEEEEEE, "RAM monitoring")):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); elementY = elementY + 2
+mainContainer.toolbar:addChild(GUI.label(2, elementY, elementWidth, 1, 0xEEEEEE, "RAM monitoring")):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP); elementY = elementY + 2
 mainContainer.toolbar.RAMChart = mainContainer.toolbar:addChild(GUI.chart(2, elementY, elementWidth, mainContainer.toolbar.height - elementY - 3, 0xEEEEEE, 0xAAAAAA, 0x555555, 0x66DB80, 0.35, 0.25, "s", "%", true, {})); elementY = elementY + mainContainer.toolbar.RAMChart.height + 1
 mainContainer.toolbar.RAMChart.roundValues = true
 -- mainContainer.toolbar.RAMChart.showXAxisValues = false

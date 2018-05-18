@@ -8,7 +8,7 @@ local MineOSInterface = require("MineOSInterface")
 
 ---------------------------------------------------------------------------------------------------------
 
-local mainContainer, window = MineOSInterface.addWindow(MineOSInterface.filledWindow(1, 1, 110, 25, 0xF0F0F0))
+local mainContainer, window = MineOSInterface.addWindow(GUI.filledWindow(1, 1, 110, 25, 0xF0F0F0))
 local yDependencyString = "math.sin(x)"
 local xOffset, yOffset, xDrag, yDrag, points = 0, 0, 1, 1
 
@@ -17,8 +17,8 @@ local xOffset, yOffset, xDrag, yDrag, points = 0, 0, 1, 1
 window.backgroundPanel.localY, window.backgroundPanel.height = 4, window.backgroundPanel.height - 3
 local titlePanel = window:addChild(GUI.panel(1, 1, window.width, 3, 0x2D2D2D))
 local layout = window:addChild(GUI.layout(1, 1, window.width, 3, 1, 1))
-layout:setCellDirection(1, 1, GUI.directions.horizontal)
-layout:setCellSpacing(1, 1, 3)
+layout:setDirection(1, 1, GUI.DIRECTION_HORIZONTAL)
+layout:setSpacing(1, 1, 3)
 
 local switchAndLabel = layout:addChild(GUI.switchAndLabel(1, 1, 16, 6, 0x66DB80, 0x1E1E1E, 0xF0F0F0, 0xBBBBBB, "Quants:", false))
 local scaleSlider = layout:addChild(GUI.slider(1, 1, 12, 0x66DB80, 0x0, 0xFFFFFF, 0xBBBBBB, 1, 1000, 400, false, "Scale: ", "%"))
@@ -35,12 +35,12 @@ graph.draw = function(graph)
 
 	local xCenter, yCenter = graph.x + xOffset + graph.width / 2 - 1, graph.y + yOffset + graph.height / 2 - 1
 	
-	buffer.semiPixelLine(math.floor(graph.x), math.floor(yCenter * 2), math.floor(graph.x + graph.width - 1), math.floor(yCenter * 2), 0xD2D2D2)
-	buffer.semiPixelLine(math.floor(xCenter), math.floor(graph.y * 2 - 1), math.floor(xCenter), math.floor(graph.y + graph.height - 1) * 2, 0xD2D2D2)
+	buffer.drawSemiPixelLine(math.floor(graph.x), math.floor(yCenter * 2), math.floor(graph.x + graph.width - 1), math.floor(yCenter * 2), 0xD2D2D2)
+	buffer.drawSemiPixelLine(math.floor(xCenter), math.floor(graph.y * 2 - 1), math.floor(xCenter), math.floor(graph.y + graph.height - 1) * 2, 0xD2D2D2)
 
 	for i = 1, #points - 1 do
 		local x1, x2, y1, y2 = math.floor(xCenter + points[i].x), math.floor(yCenter - points[i].y + 1) * 2, math.floor(xCenter + points[i + 1].x), math.floor(yCenter - points[i + 1].y + 1) * 2
-		buffer.semiPixelLine(x1, x2, y1, y2, 0x0)
+		buffer.drawSemiPixelLine(x1, x2, y1, y2, 0x0)
 		if switchAndLabel.switch.state then
 			buffer.semiPixelSet(x1, x2, 0x66DB80)
 		end
@@ -71,7 +71,7 @@ local function update()
 				})
 			end
 		else
-			GUI.error("Invalid input function")
+			GUI.alert("Invalid input function")
 			return
 		end
 	end
@@ -85,7 +85,7 @@ functionButton.onTouch = function()
 			yDependencyString = inputField.text
 			update()
 
-			container:delete()
+			container:remove()
 			mainContainer:drawOnScreen()
 		end
 	end
@@ -109,7 +109,7 @@ window.onResize = function(width, height)
 	update()
 end
 
-graph.eventHandler = function(mainContainer, graph, e1, e2, e3, e4)
+graph.eventHandler = function(mainContainer, graph, e1, e2, e3, e4, e5)
 	if e1 == "touch" then
 		xDrag, yDrag = e3, e4
 	elseif e1 == "drag" then

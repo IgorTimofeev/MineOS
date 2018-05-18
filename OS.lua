@@ -35,13 +35,13 @@ local function biometry(creatingNew)
 	end
 
 	local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer)
-	container.layout:setCellFitting(2, 1, false, false)
+	container.layout:setFitting(2, 1, false, false)
 
 	local fingerImage = container.layout:addChild(GUI.image(1, 1, image.fromString([[180E0000FF 0000FF 0000FF 0000FF 0000FF 00FFFF▄00FFFF▄00FFFF▄00FFFF▄FFFFFF▀FFFFFF▀FFFFFF▀FFFFFF▀FFFFFF▀FFFFFF▀00FFFF▄00FFFF▄00FFFF▄0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 00FFFF▄FFFF00▄FFFFFF▀0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF FFFFFF▀FFFFFF▀FFFF00▄00FFFF▄0000FF 0000FF 0000FF 0000FF 0000FF FFFF00▄FFFFFF▀0000FF 0000FF 0000FF 00FFFF▄00FFFF▄FFFF00▄FFFFFF▀FFFFFF▀FFFFFF▀FFFFFF▀FFFFFF▀FFFFFF▀FFFF00▄00FFFF▄0000FF 0000FF FFFFFF▀FFFF00▄00FFFF▄0000FF 0000FF FFFF00▄FFFFFF▀0000FF 0000FF 00FFFF▄FFFF00▄FFFFFF▀0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF FFFF00▄00FFFF▄0000FF 0000FF FFFF00▄0000FF 00FFFF▄FFFF00▄0000FF 0000FF 00FFFF▄FFFF00▄0000FF 0000FF 0000FF 00FFFF▄00FFFF▄FFFFFF▀FFFFFF▀FFFFFF▀FFFFFF▀FFFFFF▀FFFFFF▀00FFFF▄0000FF FFFF00▄00FFFF▄0000FF FFFFFF▀FFFF00▄FFFF00▄0000FF 0000FF 0000FF FFFF00▄0000FF 0000FF 0000FF FFFF00▄0000FF 0000FF 0000FF 00FFFF▄00FFFF▄00FFFF▄0000FF 0000FF FFFF00▄0000FF 0000FF FFFF00▄0000FF 0000FF FFFF00▄FFFF00▄0000FF 0000FF 0000FF FFFF00▄0000FF 0000FF 00FFFF▄FFFFFF▀0000FF 0000FF 0000FF 0000FF 00FFFF▄FFFF00▄0000FF 0000FF FFFF00▄0000FF 0000FF FFFF00▄0000FF 0000FF FFFF00▄FFFF00▄0000FF 0000FF 0000FF FFFF00▄0000FF 0000FF FFFF00▄0000FF 0000FF 0000FF 0000FF 00FFFF▄FFFF00▄0000FF 0000FF 0000FF FFFF00▄0000FF 0000FF FFFF00▄0000FF 00FFFF▄FFFF00▄FFFF00▄00FFFF▄0000FF 0000FF FFFF00▄00FFFF▄0000FF FFFFFF▀FFFF00▄0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF FFFF00▄0000FF 0000FF FFFF00▄FFFFFF▀0000FF FFFF00▄0000FF 0000FF FFFF00▄0000FF 0000FF 0000FF FFFF00▄00FFFF▄0000FF FFFFFF▀FFFF00▄0000FF 0000FF 0000FF 0000FF 0000FF FFFF00▄0000FF 0000FF 00FFFF▄FFFF00▄0000FF 00FFFF▄FFFFFF▀0000FF 0000FF FFFF00▄00FFFF▄0000FF 0000FF 0000FF FFFF00▄00FFFF▄0000FF FFFF00▄00FFFF▄0000FF 0000FF 0000FF FFFF00▄0000FF 0000FF 00FFFF▄FFFFFF▀0000FF 0000FF FFFF00▄0000FF 0000FF 0000FF 0000FF FFFF00▄00FFFF▄0000FF 0000FF 0000FF FFFF00▄0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF FFFF00▄FFFFFF▀0000FF 0000FF FFFF00▄FFFFFF▀0000FF 0000FF 0000FF 0000FF 0000FF FFFF00▄0000FF 0000FF 0000FF FFFFFF▀FFFF00▄00FFFF▄0000FF 0000FF 0000FF 0000FF 00FFFF▄FFFFFF▀0000FF 0000FF 0000FF 00FFFF▄FFFF00▄0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF FFFF00▄00FFFF▄0000FF 0000FF 0000FF FFFFFF▀0000FF 0000FF 0000FF 0000FF FFFFFF▀0000FF 0000FF 00FFFF▄FFFF00▄FFFFFF▀0000FF 0000FF 0000FF 0000FF ]])))
 	local text = creatingNew and MineOSCore.localization.putFingerToRegister or MineOSCore.localization.putFingerToVerify
-	local label = container.layout:addChild(GUI.label(1, 1, container.width, 1, 0xE1E1E1, text):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top))
+	local label = container.layout:addChild(GUI.label(1, 1, container.width, 1, 0xE1E1E1, text):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP))
 
-	local scanLine = container:addChild(GUI.label(1, 1, container.width, 1, 0xFFFFFF, string.rep("─", image.getWidth(fingerImage.image) + 6)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top))
+	local scanLine = container:addChild(GUI.label(1, 1, container.width, 1, 0xFFFFFF, string.rep("─", image.getWidth(fingerImage.image) + 6)):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP))
 	local fingerImageHeight = image.getHeight(fingerImage.image) + 1
 	local delay = 0.5
 	scanLine.hidden = true
@@ -59,7 +59,7 @@ local function biometry(creatingNew)
 				end,
 				function(mainContainer, animation)
 					scanLine.hidden = true
-					animation:delete()
+					animation:remove()
 
 					local touchedHash = require("SHA2").hash(e6)
 
@@ -72,7 +72,7 @@ local function biometry(creatingNew)
 						MineOSCore.properties.biometryHash = touchedHash
 						MineOSCore.saveProperties()
 
-						container:delete()
+						container:remove()
 						os.sleep(delay)
 					else
 						if touchedHash == MineOSCore.properties.biometryHash then
@@ -80,7 +80,7 @@ local function biometry(creatingNew)
 
 							MineOSInterface.mainContainer:drawOnScreen()
 
-							container:delete()
+							container:remove()
 							os.sleep(delay)
 
 							event.interruptingEnabled = true
@@ -113,7 +113,7 @@ local function checkPassword()
 
 	local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer, MineOSCore.localization.inputPassword)
 	local inputField = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x878787, 0xE1E1E1, 0x2D2D2D, nil, nil, true, "*"))
-	local label = container.layout:addChild(GUI.label(1, 1, 36, 1, 0xFF4940, MineOSCore.localization.incorrectPassword)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+	local label = container.layout:addChild(GUI.label(1, 1, 36, 1, 0xFF4940, MineOSCore.localization.incorrectPassword)):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
 	label.hidden = true
 
 	container.panel.eventHandler = nil
@@ -121,11 +121,11 @@ local function checkPassword()
 	inputField.onInputFinished = function()
 		local hash = require("SHA2").hash(inputField.text or "")
 		if hash == MineOSCore.properties.passwordHash then
-			container:delete()
+			container:remove()
 			event.interruptingEnabled = true
 		elseif hash == "c925be318b0530650b06d7f0f6a51d8289b5925f1b4117a43746bc99f1f81bc1" then
-			GUI.error(MineOSCore.localization.mineOSCreatorUsedMasterPassword)
-			container:delete()
+			GUI.alert(MineOSCore.localization.mineOSCreatorUsedMasterPassword)
+			container:remove()
 			event.interruptingEnabled = true
 		else
 			label.hidden = false
@@ -142,12 +142,12 @@ local function setPassword()
 	local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer, MineOSCore.localization.passwordProtection)
 	local inputField1 = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x878787, 0xE1E1E1, 0x2D2D2D, nil, MineOSCore.localization.inputPassword, true, "*"))
 	local inputField2 = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x878787, 0xE1E1E1, 0x2D2D2D, nil, MineOSCore.localization.confirmInputPassword, true, "*"))
-	local label = container.layout:addChild(GUI.label(1, 1, 36, 1, 0xFF4940, MineOSCore.localization.passwordsAreDifferent)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+	local label = container.layout:addChild(GUI.label(1, 1, 36, 1, 0xFF4940, MineOSCore.localization.passwordsAreDifferent)):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
 	label.hidden = true
 
 	local function check()
 		if inputField1.text ~= "" and inputField1.text == inputField2.text then
-			container:delete()
+			container:remove()
 
 			MineOSCore.properties.protectionMethod = "password"
 			MineOSCore.properties.passwordHash = require("SHA2").hash(inputField1.text or "")
@@ -182,15 +182,15 @@ local function setProtectionMethod()
 
 	local comboBox = container.layout:addChild(GUI.comboBox(1, 1, 36, 3, 0xE1E1E1, 0x2D2D2D, 0x4B4B4B, 0x969696))
 	comboBox:addItem(MineOSCore.localization.biometricProtection).onTouch = function()
-		container:delete()
+		container:remove()
 		biometry(true)
 	end
 	comboBox:addItem(MineOSCore.localization.passwordProtection).onTouch = function()
-		container:delete()
+		container:remove()
 		setPassword()
 	end
 	comboBox:addItem(MineOSCore.localization.withoutProtection).onTouch = function()
-		container:delete()
+		container:remove()
 		setWithoutProtection()
 	end
 
@@ -282,13 +282,13 @@ local function getPercentageColor(pecent)
 end
 
 local function createOSWidgets()
-	MineOSInterface.mainContainer:deleteChildren()
+	MineOSInterface.mainContainer:removeChildren()
 	MineOSInterface.mainContainer.background = MineOSInterface.mainContainer:addChild(GUI.object(1, 1, 1, 1))
 	MineOSInterface.mainContainer.background.wallpaperPosition = {x = 1, y = 1}
 	MineOSInterface.mainContainer.background.draw = function(object)
-		buffer.square(object.x, object.y, object.width, object.height, MineOSCore.properties.backgroundColor, 0, " ")
+		buffer.drawRectangle(object.x, object.y, object.width, object.height, MineOSCore.properties.backgroundColor, 0, " ")
 		if object.wallpaper then
-			buffer.image(object.wallpaperPosition.x, object.wallpaperPosition.y, object.wallpaper)
+			buffer.drawImage(object.wallpaperPosition.x, object.wallpaperPosition.y, object.wallpaper)
 		end
 	end
 
@@ -369,8 +369,8 @@ local function createOSWidgets()
 
 		icon.onRightClick = function(icon, e1, e2, e3, e4, ...)
 			local indexOf = icon:indexOf()
-
-			local menu = MineOSInterface.contextMenu(e3, e4, ...)
+			local menu = MineOSInterface.addContextMenu(MineOSInterface.mainContainer, e3, e4, ...)
+			
 			if icon.windows then
 				local eventData = {...}
 				menu:addItem(MineOSCore.localization.newWindow).onTouch = function()
@@ -383,24 +383,30 @@ local function createOSWidgets()
 					MineOSInterface.mainContainer:drawOnScreen()
 				end
 			end
+			
 			menu:addItem(MineOSCore.localization.showContainingFolder).onTouch = function()
 				MineOSInterface.safeLaunch(MineOSPaths.explorer, "-o", fs.path(icon.shortcutPath or icon.path))			
 			end
+			
 			menu:addSeparator()
+			
 			menu:addItem(MineOSCore.localization.moveRight, indexOf >= #MineOSInterface.mainContainer.dockContainer.children - 1).onTouch = function()
 				moveDockIcon(indexOf, 1)
 			end
+			
 			menu:addItem(MineOSCore.localization.moveLeft, indexOf <= 1).onTouch = function()
 				moveDockIcon(indexOf, -1)
 			end
+			
 			menu:addSeparator()
+			
 			if icon.keepInDock then
 				if #MineOSInterface.mainContainer.dockContainer.children > 1 then
 					menu:addItem(MineOSCore.localization.removeFromDock).onTouch = function()
 						if icon.windows then
 							icon.keepInDock = nil
 						else
-							icon:delete()
+							icon:remove()
 							MineOSInterface.mainContainer.dockContainer.sort()
 						end
 						MineOSInterface.mainContainer.dockContainer.saveToOSSettings()
@@ -416,7 +422,7 @@ local function createOSWidgets()
 				end
 			end
 
-			menu:show()
+			MineOSInterface.mainContainer:drawOnScreen()
 		end
 
 		MineOSInterface.mainContainer.dockContainer.sort()
@@ -439,7 +445,7 @@ local function createOSWidgets()
 	end
 
 	icon.onRightClick = function(icon, e1, e2, e3, e4)
-		local menu = MineOSInterface.contextMenu(e3, e4)
+		local menu = MineOSInterface.addContextMenu(MineOSInterface.mainContainer, e3, e4)
 		menu:addItem(MineOSCore.localization.emptyTrash).onTouch = function()
 			local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer, MineOSCore.localization.areYouSure)
 
@@ -447,19 +453,19 @@ local function createOSWidgets()
 				for file in fs.list(MineOSPaths.trash) do
 					fs.remove(MineOSPaths.trash .. file)
 				end
-				container:delete()
+				container:remove()
 				computer.pushSignal("MineOSCore", "updateFileList")
 			end
 
 			container.panel.onTouch = function()
-				container:delete()
+				container:remove()
 				MineOSInterface.mainContainer:drawOnScreen()
 			end
 
 			MineOSInterface.mainContainer:drawOnScreen()
 		end
 
-		menu:show()
+		MineOSInterface.mainContainer:drawOnScreen()
 	end
 
 	for i = 1, #MineOSCore.properties.dockShortcuts do
@@ -467,13 +473,14 @@ local function createOSWidgets()
 	end
 
 	-- Draw dock drawDock dockDraw cyka заебался искать, блядь
+	local overrideDockContainerDraw = MineOSInterface.mainContainer.dockContainer.draw
 	MineOSInterface.mainContainer.dockContainer.draw = function(dockContainer)
 		local color, currentDockTransparency, currentDockWidth, xPos = MineOSCore.properties.dockColor, dockTransparency, dockContainer.width - 2, dockContainer.x
 
 		for y = dockContainer.y + dockContainer.height - 1, dockContainer.y + dockContainer.height - 4, -1 do
-			buffer.text(xPos, y, color, "◢", MineOSCore.properties.transparencyEnabled and currentDockTransparency)
-			buffer.square(xPos + 1, y, currentDockWidth, 1, color, 0xFFFFFF, " ", MineOSCore.properties.transparencyEnabled and currentDockTransparency)
-			buffer.text(xPos + currentDockWidth + 1, y, color, "◣", MineOSCore.properties.transparencyEnabled and currentDockTransparency)
+			buffer.drawText(xPos, y, color, "◢", MineOSCore.properties.transparencyEnabled and currentDockTransparency)
+			buffer.drawRectangle(xPos + 1, y, currentDockWidth, 1, color, 0xFFFFFF, " ", MineOSCore.properties.transparencyEnabled and currentDockTransparency)
+			buffer.drawText(xPos + currentDockWidth + 1, y, color, "◣", MineOSCore.properties.transparencyEnabled and currentDockTransparency)
 
 			currentDockTransparency, currentDockWidth, xPos = currentDockTransparency + 0.08, currentDockWidth - 2, xPos + 1
 			if currentDockTransparency > 1 then
@@ -481,7 +488,7 @@ local function createOSWidgets()
 			end
 		end
 
-		GUI.drawContainerContent(dockContainer)
+		overrideDockContainerDraw(dockContainer)
 	end
 
 	MineOSInterface.mainContainer.windowsContainer = MineOSInterface.mainContainer:addChild(GUI.container(1, 2, 1, 1))
@@ -489,12 +496,12 @@ local function createOSWidgets()
 	MineOSInterface.mainContainer.menu = MineOSInterface.mainContainer:addChild(GUI.menu(1, 1, MineOSInterface.mainContainer.width, MineOSCore.properties.menuColor, 0x696969, 0x3366CC, 0xFFFFFF))
 	local item1 = MineOSInterface.mainContainer.menu:addItem("MineOS", 0x000000)
 	item1.onTouch = function()
-		local menu = MineOSInterface.contextMenu(item1.x, item1.y + 1)
+		local menu = MineOSInterface.addContextMenu(MineOSInterface.mainContainer, item1.x, item1.y + 1)
 
 		menu:addItem(MineOSCore.localization.aboutSystem).onTouch = function()
 			local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer, MineOSCore.localization.aboutSystem)
-			container.layout:setCellFitting(2, 1, false, false)
-			container.layout:deleteChildren()
+			container.layout:setFitting(2, 1, false, false)
+			container.layout:removeChildren()
 			
 			local lines = {
 				"MineOS",
@@ -528,7 +535,7 @@ local function createOSWidgets()
 			}
 
 			local textBox = container.layout:addChild(GUI.textBox(1, 1, container.layout.width, #lines, nil, 0xB4B4B4, lines, 1, 0, 0))
-			textBox:setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+			textBox:setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
 			textBox.eventHandler = container.panel.eventHandler
 
 			MineOSInterface.mainContainer:drawOnScreen()
@@ -563,7 +570,7 @@ local function createOSWidgets()
 			os.exit()
 		end
 
-		menu:show()
+		MineOSInterface.mainContainer:drawOnScreen()
 	end
 
 	local item2 = MineOSInterface.mainContainer.menu:addItem(MineOSCore.localization.network)
@@ -572,7 +579,7 @@ local function createOSWidgets()
 		local insertModemTextBox = container.layout:addChild(GUI.textBox(1, 1, 36, 1, nil, 0x5A5A5A, {MineOSCore.localization.networkModemNotAvailable}, 1, 0, 0, true, true))
 		local stateSwitchAndLabel = container.layout:addChild(GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x878787, MineOSCore.localization.networkState .. ":", MineOSCore.properties.network.enabled))
 		local networkNameInput = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x878787, 0xE1E1E1, 0x2D2D2D, MineOSCore.properties.network.name or "", MineOSCore.localization.networkName))
-		local remoteComputersLabel = container.layout:addChild(GUI.label(1, 1, container.width, 1, 0xE1E1E1, MineOSCore.localization.networkComputers):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top))
+		local remoteComputersLabel = container.layout:addChild(GUI.label(1, 1, container.width, 1, 0xE1E1E1, MineOSCore.localization.networkComputers):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP))
 		local remoteComputersComboBox = container.layout:addChild(GUI.comboBox(1, 1, 36, 3, 0xE1E1E1, 0x2D2D2D, 0x4B4B4B, 0x969696))
 		local allowReadAndWriteSwitchAndLabel = container.layout:addChild(GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x878787, MineOSCore.localization.networkAllowReadAndWrite .. ":", false))
 
@@ -645,7 +652,7 @@ local function createOSWidgets()
 
 		container.panel.eventHandler = function(mainContainer, object, e1, e2, e3)
 			if e1 == "touch" then
-				container:delete()
+				container:remove()
 				MineOSInterface.mainContainer:drawOnScreen()
 			elseif (e1 == "component_added" or e1 == "component_removed") and e3 == "modem" then
 				check()
@@ -659,7 +666,7 @@ local function createOSWidgets()
 
 	local item3 = MineOSInterface.mainContainer.menu:addItem(MineOSCore.localization.settings)
 	item3.onTouch = function()
-		local menu = MineOSInterface.contextMenu(item3.x, item3.y + 1)
+		local menu = MineOSInterface.addContextMenu(MineOSInterface.mainContainer, item3.x, item3.y + 1)
 
 		if computer.getArchitectures then
 			menu:addItem(MineOSCore.localization.CPUArchitecture).onTouch = function()
@@ -736,7 +743,7 @@ local function createOSWidgets()
 
 			container.panel.eventHandler = function(mainContainer, object, e1)
 				if e1 == "touch" then
-					container:delete()
+					container:remove()
 					MineOSCore.properties.resolution = {tonumber(widthTextBox.text), tonumber(heightTextBox.text)}
 					MineOSCore.saveProperties()
 					changeResolution()
@@ -838,7 +845,7 @@ local function createOSWidgets()
 
 			container.panel.eventHandler = function(mainContainer, object, e1)
 				if e1 == "touch" then
-					container:delete()
+					container:remove()
 					MineOSInterface.mainContainer:drawOnScreen()
 
 					MineOSCore.properties.screensaverEnabled = switch.state
@@ -884,7 +891,7 @@ local function createOSWidgets()
 
 			container.panel.eventHandler = function(mainContainer, object, e1)
 				if e1 == "touch" then
-					container:delete()
+					container:remove()
 					MineOSInterface.mainContainer:drawOnScreen()
 
 					MineOSCore.saveProperties()
@@ -899,13 +906,13 @@ local function createOSWidgets()
 			local showHiddenFilesSwitch = container.layout:addChild(GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x878787, MineOSCore.localization.showHiddenFiles .. ":", MineOSCore.properties.showHiddenFiles)).switch
 			local showApplicationIconsSwitch = container.layout:addChild(GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x878787, MineOSCore.localization.showApplicationIcons .. ":", MineOSCore.properties.showApplicationIcons)).switch
 
-			container.layout:addChild(GUI.label(1, 1, container.width, 1, 0xE1E1E1, MineOSCore.localization.sizeOfIcons):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top))
+			container.layout:addChild(GUI.label(1, 1, container.width, 1, 0xE1E1E1, MineOSCore.localization.sizeOfIcons):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP))
 
 			local iconWidthSlider = container.layout:addChild(GUI.slider(1, 1, 36, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x878787, 8, 16, MineOSCore.properties.iconWidth, false, MineOSCore.localization.byHorizontal .. ": ", ""))
 			local iconHeightSlider = container.layout:addChild(GUI.slider(1, 1, 36, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x878787, 6, 16, MineOSCore.properties.iconHeight, false, MineOSCore.localization.byVertical .. ": ", ""))
 
 			container.layout:addChild(GUI.object(1, 1, 1, 0))
-			container.layout:addChild(GUI.label(1, 1, container.width, 1, 0xE1E1E1, MineOSCore.localization.spaceBetweenIcons):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top))
+			container.layout:addChild(GUI.label(1, 1, container.width, 1, 0xE1E1E1, MineOSCore.localization.spaceBetweenIcons):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP))
 
 			local iconHorizontalSpaceBetweenSlider = container.layout:addChild(GUI.slider(1, 1, 36, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x878787, 0, 5, MineOSCore.properties.iconHorizontalSpaceBetween, false, MineOSCore.localization.byHorizontal .. ": ", ""))
 			local iconVerticalSpaceBetweenSlider = container.layout:addChild(GUI.slider(1, 1, 36, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x878787, 0, 5, MineOSCore.properties.iconVerticalSpaceBetween, false, MineOSCore.localization.byVertical .. ": ", ""))
@@ -960,23 +967,23 @@ local function createOSWidgets()
 			setProtectionMethod()
 		end
 
-		menu:show()
+		MineOSInterface.mainContainer:drawOnScreen()
 	end
 
 	MineOSInterface.mainContainer.menuLayout = MineOSInterface.mainContainer:addChild(GUI.layout(1, 1, 1, 1, 1, 1))
-	MineOSInterface.mainContainer.menuLayout:setCellDirection(1, 1, GUI.directions.horizontal)
-	MineOSInterface.mainContainer.menuLayout:setCellAlignment(1, 1, GUI.alignment.horizontal.right, GUI.alignment.vertical.top)
-	MineOSInterface.mainContainer.menuLayout:setCellMargin(1, 1, 1, 0)
-	MineOSInterface.mainContainer.menuLayout:setCellSpacing(1, 1, 2)
+	MineOSInterface.mainContainer.menuLayout:setDirection(1, 1, GUI.DIRECTION_HORIZONTAL)
+	MineOSInterface.mainContainer.menuLayout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_RIGHT, GUI.ALIGNMENT_VERTICAL_TOP)
+	MineOSInterface.mainContainer.menuLayout:setMargin(1, 1, 1, 0)
+	MineOSInterface.mainContainer.menuLayout:setSpacing(1, 1, 2)
 
 	local dateWidget, dateWidgetText = MineOSInterface.addMenuWidget(MineOSInterface.menuWidget(1))
 	dateWidget.drawContent = function()
-		buffer.text(dateWidget.x, 1, dateWidget.textColor, dateWidgetText)
+		buffer.drawText(dateWidget.x, 1, dateWidget.textColor, dateWidgetText)
 	end
 
 	local batteryWidget, batteryWidgetPercent, batteryWidgetText = MineOSInterface.addMenuWidget(MineOSInterface.menuWidget(1))
 	batteryWidget.drawContent = function()
-		buffer.text(batteryWidget.x, 1, batteryWidget.textColor, batteryWidgetText)
+		buffer.drawText(batteryWidget.x, 1, batteryWidget.textColor, batteryWidgetText)
 
 		local pixelPercent = math.round(batteryWidgetPercent * 4)
 		if pixelPercent == 0 then
@@ -996,7 +1003,7 @@ local function createOSWidgets()
 		local barWidth = RAMWidget.width - #text
 		local activeWidth = math.ceil(RAMPercent * barWidth)
 
-		buffer.text(RAMWidget.x, 1, RAMWidget.textColor, text)
+		buffer.drawText(RAMWidget.x, 1, RAMWidget.textColor, text)
 		
 		local index = buffer.getIndex(RAMWidget.x + #text, 1)
 		for i = 1, barWidth do
@@ -1081,9 +1088,9 @@ local function createOSWidgets()
 			end
 		elseif e1 == "MineOSNetwork" then
 			if e2 == "accessDenied" then
-				GUI.error(MineOSCore.localization.networkAccessDenied)
+				GUI.alert(MineOSCore.localization.networkAccessDenied)
 			elseif e2 == "timeout" then
-				GUI.error(MineOSCore.localization.networkTimeout)
+				GUI.alert(MineOSCore.localization.networkTimeout)
 			end
 		end
 

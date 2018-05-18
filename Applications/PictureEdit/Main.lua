@@ -88,7 +88,7 @@ end
 local pizdaWidth = 28
 mainContainer.sidebarPanel = mainContainer:addChild(GUI.panel(mainContainer.width - pizdaWidth + 1, 2, pizdaWidth, mainContainer.height - 1, 0x3C3C3C))
 mainContainer.sidebarLayout = mainContainer:addChild(GUI.layout(mainContainer.sidebarPanel.localX, 2, mainContainer.sidebarPanel.width, mainContainer.sidebarPanel.height, 1, 1))
-mainContainer.sidebarLayout:setCellAlignment(1, 1, GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+mainContainer.sidebarLayout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
 
 addTitle(mainContainer.sidebarLayout, "Recent colors")
 
@@ -110,8 +110,8 @@ end
 local currentToolTitle = addTitle(mainContainer.sidebarLayout, "Tool properties")
 
 mainContainer.currentToolLayout = mainContainer.sidebarLayout:addChild(GUI.layout(1, 1, mainContainer.sidebarLayout.width, 1, 1, 1))
-mainContainer.currentToolLayout:setCellAlignment(1, 1, GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
-mainContainer.currentToolLayout:setCellFitting(1, 1, true, false, 2, 0)
+mainContainer.currentToolLayout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
+mainContainer.currentToolLayout:setFitting(1, 1, true, false, 2, 0)
 
 local aboutToolTitle = addTitle(mainContainer.sidebarLayout, "About tool")
 local aboutToolTextBox = mainContainer.sidebarLayout:addChild(GUI.textBox(1, 1, mainContainer.sidebarLayout.width - 2, 1, nil, 0x787878, {}, 1, 0, 0))
@@ -125,8 +125,8 @@ local function onToolTouch(index)
 	tool = mainContainer.toolsList.itemsLayout.children[index].tool
 	
 	mainContainer.toolsList:select(index)
-	mainContainer.currentToolOverlay:deleteChildren()
-	mainContainer.currentToolLayout:deleteChildren()
+	mainContainer.currentToolOverlay:removeChildren()
+	mainContainer.currentToolLayout:removeChildren()
 
 	currentToolTitle.hidden = not tool.onSelection
 	mainContainer.currentToolLayout.hidden = currentToolTitle.hidden
@@ -140,7 +140,7 @@ local function onToolTouch(index)
 				mainContainer.currentToolLayout.height = lastChild.localY + lastChild.height - 1
 			end
 		else
-			GUI.error(reason)
+			GUI.alert(reason)
 		end
 	end
 
@@ -175,14 +175,14 @@ for i = 1, #modules do
 end
 
 mainContainer.image.draw = function(object)
-	GUI.windowShadow(object.x, object.y, object.width, object.height, nil, true)
+	GUI.drawShadow(object.x, object.y, object.width, object.height, nil, true)
 	
 	local y, text = object.y + object.height + 1, "Size: " .. object.width .. "x" .. object.height
-	buffer.text(math.floor(object.x + object.width / 2 - unicode.len(text) / 2), y, 0x5A5A5A, text)
+	buffer.drawText(math.floor(object.x + object.width / 2 - unicode.len(text) / 2), y, 0x5A5A5A, text)
 
 	if savePath then
 		text = "Path: " .. savePath
-		buffer.text(math.floor(object.x + object.width / 2 - unicode.len(text) / 2), y + 1, 0x5A5A5A, text)
+		buffer.drawText(math.floor(object.x + object.width / 2 - unicode.len(text) / 2), y + 1, 0x5A5A5A, text)
 	end
 	
 	local x, y, step, notStep, background, foreground, symbol = object.x, object.y, false, mainContainer.image.width % 2
@@ -234,10 +234,10 @@ local function swapColors()
 end
 
 local function colorSelectorDraw(object)
-	buffer.square(object.x + 1, object.y, object.width - 2, object.height, object.color, 0x0, " ")
+	buffer.drawRectangle(object.x + 1, object.y, object.width - 2, object.height, object.color, 0x0, " ")
 	for y = object.y, object.y + object.height - 1 do
-		buffer.text(object.x, y, object.color, "⢸")
-		buffer.text(object.x + object.width - 1, y, object.color, "⡇")
+		buffer.drawText(object.x, y, object.color, "⢸")
+		buffer.drawText(object.x + object.width - 1, y, object.color, "⡇")
 	end
 end
 
@@ -268,7 +268,7 @@ mainContainer.image.eventHandler = function(mainContainer, object, e1, e2, e3, e
 
 	local result, reason = pcall(tool.eventHandler, mainContainer, object, e1, e2, e3, e4, ...)
 	if not result then
-		GUI.error("Tool eventHandler() failed: " .. reason)
+		GUI.alert("Tool eventHandler() failed: " .. reason)
 	end
 end
 
@@ -309,7 +309,7 @@ local function new()
 	container.panel.eventHandler = function(mainContainer, object, e1)
 		if e1 == "touch" then
 			newNoGUI(tonumber(widthInput.text), tonumber(heightInput.text))
-			container:delete()
+			container:remove()
 			mainContainer:drawOnScreen()
 		end
 	end
@@ -325,7 +325,7 @@ local function loadImage(path)
 		mainContainer.image.data = result
 		mainContainer.image.reposition()
 	else
-		GUI.error(reason)
+		GUI.alert(reason)
 	end
 end
 
@@ -335,7 +335,7 @@ local function saveImage(path)
 		savePath = path
 		addRecentFile(path)
 	else
-		GUI.error(reason)
+		GUI.alert(reason)
 	end
 end
 
@@ -343,15 +343,15 @@ mainContainer.menu:addItem("PE", 0x00B6FF)
 
 local fileItem = mainContainer.menu:addItem("File")
 fileItem.onTouch = function()
-	local menu = GUI.contextMenu(fileItem.x, fileItem.y + 1)
+	local menu = GUI.addContextMenu(mainContainer, fileItem.x, fileItem.y + 1)
 	
 	menu:addItem("New").onTouch = new
 
 	menu:addSeparator()
 
 	menu:addItem("Open").onTouch = function()
-		local filesystemDialog = GUI.addFilesystemDialogToContainer(mainContainer, 50, math.floor(mainContainer.height * 0.8), true, "Open", "Cancel", "File name", "/")
-		filesystemDialog:setMode(GUI.filesystemModes.open, GUI.filesystemModes.file)
+		local filesystemDialog = GUI.addFilesystemDialog(mainContainer, true, 50, math.floor(mainContainer.height * 0.8), "Open", "Cancel", "File name", "/")
+		filesystemDialog:setMode(GUI.IO_MODE_OPEN, GUI.IO_MODE_FILE)
 		filesystemDialog:addExtensionFilter(".pic")
 		filesystemDialog:expandPath(MineOSPaths.desktop)
 		filesystemDialog:show()
@@ -376,21 +376,21 @@ fileItem.onTouch = function()
 		local input = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x969696, 0xE1E1E1, 0x2D2D2D, "", "http://example.com/test.pic"))
 		input.onInputFinished = function()
 			if #input.text > 0 then
-				input:delete()
-				container.layout:addChild(GUI.label(1, 1, container.width, 1, 0x969696, "Downloading file..."):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top))
+				input:remove()
+				container.layout:addChild(GUI.label(1, 1, container.width, 1, 0x969696, "Downloading file..."):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP))
 				mainContainer:drawOnScreen()
 
 				local temporaryPath = MineOSCore.getTemporaryPath() .. ".pic"
 				local result, reason = web.download(input.text, temporaryPath)
 
-				container:delete()
+				container:remove()
 
 				if result then
 					loadImage(temporaryPath)
 					fs.remove(temporaryPath)
 					savePath = nil
 				else
-					GUI.error(reason)
+					GUI.alert(reason)
 				end
 
 				mainContainer:drawOnScreen()
@@ -407,8 +407,8 @@ fileItem.onTouch = function()
 	end
 
 	menu:addItem("Save as").onTouch = function()
-		local filesystemDialog = GUI.addFilesystemDialogToContainer(mainContainer, 50, math.floor(mainContainer.height * 0.8), true, "Save", "Cancel", "File name", "/")
-		filesystemDialog:setMode(GUI.filesystemModes.save, GUI.filesystemModes.file)
+		local filesystemDialog = GUI.addFilesystemDialog(mainContainer, true, 50, math.floor(mainContainer.height * 0.8), "Save", "Cancel", "File name", "/")
+		filesystemDialog:setMode(GUI.IO_MODE_SAVE, GUI.IO_MODE_FILE)
 		filesystemDialog:addExtensionFilter(".pic")
 		filesystemDialog:expandPath(MineOSPaths.desktop)
 		filesystemDialog.filesystemTree.selectedItem = MineOSPaths.desktop
@@ -425,7 +425,7 @@ fileItem.onTouch = function()
 		mainContainer:stopEventHandling()
 	end
 
-	menu:show()
+	mainContainer:drawOnScreen()
 end
 
 mainContainer.menu:addItem("View").onTouch = function()
@@ -438,7 +438,7 @@ mainContainer.menu:addItem("View").onTouch = function()
 		if e1 == "touch" then
 			config.transparencyBackground, config.transparencyForeground = colorSelector1.color, colorSelector2.color
 			
-			container:delete()
+			container:remove()
 			mainContainer:drawOnScreen()
 			saveConfig()
 		end

@@ -10,27 +10,25 @@ local event = require("event")
 local unicode = require("unicode")
 local keyboard = require("keyboard")
 local GUI = require("GUI")
-local MineOSPaths = require("MineOSPaths")
 local MineOSCore = require("MineOSCore")
+local MineOSPaths = require("MineOSPaths")
 local MineOSInterface = require("MineOSInterface")
 
 ------------------------------------------------------------
 
 local config = {
 	leftTreeViewWidth = 27,
-	syntaxColorScheme = GUI.colors.syntaxHighlighting,
+	syntaxColorScheme = GUI.LUA_SYNTAX_COLOR_SCHEME,
 	scrollSpeed = 8,
 	cursorColor = 0x00A8FF,
 	cursorSymbol = "┃",
 	cursorBlinkDelay = 0.5,
 	doubleClickDelay = 0.4,
-	screenResolution = {},
 	enableAutoBrackets = true,
 	highlightLuaSyntax = true,
 	enableAutocompletion = true,
 	linesToShowOpenProgress = 150,
 }
-config.screenResolution.width, config.screenResolution.height = component.gpu.getResolution()
 
 local openBrackets = {
 	["{"] = "}",
@@ -55,7 +53,7 @@ local cursorBlinkState = false
 
 local scriptCoroutine
 local resourcesPath = MineOSCore.getCurrentScriptDirectory() 
-local configPath = MineOSPaths.applicationData .. "MineCode IDE/Config8.cfg"
+local configPath = MineOSPaths.applicationData .. "MineCode IDE/Config9.cfg"
 local localization = MineOSCore.getCurrentScriptLocalization()
 local findStartFrom
 local clipboard
@@ -69,12 +67,12 @@ local continue, showBreakpointMessage, showErrorContainer
 
 if fs.exists(configPath) then
 	config = table.fromFile(configPath)
-	GUI.colors.syntaxHighlighting = config.syntaxColorScheme
+	GUI.LUA_SYNTAX_COLOR_SCHEME = config.syntaxColorScheme
 end
 
 local mainContainer = GUI.fullScreenContainer()
 
-local codeView = mainContainer:addChild(GUI.codeView(1, 1, 1, 1, lines, 1, 1, 1, {}, {}, config.highlightLuaSyntax, 2))
+local codeView = mainContainer:addChild(GUI.codeView(1, 1, 1, 1, 1, 1, 1, {}, {}, GUI.LUA_SYNTAX_PATTERNS, config.syntaxColorScheme, config.syntaxHighlight, lines))
 
 local function convertTextPositionToScreenCoordinates(symbol, line)
 	return
@@ -100,7 +98,7 @@ codeView.draw = function(...)
 			x <= codeView.codeAreaPosition + codeView.codeAreaWidth - 2 and
 			y <= codeView.y + codeView.height - 2
 		then
-			buffer.text(x, y, config.cursorColor, config.cursorSymbol)
+			buffer.drawText(x, y, config.cursorColor, config.cursorSymbol)
 		end
 	end
 end
@@ -117,9 +115,9 @@ local topToolBarPanel = topToolBar:addChild(GUI.panel(1, 1, 1, 3, 0xE1E1E1))
 local RAMProgressBar = topToolBar:addChild(GUI.progressBar(1, 2, 20, 0x787878, 0xC3C3C3, 0xB4B4B4, 50, true, true, "RAM: ", "%"))
 
 local topLayout = topToolBar:addChild(GUI.layout(1, 1, 1, 3, 1, 1))
-topLayout:setCellDirection(1, 1, GUI.directions.horizontal)
-topLayout:setCellSpacing(1, 1, 2)
-topLayout:setCellAlignment(1, 1, GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+topLayout:setDirection(1, 1, GUI.DIRECTION_HORIZONTAL)
+topLayout:setSpacing(1, 1, 2)
+topLayout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
 
 local autocomplete = mainContainer:addChild(GUI.autoComplete(1, 1, 36, 7, 0xE1E1E1, 0xA5A5A5, 0x3C3C3C, 0x3C3C3C, 0xA5A5A5, 0xE1E1E1, 0xC3C3C3, 0x4B4B4B))
 
@@ -127,25 +125,25 @@ local addBreakpointButton = topLayout:addChild(GUI.adaptiveButton(1, 1, 3, 1, 0x
 
 local syntaxHighlightingButton = topLayout:addChild(GUI.adaptiveButton(1, 1, 3, 1, 0xD2D2D2, 0x4B4B4B, 0x696969, 0xE1E1E1, "◌"))
 syntaxHighlightingButton.switchMode = true
-syntaxHighlightingButton.pressed = codeView.highlightLuaSyntax
+syntaxHighlightingButton.pressed = codeView.syntaxHighlight
 
 local runButton = topLayout:addChild(GUI.adaptiveButton(1, 1, 3, 1, 0x4B4B4B, 0xE1E1E1, 0xD2D2D2, 0x4B4B4B, "▷"))
 
-local title = topLayout:addChild(GUI.textBox(1, 1, 1, 3, 0x0, 0x0, {}, 1):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top))
+local title = topLayout:addChild(GUI.textBox(1, 1, 1, 3, 0x0, 0x0, {}, 1):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP))
 local titleLines = {}
 local titleDebugMode = false
 title.draw = function()	
 	local sides = titleDebugMode and 0xCC4940 or 0x5A5A5A
-	buffer.square(title.x, 2, 1, title.height, sides, 0x0, " ")
-	buffer.square(title.x + title.width - 1, 2, 1, title.height, sides, 0x0, " ")
-	buffer.square(title.x + 1, 2, title.width - 2, 3, titleDebugMode and 0x880000 or 0x3C3C3C, 0xE1E1E1, " ")
+	buffer.drawRectangle(title.x, 2, 1, title.height, sides, 0x0, " ")
+	buffer.drawRectangle(title.x + title.width - 1, 2, 1, title.height, sides, 0x0, " ")
+	buffer.drawRectangle(title.x + 1, 2, title.width - 2, 3, titleDebugMode and 0x880000 or 0x3C3C3C, 0xE1E1E1, " ")
 
 	if titleDebugMode then
 		local text = lastErrorLine and localization.runtimeError or localization.debugging .. (_G.MineCodeIDEDebugInfo and _G.MineCodeIDEDebugInfo.line or "N/A")
-		buffer.text(math.floor(title.x + title.width / 2 - unicode.len(text) / 2), 3, 0xE1E1E1, text)
+		buffer.drawText(math.floor(title.x + title.width / 2 - unicode.len(text) / 2), 3, 0xE1E1E1, text)
 	else
 		for i = 1, #titleLines do
-			buffer.text(math.floor(title.x + title.width / 2 - unicode.len(titleLines[i]) / 2), i + 1, 0xE1E1E1, titleLines[i])
+			buffer.drawText(math.floor(title.x + title.width / 2 - unicode.len(titleLines[i]) / 2), i + 1, 0xE1E1E1, titleLines[i])
 		end
 	end
 end
@@ -169,7 +167,7 @@ local searchInput = bottomToolBar:addChild(GUI.input(7, 1, 10, 3, 0xE1E1E1, 0x96
 
 local searchButton = bottomToolBar:addChild(GUI.adaptiveButton(1, 1, 3, 1, 0x3C3C3C, 0xE1E1E1, 0xB4B4B4, 0x2D2D2D, localization.find))
 
-local leftTreeView = mainContainer:addChild(GUI.filesystemTree(1, 1, config.leftTreeViewWidth, 1, 0xD2D2D2, 0x3C3C3C, 0x3C3C3C, 0x969696, 0x3C3C3C, 0xE1E1E1, 0xB4B4B4, 0xA5A5A5, 0xB4B4B4, 0x4B4B4B, GUI.filesystemModes.both, GUI.filesystemModes.file))
+local leftTreeView = mainContainer:addChild(GUI.filesystemTree(1, 1, config.leftTreeViewWidth, 1, 0xD2D2D2, 0x3C3C3C, 0x3C3C3C, 0x969696, 0x3C3C3C, 0xE1E1E1, 0xB4B4B4, 0xA5A5A5, 0xB4B4B4, 0x4B4B4B, GUI.IO_MODE_BOTH, GUI.IO_MODE_FILE))
 
 local leftTreeViewResizer = mainContainer:addChild(GUI.resizer(1, 1, 3, 5, 0x696969, 0x0))
 
@@ -498,50 +496,15 @@ local function removeWindowsLineEndings(text)
 	return result
 end
 
-local function changeResolution(width, height)
-	buffer.setResolution(width, height)
-	calculateSizes()
-	config.screenResolution.width, config.screenResolution.height = width, height
-end
-
-local function addFadeContainer(title)
-	return GUI.addFadeContainer(mainContainer, true, true, title)
+local function addBackgroundContainer(title)
+	return GUI.addBackgroundContainer(mainContainer, true, true, title)
 end
 
 local function addInputFadeContainer(title, placeholder)
-	local container = addFadeContainer(title)
+	local container = addBackgroundContainer(title)
 	container.input = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xC3C3C3, 0x787878, 0x787878, 0xC3C3C3, 0x2D2D2D, "", placeholder))
 
 	return container
-end
-
-
-local function changeResolutionWindow()
-	local container = addFadeContainer(localization.changeResolution)
-	local inputFieldWidth = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xC3C3C3, 0x787878, 0x787878, 0xC3C3C3, 0x2D2D2D, tostring(config.screenResolution.width)))
-	local inputFieldHeight = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xC3C3C3, 0x787878, 0x787878, 0xC3C3C3, 0x2D2D2D, tostring(config.screenResolution.height)))
-	
-	local maxResolutionWidth, maxResolutionHeight = component.gpu.maxResolution()
-	inputFieldWidth.validator = function(text)
-		local number = tonumber(text)
-		if number and number >= 1 and number <= maxResolutionWidth then return true end
-	end
-	inputFieldHeight.validator = function(text)
-		local number = tonumber(text)
-		if number and number >= 1 and number <= maxResolutionHeight then return true end
-	end
-
-	container.panel.eventHandler = function(mainContainer, object, e1)
-		if e1 == "touch" then
-			config.screenResolution.width, config.screenResolution.height = tonumber(inputFieldWidth.text), tonumber(inputFieldHeight.text)
-			saveConfig()
-			container:delete()
-			changeResolution(config.screenResolution.width, config.screenResolution.height)
-			mainContainer:drawOnScreen()
-		end
-	end
-
-	mainContainer:drawOnScreen()
 end
 
 local function newFile()
@@ -565,7 +528,7 @@ local function loadFile(path)
 		local container = mainContainer:addChild(GUI.container(codeView.localX, codeView.localY, codeView.width, codeView.height))
 		container:addChild(GUI.panel(1, 1, container.width, container.height, 0x1E1E1E))
 		local layout = container:addChild(GUI.layout(1, 1, container.width, container.height, 1, 1))
-		layout:addChild(GUI.label(1, 1, layout.width, 1, 0xD2D2D2, localization.openingFile .. " " .. path):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top))
+		layout:addChild(GUI.label(1, 1, layout.width, 1, 0xD2D2D2, localization.openingFile .. " " .. path):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP))
 		local progressBar = layout:addChild(GUI.progressBar(1, 1, 36, 0x969696, 0x2D2D2D, 0x787878, 0, true, true, "", "%"))
 
 		local counter, currentSize, totalSize = 1, 0, fs.size(path)
@@ -592,13 +555,13 @@ local function loadFile(path)
 		end
 
 		codeView.hidden = false
-		container:delete()
+		container:remove()
 		updateAutocompleteDatabaseFromFile()
 		updateTitle()
 
 		file:close()
 	else
-		GUI.error(reason)
+		GUI.alert(reason)
 	end
 end
 
@@ -611,7 +574,7 @@ local function saveFile(path)
 		end
 		file:close()
 	else
-		GUI.error("Failed to open file for writing: " .. tostring(reason))
+		GUI.alert("Failed to open file for writing: " .. tostring(reason))
 	end
 end
 
@@ -621,7 +584,7 @@ local function gotoLineWindow()
 	container.input.onInputFinished = function()
 		if container.input.text:match("%d+") then
 			gotoLine(tonumber(container.input.text))
-			container:delete()
+			container:remove()
 			mainContainer:drawOnScreen()
 		end
 	end
@@ -630,8 +593,8 @@ local function gotoLineWindow()
 end
 
 local function openFileWindow()
-	local filesystemDialog = GUI.addFilesystemDialogToContainer(mainContainer, 50, math.floor(mainContainer.height * 0.8), true, "Open", "Cancel", "File name", "/")
-	filesystemDialog:setMode(GUI.filesystemModes.open, GUI.filesystemModes.file)
+	local filesystemDialog = GUI.addFilesystemDialog(mainContainer, 50, math.floor(mainContainer.height * 0.8), true, "Open", "Cancel", "File name", "/")
+	filesystemDialog:setMode(GUI.IO_MODE_OPEN, GUI.IO_MODE_FILE)
 	filesystemDialog.onSubmit = function(path)
 		loadFile(path)
 		mainContainer:drawOnScreen()
@@ -640,8 +603,8 @@ local function openFileWindow()
 end
 
 local function saveFileAsWindow()
-	local filesystemDialog = GUI.addFilesystemDialogToContainer(mainContainer, 50, math.floor(mainContainer.height * 0.8), true, "Save", "Cancel", "File name", "/")
-	filesystemDialog:setMode(GUI.filesystemModes.save, GUI.filesystemModes.file)
+	local filesystemDialog = GUI.addFilesystemDialog(mainContainer, 50, math.floor(mainContainer.height * 0.8), true, "Save", "Cancel", "File name", "/")
+	filesystemDialog:setMode(GUI.IO_MODE_SAVE, GUI.IO_MODE_FILE)
 	filesystemDialog.onSubmit = function(path)
 		saveFile(path)
 		leftTreeView:updateFileList()
@@ -681,10 +644,10 @@ local function downloadFileFromWeb()
 				newFile()
 				lines, codeView.maximumLineLength = splitStringIntoLines(result)
 			else
-				GUI.error("Failed to connect to URL: " .. tostring(reason))
+				GUI.alert("Failed to connect to URL: " .. tostring(reason))
 			end
 
-			container:delete()
+			container:remove()
 			mainContainer:drawOnScreen()
 		end
 	end
@@ -820,7 +783,7 @@ local function pizda(lines, debug)
 		titleDebugMode = false
 		updateHighlights()
 		
-		container:delete()
+		container:remove()
 		mainContainer:drawOnScreen()
 	end
 
@@ -844,7 +807,7 @@ local function pizda(lines, debug)
 			continue()
 		end
 		
-		textBox:setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+		textBox:setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
 	end
 
 	backgroundObject.eventHandler = function(mainContainer, object, e1)
@@ -913,7 +876,7 @@ local function launchWithArgumentsWindow()
 			table.insert(arguments, argument)
 		end
 
-		container:delete()
+		container:remove()
 		mainContainer:drawOnScreen()
 
 		run(table.unpack(arguments))
@@ -1016,10 +979,12 @@ local function selectAndPasteColor()
 		startColor = tonumber(unicode.sub(lines[codeView.selections[1].from.line], codeView.selections[1].from.symbol, codeView.selections[1].to.symbol)) or startColor
 	end
 
-	local palette = GUI.addPaletteWindowToContainer(mainContainer, startColor)
-	palette.onSubmit = function()
-		palette:delete()
+	local palette = mainContainer:addChild(GUI.addPalette(1, 1, startColor))
+	palette.localX, palette.localY = math.floor(mainContainer.width / 2 - palette.width / 2), math.floor(mainContainer.height / 2 - palette.height / 2)
+
+	palette.submitButton.onTouch = function()
 		paste(string.format("0x%06X", palette.color.integer), true)
+		mainContainer:drawOnScreen()
 	end
 end
 
@@ -1249,7 +1214,7 @@ local function find()
 					return
 				end
 			else
-				GUI.error("Wrong searching regex")
+				GUI.alert("Wrong searching regex")
 			end
 		end
 
@@ -1280,7 +1245,7 @@ local function toggleTopToolBar()
 end
 
 local function createEditOrRightClickMenu(x, y)
-	local menu = GUI.contextMenu(x, y)
+	local menu = GUI.addContextMenu(mainContainer, x, y)
 	
 	menu:addItem(localization.cut, not codeView.selections[1], "^X").onTouch = function()
 		cut()
@@ -1347,7 +1312,7 @@ local function createEditOrRightClickMenu(x, y)
 		clearBreakpoints()
 	end
 
-	menu:show()
+	mainContainer:drawOnScreen()
 end
 
 codeView.eventHandler = function(mainContainer, object, e1, e2, e3, e4, e5)
@@ -1450,9 +1415,6 @@ codeView.eventHandler = function(mainContainer, object, e1, e2, e3, e4, e5)
 			-- Delete
 			elseif e4 == 211 then
 				deleteLine(cursorPositionLine)
-			-- R
-			elseif e4 == 19 then
-				changeResolutionWindow()
 			-- F5
 			elseif e4 == 63 then
 				launchWithArgumentsWindow()
@@ -1571,10 +1533,10 @@ end
 
 local topMenuMineCode = topMenu:addItem("MineCode", 0x0)
 topMenuMineCode.onTouch = function()
-	local menu = GUI.contextMenu(topMenuMineCode.x, topMenuMineCode.y + 1)
+	local menu = GUI.addContextMenu(mainContainer, topMenuMineCode.x, topMenuMineCode.y + 1)
 	
 	menu:addItem(localization.about).onTouch = function()
-		local container = addFadeContainer(localization.about)
+		local container = addBackgroundContainer(localization.about)
 		
 		local about = {
 			"MineCode IDE",
@@ -1596,7 +1558,7 @@ topMenuMineCode.onTouch = function()
 		}
 
 		local textBox = container.layout:addChild(GUI.textBox(1, 1, 36, #about, nil, 0xB4B4B4, about, 1, 0, 0, true, false))
-		textBox:setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+		textBox:setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
 		textBox.eventHandler = nil
 
 		mainContainer:drawOnScreen()
@@ -1606,12 +1568,12 @@ topMenuMineCode.onTouch = function()
 		mainContainer:stopEventHandling()
 	end
 
-	menu:show()
+	mainContainer:drawOnScreen()
 end
 
 local topMenuFile = topMenu:addItem(localization.file)
 topMenuFile.onTouch = function()
-	local menu = GUI.contextMenu(topMenuFile.x, topMenuFile.y + 1)
+	local menu = GUI.addContextMenu(mainContainer, topMenuFile.x, topMenuFile.y + 1)
 	
 	menu:addItem(localization.new, false, "^N").onTouch = function()
 		newFile()
@@ -1642,7 +1604,7 @@ topMenuFile.onTouch = function()
 		launchWithArgumentsWindow()
 	end
 
-	menu:show()
+	mainContainer:drawOnScreen()
 end
 
 local topMenuEdit = topMenu:addItem(localization.edit)
@@ -1652,7 +1614,7 @@ end
 
 local topMenuGoto = topMenu:addItem(localization.gotoCyka)
 topMenuGoto.onTouch = function()
-	local menu = GUI.contextMenu(topMenuGoto.x, topMenuGoto.y + 1)
+	local menu = GUI.addContextMenu(mainContainer, topMenuGoto.x, topMenuGoto.y + 1)
 	
 	menu:addItem(localization.pageUp, false, "PgUp").onTouch = function()
 		pageUp()
@@ -1676,22 +1638,22 @@ topMenuGoto.onTouch = function()
 		gotoLineWindow()
 	end
 
-	menu:show()
+	mainContainer:drawOnScreen()
 end
 
 local topMenuProperties = topMenu:addItem(localization.properties)
 topMenuProperties.onTouch = function()
-	local menu = GUI.contextMenu(topMenuProperties.x, topMenuProperties.y + 1)
+	local menu = GUI.addContextMenu(mainContainer, topMenuProperties.x, topMenuProperties.y + 1)
 	
 	menu:addItem(localization.colorScheme).onTouch = function()
-		local container = GUI.addFadeContainer(mainContainer, true, false, localization.colorScheme)
+		local container = GUI.addBackgroundContainer(mainContainer, true, false, localization.colorScheme)
 					
 		local colorSelectorsCount, colorSelectorCountX = 0, 4; for key in pairs(config.syntaxColorScheme) do colorSelectorsCount = colorSelectorsCount + 1 end
 		local colorSelectorCountY = math.ceil(colorSelectorsCount / colorSelectorCountX)
 		local colorSelectorWidth, colorSelectorHeight, colorSelectorSpaceX, colorSelectorSpaceY = math.floor(container.width / colorSelectorCountX * 0.8), 3, 2, 1
 		
 		local startX, y = math.floor(container.width / 2 - (colorSelectorCountX * (colorSelectorWidth + colorSelectorSpaceX) - colorSelectorSpaceX) / 2), math.floor(container.height / 2 - (colorSelectorCountY * (colorSelectorHeight + colorSelectorSpaceY) - colorSelectorSpaceY + 3) / 2)
-		container:addChild(GUI.label(1, y, container.width, 1, 0xFFFFFF, localization.colorScheme)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top); y = y + 3
+		container:addChild(GUI.label(1, y, container.width, 1, 0xFFFFFF, localization.colorScheme)):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP); y = y + 3
 		local x, counter = startX, 1
 
 		local colors = {}
@@ -1705,7 +1667,7 @@ topMenuProperties.onTouch = function()
 			local colorSelector = container:addChild(GUI.colorSelector(x, y, colorSelectorWidth, colorSelectorHeight, config.syntaxColorScheme[colors[i][1]], colors[i][1]))
 			colorSelector.onTouch = function()
 				config.syntaxColorScheme[colors[i][1]] = colorSelector.color
-				GUI.colors.syntaxHighlighting = config.syntaxColorScheme
+				GUI.LUA_SYNTAX_COLOR_SCHEME = config.syntaxColorScheme
 				saveConfig()
 			end
 
@@ -1719,7 +1681,7 @@ topMenuProperties.onTouch = function()
 	end
 
 	menu:addItem(localization.cursorProperties).onTouch = function()
-		local container = addFadeContainer(localization.cursorProperties)
+		local container = addBackgroundContainer(localization.cursorProperties)
 
 		local input = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xC3C3C3, 0x787878, 0x787878, 0xC3C3C3, 0x2D2D2D, config.cursorSymbol, localization.cursorSymbol))
 		input.onInputFinished = function()
@@ -1761,16 +1723,10 @@ topMenuProperties.onTouch = function()
 		toggleEnableAutocompleteDatabase()
 	end
 
-	menu:addSeparator()
-
-	menu:addItem(localization.changeResolution, false, "^R").onTouch = function()
-		changeResolutionWindow()
-	end
-
-	menu:show()
+	mainContainer:drawOnScreen()
 end
 
-leftTreeViewResizer.onResize = function(mainContainer, object, dragWidth, dragHeight)
+leftTreeViewResizer.onResize = function(dragWidth, dragHeight)
 	leftTreeView.width = leftTreeView.width + dragWidth
 	calculateSizes()
 end
@@ -1786,8 +1742,8 @@ addBreakpointButton.onTouch = function()
 end
 
 syntaxHighlightingButton.onTouch = function()
-	codeView.highlightLuaSyntax = not codeView.highlightLuaSyntax
-	config.highlightLuaSyntax = codeView.highlightLuaSyntax
+	codeView.syntaxHighlight = not codeView.syntaxHighlight
+	config.syntaxHighlight = codeView.syntaxHighlight
 	saveConfig()
 	mainContainer:drawOnScreen()
 end
@@ -1847,7 +1803,7 @@ searchButton.onTouch = find
 autocomplete:moveToFront()
 leftTreeView:updateFileList()
 
-changeResolution(config.screenResolution.width, config.screenResolution.height)
+calculateSizes()
 updateTitle()
 updateRAMProgressBar()
 mainContainer:drawOnScreen()

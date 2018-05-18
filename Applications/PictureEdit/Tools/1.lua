@@ -133,26 +133,26 @@ selector.eventHandler = tool.eventHandler
 selector.draw = function()
 	local step = true
 	for x = selector.x + 1, selector.x + selector.width - 2 do
-		buffer.text(x, selector.y, step and 0xFFFFFF or 0x0, "━")
-		buffer.text(x, selector.y + selector.height - 1, step and 0xFFFFFF or 0x0, "━")
+		buffer.drawText(x, selector.y, step and 0xFFFFFF or 0x0, "━")
+		buffer.drawText(x, selector.y + selector.height - 1, step and 0xFFFFFF or 0x0, "━")
 		step = not step
 	end
 
 	step = true
 	for y = selector.y + 1, selector.y + selector.height - 2 do
-		buffer.text(selector.x, y, step and 0xFFFFFF or 0x0, "┃")
-		buffer.text(selector.x + selector.width - 1, y, step and 0xFFFFFF or 0x0, "┃")
+		buffer.drawText(selector.x, y, step and 0xFFFFFF or 0x0, "┃")
+		buffer.drawText(selector.x + selector.width - 1, y, step and 0xFFFFFF or 0x0, "┃")
 		step = not step
 	end
 
-	buffer.text(selector.x, selector.y, 0x0, "┏")
-	buffer.text(selector.x + selector.width - 1, selector.y + selector.height - 1, 0x0, "┛")
+	buffer.drawText(selector.x, selector.y, 0x0, "┏")
+	buffer.drawText(selector.x + selector.width - 1, selector.y + selector.height - 1, 0x0, "┛")
 
-	buffer.text(selector.x + selector.width - 1, selector.y, 0x0, "┓")
-	buffer.text(selector.x, selector.y + selector.height - 1, 0x0, "┗")
+	buffer.drawText(selector.x + selector.width - 1, selector.y, 0x0, "┓")
+	buffer.drawText(selector.x, selector.y + selector.height - 1, 0x0, "┗")
 
-	buffer.text(touchX, touchY, 0x66FF80, "⬤")
-	buffer.text(dragX, dragY, 0x66FF80, "⬤")
+	buffer.drawText(touchX, touchY, 0x66FF80, "⬤")
+	buffer.drawText(dragX, dragY, 0x66FF80, "⬤")
 end
 
 ------------------------------------------------------

@@ -38,7 +38,7 @@ local scrollBar, titleTextBox
 
 ------------------------------------------------------------------------------------------------------------------
 
-local mainContainer, window = MineOSInterface.addWindow(MineOSInterface.filledWindow(1, 1, 98, 25, colors.background))
+local mainContainer, window = MineOSInterface.addWindow(GUI.filledWindow(1, 1, 98, 25, colors.background))
 
 window.backgroundPanel.localX, window.backgroundPanel.localY = 11, 5
 window.backgroundPanel.width, window.backgroundPanel.height = window.width - 10, window.height - 4
@@ -58,14 +58,14 @@ local function byteFieldDraw(object)
 			if bytes[index] then
 				local textColor = colors.backgroundText
 				if index == selection.from or index == selection.to then
-					buffer.square(x - object.offset, y, object.elementWidth, 1, index == selection.from and colors.selectionFrom or colors.selectionTo, colors.selectionText, " ")
+					buffer.drawRectangle(x - object.offset, y, object.elementWidth, 1, index == selection.from and colors.selectionFrom or colors.selectionTo, colors.selectionText, " ")
 					textColor = colors.selectionText
 				elseif index > selection.from and index < selection.to then
-					buffer.square(x - object.offset, y, object.elementWidth, 1, colors.selectionBetween, colors.selectionText, " ")
+					buffer.drawRectangle(x - object.offset, y, object.elementWidth, 1, colors.selectionBetween, colors.selectionText, " ")
 					textColor = colors.selectionBetweenText
 				end
 
-				buffer.text(x, y, textColor, object.asChar and string.char(bytes[index]) or string.format("%02X", bytes[index]))
+				buffer.drawText(x, y, textColor, object.asChar and string.char(bytes[index]) or string.format("%02X", bytes[index]))
 			else
 				return object
 			end
@@ -75,7 +75,7 @@ local function byteFieldDraw(object)
 
 		local lastLineIndex = index - 1
 		if lastLineIndex >= selection.from and lastLineIndex < selection.to then
-			buffer.square(object.x - object.offset, y + 1, object.width, 1, colors.selectionBetween, colors.selectionText, " ")
+			buffer.drawRectangle(object.x - object.offset, y + 1, object.width, 1, colors.selectionBetween, colors.selectionText, " ")
 		end
 
 		x, y = object.x, y + object.elementHeight
@@ -87,7 +87,7 @@ end
 local function byteFieldEventHandler(mainContainer, object, e1, e2, e3, e4, e5)
 	if e1 == "touch" or e1 == "drag" then
 		if e5 == 1 then
-			local menu = GUI.contextMenu(e3, e4)
+			local menu = GUI.addContextMenu(mainContainer, e3, e4)
 			
 			menu:addItem("Select all").onTouch = function()
 				selection.from = 1
@@ -95,7 +95,9 @@ local function byteFieldEventHandler(mainContainer, object, e1, e2, e3, e4, e5)
 				
 				mainContainer:drawOnScreen()
 			end
+			
 			menu:addSeparator()
+			
 			menu:addItem("Edit").onTouch = function()
 				local container = MineOSInterface.addUniversalContainer(mainContainer, "Fill byte range [" .. selection.from .. "; " .. selection.to .. "]")
 
@@ -107,13 +109,14 @@ local function byteFieldEventHandler(mainContainer, object, e1, e2, e3, e4, e5)
 							bytes[i] = number
 						end
 
-						container:delete()
+						container:remove()
 						mainContainer:drawOnScreen()
 					end
 				end
 				
 				mainContainer:drawOnScreen()
 			end
+			
 			menu:addItem("Insert").onTouch = function()
 				local container = MineOSInterface.addUniversalContainer(mainContainer, "Insert bytes at position " .. selection.from .. "")
 
@@ -134,14 +137,16 @@ local function byteFieldEventHandler(mainContainer, object, e1, e2, e3, e4, e5)
 							selection.from, selection.to = insertionPosition, insertionPosition + count - 1
 						end
 
-						container:delete()
+						container:remove()
 						mainContainer:drawOnScreen()
 					end
 				end
 				
 				mainContainer:drawOnScreen()
 			end
+			
 			menu:addSeparator()
+			
 			menu:addItem("Delete").onTouch = function()
 				for i = selection.from, selection.to do
 					table.remove(bytes, selection.from)
@@ -152,7 +157,8 @@ local function byteFieldEventHandler(mainContainer, object, e1, e2, e3, e4, e5)
 					selection.to = selection.from
 				end
 			end
-			menu:show()
+
+			mainContainer:drawOnScreen()
 		else
 			local index = (math.ceil((e4 - object.y + 1) / 2) - 1) * 16 + math.ceil((e3 - object.x + 1 + object.offset) / object.elementWidth) + offset
 			
@@ -212,7 +218,7 @@ local charField = window:addChild(newByteField(byteField.localX + byteField.widt
 local separator = window:addChild(GUI.object(byteField.localX + byteField.width, 5, 1, 21))
 separator.draw = function(object)
 	for i = object.y, object.y + object.height - 1 do
-		buffer.text(object.x, i, colors.separator, "│")
+		buffer.drawText(object.x, i, colors.separator, "│")
 	end
 end
 
@@ -222,23 +228,23 @@ window:addChild(GUI.panel(11, 4, window.width - 10, 1, colors.panel))
 -- Vertical
 local verticalCounter = window:addChild(GUI.object(1, 4, 10, window.height - 3))
 verticalCounter.draw = function(object)
-	buffer.square(object.x, object.y, object.width, object.height, colors.panel, colors.panelText, " ")
+	buffer.drawRectangle(object.x, object.y, object.width, object.height, colors.panel, colors.panelText, " ")
 
 	local index = offset
 	for y = 2, object.height - 1, 2 do
 		local textColor = colors.panelText
 
 		if index > selection.from and index < selection.to then
-			buffer.square(object.x, object.y + y - 1, object.width, 2, colors.panelSeleciton, colors.panelSelecitonText, " ")
+			buffer.drawRectangle(object.x, object.y + y - 1, object.width, 2, colors.panelSeleciton, colors.panelSelecitonText, " ")
 			textColor = colors.panelSelecitonText
 		end
 
 		if selection.from >= index and selection.from <= index + 15 or selection.to >= index and selection.to <= index + 15 then
-			buffer.square(object.x, object.y + y, object.width, 1, colors.selectionFrom, colors.selectionText, " ")
+			buffer.drawRectangle(object.x, object.y + y, object.width, 1, colors.selectionFrom, colors.selectionText, " ")
 			textColor = colors.selectionText
 		end
 
-		buffer.text(object.x + 1, object.y + y, textColor, string.format("%08X", index))
+		buffer.drawText(object.x + 1, object.y + y, textColor, string.format("%08X", index))
 
 		index = index + 16
 	end
@@ -251,14 +257,14 @@ window:addChild(GUI.object(13, 4, 62, 1)).draw = function(object)
 	for x = 1, object.width, 4 do
 		local textColor = colors.panelText
 		if counter + 1 > restFrom and counter + 1 < restTo then
-			buffer.square(object.x + x - 2, object.y, 4, 1, colors.panelSeleciton, colors.selectionText, " ")
+			buffer.drawRectangle(object.x + x - 2, object.y, 4, 1, colors.panelSeleciton, colors.selectionText, " ")
 			textColor = colors.panelSelecitonText
 		elseif restFrom == counter + 1 or restTo == counter + 1 then
-			buffer.square(object.x + x - 2, object.y, 4, 1, colors.selectionFrom, colors.selectionText, " ")
+			buffer.drawRectangle(object.x + x - 2, object.y, 4, 1, colors.selectionFrom, colors.selectionText, " ")
 			textColor = colors.selectionText
 		end
 
-		buffer.text(object.x + x - 1, object.y, textColor, string.format("%02X", counter))
+		buffer.drawText(object.x + x - 1, object.y, textColor, string.format("%02X", counter))
 		counter = counter + 1
 	end
 end
@@ -280,7 +286,7 @@ titleTextBox = window:addChild(
 	)
 )
 titleTextBox.localX = math.floor(window.width / 2 - titleTextBox.width / 2)
-titleTextBox:setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+titleTextBox:setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
 titleTextBox.eventHandler = nil
 
 local saveFileButton = window:addChild(GUI.adaptiveRoundedButton(titleTextBox.localX - 11, 2, 2, 0, colors.panel, colors.panelSelecitonText, colors.panelSelecitonText, colors.panel, "Save"))
@@ -309,13 +315,13 @@ local function load(path)
 		scrollBar.value, scrollBar.maximumValue = 0, #bytes
 		status()
 	else
-		GUI.error("Failed to open file for reading: " .. tostring(reason))
+		GUI.alert("Failed to open file for reading: " .. tostring(reason))
 	end
 end
 
 openFileButton.onTouch = function()
-	local filesystemDialog = GUI.addFilesystemDialogToContainer(mainContainer, 50, math.floor(mainContainer.height * 0.8), true, "Open", "Cancel", "File name", "/")
-	filesystemDialog:setMode(GUI.filesystemModes.open, GUI.filesystemModes.file)
+	local filesystemDialog = GUI.addFilesystemDialog(mainContainer, true, 50, math.floor(mainContainer.height * 0.8), "Open", "Cancel", "File name", "/")
+	filesystemDialog:setMode(GUI.IO_MODE_OPEN, GUI.IO_MODE_FILE)
 	filesystemDialog:show()
 	filesystemDialog.onSubmit = function(path)
 		load(path)
@@ -324,8 +330,8 @@ openFileButton.onTouch = function()
 end
 
 saveFileButton.onTouch = function()
-	local filesystemDialog = GUI.addFilesystemDialogToContainer(mainContainer, 50, math.floor(mainContainer.height * 0.8), true, "Save", "Cancel", "File name", "/")
-	filesystemDialog:setMode(GUI.filesystemModes.save, GUI.filesystemModes.file)
+	local filesystemDialog = GUI.addFilesystemDialog(mainContainer, true, 50, math.floor(mainContainer.height * 0.8), "Save", "Cancel", "File name", "/")
+	filesystemDialog:setMode(GUI.IO_MODE_SAVE, GUI.IO_MODE_FILE)
 	filesystemDialog:show()
 	filesystemDialog.onSubmit = function(path)
 		local file = io.open(path, "wb")
@@ -335,7 +341,7 @@ saveFileButton.onTouch = function()
 			end
 			file:close()
 		else
-			GUI.error("Failed to open file for writing: " .. tostring(reason))
+			GUI.alert("Failed to open file for writing: " .. tostring(reason))
 		end
 	end
 end

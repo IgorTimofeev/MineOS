@@ -11,7 +11,7 @@ local GUI = require("GUI")
 --------------------------------------------------------------------------------------------
 
 if not component.isAvailable("hologram") then
-  GUI.error("This program needs a Tier 2 holo-projector to work")
+  GUI.alert("This program needs a Tier 2 holo-projector to work")
   return
 end
 
@@ -149,7 +149,7 @@ local function drawSymbolOnScreen(x, y, symbol, color)
 	for j = 1, #symbols[symbol] do
 		for i = 1, #symbols[symbol][j] do
 			if symbols[symbol][j][i] == 1 then
-				buffer.square(xPos, y, 2, 1, color, 0x000000, " ")
+				buffer.drawRectangle(xPos, y, 2, 1, color, 0x000000, " ")
 			end
 			xPos = xPos + 2
 		end
@@ -204,11 +204,11 @@ local function drawOnScreen()
 	drawText(x, y, date, config.dateColor)
 
 	y = y + 9
-	GUI.label(1, y, buffer.getWidth(), 1, config.dateColor, "Press R to randomize clock color, scroll to change projection scale,"):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top):draw(); y = y + 1
-	GUI.label(1, y, buffer.getWidth(), 1, config.dateColor, "or press Enter to save and quit"):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top):draw()
+	GUI.label(1, y, buffer.getWidth(), 1, config.dateColor, "Press R to randomize clock color, scroll to change projection scale,"):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP):draw(); y = y + 1
+	GUI.label(1, y, buffer.getWidth(), 1, config.dateColor, "or press Enter to save and quit"):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP):draw()
 	-- GUI.label(1, y, buffer.getWidth(), 1, 0xFFFFFF, ""):draw()
 
-	buffer.draw()
+	buffer.drawChanges()
 end
 
 --------------------------------------------------------------------------------------------

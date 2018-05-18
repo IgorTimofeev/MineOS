@@ -17,7 +17,7 @@ local resourcesPath = MineOSCore.getCurrentScriptDirectory()
 local modulesPath = resourcesPath .. "Modules/"
 local localization = MineOSCore.getLocalization(resourcesPath .. "Localizations/")
 
-local mainContainer, window = MineOSInterface.addWindow(MineOSInterface.tabbedWindow(1, 1, 80, 25))
+local mainContainer, window = MineOSInterface.addWindow(GUI.tabbedWindow(1, 1, 80, 25))
 
 ----------------------------------------------------------------------------------------------------------------
 

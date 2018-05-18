@@ -49,10 +49,10 @@ local switchButton = layout:addChild(GUI.adaptiveRoundedButton(1, 1, 3, 1, 0x2D2
 local toComboBox = layout:addChild(GUI.comboBox(1, 1, elementWidth, 1, 0x2D2D2D, 0xAAAAAA, 0x444444, 0x888888))
 local toInputField = layout:addChild(GUI.input(1, 1, elementWidth, 5, 0x2D2D2D, 0x666666, 0x444444, 0x3C3C3C, 0xBBBBBB, nil, nil))
 
-layout:addChild(GUI.label(1, 1, elementWidth, 1, 0xAAAAAA, "API Key:"):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top))
+layout:addChild(GUI.label(1, 1, elementWidth, 1, 0xAAAAAA, "API Key:"):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP))
 local APIKeyInputField = layout:addChild(GUI.input(1, 1, elementWidth, 1, 0x1E1E1E, 0x666666, 0x444444, 0x1E1E1E, 0xBBBBBB, config.APIKey, "Введите API Key", true))
 
-local infoLabel = layout:addChild(GUI.label(1, 1, elementWidth, 1, 0xFF6D40, " "):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top))
+local infoLabel = layout:addChild(GUI.label(1, 1, elementWidth, 1, 0xFF6D40, " "):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP))
 
 ------------------------------------------------------------------------------------------------------------------
 
@@ -184,7 +184,8 @@ checkLanguages()
 fromComboBox.selectedItem = getLanguageIndex(config.fromLanguage, false)
 toComboBox.selectedItem = getLanguageIndex(config.toLanguage, false)
 
-mainContainer:drawOnScreen()
+mainContainer:draw()
+buffer.drawChanges(true)
 mainContainer:startEventHandling()
 
 

@@ -21,26 +21,6 @@ MineOSInterface.iconConfigFileName = ".icons"
 MineOSInterface.iconImageWidth = 8
 MineOSInterface.iconImageHeight = 4
 
-MineOSInterface.colors = {
-	windows = {
-		title = {
-			background = 0xE1E1E1,
-			text = 0x2D2D2D
-		},
-		backgroundPanel = 0xF0F0F0,
-		tabBar = {
-			default = {
-				background = 0x2D2D2D,
-				text = 0xF0F0F0
-			},
-			selected = {
-				background = 0xF0F0F0,
-				text = 0x2D2D2D
-			}
-		}
-	}
-}
-
 -----------------------------------------------------------------------------------------------------------------------------------
 
 local function calculateIconSizes()
@@ -105,9 +85,9 @@ local function iconDrawNameLine(x, y, line, icon)
 	local lineLength = unicode.len(line)
 	local x = math.floor(x - lineLength / 2)
 	if icon.selected then
-		buffer.square(x, y, lineLength, 1, icon.colors.selection, 0x0, " ", icon.colors.selectionTransparency)
+		buffer.drawRectangle(x, y, lineLength, 1, icon.colors.selection, 0x0, " ", icon.colors.selectionTransparency)
 	end
-	buffer.text(x, y, icon.colors.text, line)
+	buffer.drawText(x, y, icon.colors.text, line)
 end
 
 local function iconDraw(icon)
@@ -127,9 +107,9 @@ local function iconDraw(icon)
 	local xImage = icon.x + MineOSInterface.iconImageHorizontalOffset
 	if icon.selected then
 		local xSelection = xImage - 1
-		buffer.text(xSelection, icon.y - 1, icon.colors.selection, string.rep("▄", MineOSInterface.iconImageWidth + 2), icon.colors.selectionTransparency)
-		buffer.text(xSelection, icon.y + MineOSInterface.iconImageHeight, icon.colors.selection, string.rep("▀", MineOSInterface.iconImageWidth + 2), icon.colors.selectionTransparency)
-		buffer.square(xSelection, icon.y, MineOSInterface.iconImageWidth + 2, MineOSInterface.iconImageHeight, icon.colors.selection, 0x0, " ", icon.colors.selectionTransparency)
+		buffer.drawText(xSelection, icon.y - 1, icon.colors.selection, string.rep("▄", MineOSInterface.iconImageWidth + 2), icon.colors.selectionTransparency)
+		buffer.drawText(xSelection, icon.y + MineOSInterface.iconImageHeight, icon.colors.selection, string.rep("▀", MineOSInterface.iconImageWidth + 2), icon.colors.selectionTransparency)
+		buffer.drawRectangle(xSelection, icon.y, MineOSInterface.iconImageWidth + 2, MineOSInterface.iconImageHeight, icon.colors.selection, 0x0, " ", icon.colors.selectionTransparency)
 	end
 
 	if icon.image then
@@ -144,9 +124,9 @@ local function iconDraw(icon)
 				end
 			end
 			
-			buffer.image(xImage, icon.y, icon.semiTransparentImage, true)
+			buffer.drawImage(xImage, icon.y, icon.semiTransparentImage, true)
 		else
-			buffer.image(xImage, icon.y, icon.image)
+			buffer.drawImage(xImage, icon.y, icon.image)
 		end
 	elseif icon.liveImage then
 		icon.liveImage(xImage, icon.y)
@@ -158,7 +138,7 @@ local function iconDraw(icon)
 	end
 
 	if icon.windows then
-		buffer.text(xCenter - 1, icon.y + MineOSInterface.iconImageHeight, 0x66DBFF, "╺╸")
+		buffer.drawText(xCenter - 1, icon.y + MineOSInterface.iconImageHeight, 0x66DBFF, "╺╸")
 		
 		local windowCount = table.size(icon.windows)
 		if windowCount > 1 then
@@ -167,18 +147,18 @@ local function iconDraw(icon)
 			local windowCountLength = #windowCount
 			local xTip, yTip = xShortcut - windowCountLength, icon.y
 
-			buffer.square(xTip, yTip, windowCountLength, 1, 0xFF4940, 0xFFFFFF, " ")
-			buffer.text(xTip, yTip, 0xFFFFFF, windowCount)
-			buffer.text(xTip - 1, yTip, 0xFF4940, "⢸")
-			buffer.text(xTip + windowCountLength, yTip, 0xFF4940, "⡇")
-			buffer.text(xTip, yTip - 1, 0xFF4940, string.rep("⣀", windowCountLength))
-			buffer.text(xTip, yTip + 1, 0xFF4940, string.rep("⠉", windowCountLength))
+			buffer.drawRectangle(xTip, yTip, windowCountLength, 1, 0xFF4940, 0xFFFFFF, " ")
+			buffer.drawText(xTip, yTip, 0xFFFFFF, windowCount)
+			buffer.drawText(xTip - 1, yTip, 0xFF4940, "⢸")
+			buffer.drawText(xTip + windowCountLength, yTip, 0xFF4940, "⡇")
+			buffer.drawText(xTip, yTip - 1, 0xFF4940, string.rep("⣀", windowCountLength))
+			buffer.drawText(xTip, yTip + 1, 0xFF4940, string.rep("⠉", windowCountLength))
 		end
 	end
 end
 
 local function iconEventHandler(mainContainer, object, e1, e2, e3, e4, e5, ...)
-	if e1 == "touch" then
+	if e1 == "touch" and object:isPointInside(e3, e4) then
 		object.lastTouchPosition = object.lastTouchPosition or {}
 		object.lastTouchPosition.x, object.lastTouchPosition.y = e3, e4
 		object:moveToFront()
@@ -366,7 +346,7 @@ function MineOSInterface.iconLaunchers.shortcut(icon)
 end
 
 function MineOSInterface.iconLaunchers.corrupted(icon)
-	GUI.error("Application is corrupted")
+	GUI.alert("Application is corrupted")
 end
 
 function MineOSInterface.iconLaunchers.extension(icon)
@@ -444,7 +424,7 @@ local function iconFieldUpdateFileList(iconField)
 	end
 
 	-- Заполнение дочернего контейнера
-	iconField.iconsContainer:deleteChildren()
+	iconField.iconsContainer:removeChildren()
 	for i = 1, #configList do
 		local icon = iconField.iconsContainer:addChild(MineOSInterface.icon(
 			iconField.iconConfig[configList[i]].x,
@@ -500,7 +480,7 @@ local function iconFieldBackgroundObjectEventHandler(mainContainer, object, e1, 
 
 			mainContainer:drawOnScreen()
 		else
-			local menu = MineOSInterface.contextMenu(e3, e4)
+			local menu = MineOSInterface.addContextMenu(MineOSInterface.mainContainer, e3, e4)
 
 			local subMenu = menu:addSubMenu(MineOSCore.localization.create)
 
@@ -534,7 +514,6 @@ local function iconFieldBackgroundObjectEventHandler(mainContainer, object, e1, 
 				computer.pushSignal("MineOSCore", "updateFileList")
 			end
 
-			
 			subMenu:addItem(MineOSCore.localization.sortByDate).onTouch = function()
 				object.parent:deleteIconConfig()
 
@@ -584,7 +563,7 @@ local function iconFieldBackgroundObjectEventHandler(mainContainer, object, e1, 
 				computer.pushSignal("MineOSCore", "updateFileList")
 			end
 
-			menu:show()
+			MineOSInterface.mainContainer:drawOnScreen()
 		end
 	elseif e1 == "drag" then
 		if object.parent.selection then
@@ -613,7 +592,7 @@ local function iconFieldBackgroundObjectDraw(object)
 			y1, y2 = y2, y1
 		end
 		
-		buffer.square(x1, y1, x2 - x1 + 1, y2 - y1 + 1, object.parent.colors.selection, 0x0, " ", 0.6)
+		buffer.drawRectangle(x1, y1, x2 - x1 + 1, y2 - y1 + 1, object.parent.colors.selection, 0x0, " ", 0.6)
 
 		for i = 1, #object.parent.iconsContainer.children do
 			local xCenter, yCenter = object.parent.iconsContainer.children[i].x + MineOSCore.properties.iconWidth / 2, object.parent.iconsContainer.children[i].y + MineOSCore.properties.iconHeight / 2
@@ -696,11 +675,11 @@ end
 
 ----------------------------------------------------------------------------------------------------------------
 
-function MineOSInterface.contextMenu(...)
-	local menu = GUI.contextMenu(...)
+function MineOSInterface.addContextMenu(...)
+	local menu = GUI.addContextMenu(...)
 	
-	menu.colors.transparency.background = MineOSCore.properties.transparencyEnabled and GUI.colors.contextMenu.transparency.background
-	menu.colors.transparency.shadow = MineOSCore.properties.transparencyEnabled and GUI.colors.contextMenu.transparency.shadow
+	menu.colors.transparency.background = MineOSCore.properties.transparencyEnabled and GUI.CONTEXT_MENU_BACKGROUND_TRANSPARENCY
+	menu.colors.transparency.shadow = MineOSCore.properties.transparencyEnabled and GUI.CONTEXT_MENU_SHADOW_TRANSPARENCY
 
 	return menu
 end
@@ -727,7 +706,13 @@ function MineOSInterface.iconRightClick(icon, e1, e2, e3, e4)
 
 	local selectedIcons = icon.parent.parent:getSelectedIcons()
 
-	local menu = MineOSInterface.contextMenu(e3, e4)
+	local menu = MineOSInterface.addContextMenu(MineOSInterface.mainContainer, e3, e4)
+	
+	menu.onClose = function()
+		icon.parent.parent:deselectAll()
+		MineOSInterface.mainContainer:drawOnScreen()
+	end
+
 	if #selectedIcons == 1 then
 		if icon.isDirectory then
 			if icon.extension == ".app" then
@@ -748,7 +733,7 @@ function MineOSInterface.iconRightClick(icon, e1, e2, e3, e4)
 					local input = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x878787, 0xE1E1E1, 0x2D2D2D, icon.name, MineOSCore.localization.name))
 					container.panel.eventHandler = function(mainContainer, object, e1)
 						if e1 == "touch" then
-							container:delete()
+							container:remove()
 
 							if e1 == "touch" and #input.text > 0 then
 								computer.pushSignal("Finder", "updateFavourites", {name = input.text, path = icon.path})
@@ -804,7 +789,7 @@ function MineOSInterface.iconRightClick(icon, e1, e2, e3, e4)
 
 		local success, reason = require("archive").pack(fs.path(icon.path) .. "/Archive.arc", itemsToArchive)
 		if not success then
-			GUI.error(reason)
+			GUI.alert(reason)
 		end
 
 		computer.pushSignal("MineOSCore", "updateFileList")
@@ -899,18 +884,15 @@ function MineOSInterface.iconRightClick(icon, e1, e2, e3, e4)
 		end
 	end
 
-	menu:show()
-
-	icon.parent.parent:deselectAll()
 	MineOSInterface.mainContainer:drawOnScreen()
 end
 
 -----------------------------------------------------------------------------------------------------------------------------------
 
 function MineOSInterface.addUniversalContainer(parentContainer, title)
-	local container = GUI.addFadeContainer(parentContainer, true, true, title)
+	local container = GUI.addBackgroundContainer(parentContainer, true, true, title)
 	container.panel.colors.background = MineOSCore.properties.transparencyEnabled and 0x0 or MineOSCore.properties.backgroundColor
-	container.panel.colors.transparency = MineOSCore.properties.transparencyEnabled and GUI.colors.fadeContainer.transparency
+	container.panel.colors.transparency = MineOSCore.properties.transparencyEnabled and GUI.BACKGROUND_CONTAINER_PANEL_TRANSPARENCY
 	
 	return container
 end
@@ -919,7 +901,7 @@ local function addUniversalContainerWithInputTextBox(parentWindow, text, title, 
 	local container = MineOSInterface.addUniversalContainer(parentWindow, title)
 	
 	container.inputField = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x878787, 0xE1E1E1, 0x2D2D2D, text, placeholder, false))
-	container.label = container.layout:addChild(GUI.label(1, 1, 36, 1, 0xFF4940, MineOSCore.localization.file .. " " .. MineOSCore.localization.alreadyExists)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+	container.label = container.layout:addChild(GUI.label(1, 1, 36, 1, 0xFF4940, MineOSCore.localization.file .. " " .. MineOSCore.localization.alreadyExists)):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
 	container.label.hidden = true
 
 	return container
@@ -930,7 +912,7 @@ local function checkFileToExists(container, path)
 		container.label.hidden = false
 		container.parent:drawOnScreen()
 	else
-		container:delete()
+		container:remove()
 		return true
 	end
 end
@@ -985,23 +967,23 @@ function MineOSInterface.newFileFromURL(parentWindow, iconField, x, y, path)
 					container.label.hidden = false
 					mainContainer:drawOnScreen()
 				else
-					container.layout:deleteChildren(2)
-					container.layout:addChild(GUI.label(1, 1, container.width, 1, 0x787878, MineOSCore.localization.downloading .. "...")):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+					container.layout:removeChildren(2)
+					container.layout:addChild(GUI.label(1, 1, container.width, 1, 0x787878, MineOSCore.localization.downloading .. "...")):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
 					mainContainer:drawOnScreen()
 
 					local success, reason = require("web").download(container.inputFieldURL.text, path .. container.inputField.text)
-					container:delete()
+					container:remove()
 
 					if success then
 						checkIconConfigCanSavePosition(iconField, x, y, container.inputField.text)
 						computer.pushSignal("MineOSCore", "updateFileList")
 					else
-						GUI.error(reason)
+						GUI.alert(reason)
 						mainContainer:drawOnScreen()
 					end
 				end
 			else
-				container:delete()
+				container:remove()
 				mainContainer:drawOnScreen()
 			end
 		end
@@ -1029,12 +1011,12 @@ function MineOSInterface.newApplication(parentWindow, iconField, x, y, path)
 					file:write("require(\"GUI\").error(\"Hello world\")")
 					file:close()
 
-					container:delete()
+					container:remove()
 					checkIconConfigCanSavePosition(iconField, x, y, container.inputField.text .. ".app/")
 					computer.pushSignal("MineOSCore", "updateFileList")
 				end
 			else
-				container:delete()
+				container:remove()
 				parentWindow:drawOnScreen()
 			end
 		end
@@ -1085,7 +1067,7 @@ function MineOSInterface.editShortcut(parentWindow, path)
 	container.inputField.onInputFinished = function()
 		if fs.exists(container.inputField.text) then
 			MineOSCore.createShortcut(path, container.inputField.text)
-			container:delete()
+			container:remove()
 			computer.pushSignal("MineOSCore", "updateFileList")
 		else
 			container.label.text = MineOSCore.localization.shortcutIsCorrupted
@@ -1107,7 +1089,7 @@ function MineOSInterface.launchWithArguments(parentWindow, path)
 				table.insert(args, arg)
 			end
 		end
-		container:delete()
+		container:remove()
 
 		MineOSInterface.clearTerminal()
 		if MineOSInterface.safeLaunch(path, table.unpack(args)) then
@@ -1147,7 +1129,7 @@ function MineOSInterface.addWindow(window, preserveCoordinates)
 
 	dockPath = (dockPath or "/bin/OS.lua"):gsub("/+", "/")
 
-	-- GUI.error(dockPath)
+	-- GUI.alert(dockPath)
 	
 	-- Чекаем наличие иконки в доке с таким же путем
 	for i = 1, #MineOSInterface.mainContainer.dockContainer.children do
@@ -1196,37 +1178,12 @@ function MineOSInterface.addWindow(window, preserveCoordinates)
 		if not sameIconExists then
 			dockIcon.windows = nil
 			if not dockIcon.keepInDock then
-				dockIcon:delete()
+				dockIcon:remove()
 				MineOSInterface.mainContainer.dockContainer.sort()
 			end
 		end
 		
-		window:delete()
-	end
-	
-	window.maximize = function(window)
-		if window.maximized then
-			window.localX = window.oldGeometry.x
-			window.localY = window.oldGeometry.y
-			window:resize(window.oldGeometry.width, window.oldGeometry.height)
-		else
-			window.oldGeometry = {
-				x = window.localX,
-				y = window.localY,
-				width = window.width,
-				height = window.height
-			}
-			window.localX, window.localY = 1, 1
-			window:resize(window.parent.width, window.parent.height)
-		end
-
-		window.maximized = not window.maximized
-		MineOSInterface.mainContainer:drawOnScreen()
-	end
-
-	window.minimize = function(window)
-		window.hidden = true
-		MineOSInterface.mainContainer:drawOnScreen()
+		window:remove()
 	end
 
 	if window.actionButtons then
@@ -1252,7 +1209,7 @@ local function addKeyAndValue(window, x, y, key, value)
 end
 
 function MineOSInterface.propertiesWindow(x, y, width, icon)
-	local mainContainer, window = MineOSInterface.addWindow(MineOSInterface.titledWindow(x, y, width, 1, package.loaded.MineOSCore.localization.properties))
+	local mainContainer, window = MineOSInterface.addWindow(GUI.titledWindow(x, y, width, 1, package.loaded.MineOSCore.localization.properties))
 
 	window.backgroundPanel.colors.transparency = 0.2
 	window:addChild(GUI.image(2, 3, icon.image))
@@ -1266,8 +1223,8 @@ function MineOSInterface.propertiesWindow(x, y, width, icon)
 	local textBox = window:addChild(GUI.textBox(17, y, window.width - 18, 1, nil, 0x555555, {icon.path}, 1, 0, 0, true, true))
 	textBox.eventHandler = nil
 
-	window.actionButtons.minimize:delete()
-	window.actionButtons.maximize:delete()
+	window.actionButtons.minimize:remove()
+	window.actionButtons.maximize:remove()
 
 	window.height = textBox.y + textBox.height
 	window.backgroundPanel.width = window.width
@@ -1287,7 +1244,7 @@ local function GUICopy(parentContainer, fileList, toPath)
 	local applyYes, breakRecursion
 
 	local container = MineOSInterface.addUniversalContainer(parentContainer, MineOSCore.localization.copying)
-	local textBox = container.layout:addChild(GUI.textBox(1, 1, container.width, 1, nil, 0x787878, {}, 1, 0, 0, true, true):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top))
+	local textBox = container.layout:addChild(GUI.textBox(1, 1, container.width, 1, nil, 0x787878, {}, 1, 0, 0, true, true):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP))
 	local switchAndLabel = container.layout:addChild(GUI.switchAndLabel(1, 1, 37, 8, 0x66DB80, 0x1E1E1E, 0xE1E1E1, 0x787878, MineOSCore.localization.applyToAll .. ":", false))
 	container.panel.eventHandler = nil
 
@@ -1303,8 +1260,8 @@ local function GUICopy(parentContainer, fileList, toPath)
 		breakRecursion = true
 		parentContainer:stopEventHandling()
 	end
-	buttonsLayout:setCellDirection(1, 1, GUI.directions.horizontal)
-	buttonsLayout:setCellSpacing(1, 1, 2)
+	buttonsLayout:setDirection(1, 1, GUI.DIRECTION_HORIZONTAL)
+	buttonsLayout:setSpacing(1, 1, 2)
 	buttonsLayout:fitToChildrenSize(1, 1)
 
 	local function copyOrMove(path, finalPath)
@@ -1365,7 +1322,7 @@ local function GUICopy(parentContainer, fileList, toPath)
 		recursiveCopy(fileList[i], toPath)
 	end
 
-	container:delete()
+	container:remove()
 	parentContainer:drawOnScreen()
 end
 
@@ -1392,7 +1349,7 @@ end
 local function menuWidgetDraw(object)
 	if object.selected then
 		object.textColor = 0xFFFFFF
-		buffer.square(object.x - 1, object.y, object.width + 2, 1, 0x3366CC, object.textColor, " ")
+		buffer.drawRectangle(object.x - 1, object.y, object.width + 2, 1, 0x3366CC, object.textColor, " ")
 	else
 		object.textColor = 0x0
 	end
@@ -1424,11 +1381,11 @@ function MineOSInterface.showErrorWindow(path, line, traceback)
 	mainContainer.y = math.floor(buffer.getHeight() / 2 - mainContainer.height / 2)
 	
 	mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, 3, 0x383838))
-	mainContainer:addChild(GUI.label(1, 2, mainContainer.width, 1, 0xFFFFFF, MineOSCore.localization.errorWhileRunningProgram .. "\"" .. fs.name(path) .. "\"")):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+	mainContainer:addChild(GUI.label(1, 2, mainContainer.width, 1, 0xFFFFFF, MineOSCore.localization.errorWhileRunningProgram .. "\"" .. fs.name(path) .. "\"")):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
 	local actionButtons = mainContainer:addChild(GUI.actionButtons(2, 2, false))
 	local sendToDeveloperButton = mainContainer:addChild(GUI.adaptiveButton(9, 1, 2, 1, 0x444444, 0xFFFFFF, 0x343434, 0xFFFFFF, MineOSCore.localization.sendFeedback))
 
-	local codeView = mainContainer:addChild(GUI.codeView(1, 4, math.floor(mainContainer.width * 0.62), mainContainer.height - 3, {}, 1, 1, 100, {}, {[line] = 0xFF4444}, true, 2))
+	local codeView = mainContainer:addChild(GUI.codeView(1, 4, math.floor(mainContainer.width * 0.62), mainContainer.height - 3, 1, 1, 100, {}, {[line] = 0xFF4444}, GUI.LUA_SYNTAX_PATTERNS, GUI.LUA_SYNTAX_COLOR_SCHEME, true, {}))
 	
 	codeView.fromLine = line - math.floor((mainContainer.height - 3) / 2) + 1
 	if codeView.fromLine <= 0 then
@@ -1495,48 +1452,6 @@ function MineOSInterface.safeLaunch(...)
 	end
 
 	return success, path, line, traceback
-end
-
------------------------------------------ Window object -----------------------------------------
-
-MineOSInterface.window = GUI.window
-
-function MineOSInterface.filledWindow(x, y, width, height, backgroundColor)
-	local window = MineOSInterface.window(x, y, width, height)
-
-	window.backgroundPanel = window:addChild(GUI.panel(1, 1, width, height, backgroundColor))
-	window.actionButtons = window:addChild(GUI.actionButtons(2, 2, false))
-
-	return window
-end
-
-function MineOSInterface.titledWindow(x, y, width, height, title, addTitlePanel)
-	local window = MineOSInterface.filledWindow(x, y, width, height, MineOSInterface.colors.windows.backgroundPanel)
-
-	if addTitlePanel then
-		window.titlePanel = window:addChild(GUI.panel(1, 1, width, 1, MineOSInterface.colors.windows.title.background))
-		window.backgroundPanel.localY, window.backgroundPanel.height = 2, window.height - 1
-	end
-
-	window.titleLabel = window:addChild(GUI.label(1, 1, width, height, MineOSInterface.colors.windows.title.text, title)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
-	window.actionButtons.localY = 1
-	window.actionButtons:moveToFront()
-
-	return window
-end
-
-function MineOSInterface.tabbedWindow(x, y, width, height, ...)
-	local window = MineOSInterface.filledWindow(x, y, width, height, MineOSInterface.colors.windows.backgroundPanel)
-
-	window.tabBar = window:addChild(GUI.list(1, 1, window.width, 3, 2, 0, MineOSInterface.colors.windows.tabBar.default.background, MineOSInterface.colors.windows.tabBar.default.text, MineOSInterface.colors.windows.tabBar.default.background, MineOSInterface.colors.windows.tabBar.default.text, MineOSInterface.colors.windows.tabBar.selected.background, MineOSInterface.colors.windows.tabBar.selected.text, true))
-	window.tabBar:setDirection(GUI.directions.horizontal)
-	window.tabBar:setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
-	
-	window.backgroundPanel.localY, window.backgroundPanel.height = 4, window.height - 3
-	window.actionButtons:moveToFront()
-	window.actionButtons.localY = 2
-
-	return window
 end
 
 -----------------------------------------------------------------------------------------------------------------------------------

@@ -174,13 +174,13 @@ local function drawShapeNumbers(x, y)
 end
 
 local function toolBarInfoLine(y, text)
-	buffer.square(xToolbar, y, widthOfToolbar, 1, colors.toolbarInfoBackground, 0xFFFFFF, " ")
-	buffer.text(xToolbar + 1, y, colors.toolbarInfoText, text)
+	buffer.drawRectangle(xToolbar, y, widthOfToolbar, 1, colors.toolbarInfoBackground, 0xFFFFFF, " ")
+	buffer.drawText(xToolbar + 1, y, colors.toolbarInfoText, text)
 end
 
 local function centerText(y, color, text)
 	local x = math.floor(xToolbar + widthOfToolbar / 2 - unicode.len(text) / 2)
-	buffer.text(x, y, color, text)
+	buffer.drawText(x, y, color, text)
 end
 
 local function addButton(y, back, fore, text)
@@ -192,8 +192,8 @@ local function printKeyValue(x, y, keyColor, valueColor, key, value, limit)
 	if totalLength > limit then
 		value = unicode.sub(value, 1, limit - unicode.len(key .. ": ") - 1) .. "…"
 	end
-	buffer.text(x, y, keyColor, key .. ":")
-	buffer.text(x + unicode.len(key) + 2, y, valueColor, value)
+	buffer.drawText(x, y, keyColor, key .. ":")
+	buffer.drawText(x + unicode.len(key) + 2, y, valueColor, value)
 end
 
 local function getShapeCoords()
@@ -210,7 +210,7 @@ local function fixNumber(number)
 end
 
 local function drawToolbar()
-	buffer.square(xToolbar, 1, widthOfToolbar, ySize, colors.toolbarBackground, 0xFFFFFF, " ")
+	buffer.drawRectangle(xToolbar, 1, widthOfToolbar, ySize, colors.toolbarBackground, 0xFFFFFF, " ")
 
 	local x = xToolbar + 8
 	local y = 3
@@ -328,7 +328,7 @@ local function printModel(count)
 end
 
 local function drawPixel(x, y, width, height, color, trasparency)
-	buffer.square(xDrawingZone + x * pixelWidth - pixelWidth, yDrawingZone + y * pixelHeight - pixelHeight, width * pixelWidth, height * pixelHeight, color, 0xFFFFFF, " ", trasparency)
+	buffer.drawRectangle(xDrawingZone + x * pixelWidth - pixelWidth, yDrawingZone + y * pixelHeight - pixelHeight, width * pixelWidth, height * pixelHeight, color, 0xFFFFFF, " ", trasparency)
 end
 
 local function setka()
@@ -396,10 +396,10 @@ local function drawDrawingZone()
 end
 
 local function drawAll()
-	buffer.square(1, 2, xSize, ySize, colors.drawingZoneCYKA, 0xFFFFFF, " ")
+	buffer.drawRectangle(1, 2, xSize, ySize, colors.drawingZoneCYKA, 0xFFFFFF, " ")
 	drawDrawingZone()
 	drawToolbar()
-	buffer.draw()
+	buffer.drawChanges()
 	drawTopMenu(0)
 end
 
@@ -457,11 +457,11 @@ while true do
 				
 				startPointSelected = true
 				model.shapes[currentShape] = nil
-				-- buffer.square(xDrawingZone, yDrawingZone, drawingZoneWidth, drawingZoneHeight, colors.drawingZoneBackground, 0xFFFFFF, " ")
+				-- buffer.drawRectangle(xDrawingZone, yDrawingZone, drawingZoneWidth, drawingZoneHeight, colors.drawingZoneBackground, 0xFFFFFF, " ")
 			
 				drawPixel(xShapeStart, yShapeStart, 1, 1, colors.drawingZoneStartPoint)
 			
-				buffer.draw()
+				buffer.drawChanges()
 			else
 				xShapeEnd = math.ceil((e[3] - xDrawingZone + 1) / pixelWidth)
 				yShapeEnd = math.ceil((e[4] - yDrawingZone + 1) / pixelHeight)
@@ -506,7 +506,7 @@ while true do
 			for key in pairs(obj.ToolbarButtons) do
 				if ecs.clickedAtArea(e[3], e[4], obj.ToolbarButtons[key][1], obj.ToolbarButtons[key][2], obj.ToolbarButtons[key][3], obj.ToolbarButtons[key][4]) then
 					buffer.button(obj.ToolbarButtons[key][1], obj.ToolbarButtons[key][2], widthOfToolbar - 4, 3, ecs.colors.blue, 0xFFFFFF, key)
-					buffer.draw()
+					buffer.drawChanges()
 					os.sleep(0.2)
 
 					if key == "Напечатать" then
@@ -596,7 +596,7 @@ while true do
 				if ecs.clickedAtArea(e[3], e[4], obj.TopMenu[key][1], obj.TopMenu[key][2], obj.TopMenu[key][3], obj.TopMenu[key][4]) then
 					drawTopMenu(obj.TopMenu[key][5])
 					-- buffer.button(obj.TopMenu[key][1] - 1, obj.TopMenu[key][2], unicode.len(key) + 2, 1, ecs.colors.blue, 0xFFFFFF, key)
-					-- buffer.draw()
+					-- buffer.drawChanges()
 
 					local action
 					if key == "Файл" then
@@ -659,7 +659,7 @@ while true do
 					elseif action == "Выход" then
 						gpu.setResolution(xOld, yOld)
 						buffer.flush()	
-						buffer.draw(true)
+						buffer.drawChanges(true)
 						if hologramAvailable then component.hologram.clear() end
 						return
 					elseif action == "Масштаб" then

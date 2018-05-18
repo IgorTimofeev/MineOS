@@ -9,11 +9,11 @@ local MineOSCore = require("MineOSCore")
 --------------------------------------------------------------------------------------------------------------------
 
 if not component.isAvailable("geolyzer") then
-	GUI.error("This program requires a geolyzer to work!"); return
+	GUI.alert("This program requires a geolyzer to work!"); return
 end
 
 if not component.isAvailable("hologram") then
-	GUI.error("This program requires a hologram projector to work!"); return
+	GUI.alert("This program requires a hologram projector to work!"); return
 end
 
 component.gpu.setResolution(component.gpu.maxResolution())
@@ -72,7 +72,7 @@ local function progressReport(value, text)
 	local width = 40
 	local x, y = math.floor(bufferWidth / 2 - width / 2), math.floor(bufferHeight / 2)
 	GUI.progressBar(x, y, width, 0x00B6FF, 0xFFFFFF, 0xEEEEEE, value, true, true, text, "%"):draw()
-	buffer.draw()
+	buffer.drawChanges()
 end
 
 local function updateData(onScreen, onProjector, onGlasses)
@@ -122,7 +122,7 @@ mainContainer:addChild(GUI.panel(panelX, 1, panelWidth, bufferHeight, 0x444444))
 mainContainer.planetImage = mainContainer:addChild(GUI.image(buttonX, objectY, earthImage))
 objectY = objectY + mainContainer.planetImage.image[2] + 1
 
-mainContainer:addChild(GUI.label(buttonX, objectY, buttonWidth, 1, 0xFFFFFF, "GeoScan v2.0")):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+mainContainer:addChild(GUI.label(buttonX, objectY, buttonWidth, 1, 0xFFFFFF, "GeoScan v2.0")):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
 objectY = objectY + 2
 
 mainContainer.horizontalScanRangeSlider = mainContainer:addChild(GUI.slider(buttonX, objectY, buttonWidth, 0xFFDB80, 0x000000, 0xFFDB40, 0xBBBBBB, 4, 24, 16, false, "Horizontal scan range: "))
@@ -132,13 +132,13 @@ mainContainer.verticalScanRangeSlider = mainContainer:addChild(GUI.slider(button
 mainContainer.verticalScanRangeSlider.roundValues = true
 objectY = objectY + 4
 
-mainContainer:addChild(GUI.label(buttonX, objectY, buttonWidth, 1, 0xFFFFFF, "Rendering properties")):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+mainContainer:addChild(GUI.label(buttonX, objectY, buttonWidth, 1, 0xFFFFFF, "Rendering properties")):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
 objectY = objectY + 2
 
 mainContainer.minimumHardnessTextBox = mainContainer:addChild(GUI.input(buttonX, objectY, 12, 3, 0x262626, 0xBBBBBB, 0xBBBBBB, 0x262626, 0xFFFFFF, tostring(2.7), nil, true))
 mainContainer.maximumHardnessTextBox = mainContainer:addChild(GUI.input(buttonX + 14, objectY, 12, 3, 0x262626, 0xBBBBBB, 0xBBBBBB, 0x262626, 0xFFFFFF, tostring(10), nil, true))
 objectY = objectY + 3
-mainContainer:addChild(GUI.label(buttonX, objectY, buttonWidth, 1, 0xBBBBBB, "Hardness min  Hardness max")):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+mainContainer:addChild(GUI.label(buttonX, objectY, buttonWidth, 1, 0xBBBBBB, "Hardness min  Hardness max")):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
 objectY = objectY + 2
 
 
@@ -201,7 +201,7 @@ mainContainer.scanButton.onTouch = function()
 			scanResult[x][z] = component.geolyzer.scan(x, z)
 			current = current + 1
 			progressReport(math.ceil(current / total * 100), "Scan progress: ")
-			buffer.draw()
+			buffer.drawChanges()
 		end
 	end
 

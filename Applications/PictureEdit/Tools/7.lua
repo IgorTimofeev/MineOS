@@ -39,7 +39,7 @@ tool.eventHandler = function(mainContainer, object, e1, e2, e3, e4)
 				end
 			end
 
-			input:delete()
+			input:remove()
 			mainContainer:drawOnScreen()
 		end
 

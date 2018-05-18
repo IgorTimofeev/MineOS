@@ -8,7 +8,7 @@ local image = require("image")
 local fs = require("filesystem")
 
 if not component.isAvailable("camera") then
-	GUI.error("This program reqiures camera from computronix mod")
+	GUI.alert("This program reqiures camera from computronix mod")
 	return
 end
 
@@ -58,17 +58,17 @@ local thermal = {
 }
 local palette = grayscale
 
-local mainContainer, window = MineOSInterface.addWindow(MineOSInterface.filledWindow(1, 1, 100, 25, 0x2D2D2D))
+local mainContainer, window = MineOSInterface.addWindow(GUI.filledWindow(1, 1, 100, 25, 0x2D2D2D))
 
 window.backgroundPanel.width = 22
 window.backgroundPanel.height = window.height
 window.backgroundPanel.colors.transparency = nil
 
 local layout = window:addChild(GUI.layout(1, 4, window.backgroundPanel.width, window.backgroundPanel.height - 3, 1, 1))
-layout:setCellFitting(1, 1, true, false, 2, 0)
-layout:setCellAlignment(1, 1, GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+layout:setFitting(1, 1, true, false, 2, 0)
+layout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
 
-layout:addChild(GUI.label(1, 1, 1, 1, 0xC3C3C3, "Select camera"):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top))
+layout:addChild(GUI.label(1, 1, 1, 1, 0xC3C3C3, "Select camera"):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP))
 local comboBox = layout:addChild(GUI.comboBox(1, 1, 36, 1, 0xF0F0F0, 0x2D2D2D, 0x444444, 0x999999))
 local paletteSwitch = layout:addChild(GUI.switchAndLabel(1, 1, 16, 6, 0x66DB80, 0x0, 0xF0F0F0, 0xC3C3C3, "Thermal:", false)).switch
 local semiPixelSwitch = layout:addChild(GUI.switchAndLabel(1, 1, 16, 6, 0x66DB80, 0x0, 0xF0F0F0, 0xC3C3C3, "Semipixels:", true)).switch
@@ -108,7 +108,7 @@ local buttonImage = image.load(fs.path(getCurrentScript()) .. "Icon.pic")
 local buttonImagePressed = image.blend(buttonImage, 0x0, 0.6)
 local shootButton = window:addChild(GUI.object(1, 1, 8, 4))
 shootButton.draw = function()
-	buffer.image(shootButton.x, shootButton.y, shootButton.pressed and buttonImagePressed or buttonImage)
+	buffer.drawImage(shootButton.x, shootButton.y, shootButton.pressed and buttonImagePressed or buttonImage)
 end
 
 shootButton.eventHandler = function(mainContainer, object, e1)
@@ -124,7 +124,7 @@ shootButton.eventHandler = function(mainContainer, object, e1)
 end
 
 cameraView.draw = function(cameraView)
-	buffer.square(cameraView.x, cameraView.y, cameraView.width, cameraView.height, 0xF0F0F0, 0x878787, " ")
+	buffer.drawRectangle(cameraView.x, cameraView.y, cameraView.width, cameraView.height, 0xF0F0F0, 0x878787, " ")
 	local x, y = 0, 0
 	for y = 1, #cameraView.pixels do
 		for x = 1, #cameraView.pixels[y] do

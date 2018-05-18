@@ -10,10 +10,10 @@ local MineOSInterface = require("MineOSInterface")
 
 ---------------------------------------------------------------------------------------------------------
 
-local mainContainer, window = MineOSInterface.addWindow(MineOSInterface.filledWindow(1, 1, 32, 19, 0x2D2D2D))
+local mainContainer, window = MineOSInterface.addWindow(GUI.filledWindow(1, 1, 32, 19, 0x2D2D2D))
 
 local layout = window:addChild(GUI.layout(1, 2, 1, 1, 1, 1))
-layout:setCellDirection(1, 1, GUI.directions.horizontal)
+layout:setDirection(1, 1, GUI.DIRECTION_HORIZONTAL)
 
 local newButton = layout:addChild(GUI.button(1, 1, 3, 1, 0x444444, 0xE1E1E1, 0xE1E1E1, 0x444444, "N"))
 local saveButton = layout:addChild(GUI.button(1, 1, 3, 1, 0x444444, 0xE1E1E1, 0xE1E1E1, 0x444444, "S"))
@@ -37,9 +37,9 @@ local function newCell(x, y, shaded)
 		for y = 1, 4 do
 			for x = 1, 2 do
 				if object.pixels[y][x] then
-					buffer.square(object.x + x * 2 - 2, object.y + y - 1, 2, 1, object.pixels[y][x] == 1 and object.foreground or object.background, 0x0, " ")
+					buffer.drawRectangle(object.x + x * 2 - 2, object.y + y - 1, 2, 1, object.pixels[y][x] == 1 and object.foreground or object.background, 0x0, " ")
 				else
-					buffer.square(object.x + x * 2 - 2, object.y + y - 1, 2, 1, 0xFFFFFF, object.shaded and (step and 0xC3C3C3 or 0xB4B4B4) or (step and 0xE1E1E1 or 0xD2D2D2), "▒")
+					buffer.drawRectangle(object.x + x * 2 - 2, object.y + y - 1, 2, 1, 0xFFFFFF, object.shaded and (step and 0xC3C3C3 or 0xB4B4B4) or (step and 0xE1E1E1 or 0xD2D2D2), "▒")
 				end
 				step = not step
 			end
@@ -77,7 +77,7 @@ end
 local drawingArea = window:addChild(GUI.container(1, 4, 1, 1))
 local overrideDraw = drawingArea.draw
 drawingArea.draw = function(...)
-	GUI.windowShadow(drawingArea.x, drawingArea.y, drawingArea.width, drawingArea.height, GUI.colors.contextMenu.transparency.shadow, true)
+	GUI.drawShadow(drawingArea.x, drawingArea.y, drawingArea.width, drawingArea.height, GUI.colors.contextMenu.transparency.shadow, true)
 	overrideDraw(...)
 end
 
@@ -99,7 +99,7 @@ local function newNoGUI(width, height)
 	layout.width = window.backgroundPanel.width
 	
 
-	drawingArea:deleteChildren()
+	drawingArea:removeChildren()
 
 	local x, y, step = 1, 1, false
 	for j = 1, height do
@@ -126,7 +126,7 @@ local function new()
 
 	container.panel.eventHandler = function(mainContainer, object, e1)
 		if e1 == "touch" then
-			container:delete()
+			container:remove()
 
 			newNoGUI(tonumber(widthTextBox.text), tonumber(heightTextBox.text))
 
@@ -163,9 +163,9 @@ newButton.onTouch = function()
 end
 
 saveButton.onTouch = function()
-	local filesystemDialog = GUI.addFilesystemDialogToContainer(mainContainer, 50, math.floor(mainContainer.height * 0.8), true, "OK", "Cancel", "Path", "/")
+	local filesystemDialog = GUI.addFilesystemDialog(mainContainer, true, 50, math.floor(mainContainer.height * 0.8), "OK", "Cancel", "Path", "/")
 	
-	filesystemDialog:setMode(GUI.filesystemModes.save, GUI.filesystemModes.file)
+	filesystemDialog:setMode(GUI.IO_MODE_SAVE, GUI.IO_MODE_FILE)
 	filesystemDialog:addExtensionFilter(".pic")
 	filesystemDialog:addExtensionFilter(".braiile")
 	
@@ -180,7 +180,7 @@ saveButton.onTouch = function()
 				local brailleArray, transparencyCyka, backgroundCyka, foregroundCyka = fillBrailleArray(drawingArea.children[childIndex].pixels)
 				if transparencyCyka then
 					if backgroundCyka and foregroundCyka then
-						GUI.error("Пиксель " .. x .. "x" .. y .. " имеет два цвета и прозрачность. Убирай любой из цветов и наслаждайся")
+						GUI.alert("Пиксель " .. x .. "x" .. y .. " имеет два цвета и прозрачность. Убирай любой из цветов и наслаждайся")
 						return
 					else
 						background = 0x0
@@ -226,14 +226,14 @@ saveButton.onTouch = function()
 end
 
 openButton.onTouch = function()
-	local filesystemDialog = GUI.addFilesystemDialogToContainer(mainContainer, 50, math.floor(mainContainer.height * 0.8), true, "OK", "Cancel", "Path", "/")
+	local filesystemDialog = GUI.addFilesystemDialog(mainContainer, true, 50, math.floor(mainContainer.height * 0.8), "OK", "Cancel", "Path", "/")
 	
-	filesystemDialog:setMode(GUI.filesystemModes.open, GUI.filesystemModes.file)
+	filesystemDialog:setMode(GUI.IO_MODE_OPEN, GUI.IO_MODE_FILE)
 	filesystemDialog:addExtensionFilter(".braiile")
 
 	filesystemDialog.onSubmit = function(path)
 		local pizda = table.fromFile(path)
-		drawingArea:deleteChildren()
+		drawingArea:removeChildren()
 
 		newNoGUI(pizda.width, pizda.height)
 
@@ -249,8 +249,8 @@ openButton.onTouch = function()
 	filesystemDialog:show()
 end
 
-window.actionButtons.minimize:delete()
-window.actionButtons.maximize:delete()
+window.actionButtons.minimize:remove()
+window.actionButtons.maximize:remove()
 
 
 ---------------------------------------------------------------------------------------------------------

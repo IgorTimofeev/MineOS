@@ -15,7 +15,7 @@ local MineOSPaths = require("MineOSPaths")
 
 --------------------------------------------------------------------------------------------------------
 
-local mainContainer, window = MineOSInterface.addWindow(MineOSInterface.filledWindow(1, 1, 130, 30, 0))
+local mainContainer, window = MineOSInterface.addWindow(GUI.filledWindow(1, 1, 130, 30, 0))
 window.backgroundPanel.colors.transparency = 0.2
 
 local weatherContainer = window:addChild(GUI.container(1, 1, 1, 23))
@@ -77,12 +77,12 @@ local function newWeather(x, y, day)
 	local wind = day.speed .. " m/s, " .. (winds[math.round(day.deg / 45)] or "N/A")
 
 	local function centerText(y, color, text)
-		buffer.text(math.floor(object.x + object.width / 2 - unicode.len(text) / 2), y, color, text)
+		buffer.drawText(math.floor(object.x + object.width / 2 - unicode.len(text) / 2), y, color, text)
 	end
 
 	object.draw = function()
 		centerText(object.y, 0xFFFFFF, os.date("%a", day.dt))
-		buffer.image(object.x + 3, object.y + 2, weatherIcons[type])
+		buffer.drawImage(object.x + 3, object.y + 2, weatherIcons[type])
 		centerText(object.y + 7, 0xFFFFFF, temp)
 		centerText(object.y + 8, 0xDDDDDD, wind)
 		centerText(object.y + 9, 0xBBBBBB, pressure)
@@ -98,15 +98,15 @@ local function updateForecast()
 		result = json:decode(result)
 		
 		if result.list then
-			weatherContainer:deleteChildren()
+			weatherContainer:removeChildren()
 
 			local x, y = 1, 1
 			local currentDay = result.list[1]
 			local object = weatherContainer:addChild(GUI.object(x + 2, y, 40, 8))
 			object.draw = function()
 				bigLetters.drawText(object.x, object.y, 0xFFFFFF, math.round((currentDay.temp.max + currentDay.temp.min) / 2) .. "°")
-				buffer.text(object.x, object.y + 6, 0xFFFFFF, result.city.name .. ", " .. result.city.country)
-				buffer.text(object.x, object.y + 7, 0xFFFFFF, "Population: " .. math.shorten(result.city.population, 2))
+				buffer.drawText(object.x, object.y + 6, 0xFFFFFF, result.city.name .. ", " .. result.city.country)
+				buffer.drawText(object.x, object.y + 7, 0xFFFFFF, "Population: " .. math.shorten(result.city.population, 2))
 			end
 
 			y = y + object.height + 1
@@ -127,10 +127,10 @@ local function updateForecast()
 			MineOSInterface.mainContainer:drawOnScreen()
 			table.toFile(configPath, config)
 		else
-			GUI.error(result.message)
+			GUI.alert(result.message)
 		end
 	else
-		GUI.error("Wrong result. Check city name and try again.")
+		GUI.alert("Wrong result. Check city name and try again.")
 	end
 end
 

@@ -51,13 +51,13 @@ local xScore, yScore = math.floor(bufferWidth / 2 - 6), math.floor(bufferHeight 
 
 local function drawColumn(x, upperCornerStartPosition)
 	local y = 1
-	buffer.square(x + 1, y, config.columnWidth, upperCornerStartPosition - config.columnPipeHeight, colors.columnMain, 0x0, " ")
-	buffer.square(x, upperCornerStartPosition - config.columnPipeHeight, config.columnPipeWidth, config.columnPipeHeight, colors.columnAlternative, 0x0, " ")
+	buffer.drawRectangle(x + 1, y, config.columnWidth, upperCornerStartPosition - config.columnPipeHeight, colors.columnMain, 0x0, " ")
+	buffer.drawRectangle(x, upperCornerStartPosition - config.columnPipeHeight, config.columnPipeWidth, config.columnPipeHeight, colors.columnAlternative, 0x0, " ")
 
 	y = upperCornerStartPosition + config.columnFreeSpace
-	buffer.square(x, y, config.columnPipeWidth, config.columnPipeHeight, colors.columnAlternative, 0x0, " ")
+	buffer.drawRectangle(x, y, config.columnPipeWidth, config.columnPipeHeight, colors.columnAlternative, 0x0, " ")
 	y = y + config.columnPipeHeight
-	buffer.square(x + 1, y, config.columnWidth, bufferHeight - y + 1, colors.columnMain, 0x0, " ")
+	buffer.drawRectangle(x + 1, y, config.columnWidth, bufferHeight - y + 1, colors.columnMain, 0x0, " ")
 end
 
 local function dieBirdDie()
@@ -109,14 +109,14 @@ local function drawBackground()
 end
 
 local function drawBird()
-	buffer.image(xBird, yBird, bird)
+	buffer.drawImage(xBird, yBird, bird)
 end
 
 local function drawBigCenterText(y, textColor, usePseudoShadow, text)
 	local width = bigLetters.getTextSize(text)
 	local x = math.floor(bufferWidth / 2 - width / 2)
 
-	if usePseudoShadow then buffer.square(x - 2, y - 1, width + 4, 7, colors.scoreTextBackground, 0x0, " ") end
+	if usePseudoShadow then buffer.drawRectangle(x - 2, y - 1, width + 4, 7, colors.scoreTextBackground, 0x0, " ") end
 	bigLetters.drawText(x, y, textColor, text)
 end
 
@@ -126,7 +126,7 @@ local function drawAll(force)
 	drawBird()
 	drawBigCenterText(yScore, colors.scoreText, true,tostring(currentScore))
 
-	buffer.draw(force)
+	buffer.drawChanges(force)
 end
 
 local function saveHighScores()
@@ -203,7 +203,7 @@ local function finalGUI()
 		
 		drawAll()
 		
-		buffer.square(x, y, widthOfBoard, heightOfBoard, colors.board, 0xFFFFFF, " ", 0.3)
+		buffer.drawRectangle(x, y, widthOfBoard, heightOfBoard, colors.board, 0xFFFFFF, " ", 0.3)
 
 		y = y + 2
 		drawBigCenterText(y, colors.boardText, false, "score")
@@ -219,7 +219,7 @@ local function finalGUI()
 		-- obj.records = { buffer.button(x, y, widthOfBoard, 3, 0xFF9900, colors.buttonText, "Таблица рекордов") }; y = y + 3
 		obj.exit = { buffer.button(x, y, widthOfBoard, 3, 0x262626, colors.buttonText, "Выход") }; y = y + 3
 
-		buffer.draw()
+		buffer.drawChanges()
 	end
 
 	draw()
@@ -228,7 +228,7 @@ local function finalGUI()
 		local e = {event.pull("touch")}
 		if clicked(e[3], e[4], obj.retry) then
 			buffer.button(obj.retry[1], obj.retry[2], widthOfBoard, 3, 0xFFFFFF, 0x000000, "Заново")
-			buffer.draw()
+			buffer.drawChanges()
 			os.sleep(0.2)
 			currentScore = 0
 			birdIsAlive = true
@@ -242,7 +242,7 @@ local function finalGUI()
 
 		elseif clicked(e[3], e[4], obj.exit) then
 			buffer.button(obj.exit[1], obj.exit[2], widthOfBoard, 3, 0xFFFFFF, 0x000000, "Выход")
-			buffer.draw()
+			buffer.drawChanges()
 			os.sleep(0.2)
 			buffer.clear(0x262626)
 			ecs.prepareToExit()

@@ -87,7 +87,7 @@ local config, fileVersions, user
 
 --------------------------------------------------------------------------------
 
-local mainContainer, window = MineOSInterface.addWindow(MineOSInterface.tabbedWindow(1, 1, 110, 29))
+local mainContainer, window = MineOSInterface.addWindow(GUI.tabbedWindow(1, 1, 110, 29))
 
 local contentContainer = window:addChild(GUI.container(1, 4, 1, 1))
 
@@ -97,17 +97,17 @@ activityWidget.position = 0
 activityWidget.color1 = 0x99FF80
 activityWidget.color2 = 0x00B640
 activityWidget.draw = function(activityWidget)
-	buffer.text(activityWidget.x + 1, activityWidget.y, activityWidget.position == 1 and activityWidget.color1 or activityWidget.color2, "⢀")
-	buffer.text(activityWidget.x + 2, activityWidget.y, activityWidget.position == 1 and activityWidget.color1 or activityWidget.color2, "⡀")
+	buffer.drawText(activityWidget.x + 1, activityWidget.y, activityWidget.position == 1 and activityWidget.color1 or activityWidget.color2, "⢀")
+	buffer.drawText(activityWidget.x + 2, activityWidget.y, activityWidget.position == 1 and activityWidget.color1 or activityWidget.color2, "⡀")
 
-	buffer.text(activityWidget.x + 3, activityWidget.y + 1, activityWidget.position == 2 and activityWidget.color1 or activityWidget.color2, "⠆")
-	buffer.text(activityWidget.x + 2, activityWidget.y + 1, activityWidget.position == 2 and activityWidget.color1 or activityWidget.color2, "⢈")
+	buffer.drawText(activityWidget.x + 3, activityWidget.y + 1, activityWidget.position == 2 and activityWidget.color1 or activityWidget.color2, "⠆")
+	buffer.drawText(activityWidget.x + 2, activityWidget.y + 1, activityWidget.position == 2 and activityWidget.color1 or activityWidget.color2, "⢈")
 
-	buffer.text(activityWidget.x + 1, activityWidget.y + 2, activityWidget.position == 3 and activityWidget.color1 or activityWidget.color2, "⠈")
-	buffer.text(activityWidget.x + 2, activityWidget.y + 2, activityWidget.position == 3 and activityWidget.color1 or activityWidget.color2, "⠁")
+	buffer.drawText(activityWidget.x + 1, activityWidget.y + 2, activityWidget.position == 3 and activityWidget.color1 or activityWidget.color2, "⠈")
+	buffer.drawText(activityWidget.x + 2, activityWidget.y + 2, activityWidget.position == 3 and activityWidget.color1 or activityWidget.color2, "⠁")
 
-	buffer.text(activityWidget.x, activityWidget.y + 1, activityWidget.position == 4 and activityWidget.color1 or activityWidget.color2, "⠰")
-	buffer.text(activityWidget.x + 1, activityWidget.y + 1, activityWidget.position == 4 and activityWidget.color1 or activityWidget.color2, "⡁")
+	buffer.drawText(activityWidget.x, activityWidget.y + 1, activityWidget.position == 4 and activityWidget.color1 or activityWidget.color2, "⠰")
+	buffer.drawText(activityWidget.x + 1, activityWidget.y + 1, activityWidget.position == 4 and activityWidget.color1 or activityWidget.color2, "⡁")
 end
 
 local overrideWindowDraw = window.draw
@@ -203,10 +203,10 @@ local function fieldAPIRequest(fieldToReturn, script, data)
 		if success[fieldToReturn] then
 			return success[fieldToReturn]
 		else
-			GUI.error("Request was successful, but field " .. tostring(fieldToReturn) .. " doesn't exists")
+			GUI.alert("Request was successful, but field " .. tostring(fieldToReturn) .. " doesn't exists")
 		end
 	else
-		GUI.error(reason)
+		GUI.alert(reason)
 	end
 end
 
@@ -281,7 +281,7 @@ end
 local function tryToDownload(...)
 	local success, reason = web.download(...)
 	if not success then
-		GUI.error(reason)
+		GUI.alert(reason)
 	end
 
 	return success
@@ -295,14 +295,14 @@ local function callLastMethod()
 end
 
 local function showLabelAsContent(container, text)
-	container:deleteChildren()
-	container:addChild(GUI.label(1, 1, container.width, container.height, 0x2D2D2D, text)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.center)
+	container:removeChildren()
+	container:addChild(GUI.label(1, 1, container.width, container.height, 0x2D2D2D, text)):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_CENTER)
 end
 
 local function newButtonsLayout(x, y, width, spacing)
 	local buttonsLayout = GUI.layout(x, y, width, 1, 1, 1)
-	buttonsLayout:setCellDirection(1, 1, GUI.directions.horizontal)
-	buttonsLayout:setCellSpacing(1, 1, spacing)
+	buttonsLayout:setDirection(1, 1, GUI.DIRECTION_HORIZONTAL)
+	buttonsLayout:setSpacing(1, 1, spacing)
 
 	return buttonsLayout
 end
@@ -326,7 +326,7 @@ end
 local function ratingWidgetDraw(object)
 	local x = 0
 	for i = 1, 5 do
-		buffer.text(object.x + x, object.y, object.rating >= i and object.colors.first or object.colors.second, "*")
+		buffer.drawText(object.x + x, object.y, object.rating >= i and object.colors.first or object.colors.second, "*")
 		x = x + object.spacing
 	end
 
@@ -358,15 +358,15 @@ local function deletePublication(publication)
 		})
 
 		if success then		
-			container:delete()			
+			container:remove()			
 			updateFileList(publication.category_id)
 		else
-			GUI.error(reason)
+			GUI.alert(reason)
 		end
 	end
 
 	buttonsLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 2, 0, 0xA5A5A5, 0x2D2D2D, 0x0, 0xE1E1E1, localization.no)).onTouch = function()
-		container:delete()
+		container:remove()
 		MineOSInterface.mainContainer:drawOnScreen()
 	end
 end
@@ -408,7 +408,7 @@ local function download(publication)
 
 	if publication then
 		local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer, localization.choosePath)
-		container.layout:setCellFitting(2, 1, false, false)
+		container.layout:setFitting(2, 1, false, false)
 
 		local filesystemChooserPath = fileVersions[publication.file_id] and getApplicationPathFromVersions(fileVersions[publication.file_id].path)
 		if not filesystemChooserPath then
@@ -420,7 +420,7 @@ local function download(publication)
 		end
 
 		local filesystemChooser = container.layout:addChild(GUI.filesystemChooser(1, 1, 44, 3, 0xE1E1E1, 0x2D2D2D, 0x4B4B4B, 0x969696, filesystemChooserPath, localization.save, localization.cancel, localization.fileName, "/"))
-		filesystemChooser:setMode(GUI.filesystemModes.save, GUI.filesystemModes.file)
+		filesystemChooser:setMode(GUI.IO_MODE_SAVE, GUI.IO_MODE_FILE)
 
 		container.layout:addChild(GUI.text(1, 1, 0xE1E1E1, localization.tree))
 		local tree = container.layout:addChild(GUI.tree(1, 1, 44, 10, 0xE1E1E1, 0xA5A5A5, 0x3C3C3C, 0xA5A5A5, 0x3C3C3C, 0xE1E1E1, 0xB4B4B4, 0xA5A5A5, 0xC3C3C3, 0x444444))
@@ -485,7 +485,7 @@ local function download(publication)
 		shortcutSwitchAndLabel.hidden = publication.category_id == 2
 
 		container.layout:addChild(GUI.button(1, 1, 44, 3, 0x696969, 0xFFFFFF, 0x0, 0xFFFFFF, localization.download)).onTouch = function()
-			container.layout:deleteChildren(2)
+			container.layout:removeChildren(2)
 			local progressBar = container.layout:addChild(GUI.progressBar(1, 1, 40, 0x66DB80, 0x0, 0xE1E1E1, 0, true, true, "", "%"))
 				
 			local countOfShit = 1 + (publication.all_dependencies and #publication.all_dependencies or 0)
@@ -524,7 +524,7 @@ local function download(publication)
 				end
 			end
 
-			container:delete()
+			container:remove()
 			callLastMethod()
 
 			if not shortcutSwitchAndLabel.hidden and shortcutSwitchAndLabel.switch.state then
@@ -666,7 +666,7 @@ mainMenu = function(menuID, messageToUser)
 	window.tabBar:select(1)
 	lastMethod, lastArguments = mainMenu, {menuID, messageToUser}
 
-	contentContainer:deleteChildren()
+	contentContainer:removeChildren()
 
 	local menuList = contentContainer:addChild(GUI.list(1, 1, 23, contentContainer.height, 3, 0, 0xE1E1E1, 0x4B4B4B, 0xD2D2D2, 0x4B4B4B, 0x4B4B4B, 0xE1E1E1))
 	local menuContentContainer = contentContainer:addChild(GUI.container(menuList.width + 1, 1, contentContainer.width - menuList.width, contentContainer.height))
@@ -687,7 +687,7 @@ mainMenu = function(menuID, messageToUser)
 			})
 
 			if publications then
-				menuContentContainer:deleteChildren()
+				menuContentContainer:removeChildren()
 
 				local iconsContainer = menuContentContainer:addChild(GUI.container(1, 1, menuContentContainer.width, menuContentContainer.height))
 
@@ -700,7 +700,7 @@ mainMenu = function(menuID, messageToUser)
 				statisticsLayout:addChild(GUI.image(1, 1, image.load(currentScriptDirectory .. "Icon.pic"))).height = 5
 				
 				local textLayout = statisticsLayout:addChild(GUI.layout(1, 1, container.width - 4, 1, 1, 1))
-				textLayout:setCellAlignment(1, 1, GUI.alignment.horizontal.left, GUI.alignment.vertical.top)
+				textLayout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_LEFT, GUI.ALIGNMENT_VERTICAL_TOP)
 
 				textLayout:addChild(GUI.keyAndValue(1, 1, 0x4B4B4B, 0xA5A5A5, localization.statisticsUsersCount, ": " .. statistics.users_count))
 				textLayout:addChild(GUI.keyAndValue(1, 1, 0x4B4B4B, 0xA5A5A5, localization.statisticsNewUser, ": " .. statistics.last_registered_user))
@@ -711,7 +711,7 @@ mainMenu = function(menuID, messageToUser)
 
 				local applicationPreview = statisticsLayout:addChild(newApplicationPreview(1, 1, publications[1]))
 				applicationPreview.panel.colors.background = 0xF0F0F0
-				statisticsLayout:addChild(GUI.label(1, 1, statisticsLayout.width, 1, 0xA5A5A5, localization.statisticsPopularPublication)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.center)
+				statisticsLayout:addChild(GUI.label(1, 1, statisticsLayout.width, 1, 0xA5A5A5, localization.statisticsPopularPublication)):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_CENTER)
 
 				MineOSInterface.mainContainer:drawOnScreen()
 
@@ -834,7 +834,7 @@ mainMenu = function(menuID, messageToUser)
 		end
 		messages = messages or {}
 
-		menuContentContainer:deleteChildren()
+		menuContentContainer:removeChildren()
 
 		local button = menuContentContainer:addChild(GUI.adaptiveButton(1, menuContentContainer.height - 2, 2, 1, 0x4B4B4B, 0xE1E1E1, 0x2D2D2D, 0xE1E1E1, localization.send))
 		button.localX = menuContentContainer.width - button.width + 1
@@ -862,7 +862,7 @@ mainMenu = function(menuID, messageToUser)
 			if success then
 				dialogGUI(to_user_name)
 			else
-				GUI.error(reason)
+				GUI.alert(reason)
 			end
 
 			activity(false)
@@ -883,27 +883,27 @@ mainMenu = function(menuID, messageToUser)
 		else
 			local keyAndValue = menuContentContainer:addChild(GUI.keyAndValue(1, 2, 0x878787, 0x0, localization.dialogWith, to_user_name))
 			keyAndValue.localX = math.floor(menuContentContainer.width / 2 - (keyAndValue.keyLength + keyAndValue.valueLength) / 2)
-			-- menuContentContainer:addChild(GUI.label(1, 2, menuContentContainer.width, 1, 0x2D2D2D, to_user_name)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.center)
+			-- menuContentContainer:addChild(GUI.label(1, 2, menuContentContainer.width, 1, 0x2D2D2D, to_user_name)):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_CENTER)
 		end
 
 		local function cloudDraw(object)
 			local backgroundColor, textColor = object.me and 0x6692FF or 0xFFFFFF, object.me and 0xFFFFFF or 0x4B4B4B
 			
-			buffer.square(object.x, object.y, object.width, object.height, backgroundColor, textColor, " ")
-			buffer.text(object.x, object.y - 1, backgroundColor, "⢀" .. string.rep("⣀", object.width - 2) .. "⡀")
-			buffer.text(object.x, object.y + object.height, backgroundColor, "⠈" .. string.rep("⠉", object.width - 2) .. "⠁")
+			buffer.drawRectangle(object.x, object.y, object.width, object.height, backgroundColor, textColor, " ")
+			buffer.drawText(object.x, object.y - 1, backgroundColor, "⢀" .. string.rep("⣀", object.width - 2) .. "⡀")
+			buffer.drawText(object.x, object.y + object.height, backgroundColor, "⠈" .. string.rep("⠉", object.width - 2) .. "⠁")
 
 			local date = os.date("%d.%m.%Y, %H:%M", object.timestamp)
 			if object.me then
-				buffer.text(object.x - #date - 1, object.y, 0xC3C3C3, date)
-				buffer.text(object.x + object.width, object.y + object.height - 1, backgroundColor, "◤")
+				buffer.drawText(object.x - #date - 1, object.y, 0xC3C3C3, date)
+				buffer.drawText(object.x + object.width, object.y + object.height - 1, backgroundColor, "◤")
 			else
-				buffer.text(object.x + object.width + 1, object.y, 0xC3C3C3, date)
-				buffer.text(object.x - 1, object.y + object.height - 1, backgroundColor, "◥")
+				buffer.drawText(object.x + object.width + 1, object.y, 0xC3C3C3, date)
+				buffer.drawText(object.x - 1, object.y + object.height - 1, backgroundColor, "◥")
 			end
 
 			for i = 1, #object.lines do
-				buffer.text(object.x + 1, object.y + i - 1, textColor, object.lines[i])
+				buffer.drawText(object.x + 1, object.y + i - 1, textColor, object.lines[i])
 			end
 		end
 
@@ -939,7 +939,7 @@ mainMenu = function(menuID, messageToUser)
 		})
 
 		if dialogs then
-			menuContentContainer:deleteChildren()
+			menuContentContainer:removeChildren()
 
 			local dialogsContainer = menuContentContainer:addChild(GUI.container(1, 1, menuContentContainer.width, menuContentContainer.height))
 			dialogsContainer.eventHandler = containerScrollEventHandler
@@ -975,7 +975,7 @@ mainMenu = function(menuID, messageToUser)
 					y = y + dialogContainer.height + 1
 				end
 			else
-				dialogsContainer:addChild(GUI.label(1, sendMessageButton.localY - 2, dialogsContainer.width, 1, 0xA5A5A5, localization.hereBeYourDialogs)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.center)
+				dialogsContainer:addChild(GUI.label(1, sendMessageButton.localY - 2, dialogsContainer.width, 1, 0xA5A5A5, localization.hereBeYourDialogs)):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_CENTER)
 			end
 		end
 
@@ -983,7 +983,7 @@ mainMenu = function(menuID, messageToUser)
 	end
 
 	local function settings()
-		menuContentContainer:deleteChildren()
+		menuContentContainer:removeChildren()
 		local layout = menuContentContainer:addChild(GUI.layout(1, 1, menuContentContainer.width, menuContentContainer.height, 1, 1))
 
 		layout:addChild(GUI.text(1, 1, 0x2D2D2D, localization.language))
@@ -1017,10 +1017,10 @@ mainMenu = function(menuID, messageToUser)
 		end
 
 		local function addAccountShit(login, register, recover)
-			menuContentContainer:deleteChildren()
+			menuContentContainer:removeChildren()
 			local layout = menuContentContainer:addChild(GUI.layout(1, 1, menuContentContainer.width, menuContentContainer.height, 1, 1))
 			
-			layout:addChild(GUI.label(1, 1, 36, 1, 0x0, login and localization.login or register and localization.createAccount or recover and localization.changePassword)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+			layout:addChild(GUI.label(1, 1, 36, 1, 0x0, login and localization.login or register and localization.createAccount or recover and localization.changePassword)):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
 			local nameInput = layout:addChild(GUI.input(1, 1, 36, 3, 0xFFFFFF, 0x696969, 0xB4B4B4, 0xFFFFFF, 0x2D2D2D, "", localization.nickname))
 			local emailInput = layout:addChild(GUI.input(1, 1, 36, 3, 0xFFFFFF, 0x696969, 0xB4B4B4, 0xFFFFFF, 0x2D2D2D, "", login and localization.nicknameOrEmail or "E-mail"))
 			local currentPasswordInput = layout:addChild(GUI.input(1, 1, 36, 3, 0xFFFFFF, 0x696969, 0xB4B4B4, 0xFFFFFF, 0x2D2D2D, "", localization.currentPassword, false, "*"))
@@ -1074,7 +1074,7 @@ mainMenu = function(menuID, messageToUser)
 					if success then
 						logout()
 					else
-						GUI.error(reason)
+						GUI.alert(reason)
 					end
 				end
 
@@ -1083,7 +1083,7 @@ mainMenu = function(menuID, messageToUser)
 
 			if login then
 				local registerLayout = layout:addChild(GUI.layout(1, 1, layout.width, 1, 1, 1))
-				registerLayout:setCellDirection(1, 1, GUI.directions.horizontal)
+				registerLayout:setDirection(1, 1, GUI.DIRECTION_HORIZONTAL)
 				registerLayout:addChild(GUI.text(1, 1, 0xA5A5A5, localization.notRegistered))
 				registerLayout:addChild(GUI.adaptiveButton(1, 1, 0, 0, nil, 0x696969, nil, 0x0, localization.createAccount)).onTouch = function()
 					addAccountShit(false, true, false)
@@ -1106,13 +1106,13 @@ mainMenu = function(menuID, messageToUser)
 			})
 
 			if result then
-				menuContentContainer:deleteChildren()
+				menuContentContainer:removeChildren()
 				local layout = menuContentContainer:addChild(GUI.layout(1, 1, menuContentContainer.width, menuContentContainer.height, 1, 1))
 
 				layout:addChild(GUI.text(1, 1, 0x2D2D2D, localization.profile))
 
 				local textLayout = layout:addChild(GUI.layout(1, 1, 36, 5, 1, 1))
-				textLayout:setCellAlignment(1, 1, GUI.alignment.horizontal.left, GUI.alignment.vertical.top)
+				textLayout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_LEFT, GUI.ALIGNMENT_VERTICAL_TOP)
 				
 				textLayout:addChild(GUI.keyAndValue(1, 1, 0x696969, 0x969696, localization.nickname, ": " .. user.name))
 				textLayout:addChild(GUI.keyAndValue(1, 1, 0x696969, 0x969696, "E-Mail", ": " .. user.email))
@@ -1222,14 +1222,14 @@ newPublicationInfo = function(file_id)
 		})
 
 		if reviews then
-			contentContainer:deleteChildren()
+			contentContainer:removeChildren()
 			
 			local infoContainer = contentContainer:addChild(GUI.container(1, 1, contentContainer.width, contentContainer.height))
 			infoContainer.eventHandler = containerScrollEventHandler
 
 			-- Жирный йоба-лейаут для отображения ВАЩЕ всего - и инфы, и отзыввов
 			local layout = infoContainer:addChild(GUI.layout(3, 2, infoContainer.width - 4, infoContainer.height, 1, 1))
-			layout:setCellAlignment(1, 1, GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+			layout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
 
 			-- А вот эт уже контейнер чисто инфы крч
 			local detailsContainer = layout:addChild(GUI.container(3, 2, layout.width, 6))
@@ -1299,7 +1299,7 @@ newPublicationInfo = function(file_id)
 
 					buttonsLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 1, 0, 0xA5A5A5, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, existingReviewText and localization.changeReview or localization.writeReview)).onTouch = function()
 						local container = MineOSInterface.addUniversalContainer(window, existingReviewText and localization.changeReview or localization.writeReview)
-						container.layout:setCellFitting(2, 1, false, false)
+						container.layout:setFitting(2, 1, false, false)
 
 						local input = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xFFFFFF, 0x696969, 0xB4B4B4, 0xFFFFFF, 0x2D2D2D, existingReviewText or "", localization.writeReviewHere))
 						
@@ -1329,13 +1329,13 @@ newPublicationInfo = function(file_id)
 								comment = input.text,
 							})
 
-							container:delete()
+							container:remove()
 							MineOSInterface.mainContainer:drawOnScreen()
 
 							if success then
 								newPublicationInfo(publication.file_id)
 							else
-								GUI.error(reason)
+								GUI.alert(reason)
 							end
 
 							activity()
@@ -1348,7 +1348,7 @@ newPublicationInfo = function(file_id)
 							else
 								govno.disabled = true
 								if textLength > to then
-									GUI.error("Too big review length (" .. textLength .. "). Maximum is " .. to)
+									GUI.alert("Too big review length (" .. textLength .. "). Maximum is " .. to)
 								end
 							end
 							
@@ -1382,7 +1382,7 @@ newPublicationInfo = function(file_id)
 				end
 
 				if publicationDependencyExists then
-					textDetailsContainer:addChild(GUI.label(1, y, textDetailsContainer.width, 1, 0x696969, localization.dependencies)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+					textDetailsContainer:addChild(GUI.label(1, y, textDetailsContainer.width, 1, 0x696969, localization.dependencies)):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
 					y = y + 2
 
 					for i = 1, #publication.all_dependencies do
@@ -1449,8 +1449,8 @@ newPublicationInfo = function(file_id)
 						local wasHelpText = reviewContainer:addChild(GUI.text(3, y, 0xC3C3C3, localization.wasReviewHelpful))
 						
 						local layout = reviewContainer:addChild(GUI.layout(wasHelpText.localX + wasHelpText.width + 1, y, reviewContainer.width - wasHelpText.localX - wasHelpText.width - 1, 1, 1, 1))
-						layout:setCellDirection(1, 1, GUI.directions.horizontal)
-						layout:setCellAlignment(1, 1, GUI.alignment.horizontal.left, GUI.alignment.vertical.top)
+						layout:setDirection(1, 1, GUI.DIRECTION_HORIZONTAL)
+						layout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_LEFT, GUI.ALIGNMENT_VERTICAL_TOP)
 
 						local function go(rating)
 							activity(true)
@@ -1464,7 +1464,7 @@ newPublicationInfo = function(file_id)
 							if success then
 								wasHelpText.text = localization.thanksForVote
 								wasHelpText.color = 0x696969
-								layout:delete()
+								layout:remove()
 							end
 
 							activity()
@@ -1502,14 +1502,14 @@ end
 
 local function newPlusMinusCyka(width, disableLimit)
 	local layout = GUI.layout(1, 1, width, 1, 2, 1)
-	layout:setColumnWidth(1, GUI.sizePolicies.percentage, 1.0)
-	layout:setColumnWidth(2, GUI.sizePolicies.absolute, 8)
-	layout:setCellFitting(1, 1, true, false)
-	layout:setCellMargin(2, 1, 1, 0)
-	layout:setCellAlignment(1, 1, GUI.alignment.horizontal.left, GUI.alignment.vertical.top)
-	layout:setCellAlignment(2, 1, GUI.alignment.horizontal.left, GUI.alignment.vertical.top)
-	layout:setCellDirection(1, 1, GUI.directions.horizontal)
-	layout:setCellDirection(2, 1, GUI.directions.horizontal)
+	layout:setColumnWidth(1, GUI.SIZE_POLICY_RELATIVE, 1.0)
+	layout:setColumnWidth(2, GUI.SIZE_POLICY_ABSOLUTE, 8)
+	layout:setFitting(1, 1, true, false)
+	layout:setMargin(2, 1, 1, 0)
+	layout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_LEFT, GUI.ALIGNMENT_VERTICAL_TOP)
+	layout:setAlignment(2, 1, GUI.ALIGNMENT_HORIZONTAL_LEFT, GUI.ALIGNMENT_VERTICAL_TOP)
+	layout:setDirection(1, 1, GUI.DIRECTION_HORIZONTAL)
+	layout:setDirection(2, 1, GUI.DIRECTION_HORIZONTAL)
 
 	layout.comboBox = layout:addChild(GUI.comboBox(1, 1, width - 7, 1, 0xFFFFFF, 0x696969, 0x969696, 0xE1E1E1))
 	layout.defaultColumn = 2
@@ -1532,16 +1532,16 @@ end
 
 editPublication = function(initialPublication, initialCategoryID)
 	lastMethod, lastArguments = editPublication, {initialPublication}
-	contentContainer:deleteChildren()
+	contentContainer:removeChildren()
 
 	local layout = contentContainer:addChild(GUI.layout(1, 1, contentContainer.width, contentContainer.height, 3, 1))
-	layout:setColumnWidth(1, GUI.sizePolicies.percentage, 0.5)
-	layout:setColumnWidth(2, GUI.sizePolicies.absolute, 36)
-	layout:setColumnWidth(3, GUI.sizePolicies.percentage, 0.5)
-	layout:setCellAlignment(1, 1, GUI.alignment.horizontal.right, GUI.alignment.vertical.center)
-	layout:setCellAlignment(2, 1, GUI.alignment.horizontal.left, GUI.alignment.vertical.center)
-	layout:setCellFitting(2, 1, true, false)
-	layout:setCellMargin(1, 1, 1, 0)
+	layout:setColumnWidth(1, GUI.SIZE_POLICY_RELATIVE, 0.5)
+	layout:setColumnWidth(2, GUI.SIZE_POLICY_ABSOLUTE, 36)
+	layout:setColumnWidth(3, GUI.SIZE_POLICY_RELATIVE, 0.5)
+	layout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_RIGHT, GUI.ALIGNMENT_VERTICAL_CENTER)
+	layout:setAlignment(2, 1, GUI.ALIGNMENT_HORIZONTAL_LEFT, GUI.ALIGNMENT_VERTICAL_CENTER)
+	layout:setFitting(2, 1, true, false)
+	layout:setMargin(1, 1, 1, 0)
 
 	layout:addChild(GUI.text(1, 1, 0x2D2D2D, localization.category .. ":"))
 	layout:addChild(GUI.text(1, 1, 0x2D2D2D, localization.license .. ":"))
@@ -1554,7 +1554,7 @@ editPublication = function(initialPublication, initialCategoryID)
 
 	layout.defaultColumn = 2
 
-	layout:addChild(GUI.label(1, 1, 36, 1, 0x0, initialPublication and localization.edit or localization.publish)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+	layout:addChild(GUI.label(1, 1, 36, 1, 0x0, initialPublication and localization.edit or localization.publish)):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
 
 	local categoryComboBox = layout:addChild(GUI.comboBox(1, 1, 36, 1, 0xFFFFFF, 0x696969, 0x969696, 0xE1E1E1))
 	for i = 1, #categories do
@@ -1610,7 +1610,7 @@ editPublication = function(initialPublication, initialCategoryID)
 	dependenciesLayout.addButton.onTouch = function()
 		local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer, localization.addDependency)
 		
-		container.layout:setCellFitting(2, 1, false, false)
+		container.layout:setFitting(2, 1, false, false)
 
 		local dependencyTypeComboBox = container.layout:addChild(GUI.comboBox(1, 1, 36, 3, 0xFFFFFF, 0x696969, 0x969696, 0xE1E1E1))
 		dependencyTypeComboBox:addItem(localization.fileByURL)
@@ -1630,7 +1630,7 @@ editPublication = function(initialPublication, initialCategoryID)
 				source_url = lastDependencyType == 1 and urlInput.text or nil,
 			})
 
-			container:delete()
+			container:remove()
 			MineOSInterface.mainContainer:drawOnScreen()
 		end
 
@@ -1727,7 +1727,7 @@ editPublication = function(initialPublication, initialCategoryID)
 				updateFileList(categoryComboBox.selectedItem)
 			end
 		else
-			GUI.error(reason)
+			GUI.alert(reason)
 		end
 
 		activity()
@@ -1761,7 +1761,7 @@ updateFileList = function(category_id, updates)
 	})
 
 	if result then
-		contentContainer:deleteChildren()
+		contentContainer:removeChildren()
 		
 		if updates then
 			local i = 1
@@ -1776,15 +1776,15 @@ updateFileList = function(category_id, updates)
 
 		local y = 2
 		local layout = contentContainer:addChild(GUI.layout(1, y, contentContainer.width, 1, 1, 1))
-		layout:setCellDirection(1, 1, GUI.directions.horizontal)
-		layout:setCellSpacing(1, 1, 2)
+		layout:setDirection(1, 1, GUI.DIRECTION_HORIZONTAL)
+		layout:setSpacing(1, 1, 2)
 
 		if not updates or updates and #result > 0 then
 			if updates then
 				if #result > 0 then
 					layout:addChild(GUI.adaptiveRoundedButton(1, 1, 2, 0, 0x696969, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.updateAll)).onTouch = function()
 						local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer, "")
-						container.layout:setCellFitting(2, 1, false, false)
+						container.layout:setFitting(2, 1, false, false)
 
 						local progressBar = container.layout:addChild(GUI.progressBar(1, 1, 40, 0x66DB80, 0x0, 0xE1E1E1, 0, true, true, "", "%"))
 
@@ -1827,7 +1827,7 @@ updateFileList = function(category_id, updates)
 							end
 						end
 
-						container:delete()
+						container:remove()
 						saveFileVersions()
 						computer.shutdown(true)
 					end
@@ -1876,8 +1876,8 @@ updateFileList = function(category_id, updates)
 			y = y + layout.height + 1
 
 			local navigationLayout = contentContainer:addChild(GUI.layout(1, contentContainer.height - 1, contentContainer.width, 1, 1, 1))
-			navigationLayout:setCellDirection(1, 1, GUI.directions.horizontal)
-			navigationLayout:setCellSpacing(1, 1, 2)
+			navigationLayout:setDirection(1, 1, GUI.DIRECTION_HORIZONTAL)
+			navigationLayout:setSpacing(1, 1, 2)
 
 			local function switchPage(forward)
 				currentPage = currentPage + (forward and 1 or -1)
@@ -1959,7 +1959,7 @@ window.onResize = function(width, height)
 	appsPerPage = appsPerWidth * appsPerHeight
 	currentPage = 0
 
-	contentContainer:deleteChildren()
+	contentContainer:removeChildren()
 	callLastMethod()
 end
 

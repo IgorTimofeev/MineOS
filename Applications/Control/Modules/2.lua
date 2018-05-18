@@ -22,7 +22,7 @@ local floppyImage = image.load(MineOSPaths.icons .. "Floppy.pic")
 ----------------------------------------------------------------------------------------------------------------
 
 module.onTouch = function()
-	window.contentContainer:deleteChildren()
+	window.contentContainer:removeChildren()
 	local container = window.contentContainer:addChild(GUI.container(1, 1, window.contentContainer.width, window.contentContainer.height))
 	
 	local y = 2
@@ -41,7 +41,7 @@ module.onTouch = function()
 				if inputField.text and inputField.text:len() > 0 then
 					proxy.setLabel(inputField.text)
 
-					container:delete()
+					container:remove()
 					module.onTouch()
 				end
 			end
@@ -53,7 +53,7 @@ module.onTouch = function()
 					proxy.remove(list[i])
 				end
 
-				container:delete()
+				container:remove()
 				module.onTouch()
 			end
 			formatButton.disabled = isReadOnly
@@ -63,7 +63,7 @@ module.onTouch = function()
 				if switch.state then
 					computer.setBootAddress(proxy.address)
 
-					container:delete()
+					container:remove()
 					module.onTouch()
 				end
 			end
@@ -80,7 +80,7 @@ module.onTouch = function()
 		diskContainer:addChild(GUI.image(3, 1, isReadOnly and floppyImage or HDDImage))
 		diskContainer:addChild(GUI.label(x, 1, width, 1, 0x2D2D2D, (proxy.getLabel() or "Unknown") .. " (" .. (isBoot and (localization.bootable .. ", ") or "") .. proxy.address .. ")"))
 		diskContainer:addChild(GUI.progressBar(x, 3, width, 0x66DB80, 0xD2D2D2, 0xD2D2D2, spaceUsed / spaceTotal * 100, true))
-		diskContainer:addChild(GUI.label(x, 4, width, 1, 0xBBBBBB, localization.free .. " " .. math.roundToDecimalPlaces((spaceTotal - spaceUsed) / 1024 / 1024, 2) .. " MB " .. localization.of .. " " .. math.roundToDecimalPlaces(spaceTotal / 1024 / 1024, 2) .. " MB")):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+		diskContainer:addChild(GUI.label(x, 4, width, 1, 0xBBBBBB, localization.free .. " " .. math.roundToDecimalPlaces((spaceTotal - spaceUsed) / 1024 / 1024, 2) .. " MB " .. localization.of .. " " .. math.roundToDecimalPlaces(spaceTotal / 1024 / 1024, 2) .. " MB")):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
 
 		y = y + diskContainer.height + 1
 	end

@@ -15,7 +15,7 @@ local MineOSCore = require("MineOSCore")
 
 ----------------------------------------- cyka -----------------------------------------
 
-if not component.isAvailable("printer3d") then GUI.error("This program requires at least one 3D-printer"); return end
+if not component.isAvailable("printer3d") then GUI.alert("This program requires at least one 3D-printer"); return end
 local args, options = require("shell").parse(...)
 local startImagePath = args[1] == "open" and args[2] or "/MineOS/System/Icons/Steve.pic"
 local configPath = MineOSPaths.applicationData .. "PrintImage/Config.cfg"
@@ -105,7 +105,7 @@ local function beginPrint()
 						end
 
 						GUI.progressBar(math.floor(buffer.getWidth() / 2 - 25), math.floor(buffer.getHeight() / 2), 50, 0x3366CC, 0xFFFFFF, 0xFFFFFF, math.ceil(counter * 100 / (xShapeCount * yShapeCount)), true, true, "Progress: ", "%"):draw()
-						buffer.draw()
+						buffer.drawChanges()
 					-- else
 					-- 	error("Printing out of mainImage range")
 					end
@@ -141,7 +141,7 @@ local function beginPrint()
 
 	buffer.clear()
 	mainContainer:draw()
-	buffer.draw(true)
+	buffer.drawChanges(true)
 end
 
 ----------------------------------------- Window-zaluped parasha -----------------------------------------
@@ -174,12 +174,12 @@ local function drawMainImageObject(object)
 	if mainImage then
 		local xImage = image.getWidth(mainImage) < buffer.getWidth() and math.floor(buffer.getWidth() / 2 - image.getWidth(mainImage) / 2) or 1
 		local yImage = image.getHeight(mainImage) < buffer.getHeight() and math.floor(buffer.getHeight() / 2 - image.getHeight(mainImage) / 2) or 1
-		buffer.image(xImage, yImage, mainImage)
-		GUI.windowShadow(xImage, yImage, image.getWidth(mainImage), image.getHeight(mainImage), 50, true)
+		buffer.drawImage(xImage, yImage, mainImage)
+		GUI.drawShadow(xImage, yImage, image.getWidth(mainImage), image.getHeight(mainImage), 50, true)
 		if config.showGrid then
 			for x = xImage, xImage + image.getWidth(mainImage) - 1, shapeResolutionLimit do verticalLine(x, yImage, image.getHeight(mainImage), 0.627) end
 			for y = yImage, yImage + image.getHeight(mainImage) - 1, shapeResolutionLimit / 2 do horizontalLine(xImage, y, image.getWidth(mainImage), 0.627) end
-			buffer.text(1, 1, 0xBBBBBB, "хуй")
+			buffer.drawText(1, 1, 0xBBBBBB, "хуй")
 		end
 	end
 end
@@ -194,7 +194,7 @@ local function createWindow()
 	mainContainer.shadeContainer:addChild(GUI.panel(1, 1, mainContainer.shadeContainer.width, mainContainer.shadeContainer.height, 0x0000000, 0.4))
 	
 	local y = 2
-	mainContainer.shadeContainer:addChild(GUI.label(1, y, mainContainer.shadeContainer.width, 1, 0xFFFFFF, "Main properties")):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+	mainContainer.shadeContainer:addChild(GUI.label(1, y, mainContainer.shadeContainer.width, 1, 0xFFFFFF, "Main properties")):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
 	
 	y = y + 2
 	mainContainer.shadeContainer:addChild(GUI.label(3, y, mainContainer.shadeContainer.width, 1, 0xCCCCCC, "Image path:"))
@@ -240,7 +240,7 @@ local function createWindow()
 	end
 	
 	y = y + 4
-	mainContainer.shadeContainer:addChild(GUI.label(1, y, mainContainer.shadeContainer.width, 1, 0xFFFFFF, "Frame properties")):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+	mainContainer.shadeContainer:addChild(GUI.label(1, y, mainContainer.shadeContainer.width, 1, 0xFFFFFF, "Frame properties")):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
 	y = y + 2
 	mainContainer.shadeContainer:addChild(GUI.label(3, y, mainContainer.shadeContainer.width, 1, 0xCCCCCC, "Enabled:"))
 	local frameSwitch = mainContainer.shadeContainer:addChild(GUI.switch(mainContainer.shadeContainer.width - 9, y, 8, 0xFFDB40, 0xAAAAAA, 0xFFFFFF, config.frame.enabled))
@@ -265,7 +265,7 @@ local function createWindow()
 	frameWidthSlider.roundValues = true
 
 	y = y + 5
-	mainContainer.shadeContainer:addChild(GUI.label(1, y, mainContainer.shadeContainer.width, 1, 0xFFFFFF, "Light emission")):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+	mainContainer.shadeContainer:addChild(GUI.label(1, y, mainContainer.shadeContainer.width, 1, 0xFFFFFF, "Light emission")):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
 	y = y + 2
 	mainContainer.shadeContainer:addChild(GUI.label(3, y, mainContainer.shadeContainer.width, 1, 0xCCCCCC, "Enabled:"))
 	local lightSwitch = mainContainer.shadeContainer:addChild(GUI.switch(mainContainer.shadeContainer.width - 9, y, 8, 0xFFDB40, 0xAAAAAA, 0xFFFFFF, config.lightEmission.enabled))
@@ -283,9 +283,9 @@ local function createWindow()
 	end
 
 	y = y + 5
-	mainContainer.shadeContainer:addChild(GUI.label(1, y, mainContainer.shadeContainer.width, 1, 0xFFFFFF, "Summary information:")):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+	mainContainer.shadeContainer:addChild(GUI.label(1, y, mainContainer.shadeContainer.width, 1, 0xFFFFFF, "Summary information:")):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
 	y = y + 2
-	mainContainer.shadeContainer.statusTextBox = mainContainer.shadeContainer:addChild(GUI.textBox(3, y, mainContainer.shadeContainer.width - 4, 5, nil, 0xCCCCCC, {}, 1)):setAlignment(GUI.alignment.horizontal.left, GUI.alignment.vertical.top)
+	mainContainer.shadeContainer.statusTextBox = mainContainer.shadeContainer:addChild(GUI.textBox(3, y, mainContainer.shadeContainer.width - 4, 5, nil, 0xCCCCCC, {}, 1)):setAlignment(GUI.ALIGNMENT_HORIZONTAL_LEFT, GUI.ALIGNMENT_VERTICAL_TOP)
 
 	mainContainer.shadeContainer:addChild(GUI.button(1, mainContainer.shadeContainer.height - 5, mainContainer.shadeContainer.width, 3, 0x363636, 0xFFFFFF, 0xFFFFFF, 0x262626, "Exit")).onTouch = function()
 		mainContainer:stopEventHandling()

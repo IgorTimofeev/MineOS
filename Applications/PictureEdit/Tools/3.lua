@@ -13,7 +13,7 @@ local x, y, stepX, stepY, buttonWidth, buttonHeight, buttonCount, buttons, curre
 
 local buttonsContainer = GUI.container(1, 1, (buttonWidth + stepX) * buttonCount - stepX, (buttonHeight + stepY) * buttonCount - stepY)
 local buttonsLayout = GUI.layout(1, 1, buttonsContainer.width, buttonsContainer.height, 1, 1)
-buttonsLayout:setCellAlignment(1, 1, GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+buttonsLayout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
 buttonsLayout:addChild(buttonsContainer)
 
 local widthInput = GUI.input(1, 1, 1, 1, 0x2D2D2D, 0xC3C3C3, 0x5A5A5A, 0x2D2D2D, 0xD2D2D2, "", "Width")
