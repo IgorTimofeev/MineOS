@@ -558,9 +558,9 @@ function bigLetters.draw(x, y, color, symbol, drawWithSymbol)
     for i = 1, #letters[symbol][j] do
       if letters[symbol][j][i] == 1 then
         if not drawWithSymbol then
-          buffer.square(x + i * 2 - 2, y + (pixelHeight - #letters[symbol]) + j - 1, 2, 1, color, 0xFFFFFF, " ")
+          buffer.drawRectangle(x + i * 2 - 2, y + (pixelHeight - #letters[symbol]) + j - 1, 2, 1, color, 0xFFFFFF, " ")
         else
-          buffer.text(x + i * 2 - 2, y + (pixelHeight - #letters[symbol]) + j - 1, color, "*")
+          buffer.drawText(x + i * 2 - 2, y + (pixelHeight - #letters[symbol]) + j - 1, color, "*")
         end
       end
     end
