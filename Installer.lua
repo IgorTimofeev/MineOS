@@ -128,7 +128,7 @@ stageContainer:addChild(GUI.panel(1, 1, stageContainer.width, stageContainer.hei
 local overrideDraw = stageContainer.draw
 stageContainer.draw = function(...)
 	overrideDraw(...)
-	GUI.windowShadow(stageContainer.x, stageContainer.y, stageContainer.width, stageContainer.height, 0.5, true)
+	GUI.drawShadow(stageContainer.x, stageContainer.y, stageContainer.width, stageContainer.height, 0.5, true)
 end
 
 ------------------------------------------------------------------------------------------------------------------------------------
@@ -166,12 +166,12 @@ end
 
 function stages.load(stage)
 	stages.current = stage
-	stageContainer:deleteChildren(2)
+	stageContainer:removeChildren(2)
 
 	stages[stage]()
 
 	mainContainer:draw()
-	buffer.draw()
+	buffer.drawChanges()
 end
 
 local function addImageToStage(y, picture)
@@ -224,7 +224,7 @@ stages[3] = function()
 	switch.onStateChanged = function()
 		stageContainer.nextStageButton.disabled = not switch.state
 		mainContainer:draw()
-		buffer.draw()
+		buffer.drawChanges()
 	end
 end
 
@@ -257,18 +257,18 @@ stages[4] = function()
 		progressBar.value = math.round(i / #applicationList.duringInstall * 100)
 
 		mainContainer:draw()
-		buffer.draw()
+		buffer.drawChanges()
 
 		web.download(applicationList.duringInstall[i].url, applicationList.duringInstall[i].path)
 		storeFileVersion(applicationList.duringInstall[i])
 	end
 
 	if stageContainer.flashEEPROMSwitch.state then
-		stageContainer:deleteChildren(2)
+		stageContainer:removeChildren(2)
 		y = addImageToStage(4, images.EEPROM)
-		stageContainer:addChild(GUI.label(1, y + 3, stageContainer.width, 1, 0x666666, localization.flashingEEPROM)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+		stageContainer:addChild(GUI.label(1, y + 3, stageContainer.width, 1, 0x666666, localization.flashingEEPROM)):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
 		mainContainer:draw()
-		buffer.draw()
+		buffer.drawChanges()
 
 		component.eeprom.set(web.request(URLs.EFI))
 	end
@@ -282,7 +282,7 @@ stages[5] = function()
 	addImageToStage(3, images.OK)
 	stageContainer.children[#stageContainer.children].localX = stageContainer.children[#stageContainer.children].localX + 3
 	
-	stageContainer:addChild(GUI.label(1, 22, stageContainer.width, 1, 0x666666, localization.needToReboot)):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+	stageContainer:addChild(GUI.label(1, 22, stageContainer.width, 1, 0x666666, localization.needToReboot)):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
 	stageContainer:addChild(GUI.adaptiveRoundedButton(math.floor(stageContainer.width / 2 - (unicode.len(localization.reboot) + 4) / 2), stageContainer.height - 4, 2, 1, 0xAAAAAA, 0xDDDDDD, 0x777777, 0xDDDDDD, localization.reboot)).onTouch = function()
 		table.toFile(MineOSPaths.fileVersions, fileVersions)
 
@@ -305,5 +305,5 @@ end
 
 stages.load(1)
 mainContainer:draw()
-buffer.draw(true)
+buffer.drawChanges(true)
 mainContainer:startEventHandling()
