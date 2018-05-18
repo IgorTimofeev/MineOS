@@ -62,7 +62,55 @@ MineOS uses the most advanced libraries to create UI applications. Below is a ta
 | Library | Documentation |
 | ------- | ------- |
 | GUI | https://github.com/IgorTimofeev/GUI |
-| MineOSInterface | https://github.com/IgorTimofeev/MineOS/Documentaion/MineOSInterface.md |
 | DoubleBuffering | https://github.com/IgorTimofeev/DoubleBuffering |
 | Image | https://github.com/IgorTimofeev/Image |
 | Color | https://github.com/IgorTimofeev/Color |
+
+The next step is using **MineOSInterface** library that comes bundled with MineOS. It implements the main system widgets, and is also responsible for all windows manipulations. It has following public methods:
+
+MineOSInterface.**addWindow**( window ): *table* mainContainer, *table* window
+-----------------------------------------------------------
+
+| Type | Parameter | Description |
+| ------ | ------ | ------ |
+| *table* | window | Pointer to the window object |
+
+Adds the window object create via **GUI library** to the MineOS environment, registers its icon in the Dock and add event handlers to it. First returned value is the MineOS main container that handles all event data and the second one is a pointer to your window object. You can use code like this (again, read GUI library documentation for details):
+
+```lua
+local color = require("color")
+local GUI = require("GUI")
+local MineOSInterface = require("MineOSInterface")
+
+-------------------------------------------------------------------------------
+
+-- Create a tabbed window and register it in MineOS environment
+local mainContainer, window = MineOSInterface.addWindow(GUI.tabbedWindow(1, 1, 88, 25))
+-- Add some stuff into it's tab bar
+window.tabBar:addItem("Tab 1")
+window.tabBar:addItem("Tab 2")
+window.tabBar:addItem("Tab 3")
+window.tabBar:addItem("Yay another tab")
+-- Add a single cell layout to window
+local layout = window:addChild(GUI.layout(1, 4, window.width, window.height - window.tabBar.height, 1, 1))
+-- Add a horizontal slider to layout
+local slider = layout:addChild(GUI.slider(1, 1, 26, 0x66DB80, 0x0, 0x009200, 0xAAAAAA, 0, 100, 100, false, "Brightness: ", "%"))
+-- Attach callback-function .onValueChanged to it
+slider.onValueChanged = function()
+	-- Calculate "brightness" color value
+	local channelValue = math.floor(slider.value / slider.maximumValue * 255)
+	local newColor = color.RGBToInteger(channelValue, channelValue, channelValue)
+	-- Set new color to all required widgets
+	window.backgroundPanel.colors.background = newColor
+	window.tabBar.colors.selected.background = newColor
+	window.tabBar.colors.selected.text = 0xFFFFFF - newColor
+	-- Draw changes on screen
+	mainContainer:drawOnScreen()
+end
+-- Call this function once to calculate brightess and draw data on screen
+slider.onValueChanged()
+```
+
+Result:
+
+![](https://i.imgur.com/TUDdkl2.gif)
