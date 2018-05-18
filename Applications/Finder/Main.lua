@@ -147,7 +147,7 @@ local function onFavouriteTouch(path)
 		addWorkpath(path)
 		updateFileListAndDraw()
 	else
-		GUI.error("Path doesn't exists: " .. path)
+		GUI.alert("Path doesn't exists: " .. path)
 	end
 end
 
@@ -163,7 +163,7 @@ openFTP = function(...)
 		updateSidebar()
 		updateFileListAndDraw()
 	else
-		GUI.error(reason)
+		GUI.alert(reason)
 	end
 end
 
@@ -307,7 +307,7 @@ prevButton.onTouch = function()
 end
 
 FTPButton.onTouch = function()
-	local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer, MineOSCore.localization.networkFTPNewConnection)
+	local container = MineOSInterface.addBackgroundContainer(MineOSInterface.mainContainer, MineOSCore.localization.networkFTPNewConnection)
 
 	local ad, po, us, pa, la = "ftp.example.com", "21", "root", "1234"
 	if #MineOSCore.properties.FTPConnections > 0 then

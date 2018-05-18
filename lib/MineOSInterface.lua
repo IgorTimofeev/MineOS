@@ -728,7 +728,7 @@ function MineOSInterface.iconRightClick(icon, e1, e2, e3, e4)
 
 			if icon.extension ~= ".app" then
 				menu:addItem(MineOSCore.localization.addToFavourites).onTouch = function()
-					local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer, MineOSCore.localization.addToFavourites)
+					local container = MineOSInterface.addBackgroundContainer(MineOSInterface.mainContainer, MineOSCore.localization.addToFavourites)
 
 					local input = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x878787, 0xE1E1E1, 0x2D2D2D, icon.name, MineOSCore.localization.name))
 					container.panel.eventHandler = function(mainContainer, object, e1)
@@ -889,7 +889,7 @@ end
 
 -----------------------------------------------------------------------------------------------------------------------------------
 
-function MineOSInterface.addUniversalContainer(parentContainer, title)
+function MineOSInterface.addBackgroundContainer(parentContainer, title)
 	local container = GUI.addBackgroundContainer(parentContainer, true, true, title)
 	container.panel.colors.background = MineOSCore.properties.transparencyEnabled and 0x0 or MineOSCore.properties.backgroundColor
 	container.panel.colors.transparency = MineOSCore.properties.transparencyEnabled and GUI.BACKGROUND_CONTAINER_PANEL_TRANSPARENCY
@@ -898,7 +898,7 @@ function MineOSInterface.addUniversalContainer(parentContainer, title)
 end
 
 local function addUniversalContainerWithInputTextBox(parentWindow, text, title, placeholder)
-	local container = MineOSInterface.addUniversalContainer(parentWindow, title)
+	local container = MineOSInterface.addBackgroundContainer(parentWindow, title)
 	
 	container.inputField = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x878787, 0xE1E1E1, 0x2D2D2D, text, placeholder, false))
 	container.label = container.layout:addChild(GUI.label(1, 1, 36, 1, 0xFF4940, MineOSCore.localization.file .. " " .. MineOSCore.localization.alreadyExists)):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
@@ -1243,7 +1243,7 @@ end
 local function GUICopy(parentContainer, fileList, toPath)
 	local applyYes, breakRecursion
 
-	local container = MineOSInterface.addUniversalContainer(parentContainer, MineOSCore.localization.copying)
+	local container = MineOSInterface.addBackgroundContainer(parentContainer, MineOSCore.localization.copying)
 	local textBox = container.layout:addChild(GUI.textBox(1, 1, container.width, 1, nil, 0x787878, {}, 1, 0, 0, true, true):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP))
 	local switchAndLabel = container.layout:addChild(GUI.switchAndLabel(1, 1, 37, 8, 0x66DB80, 0x1E1E1E, 0xE1E1E1, 0x787878, MineOSCore.localization.applyToAll .. ":", false))
 	container.panel.eventHandler = nil

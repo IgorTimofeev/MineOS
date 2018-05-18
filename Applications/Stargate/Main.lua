@@ -165,7 +165,7 @@ mainContainer.connectionButton = mainContainer:addChild(GUI.framedButton(x, y, w
 -- mainContainer.connectionButton.animated = false
 mainContainer.connectionButton.onTouch = function()
 	if stargate.stargateState() == "Idle" then
-		local container = MineOSInterface.addUniversalContainer(mainContainer, "Connect")
+		local container = MineOSInterface.addBackgroundContainer(mainContainer, "Connect")
 		local input = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0x666666, 0xEEEEEE, 0x262626, contacts.last, "Type address here"))
 		input.onInputFinished = function()
 			if input.text then
@@ -201,7 +201,7 @@ end
 
 mainContainer.messageContactButton = mainContainer:addChild(GUI.framedButton(x, y, width, 3, 0xEEEEEE, 0xEEEEEE, 0xBBBBBB, 0xBBBBBB, "Message")); y = y + 4
 mainContainer.messageContactButton.onTouch = function()
-	local container = MineOSInterface.addUniversalContainer(mainContainer, "Message")
+	local container = MineOSInterface.addBackgroundContainer(mainContainer, "Message")
 	local input = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0x666666, 0xEEEEEE, 0x262626, nil, "Type message text here"))
 	input.onInputFinished = function()
 		if input.text then
@@ -231,7 +231,7 @@ end
 
 mainContainer.addContactButton = mainContainer:addChild(GUI.framedButton(x, y, width, 3, 0xEEEEEE, 0xEEEEEE, 0xBBBBBB, 0xBBBBBB, "Add contact")); y = y + 3
 mainContainer.addContactButton.onTouch = function()
-	local container = MineOSInterface.addUniversalContainer(mainContainer, "Add contact")
+	local container = MineOSInterface.addBackgroundContainer(mainContainer, "Add contact")
 	local input1 = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0x666666, 0xEEEEEE, 0x262626, nil, "Name"))
 	local input2 = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0x666666, 0xEEEEEE, 0x262626, contacts.last, "Address"))
 

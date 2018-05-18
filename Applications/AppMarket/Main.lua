@@ -348,7 +348,7 @@ local function newRatingWidget(x, y, rating, firstColor, secondColor)
 end
 
 local function deletePublication(publication)
-	local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer, localization.areYouSure)
+	local container = MineOSInterface.addBackgroundContainer(MineOSInterface.mainContainer, localization.areYouSure)
 	local buttonsLayout = container.layout:addChild(newButtonsLayout(1, 1, container.layout.width, 3))
 	
 	buttonsLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 2, 0, 0xE1E1E1, 0x2D2D2D, 0x0, 0xE1E1E1, localization.yes)).onTouch = function()
@@ -407,7 +407,7 @@ local function download(publication)
 	end
 
 	if publication then
-		local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer, localization.choosePath)
+		local container = MineOSInterface.addBackgroundContainer(MineOSInterface.mainContainer, localization.choosePath)
 		container.layout:setFitting(2, 1, false, false)
 
 		local filesystemChooserPath = fileVersions[publication.file_id] and getApplicationPathFromVersions(fileVersions[publication.file_id].path)
@@ -1298,7 +1298,7 @@ newPublicationInfo = function(file_id)
 					end
 
 					buttonsLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 1, 0, 0xA5A5A5, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, existingReviewText and localization.changeReview or localization.writeReview)).onTouch = function()
-						local container = MineOSInterface.addUniversalContainer(window, existingReviewText and localization.changeReview or localization.writeReview)
+						local container = MineOSInterface.addBackgroundContainer(window, existingReviewText and localization.changeReview or localization.writeReview)
 						container.layout:setFitting(2, 1, false, false)
 
 						local input = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xFFFFFF, 0x696969, 0xB4B4B4, 0xFFFFFF, 0x2D2D2D, existingReviewText or "", localization.writeReviewHere))
@@ -1608,7 +1608,7 @@ editPublication = function(initialPublication, initialCategoryID)
 	local lastDependencyType = 1
 
 	dependenciesLayout.addButton.onTouch = function()
-		local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer, localization.addDependency)
+		local container = MineOSInterface.addBackgroundContainer(MineOSInterface.mainContainer, localization.addDependency)
 		
 		container.layout:setFitting(2, 1, false, false)
 
@@ -1783,7 +1783,7 @@ updateFileList = function(category_id, updates)
 			if updates then
 				if #result > 0 then
 					layout:addChild(GUI.adaptiveRoundedButton(1, 1, 2, 0, 0x696969, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.updateAll)).onTouch = function()
-						local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer, "")
+						local container = MineOSInterface.addBackgroundContainer(MineOSInterface.mainContainer, "")
 						container.layout:setFitting(2, 1, false, false)
 
 						local progressBar = container.layout:addChild(GUI.progressBar(1, 1, 40, 0x66DB80, 0x0, 0xE1E1E1, 0, true, true, "", "%"))

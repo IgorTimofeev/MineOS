@@ -112,7 +112,7 @@ local function newNoGUI(width, height)
 end
 
 local function new()
-	local container = MineOSInterface.addUniversalContainer(mainContainer, "Create")
+	local container = MineOSInterface.addBackgroundContainer(mainContainer, "Create")
 
 	local widthTextBox = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0x666666, 0xEEEEEE, 0x262626, "8", "Width", true))
 	widthTextBox.validator = function(text)

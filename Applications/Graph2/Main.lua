@@ -78,7 +78,7 @@ local function update()
 end
 
 functionButton.onTouch = function()
-	local container = MineOSInterface.addUniversalContainer(window, "Set function f(x)")
+	local container = MineOSInterface.addBackgroundContainer(window, "Set function f(x)")
 	local inputField = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0x666666, 0xEEEEEE, 0x262626, yDependencyString, "f(x)", false))
 	inputField.onInputFinished = function()
 		if inputField.text then

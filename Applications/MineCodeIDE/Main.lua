@@ -1665,7 +1665,7 @@ topMenuProperties.onTouch = function()
 
 		for i = 1, #colors do
 			local colorSelector = container:addChild(GUI.colorSelector(x, y, colorSelectorWidth, colorSelectorHeight, config.syntaxColorScheme[colors[i][1]], colors[i][1]))
-			colorSelector.onTouch = function()
+			colorSelector.onColorSelected = function()
 				config.syntaxColorScheme[colors[i][1]] = colorSelector.color
 				GUI.LUA_SYNTAX_COLOR_SCHEME = config.syntaxColorScheme
 				saveConfig()
@@ -1692,7 +1692,7 @@ topMenuProperties.onTouch = function()
 		end
 
 		local colorSelector = container.layout:addChild(GUI.colorSelector(1, 1, 36, 3, config.cursorColor, localization.cursorColor))
-		colorSelector.onTouch = function()
+		colorSelector.onColorSelected = function()
 			config.cursorColor = colorSelector.color
 			saveConfig()
 		end

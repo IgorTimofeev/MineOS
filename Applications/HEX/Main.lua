@@ -99,7 +99,7 @@ local function byteFieldEventHandler(mainContainer, object, e1, e2, e3, e4, e5)
 			menu:addSeparator()
 			
 			menu:addItem("Edit").onTouch = function()
-				local container = MineOSInterface.addUniversalContainer(mainContainer, "Fill byte range [" .. selection.from .. "; " .. selection.to .. "]")
+				local container = MineOSInterface.addBackgroundContainer(mainContainer, "Fill byte range [" .. selection.from .. "; " .. selection.to .. "]")
 
 				local input = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x666666, 0x666666, 0xE1E1E1, 0x2D2D2D, string.format("%02X" , bytes[selection.from]), "Type byte value"))
 				input.onInputFinished = function(text)
@@ -118,7 +118,7 @@ local function byteFieldEventHandler(mainContainer, object, e1, e2, e3, e4, e5)
 			end
 			
 			menu:addItem("Insert").onTouch = function()
-				local container = MineOSInterface.addUniversalContainer(mainContainer, "Insert bytes at position " .. selection.from .. "")
+				local container = MineOSInterface.addBackgroundContainer(mainContainer, "Insert bytes at position " .. selection.from .. "")
 
 				local input = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x666666, 0x666666, 0xE1E1E1, 0x2D2D2D, "", "Type byte values separated by space", true))
 				local switch = container.layout:addChild(GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0x1E1E1E, 0xE1E1E1, 0xBBBBBB, "Select inserted bytes:", true)).switch

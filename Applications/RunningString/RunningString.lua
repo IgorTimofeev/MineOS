@@ -7,7 +7,7 @@ local event = require("event")
 
 ---------------------------------------------------------------------------------------------------------
 
-local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer, "Running string setup")
+local container = MineOSInterface.addBackgroundContainer(MineOSInterface.mainContainer, "Running string setup")
 
 local textInput = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xFFFFFF, 0x696969, 0xB4B4B4, 0xFFFFFF, 0x2D2D2D, "Working on cool things, don't distract me", "Type text here", true))
 local backgroundColorSelector = container.layout:addChild(GUI.colorSelector(1, 1, 36, 3, 0x0, "Background color"))

@@ -878,7 +878,7 @@ local function createOSWidgets()
 			end
 			container.layout:addChild(GUI.textBox(1, 1, 36, 1, nil, 0x5A5A5A, {MineOSCore.localization.transparencySwitchInfo}, 1, 0, 0, true, true))
 
-			backgroundColorSelector.onTouch = function()
+			backgroundColorSelector.onColorSelected = function()
 				MineOSCore.properties.backgroundColor = backgroundColorSelector.color
 				MineOSCore.properties.menuColor = menuColorSelector.color
 				MineOSCore.properties.dockColor = dockColorSelector.color
@@ -886,8 +886,8 @@ local function createOSWidgets()
 
 				MineOSInterface.mainContainer:drawOnScreen()
 			end
-			menuColorSelector.onTouch = backgroundColorSelector.onTouch
-			dockColorSelector.onTouch = backgroundColorSelector.onTouch
+			menuColorSelector.onColorSelected = backgroundColorSelector.onColorSelected
+			dockColorSelector.onColorSelected = backgroundColorSelector.onColorSelected
 
 			container.panel.eventHandler = function(mainContainer, object, e1)
 				if e1 == "touch" then

@@ -296,7 +296,7 @@ local function newNoGUI(width, height)
 end
 
 local function new()
-	local container = MineOSInterface.addUniversalContainer(mainContainer, "New picture")
+	local container = MineOSInterface.addBackgroundContainer(mainContainer, "New picture")
 
 	local widthInput = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x696969, 0xE1E1E1, 0x2D2D2D, "51", "Width"))
 	local heightInput = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x696969, 0xE1E1E1, 0x2D2D2D, "19", "Height"))
@@ -371,7 +371,7 @@ fileItem.onTouch = function()
 	end
 
 	menu:addItem("Open from URL").onTouch = function()
-		local container = MineOSInterface.addUniversalContainer(mainContainer, "Open from URL")
+		local container = MineOSInterface.addBackgroundContainer(mainContainer, "Open from URL")
 
 		local input = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x969696, 0xE1E1E1, 0x2D2D2D, "", "http://example.com/test.pic"))
 		input.onInputFinished = function()
@@ -429,7 +429,7 @@ fileItem.onTouch = function()
 end
 
 mainContainer.menu:addItem("View").onTouch = function()
-	local container = MineOSInterface.addUniversalContainer(mainContainer, "View")
+	local container = MineOSInterface.addBackgroundContainer(mainContainer, "View")
 
 	local colorSelector1 = container.layout:addChild(GUI.colorSelector(1, 1, 36, 3, config.transparencyBackground, "Transparency background"))
 	local colorSelector2 = container.layout:addChild(GUI.colorSelector(1, 1, 36, 3, config.transparencyForeground, "Transparency foreground"))
@@ -448,7 +448,7 @@ mainContainer.menu:addItem("View").onTouch = function()
 end
 
 mainContainer.menu:addItem("Hotkeys").onTouch = function()
-	local container = MineOSInterface.addUniversalContainer(mainContainer, "Hotkeys")
+	local container = MineOSInterface.addBackgroundContainer(mainContainer, "Hotkeys")
 	local lines = {
 		"There are some hotkeys that works exactly like in real Photoshop:",
 		" ",

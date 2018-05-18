@@ -10,11 +10,11 @@ local world
 if component.isAvailable("debug") then
 	world = component.debug.getWorld()
 else
-	GUI.error("This program requires debug card to run")
+	GUI.alert("This program requires debug card to run")
 	return
 end
 
-local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer, "Fuck The Rain")
+local container = MineOSInterface.addBackgroundContainer(MineOSInterface.mainContainer, "Fuck The Rain")
 
 local lines = string.wrap("This script works as background daemon and checks rain condition in specified interval", 36)
 container.layout:addChild(GUI.textBox(1, 1, 36, #lines, nil, 0xA5A5A5, lines, 1, 0, 0))
@@ -49,7 +49,7 @@ container.layout:addChild(GUI.button(1, 1, 36, 3, 0x444444, 0xFFFFFF, 0x2D2D2D, 
 		end
 	end
 
-	container:delete()
+	container:remove()
 	MineOSInterface.mainContainer:drawOnScreen()
 end
 

@@ -456,7 +456,7 @@ calculateLightComboBox()
 
 mainContainer.toolbar.blockColorSelector = mainContainer.toolbar:addChild(GUI.colorSelector(2, elementY, elementWidth, 1, 0xEEEEEE, "Block color")); elementY = elementY + mainContainer.toolbar.blockColorSelector.height + 1
 mainContainer.toolbar.backgroundColorSelector = mainContainer.toolbar:addChild(GUI.colorSelector(2, elementY, elementWidth, 1, scene.backgroundColor, "Background color")); elementY = elementY + mainContainer.toolbar.blockColorSelector.height + 1
-mainContainer.toolbar.backgroundColorSelector.onTouch = function()
+mainContainer.toolbar.backgroundColorSelector.onColorSelected = function()
 	scene.backgroundColor = mainContainer.toolbar.backgroundColorSelector.color
 end
 
