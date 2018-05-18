@@ -75,7 +75,9 @@ MineOSInterface.**addWindow**( window ): *table* mainContainer, *table* window
 | ------ | ------ | ------ |
 | *table* | window | Pointer to the window object |
 
-Adds the window object create via **GUI library** to the MineOS environment, registers its icon in the Dock and add event handlers to it. First returned value is the MineOS main container that handles all event data and the second one is a pointer to your window object. You can use code like this (again, read GUI library documentation for details):
+Adds the window object create via **GUI library** to the MineOS environment, registers its icon in the Dock and add event handlers to it. First returned value is the MineOS main container that handles all event data and the second one is a pointer to your window object.
+
+Here is nice example of tabbed window that can change it "brightness" in real time.:
 
 ```lua
 local color = require("color")
