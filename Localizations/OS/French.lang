@@ -154,21 +154,9 @@
 	inCurrentDirectory = "Dans le répertoire actuel",
 
 	settings = "Préférences",
-	months = {
-		Jan = "Jan",
-		Feb = "Fev",
-		Mar = "Mar",
-		Apr = "Avr",
-		May = "Mai",
-		Jun = "Jui",
-		Jul = "Juil",
-		Aug = "Aou",
-		Sep = "Sep",
-		Oct = "Oct",
-		Nov = "Nov",
-		Dec = "Dec",
-	},
+	dateAndTime = "Date et heure",
 	timezone = "Fuseau horaire",
+	dateFormat = "Format de date",
 
 	errorWhileRunningProgram = "Erreur lors de l'exécution ",
 	sendedFeedback = "Votre commantaire a bien été envoyé",

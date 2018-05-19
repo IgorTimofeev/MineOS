@@ -154,21 +154,9 @@
 	inCurrentDirectory = "In current directory",
 
 	settings = "Preferences",
-	months = {
-		Jan = "Jan",
-		Feb = "Feb",
-		Mar = "Mar",
-		Apr = "Apr",
-		May = "May",
-		Jun = "Jun",
-		Jul = "Jul",
-		Aug = "Aug",
-		Sep = "Sep",
-		Oct = "Oct",
-		Nov = "Nov",
-		Dec = "Dec",
-	},
+	dateAndTime = "Date and time",
 	timezone = "Timezone",
+	dateFormat = "Date format",
 
 	errorWhileRunningProgram = "Error while running ",
 	sendedFeedback = "Feedback was sent",

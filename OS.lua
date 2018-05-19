@@ -942,20 +942,31 @@ local function createOSWidgets()
 			showHiddenFilesSwitch.onStateChanged, showApplicationIconsSwitch.onStateChanged = showExtensionSwitch.onStateChanged, showExtensionSwitch.onStateChanged
 		end
 
-		menu:addItem(MineOSCore.localization.timezone).onTouch = function()
+		menu:addItem(MineOSCore.localization.dateAndTime).onTouch = function()
 			local container = MineOSInterface.addBackgroundContainer(MineOSInterface.mainContainer, MineOSCore.localization.timezone)
 			
 			local comboBox = container.layout:addChild(GUI.comboBox(1, 1, 36, 3, 0xE1E1E1, 0x2D2D2D, 0x4B4B4B, 0x969696))
 			comboBox.dropDownMenu.itemHeight = 1
+			
+			local label = container.layout:addChild(GUI.label(1, 1, container.width, 1, 0xE1E1E1, MineOSCore.localization.dateFormat):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP))
+
+			local input = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x878787, 0xE1E1E1, 0x2D2D2D, MineOSCore.properties.dateFormat or ""))
+			input.onInputFinished = function()
+				MineOSCore.properties.dateFormat = input.text
+				MineOSCore.OSUpdateDate()
+
+				MineOSInterface.mainContainer:drawOnScreen()
+				MineOSCore.saveProperties()
+			end
 
 			for i = -12, 12 do
 				comboBox:addItem("GMT" .. (i >= 0 and "+" or "") .. i).onTouch = function()
 					MineOSCore.properties.timezone = i
-					MineOSCore.saveProperties()
-
 					MineOSCore.OSUpdateTimezone(i)
 					MineOSCore.OSUpdateDate()
+
 					MineOSInterface.mainContainer:drawOnScreen()
+					MineOSCore.saveProperties()
 				end
 			end
 			
@@ -1026,12 +1037,10 @@ local function createOSWidgets()
 			fs.remove(name)
 		end
 
-		local firstPart, month, secondPart = os.date(
-			"%d %b %Y %T",
+		dateWidgetText = os.date(
+			MineOSCore.properties.dateFormat,
 			realTimestamp + computerDateUptime - computerUptimeOnBoot + timezoneCorrection
-		):match("(%d+%s)(%a+)(.+)")
-
-		dateWidgetText = firstPart .. (MineOSCore.localization.months[month] or "monthNotAvailable:" .. month) .. secondPart
+		)
 		dateWidget.width = unicode.len(dateWidgetText)
 
 		batteryWidgetPercent = computer.energy() / computer.maxEnergy()

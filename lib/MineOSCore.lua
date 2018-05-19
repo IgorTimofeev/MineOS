@@ -85,6 +85,7 @@ function MineOSCore.loadPropeties()
 	end
 
 	local defaultValues = {
+		dateFormat = "%d %b% %Y %H:%M:%S",
 		packageUnloading = true,
 		transparencyEnabled = true,
 		showApplicationIcons = true,
