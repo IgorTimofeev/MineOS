@@ -11,7 +11,7 @@ MineOS is half the operating system and half the graphical environment for OpenO
 * Support for file sharing over the local network via modems
 * Support for client connection to real FTP servers
 * Error reporting system with the possibility to send information to developers
-* Store applications with the possibility to publish their own creations and a system of user ratings
+* App Market with possibility to publish your own programs for every MineOS user
 * An integrated IDE with a debugger and a significant amount of applications
 * Open source system API and detailed illustrated documentations
 * Custom EEPROM firmware with the possibility to select/format the boot volume and Internet recovery
