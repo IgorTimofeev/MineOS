@@ -708,7 +708,7 @@ function MineOSInterface.iconRightClick(icon, e1, e2, e3, e4)
 
 	local menu = MineOSInterface.addContextMenu(MineOSInterface.mainContainer, e3, e4)
 	
-	menu.onClose = function()
+	menu.onMenuClosed = function()
 		icon.parent.parent:deselectAll()
 		MineOSInterface.mainContainer:drawOnScreen()
 	end

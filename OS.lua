@@ -342,9 +342,6 @@ local function createOSWidgets()
 			else
 				icon.onLeftClick(icon, e1, e2, e3, e4, e5, e6, ...)
 			end
-
-			icon.selected = false
-			MineOSInterface.mainContainer:drawOnScreen()
 		end
 	end
 
@@ -371,6 +368,11 @@ local function createOSWidgets()
 			local indexOf = icon:indexOf()
 			local menu = MineOSInterface.addContextMenu(MineOSInterface.mainContainer, e3, e4)
 			
+			menu.onMenuClosed = function()
+				icon.selected = false
+				MineOSInterface.mainContainer:drawOnScreen()
+			end
+
 			if icon.windows then
 				local eventData = {...}
 				menu:addItem(MineOSCore.localization.newWindow).onTouch = function()
@@ -446,6 +448,11 @@ local function createOSWidgets()
 
 	icon.onRightClick = function(icon, e1, e2, e3, e4)
 		local menu = MineOSInterface.addContextMenu(MineOSInterface.mainContainer, e3, e4)
+		
+		menu.onMenuClosed = function()
+			icon.selected = false
+			MineOSInterface.mainContainer:drawOnScreen()
+		end
 		
 		menu:addItem(MineOSCore.localization.emptyTrash).onTouch = function()
 			local container = MineOSInterface.addBackgroundContainer(MineOSInterface.mainContainer, MineOSCore.localization.areYouSure)
