@@ -57,7 +57,7 @@ The **Main.lua** file is launched on application start, and **Icon.pic** is used
 
 You will be asked to choose the name of your application, as well as its icon. If the icon is not choosen, then the system icon will be used. To modify the source code of an application, just edit the **Main.lua** file.
 
-MineOS uses the most advanced libraries to create UI applications. Below is a table with illustrated documentation for libraries that are highly recommended for reading:
+MineOS uses the most advanced libraries to create UI software. Below is a table with illustrated documentation for libraries that are highly recommended for reading:
 
 | Library | Documentation |
 | ------- | ------- |
@@ -66,7 +66,7 @@ MineOS uses the most advanced libraries to create UI applications. Below is a ta
 | Image | https://github.com/IgorTimofeev/Image |
 | Color | https://github.com/IgorTimofeev/Color |
 
-The next step is using **MineOSInterface** library that comes bundled with MineOS. It implements the main system widgets, and is also responsible for all windows manipulations. It has following public methods:
+Now you can create some cool apps. Use **MineOSInterface** library that comes bundled with MineOS: it implements the main system widgets, and is also responsible for all windows manipulations. It has following public methods:
 
 MineOSInterface.**addWindow**( window ): *table* mainContainer, *table* window
 -----------------------------------------------------------
@@ -75,9 +75,9 @@ MineOSInterface.**addWindow**( window ): *table* mainContainer, *table* window
 | ------ | ------ | ------ |
 | *table* | window | Pointer to the window object |
 
-Adds the window object create via **GUI library** to the MineOS environment, registers its icon in the Dock and add event handlers to it. First returned value is the MineOS main container that handles all event data and the second one is a pointer to your window object.
+Adds the window object that was created via **GUI library** to the MineOS environment, registers its icon in the Dock and add event handlers to it. First returned value is the MineOS main container that handles all event data and the second one is a pointer to your window object.
 
-Here is nice example of tabbed window that can change it "brightness" in real time:
+Here is nice example of tabbed window that can change its "brightness" in real time:
 
 ```lua
 local color = require("color")
