@@ -593,7 +593,7 @@ local function gotoLineWindow()
 end
 
 local function openFileWindow()
-	local filesystemDialog = GUI.addFilesystemDialog(mainContainer, 50, math.floor(mainContainer.height * 0.8), true, "Open", "Cancel", "File name", "/")
+	local filesystemDialog = GUI.addFilesystemDialog(mainContainer, true, 50, math.floor(mainContainer.height * 0.8), "Open", "Cancel", "File name", "/")
 	filesystemDialog:setMode(GUI.IO_MODE_OPEN, GUI.IO_MODE_FILE)
 	filesystemDialog.onSubmit = function(path)
 		loadFile(path)
@@ -603,7 +603,7 @@ local function openFileWindow()
 end
 
 local function saveFileAsWindow()
-	local filesystemDialog = GUI.addFilesystemDialog(mainContainer, 50, math.floor(mainContainer.height * 0.8), true, "Save", "Cancel", "File name", "/")
+	local filesystemDialog = GUI.addFilesystemDialog(mainContainer, true, 50, math.floor(mainContainer.height * 0.8), "Save", "Cancel", "File name", "/")
 	filesystemDialog:setMode(GUI.IO_MODE_SAVE, GUI.IO_MODE_FILE)
 	filesystemDialog.onSubmit = function(path)
 		saveFile(path)
