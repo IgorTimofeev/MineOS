@@ -1,4 +1,6 @@
 {
+	enableSyntaxHighlight = "Включить подсветку синтаксиса",
+	disableSyntaxHighlight = "Отключить подсветку синтаксиса",
 	toUpperCase = "В верхний",
 	toLowerCase = "В нижний",
 	convertCase = "Преобразовать регистр",
@@ -22,7 +24,6 @@
 	runtimeError = "Ошибка при выполнении программы",
 	variablesNotAvailable = "Не найдено возможных переменных",
 	variables = "Значения переменных:",
-	changeResolution = "Изменить разрешение экрана",
 	pathToFile = "Путь к файлу",
 	selectWord = "Выделить текущее слово",
 	gotoCyka = "Переход",

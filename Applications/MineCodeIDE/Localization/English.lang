@@ -1,4 +1,6 @@
 {
+	enableSyntaxHighlight = "Enable syntax highlighting",
+	disableSyntaxHighlight = "Disable syntax highlighting",
 	toUpperCase = "To upper",
 	toLowerCase = "To lower",
 	convertCase = "Convert case",
@@ -22,7 +24,6 @@
 	runtimeError = "Runtime error",
 	variablesNotAvailable = "No variables found",
 	variables = "Values of the variables:",
-	changeResolution = "Change screen resolution",
 	pathToFile = "Path to file",
 	selectWord = "Select current word",
 	gotoCyka = "Goto",

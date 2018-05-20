@@ -25,7 +25,7 @@ local config = {
 	cursorBlinkDelay = 0.5,
 	doubleClickDelay = 0.4,
 	enableAutoBrackets = true,
-	highlightLuaSyntax = true,
+	syntaxHighlight = true,
 	enableAutocompletion = true,
 	linesToShowOpenProgress = 150,
 }
@@ -123,7 +123,7 @@ local autocomplete = mainContainer:addChild(GUI.autoComplete(1, 1, 36, 7, 0xE1E1
 
 local addBreakpointButton = topLayout:addChild(GUI.adaptiveButton(1, 1, 3, 1, 0x878787, 0xE1E1E1, 0xD2D2D2, 0x4B4B4B, "x"))
 
-local syntaxHighlightingButton = topLayout:addChild(GUI.adaptiveButton(1, 1, 3, 1, 0xD2D2D2, 0x4B4B4B, 0x696969, 0xE1E1E1, "◌"))
+local syntaxHighlightingButton = topLayout:addChild(GUI.adaptiveButton(1, 1, 3, 1, 0xD2D2D2, 0x4B4B4B, 0x696969, 0xE1E1E1, "◈"))
 syntaxHighlightingButton.switchMode = true
 syntaxHighlightingButton.pressed = codeView.syntaxHighlight
 
@@ -1714,6 +1714,11 @@ topMenuProperties.onTouch = function()
 
 	menu:addSeparator()
 
+	menu:addItem(config.syntaxHighlight and localization.disableSyntaxHighlight or localization.enableSyntaxHighlight).onTouch = function()
+		syntaxHighlightingButton.pressed = not syntaxHighlightingButton.pressed
+		syntaxHighlightingButton.onTouch()
+	end
+
 	menu:addItem(config.enableAutoBrackets and localization.disableAutoBrackets or localization.enableAutoBrackets, false, "^]").onTouch = function()
 		config.enableAutoBrackets = not config.enableAutoBrackets
 		saveConfig()
@@ -1742,10 +1747,10 @@ addBreakpointButton.onTouch = function()
 end
 
 syntaxHighlightingButton.onTouch = function()
-	codeView.syntaxHighlight = not codeView.syntaxHighlight
-	config.syntaxHighlight = codeView.syntaxHighlight
-	saveConfig()
+	config.syntaxHighlight = not config.syntaxHighlight
+	codeView.syntaxHighlight = config.syntaxHighlight
 	mainContainer:drawOnScreen()
+	saveConfig()
 end
 
 toggleLeftToolBarButton.onTouch = function()

@@ -1,4 +1,6 @@
 {
+	enableSyntaxHighlight = "Activer la coloration syntaxique",
+	disableSyntaxHighlight = "Désactiver la coloration syntaxique",
 	toUpperCase = "Monter",
 	toLowerCase = "Baisser",
 	convertCase = "Convertir le cas",
@@ -22,7 +24,6 @@
 	runtimeError = "Erreur d'exécution",
 	variablesNotAvailable = "Aucune variable trouvée",
 	variables = "Valeurs des variables:",
-	changeResolution = "Changer la résolution de l'écran",
 	pathToFile = "Chemin d'accès du fichier",
 	selectWord = "Sélectionnez le mot actuel",
 	gotoCyka = "Aller à",
