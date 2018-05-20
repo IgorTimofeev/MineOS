@@ -425,6 +425,7 @@ end
 
 local overrideUpdateFileList = iconField.updateFileList
 iconField.updateFileList = function(...)
+	mainContainer:drawOnScreen()
 	overrideUpdateFileList(...)
 	updateScrollBar()
 end

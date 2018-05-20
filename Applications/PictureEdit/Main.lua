@@ -186,26 +186,24 @@ mainContainer.image.draw = function(object)
 	end
 	
 	local x, y, step, notStep, background, foreground, symbol = object.x, object.y, false, mainContainer.image.width % 2
-	for i = 3, #mainContainer.image.data, 4 do
-		
-		if mainContainer.image.data[i + 2] == 0 then
-			background = mainContainer.image.data[i]
-			foreground = mainContainer.image.data[i + 1]
-			symbol = mainContainer.image.data[i + 3]
-		elseif mainContainer.image.data[i + 2] < 1 then
-			background = color.blend(config.transparencyBackground, mainContainer.image.data[i], mainContainer.image.data[i + 2])
-			foreground = mainContainer.image.data[i + 1]
-			symbol = mainContainer.image.data[i + 3]
+	for i = 1, mainContainer.image.width * mainContainer.image.height do
+		if mainContainer.image.data[5][i] == 0 then
+			background = mainContainer.image.data[3][i]
+			foreground = mainContainer.image.data[4][i]
+			symbol = mainContainer.image.data[6][i]
+		elseif mainContainer.image.data[5][i] < 1 then
+			background = color.blend(config.transparencyBackground, mainContainer.image.data[3][i], mainContainer.image.data[5][i])
+			foreground = mainContainer.image.data[4][i]
+			symbol = mainContainer.image.data[6][i]
 		else
-			if mainContainer.image.data[i + 3] == " " then
+			if mainContainer.image.data[6][i] == " " then
 				background = config.transparencyBackground
 				foreground = config.transparencyForeground
 				symbol = step and "▒" or "░"
 			else
 				background = config.transparencyBackground
-				foreground = mainContainer.image.data[i + 1]
-				symbol = mainContainer.image.data[i + 3]
-				
+				foreground = mainContainer.image.data[4][i]
+				symbol = mainContainer.image.data[6][i]
 			end
 		end
 
@@ -284,14 +282,14 @@ end
 
 local function newNoGUI(width, height)
 	savePath = nil
-	mainContainer.image.data = {width, height}
+	mainContainer.image.data = {width, height, {}, {}, {}, {}}
 	mainContainer.image.reposition()	
 	
 	for i = 1, width * height do
-		table.insert(mainContainer.image.data, 0x0)
-		table.insert(mainContainer.image.data, 0x0)
-		table.insert(mainContainer.image.data, 1)
-		table.insert(mainContainer.image.data, " ")
+		table.insert(mainContainer.image.data[3], 0x0)
+		table.insert(mainContainer.image.data[4], 0x0)
+		table.insert(mainContainer.image.data[5], 1)
+		table.insert(mainContainer.image.data[6], " ")
 	end
 end
 
@@ -478,7 +476,6 @@ mainContainer.image:moveToBack()
 mainContainer.backgroundPanel:moveToBack()
 
 updateRecentColorsButtons()
-onToolTouch(5)
 
 if options.o or options.open and args[1] and fs.exists(args[1]) then
 	loadImage(args[1])
@@ -486,5 +483,5 @@ else
 	newNoGUI(51, 19)
 end
 
-mainContainer:drawOnScreen(true)
+onToolTouch(5)
 mainContainer:startEventHandling()

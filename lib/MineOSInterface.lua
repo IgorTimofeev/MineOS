@@ -694,10 +694,9 @@ function MineOSInterface.iconLeftClick(icon)
 end
 
 function MineOSInterface.iconDoubleClick(icon)
-	icon.selected = false
 	icon:launch()
+	icon.selected = false
 	MineOSInterface.mainContainer:drawOnScreen()
-	-- computer.pushSignal("MineOSCore", "updateFileList")
 end
 
 function MineOSInterface.iconRightClick(icon, e1, e2, e3, e4)

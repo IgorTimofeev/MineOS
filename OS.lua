@@ -228,13 +228,21 @@ local function changeWallpaper()
 			MineOSInterface.mainContainer.background.wallpaperPosition.y = math.floor(1 + MineOSInterface.mainContainer.height / 2 - image.getHeight(MineOSInterface.mainContainer.background.wallpaper) / 2)
 		end
 
-		local r, g, b
-		for i = 3, #MineOSInterface.mainContainer.background.wallpaper, 4 do
-			r, g, b = color.integerToRGB(MineOSInterface.mainContainer.background.wallpaper[i])
-			MineOSInterface.mainContainer.background.wallpaper[i] = color.RGBToInteger(math.floor(r * MineOSCore.properties.wallpaperBrightness), math.floor(g * MineOSCore.properties.wallpaperBrightness), math.floor(b * MineOSCore.properties.wallpaperBrightness))
-			
-			r, g, b = color.integerToRGB(MineOSInterface.mainContainer.background.wallpaper[i + 1])
-			MineOSInterface.mainContainer.background.wallpaper[i + 1] = color.RGBToInteger(math.floor(r * MineOSCore.properties.wallpaperBrightness), math.floor(g * MineOSCore.properties.wallpaperBrightness), math.floor(b * MineOSCore.properties.wallpaperBrightness))
+		local backgrounds, foregrounds, r, g, b = MineOSInterface.mainContainer.background.wallpaper[3], MineOSInterface.mainContainer.background.wallpaper[4]
+		for i = 1, #backgrounds do
+			r, g, b = color.integerToRGB(backgrounds[i])
+			backgrounds[i] = color.RGBToInteger(
+				math.floor(r * MineOSCore.properties.wallpaperBrightness),
+				math.floor(g * MineOSCore.properties.wallpaperBrightness),
+				math.floor(b * MineOSCore.properties.wallpaperBrightness)
+			)
+
+			r, g, b = color.integerToRGB(foregrounds[i])
+			foregrounds[i] = color.RGBToInteger(
+				math.floor(r * MineOSCore.properties.wallpaperBrightness),
+				math.floor(g * MineOSCore.properties.wallpaperBrightness),
+				math.floor(b * MineOSCore.properties.wallpaperBrightness)
+			)
 		end
 	end
 end
@@ -358,6 +366,8 @@ local function createOSWidgets()
 					window.hidden = false
 					window:moveToFront()
 				end
+				
+				icon.selected = false
 				MineOSInterface.mainContainer:drawOnScreen()
 			else
 				MineOSInterface.iconDoubleClick(icon, ...)

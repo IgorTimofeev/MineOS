@@ -77,7 +77,7 @@ end
 local drawingArea = window:addChild(GUI.container(1, 4, 1, 1))
 local overrideDraw = drawingArea.draw
 drawingArea.draw = function(...)
-	GUI.drawShadow(drawingArea.x, drawingArea.y, drawingArea.width, drawingArea.height, GUI.colors.contextMenu.transparency.shadow, true)
+	GUI.drawShadow(drawingArea.x, drawingArea.y, drawingArea.width, drawingArea.height, GUI.CONTEXT_MENU_SHADOW_TRANSPARENCY, true)
 	overrideDraw(...)
 end
 
@@ -171,7 +171,7 @@ saveButton.onTouch = function()
 	
 	filesystemDialog.onSubmit = function(path)
 		if fs.extension(path) == ".pic" then
-			local picture = {drawingArea.width / 4, drawingArea.height / 4}
+			local picture = {drawingArea.width / 4, drawingArea.height / 4, {}, {}, {}, {}}
 
 			local x, y = 1, 1
 			for childIndex = 1, #drawingArea.children do

@@ -61,11 +61,14 @@ function MineOSCore.createShortcut(where, forWhat)
 end
 
 function MineOSCore.readShortcut(path)
-	local file = io.open(path, "r")
-	local data = file:read("*a")
-	file:close()
-	
-	return data
+	local file, reason = io.open(path, "r")
+	if file then
+		local data = file:read("*a")
+		file:close()
+		return data
+	else
+		error("Failed to read shortcut \"" .. tostring(path) .. "\": " .. tostring(reason))
+	end
 end
 
 -----------------------------------------------------------------------------------------------------------------------------------
