@@ -512,87 +512,82 @@ local function createOSWidgets()
 	MineOSInterface.mainContainer.windowsContainer = MineOSInterface.mainContainer:addChild(GUI.container(1, 2, 1, 1))
 
 	MineOSInterface.mainContainer.menu = MineOSInterface.mainContainer:addChild(GUI.menu(1, 1, MineOSInterface.mainContainer.width, MineOSCore.properties.menuColor, 0x696969, 0x3366CC, 0xFFFFFF))
-	local item1 = MineOSInterface.mainContainer.menu:addItem("MineOS", 0x000000)
-	item1.onTouch = function()
-		local menu = MineOSInterface.addContextMenu(MineOSInterface.mainContainer, item1.x, item1.y + 1)
+	
+	local MineOSContextMenu = MineOSInterface.mainContainer.menu:addContextMenu("MineOS", 0x000000)
+	MineOSContextMenu:addItem(MineOSCore.localization.aboutSystem).onTouch = function()
+		local container = MineOSInterface.addBackgroundContainer(MineOSInterface.mainContainer, MineOSCore.localization.aboutSystem)
+		container.layout:setFitting(2, 1, false, false)
+		container.layout:removeChildren()
+		
+		local lines = {
+			"MineOS",
+			"Copyright © 2014-" .. os.date("%Y", realTimestamp),
+			" ",
+			"Developers:",
+			" ",
+			"Igor Timofeev, vk.com/id7799889",
+			"Gleb Trifonov, vk.com/id88323331",
+			"Yakov Verevkin, vk.com/id60991376",
+			"Alexey Smirnov, vk.com/id23897419",
+			"Timofey Shestakov, vk.com/id113499693",
+			" ",
+			"UX-advisers:",
+			" ",
+			"Nikita Yarichev, vk.com/id65873873",
+			"Vyacheslav Sazonov, vk.com/id21321257",
+			"Michail Prosin, vk.com/id75667079",
+			"Dmitrii Tiunov, vk.com/id151541414",
+			"Egor Paliev, vk.com/id83795932",
+			"Maxim Pakin, vk.com/id100687922",
+			"Andrey Kakoito, vk.com/id201043162",
+			"Maxim Omelaenko, vk.com/id54662296",
+			"Konstantin Mayakovskiy, vk.com/id10069748",
+			" ",
+			"Translators:",
+			" ",
+			"06Games, github.com/06Games",
+			"Ksenia Mazneva, vk.com/id5564402",
+			"Yana Dmitrieva, vk.com/id155326634",
+		}
 
-		menu:addItem(MineOSCore.localization.aboutSystem).onTouch = function()
-			local container = MineOSInterface.addBackgroundContainer(MineOSInterface.mainContainer, MineOSCore.localization.aboutSystem)
-			container.layout:setFitting(2, 1, false, false)
-			container.layout:removeChildren()
-			
-			local lines = {
-				"MineOS",
-				"Copyright © 2014-" .. os.date("%Y", realTimestamp),
-				" ",
-				"Developers:",
-				" ",
-				"Igor Timofeev, vk.com/id7799889",
-				"Gleb Trifonov, vk.com/id88323331",
-				"Yakov Verevkin, vk.com/id60991376",
-				"Alexey Smirnov, vk.com/id23897419",
-				"Timofey Shestakov, vk.com/id113499693",
-				" ",
-				"UX-advisers:",
-				" ",
-				"Nikita Yarichev, vk.com/id65873873",
-				"Vyacheslav Sazonov, vk.com/id21321257",
-				"Michail Prosin, vk.com/id75667079",
-				"Dmitrii Tiunov, vk.com/id151541414",
-				"Egor Paliev, vk.com/id83795932",
-				"Maxim Pakin, vk.com/id100687922",
-				"Andrey Kakoito, vk.com/id201043162",
-				"Maxim Omelaenko, vk.com/id54662296",
-				"Konstantin Mayakovskiy, vk.com/id10069748",
-				" ",
-				"Translators:",
-				" ",
-				"06Games, github.com/06Games",
-				"Ksenia Mazneva, vk.com/id5564402",
-				"Yana Dmitrieva, vk.com/id155326634",
-			}
-
-			local textBox = container.layout:addChild(GUI.textBox(1, 1, container.layout.width, #lines, nil, 0xB4B4B4, lines, 1, 0, 0))
-			textBox:setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
-			textBox.eventHandler = container.panel.eventHandler
-
-			MineOSInterface.mainContainer:drawOnScreen()
-		end
-
-		menu:addItem(MineOSCore.localization.updates).onTouch = function()
-			MineOSInterface.safeLaunch(MineOSPaths.applications .. "App Market.app/Main.lua", "updates")
-		end
-
-		menu:addSeparator()
-
-		menu:addItem(MineOSCore.localization.logout, MineOSCore.properties.protectionMethod == "withoutProtection").onTouch = function()
-			login()
-		end
-
-		menu:addItem(MineOSCore.localization.reboot).onTouch = function()
-			MineOSNetwork.broadcastComputerState(false)
-			require("computer").shutdown(true)
-		end
-
-		menu:addItem(MineOSCore.localization.shutdown).onTouch = function()
-			MineOSNetwork.broadcastComputerState(false)
-			require("computer").shutdown()
-		end
-
-		menu:addSeparator()
-
-		menu:addItem(MineOSCore.localization.returnToShell).onTouch = function()
-			MineOSNetwork.broadcastComputerState(false)
-			MineOSInterface.mainContainer:stopEventHandling()
-			MineOSInterface.clearTerminal()
-			os.exit()
-		end
+		local textBox = container.layout:addChild(GUI.textBox(1, 1, container.layout.width, #lines, nil, 0xB4B4B4, lines, 1, 0, 0))
+		textBox:setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
+		textBox.eventHandler = container.panel.eventHandler
 
 		MineOSInterface.mainContainer:drawOnScreen()
 	end
 
-	local item2 = MineOSInterface.mainContainer.menu:addItem(MineOSCore.localization.network)
-	item2.onTouch = function()
+	MineOSContextMenu:addItem(MineOSCore.localization.updates).onTouch = function()
+		MineOSInterface.safeLaunch(MineOSPaths.applications .. "App Market.app/Main.lua", "updates")
+	end
+
+	MineOSContextMenu:addSeparator()
+
+	MineOSContextMenu:addItem(MineOSCore.localization.logout, MineOSCore.properties.protectionMethod == "withoutProtection").onTouch = function()
+		login()
+	end
+
+	MineOSContextMenu:addItem(MineOSCore.localization.reboot).onTouch = function()
+		MineOSNetwork.broadcastComputerState(false)
+		require("computer").shutdown(true)
+	end
+
+	MineOSContextMenu:addItem(MineOSCore.localization.shutdown).onTouch = function()
+		MineOSNetwork.broadcastComputerState(false)
+		require("computer").shutdown()
+	end
+
+	MineOSContextMenu:addSeparator()
+
+	MineOSContextMenu:addItem(MineOSCore.localization.returnToShell).onTouch = function()
+		MineOSNetwork.broadcastComputerState(false)
+		MineOSInterface.mainContainer:stopEventHandling()
+		MineOSInterface.clearTerminal()
+		os.exit()
+	end
+
+	local networkItem = MineOSInterface.mainContainer.menu:addItem(MineOSCore.localization.network)
+	networkItem.onTouch = function()
 		local container = MineOSInterface.addBackgroundContainer(MineOSInterface.mainContainer, MineOSCore.localization.network)
 		local insertModemTextBox = container.layout:addChild(GUI.textBox(1, 1, 36, 1, nil, 0x5A5A5A, {MineOSCore.localization.networkModemNotAvailable}, 1, 0, 0, true, true))
 		local stateSwitchAndLabel = container.layout:addChild(GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x878787, MineOSCore.localization.networkState .. ":", MineOSCore.properties.network.enabled))
@@ -682,323 +677,317 @@ local function createOSWidgets()
 		check()
 	end
 
-	local item3 = MineOSInterface.mainContainer.menu:addItem(MineOSCore.localization.settings)
-	item3.onTouch = function()
-		local menu = MineOSInterface.addContextMenu(MineOSInterface.mainContainer, item3.x, item3.y + 1)
-
-		if computer.getArchitectures then
-			menu:addItem(MineOSCore.localization.CPUArchitecture).onTouch = function()
-				local container = MineOSInterface.addBackgroundContainer(MineOSInterface.mainContainer, MineOSCore.localization.CPUArchitecture)
-				
-				local comboBox = container.layout:addChild(GUI.comboBox(1, 1, 36, 3, 0xE1E1E1, 0x2D2D2D, 0x4B4B4B, 0x969696))
-				local architectures, architecture = computer.getArchitectures(), computer.getArchitecture()
-				for i = 1, #architectures do
-					comboBox:addItem(architectures[i]).onTouch = function()
-						computer.setArchitecture(architectures[i])
-						computer.shutdown(true)
-					end
-
-					if architecture == architectures[i] then
-						comboBox.selectedItem = i
-					end
-				end
-
-				MineOSInterface.mainContainer:drawOnScreen()
-			end
-		end
-
-		menu:addItem(MineOSCore.localization.RAMControl).onTouch = function()
-			local container = MineOSInterface.addBackgroundContainer(MineOSInterface.mainContainer, MineOSCore.localization.RAMControl)
-
-			local comboBox = container.layout:addChild(GUI.comboBox(1, 1, 36, 3, 0xE1E1E1, 0x2D2D2D, 0x4B4B4B, 0x969696))
-			comboBox.dropDownMenu.itemHeight = 1
-
-			local function update()
-				local libraries = {}
-				for key in pairs(package.loaded) do
-					if not _G[key] then
-						table.insert(libraries, key)
-					end
-				end
-				
-				table.sort(libraries, function(a, b) return a < b end)
-
-				comboBox:clear()
-				for i = 1, #libraries do
-					comboBox:addItem(libraries[i]).onTouch = function()
-						package.loaded[libraries[i]] = nil
-						update()
-					end
-				end
-
-				MineOSInterface.mainContainer:drawOnScreen()
-			end
-
-			local switch = container.layout:addChild(GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x878787, MineOSCore.localization.packageUnloading .. ":", MineOSCore.properties.packageUnloading)).switch
-			switch.onStateChanged = function()
-				MineOSCore.properties.packageUnloading = switch.state
-				MineOSCore.setPackageUnloading(MineOSCore.properties.packageUnloading)
-				MineOSCore.saveProperties()
-			end
-
-			update()
-		end
-
-		menu:addItem(MineOSCore.localization.screenResolution).onTouch = function()
-			local container = MineOSInterface.addBackgroundContainer(MineOSInterface.mainContainer, MineOSCore.localization.screenResolution)
-
-			local widthTextBox = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x878787, 0xE1E1E1, 0x2D2D2D, tostring(MineOSCore.properties.resolution and MineOSCore.properties.resolution[1] or 160), "Width", true))
-			widthTextBox.validator = function(text)
-				local number = tonumber(text)
-				if number then return number >= 1 and number <= 160 end
-			end
-
-			local heightTextBox = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x878787, 0xE1E1E1, 0x2D2D2D, tostring(MineOSCore.properties.resolution and MineOSCore.properties.resolution[2] or 50), "Height", true))
-			heightTextBox.validator = function(text)
-				local number = tonumber(text)
-				if number then return number >= 1 and number <= 50 end
-			end
-
-			container.panel.eventHandler = function(mainContainer, object, e1)
-				if e1 == "touch" then
-					container:remove()
-					MineOSCore.properties.resolution = {tonumber(widthTextBox.text), tonumber(heightTextBox.text)}
-					MineOSCore.saveProperties()
-					changeResolution()
-					changeWallpaper()
-					MineOSInterface.mainContainer.updateFileListAndDraw()
-				end
-			end
-		end
-
-		menu:addSeparator()
-
-		menu:addItem(MineOSCore.localization.systemLanguage).onTouch = function()
-			local container = MineOSInterface.addBackgroundContainer(MineOSInterface.mainContainer, MineOSCore.localization.systemLanguage)
-
-			local comboBox = container.layout:addChild(GUI.comboBox(1, 1, 36, 3, 0xE1E1E1, 0x2D2D2D, 0x4B4B4B, 0x969696))
-			for file in fs.list(MineOSPaths.localizationFiles) do
-				local name = fs.hideExtension(file)
-				comboBox:addItem(name).onTouch = function()
-					MineOSCore.properties.language = name
-					MineOSCore.localization = MineOSCore.getLocalization(MineOSPaths.localizationFiles)
-
-					createOSWidgets()
-					changeResolution()
-					changeWallpaper()
-					MineOSCore.OSUpdateDate()
-
-					MineOSInterface.mainContainer.updateFileListAndDraw()
-					MineOSCore.saveProperties()
-				end
-
-				if name == MineOSCore.properties.language then
-					comboBox.selectedItem = comboBox:count()
-				end
-			end
-		end
-
-		menu:addItem(MineOSCore.localization.wallpaper).onTouch = function()
-			local container = MineOSInterface.addBackgroundContainer(MineOSInterface.mainContainer, MineOSCore.localization.wallpaper)
-
-			local filesystemChooser = container.layout:addChild(GUI.filesystemChooser(1, 1, 36, 3, 0xE1E1E1, 0x2D2D2D, 0x4B4B4B, 0x969696, MineOSCore.properties.wallpaper, MineOSCore.localization.open, MineOSCore.localization.cancel, MineOSCore.localization.wallpaperPath, "/"))
-			filesystemChooser:addExtensionFilter(".pic")
-			filesystemChooser.onSubmit = function(path)
-				MineOSCore.properties.wallpaper = path
-				MineOSCore.saveProperties()
-				changeWallpaper()
-
-				MineOSInterface.mainContainer:drawOnScreen()
-			end
-
-			local comboBox = container.layout:addChild(GUI.comboBox(1, 1, 36, 3, 0xE1E1E1, 0x2D2D2D, 0x4B4B4B, 0x969696))
-			comboBox.selectedItem = MineOSCore.properties.wallpaperMode or 1
-			comboBox:addItem(MineOSCore.localization.wallpaperModeStretch)
-			comboBox:addItem(MineOSCore.localization.wallpaperModeCenter)
-
-			local switch = container.layout:addChild(GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0xE1E1E1, MineOSCore.localization.wallpaperEnabled .. ":", MineOSCore.properties.wallpaperEnabled)).switch
-			switch.onStateChanged = function()
-				MineOSCore.properties.wallpaperEnabled = switch.state
-				MineOSCore.saveProperties()
-				changeWallpaper()
-
-				MineOSInterface.mainContainer:drawOnScreen()
-			end
-
-			container.layout:addChild(GUI.textBox(1, 1, 36, 1, nil, 0x5A5A5A, {MineOSCore.localization.wallpaperSwitchInfo}, 1, 0, 0, true, true))
-
-			local slider = container.layout:addChild(GUI.slider(1, 1, 36, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x878787, 0, 100, MineOSCore.properties.wallpaperBrightness * 100, false, MineOSCore.localization.wallpaperBrightness .. ": ", "%"))
-			slider.roundValues = true
-			slider.onValueChanged = function()
-				MineOSCore.properties.wallpaperBrightness = slider.value / 100
-				MineOSCore.saveProperties()
-				changeWallpaper()
-
-				MineOSInterface.mainContainer:drawOnScreen()
-			end
-			container.layout:addChild(GUI.object(1, 1, 1, 1))
+	local settingsContextMenu = MineOSInterface.mainContainer.menu:addContextMenu(MineOSCore.localization.settings)
+	if computer.getArchitectures then
+		settingsContextMenu:addItem(MineOSCore.localization.CPUArchitecture).onTouch = function()
+			local container = MineOSInterface.addBackgroundContainer(MineOSInterface.mainContainer, MineOSCore.localization.CPUArchitecture)
 			
-			comboBox.onItemSelected = function()
-				MineOSCore.properties.wallpaperMode = comboBox.selectedItem
-				MineOSCore.saveProperties()
-				changeWallpaper()
-
-				MineOSInterface.mainContainer:drawOnScreen()
-			end
-		end
-
-		menu:addItem(MineOSCore.localization.screensaver).onTouch = function()
-			local container = MineOSInterface.addBackgroundContainer(MineOSInterface.mainContainer, MineOSCore.localization.screensaver)
-
 			local comboBox = container.layout:addChild(GUI.comboBox(1, 1, 36, 3, 0xE1E1E1, 0x2D2D2D, 0x4B4B4B, 0x969696))
-			local fileList = fs.sortedList(screensaversPath, "name", false)
-			for i = 1, #fileList do
-				comboBox:addItem(fs.hideExtension(fileList[i]))
-				if MineOSCore.properties.screensaver == fileList[i] then
+			local architectures, architecture = computer.getArchitectures(), computer.getArchitecture()
+			for i = 1, #architectures do
+				comboBox:addItem(architectures[i]).onTouch = function()
+					computer.setArchitecture(architectures[i])
+					computer.shutdown(true)
+				end
+
+				if architecture == architectures[i] then
 					comboBox.selectedItem = i
 				end
 			end
-			local switch = container.layout:addChild(GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0xE1E1E1, MineOSCore.localization.screensaverEnabled .. ":", MineOSCore.properties.screensaverEnabled)).switch
-			local slider = container.layout:addChild(GUI.slider(1, 1, 36, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x878787, 1, 80, MineOSCore.properties.screensaverDelay, false, MineOSCore.localization.screensaverDelay .. ": ", ""))
 
-			container.panel.eventHandler = function(mainContainer, object, e1)
-				if e1 == "touch" then
-					container:remove()
-					MineOSInterface.mainContainer:drawOnScreen()
+			MineOSInterface.mainContainer:drawOnScreen()
+		end
+	end
 
-					MineOSCore.properties.screensaverEnabled = switch.state
-					MineOSCore.properties.screensaver = fileList[comboBox.selectedItem]
-					MineOSCore.properties.screensaverDelay = slider.value
+	settingsContextMenu:addItem(MineOSCore.localization.RAMControl).onTouch = function()
+		local container = MineOSInterface.addBackgroundContainer(MineOSInterface.mainContainer, MineOSCore.localization.RAMControl)
 
-					MineOSCore.saveProperties()
+		local comboBox = container.layout:addChild(GUI.comboBox(1, 1, 36, 3, 0xE1E1E1, 0x2D2D2D, 0x4B4B4B, 0x969696))
+		comboBox.dropDownMenu.itemHeight = 1
+
+		local function update()
+			local libraries = {}
+			for key in pairs(package.loaded) do
+				if not _G[key] then
+					table.insert(libraries, key)
+				end
+			end
+			
+			table.sort(libraries, function(a, b) return a < b end)
+
+			comboBox:clear()
+			for i = 1, #libraries do
+				comboBox:addItem(libraries[i]).onTouch = function()
+					package.loaded[libraries[i]] = nil
+					update()
 				end
 			end
 
 			MineOSInterface.mainContainer:drawOnScreen()
 		end
 
-		menu:addItem(MineOSCore.localization.colorScheme).onTouch = function()
-			local container = MineOSInterface.addBackgroundContainer(MineOSInterface.mainContainer, MineOSCore.localization.colorScheme)
-
-			local backgroundColorSelector = container.layout:addChild(GUI.colorSelector(1, 1, 36, 3, MineOSCore.properties.backgroundColor, MineOSCore.localization.backgroundColor))
-			local menuColorSelector = container.layout:addChild(GUI.colorSelector(1, 1, 36, 3, MineOSCore.properties.menuColor, MineOSCore.localization.menuColor))
-			local dockColorSelector = container.layout:addChild(GUI.colorSelector(1, 1, 36, 3, MineOSCore.properties.dockColor, MineOSCore.localization.dockColor))
-
-			local switch = container.layout:addChild(GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0xE1E1E1, MineOSCore.localization.transparencyEnabled .. ":", MineOSCore.properties.transparencyEnabled)).switch
-			switch.onStateChanged = function()
-				MineOSCore.properties.transparencyEnabled = switch.state
-				MineOSCore.saveProperties()
-				MineOSInterface.mainContainer.menu.colors.transparency = MineOSCore.properties.transparencyEnabled and menuTransparency
-				container.panel.colors.background = switch.state and GUI.BACKGROUND_CONTAINER_PANEL_COLOR or (MineOSCore.properties.backgroundColor)
-				container.panel.colors.transparency = switch.state and GUI.BACKGROUND_CONTAINER_PANEL_TRANSPARENCY
-
-				MineOSInterface.mainContainer:drawOnScreen()
-			end
-			container.layout:addChild(GUI.textBox(1, 1, 36, 1, nil, 0x5A5A5A, {MineOSCore.localization.transparencySwitchInfo}, 1, 0, 0, true, true))
-
-			backgroundColorSelector.onColorSelected = function()
-				MineOSCore.properties.backgroundColor = backgroundColorSelector.color
-				MineOSCore.properties.menuColor = menuColorSelector.color
-				MineOSCore.properties.dockColor = dockColorSelector.color
-				MineOSInterface.mainContainer.menu.colors.default.background = MineOSCore.properties.menuColor
-
-				MineOSInterface.mainContainer:drawOnScreen()
-			end
-			menuColorSelector.onColorSelected = backgroundColorSelector.onColorSelected
-			dockColorSelector.onColorSelected = backgroundColorSelector.onColorSelected
-
-			container.panel.eventHandler = function(mainContainer, object, e1)
-				if e1 == "touch" then
-					container:remove()
-					MineOSInterface.mainContainer:drawOnScreen()
-
-					MineOSCore.saveProperties()
-				end
-			end
+		local switch = container.layout:addChild(GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x878787, MineOSCore.localization.packageUnloading .. ":", MineOSCore.properties.packageUnloading)).switch
+		switch.onStateChanged = function()
+			MineOSCore.properties.packageUnloading = switch.state
+			MineOSCore.setPackageUnloading(MineOSCore.properties.packageUnloading)
+			MineOSCore.saveProperties()
 		end
 
-		menu:addItem(MineOSCore.localization.iconProperties).onTouch = function()
-			local container = MineOSInterface.addBackgroundContainer(MineOSInterface.mainContainer, MineOSCore.localization.iconProperties)
+		update()
+	end
 
-			local showExtensionSwitch = container.layout:addChild(GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x878787, MineOSCore.localization.showExtension .. ":", MineOSCore.properties.showExtension)).switch
-			local showHiddenFilesSwitch = container.layout:addChild(GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x878787, MineOSCore.localization.showHiddenFiles .. ":", MineOSCore.properties.showHiddenFiles)).switch
-			local showApplicationIconsSwitch = container.layout:addChild(GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x878787, MineOSCore.localization.showApplicationIcons .. ":", MineOSCore.properties.showApplicationIcons)).switch
+	settingsContextMenu:addItem(MineOSCore.localization.screenResolution).onTouch = function()
+		local container = MineOSInterface.addBackgroundContainer(MineOSInterface.mainContainer, MineOSCore.localization.screenResolution)
 
-			container.layout:addChild(GUI.label(1, 1, container.width, 1, 0xE1E1E1, MineOSCore.localization.sizeOfIcons):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP))
-
-			local iconWidthSlider = container.layout:addChild(GUI.slider(1, 1, 36, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x878787, 8, 16, MineOSCore.properties.iconWidth, false, MineOSCore.localization.byHorizontal .. ": ", ""))
-			local iconHeightSlider = container.layout:addChild(GUI.slider(1, 1, 36, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x878787, 6, 16, MineOSCore.properties.iconHeight, false, MineOSCore.localization.byVertical .. ": ", ""))
-
-			container.layout:addChild(GUI.object(1, 1, 1, 0))
-			container.layout:addChild(GUI.label(1, 1, container.width, 1, 0xE1E1E1, MineOSCore.localization.spaceBetweenIcons):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP))
-
-			local iconHorizontalSpaceBetweenSlider = container.layout:addChild(GUI.slider(1, 1, 36, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x878787, 0, 5, MineOSCore.properties.iconHorizontalSpaceBetween, false, MineOSCore.localization.byHorizontal .. ": ", ""))
-			local iconVerticalSpaceBetweenSlider = container.layout:addChild(GUI.slider(1, 1, 36, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x878787, 0, 5, MineOSCore.properties.iconVerticalSpaceBetween, false, MineOSCore.localization.byVertical .. ": ", ""))
-			
-			iconHorizontalSpaceBetweenSlider.roundValues, iconVerticalSpaceBetweenSlider.roundValues = true, true
-			iconWidthSlider.roundValues, iconHeightSlider.roundValues = true, true
-
-			iconWidthSlider.onValueChanged = function()
-				MineOSInterface.setIconProperties(math.floor(iconWidthSlider.value), math.floor(iconHeightSlider.value), MineOSCore.properties.iconHorizontalSpaceBetween, MineOSCore.properties.iconVerticalSpaceBetween)
-			end
-			iconHeightSlider.onValueChanged = iconWidthSlider.onValueChanged
-
-			iconHorizontalSpaceBetweenSlider.onValueChanged = function()
-				MineOSInterface.setIconProperties(MineOSCore.properties.iconWidth, MineOSCore.properties.iconHeight, math.floor(iconHorizontalSpaceBetweenSlider.value), math.floor(iconVerticalSpaceBetweenSlider.value))
-			end
-			iconVerticalSpaceBetweenSlider.onValueChanged = iconHorizontalSpaceBetweenSlider.onValueChanged
-
-			showExtensionSwitch.onStateChanged = function()
-				MineOSCore.properties.showExtension = showExtensionSwitch.state
-				MineOSCore.properties.showHiddenFiles = showHiddenFilesSwitch.state
-				MineOSCore.properties.showApplicationIcons = showApplicationIconsSwitch.state
-				MineOSCore.saveProperties()
-
-				computer.pushSignal("MineOSCore", "updateFileList")
-			end
-			showHiddenFilesSwitch.onStateChanged, showApplicationIconsSwitch.onStateChanged = showExtensionSwitch.onStateChanged, showExtensionSwitch.onStateChanged
+		local widthTextBox = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x878787, 0xE1E1E1, 0x2D2D2D, tostring(MineOSCore.properties.resolution and MineOSCore.properties.resolution[1] or 160), "Width", true))
+		widthTextBox.validator = function(text)
+			local number = tonumber(text)
+			if number then return number >= 1 and number <= 160 end
 		end
 
-		menu:addItem(MineOSCore.localization.dateAndTime).onTouch = function()
-			local container = MineOSInterface.addBackgroundContainer(MineOSInterface.mainContainer, MineOSCore.localization.timezone)
-			
-			local comboBox = container.layout:addChild(GUI.comboBox(1, 1, 36, 3, 0xE1E1E1, 0x2D2D2D, 0x4B4B4B, 0x969696))
-			comboBox.dropDownMenu.itemHeight = 1
-			
-			local label = container.layout:addChild(GUI.label(1, 1, container.width, 1, 0xE1E1E1, MineOSCore.localization.dateFormat):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP))
+		local heightTextBox = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x878787, 0xE1E1E1, 0x2D2D2D, tostring(MineOSCore.properties.resolution and MineOSCore.properties.resolution[2] or 50), "Height", true))
+		heightTextBox.validator = function(text)
+			local number = tonumber(text)
+			if number then return number >= 1 and number <= 50 end
+		end
 
-			local input = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x878787, 0xE1E1E1, 0x2D2D2D, MineOSCore.properties.dateFormat or ""))
-			input.onInputFinished = function()
-				MineOSCore.properties.dateFormat = input.text
+		container.panel.eventHandler = function(mainContainer, object, e1)
+			if e1 == "touch" then
+				container:remove()
+				MineOSCore.properties.resolution = {tonumber(widthTextBox.text), tonumber(heightTextBox.text)}
+				MineOSCore.saveProperties()
+				changeResolution()
+				changeWallpaper()
+				MineOSInterface.mainContainer.updateFileListAndDraw()
+			end
+		end
+	end
+
+	settingsContextMenu:addSeparator()
+
+	settingsContextMenu:addItem(MineOSCore.localization.systemLanguage).onTouch = function()
+		local container = MineOSInterface.addBackgroundContainer(MineOSInterface.mainContainer, MineOSCore.localization.systemLanguage)
+
+		local comboBox = container.layout:addChild(GUI.comboBox(1, 1, 36, 3, 0xE1E1E1, 0x2D2D2D, 0x4B4B4B, 0x969696))
+		for file in fs.list(MineOSPaths.localizationFiles) do
+			local name = fs.hideExtension(file)
+			comboBox:addItem(name).onTouch = function()
+				MineOSCore.properties.language = name
+				MineOSCore.localization = MineOSCore.getLocalization(MineOSPaths.localizationFiles)
+
+				createOSWidgets()
+				changeResolution()
+				changeWallpaper()
 				MineOSCore.OSUpdateDate()
 
-				MineOSInterface.mainContainer:drawOnScreen()
+				MineOSInterface.mainContainer.updateFileListAndDraw()
 				MineOSCore.saveProperties()
 			end
 
-			for i = -12, 12 do
-				comboBox:addItem("GMT" .. (i >= 0 and "+" or "") .. i).onTouch = function()
-					MineOSCore.properties.timezone = i
-					MineOSCore.OSUpdateTimezone(i)
-					MineOSCore.OSUpdateDate()
-
-					MineOSInterface.mainContainer:drawOnScreen()
-					MineOSCore.saveProperties()
-				end
+			if name == MineOSCore.properties.language then
+				comboBox.selectedItem = comboBox:count()
 			end
-			
+		end
+	end
+
+	settingsContextMenu:addItem(MineOSCore.localization.wallpaper).onTouch = function()
+		local container = MineOSInterface.addBackgroundContainer(MineOSInterface.mainContainer, MineOSCore.localization.wallpaper)
+
+		local filesystemChooser = container.layout:addChild(GUI.filesystemChooser(1, 1, 36, 3, 0xE1E1E1, 0x2D2D2D, 0x4B4B4B, 0x969696, MineOSCore.properties.wallpaper, MineOSCore.localization.open, MineOSCore.localization.cancel, MineOSCore.localization.wallpaperPath, "/"))
+		filesystemChooser:addExtensionFilter(".pic")
+		filesystemChooser.onSubmit = function(path)
+			MineOSCore.properties.wallpaper = path
+			MineOSCore.saveProperties()
+			changeWallpaper()
+
 			MineOSInterface.mainContainer:drawOnScreen()
 		end
 
-		menu:addSeparator()
+		local comboBox = container.layout:addChild(GUI.comboBox(1, 1, 36, 3, 0xE1E1E1, 0x2D2D2D, 0x4B4B4B, 0x969696))
+		comboBox.selectedItem = MineOSCore.properties.wallpaperMode or 1
+		comboBox:addItem(MineOSCore.localization.wallpaperModeStretch)
+		comboBox:addItem(MineOSCore.localization.wallpaperModeCenter)
 
-		menu:addItem(MineOSCore.localization.setProtectionMethod).onTouch = function()
-			setProtectionMethod()
+		local switch = container.layout:addChild(GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0xE1E1E1, MineOSCore.localization.wallpaperEnabled .. ":", MineOSCore.properties.wallpaperEnabled)).switch
+		switch.onStateChanged = function()
+			MineOSCore.properties.wallpaperEnabled = switch.state
+			MineOSCore.saveProperties()
+			changeWallpaper()
+
+			MineOSInterface.mainContainer:drawOnScreen()
+		end
+
+		container.layout:addChild(GUI.textBox(1, 1, 36, 1, nil, 0x5A5A5A, {MineOSCore.localization.wallpaperSwitchInfo}, 1, 0, 0, true, true))
+
+		local slider = container.layout:addChild(GUI.slider(1, 1, 36, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x878787, 0, 100, MineOSCore.properties.wallpaperBrightness * 100, false, MineOSCore.localization.wallpaperBrightness .. ": ", "%"))
+		slider.roundValues = true
+		slider.onValueChanged = function()
+			MineOSCore.properties.wallpaperBrightness = slider.value / 100
+			MineOSCore.saveProperties()
+			changeWallpaper()
+
+			MineOSInterface.mainContainer:drawOnScreen()
+		end
+		container.layout:addChild(GUI.object(1, 1, 1, 1))
+		
+		comboBox.onItemSelected = function()
+			MineOSCore.properties.wallpaperMode = comboBox.selectedItem
+			MineOSCore.saveProperties()
+			changeWallpaper()
+
+			MineOSInterface.mainContainer:drawOnScreen()
+		end
+	end
+
+	settingsContextMenu:addItem(MineOSCore.localization.screensaver).onTouch = function()
+		local container = MineOSInterface.addBackgroundContainer(MineOSInterface.mainContainer, MineOSCore.localization.screensaver)
+
+		local comboBox = container.layout:addChild(GUI.comboBox(1, 1, 36, 3, 0xE1E1E1, 0x2D2D2D, 0x4B4B4B, 0x969696))
+		local fileList = fs.sortedList(screensaversPath, "name", false)
+		for i = 1, #fileList do
+			comboBox:addItem(fs.hideExtension(fileList[i]))
+			if MineOSCore.properties.screensaver == fileList[i] then
+				comboBox.selectedItem = i
+			end
+		end
+		local switch = container.layout:addChild(GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0xE1E1E1, MineOSCore.localization.screensaverEnabled .. ":", MineOSCore.properties.screensaverEnabled)).switch
+		local slider = container.layout:addChild(GUI.slider(1, 1, 36, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x878787, 1, 80, MineOSCore.properties.screensaverDelay, false, MineOSCore.localization.screensaverDelay .. ": ", ""))
+
+		container.panel.eventHandler = function(mainContainer, object, e1)
+			if e1 == "touch" then
+				container:remove()
+				MineOSInterface.mainContainer:drawOnScreen()
+
+				MineOSCore.properties.screensaverEnabled = switch.state
+				MineOSCore.properties.screensaver = fileList[comboBox.selectedItem]
+				MineOSCore.properties.screensaverDelay = slider.value
+
+				MineOSCore.saveProperties()
+			end
 		end
 
 		MineOSInterface.mainContainer:drawOnScreen()
 	end
 
+	settingsContextMenu:addItem(MineOSCore.localization.colorScheme).onTouch = function()
+		local container = MineOSInterface.addBackgroundContainer(MineOSInterface.mainContainer, MineOSCore.localization.colorScheme)
+
+		local backgroundColorSelector = container.layout:addChild(GUI.colorSelector(1, 1, 36, 3, MineOSCore.properties.backgroundColor, MineOSCore.localization.backgroundColor))
+		local menuColorSelector = container.layout:addChild(GUI.colorSelector(1, 1, 36, 3, MineOSCore.properties.menuColor, MineOSCore.localization.menuColor))
+		local dockColorSelector = container.layout:addChild(GUI.colorSelector(1, 1, 36, 3, MineOSCore.properties.dockColor, MineOSCore.localization.dockColor))
+
+		local switch = container.layout:addChild(GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0xE1E1E1, MineOSCore.localization.transparencyEnabled .. ":", MineOSCore.properties.transparencyEnabled)).switch
+		switch.onStateChanged = function()
+			MineOSCore.properties.transparencyEnabled = switch.state
+			MineOSCore.saveProperties()
+			MineOSInterface.mainContainer.menu.colors.transparency = MineOSCore.properties.transparencyEnabled and menuTransparency
+			container.panel.colors.background = switch.state and GUI.BACKGROUND_CONTAINER_PANEL_COLOR or (MineOSCore.properties.backgroundColor)
+			container.panel.colors.transparency = switch.state and GUI.BACKGROUND_CONTAINER_PANEL_TRANSPARENCY
+
+			MineOSInterface.mainContainer:drawOnScreen()
+		end
+		container.layout:addChild(GUI.textBox(1, 1, 36, 1, nil, 0x5A5A5A, {MineOSCore.localization.transparencySwitchInfo}, 1, 0, 0, true, true))
+
+		backgroundColorSelector.onColorSelected = function()
+			MineOSCore.properties.backgroundColor = backgroundColorSelector.color
+			MineOSCore.properties.menuColor = menuColorSelector.color
+			MineOSCore.properties.dockColor = dockColorSelector.color
+			MineOSInterface.mainContainer.menu.colors.default.background = MineOSCore.properties.menuColor
+
+			MineOSInterface.mainContainer:drawOnScreen()
+		end
+		menuColorSelector.onColorSelected = backgroundColorSelector.onColorSelected
+		dockColorSelector.onColorSelected = backgroundColorSelector.onColorSelected
+
+		container.panel.eventHandler = function(mainContainer, object, e1)
+			if e1 == "touch" then
+				container:remove()
+				MineOSInterface.mainContainer:drawOnScreen()
+
+				MineOSCore.saveProperties()
+			end
+		end
+	end
+
+	settingsContextMenu:addItem(MineOSCore.localization.iconProperties).onTouch = function()
+		local container = MineOSInterface.addBackgroundContainer(MineOSInterface.mainContainer, MineOSCore.localization.iconProperties)
+
+		local showExtensionSwitch = container.layout:addChild(GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x878787, MineOSCore.localization.showExtension .. ":", MineOSCore.properties.showExtension)).switch
+		local showHiddenFilesSwitch = container.layout:addChild(GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x878787, MineOSCore.localization.showHiddenFiles .. ":", MineOSCore.properties.showHiddenFiles)).switch
+		local showApplicationIconsSwitch = container.layout:addChild(GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x878787, MineOSCore.localization.showApplicationIcons .. ":", MineOSCore.properties.showApplicationIcons)).switch
+
+		container.layout:addChild(GUI.label(1, 1, container.width, 1, 0xE1E1E1, MineOSCore.localization.sizeOfIcons):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP))
+
+		local iconWidthSlider = container.layout:addChild(GUI.slider(1, 1, 36, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x878787, 8, 16, MineOSCore.properties.iconWidth, false, MineOSCore.localization.byHorizontal .. ": ", ""))
+		local iconHeightSlider = container.layout:addChild(GUI.slider(1, 1, 36, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x878787, 6, 16, MineOSCore.properties.iconHeight, false, MineOSCore.localization.byVertical .. ": ", ""))
+
+		container.layout:addChild(GUI.object(1, 1, 1, 0))
+		container.layout:addChild(GUI.label(1, 1, container.width, 1, 0xE1E1E1, MineOSCore.localization.spaceBetweenIcons):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP))
+
+		local iconHorizontalSpaceBetweenSlider = container.layout:addChild(GUI.slider(1, 1, 36, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x878787, 0, 5, MineOSCore.properties.iconHorizontalSpaceBetween, false, MineOSCore.localization.byHorizontal .. ": ", ""))
+		local iconVerticalSpaceBetweenSlider = container.layout:addChild(GUI.slider(1, 1, 36, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x878787, 0, 5, MineOSCore.properties.iconVerticalSpaceBetween, false, MineOSCore.localization.byVertical .. ": ", ""))
+		
+		iconHorizontalSpaceBetweenSlider.roundValues, iconVerticalSpaceBetweenSlider.roundValues = true, true
+		iconWidthSlider.roundValues, iconHeightSlider.roundValues = true, true
+
+		iconWidthSlider.onValueChanged = function()
+			MineOSInterface.setIconProperties(math.floor(iconWidthSlider.value), math.floor(iconHeightSlider.value), MineOSCore.properties.iconHorizontalSpaceBetween, MineOSCore.properties.iconVerticalSpaceBetween)
+		end
+		iconHeightSlider.onValueChanged = iconWidthSlider.onValueChanged
+
+		iconHorizontalSpaceBetweenSlider.onValueChanged = function()
+			MineOSInterface.setIconProperties(MineOSCore.properties.iconWidth, MineOSCore.properties.iconHeight, math.floor(iconHorizontalSpaceBetweenSlider.value), math.floor(iconVerticalSpaceBetweenSlider.value))
+		end
+		iconVerticalSpaceBetweenSlider.onValueChanged = iconHorizontalSpaceBetweenSlider.onValueChanged
+
+		showExtensionSwitch.onStateChanged = function()
+			MineOSCore.properties.showExtension = showExtensionSwitch.state
+			MineOSCore.properties.showHiddenFiles = showHiddenFilesSwitch.state
+			MineOSCore.properties.showApplicationIcons = showApplicationIconsSwitch.state
+			MineOSCore.saveProperties()
+
+			computer.pushSignal("MineOSCore", "updateFileList")
+		end
+		showHiddenFilesSwitch.onStateChanged, showApplicationIconsSwitch.onStateChanged = showExtensionSwitch.onStateChanged, showExtensionSwitch.onStateChanged
+	end
+
+	settingsContextMenu:addItem(MineOSCore.localization.dateAndTime).onTouch = function()
+		local container = MineOSInterface.addBackgroundContainer(MineOSInterface.mainContainer, MineOSCore.localization.timezone)
+		
+		local comboBox = container.layout:addChild(GUI.comboBox(1, 1, 36, 3, 0xE1E1E1, 0x2D2D2D, 0x4B4B4B, 0x969696))
+		comboBox.dropDownMenu.itemHeight = 1
+		
+		local label = container.layout:addChild(GUI.label(1, 1, container.width, 1, 0xE1E1E1, MineOSCore.localization.dateFormat):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP))
+
+		local input = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x878787, 0xE1E1E1, 0x2D2D2D, MineOSCore.properties.dateFormat or ""))
+		input.onInputFinished = function()
+			MineOSCore.properties.dateFormat = input.text
+			MineOSCore.OSUpdateDate()
+
+			MineOSInterface.mainContainer:drawOnScreen()
+			MineOSCore.saveProperties()
+		end
+
+		for i = -12, 12 do
+			comboBox:addItem("GMT" .. (i >= 0 and "+" or "") .. i).onTouch = function()
+				MineOSCore.properties.timezone = i
+				MineOSCore.OSUpdateTimezone(i)
+				MineOSCore.OSUpdateDate()
+
+				MineOSInterface.mainContainer:drawOnScreen()
+				MineOSCore.saveProperties()
+			end
+		end
+		
+		MineOSInterface.mainContainer:drawOnScreen()
+	end
+
+	settingsContextMenu:addSeparator()
+
+	settingsContextMenu:addItem(MineOSCore.localization.setProtectionMethod).onTouch = function()
+		setProtectionMethod()
+	end
+	
 	MineOSInterface.mainContainer.menuLayout = MineOSInterface.mainContainer:addChild(GUI.layout(1, 1, 1, 1, 1, 1))
 	MineOSInterface.mainContainer.menuLayout:setDirection(1, 1, GUI.DIRECTION_HORIZONTAL)
 	MineOSInterface.mainContainer.menuLayout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_RIGHT, GUI.ALIGNMENT_VERTICAL_TOP)

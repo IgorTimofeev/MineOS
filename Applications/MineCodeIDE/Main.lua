@@ -1244,9 +1244,7 @@ local function toggleTopToolBar()
 	calculateSizes()
 end
 
-local function createEditOrRightClickMenu(x, y)
-	local menu = GUI.addContextMenu(mainContainer, x, y)
-	
+local function createEditOrRightClickMenu(menu)
 	menu:addItem(localization.cut, not codeView.selections[1], "^X").onTouch = function()
 		cut()
 	end
@@ -1311,14 +1309,12 @@ local function createEditOrRightClickMenu(x, y)
 	menu:addItem(localization.clearBreakpoints, not breakpointLines, "^F9").onTouch = function()
 		clearBreakpoints()
 	end
-
-	mainContainer:drawOnScreen()
 end
 
 codeView.eventHandler = function(mainContainer, object, e1, e2, e3, e4, e5)
 	if e1 == "touch" then
 		if e5 == 1 then
-			createEditOrRightClickMenu(e3, e4)
+			createEditOrRightClickMenu(GUI.addContextMenu(mainContainer, e3, e4))
 		else
 			setCursorPositionAndClearSelection(convertScreenCoordinatesToTextPosition(e3, e4))
 		end
@@ -1531,204 +1527,178 @@ leftTreeView.onItemSelected = function(path)
 	mainContainer:drawOnScreen()
 end
 
-local topMenuMineCode = topMenu:addItem("MineCode", 0x0)
-topMenuMineCode.onTouch = function()
-	local menu = GUI.addContextMenu(mainContainer, topMenuMineCode.x, topMenuMineCode.y + 1)
+local MineCodeContextMenu = topMenu:addContextMenu("MineCode", 0x0)
+MineCodeContextMenu:addItem(localization.about).onTouch = function()
+	local container = addBackgroundContainer(localization.about)
 	
-	menu:addItem(localization.about).onTouch = function()
-		local container = addBackgroundContainer(localization.about)
-		
-		local about = {
-			"MineCode IDE",
-			"Copyright © 2014-2018 ECS Inc.",
-			" ",
-			"Developers:",
-			" ",
-			"Timofeev Igor, vk.com/id7799889",
-			"Trifonov Gleb, vk.com/id88323331",
-			" ",
-			"Testers:",
-			" ",
-			"Semyonov Semyon, vk.com/id92656626",
-			"Prosin Mihail, vk.com/id75667079",
-			"Shestakov Timofey, vk.com/id113499693",
-			"Bogushevich Victoria, vk.com/id171497518",
-			"Vitvitskaya Yana, vk.com/id183425349",
-			"Golovanova Polina, vk.com/id226251826",
-		}
+	local about = {
+		"MineCode IDE",
+		"Copyright © 2014-2018 ECS Inc.",
+		" ",
+		"Developers:",
+		" ",
+		"Timofeev Igor, vk.com/id7799889",
+		"Trifonov Gleb, vk.com/id88323331",
+		" ",
+		"Testers:",
+		" ",
+		"Semyonov Semyon, vk.com/id92656626",
+		"Prosin Mihail, vk.com/id75667079",
+		"Shestakov Timofey, vk.com/id113499693",
+		"Bogushevich Victoria, vk.com/id171497518",
+		"Vitvitskaya Yana, vk.com/id183425349",
+		"Golovanova Polina, vk.com/id226251826",
+	}
 
-		local textBox = container.layout:addChild(GUI.textBox(1, 1, 36, #about, nil, 0xB4B4B4, about, 1, 0, 0, true, false))
-		textBox:setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
-		textBox.eventHandler = nil
-
-		mainContainer:drawOnScreen()
-	end
-
-	menu:addItem(localization.quit, false, "^W").onTouch = function()
-		mainContainer:stopEventHandling()
-	end
+	local textBox = container.layout:addChild(GUI.textBox(1, 1, 36, #about, nil, 0xB4B4B4, about, 1, 0, 0, true, false))
+	textBox:setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
+	textBox.eventHandler = nil
 
 	mainContainer:drawOnScreen()
 end
 
-local topMenuFile = topMenu:addItem(localization.file)
-topMenuFile.onTouch = function()
-	local menu = GUI.addContextMenu(mainContainer, topMenuFile.x, topMenuFile.y + 1)
-	
-	menu:addItem(localization.new, false, "^N").onTouch = function()
-		newFile()
-		mainContainer:drawOnScreen()
-	end
+MineCodeContextMenu:addItem(localization.quit, false, "^W").onTouch = function()
+	mainContainer:stopEventHandling()
+end
 
-	menu:addItem(localization.open, false, "^O").onTouch = function()
-		openFileWindow()
-	end
-
-	if component.isAvailable("internet") then
-		menu:addItem(localization.getFromWeb, false, "^U").onTouch = function()
-			downloadFileFromWeb()
-		end
-	end
-
-	menu:addSeparator()
-
-	menu:addItem(localization.save, not leftTreeView.selectedItem, "^S").onTouch = function()
-		saveFileWindow()
-	end
-
-	menu:addItem(localization.saveAs, false, "^⇧S").onTouch = function()
-		saveFileAsWindow()
-	end
-
-	menu:addItem(localization.launchWithArguments, false, "^F5").onTouch = function()
-		launchWithArgumentsWindow()
-	end
-
+local fileContextMenu = topMenu:addContextMenu(localization.file)
+fileContextMenu:addItem(localization.new, false, "^N").onTouch = function()
+	newFile()
 	mainContainer:drawOnScreen()
 end
 
-local topMenuEdit = topMenu:addItem(localization.edit)
-topMenuEdit.onTouch = function()
-	createEditOrRightClickMenu(topMenuEdit.x, topMenuEdit.y + 1)
+fileContextMenu:addItem(localization.open, false, "^O").onTouch = function()
+	openFileWindow()
 end
 
-local topMenuGoto = topMenu:addItem(localization.gotoCyka)
-topMenuGoto.onTouch = function()
-	local menu = GUI.addContextMenu(mainContainer, topMenuGoto.x, topMenuGoto.y + 1)
-	
-	menu:addItem(localization.pageUp, false, "PgUp").onTouch = function()
-		pageUp()
+if component.isAvailable("internet") then
+	fileContextMenu:addItem(localization.getFromWeb, false, "^U").onTouch = function()
+		downloadFileFromWeb()
 	end
-	
-	menu:addItem(localization.pageDown, false, "PgDn").onTouch = function()
-		pageDown()
-	end
-
-	menu:addItem(localization.gotoStart, false, "Home").onTouch = function()
-		setCursorPositionToHome()
-	end
-
-	menu:addItem(localization.gotoEnd, false, "End").onTouch = function()
-		setCursorPositionToEnd()
-	end
-
-	menu:addSeparator()
-
-	menu:addItem(localization.gotoLine, false, "^L").onTouch = function()
-		gotoLineWindow()
-	end
-
-	mainContainer:drawOnScreen()
 end
 
-local topMenuProperties = topMenu:addItem(localization.properties)
-topMenuProperties.onTouch = function()
-	local menu = GUI.addContextMenu(mainContainer, topMenuProperties.x, topMenuProperties.y + 1)
+fileContextMenu:addSeparator()
+
+fileContextMenu:addItem(localization.save, not leftTreeView.selectedItem, "^S").onTouch = function()
+	saveFileWindow()
+end
+
+fileContextMenu:addItem(localization.saveAs, false, "^⇧S").onTouch = function()
+	saveFileAsWindow()
+end
+
+fileContextMenu:addItem(localization.launchWithArguments, false, "^F5").onTouch = function()
+	launchWithArgumentsWindow()
+end
+
+local topMenuEdit = topMenu:addContextMenu(localization.edit)
+createEditOrRightClickMenu(topMenuEdit)
+
+local gotoContextMenu = topMenu:addContextMenu(localization.gotoCyka)
+gotoContextMenu:addItem(localization.pageUp, false, "PgUp").onTouch = function()
+	pageUp()
+end
+
+gotoContextMenu:addItem(localization.pageDown, false, "PgDn").onTouch = function()
+	pageDown()
+end
+
+gotoContextMenu:addItem(localization.gotoStart, false, "Home").onTouch = function()
+	setCursorPositionToHome()
+end
+
+gotoContextMenu:addItem(localization.gotoEnd, false, "End").onTouch = function()
+	setCursorPositionToEnd()
+end
+
+gotoContextMenu:addSeparator()
+
+gotoContextMenu:addItem(localization.gotoLine, false, "^L").onTouch = function()
+	gotoLineWindow()
+end
+
+local propertiesContextMenu = topMenu:addContextMenu(localization.properties)
+propertiesContextMenu:addItem(localization.colorScheme).onTouch = function()
+	local container = GUI.addBackgroundContainer(mainContainer, true, false, localization.colorScheme)
+				
+	local colorSelectorsCount, colorSelectorCountX = 0, 4; for key in pairs(config.syntaxColorScheme) do colorSelectorsCount = colorSelectorsCount + 1 end
+	local colorSelectorCountY = math.ceil(colorSelectorsCount / colorSelectorCountX)
+	local colorSelectorWidth, colorSelectorHeight, colorSelectorSpaceX, colorSelectorSpaceY = math.floor(container.width / colorSelectorCountX * 0.8), 3, 2, 1
 	
-	menu:addItem(localization.colorScheme).onTouch = function()
-		local container = GUI.addBackgroundContainer(mainContainer, true, false, localization.colorScheme)
-					
-		local colorSelectorsCount, colorSelectorCountX = 0, 4; for key in pairs(config.syntaxColorScheme) do colorSelectorsCount = colorSelectorsCount + 1 end
-		local colorSelectorCountY = math.ceil(colorSelectorsCount / colorSelectorCountX)
-		local colorSelectorWidth, colorSelectorHeight, colorSelectorSpaceX, colorSelectorSpaceY = math.floor(container.width / colorSelectorCountX * 0.8), 3, 2, 1
-		
-		local startX, y = math.floor(container.width / 2 - (colorSelectorCountX * (colorSelectorWidth + colorSelectorSpaceX) - colorSelectorSpaceX) / 2), math.floor(container.height / 2 - (colorSelectorCountY * (colorSelectorHeight + colorSelectorSpaceY) - colorSelectorSpaceY + 3) / 2)
-		container:addChild(GUI.label(1, y, container.width, 1, 0xFFFFFF, localization.colorScheme)):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP); y = y + 3
-		local x, counter = startX, 1
+	local startX, y = math.floor(container.width / 2 - (colorSelectorCountX * (colorSelectorWidth + colorSelectorSpaceX) - colorSelectorSpaceX) / 2), math.floor(container.height / 2 - (colorSelectorCountY * (colorSelectorHeight + colorSelectorSpaceY) - colorSelectorSpaceY + 3) / 2)
+	container:addChild(GUI.label(1, y, container.width, 1, 0xFFFFFF, localization.colorScheme)):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP); y = y + 3
+	local x, counter = startX, 1
 
-		local colors = {}
-		for key in pairs(config.syntaxColorScheme) do
-			table.insert(colors, {key})
-		end
-
-		aplhabeticalSort(colors)
-
-		for i = 1, #colors do
-			local colorSelector = container:addChild(GUI.colorSelector(x, y, colorSelectorWidth, colorSelectorHeight, config.syntaxColorScheme[colors[i][1]], colors[i][1]))
-			colorSelector.onColorSelected = function()
-				config.syntaxColorScheme[colors[i][1]] = colorSelector.color
-				GUI.LUA_SYNTAX_COLOR_SCHEME = config.syntaxColorScheme
-				saveConfig()
-			end
-
-			x, counter = x + colorSelectorWidth + colorSelectorSpaceX, counter + 1
-			if counter > colorSelectorCountX then
-				x, y, counter = startX, y + colorSelectorHeight + colorSelectorSpaceY, 1
-			end
-		end
-
-		mainContainer:drawOnScreen()
+	local colors = {}
+	for key in pairs(config.syntaxColorScheme) do
+		table.insert(colors, {key})
 	end
 
-	menu:addItem(localization.cursorProperties).onTouch = function()
-		local container = addBackgroundContainer(localization.cursorProperties)
+	aplhabeticalSort(colors)
 
-		local input = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xC3C3C3, 0x787878, 0x787878, 0xC3C3C3, 0x2D2D2D, config.cursorSymbol, localization.cursorSymbol))
-		input.onInputFinished = function()
-			if #input.text == 1 then
-				config.cursorSymbol = input.text
-				saveConfig()
-			end
-		end
-
-		local colorSelector = container.layout:addChild(GUI.colorSelector(1, 1, 36, 3, config.cursorColor, localization.cursorColor))
+	for i = 1, #colors do
+		local colorSelector = container:addChild(GUI.colorSelector(x, y, colorSelectorWidth, colorSelectorHeight, config.syntaxColorScheme[colors[i][1]], colors[i][1]))
 		colorSelector.onColorSelected = function()
-			config.cursorColor = colorSelector.color
+			config.syntaxColorScheme[colors[i][1]] = colorSelector.color
+			GUI.LUA_SYNTAX_COLOR_SCHEME = config.syntaxColorScheme
 			saveConfig()
 		end
 
-		local slider = container.layout:addChild(GUI.slider(1, 1, 36, 0xFFDB80, 0x000000, 0xFFDB40, 0xDDDDDD, 1, 1000, config.cursorBlinkDelay * 1000, false, localization.cursorBlinkDelay .. ": ", " ms"))
-		slider.onValueChanged = function()
-			config.cursorBlinkDelay = slider.value / 1000
+		x, counter = x + colorSelectorWidth + colorSelectorSpaceX, counter + 1
+		if counter > colorSelectorCountX then
+			x, y, counter = startX, y + colorSelectorHeight + colorSelectorSpaceY, 1
+		end
+	end
+
+	mainContainer:drawOnScreen()
+end
+
+propertiesContextMenu:addItem(localization.cursorProperties).onTouch = function()
+	local container = addBackgroundContainer(localization.cursorProperties)
+
+	local input = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xC3C3C3, 0x787878, 0x787878, 0xC3C3C3, 0x2D2D2D, config.cursorSymbol, localization.cursorSymbol))
+	input.onInputFinished = function()
+		if #input.text == 1 then
+			config.cursorSymbol = input.text
 			saveConfig()
 		end
-
-		mainContainer:drawOnScreen()
 	end
 
-	if topToolBar.hidden then
-		menu:addItem(localization.toggleTopToolBar).onTouch = function()
-			toggleTopToolBar()
-		end
-	end
-
-	menu:addSeparator()
-
-	menu:addItem(config.syntaxHighlight and localization.disableSyntaxHighlight or localization.enableSyntaxHighlight).onTouch = function()
-		syntaxHighlightingButton.pressed = not syntaxHighlightingButton.pressed
-		syntaxHighlightingButton.onTouch()
-	end
-
-	menu:addItem(config.enableAutoBrackets and localization.disableAutoBrackets or localization.enableAutoBrackets, false, "^]").onTouch = function()
-		config.enableAutoBrackets = not config.enableAutoBrackets
+	local colorSelector = container.layout:addChild(GUI.colorSelector(1, 1, 36, 3, config.cursorColor, localization.cursorColor))
+	colorSelector.onColorSelected = function()
+		config.cursorColor = colorSelector.color
 		saveConfig()
 	end
 
-	menu:addItem(config.enableAutocompletion and localization.disableAutocompletion or localization.enableAutocompletion, false, "^I").onTouch = function()
-		toggleEnableAutocompleteDatabase()
+	local slider = container.layout:addChild(GUI.slider(1, 1, 36, 0xFFDB80, 0x000000, 0xFFDB40, 0xDDDDDD, 1, 1000, config.cursorBlinkDelay * 1000, false, localization.cursorBlinkDelay .. ": ", " ms"))
+	slider.onValueChanged = function()
+		config.cursorBlinkDelay = slider.value / 1000
+		saveConfig()
 	end
 
 	mainContainer:drawOnScreen()
+end
+
+if topToolBar.hidden then
+	propertiesContextMenu:addItem(localization.toggleTopToolBar).onTouch = function()
+		toggleTopToolBar()
+	end
+end
+
+propertiesContextMenu:addSeparator()
+
+propertiesContextMenu:addItem(config.syntaxHighlight and localization.disableSyntaxHighlight or localization.enableSyntaxHighlight).onTouch = function()
+	syntaxHighlightingButton.pressed = not syntaxHighlightingButton.pressed
+	syntaxHighlightingButton.onTouch()
+end
+
+propertiesContextMenu:addItem(config.enableAutoBrackets and localization.disableAutoBrackets or localization.enableAutoBrackets, false, "^]").onTouch = function()
+	config.enableAutoBrackets = not config.enableAutoBrackets
+	saveConfig()
+end
+
+propertiesContextMenu:addItem(config.enableAutocompletion and localization.disableAutocompletion or localization.enableAutocompletion, false, "^I").onTouch = function()
+	toggleEnableAutocompleteDatabase()
 end
 
 leftTreeViewResizer.onResize = function(dragWidth, dragHeight)

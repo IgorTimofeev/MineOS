@@ -339,91 +339,85 @@ end
 
 mainContainer.menu:addItem("PE", 0x00B6FF)
 
-local fileItem = mainContainer.menu:addItem("File")
-fileItem.onTouch = function()
-	local menu = GUI.addContextMenu(mainContainer, fileItem.x, fileItem.y + 1)
-	
-	menu:addItem("New").onTouch = new
+local fileItem = mainContainer.menu:addContextMenu("File")
+fileItem:addItem("New").onTouch = new
 
-	menu:addSeparator()
+fileItem:addSeparator()
 
-	menu:addItem("Open").onTouch = function()
-		local filesystemDialog = GUI.addFilesystemDialog(mainContainer, true, 50, math.floor(mainContainer.height * 0.8), "Open", "Cancel", "File name", "/")
-		filesystemDialog:setMode(GUI.IO_MODE_OPEN, GUI.IO_MODE_FILE)
-		filesystemDialog:addExtensionFilter(".pic")
-		filesystemDialog:expandPath(MineOSPaths.desktop)
-		filesystemDialog:show()
+fileItem:addItem("Open").onTouch = function()
+	local filesystemDialog = GUI.addFilesystemDialog(mainContainer, true, 50, math.floor(mainContainer.height * 0.8), "Open", "Cancel", "File name", "/")
+	filesystemDialog:setMode(GUI.IO_MODE_OPEN, GUI.IO_MODE_FILE)
+	filesystemDialog:addExtensionFilter(".pic")
+	filesystemDialog:expandPath(MineOSPaths.desktop)
+	filesystemDialog:show()
 
-		filesystemDialog.onSubmit = function(path)
-			loadImage(path)
-			mainContainer:drawOnScreen()
-		end
-	end
-
-	local subMenu = menu:addSubMenu("Open recent", #config.recentFiles == 0)
-	for i = 1, #config.recentFiles do
-		subMenu:addItem(string.limit(config.recentFiles[i], 32, "left")).onTouch = function()
-			loadImage(config.recentFiles[i])
-			mainContainer:drawOnScreen()
-		end
-	end
-
-	menu:addItem("Open from URL").onTouch = function()
-		local container = MineOSInterface.addBackgroundContainer(mainContainer, "Open from URL")
-
-		local input = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x969696, 0xE1E1E1, 0x2D2D2D, "", "http://example.com/test.pic"))
-		input.onInputFinished = function()
-			if #input.text > 0 then
-				input:remove()
-				container.layout:addChild(GUI.label(1, 1, container.width, 1, 0x969696, "Downloading file..."):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP))
-				mainContainer:drawOnScreen()
-
-				local temporaryPath = MineOSCore.getTemporaryPath() .. ".pic"
-				local result, reason = web.download(input.text, temporaryPath)
-
-				container:remove()
-
-				if result then
-					loadImage(temporaryPath)
-					fs.remove(temporaryPath)
-					savePath = nil
-				else
-					GUI.alert(reason)
-				end
-
-				mainContainer:drawOnScreen()
-			end
-		end
-
+	filesystemDialog.onSubmit = function(path)
+		loadImage(path)
 		mainContainer:drawOnScreen()
 	end
+end
 
-	menu:addSeparator()
-
-	menu:addItem("Save", not savePath).onTouch = function()
-		saveImage(savePath)
+local fileItemSubMenu = fileItem:addSubMenu("Open recent", #config.recentFiles == 0)
+for i = 1, #config.recentFiles do
+	fileItemSubMenu:addItem(string.limit(config.recentFiles[i], 32, "left")).onTouch = function()
+		loadImage(config.recentFiles[i])
+		mainContainer:drawOnScreen()
 	end
+end
 
-	menu:addItem("Save as").onTouch = function()
-		local filesystemDialog = GUI.addFilesystemDialog(mainContainer, true, 50, math.floor(mainContainer.height * 0.8), "Save", "Cancel", "File name", "/")
-		filesystemDialog:setMode(GUI.IO_MODE_SAVE, GUI.IO_MODE_FILE)
-		filesystemDialog:addExtensionFilter(".pic")
-		filesystemDialog:expandPath(MineOSPaths.desktop)
-		filesystemDialog.filesystemTree.selectedItem = MineOSPaths.desktop
-		filesystemDialog:show()
+fileItem:addItem("Open from URL").onTouch = function()
+	local container = MineOSInterface.addBackgroundContainer(mainContainer, "Open from URL")
 
-		filesystemDialog.onSubmit = function(path)
-			saveImage(path)
+	local input = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x969696, 0xE1E1E1, 0x2D2D2D, "", "http://example.com/test.pic"))
+	input.onInputFinished = function()
+		if #input.text > 0 then
+			input:remove()
+			container.layout:addChild(GUI.label(1, 1, container.width, 1, 0x969696, "Downloading file..."):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP))
+			mainContainer:drawOnScreen()
+
+			local temporaryPath = MineOSCore.getTemporaryPath() .. ".pic"
+			local result, reason = web.download(input.text, temporaryPath)
+
+			container:remove()
+
+			if result then
+				loadImage(temporaryPath)
+				fs.remove(temporaryPath)
+				savePath = nil
+			else
+				GUI.alert(reason)
+			end
+
+			mainContainer:drawOnScreen()
 		end
-	end
-
-	menu:addSeparator()
-
-	menu:addItem("Exit").onTouch = function()
-		mainContainer:stopEventHandling()
 	end
 
 	mainContainer:drawOnScreen()
+end
+
+fileItem:addSeparator()
+
+fileItem:addItem("Save", not savePath).onTouch = function()
+	saveImage(savePath)
+end
+
+fileItem:addItem("Save as").onTouch = function()
+	local filesystemDialog = GUI.addFilesystemDialog(mainContainer, true, 50, math.floor(mainContainer.height * 0.8), "Save", "Cancel", "File name", "/")
+	filesystemDialog:setMode(GUI.IO_MODE_SAVE, GUI.IO_MODE_FILE)
+	filesystemDialog:addExtensionFilter(".pic")
+	filesystemDialog:expandPath(MineOSPaths.desktop)
+	filesystemDialog.filesystemTree.selectedItem = MineOSPaths.desktop
+	filesystemDialog:show()
+
+	filesystemDialog.onSubmit = function(path)
+		saveImage(path)
+	end
+end
+
+fileItem:addSeparator()
+
+fileItem:addItem("Exit").onTouch = function()
+	mainContainer:stopEventHandling()
 end
 
 mainContainer.menu:addItem("View").onTouch = function()
