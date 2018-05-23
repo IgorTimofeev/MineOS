@@ -20,12 +20,12 @@ local MineOSInterface = require("MineOSInterface")
 
 local dockTransparency = 0.4
 
-local computerUptimeOnBoot = computer.uptime()
-local computerDateUptime = computerUptimeOnBoot
 local realTimestamp
+local bootUptime = computer.uptime()
+local dateUptime = bootUptime
+local screensaverUptime = bootUptime
 local timezoneCorrection
 local screensaversPath = MineOSPaths.system .. "Screensavers/"
-local screensaverUptime = computerUptimeOnBoot
 
 ---------------------------------------- Система защиты пекарни ----------------------------------------
 
@@ -521,7 +521,7 @@ local function createOSWidgets()
 		
 		local lines = {
 			"MineOS",
-			"Copyright © 2014-" .. os.date("%Y", realTimestamp),
+			"Copyright © 2014-" .. os.date("%Y", MineOSCore.time),
 			" ",
 			"Developers:",
 			" ",
@@ -778,7 +778,7 @@ local function createOSWidgets()
 				createOSWidgets()
 				changeResolution()
 				changeWallpaper()
-				MineOSCore.OSUpdateDate()
+				MineOSCore.updateTime()
 
 				MineOSInterface.mainContainer.updateFileListAndDraw()
 				MineOSCore.saveProperties()
@@ -962,7 +962,7 @@ local function createOSWidgets()
 		local input = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x878787, 0xE1E1E1, 0x2D2D2D, MineOSCore.properties.dateFormat or ""))
 		input.onInputFinished = function()
 			MineOSCore.properties.dateFormat = input.text
-			MineOSCore.OSUpdateDate()
+			MineOSCore.updateTime()
 
 			MineOSInterface.mainContainer:drawOnScreen()
 			MineOSCore.saveProperties()
@@ -971,8 +971,7 @@ local function createOSWidgets()
 		for i = -12, 12 do
 			comboBox:addItem("GMT" .. (i >= 0 and "+" or "") .. i).onTouch = function()
 				MineOSCore.properties.timezone = i
-				MineOSCore.OSUpdateTimezone(i)
-				MineOSCore.OSUpdateDate()
+				MineOSCore.updateTimezone(i)
 
 				MineOSInterface.mainContainer:drawOnScreen()
 				MineOSCore.saveProperties()
@@ -1030,23 +1029,10 @@ local function createOSWidgets()
 		end
 	end
 
-	MineOSCore.OSUpdateTimezone = function(timezone)
-		timezoneCorrection = timezone * 3600
-	end
+	MineOSCore.updateTime = function()
+		MineOSCore.time = realTimestamp + computer.uptime() - bootUptime + timezoneCorrection
 
-	MineOSCore.OSUpdateDate = function()
-		if not realTimestamp then
-			local name = MineOSPaths.system .. "/Timestamp.tmp"
-			local file = io.open(name, "w")
-			file:close()
-			realTimestamp = math.floor(fs.lastModified(name) / 1000)
-			fs.remove(name)
-		end
-
-		dateWidgetText = os.date(
-			MineOSCore.properties.dateFormat,
-			realTimestamp + computerDateUptime - computerUptimeOnBoot + timezoneCorrection
-		)
+		dateWidgetText = os.date(MineOSCore.properties.dateFormat, MineOSCore.time)
 		dateWidget.width = unicode.len(dateWidgetText)
 
 		batteryWidgetPercent = computer.energy() / computer.maxEnergy()
@@ -1058,6 +1044,11 @@ local function createOSWidgets()
 
 		local totalMemory = computer.totalMemory()
 		RAMPercent = (totalMemory - computer.freeMemory()) / totalMemory
+	end
+
+	MineOSCore.updateTimezone = function(timezone)
+		timezoneCorrection = timezone * 3600
+		MineOSCore.updateTime()
 	end
 
 	MineOSInterface.mainContainer.updateFileListAndDraw = function(...)
@@ -1110,10 +1101,10 @@ local function createOSWidgets()
 			end
 		end
 
-		if computer.uptime() - computerDateUptime >= 1 then
-			MineOSCore.OSUpdateDate()
+		if computer.uptime() - dateUptime >= 1 then
+			MineOSCore.updateTime()
 			MineOSInterface.mainContainer:drawOnScreen()
-			computerDateUptime = computer.uptime()
+			dateUptime = computer.uptime()
 		end
 
 		if MineOSCore.properties.screensaverEnabled then
@@ -1121,7 +1112,7 @@ local function createOSWidgets()
 				screensaverUptime = computer.uptime()
 			end
 
-			if computerDateUptime - screensaverUptime >= MineOSCore.properties.screensaverDelay then
+			if dateUptime - screensaverUptime >= MineOSCore.properties.screensaverDelay then
 				if fs.exists(screensaversPath .. MineOSCore.properties.screensaver) then
 					MineOSInterface.safeLaunch(screensaversPath .. MineOSCore.properties.screensaver)
 					MineOSInterface.mainContainer:drawOnScreen(true)
@@ -1139,13 +1130,20 @@ local function createOSWindow()
 	createOSWidgets()
 	changeResolution()
 	changeWallpaper()
-	MineOSCore.OSUpdateTimezone(MineOSCore.properties.timezone)
-	MineOSCore.OSUpdateDate()
+	MineOSCore.updateTimezone(MineOSCore.properties.timezone)
 end
 
 ---------------------------------------- Сама ОС ----------------------------------------
 
 MineOSCore.localization = MineOSCore.getLocalization(MineOSPaths.localizationFiles)
+
+if not MineOSCore.time then
+	local name = MineOSPaths.system .. "/Timestamp.tmp"
+	local file = io.open(name, "w")
+	file:close()
+	realTimestamp = math.floor(fs.lastModified(name) / 1000)
+	fs.remove(name)
+end
 
 createOSWindow()
 login()
