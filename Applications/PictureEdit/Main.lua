@@ -122,9 +122,9 @@ mainContainer.image = mainContainer:addChild(GUI.object(1, 1, 1, 1))
 mainContainer.image.data = {}
 
 local function onToolTouch(index)
-	tool = mainContainer.toolsList.itemsLayout.children[index].tool
+	tool = mainContainer.toolsList:getItem(index).tool
 	
-	mainContainer.toolsList:select(index)
+	mainContainer.toolsList.selectedItem = index
 	mainContainer.currentToolOverlay:removeChildren()
 	mainContainer.currentToolLayout:removeChildren()
 
@@ -255,8 +255,8 @@ mainContainer.image.eventHandler = function(mainContainer, object, e1, e2, e3, e
 		elseif e4 == 45 then
 			swapColors()
 		else
-			for i = 1, #mainContainer.toolsList.itemsLayout.children do
-				if e4 == mainContainer.toolsList.itemsLayout.children[i].tool.keyCode then
+			for i = 1, mainContainer.toolsList:count() do
+				if e4 == mainContainer.toolsList:getItem(i).tool.keyCode then
 					onToolTouch(i)
 					return
 				end

@@ -663,7 +663,7 @@ newApplicationPreview = function(x, y, publication)
 end
 
 mainMenu = function(menuID, messageToUser)
-	window.tabBar:select(1)
+	window.tabBar.selectedItem = 1
 	lastMethod, lastArguments = mainMenu, {menuID, messageToUser}
 
 	contentContainer:removeChildren()
@@ -1717,7 +1717,7 @@ editPublication = function(initialPublication, initialCategoryID)
 		})
 
 		if success then
-			window.tabBar:select(categoryComboBox.selectedItem + 1)
+			window.tabBar.selectedItem = categoryComboBox.selectedItem + 1
 			
 			if initialPublication then
 				newPublicationInfo(initialPublication.file_id)
@@ -1969,7 +1969,7 @@ loadConfig()
 
 if args[1] == "updates" then
 	lastMethod, lastArguments = updateFileList, {nil, true}
-	window.tabBar:select(#categories + 2)
+	window.tabBar.selectedItem = #categories + 2
 else
 	lastMethod, lastArguments = mainMenu, {1}
 end
