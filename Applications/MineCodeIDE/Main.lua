@@ -979,12 +979,17 @@ local function selectAndPasteColor()
 		startColor = tonumber(unicode.sub(lines[codeView.selections[1].from.line], codeView.selections[1].from.symbol, codeView.selections[1].to.symbol)) or startColor
 	end
 
-	local palette = mainContainer:addChild(GUI.addPalette(1, 1, startColor))
+	local palette = mainContainer:addChild(GUI.palette(1, 1, startColor))
 	palette.localX, palette.localY = math.floor(mainContainer.width / 2 - palette.width / 2), math.floor(mainContainer.height / 2 - palette.height / 2)
+
+	palette.cancelButton.onTouch = function()
+		palette:remove()
+		mainContainer:drawOnScreen()
+	end
 
 	palette.submitButton.onTouch = function()
 		paste(string.format("0x%06X", palette.color.integer), true)
-		mainContainer:drawOnScreen()
+		palette.cancelButton.onTouch()
 	end
 end
 
