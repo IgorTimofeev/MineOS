@@ -1248,6 +1248,9 @@ local function GUICopy(parentContainer, fileList, toPath)
 	container.panel.eventHandler = nil
 
 	local buttonsLayout = container.layout:addChild(GUI.layout(1, 1, 1, 1, 1, 1))
+	buttonsLayout:setDirection(1, 1, GUI.DIRECTION_HORIZONTAL)
+	buttonsLayout:setSpacing(1, 1, 2)
+
 	buttonsLayout:addChild(GUI.button(1, 1, 11, 1, 0xE1E1E1, 0x2D2D2D, 0xA5A5A5, 0x2D2D2D, MineOSCore.localization.yes)).onTouch = function()
 		applyYes = true
 		parentContainer:stopEventHandling()
@@ -1259,9 +1262,6 @@ local function GUICopy(parentContainer, fileList, toPath)
 		breakRecursion = true
 		parentContainer:stopEventHandling()
 	end
-	buttonsLayout:setDirection(1, 1, GUI.DIRECTION_HORIZONTAL)
-	buttonsLayout:setSpacing(1, 1, 2)
-	buttonsLayout:fitToChildrenSize(1, 1)
 
 	local function copyOrMove(path, finalPath)
 		switchAndLabel.hidden = true
@@ -1270,7 +1270,7 @@ local function GUICopy(parentContainer, fileList, toPath)
 		textBox.lines = {
 			MineOSCore.localization.copying .. " " .. MineOSCore.localization.faylaBlyad .. " " .. fs.name(path) .. " " .. MineOSCore.localization.toDirectory .. " " .. string.canonicalPath(toPath),
 		}
-		textBox.height = #textBox.lines
+		textBox:update()
 
 		parentContainer:drawOnScreen()
 
@@ -1301,7 +1301,7 @@ local function GUICopy(parentContainer, fileList, toPath)
 						MineOSCore.localization.file .. " " .. fs.name(path) .. " " .. MineOSCore.localization.alreadyExists .. " " ..  MineOSCore.localization.inDirectory .. " " .. string.canonicalPath(toPath),
 						MineOSCore.localization.needReplace,
 					}
-					textBox.height = #textBox.lines
+					textBox:update()
 
 					parentContainer:drawOnScreen()
 					parentContainer:startEventHandling()
