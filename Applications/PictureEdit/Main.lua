@@ -27,6 +27,7 @@ local resourcesPath = MineOSCore.getCurrentScriptDirectory()
 local toolsPath = resourcesPath .. "Tools/"
 local configPath = MineOSPaths.applicationData .. "Picture Edit/Config2.cfg"
 local savePath
+local saveItem
 local tool
 
 --------------------------------------------------------------------
@@ -281,7 +282,7 @@ mainContainer.image.reposition = function()
 end
 
 local function newNoGUI(width, height)
-	savePath = nil
+	savePath, saveItem.disabled = nil, true
 	mainContainer.image.data = {width, height, {}, {}, {}, {}}
 	mainContainer.image.reposition()	
 	
@@ -318,7 +319,7 @@ end
 local function loadImage(path)
 	local result, reason = image.load(path)
 	if result then
-		savePath = path
+		savePath, saveItem.disabled = path, false
 		addRecentFile(path)
 		mainContainer.image.data = result
 		mainContainer.image.reposition()
@@ -330,7 +331,7 @@ end
 local function saveImage(path)
 	local result, reason = image.save(path, mainContainer.image.data, 6)
 	if result then
-		savePath = path
+		savePath, saveItem.disabled = path, false
 		addRecentFile(path)
 	else
 		GUI.alert(reason)
@@ -383,7 +384,7 @@ fileItem:addItem("Open from URL").onTouch = function()
 			if result then
 				loadImage(temporaryPath)
 				fs.remove(temporaryPath)
-				savePath = nil
+				savePath, saveItem.disabled = nil, true
 			else
 				GUI.alert(reason)
 			end
@@ -397,7 +398,8 @@ end
 
 fileItem:addSeparator()
 
-fileItem:addItem("Save", not savePath).onTouch = function()
+saveItem = fileItem:addItem("Save")
+saveItem.onTouch = function()
 	saveImage(savePath)
 end
 
