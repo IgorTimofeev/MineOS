@@ -40,7 +40,7 @@ local colorScheme = {
 	myMessageSender = 0x2D2D2D,
 	myMessageText = 0x969696,
 	otherMessageSender = 0x2D2D2D,
-	otherMessageText = 0x5A5A5A,
+	otherMessageText = 0x696969,
 	channelDataMessageSender = 0x696969,
 	channelDataMessageText = 0xB4B4B4,
 }
@@ -75,7 +75,7 @@ end
 
 -------------------------------------------------------------------------------
 
-local mainContainer, window = MineOSInterface.addWindow(GUI.filledWindow(1, 1, 110, 27, 0x2D2D2D))
+local mainContainer, window = MineOSInterface.addWindow(GUI.filledWindow(1, 1, 110, 27, 0xE1E1E1))
 
 local leftPanel = window:addChild(GUI.panel(1, 1, 20, 1, 0x2D2D2D))
 local leftLayout = window:addChild(GUI.layout(1, 4, leftPanel.width, 1, 1, 1))
@@ -121,7 +121,7 @@ chatInputLayout:setSpacing(1, 1, 0)
 local chatInput = chatInputLayout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0xA5A5A5, 0xE1E1E1, 0x2D2D2D, "", "Type message here"))
 chatInput.historyEnabled = true
 
-local chatComboBox = chatInputLayout:addChild(GUI.comboBox(1, 1, 14, 3, 0xD2D2D2, 0x696969, 0xC3C3C3, 0x969696))
+local chatComboBox = chatInputLayout:addChild(GUI.comboBox(1, 1, 14, 3, 0xD2D2D2, 0x4B4B4B, 0xD2D2D2, 0x969696))
 chatComboBox.dropDownMenu.itemHeight = 1
 chatComboBox:addItem("/msg")
 chatComboBox:addItem("/me")
@@ -163,6 +163,10 @@ end
 
 local function saveConfig()
 	table.toFile(configPath, config)
+end
+
+local function saveHistory()
+	table.toFile(historyPath, history)
 end
 
 local function socketWrite(data)
@@ -282,7 +286,7 @@ local function addChatMessage(conversationName, text, sender)
 		addContactItemToList(conversationName)
 	end
 
-	text = text:gsub("\\", "\\\\"):gsub("\"", "\\\""):gsub("\'", "\\\'"):gsub("[\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0A\x0B\x0C\x0D\x0E\x0F\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1A\x1B\x1C\x1D\x1E\x1F]+", "")
+	text = text:gsub("[\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0A\x0B\x0C\x0D\x0E\x0F\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1A\x1B\x1C\x1D\x1E\x1F]+", "")
 
 	local message = {
 		text = text,
@@ -451,18 +455,35 @@ end
 addScrollEventHandler(leftLayout)
 addScrollEventHandler(rightLayout)
 
+local function selectItem(item)
+	selectedItem = item
+	item.parent.selectedItem = item:indexOf()
+	item.onTouch()
+end
+
+local function userButtonOnTouch(mainContainer, object)
+	local text = object.text:gsub("^[@+]", "")
+	if history[text] then
+		selectItem(getItemByText(text))
+	else
+		selectItem(addContactItemToList(text))
+	end
+
+	saveHistory()
+end
+
 local function updateUsersLayoutFromList()
 	rightLayout:removeChildren()
 
 	local function addCategory(field, name)
 		if #channelUsersList[field] > 0 then
 			rightLayout:addChild(GUI.object(1, 1, 1, 1))
-			rightLayout:addChild(GUI.text(1, 1, 0xE1E1E1, name)).height = 2
+			rightLayout:addChild(GUI.text(1, 1, 0x5A5A5A, name)).height = 2
 
 			table.sort(channelUsersList[field], function(a, b) return unicode.lower(a) < unicode.lower(b) end)
 
 			for i = 1, #channelUsersList[field] do
-				rightLayout:addChild(GUI.adaptiveButton(1, 1, 0, 0, nil, 0x787878, nil, 0x4B4B4B, channelUsersList[field][i]))
+				rightLayout:addChild(GUI.adaptiveButton(1, 1, 0, 0, nil, 0x969696, nil, 0x2D2D2D, channelUsersList[field][i])).onTouch = userButtonOnTouch
 			end
 		end
 	end
@@ -495,12 +516,6 @@ local function removeUserFromList(name)
 			end
 		end
 	end
-end
-
-local function selectItem(item)
-	selectedItem = item
-	item.parent.selectedItem = item:indexOf()
-	item.onTouch()
 end
 
 local oldUptime = 0
@@ -689,6 +704,7 @@ contactAddButton.onTouch = function()
 	backgroundLayout:addChild(addContactSubmitButton)
 
 	mainContainer:drawOnScreen()
+	saveHistory()
 end
 
 addContactSubmitButton.onTouch = function()
@@ -715,7 +731,7 @@ contactRemoveButton.onTouch = function()
 	updateLeftLayout()
 
 	mainContainer:drawOnScreen()
-	saveConfig()
+	saveHistory()
 end
 
 loginPasswordSwitchAndLabel.switch.onStateChanged = function()
@@ -756,10 +772,15 @@ window.close = function(...)
 	end
 	overrideWindowClose(...)
 	
-	-- for key in pairs(history) do
-	-- 	history[key] = {}
-	-- end
-	table.toFile(historyPath, history)
+	for key in pairs(history) do
+		for i = 1, #history[key] do
+			history[key][i].text = history[key][i].text:gsub("\\", "\\\\")
+			history[key][i].text = history[key][i].text:gsub("\"", "\\\"")
+			history[key][i].text = history[key][i].text:gsub("\'", "\\\'")
+		end
+	end
+
+	saveHistory()
 end
 
 -------------------------------------------------------------------------------
