@@ -1137,13 +1137,11 @@ end
 
 MineOSCore.localization = MineOSCore.getLocalization(MineOSPaths.localizationFiles)
 
-if not MineOSCore.time then
-	local name = MineOSPaths.system .. "/Timestamp.tmp"
-	local file = io.open(name, "w")
-	file:close()
-	realTimestamp = math.floor(fs.lastModified(name) / 1000)
-	fs.remove(name)
-end
+local name = MineOSPaths.system .. "/Timestamp.tmp"
+local file = io.open(name, "w")
+file:close()
+realTimestamp = math.floor(fs.lastModified(name) / 1000)
+fs.remove(name)
 
 createOSWindow()
 login()
