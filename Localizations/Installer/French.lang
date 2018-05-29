@@ -1,6 +1,5 @@
 {
-	fullInstallation = "Installation complète",
-	installSomeApps = "Installer quelques apps",
+	installSomeApps = "Installer apps",
 	installWallpapers = "Télécharger les fonds d'écran",
 	downloading = "Téléchargement de",
 	reboot = "Redémarrer",

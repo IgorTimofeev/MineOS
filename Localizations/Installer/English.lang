@@ -1,6 +1,5 @@
 {
-	fullInstallation = "Full installation",
-	installSomeApps = "Install some apps",
+	installSomeApps = "Install apps",
 	installWallpapers = "Download wallpapers",
 	downloading = "Downloading",
 	reboot = "Reboot",

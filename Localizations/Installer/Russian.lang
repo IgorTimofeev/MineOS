@@ -1,6 +1,5 @@
 {
-	fullInstallation = "Полная установка",
-	installSomeApps = "Установить некоторые приложения",
+	installSomeApps = "Установить приложения",
 	installWallpapers = "Загрузить обои",
 	downloading = "Загрузка",
 	reboot = "Перезагрузить",
