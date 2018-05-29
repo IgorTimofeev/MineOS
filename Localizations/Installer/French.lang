@@ -1,6 +1,6 @@
 {
-	installSomeApps = "Installer apps",
-	installWallpapers = "Télécharger les fonds d'écran",
+	installSomeApps = "Télécharger apps",
+	installWallpapers = "Télécharger des photos",
 	downloading = "Téléchargement de",
 	reboot = "Redémarrer",
 	needToReboot = "MineOS a été installé avec succès",
