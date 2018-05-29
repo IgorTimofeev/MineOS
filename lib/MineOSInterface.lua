@@ -116,10 +116,10 @@ local function iconDraw(icon)
 		if icon.cut then
 			if not icon.semiTransparentImage then
 				icon.semiTransparentImage = image.copy(icon.image)
-				for i = 3, #icon.semiTransparentImage, 4 do
-					icon.semiTransparentImage[i + 2] = icon.semiTransparentImage[i + 2] + 0.6
-					if icon.semiTransparentImage[i + 2] > 1 then
-						icon.semiTransparentImage[i + 2] = 1
+				for i = 1, #icon.semiTransparentImage[3] do
+					icon.semiTransparentImage[5][i] = icon.semiTransparentImage[5][i] + 0.6
+					if icon.semiTransparentImage[5][i] > 1 then
+						icon.semiTransparentImage[5][i] = 1
 					end
 				end
 			end
