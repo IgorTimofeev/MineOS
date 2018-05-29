@@ -266,7 +266,7 @@ function MineOSCore.safeLaunch(path, ...)
 			finalSuccess, finalPath, finalLine, finalTraceback = false, path, tonumber(match) or 1, loadReason
 		end
 	else
-		require("GUI").error("Failed to safely launch file that doesn't exists: \"" .. path .. "\"")
+		require("GUI").alert("Failed to safely launch file that doesn't exists: \"" .. path .. "\"")
 	end
 
 	component.screen.setPrecise(false)
