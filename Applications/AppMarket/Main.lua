@@ -408,7 +408,6 @@ local function download(publication)
 
 	if publication then
 		local container = MineOSInterface.addBackgroundContainer(MineOSInterface.mainContainer, localization.choosePath)
-		container.layout:setFitting(2, 1, false, false)
 
 		local filesystemChooserPath = fileVersions[publication.file_id] and getApplicationPathFromVersions(fileVersions[publication.file_id].path)
 		if not filesystemChooserPath then
@@ -1299,7 +1298,6 @@ newPublicationInfo = function(file_id)
 
 					buttonsLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 1, 0, 0xA5A5A5, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, existingReviewText and localization.changeReview or localization.writeReview)).onTouch = function()
 						local container = MineOSInterface.addBackgroundContainer(window, existingReviewText and localization.changeReview or localization.writeReview)
-						container.layout:setFitting(2, 1, false, false)
 
 						local input = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xFFFFFF, 0x696969, 0xB4B4B4, 0xFFFFFF, 0x2D2D2D, existingReviewText or "", localization.writeReviewHere))
 						
@@ -1610,8 +1608,6 @@ editPublication = function(initialPublication, initialCategoryID)
 	dependenciesLayout.addButton.onTouch = function()
 		local container = MineOSInterface.addBackgroundContainer(MineOSInterface.mainContainer, localization.addDependency)
 		
-		container.layout:setFitting(2, 1, false, false)
-
 		local dependencyTypeComboBox = container.layout:addChild(GUI.comboBox(1, 1, 36, 3, 0xFFFFFF, 0x696969, 0x969696, 0xE1E1E1))
 		dependencyTypeComboBox:addItem(localization.fileByURL)
 		dependencyTypeComboBox:addItem(localization.existingPublication)
@@ -1784,7 +1780,6 @@ updateFileList = function(category_id, updates)
 				if #result > 0 then
 					layout:addChild(GUI.adaptiveRoundedButton(1, 1, 2, 0, 0x696969, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.updateAll)).onTouch = function()
 						local container = MineOSInterface.addBackgroundContainer(MineOSInterface.mainContainer, "")
-						container.layout:setFitting(2, 1, false, false)
 
 						local progressBar = container.layout:addChild(GUI.progressBar(1, 1, 40, 0x66DB80, 0x0, 0xE1E1E1, 0, true, true, "", "%"))
 
