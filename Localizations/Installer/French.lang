@@ -1,6 +1,6 @@
 {
 	fullInstallation = "Installation complète",
-	mustHaveInstallation = "Installer uniquement les applications indispensables",
+	installSomeApps = "Installer quelques apps",
 	installWallpapers = "Télécharger les fonds d'écran",
 	downloading = "Téléchargement de",
 	reboot = "Redémarrer",

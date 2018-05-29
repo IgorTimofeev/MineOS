@@ -1,6 +1,6 @@
 {
 	fullInstallation = "Full installation",
-	mustHaveInstallation = "Install only must-have apps",
+	installSomeApps = "Install some apps",
 	installWallpapers = "Download wallpapers",
 	downloading = "Downloading",
 	reboot = "Reboot",
