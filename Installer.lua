@@ -200,17 +200,22 @@ end
 
 ------------------------------------------------------------------------------------------------------------------------------------
 
+local stageSwitchWidth = 8
+
 local function addSwitchToStage(x, y, color, text, state)
-	stageContainer:addChild(GUI.text(math.floor(x + 4 - unicode.len(text) / 2), y + 1, 0x555555, text))
-	return stageContainer:addChild(GUI.switch(x, y, 8, color, 0xAAAAAA, 0xFFFFFF, state))
+	stageContainer:addChild(GUI.text(math.floor(x + stageSwitchWidth / 2 - unicode.len(text) / 2), y + 2, 0x555555, text))
+	return stageContainer:addChild(GUI.switch(x, y, stageSwitchWidth, color, 0xAAAAAA, 0xFFFFFF, state))
 end
 
 stages[2] = function()
 	addButtonsToStage()
 	stageContainer:addChild(GUI.image(1, 1, images.OS))
-	local x = math.floor(stageContainer.width / 2)
-	stageContainer.downloadWallpapersSwitch = addSwitchToStage(x - 13, 22, 0xFF4940, localization.installWallpapers, true)
-	stageContainer.flashEEPROMSwitch = addSwitchToStage(x + 6, 22, 0x3392FF, localization.flashEEPROM, true)
+
+	local spacing = math.max(unicode.len(localization.installSomeApps), unicode.len(localization.installWallpapers), unicode.len(localization.flashEEPROM)) + 2
+
+	stageContainer.installSomeAppsSwitch = addSwitchToStage(math.floor(stageContainer.width / 2 - spacing - stageSwitchWidth / 2), 22, 0xFF4940, localization.installSomeApps, true)
+	stageContainer.downloadWallpapersSwitch = addSwitchToStage(math.floor(stageContainer.width / 2 - stageSwitchWidth / 2), 22, 0x3392FF, localization.installWallpapers, true)
+	stageContainer.flashEEPROMSwitch = addSwitchToStage(math.floor(stageContainer.width / 2 + spacing - stageSwitchWidth / 2), 22, 0x33FF80, localization.flashEEPROM, true)
 end
 
 ------------------------------------------------------------------------------------------------------------------------------------
@@ -237,7 +242,7 @@ stages[4] = function()
 
 	local width = 62
 	local x = math.floor(stageContainer.width / 2 - width / 2)
-	local progressBar = stageContainer:addChild(GUI.progressBar(x, y, width, 0x3392FF, 0xBBBBBB, 0x555555, 0, true, false))
+	local progressBar = stageContainer:addChild(GUI.progressBar(x, y, width, 0x3392FF, 0xCCCCCC, 0x555555, 0, true, false))
 	local fileLabel = stageContainer:addChild(GUI.label(x, y + 1, width, 1, 0x666666, ""))
 
 	if stageContainer.downloadWallpapersSwitch.state then
@@ -252,14 +257,27 @@ stages[4] = function()
 		applicationList.localizations[i] = nil
 	end
 
+	if stageContainer.installSomeAppsSwitch.state then
+		for i = 1, #applicationList.optional do
+			table.insert(applicationList.duringInstall, applicationList.optional[i])
+			applicationList.optional[i] = nil
+		end
+	end
+
 	for i = 1, #applicationList.duringInstall do
-		fileLabel.text = localization.downloading .. " " .. string.limit(applicationList.duringInstall[i].path, width - unicode.len(localization.downloading) - 1, "center")
+		fileLabel.text = localization.downloading .. " " .. string.limit(applicationList.duringInstall[i].path, width - unicode.len(localization.downloading) - 1, "left")
 		progressBar.value = math.round(i / #applicationList.duringInstall * 100)
 
 		mainContainer:draw()
 		buffer.drawChanges()
 
 		web.download(applicationList.duringInstall[i].url, applicationList.duringInstall[i].path)
+		
+		if applicationList.duringInstall[i].createShortcut then
+			local path = fs.path(applicationList.duringInstall[i].path)
+			MineOSCore.createShortcut(MineOSPaths.desktop .. fs.hideExtension(fs.name(path)) .. ".lnk", path)
+		end
+
 		storeFileVersion(applicationList.duringInstall[i])
 	end
 
