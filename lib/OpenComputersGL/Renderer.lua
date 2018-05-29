@@ -202,7 +202,7 @@ local function fillTexturedPart(firstZ, secondZ, x1Screen, x2Screen, z1Screen, z
 	local u, uStep = u1Texture, (u2Texture - u1Texture) / (x2Screen - x1Screen)
 	local v, vStep = v1Texture, (v2Texture - v1Texture) / (x2Screen - x1Screen)
 
-	-- buffer.text(1, 1, 0xFF00FF, "GOVNO: " .. math.abs(renderer.viewport.projectionSurface / z))
+	-- buffer.drawText(1, 1, 0xFF00FF, "GOVNO: " .. math.abs(renderer.viewport.projectionSurface / z))
 
 	local color, uVal, vVal
 	for x = math.floor(x1Screen), math.floor(x2Screen) do
@@ -246,7 +246,7 @@ function renderer.renderTexturedTriangle(points, texture)
 	end
 
 	-- for i = 1, 3 do
-	-- 	buffer.text(math.floor(points[i][1]), math.floor(points[i][2]), 0xFFFFFF, "ID " .. i .. ": u = " ..  points[i][4] .. ", v = " .. points[topID][5])
+	-- 	buffer.drawText(math.floor(points[i][1]), math.floor(points[i][2]), 0xFFFFFF, "ID " .. i .. ": u = " ..  points[i][4] .. ", v = " .. points[topID][5])
 	-- end
 end
 
@@ -285,19 +285,19 @@ end
 local function drawSegments(x, y, segments, color)
 	for i = 1, #segments do
 		if segments[i] == 1 then
-			buffer.semiPixelSquare(x, y, 3, 1, color)
+			buffer.drawSemiPixelRectangle(x, y, 3, 1, color)
 		elseif segments[i] == 2 then
-			buffer.semiPixelSquare(x + 2, y, 1, 3, color)
+			buffer.drawSemiPixelRectangle(x + 2, y, 1, 3, color)
 		elseif segments[i] == 3 then
-			buffer.semiPixelSquare(x + 2, y + 2, 1, 3, color)
+			buffer.drawSemiPixelRectangle(x + 2, y + 2, 1, 3, color)
 		elseif segments[i] == 4 then
-			buffer.semiPixelSquare(x, y + 4, 3, 1, color)
+			buffer.drawSemiPixelRectangle(x, y + 4, 3, 1, color)
 		elseif segments[i] == 5 then
-			buffer.semiPixelSquare(x, y + 2, 1, 3, color)
+			buffer.drawSemiPixelRectangle(x, y + 2, 1, 3, color)
 		elseif segments[i] == 6 then
-			buffer.semiPixelSquare(x, y, 1, 3, color)
+			buffer.drawSemiPixelRectangle(x, y, 1, 3, color)
 		elseif segments[i] == 7 then
-			buffer.semiPixelSquare(x, y + 2, 3, 1, color)
+			buffer.drawSemiPixelRectangle(x, y + 2, 3, 1, color)
 		else
 			error("Че за говно ты сюда напихал? Переделывай!")
 		end
@@ -341,7 +341,7 @@ end
 -- 	{52, 52, 1, 16, 16},
 -- }, texture)
 
--- buffer.draw(true)
+-- buffer.drawChanges(true)
 
 ------------------------------------------------------------------------------------------------------------------------
 

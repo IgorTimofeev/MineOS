@@ -498,7 +498,7 @@ function meowEngine.intro(vector3Position, size)
 		scene.camera:lookAt(0, 0, 0)
 		scene:render()
 		if scene.camera.position[1] < to then buffer.clear(0x0, transparency) end
-		buffer.draw()
+		buffer.drawChanges()
 
 		transparency = transparency + transparencyStep
 		-- ecs.error("POS: " .. scene.camera.position[1] .. ", " .. scene.camera.position[2] .. ", " .. scene.camera.position[3] .. ", ROT: " .. math.deg(scene.camera.rotation[1]) .. ", " .. math.deg(scene.camera.rotation[2]) .. ", " .. math.deg(scene.camera.rotation[3]))
@@ -510,7 +510,7 @@ function meowEngine.intro(vector3Position, size)
 	for i = 1, 0, -0.2 do
 		scene:render()
 		buffer.clear(0x0, i)
-		buffer.draw()
+		buffer.drawChanges()
 	end
 end
 
