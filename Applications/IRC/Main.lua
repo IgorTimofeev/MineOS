@@ -14,6 +14,7 @@ local MineOSInterface = require("MineOSInterface")
 local socketHandle
 local socketConnectDelay = 1
 local socketReadDelay = 1
+local oldUptime = 0
 
 local channelUsersList = {operators = {}, voiced = {}, default = {}}
 local channelUsersListUpdatingFinished = true
@@ -77,7 +78,7 @@ end
 
 local mainContainer, window = MineOSInterface.addWindow(GUI.filledWindow(1, 1, 110, 27, 0xE1E1E1))
 
-local leftPanel = window:addChild(GUI.panel(1, 1, 20, 1, 0x2D2D2D))
+local leftPanel = window:addChild(GUI.panel(1, 1, 21, 1, 0x2D2D2D))
 local leftLayout = window:addChild(GUI.layout(1, 4, leftPanel.width, 1, 1, 1))
 leftLayout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_LEFT, GUI.ALIGNMENT_VERTICAL_TOP)
 leftLayout:setMargin(1, 1, 0, 0)
@@ -91,16 +92,17 @@ local usersList = leftLayout:addChild(GUI.list(1, 1, leftPanel.width, 1, 1, 0, 0
 local systemText = leftLayout:addChild(GUI.text(1, 1, 0xE1E1E1, "  System"))
 local systemList = leftLayout:addChild(GUI.list(1, 1, leftPanel.width, 1, 1, 0, 0x2D2D2D, 0x696969, 0x2D2D2D, 0x696969, 0x3366CC, 0xE1E1E1, false))
 
-local contactButtonWidth, contactButtonHeight = 10, 3
-local contactLayout = window:addChild(GUI.layout(1, 1, leftPanel.width, contactButtonHeight, 1, 1))
+local contactLayout = window:addChild(GUI.layout(1, 1, leftPanel.width, 3, 1, 1))
 contactLayout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
 contactLayout:setDirection(1, 1, GUI.DIRECTION_HORIZONTAL)
 contactLayout:setSpacing(1, 1, 0)
 
-local contactAddButton = contactLayout:addChild(GUI.button(1, 1, contactButtonWidth, contactButtonHeight, 0x3C3C3C, 0xA5A5A5, 0x878787, 0xB4B4B4, "+"))
-local contactRemoveButton = contactLayout:addChild(GUI.button(1, 1, contactButtonWidth, contactButtonHeight, 0x4B4B4B, 0xA5A5A5, 0x878787, 0xB4B4B4, "-"))
+local contactButtonWidth = 7
+local contactAddButton = contactLayout:addChild(GUI.button(1, 1, contactButtonWidth, contactLayout.height, 0x3C3C3C, 0xA5A5A5, 0x878787, 0xB4B4B4, "+"))
+local contactRemoveButton = contactLayout:addChild(GUI.button(1, 1, contactButtonWidth, contactLayout.height, 0x4B4B4B, 0xA5A5A5, 0x878787, 0xB4B4B4, "-"))
 contactRemoveButton.colors.disabled.background = 0x4B4B4B
 contactRemoveButton.colors.disabled.text = 0x696969
+local settingsButton = contactLayout:addChild(GUI.button(1, 1, contactButtonWidth, contactLayout.height, 0x3C3C3C, 0xA5A5A5, 0x878787, 0xB4B4B4, "*"))
 
 window.backgroundPanel.width = 18
 local rightLayout = window:addChild(GUI.layout(1, 1, window.backgroundPanel.width - 2, 1, 1, 1))
@@ -147,9 +149,6 @@ local loginPasswordSwitchAndLabel = GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0x
 local loginSubmitButton = GUI.button(1, 1, 36, 3, 0xC3C3C3, 0xFFFFFF, 0x696969, 0xFFFFFF, "Connect")
 local loginStatusText = GUI.text(1, 1, 0xA5A5A5, "")
 
-local addContactInput = GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x787878, 0xB4B4B4, 0xE1E1E1, 0x2D2D2D, "", "User or chat name")
-local addContactSubmitButton = GUI.button(1, 1, 36, 3, 0xB4B4B4, 0xFFFFFF, 0x969696, 0xB4B4B4, "Add contact")
-
 window.actionButtons.localX = 3
 window.actionButtons:moveToFront()
 
@@ -163,10 +162,6 @@ end
 
 local function saveConfig()
 	table.toFile(configPath, config)
-end
-
-local function saveHistory()
-	table.toFile(historyPath, history)
 end
 
 local function socketWrite(data)
@@ -195,13 +190,13 @@ local function status(text)
 	mainContainer:drawOnScreen()
 end
 
-local function checkTextAndList(text, list)
-	text.hidden = #list.children == 0
-	list.hidden = text.hidden
-	list.height = #list.children
-end
-
 local function updateLeftLayout()
+	local function checkTextAndList(text, list)
+		text.hidden = #list.children == 0
+		list.hidden = text.hidden
+		list.height = #list.children
+	end
+
 	checkTextAndList(channelsText, channelsList)
 	checkTextAndList(usersText, usersList)
 	checkTextAndList(systemText, systemList)
@@ -287,6 +282,15 @@ local function addChatMessage(conversationName, text, sender)
 	end
 
 	text = text:gsub("[\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0A\x0B\x0C\x0D\x0E\x0F\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1A\x1B\x1C\x1D\x1E\x1F]+", "")
+	
+	local chars = {}
+	for i = 1, unicode.len(text) do
+		chars[i] = unicode.sub(text, i, i)
+		if unicode.isWide(chars[i]) then
+			chars[i] = "?"
+		end
+	end
+	text = table.concat(chars)
 
 	local message = {
 		text = text,
@@ -313,20 +317,11 @@ local function addChatMessage(conversationName, text, sender)
 	return message
 end
 
-local function checkLoginInputs()
-	loginSubmitButton.disabled = #loginUsernameInput.text == 0 or #loginServerInput.text == 0 or not loginPortInput.text:match("^%d+$")
-end
-
 chat.draw = function()
 	buffer.drawRectangle(chat.x, chat.y, chat.width, chat.height, 0xF0F0F0, colorScheme.otherMessageText, " ")
 
 	if history[selectedItem.text] and #history[selectedItem.text] > 0 then
 		local y, userZoneWidth, messages = chat.y + chat.height - 2, 0, history[selectedItem.text]
-
-		if not messages[scrollBar.value] then
-			GUI.alert(scrollBar.value, #messages)
-			return
-		end
 
 		for i = scrollBar.value, 1, -1 do
 			userZoneWidth = math.max(userZoneWidth, unicode.len(messages[i].sender or selectedItem.text))
@@ -341,38 +336,52 @@ chat.draw = function()
 		end
 		
 		for i = scrollBar.value, 1, -1 do
-			local wrappedLines = string.wrap(messages[i].text, chat.width - userZoneWidth - 3)
+			if messages[i].newMessages then
+				local elda = " New messages "
+				local pizda = chat.width - userZoneWidth - 3 - unicode.len(elda)
+				local klitor = math.floor(pizda / 2)
+				local vagina = pizda - klitor
 
-			local senderColor, textColor
-			if messages[i].notice then
-				senderColor, textColor = colorScheme.noticeMessageSender, colorScheme.noticeMessageText
-			elseif messages[i].action then
-				senderColor, textColor = colorScheme.actionMessageSender, colorScheme.actionMessageText
-			elseif messages[i].channelAction then
-				senderColor, textColor = colorScheme.channelDataMessageSender, colorScheme.channelDataMessageText
-			elseif messages[i].sender == config.username then
-				senderColor, textColor = colorScheme.myMessageSender, colorScheme.myMessageText
-			else
-				senderColor, textColor = colorScheme.otherMessageSender, colorScheme.otherMessageText
-			end
-
-			for j = #wrappedLines, 1, -1 do
-				buffer.drawText(chat.x + userZoneWidth + 1, y, textColor, wrappedLines[j])
-
+				buffer.drawText(chat.x + userZoneWidth + 1, y, 0xFF9280, string.rep("─", klitor) .. elda .. string.rep("─", vagina))
 				y = y - 1
-				if y < chat.y then
-					return
-				end
-			end
+			else
+				local wrappedLines = string.wrap(messages[i].text, chat.width - userZoneWidth - 3)
 
-			local sender = messages[i].sender or selectedItem.text
-			local limited = string.limit(sender, userZoneWidth - chatTimeWidth - 4, "center")
-			buffer.drawText(chat.x + userZoneWidth - unicode.len(limited) - 2, y + 1, senderColor, limited)
-			buffer.drawText(chat.x + 1, y + 1, 0xC3C3C3, messages[i].time)
+				local senderColor, textColor
+				if messages[i].notice then
+					senderColor, textColor = colorScheme.noticeMessageSender, colorScheme.noticeMessageText
+				elseif messages[i].action then
+					senderColor, textColor = colorScheme.actionMessageSender, colorScheme.actionMessageText
+				elseif messages[i].channelAction then
+					senderColor, textColor = colorScheme.channelDataMessageSender, colorScheme.channelDataMessageText
+				elseif messages[i].sender == config.username then
+					senderColor, textColor = colorScheme.myMessageSender, colorScheme.myMessageText
+				else
+					senderColor, textColor = colorScheme.otherMessageSender, colorScheme.otherMessageText
+				end
+
+				for j = #wrappedLines, 1, -1 do
+					buffer.drawText(chat.x + userZoneWidth + 1, y, textColor, wrappedLines[j])
+
+					y = y - 1
+					if y < chat.y then
+						return
+					end
+				end
+
+				local sender = messages[i].sender or selectedItem.text
+				local limited = string.limit(sender, userZoneWidth - chatTimeWidth - 4, "center")
+				buffer.drawText(chat.x + userZoneWidth - unicode.len(limited) - 2, y + 1, senderColor, limited)
+				buffer.drawText(chat.x + 1, y + 1, 0xC3C3C3, messages[i].time)
+			end
 
 			y = y - 1
 		end
 	end
+end
+
+local function checkLoginInputs()
+	loginSubmitButton.disabled = #loginUsernameInput.text == 0 or #loginServerInput.text == 0 or not loginPortInput.text:match("^%d+$")
 end
 
 loginUsernameInput.onInputFinished = function()
@@ -424,17 +433,17 @@ chatInput.onInputFinished = function()
 	end
 end
 
-local function getTotalHeight(layout)
-	local height = 0
+local function addScrollEventHandler(layout)
+	local function getTotalHeight(layout)
+		local height = 0
 
-	for i = 1, #layout.children do
-		height = height + layout.children[i].height + (i < #layout.children and layout.cells[1][1].spacing or 0)
+		for i = 1, #layout.children do
+			height = height + layout.children[i].height + (i < #layout.children and layout.cells[1][1].spacing or 0)
+		end
+
+		return height
 	end
 
-	return height
-end
-
-local function addScrollEventHandler(layout)
 	layout.eventHandler = function(mainContainer, layout, e1, e2, e3, e4, e5)
 		if e1 == "scroll" then
 			if e5 > 0 then
@@ -468,13 +477,9 @@ local function userButtonOnTouch(mainContainer, object)
 	else
 		selectItem(addContactItemToList(text))
 	end
-
-	saveHistory()
 end
 
 local function updateUsersLayoutFromList()
-	rightLayout:removeChildren()
-
 	local function addCategory(field, name)
 		if #channelUsersList[field] > 0 then
 			rightLayout:addChild(GUI.object(1, 1, 1, 1))
@@ -488,6 +493,7 @@ local function updateUsersLayoutFromList()
 		end
 	end
 
+	rightLayout:removeChildren()
 	addCategory("operators", "Operators")
 	addCategory("voiced", "Voiced")
 	addCategory("default", "Users")
@@ -518,7 +524,6 @@ local function removeUserFromList(name)
 	end
 end
 
-local oldUptime = 0
 chat.eventHandler = function(mainContainer, chat, e1, e2, e3, e4, e5)
 	if e1 == "scroll" then
 		if e5 > 0 then
@@ -592,7 +597,9 @@ chat.eventHandler = function(mainContainer, chat, e1, e2, e3, e4, e5)
 										addChatMessage(conversationName, afterDots, username)
 									end
 
-									-- computer.beep(2000, 0.05)
+									if config.soundNotifications then
+										computer.beep(2000, 0.05)
+									end
 								elseif words[2] == "JOIN" and username then
 									if selectedItem.text == words[3] then
 										if not addUserToList(username) then
@@ -601,6 +608,13 @@ chat.eventHandler = function(mainContainer, chat, e1, e2, e3, e4, e5)
 									end
 
 									addChatMessage(words[3], username .. " (" .. address .. ") has joined the channel", "!").channelAction = true
+								elseif words[2] == "NICK" and username then
+									addChatMessage(selectedItem.text, username .. " is now known as " .. afterDots, "!").channelAction = true
+									local item = getItemByText(username)
+									if item then
+										history[item.text] = afterDots
+										item.text = afterDots
+									end
 								elseif words[2] == "MODE" and username then
 									addChatMessage(words[3], username .. " sets " .. words[5] .. " mode to " .. words[4], "!").channelAction = true
 								elseif (words[2] == "QUIT" or words[2] == "PART") and username then
@@ -696,27 +710,44 @@ loginSubmitButton.onTouch = function()
 	end
 end
 
-contactAddButton.onTouch = function()
+settingsButton.onTouch = function()
 	backgroundContainer.hidden = false
-
 	backgroundLayout:removeChildren()
-	backgroundLayout:addChild(addContactInput)
-	backgroundLayout:addChild(addContactSubmitButton)
+	
+	local slider = backgroundLayout:addChild(GUI.slider(1, 1, 36, 0x66DB80, 0xE1E1E1, 0xFFFFFF, 0xB4B4B4, 0, 500, config.historyLimit, false, "History limit: ", ""))
+	slider.height = 2
+	slider.roundValues = true
+
+	local switchAndLabel = backgroundLayout:addChild(GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0x4B4B4B, 0xFFFFFF, 0xB4B4B4, "Sound notifications:", config.soundNotifications))
+	
+	backgroundLayout:addChild(GUI.button(1, 1, 36, 3, 0xB4B4B4, 0xFFFFFF, 0x969696, 0xB4B4B4, "Save")).onTouch = function()
+		config.historyLimit = math.floor(slider.value)
+		config.soundNotifications = switchAndLabel.switch.state
+		backgroundContainer.hidden = true
+		
+		mainContainer:drawOnScreen()
+		saveConfig()
+	end
 
 	mainContainer:drawOnScreen()
-	saveHistory()
 end
 
-addContactSubmitButton.onTouch = function()
-	backgroundContainer.hidden = true
-	local text = addContactInput.text
-	addContactInput.text = ""
+contactAddButton.onTouch = function()
+	backgroundContainer.hidden = false
+	backgroundLayout:removeChildren()
 
-	if #text > 0 and not history[text] then
-		selectItem(addContactItemToList(text))
-	else
-		mainContainer:drawOnScreen()
+	local input = backgroundLayout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x787878, 0xB4B4B4, 0xE1E1E1, 0x2D2D2D, "", "User or chat name"))
+	backgroundLayout:addChild(GUI.button(1, 1, 36, 3, 0xB4B4B4, 0xFFFFFF, 0x969696, 0xB4B4B4, "Add contact")).onTouch = function()
+		backgroundContainer.hidden = true
+
+		if #input.text > 0 and not history[input.text] then
+			selectItem(addContactItemToList(input.text))
+		else
+			mainContainer:drawOnScreen()
+		end
 	end
+
+	mainContainer:drawOnScreen()
 end
 
 contactRemoveButton.onTouch = function()
@@ -731,7 +762,6 @@ contactRemoveButton.onTouch = function()
 	updateLeftLayout()
 
 	mainContainer:drawOnScreen()
-	saveHistory()
 end
 
 loginPasswordSwitchAndLabel.switch.onStateChanged = function()
@@ -771,16 +801,22 @@ window.close = function(...)
 		socketWrite("QUIT")
 	end
 	overrideWindowClose(...)
-	
+
 	for key in pairs(history) do
 		for i = 1, #history[key] do
-			history[key][i].text = history[key][i].text:gsub("\\", "\\\\")
-			history[key][i].text = history[key][i].text:gsub("\"", "\\\"")
-			history[key][i].text = history[key][i].text:gsub("\'", "\\\'")
+			if history[key][i].text then
+				history[key][i].text = history[key][i].text:gsub("\\", "\\\\")
+				history[key][i].text = history[key][i].text:gsub("\"", "\\\"")
+				history[key][i].text = history[key][i].text:gsub("\'", "\\\'")
+			end
+		end
+
+		if #history[key] > 0 and not history[key][#history[key]].newMessages then
+			table.insert(history[key], {newMessages = true})
 		end
 	end
-
-	saveHistory()
+	
+	table.toFile(historyPath, history)
 end
 
 -------------------------------------------------------------------------------
