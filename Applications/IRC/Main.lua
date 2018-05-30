@@ -146,7 +146,7 @@ local loginPortInput = loginServerLayout:addChild(GUI.input(1, 1, loginServerLay
 local loginUsernameInput = GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x787878, 0xB4B4B4, 0xE1E1E1, 0x2D2D2D, config.username or "", "Username")
 local loginPasswordInput = GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x787878, 0xB4B4B4, 0xE1E1E1, 0x2D2D2D, config.password or "", "Password")
 local loginPasswordSwitchAndLabel = GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0xE1E1E1, 0xFFFFFF, 0xB4B4B4, "Log into NickServ:", true)
-local loginSubmitButton = GUI.button(1, 1, 36, 3, 0xC3C3C3, 0xFFFFFF, 0x696969, 0xFFFFFF, "Connect")
+local loginSubmitButton = GUI.button(1, 1, 36, 3, 0xC3C3C3, 0xFFFFFF, 0x969696, 0xFFFFFF, "Connect")
 local loginStatusText = GUI.text(1, 1, 0xA5A5A5, "")
 
 window.actionButtons.localX = 3
@@ -718,9 +718,9 @@ settingsButton.onTouch = function()
 	slider.height = 2
 	slider.roundValues = true
 
-	local switchAndLabel = backgroundLayout:addChild(GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0x4B4B4B, 0xFFFFFF, 0xB4B4B4, "Sound notifications:", config.soundNotifications))
+	local switchAndLabel = backgroundLayout:addChild(GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0xE1E1E1, 0xFFFFFF, 0xB4B4B4, "Sound notifications:", config.soundNotifications))
 	
-	backgroundLayout:addChild(GUI.button(1, 1, 36, 3, 0xB4B4B4, 0xFFFFFF, 0x969696, 0xB4B4B4, "Save")).onTouch = function()
+	backgroundLayout:addChild(GUI.button(1, 1, 36, 3, 0xC3C3C3, 0xFFFFFF, 0x969696, 0xFFFFFF, "Save")).onTouch = function()
 		config.historyLimit = math.floor(slider.value)
 		config.soundNotifications = switchAndLabel.switch.state
 		backgroundContainer.hidden = true
