@@ -1008,7 +1008,7 @@ local function createOSWidgets()
 		
 		local index = buffer.getIndex(batteryWidget.x + #batteryWidgetText, 1)
 		for i = 1, 4 do
-			buffer.rawSet(index, buffer.rawGet(index), i <= pixelPercent and getPercentageColor(batteryWidgetPercent) or 0xB4B4B4, i < 4 and "⠶" or "╸")
+			buffer.rawSet(index, buffer.rawGet(index), i <= pixelPercent and getPercentageColor(batteryWidgetPercent) or 0xD2D2D2, i < 4 and "⠶" or "╸")
 			index = index + 1
 		end
 	end
@@ -1023,7 +1023,7 @@ local function createOSWidgets()
 		
 		local index = buffer.getIndex(RAMWidget.x + #text, 1)
 		for i = 1, barWidth do
-			buffer.rawSet(index, buffer.rawGet(index), i <= activeWidth and getPercentageColor(1 - RAMPercent) or 0xB4B4B4, "━")
+			buffer.rawSet(index, buffer.rawGet(index), i <= activeWidth and getPercentageColor(1 - RAMPercent) or 0xD2D2D2, "━")
 			index = index + 1
 		end
 	end
