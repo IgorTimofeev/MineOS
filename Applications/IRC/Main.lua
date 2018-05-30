@@ -803,15 +803,22 @@ window.close = function(...)
 	overrideWindowClose(...)
 
 	for key in pairs(history) do
-		for i = 1, #history[key] do
+		local i = 1
+		while i <= #history[key] do
 			if history[key][i].text then
 				history[key][i].text = history[key][i].text:gsub("\\", "\\\\")
 				history[key][i].text = history[key][i].text:gsub("\"", "\\\"")
 				history[key][i].text = history[key][i].text:gsub("\'", "\\\'")
 			end
+
+			if history[key][i].newMessages then
+				table.remove(history[key], i)
+			else
+				i = i + 1
+			end
 		end
 
-		if #history[key] > 0 and not history[key][#history[key]].newMessages then
+		if #history[key] > 0 then
 			table.insert(history[key], {newMessages = true})
 		end
 	end
