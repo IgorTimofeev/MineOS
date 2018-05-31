@@ -50,12 +50,16 @@ FTPButton.colors.disabled = prevButton.colors.disabled
 FTPButton.disabled = not MineOSNetwork.internetProxy
 
 local sidebarContainer = window:addChild(GUI.container(1, 4, 20, 1))
-sidebarContainer.panel = sidebarContainer:addChild(GUI.panel(1, 1, sidebarContainer.width, 1, 0xFFFFFF, MineOSCore.properties.transparencyEnabled and 0.3))
+local sidebarPanel = sidebarContainer:addChild(GUI.object(1, 1, sidebarContainer.width, 1, 0xFFFFFF))
+sidebarPanel.draw = function(object)
+	buffer.drawRectangle(object.x, object.y, object.width, object.height, 0xFFFFFF, 0x0, " ", MineOSCore.properties.transparencyEnabled and 0.3)
+end
+
 sidebarContainer.itemsContainer = sidebarContainer:addChild(GUI.container(1, 1, sidebarContainer.width, 1))
 
 local searchInput = window:addChild(GUI.input(1, 2, 36, 1, 0xFFFFFF, 0x4B4B4B, 0xA5A5A5, 0xFFFFFF, 0x2D2D2D, nil, MineOSCore.localization.search, true))
 
-local iconField = window:addChild(MineOSInterface.iconField(1, 4, 1, 1, 2, 2, 0x3C3C3C, 0x3C3C3C, MineOSPaths.desktop))
+local iconField = window:addChild(MineOSInterface.iconField(1, 4, 1, 1, 2, 2, 0x3C3C3C, 0x969696, MineOSPaths.desktop))
 
 local scrollBar = window:addChild(GUI.scrollBar(1, 4, 1, 1, 0xC3C3C3, 0x4B4B4B, iconFieldYOffset, 1, 1, 1, 1, true))
 scrollBar.eventHandler = nil
@@ -433,8 +437,8 @@ end
 local function calculateSizes(width, height)
 	sidebarContainer.height = height - 3
 	
-	sidebarContainer.panel.width = sidebarContainer.width
-	sidebarContainer.panel.height = sidebarContainer.height
+	sidebarPanel.width = sidebarContainer.width
+	sidebarPanel.height = sidebarContainer.height
 	
 	sidebarContainer.itemsContainer.width = sidebarContainer.width
 	sidebarContainer.itemsContainer.height = sidebarContainer.height

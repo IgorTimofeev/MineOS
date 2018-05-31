@@ -81,35 +81,37 @@ function MineOSInterface.cacheIconSource(name, path)
 	return MineOSInterface.iconsCache[name]
 end
 
-local function iconDrawNameLine(x, y, line, icon)
-	local lineLength = unicode.len(line)
-	local x = math.floor(x - lineLength / 2)
-	if icon.selected then
-		buffer.drawRectangle(x, y, lineLength, 1, icon.colors.selection, 0x0, " ", icon.colors.selectionTransparency)
-	end
-	buffer.drawText(x, y, icon.colors.text, line)
-end
-
 local function iconDraw(icon)
+	local selectionTransparency = MineOSCore.properties.transparencyEnabled and 0.6
 	local text = MineOSCore.properties.showExtension and icon.name or icon.nameWithoutExtension
 	local xCenter, yText = icon.x + MineOSInterface.iconHalfWidth, icon.y + MineOSInterface.iconImageHeight + 1
+
+	local function iconDrawNameLine(y, line)
+		local lineLength = unicode.len(line)
+		local x = math.floor(xCenter - lineLength / 2)
+		
+		if icon.selected then
+			buffer.drawRectangle(x, y, lineLength, 1, icon.colors.selection, 0x0, " ", selectionTransparency)
+		end
+		buffer.drawText(x, y, icon.colors.text, line)
+	end
 
 	local charIndex = 1
 	for lineIndex = 1, MineOSInterface.iconTextHeight do
 		if lineIndex < MineOSInterface.iconTextHeight then
-			iconDrawNameLine(xCenter, yText, unicode.sub(text, charIndex, charIndex + icon.width - 1), icon)
+			iconDrawNameLine(yText, unicode.sub(text, charIndex, charIndex + icon.width - 1))
 			charIndex, yText = charIndex + icon.width, yText + 1
 		else
-			iconDrawNameLine(xCenter, yText, string.limit(unicode.sub(text, charIndex, -1), icon.width, "center"), icon)
+			iconDrawNameLine(yText, string.limit(unicode.sub(text, charIndex, -1), icon.width, "center"))
 		end
 	end
 
 	local xImage = icon.x + MineOSInterface.iconImageHorizontalOffset
 	if icon.selected then
 		local xSelection = xImage - 1
-		buffer.drawText(xSelection, icon.y - 1, icon.colors.selection, string.rep("▄", MineOSInterface.iconImageWidth + 2), icon.colors.selectionTransparency)
-		buffer.drawText(xSelection, icon.y + MineOSInterface.iconImageHeight, icon.colors.selection, string.rep("▀", MineOSInterface.iconImageWidth + 2), icon.colors.selectionTransparency)
-		buffer.drawRectangle(xSelection, icon.y, MineOSInterface.iconImageWidth + 2, MineOSInterface.iconImageHeight, icon.colors.selection, 0x0, " ", icon.colors.selectionTransparency)
+		buffer.drawText(xSelection, icon.y - 1, icon.colors.selection, string.rep("▄", MineOSInterface.iconImageWidth + 2), selectionTransparency)
+		buffer.drawText(xSelection, icon.y + MineOSInterface.iconImageHeight, icon.colors.selection, string.rep("▀", MineOSInterface.iconImageWidth + 2), selectionTransparency)
+		buffer.drawRectangle(xSelection, icon.y, MineOSInterface.iconImageWidth + 2, MineOSInterface.iconImageHeight, icon.colors.selection, 0x0, " ", selectionTransparency)
 	end
 
 	if icon.image then
@@ -278,8 +280,7 @@ function MineOSInterface.icon(x, y, path, textColor, selectionColor)
 	
 	icon.colors = {
 		text = textColor,
-		selection = selectionColor,
-		selectionTransparency = 0.6
+		selection = selectionColor
 	}
 
 	icon.path = path
@@ -480,7 +481,7 @@ local function iconFieldBackgroundObjectEventHandler(mainContainer, object, e1, 
 
 			mainContainer:drawOnScreen()
 		else
-			local menu = MineOSInterface.addContextMenu(MineOSInterface.mainContainer, e3, e4)
+			local menu = GUI.addContextMenu(MineOSInterface.mainContainer, e3, e4)
 
 			local subMenu = menu:addSubMenu(MineOSCore.localization.create)
 
@@ -592,7 +593,11 @@ local function iconFieldBackgroundObjectDraw(object)
 			y1, y2 = y2, y1
 		end
 		
-		buffer.drawRectangle(x1, y1, x2 - x1 + 1, y2 - y1 + 1, object.parent.colors.selection, 0x0, " ", 0.6)
+		if MineOSCore.properties.transparencyEnabled then	
+			buffer.drawRectangle(x1, y1, x2 - x1 + 1, y2 - y1 + 1, object.parent.colors.selection, 0x0, " ", 0.6)
+		else
+			buffer.drawFrame(x1, y1, x2 - x1 + 1, y2 - y1 + 1, object.parent.colors.selection)
+		end
 
 		for i = 1, #object.parent.iconsContainer.children do
 			local xCenter, yCenter = object.parent.iconsContainer.children[i].x + MineOSCore.properties.iconWidth / 2, object.parent.iconsContainer.children[i].y + MineOSCore.properties.iconHeight / 2
@@ -675,9 +680,9 @@ end
 
 ----------------------------------------------------------------------------------------------------------------
 
-function MineOSInterface.addContextMenu(...)
-	local menu = GUI.addContextMenu(...)
-	
+local overrideGUIDropDownMenu = GUI.dropDownMenu
+GUI.dropDownMenu = function(...)
+	local menu = overrideGUIDropDownMenu(...)
 	menu.colors.transparency.background = MineOSCore.properties.transparencyEnabled and GUI.CONTEXT_MENU_BACKGROUND_TRANSPARENCY
 	menu.colors.transparency.shadow = MineOSCore.properties.transparencyEnabled and GUI.CONTEXT_MENU_SHADOW_TRANSPARENCY
 
@@ -705,7 +710,7 @@ function MineOSInterface.iconRightClick(icon, e1, e2, e3, e4)
 
 	local selectedIcons = icon.parent.parent:getSelectedIcons()
 
-	local menu = MineOSInterface.addContextMenu(MineOSInterface.mainContainer, e3, e4)
+	local menu = GUI.addContextMenu(MineOSInterface.mainContainer, e3, e4)
 	
 	menu.onMenuClosed = function()
 		icon.parent.parent:deselectAll()

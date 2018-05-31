@@ -375,7 +375,7 @@ local function createOSWidgets()
 
 		icon.onRightClick = function(icon, e1, e2, e3, e4, ...)
 			local indexOf = icon:indexOf()
-			local menu = MineOSInterface.addContextMenu(MineOSInterface.mainContainer, e3, e4)
+			local menu = GUI.addContextMenu(MineOSInterface.mainContainer, e3, e4)
 			
 			menu.onMenuClosed = function()
 				icon.selected = false
@@ -456,7 +456,7 @@ local function createOSWidgets()
 	end
 
 	icon.onRightClick = function(icon, e1, e2, e3, e4)
-		local menu = MineOSInterface.addContextMenu(MineOSInterface.mainContainer, e3, e4)
+		local menu = GUI.addContextMenu(MineOSInterface.mainContainer, e3, e4)
 		
 		menu.onMenuClosed = function()
 			icon.selected = false

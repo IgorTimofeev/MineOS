@@ -307,8 +307,3 @@ MineOSCore.setPackageUnloading(MineOSCore.properties.packageUnloading)
 -----------------------------------------------------------------------------------------------------------------------------------
 
 return MineOSCore
-
-
-
-
-
