@@ -515,7 +515,6 @@ local function createOSWidgets()
 	local MineOSContextMenu = MineOSInterface.mainContainer.menu:addContextMenu("MineOS", 0x000000)
 	MineOSContextMenu:addItem(MineOSCore.localization.aboutSystem).onTouch = function()
 		local container = MineOSInterface.addBackgroundContainer(MineOSInterface.mainContainer, MineOSCore.localization.aboutSystem)
-		container.layout:setFitting(2, 1, false, false)
 		container.layout:removeChildren()
 		
 		local lines = {
@@ -706,13 +705,13 @@ local function createOSWidgets()
 
 		local function update()
 			local libraries = {}
-			for key in pairs(package.loaded) do
-				if not _G[key] then
+			for key, value in pairs(package.loaded) do
+				if _G[key] ~= value then
 					table.insert(libraries, key)
 				end
 			end
 			
-			table.sort(libraries, function(a, b) return a < b end)
+			table.sort(libraries, function(a, b) return unicode.lower(a) < unicode.lower(b) end)
 
 			comboBox:clear()
 			for i = 1, #libraries do
