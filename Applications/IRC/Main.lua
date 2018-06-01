@@ -662,6 +662,9 @@ chat.eventHandler = function(mainContainer, chat, e1, e2, e3, e4, e5)
 										status("Logging in...")
 										socketWrite("IDENTIFY " .. config.username .. " " .. config.password)
 									end
+								-- No such nick/channel
+								elseif words[2] == "401" then
+									addChatMessage(words[4], "There's no " .. (words[4]:sub(1, 1) == "#" and "channel with such name" or "user with such nick") .. " online", "!").channelAction = true
 								end
 							end
 						else
