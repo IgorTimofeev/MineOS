@@ -82,7 +82,7 @@ function MineOSInterface.cacheIconSource(name, path)
 end
 
 local function iconDraw(icon)
-	local selectionTransparency = MineOSCore.properties.transparencyEnabled and 0.6
+	local selectionTransparency = MineOSCore.properties.transparencyEnabled and 0.5
 	local text = MineOSCore.properties.showExtension and icon.name or icon.nameWithoutExtension
 	local xCenter, yText = icon.x + MineOSInterface.iconHalfWidth, icon.y + MineOSInterface.iconImageHeight + 1
 
@@ -594,7 +594,7 @@ local function iconFieldBackgroundObjectDraw(object)
 		end
 		
 		if MineOSCore.properties.transparencyEnabled then	
-			buffer.drawRectangle(x1, y1, x2 - x1 + 1, y2 - y1 + 1, object.parent.colors.selection, 0x0, " ", 0.6)
+			buffer.drawRectangle(x1, y1, x2 - x1 + 1, y2 - y1 + 1, object.parent.colors.selection, 0x0, " ", 0.5)
 		else
 			buffer.drawFrame(x1, y1, x2 - x1 + 1, y2 - y1 + 1, object.parent.colors.selection)
 		end
@@ -679,15 +679,6 @@ function MineOSInterface.iconField(x, y, width, height, xOffset, yOffset, textCo
 end
 
 ----------------------------------------------------------------------------------------------------------------
-
-local overrideGUIDropDownMenu = GUI.dropDownMenu
-GUI.dropDownMenu = function(...)
-	local menu = overrideGUIDropDownMenu(...)
-	menu.colors.transparency.background = MineOSCore.properties.transparencyEnabled and GUI.CONTEXT_MENU_BACKGROUND_TRANSPARENCY
-	menu.colors.transparency.shadow = MineOSCore.properties.transparencyEnabled and GUI.CONTEXT_MENU_SHADOW_TRANSPARENCY
-
-	return menu
-end
 
 function MineOSInterface.iconLeftClick(icon)
 	if not keyboard.isKeyDown(29) and not keyboard.isKeyDown(219) then

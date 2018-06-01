@@ -26,6 +26,7 @@ local dateUptime = bootUptime
 local screensaverUptime = bootUptime
 local timezoneCorrection
 local screensaversPath = MineOSPaths.system .. "Screensavers/"
+local overrideGUIDropDownMenu = GUI.dropDownMenu
 
 ---------------------------------------- Система защиты пекарни ----------------------------------------
 
@@ -288,6 +289,16 @@ local function getPercentageColor(pecent)
 	end
 end
 
+local function applyTransparency()
+	GUI.dropDownMenu = function(...)
+		local menu = overrideGUIDropDownMenu(...)
+		menu.colors.transparency.background = MineOSCore.properties.transparencyEnabled and GUI.CONTEXT_MENU_BACKGROUND_TRANSPARENCY
+		menu.colors.transparency.shadow = MineOSCore.properties.transparencyEnabled and GUI.CONTEXT_MENU_SHADOW_TRANSPARENCY
+
+		return menu
+	end
+end
+
 local function createOSWidgets()
 	MineOSInterface.mainContainer:removeChildren()
 	MineOSInterface.mainContainer.background = MineOSInterface.mainContainer:addChild(GUI.object(1, 1, 1, 1))
@@ -303,7 +314,7 @@ local function createOSWidgets()
 		MineOSInterface.iconField(
 			1, 2, 1, 1, 3, 2,
 			0xFFFFFF,
-			0xFFFFFF,
+			0xD2D2D2,
 			MineOSPaths.desktop
 		)
 	)
@@ -877,12 +888,13 @@ local function createOSWidgets()
 		local switch = container.layout:addChild(GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0xE1E1E1, MineOSCore.localization.transparencyEnabled .. ":", MineOSCore.properties.transparencyEnabled)).switch
 		switch.onStateChanged = function()
 			MineOSCore.properties.transparencyEnabled = switch.state
-			MineOSCore.saveProperties()
-			MineOSInterface.mainContainer.menu.colors.transparency = MineOSCore.properties.transparencyEnabled and menuTransparency
-			container.panel.colors.background = switch.state and GUI.BACKGROUND_CONTAINER_PANEL_COLOR or (MineOSCore.properties.backgroundColor)
+
+			container.panel.colors.background = switch.state and GUI.BACKGROUND_CONTAINER_PANEL_COLOR or MineOSCore.properties.backgroundColor
 			container.panel.colors.transparency = switch.state and GUI.BACKGROUND_CONTAINER_PANEL_TRANSPARENCY
+			applyTransparency()
 
 			MineOSInterface.mainContainer:drawOnScreen()
+			MineOSCore.saveProperties()
 		end
 		container.layout:addChild(GUI.textBox(1, 1, 36, 1, nil, 0x5A5A5A, {MineOSCore.localization.transparencySwitchInfo}, 1, 0, 0, true, true))
 
@@ -1143,6 +1155,7 @@ end
 
 MineOSCore.localization = MineOSCore.getLocalization(MineOSPaths.localizationFiles)
 
+applyTransparency()
 updateCurrentTimestamp()
 createOSWindow()
 login()
