@@ -1199,7 +1199,8 @@ mainMenu = function(menuID, messageToUser)
 		settings()
 	end
 	
-	menuList:getItem(1).onTouch()
+	menuList.selectedItem = menuID
+	menuList:getItem(menuList.selectedItem).onTouch()
 end
 
 newPublicationInfo = function(file_id)
