@@ -218,31 +218,37 @@ end
 local function changeWallpaper()
 	MineOSInterface.mainContainer.background.wallpaper = nil
 
-	if MineOSCore.properties.wallpaperEnabled and MineOSCore.properties.wallpaper and fs.exists(MineOSCore.properties.wallpaper) then
-		if MineOSCore.properties.wallpaperMode == 1 then
-			MineOSInterface.mainContainer.background.wallpaper = image.transform(image.load(MineOSCore.properties.wallpaper), MineOSInterface.mainContainer.width, MineOSInterface.mainContainer.height)
-			MineOSInterface.mainContainer.background.wallpaperPosition.x, MineOSInterface.mainContainer.background.wallpaperPosition.y = 1, 1
+	if MineOSCore.properties.wallpaperEnabled and MineOSCore.properties.wallpaper then
+		local result, reason = image.load(MineOSCore.properties.wallpaper)
+		if result then
+			MineOSInterface.mainContainer.background.wallpaper, result = result, nil
+
+			if MineOSCore.properties.wallpaperMode == 1 then
+				MineOSInterface.mainContainer.background.wallpaper = image.transform(MineOSInterface.mainContainer.background.wallpaper, MineOSInterface.mainContainer.width, MineOSInterface.mainContainer.height)
+				MineOSInterface.mainContainer.background.wallpaperPosition.x, MineOSInterface.mainContainer.background.wallpaperPosition.y = 1, 1
+			else
+				MineOSInterface.mainContainer.background.wallpaperPosition.x = math.floor(1 + MineOSInterface.mainContainer.width / 2 - image.getWidth(MineOSInterface.mainContainer.background.wallpaper) / 2)
+				MineOSInterface.mainContainer.background.wallpaperPosition.y = math.floor(1 + MineOSInterface.mainContainer.height / 2 - image.getHeight(MineOSInterface.mainContainer.background.wallpaper) / 2)
+			end
+
+			local backgrounds, foregrounds, r, g, b = MineOSInterface.mainContainer.background.wallpaper[3], MineOSInterface.mainContainer.background.wallpaper[4]
+			for i = 1, #backgrounds do
+				r, g, b = color.integerToRGB(backgrounds[i])
+				backgrounds[i] = color.RGBToInteger(
+					math.floor(r * MineOSCore.properties.wallpaperBrightness),
+					math.floor(g * MineOSCore.properties.wallpaperBrightness),
+					math.floor(b * MineOSCore.properties.wallpaperBrightness)
+				)
+
+				r, g, b = color.integerToRGB(foregrounds[i])
+				foregrounds[i] = color.RGBToInteger(
+					math.floor(r * MineOSCore.properties.wallpaperBrightness),
+					math.floor(g * MineOSCore.properties.wallpaperBrightness),
+					math.floor(b * MineOSCore.properties.wallpaperBrightness)
+				)
+			end
 		else
-			MineOSInterface.mainContainer.background.wallpaper = image.load(MineOSCore.properties.wallpaper)
-			MineOSInterface.mainContainer.background.wallpaperPosition.x = math.floor(1 + MineOSInterface.mainContainer.width / 2 - image.getWidth(MineOSInterface.mainContainer.background.wallpaper) / 2)
-			MineOSInterface.mainContainer.background.wallpaperPosition.y = math.floor(1 + MineOSInterface.mainContainer.height / 2 - image.getHeight(MineOSInterface.mainContainer.background.wallpaper) / 2)
-		end
-
-		local backgrounds, foregrounds, r, g, b = MineOSInterface.mainContainer.background.wallpaper[3], MineOSInterface.mainContainer.background.wallpaper[4]
-		for i = 1, #backgrounds do
-			r, g, b = color.integerToRGB(backgrounds[i])
-			backgrounds[i] = color.RGBToInteger(
-				math.floor(r * MineOSCore.properties.wallpaperBrightness),
-				math.floor(g * MineOSCore.properties.wallpaperBrightness),
-				math.floor(b * MineOSCore.properties.wallpaperBrightness)
-			)
-
-			r, g, b = color.integerToRGB(foregrounds[i])
-			foregrounds[i] = color.RGBToInteger(
-				math.floor(r * MineOSCore.properties.wallpaperBrightness),
-				math.floor(g * MineOSCore.properties.wallpaperBrightness),
-				math.floor(b * MineOSCore.properties.wallpaperBrightness)
-			)
+			GUI.alert("Failed to load wallpaper: " .. (reason or "image file is corrupted"))
 		end
 	end
 end
