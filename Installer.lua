@@ -72,14 +72,9 @@ local function unserializeFile(path)
 	return data
 end
 
-local function wget(url, path)
-	fs.makeDirectory(fs.path(path))
-	shell.execute("wget " .. url .. " " .. path .. " -fq")
-end
-
 print("Downloading MineOS file list...")
 local path = "/MineOS/System/Files.cfg"
-wget(URLs.applicationList, path)
+_G.downloadFile(URLs.applicationList, path)
 applicationList = unserializeFile(path)
 fs.remove(path)
 
@@ -87,7 +82,7 @@ print(" ")
 
 for i = 1, #applicationList.preInstall do
 	print("Downloading library \"" .. fs.name(applicationList.preInstall[i].path) .. "\"")
-	wget(applicationList.preInstall[i].url, applicationList.preInstall[i].path)
+	_G.downloadFile(applicationList.preInstall[i].url, applicationList.preInstall[i].path)
 	storeFileVersion(applicationList.preInstall[i])
 end
 
