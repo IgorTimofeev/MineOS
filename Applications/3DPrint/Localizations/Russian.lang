@@ -1,4 +1,5 @@
 {
+	exit = "Выйти",
 	new = "Создать",
 	open = "Открыть",
 	save = "Сохранить",
@@ -25,7 +26,7 @@
 	tintColor = "Цвет оттенка",
 	texture = "Текстура",
 	print = "Напечатать",
-	modelSettings = "Параметры модели",
+	modelSettings = "Приложение",
 	blockSettings = "Параметры блока",
 	projectorSettings = "Параметры проектора",
 	elementSettings = "Параметры элемента",
