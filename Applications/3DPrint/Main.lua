@@ -402,15 +402,19 @@ view.eventHandler = function(mainContainer, view, e1, e2, e3, e4, e5)
 	elseif e1 == "drop" then
 		touchX, touchY = nil, nil
 	elseif e1 == "scroll" then
-		currentLayer = currentLayer + e5
-		if currentLayer < 0 then
-			currentLayer = 0
-		elseif currentLayer > 15 then
-			currentLayer = 15
+		if e5 > 0 then
+			if currentLayer < 15 then
+				currentLayer = currentLayer + 1
+				mainContainer:drawOnScreen()
+				updateOnHologram()
+			end
+		else
+			if currentLayer > 0 then
+				currentLayer = currentLayer - 1
+				mainContainer:drawOnScreen()
+				updateOnHologram()
+			end
 		end
-
-		mainContainer:drawOnScreen()
-		updateOnHologram()
 	elseif e1 == "component_added" or e1 == "component_removed" then
 		updateProxies()
 	end
@@ -555,8 +559,8 @@ tintColorSelector.onColorSelected = updateModelFromWidgets
 
 --------------------------------------------------------------------------------
 
-if (args.o or args.open) and args[1] then
-	load(path)
+if (options.o or options.open) and args[1] then
+	load(args[1])
 else
 	newButton.onTouch()
 end
