@@ -1,1 +1,0 @@
-This is a professional tool for the creating and printing models using 3D-printer. It supports all the features of the printer. It requires the printer itself, and, if desired, a holographic projector 2 level.
