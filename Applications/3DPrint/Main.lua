@@ -80,9 +80,9 @@ local enabledListItem = modelList:addItem(localization.enabled)
 
 local elementComboBox = toolLayout:addChild(GUI.comboBox(1, 1, toolLayout.width - 2, 1, 0x1E1E1E, 0xA5A5A5, 0x3C3C3C, 0x696969))
 
-local textureInput = toolLayout:addChild(GUI.input(1, 1, toolLayout.width - 2, 1, 0x1E1E1E, 0xA5A5A5, 0x696969, 0x1E1E1E, 0xE1E1E1, "", localization.texture))
+local textureInput = toolLayout:addChild(GUI.input(1, 1, toolLayout.width - 2, 1, 0x1E1E1E, 0xA5A5A5, 0x696969, 0x1E1E1E, 0xE1E1E1, "", localization.texture, true))
 local tintColorSelector = addColorSelector(0x330040, localization.tintColor)
-local tintSwitch = toolLayout:addChild(GUI.switchAndLabel(1, 1, toolLayout.width - 2, 6, 0x66DB80, 0x1E1E1E, 0xE1E1E1, 0xA5A5A5, localization.tintEnabled .. ":", true)).switch
+local tintSwitch = toolLayout:addChild(GUI.switchAndLabel(1, 1, toolLayout.width - 2, 6, 0x66DB80, 0x1E1E1E, 0xE1E1E1, 0xA5A5A5, localization.tintEnabled .. ":", false)).switch
 
 local addShapeButton = addButton(localization.add)
 
@@ -94,15 +94,15 @@ local removeShapeButton = addButton(localization.remove)
 
 addSeparator(localization.blockSettings)
 
-local labelInput = toolLayout:addChild(GUI.input(1, 1, toolLayout.width - 2, 1, 0x1E1E1E, 0xA5A5A5, 0x696969, 0x1E1E1E, 0xE1E1E1, "", localization.label))
-local tooltipInput = toolLayout:addChild(GUI.input(1, 1, toolLayout.width - 2, 1, 0x1E1E1E, 0xA5A5A5, 0x696969, 0x1E1E1E, 0xE1E1E1, "", localization.tooltip))
-local buttonModeSwitch = toolLayout:addChild(GUI.switchAndLabel(1, 1, toolLayout.width - 2, 6, 0x66DB80, 0x1E1E1E, 0xE1E1E1, 0xA5A5A5, localization.buttonMode .. ":", true)).switch
+local labelInput = toolLayout:addChild(GUI.input(1, 1, toolLayout.width - 2, 1, 0x1E1E1E, 0xA5A5A5, 0x696969, 0x1E1E1E, 0xE1E1E1, "", localization.label, true))
+local tooltipInput = toolLayout:addChild(GUI.input(1, 1, toolLayout.width - 2, 1, 0x1E1E1E, 0xA5A5A5, 0x696969, 0x1E1E1E, 0xE1E1E1, "", localization.tooltip, true))
+local buttonModeSwitch = toolLayout:addChild(GUI.switchAndLabel(1, 1, toolLayout.width - 2, 6, 0x66DB80, 0x1E1E1E, 0xE1E1E1, 0xA5A5A5, localization.buttonMode .. ":", false)).switch
 local collisionSwitch = toolLayout:addChild(GUI.switchAndLabel(1, 1, toolLayout.width - 2, 6, 0x66DB80, 0x1E1E1E, 0xE1E1E1, 0xA5A5A5, localization.collidable .. ":", true)).switch
 
-local redstoneSlider = toolLayout:addChild(GUI.slider(1, 1, toolLayout.width - 2, 0x66DB80, 0x1E1E1E, 0xE1E1E1, 0xA5A5A5, 0, 15, 8, false, localization.emitRedstone .. ": ", ""))
+local redstoneSlider = toolLayout:addChild(GUI.slider(1, 1, toolLayout.width - 2, 0x66DB80, 0x1E1E1E, 0xE1E1E1, 0xA5A5A5, 0, 15, 0, false, localization.emitRedstone .. ": ", ""))
 redstoneSlider.roundValues = true
 
-local lightLevelSlider = toolLayout:addChild(GUI.slider(1, 1, toolLayout.width - 2, 0x66DB80, 0x1E1E1E, 0xE1E1E1, 0xA5A5A5, 0, 15, 8, false, localization.lightLevel .. ": ", ""))
+local lightLevelSlider = toolLayout:addChild(GUI.slider(1, 1, toolLayout.width - 2, 0x66DB80, 0x1E1E1E, 0xE1E1E1, 0xA5A5A5, 0, 15, 0, false, localization.lightLevel .. ": ", ""))
 lightLevelSlider.height = 2
 lightLevelSlider.roundValues = true
 
@@ -166,17 +166,6 @@ for i = 1, 3 do
 	end
 end
 
-local function updateComboBoxFromModel()
-	elementComboBox:clear()
-	for i = 1, #model.shapes do
-		if checkShapeState(model.shapes[i]) then
-			local item = elementComboBox:addItem(tostring(i))
-			item.shapeIndex = i
-			item.color = colors[i]
-		end
-	end
-end
-
 local function updateOnHologram()
 	if proxies.hologram and projectorSwitch.state then
 		local initialX = 17
@@ -218,19 +207,35 @@ local function getCurrentShapeIndex()
 	return item and item.shapeIndex
 end
 
+local function updateComboBoxFromModel()
+	elementComboBox:clear()
+	
+	for i = 1, #model.shapes do
+		if checkShapeState(model.shapes[i]) then
+			local item = elementComboBox:addItem(tostring(i))
+			item.shapeIndex = i
+			item.color = colors[i]
+		end
+	end
+end
+
+local function updateAddRemoveButtonsState()
+	addShapeButton.disabled = #model.shapes >= shapeLimit
+	removeShapeButton.disabled = #model.shapes < 1 or elementComboBox:count() < 1
+end
+
 local function updateWidgetsFromModel()
-	updateComboBoxFromModel()
 	labelInput.text = model.label or ""
 	tooltipInput.text = model.tooltip or ""
-	buttonModeSwitch.state = model.buttonMode
-	collisionSwitch.state = model.collidable
+	buttonModeSwitch:setState(model.buttonMode)
+	collisionSwitch:setState(model.collidable)
 	redstoneSlider.value = model.emitRedstone or 0
 	lightLevelSlider.value = model.lightLevel or 0
 
 	local shapeIndex = getCurrentShapeIndex()
 	if shapeIndex then
 		textureInput.text = model.shapes[shapeIndex].texture or ""
-		tintSwitch.state = model.shapes[shapeIndex].tint and true or false
+		tintSwitch:setState(model.shapes[shapeIndex].tint and true or false)
 		tintColorSelector.color = model.shapes[shapeIndex].tint or tintColorSelector.color
 	end
 end
@@ -257,7 +262,10 @@ end
 
 local function load(path)
 	model = table.fromFile(path)
+
+	updateComboBoxFromModel()
 	updateWidgetsFromModel()
+	updateAddRemoveButtonsState()
 end
 
 openButton.onTouch = function()
@@ -277,7 +285,6 @@ saveButton.onTouch = function()
 	filesystemDialog:setMode(GUI.IO_MODE_SAVE, GUI.IO_MODE_FILE)
 	filesystemDialog:addExtensionFilter(".3dm")
 	filesystemDialog.onSubmit = function(path)
-		updateModelFromWidgets()
 		table.toFile(path, model, true)
 	end
 	filesystemDialog:show()
@@ -453,18 +460,11 @@ flipButton.onTouch = function()
 	updateOnHologram()
 end
 
-local function updateAddRemoveButtonsState()
-	addShapeButton.disabled = #model.shapes >= shapeLimit
-	removeShapeButton.disabled = #model.shapes < 1 or elementComboBox:count() < 1
-end
-
-textureInput.onInputFinished = updateModelFromWidgets
-tintSwitch.onStateChanged = updateModelFromWidgets
-tintColorSelector.onColorSelected = updateModelFromWidgets
-
 disabledListItem.onTouch = function()
 	updateComboBoxFromModel()
+	updateWidgetsFromModel()
 	updateAddRemoveButtonsState()
+
 	mainContainer:drawOnScreen()
 end
 
@@ -472,10 +472,12 @@ enabledListItem.onTouch = disabledListItem.onTouch
 
 addShapeButton.onTouch = function()
 	table.insert(model.shapes, {6, 6, 0, 10, 10, 1, state = modelList.selectedItem == 2 or nil})
+	
 	updateComboBoxFromModel()
 	elementComboBox.selectedItem = elementComboBox:count()
-
+	updateWidgetsFromModel()
 	updateAddRemoveButtonsState()
+
 	mainContainer:drawOnScreen()
 end
 
@@ -483,13 +485,13 @@ removeShapeButton.onTouch = function()
 	table.remove(model.shapes, getCurrentShapeIndex())
 
 	updateComboBoxFromModel()
+	updateWidgetsFromModel()
 	updateAddRemoveButtonsState()
+
 	mainContainer:drawOnScreen()
 end
 
 printButton.onTouch = function()
-	updateModelFromWidgets()
-
 	proxies.printer3d.reset()
 
 	if model.label then
@@ -536,6 +538,22 @@ printButton.onTouch = function()
 		GUI.alert(localization.failedToPrint .. ": " .. reason)
 	end
 end
+
+elementComboBox.onItemSelected = function()
+	updateWidgetsFromModel()
+
+	mainContainer:drawOnScreen()
+end
+
+labelInput.onInputFinished = updateModelFromWidgets
+tooltipInput.onInputFinished = updateModelFromWidgets
+buttonModeSwitch.onStateChanged = updateModelFromWidgets
+collisionSwitch.onStateChanged = updateModelFromWidgets
+redstoneSlider.onValueChanged = updateModelFromWidgets
+lightLevelSlider.onValueChanged = updateModelFromWidgets
+textureInput.onInputFinished = updateModelFromWidgets
+tintSwitch.onStateChanged = updateModelFromWidgets
+tintColorSelector.onColorSelected = updateModelFromWidgets
 
 --------------------------------------------------------------------------------
 
