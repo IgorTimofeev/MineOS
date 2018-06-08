@@ -322,14 +322,12 @@ view.draw = function()
 				if width > 0 and height > 0 and currentLayer >= shape[3] and currentLayer <= shape[6] - 1 then
 					buffer.drawRectangle(x, y, width, height, i == shapeIndex and colors[i] or color.blend(colors[i], 0xFFFFFF, 0.5), 0x0, " ")
 
-					if i == shapeIndex then
-						if currentLayer == shape[3] then
-							buffer.drawRectangle(x, y, viewPixelWidth, viewPixelHeight, 0x0, 0x0, " ", 0.6)
-						end
+					if currentLayer == shape[3] then
+						buffer.drawRectangle(x, y, viewPixelWidth, viewPixelHeight, 0x0, 0x0, " ", i == shapeIndex and 0.2 or 0.6)
+					end
 
-						if currentLayer == shape[6] - 1 then
-							buffer.drawRectangle(x + width - viewPixelWidth, y + height - viewPixelHeight, viewPixelWidth, viewPixelHeight, 0x0, 0x0, " ", 0.8)
-						end
+					if currentLayer == shape[6] - 1 then
+						buffer.drawRectangle(x + width - viewPixelWidth, y + height - viewPixelHeight, viewPixelWidth, viewPixelHeight, 0x0, 0x0, " ", i == shapeIndex and 0.4 or 0.8)
 					end
 				end
 			end
