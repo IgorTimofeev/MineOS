@@ -1,19 +1,13 @@
 
-local args = {...}
+local args, options = require("shell").parse(...)
 
 require("advancedLua")
 local component = require("component")
-local computer = require("computer")
-local web = require("web")
 local GUI = require("GUI")
 local buffer = require("doubleBuffering")
-local MineOSCore = require("MineOSCore")
-local MineOSPaths = require("MineOSPaths")
-local MineOSInterface = require("MineOSInterface")
-local image = require("image")
-local fs = require("filesystem")
 local color = require("color")
 local unicode = require("unicode")
+local MineOSCore = require("MineOSCore")
 local bigLetters = require("bigLetters")
 
 --------------------------------------------------------------------------------
@@ -72,6 +66,9 @@ addSeparator(localization.modelSettings)
 local newButton = addButton(localization.new)
 local openButton = addButton(localization.open)
 local saveButton = addButton(localization.save)
+addButton(localization.exit).onTouch = function()
+	mainContainer:stopEventHandling()
+end
 
 addSeparator(localization.elementSettings)
 
@@ -258,13 +255,17 @@ newButton.onTouch = function()
 	addShapeButton.onTouch()
 end
 
+local function load(path)
+	model = table.fromFile(path)
+	updateWidgetsFromModel()
+end
+
 openButton.onTouch = function()
 	local filesystemDialog = GUI.addFilesystemDialog(mainContainer, true, 50, math.floor(mainContainer.height * 0.8), "Open", "Cancel", "File name", "/")
 	filesystemDialog:setMode(GUI.IO_MODE_OPEN, GUI.IO_MODE_FILE)
 	filesystemDialog:addExtensionFilter(".3dm")
 	filesystemDialog.onSubmit = function(path)
-		model = table.fromFile(path)
-		updateWidgetsFromModel()
+		load(path)
 		mainContainer:drawOnScreen()
 		updateOnHologram()
 	end
@@ -538,10 +539,13 @@ end
 
 --------------------------------------------------------------------------------
 
-newButton.onTouch()
-updateWidgetsFromModel()
-updateAddRemoveButtonsState()
-updateOnHologram()
+if (args.o or args.open) and args[1] then
+	load(path)
+else
+	newButton.onTouch()
+end
 
+updateAddRemoveButtonsState()
 mainContainer:drawOnScreen()
 mainContainer:startEventHandling()
+updateOnHologram()
