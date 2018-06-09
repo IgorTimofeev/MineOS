@@ -1259,6 +1259,8 @@ local function GUICopy(parentContainer, fileList, toPath)
 		parentContainer:stopEventHandling()
 	end
 
+	buttonsLayout:fitToChildrenSize(1, 1)
+
 	local function copyOrMove(path, finalPath)
 		switchAndLabel.hidden = true
 		buttonsLayout.hidden = true
