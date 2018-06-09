@@ -17,6 +17,7 @@ local currentLayer = 0
 local model
 local shapeLimit = 24
 local proxies = {}
+local viewPixelWidth, viewPixelHeight = 4, 2
 
 local colors, hue, hueStep = {}, 0, 360 / shapeLimit
 for i = 1, shapeLimit do
@@ -24,11 +25,7 @@ for i = 1, shapeLimit do
 	hue = hue + hueStep
 end
 
-local viewPixelWidth, viewPixelHeight = 4, 2
-
 --------------------------------------------------------------------------------
-
-buffer.setResolution(buffer.getGPUProxy().maxResolution())
 
 local mainContainer = GUI.fullScreenContainer()
 
@@ -54,19 +51,32 @@ end
 
 local printButton = mainContainer:addChild(GUI.button(1, mainContainer.height - 2, toolLayout.width, 3, 0x4B4B4B, 0xD2D2D2, 0xE1E1E1, 0x3C3C3C, localization.print))
 
-local currentLayerObject = toolLayout:addChild(GUI.object(1, 1, toolLayout.width, 5))
-currentLayerObject.draw = function()
+toolLayout:addChild(GUI.object(1, 1, toolLayout.width, 5)).draw = function(object)
 	local text = tostring(math.floor(currentLayer))
 	local width = bigLetters.getTextSize(text)
-	bigLetters.drawText(math.floor(currentLayerObject.x + currentLayerObject.width / 2 - width / 2), currentLayerObject.y, 0xE1E1E1, text)
+	bigLetters.drawText(math.floor(object.x + object.width / 2 - width / 2), object.y, 0xE1E1E1, text)
 end
 
 addSeparator(localization.modelSettings)
 
 local newButton = addButton(localization.new)
 local openButton = addButton(localization.open)
-local saveButton = addButton(localization.save)
+
+addButton(localization.save).onTouch = function()
+	local filesystemDialog = GUI.addFilesystemDialog(mainContainer, true, 50, math.floor(mainContainer.height * 0.8), "Save", "Cancel", "File name", "/")
+	filesystemDialog:setMode(GUI.IO_MODE_SAVE, GUI.IO_MODE_FILE)
+	filesystemDialog:addExtensionFilter(".3dm")
+	filesystemDialog.onSubmit = function(path)
+		table.toFile(path, model, true)
+	end
+	filesystemDialog:show()
+end
+
 addButton(localization.exit).onTouch = function()
+	if hologram then
+		hologram.clear()
+	end
+
 	mainContainer:stopEventHandling()
 end
 
@@ -177,16 +187,9 @@ local function updateOnHologram()
 		for i = 1, #model.shapes do
 			local shape = model.shapes[i]
 			if checkShapeState(shape) then
-				local x1 = initialX + shape[1]
-				local y1 = initialY + shape[2]
-				local z1 = initialZ + shape[3]
-				local x2 = initialX + shape[4] - 1
-				local y2 = initialY + shape[5] - 1
-				local z2 = initialZ + shape[6] - 1
-
-				for x = x1, x2 do
-					for z = z1, z2 do
-						proxies.hologram.fill(x, z, y1, y2, i == elementComboBox.selectedItem and 1 or 2)
+				for x = initialX + shape[1], initialX + shape[4] - 1 do
+					for z = initialZ + shape[3], initialZ + shape[6] - 1 do
+						proxies.hologram.fill(x, z, initialY + shape[2], initialY + shape[5] - 1, i == elementComboBox.selectedItem and 1 or 2)
 					end
 				end
 			end
@@ -255,11 +258,6 @@ local function updateModelFromWidgets()
 	end
 end
 
-newButton.onTouch = function()
-	model = {shapes = {}}
-	addShapeButton.onTouch()
-end
-
 local function load(path)
 	model = table.fromFile(path)
 
@@ -274,18 +272,9 @@ openButton.onTouch = function()
 	filesystemDialog:addExtensionFilter(".3dm")
 	filesystemDialog.onSubmit = function(path)
 		load(path)
+
 		mainContainer:drawOnScreen()
 		updateOnHologram()
-	end
-	filesystemDialog:show()
-end
-
-saveButton.onTouch = function()
-	local filesystemDialog = GUI.addFilesystemDialog(mainContainer, true, 50, math.floor(mainContainer.height * 0.8), "Save", "Cancel", "File name", "/")
-	filesystemDialog:setMode(GUI.IO_MODE_SAVE, GUI.IO_MODE_FILE)
-	filesystemDialog:addExtensionFilter(".3dm")
-	filesystemDialog.onSubmit = function(path)
-		table.toFile(path, model, true)
 	end
 	filesystemDialog:show()
 end
@@ -353,64 +342,67 @@ toolLayout.eventHandler = function(mainContainer, toolLayout, e1, e2, e3, e4, e5
 	end
 end
 
-local touchX, touchY, clicked
+local touchX, touchY, shapeX, shapeY, shapeZ
 view.eventHandler = function(mainContainer, view, e1, e2, e3, e4, e5)
-	if e1 == "touch" then
+	if e1 == "touch" or e1 == "drag" then
 		if e5 > 0 then
-			touchX, touchY = e3, e4
+			if e1 == "touch" then
+				touchX, touchY = e3, e4
+			elseif touchX then
+				view.localX, view.localY = view.localX + e3 - touchX, view.localY + e4 - touchY
+				touchX, touchY = e3, e4
+
+				mainContainer:drawOnScreen()
+			end
 		else
 			local shapeIndex = getCurrentShapeIndex()
 			if shapeIndex then
 				local shape = model.shapes[shapeIndex]
-
 				local x = math.floor((e3 - view.x) / view.width * 16)
 				local y = 15 - math.floor((e4 - view.y) / view.height * 16)
 
-				if clicked then
-					shape[4] = x
-					shape[5] = y
-					shape[6] = currentLayer
-
+				if e1 == "touch" then
+					shapeX, shapeY, shapeZ = x, y, currentLayer
+					shape[1], shape[2], shape[3] = x, y, currentLayer
+					shape[4], shape[5], shape[6] = x + 1, y + 1, currentLayer + 1
+				elseif shapeX then
+					shape[1], shape[2], shape[3] = shapeX, shapeY, shapeZ
+					shape[4], shape[5], shape[6] = x, y, currentLayer
 					fixShape(shape)
-
-					shape[4] = shape[4] + 1
-					shape[5] = shape[5] + 1
-					shape[6] = shape[6] + 1
-					
-					clicked = false
-				else
-					shape[1] = x
-					shape[2] = y
-					shape[3] = currentLayer
-
-					shape[4] = x + 1
-					shape[5] = y + 1
-					shape[6] = currentLayer + 1
-
-					clicked = true
+					shape[4], shape[5], shape[6] = shape[4] + 1, shape[5] + 1, shape[6] + 1
 				end
 
 				mainContainer:drawOnScreen()
-				updateOnHologram()
 			end
 		end
-	elseif e1 == "drag" and touchX and e5 > 0 then
-		view.localX, view.localY = view.localX + e3 - touchX, view.localY + e4 - touchY
-		touchX, touchY = e3, e4
-
-		mainContainer:drawOnScreen()
 	elseif e1 == "drop" then
-		touchX, touchY = nil, nil
+		touchX, touchY, shapeX, shapeY, shapeZ = nil, nil, nil, nil, nil
+		updateOnHologram()
 	elseif e1 == "scroll" then
+		local function fix()
+			local shapeIndex = getCurrentShapeIndex()
+			if shapeX and shapeIndex then
+				local shape = model.shapes[shapeIndex]
+				shape[3] = shapeZ
+				shape[6] = currentLayer
+				fixShape(shape)
+				shape[6] = shape[6] + 1
+			end
+		end
+
 		if e5 > 0 then
 			if currentLayer < 15 then
 				currentLayer = currentLayer + 1
+				fix()
+
 				mainContainer:drawOnScreen()
 				updateOnHologram()
 			end
 		else
 			if currentLayer > 0 then
 				currentLayer = currentLayer - 1
+				fix()
+
 				mainContainer:drawOnScreen()
 				updateOnHologram()
 			end
@@ -472,15 +464,32 @@ end
 
 enabledListItem.onTouch = disabledListItem.onTouch
 
-addShapeButton.onTouch = function()
+local function addShape()
 	table.insert(model.shapes, {6, 6, 0, 10, 10, 1, state = modelList.selectedItem == 2 or nil})
 	
 	updateComboBoxFromModel()
 	elementComboBox.selectedItem = elementComboBox:count()
 	updateWidgetsFromModel()
 	updateAddRemoveButtonsState()
+end
+
+local function new()
+	model = {shapes = {}}
+	addShape()
+end
+
+newButton.onTouch = function()
+	new()
 
 	mainContainer:drawOnScreen()
+	updateOnHologram()
+end
+
+addShapeButton.onTouch = function()
+	addShape()
+
+	mainContainer:drawOnScreen()
+	updateOnHologram()
 end
 
 removeShapeButton.onTouch = function()
@@ -491,6 +500,7 @@ removeShapeButton.onTouch = function()
 	updateAddRemoveButtonsState()
 
 	mainContainer:drawOnScreen()
+	updateOnHologram()
 end
 
 printButton.onTouch = function()
@@ -522,17 +532,7 @@ printButton.onTouch = function()
 	
 	for i = 1, #model.shapes do
 		local shape = model.shapes[i]
-		proxies.printer3d.addShape(
-			shape[1],
-			shape[2],
-			shape[3],
-			shape[4],
-			shape[5],
-			shape[6],
-			shape.texture,
-			shape.state,
-			shape.tint
-		)
+		proxies.printer3d.addShape(shape[1], shape[2], shape[3], shape[4], shape[5], shape[6], shape.texture, shape.state, shape.tint)
 	end
 
 	local success, reason = proxies.printer3d.commit(count)
@@ -545,6 +545,7 @@ elementComboBox.onItemSelected = function()
 	updateWidgetsFromModel()
 
 	mainContainer:drawOnScreen()
+	updateOnHologram()
 end
 
 labelInput.onInputFinished = updateModelFromWidgets
@@ -562,10 +563,9 @@ tintColorSelector.onColorSelected = updateModelFromWidgets
 if (options.o or options.open) and args[1] then
 	load(args[1])
 else
-	newButton.onTouch()
+	new()
 end
 
-updateAddRemoveButtonsState()
 mainContainer:drawOnScreen()
-mainContainer:startEventHandling()
 updateOnHologram()
+mainContainer:startEventHandling()
