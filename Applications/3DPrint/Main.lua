@@ -253,7 +253,7 @@ local function updateModelFromWidgets()
 
 	local shapeIndex = getCurrentShapeIndex()
 	if shapeIndex then
-		model.shapes[shapeIndex].texture = #textureInput.text > 0 and textureInput.text or "empty"
+		model.shapes[shapeIndex].texture = #textureInput.text > 0 and textureInput.text or nil
 		model.shapes[shapeIndex].tint = tintSwitch.state and tintColorSelector.color or nil
 	end
 end
@@ -532,7 +532,7 @@ printButton.onTouch = function()
 	
 	for i = 1, #model.shapes do
 		local shape = model.shapes[i]
-		proxies.printer3d.addShape(shape[1], shape[2], shape[3], shape[4], shape[5], shape[6], shape.texture, shape.state, shape.tint)
+		proxies.printer3d.addShape(shape[1], shape[2], shape[3], shape[4], shape[5], shape[6], shape.texture or "empty", shape.state, shape.tint)
 	end
 
 	local success, reason = proxies.printer3d.commit(count)

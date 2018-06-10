@@ -55,7 +55,7 @@ for j = 1, buttonCount do
 		buttons[j][i] = buttonsContainer:addChild(GUI.button(x, y, buttonWidth, buttonHeight, 0x2D2D2D, 0xB4B4B4, 0x696969, 0xD2D2D2, " "))
 		buttons[j][i].onTouch = function()
 			set(i, j)
-			buttons[j][i]:getFirstParent():drawOnScreen()
+			buttons[j][i].firstParent:drawOnScreen()
 		end
 
 		x = x + buttonWidth + stepX

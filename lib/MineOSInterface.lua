@@ -361,13 +361,13 @@ end
 function MineOSInterface.iconLaunchers.showPackageContent(icon)
 	icon.parent.parent:setWorkpath(icon.path)
 	icon.parent.parent:updateFileList()
-	icon:getFirstParent():drawOnScreen()
+	icon.firstParent:drawOnScreen()
 end
 
 function MineOSInterface.iconLaunchers.showContainingFolder(icon)
 	icon.parent.parent:setWorkpath(fs.path(icon.shortcutPath))
 	icon.parent.parent:updateFileList()
-	icon:getFirstParent():drawOnScreen()
+	icon.firstParent:drawOnScreen()
 end
 
 -----------------------------------------------------------------------------------------------------------------------------------
