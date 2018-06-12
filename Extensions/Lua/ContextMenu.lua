@@ -20,14 +20,14 @@ menu:addItem(MineOSCore.localization.launchWithArguments).onTouch = function()
 end
 
 menu:addItem(MineOSCore.localization.flashEEPROM, not component.isAvailable("eeprom") or fs.size(icon.path) > 4096).onTouch = function()
-	local container = MineOSInterface.addUniversalContainer(MineOSInterface.mainContainer, MineOSCore.localization.flashEEPROM)
-	container.layout:addChild(GUI.label(1, 1, container.width, 1, 0x969696, MineOSCore.localization.flashingEEPROM .. "...")):setAlignment(GUI.alignment.horizontal.center, GUI.alignment.vertical.top)
+	local container = MineOSInterface.addBackgroundContainer(MineOSInterface.mainContainer, MineOSCore.localization.flashEEPROM)
+	container.layout:addChild(GUI.label(1, 1, container.width, 1, 0x969696, MineOSCore.localization.flashingEEPROM .. "...")):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
 	MineOSInterface.mainContainer:drawOnScreen()
 
 	local file = io.open(icon.path, "r")
 	component.eeprom.set(file:read("*a"))
 	file:close()
 	
-	container:delete()
+	container:remove()
 	MineOSInterface.mainContainer:drawOnScreen()
 end
