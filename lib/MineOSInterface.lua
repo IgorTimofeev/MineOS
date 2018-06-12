@@ -1003,7 +1003,7 @@ function MineOSInterface.newApplication(parentWindow, iconField, x, y, path)
 					fs.copy(filesystemChooser.path or MineOSPaths.icons .. "SampleIcon.pic", finalPath .. "Icon.pic")
 					
 					local file = io.open(finalPath .. "Main.lua", "w")
-					file:write("require(\"GUI\").error(\"Hello world\")")
+					file:write("require(\"GUI\").alert(\"Hello world\")")
 					file:close()
 
 					container:remove()
