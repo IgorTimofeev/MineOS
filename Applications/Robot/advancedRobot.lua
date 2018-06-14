@@ -240,7 +240,7 @@ function AR.swingAndMove(direction)
 		else
 			if swingReason == "block" then
 				AR.moveToZeroPosition()
-				return false, "Unbreakable block detected, going to base")
+				return false, "Unbreakable block detected, going to base"
 			end
 		end
 	end
