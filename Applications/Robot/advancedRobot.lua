@@ -58,18 +58,6 @@ AR.rotation = 0
 
 --------------------------------------------------------------------------------
 
-function AR.getRotatedPosition(x, z)
-	if AR.rotation == 0 then
-		return x, z
-	elseif AR.rotation == 1 then
-		return -z, x 
-	elseif AR.rotation == 2 then
-		return -x, -z
-	else
-		return z, -x
-	end
-end
-
 function AR.updateProxies()
 	local name
 	for name in pairs(AR.requiredProxies) do
