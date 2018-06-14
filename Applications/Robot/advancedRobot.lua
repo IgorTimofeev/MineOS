@@ -350,12 +350,6 @@ function AR.turnAround()
 	AR.turn(true)
 end
 
-AR.select = AR.proxies.robot.select
-AR.drop = AR.proxies.robot.drop
-AR.durability = AR.proxies.robot.durability
-AR.inventorySize = AR.proxies.robot.inventorySize
-AR.count = AR.proxies.robot.count
-
 --------------------------------------------------------------------------------
 
 local function callProxyMethod(proxyName, methodName, ...)
@@ -377,6 +371,12 @@ end
 --------------------------------------------------------------------------------
 
 AR.updateProxies()
+
+AR.select = AR.proxies.robot.select
+AR.drop = AR.proxies.robot.drop
+AR.durability = AR.proxies.robot.durability
+AR.inventorySize = AR.proxies.robot.inventorySize
+AR.count = AR.proxies.robot.count
 
 --------------------------------------------------------------------------------
 
