@@ -13,6 +13,10 @@ local list = {
     url = "https://raw.githubusercontent.com/IgorTimofeev/MineOS/master/Applications/Robot/experience.lua",
     path = "experience.lua",
   },
+  {
+    url = "https://raw.githubusercontent.com/IgorTimofeev/MineOS/master/Applications/Robot/VRScanRobot.lua",
+    path = "VRScan.lua",
+  },
 }
 
 for i = 1, #list do
