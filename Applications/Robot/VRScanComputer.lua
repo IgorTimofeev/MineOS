@@ -1,6 +1,8 @@
 
 local component = require("component")
 local GUI = require("GUI")
+local color = require("color")
+local computer = require("computer")
 local filesystem = require("filesystem")
 local MineOSPaths = require("MineOSPaths")
 
@@ -11,7 +13,7 @@ local modem = component.modem
 
 local port = 512
 
-config = {
+local config = {
 	glassesX = 0,
 	glassesY = 0,
 	glassesZ = 0,
@@ -101,7 +103,7 @@ end
 
 layout:addChild(GUI.button(1, 1, width, 3, 0xC3C3C3, 0xFFFFFF, 0x969696, 0xFFFFFF, "Scan")).onTouch = function()
 	saveConfig()
-	
+
 	broadcast("scan", table.toString({
 		width = config.width,
 		height = config.height,
@@ -125,7 +127,12 @@ layout.eventHandler = function(mainContainer, layout, e1, e2, e3, e4, e5, e6, e7
 						for i = 1, #result.blocks[x][y][z] do
 							local cube = glasses.addCube3D()
 							cube.setVisibleThroughObjects(true)
-							cube.setColor(0, 0.6, 1)
+
+							local maxHue = 240
+							local hue = (1 - result.blocks[x][y][z][i] / config.maxDensity) * maxHue
+							local r, g, b = color.HSBToRGB(hue, 1, 1)
+
+							cube.setColor(r / 255, g / 255, b / 255)
 							cube.setAlpha(0.5)
 							cube.set3DPos(
 								config.robotX - config.glassesX + result.x + x,
@@ -133,6 +140,8 @@ layout.eventHandler = function(mainContainer, layout, e1, e2, e3, e4, e5, e6, e7
 								config.robotZ - config.glassesZ + result.z + z
 							)
 						end
+
+						computer.pullSignal(0)
 					end
 				end
 			end

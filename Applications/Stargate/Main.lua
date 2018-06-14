@@ -130,10 +130,12 @@ local function newThing(x, y, width, height)
 end
 
 local function dial(address)
-	local success = stargate.dial(address)
+	local success, reason = stargate.dial(address)
 	if success then
 		mainContainer.fuelProgressBar.value = math.ceil(stargate.energyToDial(address) / stargate.energyAvailable() * 100)
 		mainContainer:drawOnScreen()
+	else
+		GUI.alert("Failed to dial: " .. tostring(reason))
 	end
 end
 
