@@ -1,4 +1,5 @@
 
+local component = require("component")
 local computer = require("computer")
 local event = require("event")
 local sides = require("sides")
