@@ -15,6 +15,8 @@ AR.requiredProxies = {
 	"modem",
 	"geolyzer",
 	"redstone",
+	"experience",
+	"chunkloader"
 }
 
 AR.fuels = {
@@ -186,29 +188,29 @@ function AR.tryToDropDroppables(side)
 	end
 end
 
-function AR.dropAllResources(side, exceptArray)
-	side = side or sides.front
+function AR.dropAll(side, exceptArray)
 	exceptArray = exceptArray or AR.tools
 	print("Dropping all mined resources...")
 
 	for slot = 1, AR.inventorySize() do
 		local stack = AR.getStackInInternalSlot(slot)
 		if stack then
-			local thisIsAShittyItem = true
+			local droppableItem = true
 			
 			for exceptItem = 1, #exceptArray do
 				if stack.name == exceptArray[exceptItem] then
-					thisIsAShittyItem = false
+					droppableItem = false
 					break
 				end
 			end
 			
-			if thisIsAShittyItem then
+			if droppableItem then
 				AR.select(slot)
 				AR.drop(side)
 			end
 		end
 	end
+
 	AR.select(1)
 end
 
@@ -274,15 +276,15 @@ function AR.getSlotWithFuel()
 end
 
 function AR.checkGeneratorStatus()
-	if component.isAvailable("generator") then
-		if component.generator.count() == 0 then
+	if AR.proxies.generator then
+		if AR.proxies.generator.count() == 0 then
 			print("Generator is empty, trying to find some fuel in inventory")
 			local slot = AR.getSlotWithFuel()
 			if slot then
 				print("Found slot with fuel: " .. slot)
 				local oldSlot = AR.select()
 				AR.select(slot)
-				component.generator.insert()
+				AR.proxies.generator.insert()
 				AR.select(oldSlot)
 				return
 			else

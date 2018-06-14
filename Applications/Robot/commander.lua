@@ -1,4 +1,4 @@
-local AR = require("AR")
+local AR = require("advancedRobot")
 local args = {...}
 
 if #args < 0 then
