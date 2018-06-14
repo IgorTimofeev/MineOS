@@ -58,6 +58,18 @@ AR.rotation = 0
 
 --------------------------------------------------------------------------------
 
+function AR.getRotatedPosition(x, z)
+	if AR.rotation == 0 then
+		return x, z
+	elseif AR.rotation == 1 then
+		return -z, x 
+	elseif AR.rotation == 2 then
+		return -x, -z
+	else
+		return z, -x
+	end
+end
+
 function AR.updateProxies()
 	local name
 	for name in pairs(AR.requiredProxies) do
@@ -342,7 +354,7 @@ function AR.checkEnergyStatus()
 	if computer.energy() / computer.maxEnergy() < AR.zeroPositionReturnEnergy then
 		print("Low energy level detected")
 		-- Запоминаем старую позицию, шобы суда вернуться
-		local oldPosition = AR.getRobotPosition()
+		local x, y, z = AR.positionX, AR.positionY, AR.positionZ
 		-- Пиздуем на базу за зарядкой
 		AR.moveToZeroPosition()
 		-- Заряжаемся, пока энергия не достигнет более-менее максимума
@@ -351,7 +363,7 @@ function AR.checkEnergyStatus()
 			os.sleep(1)
 		end
 		-- Пиздуем обратно
-		AR.moveToPosition(oldPosition.x, oldPosition.y, oldPosition.z)
+		AR.moveToPosition(x, y, z)
 		AR.turnToRotation(oldPosition.rotation)
 	end
 end

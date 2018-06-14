@@ -28,6 +28,8 @@ local function execute(symbol)
 		print("Swinging:", AR.swingForward())
 	elseif symbol == "e" then
 		print("Swinging:", AR.useForward())
+	elseif symbol == "." then
+		print("Returning to start:", AR.moveToZeroPosition())
 	end
 end
 

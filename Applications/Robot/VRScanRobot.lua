@@ -9,52 +9,86 @@ AR.proxies.modem.open(port)
 --------------------------------------------------------------------------------
 
 local function broadcast(...)
-	modem.broadcast(port, "VRScan", ...)
+	AR.proxies.modem.broadcast(port, "VRScan", ...)
+end
+
+local function round(num, decimalPlaces)
+	local mult = 10 ^ (decimalPlaces or 0)
+	return math.floor(num * mult + 0.5) / mult
 end
 
 local function move(x, y, z)
 	print("Moving to next chunk with offset " .. x .. "x" .. y .. "x" .. z)
-	AR.moveToPosition(AR.robotPositionX + x, AR.robotPositionY + y, AR.robotPositionZ + z)
+	AR.moveToPosition(AR.positionX + x, AR.positionY + y, AR.positionZ + z)
 end
+
+print("Waiting for modem commands...")
 
 while true do
 	local e = {event.pull()}
 	if e[1] == "modem_message" and e[6] == "VRScan" then
 		if e[7] == "scan" then
-			print("Scanning started")
-
-			local width, height, length, radius, minDensity, maxDensity = e[8], e[9], e[10], e[11], e[12], e[13]
+			local settings = serialization.unserialize(e[8])
 			
-			for h = 1, height do
-				for w = 1, width do
-					for l = 1, length do
+			print("Scanning with paramerers: " .. e[8])
+
+			local h, w, l, startX, startY, startZ = 0, 0, 0, AR.positionX, AR.positionY, AR.positionZ
+
+			local function move()
+				local distance = settings.radius * 2 + 1
+				local moveX, moveZ = AR.getRotatedPosition(w * distance, l * distance)
+				
+				AR.moveToPosition(
+					startX + moveX,
+					startY + h * distance,
+					startZ + moveZ
+				)
+			end
+
+			while h < settings.height do
+				while w < settings.width do
+					while l < settings.length do
 						print("Scanning chunk " .. w .. " x " .. h .. " x " .. l)
 						
-						local result, column = {}
-						for z = -radius, radius do
-							for x = -radius, radius do
+						local result, column = {
+							x = AR.positionX,
+							y = AR.positionY,
+							z = AR.positionZ,
+							blocks = {}
+						}
+
+						local blockCount = 0
+						for z = -settings.radius, settings.radius do
+							for x = -settings.radius, settings.radius do
 								column = AR.proxies.geolyzer.scan(x, z)
-								for i = 1, #column do
-									if column[i] >= minDensity and column[i] <= maxDensity then
-										table.insert(result, AR.robotPositionX)
-										table.insert(result, AR.robotPositionY)
-										table.insert(result, AR.robotPositionZ)
-										table.insert(result, column[i])
+								
+								for i = 32 - settings.radius, 32 + settings.radius do
+									if column[i] >= settings.minDensity and column[i] <= settings.maxDensity then
+										local y = i - 33
+										result.blocks[x] = result.blocks[x] or {}
+										result.blocks[x][y] = result.blocks[x][y] or {}
+										result.blocks[x][y][z] = result.blocks[x][y][z] or {}
+										table.insert(result.blocks[x][y][z], round(column[i], 2))
+
+										blockCount = blockCount + 1
 									end
 								end 
 							end
 						end
 
-						print("Scanning finished. Sending result with size: " .. #result)
-						broadcast("result", AR.robotPositionX, AR.robotPositionY, AR.robotPositionZ, serialization.serialize(result))
+						print("Scanning finished. Sending result with blocks size: " .. blockCount)
+						broadcast("result", serialization.serialize(result))
 
-						move(0, 0, radius + 1)
+						l = l + 1
+						move()
 					end
 
-					move(radius + 1, 0, 0)
+					w = w + 1
+					move()
 				end
 
-				move(0, radius + 1, 0)
+				h = h + 1
+				move()
 			end
 		end
 	end
