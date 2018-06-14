@@ -10,8 +10,8 @@ local list = {
     path = "commander.lua",
   },
   {
-    url = "https://raw.githubusercontent.com/IgorTimofeev/MineOS/master/Applications/Robot/expirience.lua",
-    path = "expirience.lua",
+    url = "https://raw.githubusercontent.com/IgorTimofeev/MineOS/master/Applications/Robot/experience.lua",
+    path = "experience.lua",
   },
 }
 
