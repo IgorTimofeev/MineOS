@@ -1,43 +1,46 @@
-
 local component = require("component")
 local robot = require("robot")
-local currentToolSlot = 1
-local counter = 0
-local inventorySize = robot.inventorySize()
 
+local args = {...}
 
-robot.select(1)
-local success
-while true do
-	success = robot.swing()
-	if success then
-		robot.place()
-	end
-	counter = counter + 1
-	if counter > 50 then
-		local durability = robot.durability() or 500000000
-		counter = 0
-		print("Текущая экспа: " .. robot.level())
-		print("Текущий слот: " .. currentToolSlot)
-		print("Текущая прочность: " .. durability)
-		print(" ")
-		if durability < 0.1 then
-			currentToolSlot = currentToolSlot + 1
-			if currentToolSlot > inventorySize then currentToolSlot = inventorySize end
-			robot.select(currentToolSlot)
-			component.inventory_controller.equip()
-			robot.select(1)
-		end
-	end
+local function printUsage()
+  print("Usages:")
+  print("exp")
+  print("  Gets the current level.")
+  print("exp <slot>")
+  print("  Tries to consume an enchanted item to add")
+  print("  expierence to the upgrade")
+  print("  from the specified slot.")
+  print("exp all")
+  print("  from all slots.")
 end
 
-
-
-
-
-
-
-
-
-
-
+if component.isAvailable("experience") then
+  local e = component.experience
+  if #args == 0 then
+    print("Level: "..e.level())
+  elseif tonumber(args[1]) ~= nil then
+    local slot = tonumber(args[1])
+    robot.select(slot)
+    io.write("Experience from slot "..slot.."... ")
+    local success, msg = e.consume()
+    if success then
+      print("success.")
+    else
+      print("failed: "..msg)
+    end
+    robot.select(1)
+  elseif string.lower(args[1]) == "all" then
+    io.write("Experience from all slots... ")
+    for i = 1, robot.inventorySize() do
+      robot.select(i)
+      e.consume()
+    end
+    robot.select(1)
+    print("done.")
+  else
+    printUsage()
+  end
+else
+  print("This program requires the experience upgrade to be installed.")
+end

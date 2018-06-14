@@ -1,4 +1,4 @@
-local robotAPI = require("robotAPI")
+local AR = require("AR")
 local args = {...}
 
 if #args < 0 then
@@ -10,23 +10,23 @@ print("Task stated")
 
 local function execute(symbol)
 	if symbol == "f" then
-		print("Moving forward:", robotAPI.moveForward())
+		print("Moving forward:", AR.moveForward())
 	elseif symbol == "b" then
-		print("Moving backward:", robotAPI.moveBackward())
+		print("Moving backward:", AR.moveBackward())
 	elseif symbol == "u" then
-		print("Moving up:", robotAPI.moveUp())
+		print("Moving up:", AR.moveUp())
 	elseif symbol == "d" then
-		print("Moving down:", robotAPI.moveDown())
+		print("Moving down:", AR.moveDown())
 	elseif symbol == "r" then
-		print("Turning right:", robotAPI.turnRight())
+		print("Turning right:", AR.turnRight())
 	elseif symbol == "l" then
-		print("Turning left:", robotAPI.turnLeft())
+		print("Turning left:", AR.turnLeft())
 	elseif symbol == "t" then
-		print("Turning around:", robotAPI.turnAround())
+		print("Turning around:", AR.turnAround())
 	elseif symbol == "s" then
-		print("Swinging:", robotAPI.swing())
+		print("Swinging:", AR.swingForward())
 	elseif symbol == "e" then
-		print("Swinging:", robotAPI.use())
+		print("Swinging:", AR.useForward())
 	end
 end
 
