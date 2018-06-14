@@ -77,21 +77,27 @@ end
 --------------------------------------------------------------------------------
 
 function AR.move(direction)
-	if direction == sides.front or direction == sides.back then
-		local directionOffset = direction == sides.front and 1 or -1
+	local success, reason = AR.proxies.robot.move(direction)
+	
+	if success then
+		if direction == sides.front or direction == sides.back then
+			local directionOffset = direction == sides.front and 1 or -1
 
-		if AR.rotation == 0 then
-			AR.positionX = AR.positionX + directionOffset
-		elseif AR.rotation == 1 then
-			AR.positionZ = AR.positionZ + directionOffset
-		elseif AR.rotation == 2 then
-			AR.positionX = AR.positionX - directionOffset
-		elseif AR.rotation == 3 then
-			AR.positionZ = AR.positionZ - directionOffset
+			if AR.rotation == 0 then
+				AR.positionX = AR.positionX + directionOffset
+			elseif AR.rotation == 1 then
+				AR.positionZ = AR.positionZ + directionOffset
+			elseif AR.rotation == 2 then
+				AR.positionX = AR.positionX - directionOffset
+			elseif AR.rotation == 3 then
+				AR.positionZ = AR.positionZ - directionOffset
+			end
+		elseif direction == sides.up or direction == sides.down then
+			AR.positionY = AR.positionY + (direction == sides.up and 1 or -1)
 		end
-	elseif direction == sides.up or direction == sides.down then
-		AR.positionY = AR.positionY + (direction == sides.up and 1 or -1)
 	end
+
+	return success, reason
 end
 
 function AR.turn(clockwise)
@@ -231,11 +237,11 @@ end
 
 function AR.swingAndMove(direction)
 	while true do
-		local swingSuccess, swingReason = AR.proxies.robot.swing(direction)
+		local swingSuccess, swingReason = AR.swing(direction)
 		if swingSuccess or swingReason == "air" then
-			local moveSuccess, moveReason = AR.proxies.robot.move(direction)
+			local moveSuccess, moveReason = AR.move(direction)
 			if moveSuccess then
-				break
+				return moveSuccess, moveReason
 			end
 		else
 			if swingReason == "block" then
@@ -244,8 +250,6 @@ function AR.swingAndMove(direction)
 			end
 		end
 	end
-
-	return AR.move(direction)
 end
 
 function AR.getEmptySlotsCount()
