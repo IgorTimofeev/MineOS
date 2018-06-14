@@ -1,8 +1,9 @@
 local AR = require("advancedRobot")
 local args = {...}
 
-if #args < 0 then
-	print("No arguments")
+if #args == 0 then
+	print("Usage:")
+	print("  commander <command string>")
 	return
 end
 
