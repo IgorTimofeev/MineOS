@@ -10,41 +10,41 @@ local AR = {}
 
 AR.proxies = {}
 AR.requiredProxies = {
-	"robot",
-	"generator",
-	"inventory_controller",
-	"modem",
-	"geolyzer",
-	"redstone",
-	"experience",
-	"chunkloader"
+	["robot"] = true,
+	["generator"] = true,
+	["inventory_controller"] = true,
+	["modem"] = true,
+	["geolyzer"] = true,
+	["redstone"] = true,
+	["experience"] = true,
+	["chunkloader"] = true,
 }
 
 AR.fuels = {
-	"minecraft:coal",
-	"minecraft:coal_block",
-	"minecraft:lava_bucket",
-	"minecraft:coal_block",
+	["minecraft:coal"] = true,
+	["minecraft:coal_block"] = true,
+	["minecraft:lava_bucket"] = true,
+	["minecraft:coal_block"] = true,
 }
 
 AR.droppables = {
-	"minecraft:cobblestone",
-	"minecraft:grass",
-	"minecraft:dirt",
-	"minecraft:gravel",
-	"minecraft:sand",
-	"minecraft:sandstone",
-	"minecraft:torch",
-	"minecraft:planks",
-	"minecraft:fence",
-	"minecraft:chest",
-	"minecraft:monster_egg",
-	"minecraft:stonebrick",
+	["minecraft:cobblestone"] = true,
+	["minecraft:grass"] = true,
+	["minecraft:dirt"] = true,
+	["minecraft:gravel"] = true,
+	["minecraft:sand"] = true,
+	["minecraft:sandstone"] = true,
+	["minecraft:torch"] = true,
+	["minecraft:planks"] = true,
+	["minecraft:fence"] = true,
+	["minecraft:chest"] = true,
+	["minecraft:monster_egg"] = true,
+	["minecraft:stonebrick"] = true,
 }
 
 AR.tools = {
-	"minecraft:diamond_pickaxe",
-	"minecraft:iron_pickaxe",
+	["minecraft:diamond_pickaxe"] = true,
+	["minecraft:iron_pickaxe"] = true,
 }
 
 AR.toolReplaceDurability = 0.05
@@ -60,9 +60,7 @@ AR.rotation = 0
 
 function AR.updateProxies()
 	local name
-	for i = 1, #AR.requiredProxies do
-		name = AR.requiredProxies[i]
-		
+	for name in pairs(AR.requiredProxies) do
 		AR.proxies[name] = component.list(name)()
 		if AR.proxies[name] then
 			AR.proxies[name] = component.proxy(AR.proxies[name])
@@ -70,29 +68,15 @@ function AR.updateProxies()
 	end
 end
 
-function AR.moveToZeroPosition()
-	AR.moveToRequiredPosition(0, AR.positionY, 0)
-	AR.turnToRequiredRotation(0)
-	AR.tryToDropDroppables()
-	AR.moveToRequiredPosition(0, 0, 0)
+AR.updateProxies()
+
+for key, value in pairs(AR.proxies.robot) do
+	AR[key] = value
 end
 
-function AR.move(direction)
-	while true do
-		local swingSuccess, swingReason = AR.proxies.robot.swing(direction)
-		if swingSuccess or swingReason == "air" then
-			local moveSuccess, moveReason = AR.proxies.robot.move(direction)
-			if moveSuccess then
-				break
-			end
-		else
-			if swingReason == "block" then
-				AR.moveToZeroPosition()
-				error("Unbreakable block detected, going to base")
-			end
-		end
-	end
+--------------------------------------------------------------------------------
 
+function AR.move(direction)
 	if direction == sides.front or direction == sides.back then
 		local directionOffset = direction == sides.front and 1 or -1
 
@@ -106,14 +90,14 @@ function AR.move(direction)
 			AR.positionZ = AR.positionZ - directionOffset
 		end
 	elseif direction == sides.up or direction == sides.down then
-		local directionOffset = direction == sides.up and 1 or -1
-		AR.positionY = AR.positionY + directionOffset
+		AR.positionY = AR.positionY + (direction == sides.up and 1 or -1)
 	end
 end
 
 function AR.turn(clockwise)
 	AR.proxies.robot.turn(clockwise)
 	AR.rotation = AR.rotation + (clockwise and 1 or -1)
+	
 	if AR.rotation > 3 then
 		AR.rotation = 0
 	elseif AR.rotation < 0 then
@@ -121,15 +105,14 @@ function AR.turn(clockwise)
 	end
 end
 
-function AR.turnToRequiredRotation(requiredRotation)
+function AR.turnToRotation(requiredRotation)
 	local difference = AR.rotation - requiredRotation
-	
 	if difference ~= 0 then
 		local fastestWay
 		if difference > 0 then
-			if difference > 2 then fastestWay = true else fastestWay = false end
+			fastestWay = difference > 2
 		else
-			if -difference > 2 then fastestWay = false else fastestWay = true end
+			fastestWay = -difference <= 2
 		end
 
 		while AR.rotation ~= requiredRotation do
@@ -138,159 +121,27 @@ function AR.turnToRequiredRotation(requiredRotation)
 	end
 end
 
-function AR.moveToRequiredPosition(xTarget, yTarget, zTarget)
-	local xDistance = xTarget - AR.positionX
-	local yDistance = yTarget - AR.positionY
-	local zDistance = zTarget - AR.positionZ
+function AR.moveToPosition(xTarget, yTarget, zTarget)
+	local xDistance, yDistance, zDistance = xTarget - AR.positionX, yTarget - AR.positionY, zTarget - AR.positionZ
 
 	if yDistance ~= 0 then
 		local direction = yDistance > 0 and sides.up or sides.down
-		for i = 1, math.abs(yDistance) do AR.move(direction) end
+		for i = 1, math.abs(yDistance) do
+			AR.move(direction)
+		end
 	end
 
 	if xDistance ~= 0 then
-		AR.turnToRequiredRotation(xDistance > 0 and 0 or 2)
-		for i = 1, math.abs(xDistance) do AR.move(sides.front) end
+		AR.turnToRotation(xDistance > 0 and 0 or 2)
+		for i = 1, math.abs(xDistance) do
+			AR.move(sides.front)
+		end
 	end
 
 	if zDistance ~= 0 then
-		AR.turnToRequiredRotation(zDistance > 0 and 1 or 3)
-		for i = 1, math.abs(zDistance) do AR.move(sides.front) end
-	end
-end
-
-function AR.getEmptySlotsCount()
-	local count = 0
-	for slot = 1, AR.inventorySize() do
-		if AR.count(slot) == 0 then
-			count = count + 1
-		end
-	end
-
-	return count
-end
-
-function AR.tryToDropDroppables(side)
-	if AR.getEmptySlotsCount() < AR.emptySlotsCountDropping then 
-		print("Trying to drop all shitty resources to free some slots for mining")
-		for slot = 1, AR.inventorySize() do
-			local stack = AR.getStackInInternalSlot(slot)
-			if stack then
-				for i = 1, #AR.droppables do
-					if stack.name == AR.droppables[i] then
-						AR.select(slot)
-						AR.drop(side or sides.down)
-					end
-				end
-			end
-		end
-
-		AR.select(1)
-	end
-end
-
-function AR.dropAll(side, exceptArray)
-	exceptArray = exceptArray or AR.tools
-	print("Dropping all mined resources...")
-
-	for slot = 1, AR.inventorySize() do
-		local stack = AR.getStackInInternalSlot(slot)
-		if stack then
-			local droppableItem = true
-			
-			for exceptItem = 1, #exceptArray do
-				if stack.name == exceptArray[exceptItem] then
-					droppableItem = false
-					break
-				end
-			end
-			
-			if droppableItem then
-				AR.select(slot)
-				AR.drop(side)
-			end
-		end
-	end
-
-	AR.select(1)
-end
-
-function AR.checkToolStatus()
-	if AR.durability() < AR.toolReplaceDurability then
-		print("Equipped tool durability lesser then " .. AR.toolReplaceDurability)
-		local success = false
-		
-		for slot = 1, AR.inventorySize() do
-			local stack = AR.getStackInInternalSlot(slot)
-			if stack then
-				for tool = 1, #AR.tools do
-					if stack.name == AR.tools[tool] and stack.damage / stack.maxDamage < AR.toolReplaceDurability then
-						local oldSlot = AR.select()
-						AR.select(slot)
-						AR.equip()
-						AR.select(oldSlot)
-						success = true
-						break
-					end
-				end
-			end
-		end
-
-		if not success then
-			AR.moveToZeroPosition()
-			error("No one useable tool are found in inventory, going back to base")
-		else
-			print("Successfullty switched tool to another from inventory")
-		end
-	end
-end
-
-function AR.checkEnergyStatus()
-	if computer.energy() / computer.maxEnergy() < AR.zeroPositionReturnEnergy then
-		print("Low energy level detected")
-		-- Запоминаем старую позицию, шобы суда вернуться
-		local oldPosition = AR.getRobotPosition()
-		-- Пиздуем на базу за зарядкой
-		AR.moveToZeroPosition()
-		-- Заряжаемся, пока энергия не достигнет более-менее максимума
-		while computer.energy() / computer.maxEnergy() < 0.99 do
-			print("Charging up: " .. math.floor(computer.energy() / computer.maxEnergy() * 100) .. "%")
-			os.sleep(1)
-		end
-		-- Пиздуем обратно
-		AR.moveToRequiredPosition(oldPosition.x, oldPosition.y, oldPosition.z)
-		AR.turnToRequiredRotation(oldPosition.rotation)
-	end
-end
-
-function AR.getSlotWithFuel()
-	for slot = 1, AR.inventorySize() do
-		local stack = AR.getStackInInternalSlot(slot)
-		if stack then
-			for fuel = 1, #AR.fuels do
-				if stack.name == AR.fuels[fuel] then
-					return slot
-				end
-			end
-		end
-	end
-end
-
-function AR.checkGeneratorStatus()
-	if AR.proxies.generator then
-		if AR.proxies.generator.count() == 0 then
-			print("Generator is empty, trying to find some fuel in inventory")
-			local slot = AR.getSlotWithFuel()
-			if slot then
-				print("Found slot with fuel: " .. slot)
-				local oldSlot = AR.select()
-				AR.select(slot)
-				AR.proxies.generator.insert()
-				AR.select(oldSlot)
-				return
-			else
-				print("Slot with fuel not found")
-			end
+		AR.turnToRotation(zDistance > 0 and 1 or 3)
+		for i = 1, math.abs(zDistance) do
+			AR.move(sides.front)
 		end
 	end
 end
@@ -371,13 +222,167 @@ end
 
 --------------------------------------------------------------------------------
 
-AR.updateProxies()
+function AR.moveToZeroPosition()
+	AR.moveToPosition(0, AR.positionY, 0)
+	AR.turnToRotation(0)
+	AR.dropDroppables()
+	AR.moveToPosition(0, 0, 0)
+end
 
-AR.select = AR.proxies.robot.select
-AR.drop = AR.proxies.robot.drop
-AR.durability = AR.proxies.robot.durability
-AR.inventorySize = AR.proxies.robot.inventorySize
-AR.count = AR.proxies.robot.count
+function AR.swingAndMove(direction)
+	while true do
+		local swingSuccess, swingReason = AR.proxies.robot.swing(direction)
+		if swingSuccess or swingReason == "air" then
+			local moveSuccess, moveReason = AR.proxies.robot.move(direction)
+			if moveSuccess then
+				break
+			end
+		else
+			if swingReason == "block" then
+				AR.moveToZeroPosition()
+				return false, "Unbreakable block detected, going to base")
+			end
+		end
+	end
+
+	return AR.move(direction)
+end
+
+function AR.getEmptySlotsCount()
+	local count = 0
+	for slot = 1, AR.inventorySize() do
+		if AR.count(slot) == 0 then
+			count = count + 1
+		end
+	end
+
+	return count
+end
+
+function AR.dropDroppables(side)
+	if AR.getEmptySlotsCount() < AR.emptySlotsCountDropping then 
+		print("Trying to drop all shitty resources to free some slots for mining")
+		for slot = 1, AR.inventorySize() do
+			local stack = AR.getStackInInternalSlot(slot)
+			if stack then
+				for name in pairs(AR.droppables) do
+					if stack.name == name then
+						AR.select(slot)
+						AR.drop(side or sides.down)
+					end
+				end
+			end
+		end
+
+		AR.select(1)
+	end
+end
+
+function AR.dropAll(side, exceptArray)
+	exceptArray = exceptArray or AR.tools
+	print("Dropping all mined resources...")
+
+	for slot = 1, AR.inventorySize() do
+		local stack = AR.getStackInInternalSlot(slot)
+		if stack then
+			local droppableItem = true
+			
+			for exceptItem in pairs(exceptArray) do
+				if stack.name == exceptItem then
+					droppableItem = false
+					break
+				end
+			end
+			
+			if droppableItem then
+				AR.select(slot)
+				AR.drop(side)
+			end
+		end
+	end
+
+	AR.select(1)
+end
+
+function AR.checkToolStatus()
+	if AR.durability() < AR.toolReplaceDurability then
+		print("Equipped tool durability lesser then " .. AR.toolReplaceDurability)
+		local success = false
+		
+		for slot = 1, AR.inventorySize() do
+			local stack = AR.getStackInInternalSlot(slot)
+			if stack then
+				for name in pairs(AR.tools) do
+					if stack.name == name and stack.damage / stack.maxDamage < AR.toolReplaceDurability then
+						local oldSlot = AR.select()
+						AR.select(slot)
+						AR.equip()
+						AR.select(oldSlot)
+						success = true
+						break
+					end
+				end
+			end
+		end
+
+		if not success then
+			AR.moveToZeroPosition()
+			error("No one useable tool are found in inventory, going back to base")
+		else
+			print("Successfullty switched tool to another from inventory")
+		end
+	end
+end
+
+function AR.checkEnergyStatus()
+	if computer.energy() / computer.maxEnergy() < AR.zeroPositionReturnEnergy then
+		print("Low energy level detected")
+		-- Запоминаем старую позицию, шобы суда вернуться
+		local oldPosition = AR.getRobotPosition()
+		-- Пиздуем на базу за зарядкой
+		AR.moveToZeroPosition()
+		-- Заряжаемся, пока энергия не достигнет более-менее максимума
+		while computer.energy() / computer.maxEnergy() < 0.99 do
+			print("Charging up: " .. math.floor(computer.energy() / computer.maxEnergy() * 100) .. "%")
+			os.sleep(1)
+		end
+		-- Пиздуем обратно
+		AR.moveToPosition(oldPosition.x, oldPosition.y, oldPosition.z)
+		AR.turnToRotation(oldPosition.rotation)
+	end
+end
+
+function AR.getSlotWithFuel()
+	for slot = 1, AR.inventorySize() do
+		local stack = AR.getStackInInternalSlot(slot)
+		if stack then
+			for name in pairs(AR.fuels) do
+				if stack.name == name then
+					return slot
+				end
+			end
+		end
+	end
+end
+
+function AR.checkGeneratorStatus()
+	if AR.proxies.generator then
+		if AR.proxies.generator.count() == 0 then
+			print("Generator is empty, trying to find some fuel in inventory")
+			local slot = AR.getSlotWithFuel()
+			if slot then
+				print("Found slot with fuel: " .. slot)
+				local oldSlot = AR.select()
+				AR.select(slot)
+				AR.proxies.generator.insert()
+				AR.select(oldSlot)
+				return
+			else
+				print("Slot with fuel not found")
+			end
+		end
+	end
+end
 
 --------------------------------------------------------------------------------
 
