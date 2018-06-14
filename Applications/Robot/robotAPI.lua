@@ -315,7 +315,7 @@ function robotAPI.moveForward()
 	robotAPI.move(sides.front)
 end
 
-function robotAPI.moveBack()
+function robotAPI.moveBackward()
 	robotAPI.move(sides.back)
 end
 

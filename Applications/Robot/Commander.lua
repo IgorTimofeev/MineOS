@@ -1,82 +1,52 @@
-local robot = require("robot")
 local robotAPI = require("robotAPI")
-
 local args = {...}
 
-------------------------------------------------------------------------------------------------------------------------
+if #args < 0 then
+	print("No arguments")
+	return
+end
 
-if #args < 0 then error("No arguments!") end
-local commands = args[1]
+print("Task stated")
 
-local symbols = {}
-local symbolcounter = 1
-
-------------------------------------------------------------------------------------------------------------------------
-
-local function executeCommand(symbol)
+local function execute(symbol)
 	if symbol == "f" then
-		robotAPI.move("forward")
-	elseif symbol == "r" then
-		robot.turnRight()
-		print("Поворачиваюсь направо!")
-	elseif symbol == "l" then
-		robot.turnLeft()
-		print("Поворачиваюсь налево!")
-	elseif symbol == "t" then
-		robot.turnAround()
-		print("Крррррууу-гом!")
+		print("Moving forward:", robotAPI.moveForward())
+	elseif symbol == "b" then
+		print("Moving backward:", robotAPI.moveBackward())
 	elseif symbol == "u" then
-		robotAPI.move("up")
-		print("Поднимаюсь выше!")
+		print("Moving up:", robotAPI.moveUp())
 	elseif symbol == "d" then
-		robotAPI.move("down")
-		print("Опускаюсь ниже!")
-	elseif symbol == "m" then
-		robotAPI.move("forward")
-		robot.swing()
-		print("Копаю вперед!")
+		print("Moving down:", robotAPI.moveDown())
+	elseif symbol == "r" then
+		print("Turning right:", robotAPI.turnRight())
+	elseif symbol == "l" then
+		print("Turning left:", robotAPI.turnLeft())
+	elseif symbol == "t" then
+		print("Turning around:", robotAPI.turnAround())
 	elseif symbol == "s" then
-		print("Копаю впереди!", robot.swing())
-
-	--Вообще потная хуйня, но работает, епта!
-	elseif tonumber(symbol) ~= nil then
-		local startNumber = symbol
-		local counter = 1
-		for i = (symbolcounter + 1), #symbols do
-			local newNumber = tonumber(symbols[i])
-			if newNumber then
-				startNumber = startNumber .. symbols[i]
-				counter = counter + 1
-			else
-				break
-			end
-		end
-		startNumber = tonumber(startNumber)
-
-		print("Выполняю "..startNumber.." раз команду "..symbols[symbolcounter + counter])
-		for i = 1, startNumber do
-			executeCommand(symbols[symbolcounter + counter])
-		end
-
-		symbolcounter =  symbolcounter + counter
+		print("Swinging:", robotAPI.swing())
+	elseif symbol == "e" then
+		print("Swinging:", robotAPI.use())
 	end
 end
 
-------------------------------------------------------------------------------------------------
+local i, commands, symbol, starting, ending, count = 1, args[1]
+while i <= #commands do
+	starting, ending = commands:find("%d+", i)
+	
+	if starting == i then
+		symbol, count = commands:sub(ending + 1, ending + 1), tonumber(commands:sub(starting, ending))
+		
+		print("Executing \"" .. symbol .. "\" command for " .. count .. " times")
+		for j = 1, count do
+			execute(symbol)
+		end 
 
-for i = 1, #commands do
-	table.insert(symbols, string.sub(commands, i, i))
+		i = ending + 2
+	else
+		execute(commands:sub(i, i))
+		i = i + 1
+	end
 end
 
-print(" ")
-print("Начинаю работать!")
-print(" ")
-
-while symbolcounter <= #symbols do
-	executeCommand(symbols[symbolcounter])
-	symbolcounter = symbolcounter + 1
-end
-
-print(" ")
-print("Работа завершена!")
-print(" ")
+print("Task finished")
