@@ -1,8 +1,9 @@
 local computer, component = require("computer"), require("component")
 
-local minDensity, maxDensity, worldHeight, droppables, tools, computerEnergy, computerMaxEnergy, mathAbs, getComponent =
+local minDensity, maxDensity, chunkCount, worldHeight, droppables, tools, computerEnergy, computerMaxEnergy, mathAbs, getComponent =
   2,
   10,
+  3,
   -64,
   {
     cobblestone = 1,
@@ -107,6 +108,7 @@ end
 
 local function dropAll()
   print("Пиздую на базу")
+  moveTo(0, positionY, 0)
   moveTo(0, 0, 0)
 
   print("Ищу сундук")
@@ -130,6 +132,7 @@ local function dropAll()
   end
 end
 
+print("Запускаю софтину")
 robotSelect(1)
 move(0)
 
@@ -149,119 +152,147 @@ for i = 0, 3 do
   turn(false)
 end
 
-rotation = 0
+local chunkX, chunkZ, chunkRotation, chunkRadius, chunkRadiusCounter, chunkWorldX, chunkWorldZ = 0, 0, 0, 1, 1
+for chunk = 1, chunkCount do
+  chunkWorldX, chunkWorldZ = chunkX * 8, chunkZ * 8
 
-while true do
-  print("Сканирую")
-  local scanX, scanZ, i, ores, scanResult, bedrock =
-    positionX,
-    positionZ,
-    1,
-    {},
-    geolyzer.scan(
-      positionX >= 0 and -(positionX % 8) or -7 + (-positionX % 8),
-      positionZ >= 0 and -(positionZ % 8) or -7 + (-positionZ % 8),
-      -1,
-      8,
-      8,
-      1
-    )
+  print("Пиздую к текущему чанку", chunkX, chunkZ)
+  moveTo(chunkWorldX, -1, chunkWorldZ)
 
-  for z = 0, 7 do
-    for x = 0, 7 do 
-      if scanResult[i] >= minDensity and scanResult[i] <= maxDensity then
-        table.insert(ores, x - positionX)
-        table.insert(ores, z - positionZ)
-      elseif scanResult[i] < -0.4 then
-        bedrock = true
-        break
+  while true do
+    print("Сканирую")
+    local scanX, scanZ, scanIndex, ores, scanResult, bedrock =
+      positionX,
+      positionZ,
+      1,
+      {},
+      geolyzer.scan(
+        chunkWorldX - positionX,
+        chunkWorldZ - positionZ,
+        -1,
+        8,
+        8,
+        1
+      )
+
+    for z = 0, 7 do
+      for x = 0, 7 do 
+        if scanResult[scanIndex] >= minDensity and scanResult[scanIndex] <= maxDensity then
+          table.insert(ores, chunkWorldX + x)
+          table.insert(ores, chunkWorldZ + z)
+        elseif scanResult[scanIndex] < -0.4 then
+          bedrock = true
+          break
+        end
+
+        scanIndex = scanIndex + 1
       end
-
-      i = i + 1
     end
-  end
 
-  if bedrock or positionY <= worldHeight then
-    print("Бедрок чет нашел на Y или низковато опустился", positionY - 1)
-    break
-  else
-    print("Начинаю копать")
-    move(0)
+    if bedrock or positionY <= worldHeight then
+      print("Бедрок чет нашел на Y или низковато опустился", positionY - 1)
+      break
+    else
+      print("Начинаю копать")
+      move(0)
 
-    if #ores > 0 then
-      print("Нашел вот стока руд", #ores)
-      while #ores > 0 do
-        local nearestIndex, nearestDistance, distance = 1, math.huge
-        for i = 1, #ores, 2 do
-          distance = math.sqrt((ores[i] - positionX) ^ 2 + (ores[i + 1] - positionZ) ^ 2)
-          if distance < nearestDistance then
-            nearestIndex, nearestDistance = i, distance
+      if #ores > 0 then
+        print("Нашел вот стока руд", #ores)
+        while #ores > 0 do
+          local nearestIndex, nearestDistance, distance = 1, math.huge
+          for i = 1, #ores, 2 do
+            distance = math.sqrt((ores[i] - positionX) ^ 2 + (ores[i + 1] - positionZ) ^ 2)
+            if distance < nearestDistance then
+              nearestIndex, nearestDistance = i, distance
+            end
+          end
+
+          print("Пиздую к руде на точку", ores[nearestIndex], positionY, ores[nearestIndex + 1])
+          moveTo(ores[nearestIndex], positionY, ores[nearestIndex + 1])
+          
+          for i = 1, 2 do
+            table.remove(ores, nearestIndex)
           end
         end
+      else
+        print("Ни хуя тут руд нет")
+      end
+    end
 
-        moveTo(scanX + ores[nearestIndex], positionY, scanZ + ores[nearestIndex + 1])
-        
-        for i = 1, 2 do
-          table.remove(ores, nearestIndex)
+    -- Чекаем генератор
+    print("Чекаем генератор")
+    if generator and generator.count() == 0 then
+      print("Генератор пустой чота")
+      for i = 1, inventorySize do
+        robotSelect(i)
+        if generator.insert() then
+          print("Генератор заправлен")
+          break
         end
       end
+    end
+
+    -- Чекаем инструмент
+    print("Чекаем инстурмент")
+    if robot.durability() <= 0.2 then
+      print("Инструмент хуевый")
+      for i = 1, inventorySize do
+        local stack = inventory_controllerGetStackInInternalSlot(i)
+        if stack and (tools[stack.name] or tools[stack.name:gsub("minecraft:", "")]) and stack.damage / stack.maxDamage < 0.8 then
+          print("Ща сменю его")
+          robotSelect(i)
+          inventory_controller.equip()
+          break
+        end
+      end
+    end
+
+    -- Чекаем зарядку и заполненность инвентаря
+    print("Чекаю фри слоты или энергию", freeSlots, computerEnergy() / computerMaxEnergy())
+    local freeSlots = 0
+    for i = 1, inventorySize do
+      if robot.count(i) == 0 then
+        freeSlots = freeSlots + 1
+      end
+    end
+
+    if freeSlots <= 4 or computerEnergy() / computerMaxEnergy() <= 0.2 then
+      print("Чота все хуева")
+      local oldX, oldY, oldZ, oldRotation = positionX, positionY, positionZ, rotation
+      dropAll()
+
+      while computerEnergy() / computerMaxEnergy() < 0.99 do
+        print("Заряжаюсь", computerEnergy() / computerMaxEnergy())
+        computer.pullSignal(1)
+      end
+
+      print("Пиздую назад")
+      moveTo(oldX, oldY, oldZ)
+      turnTo(oldRotation)
+    end
+  end
+
+  print("Чанк выкопан, рассчитываю коорды следующего")
+  chunkX, chunkZ = chunkX + (chunkRotation == 0 and 1 or chunkRotation == 2 and -1 or 0), chunkZ + (chunkRotation == 1 and 1 or chunkRotation == 3 and -1 or 0)
+  
+  if
+    (chunkRotation == 0 or chunkRotation == 2) and mathAbs(chunkX) >= chunkRadius or
+    (chunkRotation == 1 or chunkRotation == 3) and mathAbs(chunkZ) >= chunkRadius
+  then
+    chunkRadiusCounter = chunkRadiusCounter + 1
+    if chunkRadiusCounter > 5 then
+      chunkRadius, chunkRadiusCounter = chunkRadius + 1, 1
+      print("Радиус увеличил", chunkRadius)
     else
-      print("Ни хуя тут руд нет")
-    end
-  end
-
-  -- Чекаем генератор
-  print("Чекаем генератор")
-  if generator and generator.count() == 0 then
-    print("Генератор пустой чота")
-    for i = 1, inventorySize do
-      robotSelect(i)
-      if generator.insert() then
-        print("Генератор заправлен")
-        break
+      chunkRotation = chunkRotation + 1
+      if chunkRotation > 3 then
+        chunkRotation = 0
       end
+      print("Паварооот", chunkRotation)
     end
-  end
-
-  -- Чекаем инструмент
-  print("Чекаем инстурмент")
-  if robot.durability() <= 0.2 then
-    print("Инструмент хуевый")
-    for i = 1, inventorySize do
-      local stack = inventory_controllerGetStackInInternalSlot(i)
-      if stack and (tools[stack.name] or tools[stack.name:gsub("minecraft:", "")]) and stack.damage / stack.maxDamage < 0.8 then
-        print("Ща сменю его")
-        robotSelect(i)
-        inventory_controller.equip()
-        break
-      end
-    end
-  end
-
-  -- Чекаем зарядку и заполненность инвентаря
-  print("Чекаю фри слоты или энергию", freeSlots, computerEnergy() / computerMaxEnergy())
-  local freeSlots = 0
-  for i = 1, inventorySize do
-    if robot.count(i) == 0 then
-      freeSlots = freeSlots + 1
-    end
-  end
-
-  if freeSlots <= 4 or computerEnergy() / computerMaxEnergy() <= 0.2 then
-    print("Чота все хуева")
-    local oldX, oldY, oldZ, oldRotation = positionX, positionY, positionZ, rotation
-    dropAll()
-
-    while computerEnergy() / computerMaxEnergy() < 0.99 do
-      print("Заряжаюсь", computerEnergy() / computerMaxEnergy())
-      computer.pullSignal(1)
-    end
-
-    print("Пиздую назад")
-    moveTo(oldX, oldY, oldZ)
-    turnTo(oldRotation)
   end
 end
 
 dropAll()
 turnTo(0)
+print("Усе, епта")
