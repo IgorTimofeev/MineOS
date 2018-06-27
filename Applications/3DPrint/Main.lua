@@ -535,7 +535,7 @@ printButton.onTouch = function()
 		proxies.printer3d.addShape(shape[1], shape[2], shape[3], shape[4], shape[5], shape[6], shape.texture or "empty", shape.state, shape.tint)
 	end
 
-	local success, reason = proxies.printer3d.commit(count)
+	local success, reason = proxies.printer3d.commit(1)
 	if not success then
 		GUI.alert(localization.failedToPrint .. ": " .. reason)
 	end
