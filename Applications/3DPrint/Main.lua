@@ -108,9 +108,7 @@ local labelInput = toolLayout:addChild(GUI.input(1, 1, toolLayout.width - 2, 1, 
 local tooltipInput = toolLayout:addChild(GUI.input(1, 1, toolLayout.width - 2, 1, 0x1E1E1E, 0xA5A5A5, 0x696969, 0x1E1E1E, 0xE1E1E1, "", localization.tooltip, true))
 local buttonModeSwitch = toolLayout:addChild(GUI.switchAndLabel(1, 1, toolLayout.width - 2, 6, 0x66DB80, 0x1E1E1E, 0xE1E1E1, 0xA5A5A5, localization.buttonMode .. ":", false)).switch
 local collisionSwitch = toolLayout:addChild(GUI.switchAndLabel(1, 1, toolLayout.width - 2, 6, 0x66DB80, 0x1E1E1E, 0xE1E1E1, 0xA5A5A5, localization.collidable .. ":", true)).switch
-
-local redstoneSlider = toolLayout:addChild(GUI.slider(1, 1, toolLayout.width - 2, 0x66DB80, 0x1E1E1E, 0xE1E1E1, 0xA5A5A5, 0, 15, 0, false, localization.emitRedstone .. ": ", ""))
-redstoneSlider.roundValues = true
+local redstoneSwitch = toolLayout:addChild(GUI.switchAndLabel(1, 1, toolLayout.width - 2, 6, 0x66DB80, 0x1E1E1E, 0xE1E1E1, 0xA5A5A5, localization.emitRedstone .. ":", true)).switch
 
 local lightLevelSlider = toolLayout:addChild(GUI.slider(1, 1, toolLayout.width - 2, 0x66DB80, 0x1E1E1E, 0xE1E1E1, 0xA5A5A5, 0, 15, 0, false, localization.lightLevel .. ": ", ""))
 lightLevelSlider.height = 2
@@ -236,7 +234,7 @@ local function updateWidgetsFromModel()
 	tooltipInput.text = model.tooltip or ""
 	buttonModeSwitch:setState(model.buttonMode)
 	collisionSwitch:setState(model.collidable)
-	redstoneSlider.value = model.emitRedstone or 0
+	redstoneSwitch.state = model.emitRedstone or false
 	lightLevelSlider.value = model.lightLevel or 0
 
 	local shapeIndex = getCurrentShapeIndex()
@@ -252,7 +250,7 @@ local function updateModelFromWidgets()
 	model.tooltip = #tooltipInput.text > 0 and tooltipInput.text or nil
 	model.buttonMode = buttonModeSwitch.state
 	model.collidable = collisionSwitch.state and {true, true} or nil
-	model.emitRedstone = redstoneSlider.value > 0 and redstoneSlider.value or nil
+	model.emitRedstone = redstoneSwitch.state
 	model.lightLevel = lightLevelSlider.value > 0 and lightLevelSlider.value or nil
 
 	local shapeIndex = getCurrentShapeIndex()
@@ -470,7 +468,7 @@ end
 enabledListItem.onTouch = disabledListItem.onTouch
 
 local function addShape()
-	table.insert(model.shapes, {6, 6, 0, 10, 10, 1, state = modelList.selectedItem == 2 or nil})
+	table.insert(model.shapes, {6, 6, 0, 10, 10, 1, state = modelList.selectedItem == 2 or nil, texture = #textureInput.text > 0 and textureInput.text or nil})
 	
 	updateComboBoxFromModel()
 	elementComboBox.selectedItem = elementComboBox:count()
@@ -557,7 +555,7 @@ labelInput.onInputFinished = updateModelFromWidgets
 tooltipInput.onInputFinished = updateModelFromWidgets
 buttonModeSwitch.onStateChanged = updateModelFromWidgets
 collisionSwitch.onStateChanged = updateModelFromWidgets
-redstoneSlider.onValueChanged = updateModelFromWidgets
+redstoneSwitch.onStateChanged = updateModelFromWidgets
 lightLevelSlider.onValueChanged = updateModelFromWidgets
 textureInput.onInputFinished = updateModelFromWidgets
 tintSwitch.onStateChanged = updateModelFromWidgets
