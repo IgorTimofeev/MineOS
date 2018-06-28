@@ -178,39 +178,40 @@ if proxies.hologram then
 	end
 end
 
+local function getCurrentShapeIndex()
+	local item = elementComboBox:getItem(elementComboBox.selectedItem)
+	return item and item.shapeIndex
+end
+
 local function updateOnHologram()
 	if proxies.hologram and projectorSwitch.state then
 		local initialX = 17
 		local initialY = 2
-		local initialZ = 17
+		local initialZ = 33
 		local projectorPaletteIndex = proxies.hologram.maxDepth() > 1 and 3 or 1
 
 		proxies.hologram.clear()
 
+		local shapeIndex = getCurrentShapeIndex()
 		for i = 1, #model.shapes do
 			local shape = model.shapes[i]
 			if checkShapeState(shape) then
 				for x = initialX + shape[1], initialX + shape[4] - 1 do
-					for z = initialZ + shape[3], initialZ + shape[6] - 1 do
-						proxies.hologram.fill(x, z, initialY + shape[2], initialY + shape[5] - 1, projectorPaletteIndex == 3 and (i == elementComboBox.selectedItem and 1 or 2) or 1)
+					for z = initialZ - shape[6] + 1, initialZ - shape[3] do
+						proxies.hologram.fill(x, z, initialY + shape[2], initialY + shape[5] - 1, projectorPaletteIndex == 3 and (i == shapeIndex and 1 or 2) or 1)
 					end
 				end
 			end
 		end
 
-		proxies.hologram.fill(initialX - 1, initialZ + currentLayer, initialY - 1, initialY + 16, projectorPaletteIndex)
-		proxies.hologram.fill(initialX + 16, initialZ + currentLayer, initialY - 1, initialY + 16, projectorPaletteIndex)
+		proxies.hologram.fill(initialX - 1, initialZ - currentLayer, initialY - 1, initialY + 16, projectorPaletteIndex)
+		proxies.hologram.fill(initialX + 16, initialZ - currentLayer, initialY - 1, initialY + 16, projectorPaletteIndex)
 
 		for x = initialX - 1, initialX + 16 do
-			proxies.hologram.set(x, initialY - 1, initialZ + currentLayer, projectorPaletteIndex)
-			proxies.hologram.set(x, initialY + 16, initialZ + currentLayer, projectorPaletteIndex)
+			proxies.hologram.set(x, initialY - 1, initialZ - currentLayer, projectorPaletteIndex)
+			proxies.hologram.set(x, initialY + 16, initialZ - currentLayer, projectorPaletteIndex)
 		end
 	end
-end
-
-local function getCurrentShapeIndex()
-	local item = elementComboBox:getItem(elementComboBox.selectedItem)
-	return item and item.shapeIndex
 end
 
 local function updateComboBoxFromModel()
@@ -463,6 +464,7 @@ disabledListItem.onTouch = function()
 	updateAddRemoveButtonsState()
 
 	mainContainer:drawOnScreen()
+	updateOnHologram()
 end
 
 enabledListItem.onTouch = disabledListItem.onTouch
