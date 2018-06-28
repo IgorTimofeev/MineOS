@@ -124,11 +124,11 @@ function MineOSCore.loadPropeties()
 	MineOSCore.associateExtension(".pic", MineOSPaths.imageEditor, MineOSPaths.icons .. "/Image.pic", MineOSPaths.extensionAssociations .. "Pic/ContextMenu.lua")
 	MineOSCore.associateExtension(".txt", MineOSPaths.editor, MineOSPaths.icons .. "/Text.pic")
 	MineOSCore.associateExtension(".cfg", MineOSPaths.editor, MineOSPaths.icons .. "/Config.pic")
-	MineOSCore.associateExtension(".3dm", MineOSPaths.applications .. "/3D Print.app/Main.lua", MineOSPaths.icons .. "/3DModel.pic")
-
+	MineOSCore.associateExtension(".arc", MineOSPaths.extensionAssociations .. "Arc/Launcher.lua", MineOSPaths.icons .. "/Archive.pic")
+	
+	MineOSCore.associateExtension(".3dm", MineOSPaths.applications .. "/3D Print.app/Main.lua", MineOSPaths.icons .. "/3DModel.pic", MineOSPaths.extensionAssociations .. "3dm/ContextMenu.lua")
 	MineOSCore.associateExtension("script", MineOSPaths.extensionAssociations .. "Lua/Launcher.lua", MineOSPaths.icons .. "/Script.pic", MineOSPaths.extensionAssociations .. "Lua/ContextMenu.lua")
 	MineOSCore.associateExtension(".lua", MineOSPaths.extensionAssociations .. "Lua/Launcher.lua", MineOSPaths.icons .. "/Lua.pic", MineOSPaths.extensionAssociations .. "Lua/ContextMenu.lua")
-	MineOSCore.associateExtension(".arc", MineOSPaths.extensionAssociations .. "Arc/Launcher.lua", MineOSPaths.icons .. "/Archive.pic")
 
 	for key, value in pairs(defaultValues) do
 		if MineOSCore.properties[key] == nil then
