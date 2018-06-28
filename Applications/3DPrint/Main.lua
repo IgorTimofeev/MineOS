@@ -411,6 +411,7 @@ view.eventHandler = function(mainContainer, view, e1, e2, e3, e4, e5)
 		end
 	elseif e1 == "component_added" or e1 == "component_removed" then
 		updateProxies()
+		updateOnHologram()
 	end
 end
 
