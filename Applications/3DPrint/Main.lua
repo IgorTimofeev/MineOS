@@ -166,12 +166,14 @@ projectorOffsetSlider.onValueChanged = function()
 	end
 end
 
-for i = 1, 3 do
-	local selector = addColorSelector(proxies.hologram and proxies.hologram.getPaletteColor(i) or 0x0, localization.color .. " " .. i)
-	selector.onColorSelected = function()
-		if proxies.hologram then
-			proxies.hologram.setPaletteColor(i, selector.color)
-			mainContainer:drawOnScreen()
+if proxies.hologram then
+	for i = 1, proxies.hologram.maxDepth() == 1 and 1 or 3 do
+		local selector = addColorSelector(proxies.hologram and proxies.hologram.getPaletteColor(i) or 0x0, localization.color .. " " .. i)
+		selector.onColorSelected = function()
+			if proxies.hologram then
+				proxies.hologram.setPaletteColor(i, selector.color)
+				mainContainer:drawOnScreen()
+			end
 		end
 	end
 end
@@ -181,6 +183,7 @@ local function updateOnHologram()
 		local initialX = 17
 		local initialY = 2
 		local initialZ = 17
+		local projectorPaletteIndex = proxies.hologram.maxDepth() > 1 and 3 or 1
 
 		proxies.hologram.clear()
 
@@ -189,18 +192,18 @@ local function updateOnHologram()
 			if checkShapeState(shape) then
 				for x = initialX + shape[1], initialX + shape[4] - 1 do
 					for z = initialZ + shape[3], initialZ + shape[6] - 1 do
-						proxies.hologram.fill(x, z, initialY + shape[2], initialY + shape[5] - 1, i == elementComboBox.selectedItem and 1 or 2)
+						proxies.hologram.fill(x, z, initialY + shape[2], initialY + shape[5] - 1, projectorPaletteIndex == 3 and (i == elementComboBox.selectedItem and 1 or 2) or 1)
 					end
 				end
 			end
 		end
 
-		proxies.hologram.fill(initialX - 1, initialZ + currentLayer, initialY - 1, initialY + 16, 3)
-		proxies.hologram.fill(initialX + 16, initialZ + currentLayer, initialY - 1, initialY + 16, 3)
+		proxies.hologram.fill(initialX - 1, initialZ + currentLayer, initialY - 1, initialY + 16, projectorPaletteIndex)
+		proxies.hologram.fill(initialX + 16, initialZ + currentLayer, initialY - 1, initialY + 16, projectorPaletteIndex)
 
 		for x = initialX - 1, initialX + 16 do
-			proxies.hologram.set(x, initialY - 1, initialZ + currentLayer, 3)
-			proxies.hologram.set(x, initialY + 16, initialZ + currentLayer, 3)
+			proxies.hologram.set(x, initialY - 1, initialZ + currentLayer, projectorPaletteIndex)
+			proxies.hologram.set(x, initialY + 16, initialZ + currentLayer, projectorPaletteIndex)
 		end
 	end
 end

@@ -12,8 +12,8 @@ local bufferWidth, bufferHeight = buffer.getResolution()
 while true do
 	local transformed = image.transform(source, math.ceil(width * scale), height)
 	buffer.clear(0x0)
-	buffer.image(math.floor(bufferWidth / 2 - image.getWidth(transformed) / 2), math.floor(bufferHeight / 2 - image.getHeight(transformed) / 2), transformed)
-	buffer.draw()
+	buffer.drawImage(math.floor(bufferWidth / 2 - image.getWidth(transformed) / 2), math.floor(bufferHeight / 2 - image.getHeight(transformed) / 2), transformed)
+	buffer.drawChanges()
 
 	scale = scale - scaleMod
 	if scale < targetMinimalScale then
