@@ -1580,11 +1580,10 @@ fileContextMenu:addItem(localization.open, false, "^O").onTouch = function()
 	openFileWindow()
 end
 
-if component.isAvailable("internet") then
-	fileContextMenu:addItem(localization.getFromWeb, false, "^U").onTouch = function()
-		downloadFileFromWeb()
-	end
+fileContextMenu:addItem(localization.getFromWeb, not component.isAvailable("internet"), "^U").onTouch = function()
+	downloadFileFromWeb()
 end
+
 
 fileContextMenu:addSeparator()
 
@@ -1595,6 +1594,19 @@ end
 fileContextMenu:addItem(localization.saveAs, false, "^⇧S").onTouch = function()
 	saveFileAsWindow()
 end
+
+fileContextMenu:addItem(MineOSCore.localization.flashEEPROM, not component.isAvailable("eeprom")).onTouch = function()
+	local container = addBackgroundContainer(MineOSCore.localization.flashEEPROM)
+	container.layout:addChild(GUI.label(1, 1, container.width, 1, 0x969696, MineOSCore.localization.flashingEEPROM .. "...")):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
+	mainContainer:drawOnScreen()
+
+	pcall(component.eeprom.set, table.concat(lines, ";"))
+	
+	container:remove()
+	mainContainer:drawOnScreen()
+end
+
+fileContextMenu:addSeparator()
 
 fileContextMenu:addItem(localization.launchWithArguments, false, "^F5").onTouch = function()
 	launchWithArgumentsWindow()
