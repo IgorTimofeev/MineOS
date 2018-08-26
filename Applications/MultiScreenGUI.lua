@@ -50,7 +50,7 @@ local function clearScreens()
 end
 
 local function addButton(text)
-	return layout:addChild(GUI.button(1, 1, elementWidth, 3, 0x3C3C3C, 0x969696, 0x969696, 0x3C3C3C, text))
+	return layout:addChild(GUI.button(1, 1, elementWidth, 3, 0x4B4B4B, 0xB4B4B4, 0xB4B4B4, 0x4B4B4B, text))
 end
 
 local function addTextBox(lines)
