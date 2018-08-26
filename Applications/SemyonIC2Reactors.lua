@@ -4,6 +4,7 @@ local component = require("component")
 local GUI = require("GUI")
 local buffer = require("doubleBuffering")
 local fs = require("filesystem")
+local scale = require("scale")
 
 --------------------------------------------------------------------------------
 
@@ -20,9 +21,11 @@ end
 
 local palette = {0x00FF00,0x00B600,0x33DB00,0x99FF00,0xCCFF00,0xFFDB00,0xFFB600,0xFF9200,0xFF6D00,0xFF4900,0xFF2400,0xFF0000}
 
-local mainContainer = GUI.fullScreenContainer()
-
 --------------------------------------------------------------------------------
+
+scale.set(1)
+buffer.flush()
+local mainContainer = GUI.fullScreenContainer()
 
 mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x1E1E1E))
 
