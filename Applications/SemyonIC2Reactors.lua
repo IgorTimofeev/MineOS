@@ -153,7 +153,10 @@ end
 
 local function masterState(state)
 	for i = 1, #contorollersContainer.children do
-		setButtonState(contorollersContainer.children[i].button, state)
+		local object = contorollersContainer.children[i]
+		if not object.disabled then
+			setButtonState(object.button, state)
+		end
 	end
 
 	mainContainer:drawOnScreen()
