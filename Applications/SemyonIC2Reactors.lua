@@ -30,17 +30,17 @@ local mainContainer = GUI.fullScreenContainer()
 
 mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x1E1E1E))
 
-local toolPanel = mainContainer:addChild(GUI.panel(1, 1, 30, mainContainer.height, 0x2D2D2D))
-toolPanel.localX = mainContainer.width - toolPanel.width + 1
+local statLayout = mainContainer:addChild(GUI.layout(1, 1, 30, mainContainer.height, 1, 1))
 
-local totalEnergy = 750
-local totalEnergyObject = mainContainer:addChild(GUI.object(toolPanel.localX, 2, toolPanel.width, 5))
+local totalEnergy = "732"
+local totalEnergyObject = statLayout:addChild(GUI.object(1, 1, statLayout.width, 5))
 totalEnergyObject.draw = function()
-	bigLetters.drawText(totalEnergyObject.x, totalEnergyObject.y, 0xFFFFFF, tostring(totalEnergy))
+	local text = tostring(totalEnergy)
+	bigLetters.drawText(math.floor(totalEnergyObject.x + totalEnergyObject.width / 2 - bigLetters.getTextSize(text) / 2), totalEnergyObject.y, 0xFFFFFF, text)
 end
 
-local totalEnable = mainContainer:addChild(GUI.button(toolPanel.localX, mainContainer.height - 5, toolPanel.width, 3, 0x3C3C3C, 0x969696, 0x008800, 0xFFFFFF, "MASTER ENABLE"))
-local totalDisable = mainContainer:addChild(GUI.button(toolPanel.localX, mainContainer.height - 2, toolPanel.width, 3, 0x4B4B4B, 0x969696, 0x880000, 0xFFFFFF, "MASTER DISABLE"))
+local totalEnable = statLayout:addChild(GUI.button(1, 1, statLayout.width, 3, 0x2D2D2D, 0x969696, 0x008800, 0xFFFFFF, "MASTER ENABLE"))
+local totalDisable = statLayout:addChild(GUI.button(1, 1, statLayout.width, 3, 0x2D2D2D, 0x969696, 0x880000, 0xFFFFFF, "MASTER DISABLE"))
 
 local function newController(x, y, proxy)
 	local contoroller = GUI.window(x, y, 40, 6)
