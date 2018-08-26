@@ -94,7 +94,7 @@ local function mainMenu(force)
 	filesystemChooser:setMode(GUI.IO_MODE_OPEN, GUI.IO_MODE_FILE)
 	filesystemChooser:addExtensionFilter(".pic")
 
-	local colorSelector = layout:addChild(GUI.colorSelector(2, 2, elementWidth, 3, 0xFF55FF, "Choose color"))
+	local colorSelector = layout:addChild(GUI.colorSelector(2, 2, elementWidth, 3, config.backgroundColor, "Choose color"))
 
 	local actionButton = addButton("Next")
 
