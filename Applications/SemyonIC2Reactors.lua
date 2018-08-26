@@ -5,6 +5,7 @@ local GUI = require("GUI")
 local buffer = require("doubleBuffering")
 local fs = require("filesystem")
 local scale = require("scale")
+local bigLetters = require("bigLetters")
 
 --------------------------------------------------------------------------------
 
@@ -23,11 +24,20 @@ local palette = {0x00FF00,0x00B600,0x33DB00,0x99FF00,0xCCFF00,0xFFDB00,0xFFB600,
 
 --------------------------------------------------------------------------------
 
-scale.set(0.8)
+scale.set(1)
 buffer.flush()
 local mainContainer = GUI.fullScreenContainer()
 
 mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x1E1E1E))
+
+local toolPanel = mainContainer:addChild(GUI.panel(1, 1, 30, mainContainer.height, 0x2D2D2D))
+toolPanel.localX = mainContainer.width - toolPanel.width + 1
+
+local totalEnergy = 750
+local totalEnergyObject = mainContainer:addChild(GUI.object(toolPanel.localX, 2, toolPanel.width, 5))
+totalEnergyObject.draw = function()
+	bigLetters.drawText(totalEnergyObject.x, totalEnergyObject.y, 0xFFFFFF, tostring(totalEnergy))
+end
 
 local function newController(x, y, proxy)
 	local contoroller = GUI.window(x, y, 40, 6)
