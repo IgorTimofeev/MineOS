@@ -61,7 +61,7 @@ local function newController(x, y, reactorProxy)
 	object.reactorProxy = reactorProxy
 	object:addChild(GUI.panel(1, 1, object.width, object.height, 0x2D2D2D))
 
-	object.button = object:addChild(GUI.button(1, 1, 16, 3, 0x660000, 0xFFFFFF, 0x33B640, 0xFFFFFF, "PASV"))
+	object.button = object:addChild(GUI.button(1, 1, 16, 3, 0x660000, 0xFFFFFF, 0x33B640, 0xFFFFFF, "DISABLED"))
 	object.button.localX = object.width - object.button.width + 1
 	object.button.switchMode = true
 	object.button.animated = false
