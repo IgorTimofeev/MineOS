@@ -31,6 +31,7 @@ local mainContainer = GUI.fullScreenContainer()
 mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x1E1E1E))
 
 local statLayout = mainContainer:addChild(GUI.layout(1, 1, 30, mainContainer.height, 1, 1))
+statLayout.localX = mainContainer.width - statLayout.width + 1
 
 local totalEnergy = "732"
 local totalEnergyObject = statLayout:addChild(GUI.object(1, 1, statLayout.width, 5))
