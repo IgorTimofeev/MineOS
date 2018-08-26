@@ -173,7 +173,13 @@ local function mainMenu(force)
 			saveConfig()
 			clearScreens()
 		else
-			layout:removeChildren()	
+			layout:removeChildren()	 
+
+			addTextBox({
+				{color = 0xE1E1E1, text = "Screen cluster calibration"},
+				" ",
+				"Specify required count of screens (not screen blocks, screens!) by horizontal and vertical"
+			})
 
 			local hSlider = layout:addChild(GUI.slider(1, 1, elementWidth, 0x66DB80, 0x0, 0xFFFFFF, 0xAAAAAA, 1, 10, 5, false, "Screens by horizontal: ", ""))
 			hSlider.roundValues = true
@@ -194,6 +200,12 @@ local function mainMenu(force)
 
 				if specifiedCount <= connectedCount then
 					layout:removeChildren()
+
+					addTextBox({
+						{color = 0xE1E1E1, text = "Screen cluster calibration"},
+						" ",
+						"Touch highlighted screen with your hand once. After touching all of screens calibration will be finished"
+					})
 
 					local SSX, SSY = 1, 1
 					local function screenObjectDraw(object)
