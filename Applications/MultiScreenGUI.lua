@@ -50,7 +50,7 @@ local function clearScreens()
 end
 
 local function addButton(text)
-	return layout:addChild(GUI.button(1, 1, elementWidth, 3, 0x4B4B4B, 0xB4B4B4, 0xB4B4B4, 0x4B4B4B, text))
+	return layout:addChild(GUI.button(1, 1, elementWidth, 3, 0x4B4B4B, 0xD2D2D2, 0xD2D2D2, 0x4B4B4B, text))
 end
 
 local function addTextBox(lines)
@@ -85,7 +85,7 @@ local function mainMenu(force)
 
 	addTextBox(lines)
 
-	local actionComboBox = layout:addChild(GUI.comboBox(1, 1, elementWidth, 3, 0xEEEEEE, 0x2D2D2D, 0xCCCCCC, 0x888888))
+	local actionComboBox = layout:addChild(GUI.comboBox(1, 1, elementWidth, 3, 0xEEEEEE, 0x2D2D2D, 0x3C3C3C, 0x888888))
 	actionComboBox:addItem("Draw image")
 	actionComboBox:addItem("Clear screens")
 	actionComboBox:addItem("Calibrate")
