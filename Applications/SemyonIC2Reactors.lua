@@ -39,6 +39,9 @@ totalEnergyObject.draw = function()
 	bigLetters.drawText(totalEnergyObject.x, totalEnergyObject.y, 0xFFFFFF, tostring(totalEnergy))
 end
 
+local totalEnable = mainContainer:addChild(toolPanel.localX, mainContainer.height - 5, toolPanel.width, 3, 0x3C3C3C, 0x969696, 0x008800, 0xFFFFFF, "MASTER ENABLE")
+local totalDisable = mainContainer:addChild(toolPanel.localX, mainContainer.height - 2, toolPanel.width, 3, 0x4B4B4B, 0x969696, 0x880000, 0xFFFFFF, "MASTER DISABLE")
+
 local function newController(x, y, proxy)
 	local contoroller = GUI.window(x, y, 40, 6)
 	
