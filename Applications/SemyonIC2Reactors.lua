@@ -23,7 +23,7 @@ local palette = {0x00FF00,0x00B600,0x33DB00,0x99FF00,0xCCFF00,0xFFDB00,0xFFB600,
 
 --------------------------------------------------------------------------------
 
-scale.set(1)
+scale.set(0.8)
 buffer.flush()
 local mainContainer = GUI.fullScreenContainer()
 
