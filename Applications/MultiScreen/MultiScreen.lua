@@ -40,6 +40,7 @@ local function clearScreens()
 	for address in component.list("screen") do
 		if address ~= mainScreenAddress then
 			GPUProxy.bind(address, false)
+			GPUProxy.setDepth(8)
 			GPUProxy.setResolution(baseResolutionWidth, baseResolutionHeight)
 			GPUProxy.setBackground(config.backgroundColor)
 			GPUProxy.fill(1, 1, baseResolutionWidth, baseResolutionHeight, " ")
@@ -247,7 +248,7 @@ local function mainMenu(force)
 						local e1, e2 = event.pull("touch")
 						if e2 ~= mainScreenAddress then
 							GPUProxy.bind(e2, false)
-
+							GPUProxy.setDepth(8)
 							GPUProxy.setResolution(baseResolutionWidth, baseResolutionHeight)
 							GPUProxy.setBackground(color.HSBToInteger(hue, 1, 1))
 							GPUProxy.setForeground(0x0)
