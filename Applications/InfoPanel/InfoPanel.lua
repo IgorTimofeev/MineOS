@@ -55,9 +55,10 @@ mainLayout:addChild(GUI.text(1, 1, 0xE1E1E1, "Text files directory"))
 local filesystemChooser = mainLayout:addChild(GUI.filesystemChooser(1, 1, widthInput.width * 2 + 2, 3, 0xE1E1E1, 0x888888, 0x3C3C3C, 0x888888, "/InfoPanel/Pages/", "Open", "Cancel", "Choose directory", "/"))
 filesystemChooser:setMode(GUI.IO_MODE_OPEN, GUI.IO_MODE_DIRECTORY)
 mainLayout:addChild(GUI.button(1, 1, filesystemChooser.width, 3, 0x3C3C3C, 0xE1E1E1, 0xE1E1E1, 0x3C3C3C, "OK")).onTouch = function()
-	mainLayout:remove()
+	mainContainer:removeChildren()
 
 	buffer.setResolution(tonumber(widthInput.text), tonumber(heightInput.text))
+	mainContainer.width, mainContainer.height = buffer.getResolution()
 
 	local list = mainContainer:addChild(GUI.list(1, 1, 24, mainContainer.height, 3, 0, leftBarBackgroundColorSelector.color, leftBarTextColorSelector.color, leftBarAlternativeBackgroundColorSelector.color, leftBarAlternativeTextColorSelector.color, leftBarSelectedBackgroundColorSelector.color, leftBarSelectedTextColorSelector.color))
 	
@@ -117,7 +118,9 @@ mainLayout:addChild(GUI.button(1, 1, filesystemChooser.width, 3, 0x3C3C3C, 0xE1E
 		end
 	end
 
-	list:getItem(1).onTouch()
+	if list:count() > 0 then
+		list:getItem(1).onTouch()
+	end
 end
 
 mainContainer:drawOnScreen(true)
