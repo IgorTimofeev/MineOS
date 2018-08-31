@@ -63,7 +63,7 @@ data.draw = function()
 	end
 end
 
-local scrollBar = mainContainer:addChild(GUI.scrollBar(mainContainer.width - config.scrollBarWidth + 1, 1, scrollBarWidth.scrollBarWidth, mainContainer.height, config.colors.scrollBarBackground, config.colors.scrollBarPipe, 1, 100, 1, mainContainer.height, 1))
+local scrollBar = mainContainer:addChild(GUI.scrollBar(mainContainer.width - config.scrollBarWidth + 1, 1, config.scrollBarWidth, mainContainer.height, config.colors.scrollBarBackground, config.colors.scrollBarPipe, 1, 100, 1, mainContainer.height, 1))
 scrollBar.onTouch = function()
 	linesY = -math.floor(scrollBar.value) + 3
 	mainContainer:drawOnScreen()
