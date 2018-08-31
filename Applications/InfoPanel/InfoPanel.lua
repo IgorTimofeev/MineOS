@@ -1,34 +1,35 @@
-local ecs = require("ECSAPI")
-local MineOSCore = require("MineOSCore")
-local xml = require("xmlParser")
-local image = require("image")
-local event = require("event")
+
+local computer = require("computer")
+local component = require("component")
+local GUI = require("GUI")
 local unicode = require("unicode")
 local fs = require("filesystem")
-local gpu = require("component").gpu
+local buffer = require("doubleBuffering")
+local xmlParser = require("xmlParser")
+local scale = require("scale")
 
-------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 local config = {
 	scale = 0.63,
 	leftBarWidth = 20,
-	scrollSpeed = 6,
-	pathToInfoPanelFolder = MineOSCore.getCurrentApplicationResourcesDirectory() .. "Pages/",
+	scrollBarWidth = 4,
+	pagesPath = "/InfoPanel/Pages/",
 	colors = {
-		leftBar = 0xEEEEEE,
-		leftBarText = 0x262626,
-		leftBarSelection = 0x00C6FF,
-		leftBarSelectionText = 0xFFFFFF,
-		scrollbarBack = 0xEEEEEE,
-		scrollbarPipe = 0x3366CC,
-		background = 0x262626,
+		background = 0x1E1E1E,
 		text = 0xFFFFFF,
+		leftBarRegularBackground = 0xE1E1E1,
+		leftBarRegularText = 0x2D2D2D,
+		leftBarAlternativeBackground = 0xD2D2D2,
+		leftBarAlternativeText = 0x2D2D2D,
+		leftBarSelectionBackground = 0x3366CC,
+		leftBarSelectionText = 0xFFFFFF,
+		scrollBarBackground = 0xE1E1E1,
+		scrollBarPipe = 0x3366CC,
 	},
 }
 
-local xOld, yOld = gpu.getResolution()
-ecs.setScale(config.scale)
-local xSize, ySize = gpu.getResolution()
+local lines = {}
 
 fs.makeDirectory(config.pathToInfoPanelFolder)
 local currentFile = 1
@@ -40,147 +41,62 @@ local stringsWidthLimit = xSize - config.leftBarWidth - 4
 
 ------------------------------------------------------------------------------------------------------------------
 
-local obj = {}
-local function newObj(class, name, ...)
-	obj[class] = obj[class] or {}
-	obj[class][name] = {...}
-end
+local mainContainer = GUI.fullScreenContainer()
+local list = mainContainer:addChild(GUI.list(1, 1, config.leftBarWidth, mainContainer.height, 3, 0, config.colors.leftBarRegularBackground, config.colors.leftBarRegularText, config.colors.leftBarAlternativeBackground, config.colors.leftBarAlternativeText, config.colors.leftBarSelectionBackground, config.colors.leftBarSelectionText))
+local data = mainContainer:addChild(GUI.object(list.width + 1, 1, mainContainer.width - list.width, mainContainer.height))
 
-local function drawLeftBar()
-	--ecs.square(1, 1, config.leftBarWidth, ySize, config.colors.leftBar)
-	fileList = ecs.getFileList(config.pathToInfoPanelFolder)
-	obj["Files"] = {}
-	local yPos = 1, 1
-	for i = 1, #fileList do
-		if i == currentFile then
-			newObj("Files", i, ecs.drawButton(1, yPos, config.leftBarWidth, 3, ecs.hideFileFormat(fileList[i]), config.colors.leftBarSelection, config.colors.leftBarSelectionText))
-		else
-			if i % 2 == 0 then
-				newObj("Files", i, ecs.drawButton(1, yPos, config.leftBarWidth, 3, ecs.stringLimit("end", ecs.hideFileFormat(fileList[i]), config.leftBarWidth - 2), config.colors.leftBar, config.colors.leftBarText))
+data.draw = function()
+	buffer.drawRectangle(data.x, data.y, data.width, data.height, config.colors.background, config.colors.text, " ")
+	
+	local textColor, y, x = config.colors.text, linesY
+	for i = 1, #lines do
+		x = list.width + 3
+
+		for j = 1, #lines[i] do
+			if type(lines[i][j]) == "table" then
+				if lines[i][j].label == "color" then
+					textColor = tonumber(lines[i][j][1])
+				end
 			else
-				newObj("Files", i, ecs.drawButton(1, yPos, config.leftBarWidth, 3, ecs.stringLimit("end", ecs.hideFileFormat(fileList[i]), config.leftBarWidth - 2), config.colors.leftBar - 0x111111, config.colors.leftBarText))
-			end
-		end
-		yPos = yPos + 3
-	end
-	ecs.square(1, yPos, config.leftBarWidth, ySize - yPos + 1, config.colors.leftBar)
-end
-
-local function loadFile()
-	currentString = 1
-	stroki = {}
-	local file = io.open(config.pathToInfoPanelFolder .. fileList[currentFile], "r")
-	for line in file:lines() do table.insert(stroki, xml.collect(line)) end
-	file:close()
-end
-
-local function drawMain()
-	local x, y = config.leftBarWidth + 3, 2
-	local xPos, yPos = x, y
-
-	ecs.square(xPos, yPos, xSize - config.leftBarWidth - 5, ySize, config.colors.background)
-	gpu.setForeground(config.colors.text)
-
-	for line = currentString, (stringsHeightLimit + currentString - 1) do
-		if stroki[line] then
-			for i = 1, #stroki[line] do
-				if type(stroki[line][i]) == "table" then
-					if stroki[line][i].label == "color" then
-						gpu.setForeground(tonumber(stroki[line][i][1]))
-					elseif stroki[line][i].label == "image" then
-						local bg, fg = gpu.getBackground(), gpu.getForeground()
-						local picture = image.load(stroki[line][i][1])
-						image.draw(xPos, yPos, picture)
-						yPos = yPos + picture.height - 1
-						gpu.setForeground(fg)
-						gpu.setBackground(bg)
-					end
-				else
-					gpu.set(xPos, yPos, stroki[line][i])
-					xPos = xPos + unicode.len(stroki[line][i])
-				end
-			end
-			yPos = yPos + 1
-			xPos = x
-		else
-			break
-		end
-	end
-
-end
-
-local function drawScrollBar()
-	local name
-	name = "⬆"; newObj("Scroll", name, ecs.drawButton(xSize - 2, 1, 3, 3, name, config.colors.leftBarSelection, config.colors.leftBarSelectionText))
-	name = "⬇"; newObj("Scroll", name, ecs.drawButton(xSize - 2, ySize - 2, 3, 3, name, config.colors.leftBarSelection, config.colors.leftBarSelectionText))
-
-	ecs.srollBar(xSize - 2, 4, 3, ySize - 6, #stroki, currentString, config.colors.scrollbarBack, config.colors.scrollbarPipe)
-end
-
-------------------------------------------------------------------------------------------------------------------
-
-ecs.prepareToExit()
-drawLeftBar()
-loadFile()
-drawMain()
-drawScrollBar()
-
-while true do
-	local e = {event.pull()}
-	if e[1] == "touch" then
-		for key in pairs(obj["Files"]) do
-			if ecs.clickedAtArea(e[3], e[4], obj["Files"][key][1], obj["Files"][key][2], obj["Files"][key][3], obj["Files"][key][4]) then
-				currentFile = key
-				loadFile()
-				drawLeftBar()
-				drawMain()
-				drawScrollBar()
-				break
+				buffer.drawText(x, y, textColor, lines[i][j])
+				x = x + unicode.len(lines[i][j])
 			end
 		end
 
-		for key in pairs(obj["Scroll"]) do
-			if ecs.clickedAtArea(e[3], e[4], obj["Scroll"][key][1], obj["Scroll"][key][2], obj["Scroll"][key][3], obj["Scroll"][key][4]) then
-				ecs.drawButton(obj["Scroll"][key][1], obj["Scroll"][key][2], 3, 3, key, config.colors.leftBarSelectionText, config.colors.leftBarSelection)
-				os.sleep(0.2)
-				ecs.drawButton(obj["Scroll"][key][1], obj["Scroll"][key][2], 3, 3, key, config.colors.leftBarSelection, config.colors.leftBarSelectionText)
-
-				if key == "⬆" then
-					if currentString > config.scrollSpeed then
-						currentString = currentString - config.scrollSpeed
-						drawMain()
-						drawScrollBar()
-					end
-				else
-					if currentString < (#stroki - config.scrollSpeed + 1) then
-						currentString = currentString + config.scrollSpeed
-						drawMain()
-						drawScrollBar()
-					end
-				end
-
-				break
-			end
-		end
-
-	elseif e[1] == "key_down" then
-		if e[4] == 28 then
-			gpu.setResolution(xOld, yOld)
-			ecs.prepareToExit()
-			return
-		end
+		y = y + 1
 	end
 end
 
+local scrollBar = mainContainer:addChild(GUI.scrollBar(mainContainer.width - config.scrollBarWidth + 1, 1, scrollBarWidth.scrollBarWidth, mainContainer.height, config.colors.scrollBarBackground, config.colors.scrollBarPipe, 1, 100, 1, mainContainer.height, 1))
+scrollBar.onTouch = function()
+	linesY = -math.floor(scrollBar.value) + 3
+	mainContainer:drawOnScreen()
+end
 
+local files = {}
+for file in fs.list(config.pagesPath) do
+	if not fs.isDirectory(config.pagesPath .. file) then
+		table.insert(files, file)
+	end
+end
+table.sort(files, function(a, b) return a < b end)
 
+for i = 1, #files do
+	list:addItem(files[i]:gsub("^%d+_", "")).onTouch = function()
+		lines = {}
+		for line in io.lines(config.pagesPath .. files[i]) do
+			table.insert(lines, xmlParser.collect(line))
+		end
 
+		linesY = 2
+		scrollBar.hidden = #lines <= mainContainer.height
+		scrollBar.maximumValue = #lines
+		scrollBar.value = 1
 
+		mainContainer:drawOnScreen()
+	end
+end
 
-
-
-
-
-
-
-
+list:getItem(1).onTouch()
+buffer.drawChanges(true)
+mainContainer:startEventHandling()
