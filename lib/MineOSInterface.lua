@@ -957,7 +957,7 @@ function MineOSInterface.newFileFromURL(parentWindow, iconField, x, y, path)
 	container.inputFieldURL = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x878787, 0xE1E1E1, 0x2D2D2D, nil, "URL", false))
 	container.panel.eventHandler = function(mainContainer, object, e1)
 		if e1 == "touch" then
-			if #container.inputField.text > 0 and #container.inputFieldURL > 0 then
+			if #container.inputField.text > 0 and #container.inputFieldURL.text > 0 then
 				if fs.exists(path .. container.inputField.text) then
 					container.label.hidden = false
 					mainContainer:drawOnScreen()
