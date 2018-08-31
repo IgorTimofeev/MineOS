@@ -30,16 +30,12 @@ local config = {
 }
 
 local lines = {}
+local linesY = 2
 
-fs.makeDirectory(config.pathToInfoPanelFolder)
-local currentFile = 1
-local fileList
-local stroki = {}
-local currentString = 1
-local stringsHeightLimit = ySize - 2
-local stringsWidthLimit = xSize - config.leftBarWidth - 4
+--------------------------------------------------------------------------------
 
-------------------------------------------------------------------------------------------------------------------
+scale.set(config.scale)
+buffer.flush()
 
 local mainContainer = GUI.fullScreenContainer()
 local list = mainContainer:addChild(GUI.list(1, 1, config.leftBarWidth, mainContainer.height, 3, 0, config.colors.leftBarRegularBackground, config.colors.leftBarRegularText, config.colors.leftBarAlternativeBackground, config.colors.leftBarAlternativeText, config.colors.leftBarSelectionBackground, config.colors.leftBarSelectionText))
