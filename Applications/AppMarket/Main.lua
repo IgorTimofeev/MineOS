@@ -91,42 +91,12 @@ local mainContainer, window = MineOSInterface.addWindow(GUI.tabbedWindow(1, 1, 1
 
 local contentContainer = window:addChild(GUI.container(1, 4, 1, 1))
 
-local activityWidget = window:addChild(GUI.object(1, 1, 4, 3))
-activityWidget.hidden = true
-activityWidget.position = 0
-activityWidget.color1 = 0x99FF80
-activityWidget.color2 = 0x00B640
-activityWidget.draw = function(activityWidget)
-	buffer.drawText(activityWidget.x + 1, activityWidget.y, activityWidget.position == 1 and activityWidget.color1 or activityWidget.color2, "⢀")
-	buffer.drawText(activityWidget.x + 2, activityWidget.y, activityWidget.position == 1 and activityWidget.color1 or activityWidget.color2, "⡀")
-
-	buffer.drawText(activityWidget.x + 3, activityWidget.y + 1, activityWidget.position == 2 and activityWidget.color1 or activityWidget.color2, "⠆")
-	buffer.drawText(activityWidget.x + 2, activityWidget.y + 1, activityWidget.position == 2 and activityWidget.color1 or activityWidget.color2, "⢈")
-
-	buffer.drawText(activityWidget.x + 1, activityWidget.y + 2, activityWidget.position == 3 and activityWidget.color1 or activityWidget.color2, "⠈")
-	buffer.drawText(activityWidget.x + 2, activityWidget.y + 2, activityWidget.position == 3 and activityWidget.color1 or activityWidget.color2, "⠁")
-
-	buffer.drawText(activityWidget.x, activityWidget.y + 1, activityWidget.position == 4 and activityWidget.color1 or activityWidget.color2, "⠰")
-	buffer.drawText(activityWidget.x + 1, activityWidget.y + 1, activityWidget.position == 4 and activityWidget.color1 or activityWidget.color2, "⡁")
-end
-
-local overrideWindowDraw = window.draw
-window.draw = function(...)
-	if not activityWidget.hidden then
-		activityWidget.position = activityWidget.position + 1
-		if activityWidget.position > 4 then
-			activityWidget.position = 1
-		end
-	end
-
-	return overrideWindowDraw(...)
-end
+local progressIndicator = window:addChild(GUI.progressIndicator(1, 1, 0x3C3C3C, 0x99FF80, 0x00B640))
 
 local function activity(state)
-	activityWidget.hidden = not state
-	MineOSInterface.mainContainer:drawOnScreen()
+	progressIndicator.active = state
+	mainContainer:drawOnScreen()
 end
-
 --------------------------------------------------------------------------------
 
 local function saveConfig()
@@ -168,18 +138,24 @@ end
 
 --------------------------------------------------------------------------------
 
-local function RawAPIRequest(script, data, notUnserialize)
-	local requestResult, requestReason = web.request(
+local function RawAPIRequest(script, postData, notUnserialize)
+	local data = ""
+	local success, reason = web.rawRequest(
 		host .. script .. ".php",
-		data and web.serialize(data) or nil,
-		{ 
-			["User-Agent"] = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.119 Safari/537.36"
-		}
+		postData and web.serialize(postData) or nil,
+		{["User-Agent"] = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.119 Safari/537.36"},
+		function(chunk)
+			data = data .. chunk
+			
+			mainContainer:drawOnScreen()
+			progressIndicator:roll()
+		end,
+		math.huge
 	)
 
-	if requestResult then
+	if success then
 		if not notUnserialize then
-			local unserializeResult, unserializeReason = table.fromString(requestResult)
+			local unserializeResult, unserializeReason = table.fromString(data)
 			if unserializeResult then
 				if unserializeResult.success then
 					return unserializeResult
@@ -193,7 +169,7 @@ local function RawAPIRequest(script, data, notUnserialize)
 			return result
 		end
 	else
-		return false, "Web request failed: " .. tostring(requestReason)
+		return false, "Web request failed: " .. tostring(reason)
 	end
 end
 
@@ -1949,7 +1925,7 @@ window.onResize = function(width, height)
 	contentContainer.height = window.backgroundPanel.height
 	window.tabBar.width = width
 
-	activityWidget.localX = window.width - activityWidget.width
+	progressIndicator.localX = window.width - progressIndicator.width
 
 	appsPerWidth = math.floor((contentContainer.width + appHSpacing) / (appWidth + appHSpacing))
 	appsPerHeight = math.floor((contentContainer.height - 6 + appVSpacing) / (appHeight + appVSpacing))
