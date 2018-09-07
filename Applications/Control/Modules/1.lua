@@ -77,7 +77,7 @@ module.onTouch = function()
 
 			local result, reason = load(input.text)
 			if result then
-				local data = {xpcall(result, debug.traceback())}
+				local data = {xpcall(result, debug.traceback)}
 				if data[1] then
 					print(table.unpack(data, 2))
 				else
