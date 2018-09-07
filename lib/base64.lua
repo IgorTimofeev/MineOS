@@ -11,8 +11,8 @@ function base64.encode(data)
 	for i = 1, #data, 3 do
 		result[resultIndex] = chars[bit32Rshift(data[dataIndex] or 0, 2)] or "="; resultIndex = resultIndex + 1
 		result[resultIndex] = chars[bit32Bor(bit32Lshift((data[dataIndex] or 0) % 4, 4), bit32Rshift(data[dataIndex + 1] or 0, 4))] or "="; resultIndex = resultIndex + 1
-		result[resultIndex] = #data - i > 1 and chars[bit32Bor(bit32Lshift((data[dataIndex + 1] or 0) % 16, 2), bit32Rshift(data[dataIndex + 2] or 0, 6))] or "="; resultIndex = resultIndex + 1
-		result[resultIndex] = #data - i > 2 and chars[(data[dataIndex + 2] or 0) % 64] or "="; resultIndex = resultIndex + 1
+		result[resultIndex] = #data - i > 0 and chars[bit32Bor(bit32Lshift((data[dataIndex + 1] or 0) % 16, 2), bit32Rshift(data[dataIndex + 2] or 0, 6))] or "="; resultIndex = resultIndex + 1
+		result[resultIndex] = #data - i > 1 and chars[(data[dataIndex + 2] or 0) % 64] or "="; resultIndex = resultIndex + 1
 
 		dataIndex = dataIndex + 3
 	end
