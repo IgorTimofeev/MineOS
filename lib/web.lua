@@ -5,9 +5,9 @@ local fs = require("filesystem")
 ----------------------------------------------------------------------------------------------------
 
 local function encode(data)
-	return data:gsub("([^%w%s%-%_%.%~])", function(char)
+	return data:gsub("([^%w%-%_%.%~])", function(char)
 		return string.format("%%%02X", string.byte(char))
-	end):gsub("%s", "+")
+	end)
 end
 
 local function serialize(data)
