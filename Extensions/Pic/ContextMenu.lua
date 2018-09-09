@@ -1,7 +1,7 @@
 local computer = require("computer")
 local MineOSCore = require("MineOSCore")
 
-local icon, menu = args[1], args[2]
+local icon, menu = select(1, ...), select(2, ...)
 menu:addItem(MineOSCore.localization.setAsWallpaper).onTouch = function()
 	MineOSCore.properties.wallpaperEnabled = true
 	MineOSCore.properties.wallpaper = icon.path
