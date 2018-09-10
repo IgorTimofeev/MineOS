@@ -1374,7 +1374,11 @@ codeView.eventHandler = function(mainContainer, object, e1, e2, e3, e4, e5)
 				paste(clipboard)
 			-- X
 			elseif e4 == 45 then
-				cut()
+				if codeView.selections[1] then
+					cut()
+				else
+					deleteLine(cursorPositionLine)
+				end
 			-- N
 			elseif e4 == 49 then
 				newFile()
