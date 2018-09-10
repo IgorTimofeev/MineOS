@@ -17,7 +17,7 @@ local MineOSInterface = require("MineOSInterface")
 ------------------------------------------------------------
 
 local config = {
-	leftTreeViewWidth = 27,
+	leftTreeViewWidth = 23,
 	syntaxColorScheme = GUI.LUA_SYNTAX_COLOR_SCHEME,
 	scrollSpeed = 8,
 	cursorColor = 0x00A8FF,
@@ -51,6 +51,8 @@ local cursorPositionSymbol = 1
 local cursorPositionLine = 1
 local cursorBlinkState = false
 
+local saveContextMenuItem 
+local cursorUptime = computer.uptime()
 local scriptCoroutine
 local resourcesPath = MineOSCore.getCurrentScriptDirectory() 
 local configPath = MineOSPaths.applicationData .. "MineCode IDE/Config9.cfg"
@@ -70,15 +72,10 @@ if fs.exists(configPath) then
 	GUI.LUA_SYNTAX_COLOR_SCHEME = config.syntaxColorScheme
 end
 
-local mainContainer = GUI.fullScreenContainer()
+local mainContainer, window, menu = MineOSInterface.addWindow(GUI.window(1, 1, 120, 30))
+menu:removeChildren()
 
-local codeView = mainContainer:addChild(GUI.codeView(1, 1, 1, 1, 1, 1, 1, {}, {}, GUI.LUA_SYNTAX_PATTERNS, config.syntaxColorScheme, config.syntaxHighlight, lines))
-
-local function convertTextPositionToScreenCoordinates(symbol, line)
-	return
-		codeView.codeAreaPosition + symbol - codeView.fromSymbol + 1,
-		codeView.y + line - codeView.fromLine
-end
+local codeView = window:addChild(GUI.codeView(1, 1, 1, 1, 1, 1, 1, {}, {}, GUI.LUA_SYNTAX_PATTERNS, config.syntaxColorScheme, config.syntaxHighlight, lines))
 
 local function convertScreenCoordinatesToTextPosition(x, y)
 	return
@@ -91,7 +88,7 @@ codeView.draw = function(...)
 	overrideCodeViewDraw(...)
 
 	if cursorBlinkState then
-		local x, y = convertTextPositionToScreenCoordinates(cursorPositionSymbol, cursorPositionLine)
+		local x, y = codeView.codeAreaPosition + cursorPositionSymbol - codeView.fromSymbol + 1, codeView.y + cursorPositionLine - codeView.fromLine
 		if
 			x >= codeView.codeAreaPosition + 1 and
 			y >= codeView.y and
@@ -107,19 +104,15 @@ local function saveConfig()
 	table.toFile(configPath, config)
 end
 
-local topMenu = mainContainer:addChild(GUI.menu(1, 1, 1, 0xF0F0F0, 0x696969, 0x3366CC, 0xFFFFFF))
-
-local topToolBar = mainContainer:addChild(GUI.container(1, 2, 1, 3))
+local topToolBar = window:addChild(GUI.container(1, 1, 1, 3))
 local topToolBarPanel = topToolBar:addChild(GUI.panel(1, 1, 1, 3, 0xE1E1E1))
-
-local RAMProgressBar = topToolBar:addChild(GUI.progressBar(1, 2, 20, 0x787878, 0xC3C3C3, 0xB4B4B4, 50, true, true, "RAM: ", "%"))
 
 local topLayout = topToolBar:addChild(GUI.layout(1, 1, 1, 3, 1, 1))
 topLayout:setDirection(1, 1, GUI.DIRECTION_HORIZONTAL)
 topLayout:setSpacing(1, 1, 2)
 topLayout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
 
-local autocomplete = mainContainer:addChild(GUI.autoComplete(1, 1, 36, 7, 0xE1E1E1, 0xA5A5A5, 0x3C3C3C, 0x3C3C3C, 0xA5A5A5, 0xE1E1E1, 0xC3C3C3, 0x4B4B4B))
+local autocomplete = window:addChild(GUI.autoComplete(1, 1, 36, 7, 0xE1E1E1, 0xA5A5A5, 0x3C3C3C, 0x3C3C3C, 0xA5A5A5, 0xE1E1E1, 0xC3C3C3, 0x4B4B4B))
 
 local addBreakpointButton = topLayout:addChild(GUI.adaptiveButton(1, 1, 3, 1, 0x878787, 0xE1E1E1, 0xD2D2D2, 0x4B4B4B, "x"))
 
@@ -132,18 +125,19 @@ local runButton = topLayout:addChild(GUI.adaptiveButton(1, 1, 3, 1, 0x4B4B4B, 0x
 local title = topLayout:addChild(GUI.textBox(1, 1, 1, 3, 0x0, 0x0, {}, 1):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP))
 local titleLines = {}
 local titleDebugMode = false
+title.eventHandler = nil
 title.draw = function()	
 	local sides = titleDebugMode and 0xCC4940 or 0x5A5A5A
-	buffer.drawRectangle(title.x, 2, 1, title.height, sides, 0x0, " ")
-	buffer.drawRectangle(title.x + title.width - 1, 2, 1, title.height, sides, 0x0, " ")
-	buffer.drawRectangle(title.x + 1, 2, title.width - 2, 3, titleDebugMode and 0x880000 or 0x3C3C3C, 0xE1E1E1, " ")
+	buffer.drawRectangle(title.x, title.y, 1, title.height, sides, 0x0, " ")
+	buffer.drawRectangle(title.x + title.width - 1, title.y, 1, title.height, sides, 0x0, " ")
+	buffer.drawRectangle(title.x + 1, title.y, title.width - 2, 3, titleDebugMode and 0x880000 or 0x3C3C3C, 0xE1E1E1, " ")
 
 	if titleDebugMode then
 		local text = lastErrorLine and localization.runtimeError or localization.debugging .. (_G.MineCodeIDEDebugInfo and _G.MineCodeIDEDebugInfo.line or "N/A")
-		buffer.drawText(math.floor(title.x + title.width / 2 - unicode.len(text) / 2), 3, 0xE1E1E1, text)
+		buffer.drawText(math.floor(title.x + title.width / 2 - unicode.len(text) / 2), title.y + 1, 0xE1E1E1, text)
 	else
 		for i = 1, #titleLines do
-			buffer.drawText(math.floor(title.x + title.width / 2 - unicode.len(titleLines[i]) / 2), i + 1, 0xE1E1E1, titleLines[i])
+			buffer.drawText(math.floor(title.x + title.width / 2 - unicode.len(titleLines[i]) / 2), title.y + i - 1, 0xE1E1E1, titleLines[i])
 		end
 	end
 end
@@ -157,7 +151,18 @@ toggleBottomToolBarButton.switchMode, toggleBottomToolBarButton.pressed = true, 
 local toggleTopToolBarButton = topLayout:addChild(GUI.adaptiveButton(1, 1, 3, 1, 0xD2D2D2, 0x4B4B4B, 0x878787, 0xE1E1E1, "⇧"))
 toggleTopToolBarButton.switchMode, toggleTopToolBarButton.pressed = true, true
 
-local bottomToolBar = mainContainer:addChild(GUI.container(1, 1, 1, 3))
+local actionButtons = window:addChild(GUI.actionButtons(2, 2, true))
+actionButtons.close.onTouch = function()
+	window:close()
+end
+actionButtons.maximize.onTouch = function()
+	window:maximize()
+end
+actionButtons.minimize.onTouch = function()
+	window:minimize()
+end
+
+local bottomToolBar = window:addChild(GUI.container(1, 1, 1, 3))
 bottomToolBar.hidden = true
 
 local caseSensitiveButton = bottomToolBar:addChild(GUI.adaptiveButton(1, 1, 2, 1, 0x3C3C3C, 0xE1E1E1, 0xB4B4B4, 0x2D2D2D, "Aa"))
@@ -167,9 +172,9 @@ local searchInput = bottomToolBar:addChild(GUI.input(7, 1, 10, 3, 0xE1E1E1, 0x96
 
 local searchButton = bottomToolBar:addChild(GUI.adaptiveButton(1, 1, 3, 1, 0x3C3C3C, 0xE1E1E1, 0xB4B4B4, 0x2D2D2D, localization.find))
 
-local leftTreeView = mainContainer:addChild(GUI.filesystemTree(1, 1, config.leftTreeViewWidth, 1, 0xD2D2D2, 0x3C3C3C, 0x3C3C3C, 0x969696, 0x3C3C3C, 0xE1E1E1, 0xB4B4B4, 0xA5A5A5, 0xB4B4B4, 0x4B4B4B, GUI.IO_MODE_BOTH, GUI.IO_MODE_FILE))
+local leftTreeView = window:addChild(GUI.filesystemTree(1, 1, config.leftTreeViewWidth, 1, 0xD2D2D2, 0x3C3C3C, 0x3C3C3C, 0x969696, 0x3C3C3C, 0xE1E1E1, 0xB4B4B4, 0xA5A5A5, 0xB4B4B4, 0x4B4B4B, GUI.IO_MODE_BOTH, GUI.IO_MODE_FILE))
 
-local leftTreeViewResizer = mainContainer:addChild(GUI.resizer(1, 1, 3, 5, 0x696969, 0x0))
+local leftTreeViewResizer = window:addChild(GUI.resizer(1, 1, 3, 5, 0x696969, 0x0))
 
 local function updateHighlights()
 	codeView.highlights = {}
@@ -212,18 +217,12 @@ local function updateTitle()
 	end
 end
 
-local function updateRAMProgressBar()
-	if not topToolBar.hidden then
-		local totalMemory = computer.totalMemory()
-		RAMProgressBar.value = math.ceil((totalMemory - computer.freeMemory()) / totalMemory * 100)
-	end
-end
-
 local function tick(state)
 	cursorBlinkState = state
 	updateTitle()
-	updateRAMProgressBar()
 	mainContainer:drawOnScreen()
+
+	cursorUptime = computer.uptime()
 end
 
 local function updateAutocompleteDatabaseFromString(str, value)
@@ -279,7 +278,8 @@ local function showAutocomplete()
 
 			if #autocomplete.items > 0 then
 				autocomplete.fromItem, autocomplete.selectedItem = 1, 1
-				autocomplete.localX, autocomplete.localY = convertTextPositionToScreenCoordinates(autoCompleteWordStart - 1, cursorPositionLine + 1)
+				autocomplete.localX = codeView.localX + codeView.lineNumbersWidth + autoCompleteWordStart - codeView.fromSymbol
+				autocomplete.localY = codeView.localY + cursorPositionLine - codeView.fromLine + 1
 				autocomplete.hidden = false
 			end
 		end
@@ -293,43 +293,37 @@ local function toggleEnableAutocompleteDatabase()
 end
 
 local function calculateSizes()
-	mainContainer.width, mainContainer.height = buffer.getResolution()
-
 	if leftTreeView.hidden then
-		codeView.localX, codeView.width = 1, mainContainer.width
+		codeView.localX, codeView.width = 1, window.width
 		bottomToolBar.localX, bottomToolBar.width = codeView.localX, codeView.width
 	else
-		codeView.localX, codeView.width = leftTreeView.width + 1, mainContainer.width - leftTreeView.width
+		codeView.localX, codeView.width = leftTreeView.width + 1, window.width - leftTreeView.width
 		bottomToolBar.localX, bottomToolBar.width = codeView.localX, codeView.width
 	end
 
 	if topToolBar.hidden then
-		leftTreeView.localY, leftTreeView.height = 2, mainContainer.height - 1
-		codeView.localY, codeView.height = 2, mainContainer.height - 1
+		leftTreeView.localY, leftTreeView.height = 1, window.height
+		codeView.localY, codeView.height = 1, window.height
 	else
-		leftTreeView.localY, leftTreeView.height = 5, mainContainer.height - 4
-		codeView.localY, codeView.height = 5, mainContainer.height - 4
+		leftTreeView.localY, leftTreeView.height = 4, window.height - 3
+		codeView.localY, codeView.height = 4, window.height - 3
 	end
 
-	if bottomToolBar.hidden then
-
-	else
+	if not bottomToolBar.hidden then
 		codeView.height = codeView.height - 3
 	end
 
 	leftTreeViewResizer.localX = leftTreeView.width
 	leftTreeViewResizer.localY = math.floor(leftTreeView.localY + leftTreeView.height / 2 - leftTreeViewResizer.height / 2)
 
-	bottomToolBar.localY = mainContainer.height - 2
+	bottomToolBar.localY = window.height - 2
 	searchButton.localX = bottomToolBar.width - searchButton.width + 1
 	searchInput.width = bottomToolBar.width - searchInput.localX - searchButton.width + 1
 
-	topToolBar.width, topToolBarPanel.width, topLayout.width = mainContainer.width, mainContainer.width, mainContainer.width
+	topToolBar.width, topToolBarPanel.width, topLayout.width = window.width, window.width, window.width
 	title.width = math.floor(topToolBar.width * 0.32)
-	
-	RAMProgressBar.localX = topToolBar.width - RAMProgressBar.width - 1
 
-	topMenu.width = mainContainer.width
+	-- topMenu.width = window.width
 end
 
 local function gotoLine(line)
@@ -486,14 +480,8 @@ local function selectWord()
 	end
 end
 
-local function removeTabs(text)
-	local result = text:gsub("\t", string.rep(" ", codeView.indentationWidth))
-	return result
-end
-
-local function removeWindowsLineEndings(text)
-	local result = text:gsub("\r\n", "\n")
-	return result
+local function optimizeString(s)
+	return s:gsub("\t", string.rep(" ", codeView.indentationWidth)):gsub("\r\n", "\n")
 end
 
 local function addBackgroundContainer(title)
@@ -518,22 +506,24 @@ local function newFile()
 	updateTitle()
 end
 
-local function loadFile(path)
+local function openFile(path)
 	local file, reason = io.open(path, "r")
 	if file then
 		newFile()
 		leftTreeView.selectedItem = path
 		codeView.hidden = true
 
-		local container = mainContainer:addChild(GUI.container(codeView.localX, codeView.localY, codeView.width, codeView.height))
+		local container = window:addChild(GUI.container(codeView.localX, codeView.localY, codeView.width, codeView.height))
 		container:addChild(GUI.panel(1, 1, container.width, container.height, 0x1E1E1E))
+		
 		local layout = container:addChild(GUI.layout(1, 1, container.width, container.height, 1, 1))
+		
 		layout:addChild(GUI.label(1, 1, layout.width, 1, 0xD2D2D2, localization.openingFile .. " " .. path):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP))
 		local progressBar = layout:addChild(GUI.progressBar(1, 1, 36, 0x969696, 0x2D2D2D, 0x787878, 0, true, true, "", "%"))
 
 		local counter, currentSize, totalSize = 1, 0, fs.size(path)
 		for line in file:lines() do
-			line = removeWindowsLineEndings(removeTabs(line))
+			line = optimizeString(line)
 			table.insert(lines, line)
 			codeView.maximumLineLength = math.max(codeView.maximumLineLength, unicode.len(line))
 			
@@ -544,6 +534,8 @@ local function loadFile(path)
 				mainContainer:drawOnScreen()
 			end
 		end
+
+		file:close()
 
 		if #lines > 1 then
 			table.remove(lines, 1)
@@ -558,8 +550,7 @@ local function loadFile(path)
 		container:remove()
 		updateAutocompleteDatabaseFromFile()
 		updateTitle()
-
-		file:close()
+		saveContextMenuItem.disabled = false
 	else
 		GUI.alert(reason)
 	end
@@ -573,6 +564,8 @@ local function saveFile(path)
 			file:write(lines[line], "\n")
 		end
 		file:close()
+
+		saveContextMenuItem.disabled = false
 	else
 		GUI.alert("Failed to open file for writing: " .. tostring(reason))
 	end
@@ -593,17 +586,17 @@ local function gotoLineWindow()
 end
 
 local function openFileWindow()
-	local filesystemDialog = GUI.addFilesystemDialog(mainContainer, true, 50, math.floor(mainContainer.height * 0.8), "Open", "Cancel", "File name", "/")
+	local filesystemDialog = GUI.addFilesystemDialog(mainContainer, true, 50, math.floor(window.height * 0.8), "Open", "Cancel", "File name", "/")
 	filesystemDialog:setMode(GUI.IO_MODE_OPEN, GUI.IO_MODE_FILE)
 	filesystemDialog.onSubmit = function(path)
-		loadFile(path)
+		openFile(path)
 		mainContainer:drawOnScreen()
 	end
 	filesystemDialog:show()
 end
 
 local function saveFileAsWindow()
-	local filesystemDialog = GUI.addFilesystemDialog(mainContainer, true, 50, math.floor(mainContainer.height * 0.8), "Save", "Cancel", "File name", "/")
+	local filesystemDialog = GUI.addFilesystemDialog(mainContainer, true, 50, math.floor(window.height * 0.8), "Save", "Cancel", "File name", "/")
 	filesystemDialog:setMode(GUI.IO_MODE_SAVE, GUI.IO_MODE_FILE)
 	filesystemDialog.onSubmit = function(path)
 		saveFile(path)
@@ -623,15 +616,21 @@ local function saveFileWindow()
 end
 
 local function splitStringIntoLines(s)
-	s = removeWindowsLineEndings(removeTabs(s))
+	s = optimizeString(s)
 
-	local splitLines, maximumLineLength = {}, 0
-	for line in s:gmatch("[^\n]+") do
-		maximumLineLength = math.max(maximumLineLength, unicode.len(line))
-		table.insert(splitLines, line)
-	end
+	local lines, index, maximumLineLength, starting = {s}, 1, 0
+	repeat
+		starting = lines[index]:find("\n")
+		if starting then
+			table.insert(lines, lines[index]:sub(starting + 1, -1))
+			lines[index] = lines[index]:sub(1, starting - 1)
+			maximumLineLength = math.max(maximumLineLength, unicode.len(lines[index]))
 
-	return splitLines, maximumLineLength
+			index = index + 1
+		end
+	until not starting
+
+	return lines, maximumLineLength
 end
 
 local function downloadFileFromWeb()
@@ -771,10 +770,10 @@ local function run(...)
 end
 
 local function pizda(lines, debug)
-	local container = mainContainer:addChild(GUI.container(1, 1, mainContainer.width, mainContainer.height))
+	local container = window:addChild(GUI.container(1, 1, window.width, window.height))
 
-	local backgroundObject = container:addChild(GUI.object(1, 1, mainContainer.width, mainContainer.height))
-	local errorContainer = container:addChild(GUI.container(title.localX, topToolBar.hidden and 2 or 5, title.width, #lines + 2))
+	local backgroundObject = container:addChild(GUI.object(1, 1, window.width, window.height))
+	local errorContainer = container:addChild(GUI.container(title.localX, topToolBar.hidden and 1 or 4, title.width, #lines + 2))
 	local panel = errorContainer:addChild(GUI.panel(1, 1, errorContainer.width, errorContainer.height, 0xFFFFFF, 0.3))
 	local textBox = errorContainer:addChild(GUI.textBox(3, 2, errorContainer.width - 4, #lines, nil, 0x4B4B4B, lines, 1))
 
@@ -979,8 +978,8 @@ local function selectAndPasteColor()
 		startColor = tonumber(unicode.sub(lines[codeView.selections[1].from.line], codeView.selections[1].from.symbol, codeView.selections[1].to.symbol)) or startColor
 	end
 
-	local palette = mainContainer:addChild(GUI.palette(1, 1, startColor))
-	palette.localX, palette.localY = math.floor(mainContainer.width / 2 - palette.width / 2), math.floor(mainContainer.height / 2 - palette.height / 2)
+	local palette = window:addChild(GUI.palette(1, 1, startColor))
+	palette.localX, palette.localY = math.floor(window.width / 2 - palette.width / 2), math.floor(window.height / 2 - palette.height / 2)
 
 	palette.cancelButton.onTouch = function()
 		palette:remove()
@@ -1316,6 +1315,7 @@ local function createEditOrRightClickMenu(menu)
 	end
 end
 
+local uptime = computer.uptime()
 codeView.eventHandler = function(mainContainer, object, e1, e2, e3, e4, e5)
 	if e1 == "touch" then
 		if e5 == 1 then
@@ -1375,9 +1375,6 @@ codeView.eventHandler = function(mainContainer, object, e1, e2, e3, e4, e5)
 			-- X
 			elseif e4 == 45 then
 				cut()
-			-- W
-			elseif e4 == 17 then
-				mainContainer:stopEventHandling()
 			-- N
 			elseif e4 == 49 then
 				newFile()
@@ -1521,22 +1518,21 @@ codeView.eventHandler = function(mainContainer, object, e1, e2, e3, e4, e5)
 		tick(cursorBlinkState)
 	elseif e1 == "clipboard" then
 		local lines = splitStringIntoLines(e3)
-		table.insert(lines, "")
 		paste(lines)
 		
 		tick(cursorBlinkState)
-	elseif not e1 then
+	elseif not e1 and cursorUptime + config.cursorBlinkDelay < computer.uptime() then
 		tick(not cursorBlinkState)
 	end
 end
 
 leftTreeView.onItemSelected = function(path)
 	mainContainer:drawOnScreen()
-	loadFile(path)
+	openFile(path)
 	mainContainer:drawOnScreen()
 end
 
-local MineCodeContextMenu = topMenu:addContextMenu("MineCode", 0x0)
+local MineCodeContextMenu = menu:addContextMenu("MineCode", 0x0)
 MineCodeContextMenu:addItem(localization.about).onTouch = function()
 	local container = addBackgroundContainer(localization.about)
 	
@@ -1566,11 +1562,7 @@ MineCodeContextMenu:addItem(localization.about).onTouch = function()
 	mainContainer:drawOnScreen()
 end
 
-MineCodeContextMenu:addItem(localization.quit, false, "^W").onTouch = function()
-	mainContainer:stopEventHandling()
-end
-
-local fileContextMenu = topMenu:addContextMenu(localization.file)
+local fileContextMenu = menu:addContextMenu(localization.file)
 fileContextMenu:addItem(localization.new, false, "^N").onTouch = function()
 	newFile()
 	mainContainer:drawOnScreen()
@@ -1587,7 +1579,8 @@ end
 
 fileContextMenu:addSeparator()
 
-fileContextMenu:addItem(localization.save, not leftTreeView.selectedItem, "^S").onTouch = function()
+saveContextMenuItem = fileContextMenu:addItem(localization.save, not leftTreeView.selectedItem, "^S")
+saveContextMenuItem.onTouch = function()
 	saveFileWindow()
 end
 
@@ -1612,10 +1605,10 @@ fileContextMenu:addItem(localization.launchWithArguments, false, "^F5").onTouch 
 	launchWithArgumentsWindow()
 end
 
-local topMenuEdit = topMenu:addContextMenu(localization.edit)
+local topMenuEdit = menu:addContextMenu(localization.edit)
 createEditOrRightClickMenu(topMenuEdit)
 
-local gotoContextMenu = topMenu:addContextMenu(localization.gotoCyka)
+local gotoContextMenu = menu:addContextMenu(localization.gotoCyka)
 gotoContextMenu:addItem(localization.pageUp, false, "PgUp").onTouch = function()
 	pageUp()
 end
@@ -1638,7 +1631,7 @@ gotoContextMenu:addItem(localization.gotoLine, false, "^L").onTouch = function()
 	gotoLineWindow()
 end
 
-local propertiesContextMenu = topMenu:addContextMenu(localization.properties)
+local propertiesContextMenu = menu:addContextMenu(localization.properties)
 propertiesContextMenu:addItem(localization.colorScheme).onTouch = function()
 	local container = GUI.addBackgroundContainer(mainContainer, true, false, localization.colorScheme)
 				
@@ -1790,6 +1783,11 @@ autocomplete.onItemSelected = function(mainContainer, object, e1)
 	tick(true)
 end
 
+window.onResize = function(width, height)
+	calculateSizes()
+	mainContainer:drawOnScreen()
+end
+
 searchInput.onInputFinished = findFromFirstDisplayedLine
 caseSensitiveButton.onTouch = find
 searchButton.onTouch = find
@@ -1800,17 +1798,12 @@ autocomplete:moveToFront()
 leftTreeView:updateFileList()
 
 calculateSizes()
-updateTitle()
-updateRAMProgressBar()
 mainContainer:drawOnScreen()
 
 if args[1] and fs.exists(args[1]) then
-	loadFile(args[1])
+	openFile(args[1])
 else
 	newFile()
 end
 
 mainContainer:drawOnScreen()
-mainContainer:startEventHandling(config.cursorBlinkDelay)
-
-

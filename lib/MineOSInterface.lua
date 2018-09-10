@@ -1097,6 +1097,11 @@ end
 
 ----------------------------------------- Windows patterns -----------------------------------------
 
+function MineOSInterface.updateMenu()
+	local focusedWindow = MineOSInterface.mainContainer.windowsContainer.children[#MineOSInterface.mainContainer.windowsContainer.children]
+	MineOSInterface.mainContainer.menu.children = focusedWindow and focusedWindow.menu.children or MineOSInterface.menuInitialChildren
+end
+
 function MineOSInterface.addWindow(window, preserveCoordinates)
 	-- Чекаем коорды
 	if not preserveCoordinates then
@@ -1126,22 +1131,29 @@ function MineOSInterface.addWindow(window, preserveCoordinates)
 
 	-- GUI.alert(dockPath)
 	
-	-- Чекаем наличие иконки в доке с таким же путем
+	-- Чекаем наличие иконки в доке с таким же путем, и еси ее нет, то хуячим новую
 	for i = 1, #MineOSInterface.mainContainer.dockContainer.children do
 		if MineOSInterface.mainContainer.dockContainer.children[i].path == dockPath then
 			dockIcon = MineOSInterface.mainContainer.dockContainer.children[i]
 			break
 		end
 	end
-
-	-- Если такой иконки ищо нет, то хуячим новую
 	if not dockIcon then
 		dockIcon = MineOSInterface.mainContainer.dockContainer.addIcon(dockPath, window)
 	end
 	
-	-- Ебурим ссылку на окно в иконку
+	-- Ебурим ссылку на окна в иконку
 	dockIcon.windows = dockIcon.windows or {}
 	dockIcon.windows[window] = true
+
+	-- Взалупливаем иконке индивидуальную менюху. По дефолту тут всякая хуйня и прочее
+	window.menu = GUI.menu(1, 1, 1)
+	window.menu.colors = MineOSInterface.mainContainer.menu.colors
+	local name = fs.hideExtension(fs.name(dockPath))
+	local contextMenu = window.menu:addContextMenu(name, 0x0)
+	contextMenu:addItem(MineOSCore.localization.closeWindow .. " " .. name, false, "^W").onTouch = function()
+		window:close()
+	end
 
 	-- Смещаем окно правее и ниже, если уже есть открытые окна этой софтины
 	local lastIndex
@@ -1151,11 +1163,14 @@ function MineOSInterface.addWindow(window, preserveCoordinates)
 			break
 		end
 	end
-
 	if lastIndex then
 		window.localX, window.localY = MineOSInterface.mainContainer.windowsContainer.children[lastIndex].localX + 4, MineOSInterface.mainContainer.windowsContainer.children[lastIndex].localY + 2
 	end
 
+	-- Когда окно фокусицца, то главная ОСевая менюха заполницца ДЕТИШЕЧКАМИ оконной менюхи
+	window.onFocus = MineOSInterface.updateMenu
+	
+	-- Биндим функции по ресайзу/закрытию и прочему говнищу
 	window.close = function(window)
 		local sameIconExists = false
 		for i = 1, #MineOSInterface.mainContainer.dockContainer.children do
@@ -1179,8 +1194,10 @@ function MineOSInterface.addWindow(window, preserveCoordinates)
 		end
 		
 		window:remove()
+		MineOSInterface.updateMenu()
 	end
 
+	-- Кнопочкам тоже эту хуйню пихаем
 	if window.actionButtons then
 		window.actionButtons.close.onTouch = function()
 			window.close(window)
@@ -1193,7 +1210,9 @@ function MineOSInterface.addWindow(window, preserveCoordinates)
 		end
 	end
 
-	return MineOSInterface.mainContainer, window
+	MineOSInterface.updateMenu()
+
+	return MineOSInterface.mainContainer, window, window.menu
 end
 
 -----------------------------------------------------------------------------------------------------------------------------------

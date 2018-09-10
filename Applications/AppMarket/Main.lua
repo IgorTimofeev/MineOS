@@ -91,7 +91,7 @@ local mainContainer, window = MineOSInterface.addWindow(GUI.tabbedWindow(1, 1, 1
 
 local contentContainer = window:addChild(GUI.container(1, 4, 1, 1))
 
-local progressIndicator = window:addChild(GUI.progressIndicator(1, 1, 0x3C3C3C, 0x99FF80, 0x00B640))
+local progressIndicator = window:addChild(GUI.progressIndicator(1, 1, 0x3C3C3C, 0x00B640, 0x99FF80))
 
 local function activity(state)
 	progressIndicator.active = state

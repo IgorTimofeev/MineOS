@@ -34,7 +34,7 @@ local workpathHistoryCurrent = 0
 
 ------------------------------------------------------------------------------------------------------
 
-local mainContainer, window = MineOSInterface.addWindow(GUI.filledWindow(1, 1, 88, 26, 0xF0F0F0))
+local mainContainer, window, menu = MineOSInterface.addWindow(GUI.filledWindow(1, 1, 88, 26, 0xF0F0F0))
 
 local titlePanel = window:addChild(GUI.panel(1, 1, 1, 3, 0xE1E1E1))
 

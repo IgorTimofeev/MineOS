@@ -23,6 +23,7 @@
 	select = "Choisissez l'application ...",
 	keepInDock = "Gardez dans la barre des tâches",
 	closeAllWindows = "Fermez toutes les fenêtres",
+	closeWindow = "Fermer",
 	newWindow = "Nouvelle fenetre",
 	launchWithArguments = "Lancement avec des arguments",
 	dontShowAnymore = "Ne plus afficher",

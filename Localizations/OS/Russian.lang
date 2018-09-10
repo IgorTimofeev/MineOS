@@ -23,6 +23,7 @@
 	select = "Выбрать программу…",
 	keepInDock = "Оставить в Dock",
 	closeAllWindows = "Закрыть все окна",
+	closeWindow = "Закрыть",
 	newWindow = "Новое окно",
 	launchWithArguments = "Запустить с аргументами",
 	dontShowAnymore = "Больше не показывать",

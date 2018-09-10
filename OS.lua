@@ -382,8 +382,9 @@ local function createOSWidgets()
 					window.hidden = false
 					window:moveToFront()
 				end
-				
+
 				icon.selected = false
+				MineOSInterface.updateMenu()
 				MineOSInterface.mainContainer:drawOnScreen()
 			else
 				MineOSInterface.iconDoubleClick(icon, ...)
@@ -1138,6 +1139,8 @@ local function createOSWidgets()
 			end
 		end
 	end
+
+	MineOSInterface.menuInitialChildren = MineOSInterface.mainContainer.menu.children
 end
 
 local function updateCurrentTimestamp()
