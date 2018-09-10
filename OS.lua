@@ -558,11 +558,13 @@ local function createOSWidgets()
 			"Andrey Kakoito, vk.com/id201043162",
 			"Maxim Omelaenko, vk.com/id54662296",
 			"Konstantin Mayakovskiy, vk.com/id10069748",
+			"Ruslan Isaev, vk.com/id181265169",
+			"Eugene8388608, github.com/Eugene8388608",
 			" ",
 			"Translators:",
 			" ",
 			"06Games, github.com/06Games",
-			"Ksenia Mazneva, vk.com/id5564402",
+			"Xenia Mazneva, vk.com/id5564402",
 			"Yana Dmitrieva, vk.com/id155326634",
 		}
 
