@@ -113,7 +113,7 @@ function MineOSCore.loadPropeties()
 			MineOSPaths.applications .. "MineCode IDE.app/",
 			MineOSPaths.applications .. "Finder.app/",
 			MineOSPaths.applications .. "Picture Edit.app/",
-			MineOSPaths.applications .. "Control.app/",
+			MineOSPaths.applications .. "Settings.app/",
 		},
 		network = {
 			users = {},
