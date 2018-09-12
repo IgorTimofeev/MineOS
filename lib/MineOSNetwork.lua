@@ -650,12 +650,12 @@ local exceptionMethods = {
 	end,
 }
 
-local function handleRequest(eventData)	
-	if MineOSCore.properties.network.users[eventData[3]].allowReadAndWrite then
-		local result = { pcall(exceptionMethods[eventData[8]] or filesystemProxy[eventData[8]], table.unpack(eventData, 9)) }
-		MineOSNetwork.sendMessage(eventData[3], "MineOSNetwork", "response", eventData[8], table.unpack(result, result[1] and 2 or 1))
+local function handleRequest(e1, e2, e3, e4, e5, e6, e7, e8, ...)	
+	if MineOSCore.properties.network.users[e3].allowReadAndWrite then
+		local result = { pcall(exceptionMethods[e8] or filesystemProxy[e8], ...) }
+		MineOSNetwork.sendMessage(e3, "MineOSNetwork", "response", e8, table.unpack(result, result[1] and 2 or 1))
 	else
-		MineOSNetwork.sendMessage(eventData[3], "MineOSNetwork", "accessDenied")
+		MineOSNetwork.sendMessage(e3, "MineOSNetwork", "accessDenied")
 	end
 end
 
@@ -668,51 +668,13 @@ function MineOSNetwork.update()
 	MineOSNetwork.setSignalStrength(MineOSCore.properties.network.signalStrength)
 	MineOSNetwork.broadcastComputerState(MineOSCore.properties.network.enabled)
 
-	if MineOSNetwork.eventHandlerID then
-		event.removeHandler(MineOSNetwork.eventHandlerID)
-	end
+	-- if MineOSNetwork.eventHandlerID then
+	-- 	event.removeHandler(MineOSNetwork.eventHandlerID)
+	-- end
 
-	if MineOSCore.properties.network.enabled then
-		MineOSNetwork.eventHandlerID = event.addHandler(function(...)
-			local eventData = {...}
-			
-			if (eventData[1] == "component_added" or eventData[1] == "component_removed") and (eventData[3] == "modem" or eventData[3] == "internet") then
-				MineOSNetwork.updateComponents()
-			elseif eventData[1] == "modem_message" and MineOSCore.properties.network.enabled and eventData[6] == "MineOSNetwork" then
-				if eventData[7] == "request" then
-					handleRequest(eventData)
-				elseif eventData[7] == "computerAvailable" or eventData[7] == "computerAvailableRedirect" then
-					for proxy in fs.mounts() do
-						if proxy.MineOSNetworkModem and proxy.address == eventData[3] then
-							fs.umount(proxy)
-						end
-					end
-
-					proxy = newModemProxy(eventData[3])
-					proxy.name = eventData[8]
-					fs.mount(proxy, MineOSNetwork.mountPaths.modem .. eventData[3] .. "/")
-
-					if eventData[7] == "computerAvailable" then
-						MineOSNetwork.sendMessage(eventData[3], "MineOSNetwork", "computerAvailableRedirect", MineOSCore.properties.network.name)
-					end
-
-					if not MineOSCore.properties.network.users[eventData[3]] then
-						MineOSCore.properties.network.users[eventData[3]] = {}
-						MineOSCore.saveProperties()
-					end
-
-					computer.pushSignal("MineOSNetwork", "updateProxyList")
-				elseif eventData[7] == "computerNotAvailable" then
-					local proxy = MineOSNetwork.getMountedModemProxy(eventData[3])
-					if proxy then
-						fs.umount(proxy)
-					end
-
-					computer.pushSignal("MineOSNetwork", "updateProxyList")
-				end
-			end
-		end)
-	end
+	-- if MineOSCore.properties.network.enabled then
+		
+	-- end
 end
 
 function MineOSNetwork.disable()
@@ -729,16 +691,45 @@ end
 
 ----------------------------------------------------------------------------------------------------------------
 
--- MineOSNetwork.updateComponents()
+event.addHandler(function(e1, e2, e3, e4, e5, e6, e7, e8, ...)
+	if (e1 == "component_added" or e1 == "component_removed") and (e3 == "modem" or e3 == "internet") then
+		MineOSNetwork.updateComponents()
+		MineOSNetwork.broadcastComputerState(MineOSCore.properties.network.enabled)
+	elseif MineOSCore.properties.network.enabled and e1 == "modem_message" and e6 == "MineOSNetwork" then
+		if e7 == "request" then
+			handleRequest(e1, e2, e3, e4, e5, e6, e7, e8, ...)
+		elseif e7 == "computerAvailable" or e7 == "computerAvailableRedirect" then
+			for proxy in fs.mounts() do
+				if proxy.MineOSNetworkModem and proxy.address == e3 then
+					fs.umount(proxy)
+				end
+			end
 
--- local proxy, reason = MineOSNetwork.FTPProxy("localhost", 8888, "root", "1234")
--- print(proxy, reason)
+			proxy = newModemProxy(e3)
+			proxy.name = e8
+			fs.mount(proxy, MineOSNetwork.mountPaths.modem .. e3 .. "/")
+
+			if e7 == "computerAvailable" then
+				MineOSNetwork.sendMessage(e3, "MineOSNetwork", "computerAvailableRedirect", MineOSCore.properties.network.name)
+			end
+
+			if not MineOSCore.properties.network.users[e3] then
+				MineOSCore.properties.network.users[e3] = {}
+				MineOSCore.saveProperties()
+			end
+
+			computer.pushSignal("MineOSNetwork", "updateProxyList")
+		elseif e7 == "computerNotAvailable" then
+			local proxy = MineOSNetwork.getMountedModemProxy(e3)
+			if proxy then
+				fs.umount(proxy)
+			end
+
+			computer.pushSignal("MineOSNetwork", "updateProxyList")
+		end
+	end
+end)
 
 ----------------------------------------------------------------------------------------------------------------
 
 return MineOSNetwork
-
-
-
-
-
