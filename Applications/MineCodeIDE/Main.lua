@@ -46,6 +46,29 @@ local closeBrackets = {
 	["\'"] = "\'"
 }
 
+local luaKeywords = {
+	["do"] = true,
+	["local"] = true,
+	["return"] = true,
+	["while"] = true,
+	["repeat"] = true,
+	["until"] = true,
+	["for"] = true,
+	["in"] = true,
+	["if"] = true,
+	["then"] = true,
+	["else"] = true,
+	["elseif"] = true,
+	["end"] = true,
+	["function"] = true,
+	["true"] = true,
+	["false"] = true,
+	["nil"] = true,
+	["not"] = true,
+	["and"] = true,
+	["or" ] = true,
+}
+
 local lines = {""}
 local cursorPositionSymbol = 1
 local cursorPositionLine = 1
@@ -225,10 +248,10 @@ local function tick(state)
 	cursorUptime = computer.uptime()
 end
 
-local function updateAutocompleteDatabaseFromString(str, value)
+local function updateAutocompleteDatabaseFromString(str)
 	for word in str:gmatch("[%a%d%_]+") do
 		if not word:match("^%d+$") then
-			autocompleteDatabase[word] = value
+			autocompleteDatabase[word] = true
 		end
 	end
 end
@@ -237,7 +260,7 @@ local function updateAutocompleteDatabaseFromFile()
 	if config.enableAutocompletion then
 		autocompleteDatabase = {}
 		for line = 1, #lines do
-			updateAutocompleteDatabaseFromString(lines[line], true)
+			updateAutocompleteDatabaseFromString(lines[line])
 		end
 	end
 end
@@ -266,21 +289,16 @@ local function showAutocomplete()
 	if config.enableAutocompletion then
 		autoCompleteWordStart, autoCompleteWordEnd = getautoCompleteWordStartAndEnding(cursorPositionSymbol - 1)
 		if autoCompleteWordStart then
-			autocomplete:match(
-				autocompleteDatabase,
-				unicode.sub(
-					lines[cursorPositionLine],
-					autoCompleteWordStart,
-					autoCompleteWordEnd
-				),
-				true
-			)
+			local word = unicode.sub(lines[cursorPositionLine], autoCompleteWordStart, autoCompleteWordEnd)
+			if not luaKeywords[word] then
+				autocomplete:match(autocompleteDatabase, word, true)
 
-			if #autocomplete.items > 0 then
-				autocomplete.fromItem, autocomplete.selectedItem = 1, 1
-				autocomplete.localX = codeView.localX + codeView.lineNumbersWidth + autoCompleteWordStart - codeView.fromSymbol
-				autocomplete.localY = codeView.localY + cursorPositionLine - codeView.fromLine + 1
-				autocomplete.hidden = false
+				if #autocomplete.items > 0 then
+					autocomplete.fromItem, autocomplete.selectedItem = 1, 1
+					autocomplete.localX = codeView.localX + codeView.lineNumbersWidth + autoCompleteWordStart - codeView.fromSymbol
+					autocomplete.localY = codeView.localY + cursorPositionLine - codeView.fromLine + 1
+					autocomplete.hidden = false
+				end
 			end
 		end
 	end
@@ -415,8 +433,8 @@ local function setCursorPositionAndClearSelection(symbol, line)
 	clearSelection()
 end
 
-local function moveCursor(symbolOffset, lineOffset)
-	if autocomplete.hidden then
+local function moveCursor(symbolOffset, lineOffset, ignoreHidden)
+	if autocomplete.hidden or ignoreHidden then
 		if codeView.selections[1] then
 			if symbolOffset < 0 or lineOffset < 0 then
 				setCursorPositionAndClearSelection(codeView.selections[1].from.symbol, codeView.selections[1].from.line)
@@ -667,26 +685,7 @@ local function getVariables(codePart)
 		for word in codePart:gmatch("[%a%d%.%:%_]+") do
 			-- Далее проверяем, не совпадает ли это слово с одним из луа-шаблонов, то бишь, не является ли оно частью синтаксиса
 			if
-				word ~= "local" and
-				word ~= "return" and
-				word ~= "while" and
-				word ~= "repeat" and
-				word ~= "until" and
-				word ~= "for" and
-				word ~= "in" and
-				word ~= "do" and
-				word ~= "if" and
-				word ~= "then" and
-				word ~= "else" and
-				word ~= "elseif" and
-				word ~= "end" and
-				word ~= "function" and
-				word ~= "true" and
-				word ~= "false" and
-				word ~= "nil" and
-				word ~= "not" and
-				word ~= "and" and
-				word ~= "or"  and
+				not luaKeywords[word] and
 				-- Также проверяем, не число ли это в чистом виде
 				not word:match("^[%d%.]+$") and
 				not word:match("^0x%x+$") and
@@ -1249,6 +1248,10 @@ local function toggleTopToolBar()
 end
 
 local function createEditOrRightClickMenu(menu)
+	-- menu:addItem("Сгенерировать", false, "^Enter").onTouch = function()
+		
+	-- end
+
 	menu:addItem(localization.cut, not codeView.selections[1], "^X").onTouch = function()
 		cut()
 	end
@@ -1370,7 +1373,7 @@ codeView.eventHandler = function(mainContainer, object, e1, e2, e3, e4, e5)
 					copy()
 				end
 			-- V
-			elseif e4 == 47 then
+			elseif e4 == 47 and clipboard then
 				paste(clipboard)
 			-- X
 			elseif e4 == 45 then
@@ -1427,9 +1430,9 @@ codeView.eventHandler = function(mainContainer, object, e1, e2, e3, e4, e5)
 		elseif e4 == 208 then
 			moveCursor(0, 1)
 		elseif e4 == 203 then
-			moveCursor(-1, 0)
+			moveCursor(-1, 0, true)
 		elseif e4 == 205 then
-			moveCursor(1, 0)
+			moveCursor(1, 0, true)
 		-- Tab
 		elseif e4 == 15 then
 			if keyboard.isKeyDown(42) then
