@@ -19,7 +19,7 @@
 	wallpaperPath = "Wallpaper image path",
 	wallpaperEnabled = "Wallpaper enabled",
 	wallpaperBrightness = "Wallpaper brightness",
-	wallpaperStretch = "Stretc",
+	wallpaperStretch = "Stretch",
 	wallpaperCenter = "Center",
 	wallpaperInfo = "Disabling this option will significantly reduce the consumption of RAM and increase performance",
 
