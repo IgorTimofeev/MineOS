@@ -351,7 +351,11 @@ function MineOSInterface.iconLaunchers.corrupted(icon)
 end
 
 function MineOSInterface.iconLaunchers.extension(icon)
-	MineOSInterface.safeLaunch(MineOSCore.properties.extensionAssociations[icon.extension].launcher, icon.path, "-o")
+	if icon.isShortcut then
+		MineOSInterface.safeLaunch(MineOSCore.properties.extensionAssociations[icon.shortcutExtension].launcher, icon.shortcutPath, "-o")
+	else
+		MineOSInterface.safeLaunch(MineOSCore.properties.extensionAssociations[icon.extension].launcher, icon.path, "-o")
+	end
 end
 
 function MineOSInterface.iconLaunchers.script(icon)
