@@ -1,6 +1,4 @@
 
-local args = {...}
-
 require("advancedLua")
 local computer = require("computer")
 local component = require("component")
@@ -86,7 +84,7 @@ local breakpointLines
 local lastErrorLine
 local autocompleteDatabase
 local autoCompleteWordStart, autoCompleteWordEnd
-local continue, showBreakpointMessage, showErrorContainer
+local continue, showBreakpointMessage, showTip
 
 ------------------------------------------------------------
 
@@ -157,7 +155,7 @@ syntaxHighlightingButton.pressed = codeView.syntaxHighlight
 
 local runButton = topLayout:addChild(GUI.adaptiveButton(1, 1, 3, 1, 0x4B4B4B, 0xE1E1E1, 0xD2D2D2, 0x4B4B4B, "▷"))
 
-local title = topLayout:addChild(GUI.textBox(1, 1, 1, 3, 0x0, 0x0, {}, 1):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP))
+local title = topLayout:addChild(GUI.object(1, 1, 1, 3))
 local titleLines = {}
 local titleDebugMode = false
 title.eventHandler = nil
@@ -165,14 +163,14 @@ title.draw = function()
 	local sides = titleDebugMode and 0xCC4940 or 0x5A5A5A
 	buffer.drawRectangle(title.x, title.y, 1, title.height, sides, 0x0, " ")
 	buffer.drawRectangle(title.x + title.width - 1, title.y, 1, title.height, sides, 0x0, " ")
-	buffer.drawRectangle(title.x + 1, title.y, title.width - 2, 3, titleDebugMode and 0x880000 or 0x3C3C3C, 0xE1E1E1, " ")
+	buffer.drawRectangle(title.x + 1, title.y, title.width - 2, 3, titleDebugMode and 0x880000 or 0x3C3C3C, 0x969696, " ")
 
 	if titleDebugMode then
 		local text = lastErrorLine and localization.runtimeError or localization.debugging .. (_G.MineCodeIDEDebugInfo and _G.MineCodeIDEDebugInfo.line or "N/A")
 		buffer.drawText(math.floor(title.x + title.width / 2 - unicode.len(text) / 2), title.y + 1, 0xE1E1E1, text)
 	else
 		for i = 1, #titleLines do
-			buffer.drawText(math.floor(title.x + title.width / 2 - unicode.len(titleLines[i]) / 2), title.y + i - 1, 0xE1E1E1, titleLines[i])
+			buffer.drawText(math.floor(title.x + title.width / 2 - unicode.len(titleLines[i]) / 2), title.y + i - 1, 0x969696, titleLines[i])
 		end
 	end
 end
@@ -227,8 +225,8 @@ end
 
 local function updateTitle()
 	if not topToolBar.hidden then
-		titleLines[1] = string.limit(localization.file .. ": " .. (leftTreeView.selectedItem or localization.none), title.width - 4)
-		titleLines[2] = string.limit(localization.cursor .. cursorPositionLine .. localization.line .. cursorPositionSymbol .. localization.symbol, title.width - 4)
+		titleLines[1] = string.limit(leftTreeView.selectedItem or "...", title.width - 4, "left")
+		titleLines[2] = string.limit(localization.cursor .. math.floor(cursorPositionLine) .. localization.line .. math.floor(cursorPositionSymbol) .. localization.symbol, title.width - 4)
 		
 		if codeView.selections[1] then
 			local countOfSelectedLines, countOfSelectedSymbols = codeView.selections[1].to.line - codeView.selections[1].from.line + 1
@@ -245,7 +243,7 @@ local function updateTitle()
 				countOfSelectedSymbols = countOfSelectedSymbols + unicode.len(unicode.sub(lines[codeView.selections[1].to.line], 1, codeView.selections[1].to.symbol))
 			end
 
-			titleLines[3] = string.limit(localization.selection .. countOfSelectedLines .. localization.lines .. countOfSelectedSymbols .. localization.symbols, title.width - 4)
+			titleLines[3] = string.limit(localization.selection .. math.floor(countOfSelectedLines) .. localization.lines .. math.floor(countOfSelectedSymbols) .. localization.symbols, title.width - 4)
 		else
 			titleLines[3] = string.limit(localization.selection .. localization.none, title.width - 4)
 		end
@@ -748,8 +746,7 @@ continue = function(...)
 		end
 	else
 		buffer.setResolution(oldResolutionX, oldResolutionY)
-		mainContainer:drawOnScreen(true)
-		showErrorContainer(debug.traceback(scriptCoroutine, coroutineResumeReason))
+		showTip(debug.traceback(scriptCoroutine, coroutineResumeReason), "%:(%d+)%: in main chunk", true, true)
 	end
 end
 
@@ -772,7 +769,7 @@ local function run(...)
 	end
 
 	-- Лоадим кодыч
-	local loadSuccess, loadReason = load(table.concat(lines, "\n"))
+	local loadSuccess, loadReason = load(table.concat(lines, "\n"), leftTreeView.selectedItem and ("=" .. leftTreeView.selectedItem))
 	
 	-- Чистим дерьмо вилочкой, чистим
 	if breakpointLines then
@@ -786,19 +783,14 @@ local function run(...)
 		scriptCoroutine = coroutine.create(loadSuccess)
 		continue(...)
 	else
-		showErrorContainer(loadReason)
+		showTip(loadReason, "%:(%d+)%:", true)
 	end
 end
 
-local function pizda(lines, debug)
+local function zalupa()
 	local container = window:addChild(GUI.container(1, 1, window.width, window.height))
 
-	local backgroundObject = container:addChild(GUI.object(1, 1, window.width, window.height))
-	local errorContainer = container:addChild(GUI.container(title.localX, topToolBar.hidden and 1 or 4, title.width, #lines + 2))
-	local panel = errorContainer:addChild(GUI.panel(1, 1, errorContainer.width, errorContainer.height, 0xFFFFFF, 0.3))
-	local textBox = errorContainer:addChild(GUI.textBox(3, 2, errorContainer.width - 4, #lines, nil, 0x4B4B4B, lines, 1))
-
-	local function close()
+	container.close = function()
 		lastErrorLine = nil
 		titleDebugMode = false
 		updateHighlights()
@@ -807,46 +799,18 @@ local function pizda(lines, debug)
 		mainContainer:drawOnScreen()
 	end
 
-	local times, frequency = 3, 1500
-	if debug then
-		times, frequency = 1, 1800
-		errorContainer.height = errorContainer.height + 1
-		panel.height = errorContainer.height
-		
-		local exitButton = errorContainer:addChild(GUI.button(1, errorContainer.height, math.floor(errorContainer.width / 2), 1, 0x3C3C3C, 0xC3C3C3, 0x2D2D2D, 0x878787, localization.finishDebug))
-		exitButton.animated = false
-		exitButton.onTouch = function()
-			scriptCoroutine = nil
-			close()
-		end
-		
-		local continueButton = errorContainer:addChild(GUI.button(exitButton.width + 1, exitButton.localY, errorContainer.width - exitButton.width, 1, 0x4B4B4B, 0xC3C3C3, 0x2D2D2D, 0x878787, localization.continueDebug))
-		continueButton.animated = false
-		continueButton.onTouch = function()
-			close()
-			continue()
-		end
-		
-		textBox:setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
-	end
-
-	backgroundObject.eventHandler = function(mainContainer, object, e1)
-		if e1 == "touch" then
-			close()
+	container:addChild(GUI.object(1, 1, window.width, window.height)).eventHandler = function(mainContainer, object, e1)
+		if e1 == "touch" or e1 == "key_down" then
+			container.close()
 		end
 	end
 
-	titleDebugMode = true
-	mainContainer:drawOnScreen()
-
-	for i = 1, times do
-		computer.beep(frequency, 0.08)
-	end
+	return container
 end
 
-showErrorContainer = function(errorCode)
+showTip = function(errorCode, matchCode, beep, force)
 	-- Извлекаем ошибочную строку текущего скрипта
-	lastErrorLine = tonumber(errorCode:match("%:(%d+)%: in main chunk"))
+	lastErrorLine = tonumber(errorCode:match(matchCode))
 	if lastErrorLine then
 		-- Делаем поправку на количество брейкпоинтов в виде вставленных дебаг-строк
 		if breakpointLines then
@@ -866,7 +830,33 @@ showErrorContainer = function(errorCode)
 	end
 
 	updateHighlights()
-	pizda(string.wrap({errorCode}, title.width - 4))
+
+	local container = zalupa()
+	local tip, tipLines = container:addChild(GUI.object(1, 1, 40))
+
+	tip.passScreenEvents = true
+	tip.draw = function()
+		buffer.drawText(math.floor(tip.x + tip.width / 2 - 1), tip.y, 0xE1E1E1, "◢◣")
+		buffer.drawRectangle(tip.x, tip.y + 1, tip.width, tip.height - 1, 0xE1E1E1, 0x2D2D2D, " ")
+		for i = 1, #tipLines do
+			buffer.drawText(tip.x + 1, tip.y + i + 1, 0x2D2D2D, tipLines[i])
+		end
+	end
+
+	tipLines = string.wrap(errorCode, tip.width - 2)
+	tip.height = #tipLines + 3
+
+	local minX = codeView.localX + codeView.codeAreaPosition - codeView.x
+	local maxX = minX + codeView.width - tip.width - 5
+
+	tip.localX = math.min(maxX, math.max(minX + 1, math.round(minX + unicode.len(lines[lastErrorLine]) / 2 - tip.width / 2)))
+	tip.localY = codeView.localY + lastErrorLine - codeView.fromLine + 1
+
+	mainContainer:drawOnScreen(force)
+
+	if beep then
+		computer.beep(1500, 0.08)
+	end
 end
 
 showBreakpointMessage = function(variables)
@@ -883,7 +873,30 @@ showBreakpointMessage = function(variables)
 		table.insert(lines, 1, {text = localization.variablesNotAvailable, color = 0x0})
 	end
 
-	pizda(lines, true)
+	local container = zalupa()
+	local errorContainer = container:addChild(GUI.container(title.localX, topToolBar.hidden and 1 or 4, title.width, #lines + 3))
+	local panel = errorContainer:addChild(GUI.panel(1, 1, errorContainer.width, errorContainer.height, 0xE1E1E1))
+	local textBox = errorContainer:addChild(GUI.textBox(3, 2, errorContainer.width - 4, #lines, nil, 0x4B4B4B, lines, 1))
+	textBox:setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
+
+	local exitButton = errorContainer:addChild(GUI.button(1, errorContainer.height, math.floor(errorContainer.width / 2), 1, 0x3C3C3C, 0xC3C3C3, 0x2D2D2D, 0x878787, localization.finishDebug))
+	exitButton.animated = false
+	exitButton.onTouch = function()
+		scriptCoroutine = nil
+		container.close()
+	end
+	
+	local continueButton = errorContainer:addChild(GUI.button(exitButton.width + 1, exitButton.localY, errorContainer.width - exitButton.width, 1, 0x4B4B4B, 0xC3C3C3, 0x2D2D2D, 0x878787, localization.continueDebug))
+	continueButton.animated = false
+	continueButton.onTouch = function()
+		container.close()
+		continue()
+	end
+	
+	titleDebugMode = true
+	mainContainer:drawOnScreen()
+
+	computer.beep(1500, 0.08)
 end
 
 local function launchWithArgumentsWindow()
@@ -992,6 +1005,8 @@ local function paste(data, notTable)
 			clearAutocompleteDatabaseFromLine(cursorPositionLine)
 
 			lines[cursorPositionLine] = firstPart .. data[1]
+			updateAutocompleteDatabaseFromLine(cursorPositionLine)
+
 			if #data > 2 then
 				for pasteLine = #data - 1, 2, -1 do
 					table.insert(lines, cursorPositionLine + 1, data[pasteLine])
@@ -1000,10 +1015,9 @@ local function paste(data, notTable)
 				end
 			end
 			table.insert(lines, cursorPositionLine + #data - 1, data[#data] .. secondPart)
-			setCursorPositionAndClearSelection(unicode.len(data[#data]) + 1, cursorPositionLine + #data - 1)
-
-			updateAutocompleteDatabaseFromLine(cursorPositionLine)
 			updateAutocompleteDatabaseFromLine(cursorPositionLine + #data - 1)
+
+			setCursorPositionAndClearSelection(unicode.len(data[#data]) + 1, cursorPositionLine + #data - 1)
 		end
 	end
 end
@@ -1834,12 +1848,12 @@ searchButton.onTouch = find
 
 autocomplete:moveToFront()
 leftTreeView:updateFileList()
-
 calculateSizes()
-mainContainer:drawOnScreen()
+mainContainer:draw()
 
-if args[1] and filesystem.exists(args[1]) then
-	openFile(args[1])
+local initialPath = select(1, ...)
+if initialPath and filesystem.exists(initialPath) then
+	openFile(initialPath)
 else
 	newFile()
 end
