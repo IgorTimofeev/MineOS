@@ -14,7 +14,7 @@ end
 menu:addSeparator()
 
 menu:addItem(MineOSCore.localization.launchWithArguments).onTouch = function()
-	MineOSInterface.launchWithArguments(MineOSInterface.mainContainer, icon.path)
+	MineOSInterface.launchWithArguments(MineOSInterface.mainContainer, icon.path, true)
 end
 
 menu:addItem(MineOSCore.localization.flashEEPROM, not component.isAvailable("eeprom") or fs.size(icon.path) > 4096).onTouch = function()

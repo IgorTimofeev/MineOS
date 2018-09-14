@@ -714,8 +714,13 @@ function MineOSInterface.iconRightClick(icon, e1, e2, e3, e4)
 				menu:addItem(MineOSCore.localization.showPackageContent).onTouch = function()
 					icon.parent.parent.launchers.showPackageContent(icon)
 				end		
+
 				menu:addItem(MineOSCore.localization.launchWithArguments).onTouch = function()
-					MineOSInterface.launchWithArguments(MineOSInterface.mainContainer, icon.path)
+					MineOSInterface.launchWithArguments(MineOSInterface.mainContainer, icon.path .. "Main.lua")
+				end
+
+				menu:addItem(MineOSCore.localization.edit .. " Main.lua").onTouch = function()
+					MineOSInterface.safeLaunch(MineOSPaths.editor, icon.path .. "Main.lua")
 				end
 
 				menu:addSeparator()
@@ -927,7 +932,7 @@ function MineOSInterface.newFile(parentWindow, iconField, x, y, path)
 			local file = io.open(path .. container.inputField.text, "w")
 			file:close()
 			checkIconConfigCanSavePosition(iconField, x, y, container.inputField.text)
-			MineOSInterface.safeLaunch(MineOSPaths.editor, path .. container.inputField.text)	
+			MineOSInterface.safeLaunch(MineOSPaths.editor, path .. container.inputField.text)
 			computer.pushSignal("MineOSCore", "updateFileList")
 		end
 	end
@@ -1074,24 +1079,31 @@ function MineOSInterface.editShortcut(parentWindow, path)
 	parentWindow:drawOnScreen()
 end
 
-function MineOSInterface.launchWithArguments(parentWindow, path)
+function MineOSInterface.launchWithArguments(parentWindow, path, withTerminal)
 	local container = addUniversalContainerWithInputTextBox(parentWindow, nil, MineOSCore.localization.launchWithArguments)
 
-	container.inputField.onInputFinished = function()
-		local args = {}
-		if container.inputField.text then
-			for arg in container.inputField.text:gmatch("[^%s]+") do
-				table.insert(args, arg)
+	container.panel.eventHandler = function(mainContainer, object, e1)
+		if e1 == "touch" then
+			local args = {}
+			if container.inputField.text then
+				for arg in container.inputField.text:gmatch("[^%s]+") do
+					table.insert(args, arg)
+				end
 			end
-		end
-		container:remove()
 
-		MineOSInterface.clearTerminal()
-		if MineOSInterface.safeLaunch(path, table.unpack(args)) then
-			MineOSInterface.waitForPressingAnyKey()
-		end
+			container:remove()
 
-		parentWindow:drawOnScreen(true)
+			if withTerminal then
+				MineOSInterface.clearTerminal()
+				if MineOSInterface.safeLaunch(path, table.unpack(args)) then
+					MineOSInterface.waitForPressingAnyKey()
+				end
+			else
+				MineOSInterface.safeLaunch(path, table.unpack(args))
+			end
+
+			parentWindow:drawOnScreen(true)
+		end
 	end
 end
 

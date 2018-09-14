@@ -28,191 +28,6 @@ local timezoneCorrection
 local screensaversPath = MineOSPaths.system .. "Screensavers/"
 local overrideGUIDropDownMenu = GUI.dropDownMenu
 
----------------------------------------- Система защиты пекарни ----------------------------------------
-
-local function biometry(creatingNew)
-	if not creatingNew then
-		event.interruptingEnabled = false
-	end
-
-	local container = MineOSInterface.addBackgroundContainer(MineOSInterface.mainContainer)
-	
-	local fingerImage = container.layout:addChild(GUI.image(1, 1, image.fromString([[180E0000FF 0000FF 0000FF 0000FF 0000FF 00FFFF▄00FFFF▄00FFFF▄00FFFF▄FFFFFF▀FFFFFF▀FFFFFF▀FFFFFF▀FFFFFF▀FFFFFF▀00FFFF▄00FFFF▄00FFFF▄0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 00FFFF▄FFFF00▄FFFFFF▀0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF FFFFFF▀FFFFFF▀FFFF00▄00FFFF▄0000FF 0000FF 0000FF 0000FF 0000FF FFFF00▄FFFFFF▀0000FF 0000FF 0000FF 00FFFF▄00FFFF▄FFFF00▄FFFFFF▀FFFFFF▀FFFFFF▀FFFFFF▀FFFFFF▀FFFFFF▀FFFF00▄00FFFF▄0000FF 0000FF FFFFFF▀FFFF00▄00FFFF▄0000FF 0000FF FFFF00▄FFFFFF▀0000FF 0000FF 00FFFF▄FFFF00▄FFFFFF▀0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF FFFF00▄00FFFF▄0000FF 0000FF FFFF00▄0000FF 00FFFF▄FFFF00▄0000FF 0000FF 00FFFF▄FFFF00▄0000FF 0000FF 0000FF 00FFFF▄00FFFF▄FFFFFF▀FFFFFF▀FFFFFF▀FFFFFF▀FFFFFF▀FFFFFF▀00FFFF▄0000FF FFFF00▄00FFFF▄0000FF FFFFFF▀FFFF00▄FFFF00▄0000FF 0000FF 0000FF FFFF00▄0000FF 0000FF 0000FF FFFF00▄0000FF 0000FF 0000FF 00FFFF▄00FFFF▄00FFFF▄0000FF 0000FF FFFF00▄0000FF 0000FF FFFF00▄0000FF 0000FF FFFF00▄FFFF00▄0000FF 0000FF 0000FF FFFF00▄0000FF 0000FF 00FFFF▄FFFFFF▀0000FF 0000FF 0000FF 0000FF 00FFFF▄FFFF00▄0000FF 0000FF FFFF00▄0000FF 0000FF FFFF00▄0000FF 0000FF FFFF00▄FFFF00▄0000FF 0000FF 0000FF FFFF00▄0000FF 0000FF FFFF00▄0000FF 0000FF 0000FF 0000FF 00FFFF▄FFFF00▄0000FF 0000FF 0000FF FFFF00▄0000FF 0000FF FFFF00▄0000FF 00FFFF▄FFFF00▄FFFF00▄00FFFF▄0000FF 0000FF FFFF00▄00FFFF▄0000FF FFFFFF▀FFFF00▄0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF FFFF00▄0000FF 0000FF FFFF00▄FFFFFF▀0000FF FFFF00▄0000FF 0000FF FFFF00▄0000FF 0000FF 0000FF FFFF00▄00FFFF▄0000FF FFFFFF▀FFFF00▄0000FF 0000FF 0000FF 0000FF 0000FF FFFF00▄0000FF 0000FF 00FFFF▄FFFF00▄0000FF 00FFFF▄FFFFFF▀0000FF 0000FF FFFF00▄00FFFF▄0000FF 0000FF 0000FF FFFF00▄00FFFF▄0000FF FFFF00▄00FFFF▄0000FF 0000FF 0000FF FFFF00▄0000FF 0000FF 00FFFF▄FFFFFF▀0000FF 0000FF FFFF00▄0000FF 0000FF 0000FF 0000FF FFFF00▄00FFFF▄0000FF 0000FF 0000FF FFFF00▄0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF FFFF00▄FFFFFF▀0000FF 0000FF FFFF00▄FFFFFF▀0000FF 0000FF 0000FF 0000FF 0000FF FFFF00▄0000FF 0000FF 0000FF FFFFFF▀FFFF00▄00FFFF▄0000FF 0000FF 0000FF 0000FF 00FFFF▄FFFFFF▀0000FF 0000FF 0000FF 00FFFF▄FFFF00▄0000FF 0000FF 0000FF 0000FF 0000FF 0000FF 0000FF FFFF00▄00FFFF▄0000FF 0000FF 0000FF FFFFFF▀0000FF 0000FF 0000FF 0000FF FFFFFF▀0000FF 0000FF 00FFFF▄FFFF00▄FFFFFF▀0000FF 0000FF 0000FF 0000FF ]])))
-	local text = creatingNew and MineOSCore.localization.putFingerToRegister or MineOSCore.localization.putFingerToVerify
-	local label = container.layout:addChild(GUI.label(1, 1, container.width, 1, 0xE1E1E1, text):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP))
-
-	local scanLine = container:addChild(GUI.label(1, 1, container.width, 1, 0xFFFFFF, string.rep("─", image.getWidth(fingerImage.image) + 6)):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP))
-	local fingerImageHeight = image.getHeight(fingerImage.image) + 1
-	local delay = 0.5
-	scanLine.hidden = true
-
-	fingerImage.eventHandler = function(mainContainer, object, e1, e2, e3, e4, e5, e6, ...)
-		if e1 == "touch" then
-			scanLine:addAnimation(
-				function(mainContainer, animation)
-					scanLine.hidden = false
-					if animation.position <= 0.5 then
-						scanLine.localY = math.floor(fingerImage.localY + fingerImageHeight - fingerImageHeight * animation.position * 2 - 1)
-					else
-						scanLine.localY = math.floor(fingerImage.localY + fingerImageHeight * (animation.position - 0.5) * 2 - 1)
-					end
-				end,
-				function(mainContainer, animation)
-					scanLine.hidden = true
-					animation:remove()
-
-					local touchedHash = require("SHA2").hash(e6)
-
-					if creatingNew then
-						label.text = MineOSCore.localization.fingerprintCreated
-
-						MineOSInterface.mainContainer:drawOnScreen()
-
-						MineOSCore.properties.protectionMethod = "biometric"
-						MineOSCore.properties.biometryHash = touchedHash
-						MineOSCore.saveProperties()
-
-						container:remove()
-						os.sleep(delay)
-					else
-						if touchedHash == MineOSCore.properties.biometryHash then
-							label.text = MineOSCore.localization.welcomeBack .. e6
-
-							MineOSInterface.mainContainer:drawOnScreen()
-
-							container:remove()
-							os.sleep(delay)
-
-							event.interruptingEnabled = true
-						else
-							label.text = MineOSCore.localization.accessDenied
-							local oldBackground = container.panel.colors.background
-							container.panel.colors.background = 0x550000
-
-							MineOSInterface.mainContainer:drawOnScreen()
-
-							os.sleep(delay)
-
-							label.text = text
-							container.panel.colors.background = oldBackground
-						end
-					end
-
-					MineOSInterface.mainContainer:drawOnScreen()
-				end
-			):start(3)
-		end
-	end
-	label.eventHandler, container.panel.eventHandler = fingerImage.eventHandler, fingerImage.eventHandler
-
-	MineOSInterface.mainContainer:drawOnScreen()
-end
-
-local function checkPassword()
-	event.interruptingEnabled = false
-
-	local container = MineOSInterface.addBackgroundContainer(MineOSInterface.mainContainer, MineOSCore.localization.inputPassword)
-	local inputField = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x878787, 0xE1E1E1, 0x2D2D2D, nil, nil, true, "*"))
-	local label = container.layout:addChild(GUI.label(1, 1, 36, 1, 0xFF4940, MineOSCore.localization.incorrectPassword)):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
-	label.hidden = true
-
-	container.panel.eventHandler = nil
-
-	inputField.onInputFinished = function()
-		local hash = require("SHA2").hash(inputField.text or "")
-		if hash == MineOSCore.properties.passwordHash then
-			container:remove()
-			event.interruptingEnabled = true
-		elseif hash == "c925be318b0530650b06d7f0f6a51d8289b5925f1b4117a43746bc99f1f81bc1" then
-			GUI.alert(MineOSCore.localization.mineOSCreatorUsedMasterPassword)
-			container:remove()
-			event.interruptingEnabled = true
-		else
-			label.hidden = false
-		end
-
-		MineOSInterface.mainContainer:drawOnScreen()
-	end
-
-	MineOSInterface.mainContainer:drawOnScreen()
-	inputField:startInput()
-end
-
-local function setPassword()
-	local container = MineOSInterface.addBackgroundContainer(MineOSInterface.mainContainer, MineOSCore.localization.passwordProtection)
-	local inputField1 = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x878787, 0xE1E1E1, 0x2D2D2D, nil, MineOSCore.localization.inputPassword, true, "*"))
-	local inputField2 = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x878787, 0xE1E1E1, 0x2D2D2D, nil, MineOSCore.localization.confirmInputPassword, true, "*"))
-	local label = container.layout:addChild(GUI.label(1, 1, 36, 1, 0xFF4940, MineOSCore.localization.passwordsAreDifferent)):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
-	label.hidden = true
-
-	local function check()
-		if inputField1.text ~= "" and inputField1.text == inputField2.text then
-			container:remove()
-
-			MineOSCore.properties.protectionMethod = "password"
-			MineOSCore.properties.passwordHash = require("SHA2").hash(inputField1.text or "")
-			MineOSCore.saveProperties()
-		else
-			label.hidden = false
-		end
-
-		MineOSInterface.mainContainer:drawOnScreen()
-	end
-
-	inputField1.onInputFinished = check
-	inputField2.onInputFinished = check
-
-	container.panel.eventHandler = function(mainContainer, object, e1)
-		if e1 == "touch" then
-			check()
-		end
-	end
-
-	MineOSInterface.mainContainer:drawOnScreen()
-end
-
-local function setWithoutProtection()
-	MineOSCore.properties.passwordHash = nil
-	MineOSCore.properties.protectionMethod = "withoutProtection"
-	MineOSCore.saveProperties()
-end
-
-local function setProtectionMethod()
-	local container = MineOSInterface.addBackgroundContainer(MineOSInterface.mainContainer, MineOSCore.localization.protectYourComputer)
-
-	local comboBox = container.layout:addChild(GUI.comboBox(1, 1, 36, 3, 0xE1E1E1, 0x2D2D2D, 0x4B4B4B, 0x969696))
-	comboBox:addItem(MineOSCore.localization.biometricProtection).onTouch = function()
-		container:remove()
-		biometry(true)
-	end
-	comboBox:addItem(MineOSCore.localization.passwordProtection).onTouch = function()
-		container:remove()
-		setPassword()
-	end
-	comboBox:addItem(MineOSCore.localization.withoutProtection).onTouch = function()
-		container:remove()
-		setWithoutProtection()
-	end
-
-	container.panel.eventHandler = function(mainContainer, object, e1)
-		if e1 == "touch" then
-			comboBox:getItem(comboBox.selectedItem).onTouch()
-		end
-	end 
-end
-
-local function login()
-	if not MineOSCore.properties.protectionMethod then
-		setProtectionMethod()
-	elseif MineOSCore.properties.protectionMethod == "password" then
-		checkPassword()
-	elseif MineOSCore.properties.protectionMethod == "biometric" then
-		biometry()
-	end
-
-	MineOSInterface.mainContainer:drawOnScreen()
-end
-
 ---------------------------------------- Основные функции ----------------------------------------
 
 function MineOSInterface.changeWallpaper()
@@ -559,7 +374,7 @@ function MineOSInterface.createWidgets()
 			"Maxim Omelaenko, vk.com/id54662296",
 			"Konstantin Mayakovskiy, vk.com/id10069748",
 			"Ruslan Isaev, vk.com/id181265169",
-			"Eugene8388608, github.com/Eugene8388608",
+			"Eugene8388608, vk.com/id287247631",
 			" ",
 			"Translators:",
 			" ",
@@ -580,10 +395,6 @@ function MineOSInterface.createWidgets()
 	end
 
 	MineOSContextMenu:addSeparator()
-
-	MineOSContextMenu:addItem(MineOSCore.localization.logout, MineOSCore.properties.protectionMethod == "withoutProtection").onTouch = function()
-		login()
-	end
 
 	MineOSContextMenu:addItem(MineOSCore.localization.reboot).onTouch = function()
 		MineOSNetwork.broadcastComputerState(false)
@@ -778,7 +589,6 @@ runTasks(2)
 MineOSInterface.applyTransparency()
 updateCurrentTimestamp()
 createOSWindow()
--- login()
 MineOSInterface.mainContainer:drawOnScreen()
 MineOSNetwork.update()
 

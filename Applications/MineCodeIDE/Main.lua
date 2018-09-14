@@ -4,7 +4,7 @@ local args = {...}
 require("advancedLua")
 local computer = require("computer")
 local component = require("component")
-local fs = require("filesystem")
+local filesystem = require("filesystem")
 local buffer = require("doubleBuffering")
 local event = require("event")
 local unicode = require("unicode")
@@ -90,9 +90,8 @@ local continue, showBreakpointMessage, showErrorContainer
 
 ------------------------------------------------------------
 
-if fs.exists(configPath) then
+if filesystem.exists(configPath) then
 	config = table.fromFile(configPath)
-	GUI.LUA_SYNTAX_COLOR_SCHEME = config.syntaxColorScheme
 end
 
 local mainContainer, window, menu = MineOSInterface.addWindow(GUI.window(1, 1, 120, 30))
@@ -121,6 +120,19 @@ codeView.draw = function(...)
 			buffer.drawText(x, y, config.cursorColor, config.cursorSymbol)
 		end
 	end
+
+	-- if autocompleteDatabase then
+	-- 	local w = 30
+	-- 	local x, y = codeView.x + codeView.width - w, codeView.y
+	-- 	buffer.drawRectangle(x, y, w, codeView.height, 0x0, 0xFFFFFF, " ")
+	-- 	for key, value in pairs(autocompleteDatabase) do
+	-- 		buffer.drawText(x + 1, y, 0xFFFFFF, key .. ": " .. value)
+	-- 		y = y + 1
+	-- 		if y > codeView.y + codeView.height - 1 then
+	-- 			break
+	-- 		end
+	-- 	end
+	-- end
 end
 
 local function saveConfig()
@@ -248,19 +260,30 @@ local function tick(state)
 	cursorUptime = computer.uptime()
 end
 
-local function updateAutocompleteDatabaseFromString(str)
-	for word in str:gmatch("[%a%d%_]+") do
+local function clearAutocompleteDatabaseFromLine(line)
+	for word in lines[line]:gmatch("[%a%d%_]+") do
 		if not word:match("^%d+$") then
-			autocompleteDatabase[word] = true
+			autocompleteDatabase[word] = (autocompleteDatabase[word] or 0) - 1
+			if autocompleteDatabase[word] < 1 then
+				autocompleteDatabase[word] = nil
+			end
 		end
 	end
 end
 
-local function updateAutocompleteDatabaseFromFile()
+local function updateAutocompleteDatabaseFromLine(line)
+	for word in lines[line]:gmatch("[%a%d%_]+") do
+		if not word:match("^%d+$") then
+			autocompleteDatabase[word] = (autocompleteDatabase[word] or 0) + 1
+		end
+	end
+end
+
+local function updateAutocompleteDatabaseFromAllLines()
 	if config.enableAutocompletion then
 		autocompleteDatabase = {}
 		for line = 1, #lines do
-			updateAutocompleteDatabaseFromString(lines[line])
+			updateAutocompleteDatabaseFromLine(line)
 		end
 	end
 end
@@ -539,7 +562,7 @@ local function openFile(path)
 		layout:addChild(GUI.label(1, 1, layout.width, 1, 0xD2D2D2, localization.openingFile .. " " .. path):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP))
 		local progressBar = layout:addChild(GUI.progressBar(1, 1, 36, 0x969696, 0x2D2D2D, 0x787878, 0, true, true, "", "%"))
 
-		local counter, currentSize, totalSize = 1, 0, fs.size(path)
+		local counter, currentSize, totalSize = 1, 0, filesystem.size(path)
 		for line in file:lines() do
 			line = optimizeString(line)
 			table.insert(lines, line)
@@ -566,7 +589,7 @@ local function openFile(path)
 
 		codeView.hidden = false
 		container:remove()
-		updateAutocompleteDatabaseFromFile()
+		updateAutocompleteDatabaseFromAllLines()
 		updateTitle()
 		saveContextMenuItem.disabled = false
 	else
@@ -575,7 +598,7 @@ local function openFile(path)
 end
 
 local function saveFile(path)
-	fs.makeDirectory(fs.path(path))
+	filesystem.makeDirectory(filesystem.path(path))
 	local file, reason = io.open(path, "w")
 		if file then
 		for line = 1, #lines do
@@ -622,7 +645,6 @@ local function saveFileAsWindow()
 		leftTreeView.selectedItem = (leftTreeView.workPath .. path):gsub("/+", "/")
 
 		updateTitle()
-		updateAutocompleteDatabaseFromFile()
 		mainContainer:drawOnScreen()
 	end
 	filesystemDialog:show()
@@ -884,6 +906,8 @@ local function launchWithArgumentsWindow()
 end
 
 local function deleteLine(line)
+	clearAutocompleteDatabaseFromLine(line)
+	
 	if #lines > 1 then
 		table.remove(lines, line)
 	else
@@ -891,18 +915,20 @@ local function deleteLine(line)
 	end
 
 	setCursorPositionAndClearSelection(1, cursorPositionLine)
-	updateAutocompleteDatabaseFromFile()
 end
 
 local function deleteSpecifiedData(fromSymbol, fromLine, toSymbol, toLine)	
-	lines[fromLine] = unicode.sub(lines[fromLine], 1, fromSymbol - 1) .. unicode.sub(lines[toLine], toSymbol + 1, -1)
+	clearAutocompleteDatabaseFromLine(fromLine)
 
+	lines[fromLine] = unicode.sub(lines[fromLine], 1, fromSymbol - 1) .. unicode.sub(lines[toLine], toSymbol + 1, -1)
 	for line = fromLine + 1, toLine do
+		clearAutocompleteDatabaseFromLine(fromLine + 1)
+		
 		table.remove(lines, fromLine + 1)
 	end
 	
 	setCursorPositionAndClearSelection(fromSymbol, fromLine)
-	updateAutocompleteDatabaseFromFile()
+	updateAutocompleteDatabaseFromLine(fromLine)
 end
 
 local function deleteSelectedData()
@@ -948,27 +974,38 @@ local function paste(data, notTable)
 	local secondPart = unicode.sub(lines[cursorPositionLine], cursorPositionSymbol, -1)
 
 	if notTable then
+		clearAutocompleteDatabaseFromLine(cursorPositionLine)
+
 		lines[cursorPositionLine] = firstPart .. data .. secondPart
 		setCursorPositionAndClearSelection(cursorPositionSymbol + unicode.len(data), cursorPositionLine)
+
+		updateAutocompleteDatabaseFromLine(cursorPositionLine)
 	else
 		if #data == 1 then
+			clearAutocompleteDatabaseFromLine(cursorPositionLine)
+
 			lines[cursorPositionLine] = firstPart .. data[1] .. secondPart
 			setCursorPositionAndClearSelection(unicode.len(firstPart .. data[1]) + 1, cursorPositionLine)
-		else
-			lines[cursorPositionLine] = firstPart .. data[1]
 
+			updateAutocompleteDatabaseFromLine(cursorPositionLine)
+		else
+			clearAutocompleteDatabaseFromLine(cursorPositionLine)
+
+			lines[cursorPositionLine] = firstPart .. data[1]
 			if #data > 2 then
 				for pasteLine = #data - 1, 2, -1 do
 					table.insert(lines, cursorPositionLine + 1, data[pasteLine])
+					
+					updateAutocompleteDatabaseFromLine(cursorPositionLine + 1)
 				end
 			end
-
 			table.insert(lines, cursorPositionLine + #data - 1, data[#data] .. secondPart)
 			setCursorPositionAndClearSelection(unicode.len(data[#data]) + 1, cursorPositionLine + #data - 1)
+
+			updateAutocompleteDatabaseFromLine(cursorPositionLine)
+			updateAutocompleteDatabaseFromLine(cursorPositionLine + #data - 1)
 		end
 	end
-
-	updateAutocompleteDatabaseFromFile()
 end
 
 local function selectAndPasteColor()
@@ -1009,9 +1046,9 @@ end
 local function pasteRegularChar(unicodeByte, char)
 	if not keyboard.isControl(unicodeByte) then
 		paste(char, true)
-		if char == " " then
-			updateAutocompleteDatabaseFromFile()
-		end
+		-- if char == " " then
+			-- updateAutocompleteDatabaseFromAllLines()
+		-- end
 		showAutocomplete()
 	end
 end
@@ -1074,7 +1111,6 @@ local function delete()
 			end
 		end
 
-		-- updateAutocompleteDatabaseFromFile()
 		showAutocomplete()
 	end
 end
@@ -1248,10 +1284,6 @@ local function toggleTopToolBar()
 end
 
 local function createEditOrRightClickMenu(menu)
-	-- menu:addItem("Сгенерировать", false, "^Enter").onTouch = function()
-		
-	-- end
-
 	menu:addItem(localization.cut, not codeView.selections[1], "^X").onTouch = function()
 		cut()
 	end
@@ -1661,7 +1693,6 @@ propertiesContextMenu:addItem(localization.colorScheme).onTouch = function()
 		local colorSelector = container:addChild(GUI.colorSelector(x, y, colorSelectorWidth, colorSelectorHeight, config.syntaxColorScheme[colors[i][1]], colors[i][1]))
 		colorSelector.onColorSelected = function()
 			config.syntaxColorScheme[colors[i][1]] = colorSelector.color
-			GUI.LUA_SYNTAX_COLOR_SCHEME = config.syntaxColorScheme
 			saveConfig()
 		end
 
@@ -1807,7 +1838,7 @@ leftTreeView:updateFileList()
 calculateSizes()
 mainContainer:drawOnScreen()
 
-if args[1] and fs.exists(args[1]) then
+if args[1] and filesystem.exists(args[1]) then
 	openFile(args[1])
 else
 	newFile()
