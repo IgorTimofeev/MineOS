@@ -96,9 +96,10 @@ module.onTouch = function()
 	end
 
 	button.onTouch = function()
-		local list = getProxy().list("/")
+		local proxy = getProxy()
+		local list = proxy.list("/")
 		for i = 1, #list do
-			-- filesystem.remove(list[i])
+			proxy.remove("/" .. list[i])
 		end
 
 		fill()

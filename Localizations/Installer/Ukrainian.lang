@@ -5,6 +5,6 @@
 	reboot = "Перезавантажити",
 	needToReboot = "Система встановлена, насолоджуйтеся",
 	terms = "Я приймаю умови угоди",
-	flashingEEPROM = "Йде установка EFI ...",
+	flashingEEPROM = "Йде установка EFI...",
 	flashEEPROM = "Встановити EFI",
 }
