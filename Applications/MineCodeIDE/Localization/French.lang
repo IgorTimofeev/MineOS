@@ -20,6 +20,7 @@
 	disableAutoBrackets = "Désactiver le crochetage automatiques",
 	url = "http://example.org/quelquechose.lua",
 	getFromWeb = "Télécharger depuis une URL",
+	downloading = "Téléchargement du fichier...",
 	debugging = "Debugguer la ligne ",
 	runtimeError = "Erreur d'exécution",
 	variablesNotAvailable = "Aucune variable trouvée",

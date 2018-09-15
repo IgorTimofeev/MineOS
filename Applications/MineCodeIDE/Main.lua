@@ -672,21 +672,27 @@ local function splitStringIntoLines(s)
 end
 
 local function downloadFileFromWeb()
-	local container = addInputFadeContainer(localization.gotoLine, localization.lineNumber)
-
+	local container = addInputFadeContainer(localization.getFromWeb, localization.url)
+	
 	container.input.onInputFinished = function()
 		if #container.input.text > 0 then
+			container.input:remove()
+			container.layout:addChild(GUI.text(1, 1, 0x969696, localization.downloading))
+			mainContainer:drawOnScreen()
+
 			local result, reason = require("web").request(container.input.text)
 			if result then
 				newFile()
 				lines, codeView.maximumLineLength = splitStringIntoLines(result)
+				codeView.lines = lines
+				updateAutocompleteDatabaseFromAllLines()
 			else
 				GUI.alert("Failed to connect to URL: " .. tostring(reason))
 			end
-
-			container:remove()
-			mainContainer:drawOnScreen()
 		end
+
+		container:remove()
+		mainContainer:drawOnScreen()
 	end
 
 	mainContainer:drawOnScreen()
