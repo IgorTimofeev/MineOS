@@ -91,7 +91,7 @@ function MineOSCore.loadPropeties()
 		tasks = {},
 		timeUseRealTimestamp = true,
 		dateFormat = "%d %b %Y %H:%M:%S",
-		packageUnloading = true,
+		packageUnloading = false,
 		transparencyEnabled = true,
 		showApplicationIcons = true,
 		iconHorizontalSpaceBetween = 1,
