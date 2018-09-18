@@ -6,8 +6,7 @@
 
 local computer = require("computer")
 
-local event, handlers, interruptingKeysDown, lastInterrupt = {
-	push = computer.pushSignal,
+local event, handlers, interruptingKeysDown, lastInterrupt, skipSignalType = {
 	interruptingEnabled = true,
 	interruptingDelay = 1,
 	interruptingKeyCodes = {
@@ -17,7 +16,8 @@ local event, handlers, interruptingKeysDown, lastInterrupt = {
 	},
 	onError = function(errorMessage)
 		-- require("GUI").error("Event handler error: \"" .. tostring(errorMessage) .. "\"")
-	end
+	end,
+	push = computer.pushSignal
 }, {}, {}, 0
 
 --------------------------------------------------------------------------------------------------------
@@ -78,6 +78,7 @@ function event.listen(signalType, callback)
 	end
 
 	event.addHandler(callback, signalType)
+
 	return true
 end
 
@@ -109,19 +110,8 @@ event.cancel = event.removeHandler
 
 --------------------------------------------------------------------------------------------------------
 
-local function executeHandlerCallback(callback, ...)
-	local success, result = pcall(callback, ...)
-	if success then
-		return result
-	else
-		if type(event.onError) == "function" then
-			pcall(event.onError, result)
-		end
-	end
-end
-
 function event.skip(signalType)
-	event.skipSignalType = signalType
+	skipSignalType = signalType
 end
 
 function event.pull(...)
@@ -163,7 +153,11 @@ function event.pull(...)
 						handler.nextTriggerTime = uptime + handler.interval
 					end
 
-					executeHandlerCallback(handler.callback, table.unpack(signalData))
+					-- Callback running
+					local success, result = xpcall(handler.callback, debug.traceback, table.unpack(signalData))
+					if not success then
+						event.onError(result)
+					end
 				end
 			else
 				handlers[ID] = nil
@@ -198,8 +192,8 @@ function event.pull(...)
 		
 		-- Loop-breaking conditions
 		if signalData[1] and (not signalType or signalType == signalData[1]) then
-			if signalData[1] == event.skipSignalType then
-				event.skipSignalType = nil
+			if signalData[1] == skipSignalType then
+				skipSignalType = nil
 			else
 				return table.unpack(signalData)
 			end
