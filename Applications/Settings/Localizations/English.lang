@@ -9,8 +9,9 @@
 	screenHeight = "Height",
 	screenPreferredMonitor = "Monitor",
 	screenScaleInfo = "Using this option will allow you to select the optimal screen resolution to get rid of the \"black rectangles\" effect",
+	screenInvalidResolution = "The text in the input fields should consist of digits, and the maximum resolution should't exceed %d characters",
 
-	wallpaper = "Wallpapers",
+	wallpaper = "Wallpaper",
 	wallpaperWallpaper = "Wallpaper",
 	wallpaperScreensaver = "Screensaver",
 	wallpaperScreensaverPath = "Screensaver script path",

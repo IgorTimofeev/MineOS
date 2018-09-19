@@ -61,36 +61,50 @@ module.onTouch = function()
 	layout:addChild(GUI.text(1, 1, 0x2D2D2D, "x"))
 	local heightInput = layout:addChild(GUI.input(1, 1, 17, 3, 0xE1E1E1, 0x696969, 0xA5A5A5, 0xE1E1E1, 0x2D2D2D, "", localization.screenHeight))
 
+	local maxWidth, maxHeight = buffer.getGPUProxy().maxResolution()
+	local limit = maxWidth * maxHeight
+	local cykaTextBox = window.contentLayout:addChild(GUI.textBox(1, 1, 36, 1, nil, 0x880000, {string.format(localization.screenInvalidResolution, limit)}, 1, 0, 0, true, true))
+
 	local switch = window.contentLayout:addChild(GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0xE1E1E1, 0xFFFFFF, 0xA5A5A5, localization.screenAutoScale .. ":", MineOSCore.properties.screenAutoScale)).switch
 
 	window.contentLayout:addChild(GUI.textBox(1, 1, 36, 1, nil, 0xA5A5A5, {localization.screenScaleInfo}, 1, 0, 0, true, true))
 
 	local function updateSwitch()
-		widthInput.text, heightInput.text = tostring(buffer.getWidth()), tostring(buffer.getHeight())
+		widthInput.text = tostring(MineOSCore.properties.resolution and MineOSCore.properties.resolution[1] or buffer.getWidth())
+		heightInput.text = tostring(MineOSCore.properties.resolution and MineOSCore.properties.resolution[2] or buffer.getHeight())
 		resolutionComboBox.hidden = not switch.state
 		layout.hidden = switch.state
-		MineOSInterface.mainContainer:drawOnScreen()
+	end
+
+	local function updateCykaTextBox()
+		local width, height = tonumber(widthInput.text), tonumber(heightInput.text)
+		cykaTextBox.hidden = width and height and width * height <= limit
+		return width, height
 	end
 
 	switch.onStateChanged = function()
 		updateSwitch()
+		updateCykaTextBox()
+		mainContainer:drawOnScreen()
 
 		MineOSCore.properties.screenAutoScale = switch.state
 		MineOSCore.saveProperties()
 	end
 
 	widthInput.onInputFinished = function()
-		local width, height = tonumber(widthInput.text), tonumber(heightInput.text)
-		if width and height then
+		local width, height = updateCykaTextBox()
+		if cykaTextBox.hidden then
 			setResolution(width, height)
+		else
+			mainContainer:drawOnScreen()
 		end
 	end
 	heightInput.onInputFinished = widthInput.onInputFinished
 
 	updateSwitch()
+	updateCykaTextBox()
 end
 
 --------------------------------------------------------------------------------
 
 return module
-
