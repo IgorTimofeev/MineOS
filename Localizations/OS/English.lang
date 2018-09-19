@@ -1,4 +1,5 @@
 {
+	iconPath = "Icon path",
 	downloading = "Downloading in progress",
 	networkFTPNewConnection = "FTP-connection",
 	networkFTPConnections = "FTP-connections",

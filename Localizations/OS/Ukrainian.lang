@@ -1,4 +1,5 @@
 {
+	iconPath = "Шлях до іконки",
 	downloading = "Триває завантаження файлу",
 	networkFTPNewConnection = "FTP-підключення",
 	networkFTPConnections = "FTP-підключення",
