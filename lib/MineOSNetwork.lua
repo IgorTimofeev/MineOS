@@ -14,9 +14,10 @@ local filesystemProxy = component.proxy(computer.getBootAddress())
 
 MineOSNetwork.filesystemHandles = {}
 
+local modemMaxPacketSize = 8192
+local modemPacketReserve = 128
 MineOSNetwork.modemProxy = nil
 MineOSNetwork.modemPort = 1488
-MineOSNetwork.modemPacketReserve = 128
 MineOSNetwork.modemTimeout = 2
 
 MineOSNetwork.internetProxy = nil
@@ -547,8 +548,8 @@ local function newModemProxy(address)
 		return request("read", "", ...)
 	end
 
-	write = function(handle, data)
-		local maxPacketSize = MineOSNetwork.modemProxy.maxPacketSize() - MineOSNetwork.modemPacketReserve
+	proxy.write = function(handle, data)
+		local maxPacketSize = (MineOSNetwork.modemProxy.maxPacketSize and MineOSNetwork.modemProxy.maxPacketSize() or modemMaxPacketSize) - modemPacketReserve
 		repeat
 			if not request("write", false, handle, data:sub(1, maxPacketSize)) then
 				return false
