@@ -13,4 +13,6 @@
 	saveConfiguration = "Enregistrer la configuration",
 	saveFailed = "Échec de la sauvegarde: dans l'inventaire, il n'y a pas de nanites non configurés",
 	notSynced = "Il y avait une synchronisation avec les nanites. Il est recommandé de fermer le programme et de recommencer.",
+	notWireless = "L'ordinateur dispose d'un modem, mais les nanites perçoivent les commandes exclusivement sur le réseau sans fil. Insérez le modem sans fil et réessayez.",
+	noModem = "L'ordinateur ne possède pas de modem sans fil pour envoyer et recevoir des commandes nanites sur un réseau",
 }

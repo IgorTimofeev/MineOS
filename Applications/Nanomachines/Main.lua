@@ -17,12 +17,12 @@ local stack = {}
 local port = 451
 local maxInputs = 18
 local scrollSpeed = 2
-local from = 5
+local from = 3
 local maxActiveInputs = 4
 local elementWidth = 40
 local syncDelay = 4
 local historyLimit = 30
-local modem = component.modem
+local modem
 local currentEffects = "{}"
 
 local localization = MineOSCore.getCurrentScriptLocalization()
@@ -54,7 +54,9 @@ layout:setMargin(1, 1, 0, from)
 layout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
 
 local textBox = window:addChild(GUI.textBox(window.backgroundPanel.localX, 1, window.backgroundPanel.width, 5, 0xFFFFFF, 0xB4B4B4, {}, 1, 1))
+textBox.eventHandler = nil
 textBox.localY = window.height - textBox.height + 1
+
 local textBoxButton = window:addChild(GUI.adaptiveButton(1, 1, 2, 0, 0xFFFFFF, 0xD2D2D2, 0xFFFFFF, 0x2D2D2D, " "))
 textBoxButton.localX = math.floor(textBox.localX + textBox.width / 2 - textBoxButton.width / 2)
 
@@ -64,6 +66,7 @@ local syncLayout = syncContainer:addChild(GUI.layout(1, 1, syncContainer.width, 
 
 syncLayout:addChild(GUI.text(1, 1, 0x2D2D2D, localization.syncWelcome))
 local syncTextBox = syncLayout:addChild(GUI.textBox(1, 1, 44, 1, nil, 0xA5A5A5, {}, 1, 0, 0, true, true))
+syncTextBox.eventHandler = nil
 
 textBoxButton.onTouch = function()
 	textBox.hidden = not textBox.hidden
@@ -177,6 +180,7 @@ end
 layout:addChild(GUI.text(1, 1, 0x2D2D2D, localization.instructionTitle))
 
 local infoTextBox = layout:addChild(GUI.textBox(1, 1, elementWidth, 1, nil, 0xA5A5A5, {localization.instructionData}, 1, 0, 0, true, true))
+infoTextBox.eventHandler = nil
 
 local function parseEffects()
 	local variants = {}
@@ -277,49 +281,6 @@ local function syncReset()
 	syncUpdate()
 end
 
-layout.eventHandler = function(mainContainer, object, e1, e2, e3, e4, e5, e6, e7, e8, e9)
-	if not e1 then
-		if computer.uptime() >= syncDeadline then
-			syncReset()
-			mainContainer:drawOnScreen()
-		end
-
-		if not syncStarted then
-			broadcast("setResponsePort", port)
-		end
-	elseif e1 == "modem_message" and e6 == "nanomachines" then
-		if e7 == "port" and not syncStarted then
-			syncStarted = true
-
-			for i = 1, maxInputs do
-				broadcastPut("getInput", i)
-			end
-			broadcastPut("getActiveEffects")
-		elseif e7 == "input" then
-			syncResult[e8] = e9
-		elseif e7 == "effects" then
-			currentEffects = e8
-			updateEffects(parseEffects())
-
-			syncContainer.hidden = true
-			for i = 1, #syncResult do
-				inputsContainer.children[i]:setState(syncResult[i])
-			end
-			checkSwitches()
-			mainContainer:drawOnScreen()
-
-			layout.eventHandler = runtimeEventHandler
-			return
-		end
-
-		setLines(string.format(localization.syncProgress .. localization.syncContacts, #syncResult, maxInputs))
-		mainContainer:drawOnScreen()
-
-		syncUpdate()
-		broadcastNext()
-	end
-end
-
 favouritesAddButton.onTouch = function()
 	local text, variants = "", parseEffects()
 	for i = 1, #variants do
@@ -346,7 +307,7 @@ favouritesAddButton.onTouch = function()
 	})
 
 	favouritesComboBox.selectedItem = favouritesComboBox:count()
-	
+
 	saveConfig()
 end
 
@@ -393,9 +354,64 @@ end
 
 -- syncContainer.hidden = true
 
-modem.open(port)
 window.actionButtons:moveToFront()
-updateEffects(parseEffects())
-textBoxButton.onTouch()
-syncReset()
+
+if component.isAvailable("modem") then
+	modem = component.modem
+	if modem.isWireless() then
+		modem.open(port)
+		textBoxButton.onTouch()
+		updateEffects(parseEffects())
+		syncReset()
+
+		layout.eventHandler = function(mainContainer, object, e1, e2, e3, e4, e5, e6, e7, e8, e9)
+			if not e1 then
+				if computer.uptime() >= syncDeadline then
+					syncReset()
+					setLines(localization.syncInfo)
+					mainContainer:drawOnScreen()
+				end
+
+				if not syncStarted then
+					broadcast("setResponsePort", port)
+				end
+			elseif e1 == "modem_message" and e6 == "nanomachines" then
+				if e7 == "port" and not syncStarted then
+					syncStarted = true
+
+					for i = 1, maxInputs do
+						broadcastPut("getInput", i)
+					end
+					broadcastPut("getActiveEffects")
+				elseif e7 == "input" then
+					syncResult[e8] = e9
+				elseif e7 == "effects" then
+					currentEffects = e8
+					updateEffects(parseEffects())
+
+					syncContainer.hidden = true
+					for i = 1, #syncResult do
+						inputsContainer.children[i]:setState(syncResult[i])
+					end
+					checkSwitches()
+					mainContainer:drawOnScreen()
+
+					layout.eventHandler = runtimeEventHandler
+					return
+				end
+
+				setLines(string.format(localization.syncProgress .. localization.syncContacts, #syncResult, maxInputs))
+				mainContainer:drawOnScreen()
+
+				syncUpdate()
+				broadcastNext()
+			end
+		end
+	else
+		setLines(localization.notWireless)
+	end
+else
+	setLines(localization.noModem)
+end
+		
 mainContainer:drawOnScreen()

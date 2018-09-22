@@ -13,4 +13,6 @@
 	saveConfiguration = "Save configuration",
 	saveFailed = "Saving failed: in the inventory there are no unconfigured nanites",
 	notSynced = "There was an out-of-sync with nanites. It is recommended to close the program and start again.",
+	notWireless = "The computer has a modem, but nanites perceive commands exclusively over the wireless network. Insert the wireless modem and try again",
+	noModem = "The computer does not have a wireless modem to send and receive nanite commands over a network",
 }
