@@ -1,0 +1,7 @@
+{
+	invalidPassword = "Invalid login or password",
+	username = "E-mail or phone number",
+	password = "Password",
+	login = "Login",
+	saveLogin = "Save authorization data:",
+}
