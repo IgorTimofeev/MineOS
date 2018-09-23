@@ -16,7 +16,6 @@ local MineOSCore = require("MineOSCore")
 --------------------------------------------------------------------------------
 
 local VKAPIVersion = 5.85
-local accessToken
 
 local config = {
 	avatars = {
@@ -76,6 +75,10 @@ local function request(url, postData)
 	progressIndicator.active = true
 	mainContainer:drawOnScreen()
 
+	local file = io.open("/urlLog.lua", "a")
+	file:write(url)
+	file:close()
+
 	local data = ""
 	local success, reason = web.rawRequest(
 		url,
@@ -113,17 +116,8 @@ local function responseRequest(...)
 	end
 end
 
-local function loginRequest(username, password)
-	local result, reason = request("https://oauth.vk.com/token?grant_type=password&client_id=3697615&client_secret=AlVXZFMUqyrnABp8ncuU&username=" .. username .. "&password=" .. password .. "&v=" .. VKAPIVersion)
-	if result then
-		if result.access_token then
-			return result.access_token
-		end
-	end
-end
-
 local function methodRequest(method, ...)
-	return responseRequest("https://api.vk.com/method/" .. method .. "?" .. table.concat({...}, "&") .. "&access_token=" .. accessToken .. "&v=" .. VKAPIVersion)
+	return responseRequest("https://api.vk.com/method/" .. method .. "?" .. table.concat({...}, "&") .. "&access_token=" .. config.accessToken .. "&v=" .. VKAPIVersion)
 end
 
 local function truncateEmoji(text)
@@ -184,6 +178,15 @@ local function addPizda(name)
 	maxPizdaLength = math.max(maxPizdaLength, unicode.len(name))
 
 	return object
+end
+
+local function getAbbreviatedFileSize(size, decimalPlaces)
+	if size < 1024 then
+		return math.roundToDecimalPlaces(size, 2) .. " B"
+	else
+		local power = math.floor(math.log(size, 1024))
+		return math.roundToDecimalPlaces(size / 1024 ^ power, decimalPlaces) .. " " .. ({"KB", "MB", "GB", "TB"})[power]
+	end
 end
 
 local function capitalize(text)
@@ -286,9 +289,34 @@ local function newAttachment(x, y, maxWidth, attachment)
 	elseif attachment.audio then
 		object.text = attachment.audio.artist .. " - " .. attachment.audio.title
 	elseif attachment.sticker then
-		object.text = attachment.sticker.images[#attachment.sticker.images].url
+		object.text = ":)"
 	elseif attachment.link then
 		object.text = #attachment.link.title > 0 and attachment.link.title or attachment.link.url
+	elseif attachment.doc then
+		object.text = attachment.doc.title .. ", " .. getAbbreviatedFileSize(attachment.doc.size)
+	elseif attachment.audio_message then
+		local length = 30
+
+		local values, trigger, value, counter, stepper, maxValue = {}, #attachment.audio_message.waveform / length, 0, 0, 0, 0
+		for i = 1, #attachment.audio_message.waveform do
+			value = value + attachment.audio_message.waveform[i]
+
+			if stepper > trigger then
+				table.insert(values, value / counter)
+				maxValue = math.max(maxValue, values[#values])
+				
+				value, counter, stepper = 0, 0, stepper - trigger
+			else
+				counter, stepper = counter + 1, stepper + 1
+			end
+		end
+
+		local pixels = {"⡀", "⡄", "⡆", "⡇"}
+
+		object.text = ""
+		for i = 1, #values do
+			object.text = object.text .. (pixels[math.ceil(values[i] / maxValue * 4)] or "⡀")
+		end
 	else
 		object.text = "N/A"
 	end
@@ -311,7 +339,7 @@ local function getHistory(container, peerID)
 		layout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_LEFT, GUI.ALIGNMENT_VERTICAL_BOTTOM)
 		layout:setMargin(1, 1, 0, 1)
 
-		local function newMessage(x, y, width, message)
+		local function newMessage(x, y, width, fwdOffset, message)
 			local object = GUI.container(x, y, width, 1)
 			
 			local localX, localY = 1, 1
@@ -346,8 +374,8 @@ local function getHistory(container, peerID)
 				object.fwdMessages = {}
 
 				for i = 1, #message.fwd_messages do
-					object.fwdMessages[i] = object:addChild(newMessage(3, localY, width - 2, message.fwd_messages[i]))
-					object:addChild(newSeparator(1, localY, object.fwdMessages[i].height))
+					object.fwdMessages[i] = object:addChild(newMessage(fwdOffset + 3, localY, width - 2, 0, message.fwd_messages[i]))
+					object:addChild(newSeparator(fwdOffset + 1, localY, object.fwdMessages[i].height))
 					localY = localY + object.fwdMessages[i].height + 1
 				end
 			end
@@ -360,7 +388,7 @@ local function getHistory(container, peerID)
 		end
 
 		for i = 1, #result.items do
-			local message = layout:addChild(newMessage(2, y, container.width - 2, result.items[i]), 1)
+			local message = layout:addChild(newMessage(2, y, container.width - 2, 5, result.items[i]), 1)
 		end
 
 		input.onInputFinished = function()
@@ -482,23 +510,32 @@ loginUsernameInput.onInputFinished = function()
 	loginButton.disabled = #loginUsernameInput.text == 0 or #loginPasswordInput.text == 0
 	mainContainer:drawOnScreen()
 end
+
 loginPasswordInput.onInputFinished = loginUsernameInput.onInputFinished
-loginButton.onTouch = function()
-	accessToken = loginRequest(loginUsernameInput.text, loginPasswordInput.text)
-	
-	if accessToken then
+
+local function login()
+	if config.accessToken then
 		loginContainer.hidden = true
-
-		if loginSaveSwitch.state then
-			config.username, config.password = loginUsernameInput.text, loginPasswordInput.text
-		else
-			config.username, config.password = nil, nil
-		end
-
 		conversationsSelectable:select()
 	else
-		loginInvalidLabel.hidden = false
-		mainContainer:drawOnScreen()
+		loginUsernameInput.onInputFinished()
+	end
+end
+
+loginButton.onTouch = function()
+	local result, reason = request("https://oauth.vk.com/token?grant_type=password&client_id=3697615&client_secret=AlVXZFMUqyrnABp8ncuU&username=" .. loginUsernameInput.text .. "&password=" .. loginPasswordInput.text .. "&v=" .. VKAPIVersion)
+	if result then
+		if result.access_token then
+			config.accessToken = result.access_token
+			config.username = loginSaveSwitch.state and loginUsernameInput.text or nil
+			
+			login()
+		else
+			config.accessToken = nil
+			loginInvalidLabel.hidden = false
+
+			mainContainer:drawOnScreen()
+		end
 	end
 end
 
@@ -527,4 +564,4 @@ window.actionButtons.localX = 3
 window.actionButtons:moveToFront()
 window:resize(window.width, window.height)
 
-loginUsernameInput.onInputFinished()
+login()

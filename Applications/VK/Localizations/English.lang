@@ -28,6 +28,7 @@
 		wall_reply = "wall reply",
 		sticker = "sticker",
 		gift = "gift",
+		audio_message = "voice",
 	},
 	
 	documents = "Documents",
