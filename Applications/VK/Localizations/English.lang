@@ -4,4 +4,35 @@
 	password = "Password",
 	login = "Login",
 	saveLogin = "Save authorization data:",
+
+	profile = "Profile",
+	
+	friends = "Friends",
+
+	news = "News",
+
+	conversations = "Conversations",
+	you = "You: ",
+	typeMessageHere = "Type message here",
+	fwdMessages = "Messages: ",
+	attachments = "Attachments: ",
+	attachmentsTypes = {
+		photo = "photo",
+		video = "video",
+		audio = "audio",
+		doc = "document",
+		link = "link",
+		market = "makret",
+		market_album = "market_album",
+		wall = "wall post",
+		wall_reply = "wall reply",
+		sticker = "sticker",
+		gift = "gift",
+	},
+	
+	documents = "Documents",
+
+	settings = "Settings",
+
+	exit = "Logout",
 }
