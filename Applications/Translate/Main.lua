@@ -84,7 +84,7 @@ local function checkLanguages()
 			fromComboBox:clear()
 			toComboBox:clear()
 
-			local yandexArray = json:decode(result)
+			local yandexArray = json.decode(result)
 			for key, value in pairs(yandexArray.langs) do
 				table.insert(config.languages, {key, value})
 			end
@@ -111,7 +111,7 @@ local function translate()
 		)
 
 		if result then
-			toInputField.text = json:decode(result).text[1]
+			toInputField.text = json.decode(result).text[1]
 			status(" ")
 
 			config.fromLanguage = fromComboBox:getItem(fromComboBox.selectedItem).text
@@ -133,7 +133,7 @@ fromLanguageAutoDetectButton.onTouch = function()
 		)
 
 		if result then
-			result = json:decode(result)
+			result = json.decode(result)
 			if result.lang then
 				fromComboBox.selectedItem = getLanguageIndex(result.lang, true)
 				translate()

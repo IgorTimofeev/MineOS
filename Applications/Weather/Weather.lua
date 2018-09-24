@@ -95,7 +95,7 @@ end
 local function updateForecast()
 	local result, reason = web.request("http://api.openweathermap.org/data/2.5/forecast/daily?&appid=98ba4333281c6d0711ca78d2d0481c3d&units=metric&cnt=17&q=" .. web.encode(config.lastCityName))
 	if result then
-		result = json:decode(result)
+		result = json.decode(result)
 		
 		if result.list then
 			weatherContainer:removeChildren()
