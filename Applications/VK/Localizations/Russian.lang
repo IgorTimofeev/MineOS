@@ -1,0 +1,43 @@
+{
+	leftBarOffset = 7,
+
+	invalidPassword = "Неверный логин или пароль",
+	username = "E-mail или номер телефона",
+	password = "Пароль",
+	login = "Войти",
+	saveLogin = "Сохранять данные входа:",
+
+	profile = "Профиль",
+	
+	friends = "Друзья",
+
+	news = "Новости",
+
+	send = "Отправить",
+	conversations = "Сообщения",
+	you = "Вы: ",
+	typeMessageHere = "Напишите сообщение...",
+	fwdMessages = "Сообщения: ",
+	attachments = "Вложения: ",
+	attachmentsTypes = {
+		photo = "фото",
+		video = "видео",
+		audio = "аудио",
+		doc = "документ",
+		link = "ссылка",
+		market = "товар",
+		market_album = "каталог товаров",
+		wall = "запись",
+		wall_reply = "репост",
+		sticker = "стикер",
+		gift = "подарок",
+		audio_message = "аудио",
+	},
+	sentFromMineOS = " (Отправлено через MineOS VK Client)",
+	
+	documents = "Документы",
+
+	settings = "Настройки",
+
+	exit = "Выйти",
+}

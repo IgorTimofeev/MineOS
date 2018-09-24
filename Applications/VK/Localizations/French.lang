@@ -1,0 +1,43 @@
+{
+	leftBarOffset = 5,
+	
+	invalidPassword = "Nom d'utilisateur ou mot de passe incorrect",
+	username = "E-mail ou numéro de téléphone",
+	password = "Mot de passe",
+	login = "S'identifier",
+	saveLogin = "Enregistrer les données d'autorisation:",
+
+	profile = "Profil",
+	
+	friends = "Copains",
+
+	news = "Nouvelles",
+
+	send = "Envoyer",
+	conversations = "Conversations",
+	you = "Toi: ",
+	typeMessageHere = "Tapez le message ici",
+	fwdMessages = "Messages: ",
+	attachments = "Pièces jointes: ",
+	attachmentsTypes = {
+		photo = "photo",
+		video = "vidéo",
+		audio = "l'audio",
+		doc = "document",
+		link = "lien",
+		market = "makret",
+		market_album = "market_album",
+		wall = "message sur le Mur",
+		wall_reply = "réponse murale",
+		sticker = "autocollant",
+		gift = "cadeau",
+		audio_message = "voix",
+	},
+	sentFromMineOS = " (Envoyé via le client MineOS VK)",
+	
+	documents = "Documents",
+
+	settings = "Paramètres",
+
+	exit = "Connectez - Out",
+}

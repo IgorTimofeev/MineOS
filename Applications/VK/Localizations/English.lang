@@ -1,4 +1,6 @@
 {
+	leftBarOffset = 5,
+	
 	invalidPassword = "Invalid login or password",
 	username = "E-mail or phone number",
 	password = "Password",
@@ -11,6 +13,7 @@
 
 	news = "News",
 
+	send = "Send",
 	conversations = "Conversations",
 	you = "You: ",
 	typeMessageHere = "Type message here",
@@ -30,6 +33,7 @@
 		gift = "gift",
 		audio_message = "voice",
 	},
+	sentFromMineOS = " (Sent via MineOS VK Client)",
 	
 	documents = "Documents",
 

@@ -6,7 +6,8 @@ local fs = require("filesystem")
 local color = require("color")
 local image = require("image")
 local web = require("web")
-local json = require("json")
+package.loaded.json2 = nil
+local json = require("json2")
 local color = require("color")
 local unicode = require("unicode")
 local MineOSInterface = require("MineOSInterface")
@@ -16,6 +17,7 @@ local MineOSCore = require("MineOSCore")
 --------------------------------------------------------------------------------
 
 local VKAPIVersion = 5.85
+local accessToken
 
 local config = {
 	avatars = {
@@ -24,6 +26,9 @@ local config = {
 	conversationsLoadCount = 10,
 	messagesLoadCount = 10,
 	newsLoadCount = 10,
+	messagesScrollSpeed = 2,
+	addMessagePostfix = true,
+	updateContentTrigger = 0.2,
 }
 
 local configPath = MineOSPaths.applicationData .. "VK/Config.cfg"
@@ -31,16 +36,22 @@ if fs.exists(configPath) then
 	config = table.fromFile(configPath)
 end
 
-local function saveConfig()
-	table.toFile(configPath, config)
-end
-
 local scriptDirectory = MineOSCore.getCurrentScriptDirectory()
 local localization = MineOSCore.getLocalization(scriptDirectory .. "Localizations/")
--- local icons = {}
--- for file in fs.list(scriptDirectory .. "Icons/") do
--- 	icons[file]
--- end
+
+local icons = {}
+for file in fs.list(scriptDirectory .. "Icons/") do
+	local icon = image.load(scriptDirectory .. "Icons/" .. file)
+
+	for y = 1, image.getHeight(icon) do
+		for x = 1, image.getWidth(icon) do
+			local b, f, a, s = image.get(icon, x, y)
+			image.set(icon, x, y, b, 0xD2D2D2, a, s)
+		end
+	end
+
+	icons[unicode.lower(fs.hideExtension(file))] = icon
+end
 
 --------------------------------------------------------------------------------
 
@@ -72,21 +83,30 @@ local loginSaveSwitch = loginLayout:addChild(GUI.switchAndLabel(1, 1, 36, 6, 0x6
 local loginInvalidLabel = loginLayout:addChild(GUI.label(1, 1, 36, 1, 0xFF4940, localization.invalidPassword))
 loginInvalidLabel.hidden = true
 
-local function request(url, postData)
+local function saveConfig()
+	table.toFile(configPath, config)
+end
+
+local function log(...)
+	local file = io.open("/url.log", "a")
+	file:write(...)
+	file:close()
+end
+
+local function request(url, postData, headers)
 	progressIndicator.active = true
 	mainContainer:drawOnScreen()
 
-	-- local file = io.open("/urlLog.lua", "a")
-	-- file:write(url, "\n")
-	-- file:close()
+	-- log(url, "\n")
+
+	headers = headers or {}
+	headers["User-Agent"] = "Mozilla/5.0 (Macintosh; Intel Mac OS X x.y; rv:42.0) Gecko/20100101 Firefox/42.0"
 
 	local data = ""
 	local success, reason = web.rawRequest(
 		url,
 		postData,
-		{
-			["User-Agent"] = "Mozilla/5.0 (Macintosh; Intel Mac OS X x.y; rv:42.0) Gecko/20100101 Firefox/42.0"
-		},
+		headers,
 		function(chunk)
 			data = data .. chunk
 
@@ -96,11 +116,12 @@ local function request(url, postData)
 		math.huge
 	)
 
-	progressIndicator.active = false
-	mainContainer:drawOnScreen()
-
 	if success then
-		return json:decode(data)
+		data = json.decode(data)
+		progressIndicator.active = false
+		mainContainer:drawOnScreen()
+
+		return data
 	else
 		GUI.alert("Failed to perform web request: " .. tostring(reason))
 	end
@@ -112,13 +133,14 @@ local function responseRequest(...)
 		if result.response then
 			return result.response
 		else
-			GUI.alert("API request was successfult, but response field is missing")
+			GUI.alert("API request was successfult, but response field is missing, shit saved to /url.log")
+			log(table.toString(result, true), "\n")
 		end
 	end
 end
 
-local function methodRequest(method, ...)
-	return responseRequest("https://api.vk.com/method/" .. method .. "?" .. table.concat({...}, "&") .. "&access_token=" .. config.accessToken .. "&v=" .. VKAPIVersion)
+local function methodRequest(data)
+	return responseRequest("https://api.vk.com/method/" .. data .. "&access_token=" .. accessToken .. "&v=" .. VKAPIVersion)
 end
 
 local function truncateEmoji(text)
@@ -179,6 +201,45 @@ local function addPizda(name)
 	maxPizdaLength = math.max(maxPizdaLength, unicode.len(name))
 
 	return object
+end
+
+local function addScrollEventHandler(layout, regularDirection, updater)
+	layout.eventHandler = function(mainContainer, layout, e1, e2, e3, e4, e5)
+		if e1 == "scroll" then
+			local cell = layout.cells[1][1]
+
+			if regularDirection then
+				if e5 > 0 then
+					cell.verticalMargin = cell.verticalMargin + config.messagesScrollSpeed
+					if cell.verticalMargin > 1 then
+						cell.verticalMargin = 1
+					end
+				else
+					cell.verticalMargin = cell.verticalMargin - config.messagesScrollSpeed
+					local lastChild = layout.children[#layout.children]
+					if lastChild.localY + lastChild.height - 1 < layout.height * (1 - config.updateContentTrigger) then
+						updater()
+					end
+				end
+			else
+				if e5 > 0 then
+					cell.verticalMargin = cell.verticalMargin - config.messagesScrollSpeed
+					layout:update()
+
+					if layout.children[1].localY > layout.height * config.updateContentTrigger then
+						updater()
+					end
+				else
+					cell.verticalMargin = cell.verticalMargin + config.messagesScrollSpeed
+					if cell.verticalMargin > 1 then
+						cell.verticalMargin = 1
+					end
+				end
+			end
+			
+			mainContainer:drawOnScreen()
+		end
+	end
 end
 
 local function getAbbreviatedFileSize(size, decimalPlaces)
@@ -268,18 +329,29 @@ local function attachmentDraw(object)
 	-- buffer.drawRectangle(object.x, object.y, object.width, 1, 0x880000, 0xA5A5A5, " ")
 	local x, y, typeLength = object.x, object.y, unicode.len(object.type)
 	-- Type
-	buffer.drawText(x, y, 0xF0F0F0, "⠰"); x = x + 1
-	buffer.drawRectangle(x, y, typeLength + 2, 1, 0xF0F0F0, 0xA5A5A5, " "); x = x + 1
-	buffer.drawText(x, y, 0xA5A5A5, object.type); x = x + typeLength + 1
-	buffer.set(x, y, 0xE1E1E1, 0xF0F0F0, "⠆"); x = x + 1
+	buffer.drawText(x, y, object.typeB, "⠰"); x = x + 1
+	buffer.drawRectangle(x, y, typeLength + 2, 1, object.typeB, object.typeT, " "); x = x + 1
+	buffer.drawText(x, y, object.typeT, object.type); x = x + typeLength + 1
+
+	local textB = object.selected and object.selectionB or object.textB
+	local textT = object.selected and object.selectionT or object.textT
+
+	buffer.set(x, y, textB, object.typeB, "⠆"); x = x + 1
 	-- Text
-	buffer.drawRectangle(x, y, object.width - typeLength - 5, 1, 0xE1E1E1, 0xA5A5A5, " "); x = x + 1
-	buffer.drawText(x, y, 0x787878, string.limit(object.text, object.width - typeLength - 7))
-	buffer.drawText(object.x + object.width - 1, y, 0xE1E1E1, "⠆")
+	buffer.drawRectangle(x, y, object.width - typeLength - 5, 1, textB, textT, " "); x = x + 1
+	buffer.drawText(x, y, textT, string.limit(object.text, object.width - typeLength - 7))
+	buffer.drawText(object.x + object.width - 1, y, textB, "⠆")
 end
 
-local function newAttachment(x, y, maxWidth, attachment)
+local function newAttachment(x, y, maxWidth, attachment, typeB, typeT, textB, textT, selectionB, selectionT)
 	local object = GUI.object(x, y, 1, 1)
+
+	object.typeB = typeB
+	object.typeT = typeT
+	object.textB = textB
+	object.textT = textT
+	object.selectionB = selectionB
+	object.selectionT = selectionT
 
 	object.type = capitalize(localization.attachmentsTypes[attachment.type])
 
@@ -392,7 +464,7 @@ local function newPost(x, y, width, mainMessage, profiles, conversations, groups
 						attachment.wall
 					)
 				else
-					object:addChild(newAttachment(localX, localY, object.width - localX, attachment))
+					object:addChild(newAttachment(localX, localY, object.width - localX, attachment, 0xF0F0F0, 0xA5A5A5, 0xE1E1E1, 0x787878, 0x3392FF, 0xE1E1E1))
 					localY = localY + 2
 				end
 			end
@@ -409,6 +481,26 @@ local function newPost(x, y, width, mainMessage, profiles, conversations, groups
 		end
 	end
 
+	if data.likes or data.reposts or data.views or data.comments then
+		local layout = object:addChild(GUI.layout(localX, localY, object.width - localX, 2, 1, 1))
+		layout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_LEFT, GUI.ALIGNMENT_VERTICAL_BOTTOM)
+		layout:setDirection(1, 1, GUI.DIRECTION_HORIZONTAL)
+		layout:setSpacing(1, 1, 2)
+
+		local function addStuff(icon, text)
+			local container = layout:addChild(GUI.container(1, 1, 5 + unicode.len(text), 2))
+			container:addChild(GUI.image(1, 1, icon))
+			container:addChild(GUI.text(6, 2, 0x969696, text))
+		end
+
+		addStuff(icons.likes, tostring(data.likes and data.likes.count or 0))
+		addStuff(icons.comments, tostring(data.comments and data.comments.count or 0))
+		addStuff(icons.reposts, tostring(data.reposts and data.reposts.count or 0))
+		addStuff(icons.views, tostring(data.views and data.views.count or 0))
+		
+		localY = localY + 3
+	end
+
 	object.height = localY - 2
 
 	-- object:addChild(GUI.panel(1, 1, width, object.height, 0x0), 1)
@@ -416,39 +508,133 @@ local function newPost(x, y, width, mainMessage, profiles, conversations, groups
 	return object
 end
 
-local function getHistory(container, peerID)
-	local messagesHistory = methodRequest("messages.getHistory", "offset=0", "count=" .. config.messagesLoadCount, "peer_id=" .. peerID, "extended=1", "fields=first_name,last_name,online")
+local function uploadDocument(path)
+	local fileName = fs.name(path)
+	local uploadServer = methodRequest("docs.getUploadServer?")
+	if uploadServer then
+		local boundary = "----WebKitFormBoundaryISgaMqjePLcGZFOx"
+		local handle = io.open(path, "rb")
+		
+		local data =
+			"--" .. boundary .. "\r\n" ..
+			"Content-Disposition: form-data; name=\"file\"; filename=\"" .. fileName .. "\"\r\n" ..
+			"Content-Type: application/octet-stream\r\n\r\n" ..
+			handle:read("*a") .. "\r\n" ..
+			"--" .. boundary .. "--"
+
+		handle:close()
+
+		local uploadResult, reason = request(
+			uploadServer.upload_url,
+			data,
+			{
+				["Content-Type"] = "multipart/form-data; boundary=" .. boundary,
+				["Content-Length"] = #data,
+			}
+		)
+
+		table.toFile("/test.txt", {
+			url = uploadServer.upload_url,
+			data = data,
+			size = #data,
+		}, true)
+
+		if uploadResult then
+			if uploadResult.file then
+				return methodRequest("docs.save?file=" .. uploadResult.file .. "&title=" .. fileName)
+			else
+				GUI.alert("UPLOAD ALMOST ZAEBIS, BUT NOT FILE", uploadResult)
+			end
+		else
+			GUI.alert("UPLOAD FAIL", reason)
+		end
+	end
+end
+
+local function getHistory(peerID, startMessageID)
+	return methodRequest("messages.getHistory?extended=1&fields=first_name,last_name,online&count=" .. config.messagesLoadCount .. "&peer_id=" .. peerID .. (startMessageID and "&offset=1" or "") .. (startMessageID and ("&start_message_id=" .. startMessageID) or ""))
+end
+
+local function showHistory(container, peerID)
+	local messagesHistory = getHistory(peerID, nil)
 	if messagesHistory then
 		container:removeChildren()
 
-		local input = container:addChild(GUI.input(1, container.height - 2, container.width, 3, 0xE1E1E1, 0x787878, 0xA5A5A5, 0xE1E1E1, 0x3C3C3C, "", localization.typeMessageHere))
+		local inputLayout = container:addChild(GUI.layout(1, container.height - 2, container.width, 3, 1, 1))
+		inputLayout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_LEFT, GUI.ALIGNMENT_VERTICAL_TOP)
+		inputLayout:setSpacing(1, 1, 0)
+		inputLayout:setDirection(1, 1, GUI.DIRECTION_HORIZONTAL)
+
+		local attachButton = inputLayout:addChild(GUI.adaptiveButton(1, 1, 2, 1, 0xE1E1E1, 0x3C3C3C, 0x3C3C3C, 0xFFFFFF, "+"))
+		attachButton.switchMode = true
+		local sendButton = inputLayout:addChild(GUI.adaptiveButton(1, 1, 2, 1, 0x3C3C3C, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.send))
+		local input = inputLayout:addChild(GUI.input(1, 1, inputLayout.width - sendButton.width - attachButton.width, 3, 0xF0F0F0, 0x787878, 0xA5A5A5, 0xF0F0F0, 0x3C3C3C, "", localization.typeMessageHere), 2)
+		
 		local layout = container:addChild(GUI.layout(2, 1, container.width - 2, container.height - input.height, 1, 1))
 		layout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_LEFT, GUI.ALIGNMENT_VERTICAL_BOTTOM)
 		layout:setMargin(1, 1, 0, 1)
 
-		for i = 1, #messagesHistory.items do
-			local data = layout:addChild(
-				newPost(2, y, container.width - 2, true,
-					messagesHistory.profiles,
-					messagesHistory.conversations,
-					messagesHistory.groups,
-					getSenderName(
-						messagesHistory.profiles,
-						messagesHistory.conversations,
-						messagesHistory.groups,
-						messagesHistory.items[i].from_id
-					),
-					"fwd_messages",
-					messagesHistory.items[i]
-				), 1
-			)
+		local function addFromHistory(history)
+			for i = 1, #history.items do
+				local post = layout:addChild(
+					newPost(2, y, container.width - 2, true,
+						history.profiles,
+						history.conversations,
+						history.groups,
+						getSenderName(
+							history.profiles,
+							history.conversations,
+							history.groups,
+							history.items[i].from_id
+						),
+						"fwd_messages",
+						history.items[i]
+					), 1
+				)
+
+				post.id = history.items[i].id
+			end
 		end
 
-		input.onInputFinished = function()
-			if #input.text > 0 then
-				local result = methodRequest("messages.send", "peer_id=" .. peerID, "message=" .. web.encode(input.text))
-				if result then
-					getHistory(container, peerID)
+		addFromHistory(messagesHistory)
+
+		addScrollEventHandler(layout, false, function()
+			local newMessagesHistory = getHistory(peerID, layout.children[1].id)
+			if newMessagesHistory then
+				addFromHistory(newMessagesHistory)
+			end
+		end)
+
+		local attachedPath
+		attachButton.onTouch = function()
+			if attachedPath then
+				attachedPath = nil
+			else
+				local filesystemDialog = GUI.addFilesystemDialog(window, true, 45, window.height - 5, "Open", "Cancel", "File name", "/")
+				filesystemDialog:setMode(GUI.IO_MODE_OPEN, GUI.IO_MODE_FILE)
+				filesystemDialog.onSubmit = function(path)
+					attachedPath = path
+				end
+
+				filesystemDialog:show()
+			end
+		end
+
+		sendButton.onTouch = function()
+			if #input.text > 0 or filesystemChooser.path then
+				local attachment
+				if attachedPath then
+					local saveResult = uploadDocument(attachedPath)
+					if saveResult then
+						attachment = "&attachment=doc" .. saveResult[1].owner_id .. "_" .. saveResult[1].id
+					end
+					
+					attachedPath = nil
+				end
+
+				local sendResult = methodRequest("messages.send?peer_id=" .. peerID .. (attachment or "") .. (#input.text > 0 and ("&message=" .. web.encode(input.text)) or ""))
+				if sendResult then
+					showHistory(container, peerID)
 				end
 			end
 		end
@@ -461,31 +647,51 @@ end
 
 local newsSelectable = addPizda(localization.news)
 newsSelectable.onTouch = function()
-	local newsFeed = methodRequest("newsfeed.get", "filters=post", "count=" .. config.newsLoadCount, "fields=first_name,last_name,name")
-	if newsFeed then
+	local function getNews(startFrom)
+		return methodRequest("newsfeed.get?filters=post&fields=first_name,last_name,name&count=" .. config.newsLoadCount .. (startFrom and ("&start_from=" .. startFrom) or ""))
+	end
+
+	local news = getNews(nil)
+	if news then
 		contentContainer:removeChildren()
 
-		local newsLayout = contentContainer:addChild(GUI.layout(3, 1, contentContainer.width - 4, contentContainer.height, 1, 1))
-		newsLayout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_LEFT, GUI.ALIGNMENT_VERTICAL_TOP)
-		newsLayout:setSpacing(1, 1, 1)
-		newsLayout:setMargin(1, 1, 0, 1)
+		local layout = contentContainer:addChild(GUI.layout(3, 1, contentContainer.width - 4, contentContainer.height, 1, 1))
+		layout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_LEFT, GUI.ALIGNMENT_VERTICAL_TOP)
+		layout:setSpacing(1, 1, 1)
+		layout:setMargin(1, 1, 0, 1)
 		
-		for i = 1, #newsFeed.items do
-			local item = newsFeed.items[i]
+		local function addFromList(list)
+			for i = 1, #list.items do
+				local item = list.items[i]
 
-			newsLayout:addChild(
-				newPost(
-					1, 1, newsLayout.width, true,
-					newsFeed.profiles,
-					newsFeed.conversations,
-					newsFeed.groups,
-					getSenderName(newsFeed.profiles, newsFeed.conversations, newsFeed.groups, item.source_id),
+				local postContainer = layout:addChild(GUI.container(1, 1, layout.width, 1))
+
+				local post = postContainer:addChild(newPost(
+					3, 2, postContainer.width - 4, true,
+					list.profiles,
+					list.conversations,
+					list.groups,
+					getSenderName(list.profiles, list.conversations, list.groups, item.source_id),
 					"copy_history",
 					item
-				)
-			)
+				))
+
+				postContainer.height = post.height + 2
+
+				postContainer:addChild(GUI.panel(1, 1, postContainer.width, postContainer.height, 0xFFFFFF), 1)
+			end
 		end
 
+		addFromList(news)
+
+		local nextFrom = news.next_from
+		addScrollEventHandler(layout, true, function()
+			local newNews = getNews(nextFrom)
+			if newNews then
+				nextFrom = newNews.next_from
+				addFromList(newNews)
+			end
+		end)
 
 		mainContainer:drawOnScreen()
 	end
@@ -493,16 +699,20 @@ end
 
 local conversationsSelectable = addPizda(localization.conversations)
 conversationsSelectable.onTouch = function()
-	local result = methodRequest("messages.getConversations", "offset=0", "count=" .. config.conversationsLoadCount, "filter=all", "extended=1", "fields=first_name,last_name,online,id")
+	local function getConversations(startMessageID)
+		return methodRequest("messages.getConversations?filter=all&extended=1&fields=first_name,last_name,online,id&count=" .. config.conversationsLoadCount .. (startMessageID and "&offset=1" or "") .. (startMessageID and ("&start_message_id=" .. startMessageID) or ""))
+	end
+
+	local result = getConversations(nil)
 	if result then
 		contentContainer:removeChildren()
 
-		local conversationsLayout = contentContainer:addChild(GUI.layout(1, 1, 28, contentContainer.height, 1, 1))
-		conversationsLayout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_LEFT, GUI.ALIGNMENT_VERTICAL_TOP)
-		conversationsLayout:setSpacing(1, 1, 1)
-		conversationsLayout:setMargin(1, 1, 0, 1)
+		local layout = contentContainer:addChild(GUI.layout(1, 1, 28, contentContainer.height, 1, 1))
+		layout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_LEFT, GUI.ALIGNMENT_VERTICAL_TOP)
+		layout:setSpacing(1, 1, 1)
+		layout:setMargin(1, 1, 0, 1)
 
-		local conversationPanel = contentContainer:addChild(GUI.panel(conversationsLayout.width + 1, 1, contentContainer.width - conversationsLayout.width, contentContainer.height, 0xFFFFFF))
+		local conversationPanel = contentContainer:addChild(GUI.panel(layout.width + 1, 1, contentContainer.width - layout.width, contentContainer.height, 0xFFFFFF))
 		local conversationContainer = contentContainer:addChild(GUI.container(conversationPanel.localX, 1, conversationPanel.width, conversationPanel.height))
 
 		local function conversationDraw(object)
@@ -520,63 +730,75 @@ conversationsSelectable.onTouch = function()
 			buffer.drawText(object.x + 6, object.y + 1, color2, string.limit(truncateEmoji(object.message), object.width - 7))
 		end
 
-		for i = 1, #result.items do
-			local item = result.items[i]
+		local function addFromList(list)
+			for i = 1, #list.items do
+				local item = list.items[i]
 
-			config.avatars[item.conversation.peer.id] = config.avatars[item.conversation.peer.id] or color.HSBToInteger(math.random(360), 1, 1)
+				config.avatars[item.conversation.peer.id] = config.avatars[item.conversation.peer.id] or color.HSBToInteger(math.random(360), 1, 1)
 
-			local object = addSelectable(conversationsLayout, 2)
-			
-			-- Превью текста сообщеньки с вложениями и прочей залупой
-			if #item.last_message.text == 0 then
-				if #item.last_message.fwd_messages > 0 then
-					object.message = localization.fwdMessages .. #item.last_message.fwd_messages
-				elseif #item.last_message.attachments > 0 then
-					local data = {}
-					for i = 1, #item.last_message.attachments do
-						if localization.attachmentsTypes[item.last_message.attachments[i].type] then
-							data[i] = localization.attachmentsTypes[item.last_message.attachments[i].type] or "N/A"
+				local object = addSelectable(layout, 2)
+
+				object.id = item.last_message.id
+
+				-- Превью текста сообщеньки с вложениями и прочей залупой
+				if #item.last_message.text == 0 then
+					if #item.last_message.fwd_messages > 0 then
+						object.message = localization.fwdMessages .. #item.last_message.fwd_messages
+					elseif #item.last_message.attachments > 0 then
+						local data = {}
+						for i = 1, #item.last_message.attachments do
+							if localization.attachmentsTypes[item.last_message.attachments[i].type] then
+								data[i] = localization.attachmentsTypes[item.last_message.attachments[i].type] or "N/A"
+							end
 						end
-					end
 
-					object.message = table.concat(data, ", ")
+						object.message = table.concat(data, ", ")
+					else
+						object.message = item.last_message.text
+					end
 				else
 					object.message = item.last_message.text
 				end
-			else
-				object.message = item.last_message.text
-			end
 
-			-- Префиксы для отправленных мною, либо же для имен отправителей в конфах
-			if item.last_message.out == 1 then
-				object.message = localization.you .. object.message
-			else
-				if isPeerChat(item.conversation.peer.id) then
-					local eblo = getEblo(result.profiles, item.last_message.from_id)
-					object.message = eblo.first_name .. ": " .. object.message
+				-- Префиксы для отправленных мною, либо же для имен отправителей в конфах
+				if item.last_message.out == 1 then
+					object.message = localization.you .. object.message
+				else
+					if isPeerChat(item.conversation.peer.id) then
+						local eblo = getEblo(list.profiles, item.last_message.from_id)
+						object.message = eblo.first_name .. ": " .. object.message
+					end
 				end
-			end
 
-			object.date = os.date("%H:%M", item.last_message.date)
-			object.out = item.last_message.out
-			object.avatarColor, object.avatarTextColor = getAvatarColors(item.conversation.peer.id)
+				object.date = os.date("%H:%M", item.last_message.date)
+				object.out = item.last_message.out
+				object.avatarColor, object.avatarTextColor = getAvatarColors(item.conversation.peer.id)
 
-			-- Имя отправителя
-			object.name = getSenderName(result.profiles, item.conversation, result.groups, item.conversation.peer.id)
+				-- Имя отправителя
+				object.name = getSenderName(list.profiles, item.conversation, list.groups, item.conversation.peer.id)
 
-			-- Превьюха имени отправителя для аватарки
-			object.shortcut = getNameShortcut(object.name)
+				-- Превьюха имени отправителя для аватарки
+				object.shortcut = getNameShortcut(object.name)
 
-			object.draw = conversationDraw
+				object.draw = conversationDraw
 
-			object.onTouch = function()
-				getHistory(conversationContainer, item.conversation.peer.id)
+				object.onTouch = function()
+					showHistory(conversationContainer, item.conversation.peer.id)
+				end
 			end
 		end
 
+		addFromList(result)
 
-		if #conversationsLayout.children > 0 then
-			conversationsLayout.children[1]:select()
+		addScrollEventHandler(layout, true, function()
+			local newConversations = getConversations(layout.children[#layout.children].id)
+			if newConversations then
+				addFromList(newConversations)
+			end
+		end)
+
+		if #layout.children > 0 then
+			layout.children[1]:select()
 		else
 			mainContainer:drawOnScreen()
 		end
@@ -596,10 +818,18 @@ end
 
 loginPasswordInput.onInputFinished = loginUsernameInput.onInputFinished
 
+local function logout()
+	accessToken = nil
+	config.accessToken = nil
+	loginContainer.hidden = false
+	
+	mainContainer:drawOnScreen()
+end
+
 local function login()
-	if config.accessToken then
+	if accessToken then
 		loginContainer.hidden = true
-		newsSelectable:select()
+		conversationsSelectable:select()
 	else
 		loginUsernameInput.onInputFinished()
 	end
@@ -609,29 +839,36 @@ loginButton.onTouch = function()
 	local result, reason = request("https://oauth.vk.com/token?grant_type=password&client_id=3697615&client_secret=AlVXZFMUqyrnABp8ncuU&username=" .. loginUsernameInput.text .. "&password=" .. loginPasswordInput.text .. "&v=" .. VKAPIVersion)
 	if result then
 		if result.access_token then
-			config.accessToken = result.access_token
+			accessToken = result.access_token
+			config.accessToken = loginSaveSwitch.state and result.access_token or nil
 			config.username = loginSaveSwitch.state and loginUsernameInput.text or nil
 			
 			login()
 		else
+			accessToken = nil
 			config.accessToken = nil
 			loginInvalidLabel.hidden = false
 
-			mainContainer:drawOnScreen()
+			logout()
 		end
+
+		saveConfig()
 	end
 end
 
 -- addPizda(localization.settings)
 
--- addPizda(localization.exit)
+addPizda(localization.exit).onTouch = function()
+	logout()
+	saveConfig()
+end
 
 window.onResize = function(width, height)
 	loginContainer.width, loginContainer.height = width, height
 	loginPanel.width, loginPanel.height = loginContainer.width, loginContainer.height
 	loginLayout.width, loginLayout.height = loginContainer.width, loginContainer.height
 
-	leftPanel.width, leftPanel.height = maxPizdaLength + 5, height
+	leftPanel.width, leftPanel.height = maxPizdaLength + localization.leftBarOffset, height
 	leftLayout.width, leftLayout.height = leftPanel.width, leftPanel.height - 2
 	progressIndicator.localX, progressIndicator.localY = math.floor(leftPanel.width / 2 - 1), leftPanel.height - progressIndicator.height + 1
 
@@ -643,8 +880,11 @@ window.onResize = function(width, height)
 	contentContainer.localX, contentContainer.width, contentContainer.height = window.backgroundPanel.localX, window.backgroundPanel.width, window.backgroundPanel.height
 end
 
+--------------------------------------------------------------------------------
+
 window.actionButtons.localX = 3
 window.actionButtons:moveToFront()
 window:resize(window.width, window.height)
 
+accessToken = config.accessToken
 login()
