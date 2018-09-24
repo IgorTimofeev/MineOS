@@ -23,6 +23,7 @@ local config = {
 	},
 	conversationsLoadCount = 10,
 	messagesLoadCount = 10,
+	newsLoadCount = 10,
 }
 
 local configPath = MineOSPaths.applicationData .. "VK/Config.cfg"
@@ -75,9 +76,9 @@ local function request(url, postData)
 	progressIndicator.active = true
 	mainContainer:drawOnScreen()
 
-	local file = io.open("/urlLog.lua", "a")
-	file:write(url)
-	file:close()
+	-- local file = io.open("/urlLog.lua", "a")
+	-- file:write(url, "\n")
+	-- file:close()
 
 	local data = ""
 	local success, reason = web.rawRequest(
@@ -283,7 +284,14 @@ local function newAttachment(x, y, maxWidth, attachment)
 	object.type = capitalize(localization.attachmentsTypes[attachment.type])
 
 	if attachment.photo then
-		object.text = attachment.photo.sizes[#attachment.photo.sizes].url
+		local maxIndex, maxWidth = 1, 0
+		for i = 1, #attachment.photo.sizes do
+			if maxWidth < attachment.photo.sizes[i].width then
+				maxIndex, maxWidth = i, attachment.photo.sizes[i].width
+			end
+		end
+
+		object.text = attachment.photo.sizes[maxIndex].width .. " x " .. attachment.photo.sizes[maxIndex].height .. " px"
 	elseif attachment.video then
 		object.text = attachment.video.title
 	elseif attachment.audio then
@@ -329,9 +337,88 @@ local function newAttachment(x, y, maxWidth, attachment)
 	return object
 end
 
+local function newPost(x, y, width, mainMessage, profiles, conversations, groups, senderName, fwdMessagesFieldName, data)
+	local object = GUI.container(x, y, width, 1)
+	
+	local localX, localY = 1, 1
+
+	local avatar = object:addChild(newAvatar(localX, localY, 4, 2, getNameShortcut(senderName), data.from_id or data.source_id))
+	localX = localX + avatar.width + 1
+	
+	local nameText = object:addChild(GUI.text(localX, localY, 0x3C3C3C, senderName))
+	object:addChild(GUI.text(localX + nameText.width + 1, localY, 0xD2D2D2, os.date("%H:%M", data.date)))
+
+	localY = localY + 1
+
+	if #data.text > 0 then
+		local lines = string.wrap(data.text, width - localX)
+		object.textBox = object:addChild(GUI.textBox(localX, localY, width - localX, #lines, nil, 0xA5A5A5, lines, 1, 0, 0))
+		object.textBox.eventHandler = nil
+		localY = localY + object.textBox.height + 1
+	else
+		localY = localY + 1
+	end
+
+	local function addAnotherPost(senderName, data)
+		localY = localY + (mainMessage and 0 or 1)
+
+		local offset = mainMessage and 6 or 1
+		local attachment = object:addChild(
+			newPost(
+				offset + 2,
+				localY,
+				math.max(16, width - 6),
+				false,
+				profiles,
+				conversations,
+				groups,
+				senderName,
+				fwdMessagesFieldName,
+				data
+			)
+		)
+		object:addChild(newSeparator(offset, localY, attachment.height))
+		
+		localY = localY + attachment.height + 1
+	end
+
+	if data.attachments and #data.attachments > 0 then
+		for i = 1, #data.attachments do
+			local attachment = data.attachments[i]
+			if localization.attachmentsTypes[attachment.type] then
+				if attachment.wall then
+					addAnotherPost(
+						attachment.wall.from.name or (attachment.wall.from.first_name .. " " .. attachment.wall.from.last_name),
+						attachment.wall
+					)
+				else
+					object:addChild(newAttachment(localX, localY, object.width - localX, attachment))
+					localY = localY + 2
+				end
+			end
+		end
+	end
+
+	-- fwd_messages
+	if data[fwdMessagesFieldName] then
+		for i = 1, #data[fwdMessagesFieldName] do
+			addAnotherPost(
+				getSenderName(profiles, conversations, groups, data[fwdMessagesFieldName][i].from_id),
+				data[fwdMessagesFieldName][i]
+			)
+		end
+	end
+
+	object.height = localY - 2
+
+	-- object:addChild(GUI.panel(1, 1, width, object.height, 0x0), 1)
+
+	return object
+end
+
 local function getHistory(container, peerID)
-	local result = methodRequest("messages.getHistory", "offset=0", "count=" .. config.messagesLoadCount, "peer_id=" .. peerID, "extended=1", "fields=first_name,last_name,online")
-	if result then
+	local messagesHistory = methodRequest("messages.getHistory", "offset=0", "count=" .. config.messagesLoadCount, "peer_id=" .. peerID, "extended=1", "fields=first_name,last_name,online")
+	if messagesHistory then
 		container:removeChildren()
 
 		local input = container:addChild(GUI.input(1, container.height - 2, container.width, 3, 0xE1E1E1, 0x787878, 0xA5A5A5, 0xE1E1E1, 0x3C3C3C, "", localization.typeMessageHere))
@@ -339,56 +426,22 @@ local function getHistory(container, peerID)
 		layout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_LEFT, GUI.ALIGNMENT_VERTICAL_BOTTOM)
 		layout:setMargin(1, 1, 0, 1)
 
-		local function newMessage(x, y, width, fwdOffset, message)
-			local object = GUI.container(x, y, width, 1)
-			
-			local localX, localY = 1, 1
-
-			local name = getSenderName(result.profiles, result.conversations, result.groups, message.from_id)
-			local avatar = object:addChild(newAvatar(localX, localY, 4, 2, getNameShortcut(name), message.from_id))
-			localX = localX + avatar.width + 1
-			
-			object:addChild(GUI.text(localX, localY, 0x3C3C3C, name))
-			localY = localY + 1
-
-			if #message.text > 0 then
-				local lines = string.wrap(message.text, width - localX)
-				object.textBox = object:addChild(GUI.textBox(localX, localY, width - localX, #lines, nil, 0xA5A5A5, lines, 1, 0, 0))
-				object.textBox.eventHandler = nil
-				localY = localY + object.textBox.height + 1
-			else
-				localY = localY + 1
-			end
-
-			if #message.attachments > 0 then
-				for i = 1, #message.attachments do
-					local attachment = message.attachments[i]
-					if localization.attachmentsTypes[attachment.type] then
-						local attachment = object:addChild(newAttachment(localX, localY, object.width - localX, message.attachments[i]))
-						localY = localY + 2
-					end
-				end
-			end
-
-			if message.fwd_messages then
-				object.fwdMessages = {}
-
-				for i = 1, #message.fwd_messages do
-					object.fwdMessages[i] = object:addChild(newMessage(fwdOffset + 3, localY, width - 2, 0, message.fwd_messages[i]))
-					object:addChild(newSeparator(fwdOffset + 1, localY, object.fwdMessages[i].height))
-					localY = localY + object.fwdMessages[i].height + 1
-				end
-			end
-
-			object.height = localY - 2
-
-			-- object:addChild(GUI.panel(1, 1, width, object.height, 0x0), 1)
-
-			return object
-		end
-
-		for i = 1, #result.items do
-			local message = layout:addChild(newMessage(2, y, container.width - 2, 5, result.items[i]), 1)
+		for i = 1, #messagesHistory.items do
+			local data = layout:addChild(
+				newPost(2, y, container.width - 2, true,
+					messagesHistory.profiles,
+					messagesHistory.conversations,
+					messagesHistory.groups,
+					getSenderName(
+						messagesHistory.profiles,
+						messagesHistory.conversations,
+						messagesHistory.groups,
+						messagesHistory.items[i].from_id
+					),
+					"fwd_messages",
+					messagesHistory.items[i]
+				), 1
+			)
 		end
 
 		input.onInputFinished = function()
@@ -404,9 +457,39 @@ local function getHistory(container, peerID)
 	end
 end
 
-addPizda(localization.profile)
+-- addPizda(localization.profile)
 
-addPizda(localization.news)
+local newsSelectable = addPizda(localization.news)
+newsSelectable.onTouch = function()
+	local newsFeed = methodRequest("newsfeed.get", "filters=post", "count=" .. config.newsLoadCount, "fields=first_name,last_name,name")
+	if newsFeed then
+		contentContainer:removeChildren()
+
+		local newsLayout = contentContainer:addChild(GUI.layout(3, 1, contentContainer.width - 4, contentContainer.height, 1, 1))
+		newsLayout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_LEFT, GUI.ALIGNMENT_VERTICAL_TOP)
+		newsLayout:setSpacing(1, 1, 1)
+		newsLayout:setMargin(1, 1, 0, 1)
+		
+		for i = 1, #newsFeed.items do
+			local item = newsFeed.items[i]
+
+			newsLayout:addChild(
+				newPost(
+					1, 1, newsLayout.width, true,
+					newsFeed.profiles,
+					newsFeed.conversations,
+					newsFeed.groups,
+					getSenderName(newsFeed.profiles, newsFeed.conversations, newsFeed.groups, item.source_id),
+					"copy_history",
+					item
+				)
+			)
+		end
+
+
+		mainContainer:drawOnScreen()
+	end
+end
 
 local conversationsSelectable = addPizda(localization.conversations)
 conversationsSelectable.onTouch = function()
@@ -479,7 +562,7 @@ conversationsSelectable.onTouch = function()
 			object.avatarColor, object.avatarTextColor = getAvatarColors(item.conversation.peer.id)
 
 			-- Имя отправителя
-			object.name = getSenderName(result.profiles, item.conversation, result.groups, item.conversation.peer.id)	
+			object.name = getSenderName(result.profiles, item.conversation, result.groups, item.conversation.peer.id)
 
 			-- Превьюха имени отправителя для аватарки
 			object.shortcut = getNameShortcut(object.name)
@@ -502,9 +585,9 @@ conversationsSelectable.onTouch = function()
 	end
 end
 
-addPizda(localization.friends)
+-- addPizda(localization.friends)
 
-addPizda(localization.documents)
+-- addPizda(localization.documents)
 
 loginUsernameInput.onInputFinished = function()
 	loginButton.disabled = #loginUsernameInput.text == 0 or #loginPasswordInput.text == 0
@@ -516,7 +599,7 @@ loginPasswordInput.onInputFinished = loginUsernameInput.onInputFinished
 local function login()
 	if config.accessToken then
 		loginContainer.hidden = true
-		conversationsSelectable:select()
+		newsSelectable:select()
 	else
 		loginUsernameInput.onInputFinished()
 	end
@@ -539,9 +622,9 @@ loginButton.onTouch = function()
 	end
 end
 
-addPizda(localization.settings)
+-- addPizda(localization.settings)
 
-addPizda(localization.exit)
+-- addPizda(localization.exit)
 
 window.onResize = function(width, height)
 	loginContainer.width, loginContainer.height = width, height
