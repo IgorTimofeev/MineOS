@@ -837,6 +837,8 @@ end
 loginButton.onTouch = function()
 	local result, reason = request("https://oauth.vk.com/token?grant_type=password&client_id=3697615&client_secret=AlVXZFMUqyrnABp8ncuU&username=" .. loginUsernameInput.text .. "&password=" .. loginPasswordInput.text .. "&v=" .. VKAPIVersion)
 	if result then
+		loginPasswordInput.text = nil
+
 		if result.access_token then
 			accessToken = result.access_token
 			config.accessToken = loginSaveSwitch.state and result.access_token or nil
