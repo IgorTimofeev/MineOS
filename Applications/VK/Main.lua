@@ -16,7 +16,7 @@ local MineOSCore = require("MineOSCore")
 --------------------------------------------------------------------------------
 
 local VKAPIVersion = 5.85
-local accessToken
+local currentAccessToken, currentPeerID
 
 local config = {
 	avatars = {
@@ -28,9 +28,10 @@ local config = {
 	messagesScrollSpeed = 2,
 	addMessagePostfix = true,
 	updateContentTrigger = 0.2,
+	wallLoadCount = 10,
 }
 
-local configPath = MineOSPaths.applicationData .. "VK/Config.cfg"
+local configPath = MineOSPaths.applicationData .. "VK/Config2.cfg"
 if fs.exists(configPath) then
 	config = table.fromFile(configPath)
 end
@@ -51,6 +52,8 @@ for file in fs.list(scriptDirectory .. "Icons/") do
 
 	icons[unicode.lower(fs.hideExtension(file))] = icon
 end
+
+local showUserProfile, showConversations
 
 --------------------------------------------------------------------------------
 
@@ -139,7 +142,27 @@ local function responseRequest(...)
 end
 
 local function methodRequest(data)
-	return responseRequest("https://api.vk.com/method/" .. data .. "&access_token=" .. accessToken .. "&v=" .. VKAPIVersion)
+	return responseRequest("https://api.vk.com/method/" .. data .. "&access_token=" .. currentAccessToken .. "&v=" .. VKAPIVersion)
+end
+
+local function addPanel(container, color)
+	return container:addChild(GUI.panel(1, 1, container.width, container.height, color), 1)
+end
+
+local function fitToLastChild(what, addition)
+	if what.update then
+		what:update()
+	end
+
+	local endPoint = -math.huge
+	for i = 1, #what.children do
+		local child = what.children[i]
+		if not child.hidden then
+			endPoint = math.max(endPoint, child.localY + child.height - 1)
+		end
+	end
+
+	what.height = endPoint + addition
 end
 
 local function truncateEmoji(text)
@@ -161,6 +184,7 @@ local function selectableSelect(object)
 	mainContainer:drawOnScreen()
 
 	if object.onTouch then
+		contentContainer.eventHandler = nil
 		object.onTouch()
 	end
 end
@@ -300,27 +324,61 @@ end
 local function avatarDraw(object)
 	buffer.drawRectangle(object.x, object.y, object.width, object.height, object.backgroundColor, object.textColor, " ")
 	buffer.drawText(math.floor(object.x + object.width / 2 - unicode.len(object.shortcut) / 2), math.floor(object.y + object.height / 2 - 1), object.textColor, object.shortcut)
+
+	if object.selected then
+		buffer.drawRectangle(object.x, object.y, object.width, object.height, 0x0, 0x0, " ", 0.5)
+	end
+end
+
+local function avatarEventHandler(mainContainer, object, e1)
+	if e1 == "touch" then
+		object.selected = true
+		mainContainer:drawOnScreen()
+
+		os.sleep(0.2)
+		
+		object.selected = false
+		showUserProfile(object.peerID)
+	end
 end
 
 local function newAvatar(x, y, width, height, name, peerID)
 	local object = GUI.object(x, y, width, height)
+	
 	object.backgroundColor, object.textColor = getAvatarColors(peerID)
 	object.draw = avatarDraw
 	object.shortcut = getNameShortcut(name)
+	object.peerID = peerID
+	object.eventHandler = avatarEventHandler
 
 	return object
 end
 
-local function separatorDraw(object)
+local function verticalLineDraw(object)
 	for i = 1, object.height do
-		buffer.drawText(object.x, object.y + i - 1, 0xE1E1E1, "│")
+		buffer.drawText(object.x, object.y + i - 1, object.color, "│")
 	end
 end
 
-local function newSeparator(x, y, height)
+local function newVerticalLine(x, y, height, color)
 	local object = GUI.object(x, y, 1, height)
-	object.draw = separatorDraw
+	
+	object.draw = verticalLineDraw
+	object.color = color
+	
+	return object
+end
 
+local function horizontalLineDraw(object)
+	buffer.drawText(object.x, object.y, object.color, string.rep("─", object.width))
+end
+
+local function newHorizontalLine(x, y, width, color)
+	local object = GUI.object(x, y, width, 1)
+	
+	object.draw = horizontalLineDraw
+	object.color = color
+	
 	return object
 end
 
@@ -448,7 +506,7 @@ local function newPost(x, y, width, mainMessage, profiles, conversations, groups
 				data
 			)
 		)
-		object:addChild(newSeparator(offset, localY, attachment.height))
+		object:addChild(newVerticalLine(offset, localY, attachment.height, 0xE1E1E1))
 		
 		localY = localY + attachment.height + 1
 	end
@@ -564,9 +622,9 @@ local function showHistory(container, peerID)
 		inputLayout:setSpacing(1, 1, 0)
 		inputLayout:setDirection(1, 1, GUI.DIRECTION_HORIZONTAL)
 
-		local attachButton = inputLayout:addChild(GUI.adaptiveButton(1, 1, 2, 1, 0xE1E1E1, 0x3C3C3C, 0x3C3C3C, 0xFFFFFF, "+"))
+		local attachButton = inputLayout:addChild(GUI.adaptiveButton(1, 1, 2, 1, 0xD2D2D2, 0x3C3C3C, 0x2D2D2D, 0xFFFFFF, "+"))
 		attachButton.switchMode = true
-		local sendButton = inputLayout:addChild(GUI.adaptiveButton(1, 1, 2, 1, 0x3C3C3C, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.send))
+		local sendButton = inputLayout:addChild(GUI.adaptiveButton(1, 1, 2, 1, 0xD2D2D2, 0x3C3C3C, 0x2D2D2D, 0xFFFFFF, localization.send))
 		local input = inputLayout:addChild(GUI.input(1, 1, inputLayout.width - sendButton.width - attachButton.width, 3, 0xF0F0F0, 0x787878, 0xA5A5A5, 0xF0F0F0, 0x3C3C3C, "", localization.typeMessageHere), 2)
 		
 		local layout = container:addChild(GUI.layout(2, 1, container.width - 2, container.height - input.height, 1, 1))
@@ -642,7 +700,364 @@ local function showHistory(container, peerID)
 	end
 end
 
--- addPizda(localization.profile)
+local function usersRequest(ids, nameCase, fields)
+	return methodRequest("users.get?name_case=" .. nameCase .. "&user_ids=" .. ids .. (fields and "&fields=" .. fields or ""))
+end
+
+local function friendsRequest(online, peerID, order, count)
+	return methodRequest("friends.get" .. (online and "Online" or "") .. "?name_case=Nom&user_id=" .. peerID .. "&order=" .. order .. (count and "&count=" .. count or ""))
+end
+
+local function wallRequest(peerID, offset, filter)
+	return methodRequest("wall.get?extended=1&fields=first_name,last_name&owner_id=" .. peerID .. "&offset=" .. offset .. "&count=" .. config.wallLoadCount .. "&filter=" .. filter)
+end
+
+showUserProfile = function(peerID)
+	local friendsDisplayColumns, friendsDisplayRows = 3, 2
+	local friendsDisplayCount = friendsDisplayColumns * friendsDisplayRows
+	local friendsNameLimit = 6
+
+	local user = usersRequest(peerID, "Nom", "activities,education,tv,status,sex,schools,relation,quotes,personal,occupation,connections,counters,contacts,verified,city,country,site,last_seen,online,bdate,books,movies,music,games,universities,interests,home_town,relatives,friend_status")
+	if user then
+		local allFriends = friendsRequest(false, peerID, "random", friendsDisplayCount)
+		if allFriends then
+			-- GUI.alert(table.toFile("/test.txt", allFriends, true))
+			local onlineFriends = friendsRequest(true, peerID, "random")
+			if onlineFriends then
+				local wall = wallRequest(peerID, 0, "all")
+				if wall then
+					-- GUI.alert(table.toFile("/test.txt", onlineFriends, true))
+					local friendsInfo = usersRequest(table.concat(allFriends.items, ",") .. "," .. table.concat(onlineFriends, ",", 1, math.min(#onlineFriends, friendsDisplayCount)), "Nom", "first_name,last_name")
+					if friendsInfo then
+						user = user[1]
+						local fullName = user.first_name .. " " .. user.last_name
+						local profileKeys = localization.profileKeys
+
+						contentContainer:removeChildren()
+
+						local userContainer = contentContainer:addChild(GUI.container(1, 1, contentContainer.width, 1))
+
+						-- Авочка
+						local leftLayout = userContainer:addChild(GUI.layout(3, 2, 24, 1, 1, 1))
+						leftLayout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_LEFT, GUI.ALIGNMENT_VERTICAL_TOP)
+
+						local avatarContainer = leftLayout:addChild(GUI.container(1, 1, leftLayout.width, 1))
+						local avatar = avatarContainer:addChild(newAvatar(3, 2, avatarContainer.width - 4, math.floor((avatarContainer.width - 4) / 2), getNameShortcut(fullName), user.id))
+
+						if peerID ~= currentPeerID then
+							local messageButton = avatarContainer:addChild(GUI.roundedButton(3, avatar.localY + avatar.height + 1, avatar.width, 1, 0xA5A5A5, 0xFFFFFF, 0x3C3C3C, 0xFFFFFF, localization.sendMessage))
+							messageButton.onTouch = function()
+								showConversations(peerID)
+							end
+
+							-- local friendButton = avatarContainer:addChild(GUI.roundedButton(3, messageButton.localY + messageButton.height + 1, avatar.width, 1, 0xA5A5A5, 0xFFFFFF, 0x3C3C3C, 0xFFFFFF, user.friend_status == 0 and localization.addToFriends or user.friend_status == 1 and localization.friendRequestSent or user.friend_status == 2 and localization.userSubscribedToYou or localization.userIsYourFriend))
+						end
+
+						fitToLastChild(avatarContainer, 1)
+						addPanel(avatarContainer, 0xFFFFFF)
+
+						-- Список друзяшек
+						local function addFriendsList(title, titleCount, list)
+							if #list > 0 then
+								local rowsCount = math.min(math.ceil(#list / friendsDisplayColumns), friendsDisplayRows)
+								
+								local container = leftLayout:addChild(GUI.container(1, 1, leftLayout.width, 3 + rowsCount * 5))
+								
+								addPanel(container, 0xFFFFFF)
+								title = container:addChild(GUI.text(3, 2, 0x3C3C3C, title))
+								container:addChild(GUI.text(title.localX + title.width + 1, 2, 0xB4B4B4, tostring(titleCount)))
+
+								local layout = container:addChild(GUI.layout(1, 4, container.width, container.height - 3, friendsDisplayColumns, rowsCount))
+								
+								local index = 1
+								for row = 1, rowsCount do
+									for column = 1, friendsDisplayColumns do
+										if list[index] then
+											local eblo = getEblo(friendsInfo, list[index])
+											if eblo then
+												layout.defaultColumn, layout.defaultRow = column, row
+
+												layout:addChild(newAvatar(1, 1, 4, 2, getNameShortcut(eblo.first_name .. " " .. eblo.last_name), eblo.id))
+												layout:addChild(GUI.text(1, 4, 0xA5A5A5, string.limit(eblo.first_name, friendsNameLimit)))
+
+												index = index + 1
+											else
+												GUI.alert("EBLO NOT FOUND", list[index])
+											end
+										else
+											break
+										end
+									end
+								end
+							end
+						end
+
+						addFriendsList(localization.friends, allFriends.count, allFriends.items)
+						addFriendsList(localization.friendsOnline, #onlineFriends, onlineFriends)
+
+						-- Инфа о юзвере
+						local rightLayout = userContainer:addChild(GUI.layout(leftLayout.localX + leftLayout.width + 2, 2, userContainer.width - leftLayout.width - 6, 1, 1, 1))
+						rightLayout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_LEFT, GUI.ALIGNMENT_VERTICAL_TOP)
+
+						local infoContainer = rightLayout:addChild(GUI.container(1, 1, rightLayout.width, 1))
+						local infoPanel = addPanel(infoContainer, 0xFFFFFF)
+						local infoLayout = infoContainer:addChild(GUI.layout(infoPanel.localX + 2, infoPanel.localY + 1, infoPanel.width - 4, 1, 1, 1))
+						infoLayout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_LEFT, GUI.ALIGNMENT_VERTICAL_TOP)
+						infoLayout:setSpacing(1, 1, 0)
+
+						local layoutToAdd = infoLayout
+
+						local function addTitle(text)
+							local container = layoutToAdd:addChild(GUI.container(1, 1, layoutToAdd.width, 3))
+							
+							if text then
+								text = container:addChild(GUI.text(1, 2, 0x3C3C3C, text))
+								container:addChild(newHorizontalLine(text.width + 2, 2, container.width - text.width - 1, 0xE1E1E1))
+							else
+								container:addChild(newHorizontalLine(1, 2, container.width, 0xE1E1E1))
+							end
+						end
+
+						local maxProfileKeyLength = 0
+						for key, value in pairs(profileKeys) do
+							maxProfileKeyLength = math.max(maxProfileKeyLength, unicode.len(value))
+						end
+						maxProfileKeyLength = maxProfileKeyLength + 4
+
+						local function addKeyAndValue(key, value)
+							local container = layoutToAdd:addChild(GUI.container(1, 1, layoutToAdd.width, 1))
+							container:addChild(GUI.text(1, 1, 0xB4B4B4, key .. ": "))
+
+							local width = container.width - maxProfileKeyLength
+							local lines = string.wrap(value, width)
+							container:addChild(GUI.textBox(maxProfileKeyLength, 1, width, #lines, nil, 0x969696, lines, 1)).eventHandler = nil
+
+							container.height = #lines
+						end
+
+						local function anyExists(...)
+							local args = {...}
+							for i = 1, #args do
+								if args[i] and (type(args[i]) ~= "string" or #args[i] > 0) then
+									return true
+								end
+							end
+						end
+
+						local function addIfExists(what, ...)
+							if what and (type(what) ~= "string" or #what > 0) then
+								addKeyAndValue(...)
+							end
+						end
+
+						infoLayout:addChild(GUI.text(1, 1, 0x0, fullName))
+
+						if user.status and #user.status > 0 then
+							local statusButton = infoLayout:addChild(GUI.adaptiveButton(1, 1, 0, 0, nil, 0x696969, nil, 0x0, user.status_audio and ("* " .. user.status_audio.artist .. " - " .. user.status_audio.title) or user.status))
+						end
+
+						addTitle()
+
+						if user.bdate then
+							local cyka = {}
+							for part in user.bdate:gmatch("%d+") do
+								table.insert(cyka, part)
+							end
+							addKeyAndValue(profileKeys.birthday, cyka[1] .. " " .. localization.months[tonumber(cyka[2])] .. (cyka[3] and " " .. cyka[3] or ""))
+						end
+
+						if user.city then
+							addKeyAndValue(profileKeys.city, user.city.title == "Москва" and "Массква" or user.city.title)
+						end
+
+						addIfExists(user.relation, profileKeys.relation, localization.relationStatuses[user.sex > 0 and user.sex or 1][user.relation])
+						
+						if user.occupation then
+							addKeyAndValue(profileKeys.occupation, user.occupation.name)
+						end
+						
+						if user.university_name and #user.university_name > 0 then
+							addKeyAndValue(profileKeys.education, user.university_name .. "'" .. tostring(user.graduation):sub(-2, -1))
+						end
+
+						addIfExists(user.site, profileKeys.site, user.site)
+
+						-- Вот тута начинается дополнительная инфа
+						local expandButton = infoLayout:addChild(GUI.button(1, 1, infoLayout.width, 2, nil, 0x969696, nil, 0x0, ""))
+
+						local additionalLayout = infoLayout:addChild(GUI.layout(1, 1, infoLayout.width, 1, 1, 1))
+						additionalLayout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_LEFT, GUI.ALIGNMENT_VERTICAL_TOP)
+						additionalLayout:setSpacing(1, 1, 0)
+						additionalLayout.hidden = true
+
+						layoutToAdd = additionalLayout
+
+						-- Основная инфа
+						if anyExists(user.home_town, user.personal and user.personal.langs) then
+							addTitle(localization.profileTitleMainInformation)
+
+							addIfExists(user.home_town, profileKeys.homeCity, user.home_town)
+
+							if user.personal and user.personal.langs then
+								addKeyAndValue(profileKeys.languages, table.concat(user.personal.langs, ", "))
+							end
+						end
+
+						-- Контакты
+						if anyExists(user.mobile_phone, user.home_phone, user.skype, user.instagram, user.facebook) then
+							addTitle(localization.profileTitleContacts)
+
+							addIfExists(user.mobile_phone, profileKeys.mobilePhone, user.mobile_phone)
+							addIfExists(user.home_phone, profileKeys.homePhone, user.home_phone)
+							addIfExists(user.skype, "Skype", user.skype)
+							addIfExists(user.instagram, "Instagram", user.instagram)
+							addIfExists(user.facebook, "Facebook", user.facebook)
+						end
+
+						if user.personal and anyExists(user.personal.political, user.personal.religon, user.personal.life_main, user.personal.people_main, user.personal.smoking, user.personal.alcohol, user.personal.inspired_by) then
+							addTitle(localization.profileTitlePersonal)
+
+							addIfExists(user.personal.political, profileKeys.political, localization.personalPoliticalTypes[user.personal.political])
+
+							addIfExists(user.personal.religon, profileKeys.religion, user.personal.religon)
+
+							addIfExists(user.personal.life_main, profileKeys.lifeMain, localization.personalLifeMainTypes[user.personal.life_main])
+
+							addIfExists(user.personal.people_main, profileKeys.peopleMain, localization.personalPeopleMainTypes[user.personal.people_main])
+
+							addIfExists(user.personal.smoking, profileKeys.smoking, localization.personalBlyadTypes[user.personal.smoking])
+
+							addIfExists(user.personal.alcohol, profileKeys.alcohol, localization.personalBlyadTypes[user.personal.alcohol])
+
+							addIfExists(user.personal.inspired_by, profileKeys.inspiredBy, user.personal.inspired_by)
+						end
+
+						if anyExists(user.activities, user.interests, user.music, user.movies, user.tv, user.games, user.books, user.quotes) then
+							addTitle(localization.profileTitleAdditions)
+
+							addIfExists(user.activities, profileKeys.activities, user.activities)
+							addIfExists(user.interests, profileKeys.interests, user.interests)
+							addIfExists(user.music, profileKeys.music, user.music)
+							addIfExists(user.movies, profileKeys.movies, user.movies)
+							addIfExists(user.tv, profileKeys.tv, user.tv)
+							addIfExists(user.games, profileKeys.games, user.games)
+							addIfExists(user.books, profileKeys.books, user.books)
+							addIfExists(user.quotes, profileKeys.quotes, user.quotes)
+						end
+						
+						-- И снова добавляем в основной лейаут
+						layoutToAdd = infoLayout
+
+						addTitle()
+
+						local statsLayout = layoutToAdd:addChild(GUI.layout(1, 1, layoutToAdd.width, 2, 1, 1))
+						statsLayout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
+						statsLayout:setDirection(1, 1, GUI.DIRECTION_HORIZONTAL)
+						statsLayout:setSpacing(1, 1, 3)	
+
+						local function counterDraw(object)
+							local centerX = object.x + object.width / 2
+							buffer.drawText(math.floor(centerX - object.countLength / 2), object.y, 0x3C3C3C, object.count)
+							buffer.drawText(math.floor(centerX - object.descriptionLength / 2), object.y + 1, 0x969696, object.description)
+						end
+
+						for i = 1, #localization.profileCounters do
+							local count = user.counters[localization.profileCounters[i].field]
+							if count then
+								local object = GUI.object(1, 1, 1, 2)
+
+								object.count = tostring(count)
+								object.description = localization.profileCounters[i].description
+								object.countLength = unicode.len(object.count)
+								object.descriptionLength = unicode.len(object.description)
+								object.width = math.max(object.countLength, object.descriptionLength)
+								object.draw = counterDraw
+
+								statsLayout:addChild(object)
+							end
+						end
+
+						-- Стена
+						local wallLayout = rightLayout:addChild(GUI.layout(1, 1, rightLayout.width, 1, 1, 1))
+						wallLayout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_LEFT, GUI.ALIGNMENT_VERTICAL_TOP)
+
+						for i = 1, #wall.items do
+							local item = wall.items[i]
+							local post = newPost(3, 2, rightLayout.width - 4, true,
+								wall.profiles,
+								wall.conversations,
+								wall.groups,
+								getSenderName(wall.profiles, wall.conversations, wall.groups, item.from_id),
+								"copy_history",
+								item
+							)
+
+							local container = wallLayout:addChild(GUI.container(1, 1, rightLayout.width, post.height + 2))
+							addPanel(container, 0xFFFFFF)
+							container:addChild(post)
+						end
+
+						fitToLastChild(wallLayout, 0)
+
+						local function update()
+							-- Фиттим дополнительный лейаут
+							fitToLastChild(additionalLayout, 0)
+							-- Фиттим лейаут с инфой
+							fitToLastChild(infoLayout, 0)
+							-- Подгоняем контейнер под него
+							infoContainer.height = infoLayout.height + 2
+							infoPanel.height = infoContainer.height
+							-- Фиттим лево-правые лейауты
+							fitToLastChild(leftLayout, 1)
+							fitToLastChild(rightLayout, 1)
+							-- Фиттим весь юзер-контейнер с авой, друганами и всем дерьмом
+							fitToLastChild(userContainer, 0)
+							-- Ой, кнопочка!
+							expandButton.text = additionalLayout.hidden and localization.profileShowAdditional or localization.profileHideAdditional
+						end
+						
+						update()
+
+						expandButton.onTouch = function()
+							additionalLayout.hidden = not additionalLayout.hidden
+							update()
+						end
+
+						contentContainer.eventHandler = function(mainContainer, contentContainer, e1, e2, e3, e4, e5)
+							if e1 == "scroll" then
+								userContainer.localY = userContainer.localY + (e5 > 0 and 1 or -1) * config.messagesScrollSpeed
+								
+								if userContainer.localY + userContainer.height - 1 < contentContainer.height then
+									userContainer.localY = contentContainer.height - userContainer.height
+								end
+
+								if userContainer.localY > 1 then
+									userContainer.localY = 1
+								end
+
+								mainContainer:drawOnScreen()
+							end
+						end
+					end
+				end
+			end
+		end
+	end
+end
+
+local profileSelectable = addPizda(localization.profile)
+profileSelectable.onTouch = function()
+	showUserProfile(currentPeerID)
+
+	-- Яша
+	-- showUserProfile(60991376)
+
+	-- Яна
+	-- showUserProfile(155326634)
+
+	-- Крутой
+	-- showUserProfile(21321257)
+end
 
 local newsSelectable = addPizda(localization.news)
 newsSelectable.onTouch = function()
@@ -696,8 +1111,7 @@ newsSelectable.onTouch = function()
 	end
 end
 
-local conversationsSelectable = addPizda(localization.conversations)
-conversationsSelectable.onTouch = function()
+showConversations = function(peerID)
 	local function getConversations(startMessageID)
 		return methodRequest("messages.getConversations?filter=all&extended=1&fields=first_name,last_name,online,id&count=" .. config.conversationsLoadCount .. (startMessageID and "&offset=1" or "") .. (startMessageID and ("&start_message_id=" .. startMessageID) or ""))
 	end
@@ -796,14 +1210,21 @@ conversationsSelectable.onTouch = function()
 			end
 		end)
 
-		if #layout.children > 0 then
-			layout.children[1]:select()
+		if peerID then
+			showHistory(conversationContainer, peerID)
 		else
-			mainContainer:drawOnScreen()
+			if #layout.children > 0 then
+				layout.children[1]:select()
+			else
+				mainContainer:drawOnScreen()
+			end
 		end
-
-		saveConfig()
 	end
+end
+
+local conversationsSelectable = addPizda(localization.conversations)
+conversationsSelectable.onTouch = function()
+	showConversations()
 end
 
 -- addPizda(localization.friends)
@@ -818,17 +1239,19 @@ end
 loginPasswordInput.onInputFinished = loginUsernameInput.onInputFinished
 
 local function logout()
-	accessToken = nil
+	currentAccessToken = nil
+	currentPeerID = nil
 	config.accessToken = nil
+	config.peerID = nil
 	loginContainer.hidden = false
 	
 	mainContainer:drawOnScreen()
 end
 
 local function login()
-	if accessToken then
+	if currentAccessToken then
 		loginContainer.hidden = true
-		conversationsSelectable:select()
+		profileSelectable:select()
 	else
 		loginUsernameInput.onInputFinished()
 	end
@@ -840,16 +1263,15 @@ loginButton.onTouch = function()
 		loginPasswordInput.text = nil
 
 		if result.access_token then
-			accessToken = result.access_token
-			config.accessToken = loginSaveSwitch.state and result.access_token or nil
+			currentAccessToken = result.access_token
+			currentPeerID = result.user_id
+			config.accessToken = loginSaveSwitch.state and currentAccessToken or nil
 			config.username = loginSaveSwitch.state and loginUsernameInput.text or nil
+			config.peerID = loginSaveSwitch.state and currentPeerID or nil
 			
 			login()
 		else
-			accessToken = nil
-			config.accessToken = nil
 			loginInvalidLabel.hidden = false
-
 			logout()
 		end
 
@@ -887,5 +1309,6 @@ window.actionButtons.localX = 3
 window.actionButtons:moveToFront()
 window:resize(window.width, window.height)
 
-accessToken = config.accessToken
+currentAccessToken = config.accessToken
+currentPeerID = config.peerID
 login()
