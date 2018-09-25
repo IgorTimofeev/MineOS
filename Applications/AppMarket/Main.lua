@@ -1417,7 +1417,7 @@ newPublicationInfo = function(file_id)
 					end
 
 					if reviews[i].votes then
-						reviewContainer:addChild(GUI.text(3, y, 0xC3C3C3, reviews[i].votes.positive .. " из " .. reviews[i].votes.total .. " пользователей считают этот отзыв полезным"))
+						reviewContainer:addChild(GUI.text(3, y, 0xC3C3C3, reviews[i].votes.positive .. " " .. localization.of .. " " .. reviews[i].votes.total .. " " .. localization.usersLoveReview))
 						y = y + 1
 					end
 
