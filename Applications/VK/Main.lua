@@ -197,8 +197,8 @@ local function selectableEventHandler(mainContainer, object, e1)
 	end
 end
 
-local function addSelectable(layout, height)
-	local object = layout:addChild(GUI.object(1, 1, layout.width, height))
+local function addSelectable(layout, method, height)
+	local object = layout:addChild(GUI[method](1, 1, layout.width, height))
 	
 	object.eventHandler = selectableEventHandler
 	object.selected = false
@@ -225,7 +225,7 @@ local function pizdaSelect(object)
 end
 
 local function addPizda(name)
-	local object = addSelectable(leftLayout, 1)
+	local object = addSelectable(leftLayout, "object", 1)
 	
 	object.draw = pizdaDraw
 	object.name = name
@@ -326,8 +326,6 @@ end
 local function getAvatarColors(peerID)
 	local hue = math.abs(peerID) % 360
 	return color.HSBToInteger(hue, 0.25, 1), color.HSBToInteger(hue, 1, 0.9)
-	-- config.avatars[peerID] = config.avatars[peerID] or math.random(360)
-	-- return color.HSBToInteger(config.avatars[peerID], 0.25, 1), color.HSBToInteger(config.avatars[peerID], 1, 0.9)
 end
 
 local function avatarDraw(object)
@@ -358,7 +356,11 @@ local function newAvatar(x, y, width, height, name, peerID)
 	object.draw = avatarDraw
 	object.shortcut = getNameShortcut(name)
 	object.peerID = peerID
-	object.eventHandler = avatarEventHandler
+
+	-- Нехуй на группы тыкать, НИРИАЛИЗОВАНО ИЩО
+	if peerID > 0 then
+		object.eventHandler = avatarEventHandler
+	end
 
 	return object
 end
@@ -477,12 +479,12 @@ local function newAttachment(x, y, maxWidth, attachment, typeB, typeT, textB, te
 	return object
 end
 
-local function newPost(x, y, width, mainMessage, profiles, conversations, groups, senderName, fwdMessagesFieldName, data)
+local function newPost(x, y, width, avatarWidth, mainMessage, profiles, conversations, groups, senderName, fwdMessagesFieldName, data)
 	local object = GUI.container(x, y, width, 1)
 	
 	local localX, localY = 1, 1
 
-	local avatar = object:addChild(newAvatar(localX, localY, 4, 2, getNameShortcut(senderName), data.from_id or data.source_id))
+	local avatar = object:addChild(newAvatar(localX, localY, avatarWidth, math.floor(avatarWidth / 2), getNameShortcut(senderName), data.from_id or data.source_id))
 	localX = localX + avatar.width + 1
 	
 	local nameText = object:addChild(GUI.text(localX, localY, 0x3C3C3C, senderName))
@@ -502,12 +504,13 @@ local function newPost(x, y, width, mainMessage, profiles, conversations, groups
 	local function addAnotherPost(senderName, data)
 		localY = localY + (mainMessage and 0 or 1)
 
-		local offset = mainMessage and 6 or 1
+		local offset = mainMessage and avatarWidth + 2 or 1
 		local attachment = object:addChild(
 			newPost(
 				offset + 2,
 				localY,
 				math.max(16, width - 6),
+				avatarWidth,
 				false,
 				profiles,
 				conversations,
@@ -645,7 +648,12 @@ local function showHistory(container, peerID)
 		local function addFromHistory(history)
 			for i = 1, #history.items do
 				local post = layout:addChild(
-					newPost(2, y, container.width - 2, true,
+					newPost(
+						2,
+						y,
+						container.width - 2,
+						4,
+						true,
 						history.profiles,
 						history.conversations,
 						history.groups,
@@ -683,7 +691,6 @@ local function showHistory(container, peerID)
 				filesystemDialog.onSubmit = function(path)
 					attachedPath = path
 				end
-
 				filesystemDialog:show()
 			end
 		end
@@ -994,7 +1001,7 @@ showUserProfile = function(peerID)
 
 						for i = 1, #wall.items do
 							local item = wall.items[i]
-							local post = newPost(3, 2, rightLayout.width - 4, true,
+							local post = newPost(3, 2, rightLayout.width - 4, 4, true,
 								wall.profiles,
 								wall.conversations,
 								wall.groups,
@@ -1178,7 +1185,7 @@ newsSelectable.onTouch = function()
 				local postContainer = layout:addChild(GUI.container(1, 1, layout.width, 1))
 
 				local post = postContainer:addChild(newPost(
-					3, 2, postContainer.width - 4, true,
+					3, 2, postContainer.width - 4, 6, true,
 					list.profiles,
 					list.conversations,
 					list.groups,
@@ -1225,34 +1232,23 @@ showConversations = function(peerID)
 		local conversationPanel = contentContainer:addChild(GUI.panel(layout.width + 1, 1, contentContainer.width - layout.width, contentContainer.height, 0xFFFFFF))
 		local conversationContainer = contentContainer:addChild(GUI.container(conversationPanel.localX, 1, conversationPanel.width, conversationPanel.height))
 
-		local function conversationDraw(object)
-			local color1, color2, color3 = 0x3C3C3C, 0x969696, 0xD2D2D2
-			if object.selected then
-				color1, color2, color3 = 0x3C3C3C, 0x969696, 0xD2D2D2
-				drawSelection(object, 0xFFFFFF, color2)
+		local function conversationDraw(container)
+			if container.selected then
+				drawSelection(container, 0xFFFFFF, 0xB4B4B4)
 			end
-
-			buffer.drawRectangle(object.x + 1, object.y, 4, 2, object.avatarColor, object.avatarTextColor, " ")
-			buffer.drawText(object.x + 2, object.y, object.avatarTextColor, object.shortcut)
-
-			buffer.drawText(object.x + 6, object.y, color1, string.limit(object.name, object.width - 13))
-			buffer.drawText(object.x + object.width - 6, object.y, color3, object.date)
-			buffer.drawText(object.x + 6, object.y + 1, color2, string.limit(truncateEmoji(object.message), object.width - 7))
+			-- Спиздим метод у этого контейнера. Надеюсь, он не обидится
+			contentContainer.draw(container)
 		end
 
 		local function addFromList(list)
 			for i = 1, #list.items do
 				local item = list.items[i]
 
-				local object = addSelectable(layout, 2)
-
-				object.id = item.last_message.id
-				object.selected = item.conversation.peer.id == peerID
-
 				-- Превью текста сообщеньки с вложениями и прочей залупой
+				local messagePreview
 				if #item.last_message.text == 0 then
 					if #item.last_message.fwd_messages > 0 then
-						object.message = localization.fwdMessages .. #item.last_message.fwd_messages
+						messagePreview = localization.fwdMessages .. #item.last_message.fwd_messages
 					elseif #item.last_message.attachments > 0 then
 						local data = {}
 						for i = 1, #item.last_message.attachments do
@@ -1261,37 +1257,38 @@ showConversations = function(peerID)
 							end
 						end
 
-						object.message = table.concat(data, ", ")
+						messagePreview = table.concat(data, ", ")
 					else
-						object.message = item.last_message.text
+						messagePreview = item.last_message.text
 					end
 				else
-					object.message = item.last_message.text
+					messagePreview = item.last_message.text
 				end
 
 				-- Префиксы для отправленных мною, либо же для имен отправителей в конфах
 				if item.last_message.out == 1 then
-					object.message = localization.you .. object.message
+					messagePreview = localization.you ..	messagePreview
 				else
 					if isPeerChat(item.conversation.peer.id) then
 						local eblo = getEblo(list.profiles, item.last_message.from_id)
-						object.message = eblo.first_name .. ": " .. object.message
+						messagePreview = eblo.first_name .. ": " ..	messagePreview
 					end
 				end
 
-				object.date = os.date("%H:%M", item.last_message.date)
-				object.out = item.last_message.out
-				object.avatarColor, object.avatarTextColor = getAvatarColors(item.conversation.peer.id)
+				local container = addSelectable(layout, "container", 2)
 
-				-- Имя отправителя
-				object.name = getSenderName(list.profiles, item.conversation, list.groups, item.conversation.peer.id)
+				local senderName = getSenderName(list.profiles, item.conversation, list.groups, item.conversation.peer.id)
+				local avatar = container:addChild(newAvatar(2, 1, 4, 2, getNameShortcut(senderName), item.conversation.peer.id))
+				local senderText = container:addChild(GUI.text(avatar.localX + avatar.width + 1, 1, 0x3C3C3C, string.limit(senderName, container.width - avatar.width - 9)))
+				container:addChild(GUI.text(senderText.localX, 2, 0xB4B4B4, string.limit(messagePreview, container.width - avatar.width - 3)))
+				container:addChild(GUI.text(container.width - 5, 1, 0xD2D2D2, os.date("%H:%M", item.last_message.date)))
 
-				-- Превьюха имени отправителя для аватарки
-				object.shortcut = getNameShortcut(object.name)
+				container.id = item.last_message.id
+				container.selected = item.conversation.peer.id == peerID
 
-				object.draw = conversationDraw
+				container.draw = conversationDraw
 
-				object.onTouch = function()
+				container.onTouch = function()
 					showHistory(conversationContainer, item.conversation.peer.id)
 				end
 			end
@@ -1376,7 +1373,7 @@ loginButton.onTouch = function()
 	end
 end
 
-addPizda(localization.documents).onTouch = function()
+local function showDocuments()
 	local offset = 0
 
 	local function getDocs()
@@ -1392,12 +1389,23 @@ addPizda(localization.documents).onTouch = function()
 		layout:setSpacing(1, 1, 1)
 		layout:setMargin(1, 1, 0, 1)
 
-		local container = layout:addChild(GUI.container(1, 1, layout.width, 3))
-		addPanel(container, 0xFFFFFF)
-		container:addChild(GUI.keyAndValue(3, 2, 0x3C3C3C, 0xA5A5A5, localization.documentsCount .. ": ", tostring(docs.count)))
+		local container = layout:addChild(GUI.container(1, 1, layout.width, 1))
+		-- addPanel(container, 0xFFFFFF)
+		container:addChild(GUI.keyAndValue(3, 1, 0x3C3C3C, 0xA5A5A5, localization.documentsCount .. ": ", tostring(docs.count)))
 
-		local button = container:addChild(GUI.adaptiveRoundedButton(1, 2, 1, 0, 0xA5A5A5, 0xFFFFFF, 0x2D2D2D, 0xE1E1E1, localization.documentsAdd))
+		local button = container:addChild(GUI.adaptiveRoundedButton(1, 1, 1, 0, 0xA5A5A5, 0xFFFFFF, 0x2D2D2D, 0xE1E1E1, localization.documentsAdd))
 		button.localX = container.width - button.width - 1
+		button.onTouch = function()
+			local filesystemDialog = GUI.addFilesystemDialog(window, true, 45, window.height - 5, "Open", "Cancel", "File name", "/")
+			filesystemDialog:setMode(GUI.IO_MODE_OPEN, GUI.IO_MODE_FILE)
+			filesystemDialog.onSubmit = function(path)
+				local saveResult = uploadDocument(path)
+				if saveResult then
+					showDocuments()
+				end
+			end
+			filesystemDialog:show()
+		end
 
 		local function addFromList(list)
 			for i = 1, #list do
@@ -1420,6 +1428,12 @@ addPizda(localization.documents).onTouch = function()
 			end
 		end)
 	end
+
+	mainContainer:drawOnScreen()
+end
+
+addPizda(localization.documents).onTouch = function()
+	showDocuments()
 end
 
 addPizda(localization.settings).onTouch = function()
@@ -1450,6 +1464,8 @@ addPizda(localization.settings).onTouch = function()
 	addYobaSlider(2, 50, "loadCountWall")
 	addYobaSlider(2, 50, "loadCountDocs")
 	addYobaSlider(2, 10, "scrollSpeed")
+
+	mainContainer:drawOnScreen()
 end
 
 addPizda(localization.exit).onTouch = function()
