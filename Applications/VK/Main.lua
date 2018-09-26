@@ -17,6 +17,8 @@ local MineOSCore = require("MineOSCore")
 
 local VKAPIVersion = 5.85
 local currentAccessToken, currentPeerID
+local showUserProfile, showConversations
+local lastPizda
 
 local config = {
 	avatars = {
@@ -53,8 +55,6 @@ for file in fs.list(scriptDirectory .. "Icons/") do
 
 	icons[unicode.lower(fs.hideExtension(file))] = icon
 end
-
-local showUserProfile, showConversations
 
 --------------------------------------------------------------------------------
 
@@ -217,11 +217,18 @@ local function pizdaDraw(object)
 end
 
 local maxPizdaLength = 0
+
+local function pizdaSelect(object)
+	lastPizda = object
+	selectableSelect(object)
+end
+
 local function addPizda(name)
 	local object = addSelectable(leftLayout, 1)
 	
 	object.draw = pizdaDraw
 	object.name = name
+	object.select = pizdaSelect
 	maxPizdaLength = math.max(maxPizdaLength, unicode.len(name))
 
 	return object
@@ -1417,14 +1424,19 @@ window.onResize = function(width, height)
 
 	window.backgroundPanel.localX, window.backgroundPanel.width, window.backgroundPanel.height = leftPanel.width + 1, width - leftPanel.width, height
 	contentContainer.localX, contentContainer.width, contentContainer.height = window.backgroundPanel.localX, window.backgroundPanel.width, window.backgroundPanel.height
+
+	if lastPizda then
+		lastPizda:select()
+	end
 end
 
 --------------------------------------------------------------------------------
 
-window.actionButtons.localX = 3
-window.actionButtons:moveToFront()
-window:resize(window.width, window.height)
-
 currentAccessToken = config.accessToken
 currentPeerID = config.peerID
+
+window.actionButtons.localX = 3
+window.actionButtons:moveToFront()
+
+window:resize(window.width, window.height)
 login()
