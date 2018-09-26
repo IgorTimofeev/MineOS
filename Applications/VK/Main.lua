@@ -323,8 +323,10 @@ local function getNameShortcut(name)
 end
 
 local function getAvatarColors(peerID)
-	config.avatars[peerID] = config.avatars[peerID] or math.random(360)
-	return color.HSBToInteger(config.avatars[peerID], 0.25, 1), color.HSBToInteger(config.avatars[peerID], 1, 0.9)
+	local hue = math.abs(peerID) % 360
+	return color.HSBToInteger(hue, 0.25, 1), color.HSBToInteger(hue, 1, 0.9)
+	-- config.avatars[peerID] = config.avatars[peerID] or math.random(360)
+	-- return color.HSBToInteger(config.avatars[peerID], 0.25, 1), color.HSBToInteger(config.avatars[peerID], 1, 0.9)
 end
 
 local function avatarDraw(object)
