@@ -32,6 +32,7 @@ local config = {
 	updateContentTrigger = 0.2,
 	loadCountWall = 10,
 	loadCountFriends = 10,
+	loadCountDocs = 10,
 }
 
 local configPath = MineOSPaths.applicationData .. "VK/Config3.cfg"
@@ -1327,8 +1328,6 @@ friendsSelectable.onTouch = function()
 	showFriends(currentPeerID)
 end
 
--- addPizda(localization.documents)
-
 loginUsernameInput.onInputFinished = function()
 	loginButton.disabled = #loginUsernameInput.text == 0 or #loginPasswordInput.text == 0
 	mainContainer:drawOnScreen()
@@ -1377,6 +1376,52 @@ loginButton.onTouch = function()
 	end
 end
 
+addPizda(localization.documents).onTouch = function()
+	local offset = 0
+
+	local function getDocs()
+		return methodRequest("docs.get?owner_id=" .. currentPeerID .. "&count=" .. config.loadCountDocs .. "&offset=" .. offset)
+	end
+
+	local docs = getDocs()
+	if docs then
+		contentContainer:removeChildren()
+
+		local layout = contentContainer:addChild(GUI.layout(3, 1, contentContainer.width - 4, contentContainer.height, 1, 1))
+		layout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_LEFT, GUI.ALIGNMENT_VERTICAL_TOP)
+		layout:setSpacing(1, 1, 1)
+		layout:setMargin(1, 1, 0, 1)
+
+		local container = layout:addChild(GUI.container(1, 1, layout.width, 3))
+		addPanel(container, 0xFFFFFF)
+		container:addChild(GUI.keyAndValue(3, 2, 0x3C3C3C, 0xA5A5A5, localization.documentsCount .. ": ", tostring(docs.count)))
+
+		local button = container:addChild(GUI.adaptiveRoundedButton(1, 2, 1, 0, 0xA5A5A5, 0xFFFFFF, 0x2D2D2D, 0xE1E1E1, localization.documentsAdd))
+		button.localX = container.width - button.width - 1
+
+		local function addFromList(list)
+			for i = 1, #list do
+				local item = list[i]
+				local container = layout:addChild(GUI.container(1, 1, layout.width, 4))
+				addPanel(container, 0xFFFFFF)
+
+				container:addChild(GUI.text(3, 2, 0x3C3C3C, item.title))
+				container:addChild(GUI.text(3, 3, 0xA5A5A5, getAbbreviatedFileSize(item.size, 2) .. ", " .. os.date("%d.%m.%Y %H:%M", item.date)))
+			end
+		end
+		
+		addFromList(docs.items)
+
+		addScrollEventHandler(layout, true, function()
+			offset = offset + config.loadCountDocs
+			local newDocs = getDocs()
+			if newDocs then
+				addFromList(newDocs.items)
+			end
+		end)
+	end
+end
+
 addPizda(localization.settings).onTouch = function()
 	contentContainer:removeChildren()
 
@@ -1400,9 +1445,10 @@ addPizda(localization.settings).onTouch = function()
 
 	addYobaSlider(2, 50, "loadCountConversations")
 	addYobaSlider(2, 50, "loadCountMessages")
+	addYobaSlider(2, 50, "loadCountFriends")
 	addYobaSlider(2, 50, "loadCountNews")
 	addYobaSlider(2, 50, "loadCountWall")
-	addYobaSlider(2, 100, "loadCountFriends")
+	addYobaSlider(2, 50, "loadCountDocs")
 	addYobaSlider(2, 10, "scrollSpeed")
 end
 

@@ -13,6 +13,7 @@
 	scrollSpeed = "Скорость прокрутки",
 	loadCountWall = "Число загружаемых постов",
 	loadCountFriends = "Число загружаемых друзей",
+	loadCountDocs = "Число загружаемых документов",
 
 	profile = "Профиль",
 	message = "Сообщение",
@@ -165,6 +166,8 @@
 	sentFromMineOS = " (Отправлено через MineOS VK Client)",
 	
 	documents = "Документы",
+	documentsCount = "Всего документов",
+	documentsAdd = "Загрузить документ",
 
 	settings = "Настройки",
 
