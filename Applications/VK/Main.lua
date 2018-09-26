@@ -34,7 +34,7 @@ local config = {
 }
 
 local scriptDirectory = MineOSCore.getCurrentScriptDirectory()
-local configPath = MineOSPaths.applicationData .. "VK/Config3.cfg"
+local configPath = MineOSPaths.applicationData .. "VK/Config4.cfg"
 local iconsPath = scriptDirectory .. "Icons/"
 local stylesPath = scriptDirectory .. "Styles/"
 
