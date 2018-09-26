@@ -7,8 +7,16 @@
 	login = "Войти",
 	saveLogin = "Сохранять данные входа:",
 
+	loadCountConversations = "Число загружаемых диалогов",
+	loadCountMessages = "Число загружаемых сообщений",
+	loadCountNews = "Число загружаемых новостей",
+	scrollSpeed = "Скорость прокрутки",
+	loadCountWall = "Число загружаемых постов",
+	loadCountFriends = "Число загружаемых друзей",
+
 	profile = "Профиль",
-	sendMessage = "Сообщение",
+	message = "Сообщение",
+	sendMessage = "Отправить сообщение",
 	addToFriends = "Добавить в друзья",
 	friendRequestSent = "Заявка отправлена",
 	userSubscribedToYou = "Подписан на вас",

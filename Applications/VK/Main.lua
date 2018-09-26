@@ -22,16 +22,17 @@ local config = {
 	avatars = {
 		[7799889] = 0x2D2D2D,
 	},
-	conversationsLoadCount = 10,
-	messagesLoadCount = 10,
-	newsLoadCount = 10,
-	messagesScrollSpeed = 2,
+	loadCountConversations = 10,
+	loadCountMessages = 10,
+	loadCountNews = 10,
+	scrollSpeed = 2,
 	addMessagePostfix = true,
 	updateContentTrigger = 0.2,
-	wallLoadCount = 10,
+	loadCountWall = 10,
+	loadCountFriends = 10,
 }
 
-local configPath = MineOSPaths.applicationData .. "VK/Config2.cfg"
+local configPath = MineOSPaths.applicationData .. "VK/Config3.cfg"
 if fs.exists(configPath) then
 	config = table.fromFile(configPath)
 end
@@ -233,12 +234,12 @@ local function addScrollEventHandler(layout, regularDirection, updater)
 
 			if regularDirection then
 				if e5 > 0 then
-					cell.verticalMargin = cell.verticalMargin + config.messagesScrollSpeed
+					cell.verticalMargin = cell.verticalMargin + config.scrollSpeed
 					if cell.verticalMargin > 1 then
 						cell.verticalMargin = 1
 					end
 				else
-					cell.verticalMargin = cell.verticalMargin - config.messagesScrollSpeed
+					cell.verticalMargin = cell.verticalMargin - config.scrollSpeed
 					local lastChild = layout.children[#layout.children]
 					if lastChild.localY + lastChild.height - 1 < layout.height * (1 - config.updateContentTrigger) then
 						updater()
@@ -246,14 +247,14 @@ local function addScrollEventHandler(layout, regularDirection, updater)
 				end
 			else
 				if e5 > 0 then
-					cell.verticalMargin = cell.verticalMargin - config.messagesScrollSpeed
+					cell.verticalMargin = cell.verticalMargin - config.scrollSpeed
 					layout:update()
 
 					if layout.children[1].localY > layout.height * config.updateContentTrigger then
 						updater()
 					end
 				else
-					cell.verticalMargin = cell.verticalMargin + config.messagesScrollSpeed
+					cell.verticalMargin = cell.verticalMargin + config.scrollSpeed
 					if cell.verticalMargin > 1 then
 						cell.verticalMargin = 1
 					end
@@ -315,10 +316,8 @@ local function getNameShortcut(name)
 end
 
 local function getAvatarColors(peerID)
-	config.avatars[peerID] = config.avatars[peerID] or color.HSBToInteger(math.random(360), 1, 1)
-	local r, g, b = color.integerToRGB(config.avatars[peerID])
-
-	return config.avatars[peerID], (r + g + b) / 3 > 127 and 0x0 or 0xFFFFFF
+	config.avatars[peerID] = config.avatars[peerID] or math.random(360)
+	return color.HSBToInteger(config.avatars[peerID], 0.25, 1), color.HSBToInteger(config.avatars[peerID], 1, 0.9)
 end
 
 local function avatarDraw(object)
@@ -431,6 +430,8 @@ local function newAttachment(x, y, maxWidth, attachment, typeB, typeT, textB, te
 		object.text = #attachment.link.title > 0 and attachment.link.title or attachment.link.url
 	elseif attachment.doc then
 		object.text = attachment.doc.title .. ", " .. getAbbreviatedFileSize(attachment.doc.size)
+	elseif attachment.gift then
+		object.text = ":3"
 	elseif attachment.audio_message then
 		local length = 30
 
@@ -609,7 +610,7 @@ local function uploadDocument(path)
 end
 
 local function getHistory(peerID, startMessageID)
-	return methodRequest("messages.getHistory?extended=1&fields=first_name,last_name,online&count=" .. config.messagesLoadCount .. "&peer_id=" .. peerID .. (startMessageID and "&offset=1" or "") .. (startMessageID and ("&start_message_id=" .. startMessageID) or ""))
+	return methodRequest("messages.getHistory?extended=1&fields=first_name,last_name,online&count=" .. config.loadCountMessages .. "&peer_id=" .. peerID .. (startMessageID and "&offset=1" or "") .. (startMessageID and ("&start_message_id=" .. startMessageID) or ""))
 end
 
 local function showHistory(container, peerID)
@@ -622,9 +623,9 @@ local function showHistory(container, peerID)
 		inputLayout:setSpacing(1, 1, 0)
 		inputLayout:setDirection(1, 1, GUI.DIRECTION_HORIZONTAL)
 
-		local attachButton = inputLayout:addChild(GUI.adaptiveButton(1, 1, 2, 1, 0xD2D2D2, 0x3C3C3C, 0x2D2D2D, 0xFFFFFF, "+"))
+		local attachButton = inputLayout:addChild(GUI.adaptiveButton(1, 1, 2, 1, 0xE1E1E1, 0x3C3C3C, 0x2D2D2D, 0xFFFFFF, "+"))
 		attachButton.switchMode = true
-		local sendButton = inputLayout:addChild(GUI.adaptiveButton(1, 1, 2, 1, 0xD2D2D2, 0x3C3C3C, 0x2D2D2D, 0xFFFFFF, localization.send))
+		local sendButton = inputLayout:addChild(GUI.adaptiveButton(1, 1, 2, 1, 0xE1E1E1, 0x3C3C3C, 0x2D2D2D, 0xFFFFFF, localization.send))
 		local input = inputLayout:addChild(GUI.input(1, 1, inputLayout.width - sendButton.width - attachButton.width, 3, 0xF0F0F0, 0x787878, 0xA5A5A5, 0xF0F0F0, 0x3C3C3C, "", localization.typeMessageHere), 2)
 		
 		local layout = container:addChild(GUI.layout(2, 1, container.width - 2, container.height - input.height, 1, 1))
@@ -704,12 +705,12 @@ local function usersRequest(ids, nameCase, fields)
 	return methodRequest("users.get?name_case=" .. nameCase .. "&user_ids=" .. ids .. (fields and "&fields=" .. fields or ""))
 end
 
-local function friendsRequest(online, peerID, order, count)
-	return methodRequest("friends.get" .. (online and "Online" or "") .. "?name_case=Nom&user_id=" .. peerID .. "&order=" .. order .. (count and "&count=" .. count or ""))
+local function friendsRequest(online, peerID, order, offset, count, fields)
+	return methodRequest("friends.get" .. (online and "Online" or "") .. "?name_case=Nom&user_id=" .. peerID .. "&order=" .. order .. (offset and "&offset=" .. offset or "") .. (count and "&count=" .. count or "") .. (fields and "&fields=" .. fields or ""))
 end
 
 local function wallRequest(peerID, offset, filter)
-	return methodRequest("wall.get?extended=1&fields=first_name,last_name&owner_id=" .. peerID .. "&offset=" .. offset .. "&count=" .. config.wallLoadCount .. "&filter=" .. filter)
+	return methodRequest("wall.get?extended=1&fields=first_name,last_name&owner_id=" .. peerID .. "&offset=" .. offset .. "&count=" .. config.loadCountWall .. "&filter=" .. filter)
 end
 
 showUserProfile = function(peerID)
@@ -719,7 +720,7 @@ showUserProfile = function(peerID)
 
 	local user = usersRequest(peerID, "Nom", "activities,education,tv,status,sex,schools,relation,quotes,personal,occupation,connections,counters,contacts,verified,city,country,site,last_seen,online,bdate,books,movies,music,games,universities,interests,home_town,relatives,friend_status")
 	if user then
-		local allFriends = friendsRequest(false, peerID, "random", friendsDisplayCount)
+		local allFriends = friendsRequest(false, peerID, "random", 0, friendsDisplayCount)
 		if allFriends then
 			-- GUI.alert(table.toFile("/test.txt", allFriends, true))
 			local onlineFriends = friendsRequest(true, peerID, "random")
@@ -745,7 +746,7 @@ showUserProfile = function(peerID)
 						local avatar = avatarContainer:addChild(newAvatar(3, 2, avatarContainer.width - 4, math.floor((avatarContainer.width - 4) / 2), getNameShortcut(fullName), user.id))
 
 						if peerID ~= currentPeerID then
-							local messageButton = avatarContainer:addChild(GUI.roundedButton(3, avatar.localY + avatar.height + 1, avatar.width, 1, 0xA5A5A5, 0xFFFFFF, 0x3C3C3C, 0xFFFFFF, localization.sendMessage))
+							local messageButton = avatarContainer:addChild(GUI.roundedButton(3, avatar.localY + avatar.height + 1, avatar.width, 1, 0xA5A5A5, 0xFFFFFF, 0x3C3C3C, 0xFFFFFF, localization.message))
 							messageButton.onTouch = function()
 								showConversations(peerID)
 							end
@@ -1015,7 +1016,7 @@ showUserProfile = function(peerID)
 							-- Ой, кнопочка!
 							expandButton.text = additionalLayout.hidden and localization.profileShowAdditional or localization.profileHideAdditional
 						end
-						
+
 						update()
 
 						expandButton.onTouch = function()
@@ -1025,7 +1026,7 @@ showUserProfile = function(peerID)
 
 						contentContainer.eventHandler = function(mainContainer, contentContainer, e1, e2, e3, e4, e5)
 							if e1 == "scroll" then
-								userContainer.localY = userContainer.localY + (e5 > 0 and 1 or -1) * config.messagesScrollSpeed
+								userContainer.localY = userContainer.localY + (e5 > 0 and 1 or -1) * config.scrollSpeed
 								
 								if userContainer.localY + userContainer.height - 1 < contentContainer.height then
 									userContainer.localY = contentContainer.height - userContainer.height
@@ -1059,10 +1060,96 @@ profileSelectable.onTouch = function()
 	-- showUserProfile(21321257)
 end
 
+local function showFriends(peerID)
+	local offset = 0
+
+	local function getFriendsAndLists()
+		local friends = friendsRequest(false, peerID, "hints", offset, config.loadCountFriends, "first_name,last_name,occupation")
+		if friends then
+			local lists = methodRequest("friends.getLists?return_system=1&user_id=" .. peerID)
+			if lists then
+				-- Удобнее!
+				for i = 1, #lists.items do
+					lists[lists.items[i].id] = lists.items[i].name
+					lists.items[i] = nil
+				end
+				lists.items, lists.count = nil, nil
+
+				return friends, lists
+			end
+		end
+	end
+
+	local friends, lists = getFriendsAndLists()
+	if friends then
+		contentContainer:removeChildren()
+
+		local layout = contentContainer:addChild(GUI.layout(3, 1, contentContainer.width - 4, contentContainer.height, 1, 1))
+		layout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_LEFT, GUI.ALIGNMENT_VERTICAL_TOP)
+		layout:setMargin(1, 1, 0, 1)
+
+		local function addFromList(friends, lists)
+			for i = 1, #friends.items do
+				local item = friends.items[i]
+				local fullName = item.first_name .. " " .. item.last_name
+				local container = layout:addChild(GUI.container(1, 1, layout.width, 1))
+
+				local avatar = container:addChild(newAvatar(3, 2, 8, 4, getNameShortcut(fullName), item.id))
+
+				local startX = avatar.localX + avatar.width + 2
+				local x, y = startX, avatar.localY
+				
+				container:addChild(GUI.text(startX, y, 0x3C3C3C, fullName)); y = y + 1
+				if item.occupation then
+					container:addChild(GUI.text(startX, y, 0xA5A5A5, item.occupation.name)); y = y + 1
+				end
+				y = y + 1
+
+				if item.lists then
+					local offset, space = 1, 2
+					
+					for j = 1, #item.lists do
+						local text = lists[item.lists[j]] or "N/A"
+
+						if x + unicode.len(text) + offset * 2 >= container.width then
+							x, y = startX, y + 2
+						end
+
+						local button = container:addChild(GUI.adaptiveRoundedButton(x, y, offset, 0, 0xC3C3C3, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, text))
+
+						x = x + button.width + space
+					end
+
+					y = y + 2
+				end
+
+				container:addChild(GUI.adaptiveButton(startX, y, 0, 0, nil, 0x696969, nil, 0x0, localization.sendMessage)).onTouch = function()
+					showConversations(item.id)
+				end
+
+				fitToLastChild(container, 1)
+				addPanel(container, 0xFFFFFF)
+			end
+		end
+
+		addFromList(friends, lists)
+
+		addScrollEventHandler(layout, true, function()
+			offset = offset + config.loadCountFriends
+
+			local friends, lists = getFriendsAndLists()
+			if friends then
+				addFromList(friends, lists)
+				mainContainer:drawOnScreen()
+			end
+		end)
+	end
+end
+
 local newsSelectable = addPizda(localization.news)
 newsSelectable.onTouch = function()
 	local function getNews(startFrom)
-		return methodRequest("newsfeed.get?filters=post&fields=first_name,last_name,name&count=" .. config.newsLoadCount .. (startFrom and ("&start_from=" .. startFrom) or ""))
+		return methodRequest("newsfeed.get?filters=post&fields=first_name,last_name,name&count=" .. config.loadCountNews .. (startFrom and ("&start_from=" .. startFrom) or ""))
 	end
 
 	local news = getNews(nil)
@@ -1113,7 +1200,7 @@ end
 
 showConversations = function(peerID)
 	local function getConversations(startMessageID)
-		return methodRequest("messages.getConversations?filter=all&extended=1&fields=first_name,last_name,online,id&count=" .. config.conversationsLoadCount .. (startMessageID and "&offset=1" or "") .. (startMessageID and ("&start_message_id=" .. startMessageID) or ""))
+		return methodRequest("messages.getConversations?filter=all&extended=1&fields=first_name,last_name,online,id&count=" .. config.loadCountConversations .. (startMessageID and "&offset=1" or "") .. (startMessageID and ("&start_message_id=" .. startMessageID) or ""))
 	end
 
 	local result = getConversations(nil)
@@ -1147,11 +1234,10 @@ showConversations = function(peerID)
 			for i = 1, #list.items do
 				local item = list.items[i]
 
-				config.avatars[item.conversation.peer.id] = config.avatars[item.conversation.peer.id] or color.HSBToInteger(math.random(360), 1, 1)
-
 				local object = addSelectable(layout, 2)
 
 				object.id = item.last_message.id
+				object.selected = item.conversation.peer.id == peerID
 
 				-- Превью текста сообщеньки с вложениями и прочей залупой
 				if #item.last_message.text == 0 then
@@ -1227,7 +1313,10 @@ conversationsSelectable.onTouch = function()
 	showConversations()
 end
 
--- addPizda(localization.friends)
+local friendsSelectable = addPizda(localization.friends)
+friendsSelectable.onTouch = function()
+	showFriends(currentPeerID)
+end
 
 -- addPizda(localization.documents)
 
@@ -1251,7 +1340,7 @@ end
 local function login()
 	if currentAccessToken then
 		loginContainer.hidden = true
-		profileSelectable:select()
+		conversationsSelectable:select()
 	else
 		loginUsernameInput.onInputFinished()
 	end
@@ -1279,7 +1368,34 @@ loginButton.onTouch = function()
 	end
 end
 
--- addPizda(localization.settings)
+addPizda(localization.settings).onTouch = function()
+	contentContainer:removeChildren()
+
+	local layout = contentContainer:addChild(GUI.layout(1, 1, contentContainer.width, contentContainer.height, 1, 1))
+
+	local function addSlider(...)
+		local slider = layout:addChild(GUI.slider(1, 1, 36, 0x66DB80, 0xE1E1E1, 0xFFFFFF, 0xA5A5A5, ...))
+		slider.height = 2
+		slider.roundValues = true
+
+		return slider
+	end
+
+	local function addYobaSlider(min, max, field)
+		local slider = addSlider(min, max, config[field], false, localization[field] .. ": ", "")
+		slider.onValueChanged = function()
+			config[field] = math.round(slider.value)
+			saveConfig()
+		end
+	end
+
+	addYobaSlider(2, 50, "loadCountConversations")
+	addYobaSlider(2, 50, "loadCountMessages")
+	addYobaSlider(2, 50, "loadCountNews")
+	addYobaSlider(2, 50, "loadCountWall")
+	addYobaSlider(2, 100, "loadCountFriends")
+	addYobaSlider(2, 10, "scrollSpeed")
+end
 
 addPizda(localization.exit).onTouch = function()
 	logout()
