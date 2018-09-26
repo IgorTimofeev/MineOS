@@ -1,6 +1,9 @@
 {
 	leftBarOffset = 7,
 
+	settingsStyle = "Цветовая схема",
+	settingsAdditional = "Дополнительно",
+
 	invalidPassword = "Неверный логин или пароль",
 	username = "E-mail или номер телефона",
 	password = "Пароль",

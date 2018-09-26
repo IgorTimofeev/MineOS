@@ -16,9 +16,6 @@ local MineOSCore = require("MineOSCore")
 --------------------------------------------------------------------------------
 
 local VKAPIVersion = 5.85
-local currentAccessToken, currentPeerID
-local showUserProfile, showConversations
-local lastPizda
 
 local config = {
 	avatars = {
@@ -33,63 +30,56 @@ local config = {
 	loadCountWall = 10,
 	loadCountFriends = 10,
 	loadCountDocs = 10,
+	style = "Bright.lua",
 }
 
+local scriptDirectory = MineOSCore.getCurrentScriptDirectory()
 local configPath = MineOSPaths.applicationData .. "VK/Config3.cfg"
+local iconsPath = scriptDirectory .. "Icons/"
+local stylesPath = scriptDirectory .. "Styles/"
+
+--------------------------------------------------------------------------------
+
+local currentAccessToken, currentPeerID
+local showUserProfile, showConversations
+local lastPizda
+local style
+
+local function saveConfig()
+	table.toFile(configPath, config)
+end
+
+local function loadStyle()
+	style = table.fromFile(stylesPath .. config.style)
+end
+
 if fs.exists(configPath) then
 	config = table.fromFile(configPath)
 end
 
-local scriptDirectory = MineOSCore.getCurrentScriptDirectory()
 local localization = MineOSCore.getLocalization(scriptDirectory .. "Localizations/")
 
+loadStyle()
+
 local icons = {}
-for file in fs.list(scriptDirectory .. "Icons/") do
-	local icon = image.load(scriptDirectory .. "Icons/" .. file)
-
-	for y = 1, image.getHeight(icon) do
-		for x = 1, image.getWidth(icon) do
-			local b, f, a, s = image.get(icon, x, y)
-			image.set(icon, x, y, b, 0xD2D2D2, a, s)
-		end
-	end
-
-	icons[unicode.lower(fs.hideExtension(file))] = icon
+for file in fs.list(iconsPath) do
+	icons[unicode.lower(fs.hideExtension(file))] = image.load(iconsPath .. file)
 end
 
 --------------------------------------------------------------------------------
 
-local mainContainer, window = MineOSInterface.addWindow(GUI.filledWindow(1, 1, 100, 26, 0xF0F0F0))
 
-local leftPanel = window:addChild(GUI.panel(1, 1, 1, 1, 0x2D2D2D))
+local mainContainer, window = MineOSInterface.addWindow(GUI.filledWindow(1, 1, 100, 26, 0x0))
+
+local leftPanel = window:addChild(GUI.panel(1, 1, 1, 1, 0x0))
 local leftLayout = window:addChild(GUI.layout(1, 3, 1, 1, 1, 1))
 leftLayout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_LEFT, GUI.ALIGNMENT_VERTICAL_TOP)
 leftLayout:setSpacing(1, 1, 1)
 leftLayout:setMargin(1, 1, 0, 1)
 
-local progressIndicator = window:addChild(GUI.progressIndicator(1, 1, 0x1E1E1E, 0x00B640, 0x99FF80))
+local progressIndicator = window:addChild(GUI.progressIndicator(1, 1, 0x0, 0x0, 0x0))
 
 local contentContainer = window:addChild(GUI.container(1, 1, 1, 1))
-
-local loginContainer = window:addChild(GUI.container(1, 1, 1, 1))
-local loginPanel = loginContainer:addChild(GUI.panel(1, 1, loginContainer.width, loginContainer.height, 0xF0F0F0))
-local loginLayout = loginContainer:addChild(GUI.layout(1, 1, loginContainer.width, loginContainer.height, 1, 1))
-local loginLogo = loginLayout:addChild(GUI.image(1, 1, image.load(scriptDirectory .. "Icon.pic")))
-loginLogo.height = loginLogo.height + 1
-local loginUsernameInput = loginLayout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x787878, 0xA5A5A5, 0xE1E1E1, 0x3C3C3C, config.username or "", localization.username))
-local loginPasswordInput = loginLayout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x787878, 0xA5A5A5, 0xE1E1E1, 0x3C3C3C, config.password or "", localization.password, true, "•"))
-local loginButton = loginLayout:addChild(GUI.button(1, 1, 36, 3, 0xD2D2D2, 0x2D2D2D, 0x2D2D2D, 0xE1E1E1, localization.login))
-loginButton.colors.disabled = {
-	background = 0xB4B4B4,
-	text = 0x969696,
-}
-local loginSaveSwitch = loginLayout:addChild(GUI.switchAndLabel(1, 1, 36, 6, 0x66DB80, 0xD2D2D2, 0xFFFFFF, 0xB4B4B4, localization.saveLogin, true)).switch
-local loginInvalidLabel = loginLayout:addChild(GUI.label(1, 1, 36, 1, 0xFF4940, localization.invalidPassword))
-loginInvalidLabel.hidden = true
-
-local function saveConfig()
-	table.toFile(configPath, config)
-end
 
 local function log(...)
 	local file = io.open("/url.log", "a")
@@ -208,10 +198,10 @@ local function addSelectable(layout, method, height)
 end
 
 local function pizdaDraw(object)
-	local textColor = 0xE1E1E1
+	local textColor = style.leftToolbarDefaultForeground
 	if object.selected then
-		textColor = 0x2D2D2D
-		drawSelection(object, 0xF0F0F0, textColor)
+		textColor = style.leftToolbarSelectedForeground
+		drawSelection(object, style.leftToolbarSelectedBackground, textColor)
 	end
 
 	buffer.drawText(object.x + 2, math.floor(object.y + object.height / 2), textColor, object.name)
@@ -220,7 +210,10 @@ end
 local maxPizdaLength = 0
 
 local function pizdaSelect(object)
-	lastPizda = object
+	lastPizda = function()
+		object:select()
+	end
+
 	selectableSelect(object)
 end
 
@@ -401,8 +394,8 @@ local function attachmentDraw(object)
 	buffer.drawRectangle(x, y, typeLength + 2, 1, object.typeB, object.typeT, " "); x = x + 1
 	buffer.drawText(x, y, object.typeT, object.type); x = x + typeLength + 1
 
-	local textB = object.selected and object.selectionB or object.textB
-	local textT = object.selected and object.selectionT or object.textT
+	local textB = object.selected and style.blockAttachmentTextSelectionBackground or object.textB
+	local textT = object.selected and style.blockAttachmentTextSelectionForeground or object.textT
 
 	buffer.set(x, y, textB, object.typeB, "⠆"); x = x + 1
 	-- Text
@@ -411,15 +404,13 @@ local function attachmentDraw(object)
 	buffer.drawText(object.x + object.width - 1, y, textB, "⠆")
 end
 
-local function newAttachment(x, y, maxWidth, attachment, typeB, typeT, textB, textT, selectionB, selectionT)
+local function newAttachment(x, y, maxWidth, attachment, typeB, typeT, textB, textT)
 	local object = GUI.object(x, y, 1, 1)
 
 	object.typeB = typeB
 	object.typeT = typeT
 	object.textB = textB
 	object.textT = textT
-	object.selectionB = selectionB
-	object.selectionT = selectionT
 
 	object.type = capitalize(localization.attachmentsTypes[attachment.type])
 
@@ -479,7 +470,7 @@ local function newAttachment(x, y, maxWidth, attachment, typeB, typeT, textB, te
 	return object
 end
 
-local function newPost(x, y, width, avatarWidth, mainMessage, profiles, conversations, groups, senderName, fwdMessagesFieldName, data)
+local function newPost(x, y, width, avatarWidth, senderColor, textColor, dateColor, lineColor, attachmentColorTypeB, attachmentColorTypeF, attachmentColorTextB, attachmentColorTextF, mainMessage, profiles, conversations, groups, senderName, fwdMessagesFieldName, data)
 	local object = GUI.container(x, y, width, 1)
 	
 	local localX, localY = 1, 1
@@ -487,14 +478,14 @@ local function newPost(x, y, width, avatarWidth, mainMessage, profiles, conversa
 	local avatar = object:addChild(newAvatar(localX, localY, avatarWidth, math.floor(avatarWidth / 2), getNameShortcut(senderName), data.from_id or data.source_id))
 	localX = localX + avatar.width + 1
 	
-	local nameText = object:addChild(GUI.text(localX, localY, 0x3C3C3C, senderName))
-	object:addChild(GUI.text(localX + nameText.width + 1, localY, 0xD2D2D2, os.date("%H:%M", data.date)))
+	local nameText = object:addChild(GUI.text(localX, localY, senderColor, senderName))
+	object:addChild(GUI.text(localX + nameText.width + 1, localY, dateColor, os.date("%H:%M", data.date)))
 
 	localY = localY + 1
 
 	if #data.text > 0 then
 		local lines = string.wrap(data.text, width - localX)
-		object.textBox = object:addChild(GUI.textBox(localX, localY, width - localX, #lines, nil, 0xA5A5A5, lines, 1, 0, 0))
+		object.textBox = object:addChild(GUI.textBox(localX, localY, width - localX, #lines, nil, textColor, lines, 1, 0, 0))
 		object.textBox.eventHandler = nil
 		localY = localY + object.textBox.height + 1
 	else
@@ -502,7 +493,7 @@ local function newPost(x, y, width, avatarWidth, mainMessage, profiles, conversa
 	end
 
 	local function addAnotherPost(senderName, data)
-		localY = localY + (mainMessage and 0 or 1)
+		-- localY = localY + (mainMessage and 0 or 1)
 
 		local offset = mainMessage and avatarWidth + 2 or 1
 		local attachment = object:addChild(
@@ -511,6 +502,14 @@ local function newPost(x, y, width, avatarWidth, mainMessage, profiles, conversa
 				localY,
 				math.max(16, width - 6),
 				avatarWidth,
+				senderColor,
+				textColor,
+				dateColor,
+				lineColor,
+				attachmentColorTypeB,
+				attachmentColorTypeF,
+				attachmentColorTextB,
+				attachmentColorTextF,
 				false,
 				profiles,
 				conversations,
@@ -520,7 +519,7 @@ local function newPost(x, y, width, avatarWidth, mainMessage, profiles, conversa
 				data
 			)
 		)
-		object:addChild(newVerticalLine(offset, localY, attachment.height, 0xE1E1E1))
+		object:addChild(newVerticalLine(offset, localY, attachment.height, lineColor))
 		
 		localY = localY + attachment.height + 1
 	end
@@ -535,7 +534,7 @@ local function newPost(x, y, width, avatarWidth, mainMessage, profiles, conversa
 						attachment.wall
 					)
 				else
-					object:addChild(newAttachment(localX, localY, object.width - localX, attachment, 0xF0F0F0, 0xA5A5A5, 0xE1E1E1, 0x787878, 0x3392FF, 0xE1E1E1))
+					object:addChild(newAttachment(localX, localY, object.width - localX, attachment, attachmentColorTypeB, attachmentColorTypeF, attachmentColorTextB, attachmentColorTextF))
 					localY = localY + 2
 				end
 			end
@@ -561,7 +560,7 @@ local function newPost(x, y, width, avatarWidth, mainMessage, profiles, conversa
 		local function addStuff(icon, text)
 			local container = layout:addChild(GUI.container(1, 1, 5 + unicode.len(text), 2))
 			container:addChild(GUI.image(1, 1, icon))
-			container:addChild(GUI.text(6, 2, 0x969696, text))
+			container:addChild(GUI.text(6, 2, style.counterText, text))
 		end
 
 		addStuff(icons.likes, tostring(data.likes and data.likes.count or 0))
@@ -574,7 +573,7 @@ local function newPost(x, y, width, avatarWidth, mainMessage, profiles, conversa
 
 	object.height = localY - 2
 
-	-- object:addChild(GUI.panel(1, 1, width, object.height, 0x0), 1)
+	-- object:addChild(GUI.panel(1, 1, width, object.height, math.random(0xFFFFFF)), 1)
 
 	return object
 end
@@ -636,10 +635,10 @@ local function showHistory(container, peerID)
 		inputLayout:setSpacing(1, 1, 0)
 		inputLayout:setDirection(1, 1, GUI.DIRECTION_HORIZONTAL)
 
-		local attachButton = inputLayout:addChild(GUI.adaptiveButton(1, 1, 2, 1, 0xE1E1E1, 0x3C3C3C, 0x2D2D2D, 0xFFFFFF, "+"))
+		local attachButton = inputLayout:addChild(GUI.adaptiveButton(1, 1, 2, 1, style.messageButtonDefaultBackground, style.messageButtonDefaultForeground, style.messageButtonPressedBackground, style.messageButtonPressedForeground, "+"))
 		attachButton.switchMode = true
-		local sendButton = inputLayout:addChild(GUI.adaptiveButton(1, 1, 2, 1, 0xE1E1E1, 0x3C3C3C, 0x2D2D2D, 0xFFFFFF, localization.send))
-		local input = inputLayout:addChild(GUI.input(1, 1, inputLayout.width - sendButton.width - attachButton.width, 3, 0xF0F0F0, 0x787878, 0xA5A5A5, 0xF0F0F0, 0x3C3C3C, "", localization.typeMessageHere), 2)
+		local sendButton = inputLayout:addChild(GUI.adaptiveButton(1, 1, 2, 1, style.messageButtonDefaultBackground, style.messageButtonDefaultForeground, style.messageButtonPressedBackground, style.messageButtonPressedForeground, localization.send))
+		local input = inputLayout:addChild(GUI.input(1, 1, inputLayout.width - sendButton.width - attachButton.width, 3, style.messageInputBackground, style.messageInputForeground, style.messageInputPlaceholder, style.messageInputBackground, style.messageInputForeground, "", localization.typeMessageHere), 2)
 		
 		local layout = container:addChild(GUI.layout(2, 1, container.width - 2, container.height - input.height, 1, 1))
 		layout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_LEFT, GUI.ALIGNMENT_VERTICAL_BOTTOM)
@@ -653,6 +652,14 @@ local function showHistory(container, peerID)
 						y,
 						container.width - 2,
 						4,
+						style.messageSelectedTitle,
+						style.messageSelectedText,
+						style.messageSelectedDate,
+						style.messageSelectedLine,
+						style.messageAttachmentTypeBackground,
+						style.messageAttachmentTypeForeground,
+						style.messageAttachmentTextBackground,
+						style.messageAttachmentTextForeground,
 						true,
 						history.profiles,
 						history.conversations,
@@ -696,7 +703,7 @@ local function showHistory(container, peerID)
 		end
 
 		sendButton.onTouch = function()
-			if #input.text > 0 or filesystemChooser.path then
+			if #input.text > 0 then
 				local attachment
 				if attachedPath then
 					local saveResult = uploadDocument(attachedPath)
@@ -763,7 +770,7 @@ showUserProfile = function(peerID)
 						local avatar = avatarContainer:addChild(newAvatar(3, 2, avatarContainer.width - 4, math.floor((avatarContainer.width - 4) / 2), getNameShortcut(fullName), user.id))
 
 						if peerID ~= currentPeerID then
-							local messageButton = avatarContainer:addChild(GUI.roundedButton(3, avatar.localY + avatar.height + 1, avatar.width, 1, 0xA5A5A5, 0xFFFFFF, 0x3C3C3C, 0xFFFFFF, localization.message))
+							local messageButton = avatarContainer:addChild(GUI.roundedButton(3, avatar.localY + avatar.height + 1, avatar.width, 1, style.blockButtonDefaultBackground, style.blockButtonDefaultForeground, style.blockButtonPressedBackground, style.blockButtonPressedForeground, localization.message))
 							messageButton.onTouch = function()
 								showConversations(peerID)
 							end
@@ -772,7 +779,7 @@ showUserProfile = function(peerID)
 						end
 
 						fitToLastChild(avatarContainer, 1)
-						addPanel(avatarContainer, 0xFFFFFF)
+						addPanel(avatarContainer, style.blockBackground)
 
 						-- Список друзяшек
 						local function addFriendsList(title, titleCount, list)
@@ -781,9 +788,9 @@ showUserProfile = function(peerID)
 								
 								local container = leftLayout:addChild(GUI.container(1, 1, leftLayout.width, 3 + rowsCount * 5))
 								
-								addPanel(container, 0xFFFFFF)
-								title = container:addChild(GUI.text(3, 2, 0x3C3C3C, title))
-								container:addChild(GUI.text(title.localX + title.width + 1, 2, 0xB4B4B4, tostring(titleCount)))
+								addPanel(container, style.blockBackground)
+								title = container:addChild(GUI.text(3, 2, style.blockTitle, title))
+								container:addChild(GUI.text(title.localX + title.width + 1, 2, style.blockValue, tostring(titleCount)))
 
 								local layout = container:addChild(GUI.layout(1, 4, container.width, container.height - 3, friendsDisplayColumns, rowsCount))
 								
@@ -818,7 +825,7 @@ showUserProfile = function(peerID)
 						rightLayout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_LEFT, GUI.ALIGNMENT_VERTICAL_TOP)
 
 						local infoContainer = rightLayout:addChild(GUI.container(1, 1, rightLayout.width, 1))
-						local infoPanel = addPanel(infoContainer, 0xFFFFFF)
+						local infoPanel = addPanel(infoContainer, style.blockBackground)
 						local infoLayout = infoContainer:addChild(GUI.layout(infoPanel.localX + 2, infoPanel.localY + 1, infoPanel.width - 4, 1, 1, 1))
 						infoLayout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_LEFT, GUI.ALIGNMENT_VERTICAL_TOP)
 						infoLayout:setSpacing(1, 1, 0)
@@ -829,10 +836,10 @@ showUserProfile = function(peerID)
 							local container = layoutToAdd:addChild(GUI.container(1, 1, layoutToAdd.width, 3))
 							
 							if text then
-								text = container:addChild(GUI.text(1, 2, 0x3C3C3C, text))
-								container:addChild(newHorizontalLine(text.width + 2, 2, container.width - text.width - 1, 0xE1E1E1))
+								text = container:addChild(GUI.text(1, 2, style.blockTitle, text))
+								container:addChild(newHorizontalLine(text.width + 2, 2, container.width - text.width - 1, style.blockLine))
 							else
-								container:addChild(newHorizontalLine(1, 2, container.width, 0xE1E1E1))
+								container:addChild(newHorizontalLine(1, 2, container.width, style.blockLine))
 							end
 						end
 
@@ -844,11 +851,11 @@ showUserProfile = function(peerID)
 
 						local function addKeyAndValue(key, value)
 							local container = layoutToAdd:addChild(GUI.container(1, 1, layoutToAdd.width, 1))
-							container:addChild(GUI.text(1, 1, 0xB4B4B4, key .. ": "))
+							container:addChild(GUI.text(1, 1, style.blockKey, key .. ": "))
 
 							local width = container.width - maxProfileKeyLength
 							local lines = string.wrap(value, width)
-							container:addChild(GUI.textBox(maxProfileKeyLength, 1, width, #lines, nil, 0x969696, lines, 1)).eventHandler = nil
+							container:addChild(GUI.textBox(maxProfileKeyLength, 1, width, #lines, nil, style.blockValue, lines, 1)).eventHandler = nil
 
 							container.height = #lines
 						end
@@ -868,10 +875,10 @@ showUserProfile = function(peerID)
 							end
 						end
 
-						infoLayout:addChild(GUI.text(1, 1, 0x0, fullName))
+						infoLayout:addChild(GUI.text(1, 1, style.blockTitle, fullName))
 
 						if user.status and #user.status > 0 then
-							local statusButton = infoLayout:addChild(GUI.adaptiveButton(1, 1, 0, 0, nil, 0x696969, nil, 0x0, user.status_audio and ("* " .. user.status_audio.artist .. " - " .. user.status_audio.title) or user.status))
+							local statusButton = infoLayout:addChild(GUI.adaptiveButton(1, 1, 0, 0, nil, style.blockValue, nil, 0x0, user.status_audio and ("* " .. user.status_audio.artist .. " - " .. user.status_audio.title) or user.status))
 						end
 
 						addTitle()
@@ -901,7 +908,7 @@ showUserProfile = function(peerID)
 						addIfExists(user.site, profileKeys.site, user.site)
 
 						-- Вот тута начинается дополнительная инфа
-						local expandButton = infoLayout:addChild(GUI.button(1, 1, infoLayout.width, 2, nil, 0x969696, nil, 0x0, ""))
+						local expandButton = infoLayout:addChild(GUI.button(1, 1, infoLayout.width, 2, nil, style.blockTextButton, nil, 0x0, ""))
 
 						local additionalLayout = infoLayout:addChild(GUI.layout(1, 1, infoLayout.width, 1, 1, 1))
 						additionalLayout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_LEFT, GUI.ALIGNMENT_VERTICAL_TOP)
@@ -971,12 +978,12 @@ showUserProfile = function(peerID)
 						local statsLayout = layoutToAdd:addChild(GUI.layout(1, 1, layoutToAdd.width, 2, 1, 1))
 						statsLayout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
 						statsLayout:setDirection(1, 1, GUI.DIRECTION_HORIZONTAL)
-						statsLayout:setSpacing(1, 1, 3)	
+						statsLayout:setSpacing(1, 1, 2)	
 
 						local function counterDraw(object)
 							local centerX = object.x + object.width / 2
-							buffer.drawText(math.floor(centerX - object.countLength / 2), object.y, 0x3C3C3C, object.count)
-							buffer.drawText(math.floor(centerX - object.descriptionLength / 2), object.y + 1, 0x969696, object.description)
+							buffer.drawText(math.floor(centerX - object.countLength / 2), object.y, style.blockTitle, object.count)
+							buffer.drawText(math.floor(centerX - object.descriptionLength / 2), object.y + 1, style.blockValue, object.description)
 						end
 
 						for i = 1, #localization.profileCounters do
@@ -1001,7 +1008,20 @@ showUserProfile = function(peerID)
 
 						for i = 1, #wall.items do
 							local item = wall.items[i]
-							local post = newPost(3, 2, rightLayout.width - 4, 4, true,
+							local post = newPost(
+								3,
+								2,
+								rightLayout.width - 4,
+								4,
+								style.blockTitle,
+								style.blockText,
+								style.blockDate,
+								style.blockLine,
+								style.blockAttachmentTypeBackground,
+								style.blockAttachmentTypeForeground,
+								style.blockAttachmentTextBackground,
+								style.blockAttachmentTextForeground,
+								true,
 								wall.profiles,
 								wall.conversations,
 								wall.groups,
@@ -1011,7 +1031,7 @@ showUserProfile = function(peerID)
 							)
 
 							local container = wallLayout:addChild(GUI.container(1, 1, rightLayout.width, post.height + 2))
-							addPanel(container, 0xFFFFFF)
+							addPanel(container, style.blockBackground)
 							container:addChild(post)
 						end
 
@@ -1116,9 +1136,9 @@ local function showFriends(peerID)
 				local startX = avatar.localX + avatar.width + 2
 				local x, y = startX, avatar.localY
 				
-				container:addChild(GUI.text(startX, y, 0x3C3C3C, fullName)); y = y + 1
+				container:addChild(GUI.text(startX, y, style.blockTitle, fullName)); y = y + 1
 				if item.occupation then
-					container:addChild(GUI.text(startX, y, 0xA5A5A5, item.occupation.name)); y = y + 1
+					container:addChild(GUI.text(startX, y, style.blockValue, item.occupation.name)); y = y + 1
 				end
 				y = y + 1
 
@@ -1132,7 +1152,7 @@ local function showFriends(peerID)
 							x, y = startX, y + 2
 						end
 
-						local button = container:addChild(GUI.adaptiveRoundedButton(x, y, offset, 0, 0xC3C3C3, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, text))
+						local button = container:addChild(GUI.adaptiveRoundedButton(x, y, offset, 0, style.blockButtonDefaultBackground, style.blockButtonDefaultForeground, style.blockButtonPressedBackground, style.blockButtonPressedForeground, text))
 
 						x = x + button.width + space
 					end
@@ -1140,12 +1160,12 @@ local function showFriends(peerID)
 					y = y + 2
 				end
 
-				container:addChild(GUI.adaptiveButton(startX, y, 0, 0, nil, 0x696969, nil, 0x0, localization.sendMessage)).onTouch = function()
+				container:addChild(GUI.adaptiveButton(startX, y, 0, 0, nil, style.blockTextButton, nil, 0x0, localization.sendMessage)).onTouch = function()
 					showConversations(item.id)
 				end
 
 				fitToLastChild(container, 1)
-				addPanel(container, 0xFFFFFF)
+				addPanel(container, style.blockBackground)
 			end
 		end
 
@@ -1184,19 +1204,33 @@ newsSelectable.onTouch = function()
 
 				local postContainer = layout:addChild(GUI.container(1, 1, layout.width, 1))
 
-				local post = postContainer:addChild(newPost(
-					3, 2, postContainer.width - 4, 6, true,
-					list.profiles,
-					list.conversations,
-					list.groups,
-					getSenderName(list.profiles, list.conversations, list.groups, item.source_id),
-					"copy_history",
-					item
-				))
+				local post = postContainer:addChild(
+					newPost(
+						3,
+						2,
+						postContainer.width - 4,
+						6,
+						style.blockTitle,
+						style.blockText,
+						style.blockDate,
+						style.blockLine,
+						style.blockAttachmentTypeBackground,
+						style.blockAttachmentTypeForeground,
+						style.blockAttachmentTextBackground,
+						style.blockAttachmentTextForeground,
+						true,
+						list.profiles,
+						list.conversations,
+						list.groups,
+						getSenderName(list.profiles, list.conversations, list.groups, item.source_id),
+						"copy_history",
+						item
+					)
+				)
 
 				postContainer.height = post.height + 2
 
-				postContainer:addChild(GUI.panel(1, 1, postContainer.width, postContainer.height, 0xFFFFFF), 1)
+				postContainer:addChild(GUI.panel(1, 1, postContainer.width, postContainer.height, style.blockBackground), 1)
 			end
 		end
 
@@ -1229,12 +1263,20 @@ showConversations = function(peerID)
 		layout:setSpacing(1, 1, 1)
 		layout:setMargin(1, 1, 0, 1)
 
-		local conversationPanel = contentContainer:addChild(GUI.panel(layout.width + 1, 1, contentContainer.width - layout.width, contentContainer.height, 0xFFFFFF))
+		local conversationPanel = contentContainer:addChild(GUI.panel(layout.width + 1, 1, contentContainer.width - layout.width, contentContainer.height, style.messageSelectedBackground))
 		local conversationContainer = contentContainer:addChild(GUI.container(conversationPanel.localX, 1, conversationPanel.width, conversationPanel.height))
 
 		local function conversationDraw(container)
 			if container.selected then
-				drawSelection(container, 0xFFFFFF, 0xB4B4B4)
+				container.senderText.color = style.messageSelectedTitle
+				container.messagePreviewText.color = style.messageSelectedText
+				container.dateText.color = style.messageSelectedDate
+
+				drawSelection(container, style.messageSelectedBackground, style.blockTitle)
+			else
+				container.senderText.color = style.messageTitle
+				container.messagePreviewText.color = style.messageText
+				container.dateText.color = style.messageDate
 			end
 			-- Спиздим метод у этого контейнера. Надеюсь, он не обидится
 			contentContainer.draw(container)
@@ -1277,14 +1319,15 @@ showConversations = function(peerID)
 
 				local container = addSelectable(layout, "container", 2)
 
-				local senderName = getSenderName(list.profiles, item.conversation, list.groups, item.conversation.peer.id)
-				local avatar = container:addChild(newAvatar(2, 1, 4, 2, getNameShortcut(senderName), item.conversation.peer.id))
-				local senderText = container:addChild(GUI.text(avatar.localX + avatar.width + 1, 1, 0x3C3C3C, string.limit(senderName, container.width - avatar.width - 9)))
-				container:addChild(GUI.text(senderText.localX, 2, 0xB4B4B4, string.limit(messagePreview, container.width - avatar.width - 3)))
-				container:addChild(GUI.text(container.width - 5, 1, 0xD2D2D2, os.date("%H:%M", item.last_message.date)))
-
 				container.id = item.last_message.id
 				container.selected = item.conversation.peer.id == peerID
+
+				local senderName = getSenderName(list.profiles, item.conversation, list.groups, item.conversation.peer.id)
+				local avatar = container:addChild(newAvatar(2, 1, 4, 2, getNameShortcut(senderName), item.conversation.peer.id))
+				
+				container.senderText = container:addChild(GUI.text(avatar.localX + avatar.width + 1, 1, 0x0, string.limit(senderName, container.width - avatar.width - 9)))
+				container.messagePreviewText = container:addChild(GUI.text(container.senderText.localX, 2, 0x0, string.limit(messagePreview, container.width - avatar.width - 3)))
+				container.dateText = container:addChild(GUI.text(container.width - 5, 1, 0x0, os.date("%H:%M", item.last_message.date)))
 
 				container.draw = conversationDraw
 
@@ -1325,54 +1368,6 @@ friendsSelectable.onTouch = function()
 	showFriends(currentPeerID)
 end
 
-loginUsernameInput.onInputFinished = function()
-	loginButton.disabled = #loginUsernameInput.text == 0 or #loginPasswordInput.text == 0
-	mainContainer:drawOnScreen()
-end
-
-loginPasswordInput.onInputFinished = loginUsernameInput.onInputFinished
-
-local function logout()
-	currentAccessToken = nil
-	currentPeerID = nil
-	config.accessToken = nil
-	config.peerID = nil
-	loginContainer.hidden = false
-	
-	mainContainer:drawOnScreen()
-end
-
-local function login()
-	if currentAccessToken then
-		loginContainer.hidden = true
-		conversationsSelectable:select()
-	else
-		loginUsernameInput.onInputFinished()
-	end
-end
-
-loginButton.onTouch = function()
-	local result, reason = request("https://oauth.vk.com/token?grant_type=password&client_id=3697615&client_secret=AlVXZFMUqyrnABp8ncuU&username=" .. loginUsernameInput.text .. "&password=" .. loginPasswordInput.text .. "&v=" .. VKAPIVersion)
-	if result then
-		loginPasswordInput.text = nil
-
-		if result.access_token then
-			currentAccessToken = result.access_token
-			currentPeerID = result.user_id
-			config.accessToken = loginSaveSwitch.state and currentAccessToken or nil
-			config.username = loginSaveSwitch.state and loginUsernameInput.text or nil
-			config.peerID = loginSaveSwitch.state and currentPeerID or nil
-			
-			login()
-		else
-			loginInvalidLabel.hidden = false
-			logout()
-		end
-
-		saveConfig()
-	end
-end
-
 local function showDocuments()
 	local offset = 0
 
@@ -1390,10 +1385,9 @@ local function showDocuments()
 		layout:setMargin(1, 1, 0, 1)
 
 		local container = layout:addChild(GUI.container(1, 1, layout.width, 1))
-		-- addPanel(container, 0xFFFFFF)
-		container:addChild(GUI.keyAndValue(3, 1, 0x3C3C3C, 0xA5A5A5, localization.documentsCount .. ": ", tostring(docs.count)))
+		container:addChild(GUI.keyAndValue(3, 1, style.blockTitle, style.blockText, localization.documentsCount .. ": ", tostring(docs.count)))
 
-		local button = container:addChild(GUI.adaptiveRoundedButton(1, 1, 1, 0, 0xA5A5A5, 0xFFFFFF, 0x2D2D2D, 0xE1E1E1, localization.documentsAdd))
+		local button = container:addChild(GUI.adaptiveRoundedButton(1, 1, 2, 0, style.blockButtonDefaultBackground, style.blockButtonDefaultForeground, style.blockButtonPressedBackground, style.blockButtonPressedForeground, localization.documentsAdd))
 		button.localX = container.width - button.width - 1
 		button.onTouch = function()
 			local filesystemDialog = GUI.addFilesystemDialog(window, true, 45, window.height - 5, "Open", "Cancel", "File name", "/")
@@ -1411,10 +1405,10 @@ local function showDocuments()
 			for i = 1, #list do
 				local item = list[i]
 				local container = layout:addChild(GUI.container(1, 1, layout.width, 4))
-				addPanel(container, 0xFFFFFF)
+				addPanel(container, style.blockBackground)
 
-				container:addChild(GUI.text(3, 2, 0x3C3C3C, item.title))
-				container:addChild(GUI.text(3, 3, 0xA5A5A5, getAbbreviatedFileSize(item.size, 2) .. ", " .. os.date("%d.%m.%Y %H:%M", item.date)))
+				container:addChild(GUI.text(3, 2, style.blockTitle, item.title))
+				container:addChild(GUI.text(3, 3, style.blockText, getAbbreviatedFileSize(item.size, 2) .. ", " .. os.date("%d.%m.%Y %H:%M", item.date)))
 			end
 		end
 		
@@ -1436,26 +1430,55 @@ addPizda(localization.documents).onTouch = function()
 	showDocuments()
 end
 
-addPizda(localization.settings).onTouch = function()
+local function applyStyle()
+	window.backgroundPanel.colors.background = style.leftToolbarSelectedBackground
+	leftPanel.colors.background = style.leftToolbarDefaultBackground
+	progressIndicator.colors.passive, progressIndicator.colors.primary, progressIndicator.colors.secondary = style.UIProgressIndicatorPassive, style.UIProgressIndicatorPrimary, style.UIProgressIndicatorSecondary
+	
+	for _, icon in pairs(icons) do
+		for y = 1, image.getHeight(icon) do
+			for x = 1, image.getWidth(icon) do
+				local b, f, a, s = image.get(icon, x, y)
+				image.set(icon, x, y, b, style.counterIcon, a, s)
+			end
+		end
+	end
+end
+
+local settingsSelectable = addPizda(localization.settings)
+settingsSelectable.onTouch = function()
 	contentContainer:removeChildren()
 
 	local layout = contentContainer:addChild(GUI.layout(1, 1, contentContainer.width, contentContainer.height, 1, 1))
 
-	local function addSlider(...)
-		local slider = layout:addChild(GUI.slider(1, 1, 36, 0x66DB80, 0xE1E1E1, 0xFFFFFF, 0xA5A5A5, ...))
-		slider.height = 2
-		slider.roundValues = true
-
-		return slider
-	end
-
 	local function addYobaSlider(min, max, field)
-		local slider = addSlider(min, max, config[field], false, localization[field] .. ": ", "")
+		local slider = layout:addChild(GUI.slider(1, 1, 36, style.UISliderPrimary, style.UISliderSecondary, style.UISliderPipe, style.UISliderValue, min, max, config[field], false, localization[field] .. ": ", ""))
+		slider.roundValues = true
 		slider.onValueChanged = function()
 			config[field] = math.round(slider.value)
 			saveConfig()
 		end
 	end
+
+	layout:addChild(GUI.text(1, 1, style.UITitle, localization.settingsStyle))
+
+	local comboBox = layout:addChild(GUI.comboBox(1, 1, 36, 3, style.UIComboBoxBackground, style.UIComboBoxForeground, style.UIComboBoxArrowBackground, style.UIComboBoxArrowForeground))
+	for file in fs.list(stylesPath) do
+		comboBox:addItem(fs.hideExtension(file)).onTouch = function()
+			config.style = file
+			loadStyle()
+			applyStyle()
+			lastPizda()
+
+			saveConfig()
+		end
+
+		if file == config.style then
+			comboBox.selectedItem = comboBox:count()
+		end
+	end
+
+	layout:addChild(GUI.text(1, 1, style.UITitle, localization.settingsAdditional))
 
 	addYobaSlider(2, 50, "loadCountConversations")
 	addYobaSlider(2, 50, "loadCountMessages")
@@ -1468,16 +1491,70 @@ addPizda(localization.settings).onTouch = function()
 	mainContainer:drawOnScreen()
 end
 
+local function login()
+	local loginContainer = window:addChild(GUI.container(1, 1, window.width, window.height), #window.children)
+	addPanel(loginContainer, style.UIBackground)
+	
+	local layout = loginContainer:addChild(GUI.layout(1, 1, loginContainer.width, loginContainer.height, 1, 1))
+	local logo = layout:addChild(GUI.image(1, 1, image.load(scriptDirectory .. "Icon.pic")))
+	logo.height = logo.height + 1
+	local usernameInput = layout:addChild(GUI.input(1, 1, 36, 3, style.UIInputBackground, style.UIInputForeground, style.UIInputPlaceholder, style.UIInputBackground, style.UIInputFocusedForeground, config.username or "", localization.username))
+	local passwordInput = layout:addChild(GUI.input(1, 1, 36, 3, style.UIInputBackground, style.UIInputForeground, style.UIInputPlaceholder, style.UIInputBackground, style.UIInputFocusedForeground, config.password or "", localization.password, true, "•"))
+	local loginButton = layout:addChild(GUI.button(1, 1, 36, 3, style.UIButtonDefaultBackground, style.UIButtonDefaultForeground, style.UIButtonPressedBackground, style.UIButtonPressedForeground, localization.login))
+	loginButton.colors.disabled = {
+		background = style.UIButtonDisabledBackground,
+		text = style.UIButtonDisabledForeground,
+	}
+	local saveSwitch = layout:addChild(GUI.switchAndLabel(1, 1, 36, 6, style.UISwitchActive, style.UISwitchPassive, style.UISwitchPipe, style.UIText, localization.saveLogin, true))
+	local loginusernameInput = layout:addChild(GUI.label(1, 1, 36, 1, style.UIText, localization.invalidPassword))
+	loginusernameInput.hidden = true
+
+	usernameInput.onInputFinished = function()
+		loginButton.disabled = #usernameInput.text == 0 or #passwordInput.text == 0
+		mainContainer:drawOnScreen()
+	end
+	passwordInput.onInputFinished = usernameInput.onInputFinished
+
+	loginButton.onTouch = function()
+		local result, reason = request("https://oauth.vk.com/token?grant_type=password&client_id=3697615&client_secret=AlVXZFMUqyrnABp8ncuU&username=" .. usernameInput.text .. "&password=" .. passwordInput.text .. "&v=" .. VKAPIVersion)
+		if result then
+			if result.access_token then
+				currentAccessToken = result.access_token
+				currentPeerID = result.user_id
+				config.accessToken = saveSwitch.switch.state and currentAccessToken or nil
+				config.username = saveSwitch.switch.state and usernameInput.text or nil
+				config.peerID = saveSwitch.switch.state and currentPeerID or nil
+					
+				loginContainer:remove()
+				conversationsSelectable:select()
+			else
+				loginusernameInput.hidden = false
+				logout()
+			end
+
+			saveConfig()
+		end
+	end
+
+	lastPizda = login
+	usernameInput.onInputFinished()
+	mainContainer:drawOnScreen()
+end
+
+local function logout()
+	currentAccessToken = nil
+	currentPeerID = nil
+	config.accessToken = nil
+	config.peerID = nil
+	login()
+end
+
 addPizda(localization.exit).onTouch = function()
 	logout()
 	saveConfig()
 end
 
 window.onResize = function(width, height)
-	loginContainer.width, loginContainer.height = width, height
-	loginPanel.width, loginPanel.height = loginContainer.width, loginContainer.height
-	loginLayout.width, loginLayout.height = loginContainer.width, loginContainer.height
-
 	leftPanel.width, leftPanel.height = maxPizdaLength + localization.leftBarOffset, height
 	leftLayout.width, leftLayout.height = leftPanel.width, leftPanel.height - 2
 	progressIndicator.localX, progressIndicator.localY = math.floor(leftPanel.width / 2 - 1), leftPanel.height - progressIndicator.height + 1
@@ -1490,7 +1567,7 @@ window.onResize = function(width, height)
 	contentContainer.localX, contentContainer.width, contentContainer.height = window.backgroundPanel.localX, window.backgroundPanel.width, window.backgroundPanel.height
 
 	if lastPizda then
-		lastPizda:select()
+		lastPizda()
 	end
 end
 
@@ -1501,6 +1578,11 @@ currentPeerID = config.peerID
 
 window.actionButtons.localX = 3
 window.actionButtons:moveToFront()
-
 window:resize(window.width, window.height)
-login()
+applyStyle()
+
+if currentAccessToken then
+	conversationsSelectable:select()
+else
+	login()
+end
