@@ -143,6 +143,7 @@
 
 	friends = "Друзья",
 	friendsOnline = "Друзья онлайн",
+	friendsMutual = "Общие друзья",
 
 	news = "Новости",
 

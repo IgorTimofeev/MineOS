@@ -142,7 +142,8 @@
 	},
 
 	friends = "Friends",
-	friendsOnline = "Friends online",
+	friendsOnline = "Online friends",
+	friendsMutual = "Mutual friends",
 
 	news = "Newsfeed",
 
