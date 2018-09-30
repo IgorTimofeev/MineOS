@@ -1228,24 +1228,33 @@ end
 local function showFriends(peerID)
 	local offset = 0
 
-	local function getFriendsAndLists()
-		local friends = friendsRequest(false, peerID, "hints", offset, config.loadCountFriends, "first_name,last_name,occupation")
-		if friends then
-			local lists = methodRequest("friends.getLists?return_system=1&user_id=" .. peerID)
-			if lists then
-				-- Удобнее!
-				for i = 1, #lists.items do
-					lists[lists.items[i].id] = lists.items[i].name
-					lists.items[i] = nil
-				end
-				lists.items, lists.count = nil, nil
+	local function getFriends()
+		local result = executeRequest([[
+			var friends = API.friends.get({"offset":]] .. offset .. [[,"count":]] .. config.loadCountFriends .. [[,"order": "hints","fields":"first_name,last_name,occupation"});
+			var lists = API.friends.getLists();
 
-				return friends, lists
+			return {
+				"friends": friends.items,
+				"lists": lists.items,
+				"friends_count": friends.count
+			};
+		]])
+
+		if result then
+			-- Удобнее!
+			local newLists = {}
+
+			for i = 1, #result.lists do
+				newLists[result.lists[i].id] = result.lists[i].name
 			end
+
+			result.lists = newLists
+
+			return result
 		end
 	end
 
-	local friends, lists = getFriendsAndLists()
+	local friends = getFriends()
 	if friends then
 		contentContainer:removeChildren()
 
@@ -1253,28 +1262,28 @@ local function showFriends(peerID)
 		layout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_LEFT, GUI.ALIGNMENT_VERTICAL_TOP)
 		layout:setMargin(1, 1, 0, 1)
 
-		local function addFromList(friends, lists)
-			for i = 1, #friends.items do
-				local item = friends.items[i]
-				local fullName = item.first_name .. " " .. item.last_name
+		local function addFromList(result)
+			for i = 1, #result.friends do
+				local friend = result.friends[i]
+				local fullName = friend.first_name .. " " .. friend.last_name
 				local container = layout:addChild(GUI.container(1, 1, layout.width, 1))
 
-				local avatar = container:addChild(newAvatar(3, 2, 8, 4, getNameShortcut(fullName), item.id))
+				local avatar = container:addChild(newAvatar(3, 2, 8, 4, getNameShortcut(fullName), friend.id))
 
 				local startX = avatar.localX + avatar.width + 2
 				local x, y = startX, avatar.localY
 				
 				container:addChild(GUI.text(startX, y, style.blockTitle, fullName)); y = y + 1
-				if item.occupation then
-					container:addChild(GUI.text(startX, y, style.blockValue, item.occupation.name)); y = y + 1
+				if friend.occupation then
+					container:addChild(GUI.text(startX, y, style.blockValue, friend.occupation.name)); y = y + 1
 				end
 				y = y + 1
 
-				if item.lists then
+				if friend.lists then
 					local offset, space = 1, 2
 					
-					for j = 1, #item.lists do
-						local text = lists[item.lists[j]] or "N/A"
+					for j = 1, #friend.lists do
+						local text = result.lists[friend.lists[j]] or "N/A"
 
 						if x + unicode.len(text) + offset * 2 >= container.width then
 							x, y = startX, y + 2
@@ -1289,7 +1298,7 @@ local function showFriends(peerID)
 				end
 
 				container:addChild(GUI.adaptiveButton(startX, y, 0, 0, nil, style.blockTextButton, nil, 0x0, localization.sendMessage)).onTouch = function()
-					showConversations(item.id)
+					showConversations(friend.id)
 				end
 
 				fitToLastChild(container, 1)
@@ -1297,14 +1306,14 @@ local function showFriends(peerID)
 			end
 		end
 
-		addFromList(friends, lists)
+		addFromList(friends)
 
 		addScrollEventHandler(layout, true, function()
 			offset = offset + config.loadCountFriends
 
-			local friends, lists = getFriendsAndLists()
+			local friends = getFriends()
 			if friends then
-				addFromList(friends, lists)
+				addFromList(friends)
 				mainContainer:drawOnScreen()
 			end
 		end)
