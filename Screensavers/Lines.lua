@@ -33,7 +33,7 @@ end
 -------------------------------------------------------------------------------------
 
 buffer.clear(backgroundColor)
-buffer.draw(true)
+buffer.drawChanges(true)
 
 while true do
 	local eventType = event.pull(0.0001)
@@ -54,9 +54,9 @@ while true do
 	buffer.clear(backgroundColor)
 
 	for i = 1, lineCount - 1 do
-		buffer.semiPixelLine(t[i].x, t[i].y, t[i + 1].x, t[i + 1].y, lineColor)
+		buffer.drawSemiPixelLine(t[i].x, t[i].y, t[i + 1].x, t[i + 1].y, lineColor)
 	end
 
-	buffer.semiPixelLine(t[1].x, t[1].y, t[lineCount].x, t[lineCount].y, lineColor)
-	buffer.draw()
+	buffer.drawSemiPixelLine(t[1].x, t[1].y, t[lineCount].x, t[lineCount].y, lineColor)
+	buffer.drawChanges()
 end

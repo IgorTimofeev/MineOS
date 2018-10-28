@@ -331,8 +331,9 @@ local function drawCross(x, y)
 	drawInvertedText(x, y + 1, "┃")
 end
 
+local oldUptime
 OCGLView.draw = function(object)
-	mainContainer.oldClock = os.clock()
+	oldUptime = computer.uptime()
 	if world then renderWorld() end
 	scene:render()
 	if mainContainer.toolbar.zBufferSwitch.state then
@@ -472,7 +473,7 @@ end
 
 local FPSCounter = GUI.object(2, 2, 8, 3)
 FPSCounter.draw = function(FPSCounter)
-	renderer.renderFPSCounter(FPSCounter.x, FPSCounter.y, tostring(math.ceil(1 / (os.clock() - mainContainer.oldClock) / 10)), 0xFFFF00)
+	renderer.renderFPSCounter(FPSCounter.x, FPSCounter.y, tostring(math.ceil(1 / (computer.uptime() - oldUptime))), 0xFFFF00)
 end
 mainContainer:addChild(FPSCounter)
 

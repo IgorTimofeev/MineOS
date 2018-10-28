@@ -5,7 +5,7 @@ local fs = require("filesystem")
 ----------------------------------------------------------------------------------------------------
 
 local function encode(data)
-	data = data:gsub("([^%w%-%_%.%~])", function(char)
+	data = data:gsub("([^%-%_%.%~])", function(char)
 		return string.format("%%%02X", string.byte(char))
 	end)
 	

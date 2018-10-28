@@ -814,7 +814,7 @@ local colors = {
 }
 
 buffer.clear()
-buffer.draw(true)
+buffer.drawChanges(true)
 
 local sizeX,sizeY = 80, 50
 while true do
@@ -822,10 +822,10 @@ while true do
 		for y=1, sizeY do
 			for x=1, sizeX do
 				local pos = (y <= sizeX and x <= sizeX) and string.sub(nyans[frame][y], x, x) or ","
-				buffer.square(x * 2 - 1, y, 2, 1, colors[pos], 0x0, " ")
+				buffer.drawRectangle(x * 2 - 1, y, 2, 1, colors[pos], 0x0, " ")
 			end
 		end
-		buffer.draw()
+		buffer.drawChanges()
 		local eventType = event.pull(0)
 		if eventType == "touch" or eventType == "key_down" then
 			return
