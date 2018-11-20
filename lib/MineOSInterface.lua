@@ -1067,7 +1067,6 @@ function MineOSInterface.editShortcut(parentWindow, path)
 	local text = MineOSCore.readShortcut(path)
 	local container = addUniversalContainerWithInputTextBox(parentWindow, text, MineOSCore.localization.editShortcut, MineOSCore.localization.rename)
 
-	container.panel.eventHandler = nil
 	container.inputField.onInputFinished = function()
 		if fs.exists(container.inputField.text) then
 			MineOSCore.createShortcut(path, container.inputField.text)
@@ -1488,6 +1487,20 @@ end
 
 -----------------------------------------------------------------------------------------------------------------------------------
 
+local overrideGUIDropDownMenu = GUI.dropDownMenu
+function MineOSInterface.updateColorScheme()
+	GUI.dropDownMenu = function(...)
+		local menu = overrideGUIDropDownMenu(...)
+		
+		menu.colors.transparency.background = MineOSCore.properties.transparencyEnabled and GUI.CONTEXT_MENU_BACKGROUND_TRANSPARENCY
+		menu.colors.transparency.shadow = MineOSCore.properties.transparencyEnabled and GUI.CONTEXT_MENU_SHADOW_TRANSPARENCY
+
+		return menu
+	end
+end
+
+MineOSInterface.updateColorScheme()
+
 MineOSInterface.cacheIconSource("folder", MineOSPaths.icons .. "Folder.pic")
 MineOSInterface.cacheIconSource("fileNotExists", MineOSPaths.icons .. "FileNotExists.pic")
 MineOSInterface.cacheIconSource("application", MineOSPaths.icons .. "Application.pic")
@@ -1497,3 +1510,4 @@ MineOSInterface.cacheIconSource("script", MineOSPaths.icons .. "Script.pic")
 -----------------------------------------------------------------------------------------------------------------------------------
 
 return MineOSInterface
+	
