@@ -1,0 +1,10 @@
+{
+	installSomeApps = "Installiere Apps",
+	installWallpapers = "Lade Hintergründe herunter",
+	downloading = "Download",
+	reboot = "Neustart",
+	needToReboot = "MineOS wurde erfolgreich Installiert, viel Spass",
+	terms = "Ich akzeptiere die folgenden Bedingungen",
+	flashingEEPROM = "Installiere EFI...",
+	flashEEPROM = "Installiere EFI",
+}
