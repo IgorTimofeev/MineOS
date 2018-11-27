@@ -87,4 +87,10 @@
 	systemRAM = "Gestion de la mémoire",
 	systemUnload = "Télécharger la bibliothèque",
 	systemInfo = "Cette option économise de la mémoire en déchargeant les bibliothèques inutilisées en utilisant la méthode \"Weak Link\". Désactivez-le si vous rencontrez des bizarreries ou des problèmes dans le comportement de systèmes interdépendants complexes",
+
+	users = "Utilisateurs",
+	usersAdd = "Ajouter un utilisateur",
+	usersList = "La liste des utilisateurs",
+	usersTypeNameHere = "Entrez un surnom",
+	usersInfo = "Vous pouvez créer un accès privé à votre ordinateur. Pour l'enregistrement, l'utilisateur spécifié doit être en ligne",
 }

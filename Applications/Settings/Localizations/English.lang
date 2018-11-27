@@ -87,4 +87,10 @@
 	systemRAM = "Memory management",
 	systemUnload = "Upload library",
 	systemInfo = "This option saves memory by unloading unused libraries using the \"Weak Link\" method. Disable it if you encounter any rancors or glitches in the behavior of complex interdependent systems",
+
+	users = "Users",
+	usersAdd = "Add user",
+	usersList = "List of users",
+	usersTypeNameHere = "Type nickname here",
+	usersInfo = "You can create private access to your computer. To register, the specified user must be online",
 }
