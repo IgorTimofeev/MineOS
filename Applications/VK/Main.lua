@@ -15,7 +15,7 @@ local MineOSCore = require("MineOSCore")
 
 --------------------------------------------------------------------------------
 
-local VKAPIVersion = 5.85
+local VKAPIVersion = "5.85"
 
 local config = {
 	avatars = {
@@ -991,17 +991,22 @@ showUserProfile = function(peerID)
 				container.height = #lines
 			end
 
+			local function isTypeValid(what)
+				local whatType = type(what)
+				return what and (whatType == "string" and #what > 0 or whatType == "number" and what ~= 0)
+			end
+
 			local function anyExists(...)
 				local args = {...}
 				for i = 1, #args do
-					if args[i] and (type(args[i]) ~= "string" or #args[i] > 0) then
+					if isTypeValid(args[i]) then
 						return true
 					end
 				end
 			end
 
 			local function addIfExists(what, ...)
-				if what and (type(what) ~= "string" or #what > 0) then
+				if isTypeValid(what) then
 					addKeyAndValue(...)
 				end
 			end
