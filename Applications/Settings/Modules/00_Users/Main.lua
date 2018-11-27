@@ -25,6 +25,7 @@ module.onTouch = function()
 
 	local function update()
 		local users = {computer.users()}
+		-- local users = {"ECS", "Xylic", "Computrix", "Yan0t", "Кукарек", "Bird", "Pirnogion"}
 		
 		usersLayout:removeChildren()
 		usersLayout.height = 0
@@ -32,19 +33,23 @@ module.onTouch = function()
 		usersListText.hidden = #users == 0
 		usersLayout.hidden = usersListText.hidden
 
+		module.margin = #users * 3
+
 		if #users > 0 then
+			local step = false
+
 			for i = 1, #users do
 				local userContainer = usersLayout:addChild(GUI.container(1, 1, usersLayout.width, 3))
 				userContainer:addChild(GUI.panel(1, 1, userContainer.width - 5, userContainer.height, 0xE1E1E1))
 				userContainer:addChild(GUI.text(2, 2, 0x696969, string.limit(users[i], userContainer.width - 5, "right")))
-				userContainer:addChild(GUI.button(userContainer.width - 4, 1, 5, 3, 0xD2D2D2, 0x0, 0x969696, 0xE1E1E1, "x")).onTouch = function()
+				userContainer:addChild(GUI.button(userContainer.width - 4, 1, 5, 3, step and 0xC3C3C3 or 0xD2D2D2, 0x0, 0x969696, 0xE1E1E1, "x")).onTouch = function()
 					computer.removeUser(users[i])
 
 					update()
 					mainContainer:drawOnScreen()
 				end
 
-				usersLayout.height = usersLayout.height + userContainer.height
+				usersLayout.height, step = usersLayout.height + userContainer.height, not step
 			end
 		end
 	end
