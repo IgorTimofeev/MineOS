@@ -6,7 +6,7 @@
 
 local computer = require("computer")
 
-local event, handlers, interruptingKeysDown, lastInterrupt, skipSignalType = {
+local event, handlers, interruptingKeysDown, lastInterrupt = {
 	interruptingEnabled = true,
 	interruptingDelay = 1,
 	interruptingKeyCodes = {
@@ -14,11 +14,10 @@ local event, handlers, interruptingKeysDown, lastInterrupt, skipSignalType = {
 		[46] = true,
 		[56] = true
 	},
-	onError = function(errorMessage)
-		-- require("GUI").error("Event handler error: \"" .. tostring(errorMessage) .. "\"")
-	end,
 	push = computer.pushSignal
 }, {}, {}, 0
+
+local computerPullSignal, computerUptime, mathHuge, mathMin, skipSignalType = computer.pullSignal, computer.uptime, math.huge, math.min
 
 --------------------------------------------------------------------------------------------------------
 
@@ -28,17 +27,17 @@ function event.addHandler(callback, signalType, times, interval)
 	checkArg(3, times, "number", "nil")
 	checkArg(4, nextTriggerTime, "number", "nil")
 
-	local ID = math.random(1, 0x7FFFFFFF)
+	local ID = math.random(0x7FFFFFFF)
 	while handlers[ID] do
-		ID = math.random(1, 0x7FFFFFFF)
+		ID = math.random(0x7FFFFFFF)
 	end
 
 	handlers[ID] = {
 		signalType = signalType,
 		callback = callback,
-		times = times or math.huge,
+		times = times or mathHuge,
 		interval = interval,
-		nextTriggerTime = interval and (computer.uptime() + interval) or nil
+		nextTriggerTime = interval and (computerUptime() + interval) or nil
 	}
 
 	return ID
@@ -51,7 +50,7 @@ function event.removeHandler(ID)
 		handlers[ID] = nil
 		return true
 	else
-		return false, "No registered handlers found for ID \"" .. ID .. "\""
+		return false, "No registered handlers found for ID " .. ID
 	end
 end
 
@@ -61,7 +60,7 @@ function event.getHandler(ID)
 	if handlers[ID] then
 		return handlers[ID]
 	else
-		return false, "No registered handlers found for ID \"" .. ID .. "\""
+		return false, "No registered handlers found for ID " .. ID
 	end
 end
 
@@ -93,7 +92,7 @@ function event.ignore(signalType, callback)
 		end
 	end
 
-	return false, "No registered listeners found for signal \"" .. signalType .. "\" and callback method \"" .. tostring(callback)
+	return false, "No registered listeners found for signal \"" .. signalType .. "\" and callback method " .. tostring(callback)
 end
 
 --------------------------------------------------------------------------------------------------------
@@ -114,35 +113,31 @@ function event.skip(signalType)
 	skipSignalType = signalType
 end
 
-function event.pull(...)
-	local args = {...}
-
-	local args1Type, preferredTimeout, signalType = type(args[1])
+function event.pull(arg1, arg2)
+	local args1Type, uptime, timeout, preferredTimeout, signalType, signalData = type(arg1), computerUptime()
 	if args1Type == "string" then
-		preferredTimeout, signalType = math.huge, args[1]
+		preferredTimeout, signalType = mathHuge, arg1
 	elseif args1Type == "number" then
-		preferredTimeout, signalType = args[1], type(args[2]) == "string" and args[2] or nil
+		preferredTimeout, signalType = arg1, type(arg2) == "string" and arg2 or nil
 	end
 	
-	local uptime, signalData, timeout = computer.uptime()
-	local deadline = uptime + (preferredTimeout or math.huge)
-	
+	local deadline = uptime + (preferredTimeout or mathHuge)
 	while uptime <= deadline do
 		-- Determining pullSignal timeout
 		timeout = deadline
 		for ID, handler in pairs(handlers) do
 			if handler.nextTriggerTime then
-				timeout = math.min(timeout, handler.nextTriggerTime)
+				timeout = mathMin(timeout, handler.nextTriggerTime)
 			end
 		end
 
 		-- Pulling signal data
-		signalData = { computer.pullSignal(timeout - computer.uptime()) }
+		signalData = { computerPullSignal(timeout - computerUptime()) }
 				
 		-- Handlers processing
 		for ID, handler in pairs(handlers) do
 			if handler.times > 0 then
-				uptime = computer.uptime()
+				uptime = computerUptime()
 
 				if
 					(not handler.signalType or handler.signalType == signalData[1]) and
@@ -154,27 +149,18 @@ function event.pull(...)
 					end
 
 					-- Callback running
-					local success, result = xpcall(handler.callback, debug.traceback, table.unpack(signalData))
-					if not success then
-						event.onError(result)
-					end
+					pcall(handler.callback, table.unpack(signalData))
 				end
 			else
 				handlers[ID] = nil
 			end
 		end
 
-		-- Interruption support
-		if event.interruptingEnabled then
+		-- Program interruption support
+		if signalData[1] == "key_down" or signalData[1] == "key_up" and event.interruptingEnabled then
 			-- Analysing for which interrupting key is pressed - we don't need keyboard API for this
-			if signalData[1] == "key_down" then
-				if event.interruptingKeyCodes[signalData[4]] then
-					interruptingKeysDown[signalData[4]] = true
-				end
-			elseif signalData[1] == "key_up" then
-				if event.interruptingKeyCodes[signalData[4]] then
-					interruptingKeysDown[signalData[4]] = nil
-				end
+			if event.interruptingKeyCodes[signalData[4]] then
+				interruptingKeysDown[signalData[4]] = signalData[1] == "key_down" and true or nil
 			end
 
 			local shouldInterrupt = true
@@ -206,7 +192,7 @@ end
 local doubleTouchInterval, lastTouchX, lastTouchY, lastTouchButton, lastTouchUptime, lastTouchScreenAddress = 0.3, 0, 0, 0, 0
 
 event.listen("touch", function(signalType, screenAddress, x, y, button, user)
-	local uptime = computer.uptime()
+	local uptime = computerUptime()
 	
 	if lastTouchX == x and lastTouchY == y and lastTouchButton == button and lastTouchScreenAddress == screenAddress and uptime - lastTouchUptime <= doubleTouchInterval then
 		event.skip("touch")
