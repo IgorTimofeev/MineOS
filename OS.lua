@@ -1,10 +1,8 @@
 
----------------------------------------- Либсы-хуибсы ----------------------------------------
-
 local computer = require("computer")
 local component = require("component")
 local unicode = require("unicode")
-local fs = require("filesystem")
+local filesystem = require("filesystem")
 local keyboard = require("keyboard")
 local event = require("event")
 local image = require("image")
@@ -16,37 +14,45 @@ local MineOSCore = require("MineOSCore")
 local MineOSNetwork = require("MineOSNetwork")
 local MineOSInterface = require("MineOSInterface")
 
----------------------------------------- Всякая константная залупа ----------------------------------------
+---------------------------------------- Constants ----------------------------------------
 
 local dockTransparency = 0.4
+local doubleTouchInterval = 0.3
 
-local realTimestamp
+local mainContainer
 local bootUptime = computer.uptime()
 local dateUptime = bootUptime
 local screensaverUptime = bootUptime
+local realTimestamp
 local timezoneCorrection
-local screensaversPath = MineOSPaths.system .. "Screensavers/"
-local overrideGUIDropDownMenu = GUI.dropDownMenu
+local doubleTouchX
+local doubleTouchY
+local doubleTouchButton
+local doubleTouchUptime
+local doubleTouchScreenAddress
 
----------------------------------------- Основные функции ----------------------------------------
+---------------------------------------- UI methods ----------------------------------------
 
 function MineOSInterface.changeWallpaper()
-	MineOSInterface.mainContainer.background.wallpaper = nil
+	mainContainer.backgroundObject.wallpaper = nil
 
 	if MineOSCore.properties.wallpaperEnabled and MineOSCore.properties.wallpaper then
 		local result, reason = image.load(MineOSCore.properties.wallpaper)
 		if result then
-			MineOSInterface.mainContainer.background.wallpaper, result = result, nil
+			mainContainer.backgroundObject.wallpaper, result = result, nil
 
+			-- Fit to screen size mode
 			if MineOSCore.properties.wallpaperMode == 1 then
-				MineOSInterface.mainContainer.background.wallpaper = image.transform(MineOSInterface.mainContainer.background.wallpaper, MineOSInterface.mainContainer.width, MineOSInterface.mainContainer.height)
-				MineOSInterface.mainContainer.background.wallpaperPosition.x, MineOSInterface.mainContainer.background.wallpaperPosition.y = 1, 1
+				mainContainer.backgroundObject.wallpaper = image.transform(mainContainer.backgroundObject.wallpaper, mainContainer.width, mainContainer.height)
+				mainContainer.backgroundObject.wallpaperPosition.x, mainContainer.backgroundObject.wallpaperPosition.y = 1, 1
+			-- Centerized mode
 			else
-				MineOSInterface.mainContainer.background.wallpaperPosition.x = math.floor(1 + MineOSInterface.mainContainer.width / 2 - image.getWidth(MineOSInterface.mainContainer.background.wallpaper) / 2)
-				MineOSInterface.mainContainer.background.wallpaperPosition.y = math.floor(1 + MineOSInterface.mainContainer.height / 2 - image.getHeight(MineOSInterface.mainContainer.background.wallpaper) / 2)
+				mainContainer.backgroundObject.wallpaperPosition.x = math.floor(1 + mainContainer.width / 2 - image.getWidth(mainContainer.backgroundObject.wallpaper) / 2)
+				mainContainer.backgroundObject.wallpaperPosition.y = math.floor(1 + mainContainer.height / 2 - image.getHeight(mainContainer.backgroundObject.wallpaper) / 2)
 			end
 
-			local backgrounds, foregrounds, r, g, b = MineOSInterface.mainContainer.background.wallpaper[3], MineOSInterface.mainContainer.background.wallpaper[4]
+			-- Brightness adjustment
+			local backgrounds, foregrounds, r, g, b = mainContainer.backgroundObject.wallpaper[3], mainContainer.backgroundObject.wallpaper[4]
 			for i = 1, #backgrounds do
 				r, g, b = color.integerToRGB(backgrounds[i])
 				backgrounds[i] = color.RGBToInteger(
@@ -68,32 +74,30 @@ function MineOSInterface.changeWallpaper()
 	end
 end
 
----------------------------------------- Всякая параша для ОС-контейнера ----------------------------------------
-
 function MineOSInterface.changeResolution()
 	buffer.setResolution(table.unpack(MineOSCore.properties.resolution or {buffer.getGPUProxy().maxResolution()}))
 
-	MineOSInterface.mainContainer.width, MineOSInterface.mainContainer.height = buffer.getResolution()
+	mainContainer.width, mainContainer.height = buffer.getResolution()
 
-	MineOSInterface.mainContainer.iconField.width = MineOSInterface.mainContainer.width
-	MineOSInterface.mainContainer.iconField.height = MineOSInterface.mainContainer.height
-	MineOSInterface.mainContainer.iconField:updateFileList()
+	mainContainer.iconField.width = mainContainer.width
+	mainContainer.iconField.height = mainContainer.height
+	mainContainer.iconField:updateFileList()
 
-	MineOSInterface.mainContainer.dockContainer.sort()
-	MineOSInterface.mainContainer.dockContainer.localY = MineOSInterface.mainContainer.height - MineOSInterface.mainContainer.dockContainer.height + 1
+	mainContainer.dockContainer.sort()
+	mainContainer.dockContainer.localY = mainContainer.height - mainContainer.dockContainer.height + 1
 
-	MineOSInterface.mainContainer.menu.width = MineOSInterface.mainContainer.width
-	MineOSInterface.mainContainer.menuLayout.width = MineOSInterface.mainContainer.width
-	MineOSInterface.mainContainer.background.width, MineOSInterface.mainContainer.background.height = MineOSInterface.mainContainer.width, MineOSInterface.mainContainer.height
+	mainContainer.menu.width = mainContainer.width
+	mainContainer.menuLayout.width = mainContainer.width
+	mainContainer.backgroundObject.width, mainContainer.backgroundObject.height = mainContainer.width, mainContainer.height
 
-	MineOSInterface.mainContainer.windowsContainer.width, MineOSInterface.mainContainer.windowsContainer.height = MineOSInterface.mainContainer.width, MineOSInterface.mainContainer.height - 1
+	mainContainer.windowsContainer.width, mainContainer.windowsContainer.height = mainContainer.width, mainContainer.height - 1
 end
 
 local function moveDockIcon(index, direction)
-	MineOSInterface.mainContainer.dockContainer.children[index], MineOSInterface.mainContainer.dockContainer.children[index + direction] = MineOSInterface.mainContainer.dockContainer.children[index + direction], MineOSInterface.mainContainer.dockContainer.children[index]
-	MineOSInterface.mainContainer.dockContainer.sort()
-	MineOSInterface.mainContainer.dockContainer.saveToOSSettings()
-	MineOSInterface.mainContainer:drawOnScreen()
+	mainContainer.dockContainer.children[index], mainContainer.dockContainer.children[index + direction] = mainContainer.dockContainer.children[index + direction], mainContainer.dockContainer.children[index]
+	mainContainer.dockContainer.sort()
+	mainContainer.dockContainer.saveToOSSettings()
+	mainContainer:drawOnScreen()
 end
 
 local function getPercentageColor(pecent)
@@ -110,28 +114,32 @@ local function getPercentageColor(pecent)
 	end
 end
 
-function MineOSInterface.applyTransparency()
-	GUI.dropDownMenu = function(...)
-		local menu = overrideGUIDropDownMenu(...)
-		menu.colors.transparency.background = MineOSCore.properties.transparencyEnabled and GUI.CONTEXT_MENU_BACKGROUND_TRANSPARENCY
-		menu.colors.transparency.shadow = MineOSCore.properties.transparencyEnabled and GUI.CONTEXT_MENU_SHADOW_TRANSPARENCY
+local function dockIconEventHandler(mainContainer, icon, e1, e2, e3, e4, e5, e6, ...)
+	if e1 == "touch" then
+		icon.selected = true
+		mainContainer:drawOnScreen()
 
-		return menu
+		if e5 == 1 then
+			icon.onRightClick(icon, e1, e2, e3, e4, e5, e6, ...)
+		else
+			icon.onLeftClick(icon, e1, e2, e3, e4, e5, e6, ...)
+		end
 	end
 end
 
 function MineOSInterface.createWidgets()
-	MineOSInterface.mainContainer:removeChildren()
-	MineOSInterface.mainContainer.background = MineOSInterface.mainContainer:addChild(GUI.object(1, 1, 1, 1))
-	MineOSInterface.mainContainer.background.wallpaperPosition = {x = 1, y = 1}
-	MineOSInterface.mainContainer.background.draw = function(object)
+	mainContainer:removeChildren()
+	
+	mainContainer.backgroundObject = mainContainer:addChild(GUI.object(1, 1, 1, 1))
+	mainContainer.backgroundObject.wallpaperPosition = {x = 1, y = 1}
+	mainContainer.backgroundObject.draw = function(object)
 		buffer.drawRectangle(object.x, object.y, object.width, object.height, MineOSCore.properties.backgroundColor, 0, " ")
 		if object.wallpaper then
 			buffer.drawImage(object.wallpaperPosition.x, object.wallpaperPosition.y, object.wallpaper)
 		end
 	end
 
-	MineOSInterface.mainContainer.iconField = MineOSInterface.mainContainer:addChild(
+	mainContainer.iconField = mainContainer:addChild(
 		MineOSInterface.iconField(
 			1, 2, 1, 1, 3, 2,
 			0xFFFFFF,
@@ -139,53 +147,46 @@ function MineOSInterface.createWidgets()
 			MineOSPaths.desktop
 		)
 	)
-	MineOSInterface.mainContainer.iconField.iconConfigEnabled = true
-	MineOSInterface.mainContainer.iconField.launchers.directory = function(icon)
+	
+	mainContainer.iconField.iconConfigEnabled = true
+	
+	mainContainer.iconField.launchers.directory = function(icon)
 		MineOSInterface.safeLaunch(MineOSPaths.explorer, "-o", icon.path)
 	end
-	MineOSInterface.mainContainer.iconField.launchers.showContainingFolder = function(icon)
-		MineOSInterface.safeLaunch(MineOSPaths.explorer, "-o", fs.path(icon.shortcutPath or icon.path))
+	
+	mainContainer.iconField.launchers.showContainingFolder = function(icon)
+		MineOSInterface.safeLaunch(MineOSPaths.explorer, "-o", filesystem.path(icon.shortcutPath or icon.path))
 	end
-	MineOSInterface.mainContainer.iconField.launchers.showPackageContent = function(icon)
+	
+	mainContainer.iconField.launchers.showPackageContent = function(icon)
 		MineOSInterface.safeLaunch(MineOSPaths.explorer, "-o", icon.path)
 	end
 
-	MineOSInterface.mainContainer.dockContainer = MineOSInterface.mainContainer:addChild(GUI.container(1, 1, MineOSInterface.mainContainer.width, 7))
-	MineOSInterface.mainContainer.dockContainer.saveToOSSettings = function()
+	mainContainer.dockContainer = mainContainer:addChild(GUI.container(1, 1, mainContainer.width, 7))
+
+	mainContainer.dockContainer.saveToOSSettings = function()
 		MineOSCore.properties.dockShortcuts = {}
-		for i = 1, #MineOSInterface.mainContainer.dockContainer.children do
-			if MineOSInterface.mainContainer.dockContainer.children[i].keepInDock then
-				table.insert(MineOSCore.properties.dockShortcuts, MineOSInterface.mainContainer.dockContainer.children[i].path)
+		for i = 1, #mainContainer.dockContainer.children do
+			if mainContainer.dockContainer.children[i].keepInDock then
+				table.insert(MineOSCore.properties.dockShortcuts, mainContainer.dockContainer.children[i].path)
 			end
 		end
 		MineOSCore.saveProperties()
 	end
-	MineOSInterface.mainContainer.dockContainer.sort = function()
+
+	mainContainer.dockContainer.sort = function()
 		local x = 4
-		for i = 1, #MineOSInterface.mainContainer.dockContainer.children do
-			MineOSInterface.mainContainer.dockContainer.children[i].localX = x
+		for i = 1, #mainContainer.dockContainer.children do
+			mainContainer.dockContainer.children[i].localX = x
 			x = x + MineOSCore.properties.iconWidth + MineOSCore.properties.iconHorizontalSpaceBetween
 		end
 
-		MineOSInterface.mainContainer.dockContainer.width = #MineOSInterface.mainContainer.dockContainer.children * (MineOSCore.properties.iconWidth + MineOSCore.properties.iconHorizontalSpaceBetween) - MineOSCore.properties.iconHorizontalSpaceBetween + 6
-		MineOSInterface.mainContainer.dockContainer.localX = math.floor(MineOSInterface.mainContainer.width / 2 - MineOSInterface.mainContainer.dockContainer.width / 2)
+		mainContainer.dockContainer.width = #mainContainer.dockContainer.children * (MineOSCore.properties.iconWidth + MineOSCore.properties.iconHorizontalSpaceBetween) - MineOSCore.properties.iconHorizontalSpaceBetween + 6
+		mainContainer.dockContainer.localX = math.floor(mainContainer.width / 2 - mainContainer.dockContainer.width / 2)
 	end
 
-	local function dockIconEventHandler(mainContainer, icon, e1, e2, e3, e4, e5, e6, ...)
-		if e1 == "touch" then
-			icon.selected = true
-			MineOSInterface.mainContainer:drawOnScreen()
-
-			if e5 == 1 then
-				icon.onRightClick(icon, e1, e2, e3, e4, e5, e6, ...)
-			else
-				icon.onLeftClick(icon, e1, e2, e3, e4, e5, e6, ...)
-			end
-		end
-	end
-
-	MineOSInterface.mainContainer.dockContainer.addIcon = function(path, window)
-		local icon = MineOSInterface.mainContainer.dockContainer:addChild(MineOSInterface.icon(1, 2, path, 0x2D2D2D, 0xFFFFFF))
+	mainContainer.dockContainer.addIcon = function(path, window)
+		local icon = mainContainer.dockContainer:addChild(MineOSInterface.icon(1, 2, path, 0x2D2D2D, 0xFFFFFF))
 		icon:analyseExtension()
 		icon:moveBackward()
 
@@ -200,7 +201,7 @@ function MineOSInterface.createWidgets()
 
 				icon.selected = false
 				MineOSInterface.updateMenu()
-				MineOSInterface.mainContainer:drawOnScreen()
+				mainContainer:drawOnScreen()
 			else
 				MineOSInterface.iconDoubleClick(icon, ...)
 			end
@@ -208,11 +209,11 @@ function MineOSInterface.createWidgets()
 
 		icon.onRightClick = function(icon, e1, e2, e3, e4, ...)
 			local indexOf = icon:indexOf()
-			local menu = GUI.addContextMenu(MineOSInterface.mainContainer, e3, e4)
+			local menu = GUI.addContextMenu(mainContainer, e3, e4)
 			
 			menu.onMenuClosed = function()
 				icon.selected = false
-				MineOSInterface.mainContainer:drawOnScreen()
+				mainContainer:drawOnScreen()
 			end
 
 			if icon.windows then
@@ -224,17 +225,17 @@ function MineOSInterface.createWidgets()
 					for window in pairs(icon.windows) do
 						window:close()
 					end
-					MineOSInterface.mainContainer:drawOnScreen()
+					mainContainer:drawOnScreen()
 				end
 			end
 			
 			menu:addItem(MineOSCore.localization.showContainingFolder).onTouch = function()
-				MineOSInterface.safeLaunch(MineOSPaths.explorer, "-o", fs.path(icon.shortcutPath or icon.path))			
+				MineOSInterface.safeLaunch(MineOSPaths.explorer, "-o", filesystem.path(icon.shortcutPath or icon.path))
 			end
 			
 			menu:addSeparator()
 			
-			menu:addItem(MineOSCore.localization.moveRight, indexOf >= #MineOSInterface.mainContainer.dockContainer.children - 1).onTouch = function()
+			menu:addItem(MineOSCore.localization.moveRight, indexOf >= #mainContainer.dockContainer.children - 1).onTouch = function()
 				moveDockIcon(indexOf, 1)
 			end
 			
@@ -245,37 +246,37 @@ function MineOSInterface.createWidgets()
 			menu:addSeparator()
 			
 			if icon.keepInDock then
-				if #MineOSInterface.mainContainer.dockContainer.children > 1 then
+				if #mainContainer.dockContainer.children > 1 then
 					menu:addItem(MineOSCore.localization.removeFromDock).onTouch = function()
 						if icon.windows then
 							icon.keepInDock = nil
 						else
 							icon:remove()
-							MineOSInterface.mainContainer.dockContainer.sort()
+							mainContainer.dockContainer.sort()
 						end
-						MineOSInterface.mainContainer.dockContainer.saveToOSSettings()
-						MineOSInterface.mainContainer:drawOnScreen()
+						mainContainer.dockContainer.saveToOSSettings()
+						mainContainer:drawOnScreen()
 					end
 				end
 			else
 				if icon.windows then
 					menu:addItem(MineOSCore.localization.keepInDock).onTouch = function()
 						icon.keepInDock = true
-						MineOSInterface.mainContainer.dockContainer.saveToOSSettings()
+						mainContainer.dockContainer.saveToOSSettings()
 					end
 				end
 			end
 
-			MineOSInterface.mainContainer:drawOnScreen()
+			mainContainer:drawOnScreen()
 		end
 
-		MineOSInterface.mainContainer.dockContainer.sort()
+		mainContainer.dockContainer.sort()
 
 		return icon
 	end
 
 	-- Trash
-	local icon = MineOSInterface.mainContainer.dockContainer.addIcon(MineOSPaths.trash)
+	local icon = mainContainer.dockContainer.addIcon(MineOSPaths.trash)
 	icon.launchers.directory = function(icon)
 		MineOSInterface.safeLaunch(MineOSPaths.explorer, "-o", icon.path)
 	end
@@ -289,19 +290,19 @@ function MineOSInterface.createWidgets()
 	end
 
 	icon.onRightClick = function(icon, e1, e2, e3, e4)
-		local menu = GUI.addContextMenu(MineOSInterface.mainContainer, e3, e4)
+		local menu = GUI.addContextMenu(mainContainer, e3, e4)
 		
 		menu.onMenuClosed = function()
 			icon.selected = false
-			MineOSInterface.mainContainer:drawOnScreen()
+			mainContainer:drawOnScreen()
 		end
 		
 		menu:addItem(MineOSCore.localization.emptyTrash).onTouch = function()
-			local container = MineOSInterface.addBackgroundContainer(MineOSInterface.mainContainer, MineOSCore.localization.areYouSure)
+			local container = MineOSInterface.addBackgroundContainer(mainContainer, MineOSCore.localization.areYouSure)
 
 			container.layout:addChild(GUI.button(1, 1, 30, 1, 0xE1E1E1, 0x2D2D2D, 0xA5A5A5, 0x2D2D2D, "OK")).onTouch = function()
-				for file in fs.list(MineOSPaths.trash) do
-					fs.remove(MineOSPaths.trash .. file)
+				for file in filesystem.list(MineOSPaths.trash) do
+					filesystem.remove(MineOSPaths.trash .. file)
 				end
 				container:remove()
 				computer.pushSignal("MineOSCore", "updateFileList")
@@ -309,22 +310,22 @@ function MineOSInterface.createWidgets()
 
 			container.panel.onTouch = function()
 				container:remove()
-				MineOSInterface.mainContainer:drawOnScreen()
+				mainContainer:drawOnScreen()
 			end
 
-			MineOSInterface.mainContainer:drawOnScreen()
+			mainContainer:drawOnScreen()
 		end
 
-		MineOSInterface.mainContainer:drawOnScreen()
+		mainContainer:drawOnScreen()
 	end
 
 	for i = 1, #MineOSCore.properties.dockShortcuts do
-		MineOSInterface.mainContainer.dockContainer.addIcon(MineOSCore.properties.dockShortcuts[i]).keepInDock = true
+		mainContainer.dockContainer.addIcon(MineOSCore.properties.dockShortcuts[i]).keepInDock = true
 	end
 
 	-- Draw dock drawDock dockDraw cyka заебался искать, блядь
-	local overrideDockContainerDraw = MineOSInterface.mainContainer.dockContainer.draw
-	MineOSInterface.mainContainer.dockContainer.draw = function(dockContainer)
+	local overrideDockContainerDraw = mainContainer.dockContainer.draw
+	mainContainer.dockContainer.draw = function(dockContainer)
 		local color, currentDockTransparency, currentDockWidth, xPos = MineOSCore.properties.dockColor, dockTransparency, dockContainer.width - 2, dockContainer.x
 
 		for y = dockContainer.y + dockContainer.height - 1, dockContainer.y + dockContainer.height - 4, -1 do
@@ -341,13 +342,13 @@ function MineOSInterface.createWidgets()
 		overrideDockContainerDraw(dockContainer)
 	end
 
-	MineOSInterface.mainContainer.windowsContainer = MineOSInterface.mainContainer:addChild(GUI.container(1, 2, 1, 1))
+	mainContainer.windowsContainer = mainContainer:addChild(GUI.container(1, 2, 1, 1))
 
-	MineOSInterface.mainContainer.menu = MineOSInterface.mainContainer:addChild(GUI.menu(1, 1, MineOSInterface.mainContainer.width, MineOSCore.properties.menuColor, 0x696969, 0x3366CC, 0xFFFFFF))
+	mainContainer.menu = mainContainer:addChild(GUI.menu(1, 1, mainContainer.width, MineOSCore.properties.menuColor, 0x696969, 0x3366CC, 0xFFFFFF))
 	
-	local MineOSContextMenu = MineOSInterface.mainContainer.menu:addContextMenu("MineOS", 0x000000)
+	local MineOSContextMenu = mainContainer.menu:addContextMenu("MineOS", 0x000000)
 	MineOSContextMenu:addItem(MineOSCore.localization.aboutSystem).onTouch = function()
-		local container = MineOSInterface.addBackgroundContainer(MineOSInterface.mainContainer, MineOSCore.localization.aboutSystem)
+		local container = MineOSInterface.addBackgroundContainer(mainContainer, MineOSCore.localization.aboutSystem)
 		container.layout:removeChildren()
 		
 		local lines = {
@@ -387,7 +388,7 @@ function MineOSInterface.createWidgets()
 		textBox:setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
 		textBox.eventHandler = container.panel.eventHandler
 
-		MineOSInterface.mainContainer:drawOnScreen()
+		mainContainer:drawOnScreen()
 	end
 
 	MineOSContextMenu:addItem(MineOSCore.localization.updates).onTouch = function()
@@ -410,16 +411,16 @@ function MineOSInterface.createWidgets()
 
 	MineOSContextMenu:addItem(MineOSCore.localization.returnToShell).onTouch = function()
 		MineOSNetwork.broadcastComputerState(false)
-		MineOSInterface.mainContainer:stopEventHandling()
+		mainContainer:stopEventHandling()
 		MineOSInterface.clearTerminal()
 		os.exit()
 	end
 		
-	MineOSInterface.mainContainer.menuLayout = MineOSInterface.mainContainer:addChild(GUI.layout(1, 1, 1, 1, 1, 1))
-	MineOSInterface.mainContainer.menuLayout:setDirection(1, 1, GUI.DIRECTION_HORIZONTAL)
-	MineOSInterface.mainContainer.menuLayout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_RIGHT, GUI.ALIGNMENT_VERTICAL_TOP)
-	MineOSInterface.mainContainer.menuLayout:setMargin(1, 1, 1, 0)
-	MineOSInterface.mainContainer.menuLayout:setSpacing(1, 1, 2)
+	mainContainer.menuLayout = mainContainer:addChild(GUI.layout(1, 1, 1, 1, 1, 1))
+	mainContainer.menuLayout:setDirection(1, 1, GUI.DIRECTION_HORIZONTAL)
+	mainContainer.menuLayout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_RIGHT, GUI.ALIGNMENT_VERTICAL_TOP)
+	mainContainer.menuLayout:setMargin(1, 1, 1, 0)
+	mainContainer.menuLayout:setSpacing(1, 1, 2)
 
 	local dateWidget, dateWidgetText = MineOSInterface.addMenuWidget(MineOSInterface.menuWidget(1))
 	dateWidget.drawContent = function()
@@ -480,31 +481,31 @@ function MineOSInterface.createWidgets()
 	end
 
 	MineOSInterface.updateFileListAndDraw = function(...)
-		MineOSInterface.mainContainer.iconField:updateFileList()
-		MineOSInterface.mainContainer:drawOnScreen(...)
+		mainContainer.iconField:updateFileList()
+		mainContainer:drawOnScreen(...)
 	end
 
 	local lastWindowHandled
-	MineOSInterface.mainContainer.eventHandler = function(mainContainer, object, e1, e2, e3, e4)
+	mainContainer.eventHandler = function(mainContainer, object, e1, e2, e3, e4)
 		if e1 == "key_down" then
-			local windowsCount = #MineOSInterface.mainContainer.windowsContainer.children
+			local windowsCount = #mainContainer.windowsContainer.children
 			-- Ctrl or CMD
 			if windowsCount > 0 and not lastWindowHandled and (keyboard.isKeyDown(29) or keyboard.isKeyDown(219)) then
 				-- W
 				if e4 == 17 then
-					MineOSInterface.mainContainer.windowsContainer.children[windowsCount]:close()
+					mainContainer.windowsContainer.children[windowsCount]:close()
 					lastWindowHandled = true
 
 					mainContainer:drawOnScreen()
 				-- H
 				elseif e4 == 35 then
 					local lastUnhiddenWindowIndex = 1
-					for i = 1, #MineOSInterface.mainContainer.windowsContainer.children do
-						if not MineOSInterface.mainContainer.windowsContainer.children[i].hidden then
+					for i = 1, #mainContainer.windowsContainer.children do
+						if not mainContainer.windowsContainer.children[i].hidden then
 							lastUnhiddenWindowIndex = i
 						end
 					end
-					MineOSInterface.mainContainer.windowsContainer.children[lastUnhiddenWindowIndex]:minimize()
+					mainContainer.windowsContainer.children[lastUnhiddenWindowIndex]:minimize()
 					lastWindowHandled = true
 
 					mainContainer:drawOnScreen()
@@ -519,7 +520,7 @@ function MineOSInterface.createWidgets()
 				MineOSInterface.updateFileListAndDraw(true)
 			elseif e2 == "updateWallpaper" then
 				MineOSInterface.changeWallpaper()
-				MineOSInterface.mainContainer:drawOnScreen()
+				mainContainer:drawOnScreen()
 			end
 		elseif e1 == "MineOSNetwork" then
 			if e2 == "accessDenied" then
@@ -531,7 +532,7 @@ function MineOSInterface.createWidgets()
 
 		if computer.uptime() - dateUptime >= 1 then
 			MineOSCore.updateTime()
-			MineOSInterface.mainContainer:drawOnScreen()
+			mainContainer:drawOnScreen()
 			dateUptime = computer.uptime()
 		end
 
@@ -541,9 +542,9 @@ function MineOSInterface.createWidgets()
 			end
 
 			if dateUptime - screensaverUptime >= MineOSCore.properties.screensaverDelay then
-				if fs.exists(MineOSCore.properties.screensaver) then
+				if filesystem.exists(MineOSCore.properties.screensaver) then
 					MineOSInterface.safeLaunch(MineOSCore.properties.screensaver)
-					MineOSInterface.mainContainer:drawOnScreen(true)
+					mainContainer:drawOnScreen(true)
 				end
 
 				screensaverUptime = computer.uptime()
@@ -551,26 +552,12 @@ function MineOSInterface.createWidgets()
 		end
 	end
 
-	MineOSInterface.menuInitialChildren = MineOSInterface.mainContainer.menu.children
+	MineOSInterface.menuInitialChildren = mainContainer.menu.children
 end
 
-local function updateCurrentTimestamp()
-	local name = MineOSPaths.system .. "/Timestamp.tmp"
-	local file = io.open(name, "w")
-	file:close()
-	realTimestamp = math.floor(fs.lastModified(name) / 1000)
-	fs.remove(name)
-end
+---------------------------------------- Main loop ----------------------------------------
 
-local function createOSWindow()
-	MineOSInterface.mainContainer = GUI.fullScreenContainer()
-
-	MineOSInterface.createWidgets()
-	MineOSInterface.changeResolution()
-	MineOSInterface.changeWallpaper()
-	MineOSCore.updateTimezone()
-end
-
+-- Runs tasks before/after OS UI initialization
 local function runTasks(mode)
 	for i = 1, #MineOSCore.properties.tasks do
 		local task = MineOSCore.properties.tasks[i]
@@ -580,33 +567,65 @@ local function runTasks(mode)
 	end
 end
 
----------------------------------------- Сама ОС ----------------------------------------
+-- Creates OS main container and all its widgets
+local function createWidgets()
+	mainContainer = GUI.fullScreenContainer()
+	MineOSInterface.mainContainer = mainContainer
 
+	MineOSInterface.createWidgets()
+	MineOSInterface.changeResolution()
+	MineOSInterface.changeWallpaper()
+	MineOSCore.updateTimezone()
+end
+
+-- "double_touch" event handler
+if not event.doubleTouchHandler then
+	event.doubleTouchHandler = event.addHandler(
+		function(signalType, screenAddress, x, y, button, user)
+			local uptime = computer.uptime()
+			
+			if doubleTouchX == x and doubleTouchY == y and doubleTouchButton == button and doubleTouchScreenAddress == screenAddress and uptime - doubleTouchUptime <= doubleTouchInterval then
+				event.skip("touch")
+				computer.pushSignal("double_touch", screenAddress, x, y, button, user)
+			end
+
+			doubleTouchX, doubleTouchY, doubleTouchButton, doubleTouchUptime, doubleTouchScreenAddress = x, y, button, uptime, screenAddress
+		end,
+		"touch"
+	)
+end
+
+-- Optaining temporary file's last modified UNIX timestamp
+local temporaryPath = MineOSPaths.system .. "Timestamp.tmp"
+local file = io.open(temporaryPath, "w")
+file:close()
+realTimestamp = math.floor(filesystem.lastModified(temporaryPath) / 1000)
+filesystem.remove(temporaryPath)
+
+-- Localization loading
 MineOSCore.localization = MineOSCore.getLocalization(MineOSPaths.localizationFiles)
 
+-- Tasks and UI initialization
 runTasks(2)
-
-MineOSInterface.applyTransparency()
-updateCurrentTimestamp()
-createOSWindow()
-MineOSInterface.mainContainer:drawOnScreen()
+createWidgets()
+mainContainer:drawOnScreen()
 MineOSNetwork.update()
-
 runTasks(1)
 
+-- Loops with UI regeneration after errors 
 while true do
 	local success, path, line, traceback = MineOSCore.call(
-		MineOSInterface.mainContainer.startEventHandling,
-		MineOSInterface.mainContainer,
+		mainContainer.startEventHandling,
+		mainContainer,
 		0
 	)
 
 	if success then
 		break
 	else
-		createOSWindow()
-		MineOSInterface.mainContainer:drawOnScreen()
+		createWidgets()
+		mainContainer:drawOnScreen()
 		MineOSInterface.showErrorWindow(path, line, traceback)
-		MineOSInterface.mainContainer:drawOnScreen()
+		mainContainer:drawOnScreen()
 	end
 end

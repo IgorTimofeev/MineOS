@@ -27,17 +27,17 @@ function event.addHandler(callback, signalType, times, interval)
 	checkArg(3, times, "number", "nil")
 	checkArg(4, nextTriggerTime, "number", "nil")
 
-	local ID = math.random(0x7FFFFFFF)
-	while handlers[ID] do
+	local ID
+	repeat
 		ID = math.random(0x7FFFFFFF)
-	end
+	until not handlers[ID]
 
 	handlers[ID] = {
 		signalType = signalType,
 		callback = callback,
 		times = times or mathHuge,
 		interval = interval,
-		nextTriggerTime = interval and (computerUptime() + interval) or 0
+		nextTriggerTime = interval and computerUptime() + interval or 0
 	}
 
 	return ID
@@ -48,6 +48,7 @@ function event.removeHandler(ID)
 
 	if handlers[ID] then
 		handlers[ID] = nil
+
 		return true
 	else
 		return false, "No registered handlers found for ID " .. ID
@@ -71,7 +72,7 @@ function event.listen(signalType, callback)
 	checkArg(2, callback, "function")
 
 	for ID, handler in pairs(handlers) do
-		if handler.callback == callback then
+		if handler.callback == callback and handler.signalType == signalType then
 			return false, "Callback method " .. tostring(callback) .. " is already registered"
 		end
 	end
@@ -186,21 +187,6 @@ function event.pull(arg1, arg2)
 		end
 	until uptime >= deadline
 end
-
---------------------------------------------------------------------------------------------------------
-
-local doubleTouchInterval, lastTouchX, lastTouchY, lastTouchButton, lastTouchUptime, lastTouchScreenAddress = 0.3, 0, 0, 0, 0
-
-event.listen("touch", function(signalType, screenAddress, x, y, button, user)
-	local uptime = computerUptime()
-	
-	if lastTouchX == x and lastTouchY == y and lastTouchButton == button and lastTouchScreenAddress == screenAddress and uptime - lastTouchUptime <= doubleTouchInterval then
-		event.skip("touch")
-		computer.pushSignal("double_touch", screenAddress, x, y, button, user)
-	end
-
-	lastTouchX, lastTouchY, lastTouchButton, lastTouchUptime, lastTouchScreenAddress = x, y, button, uptime, screenAddress
-end)
 
 --------------------------------------------------------------------------------------------------------
 
