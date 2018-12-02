@@ -7,6 +7,7 @@ local event = require("event")
 local MineOSPaths = require("MineOSPaths")
 local MineOSCore = require("MineOSCore")
 local MineOSNetwork = require("MineOSNetwork")
+local unicode = require("unicode")
 local MineOSInterface = require("MineOSInterface")
 
 local args, options = require("shell").parse(...)
@@ -37,18 +38,20 @@ local workpathHistoryCurrent = 0
 
 --------------------------------------------------------------------------------
 
-local mainContainer, window, menu = MineOSInterface.addWindow(GUI.filledWindow(1, 1, 88, 26, 0xE1E1E1))
+local mainContainer, window, menu = MineOSInterface.addWindow(GUI.filledWindow(1, 1, 100, 26, 0xE1E1E1))
 
 local titlePanel = window:addChild(GUI.panel(1, 1, 1, 3, 0x3C3C3C))
 
-local prevButton = window:addChild(GUI.adaptiveRoundedButton(9, 2, 1, 0, 0x5A5A5A, 0xC3C3C3, 0x2D2D2D, 0xE1E1E1, "<"))
+local prevButton = window:addChild(GUI.adaptiveRoundedButton(9, 2, 1, 0, 0x5A5A5A, 0xC3C3C3, 0xE1E1E1, 0x3C3C3C, "<"))
 prevButton.colors.disabled.background = 0x4B4B4B
 prevButton.colors.disabled.text = 0xA5A5A5
 
-local nextButton = window:addChild(GUI.adaptiveRoundedButton(14, 2, 1, 0, 0x5A5A5A, 0xC3C3C3, 0x2D2D2D, 0xE1E1E1, ">"))
+local nextButton = window:addChild(GUI.adaptiveRoundedButton(14, 2, 1, 0, 0x5A5A5A, 0xC3C3C3, 0xE1E1E1, 0x3C3C3C, ">"))
 nextButton.colors.disabled = prevButton.colors.disabled
 
-local FTPButton = window:addChild(GUI.adaptiveRoundedButton(20, 2, 1, 0, 0x5A5A5A, 0xC3C3C3, 0x2D2D2D, 0xE1E1E1, MineOSCore.localization.networkFTPNewConnection))
+-- local FTPButton = window:addChild(GUI.adaptiveRoundedButton(20, 2, 1, 0, 0x5A5A5A, 0xC3C3C3, 0x2D2D2D, 0xE1E1E1, MineOSCore.localization.networkFTPNewConnection))
+local FTPButton = window:addChild(GUI.adaptiveRoundedButton(nextButton.localX + nextButton.width + 2, 2, 1, 0, 0x5A5A5A, 0xC3C3C3, 0xE1E1E1, 0x3C3C3C, "FTP"))
+
 FTPButton.colors.disabled = prevButton.colors.disabled
 FTPButton.disabled = not MineOSNetwork.internetProxy
 
@@ -63,19 +66,15 @@ itemsLayout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_LEFT, GUI.ALIGNMENT_VERT
 itemsLayout:setSpacing(1, 1, 0)
 itemsLayout:setMargin(1, 1, 0, 0)
 
-local searchInput = window:addChild(GUI.input(1, 2, 36, 1, 0x4B4B4B, 0xC3C3C3, 0x878787, 0x4B4B4B, 0xE1E1E1, nil, MineOSCore.localization.search, true))
+local searchInput = window:addChild(GUI.input(1, 2, 20, 1, 0x4B4B4B, 0xC3C3C3, 0x878787, 0x4B4B4B, 0xE1E1E1, nil, MineOSCore.localization.search, true))
 
 local iconField = window:addChild(MineOSInterface.iconField(1, 4, 1, 1, 2, 2, 0x3C3C3C, 0x969696, MineOSPaths.desktop))
 
 local scrollBar = window:addChild(GUI.scrollBar(1, 4, 1, 1, 0xC3C3C3, 0x4B4B4B, iconFieldYOffset, 1, 1, 1, 1, true))
 scrollBar.eventHandler = nil
 
-local statusBar = window:addChild(GUI.object(1, 1, 1, 1))
-
-statusBar.draw = function(object)
-	buffer.drawRectangle(object.x, object.y, object.width, object.height, 0xF0F0F0, 0xA5A5A5, " ")
-	buffer.drawText(object.x + 1, object.y, 0xA5A5A5, string.limit(("root/" .. iconField.workpath):gsub("/+$", ""):gsub("%/+", " ► "), object.width - 2, "left"))
-end
+local statusContainer = window:addChild(GUI.container(FTPButton.localX + FTPButton.width + 2, 2, 1, 1))
+local statusPanel = statusContainer:addChild(GUI.panel(1, 1, 1, 1, 0x4B4B4B))
 
 ------------------------------------------------------------------------------------------------------
 
@@ -264,6 +263,8 @@ updateSidebar = function()
 				MineOSCore.saveProperties()
 			end
 		end
+
+		addSidebarSeparator()
 	end
 
 	-- Mounts
@@ -292,6 +293,15 @@ itemsLayout.eventHandler = function(mainContainer, object, e1, e2, e3, e4, e5)
 		end
 
 		mainContainer:drawOnScreen()
+	elseif e1 == "component_added" or e1 == "component_removed" then
+		FTPButton.disabled = not MineOSNetwork.internetProxy
+		updateSidebar()
+		MineOSInterface.mainContainer:drawOnScreen()
+	elseif e1 == "MineOSNetwork" then
+		if e2 == "updateProxyList" or e2 == "timeout" then
+			updateSidebar()
+			MineOSInterface.mainContainer:drawOnScreen()
+		end
 	end
 end
 
@@ -383,19 +393,6 @@ FTPButton.onTouch = function()
 	MineOSInterface.mainContainer:drawOnScreen()
 end
 
-statusBar.eventHandler = function(mainContainer, object, e1, e2)
-	if e1 == "component_added" or e1 == "component_removed" then
-		FTPButton.disabled = not MineOSNetwork.internetProxy
-		updateSidebar()
-		MineOSInterface.mainContainer:drawOnScreen()
-	elseif e1 == "MineOSNetwork" then
-		if e2 == "updateProxyList" or e2 == "timeout" then
-			updateSidebar()
-			MineOSInterface.mainContainer:drawOnScreen()
-		end
-	end
-end
-
 iconField.eventHandler = function(mainContainer, object, e1, e2, e3, e4, e5)
 	if e1 == "scroll" then
 		iconField.yOffset = iconField.yOffset + e5 * 2
@@ -451,6 +448,35 @@ end
 
 local overrideUpdateFileList = iconField.updateFileList
 iconField.updateFileList = function(...)
+	statusContainer:removeChildren(2)
+
+	local x, path = 2, "/"
+
+	local function addNode(text, path)
+		statusContainer:addChild(GUI.adaptiveButton(x, 1, 0, 0, nil, 0xB4B4B4, nil, 0xFFFFFF, text)).onTouch = function()
+			addWorkpath(path)
+			updateFileListAndDraw()
+		end
+
+		x = x + unicode.len(text)
+	end
+
+	addNode("root", "/")
+
+	for node in iconField.workpath:gsub("/$", ""):gmatch("[^/]+") do
+		statusContainer:addChild(GUI.text(x, 1, 0x696969, " ► "))
+		x = x + 3
+		
+		path = path .. node .. "/"
+		addNode(node, path)
+	end
+
+	if x > statusContainer.width then
+		for i = 2, #statusContainer.children do
+			statusContainer.children[i].localX = statusContainer.children[i].localX - (x - statusContainer.width)
+		end
+	end
+
 	mainContainer:drawOnScreen()
 	overrideUpdateFileList(...)
 	updateScrollBar()
@@ -469,17 +495,15 @@ window.onResize = function(width, height)
 	end
 
 	window.backgroundPanel.width = width - sidebarContainer.width
-	window.backgroundPanel.height = height - 4
+	window.backgroundPanel.height = height - 3
 	window.backgroundPanel.localX = sidebarContainer.width + 1
 	window.backgroundPanel.localY = 4
 
-	statusBar.localX = sidebarContainer.width + 1
-	statusBar.localY = height
-	statusBar.width = window.backgroundPanel.width
-
 	titlePanel.width = width
-	searchInput.width = math.floor(width * 0.25)
-	searchInput.localX = width - searchInput.width - 1
+	searchInput.localX = width - searchInput.width
+
+	statusContainer.width = window.width - searchInput.width - FTPButton.width - 22
+	statusPanel.width = statusContainer.width
 
 	iconField.width = window.backgroundPanel.width
 	iconField.height = height + 4
