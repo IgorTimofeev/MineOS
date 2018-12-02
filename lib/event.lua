@@ -37,7 +37,7 @@ function event.addHandler(callback, signalType, times, interval)
 		callback = callback,
 		times = times or mathHuge,
 		interval = interval,
-		nextTriggerTime = interval and (computerUptime() + interval) or nil
+		nextTriggerTime = interval and (computerUptime() + interval) or 0
 	}
 
 	return ID
@@ -114,19 +114,19 @@ function event.skip(signalType)
 end
 
 function event.pull(arg1, arg2)
-	local args1Type, uptime, timeout, preferredTimeout, signalType, signalData = type(arg1), computerUptime()
-	if args1Type == "string" then
+	local arg1Type, uptime, timeout, preferredTimeout, signalType, signalData = type(arg1), computerUptime()
+	if arg1Type == "string" then
 		preferredTimeout, signalType = mathHuge, arg1
-	elseif args1Type == "number" then
+	elseif arg1Type == "number" then
 		preferredTimeout, signalType = arg1, type(arg2) == "string" and arg2 or nil
 	end
 	
 	local deadline = uptime + (preferredTimeout or mathHuge)
-	while uptime <= deadline do
+	repeat
 		-- Determining pullSignal timeout
 		timeout = deadline
 		for ID, handler in pairs(handlers) do
-			if handler.nextTriggerTime then
+			if handler.nextTriggerTime > 0 then
 				timeout = mathMin(timeout, handler.nextTriggerTime)
 			end
 		end
@@ -141,10 +141,10 @@ function event.pull(arg1, arg2)
 
 				if
 					(not handler.signalType or handler.signalType == signalData[1]) and
-					(not handler.nextTriggerTime or handler.nextTriggerTime <= uptime)
+					handler.nextTriggerTime <= uptime
 				then
 					handler.times = handler.times - 1
-					if handler.nextTriggerTime then
+					if handler.nextTriggerTime > 0 then
 						handler.nextTriggerTime = uptime + handler.interval
 					end
 
@@ -156,7 +156,7 @@ function event.pull(arg1, arg2)
 			end
 		end
 
-		-- Program interruption support
+		-- Program interruption support. It's faster to do it here instead of registering handlers
 		if signalData[1] == "key_down" or signalData[1] == "key_up" and event.interruptingEnabled then
 			-- Analysing for which interrupting key is pressed - we don't need keyboard API for this
 			if event.interruptingKeyCodes[signalData[4]] then
@@ -184,7 +184,7 @@ function event.pull(arg1, arg2)
 				return table.unpack(signalData)
 			end
 		end
-	end
+	until uptime >= deadline
 end
 
 --------------------------------------------------------------------------------------------------------
