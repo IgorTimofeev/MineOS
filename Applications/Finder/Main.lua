@@ -128,7 +128,7 @@ end
 local function sidebarItemDraw(object)
 	local textColor, limit = object.textColor, object.width - 2
 	if object.path == iconField.workpath then
-		textColor = 0x4B4B4B
+		textColor = 0x3C3C3C
 		buffer.drawRectangle(object.x, object.y, object.width, 1, 0xE1E1E1, textColor, " ")
 
 		if object.onRemove then
@@ -488,13 +488,13 @@ iconField.updateFileList = function(...)
 end
 
 gotoButton.onTouch = function()
-	local input = window:addChild(GUI.input(statusContainer.localX, statusContainer.localY, statusContainer.width, 1, 0x4B4B4B, 0xE1E1E1, 0x878787, 0x4B4B4B, 0xE1E1E1, nil, nil))
+	local input = window:addChild(GUI.input(statusContainer.localX, statusContainer.localY, statusContainer.width, 1, 0x4B4B4B, 0xC3C3C3, 0xC3C3C3, 0x4B4B4B, 0xC3C3C3, nil, nil))
 	
 	input.onInputFinished = function()
 		input:remove()
 		statusContainer.hidden = false
 		input.text = ("/" .. input.text .. "/"):gsub("/+", "/")
-				
+
 		if filesystem.exists(input.text) and filesystem.isDirectory(input.text) then
 			addWorkpath(input.text)
 			iconField:updateFileList()
