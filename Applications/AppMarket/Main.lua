@@ -643,7 +643,7 @@ mainMenu = function(menuID, messageToUser)
 
 	contentContainer:removeChildren()
 
-	local menuList = contentContainer:addChild(GUI.list(1, 1, 23, contentContainer.height, 3, 0, 0xE1E1E1, 0x4B4B4B, 0xD2D2D2, 0x4B4B4B, 0x4B4B4B, 0xE1E1E1))
+	local menuList = contentContainer:addChild(GUI.list(1, 1, 23, contentContainer.height, 3, 0, 0xE1E1E1, 0x3C3C3C, 0xD2D2D2, 0x3C3C3C, 0x3C3C3C, 0xE1E1E1))
 	local menuContentContainer = contentContainer:addChild(GUI.container(menuList.width + 1, 1, contentContainer.width - menuList.width, contentContainer.height))
 
 	local function statistics()
@@ -1552,7 +1552,7 @@ editPublication = function(initialPublication, initialCategoryID)
 	local mainUrlInput = layout:addChild(GUI.input(1, 1, 36, 1, 0xFFFFFF, 0x696969, 0xB4B4B4, 0xFFFFFF, 0x2D2D2D, initialPublication and initialPublication.source_url or "", "http://example.com/Main.lua"))
 	local iconUrlInput = layout:addChild(GUI.input(1, 1, 36, 1, 0xFFFFFF, 0x696969, 0xB4B4B4, 0xFFFFFF, 0x2D2D2D, initialPublication and initialPublication.icon_url or "", "http://example.com/Icon.pic"))
 	local mainPathInput = layout:addChild(GUI.input(1, 1, 36, 1, 0xFFFFFF, 0x696969, 0xB4B4B4, 0xFFFFFF, 0x2D2D2D, initialPublication and initialPublication.path or "", "MyScript.lua"))
-	local descriptionInput = layout:addChild(GUI.input(1, 1, 36, 1, 0xFFFFFF, 0x696969, 0xB4B4B4, 0xFFFFFF, 0x2D2D2D, initialPublication and initialPublication.initial_description or "", "This is my cool script"))
+	local descriptionInput = layout:addChild(GUI.input(1, 1, 36, 1, 0xFFFFFF, 0x696969, 0xB4B4B4, 0xFFFFFF, 0x2D2D2D, initialPublication and initialPublication.initial_description or "", "This is my cool script", true))
 	local dependenciesLayout = layout:addChild(newPlusMinusCyka(36, 0))
 
 	local function addDependency(dependency)
