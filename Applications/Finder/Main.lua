@@ -2,23 +2,17 @@
 local GUI = require("GUI")
 local buffer = require("doubleBuffering")
 local computer = require("computer")
-local fs = require("filesystem")
+local filesystem = require("filesystem")
 local event = require("event")
-local MineOSPaths = require("MineOSPaths")
-local MineOSCore = require("MineOSCore")
-local MineOSNetwork = require("MineOSNetwork")
 local unicode = require("unicode")
+local MineOSCore = require("MineOSCore")
+local MineOSPaths = require("MineOSPaths")
+local MineOSNetwork = require("MineOSNetwork")
 local MineOSInterface = require("MineOSInterface")
 
 local args, options = require("shell").parse(...)
 
 --------------------------------------------------------------------------------
-
-local resourcesPath = MineOSCore.getCurrentScriptDirectory()
-local favouritesPath = MineOSPaths.applicationData .. "Finder/Favourites3.cfg"
-
-local sidebarTitleColor = 0xC3C3C3
-local sidebarItemColor = 0x696969
 
 local favourites = {
 	{name = "Root", path = "/"},
@@ -29,6 +23,13 @@ local favourites = {
 	{name = "Libraries", path = "/lib/"},
 	{name = "Trash", path = MineOSPaths.trash},
 }
+
+
+local resourcesPath = MineOSCore.getCurrentScriptDirectory()
+local favouritesPath = MineOSPaths.applicationData .. "Finder/Favourites3.cfg"
+
+local sidebarTitleColor = 0xC3C3C3
+local sidebarItemColor = 0x696969
 
 local iconFieldYOffset = 2
 local scrollTimerID
@@ -49,7 +50,6 @@ prevButton.colors.disabled.text = 0xA5A5A5
 local nextButton = window:addChild(GUI.adaptiveRoundedButton(14, 2, 1, 0, 0x5A5A5A, 0xC3C3C3, 0xE1E1E1, 0x3C3C3C, ">"))
 nextButton.colors.disabled = prevButton.colors.disabled
 
--- local FTPButton = window:addChild(GUI.adaptiveRoundedButton(20, 2, 1, 0, 0x5A5A5A, 0xC3C3C3, 0x2D2D2D, 0xE1E1E1, MineOSCore.localization.networkFTPNewConnection))
 local FTPButton = window:addChild(GUI.adaptiveRoundedButton(nextButton.localX + nextButton.width + 2, 2, 1, 0, 0x5A5A5A, 0xC3C3C3, 0xE1E1E1, 0x3C3C3C, "FTP"))
 
 FTPButton.colors.disabled = prevButton.colors.disabled
@@ -76,7 +76,9 @@ scrollBar.eventHandler = nil
 local statusContainer = window:addChild(GUI.container(FTPButton.localX + FTPButton.width + 2, 2, 1, 1))
 local statusPanel = statusContainer:addChild(GUI.panel(1, 1, 1, 1, 0x4B4B4B))
 
-------------------------------------------------------------------------------------------------------
+local gotoButton = window:addChild(GUI.button(1, 2, 3, 1, 0x5A5A5A, 0xC3C3C3, 0xE1E1E1, 0x3C3C3C, "→"))
+
+--------------------------------------------------------------------------------
 
 local function saveFavourites()
 	table.toFile(favouritesPath, favourites)
@@ -174,7 +176,7 @@ local function addSidebarSeparator()
 end
 
 local function onFavouriteTouch(path)
-	if fs.exists(path) then
+	if filesystem.exists(path) then
 		addWorkpath(path)
 		updateFileListAndDraw()
 	else
@@ -186,11 +188,14 @@ local openFTP, updateSidebar
 
 openFTP = function(...)
 	local mountPath = MineOSNetwork.mountPaths.FTP .. MineOSNetwork.getFTPProxyName(...) .. "/"
+	
+	addWorkpath(mountPath)
+	mainContainer:drawOnScreen()
+
 	local proxy, reason = MineOSNetwork.connectToFTP(...)
 	if proxy then
 		MineOSNetwork.umountFTPs()
-		fs.mount(proxy, mountPath)
-		addWorkpath(mountPath)
+		filesystem.mount(proxy, mountPath)
 		updateSidebar()
 		updateFileListAndDraw()
 	else
@@ -205,7 +210,7 @@ updateSidebar = function()
 	addSidebarTitle(MineOSCore.localization.favourite)
 	
 	for i = 1, #favourites do
-		local object = addSidebarItem(" " .. fs.name(favourites[i].name), favourites[i].path)
+		local object = addSidebarItem(" " .. filesystem.name(favourites[i].name), favourites[i].path)
 		
 		object.onTouch = function(e1, e2, e3)
 			onFavouriteTouch(favourites[i].path)
@@ -223,7 +228,7 @@ updateSidebar = function()
 
 	-- Modem connections
 	local added = false
-	for proxy, path in fs.mounts() do
+	for proxy, path in filesystem.mounts() do
 		if proxy.MineOSNetworkModem then
 			if not added then
 				addSidebarTitle(MineOSCore.localization.network)
@@ -270,9 +275,9 @@ updateSidebar = function()
 	-- Mounts
 	addSidebarTitle(MineOSCore.localization.mounts)
 	
-	for proxy, path in fs.mounts() do
+	for proxy, path in filesystem.mounts() do
 		if path ~= "/" and not proxy.MineOSNetworkModem and not proxy.MineOSNetworkFTP then
-			addSidebarItem(" " .. (proxy.getLabel() or fs.name(path)), path .. "/").onTouch = function()
+			addSidebarItem(" " .. (proxy.getLabel() or filesystem.name(path)), path .. "/").onTouch = function()
 				onFavouriteTouch(path .. "/")
 			end
 		end
@@ -442,7 +447,7 @@ iconField.launchers.showPackageContent = function(icon)
 end
 
 iconField.launchers.showContainingFolder = function(icon)
-	addWorkpath(fs.path(MineOSCore.readShortcut(icon.path)))
+	addWorkpath(filesystem.path(MineOSCore.readShortcut(icon.path)))
 	updateFileListAndDraw()
 end
 
@@ -482,6 +487,32 @@ iconField.updateFileList = function(...)
 	updateScrollBar()
 end
 
+gotoButton.onTouch = function()
+	local input = window:addChild(GUI.input(statusContainer.localX, statusContainer.localY, statusContainer.width, 1, 0x4B4B4B, 0xE1E1E1, 0x878787, 0x4B4B4B, 0xE1E1E1, nil, nil))
+	
+	input.onInputFinished = function()
+		input.text = ("/" .. input.text .. "/"):gsub("/+", "/")
+		
+		if filesystem.exists(input.text) then
+			if filesystem.isDirectory(input.text) then
+				addWorkpath(input.text)
+				iconField:updateFileList()
+			else
+				GUI.alert("is a file")
+			end
+		else
+			GUI.alert("not exists")
+		end
+
+		input:remove()
+		statusContainer.hidden = false
+		mainContainer:drawOnScreen()
+	end
+
+	statusContainer.hidden = true
+	input:startInput()
+end
+
 window.onResize = function(width, height)
 	sidebarContainer.height = height - 3
 	
@@ -502,8 +533,10 @@ window.onResize = function(width, height)
 	titlePanel.width = width
 	searchInput.localX = width - searchInput.width
 
-	statusContainer.width = window.width - searchInput.width - FTPButton.width - 22
+	statusContainer.width = window.width - searchInput.width - FTPButton.width - 25
 	statusPanel.width = statusContainer.width
+
+	gotoButton.localX = statusContainer.localX + statusContainer.width
 
 	iconField.width = window.backgroundPanel.width
 	iconField.height = height + 4
@@ -529,15 +562,15 @@ window.actionButtons.close.onTouch = function()
 	window:close()
 end
 
-------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
-if fs.exists(favouritesPath) then
+if filesystem.exists(favouritesPath) then
 	favourites = table.fromFile(favouritesPath)
 else
 	saveFavourites()
 end
 
-if (options.o or options.open) and args[1] and fs.isDirectory(args[1]) then
+if (options.o or options.open) and args[1] and filesystem.isDirectory(args[1]) then
 	addWorkpath(args[1])
 else
 	addWorkpath("/")
@@ -545,4 +578,3 @@ end
 
 updateSidebar()
 window:resize(window.width, window.height)
-
