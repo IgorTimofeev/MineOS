@@ -491,21 +491,15 @@ gotoButton.onTouch = function()
 	local input = window:addChild(GUI.input(statusContainer.localX, statusContainer.localY, statusContainer.width, 1, 0x4B4B4B, 0xE1E1E1, 0x878787, 0x4B4B4B, 0xE1E1E1, nil, nil))
 	
 	input.onInputFinished = function()
-		input.text = ("/" .. input.text .. "/"):gsub("/+", "/")
-		
-		if filesystem.exists(input.text) then
-			if filesystem.isDirectory(input.text) then
-				addWorkpath(input.text)
-				iconField:updateFileList()
-			else
-				GUI.alert("is a file")
-			end
-		else
-			GUI.alert("not exists")
-		end
-
 		input:remove()
 		statusContainer.hidden = false
+		input.text = ("/" .. input.text .. "/"):gsub("/+", "/")
+				
+		if filesystem.exists(input.text) and filesystem.isDirectory(input.text) then
+			addWorkpath(input.text)
+			iconField:updateFileList()
+		end
+
 		mainContainer:drawOnScreen()
 	end
 
