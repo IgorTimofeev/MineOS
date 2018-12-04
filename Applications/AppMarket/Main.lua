@@ -1368,7 +1368,7 @@ newPublicationInfo = function(file_id)
 							if x + textLength + 4 > textDetailsContainer.width - 4 then
 								x, y = 3, y + 2
 							end
-							local button = textDetailsContainer:addChild(GUI.roundedButton(x, y, textLength + 2, 1, 0xC3C3C3, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, dependency.publication_name))
+							local button = textDetailsContainer:addChild(GUI.tagButton(x, y, textLength + 2, 1, 0xC3C3C3, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, dependency.publication_name))
 							button.onTouch = function()
 								newPublicationInfo(publication.all_dependencies[i])
 							end
