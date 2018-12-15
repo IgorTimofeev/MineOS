@@ -580,18 +580,19 @@ end
 
 -- "double_touch" event handler
 if not event.doubleTouchHandler then
-	event.doubleTouchHandler = event.addHandler(
+	event.doubleTouchHandler = event.listen(
+		"touch",
 		function(signalType, screenAddress, x, y, button, user)
 			local uptime = computer.uptime()
 			
 			if doubleTouchX == x and doubleTouchY == y and doubleTouchButton == button and doubleTouchScreenAddress == screenAddress and uptime - doubleTouchUptime <= doubleTouchInterval then
-				event.skip("touch")
 				computer.pushSignal("double_touch", screenAddress, x, y, button, user)
 			end
 
 			doubleTouchX, doubleTouchY, doubleTouchButton, doubleTouchUptime, doubleTouchScreenAddress = x, y, button, uptime, screenAddress
 		end,
-		"touch"
+		math.huge,
+		math.huge
 	)
 end
 
