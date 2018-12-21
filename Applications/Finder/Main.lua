@@ -14,19 +14,23 @@ local args, options = require("shell").parse(...)
 
 --------------------------------------------------------------------------------
 
-local favourites = {
-	{name = "Root", path = "/"},
-	{name = "Desktop", path = MineOSPaths.desktop},
-	{name = "Applications", path = MineOSPaths.applications},
-	{name = "Pictures", path = MineOSPaths.pictures},
-	{name = "System", path = MineOSPaths.system},
-	{name = "Libraries", path = "/lib/"},
-	{name = "Trash", path = MineOSPaths.trash},
+local configPath = MineOSPaths.applicationData .. "Finder/Config.cfg"
+local config = {
+	favourites = {
+		{ name = "Root", path = "/" },
+		{ name = "Desktop", path = MineOSPaths.desktop },
+		{ name = "Applications", path = MineOSPaths.applications },
+		{ name = "Pictures", path = MineOSPaths.pictures },
+		{ name = "System", path = MineOSPaths.system },
+		{ name = "Libraries", path = "/lib/" },
+		{ name = "Trash", path = MineOSPaths.trash },
+	},
+	sidebarWidth = 20,
 }
 
-
-local resourcesPath = MineOSCore.getCurrentScriptDirectory()
-local favouritesPath = MineOSPaths.applicationData .. "Finder/Favourites3.cfg"
+if filesystem.exists(configPath) then
+	config = table.fromFile(configPath)
+end
 
 local sidebarTitleColor = 0xC3C3C3
 local sidebarItemColor = 0x696969
@@ -55,8 +59,8 @@ local FTPButton = window:addChild(GUI.adaptiveRoundedButton(nextButton.localX + 
 FTPButton.colors.disabled = prevButton.colors.disabled
 FTPButton.disabled = not MineOSNetwork.internetProxy
 
-local sidebarContainer = window:addChild(GUI.container(1, 4, 20, 1))
-local sidebarPanel = sidebarContainer:addChild(GUI.object(1, 1, sidebarContainer.width, 1, 0xFFFFFF))
+local sidebarContainer = window:addChild(GUI.container(1, 4, config.sidebarWidth, 1))
+local sidebarPanel = sidebarContainer:addChild(GUI.object(1, 1, 1, 1, 0xFFFFFF))
 sidebarPanel.draw = function(object)
 	buffer.drawRectangle(object.x, object.y, object.width, object.height, 0x2D2D2D, sidebarItemColor, " ")
 end
@@ -78,10 +82,14 @@ local statusPanel = statusContainer:addChild(GUI.panel(1, 1, 1, 1, 0x4B4B4B))
 
 local gotoButton = window:addChild(GUI.button(1, 2, 3, 1, 0x5A5A5A, 0xC3C3C3, 0xE1E1E1, 0x3C3C3C, "→"))
 
+local resizer = window:addChild(GUI.resizer(1, 1, 3, 4, 0xC3C3C3, 0x0))
+
+window.actionButtons:moveToFront()
+
 --------------------------------------------------------------------------------
 
-local function saveFavourites()
-	table.toFile(favouritesPath, favourites)
+local function saveConfig()
+	table.toFile(configPath, config)
 end
 
 local function updateFileListAndDraw()
@@ -209,18 +217,18 @@ updateSidebar = function()
 	-- Favourites
 	addSidebarTitle(MineOSCore.localization.favourite)
 	
-	for i = 1, #favourites do
-		local object = addSidebarItem(" " .. filesystem.name(favourites[i].name), favourites[i].path)
+	for i = 1, #config.favourites do
+		local object = addSidebarItem(" " .. filesystem.name(config.favourites[i].name), config.favourites[i].path)
 		
 		object.onTouch = function(e1, e2, e3)
-			onFavouriteTouch(favourites[i].path)
+			onFavouriteTouch(config.favourites[i].path)
 		end
 
 		object.onRemove = function()
-			table.remove(favourites, i)
+			table.remove(config.favourites, i)
 			updateSidebar()
 			mainContainer:drawOnScreen()
-			saveFavourites()
+			saveConfig()
 		end
 	end
 
@@ -424,12 +432,14 @@ iconField.eventHandler = function(mainContainer, object, e1, e2, e3, e4, e5)
 			if e1 == "MineOSCore" then
 				iconField.yOffset = iconFieldYOffset
 			end
+
 			updateFileListAndDraw()
 		elseif e2 == "updateFavourites" then
 			if e3 then
-				table.insert(favourites, e3)
+				table.insert(config.favourites, e3)
 			end
-			saveFavourites()
+
+			saveConfig()
 			updateSidebar()
 			MineOSInterface.mainContainer:drawOnScreen()
 		end	
@@ -507,45 +517,6 @@ gotoButton.onTouch = function()
 	input:startInput()
 end
 
-window.onResize = function(width, height)
-	sidebarContainer.height = height - 3
-	
-	sidebarPanel.width = sidebarContainer.width
-	sidebarPanel.height = sidebarContainer.height
-	
-	itemsLayout.width = sidebarContainer.width
-	itemsLayout.height = sidebarContainer.height
-	for i = 1, #itemsLayout.children do
-		itemsLayout.children[i].width = itemsLayout.width
-	end
-
-	window.backgroundPanel.width = width - sidebarContainer.width
-	window.backgroundPanel.height = height - 3
-	window.backgroundPanel.localX = sidebarContainer.width + 1
-	window.backgroundPanel.localY = 4
-
-	titlePanel.width = width
-	searchInput.localX = width - searchInput.width
-
-	statusContainer.width = window.width - searchInput.width - FTPButton.width - 25
-	statusPanel.width = statusContainer.width
-
-	gotoButton.localX = statusContainer.localX + statusContainer.width
-
-	iconField.width = window.backgroundPanel.width
-	iconField.height = height + 4
-	iconField.localX = window.backgroundPanel.localX
-
-	scrollBar.localX = window.width
-	scrollBar.height = window.backgroundPanel.height
-	scrollBar.shownValueCount = scrollBar.height - 1
-	
-	window.actionButtons:moveToFront()
-
-	MineOSInterface.mainContainer:drawOnScreen()
-	updateFileListAndDraw()
-end
-
 local overrideMaximize = window.actionButtons.maximize.onTouch
 window.actionButtons.maximize.onTouch = function()
 	iconField.yOffset = iconFieldYOffset
@@ -556,13 +527,67 @@ window.actionButtons.close.onTouch = function()
 	window:close()
 end
 
---------------------------------------------------------------------------------
+local function calculateSizes()
+	sidebarContainer.height = window.height - 3
+	
+	sidebarPanel.width = sidebarContainer.width
+	sidebarPanel.height = sidebarContainer.height
+	
+	itemsLayout.width = sidebarContainer.width
+	itemsLayout.height = sidebarContainer.height
+	for i = 1, #itemsLayout.children do
+		itemsLayout.children[i].width = itemsLayout.width
+	end
 
-if filesystem.exists(favouritesPath) then
-	favourites = table.fromFile(favouritesPath)
-else
-	saveFavourites()
+	resizer.localX = sidebarContainer.width
+	resizer.localY = math.floor(4 + sidebarContainer.height / 2 - resizer.height / 2)
+
+	window.backgroundPanel.width = window.width - sidebarContainer.width
+	window.backgroundPanel.height = window.height - 3
+	window.backgroundPanel.localX = sidebarContainer.width + 1
+	window.backgroundPanel.localY = 4
+
+	titlePanel.width = window.width
+	searchInput.localX = window.width - searchInput.width
+
+	statusContainer.width = window.width - searchInput.width - FTPButton.width - 25
+	statusPanel.width = statusContainer.width
+
+	gotoButton.localX = statusContainer.localX + statusContainer.width
+
+	iconField.width = window.backgroundPanel.width
+	iconField.height = window.height
+	iconField.localX = window.backgroundPanel.localX
+
+	scrollBar.localX = window.width
+	scrollBar.height = window.backgroundPanel.height
+	scrollBar.shownValueCount = scrollBar.height - 1
 end
+
+window.onResize = function(width, height)
+	window.width = width
+	window.height = height
+	calculateSizes()
+
+	mainContainer:drawOnScreen()
+	updateFileListAndDraw()
+end
+
+resizer.onResize = function(deltaX)
+	sidebarContainer.width = sidebarContainer.width + deltaX
+	calculateSizes()
+
+	mainContainer:drawOnScreen()
+end
+
+resizer.onResizeFinished = function()
+	updateFileListAndDraw()
+
+	config.sidebarWidth = sidebarContainer.width
+	saveConfig()
+end
+
+--------------------------------------------------------------------------------
 
 if (options.o or options.open) and args[1] and filesystem.isDirectory(args[1]) then
 	addWorkpath(args[1])
