@@ -556,7 +556,7 @@ local function calculateSizes()
 	gotoButton.localX = statusContainer.localX + statusContainer.width
 
 	iconField.width = window.backgroundPanel.width
-	iconField.height = window.height
+	iconField.height = window.height + 3
 	iconField.localX = window.backgroundPanel.localX
 
 	scrollBar.localX = window.width
