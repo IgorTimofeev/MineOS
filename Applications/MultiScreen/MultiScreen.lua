@@ -123,16 +123,17 @@ local function mainMenu(force)
 
 					clearScreens()
 
-					local background, foreground, currentBackground, currentForeground, currentAddress
+					local background, foreground, symbol, currentBackground, currentForeground, currentAddress
 					for y = 1, height do
 						for x = 1, width do
 							background = color.to24Bit(string.byte(file:read(1)))
 							foreground = color.to24Bit(string.byte(file:read(1)))
 							file:read(1)
+							symbol = fs.readUnicodeChar(file)
 
 							local xMonitor = math.ceil(x / baseResolutionWidth)
 							local yMonitor = math.ceil(y / baseResolutionHeight)
-								
+							
 							if config.map[yMonitor] and config.map[yMonitor][xMonitor] then
 								if currentAddress ~= config.map[yMonitor][xMonitor] then
 									GPUProxy.bind(config.map[yMonitor][xMonitor], false)
@@ -152,7 +153,7 @@ local function mainMenu(force)
 									currentForeground = foreground
 								end
 
-								GPUProxy.set(x - (xMonitor - 1) * baseResolutionWidth, y - (yMonitor - 1) * baseResolutionHeight, fs.readUnicodeChar(file))
+								GPUProxy.set(x - (xMonitor - 1) * baseResolutionWidth, y - (yMonitor - 1) * baseResolutionHeight, symbol)
 							end
 						end
 					end
