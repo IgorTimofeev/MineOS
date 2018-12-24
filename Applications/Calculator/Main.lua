@@ -35,7 +35,15 @@ local displayContainer = window:addChild(GUI.container(1, 1, window.width, displ
 
 local displayPanel = displayContainer:addChild(GUI.panel(1, 1, window.width, displayHeight, 0x2D2D2D))
 
--- window:addChild(GUI.actionButtons(3, 2, true))
+local actionButtons = window:addChild(GUI.actionButtons(3, 3, true))
+
+actionButtons.close.onTouch = function()
+	window:close()
+end
+
+actionButtons.minimize.onTouch = function()
+	window:minimize()
+end
 
 local binaryPanel = displayContainer:addChild(GUI.panel(1, displayHeight + 1, window.width, binaryHeight, 0x3C3C3C))
 
@@ -77,7 +85,7 @@ local modeList = addBinaryLayoutList(17)
 
 modeList.selectedItem = 2
 
-local displayWidget = displayContainer:addChild(GUI.object(4, 1, window.width - 6, displayHeight))
+local displayWidget = displayContainer:addChild(GUI.object(10, 1, window.width - 12, displayHeight))
 
 local function parseFloat(v)
 	local integer, fractional = tostring(v * 1.0):match("(.+)%.(.+)")
