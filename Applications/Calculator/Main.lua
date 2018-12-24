@@ -80,7 +80,12 @@ modeList.selectedItem = 2
 local displayWidget = displayContainer:addChild(GUI.object(4, 1, window.width - 6, displayHeight))
 
 local function parseFloat(v)
-	return tostring(v * 1.0):match("(.+)%.(.+)")
+	local integer, fractional = tostring(v * 1.0):match("(.+)%.(.+)")
+	if integer then
+		return integer, fractional
+	else
+		return tostring(v), "0"
+	end
 end
 
 local function format(v)
