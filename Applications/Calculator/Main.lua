@@ -146,19 +146,18 @@ displayWidget.draw = function()
 end
 
 local function setValueRaw(v)
-	value, absValue = v * 1.0, math.floor(math.abs(v))
+	value, absValue = v, math.floor(math.abs(v))
 end
 
 local function numberToBinary()
-	local copy, bit = absValue
 	for i = 1, #binaryButtons do
 		binaryButtons[i].text = "0"
 	end
 
-	local i = #binaryButtons
+	local i, copy = #binaryButtons, absValue
 	while copy > 0 do
-		bit = bit32.band(copy, 1)
-		copy, binaryButtons[i].text = bit32.rshift(copy, 1), tostring(bit)
+		binaryButtons[i].text = tostring(bit32.band(copy, 1))
+		copy = bit32.rshift(copy, 1)
 
 		i = i - 1
 	end
@@ -206,7 +205,8 @@ modeList:addItem("16").onTouch = function()
 end
 
 local function binaryToNumber()
-	local bits, firstNotNullBitIndex = {}, 0
+	local firstNotNullBitIndex = 0
+
 	for i = 1, #binaryButtons do
 		if binaryButtons[i].text == "1" then
 			firstNotNullBitIndex = i
@@ -216,7 +216,7 @@ local function binaryToNumber()
 
 	local number = 1
 	for i = firstNotNullBitIndex + 1, #binaryButtons do
-		number = bit32.bor(bit32.lshift(number, 1), tonumber(binaryButtons[i].text))
+		number = bit32.bor(bit32.lshift(number, 1), binaryButtons[i].text == "1" and 1 or 0)
 	end
 
 	setValueRaw(number)
@@ -644,4 +644,4 @@ end)
 --------------------------------------------------------------------
 
 setValue(0)
-mainContainer:drawOnScreen()
+modeList:getItem(2).onTouch()
