@@ -199,6 +199,8 @@ function MineOSInterface.createWidgets()
 					window:moveToFront()
 				end
 
+				os.sleep(0.2)
+
 				icon.selected = false
 				MineOSInterface.updateMenu()
 				mainContainer:drawOnScreen()
