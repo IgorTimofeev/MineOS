@@ -88,42 +88,48 @@ modeList.selectedItem = 2
 local displayWidget = displayContainer:addChild(GUI.object(10, 1, window.width - 12, displayHeight))
 
 local function parseFloat(v)
-	local integer, fractional = tostring(v * 1.0):match("(.+)%.(.+)")
+	v = tostring(v)
+
+	local integer, fractional = v:match("(.+)%.(.+)")
 	if integer then
 		return integer, fractional
 	else
-		return tostring(v), "0"
+		return v, "0"
 	end
+end
+
+local function isNumber(v)
+	return v ~= "inf" and v ~= "-inf" and v ~= "nan"
 end
 
 local function format(v)
 	local integer, fractional = parseFloat(v)
 
-	if modeList.selectedItem == 1 then
-		integer, fractional = string.format("%o", integer), string.format("%o", fractional)
-		return integer, integer, fractional
+	if not isNumber(integer) then
+		return integer
+	elseif modeList.selectedItem == 1 then
+		return string.format("%o", integer)
 	elseif modeList.selectedItem == 2 then
-		return integer .. "." .. fractional, integer, fractional
+		return integer .. "." .. fractional, #integer
 	else
-		integer, fractional = string.format("0x%X", integer), string.format("%X", fractional)
-		return integer, integer, fractional
+		return string.format("0x%X", integer)
 	end
 end
 
 displayWidget.draw = function()
 	local x, y = displayWidget.x + displayWidget.width, displayWidget.y + 2
-	local result, integer, fractional = format(value)
+	local result, integerLength = format(value)
 	
 	-- Result
 	x = x - #result
 	buffer.drawText(x, y, 0xFFFFFF, result)
 		
 	-- Digit mode
-	if modeList.selectedItem == 2 then
+	if modeList.selectedItem == 2 and integerLength then
 		if floatingList.selectedItem == 1 then
-			buffer.drawText(x, y + 1, 0x696969, string.rep("─", #integer))
+			buffer.drawText(x, y + 1, 0x696969, string.rep("─", integerLength))
 		else
-			buffer.drawText(x + #integer + 1, y + 1, 0x696969, string.rep("─", #fractional))
+			buffer.drawText(x + integerLength + 1, y + 1, 0x696969, string.rep("─", #result - integerLength - 1))
 		end
 	end
 
@@ -295,14 +301,16 @@ local function onDigitPressed(digit)
 		setValue(tonumber(string.format("%o", value) .. digit, 8))
 	elseif modeList.selectedItem == 2 then
 		local integer, fractional = parseFloat(value)
-		if floatingList.selectedItem == 1 then
-			setValue(tonumber(integer .. digit .. "." .. fractional))
-		else
-			setValue(tonumber(integer .. "." .. (fractional == "0" and "" or fractional) .. digit))
+
+		if isNumber(integer) then
+			if floatingList.selectedItem == 1 then
+				setValue(tonumber(integer .. digit .. "." .. fractional))
+			else
+				setValue(tonumber(integer .. "." .. (fractional == "0" and "" or fractional) .. digit))
+			end
 		end
 	else
-		local integer, fractional = math.modf(value)
-		setValue(integer * 16 + digit + fractional)
+		setValue(math.floor(value) * 16 + digit)
 	end
 end
 
@@ -322,6 +330,7 @@ end
 local function addAction(button, getResult)
 	button.switchMode = true
 	button.onTouch = function()
+		-- Если уже имеется какое-то действие
 		if action then
 			-- Если мы повторно жмякаем на ранее нажатую кнопку
 			if action.button == button then
