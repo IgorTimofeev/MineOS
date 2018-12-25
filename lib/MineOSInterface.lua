@@ -200,11 +200,11 @@ local function iconAnalyseExtension(icon)
 				elseif fs.exists(icon.path .. "Resources/Icon.pic") then
 					icon.image = image.load(icon.path .. "Resources/Icon.pic")
 				elseif fs.exists(icon.path .. "Icon.lua") then
-					local data, reason = loadfile(icon.path .. "Icon.lua")
-					if data then
-						data, reason = data()
-						if data then
-							icon.liveImage = data
+					local result, reason = loadfile(icon.path .. "Icon.lua")
+					if result then
+						result, reason = pcall(result)
+						if result then
+							icon.liveImage = reason
 						else
 							error("Failed to load live icon image: " .. tostring(reason))
 						end
@@ -1120,7 +1120,7 @@ end
 function MineOSInterface.addWindow(window, preserveCoordinates)
 	-- Чекаем коорды
 	if not preserveCoordinates then
-		window.x, window.y = math.ceil(MineOSInterface.mainContainer.windowsContainer.width / 2 - window.width / 2), math.ceil(MineOSInterface.mainContainer.windowsContainer.height / 2 - window.height / 2)
+		window.x, window.y = math.floor(MineOSInterface.mainContainer.windowsContainer.width / 2 - window.width / 2), math.floor(MineOSInterface.mainContainer.windowsContainer.height / 2 - window.height / 2)
 	end
 	
 	-- Ебурим окно к окнам
