@@ -20,7 +20,7 @@ local args, options = require("shell").parse(...)
 local startImagePath = args[1] == "open" and args[2] or "/MineOS/System/Icons/Steve.pic"
 local configPath = MineOSPaths.applicationData .. "PrintImage/Config.cfg"
 local panelWidth = 34
-local mainContainer
+local application
 local mainImage
 local printers
 local currentPrinter = 1
@@ -140,15 +140,14 @@ local function beginPrint()
 	end
 
 	buffer.clear()
-	mainContainer:draw()
-	buffer.drawChanges(true)
+	application:draw()
 end
 
 ----------------------------------------- Window-zaluped parasha -----------------------------------------
 
 local function getStatus()
 	local xBlocks, yBlocks = math.ceil(image.getWidth(mainImage) / shapeResolutionLimit), math.ceil(image.getHeight(mainImage) * 2 / shapeResolutionLimit)
-	mainContainer.shadeContainer.statusTextBox.lines = {
+	application.shadeContainer.statusTextBox.lines = {
 		"Image size: " .. image.getWidth(mainImage) .. "x" .. image.getHeight(mainImage) .. " px",
 		"Count of printers: " .. #printers,
 		"Print result: " .. xBlocks .. "x" .. yBlocks .. " blocks",
@@ -185,79 +184,79 @@ local function drawMainImageObject(object)
 end
 
 local function createWindow()
-	mainContainer = GUI.fullScreenContainer()
-	mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0xEEEEEE))
-	mainContainer:addChild(GUI.object(1, 1, mainContainer.width, mainContainer.height)).draw = drawMainImageObject
+	application = GUI.application()
+	application:addChild(GUI.panel(1, 1, application.width, application.height, 0xEEEEEE))
+	application:addChild(GUI.object(1, 1, application.width, application.height)).draw = drawMainImageObject
 	local textBoxesWidth = math.floor(panelWidth * 0.55)
 	
-	mainContainer.shadeContainer = mainContainer:addChild(GUI.container(mainContainer.width - panelWidth + 1, 1, panelWidth, mainContainer.height))
-	mainContainer.shadeContainer:addChild(GUI.panel(1, 1, mainContainer.shadeContainer.width, mainContainer.shadeContainer.height, 0x0000000, 0.4))
+	application.shadeContainer = application:addChild(GUI.container(application.width - panelWidth + 1, 1, panelWidth, application.height))
+	application.shadeContainer:addChild(GUI.panel(1, 1, application.shadeContainer.width, application.shadeContainer.height, 0x0000000, 0.4))
 	
 	local y = 2
-	mainContainer.shadeContainer:addChild(GUI.label(1, y, mainContainer.shadeContainer.width, 1, 0xFFFFFF, "Main properties")):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
+	application.shadeContainer:addChild(GUI.label(1, y, application.shadeContainer.width, 1, 0xFFFFFF, "Main properties")):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
 	
 	y = y + 2
-	mainContainer.shadeContainer:addChild(GUI.label(3, y, mainContainer.shadeContainer.width, 1, 0xCCCCCC, "Image path:"))
-	local filesystemChooser = mainContainer.shadeContainer:addChild(GUI.filesystemChooser(mainContainer.shadeContainer.width - textBoxesWidth - 1, y, textBoxesWidth, 1, 0xEEEEEE, 0x262626, 0x444444, 0x999999, startImagePath, MineOSCore.localization.open, MineOSCore.localization.cancel, "Image path", "/"))
+	application.shadeContainer:addChild(GUI.label(3, y, application.shadeContainer.width, 1, 0xCCCCCC, "Image path:"))
+	local filesystemChooser = application.shadeContainer:addChild(GUI.filesystemChooser(application.shadeContainer.width - textBoxesWidth - 1, y, textBoxesWidth, 1, 0xEEEEEE, 0x262626, 0x444444, 0x999999, startImagePath, MineOSCore.localization.open, MineOSCore.localization.cancel, "Image path", "/"))
 	filesystemChooser:addExtensionFilter(".pic")
 	filesystemChooser.onSubmit = function(path)
 		mainImage = image.load(path)
 		getStatus()
-		mainContainer:drawOnScreen()
+		application:draw()
 	end
 
 	y = y + 2
-	mainContainer.shadeContainer:addChild(GUI.label(3, y, mainContainer.shadeContainer.width, 1, 0xCCCCCC, "Material:"))
-	local mainMaterialTextBox = mainContainer.shadeContainer:addChild(GUI.input(mainContainer.shadeContainer.width - textBoxesWidth - 1, y, textBoxesWidth, 1, 0xEEEEEE, 0x555555, 0x555555, 0xEEEEEE, 0x262626, config.mainMaterial, nil, false))
+	application.shadeContainer:addChild(GUI.label(3, y, application.shadeContainer.width, 1, 0xCCCCCC, "Material:"))
+	local mainMaterialTextBox = application.shadeContainer:addChild(GUI.input(application.shadeContainer.width - textBoxesWidth - 1, y, textBoxesWidth, 1, 0xEEEEEE, 0x555555, 0x555555, 0xEEEEEE, 0x262626, config.mainMaterial, nil, false))
 	mainMaterialTextBox.onInputFinished = function()
 		config.mainMaterial = mainMaterialTextBox.text
 		save()
 	end
 
 	y = y + 2
-	mainContainer.shadeContainer:addChild(GUI.label(3, y, mainContainer.shadeContainer.width, 1, 0xCCCCCC, "Print name:"))
-	local printNameTextBox = mainContainer.shadeContainer:addChild(GUI.input(mainContainer.shadeContainer.width - textBoxesWidth - 1, y, textBoxesWidth, 1, 0xEEEEEE, 0x555555, 0x555555, 0xEEEEEE, 0x262626, config.printName, nil, false))
+	application.shadeContainer:addChild(GUI.label(3, y, application.shadeContainer.width, 1, 0xCCCCCC, "Print name:"))
+	local printNameTextBox = application.shadeContainer:addChild(GUI.input(application.shadeContainer.width - textBoxesWidth - 1, y, textBoxesWidth, 1, 0xEEEEEE, 0x555555, 0x555555, 0xEEEEEE, 0x262626, config.printName, nil, false))
 	printNameTextBox.onInputFinished = function()
 		config.printName = printNameTextBox.text
 		save()
 	end
 
 	y = y + 2
-	mainContainer.shadeContainer:addChild(GUI.label(3, y, mainContainer.shadeContainer.width, 1, 0xCCCCCC, "Floor mode:"))
-	local floorSwitch = mainContainer.shadeContainer:addChild(GUI.switch(mainContainer.shadeContainer.width - 9, y, 8, 0xFFDB40, 0xAAAAAA, 0xFFFFFF, config.floorMode))
+	application.shadeContainer:addChild(GUI.label(3, y, application.shadeContainer.width, 1, 0xCCCCCC, "Floor mode:"))
+	local floorSwitch = application.shadeContainer:addChild(GUI.switch(application.shadeContainer.width - 9, y, 8, 0xFFDB40, 0xAAAAAA, 0xFFFFFF, config.floorMode))
 	floorSwitch.onStateChanged = function()
 		config.floorMode = floorSwitch.state
 		save()
 	end
 
 	y = y + 2
-	mainContainer.shadeContainer:addChild(GUI.label(3, y, mainContainer.shadeContainer.width, 1, 0xCCCCCC, "Show grid:"))
-	local gridSwitch = mainContainer.shadeContainer:addChild(GUI.switch(mainContainer.shadeContainer.width - 9, y, 8, 0xFFDB40, 0xAAAAAA, 0xFFFFFF, config.showGrid))
+	application.shadeContainer:addChild(GUI.label(3, y, application.shadeContainer.width, 1, 0xCCCCCC, "Show grid:"))
+	local gridSwitch = application.shadeContainer:addChild(GUI.switch(application.shadeContainer.width - 9, y, 8, 0xFFDB40, 0xAAAAAA, 0xFFFFFF, config.showGrid))
 	gridSwitch.onStateChanged = function()
 		config.showGrid = gridSwitch.state
 		save()
-		mainContainer:draw()
+		application:draw()
 	end
 	
 	y = y + 4
-	mainContainer.shadeContainer:addChild(GUI.label(1, y, mainContainer.shadeContainer.width, 1, 0xFFFFFF, "Frame properties")):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
+	application.shadeContainer:addChild(GUI.label(1, y, application.shadeContainer.width, 1, 0xFFFFFF, "Frame properties")):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
 	y = y + 2
-	mainContainer.shadeContainer:addChild(GUI.label(3, y, mainContainer.shadeContainer.width, 1, 0xCCCCCC, "Enabled:"))
-	local frameSwitch = mainContainer.shadeContainer:addChild(GUI.switch(mainContainer.shadeContainer.width - 9, y, 8, 0xFFDB40, 0xAAAAAA, 0xFFFFFF, config.frame.enabled))
+	application.shadeContainer:addChild(GUI.label(3, y, application.shadeContainer.width, 1, 0xCCCCCC, "Enabled:"))
+	local frameSwitch = application.shadeContainer:addChild(GUI.switch(application.shadeContainer.width - 9, y, 8, 0xFFDB40, 0xAAAAAA, 0xFFFFFF, config.frame.enabled))
 	frameSwitch.onStateChanged = function()
 		config.frame.enabled = frameSwitch.state
 		save()
 	end
 	y = y + 2
-	mainContainer.shadeContainer:addChild(GUI.label(3, y, mainContainer.shadeContainer.width, 1, 0xCCCCCC, "Material:"))
-	local frameMaterialTextBox = mainContainer.shadeContainer:addChild(GUI.input(mainContainer.shadeContainer.width - textBoxesWidth - 1, y, textBoxesWidth, 1, 0xEEEEEE, 0x555555, 0x555555, 0xEEEEEE, 0x262626, config.frame.material, nil, false))
+	application.shadeContainer:addChild(GUI.label(3, y, application.shadeContainer.width, 1, 0xCCCCCC, "Material:"))
+	local frameMaterialTextBox = application.shadeContainer:addChild(GUI.input(application.shadeContainer.width - textBoxesWidth - 1, y, textBoxesWidth, 1, 0xEEEEEE, 0x555555, 0x555555, 0xEEEEEE, 0x262626, config.frame.material, nil, false))
 	frameMaterialTextBox.onInputFinished = function()
 		config.frame.material = frameMaterialTextBox.text
 		save()
 	end
 
 	y = y + 2
-	local frameWidthSlider = mainContainer.shadeContainer:addChild(GUI.slider(3, y, mainContainer.shadeContainer.width - 4, 0xFFDB80, 0x000000, 0xFFDB40, 0xCCCCCC, 1, shapeResolutionLimit - 1, config.frame.width, false, "Width: " , " voxel(s)"))
+	local frameWidthSlider = application.shadeContainer:addChild(GUI.slider(3, y, application.shadeContainer.width - 4, 0xFFDB80, 0x000000, 0xFFDB40, 0xCCCCCC, 1, shapeResolutionLimit - 1, config.frame.width, false, "Width: " , " voxel(s)"))
 	frameWidthSlider.onValueChanged = function()
 		config.frame.width = frameWidthSlider.value
 		save()
@@ -265,17 +264,17 @@ local function createWindow()
 	frameWidthSlider.roundValues = true
 
 	y = y + 5
-	mainContainer.shadeContainer:addChild(GUI.label(1, y, mainContainer.shadeContainer.width, 1, 0xFFFFFF, "Light emission")):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
+	application.shadeContainer:addChild(GUI.label(1, y, application.shadeContainer.width, 1, 0xFFFFFF, "Light emission")):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
 	y = y + 2
-	mainContainer.shadeContainer:addChild(GUI.label(3, y, mainContainer.shadeContainer.width, 1, 0xCCCCCC, "Enabled:"))
-	local lightSwitch = mainContainer.shadeContainer:addChild(GUI.switch(mainContainer.shadeContainer.width - 9, y, 8, 0xFFDB40, 0xAAAAAA, 0xFFFFFF, config.lightEmission.enabled))
+	application.shadeContainer:addChild(GUI.label(3, y, application.shadeContainer.width, 1, 0xCCCCCC, "Enabled:"))
+	local lightSwitch = application.shadeContainer:addChild(GUI.switch(application.shadeContainer.width - 9, y, 8, 0xFFDB40, 0xAAAAAA, 0xFFFFFF, config.lightEmission.enabled))
 	lightSwitch.onStateChanged = function()
 		config.lightEmission.enabled = true
 		save()
 	end
 
 	y = y + 2
- 	local lightSlider = mainContainer.shadeContainer:addChild(GUI.slider(3, y, mainContainer.shadeContainer.width - 4, 0xFFDB80, 0x000000, 0xFFDB40, 0xCCCCCC, 1, 8, 8, false, "Radius: " , " block(s)"))
+ 	local lightSlider = application.shadeContainer:addChild(GUI.slider(3, y, application.shadeContainer.width - 4, 0xFFDB80, 0x000000, 0xFFDB40, 0xCCCCCC, 1, 8, 8, false, "Radius: " , " block(s)"))
 	lightSlider.roundValues = true
 	lightSlider.onValueChanged = function()
 		config.lightEmission.value = lightSlider.value
@@ -283,23 +282,23 @@ local function createWindow()
 	end
 
 	y = y + 5
-	mainContainer.shadeContainer:addChild(GUI.label(1, y, mainContainer.shadeContainer.width, 1, 0xFFFFFF, "Summary information:")):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
+	application.shadeContainer:addChild(GUI.label(1, y, application.shadeContainer.width, 1, 0xFFFFFF, "Summary information:")):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
 	y = y + 2
-	mainContainer.shadeContainer.statusTextBox = mainContainer.shadeContainer:addChild(GUI.textBox(3, y, mainContainer.shadeContainer.width - 4, 5, nil, 0xCCCCCC, {}, 1)):setAlignment(GUI.ALIGNMENT_HORIZONTAL_LEFT, GUI.ALIGNMENT_VERTICAL_TOP)
+	application.shadeContainer.statusTextBox = application.shadeContainer:addChild(GUI.textBox(3, y, application.shadeContainer.width - 4, 5, nil, 0xCCCCCC, {}, 1)):setAlignment(GUI.ALIGNMENT_HORIZONTAL_LEFT, GUI.ALIGNMENT_VERTICAL_TOP)
 
-	mainContainer.shadeContainer:addChild(GUI.button(1, mainContainer.shadeContainer.height - 5, mainContainer.shadeContainer.width, 3, 0x363636, 0xFFFFFF, 0xFFFFFF, 0x262626, "Exit")).onTouch = function()
-		mainContainer:stopEventHandling()
+	application.shadeContainer:addChild(GUI.button(1, application.shadeContainer.height - 5, application.shadeContainer.width, 3, 0x363636, 0xFFFFFF, 0xFFFFFF, 0x262626, "Exit")).onTouch = function()
+		application:stop()
 	end
 
-	mainContainer.shadeContainer:addChild(GUI.button(1, mainContainer.shadeContainer.height - 2, mainContainer.shadeContainer.width, 3, 0x262626, 0xFFFFFF, 0xFFFFFF, 0x262626, "Start print")).onTouch = function()
+	application.shadeContainer:addChild(GUI.button(1, application.shadeContainer.height - 2, application.shadeContainer.width, 3, 0x262626, 0xFFFFFF, 0xFFFFFF, 0x262626, "Start print")).onTouch = function()
 		beginPrint()
 	end
 
-	mainContainer.eventHandler = function(mainContainer, object, e1, e2, e3)
+	application.eventHandler = function(application, object, e1, e2, e3)
 		if (e1 == "component_added" or e1 == "component_removed") and e3 == "printer3d" then
 			getPrinters()
 			getStatus()
-			mainContainer:drawOnScreen()
+			application:draw()
 		end
 	end
 end
@@ -313,5 +312,5 @@ createWindow()
 mainImage = image.load(startImagePath)
 getStatus()
 
-mainContainer:drawOnScreen()
-mainContainer:startEventHandling()
+application:draw()
+application:start()

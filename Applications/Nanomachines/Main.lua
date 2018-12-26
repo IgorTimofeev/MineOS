@@ -42,7 +42,7 @@ end
 
 --------------------------------------------------------------------------------
 
-local mainContainer, window = MineOSInterface.addWindow(GUI.filledWindow(1, 1, 80, 22, 0xF0F0F0))
+local application, window = MineOSInterface.addWindow(GUI.filledWindow(1, 1, 80, 22, 0xF0F0F0))
 local inputsPanel = window:addChild(GUI.panel(1, 1, 19, window.height, 0x2D2D2D))
 window.backgroundPanel.localX = inputsPanel.width + 1
 window.backgroundPanel.width = window.width - inputsPanel.width
@@ -95,7 +95,7 @@ end
 
 local function broadcast(...)
 	addMessage(localization.sent .. ": ", ...)
-	mainContainer:drawOnScreen()
+	application:draw()
 
 	modem.broadcast(port, "nanomachines", ...)
 end
@@ -138,7 +138,7 @@ for i = 1, maxInputs do
 	local input = inputsContainer:addChild(GUI.switch(x, y, width, 0x66DB80, 0x1E1E1E, 0xE1E1E1, false))
 	input.onStateChanged = function()
 		checkSwitches()
-		mainContainer:drawOnScreen()
+		application:draw()
 
 		broadcastPut("setInput", i, input.state)
 		broadcastPut("getActiveEffects")
@@ -230,7 +230,7 @@ local function updateEffects(variants)
 	effectsLayout.height = #effectsLayout.children * 3
 end
 
-local function runtimeEventHandler(mainContainer, object, e1, e2, e3, e4, e5, e6, e7, e8, ...)
+local function runtimeEventHandler(application, object, e1, e2, e3, e4, e5, e6, e7, e8, ...)
 	if e1 == "modem_message" and e6 == "nanomachines" then
 		if e7 == "input" then
 			local child = inputsContainer.children[e8]
@@ -245,7 +245,7 @@ local function runtimeEventHandler(mainContainer, object, e1, e2, e3, e4, e5, e6
 		end
 
 		addMessage(localization.received .. ": ", e7, e8, ...)
-		mainContainer:drawOnScreen()
+		application:draw()
 
 		broadcastNext()
 	elseif e1 == "scroll" then
@@ -259,7 +259,7 @@ local function runtimeEventHandler(mainContainer, object, e1, e2, e3, e4, e5, e6
 			cell.verticalMargin = to
 		end
 
-		mainContainer:drawOnScreen()
+		application:draw()
 	end
 end
 
@@ -342,7 +342,7 @@ favouritesComboBox.onItemSelected = function()
 	end
 
 	checkSwitches()
-	mainContainer:drawOnScreen()
+	application:draw()
 	broadcastNext()
 end
 
@@ -364,12 +364,12 @@ if component.isAvailable("modem") then
 		updateEffects(parseEffects())
 		syncReset()
 
-		layout.eventHandler = function(mainContainer, object, e1, e2, e3, e4, e5, e6, e7, e8, e9)
+		layout.eventHandler = function(application, object, e1, e2, e3, e4, e5, e6, e7, e8, e9)
 			if not e1 then
 				if computer.uptime() >= syncDeadline then
 					syncReset()
 					setLines(localization.syncInfo)
-					mainContainer:drawOnScreen()
+					application:draw()
 				end
 
 				if not syncStarted then
@@ -394,14 +394,14 @@ if component.isAvailable("modem") then
 						inputsContainer.children[i]:setState(syncResult[i])
 					end
 					checkSwitches()
-					mainContainer:drawOnScreen()
+					application:draw()
 
 					layout.eventHandler = runtimeEventHandler
 					return
 				end
 
 				setLines(string.format(localization.syncProgress .. localization.syncContacts, #syncResult, maxInputs))
-				mainContainer:drawOnScreen()
+				application:draw()
 
 				syncUpdate()
 				broadcastNext()
@@ -414,4 +414,4 @@ else
 	setLines(localization.noModem)
 end
 		
-mainContainer:drawOnScreen()
+application:draw()

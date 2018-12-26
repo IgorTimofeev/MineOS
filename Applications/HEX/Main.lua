@@ -38,7 +38,7 @@ local scrollBar, titleTextBox
 
 ------------------------------------------------------------------------------------------------------------------
 
-local mainContainer, window = MineOSInterface.addWindow(GUI.filledWindow(1, 1, 98, 25, colors.background))
+local application, window = MineOSInterface.addWindow(GUI.filledWindow(1, 1, 98, 25, colors.background))
 
 window.backgroundPanel.localX, window.backgroundPanel.localY = 11, 5
 window.backgroundPanel.width, window.backgroundPanel.height = window.width - 10, window.height - 4
@@ -84,22 +84,22 @@ local function byteFieldDraw(object)
 	return object
 end
 
-local function byteFieldEventHandler(mainContainer, object, e1, e2, e3, e4, e5)
+local function byteFieldEventHandler(application, object, e1, e2, e3, e4, e5)
 	if e1 == "touch" or e1 == "drag" then
 		if e5 == 1 then
-			local menu = GUI.addContextMenu(mainContainer, e3, e4)
+			local menu = GUI.addContextMenu(application, e3, e4)
 			
 			menu:addItem("Select all").onTouch = function()
 				selection.from = 1
 				selection.to = #bytes
 				
-				mainContainer:drawOnScreen()
+				application:draw()
 			end
 			
 			menu:addSeparator()
 			
 			menu:addItem("Edit").onTouch = function()
-				local container = MineOSInterface.addBackgroundContainer(mainContainer, "Fill byte range [" .. selection.from .. "; " .. selection.to .. "]")
+				local container = MineOSInterface.addBackgroundContainer(application, "Fill byte range [" .. selection.from .. "; " .. selection.to .. "]")
 
 				local input = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x666666, 0x666666, 0xE1E1E1, 0x2D2D2D, string.format("%02X" , bytes[selection.from]), "Type byte value"))
 				input.onInputFinished = function(text)
@@ -110,15 +110,15 @@ local function byteFieldEventHandler(mainContainer, object, e1, e2, e3, e4, e5)
 						end
 
 						container:remove()
-						mainContainer:drawOnScreen()
+						application:draw()
 					end
 				end
 				
-				mainContainer:drawOnScreen()
+				application:draw()
 			end
 			
 			menu:addItem("Insert").onTouch = function()
-				local container = MineOSInterface.addBackgroundContainer(mainContainer, "Insert bytes at position " .. selection.from .. "")
+				local container = MineOSInterface.addBackgroundContainer(application, "Insert bytes at position " .. selection.from .. "")
 
 				local input = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x666666, 0x666666, 0xE1E1E1, 0x2D2D2D, "", "Type byte values separated by space", true))
 				local switch = container.layout:addChild(GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0x1E1E1E, 0xE1E1E1, 0xBBBBBB, "Select inserted bytes:", true)).switch
@@ -138,11 +138,11 @@ local function byteFieldEventHandler(mainContainer, object, e1, e2, e3, e4, e5)
 						end
 
 						container:remove()
-						mainContainer:drawOnScreen()
+						application:draw()
 					end
 				end
 				
-				mainContainer:drawOnScreen()
+				application:draw()
 			end
 			
 			menu:addSeparator()
@@ -158,7 +158,7 @@ local function byteFieldEventHandler(mainContainer, object, e1, e2, e3, e4, e5)
 				end
 			end
 
-			mainContainer:drawOnScreen()
+			application:draw()
 		else
 			local index = (math.ceil((e4 - object.y + 1) / 2) - 1) * 16 + math.ceil((e3 - object.x + 1 + object.offset) / object.elementWidth) + offset
 			
@@ -180,7 +180,7 @@ local function byteFieldEventHandler(mainContainer, object, e1, e2, e3, e4, e5)
 				end
 
 				status()
-				mainContainer:drawOnScreen()
+				application:draw()
 			end
 		end
 	elseif e1 == "scroll" then
@@ -192,7 +192,7 @@ local function byteFieldEventHandler(mainContainer, object, e1, e2, e3, e4, e5)
 		end
 		scrollBar.value = offset
 
-		mainContainer:drawOnScreen()
+		application:draw()
 	end
 end
 
@@ -320,17 +320,17 @@ local function load(path)
 end
 
 openFileButton.onTouch = function()
-	local filesystemDialog = GUI.addFilesystemDialog(mainContainer, true, 50, math.floor(mainContainer.height * 0.8), "Open", "Cancel", "File name", "/")
+	local filesystemDialog = GUI.addFilesystemDialog(application, true, 50, math.floor(application.height * 0.8), "Open", "Cancel", "File name", "/")
 	filesystemDialog:setMode(GUI.IO_MODE_OPEN, GUI.IO_MODE_FILE)
 	filesystemDialog:show()
 	filesystemDialog.onSubmit = function(path)
 		load(path)
-		mainContainer:drawOnScreen()
+		application:draw()
 	end
 end
 
 saveFileButton.onTouch = function()
-	local filesystemDialog = GUI.addFilesystemDialog(mainContainer, true, 50, math.floor(mainContainer.height * 0.8), "Save", "Cancel", "File name", "/")
+	local filesystemDialog = GUI.addFilesystemDialog(application, true, 50, math.floor(application.height * 0.8), "Save", "Cancel", "File name", "/")
 	filesystemDialog:setMode(GUI.IO_MODE_SAVE, GUI.IO_MODE_FILE)
 	filesystemDialog:show()
 	filesystemDialog.onSubmit = function(path)
@@ -358,13 +358,13 @@ window.actionButtons.maximize.onTouch = function()
 
 	window.localY = 1
 
-	mainContainer:drawOnScreen()
+	application:draw()
 end
 
 ------------------------------------------------------------------------------------------------------------------
 
 load("/bin/resolution.lua")
-mainContainer:drawOnScreen()
+application:draw()
 
 
 

@@ -29,7 +29,7 @@ local digitDecimalButtons = {}
 
 --------------------------------------------------------------------
 
-local mainContainer, window, menu = MineOSInterface.addWindow(GUI.window(1, 1, buttonWidth * 12, buttonHeight * 5 + displayHeight + binaryHeight))
+local application, window, menu = MineOSInterface.addWindow(GUI.window(1, 1, buttonWidth * 12, buttonHeight * 5 + displayHeight + binaryHeight))
 
 local displayContainer = window:addChild(GUI.container(1, 1, window.width, displayHeight + binaryHeight))
 
@@ -182,7 +182,7 @@ modeList:addItem("8").onTouch = function()
 	floatingList.selectedItem = 1
 	setValue(math.floor(value))
 
-	mainContainer:drawOnScreen()
+	application:draw()
 end
 
 modeList:addItem("10").onTouch = function()
@@ -190,7 +190,7 @@ modeList:addItem("10").onTouch = function()
 	setButtonsDisabled(digitDecimalButtons, false)
 	setButtonsDisabled(digitHexadecimalButtons, true)
 
-	mainContainer:drawOnScreen()
+	application:draw()
 end
 
 modeList:addItem("16").onTouch = function()
@@ -201,7 +201,7 @@ modeList:addItem("16").onTouch = function()
 	floatingList.selectedItem = 1
 	setValue(math.floor(value))
 
-	mainContainer:drawOnScreen()
+	application:draw()
 end
 
 local function binaryToNumber()

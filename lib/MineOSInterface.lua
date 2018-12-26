@@ -34,8 +34,8 @@ function MineOSInterface.setIconProperties(width, height, horizontalSpaceBetween
 	MineOSCore.saveProperties()
 	calculateIconSizes()
 
-	MineOSInterface.mainContainer.iconField:deleteIconConfig()
-	MineOSInterface.mainContainer.dockContainer.sort()
+	MineOSInterface.application.iconField:deleteIconConfig()
+	MineOSInterface.application.dockContainer.sort()
 	
 	computer.pushSignal("MineOSCore", "updateFileList")
 end
@@ -159,7 +159,7 @@ local function iconDraw(icon)
 	end
 end
 
-local function iconEventHandler(mainContainer, object, e1, e2, e3, e4, e5, ...)
+local function iconEventHandler(application, object, e1, e2, e3, e4, e5, ...)
 	if e1 == "touch" and object:isPointInside(e3, e4) then
 		object.lastTouchPosition = object.lastTouchPosition or {}
 		object.lastTouchPosition.x, object.lastTouchPosition.y = e3, e4
@@ -179,7 +179,7 @@ local function iconEventHandler(mainContainer, object, e1, e2, e3, e4, e5, ...)
 		object.localY = object.localY + e4 - object.lastTouchPosition.y
 		object.lastTouchPosition.x, object.lastTouchPosition.y = e3, e4
 
-		mainContainer:drawOnScreen()
+		application:draw()
 	elseif e1 == "drop" and object.parent.parent.iconConfigEnabled and object.dragStarted then
 		object.dragStarted = nil
 		object.parent.parent.iconConfig[object.name .. (object.isDirectory and "/" or "")] = {
@@ -365,13 +365,13 @@ end
 function MineOSInterface.iconLaunchers.showPackageContent(icon)
 	icon.parent.parent:setWorkpath(icon.path)
 	icon.parent.parent:updateFileList()
-	icon.firstParent:drawOnScreen()
+	icon.firstParent:draw()
 end
 
 function MineOSInterface.iconLaunchers.showContainingFolder(icon)
 	icon.parent.parent:setWorkpath(fs.path(icon.shortcutPath))
 	icon.parent.parent:updateFileList()
-	icon.firstParent:drawOnScreen()
+	icon.firstParent:draw()
 end
 
 -----------------------------------------------------------------------------------------------------------------------------------
@@ -474,7 +474,7 @@ local function iconFieldUpdateFileList(iconField)
 	return iconField
 end
 
-local function iconFieldBackgroundObjectEventHandler(mainContainer, object, e1, e2, e3, e4, e5, ...)
+local function iconFieldBackgroundObjectEventHandler(application, object, e1, e2, e3, e4, e5, ...)
 	if e1 == "touch" then
 		if e5 == 0 then
 			object.parent:deselectAll()
@@ -483,28 +483,28 @@ local function iconFieldBackgroundObjectEventHandler(mainContainer, object, e1, 
 				y1 = e4
 			}
 
-			mainContainer:drawOnScreen()
+			application:draw()
 		else
-			local menu = GUI.addContextMenu(MineOSInterface.mainContainer, e3, e4)
+			local menu = GUI.addContextMenu(MineOSInterface.application, e3, e4)
 
 			local subMenu = menu:addSubMenu(MineOSCore.localization.create)
 
 			subMenu:addItem(MineOSCore.localization.newFile).onTouch = function()
-				MineOSInterface.newFile(MineOSInterface.mainContainer, object.parent, e3, e4, object.parent.workpath)
+				MineOSInterface.newFile(MineOSInterface.application, object.parent, e3, e4, object.parent.workpath)
 			end
 			
 			subMenu:addItem(MineOSCore.localization.newFolder).onTouch = function()
-				MineOSInterface.newFolder(MineOSInterface.mainContainer, object.parent, e3, e4, object.parent.workpath)
+				MineOSInterface.newFolder(MineOSInterface.application, object.parent, e3, e4, object.parent.workpath)
 			end
 
 			subMenu:addItem(MineOSCore.localization.newFileFromURL, not component.isAvailable("internet")).onTouch = function()
-				MineOSInterface.newFileFromURL(MineOSInterface.mainContainer, object.parent, e3, e4, object.parent.workpath)
+				MineOSInterface.newFileFromURL(MineOSInterface.application, object.parent, e3, e4, object.parent.workpath)
 			end
 
 			subMenu:addSeparator()
 
 			subMenu:addItem(MineOSCore.localization.newApplication).onTouch = function()
-				MineOSInterface.newApplication(MineOSInterface.mainContainer, object.parent, e3, e4, object.parent.workpath)
+				MineOSInterface.newApplication(MineOSInterface.application, object.parent, e3, e4, object.parent.workpath)
 			end
 
 			menu:addSeparator()
@@ -568,20 +568,20 @@ local function iconFieldBackgroundObjectEventHandler(mainContainer, object, e1, 
 				computer.pushSignal("MineOSCore", "updateFileList")
 			end
 
-			MineOSInterface.mainContainer:drawOnScreen()
+			MineOSInterface.application:draw()
 		end
 	elseif e1 == "drag" then
 		if object.parent.selection then
 			object.parent.selection.x2, object.parent.selection.y2 = e3, e4
 			object:moveToFront()
 
-			mainContainer:drawOnScreen()
+			application:draw()
 		end
 	elseif e1 == "drop" then
 		object.parent.selection = nil
 		object:moveToBack()
 
-		mainContainer:drawOnScreen()
+		application:draw()
 	end
 end
 
@@ -690,26 +690,26 @@ function MineOSInterface.iconLeftClick(icon)
 	end
 	icon.selected = true
 
-	MineOSInterface.mainContainer:drawOnScreen()
+	MineOSInterface.application:draw()
 end
 
 function MineOSInterface.iconDoubleClick(icon)
 	icon:launch()
 	icon.selected = false
-	MineOSInterface.mainContainer:drawOnScreen()
+	MineOSInterface.application:draw()
 end
 
 function MineOSInterface.iconRightClick(icon, e1, e2, e3, e4)
 	icon.selected = true
-	MineOSInterface.mainContainer:drawOnScreen()
+	MineOSInterface.application:draw()
 
 	local selectedIcons = icon.parent.parent:getSelectedIcons()
 
-	local menu = GUI.addContextMenu(MineOSInterface.mainContainer, e3, e4)
+	local menu = GUI.addContextMenu(MineOSInterface.application, e3, e4)
 	
 	menu.onMenuClosed = function()
 		icon.parent.parent:deselectAll()
-		MineOSInterface.mainContainer:drawOnScreen()
+		MineOSInterface.application:draw()
 	end
 
 	if #selectedIcons == 1 then
@@ -720,7 +720,7 @@ function MineOSInterface.iconRightClick(icon, e1, e2, e3, e4)
 				end		
 
 				menu:addItem(MineOSCore.localization.launchWithArguments).onTouch = function()
-					MineOSInterface.launchWithArguments(MineOSInterface.mainContainer, icon.path .. "Main.lua")
+					MineOSInterface.launchWithArguments(MineOSInterface.application, icon.path .. "Main.lua")
 				end
 
 				menu:addItem(MineOSCore.localization.edit .. " Main.lua").onTouch = function()
@@ -732,17 +732,17 @@ function MineOSInterface.iconRightClick(icon, e1, e2, e3, e4)
 
 			if icon.extension ~= ".app" then
 				menu:addItem(MineOSCore.localization.addToFavourites).onTouch = function()
-					local container = MineOSInterface.addBackgroundContainer(MineOSInterface.mainContainer, MineOSCore.localization.addToFavourites)
+					local container = MineOSInterface.addBackgroundContainer(MineOSInterface.application, MineOSCore.localization.addToFavourites)
 
 					local input = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x878787, 0xE1E1E1, 0x2D2D2D, icon.name, MineOSCore.localization.name))
-					container.panel.eventHandler = function(mainContainer, object, e1)
+					container.panel.eventHandler = function(application, object, e1)
 						if e1 == "touch" then
 							container:remove()
 
 							if e1 == "touch" and #input.text > 0 then
 								computer.pushSignal("Finder", "updateFavourites", {name = input.text, path = icon.path})
 							else
-								MineOSInterface.mainContainer:drawOnScreen()
+								MineOSInterface.application:draw()
 							end
 						end
 					end					
@@ -752,7 +752,7 @@ function MineOSInterface.iconRightClick(icon, e1, e2, e3, e4)
 		else
 			if icon.isShortcut then
 				menu:addItem(MineOSCore.localization.editShortcut).onTouch = function()
-					MineOSInterface.editShortcut(MineOSInterface.mainContainer, icon.path)
+					MineOSInterface.editShortcut(MineOSInterface.application, icon.path)
 					computer.pushSignal("MineOSCore", "updateFileList")
 				end
 
@@ -780,7 +780,7 @@ function MineOSInterface.iconRightClick(icon, e1, e2, e3, e4)
 
 	if #selectedIcons > 1 then
 		menu:addItem(MineOSCore.localization.newFolderFromChosen .. " (" .. #selectedIcons .. ")").onTouch = function()
-			MineOSInterface.newFolderFromChosen(MineOSInterface.mainContainer, icon.parent.parent, e3, e4, selectedIcons)
+			MineOSInterface.newFolderFromChosen(MineOSInterface.application, icon.parent.parent, e3, e4, selectedIcons)
 		end
 		menu:addSeparator()
 	end
@@ -851,7 +851,7 @@ function MineOSInterface.iconRightClick(icon, e1, e2, e3, e4)
 
 	if #selectedIcons == 1 then
 		menu:addItem(MineOSCore.localization.rename).onTouch = function()
-			MineOSInterface.rename(MineOSInterface.mainContainer, icon.path)
+			MineOSInterface.rename(MineOSInterface.application, icon.path)
 		end
 	end
 
@@ -877,8 +877,8 @@ function MineOSInterface.iconRightClick(icon, e1, e2, e3, e4)
 
 	if #selectedIcons == 1 then
 		menu:addItem(MineOSCore.localization.addToDock).onTouch = function()
-			MineOSInterface.mainContainer.dockContainer.addIcon(icon.path).keepInDock = true
-			MineOSInterface.mainContainer.dockContainer.saveToOSSettings()
+			MineOSInterface.application.dockContainer.addIcon(icon.path).keepInDock = true
+			MineOSInterface.application.dockContainer.saveToOSSettings()
 		end
 	end
 
@@ -888,7 +888,7 @@ function MineOSInterface.iconRightClick(icon, e1, e2, e3, e4)
 		end
 	end
 
-	MineOSInterface.mainContainer:drawOnScreen()
+	MineOSInterface.application:draw()
 end
 
 -----------------------------------------------------------------------------------------------------------------------------------
@@ -914,7 +914,7 @@ end
 local function checkFileToExists(container, path)
 	if fs.exists(path) then
 		container.label.hidden = false
-		container.parent:drawOnScreen()
+		container.parent:draw()
 	else
 		container:remove()
 		return true
@@ -941,7 +941,7 @@ function MineOSInterface.newFile(parentWindow, iconField, x, y, path)
 		end
 	end
 
-	parentWindow:drawOnScreen()
+	parentWindow:draw()
 end
 
 function MineOSInterface.newFolder(parentWindow, iconField, x, y, path)
@@ -955,7 +955,7 @@ function MineOSInterface.newFolder(parentWindow, iconField, x, y, path)
 		end
 	end
 
-	parentWindow:drawOnScreen()
+	parentWindow:draw()
 
 	return container
 end
@@ -964,16 +964,16 @@ function MineOSInterface.newFileFromURL(parentWindow, iconField, x, y, path)
 	local container = addUniversalContainerWithInputTextBox(parentWindow, nil, "Загрузить файл по URL", MineOSCore.localization.fileName)
 
 	container.inputFieldURL = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x878787, 0xE1E1E1, 0x2D2D2D, nil, "URL", false))
-	container.panel.eventHandler = function(mainContainer, object, e1)
+	container.panel.eventHandler = function(application, object, e1)
 		if e1 == "touch" then
 			if #container.inputField.text > 0 and #container.inputFieldURL.text > 0 then
 				if fs.exists(path .. container.inputField.text) then
 					container.label.hidden = false
-					mainContainer:drawOnScreen()
+					application:draw()
 				else
 					container.layout:removeChildren(2)
 					container.layout:addChild(GUI.label(1, 1, container.width, 1, 0x787878, MineOSCore.localization.downloading .. "...")):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
-					mainContainer:drawOnScreen()
+					application:draw()
 
 					local success, reason = require("web").download(container.inputFieldURL.text, path .. container.inputField.text)
 					container:remove()
@@ -983,17 +983,17 @@ function MineOSInterface.newFileFromURL(parentWindow, iconField, x, y, path)
 						computer.pushSignal("MineOSCore", "updateFileList")
 					else
 						GUI.alert(reason)
-						mainContainer:drawOnScreen()
+						application:draw()
 					end
 				end
 			else
 				container:remove()
-				mainContainer:drawOnScreen()
+				application:draw()
 			end
 		end
 	end
 
-	parentWindow:drawOnScreen()
+	parentWindow:draw()
 end
 
 function MineOSInterface.newApplication(parentWindow, iconField, x, y, path)
@@ -1003,7 +1003,7 @@ function MineOSInterface.newApplication(parentWindow, iconField, x, y, path)
 	filesystemChooser:addExtensionFilter(".pic")
 	filesystemChooser:moveBackward()
 	
-	container.panel.eventHandler = function(mainContainer, object, e1)
+	container.panel.eventHandler = function(application, object, e1)
 		if e1 == "touch" then	
 			if #container.inputField.text > 0 then
 				local finalPath = path .. container.inputField.text .. ".app/"
@@ -1021,12 +1021,12 @@ function MineOSInterface.newApplication(parentWindow, iconField, x, y, path)
 				end
 			else
 				container:remove()
-				parentWindow:drawOnScreen()
+				parentWindow:draw()
 			end
 		end
 	end
 
-	parentWindow:drawOnScreen()
+	parentWindow:draw()
 end
 
 function MineOSInterface.newFolderFromChosen(parentWindow, iconField, x, y, selectedIcons)
@@ -1045,7 +1045,7 @@ function MineOSInterface.newFolderFromChosen(parentWindow, iconField, x, y, sele
 		end
 	end
 
-	parentWindow:drawOnScreen()
+	parentWindow:draw()
 
 	return container
 end
@@ -1060,7 +1060,7 @@ function MineOSInterface.rename(parentWindow, path)
 		end
 	end
 
-	parentWindow:drawOnScreen()
+	parentWindow:draw()
 end
 
 function MineOSInterface.editShortcut(parentWindow, path)
@@ -1075,17 +1075,17 @@ function MineOSInterface.editShortcut(parentWindow, path)
 		else
 			container.label.text = MineOSCore.localization.shortcutIsCorrupted
 			container.label.hidden = false
-			MineOSInterface.mainContainer:drawOnScreen()
+			MineOSInterface.application:draw()
 		end
 	end
 
-	parentWindow:drawOnScreen()
+	parentWindow:draw()
 end
 
 function MineOSInterface.launchWithArguments(parentWindow, path, withTerminal)
 	local container = addUniversalContainerWithInputTextBox(parentWindow, nil, MineOSCore.localization.launchWithArguments)
 
-	container.panel.eventHandler = function(mainContainer, object, e1)
+	container.panel.eventHandler = function(application, object, e1)
 		if e1 == "touch" then
 			local args = {}
 			if container.inputField.text then
@@ -1105,7 +1105,7 @@ function MineOSInterface.launchWithArguments(parentWindow, path, withTerminal)
 				MineOSInterface.safeLaunch(path, table.unpack(args))
 			end
 
-			parentWindow:drawOnScreen(true)
+			parentWindow:draw(true)
 		end
 	end
 end
@@ -1113,18 +1113,18 @@ end
 ----------------------------------------- Windows patterns -----------------------------------------
 
 function MineOSInterface.updateMenu()
-	local focusedWindow = MineOSInterface.mainContainer.windowsContainer.children[#MineOSInterface.mainContainer.windowsContainer.children]
-	MineOSInterface.mainContainer.menu.children = focusedWindow and focusedWindow.menu.children or MineOSInterface.menuInitialChildren
+	local focusedWindow = MineOSInterface.application.windowsContainer.children[#MineOSInterface.application.windowsContainer.children]
+	MineOSInterface.application.menu.children = focusedWindow and focusedWindow.menu.children or MineOSInterface.menuInitialChildren
 end
 
 function MineOSInterface.addWindow(window, preserveCoordinates)
 	-- Чекаем коорды
 	if not preserveCoordinates then
-		window.x, window.y = math.floor(MineOSInterface.mainContainer.windowsContainer.width / 2 - window.width / 2), math.floor(MineOSInterface.mainContainer.windowsContainer.height / 2 - window.height / 2)
+		window.x, window.y = math.floor(MineOSInterface.application.windowsContainer.width / 2 - window.width / 2), math.floor(MineOSInterface.application.windowsContainer.height / 2 - window.height / 2)
 	end
 	
 	-- Ебурим окно к окнам
-	MineOSInterface.mainContainer.windowsContainer:addChild(window)
+	MineOSInterface.application.windowsContainer:addChild(window)
 	
 	-- Получаем путь залупы
 	local dockPath, info, dockIcon
@@ -1147,14 +1147,14 @@ function MineOSInterface.addWindow(window, preserveCoordinates)
 	-- GUI.alert(dockPath)
 	
 	-- Чекаем наличие иконки в доке с таким же путем, и еси ее нет, то хуячим новую
-	for i = 1, #MineOSInterface.mainContainer.dockContainer.children do
-		if MineOSInterface.mainContainer.dockContainer.children[i].path == dockPath then
-			dockIcon = MineOSInterface.mainContainer.dockContainer.children[i]
+	for i = 1, #MineOSInterface.application.dockContainer.children do
+		if MineOSInterface.application.dockContainer.children[i].path == dockPath then
+			dockIcon = MineOSInterface.application.dockContainer.children[i]
 			break
 		end
 	end
 	if not dockIcon then
-		dockIcon = MineOSInterface.mainContainer.dockContainer.addIcon(dockPath, window)
+		dockIcon = MineOSInterface.application.dockContainer.addIcon(dockPath, window)
 	end
 	
 	-- Ебурим ссылку на окна в иконку
@@ -1163,7 +1163,7 @@ function MineOSInterface.addWindow(window, preserveCoordinates)
 
 	-- Взалупливаем иконке индивидуальную менюху. По дефолту тут всякая хуйня и прочее
 	window.menu = GUI.menu(1, 1, 1)
-	window.menu.colors = MineOSInterface.mainContainer.menu.colors
+	window.menu.colors = MineOSInterface.application.menu.colors
 	local name = fs.hideExtension(fs.name(dockPath))
 	local contextMenu = window.menu:addContextMenu(name, 0x0)
 	contextMenu:addItem(MineOSCore.localization.closeWindow .. " " .. name, false, "^W").onTouch = function()
@@ -1172,14 +1172,14 @@ function MineOSInterface.addWindow(window, preserveCoordinates)
 
 	-- Смещаем окно правее и ниже, если уже есть открытые окна этой софтины
 	local lastIndex
-	for i = #MineOSInterface.mainContainer.windowsContainer.children, 1, -1 do
-		if MineOSInterface.mainContainer.windowsContainer.children[i] ~= window and dockIcon.windows[MineOSInterface.mainContainer.windowsContainer.children[i]] then
+	for i = #MineOSInterface.application.windowsContainer.children, 1, -1 do
+		if MineOSInterface.application.windowsContainer.children[i] ~= window and dockIcon.windows[MineOSInterface.application.windowsContainer.children[i]] then
 			lastIndex = i
 			break
 		end
 	end
 	if lastIndex then
-		window.localX, window.localY = MineOSInterface.mainContainer.windowsContainer.children[lastIndex].localX + 4, MineOSInterface.mainContainer.windowsContainer.children[lastIndex].localY + 2
+		window.localX, window.localY = MineOSInterface.application.windowsContainer.children[lastIndex].localX + 4, MineOSInterface.application.windowsContainer.children[lastIndex].localY + 2
 	end
 
 	-- Когда окно фокусицца, то главная ОСевая менюха заполницца ДЕТИШЕЧКАМИ оконной менюхи
@@ -1188,13 +1188,13 @@ function MineOSInterface.addWindow(window, preserveCoordinates)
 	-- Биндим функции по ресайзу/закрытию и прочему говнищу
 	window.close = function(window)
 		local sameIconExists = false
-		for i = 1, #MineOSInterface.mainContainer.dockContainer.children do
+		for i = 1, #MineOSInterface.application.dockContainer.children do
 			if 
-				MineOSInterface.mainContainer.dockContainer.children[i].path == dockPath and
-				MineOSInterface.mainContainer.dockContainer.children[i].windows and
-				table.size(MineOSInterface.mainContainer.dockContainer.children[i].windows) > 1
+				MineOSInterface.application.dockContainer.children[i].path == dockPath and
+				MineOSInterface.application.dockContainer.children[i].windows and
+				table.size(MineOSInterface.application.dockContainer.children[i].windows) > 1
 			then
-				MineOSInterface.mainContainer.dockContainer.children[i].windows[window] = nil
+				MineOSInterface.application.dockContainer.children[i].windows[window] = nil
 				sameIconExists = true
 				break
 			end
@@ -1204,7 +1204,7 @@ function MineOSInterface.addWindow(window, preserveCoordinates)
 			dockIcon.windows = nil
 			if not dockIcon.keepInDock then
 				dockIcon:remove()
-				MineOSInterface.mainContainer.dockContainer.sort()
+				MineOSInterface.application.dockContainer.sort()
 			end
 		end
 		
@@ -1227,7 +1227,7 @@ function MineOSInterface.addWindow(window, preserveCoordinates)
 
 	MineOSInterface.updateMenu()
 
-	return MineOSInterface.mainContainer, window, window.menu
+	return MineOSInterface.application, window, window.menu
 end
 
 -----------------------------------------------------------------------------------------------------------------------------------
@@ -1238,7 +1238,7 @@ local function addKeyAndValue(window, x, y, key, value)
 end
 
 function MineOSInterface.propertiesWindow(x, y, width, icon)
-	local mainContainer, window = MineOSInterface.addWindow(GUI.titledWindow(x, y, width, 1, package.loaded.MineOSCore.localization.properties))
+	local application, window = MineOSInterface.addWindow(GUI.titledWindow(x, y, width, 1, package.loaded.MineOSCore.localization.properties))
 
 	window.backgroundPanel.colors.transparency = 0.2
 	window:addChild(GUI.image(2, 3, icon.image))
@@ -1259,20 +1259,20 @@ function MineOSInterface.propertiesWindow(x, y, width, icon)
 	window.backgroundPanel.width = window.width
 	window.backgroundPanel.height = textBox.y + textBox.height
 
-	mainContainer:drawOnScreen()
+	application:draw()
 
 	if icon.isDirectory then
 		fileSizeLabel.text = string.format("%.2f", fs.directorySize(icon.path) / 1024) .. " KB"
-		mainContainer:drawOnScreen()
+		application:draw()
 	end
 end
 
 -----------------------------------------------------------------------------------------------------------------------------------
 
-local function GUICopy(parentContainer, fileList, toPath)
+local function GUICopy(application, fileList, toPath)
 	local applyYes, breakRecursion
 
-	local container = MineOSInterface.addBackgroundContainer(parentContainer, MineOSCore.localization.copying)
+	local container = MineOSInterface.addBackgroundContainer(application, MineOSCore.localization.copying)
 	local textBox = container.layout:addChild(GUI.textBox(1, 1, container.width, 1, nil, 0x787878, {}, 1, 0, 0, true, true):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP))
 	local switchAndLabel = container.layout:addChild(GUI.switchAndLabel(1, 1, 37, 8, 0x66DB80, 0x1E1E1E, 0xE1E1E1, 0x787878, MineOSCore.localization.applyToAll .. ":", false))
 	container.panel.eventHandler = nil
@@ -1283,14 +1283,14 @@ local function GUICopy(parentContainer, fileList, toPath)
 
 	buttonsLayout:addChild(GUI.button(1, 1, 11, 1, 0xE1E1E1, 0x2D2D2D, 0xA5A5A5, 0x2D2D2D, MineOSCore.localization.yes)).onTouch = function()
 		applyYes = true
-		parentContainer:stopEventHandling()
+		application:stop()
 	end
 	buttonsLayout:addChild(GUI.button(1, 1, 11, 1, 0xE1E1E1, 0x2D2D2D, 0xA5A5A5, 0x2D2D2D, MineOSCore.localization.no)).onTouch = function()
-		parentContainer:stopEventHandling()
+		application:stop()
 	end
 	buttonsLayout:addChild(GUI.button(1, 1, 11, 1, 0xE1E1E1, 0x2D2D2D, 0xA5A5A5, 0x2D2D2D, MineOSCore.localization.cancel)).onTouch = function()
 		breakRecursion = true
-		parentContainer:stopEventHandling()
+		application:stop()
 	end
 
 	buttonsLayout:fitToChildrenSize(1, 1)
@@ -1304,7 +1304,7 @@ local function GUICopy(parentContainer, fileList, toPath)
 		}
 		textBox:update()
 
-		parentContainer:drawOnScreen()
+		application:draw()
 
 		fs.remove(finalPath)
 		fs.copy(path, finalPath)
@@ -1335,9 +1335,9 @@ local function GUICopy(parentContainer, fileList, toPath)
 					}
 					textBox:update()
 
-					parentContainer:drawOnScreen()
-					parentContainer:startEventHandling()
-					parentContainer:drawOnScreen()
+					application:draw()
+					application:start()
+					application:draw()
 				end
 
 				if applyYes then
@@ -1354,7 +1354,7 @@ local function GUICopy(parentContainer, fileList, toPath)
 	end
 
 	container:remove()
-	parentContainer:drawOnScreen()
+	application:draw()
 end
 
 function MineOSInterface.copy(what, toPath)
@@ -1362,18 +1362,18 @@ function MineOSInterface.copy(what, toPath)
 		what = {what}
 	end
 
-	GUICopy(MineOSInterface.mainContainer, what, toPath)
+	GUICopy(MineOSInterface.application, what, toPath)
 end
 
-local function menuWidgetEventHandler(mainContainer, object, e1, ...)
+local function menuWidgetEventHandler(application, object, e1, ...)
 	if e1 == "touch" and object.onTouch then
 		object.selected = true
-		MineOSInterface.mainContainer:drawOnScreen()
+		MineOSInterface.application:draw()
 
-		object.onTouch(mainContainer, object, e1, ...)
+		object.onTouch(application, object, e1, ...)
 
 		object.selected = false
-		MineOSInterface.mainContainer:drawOnScreen()
+		MineOSInterface.application:draw()
 	end
 end
 
@@ -1399,7 +1399,7 @@ function MineOSInterface.menuWidget(width)
 end
 
 function MineOSInterface.addMenuWidget(object)
-	MineOSInterface.mainContainer.menuLayout:addChild(object)
+	MineOSInterface.application.menuLayout:addChild(object)
 	object:moveToBack()
 
 	return object
@@ -1408,17 +1408,17 @@ end
 -----------------------------------------------------------------------------------------------------------------------------------
 
 function MineOSInterface.showErrorWindow(path, line, traceback)
-	local mainContainer = GUI.container(1, 1, buffer.getWidth(), math.floor(buffer.getHeight() * 0.5))
-	mainContainer.y = math.floor(buffer.getHeight() / 2 - mainContainer.height / 2)
+	local application = GUI.application(1, 1, buffer.getWidth(), math.floor(buffer.getHeight() * 0.5))
+	application.y = math.floor(buffer.getHeight() / 2 - application.height / 2)
 	
-	mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, 3, 0x383838))
-	mainContainer:addChild(GUI.label(1, 2, mainContainer.width, 1, 0xFFFFFF, MineOSCore.localization.errorWhileRunningProgram .. "\"" .. fs.name(path) .. "\"")):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
-	local actionButtons = mainContainer:addChild(GUI.actionButtons(2, 2, false))
-	local sendToDeveloperButton = mainContainer:addChild(GUI.adaptiveButton(9, 1, 2, 1, 0x444444, 0xFFFFFF, 0x343434, 0xFFFFFF, MineOSCore.localization.sendFeedback))
+	application:addChild(GUI.panel(1, 1, application.width, 3, 0x383838))
+	application:addChild(GUI.label(1, 2, application.width, 1, 0xFFFFFF, MineOSCore.localization.errorWhileRunningProgram .. "\"" .. fs.name(path) .. "\"")):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
+	local actionButtons = application:addChild(GUI.actionButtons(2, 2, false))
+	local sendToDeveloperButton = application:addChild(GUI.adaptiveButton(9, 1, 2, 1, 0x444444, 0xFFFFFF, 0x343434, 0xFFFFFF, MineOSCore.localization.sendFeedback))
 
-	local codeView = mainContainer:addChild(GUI.codeView(1, 4, math.floor(mainContainer.width * 0.62), mainContainer.height - 3, 1, 1, 100, {}, {[line] = 0xFF4444}, GUI.LUA_SYNTAX_PATTERNS, GUI.LUA_SYNTAX_COLOR_SCHEME, true, {}))
+	local codeView = application:addChild(GUI.codeView(1, 4, math.floor(application.width * 0.62), application.height - 3, 1, 1, 100, {}, {[line] = 0xFF4444}, GUI.LUA_SYNTAX_PATTERNS, GUI.LUA_SYNTAX_COLOR_SCHEME, true, {}))
 	
-	codeView.fromLine = line - math.floor((mainContainer.height - 3) / 2) + 1
+	codeView.fromLine = line - math.floor((application.height - 3) / 2) + 1
 	if codeView.fromLine <= 0 then
 		codeView.fromLine = 1
 	end
@@ -1438,13 +1438,13 @@ function MineOSInterface.showErrorWindow(path, line, traceback)
 		end
 	end
 
-	mainContainer:addChild(GUI.textBox(codeView.width + 1, 4, mainContainer.width - codeView.width, codeView.height, 0xFFFFFF, 0x0, string.wrap(MineOSCore.parseErrorMessage(traceback, 4), mainContainer.width - codeView.width - 2), 1, 1, 0))
+	application:addChild(GUI.textBox(codeView.width + 1, 4, application.width - codeView.width, codeView.height, 0xFFFFFF, 0x0, string.wrap(MineOSCore.parseErrorMessage(traceback, 4), application.width - codeView.width - 2), 1, 1, 0))
 	
 	actionButtons.close.onTouch = function()
-		mainContainer:stopEventHandling()
+		application:stop()
 	end
 
-	mainContainer.eventHandler = function(mainContainer, object, e1, e2, e3, e4)
+	application.eventHandler = function(application, object, e1, e2, e3, e4)
 		if e1 == "key_down" and e4 == 28 then
 			actionButtons.close.onTouch()
 		end
@@ -1459,7 +1459,7 @@ function MineOSInterface.showErrorWindow(path, line, traceback)
 			end
 
 			sendToDeveloperButton.text = MineOSCore.localization.sendedFeedback
-			mainContainer:drawOnScreen()
+			application:draw()
 			os.sleep(1)
 		end
 
@@ -1467,13 +1467,13 @@ function MineOSInterface.showErrorWindow(path, line, traceback)
 	end
 
 	buffer.clear(0x0, 0.5)
-	mainContainer:drawOnScreen()
+	application:draw()
 
 	for i = 1, 3 do
 		component.computer.beep(1500, 0.08)
 	end
 
-	mainContainer:startEventHandling()
+	application:start()
 end
 
 function MineOSInterface.safeLaunch(...)

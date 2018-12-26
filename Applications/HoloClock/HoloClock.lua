@@ -196,7 +196,7 @@ local function flashback()
 	buffer.clear(0x0, 0.3)
 end
 
-local function drawOnScreen()
+local function draw()
 	local width, height = 58, 7
 	local x, y = math.floor(buffer.getWidth() / 2 - width / 2), math.floor(buffer.getHeight() / 2 - height / 2)
 
@@ -221,7 +221,7 @@ flashback()
 
 while true do
 	getDate()
-	drawOnScreen()
+	draw()
 
 	local e = {event.pull(1)}
 	if e[1] == "scroll" then

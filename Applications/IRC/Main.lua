@@ -76,7 +76,7 @@ end
 
 -------------------------------------------------------------------------------
 
-local mainContainer, window = MineOSInterface.addWindow(GUI.filledWindow(1, 1, 110, 27, 0xE1E1E1))
+local application, window = MineOSInterface.addWindow(GUI.filledWindow(1, 1, 110, 27, 0xE1E1E1))
 
 local leftPanel = window:addChild(GUI.panel(1, 1, 21, 1, 0x2D2D2D))
 local leftLayout = window:addChild(GUI.layout(1, 4, leftPanel.width, 1, 1, 1))
@@ -187,7 +187,7 @@ local function status(text)
 	loginStatusText.hidden, loginServerLayout.hidden, loginUsernameInput.hidden, loginPasswordSwitchAndLabel.hidden, loginSubmitButton.hidden = not state, state, state, state, state
 	loginPasswordInput.hidden = state and true or not loginPasswordSwitchAndLabel.switch.state
 
-	mainContainer:drawOnScreen()
+	application:draw()
 end
 
 local function updateLeftLayout()
@@ -256,7 +256,7 @@ local function addContactItemToList(name)
 		scrollBar.value = scrollBar.maximumValue
 		
 		rightLayout:removeChildren()
-		mainContainer:drawOnScreen()
+		application:draw()
 
 		if socketHandle then
 			if list == channelsList then
@@ -386,7 +386,7 @@ end
 
 loginUsernameInput.onInputFinished = function()
 	checkLoginInputs()
-	mainContainer:drawOnScreen()
+	application:draw()
 end
 
 loginPasswordInput.onInputFinished = loginUsernameInput.onInputFinished
@@ -429,7 +429,7 @@ chatInput.onInputFinished = function()
 
 		chatInput.text = ""
 
-		mainContainer:drawOnScreen()
+		application:draw()
 	end
 end
 
@@ -444,17 +444,17 @@ local function addScrollEventHandler(layout)
 		return height
 	end
 
-	layout.eventHandler = function(mainContainer, layout, e1, e2, e3, e4, e5)
+	layout.eventHandler = function(application, layout, e1, e2, e3, e4, e5)
 		if e1 == "scroll" then
 			if e5 > 0 then
 				if layout.cells[1][1].verticalMargin < 0 then
 					layout.cells[1][1].verticalMargin = layout.cells[1][1].verticalMargin + 1
-					mainContainer:drawOnScreen()
+					application:draw()
 				end
 			else
 				if layout.cells[1][1].verticalMargin > -getTotalHeight(layout) + 1 then
 					layout.cells[1][1].verticalMargin = layout.cells[1][1].verticalMargin - 1
-					mainContainer:drawOnScreen()
+					application:draw()
 				end
 			end
 		end
@@ -470,7 +470,7 @@ local function selectItem(item)
 	item.onTouch()
 end
 
-local function userButtonOnTouch(mainContainer, object)
+local function userButtonOnTouch(application, object)
 	local text = object.text:gsub("^[@+]", "")
 	if history[text] then
 		selectItem(getItemByText(text))
@@ -524,17 +524,17 @@ local function removeUserFromList(name)
 	end
 end
 
-chat.eventHandler = function(mainContainer, chat, e1, e2, e3, e4, e5)
+chat.eventHandler = function(application, chat, e1, e2, e3, e4, e5)
 	if e1 == "scroll" then
 		if e5 > 0 then
 			if scrollBar.value > 1 then
 				scrollBar.value = scrollBar.value - 1
-				mainContainer:drawOnScreen()
+				application:draw()
 			end
 		else
 			if scrollBar.value < scrollBar.maximumValue then
 				scrollBar.value = scrollBar.value + 1
-				mainContainer:drawOnScreen()
+				application:draw()
 			end
 		end
 	elseif not e1 and socketHandle and computer.uptime() - oldUptime > socketReadDelay then
@@ -675,7 +675,7 @@ chat.eventHandler = function(mainContainer, chat, e1, e2, e3, e4, e5)
 						end
 					end
 
-					mainContainer:drawOnScreen()
+					application:draw()
 					break
 				else
 					break
@@ -728,11 +728,11 @@ settingsButton.onTouch = function()
 		config.soundNotifications = switchAndLabel.switch.state
 		backgroundContainer.hidden = true
 		
-		mainContainer:drawOnScreen()
+		application:draw()
 		saveConfig()
 	end
 
-	mainContainer:drawOnScreen()
+	application:draw()
 end
 
 contactAddButton.onTouch = function()
@@ -746,11 +746,11 @@ contactAddButton.onTouch = function()
 		if #input.text > 0 and not history[input.text] then
 			selectItem(addContactItemToList(input.text))
 		else
-			mainContainer:drawOnScreen()
+			application:draw()
 		end
 	end
 
-	mainContainer:drawOnScreen()
+	application:draw()
 end
 
 contactRemoveButton.onTouch = function()
@@ -764,7 +764,7 @@ contactRemoveButton.onTouch = function()
 	selectItem(systemList:getItem(socketUsername))
 	updateLeftLayout()
 
-	mainContainer:drawOnScreen()
+	application:draw()
 end
 
 loginPasswordSwitchAndLabel.switch.onStateChanged = function()
@@ -795,7 +795,7 @@ scrollBar.onTouch = function()
 		scrollBar.value = #history[selectedItem.text]
 	end
 
-	mainContainer:drawOnScreen()
+	application:draw()
 end
 
 local overrideWindowClose = window.close

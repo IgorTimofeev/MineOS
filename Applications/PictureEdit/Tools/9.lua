@@ -32,24 +32,24 @@ end
 
 local backgroundSwitch = GUI.switchAndLabel(1, 1, 1, 6, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x878787, "Draw background:", false)
 
-tool.onSelection = function(mainContainer)
-	mainContainer.currentToolLayout:addChild(layout)
-	mainContainer.currentToolLayout:addChild(backgroundSwitch)
+tool.onSelection = function(application)
+	application.currentToolLayout:addChild(layout)
+	application.currentToolLayout:addChild(backgroundSwitch)
 end
 
-tool.eventHandler = function(mainContainer, object, e1, e2, e3, e4)
+tool.eventHandler = function(application, object, e1, e2, e3, e4)
 	if e1 == "touch" or e1 == "drag" then
-		local x, y = e3 - mainContainer.image.x + 1, e4 - mainContainer.image.y + 1
-		local background, foreground, alpha, symbol = image.get(mainContainer.image.data, x, y)
+		local x, y = e3 - application.image.x + 1, e4 - application.image.y + 1
+		local background, foreground, alpha, symbol = image.get(application.image.data, x, y)
 		
-		image.set(mainContainer.image.data, x, y,
-			backgroundSwitch.switch.state and mainContainer.secondaryColorSelector.color or background,
-			mainContainer.primaryColorSelector.color,
+		image.set(application.image.data, x, y,
+			backgroundSwitch.switch.state and application.secondaryColorSelector.color or background,
+			application.primaryColorSelector.color,
 			backgroundSwitch.switch.state and 0 or alpha,
 			char
 		)
 
-		mainContainer:drawOnScreen()
+		application:draw()
 	end
 end
 

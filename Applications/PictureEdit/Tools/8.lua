@@ -29,13 +29,13 @@ local function pizda(x, y, picture, sourceB, sourceF, sourceA, sourceS, newB, ne
 	if check(x - 1, y, picture, sourceB, sourceF, sourceA, sourceS, newB, newF, newA, newS) then pizda(x - 1, y, picture, sourceB, sourceF, sourceA, sourceS, newB, newF, newA, newS) end
 end
 
-tool.eventHandler = function(mainContainer, object, e1, e2, e3, e4)
+tool.eventHandler = function(application, object, e1, e2, e3, e4)
 	if e1 == "touch" then
-		local x, y = e3 - mainContainer.image.x + 1, e4 - mainContainer.image.y + 1
-		local sourceB, sourceF, sourceA, sourceS = image.get(mainContainer.image.data, x, y)
-		pizda(x, y, mainContainer.image.data, sourceB, sourceF, sourceA, sourceS, mainContainer.primaryColorSelector.color, 0x0, 0, " ")
+		local x, y = e3 - application.image.x + 1, e4 - application.image.y + 1
+		local sourceB, sourceF, sourceA, sourceS = image.get(application.image.data, x, y)
+		pizda(x, y, application.image.data, sourceB, sourceF, sourceA, sourceS, application.primaryColorSelector.color, 0x0, 0, " ")
 		
-		mainContainer:drawOnScreen()
+		application:draw()
 	end
 end
 

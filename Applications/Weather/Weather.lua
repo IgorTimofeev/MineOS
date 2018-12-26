@@ -15,7 +15,7 @@ local MineOSPaths = require("MineOSPaths")
 
 --------------------------------------------------------------------------------------------------------
 
-local mainContainer, window = MineOSInterface.addWindow(GUI.filledWindow(1, 1, 130, 30, 0))
+local application, window = MineOSInterface.addWindow(GUI.filledWindow(1, 1, 130, 30, 0))
 window.backgroundPanel.colors.transparency = 0.2
 
 local weatherContainer = window:addChild(GUI.container(1, 1, 1, 23))
@@ -124,7 +124,7 @@ local function updateForecast()
 				x = x + object.width + 2
 			end
 
-			MineOSInterface.mainContainer:drawOnScreen()
+			MineOSInterface.application:draw()
 			table.toFile(configPath, config)
 		else
 			GUI.alert(result.message)
@@ -146,7 +146,7 @@ window.onResize = function(width, height)
 end
 
 window:resize(window.width, window.height)
-MineOSInterface.mainContainer:drawOnScreen()
+MineOSInterface.application:draw()
 
 if fs.exists(configPath) then
 	config = table.fromFile(configPath)

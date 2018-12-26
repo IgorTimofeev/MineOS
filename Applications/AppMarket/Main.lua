@@ -87,7 +87,7 @@ local config, fileVersions, user
 
 --------------------------------------------------------------------------------
 
-local mainContainer, window = MineOSInterface.addWindow(GUI.tabbedWindow(1, 1, 110, 29))
+local application, window = MineOSInterface.addWindow(GUI.tabbedWindow(1, 1, 110, 29))
 
 local contentContainer = window:addChild(GUI.container(1, 4, 1, 1))
 
@@ -95,7 +95,7 @@ local progressIndicator = window:addChild(GUI.progressIndicator(1, 1, 0x3C3C3C, 
 
 local function activity(state)
 	progressIndicator.active = state
-	mainContainer:drawOnScreen()
+	application:draw()
 end
 --------------------------------------------------------------------------------
 
@@ -147,7 +147,7 @@ local function RawAPIRequest(script, postData, notUnserialize)
 		function(chunk)
 			data = data .. chunk
 			
-			mainContainer:drawOnScreen()
+			application:draw()
 			progressIndicator:roll()
 		end,
 		math.huge
@@ -324,7 +324,7 @@ local function newRatingWidget(x, y, rating, firstColor, secondColor)
 end
 
 local function deletePublication(publication)
-	local container = MineOSInterface.addBackgroundContainer(MineOSInterface.mainContainer, localization.areYouSure)
+	local container = MineOSInterface.addBackgroundContainer(MineOSInterface.application, localization.areYouSure)
 	local buttonsLayout = container.layout:addChild(newButtonsLayout(1, 1, container.layout.width, 3))
 	
 	buttonsLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 2, 0, 0xE1E1E1, 0x2D2D2D, 0x0, 0xE1E1E1, localization.yes)).onTouch = function()
@@ -343,7 +343,7 @@ local function deletePublication(publication)
 
 	buttonsLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 2, 0, 0xA5A5A5, 0x2D2D2D, 0x0, 0xE1E1E1, localization.no)).onTouch = function()
 		container:remove()
-		MineOSInterface.mainContainer:drawOnScreen()
+		MineOSInterface.application:draw()
 	end
 end
 
@@ -383,7 +383,7 @@ local function download(publication)
 	end
 
 	if publication then
-		local container = MineOSInterface.addBackgroundContainer(MineOSInterface.mainContainer, localization.choosePath)
+		local container = MineOSInterface.addBackgroundContainer(MineOSInterface.application, localization.choosePath)
 
 		local filesystemChooserPath = fileVersions[publication.file_id] and getApplicationPathFromVersions(fileVersions[publication.file_id].path)
 		if not filesystemChooserPath then
@@ -468,7 +468,7 @@ local function download(publication)
 			local function govnoed(pizda, i)
 				container.label.text = localization.downloading .. " " .. fs.name(pizda.path)
 				progressBar.value = math.round(i / countOfShit * 100)
-				MineOSInterface.mainContainer:drawOnScreen()
+				MineOSInterface.application:draw()
 			end
 
 			-- SAVED
@@ -585,7 +585,7 @@ local function addApplicationInfo(container, publication, limit)
 	end
 end
 
-local function containerScrollEventHandler(mainContainer, object, e1, e2, e3, e4, e5)
+local function containerScrollEventHandler(application, object, e1, e2, e3, e4, e5)
 	if e1 == "scroll" then
 		local first, last = object.children[1], object.children[#object.children]
 		
@@ -594,14 +594,14 @@ local function containerScrollEventHandler(mainContainer, object, e1, e2, e3, e4
 				for i = 1, #object.children do
 					object.children[i].localY = object.children[i].localY + 1
 				end
-				MineOSInterface.mainContainer:drawOnScreen()
+				MineOSInterface.application:draw()
 			end
 		else
 			if last.localY + last.height - 1 >= object.height then
 				for i = 1, #object.children do
 					object.children[i].localY = object.children[i].localY - 1
 				end
-				MineOSInterface.mainContainer:drawOnScreen()
+				MineOSInterface.application:draw()
 			end
 		end
 	end
@@ -609,10 +609,10 @@ end
 
 local newApplicationPreview, newPublicationInfo, mainMenu
 
-local function applicationWidgetEventHandler(mainContainer, object, e1)
+local function applicationWidgetEventHandler(application, object, e1)
 	if e1 == "touch" then
 		object.parent.panel.colors.background = 0xE1E1E1
-		MineOSInterface.mainContainer:drawOnScreen()
+		MineOSInterface.application:draw()
 		newPublicationInfo(object.parent.file_id)
 	end
 end
@@ -651,7 +651,7 @@ mainMenu = function(menuID, messageToUser)
 
 		local statistics = fieldAPIRequest("result", "statistics")
 		if statistics then
-			MineOSInterface.mainContainer:drawOnScreen()
+			MineOSInterface.application:draw()
 
 			local publications = fieldAPIRequest("result", "publications", {
 				order_by = "popularity",
@@ -688,7 +688,7 @@ mainMenu = function(menuID, messageToUser)
 				applicationPreview.panel.colors.background = 0xF0F0F0
 				statisticsLayout:addChild(GUI.label(1, 1, statisticsLayout.width, 1, 0xA5A5A5, localization.statisticsPopularPublication)):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_CENTER)
 
-				MineOSInterface.mainContainer:drawOnScreen()
+				MineOSInterface.application:draw()
 
 				local uptime, newUptime = computer.uptime()
 				local function tick()
@@ -745,13 +745,13 @@ mainMenu = function(menuID, messageToUser)
 							child.localX, child.localY = math.floor(child.moveX), math.floor(child.moveY)
 						end
 
-						MineOSInterface.mainContainer:drawOnScreen()
+						MineOSInterface.application:draw()
 
 						return true
 					end
 				end
 
-				iconsContainer.eventHandler = function(mainContainer, object, e1, e2, e3, e4)
+				iconsContainer.eventHandler = function(application, object, e1, e2, e3, e4)
 					if e1 == "touch" or e1 == "drag" then
 						local child, deltaX, deltaY, vectorLength
 						for i = 1, #iconsContainer.children do
@@ -778,7 +778,7 @@ mainMenu = function(menuID, messageToUser)
 					object.forceY = math.random(-100, 100) / 100 * overviewForceLimit
 					
 					if not tick() then
-						MineOSInterface.mainContainer:drawOnScreen()
+						MineOSInterface.application:draw()
 					end
 				end
 
@@ -843,10 +843,10 @@ mainMenu = function(menuID, messageToUser)
 			activity(false)
 		end
 
-		local messagesContainer = menuContentContainer:addChild(GUI.container(1, 1, menuContentContainer.width, menuContentContainer.height - 3))
+		local messagesContainer = menuContentContainer:addChild(GUI.container(1, 4, menuContentContainer.width, menuContentContainer.height - 6))
 		messagesContainer.eventHandler = containerScrollEventHandler
 
-		local panel = menuContentContainer:addChild(GUI.panel(1, 1, menuContentContainer.width, 3, 0xFFFFFF, 0.3))
+		local panel = menuContentContainer:addChild(GUI.panel(1, 1, menuContentContainer.width, 3, 0xFFFFFF))
 		if not to_user_name then
 			panel.colors.transparency = nil
 			local text = menuContentContainer:addChild(GUI.text(3, 2, 0x0, localization.toWho))
@@ -940,7 +940,7 @@ mainMenu = function(menuID, messageToUser)
 					dialogContainer:addChild(GUI.keyAndValue(3, 2, nicknameColor, timestampColor, dialogs[i].dialog_user_name, os.date(" (%d.%m.%Y, %H:%M)", dialogs[i].timestamp)))
 					dialogContainer:addChild(GUI.text(3, 3, textColor, string.limit((dialogs[i].last_message_user_name == user.name and localization.yourText .. " " or "") .. dialogs[i].text, dialogContainer.width - 4, "right")))
 
-					dialogContainer.eventHandler = function(mainContainer, object, e1)
+					dialogContainer.eventHandler = function(application, object, e1)
 						if e1 == "touch" then
 							dialogContainer.panel.colors.background = 0xE1E1E1
 							dialogGUI(dialogs[i].dialog_user_name)
@@ -981,7 +981,7 @@ mainMenu = function(menuID, messageToUser)
 			end
 		end
 
-		MineOSInterface.mainContainer:drawOnScreen()
+		MineOSInterface.application:draw()
 	end
 
 	local function account()
@@ -1149,7 +1149,7 @@ mainMenu = function(menuID, messageToUser)
 			activity()
 		else
 			addAccountShit(true, false, false)
-			MineOSInterface.mainContainer:drawOnScreen()
+			MineOSInterface.application:draw()
 		end
 	end
 
@@ -1190,7 +1190,7 @@ newPublicationInfo = function(file_id)
 	})
 
 	if publication then
-		MineOSInterface.mainContainer:drawOnScreen()
+		MineOSInterface.application:draw()
 
 		local reviews = fieldAPIRequest("result", "reviews", {
 			file_id = file_id,
@@ -1284,10 +1284,10 @@ newPublicationInfo = function(file_id)
 						pizda.width = eblo.width + 9
 						
 						local cyka = pizda:addChild(newRatingWidget(eblo.width + 1, 1, 4))
-						cyka.eventHandler = function(mainContainer, object, e1, e2, e3)
+						cyka.eventHandler = function(application, object, e1, e2, e3)
 							if e1 == "touch" then
 								cyka.rating = math.round((e3 - object.x + 1) / object.width * 5)
-								MineOSInterface.mainContainer:drawOnScreen()
+								MineOSInterface.application:draw()
 							end
 						end
 						
@@ -1306,7 +1306,7 @@ newPublicationInfo = function(file_id)
 							})
 
 							container:remove()
-							MineOSInterface.mainContainer:drawOnScreen()
+							MineOSInterface.application:draw()
 
 							if success then
 								newPublicationInfo(publication.file_id)
@@ -1328,7 +1328,7 @@ newPublicationInfo = function(file_id)
 								end
 							end
 							
-							MineOSInterface.mainContainer:drawOnScreen()
+							MineOSInterface.application:draw()
 						end
 
 						input.onInputFinished()
@@ -1368,10 +1368,12 @@ newPublicationInfo = function(file_id)
 							if x + textLength + 4 > textDetailsContainer.width - 4 then
 								x, y = 3, y + 2
 							end
+							
 							local button = textDetailsContainer:addChild(GUI.tagButton(x, y, textLength + 2, 1, 0xC3C3C3, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, dependency.publication_name))
 							button.onTouch = function()
 								newPublicationInfo(publication.all_dependencies[i])
 							end
+
 							x = x + button.width + 2
 						end
 					end
@@ -1500,7 +1502,7 @@ local function newPlusMinusCyka(width, disableLimit)
 
 	layout.removeButton.onTouch = function()
 		layout.comboBox:removeItem(layout.comboBox.selectedItem)
-		MineOSInterface.mainContainer:drawOnScreen()
+		MineOSInterface.application:draw()
 	end
 
 	return layout
@@ -1584,7 +1586,7 @@ editPublication = function(initialPublication, initialCategoryID)
 	local lastDependencyType = 1
 
 	dependenciesLayout.addButton.onTouch = function()
-		local container = MineOSInterface.addBackgroundContainer(MineOSInterface.mainContainer, localization.addDependency)
+		local container = MineOSInterface.addBackgroundContainer(MineOSInterface.application, localization.addDependency)
 		
 		local dependencyTypeComboBox = container.layout:addChild(GUI.comboBox(1, 1, 36, 3, 0xFFFFFF, 0x696969, 0x969696, 0xE1E1E1))
 		dependencyTypeComboBox:addItem(localization.fileByURL)
@@ -1605,7 +1607,7 @@ editPublication = function(initialPublication, initialCategoryID)
 			})
 
 			container:remove()
-			MineOSInterface.mainContainer:drawOnScreen()
+			MineOSInterface.application:draw()
 		end
 
 		publicationNameInput.onInputFinished = function()
@@ -1627,7 +1629,7 @@ editPublication = function(initialPublication, initialCategoryID)
 
 		dependencyTypeComboBox.onItemSelected = function()
 			onDependencyTypeComboBoxItemSelected()
-			MineOSInterface.mainContainer:drawOnScreen()
+			MineOSInterface.application:draw()
 		end
 
 		pathType.switch.onStateChanged = function()
@@ -1637,7 +1639,7 @@ editPublication = function(initialPublication, initialCategoryID)
 		publicationNameInput.onInputFinished()
 		onDependencyTypeComboBoxItemSelected()
 		pathType.switch.onStateChanged()
-		MineOSInterface.mainContainer:drawOnScreen()
+		MineOSInterface.application:draw()
 	end
 
 	local publishButton = layout:addChild(GUI.adaptiveRoundedButton(1, 1, 2, 0, 0x696969, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.save))
@@ -1656,7 +1658,7 @@ editPublication = function(initialPublication, initialCategoryID)
 		mainPathInput.hidden = pathHint.hidden
 
 		nameInput.onInputFinished()
-		MineOSInterface.mainContainer:drawOnScreen()
+		MineOSInterface.application:draw()
 	end
 
 	categoryComboBox.onItemSelected()
@@ -1757,14 +1759,14 @@ updateFileList = function(category_id, updates)
 			if updates then
 				if #result > 0 then
 					layout:addChild(GUI.adaptiveRoundedButton(1, 1, 2, 0, 0x696969, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.updateAll)).onTouch = function()
-						local container = MineOSInterface.addBackgroundContainer(MineOSInterface.mainContainer, "")
+						local container = MineOSInterface.addBackgroundContainer(MineOSInterface.application, "")
 
 						local progressBar = container.layout:addChild(GUI.progressBar(1, 1, 40, 0x66DB80, 0x0, 0xE1E1E1, 0, true, true, "", "%"))
 
 						for i = 1, #result do
 							container.label.text = localization.downloading .. " " .. result[i].publication_name
 							progressBar.value = math.round(i / #result * 100)
-							MineOSInterface.mainContainer:drawOnScreen()
+							MineOSInterface.application:draw()
 
 							local publication = fieldAPIRequest("result", "publication", {
 								file_id = result[i].file_id,
@@ -1780,7 +1782,7 @@ updateFileList = function(category_id, updates)
 										local dependency = publication.dependencies_data[publication.all_dependencies[j]]
 										if not dependency.publication_name then
 											container.label.text = localization.downloading .. " " .. dependency.path
-											MineOSInterface.mainContainer:drawOnScreen()
+											MineOSInterface.application:draw()
 											
 											if getUpdateState(publication.all_dependencies[j], dependency.version) < 4 then
 												local dependencyPath = getDependencyPath(fileVersions[publication.file_id].path, dependency)
@@ -1887,7 +1889,7 @@ updateFileList = function(category_id, updates)
 				end
 				counter = counter + 1
 
-				MineOSInterface.mainContainer:drawOnScreen()
+				MineOSInterface.application:draw()
 			end
 		else
 			showLabelAsContent(contentContainer, localization.noUpdates)

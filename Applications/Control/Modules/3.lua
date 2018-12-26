@@ -1,6 +1,6 @@
 
 local args = {...}
-local mainContainer, window, localization = args[1], args[2], args[3]
+local application, window, localization = args[1], args[2], args[3]
 
 require("advancedLua")
 local component = require("component")
@@ -128,7 +128,7 @@ module.onTouch = function()
 			out("Failed to load string \"" .. data .. "\": " .. reason)
 		end
 
-		mainContainer:drawOnScreen()
+		application:draw()
 	end
 
 

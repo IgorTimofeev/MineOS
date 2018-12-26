@@ -7,7 +7,7 @@ local filesystem = require("filesystem")
 
 local module = {}
 
-local mainContainer, window, localization = table.unpack({...})
+local application, window, localization = table.unpack({...})
 
 --------------------------------------------------------------------------------
 

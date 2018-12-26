@@ -7,7 +7,7 @@ local MineOSCore = require("MineOSCore")
 
 local module = {}
 
-local mainContainer, window, localization = table.unpack({...})
+local application, window, localization = table.unpack({...})
 
 --------------------------------------------------------------------------------
 
@@ -33,9 +33,9 @@ module.onTouch = function()
 		MineOSCore.properties.backgroundColor = backgroundColorSelector.color
 		MineOSCore.properties.menuColor = menuColorSelector.color
 		MineOSCore.properties.dockColor = dockColorSelector.color
-		MineOSInterface.mainContainer.menu.colors.default.background = MineOSCore.properties.menuColor
+		MineOSInterface.application.menu.colors.default.background = MineOSCore.properties.menuColor
 
-		MineOSInterface.mainContainer:drawOnScreen()
+		MineOSInterface.application:draw()
 	end
 	menuColorSelector.onColorSelected = backgroundColorSelector.onColorSelected
 	dockColorSelector.onColorSelected = backgroundColorSelector.onColorSelected
@@ -79,7 +79,7 @@ module.onTouch = function()
 		MineOSCore.properties.transparencyEnabled = transparencySwitch.state
 
 		MineOSInterface.applyTransparency()
-		MineOSInterface.mainContainer:drawOnScreen()
+		MineOSInterface.application:draw()
 		MineOSCore.saveProperties()
 	end
 

@@ -6,7 +6,7 @@ local MineOSCore = require("MineOSCore")
 
 local module = {}
 
-local mainContainer, window, localization = table.unpack({...})
+local application, window, localization = table.unpack({...})
 
 --------------------------------------------------------------------------------
 
@@ -21,7 +21,7 @@ module.onTouch = function()
 	wallpaperChooser.onSubmit = function(path)
 		MineOSCore.properties.wallpaper = path
 		MineOSInterface.changeWallpaper()
-		MineOSInterface.mainContainer:drawOnScreen()
+		MineOSInterface.application:draw()
 
 		MineOSCore.saveProperties()
 	end
@@ -35,7 +35,7 @@ module.onTouch = function()
 	wallpaperSwitch.onStateChanged = function()
 		MineOSCore.properties.wallpaperEnabled = wallpaperSwitch.state
 		MineOSInterface.changeWallpaper()
-		MineOSInterface.mainContainer:drawOnScreen()
+		MineOSInterface.application:draw()
 
 		MineOSCore.saveProperties()
 	end
@@ -48,7 +48,7 @@ module.onTouch = function()
 	wallpaperSlider.onValueChanged = function()
 		MineOSCore.properties.wallpaperBrightness = wallpaperSlider.value / 100
 		MineOSInterface.changeWallpaper()
-		MineOSInterface.mainContainer:drawOnScreen()
+		MineOSInterface.application:draw()
 
 		MineOSCore.saveProperties()
 	end
@@ -56,7 +56,7 @@ module.onTouch = function()
 	comboBox.onItemSelected = function()
 		MineOSCore.properties.wallpaperMode = comboBox.selectedItem
 		MineOSInterface.changeWallpaper()
-		MineOSInterface.mainContainer:drawOnScreen()
+		MineOSInterface.application:draw()
 
 		MineOSCore.saveProperties()
 	end

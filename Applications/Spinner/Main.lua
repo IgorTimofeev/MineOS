@@ -15,9 +15,9 @@ local spinnerLimit = 8
 local spinnerHue = math.random(0, 360)
 local spinnerHueStep = 20
 
-local mainContainer = GUI.fullScreenContainer()
-mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x0))
-local spinnerImage = mainContainer:addChild(GUI.image(1, 1, {1, 1}))
+local application = GUI.application()
+application:addChild(GUI.panel(1, 1, application.width, application.height, 0x0))
+local spinnerImage = application:addChild(GUI.image(1, 1, {1, 1}))
 
 ------------------------------------------------------------------------------------------
 
@@ -43,9 +43,9 @@ local function changeColor(hue, saturation)
 	spinnerImage.image = spinners[currentSpinner]
 end
 
-mainContainer.eventHandler = function(mainContainer, object, e1, e2, e3, e4, e5)
+application.eventHandler = function(application, object, e1, e2, e3, e4, e5)
 	if e1 == "key_down" then
-		mainContainer:stopEventHandling()
+		application:stop()
 	elseif e1 == "touch" then
 		spinnerHue = spinnerHue + spinnerHueStep * (e5 == 1 and -1 or 1)
 		if spinnerHue > 360 then
@@ -62,7 +62,7 @@ mainContainer.eventHandler = function(mainContainer, object, e1, e2, e3, e4, e5)
 	end
 	spinnerImage.image = spinners[currentSpinner]
 	
-	mainContainer:drawOnScreen()
+	application:draw()
 end
 
 ------------------------------------------------------------------------------------------
@@ -72,14 +72,14 @@ for i = 1, spinnerLimit do
 end
 spinnerImage.width = image.getWidth(spinners[currentSpinner])
 spinnerImage.height = image.getHeight(spinners[currentSpinner]) 
-spinnerImage.localX = math.floor(mainContainer.width / 2 - spinnerImage.width / 2)
-spinnerImage.localY = math.floor(mainContainer.height / 2 - spinnerImage.height/ 2)
+spinnerImage.localX = math.floor(application.width / 2 - spinnerImage.width / 2)
+spinnerImage.localY = math.floor(application.height / 2 - spinnerImage.height/ 2)
 
 changeColor(spinnerHue, 1)
 buffer.flush()
-mainContainer:drawOnScreen()
+application:draw()
 
-mainContainer:startEventHandling(0)
+application:start(0)
 
 
 

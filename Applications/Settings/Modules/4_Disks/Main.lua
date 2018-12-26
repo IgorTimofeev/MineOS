@@ -9,7 +9,7 @@ local filesystem = require("filesystem")
 
 local module = {}
 
-local mainContainer, window, localization = table.unpack({...})
+local application, window, localization = table.unpack({...})
 
 --------------------------------------------------------------------------------
 
@@ -79,7 +79,7 @@ module.onTouch = function()
 	comboBox.onItemSelected = function()
 		currentAddress = getProxy().address
 		update()
-		mainContainer:drawOnScreen()
+		application:draw()
 	end
 
 	input.onInputFinished = function()
@@ -92,7 +92,7 @@ module.onTouch = function()
 			GUI.alert(reason)
 		end
 
-		mainContainer:drawOnScreen()
+		application:draw()
 	end
 
 	button.onTouch = function()
@@ -103,7 +103,7 @@ module.onTouch = function()
 		end
 
 		fill()
-		mainContainer:drawOnScreen()
+		application:draw()
 	end
 		
 	fill()

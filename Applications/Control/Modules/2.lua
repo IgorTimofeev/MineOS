@@ -1,6 +1,6 @@
 
 local args = {...}
-local mainContainer, window, localization = args[1], args[2], args[3]
+local application, window, localization = args[1], args[2], args[3]
 
 require("advancedLua")
 local component = require("component")
@@ -35,7 +35,7 @@ module.onTouch = function()
 		
 		local button = diskContainer:addChild(GUI.adaptiveRoundedButton(1, 3, 2, 0, 0x2D2D2D, 0xE1E1E1, 0x0, 0xE1E1E1, localization.options))
 		button.onTouch = function()
-			local container = MineOSInterface.addBackgroundContainer(mainContainer, localization.options)
+			local container = MineOSInterface.addBackgroundContainer(application, localization.options)
 			local inputField = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x666666, 0x666666, 0xE1E1E1, 0x2D2D2D, proxy.getLabel() or "", localization.diskLabel))
 			inputField.onInputFinished = function()
 				if inputField.text and inputField.text:len() > 0 then
@@ -68,7 +68,7 @@ module.onTouch = function()
 				end
 			end
 
-			mainContainer:drawOnScreen()
+			application:draw()
 		end
 		button.localX = diskContainer.width - button.width - 1
 
@@ -85,14 +85,14 @@ module.onTouch = function()
 		y = y + diskContainer.height + 1
 	end
 
-	container.eventHandler = function(mainContainer, object, e1, e2, e3, e4, e5)
+	container.eventHandler = function(application, object, e1, e2, e3, e4, e5)
 		if e1 == "scroll" then
 			if e5 < 0 or container.children[1].localY < 2 then
 				for i = 1, #container.children do
 					container.children[i].localY = container.children[i].localY + e5
 				end
 
-				mainContainer:drawOnScreen()
+				application:draw()
 			end
 		elseif e1 == "component_added" or e1 == "component_removed" and e3 == "filesystem" then
 			module.onTouch()

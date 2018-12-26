@@ -19,7 +19,7 @@ local rasterizeEllipseButton = GUI.roundedButton(1, 1, 36, 1, 0xE1E1E1, 0x2D2D2D
 local clearButton = GUI.roundedButton(1, 1, 36, 1, 0x696969, 0xE1E1E1, 0x2D2D2D, 0xE1E1E1, "Clear")
 local cropButton = GUI.roundedButton(1, 1, 36, 1, 0x696969, 0xE1E1E1, 0x2D2D2D, 0xE1E1E1, "Crop")
 
-local function repositionSelector(mainContainer)
+local function repositionSelector(application)
 	if dragX - touchX >= 0 then
 		selector.localX, selector.width = touchX, dragX - touchX + 1
 	else
@@ -32,100 +32,100 @@ local function repositionSelector(mainContainer)
 		selector.localY, selector.height = dragY, touchY - dragY + 1
 	end
 	
-	mainContainer:drawOnScreen()
+	application:draw()
 end
 
-local function fitSelector(mainContainer)
-	touchX, touchY, dragX, dragY = mainContainer.image.localX, mainContainer.image.localY, mainContainer.image.localX + mainContainer.image.width - 1, mainContainer.image.localY + mainContainer.image.height - 1
-	repositionSelector(mainContainer)
+local function fitSelector(application)
+	touchX, touchY, dragX, dragY = application.image.localX, application.image.localY, application.image.localX + application.image.width - 1, application.image.localY + application.image.height - 1
+	repositionSelector(application)
 end
 
-tool.onSelection = function(mainContainer)
-	mainContainer.currentToolLayout:addChild(fillButton).onTouch = function()
+tool.onSelection = function(application)
+	application.currentToolLayout:addChild(fillButton).onTouch = function()
 		for j = selector.y, selector.y + selector.height - 1 do
 			for i = selector.x, selector.x + selector.width - 1 do
-				image.set(mainContainer.image.data, i - mainContainer.image.x + 1, j - mainContainer.image.y + 1, mainContainer.primaryColorSelector.color, 0x0, 0, " ")
+				image.set(application.image.data, i - application.image.x + 1, j - application.image.y + 1, application.primaryColorSelector.color, 0x0, 0, " ")
 			end
 		end
 
-		mainContainer:drawOnScreen()
+		application:draw()
 	end
 	
-	mainContainer.currentToolLayout:addChild(outlineButton).onTouch = function()
-		local x1, y1 = selector.x - mainContainer.image.x + 1, selector.y - mainContainer.image.y + 1
+	application.currentToolLayout:addChild(outlineButton).onTouch = function()
+		local x1, y1 = selector.x - application.image.x + 1, selector.y - application.image.y + 1
 		local x2, y2 = x1 + selector.width - 1, y1 + selector.height - 1
 		
 		for x = x1, x2 do
-			image.set(mainContainer.image.data, x, y1, mainContainer.primaryColorSelector.color, 0x0, 0, " ")
-			image.set(mainContainer.image.data, x, y2, mainContainer.primaryColorSelector.color, 0x0, 0, " ")
+			image.set(application.image.data, x, y1, application.primaryColorSelector.color, 0x0, 0, " ")
+			image.set(application.image.data, x, y2, application.primaryColorSelector.color, 0x0, 0, " ")
 		end
 
 		for y = y1 + 1, y2 - 1 do
-			image.set(mainContainer.image.data, x1, y, mainContainer.primaryColorSelector.color, 0x0, 0, " ")
-			image.set(mainContainer.image.data, x2, y, mainContainer.primaryColorSelector.color, 0x0, 0, " ")
+			image.set(application.image.data, x1, y, application.primaryColorSelector.color, 0x0, 0, " ")
+			image.set(application.image.data, x2, y, application.primaryColorSelector.color, 0x0, 0, " ")
 		end
 
-		mainContainer:drawOnScreen()
+		application:draw()
 	end
 	
-	mainContainer.currentToolLayout:addChild(rasterizeLineButton).onTouch = function()
+	application.currentToolLayout:addChild(rasterizeLineButton).onTouch = function()
 		buffer.rasterizeLine(
-			touchX - mainContainer.image.x + 1,
-			touchY - mainContainer.image.y + 1,
-			dragX - mainContainer.image.x + 1,
-			dragY - mainContainer.image.y + 1,
+			touchX - application.image.x + 1,
+			touchY - application.image.y + 1,
+			dragX - application.image.x + 1,
+			dragY - application.image.y + 1,
 			function(x, y)
-				image.set(mainContainer.image.data, x, y, mainContainer.primaryColorSelector.color, 0x0, 0, " ")
+				image.set(application.image.data, x, y, application.primaryColorSelector.color, 0x0, 0, " ")
 			end
 		)
 
-		mainContainer:drawOnScreen()
+		application:draw()
 	end
 
-	mainContainer.currentToolLayout:addChild(rasterizeEllipseButton).onTouch = function()
+	application.currentToolLayout:addChild(rasterizeEllipseButton).onTouch = function()
 		local minX, minY, maxX, maxY = math.min(touchX, dragX), math.min(touchY, dragY), math.max(touchX, dragX), math.max(touchY, dragY)
 		local centerX, centerY = math.ceil(minX + (maxX - minX) / 2), math.ceil(minY + (maxY - minY) / 2)
 				
 		buffer.rasterizeEllipse(
-			centerX - mainContainer.image.x + 1,
-			centerY - mainContainer.image.y + 1,
+			centerX - application.image.x + 1,
+			centerY - application.image.y + 1,
 			maxX - centerX,
 			maxY - centerY,
 			function(x, y)
-				image.set(mainContainer.image.data, x, y, mainContainer.primaryColorSelector.color, 0x0, 0, " ")
+				image.set(application.image.data, x, y, application.primaryColorSelector.color, 0x0, 0, " ")
 			end
 		)
 
-		mainContainer:drawOnScreen()
+		application:draw()
 	end
 
-	mainContainer.currentToolLayout:addChild(clearButton).onTouch = function()
+	application.currentToolLayout:addChild(clearButton).onTouch = function()
 		for j = selector.y, selector.y + selector.height - 1 do
 			for i = selector.x, selector.x + selector.width - 1 do
-				image.set(mainContainer.image.data, i - mainContainer.image.x + 1, j - mainContainer.image.y + 1, 0x0, 0x0, 1, " ")
+				image.set(application.image.data, i - application.image.x + 1, j - application.image.y + 1, 0x0, 0x0, 1, " ")
 			end
 		end
 
-		mainContainer:drawOnScreen()
+		application:draw()
 	end
 	
-	mainContainer.currentToolLayout:addChild(cropButton).onTouch = function()
-		mainContainer.image.data = image.crop(mainContainer.image.data, selector.x - mainContainer.image.x + 1, selector.y - mainContainer.image.y + 1, selector.width, selector.height)
-		mainContainer.image.reposition()
-		fitSelector(mainContainer)
+	application.currentToolLayout:addChild(cropButton).onTouch = function()
+		application.image.data = image.crop(application.image.data, selector.x - application.image.x + 1, selector.y - application.image.y + 1, selector.width, selector.height)
+		application.image.reposition()
+		fitSelector(application)
 	end
 
-	mainContainer.currentToolOverlay:addChild(selector)
-	fitSelector(mainContainer)
+	application.currentToolOverlay:addChild(selector)
+	fitSelector(application)
 end
 
-tool.eventHandler = function(mainContainer, object, e1, e2, e3, e4)
+tool.eventHandler = function(application, object, e1, e2, e3, e4)
 	if e1 == "touch" then
 		touchX, touchY, dragX, dragY = e3, e4, e3, e4
-		repositionSelector(mainContainer)
+		repositionSelector(application)
 	elseif e1 == "drag" then
 		dragX, dragY = e3, e4
-		repositionSelector(mainContainer)
+		repositionSelector(application)
 	end
 end
 

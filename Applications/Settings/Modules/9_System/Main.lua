@@ -8,7 +8,7 @@ local unicode = require("unicode")
 
 local module = {}
 
-local mainContainer, window, localization = table.unpack({...})
+local application, window, localization = table.unpack({...})
 
 --------------------------------------------------------------------------------
 
@@ -50,7 +50,7 @@ module.onTouch = function()
 			RAMComboBox:addItem(libraries[i])
 		end
 
-		MineOSInterface.mainContainer:drawOnScreen()
+		MineOSInterface.application:draw()
 	end
 
 	window.contentLayout:addChild(GUI.button(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x696969, 0xE1E1E1, localization.systemUnload)).onTouch = function()
@@ -69,7 +69,7 @@ module.onTouch = function()
 
 	update()
 
-	MineOSInterface.mainContainer:drawOnScreen()
+	MineOSInterface.application:draw()
 end
 
 --------------------------------------------------------------------------------

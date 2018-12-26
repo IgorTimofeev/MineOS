@@ -72,7 +72,7 @@ end
 --------------------------------------------------------------------------------
 
 
-local mainContainer, window = MineOSInterface.addWindow(GUI.filledWindow(1, 1, 100, 26, 0x0))
+local application, window = MineOSInterface.addWindow(GUI.filledWindow(1, 1, 100, 26, 0x0))
 
 local leftPanel = window:addChild(GUI.panel(1, 1, 1, 1, 0x0))
 local leftLayout = window:addChild(GUI.layout(1, 3, 1, 1, 1, 1))
@@ -93,7 +93,7 @@ end
 
 local function request(url, postData, headers)
 	progressIndicator.active = true
-	mainContainer:drawOnScreen()
+	application:draw()
 
 	-- log("REQUEST URL: ", url)
 
@@ -109,7 +109,7 @@ local function request(url, postData, headers)
 			data = data .. chunk
 
 			progressIndicator:roll()
-			mainContainer:drawOnScreen()
+			application:draw()
 		end,
 		math.huge
 	)
@@ -117,7 +117,7 @@ local function request(url, postData, headers)
 	if success then
 		data = json.decode(data)
 		progressIndicator.active = false
-		mainContainer:drawOnScreen()
+		application:draw()
 
 		return data
 	else
@@ -181,7 +181,7 @@ local function selectableSelect(object)
 		object.parent.children[i].selected = object.parent.children[i] == object
 	end
 
-	mainContainer:drawOnScreen()
+	application:draw()
 
 	if object.onTouch then
 		contentContainer.eventHandler = nil
@@ -189,7 +189,7 @@ local function selectableSelect(object)
 	end
 end
 
-local function selectableEventHandler(mainContainer, object, e1)
+local function selectableEventHandler(application, object, e1)
 	if e1 == "touch" then
 		object:select()
 	end
@@ -237,7 +237,7 @@ local function addPizda(name)
 end
 
 local function addScrollEventHandler(layout, regularDirection, updater)
-	layout.eventHandler = function(mainContainer, layout, e1, e2, e3, e4, e5)
+	layout.eventHandler = function(application, layout, e1, e2, e3, e4, e5)
 		if e1 == "scroll" then
 			local cell = layout.cells[1][1]
 
@@ -270,7 +270,7 @@ local function addScrollEventHandler(layout, regularDirection, updater)
 				end
 			end
 			
-			mainContainer:drawOnScreen()
+			application:draw()
 		end
 	end
 end
@@ -338,10 +338,10 @@ local function avatarDraw(object)
 	end
 end
 
-local function avatarEventHandler(mainContainer, object, e1)
+local function avatarEventHandler(application, object, e1)
 	if e1 == "touch" then
 		object.selected = true
-		mainContainer:drawOnScreen()
+		application:draw()
 
 		os.sleep(0.2)
 		
@@ -785,7 +785,7 @@ local function showHistory(container, peerID)
 			end
 		end
 
-		mainContainer:drawOnScreen()
+		application:draw()
 	end
 end
 
@@ -1197,7 +1197,7 @@ showUserProfile = function(peerID)
 				update()
 			end
 
-			contentContainer.eventHandler = function(mainContainer, contentContainer, e1, e2, e3, e4, e5)
+			contentContainer.eventHandler = function(application, contentContainer, e1, e2, e3, e4, e5)
 				if e1 == "scroll" then
 					userContainer.localY = userContainer.localY + (e5 > 0 and 1 or -1) * config.scrollSpeed
 					
@@ -1209,7 +1209,7 @@ showUserProfile = function(peerID)
 						userContainer.localY = 1
 					end
 
-					mainContainer:drawOnScreen()
+					application:draw()
 				end
 			end
 		end
@@ -1319,7 +1319,7 @@ local function showFriends(peerID)
 			local friends = getFriends()
 			if friends then
 				addFromList(friends)
-				mainContainer:drawOnScreen()
+				application:draw()
 			end
 		end)
 	end
@@ -1387,7 +1387,7 @@ newsSelectable.onTouch = function()
 			end
 		end)
 
-		mainContainer:drawOnScreen()
+		application:draw()
 	end
 end
 
@@ -1494,7 +1494,7 @@ showConversations = function(peerID)
 			if #layout.children > 0 then
 				layout.children[1]:select()
 			else
-				mainContainer:drawOnScreen()
+				application:draw()
 			end
 		end
 	end
@@ -1565,7 +1565,7 @@ local function showDocuments()
 		end)
 	end
 
-	mainContainer:drawOnScreen()
+	application:draw()
 end
 
 addPizda(localization.documents).onTouch = function()
@@ -1630,7 +1630,7 @@ settingsSelectable.onTouch = function()
 	addYobaSlider(2, 50, "loadCountDocs")
 	addYobaSlider(2, 10, "scrollSpeed")
 
-	mainContainer:drawOnScreen()
+	application:draw()
 end
 
 local function login()
@@ -1653,7 +1653,7 @@ local function login()
 
 	usernameInput.onInputFinished = function()
 		loginButton.disabled = #usernameInput.text == 0 or #passwordInput.text == 0
-		mainContainer:drawOnScreen()
+		application:draw()
 	end
 	passwordInput.onInputFinished = usernameInput.onInputFinished
 
@@ -1680,7 +1680,7 @@ local function login()
 
 	lastPizda = login
 	usernameInput.onInputFinished()
-	mainContainer:drawOnScreen()
+	application:draw()
 end
 
 local function logout()

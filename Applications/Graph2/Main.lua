@@ -8,7 +8,7 @@ local MineOSInterface = require("MineOSInterface")
 
 ---------------------------------------------------------------------------------------------------------
 
-local mainContainer, window = MineOSInterface.addWindow(GUI.filledWindow(1, 1, 110, 25, 0xF0F0F0))
+local application, window = MineOSInterface.addWindow(GUI.filledWindow(1, 1, 110, 25, 0xF0F0F0))
 local yDependencyString = "math.sin(x)"
 local xOffset, yOffset, xDrag, yDrag, points = 0, 0, 1, 1
 
@@ -86,16 +86,16 @@ functionButton.onTouch = function()
 			update()
 
 			container:remove()
-			mainContainer:drawOnScreen()
+			application:draw()
 		end
 	end
 
-	mainContainer:drawOnScreen()
+	application:draw()
 end
 
 scaleSlider.onValueChanged = function()
 	update()
-	mainContainer:drawOnScreen()
+	application:draw()
 end
 rangeSlider.onValueChanged = scaleSlider.onValueChanged
 precisionSlider.onValueChanged = scaleSlider.onValueChanged
@@ -109,12 +109,12 @@ window.onResize = function(width, height)
 	update()
 end
 
-graph.eventHandler = function(mainContainer, graph, e1, e2, e3, e4, e5)
+graph.eventHandler = function(application, graph, e1, e2, e3, e4, e5)
 	if e1 == "touch" then
 		xDrag, yDrag = e3, e4
 	elseif e1 == "drag" then
 		xOffset, yOffset = xOffset + (e3 - xDrag), yOffset + (e4 - yDrag)
-		mainContainer:drawOnScreen()
+		application:draw()
 
 		xDrag, yDrag = e3, e4
 	elseif e1 == "scroll" then
@@ -126,14 +126,14 @@ graph.eventHandler = function(mainContainer, graph, e1, e2, e3, e4, e5)
 		end
 
 		update()
-		mainContainer:drawOnScreen()
+		application:draw()
 	end
 end
 
 ---------------------------------------------------------------------------------------------------------
 
 update()
-mainContainer:drawOnScreen()
+application:draw()
 
 
 

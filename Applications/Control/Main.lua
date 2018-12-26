@@ -17,7 +17,7 @@ local resourcesPath = MineOSCore.getCurrentScriptDirectory()
 local modulesPath = resourcesPath .. "Modules/"
 local localization = MineOSCore.getLocalization(resourcesPath .. "Localizations/")
 
-local mainContainer, window = MineOSInterface.addWindow(GUI.tabbedWindow(1, 1, 80, 25))
+local application, window = MineOSInterface.addWindow(GUI.tabbedWindow(1, 1, 80, 25))
 
 ----------------------------------------------------------------------------------------------------------------
 
@@ -28,11 +28,11 @@ local function loadModules()
 	for i = 1, #fileList do
 		local loadedFile, reason = loadfile(modulesPath .. fileList[i])
 		if loadedFile then
-			local pcallSuccess, reason = pcall(loadedFile, mainContainer, window, localization)
+			local pcallSuccess, reason = pcall(loadedFile, application, window, localization)
 			if pcallSuccess then
 				window.tabBar:addItem(reason.name).onTouch = function()
 					reason.onTouch()
-					MineOSInterface.mainContainer:drawOnScreen()
+					MineOSInterface.application:draw()
 				end
 			else
 				error("Failed to call loaded module \"" .. tostring(fileList[i]) .. "\": " .. tostring(reason))

@@ -58,7 +58,7 @@ local thermal = {
 }
 local palette = grayscale
 
-local mainContainer, window = MineOSInterface.addWindow(GUI.filledWindow(1, 1, 100, 25, 0x2D2D2D))
+local application, window = MineOSInterface.addWindow(GUI.filledWindow(1, 1, 100, 25, 0x2D2D2D))
 
 window.backgroundPanel.width = 22
 window.backgroundPanel.height = window.height
@@ -101,7 +101,7 @@ local function takePicture()
 		x, y = 1, y + 1
 	end
 
-	MineOSInterface.mainContainer:drawOnScreen()
+	MineOSInterface.application:draw()
 end
 
 local buttonImage = image.load(fs.path(getCurrentScript()) .. "Icon.pic")
@@ -111,15 +111,15 @@ shootButton.draw = function()
 	buffer.drawImage(shootButton.x, shootButton.y, shootButton.pressed and buttonImagePressed or buttonImage)
 end
 
-shootButton.eventHandler = function(mainContainer, object, e1)
+shootButton.eventHandler = function(application, object, e1)
 	if e1 == "touch" then
 		shootButton.pressed = true
-		MineOSInterface.mainContainer:drawOnScreen()
+		MineOSInterface.application:draw()
 		
 		takePicture()
 
 		shootButton.pressed = false
-		MineOSInterface.mainContainer:drawOnScreen()
+		MineOSInterface.application:draw()
 	end
 end
 
@@ -156,12 +156,12 @@ FOVSlider.onValueChanged = takePicture
 
 paletteSwitch.onStateChanged = function()
 	palette = paletteSwitch.state and thermal or grayscale
-	MineOSInterface.mainContainer:drawOnScreen()
+	MineOSInterface.application:draw()
 end
 
 autoupdateSwitch.onStateChanged = function()
 	autoupdateSlider.hidden = not autoupdateSwitch.state
-	MineOSInterface.mainContainer:drawOnScreen()
+	MineOSInterface.application:draw()
 end
 
 for address in component.list("camera") do
@@ -180,7 +180,7 @@ window.onResize = function(width, height)
 	shootButton.localX = math.floor(1 + window.backgroundPanel.width / 2 - shootButton.width / 2)
 	shootButton.localY = window.height - shootButton.height
 
-	MineOSInterface.mainContainer:drawOnScreen()
+	MineOSInterface.application:draw()
 	takePicture()
 end
 

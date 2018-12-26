@@ -8,7 +8,7 @@ local filesystem = require("filesystem")
 
 local module = {}
 
-local mainContainer, window, localization = table.unpack({...})
+local application, window, localization = table.unpack({...})
 
 --------------------------------------------------------------------------------
 
@@ -63,7 +63,7 @@ module.onTouch = function()
 			end
 		end
 
-		mainContainer:drawOnScreen()
+		application:draw()
 	end
 
 	networkNameInput.onInputFinished = function()
@@ -93,7 +93,7 @@ module.onTouch = function()
 	end
 
 	-- Empty object-listener
-	emptyObject.eventHandler = function(mainContainer, object, e1, e2, e3, ...)
+	emptyObject.eventHandler = function(application, object, e1, e2, e3, ...)
 		if (e1 == "component_added" or e1 == "component_removed") and e3 == "modem" then
 			check()
 		elseif e1 == "MineOSNetwork" and e2 == "updateProxyList" then

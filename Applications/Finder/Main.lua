@@ -43,7 +43,7 @@ local workpathHistoryCurrent = 0
 
 --------------------------------------------------------------------------------
 
-local mainContainer, window, menu = MineOSInterface.addWindow(GUI.filledWindow(1, 1, 100, 26, 0xE1E1E1))
+local application, window, menu = MineOSInterface.addWindow(GUI.filledWindow(1, 1, 100, 26, 0xE1E1E1))
 
 local titlePanel = window:addChild(GUI.panel(1, 1, 1, 3, 0x3C3C3C))
 
@@ -94,7 +94,7 @@ end
 
 local function updateFileListAndDraw()
 	iconField:updateFileList()
-	MineOSInterface.mainContainer:drawOnScreen()
+	application:draw()
 end
 
 local function workpathHistoryButtonsUpdate()
@@ -148,7 +148,7 @@ local function sidebarItemDraw(object)
 	buffer.drawText(object.x + 1, object.y, textColor, string.limit(object.text, limit, "center"))
 end
 
-local function sidebarItemEventHandler(mainContainer, object, e1, e2, e3, ...)
+local function sidebarItemEventHandler(application, object, e1, e2, e3, ...)
 	if e1 == "touch" then
 		if object.onRemove and e3 == object.x + object.width - 2 then
 			object.onRemove()
@@ -198,7 +198,7 @@ openFTP = function(...)
 	local mountPath = MineOSNetwork.mountPaths.FTP .. MineOSNetwork.getFTPProxyName(...) .. "/"
 	
 	addWorkpath(mountPath)
-	mainContainer:drawOnScreen()
+	application:draw()
 
 	local proxy, reason = MineOSNetwork.connectToFTP(...)
 	if proxy then
@@ -227,7 +227,7 @@ updateSidebar = function()
 		object.onRemove = function()
 			table.remove(config.favourites, i)
 			updateSidebar()
-			mainContainer:drawOnScreen()
+			application:draw()
 			saveConfig()
 		end
 	end
@@ -272,7 +272,7 @@ updateSidebar = function()
 			object.onRemove = function()
 				table.remove(MineOSCore.properties.FTPConnections, i)
 				updateSidebar()
-				mainContainer:drawOnScreen()
+				application:draw()
 				MineOSCore.saveProperties()
 			end
 		end
@@ -292,7 +292,7 @@ updateSidebar = function()
 	end
 end
 
-itemsLayout.eventHandler = function(mainContainer, object, e1, e2, e3, e4, e5)
+itemsLayout.eventHandler = function(application, object, e1, e2, e3, e4, e5)
 	if e1 == "scroll" then
 		local cell = itemsLayout.cells[1][1]
 		local from = 0
@@ -305,15 +305,15 @@ itemsLayout.eventHandler = function(mainContainer, object, e1, e2, e3, e4, e5)
 			cell.verticalMargin = to
 		end
 
-		mainContainer:drawOnScreen()
+		application:draw()
 	elseif e1 == "component_added" or e1 == "component_removed" then
 		FTPButton.disabled = not MineOSNetwork.internetProxy
 		updateSidebar()
-		MineOSInterface.mainContainer:drawOnScreen()
+		application:draw()
 	elseif e1 == "MineOSNetwork" then
 		if e2 == "updateProxyList" or e2 == "timeout" then
 			updateSidebar()
-			MineOSInterface.mainContainer:drawOnScreen()
+			application:draw()
 		end
 	end
 end
@@ -356,7 +356,7 @@ prevButton.onTouch = function()
 end
 
 FTPButton.onTouch = function()
-	local container = MineOSInterface.addBackgroundContainer(MineOSInterface.mainContainer, MineOSCore.localization.networkFTPNewConnection)
+	local container = MineOSInterface.addBackgroundContainer(application, MineOSCore.localization.networkFTPNewConnection)
 
 	local ad, po, us, pa, la = "ftp.example.com", "21", "root", "1234"
 	if #MineOSCore.properties.FTPConnections > 0 then
@@ -396,17 +396,17 @@ FTPButton.onTouch = function()
 				MineOSCore.saveProperties()
 
 				updateSidebar()
-				MineOSInterface.mainContainer:drawOnScreen()
+				application:draw()
 
 				openFTP(addressInput.text, port, userInput.text, passwordInput.text)
 			end
 		end
 	end
 
-	MineOSInterface.mainContainer:drawOnScreen()
+	application:draw()
 end
 
-iconField.eventHandler = function(mainContainer, object, e1, e2, e3, e4, e5)
+iconField.eventHandler = function(application, object, e1, e2, e3, e4, e5)
 	if e1 == "scroll" then
 		iconField.yOffset = iconField.yOffset + e5 * 2
 
@@ -417,7 +417,7 @@ iconField.eventHandler = function(mainContainer, object, e1, e2, e3, e4, e5)
 			iconField.iconsContainer.children[i].localY = iconField.iconsContainer.children[i].localY + delta
 		end
 
-		MineOSInterface.mainContainer:drawOnScreen()
+		application:draw()
 
 		if scrollTimerID then
 			event.cancel(scrollTimerID)
@@ -441,7 +441,7 @@ iconField.eventHandler = function(mainContainer, object, e1, e2, e3, e4, e5)
 
 			saveConfig()
 			updateSidebar()
-			MineOSInterface.mainContainer:drawOnScreen()
+			application:draw()
 		end	
 	end
 end
@@ -492,7 +492,7 @@ iconField.updateFileList = function(...)
 		end
 	end
 
-	mainContainer:drawOnScreen()
+	application:draw()
 	overrideUpdateFileList(...)
 	updateScrollBar()
 end
@@ -510,7 +510,7 @@ gotoButton.onTouch = function()
 			iconField:updateFileList()
 		end
 
-		mainContainer:drawOnScreen()
+		application:draw()
 	end
 
 	statusContainer.hidden = true
@@ -569,7 +569,7 @@ window.onResize = function(width, height)
 	window.height = height
 	calculateSizes()
 
-	mainContainer:drawOnScreen()
+	application:draw()
 	updateFileListAndDraw()
 end
 
@@ -577,7 +577,7 @@ resizer.onResize = function(deltaX)
 	sidebarContainer.width = sidebarContainer.width + deltaX
 	calculateSizes()
 
-	mainContainer:drawOnScreen()
+	application:draw()
 end
 
 resizer.onResizeFinished = function()

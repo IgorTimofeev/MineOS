@@ -1,6 +1,6 @@
 
 local args = {...}
-local mainContainer, window, localization = args[1], args[2], args[3]
+local application, window, localization = args[1], args[2], args[3]
 
 require("advancedLua")
 local component = require("component")
@@ -30,7 +30,7 @@ module.onTouch = function()
 	local textBox = layout:addChild(GUI.textBox(1, 1, container.width - 4, container.height - 4, nil, 0x888888, {localization.waitingEvents .. "..."}, 1, 0, 0))
 	local switch = layout:addChild(GUI.switchAndLabel(1, 1, 27, 6, 0x66DB80, 0x1E1E1E, 0xFFFFFF, 0x2D2D2D, localization.processingEnabled .. ": ", true)).switch
 	
-	textBox.eventHandler = function(mainContainer, object, ...)
+	textBox.eventHandler = function(application, object, ...)
 		local eventData = {...}
 		if switch.state and eventData[1] then
 			local lines = table.concat(eventData, " ")
@@ -40,7 +40,7 @@ module.onTouch = function()
 			end
 			textBox:scrollToEnd()
 
-			mainContainer:drawOnScreen()
+			application:draw()
 		end
 	end
 end

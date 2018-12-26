@@ -92,7 +92,7 @@ if filesystem.exists(configPath) then
 	config = table.fromFile(configPath)
 end
 
-local mainContainer, window, menu = MineOSInterface.addWindow(GUI.window(1, 1, 120, 30))
+local application, window, menu = MineOSInterface.addWindow(GUI.window(1, 1, 120, 30))
 menu:removeChildren()
 
 local codeView = window:addChild(GUI.codeView(1, 1, 1, 1, 1, 1, 1, {}, {}, GUI.LUA_SYNTAX_PATTERNS, config.syntaxColorScheme, config.syntaxHighlight, lines))
@@ -253,7 +253,7 @@ end
 local function tick(state)
 	cursorBlinkState = state
 	updateTitle()
-	mainContainer:drawOnScreen()
+	application:draw()
 
 	cursorUptime = computer.uptime()
 end
@@ -524,7 +524,7 @@ local function optimizeString(s)
 end
 
 local function addBackgroundContainer(title)
-	return GUI.addBackgroundContainer(mainContainer, true, true, title)
+	return GUI.addBackgroundContainer(application, true, true, title)
 end
 
 local function addInputFadeContainer(title, placeholder)
@@ -570,7 +570,7 @@ local function openFile(path)
 			if counter % config.linesToShowOpenProgress == 0 then
 				progressBar.value = math.floor(currentSize / totalSize * 100)
 				computer.pullSignal(0)
-				mainContainer:drawOnScreen()
+				application:draw()
 			end
 		end
 
@@ -582,7 +582,7 @@ local function openFile(path)
 
 		if counter > config.linesToShowOpenProgress then
 			progressBar.value = 100
-			mainContainer:drawOnScreen()
+			application:draw()
 		end
 
 		codeView.hidden = false
@@ -598,7 +598,7 @@ end
 local function saveFile(path)
 	filesystem.makeDirectory(filesystem.path(path))
 	local file, reason = io.open(path, "w")
-		if file then
+	if file then
 		for line = 1, #lines do
 			file:write(lines[line], "\n")
 		end
@@ -617,25 +617,25 @@ local function gotoLineWindow()
 		if container.input.text:match("%d+") then
 			gotoLine(tonumber(container.input.text))
 			container:remove()
-			mainContainer:drawOnScreen()
+			application:draw()
 		end
 	end
 
-	mainContainer:drawOnScreen()
+	application:draw()
 end
 
 local function openFileWindow()
-	local filesystemDialog = GUI.addFilesystemDialog(mainContainer, true, 50, math.floor(window.height * 0.8), "Open", "Cancel", "File name", "/")
+	local filesystemDialog = GUI.addFilesystemDialog(application, true, 50, math.floor(window.height * 0.8), "Open", "Cancel", "File name", "/")
 	filesystemDialog:setMode(GUI.IO_MODE_OPEN, GUI.IO_MODE_FILE)
 	filesystemDialog.onSubmit = function(path)
 		openFile(path)
-		mainContainer:drawOnScreen()
+		application:draw()
 	end
 	filesystemDialog:show()
 end
 
 local function saveFileAsWindow()
-	local filesystemDialog = GUI.addFilesystemDialog(mainContainer, true, 50, math.floor(window.height * 0.8), "Save", "Cancel", "File name", "/")
+	local filesystemDialog = GUI.addFilesystemDialog(application, true, 50, math.floor(window.height * 0.8), "Save", "Cancel", "File name", "/")
 	filesystemDialog:setMode(GUI.IO_MODE_SAVE, GUI.IO_MODE_FILE)
 	filesystemDialog.onSubmit = function(path)
 		saveFile(path)
@@ -643,7 +643,7 @@ local function saveFileAsWindow()
 		leftTreeView.selectedItem = (leftTreeView.workPath .. path):gsub("/+", "/")
 
 		updateTitle()
-		mainContainer:drawOnScreen()
+		application:draw()
 	end
 	filesystemDialog:show()
 end
@@ -678,7 +678,7 @@ local function downloadFileFromWeb()
 		if #container.input.text > 0 then
 			container.input:remove()
 			container.layout:addChild(GUI.text(1, 1, 0x969696, localization.downloading))
-			mainContainer:drawOnScreen()
+			application:draw()
 
 			local result, reason = require("web").request(container.input.text)
 			if result then
@@ -692,10 +692,10 @@ local function downloadFileFromWeb()
 		end
 
 		container:remove()
-		mainContainer:drawOnScreen()
+		application:draw()
 	end
 
-	mainContainer:drawOnScreen()
+	application:draw()
 end
 
 local function getVariables(codePart)
@@ -740,12 +740,12 @@ continue = function(...)
 		if coroutine.status(scriptCoroutine) == "dead" then
 			MineOSInterface.waitForPressingAnyKey()
 			buffer.setResolution(oldResolutionX, oldResolutionY)
-			mainContainer:drawOnScreen(true)
+			application:draw(true)
 		else
 			-- Тест на пидора, мало ли у чувака в проге тоже есть yield
 			if _G.MineCodeIDEDebugInfo then
 				buffer.setResolution(oldResolutionX, oldResolutionY)
-				mainContainer:drawOnScreen(true)
+				application:draw(true)
 				gotoLine(_G.MineCodeIDEDebugInfo.line)
 				showBreakpointMessage(_G.MineCodeIDEDebugInfo.variables)
 			end
@@ -802,10 +802,10 @@ local function zalupa()
 		updateHighlights()
 		
 		container:remove()
-		mainContainer:drawOnScreen()
+		application:draw()
 	end
 
-	container:addChild(GUI.object(1, 1, window.width, window.height)).eventHandler = function(mainContainer, object, e1)
+	container:addChild(GUI.object(1, 1, window.width, window.height)).eventHandler = function(application, object, e1)
 		if e1 == "touch" or e1 == "key_down" then
 			container.close()
 		end
@@ -858,7 +858,7 @@ showTip = function(errorCode, matchCode, beep, force)
 	tip.localX = math.min(maxX, math.max(minX + 1, math.round(minX + unicode.len(lines[lastErrorLine]) / 2 - tip.width / 2)))
 	tip.localY = codeView.localY + lastErrorLine - codeView.fromLine + 1
 
-	mainContainer:drawOnScreen(force)
+	application:draw(force)
 
 	if beep then
 		computer.beep(1500, 0.08)
@@ -900,7 +900,7 @@ showBreakpointMessage = function(variables)
 	end
 	
 	titleDebugMode = true
-	mainContainer:drawOnScreen()
+	application:draw()
 
 	computer.beep(1500, 0.08)
 end
@@ -916,12 +916,12 @@ local function launchWithArgumentsWindow()
 		end
 
 		container:remove()
-		mainContainer:drawOnScreen()
+		application:draw()
 
 		run(table.unpack(arguments))
 	end
 
-	mainContainer:drawOnScreen()
+	application:draw()
 end
 
 local function deleteLine(line)
@@ -1039,7 +1039,7 @@ local function selectAndPasteColor()
 
 	palette.cancelButton.onTouch = function()
 		palette:remove()
-		mainContainer:drawOnScreen()
+		application:draw()
 	end
 
 	palette.submitButton.onTouch = function()
@@ -1292,7 +1292,7 @@ local function toggleBottomToolBar()
 	calculateSizes()
 		
 	if not bottomToolBar.hidden then
-		mainContainer:draw()
+		application:draw()
 		findFromFirstDisplayedLine()
 	end
 end
@@ -1362,7 +1362,7 @@ local function createEditOrRightClickMenu(menu)
 
 	menu:addItem(localization.addBreakpoint, false, "F9").onTouch = function()
 		addBreakpoint()
-		mainContainer:drawOnScreen()
+		application:draw()
 	end
 
 	menu:addItem(localization.clearBreakpoints, not breakpointLines, "^F9").onTouch = function()
@@ -1371,10 +1371,10 @@ local function createEditOrRightClickMenu(menu)
 end
 
 local uptime = computer.uptime()
-codeView.eventHandler = function(mainContainer, object, e1, e2, e3, e4, e5)
+codeView.eventHandler = function(application, object, e1, e2, e3, e4, e5)
 	if e1 == "touch" then
 		if e5 == 1 then
-			createEditOrRightClickMenu(GUI.addContextMenu(mainContainer, e3, e4))
+			createEditOrRightClickMenu(GUI.addContextMenu(application, e3, e4))
 		else
 			setCursorPositionAndClearSelection(convertScreenCoordinatesToTextPosition(e3, e4))
 		end
@@ -1586,9 +1586,9 @@ codeView.eventHandler = function(mainContainer, object, e1, e2, e3, e4, e5)
 end
 
 leftTreeView.onItemSelected = function(path)
-	mainContainer:drawOnScreen()
+	application:draw()
 	openFile(path)
-	mainContainer:drawOnScreen()
+	application:draw()
 end
 
 local MineCodeContextMenu = menu:addContextMenu("MineCode", 0x0)
@@ -1618,13 +1618,13 @@ MineCodeContextMenu:addItem(localization.about).onTouch = function()
 	textBox:setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
 	textBox.eventHandler = nil
 
-	mainContainer:drawOnScreen()
+	application:draw()
 end
 
 local fileContextMenu = menu:addContextMenu(localization.file)
 fileContextMenu:addItem(localization.new, false, "^N").onTouch = function()
 	newFile()
-	mainContainer:drawOnScreen()
+	application:draw()
 end
 
 fileContextMenu:addItem(localization.open, false, "^O").onTouch = function()
@@ -1650,12 +1650,12 @@ end
 fileContextMenu:addItem(MineOSCore.localization.flashEEPROM, not component.isAvailable("eeprom")).onTouch = function()
 	local container = addBackgroundContainer(MineOSCore.localization.flashEEPROM)
 	container.layout:addChild(GUI.label(1, 1, container.width, 1, 0x969696, MineOSCore.localization.flashingEEPROM .. "...")):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
-	mainContainer:drawOnScreen()
+	application:draw()
 
 	pcall(component.eeprom.set, table.concat(lines, ";"))
 	
 	container:remove()
-	mainContainer:drawOnScreen()
+	application:draw()
 end
 
 fileContextMenu:addSeparator()
@@ -1692,7 +1692,7 @@ end
 
 local propertiesContextMenu = menu:addContextMenu(localization.properties)
 propertiesContextMenu:addItem(localization.colorScheme).onTouch = function()
-	local container = GUI.addBackgroundContainer(mainContainer, true, false, localization.colorScheme)
+	local container = GUI.addBackgroundContainer(application, true, false, localization.colorScheme)
 				
 	local colorSelectorsCount, colorSelectorCountX = 0, 4; for key in pairs(config.syntaxColorScheme) do colorSelectorsCount = colorSelectorsCount + 1 end
 	local colorSelectorCountY = math.ceil(colorSelectorsCount / colorSelectorCountX)
@@ -1722,7 +1722,7 @@ propertiesContextMenu:addItem(localization.colorScheme).onTouch = function()
 		end
 	end
 
-	mainContainer:drawOnScreen()
+	application:draw()
 end
 
 propertiesContextMenu:addItem(localization.cursorProperties).onTouch = function()
@@ -1748,7 +1748,7 @@ propertiesContextMenu:addItem(localization.cursorProperties).onTouch = function(
 		saveConfig()
 	end
 
-	mainContainer:drawOnScreen()
+	application:draw()
 end
 
 if topToolBar.hidden then
@@ -1785,13 +1785,13 @@ end
 
 addBreakpointButton.onTouch = function()
 	addBreakpoint()
-	mainContainer:drawOnScreen()
+	application:draw()
 end
 
 syntaxHighlightingButton.onTouch = function()
 	config.syntaxHighlight = not config.syntaxHighlight
 	codeView.syntaxHighlight = config.syntaxHighlight
-	mainContainer:drawOnScreen()
+	application:draw()
 	saveConfig()
 end
 
@@ -1799,19 +1799,19 @@ toggleLeftToolBarButton.onTouch = function()
 	leftTreeView.hidden = not toggleLeftToolBarButton.pressed
 	leftTreeViewResizer.hidden = leftTreeView.hidden
 	calculateSizes()
-	mainContainer:drawOnScreen()
+	application:draw()
 end
 
 toggleBottomToolBarButton.onTouch = function()
 	bottomToolBar.hidden = not toggleBottomToolBarButton.pressed
 	calculateSizes()
-	mainContainer:drawOnScreen()
+	application:draw()
 end
 
 toggleTopToolBarButton.onTouch = function()
 	topToolBar.hidden = not toggleTopToolBarButton.pressed
 	calculateSizes()
-	mainContainer:drawOnScreen()
+	application:draw()
 end
 
 codeView.verticalScrollBar.onTouch = function()
@@ -1826,7 +1826,7 @@ runButton.onTouch = function()
 	run()
 end
 
-autocomplete.onItemSelected = function(mainContainer, object, e1)
+autocomplete.onItemSelected = function(application, object, e1)
 	local firstPart = unicode.sub(lines[cursorPositionLine], 1, autoCompleteWordStart - 1)
 	local secondPart = unicode.sub(lines[cursorPositionLine], autoCompleteWordEnd + 1, -1)
 	local middle = firstPart .. autocomplete.items[autocomplete.selectedItem]
@@ -1843,7 +1843,7 @@ end
 
 window.onResize = function(width, height)
 	calculateSizes()
-	mainContainer:drawOnScreen()
+	application:draw()
 end
 
 searchInput.onInputFinished = findFromFirstDisplayedLine
@@ -1855,7 +1855,7 @@ searchButton.onTouch = find
 autocomplete:moveToFront()
 leftTreeView:updateFileList()
 calculateSizes()
-mainContainer:draw()
+application:draw()
 
 local initialPath = select(1, ...)
 if initialPath and filesystem.exists(initialPath) then
@@ -1864,4 +1864,4 @@ else
 	newFile()
 end
 
-mainContainer:drawOnScreen()
+application:draw()

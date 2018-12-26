@@ -21,7 +21,7 @@ local recent = {
 
 --------------------------------------------------------------------
 
-local mainContainer, window = MineOSInterface.addWindow(GUI.filledWindow(1, 1, 90, 23, 0xE1E1E1))
+local application, window = MineOSInterface.addWindow(GUI.filledWindow(1, 1, 90, 23, 0xE1E1E1))
 
 local sidePanel = window:addChild(GUI.panel(1, 1, 17, 1, 0x2D2D2D))
 local buttonsContainer = window:addChild(GUI.container(3, 2, 1, 1))
@@ -64,13 +64,13 @@ recentLayout:setDirection(1, 1, GUI.DIRECTION_HORIZONTAL)
 recentLayout:setSpacing(1, 1, 0)
 recentLayout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
 
-local function onRecentButtonTouch(mainContainer, object)
+local function onRecentButtonTouch(application, object)
 	fromChar = object.code
 	selectedChar = object.code
 	updateChars()
 	updateTexts()
 
-	mainContainer:drawOnScreen()
+	application:draw()
 end
 
 local function updateRecent()
@@ -86,7 +86,7 @@ for i = 1, #recent do
 	step = not step
 end
 
-local function charButtonOnTouch(mainContainer, button)
+local function charButtonOnTouch(application, button)
 	selectedChar = fromChar + button:indexOf() - 1
 	table.insert(recent, 1, selectedChar)
 	table.remove(recent, #recent)
@@ -95,7 +95,7 @@ local function charButtonOnTouch(mainContainer, button)
 	updateTexts()
 	updateRecent()
 
-	mainContainer:drawOnScreen()
+	application:draw()
 	table.toFile(recentCharsPath, recent)
 end
 
@@ -131,7 +131,7 @@ window.onResize = function(width, height)
 
 	updateChars()
 	updateTexts()
-	mainContainer:drawOnScreen()
+	application:draw()
 end
 
 local function onAny()
@@ -147,7 +147,7 @@ nextButton.onTouch = function()
 
 	updateChars()
 	updateTexts()
-	mainContainer:drawOnScreen()
+	application:draw()
 end
 
 prevButton.onTouch = function()
@@ -156,7 +156,7 @@ prevButton.onTouch = function()
 
 	updateChars()
 	updateTexts()
-	mainContainer:drawOnScreen()
+	application:draw()
 end
 
 local overrideWindowEventHandler = window.eventHandler
@@ -180,7 +180,7 @@ gotoInput.onInputFinished = function()
 		updateChars()
 		updateTexts()
 
-		mainContainer:drawOnScreen()
+		application:draw()
 	end
 end
 

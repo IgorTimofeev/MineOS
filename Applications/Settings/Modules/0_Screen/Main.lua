@@ -9,7 +9,7 @@ local scale = require("scale")
 
 local module = {}
 
-local mainContainer, window, localization = table.unpack({...})
+local application, window, localization = table.unpack({...})
 
 --------------------------------------------------------------------------------
 
@@ -85,7 +85,7 @@ module.onTouch = function()
 	switch.onStateChanged = function()
 		updateSwitch()
 		updateCykaTextBox()
-		mainContainer:drawOnScreen()
+		application:draw()
 
 		MineOSCore.properties.screenAutoScale = switch.state
 		MineOSCore.saveProperties()
@@ -96,7 +96,7 @@ module.onTouch = function()
 		if cykaTextBox.hidden then
 			setResolution(width, height)
 		else
-			mainContainer:drawOnScreen()
+			application:draw()
 		end
 	end
 	heightInput.onInputFinished = widthInput.onInputFinished

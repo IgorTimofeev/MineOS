@@ -4,7 +4,7 @@ local computer = require("computer")
 
 local module = {}
 
-local mainContainer, window, localization = table.unpack({...})
+local application, window, localization = table.unpack({...})
 
 --------------------------------------------------------------------------------
 
@@ -46,7 +46,7 @@ module.onTouch = function()
 					computer.removeUser(users[i])
 
 					update()
-					mainContainer:drawOnScreen()
+					application:draw()
 				end
 
 				usersLayout.height, step = usersLayout.height + userContainer.height, not step
@@ -60,7 +60,7 @@ module.onTouch = function()
 			input.text = ""
 
 			update()
-			mainContainer:drawOnScreen()
+			application:draw()
 		end
 	end
 

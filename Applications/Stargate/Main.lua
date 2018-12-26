@@ -22,7 +22,7 @@ local contacts = {}
 local Ch1Image = image.load(resources .. "Ch1.pic")
 local Ch2Image = image.load(resources .. "Ch2.pic")
 
-local mainContainer = GUI.fullScreenContainer()
+local application = GUI.application()
 
 ---------------------------------------------------------------------------------------------
 
@@ -56,30 +56,30 @@ local function newChevronObject(x, y)
 end
 
 local function addChevron(x, y)
-	table.insert(mainContainer.chevrons, mainContainer.chevronsContainer:addChild(newChevronObject(x, y)))
+	table.insert(application.chevrons, application.chevronsContainer:addChild(newChevronObject(x, y)))
 end
 
 local function updateChevrons(state)
-	for i = 1, #mainContainer.chevrons do
-		mainContainer.chevrons[i].isActivated = state
-		if not state then mainContainer.chevrons[i].text = " " end
+	for i = 1, #application.chevrons do
+		application.chevrons[i].isActivated = state
+		if not state then application.chevrons[i].text = " " end
 	end
 end
 
 local function updateButtons()
-	mainContainer.removeContactButton.disabled = #contacts == 0
-	mainContainer.connectContactButton.disabled = #contacts == 0
+	application.removeContactButton.disabled = #contacts == 0
+	application.connectContactButton.disabled = #contacts == 0
 end
 
 local function update()
 	local stargateState, irisState, imagePath = stargate.stargateState(), stargate.irisState()
-	mainContainer.irisButton.text = irisState == "Closed" and "Open Iris" or "Close Iris"
-	mainContainer.connectionButton.text = stargateState == "Connected" and "Disconnect" or "Connect"
-	mainContainer.connectedToLabel.text = stargateState == "Connected" and "(Connected to " .. stargate.remoteAddress() .. ")" or "(Not connected)"
+	application.irisButton.text = irisState == "Closed" and "Open Iris" or "Close Iris"
+	application.connectionButton.text = stargateState == "Connected" and "Disconnect" or "Connect"
+	application.connectedToLabel.text = stargateState == "Connected" and "(Connected to " .. stargate.remoteAddress() .. ")" or "(Not connected)"
 	
 	if stargateState == "Connected" then
-		mainContainer.connectContactButton.disabled = true
-		mainContainer.messageContactButton.disabled = false
+		application.connectContactButton.disabled = true
+		application.messageContactButton.disabled = false
 
 		if irisState == "Closed" then
 			imagePath = "OnOn.pic"
@@ -87,8 +87,8 @@ local function update()
 			imagePath = "OnOff.pic"
 		end
 	else
-		mainContainer.connectContactButton.disabled = false
-		mainContainer.messageContactButton.disabled = true
+		application.connectContactButton.disabled = false
+		application.messageContactButton.disabled = true
 
 		if irisState == "Closed" then
 			imagePath = "OffOn.pic"
@@ -98,16 +98,16 @@ local function update()
 	end
 
 	updateButtons()
-	mainContainer.SGImage.image = image.load(resources .. imagePath)
+	application.SGImage.image = image.load(resources .. imagePath)
 end
 
 local function updateContacts()
-	mainContainer.contactsComboBox:clear()
+	application.contactsComboBox:clear()
 	if #contacts == 0 then
-		mainContainer.contactsComboBox:addItem("No contacts found")
+		application.contactsComboBox:addItem("No contacts found")
 	else
 		for i = 1, #contacts do
-			mainContainer.contactsComboBox:addItem(contacts[i].name)
+			application.contactsComboBox:addItem(contacts[i].name)
 		end
 	end
 end
@@ -132,8 +132,8 @@ end
 local function dial(address)
 	local success, reason = stargate.dial(address)
 	if success then
-		mainContainer.fuelProgressBar.value = math.ceil(stargate.energyToDial(address) / stargate.energyAvailable() * 100)
-		mainContainer:drawOnScreen()
+		application.fuelProgressBar.value = math.ceil(stargate.energyToDial(address) / stargate.energyAvailable() * 100)
+		application:draw()
 	else
 		GUI.alert("Failed to dial: " .. tostring(reason))
 	end
@@ -142,15 +142,15 @@ end
 ---------------------------------------------------------------------------------------------
 
 local width, height = 32, 37
-local x, y = mainContainer.width - width - 3, math.floor(mainContainer.height / 2 - height / 2)
+local x, y = application.width - width - 3, math.floor(application.height / 2 - height / 2)
 
-mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x1E1E1E))
+application:addChild(GUI.panel(1, 1, application.width, application.height, 0x1E1E1E))
 
-mainContainer.SGImage = mainContainer:addChild(GUI.image(1, 1, image.load(resources .. "OffOff.pic")))
-mainContainer.SGImage.localX, mainContainer.SGImage.localY = math.floor((x - 2) / 2 - image.getWidth(mainContainer.SGImage.image) / 2), mainContainer.height - image.getHeight(mainContainer.SGImage.image) + 1
+application.SGImage = application:addChild(GUI.image(1, 1, image.load(resources .. "OffOff.pic")))
+application.SGImage.localX, application.SGImage.localY = math.floor((x - 2) / 2 - image.getWidth(application.SGImage.image) / 2), application.height - image.getHeight(application.SGImage.image) + 1
 
-mainContainer.chevronsContainer = mainContainer:addChild(GUI.container(mainContainer.SGImage.localX, mainContainer.SGImage.localY, mainContainer.SGImage.width, mainContainer.SGImage.height))
-mainContainer.chevrons = {}
+application.chevronsContainer = application:addChild(GUI.container(application.SGImage.localX, application.SGImage.localY, application.SGImage.width, application.SGImage.height))
+application.chevrons = {}
 addChevron(13, 30)
 addChevron(8, 17)
 addChevron(21, 6)
@@ -159,15 +159,15 @@ addChevron(72, 6)
 addChevron(83, 17)
 addChevron(79, 30)
 
-mainContainer:addChild(newThing(mainContainer.SGImage.localX + mainContainer.SGImage.width, y, mainContainer.width - mainContainer.SGImage.localX - mainContainer.SGImage.width - width - 7,  height))
+application:addChild(newThing(application.SGImage.localX + application.SGImage.width, y, application.width - application.SGImage.localX - application.SGImage.width - width - 7,  height))
 
-mainContainer:addChild(GUI.label(x, y, width, 1, 0xEEEEEE, "Stargate " .. stargate.localAddress())):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP); y = y + 1
-mainContainer.connectedToLabel = mainContainer:addChild(GUI.label(x, y, width, 1, 0x555555, "(Not connected)")):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP); y = y + 2
-mainContainer.connectionButton = mainContainer:addChild(GUI.framedButton(x, y, width, 3, 0xEEEEEE, 0xEEEEEE, 0xBBBBBB, 0xBBBBBB, "Connect")); y = y + 3
--- mainContainer.connectionButton.animated = false
-mainContainer.connectionButton.onTouch = function()
+application:addChild(GUI.label(x, y, width, 1, 0xEEEEEE, "Stargate " .. stargate.localAddress())):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP); y = y + 1
+application.connectedToLabel = application:addChild(GUI.label(x, y, width, 1, 0x555555, "(Not connected)")):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP); y = y + 2
+application.connectionButton = application:addChild(GUI.framedButton(x, y, width, 3, 0xEEEEEE, 0xEEEEEE, 0xBBBBBB, 0xBBBBBB, "Connect")); y = y + 3
+-- application.connectionButton.animated = false
+application.connectionButton.onTouch = function()
 	if stargate.stargateState() == "Idle" then
-		local container = MineOSInterface.addBackgroundContainer(mainContainer, "Connect")
+		local container = MineOSInterface.addBackgroundContainer(application, "Connect")
 		local input = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0x666666, 0xEEEEEE, 0x262626, contacts.last, "Type address here"))
 		input.onInputFinished = function()
 			if input.text then
@@ -176,24 +176,24 @@ mainContainer.connectionButton.onTouch = function()
 				saveContacts()
 				container:remove()
 
-				mainContainer:drawOnScreen()
+				application:draw()
 			end
 		end
 
-		container.panel.eventHandler = function(mainContainer, object, e1)
+		container.panel.eventHandler = function(application, object, e1)
 			if e1 == "touch" then
 				input.onInputFinished()
 			end
 		end
 
-		mainContainer:drawOnScreen()
+		application:draw()
 	else
 		stargate.disconnect()
 	end
 end
 
-mainContainer.irisButton = mainContainer:addChild(GUI.framedButton(x, y, width, 3, 0xEEEEEE, 0xEEEEEE, 0xBBBBBB, 0xBBBBBB, "Open Iris")); y = y + 3
-mainContainer.irisButton.onTouch = function()
+application.irisButton = application:addChild(GUI.framedButton(x, y, width, 3, 0xEEEEEE, 0xEEEEEE, 0xBBBBBB, 0xBBBBBB, "Open Iris")); y = y + 3
+application.irisButton.onTouch = function()
 	if stargate.irisState() == "Open" then
 		stargate.closeIris()
 	else
@@ -201,43 +201,43 @@ mainContainer.irisButton.onTouch = function()
 	end
 end
 
-mainContainer.messageContactButton = mainContainer:addChild(GUI.framedButton(x, y, width, 3, 0xEEEEEE, 0xEEEEEE, 0xBBBBBB, 0xBBBBBB, "Message")); y = y + 4
-mainContainer.messageContactButton.onTouch = function()
-	local container = MineOSInterface.addBackgroundContainer(mainContainer, "Message")
+application.messageContactButton = application:addChild(GUI.framedButton(x, y, width, 3, 0xEEEEEE, 0xEEEEEE, 0xBBBBBB, 0xBBBBBB, "Message")); y = y + 4
+application.messageContactButton.onTouch = function()
+	local container = MineOSInterface.addBackgroundContainer(application, "Message")
 	local input = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0x666666, 0xEEEEEE, 0x262626, nil, "Type message text here"))
 	input.onInputFinished = function()
 		if input.text then
 			container:remove()
 			stargate.sendMessage(input.text)
 
-			mainContainer:drawOnScreen()
+			application:draw()
 		end
 	end
 
-	container.panel.eventHandler = function(mainContainer, object, e1)
+	container.panel.eventHandler = function(application, object, e1)
 		if e1 == "touch" then
 			input.onInputFinished()
 		end
 	end
 
-	mainContainer:drawOnScreen()
+	application:draw()
 end
 
-mainContainer:addChild(GUI.label(x, y, width, 1, 0xEEEEEE, "Contacts")):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP); y = y + 2
-mainContainer.contactsComboBox = mainContainer:addChild(GUI.comboBox(x, y, width, 3, 0x3C3C3C, 0xBBBBBB, 0x555555, 0x888888)); y = y + 4
+application:addChild(GUI.label(x, y, width, 1, 0xEEEEEE, "Contacts")):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP); y = y + 2
+application.contactsComboBox = application:addChild(GUI.comboBox(x, y, width, 3, 0x3C3C3C, 0xBBBBBB, 0x555555, 0x888888)); y = y + 4
 
-mainContainer.connectContactButton = mainContainer:addChild(GUI.framedButton(x, y, width, 3, 0xEEEEEE, 0xEEEEEE, 0xBBBBBB, 0xBBBBBB, "Connect")); y = y + 3
-mainContainer.connectContactButton.onTouch = function()
-	dial(contacts[mainContainer.contactsComboBox.selectedItem].address)
+application.connectContactButton = application:addChild(GUI.framedButton(x, y, width, 3, 0xEEEEEE, 0xEEEEEE, 0xBBBBBB, 0xBBBBBB, "Connect")); y = y + 3
+application.connectContactButton.onTouch = function()
+	dial(contacts[application.contactsComboBox.selectedItem].address)
 end
 
-mainContainer.addContactButton = mainContainer:addChild(GUI.framedButton(x, y, width, 3, 0xEEEEEE, 0xEEEEEE, 0xBBBBBB, 0xBBBBBB, "Add contact")); y = y + 3
-mainContainer.addContactButton.onTouch = function()
-	local container = MineOSInterface.addBackgroundContainer(mainContainer, "Add contact")
+application.addContactButton = application:addChild(GUI.framedButton(x, y, width, 3, 0xEEEEEE, 0xEEEEEE, 0xBBBBBB, 0xBBBBBB, "Add contact")); y = y + 3
+application.addContactButton.onTouch = function()
+	local container = MineOSInterface.addBackgroundContainer(application, "Add contact")
 	local input1 = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0x666666, 0xEEEEEE, 0x262626, nil, "Name"))
 	local input2 = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0x666666, 0xEEEEEE, 0x262626, contacts.last, "Address"))
 
-	container.panel.eventHandler = function(mainContainer, object, e1)
+	container.panel.eventHandler = function(application, object, e1)
 		if e1 == "touch" then
 			if input1.text and input2.text then
 				local exists = false
@@ -255,48 +255,48 @@ mainContainer.addContactButton.onTouch = function()
 				end
 
 				container:remove()
-				mainContainer:drawOnScreen()
+				application:draw()
 			end
 		end
 	end
 
-	mainContainer:drawOnScreen()
+	application:draw()
 end
 
-mainContainer.removeContactButton = mainContainer:addChild(GUI.framedButton(x, y, width, 3, 0xEEEEEE, 0xEEEEEE, 0xBBBBBB, 0xBBBBBB, "Remove contact")); y = y + 4
-mainContainer.removeContactButton.onTouch = function()
+application.removeContactButton = application:addChild(GUI.framedButton(x, y, width, 3, 0xEEEEEE, 0xEEEEEE, 0xBBBBBB, 0xBBBBBB, "Remove contact")); y = y + 4
+application.removeContactButton.onTouch = function()
 	if #contacts > 0 then
-		table.remove(contacts, mainContainer.contactsComboBox.selectedItem)
+		table.remove(contacts, application.contactsComboBox.selectedItem)
 		updateContacts()
 		saveContacts()
 		updateButtons()
 
-		mainContainer:drawOnScreen()
+		application:draw()
 	end
 end
 
-mainContainer:addChild(GUI.label(x, y, width, 1, 0xEEEEEE, "Energy to dial")):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP); y = y + 2
-mainContainer.fuelProgressBar = mainContainer:addChild(GUI.progressBar(x, y, width, 0xBBBBBB, 0x0, 0xEEEEEE, 100, true, true, "", "%")); y = y + 3
-mainContainer.exitButton = mainContainer:addChild(GUI.framedButton(x, y, width, 3, 0xEEEEEE, 0xEEEEEE, 0xBBBBBB, 0xBBBBBB, "Exit")); y = y + 4
-mainContainer.exitButton.onTouch = function()
-	mainContainer:stopEventHandling()
+application:addChild(GUI.label(x, y, width, 1, 0xEEEEEE, "Energy to dial")):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP); y = y + 2
+application.fuelProgressBar = application:addChild(GUI.progressBar(x, y, width, 0xBBBBBB, 0x0, 0xEEEEEE, 100, true, true, "", "%")); y = y + 3
+application.exitButton = application:addChild(GUI.framedButton(x, y, width, 3, 0xEEEEEE, 0xEEEEEE, 0xBBBBBB, 0xBBBBBB, "Exit")); y = y + 4
+application.exitButton.onTouch = function()
+	application:stop()
 end
 
-mainContainer.eventHandler = function(mainContainer, object, e1, e2, e3, e4)
+application.eventHandler = function(application, object, e1, e2, e3, e4)
 	if e1 == "sgIrisStateChange" then
 		update()
-		mainContainer:drawOnScreen()
+		application:draw()
 	elseif e1 == "sgStargateStateChange" then
 		if e3 == "Idle" or e3 == "Connected" then
 			update()
 			updateChevrons(e3 == "Connected")
-			mainContainer:drawOnScreen()
+			application:draw()
 		end
 	elseif e1 == "sgChevronEngaged" then
-		if mainContainer.chevrons[e3] then
-			mainContainer.chevrons[e3].isActivated = true
-			mainContainer.chevrons[e3].text = e4
-			mainContainer:drawOnScreen()
+		if application.chevrons[e3] then
+			application.chevrons[e3].isActivated = true
+			application.chevrons[e3].text = e4
+			application:draw()
 		end
 	elseif e1 == "sgMessageReceived" then
 		GUI.alert(e3)
@@ -308,6 +308,5 @@ updateContacts()
 update()
 updateChevrons(stargate.stargateState() == "Connected")
 
-mainContainer:draw()
-buffer.drawChanges(true)
-mainContainer:startEventHandling()
+application:draw()
+application:start()

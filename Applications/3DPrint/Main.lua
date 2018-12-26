@@ -27,10 +27,10 @@ end
 
 --------------------------------------------------------------------------------
 
-local mainContainer = GUI.fullScreenContainer()
+local application = GUI.application()
 
-local toolPanel = mainContainer:addChild(GUI.panel(1, 1, 28, mainContainer.height, 0x2D2D2D))
-local toolLayout = mainContainer:addChild(GUI.layout(1, 1, toolPanel.width, toolPanel.height - 3, 1, 1))
+local toolPanel = application:addChild(GUI.panel(1, 1, 28, application.height, 0x2D2D2D))
+local toolLayout = application:addChild(GUI.layout(1, 1, toolPanel.width, toolPanel.height - 3, 1, 1))
 toolLayout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
 toolLayout:setMargin(1, 1, 0, 1)
 
@@ -49,7 +49,7 @@ local function addColorSelector(...)
 	return toolLayout:addChild(GUI.colorSelector(1, 1, toolLayout.width - 2, 1, ...))
 end
 
-local printButton = mainContainer:addChild(GUI.button(1, mainContainer.height - 2, toolLayout.width, 3, 0x4B4B4B, 0xD2D2D2, 0xE1E1E1, 0x3C3C3C, localization.print))
+local printButton = application:addChild(GUI.button(1, application.height - 2, toolLayout.width, 3, 0x4B4B4B, 0xD2D2D2, 0xE1E1E1, 0x3C3C3C, localization.print))
 
 toolLayout:addChild(GUI.object(1, 1, toolLayout.width, 5)).draw = function(object)
 	local text = tostring(math.floor(currentLayer))
@@ -63,7 +63,7 @@ local newButton = addButton(localization.new)
 local openButton = addButton(localization.open)
 
 addButton(localization.save).onTouch = function()
-	local filesystemDialog = GUI.addFilesystemDialog(mainContainer, true, 50, math.floor(mainContainer.height * 0.8), "Save", "Cancel", "File name", "/")
+	local filesystemDialog = GUI.addFilesystemDialog(application, true, 50, math.floor(application.height * 0.8), "Save", "Cancel", "File name", "/")
 	filesystemDialog:setMode(GUI.IO_MODE_SAVE, GUI.IO_MODE_FILE)
 	filesystemDialog:addExtensionFilter(".3dm")
 	filesystemDialog.onSubmit = function(path)
@@ -77,7 +77,7 @@ addButton(localization.exit).onTouch = function()
 		hologram.clear()
 	end
 
-	mainContainer:stopEventHandling()
+	application:stop()
 end
 
 addSeparator(localization.elementSettings)
@@ -170,7 +170,7 @@ if proxies.hologram then
 		selector.onColorSelected = function()
 			if proxies.hologram then
 				proxies.hologram.setPaletteColor(i, selector.color)
-				mainContainer:drawOnScreen()
+				application:draw()
 			end
 		end
 	end
@@ -269,23 +269,23 @@ local function load(path)
 end
 
 openButton.onTouch = function()
-	local filesystemDialog = GUI.addFilesystemDialog(mainContainer, true, 50, math.floor(mainContainer.height * 0.8), "Open", "Cancel", "File name", "/")
+	local filesystemDialog = GUI.addFilesystemDialog(application, true, 50, math.floor(application.height * 0.8), "Open", "Cancel", "File name", "/")
 	filesystemDialog:setMode(GUI.IO_MODE_OPEN, GUI.IO_MODE_FILE)
 	filesystemDialog:addExtensionFilter(".3dm")
 	filesystemDialog.onSubmit = function(path)
 		load(path)
 
-		mainContainer:drawOnScreen()
+		application:draw()
 		updateOnHologram()
 	end
 	filesystemDialog:show()
 end
 
-mainContainer:addChild(GUI.panel(toolPanel.width + 1, 1, mainContainer.width - toolPanel.width, toolPanel.height, 0x1E1E1E))
+application:addChild(GUI.panel(toolPanel.width + 1, 1, application.width - toolPanel.width, toolPanel.height, 0x1E1E1E))
 
-local view = mainContainer:addChild(GUI.object(1, 1, 16 * viewPixelWidth, 16 * viewPixelHeight))
-view.localX = math.floor(toolLayout.width + (mainContainer.width - toolLayout.width) / 2 - view.width / 2)
-view.localY = math.floor(mainContainer.height / 2 - view.height / 2)
+local view = application:addChild(GUI.object(1, 1, 16 * viewPixelWidth, 16 * viewPixelHeight))
+view.localX = math.floor(toolLayout.width + (application.width - toolLayout.width) / 2 - view.width / 2)
+view.localY = math.floor(application.height / 2 - view.height / 2)
 view.draw = function()
 	local x, y, step = view.x, view.y, true
 	for j = 1, 16 do
@@ -326,26 +326,26 @@ view.draw = function()
 	end
 end
 
-toolLayout.eventHandler = function(mainContainer, toolLayout, e1, e2, e3, e4, e5)
+toolLayout.eventHandler = function(application, toolLayout, e1, e2, e3, e4, e5)
 	if e1 == "scroll" then
 		local cell = toolLayout.cells[1][1]
 		if e5 > 0 then
 			if cell.verticalMargin < 1 then
 				cell.verticalMargin = cell.verticalMargin + 1
-				mainContainer:drawOnScreen()
+				application:draw()
 			end
 		else
 			local child = toolLayout.children[#toolLayout.children]
 			if child.localY + child.height - 1 >= toolLayout.localY + toolLayout.height - 1 then
 				cell.verticalMargin = cell.verticalMargin - 1
-				mainContainer:drawOnScreen()
+				application:draw()
 			end
 		end
 	end
 end
 
 local touchX, touchY, shapeX, shapeY, shapeZ
-view.eventHandler = function(mainContainer, view, e1, e2, e3, e4, e5)
+view.eventHandler = function(application, view, e1, e2, e3, e4, e5)
 	if e1 == "touch" or e1 == "drag" then
 		if e5 > 0 then
 			if e1 == "touch" then
@@ -354,7 +354,7 @@ view.eventHandler = function(mainContainer, view, e1, e2, e3, e4, e5)
 				view.localX, view.localY = view.localX + e3 - touchX, view.localY + e4 - touchY
 				touchX, touchY = e3, e4
 
-				mainContainer:drawOnScreen()
+				application:draw()
 			end
 		else
 			local shapeIndex = getCurrentShapeIndex()
@@ -374,7 +374,7 @@ view.eventHandler = function(mainContainer, view, e1, e2, e3, e4, e5)
 					shape[4], shape[5], shape[6] = shape[4] + 1, shape[5] + 1, shape[6] + 1
 				end
 
-				mainContainer:drawOnScreen()
+				application:draw()
 			end
 		end
 	elseif e1 == "drop" then
@@ -397,7 +397,7 @@ view.eventHandler = function(mainContainer, view, e1, e2, e3, e4, e5)
 				currentLayer = currentLayer + 1
 				fix()
 
-				mainContainer:drawOnScreen()
+				application:draw()
 				updateOnHologram()
 			end
 		else
@@ -405,7 +405,7 @@ view.eventHandler = function(mainContainer, view, e1, e2, e3, e4, e5)
 				currentLayer = currentLayer - 1
 				fix()
 
-				mainContainer:drawOnScreen()
+				application:draw()
 				updateOnHologram()
 			end
 		end
@@ -430,7 +430,7 @@ rotateButton.onTouch = function()
 		fixShape(shape)
 	end
 
-	mainContainer:drawOnScreen()
+	application:draw()
 	updateOnHologram()
 end
 
@@ -453,7 +453,7 @@ flipButton.onTouch = function()
 		fixShape(shape)
 	end
 
-	mainContainer:drawOnScreen()
+	application:draw()
 	updateOnHologram()
 end
 
@@ -462,7 +462,7 @@ disabledListItem.onTouch = function()
 	updateWidgetsFromModel()
 	updateAddRemoveButtonsState()
 
-	mainContainer:drawOnScreen()
+	application:draw()
 	updateOnHologram()
 end
 
@@ -485,14 +485,14 @@ end
 newButton.onTouch = function()
 	new()
 
-	mainContainer:drawOnScreen()
+	application:draw()
 	updateOnHologram()
 end
 
 addShapeButton.onTouch = function()
 	addShape()
 
-	mainContainer:drawOnScreen()
+	application:draw()
 	updateOnHologram()
 end
 
@@ -503,7 +503,7 @@ removeShapeButton.onTouch = function()
 	updateWidgetsFromModel()
 	updateAddRemoveButtonsState()
 
-	mainContainer:drawOnScreen()
+	application:draw()
 	updateOnHologram()
 end
 
@@ -548,7 +548,7 @@ end
 elementComboBox.onItemSelected = function()
 	updateWidgetsFromModel()
 
-	mainContainer:drawOnScreen()
+	application:draw()
 	updateOnHologram()
 end
 
@@ -570,6 +570,6 @@ else
 	new()
 end
 
-mainContainer:drawOnScreen()
+application:draw()
 updateOnHologram()
-mainContainer:startEventHandling()
+application:start()

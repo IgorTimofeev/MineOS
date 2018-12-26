@@ -29,10 +29,10 @@ end
 
 ------------------------------------------------------------------------------------------------------------------
 
-local mainContainer = GUI.fullScreenContainer()
-mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x1E1E1E))
-local actionButtons = mainContainer:addChild(GUI.actionButtons(2, 1))
-local layout = mainContainer:addChild(GUI.layout(1, 1, mainContainer.width, mainContainer.height, 1, 1))
+local application = GUI.application()
+application:addChild(GUI.panel(1, 1, application.width, application.height, 0x1E1E1E))
+local actionButtons = application:addChild(GUI.actionButtons(3, 2, true))
+local layout = application:addChild(GUI.layout(1, 1, application.width, application.height, 1, 1))
 
 local logo = layout:addChild(GUI.image(1, 1, image.load(resourcesPath .. "Logo.pic")))
 local elementWidth = image.getWidth(logo.image)
@@ -58,7 +58,7 @@ local infoLabel = layout:addChild(GUI.label(1, 1, elementWidth, 1, 0xFF6D40, " "
 
 local function status(text)
 	infoLabel.text = text
-	mainContainer:drawOnScreen()
+	application:draw()
 end
 
 local function getLanguageIndex(text, short)
@@ -147,7 +147,7 @@ fromLanguageAutoDetectButton.onTouch = function()
 end
 
 actionButtons.close.onTouch = function()
-	mainContainer:stopEventHandling()
+	application:stop()
 end
 
 switchButton.onTouch = function()
@@ -184,8 +184,5 @@ checkLanguages()
 fromComboBox.selectedItem = getLanguageIndex(config.fromLanguage, false)
 toComboBox.selectedItem = getLanguageIndex(config.toLanguage, false)
 
-mainContainer:draw()
-buffer.drawChanges(true)
-mainContainer:startEventHandling()
-
-
+application:draw()
+application:start()

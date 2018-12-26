@@ -10,7 +10,7 @@ local MineOSInterface = require("MineOSInterface")
 
 ---------------------------------------------------------------------------------------------------------
 
-local mainContainer, window = MineOSInterface.addWindow(GUI.filledWindow(1, 1, 32, 19, 0x2D2D2D))
+local application, window = MineOSInterface.addWindow(GUI.filledWindow(1, 1, 32, 19, 0x2D2D2D))
 
 local layout = window:addChild(GUI.layout(1, 2, 1, 1, 1, 1))
 layout:setDirection(1, 1, GUI.DIRECTION_HORIZONTAL)
@@ -47,7 +47,7 @@ local function newCell(x, y, shaded)
 		end
 	end
 
-	object.eventHandler = function(mainContainer, object, e1, e2, e3, e4, e5)
+	object.eventHandler = function(application, object, e1, e2, e3, e4, e5)
 		if e1 == "touch" or e1 == "drag" then
 			local x, y = math.ceil((e3 - object.x + 1) / 2), e4 - object.y + 1
 			
@@ -66,7 +66,7 @@ local function newCell(x, y, shaded)
 				object.pixels[y][x] = e5 == 0 and 1 or 0
 			end
 
-			mainContainer:drawOnScreen()
+			application:draw()
 		end
 	end
 
@@ -112,7 +112,7 @@ local function newNoGUI(width, height)
 end
 
 local function new()
-	local container = MineOSInterface.addBackgroundContainer(mainContainer, "Create")
+	local container = MineOSInterface.addBackgroundContainer(application, "Create")
 
 	local widthTextBox = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xEEEEEE, 0x666666, 0x666666, 0xEEEEEE, 0x262626, "8", "Width", true))
 	widthTextBox.validator = function(text)
@@ -124,17 +124,17 @@ local function new()
 		return tonumber(text)
 	end
 
-	container.panel.eventHandler = function(mainContainer, object, e1)
+	container.panel.eventHandler = function(application, object, e1)
 		if e1 == "touch" then
 			container:remove()
 
 			newNoGUI(tonumber(widthTextBox.text), tonumber(heightTextBox.text))
 
-			mainContainer:drawOnScreen()
+			application:draw()
 		end
 	end
 
-	mainContainer:drawOnScreen()
+	application:draw()
 end
 
 local function fillBrailleArray(source, inverted)
@@ -163,7 +163,7 @@ newButton.onTouch = function()
 end
 
 saveButton.onTouch = function()
-	local filesystemDialog = GUI.addFilesystemDialog(mainContainer, true, 50, math.floor(mainContainer.height * 0.8), "OK", "Cancel", "Path", "/")
+	local filesystemDialog = GUI.addFilesystemDialog(application, true, 50, math.floor(application.height * 0.8), "OK", "Cancel", "Path", "/")
 	
 	filesystemDialog:setMode(GUI.IO_MODE_SAVE, GUI.IO_MODE_FILE)
 	filesystemDialog:addExtensionFilter(".pic")
@@ -226,7 +226,7 @@ saveButton.onTouch = function()
 end
 
 openButton.onTouch = function()
-	local filesystemDialog = GUI.addFilesystemDialog(mainContainer, true, 50, math.floor(mainContainer.height * 0.8), "OK", "Cancel", "Path", "/")
+	local filesystemDialog = GUI.addFilesystemDialog(application, true, 50, math.floor(application.height * 0.8), "OK", "Cancel", "Path", "/")
 	
 	filesystemDialog:setMode(GUI.IO_MODE_OPEN, GUI.IO_MODE_FILE)
 	filesystemDialog:addExtensionFilter(".braiile")
@@ -243,7 +243,7 @@ openButton.onTouch = function()
 			drawingArea.children[i].pixels = pizda[i].pixels
 		end
 
-		mainContainer:drawOnScreen()
+		application:draw()
 	end
 
 	filesystemDialog:show()
@@ -256,7 +256,7 @@ window.actionButtons.maximize:remove()
 ---------------------------------------------------------------------------------------------------------
 
 newNoGUI(8, 4)
-mainContainer:drawOnScreen()
+application:draw()
 
 
 

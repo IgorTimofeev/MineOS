@@ -55,7 +55,7 @@ for j = 1, buttonCount do
 		buttons[j][i] = buttonsContainer:addChild(GUI.button(x, y, buttonWidth, buttonHeight, 0x2D2D2D, 0xB4B4B4, 0x696969, 0xD2D2D2, " "))
 		buttons[j][i].onTouch = function()
 			set(i, j)
-			buttons[j][i].firstParent:drawOnScreen()
+			buttons[j][i].firstParent:draw()
 		end
 
 		x = x + buttonWidth + stepX
@@ -66,18 +66,18 @@ end
 
 set(2, 2)
 
-tool.onSelection = function(mainContainer)
-	mainContainer.currentToolLayout:addChild(buttonsLayout)
-	mainContainer.currentToolLayout:addChild(widthInput)
-	mainContainer.currentToolLayout:addChild(heightInput)
-	mainContainer.currentToolLayout:addChild(expandButton)
-	mainContainer.currentToolLayout:addChild(cropButton)
+tool.onSelection = function(application)
+	application.currentToolLayout:addChild(buttonsLayout)
+	application.currentToolLayout:addChild(widthInput)
+	application.currentToolLayout:addChild(heightInput)
+	application.currentToolLayout:addChild(expandButton)
+	application.currentToolLayout:addChild(cropButton)
 
 	widthInput.onInputFinished = function()
 		expandButton.disabled = not widthInput.text:match("^%d+$") or not heightInput.text:match("^%d+$")
 		cropButton.disabled = expandButton.disabled
 
-		mainContainer:drawOnScreen()
+		application:draw()
 	end
 	heightInput.onInputFinished = widthInput.onInputFinished
 	widthInput.onInputFinished()
@@ -85,33 +85,33 @@ tool.onSelection = function(mainContainer)
 	expandButton.onTouch = function()
 		local width, height = tonumber(widthInput.text), tonumber(heightInput.text)
 		
-		mainContainer.image.data = image.expand(mainContainer.image.data,
+		application.image.data = image.expand(application.image.data,
 			currentY > 1 and height or 0,
 			currentY < 3 and height or 0,
 			currentX > 1 and width or 0,
 			currentX < 3 and width or 0,
 		0x0, 0x0, 1, " ")
 
-		mainContainer.image.reposition()
-		mainContainer:drawOnScreen()
+		application.image.reposition()
+		application:draw()
 	end
 
 	cropButton.onTouch = function()
 		local width, height = tonumber(widthInput.text), tonumber(heightInput.text)
 		
-		mainContainer.image.data = image.crop(mainContainer.image.data,
+		application.image.data = image.crop(application.image.data,
 			currentX == 1 and 1 or width + 1,
 			currentY == 1 and 1 or height + 1,
-			(currentX == 1 or currentX == 3) and mainContainer.image.width - width or mainContainer.image.width - width * 2,
-			(currentY == 1 or currentY == 3) and mainContainer.image.height - height or mainContainer.image.height - height * 2
+			(currentX == 1 or currentX == 3) and application.image.width - width or application.image.width - width * 2,
+			(currentY == 1 or currentY == 3) and application.image.height - height or application.image.height - height * 2
 		)
 
-		mainContainer.image.reposition()
-		mainContainer:drawOnScreen()
+		application.image.reposition()
+		application:draw()
 	end
 end
 
-tool.eventHandler = function(mainContainer, object, e1)
+tool.eventHandler = function(application, object, e1)
 	
 end
 
