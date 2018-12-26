@@ -119,10 +119,10 @@ local MineOSPaths = require("MineOSPaths")
 local MineOSCore = require("MineOSCore")
 
 buffer.setResolution(gpu.maxResolution())
-local mainContainer = GUI.fullScreenContainer()
-mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x2D2D2D))
+local application = GUI.application()
+application:addChild(GUI.panel(1, 1, application.width, application.height, 0x2D2D2D))
 
-local stageContainer = mainContainer:addChild(GUI.container(math.floor(mainContainer.width / 2 - 90 / 2), math.floor(mainContainer.height / 2 - 28 / 2), 90, 28))
+local stageContainer = application:addChild(GUI.container(math.floor(application.width / 2 - 90 / 2), math.floor(application.height / 2 - 28 / 2), 90, 28))
 stageContainer:addChild(GUI.panel(1, 1, stageContainer.width, stageContainer.height, 0xDDDDDD))
 
 local overrideDraw = stageContainer.draw
@@ -170,8 +170,7 @@ function stages.load(stage)
 
 	stages[stage]()
 
-	mainContainer:draw()
-	buffer.drawChanges()
+	application:draw()
 end
 
 local function addImageToStage(y, picture)
@@ -228,8 +227,7 @@ stages[3] = function()
 	local switch = addSwitchToStage(41, 22, 0x666666, localization.terms, false)
 	switch.onStateChanged = function()
 		stageContainer.nextStageButton.disabled = not switch.state
-		mainContainer:draw()
-		buffer.drawChanges()
+		application:draw()
 	end
 end
 
@@ -268,8 +266,7 @@ stages[4] = function()
 		fileLabel.text = localization.downloading .. " " .. string.limit(applicationList.duringInstall[i].path, width - unicode.len(localization.downloading) - 1, "left")
 		progressBar.value = math.round(i / #applicationList.duringInstall * 100)
 
-		mainContainer:draw()
-		buffer.drawChanges()
+		application:draw()
 
 		web.download(applicationList.duringInstall[i].url, applicationList.duringInstall[i].path)
 		
@@ -285,8 +282,7 @@ stages[4] = function()
 		stageContainer:removeChildren(2)
 		y = addImageToStage(4, images.EEPROM)
 		stageContainer:addChild(GUI.label(1, y + 3, stageContainer.width, 1, 0x666666, localization.flashingEEPROM)):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
-		mainContainer:draw()
-		buffer.drawChanges()
+		application:draw()
 
 		component.eeprom.set(web.request(URLs.EFI))
 	end
@@ -322,6 +318,5 @@ end
 ------------------------------------------------------------------------------------------------------------------------------------
 
 stages.load(1)
-mainContainer:draw()
-buffer.drawChanges(true)
-mainContainer:startEventHandling()
+application:draw(true)
+application:start()
