@@ -34,8 +34,8 @@ local application, window, menu = MineOSInterface.addWindow(GUI.window(1, 1, but
 local displayContainer = window:addChild(GUI.container(1, 1, window.width, displayHeight + binaryHeight))
 
 local displayPanel = displayContainer:addChild(GUI.panel(1, 1, window.width, displayHeight, 0x2D2D2D))
-
-local actionButtons = window:addChild(GUI.actionButtons(3, 3, true))
+displayPanel.colors.transparency = 0.2 
+local actionButtons = window:addChild(GUI.actionButtons(3, 2, true))
 
 actionButtons.close.onTouch = function()
 	window:close()
