@@ -11,7 +11,7 @@
 	screenScaleInfo = "L'utilisation de cette option vous permettra de sélectionner la résolution d'écran optimale pour éliminer l'effet des \"barres noires\"",
 	screenInvalidResolution = "Le texte dans les champs de saisie doit être composé de chiffres et la résolution maximale ne doit pas dépasser %d caractères",
 	
-	wallpaper = "Fonds d'écran et économiseur d'écran",
+	wallpaper = "Fonds et économiseur",
 	wallpaperWallpaper = "Fonds d'écran",
 	wallpaperScreensaver = "Économiseur d'écran",
 	wallpaperScreensaverPath = "Le chemin d'accès au script d'écran de démarrage",
@@ -60,7 +60,7 @@
 	networkThis = "Paramètres de ce PC",
 	networkNoModem = "Connecter le modem pour utiliser les fonctions réseau",
 	
-	tasks = "Démarrage automatique",
+	tasks = "Autochargement",
 	tasksInfo = "Vous pouvez ajouter autant de scripts que vous le souhaitez pour les exécuter automatiquement dans l'ordre spécifié",
 	tasksBefore = "Exécuter avant d'exécuter le système d'exploitation",
 	tasksAfter = "Exécuter après le démarrage du système d'exploitation",
