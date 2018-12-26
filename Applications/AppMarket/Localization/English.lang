@@ -27,8 +27,8 @@
 	statisticsReviewsCount = "Reviews count",
 	statisticsPopularPublication = "(popular publication)",
 
-	whatsNew = "Что нового",
-	whatsNewInVersion = "Что нового в версии",
+	whatsNew = "What's new",
+	whatsNewInVersion = "What's new in version",
 	areYouSure = "Are your sure want to delete publication?",
 	createShortcut = "Create desktop shortcut",
 	editing = "Edit publication",

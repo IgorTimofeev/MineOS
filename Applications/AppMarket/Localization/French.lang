@@ -27,8 +27,8 @@
 	statisticsReviewsCount = "Nombre de commentaires",
 	statisticsPopularPublication = "(publication populaire)",
 
-	whatsNew = "Что нового",
-	whatsNewInVersion = "Что нового в версии",
+	whatsNew = "Quoi de neuf",
+	whatsNewInVersion = "Quoi de neuf dans la version",
 	areYouSure = "Êtes-vous sûr de vouloir supprimer la publication ?",
 	createShortcut = "Créer un raccourci sur le bureau",
 	editing = "Modifier la publication",
