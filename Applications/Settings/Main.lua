@@ -19,7 +19,7 @@ local scrollSpeed = 2
 
 --------------------------------------------------------------------------------
 
-local mainContainer, window = MineOSInterface.addWindow(GUI.filledWindow(1, 1, 100, 29, 0xF0F0F0))
+local application, window = MineOSInterface.addWindow(GUI.filledWindow(1, 1, 100, 29, 0xF0F0F0))
 
 local leftPanel = window:addChild(GUI.panel(1, 1, 1, 1, 0x2D2D2D))
 window.actionButtons.localY = 2
@@ -47,7 +47,7 @@ local function runModule(object)
 	window.contentLayout:removeChildren()
 	window.contentLayout:setMargin(1, 1, 0, object.module.margin)
 
-	window.contentLayout.eventHandler = function(mainContainer, _, e1, e2, e3, e4, e5)
+	window.contentLayout.eventHandler = function(application, _, e1, e2, e3, e4, e5)
 		if e1 == "scroll" then
 			local cell = window.contentLayout.cells[1][1]
 			local to = -math.floor(cell.childrenHeight / 2)
@@ -59,12 +59,12 @@ local function runModule(object)
 				cell.verticalMargin = to
 			end
 
-			mainContainer:drawOnScreen()
+			application:draw()
 		end
 	end
 
 	object.module.onTouch()
-	mainContainer:drawOnScreen()
+	application:draw()
 end
 
 local function selectModule(object)
@@ -77,13 +77,13 @@ local function selectModule(object)
 	runModule(object)
 end
 
-local function moduleEventHandler(mainContainer, object, e1)
+local function moduleEventHandler(application, object, e1)
 	if e1 == "touch" then
 		selectModule(object)
 	end
 end
 
-modulesLayout.eventHandler = function(mainContainer, object, e1, e2, e3, e4, e5)
+modulesLayout.eventHandler = function(application, object, e1, e2, e3, e4, e5)
 	if e1 == "scroll" then
 		local cell = modulesLayout.cells[1][1]
 		local to = -(#modulesLayout.children - 1) * 4 + 1
@@ -95,7 +95,7 @@ modulesLayout.eventHandler = function(mainContainer, object, e1, e2, e3, e4, e5)
 			cell.verticalMargin = to
 		end
 
-		mainContainer:drawOnScreen()
+		application:draw()
 	end
 end
 
@@ -126,7 +126,7 @@ table.sort(modules, function(a, b) return a < b end)
 for i = 1, #modules do
 	local result, reason = loadfile(modulesPath .. modules[i] .. "Main.lua")
 	if result then
-		local success, result = pcall(result, mainContainer, window, localization)
+		local success, result = pcall(result, application, window, localization)
 		if success then
 			local object = modulesLayout:addChild(GUI.object(1, 1, 1, 3))
 
