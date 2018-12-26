@@ -1342,10 +1342,26 @@ newPublicationInfo = function(file_id)
 			addApplicationInfo(textDetailsContainer, publication, math.huge)
 			-- Ебурим описание
 			local x, y = 3, 7
-			local lines = string.wrap(publication.translated_description, textDetailsContainer.width - 4)
-			local textBox = textDetailsContainer:addChild(GUI.textBox(3, y, textDetailsContainer.width - 4, #lines, nil, 0x969696, lines, 1, 0, 0))
-			textBox.eventHandler = nil
-			y = y + textBox.height + 1
+
+			local function addLabel(text)
+				textDetailsContainer:addChild(GUI.label(1, y, textDetailsContainer.width, 1, 0x696969, text)):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
+				y = y + 2
+			end
+			
+			local function addTextBox(text)
+				local lines = string.wrap(text, textDetailsContainer.width - 4)
+				local textBox = textDetailsContainer:addChild(GUI.textBox(3, y, textDetailsContainer.width - 4, #lines, nil, 0x969696, lines, 1, 0, 0))
+				textBox.eventHandler = nil
+				y = y + textBox.height + 1
+			end
+
+			addTextBox(publication.translated_description)
+
+			-- Инфа о чем-то новом
+			if publication.whats_new then
+				addLabel(localization.whatsNewInVersion .. " " .. publication.whats_new_version .. ":")
+				addTextBox(publication.whats_new)
+			end
 
 			-- Зависимости
 			if publication.dependencies then
@@ -1358,8 +1374,7 @@ newPublicationInfo = function(file_id)
 				end
 
 				if publicationDependencyExists then
-					textDetailsContainer:addChild(GUI.label(1, y, textDetailsContainer.width, 1, 0x696969, localization.dependencies)):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
-					y = y + 2
+					addLabel(localization.dependencies .. ":")
 
 					for i = 1, #publication.all_dependencies do
 						local dependency = publication.dependencies_data[publication.all_dependencies[i]]
@@ -1489,7 +1504,7 @@ local function newPlusMinusCyka(width, disableLimit)
 	layout:setDirection(1, 1, GUI.DIRECTION_HORIZONTAL)
 	layout:setDirection(2, 1, GUI.DIRECTION_HORIZONTAL)
 
-	layout.comboBox = layout:addChild(GUI.comboBox(1, 1, width - 7, 1, 0xFFFFFF, 0x696969, 0x969696, 0xE1E1E1))
+	layout.comboBox = layout:addChild(GUI.comboBox(1, 1, width - 7, 1, 0xFFFFFF, 0x878787, 0x969696, 0xE1E1E1))
 	layout.defaultColumn = 2
 	layout.addButton = layout:addChild(GUI.button(1, 1, 3, 1, 0x696969, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, "+"))
 	layout.removeButton = layout:addChild(GUI.button(1, 1, 3, 1, 0x696969, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, "-"))
@@ -1521,40 +1536,48 @@ editPublication = function(initialPublication, initialCategoryID)
 	layout:setFitting(2, 1, true, false)
 	layout:setMargin(1, 1, 1, 0)
 
-	layout:addChild(GUI.text(1, 1, 0x2D2D2D, localization.category .. ":"))
-	layout:addChild(GUI.text(1, 1, 0x2D2D2D, localization.license .. ":"))
-	layout:addChild(GUI.text(1, 1, 0x2D2D2D, localization.publicationName .. ":"))
-	layout:addChild(GUI.text(1, 1, 0x2D2D2D, localization.mainFileURL .. ":"))
-	local iconHint = layout:addChild(GUI.text(1, 1, 0x2D2D2D, localization.iconURL .. ":"))
-	local pathHint = layout:addChild(GUI.text(1, 1, 0x2D2D2D, localization.mainFileName .. ":"))
-	layout:addChild(GUI.text(1, 1, 0x2D2D2D, localization.description .. ":"))
-	layout:addChild(GUI.text(1, 1, 0x2D2D2D, localization.dependenciesAndResources .. ":"))
+	local function addText(text)
+		return layout:addChild(GUI.text(1, 1, 0x4B4B4B, text))
+	end
+
+	local function addInput(...)
+		return layout:addChild(GUI.input(1, 1, 36, 1, 0xFFFFFF, 0x878787, 0xC3C3C3, 0xFFFFFF, 0x2D2D2D, ...))
+	end
+
+	local function addComboBox()
+		return layout:addChild(GUI.comboBox(1, 1, 36, 1, 0xFFFFFF, 0x878787, 0x969696, 0xE1E1E1))
+	end
+
+	addText(localization.category .. ":")
+	addText(localization.license .. ":")
+	addText(localization.publicationName .. ":")
+	addText(localization.mainFileURL .. ":")
+	local iconHint = addText(localization.iconURL .. ":")
+	local pathHint = addText(localization.mainFileName .. ":")
+	addText(localization.description .. ":")
+	local whatsNewHint = addText(localization.whatsNew .. ":")
+	addText(localization.dependenciesAndResources .. ":")
 
 	layout.defaultColumn = 2
 
 	layout:addChild(GUI.label(1, 1, 36, 1, 0x0, initialPublication and localization.edit or localization.publish)):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
 
-	local categoryComboBox = layout:addChild(GUI.comboBox(1, 1, 36, 1, 0xFFFFFF, 0x696969, 0x969696, 0xE1E1E1))
+	local categoryComboBox = addComboBox()
 	for i = 1, #categories do
 		categoryComboBox:addItem(categories[i])
 	end
-	if initialPublication then
-		categoryComboBox.selectedItem = initialPublication.category_id
-	elseif initialCategoryID then
-		categoryComboBox.selectedItem = initialCategoryID
-	end
 
-	local licenseComboBox = layout:addChild(GUI.comboBox(1, 1, 36, 1, 0xFFFFFF, 0x696969, 0x969696, 0xE1E1E1))
+	local licenseComboBox = addComboBox()
 	for i = 1, #licenses do
 		licenseComboBox:addItem(licenses[i])
 	end
-	if initialPublication then licenseComboBox.selectedItem = initialPublication.license_id end
-
-	local nameInput = layout:addChild(GUI.input(1, 1, 36, 1, 0xFFFFFF, 0x696969, 0xB4B4B4, 0xFFFFFF, 0x2D2D2D, initialPublication and initialPublication.publication_name or "", "My Script"))
-	local mainUrlInput = layout:addChild(GUI.input(1, 1, 36, 1, 0xFFFFFF, 0x696969, 0xB4B4B4, 0xFFFFFF, 0x2D2D2D, initialPublication and initialPublication.source_url or "", "http://example.com/Main.lua"))
-	local iconUrlInput = layout:addChild(GUI.input(1, 1, 36, 1, 0xFFFFFF, 0x696969, 0xB4B4B4, 0xFFFFFF, 0x2D2D2D, initialPublication and initialPublication.icon_url or "", "http://example.com/Icon.pic"))
-	local mainPathInput = layout:addChild(GUI.input(1, 1, 36, 1, 0xFFFFFF, 0x696969, 0xB4B4B4, 0xFFFFFF, 0x2D2D2D, initialPublication and initialPublication.path or "", "MyScript.lua"))
-	local descriptionInput = layout:addChild(GUI.input(1, 1, 36, 1, 0xFFFFFF, 0x696969, 0xB4B4B4, 0xFFFFFF, 0x2D2D2D, initialPublication and initialPublication.initial_description or "", "This is my cool script", true))
+	
+	local nameInput = addInput(initialPublication and initialPublication.publication_name or "", "My publication")
+	local mainUrlInput = addInput(initialPublication and initialPublication.source_url or "", "http://example.com/Main.lua")
+	local iconUrlInput = addInput(initialPublication and initialPublication.icon_url or "", "http://example.com/Icon.pic")
+	local mainPathInput = addInput(initialPublication and initialPublication.path or "", "MyScript.lua")
+	local descriptionInput = addInput(initialPublication and initialPublication.initial_description or "", "This's my favourite script", true)
+	local whatsNewInput = addInput("", "Added some cool features...")
 	local dependenciesLayout = layout:addChild(newPlusMinusCyka(36, 0))
 
 	local function addDependency(dependency)
@@ -1583,12 +1606,19 @@ editPublication = function(initialPublication, initialCategoryID)
 		end
 	end
 
-	local lastDependencyType = 1
+	if initialPublication then
+		categoryComboBox.selectedItem = initialPublication.category_id
+		licenseComboBox.selectedItem = initialPublication.license_id
+	elseif initialCategoryID then
+		categoryComboBox.selectedItem = initialCategoryID
+	end
+	whatsNewHint.hidden, whatsNewInput.hidden = not initialPublication, not initialPublication
 
+	local lastDependencyType = 1
 	dependenciesLayout.addButton.onTouch = function()
 		local container = MineOSInterface.addBackgroundContainer(MineOSInterface.application, localization.addDependency)
 		
-		local dependencyTypeComboBox = container.layout:addChild(GUI.comboBox(1, 1, 36, 3, 0xFFFFFF, 0x696969, 0x969696, 0xE1E1E1))
+		local dependencyTypeComboBox = container.layout:addChild(GUI.comboBox(1, 1, 36, 3, 0xFFFFFF, 0x4B4B4B, 0x969696, 0xE1E1E1))
 		dependencyTypeComboBox:addItem(localization.fileByURL)
 		dependencyTypeComboBox:addItem(localization.existingPublication)
 		dependencyTypeComboBox.selectedItem = lastDependencyType
@@ -1690,6 +1720,7 @@ editPublication = function(initialPublication, initialCategoryID)
 			license_id = licenseComboBox.selectedItem,
 			dependencies = dependencies,
 			category_id = categoryComboBox.selectedItem,
+			whats_new = #whatsNewInput.text > 0 and whatsNewInput.text or nil
 		})
 
 		if success then
