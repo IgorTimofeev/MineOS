@@ -27,6 +27,8 @@
 	statisticsReviewsCount = "Число отзывов",
 	statisticsPopularPublication = "(популярная публикация)",
 
+	whatsNew = "Что нового",
+	whatsNewInVersion = "Что нового в версии",
 	areYouSure = "Вы уверены, что хотите удалить публикацию?",
 	createShortcut = "Создать ярлык на рабочем столе",
 	editing = "Редактирование публикации",
