@@ -31,10 +31,10 @@ local function saveConfig()
 	table.toFile(configPath, config, true)
 end
 
-local mainContainer = GUI.fullScreenContainer()
-mainContainer:addChild(GUI.panel(1, 1, mainContainer.width, mainContainer.height, 0x2D2D2D))
+local application = GUI.application()
+application:addChild(GUI.panel(1, 1, application.width, application.height, 0x2D2D2D))
 
-local layout = mainContainer:addChild(GUI.layout(1, 1, mainContainer.width, mainContainer.height, 1, 1))
+local layout = application:addChild(GUI.layout(1, 1, application.width, application.height, 1, 1))
 
 local function clearScreens()
 	for address in component.list("screen") do
@@ -107,7 +107,7 @@ local function mainMenu(force)
 
 	filesystemChooser.onSubmit = function()
 		actionComboBox.onItemSelected()
-		mainContainer:drawOnScreen()
+		application:draw()
 	end
 
 	actionButton.onTouch = function()
@@ -118,8 +118,8 @@ local function mainMenu(force)
 			if signature == "OCIF" then
 				local encodingMethod = string.byte(file:read(1))
 				if encodingMethod == 5 then
-					local width = bit32.byteArrayToNumber({string.byte(file:read(2), 1, 2)})
-					local height = bit32.byteArrayToNumber({string.byte(file:read(2), 1, 2)})
+					local width = bit32.bor(bit32.lshift(string.byte(file:read(1)), 8), string.byte(file:read(1)))
+					local height = bit32.bor(bit32.lshift(string.byte(file:read(1)), 8), string.byte(file:read(1)))
 
 					clearScreens()
 
@@ -239,7 +239,7 @@ local function mainMenu(force)
 						layout:addChild(newScreenLine(SY))
 					end
 
-					mainContainer:drawOnScreen()
+					application:draw()
 
 					clearScreens(0x0)
 
@@ -272,7 +272,7 @@ local function mainMenu(force)
 								end
 							end
 
-							mainContainer:drawOnScreen()
+							application:draw()
 						end
 					end
 
@@ -283,15 +283,15 @@ local function mainMenu(force)
 				end
 			end
 
-			mainContainer:drawOnScreen()
+			application:draw()
 		end
 	end
 
 	actionComboBox.onItemSelected()
-	mainContainer:drawOnScreen(force)
+	application:draw(force)
 end
 
 --------------------------------------------------------------------------------
 
 mainMenu(true)
-mainContainer:startEventHandling()
+application:start()
