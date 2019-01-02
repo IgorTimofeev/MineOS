@@ -2,7 +2,7 @@
 
 -- local component, computer, unicode = require("component"), require("computer"), require("unicode")
 
-local stringsMain, stringsBootFromURL, stringsChangeLabel, stringKeyDown, stringsInit, stringsFilesystem, componentProxy, componentList, pullSignal, uptime, tableInsert, mathMax, mathMin, mathHuge = "MineOS EFI", "Internet boot", "Change label", "key_down", "/init.lua", "filesystem", component.proxy, component.list, computer.pullSignal, computer.uptime, table.insert, math.max, math.min, math.huge
+local stringsMain, stringsBootFromURL, stringsChangeLabel, stringKeyDown, stringsInit, stringsFilesystem, componentProxy, componentList, pullSignal, uptime, tableInsert, mathMax, mathMin, mathHuge, mathFloor = "MineOS EFI", "Internet recovery", "Change label", "key_down", "/init.lua", "filesystem", component.proxy, component.list, computer.pullSignal, computer.uptime, table.insert, math.max, math.min, math.huge, math.floor
 local colorsTitle, colorsBackground, colorsText, colorsSelectionBackground, colorsSelectionText, eeprom, gpu, internetAddress = 1, 0, 1, 1, 0, componentProxy(componentList("eeprom")()), componentProxy(componentList("gpu")()), componentList("internet")()
 
 gpu.bind(componentList("screen")(), true)
@@ -16,7 +16,7 @@ elseif depth == 8 then
 	colorsTitle, colorsBackground, colorsText, colorsSelectionBackground, colorsSelectionText = 0x2D2D2D, 0xE1E1E1, 0x878787, 0x878787, 0xE1E1E1
 end
 
-local setBackground, setForeground, round, restrict = 
+local setBackground, setForeground, restrict = 
 	function(color)
 		if color ~= curentBackground then
 			gpu.setBackground(color)
@@ -28,9 +28,6 @@ local setBackground, setForeground, round, restrict =
 			gpu.setForeground(color)
 			currentForeground = color
 		end
-	end,
-	function(n)
-		return math.floor(n + 0.5)
 	end,
 	function(text, limit, skip)
 		if #text < limit then
@@ -48,7 +45,7 @@ local rectangle, centrizedText, menuElement =
 		gpuFill(x, y, width, height, " ")
 	end,
 	function(y, foreground, text)
-		local x = round(screenWidth / 2 - #text / 2)
+		local x = mathFloor(screenWidth / 2 - #text / 2)
 		setForeground(foreground)
 		gpuSet(x, y, text)
 	end,
@@ -60,24 +57,37 @@ local rectangle, centrizedText, menuElement =
 		}
 	end
 
-local function status(y, titleText, statusText, needWait)
-	y = y or round(screenHeight / 2 - 1)
-
+local function title(yHalfer, titleText)
+	y = mathFloor(screenHeight / 2 - yHalfer / 2)
 	rectangle(1, 1, screenWidth, screenHeight, colorsBackground)
 	centrizedText(y, colorsTitle, titleText)
-	centrizedText(y + 2, colorsText, statusText or "")
-	if needWait then
-		repeat
-			local event = pullSignal()
-		until event == stringKeyDown or event == "touch"
+
+	return y + 2
+end
+
+local function status(titleText, statusText, needWait)
+	local lines = {}
+	for line in statusText:gmatch("[^\r\n]+") do
+		lines[#lines + 1] = line:gsub("\t", "  ")
+	end
+	
+	local y = title(#lines, titleText)
+	
+	for i = 1, #lines do
+		centrizedText(y, colorsText, lines[i])
+		y = y + 1
 	end
 
-	return y
+	if needWait then
+		repeat
+			needWait = pullSignal()
+		until needWait == stringKeyDown or needWait == "touch"
+	end
 end
 
 local loadInit, menuBack, menu, input, netboot =
 	function(proxy)
-		status(NIL, stringsMain, "Booting from " .. proxy.address)
+		status(stringsMain, "Booting from " .. proxy.address)
 
 		local data, chunk, handle, success, reason = "", "", proxy.open(stringsInit, "r")
 		while chunk do
@@ -85,7 +95,7 @@ local loadInit, menuBack, menu, input, netboot =
 		end
 		proxy.close(handle)
 
-		success, reason = load(data)
+		success, reason = load(data, "=OS")
 		if success then
 			success, reason = pcall(success)
 			if success then
@@ -93,7 +103,7 @@ local loadInit, menuBack, menu, input, netboot =
 			end
 		end
 
-		status(NIL, stringsMain, "Failed to run init file: " .. reason, 1)
+		status(stringsMain, reason, 1)
 	end,
 	function()
 		return menuElement("Back", NIL, 1)
@@ -105,13 +115,13 @@ local loadInit, menuBack, menu, input, netboot =
 		end
 
 		while 1 do
-			local y, x, eventData = status(round(screenHeight / 2 - (#elements + 2) / 2), titleText) + 2
+			local y, x, eventData = title(#elements + 2, titleText)
 			
 			for i = 1, #elements do
-				x = round(screenWidth / 2 - #elements[i].s / 2)
+				x = mathFloor(screenWidth / 2 - #elements[i].s / 2)
 				
 				if i == selectedElement then
-					rectangle(round(screenWidth / 2 - maxLength / 2) - 2, y, maxLength + 4, 1, colorsSelectionBackground)
+					rectangle(mathFloor(screenWidth / 2 - maxLength / 2) - 2, y, maxLength + 4, 1, colorsSelectionBackground)
 					setForeground(colorsSelectionText)
 					gpuSet(x, y, elements[i].s)
 				else
@@ -146,7 +156,8 @@ local loadInit, menuBack, menu, input, netboot =
 		while 1 do
 			eblo = prefix .. text
 			gpuFill(1, y, screenWidth, 1, " ")
-			gpuSet(round(screenWidth / 2 - #eblo / 2), y, eblo .. (state and "█" or ""))
+			gpuSetForeground(colorsText)
+			gpuSet(mathFloor(screenWidth / 2 - #eblo / 2), y, eblo .. (state and "█" or ""))
 
 			eventData = {pullSignal(0.5)}
 			if eventData[1] == stringKeyDown then
@@ -172,13 +183,13 @@ local loadInit, menuBack, menu, input, netboot =
 	function(url)	
 		local runReason, data, handle, result, reason =
 			function(text)
-				status(NIL, stringsBootFromURL, "Internet boot failed: " .. text, 1)
+				status(stringsBootFromURL, "Internet boot failed: " .. text, 1)
 			end,
 			"",
 			componentProxy(internetAddress).request(url)
 		
 		if handle then
-			status(NIL, stringsBootFromURL, "Downloading script...")	
+			status(stringsBootFromURL, "Downloading script...")	
 			while 1 do
 				result, reason = handle.read(mathHuge)	
 				if result then
@@ -211,7 +222,7 @@ local loadInit, menuBack, menu, input, netboot =
 		end
 	end
 
-status(NIL, stringsMain, "Hold Alt to show boot options menu")
+status(stringsMain, "Hold Alt to show boot options menu")
 
 local deadline, eventData = uptime() + 1
 while uptime() < deadline do
@@ -239,23 +250,21 @@ while uptime() < deadline do
 
 								if not isReadOnly then
 									tableInsert(filesystemOptions, 1, menuElement(stringsChangeLabel, function()
-										proxy.setLabel(input(status(NIL, stringsChangeLabel) + 2, "Enter new name: "))
+										proxy.setLabel(input(title(2, stringsChangeLabel), "Enter new name: "))
 									end, 1))
 
 									tableInsert(filesystemOptions, 2, menuElement("Format", function()
-										status(NIL, stringsMain, "Formatting filesystem " .. address)
+										status(stringsMain, "Formatting filesystem " .. address)
 										for _, file in ipairs(proxy.list("/")) do
 											proxy.remove(file)
 										end
-										status(NIL, stringsMain, "Formatting finished", 1)
+										status(stringsMain, "Formatting finished", 1)
 									end, 1))
 								end
 
-								if proxy.exists(stringsInit) then
-									tableInsert(filesystemOptions, 1, menuElement("Set as startup", function()
-										eepromSetData(address)
-									end, 1))
-								end
+								tableInsert(filesystemOptions, 1, menuElement("Set as startup", function()
+									eepromSetData(address)
+								end, 1))
 
 								menu(label .. " (" .. address .. ")", filesystemOptions)
 							end
@@ -263,7 +272,7 @@ while uptime() < deadline do
 					)
 				end
 
-				menu("Select filesystem to show options", filesystems)
+				menu("Select filesystem", filesystems)
 			end),
 			
 			menuElement("Shutdown", function()
@@ -275,7 +284,7 @@ while uptime() < deadline do
 
 		if internetAddress then	
 			tableInsert(utilities, 2, menuElement(stringsBootFromURL, function()
-				netboot(input(status(NIL, stringsBootFromURL) + 2, "Enter URL: "))
+				netboot(input(title(2, stringsBootFromURL), "Enter URL: "))
 			end))
 		end
 
@@ -288,6 +297,7 @@ if data:sub(1, 1) == "#" then
 	netboot(data:sub(2, -1))
 else
 	proxy = componentProxy(data)
+
 	if proxy and proxy.exists(stringsInit) then
 		loadInit(proxy)
 	else
@@ -303,28 +313,9 @@ else
 		end
 
 		if not proxy then
-			status(NIL, stringsMain, "No bootable mediums found", 1)
+			status(stringsMain, "No bootable mediums found", 1)
 		end
 	end
 end
 
 shutdown()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
