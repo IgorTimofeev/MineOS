@@ -95,7 +95,7 @@ local loadInit, menuBack, menu, input, netboot =
 		end
 		proxy.close(handle)
 
-		success, reason = load(data, "=OS")
+		success, reason = load(data, "=" .. stringsInit)
 		if success then
 			success, reason = pcall(success)
 			if success then
