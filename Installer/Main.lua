@@ -189,7 +189,7 @@ function require(module)
 	if package.loaded[module] then
 		return package.loaded[module]
 	elseif package.loading[module] then
-		error("already loading " .. module)
+		error("already loading " .. module .. ": " .. debug.traceback())
 	else
 		package.loading[module] = true
 		package.loaded[module] = dofile(installerPath .. "Libraries/" .. module .. ".lua")

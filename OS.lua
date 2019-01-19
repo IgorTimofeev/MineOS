@@ -51,7 +51,7 @@ function require(module)
 	if package.loaded[lowerModule] then
 		return package.loaded[lowerModule]
 	elseif package.loading[lowerModule] then
-		error("recursive require() call found: library \"" .. module .. "\" is trying to require another library that requires it")
+		error("recursive require() call found: library \"" .. module .. "\" is trying to require another library that requires it\n" .. debug.traceback())
 	else
 		local errors = {}
 
