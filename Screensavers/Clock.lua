@@ -1,7 +1,7 @@
-local gpu = require("component").gpu
-local event = require("event")
+local gpu = require("Screen").getGPUProxy()
+local event = require("Event")
 local w, h, t, q = gpu.getResolution()
-local numb, ha, wh, p, s, u, e, gsB, gS, ti, r, slp, tn = {29850,29351,30887,18925,14735,27343,9383,31407,31147,[0]=31599}, h/2-2, {0, 8, nil, 18, 26}, "▀", "  ", h%2, w/2, gpu.setBackground, gpu.set, table.insert, math.random, os.sleep, tonumber
+local numb, ha, wh, p, s, u, e, gsB, gS, ti, r, slp, tn = {29850,29351,30887,18925,14735,27343,9383,31407,31147,[0]=31599}, h/2-2, {0, 8, nil, 18, 26}, "▀", "  ", h%2, w/2, gpu.setBackground, gpu.set, table.insert, math.random, event.sleep, tonumber
 
 local function drawN(x, y, n)
   local c = 0

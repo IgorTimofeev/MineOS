@@ -1,22 +1,14 @@
 
+local stringsMain, stringsInit, stringsChangeLabel, stringKeyDown, stringsFilesystem, colorsTitle, colorsBackground, colorsText, colorsSelectionBackground, colorsSelectionText, componentProxy, componentList, pullSignal, uptime, tableInsert, mathMax, mathMin, mathHuge, mathFloor = "MineOS EFI", "/OS.lua", "Change label", "key_down", "filesystem", 0x2D2D2D, 0xE1E1E1, 0x878787, 0x878787, 0xE1E1E1, component.proxy, component.list, computer.pullSignal, computer.uptime, table.insert, math.max, math.min, math.huge, math.floor
 
--- local component, computer, unicode = require("component"), require("computer"), require("unicode")
+local eeprom, gpu, internetAddress = componentProxy(componentList("eeprom")()), componentProxy(componentList("gpu")()), componentList("internet")()
 
-local stringsMain, stringsBootFromURL, stringsChangeLabel, stringKeyDown, stringsInit, stringsFilesystem, componentProxy, componentList, pullSignal, uptime, tableInsert, mathMax, mathMin, mathHuge, mathFloor = "MineOS EFI", "Internet recovery", "Change label", "key_down", "/init.lua", "filesystem", component.proxy, component.list, computer.pullSignal, computer.uptime, table.insert, math.max, math.min, math.huge, math.floor
-local colorsTitle, colorsBackground, colorsText, colorsSelectionBackground, colorsSelectionText, eeprom, gpu, internetAddress = 1, 0, 1, 1, 0, componentProxy(componentList("eeprom")()), componentProxy(componentList("gpu")()), componentList("internet")()
+local shutdown, gpuSet, gpuFill, eepromSetData, eepromGetData, screenWidth, screenHeight, curentBackground, currentForeground = computer.shutdown, gpu.set, gpu.fill, eeprom.setData, eeprom.getData, gpu.getResolution()
 
-gpu.bind(componentList("screen")(), true)
-
-local shutdown, gpuSet, gpuFill, eepromSetData, eepromGetData, depth, screenWidth, screenHeight, curentBackground, currentForeground, NIL = computer.shutdown, gpu.set, gpu.fill, eeprom.setData, eeprom.getData, gpu.getDepth(), gpu.getResolution()
-computer.getBootAddress, computer.setBootAddress = eepromGetData, eepromSetData
-
-if depth == 4 then
-	colorsTitle, colorsBackground, colorsText, colorsSelectionBackground, colorsSelectionText = 0x333333, 0xFFFFFF, 0x333333, 0x333333, 0xFFFFFF
-elseif depth == 8 then
-	colorsTitle, colorsBackground, colorsText, colorsSelectionBackground, colorsSelectionText = 0x2D2D2D, 0xE1E1E1, 0x878787, 0x878787, 0xE1E1E1
-end
-
-local setBackground, setForeground, restrict = 
+local resetColors, setBackground, setForeground, restrict = 
+	function()
+		curentBackground, currentForeground = nil, nil
+	end,
 	function(color)
 		if color ~= curentBackground then
 			gpu.setBackground(color)
@@ -57,8 +49,8 @@ local rectangle, centrizedText, menuElement =
 		}
 	end
 
-local function title(yHalfer, titleText)
-	y = mathFloor(screenHeight / 2 - yHalfer / 2)
+local function title(y, titleText)
+	y = mathFloor(screenHeight / 2 - y / 2)
 	rectangle(1, 1, screenWidth, screenHeight, colorsBackground)
 	centrizedText(y, colorsTitle, titleText)
 
@@ -85,28 +77,35 @@ local function status(titleText, statusText, needWait)
 	end
 end
 
-local loadInit, menuBack, menu, input, netboot =
+local function executeString(...)
+	local result, reason = load(...)
+	if result then
+		result, reason = xpcall(result, debug.traceback)
+		if result then
+			return
+		end
+	end
+
+	resetColors()
+	status(stringsMain, reason, 1)
+end
+
+local loadInit, menuBack, menu, input =
 	function(proxy)
 		status(stringsMain, "Booting from " .. proxy.address)
 
-		local data, chunk, handle, success, reason = "", "", proxy.open(stringsInit, "r")
-		while chunk do
-			data, chunk = data .. chunk, proxy.read(handle, mathHuge)
-		end
+		local handle, data, chunk, success, reason = proxy.open(stringsInit, "rb"), "", ""
+		repeat
+			chunk = proxy.read(handle, mathHuge)
+			data = data .. (chunk or "")
+		until not chunk
+
 		proxy.close(handle)
 
-		success, reason = load(data, "=" .. stringsInit)
-		if success then
-			success, reason = pcall(success)
-			if success then
-				return
-			end
-		end
-
-		status(stringsMain, reason, 1)
+		executeString(data, "=" .. stringsInit)
 	end,
 	function()
-		return menuElement("Back", NIL, 1)
+		return menuElement("Back", nil, 1)
 	end,
 	function(titleText, elements)
 		local spacing, selectedElement, maxLength = 2, 1, 0
@@ -156,7 +155,7 @@ local loadInit, menuBack, menu, input, netboot =
 		while 1 do
 			eblo = prefix .. text
 			gpuFill(1, y, screenWidth, 1, " ")
-			gpuSetForeground(colorsText)
+			setForeground(colorsText)
 			gpuSet(mathFloor(screenWidth / 2 - #eblo / 2), y, eblo .. (state and "█" or ""))
 
 			eventData = {pullSignal(0.5)}
@@ -179,49 +178,9 @@ local loadInit, menuBack, menu, input, netboot =
 				state = not state
 			end
 		end
-	end,
-	function(url)	
-		local runReason, data, handle, result, reason =
-			function(text)
-				status(stringsBootFromURL, "Internet boot failed: " .. text, 1)
-			end,
-			"",
-			componentProxy(internetAddress).request(url)
-		
-		if handle then
-			status(stringsBootFromURL, "Downloading script...")	
-			while 1 do
-				result, reason = handle.read(mathHuge)	
-				if result then
-					data = data .. result
-				else
-					handle:close()
-					
-					if reason then
-						runReason(reason)
-					else
-						result, reason = load(data)
-						if result then
-							eepromSetData("#" .. url)
-							result, reason = pcall(result)
-							if result then
-								return
-							else
-								runReason(reason)
-							end
-						else
-							runReason(reason)
-						end
-					end
-
-					break
-				end
-			end
-		else
-			runReason("invalid URL-address")
-		end
 	end
 
+gpu.bind(componentList("screen")(), true)
 status(stringsMain, "Hold Alt to show boot options menu")
 
 local deadline, eventData = uptime() + 1
@@ -283,8 +242,32 @@ while uptime() < deadline do
 		}
 
 		if internetAddress then	
-			tableInsert(utilities, 2, menuElement(stringsBootFromURL, function()
-				netboot(input(title(2, stringsBootFromURL), "Enter URL: "))
+			tableInsert(utilities, 2, menuElement("Internet recovery", function()
+				local handle, data, result, reason = componentProxy(internetAddress).request("https://raw.githubusercontent.com/IgorTimofeev/MineOSStandalone/master/Installer/Main.lua"), ""
+
+				if handle then
+					status(stringsMain, "Downloading recovery script")
+
+					while 1 do
+						result, reason = handle.read(mathHuge)	
+						
+						if result then
+							data = data .. result
+						else
+							handle:close()
+							
+							if reason then
+								status(stringsMain, reason, 1)
+							else
+								executeString(data, "=string")
+							end
+
+							break
+						end
+					end
+				else
+					status(stringsMain, "invalid URL-address", 1)
+				end
 			end))
 		end
 
@@ -292,29 +275,23 @@ while uptime() < deadline do
 	end
 end
 
-local data, proxy = eepromGetData()
-if data:sub(1, 1) == "#" then
-	netboot(data:sub(2, -1))
+local proxy = componentProxy(eepromGetData())
+if proxy and proxy.exists(stringsInit) then
+	loadInit(proxy)
 else
-	proxy = componentProxy(data)
-
-	if proxy and proxy.exists(stringsInit) then
-		loadInit(proxy)
-	else
-		for address in componentList(stringsFilesystem) do
-			proxy = componentProxy(address)
-			if proxy.exists(stringsInit) then
-				eepromSetData(address)
-				loadInit(proxy)
-				break
-			else
-				proxy = nil
-			end
+	for address in componentList(stringsFilesystem) do
+		proxy = componentProxy(address)
+		if proxy.exists(stringsInit) then
+			eepromSetData(address)
+			loadInit(proxy)
+			break
+		else
+			proxy = nil
 		end
+	end
 
-		if not proxy then
-			status(stringsMain, "No bootable mediums found", 1)
-		end
+	if not proxy then
+		status(stringsMain, "No bootable mediums found", 1)
 	end
 end
 

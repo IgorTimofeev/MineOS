@@ -1,13 +1,13 @@
 
-local buffer = require("doubleBuffering")
-local event = require("event")
+local screen = require("Screen")
+local event = require("Event")
 
 -------------------------------------------------------------------------------------
 
 local lineCount = 10
 local backgroundColor = 0x0
 local lineColor = 0xFFFFFF
-local bufferWidth, bufferHeight = buffer.getResolution()
+local bufferWidth, bufferHeight = screen.getResolution()
 
 -------------------------------------------------------------------------------------
 
@@ -32,8 +32,8 @@ end
 
 -------------------------------------------------------------------------------------
 
-buffer.clear(backgroundColor)
-buffer.drawChanges(true)
+screen.clear(backgroundColor)
+screen.update()
 
 while true do
 	local eventType = event.pull(0.0001)
@@ -51,12 +51,12 @@ while true do
 		if t[i].y < 1 then t[i].dy = 1 end
 	end
 
-	buffer.clear(backgroundColor)
+	screen.clear(backgroundColor)
 
 	for i = 1, lineCount - 1 do
-		buffer.drawSemiPixelLine(t[i].x, t[i].y, t[i + 1].x, t[i + 1].y, lineColor)
+		screen.drawSemiPixelLine(t[i].x, t[i].y, t[i + 1].x, t[i + 1].y, lineColor)
 	end
 
-	buffer.drawSemiPixelLine(t[1].x, t[1].y, t[lineCount].x, t[lineCount].y, lineColor)
-	buffer.drawChanges()
+	screen.drawSemiPixelLine(t[1].x, t[1].y, t[lineCount].x, t[lineCount].y, lineColor)
+	screen.update()
 end

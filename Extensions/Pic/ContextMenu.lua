@@ -1,10 +1,14 @@
-local computer = require("computer")
-local MineOSCore = require("MineOSCore")
 
-local icon, menu = select(1, ...), select(2, ...)
-menu:addItem(MineOSCore.localization.setAsWallpaper).onTouch = function()
-	MineOSCore.properties.wallpaperEnabled = true
-	MineOSCore.properties.wallpaper = icon.path
-	MineOSCore.saveProperties()
-	computer.pushSignal("MineOSCore", "updateWallpaper")
+local system = require("System")
+
+local workspace, icon, menu = select(1, ...), select(2, ...), select(3, ...)
+
+menu:addItem(system.localization.setAsWallpaper).onTouch = function()
+	system.properties.interfaceWallpaperEnabled = true
+	system.properties.interfaceWallpaperPath = icon.path
+
+	system.updateWallpaper()
+	workspace:draw()
+
+	system.saveProperties()
 end

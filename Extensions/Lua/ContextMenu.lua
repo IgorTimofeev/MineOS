@@ -1,31 +1,28 @@
-local component = require("component")
-local computer = require("computer")
-local fs = require("filesystem")
-local GUI = require("GUI")
-local MineOSPaths = require("MineOSPaths")
-local MineOSCore = require("MineOSCore")
-local MineOSInterface = require("MineOSInterface")
 
-local icon, menu = select(1, ...), select(2, ...)
-menu:addItem(MineOSCore.localization.edit).onTouch = function()
-	MineOSInterface.safeLaunch(MineOSPaths.editor, icon.path)
+local filesystem = require("Filesystem")
+local GUI = require("GUI")
+local paths = require("Paths")
+local system = require("System")
+
+local workspace, icon, menu = select(1, ...), select(2, ...), select(3, ...)
+
+menu:addItem(system.localization.edit).onTouch = function()
+	system.execute(paths.system.applicationMineCodeIDE, icon.path)
 end
 
 menu:addSeparator()
 
-menu:addItem(MineOSCore.localization.launchWithArguments).onTouch = function()
-	MineOSInterface.launchWithArguments(MineOSInterface.mainContainer, icon.path, true)
+menu:addItem(system.localization.launchWithArguments).onTouch = function()
+	system.launchWithArguments(workspace, icon.path)
 end
 
-menu:addItem(MineOSCore.localization.flashEEPROM, not component.isAvailable("eeprom") or fs.size(icon.path) > 4096).onTouch = function()
-	local container = MineOSInterface.addBackgroundContainer(MineOSInterface.mainContainer, MineOSCore.localization.flashEEPROM)
-	container.layout:addChild(GUI.label(1, 1, container.width, 1, 0x969696, MineOSCore.localization.flashingEEPROM .. "...")):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
-	MineOSInterface.mainContainer:drawOnScreen()
+menu:addItem(system.localization.flashEEPROM, not component.isAvailable("eeprom") or filesystem.size(icon.path) > 4096).onTouch = function()
+	local container = GUI.addBackgroundContainer(workspace, true, true, system.localization.flashEEPROM)
+	container.layout:addChild(GUI.label(1, 1, container.width, 1, 0x969696, system.localization.flashingEEPROM .. "...")):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
+	workspace:draw()
 
-	local file = io.open(icon.path, "r")
-	component.eeprom.set(file:read("*a"))
-	file:close()
+	component.get("eeprom").set(filesystem.read(icon.path))
 	
 	container:remove()
-	MineOSInterface.mainContainer:drawOnScreen()
+	workspace:draw()
 end

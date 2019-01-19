@@ -1,5 +1,5 @@
-local buffer = require("doubleBuffering")
-local event = require("event")
+local screen = require("Screen")
+local event = require("Event")
 
 local nyans = {
   {
@@ -813,8 +813,8 @@ local colors = {
 	["%"] = 0xd787af  -- Pink cheeks
 }
 
-buffer.clear()
-buffer.drawChanges(true)
+screen.clear()
+screen.update()
 
 local sizeX,sizeY = 80, 50
 while true do
@@ -822,10 +822,10 @@ while true do
 		for y=1, sizeY do
 			for x=1, sizeX do
 				local pos = (y <= sizeX and x <= sizeX) and string.sub(nyans[frame][y], x, x) or ","
-				buffer.drawRectangle(x * 2 - 1, y, 2, 1, colors[pos], 0x0, " ")
+				screen.drawRectangle(x * 2 - 1, y, 2, 1, colors[pos], 0x0, " ")
 			end
 		end
-		buffer.drawChanges()
+		screen.update()
 		local eventType = event.pull(0)
 		if eventType == "touch" or eventType == "key_down" then
 			return
