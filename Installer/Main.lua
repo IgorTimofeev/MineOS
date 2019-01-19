@@ -1,6 +1,6 @@
 
 -- Backport for OpenOS non-global fields
-component, computer, unicode = component or require("Component"), computer or require("Computer"), unicode or require("Unicode")
+component, computer, unicode = component or require("component"), computer or require("computer"), unicode or require("unicode")
 
 --------------------------------------------------------------------------------
 
