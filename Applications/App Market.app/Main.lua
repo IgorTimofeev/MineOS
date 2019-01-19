@@ -104,7 +104,7 @@ local function saveConfig()
 end
 
 local function saveFileVersions()
-	filesystem.writeTable(paths.user.fileVersions, fileVersions)
+	filesystem.writeTable(paths.user.versions, fileVersions)
 end
 
 local function saveUser()
