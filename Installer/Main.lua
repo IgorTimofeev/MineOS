@@ -552,7 +552,7 @@ addStage(function()
 		end
 	end
 
-	addToList(wallpapersSwitchAndLabel, "optional")
+	addToList(applicationsSwitchAndLabel, "optional")
 	addToList(wallpapersSwitchAndLabel, "wallpapers")
 	addToList(screensaversSwitchAndLabel, "screensavers")
 
