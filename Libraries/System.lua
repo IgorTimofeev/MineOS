@@ -2178,6 +2178,7 @@ function system.updateDesktop()
 
 	system.menuInitialChildren = desktopMenu.children
 
+	system.updateColorScheme()
 	system.updateResolution()
 	system.updateWallpaper()
 	system.updateMenuWidgets()
@@ -2232,8 +2233,6 @@ local function updateUser(u)
 	system.calculateIconProperties()
 	-- Creating desktop widgets
 	system.updateDesktop()
-	-- Updating color scheme
-	system.updateColorScheme()
 	-- Meowing
 	workspace:draw()
 	require("Network").update()
@@ -2327,7 +2326,7 @@ function system.getDefaultProperties()
 
 		interfaceColorDesktopBackground = 0x1E1E1E,
 		interfaceColorDock = 0xE1E1E1,
-		interfaceColorMenu = 0xFFFFFF,
+		interfaceColorMenu = 0xF0F0F0,
 
 		filesShowExtension = false,
 		filesShowHidden = false,
