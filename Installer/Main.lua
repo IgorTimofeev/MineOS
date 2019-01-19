@@ -210,6 +210,7 @@ local number = require("Number")
 local screen = require("Screen")
 local GUI = require("GUI")
 local system = require("System")
+local paths = require("Paths")
 
 --------------------------------------------------------------------------------
 
@@ -515,7 +516,7 @@ addStage(function()
 	paths.create(paths.system)
 
 	-- Creating user paths
-	local properties, paths = system.createUser(
+	local userProperties, userPaths = system.createUser(
 		usernameInput.text,
 		filesystemHideExtension(filesystemName(files.localizations[localizationComboBox.selectedItem])),
 		not passwordSwitchAndLabel.switch.state and passwordInput.text,
@@ -581,7 +582,7 @@ addStage(function()
 		-- Create shortcut if possible
 		if shortcut then
 			system.createShortcut(
-				paths.desktop .. filesystemHideExtension(filesystemName(filesystemPath(path)) .. "/") .. ".lnk",
+				userPaths.desktop .. filesystemHideExtension(filesystemName(filesystemPath(path)) .. "/") .. ".lnk",
 				OSPath .. filesystemPath(path)
 			)
 		end
