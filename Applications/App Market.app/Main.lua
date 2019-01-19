@@ -14,7 +14,7 @@ local text = require("Text")
 
 --------------------------------------------------------------------------------
 
-local host = "http://eliteclubsessions.ru/MineOSAPI/2.03/"
+local host = "http://eliteclubsessions.ru/MineOSAPI/2.04/"
 local iconCheckReponseTime = 2
 
 local overviewIconsCount = 14
