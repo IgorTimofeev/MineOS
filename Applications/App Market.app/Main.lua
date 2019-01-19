@@ -226,6 +226,10 @@ local function checkImage(url, mneTolkoSprosit)
 			chunk, reason = handle.read(math.huge)
 			if chunk then
 				data = data .. chunk
+				
+				progressIndicator:roll()
+				workspace:draw()
+
 				if needCheck and #data > 8 then
 					if data:sub(1, 4) == "OCIF" then
 						if string.byte(data:sub(5, 5)) == 6 then
@@ -542,7 +546,14 @@ local function getPublicationIcon(publication)
 		if filesystem.exists(path) then
 			return loadImage(path)
 		else
+			progressIndicator.active = true
+			workspace:draw()
+
 			local data, reason = checkImage(publication.icon_url)
+
+			progressIndicator.active = false
+			workspace:draw()
+
 			if data then
 				filesystem.write(path, data)
 
