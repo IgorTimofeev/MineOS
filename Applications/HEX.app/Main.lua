@@ -307,11 +307,11 @@ local function load(path)
 	
 	if file then
 		bytes = {}
-		local char
+		local byte
 		while true do
-			local char = file:read(1)
-			if char then
-				table.insert(bytes, string.byte(char))
+			byte = file:readBytes(1)
+			if byte then
+				table.insert(bytes, byte)
 			else
 				break
 			end

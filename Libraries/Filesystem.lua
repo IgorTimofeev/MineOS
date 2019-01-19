@@ -253,7 +253,7 @@ end
 local function read(self, format, ...)
 	local formatType = type(format)
 	if formatType == "number" then	
-		return readChar(self, format)
+		return readString(self, format)
 	elseif formatType == "string" then
 		format = format:gsub("^%*", "")
 
@@ -262,7 +262,7 @@ local function read(self, format, ...)
 		elseif format == "l" then
 			return readLine(self)
 		elseif format == "b" then
-			return readByte(self)
+			return readBytes(self, 1)
 		elseif format == "bs" then
 			return readBytes(self, ...)
 		elseif format == "u" then
