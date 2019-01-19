@@ -1,9 +1,4 @@
 
--- Backport for OpenOS non-global fields
-component, computer, unicode = component or require("component"), computer or require("computer"), unicode or require("unicode")
-
---------------------------------------------------------------------------------
-
 local EEPROMProxy, internetProxy, GPUProxy = component.proxy(component.list("eeprom")()), component.proxy(component.list("internet")()), component.proxy(component.list("gpu")())
 
 local repositoryURL = "https://raw.githubusercontent.com/IgorTimofeev/MineOS/master/"
@@ -183,7 +178,7 @@ for i = 1, #files.installerFiles do
 end
 
 -- Initializing simple package system for loading OS libraries
-package = {loading = {},loaded = {}}
+package = {loading = {}, loaded = {}}
 
 function require(module)
 	if package.loaded[module] then
