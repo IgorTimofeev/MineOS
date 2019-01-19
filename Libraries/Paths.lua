@@ -26,7 +26,7 @@ paths.system.applicationSettings = paths.system.applications .. "Settings.app/Ma
 function paths.create(what)
 	for _, path in pairs(what) do
 		if path:sub(-1, -1) == "/" then
-			filesystem.makeDirectory(path)
+			require("Filesystem").makeDirectory(path)
 		end
 	end
 end
