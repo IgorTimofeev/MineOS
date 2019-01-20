@@ -422,7 +422,8 @@ addStage(function()
 				local list, path = proxy.list("/")
 				for i = 1, #list do
 					path = "/" .. list[i]
-					if path ~= installerPath then
+
+					if proxy.address ~= temporaryFilesystemProxy.address or path ~= installerPath then
 						proxy.remove(path)
 					end
 				end
@@ -514,7 +515,7 @@ addStage(function()
 	
 	-- Creating system paths
 	paths.create(paths.system)
-	
+
 	local userProperties, userPaths = system.createUser(
 		usernameInput.text,
 		filesystemHideExtension(filesystemName(files.localizations[localizationComboBox.selectedItem])),
