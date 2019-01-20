@@ -11,7 +11,7 @@ local OSPath = "/"
 
 local screenWidth, screenHeight = GPUProxy.getResolution()
 
-local temporaryFilesystemProxy, currentFilesystemProxy
+local temporaryFilesystemProxy, selectedFilesystemProxy
 
 --------------------------------------------------------------------------------
 
@@ -101,26 +101,26 @@ local function request(url)
 end
 
 local function download(url, path)
-	currentFilesystemProxy.makeDirectory(filesystemPath(path))
+	selectedFilesystemProxy.makeDirectory(filesystemPath(path))
 
-	local fileHandle, reason = currentFilesystemProxy.open(path, "wb")
+	local fileHandle, reason = selectedFilesystemProxy.open(path, "wb")
 	if fileHandle then	
 		rawRequest(url, function(chunk)
-			currentFilesystemProxy.write(fileHandle, chunk)
+			selectedFilesystemProxy.write(fileHandle, chunk)
 		end)
 
-		currentFilesystemProxy.close(fileHandle)
+		selectedFilesystemProxy.close(fileHandle)
 	else
 		error("File opening failed: " .. tostring(reason))
 	end
 end
 
 local function dofile(path, ...)
-	local handle, reason = currentFilesystemProxy.open(path, "rb")
+	local handle, reason = selectedFilesystemProxy.open(path, "rb")
 	if handle then
 		local data, chunk = ""
 		while true do
-			chunk = currentFilesystemProxy.read(handle, math.huge)
+			chunk = selectedFilesystemProxy.read(handle, math.huge)
 			
 			if chunk then
 				data = data .. chunk
@@ -129,7 +129,7 @@ local function dofile(path, ...)
 			end
 		end
 
-		currentFilesystemProxy.close(handle)
+		selectedFilesystemProxy.close(handle)
 
 		return load(data, "=" .. path)(...)
 	end
@@ -156,7 +156,7 @@ GPUProxy.fill(1, 1, screenWidth, screenHeight, " ")
 for address in component.list("filesystem") do
 	local proxy = component.proxy(address)
 	if proxy.spaceTotal() >= 2 * 1024 * 1024 then
-		temporaryFilesystemProxy, currentFilesystemProxy = proxy, proxy
+		temporaryFilesystemProxy, selectedFilesystemProxy = proxy, proxy
 		break
 	end
 end
@@ -297,8 +297,10 @@ local acceptSwitchAndLabel = newSwitchAndLabel(30, 0x9949FF, "", false)
 local localizationComboBox = GUI.comboBox(1, 1, 22, 1, 0xF0F0F0, 0x969696, 0xD2D2D2, 0xB4B4B4)
 for i = 1, #files.localizations do
 	localizationComboBox:addItem(filesystemHideExtension(filesystemName(files.localizations[i]))).onTouch = function()
+		-- Obtaining localization table
 		localization = deserialize(request(installerURL .. files.localizations[i]))
 
+		-- Filling widgets with selected localization data
 		usernameInput.placeholderText = localization.username
 		passwordInput.placeholderText = localization.password
 		passwordSubmitInput.placeholderText = localization.submitPassword
@@ -396,10 +398,11 @@ addStage(function()
 	local HDDImage = loadImage("HDD")
 
 	local function select(proxy)
-		currentFilesystemProxy = proxy
+		selectedFilesystemProxy = proxy
+		filesystem.setProxy(proxy)
 
 		for i = 1, #diskLayout.children do
-			diskLayout.children[i].children[1].hidden = diskLayout.children[i].proxy ~= currentFilesystemProxy
+			diskLayout.children[i].children[1].hidden = diskLayout.children[i].proxy ~= selectedFilesystemProxy
 		end
 	end
 
@@ -454,7 +457,7 @@ addStage(function()
 			end
 		end
 
-		select(currentFilesystemProxy)
+		select(selectedFilesystemProxy)
 	end
 	
 	updateDisks()
@@ -527,7 +530,7 @@ addStage(function()
 	
 	EEPROMProxy.set(request(EFIURL))
 	EEPROMProxy.setLabel("MineOS EFI")
-	EEPROMProxy.setData(currentFilesystemProxy.address)
+	EEPROMProxy.setData(selectedFilesystemProxy.address)
 
 	-- Creating list of files to download
 	layout:removeChildren()
