@@ -96,7 +96,7 @@
 	shutdown = "Выключить",
 	logout = "Выйти",
 	reboot = "Перезагрузить",
-	
+
 	shortcutIsCorrupted = "Ярлык ссылается на несуществующий файл",
 	sortAutomatically = "Привязать к сетке",
 	onDesktop = "На рабочем столе",
@@ -112,4 +112,10 @@
 	favourite = "Избранное",
 	search = "Поиск",
 	mounts = "Устройства",
+
+	uploadToPastebin = "Загрузить на Pastebin",
+	pasteName = "Имя файла после загрузки",
+	uploading = "Идет загрузка файла...",
+	uploadingSuccess = "Загружено по ссылке ",
+	uploadingFailure = "Ошибка при загрузке: ",
 }

@@ -96,7 +96,7 @@
 	shutdown = "Éteindre",
 	logout = "Se déconnecter",
 	reboot = "Redémarrer",
-	
+
 	shortcutIsCorrupted = "Le raccourci est lié à un fichier inexistant",
 	sortAutomatically = "Aligner sur la grille",
 	onDesktop = "Sur le bureau",
@@ -112,4 +112,10 @@
 	favourite = "Favori",
 	search = "Rechercher",
 	mounts = "Monter",
+
+	uploadToPastebin = "Envoyer à Pastebin",
+	pasteName = "Coller un nom",
+	uploading = "Téléchargement en cours...",
+	uploadingSuccess = "Téléchargé à ",
+	uploadingFailure = "Échec du téléchargement: ",
 }
