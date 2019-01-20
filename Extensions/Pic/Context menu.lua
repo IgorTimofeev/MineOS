@@ -12,3 +12,7 @@ menu:addItem(system.localization.setAsWallpaper).onTouch = function()
 
 	system.saveProperties()
 end
+
+menu:addItem(system.localization.uploadToPastebin, not component.isAvailable("internet")).onTouch = function()
+	system.uploadToPastebin(icon.path)
+end

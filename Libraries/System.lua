@@ -310,10 +310,10 @@ local function iconDraw(icon)
 		if icon.cut then
 			if not icon.semiTransparentImage then
 				icon.semiTransparentImage = image.copy(icon.image)
-				for i = 1, #icon.semiTransparentImage[3] do
-					icon.semiTransparentImage[5][i] = icon.semiTransparentImage[5][i] + 0.6
-					if icon.semiTransparentImage[5][i] > 1 then
-						icon.semiTransparentImage[5][i] = 1
+				for i = 3, #icon.semiTransparentImage, 4 do
+					icon.semiTransparentImage[i + 2] = icon.semiTransparentImage[i + 2] + 0.6
+					if icon.semiTransparentImage[i + 2] > 1 then
+						icon.semiTransparentImage[i + 2] = 1
 					end
 				end
 			end
@@ -587,6 +587,47 @@ local function iconOnDoubleClick(icon)
 	workspace:draw()
 end
 
+function system.uploadToPastebin(path)
+	local container = addBackgroundContainerWithInput(filesystem.name(path), system.localization.uploadToPastebin, system.localization.pasteName)
+
+	local result, reason
+	container.panel.eventHandler = function(workspace, panel, e1)
+		if e1 == "touch" then
+			if result == nil and #container.input.text > 0 then
+				container.input:remove()
+				local info = container.layout:addChild(GUI.text(1, 1, 0x878787, system.localization.uploading))
+
+				workspace:draw()
+
+				local internet = require("Internet")
+				result, reason = internet.request("http://pastebin.com/api/api_post.php", internet.serialize({
+					api_option = "paste",
+					api_dev_key = "fd92bd40a84c127eeb6804b146793c97",
+					api_paste_expire_date = "N",
+					api_paste_format = filesystem.extension(path) == ".lua" and "lua",
+					api_paste_name = container.input.text,
+					api_paste_code = filesystem.read(path),
+				}))
+
+				info.text =
+					result and
+					(
+						result:match("^http") and
+						system.localization.uploadingSuccess .. result or
+						system.localization.uploadingFailure .. result
+					) or
+					system.localization.uploadingFailure .. reason
+			else
+				container:remove()
+			end
+
+			workspace:draw()
+		end
+	end
+
+	workspace:draw()
+end
+
 local function iconOnRightClick(icon, e1, e2, e3, e4)
 	icon.selected = true
 	workspace:draw()
@@ -693,6 +734,10 @@ local function iconOnRightClick(icon, e1, e2, e3, e4)
 						system.execute(paths.system.applicationMineCodeIDE, icon.path)
 					end
 
+					contextMenu:addItem(system.localization.uploadToPastebin, not component.isAvailable("internet")).onTouch = function()
+						system.uploadToPastebin(icon.path)
+					end
+
 					contextMenu:addSeparator()
 				end
 
@@ -737,7 +782,7 @@ local function iconOnRightClick(icon, e1, e2, e3, e4)
 			table.insert(itemsToArchive, selectedIcons[i].path)
 		end
 
-		local success, reason = require("Archive").pack(filesystem.path(icon.path) .. "/Archive.arc", itemsToArchive)
+		local success, reason = require("Compressor").pack(filesystem.path(icon.path) .. "/Archive.pkg", itemsToArchive)
 		if not success then
 			GUI.alert(reason)
 		end
@@ -819,7 +864,7 @@ local function iconOnRightClick(icon, e1, e2, e3, e4)
 				local clearName = selectedIcons[i].nameWithoutExtension
 				local repeats = 1
 				while filesystem.exists(newName) do
-					newName, repeats = paths.user.trash .. clearName .. string.rep("-copy", repeats) .. selectedIcons[i].extension, repeats + 1
+					newName, repeats = paths.user.trash .. clearName .. string.rep("-copy", repeats) .. (selectedIcons[i].extension or ""), repeats + 1
 				end
 				filesystem.rename(selectedIcons[i].path, newName)
 			end
@@ -1053,7 +1098,7 @@ local function iconFieldBackgroundObjectEventHandler(workspace, object, e1, e2, 
 								workspace:draw()
 							else
 								container.layout:removeChildren(2)
-								container.layout:addChild(GUI.label(1, 1, container.width, 1, 0x787878, system.localization.downloading .. "...")):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
+								container.layout:addChild(GUI.label(1, 1, container.width, 1, 0x878787, system.localization.downloading .. "...")):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
 								workspace:draw()
 
 								local success, reason = require("Internet").download(inputURL.text, path)
@@ -1449,8 +1494,8 @@ function system.copy(fileList, toPath)
 	local applyYes, breakRecursion
 
 	local container = GUI.addBackgroundContainer(workspace, true, true, system.localization.copying)
-	local textBox = container.layout:addChild(GUI.textBox(1, 1, container.width, 1, nil, 0x787878, {}, 1, 0, 0, true, true):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP))
-	local switchAndLabel = container.layout:addChild(GUI.switchAndLabel(1, 1, 37, 8, 0x66DB80, 0x1E1E1E, 0xE1E1E1, 0x787878, system.localization.applyToAll .. ":", false))
+	local textBox = container.layout:addChild(GUI.textBox(1, 1, container.width, 1, nil, 0x878787, {}, 1, 0, 0, true, true):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP))
+	local switchAndLabel = container.layout:addChild(GUI.switchAndLabel(1, 1, 37, 8, 0x66DB80, 0x1E1E1E, 0xE1E1E1, 0x878787, system.localization.applyToAll .. ":", false))
 	container.panel.eventHandler = nil
 
 	local buttonsLayout = container.layout:addChild(GUI.layout(1, 1, 1, 1, 1, 1))
@@ -2349,12 +2394,12 @@ function system.getDefaultProperties()
 			[".3dm"] = {
 				icon = paths.system.icons .. "3DModel.pic",
 				launcher = paths.system.applications .. "3D Print.app/Main.lua",
-				contextMenu = paths.system.extensions .. "3dm/ContextMenu.lua"
+				contextMenu = paths.system.extensions .. "3dm/Context menu.lua"
 			},
 			[".pic"] = {
 				icon = paths.system.icons .. "Image.pic",
 				launcher = paths.system.applicationPictureEdit,
-				contextMenu = paths.system.extensions .. "Pic/ContextMenu.lua"
+				contextMenu = paths.system.extensions .. "Pic/Context menu.lua"
 			},
 			[".cfg"] = {
 				icon = paths.system.icons .. "Config.pic"
@@ -2362,19 +2407,19 @@ function system.getDefaultProperties()
 			[".txt"] = {
 				icon = paths.system.icons .. "Text.pic"
 			},
-			[".arc"] = {
+			[".pkg"] = {
 				icon = paths.system.icons .. "Archive.pic",
-				launcher = paths.system.extensions .. "Arc/Launcher.lua"
+				launcher = paths.system.extensions .. "Pkg/Launcher.lua",
 			},
 			[".lua"] = {
 				icon = paths.system.icons .. "Lua.pic",
 				launcher = paths.system.extensions .. "Lua/Launcher.lua",
-				contextMenu = paths.system.extensions .. "Lua/ContextMenu.lua"
+				contextMenu = paths.system.extensions .. "Lua/Context menu.lua"
 			},
 			["script"] = {
 				icon = paths.system.icons .. "Script.pic",
 				launcher = paths.system.extensions .. "Lua/Launcher.lua",
-				contextMenu = paths.system.extensions .. "Lua/ContextMenu.lua"
+				contextMenu = paths.system.extensions .. "Lua/Context menu.lua"
 			},
 		},
 	}

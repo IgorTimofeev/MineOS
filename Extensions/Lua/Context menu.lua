@@ -10,6 +10,10 @@ menu:addItem(system.localization.edit).onTouch = function()
 	system.execute(paths.system.applicationMineCodeIDE, icon.path)
 end
 
+menu:addItem(system.localization.uploadToPastebin, not component.isAvailable("internet")).onTouch = function()
+	system.uploadToPastebin(icon.path)
+end
+
 menu:addSeparator()
 
 menu:addItem(system.localization.launchWithArguments).onTouch = function()
