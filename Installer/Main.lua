@@ -115,28 +115,6 @@ local function download(url, path)
 	end
 end
 
-local function dofile(path, ...)
-	local handle, reason = selectedFilesystemProxy.open(path, "rb")
-	if handle then
-		local data, chunk = ""
-		while true do
-			chunk = selectedFilesystemProxy.read(handle, math.huge)
-			
-			if chunk then
-				data = data .. chunk
-			else
-				break
-			end
-		end
-
-		selectedFilesystemProxy.close(handle)
-
-		return load(data, "=" .. path)(...)
-	end
-
-	error("File opening failed: " .. tostring(reason))
-end
-
 local function deserialize(text)
 	local result, reason = load("return " .. text, "=string")
 	if result then
@@ -187,7 +165,22 @@ function require(module)
 		error("already loading " .. module .. ": " .. debug.traceback())
 	else
 		package.loading[module] = true
-		package.loaded[module] = dofile(installerPath .. "Libraries/" .. module .. ".lua")
+
+		local path = installerPath .. "Libraries/" .. module .. ".lua"
+		local handle, reason = temporaryFilesystemProxy.open(path, "rb")
+		if handle then
+			local data, chunk = ""
+			repeat
+				chunk = temporaryFilesystemProxy.read(handle, math.huge)
+				data = data .. (chunk or "")
+			until not chunk
+			temporaryFilesystemProxy.close(handle)
+			
+			package.loaded[module] = load(data, "=" .. path)() or true
+		else
+			error("File opening failed: " .. tostring(reason))
+		end
+
 		package.loading[module] = nil
 
 		return package.loaded[module]
@@ -529,7 +522,6 @@ addStage(function()
 
 	-- Switching back to temporary fileystem proxy
 	filesystem.setProxy(temporaryFilesystemProxy)
-
 
 	-- Flashing EEPROM
 	layout:removeChildren()
