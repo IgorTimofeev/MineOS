@@ -423,7 +423,7 @@ addStage(function()
 				for i = 1, #list do
 					path = "/" .. list[i]
 
-					if proxy.address ~= temporaryFilesystemProxy.address or path ~= installerPath then
+					if proxy ~= temporaryFilesystemProxy or path ~= installerPath then
 						proxy.remove(path)
 					end
 				end
