@@ -399,7 +399,6 @@ addStage(function()
 
 	local function select(proxy)
 		selectedFilesystemProxy = proxy
-		filesystem.setProxy(proxy)
 
 		for i = 1, #diskLayout.children do
 			diskLayout.children[i].children[1].hidden = diskLayout.children[i].proxy ~= selectedFilesystemProxy
@@ -511,9 +510,9 @@ addStage(function()
 	workspace:draw()
 
 	-- Creating system paths
+	filesystem.setProxy(selectedFilesystemProxy)
+	
 	paths.create(paths.system)
-
-	-- Creating user paths
 	local userProperties, userPaths = system.createUser(
 		usernameInput.text,
 		filesystemHideExtension(filesystemName(files.localizations[localizationComboBox.selectedItem])),
@@ -521,6 +520,10 @@ addStage(function()
 		wallpapersSwitchAndLabel.switch.state,
 		screensaversSwitchAndLabel.switch.state
 	)
+	filesystem.setProxy(temporaryFilesystemProxy)
+	
+	temporaryFilesystemProxy.setLabel("MineOS HDD")
+
 
 	-- Flashing EEPROM
 	layout:removeChildren()
