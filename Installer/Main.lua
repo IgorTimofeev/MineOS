@@ -509,10 +509,12 @@ addStage(function()
 	addTitle(0x969696, localization.creating)
 	workspace:draw()
 
-	-- Creating system paths
+	-- Switching to selected filesystem proxy for performing system library operations
 	filesystem.setProxy(selectedFilesystemProxy)
 	
+	-- Creating system paths
 	paths.create(paths.system)
+	
 	local userProperties, userPaths = system.createUser(
 		usernameInput.text,
 		filesystemHideExtension(filesystemName(files.localizations[localizationComboBox.selectedItem])),
@@ -520,9 +522,12 @@ addStage(function()
 		wallpapersSwitchAndLabel.switch.state,
 		screensaversSwitchAndLabel.switch.state
 	)
-	filesystem.setProxy(temporaryFilesystemProxy)
-	
+
+	-- Renaming HDD
 	temporaryFilesystemProxy.setLabel("MineOS HDD")
+
+	-- Switching back to temporary fileystem proxy
+	filesystem.setProxy(temporaryFilesystemProxy)
 
 
 	-- Flashing EEPROM
