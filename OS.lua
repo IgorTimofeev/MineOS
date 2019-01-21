@@ -33,9 +33,11 @@ end
 
 -- Initializing global package system
 package = {
-	paths = {["/Libraries/"] = true},
+	paths = {
+		["/Libraries/"] = true
+	},
 	loaded = {},
-	loading = {},
+	loading = {}
 }
 
 -- Checks existense of specified path. It will be overriden after filesystem library initialization

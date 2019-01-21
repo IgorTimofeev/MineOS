@@ -106,7 +106,7 @@ end
 
 function system.createShortcut(where, forWhat)
 	filesystem.makeDirectory(filesystem.path(where))
-	filesystem.write(where, forWhat)
+	filesystem.write(where .. ".lnk", forWhat)
 end
 
 function system.parseArguments(...)
@@ -827,7 +827,7 @@ local function iconOnRightClick(icon, e1, e2, e3, e4)
 			for i = 1, #selectedIcons do
 				if not selectedIcons[i].isShortcut then
 					system.createShortcut(
-						filesystem.path(selectedIcons[i].path) .. selectedIcons[i].nameWithoutExtension .. ".lnk",
+						filesystem.path(selectedIcons[i].path) .. selectedIcons[i].nameWithoutExtension,
 						selectedIcons[i].path
 					)
 				end
@@ -840,7 +840,7 @@ local function iconOnRightClick(icon, e1, e2, e3, e4)
 			for i = 1, #selectedIcons do
 				if not selectedIcons[i].isShortcut then
 					system.createShortcut(
-						paths.user.desktop .. selectedIcons[i].nameWithoutExtension .. ".lnk",
+						paths.user.desktop .. selectedIcons[i].nameWithoutExtension,
 						selectedIcons[i].path
 					)
 				end

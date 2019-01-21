@@ -540,7 +540,7 @@ local function newModemProxy(address)
 		return request("read", "", ...)
 	end
 
-	write = function(handle, data)
+	proxy.write = function(handle, data)
 		local maxPacketSize = network.modemProxy.maxPacketSize() - network.modemPacketReserve
 		repeat
 			if not request("write", false, handle, data:sub(1, maxPacketSize)) then
@@ -681,7 +681,7 @@ function network.update()
 						end
 					end
 
-					proxy = newModemProxy(eventData[3])
+					local proxy = newModemProxy(eventData[3])
 					proxy.name = eventData[8]
 					filesystem.mount(proxy, paths.system.mounts .. eventData[3] .. "/")
 

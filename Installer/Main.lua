@@ -56,7 +56,7 @@ local function filesystemPath(path)
 end
 
 local function filesystemName(path)
-	return path:match("%/?([^%/]+)%/?$")
+	return path:match("%/?([^%/]+%/?)$")
 end
 
 local function filesystemHideExtension(path)
@@ -504,11 +504,11 @@ addStage(function()
 	workspace:draw()
 
 	-- Switching to selected filesystem proxy for performing system library operations
-	filesystem.setProxy(selectedFilesystemProxy)
 	
 	-- Creating system paths
-	paths.create(paths.system)
+	filesystem.setProxy(selectedFilesystemProxy)
 
+	paths.create(paths.system)
 	local userProperties, userPaths = system.createUser(
 		usernameInput.text,
 		filesystemHideExtension(filesystemName(files.localizations[localizationComboBox.selectedItem])),
@@ -517,10 +517,6 @@ addStage(function()
 		screensaversSwitchAndLabel.switch.state
 	)
 
-	-- Renaming HDD
-	temporaryFilesystemProxy.setLabel("MineOS HDD")
-
-	-- Switching back to temporary fileystem proxy
 	filesystem.setProxy(temporaryFilesystemProxy)
 
 	-- Flashing EEPROM
@@ -580,10 +576,14 @@ addStage(function()
 
 		-- Create shortcut if possible
 		if shortcut then
+			filesystem.setProxy(selectedFilesystemProxy)
+			
 			system.createShortcut(
-				userPaths.desktop .. filesystemHideExtension(filesystemName(filesystemPath(path)) .. "/") .. ".lnk",
+				userPaths.desktop .. filesystemHideExtension(filesystemName(filesystemPath(path))),
 				OSPath .. filesystemPath(path)
 			)
+
+			filesystem.setProxy(temporaryFilesystemProxy)
 		end
 
 		progressBar.value = math.floor(i / #downloadList * 100)

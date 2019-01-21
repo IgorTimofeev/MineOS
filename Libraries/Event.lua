@@ -52,7 +52,7 @@ function event.skip(signalType)
 end
 
 function event.pull(preferredTimeout)	
-	local uptime = computerUptime()
+	local uptime, signalData = computerUptime()
 	local deadline = uptime + (preferredTimeout or mathHuge)
 	
 	repeat
