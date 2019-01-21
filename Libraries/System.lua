@@ -604,7 +604,7 @@ function system.uploadToPastebin(path)
 					api_option = "paste",
 					api_dev_key = "fd92bd40a84c127eeb6804b146793c97",
 					api_paste_expire_date = "N",
-					api_paste_format = filesystem.extension(path) == ".lua" and "lua",
+					api_paste_format = filesystem.extension(path) == ".lua" and "lua" or "text",
 					api_paste_name = container.input.text,
 					api_paste_code = filesystem.read(path),
 				}))

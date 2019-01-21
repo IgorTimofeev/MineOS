@@ -11,6 +11,7 @@ local filesystem = require("Filesystem")
 local color = require("Color")
 local number = require("Number")
 local text = require("Text")
+local event = require("Event")
 
 --------------------------------------------------------------------------------
 
