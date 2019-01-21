@@ -18,20 +18,23 @@ module.onTouch = function()
 
 	local list = filesystem.list(paths.system.localizations)
 	for i = 1, #list do
-		local name = filesystem.hideExtension(list[i])
-		comboBox:addItem(name).onTouch = function()
-			system.properties.localizationLanguage = name
-			system.localization = system.getLocalization(paths.system.localizations)
+		if filesystem.extension(list[i]) == ".lang" then
+			local name = filesystem.hideExtension(list[i])
+			
+			comboBox:addItem(name).onTouch = function()
+				system.properties.localizationLanguage = name
+				system.localization = system.getLocalization(paths.system.localizations)
 
-			system.updateWorkspace()
-			system.updateDesktop()
-			workspace:draw()
+				system.updateWorkspace()
+				system.updateDesktop()
+				workspace:draw()
 
-			system.saveProperties()
-		end
+				system.saveProperties()
+			end
 
-		if name == system.properties.localizationLanguage then
-			comboBox.selectedItem = comboBox:count()
+			if name == system.properties.localizationLanguage then
+				comboBox.selectedItem = comboBox:count()
+			end
 		end
 	end
 end
