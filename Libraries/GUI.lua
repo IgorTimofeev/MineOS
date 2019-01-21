@@ -2482,7 +2482,7 @@ local function filesystemTreeUpdateFileListRecursively(tree, path, offset)
 
 	if tree.showMode == GUI.IO_MODE_BOTH or tree.showMode == GUI.IO_MODE_DIRECTORY then
 		for i = 1, #expandables do
-			tree:addItem(filesystem.name(expandables[i], true), path .. expandables[i], offset, true)
+			tree:addItem(filesystem.name(expandables[i]):sub(1, -2), path .. expandables[i], offset, true)
 
 			if tree.expandedItems[path .. expandables[i]] then
 				filesystemTreeUpdateFileListRecursively(tree, path .. expandables[i], offset + 2)

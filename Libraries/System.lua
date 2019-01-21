@@ -483,7 +483,7 @@ function system.icon(x, y, path, textColor, selectionColor)
 	icon.path = path
 	icon.extension = filesystem.extension(icon.path)
 	icon.isDirectory = filesystem.isDirectory(icon.path)
-	icon.name = filesystem.name(path, true)
+	icon.name = icon.isDirectory and filesystem.name(path):sub(1, -2) or filesystem.name(path)
 	icon.nameWithoutExtension = filesystem.hideExtension(icon.name)
 	icon.isShortcut = false
 	icon.selected = false
@@ -757,12 +757,12 @@ local function iconOnRightClick(icon, e1, e2, e3, e4)
 			local container = addBackgroundContainerWithInput("", system.localization.newFolderFromChosen .. " (" .. #selectedIcons .. ")", system.localization.folderName)
 
 			container.input.onInputFinished = function()
-				local path = filesystem.path(selectedIcons[1].path) .. container.input.text
+				local path = filesystem.path(selectedIcons[1].path) .. container.input.text .. "/"
 				if checkFileToExists(container, path) then
 					filesystem.makeDirectory(path)
 					
 					for i = 1, #selectedIcons do
-						filesystem.rename(selectedIcons[i].path, path .. "/" .. selectedIcons[i].name)
+						filesystem.rename(selectedIcons[i].path, path .. selectedIcons[i].name)
 					end
 
 					iconFieldSaveIconPosition(icon.parent.parent, container.input.text, e3, e4)
@@ -776,18 +776,28 @@ local function iconOnRightClick(icon, e1, e2, e3, e4)
 		contextMenu:addSeparator()
 	end
 
-	contextMenu:addItem(system.localization.archive .. (#selectedIcons > 1 and " (" .. #selectedIcons .. ")" or "")).onTouch = function()
+	local subMenu = contextMenu:addSubMenu(system.localization.archive .. (#selectedIcons > 1 and " (" .. #selectedIcons .. ")" or ""))
+	
+	local function archive(where)
 		local itemsToArchive = {}
 		for i = 1, #selectedIcons do
 			table.insert(itemsToArchive, selectedIcons[i].path)
 		end
 
-		local success, reason = require("Compressor").pack(filesystem.path(icon.path) .. "/Archive.pkg", itemsToArchive)
+		local success, reason = require("Compressor").pack(where .. "/Archive.pkg", itemsToArchive)
 		if not success then
 			GUI.alert(reason)
 		end
-
+		
 		computer.pushSignal("system", "updateFileList")
+	end
+
+	subMenu:addItem(system.localization.inCurrentDirectory).onTouch = function()
+		archive(filesystem.path(icon.path))
+	end
+
+	subMenu:addItem(system.localization.onDesktop).onTouch = function()
+		archive(paths.user.desktop)
 	end
 
 	local function cutOrCopy(cut)
@@ -817,7 +827,7 @@ local function iconOnRightClick(icon, e1, e2, e3, e4)
 			for i = 1, #selectedIcons do
 				if not selectedIcons[i].isShortcut then
 					system.createShortcut(
-						filesystem.path(selectedIcons[i].path) .. "/" .. selectedIcons[i].nameWithoutExtension .. ".lnk",
+						filesystem.path(selectedIcons[i].path) .. selectedIcons[i].nameWithoutExtension .. ".lnk",
 						selectedIcons[i].path
 					)
 				end
