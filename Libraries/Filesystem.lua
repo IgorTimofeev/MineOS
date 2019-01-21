@@ -21,8 +21,8 @@ function filesystem.path(path)
 	return path:match("^(.+%/).") or ""
 end
 
-function filesystem.name(path)
-	return path:match("%/?([^%/]+)%/?$")
+function filesystem.name(path, removeSlashes)
+	return path:match(removeSlashes and "%/?([^%/]+)%/?$" or "%/?([^%/]+%/?)$")
 end
 
 function filesystem.extension(path, lower)

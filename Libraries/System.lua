@@ -482,9 +482,9 @@ function system.icon(x, y, path, textColor, selectionColor)
 
 	icon.path = path
 	icon.extension = filesystem.extension(icon.path)
-	icon.name = filesystem.name(path)
-	icon.nameWithoutExtension = filesystem.hideExtension(icon.name)
 	icon.isDirectory = filesystem.isDirectory(icon.path)
+	icon.name = filesystem.name(path, true)
+	icon.nameWithoutExtension = filesystem.hideExtension(icon.name)
 	icon.isShortcut = false
 	icon.selected = false
 
@@ -830,7 +830,7 @@ local function iconOnRightClick(icon, e1, e2, e3, e4)
 			for i = 1, #selectedIcons do
 				if not selectedIcons[i].isShortcut then
 					system.createShortcut(
-						paths.user.desktop .. "/" .. selectedIcons[i].nameWithoutExtension .. ".lnk",
+						paths.user.desktop .. selectedIcons[i].nameWithoutExtension .. ".lnk",
 						selectedIcons[i].path
 					)
 				end
