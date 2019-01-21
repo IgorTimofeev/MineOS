@@ -655,8 +655,6 @@ local function overview()
 	leftList.selectedItem = 1
 	lastMethod, lastArguments = overview, {}
 
-	contentContainer:removeChildren()
-
 	local statistics = fieldAPIRequest("result", "statistics")
 	if statistics then
 		local publications = fieldAPIRequest("result", "publications", {
