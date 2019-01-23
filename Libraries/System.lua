@@ -2417,6 +2417,9 @@ function system.getDefaultProperties()
 			[".txt"] = {
 				icon = paths.system.icons .. "Text.pic"
 			},
+			[".lang"] = {
+				icon = paths.system.icons .. "Localization.pic"
+			},
 			[".pkg"] = {
 				icon = paths.system.icons .. "Archive.pic",
 				launcher = paths.system.extensions .. "Pkg/Launcher.lua",
