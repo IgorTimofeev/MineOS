@@ -511,7 +511,7 @@ addStage(function()
 	paths.create(paths.system)
 	local userProperties, userPaths = system.createUser(
 		usernameInput.text,
-		filesystemHideExtension(filesystemName(files.localizations[localizationComboBox.selectedItem])),
+		localizationComboBox:getItem(localizationComboBox.selectedItem).text,
 		not passwordSwitchAndLabel.switch.state and passwordInput.text,
 		wallpapersSwitchAndLabel.switch.state,
 		screensaversSwitchAndLabel.switch.state
@@ -529,7 +529,7 @@ addStage(function()
 	EEPROMProxy.setLabel("MineOS EFI")
 	EEPROMProxy.setData(selectedFilesystemProxy.address)
 
-	-- Creating list of files to download
+	-- Downloading files
 	layout:removeChildren()
 	addImage(3, 2, "Downloading")
 
@@ -537,36 +537,46 @@ addStage(function()
 	local progressBar = container:addChild(GUI.progressBar(1, 1, container.width, 0x66B6FF, 0xD2D2D2, 0xA5A5A5, 0, true, false))
 	local cyka = container:addChild(GUI.label(1, 2, container.width, 1, 0x969696, "")):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
 
-	local downloadList = files.required
+	-- Creating final filelist of things to download
+	local downloadList = {}
 
-	local function addToList(switchAndLabel, key)
-		if switchAndLabel.switch.state then
+	local function getData(item)
+		if type(item) == "table" then
+			return item.path, item.id, item.shortcut
+		else
+			return item
+		end
+	end
+
+	local function addToList(state, key)
+		if state then
+			local path
 			for i = 1, #files[key] do
-				table.insert(downloadList, files[key][i])
+				path = getData(files[key][i])
+
+				if 
+					filesystem.extension(path) ~= ".lang" or
+					(
+						localizationsSwitchAndLabel.switch.state or
+						filesystem.hideExtension(filesystem.name(path)) == localizationComboBox:getItem(localizationComboBox.selectedItem).text
+					)
+				then
+					table.insert(downloadList, files[key][i])
+				end
 			end
 		end
 	end
 
-	addToList(applicationsSwitchAndLabel, "optional")
-	addToList(wallpapersSwitchAndLabel, "wallpapers")
-	addToList(screensaversSwitchAndLabel, "screensavers")
-
-	if localizationsSwitchAndLabel.switch.state then
-		for i = 1, #files.localizations do
-			table.insert(downloadList, files.localizations[i])
-		end
-	else
-		table.insert(downloadList, files.localizations[localizationComboBox.selectedItem])
-	end
+	addToList(true, "required")
+	addToList(true, "localizations")
+	addToList(applicationsSwitchAndLabel.switch.state, "optional")
+	addToList(wallpapersSwitchAndLabel.switch.state, "wallpapers")
+	addToList(screensaversSwitchAndLabel.switch.state, "screensavers")
 
 	-- Downloading files from created list
 	local path, id, shortcut
 	for i = 1, #downloadList do
-		if type(downloadList[i]) == "table" then
-			path, id, shortcut = downloadList[i].path, downloadList[i].id, downloadList[i].shortcut
-		else
-			path, id, shortcut = downloadList[i]
-		end
+		path, id, shortcut = getData(downloadList[i])
 
 		cyka.text = text.limit(localization.installing .. " \"" .. path .. "\"", container.width, "center")
 		workspace:draw()
@@ -579,8 +589,8 @@ addStage(function()
 			filesystem.setProxy(selectedFilesystemProxy)
 			
 			system.createShortcut(
-				userPaths.desktop .. filesystemHideExtension(filesystemName(filesystemPath(path))),
-				OSPath .. filesystemPath(path)
+				userPaths.desktop .. filesystem.hideExtension(filesystem.name(filesystem.path(path))),
+				OSPath .. filesystem.path(path)
 			)
 
 			filesystem.setProxy(temporaryFilesystemProxy)
