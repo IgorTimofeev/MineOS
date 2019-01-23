@@ -110,13 +110,32 @@ function system.createShortcut(where, forWhat)
 end
 
 function system.parseArguments(...)
-	local arguments, options = {...}, {}
-	local i = 1
+	local i, arguments, options, dashes, data, key, value = 1, {...}, {}
+
 	while i <= #arguments do
-		local option = arguments[i]:match("^%-+(.+)")
-		if option then
-			options[option] = true
-			table.remove(arguments, i)
+		if type(arguments[i]) == "string" then
+			dashes, data = arguments[i]:match("^(%-+)(.+)")
+			
+			if dashes then
+				-- Single dash option
+				if #dashes == 1 then
+					for i = 1, unicode.len(data) do
+						options[unicode.sub(data, i, i)] = true
+					end
+				-- Multiple dash option
+				else
+					-- Option with key and value
+					key, value = data:match("^([^=]+)=(.+)")
+					if key then
+						options[key] = value
+					else
+						options[data] = true
+					end
+				end
+
+				table.remove(arguments, i)
+				i = i - 1
+			end
 		end
 
 		i = i + 1
