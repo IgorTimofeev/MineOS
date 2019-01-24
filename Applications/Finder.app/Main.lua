@@ -12,6 +12,9 @@ local args, options = system.parseArguments(...)
 
 --------------------------------------------------------------------------------
 
+local userSettings = system.getUserSettings()
+local localization = system.getSystemLocalization()
+
 local configPath = paths.user.applicationData .. "Finder/Config.cfg"
 local config = {
 	favourites = {
@@ -68,7 +71,7 @@ itemsLayout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_LEFT, GUI.ALIGNMENT_VERT
 itemsLayout:setSpacing(1, 1, 0)
 itemsLayout:setMargin(1, 1, 0, 0)
 
-local searchInput = window:addChild(GUI.input(1, 2, 20, 1, 0x4B4B4B, 0xC3C3C3, 0x878787, 0x4B4B4B, 0xE1E1E1, nil, system.localization.search, true))
+local searchInput = window:addChild(GUI.input(1, 2, 20, 1, 0x4B4B4B, 0xC3C3C3, 0x878787, 0x4B4B4B, 0xE1E1E1, nil, localization.search, true))
 
 local iconField = window:addChild(system.iconField(1, 4, 1, 1, 2, 2, 0x3C3C3C, 0x969696, paths.user.desktop))
 
@@ -209,7 +212,7 @@ updateSidebar = function()
 	itemsLayout:removeChildren()
 
 	-- Favourites
-	addSidebarTitle(system.localization.favourite)
+	addSidebarTitle(localization.favourite)
 	
 	for i = 1, #config.favourites do
 		local object = addSidebarItem(" " .. filesystem.name(config.favourites[i].name), config.favourites[i].path)
@@ -233,7 +236,7 @@ updateSidebar = function()
 	for proxy, path in filesystem.mounts() do
 		if proxy.networkModem then
 			if not added then
-				addSidebarTitle(system.localization.network)
+				addSidebarTitle(localization.network)
 				added = true
 			end
 
@@ -249,11 +252,11 @@ updateSidebar = function()
 	end
 
 	-- FTP connections
-	if network.internetProxy and #system.properties.networkFTPConnections > 0 then
-		addSidebarTitle(system.localization.networkFTPConnections)
+	if network.internetProxy and #userSettings.networkFTPConnections > 0 then
+		addSidebarTitle(localization.networkFTPConnections)
 		
-		for i = 1, #system.properties.networkFTPConnections do
-			local connection = system.properties.networkFTPConnections[i]
+		for i = 1, #userSettings.networkFTPConnections do
+			local connection = userSettings.networkFTPConnections[i]
 			local name = network.getFTPProxyName(connection.address, connection.port, connection.user)
 			local mountPath = network.mountPaths.FTP .. name .. "/"
 
@@ -264,10 +267,10 @@ updateSidebar = function()
 			end
 
 			object.onRemove = function()
-				table.remove(system.properties.networkFTPConnections, i)
+				table.remove(userSettings.networkFTPConnections, i)
 				updateSidebar()
 				workspace:draw()
-				system.saveProperties()
+				system.saveUserSettings()
 			end
 		end
 
@@ -275,7 +278,7 @@ updateSidebar = function()
 	end
 
 	-- Mounts
-	addSidebarTitle(system.localization.mounts)
+	addSidebarTitle(localization.mounts)
 	
 	for proxy, path in filesystem.mounts() do
 		if not proxy.networkModem and not proxy.networkFTP then
@@ -318,7 +321,7 @@ local function updateScrollBar()
 	local shownFilesCount = #iconField.fileList - iconField.fromFile + 1
 	
 	local horizontalLines = math.ceil(shownFilesCount / iconField.iconCount.horizontal)
-	local minimumOffset = 3 - (horizontalLines - 1) * (system.properties.iconHeight + system.properties.iconVerticalSpace) - system.properties.iconVerticalSpace
+	local minimumOffset = 3 - (horizontalLines - 1) * (userSettings.iconHeight + userSettings.iconVerticalSpace) - userSettings.iconVerticalSpace
 	
 	if iconField.yOffset > iconFieldYOffset then
 		iconField.yOffset = iconFieldYOffset
@@ -352,30 +355,30 @@ prevButton.onTouch = function()
 end
 
 FTPButton.onTouch = function()
-	local container = GUI.addBackgroundContainer(workspace, true, true, system.localization.networkFTPNewConnection)
+	local container = GUI.addBackgroundContainer(workspace, true, true, localization.networkFTPNewConnection)
 
 	local ad, po, us, pa
-	if #system.properties.networkFTPConnections > 0 then
-		local la = system.properties.networkFTPConnections[#system.properties.networkFTPConnections]
+	if #userSettings.networkFTPConnections > 0 then
+		local la = userSettings.networkFTPConnections[#userSettings.networkFTPConnections]
 		ad, po, us, pa = la.address, tostring(la.port), la.user, la.password
 	end
 
-	local addressInput = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x969696, 0xE1E1E1, 0x2D2D2D, ad, system.localization.networkFTPAddress, true))
-	local portInput = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x969696, 0xE1E1E1, 0x2D2D2D, po, system.localization.networkFTPPort, true))
-	local userInput = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x969696, 0xE1E1E1, 0x2D2D2D, us, system.localization.networkFTPUser, true))
-	local passwordInput = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x969696, 0xE1E1E1, 0x2D2D2D, pa, system.localization.networkFTPPassword, true, "*"))
+	local addressInput = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x969696, 0xE1E1E1, 0x2D2D2D, ad, localization.networkFTPAddress, true))
+	local portInput = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x969696, 0xE1E1E1, 0x2D2D2D, po, localization.networkFTPPort, true))
+	local userInput = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x969696, 0xE1E1E1, 0x2D2D2D, us, localization.networkFTPUser, true))
+	local passwordInput = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x969696, 0xE1E1E1, 0x2D2D2D, pa, localization.networkFTPPassword, true, "*"))
 	container.layout:addChild(GUI.button(1, 1, 36, 3, 0x5A5A5A, 0xE1E1E1, 0x2D2D2D, 0xE1E1E1, "OK")).onTouch = function()
 		container:remove()
 
 		local port = tonumber(portInput.text)
 		if port then
 			local found = false
-			for i = 1, #system.properties.networkFTPConnections do
+			for i = 1, #userSettings.networkFTPConnections do
 				if
-					system.properties.networkFTPConnections[i].address == addressInput.text and
-					system.properties.networkFTPConnections[i].port == port and
-					system.properties.networkFTPConnections[i].user == userInput.text and
-					system.properties.networkFTPConnections[i].password == passwordInput.text
+					userSettings.networkFTPConnections[i].address == addressInput.text and
+					userSettings.networkFTPConnections[i].port == port and
+					userSettings.networkFTPConnections[i].user == userInput.text and
+					userSettings.networkFTPConnections[i].password == passwordInput.text
 				then
 					found = true
 					break
@@ -383,13 +386,13 @@ FTPButton.onTouch = function()
 			end
 
 			if not found then
-				table.insert(system.properties.networkFTPConnections, {
+				table.insert(userSettings.networkFTPConnections, {
 					address = addressInput.text,
 					port = port,
 					user = userInput.text,
 					password = passwordInput.text
 				})
-				system.saveProperties()
+				system.saveUserSettings()
 
 				updateSidebar()
 				workspace:draw()

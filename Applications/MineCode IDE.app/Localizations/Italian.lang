@@ -55,7 +55,7 @@
 	saveAs = "Salva come",
 	colorScheme = "Schema colore",
 	color = "Colore",
-	toggleTopToolBar = "Mostra barra degli strumenti in alto",
+	toggleTopToolBar = "Toggle barra degli strumenti in alto",
 	find = "Trovare",
 	findSomeShit = "Troviamo un po ' di roba.…",
 	cut = "Tagliare",
@@ -66,4 +66,6 @@
 	comment = "Commuta commento",
 	indent = "Indent",
 	unindent = "Unindent",
+	flashEEPROM = "Flash su EEPROM",
+	flashingEEPROM = "Lampeggiante in corso. Non spegnere il computer...",
 }

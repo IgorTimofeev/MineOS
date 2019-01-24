@@ -8,6 +8,7 @@ local filesystem = require("Filesystem")
 local module = {}
 
 local workspace, window, localization = table.unpack({...})
+local userSettings = system.getUserSettings()
 
 --------------------------------------------------------------------------------
 
@@ -17,13 +18,13 @@ module.onTouch = function()
 	local emptyObject = window.contentLayout:addChild(GUI.object(1, 1, 0, 0))
 	local insertModemText = window.contentLayout:addChild(GUI.text(1, 1, 0x2D2D2D, localization.networkNoModem))
 	local ebloText = window.contentLayout:addChild(GUI.text(1, 1, 0x2D2D2D, localization.networkThis))
-	local networkNameInput = window.contentLayout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0xA5A5A5, 0xE1E1E1, 0x2D2D2D, system.properties.networkName or "", localization.networkName))
-	local stateSwitchAndLabel = window.contentLayout:addChild(GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0xE1E1E1, 0xFFFFFF, 0xA5A5A5, localization.networkEnabled .. ":", system.properties.networkEnabled))
+	local networkNameInput = window.contentLayout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0xA5A5A5, 0xE1E1E1, 0x2D2D2D, userSettings.networkName or "", localization.networkName))
+	local stateSwitchAndLabel = window.contentLayout:addChild(GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0xE1E1E1, 0xFFFFFF, 0xA5A5A5, localization.networkEnabled .. ":", userSettings.networkEnabled))
 	local remoteComputersText = window.contentLayout:addChild(GUI.text(1, 1, 0x2D2D2D, localization.networkRemote))	
 	local remoteComputersComboBox = window.contentLayout:addChild(GUI.comboBox(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0xD2D2D2, 0xA5A5A5))
 	local allowReadAndWriteSwitchAndLabel = window.contentLayout:addChild(GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0xE1E1E1, 0xFFFFFF, 0xA5A5A5, localization.networkFileAccess .. ":", false))
 
-	local signalStrengthSlider = window.contentLayout:addChild(GUI.slider(1, 1, 36, 0x66DB80, 0xE1E1E1, 0xFFFFFF, 0xA5A5A5, 0, 512, system.properties.networkSignalStrength, false, localization.networkRadius ..": ", ""))
+	local signalStrengthSlider = window.contentLayout:addChild(GUI.slider(1, 1, 36, 0x66DB80, 0xE1E1E1, 0xFFFFFF, 0xA5A5A5, 0, 512, userSettings.networkSignalStrength, false, localization.networkRadius ..": ", ""))
 	signalStrengthSlider.roundValues = true
 
 	local function check()
@@ -47,7 +48,7 @@ module.onTouch = function()
 						local item = remoteComputersComboBox:addItem(network.getModemProxyName(proxy))
 						item.proxyAddress = proxy.address
 						item.onTouch = function()
-							allowReadAndWriteSwitchAndLabel.switch:setState(system.properties.networkUsers[item.proxyAddress].allowReadAndWrite)
+							allowReadAndWriteSwitchAndLabel.switch:setState(userSettings.networkUsers[item.proxyAddress].allowReadAndWrite)
 						end
 					end
 				end
@@ -66,14 +67,14 @@ module.onTouch = function()
 	end
 
 	networkNameInput.onInputFinished = function()
-		system.properties.networkName = #networkNameInput.text > 0 and networkNameInput.text or nil
-		system.saveProperties()
-		network.broadcastComputerState(system.properties.networkEnabled)
+		userSettings.networkName = #networkNameInput.text > 0 and networkNameInput.text or nil
+		system.saveUserSettings()
+		network.broadcastComputerState(userSettings.networkEnabled)
 	end
 
 	signalStrengthSlider.onValueChanged = function()
-		system.properties.networkSignalStrength = math.floor(signalStrengthSlider.value)
-		system.saveProperties()
+		userSettings.networkSignalStrength = math.floor(signalStrengthSlider.value)
+		system.saveUserSettings()
 	end
 
 	stateSwitchAndLabel.switch.onStateChanged = function()
@@ -87,8 +88,8 @@ module.onTouch = function()
 	end
 
 	allowReadAndWriteSwitchAndLabel.switch.onStateChanged = function()
-		system.properties.networkUsers[remoteComputersComboBox:getItem(remoteComputersComboBox.selectedItem).proxyAddress].allowReadAndWrite = allowReadAndWriteSwitchAndLabel.switch.state
-		system.saveProperties()
+		userSettings.networkUsers[remoteComputersComboBox:getItem(remoteComputersComboBox.selectedItem).proxyAddress].allowReadAndWrite = allowReadAndWriteSwitchAndLabel.switch.state
+		system.saveUserSettings()
 	end
 
 	-- Empty object-listener

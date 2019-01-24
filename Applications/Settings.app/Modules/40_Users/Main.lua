@@ -10,6 +10,7 @@ local SHA = require("SHA-256")
 local module = {}
 
 local workspace, window, localization = table.unpack({...})
+local userSettings = system.getUserSettings()
 
 --------------------------------------------------------------------------------
 
@@ -52,7 +53,7 @@ module.onTouch = function()
 	local passwordText = window.contentLayout:addChild(GUI.text(1, 1, 0xCC4940, localization.usersPasswordsArentEqual))
 
 	local function updatePasswordText()
-		passwordButton.text = system.properties.securityPassword and localization.usersRemovePassword or localization.usersAddPassword
+		passwordButton.text = userSettings.securityPassword and localization.usersRemovePassword or localization.usersAddPassword
 	end
 
 	local function updateRename(state)
@@ -111,7 +112,7 @@ module.onTouch = function()
 
 	addUserButton.onTouch = function()
 		local name = "User #" .. math.random(0xFFFFFF)
-		system.createUser(name, system.properties.localizationLanguage, nil, true, true)
+		system.createUser(name, userSettings.localizationLanguage, nil, true, true)
 		usersComboBox:addItem(name)
 		usersComboBox.selectedItem = usersComboBox:count()
 	end
@@ -130,12 +131,12 @@ module.onTouch = function()
 	end
 
 	passwordButton.onTouch = function()
-		if system.properties.securityPassword then
-			system.properties.securityPassword = nil
+		if userSettings.securityPassword then
+			userSettings.securityPassword = nil
 			updatePasswordText()
 
 			workspace:draw()
-			system.saveProperties()
+			system.saveUserSettings()
 		else
 			updateRemoveAndPasswordButtons(true)
 		end
@@ -161,8 +162,8 @@ module.onTouch = function()
 	passwordInput.onInputFinished = function()
 		if #passwordInput.text > 0 and #submitPasswordInput.text > 0 then
 			if passwordInput.text == submitPasswordInput.text then
-				system.properties.securityPassword = SHA.hash(passwordInput.text)
-				system.saveProperties()
+				userSettings.securityPassword = SHA.hash(passwordInput.text)
+				system.saveUserSettings()
 
 				passwordInput.text = ""
 				submitPasswordInput.text = ""

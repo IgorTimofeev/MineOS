@@ -2,17 +2,19 @@
 local system = require("System")
 
 local workspace, icon, menu = select(1, ...), select(2, ...), select(3, ...)
+local localization = system.getSystemLocalization()
+local userSettings = system.getUserSettings()
 
-menu:addItem(system.localization.setAsWallpaper).onTouch = function()
-	system.properties.interfaceWallpaperEnabled = true
-	system.properties.interfaceWallpaperPath = icon.path
+menu:addItem(localization.setAsWallpaper).onTouch = function()
+	userSettings.interfaceWallpaperEnabled = true
+	userSettings.interfaceWallpaperPath = icon.path
 
 	system.updateWallpaper()
 	workspace:draw()
 
-	system.saveProperties()
+	system.saveUserSettings()
 end
 
-menu:addItem(system.localization.uploadToPastebin, not component.isAvailable("internet")).onTouch = function()
+menu:addItem(localization.uploadToPastebin, not component.isAvailable("internet")).onTouch = function()
 	system.uploadToPastebin(icon.path)
 end

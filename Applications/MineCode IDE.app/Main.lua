@@ -1643,12 +1643,12 @@ fileContextMenu:addItem(localization.saveAs, false, "^⇧S").onTouch = function(
 	saveFileAsWindow()
 end
 
-fileContextMenu:addItem(system.localization.flashEEPROM, not component.isAvailable("eeprom")).onTouch = function()
-	local container = addBackgroundContainer(system.localization.flashEEPROM)
-	container.layout:addChild(GUI.label(1, 1, container.width, 1, 0x969696, system.localization.flashingEEPROM .. "...")):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
+fileContextMenu:addItem(localization.flashEEPROM, not component.isAvailable("eeprom")).onTouch = function()
+	local container = addBackgroundContainer(localization.flashEEPROM)
+	container.layout:addChild(GUI.label(1, 1, container.width, 1, 0x969696, localization.flashingEEPROM .. "...")):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
 	workspace:draw()
 
-	pcall(component.get("eeprom").set, table.concat(lines, ";"))
+	component.get("eeprom").set(table.concat(lines, "\n"))
 	
 	container:remove()
 	workspace:draw()
@@ -1747,10 +1747,8 @@ propertiesContextMenu:addItem(localization.cursorProperties).onTouch = function(
 	workspace:draw()
 end
 
-if topToolBar.hidden then
-	propertiesContextMenu:addItem(localization.toggleTopToolBar).onTouch = function()
-		toggleTopToolBar()
-	end
+propertiesContextMenu:addItem(localization.toggleTopToolBar).onTouch = function()
+	toggleTopToolBar()
 end
 
 propertiesContextMenu:addSeparator()

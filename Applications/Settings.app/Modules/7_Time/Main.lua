@@ -6,6 +6,7 @@ local system = require("System")
 local module = {}
 
 local workspace, window, localization = table.unpack({...})
+local userSettings = system.getUserSettings()
 
 --------------------------------------------------------------------------------
 
@@ -23,22 +24,22 @@ module.onTouch = function()
 
 	window.contentLayout:addChild(GUI.text(1, 1, 0x2D2D2D, localization.timeFormat))
 	
-	local input = window.contentLayout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0xA5A5A5, 0xE1E1E1, 0x2D2D2D, system.properties.timeFormat or ""))
+	local input = window.contentLayout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0xA5A5A5, 0xE1E1E1, 0x2D2D2D, userSettings.timeFormat or ""))
 
-	local switch = window.contentLayout:addChild(GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0xE1E1E1, 0xFFFFFF, 0xA5A5A5, localization.timeUseRealTimestamp .. ":", system.properties.timeRealTimestamp)).switch
+	local switch = window.contentLayout:addChild(GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0xE1E1E1, 0xFFFFFF, 0xA5A5A5, localization.timeUseRealTimestamp .. ":", userSettings.timeRealTimestamp)).switch
 	
 	window.contentLayout:addChild(GUI.textBox(1, 1, 36, 1, nil, 0xA5A5A5, {localization.timeInfo}, 1, 0, 0, true, true))
 
-	comboBox.selectedItem = (system.properties.timeTimezone or 0) + 13
+	comboBox.selectedItem = (userSettings.timeTimezone or 0) + 13
 	comboBox.onItemSelected = function()
-		system.properties.timeRealTimestamp = switch.state
-		system.properties.timeTimezone = (comboBox.selectedItem - 13) * 3600
-		system.properties.timeFormat = input.text
+		userSettings.timeRealTimestamp = switch.state
+		userSettings.timeTimezone = (comboBox.selectedItem - 13) * 3600
+		userSettings.timeFormat = input.text
 		
 		system.updateMenuWidgets()
 		workspace:draw()
 
-		system.saveProperties()
+		system.saveUserSettings()
 	end
 
 	input.onInputFinished, switch.onStateChanged = comboBox.onItemSelected, comboBox.onItemSelected

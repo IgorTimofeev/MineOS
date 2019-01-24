@@ -7,6 +7,7 @@ local filesystem = require("Filesystem")
 local module = {}
 
 local workspace, window, localization = table.unpack({...})
+local userSettings = system.getUserSettings()
 
 --------------------------------------------------------------------------------
 

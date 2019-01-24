@@ -83,7 +83,7 @@
 	showPackageContent = "Paketinhalt anzeigen",
 	showContainingFolder = "Enthaltenden Ordner anzeigen",
 	flashEEPROM = "Flash zu EEPROM",
-	flashingEEPROM = "Blinkt im Gange. Computer nicht ausschalten",
+	flashingEEPROM = "Blinkt im Gange. Computer nicht ausschalten...",
 
 	sortBy = "Sortieren",
 	sortByType = "Nach Typ",

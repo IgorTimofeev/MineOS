@@ -6,6 +6,7 @@ local system = require("System")
 local module = {}
 
 local workspace, window, localization = table.unpack({...})
+local userSettings = system.getUserSettings()
 
 --------------------------------------------------------------------------------
 
@@ -55,11 +56,11 @@ module.onTouch = function()
 		update()
 	end
 
-	local switch = window.contentLayout:addChild(GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0xE1E1E1, 0xFFFFFF, 0xA5A5A5, localization.systemUnloading .. ":", system.properties.packageUnloading)).switch
+	local switch = window.contentLayout:addChild(GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0xE1E1E1, 0xFFFFFF, 0xA5A5A5, localization.systemUnloading .. ":", userSettings.packageUnloading)).switch
 	switch.onStateChanged = function()
-		system.properties.packageUnloading = switch.state
-		system.setPackageUnloading(system.properties.packageUnloading)
-		system.saveProperties()
+		userSettings.packageUnloading = switch.state
+		system.setPackageUnloading(userSettings.packageUnloading)
+		system.saveUserSettings()
 	end
 
 	window.contentLayout:addChild(GUI.textBox(1, 1, 36, 1, nil, 0xA5A5A5, {localization.systemInfo}, 1, 0, 0, true, true))

@@ -7,6 +7,7 @@ local filesystem = require("Filesystem")
 local module = {}
 
 local workspace, window, localization = table.unpack({...})
+local userSettings = system.getUserSettings()
 
 --------------------------------------------------------------------------------
 
@@ -22,17 +23,17 @@ module.onTouch = function()
 			local name = filesystem.hideExtension(list[i])
 			
 			comboBox:addItem(name).onTouch = function()
-				system.properties.localizationLanguage = name
-				system.localization = system.getLocalization(paths.system.localizations)
+				userSettings.localizationLanguage = name
+				localization = system.getLocalization(paths.system.localizations)
 
 				system.updateWorkspace()
 				system.updateDesktop()
 				workspace:draw()
 
-				system.saveProperties()
+				system.saveUserSettings()
 			end
 
-			if name == system.properties.localizationLanguage then
+			if name == userSettings.localizationLanguage then
 				comboBox.selectedItem = comboBox:count()
 			end
 		end

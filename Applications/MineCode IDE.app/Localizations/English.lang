@@ -55,7 +55,7 @@
 	saveAs = "Save as",
 	colorScheme = "Color scheme",
 	color = "Color",
-	toggleTopToolBar = "Show top toolbar",
+	toggleTopToolBar = "Toggle top toolbar",
 	find = "Find",
 	findSomeShit = "Let's find some shit…",
 	cut = "Cut",
@@ -66,4 +66,6 @@
 	comment = "Toggle comment",
 	indent = "Indent",
 	unindent = "Unindent",
+	flashEEPROM = "Flash to EEPROM",
+	flashingEEPROM = "Flashing in progress. Don't turn off computer...",
 }

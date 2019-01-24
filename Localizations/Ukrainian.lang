@@ -83,7 +83,7 @@
 	showPackageContent = "Показати вміст пакету",
 	showContainingFolder = "Показати папку",
 	flashEEPROM = "Спалах до EEPROM",
-	flashingEEPROM = "Блимає в процесі. Не вимикати комп'ютер",
+	flashingEEPROM = "Блимає в процесі. Не вимикати комп'ютер...",
 
 	sortBy = "Роду",
 	sortByType = "За типом",

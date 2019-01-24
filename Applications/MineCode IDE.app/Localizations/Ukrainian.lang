@@ -54,7 +54,7 @@
 	saveAs = "Зберегти як",
 	colorScheme = "Схема кольорів",
 	color = "Колір",
-	toggleTopToolBar = "Показати панель Інстурмент",
+	toggleTopToolBar = "Переключити панель Інстурмент",
 	find = "Знайти",
 	findSomeShit = "Давай знайдемо якесь лайно ...",
 	cut = "Вирізати",
@@ -65,4 +65,6 @@
 	comment = "Коментувати",
 	indent = "Табулювати",
 	unindent = "Детабулювати",
+	flashEEPROM = "Спалах до EEPROM",
+	flashingEEPROM = "Блимає в процесі. Не вимикати комп'ютер...",
 }

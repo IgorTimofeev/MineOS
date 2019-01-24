@@ -83,7 +83,7 @@
 	showPackageContent = "Afficher le contenu du package",
 	showContainingFolder = "Afficher le dossier contenant",
 	flashEEPROM = "Flasher vers l'EEPROM",
-	flashingEEPROM = "Flash en cours. Ne pas éteindre l'ordinateur",
+	flashingEEPROM = "Flash en cours. Ne pas éteindre l'ordinateur...",
 
 	sortBy = "Trier",
 	sortByType = "Par type",

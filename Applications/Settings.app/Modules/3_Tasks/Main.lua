@@ -6,6 +6,7 @@ local system = require("System")
 local module = {}
 
 local workspace, window, localization = table.unpack({...})
+local userSettings = system.getUserSettings()
 
 --------------------------------------------------------------------------------
 
@@ -26,21 +27,21 @@ module.onTouch = function()
 	local switchAndLabel = window.contentLayout:addChild(GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0xE1E1E1, 0xFFFFFF, 0xA5A5A5, localization.tasksEnabled .. ":", true))
 	
 	local function update()
-		switchAndLabel.hidden = #system.properties.tasks == 0
+		switchAndLabel.hidden = #userSettings.tasks == 0
 		modeComboBox.hidden = switchAndLabel.hidden
 		container.hidden = switchAndLabel.hidden
 
 		if not switchAndLabel.hidden then
-			modeComboBox.selectedItem = system.properties.tasks[tasksComboBox.selectedItem].mode
-			switchAndLabel.switch:setState(system.properties.tasks[tasksComboBox.selectedItem].enabled)
+			modeComboBox.selectedItem = userSettings.tasks[tasksComboBox.selectedItem].mode
+			switchAndLabel.switch:setState(userSettings.tasks[tasksComboBox.selectedItem].enabled)
 		end
 	end
 
 	local function fill()
 		tasksComboBox:clear()
 
-		for i = 1, #system.properties.tasks do
-			tasksComboBox:addItem(system.properties.tasks[i].path)
+		for i = 1, #userSettings.tasks do
+			tasksComboBox:addItem(userSettings.tasks[i].path)
 		end
 		tasksComboBox.selectedItem = tasksComboBox:count()
 
@@ -50,7 +51,7 @@ module.onTouch = function()
 	tasksComboBox.onItemSelected = update
 
 	filesystemChooser.onSubmit = function(path)
-		table.insert(system.properties.tasks, {
+		table.insert(userSettings.tasks, {
 			path = filesystemChooser.path,
 			enabled = switchAndLabel.switch.state,
 			mode = modeComboBox.selectedItem,
@@ -59,27 +60,27 @@ module.onTouch = function()
 		filesystemChooser.path = nil
 		fill()
 
-		system.saveProperties()
+		system.saveUserSettings()
 	end
 
 	removeButton.onTouch = function()
-		table.remove(system.properties.tasks, tasksComboBox.selectedItem)
+		table.remove(userSettings.tasks, tasksComboBox.selectedItem)
 		fill()
 
-		system.saveProperties()
+		system.saveUserSettings()
 	end
 
 	modeComboBox.onItemSelected = function()
-		if #system.properties.tasks > 0 then
-			system.properties.tasks[tasksComboBox.selectedItem].mode = modeComboBox.selectedItem
-			system.saveProperties()
+		if #userSettings.tasks > 0 then
+			userSettings.tasks[tasksComboBox.selectedItem].mode = modeComboBox.selectedItem
+			system.saveUserSettings()
 		end
 	end
 
 	switchAndLabel.switch.onStateChanged = function()
-		if #system.properties.tasks > 0 then
-			system.properties.tasks[tasksComboBox.selectedItem].enabled = switchAndLabel.switch.state
-			system.saveProperties()
+		if #userSettings.tasks > 0 then
+			userSettings.tasks[tasksComboBox.selectedItem].enabled = switchAndLabel.switch.state
+			system.saveUserSettings()
 		end
 	end
 

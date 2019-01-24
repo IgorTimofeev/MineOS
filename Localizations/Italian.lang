@@ -83,7 +83,7 @@
 	showPackageContent = "Mostra il contenuto della confezione",
 	showContainingFolder = "Mostra cartella contenente",
 	flashEEPROM = "Flash su EEPROM",
-	flashingEEPROM = "Lampeggiante in corso. Non spegnere il computer",
+	flashingEEPROM = "Lampeggiante in corso. Non spegnere il computer...",
 
 	sortBy = "Genere",
 	sortByType = "Per tipo",

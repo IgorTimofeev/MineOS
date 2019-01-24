@@ -55,7 +55,7 @@
 	saveAs = "Speichern unter",
 	colorScheme = "Farbschema",
 	color = "Farbig",
-	toggleTopToolBar = "Obere Symbolleiste anzeigen",
+	toggleTopToolBar = "Toggle Symbolleiste anzeigen",
 	find = "Finden",
 	findSomeShit = "Lass uns etwas Scheiße finden…",
 	cut = "Schneiden",
@@ -66,4 +66,6 @@
 	comment = "Kommentar Umschalten",
 	indent = "Einzug",
 	unindent = "Unindent",
+	flashEEPROM = "Flash zu EEPROM",
+	flashingEEPROM = "Blinkt im Gange. Computer nicht ausschalten...",
 }

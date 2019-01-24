@@ -10,6 +10,7 @@ local network = {}
 
 ----------------------------------------------------------------------------------------------------------------
 
+local userSettings
 local filesystemProxy = filesystem.getProxy()
 
 network.filesystemHandles = {}
@@ -205,7 +206,7 @@ end
 local function check(...)
 	local result = {...}
 	if not result[1] then
-		GUI.error(table.unpack(result, 2))
+		GUI.alert(table.unpack(result, 2))
 	end
 	return table.unpack(result)
 end
@@ -438,7 +439,7 @@ function network.setSignalStrength(strength)
 end
 
 function network.broadcastComputerState(state)
-	return network.broadcastMessage("network", state and "computerAvailable" or "computerNotAvailable", system.properties.networkName)
+	return network.broadcastMessage("network", state and "computerAvailable" or "computerNotAvailable", userSettings.networkName)
 end
 
 local function newModemProxy(address)
@@ -601,7 +602,7 @@ end
 
 local exceptionMethods = {
 	getLabel = function()
-		return system.properties.networkName or network.modemProxy.address
+		return userSettings.networkName or network.modemProxy.address
 	end,
 
 	list = function(path)
@@ -644,7 +645,7 @@ local exceptionMethods = {
 }
 
 local function handleRequest(eventData)	
-	if system.properties.networkUsers[eventData[3]].allowReadAndWrite then
+	if userSettings.networkUsers[eventData[3]].allowReadAndWrite then
 		local result = { pcall(exceptionMethods[eventData[8]] or filesystemProxy[eventData[8]], table.unpack(eventData, 9)) }
 		network.sendMessage(eventData[3], "network", "response", eventData[8], table.unpack(result, result[1] and 2 or 1))
 	else
@@ -655,23 +656,25 @@ end
 ----------------------------------------------------------------------------------------------------------------
 
 function network.update()
+	userSettings = system.getUserSettings()
+	
 	network.unmountModems()
 	network.unmountFTPs()
 	network.updateComponents()
-	network.setSignalStrength(system.properties.networkSignalStrength)
-	network.broadcastComputerState(system.properties.networkEnabled)
+	network.setSignalStrength(userSettings.networkSignalStrength)
+	network.broadcastComputerState(userSettings.networkEnabled)
 
 	if network.eventHandlerID then
 		event.removeHandler(network.eventHandlerID)
 	end
 
-	if system.properties.networkEnabled then
+	if userSettings.networkEnabled then
 		network.eventHandlerID = event.addHandler(function(...)
 			local eventData = {...}
 			
 			if (eventData[1] == "component_added" or eventData[1] == "component_removed") and (eventData[3] == "modem" or eventData[3] == "internet") then
 				network.updateComponents()
-			elseif eventData[1] == "modem_message" and system.properties.networkEnabled and eventData[6] == "network" then
+			elseif eventData[1] == "modem_message" and userSettings.networkEnabled and eventData[6] == "network" then
 				if eventData[7] == "request" then
 					handleRequest(eventData)
 				elseif eventData[7] == "computerAvailable" or eventData[7] == "computerAvailableRedirect" then
@@ -686,12 +689,12 @@ function network.update()
 					filesystem.mount(proxy, paths.system.mounts .. eventData[3] .. "/")
 
 					if eventData[7] == "computerAvailable" then
-						network.sendMessage(eventData[3], "network", "computerAvailableRedirect", system.properties.networkName)
+						network.sendMessage(eventData[3], "network", "computerAvailableRedirect", userSettings.networkName)
 					end
 
-					if not system.properties.networkUsers[eventData[3]] then
-						system.properties.networkUsers[eventData[3]] = {}
-						system.saveProperties()
+					if not userSettings.networkUsers[eventData[3]] then
+						userSettings.networkUsers[eventData[3]] = {}
+						system.saveUserSettings()
 					end
 
 					computer.pushSignal("network", "updateProxyList")
@@ -709,14 +712,14 @@ function network.update()
 end
 
 function network.disable()
-	system.properties.networkEnabled = false
-	system.saveProperties()
+	userSettings.networkEnabled = false
+	system.saveUserSettings()
 	network.update()
 end
 
 function network.enable()
-	system.properties.networkEnabled = true
-	system.saveProperties()
+	userSettings.networkEnabled = true
+	system.saveUserSettings()
 	network.update()
 end
 

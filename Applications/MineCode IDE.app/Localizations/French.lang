@@ -55,7 +55,7 @@
 	saveAs = "Enregistrer sous",
 	colorScheme = "Schéma de couleurs",
 	color = "Coleur",
-	toggleTopToolBar = "Afficher la barre d'outils supérieure",
+	toggleTopToolBar = "Toggle la barre d'outils supérieure",
 	find = "Rechercher",
 	findSomeShit = "Trouvons de la merde ...",
 	cut = "Couper",
@@ -66,4 +66,6 @@
 	comment = "Activer les commentaires",
 	indent = "Tabulation",
 	unindent = "Retirer la tabulation",
+	flashEEPROM = "Flasher vers l'EEPROM",
+	flashingEEPROM = "Flash en cours. Ne pas éteindre l'ordinateur...",
 }

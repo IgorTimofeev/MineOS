@@ -7,6 +7,7 @@ local system = require("System")
 local module = {}
 
 local workspace, window, localization = table.unpack({...})
+local userSettings = system.getUserSettings()
 
 --------------------------------------------------------------------------------
 
@@ -28,7 +29,7 @@ module.onTouch = function()
 			system.updateWallpaper()
 			workspace:draw()
 
-			system.saveProperties()
+			system.saveUserSettings()
 		end
 	end
 
@@ -37,14 +38,14 @@ module.onTouch = function()
 	local resolutionComboBox = window.contentLayout:addChild(GUI.comboBox(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0xD2D2D2, 0xA5A5A5))
 
 	local function setResolution(width, height)
-		system.properties.interfaceScreenWidth = width
-		system.properties.interfaceScreenHeight = height
+		userSettings.interfaceScreenWidth = width
+		userSettings.interfaceScreenHeight = height
 
 		system.updateResolution()
 		system.updateWallpaper()
 		workspace:draw()
 		
-		system.saveProperties()
+		system.saveUserSettings()
 	end
 
 	local step = 1 / 6
@@ -66,13 +67,13 @@ module.onTouch = function()
 	local limit = maxWidth * maxHeight
 	local cykaTextBox = window.contentLayout:addChild(GUI.textBox(1, 1, 36, 1, nil, 0x880000, {string.format(localization.screenInvalidResolution, limit)}, 1, 0, 0, true, true))
 
-	local switch = window.contentLayout:addChild(GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0xE1E1E1, 0xFFFFFF, 0xA5A5A5, localization.screenAutoScale .. ":", system.properties.interfaceScreenAutoScale)).switch
+	local switch = window.contentLayout:addChild(GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0xE1E1E1, 0xFFFFFF, 0xA5A5A5, localization.screenAutoScale .. ":", userSettings.interfaceScreenAutoScale)).switch
 
 	window.contentLayout:addChild(GUI.textBox(1, 1, 36, 1, nil, 0xA5A5A5, {localization.screenScaleInfo}, 1, 0, 0, true, true))
 
 	local function updateSwitch()
-		widthInput.text = tostring(system.properties.interfaceScreenWidth and system.properties.interfaceScreenWidth or screen.getWidth())
-		heightInput.text = tostring(system.properties.interfaceScreenHeight and system.properties.interfaceScreenHeight or screen.getHeight())
+		widthInput.text = tostring(userSettings.interfaceScreenWidth and userSettings.interfaceScreenWidth or screen.getWidth())
+		heightInput.text = tostring(userSettings.interfaceScreenHeight and userSettings.interfaceScreenHeight or screen.getHeight())
 		resolutionComboBox.hidden = not switch.state
 		layout.hidden = switch.state
 	end
@@ -88,8 +89,8 @@ module.onTouch = function()
 		updateCykaTextBox()
 		workspace:draw()
 
-		system.properties.interfaceScreenAutoScale = switch.state
-		system.saveProperties()
+		userSettings.interfaceScreenAutoScale = switch.state
+		system.saveUserSettings()
 	end
 
 	widthInput.onInputFinished = function()

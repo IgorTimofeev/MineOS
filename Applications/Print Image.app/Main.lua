@@ -198,7 +198,7 @@ local function createWindow()
 	
 	y = y + 2
 	workspace.shadeContainer:addChild(GUI.label(3, y, workspace.shadeContainer.width, 1, 0xCCCCCC, "Image path:"))
-	local filesystemChooser = workspace.shadeContainer:addChild(GUI.filesystemChooser(workspace.shadeContainer.width - textBoxesWidth - 1, y, textBoxesWidth, 1, 0xEEEEEE, 0x262626, 0x444444, 0x999999, startImagePath, system.localization.open, system.localization.cancel, "Image path", "/"))
+	local filesystemChooser = workspace.shadeContainer:addChild(GUI.filesystemChooser(workspace.shadeContainer.width - textBoxesWidth - 1, y, textBoxesWidth, 1, 0xEEEEEE, 0x262626, 0x444444, 0x999999, startImagePath, "Open", "Cancel", "Image path", "/"))
 	filesystemChooser:addExtensionFilter(".pic")
 	filesystemChooser.onSubmit = function(path)
 		mainImage = image.load(path)

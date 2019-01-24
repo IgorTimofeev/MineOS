@@ -83,7 +83,7 @@
 	showPackageContent = "Show package content",
 	showContainingFolder = "Show containing folder",
 	flashEEPROM = "Flash to EEPROM",
-	flashingEEPROM = "Flashing in progress. Don't turn off computer",
+	flashingEEPROM = "Flashing in progress. Don't turn off computer...",
 
 	sortBy = "Sort",
 	sortByType = "By type",
