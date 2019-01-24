@@ -1,7 +1,7 @@
 
 -- Import libraries
 local GUI = require("GUI")
-local system = require("system")
+local system = require("System")
 
 ---------------------------------------------------------------------------------
 
@@ -14,11 +14,11 @@ local localization = system.getCurrentScriptLocalization()
 -- Add single cell layout to window
 local layout = window:addChild(GUI.layout(1, 1, window.width, window.height, 1, 1))
 
--- Add nice grey text object to layout
+-- Add nice gray text object to layout
 layout:addChild(GUI.text(1, 1, 0x4B4B4B, localization.greeting .. system.getUser()))
 
--- Customize MineOS menu for this application
-local contextMenu = menu:addContextMenu("File")
+-- Customize MineOS menu for this application by your will
+local contextMenu = menu:addContextMenuItem("File")
 contextMenu:addItem("New")
 contextMenu:addSeparator()
 contextMenu:addItem("Open")

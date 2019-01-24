@@ -67,7 +67,7 @@ function system.getDefaultUserSettings()
 	return {
 		localizationLanguage = "English",
 
-		timeFormat = "%d %b %Y %H:%M:%S",
+		timeForat = "%d %b %Y %H:%M:%S",
 		timeRealTimestamp = true,
 		timeTimezone = 0,
 
@@ -706,7 +706,7 @@ local function iconOnDoubleClick(icon)
 end
 
 function system.uploadToPastebin(path)
-	local container = addBackgroundContainerWithInput(filesystem.name(path), localization.uploadToPastebin, localization.pasteName)
+	local container = addBackgroundContainerWithInput("", localization.uploadToPastebin, localization.pasteName)
 
 	local result, reason
 	container.panel.eventHandler = function(workspace, panel, e1)
@@ -859,7 +859,7 @@ local function iconOnRightClick(icon, e1, e2, e3, e4)
 					contextMenu:addSeparator()
 				end
 
-				-- local subMenu = contextMenu:addSubMenu(localization.openWith)
+				-- local subMenu = contextMenu:addSubMenuItem(localization.openWith)
 				-- local fileList = filesystem.sortedList(paths.system.applications, "name")
 				-- subMenu:addItem(localization.select)
 				-- subMenu:addSeparator()
@@ -894,7 +894,7 @@ local function iconOnRightClick(icon, e1, e2, e3, e4)
 		contextMenu:addSeparator()
 	end
 
-	local subMenu = contextMenu:addSubMenu(localization.archive .. (#selectedIcons > 1 and " (" .. #selectedIcons .. ")" or ""))
+	local subMenu = contextMenu:addSubMenuItem(localization.archive .. (#selectedIcons > 1 and " (" .. #selectedIcons .. ")" or ""))
 	
 	local function archive(where)
 		local itemsToArchive = {}
@@ -939,7 +939,7 @@ local function iconOnRightClick(icon, e1, e2, e3, e4)
 	end
 
 	if not icon.isShortcut or #selectedIcons > 1 then
-		local subMenu = contextMenu:addSubMenu(localization.createShortcut)
+		local subMenu = contextMenu:addSubMenuItem(localization.createShortcut)
 		
 		subMenu:addItem(localization.inCurrentDirectory).onTouch = function()
 			for i = 1, #selectedIcons do
@@ -1132,7 +1132,7 @@ local function iconFieldBackgroundObjectEventHandler(workspace, object, e1, e2, 
 		else
 			local contextMenu = GUI.addContextMenu(workspace, e3, e4)
 
-			local subMenu = contextMenu:addSubMenu(localization.create)
+			local subMenu = contextMenu:addSubMenuItem(localization.create)
 
 			subMenu:addItem(localization.newFile).onTouch = function()
 				local container = addBackgroundContainerWithInput("", localization.newFile, localization.fileName)
@@ -1255,10 +1255,6 @@ local function iconFieldBackgroundObjectEventHandler(workspace, object, e1, e2, 
 
 			subMenu:addItem(localization.newApplication).onTouch = function()
 				local container = addBackgroundContainerWithInput("", localization.newApplication, localization.applicationName)
-
-				local filesystemChooser = container.layout:addChild(GUI.filesystemChooser(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x444444, 0x969696, nil, localization.open, localization.cancel, localization.iconPath, "/"))
-				filesystemChooser:addExtensionFilter(".pic")
-				filesystemChooser:moveBackward()
 				
 				container.panel.eventHandler = function(workspace, panel, e1)
 					if e1 == "touch" then	
@@ -1284,7 +1280,7 @@ local function iconFieldBackgroundObjectEventHandler(workspace, object, e1, e2, 
 
 			contextMenu:addSeparator()
 						
-			local subMenu = contextMenu:addSubMenu(localization.sortBy)
+			local subMenu = contextMenu:addSubMenuItem(localization.sortBy)
 			
 			local function setSortingMethod(sm)
 				object.parent:deleteIconConfig()
@@ -1527,7 +1523,7 @@ function system.addWindow(window, dontAddToDock, preserveCoordinates)
 					window.menu = GUI.menu(1, 1, 1)
 					window.menu.colors = desktopMenu.colors
 					local name = filesystem.hideExtension(filesystem.name(dockPath))
-					local contextMenu = window.menu:addContextMenu(name, 0x0)
+					local contextMenu = window.menu:addContextMenuItem(name, 0x0)
 
 					contextMenu:addItem(localization.closeWindow .. " " .. name, false, "^W").onTouch = function()
 						window:remove()
@@ -2175,7 +2171,7 @@ function system.updateDesktop()
 
 	desktopMenu = workspace:addChild(GUI.menu(1, 1, workspace.width, 0x0, 0x696969, 0x3366CC, 0xFFFFFF))
 	
-	local MineOSContextMenu = desktopMenu:addContextMenu("MineOS", 0x000000)
+	local MineOSContextMenu = desktopMenu:addContextMenuItem("MineOS", 0x000000)
 	MineOSContextMenu:addItem(localization.aboutSystem).onTouch = function()
 		local container = GUI.addBackgroundContainer(workspace, true, true, localization.aboutSystem)
 		container.layout:removeChildren()

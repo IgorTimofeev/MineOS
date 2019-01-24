@@ -1344,7 +1344,7 @@ local function createEditOrRightClickMenu(menu)
 		selectAndPasteColor()
 	end
 	
-	local subMenu = menu:addSubMenu(localization.convertCase)
+	local subMenu = menu:addSubMenuItem(localization.convertCase)
 	
 	subMenu:addItem(localization.toUpperCase, false, "^▲").onTouch = function()
 		convertCase("upper")
@@ -1587,7 +1587,7 @@ leftTreeView.onItemSelected = function(path)
 	workspace:draw()
 end
 
-local MineCodeContextMenu = menu:addContextMenu("MineCode", 0x0)
+local MineCodeContextMenu = menu:addContextMenuItem("MineCode", 0x0)
 MineCodeContextMenu:addItem(localization.about).onTouch = function()
 	local container = addBackgroundContainer(localization.about)
 	
@@ -1617,7 +1617,7 @@ MineCodeContextMenu:addItem(localization.about).onTouch = function()
 	workspace:draw()
 end
 
-local fileContextMenu = menu:addContextMenu(localization.file)
+local fileContextMenu = menu:addContextMenuItem(localization.file)
 fileContextMenu:addItem(localization.new, false, "^N").onTouch = function()
 	newFile()
 	workspace:draw()
@@ -1660,10 +1660,10 @@ fileContextMenu:addItem(localization.launchWithArguments, false, "^F5").onTouch 
 	launchWithArgumentsWindow()
 end
 
-local topMenuEdit = menu:addContextMenu(localization.edit)
+local topMenuEdit = menu:addContextMenuItem(localization.edit)
 createEditOrRightClickMenu(topMenuEdit)
 
-local gotoContextMenu = menu:addContextMenu(localization.gotoCyka)
+local gotoContextMenu = menu:addContextMenuItem(localization.gotoCyka)
 gotoContextMenu:addItem(localization.pageUp, false, "PgUp").onTouch = function()
 	pageUp()
 end
@@ -1686,7 +1686,7 @@ gotoContextMenu:addItem(localization.gotoLine, false, "^L").onTouch = function()
 	gotoLineWindow()
 end
 
-local propertiesContextMenu = menu:addContextMenu(localization.properties)
+local propertiesContextMenu = menu:addContextMenuItem(localization.properties)
 propertiesContextMenu:addItem(localization.colorScheme).onTouch = function()
 	local container = GUI.addBackgroundContainer(workspace, true, false, localization.colorScheme)
 				

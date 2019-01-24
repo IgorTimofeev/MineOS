@@ -356,7 +356,7 @@ end
 
 workspace.menu:addItem("PE", 0x00B6FF)
 
-local fileItem = workspace.menu:addContextMenu("File")
+local fileItem = workspace.menu:addContextMenuItem("File")
 fileItem:addItem("New").onTouch = new
 
 fileItem:addSeparator()
@@ -375,7 +375,7 @@ fileItem:addItem("Open").onTouch = function()
 	end
 end
 
-local fileItemSubMenu = fileItem:addSubMenu("Open recent", #config.recentFiles == 0)
+local fileItemSubMenu = fileItem:addSubMenuItem("Open recent", #config.recentFiles == 0)
 for i = 1, #config.recentFiles do
 	fileItemSubMenu:addItem(text.limit(config.recentFiles[i], 32, "left")).onTouch = function()
 		loadImage(config.recentFiles[i])

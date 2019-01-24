@@ -4000,9 +4000,9 @@ local function contextMenuUpdate(menu)
 	end
 end
 
-local contextMenuCreate, contextMenuAddSubMenu
+local contextMenuCreate, contextMenuaddSubMenuItem
 
-contextMenuAddSubMenu = function(menu, text, disabled)
+contextMenuaddSubMenuItem = function(menu, text, disabled)
 	local item = menu:addItem(text, disabled, "►")
 	item.subMenu = contextMenuCreate(1, 1)
 	item.subMenu.colors = menu.colors
@@ -4028,7 +4028,7 @@ contextMenuCreate = function(x, y, backgroundColor, textColor, backgroundPressed
 	)
 
 	menu.update = contextMenuUpdate
-	menu.addSubMenu = contextMenuAddSubMenu
+	menu.addSubMenuItem = contextMenuaddSubMenuItem
 
 	return menu
 end
@@ -4343,7 +4343,7 @@ local function menuContextMenuItemOnTouch(workspace, item)
 	workspace:draw()
 end
 
-local function menuAddContextMenu(menu, ...)
+local function menuAddContextMenuItem(menu, ...)
 	local item = menu:addItem(...)
 
 	item.switchMode = true
@@ -4373,7 +4373,7 @@ function GUI.menu(x, y, width, backgroundColor, textColor, backgroundPressedColo
 	}
 	
 	menu.passScreenEvents = false
-	menu.addContextMenu = menuAddContextMenu
+	menu.addContextMenuItem = menuAddContextMenuItem
 	menu.addItem = menuAddItem
 	menu.getItem = menuGetItem
 	menu.draw = menuDraw
