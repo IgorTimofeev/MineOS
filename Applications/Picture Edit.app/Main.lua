@@ -32,7 +32,7 @@ local tool
 
 --------------------------------------------------------------------
 
-local workspace, window, menu = system.addWindow(GUI.filledWindow(1, 1, 125, 34, 0x1E1E1E))
+local workspace, window, menu = system.addWindow(GUI.filledWindow(1, 1, 125, 37, 0x1E1E1E))
 
 local function saveConfig()
 	filesystem.writeTable(configPath, config)
