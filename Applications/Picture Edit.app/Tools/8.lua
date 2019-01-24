@@ -1,10 +1,12 @@
 
-local image = require("image")
-local tool = {}
+local image = require("Image")
 
 ------------------------------------------------------
 
-tool.shortcut = "Fl"
+local workspace, window, menu = select(1, ...), select(2, ...), select(3, ...)
+local tool = {}
+
+tool.shortcut = "Fil"
 tool.keyCode = 34
 tool.about = "Fill tool allows you to automatically fill areas with selected primary color just like in Paint. Oh God, where is my RAM...?"
 
@@ -31,9 +33,9 @@ end
 
 tool.eventHandler = function(workspace, object, e1, e2, e3, e4)
 	if e1 == "touch" then
-		local x, y = e3 - workspace.image.x + 1, e4 - workspace.image.y + 1
-		local sourceB, sourceF, sourceA, sourceS = image.get(workspace.image.data, x, y)
-		pizda(x, y, workspace.image.data, sourceB, sourceF, sourceA, sourceS, workspace.primaryColorSelector.color, 0x0, 0, " ")
+		local x, y = e3 - window.image.x + 1, e4 - window.image.y + 1
+		local sourceB, sourceF, sourceA, sourceS = image.get(window.image.data, x, y)
+		pizda(x, y, window.image.data, sourceB, sourceF, sourceA, sourceS, window.primaryColorSelector.color, 0x0, 0, " ")
 		
 		workspace:draw()
 	end

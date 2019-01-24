@@ -1,12 +1,14 @@
 
-local image = require("image")
+local image = require("Image")
 local GUI = require("GUI")
-local text = require("text")
-local tool = {}
+local text = require("Text")
 
 ------------------------------------------------------
 
-tool.shortcut = "Br"
+local workspace, window, menu = select(1, ...), select(2, ...), select(3, ...)
+local tool = {}
+
+tool.shortcut = "Bra"
 tool.keyCode = 33
 tool.about = "Braille tool allows you to draw pixels with Braille symbols on your image. Select preferred mini-pixels via menu above, configure transparency affecting and \"Let's go fellas!\""
 
@@ -33,19 +35,19 @@ end
 
 local backgroundSwitch = GUI.switchAndLabel(1, 1, 1, 6, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x878787, "Draw background:", false)
 
-tool.onSelection = function(workspace)
-	workspace.currentToolLayout:addChild(layout)
-	workspace.currentToolLayout:addChild(backgroundSwitch)
+tool.onSelection = function()
+	window.currentToolLayout:addChild(layout)
+	window.currentToolLayout:addChild(backgroundSwitch)
 end
 
 tool.eventHandler = function(workspace, object, e1, e2, e3, e4)
 	if e1 == "touch" or e1 == "drag" then
-		local x, y = e3 - workspace.image.x + 1, e4 - workspace.image.y + 1
-		local background, foreground, alpha, symbol = image.get(workspace.image.data, x, y)
+		local x, y = e3 - window.image.x + 1, e4 - window.image.y + 1
+		local background, foreground, alpha, symbol = image.get(window.image.data, x, y)
 		
-		image.set(workspace.image.data, x, y,
-			backgroundSwitch.switch.state and workspace.secondaryColorSelector.color or background,
-			workspace.primaryColorSelector.color,
+		image.set(window.image.data, x, y,
+			backgroundSwitch.switch.state and window.secondaryColorSelector.color or background,
+			window.primaryColorSelector.color,
 			backgroundSwitch.switch.state and 0 or alpha,
 			char
 		)

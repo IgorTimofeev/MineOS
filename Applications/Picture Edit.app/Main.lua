@@ -32,6 +32,8 @@ local tool
 
 --------------------------------------------------------------------
 
+local workspace, window, menu = system.addWindow(GUI.filledWindow(1, 1, 125, 34, 0x1E1E1E))
+
 local function saveConfig()
 	filesystem.writeTable(configPath, config)
 end
@@ -74,31 +76,44 @@ end
 
 loadConfig()
 
-local workspace = GUI.workspace()
-
-workspace.menu = workspace:addChild(GUI.menu(1, 1, workspace.width, 0xE1E1E1, 0x5A5A5A, 0x3366CC, 0xFFFFFF, nil))
-
 local function addTitle(container, text)
 	local titleContainer = container:addChild(GUI.container(1, 1, container.width, 1))
-	titleContainer:addChild(GUI.panel(1, 1, titleContainer.width, 1, 0x2D2D2D))
+	titleContainer:addChild(GUI.panel(1, 1, titleContainer.width, 1, 0x1E1E1E))
 	titleContainer:addChild(GUI.text(2, 1, 0xD2D2D2, text))
 
 	return titleContainer
 end
 
-local pizdaWidth = 28
-workspace.sidebarPanel = workspace:addChild(GUI.panel(workspace.width - pizdaWidth + 1, 2, pizdaWidth, workspace.height - 1, 0x3C3C3C))
-workspace.sidebarLayout = workspace:addChild(GUI.layout(workspace.sidebarPanel.localX, 2, workspace.sidebarPanel.width, workspace.sidebarPanel.height, 1, 1))
-workspace.sidebarLayout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
+window.sidebarPanel = window:addChild(GUI.panel(1, 1, 28, 1, 0x2D2D2D))
+window.sidebarLayout = window:addChild(GUI.layout(1, 1, window.sidebarPanel.width, 1, 1, 1))
+window.sidebarLayout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
 
-addTitle(workspace.sidebarLayout, "Recent colors")
+window.sidebarLayout.eventHandler = function(workspace, object, e1, e2, e3, e4, e5)
+	if e1 == "scroll" then
+		local h, v = window.sidebarLayout:getMargin(1, 1)
+		local from = 0
+		local to = -window.sidebarLayout.cells[1][1].childrenHeight + 2
 
-local recentColorsContainer = workspace.sidebarLayout:addChild(GUI.container(1, 1, workspace.sidebarLayout.width - 2, 4))
+		v = v + (e5 > 0 and 2 or -2)
+		if v > from then
+			v = from
+		elseif v < to then
+			v = to
+		end
+
+		window.sidebarLayout:setMargin(1, 1, h, v)
+		workspace:draw()
+	end
+end
+
+addTitle(window.sidebarLayout, "Recent colors")
+
+local recentColorsContainer = window.sidebarLayout:addChild(GUI.container(1, 1, window.sidebarLayout.width - 2, 4))
 local x, y = 1, 1
 for i = 1, #config.recentColors do
 	local button = recentColorsContainer:addChild(GUI.button(x, y, 2, 1, 0x0, 0x0, 0x0, 0x0, " "))
 	button.onTouch = function()
-		workspace.primaryColorSelector.color = config.recentColors[i]
+		window.primaryColorSelector.color = config.recentColors[i]
 		workspace:draw()
 	end
 
@@ -108,37 +123,40 @@ for i = 1, #config.recentColors do
 	end
 end
 
-local currentToolTitle = addTitle(workspace.sidebarLayout, "Tool properties")
+local currentToolTitle = addTitle(window.sidebarLayout, "Tool properties")
 
-workspace.currentToolLayout = workspace.sidebarLayout:addChild(GUI.layout(1, 1, workspace.sidebarLayout.width, 1, 1, 1))
-workspace.currentToolLayout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
-workspace.currentToolLayout:setFitting(1, 1, true, false, 2, 0)
+window.currentToolLayout = window.sidebarLayout:addChild(GUI.layout(1, 1, window.sidebarLayout.width, 1, 1, 1))
+window.currentToolLayout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
+window.currentToolLayout:setFitting(1, 1, true, false, 2, 0)
 
-local aboutToolTitle = addTitle(workspace.sidebarLayout, "About tool")
-local aboutToolTextBox = workspace.sidebarLayout:addChild(GUI.textBox(1, 1, workspace.sidebarLayout.width - 2, 1, nil, 0x787878, {}, 1, 0, 0))
+local aboutToolTitle = addTitle(window.sidebarLayout, "About tool")
+local aboutToolTextBox = window.sidebarLayout:addChild(GUI.textBox(1, 1, window.sidebarLayout.width - 2, 1, nil, 0x787878, {}, 1, 0, 0))
 
-workspace.toolsList = workspace:addChild(GUI.list(1, 2, 6, workspace.height - 1, 3, 0, 0x3C3C3C, 0xD2D2D2, 0x3C3C3C, 0xD2D2D2, 0x2D2D2D, 0xD2D2D2))
-workspace.backgroundPanel = workspace:addChild(GUI.panel(workspace.toolsList.width + 1, 2, workspace.width - workspace.toolsList.width - workspace.sidebarPanel.width, workspace.height - 1, 0x1E1E1E))
-workspace.image = workspace:addChild(GUI.object(1, 1, 1, 1))
-workspace.image.data = {}
+window.toolsList = window:addChild(GUI.list(1, 1, 7, 1, 3, 0, 0x2D2D2D, 0x787878, 0x2D2D2D, 0x787878, 0x3C3C3C, 0xE1E1E1))
+window.toolsList:setMargin(0, 3)
+window.image = window:addChild(GUI.object(1, 1, 1, 1))
+window.image.data = {}
+
+
 
 local function onToolTouch(index)
-	tool = workspace.toolsList:getItem(index).tool
+	tool = window.toolsList:getItem(index).tool
 	
-	workspace.toolsList.selectedItem = index
-	workspace.currentToolOverlay:removeChildren()
-	workspace.currentToolLayout:removeChildren()
+	window.toolsList.selectedItem = index
+	window.currentToolOverlay:removeChildren()
+	window.currentToolLayout:removeChildren()
 
 	currentToolTitle.hidden = not tool.onSelection
-	workspace.currentToolLayout.hidden = currentToolTitle.hidden
+	window.currentToolLayout.hidden = currentToolTitle.hidden
+	window.sidebarLayout:setMargin(1, 1, 0, 0)
 	
 	if tool.onSelection then
-		local result, reason = pcall(tool.onSelection, workspace)
+		local result, reason = pcall(tool.onSelection)
 		if result then
-			workspace.currentToolLayout:update()
-			local lastChild = workspace.currentToolLayout.children[#workspace.currentToolLayout.children]
+			window.currentToolLayout:update()
+			local lastChild = window.currentToolLayout.children[#window.currentToolLayout.children]
 			if lastChild then
-				workspace.currentToolLayout.height = lastChild.localY + lastChild.height - 1
+				window.currentToolLayout.height = lastChild.localY + lastChild.height - 1
 			end
 		else
 			GUI.alert(reason)
@@ -156,28 +174,28 @@ local function onToolTouch(index)
 	workspace:draw()
 end
 
-local modules = filesystem.list(toolsPath)
-for i = 1, #modules do
-	if filesystem.extension(modules[i]) == ".lua" then
-		local result, reason = loadfile(toolsPath .. modules[i])
+local tools = filesystem.list(toolsPath)
+for i = 1, #tools do
+	if filesystem.extension(tools[i]) == ".lua" then
+		local result, reason = loadfile(toolsPath .. tools[i])
 		if result then
-			result, reason = pcall(result)
+			result, reason = pcall(result, workspace, window, menu)
 			if result then
-				local item = workspace.toolsList:addItem(reason.shortcut)
+				local item = window.toolsList:addItem(reason.shortcut)
 				item.tool = reason
 				item.onTouch = function()
 					onToolTouch(i)
 				end
 			else
-				error("Failed to perform pcall() on module " .. modules[i] .. ": " .. reason)
+				error("Failed to perform pcall() on tool " .. tools[i] .. ": " .. reason)
 			end
 		else
-			error("Failed to perform loadfile() on module " .. modules[i] .. ": " .. reason)
+			error("Failed to perform loadfile() on tool " .. tools[i] .. ": " .. reason)
 		end
 	end
 end
 
-workspace.image.draw = function(object)
+window.image.draw = function(object)
 	GUI.drawShadow(object.x, object.y, object.width, object.height, nil, true)
 	
 	local y, text = object.y + object.height + 1, "Size: " .. object.width .. "x" .. object.height
@@ -188,25 +206,25 @@ workspace.image.draw = function(object)
 		screen.drawText(math.floor(object.x + object.width / 2 - unicode.len(text) / 2), y + 1, 0x5A5A5A, text)
 	end
 	
-	local x, y, step, notStep, background, foreground, symbol = object.x, object.y, false, workspace.image.width % 2
-	for i = 3, #workspace.image.data, 4 do
-		if workspace.image.data[i + 2] == 0 then
-			background = workspace.image.data[i]
-			foreground = workspace.image.data[i + 1]
-			symbol = workspace.image.data[i + 3]
-		elseif workspace.image.data[i + 2] < 1 then
-			background = color.blend(config.transparencyBackground, workspace.image.data[i], workspace.image.data[i + 2])
-			foreground = workspace.image.data[i + 1]
-			symbol = workspace.image.data[i + 3]
+	local x, y, step, notStep, background, foreground, symbol = object.x, object.y, false, window.image.width % 2
+	for i = 3, #window.image.data, 4 do
+		if window.image.data[i + 2] == 0 then
+			background = window.image.data[i]
+			foreground = window.image.data[i + 1]
+			symbol = window.image.data[i + 3]
+		elseif window.image.data[i + 2] < 1 then
+			background = color.blend(config.transparencyBackground, window.image.data[i], window.image.data[i + 2])
+			foreground = window.image.data[i + 1]
+			symbol = window.image.data[i + 3]
 		else
-			if workspace.image.data[i + 3] == " " then
+			if window.image.data[i + 3] == " " then
 				background = config.transparencyBackground
 				foreground = config.transparencyForeground
 				symbol = step and "▒" or "░"
 			else
 				background = config.transparencyBackground
-				foreground = workspace.image.data[i + 1]
-				symbol = workspace.image.data[i + 3]
+				foreground = window.image.data[i + 1]
+				symbol = window.image.data[i + 3]
 			end
 		end
 
@@ -230,7 +248,7 @@ local function updateRecentColorsButtons()
 end
 
 local function swapColors()
-	workspace.primaryColorSelector.color, workspace.secondaryColorSelector.color = workspace.secondaryColorSelector.color, workspace.primaryColorSelector.color
+	window.primaryColorSelector.color, window.secondaryColorSelector.color = window.secondaryColorSelector.color, window.primaryColorSelector.color
 	workspace:draw()
 end
 
@@ -242,24 +260,25 @@ local function colorSelectorDraw(object)
 	end
 end
 
-workspace.secondaryColorSelector = workspace:addChild(GUI.colorSelector(2, workspace.toolsList.height - 3, 5, 2, 0xFFFFFF, " "))
-workspace.primaryColorSelector = workspace:addChild(GUI.colorSelector(1, workspace.toolsList.height - 4, 5, 2, 0x880000, " "))
-workspace.secondaryColorSelector.draw, workspace.primaryColorSelector.draw = colorSelectorDraw, colorSelectorDraw
+window.secondaryColorSelector = window:addChild(GUI.colorSelector(3, 1, 5, 2, 0xFFFFFF, " "))
+window.primaryColorSelector = window:addChild(GUI.colorSelector(2, 1, 5, 2, 0x000000, " "))
+window.secondaryColorSelector.draw, window.primaryColorSelector.draw = colorSelectorDraw, colorSelectorDraw
 
-workspace:addChild(GUI.adaptiveButton(3, workspace.secondaryColorSelector.localY + workspace.secondaryColorSelector.height + 1, 0, 0, nil, 0xD2D2D2, nil, 0xA5A5A5, "<>")).onTouch = swapColors
+window.swapColorsButton = window:addChild(GUI.adaptiveButton(3, 1, 0, 0, nil, 0xD2D2D2, nil, 0xA5A5A5, "<>"))
+window.swapColorsButton.onTouch = swapColors
 
-workspace.image.eventHandler = function(workspace, object, e1, e2, e3, e4, ...)
+window.image.eventHandler = function(workspace, object, e1, e2, e3, e4, ...)
 	if e1 == "key_down" then
 		-- D
 		if e4 == 32 then
-			workspace.primaryColorSelector.color, workspace.secondaryColorSelector.color = 0x0, 0xFFFFFF
+			window.primaryColorSelector.color, window.secondaryColorSelector.color = 0x0, 0xFFFFFF
 			workspace:draw()
 		-- X
 		elseif e4 == 45 then
 			swapColors()
 		else
-			for i = 1, workspace.toolsList:count() do
-				if e4 == workspace.toolsList:getItem(i).tool.keyCode then
+			for i = 1, window.toolsList:count() do
+				if e4 == window.toolsList:getItem(i).tool.keyCode then
 					onToolTouch(i)
 					return
 				end
@@ -273,26 +292,25 @@ workspace.image.eventHandler = function(workspace, object, e1, e2, e3, e4, ...)
 	end
 end
 
-workspace.image.reposition = function()
-	workspace.image.width, workspace.image.height = workspace.image.data[1], workspace.image.data[2]
-	if workspace.image.width <= workspace.backgroundPanel.width then
-		workspace.image.localX = math.floor(workspace.backgroundPanel.x + workspace.backgroundPanel.width / 2 - workspace.image.width / 2)
-		workspace.image.localY = math.floor(workspace.backgroundPanel.y + workspace.backgroundPanel.height / 2 - workspace.image.height / 2)
+window.image.reposition = function()
+	window.image.width, window.image.height = window.image.data[1], window.image.data[2]
+	if window.image.width <= window.backgroundPanel.width then
+		window.image.localX = math.floor(window.backgroundPanel.localX + window.backgroundPanel.width / 2 - window.image.width / 2)
+		window.image.localY = math.floor(window.backgroundPanel.localY + window.backgroundPanel.height / 2 - window.image.height / 2)
 	else
-		workspace.image.localX, workspace.image.localY = 9, 3
+		window.image.localX, window.image.localY = window.backgroundPanel.localX, window.backgroundPanel.localY
 	end
 end
 
 local function newNoGUI(width, height)
 	savePath, saveItem.disabled = nil, true
-	workspace.image.data = {width, height}
-	workspace.image.reposition()	
+	window.image.data = {width, height}
 	
 	for i = 1, width * height do
-		table.insert(workspace.image.data, 0x0)
-		table.insert(workspace.image.data, 0x0)
-		table.insert(workspace.image.data, 1)
-		table.insert(workspace.image.data, " ")
+		table.insert(window.image.data, 0x0)
+		table.insert(window.image.data, 0x0)
+		table.insert(window.image.data, 1)
+		table.insert(window.image.data, " ")
 	end
 end
 
@@ -310,6 +328,8 @@ local function new()
 	container.panel.eventHandler = function(workspace, object, e1)
 		if e1 == "touch" then
 			newNoGUI(tonumber(widthInput.text), tonumber(heightInput.text))
+			window.image.reposition()
+
 			container:remove()
 			workspace:draw()
 		end
@@ -330,8 +350,7 @@ local function loadImage(path)
 	if result then
 		savePath, saveItem.disabled = path, false
 		addRecentFile(path)
-		workspace.image.data = result
-		workspace.image.reposition()
+		window.image.data = result
 	else
 		GUI.alert(reason)
 	end
@@ -339,7 +358,7 @@ end
 
 local function saveImage(path)
 	if filesystem.extension(path) == ".pic" then
-		local result, reason = image.save(path, workspace.image.data, 6)
+		local result, reason = image.save(path, window.image.data, 6)
 		if result then
 			savePath, saveItem.disabled = path, false
 			
@@ -350,19 +369,17 @@ local function saveImage(path)
 	else
 		savePath, saveItem.disabled = path, false
 
-		filesystem.write(path, image.toString(workspace.image.data))
+		filesystem.write(path, image.toString(window.image.data))
 	end
 end
 
-workspace.menu:addItem("PE", 0x00B6FF)
-
-local fileItem = workspace.menu:addContextMenuItem("File")
+local fileItem = menu:addContextMenuItem("File")
 fileItem:addItem("New").onTouch = new
 
 fileItem:addSeparator()
 
 fileItem:addItem("Open").onTouch = function()
-	local filesystemDialog = GUI.addFilesystemDialog(workspace, true, 50, math.floor(workspace.height * 0.8), "Open", "Cancel", "File name", "/")
+	local filesystemDialog = GUI.addFilesystemDialog(workspace, true, 50, math.floor(window.height * 0.8), "Open", "Cancel", "File name", "/")
 	filesystemDialog:setMode(GUI.IO_MODE_OPEN, GUI.IO_MODE_FILE)
 	filesystemDialog:addExtensionFilter(".pic")
 	filesystemDialog:addExtensionFilter(".rawpic")
@@ -371,6 +388,8 @@ fileItem:addItem("Open").onTouch = function()
 
 	filesystemDialog.onSubmit = function(path)
 		loadImage(path)
+		window.image.reposition()
+
 		workspace:draw()
 	end
 end
@@ -379,6 +398,8 @@ local fileItemSubMenu = fileItem:addSubMenuItem("Open recent", #config.recentFil
 for i = 1, #config.recentFiles do
 	fileItemSubMenu:addItem(text.limit(config.recentFiles[i], 32, "left")).onTouch = function()
 		loadImage(config.recentFiles[i])
+		window.image.reposition()
+
 		workspace:draw()
 	end
 end
@@ -400,6 +421,8 @@ fileItem:addItem("Open from URL").onTouch = function()
 
 			if result then
 				loadImage(temporaryPath)
+				window.image.reposition()
+
 				filesystem.remove(temporaryPath)
 				savePath, saveItem.disabled = nil, true
 			else
@@ -421,7 +444,7 @@ saveItem.onTouch = function()
 end
 
 fileItem:addItem("Save as").onTouch = function()
-	local filesystemDialog = GUI.addFilesystemDialog(workspace, true, 50, math.floor(workspace.height * 0.8), "Save", "Cancel", "File name", "/")
+	local filesystemDialog = GUI.addFilesystemDialog(workspace, true, 50, math.floor(window.height * 0.8), "Save", "Cancel", "File name", "/")
 	filesystemDialog:setMode(GUI.IO_MODE_SAVE, GUI.IO_MODE_FILE)
 	filesystemDialog:addExtensionFilter(".pic")
 	filesystemDialog:addExtensionFilter(".ocifstring")
@@ -437,10 +460,10 @@ end
 fileItem:addSeparator()
 
 fileItem:addItem("Exit").onTouch = function()
-	workspace:stop()
+	window:remove()
 end
 
-workspace.menu:addItem("View").onTouch = function()
+menu:addItem("View").onTouch = function()
 	local container = GUI.addBackgroundContainer(workspace, true, true, "View")
 
 	local colorSelector1 = container.layout:addChild(GUI.colorSelector(1, 1, 36, 3, config.transparencyBackground, "Transparency background"))
@@ -459,7 +482,7 @@ workspace.menu:addItem("View").onTouch = function()
 	workspace:draw()
 end
 
-workspace.menu:addItem("Hotkeys").onTouch = function()
+menu:addItem("Hotkeys").onTouch = function()
 	local container = GUI.addBackgroundContainer(workspace, true, true, "Hotkeys")
 	local lines = {
 		"There are some hotkeys that works exactly like in real Photoshop:",
@@ -482,20 +505,43 @@ workspace.menu:addItem("Hotkeys").onTouch = function()
 	workspace:draw()
 end
 
-workspace.currentToolOverlay = workspace:addChild(GUI.container(1, 1, workspace.width, workspace.height))
+window.currentToolOverlay = window:addChild(GUI.container(1, 1, 1, 1))
+
+window.onResize = function(width, height)
+	window.backgroundPanel.localX = window.toolsList.width + 1
+	window.backgroundPanel.width = width - window.sidebarLayout.width - window.toolsList.width
+	window.backgroundPanel.height = height
+
+	window.currentToolOverlay.width = width
+	window.currentToolOverlay.height = height
+
+	window.sidebarPanel.localX = window.width - window.sidebarPanel.width + 1
+	window.sidebarPanel.height = height
+
+	window.sidebarLayout.localX = window.sidebarPanel.localX
+	window.sidebarLayout.height = height
+
+	window.toolsList.height = height
+
+	window.secondaryColorSelector.localY = height - 4
+	window.primaryColorSelector.localY = height - 5
+	window.swapColorsButton.localY = height - 1
+
+	window.image.reposition()
+end
 
 ----------------------------------------------------------------
 
-workspace.image:moveToBack()
-workspace.backgroundPanel:moveToBack()
+window.actionButtons:moveToFront()
 
 updateRecentColorsButtons()
 
-if options.o or options.open and args[1] and filesystem.exists(args[1]) then
+if (options.o or options.open) and args[1] and filesystem.exists(args[1]) then
 	loadImage(args[1])
 else
 	newNoGUI(51, 19)
 end
 
+window:resize(window.width, window.height)
+
 onToolTouch(5)
-workspace:start()

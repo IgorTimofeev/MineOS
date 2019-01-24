@@ -1,12 +1,14 @@
 
 local GUI = require("GUI")
-local screen = require("screen")
-local image = require("image")
-local tool = {}
+local screen = require("Screen")
+local image = require("Image")
 
 ------------------------------------------------------
 
-tool.shortcut = "Se"
+local workspace, window, menu = select(1, ...), select(2, ...), select(3, ...)
+local tool = {}
+
+tool.shortcut = "Slc"
 tool.keyCode = 50
 tool.about = "Selection tool allows you to select preferred area on image and to perform some operations on it. Green dots mean start and end points (for example, it needs to line rasterization)"
 
@@ -19,117 +21,118 @@ local rasterizeEllipseButton = GUI.roundedButton(1, 1, 36, 1, 0xE1E1E1, 0x2D2D2D
 local clearButton = GUI.roundedButton(1, 1, 36, 1, 0x696969, 0xE1E1E1, 0x2D2D2D, 0xE1E1E1, "Clear")
 local cropButton = GUI.roundedButton(1, 1, 36, 1, 0x696969, 0xE1E1E1, 0x2D2D2D, 0xE1E1E1, "Crop")
 
-local function repositionSelector(workspace)
+local function repositionSelector()
 	if dragX - touchX >= 0 then
-		selector.localX, selector.width = touchX, dragX - touchX + 1
+		selector.localX, selector.width = touchX - window.x + 1, dragX - touchX + 1
 	else
-		selector.localX, selector.width = dragX, touchX - dragX + 1
+		selector.localX, selector.width = dragX - window.x + 1, touchX - dragX + 1
 	end
 
 	if dragY - touchY >= 0 then
-		selector.localY, selector.height = touchY, dragY - touchY + 1
+		selector.localY, selector.height = touchY - window.y + 1, dragY - touchY + 1
 	else
-		selector.localY, selector.height = dragY, touchY - dragY + 1
+		selector.localY, selector.height = dragY - window.y + 1, touchY - dragY + 1
 	end
 	
 	workspace:draw()
 end
 
-local function fitSelector(workspace)
-	touchX, touchY, dragX, dragY = workspace.image.localX, workspace.image.localY, workspace.image.localX + workspace.image.width - 1, workspace.image.localY + workspace.image.height - 1
-	repositionSelector(workspace)
+local function fitSelector()
+	touchX, touchY, dragX, dragY = window.image.x, window.image.y, window.image.x + window.image.width - 1, window.image.y + window.image.height - 1
+	repositionSelector()
 end
 
-tool.onSelection = function(workspace)
-	workspace.currentToolLayout:addChild(fillButton).onTouch = function()
+tool.onSelection = function()
+	window.currentToolLayout:addChild(fillButton).onTouch = function()
 		for j = selector.y, selector.y + selector.height - 1 do
 			for i = selector.x, selector.x + selector.width - 1 do
-				image.set(workspace.image.data, i - workspace.image.x + 1, j - workspace.image.y + 1, workspace.primaryColorSelector.color, 0x0, 0, " ")
+				image.set(window.image.data, i - window.image.x + 1, j - window.image.y + 1, window.primaryColorSelector.color, 0x0, 0, " ")
 			end
 		end
 
 		workspace:draw()
 	end
 	
-	workspace.currentToolLayout:addChild(outlineButton).onTouch = function()
-		local x1, y1 = selector.x - workspace.image.x + 1, selector.y - workspace.image.y + 1
+	window.currentToolLayout:addChild(outlineButton).onTouch = function()
+		local x1, y1 = selector.x - window.image.x + 1, selector.y - window.image.y + 1
 		local x2, y2 = x1 + selector.width - 1, y1 + selector.height - 1
 		
 		for x = x1, x2 do
-			image.set(workspace.image.data, x, y1, workspace.primaryColorSelector.color, 0x0, 0, " ")
-			image.set(workspace.image.data, x, y2, workspace.primaryColorSelector.color, 0x0, 0, " ")
+			image.set(window.image.data, x, y1, window.primaryColorSelector.color, 0x0, 0, " ")
+			image.set(window.image.data, x, y2, window.primaryColorSelector.color, 0x0, 0, " ")
 		end
 
 		for y = y1 + 1, y2 - 1 do
-			image.set(workspace.image.data, x1, y, workspace.primaryColorSelector.color, 0x0, 0, " ")
-			image.set(workspace.image.data, x2, y, workspace.primaryColorSelector.color, 0x0, 0, " ")
+			image.set(window.image.data, x1, y, window.primaryColorSelector.color, 0x0, 0, " ")
+			image.set(window.image.data, x2, y, window.primaryColorSelector.color, 0x0, 0, " ")
 		end
 
 		workspace:draw()
 	end
 	
-	workspace.currentToolLayout:addChild(rasterizeLineButton).onTouch = function()
+	window.currentToolLayout:addChild(rasterizeLineButton).onTouch = function()
 		screen.rasterizeLine(
-			touchX - workspace.image.x + 1,
-			touchY - workspace.image.y + 1,
-			dragX - workspace.image.x + 1,
-			dragY - workspace.image.y + 1,
+			touchX - window.image.x + 1,
+			touchY - window.image.y + 1,
+			dragX - window.image.x + 1,
+			dragY - window.image.y + 1,
 			function(x, y)
-				image.set(workspace.image.data, x, y, workspace.primaryColorSelector.color, 0x0, 0, " ")
+				image.set(window.image.data, x, y, window.primaryColorSelector.color, 0x0, 0, " ")
 			end
 		)
 
 		workspace:draw()
 	end
 
-	workspace.currentToolLayout:addChild(rasterizeEllipseButton).onTouch = function()
+	window.currentToolLayout:addChild(rasterizeEllipseButton).onTouch = function()
 		local minX, minY, maxX, maxY = math.min(touchX, dragX), math.min(touchY, dragY), math.max(touchX, dragX), math.max(touchY, dragY)
 		local centerX, centerY = math.ceil(minX + (maxX - minX) / 2), math.ceil(minY + (maxY - minY) / 2)
 				
 		screen.rasterizeEllipse(
-			centerX - workspace.image.x + 1,
-			centerY - workspace.image.y + 1,
+			centerX - window.image.x + 1,
+			centerY - window.image.y + 1,
 			maxX - centerX,
 			maxY - centerY,
 			function(x, y)
-				image.set(workspace.image.data, x, y, workspace.primaryColorSelector.color, 0x0, 0, " ")
+				image.set(window.image.data, x, y, window.primaryColorSelector.color, 0x0, 0, " ")
 			end
 		)
 
 		workspace:draw()
 	end
 
-	workspace.currentToolLayout:addChild(clearButton).onTouch = function()
+	window.currentToolLayout:addChild(clearButton).onTouch = function()
 		for j = selector.y, selector.y + selector.height - 1 do
 			for i = selector.x, selector.x + selector.width - 1 do
-				image.set(workspace.image.data, i - workspace.image.x + 1, j - workspace.image.y + 1, 0x0, 0x0, 1, " ")
+				image.set(window.image.data, i - window.image.x + 1, j - window.image.y + 1, 0x0, 0x0, 1, " ")
 			end
 		end
 
 		workspace:draw()
 	end
 	
-	workspace.currentToolLayout:addChild(cropButton).onTouch = function()
-		workspace.image.data = image.crop(workspace.image.data, selector.x - workspace.image.x + 1, selector.y - workspace.image.y + 1, selector.width, selector.height)
-		workspace.image.reposition()
-		fitSelector(workspace)
+	window.currentToolLayout:addChild(cropButton).onTouch = function()
+		window.image.data = image.crop(window.image.data, selector.x - window.image.x + 1, selector.y - window.image.y + 1, selector.width, selector.height)
+		window.image.reposition()
+		fitSelector()
 	end
 
-	workspace.currentToolOverlay:addChild(selector)
-	fitSelector(workspace)
+	window.currentToolOverlay:addChild(selector)
+	fitSelector()
 end
 
 tool.eventHandler = function(workspace, object, e1, e2, e3, e4)
 	if e1 == "touch" then
 		touchX, touchY, dragX, dragY = e3, e4, e3, e4
-		repositionSelector(workspace)
+		repositionSelector()
 	elseif e1 == "drag" then
 		dragX, dragY = e3, e4
-		repositionSelector(workspace)
+		repositionSelector()
 	end
 end
 
 selector.eventHandler = tool.eventHandler
+
 selector.draw = function()
 	local step = true
 	for x = selector.x + 1, selector.x + selector.width - 2 do
