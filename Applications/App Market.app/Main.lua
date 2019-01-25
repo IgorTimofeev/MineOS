@@ -46,7 +46,7 @@ local orderDirections = {
 local downloadPaths = {
 	paths.system.applications,
 	paths.system.libraries,
-	paths.system.scripts,
+	"/",
 }
 
 local licenses = {
@@ -465,7 +465,7 @@ local function download(publication)
 				end
 			end
 
-			pizda(dependencyTree, 1, "/")
+			pizda(dependencyTree, 1, "")
 		end
 
 		local shortcutSwitchAndLabel = container.layout:addChild(GUI.switchAndLabel(1, 1, 44, 8, 0x66DB80, 0x0, 0xE1E1E1, 0x878787, localization.createShortcut .. ":", true))
