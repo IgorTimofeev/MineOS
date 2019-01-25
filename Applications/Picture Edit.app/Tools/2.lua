@@ -15,8 +15,10 @@ tool.eventHandler = function(workspace, object, e1, e2, e3, e4)
 	if e1 == "touch" then
 		xOld, yOld = e3, e4
 	elseif e1 == "drag" and xOld and yOld then
-		window.image.localX = window.image.localX + (e3 - xOld)
-		window.image.localY = window.image.localY + (e4 - yOld)
+		window.image.setPosition(
+			window.image.localX + (e3 - xOld),
+			window.image.localY + (e4 - yOld)
+		)
 		xOld, yOld = e3, e4
 		
 		workspace:draw()

@@ -30,9 +30,37 @@ local savePath
 local saveItem
 local tool
 
+local workspace, window, menu = system.addWindow(GUI.filledWindow(1, 1, 125, 37, 0x1E1E1E))
+
 --------------------------------------------------------------------
 
-local workspace, window, menu = system.addWindow(GUI.filledWindow(1, 1, 125, 37, 0x1E1E1E))
+window.newInput = function(...)
+	return GUI.input(1, 1, 1, 1, 0x1E1E1E, 0xC3C3C3, 0x5A5A5A, 0x1E1E1E, 0xD2D2D2, ...)
+end
+
+window.newSlider = function(...)
+	local slider = GUI.slider(1, 1, 1, 0x66DB80, 0x1E1E1E, 0xE1E1E1, 0x878787, ...)
+	slider.roundValues = true
+
+	return slider
+end
+
+window.newSwitch = function(...)
+	return GUI.switchAndLabel(1, 1, 1, 6, 0x66DB80, 0x1E1E1E, 0xE1E1E1, 0x878787, ...)
+end
+
+window.newButton1 = function(...)
+	return GUI.roundedButton(1, 1, 36, 1, 0xE1E1E1, 0x4B4B4B, 0x4B4B4B, 0xE1E1E1, ...)
+end
+
+window.newButton2 = function(...)
+	local button = GUI.roundedButton(1, 1, 36, 1, 0x4B4B4B, 0xE1E1E1, 0x2D2D2D, 0xE1E1E1, ...)
+	button.colors.disabled.background, button.colors.disabled.text = 0x4B4B4B, 0x787878
+
+	return button
+end
+
+--------------------------------------------------------------------
 
 local function saveConfig()
 	filesystem.writeTable(configPath, config)
@@ -136,8 +164,6 @@ window.toolsList = window:addChild(GUI.list(1, 1, 7, 1, 3, 0, 0x2D2D2D, 0x787878
 window.toolsList:setMargin(0, 3)
 window.image = window:addChild(GUI.object(1, 1, 1, 1))
 window.image.data = {}
-
-
 
 local function onToolTouch(index)
 	tool = window.toolsList:getItem(index).tool
@@ -292,13 +318,29 @@ window.image.eventHandler = function(workspace, object, e1, e2, e3, e4, ...)
 	end
 end
 
+window.image.setPosition = function(x, y)
+	window.image.localX = x
+	window.image.localY = y
+	window.currentToolOverlay.localX = x
+	window.currentToolOverlay.localY = y
+end
+
 window.image.reposition = function()
-	window.image.width, window.image.height = window.image.data[1], window.image.data[2]
-	if window.image.width <= window.backgroundPanel.width then
-		window.image.localX = math.floor(window.backgroundPanel.localX + window.backgroundPanel.width / 2 - window.image.width / 2)
-		window.image.localY = math.floor(window.backgroundPanel.localY + window.backgroundPanel.height / 2 - window.image.height / 2)
+	window.image.width = window.image.data[1]
+	window.image.height = window.image.data[2]
+	window.currentToolOverlay.width = window.image.width
+	window.currentToolOverlay.height = window.image.height
+
+	if window.image.width < window.backgroundPanel.width then
+		window.image.setPosition(
+			math.floor(window.backgroundPanel.localX + window.backgroundPanel.width / 2 - window.image.width / 2),
+			math.floor(window.backgroundPanel.localY + window.backgroundPanel.height / 2 - window.image.height / 2)
+		)
 	else
-		window.image.localX, window.image.localY = window.backgroundPanel.localX, window.backgroundPanel.localY
+		window.image.setPosition(
+			window.backgroundPanel.localX,
+			window.backgroundPanel.localY
+		)
 	end
 end
 
@@ -511,9 +553,6 @@ window.onResize = function(width, height)
 	window.backgroundPanel.localX = window.toolsList.width + 1
 	window.backgroundPanel.width = width - window.sidebarLayout.width - window.toolsList.width
 	window.backgroundPanel.height = height
-
-	window.currentToolOverlay.width = width
-	window.currentToolOverlay.height = height
 
 	window.sidebarPanel.localX = window.width - window.sidebarPanel.width + 1
 	window.sidebarPanel.height = height

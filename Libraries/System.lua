@@ -94,6 +94,9 @@ function system.getDefaultUserSettings()
 		interfaceColorDesktopBackground = 0x1E1E1E,
 		interfaceColorDock = 0xE1E1E1,
 		interfaceColorMenu = 0xF0F0F0,
+		interfaceColorDropDownMenuSeparator = 0xA5A5A5,
+		interfaceColorDropDownMenuDefaultBackground = 0xFFFFFF,
+		interfaceColorDropDownMenuDefaultText = 0x2D2D2D,
 
 		filesShowExtension = false,
 		filesShowHidden = false,
@@ -2357,6 +2360,10 @@ function system.updateColorScheme()
 	-- Drop down menus
 	GUI.CONTEXT_MENU_BACKGROUND_TRANSPARENCY = userSettings.interfaceTransparencyEnabled and 0.18
 	GUI.CONTEXT_MENU_SHADOW_TRANSPARENCY = userSettings.interfaceTransparencyEnabled and 0.4
+	GUI.CONTEXT_MENU_SEPARATOR_COLOR = userSettings.interfaceColorDropDownMenuSeparator
+	GUI.CONTEXT_MENU_DEFAULT_BACKGROUND_COLOR = userSettings.interfaceColorDropDownMenuDefaultBackground
+	GUI.CONTEXT_MENU_DEFAULT_TEXT_COLOR = userSettings.interfaceColorDropDownMenuDefaultText
+
 	-- Windows
 	GUI.WINDOW_SHADOW_TRANSPARENCY = userSettings.interfaceTransparencyEnabled and 0.6
 	-- Background containers

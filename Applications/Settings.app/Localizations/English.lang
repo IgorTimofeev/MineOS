@@ -35,10 +35,13 @@
 	appearanceColorScheme = "Color scheme",
 	appearanceFiles = "File properties",
 	appearanceDesktopBackground = "Desktop background",
-	appearanceDock = "Dock color",
-	appearanceMenu = "Menu",
+	appearanceDock = "Dock background",
+	appearanceMenu = "Menu background",
 	appearanceTransparencyEnabled = "Interface transparency",
 	appearanceTransparencyInfo = "Disabling the last two options will significantly reduce the number of direct calls to the CPU / GPU and increase performance",
+	appearanceDropDownDefaultBackground = "Drop down menu background",
+	appearanceDropDownDefaultText = "Drop down menu text",
+	appearanceDropDownSeparator = "Drop down menu separator",
 	
 	users = "Users",
 	

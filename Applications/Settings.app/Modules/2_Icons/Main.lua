@@ -24,23 +24,23 @@ module.onTouch = function()
 
 	window.contentLayout:addChild(GUI.text(1, 1, 0x2D2D2D, localization.appearanceColorScheme))
 
-	local backgroundColorSelector = window.contentLayout:addChild(GUI.colorSelector(1, 1, 36, 3, userSettings.interfaceColorDesktopBackground, localization.appearanceDesktopBackground))
-	local menuColorSelector = window.contentLayout:addChild(GUI.colorSelector(1, 1, 36, 3, userSettings.interfaceColorMenu, localization.appearanceMenu))
-	local dockColorSelector = window.contentLayout:addChild(GUI.colorSelector(1, 1, 36, 3, userSettings.interfaceColorDock, localization.appearanceDock))
+	local function addColorSelector(key, ...)
+		local c = window.contentLayout:addChild(GUI.colorSelector(1, 1, 36, 1, userSettings[key], ...))
+		c.onColorSelected = function()
+			userSettings[key] = c.color
 
-	backgroundColorSelector.onColorSelected = function()
-		userSettings.interfaceColorDesktopBackground = backgroundColorSelector.color
-		userSettings.interfaceColorMenu = menuColorSelector.color
-		userSettings.interfaceColorDock = dockColorSelector.color
-		userSettings.interfaceTransparencyEnabled = transparencySwitch.state
-
-		system.updateColorScheme()
-		workspace:draw()
-		system.saveUserSettings()
+			system.updateColorScheme()
+			workspace:draw()
+			system.saveUserSettings()
+		end
 	end
-	menuColorSelector.onColorSelected = backgroundColorSelector.onColorSelected
-	dockColorSelector.onColorSelected = backgroundColorSelector.onColorSelected
-	transparencySwitch.onStateChanged = backgroundColorSelector.onColorSelected
+
+	addColorSelector("interfaceColorDesktopBackground", localization.appearanceDesktopBackground)
+	addColorSelector("interfaceColorMenu", localization.appearanceMenu)
+	addColorSelector("interfaceColorDock", localization.appearanceDock)
+	addColorSelector("interfaceColorDropDownMenuDefaultBackground", localization.appearanceDropDownDefaultBackground)
+	addColorSelector("interfaceColorDropDownMenuDefaultText", localization.appearanceDropDownDefaultText)
+	addColorSelector("interfaceColorDropDownMenuSeparator", localization.appearanceDropDownSeparator)
 
 	window.contentLayout:addChild(GUI.text(1, 1, 0x2D2D2D, localization.appearanceSize))
 
@@ -79,11 +79,13 @@ module.onTouch = function()
 		userSettings.filesShowExtension = showExtensionSwitch.state
 		userSettings.filesShowHidden = showHiddenFilesSwitch.state
 		userSettings.filesShowApplicationIcon = showApplicationIconsSwitch.state
+		userSettings.interfaceTransparencyEnabled = transparencySwitch.state
+		system.updateColorScheme()
 		system.saveUserSettings()
 
 		computer.pushSignal("system", "updateFileList")
 	end
-	showHiddenFilesSwitch.onStateChanged, showApplicationIconsSwitch.onStateChanged = showExtensionSwitch.onStateChanged, showExtensionSwitch.onStateChanged
+	showHiddenFilesSwitch.onStateChanged, showApplicationIconsSwitch.onStateChanged, transparencySwitch.onStateChanged = showExtensionSwitch.onStateChanged, showExtensionSwitch.onStateChanged, showExtensionSwitch.onStateChanged
 
 end
 

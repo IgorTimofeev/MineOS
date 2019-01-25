@@ -18,14 +18,11 @@ local buttonsLayout = GUI.layout(1, 1, buttonsContainer.width, buttonsContainer.
 buttonsLayout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
 buttonsLayout:addChild(buttonsContainer)
 
-local widthInput = GUI.input(1, 1, 1, 1, 0x1E1E1E, 0xC3C3C3, 0x5A5A5A, 0x1E1E1E, 0xD2D2D2, "", "Width")
-local heightInput = GUI.input(1, 1, 1, 1, 0x1E1E1E, 0xC3C3C3, 0x5A5A5A, 0x1E1E1E, 0xD2D2D2, "", "Height")
+local widthInput = window.newInput("", "Width")
+local heightInput = window.newInput("", "Height")
 
-local expandButton = GUI.roundedButton(1, 1, 36, 1, 0x696969, 0xE1E1E1, 0x2D2D2D, 0xE1E1E1, "Expand")
-local cropButton = GUI.roundedButton(1, 1, 36, 1, 0x696969, 0xE1E1E1, 0x2D2D2D, 0xE1E1E1, "Crop")
-
-expandButton.colors.disabled.background, expandButton.colors.disabled.text = 0x4B4B4B, 0x787878
-cropButton.colors = expandButton.colors
+local expandButton = window.newButton2("Expand")
+local cropButton = window.newButton2("Crop")
 
 local function try(x, y, symbol)
 	if buttons[y] and buttons[y][x] then

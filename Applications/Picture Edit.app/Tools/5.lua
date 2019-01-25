@@ -12,22 +12,19 @@ tool.shortcut = "Brs"
 tool.keyCode = 48
 tool.about = "Classic brush tool to perform drawing with specified radius and transparency. You can configure of what data will be drawn. Also you can specify preferred symbol to draw with, otherwise whitespace will be used."
 
-local backgroundSwitch = GUI.switchAndLabel(1, 1, 1, 6, 0x66DB80, 0x1E1E1E, 0xE1E1E1, 0x878787, "Draw background:", true)
-local foregroundSwitch = GUI.switchAndLabel(1, 1, 1, 6, 0x66DB80, 0x1E1E1E, 0xE1E1E1, 0x878787, "Draw foreground:", true)
-local alphaSwitch = GUI.switchAndLabel(1, 1, 1, 6, 0x66DB80, 0x1E1E1E, 0xE1E1E1, 0x878787, "Draw alpha:", true)
-local symbolSwitch = GUI.switchAndLabel(1, 1, 1, 6, 0x66DB80, 0x1E1E1E, 0xE1E1E1, 0x878787, "Draw symbol:", true)
+local backgroundSwitch = window.newSwitch("Draw background:", true)
+local foregroundSwitch = window.newSwitch("Draw foreground:", true)
+local alphaSwitch = window.newSwitch("Draw alpha:", true)
+local symbolSwitch = window.newSwitch("Draw symbol:", true)
 
-local symbolInput = GUI.input(1, 1, 1, 1, 0x1E1E1E, 0xC3C3C3, 0x5A5A5A, 0x1E1E1E, 0xD2D2D2, "", "Symbol to draw with")
+local symbolInput = window.newInput("", "Symbol to draw with")
 symbolInput.onInputFinished = function()
 	symbolInput.text = unicode.sub(symbolInput.text, 1, 1)
 end
 
-local alphaSlider = GUI.slider(1, 1, 1, 0x66DB80, 0x1E1E1E, 0xE1E1E1, 0x878787, 0, 255, 0, false, "Alpha value: ", "")
-alphaSlider.roundValues = true
-
-local radiusSlider = GUI.slider(1, 1, 1, 0x66DB80, 0x1E1E1E, 0xE1E1E1, 0x878787, 1, 8, 1, false, "Radius: ", " px")
+local alphaSlider = window.newSlider(0, 255, 0, false, "Alpha value: ", "")
+local radiusSlider = window.newSlider(1, 8, 1, false, "Radius: ", " px")
 radiusSlider.height = 2
-radiusSlider.roundValues = true
 
 tool.onSelection = function()
 	window.currentToolLayout:addChild(backgroundSwitch)

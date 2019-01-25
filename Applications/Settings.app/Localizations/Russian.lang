@@ -39,6 +39,9 @@
 	appearanceMenu = "Цвет меню",
 	appearanceTransparencyEnabled = "Прозрачность интерфейса",
 	appearanceTransparencyInfo = "Отключение последних двух опций существенно снизит количество прямых обращений к CPU/GPU и увеличит производительность",
+	appearanceDropDownDefaultBackground = "Фон контекстного меню",
+	appearanceDropDownDefaultText = "Текст контекстного меню",
+	appearanceDropDownSeparator = "Разделитель контекстного меню",
 
 	users = "Пользователи",
 

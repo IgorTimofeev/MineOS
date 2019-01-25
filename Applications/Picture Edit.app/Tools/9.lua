@@ -33,7 +33,7 @@ for y = 1, 8, 2 do
 	step = not step
 end
 
-local backgroundSwitch = GUI.switchAndLabel(1, 1, 1, 6, 0x66DB80, 0x2D2D2D, 0xE1E1E1, 0x878787, "Draw background:", false)
+local backgroundSwitch = window.newSwitch("Draw background:", false)
 
 tool.onSelection = function()
 	window.currentToolLayout:addChild(layout)

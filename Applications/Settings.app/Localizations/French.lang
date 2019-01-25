@@ -39,6 +39,9 @@
 	appearanceMenu = "Couleur du menu",
 	appearanceTransparencyEnabled = "Transparence de l'interface",
 	appearanceTransparencyInfo = "La désactivation des deux dernières options réduira considérablement le nombre d'appels directs au processeur / processeur graphique et augmentera les performances.",
+	appearanceDropDownDefaultBackground = "Menu déroulant arrière-plan",
+	appearanceDropDownDefaultText = "Menu déroulant texte",
+	appearanceDropDownSeparator = "Menu déroulant séparateur",
 	
 	users = "Liste des membres",
 	

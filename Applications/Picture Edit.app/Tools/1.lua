@@ -14,24 +14,24 @@ tool.about = "Selection tool allows you to select preferred area on image and to
 
 local selector, touchX, touchY, dragX, dragY = GUI.object(1, 1, 1, 1)
 
-local fillButton = GUI.roundedButton(1, 1, 36, 1, 0xE1E1E1, 0x2D2D2D, 0x2D2D2D, 0xE1E1E1, "Fill")
-local outlineButton = GUI.roundedButton(1, 1, 36, 1, 0xE1E1E1, 0x2D2D2D, 0x2D2D2D, 0xE1E1E1, "Outline")
-local rasterizeLineButton = GUI.roundedButton(1, 1, 36, 1, 0xE1E1E1, 0x2D2D2D, 0x2D2D2D, 0xE1E1E1, "Rasterize line")
-local rasterizeEllipseButton = GUI.roundedButton(1, 1, 36, 1, 0xE1E1E1, 0x2D2D2D, 0x2D2D2D, 0xE1E1E1, "Rasterize ellipse")
-local clearButton = GUI.roundedButton(1, 1, 36, 1, 0x696969, 0xE1E1E1, 0x2D2D2D, 0xE1E1E1, "Clear")
-local cropButton = GUI.roundedButton(1, 1, 36, 1, 0x696969, 0xE1E1E1, 0x2D2D2D, 0xE1E1E1, "Crop")
+local fillButton = window.newButton1("Fill")
+local outlineButton = window.newButton1("Outline")
+local rasterizeLineButton = window.newButton1("Rasterize line")
+local rasterizeEllipseButton = window.newButton1("Rasterize ellipse")
+local clearButton = window.newButton2("Clear")
+local cropButton = window.newButton2("Crop")
 
 local function repositionSelector()
 	if dragX - touchX >= 0 then
-		selector.localX, selector.width = touchX - window.x + 1, dragX - touchX + 1
+		selector.localX, selector.width = touchX - window.currentToolOverlay.x + 1, dragX - touchX + 1
 	else
-		selector.localX, selector.width = dragX - window.x + 1, touchX - dragX + 1
+		selector.localX, selector.width = dragX - window.currentToolOverlay.x + 1, touchX - dragX + 1
 	end
 
 	if dragY - touchY >= 0 then
-		selector.localY, selector.height = touchY - window.y + 1, dragY - touchY + 1
+		selector.localY, selector.height = touchY - window.currentToolOverlay.y + 1, dragY - touchY + 1
 	else
-		selector.localY, selector.height = dragY - window.y + 1, touchY - dragY + 1
+		selector.localY, selector.height = dragY - window.currentToolOverlay.y + 1, touchY - dragY + 1
 	end
 	
 	workspace:draw()
@@ -154,8 +154,8 @@ selector.draw = function()
 	screen.drawText(selector.x + selector.width - 1, selector.y, 0x0, "┓")
 	screen.drawText(selector.x, selector.y + selector.height - 1, 0x0, "┗")
 
-	screen.drawText(touchX, touchY, 0x66FF80, "⬤")
-	screen.drawText(dragX, dragY, 0x66FF80, "⬤")
+	screen.drawText(selector.x, selector.y, 0x66FF80, "⬤")
+	screen.drawText(selector.x + selector.width - 1, selector.y + selector.height - 1, 0x66FF80, "⬤")
 end
 
 ------------------------------------------------------

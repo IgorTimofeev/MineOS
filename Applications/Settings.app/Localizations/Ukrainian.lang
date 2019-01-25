@@ -39,6 +39,9 @@
 	appearanceMenu = "Колір меню",
 	appearanceTransparencyEnabled = "Прозорість інтерфейсу",
 	appearanceTransparencyInfo = "Відключення останніх двох опцій істотно знизить кількість прямих звернень до CPU / GPU і збільшить продуктивність",
+	appearanceDropDownDefaultBackground = "Випадаюче меню фон",
+	appearanceDropDownDefaultText = "Випадаюче меню текст",
+	appearanceDropDownSeparator = "Роздільник спадного меню",
 
 	users = "Користувачі",
 

@@ -39,6 +39,9 @@
 	appearanceMenu = "Menu",
 	appearanceTransparencyEnabled = "Trasparenza interfaccia",
 	appearanceTransparencyInfo = "Disabilitare le ultime due opzioni ridurrà significativamente il numero di chiamate dirette alla CPU / GPU e aumenterà le prestazioni",
+	appearanceDropDownDefaultBackground = "Sfondo menu a discesa",
+	appearanceDropDownDefaultText = "Testo menu a discesa",
+	appearanceDropDownSeparator = "Separatore menu a discesa",
 	
 	users = "Internauti",
 	

@@ -39,6 +39,9 @@
 	appearanceMenu = "Menü",
 	appearanceTransparencyEnabled = "Interface Transparenz",
 	appearanceTransparencyInfo = "Das deaktivieren der letzten beiden Optionen reduziert die Anzahl der direkten Aufrufe an die CPU / GPU erheblich und erhöht die Leistung",
+	appearanceDropDownDefaultBackground = "Dropdown-Menü hintergrund",
+	appearanceDropDownDefaultText = "Dropdown-Menü text",
+	appearanceDropDownSeparator = "Dropdown-Menü Trennzeichen",
 	
 	users = "Internetnutzer",
 	

@@ -11,8 +11,8 @@ tool.shortcut = "Pck"
 tool.keyCode = 56
 tool.about = "Picker tool allows to select interested data from image as primary or secondary color. You can configure of what colors to pick."
 
-local pickBackgroundSwitch = GUI.switchAndLabel(1, 1, width, 6, 0x66DB80, 0x1E1E1E, 0xE1E1E1, 0x878787, "Pick background:", true)
-local pickForegroundSwitch = GUI.switchAndLabel(1, 1, width, 6, 0x66DB80, 0x1E1E1E, 0xE1E1E1, 0x878787, "Pick foreground:", true)
+local pickBackgroundSwitch = window.newSwitch("Pick background:", true)
+local pickForegroundSwitch = window.newSwitch("Pick foreground:", true)
 
 tool.onSelection = function()
 	window.currentToolLayout:addChild(pickBackgroundSwitch)

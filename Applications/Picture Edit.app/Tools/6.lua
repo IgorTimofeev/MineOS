@@ -11,13 +11,12 @@ tool.shortcut = "Ers"
 tool.keyCode = 18
 tool.about = "Eraser tool will cleanup pixels just like brush tool. You can configure of what data is need to be erased"
 
-local backgroundSwitch = GUI.switchAndLabel(1, 1, width, 6, 0x66DB80, 0x1E1E1E, 0xE1E1E1, 0x878787, "Erase background:", true)
-local foregroundSwitch = GUI.switchAndLabel(1, 1, width, 6, 0x66DB80, 0x1E1E1E, 0xE1E1E1, 0x878787, "Erase foreground:", true)
-local alphaSwitch = GUI.switchAndLabel(1, 1, width, 6, 0x66DB80, 0x1E1E1E, 0xE1E1E1, 0x878787, "Erase alpha:", true)
-local symbolSwitch = GUI.switchAndLabel(1, 1, width, 6, 0x66DB80, 0x1E1E1E, 0xE1E1E1, 0x878787, "Erase symbol:", true)
-local radiusSlider = GUI.slider(1, 1, 1, 0x66DB80, 0x1E1E1E, 0xE1E1E1, 0x878787, 1, 8, 1, false, "Radius: ", " px")
+local backgroundSwitch = window.newSwitch("Erase background:", true)
+local foregroundSwitch = window.newSwitch("Erase foreground:", true)
+local alphaSwitch = window.newSwitch("Erase alpha:", true)
+local symbolSwitch = window.newSwitch("Erase symbol:", true)
+local radiusSlider = window.newSlider(1, 8, 1, false, "Radius: ", " px")
 radiusSlider.height = 2
-radiusSlider.roundValues = true
 
 tool.onSelection = function()
 	window.currentToolLayout:addChild(backgroundSwitch)
