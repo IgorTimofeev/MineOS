@@ -4,7 +4,8 @@ local GUI = require("GUI")
 local screen = require("Screen")
 local color = require("Color")
 local system = require("System")
-local bigLetters = require("bigLetters")
+local bigLetters = require("BigLetters")
+local filesystem = require("Filesystem")
 
 local args, options = system.parseArguments(...)
 

@@ -7,18 +7,9 @@ local system = require("System")
 local workspace, icon, menu = select(1, ...), select(2, ...), select(3, ...)
 local localization = system.getSystemLocalization()
 
-menu:addItem(localization.edit).onTouch = function()
-	system.execute(paths.system.applicationMineCodeIDE, icon.path)
-end
 
 menu:addItem(localization.uploadToPastebin, not component.isAvailable("internet")).onTouch = function()
 	system.uploadToPastebin(icon.path)
-end
-
-menu:addSeparator()
-
-menu:addItem(localization.launchWithArguments).onTouch = function()
-	system.launchWithArguments(workspace, icon.path)
 end
 
 menu:addItem(localization.flashEEPROM, not component.isAvailable("eeprom") or filesystem.size(icon.path) > 4096).onTouch = function()
@@ -30,4 +21,8 @@ menu:addItem(localization.flashEEPROM, not component.isAvailable("eeprom") or fi
 	
 	container:remove()
 	workspace:draw()
+end
+
+menu:addItem(localization.launchWithArguments).onTouch = function()
+	system.launchWithArguments(workspace, icon.path)
 end

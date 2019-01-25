@@ -116,39 +116,12 @@ function system.getDefaultUserSettings()
 			filesystem.path(paths.system.applicationSettings),
 		},
 		extensions = {
-			[".3dm"] = {
-				icon = paths.system.icons .. "3DModel.pic",
-				launcher = paths.system.applications .. "3D Print.app/Main.lua",
-				contextMenu = paths.system.extensions .. "3dm/Context menu.lua"
-			},
-			[".pic"] = {
-				icon = paths.system.icons .. "Image.pic",
-				launcher = paths.system.applicationPictureEdit,
-				contextMenu = paths.system.extensions .. "Pic/Context menu.lua"
-			},
-			[".cfg"] = {
-				icon = paths.system.icons .. "Config.pic"
-			},
-			[".txt"] = {
-				icon = paths.system.icons .. "Text.pic"
-			},
-			[".lang"] = {
-				icon = paths.system.icons .. "Localization.pic"
-			},
-			[".pkg"] = {
-				icon = paths.system.icons .. "Archive.pic",
-				launcher = paths.system.extensions .. "Pkg/Launcher.lua",
-			},
-			[".lua"] = {
-				icon = paths.system.icons .. "Lua.pic",
-				launcher = paths.system.extensions .. "Lua/Launcher.lua",
-				contextMenu = paths.system.extensions .. "Lua/Context menu.lua"
-			},
-			["script"] = {
-				icon = paths.system.icons .. "Script.pic",
-				launcher = paths.system.extensions .. "Lua/Launcher.lua",
-				contextMenu = paths.system.extensions .. "Lua/Context menu.lua"
-			},
+			[".lua"] = filesystem.path(paths.system.applicationMineCodeIDE),
+			[".cfg"] = filesystem.path(paths.system.applicationMineCodeIDE),
+			[".txt"] = filesystem.path(paths.system.applicationMineCodeIDE),
+			[".lang"] = filesystem.path(paths.system.applicationMineCodeIDE),
+			[".pic"] = filesystem.path(paths.system.applicationPictureEdit),
+			[".3dm"] = paths.system.applications .. "3D Print.app/"
 		},
 	}
 end
@@ -345,14 +318,14 @@ local iconLaunchers = {
 
 	extension = function(icon)
 		if icon.isShortcut then
-			system.execute(userSettings.extensions[icon.shortcutExtension].launcher, icon.shortcutPath, "-o")
+			system.execute(userSettings.extensions[icon.shortcutExtension] .. "Main.lua", icon.shortcutPath, "-o")
 		else
-			system.execute(userSettings.extensions[icon.extension].launcher, icon.path, "-o")
+			system.execute(userSettings.extensions[icon.extension] .. "Main.lua", icon.path, "-o")
 		end
 	end,
 
 	script = function(icon)
-		system.execute(icon.path)
+		system.execute(paths.system.applicationMineCodeIDE, icon.path)
 	end,
 
 	showPackageContent = function(icon)
@@ -368,6 +341,15 @@ local iconLaunchers = {
 		
 		workspace:draw()
 	end,
+
+	archive = function(icon)
+		local success, reason = require("Compressor").unpack(icon.path, filesystem.path(icon.path))
+		if success then
+			computer.pushSignal("system", "updateFileList")
+		else
+			GUI.alert(reason)
+		end
+	end
 }
 
 function system.calculateIconProperties()
@@ -515,23 +497,7 @@ local function iconAnalyseExtension(icon, launchers)
 	if icon.isDirectory then
 		if icon.extension == ".app" then
 			if userSettings.filesShowApplicationIcon then
-				if filesystem.exists(icon.path .. "Icon.pic") then
-					icon.image = image.load(icon.path .. "Icon.pic")
-				elseif filesystem.exists(icon.path .. "Icon.lua") then
-					local result, reason = loadfile(icon.path .. "Icon.lua")
-					if result then
-						result, reason = pcall(result)
-						if result then
-							icon.liveImage = reason
-						else
-							error("Failed to load live icon image: " .. tostring(reason))
-						end
-					else
-						error("Failed to load live icon image: " .. tostring(reason))
-					end
-				else
-					icon.image = iconCache.fileNotExists
-				end
+				icon.image = image.load(icon.path .. "Icon.pic") or iconCache.fileNotExists
 			else
 				icon.image = iconCache.application
 			end
@@ -563,17 +529,22 @@ local function iconAnalyseExtension(icon, launchers)
 			icon.image = shortcutIcon.image
 			icon.shortcutLaunch = shortcutIcon.launch
 			icon.launch = launchers.shortcut
+		elseif icon.extension == ".pkg" then
+			icon.image = iconCache.archive
+			icon.launch = launchers.archive
+		elseif userSettings.extensions[icon.extension] then
+			icon.image =
+				image.load(userSettings.extensions[icon.extension] .. "Extensions/" .. icon.extension .. "/Icon.pic") or
+				image.load(userSettings.extensions[icon.extension] .. "Icon.pic") or
+				iconCache.fileNotExists
+
+			icon.launch = launchers.extension
 		elseif not filesystem.exists(icon.path) then
 			icon.image = iconCache.fileNotExists
 			icon.launch = launchers.corrupted
 		else
-			if userSettings.extensions[icon.extension] then
-				icon.launch = launchers.extension
-				icon.image = system.cacheIcon(icon.extension, userSettings.extensions[icon.extension].icon)
-			else
-				icon.launch = launchers.script
-				icon.image = iconCache.script
-			end
+			icon.image = iconCache.script
+			icon.launch = launchers.script
 		end
 	end
 
@@ -765,6 +736,10 @@ local function iconOnRightClick(icon, e1, e2, e3, e4)
 	if #selectedIcons == 1 then
 		if icon.isDirectory then
 			if icon.extension == ".app" then
+				contextMenu:addItem(localization.edit .. " Main.lua").onTouch = function()
+					system.execute(paths.system.applicationMineCodeIDE, icon.path .. "Main.lua")
+				end
+
 				contextMenu:addItem(localization.showPackageContent).onTouch = function()
 					icon.parent.parent.launchers.showPackageContent(icon)
 				end		
@@ -788,10 +763,6 @@ local function iconOnRightClick(icon, e1, e2, e3, e4)
 					end
 
 					workspace:draw()
-				end
-
-				contextMenu:addItem(localization.edit .. " Main.lua").onTouch = function()
-					system.execute(paths.system.applicationMineCodeIDE, icon.path .. "Main.lua")
 				end
 
 				contextMenu:addSeparator()
@@ -842,33 +813,70 @@ local function iconOnRightClick(icon, e1, e2, e3, e4)
 				end
 
 				contextMenu:addSeparator()
-			else				
-				if userSettings.extensions[icon.extension] and userSettings.extensions[icon.extension].contextMenu then
-					local success, reason = pcall(loadfile(userSettings.extensions[icon.extension].contextMenu), workspace, icon, contextMenu)
-					if success then
-						contextMenu:addSeparator()
-					else
-						GUI.alert("Failed to load extension association: " .. tostring(reason))
-					end
-				else
-					contextMenu:addItem(localization.edit).onTouch = function()
-						system.execute(paths.system.applicationMineCodeIDE, icon.path)
-					end
-
+			else
+				local function addDefault()
 					contextMenu:addItem(localization.uploadToPastebin, not component.isAvailable("internet")).onTouch = function()
 						system.uploadToPastebin(icon.path)
 					end
-
 					contextMenu:addSeparator()
 				end
 
-				-- local subMenu = contextMenu:addSubMenuItem(localization.openWith)
-				-- local fileList = filesystem.sortedList(paths.system.applications, "name")
-				-- subMenu:addItem(localization.select)
-				-- subMenu:addSeparator()
-				-- for i = 1, #fileList do
-				-- 	subMenu:addItem(fileList[i].nameWithoutExtension)
-				-- end
+				if userSettings.extensions[icon.extension] then
+					local result, reason = loadfile(userSettings.extensions[icon.extension] .. "Extensions/" .. icon.extension .. "/Context menu.lua")
+					if result then
+						result, reason = pcall(result, workspace, icon, contextMenu)
+
+						if result then
+							contextMenu:addSeparator()
+						else
+							GUI.alert("Failed to load extension association: " .. tostring(reason))
+						end
+					else
+						addDefault()
+					end
+				else
+					addDefault()
+				end
+
+				-- Open with
+				local subMenu = contextMenu:addSubMenuItem(localization.openWith)
+				
+				local function setAssociation(path)
+					userSettings.extensions[icon.extension] = path
+					
+					icon:analyseExtension(icon.parent.parent.launchers)
+					icon:launch()
+					workspace:draw()
+
+					system.saveUserSettings()
+				end
+
+				subMenu:addItem(localization.select).onTouch = function()
+					local filesystemDialog = GUI.addFilesystemDialog(workspace, true, 50, math.floor(workspace.height * 0.8), localization.open, localization.cancel, localization.fileName, "/")
+					
+					filesystemDialog:setMode(GUI.IO_MODE_OPEN, GUI.IO_MODE_DIRECTORY)
+					filesystemDialog:addExtensionFilter(".app")
+					filesystemDialog:expandPath(paths.system.applications)
+					filesystemDialog.filesystemTree.selectedItem = userSettings.extensions[icon.extension]
+					filesystemDialog.onSubmit = function(path)
+						setAssociation(path)
+					end
+
+					filesystemDialog:show()
+				end
+
+				subMenu:addSeparator()
+
+				local list = filesystem.list(paths.system.applications)
+				for i = 1, #list do
+					local path = paths.system.applications .. list[i]
+
+					if filesystem.isDirectory(path) and filesystem.extension(list[i]) == ".app" then
+						subMenu:addItem(filesystem.hideExtension(list[i])).onTouch = function()
+							setAssociation(path)
+						end
+					end
+				end
 			end
 		end
 	end
@@ -895,50 +903,6 @@ local function iconOnRightClick(icon, e1, e2, e3, e4)
 		end
 
 		contextMenu:addSeparator()
-	end
-
-	local subMenu = contextMenu:addSubMenuItem(localization.archive .. (#selectedIcons > 1 and " (" .. #selectedIcons .. ")" or ""))
-	
-	local function archive(where)
-		local itemsToArchive = {}
-		for i = 1, #selectedIcons do
-			table.insert(itemsToArchive, selectedIcons[i].path)
-		end
-
-		local success, reason = require("Compressor").pack(where .. "/Archive.pkg", itemsToArchive)
-		if not success then
-			GUI.alert(reason)
-		end
-		
-		computer.pushSignal("system", "updateFileList")
-	end
-
-	subMenu:addItem(localization.inCurrentDirectory).onTouch = function()
-		archive(filesystem.path(icon.path))
-	end
-
-	subMenu:addItem(localization.onDesktop).onTouch = function()
-		archive(paths.user.desktop)
-	end
-
-	local function cutOrCopy(cut)
-		for i = 1, #icon.parent.children do
-			icon.parent.children[i].cut = nil
-		end
-
-		system.clipboard = {cut = cut}
-		for i = 1, #selectedIcons do
-			selectedIcons[i].cut = cut
-			table.insert(system.clipboard, selectedIcons[i].path)
-		end
-	end
-
-	contextMenu:addItem(localization.cut).onTouch = function()
-		cutOrCopy(true)
-	end
-
-	contextMenu:addItem(localization.copy).onTouch = function()
-		cutOrCopy()
 	end
 
 	if not icon.isShortcut or #selectedIcons > 1 then
@@ -969,6 +933,59 @@ local function iconOnRightClick(icon, e1, e2, e3, e4)
 			
 			computer.pushSignal("system", "updateFileList")
 		end
+	end
+
+	local subMenu = contextMenu:addSubMenuItem(localization.archive .. (#selectedIcons > 1 and " (" .. #selectedIcons .. ")" or ""))
+	
+	local function archive(where)
+		local itemsToArchive = {}
+		for i = 1, #selectedIcons do
+			table.insert(itemsToArchive, selectedIcons[i].path)
+		end
+
+		local success, reason = require("Compressor").pack(where .. "/Archive.pkg", itemsToArchive)
+		if not success then
+			GUI.alert(reason)
+		end
+		
+		computer.pushSignal("system", "updateFileList")
+	end
+
+	subMenu:addItem(localization.inCurrentDirectory).onTouch = function()
+		archive(filesystem.path(icon.path))
+	end
+
+	subMenu:addItem(localization.onDesktop).onTouch = function()
+		archive(paths.user.desktop)
+	end
+
+	if #selectedIcons == 1 then
+		contextMenu:addItem(localization.addToDock).onTouch = function()
+			dockContainer.addIcon(icon.path).keepInDock = true
+			dockContainer.saveUserSettings()
+		end
+	end
+
+	contextMenu:addSeparator()
+
+	local function cutOrCopy(cut)
+		for i = 1, #icon.parent.children do
+			icon.parent.children[i].cut = nil
+		end
+
+		system.clipboard = {cut = cut}
+		for i = 1, #selectedIcons do
+			selectedIcons[i].cut = cut
+			table.insert(system.clipboard, selectedIcons[i].path)
+		end
+	end
+
+	contextMenu:addItem(localization.cut).onTouch = function()
+		cutOrCopy(true)
+	end
+
+	contextMenu:addItem(localization.copy).onTouch = function()
+		cutOrCopy()
 	end
 
 	if #selectedIcons == 1 then
@@ -1005,13 +1022,6 @@ local function iconOnRightClick(icon, e1, e2, e3, e4)
 	end
 
 	contextMenu:addSeparator()
-
-	if #selectedIcons == 1 then
-		contextMenu:addItem(localization.addToDock).onTouch = function()
-			dockContainer.addIcon(icon.path).keepInDock = true
-			dockContainer.saveUserSettings()
-		end
-	end
 
 	contextMenu:addItem(localization.properties).onTouch = function()
 		for i = 1, #selectedIcons do
@@ -2659,6 +2669,7 @@ bootRealTime = math.floor(filesystem.lastModified(temporaryPath) / 1000)
 filesystem.remove(temporaryPath)
 
 -- Caching commonly used icons
+system.cacheIcon("archive", paths.system.icons .. "Archive.pic")
 system.cacheIcon("directory", paths.system.icons .. "Folder.pic")
 system.cacheIcon("fileNotExists", paths.system.icons .. "FileNotExists.pic")
 system.cacheIcon("application", paths.system.icons .. "Application.pic")
