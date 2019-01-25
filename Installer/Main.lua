@@ -503,8 +503,11 @@ addStage(function()
 	addTitle(0x969696, localization.creating)
 	workspace:draw()
 
-	-- Switching to selected filesystem proxy for performing system library operations
-	
+	-- Renaming if possible
+	if not selectedFilesystemProxy.getLabel() then
+		selectedFilesystemProxy.setLabel("MineOS HDD")
+	end
+
 	-- Creating system paths
 	filesystem.setProxy(selectedFilesystemProxy)
 
