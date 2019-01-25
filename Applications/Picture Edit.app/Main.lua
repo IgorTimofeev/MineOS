@@ -290,7 +290,7 @@ window.secondaryColorSelector = window:addChild(GUI.colorSelector(3, 1, 5, 2, 0x
 window.primaryColorSelector = window:addChild(GUI.colorSelector(2, 1, 5, 2, 0x000000, " "))
 window.secondaryColorSelector.draw, window.primaryColorSelector.draw = colorSelectorDraw, colorSelectorDraw
 
-window.swapColorsButton = window:addChild(GUI.adaptiveButton(3, 1, 0, 0, nil, 0xD2D2D2, nil, 0xA5A5A5, "<>"))
+window.swapColorsButton = window:addChild(GUI.button(1, 1, window.toolsList.width, 1, nil, 0x696969, nil, 0xA5A5A5, ">"))
 window.swapColorsButton.onTouch = swapColors
 
 window.image.eventHandler = function(workspace, object, e1, e2, e3, e4, ...)

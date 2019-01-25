@@ -67,7 +67,7 @@ function system.getDefaultUserSettings()
 	return {
 		localizationLanguage = "English",
 
-		timeForat = "%d %b %Y %H:%M:%S",
+		timeFormat = "%d %b %Y %H:%M:%S",
 		timeRealTimestamp = true,
 		timeTimezone = 0,
 
