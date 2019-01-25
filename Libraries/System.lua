@@ -15,7 +15,6 @@ local system = {}
 
 local iconImageWidth = 8
 local iconImageHeight = 4
-local iconCache = {}
 
 local bootUptime = computer.uptime()
 local dateUptime = bootUptime
@@ -40,6 +39,15 @@ local desktopBackgroundColor = 0x1E1E1E
 local desktopBackgroundWallpaper
 local desktopBackgroundWallpaperX
 local desktopBackgroundWallpaperY
+
+-- Caching commonly used icons
+local iconCache = {
+	archive = image.load(paths.system.icons .. "Archive.pic"),
+	directory = image.load(paths.system.icons .. "Folder.pic"),
+	fileNotExists = image.load(paths.system.icons .. "FileNotExists.pic"),
+	application = image.load(paths.system.icons .. "Application.pic"),
+	script = image.load(paths.system.icons .. "Script.pic"),
+}
 
 --------------------------------------------------------------------------------
 
@@ -365,14 +373,6 @@ function system.updateIconProperties()
 	computer.pushSignal("system", "updateFileList")
 end
 
-function system.cacheIcon(name, path)
-	if not iconCache[name] then
-		iconCache[name] = image.load(path)
-	end
-	
-	return iconCache[name]
-end
-
 local function drawSelection(x, y, width, height, color, transparency)
 	screen.drawText(x, y, color, string.rep("▄", width), transparency)
 	screen.drawText(x, y + height - 1, color, string.rep("▀", width), transparency)
@@ -533,10 +533,20 @@ local function iconAnalyseExtension(icon, launchers)
 			icon.image = iconCache.archive
 			icon.launch = launchers.archive
 		elseif userSettings.extensions[icon.extension] then
-			icon.image =
-				image.load(userSettings.extensions[icon.extension] .. "Extensions/" .. icon.extension .. "/Icon.pic") or
-				image.load(userSettings.extensions[icon.extension] .. "Icon.pic") or
-				iconCache.fileNotExists
+			if iconCache[icon.extension] then
+				icon.image = iconCache[icon.extension]
+			else
+				local picture =
+					image.load(userSettings.extensions[icon.extension] .. "Extensions/" .. icon.extension .. "/Icon.pic") or
+					image.load(userSettings.extensions[icon.extension] .. "Icon.pic")
+				
+				if picture then
+					iconCache[icon.extension] = picture
+					icon.image = picture
+				else
+					icon.image = iconCache.fileNotExists
+				end
+			end
 
 			icon.launch = launchers.extension
 		elseif not filesystem.exists(icon.path) then
@@ -844,6 +854,7 @@ local function iconOnRightClick(icon, e1, e2, e3, e4)
 				local function setAssociation(path)
 					userSettings.extensions[icon.extension] = path
 					
+					iconCache[icon.extension] = nil
 					icon:analyseExtension(icon.parent.parent.launchers)
 					icon:launch()
 					workspace:draw()
@@ -2667,13 +2678,6 @@ local temporaryPath = system.getTemporaryPath()
 filesystem.write(temporaryPath, "")
 bootRealTime = math.floor(filesystem.lastModified(temporaryPath) / 1000)
 filesystem.remove(temporaryPath)
-
--- Caching commonly used icons
-system.cacheIcon("archive", paths.system.icons .. "Archive.pic")
-system.cacheIcon("directory", paths.system.icons .. "Folder.pic")
-system.cacheIcon("fileNotExists", paths.system.icons .. "FileNotExists.pic")
-system.cacheIcon("application", paths.system.icons .. "Application.pic")
-system.cacheIcon("script", paths.system.icons .. "Script.pic")
 
 --------------------------------------------------------------------------------
 
