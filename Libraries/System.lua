@@ -1485,7 +1485,26 @@ local function updateMenu()
 	desktopMenu.children = focusedWindow and focusedWindow.menu.children or system.menuInitialChildren
 end
 
+local function setWorkspaceHidden(state)
+	dockContainer.hidden = state
+	desktopIconField.hidden = state
+	desktopBackground.hidden = state
+end
+
+local function windowMaximize(window, ...)
+	window.movingEnabled = window.maximized
+	setWorkspaceHidden(not window.maximized)
+	GUI.windowMaximize(window, ...)
+end
+
+local function windowMinimize(...)
+	setWorkspaceHidden(false)
+	GUI.windowMinimize(...)
+end
+
 local function windowRemove(window)
+	setWorkspaceHidden(false)
+
 	if window.dockIcon then
 		-- Удаляем ссылку на окно из докиконки
 		window.dockIcon.windows[window] = nil
@@ -1582,6 +1601,8 @@ function system.addWindow(window, dontAddToDock, preserveCoordinates)
 
 	-- "Закрытие" акошычка
 	window.remove = windowRemove
+	window.maximize = windowMaximize
+	window.minimize = windowMinimize
 
 	-- Кнопочкам тоже эту хуйню пихаем
 	if window.actionButtons then

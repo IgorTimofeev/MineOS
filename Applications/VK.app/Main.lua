@@ -120,7 +120,7 @@ local function request(url, postData, headers)
 
 		return data
 	else
-		GUI.alert("Failed to perform internet request: ")
+		GUI.alert("Failed to perform internet request: " .. tostring(reason))
 	end
 end
 
@@ -1661,7 +1661,7 @@ local function login()
 	passwordInput.onInputFinished = usernameInput.onInputFinished
 
 	loginButton.onTouch = function()
-		local result, reason = request("https://oauth.vk.com/token?grant_type=password&client_id=3697615&client_secret=AlVXZFMUqyrnABp8ncuU&username=" .. usernameInput.text .. "&password=" .. passwordInput.text .. "&v=" .. VKAPIVersion)
+		local result, reason = request("https://oauth.vk.com/token?grant_type=password&client_id=3697615&client_secret=AlVXZFMUqyrnABp8ncuU&username=" .. internet.encode(usernameInput.text) .. "&password=" .. internet.encode(passwordInput.text) .. "&v=" .. VKAPIVersion)
 		if result then
 			if result.access_token then
 				currentAccessToken = result.access_token

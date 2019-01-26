@@ -4206,30 +4206,32 @@ local function windowCheck(window, x, y)
 end
 
 local function windowEventHandler(workspace, window, e1, e2, e3, e4, ...)
-	if e1 == "touch" then
-		if not windowCheck(window, e3, e4) then
-			window.lastTouchX, window.lastTouchY = e3, e4
-		end
-
-		if window ~= window.parent.children[#window.parent.children] then
-			window:moveToFront()
-			
-			if window.onFocus then
-				window.onFocus(workspace, window, e1, e2, e3, e4, ...)
+	if window.movingEnabled then
+		if e1 == "touch" then
+			if not windowCheck(window, e3, e4) then
+				window.lastTouchX, window.lastTouchY = e3, e4
 			end
 
-			workspace:draw()
+			if window ~= window.parent.children[#window.parent.children] then
+				window:moveToFront()
+				
+				if window.onFocus then
+					window.onFocus(workspace, window, e1, e2, e3, e4, ...)
+				end
+
+				workspace:draw()
+			end
+		elseif e1 == "drag" and window.lastTouchX and not windowCheck(window, e3, e4) then
+			local xOffset, yOffset = e3 - window.lastTouchX, e4 - window.lastTouchY
+			if xOffset ~= 0 or yOffset ~= 0 then
+				window.localX, window.localY = window.localX + xOffset, window.localY + yOffset
+				window.lastTouchX, window.lastTouchY = e3, e4
+				
+				workspace:draw()
+			end
+		elseif e1 == "drop" then
+			window.lastTouchX, window.lastTouchY = nil, nil
 		end
-	elseif e1 == "drag" and window.lastTouchX and not windowCheck(window, e3, e4) then
-		local xOffset, yOffset = e3 - window.lastTouchX, e4 - window.lastTouchY
-		if xOffset ~= 0 or yOffset ~= 0 then
-			window.localX, window.localY = window.localX + xOffset, window.localY + yOffset
-			window.lastTouchX, window.lastTouchY = e3, e4
-			
-			workspace:draw()
-		end
-	elseif e1 == "drop" then
-		window.lastTouchX, window.lastTouchY = nil, nil
 	end
 end
 
@@ -4242,7 +4244,7 @@ local function windowResize(window, width, height)
 	return window
 end
 
-local function windowMaximize(window)
+function GUI.windowMaximize(window)
 	if window.maximized then
 		window.localX, window.localY = window.oldGeometryX, window.oldGeometryY
 		window:resize(window.oldGeometryWidth, window.oldGeometryHeight)
@@ -4255,7 +4257,7 @@ local function windowMaximize(window)
 	window.maximized = not window.maximized
 end
 
-local function windowMinimize(window)
+function GUI.windowMinimize(window)
 	window.hidden = not window.hidden
 end
 
@@ -4265,10 +4267,11 @@ function GUI.window(x, y, width, height)
 	window.passScreenEvents = false
 
 	window.resize = windowResize
-	window.maximize = windowMaximize
-	window.minimize = windowMinimize
+	window.maximize = GUI.windowMaximize
+	window.minimize = GUI.windowMinimize
 	window.eventHandler = windowEventHandler
 	window.draw = windowDraw
+	window.movingEnabled = true
 
 	return window
 end
