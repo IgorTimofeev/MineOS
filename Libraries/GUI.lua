@@ -58,8 +58,6 @@ local GUI = {
 	WINDOW_TAB_BAR_SELECTED_BACKGROUND_COLOR = 0xF0F0F0,
 	WINDOW_TAB_BAR_SELECTED_TEXT_COLOR = 0x2D2D2D,
 
-	PALETTE_CONFIG_PATH = paths.system.libraries .. ".palette.cfg",
-
 	LUA_SYNTAX_COLOR_SCHEME = {
 		background = 0x1E1E1E,
 		text = 0xE1E1E1,
@@ -2798,7 +2796,7 @@ local function inputStartInput(input)
 		input.text = ""
 	end
 	
-	input:setCursorPosition(unicode.len(input.text) + 1)
+	input:setCursorPosition(input.cursorPosition)
 
 	input.stopInputObject.width, input.stopInputObject.height = input.firstParent.width, input.firstParent.height
 	input.firstParent:addChild(input.stopInputObject)
@@ -2806,10 +2804,11 @@ local function inputStartInput(input)
 	inputCursorBlink(input.firstParent, input, true)
 end
 
-local function inputEventHandler(workspace, input, e1, e2, e3, e4, e5, e6)
+local function inputEventHandler(workspace, input, e1, e2, e3, e4, e5, e6, ...)
 	if e1 == "touch" or e1 == "drag" then
+		input:setCursorPosition(input.textCutFrom + e3 - input.x - input.textOffset)
+
 		if input.focused then
-			input:setCursorPosition(input.textCutFrom + e3 - input.x - input.textOffset)
 			inputCursorBlink(workspace, input, true)
 		else
 			input:startInput()
@@ -2833,6 +2832,11 @@ local function inputEventHandler(workspace, input, e1, e2, e3, e4, e5, e6)
 			end
 
 			inputStopInput(workspace, input)
+
+			if input.onKeyDown then
+				input.onKeyDown(workspace, input, e1, e2, e3, e4, e5, e6, ...)
+			end
+
 			return
 		-- Arrows up/down/left/right
 		elseif e4 == 200 then
@@ -2881,6 +2885,10 @@ local function inputEventHandler(workspace, input, e1, e2, e3, e4, e5, e6)
 				input.text = unicode.sub(input.text, 1, input.cursorPosition - 1) .. char .. unicode.sub(input.text, input.cursorPosition, -1)
 				input:setCursorPosition(input.cursorPosition + 1)
 			end
+		end
+
+		if input.onKeyDown then
+			input.onKeyDown(workspace, input, e1, e2, e3, e4, e5, e6, ...)
 		end
 
 		inputCursorBlink(workspace, input, true)
@@ -3373,13 +3381,15 @@ function GUI.palette(x, y, startColor)
 		y = y + 2
 	end
 	
+	local paletteConfigPath = paths.user.applicationData .. "GUI/Palette.cfg"
+	
 	local favourites
-	if filesystem.exists(GUI.PALETTE_CONFIG_PATH) then
-		favourites = filesystem.readTable(GUI.PALETTE_CONFIG_PATH)
+	if filesystem.exists(paletteConfigPath) then
+		favourites = filesystem.readTable(paletteConfigPath)
 	else
 		favourites = {}
 		for i = 1, 6 do favourites[i] = color.HSBToInteger(math.random(0, 360), 1, 1) end
-		filesystem.writeTable(GUI.PALETTE_CONFIG_PATH, favourites)
+		filesystem.writeTable(paletteConfigPath, favourites)
 	end
 
 	local favouritesContainer = palette:addChild(GUI.container(58, 24, 12, 1))
@@ -3409,7 +3419,7 @@ function GUI.palette(x, y, startColor)
 				favouritesContainer.children[i].colors.pressed.background = 0x0
 			end
 			
-			filesystem.writeTable(GUI.PALETTE_CONFIG_PATH, favourites)
+			filesystem.writeTable(paletteConfigPath, favourites)
 
 			workspace:draw()
 		end

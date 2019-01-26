@@ -13,3 +13,15 @@ end
 function component.isAvailable(type)
 	return component.list(type)() and true or false
 end
+
+-- Allows writing component.gpu.set(...) instead of component.get("gpu").set(...)
+setmetatable(component, {
+	__index = function(_, key)
+		local proxy, reason = component.get(key)
+		if proxy then
+			return proxy
+		else
+			error(reason)
+		end
+	end,
+})

@@ -283,7 +283,7 @@ updateSidebar = function()
 	for proxy, path in filesystem.mounts() do
 		if not proxy.networkModem and not proxy.networkFTP then
 			if proxy ~= filesystem.getProxy() then
-				addSidebarItem(" " .. (proxy.getLabel() or filesystem.name(path)), path).onTouch = function()
+				addSidebarItem(" " .. (proxy.getLabel() or proxy.address), path).onTouch = function()
 					onFavouriteTouch(path)
 				end
 			end

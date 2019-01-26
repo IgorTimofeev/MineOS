@@ -3,15 +3,16 @@ local text = {}
 
 --------------------------------------------------------------------------------
 
-function text.serialize(t, prettyLook, indentationWidth, indentUsingTabs, recursionStackLimit)
+function text.serialize(t, prettyLook, indentator, recursionStackLimit)
 	checkArg(1, t, "table")
 
 	recursionStackLimit = recursionStackLimit or math.huge
-	local indentationSymbolAdder = string.rep(indentUsingTabs and "	" or " ", indentationWidth or 2)
+	indentator = indentator or "  "
+	
 	local equalsSymbol = prettyLook and " = " or "="
 
 	local function serialize(t, currentIndentationSymbol, currentRecusrionStack)
-		local result, nextIndentationSymbol, keyType, valueType, stringValue = {"{"}, currentIndentationSymbol .. indentationSymbolAdder
+		local result, nextIndentationSymbol, keyType, valueType, stringValue = {"{"}, currentIndentationSymbol .. indentator
 		
 		if prettyLook then
 			table.insert(result, "\n")
