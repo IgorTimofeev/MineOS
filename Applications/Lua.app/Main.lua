@@ -9,7 +9,6 @@ local text = require("Text")
 local HISTORY_LIMIT = 100
 
 local workspace, window, menu = system.addWindow(GUI.filledWindow(1, 1, 90, 25, 0xE1E1E1))
-local localization = system.getCurrentScriptLocalization()
 
 local lines = {
 	{ text = (computer.getArchitecture and computer.getArchitecture() or "Lua 5.2") .. " Copyright (C) 1994-2019 Lua.org, PUC-Rio", color = 0x696969 },
