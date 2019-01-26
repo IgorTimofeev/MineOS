@@ -403,16 +403,16 @@ local function saveImage(path)
 		local result, reason = image.save(path, window.image.data, 6)
 		if result then
 			savePath, saveItem.disabled = path, false
-			
 			addRecentFile(path)
 		else
 			GUI.alert(reason)
 		end
 	else
 		savePath, saveItem.disabled = path, false
-
 		filesystem.write(path, image.toString(window.image.data))
 	end
+
+	computer.pushSignal("system", "updateFileList")
 end
 
 local fileItem = menu:addContextMenuItem("File")

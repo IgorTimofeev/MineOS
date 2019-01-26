@@ -434,7 +434,7 @@ function filesystem.list(path, sortingMethod)
 		-- Fullfill list with mounted paths if needed
 		for i = 1, #mountedProxies do
 			if path == filesystem.path(mountedProxies[i].path) then
-				table.insert(list, filesystem.name(mountedProxies[i].path) .. "/")
+				table.insert(list, filesystem.name(mountedProxies[i].path))
 			end
 		end
 

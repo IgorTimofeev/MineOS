@@ -75,9 +75,9 @@ local languages = {
 
 filesystem.makeDirectory(iconCachePath)
 
-local luaIcon = image.load(paths.system.icons .. "Lua.pic")
-local fileNotExistsIcon = image.load(paths.system.icons .. "FileNotExists.pic")
-local scriptIcon = image.load(paths.system.icons .. "Script.pic")
+local luaIcon = image.load(currentScriptDirectory .. "Icons/Lua.pic")
+local fileNotExistsIcon = image.load(currentScriptDirectory .. "Icons/FileNotExists.pic")
+local scriptIcon = image.load(currentScriptDirectory .. "Icons/Script.pic")
 
 local search = ""
 local appWidth, appHeight, appHSpacing, appVSpacing, currentPage, appsPerPage, appsPerWidth, appsPerHeight = 32, 6, 2, 1, 0
