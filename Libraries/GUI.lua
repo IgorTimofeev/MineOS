@@ -3878,25 +3878,27 @@ local function dropDownMenuAddSeparator(menu)
 end
 
 local function dropDownMenuScrollDown(workspace, menu)
-	if menu.itemsContainer.children[1].localY < 1 then
-		for i = 1, #menu.itemsContainer.children do
-			menu.itemsContainer.children[i].localY = menu.itemsContainer.children[i].localY + 1
-		end
+	local limit, first = 1, menu.itemsContainer.children[1]
 
-		dropDownMenuReposition(menu)
-		workspace:draw()
+	first.localY = first.localY + menu.scrollSpeed
+	if first.localY > limit then
+		first.localY = limit
 	end
+
+	dropDownMenuReposition(menu)
+	workspace:draw()
 end
 
 local function dropDownMenuScrollUp(workspace, menu)
-	if menu.itemsContainer.children[#menu.itemsContainer.children].localY + menu.itemsContainer.children[#menu.itemsContainer.children].height - 1 > menu.height then
-		for i = 1, #menu.itemsContainer.children do
-			menu.itemsContainer.children[i].localY = menu.itemsContainer.children[i].localY - 1
-		end
+	local limit, first = -(#menu.itemsContainer.children * menu.itemHeight - menu.height - 1), menu.itemsContainer.children[1]
 
-		dropDownMenuReposition(menu)
-		workspace:draw()
+	first.localY = first.localY - menu.scrollSpeed
+	if first.localY < limit then
+		first.localY = limit
 	end
+
+	dropDownMenuReposition(menu)
+	workspace:draw()
 end
 
 local function dropDownMenuEventHandler(workspace, menu, e1, e2, e3, e4, e5)
@@ -3964,6 +3966,8 @@ function GUI.dropDownMenu(x, y, width, maximumHeight, itemHeight, backgroundColo
 			shadow = shadowTransparency
 		}
 	}
+
+	menu.scrollSpeed = 1
 
 	menu.itemsContainer = menu:addChild(GUI.container(1, 1, menu.width, menu.height))
 	menu.prevButton = menu:addChild(GUI.button(1, 1, menu.width, 1, backgroundColor, textColor, backgroundPressedColor, textPressedColor, "▲"))

@@ -29,7 +29,7 @@ local iconImageHorizontalOffset
 local bootRealTime
 
 local workspace
-local windowsContainer
+local desktopWindowsContainer
 local dockContainer
 local desktopMenu
 local desktopMenuLayout
@@ -1481,14 +1481,18 @@ end
 --------------------------------------------------------------------------------
 
 local function updateMenu()
-	local focusedWindow = windowsContainer.children[#windowsContainer.children]
+	local focusedWindow = desktopWindowsContainer.children[#desktopWindowsContainer.children]
 	desktopMenu.children = focusedWindow and focusedWindow.menu.children or system.menuInitialChildren
 end
 
 local function setWorkspaceHidden(state)
-	dockContainer.hidden = state
-	desktopIconField.hidden = state
-	desktopBackground.hidden = state
+	local child
+	for i = 1, #workspace.children do
+		child = workspace.children[i]
+		if child ~= desktopWindowsContainer and child ~= desktopMenu then
+			child.hidden = state
+		end
+	end
 end
 
 local function windowMaximize(window, ...)
@@ -1530,11 +1534,11 @@ end
 function system.addWindow(window, dontAddToDock, preserveCoordinates)
 	-- Чекаем коорды
 	if not preserveCoordinates then
-		window.x, window.y = math.floor(windowsContainer.width / 2 - window.width / 2), math.floor(windowsContainer.height / 2 - window.height / 2)
+		window.x, window.y = math.floor(desktopWindowsContainer.width / 2 - window.width / 2), math.floor(desktopWindowsContainer.height / 2 - window.height / 2)
 	end
 	
 	-- Ебурим окно к окнам
-	windowsContainer:addChild(window)
+	desktopWindowsContainer:addChild(window)
 	
 	if not dontAddToDock then
 		-- Получаем путь залупы
@@ -1574,15 +1578,15 @@ function system.addWindow(window, dontAddToDock, preserveCoordinates)
 
 					-- Смещаем окно правее и ниже, если уже есть открытые окна этой софтины
 					local lastIndex
-					for i = #windowsContainer.children, 1, -1 do
-						if windowsContainer.children[i] ~= window and window.dockIcon.windows[windowsContainer.children[i]] then
+					for i = #desktopWindowsContainer.children, 1, -1 do
+						if desktopWindowsContainer.children[i] ~= window and window.dockIcon.windows[desktopWindowsContainer.children[i]] then
 							lastIndex = i
 							break
 						end
 					end
 
 					if lastIndex then
-						window.localX, window.localY = windowsContainer.children[lastIndex].localX + 4, windowsContainer.children[lastIndex].localY + 2
+						window.localX, window.localY = desktopWindowsContainer.children[lastIndex].localX + 4, desktopWindowsContainer.children[lastIndex].localY + 2
 					end
 
 					-- Когда окно фокусицца, то главная ОСевая менюха заполницца ДЕТИШЕЧКАМИ оконной менюхи
@@ -1930,7 +1934,7 @@ local function updateWallpaper(path, mode, brightness)
 			end
 		end
 	else
-		GUI.alert("Failed to load wallpaper: " .. (reason or "image file is corrupted"))
+		GUI.alert(reason or "image file is corrupted")
 	end
 end
 
@@ -1966,7 +1970,7 @@ function system.updateResolution()
 	desktopMenuLayout.width = workspace.width
 	desktopBackground.width, desktopBackground.height = workspace.width, workspace.height
 
-	windowsContainer.width, windowsContainer.height = workspace.width, workspace.height - 1
+	desktopWindowsContainer.width, desktopWindowsContainer.height = workspace.width, workspace.height - 1
 end
 
 local function moveDockIcon(index, direction)
@@ -2212,7 +2216,7 @@ function system.updateDesktop()
 		overrideDockContainerDraw(dockContainer)
 	end
 
-	windowsContainer = workspace:addChild(GUI.container(1, 2, 1, 1))
+	desktopWindowsContainer = workspace:addChild(GUI.container(1, 2, 1, 1))
 
 	desktopMenu = workspace:addChild(GUI.menu(1, 1, workspace.width, 0x0, 0x696969, 0x3366CC, 0xFFFFFF))
 	
@@ -2341,12 +2345,12 @@ function system.updateDesktop()
 	local lastWindowHandled
 	workspace.eventHandler = function(workspace, object, e1, e2, e3, e4)
 		if e1 == "key_down" then
-			local windowCount = #windowsContainer.children
+			local windowCount = #desktopWindowsContainer.children
 			-- Ctrl or CMD
 			if windowCount > 0 and not lastWindowHandled and (keyboard.isKeyDown(29) or keyboard.isKeyDown(219)) then
 				-- W
 				if e4 == 17 then
-					windowsContainer.children[windowCount]:remove()
+					desktopWindowsContainer.children[windowCount]:remove()
 					lastWindowHandled = true
 
 					workspace:draw()
