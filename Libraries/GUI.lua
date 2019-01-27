@@ -487,8 +487,10 @@ local function workspaceStart(workspace, eventPullTimeout)
 							animation.position, animation.started = 1, false
 							animation.frameHandler(animation)
 							
-							animationOnFinishMethods[animationOnFinishMethodsIndex] = animation
-							animationOnFinishMethodsIndex = animationOnFinishMethodsIndex + 1
+							if animation.onFinish then
+								animationOnFinishMethods[animationOnFinishMethodsIndex] = animation
+								animationOnFinishMethodsIndex = animationOnFinishMethodsIndex + 1
+							end
 						end
 					end
 
@@ -4235,26 +4237,54 @@ local function windowEventHandler(workspace, window, e1, e2, e3, e4, ...)
 	end
 end
 
-local function windowResize(window, width, height)
+local function windowResize(window, width, height, ignoreOnResizeFinished)
 	window.width, window.height = width, height
+	
 	if window.onResize then
 		window.onResize(width, height)
+	end
+
+	if window.onResizeFinished and not ignoreOnResizeFinished then
+		window.onResizeFinished()
 	end
 
 	return window
 end
 
-function GUI.windowMaximize(window)
+function GUI.windowMaximize(window, animationDisabled)
+	local fromX, fromY, fromWidth, fromHeight, toX, toY, toWidth, toHeight = window.localX, window.localY, window.width, window.height
+	
 	if window.maximized then
-		window.localX, window.localY = window.oldGeometryX, window.oldGeometryY
-		window:resize(window.oldGeometryWidth, window.oldGeometryHeight)
+		toX, toY, toWidth, toHeight = window.oldGeometryX, window.oldGeometryY, window.oldGeometryWidth, window.oldGeometryHeight
+		window.oldGeometryX, window.oldGeometryY, window.oldGeometryWidth, window.oldGeometryHeight = nil, nil, nil, nil
+		window.maximized = nil
 	else
+		toX, toY, toWidth, toHeight = 1, 1, window.parent.width, window.parent.height
 		window.oldGeometryX, window.oldGeometryY, window.oldGeometryWidth, window.oldGeometryHeight = window.localX, window.localY, window.width, window.height
-		window.localX, window.localY = 1, 1
-		window:resize(window.parent.width, window.parent.height)
+		window.maximized = true
 	end
 
-	window.maximized = not window.maximized
+	if animationDisabled then
+		window.localX, window.localY = toX, toY
+		window:resize(toWidth, toHeight)
+	else
+		window:addAnimation(
+			function(animation)
+				window.localX, window.localY =
+					math.floor(fromX + (toX - fromX) * animation.position + 0.5),
+					math.floor(fromY + (toY - fromY) * animation.position + 0.5)
+
+				window:resize(
+					math.floor(fromWidth + (toWidth - fromWidth) * animation.position + 0.5),
+					math.floor(fromHeight + (toHeight - fromHeight) * animation.position + 0.5),
+					animation.position < 1
+				)
+			end,
+			function(animation)
+				animation:remove()
+			end
+		):start(0.5)
+	end
 end
 
 function GUI.windowMinimize(window)

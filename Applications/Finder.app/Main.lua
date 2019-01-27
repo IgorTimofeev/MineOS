@@ -567,8 +567,10 @@ window.onResize = function(width, height)
 	window.width = width
 	window.height = height
 	calculateSizes()
-
 	workspace:draw()
+end
+
+window.onResizeFinished = function()
 	updateFileListAndDraw()
 end
 

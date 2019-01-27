@@ -1889,12 +1889,14 @@ window.onResize = function(width, height)
 	contentContainer.height = window.backgroundPanel.height
 
 	progressIndicator.localY = height - progressIndicator.height
+end
 
+window.onResizeFinished = function()
 	appsPerWidth = math.floor((contentContainer.width + appHSpacing) / (appWidth + appHSpacing))
 	appsPerHeight = math.floor((contentContainer.height - 6 + appVSpacing) / (appHeight + appVSpacing))
 	appsPerPage = appsPerWidth * appsPerHeight
 	currentPage = 0
-
+	
 	contentContainer:removeChildren()
 	callLastMethod()
 end
