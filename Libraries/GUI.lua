@@ -4275,12 +4275,12 @@ function GUI.windowMaximize(window, animationDisabled)
 		window:addAnimation(
 			function(animation)
 				window.localX, window.localY =
-					math.floor(fromX + (toX - fromX) * animation.position + 0.5),
-					math.floor(fromY + (toY - fromY) * animation.position + 0.5)
+					math.floor(fromX + (toX - fromX) * animation.position),
+					math.floor(fromY + (toY - fromY) * animation.position)
 
 				window:resize(
-					math.floor(fromWidth + (toWidth - fromWidth) * animation.position + 0.5),
-					math.floor(fromHeight + (toHeight - fromHeight) * animation.position + 0.5),
+					math.floor(fromWidth + (toWidth - fromWidth) * animation.position),
+					math.floor(fromHeight + (toHeight - fromHeight) * animation.position),
 					animation.position < 1
 				)
 			end,
