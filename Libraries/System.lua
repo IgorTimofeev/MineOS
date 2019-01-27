@@ -36,7 +36,6 @@ local desktopMenuLayout
 local desktopIconField
 local desktopBackground
 local desktopBackgroundColor = 0x1E1E1E
-local desktopBackgroundWallpaper
 local desktopBackgroundWallpaperX
 local desktopBackgroundWallpaperY
 
@@ -87,7 +86,7 @@ function system.getDefaultUserSettings()
 		
 		interfaceWallpaperEnabled = false,
 		interfaceWallpaperPath = paths.system.pictures .. "Space.pic",
-		interfaceWallpaperMode = 2,
+		interfaceWallpaperMode = 1,
 		interfaceWallpaperBrightness = 0.9,
 
 		interfaceScreensaverEnabled = false,
@@ -1894,59 +1893,76 @@ function system.execute(path, ...)
 	return success, errorPath, line, traceback
 end
 
----- Хуй
-local function updateWallpaper(path, mode, brightness)
-	local result, reason = image.load(path)
-	if result then
-		desktopBackgroundWallpaper = result
-
-		-- Fit to screen size mode
-		if mode == 1 then
-			desktopBackgroundWallpaper = image.transform(desktopBackgroundWallpaper, workspace.width, workspace.height)
-			desktopBackgroundWallpaperX, desktopBackgroundWallpaperY = 1, 1
-		-- Centerized mode
-		else
-			desktopBackgroundWallpaperX = math.floor(1 + workspace.width / 2 - image.getWidth(desktopBackgroundWallpaper) / 2)
-			desktopBackgroundWallpaperY = math.floor(1 + workspace.height / 2 - image.getHeight(desktopBackgroundWallpaper) / 2)
-		end
-
-		-- Brightness adjustment
-		local background, foreground, alpha, symbol, r, g, b
-		for y = 1, image.getHeight(desktopBackgroundWallpaper) do
-			for x = 1, image.getWidth(desktopBackgroundWallpaper) do
-				background, foreground, alpha, symbol = image.get(desktopBackgroundWallpaper, x, y)
-				
-				r, g, b = color.integerToRGB(background)
-				background = color.RGBToInteger(
-					math.floor(r * brightness),
-					math.floor(g * brightness),
-					math.floor(b * brightness)
-				)
-
-				r, g, b = color.integerToRGB(foreground)
-				foreground = color.RGBToInteger(
-					math.floor(r * brightness),
-					math.floor(g * brightness),
-					math.floor(b * brightness)
-				)
-
-				image.set(desktopBackgroundWallpaper, x, y, background, foreground, alpha, symbol)
-			end
-		end
-	else
-		GUI.alert(reason or "image file is corrupted")
-	end
+local function desktopBackgroundAmbientDraw()
+	screen.drawRectangle(1, 1, desktopBackground.width, desktopBackground.height, desktopBackgroundColor, 0, " ")
 end
 
 function system.updateWallpaper()
-	desktopBackgroundWallpaper = nil
+	desktopBackground.draw = desktopBackgroundAmbientDraw
 
 	if userSettings.interfaceWallpaperEnabled and userSettings.interfaceWallpaperPath then
-		updateWallpaper(
-			userSettings.interfaceWallpaperPath,
-			userSettings.interfaceWallpaperMode,
-			userSettings.interfaceWallpaperBrightness
-		)
+		local extension = filesystem.extension(userSettings.interfaceWallpaperPath)
+		if extension == ".pic" then
+			local result, reason = image.load(userSettings.interfaceWallpaperPath)
+			if result then
+				-- Fit to screen size mode
+				if userSettings.interfaceWallpaperMode == 1 then
+					result = image.transform(result, desktopBackground.width, desktopBackground.height)
+					desktopBackgroundWallpaperX, desktopBackgroundWallpaperY = 1, 2
+				-- Centerized mode
+				else
+					desktopBackgroundWallpaperX = math.floor(1 + desktopBackground.width / 2 - image.getWidth(result) / 2)
+					desktopBackgroundWallpaperY = math.floor(2 + desktopBackground.height / 2 - image.getHeight(result) / 2)
+				end
+
+				-- Brightness adjustment
+				local brightness, background, foreground, alpha, symbol, r, g, b = userSettings.interfaceWallpaperBrightness
+				for y = 1, image.getHeight(result) do
+					for x = 1, image.getWidth(result) do
+						background, foreground, alpha, symbol = image.get(result, x, y)
+						
+						r, g, b = color.integerToRGB(background)
+						background = color.RGBToInteger(
+							math.floor(r * brightness),
+							math.floor(g * brightness),
+							math.floor(b * brightness)
+						)
+
+						r, g, b = color.integerToRGB(foreground)
+						foreground = color.RGBToInteger(
+							math.floor(r * brightness),
+							math.floor(g * brightness),
+							math.floor(b * brightness)
+						)
+
+						image.set(result, x, y, background, foreground, alpha, symbol)
+					end
+				end
+
+				desktopBackground.draw = function()
+					screen.drawRectangle(1, 1, desktopBackground.width, desktopBackground.height, desktopBackgroundColor, 0, " ")
+					screen.drawImage(desktopBackgroundWallpaperX, desktopBackgroundWallpaperY, result)
+				end
+			else
+				GUI.alert(reason or "image file is corrupted")
+			end
+		elseif extension == ".lua" then
+			local result, reason = loadfile(userSettings.interfaceWallpaperPath)
+			if result then
+				result, functionOrReason = xpcall(result, debug.traceback)
+				if result then
+					if type(functionOrReason) == "function" then
+						desktopBackground.draw = functionOrReason
+					else
+						GUI.alert("Wallpaper script didn't return drawing function")
+					end
+				else
+					GUI.alert(functionOrReason)
+				end
+			else
+				GUI.alert(reason)
+			end
+		end
 	end
 end
 
@@ -1968,7 +1984,7 @@ function system.updateResolution()
 
 	desktopMenu.width = workspace.width
 	desktopMenuLayout.width = workspace.width
-	desktopBackground.width, desktopBackground.height = workspace.width, workspace.height
+	desktopBackground.width, desktopBackground.height = workspace.width, workspace.height - 1
 
 	desktopWindowsContainer.width, desktopWindowsContainer.height = workspace.width, workspace.height - 1
 end
@@ -2507,15 +2523,8 @@ function system.updateWorkspace()
 	workspace:removeChildren()
 
 	-- Creating background object
-	desktopBackgroundWallpaperX, desktopBackgroundWallpaperY = 1, 1
-	desktopBackground = workspace:addChild(GUI.object(1, 1, workspace.width, workspace.height))
-	desktopBackground.draw = function()
-		screen.drawRectangle(1, 1, desktopBackground.width, desktopBackground.height, desktopBackgroundColor, 0, " ")
-		
-		if desktopBackgroundWallpaper then
-			screen.drawImage(desktopBackgroundWallpaperX, desktopBackgroundWallpaperY, desktopBackgroundWallpaper)
-		end
-	end
+	desktopBackground = workspace:addChild(GUI.object(1, 2, workspace.width, workspace.height))
+	desktopBackground.draw = desktopBackgroundAmbientDraw
 end
 
 function system.createUser(name, language, password, wallpaper, screensaver)
@@ -2585,21 +2594,8 @@ function system.authorize()
 	if #userList > 1 or loadUserSettingsAndCheckProtection(userList[1]) then
 		local container = workspace:addChild(GUI.container(1, 1, workspace.width, workspace.height))
 
-		-- Trying to load first wallpaper from system pictures directory
-		-- if not desktopBackgroundWallpaper then
-		-- 	local pictureList = filesystem.list(paths.system.pictures)
-		-- 	if pictureList then
-		-- 		for i = 1, #pictureList do
-		-- 			if filesystem.extension(pictureList[i]) == ".pic" then
-		-- 				updateWallpaper(paths.system.pictures .. pictureList[i], 1, 1)
-		-- 				break
-		-- 			end
-		-- 		end
-		-- 	end
-		-- end
-
 		-- If we've loaded wallpaper (from user logout or above) then add a panel to make it darker
-		if desktopBackgroundWallpaper then
+		if desktopBackground.draw ~= desktopBackgroundAmbientDraw then
 			container:addChild(GUI.panel(1, 1, container.width, container.height, 0x0, 0.5))
 		end
 

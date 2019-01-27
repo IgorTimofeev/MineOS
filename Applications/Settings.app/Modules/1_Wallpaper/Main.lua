@@ -17,6 +17,7 @@ module.onTouch = function()
 	local wallpaperChooser = window.contentLayout:addChild(GUI.filesystemChooser(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0xD2D2D2, 0xA5A5A5, userSettings.interfaceWallpaperPath, localization.open, localization.cancel, localization.wallpaperPath, "/"))
 	wallpaperChooser:setMode(GUI.IO_MODE_OPEN, GUI.IO_MODE_FILE)
 	wallpaperChooser:addExtensionFilter(".pic")
+	wallpaperChooser:addExtensionFilter(".lua")
 	wallpaperChooser.onSubmit = function(path)
 		userSettings.interfaceWallpaperPath = path
 		system.updateWallpaper()
