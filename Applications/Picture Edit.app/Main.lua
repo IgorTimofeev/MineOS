@@ -485,7 +485,7 @@ local fileItemSubMenu = fileItem:addSubMenuItem("Open recent", #config.recentFil
 for i = 1, #config.recentFiles do
 	fileItemSubMenu:addItem(text.limit(config.recentFiles[i], 32, "left")).onTouch = function()
 		loadImage(config.recentFiles[i])
-		
+
 		window.image.reposition()
 		workspace:draw()
 	end

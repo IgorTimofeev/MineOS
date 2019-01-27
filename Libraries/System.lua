@@ -1486,7 +1486,7 @@ local function setWorkspaceHidden(state)
 	local child
 	for i = 1, #workspace.children do
 		child = workspace.children[i]
-		if child ~= desktopWindowsContainer and child ~= desktopMenu then
+		if child ~= desktopWindowsContainer and child ~= desktopMenu and child ~= desktopMenuLayout then
 			child.hidden = state
 		end
 	end
@@ -1518,7 +1518,7 @@ local function windowRemove(window)
 
 			if not window.dockIcon.keepInDock then
 				window.dockIcon:remove()
-				dockContainer.update()
+				dockContainer.sort()
 			end
 		end
 	end
@@ -1892,7 +1892,7 @@ function system.execute(path, ...)
 end
 
 local function desktopBackgroundAmbientDraw()
-	screen.drawRectangle(1, 1, desktopBackground.width, desktopBackground.height, desktopBackgroundColor, 0, " ")
+	screen.drawRectangle(1, 2, desktopBackground.width, desktopBackground.height, desktopBackgroundColor, 0, " ")
 end
 
 function system.updateWallpaper()
@@ -1983,13 +1983,13 @@ function system.updateResolution()
 
 	desktopWindowsContainer.width, desktopWindowsContainer.height = workspace.width, workspace.height - 1
 
-	dockContainer.update()
+	dockContainer.sort()
 	dockContainer.localY = workspace.height - dockContainer.height + 1
 end
 
 local function moveDockIcon(index, direction)
 	dockContainer.children[index], dockContainer.children[index + direction] = dockContainer.children[index + direction], dockContainer.children[index]
-	dockContainer.update()
+	dockContainer.sort()
 	dockContainer.saveUserSettings()
 	workspace:draw()
 end
@@ -2058,21 +2058,21 @@ function system.updateDesktop()
 		system.saveUserSettings()
 	end
 
-	dockContainer.update = function()
+	dockContainer.sort = function()
 		local x = 4
 		for i = 1, #dockContainer.children do
-			-- Not trash
-			if i < #dockContainer.children then
-				dockContainer.children[i]:analyseExtension(iconLaunchers)
-			end
-
-			-- Sorting
 			dockContainer.children[i].localX = x
 			x = x + userSettings.iconWidth + userSettings.iconHorizontalSpace
 		end
 
 		dockContainer.width = #dockContainer.children * (userSettings.iconWidth + userSettings.iconHorizontalSpace) - userSettings.iconHorizontalSpace + 6
 		dockContainer.localX = math.floor(workspace.width / 2 - dockContainer.width / 2)
+	end
+
+	dockContainer.updateIcons = function()
+		for i = 1, #dockContainer.children - 1 do
+			dockContainer.children[i]:analyseExtension(iconLaunchers)
+		end
 	end
 
 	dockContainer.addIcon = function(path)
@@ -2147,7 +2147,7 @@ function system.updateDesktop()
 							icon.keepInDock = nil
 						else
 							icon:remove()
-							dockContainer.update()
+							dockContainer.sort()
 						end
 						
 						workspace:draw()
@@ -2166,7 +2166,7 @@ function system.updateDesktop()
 			workspace:draw()
 		end
 
-		dockContainer.update()
+		dockContainer.sort()
 
 		return icon
 	end
@@ -2381,7 +2381,8 @@ function system.updateDesktop()
 		elseif e1 == "system" then
 			if e2 == "updateFileList" then
 				desktopIconField:updateFileList()
-				dockContainer.update()
+				dockContainer.sort()
+				dockContainer.updateIcons()
 				workspace:draw()
 			end
 		elseif e1 == "network" then
