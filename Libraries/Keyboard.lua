@@ -14,16 +14,20 @@ function keyboard.isControl(code)
 	return type(code) == "number" and (code < 32 or (code >= 127 and code <= 159))
 end
 
-function keyboard.isAltDown(address)
+function keyboard.isAltDown()
 	return pressedCodes[56] or pressedCodes[184]
 end
 
-function keyboard.isControlDown(address)
+function keyboard.isControlDown()
 	return pressedCodes[29] or pressedCodes[157]
 end
 
-function keyboard.isShiftDown(address)
+function keyboard.isShiftDown()
 	return pressedCodes[42] or pressedCodes[54]
+end
+
+function keyboard.isCommandDown()
+	return pressedCodes[219]
 end
 
 -------------------------------------------------------------------------------

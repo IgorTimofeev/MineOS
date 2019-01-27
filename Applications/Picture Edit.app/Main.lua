@@ -8,6 +8,7 @@ local color = require("Color")
 local screen = require("Screen")
 local paths = require("Paths")
 local text = require("Text")
+local keyboard = require("Keyboard")
 
 local args, options = system.parseArguments(...)
 
@@ -293,6 +294,118 @@ window.secondaryColorSelector.draw, window.primaryColorSelector.draw = colorSele
 window.swapColorsButton = window:addChild(GUI.button(1, 1, window.toolsList.width, 1, nil, 0x696969, nil, 0xA5A5A5, ">"))
 window.swapColorsButton.onTouch = swapColors
 
+local function loadImage(path)
+	local result, reason
+	
+	if filesystem.extension(path) == ".rawpic" then
+		result = image.fromString(filesystem.read(path))
+	else
+		result, reason = image.load(path)
+	end
+
+	if result then
+		savePath, saveItem.disabled = path, false
+		addRecentFile(path)
+		window.image.data = result
+	else
+		GUI.alert(reason)
+	end
+end
+
+local function save(path)
+	if filesystem.extension(path) == ".pic" then
+		local result, reason = image.save(path, window.image.data, 6)
+		if result then
+			savePath, saveItem.disabled = path, false
+			addRecentFile(path)
+		else
+			GUI.alert(reason)
+		end
+	else
+		savePath, saveItem.disabled = path, false
+		filesystem.write(path, image.toString(window.image.data))
+	end
+
+	computer.pushSignal("system", "updateFileList")
+end
+
+local function saveAs()
+	local filesystemDialog = GUI.addFilesystemDialog(workspace, true, 50, math.floor(window.height * 0.8), "Save", "Cancel", "File name", "/")
+	filesystemDialog:setMode(GUI.IO_MODE_SAVE, GUI.IO_MODE_FILE)
+	filesystemDialog:addExtensionFilter(".pic")
+	filesystemDialog:addExtensionFilter(".ocifstring")
+	filesystemDialog:expandPath(paths.user.desktop)
+	filesystemDialog.filesystemTree.selectedItem = paths.user.desktop
+	filesystemDialog:show()
+
+	filesystemDialog.onSubmit = function(path)
+		save(path)
+		workspace:draw()
+	end
+end
+
+local function newNoGUI(width, height)
+	savePath, saveItem.disabled = nil, true
+	window.image.data = {width, height}
+	
+	for i = 1, width * height do
+		table.insert(window.image.data, 0x0)
+		table.insert(window.image.data, 0x0)
+		table.insert(window.image.data, 1)
+		table.insert(window.image.data, " ")
+	end
+end
+
+local function new()
+	local container = GUI.addBackgroundContainer(workspace, true, true, "New picture")
+
+	local layout = container.layout:addChild(GUI.layout(1, 1, 36, 3, 1, 1))
+	layout:setDirection(1, 1, GUI.DIRECTION_HORIZONTAL)
+	layout:setSpacing(1, 1, 0)
+
+	local function addInput(...)
+		return layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x969696, 0xE1E1E1, 0x2D2D2D, ...))
+	end
+
+	local widthInput = addInput("", "Width")
+	layout:addChild(GUI.text(1, 1, 0x696969, " x "))
+	local heightInput = addInput("", "Height")
+	widthInput.width, heightInput.width = 16, 17
+
+	container.panel.eventHandler = function(workspace, panel, e1)
+		if e1 == "touch" then
+			if
+				widthInput.text:match("%d+") and
+				heightInput.text:match("%d+")
+			then
+				newNoGUI(tonumber(widthInput.text), tonumber(heightInput.text))
+				window.image.reposition()
+			end
+
+			container:remove()
+			workspace:draw()
+		end
+	end
+
+	workspace:draw()
+end
+
+local function open()
+	local filesystemDialog = GUI.addFilesystemDialog(workspace, true, 50, math.floor(window.height * 0.8), "Open", "Cancel", "File name", "/")
+	filesystemDialog:setMode(GUI.IO_MODE_OPEN, GUI.IO_MODE_FILE)
+	filesystemDialog:addExtensionFilter(".pic")
+	filesystemDialog:addExtensionFilter(".rawpic")
+	filesystemDialog:expandPath(paths.user.desktop)
+	filesystemDialog:show()
+
+	filesystemDialog.onSubmit = function(path)
+		loadImage(path)
+
+		window.image.reposition()
+		workspace:draw()
+	end
+end
+
 window.image.eventHandler = function(workspace, object, e1, e2, e3, e4, ...)
 	if e1 == "key_down" then
 		-- D
@@ -302,6 +415,21 @@ window.image.eventHandler = function(workspace, object, e1, e2, e3, e4, ...)
 		-- X
 		elseif e4 == 45 then
 			swapColors()
+		elseif keyboard.isControlDown() or keyboard.isCommandDown() then
+			-- S
+			if e4 == 31 then
+				if keyboard.isShiftDown() then
+					saveAs()
+				elseif not saveItem.disabled then
+					save(savePath)
+				end
+			-- N
+			elseif e4 == 49 then
+				new()
+			-- O
+			elseif e4 == 24 then
+				open()
+			end
 		else
 			for i = 1, window.toolsList:count() do
 				if e4 == window.toolsList:getItem(i).tool.keyCode then
@@ -344,104 +472,21 @@ window.image.reposition = function()
 	end
 end
 
-local function newNoGUI(width, height)
-	savePath, saveItem.disabled = nil, true
-	window.image.data = {width, height}
-	
-	for i = 1, width * height do
-		table.insert(window.image.data, 0x0)
-		table.insert(window.image.data, 0x0)
-		table.insert(window.image.data, 1)
-		table.insert(window.image.data, " ")
-	end
-end
-
-local function new()
-	local container = GUI.addBackgroundContainer(workspace, true, true, "New picture")
-
-	local widthInput = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x696969, 0xE1E1E1, 0x2D2D2D, "51", "Width"))
-	local heightInput = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x696969, 0xE1E1E1, 0x2D2D2D, "19", "Height"))
-	
-	widthInput.validator = function(text)
-		return tonumber(text)
-	end
-	heightInput.validator = widthInput.validator
-
-	container.panel.eventHandler = function(workspace, object, e1)
-		if e1 == "touch" then
-			newNoGUI(tonumber(widthInput.text), tonumber(heightInput.text))
-			window.image.reposition()
-
-			container:remove()
-			workspace:draw()
-		end
-	end
-
-	workspace:draw()
-end
-
-local function loadImage(path)
-	local result, reason
-	
-	if filesystem.extension(path) == ".rawpic" then
-		result = image.fromString(filesystem.read(path))
-	else
-		result, reason = image.load(path)
-	end
-
-	if result then
-		savePath, saveItem.disabled = path, false
-		addRecentFile(path)
-		window.image.data = result
-	else
-		GUI.alert(reason)
-	end
-end
-
-local function saveImage(path)
-	if filesystem.extension(path) == ".pic" then
-		local result, reason = image.save(path, window.image.data, 6)
-		if result then
-			savePath, saveItem.disabled = path, false
-			addRecentFile(path)
-		else
-			GUI.alert(reason)
-		end
-	else
-		savePath, saveItem.disabled = path, false
-		filesystem.write(path, image.toString(window.image.data))
-	end
-
-	computer.pushSignal("system", "updateFileList")
-end
-
 local fileItem = menu:addContextMenuItem("File")
-fileItem:addItem("New").onTouch = new
+fileItem:addItem("New", false, "^N").onTouch = new
 
 fileItem:addSeparator()
 
-fileItem:addItem("Open").onTouch = function()
-	local filesystemDialog = GUI.addFilesystemDialog(workspace, true, 50, math.floor(window.height * 0.8), "Open", "Cancel", "File name", "/")
-	filesystemDialog:setMode(GUI.IO_MODE_OPEN, GUI.IO_MODE_FILE)
-	filesystemDialog:addExtensionFilter(".pic")
-	filesystemDialog:addExtensionFilter(".rawpic")
-	filesystemDialog:expandPath(paths.user.desktop)
-	filesystemDialog:show()
-
-	filesystemDialog.onSubmit = function(path)
-		loadImage(path)
-		window.image.reposition()
-
-		workspace:draw()
-	end
+fileItem:addItem("Open", false, "^O").onTouch = function()
+	open()
 end
 
 local fileItemSubMenu = fileItem:addSubMenuItem("Open recent", #config.recentFiles == 0)
 for i = 1, #config.recentFiles do
 	fileItemSubMenu:addItem(text.limit(config.recentFiles[i], 32, "left")).onTouch = function()
 		loadImage(config.recentFiles[i])
+		
 		window.image.reposition()
-
 		workspace:draw()
 	end
 end
@@ -480,30 +525,14 @@ end
 
 fileItem:addSeparator()
 
-saveItem = fileItem:addItem("Save")
+saveItem = fileItem:addItem("Save", false, "^S")
 saveItem.onTouch = function()
-	saveImage(savePath)
+	save(savePath)
 end
 
-fileItem:addItem("Save as").onTouch = function()
-	local filesystemDialog = GUI.addFilesystemDialog(workspace, true, 50, math.floor(window.height * 0.8), "Save", "Cancel", "File name", "/")
-	filesystemDialog:setMode(GUI.IO_MODE_SAVE, GUI.IO_MODE_FILE)
-	filesystemDialog:addExtensionFilter(".pic")
-	filesystemDialog:addExtensionFilter(".ocifstring")
-	filesystemDialog:expandPath(paths.user.desktop)
-	filesystemDialog.filesystemTree.selectedItem = paths.user.desktop
-	filesystemDialog:show()
-
-	filesystemDialog.onSubmit = function(path)
-		saveImage(path)
-	end
-end
+fileItem:addItem("Save as", false, "^⇧S").onTouch = saveAs
 
 fileItem:addSeparator()
-
-fileItem:addItem("Exit").onTouch = function()
-	window:remove()
-end
 
 menu:addItem("View").onTouch = function()
 	local container = GUI.addBackgroundContainer(workspace, true, true, "View")

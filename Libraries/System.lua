@@ -367,8 +367,6 @@ end
 
 function system.updateIconProperties()
 	desktopIconField:deleteIconConfig()
-	dockContainer.sort()
-
 	computer.pushSignal("system", "updateFileList")
 end
 
@@ -1520,7 +1518,7 @@ local function windowRemove(window)
 
 			if not window.dockIcon.keepInDock then
 				window.dockIcon:remove()
-				dockContainer.sort()
+				dockContainer.update()
 			end
 		end
 	end
@@ -1979,19 +1977,19 @@ function system.updateResolution()
 	desktopIconField.height = workspace.height
 	desktopIconField:updateFileList()
 
-	dockContainer.sort()
-	dockContainer.localY = workspace.height - dockContainer.height + 1
-
 	desktopMenu.width = workspace.width
 	desktopMenuLayout.width = workspace.width
-	desktopBackground.width, desktopBackground.height = workspace.width, workspace.height - 1
+	desktopBackground.localY, desktopBackground.width, desktopBackground.height = 2, workspace.width, workspace.height - 1
 
 	desktopWindowsContainer.width, desktopWindowsContainer.height = workspace.width, workspace.height - 1
+
+	dockContainer.update()
+	dockContainer.localY = workspace.height - dockContainer.height + 1
 end
 
 local function moveDockIcon(index, direction)
 	dockContainer.children[index], dockContainer.children[index + direction] = dockContainer.children[index + direction], dockContainer.children[index]
-	dockContainer.sort()
+	dockContainer.update()
 	dockContainer.saveUserSettings()
 	workspace:draw()
 end
@@ -2060,9 +2058,15 @@ function system.updateDesktop()
 		system.saveUserSettings()
 	end
 
-	dockContainer.sort = function()
+	dockContainer.update = function()
 		local x = 4
 		for i = 1, #dockContainer.children do
+			-- Not trash
+			if i < #dockContainer.children then
+				dockContainer.children[i]:analyseExtension(iconLaunchers)
+			end
+
+			-- Sorting
 			dockContainer.children[i].localX = x
 			x = x + userSettings.iconWidth + userSettings.iconHorizontalSpace
 		end
@@ -2143,7 +2147,7 @@ function system.updateDesktop()
 							icon.keepInDock = nil
 						else
 							icon:remove()
-							dockContainer.sort()
+							dockContainer.update()
 						end
 						
 						workspace:draw()
@@ -2162,7 +2166,7 @@ function system.updateDesktop()
 			workspace:draw()
 		end
 
-		dockContainer.sort()
+		dockContainer.update()
 
 		return icon
 	end
@@ -2377,6 +2381,7 @@ function system.updateDesktop()
 		elseif e1 == "system" then
 			if e2 == "updateFileList" then
 				desktopIconField:updateFileList()
+				dockContainer.update()
 				workspace:draw()
 			end
 		elseif e1 == "network" then
@@ -2522,9 +2527,10 @@ function system.updateWorkspace()
 	-- Clearing workspace
 	workspace:removeChildren()
 
-	-- Creating background object
-	desktopBackground = workspace:addChild(GUI.object(1, 2, workspace.width, workspace.height))
-	desktopBackground.draw = desktopBackgroundAmbientDraw
+	-- Creating desktop background object
+	local oldDraw = desktopBackground and desktopBackground.draw
+	desktopBackground = workspace:addChild(GUI.object(1, 1, workspace.width, workspace.height))
+	desktopBackground.draw = oldDraw or desktopBackgroundAmbientDraw
 end
 
 function system.createUser(name, language, password, wallpaper, screensaver)

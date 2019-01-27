@@ -1398,7 +1398,7 @@ codeView.eventHandler = function(workspace, object, e1, e2, e3, e4, e5)
 		tick(true)
 	elseif e1 == "key_down" then
 		-- Ctrl or CMD
-		if keyboard.isKeyDown(29) or keyboard.isKeyDown(219) then
+		if keyboard.isControlDown() or keyboard.isCommandDown() then
 			-- Slash
 			if e4 == 53 then
 				toggleComment()
