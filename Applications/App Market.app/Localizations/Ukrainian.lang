@@ -50,6 +50,7 @@
 	fileByURL = "Файл по URL",
 	add = "Додати",
 	relativePath = "Відносний шлях",
+	localizationDependency = "Файл локалізації",
 
 	login = "Авторизація",
 	profile = "Профіль",

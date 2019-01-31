@@ -1,6 +1,4 @@
 
-local args = {...}
-
 local internet = require("Internet")
 local GUI = require("GUI")
 local screen = require("Screen")
@@ -398,7 +396,7 @@ local function getDependencyPath(mainFilePath, dependency)
 		end
 	end
 
-	return path:gsub("/+", "/")
+	return filesystem.removeSlashes(path)
 end
 
 local function download(publication)
@@ -484,7 +482,7 @@ local function download(publication)
 			pizda(dependencyTree, 1, "")
 		end
 
-		local shortcutSwitchAndLabel = container.layout:addChild(GUI.switchAndLabel(1, 1, 44, 8, 0x66DB80, 0x0, 0xE1E1E1, 0x878787, localization.createShortcut .. ":", true))
+		local shortcutSwitchAndLabel = container.layout:addChild(GUI.switchAndLabel(1, 1, 44, 6, 0x66DB80, 0x0, 0xE1E1E1, 0x878787, localization.createShortcut .. ":", true))
 		shortcutSwitchAndLabel.hidden = publication.category_id == 2
 
 		container.layout:addChild(GUI.button(1, 1, 44, 3, 0x696969, 0xFFFFFF, 0x0, 0xFFFFFF, localization.download)).onTouch = function()
@@ -835,7 +833,7 @@ local function settings()
 		local currentPasswordInput = layout:addChild(GUI.input(1, 1, 36, 3, 0xFFFFFF, 0x696969, 0xB4B4B4, 0xFFFFFF, 0x2D2D2D, "", localization.currentPassword, false, "*"))
 		local passwordInput = layout:addChild(GUI.input(1, 1, 36, 3, 0xFFFFFF, 0x696969, 0xB4B4B4, 0xFFFFFF, 0x2D2D2D, "", recover and localization.newPassword or localization.password, false, "*"))
 
-		local singleSessionSwitchAndLabel = layout:addChild(GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0xC3C3C3, 0xFFFFFF, 0xA5A5A5, localization.singleSession .. ":", config.singleSession))
+		local singleSessionSwitchAndLabel = layout:addChild(GUI.switchAndLabel(1, 1, 36, 6, 0x66DB80, 0xC3C3C3, 0xFFFFFF, 0xA5A5A5, localization.singleSession .. ":", config.singleSession))
 
 		layout:addChild(GUI.button(1, 1, 36, 3, 0xA5A5A5, 0xFFFFFF, 0x696969, 0xFFFFFF, "OK")).onTouch = function()
 			if login then
@@ -1569,20 +1567,30 @@ editPublication = function(initialPublication, initialCategoryID)
 		
 		local dependencyTypeComboBox = container.layout:addChild(GUI.comboBox(1, 1, 36, 3, 0xFFFFFF, 0x4B4B4B, 0x969696, 0xE1E1E1))
 		dependencyTypeComboBox:addItem(localization.fileByURL)
+		dependencyTypeComboBox:addItem(localization.localizationDependency)
 		dependencyTypeComboBox:addItem(localization.existingPublication)
 		dependencyTypeComboBox.selectedItem = lastDependencyType
 
-		local publicationNameInput = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xFFFFFF, 0x696969, 0xB4B4B4, 0xFFFFFF, 0x2D2D2D, "", "Double Buffering"))
-		local urlInput = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xFFFFFF, 0x696969, 0xB4B4B4, 0xFFFFFF, 0x2D2D2D, "", "http://example.com/English.lang"))
+		local publicationNameInput = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xFFFFFF, 0x696969, 0xB4B4B4, 0xFFFFFF, 0x2D2D2D, "", "MineOS"))
+		local urlInput = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xFFFFFF, 0x696969, 0xB4B4B4, 0xFFFFFF, 0x2D2D2D, "", ""))
 		local pathInput = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xFFFFFF, 0x696969, 0xB4B4B4, 0xFFFFFF, 0x2D2D2D, "", ""))
-		local pathType = container.layout:addChild(GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0x0, 0xE1E1E1, 0x878787, localization.relativePath .. ":", true))
+		local pathType = container.layout:addChild(GUI.switchAndLabel(1, 1, 36, 6, 0x66DB80, 0x0, 0xE1E1E1, 0x878787, localization.relativePath .. ":", true))
 
 		local button = container.layout:addChild(GUI.button(1, 1, 36, 3, 0x696969, 0xFFFFFF, 0x0, 0xFFFFFF, localization.add))
 		button.onTouch = function()
 			addDependency({
-				publication_name = lastDependencyType > 1 and publicationNameInput.text or nil,
-				path = lastDependencyType == 1 and (not pathType.hidden and pathType.switch.state and pathInput.text:gsub("^/+", "") or "/" .. pathInput.text:gsub("/+", "/")) or nil,
-				source_url = lastDependencyType == 1 and urlInput.text or nil,
+				publication_name = lastDependencyType == 3 and publicationNameInput.text or nil,
+				path =
+					lastDependencyType == 1 and
+					(
+						not pathType.hidden and pathType.switch.state and pathInput.text:gsub("^/+", "") or filesystem.removeSlashes("/" .. pathInput.text)
+					) or
+					lastDependencyType == 2 and
+					(
+						"Localizations/" .. filesystem.name(urlInput.text)
+					) or
+					nil,
+				source_url = lastDependencyType ~= 3 and urlInput.text or nil,
 			})
 
 			container:remove()
@@ -1592,18 +1600,27 @@ editPublication = function(initialPublication, initialCategoryID)
 		publicationNameInput.onInputFinished = function()
 			if lastDependencyType == 1 then
 				button.disabled = #pathInput.text == 0 or #urlInput.text == 0
+			elseif lastDependencyType == 2 then
+				button.disabled = #urlInput.text == 0 or filesystem.extension(urlInput.text) ~= ".lang"
 			else
 				button.disabled = #publicationNameInput.text == 0
 			end
 		end
 		pathInput.onInputFinished, urlInput.onInputFinished = publicationNameInput.onInputFinished, publicationNameInput.onInputFinished
 		
+		local function updatePlaceholder()
+			urlInput.placeholderText = lastDependencyType == 1 and "http://example.com/Main.lua" or "http://example.com/English.lang"
+			pathInput.placeholderText = pathType.switch.state and "Resources/Main.lua" or "Users/Scripts/Main.lua"
+		end
+
 		local function onDependencyTypeComboBoxItemSelected()
 			lastDependencyType = dependencyTypeComboBox.selectedItem
-			publicationNameInput.hidden = lastDependencyType == 1
-			pathInput.hidden = not publicationNameInput.hidden
-			urlInput.hidden = pathInput.hidden
-			pathType.hidden = categoryComboBox.selectedItem > 1 or pathInput.hidden
+			publicationNameInput.hidden = lastDependencyType ~= 3
+			pathInput.hidden = lastDependencyType ~= 1
+			urlInput.hidden = lastDependencyType == 3
+			pathType.hidden = categoryComboBox.selectedItem == 3 or pathInput.hidden
+
+			updatePlaceholder()
 		end
 
 		dependencyTypeComboBox.onItemSelected = function()
@@ -1611,9 +1628,7 @@ editPublication = function(initialPublication, initialCategoryID)
 			workspace:draw()
 		end
 
-		pathType.switch.onStateChanged = function()
-			pathInput.placeholderText = pathType.switch.state and "Localizations/English.lang" or "/MineOS/Localizations/English.lang"
-		end
+		pathType.switch.onStateChanged = updatePlaceholder
 
 		publicationNameInput.onInputFinished()
 		onDependencyTypeComboBoxItemSelected()
@@ -1931,7 +1946,7 @@ loadConfig()
 
 lastMethod = loadCategory
 
-if args[1] == "updates" then
+if select(1, ...) == "updates" then
 	lastArguments = {nil, true}
 	leftList.selectedItem = #categories + 2
 else

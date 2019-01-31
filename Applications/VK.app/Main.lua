@@ -1710,7 +1710,9 @@ window.onResize = function(width, height)
 
 	window.backgroundPanel.localX, window.backgroundPanel.width, window.backgroundPanel.height = leftPanel.width + 1, width - leftPanel.width, height
 	contentContainer.localX, contentContainer.width, contentContainer.height = window.backgroundPanel.localX, window.backgroundPanel.width, window.backgroundPanel.height
+end
 
+window.onResizeFinished = function()
 	if lastPizda then
 		lastPizda()
 	end

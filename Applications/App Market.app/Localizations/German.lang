@@ -50,6 +50,7 @@
 	fileByURL = "Datei über URL",
 	add = "Hinzufügen",
 	relativePath = "Relativer Pfad",
+	localizationDependency = "Lokalisierungsdatei",
 	
 	login = "Anmelden",
 	profile = "Profil",

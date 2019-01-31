@@ -50,6 +50,7 @@
 	fileByURL = "File via URL",
 	add = "Add",
 	relativePath = "Relative path",
+	localizationDependency = "Localization file",
 	
 	login = "Log in",
 	profile = "Profile",

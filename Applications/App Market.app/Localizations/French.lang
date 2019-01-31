@@ -50,6 +50,7 @@
 	fileByURL = "Fichier par URL",
 	add = "Ajouter",
 	relativePath = "Chemin relatif",
+	localizationDependency = "Fichier de localisation",
 	
 	login = "S'identifier",
 	profile = "Profil",
