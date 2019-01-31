@@ -515,9 +515,10 @@ addStage(function()
 	end
 
 	-- Creating system paths
+	local userSettings, userPaths
 	switchProxy(function()
 		paths.create(paths.system)
-		local userSettings, userPaths = system.createUser(
+		userSettings, userPaths = system.createUser(
 			usernameInput.text,
 			localizationComboBox:getItem(localizationComboBox.selectedItem).text,
 			not passwordSwitchAndLabel.switch.state and passwordInput.text,
