@@ -81,7 +81,7 @@ local scriptIcon = image.load(currentScriptDirectory .. "Icons/Script.pic")
 
 local search = ""
 local appWidth, appHeight, appHSpacing, appVSpacing, currentPage, appsPerPage, appsPerWidth, appsPerHeight = 32, 6, 2, 1, 0
-local config, fileVersions, user
+local config, userVersions, systemVersions, user
 local updateFileList, editPublication, messagesItem
 
 --------------------------------------------------------------------------------
@@ -104,8 +104,9 @@ local function saveConfig()
 	filesystem.writeTable(configPath, config)
 end
 
-local function saveFileVersions()
-	filesystem.writeTable(paths.user.versions, fileVersions)
+local function saveVersions()
+	filesystem.writeTable(paths.system.versions, systemVersions, true)
+	filesystem.writeTable(paths.user.versions, userVersions, true)
 end
 
 local function saveUser()
@@ -113,11 +114,16 @@ local function saveUser()
 end
 
 local function loadConfig()
-	if filesystem.exists(paths.user.versions) then
-		fileVersions = filesystem.readTable(paths.user.versions)
-	else
-		fileVersions = {}
+	local function loadVersions(path)
+		if filesystem.exists(path) then
+			return filesystem.readTable(path)
+		else
+			return {}
+		end
 	end
+
+	userVersions = loadVersions(paths.user.versions)
+	systemVersions = loadVersions(paths.system.versions)
 
 	if filesystem.exists(userPath) then
 		user = filesystem.readTable(userPath)
@@ -130,7 +136,7 @@ local function loadConfig()
 	else
 		config = {
 			language_id = 18,
-			orderBy = 1,
+			orderBy = 4,
 			orderDirection = 1,
 			singleSession = false,
 		}
@@ -297,10 +303,19 @@ local function newButtonsLayout(x, y, width, spacing)
 	return buttonsLayout
 end
 
+local function getVersionsTable(file_id)
+	if systemVersions[file_id] then
+		return systemVersions
+	else
+		return userVersions
+	end
+end
+
 local function getUpdateState(file_id, version)
-	if fileVersions[file_id] then
-		if filesystem.exists(fileVersions[file_id].path) then
-			if fileVersions[file_id].version >= version then
+	local versionsTable = getVersionsTable(file_id)
+	if versionsTable[file_id] then
+		if filesystem.exists(versionsTable[file_id].path) then
+			if versionsTable[file_id].version >= version then
 				return 4
 			else
 				return 3
@@ -397,7 +412,8 @@ local function download(publication)
 	if publication then
 		local container = GUI.addBackgroundContainer(workspace, true, true, localization.choosePath)
 
-		local filesystemChooserPath = fileVersions[publication.file_id] and getApplicationPathFromVersions(fileVersions[publication.file_id].path)
+		local versionsTable = getVersionsTable(publication.file_id)
+		local filesystemChooserPath = versionsTable[publication.file_id] and getApplicationPathFromVersions(versionsTable[publication.file_id].path)
 		if not filesystemChooserPath then
 			if publication.category_id == 1 then
 				filesystemChooserPath = downloadPaths[publication.category_id] .. publication.publication_name .. ".app"
@@ -484,7 +500,7 @@ local function download(publication)
 			end
 
 			-- SAVED
-			fileVersions[publication.file_id] = {
+			versionsTable[publication.file_id] = {
 				path = mainFilePath,
 				version = publication.version,
 			}
@@ -500,7 +516,7 @@ local function download(publication)
 					govnoed(dependency, i + 1)
 
 					if getUpdateState(publication.all_dependencies[i], dependency.version) < 4 then
-						fileVersions[publication.all_dependencies[i]] = {
+						versionsTable[publication.all_dependencies[i]] = {
 							path = dependencyPath,
 							version = dependency.version,
 						}
@@ -519,7 +535,7 @@ local function download(publication)
 			end
 			
 			computer.pushSignal("system", "updateFileList")
-			saveFileVersions()
+			saveVersions()
 		end
 
 		filesystemChooser.onSubmit = updateTree
@@ -589,13 +605,14 @@ local function addApplicationInfo(container, publication, limit)
 	if updateState > 2 then
 		container.downloadButton.width = container.downloadButton.width + 1
 		container:addChild(GUI.adaptiveRoundedButton(container.downloadButton.localX + container.downloadButton.width, container.downloadButton.localY, 1, 0, 0xF0F0F0, 0x969696, 0x969696, 0xFFFFFF, "x")).onTouch = function()
-			filesystem.remove(getApplicationPathFromVersions(fileVersions[publication.file_id].path))
+			local versionsTable = getVersionsTable(publication.file_id)
+			filesystem.remove(getApplicationPathFromVersions(versionsTable[publication.file_id].path))
 			filesystem.remove(paths.user.desktop .. publication.publication_name .. ".lnk")
-			fileVersions[publication.file_id] = nil
+			versionsTable[publication.file_id] = nil
 			
 			callLastMethod()
 			computer.pushSignal("system", "updateFileList")
-			saveFileVersions()
+			saveVersions()
 		end
 	end
 end
@@ -1677,9 +1694,15 @@ updateFileList = function(category_id, updates)
 	local file_ids
 	if updates then
 		file_ids = {}
-		for id in pairs(fileVersions) do
-			table.insert(file_ids, id)
+
+		local function iterate(t)
+			for id in pairs(t) do
+				table.insert(file_ids, id)
+			end
 		end
+
+		iterate(userVersions)
+		iterate(systemVersions)
 	end
 
 	local result = fieldAPIRequest("result", "publications", {
@@ -1729,8 +1752,9 @@ updateFileList = function(category_id, updates)
 								language_id = config.language_id,
 							})
 							
-							fileVersions[publication.file_id].version = publication.version
-							tryToDownload(publication.source_url, fileVersions[publication.file_id].path)
+							local versionsTable = getVersionsTable(publication.file_id)
+							versionsTable[publication.file_id].version = publication.version
+							tryToDownload(publication.source_url, versionsTable[publication.file_id].path)
 
 							if publication then
 								if publication.dependencies then
@@ -1741,9 +1765,9 @@ updateFileList = function(category_id, updates)
 											workspace:draw()
 											
 											if getUpdateState(publication.all_dependencies[j], dependency.version) < 4 then
-												local dependencyPath = getDependencyPath(fileVersions[publication.file_id].path, dependency)
+												local dependencyPath = getDependencyPath(versionsTable[publication.file_id].path, dependency)
 												
-												fileVersions[publication.all_dependencies[j]] = {
+												versionsTable[publication.all_dependencies[j]] = {
 													path = dependencyPath,
 													version = dependency.version,
 												}
@@ -1759,7 +1783,7 @@ updateFileList = function(category_id, updates)
 						end
 
 						container:remove()
-						saveFileVersions()
+						saveVersions()
 						computer.shutdown(true)
 					end
 				end

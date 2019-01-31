@@ -508,19 +508,23 @@ addStage(function()
 		selectedFilesystemProxy.setLabel("MineOS HDD")
 	end
 
+	local function switchProxy(runnable)
+		filesystem.setProxy(selectedFilesystemProxy)
+		runnable()
+		filesystem.setProxy(temporaryFilesystemProxy)
+	end
+
 	-- Creating system paths
-	filesystem.setProxy(selectedFilesystemProxy)
-
-	paths.create(paths.system)
-	local userSettings, userPaths = system.createUser(
-		usernameInput.text,
-		localizationComboBox:getItem(localizationComboBox.selectedItem).text,
-		not passwordSwitchAndLabel.switch.state and passwordInput.text,
-		wallpapersSwitchAndLabel.switch.state,
-		screensaversSwitchAndLabel.switch.state
-	)
-
-	filesystem.setProxy(temporaryFilesystemProxy)
+	switchProxy(function()
+		paths.create(paths.system)
+		local userSettings, userPaths = system.createUser(
+			usernameInput.text,
+			localizationComboBox:getItem(localizationComboBox.selectedItem).text,
+			not passwordSwitchAndLabel.switch.state and passwordInput.text,
+			wallpapersSwitchAndLabel.switch.state,
+			screensaversSwitchAndLabel.switch.state
+		)
+	end)
 
 	-- Flashing EEPROM
 	layout:removeChildren()
@@ -545,7 +549,7 @@ addStage(function()
 
 	local function getData(item)
 		if type(item) == "table" then
-			return item.path, item.id, item.shortcut
+			return item.path, item.id, item.version, item.shortcut
 		else
 			return item
 		end
@@ -577,9 +581,9 @@ addStage(function()
 	addToList(screensaversSwitchAndLabel.switch.state, "screensavers")
 
 	-- Downloading files from created list
-	local path, id, shortcut
+	local versions, path, id, version, shortcut = {}
 	for i = 1, #downloadList do
-		path, id, shortcut = getData(downloadList[i])
+		path, id, version, shortcut = getData(downloadList[i])
 
 		cyka.text = text.limit(localization.installing .. " \"" .. path .. "\"", container.width, "center")
 		workspace:draw()
@@ -587,21 +591,32 @@ addStage(function()
 		-- Download file
 		download(path, OSPath .. path)
 
+		-- Adding system versions data
+		if id then
+			versions[id] = {
+				path = OSPath .. path,
+				versions = version or 1,
+			}
+		end
+
 		-- Create shortcut if possible
 		if shortcut then
-			filesystem.setProxy(selectedFilesystemProxy)
-			
-			system.createShortcut(
-				userPaths.desktop .. filesystem.hideExtension(filesystem.name(filesystem.path(path))),
-				OSPath .. filesystem.path(path)
-			)
-
-			filesystem.setProxy(temporaryFilesystemProxy)
+			switchProxy(function()
+				system.createShortcut(
+					userPaths.desktop .. filesystem.hideExtension(filesystem.name(filesystem.path(path))),
+					OSPath .. filesystem.path(path)
+				)
+			end)
 		end
 
 		progressBar.value = math.floor(i / #downloadList * 100)
 		workspace:draw()
 	end
+
+	-- Saving system versions
+	switchProxy(function()
+		filesystem.writeTable(paths.system.versions, versions, true)
+	end)
 
 	-- Done info
 	layout:removeChildren()

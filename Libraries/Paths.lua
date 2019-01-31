@@ -13,6 +13,7 @@ paths.system.temporary = "/Temporary/"
 paths.system.pictures = "/Pictures/"
 paths.system.screensavers = "/Screensavers/"
 paths.system.users = "/Users/"
+paths.system.versions = "/Versions.cfg"
 
 paths.system.applicationSample = paths.system.applications .. "Sample.app/"
 paths.system.applicationAppMarket = paths.system.applications .. "App Market.app/Main.lua"
@@ -42,8 +43,8 @@ function paths.getUser(name)
 	user.pictures = user.home .. "Pictures/"
 	user.screensavers = user.home .. "Screensavers/"
 	user.trash = user.home .. "Trash/"
-	user.versions = user.home .. "Versions.cfg"
 	user.settings = user.home .. "Settings.cfg"
+	user.versions = user.home .. "Versions.cfg"
 
 	return user
 end

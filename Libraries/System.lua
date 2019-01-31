@@ -1892,7 +1892,7 @@ function system.execute(path, ...)
 end
 
 local function desktopBackgroundAmbientDraw()
-	screen.drawRectangle(1, 2, desktopBackground.width, desktopBackground.height, desktopBackgroundColor, 0, " ")
+	screen.drawRectangle(1, desktopBackground.y, desktopBackground.width, desktopBackground.height, desktopBackgroundColor, 0, " ")
 end
 
 function system.updateWallpaper()
