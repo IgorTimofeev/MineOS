@@ -1,26 +1,24 @@
 
-local stringsMain, stringsInit, stringsChangeLabel, stringKeyDown, stringsFilesystem, colorsTitle, colorsBackground, colorsText, colorsSelectionBackground, colorsSelectionText, componentProxy, componentList, pullSignal, uptime, tableInsert, mathMax, mathMin, mathHuge, mathFloor = "MineOS EFI", "/OS.lua", "Change label", "key_down", "filesystem", 0x2D2D2D, 0xE1E1E1, 0x878787, 0x878787, 0xE1E1E1, component.proxy, component.list, computer.pullSignal, computer.uptime, table.insert, math.max, math.min, math.huge, math.floor
+local stringsMain, stringsChangeLabel, stringKeyDown, stringsFilesystem, colorsTitle, colorsBackground, colorsText, colorsSelectionBackground, colorsSelectionText, componentProxy, componentList, pullSignal, uptime, tableInsert, mathMax, mathMin, mathHuge, mathFloor = "MineOS EFI", "Change label", "key_down", "filesystem", 0x2D2D2D, 0xE1E1E1, 0x878787, 0x878787, 0xE1E1E1, component.proxy, component.list, computer.pullSignal, computer.uptime, table.insert, math.max, math.min, math.huge, math.floor
 
 local eeprom, gpu, internetAddress = componentProxy(componentList("eeprom")()), componentProxy(componentList("gpu")()), componentList("internet")()
 
-local shutdown, gpuSet, gpuFill, eepromSetData, eepromGetData, screenWidth, screenHeight, curentBackground, currentForeground = computer.shutdown, gpu.set, gpu.fill, eeprom.setData, eeprom.getData, gpu.getResolution()
+local shutdown, gpuSet, gpuSetBackground, gpuSetForeground, gpuFill, eepromSetData, eepromGetData, screenWidth, screenHeight = computer.shutdown, gpu.set, gpu.setBackground, gpu.setForeground, gpu.fill, eeprom.setData, eeprom.getData, gpu.getResolution()
 
-local resetColors, setBackground, setForeground, restrict = 
-	function()
-		curentBackground, currentForeground = nil, nil
-	end,
-	function(color)
-		if color ~= curentBackground then
-			gpu.setBackground(color)
-			curentBackground = color
-		end
-	end,
-	function(color)
-		if color ~= currentForeground then
-			gpu.setForeground(color)
-			currentForeground = color
-		end
-	end,
+local OSList, restrict, rectangle, centrizedText, menuElement =
+	{
+		{
+			"/OS.lua",
+			function()
+			end
+		},
+		{
+			"/init.lua",
+			function()
+				computer.getBootAddress, computer.setBootAddress = eepromGetData, eepromSetData
+			end
+		}
+	},
 	function(text, limit, skip)
 		if #text < limit then
 			text = text .. string.rep(" ", limit - #text)
@@ -29,16 +27,14 @@ local resetColors, setBackground, setForeground, restrict =
 		end
 
 		return text .. (skip and "" or "  ")
-	end
-
-local rectangle, centrizedText, menuElement =
+	end,
 	function(x, y, width, height, color)
-		setBackground(color)
+		gpuSetBackground(color)
 		gpuFill(x, y, width, height, " ")
 	end,
 	function(y, foreground, text)
 		local x = mathFloor(screenWidth / 2 - #text / 2)
-		setForeground(foreground)
+		gpuSetForeground(foreground)
 		gpuSet(x, y, text)
 	end,
 	function(text, callback, breakLoop)
@@ -86,29 +82,44 @@ local function executeString(...)
 		end
 	end
 
-	resetColors()
 	status(stringsMain, reason, 1)
 end
 
-local loadInit, menuBack, menu, input =
+local boot, menuBack, menu, input =
 	function(proxy)
-		status(stringsMain, "Booting from " .. proxy.address)
+		for i = 1, #OSList do
+			if proxy.exists(OSList[i][1]) then
+				status(stringsMain, "Booting from " .. proxy.address)
 
-		local handle, data, chunk, success, reason = proxy.open(stringsInit, "rb"), "", ""
-		repeat
-			chunk = proxy.read(handle, mathHuge)
-			data = data .. (chunk or "")
-		until not chunk
+				-- Updating current EEPROM boot address if it's differs from given proxy address
+				if eepromGetData() ~= proxy.address then
+					eepromSetData(proxy.address)
+				end
 
-		proxy.close(handle)
+				-- Running OS pre-boot function
+				OSList[i][2]()
 
-		executeString(data, "=" .. stringsInit)
+				-- Reading boot file
+				local handle, data, chunk, success, reason = proxy.open(OSList[i][1], "rb"), ""
+				repeat
+					chunk = proxy.read(handle, mathHuge)
+					data = data .. (chunk or "")
+				until not chunk
+
+				proxy.close(handle)
+
+				-- Running boot file
+				executeString(data, "=" .. OSList[i][1])
+
+				return 1
+			end
+		end
 	end,
 	function()
 		return menuElement("Back", nil, 1)
 	end,
 	function(titleText, elements)
-		local spacing, selectedElement, maxLength = 2, 1, 0
+		local selectedElement, maxLength = 1, 0
 		for i = 1, #elements do
 			maxLength = math.max(maxLength, #elements[i].s)
 		end
@@ -121,11 +132,11 @@ local loadInit, menuBack, menu, input =
 				
 				if i == selectedElement then
 					rectangle(mathFloor(screenWidth / 2 - maxLength / 2) - 2, y, maxLength + 4, 1, colorsSelectionBackground)
-					setForeground(colorsSelectionText)
+					gpuSetForeground(colorsSelectionText)
 					gpuSet(x, y, elements[i].s)
+					gpuSetBackground(colorsBackground)
 				else
-					setBackground(colorsBackground)
-					setForeground(colorsText)
+					gpuSetForeground(colorsText)
 					gpuSet(x, y, elements[i].s)
 				end
 				
@@ -155,7 +166,7 @@ local loadInit, menuBack, menu, input =
 		while 1 do
 			eblo = prefix .. text
 			gpuFill(1, y, screenWidth, 1, " ")
-			setForeground(colorsText)
+			gpuSetForeground(colorsText)
 			gpuSet(mathFloor(screenWidth / 2 - #eblo / 2), y, eblo .. (state and "█" or ""))
 
 			eventData = {pullSignal(0.5)}
@@ -181,7 +192,7 @@ local loadInit, menuBack, menu, input =
 	end
 
 gpu.bind(componentList("screen")(), true)
-status(stringsMain, "Hold Alt to show boot options menu")
+status(stringsMain, "Hold Alt to show boot options")
 
 local deadline, eventData = uptime() + 1
 while uptime() < deadline do
@@ -221,13 +232,13 @@ while uptime() < deadline do
 									end, 1))
 								end
 
-								tableInsert(filesystemOptions, 1, menuElement("Set as startup", function()
+								tableInsert(filesystemOptions, 1, menuElement("Set as bootable", function()
 									eepromSetData(address)
 								end, 1))
 
 								menu(label .. " (" .. address .. ")", filesystemOptions)
-							end
-						, 1)
+							end, 1
+						)
 					)
 				end
 
@@ -254,7 +265,7 @@ while uptime() < deadline do
 						if result then
 							data = data .. result
 						else
-							handle:close()
+							handle.close()
 							
 							if reason then
 								status(stringsMain, reason, 1)
@@ -276,14 +287,11 @@ while uptime() < deadline do
 end
 
 local proxy = componentProxy(eepromGetData())
-if proxy and proxy.exists(stringsInit) then
-	loadInit(proxy)
-else
+if not (proxy and boot(proxy)) then
 	for address in componentList(stringsFilesystem) do
 		proxy = componentProxy(address)
-		if proxy.exists(stringsInit) then
-			eepromSetData(address)
-			loadInit(proxy)
+
+		if boot(proxy) then
 			break
 		else
 			proxy = nil

@@ -508,7 +508,7 @@ local function iconAnalyseExtension(icon, launchers)
 		if icon.extension == ".lnk" then
 			icon.shortcutPath = system.readShortcut(icon.path)
 			icon.shortcutExtension = filesystem.extension(icon.shortcutPath)
-			icon.shortcutIsDirectory = filesystem.isDirectory(icon.shortcutPath)
+			icon.shortcutIsDirectory = icon.shortcutPath:sub(-1) == "/"
 			icon.isShortcut = true
 
 			local shortcutIcon = iconAnalyseExtension(
@@ -580,8 +580,8 @@ function system.icon(x, y, path, textColor, selectionColor)
 	}
 
 	icon.path = path
-	icon.extension = filesystem.extension(icon.path)
-	icon.isDirectory = filesystem.isDirectory(icon.path)
+	icon.extension = filesystem.extension(path)
+	icon.isDirectory = path:sub(-1) == "/"
 	icon.name = icon.isDirectory and filesystem.name(path):sub(1, -2) or filesystem.name(path)
 	icon.nameWithoutExtension = filesystem.hideExtension(icon.name)
 	icon.isShortcut = false
@@ -879,7 +879,7 @@ local function iconOnRightClick(icon, e1, e2, e3, e4)
 				for i = 1, #list do
 					local path = paths.system.applications .. list[i]
 
-					if filesystem.isDirectory(path) and filesystem.extension(list[i]) == ".app" then
+					if path:sub(-1) == "/" and filesystem.extension(list[i]) == ".app" then
 						subMenu:addItem(filesystem.hideExtension(list[i])).onTouch = function()
 							setAssociation(path)
 						end
@@ -2572,7 +2572,7 @@ function system.authorize()
 	local userList = filesystem.list(paths.system.users)
 	local i = 1
 	while i <= #userList do
-		if filesystem.isDirectory(paths.system.users .. userList[i]) then
+		if userList[i]:sub(-1) == "/" then
 			i = i + 1
 		else
 			table.remove(userList, i)
