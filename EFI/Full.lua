@@ -5,7 +5,7 @@ local eeprom, gpu, internetAddress = componentProxy(componentList("eeprom")()), 
 
 local shutdown, gpuSet, gpuSetBackground, gpuSetForeground, gpuFill, eepromSetData, eepromGetData, screenWidth, screenHeight = computer.shutdown, gpu.set, gpu.setBackground, gpu.setForeground, gpu.fill, eeprom.setData, eeprom.getData, gpu.getResolution()
 
-local OSList, restrict, rectangle, centrizedText, menuElement =
+local OSList, rectangle, centrizedText, menuElement =
 	{
 		{
 			"/OS.lua",
@@ -19,15 +19,6 @@ local OSList, restrict, rectangle, centrizedText, menuElement =
 			end
 		}
 	},
-	function(text, limit, skip)
-		if #text < limit then
-			text = text .. string.rep(" ", limit - #text)
-		else
-			text = text:sub(1, limit)
-		end
-
-		return text .. (skip and "" or "  ")
-	end,
 	function(x, y, width, height, color)
 		gpuSetBackground(color)
 		gpuFill(x, y, width, height, " ")
@@ -89,7 +80,7 @@ local boot, menuBack, menu, input =
 	function(proxy)
 		for i = 1, #OSList do
 			if proxy.exists(OSList[i][1]) then
-				status(stringsMain, "Booting from " .. proxy.address)
+				status(stringsMain, "Booting from " .. (proxy.getLabel() or proxy.address))
 
 				-- Updating current EEPROM boot address if it's differs from given proxy address
 				if eepromGetData() ~= proxy.address then
@@ -115,8 +106,8 @@ local boot, menuBack, menu, input =
 			end
 		end
 	end,
-	function()
-		return menuElement("Back", nil, 1)
+	function(f)
+		return menuElement("Back", f, 1)
 	end,
 	function(titleText, elements)
 		local selectedElement, maxLength = 1, 0
@@ -200,48 +191,71 @@ while uptime() < deadline do
 	if eventData[1] == stringKeyDown and eventData[4] == 56 then
 		local utilities = {
 			menuElement("Disk management", function()
-				local filesystems, bootAddress = {menuBack()}, eepromGetData()
-				
-				for address in componentList(stringsFilesystem) do
-					local proxy = componentProxy(address)
-					local label, isReadOnly = proxy.getLabel() or "Unnamed", proxy.isReadOnly()
-					
-					tableInsert(filesystems, 1,
-						menuElement(
-							(address == bootAddress and "> " or "  ") ..
-							restrict(label, 10) ..
-							restrict(proxy.spaceTotal() > 1048576 and "HDD" or proxy.spaceTotal() > 65536 and "FDD" or "SYS", 3) ..
-							restrict(isReadOnly and "R" or "R/W", 3) ..
-							address:sub(1, 8) .. "  " ..
-							restrict(string.format("%.2f", proxy.spaceUsed() / proxy.spaceTotal() * 100) .. "%", 6, 1),
+				local restrict, filesystems, filesystemOptions =
+					function(text, limit)
+						if #text < limit then
+							text = text .. string.rep(" ", limit - #text)
+						else
+							text = text:sub(1, limit)
+						end
 
-							function()
-								local filesystemOptions = {menuBack()}
+						return text .. "  "
+					end,
+					{menuBack()}
 
-								if not isReadOnly then
-									tableInsert(filesystemOptions, 1, menuElement(stringsChangeLabel, function()
-										proxy.setLabel(input(title(2, stringsChangeLabel), "Enter new name: "))
-									end, 1))
+				local function updateFilesystems()
+					for i = 2, #filesystems do
+						table.remove(filesystems, 1)
+					end
 
-									tableInsert(filesystemOptions, 2, menuElement("Format", function()
-										status(stringsMain, "Formatting filesystem " .. address)
-										for _, file in ipairs(proxy.list("/")) do
-											proxy.remove(file)
-										end
-										status(stringsMain, "Formatting finished", 1)
-									end, 1))
+					for address in componentList(stringsFilesystem) do
+						local proxy = componentProxy(address)
+						local label, isReadOnly, filesystemOptions =
+							proxy.getLabel() or "Unnamed",
+							proxy.isReadOnly(),
+							{
+								menuElement("Set as bootable", function()
+									eepromSetData(address)
+									updateFilesystems()
+								end, 1)
+							}
+
+						if not isReadOnly then
+							tableInsert(filesystemOptions, menuElement(stringsChangeLabel, function()
+								proxy.setLabel(input(title(2, stringsChangeLabel), "Enter new name: "))
+								updateFilesystems()
+							end, 1))
+
+							tableInsert(filesystemOptions, menuElement("Format", function()
+								status(stringsMain, "Formatting filesystem " .. address)
+								
+								for _, file in ipairs(proxy.list("/")) do
+									proxy.remove(file)
 								end
 
-								tableInsert(filesystemOptions, 1, menuElement("Set as bootable", function()
-									eepromSetData(address)
-								end, 1))
+								updateFilesystems()
+							end, 1))
+						end
 
-								menu(label .. " (" .. address .. ")", filesystemOptions)
-							end, 1
+						tableInsert(filesystemOptions, menuBack())
+
+						tableInsert(filesystems, 1,
+							menuElement(
+								(address == eepromGetData() and "> " or "  ") ..
+								restrict(label, 12) ..
+								restrict(proxy.spaceTotal() > 1048576 and "HDD" or proxy.spaceTotal() > 65536 and "FDD" or "SYS", 3) ..
+								restrict(isReadOnly and "R" or "R/W", 3) ..
+								restrict(string.format("%.1f", proxy.spaceUsed() / proxy.spaceTotal() * 100) .. "%", 6) ..
+								address:sub(1, 7) .. "…",
+								function()
+									menu(label .. " (" .. address .. ")", filesystemOptions)
+								end
+							)
 						)
-					)
+					end
 				end
 
+				updateFilesystems()
 				menu("Select filesystem", filesystems)
 			end),
 			

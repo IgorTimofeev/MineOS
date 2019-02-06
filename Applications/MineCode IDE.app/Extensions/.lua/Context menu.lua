@@ -14,7 +14,7 @@ end
 
 menu:addItem(localization.flashEEPROM, not component.isAvailable("eeprom") or filesystem.size(icon.path) > 4096).onTouch = function()
 	local container = GUI.addBackgroundContainer(workspace, true, true, localization.flashEEPROM)
-	container.layout:addChild(GUI.label(1, 1, container.width, 1, 0x969696, localization.flashingEEPROM .. "...")):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
+	container.layout:addChild(GUI.label(1, 1, container.width, 1, 0x969696, localization.flashingEEPROM)):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
 	workspace:draw()
 
 	component.get("eeprom").set(filesystem.read(icon.path))
