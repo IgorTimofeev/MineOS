@@ -9,7 +9,7 @@
 	screenHeight = "Höhe",
 	screenPreferredMonitor = "Überwachung",
 	screenScaleInfo = "Mit dieser option können Sie die optimale Bildschirmauflösung auswählen, um den \"schwarze Rechtecke\" - Effekt loszuwerden",
-	screenInvalidResolution = "Der text in den Eingabefeldern sollte aus Ziffern bestehen, und die maximale Auflösung sollte %d Zeichen nicht überschreiten",
+	screenInvalidResolution = "Der text in den Eingabefeldern sollte aus Ziffern bestehen, sollte größer als %d sein und die maximale Auflösung sollte %d Zeichen nicht überschreiten",
 
 	wallpaper = "Wallpaper",
 	wallpaperWallpaper = "Wallpaper",
