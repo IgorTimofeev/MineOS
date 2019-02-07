@@ -421,11 +421,6 @@ function filesystem.remove(path)
 	return proxy.remove(proxyPath)
 end
 
-function filesystem.rename(path, newPath)
-	local proxy, proxyPath = filesystem.get(path)
-	return proxy.rename(proxyPath, newPath)
-end
-
 function filesystem.list(path, sortingMethod)
 	local proxy, proxyPath = filesystem.get(path)
 	
@@ -496,34 +491,56 @@ function filesystem.list(path, sortingMethod)
 	return list, reason
 end
 
+function filesystem.rename(fromPath, toPath)
+	local fromProxy, fromProxyPath = filesystem.get(fromPath)
+	local toProxy, toProxyPath = filesystem.get(toPath)
+
+	-- If it's the same filesystem component
+	if fromProxy.address == toProxy.address then
+		return fromProxy.rename(fromProxyPath, toProxyPath)
+	else
+		-- Copy files to destination
+		filesystem.copy(fromPath, toPath)
+		-- Remove original files
+		filesystem.remove(fromPath)
+	end
+end
+
 --------------------------------------- Advanced methods -----------------------------------------
 
-function filesystem.copy(from, to)
-	local fromHandle, reason = filesystem.open(from, "rb")
-	if fromHandle then
-		local toHandle, reason = filesystem.open(to, "wb")
-		if toHandle then
-			while true do
-				local chunk = readString(fromHandle, BUFFER_SIZE)
-				if chunk then
-					local success, reason = write(toHandle, chunk)
+function filesystem.copy(fromPath, toPath)
+	local function copyRecursively(fromPath, toPath)
+		if filesystem.isDirectory(fromPath) then
+			filesystem.makeDirectory(toPath)
 
-					if not success then
-						return false, reason
-					end
-				else
-					toHandle:close()
-					fromHandle:close()
-
-					return true
-				end
+			local list = filesystem.list(fromPath)
+			for i = 1, #list do
+				copyRecursively(fromPath .. "/" .. list[i], toPath .. "/" .. list[i])
 			end
 		else
-			return false, reason
+			local fromHandle = filesystem.open(fromPath, "rb")
+			if fromHandle then
+				local toHandle = filesystem.open(toPath, "wb")
+				if toHandle then
+					while true do
+						local chunk = readString(fromHandle, BUFFER_SIZE)
+						if chunk then
+							if not write(toHandle, chunk) then
+								break
+							end
+						else
+							toHandle:close()
+							fromHandle:close()
+
+							break
+						end
+					end
+				end
+			end
 		end
-	else
-		return false, reason
 	end
+
+	copyRecursively(fromPath, toPath)
 end
 
 function filesystem.read(path)
