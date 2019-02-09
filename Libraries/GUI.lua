@@ -1024,9 +1024,6 @@ local function codeViewDraw(codeView)
 		)
 	end
 
-	local oldDrawLimitX1, oldDrawLimitY1, oldDrawLimitX2, oldDrawLimitY2 = screen.getDrawLimit()
-	screen.setDrawLimit(codeView.codeAreaPosition, codeView.y, codeView.codeAreaPosition + codeView.codeAreaWidth - 1, codeView.y + codeView.height - 1)
-
 	if #codeView.selections > 0 then
 		for selectionIndex = 1, #codeView.selections do
 			y = codeView.y
@@ -1055,14 +1052,13 @@ local function codeViewDraw(codeView)
 
 	-- Code strings
 	y = codeView.y
-	screen.setDrawLimit(codeView.codeAreaPosition + 1, y, codeView.codeAreaPosition + codeView.codeAreaWidth - 2, y + codeView.height - 1)
 	
 	for i = codeView.fromLine, toLine do
 		if codeView.lines[i] then
 			if codeView.syntaxHighlight then
-				GUI.highlightString(codeView.codeAreaPosition + 1,
+				GUI.highlightString(
+					codeView.codeAreaPosition + 1,
 					y,
-					codeView.codeAreaWidth - 2,
 					codeView.fromSymbol,
 					codeView.indentationWidth,
 					patterns,
@@ -1078,8 +1074,6 @@ local function codeViewDraw(codeView)
 			break
 		end
 	end
-
-	screen.setDrawLimit(oldDrawLimitX1, oldDrawLimitY1, oldDrawLimitX2, oldDrawLimitY2)
 
 	if #codeView.lines > codeView.height then
 		codeView.verticalScrollBar.colors.background, codeView.verticalScrollBar.colors.foreground = colorScheme.scrollBarBackground, colorScheme.scrollBarForeground
@@ -3687,11 +3681,21 @@ end
 
 ---------------------------------------------------------------------------------------------------
 
-function GUI.highlightString(x, y, width, fromChar, indentationWidth, patterns, colorScheme, s)
+function GUI.highlightString(x, y, fromChar, indentationWidth, patterns, colorScheme, s)	
+	local stringLength, x1, y1, x2, y2 = unicode.len(s), screen.getDrawLimit()
+
 	fromChar = fromChar or 1
-	
-	local counter, symbols, colors, stringLength, bufferIndex, newFrameBackgrounds, newFrameForegrounds, newFrameSymbols, searchFrom, starting, ending = indentationWidth, {}, {}, unicode.len(s), screen.getIndex(x, y), screen.getNewFrameTables()
-	local toChar = math.min(stringLength, fromChar + width - 1)
+	if x < x1 then
+		fromChar = fromChar + x1 - x
+		x = x1
+	end
+
+	local toChar, endX = stringLength, x + stringLength - 1
+	if endX > x2 then
+		toChar = toChar - endX + x2
+	end
+
+	local counter, symbols, colors, bufferIndex, newFrameBackgrounds, newFrameForegrounds, newFrameSymbols, searchFrom, starting, ending = indentationWidth, {}, {}, screen.getIndex(x, y), screen.getNewFrameTables()
 
 	-- Пидорасим на символы
 	for i = fromChar, toChar do

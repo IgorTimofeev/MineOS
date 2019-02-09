@@ -28,7 +28,7 @@ module.onTouch = function()
 		if text == placeholder then
 			screen.drawText(x, y, color, text)
 		else
-			GUI.highlightString(x, y, input.width - 2, 1, 2, GUI.LUA_SYNTAX_PATTERNS, GUI.LUA_SYNTAX_COLOR_SCHEME, text)
+			GUI.highlightString(x, y, 1, 2, GUI.LUA_SYNTAX_PATTERNS, GUI.LUA_SYNTAX_COLOR_SCHEME, text)
 		end
 	end
 
