@@ -150,6 +150,12 @@ local GUI = UIRequire("GUI")
 local system = UIRequire("System")
 UIRequire("Network")
 
+-- Filling package.loaded with default global variables for OpenOS bitches
+package.loaded.bit32 = bit32
+package.loaded.computer = computer
+package.loaded.component = component
+package.loaded.unicode = unicode
+
 ---------------------------------------- Main loop ----------------------------------------
 
 -- "double_touch" event handler
