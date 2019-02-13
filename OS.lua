@@ -130,7 +130,7 @@ local paths = UIRequire("Paths")
 local event = UIRequire("Event")
 local filesystem = UIRequire("Filesystem")
 
--- Setting main filesystem proxy too what are we booting from
+-- Setting main filesystem proxy to what are we booting from
 filesystem.setProxy(bootFilesystemProxy)
 
 -- Redeclaring requireExists function after filesystem library initialization
@@ -145,7 +145,11 @@ UIRequire("Color")
 UIRequire("Text")
 UIRequire("Number")
 local image = UIRequire("Image")
-UIRequire("Screen")
+local screen = UIRequire("Screen")
+
+-- Setting currently chosen GPU component as screen buffer main one
+screen.setGPUProxy(GPUProxy)
+
 local GUI = UIRequire("GUI")
 local system = UIRequire("System")
 UIRequire("Network")
@@ -158,28 +162,54 @@ package.loaded.unicode = unicode
 
 ---------------------------------------- Main loop ----------------------------------------
 
--- "double_touch" event handler
-local doubleTouchInterval, doubleTouchX, doubleTouchY, doubleTouchButton, doubleTouchUptime, doubleTouchScreenAddress = 0.3
-if not event.doubleTouchHandler then
-	event.doubleTouchHandler = event.addHandler(
-		function(signalType, screenProxyAddress, x, y, button, user)
-			if signalType == "touch" then
-				local uptime = computer.uptime()
-				
-				if doubleTouchX == x and doubleTouchY == y and doubleTouchButton == button and doubleTouchScreenAddress == screenProxyAddress and uptime - doubleTouchUptime <= doubleTouchInterval then
-					computer.pushSignal("double_touch", screenProxyAddress, x, y, button, user)
-					event.skip("touch")
-				end
-
-				doubleTouchX, doubleTouchY, doubleTouchButton, doubleTouchUptime, doubleTouchScreenAddress = x, y, button, uptime, screenProxyAddress
-			end
-		end
-	)
-end
-
--- Creating main OS workspace, which contains every window/menu/etc.
+-- Creating OS workspace, which contains every window/menu/etc.
 local workspace = GUI.workspace()
 system.setWorkspace(workspace)
+
+-- "double_touch" event handler
+local doubleTouchInterval, doubleTouchX, doubleTouchY, doubleTouchButton, doubleTouchUptime, doubleTouchcomponentAddress = 0.3
+event.addHandler(
+	function(signalType, componentAddress, x, y, button, user)
+		if signalType == "touch" then
+			local uptime = computer.uptime()
+			
+			if doubleTouchX == x and doubleTouchY == y and doubleTouchButton == button and doubleTouchcomponentAddress == componentAddress and uptime - doubleTouchUptime <= doubleTouchInterval then
+				computer.pushSignal("double_touch", componentAddress, x, y, button, user)
+				event.skip("touch")
+			end
+
+			doubleTouchX, doubleTouchY, doubleTouchButton, doubleTouchUptime, doubleTouchcomponentAddress = x, y, button, uptime, componentAddress
+		end
+	end
+)
+
+-- Screen component attaching/detaching event handler
+event.addHandler(
+	function(signalType, componentAddress, componentType)
+		if (signalType == "component_added" or signalType == "component_removed") and componentType == "screen" then
+			local gpu = screen.getGPUProxy()
+
+			local function bindScreen(address)
+				screen.bind(address, false)
+				gpu.setDepth(gpu.maxDepth())
+				workspace:draw()
+			end
+
+			if signalType == "component_added" then
+				if not gpu.getScreen() then
+					bindScreen(componentAddress)
+				end
+			else
+				if not gpu.getScreen() then
+					local address = component.list("screen")()
+					if address then
+						bindScreen(address)
+					end
+				end
+			end
+		end
+	end
+)
 
 -- Logging in
 system.authorize()

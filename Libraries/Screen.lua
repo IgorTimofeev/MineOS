@@ -84,9 +84,17 @@ local function getHeight()
 	return bufferHeight
 end
 
-local function bind(...)
-	GPUProxy.bind(...)
-	flush(GPUProxyGetResolution())
+local function bind(address, reset)
+	local success, reason = GPUProxy.bind(address, reset)
+	if success then
+		if reset then
+			setResolution(GPUProxy.maxResolution())
+		else
+			setResolution(bufferWidth, bufferHeight)
+		end
+	else
+		return success, reason
+	end
 end
 
 local function getGPUProxy()
@@ -110,7 +118,7 @@ end
 local function setGPUProxy(proxy)
 	GPUProxy = proxy
 	updateGPUProxyMethods()
-	flush(GPUProxyGetResolution())
+	flush()
 end
 
 local function getScaledResolution(scale)
@@ -579,10 +587,6 @@ local function update(force)
 
 	changes = nil
 end
-
---------------------------------------------------------------------------------
-
-setGPUProxy(component.proxy(component.list("gpu")()))
 
 --------------------------------------------------------------------------------
 

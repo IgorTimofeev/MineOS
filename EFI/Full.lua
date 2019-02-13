@@ -3,6 +3,8 @@ local stringsMain, stringsChangeLabel, stringKeyDown, stringsFilesystem, colorsT
 
 local eeprom, gpu, internetAddress = componentProxy(componentList("eeprom")()), componentProxy(componentList("gpu")()), componentList("internet")()
 
+gpu.bind(componentList("screen")(), true)
+
 local shutdown, gpuSet, gpuSetBackground, gpuSetForeground, gpuFill, eepromSetData, eepromGetData, screenWidth, screenHeight = computer.shutdown, gpu.set, gpu.setBackground, gpu.setForeground, gpu.fill, eeprom.setData, eeprom.getData, gpu.getResolution()
 
 local OSList, rectangle, centrizedText, menuElement =
@@ -182,7 +184,6 @@ local boot, menuBack, menu, input =
 		end
 	end
 
-gpu.bind(componentList("screen")(), true)
 status(stringsMain, "Hold Alt to show boot options")
 
 local deadline, eventData = uptime() + 1
