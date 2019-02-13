@@ -13,7 +13,7 @@ local event = require("Event")
 
 --------------------------------------------------------------------------------
 
-local host = "http://eliteclubsessions.ru/MineOSAPI/2.04/"
+local host = "http://mineos.modder.pw/MineOSAPI/2.04/"
 local iconCheckReponseTime = 2
 
 local overviewIconsCount = 14
@@ -84,12 +84,14 @@ local updateFileList, editPublication, messagesItem
 
 --------------------------------------------------------------------------------
 
-local workspace, window = system.addWindow(GUI.filledWindow(1, 1, 126, 33, 0xF0F0F0))
+local workspace, window = system.addWindow(GUI.filledWindow(1, 1, 127, 33, 0xF0F0F0))
 
-local leftListPanel = window:addChild(GUI.panel(1, 1, 22, 3, 0x2D2D2D))
+local leftListPanel = window:addChild(GUI.panel(1, 1, 23, 3, 0x2D2D2D))
 local leftList = window:addChild(GUI.list(1, 4, leftListPanel.width, 1, 3, 0, 0x2D2D2D, 0x787878, 0x2D2D2D, 0x787878, 0xF0F0F0, 0x2D2D2D, false))
 
 local contentContainer = window:addChild(GUI.container(1, 1, 1, 1))
+
+local sponsoredLabel = window:addChild(GUI.text(2, 1, 0x3C3C3C, "Sponsored by McModder"))
 
 local progressIndicator = window:addChild(GUI.progressIndicator(math.floor(leftListPanel.width / 2 - 1), 1, 0x3C3C3C, 0x00B640, 0x99FF80))
 
@@ -1928,6 +1930,7 @@ window.onResize = function(width, height)
 	contentContainer.height = window.backgroundPanel.height
 
 	progressIndicator.localY = height - progressIndicator.height
+	sponsoredLabel.localY = height
 end
 
 window.onResizeFinished = function()

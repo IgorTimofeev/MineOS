@@ -187,20 +187,20 @@ event.addHandler(
 event.addHandler(
 	function(signalType, componentAddress, componentType)
 		if (signalType == "component_added" or signalType == "component_removed") and componentType == "screen" then
-			local gpu = screen.getGPUProxy()
+			local GPUProxy = screen.getGPUProxy()
 
 			local function bindScreen(address)
 				screen.bind(address, false)
-				gpu.setDepth(gpu.maxDepth())
+				GPUProxy.setDepth(GPUProxy.maxDepth())
 				workspace:draw()
 			end
 
 			if signalType == "component_added" then
-				if not gpu.getScreen() then
+				if not GPUProxy.getScreen() then
 					bindScreen(componentAddress)
 				end
 			else
-				if not gpu.getScreen() then
+				if not GPUProxy.getScreen() then
 					local address = component.list("screen")()
 					if address then
 						bindScreen(address)
