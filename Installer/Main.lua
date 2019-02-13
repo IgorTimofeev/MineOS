@@ -195,7 +195,10 @@ bit32 = bit32 or require("Bit32")
 local image = require("Image")
 local text = require("Text")
 local number = require("Number")
+
 local screen = require("Screen")
+screen.setGPUProxy(GPUProxy)
+
 local GUI = require("GUI")
 local system = require("System")
 local paths = require("Paths")
