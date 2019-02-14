@@ -1500,7 +1500,13 @@ end
 
 local function windowMaximize(window, ...)
 	window.movingEnabled = window.maximized
-	setWorkspaceHidden(not window.maximized)
+	
+	if window.maximized then
+		setWorkspaceHidden(false)
+	else
+		setWorkspaceHidden(not window.showDesktopOnMaximize)
+	end
+
 	GUI.windowMaximize(window, ...)
 end
 
