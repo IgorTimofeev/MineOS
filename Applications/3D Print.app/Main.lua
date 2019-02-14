@@ -662,7 +662,7 @@ end
 
 --------------------------------------------------------------------------------
 
-load(options.o and args[1] or (currentScriptDirectory .. "Sample.3dm"))
+load(args[1] or (currentScriptDirectory .. "Sample.3dm"))
 
 window:resize(window.width, window.height)
 workspace:draw()
