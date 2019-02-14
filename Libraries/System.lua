@@ -1947,8 +1947,8 @@ function system.updateWallpaper()
 					end
 				end
 
-				desktopBackground.draw = function()
-					screen.drawRectangle(1, 1, desktopBackground.width, desktopBackground.height, desktopBackgroundColor, 0, " ")
+				desktopBackground.draw = function(...)
+					desktopBackgroundAmbientDraw(...)
 					screen.drawImage(desktopBackgroundWallpaperX, desktopBackgroundWallpaperY, result)
 				end
 			else
