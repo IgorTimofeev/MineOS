@@ -84,6 +84,7 @@
 	showContainingFolder = "Afficher le dossier contenant",
 	flashEEPROM = "Flasher vers l'EEPROM",
 	flashingEEPROM = "Flash en cours. Ne pas éteindre l'ordinateur...",
+	print3D = "Imprimer le modèle",
 
 	sortBy = "Trier",
 	sortByType = "Par type",

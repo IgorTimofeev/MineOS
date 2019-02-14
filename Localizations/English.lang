@@ -84,6 +84,7 @@
 	showContainingFolder = "Show containing folder",
 	flashEEPROM = "Flash to EEPROM",
 	flashingEEPROM = "Flashing in progress. Don't turn off computer...",
+	print3D = "Print model",
 
 	sortBy = "Sort",
 	sortByType = "By type",

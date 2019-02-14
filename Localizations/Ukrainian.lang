@@ -84,7 +84,8 @@
 	showContainingFolder = "Показати папку",
 	flashEEPROM = "Спалах до EEPROM",
 	flashingEEPROM = "Блимає в процесі. Не вимикати комп'ютер...",
-
+	print3D = "Роздрукувати модель",
+	
 	sortBy = "Роду",
 	sortByType = "За типом",
 	sortByName = "По імені",

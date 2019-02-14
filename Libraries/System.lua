@@ -686,7 +686,7 @@ local function iconOnDoubleClick(icon)
 	workspace:draw()
 end
 
-function system.uploadToPastebin(path)
+local function uploadToPastebin(path)
 	local container = addBackgroundContainerWithInput("", localization.uploadToPastebin, localization.pasteName)
 
 	local result, reason
@@ -725,6 +725,12 @@ function system.uploadToPastebin(path)
 	end
 
 	workspace:draw()
+end
+
+function system.addUploadToPastebinMenuItem(menu, path)
+	menu:addItem(localization.uploadToPastebin, not component.isAvailable("internet")).onTouch = function()
+		uploadToPastebin(path)
+	end
 end
 
 local function iconOnRightClick(icon, e1, e2, e3, e4)
@@ -823,7 +829,7 @@ local function iconOnRightClick(icon, e1, e2, e3, e4)
 			else
 				local function addDefault()
 					contextMenu:addItem(localization.uploadToPastebin, not component.isAvailable("internet")).onTouch = function()
-						system.uploadToPastebin(icon.path)
+						uploadToPastebin(icon.path)
 					end
 					contextMenu:addSeparator()
 				end
@@ -1531,7 +1537,11 @@ end
 function system.addWindow(window, dontAddToDock, preserveCoordinates)
 	-- Чекаем коорды
 	if not preserveCoordinates then
-		window.x, window.y = math.floor(desktopWindowsContainer.width / 2 - window.width / 2), math.floor(desktopWindowsContainer.height / 2 - window.height / 2)
+		window.x, window.y =
+			math.floor(desktopWindowsContainer.width / 2 - window.width / 2),
+			math.floor(desktopWindowsContainer.height / 2 - window.height / 2)
+
+		window.x, window.y = window.x > 0 and window.x or 1, window.y > 0 and window.y or 1
 	end
 	
 	-- Ебурим окно к окнам

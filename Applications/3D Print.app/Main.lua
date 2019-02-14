@@ -4,18 +4,78 @@ local GUI = require("GUI")
 local screen = require("Screen")
 local color = require("Color")
 local system = require("System")
+local paths = require("Paths")
 local bigLetters = require("BigLetters")
 local filesystem = require("Filesystem")
 
+--------------------------------------------------------------------------------
+
 local args, options = system.parseArguments(...)
+
+local proxies = {}
+
+local function updateProxy(name)
+	proxies[name] = component.list(name)()
+	if proxies[name] then
+		proxies[name] = component.proxy(proxies[name])
+		return true
+	end
+end
+
+local function print(model)
+	local proxy = proxies.printer3d
+
+	proxy.reset()
+
+	if model.label then
+		proxy.setLabel(model.label)
+	end
+
+	if model.tooltip then
+		proxy.setTooltip(model.tooltip)
+	end
+
+	if model.collidable then
+		proxy.setCollidable(model.collidable[1], model.collidable[2])
+	end
+
+	if model.lightLevel then
+		proxy.setLightLevel(model.lightLevel)
+	end
+
+	if model.emitRedstone then
+		proxy.setRedstoneEmitter(model.emitRedstone)
+	end
+
+	if model.buttonMode then
+		proxy.setButtonMode(model.buttonMode)
+	end
+	
+	for i = 1, #model.shapes do
+		local shape = model.shapes[i]
+		proxy.addShape(shape[1], shape[2], shape[3], shape[4], shape[5], shape[6], shape.texture or "empty", shape.state, shape.tint)
+	end
+
+	local success, reason = proxy.commit(1)
+	if not success then
+		GUI.alert(localization.failedToPrint .. ": " .. reason)
+	end
+end
+
+-- Just printing without UI
+if options.p then
+	updateProxy("printer3d")
+	print(filesystem.readTable(args[1]))
+	return
+end
 
 --------------------------------------------------------------------------------
 
 local localization = system.getCurrentScriptLocalization()
 local currentLayer = 0
 local model
+local savePath
 local shapeLimit = 24
-local proxies = {}
 local viewPixelWidth, viewPixelHeight = 4, 2
 
 local colors, hue, hueStep = {}, 0, 360 / shapeLimit
@@ -24,12 +84,12 @@ for i = 1, shapeLimit do
 	hue = hue + hueStep
 end
 
+local workspace, window, menu = system.addWindow(GUI.filledWindow(1, 1, 92, 32, 0x1E1E1E))
+
 --------------------------------------------------------------------------------
 
-local workspace = GUI.workspace()
-
-local toolPanel = workspace:addChild(GUI.panel(1, 1, 28, workspace.height, 0x2D2D2D))
-local toolLayout = workspace:addChild(GUI.layout(1, 1, toolPanel.width, toolPanel.height - 3, 1, 1))
+local toolPanel = window:addChild(GUI.panel(1, 1, 28, 1, 0x2D2D2D))
+local toolLayout = window:addChild(GUI.layout(1, 1, toolPanel.width, 1, 1, 1))
 toolLayout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
 toolLayout:setMargin(1, 1, 0, 1)
 
@@ -40,43 +100,78 @@ local function addSeparator(text)
 	end
 end
 
+local function newButton(...)
+	local button = GUI.button(1, 1, toolLayout.width - 2, 1, 0x3C3C3C, 0xA5A5A5, 0xE1E1E1, 0x3C3C3C, ...)
+	button.colors.disabled.background = 0x3C3C3C
+	button.colors.disabled.text = 0x5A5A5A
+
+	return button
+end
+
 local function addButton(...)
-	return toolLayout:addChild(GUI.button(1, 1, toolLayout.width - 2, 1, 0x3C3C3C, 0xA5A5A5, 0xE1E1E1, 0x3C3C3C, ...))
+	return toolLayout:addChild(newButton(...))
 end
 
-local function addColorSelector(...)
-	return toolLayout:addChild(GUI.colorSelector(1, 1, toolLayout.width - 2, 1, ...))
+local function addObjectsTo(layout, objects)
+	layout:setGridSize(#objects * 2 - 1, 1)
+
+	for i = 1, #objects do
+		layout:setColumnWidth(i * 2 - 1, GUI.SIZE_POLICY_RELATIVE, 1 / #objects)
+
+		if i < #objects then
+			layout:setColumnWidth(i * 2, GUI.SIZE_POLICY_ABSOLUTE, 1)
+		end
+
+		layout:setPosition(i * 2 - 1, 1, layout:addChild(objects[i]))
+		layout:setFitting(i * 2 - 1, 1, true, false)
+	end
 end
 
-local printButton = workspace:addChild(GUI.button(1, workspace.height - 2, toolLayout.width, 3, 0x4B4B4B, 0xD2D2D2, 0xE1E1E1, 0x3C3C3C, localization.print))
+local function addObjectsWithLayout(objects)
+	addObjectsTo(toolLayout:addChild(GUI.layout(1, 1, toolLayout.width - 2, 1, 1, 1)), objects)
+end
 
-toolLayout:addChild(GUI.object(1, 1, toolLayout.width, 5)).draw = function(object)
+local function addSwitch(...)
+	return toolLayout:addChild(GUI.switchAndLabel(1, 1, toolLayout.width - 2, 6, 0x66DB80, 0x1E1E1E, 0xE1E1E1, 0x787878, ...)).switch
+end
+
+local function addInput(...)
+	return toolLayout:addChild(GUI.input(1, 1, toolLayout.width - 2, 1, 0x1E1E1E, 0xA5A5A5, 0x5A5A5A, 0x1E1E1E, 0xE1E1E1, ...))
+end
+
+local function addSlider(...)
+	return toolLayout:addChild(GUI.slider(1, 1, toolLayout.width - 2, 0x66DB80, 0x1E1E1E, 0xE1E1E1, 0x787878, ...))
+end
+
+local function addComboBox(...)
+	return toolLayout:addChild(GUI.comboBox(1, 1, toolLayout.width - 2, 1, 0x1E1E1E, 0xA5A5A5, 0x3C3C3C, 0x696969))
+end
+
+local bigContainer = toolLayout:addChild(GUI.container(1, 1, toolLayout.width, 5))
+
+bigContainer:addChild(GUI.object(1, 1, bigContainer.width, bigContainer.height)).draw = function(object)
 	local text = tostring(math.floor(currentLayer))
 	local width = bigLetters.getTextSize(text)
 	bigLetters.drawText(math.floor(object.x + object.width / 2 - width / 2), object.y, 0xE1E1E1, text)
 end
 
-addSeparator(localization.modelSettings)
+window.actionButtons:remove()
+bigContainer:addChild(window.actionButtons)
+window.actionButtons.localY = 1
 
-local newButton = addButton(localization.new)
-local openButton = addButton(localization.open)
+local fileItem = menu:addContextMenuItem(localization.file)
 
-addButton(localization.save).onTouch = function()
-	local filesystemDialog = GUI.addFilesystemDialog(workspace, true, 50, math.floor(workspace.height * 0.8), "Save", "Cancel", "File name", "/")
-	filesystemDialog:setMode(GUI.IO_MODE_SAVE, GUI.IO_MODE_FILE)
-	filesystemDialog:addExtensionFilter(".3dm")
-	filesystemDialog.onSubmit = function(path)
-		filesystem.writeTable(path, model, true)
-	end
-	filesystemDialog:show()
-end
+local newItem = fileItem:addItem(localization.new, false, "^N")
+local openItem = fileItem:addItem(localization.open, false, "^O")
+fileItem:addSeparator()
+local saveItem = fileItem:addItem(localization.save, true, "^S")
+local saveAsItem = fileItem:addItem(localization.saveAs, false, "^⇧S")
+fileItem:addSeparator()
+local printItem = fileItem:addItem(localization.print)
 
-addButton(localization.exit).onTouch = function()
-	if hologram then
-		hologram.clear()
-	end
-
-	workspace:stop()
+local function updateSavePath(path)
+	savePath = path
+	saveItem.disabled = not savePath
 end
 
 addSeparator(localization.elementSettings)
@@ -87,33 +182,32 @@ modelList:setDirection(GUI.DIRECTION_HORIZONTAL)
 local disabledListItem = modelList:addItem(localization.disabled)
 local enabledListItem = modelList:addItem(localization.enabled)
 
-local elementComboBox = toolLayout:addChild(GUI.comboBox(1, 1, toolLayout.width - 2, 1, 0x1E1E1E, 0xA5A5A5, 0x3C3C3C, 0x696969))
+local elementComboBox = addComboBox()
 
-local textureInput = toolLayout:addChild(GUI.input(1, 1, toolLayout.width - 2, 1, 0x1E1E1E, 0xA5A5A5, 0x696969, 0x1E1E1E, 0xE1E1E1, "", localization.texture, true))
-local tintColorSelector = addColorSelector(0x330040, localization.tintColor)
-local tintSwitch = toolLayout:addChild(GUI.switchAndLabel(1, 1, toolLayout.width - 2, 6, 0x66DB80, 0x1E1E1E, 0xE1E1E1, 0xA5A5A5, localization.tintEnabled .. ":", false)).switch
-
-local addShapeButton = addButton(localization.add)
+local textureInput = addInput("", localization.texture, true)
+local tintColorSelector = toolLayout:addChild(GUI.colorSelector(1, 1, toolLayout.width - 2, 1, 0x330040, localization.tintColor))
+local tintSwitch = addSwitch(localization.tintEnabled .. ":", false)
 
 local function checkShapeState(shape)
 	return modelList.selectedItem == 1 and not shape.state or modelList.selectedItem == 2 and shape.state
 end
 
-local removeShapeButton = addButton(localization.remove)
+local addShapeButton, removeShapeButton = newButton(localization.add), newButton(localization.remove)
+addObjectsWithLayout({addShapeButton, removeShapeButton})
 
 addSeparator(localization.blockSettings)
 
-local labelInput = toolLayout:addChild(GUI.input(1, 1, toolLayout.width - 2, 1, 0x1E1E1E, 0xA5A5A5, 0x696969, 0x1E1E1E, 0xE1E1E1, "", localization.label, true))
-local tooltipInput = toolLayout:addChild(GUI.input(1, 1, toolLayout.width - 2, 1, 0x1E1E1E, 0xA5A5A5, 0x696969, 0x1E1E1E, 0xE1E1E1, "", localization.tooltip, true))
-local buttonModeSwitch = toolLayout:addChild(GUI.switchAndLabel(1, 1, toolLayout.width - 2, 6, 0x66DB80, 0x1E1E1E, 0xE1E1E1, 0xA5A5A5, localization.buttonMode .. ":", false)).switch
-local collisionSwitch = toolLayout:addChild(GUI.switchAndLabel(1, 1, toolLayout.width - 2, 6, 0x66DB80, 0x1E1E1E, 0xE1E1E1, 0xA5A5A5, localization.collidable .. ":", true)).switch
-local redstoneSwitch = toolLayout:addChild(GUI.switchAndLabel(1, 1, toolLayout.width - 2, 6, 0x66DB80, 0x1E1E1E, 0xE1E1E1, 0xA5A5A5, localization.emitRedstone .. ":", true)).switch
+local labelInput = addInput("", localization.label, true)
+local tooltipInput = addInput("", localization.tooltip, true)
+local buttonModeSwitch = addSwitch(localization.buttonMode .. ":", false)
+local collisionSwitch = addSwitch(localization.collidable .. ":", true)
+local redstoneSwitch = addSwitch(localization.emitRedstone .. ":", true)
 
-local lightLevelSlider = toolLayout:addChild(GUI.slider(1, 1, toolLayout.width - 2, 0x66DB80, 0x1E1E1E, 0xE1E1E1, 0xA5A5A5, 0, 15, 0, false, localization.lightLevel .. ": ", ""))
+local lightLevelSlider = addSlider(0, 15, 0, false, localization.lightLevel .. ": ", "")
 lightLevelSlider.height = 2
 lightLevelSlider.roundValues = true
 
-local axisComboBox = toolLayout:addChild(GUI.comboBox(1, 1, toolLayout.width - 2, 1, 0x1E1E1E, 0xA5A5A5, 0x3C3C3C, 0x696969))
+local axisComboBox = addComboBox()
 axisComboBox:addItem(localization.xAxis)
 axisComboBox:addItem(localization.yAxis)
 axisComboBox:addItem(localization.zAxis)
@@ -126,36 +220,21 @@ local function fixShape(shape)
 	end
 end
 
-local rotateButton = addButton(localization.rotate)
-local flipButton = addButton(localization.flip)
+local rotateButton, flipButton = newButton(localization.rotate), newButton(localization.flip)
+addObjectsWithLayout({rotateButton, flipButton})
 
 addSeparator(localization.projectorSettings)
 
-local function updateProxies()
-	local function updateProxy(name)
-		proxies[name] = component.list(name)()
-		if proxies[name] then
-			proxies[name] = component.proxy(proxies[name])
-			return true
-		end
-	end
+local projectorSwitch = addSwitch(localization.projectorEnabled .. ": ", true)
 
-	updateProxy("hologram")
-	printButton.disabled = not updateProxy("printer3d")
-end
-
-updateProxies()
-
-local projectorSwitch = toolLayout:addChild(GUI.switchAndLabel(1, 1, toolLayout.width - 2, 6, 0x66DB80, 0x1E1E1E, 0xE1E1E1, 0xA5A5A5, localization.projectorEnabled .. ": ", true)).switch
-
-local projectorScaleSlider = toolLayout:addChild(GUI.slider(1, 1, toolLayout.width - 2, 0x66DB80, 0x1E1E1E, 0xE1E1E1, 0xA5A5A5, 0.33, 3, proxies.hologram and proxies.hologram.getScale() or 1, false, localization.scale .. ": ", ""))
+local projectorScaleSlider = addSlider(0.33, 3, proxies.hologram and proxies.hologram.getScale() or 1, false, localization.scale .. ": ", "")
 projectorScaleSlider.onValueChanged = function()
 	if proxies.hologram then
 		proxies.hologram.setScale(projectorScaleSlider.value)
 	end
 end
 
-local projectorOffsetSlider = toolLayout:addChild(GUI.slider(1, 1, toolLayout.width - 2, 0x66DB80, 0x1E1E1E, 0xE1E1E1, 0xA5A5A5, 0, 1, proxies.hologram and select(2, proxies.hologram.getTranslation()) or 0, false, localization.offset .. ": ", ""))
+local projectorOffsetSlider = addSlider(0, 1, proxies.hologram and select(2, proxies.hologram.getTranslation()) or 0, false, localization.offset .. ": ", "")
 projectorOffsetSlider.height = 2
 projectorOffsetSlider.onValueChanged = function()
 	if proxies.hologram then
@@ -163,24 +242,39 @@ projectorOffsetSlider.onValueChanged = function()
 	end
 end
 
-if proxies.hologram then
-	for i = 1, proxies.hologram.maxDepth() == 1 and 1 or 3 do
-		local selector = addColorSelector(proxies.hologram and proxies.hologram.getPaletteColor(i) or 0x0, localization.color .. " " .. i)
-		selector.onColorSelected = function()
+local hologramWidgetsLayout = toolLayout:addChild(GUI.layout(1, 1, toolLayout.width - 2, 1, 1, 1))
+
+local function updateHologramWidgets()
+	local objects = {}
+
+	for i = 1, (proxies.hologram and proxies.hologram.maxDepth() == 1 and 1 or 3) or 3 do
+		objects[i] = GUI.colorSelector(1, 1, 1, 1, proxies.hologram and proxies.hologram.getPaletteColor(i) or 0x0, localization.color .. i)
+		objects[i].onColorSelected = function()
 			if proxies.hologram then
-				proxies.hologram.setPaletteColor(i, selector.color)
+				proxies.hologram.setPaletteColor(i, objects[i].color)
 				workspace:draw()
 			end
 		end
 	end
+
+	hologramWidgetsLayout:removeChildren()
+	addObjectsTo(hologramWidgetsLayout, objects)
 end
+
+local function updateProxies()
+	updateProxy("hologram")
+	updateHologramWidgets()
+	printItem.disabled = not updateProxy("printer3d")
+end
+
+updateProxies()
 
 local function getCurrentShapeIndex()
 	local item = elementComboBox:getItem(elementComboBox.selectedItem)
 	return item and item.shapeIndex
 end
 
-local function updateOnHologram()
+local function updateHologram()
 	if proxies.hologram and projectorSwitch.state then
 		local initialX = 17
 		local initialY = 2
@@ -261,30 +355,50 @@ end
 
 local function load(path)
 	model = filesystem.readTable(path)
+	updateSavePath(path)
 
 	updateComboBoxFromModel()
 	updateWidgetsFromModel()
 	updateAddRemoveButtonsState()
 end
 
-openButton.onTouch = function()
-	local filesystemDialog = GUI.addFilesystemDialog(workspace, true, 50, math.floor(workspace.height * 0.8), "Open", "Cancel", "File name", "/")
+local function save(path)
+	filesystem.writeTable(path, model, true)
+	updateSavePath(path)
+end
+
+saveItem.onTouch = function()
+	save(savePath)
+end
+
+saveAsItem.onTouch = function()
+	local filesystemDialog = GUI.addFilesystemDialog(workspace, true, 50, math.floor(window.height * 0.8), "Save", "Cancel", "File name", "/")
+	filesystemDialog:setMode(GUI.IO_MODE_SAVE, GUI.IO_MODE_FILE)
+	filesystemDialog:addExtensionFilter(".3dm")
+	filesystemDialog:expandPath(paths.user.desktop)
+	filesystemDialog.filesystemTree.selectedItem = paths.user.desktop
+	filesystemDialog.onSubmit = function(path)
+		save(path)
+	end
+
+	filesystemDialog:show()
+end
+
+openItem.onTouch = function()
+	local filesystemDialog = GUI.addFilesystemDialog(workspace, true, 50, math.floor(window.height * 0.8), "Open", "Cancel", "File name", "/")
 	filesystemDialog:setMode(GUI.IO_MODE_OPEN, GUI.IO_MODE_FILE)
 	filesystemDialog:addExtensionFilter(".3dm")
+	filesystemDialog:expandPath(paths.user.desktop)
 	filesystemDialog.onSubmit = function(path)
 		load(path)
 
 		workspace:draw()
-		updateOnHologram()
+		updateHologram()
 	end
 	filesystemDialog:show()
 end
 
-workspace:addChild(GUI.panel(toolPanel.width + 1, 1, workspace.width - toolPanel.width, toolPanel.height, 0x1E1E1E))
-
-local view = workspace:addChild(GUI.object(1, 1, 16 * viewPixelWidth, 16 * viewPixelHeight))
-view.localX = math.floor(toolLayout.width + (workspace.width - toolLayout.width) / 2 - view.width / 2)
-view.localY = math.floor(workspace.height / 2 - view.height / 2)
+local view = window:addChild(GUI.object(1, 1, 16 * viewPixelWidth, 16 * viewPixelHeight))
 view.draw = function()
 	local x, y, step = view.x, view.y, true
 	for j = 1, 16 do
@@ -327,58 +441,50 @@ end
 
 toolLayout.eventHandler = function(workspace, toolLayout, e1, e2, e3, e4, e5)
 	if e1 == "scroll" then
-		local cell = toolLayout.cells[1][1]
+		local h, v = toolLayout:getMargin(1, 1)
+
 		if e5 > 0 then
-			if cell.verticalMargin < 1 then
-				cell.verticalMargin = cell.verticalMargin + 1
+			if v < 1 then
+				v = v + 1
+				toolLayout:setMargin(1, 1, h, v)
 				workspace:draw()
 			end
 		else
 			local child = toolLayout.children[#toolLayout.children]
 			if child.localY + child.height - 1 >= toolLayout.localY + toolLayout.height - 1 then
-				cell.verticalMargin = cell.verticalMargin - 1
+				v = v - 1
+				toolLayout:setMargin(1, 1, h, v)
 				workspace:draw()
 			end
 		end
 	end
 end
 
-local touchX, touchY, shapeX, shapeY, shapeZ
+local shapeX, shapeY, shapeZ
 view.eventHandler = function(workspace, view, e1, e2, e3, e4, e5)
 	if e1 == "touch" or e1 == "drag" then
-		if e5 > 0 then
+		local shapeIndex = getCurrentShapeIndex()
+		if shapeIndex then
+			local shape = model.shapes[shapeIndex]
+			local x = math.floor((e3 - view.x) / view.width * 16)
+			local y = 15 - math.floor((e4 - view.y) / view.height * 16)
+
 			if e1 == "touch" then
-				touchX, touchY = e3, e4
-			elseif touchX then
-				view.localX, view.localY = view.localX + e3 - touchX, view.localY + e4 - touchY
-				touchX, touchY = e3, e4
-
-				workspace:draw()
+				shapeX, shapeY, shapeZ = x, y, currentLayer
+				shape[1], shape[2], shape[3] = x, y, currentLayer
+				shape[4], shape[5], shape[6] = x + 1, y + 1, currentLayer + 1
+			elseif shapeX then
+				shape[1], shape[2], shape[3] = shapeX, shapeY, shapeZ
+				shape[4], shape[5], shape[6] = x, y, currentLayer
+				fixShape(shape)
+				shape[4], shape[5], shape[6] = shape[4] + 1, shape[5] + 1, shape[6] + 1
 			end
-		else
-			local shapeIndex = getCurrentShapeIndex()
-			if shapeIndex then
-				local shape = model.shapes[shapeIndex]
-				local x = math.floor((e3 - view.x) / view.width * 16)
-				local y = 15 - math.floor((e4 - view.y) / view.height * 16)
 
-				if e1 == "touch" then
-					shapeX, shapeY, shapeZ = x, y, currentLayer
-					shape[1], shape[2], shape[3] = x, y, currentLayer
-					shape[4], shape[5], shape[6] = x + 1, y + 1, currentLayer + 1
-				elseif shapeX then
-					shape[1], shape[2], shape[3] = shapeX, shapeY, shapeZ
-					shape[4], shape[5], shape[6] = x, y, currentLayer
-					fixShape(shape)
-					shape[4], shape[5], shape[6] = shape[4] + 1, shape[5] + 1, shape[6] + 1
-				end
-
-				workspace:draw()
-			end
+			workspace:draw()
 		end
 	elseif e1 == "drop" then
-		touchX, touchY, shapeX, shapeY, shapeZ = nil, nil, nil, nil, nil
-		updateOnHologram()
+		shapeX, shapeY, shapeZ = nil, nil, nil
+		updateHologram()
 	elseif e1 == "scroll" then
 		local function fix()
 			local shapeIndex = getCurrentShapeIndex()
@@ -397,7 +503,7 @@ view.eventHandler = function(workspace, view, e1, e2, e3, e4, e5)
 				fix()
 
 				workspace:draw()
-				updateOnHologram()
+				updateHologram()
 			end
 		else
 			if currentLayer > 0 then
@@ -405,12 +511,14 @@ view.eventHandler = function(workspace, view, e1, e2, e3, e4, e5)
 				fix()
 
 				workspace:draw()
-				updateOnHologram()
+				updateHologram()
 			end
 		end
 	elseif e1 == "component_added" or e1 == "component_removed" then
 		updateProxies()
-		updateOnHologram()
+		workspace:draw()
+
+		updateHologram()
 	end
 end
 
@@ -430,7 +538,7 @@ rotateButton.onTouch = function()
 	end
 
 	workspace:draw()
-	updateOnHologram()
+	updateHologram()
 end
 
 flipButton.onTouch = function()
@@ -453,7 +561,7 @@ flipButton.onTouch = function()
 	end
 
 	workspace:draw()
-	updateOnHologram()
+	updateHologram()
 end
 
 disabledListItem.onTouch = function()
@@ -462,7 +570,7 @@ disabledListItem.onTouch = function()
 	updateAddRemoveButtonsState()
 
 	workspace:draw()
-	updateOnHologram()
+	updateHologram()
 end
 
 enabledListItem.onTouch = disabledListItem.onTouch
@@ -479,20 +587,21 @@ end
 local function new()
 	model = {shapes = {}}
 	addShape()
+	updateSavePath()
 end
 
-newButton.onTouch = function()
+newItem.onTouch = function()
 	new()
 
 	workspace:draw()
-	updateOnHologram()
+	updateHologram()
 end
 
 addShapeButton.onTouch = function()
 	addShape()
 
 	workspace:draw()
-	updateOnHologram()
+	updateHologram()
 end
 
 removeShapeButton.onTouch = function()
@@ -503,52 +612,18 @@ removeShapeButton.onTouch = function()
 	updateAddRemoveButtonsState()
 
 	workspace:draw()
-	updateOnHologram()
+	updateHologram()
 end
 
-printButton.onTouch = function()
-	proxies.printer3d.reset()
-
-	if model.label then
-		proxies.printer3d.setLabel(model.label)
-	end
-
-	if model.tooltip then
-		proxies.printer3d.setTooltip(model.tooltip)
-	end
-
-	if model.collidable then
-		proxies.printer3d.setCollidable(model.collidable[1], model.collidable[2])
-	end
-
-	if model.lightLevel then
-		proxies.printer3d.setLightLevel(model.lightLevel)
-	end
-
-	if model.emitRedstone then
-		proxies.printer3d.setRedstoneEmitter(model.emitRedstone)
-	end
-
-	if model.buttonMode then
-		proxies.printer3d.setButtonMode(model.buttonMode)
-	end
-	
-	for i = 1, #model.shapes do
-		local shape = model.shapes[i]
-		proxies.printer3d.addShape(shape[1], shape[2], shape[3], shape[4], shape[5], shape[6], shape.texture or "empty", shape.state, shape.tint)
-	end
-
-	local success, reason = proxies.printer3d.commit(1)
-	if not success then
-		GUI.alert(localization.failedToPrint .. ": " .. reason)
-	end
+printItem.onTouch = function()
+	print(model)
 end
 
 elementComboBox.onItemSelected = function()
 	updateWidgetsFromModel()
 
 	workspace:draw()
-	updateOnHologram()
+	updateHologram()
 end
 
 labelInput.onInputFinished = updateModelFromWidgets
@@ -561,14 +636,36 @@ textureInput.onInputFinished = updateModelFromWidgets
 tintSwitch.onStateChanged = updateModelFromWidgets
 tintColorSelector.onColorSelected = updateModelFromWidgets
 
+-- Overriding window removing for clearing hologram
+local overrideWindowRemove = window.remove
+window.remove = function(...)
+	overrideWindowRemove(...)
+
+	if proxies.hologram then
+		proxies.hologram.clear()
+	end
+end
+
+window.onResize = function(width, height)
+	window.backgroundPanel.localX = toolPanel.width + 1
+	window.backgroundPanel.width = width - toolPanel.width
+	window.backgroundPanel.height = height
+
+	toolPanel.height = height
+	
+	toolLayout.height = height
+
+	view.localX = math.floor(1 + toolPanel.width + window.backgroundPanel.width / 2 - view.width / 2)
+	view.localY = math.floor(1 + height / 2 - view.height / 2)
+end
+
 --------------------------------------------------------------------------------
 
-if (options.o or options.open) and args[1] then
+if args[1] and options.o then
 	load(args[1])
 else
 	new()
 end
 
+window:resize(window.width, window.height)
 workspace:draw()
-updateOnHologram()
-workspace:start()

@@ -532,8 +532,6 @@ end
 
 fileItem:addItem("Save as", false, "^⇧S").onTouch = saveAs
 
-fileItem:addSeparator()
-
 menu:addItem("View").onTouch = function()
 	local container = GUI.addBackgroundContainer(workspace, true, true, "View")
 

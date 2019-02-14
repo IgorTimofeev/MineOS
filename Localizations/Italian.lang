@@ -84,6 +84,7 @@
 	showContainingFolder = "Mostra cartella contenente",
 	flashEEPROM = "Flash su EEPROM",
 	flashingEEPROM = "Lampeggiante in corso. Non spegnere il computer...",
+	print3D = "Stampa modello",
 
 	sortBy = "Genere",
 	sortByType = "Per tipo",

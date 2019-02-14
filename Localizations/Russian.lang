@@ -84,6 +84,7 @@
 	showContainingFolder = "Открыть содержащую папку",
 	flashEEPROM = "Записать на EEPROM",
 	flashingEEPROM = "Идет запись на EEPROM. Не отключайте компьютер...",
+	print3D = "Распечатать модель",
 
 	sortBy = "Упорядочить",
 	sortByType = "По типу",
