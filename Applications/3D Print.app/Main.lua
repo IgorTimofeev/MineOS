@@ -71,7 +71,8 @@ end
 
 --------------------------------------------------------------------------------
 
-local localization = system.getCurrentScriptLocalization()
+local currentScriptDirectory = filesystem.path(system.getCurrentScript())
+local localization = system.getLocalization(currentScriptDirectory .. "Localizations/")
 local currentLayer = 0
 local model
 local savePath
@@ -661,11 +662,7 @@ end
 
 --------------------------------------------------------------------------------
 
-if args[1] and options.o then
-	load(args[1])
-else
-	new()
-end
+load(options.o and args[1] or (currentScriptDirectory .. "Sample.3dm"))
 
 window:resize(window.width, window.height)
 workspace:draw()
