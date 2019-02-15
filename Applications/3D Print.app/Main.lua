@@ -85,11 +85,15 @@ for i = 1, shapeLimit do
 	hue = hue + hueStep
 end
 
-local workspace, window, menu = system.addWindow(GUI.filledWindow(1, 1, 92, 32, 0x1E1E1E))
+local workspace, window, menu = system.addWindow(GUI.filledWindow(1, 1, 100, screen.getHeight() - 1, 0x1E1E1E))
+-- local workspace, window, menu = system.addWindow(GUI.filledWindow(1, 1, 92, 32, 0x1E1E1E))
 
 --------------------------------------------------------------------------------
 
 local toolPanel = window:addChild(GUI.panel(1, 1, 28, 1, 0x2D2D2D))
+
+window.backgroundPanel.localX = toolPanel.width + 1
+
 local toolLayout = window:addChild(GUI.layout(1, 1, toolPanel.width, 1, 1, 1))
 toolLayout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
 toolLayout:setMargin(1, 1, 0, 1)
@@ -101,16 +105,12 @@ local function addSeparator(text)
 	end
 end
 
-local function newButton(...)
-	local button = GUI.button(1, 1, toolLayout.width - 2, 1, 0x3C3C3C, 0xA5A5A5, 0xE1E1E1, 0x3C3C3C, ...)
+local function newButton(width, height, ...)
+	local button = GUI.button(1, 1, width, height, 0x3C3C3C, 0xA5A5A5, 0xE1E1E1, 0x3C3C3C, ...)
 	button.colors.disabled.background = 0x3C3C3C
 	button.colors.disabled.text = 0x5A5A5A
 
 	return button
-end
-
-local function addButton(...)
-	return toolLayout:addChild(newButton(...))
 end
 
 local function addObjectsTo(layout, objects)
@@ -130,6 +130,17 @@ end
 
 local function addObjectsWithLayout(objects)
 	addObjectsTo(toolLayout:addChild(GUI.layout(1, 1, toolLayout.width - 2, 1, 1, 1)), objects)
+end
+
+local function addButtons(...)
+	local texts, buttons = {...}, {}
+	for i = 1, #texts do
+		buttons[i] = newButton(toolLayout.width - 2, 1, texts[i])
+	end
+
+	addObjectsWithLayout(buttons)
+
+	return table.unpack(buttons)
 end
 
 local function addSwitch(...)
@@ -167,8 +178,6 @@ local openItem = fileItem:addItem(localization.open, false, "^O")
 fileItem:addSeparator()
 local saveItem = fileItem:addItem(localization.save, true, "^S")
 local saveAsItem = fileItem:addItem(localization.saveAs, false, "^⇧S")
-fileItem:addSeparator()
-local printItem = fileItem:addItem(localization.print)
 
 local function updateSavePath(path)
 	savePath = path
@@ -176,6 +185,8 @@ local function updateSavePath(path)
 end
 
 addSeparator(localization.elementSettings)
+
+local printButton = window:addChild(newButton(toolLayout.width, 3, localization.print))
 
 local modelList = toolLayout:addChild(GUI.list(1, 1, toolLayout.width, 3, math.floor(toolLayout.width / 2), 0, 0x1E1E1E, 0x5A5A5A, 0x1E1E1E, 0x5A5A5A, 0x2D2D2D, 0xA5A5A5))
 modelList:setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
@@ -193,8 +204,7 @@ local function checkShapeState(shape)
 	return modelList.selectedItem == 1 and not shape.state or modelList.selectedItem == 2 and shape.state
 end
 
-local addShapeButton, removeShapeButton = newButton(localization.add), newButton(localization.remove)
-addObjectsWithLayout({addShapeButton, removeShapeButton})
+local addShapeButton, removeShapeButton = addButtons(localization.add, localization.remove)
 
 addSeparator(localization.blockSettings)
 
@@ -221,8 +231,7 @@ local function fixShape(shape)
 	end
 end
 
-local rotateButton, flipButton = newButton(localization.rotate), newButton(localization.flip)
-addObjectsWithLayout({rotateButton, flipButton})
+local rotateButton, flipButton = addButtons(localization.rotate, localization.flip)
 
 addSeparator(localization.projectorSettings)
 
@@ -265,7 +274,7 @@ end
 local function updateProxies()
 	updateProxy("hologram")
 	updateHologramWidgets()
-	printItem.disabled = not updateProxy("printer3d")
+	printButton.disabled = not updateProxy("printer3d")
 end
 
 updateProxies()
@@ -399,7 +408,9 @@ openItem.onTouch = function()
 	filesystemDialog:show()
 end
 
-local view = window:addChild(GUI.object(1, 1, 16 * viewPixelWidth, 16 * viewPixelHeight))
+local viewLayout = window:addChild(GUI.layout(window.backgroundPanel.localX, 1, 1, 1, 1, 1))
+
+local view = viewLayout:addChild(GUI.object(1, 1, 16 * viewPixelWidth, 16 * viewPixelHeight))
 view.draw = function()
 	local x, y, step = view.x, view.y, true
 	for j = 1, 16 do
@@ -616,7 +627,7 @@ removeShapeButton.onTouch = function()
 	updateHologram()
 end
 
-printItem.onTouch = function()
+printButton.onTouch = function()
 	print(model)
 end
 
@@ -648,16 +659,17 @@ window.remove = function(...)
 end
 
 window.onResize = function(width, height)
-	window.backgroundPanel.localX = toolPanel.width + 1
 	window.backgroundPanel.width = width - toolPanel.width
 	window.backgroundPanel.height = height
 
-	toolPanel.height = height
-	
-	toolLayout.height = height
+	viewLayout.width = window.backgroundPanel.width
+	viewLayout.height = window.backgroundPanel.height
 
-	view.localX = math.floor(1 + toolPanel.width + window.backgroundPanel.width / 2 - view.width / 2)
-	view.localY = math.floor(1 + height / 2 - view.height / 2)
+	toolPanel.height = height - 3
+	
+	toolLayout.height = toolPanel.height
+
+	printButton.localY = height - 2
 end
 
 --------------------------------------------------------------------------------
