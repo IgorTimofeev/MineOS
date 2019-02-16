@@ -1,10 +1,12 @@
 
+
 local number = require("Number")
 local GUI = require("GUI")
 local screen = require("Screen")
 local color = require("Color")
 local system = require("System")
 local paths = require("Paths")
+local text = require("Text")
 local bigLetters = require("BigLetters")
 local filesystem = require("Filesystem")
 
@@ -179,6 +181,16 @@ fileItem:addSeparator()
 local saveItem = fileItem:addItem(localization.save, true, "^S")
 local saveAsItem = fileItem:addItem(localization.saveAs, false, "^⇧S")
 
+menu:addItem(localization.help).onTouch = function()
+	local container = GUI.addBackgroundContainer(workspace, true, true, localization.help)
+
+	local textBox = container.layout:addChild(GUI.textBox(1, 1, 68, 1, nil, 0xB4B4B4, localization.helpInfo, 1, 0, 0, true, true))
+	textBox.eventHandler = container.panel.eventHandler
+
+	textBox:update()
+	workspace:draw()
+end
+
 local function updateSavePath(path)
 	savePath = path
 	saveItem.disabled = not savePath
@@ -279,7 +291,7 @@ end
 
 updateProxies()
 
-local function getCurrentShapeIndex()
+local function getSelectedShapeIndex()
 	local item = elementComboBox:getItem(elementComboBox.selectedItem)
 	return item and item.shapeIndex
 end
@@ -293,7 +305,7 @@ local function updateHologram()
 
 		proxies.hologram.clear()
 
-		local shapeIndex = getCurrentShapeIndex()
+		local shapeIndex = getSelectedShapeIndex()
 		for i = 1, #model.shapes do
 			local shape = model.shapes[i]
 			if checkShapeState(shape) then
@@ -340,7 +352,7 @@ local function updateWidgetsFromModel()
 	redstoneSwitch.state = model.emitRedstone or false
 	lightLevelSlider.value = model.lightLevel or 0
 
-	local shapeIndex = getCurrentShapeIndex()
+	local shapeIndex = getSelectedShapeIndex()
 	if shapeIndex then
 		textureInput.text = model.shapes[shapeIndex].texture or ""
 		tintSwitch:setState(model.shapes[shapeIndex].tint and true or false)
@@ -356,7 +368,7 @@ local function updateModelFromWidgets()
 	model.emitRedstone = redstoneSwitch.state
 	model.lightLevel = lightLevelSlider.value > 0 and lightLevelSlider.value or nil
 
-	local shapeIndex = getCurrentShapeIndex()
+	local shapeIndex = getSelectedShapeIndex()
 	if shapeIndex then
 		model.shapes[shapeIndex].texture = #textureInput.text > 0 and textureInput.text or nil
 		model.shapes[shapeIndex].tint = tintSwitch.state and tintColorSelector.color or nil
@@ -409,8 +421,23 @@ openItem.onTouch = function()
 end
 
 local viewLayout = window:addChild(GUI.layout(window.backgroundPanel.localX, 1, 1, 1, 1, 1))
+viewLayout:setSpacing(1, 1, 2)
 
 local view = viewLayout:addChild(GUI.object(1, 1, 16 * viewPixelWidth, 16 * viewPixelHeight))
+
+local function getShapeDrawingData(shape)
+	local width, height =
+		(shape[4] - shape[1]) * viewPixelWidth,
+		(shape[5] - shape[2]) * viewPixelHeight
+
+	return
+		width > 0 and height > 0 and currentLayer >= shape[3] and currentLayer <= shape[6] - 1 and checkShapeState(shape),
+		view.x + shape[1] * viewPixelWidth,
+		view.y + view.height - shape[2] * viewPixelHeight - height,
+		width,
+		height
+end
+
 view.draw = function()
 	local x, y, step = view.x, view.y, true
 	for j = 1, 16 do
@@ -424,27 +451,21 @@ view.draw = function()
 
 	GUI.drawShadow(view.x, view.y, view.width, view.height, nil, true)
 
-	local shapeIndex, shape = getCurrentShapeIndex()
-	if shapeIndex then
+	local selectedShape, shape = getSelectedShapeIndex()
+	if selectedShape then
 		for i = 1, #model.shapes do
 			shape = model.shapes[i]
 
-			if checkShapeState(shape) then
-				local width = (shape[4] - shape[1]) * viewPixelWidth
-				local height = (shape[5] - shape[2]) * viewPixelHeight
-				local x = view.x + shape[1] * viewPixelWidth
-				local y = view.y + view.height - shape[2] * viewPixelHeight - height
+			local focused, x, y, width, height = getShapeDrawingData(shape)
+			if focused then
+				screen.drawRectangle(x, y, width, height, i == selectedShape and colors[i] or color.blend(colors[i], 0xFFFFFF, 0.4), 0x0, " ")
 
-				if width > 0 and height > 0 and currentLayer >= shape[3] and currentLayer <= shape[6] - 1 then
-					screen.drawRectangle(x, y, width, height, i == shapeIndex and colors[i] or color.blend(colors[i], 0xFFFFFF, 0.5), 0x0, " ")
+				if currentLayer == shape[3] then
+					screen.drawRectangle(x, y, viewPixelWidth, viewPixelHeight, 0x0, 0x0, " ", i == selectedShape and 0.2 or 0.6)
+				end
 
-					if currentLayer == shape[3] then
-						screen.drawRectangle(x, y, viewPixelWidth, viewPixelHeight, 0x0, 0x0, " ", i == shapeIndex and 0.2 or 0.6)
-					end
-
-					if currentLayer == shape[6] - 1 then
-						screen.drawRectangle(x + width - viewPixelWidth, y + height - viewPixelHeight, viewPixelWidth, viewPixelHeight, 0x0, 0x0, " ", i == shapeIndex and 0.4 or 0.8)
-					end
+				if currentLayer == shape[6] - 1 then
+					screen.drawRectangle(x + width - viewPixelWidth, y + height - viewPixelHeight, viewPixelWidth, viewPixelHeight, 0x0, 0x0, " ", i == shapeIndex and 0.4 or 0.8)
 				end
 			end
 		end
@@ -475,31 +496,53 @@ end
 local shapeX, shapeY, shapeZ
 view.eventHandler = function(workspace, view, e1, e2, e3, e4, e5)
 	if e1 == "touch" or e1 == "drag" then
-		local shapeIndex = getCurrentShapeIndex()
-		if shapeIndex then
-			local shape = model.shapes[shapeIndex]
-			local x = math.floor((e3 - view.x) / view.width * 16)
-			local y = 15 - math.floor((e4 - view.y) / view.height * 16)
+		if e5 == 0 then
+			local selectedShape = getSelectedShapeIndex()
+			if selectedShape then
+				local shape = model.shapes[selectedShape]
+				local x = math.floor((e3 - view.x) / view.width * 16)
+				local y = 15 - math.floor((e4 - view.y) / view.height * 16)
 
-			if e1 == "touch" then
-				shapeX, shapeY, shapeZ = x, y, currentLayer
-				shape[1], shape[2], shape[3] = x, y, currentLayer
-				shape[4], shape[5], shape[6] = x + 1, y + 1, currentLayer + 1
-			elseif shapeX then
-				shape[1], shape[2], shape[3] = shapeX, shapeY, shapeZ
-				shape[4], shape[5], shape[6] = x, y, currentLayer
-				fixShape(shape)
-				shape[4], shape[5], shape[6] = shape[4] + 1, shape[5] + 1, shape[6] + 1
+				if e1 == "touch" then
+					shapeX, shapeY, shapeZ = x, y, currentLayer
+					shape[1], shape[2], shape[3] = x, y, currentLayer
+					shape[4], shape[5], shape[6] = x + 1, y + 1, currentLayer + 1
+				elseif shapeX then
+					shape[1], shape[2], shape[3] = shapeX, shapeY, shapeZ
+					shape[4], shape[5], shape[6] = x, y, currentLayer
+					fixShape(shape)
+					shape[4], shape[5], shape[6] = shape[4] + 1, shape[5] + 1, shape[6] + 1
+				end
+
+				workspace:draw()
 			end
+		else
+			-- Selecting shape
+			local shape
+			for i = #model.shapes, 1, -1 do
+				shape = model.shapes[i]
 
-			workspace:draw()
+				local focused, x, y, width, height = getShapeDrawingData(shape)
+				if focused and e3 >= x and e3 <= x + width - 1 and e4 >= y and e4 <= y + height - 1 then
+					for j = 1, elementComboBox:count() do
+						if elementComboBox:getItem(j).shapeIndex == i then
+							elementComboBox.selectedItem = j
+							workspace:draw()
+
+							break
+						end
+					end
+
+					break
+				end
+			end
 		end
 	elseif e1 == "drop" then
 		shapeX, shapeY, shapeZ = nil, nil, nil
 		updateHologram()
 	elseif e1 == "scroll" then
 		local function fix()
-			local shapeIndex = getCurrentShapeIndex()
+			local shapeIndex = getSelectedShapeIndex()
 			if shapeX and shapeIndex then
 				local shape = model.shapes[shapeIndex]
 				shape[3] = shapeZ
@@ -598,6 +641,7 @@ end
 
 local function new()
 	model = {shapes = {}}
+	modelList.selectedItem = 1
 	addShape()
 	updateSavePath()
 end
@@ -617,7 +661,7 @@ addShapeButton.onTouch = function()
 end
 
 removeShapeButton.onTouch = function()
-	table.remove(model.shapes, getCurrentShapeIndex())
+	table.remove(model.shapes, getSelectedShapeIndex())
 
 	updateComboBoxFromModel()
 	updateWidgetsFromModel()
