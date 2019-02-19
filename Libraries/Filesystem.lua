@@ -277,23 +277,29 @@ end
 
 local function seek(self, pizda, cyka)
 	if pizda == "set" then
-		local value = self.proxy.seek(self.stream, "set", -self.position + cyka)
-		self.position = cyka
-		self.buffer = ""
+		local result, reason = self.proxy.seek(self.stream, "set", cyka)
+		if result then
+			self.position = cyka
+			self.buffer = ""
+		end
 
-		return value
+		return result, reason
 	elseif pizda == "cur" then
-		local value = self.proxy.seek(self.stream, "cur", cyka)
-		self.position = self.position + cyka
-		self.buffer = ""
+		local result, reason = self.proxy.seek(self.stream, "cur", cyka)
+		if result then
+			self.position = self.position + cyka
+			self.buffer = ""
+		end
 
-		return value
+		return result, reason
 	elseif pizda == "end" then
-		local value = self.proxy.seek(self.stream, "set", self.size - 1)
-		self.position = self.size - 1
-		self.buffer = ""
+		local result, reason = self.proxy.seek(self.stream, "set", self.size - 1)
+		if result then
+			self.position = self.size - 1
+			self.buffer = ""
+		end
 
-		return value
+		return result, reason
 	else
 		error("bad argument #2 ('set', 'cur' or 'end' expected, got " .. tostring(whence) .. ")")
 	end

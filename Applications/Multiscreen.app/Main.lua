@@ -30,7 +30,7 @@ local function saveConfig()
 	filesystem.writeTable(configPath, config, true)
 end
 
-local workspace, window = system.addWindow(GUI.filledWindow(1, 1, 64, 37, 0x2D2D2D))
+local workspace, window = system.addWindow(GUI.filledWindow(1, 1, 68, 37, 0x2D2D2D))
 
 local layout = window:addChild(GUI.layout(1, 1, window.width, window.height, 1, 1))
 
@@ -84,7 +84,7 @@ local function mainMenu(force)
 		local width, height = #config.map[1], #config.map
 		table.insert(lines, width .. "x" .. height .. " screen blocks")
 		table.insert(lines, width * baseResolutionWidth .. "x" .. height * baseResolutionHeight .. " OpenComputers pixels")
-		table.insert(lines, width * baseResolutionWidth * 2 .. "x" .. height * baseResolutionHeight * 4 .. " pixels using Braille font")
+		-- table.insert(lines, width * baseResolutionWidth * 2 .. "x" .. height * baseResolutionHeight * 4 .. " pixels using Braille font")
 	else
 		table.insert(lines, {color = 0xFF4940, text = "Calibrate your system before starting"})
 	end
@@ -123,42 +123,92 @@ local function mainMenu(force)
 			if signature == "OCIF" then
 				local encodingMethod = file:readBytes(1)
 				if encodingMethod == 5 then
-					local width = file:readBytes(2)
-					local height = file:readBytes(2)
+					local width, height, maxWidth, maxHeight, widthLimit, heightLimit, monitorCornerImageX, monitorCornerImageY, background, foreground, symbol = file:readBytes(2), file:readBytes(2), baseResolutionWidth * #config.map[1],  baseResolutionHeight * #config.map
 
+					local function skipPixels(count)
+						for i = 1, count do
+							file:readString(3)
+							file:readUnicodeChar()
+
+							-- Иначе может впасть в TLWY на тормознутых серваках
+							if i % 1000 == 0 then
+								computer.pullSignal(0)
+							end
+						end
+					end
+
+					-- Чистим дерьмо вилочкой
 					clearScreens()
 
-					local background, foreground, symbol, currentBackground, currentForeground, currentAddress
-					for y = 1, height do
-						for x = 1, width do
-							background = color.to24Bit(file:readBytes(1))
-							foreground = color.to24Bit(file:readBytes(1))
-							file:readBytes(1)
-							symbol = file:readUnicodeChar()
+					for yMonitor = 1, #config.map do
+						for xMonitor = 1, #config.map[yMonitor] do
+							GPUProxy.bind(mainScreenAddress, false)
+							-- GUI.alert("Monitor", xMonitor, yMonitor)
 
-							local xMonitor = math.ceil(x / baseResolutionWidth)
-							local yMonitor = math.ceil(y / baseResolutionHeight)
-							
-							if config.map[yMonitor] and config.map[yMonitor][xMonitor] then
-								if currentAddress ~= config.map[yMonitor][xMonitor] then
-									GPUProxy.bind(config.map[yMonitor][xMonitor], false)
+							-- Координаты левого верхнего угла моника в пикселях на пикче
+							monitorCornerImageX, monitorCornerImageY =
+								(xMonitor - 1) * baseResolutionWidth,
+								(yMonitor - 1) * baseResolutionHeight
+
+							-- Если размеры моника вообще дотягивают до рассматриваемого моника
+							if monitorCornerImageX < width and monitorCornerImageY < height then
+								-- Число пикселей, которые мы можем прочесть до окончания пикчи на данном монике (вдруг она заканчивается посередине?)
+								widthLimit, heightLimit =
+									math.min(width - monitorCornerImageX, baseResolutionWidth),
+									math.min(height - monitorCornerImageY, baseResolutionHeight)
+								-- GUI.alert("Limits", xMonitor, yMonitor, maxWidth, maxHeight, widthLimit, heightLimit)
+
+								-- Тута будет храниться сгруппированная по цветам пикча
+								local grouped = {}
+
+								-- Пиздуем на начало файла, т.к. мы в душе не можем ебать, какой там размер юникод-символов далее в пикче
+								file:seek("set", 4 + 1 + 2 + 2)
+								skipPixels(monitorCornerImageY * width + monitorCornerImageX)
+
+								-- Читаем ебучие пиксели
+								local yImageLine = monitorCornerImageY
+								for yImage = 1, heightLimit do
+									for xImage = 1, widthLimit do
+										background, foreground = color.to24Bit(file:readBytes(1)), color.to24Bit(file:readBytes(1))
+										file:readString(1)
+										symbol = file:readUnicodeChar()
+
+										grouped[background] = grouped[background] or {}
+										grouped[background][foreground] = grouped[background][foreground] or {}
+
+										table.insert(grouped[background][foreground], xImage)
+										table.insert(grouped[background][foreground], yImage)
+										table.insert(grouped[background][foreground], symbol)
+									end
+
+									-- Скипаем пиксели вплоть до начала следующего сканлайна на ДАННОМ монике
+									skipPixels(width - widthLimit)
+
+									yImageLine = yImageLine + 1
+								end
+
+								-- Биндим гпуху к выбранному монику и рисуем сгруппированную пикчу
+								GPUProxy.bind(config.map[yMonitor][xMonitor], false)
+
+								local currentForeground
+								for background in pairs(grouped) do
 									GPUProxy.setBackground(background)
-									GPUProxy.setForeground(foreground)
+									
+									for foreground in pairs(grouped[background]) do
+										if currentForeground ~= foreground then
+											GPUProxy.setForeground(foreground)
+											currentForeground = foreground
+										end
 
-									currentAddress, currentBackground, currentForeground = config.map[yMonitor][xMonitor], background, foreground
+										for i = 1, #grouped[background][foreground], 3 do
+											GPUProxy.set(
+												grouped[background][foreground][i],
+												grouped[background][foreground][i + 1],
+												grouped[background][foreground][i + 2]
+											)
+										end
+									end
 								end
-
-								if currentBackground ~= background then
-									GPUProxy.setBackground(background)
-									currentBackground = background
-								end
-
-								if currentForeground ~= foreground then
-									GPUProxy.setForeground(foreground)
-									currentForeground = foreground
-								end
-
-								GPUProxy.set(x - (xMonitor - 1) * baseResolutionWidth, y - (yMonitor - 1) * baseResolutionHeight, symbol)
 							end
 						end
 					end
@@ -166,7 +216,6 @@ local function mainMenu(force)
 					file:close()
 					
 					GPUProxy.bind(mainScreenAddress, false)
-					GUI.alert("Done.")
 				else
 					file:close()
 					GUI.alert("Wrong encodingMethod: " .. tostring(encodingMethod))
@@ -245,8 +294,6 @@ local function mainMenu(force)
 					end
 
 					workspace:draw()
-
-					clearScreens(0x0)
 
 					config.map = {}
 					local hue, hueStep = 0, 360 / specifiedCount
