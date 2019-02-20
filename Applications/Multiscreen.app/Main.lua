@@ -30,23 +30,9 @@ local function saveConfig()
 	filesystem.writeTable(configPath, config, true)
 end
 
-local workspace, window = system.addWindow(GUI.filledWindow(1, 1, 68, 37, 0x2D2D2D))
+local workspace, window = system.addWindow(GUI.filledWindow(1, 1, 68, 40, 0x2D2D2D))
 
 local layout = window:addChild(GUI.layout(1, 1, window.width, window.height, 1, 1))
-
-local function clearScreens()
-	for address in component.list("screen") do
-		if address ~= mainScreenAddress then
-			GPUProxy.bind(address, false)
-			GPUProxy.setDepth(8)
-			GPUProxy.setResolution(baseResolutionWidth, baseResolutionHeight)
-			GPUProxy.setBackground(config.backgroundColor)
-			GPUProxy.fill(1, 1, baseResolutionWidth, baseResolutionHeight, " ")
-		end
-	end
-
-	GPUProxy.bind(mainScreenAddress, false)
-end
 
 local function addButton(text)
 	local button = layout:addChild(GUI.button(1, 1, elementWidth, 3, 0x4B4B4B, 0xD2D2D2, 0xD2D2D2, 0x4B4B4B, text))
@@ -93,20 +79,20 @@ local function mainMenu(force)
 
 	local actionComboBox = layout:addChild(GUI.comboBox(1, 1, elementWidth, 3, 0xEEEEEE, 0x2D2D2D, 0x3C3C3C, 0x888888))
 	actionComboBox:addItem("Draw image")
-	actionComboBox:addItem("Clear screens")
 	actionComboBox:addItem("Calibrate")
 
 	local filesystemChooser = layout:addChild(GUI.filesystemChooser(1, 1, elementWidth, 3, 0xE1E1E1, 0x888888, 0x3C3C3C, 0x888888, nil, "Open", "Cancel", "Choose file", "/"))
 	filesystemChooser:setMode(GUI.IO_MODE_OPEN, GUI.IO_MODE_FILE)
 	filesystemChooser:addExtensionFilter(".pic")
+	filesystemChooser.path = config.lastPath
 
-	local colorSelector = layout:addChild(GUI.colorSelector(2, 2, elementWidth, 3, config.backgroundColor, "Choose color"))
+	local colorSelector = layout:addChild(GUI.colorSelector(2, 2, elementWidth, 3, config.backgroundColor, "Background color"))
 
 	local actionButton = addButton("Next")
 
 	actionComboBox.onItemSelected = function()
 		filesystemChooser.hidden = actionComboBox.selectedItem ~= 1
-		colorSelector.hidden = actionComboBox.selectedItem ~= 2
+		colorSelector.hidden = actionComboBox.selectedItem ~= 1
 		actionButton.disabled = actionComboBox.selectedItem == 1 and (not filesystemChooser.path or not config.map)
 	end
 
@@ -123,22 +109,37 @@ local function mainMenu(force)
 			if signature == "OCIF" then
 				local encodingMethod = file:readBytes(1)
 				if encodingMethod == 5 then
-					local width, height, maxWidth, maxHeight, widthLimit, heightLimit, monitorCornerImageX, monitorCornerImageY, background, foreground, symbol = file:readBytes(2), file:readBytes(2), baseResolutionWidth * #config.map[1],  baseResolutionHeight * #config.map
+					local width, height, maxWidth, maxHeight, oldWidth, oldHeight, widthLimit, heightLimit, monitorCornerImageX, monitorCornerImageY, background, foreground, symbol = 
+						file:readBytes(2),
+						file:readBytes(2),
+						baseResolutionWidth * #config.map[1],
+						baseResolutionHeight * #config.map,
+						screen.getResolution()
 
 					local function skipPixels(count)
+						local trigger = 10000
 						for i = 1, count do
+							-- Seek тут смысла не имеет, т.к. буферное чтение куда быстрее
 							file:readString(3)
 							file:readUnicodeChar()
 
 							-- Иначе может впасть в TLWY на тормознутых серваках
-							if i % 1000 == 0 then
+							if i > trigger then
 								computer.pullSignal(0)
+								trigger = trigger + 10000
 							end
 						end
 					end
 
-					-- Чистим дерьмо вилочкой
-					clearScreens()
+					-- Сейвим ебанину в конфиг
+					config.lastPath = filesystemChooser.path
+					config.backgroundColor = colorSelector.color
+					saveConfig()
+
+					-- Биндим гпуху к первому монику. Фишка в том, что смена резолюшна не должна затрагивать главный моник
+					screen.bind(config.map[1][1], false)
+					-- Сеттим разрешение разово. Все равно оно сохраняется даже при бинде
+					screen.setResolution(baseResolutionWidth, baseResolutionHeight)
 
 					for yMonitor = 1, #config.map do
 						for xMonitor = 1, #config.map[yMonitor] do
@@ -158,64 +159,48 @@ local function mainMenu(force)
 									math.min(height - monitorCornerImageY, baseResolutionHeight)
 								-- GUI.alert("Limits", xMonitor, yMonitor, maxWidth, maxHeight, widthLimit, heightLimit)
 
-								-- Тута будет храниться сгруппированная по цветам пикча
-								local grouped = {}
-
 								-- Пиздуем на начало файла, т.к. мы в душе не можем ебать, какой там размер юникод-символов далее в пикче
 								file:seek("set", 4 + 1 + 2 + 2)
+								-- Пиздуем до левого верхнего угла данного моника в файле пикчи попиксельно
 								skipPixels(monitorCornerImageY * width + monitorCornerImageX)
 
+								-- Биндим гпуху к выбранному монику
+								screen.bind(config.map[yMonitor][xMonitor], false)
+								-- Чистим вилочкой буфер
+								screen.clear(config.backgroundColor)
+
 								-- Читаем ебучие пиксели
-								local yImageLine = monitorCornerImageY
 								for yImage = 1, heightLimit do
 									for xImage = 1, widthLimit do
 										background, foreground = color.to24Bit(file:readBytes(1)), color.to24Bit(file:readBytes(1))
 										file:readString(1)
 										symbol = file:readUnicodeChar()
 
-										grouped[background] = grouped[background] or {}
-										grouped[background][foreground] = grouped[background][foreground] or {}
-
-										table.insert(grouped[background][foreground], xImage)
-										table.insert(grouped[background][foreground], yImage)
-										table.insert(grouped[background][foreground], symbol)
+										screen.set(
+											xImage,
+											yImage,
+											background,
+											foreground,
+											symbol
+										)
 									end
 
 									-- Скипаем пиксели вплоть до начала следующего сканлайна на ДАННОМ монике
-									skipPixels(width - widthLimit)
-
-									yImageLine = yImageLine + 1
-								end
-
-								-- Биндим гпуху к выбранному монику и рисуем сгруппированную пикчу
-								GPUProxy.bind(config.map[yMonitor][xMonitor], false)
-
-								local currentForeground
-								for background in pairs(grouped) do
-									GPUProxy.setBackground(background)
-									
-									for foreground in pairs(grouped[background]) do
-										if currentForeground ~= foreground then
-											GPUProxy.setForeground(foreground)
-											currentForeground = foreground
-										end
-
-										for i = 1, #grouped[background][foreground], 3 do
-											GPUProxy.set(
-												grouped[background][foreground][i],
-												grouped[background][foreground][i + 1],
-												grouped[background][foreground][i + 2]
-											)
-										end
+									if yImage < heightLimit then
+										skipPixels(width - widthLimit)
 									end
 								end
+
+								-- Рисуем всю хуйню с буфера
+								screen.update()
 							end
 						end
 					end
 
 					file:close()
 					
-					GPUProxy.bind(mainScreenAddress, false)
+					screen.bind(mainScreenAddress, false)
+					screen.setResolution(oldWidth, oldHeight)
 				else
 					file:close()
 					GUI.alert("Wrong encodingMethod: " .. tostring(encodingMethod))
@@ -224,10 +209,6 @@ local function mainMenu(force)
 				file:close()
 				GUI.alert("Wrong signature: " .. tostring(signature))
 			end
-		elseif actionComboBox.selectedItem == 2 then
-			config.backgroundColor = colorSelector.color
-			saveConfig()
-			clearScreens()
 		else
 			layout:removeChildren()	 
 
@@ -330,7 +311,6 @@ local function mainMenu(force)
 						end
 					end
 
-					GUI.alert("All screens has been successfully calibrated")
 					mainMenu()
 				else
 					GUI.alert("Invalid count of connected screens. You're specified " .. specifiedCount .. " of screens, but there's " .. connectedCount .. " connected screens")
