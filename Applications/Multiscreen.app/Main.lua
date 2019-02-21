@@ -142,32 +142,25 @@ local function mainMenu(force)
 					screen.setResolution(baseResolutionWidth, baseResolutionHeight)
 
 					for yMonitor = 1, #config.map do
+						monitorCornerImageY = (yMonitor - 1) * baseResolutionHeight
+
 						for xMonitor = 1, #config.map[yMonitor] do
-							GPUProxy.bind(mainScreenAddress, false)
-							-- GUI.alert("Monitor", xMonitor, yMonitor)
+							monitorCornerImageX = (xMonitor - 1) * baseResolutionWidth
 
-							-- Координаты левого верхнего угла моника в пикселях на пикче
-							monitorCornerImageX, monitorCornerImageY =
-								(xMonitor - 1) * baseResolutionWidth,
-								(yMonitor - 1) * baseResolutionHeight
+							local lastMonitorPosition = file:seek("cur", 0)
 
-							-- Если размеры моника вообще дотягивают до рассматриваемого моника
+							-- Биндим гпуху к выбранному монику
+							screen.bind(config.map[yMonitor][xMonitor], false)
+							-- Чистим вилочкой буфер
+							screen.clear(config.backgroundColor)
+
+							-- Если коорды моника в пикче воообще дотягивают до размеров самой пикчи
 							if monitorCornerImageX < width and monitorCornerImageY < height then
 								-- Число пикселей, которые мы можем прочесть до окончания пикчи на данном монике (вдруг она заканчивается посередине?)
 								widthLimit, heightLimit =
 									math.min(width - monitorCornerImageX, baseResolutionWidth),
 									math.min(height - monitorCornerImageY, baseResolutionHeight)
-								-- GUI.alert("Limits", xMonitor, yMonitor, maxWidth, maxHeight, widthLimit, heightLimit)
 
-								-- Пиздуем на начало файла, т.к. мы в душе не можем ебать, какой там размер юникод-символов далее в пикче
-								file:seek("set", 4 + 1 + 2 + 2)
-								-- Пиздуем до левого верхнего угла данного моника в файле пикчи попиксельно
-								skipPixels(monitorCornerImageY * width + monitorCornerImageX)
-
-								-- Биндим гпуху к выбранному монику
-								screen.bind(config.map[yMonitor][xMonitor], false)
-								-- Чистим вилочкой буфер
-								screen.clear(config.backgroundColor)
 
 								-- Читаем ебучие пиксели
 								for yImage = 1, heightLimit do
@@ -191,9 +184,25 @@ local function mainMenu(force)
 									end
 								end
 
-								-- Рисуем всю хуйню с буфера
-								screen.update()
-							end
+								-- Если мы рассматриваем любой не последний моник в ряду
+								if xMonitor < #config.map[yMonitor] then
+									-- Когда все пиксели для рассматриваемого моника прочтены, надо вернуться на позицию этого моника в файле
+									file:seek("set", lastMonitorPosition)
+									-- А затем скипнуть пиксели шириной с этот моник вплоть до следующего моника
+									skipPixels(widthLimit)
+								-- Если же это последний моник в ряду
+								else
+									-- Считаем коорду в пикче следующего моника
+									local next = xMonitor * baseResolutionWidth
+									-- Если она втискивается в пикчу, то скипаем до первого моника в следующей строке
+									if next < width then
+										skipPixels(width - next)
+									end
+								end
+							end							
+
+							-- Рисуем всю хуйню с буфера
+							screen.update()
 						end
 					end
 

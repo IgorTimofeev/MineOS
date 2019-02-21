@@ -116,25 +116,19 @@ end
 
 --------------------------------------- I/O methods -----------------------------------------
 
-local function readAndReposition(self, count)
-	local data = self.proxy.read(self.stream, count)
-	if data then
-		self.position = self.position + #data
-	end
-
-	return data
-end
-
 local function readString(self, count)
+	-- If current buffer content is a "part" of "count of data" we need to read
 	if count > #self.buffer then
 		local data, chunk = self.buffer
+
 		while #data < count do
-			chunk = readAndReposition(self, BUFFER_SIZE)
+			chunk = self.proxy.read(self.stream, BUFFER_SIZE)
 
 			if chunk then
 				data = data .. chunk
 			else
-				self.buffer = ""
+				self.position = self:seek("end", 0)
+
 				-- EOF at start
 				if data == "" then
 					return nil
@@ -146,11 +140,14 @@ local function readString(self, count)
 		end
 
 		self.buffer = data:sub(count + 1, -1)
+		chunk = data:sub(1, count)
+		self.position = self.position + #chunk
 
-		return data:sub(1, count)
+		return chunk
 	else
 		local data = self.buffer:sub(1, count)
 		self.buffer = self.buffer:sub(count + 1, -1)
+		self.position = self.position + count
 
 		return data
 	end
@@ -162,22 +159,24 @@ local function readLine(self)
 		if #self.buffer > 0 then
 			local starting, ending = self.buffer:find("\n")
 			if starting then
-				data = data .. self.buffer:sub(1, starting - 1)
+				local chunk = self.buffer:sub(1, starting - 1)
 				self.buffer = self.buffer:sub(ending + 1, -1)
+				self.position = self.position + #chunk
 
-				return data
+				return data .. chunk
 			else
 				data = data .. self.buffer
 			end
 		end
 
-		local chunk = readAndReposition(self, BUFFER_SIZE)
+		local chunk = self.proxy.read(self.stream, BUFFER_SIZE)
 		if chunk then
 			self.buffer = chunk
+			self.position = self.position + #chunk
 		-- EOF
 		else
 			local data = self.buffer
-			self.buffer = ""
+			self.position = self:seek("end", 0)
 
 			return #data > 0 and data or nil
 		end
@@ -198,10 +197,12 @@ end
 local function readAll(self)
 	local data, chunk = ""
 	while true do
-		chunk = readAndReposition(self, 4096)
+		chunk = self.proxy.read(self.stream, 4096)
 		if chunk then
 			data = data .. chunk
+		-- EOF
 		else
+			self.position = self:seek("end", 0)
 			return data
 		end
 	end
@@ -279,23 +280,23 @@ local function seek(self, pizda, cyka)
 	if pizda == "set" then
 		local result, reason = self.proxy.seek(self.stream, "set", cyka)
 		if result then
-			self.position = cyka
+			self.position = result
 			self.buffer = ""
 		end
 
 		return result, reason
 	elseif pizda == "cur" then
-		local result, reason = self.proxy.seek(self.stream, "cur", cyka)
+		local result, reason = self.proxy.seek(self.stream, "set", self.position + cyka)
 		if result then
-			self.position = self.position + cyka
+			self.position = result
 			self.buffer = ""
 		end
 
 		return result, reason
 	elseif pizda == "end" then
-		local result, reason = self.proxy.seek(self.stream, "set", self.size - 1)
+		local result, reason = self.proxy.seek(self.stream, "end", cyka)
 		if result then
-			self.position = self.size - 1
+			self.position = result
 			self.buffer = ""
 		end
 
@@ -372,7 +373,6 @@ function filesystem.open(path, mode)
 		}
 
 		if mode == "r" or mode == "rb" then
-			handle.size = proxy.size(proxyPath)
 			handle.readString = readString
 			handle.readUnicodeChar = readUnicodeChar
 			handle.readBytes = readBytes
