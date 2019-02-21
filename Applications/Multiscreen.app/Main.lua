@@ -109,7 +109,7 @@ local function mainMenu(force)
 			if signature == "OCIF" then
 				local encodingMethod = file:readBytes(1)
 				if encodingMethod == 5 then
-					local width, height, maxWidth, maxHeight, oldWidth, oldHeight, widthLimit, heightLimit, monitorCornerImageX, monitorCornerImageY, background, foreground, symbol = 
+					local width, height, maxWidth, maxHeight, oldWidth, oldHeight, widthLimit, heightLimit, monitorCornerImageX, monitorCornerImageY, nextMonitorPosition, background, foreground, symbol = 
 						file:readBytes(2),
 						file:readBytes(2),
 						baseResolutionWidth * #config.map[1],
@@ -147,8 +147,6 @@ local function mainMenu(force)
 						for xMonitor = 1, #config.map[yMonitor] do
 							monitorCornerImageX = (xMonitor - 1) * baseResolutionWidth
 
-							local lastMonitorPosition = file:seek("cur", 0)
-
 							-- Биндим гпуху к выбранному монику
 							screen.bind(config.map[yMonitor][xMonitor], false)
 							-- Чистим вилочкой буфер
@@ -178,26 +176,29 @@ local function mainMenu(force)
 										)
 									end
 
+									-- Если мы тока шо прочли первый горзионтальный ряд пикселей, то запоминаем позишн, ЙОПТА
+									if yImage == 1 then
+										nextMonitorPosition = file:seek("cur", 0)
+									end
+
 									-- Скипаем пиксели вплоть до начала следующего сканлайна на ДАННОМ монике
 									if yImage < heightLimit then
 										skipPixels(width - widthLimit)
 									end
 								end
 
-								-- Если мы рассматриваем любой не последний моник в ряду
-								if xMonitor < #config.map[yMonitor] then
-									-- Когда все пиксели для рассматриваемого моника прочтены, надо вернуться на позицию этого моника в файле
-									file:seek("set", lastMonitorPosition)
-									-- А затем скипнуть пиксели шириной с этот моник вплоть до следующего моника
-									skipPixels(widthLimit)
-								-- Если же это последний моник в ряду
-								else
-									-- Считаем коорду в пикче следующего моника
-									local next = xMonitor * baseResolutionWidth
-									-- Если она втискивается в пикчу, то скипаем до первого моника в следующей строке
-									if next < width then
+								-- Если мы рассматриваем последний мониторо-кусман на пикче в ряду
+								local next = xMonitor * baseResolutionWidth
+								if next < width then
+									-- Если этот моник далеко еще не ушел за кол-во калиброванных моников
+									if xMonitor < #config.map[yMonitor] then
+										file:seek("set", nextMonitorPosition)
+									else
 										skipPixels(width - next)
 									end
+								-- Скипать смысла нет, т.к. оно автоматом будет стоять на первом элементе некст ряда
+								-- else
+
 								end
 							end							
 
