@@ -726,7 +726,7 @@ end
 
 continue = function(...)
 	-- Готовим экран к запуску
-	local oldResolutionX, oldResolutionY = screen.getGPUProxy().getResolution()
+	local oldResolutionX, oldResolutionY = screen.getResolution()
 	
 	-- Запускаем
 	_G.MineCodeIDEDebugInfo = nil

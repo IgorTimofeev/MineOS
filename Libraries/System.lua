@@ -90,7 +90,7 @@ function system.getDefaultUserSettings()
 		interfaceWallpaperBrightness = 0.9,
 
 		interfaceScreensaverEnabled = false,
-		interfaceScreensaverPath = paths.system.screensavers .. "Matrix.lua",
+		interfaceScreensaverPath = paths.system.screensavers .. "Space.lua",
 		interfaceScreensaverDelay = 20,
 		
 		interfaceTransparencyEnabled = true,
@@ -733,6 +733,27 @@ function system.addUploadToPastebinMenuItem(menu, path)
 	end
 end
 
+function system.launchWithArguments(path)
+	local container = addBackgroundContainerWithInput("", localization.launchWithArguments)
+
+	container.panel.eventHandler = function(workspace, object, e1)
+		if e1 == "touch" then
+			local args = {}
+			if container.input.text then
+				for arg in container.input.text:gmatch("[^%s]+") do
+					table.insert(args, arg)
+				end
+			end
+
+			container:remove()
+			system.execute(path, table.unpack(args))
+			workspace:draw()
+		end
+	end
+
+	workspace:draw()
+end
+
 local function iconOnRightClick(icon, e1, e2, e3, e4)
 	icon.selected = true
 	workspace:draw()
@@ -758,24 +779,7 @@ local function iconOnRightClick(icon, e1, e2, e3, e4)
 				end		
 
 				contextMenu:addItem(localization.launchWithArguments).onTouch = function()
-					local container = addBackgroundContainerWithInput("", localization.launchWithArguments)
-
-					container.panel.eventHandler = function(workspace, object, e1)
-						if e1 == "touch" then
-							local args = {}
-							if container.input.text then
-								for arg in container.input.text:gmatch("[^%s]+") do
-									table.insert(args, arg)
-								end
-							end
-
-							container:remove()
-							system.execute(icon.path .. "Main.lua", table.unpack(args))
-							workspace:draw()
-						end
-					end
-
-					workspace:draw()
+					system.launchWithArguments(icon.path .. "Main.lua")
 				end
 
 				contextMenu:addSeparator()

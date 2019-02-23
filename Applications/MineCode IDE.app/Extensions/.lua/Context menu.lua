@@ -19,7 +19,7 @@ menu:addItem(localization.flashEEPROM, not component.isAvailable("eeprom") or fi
 end
 
 menu:addItem(localization.launchWithArguments).onTouch = function()
-	system.launchWithArguments(workspace, icon.path)
+	system.launchWithArguments(icon.path)
 end
 
 system.addUploadToPastebinMenuItem(menu, icon.path)
