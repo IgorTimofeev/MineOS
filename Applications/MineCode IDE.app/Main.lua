@@ -111,24 +111,11 @@ codeView.draw = function(...)
 			x >= codeView.codeAreaPosition + 1 and
 			y >= codeView.y and
 			x <= codeView.codeAreaPosition + codeView.codeAreaWidth - 2 and
-			y <= codeView.y + codeView.height - 2
+			y <= codeView.y + codeView.height - (codeView.horizontalScrollBar.hidden and 1 or 2)
 		then
 			screen.drawText(x, y, config.cursorColor, config.cursorSymbol)
 		end
 	end
-
-	-- if autocompleteDatabase then
-	-- 	local w = 30
-	-- 	local x, y = codeView.x + codeView.width - w, codeView.y
-	-- 	screen.drawRectangle(x, y, w, codeView.height, 0x0, 0xFFFFFF, " ")
-	-- 	for key, value in pairs(autocompleteDatabase) do
-	-- 		screen.drawText(x + 1, y, 0xFFFFFF, key .. ": " .. value)
-	-- 		y = y + 1
-	-- 		if y > codeView.y + codeView.height - 1 then
-	-- 			break
-	-- 		end
-	-- 	end
-	-- end
 end
 
 local function saveConfig()
@@ -408,10 +395,11 @@ local function addBreakpoint()
 end
 
 local function fixFromLineByCursorPosition()
+	local offset = codeView.horizontalScrollBar.hidden and 1 or 2
 	if codeView.fromLine > cursorPositionLine then
 		codeView.fromLine = cursorPositionLine
-	elseif codeView.fromLine + codeView.height - 2 < cursorPositionLine then
-		codeView.fromLine = cursorPositionLine - codeView.height + 2
+	elseif codeView.fromLine + codeView.height - offset < cursorPositionLine then
+		codeView.fromLine = cursorPositionLine - codeView.height + offset
 	end
 end
 
@@ -437,7 +425,7 @@ local function fixCursorPosition(symbol, line)
 		symbol = lineLength + 1
 	end
 
-	return symbol, line
+	return math.floor(symbol), math.floor(line)
 end
 
 local function setCursorPosition(symbol, line)
@@ -469,7 +457,7 @@ local function moveCursor(symbolOffset, lineOffset, ignoreHidden)
 				newLine, newSymbol = newLine + 1, 1
 			end
 
-			setCursorPositionAndClearSelection(newSymbol, newLine)
+			setCursorPosition(newSymbol, newLine)
 		end
 	end
 end
@@ -1366,9 +1354,13 @@ local function createEditOrRightClickMenu(menu)
 	end
 end
 
+local function checkScrollbar(y)
+	return codeView.horizontalScrollBar.hidden or y < codeView.y + codeView.height - 1
+end
+
 local uptime = computer.uptime()
 codeView.eventHandler = function(workspace, object, e1, e2, e3, e4, e5)
-	if e1 == "touch" then
+	if e1 == "touch" and checkScrollbar(e4) then
 		if e5 == 1 then
 			createEditOrRightClickMenu(GUI.addContextMenu(workspace, e3, e4))
 		else
@@ -1379,19 +1371,17 @@ codeView.eventHandler = function(workspace, object, e1, e2, e3, e4, e5)
 	elseif e1 == "double_touch" then
 		selectWord()
 		tick(true)
-	elseif e1 == "drag" then
-		if e5 ~= 1 then
-			codeView.selections[1] = codeView.selections[1] or {from = {}, to = {}}
-			codeView.selections[1].from.symbol, codeView.selections[1].from.line = cursorPositionSymbol, cursorPositionLine
-			codeView.selections[1].to.symbol, codeView.selections[1].to.line = fixCursorPosition(convertScreenCoordinatesToTextPosition(e3, e4))
-			
-			if codeView.selections[1].from.line > codeView.selections[1].to.line then
-				codeView.selections[1].from.line, codeView.selections[1].to.line = codeView.selections[1].to.line, codeView.selections[1].from.line
+	elseif e1 == "drag" and checkScrollbar(e4) then
+		codeView.selections[1] = codeView.selections[1] or {from = {}, to = {}}
+		codeView.selections[1].from.symbol, codeView.selections[1].from.line = cursorPositionSymbol, cursorPositionLine
+		codeView.selections[1].to.symbol, codeView.selections[1].to.line = fixCursorPosition(convertScreenCoordinatesToTextPosition(e3, e4))
+		
+		if codeView.selections[1].from.line > codeView.selections[1].to.line then
+			codeView.selections[1].from.line, codeView.selections[1].to.line = codeView.selections[1].to.line, codeView.selections[1].from.line
+			codeView.selections[1].from.symbol, codeView.selections[1].to.symbol = codeView.selections[1].to.symbol, codeView.selections[1].from.symbol
+		elseif codeView.selections[1].from.line == codeView.selections[1].to.line then
+			if codeView.selections[1].from.symbol > codeView.selections[1].to.symbol then
 				codeView.selections[1].from.symbol, codeView.selections[1].to.symbol = codeView.selections[1].to.symbol, codeView.selections[1].from.symbol
-			elseif codeView.selections[1].from.line == codeView.selections[1].to.line then
-				if codeView.selections[1].from.symbol > codeView.selections[1].to.symbol then
-					codeView.selections[1].from.symbol, codeView.selections[1].to.symbol = codeView.selections[1].to.symbol, codeView.selections[1].from.symbol
-				end
 			end
 		end
 
@@ -1753,17 +1743,17 @@ end
 
 propertiesContextMenu:addSeparator()
 
-propertiesContextMenu:addItem(config.syntaxHighlight and localization.disableSyntaxHighlight or localization.enableSyntaxHighlight).onTouch = function()
+propertiesContextMenu:addItem(localization.toggleSyntaxHighlight).onTouch = function()
 	syntaxHighlightingButton.pressed = not syntaxHighlightingButton.pressed
 	syntaxHighlightingButton.onTouch()
 end
 
-propertiesContextMenu:addItem(config.enableAutoBrackets and localization.disableAutoBrackets or localization.enableAutoBrackets, false, "^]").onTouch = function()
+propertiesContextMenu:addItem(localization.toggleAutoBrackets, false, "^]").onTouch = function()
 	config.enableAutoBrackets = not config.enableAutoBrackets
 	saveConfig()
 end
 
-propertiesContextMenu:addItem(config.enableAutocompletion and localization.disableAutocompletion or localization.enableAutocompletion, false, "^I").onTouch = function()
+propertiesContextMenu:addItem(localization.toggleAutocompletion, false, "^I").onTouch = function()
 	toggleEnableAutocompleteDatabase()
 end
 

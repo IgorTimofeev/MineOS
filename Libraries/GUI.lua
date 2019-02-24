@@ -979,55 +979,66 @@ end
 --------------------------------------------------------------------------------
 
 local function codeViewDraw(codeView)
-	local toLine, colorScheme, patterns = codeView.fromLine + codeView.height - 1, codeView.syntaxColorScheme, codeView.syntaxPatterns
+	local y, toLine, colorScheme, patterns = codeView.y, codeView.fromLine + codeView.height - 1, codeView.syntaxColorScheme, codeView.syntaxPatterns
+	
 	-- Line numbers bar and code area
 	codeView.lineNumbersWidth = unicode.len(tostring(toLine)) + 2
 	codeView.codeAreaPosition = codeView.x + codeView.lineNumbersWidth
 	codeView.codeAreaWidth = codeView.width - codeView.lineNumbersWidth
+	
 	-- Line numbers 
-	screen.drawRectangle(codeView.x, codeView.y, codeView.lineNumbersWidth, codeView.height, colorScheme.lineNumbersBackground, colorScheme.lineNumbersText, " ")	
+	screen.drawRectangle(codeView.x, y, codeView.lineNumbersWidth, codeView.height, colorScheme.lineNumbersBackground, colorScheme.lineNumbersText, " ")	
+	
 	-- Background
-	screen.drawRectangle(codeView.codeAreaPosition, codeView.y, codeView.codeAreaWidth, codeView.height, colorScheme.background, colorScheme.text, " ")
+	screen.drawRectangle(codeView.codeAreaPosition, y, codeView.codeAreaWidth, codeView.height, colorScheme.background, colorScheme.text, " ")
+	
 	-- Line numbers texts
-	local y = codeView.y
+	local text
 	for line = codeView.fromLine, toLine do
 		if codeView.lines[line] then
-			local text = tostring(line)
+			text = line .. ""
 			if codeView.highlights[line] then
 				screen.drawRectangle(codeView.x, y, codeView.lineNumbersWidth, 1, codeView.highlights[line], colorScheme.text, " ", 0.3)
 				screen.drawRectangle(codeView.codeAreaPosition, y, codeView.codeAreaWidth, 1, codeView.highlights[line], colorScheme.text, " ")
 			end
+
 			screen.drawText(codeView.codeAreaPosition - unicode.len(text) - 1, y, colorScheme.lineNumbersText, text)
+			
 			y = y + 1
 		else
 			break
 		end	
 	end
-
-	local function drawUpperSelection(y, selectionIndex)
-		screen.drawRectangle(
-			codeView.codeAreaPosition + codeView.selections[selectionIndex].from.symbol - codeView.fromSymbol + 1,
-			y + codeView.selections[selectionIndex].from.line - codeView.fromLine,
-			codeView.codeAreaWidth - codeView.selections[selectionIndex].from.symbol + codeView.fromSymbol - 1,
-			1,
-			codeView.selections[selectionIndex].color or colorScheme.selection, colorScheme.text, " "
-		)
-	end
-
-	local function drawLowerSelection(y, selectionIndex)
-		screen.drawRectangle(
-			codeView.codeAreaPosition,
-			y + codeView.selections[selectionIndex].from.line - codeView.fromLine,
-			codeView.selections[selectionIndex].to.symbol - codeView.fromSymbol + 2,
-			1,
-			codeView.selections[selectionIndex].color or colorScheme.selection, colorScheme.text, " "
-		)
-	end
-
+	
 	if #codeView.selections > 0 then
+		local function drawUpperSelection(y, selectionIndex)
+			screen.drawRectangle(
+				math.max(codeView.codeAreaPosition, codeView.codeAreaPosition + codeView.selections[selectionIndex].from.symbol - codeView.fromSymbol + 1),
+				y + codeView.selections[selectionIndex].from.line - codeView.fromLine,
+				codeView.codeAreaWidth - codeView.selections[selectionIndex].from.symbol + codeView.fromSymbol - 1,
+				1,
+				codeView.selections[selectionIndex].color or colorScheme.selection,
+				colorScheme.text,
+				" "
+			)
+		end
+
+		local function drawLowerSelection(y, selectionIndex)
+			screen.drawRectangle(
+				codeView.codeAreaPosition,
+				y + codeView.selections[selectionIndex].from.line - codeView.fromLine,
+				codeView.selections[selectionIndex].to.symbol - codeView.fromSymbol + 2,
+				1,
+				codeView.selections[selectionIndex].color or colorScheme.selection,
+				colorScheme.text,
+				" "
+			)
+		end
+
 		for selectionIndex = 1, #codeView.selections do
 			y = codeView.y
 			local dy = codeView.selections[selectionIndex].to.line - codeView.selections[selectionIndex].from.line
+			
 			if dy == 0 then
 				screen.drawRectangle(
 					codeView.codeAreaPosition + codeView.selections[selectionIndex].from.symbol - codeView.fromSymbol + 1,
@@ -1037,12 +1048,26 @@ local function codeViewDraw(codeView)
 					codeView.selections[selectionIndex].color or colorScheme.selection, colorScheme.text, " "
 				)
 			elseif dy == 1 then
-				drawUpperSelection(y, selectionIndex); y = y + 1
+				drawUpperSelection(y, selectionIndex)
+				y = y + 1
+
 				drawLowerSelection(y, selectionIndex)
 			else
-				drawUpperSelection(y, selectionIndex); y = y + 1
+				drawUpperSelection(y, selectionIndex)
+				y = y + 1
+				
 				for i = 1, dy - 1 do
-					screen.drawRectangle(codeView.codeAreaPosition, y + codeView.selections[selectionIndex].from.line - codeView.fromLine, codeView.codeAreaWidth, 1, codeView.selections[selectionIndex].color or colorScheme.selection, colorScheme.text, " "); y = y + 1
+					screen.drawRectangle(
+						codeView.codeAreaPosition, 
+						y + codeView.selections[selectionIndex].from.line - codeView.fromLine,
+						codeView.codeAreaWidth,
+						1,
+						codeView.selections[selectionIndex].color or colorScheme.selection,
+						colorScheme.text,
+						" "
+					)
+
+					y = y + 1
 				end
 
 				drawLowerSelection(y, selectionIndex)
@@ -1052,7 +1077,6 @@ local function codeViewDraw(codeView)
 
 	-- Code strings
 	y = codeView.y
-	
 	for i = codeView.fromLine, toLine do
 		if codeView.lines[i] then
 			if codeView.syntaxHighlight then
@@ -1066,7 +1090,16 @@ local function codeViewDraw(codeView)
 					codeView.lines[i]
 				)
 			else
-				screen.drawText(codeView.codeAreaPosition - codeView.fromSymbol + 2, y, colorScheme.text, codeView.lines[i])
+				screen.drawText(
+					codeView.codeAreaPosition + 1,
+					y,
+					colorScheme.text,
+					unicode.sub(
+						codeView.lines[i],
+						codeView.fromSymbol,
+						codeView.fromSymbol + codeView.codeAreaWidth - 3
+					)
+				)
 			end
 
 			y = y + 1
@@ -1075,6 +1108,7 @@ local function codeViewDraw(codeView)
 		end
 	end
 
+	-- Scrollbars
 	if #codeView.lines > codeView.height then
 		codeView.verticalScrollBar.colors.background, codeView.verticalScrollBar.colors.foreground = colorScheme.scrollBarBackground, colorScheme.scrollBarForeground
 		codeView.verticalScrollBar.minimumValue, codeView.verticalScrollBar.maximumValue, codeView.verticalScrollBar.value, codeView.verticalScrollBar.shownValueCount = 1, #codeView.lines, codeView.fromLine, codeView.height
@@ -3690,9 +3724,13 @@ function GUI.highlightString(x, y, fromChar, indentationWidth, patterns, colorSc
 		x = x1
 	end
 
-	local toChar, endX = stringLength, x + stringLength - 1
-	if endX > x2 then
-		toChar = toChar - endX + x2
+	-- local toChar, endX = stringLength, x + stringLength - 1
+	-- if endX > x2 then
+	-- 	toChar = toChar - endX + x2
+	-- end
+	local toChar = fromChar + x2 - x
+	if toChar > stringLength then
+		toChar = stringLength
 	end
 
 	local counter, symbols, colors, bufferIndex, newFrameBackgrounds, newFrameForegrounds, newFrameSymbols, searchFrom, starting, ending = indentationWidth, {}, {}, screen.getIndex(x, y), screen.getNewFrameTables()

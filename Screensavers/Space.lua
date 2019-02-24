@@ -1,7 +1,9 @@
 
-local screen = require("Screen")
+-- This's a copy-paste of orignal software from https://github.com/Maxu5/
 
 -------------------------------------------------------------------------------------
+
+local screen = require("Screen")
 
 local starAmount, colors, copyright, braille1, braille2, braille3, braille4, braille5, braille6, braille7, braille8, braille9, braille10 =
 	200,
@@ -28,19 +30,13 @@ local starAmount, colors, copyright, braille1, braille2, braille3, braille4, bra
 	"⠁", "⠈", "⠂", "⠐", "⠄", "⠠", "⡀", "⢀", "⠛", "⣤"
 
 -- Faster access without tables indexing
-local computerPullSignal, tableRemove, mathSin, mathCos, mathRandom, screenDrawRectangle, screenSet, screenUpdate, screenGetIndex =
+local computerPullSignal, tableRemove, mathSin, mathCos, mathRandom, screenUpdate =
 	computer.pullSignal,
 	table.remove,
 	math.sin,
 	math.cos,
 	math.random,
-	screen.drawRectangle,
-	screen.set,
-	screen.update,
-	screen.getIndex
-
--- Other variables, nil by default
-local stars, i, star, rotationAngle, targetX, targetY, startWay, x, y, xmod, ymod, prevX, prevY, signalType, screenIndex, color = {}
+	screen.update
 
 -- Screen resolution in pixels
 local screenWidth, screenHeight = screen.getResolution()
@@ -62,6 +58,9 @@ local screenTablesLength = #newFrameBackgrounds
 for i = 1, screenTablesLength do
 	newFrameBackgrounds[i], newFrameForegrounds[i], newFrameSymbols[i] = 0x0, 0x0, " "
 end
+
+-- Other variables, nil by default
+local stars, i, star, rotationAngle, targetX, targetY, startWay, x, y, xmod, ymod, prevX, prevY, signalType, screenIndex, color = {}
 
 -- Main loop
 while true do
