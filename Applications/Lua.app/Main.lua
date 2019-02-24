@@ -56,7 +56,7 @@ local function addMultiple(color, ...)
 	local args = {...}
 	for i = 1, #args do
 		if type(args[i]) == "table" then
-			args[i] = text.serialize(args[i], true, "  ", 3)
+			args[i] = text.serialize(args[i], true, "  ", 4)
 		else
 			args[i] = tostring(args[i])
 		end

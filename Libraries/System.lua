@@ -2719,6 +2719,14 @@ function system.authorize()
 	workspace:draw()
 end
 
+function system.getWindowsContainer()
+	return desktopWindowsContainer
+end
+
+function system.getDockContainer()
+	return dockContainer
+end
+
 --------------------------------------------------------------------------------
 
 -- Optaining temporary file's last modified UNIX timestamp as boot timestamp
