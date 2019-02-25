@@ -116,7 +116,7 @@ local function run(url, ...)
 				return false, tostring(result[2])
 			end
 		else
-			return false, tostring(loadReason)
+			return false, tostring(reason)
 		end
 	else
 		return false, reason
