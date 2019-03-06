@@ -27,7 +27,7 @@ local config = {
 		{ name = "Trash", path = paths.user.trash },
 	},
 	sidebarWidth = 20,
-	gridMode = 1,
+	gridMode = false,
 }
 
 if filesystem.exists(configPath) then
@@ -409,7 +409,7 @@ local function calculateSizes()
 	iconField.localX = window.backgroundPanel.localX
 end
 
-local function updateIconField(gridMode)
+local function updateIconField()
 	local path
 	if iconField then
 		path = iconField.path
@@ -419,7 +419,7 @@ local function updateIconField(gridMode)
 	end
 
 	iconField = window:addChild(
-		gridMode and
+		config.gridMode and
 		system.gridIconField(
 			1, 4, 1, 1, 2, 2, path,
 			0x3C3C3C,
@@ -453,7 +453,7 @@ local function updateIconField(gridMode)
 
 	iconField.eventHandler = function(workspace, self, e1, e2, e3, e4, e5)
 		if e1 == "scroll" then
-			if gridMode then
+			if config.gridMode then
 				local rows = math.ceil((#iconField.children - 1) / iconField.iconCount.horizontal)
 				local minimumOffset = (rows - 1) * (userSettings.iconHeight + userSettings.iconVerticalSpace) - userSettings.iconVerticalSpace
 				
@@ -583,10 +583,10 @@ resizer.onResizeFinished = function()
 end
 
 local function saveMode(gridMode)
-	updateIconField(gridMode)
-	updateFileListAndDraw()
-
 	config.gridMode = gridMode
+	updateIconField()
+	updateFileListAndDraw()
+	
 	saveConfig()
 end
 
@@ -600,8 +600,8 @@ end
 
 --------------------------------------------------------------------------------
 
-updateIconField(config.gridMode)
-modeList.selectedItem = config.gridMode and 1 or 2
+modeList.selectedItem = config.gridMode == nil and 2 or (config.gridMode and 1 or 2)
+updateIconField()
 
 if (options.o or options.open) and args[1] and filesystem.isDirectory(args[1]) then
 	addpath(args[1])
