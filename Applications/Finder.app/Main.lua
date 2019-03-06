@@ -27,6 +27,7 @@ local config = {
 		{ name = "Trash", path = paths.user.trash },
 	},
 	sidebarWidth = 20,
+	gridMode = 1,
 }
 
 if filesystem.exists(configPath) then
@@ -36,15 +37,12 @@ end
 local sidebarTitleColor = 0xC3C3C3
 local sidebarItemColor = 0x696969
 
-local iconFieldYOffset = 2
-local scrollTimerHandler
-
-local workpathHistory = {}
-local workpathHistoryCurrent = 0
+local pathHistory = {}
+local pathHistoryCurrent = 0
 
 --------------------------------------------------------------------------------
 
-local workspace, window, menu = system.addWindow(GUI.filledWindow(1, 1, 100, 26, 0xE1E1E1))
+local workspace, window, menu = system.addWindow(GUI.filledWindow(1, 1, 100, 26, 0xF0F0F0))
 
 local titlePanel = window:addChild(GUI.panel(1, 1, 1, 3, 0x3C3C3C))
 
@@ -56,9 +54,11 @@ local nextButton = window:addChild(GUI.adaptiveRoundedButton(14, 2, 1, 0, 0x5A5A
 nextButton.colors.disabled = prevButton.colors.disabled
 
 local FTPButton = window:addChild(GUI.adaptiveRoundedButton(nextButton.localX + nextButton.width + 2, 2, 1, 0, 0x5A5A5A, 0xC3C3C3, 0xE1E1E1, 0x3C3C3C, "FTP"))
-
 FTPButton.colors.disabled = prevButton.colors.disabled
 FTPButton.disabled = not network.internetProxy
+
+local modeList = window:addChild(GUI.list(FTPButton.localX + FTPButton.width + 2, 2, 10, 1, 2, 0, 0x4B4B4B, 0xE1E1E1, 0x4B4B4B, 0xE1E1E1, 0xE1E1E1, 0x4B4B4B, true))
+modeList:setDirection(GUI.DIRECTION_HORIZONTAL)
 
 local sidebarContainer = window:addChild(GUI.container(1, 4, config.sidebarWidth, 1))
 local sidebarPanel = sidebarContainer:addChild(GUI.object(1, 1, 1, 1, 0xFFFFFF))
@@ -71,14 +71,11 @@ itemsLayout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_LEFT, GUI.ALIGNMENT_VERT
 itemsLayout:setSpacing(1, 1, 0)
 itemsLayout:setMargin(1, 1, 0, 0)
 
-local searchInput = window:addChild(GUI.input(1, 2, 20, 1, 0x4B4B4B, 0xC3C3C3, 0x878787, 0x4B4B4B, 0xE1E1E1, nil, localization.search, true))
+local searchInput = window:addChild(GUI.input(1, 2, 16, 1, 0x4B4B4B, 0xC3C3C3, 0x878787, 0x4B4B4B, 0xE1E1E1, nil, localization.search, true))
 
-local iconField = window:addChild(system.iconField(1, 4, 1, 1, 2, 2, 0x3C3C3C, 0x969696, paths.user.desktop))
+local iconField 
 
-local scrollBar = window:addChild(GUI.scrollBar(1, 4, 1, 1, 0xC3C3C3, 0x4B4B4B, iconFieldYOffset, 1, 1, 1, 1, true))
-scrollBar.eventHandler = nil
-
-local statusContainer = window:addChild(GUI.container(FTPButton.localX + FTPButton.width + 2, 2, 1, 1))
+local statusContainer = window:addChild(GUI.container(modeList.localX + modeList.width + 1, 2, 1, 1))
 local statusPanel = statusContainer:addChild(GUI.panel(1, 1, 1, 1, 0x4B4B4B))
 
 local gotoButton = window:addChild(GUI.button(1, 2, 3, 1, 0x5A5A5A, 0xC3C3C3, 0xE1E1E1, 0x3C3C3C, "→"))
@@ -98,47 +95,45 @@ local function updateFileListAndDraw()
 	workspace:draw()
 end
 
-local function workpathHistoryButtonsUpdate()
-	prevButton.disabled = workpathHistoryCurrent <= 1
-	nextButton.disabled = workpathHistoryCurrent >= #workpathHistory
+local function pathHistoryButtonsUpdate()
+	prevButton.disabled = pathHistoryCurrent <= 1
+	nextButton.disabled = pathHistoryCurrent >= #pathHistory
 end
 
-local function prevOrNextWorkpath(next)
+local function prevOrNextpath(next)
 	if next then
-		if workpathHistoryCurrent < #workpathHistory then
-			workpathHistoryCurrent = workpathHistoryCurrent + 1
+		if pathHistoryCurrent < #pathHistory then
+			pathHistoryCurrent = pathHistoryCurrent + 1
 		end
 	else
-		if workpathHistoryCurrent > 1 then
-			workpathHistoryCurrent = workpathHistoryCurrent - 1
+		if pathHistoryCurrent > 1 then
+			pathHistoryCurrent = pathHistoryCurrent - 1
 		end
 	end
 
-	workpathHistoryButtonsUpdate()
-	iconField.yOffset = iconFieldYOffset
-	iconField:setWorkpath(workpathHistory[workpathHistoryCurrent])
+	pathHistoryButtonsUpdate()
+	iconField:setPath(pathHistory[pathHistoryCurrent])
 	
 	updateFileListAndDraw()
 end
 
-local function addWorkpath(path)
-	workpathHistoryCurrent = workpathHistoryCurrent + 1
-	table.insert(workpathHistory, workpathHistoryCurrent, path)
-	for i = workpathHistoryCurrent + 1, #workpathHistory do
-		workpathHistory[i] = nil
+local function addpath(path)
+	pathHistoryCurrent = pathHistoryCurrent + 1
+	table.insert(pathHistory, pathHistoryCurrent, path)
+	for i = pathHistoryCurrent + 1, #pathHistory do
+		pathHistory[i] = nil
 	end
 
-	workpathHistoryButtonsUpdate()
+	pathHistoryButtonsUpdate()
 	searchInput.text = ""
-	iconField.yOffset = iconFieldYOffset
-	iconField:setWorkpath(path)
+	iconField:setPath(path)
 end
 
 local function sidebarItemDraw(object)
 	local textColor, limit = object.textColor, object.width - 2
-	if object.path == iconField.workpath then
+	if object.path == iconField.path then
 		textColor = 0x5A5A5A
-		screen.drawRectangle(object.x, object.y, object.width, 1, 0xE1E1E1, textColor, " ")
+		screen.drawRectangle(object.x, object.y, object.width, 1, 0xF0F0F0, textColor, " ")
 
 		if object.onRemove then
 			limit = limit - 2
@@ -185,7 +180,7 @@ local function addSidebarSeparator()
 end
 
 local function onFavouriteTouch(path)
-	addWorkpath(path)
+	addpath(path)
 	updateFileListAndDraw()
 end
 
@@ -194,7 +189,7 @@ local openFTP, updateSidebar
 openFTP = function(...)
 	local mountPath = network.mountPaths.FTP .. network.getFTPProxyName(...) .. "/"
 	
-	addWorkpath(mountPath)
+	addpath(mountPath)
 	workspace:draw()
 
 	local proxy, reason = network.connectToFTP(...)
@@ -241,7 +236,7 @@ updateSidebar = function()
 			end
 
 			addSidebarItem(" " .. network.getModemProxyName(proxy), path).onTouch = function()
-				addWorkpath(path)
+				addpath(path)
 				updateFileListAndDraw()
 			end
 		end
@@ -317,41 +312,17 @@ itemsLayout.eventHandler = function(workspace, object, e1, e2, e3, e4, e5)
 	end
 end
 
-local function updateScrollBar()
-	local shownFilesCount = #iconField.fileList - iconField.fromFile + 1
-	
-	local horizontalLines = math.ceil(shownFilesCount / iconField.iconCount.horizontal)
-	local minimumOffset = 3 - (horizontalLines - 1) * (userSettings.iconHeight + userSettings.iconVerticalSpace) - userSettings.iconVerticalSpace
-	
-	if iconField.yOffset > iconFieldYOffset then
-		iconField.yOffset = iconFieldYOffset
-	elseif iconField.yOffset < minimumOffset then
-		iconField.yOffset = minimumOffset
-	end
-
-	if shownFilesCount > iconField.iconCount.total then
-		scrollBar.hidden = false
-		scrollBar.maximumValue = math.abs(minimumOffset)
-		scrollBar.value = math.abs(iconField.yOffset - iconFieldYOffset)
-	else
-		scrollBar.hidden = true
-	end
-end
-
 searchInput.onInputFinished = function()
 	iconField.filenameMatcher = searchInput.text
-	iconField.fromFile = 1
-	iconField.yOffset = iconFieldYOffset
-
 	updateFileListAndDraw()
 end
 
 nextButton.onTouch = function()
-	prevOrNextWorkpath(true)
+	prevOrNextpath(true)
 end
 
 prevButton.onTouch = function()
-	prevOrNextWorkpath(false)
+	prevOrNextpath(false)
 end
 
 FTPButton.onTouch = function()
@@ -405,127 +376,6 @@ FTPButton.onTouch = function()
 	workspace:draw()
 end
 
-iconField.eventHandler = function(workspace, object, e1, e2, e3, e4, e5)
-	if e1 == "scroll" then
-		iconField.yOffset = iconField.yOffset + e5 * 2
-
-		updateScrollBar()
-
-		local delta = iconField.yOffset - iconField.iconsContainer.children[1].localY
-		for i = 1, #iconField.iconsContainer.children do
-			iconField.iconsContainer.children[i].localY = iconField.iconsContainer.children[i].localY + delta
-		end
-
-		workspace:draw()
-
-		if scrollTimerHandler then
-			event.removeHandler(scrollTimerHandler)
-			scrollTimerHandler = nil
-		end
-
-		scrollTimerHandler = event.addHandler(function()
-			computer.pushSignal("Finder", "updateFileList")
-		end, 0.3, 1)
-	elseif e1 == "system" or e1 == "Finder" then
-		if e2 == "updateFileList" then
-			if e1 == "system" then
-				iconField.yOffset = iconFieldYOffset
-			end
-
-			updateFileListAndDraw()
-		elseif e2 == "updateFavourites" then
-			if e3 then
-				table.insert(config.favourites, e3)
-			end
-
-			saveConfig()
-			updateSidebar()
-			workspace:draw()
-		end	
-	end
-end
-
-iconField.launchers.directory = function(icon)
-	addWorkpath(icon.path)
-	updateFileListAndDraw()
-end
-
-iconField.launchers.showPackageContent = function(icon)
-	addWorkpath(icon.path)
-	updateFileListAndDraw()
-end
-
-iconField.launchers.showContainingFolder = function(icon)
-	addWorkpath(filesystem.path(system.readShortcut(icon.path)))
-	updateFileListAndDraw()
-end
-
-local overrideUpdateFileList = iconField.updateFileList
-iconField.updateFileList = function(...)
-	statusContainer:removeChildren(2)
-
-	local x, path = 2, "/"
-
-	local function addNode(text, path)
-		statusContainer:addChild(GUI.adaptiveButton(x, 1, 0, 0, nil, 0xB4B4B4, nil, 0xFFFFFF, text)).onTouch = function()
-			addWorkpath(path)
-			updateFileListAndDraw()
-		end
-
-		x = x + unicode.len(text)
-	end
-
-	addNode("root", "/")
-
-	for node in iconField.workpath:gsub("/$", ""):gmatch("[^/]+") do
-		statusContainer:addChild(GUI.text(x, 1, 0x696969, " ► "))
-		x = x + 3
-		
-		path = path .. node .. "/"
-		addNode(node, path)
-	end
-
-	if x > statusContainer.width then
-		for i = 2, #statusContainer.children do
-			statusContainer.children[i].localX = statusContainer.children[i].localX - (x - statusContainer.width)
-		end
-	end
-
-	workspace:draw()
-	overrideUpdateFileList(...)
-	updateScrollBar()
-end
-
-gotoButton.onTouch = function()
-	local input = window:addChild(GUI.input(statusContainer.localX, statusContainer.localY, statusContainer.width, 1, 0x4B4B4B, 0xC3C3C3, 0xC3C3C3, 0x4B4B4B, 0xC3C3C3, nil, nil))
-	
-	input.onInputFinished = function()
-		input:remove()
-		statusContainer.hidden = false
-		input.text = ("/" .. input.text .. "/"):gsub("/+", "/")
-
-		if filesystem.exists(input.text) and filesystem.isDirectory(input.text) then
-			addWorkpath(input.text)
-			iconField:updateFileList()
-		end
-
-		workspace:draw()
-	end
-
-	statusContainer.hidden = true
-	input:startInput()
-end
-
-local overrideMaximize = window.actionButtons.maximize.onTouch
-window.actionButtons.maximize.onTouch = function()
-	iconField.yOffset = iconFieldYOffset
-	overrideMaximize()
-end
-
-window.actionButtons.close.onTouch = function()
-	window:remove()
-end
-
 local function calculateSizes()
 	sidebarContainer.height = window.height - 3
 	
@@ -549,7 +399,7 @@ local function calculateSizes()
 	titlePanel.width = window.width
 	searchInput.localX = window.width - searchInput.width
 
-	statusContainer.width = window.width - searchInput.width - FTPButton.width - 25
+	statusContainer.width = window.width - searchInput.width - FTPButton.width - modeList.width - 26
 	statusPanel.width = statusContainer.width
 
 	gotoButton.localX = statusContainer.localX + statusContainer.width
@@ -557,10 +407,154 @@ local function calculateSizes()
 	iconField.width = window.backgroundPanel.width
 	iconField.height = window.height + 3
 	iconField.localX = window.backgroundPanel.localX
+end
 
-	scrollBar.localX = window.width
-	scrollBar.height = window.backgroundPanel.height
-	scrollBar.shownValueCount = scrollBar.height - 1
+local function updateIconField(gridMode)
+	local path
+	if iconField then
+		path = iconField.path
+		iconField:remove()
+	else
+		path = paths.user.desktop
+	end
+
+	iconField = window:addChild(
+		gridMode and
+		system.gridIconField(
+			1, 4, 1, 1, 2, 2, path,
+			0x3C3C3C,
+			0xC3C3C3,
+			0x3C3C3C,
+			0x696969,
+			nil
+		) or
+		system.listIconField(
+			1, 4, 1, 1, path,
+			0xF0F0F0,
+			0xFFFFFF,
+			0x000000
+		)
+	)
+
+	iconField.launchers.directory = function(icon)
+		addpath(icon.path)
+		updateFileListAndDraw()
+	end
+
+	iconField.launchers.showPackageContent = function(icon)
+		addpath(icon.path)
+		updateFileListAndDraw()
+	end
+
+	iconField.launchers.showContainingFolder = function(icon)
+		addpath(filesystem.path(system.readShortcut(icon.path)))
+		updateFileListAndDraw()
+	end
+
+	iconField.eventHandler = function(workspace, self, e1, e2, e3, e4, e5)
+		if e1 == "scroll" then
+			if gridMode then
+				local rows = math.ceil((#iconField.children - 1) / iconField.iconCount.horizontal)
+				local minimumOffset = (rows - 1) * (userSettings.iconHeight + userSettings.iconVerticalSpace) - userSettings.iconVerticalSpace
+				
+				iconField.yOffset = math.max(-minimumOffset + 1, math.min(iconField.yOffsetInitial, iconField.yOffset + e5 * 2))
+
+				-- Moving icons upper or lower
+				local delta, child = iconField.yOffset - iconField.children[2].localY
+				for i = 1, #iconField.children do
+					child = iconField.children[i]
+
+					if child ~= iconField.backgroundObject then
+						child.localY = child.localY + delta
+					end
+				end
+
+				workspace:draw()
+			else
+				GUI.tableEventHandler(workspace, self, e1, e2, e3, e4, e5)
+			end
+		elseif e1 == "system" or e1 == "Finder" then
+			if e2 == "updateFileList" then
+				updateFileListAndDraw()
+			elseif e2 == "updateFavourites" then
+				if e3 then
+					table.insert(config.favourites, e3)
+				end
+
+				saveConfig()
+				updateSidebar()
+				workspace:draw()
+			end	
+		else
+			GUI.tableEventHandler(workspace, self, e1, e2, e3, e4, e5)
+		end
+	end
+
+	local overrideUpdateFileList = iconField.updateFileList
+	iconField.updateFileList = function(...)
+		statusContainer:removeChildren(2)
+
+		local x, path = 2, "/"
+
+		local function addNode(text, path)
+			statusContainer:addChild(GUI.adaptiveButton(x, 1, 0, 0, nil, 0xB4B4B4, nil, 0xFFFFFF, text)).onTouch = function()
+				addpath(path)
+				updateFileListAndDraw()
+			end
+
+			x = x + unicode.len(text)
+		end
+
+		addNode("root", "/")
+
+		for node in iconField.path:gsub("/$", ""):gmatch("[^/]+") do
+			statusContainer:addChild(GUI.text(x, 1, 0x696969, " ► "))
+			x = x + 3
+			
+			path = path .. node .. "/"
+			addNode(node, path)
+		end
+
+		if x > statusContainer.width then
+			for i = 2, #statusContainer.children do
+				statusContainer.children[i].localX = statusContainer.children[i].localX - (x - statusContainer.width)
+			end
+		end
+
+		workspace:draw()
+		overrideUpdateFileList(...)
+	end
+
+	calculateSizes()
+end
+
+gotoButton.onTouch = function()
+	local input = window:addChild(GUI.input(statusContainer.localX, statusContainer.localY, statusContainer.width, 1, 0x4B4B4B, 0xC3C3C3, 0xC3C3C3, 0x4B4B4B, 0xC3C3C3, nil, nil))
+	
+	input.onInputFinished = function()
+		input:remove()
+		statusContainer.hidden = false
+		input.text = ("/" .. input.text .. "/"):gsub("/+", "/")
+
+		if filesystem.exists(input.text) and filesystem.isDirectory(input.text) then
+			addpath(input.text)
+			iconField:updateFileList()
+		end
+
+		workspace:draw()
+	end
+
+	statusContainer.hidden = true
+	input:startInput()
+end
+
+local overrideMaximize = window.actionButtons.maximize.onTouch
+window.actionButtons.maximize.onTouch = function()
+	overrideMaximize()
+end
+
+window.actionButtons.close.onTouch = function()
+	window:remove()
 end
 
 window.onResize = function(width, height)
@@ -588,12 +582,31 @@ resizer.onResizeFinished = function()
 	saveConfig()
 end
 
+local function saveMode(gridMode)
+	updateIconField(gridMode)
+	updateFileListAndDraw()
+
+	config.gridMode = gridMode
+	saveConfig()
+end
+
+modeList:addItem("☷").onTouch = function()
+	saveMode(true)
+end
+
+modeList:addItem("☰").onTouch = function()
+	saveMode(false)
+end
+
 --------------------------------------------------------------------------------
 
+updateIconField(config.gridMode)
+modeList.selectedItem = config.gridMode and 1 or 2
+
 if (options.o or options.open) and args[1] and filesystem.isDirectory(args[1]) then
-	addWorkpath(args[1])
+	addpath(args[1])
 else
-	addWorkpath("/")
+	addpath("/")
 end
 
 updateSidebar()

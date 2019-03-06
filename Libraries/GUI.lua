@@ -4528,4 +4528,239 @@ end
 
 ---------------------------------------------------------------------------------------------------
 
+local function tableHeaderDraw(self)
+	screen.drawRectangle(self.x, self.y, self.width, self.height, self.parent.colors.headerBackground, self.parent.colors.headerText, " ")
+	screen.drawText(self.x + 1, self.y, self.parent.colors.headerText, self.text)
+end
+
+local function tableAddColumn(self, headerText, sizePolicy, size)
+	layoutAddColumn(self, sizePolicy, size)
+	
+	local lastColumn = #self.columnSizes
+	
+	local header = self:setPosition(lastColumn, 1, self:addChild(GUI.object(1, 1, 1, self.itemHeight)))
+	header.text = headerText
+	header.draw = tableHeaderDraw
+
+	for row = 1, 2 do
+		self:setAlignment(lastColumn, row, GUI.ALIGNMENT_HORIZONTAL_LEFT, GUI.ALIGNMENT_VERTICAL_TOP)
+		self:setSpacing(lastColumn, row, 0)
+		self:setFitting(lastColumn, row, true, false)
+	end
+end
+
+local function tableAddRow(self, ...)
+	local objects, columnCount = {...}, #self.columnSizes
+	local index = #self.children - columnCount + 1
+	
+	if #objects == columnCount then
+		for i = #objects, 1, -1 do
+			local object = self:setPosition(i, 2, self:addChild(objects[i], index))
+
+			object.height = self.itemHeight
+			object.alternative = self.nextRowAlternative
+		end
+
+		self.nextRowAlternative = not self.nextRowAlternative
+	else
+		error("Failed to add row: count of columns ~= count of objects in row")
+	end
+end
+
+local function tableUpdateSelection(self)
+	local columnCount, row = #self.columnSizes, 1
+	
+	for i = 1, #self.children - columnCount, columnCount do
+		for j = i, i + columnCount - 1 do
+			self.children[j].selected = self.selectedRows[row]
+		end
+
+		row = row + 1
+	end
+end
+
+local function tableClear(self)
+	local columnCount, childrenCount = #self.columnSizes, #self.children
+	if childrenCount > columnCount then
+		self:removeChildren(1, childrenCount - columnCount)
+	end
+
+	self.selectedRows, self.nextRowAlternative = {}, nil
+end
+
+function GUI.tableCellEventHandler(workspace, self, e1, e2, e3, e4, e5, ...)
+	if e1 == "touch" or e1 == "drag" or e1 == "double_touch" then
+		local row = math.ceil(self:indexOf() / #self.parent.columnSizes)
+
+		-- Deselecting all rows
+		if (e5 == 0 or not self.parent.selectedRows[row]) and not (keyboard.isControlDown() or keyboard.isCommandDown()) then
+			self.parent.selectedRows = {}
+		end
+
+		-- Selecting this row
+		self.parent.selectedRows[row] = true
+		tableUpdateSelection(self.parent)
+
+		if self.parent.onCellTouch then
+			self.parent.onCellTouch(workspace, self, e1, e2, e3, e4, e5, ...)
+		end
+
+		workspace:draw()
+	end
+end
+
+function GUI.tableCellDraw(self)
+	local background, foreground
+	if self.selected then
+		background, foreground = self.colors.selectionBackground, self.colors.selectionText
+	elseif self.alternative then
+		background, foreground = self.colors.alternativeBackground, self.colors.alternativeText
+	else
+		background, foreground = self.colors.defaultBackground, self.colors.defaultText
+	end
+
+	if background then
+		screen.drawRectangle(self.x, self.y, self.width, self.height,
+			background,
+			foreground,
+		" ")
+	end
+
+	return foreground
+end
+
+function GUI.tableCell(colors)
+	local cell = GUI.object(1, 1, 1, 1)
+
+	cell.colors = colors
+	cell.draw = GUI.tableCellDraw
+	cell.eventHandler = GUI.tableCellEventHandler
+
+	return cell
+end
+
+local function tableTextCellDraw(self)
+	screen.drawText(self.x + 1, self.y, GUI.tableCellDraw(self), self.text)
+end
+
+function GUI.tableTextCell(colors, text)
+	local cell = GUI.tableCell(colors)
+
+	cell.text = text
+	cell.draw = tableTextCellDraw
+
+	return cell
+end
+
+local function tableDraw(self)
+	-- Items background
+	screen.drawRectangle(self.x, self.y + self.itemHeight, self.width, self.height - self.itemHeight, self.colors.background, 0x0, " ")
+	-- Content
+	layoutDraw(self)
+end
+
+function GUI.tableEventHandler(workspace, self, e1, e2, e3, e4, e5, ...)
+	if e1 == "touch" then
+		local itemTouched = false
+		for i = 1, #self.children do
+			if self.children[i]:isPointInside(e3, e4) then
+				itemTouched = true
+				break
+			end
+		end
+
+		if not itemTouched then
+			self.onBackgroundTouch(workspace, self, e1, e2, e3, e4, e5, ...)
+		end
+	elseif e1 == "scroll" then
+		local columnCount = #self.columnSizes
+		local horizontalMargin, verticalMargin = self:getMargin(1, 2)
+
+		for i = 1, columnCount do
+			self:setMargin(i, 2, horizontalMargin,
+				math.max(
+					-self.itemHeight * (#self.children - columnCount) / columnCount + 1,
+					math.min(
+						0,
+						verticalMargin + e5
+					)
+				)
+			)
+		end
+
+		workspace:draw()
+	end
+end
+
+function GUI.table(x, y, width, height, itemHeight, backgroundColor, headerBackgroundColor, headerTextColor)
+	local table = GUI.layout(x, y, width, height, 0, 2)
+
+	table.colors = {
+		background = backgroundColor,
+		headerBackground = headerBackgroundColor,
+		headerText = headerTextColor
+	}
+
+	table.itemHeight = itemHeight
+	table.selectedRows = {}
+
+	table.addColumn = tableAddColumn
+	table.addRow = tableAddRow
+	table.clear = tableClear
+	table.draw = tableDraw
+	table.eventHandler = GUI.tableEventHandler
+
+	table:setRowHeight(1, GUI.SIZE_POLICY_ABSOLUTE, itemHeight)
+	table:setRowHeight(2, GUI.SIZE_POLICY_RELATIVE, 1.0)
+
+	return table
+end
+
+---------------------------------------------------------------------------------------------------
+
+-- local workspace = GUI.workspace()
+
+-- workspace:addChild(GUI.panel(1, 1, workspace.width, workspace.height, 0x2D2D2D))
+
+-- local t = workspace:addChild(GUI.table(3, 2, 80, 30, 1,
+-- 	0xF0F0F0,
+-- 	0xFFFFFF,
+-- 	0x000000
+-- ))
+
+-- t:addColumn("Name", GUI.SIZE_POLICY_RELATIVE, 0.6)
+-- t:addColumn("Date", GUI.SIZE_POLICY_RELATIVE, 0.4)
+-- t:addColumn("Size", GUI.SIZE_POLICY_ABSOLUTE, 16)
+-- t:addColumn("Type", GUI.SIZE_POLICY_ABSOLUTE, 10)
+
+-- local colors1 = {
+-- 	defaultBackground = nil,
+-- 	defaultText = 0x3C3C3C,
+-- 	alternativeBackground = 0xE1E1E1,
+-- 	alternativeText = 0x3C3C3C,
+-- 	selectionBackground = 0xCC2440,
+-- 	selectionText = 0xFFFFFF,
+-- }
+
+-- local colors2 = {}
+-- for key, value in pairs(colors1) do
+-- 	colors2[key] = value
+-- end
+-- colors2.defaultText, colors2.alternativeText = 0xA5A5A5, 0xA5A5A5
+
+-- for i = 1, 10 do
+-- 	t:addRow(
+-- 		GUI.tableTextCell(colors1, "Ehehehe " .. i),
+-- 		GUI.tableTextCell(colors2, "12.02.2018"),
+-- 		GUI.tableTextCell(colors2, "114.23 KB"),
+-- 		GUI.tableTextCell(colors2, ".lua")
+-- 	)
+-- end
+
+-- workspace:draw()
+-- workspace:start()
+
+
+---------------------------------------------------------------------------------------------------
+
 return GUI
