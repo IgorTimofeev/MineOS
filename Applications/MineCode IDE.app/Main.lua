@@ -1244,7 +1244,7 @@ local function find()
 				whereToFind, whatToFind = unicode.lower(whereToFind), unicode.lower(whatToFind)
 			end
 
-			local success, starting, ending = pcall(string.unicodeFind, whereToFind, whatToFind)
+			local success, starting, ending = pcall(text.unicodeFind, whereToFind, whatToFind)
 			if success then
 				if starting then
 					codeView.selections[1] = {
