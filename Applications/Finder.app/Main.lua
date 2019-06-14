@@ -15,6 +15,7 @@ local args, options = system.parseArguments(...)
 local userSettings = system.getUserSettings()
 local localization = system.getSystemLocalization()
 
+local FTPMountPath = paths.system.mounts .. "FTP/"
 local configPath = paths.user.applicationData .. "Finder/Config.cfg"
 local config = {
 	favourites = {
@@ -187,7 +188,7 @@ end
 local openFTP, updateSidebar
 
 openFTP = function(...)
-	local mountPath = network.mountPaths.FTP .. network.getFTPProxyName(...) .. "/"
+	local mountPath = FTPMountPath .. network.getFTPProxyName(...) .. "/"
 	
 	addpath(mountPath)
 	workspace:draw()
@@ -253,9 +254,8 @@ updateSidebar = function()
 		for i = 1, #userSettings.networkFTPConnections do
 			local connection = userSettings.networkFTPConnections[i]
 			local name = network.getFTPProxyName(connection.address, connection.port, connection.user)
-			local mountPath = network.mountPaths.FTP .. name .. "/"
-
-			local object = addSidebarItem(" " .. name, mountPath)
+			
+			local object = addSidebarItem(" " .. name, FTPMountPath .. name .. "/")
 			
 			object.onTouch = function(e1, e2, e3, e4, e5)
 				openFTP(connection.address, connection.port, connection.user, connection.password)
