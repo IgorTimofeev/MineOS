@@ -1,7 +1,11 @@
+-- Bulgarian Language Pack
+-- Contributed by Pitaya on 18/06/19
+-- Български език за MineOS
+
 {
 	downloading = "Изтегля се…",
 	CPUArchitecture = "Aрхитектура на процесора",
-	RAMControl = "контрол на RAM",
+	RAMControl = "Контрол на RAM",
 	packageUnloading = "Автоматично ",
 	networkFTPNewConnection = "FTP връзка",
 	networkFTPConnections = "FTP връзки",
