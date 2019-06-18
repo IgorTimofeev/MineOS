@@ -1,6 +1,6 @@
 {
 	downloading = "Изтегля се…",
-	CPUArchitecture = "архитектура на процесора",
+	CPUArchitecture = "Aрхитектура на процесора",
 	RAMControl = "контрол на RAM",
 	packageUnloading = "Автоматично ",
 	networkFTPNewConnection = "FTP връзка",
