@@ -8,7 +8,7 @@
 	screensavers = "Économiseur:",
 	applications = "Les applications tierces:",
 	languages = "Des packs de langue:",
-	accept = "J'accepte cette merde:",
+	accept = "J'accepte:",
 	select = "Sélectionnez système de fichiers pour l'installation",
 	erase = "Effacer",
 	used = "utiliser",
