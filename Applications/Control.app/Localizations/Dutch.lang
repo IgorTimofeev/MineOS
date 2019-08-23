@@ -7,7 +7,7 @@
 	diskLabel = "Schijf label",
 	bootable = "Opstartbaar",
 	of = "van",
-	free = "Gratis",
+	free = "Vrij",
 	options = "Opties",
 	arguments = "Argumenten",
 	format = "Formatteer",
