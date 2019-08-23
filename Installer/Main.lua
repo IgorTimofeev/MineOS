@@ -566,17 +566,25 @@ addStage(function()
 
 	local function addToList(state, key)
 		if state then
-			local path
+			local selectedLocalization, path, localizationName = localizationComboBox:getItem(localizationComboBox.selectedItem).text
+			
 			for i = 1, #files[key] do
 				path = getData(files[key][i])
 
-				if 
-					filesystem.extension(path) ~= ".lang" or
-					(
+				if filesystem.extension(path) == ".lang" then
+					localizationName = filesystem.hideExtension(filesystem.name(path))
+
+					if
+						-- If ALL loacalizations need to be downloaded
 						localizationsSwitchAndLabel.switch.state or
-						filesystem.hideExtension(filesystem.name(path)) == localizationComboBox:getItem(localizationComboBox.selectedItem).text
-					)
-				then
+						-- If it's required localization file
+						localizationName == selectedLocalization or
+						-- Downloading English "just in case" for non-english localizations
+						selectedLocalization ~= "English" and localizationName == "English"
+					then
+						table.insert(downloadList, files[key][i])
+					end
+				else
 					table.insert(downloadList, files[key][i])
 				end
 			end
