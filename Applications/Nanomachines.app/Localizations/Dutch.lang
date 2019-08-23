@@ -1,0 +1,18 @@
+{
+	activeEffects = "Huidige effecten",
+	sent = "Verzonden",
+	received = "Ontvangen",
+	nothingFound = "Geen effecten gevonden",
+	instructionTitle = "Instructies",
+	instructionData = "Aan de linkerkant van het scherm zijn er schakelaren die nanites vertellen om biocontacten te activeren. Elk persoon heeft een unieke configuratie van biocontacten, waardoor nanieten verschillende buffs / debuffs kunnen opleggen. Het activeren van 2 contacten is levenslang veilig, een groter aantal zal ernstig letsel veroorzaken. U kunt maximaal 4 contacten tegelijk activeren. Experiment, zoek naar de gewenste effecten en voeg ze toe aan uw favorieten voor later gebruik. De knop \"configuratie opslaan\" is handig voor het overbrengen naar uw andere configuratie van nanieten (hiervoor moet u een aangemaakt exemplaar in de inventaris hebben)",
+	syncWelcome = "Welkom",
+	syncInfo = "Voordat u het programma gebruikt, moet u nanites maken en opdrinken (in het spel). Benader vervolgens de systeemeenheid of het serverrek met het draadloze modem geïnstalleerd voor synchronisatie",
+	syncProgress = "Er is een synchronisatie met de nanieten bezig, verlaat de computer niet voordat het proces is voltooid:",
+	syncContacts = "biocontact update %d van %d",
+	favourites = "Geselecteerde effecten",
+	saveConfiguration = "Configuratie opslaan",
+	saveFailed = "Opslaan mislukt: in het inventaris zijn er geen niet-geconfigureerde nanieten",
+	notSynced = "Er was een synchronisatiefout met de nanieten. Het wordt aanbevolen om het programma te sluiten en opnieuw te beginnen.",
+	notWireless = "De computer heeft een modem, maar de nanites nemen opdrachten uitsluitend over via het draadloze netwerk. Plaats het draadloze modem en probeer het opnieuw",
+	noModem = "De computer heeft geen draadloos modem voor het verzenden en ontvangen van nanite-opdrachten via een netwerk",
+}
