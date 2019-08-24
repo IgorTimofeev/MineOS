@@ -1,0 +1,24 @@
+{	
+	moduleDisk = "Schijven",
+	moduleRAM = "Werkgeheugen",
+	moduleEvent = "Gebeurtenissen",
+	moduleLua = "Lua-tolk",
+
+	diskLabel = "Schijf label",
+	bootable = "Opstartbaar",
+	of = "van",
+	free = "Vrij",
+	options = "Opties",
+	arguments = "Argumenten",
+	format = "Formatteer",
+	execute = "Voer uit",
+	waitingEvents = "Wachten op gebeurtenis",
+	processingEnabled = "Gebeurtenis verwerken ingeschakeld",
+	luaInfo = {
+		{color = 0x880000, text = _G._VERSION .. " Copyright (C) 1994-2017 Lua.org, PUC-Rio"},
+		"Typ een verklaring en druk op Enter om deze te evalueren",
+		"Voorvoegsel een uitdrukking met \ "= \" om de waarde ervan weer te geven",
+		" "
+	},
+	luaType = "Typ hier een verklaring"
+}
