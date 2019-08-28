@@ -17,6 +17,6 @@
 	flashing = "EEPROM clignotant...",
 	creating = "La création d'un profil d'utilisateur...",
 	installing = "Installer",
-	installed = "Des Mines ont été installées. Profitez-en!",
+	installed = "MineOS à bien été installé. Amusez-vous bien!",
 	reboot = "Redémarrer",
 }
