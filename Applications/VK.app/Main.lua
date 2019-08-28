@@ -310,7 +310,7 @@ local function getSenderName(profiles, conversations, groups, peerID)
 		return getEblo(groups, -peerID).name
 	else
 		local eblo = getEblo(profiles, peerID)
-		return eblo.first_name .. " " .. eblo.last_name
+		return eblo and (eblo.first_name .. " " .. eblo.last_name) or "N/A"
 	end
 end
 
