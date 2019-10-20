@@ -1,14 +1,14 @@
 {
 	open = "Відкрити",
-	cancel = "Відміна",
+	cancel = "Відмінити",
 
 	screen = "Екран",
-	screenResolution = "Дозвіл",
+	screenResolution = "Розширення",
 	screenAutoScale = "Автомасштабування",
 	screenWidth = "Ширина",
 	screenHeight = "Висота",
 	screenPreferredMonitor = "Монітор",
-	screenScaleInfo = "Використання цієї опції дозволить підібрати оптимальний дозвіл екрана, щоб позбутися від ефекту \"чорних смуг \"",
+	screenScaleInfo = "Використання цієї опції дозволить підібрати оптимальне розширенння екрану, щоб позбутися від ефекту \"чорних смуг \"",
 	screenInvalidResolution = "Текст в полях введення повинен складатися з цифр, повинен бути більше %d, а максимальна роздільна здатність не повинна перевищувати %d символів",
 
 	wallpaper = "Фон та заставка",
@@ -39,8 +39,8 @@
 	appearanceMenu = "Колір меню",
 	appearanceTransparencyEnabled = "Прозорість інтерфейсу",
 	appearanceTransparencyInfo = "Відключення останніх двох опцій істотно знизить кількість прямих звернень до CPU / GPU і збільшить продуктивність",
-	appearanceDropDownDefaultBackground = "Випадаюче меню фон",
-	appearanceDropDownDefaultText = "Випадаюче меню текст",
+	appearanceDropDownDefaultBackground = "Фон випадаючого меню",
+	appearanceDropDownDefaultText = "Текст випадаюче меню",
 	appearanceDropDownSeparator = "Роздільник спадного меню",
 
 	users = "Користувачі",
@@ -68,7 +68,7 @@
 	tasksBefore = "Виконати до запуску ОС",
 	tasksAfter = "Виконати після запуску ОС",
 	tasksPath = "Шлях до скрипту",
-	tasksEnabled = "Виконання включено",
+	tasksEnabled = "Виконання ввімкнено",
 
 	disks = "Диски",
 	disksFormat = "Форматувати",
@@ -100,8 +100,8 @@
 	usersAddPassword = "Додати пароль",
 	usersAddPasswordPlaceholder1 = "Введіть пароль",
 	usersAddPasswordPlaceholder2 = "Надіслати пароль",
-	usersPasswordsArentEqual = "Паролі не рівні",
-	usersClaim = "Блок комп'ютера затвердження",
+	usersPasswordsArentEqual = "Паролі різняться",
+	usersClaim = "Приват блоку комп'ютера",
 	usersClaimInfo = "Крім того, ви можете створити приватний доступ до блоку вашого комп'ютера для гравця із зазначеним ім'ям. Для цього гравець повинен бути онлайн",
 	usersClaimPlaceholder = "Введіть ім'я гравця",
 }
