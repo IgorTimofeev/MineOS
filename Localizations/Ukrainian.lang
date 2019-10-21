@@ -88,7 +88,7 @@
 	flashingEEPROM = "Блимає в процесі. Не вимикати комп'ютер...",
 	print3D = "Роздрукувати модель",
 	
-	sortBy = "Роду",
+	sortBy = "Сортувати",
 	sortByType = "По типу",
 	sortByName = "По імені",
 	sortByDate = "По даті",
