@@ -26,7 +26,7 @@
 	statisticsPublicationsCount = "Число публікацій",
 	statisticsReviewsCount = "Число відгуків",
 	statisticsPopularPublication = "(Популярна публікація)",
-	statisticsMessagesCount = "Число повідомленняний",
+	statisticsMessagesCount = "Число повідомлень",
 	
 	whatsNew = "Що нового",
 	whatsNewInVersion = "Що нового у версії",
@@ -93,7 +93,7 @@
 	version = "Версія",
 	license = "Ліцензія",
 	category = "Категорія",
-	updated = "Оновлене",
+	updated = "Оновлено",
 	reviews = "Відгуки",
 	yourRating = "Оцініть додаток",
 	writeReviewHere = "Пишіть відгук тут",
@@ -104,8 +104,8 @@
 	dependencies = "Залежності",
 	wasReviewHelpful = "Чи був цей відгук корисним?",
 	yes = "Так",
-	no = "Немає",
+	no = "Ні",
 	of = "з",
-	usersLoveReview = "Користувачів вважають цей відгук корисним",
+	usersLoveReview = "користувачів вважають цей відгук корисним",
 	thanksForVote = "Дякую за вашу думку",
 }
