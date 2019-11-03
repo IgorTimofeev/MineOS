@@ -932,8 +932,11 @@ showUserProfile = function(peerID)
 								layout.defaultColumn, layout.defaultRow = column, row
 
 								local eblo = list[index]
-								layout:addChild(newAvatar(1, 1, 4, 2, getNameShortcut(eblo.first_name .. " " .. eblo.last_name), eblo.id))
-								layout:addChild(GUI.text(1, 4, 0xA5A5A5, text.limit(eblo.first_name, friendsNameLimit)))
+
+								if eblo then
+									layout:addChild(newAvatar(1, 1, 4, 2, getNameShortcut(eblo.first_name .. " " .. eblo.last_name), eblo.id))
+									layout:addChild(GUI.text(1, 4, 0xA5A5A5, text.limit(eblo.first_name, friendsNameLimit)))
+								end
 
 								index = index + 1
 							else
@@ -1454,7 +1457,7 @@ showConversations = function(peerID)
 				else
 					if isPeerChat(item.conversation.peer.id) then
 						local eblo = getEblo(list.profiles, item.last_message.from_id)
-						messagePreview = eblo.first_name .. ": " ..	messagePreview
+						messagePreview = (eblo and eblo.first_name or "N/A") .. ": " .. messagePreview
 					end
 				end
 
