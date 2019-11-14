@@ -117,7 +117,7 @@
 	mounts = "挂载",
 
 	uploadToPastebin = "上传到Pastebin",
-	pasteName = "Paste name",
+	pasteName = "Paste名称",
 	uploading = "正在上传",
 	uploadingSuccess = "上传到..",
 	uploadingFailure = "无法上传",
