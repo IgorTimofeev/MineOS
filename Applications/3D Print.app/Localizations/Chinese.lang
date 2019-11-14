@@ -39,4 +39,4 @@
 	projectorSettings = "投影属性",
 	elementSettings = "形状属性",
 	failedToPrint = "打印失败",
-}
+	}
