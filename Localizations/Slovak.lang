@@ -118,7 +118,7 @@
 
 	uploadToPastebin = "Nahrať na Pastebin",
 	pasteName = "Meno pastu",
-	uploading = Nahrávanie prebieha..",
+	uploading = "Nahrávanie prebieha..",
 	uploadingSuccess = "Nahrané na ",
 	uploadingFailure = "Nahrávanie zlyhalo: ",
 }
