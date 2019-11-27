@@ -14,7 +14,7 @@
 	used = "Utiliser",
 	setup = "Configurer votre profil",
 	customize = "Personnaliser les téléchargements",
-	flashing = "Installation du EEPROM...",
+	flashing = "Programmation du EEPROM...",
 	creating = "Création de votre profil d'utilisateur...",
 	installing = "Installer",
 	installed = "MineOS à bien été installé. Amusez-vous bien!",
