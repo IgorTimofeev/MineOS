@@ -130,7 +130,7 @@ local function getScaledResolution(scale)
 
 	local aspectWidth, aspectHeight = component.proxy(GPUProxy.getScreen()).getAspectRatio()
 	local maxWidth, maxHeight = GPUProxy.maxResolution()
-	local proportion = (aspectWidth * 2 - 0.5) / (aspectHeight - 0.25)
+	local proportion = 2 * (16 * aspectWidth - 4.5) / (16 * aspectHeight - 4.5)
 	 
 	local height = scale * math.min(
 		maxWidth / proportion,
