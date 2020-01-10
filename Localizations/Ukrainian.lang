@@ -4,7 +4,7 @@
 	RAMControl = "Контроль оперативної пам'яті ",
 	packageUnloading = "Автоматичне розвантаження",
 	networkFTPNewConnection = "FTP-з'єднання",
-	networkFTPConnections = "FTP-підключень",
+	networkFTPConnections = "FTP-підключення",
 	networkFTPAddress = "Адреса сервера",
 	networkFTPPort = "Порт сервера",
 	networkFTPUser = "Користувач",
@@ -85,7 +85,7 @@
 	showPackageContent = "Показати вміст пакету",
 	showContainingFolder = "Показати папку",
 	flashEEPROM = "Записати на EEPROM",
-	flashingEEPROM = "Блимає в процесі. Не вимикати комп'ютер...",
+	flashingEEPROM = "Запис в процесі. Не вимикайте комп'ютер...",
 	print3D = "Роздрукувати модель",
 	
 	sortBy = "Сортувати",
@@ -116,7 +116,7 @@
 	search = "Пошук",
 	mounts = "Пристрої",
 
-	uploadToPastebin = "Завантажити в Pastebin",
+	uploadToPastebin = "Завантажити на Pastebin",
 	pasteName = "Вставити ім'я",
 	uploading = "Йде завантаження...",
 	uploadingSuccess = "Завантажено в ",
