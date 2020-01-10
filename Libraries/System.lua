@@ -2863,7 +2863,7 @@ function system.authorize()
 
 		selectUser()
 	else
-		updateUser(userList[1])
+		updateUser(userList[1]:sub(1, -2))
 	end
 
 	workspace:draw()
