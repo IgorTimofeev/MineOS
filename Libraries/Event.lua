@@ -89,7 +89,7 @@ function event.pull(preferredTimeout)
 		end
 
 		-- Program interruption support. It's faster to do it here instead of registering handlers
-		if signalData[1] == "key_down" or signalData[1] == "key_up" and event.interruptingEnabled then
+		if (signalData[1] == "key_down" or signalData[1] == "key_up") and event.interruptingEnabled then
 			-- Analysing for which interrupting key is pressed - we don't need keyboard API for this
 			if event.interruptingKeyCodes[signalData[4]] then
 				interruptingKeysDown[signalData[4]] = signalData[1] == "key_down" and true or nil
