@@ -1,7 +1,7 @@
 {
 	username = "Ім'я користувача",
 	password = "Пароль",
-	submitPassword = "Повторіть пароль",
+	submitPassword = "Підтвердіть пароль",
 	passwordsArentEqual = "Паролі не збігаються",
 	withoutPassword = "Без пароля:",
 	wallpapers = "Шпалери:",
@@ -9,14 +9,14 @@
 	applications = "Сторонні додатки:",
 	languages = "Пакети підтримки мов:",
 	accept = "Я приймаю:",
-	select = "Виберіть файлову систему для встановлення"
+	select = "Виберіть диск для встановлення",
 	erase = "Стерти",
 	used = "використовуваний",
 	setup = "Налаштування профілю",
 	customize = "Налаштування завантажень",
-	flashing = "Записуємо EEPROM..."
+	flashing = "Записуємо EEPROM...",
 	creating = "Створення профілю користувача...",
 	installing = "Встановлення",
-	installed = "MineOS встановлений. Насолоджуйтесь!",
-	reboot = "Перезавантажити",
+	installed = "MineOS встановлена. Насолоджуйтесь!",
+	reboot = "Перезавантажити"
 }
