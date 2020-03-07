@@ -591,7 +591,6 @@ end
 --------------------------------------------------------------------------------
 
 return {
-	getCoordinates = getCoordinates,
 	getIndex = getIndex,
 	setDrawLimit = setDrawLimit,
 	resetDrawLimit = resetDrawLimit,

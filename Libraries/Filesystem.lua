@@ -302,7 +302,7 @@ local function seek(self, pizda, cyka)
 
 		return result, reason
 	else
-		error("bad argument #2 ('set', 'cur' or 'end' expected, got " .. tostring(whence) .. ")")
+		error("bad argument #2 ('set', 'cur' or 'end' expected, got " .. tostring(pizda) .. ")")
 	end
 end
 
