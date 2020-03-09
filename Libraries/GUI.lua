@@ -198,7 +198,7 @@ end
 local function containerObjectMoveForward(object)
 	local objectIndex = containerObjectIndexOf(object)
 	if objectIndex < #object.parent.children then
-		object.parent.children[index], object.parent.children[index + 1] = object.parent.children[index + 1], object.parent.children[index]
+		object.parent.children[objectIndex], object.parent.children[objectIndex + 1] = object.parent.children[objectIndex + 1], object.parent.children[objectIndex]
 	end
 	
 	return object
@@ -1492,7 +1492,6 @@ function GUI.switch(x, y, width, activeColor, passiveColor, pipeColor, state)
 	}
 	switch.draw = switchDraw
 	switch.state = state or false
-	switch.update = switchUpdate
 	switch.animated = true
 	switch.animationDuration = GUI.SWITCH_ANIMATION_DURATION
 	switch.setState = switchSetState
@@ -2063,7 +2062,7 @@ local function filesystemChooserDraw(object)
 	screen.drawText(object.x + object.width - math.floor(tipWidth / 2) - 1, y, object.pressed and object.colors.tipBackground or object.colors.tipText, "…")
 	screen.drawText(object.x + 1, y, object.colors.text, text.limit(object.path or object.placeholderText, object.width - tipWidth - 2, "left"))
 
-	return filesystemChooser
+	return object
 end
 
 local function filesystemChooserAddExtensionFilter(object, extension)
@@ -2115,7 +2114,6 @@ end
 function GUI.filesystemChooser(x, y, width, height, backgroundColor, textColor, tipBackgroundColor, tipTextColor, path, submitButtonText, cancelButtonText, placeholderText, filesystemDialogPath)
 	local object = GUI.object(x, y, width, height)
 	
-	object.eventHandler = comboBoxEventHandler
 	object.colors = {
 		tipBackground = tipBackgroundColor,
 		tipText = tipTextColor,

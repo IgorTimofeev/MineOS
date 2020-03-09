@@ -45,8 +45,8 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
-local function rawRequest(url, postData, headers, chunkHandler, chunkSize)
-	local pcallSuccess, requestHandle, requestReason = pcall(component.get("internet").request, url, postData, headers)
+local function rawRequest(url, postData, headers, chunkHandler, chunkSize, method)
+	local pcallSuccess, requestHandle, requestReason = pcall(component.get("internet").request, url, postData, headers, method)
 	if pcallSuccess then
 		if requestHandle then
 			while true do
@@ -70,11 +70,17 @@ local function rawRequest(url, postData, headers, chunkHandler, chunkSize)
 	end
 end
 
-local function request(url, postData, headers)
+local function request(url, postData, headers, method)
 	local data = ""
-	local success, reason = rawRequest(url, postData, headers, function(chunk)
-		data = data .. chunk
-	end)
+	local success, reason = rawRequest(
+		url,
+		postData,
+		headers,
+			function(chunk)
+			data = data .. chunk
+		end,
+		method
+	)
 
 	if success then
 		return data
