@@ -40,7 +40,7 @@ local GUI = {
 	CONTEXT_MENU_DEFAULT_TEXT_COLOR = 0x2D2D2D,
 	CONTEXT_MENU_DEFAULT_BACKGROUND_COLOR = 0xFFFFFF,
 	CONTEXT_MENU_PRESSED_BACKGROUND_COLOR = 0x3366CC,
-	CONTEXT_MENU_PRESSED_TEXT_COLOR = 0xFFFFFF,
+	CONTEXT_MENU_PRESSED_TEXT_COLOR = 0xFFFFFF,	
 	CONTEXT_MENU_DISABLED_COLOR = 0x878787,
 	CONTEXT_MENU_BACKGROUND_TRANSPARENCY = 0.18,
 	CONTEXT_MENU_SHADOW_TRANSPARENCY = 0.4,
@@ -1087,7 +1087,7 @@ local function codeViewDraw(codeView)
 					codeView.indentationWidth,
 					patterns,
 					colorScheme,
-					codeView.lines[i]
+					unicode.sub(codeView.lines[i], 1, codeView.codeAreaWidth - 1)
 				)
 			else
 				screen.drawText(
