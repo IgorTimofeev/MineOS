@@ -1087,7 +1087,8 @@ local function codeViewDraw(codeView)
 					codeView.indentationWidth,
 					patterns,
 					colorScheme,
-					codeView.lines[i]
+					codeView.lines[i],
+					codeView.width + 1
 				)
 			else
 				screen.drawText(
@@ -3713,8 +3714,14 @@ end
 
 ---------------------------------------------------------------------------------------------------
 
-function GUI.highlightString(x, y, fromChar, indentationWidth, patterns, colorScheme, s)	
-	local stringLength, x1, y1, x2, y2 = unicode.len(s), screen.getDrawLimit()
+function GUI.highlightString(x, y, fromChar, indentationWidth, patterns, colorScheme, s, maximumLineLength)	
+	local stringLength, x1, y1, x2, y2 = unicode.len(s)
+	
+	if maximumLineLength then
+		x1, x2 = x, maximumLineLength
+	else
+		x1, y1, x2, y2 = screen.getDrawLimit()
+	end
 
 	fromChar = fromChar or 1
 	if x < x1 then
