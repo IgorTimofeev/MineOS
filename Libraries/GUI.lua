@@ -1076,12 +1076,9 @@ local function codeViewDraw(codeView)
 	end
 
 	-- Code strings
-	local x1, y1, x2, y2 = screen.getDrawLimit()
-	local endY = codeView.y + codeView.height - 1
-	screen.setDrawLimit(codeView.x, codeView.y, codeView.x + codeView.width - 1, endY)
 	y = codeView.y
 	for i = codeView.fromLine, toLine do
-		if codeView.lines[i] and y < endY then
+		if codeView.lines[i] then
 			if codeView.syntaxHighlight then
 				GUI.highlightString(
 					codeView.codeAreaPosition + 1,
@@ -1111,8 +1108,6 @@ local function codeViewDraw(codeView)
 		end
 	end
 
-	screen.setDrawLimit(x1, y1, x2, y2)
-	
 	-- Scrollbars
 	if #codeView.lines > codeView.height then
 		codeView.verticalScrollBar.colors.background, codeView.verticalScrollBar.colors.foreground = colorScheme.scrollBarBackground, colorScheme.scrollBarForeground
