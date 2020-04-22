@@ -495,7 +495,7 @@ end)
 addStage(function()
 	checkLicense()
 
-	local lines = text.wrap({request(repositoryURL .. "LICENSE")}, layout.width - 2)
+	local lines = text.wrap({request("LICENSE")}, layout.width - 2)
 	local textBox = layout:addChild(GUI.textBox(1, 1, layout.width, layout.height - 3, 0xF0F0F0, 0x696969, lines, 1, 1, 1))
 
 	layout:addChild(acceptSwitchAndLabel)
