@@ -112,7 +112,9 @@ module.onTouch = function()
 
 	addUserButton.onTouch = function()
 		local name = "User #" .. math.random(0xFFFFFF)
-		system.createUser(name, userSettings.localizationLanguage, nil, true, true)
+
+		system.createUser(name, userSettings.localizationLanguage, nil, userSettings.interfaceWallpaperEnabled, userSettings.interfaceScreensaverEnabled)
+		
 		usersComboBox:addItem(name)
 		usersComboBox.selectedItem = usersComboBox:count()
 	end
