@@ -8,6 +8,7 @@ local screen = require("Screen")
 local GUI = require("GUI")
 local paths = require("Paths")
 local system = require("System")
+local event = require("Event")
 
 ----------------------------------------- cyka -----------------------------------------
 
