@@ -92,7 +92,7 @@ function system.getDefaultUserSettings()
 
 		interfaceScreensaverEnabled = false,
 		interfaceScreensaverPath = paths.system.screensavers .. "Space.lua",
-		interfaceScreensaverDelay = 20,
+		interfaceScreensaverDelay = 50,
 		
 		interfaceTransparencyEnabled = true,
 		interfaceTransparencyDock = 0.4,
