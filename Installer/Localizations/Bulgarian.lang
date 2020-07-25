@@ -3,6 +3,7 @@
 	password = "Парола",
 	submitPassword = "Потвърдете паролата",
 	passwordsArentEqual = "Паролите не съвпадат",
+	usernameInvalid = "Invalid username",
 	withoutPassword = "Няма парола:",
 	wallpapers = "Тапети:",
 	screensavers = "Скрийнсейвъри:",

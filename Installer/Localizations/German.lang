@@ -3,6 +3,7 @@
 	password = "Passwort",
 	submitPassword = "Passwort Absenden",
 	passwordsArentEqual = "Passwörter sind nicht gleich",
+	usernameInvalid = "Invalid username",
 	withoutPassword = "Ohne Passwort:",
 	wallpapers = "Wallpaper:",
 	screensavers = "Bildschirmschoner:",

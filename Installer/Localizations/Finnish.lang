@@ -3,6 +3,7 @@
 	password = "Salasana",
 	submitPassword = "Vahvista salasana",
 	passwordsArentEqual = "Salasanat eivät täsmää, yritä uudestaan",
+	usernameInvalid = "Invalid username",
 	withoutPassword = "Älä käytä salasanaa:",
 	wallpapers = "Taustakuvat:",
 	screensavers = "Näytönsäästäjät:",

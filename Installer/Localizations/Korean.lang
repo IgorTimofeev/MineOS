@@ -3,6 +3,7 @@
 	password = "암호",
 	submitPassword = "암호 확인",
 	passwordsArentEqual = "암호가 틀립니다. 다시 시도하세요.",
+	usernameInvalid = "Invalid username",
 	withoutPassword = "암호를 사용하지 않습니다:",
 	wallpapers = "배경화면:",
 	screensavers = "화면보호기:",

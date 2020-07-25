@@ -3,6 +3,7 @@
 	password = "Wachtwoord",
 	submitPassword = "Verzend wachtwoord",
 	passwordsArentEqual = "Wachtwoorden komen niet overeen",
+	usernameInvalid = "Invalid username",
 	withoutPassword = "Zonder wachtwoord:",
 	wallpapers = "Achtergronden:",
 	screensavers = "Screensavers:",

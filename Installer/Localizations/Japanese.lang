@@ -3,6 +3,7 @@
 	password = "パスワード",
 	submitPassword = "パスワードを送信",
 	passwordsArentEqual = "パスワードが違います",
+	usernameInvalid = "Invalid username",
 	withoutPassword = "パスワードなし:",
 	wallpapers = "壁紙:",
 	screensavers = "スクリーンセーバー:",

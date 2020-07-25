@@ -3,6 +3,7 @@
 	password = "Mot de passe",
 	submitPassword = "Enregistrer le mot de passe",
 	passwordsArentEqual = "Les mots de passe ne sont pas les mêmes. Veuillez réessayer.",
+	usernameInvalid = "Invalid username",
 	withoutPassword = "Ne pas utiliser de mot de passe:",
 	wallpapers = "Fond d'écran:",
 	screensavers = "Écran de veille:",

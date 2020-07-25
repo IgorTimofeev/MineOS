@@ -3,6 +3,7 @@
 	password = "Password",
 	submitPassword = "Submit password",
 	passwordsArentEqual = "Passwords are not the same. Try Again.",
+	usernameInvalid = "Invalid username",
 	withoutPassword = "Don't use a password:",
 	wallpapers = "Wallpapers:",
 	screensavers = "Screensavers:",
