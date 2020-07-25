@@ -285,7 +285,7 @@ local stages = {}
 local usernameInput = newInput("")
 local passwordInput = newInput("", false, "•")
 local passwordSubmitInput = newInput("", false, "•")
-local passwordMatchText = GUI.text(1, 1, 0xCC0040, "")
+local usernamePasswordText = GUI.text(1, 1, 0xCC0040, "")
 local passwordSwitchAndLabel = newSwitchAndLabel(26, 0x66DB80, "", false)
 
 local wallpapersSwitchAndLabel = newSwitchAndLabel(30, 0xFF4980, "", true)
@@ -305,7 +305,6 @@ for i = 1, #files.localizations do
 		usernameInput.placeholderText = localization.username
 		passwordInput.placeholderText = localization.password
 		passwordSubmitInput.placeholderText = localization.submitPassword
-		passwordMatchText.text = localization.passwordsArentEqual
 		passwordSwitchAndLabel.label.text = localization.withoutPassword
 		wallpapersSwitchAndLabel.label.text = localization.wallpapers
 		screensaversSwitchAndLabel.label.text = localization.screensavers
@@ -334,8 +333,23 @@ local function loadStage()
 end
 
 local function checkUserInputs()
-	nextButton.disabled = #usernameInput.text == 0 or (not passwordSwitchAndLabel.switch.state and (#passwordInput.text == 0 or #passwordSubmitInput.text == 0 or passwordInput.text ~= passwordSubmitInput.text))
-	passwordMatchText.hidden = passwordSwitchAndLabel.switch.state or #passwordInput.text == 0 or #passwordSubmitInput.text == 0 or passwordInput.text == passwordSubmitInput.text
+	local nameEmpty = #usernameInput.text == 0
+	local nameVaild = usernameInput.text:match("^[%w%s_]+$")
+	local passValid = passwordSwitchAndLabel.switch.state or #passwordInput.text == 0 or #passwordSubmitInput.text == 0 or passwordInput.text == passwordSubmitInput.text
+
+	if (nameEmpty or nameVaild) and passValid then
+		usernamePasswordText.hidden = true
+		nextButton.disabled = nameEmpty or not nameVaild or not passValid
+	else
+		usernamePasswordText.hidden = false
+		nextButton.disabled = true
+
+		if nameVaild then
+			usernamePasswordText.text = localization.passwordsArentEqual
+		else
+			usernamePasswordText.text = localization.usernameInvalid
+		end
+	end
 end
 
 local function checkLicense()
@@ -474,7 +488,7 @@ addStage(function()
 	layout:addChild(usernameInput)
 	layout:addChild(passwordInput)
 	layout:addChild(passwordSubmitInput)
-	layout:addChild(passwordMatchText)
+	layout:addChild(usernamePasswordText)
 	layout:addChild(passwordSwitchAndLabel)
 end)
 
