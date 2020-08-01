@@ -9,10 +9,10 @@
 	networkFTPPort = "Server port",
 	networkFTPUser = "Benutzer",
 	networkFTPPassword = "Passwort",
-	updatingFileList = "Aktualisieren der Dateiliste...",
+	updatingFileList = "Aktualisiere die Dateiliste...",
 	network = "Netzwerk",
 	networkTimeout = "Remotecomputer reagiert nicht",
-	networkAccessDenied = "Der Zugriff auf das Dateisystem des Remotecomputers wurde verweigert. Wenden Sie sich an den Eigentümer, um entsprechende Berechtigungen zu erhalten",
+	networkAccessDenied = "Der Zugriff auf das Dateisystem des Remotecomputers wurde verweigert. Wende dich an den Eigentümer, um entsprechende Berechtigungen zu erhalten",
 	networkAllowReadAndWrite = "Zugriff auf das Dateisystem",
 	networkModemNotAvailable = "Modem anschließen, um Netzwerkfunktionen zu verwenden",
 	networkState = "Netzwerk Aktivieren/Deaktivieren",
@@ -55,7 +55,7 @@
 	path = "Pfad",
 	folder = "Ordner",
 	unknown = "Unbekannt",
-	calculatingSize = "Größe Berrechnen...",
+	calculatingSize = "Berechne Größe...",
 
 	properties = "Eigenschaft",
 	newFolderFromChosen = "Neuen Ordner Wählen.",
@@ -101,8 +101,8 @@
 	reboot = "Neustarten",
 
 	shortcutIsCorrupted = "Verknüpfung ist Fehlerhaft oder nicht mehr Vorhanden.",
-	sortAutomatically = "Am raster ausrichten",
-	onDesktop = "Auf dem desktop",
+	sortAutomatically = "Am Raster ausrichten",
+	onDesktop = "Auf dem Desktop",
 	inCurrentDirectory = "Im aktuellen Verzeichnis",
 
 	errorWhileRunningProgram = "Fehler beim ausführen ",
