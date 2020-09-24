@@ -10,8 +10,8 @@
 	free = "Libre",
 	options = "Opciones",
 	arguments = "Argumentos",
-	format = "Format",
-	execute = "Execute",
+	format = "Formatear",
+	execute = "Ejecutar",
 	waitingEvents = "Esperando eventos...",
 	processingEnabled = "Event processing enabled",
 	luaInfo = {
