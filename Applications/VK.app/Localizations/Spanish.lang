@@ -27,9 +27,9 @@
 	userIsYourFriend = "Es tu amigo",
 
 	profileCounters = {
-		{ field = "followers", description = " seguidores" },
-		{ field = "friends", description = " amigos" },
-		{ field = "photos", description = " fotos" },
+		{ field = "seguidores", description = " seguidores" },
+		{ field = "amigos", description = " amigos" },
+		{ field = "fotos", description = " fotos" },
 		{ field = "videos", description = " videos" },
 		{ field = "audios", description = " audio" },
 	},
