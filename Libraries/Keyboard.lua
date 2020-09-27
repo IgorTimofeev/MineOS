@@ -1,13 +1,13 @@
 local keyboard = {
   -- Control
-  RIGHT_CONTROL = 29,
-  LEFT_CONTROL = 157,
+  LEFT_CONTROL = 29,
+  RIGHT_CONTROL = 157,
   -- Shift
-  RIGHT_SHIFT = 42,
-  LEFT_SHIFT = 54,
+  LEFT_SHIFT = 42,
+  RIGHT_SHIFT = 54,
   -- Alft
-  RIGHT_ALT = 56,
-  LEFT_ALT = 184,
+  LEFT_ALT = 56,
+  RIGHT_ALT = 184,
   -- Command (Mac & Linux) or Windows Key (Windows), I added both in case someone is from windows
   COMMAND_KEY = 219,
   WINDOWS_KEY = 219,
