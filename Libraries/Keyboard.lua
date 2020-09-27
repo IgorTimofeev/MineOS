@@ -5,7 +5,7 @@ local keyboard = {
   -- Shift
   LEFT_SHIFT = 42,
   RIGHT_SHIFT = 54,
-  -- Alft
+  -- Alt
   LEFT_ALT = 56,
   RIGHT_ALT = 184,
   -- Command (Mac & Linux) or Windows Key (Windows), I added both in case someone is from windows
