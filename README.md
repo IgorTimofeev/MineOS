@@ -5,16 +5,18 @@ Hello again, dear friend. Thank you for being with us and supporting our ideas t
 MineOS is a GUI based operating system for the Open Computers minecraft mod. It has extensive and powerful customisation abilities as well as an app market to publish your creations among the community.
 Here's a list of a few features:
 
--   Multitasking
--   Double buffered graphical user interface
+-   Multi-moniter support
+-   A sleek, Double buffered graphical user interface for easy navigation and use of the computer
 -   Language packs and software localization
 -   Multiple user profiles with password authentication
 -   Own EEPROM firmware with boot volume choose/format/rename features and Internet Recovery mode
 -   File sharing over the local network via modems
+-   A GUI file explorer
 -   Client connections to real world FTP servers
 -   An internal IDE with syntax highlighting and debugger
--   App Market for publishing programs for every MineOS user
+-   App Market for publishing and downloading programs, scripts and libraries for every MineOS user
 -   Error reporting system with the possibility to send information to developers
+-   Nanomachine interface for simple buffing
 -   Animations, wallpapers, screensavers, color schemes and huge customization possibilities
 -   Open source system API and detailed illustrated documentations
 
@@ -28,7 +30,7 @@ You can paste it to console using middle mouse button or insert key (by default)
 
 	wget -f https://raw.githubusercontent.com/IgorTimofeev/MineOS/master/Installer/BIOS.lua /tmp/bios.lua && flash -q /tmp/bios.lua && reboot
 
-After a moment, a nice system installer will be shown. You will be prompted to select your preferred language, select and format a boot volume, create a user profile and customize some settings. After that, the system will be successfully installed. More powerful setups will be able to install it faster so it is reccomended to use 
+After a moment, a nice system installer will be shown. You will be prompted to select your preferred language, select and format a boot volume, create a user profile and customize some settings. After that, the system will be successfully installed. More powerful setups will be able to install it faster so it is reccomended to use a more powerful computer/server for installing the first time.
 
 ## How to \*do_something\*?
 
