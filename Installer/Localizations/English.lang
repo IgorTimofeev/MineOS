@@ -9,7 +9,7 @@
 	screensavers = "Screensavers:",
 	applications = "Third party apps:",
 	languages = "Language packs:",
-	accept = "I accept this shit:",
+	accept = "I accept this:",
 	select = "Select disk for installation",
 	erase = "Erase",
 	used = "used",
