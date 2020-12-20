@@ -334,7 +334,7 @@ end
 
 local function checkUserInputs()
 	local nameEmpty = #usernameInput.text == 0
-	local nameVaild = usernameInput.text:match("^[%w%s_]+$")
+	local nameVaild = usernameInput.text:match("^%w[%w%s_]+$")
 	local passValid = passwordSwitchAndLabel.switch.state or #passwordInput.text == 0 or #passwordSubmitInput.text == 0 or passwordInput.text == passwordSubmitInput.text
 
 	if (nameEmpty or nameVaild) and passValid then
