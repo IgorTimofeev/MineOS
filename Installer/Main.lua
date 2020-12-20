@@ -1,7 +1,7 @@
 
 local EEPROMProxy, internetProxy, GPUProxy = component.proxy(component.list("eeprom")()), component.proxy(component.list("internet")()), component.proxy(component.list("gpu")())
 
-local repositoryURL = "https://raw.githubusercontent.com/IgorTimofeev/MineOS/master/"
+local repositoryURL = "https://raw.githubusercontent.com/Gnog3/MineOS/master/"
 local installerURL = "Installer/"
 local EFIURL = "EFI/Minified.lua"
 
