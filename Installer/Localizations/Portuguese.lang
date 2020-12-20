@@ -1,0 +1,23 @@
+{
+	username = "Nome de usuário",
+	password = "Senha",
+	submitPassword = "Enviar senha",
+	passwordsArentEqual = "As senhas não são iguais. Tente novamente.",
+	usernameInvalid = "Nome de usuário inválido",
+	withoutPassword = "Não use uma senha:",
+	wallpapers = "Papéis de parede:",
+	screensavers = "Protetores de tela:",
+	applications = "Aplicativos de terceiros:",
+	languages = "Pacotes de idiomas:",
+	accept = "Aceito:",
+	select = "Selecione o disco para instalação",
+	erase = "Apagar",
+	used = "usado",
+	setup = "Configure seu perfil",
+	customize = "Personalize downloads",
+	flashing = "EEPROM piscando ...",
+	creating = "Criando perfil de usuário ...",
+	installing = "Instalando",
+	installed = "O MineOS foi instalado. Aproveite!",
+	reboot = "Reinicie o computador"
+}
