@@ -11,13 +11,12 @@
 	languages = "Pakiety językowe:",
 	accept = "Akceptuję to gówno:",
 	select = "Wybierz dysk do instalacji",
-	erase = "Usuń",
-	used = "używany",
+	erase = "Formatuj",
+	used = "w użyciu",
 	setup = "Skonfiguruj swój profil",
-	customize = "Dostosuj pobieranie",
-	flashing = "Miga EEPROM ...",
+	customize = "Dostosuj system",
+	flashing = "Flashowanie EEPROM ...",
 	creating = "Tworzenie profilu użytkownika ...",
 	installing = "Instalowanie",
 	installed = "MineOS zostało zainstalowane. Ciesz się!",
 	reboot = "Uruchom ponownie komputer"
-}
