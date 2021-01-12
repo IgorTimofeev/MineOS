@@ -13,6 +13,7 @@ return {
 	front = 3,
 	right = 4,
 	left = 5,
+	unknown = 6,
 	
 	down = 0,
 	up = 1,
