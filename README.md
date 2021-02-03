@@ -1,3 +1,4 @@
+English | [中文(简体)](https://github.com/IgorTimofeev/MineOS/blob/master/README-zh_CN.md)
 
 ## MineOS Standalone has released!
 

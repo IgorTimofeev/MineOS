@@ -1,0 +1,18 @@
+{
+	activeEffects = "目前的效果",
+	sent = "已发送",
+	received = "已接收",
+	nothingFound = "没有找到效果",
+	instructionTitle = "命令",
+	instructionData = "On the left side of the screen there are switches that tell nanites to activate biocontacts. Each person has a unique configuration of biocontacts, allowing nanites to impose various buffs / debuffs. Activating 2 contacts is safe for life, a larger number will cause serious injuries. You can activate up to 4 contacts at a time. Experiment, look for the desired effects and add them to your favorites for later use. The button \"save configuration\" is useful for transferring to your other configuration of nanites (for this you need to have an created instance in the inventory)",
+	syncWelcome = "欢迎",
+	syncInfo = "Before using the program, create and drink a packet of nanites. Then approach the system unit or server rack with the wireless modem installed for synchronization",
+	syncProgress = "There is a synchronization with nanites, do not leave the computer until the process is completed:",
+	syncContacts = "biocontact update %d of %d",
+	favourites = "选定的效果",
+	saveConfiguration = "保存配置",
+	saveFailed = "保存失败: in the inventory there are no unconfigured nanites",
+	notSynced = "There was an out-of-sync with nanites. It is recommended to close the program and start again.",
+	notWireless = "此电脑有网卡, 但纳米机器人只能通过无线网络感知命令. 插入无线网卡, 然后重试",
+	noModem = "The computer does not have a wireless modem to send and receive nanite commands over a network",
+}
