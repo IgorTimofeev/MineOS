@@ -78,7 +78,15 @@ local localization = system.getLocalization(currentScriptDirectory .. "Localizat
 local currentLayer = 0
 local model
 local savePath
-local shapeLimit = 24
+
+if component.isAvailable("printer3d") then
+	local printer3d = component.get("printer3d")
+	local shapeLimit = printer3d.getMaxShapeCount()
+	--Might also be getShapeCount(), as it's doc info talks about a config file.
+else
+	local shapeLimit = 24
+end
+
 local viewPixelWidth, viewPixelHeight = 4, 2
 
 local colors, hue, hueStep = {}, 0, 360 / shapeLimit
