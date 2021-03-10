@@ -81,10 +81,10 @@ local savePath
 
 if component.isAvailable("printer3d") then
 	local printer3d = component.get("printer3d")
-	local shapeLimit = printer3d.getMaxShapeCount()
-	--Might also be getShapeCount(), as it's doc info talks about a config file.
+	shapeLimit = printer3d.getMaxShapeCount()
+	--Don't use updateShapeLimit, as colors and hue stuff is updated shortly.
 else
-	local shapeLimit = 24
+	shapeLimit = 24
 end
 
 local viewPixelWidth, viewPixelHeight = 4, 2
@@ -93,6 +93,20 @@ local colors, hue, hueStep = {}, 0, 360 / shapeLimit
 for i = 1, shapeLimit do
 	colors[i] = color.HSBToInteger(hue, 1, 1)
 	hue = hue + hueStep
+end
+
+local function updateShapeLimit(newLimit)
+	--No need to update anything if new limit is the same as old.
+	if newLimit == shapeLimit:
+		return
+	--Otherwise, we need to update both limit and all the colors that use the limit.
+	shapeLimit = newLimit
+	
+	colors, hue, hueStep = {}, 0, 360 / shapeLimit
+	for i = 1, shapeLimit do
+		colors[i] = color.HSBToInteger(hue, 1, 1)
+		hue = hue + hueStep
+	end
 end
 
 local workspace, window, menu = system.addWindow(GUI.filledWindow(1, 1, 100, screen.getHeight() - 1, 0x1E1E1E))
@@ -294,7 +308,17 @@ end
 local function updateProxies()
 	updateProxy("hologram")
 	updateHologramWidgets()
-	printButton.disabled = not updateProxy("printer3d")
+	local hasPrinter = updateProxy("printer3d")
+	
+	--Update shape limit if we have a printer connected.
+	--Probably halfway laggy because it's updating colors now too though,
+	--but necessary if we want things to work right with no unintended consequences.
+	if hasPrinter then
+		local printer3d = component.get("printer3d")
+		updateShapeLimit(printer3d.getMaxShapeCount())
+	end
+	
+	printButton.disabled = not hasPrinter
 end
 
 updateProxies()
