@@ -309,6 +309,8 @@ local function updateProxies()
 	--Update shape limit if we have a printer connected.
 	--Probably halfway laggy because it's updating colors now too though,
 	--but necessary if we want things to work right with no unintended consequences.
+	--I would have this update in the component add remove part, but updateProxy is
+	--awesome and tells us if a component is present or not.
 	if hasPrinter then
 		local printer3d = component.get("printer3d")
 		updateShapeLimit(printer3d.getMaxShapeCount())
