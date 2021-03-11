@@ -408,7 +408,6 @@ local function load(path)
 end
 
 local function save(path)
-	GUI.alert(path)
 	filesystem.writeTable(path, model, true)
 	updateSavePath(path)
 end
