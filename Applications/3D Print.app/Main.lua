@@ -79,26 +79,15 @@ local currentLayer = 0
 local model
 local savePath
 
-if component.isAvailable("printer3d") then
-	local printer3d = component.get("printer3d")
-	shapeLimit = printer3d.getMaxShapeCount()
-	--Don't use updateShapeLimit, as colors and hue stuff is updated shortly.
-else
-	shapeLimit = 24
-end
-
 local viewPixelWidth, viewPixelHeight = 4, 2
-
-local colors, hue, hueStep = {}, 0, 360 / shapeLimit
-for i = 1, shapeLimit do
-	colors[i] = color.HSBToInteger(hue, 1, 1)
-	hue = hue + hueStep
-end
+local shapeLimit = 0--Temporary, will be set properly shortly
 
 local function updateShapeLimit(newLimit)
 	--No need to update anything if new limit is the same as old.
-	if newLimit == shapeLimit:
+	if newLimit == shapeLimit then
 		return
+	end
+	
 	--Otherwise, we need to update both limit and all the colors that use the limit.
 	shapeLimit = newLimit
 	
@@ -107,6 +96,13 @@ local function updateShapeLimit(newLimit)
 		colors[i] = color.HSBToInteger(hue, 1, 1)
 		hue = hue + hueStep
 	end
+end
+
+if component.isAvailable("printer3d") then
+	local printer3d = component.get("printer3d")
+	updateShapeLimit(printer3d.getMaxShapeCount())
+else
+	updateShapeLimit(24)
 end
 
 local workspace, window, menu = system.addWindow(GUI.filledWindow(1, 1, 100, screen.getHeight() - 1, 0x1E1E1E))
