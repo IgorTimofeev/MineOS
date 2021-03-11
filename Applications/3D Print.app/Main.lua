@@ -286,6 +286,19 @@ local function updateAddRemoveButtonsState()
 	removeShapeButton.disabled = #model.shapes < 1 or shapesComboBox:count() < 1
 end
 
+local function updateComboBoxFromModel()
+	shapesComboBox:clear()
+	
+	for i = 1, #model.shapes do
+		if checkShapeState(model.shapes[i]) then
+			local item = shapesComboBox:addItem(tostring(i))
+
+			item.shapeIndex = i
+			item.color = colors[i]
+		end
+	end
+end
+
 local function updateProxies()
 	updateProxy("hologram")
 	updateHologramWidgets()
@@ -309,6 +322,15 @@ local function updateProxies()
 		for i = 1, shapeLimit do
 			colors[i] = color.HSBToInteger(hue, 1, 1)
 			hue = hue + hueStep
+		end
+
+		-- Truncating existing model if it's too fat chick
+		if model and #model.shapes > newLimit then
+			while #model.shapes > newLimit do
+				table.remove(model.shapes, #model.shapes)
+			end
+
+			updateComboBoxFromModel()
 		end
 	end
 
@@ -349,19 +371,6 @@ local function updateHologram()
 		for x = initialX - 1, initialX + 16 do
 			proxies.hologram.set(x, initialY - 1, initialZ - currentLayer, projectorPaletteIndex)
 			proxies.hologram.set(x, initialY + 16, initialZ - currentLayer, projectorPaletteIndex)
-		end
-	end
-end
-
-local function updateComboBoxFromModel()
-	shapesComboBox:clear()
-	
-	for i = 1, #model.shapes do
-		if checkShapeState(model.shapes[i]) then
-			local item = shapesComboBox:addItem(tostring(i))
-
-			item.shapeIndex = i
-			item.color = colors[i]
 		end
 	end
 end
@@ -601,7 +610,7 @@ view.eventHandler = function(workspace, view, e1, e2, e3, e4, e5)
 				updateHologram()
 			end
 		end
-	elseif e1 == "component_added" or e1 == "component_removed" and (e3 == "printer3d" or e3 == "hologram") then
+	elseif (e1 == "component_added" or e1 == "component_removed") and (e3 == "printer3d" or e3 == "hologram") then
 		updateProxies()
 		updateAddRemoveButtonsState()
 
