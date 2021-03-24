@@ -54,6 +54,11 @@ end
 encodingMethodsSave[5] = function(file, picture)
 	file:writeBytes(
 		bit32.rshift(picture[1], 8),
+		bit32.band(picture[1], 0xFF)
+	)
+
+	file:writeBytes(
+		bit32.rshift(picture[2], 8),
 		bit32.band(picture[2], 0xFF)
 	)
 
