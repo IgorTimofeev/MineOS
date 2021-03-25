@@ -20,7 +20,8 @@ local function updateProxy(name)
 	proxies[name] = component.list(name)()
 	if proxies[name] then
 		proxies[name] = component.proxy(proxies[name])
-		return true
+
+		return proxies[name]
 	end
 end
 
@@ -55,10 +56,12 @@ local function print(model)
 	
 	for i = 1, #model.shapes do
 		local shape = model.shapes[i]
+
 		proxy.addShape(shape[1], shape[2], shape[3], shape[4], shape[5], shape[6], shape.texture or "empty", shape.state, shape.tint)
 	end
 
 	local success, reason = proxy.commit(1)
+
 	if not success then
 		GUI.alert(localization.failedToPrint .. ": " .. reason)
 	end
@@ -68,6 +71,7 @@ end
 if options.p then
 	updateProxy("printer3d")
 	print(filesystem.readTable(args[1]))
+
 	return
 end
 
@@ -76,19 +80,13 @@ end
 local currentScriptDirectory = filesystem.path(system.getCurrentScript())
 local localization = system.getLocalization(currentScriptDirectory .. "Localizations/")
 local currentLayer = 0
-local model
-local savePath
-local shapeLimit = 24
 local viewPixelWidth, viewPixelHeight = 4, 2
 
-local colors, hue, hueStep = {}, 0, 360 / shapeLimit
-for i = 1, shapeLimit do
-	colors[i] = color.HSBToInteger(hue, 1, 1)
-	hue = hue + hueStep
-end
+local model
+local savePath
+local shapeLimit
 
 local workspace, window, menu = system.addWindow(GUI.filledWindow(1, 1, 100, screen.getHeight() - 1, 0x1E1E1E))
--- local workspace, window, menu = system.addWindow(GUI.filledWindow(1, 1, 92, 32, 0x1E1E1E))
 
 --------------------------------------------------------------------------------
 
@@ -206,7 +204,7 @@ modelList:setDirection(GUI.DIRECTION_HORIZONTAL)
 local disabledListItem = modelList:addItem(localization.disabled)
 local enabledListItem = modelList:addItem(localization.enabled)
 
-local elementComboBox = addComboBox()
+local shapesComboBox = addComboBox()
 
 local textureInput = addInput("", localization.texture, true)
 local tintColorSelector = toolLayout:addChild(GUI.colorSelector(1, 1, toolLayout.width - 2, 1, 0x330040, localization.tintColor))
@@ -283,16 +281,66 @@ local function updateHologramWidgets()
 	addObjectsTo(hologramWidgetsLayout, objects)
 end
 
+local function updateAddRemoveButtonsState()
+	addShapeButton.disabled = #model.shapes >= shapeLimit
+	removeShapeButton.disabled = #model.shapes < 1 or shapesComboBox:count() < 1
+end
+
+local function updateComboBoxFromModel()
+	shapesComboBox:clear()
+	
+	for i = 1, #model.shapes do
+		if checkShapeState(model.shapes[i]) then
+			local item = shapesComboBox:addItem(tostring(i))
+
+			item.shapeIndex = i
+			item.color = colors[i]
+		end
+	end
+end
+
 local function updateProxies()
 	updateProxy("hologram")
 	updateHologramWidgets()
-	printButton.disabled = not updateProxy("printer3d")
+
+	local printerProxy = updateProxy("printer3d")
+	
+	--Update shape limit if we have a printer connected.
+	--Probably halfway laggy because it's updating colors now too though,
+	--but necessary if we want things to work right with no unintended consequences.
+	--I would have this update in the component add remove part, but updateProxy is
+	--awesome and tells us if a component is present or not.
+	local newLimit = printerProxy and printerProxy.getMaxShapeCount() or 24
+
+	--No need to update anything if new limit is the same as old.
+	if newLimit ~= shapeLimit then
+		--Otherwise, we need to update both limit and all the colors that use the limit.
+		shapeLimit = newLimit
+		
+		colors, hue, hueStep = {}, 0, 360 / shapeLimit
+		
+		for i = 1, shapeLimit do
+			colors[i] = color.HSBToInteger(hue, 1, 1)
+			hue = hue + hueStep
+		end
+
+		-- Truncating existing model if it's too fat chick
+		if model and #model.shapes > newLimit then
+			while #model.shapes > newLimit do
+				table.remove(model.shapes, #model.shapes)
+			end
+
+			updateComboBoxFromModel()
+		end
+	end
+
+	printButton.disabled = not printerProxy
 end
 
 updateProxies()
 
 local function getSelectedShapeIndex()
-	local item = elementComboBox:getItem(elementComboBox.selectedItem)
+	local item = shapesComboBox:getItem(shapesComboBox.selectedItem)
 	return item and item.shapeIndex
 end
 
@@ -327,23 +375,6 @@ local function updateHologram()
 	end
 end
 
-local function updateComboBoxFromModel()
-	elementComboBox:clear()
-	
-	for i = 1, #model.shapes do
-		if checkShapeState(model.shapes[i]) then
-			local item = elementComboBox:addItem(tostring(i))
-			item.shapeIndex = i
-			item.color = colors[i]
-		end
-	end
-end
-
-local function updateAddRemoveButtonsState()
-	addShapeButton.disabled = #model.shapes >= shapeLimit
-	removeShapeButton.disabled = #model.shapes < 1 or elementComboBox:count() < 1
-end
-
 local function updateWidgetsFromModel()
 	labelInput.text = model.label or ""
 	tooltipInput.text = model.tooltip or ""
@@ -369,6 +400,7 @@ local function updateModelFromWidgets()
 	model.lightLevel = lightLevelSlider.value > 0 and lightLevelSlider.value or nil
 
 	local shapeIndex = getSelectedShapeIndex()
+
 	if shapeIndex then
 		model.shapes[shapeIndex].texture = #textureInput.text > 0 and textureInput.text or nil
 		model.shapes[shapeIndex].tint = tintSwitch.state and tintColorSelector.color or nil
@@ -395,10 +427,12 @@ end
 
 saveAsItem.onTouch = function()
 	local filesystemDialog = GUI.addFilesystemDialog(workspace, true, 50, math.floor(window.height * 0.8), "Save", "Cancel", "File name", "/")
+
 	filesystemDialog:setMode(GUI.IO_MODE_SAVE, GUI.IO_MODE_FILE)
 	filesystemDialog:addExtensionFilter(".3dm")
 	filesystemDialog:expandPath(paths.user.desktop)
 	filesystemDialog.filesystemTree.selectedItem = paths.user.desktop
+
 	filesystemDialog.onSubmit = function(path)
 		save(path)
 	end
@@ -408,9 +442,11 @@ end
 
 openItem.onTouch = function()
 	local filesystemDialog = GUI.addFilesystemDialog(workspace, true, 50, math.floor(window.height * 0.8), "Open", "Cancel", "File name", "/")
+
 	filesystemDialog:setMode(GUI.IO_MODE_OPEN, GUI.IO_MODE_FILE)
 	filesystemDialog:addExtensionFilter(".3dm")
 	filesystemDialog:expandPath(paths.user.desktop)
+
 	filesystemDialog.onSubmit = function(path)
 		load(path)
 
@@ -452,11 +488,13 @@ view.draw = function()
 	GUI.drawShadow(view.x, view.y, view.width, view.height, nil, true)
 
 	local selectedShape, shape = getSelectedShapeIndex()
+
 	if selectedShape then
 		for i = 1, #model.shapes do
 			shape = model.shapes[i]
 
 			local focused, x, y, width, height = getShapeDrawingData(shape)
+
 			if focused then
 				screen.drawRectangle(x, y, width, height, i == selectedShape and colors[i] or color.blend(colors[i], 0xFFFFFF, 0.4), 0x0, " ")
 
@@ -484,6 +522,7 @@ toolLayout.eventHandler = function(workspace, toolLayout, e1, e2, e3, e4, e5)
 			end
 		else
 			local child = toolLayout.children[#toolLayout.children]
+
 			if child.localY + child.height - 1 >= toolLayout.localY + toolLayout.height - 1 then
 				v = v - 1
 				toolLayout:setMargin(1, 1, h, v)
@@ -524,9 +563,9 @@ view.eventHandler = function(workspace, view, e1, e2, e3, e4, e5)
 
 				local focused, x, y, width, height = getShapeDrawingData(shape)
 				if focused and e3 >= x and e3 <= x + width - 1 and e4 >= y and e4 <= y + height - 1 then
-					for j = 1, elementComboBox:count() do
-						if elementComboBox:getItem(j).shapeIndex == i then
-							elementComboBox.selectedItem = j
+					for j = 1, shapesComboBox:count() do
+						if shapesComboBox:getItem(j).shapeIndex == i then
+							shapesComboBox.selectedItem = j
 							workspace:draw()
 
 							break
@@ -539,10 +578,12 @@ view.eventHandler = function(workspace, view, e1, e2, e3, e4, e5)
 		end
 	elseif e1 == "drop" then
 		shapeX, shapeY, shapeZ = nil, nil, nil
+
 		updateHologram()
 	elseif e1 == "scroll" then
 		local function fix()
 			local shapeIndex = getSelectedShapeIndex()
+
 			if shapeX and shapeIndex then
 				local shape = model.shapes[shapeIndex]
 				shape[3] = shapeZ
@@ -569,10 +610,11 @@ view.eventHandler = function(workspace, view, e1, e2, e3, e4, e5)
 				updateHologram()
 			end
 		end
-	elseif e1 == "component_added" or e1 == "component_removed" then
+	elseif (e1 == "component_added" or e1 == "component_removed") and (e3 == "printer3d" or e3 == "hologram") then
 		updateProxies()
-		workspace:draw()
+		updateAddRemoveButtonsState()
 
+		workspace:draw()
 		updateHologram()
 	end
 end
@@ -604,6 +646,7 @@ flipButton.onTouch = function()
 
 	for i = 1, #model.shapes do
 		local shape = model.shapes[i]
+
 		if axisComboBox.selectedItem == 1 then
 			fix(shape, 1)
 		elseif axisComboBox.selectedItem == 2 then
@@ -634,7 +677,7 @@ local function addShape()
 	table.insert(model.shapes, {6, 6, 0, 10, 10, 1, state = modelList.selectedItem == 2 or nil, texture = #textureInput.text > 0 and textureInput.text or nil})
 	
 	updateComboBoxFromModel()
-	elementComboBox.selectedItem = elementComboBox:count()
+	shapesComboBox.selectedItem = shapesComboBox:count()
 	updateWidgetsFromModel()
 	updateAddRemoveButtonsState()
 end
@@ -675,7 +718,7 @@ printButton.onTouch = function()
 	print(model)
 end
 
-elementComboBox.onItemSelected = function()
+shapesComboBox.onItemSelected = function()
 	updateWidgetsFromModel()
 
 	workspace:draw()
