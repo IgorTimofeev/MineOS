@@ -294,6 +294,10 @@ window.secondaryColorSelector.draw, window.primaryColorSelector.draw = colorSele
 window.swapColorsButton = window:addChild(GUI.button(1, 1, window.toolsList.width, 1, nil, 0x696969, nil, 0xA5A5A5, ">"))
 window.swapColorsButton.onTouch = swapColors
 
+local function setSavePath(path)
+	savePath, saveItem.disabled = path, path == nil
+end
+
 local function loadImage(path)
 	local result, reason
 	
@@ -304,7 +308,7 @@ local function loadImage(path)
 	end
 
 	if result then
-		savePath, saveItem.disabled = path, false
+		setSavePath(path)
 		addRecentFile(path)
 		window.image.data = result
 	else
@@ -316,13 +320,13 @@ local function save(path)
 	if filesystem.extension(path) == ".pic" then
 		local result, reason = image.save(path, window.image.data, 6)
 		if result then
-			savePath, saveItem.disabled = path, false
+			setSavePath(path)
 			addRecentFile(path)
 		else
 			GUI.alert(reason)
 		end
 	else
-		savePath, saveItem.disabled = path, false
+		setSavePath(path)
 		filesystem.write(path, image.toString(window.image.data))
 	end
 
@@ -344,8 +348,9 @@ local function saveAs()
 	end
 end
 
-local function newNoGUI(width, height)
-	savePath, saveItem.disabled = nil, true
+local function newNoGUI(width, height, path)
+	setSavePath(path)
+
 	window.image.data = {width, height}
 	
 	for i = 1, width * height do
@@ -378,7 +383,7 @@ local function new()
 				widthInput.text:match("%d+") and
 				heightInput.text:match("%d+")
 			then
-				newNoGUI(tonumber(widthInput.text), tonumber(heightInput.text))
+				newNoGUI(tonumber(widthInput.text), tonumber(heightInput.text), nil)
 				window.image.reposition()
 			end
 
@@ -511,7 +516,7 @@ fileItem:addItem("Open from URL").onTouch = function()
 				window.image.reposition()
 
 				filesystem.remove(temporaryPath)
-				savePath, saveItem.disabled = nil, true
+				setSavePath(nil)
 			else
 				GUI.alert(reason)
 			end
@@ -602,10 +607,16 @@ window.actionButtons:moveToFront()
 
 updateRecentColorsButtons()
 
-if (options.o or options.open) and args[1] and filesystem.exists(args[1]) then
-	loadImage(args[1])
+if (options.o or options.open) and args[1] then
+	if filesystem.exists(args[1]) then
+		loadImage(args[1])
+	elseif options.n and args[2] and args[3] then
+		newNoGUI(args[2], args[3], args[1])
+	else
+		newNoGUI(50, 20, nil)
+	end
 else
-	newNoGUI(51, 19)
+	newNoGUI(50, 20, nil)
 end
 
 window:resize(window.width, window.height)
