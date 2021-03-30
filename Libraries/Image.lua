@@ -78,110 +78,28 @@ encodingMethodsLoad[5] = function(file, picture)
 	end
 end
 
-encodingMethodsSave[6] = function(file, picture)
-	local function getGroupSize(t)
-		local size = 0
-
-		for key in pairs(t) do
-			size = size + 1
-		end
-
-		return size
-	end
-
-	-- Grouping picture by it's alphas, symbols and colors
-	local groupedPicture = group(picture, true)
-
-	-- Writing 1 byte per image width and height
-	file:writeBytes(
-		picture[1],
-		picture[2]
-	)
-
-	-- Writing 1 byte for alphas array size
-	file:writeBytes(getGroupSize(groupedPicture))
-
-	for alpha in pairs(groupedPicture) do
-		local symbolsSize = getGroupSize(groupedPicture[alpha])
-
-		file:writeBytes(
-			-- Writing 1 byte for current alpha value
-			math.floor(alpha * 255),
-			-- Writing 2 bytes for symbols array size
-			bit32.rshift(symbolsSize, 8),
-			bit32.band(symbolsSize, 0xFF)
-		)
-
-		for symbol in pairs(groupedPicture[alpha]) do
-			-- Writing current unicode symbol value
-			file:write(symbol)
-			-- Writing 1 byte for backgrounds array size
-			file:writeBytes(getGroupSize(groupedPicture[alpha][symbol]))
-
-			for background in pairs(groupedPicture[alpha][symbol]) do
-				file:writeBytes(
-					-- Writing 1 byte for background color value (compressed by color)
-					background,
-					-- Writing 1 byte for foregrounds array size
-					getGroupSize(groupedPicture[alpha][symbol][background])
-				)
-
-				for foreground in pairs(groupedPicture[alpha][symbol][background]) do
-					file:writeBytes(
-						-- Writing 1 byte for foreground color value (compressed by color)
-						foreground,
-						-- Writing 1 byte for y array size
-						getGroupSize(groupedPicture[alpha][symbol][background][foreground])
-					)
-					
-					for y in pairs(groupedPicture[alpha][symbol][background][foreground]) do
-						file:writeBytes(
-							-- Writing 1 byte for current y value
-							y,
-							-- Writing 1 byte for x array size
-							#groupedPicture[alpha][symbol][background][foreground][y]
-						)
-
-						for x = 1, #groupedPicture[alpha][symbol][background][foreground][y] do
-							file:writeBytes(groupedPicture[alpha][symbol][background][foreground][y][x])
-						end
-					end
-				end
-			end
-		end
-	end
-end
-
-encodingMethodsLoad[6] = function(file, picture)
+local function loadOCIF67(file, picture, mode)
 	picture[1] = file:readBytes(1)
 	picture[2] = file:readBytes(1)
 
 	local currentAlpha, currentSymbol, currentBackground, currentForeground, currentY
-	local alphaSize, symbolSize, backgroundSize, foregroundSize, ySize, xSize
 
-	alphaSize = file:readBytes(1)
-	
-	for alpha = 1, alphaSize do
+	for alpha = 1, file:readBytes(1) + mode do
 		currentAlpha = file:readBytes(1) / 255
-		symbolSize = file:readBytes(2)
 		
-		for symbol = 1, symbolSize do
+		for symbol = 1, file:readBytes(2) + mode do
 			currentSymbol = file:readUnicodeChar()
-			backgroundSize = file:readBytes(1)
 			
-			for background = 1, backgroundSize do
+			for background = 1, file:readBytes(1) + mode do
 				currentBackground = color.to24Bit(file:readBytes(1))
-				foregroundSize = file:readBytes(1)
 				
-				for foreground = 1, foregroundSize do
+				for foreground = 1, file:readBytes(1) + mode do
 					currentForeground = color.to24Bit(file:readBytes(1))
-					ySize = file:readBytes(1)
 					
-					for y = 1, ySize do
+					for y = 1, file:readBytes(1) + mode do
 						currentY = file:readBytes(1)
-						xSize = file:readBytes(1)
 						
-						for x = 1, xSize do
+						for x = 1, file:readBytes(1) + mode do
 							image.set(
 								picture,
 								file:readBytes(1),
@@ -199,17 +117,17 @@ encodingMethodsLoad[6] = function(file, picture)
 	end
 end
 
-encodingMethodsSave[7] = function(file, picture)
+local function saveOCIF67(file, picture, mode)
 	local function getGroupSize(t)
-		local size = -1
-
+		local size = mode == 1 and -1 or 0
+		
 		for key in pairs(t) do
 			size = size + 1
 		end
-
+    
 		return size
 	end
-
+	
 	-- Grouping picture by it's alphas, symbols and colors
 	local groupedPicture = group(picture, true)
 
@@ -262,7 +180,7 @@ encodingMethodsSave[7] = function(file, picture)
 							-- Writing 1 byte for current y value
 							y,
 							-- Writing 1 byte for x array size
-							#groupedPicture[alpha][symbol][background][foreground][y] - 1
+							#groupedPicture[alpha][symbol][background][foreground][y] - mode
 						)
 
 						for x = 1, #groupedPicture[alpha][symbol][background][foreground][y] do
@@ -275,43 +193,20 @@ encodingMethodsSave[7] = function(file, picture)
 	end
 end
 
+encodingMethodsSave[6] = function(file, picture)
+	saveOCIF67(file, picture, 0)
+end
+
+encodingMethodsLoad[6] = function(file, picture)
+	loadOCIF67(file, picture, 0)
+end
+
+encodingMethodsSave[7] = function(file, picture)
+	saveOCIF67(file, picture, 1)
+end
+
 encodingMethodsLoad[7] = function(file, picture)
-	picture[1] = file:readBytes(1)
-	picture[2] = file:readBytes(1)
-
-	local currentAlpha, currentSymbol, currentBackground, currentForeground, currentY
-
-	for alpha = 1, file:readBytes(1) + 1 do
-		currentAlpha = file:readBytes(1) / 255
-		
-		for symbol = 1, file:readBytes(2) + 1 do
-			currentSymbol = file:readUnicodeChar()
-			
-			for background = 1, file:readBytes(1) + 1 do
-				currentBackground = color.to24Bit(file:readBytes(1))
-				
-				for foreground = 1, file:readBytes(1) + 1 do
-					currentForeground = color.to24Bit(file:readBytes(1))
-					
-					for y = 1, file:readBytes(1) + 1 do
-						currentY = file:readBytes(1)
-						
-						for x = 1, file:readBytes(1) + 1 do
-							image.set(
-								picture,
-								file:readBytes(1),
-								currentY,
-								currentBackground,
-								currentForeground,
-								currentAlpha,
-								currentSymbol
-							)
-						end
-					end
-				end
-			end
-		end
-	end
+	loadOCIF67(file, picture, 1)
 end
 
 --------------------------------------------------------------------------------
