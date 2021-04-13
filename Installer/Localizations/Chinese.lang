@@ -3,7 +3,7 @@
 	password = "密码",
 	submitPassword = "确定密码",
 	passwordsArentEqual = "密码错误",
-	usernameInvalid = "Invalid username",
+	usernameInvalid = "用户名无效",
 	withoutPassword = "没有密码",
 	wallpapers = "壁纸",
 	screensavers = "屏幕保护",
