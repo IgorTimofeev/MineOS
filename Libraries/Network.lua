@@ -113,7 +113,7 @@ local function FTPLogin(socketHandle, user, password)
 	
 	local success, result = FTPSocketRead(socketHandle)
 	if success then
-		if result:match("200") then
+		if result:match("TYPE okay") or result:match("200") then
 			return true
 		else
 			return false, "Authentication failed"
