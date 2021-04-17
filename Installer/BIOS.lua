@@ -11,4 +11,7 @@ while true do
 end
 
 handle.close()
-load(data)()
+local success,reason=xpcall(load(data),debug.traceback)
+if not success then
+	error(reason)
+end
