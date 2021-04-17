@@ -11,4 +11,13 @@ while true do
 end
 
 handle.close()
-load(data)()
+
+local result, reason = load(data, "=installer")
+if result then
+	result, reason = xpcall(result, debug.traceback)
+	if not result then
+		error(reason)
+	end
+else
+	error(reason)	
+end
