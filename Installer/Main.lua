@@ -9,6 +9,13 @@ local installerPath = "/MineOS installer/"
 local installerPicturesPath = installerPath .. "Installer/Pictures/"
 local OSPath = "/"
 
+local screen=component.list("screen")()
+
+if not screen then
+	error("Can't find the screen.")
+end
+GPUProxy.bind(sreen)
+
 local screenWidth, screenHeight = GPUProxy.getResolution()
 
 local temporaryFilesystemProxy, selectedFilesystemProxy
