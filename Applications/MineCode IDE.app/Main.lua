@@ -1258,6 +1258,7 @@ local function find()
 				end
 			else
 				GUI.alert("Wrong searching regex")
+				return
 			end
 		end
 
