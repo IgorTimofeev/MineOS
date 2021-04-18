@@ -1,5 +1,6 @@
 
-[English](https://github.com/IgorTimofeev/MineOS/) | 中文(简体)
+[English](https://github.com/IgorTimofeev/MineOS/) | 中文(简体) | [Русский](https://github.com/IgorTimofeev/MineOS/blob/master/README-ru_RU.md)
+
 ## MineOS独立版已经发布!
 
 你好, 亲爱的朋友. 感谢您在漫长的开发周期中与我们在一起并支持我们的想法. MineOS终于到了发布阶段: 现在它是一个完全独立的操作系统, 拥有自己的轻量级开发API和出色的
