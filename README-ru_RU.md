@@ -1,4 +1,4 @@
-[English](https://github.com/IgorTimofeev/MineOS/blob/master/README.md) | [Chinese](https://github.com/IgorTimofeev/MineOS/blob/master/README-zh_CN.md) | Русский
+[English](https://github.com/IgorTimofeev/MineOS/blob/master/README.md) | [中文(简体)](https://github.com/IgorTimofeev/MineOS/blob/master/README-zh_CN.md) | Русский
 
 ## MineOS Standalone вышла в релиз!
 
