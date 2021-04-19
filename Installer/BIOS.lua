@@ -1,20 +1,27 @@
-local handle, data, chunk = component.proxy(component.list("internet")()).request("https://raw.githubusercontent.com/IgorTimofeev/MineOS/master/Installer/Main.lua"), ""
-   
-while true do
-	chunk = handle.read(math.huge)
-	
-	if chunk then
-		data = data .. chunk
-	else
-		break
+
+local result, reason = ""
+
+do
+	local handle, chunk = component.proxy(component.list("internet")() or error("Required internet component is missing")).request("https://raw.githubusercontent.com/IgorTimofeev/MineOS/master/Installer/Main.lua")
+
+	while true do
+		chunk = handle.read(math.huge)
+		
+		if chunk then
+			result = result .. chunk
+		else
+			break
+		end
 	end
+
+	handle.close()
 end
 
-handle.close()
+result, reason = load(result, "=installer")
 
-local result, reason = load(data, "=installer")
 if result then
 	result, reason = xpcall(result, debug.traceback)
+
 	if not result then
 		error(reason)
 	end
