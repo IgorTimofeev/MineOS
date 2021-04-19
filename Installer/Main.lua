@@ -5,7 +5,7 @@ local function getComponentAddress(name)
 end
 
 local function getComponentProxy(name)
-	return getComponentAddress(name)
+	return component.proxy(getComponentAddress(name))
 end
 
 local EEPROMProxy, internetProxy, GPUProxy = 
