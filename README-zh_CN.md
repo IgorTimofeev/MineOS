@@ -1,8 +1,9 @@
 
-[English](https://github.com/IgorTimofeev/MineOS/) | 中文(简体)
+[English](https://github.com/IgorTimofeev/MineOS/) | 中文(简体) | [Русский](https://github.com/IgorTimofeev/MineOS/blob/master/README-ru_RU.md)
+
 ## MineOS独立版已经发布!
 
-你好, 亲爱的朋友. 感谢您在漫长的开发周期中与我们在一起并支持我们的想法. MineOS终于到了发布阶段: 现在它是一个完全独立的操作系统, 拥有自己的轻量级开发API和出色的
+你好, 亲爱的朋友. 感谢您在漫长的开发周期中与我们在一起并支持我们的想法. MineOS终于到了发布阶段: 现在它是一个完全独立的操作系统, 拥有自己的开发API和出色的
 [插图维基](https://github.com/IgorTimofeev/MineOS/wiki).
 MineOS是一个基于GUI的Minecraft Opencomputers模组的操作系统. 它有广泛和强大的定制能力, 以及一个应用程序市场, 在社区中发布你的创作.
 下面是一些特性的列表:
@@ -43,6 +44,4 @@ MineOS是一个基于GUI的Minecraft Opencomputers模组的操作系统. 它有�
 
 ## 如何\*做某事\*?
 
-[Wiki-wiki-wiki. Wi...
-...
-...ki.](https://github.com/IgorTimofeev/MineOS/wiki)
+[Wiki](https://github.com/IgorTimofeev/MineOS/wiki)

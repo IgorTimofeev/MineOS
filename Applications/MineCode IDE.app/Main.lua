@@ -1252,12 +1252,14 @@ local function find()
 						to = {symbol = ending, line = line},
 						color = 0xCC9200
 					}
+					
 					findStartFrom = line
 					gotoLine(line)
+
 					return
 				end
 			else
-				GUI.alert("Wrong searching regex")
+				return
 			end
 		end
 
