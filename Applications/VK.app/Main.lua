@@ -502,6 +502,7 @@ local function newAttachment(x, y, maxWidth, attachment, typeB, typeT, textB, te
 		local length = 30
 
 		local values, trigger, value, counter, stepper, maxValue = {}, #attachment.audio_message.waveform / length, 0, 0, 0, 0
+
 		for i = 1, #attachment.audio_message.waveform do
 			value = value + attachment.audio_message.waveform[i]
 
@@ -518,6 +519,7 @@ local function newAttachment(x, y, maxWidth, attachment, typeB, typeT, textB, te
 		local pixels = {"⡀", "⡄", "⡆", "⡇"}
 
 		object.text = ""
+
 		for i = 1, #values do
 			object.text = object.text .. (pixels[math.ceil(values[i] / maxValue * 4)] or "⡀")
 		end
@@ -590,6 +592,7 @@ local function newPost(x, y, width, avatarWidth, senderColor, textColor, dateCol
 	if data.attachments and #data.attachments > 0 then
 		for i = 1, #data.attachments do
 			local attachment = data.attachments[i]
+
 			if localization.attachmentsTypes[attachment.type] then
 				if attachment.wall then
 					addAnotherPost(
@@ -597,8 +600,15 @@ local function newPost(x, y, width, avatarWidth, senderColor, textColor, dateCol
 						attachment.wall
 					)
 				else
-					local attachment = object:addChild(newAttachment(localX, localY, object.width - localX, attachment, attachmentColorTypeB, attachmentColorTypeF, attachmentColorTextB, attachmentColorTextF))
-					localY = localY + attachment.height + 1
+					local attachmentobj = object:addChild(newAttachment(localX, localY, object.width - localX, attachment, attachmentColorTypeB, attachmentColorTypeF, attachmentColorTextB, attachmentColorTextF))
+					localY = localY + attachmentobj.height + 1
+
+					if attachment.audio_message and attachment.audio_message.transcript and #attachment.audio_message.transcript > 0then
+						local lines = text.wrap(attachment.audio_message.transcript, width - localX)
+						local textBox = object:addChild(GUI.textBox(localX, localY, width - localX, #lines, nil, textColor, lines, 1, 0, 0))
+						textBox.eventHandler = nil
+						localY = localY + textBox.height + 1
+					end
 				end
 			end
 		end
@@ -1437,13 +1447,23 @@ showConversations = function(peerID)
 						messagePreview = localization.fwdMessages .. #item.last_message.fwd_messages
 					elseif #item.last_message.attachments > 0 then
 						local data = {}
+						local foundTranscript
+
 						for i = 1, #item.last_message.attachments do
 							if localization.attachmentsTypes[item.last_message.attachments[i].type] then
 								data[i] = localization.attachmentsTypes[item.last_message.attachments[i].type] or "N/A"
+
+								if item.last_message.attachments[i].audio_message then
+									foundTranscript = item.last_message.attachments[i].audio_message.transcript
+								end
 							end
 						end
 
 						messagePreview = table.concat(data, ", ")
+
+						if foundTranscript then
+							messagePreview = foundTranscript .. messagePreview
+						end
 					else
 						messagePreview = item.last_message.text
 					end
@@ -1453,7 +1473,7 @@ showConversations = function(peerID)
 
 				-- Префиксы для отправленных мною, либо же для имен отправителей в конфах
 				if item.last_message.out == 1 then
-					messagePreview = localization.you ..	messagePreview
+					messagePreview = localization.you .. messagePreview
 				else
 					if isPeerChat(item.conversation.peer.id) then
 						local eblo = getEblo(list.profiles, item.last_message.from_id)

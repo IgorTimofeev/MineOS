@@ -434,20 +434,32 @@ local function semiPixelSet(x, y, color)
 end
 
 local function drawSemiPixelRectangle(x, y, width, height, color)
-	local index, indexStepForward, indexStepBackward, jPercentTwoEqualsZero, jFixed = bufferWidth * (mathCeil(y / 2) - 1) + x, (bufferWidth - width), width
-	for j = y, y + height - 1 do
-		jPercentTwoEqualsZero = j % 2 == 0
-		
-		for i = x, x + width - 1 do
-			jFixed = mathCeil(j / 2)
-			semiPixelRawSet(index, color, jPercentTwoEqualsZero)
-			index = index + 1
+	local index, evenYIndexStep, oddYIndexStep, realY, evenY =
+		bufferWidth * (mathCeil(y / 2) - 1) + x,
+		(bufferWidth - width),
+		width
+
+	for pseudoY = y, y + height - 1 do
+		realY = mathCeil(pseudoY / 2)
+
+		if realY >= drawLimitY1 and realY <= drawLimitY2 then
+			evenY = pseudoY % 2 == 0
+			
+			for pseudoX = x, x + width - 1 do
+				if pseudoX >= drawLimitX1 and pseudoX <= drawLimitX2 then
+					semiPixelRawSet(index, color, evenY)
+				end
+
+				index = index + 1
+			end
+		else
+			index = index + width
 		end
 
-		if jPercentTwoEqualsZero then
-			index = index + indexStepForward
+		if evenY then
+			index = index + evenYIndexStep
 		else
-			index = index - indexStepBackward
+			index = index - oddYIndexStep
 		end
 	end
 end

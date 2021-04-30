@@ -125,7 +125,7 @@ module.onTouch = function()
 	end
 
 	iconButton.onTouch = function()
-		system.execute(paths.system.applicationPictureEdit, paths.system.users .. getSelected() .. "/Icon.pic", "-o")
+		system.execute(paths.system.applicationPictureEdit, "-on", paths.system.users .. getSelected() .. "/Icon.pic", 8, 4)
 	end
 
 	renameButton.onTouch = function()
