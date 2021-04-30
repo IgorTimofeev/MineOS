@@ -162,6 +162,7 @@ end
 -- First, we need a big ass file list with localizations, applications, wallpapers
 progress(0)
 local files = deserialize(request(installerURL .. "Files.cfg"))
+local crc32 = deserialize(request(installerURL .. "crc32.cfg"))
 
 -- After that we could download required libraries for installer from it
 for i = 1, #files.installerFiles do
@@ -221,6 +222,8 @@ screen.setGPUProxy(GPUProxy)
 local GUI = require("GUI")
 local system = require("System")
 local paths = require("Paths")
+
+local hash=require("CRC32").hash
 
 --------------------------------------------------------------------------------
 
@@ -628,34 +631,55 @@ addStage(function()
 	-- Downloading files from created list
 	local versions, path, id, version, shortcut = {}
 	for i = 1, #downloadList do
-		path, id, version, shortcut = getData(downloadList[i])
+		while 1 do
+			path, id, version, shortcut = getData(downloadList[i])
 
-		cyka.text = text.limit(localization.installing .. " \"" .. path .. "\"", container.width, "center")
-		workspace:draw()
+			cyka.text = text.limit(localization.installing .. " \"" .. path .. "\"", container.width, "center")
+			workspace:draw()
 
-		-- Download file
-		download(path, OSPath .. path)
+			if selectedFilesystemProxy.exists(OSPath .. path) and crc32[path] and selectedFilesystemProxy.size(OSPath .. path)==crc32[path].length then
+				-- Check CRC32
+				local handle, reason = selectedFilesystemProxy.open(OSPath .. path, "rb")
+				if handle then
+					local data, chunk = ""
+					repeat
+						chunk = selectedFilesystemProxy.read(handle, math.huge)
+						data = data .. (chunk or "")
+					until not chunk
+					selectedFilesystemProxy.close(handle)
+					if hash(data)==crc32[path].crc32 then
+						break
+					end
+				else
+					error("File opening failed: " .. tostring(reason))
+				end
+			end
 
-		-- Adding system versions data
-		if id then
-			versions[id] = {
-				path = OSPath .. path,
-				version = version or 1,
-			}
+			-- Download file
+			download(path, OSPath .. path)
+
+			-- Adding system versions data
+			if id then
+				versions[id] = {
+					path = OSPath .. path,
+					version = version or 1,
+				}
+			end
+
+			-- Create shortcut if possible
+			if shortcut then
+				switchProxy(function()
+					system.createShortcut(
+						userPaths.desktop .. filesystem.hideExtension(filesystem.name(filesystem.path(path))),
+						OSPath .. filesystem.path(path)
+					)
+				end)
+			end
+
+			progressBar.value = math.floor(i / #downloadList * 100)
+			workspace:draw()
+			break
 		end
-
-		-- Create shortcut if possible
-		if shortcut then
-			switchProxy(function()
-				system.createShortcut(
-					userPaths.desktop .. filesystem.hideExtension(filesystem.name(filesystem.path(path))),
-					OSPath .. filesystem.path(path)
-				)
-			end)
-		end
-
-		progressBar.value = math.floor(i / #downloadList * 100)
-		workspace:draw()
 	end
 
 	-- Saving system versions

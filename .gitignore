@@ -2,3 +2,6 @@
 Mounts/
 Temporary/
 Users/
+__pycache__/
+__pypackages__/
+*.pyc
