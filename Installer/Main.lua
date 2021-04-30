@@ -568,13 +568,6 @@ addStage(function()
 
 	-- Flashing EEPROM
 	layout:removeChildren()
-	addImage(1, 1, "EEPROM")
-	addTitle(0x969696, localization.flashing)
-	workspace:draw()
-	
-	EEPROMProxy.set(request(EFIURL))
-	EEPROMProxy.setLabel("MineOS EFI")
-	EEPROMProxy.setData(selectedFilesystemProxy.address)
 
 	-- Downloading files
 	layout:removeChildren()
@@ -698,6 +691,13 @@ addStage(function()
 
 	-- Removing temporary installer directory
 	temporaryFilesystemProxy.remove(installerPath)
+	addImage(1, 1, "EEPROM")
+	addTitle(0x969696, localization.flashing)
+	workspace:draw()
+	
+	EEPROMProxy.set(request(EFIURL))
+	EEPROMProxy.setLabel("MineOS EFI")
+	EEPROMProxy.setData(selectedFilesystemProxy.address)
 end)
 
 --------------------------------------------------------------------------------
