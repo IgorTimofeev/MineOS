@@ -1,5 +1,21 @@
 
-local EEPROMProxy, internetProxy, GPUProxy = component.proxy(component.list("eeprom")()), component.proxy(component.list("internet")()), component.proxy(component.list("gpu")())
+-- Checking for required components
+local function getComponentAddress(name)
+	return component.list(name)() or error("Required " .. name .. " component is missing")
+end
+
+local function getComponentProxy(name)
+	return component.proxy(getComponentAddress(name))
+end
+
+local EEPROMProxy, internetProxy, GPUProxy = 
+	getComponentProxy("eeprom"),
+	getComponentProxy("internet"),
+	getComponentProxy("gpu")
+
+-- Binding GPU to screen in case it's not done yet
+GPUProxy.bind(getComponentAddress("screen"))
+local screenWidth, screenHeight = GPUProxy.getResolution()
 
 local repositoryURL = "https://raw.githubusercontent.com/IgorTimofeev/MineOS/master/"
 local installerURL = "Installer/"
@@ -9,12 +25,11 @@ local installerPath = "/MineOS installer/"
 local installerPicturesPath = installerPath .. "Installer/Pictures/"
 local OSPath = "/"
 
-local screenWidth, screenHeight = GPUProxy.getResolution()
-
 local temporaryFilesystemProxy, selectedFilesystemProxy
 
 --------------------------------------------------------------------------------
 
+-- Working with components directly before system libraries are downloaded & initialized
 local function centrize(width)
 	return math.floor(screenWidth / 2 - width / 2)
 end
@@ -28,6 +43,7 @@ end
 local function title()
 	local y = math.floor(screenHeight / 2 - 1)
 	centrizedText(y, 0x2D2D2D, "MineOS")
+
 	return y + 2
 end
 
@@ -124,8 +140,6 @@ local function deserialize(text)
 	end
 end
 
---------------------------------------------------------------------------------
-
 -- Clearing screen
 GPUProxy.setBackground(0xE1E1E1)
 GPUProxy.fill(1, 1, screenWidth, screenHeight, " ")
@@ -155,7 +169,7 @@ for i = 1, #files.installerFiles do
 	download(files.installerFiles[i], installerPath .. files.installerFiles[i])
 end
 
--- Initializing simple package system for loading OS libraries
+-- Initializing simple package system for loading system libraries
 package = {loading = {}, loaded = {}}
 
 function require(module)
@@ -192,7 +206,7 @@ function require(module)
 	end
 end
 
--- Initializing downloaded libraries
+-- Initializing system libraries
 local filesystem = require("Filesystem")
 filesystem.setProxy(temporaryFilesystemProxy)
 
@@ -210,7 +224,7 @@ local paths = require("Paths")
 
 --------------------------------------------------------------------------------
 
--- Creating out cool UI
+-- Creating main UI workspace
 local workspace = GUI.workspace()
 workspace:addChild(GUI.panel(1, 1, workspace.width, workspace.height, 0x1E1E1E))
 
