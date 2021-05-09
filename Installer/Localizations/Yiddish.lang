@@ -1,0 +1,23 @@
+{
+	username = "נאמען",
+	password = "שפּריכוואָרט",
+	submitPassword = "פאָרלייגן פּאַראָל",
+	passwordsArentEqual = "פּאַסווערדז זענען נישט די זעלבע.",
+	usernameInvalid = "אונגילטיג באנוצער נאמען",
+	withoutPassword = "דו זאלסט נישט נוצן אַ פּאַראָל:",
+	wallpapers = "וואַללפּאַפּערס:",
+	screensavers = "סקרעענסאַווערס:",
+	applications = "דריט פּאַרטיי אַפּפּס:",
+	languages = "שפּראַך פּאַקס:",
+	accept = "איך נעם אן:",
+	select = "סעלעקטירן דיסק פֿאַר ינסטאַלירונג",
+	erase = "מעקן",
+	used = "געניצט",
+	setup = "שטעלן דיין פּראָפיל",
+	customize = "קאַסטאַמייז דאַונלאָודז",
+	flashing = "פלאַשינג EEPROM ...",
+	creating = "שאפן באַניצער פּראָפיל ...",
+	installing = "ינסטאָלינג",
+	installed = "MineOS איז אינסטאַלירן.",
+	reboot = "רעבאָאָט די קאָמפּיוטער"
+}

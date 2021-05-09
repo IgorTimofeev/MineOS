@@ -1,0 +1,23 @@
+{
+	username = "שם משתמש",
+	password = "סיסמה",
+	submitPassword = "הגש סיסמה",
+	passwordsArentEqual = "סיסמאות אינן זהות.",
+	usernameInvalid = "שם משתמש לא חוקי",
+	withoutPassword = "אל תשתמש בסיסמה:",
+	wallpapers = "רקעים:",
+	screensavers = "שומרי מסך:",
+	applications = "אפליקציות של צד שלישי:",
+	languages = "חבילות שפה:",
+	accept = "אני מקבל:",
+	select = "בחר דיסק להתקנה",
+	erase = "לִמְחוֹק",
+	used = "בשימוש",
+	setup = "הגדר את הפרופיל שלך",
+	customize = "התאם אישית הורדות",
+	flashing = "מהבהב EEPROM ...",
+	creating = "יוצר פרופיל משתמש ...",
+	installing = "מתקין",
+	installed = "MineOS הותקן.",
+	reboot = "אתחל את המחשב"
+}

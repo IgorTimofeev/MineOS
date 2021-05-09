@@ -1,0 +1,23 @@
+{
+	username = "Aha ojii",
+	password = "Okwuntughe",
+	submitPassword = "Nyefee okwuntughe",
+	passwordsArentEqual = "Okwuntughe abụghị otu.",
+	usernameInvalid = "Aha njirimara na ezighi ezi",
+	withoutPassword = "Ejila okwuntughe:",
+	wallpapers = "Na akwụkwọ ahụ aja:",
+	screensavers = "Ihuenyo:",
+	applications = "Akụkụ nke atọ:",
+	languages = "Ngwungwu asụsụ:",
+	accept = "Anabatara m:",
+	select = "Họrọ diski maka ntinye",
+	erase = "Ichicha",
+	used = "eji",
+	setup = "Hazie profaịlụ gị",
+	customize = "Hazie nbudata",
+	flashing = "Na-egbuke egbuke EEPROM ...",
+	creating = "Mepụta profaịlụ onye ọrụ ...",
+	installing = "Wụnye",
+	installed = "E tinyela MineOS.",
+	reboot = "Reboot kọmputa"
+}

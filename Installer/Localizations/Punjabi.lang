@@ -1,0 +1,23 @@
+{
+	username = "ਉਪਯੋਗਕਰਤਾ ਨਾਮ",
+	password = "ਪਾਸਵਰਡ",
+	submitPassword = "ਪਾਸਵਰਡ ਦਰਜ ਕਰੋ",
+	passwordsArentEqual = "ਪਾਸਵਰਡ ਇਕੋ ਜਿਹੇ ਨਹੀਂ ਹਨ.",
+	usernameInvalid = "ਅਵੈਧ ਉਪਯੋਗਕਰਤਾ",
+	withoutPassword = "ਪਾਸਵਰਡ ਨਾ ਵਰਤੋ:",
+	wallpapers = "ਵਾਲਪੇਪਰ:",
+	screensavers = "ਸਕਰੀਨਸੇਵਰ:",
+	applications = "ਤੀਜੀ ਧਿਰ ਦੇ ਐਪਸ:",
+	languages = "ਭਾਸ਼ਾ ਪੈਕ:",
+	accept = "ਮੈਂ ਸਵੀਕਾਰ ਕਰਦਾ ਹਾਂ:",
+	select = "ਇੰਸਟਾਲੇਸ਼ਨ ਲਈ ਡਿਸਕ ਦੀ ਚੋਣ ਕਰੋ",
+	erase = "ਮਿਟਾਓ",
+	used = "ਵਰਤਿਆ",
+	setup = "ਆਪਣਾ ਪ੍ਰੋਫਾਈਲ ਸੈੱਟ ਕਰੋ",
+	customize = "ਡਾਉਨਲੋਡਸ ਨੂੰ ਅਨੁਕੂਲਿਤ ਕਰੋ",
+	flashing = "ਫਲੈਸ਼ਿੰਗ ਈਪ੍ਰੋਮ ...",
+	creating = "ਉਪਭੋਗਤਾ ਪ੍ਰੋਫਾਈਲ ਬਣਾ ਰਿਹਾ ਹੈ ...",
+	installing = "ਇੰਸਟੌਲ ਕਰ ਰਿਹਾ ਹੈ",
+	installed = "ਮਾਈਨੋਸ ਲਗਾਇਆ ਗਿਆ ਹੈ.",
+	reboot = "ਕੰਪਿ Reਟਰ ਨੂੰ ਮੁੜ ਚਾਲੂ ਕਰੋ"
+}

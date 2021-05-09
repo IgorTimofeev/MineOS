@@ -1,0 +1,23 @@
+{
+	username = "ଉପଯୋଗକର୍ତ୍ତା ନାମ",
+	password = "ପାସୱାର୍ଡ",
+	submitPassword = "ପାସୱାର୍ଡ ଦାଖଲ କରନ୍ତୁ |",
+	passwordsArentEqual = "ପାସୱାର୍ଡ ସମାନ ନୁହେଁ |",
+	usernameInvalid = "ଅବ val ଧ ଉପଯୋଗକର୍ତ୍ତା ନାମ |",
+	withoutPassword = "ପାସୱାର୍ଡ ବ୍ୟବହାର କରନ୍ତୁ ନାହିଁ:",
+	wallpapers = "ୱାଲପେପର:",
+	screensavers = "ସ୍କ୍ରିନ୍ ସେଭର୍:",
+	applications = "ତୃତୀୟ ପକ୍ଷ ଆପ୍:",
+	languages = "ଭାଷା ପ୍ୟାକ୍:",
+	accept = "ମୁଁ ସ୍ଵୀକାର କରୁଛି:",
+	select = "ସ୍ଥାପନ ପାଇଁ ଡିସ୍କ ବାଛନ୍ତୁ |",
+	erase = "ଲିଭାନ୍ତୁ",
+	used = "ବ୍ୟବହୃତ |",
+	setup = "ଆପଣଙ୍କର ପ୍ରୋଫାଇଲ୍ ସେଟ୍ ଅପ୍ କରନ୍ତୁ |",
+	customize = "ଡାଉନଲୋଡ୍ କଷ୍ଟୋମାଇଜ୍ କରନ୍ତୁ |",
+	flashing = "EEPROM ଫ୍ଲାସ୍ କରୁଛି ...",
+	creating = "ଉପଭୋକ୍ତା ପ୍ରୋଫାଇଲ୍ ସୃଷ୍ଟି ...",
+	installing = "ସଂସ୍ଥାପନ",
+	installed = "MineOS ସଂସ୍ଥାପିତ ହୋଇଛି |",
+	reboot = "କମ୍ପ୍ୟୁଟରକୁ ପୁନ o ଚାଳନ କରନ୍ତୁ |"
+}

@@ -1,0 +1,23 @@
+{
+	username = "Ingoa Kaiwhakamahi",
+	password = "Kupuhipa",
+	submitPassword = "Tukuna te kupuhipa",
+	passwordsArentEqual = "Kare e rite nga kupuhipa.",
+	usernameInvalid = "Ingoa kaiwhakamahi muhu",
+	withoutPassword = "Kaua e whakamahia he kupuhipa:",
+	wallpapers = "Whakaahua:",
+	screensavers = "Whakaahuamata:",
+	applications = "Nga waahanga tuatoru:",
+	languages = "Peke reo:",
+	accept = "Whakaae ahau:",
+	select = "Tīpakohia te kōpae hei whakauru",
+	erase = "Mukua",
+	used = "whakamahia",
+	setup = "Whakatauhia to tohu",
+	customize = "Whakaritehia nga tango",
+	flashing = "Rama EEPROM ...",
+	creating = "Kei te hanga whakaahua kaiwhakamahi ...",
+	installing = "Kei te whakauru",
+	installed = "Kua whakauruhia a MineOS.",
+	reboot = "Whakaara ano i te rorohiko"
+}

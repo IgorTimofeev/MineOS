@@ -1,0 +1,23 @@
+{
+	username = "Lebitso la mosebedisi",
+	password = "Phasewete",
+	submitPassword = "Kenya password",
+	passwordsArentEqual = "Liphasewete ha li tšoane.",
+	usernameInvalid = "Lebitso la mosebedisi le fosahetseng",
+	withoutPassword = "Se ke oa sebelisa phasewete:",
+	wallpapers = "Litšoantšo tsa Wallpaper",
+	screensavers = "Litlhaku tsa Screensavers:",
+	applications = "Lisebelisoa tsa motho oa boraro:",
+	languages = "Lipakete tsa puo:",
+	accept = "Kea lumela:",
+	select = "Khetha disk bakeng sa ho kenya",
+	erase = "Hlakola",
+	used = "sebedisoa",
+	setup = "Seta boemo ba hau",
+	customize = "Iketsetse download",
+	flashing = "E benya EEPROM ...",
+	creating = "Re theha boemo ba mosebelisi ...",
+	installing = "Ho kenya",
+	installed = "MineOS e kentsoe.",
+	reboot = "Qala komporo hape"
+}

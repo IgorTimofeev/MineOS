@@ -1,0 +1,23 @@
+{
+	username = "Lolowera",
+	password = "Chinsinsi",
+	submitPassword = "Tumizani mawu achinsinsi",
+	passwordsArentEqual = "Mawu achinsinsi si ofanana.",
+	usernameInvalid = "Dzina lolowera lina ndi lolakwika",
+	withoutPassword = "Osagwiritsa ntchito mawu achinsinsi:",
+	wallpapers = "Zithunzi:",
+	screensavers = "Zowonera:",
+	applications = "Mapulogalamu ena:",
+	languages = "Mapaketi azilankhulo:",
+	accept = "Ndikuvomera:",
+	select = "Sankhani disk kuti muyike",
+	erase = "Chotsani",
+	used = "ntchito",
+	setup = "Khazikitsani mbiri yanu",
+	customize = "Sinthani makonda anu kutsitsa",
+	flashing = "Zikuthwanima EEPROM ...",
+	creating = "Kupanga mbiri yanu ...",
+	installing = "Kuyika",
+	installed = "MineOS yakhazikitsidwa.",
+	reboot = "Yambitsaninso kompyuta"
+}

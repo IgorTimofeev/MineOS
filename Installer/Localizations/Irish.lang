@@ -1,0 +1,23 @@
+{
+	username = "Ainm úsáideora",
+	password = "Pasfhocal",
+	submitPassword = "Cuir isteach pasfhocal",
+	passwordsArentEqual = "Ní hionann pasfhocail.",
+	usernameInvalid = "Ainm Úsáideora neamhbhailí",
+	withoutPassword = "Ná húsáid pasfhocal:",
+	wallpapers = "Cúlbhrat:",
+	screensavers = "Sábhálaithe Scáileáin:",
+	applications = "Aipeanna tríú páirtí:",
+	languages = "Pacáistí teanga:",
+	accept = "Glacaim:",
+	select = "Roghnaigh diosca le haghaidh suiteála",
+	erase = "Léirscrios",
+	used = "úsáidtear",
+	setup = "Socraigh do phróifíl",
+	customize = "Íoslódálacha a shaincheapadh",
+	flashing = "EEPROM Gealánacha ...",
+	creating = "Próifíl úsáideora a chruthú ...",
+	installing = "Suiteáil",
+	installed = "Tá MineOS suiteáilte.",
+	reboot = "Atosaigh an ríomhaire"
+}

@@ -1,0 +1,23 @@
+{
+	username = "Emri i përdoruesit",
+	password = "Fjalëkalimi",
+	submitPassword = "Dorëzoni fjalëkalimin",
+	passwordsArentEqual = "Fjalëkalimet nuk janë të njëjta.",
+	usernameInvalid = "Emër përdoruesi i pavlefshëm",
+	withoutPassword = "Mos përdorni një fjalëkalim:",
+	wallpapers = "Wallpapers:",
+	screensavers = "Ruajtësit e ekranit:",
+	applications = "Aplikacionet e palëve të treta:",
+	languages = "Paketat gjuhësore:",
+	accept = "Unë pranoj:",
+	select = "Zgjidhni disk për instalim",
+	erase = "Fshije",
+	used = "të përdorura",
+	setup = "Konfiguroni profilin tuaj",
+	customize = "Personalizoni shkarkimet",
+	flashing = "Po ndez EEPROM ...",
+	creating = "Po krijon profilin e përdoruesit ...",
+	installing = "Po instalon",
+	installed = "MineOS është instaluar.",
+	reboot = "Rindizni kompjuterin"
+}

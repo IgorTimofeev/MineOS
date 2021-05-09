@@ -1,0 +1,23 @@
+{
+	username = "ชื่อผู้ใช้",
+	password = "รหัสผ่าน",
+	submitPassword = "ส่งรหัสผ่าน",
+	passwordsArentEqual = "รหัสผ่านไม่เหมือนกัน",
+	usernameInvalid = "ชื่อผู้ใช้ที่ไม่ถูกต้อง",
+	withoutPassword = "อย่าใช้รหัสผ่าน:",
+	wallpapers = "วอลเปเปอร์:",
+	screensavers = "สกรีนเซฟเวอร์:",
+	applications = "แอพของบุคคลที่สาม:",
+	languages = "ชุดภาษา:",
+	accept = "ฉันยอมรับ:",
+	select = "เลือกดิสก์สำหรับการติดตั้ง",
+	erase = "ลบ",
+	used = "ใช้แล้ว",
+	setup = "ตั้งค่าโปรไฟล์ของคุณ",
+	customize = "ปรับแต่งการดาวน์โหลด",
+	flashing = "EEPROM กะพริบ ...",
+	creating = "กำลังสร้างโปรไฟล์ผู้ใช้ ...",
+	installing = "กำลังติดตั้ง",
+	installed = "ติดตั้ง MineOS แล้ว",
+	reboot = "รีบูตเครื่องคอมพิวเตอร์"
+}

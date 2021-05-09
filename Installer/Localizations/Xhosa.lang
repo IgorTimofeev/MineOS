@@ -1,0 +1,23 @@
+{
+	username = "Igama lomsebenzisi",
+	password = "Inombolo yokuvula",
+	submitPassword = "Ngenisa igama lokugqithisa",
+	passwordsArentEqual = "Amagama agqithisiweyo awafani.",
+	usernameInvalid = "Igama lomsebenzisi alisebenzi",
+	withoutPassword = "Sukusebenzisa iphasiwedi:",
+	wallpapers = "Iifoto lodonga:",
+	screensavers = "Izikrini:",
+	applications = "Ii-apps zomntu wesithathu:",
+	languages = "Iipakethe zolwimi:",
+	accept = "Ndiyamkela:",
+	select = "Khetha idiski yofakelo",
+	erase = "Cima",
+	used = "isetyenzisiwe",
+	setup = "Cwangcisa iprofayile yakho",
+	customize = "Yenza ngokwezifiso ukhuphelo",
+	flashing = "Idanyaza i-EEPROM ...",
+	creating = "Ukudala iprofayile yomsebenzisi ...",
+	installing = "Iyafaka",
+	installed = "I-MineOS ifakiwe.",
+	reboot = "Qalisa ikhompyuter"
+}

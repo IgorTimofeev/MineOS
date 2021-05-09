@@ -1,0 +1,23 @@
+{
+	username = "Vartotojo vardas",
+	password = "Slaptažodis",
+	submitPassword = "Pateikti slaptažodį",
+	passwordsArentEqual = "Slaptažodžiai nėra vienodi.",
+	usernameInvalid = "Neteisingas vartotojo vardas",
+	withoutPassword = "Nenaudokite slaptažodžio:",
+	wallpapers = "Užsklandos:",
+	screensavers = "Ekrano užsklandos:",
+	applications = "Trečiųjų šalių programos:",
+	languages = "Kalbos paketai:",
+	accept = "Aš priimu:",
+	select = "Pasirinkite diegimo diską",
+	erase = "Ištrinti",
+	used = "naudojamas",
+	setup = "Nustatykite savo profilį",
+	customize = "Tinkinkite atsisiuntimus",
+	flashing = "Mirksi EEPROM ...",
+	creating = "Kuriamas vartotojo profilis ...",
+	installing = "Diegimas",
+	installed = "Įdiegta „MineOS“.",
+	reboot = "Perkraukite kompiuterį"
+}

@@ -1,0 +1,23 @@
+{
+	username = "Nume de utilizator",
+	password = "Parola",
+	submitPassword = "Trimiteți parola",
+	passwordsArentEqual = "Parolele nu sunt la fel.",
+	usernameInvalid = "Nume de utilizator invalid",
+	withoutPassword = "Nu utilizați o parolă:",
+	wallpapers = "Imagini de fundal:",
+	screensavers = "Screensavere:",
+	applications = "Aplicații terță parte:",
+	languages = "Pachete lingvistice:",
+	accept = "Accept:",
+	select = "Selectați discul pentru instalare",
+	erase = "Şterge",
+	used = "folosit",
+	setup = "Configurați-vă profilul",
+	customize = "Personalizați descărcările",
+	flashing = "EEPROM intermitent ...",
+	creating = "Se creează profilul de utilizator ...",
+	installing = "Se instalează",
+	installed = "MineOS a fost instalat.",
+	reboot = "Reporniți computerul"
+}

@@ -1,0 +1,23 @@
+{
+	username = "Sunan mai amfani",
+	password = "Kalmar wucewa",
+	submitPassword = "Sanya kalmar wucewa",
+	passwordsArentEqual = "Kalmomin shiga ba iri daya bane.",
+	usernameInvalid = "Sunan mai amfani mara aiki",
+	withoutPassword = "Kada kayi amfani da kalmar sirri:",
+	wallpapers = "Fuskar bangon waya:",
+	screensavers = "Masu ajiyar allo:",
+	applications = "Appsangare na uku apps:",
+	languages = "Harsunan fakiti:",
+	accept = "Na yarda:",
+	select = "Zaɓi faifai don shigarwa",
+	erase = "Goge",
+	used = "amfani",
+	setup = "Saita bayananku",
+	customize = "Musammam downloads",
+	flashing = "Hasken walƙiya ...",
+	creating = "Irƙiri bayanan mai amfani ...",
+	installing = "Girkawa",
+	installed = "An shigar da MineOS.",
+	reboot = "Sake yi kwamfutar"
+}

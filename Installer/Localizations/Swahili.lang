@@ -1,0 +1,23 @@
+{
+	username = "Jina la mtumiaji",
+	password = "Nenosiri",
+	submitPassword = "Tuma nywila",
+	passwordsArentEqual = "Nywila hazifanani.",
+	usernameInvalid = "Jina la mtumiaji si sahihi",
+	withoutPassword = "Usitumie nenosiri:",
+	wallpapers = "Ukuta",
+	screensavers = "Bongo:",
+	applications = "Programu za mtu wa tatu:",
+	languages = "Pakiti za lugha:",
+	accept = "Nakubali:",
+	select = "Chagua diski kwa usanidi",
+	erase = "Futa",
+	used = "kutumika",
+	setup = "Sanidi wasifu wako",
+	customize = "Badilisha upakuaji upendavyo",
+	flashing = "Kuangaza EEPROM ...",
+	creating = "Inaunda wasifu wa mtumiaji ...",
+	installing = "Inasakinisha",
+	installed = "MineOS imewekwa.",
+	reboot = "Anzisha tena kompyuta"
+}

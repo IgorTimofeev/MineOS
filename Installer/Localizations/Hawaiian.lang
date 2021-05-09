@@ -1,0 +1,23 @@
+{
+	username = "Inoa mea hoʻohana",
+	password = "Hua huna",
+	submitPassword = "Waiho ʻōlelo huna",
+	passwordsArentEqual = "ʻAʻole like nā ʻōlelo huna.",
+	usernameInvalid = "Inoa inoa kūpono ʻole",
+	withoutPassword = "Mai hoʻohana i kahi ʻōlelo huna:",
+	wallpapers = "Nā Wallpaper:",
+	screensavers = "Nā Screensavers:",
+	applications = "Nā polokalamu ʻaoʻao ʻekolu:",
+	languages = "ʻSlelo ʻlelo:",
+	accept = "ʻAe wau:",
+	select = "Koho disk no ka hoʻouka ʻana",
+	erase = "Holoi",
+	used = "hoʻohana ʻia",
+	setup = "Hoʻonohonoho i kāu ʻikepili",
+	customize = "Hoʻopilikino i nā hoʻoiho",
+	flashing = "Pākuʻi ʻia ʻo EEPROM ...",
+	creating = "Ke hana nei i nā mea hoʻohana ...",
+	installing = "Ke hoʻouka nei",
+	installed = "Ua hoʻonohonoho ʻia ʻo MineOS.",
+	reboot = "Hoʻopa hou i ke kamepiula"
+}

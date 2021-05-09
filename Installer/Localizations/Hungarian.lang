@@ -1,0 +1,23 @@
+{
+	username = "Felhasználónév",
+	password = "Jelszó",
+	submitPassword = "Jelszó elküldése",
+	passwordsArentEqual = "A jelszavak nem azonosak.",
+	usernameInvalid = "Érvénytelen felhasználónév",
+	withoutPassword = "Ne használjon jelszót:",
+	wallpapers = "Háttérképek:",
+	screensavers = "Képernyővédők:",
+	applications = "Harmadik féltől származó alkalmazások:",
+	languages = "Nyelvi csomagok:",
+	accept = "Elfogadom:",
+	select = "Válassza ki a lemezt a telepítéshez",
+	erase = "Törli",
+	used = "használt",
+	setup = "Állítsa be a profilját",
+	customize = "Testreszabhatja a letöltéseket",
+	flashing = "Villog az EEPROM ...",
+	creating = "Felhasználói profil létrehozása ...",
+	installing = "Telepítés",
+	installed = "A MineOS telepítve van.",
+	reboot = "Indítsa újra a számítógépet"
+}

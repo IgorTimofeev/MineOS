@@ -1,0 +1,23 @@
+{
+	username = "tên tài khoản",
+	password = "Mật khẩu",
+	submitPassword = "Gửi mật khẩu",
+	passwordsArentEqual = "Mật khẩu không giống nhau.",
+	usernameInvalid = "Tên sử dụng không hợp lệ",
+	withoutPassword = "Không sử dụng mật khẩu:",
+	wallpapers = "Hình nền:",
+	screensavers = "Bảo vệ màn hình:",
+	applications = "Ứng dụng của bên thứ ba:",
+	languages = "Gói ngôn ngữ:",
+	accept = "Tôi chấp nhận:",
+	select = "Chọn đĩa để cài đặt",
+	erase = "Tẩy xóa",
+	used = "đã sử dụng",
+	setup = "Thiết lập hồ sơ của bạn",
+	customize = "Tùy chỉnh tải xuống",
+	flashing = "Đang nhấp nháy EEPROM ...",
+	creating = "Tạo hồ sơ người dùng ...",
+	installing = "Đang cài đặt",
+	installed = "MineOS đã được cài đặt.",
+	reboot = "Khởi động lại máy tính"
+}

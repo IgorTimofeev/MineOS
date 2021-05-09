@@ -1,0 +1,23 @@
+{
+	username = "Korisničko ime",
+	password = "Zaporka",
+	submitPassword = "Pošaljite lozinku",
+	passwordsArentEqual = "Lozinke nisu iste.",
+	usernameInvalid = "Nevažeće korisničko ime",
+	withoutPassword = "Ne koristite lozinku:",
+	wallpapers = "Pozadine:",
+	screensavers = "Čuvari zaslona:",
+	applications = "Aplikacije treće strane:",
+	languages = "Jezični paketi:",
+	accept = "Prihvaćam:",
+	select = "Odaberite disk za instalaciju",
+	erase = "Izbriši",
+	used = "koristi",
+	setup = "Postavite svoj profil",
+	customize = "Prilagodite preuzimanja",
+	flashing = "Treperi EEPROM ...",
+	creating = "Izrada korisničkog profila ...",
+	installing = "Instaliranje",
+	installed = "Instaliran je MineOS.",
+	reboot = "Ponovo pokrenite računalo"
+}

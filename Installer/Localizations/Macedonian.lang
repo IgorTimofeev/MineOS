@@ -1,0 +1,23 @@
+{
+	username = "Корисничко име",
+	password = "Лозинка",
+	submitPassword = "Поднесете ја лозинката",
+	passwordsArentEqual = "Лозинките не се исти.",
+	usernameInvalid = "Невалидно корисничко име",
+	withoutPassword = "Не користете лозинка:",
+	wallpapers = "Позадини:",
+	screensavers = "Скринсејвери:",
+	applications = "Апликации од трети страни:",
+	languages = "Јазични пакети:",
+	accept = "Прифаќам:",
+	select = "Изберете диск за инсталација",
+	erase = "Избриши",
+	used = "користени",
+	setup = "Поставете го вашиот профил",
+	customize = "Прилагодете ги преземањата",
+	flashing = "Трепка ЕЕПРОМ ...",
+	creating = "Се создава кориснички профил ...",
+	installing = "Инсталирање",
+	installed = "MineOS е инсталиран.",
+	reboot = "Рестартирајте го компјутерот"
+}

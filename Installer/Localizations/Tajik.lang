@@ -1,0 +1,23 @@
+{
+	username = "Номи корбар",
+	password = "Гузарвожа",
+	submitPassword = "Гузарвожаро пешниҳод кунед",
+	passwordsArentEqual = "Гузарвожаҳо яксон нестанд.",
+	usernameInvalid = "Номи корбари нодуруст",
+	withoutPassword = "Паролро истифода набаред:",
+	wallpapers = "Обои:",
+	screensavers = "Скриншотҳо:",
+	applications = "Барномаҳои шахси сеюм:",
+	languages = "Бастаҳои забон:",
+	accept = "Ман рози:",
+	select = "Дискро барои насб интихоб кунед",
+	erase = "Нест кардан",
+	used = "истифода бурда мешавад",
+	setup = "Профили худро насб кунед",
+	customize = "Боргириҳоро фармоишӣ кунед",
+	flashing = "EEPROM медурахшад ...",
+	creating = "Таъсиси профили корбар ...",
+	installing = "Насб",
+	installed = "MineOS насб карда шудааст.",
+	reboot = "Компютерро бозоғоз намоед"
+}

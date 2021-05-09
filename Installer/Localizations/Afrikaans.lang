@@ -1,0 +1,23 @@
+{
+	username = "Gebruikersnaam",
+	password = "Wagwoord",
+	submitPassword = "Wagwoord in te dien",
+	passwordsArentEqual = "Wagwoorde is nie dieselfde nie.",
+	usernameInvalid = "Ongeldige gebruikersnaam",
+	withoutPassword = "Moenie 'n wagwoord gebruik nie:",
+	wallpapers = "Agtergronde:",
+	screensavers = "Skermbeveiligers:",
+	applications = "Derdeparty-programme:",
+	languages = "Taalpakkette:",
+	accept = "Ek aanvaar:",
+	select = "Kies skyf vir installasie",
+	erase = "Vee uit",
+	used = "gebruik",
+	setup = "Stel u profiel op",
+	customize = "Pas aflaai",
+	flashing = "Flits EEPROM ...",
+	creating = "Skep tans gebruikersprofiel ...",
+	installing = "Installeer",
+	installed = "MineOS is geïnstalleer.",
+	reboot = "Herbegin die rekenaar"
+}

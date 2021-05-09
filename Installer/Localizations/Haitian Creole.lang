@@ -1,0 +1,23 @@
+{
+	username = "Non itilizatè",
+	password = "Modpas",
+	submitPassword = "Soumèt modpas ou",
+	passwordsArentEqual = "Modpas yo pa menm.",
+	usernameInvalid = "Valab non itilizatè",
+	withoutPassword = "Pa sèvi ak yon modpas:",
+	wallpapers = "D ':",
+	screensavers = "Ekran:",
+	applications = "Apps twazyèm pati:",
+	languages = "Pake lang:",
+	accept = "Mwen aksepte:",
+	select = "Chwazi disk pou enstalasyon",
+	erase = "Efase",
+	used = "itilize",
+	setup = "Enstalasyon pwofil ou",
+	customize = "Customize downloads",
+	flashing = "Kap flache EEPROM ...",
+	creating = "Kreye pwofil itilizatè ...",
+	installing = "Enstale",
+	installed = "MineOS te enstale.",
+	reboot = "Rdemare òdinatè a"
+}

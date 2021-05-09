@@ -1,0 +1,23 @@
+{
+	username = "Korisničko ime",
+	password = "Lozinka",
+	submitPassword = "Pošaljite lozinku",
+	passwordsArentEqual = "Lozinke nisu iste.",
+	usernameInvalid = "Nevažeće korisničko ime",
+	withoutPassword = "Ne koristite lozinku:",
+	wallpapers = "Pozadine:",
+	screensavers = "Čuvari zaslona:",
+	applications = "Aplikacije treće strane:",
+	languages = "Jezički paketi:",
+	accept = "Prihvatam:",
+	select = "Odaberite disk za instalaciju",
+	erase = "Izbriši",
+	used = "koristi",
+	setup = "Postavite svoj profil",
+	customize = "Prilagodite preuzimanja",
+	flashing = "Treperi EEPROM ...",
+	creating = "Izrada korisničkog profila ...",
+	installing = "Instaliranje",
+	installed = "MineOS je instaliran.",
+	reboot = "Ponovo pokrenite računar"
+}

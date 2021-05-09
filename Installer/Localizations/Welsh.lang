@@ -1,0 +1,23 @@
+{
+	username = "Enw defnyddiwr",
+	password = "Cyfrinair",
+	submitPassword = "Cyflwyno cyfrinair",
+	passwordsArentEqual = "Nid yw cyfrineiriau yr un peth.",
+	usernameInvalid = "Enw defnyddiwr annilys",
+	withoutPassword = "Peidiwch â defnyddio cyfrinair:",
+	wallpapers = "Papurau wal:",
+	screensavers = "Arbedwyr sgrin:",
+	applications = "Apiau trydydd parti:",
+	languages = "Pecynnau iaith:",
+	accept = "Rwy'n derbyn:",
+	select = "Dewiswch ddisg i'w gosod",
+	erase = "Dileu",
+	used = "defnyddio",
+	setup = "Gosodwch eich proffil",
+	customize = "Addasu lawrlwythiadau",
+	flashing = "Fflachio EEPROM ...",
+	creating = "Creu proffil defnyddiwr ...",
+	installing = "Gosod",
+	installed = "Mae MineOS wedi'i osod.",
+	reboot = "Ailgychwyn y cyfrifiadur"
+}

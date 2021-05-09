@@ -1,0 +1,23 @@
+{
+	username = "Magaca isticmaalaha",
+	password = "Furaha",
+	submitPassword = "Gudbi ereyga sirta ah",
+	passwordsArentEqual = "Password-ku isku mid ma aha.",
+	usernameInvalid = "Magaca isticmaale aan ansax ahayn",
+	withoutPassword = "Ha isticmaalin lambar sir ah:",
+	wallpapers = "Sawirada:",
+	screensavers = "Sawir-qaadayaasha:",
+	applications = "Barnaamijyada xisbiga saddexaad:",
+	languages = "Xirmooyinka luqadda:",
+	accept = "Waan aqbalay:",
+	select = "Xulo disk rakibidda",
+	erase = "Masax",
+	used = "isticmaalay",
+	setup = "Samee astaantaada",
+	customize = "Habee soo dejinta",
+	flashing = "Nalalka EEPROM ...",
+	creating = "Abuuritaanka astaanta isticmaalaha ...",
+	installing = "Ku rakibidda",
+	installed = "MineOS waa la rakibay.",
+	reboot = "Dib ubixi kombiyuutarka"
+}

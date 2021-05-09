@@ -1,0 +1,23 @@
+{
+	username = "Username",
+	password = "Pasiwedhi",
+	submitPassword = "Tumira pasiwedhi",
+	passwordsArentEqual = "Passwords haana kufanana.",
+	usernameInvalid = "Zita rekushandisa risiri iro",
+	withoutPassword = "Usashandise password:",
+	wallpapers = "Wallpapers:",
+	screensavers = "Screensavers:",
+	applications = "Chechitatu bato maapplication:",
+	languages = "Mutauro mapakeji:",
+	accept = "Ndinobvuma:",
+	select = "Sarudza diski yekumisikidza",
+	erase = "Vadzime",
+	used = "kushandiswa",
+	setup = "Gadzira yako mbiri",
+	customize = "Gadzirisa kurodha pasi",
+	flashing = "Kupenya EEPROM ...",
+	creating = "Kugadzira mushandisi nhoroondo ...",
+	installing = "Kuisa",
+	installed = "MineOS yakaiswa.",
+	reboot = "Dzorera kombiyuta"
+}

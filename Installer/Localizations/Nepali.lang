@@ -1,0 +1,23 @@
+{
+	username = "प्रयोगकर्ता नाम",
+	password = "पासवर्ड",
+	submitPassword = "पासवर्ड बुझाउनुहोस्",
+	passwordsArentEqual = "पासवर्ड एकै छैन।",
+	usernameInvalid = "अवैध प्रयोगकर्ता नाम",
+	withoutPassword = "पासवर्ड प्रयोग नगर्नुहोस्:",
+	wallpapers = "वालपेपर:",
+	screensavers = "स्क्रीनसेभरहरू:",
+	applications = "तेस्रो पार्टी अनुप्रयोगहरू:",
+	languages = "भाषा प्याक:",
+	accept = "म स्वीकार छु:",
+	select = "स्थापनाको लागि डिस्क चयन गर्नुहोस्",
+	erase = "Erase",
+	used = "प्रयोग",
+	setup = "तपाईंको प्रोफाइल सेटअप गर्नुहोस्",
+	customize = "डाउनलोडहरू अनुकूलित गर्नुहोस्",
+	flashing = "फ्ल्यासिंग EEPROM ...",
+	creating = "प्रयोगकर्ता प्रोफाइल सिर्जना गर्दै ...",
+	installing = "स्थापना गर्दै",
+	installed = "MinOS स्थापित गरिएको छ।",
+	reboot = "कम्प्युटर रिबुट गर्नुहोस्"
+}

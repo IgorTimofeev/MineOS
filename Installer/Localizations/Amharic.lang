@@ -1,0 +1,23 @@
+{
+	username = "የተጠቃሚ ስም",
+	password = "የይለፍ ቃል",
+	submitPassword = "የይለፍ ቃል ያስገቡ",
+	passwordsArentEqual = "የይለፍ ቃላት አንድ አይደሉም።",
+	usernameInvalid = "ልክ ያልሆነ የተጠቃሚ ስም",
+	withoutPassword = "የይለፍ ቃል አይጠቀሙ",
+	wallpapers = "የግድግዳ ወረቀቶች",
+	screensavers = "የማያ ገጽ ቆጣቢዎች",
+	applications = "የሶስተኛ ወገን መተግበሪያዎች",
+	languages = "የቋንቋ ጥቅሎች",
+	accept = "ተቀብያለሁ:",
+	select = "ለመጫን ዲስክን ይምረጡ",
+	erase = "ደምስስ",
+	used = "ያገለገለ",
+	setup = "መገለጫዎን ያዋቅሩ",
+	customize = "ውርዶችን ያብጁ",
+	flashing = "ብልጭ ድርግም የሚል EEPROM ...",
+	creating = "የተጠቃሚ መገለጫ በመፍጠር ላይ ...",
+	installing = "በመጫን ላይ",
+	installed = "MineOS ተጭኗል.",
+	reboot = "ኮምፒተርውን እንደገና አስነሳ"
+}

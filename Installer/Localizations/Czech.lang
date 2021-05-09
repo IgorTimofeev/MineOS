@@ -1,0 +1,23 @@
+{
+	username = "Uživatelské jméno",
+	password = "Heslo",
+	submitPassword = "Zadejte heslo",
+	passwordsArentEqual = "Hesla nejsou stejná.",
+	usernameInvalid = "Neplatné uživatelské jméno",
+	withoutPassword = "Nepoužívejte heslo:",
+	wallpapers = "Tapety:",
+	screensavers = "Spořiče obrazovky:",
+	applications = "Aplikace třetích stran:",
+	languages = "Jazykové balíčky:",
+	accept = "Přijímám:",
+	select = "Vyberte disk pro instalaci",
+	erase = "Vymazat",
+	used = "použitý",
+	setup = "Nastavte si svůj profil",
+	customize = "Přizpůsobte stahování",
+	flashing = "Bliká EEPROM ...",
+	creating = "Vytváření uživatelského profilu ...",
+	installing = "Instalace",
+	installed = "MineOS byl nainstalován.",
+	reboot = "Restartujte počítač"
+}

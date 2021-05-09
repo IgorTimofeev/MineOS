@@ -1,0 +1,23 @@
+{
+	username = "Ngaran pamaké",
+	password = "Kecap akses",
+	submitPassword = "Kirimkeun kecap akses",
+	passwordsArentEqual = "Kecap akses henteu sami.",
+	usernameInvalid = "Ngaran pamaké henteu valid",
+	withoutPassword = "Entong nganggo kecap akses:",
+	wallpapers = "Wallpaper:",
+	screensavers = "Screensavers:",
+	applications = "Aplikasi pihak katilu:",
+	languages = "Pakét basa:",
+	accept = "Abdi nampi:",
+	select = "Pilih disk pikeun dipasang",
+	erase = "Ngahapus",
+	used = "dipaké",
+	setup = "Setél profil anjeun",
+	customize = "Ngaropea unduhan",
+	flashing = "Flashing EEPROM ...",
+	creating = "Nyiptakeun profil pangguna ...",
+	installing = "Masang",
+	installed = "MineOS parantos dipasang.",
+	reboot = "Pareuman komputer"
+}

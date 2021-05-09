@@ -1,0 +1,23 @@
+{
+	username = "Ainm-cleachdaidh",
+	password = "Facal-faire",
+	submitPassword = "Cuir a-steach facal-faire",
+	passwordsArentEqual = "Chan eil faclan-faire mar an ceudna.",
+	usernameInvalid = "Ainm-cleachdaidh mì-dhligheach",
+	withoutPassword = "Na cleachd facal-faire:",
+	wallpapers = "Pàipearan-balla:",
+	screensavers = "Luchd-togail-sgrìn:",
+	applications = "Aplacaidean treas-phàrtaidh:",
+	languages = "Pasganan cànain:",
+	accept = "Gabhaidh mi:",
+	select = "Tagh diosc airson an stàladh",
+	erase = "Cuir às",
+	used = "cleachdadh",
+	setup = "Suidhich do phròifil",
+	customize = "Gnàthaich luchdachadh sìos",
+	flashing = "A ’frasadh EEPROM ...",
+	creating = "A ’cruthachadh ìomhaigh neach-cleachdaidh ...",
+	installing = "Stàladh",
+	installed = "Chaidh MineOS a chuir a-steach.",
+	reboot = "Ath-thòisich an coimpiutair"
+}

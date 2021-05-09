@@ -1,0 +1,23 @@
+{
+	username = "صارف نام",
+	password = "پاس ورڈ",
+	submitPassword = "پاس ورڈ جمع کروائیں",
+	passwordsArentEqual = "پاس ورڈ ایک جیسے نہیں ہیں۔",
+	usernameInvalid = "غلط صارف نام",
+	withoutPassword = "پاس ورڈ استعمال نہ کریں:",
+	wallpapers = "وال پیپر:",
+	screensavers = "سکرینسیور:",
+	applications = "تیسری پارٹی کے ایپس:",
+	languages = "زبان کے پیک:",
+	accept = "مجھے قبول ہے:",
+	select = "تنصیب کے لئے ڈسک منتخب کریں",
+	erase = "مٹانا",
+	used = "استعمال کیا جاتا ہے",
+	setup = "اپنا پروفائل سیٹ اپ کریں",
+	customize = "ڈاؤن لوڈ کی تخصیص کریں",
+	flashing = "ایپرووم چمک رہا ہے…",
+	creating = "صارف پروفائل تشکیل دے رہا ہے…",
+	installing = "انسٹال ہو رہا ہے",
+	installed = "مائن او ایس لگا دیا گیا ہے۔",
+	reboot = "کمپیوٹر کو بوٹ کریں"
+}

@@ -1,0 +1,23 @@
+{
+	username = "Nome de usuario",
+	password = "Contrasinal",
+	submitPassword = "Enviar contrasinal",
+	passwordsArentEqual = "Os contrasinais non son os mesmos.",
+	usernameInvalid = "Nome de usuario non válido",
+	withoutPassword = "Non use un contrasinal:",
+	wallpapers = "Fondos de pantalla:",
+	screensavers = "Salvapantallas:",
+	applications = "Aplicacións de terceiros:",
+	languages = "Paquetes de idiomas:",
+	accept = "Acepto:",
+	select = "Seleccione o disco para a instalación",
+	erase = "Borrar",
+	used = "usado",
+	setup = "Configura o teu perfil",
+	customize = "Personaliza as descargas",
+	flashing = "EEPROM intermitente ...",
+	creating = "Creando perfil de usuario ...",
+	installing = "Instalando",
+	installed = "Instalouse MineOS.",
+	reboot = "Reinicie o ordenador"
+}

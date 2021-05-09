@@ -1,0 +1,23 @@
+{
+	username = "Brukernavn",
+	password = "Passord",
+	submitPassword = "Send inn passord",
+	passwordsArentEqual = "Passord er ikke det samme.",
+	usernameInvalid = "Ugyldig brukernavn",
+	withoutPassword = "Ikke bruk passord:",
+	wallpapers = "Bakgrunnsbilder:",
+	screensavers = "Skjermsparere:",
+	applications = "Tredjepartsapper:",
+	languages = "Språkpakker:",
+	accept = "Jeg aksepterer:",
+	select = "Velg disk for installasjon",
+	erase = "Viske ut",
+	used = "brukt",
+	setup = "Sett opp profilen din",
+	customize = "Tilpass nedlastinger",
+	flashing = "Blinker EEPROM ...",
+	creating = "Oppretter brukerprofil ...",
+	installing = "Installasjon",
+	installed = "MineOS er installert.",
+	reboot = "Start datamaskinen på nytt"
+}

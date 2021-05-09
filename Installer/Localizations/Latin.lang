@@ -1,0 +1,23 @@
+{
+	username = "nomen usoris",
+	password = "Password",
+	submitPassword = "submit",
+	passwordsArentEqual = "Tesserae",
+	usernameInvalid = "Irritum Username",
+	withoutPassword = "Uti",
+	wallpapers = "Video:",
+	screensavers = "Screensavers",
+	applications = "Tertius secui",
+	languages = "Lingua",
+	accept = "Accipio:",
+	select = "Lego",
+	erase = "vim extermina",
+	used = "solebant",
+	setup = "Setup",
+	customize = "Mos",
+	flashing = "Coruscans",
+	creating = "Profile",
+	installing = "installing",
+	installed = "MineOS",
+	reboot = "Reboot"
+}

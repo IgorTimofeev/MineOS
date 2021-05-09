@@ -1,0 +1,23 @@
+{
+	username = "Navê bikarhêner",
+	password = "Şîfre",
+	submitPassword = "Passwordîfreyê bişînin",
+	passwordsArentEqual = "Passwordîfre ne yek in.",
+	usernameInvalid = "Navê bikarhêner nederbasdar e",
+	withoutPassword = "Aîfre bikar neynin:",
+	wallpapers = "Wallpapers:",
+	screensavers = "Screensavers:",
+	applications = "Sepanên partiya sêyemîn:",
+	languages = "Pakêtên ziman:",
+	accept = "Ez qebûl dikim:",
+	select = "Ji bo sazkirinê dîskê hilbijêrin",
+	erase = "Vemirandin",
+	used = "bikar anîn",
+	setup = "Profîla xwe saz bikin",
+	customize = "Dakêşanan xwerû bikin",
+	flashing = "Çêkirina EEPROM ...",
+	creating = "Profîla bikarhênerê diafirîne ...",
+	installing = "Sazkirin",
+	installed = "MineOS hate saz kirin.",
+	reboot = "Komputerê nûve bikin"
+}

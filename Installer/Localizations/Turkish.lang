@@ -1,0 +1,23 @@
+{
+	username = "Kullanıcı adı",
+	password = "Parola",
+	submitPassword = "Şifre gönder",
+	passwordsArentEqual = "Şifreler aynı değil.",
+	usernameInvalid = "Geçersiz kullanıcı adı",
+	withoutPassword = "Parola kullanmayın:",
+	wallpapers = "Duvar kağıtları:",
+	screensavers = "Ekran koruyucular:",
+	applications = "Üçüncü taraf uygulamaları:",
+	languages = "Dil paketleri:",
+	accept = "Kabul ediyorum:",
+	select = "Kurulum için disk seçin",
+	erase = "Sil",
+	used = "Kullanılmış",
+	setup = "Profilinizi oluşturun",
+	customize = "İndirmeleri özelleştirin",
+	flashing = "Yanıp Sönen EEPROM ...",
+	creating = "Kullanıcı profili oluşturuluyor ...",
+	installing = "Kurulum",
+	installed = "MineOS kuruldu.",
+	reboot = "Bilgisayarı yeniden başlat"
+}

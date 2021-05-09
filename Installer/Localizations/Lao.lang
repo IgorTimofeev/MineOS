@@ -1,0 +1,23 @@
+{
+	username = "ຊື່ຜູ້ໃຊ້",
+	password = "ລະຫັດຜ່ານ",
+	submitPassword = "ສົ່ງລະຫັດຜ່ານ",
+	passwordsArentEqual = "ລະຫັດຜ່ານບໍ່ຄືກັນ.",
+	usernameInvalid = "ຊື່​ຜູ້​ໃຊ້​ທີ່​ບໍ່​ຖືກ​ຕ້ອງ",
+	withoutPassword = "ຢ່າໃຊ້ລະຫັດລັບ:",
+	wallpapers = "ພາບ:",
+	screensavers = "Screensavers:",
+	applications = "ແອັບ party ພາກສ່ວນທີສາມ:",
+	languages = "ຊອງພາສາ:",
+	accept = "ຂ້ອຍ​ຍອມ​ຮັບ:",
+	select = "ເລືອກ disk ສຳ ລັບຕິດຕັ້ງ",
+	erase = "ລົບລ້າງ",
+	used = "ໃຊ້ແລ້ວ",
+	setup = "ຕັ້ງໂປຼໄຟລ໌ຂອງທ່ານ",
+	customize = "ປັບແຕ່ງການດາວໂຫລດ",
+	flashing = "ກະພິບ EEPROM ...",
+	creating = "ກຳ ລັງສ້າງໂປຣໄຟລ໌ຜູ້ໃຊ້ ...",
+	installing = "ການຕິດຕັ້ງ",
+	installed = "MineOS ໄດ້ຖືກຕິດຕັ້ງແລ້ວ.",
+	reboot = "ເປີດຄອມພິວເຕີ້ຄືນ ໃໝ່"
+}

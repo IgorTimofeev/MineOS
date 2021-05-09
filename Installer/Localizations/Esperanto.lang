@@ -1,0 +1,23 @@
+{
+	username = "Uzantnomo",
+	password = "Pasvorto",
+	submitPassword = "Sendu pasvorton",
+	passwordsArentEqual = "Pasvortoj ne samas.",
+	usernameInvalid = "Nevalida salutnomo",
+	withoutPassword = "Ne uzu pasvorton:",
+	wallpapers = "Tapetoj:",
+	screensavers = "Ekrankurtenoj:",
+	applications = "Triaj programoj:",
+	languages = "Lingvaj pakoj:",
+	accept = "Mi akceptas:",
+	select = "Elektu diskon por instalado",
+	erase = "Viŝi",
+	used = "uzata",
+	setup = "Agordi vian profilon",
+	customize = "Agordi elŝutojn",
+	flashing = "Ekbrilanta EEPROM ...",
+	creating = "Kreante profilon de uzanto ...",
+	installing = "Instalado",
+	installed = "MineOS estis instalita.",
+	reboot = "Rekomencu la komputilon"
+}

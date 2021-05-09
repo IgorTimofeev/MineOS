@@ -1,0 +1,23 @@
+{
+	username = "Lietotājvārds",
+	password = "Parole",
+	submitPassword = "Iesniegt paroli",
+	passwordsArentEqual = "Paroles nav vienādas.",
+	usernameInvalid = "Nederīgs lietotājvārds",
+	withoutPassword = "Nelietojiet paroli:",
+	wallpapers = "Tapetes:",
+	screensavers = "Ekrāna saudzētāji:",
+	applications = "Trešo pušu lietotnes:",
+	languages = "Valodu paketes:",
+	accept = "Es piekrītu:",
+	select = "Instalēšanai izvēlieties disku",
+	erase = "Dzēst",
+	used = "izmantots",
+	setup = "Iestatiet savu profilu",
+	customize = "Pielāgojiet lejupielādes",
+	flashing = "Mirgo EEPROM ...",
+	creating = "Notiek lietotāja profila izveide ...",
+	installing = "Instalēšana",
+	installed = "MineOS ir instalēts.",
+	reboot = "Pārstartējiet datoru"
+}

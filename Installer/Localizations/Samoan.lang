@@ -1,0 +1,23 @@
+{
+	username = "Igoa Igoa",
+	password = "Numera e le iloa e sesi",
+	submitPassword = "Tuʻu mai le faʻaupuga",
+	passwordsArentEqual = "E le tutusa upu faʻamau.",
+	usernameInvalid = "Igoa Igoa le saʻo",
+	withoutPassword = "Aua le faʻaaogaina se upu faʻataga:",
+	wallpapers = "Faʻaputuga ata:",
+	screensavers = "Vaʻai vaʻai:",
+	applications = "Polokalama a le pati lona tolu:",
+	languages = "Pusa ole gagana:",
+	accept = "Ou te talia:",
+	select = "Filifili disk mo faapipiiina",
+	erase = "Tape",
+	used = "faʻaaoga",
+	setup = "Seti lau talaʻaga",
+	customize = "Tuʻufaʻatasi download",
+	flashing = "Faapapa EEPROM ...",
+	creating = "Fausiaina o faʻamatalaga a le tagata faʻaaoga ...",
+	installing = "Faapipiiina",
+	installed = "Ua faʻapipiʻi laʻu MineOS.",
+	reboot = "Toe fai le komepiuta"
+}

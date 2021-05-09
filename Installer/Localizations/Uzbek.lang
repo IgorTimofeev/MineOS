@@ -1,0 +1,23 @@
+{
+	username = "Foydalanuvchi nomi",
+	password = "Parol",
+	submitPassword = "Parolni yuboring",
+	passwordsArentEqual = "Parollar bir xil emas.",
+	usernameInvalid = "Foydalanuvchi nomi noto‘g‘ri",
+	withoutPassword = "Parolni ishlatmang:",
+	wallpapers = "Fon rasmlari:",
+	screensavers = "Ekran qo'riqchilari:",
+	applications = "Uchinchi tomon dasturlari:",
+	languages = "Til paketlari:",
+	accept = "Men qabul qilaman:",
+	select = "O'rnatish uchun diskni tanlang",
+	erase = "O'chirish",
+	used = "ishlatilgan",
+	setup = "Profilingizni sozlang",
+	customize = "Yuklanishlarni sozlang",
+	flashing = "EEPROM yonmoqda ...",
+	creating = "Foydalanuvchi profilini yaratish ...",
+	installing = "O'rnatilmoqda",
+	installed = "MineOS o'rnatildi.",
+	reboot = "Kompyuterni qayta yoqing"
+}

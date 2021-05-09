@@ -1,0 +1,23 @@
+{
+	username = "Хэрэглэгчийн нэр",
+	password = "Нууц үг",
+	submitPassword = "Нууц үгээ оруулна уу",
+	passwordsArentEqual = "Нууц үг ижил биш байна.",
+	usernameInvalid = "Хэрэглэгчийн нэр хүчингүй",
+	withoutPassword = "Нууц үг бүү ашигла:",
+	wallpapers = "Ханын зураг:",
+	screensavers = "Дэлгэц хамгаалагч:",
+	applications = "Гуравдагч этгээдийн програмууд:",
+	languages = "Хэлний багц:",
+	accept = "Би зөвшөөрч байна:",
+	select = "Суулгах дискийг сонгоно уу",
+	erase = "Устгах",
+	used = "ашигласан",
+	setup = "Өөрийн профайлыг тохируулна уу",
+	customize = "Татаж авалтыг тохируулах",
+	flashing = "EEPROM гялсхийж байна ...",
+	creating = "Хэрэглэгчийн профайл үүсгэж байна ...",
+	installing = "Суулгаж байна",
+	installed = "MineOS суулгасан.",
+	reboot = "Компьютерээ дахин ачаална уу"
+}

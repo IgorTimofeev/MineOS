@@ -1,0 +1,23 @@
+{
+	username = "Username",
+	password = "Ang password",
+	submitPassword = "Pagsumite password",
+	passwordsArentEqual = "Ang password dili parehas.",
+	usernameInvalid = "Dili balido nga username",
+	withoutPassword = "Ayaw paggamit usa ka password:",
+	wallpapers = "Mga Wallpaper:",
+	screensavers = "Mga Screensaver:",
+	applications = "Mga app sa ikatulo nga partido:",
+	languages = "Mga pakete sa sinultian:",
+	accept = "Gidawat nako:",
+	select = "Pilia ang disk alang sa pagbutang",
+	erase = "Papason",
+	used = "gigamit",
+	setup = "I-setup ang imong profile",
+	customize = "Ipasadya ang mga pag-download",
+	flashing = "Nag-flash EEPROM ...",
+	creating = "Naghimo profile sa tiggamit ...",
+	installing = "Pagbutang",
+	installed = "Gi-install ang MineOS.",
+	reboot = "I-reboot ang kompyuter"
+}

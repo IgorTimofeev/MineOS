@@ -1,0 +1,23 @@
+{
+	username = "පරිශීලක නාමය",
+	password = "මුරපදය",
+	submitPassword = "මුරපදය ඉදිරිපත් කරන්න",
+	passwordsArentEqual = "මුරපද සමාන නොවේ.",
+	usernameInvalid = "අවලංගු පරිශීලක නාමය",
+	withoutPassword = "මුරපදයක් භාවිතා නොකරන්න:",
+	wallpapers = "බිතුපත්:",
+	screensavers = "තිර සේවා:",
+	applications = "තෙවන පාර්ශවීය යෙදුම්:",
+	languages = "භාෂා ඇසුරුම්:",
+	accept = "මම පිළිගන්නවා:",
+	select = "ස්ථාපනය සඳහා තැටිය තෝරන්න",
+	erase = "මකන්න",
+	used = "භාවිතා කර ඇත",
+	setup = "ඔබගේ පැතිකඩ සකසන්න",
+	customize = "බාගැනීම් අභිරුචිකරණය කරන්න",
+	flashing = "දැල්වෙන ඊප්රොම් ...",
+	creating = "පරිශීලක පැතිකඩ නිර්මාණය කිරීම ...",
+	installing = "ස්ථාපනය කිරීම",
+	installed = "MineOS ස්ථාපනය කර ඇත.",
+	reboot = "පරිගණකය නැවත ආරම්භ කරන්න"
+}

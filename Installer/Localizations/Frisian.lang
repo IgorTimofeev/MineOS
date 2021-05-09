@@ -1,0 +1,23 @@
+{
+	username = "Brûkersnamme",
+	password = "Wachtwurd",
+	submitPassword = "Wachtwurd yntsjinje",
+	passwordsArentEqual = "Wachtwurden binne net itselde.",
+	usernameInvalid = "Ûnjildige brûkersnamme",
+	withoutPassword = "Brûk gjin wachtwurd:",
+	wallpapers = "Wallpapers:",
+	screensavers = "Skermbefeiligers:",
+	applications = "Apps fan tredden:",
+	languages = "Taalpakken:",
+	accept = "Ik akseptearje:",
+	select = "Selektearje skiif foar ynstallaasje",
+	erase = "Wiskje",
+	used = "brûkt",
+	setup = "Stel jo profyl yn",
+	customize = "Oanpasse downloads",
+	flashing = "Flasht EEPROM ...",
+	creating = "Meidoggerprofyl oanmeitsje ...",
+	installing = "Ynstallearje",
+	installed = "MineOS is ynstalleare.",
+	reboot = "Reboot de kompjûter"
+}

@@ -1,0 +1,23 @@
+{
+	username = "Lub npe neeg siv",
+	password = "Lo lus zais",
+	submitPassword = "Xa lo lus zais",
+	passwordsArentEqual = "Lo lus zais tsis zoo li qub.",
+	usernameInvalid = "Lub npe neeg siv tsis raug",
+	withoutPassword = "Tsis txhob siv tus password:",
+	wallpapers = "Phab ntsa:",
+	screensavers = "Screensavers:",
+	applications = "Thib peb apps:",
+	languages = "Cov lus hais:",
+	accept = "Kuv txais:",
+	select = "Xaiv disk rau nruab",
+	erase = "Lwv",
+	used = "siv",
+	setup = "Teeb koj qhov profile",
+	customize = "Caw suav downloads",
+	flashing = "Flash EEPROM ...",
+	creating = "Tsim neeg siv profile ...",
+	installing = "Txhim Kho",
+	installed = "MineOS tau raug ntsia.",
+	reboot = "Rov qab kho lub computer"
+}

@@ -1,0 +1,23 @@
+{
+	username = "მომხმარებლის სახელი",
+	password = "პაროლი",
+	submitPassword = "პაროლის გაგზავნა",
+	passwordsArentEqual = "პაროლები არ არის იგივე.",
+	usernameInvalid = "მომხმარებლის სახელი არასწორია",
+	withoutPassword = "არ გამოიყენოთ პაროლი:",
+	wallpapers = "ფონები:",
+	screensavers = "ეკრანმზოგი:",
+	applications = "მესამე მხარის აპები:",
+	languages = "ენის პაკეტები:",
+	accept = "Თანახმა ვარ:",
+	select = "ინსტალაციისთვის აირჩიეთ დისკი",
+	erase = "წაშლა",
+	used = "გამოყენებული",
+	setup = "დააყენეთ თქვენი პროფილი",
+	customize = "ჩამოტვირთვების მორგება",
+	flashing = "ანათებს EEPROM ...",
+	creating = "მომხმარებლის პროფილის შექმნა ...",
+	installing = "ინსტალაცია",
+	installed = "დაინსტალირებულია MineOS.",
+	reboot = "გადატვირთეთ კომპიუტერი"
+}

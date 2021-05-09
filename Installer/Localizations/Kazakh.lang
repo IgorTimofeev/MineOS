@@ -1,0 +1,23 @@
+{
+	username = "Пайдаланушы аты",
+	password = "Пароль",
+	submitPassword = "Құпия сөзді жіберіңіз",
+	passwordsArentEqual = "Құпия сөздер бірдей емес.",
+	usernameInvalid = "Пайдаланушы аты жарамсыз",
+	withoutPassword = "Құпия сөзді пайдаланбаңыз:",
+	wallpapers = "Тұсқағаздар:",
+	screensavers = "Скринсаверлер:",
+	applications = "Үшінші тарап қолданбалары:",
+	languages = "Тіл пакеттері:",
+	accept = "Мен қабылдаймын:",
+	select = "Орнату үшін дискіні таңдаңыз",
+	erase = "Өшіру",
+	used = "қолданылған",
+	setup = "Профильді орнатыңыз",
+	customize = "Жүктеулерді реттеңіз",
+	flashing = "EEPROM жыпылықтайды ...",
+	creating = "Пайдаланушы профилі жасалуда ...",
+	installing = "Орнатылуда",
+	installed = "MineOS орнатылды.",
+	reboot = "Компьютерді қайта жүктеңіз"
+}

@@ -1,0 +1,23 @@
+{
+	username = "Igama lomsebenzisi",
+	password = "Iphasiwedi",
+	submitPassword = "Thumela iphasiwedi",
+	passwordsArentEqual = "Amaphasiwedi awafani.",
+	usernameInvalid = "Igama lomsebenzisi elingavumelekile",
+	withoutPassword = "Ungasebenzisi iphasiwedi:",
+	wallpapers = "Izithombe zangemuva:",
+	screensavers = "Izikrini zesikrini:",
+	applications = "Izinhlelo zokusebenza zenkampani yangaphandle:",
+	languages = "Amaphekhi olimi:",
+	accept = "Ngiyamukela:",
+	select = "Khetha idiski ukufakwa",
+	erase = "Sula",
+	used = "esetshenzisiwe",
+	setup = "Setha iphrofayela yakho",
+	customize = "Enza ngendlela oyifisayo ukulanda",
+	flashing = "Iyakhanyisa i-EEPROM ...",
+	creating = "Idala iphrofayela yomsebenzisi ...",
+	installing = "Iyafaka",
+	installed = "I-MineOS ifakiwe.",
+	reboot = "Qalisa kabusha ikhompyutha"
+}

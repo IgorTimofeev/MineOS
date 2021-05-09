@@ -1,0 +1,23 @@
+{
+	username = "Orukọ olumulo",
+	password = "Ọrọigbaniwọle",
+	submitPassword = "Fi ọrọ igbaniwọle sii",
+	passwordsArentEqual = "Awọn ọrọigbaniwọle kii ṣe kanna.",
+	usernameInvalid = "Orukọ olumulo ti ko fẹ",
+	withoutPassword = "Maṣe lo ọrọ igbaniwọle kan:",
+	wallpapers = "Iṣẹṣọ ogiri:",
+	screensavers = "Awọn iboju iboju:",
+	applications = "Awọn ohun elo ẹnikẹta:",
+	languages = "Awọn akopọ ede:",
+	accept = "Mo gba:",
+	select = "Yan disiki fun fifi sori ẹrọ",
+	erase = "Paarẹ",
+	used = "lo",
+	setup = "Ṣeto profaili rẹ",
+	customize = "Ṣe awọn gbigba lati ayelujara",
+	flashing = "Ìmọlẹ EEPROM ...",
+	creating = "Ṣiṣẹda profaili olumulo ...",
+	installing = "Fifi sori ẹrọ",
+	installed = "MineOS ti fi sii.",
+	reboot = "Atunbere kọmputa naa"
+}

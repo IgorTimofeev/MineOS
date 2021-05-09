@@ -1,0 +1,23 @@
+{
+	username = "Anaran'ny mpampiasa",
+	password = "Password",
+	submitPassword = "Alefaso ny teny miafinao",
+	passwordsArentEqual = "Tsy mitovy ny teny miafina.",
+	usernameInvalid = "Solonanarana tsy mety",
+	withoutPassword = "Aza mampiasa teny miafina:",
+	wallpapers = "Sary:",
+	screensavers = "Screensavers:",
+	applications = "Fampiharana antoko fahatelo:",
+	languages = "Fonosana fiteny:",
+	accept = "Manaiky aho:",
+	select = "Misafidiana kapila apetraka",
+	erase = "hamafa",
+	used = "ampiasaina",
+	setup = "Amboary ny piraofilinao",
+	customize = "Ataovy miavaka ny fampidinana",
+	flashing = "Flashing EEPROM ...",
+	creating = "Mamorona mombamomba ny mpampiasa ...",
+	installing = "fametrahana",
+	installed = "Niorina i MineOS.",
+	reboot = "Avereno jerena ny solosaina"
+}

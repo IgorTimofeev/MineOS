@@ -1,0 +1,23 @@
+{
+	username = "Nome d'utilizatore",
+	password = "Codice",
+	submitPassword = "Mandate a password",
+	passwordsArentEqual = "E password ùn sò micca listesse.",
+	usernameInvalid = "Nome d'utilizatore invalidu",
+	withoutPassword = "Ùn aduprate micca una parolla d'intesa:",
+	wallpapers = "Sfondi:",
+	screensavers = "Screensavers:",
+	applications = "Apps di terzu:",
+	languages = "Packs di lingua:",
+	accept = "Accettu:",
+	select = "Sceglite u discu per a stallazione",
+	erase = "Sguassà",
+	used = "usatu",
+	setup = "Configurate u vostru prufilu",
+	customize = "Personalizà i download",
+	flashing = "EEPROM lampante ...",
+	creating = "Creendu u prufilu d'utilizatore ...",
+	installing = "Stallendu",
+	installed = "MineOS hè statu installatu.",
+	reboot = "Riavvia l'urdinatore"
+}

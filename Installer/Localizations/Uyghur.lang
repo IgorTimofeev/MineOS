@@ -1,0 +1,23 @@
+{
+	username = "ئىشلەتكۈچى ئىسمى",
+	password = "پارول",
+	submitPassword = "پارول يوللاڭ",
+	passwordsArentEqual = "پارول ئوخشاش بولمايدۇ.",
+	usernameInvalid = "ئىشلەتكۈچى ئىسمى ئىناۋەتسىز",
+	withoutPassword = "پارول ئىشلەتمەڭ:",
+	wallpapers = "تام قەغىزى:",
+	screensavers = "ئېكران ساقلىغۇچى:",
+	applications = "ئۈچىنچى تەرەپ ئەپلىرى:",
+	languages = "تىل بولىقى:",
+	accept = "مەن قوبۇل قىلىمەن:",
+	select = "ئورنىتىش ئۈچۈن دىسكىنى تاللاڭ",
+	erase = "Erase",
+	used = "ئىشلىتىلگەن",
+	setup = "ئارخىپىڭىزنى تەڭشەڭ",
+	customize = "چۈشۈرۈشنى ئىختىيارىي قىلىڭ",
+	flashing = "چاقماق EEPROM ...",
+	creating = "ئىشلەتكۈچى ئارخىپى قۇرۇش ...",
+	installing = "قاچىلاش",
+	installed = "MineOS ئورنىتىلدى.",
+	reboot = "كومپيۇتېرنى قايتا قوزغىتىڭ"
+}

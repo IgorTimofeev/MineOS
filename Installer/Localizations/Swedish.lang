@@ -1,0 +1,23 @@
+{
+	username = "Användarnamn",
+	password = "Lösenord",
+	submitPassword = "Skicka lösenord",
+	passwordsArentEqual = "Lösenorden är inte samma.",
+	usernameInvalid = "Ogiltigt användarnamn",
+	withoutPassword = "Använd inte ett lösenord:",
+	wallpapers = "Bakgrundsbilder:",
+	screensavers = "Skärmsläckare:",
+	applications = "Tredjepartsappar:",
+	languages = "Språkpaket:",
+	accept = "Jag accepterar:",
+	select = "Välj disk för installation",
+	erase = "Radera",
+	used = "Begagnade",
+	setup = "Ställ in din profil",
+	customize = "Anpassa nedladdningar",
+	flashing = "Blinkar EEPROM ...",
+	creating = "Skapar användarprofil ...",
+	installing = "Installerar",
+	installed = "MineOS har installerats.",
+	reboot = "Starta om datorn"
+}

@@ -1,0 +1,23 @@
+{
+	username = "Імя карыстальніка",
+	password = "Пароль",
+	submitPassword = "Адправіць пароль",
+	passwordsArentEqual = "Паролі не аднолькавыя.",
+	usernameInvalid = "Няправільнае імя карыстальніка",
+	withoutPassword = "Не выкарыстоўвайце пароль:",
+	wallpapers = "Шпалеры:",
+	screensavers = "Застаўкі:",
+	applications = "Дадаткі іншых вытворцаў:",
+	languages = "Моўныя пакеты:",
+	accept = "Я прымаю:",
+	select = "Выберыце дыск для ўстаноўкі",
+	erase = "Сцерці",
+	used = "выкарыстоўваецца",
+	setup = "Наладзьце свой профіль",
+	customize = "Наладзьце загрузкі",
+	flashing = "Міргае EEPROM ...",
+	creating = "Стварэнне профілю карыстальніка ...",
+	installing = "Усталёўка",
+	installed = "Усталяваны MineOS.",
+	reboot = "Перазагрузіце кампутар"
+}

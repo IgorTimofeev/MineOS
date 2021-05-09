@@ -1,0 +1,23 @@
+{
+	username = "Username",
+	password = "Password",
+	submitPassword = "Ibgħat il-password",
+	passwordsArentEqual = "Il-passwords mhumiex l-istess.",
+	usernameInvalid = "Username mhux validu",
+	withoutPassword = "Tużax password:",
+	wallpapers = "Sfondi:",
+	screensavers = "Screensavers:",
+	applications = "Applikazzjonijiet ta 'partijiet terzi:",
+	languages = "Pakketti tal-lingwa:",
+	accept = "Naċċetta:",
+	select = "Agħżel id-diska għall-installazzjoni",
+	erase = "Ħassar",
+	used = "użat",
+	setup = "Issettja l-profil tiegħek",
+	customize = "Ippersonalizza t-tniżżil",
+	flashing = "EEPROM li jteptep ...",
+	creating = "Noħolqu profil tal-utent ...",
+	installing = "Installazzjoni",
+	installed = "MineOS ġie installat.",
+	reboot = "Ibda mill-ġdid il-kompjuter"
+}

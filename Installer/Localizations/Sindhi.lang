@@ -1,0 +1,23 @@
+{
+	username = "کاتي جو نالو",
+	password = "پاسورڊ",
+	submitPassword = "پاسورڊ جمع ڪريو",
+	passwordsArentEqual = "پاسورڊ هڪجهڙا ناهن.",
+	usernameInvalid = "غلط يوزرنيم",
+	withoutPassword = "پاسورڊ استعمال نه ڪريو",
+	wallpapers = "وال پيپرز:",
+	screensavers = "اسڪرين ڏي:",
+	applications = "ٽئين پارٽي ائپس:",
+	languages = "ٻولي جا پيڪ:",
+	accept = "مان قبول ڪريان ٿو",
+	select = "انسٽاليشن لاءِ ڊسڪ چونڊيو",
+	erase = "ختم ڪريو",
+	used = "استعمال ڪيو ويو",
+	setup = "پنھنجي پروفائيل کي ترتيب ڏيو",
+	customize = "ڊائونلوڊز کي ترتيب ڏيو",
+	flashing = "EEPROM چمڪي رهيو آهي ...",
+	creating = "يوزر پروفائيل ٺاهي پيو…",
+	installing = "انسٽال ڪرڻ",
+	installed = "مينيو انسٽال ڪيو ويو آهي.",
+	reboot = "ڪمپيوٽر ريبوٽ ڪريو"
+}

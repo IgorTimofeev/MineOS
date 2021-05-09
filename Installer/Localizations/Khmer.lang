@@ -1,0 +1,23 @@
+{
+	username = "ឈ្មោះ​អ្នកប្រើប្រាស់",
+	password = "ពាក្យសម្ងាត់",
+	submitPassword = "បញ្ជូនពាក្យសម្ងាត់",
+	passwordsArentEqual = "លេខសម្ងាត់មិនដូចគ្នាទេ។",
+	usernameInvalid = "ឈ្មោះ​អ្នកប្រើប្រាស់​មិន​ត្រឹមត្រូវ",
+	withoutPassword = "កុំប្រើពាក្យសម្ងាត់៖",
+	wallpapers = "ផ្ទាំងរូបភាព:",
+	screensavers = "ធាតុរក្សាអេក្រង់៖",
+	applications = "កម្មវិធីភាគីទីបី៖",
+	languages = "កញ្ចប់ភាសា៖",
+	accept = "ខ្ញុំ​ទទួល​យក:",
+	select = "ជ្រើសរើសថាសសម្រាប់ដំឡើង",
+	erase = "លុប",
+	used = "បានប្រើ",
+	setup = "រៀបចំប្រវត្តិរូបរបស់អ្នក",
+	customize = "ប្ដូរការទាញយកតាមបំណង",
+	flashing = "កំពុងបើក EEPROM ...",
+	creating = "កំពុងបង្កើតទម្រង់អ្នកប្រើប្រាស់ ...",
+	installing = "តំឡើង",
+	installed = "MineOS ត្រូវបានតំឡើង។",
+	reboot = "ចាប់ផ្ដើមកុំព្យូទ័រឡើងវិញ"
+}

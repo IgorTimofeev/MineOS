@@ -1,0 +1,23 @@
+{
+	username = "کارن نوم",
+	password = "رمز",
+	submitPassword = "شفر وسپارئ",
+	passwordsArentEqual = "پاسورډونه ورته نه دي.",
+	usernameInvalid = "غلط کارن نوم",
+	withoutPassword = "پاسورډ مه کاروئ:",
+	wallpapers = "والپيپرونه:",
+	screensavers = "سکرین سیورونه:",
+	applications = "د دریمې ډلې غوښتنلیکونه:",
+	languages = "د ژبې پاکټونه:",
+	accept = "زه دا منم:",
+	select = "د لګولو لپاره ډیسک غوره کړئ",
+	erase = "پاکول",
+	used = "کارول شوی",
+	setup = "خپل پروفایل تنظیم کړئ",
+	customize = "ډاونلوډونه تنظیم کړئ",
+	flashing = "د EEPROM فلش کول ...",
+	creating = "د کارونکي پروفایل رامینځته کول ...",
+	installing = "لګول",
+	installed = "MinOS نصب شوی.",
+	reboot = "کمپیوټر ریبوټ کړئ"
+}

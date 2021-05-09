@@ -1,0 +1,23 @@
+{
+	username = "نام کاربری",
+	password = "کلمه عبور",
+	submitPassword = "ارسال رمز عبور",
+	passwordsArentEqual = "رمزهای عبور یکسان نیستند.",
+	usernameInvalid = "نام کاربری نامعتبر است",
+	withoutPassword = "از رمز عبور استفاده نکنید:",
+	wallpapers = "تصاویر پس زمینه:",
+	screensavers = "محافظ صفحه نمایش:",
+	applications = "برنامه های شخص ثالث:",
+	languages = "بسته های زبان:",
+	accept = "قبول میکنم:",
+	select = "دیسک را برای نصب انتخاب کنید",
+	erase = "پاک کردن",
+	used = "استفاده شده",
+	setup = "نمایه خود را تنظیم کنید",
+	customize = "بارگیری ها را سفارشی کنید",
+	flashing = "در حال چشمک زدن EEPROM ...",
+	creating = "در حال ایجاد نمایه کاربر ...",
+	installing = "در حال نصب",
+	installed = "MineOS نصب شده است.",
+	reboot = "رایانه را دوباره راه اندازی کنید"
+}

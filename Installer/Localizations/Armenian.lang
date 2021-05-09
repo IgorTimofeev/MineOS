@@ -1,0 +1,23 @@
+{
+	username = "Օգտագործողի անունը",
+	password = "Գաղտնաբառ",
+	submitPassword = "Ներկայացրեք գաղտնաբառը",
+	passwordsArentEqual = "Գաղտնաբառերը նույնը չեն:",
+	usernameInvalid = "Անվավեր օգտվողի անուն",
+	withoutPassword = "Մի օգտագործեք գաղտնաբառ.",
+	wallpapers = "Պաստառ գործասեղանի համար",
+	screensavers = "Էկրանապահներ ՝",
+	applications = "Երրորդ կողմի ծրագրեր.",
+	languages = "Լեզվական փաթեթներ:",
+	accept = "Համաձայն եմ:",
+	select = "Տեղադրելու համար ընտրեք սկավառակ",
+	erase = "Նջել",
+	used = "օգտագործված",
+	setup = "Կարգավորեք ձեր պրոֆիլը",
+	customize = "Անհատականացրեք ներլցումները",
+	flashing = "EPրամեկուսացման EEPROM ...",
+	creating = "Ստեղծվում է օգտվողի պրոֆիլ ...",
+	installing = "Տեղադրում",
+	installed = "MineOS- ը տեղադրված է:",
+	reboot = "Վերագործարկեք համակարգիչը"
+}

@@ -1,0 +1,23 @@
+{
+	username = "Erabiltzaile izena",
+	password = "Pasahitza",
+	submitPassword = "Bidali pasahitza",
+	passwordsArentEqual = "Pasahitzak ez dira berdinak.",
+	usernameInvalid = "Erabiltzaile izen baliogabea",
+	withoutPassword = "Ez erabili pasahitzik:",
+	wallpapers = "Horma paperak:",
+	screensavers = "Pantaila-babesleak:",
+	applications = "Hirugarrenen aplikazioak:",
+	languages = "Hizkuntza paketeak:",
+	accept = "Onartzen dut:",
+	select = "Aukeratu diskoa instalatzeko",
+	erase = "Ezabatu",
+	used = "erabilitakoa",
+	setup = "Konfiguratu profila",
+	customize = "Pertsonalizatu deskargak",
+	flashing = "EEPROM keinuka ...",
+	creating = "Erabiltzaile profila sortzen ...",
+	installing = "Instalatzen",
+	installed = "MineOS instalatu da.",
+	reboot = "Berrabiarazi ordenagailua"
+}

@@ -1,0 +1,23 @@
+{
+	username = "Jeneng pangguna",
+	password = "Sandhi",
+	submitPassword = "Kirimake sandhi",
+	passwordsArentEqual = "Tembung sandhi ora padha.",
+	usernameInvalid = "Jeneng pangguna sing ora valid",
+	withoutPassword = "Aja nggunakake sandhi:",
+	wallpapers = "Wallpaper:",
+	screensavers = "Screensaver:",
+	applications = "Aplikasi pihak katelu:",
+	languages = "Paket basa:",
+	accept = "Aku nampa:",
+	select = "Pilih disk kanggo instalasi",
+	erase = "Mbusak",
+	used = "digunakake",
+	setup = "Setel profil sampeyan",
+	customize = "Ngatur download",
+	flashing = "EEPROM sumunar ...",
+	creating = "Nggawe profil pangguna ...",
+	installing = "Nginstal",
+	installed = "MineOS wis diinstal.",
+	reboot = "Urip maneh komputer"
+}

@@ -1,0 +1,23 @@
+{
+	username = "वापरकर्तानाव",
+	password = "संकेतशब्द",
+	submitPassword = "संकेतशब्द सबमिट करा",
+	passwordsArentEqual = "संकेतशब्द समान नाहीत.",
+	usernameInvalid = "अवैध वापरकर्तानाव",
+	withoutPassword = "संकेतशब्द वापरू नका:",
+	wallpapers = "वॉलपेपर:",
+	screensavers = "स्क्रीनसेव्हर्स:",
+	applications = "तृतीय पक्षाचे अॅप्स:",
+	languages = "भाषा पॅक:",
+	accept = "मला मान्य आहे:",
+	select = "स्थापनेसाठी डिस्क निवडा",
+	erase = "पुसून टाका",
+	used = "वापरले",
+	setup = "आपले प्रोफाइल सेट अप करा",
+	customize = "डाउनलोड सानुकूलित करा",
+	flashing = "फ्लॅशिंग EEPROM ...",
+	creating = "वापरकर्ता प्रोफाइल तयार करीत आहे ...",
+	installing = "स्थापित करीत आहे",
+	installed = "मिनोस स्थापित केले गेले आहे.",
+	reboot = "संगणक रीबूट करा"
+}

@@ -1,0 +1,23 @@
+{
+	username = "Nama pengguna",
+	password = "Kata Laluan",
+	submitPassword = "Hantar kata laluan",
+	passwordsArentEqual = "Kata laluan tidak sama.",
+	usernameInvalid = "Nama pengguna tidak sah",
+	withoutPassword = "Jangan gunakan kata laluan:",
+	wallpapers = "Kertas dinding:",
+	screensavers = "Skrin Skrin:",
+	applications = "Aplikasi pihak ketiga:",
+	languages = "Pek bahasa:",
+	accept = "Saya terima:",
+	select = "Pilih cakera untuk pemasangan",
+	erase = "Padamkan",
+	used = "terpakai",
+	setup = "Sediakan profil anda",
+	customize = "Sesuaikan muat turun",
+	flashing = "Berkelip EEPROM ...",
+	creating = "Membuat profil pengguna ...",
+	installing = "Memasang",
+	installed = "MineOS telah dipasang.",
+	reboot = "Nyalakan semula komputer"
+}

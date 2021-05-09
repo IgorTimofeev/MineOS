@@ -1,0 +1,23 @@
+{
+	username = "Notendanafn",
+	password = "Lykilorð",
+	submitPassword = "Sendu inn lykilorð",
+	passwordsArentEqual = "Lykilorð eru ekki þau sömu.",
+	usernameInvalid = "Ógilt notandanafn",
+	withoutPassword = "Ekki nota lykilorð:",
+	wallpapers = "Veggfóður:",
+	screensavers = "Skjáhvílur:",
+	applications = "Forrit þriðja aðila:",
+	languages = "Tungumálapakkar:",
+	accept = "Ég samþykki:",
+	select = "Veldu disk til uppsetningar",
+	erase = "Eyða",
+	used = "notað",
+	setup = "Settu upp prófílinn þinn",
+	customize = "Sérsniðið niðurhal",
+	flashing = "Blikkandi EEPROM ...",
+	creating = "Býr til notandaprófíl ...",
+	installing = "Uppsetning",
+	installed = "MineOS hefur verið sett upp.",
+	reboot = "Endurræstu tölvuna"
+}

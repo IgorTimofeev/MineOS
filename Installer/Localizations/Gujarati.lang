@@ -1,0 +1,23 @@
+{
+	username = "વપરાશકર્તા નામ",
+	password = "પાસવર્ડ",
+	submitPassword = "પાસવર્ડ સબમિટ કરો",
+	passwordsArentEqual = "પાસવર્ડ્સ સમાન નથી.",
+	usernameInvalid = "અમાન્ય વપરાશ કર્તા નામ",
+	withoutPassword = "પાસવર્ડનો ઉપયોગ કરશો નહીં:",
+	wallpapers = "વ Wallpapersલપેપર્સ:",
+	screensavers = "સ્ક્રીનસેવર:",
+	applications = "તૃતીય પક્ષ એપ્લિકેશન્સ:",
+	languages = "ભાષા પેક:",
+	accept = "હું સ્વીકારું છું:",
+	select = "ઇન્સ્ટોલેશન માટે ડિસ્ક પસંદ કરો",
+	erase = "ભુસવું",
+	used = "વપરાયેલ",
+	setup = "તમારી પ્રોફાઇલ સેટ કરો",
+	customize = "ડાઉનલોડ્સને કસ્ટમાઇઝ કરો",
+	flashing = "ફ્લેશિંગ ઇપ્રોમ ...",
+	creating = "વપરાશકર્તા પ્રોફાઇલ બનાવી રહ્યાં છે ...",
+	installing = "સ્થાપિત કરી રહ્યું છે",
+	installed = "માઇનઓએસ સ્થાપિત કરવામાં આવ્યું છે.",
+	reboot = "કમ્પ્યુટર રીબુટ કરો"
+}

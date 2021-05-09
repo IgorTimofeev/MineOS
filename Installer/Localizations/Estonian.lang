@@ -1,0 +1,23 @@
+{
+	username = "Kasutajanimi",
+	password = "Parool",
+	submitPassword = "Esitage parool",
+	passwordsArentEqual = "Paroolid pole ühesugused.",
+	usernameInvalid = "Vale kasutajanimi",
+	withoutPassword = "Ärge kasutage parooli:",
+	wallpapers = "Taustapildid:",
+	screensavers = "Ekraanisäästjad:",
+	applications = "Kolmanda osapoole rakendused:",
+	languages = "Keelepaketid:",
+	accept = "Ma nõustun:",
+	select = "Valige installimiseks ketas",
+	erase = "Kustuta",
+	used = "kasutatud",
+	setup = "Seadistage oma profiil",
+	customize = "Kohandage allalaadimisi",
+	flashing = "Vilgub EEPROM ...",
+	creating = "Kasutajaprofiili loomine ...",
+	installing = "Paigaldamine",
+	installed = "MineOS on installitud.",
+	reboot = "Taaskäivitage arvuti"
+}

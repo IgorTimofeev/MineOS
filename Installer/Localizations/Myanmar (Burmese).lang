@@ -1,0 +1,23 @@
+{
+	username = "အသုံးပြုသူအမည်",
+	password = "စကားဝှက်",
+	submitPassword = "လျှို့ဝှက်နံပါတ်ကိုတင်ပါ",
+	passwordsArentEqual = "စကားဝှက်များအတူတူမဟုတ်ပါ။",
+	usernameInvalid = "မမှန်ကန်သောသုံးစွဲသူအမည်",
+	withoutPassword = "စကားဝှက်မသုံးပါနှင့် -",
+	wallpapers = "နောက်ခံပုံများ -",
+	screensavers = "Screensavers:",
+	applications = "တတိယပါတီအက်ပ်များ",
+	languages = "ဘာသာစကားအထုပ်များ",
+	accept = "ကျွန်တော်လက်ခံသည်:",
+	select = "တပ်ဆင်မှုအတွက် disk ရွေးပါ",
+	erase = "ဖျက်ပါ",
+	used = "အသုံးပြုခံ့",
+	setup = "သင်၏ပရိုဖိုင်းကိုချိန်ညှိပါ",
+	customize = "downloads များကိုစိတ်ကြိုက်ပြုလုပ်ပါ",
+	flashing = "မှိတ်တုတ်မှိတ်တုတ် EEPROM ...",
+	creating = "အသုံးပြုသူပရိုဖိုင်ကိုဖန်တီးခြင်း ...",
+	installing = "ထည့်သွင်း",
+	installed = "MineOS ကိုတပ်ဆင်လိုက်ပြီ။",
+	reboot = "ကွန်ပျူတာကို Reboot လုပ်ပါ"
+}

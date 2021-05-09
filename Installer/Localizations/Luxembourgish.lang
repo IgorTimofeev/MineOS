@@ -1,0 +1,23 @@
+{
+	username = "Benotzernumm",
+	password = "Passwuert",
+	submitPassword = "Passwuert ofginn",
+	passwordsArentEqual = "Passwierder sinn net déiselwecht.",
+	usernameInvalid = "Ongëltege Benotzernumm",
+	withoutPassword = "Benotzt kee Passwuert:",
+	wallpapers = "Hannergrënn:",
+	screensavers = "Screensavers:",
+	applications = "Drëtt Partei Apps:",
+	languages = "Sproochpakete:",
+	accept = "Ech akzeptéieren:",
+	select = "Wielt Disk fir Installatioun",
+	erase = "Läschen",
+	used = "benotzt",
+	setup = "Setzt Äre Profil op",
+	customize = "Upassung eroflueden",
+	flashing = "EEPROM blénkt ...",
+	creating = "Erstelle Benotzerprofil ...",
+	installing = "Installéieren",
+	installed = "MineOS gouf installéiert.",
+	reboot = "De Computer neu starten"
+}
