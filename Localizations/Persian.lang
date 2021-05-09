@@ -1,0 +1,116 @@
+{
+	downloading = "بارگیری در حال انجام است",
+	CPUArchitecture = "معماری پردازنده",
+	RAMControl = "کنترل RAM",
+	packageUnloading = "تخلیه خودکار",
+	networkFTPNewConnection = "اتصال FTP",
+	networkFTPConnections = "اتصالات FTP",
+	networkFTPAddress = "آدرس سرور",
+	networkFTPPort = "پورت سرور",
+	networkFTPUser = "کاربر",
+	networkFTPPassword = "کلمه عبور",
+	updatingFileList = "در حال به روزرسانی لیست پرونده ...",
+	network = "شبکه",
+	networkTimeout = "رایانه از راه دور پاسخ نمی دهد",
+	networkAccessDenied = "دسترسی به سیستم فایل رایانه از راه دور مجاز نیست.",
+	networkAllowReadAndWrite = "دسترسی به سیستم فایل",
+	networkModemNotAvailable = "برای استفاده از توابع شبکه ، مودم را پیوست کنید",
+	networkState = "حالت شبکه را فعال کنید",
+	networkComputers = "گزینه های رایانه های شخصی شبکه",
+	networkName = "نام این رایانه شخصی",
+	networkSearchRadius = "شعاع جستجو",
+	openWith = "بازکردن با",
+	select = "برنامه را انتخاب کنید",
+	keepInDock = "در اسکله نگه دارید",
+	closeAllWindows = "همه پنجره ها را ببندید",
+	closeWindow = "نزدیک",
+	newWindow = "پنجره جدید",
+	launch = "راه اندازی",
+	launchWithArguments = "با استدلال راه اندازی کنید",
+	dontShowAnymore = "دوباره نشان نده",
+	newName = "نام جدید",
+	folderName = "نام پوشه",
+	fileName = "نام فایل",
+	applicationName = "نام نرم افزار",
+	file = "فایل",
+	notExists = "وجود ندارد",
+	alreadyExists = "همین الان هم وجود داره",
+	inDirectory = "در پوشه",
+	needReplace = "جایگزینش کن؟",
+	yes = "آره",
+	no = "نه",
+	cancel = "لغو",
+	open = "باز کن",
+	applyToAll = "درخواست برای همه",
+	toDirectory = "پوشه زدن",
+	copying = "کپی برداری",
+	faylaBlyad = "فایل",
+	areYouSure = "مطمئنی؟",
+	emptyTrash = "سطل زباله را خالی کنید",
+	type = "نوع",
+	size = "اندازه",
+	date = "تاریخ",
+	name = "نام",
+	path = "مسیر",
+	folder = "پوشه",
+	unknown = "ناشناس",
+	calculatingSize = "محاسبه",
+	properties = "خواص",
+	newFolderFromChosen = "پوشه جدید از انتخاب شده است",
+	create = "جدید",
+	newFolder = "پوشه",
+	newFile = "فایل",
+	newFileFromURL = "پرونده از URL",
+	newImage = "تصویر",
+	newApplication = "برنامه MineOS",
+	paste = "چسباندن",
+	copy = "کپی 🀄",
+	cut = "برش",
+	edit = "ویرایش کنید",
+	editInPhotoshop = "ویرایش در فتوشاپ",
+	rename = "تغییر نام دهید",
+	editShortcut = "ویرایش میانبر",
+	createShortcut = "ایجاد میانبر",
+	addToDock = "اضافه کردن به بارانداز",
+	removeFromDock = "حذف از بارانداز",
+	moveRight = "برو راست",
+	moveLeft = "حرکت به سمت چپ",
+	archive = "افزودن به بایگانی",
+	delete = "حذف",
+	addToFavourites = "اضافه کردن به علاقه مندی ها",
+	removeFromFavourites = "حذف از موارد دلخواه",
+	setAsWallpaper = "به عنوان تصویر زمینه تنظیم کنید",
+	showPackageContent = "نمایش محتوای بسته",
+	showContainingFolder = "نمایش پوشه حاوی",
+	flashEEPROM = "به EEPROM فلش بزنید",
+	flashingEEPROM = "چشمک زن در حال انجام است.",
+	print3D = "مدل چاپ",
+	sortBy = "مرتب سازی",
+	sortByType = "بر اساس نوع",
+	sortByName = "بر اساس اسم",
+	sortByDate = "بر اساس تاریخ",
+	aboutSystem = "درباره سیستم",
+	updates = "به روز رسانی ها",
+	update = "تازه کردن",
+	shutdown = "خاموش کردن",
+	logout = "خروج",
+	reboot = "راه اندازی مجدد",
+	shortcutIsCorrupted = "میانبر به پرونده موجود نیست پیوند داده شده است",
+	sortAutomatically = "تراز کردن با شبکه",
+	onDesktop = "روی دسک تاپ",
+	inCurrentDirectory = "در پوشه فعلی",
+	errorWhileRunningProgram = "خطا هنگام دویدن",
+	sendedFeedback = "بازخورد ارسال شد",
+	sendFeedback = "بازخورد ارسال کنید",
+	yourContacts = "مخاطبین شما",
+	additionalInfo = "اطلاعات تکمیلی",
+	stackTraceback = "ردیابی مجدد پشته",
+	favourite = "مورد علاقه",
+	search = "جستجو کردن",
+	mounts = "سوار می شود",
+	uploadToPastebin = "در Pastebin بارگذاری کنید",
+	pasteName = "چسباندن نام",
+	uploading = "بارگذاری در حال انجام است ...",
+	uploadingSuccess = "بارگذاری شده در",
+	uploadingFailure = "بارگذاری انجام نشد:"
+}
