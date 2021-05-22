@@ -96,7 +96,7 @@ local GPUProxy = component.proxy(component.list("gpu")())
 local screenWidth, screenHeight = GPUProxy.getResolution()
 
 -- Displays title and currently required library when booting OS
-local UIRequireTotal, UIRequireCounter = 13, 1
+local UIRequireTotal, UIRequireCounter = 14, 1
 
 local function UIRequire(module)
 	local function centrize(width)

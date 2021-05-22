@@ -233,29 +233,35 @@ local function checkImage(url, mneTolkoSprosit)
 			chunk, reason = handle.read(math.huge)
 			if chunk then
 				data = data .. chunk
-				
 				progressIndicator:roll()
 				workspace:draw()
 
 				if needCheck and #data > 8 then
 					if data:sub(1, 4) == "OCIF" then
-						if string.byte(data:sub(5, 5)) == 6 then
+						local encodingMethod = string.byte(data:sub(5, 5))
+
+						if encodingMethod == 6 or encodingMethod == 7 then
 							if string.byte(data:sub(6, 6)) == 8 and string.byte(data:sub(7, 7)) == 4 then
 								if mneTolkoSprosit then
 									handle:close()
-									return true								
+
+									return true					
 								end
+
 								needCheck = false
 							else
 								handle:close()
+
 								return false, "Image size is larger than 8x4"
 							end
 						else
 							handle:close()
+
 							return false, "Image encoding method is not supported"
 						end
 					else
 						handle:close()
+
 						return false, "Wrong image file signature"
 					end		
 				end
