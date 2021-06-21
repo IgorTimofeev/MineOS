@@ -113,6 +113,8 @@ local function addTitle(container, text)
 	return titleContainer
 end
 
+window.image = window:addChild(GUI.object(1, 1, 1, 1))
+window.image.data = {}
 window.sidebarPanel = window:addChild(GUI.panel(1, 1, 28, 1, 0x2D2D2D))
 window.sidebarLayout = window:addChild(GUI.layout(1, 1, window.sidebarPanel.width, 1, 1, 1))
 window.sidebarLayout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
@@ -163,8 +165,6 @@ local aboutToolTextBox = window.sidebarLayout:addChild(GUI.textBox(1, 1, window.
 
 window.toolsList = window:addChild(GUI.list(1, 1, 7, 1, 3, 0, 0x2D2D2D, 0x787878, 0x2D2D2D, 0x787878, 0x3C3C3C, 0xE1E1E1))
 window.toolsList:setMargin(0, 3)
-window.image = window:addChild(GUI.object(1, 1, 1, 1))
-window.image.data = {}
 
 local function onToolTouch(index)
 	tool = window.toolsList:getItem(index).tool
