@@ -542,7 +542,12 @@ local function newModemProxy(address)
 	end
 
 	proxy.write = function(handle, data)
-		local maxPacketSize = network.modemProxy.maxPacketSize() - network.modemPacketReserve
+		local maxPacketSize                                       -- В OC версий 1.11+ выпилили modem.maxPacketSize(), так-что чекаем, есть ли этот метод
+		if network.modemProxy.maxPacketSize then
+			maxPacketSize = network.modemProxy.maxPacketSize() - network.modemPacketReserve
+		else
+			maxPacketSize = 8192 - network.modemPacketReserve -- 8192 - стандартный размер пакета, судя по доке
+		end
 		repeat
 			if not request("write", false, handle, data:sub(1, maxPacketSize)) then
 				return false
