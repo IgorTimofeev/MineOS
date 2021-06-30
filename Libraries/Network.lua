@@ -546,7 +546,8 @@ local function newModemProxy(address)
 		if network.modemProxy.maxPacketSize then
 			maxPacketSize = network.modemProxy.maxPacketSize() - network.modemPacketReserve
 		else
-			maxPacketSize = 8192 - network.modemPacketReserve -- 8192 - стандартный размер пакета, судя по доке
+			local modemInfo = computer.getDeviceInfo()[network.modemProxy.address] -- Получаем инфу о компоненте модема
+			maxPacketSize =  modemInfo.capacity - network.modemPacketReserve       -- поле capacity - макс. размер пакета
 		end
 		repeat
 			if not request("write", false, handle, data:sub(1, maxPacketSize)) then
