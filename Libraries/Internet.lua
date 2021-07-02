@@ -47,14 +47,17 @@ end
 
 local function rawRequest(url, postData, headers, chunkHandler, chunkSize, method)
 	local pcallSuccess, requestHandle, requestReason = pcall(component.get("internet").request, url, postData, headers, method)
+	
 	if pcallSuccess then
 		if requestHandle then
 			while true do
-				local chunk, reason = requestHandle.read(chunkSize or math.huge)	
+				local chunk, reason = requestHandle.read(chunkSize or math.huge)
+
 				if chunk then
 					chunkHandler(chunk)
 				else
 					requestHandle:close()
+					
 					if reason then
 						return false, reason
 					else
@@ -63,7 +66,7 @@ local function rawRequest(url, postData, headers, chunkHandler, chunkSize, metho
 				end
 			end
 		else
-			return false, "Invalid URL-address"
+			return false, requestReason or "Invalid URL-address"
 		end
 	else
 		return false, "Invalid arguments to internet.request"
