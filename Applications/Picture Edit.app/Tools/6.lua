@@ -6,16 +6,17 @@ local image = require("Image")
 
 local workspace, window, menu = select(1, ...), select(2, ...), select(3, ...)
 local tool = {}
+locale = select(4, ...)
 
 tool.shortcut = "Ers"
 tool.keyCode = 18
-tool.about = "Eraser tool will cleanup pixels just like brush tool. You can configure of what data is need to be erased"
+tool.about = locale.tool6
 
-local backgroundSwitch = window.newSwitch("Erase background:", true)
-local foregroundSwitch = window.newSwitch("Erase foreground:", true)
-local alphaSwitch = window.newSwitch("Erase alpha:", true)
-local symbolSwitch = window.newSwitch("Erase symbol:", true)
-local radiusSlider = window.newSlider(1, 8, 1, false, "Radius: ", " px")
+local backgroundSwitch = window.newSwitch(locale.eraseBack, true)
+local foregroundSwitch = window.newSwitch(locale.eraseFor, true)
+local alphaSwitch = window.newSwitch(locale.eraseAlpha, true)
+local symbolSwitch = window.newSwitch(locale.eraseSym, true)
+local radiusSlider = window.newSlider(1, 8, 1, false, locale.radius, " px")
 radiusSlider.height = 2
 
 tool.onSelection = function()

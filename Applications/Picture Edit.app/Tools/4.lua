@@ -6,13 +6,14 @@ local GUI = require("GUI")
 
 local workspace, window, menu = select(1, ...), select(2, ...), select(3, ...)
 local tool = {}
+locale = select(4, ...)
 
 tool.shortcut = "Pck"
 tool.keyCode = 56
-tool.about = "Picker tool allows to select interested data from image as primary or secondary color. You can configure of what colors to pick."
+tool.about = locale.tool4
 
-local pickBackgroundSwitch = window.newSwitch("Pick background:", true)
-local pickForegroundSwitch = window.newSwitch("Pick foreground:", true)
+local pickBackgroundSwitch = window.newSwitch(locale.pickBack, true)
+local pickForegroundSwitch = window.newSwitch(locale.pickFor, true)
 
 tool.onSelection = function()
 	window.currentToolLayout:addChild(pickBackgroundSwitch)

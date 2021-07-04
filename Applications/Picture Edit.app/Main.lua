@@ -24,6 +24,7 @@ local config = {
 	transparencyForeground = 0xD2D2D2,
 }
 
+local locale = system.getCurrentScriptLocalization()
 local currentScriptDirectory = filesystem.path(system.getCurrentScript())
 local toolsPath = currentScriptDirectory .. "Tools/"
 local configPath = paths.user.applicationData .. "Picture Edit/Config2.cfg"
@@ -137,7 +138,7 @@ window.sidebarLayout.eventHandler = function(workspace, object, e1, e2, e3, e4, 
 	end
 end
 
-addTitle(window.sidebarLayout, "Recent colors")
+addTitle(window.sidebarLayout, locale.recentColors)
 
 local recentColorsContainer = window.sidebarLayout:addChild(GUI.container(1, 1, window.sidebarLayout.width - 2, 4))
 local x, y = 1, 1
@@ -154,13 +155,13 @@ for i = 1, #config.recentColors do
 	end
 end
 
-local currentToolTitle = addTitle(window.sidebarLayout, "Tool properties")
+local currentToolTitle = addTitle(window.sidebarLayout, locale.toolProperties)
 
 window.currentToolLayout = window.sidebarLayout:addChild(GUI.layout(1, 1, window.sidebarLayout.width, 1, 1, 1))
 window.currentToolLayout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
 window.currentToolLayout:setFitting(1, 1, true, false, 2, 0)
 
-local aboutToolTitle = addTitle(window.sidebarLayout, "About tool")
+local aboutToolTitle = addTitle(window.sidebarLayout, locale.aboutTool)
 local aboutToolTextBox = window.sidebarLayout:addChild(GUI.textBox(1, 1, window.sidebarLayout.width - 2, 1, nil, 0x787878, {}, 1, 0, 0))
 
 window.toolsList = window:addChild(GUI.list(1, 1, 7, 1, 3, 0, 0x2D2D2D, 0x787878, 0x2D2D2D, 0x787878, 0x3C3C3C, 0xE1E1E1))
@@ -206,7 +207,7 @@ for i = 1, #tools do
 	if filesystem.extension(tools[i]) == ".lua" then
 		local result, reason = loadfile(toolsPath .. tools[i])
 		if result then
-			result, reason = pcall(result, workspace, window, menu)
+			result, reason = pcall(result, workspace, window, menu, locale)
 			if result then
 				local item = window.toolsList:addItem(reason.shortcut)
 				item.tool = reason
@@ -225,11 +226,11 @@ end
 window.image.draw = function(object)
 	GUI.drawShadow(object.x, object.y, object.width, object.height, nil, true)
 	
-	local y, text = object.y + object.height + 1, "Size: " .. object.width .. "x" .. object.height
+	local y, text = object.y + object.height + 1, locale.size .. object.width .. "x" .. object.height
 	screen.drawText(math.floor(object.x + object.width / 2 - unicode.len(text) / 2), y, 0x5A5A5A, text)
 
 	if savePath then
-		text = "Path: " .. savePath
+		text = locale.path .. savePath
 		screen.drawText(math.floor(object.x + object.width / 2 - unicode.len(text) / 2), y + 1, 0x5A5A5A, text)
 	end
 	
@@ -335,10 +336,10 @@ local function save(path)
 end
 
 local function saveAs()
-	local filesystemDialog = GUI.addFilesystemDialog(workspace, true, 50, math.floor(window.height * 0.8), "Save", "Cancel", "File name", "/")
+	local filesystemDialog = GUI.addFilesystemDialog(workspace, true, 50, math.floor(window.height * 0.8), locale.save, locale.cancel, locale.fileName, "/")
 	filesystemDialog:setMode(GUI.IO_MODE_SAVE, GUI.IO_MODE_FILE)
 	filesystemDialog:addExtensionFilter(".pic")
-	filesystemDialog:addExtensionFilter(".ocifstring")
+	filesystemDialog:addExtensionFilter(".rawpic")
 	filesystemDialog:expandPath(paths.user.desktop)
 	filesystemDialog.filesystemTree.selectedItem = paths.user.desktop
 	filesystemDialog:show()
@@ -363,7 +364,7 @@ local function newNoGUI(width, height, path)
 end
 
 local function new()
-	local container = GUI.addBackgroundContainer(workspace, true, true, "New picture")
+	local container = GUI.addBackgroundContainer(workspace, true, true, locale.newPicture)
 
 	local layout = container.layout:addChild(GUI.layout(1, 1, 36, 3, 1, 1))
 	layout:setDirection(1, 1, GUI.DIRECTION_HORIZONTAL)
@@ -373,9 +374,9 @@ local function new()
 		return layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x969696, 0xE1E1E1, 0x2D2D2D, ...))
 	end
 
-	local widthInput = addInput("", "Width")
+	local widthInput = addInput("", locale.width)
 	layout:addChild(GUI.text(1, 1, 0x696969, " x "))
-	local heightInput = addInput("", "Height")
+	local heightInput = addInput("", locale.height)
 	widthInput.width, heightInput.width = 16, 17
 
 	container.panel.eventHandler = function(workspace, panel, e1)
@@ -397,7 +398,7 @@ local function new()
 end
 
 local function open()
-	local filesystemDialog = GUI.addFilesystemDialog(workspace, true, 50, math.floor(window.height * 0.8), "Open", "Cancel", "File name", "/")
+	local filesystemDialog = GUI.addFilesystemDialog(workspace, true, 50, math.floor(window.height * 0.8), locale.open, locale.cancel, locale.fileName, "/")
 	filesystemDialog:setMode(GUI.IO_MODE_OPEN, GUI.IO_MODE_FILE)
 	filesystemDialog:addExtensionFilter(".pic")
 	filesystemDialog:addExtensionFilter(".rawpic")
@@ -478,16 +479,16 @@ window.image.reposition = function()
 	end
 end
 
-local fileItem = menu:addContextMenuItem("File")
-fileItem:addItem("New", false, "^N").onTouch = new
+local fileItem = menu:addContextMenuItem(locale.file)
+fileItem:addItem(locale.new, false, "^N").onTouch = new
 
 fileItem:addSeparator()
 
-fileItem:addItem("Open", false, "^O").onTouch = function()
+fileItem:addItem(locale.open, false, "^O").onTouch = function()
 	open()
 end
 
-local fileItemSubMenu = fileItem:addSubMenuItem("Open recent", #config.recentFiles == 0)
+local fileItemSubMenu = fileItem:addSubMenuItem(locale.openRecent, #config.recentFiles == 0)
 for i = 1, #config.recentFiles do
 	fileItemSubMenu:addItem(text.limit(config.recentFiles[i], 32, "left")).onTouch = function()
 		loadImage(config.recentFiles[i])
@@ -497,14 +498,14 @@ for i = 1, #config.recentFiles do
 	end
 end
 
-fileItem:addItem("Open from URL").onTouch = function()
-	local container = GUI.addBackgroundContainer(workspace, true, true, "Open from URL")
+fileItem:addItem(locale.openFromURL).onTouch = function()
+	local container = GUI.addBackgroundContainer(workspace, true, true, locale.openFromURL)
 
 	local input = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x969696, 0xE1E1E1, 0x2D2D2D, "", "http://example.com/test.pic"))
 	input.onInputFinished = function()
 		if #input.text > 0 then
 			input:remove()
-			container.layout:addChild(GUI.label(1, 1, container.width, 1, 0x969696, "Downloading file..."):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP))
+			container.layout:addChild(GUI.label(1, 1, container.width, 1, 0x969696, locale.downloading):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP))
 			workspace:draw()
 
 			local temporaryPath = system.getTemporaryPath() .. ".pic"
@@ -531,18 +532,18 @@ end
 
 fileItem:addSeparator()
 
-saveItem = fileItem:addItem("Save", false, "^S")
+saveItem = fileItem:addItem(locale.save, false, "^S")
 saveItem.onTouch = function()
 	save(savePath)
 end
 
-fileItem:addItem("Save as", false, "^⇧S").onTouch = saveAs
+fileItem:addItem(locale.saveAs, false, "^⇧S").onTouch = saveAs
 
-menu:addItem("View").onTouch = function()
-	local container = GUI.addBackgroundContainer(workspace, true, true, "View")
+menu:addItem(locale.view).onTouch = function()
+	local container = GUI.addBackgroundContainer(workspace, true, true, locale.view)
 
-	local colorSelector1 = container.layout:addChild(GUI.colorSelector(1, 1, 36, 3, config.transparencyBackground, "Transparency background"))
-	local colorSelector2 = container.layout:addChild(GUI.colorSelector(1, 1, 36, 3, config.transparencyForeground, "Transparency foreground"))
+	local colorSelector1 = container.layout:addChild(GUI.colorSelector(1, 1, 36, 3, config.transparencyBackground, locale.transBack))
+	local colorSelector2 = container.layout:addChild(GUI.colorSelector(1, 1, 36, 3, config.transparencyForeground, locale.transFor))
 
 	container.panel.eventHandler = function(workspace, object, e1)
 		if e1 == "touch" then
@@ -557,26 +558,10 @@ menu:addItem("View").onTouch = function()
 	workspace:draw()
 end
 
-menu:addItem("Hotkeys").onTouch = function()
-	local container = GUI.addBackgroundContainer(workspace, true, true, "Hotkeys")
-	local lines = {
-		"There are some hotkeys that works exactly like in real Photoshop:",
-		" ",
-		"M - selection tool",
-		"V - move tool",
-		"C - resizer tool",
-		"Alt - picker tool",
-		"B - brush tool",
-		"E - eraser tool",
-		"T - text tool",
-		"G - fill tool",
-		"F - braille tool",
-		" ",
-		"X - switch colors",
-		"D - make colors B/W",
-	}
+menu:addItem(locale.hotkeys).onTouch = function()
+	local container = GUI.addBackgroundContainer(workspace, true, true, locale.hotkeys)
 
-	container.layout:addChild(GUI.textBox(1, 1, 36, 1, nil, 0x969696, lines, 1, 0, 0, true, true)).eventHandler = nil
+	container.layout:addChild(GUI.textBox(1, 1, 36, 1, nil, 0x969696, locale.hotkeysText, 1, 0, 0, true, true)).eventHandler = nil
 	workspace:draw()
 end
 

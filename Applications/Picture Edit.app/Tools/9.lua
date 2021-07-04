@@ -7,10 +7,11 @@ local text = require("Text")
 
 local workspace, window, menu = select(1, ...), select(2, ...), select(3, ...)
 local tool = {}
+locale = select(4, ...)
 
 tool.shortcut = "Bra"
 tool.keyCode = 33
-tool.about = "Braille tool allows you to draw pixels with Braille symbols on your image. Select preferred mini-pixels via menu above, configure transparency affecting and \"Let's go fellas!\""
+tool.about = locale.tool9
 
 local layout = GUI.layout(1, 1, 1, 8, 1, 1)
 local container, char, step = layout:addChild(GUI.container(1, 1, 8, 8)), " ", false
@@ -33,7 +34,7 @@ for y = 1, 8, 2 do
 	step = not step
 end
 
-local backgroundSwitch = window.newSwitch("Draw background:", false)
+local backgroundSwitch = window.newSwitch(locale.drawBack, false)
 
 tool.onSelection = function()
 	window.currentToolLayout:addChild(layout)

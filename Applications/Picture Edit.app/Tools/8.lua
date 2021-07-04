@@ -5,10 +5,11 @@ local image = require("Image")
 
 local workspace, window, menu = select(1, ...), select(2, ...), select(3, ...)
 local tool = {}
+locale = select(4, ...)
 
 tool.shortcut = "Fil"
 tool.keyCode = 34
-tool.about = "Fill tool allows you to automatically fill areas with selected primary color just like in Paint. Oh God, where is my RAM...?"
+tool.about = locale.tool8
 
 local function check(x, y, picture, sourceB, sourceF, sourceA, sourceS, newB, newF, newA, newS)
 	if x >= 1 and x <= picture[1] and y >= 1 and y <= picture[2] then

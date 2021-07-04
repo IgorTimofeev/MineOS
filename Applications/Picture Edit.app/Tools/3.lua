@@ -6,10 +6,11 @@ local image = require("Image")
 
 local workspace, window, menu = select(1, ...), select(2, ...), select(3, ...)
 local tool = {}
+locale = select(4, ...)
 
 tool.shortcut = "Rsz"
 tool.keyCode = 46
-tool.about = "Resizer tool allows to change picture size in real time. You can specify preffered direction, input width and height modifiers and smart script will do the rest."
+tool.about = locale.tool3
 
 local x, y, stepX, stepY, buttonWidth, buttonHeight, buttonCount, buttons, currentX, currentY = 1, 1, 2, 1, 7, 3, 3, {}
 
@@ -18,11 +19,11 @@ local buttonsLayout = GUI.layout(1, 1, buttonsContainer.width, buttonsContainer.
 buttonsLayout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
 buttonsLayout:addChild(buttonsContainer)
 
-local widthInput = window.newInput("", "Width")
-local heightInput = window.newInput("", "Height")
+local widthInput = window.newInput("", locale.width)
+local heightInput = window.newInput("", locale.height)
 
-local expandButton = window.newButton2("Expand")
-local cropButton = window.newButton2("Crop")
+local expandButton = window.newButton2(locale.expand)
+local cropButton = window.newButton2(locale.crop)
 
 local function try(x, y, symbol)
 	if buttons[y] and buttons[y][x] then

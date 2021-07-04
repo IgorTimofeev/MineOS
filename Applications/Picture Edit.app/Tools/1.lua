@@ -7,19 +7,20 @@ local image = require("Image")
 
 local workspace, window, menu = select(1, ...), select(2, ...), select(3, ...)
 local tool = {}
+locale = select(4, ...)
 
 tool.shortcut = "Slc"
 tool.keyCode = 50
-tool.about = "Selection tool allows you to select preferred area on image and to perform some operations on it. Green dots mean start and end points (for example, it needs to line rasterization)"
+tool.about = locale.tool1
 
 local selector, touchX, touchY, dragX, dragY = GUI.object(1, 1, 1, 1)
 
-local fillButton = window.newButton1("Fill")
-local outlineButton = window.newButton1("Outline")
-local rasterizeLineButton = window.newButton1("Rasterize line")
-local rasterizeEllipseButton = window.newButton1("Rasterize ellipse")
-local clearButton = window.newButton2("Clear")
-local cropButton = window.newButton2("Crop")
+local fillButton = window.newButton1(locale.fill)
+local outlineButton = window.newButton1(locale.outline)
+local rasterizeLineButton = window.newButton1(locale.rasterizeLine)
+local rasterizeEllipseButton = window.newButton1(locale.rasterizeEllipse)
+local clearButton = window.newButton2(locale.clear)
+local cropButton = window.newButton2(locale.crop)
 
 local function repositionSelector()
 	if dragX - touchX >= 0 then
