@@ -53,6 +53,9 @@ window.eventHandler = function(workspace, window, ...)
 		if e[4] == 28 then
 			window.addLine("> " .. input)
 			input = ""
+		-- Backspace
+		elseif e[4] == 14 then
+			input = unicode.sub(input, 1, -2)
 		elseif not keyboard.isControl(e[3]) then
 			local char = unicode.char(e[3])
 
