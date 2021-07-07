@@ -53,7 +53,7 @@ window.eventHandler = function(workspace, window, ...)
 		if e[4] == 28 then
 			window.addLine("> " .. input)
 			input = ""
-		elseif not keyboard.isControl(e[4]) then
+		elseif not keyboard.isControl(e[3]) then
 			local char = unicode.char(e[3])
 
 			input = input .. char
