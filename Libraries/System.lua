@@ -1623,8 +1623,8 @@ end
 --------------------------------------------------------------------------------
 
 local function updateMenu()
-	local focusedWindow = desktopWindowsContainer.children[#desktopWindowsContainer.children]
-	desktopMenu.children = focusedWindow and focusedWindow.menu.children or system.menuInitialChildren
+	local topmostWindow = desktopWindowsContainer.children[#desktopWindowsContainer.children]
+	desktopMenu.children = topmostWindow and topmostWindow.menu.children or system.menuInitialChildren
 end
 
 local function setWorkspaceHidden(state)
@@ -1690,6 +1690,7 @@ function system.addWindow(window, dontAddToDock, preserveCoordinates)
 	end
 	
 	-- Ебурим окно к окнам
+	GUI.focusedItem = window
 	desktopWindowsContainer:addChild(window)
 	
 	if not dontAddToDock then
@@ -2101,6 +2102,7 @@ function system.updateWallpaper()
 			end
 		elseif extension == ".lua" then
 			local result, reason = loadfile(userSettings.interfaceWallpaperPath)
+
 			if result then
 				result, functionOrReason = xpcall(result, debug.traceback)
 				if result then
@@ -2250,6 +2252,7 @@ function system.updateDesktop()
 		icon.onLeftClick = function(icon, ...)
 			if icon.windows then
 				for window in pairs(icon.windows) do
+					GUI.focusedItem = window
 					window.hidden = false
 					window:moveToFront()
 				end
@@ -2587,6 +2590,7 @@ function system.updateDesktop()
 	end
 
 	system.menuInitialChildren = desktopMenu.children
+	system.consoleWindow = nil
 
 	system.updateColorScheme()
 	system.updateResolution()
@@ -2884,6 +2888,37 @@ local temporaryPath = system.getTemporaryPath()
 filesystem.write(temporaryPath, "")
 bootRealTime = math.floor(filesystem.lastModified(temporaryPath) / 1000)
 filesystem.remove(temporaryPath)
+
+-- Meow
+_G.print = function(...)
+	if not system.consoleWindow then
+		local result, data = loadfile(paths.system.applicationConsole)
+			
+		if result then
+			result, data = xpcall(result, debug.traceback)
+			
+			if not result then
+				GUI.alert(data)
+				return
+			end
+		else
+			GUI.alert(data)
+			return
+		end
+	end
+
+	local args = {...}
+
+	for i = 1, #args do
+		args[i] = tostring(args[i])
+	end
+
+	args = table.concat(args, " ")
+	
+	system.consoleWindow.hidden = false
+	system.consoleWindow.addLine(args)
+	system.consoleWindow:moveToFront()
+end
 
 --------------------------------------------------------------------------------
 

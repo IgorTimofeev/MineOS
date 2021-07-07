@@ -1252,14 +1252,12 @@ local function find()
 						to = {symbol = ending, line = line},
 						color = 0xCC9200
 					}
-					
 					findStartFrom = line
 					gotoLine(line)
-
 					return
 				end
 			else
-				return
+				GUI.alert("Wrong searching regex")
 			end
 		end
 
@@ -1388,7 +1386,7 @@ codeView.eventHandler = function(workspace, object, e1, e2, e3, e4, e5)
 		end
 
 		tick(true)
-	elseif e1 == "key_down" then
+	elseif e1 == "key_down" and GUI.focusedItem == window then
 		-- Ctrl or CMD
 		if keyboard.isControlDown() or keyboard.isCommandDown() then
 			-- Slash
