@@ -1386,7 +1386,7 @@ codeView.eventHandler = function(workspace, object, e1, e2, e3, e4, e5)
 		end
 
 		tick(true)
-	elseif e1 == "key_down" and GUI.focusedItem == window then
+	elseif e1 == "key_down" and GUI.focusedObject == window then
 		-- Ctrl or CMD
 		if keyboard.isControlDown() or keyboard.isCommandDown() then
 			-- Slash

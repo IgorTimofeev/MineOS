@@ -4254,7 +4254,7 @@ end
 local function windowEventHandler(workspace, window, e1, e2, e3, e4, ...)
 	if window.movingEnabled then
 		if e1 == "touch" then
-			GUI.focusedItem = window
+			GUI.focusedObject = window
 
 			if not windowCheck(window, e3, e4) then
 				window.lastTouchX, window.lastTouchY = e3, e4

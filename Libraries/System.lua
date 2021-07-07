@@ -1690,7 +1690,7 @@ function system.addWindow(window, dontAddToDock, preserveCoordinates)
 	end
 	
 	-- Ебурим окно к окнам
-	GUI.focusedItem = window
+	GUI.focusedObject = window
 	desktopWindowsContainer:addChild(window)
 	
 	if not dontAddToDock then
@@ -2252,7 +2252,7 @@ function system.updateDesktop()
 		icon.onLeftClick = function(icon, ...)
 			if icon.windows then
 				for window in pairs(icon.windows) do
-					GUI.focusedItem = window
+					GUI.focusedObject = window
 					window.hidden = false
 					window:moveToFront()
 				end

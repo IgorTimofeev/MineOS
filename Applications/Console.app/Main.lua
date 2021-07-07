@@ -48,7 +48,7 @@ window.eventHandler = function(workspace, window, ...)
 		end
 
 		workspace:draw()
-	elseif e[1] == "key_down" and GUI.focusedItem == window then
+	elseif e[1] == "key_down" and GUI.focusedObject == window then
 		-- Return
 		if e[4] == 28 then
 			window.addLine("> " .. input)
