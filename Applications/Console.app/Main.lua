@@ -6,7 +6,6 @@ local screen = require("Screen")
 
 ---------------------------------------------------------------------------------
 
--- Add a new window to MineOS workspace
 local workspace, window, menu = system.addWindow(GUI.filledWindow(1, 1, 82, 28, 0x000000))
 
 local disp = window:addChild(GUI.object(2, 4, 1, 1))
@@ -66,17 +65,16 @@ window.eventHandler = function(workspace, window, ...)
 	overrideWindowEventHandler(workspace, window, ...)
 end
 
--- Create callback function with resizing rules when window changes its' size
-window.onResize = function(newWidth, newHeight)
-	window.backgroundPanel.width, window.backgroundPanel.height = newWidth, newHeight
-	disp.width, disp.height = newWidth - 2, newHeight - 3
-end
-
 local overrideWindowRemove = window.remove
 window.remove = function(...)
 	system.consoleWindow = nil
 
 	overrideWindowRemove(...)
+end
+
+window.onResize = function(newWidth, newHeight)
+	window.backgroundPanel.width, window.backgroundPanel.height = newWidth, newHeight
+	disp.width, disp.height = newWidth - 2, newHeight - 3
 end
 
 ---------------------------------------------------------------------------------
