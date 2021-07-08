@@ -1663,7 +1663,7 @@ local function windowRemove(window)
 		window.dockIcon.windowCount = window.dockIcon.windowCount - 1
 
 		-- Если в докиконке еще остались окна
-		if not next(window.dockIcon.windows) then
+		if window.dockIcon.windowCount < 1 then
 			window.dockIcon.windows = nil
 			window.dockIcon.windowCount = nil
 
@@ -2251,11 +2251,15 @@ function system.updateDesktop()
 
 		icon.onLeftClick = function(icon, ...)
 			if icon.windows then
-				for window in pairs(icon.windows) do
-					GUI.focusedObject = window
-					window.hidden = false
-					window:moveToFront()
+				local topmostWindow
+
+				-- Unhide all windows
+				for w in pairs(icon.windows) do
+					topmostWindow = w
+					topmostWindow.hidden = false
 				end
+
+				topmostWindow:focus()
 
 				updateMenu()
 				event.sleep(0.2)
@@ -2915,9 +2919,8 @@ _G.print = function(...)
 
 	args = table.concat(args, " ")
 	
-	system.consoleWindow.hidden = false
 	system.consoleWindow.addLine(args)
-	system.consoleWindow:moveToFront()
+	system.consoleWindow:focus()
 end
 
 --------------------------------------------------------------------------------

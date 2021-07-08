@@ -105,7 +105,7 @@ local overrideCodeViewDraw = codeView.draw
 codeView.draw = function(...)
 	overrideCodeViewDraw(...)
 
-	if cursorBlinkState then
+	if cursorBlinkState and GUI.focusedObject == window then
 		local x, y = codeView.codeAreaPosition + cursorPositionSymbol - codeView.fromSymbol + 1, codeView.y + cursorPositionLine - codeView.fromLine
 		if
 			x >= codeView.codeAreaPosition + 1 and
