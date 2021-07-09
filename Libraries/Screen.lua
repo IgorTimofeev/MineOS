@@ -8,6 +8,7 @@ local bufferWidth, bufferHeight
 local currentFrameBackgrounds, currentFrameForegrounds, currentFrameSymbols, newFrameBackgrounds, newFrameForegrounds, newFrameSymbols
 local drawLimitX1, drawLimitX2, drawLimitY1, drawLimitY2
 local GPUProxy, GPUProxyGetResolution, GPUProxySetResolution, GPUProxyGetBackground, GPUProxyGetForeground, GPUProxySetBackground, GPUProxySetForeground, GPUProxyGet, GPUProxySet, GPUProxyFill
+local nextUpdateForced, screenFilter
 
 local mathCeil, mathFloor, mathModf, mathAbs = math.ceil, math.floor, math.modf, math.abs
 local tableInsert, tableConcat = table.insert, table.concat
@@ -512,7 +513,32 @@ local function drawSemiPixelCurve(points, color, precision)
 	end
 end
 
+
 --------------------------------------------------------------------------------
+
+local function getFilter()
+	return screenFilter
+end
+
+local function setFilter(filter)
+	if (filter == nil or type(filter) == "function") and screenFilter ~= filter then
+		screenFilter = filter
+		nextUpdateForced = true
+	end
+end
+
+local function resetFilter()
+	if screenFilter ~= nil then
+		screenFilter = nil
+		nextUpdateForced = true
+	end
+end
+
+--------------------------------------------------------------------------------
+
+local function noopFilter(color)
+	return color
+end
 
 local function update(force)	
 	local index, indexStepOnEveryLine, changes = bufferWidth * (drawLimitY1 - 1) + drawLimitX1, (bufferWidth - drawLimitX2 + drawLimitX1 - 1), {}
@@ -520,6 +546,11 @@ local function update(force)
 	local currentFrameBackground, currentFrameForeground, currentFrameSymbol, changesCurrentFrameBackground, changesCurrentFrameBackgroundCurrentFrameForeground
 
 	local changesCurrentFrameBackgroundCurrentFrameForegroundIndex
+
+	if nextUpdateForced then
+		nextUpdateForced = false
+		force = true
+	end
 
 	for y = drawLimitY1, drawLimitY2 do
 		x = drawLimitX1
@@ -562,17 +593,17 @@ local function update(force)
 				end
 
 				-- Group pixels that need to be drawn by background and foreground
-				changes[currentFrameBackground] = changes[currentFrameBackground] or {}
-				changesCurrentFrameBackground = changes[currentFrameBackground]
-				changesCurrentFrameBackground[currentFrameForeground] = changesCurrentFrameBackground[currentFrameForeground] or {index = 1}
-				changesCurrentFrameBackgroundCurrentFrameForeground = changesCurrentFrameBackground[currentFrameForeground]
+				changesCurrentFrameBackground = changes[currentFrameBackground] or {}
+				changes[currentFrameBackground] = changesCurrentFrameBackground
+				changesCurrentFrameBackgroundCurrentFrameForeground = changesCurrentFrameBackground[currentFrameForeground] or {index = 1}
+				changesCurrentFrameBackground[currentFrameForeground] = changesCurrentFrameBackgroundCurrentFrameForeground
 				changesCurrentFrameBackgroundCurrentFrameForegroundIndex = changesCurrentFrameBackgroundCurrentFrameForeground.index
 				
-				changesCurrentFrameBackgroundCurrentFrameForeground[changesCurrentFrameBackgroundCurrentFrameForegroundIndex], changesCurrentFrameBackgroundCurrentFrameForegroundIndex = x, changesCurrentFrameBackgroundCurrentFrameForegroundIndex + 1
-				changesCurrentFrameBackgroundCurrentFrameForeground[changesCurrentFrameBackgroundCurrentFrameForegroundIndex], changesCurrentFrameBackgroundCurrentFrameForegroundIndex = y, changesCurrentFrameBackgroundCurrentFrameForegroundIndex + 1
-				changesCurrentFrameBackgroundCurrentFrameForeground[changesCurrentFrameBackgroundCurrentFrameForegroundIndex], changesCurrentFrameBackgroundCurrentFrameForegroundIndex = tableConcat(equalChars), changesCurrentFrameBackgroundCurrentFrameForegroundIndex + 1
+				changesCurrentFrameBackgroundCurrentFrameForeground[changesCurrentFrameBackgroundCurrentFrameForegroundIndex] = x
+				changesCurrentFrameBackgroundCurrentFrameForeground[changesCurrentFrameBackgroundCurrentFrameForegroundIndex + 1] = y
+				changesCurrentFrameBackgroundCurrentFrameForeground[changesCurrentFrameBackgroundCurrentFrameForegroundIndex + 2] = tableConcat(equalChars)
 				
-				x, index, changesCurrentFrameBackgroundCurrentFrameForeground.index = x + equalCharsIndex - 2, index + equalCharsIndex - 2, changesCurrentFrameBackgroundCurrentFrameForegroundIndex
+				x, index, changesCurrentFrameBackgroundCurrentFrameForeground.index = x + equalCharsIndex - 2, index + equalCharsIndex - 2, changesCurrentFrameBackgroundCurrentFrameForegroundIndex + 3
 			end
 
 			x, index = x + 1, index + 1
@@ -582,12 +613,14 @@ local function update(force)
 	end
 	
 	-- Draw grouped pixels on screen
+	local currentFilter = screenFilter or noopFilter
+
 	for background, foregrounds in pairs(changes) do
-		GPUProxySetBackground(background)
+		GPUProxySetBackground(currentFilter(background))
 
 		for foreground, pixels in pairs(foregrounds) do
 			if currentForeground ~= foreground then
-				GPUProxySetForeground(foreground)
+				GPUProxySetForeground(currentFilter(foreground))
 				currentForeground = foreground
 			end
 
@@ -643,4 +676,8 @@ return {
 	drawSemiPixelLine = drawSemiPixelLine,
 	drawSemiPixelEllipse = drawSemiPixelEllipse,
 	drawSemiPixelCurve = drawSemiPixelCurve,
+
+	getFilter = getFilter,
+	setFilter = setFilter,
+	resetFilter = resetFilter,
 }
