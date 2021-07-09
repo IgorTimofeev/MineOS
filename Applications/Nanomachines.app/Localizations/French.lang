@@ -1,0 +1,18 @@
+{
+	activeEffects = "Effets actuels",
+	sent = "Envoyé",
+	received = "Reçu",
+	nothingFound = "Aucun effet trouvé",
+	instructionTitle = "Instructions",
+	instructionData = "Sur le côté gauche de l'écran, des commutateurs indiquent aux nanites d'activer les biocontacts. Chaque personne a une configuration unique de biocontacts, permettant aux nanites d’imposer divers buffs / debuffs. L'activation de 2 contacts est sans danger pour la vie, un plus grand nombre provoquera des blessures graves. Vous pouvez activer jusqu'à 4 contacts à la fois. Expérimentez, recherchez les effets souhaités et ajoutez-les à vos favoris pour une utilisation ultérieure. Le bouton \"Enregistrer la configuration\" est utile pour transférer dans votre autre configuration de nanites (pour cela, vous devez avoir une instance créée dans l'inventaire)",
+	syncWelcome = "Bienvenue",
+	syncInfo = "Avant d'utiliser le programme, créez et buvez un paquet de nanites. Ensuite, approchez-vous de l'unité système ou du rack serveur avec le modem sans fil installé pour la synchronisation.",
+	syncProgress = "Il y a une synchronisation avec les nanites, ne quittez pas l'ordinateur tant que le processus n'est pas terminé:",
+	syncContacts = "mise à jour biocontact %d de %d",
+	favourites = "Effets sélectionnés",
+	saveConfiguration = "Enregistrer la configuration",
+	saveFailed = "Échec de la sauvegarde: dans l'inventaire, il n'y a pas de nanites non configurés",
+	notSynced = "Il y avait une synchronisation avec les nanites. Il est recommandé de fermer le programme et de recommencer.",
+	notWireless = "L'ordinateur dispose d'un modem, mais les nanites perçoivent les commandes exclusivement sur le réseau sans fil. Insérez le modem sans fil et réessayez.",
+	noModem = "L'ordinateur ne possède pas de modem sans fil pour envoyer et recevoir des commandes nanites sur un réseau",
+}

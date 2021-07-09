@@ -1,0 +1,18 @@
+{
+	activeEffects = "Efectos actuales",
+	sent = "Enviado",
+	received = "Recivido",
+	nothingFound = "Ningun efecto encontrado",
+	instructionTitle = "Instruction",
+	instructionData = "En el lado izquierdo de la pantalla hay interruptores que le dicen a los nanitos que activen los biocontactos. Cada persona tiene una configuración única de biocontactos, lo que permite que los nanitos impongan varias ventajas / desventajas. Activar 2 contactos es seguro de por vida, un número mayor provocará lesiones graves. Puede activar hasta 4 contactos a la vez. Experimente, busque los efectos deseados y agréguelos a sus favoritos para su uso posterior. El botón \"Guardar Configuración\" es útil para transferir a su otra configuración de los nanites (para esto, necesita tener una instancia creada en el inventario)",
+	syncWelcome = "Bienvenido",
+	syncInfo = "Antes de usar el programa, cree y beba un paquete de nanitos. Luego, acérquese a la unidad del sistema o al bastidor del servidor con el módem inalámbrico instalado para la sincronización",
+	syncProgress = "Hay una sincronización con los nanitos, no abandone la computadora hasta que se complete el proceso:",
+	syncContacts = "actualización de biocontacto %d de %d",
+	favourites = "Efectos seleccionados",
+	saveConfiguration = "Guardar configuracion",
+	saveFailed = "Guardado fallido: en el inventario no hay nanos sin configurar",
+	notSynced = "Hubo una falta de sincronización con los nanites. Se recomienda cerrar el programa y empezar de nuevo.",
+	notWireless = "El ordenador tiene un módem, pero los nanites perciben los comandos exclusivamente a través de la red inalámbrica. Inserte el módem inalámbrico e intente nuevamente",
+	noModem = "El ordenador no tiene un módem inalámbrico para enviar y recibir comandos de nanites a través de una red",
+}

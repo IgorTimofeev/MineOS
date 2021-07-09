@@ -1,55 +1,33 @@
 
+local stringsMain, stringsChangeLabel, stringKeyDown, stringsFilesystem, colorsTitle, colorsBackground, colorsText, colorsSelectionBackground, colorsSelectionText, componentProxy, componentList, pullSignal, uptime, tableInsert, mathMax, mathMin, mathHuge, mathFloor = "MineOS EFI", "Change label", "key_down", "filesystem", 0x2D2D2D, 0xE1E1E1, 0x878787, 0x878787, 0xE1E1E1, component.proxy, component.list, computer.pullSignal, computer.uptime, table.insert, math.max, math.min, math.huge, math.floor
 
--- local component, computer, unicode = require("component"), require("computer"), require("unicode")
-
-local stringsMain, stringsBootFromURL, stringsChangeLabel, stringKeyDown, stringsInit, stringsFilesystem, componentProxy, componentList, pullSignal, uptime, tableInsert, mathMax, mathMin, mathHuge = "MineOS EFI", "Internet boot", "Change label", "key_down", "/init.lua", "filesystem", component.proxy, component.list, computer.pullSignal, computer.uptime, table.insert, math.max, math.min, math.huge
-local colorsTitle, colorsBackground, colorsText, colorsSelectionBackground, colorsSelectionText, eeprom, gpu, internetAddress = 1, 0, 1, 1, 0, componentProxy(componentList("eeprom")()), componentProxy(componentList("gpu")()), componentList("internet")()
+local eeprom, gpu, internetAddress = componentProxy(componentList("eeprom")()), componentProxy(componentList("gpu")()), componentList("internet")()
 
 gpu.bind(componentList("screen")(), true)
 
-local shutdown, gpuSet, gpuFill, eepromSetData, eepromGetData, depth, screenWidth, screenHeight, curentBackground, currentForeground, NIL = computer.shutdown, gpu.set, gpu.fill, eeprom.setData, eeprom.getData, gpu.getDepth(), gpu.getResolution()
-computer.getBootAddress, computer.setBootAddress = eepromGetData, eepromSetData
+local shutdown, gpuSet, gpuSetBackground, gpuSetForeground, gpuFill, eepromSetData, eepromGetData, screenWidth, screenHeight = computer.shutdown, gpu.set, gpu.setBackground, gpu.setForeground, gpu.fill, eeprom.setData, eeprom.getData, gpu.getResolution()
 
-if depth == 4 then
-	colorsTitle, colorsBackground, colorsText, colorsSelectionBackground, colorsSelectionText = 0x333333, 0xFFFFFF, 0x333333, 0x333333, 0xFFFFFF
-elseif depth == 8 then
-	colorsTitle, colorsBackground, colorsText, colorsSelectionBackground, colorsSelectionText = 0x2D2D2D, 0xE1E1E1, 0x878787, 0x878787, 0xE1E1E1
-end
-
-local setBackground, setForeground, round, restrict = 
-	function(color)
-		if color ~= curentBackground then
-			gpu.setBackground(color)
-			curentBackground = color
-		end
-	end,
-	function(color)
-		if color ~= currentForeground then
-			gpu.setForeground(color)
-			currentForeground = color
-		end
-	end,
-	function(n)
-		return math.floor(n + 0.5)
-	end,
-	function(text, limit, skip)
-		if #text < limit then
-			text = text .. string.rep(" ", limit - #text)
-		else
-			text = text:sub(1, limit)
-		end
-
-		return text .. (skip and "" or "  ")
-	end
-
-local rectangle, centrizedText, menuElement =
+local OSList, rectangle, centrizedText, menuElement =
+	{
+		{
+			"/OS.lua",
+			function()
+			end
+		},
+		{
+			"/init.lua",
+			function()
+				computer.getBootAddress, computer.setBootAddress = eepromGetData, eepromSetData
+			end
+		}
+	},
 	function(x, y, width, height, color)
-		setBackground(color)
+		gpuSetBackground(color)
 		gpuFill(x, y, width, height, " ")
 	end,
 	function(y, foreground, text)
-		local x = round(screenWidth / 2 - #text / 2)
-		setForeground(foreground)
+		local x = mathFloor(screenWidth / 2 - #text / 2)
+		gpuSetForeground(foreground)
 		gpuSet(x, y, text)
 	end,
 	function(text, callback, breakLoop)
@@ -60,63 +38,98 @@ local rectangle, centrizedText, menuElement =
 		}
 	end
 
-local function status(y, titleText, statusText, needWait)
-	y = y or round(screenHeight / 2 - 1)
-
+local function title(y, titleText)
+	y = mathFloor(screenHeight / 2 - y / 2)
 	rectangle(1, 1, screenWidth, screenHeight, colorsBackground)
 	centrizedText(y, colorsTitle, titleText)
-	centrizedText(y + 2, colorsText, statusText or "")
-	if needWait then
-		repeat
-			local event = pullSignal()
-		until event == stringKeyDown or event == "touch"
-	end
 
-	return y
+	return y + 2
 end
 
-local loadInit, menuBack, menu, input, netboot =
-	function(proxy)
-		status(NIL, stringsMain, "Booting from " .. proxy.address)
+local function status(titleText, statusText, needWait)
+	local lines = {}
+	for line in statusText:gmatch("[^\r\n]+") do
+		lines[#lines + 1] = line:gsub("\t", "  ")
+	end
+	
+	local y = title(#lines, titleText)
+	
+	for i = 1, #lines do
+		centrizedText(y, colorsText, lines[i])
+		y = y + 1
+	end
 
-		local data, chunk, handle, success, reason = "", "", proxy.open(stringsInit, "r")
-		while chunk do
-			data, chunk = data .. chunk, proxy.read(handle, mathHuge)
+	if needWait then
+		repeat
+			needWait = pullSignal()
+		until needWait == stringKeyDown or needWait == "touch"
+	end
+end
+
+local function executeString(...)
+	local result, reason = load(...)
+	if result then
+		result, reason = xpcall(result, debug.traceback)
+		if result then
+			return
 		end
-		proxy.close(handle)
+	end
 
-		success, reason = load(data)
-		if success then
-			success, reason = pcall(success)
-			if success then
-				return
+	status(stringsMain, reason, 1)
+end
+
+local boot, menuBack, menu, input =
+	function(proxy)
+		for i = 1, #OSList do
+			if proxy.exists(OSList[i][1]) then
+				status(stringsMain, "Booting from " .. (proxy.getLabel() or proxy.address))
+
+				-- Updating current EEPROM boot address if it's differs from given proxy address
+				if eepromGetData() ~= proxy.address then
+					eepromSetData(proxy.address)
+				end
+
+				-- Running OS pre-boot function
+				OSList[i][2]()
+
+				-- Reading boot file
+				local handle, data, chunk, success, reason = proxy.open(OSList[i][1], "rb"), ""
+				repeat
+					chunk = proxy.read(handle, mathHuge)
+					data = data .. (chunk or "")
+				until not chunk
+
+				proxy.close(handle)
+
+				-- Running boot file
+				executeString(data, "=" .. OSList[i][1])
+
+				return 1
 			end
 		end
-
-		status(NIL, stringsMain, "Failed to run init file: " .. reason, 1)
 	end,
-	function()
-		return menuElement("Back", NIL, 1)
+	function(f)
+		return menuElement("Back", f, 1)
 	end,
 	function(titleText, elements)
-		local spacing, selectedElement, maxLength = 2, 1, 0
+		local selectedElement, maxLength = 1, 0
 		for i = 1, #elements do
 			maxLength = math.max(maxLength, #elements[i].s)
 		end
 
 		while 1 do
-			local y, x, eventData = status(round(screenHeight / 2 - (#elements + 2) / 2), titleText) + 2
+			local y, x, eventData = title(#elements + 2, titleText)
 			
 			for i = 1, #elements do
-				x = round(screenWidth / 2 - #elements[i].s / 2)
+				x = mathFloor(screenWidth / 2 - #elements[i].s / 2)
 				
 				if i == selectedElement then
-					rectangle(round(screenWidth / 2 - maxLength / 2) - 2, y, maxLength + 4, 1, colorsSelectionBackground)
-					setForeground(colorsSelectionText)
+					rectangle(mathFloor(screenWidth / 2 - maxLength / 2) - 2, y, maxLength + 4, 1, colorsSelectionBackground)
+					gpuSetForeground(colorsSelectionText)
 					gpuSet(x, y, elements[i].s)
+					gpuSetBackground(colorsBackground)
 				else
-					setBackground(colorsBackground)
-					setForeground(colorsText)
+					gpuSetForeground(colorsText)
 					gpuSet(x, y, elements[i].s)
 				end
 				
@@ -146,7 +159,8 @@ local loadInit, menuBack, menu, input, netboot =
 		while 1 do
 			eblo = prefix .. text
 			gpuFill(1, y, screenWidth, 1, " ")
-			gpuSet(round(screenWidth / 2 - #eblo / 2), y, eblo .. (state and "█" or ""))
+			gpuSetForeground(colorsText)
+			gpuSet(mathFloor(screenWidth / 2 - #eblo / 2), y, eblo .. (state and "█" or ""))
 
 			eventData = {pullSignal(0.5)}
 			if eventData[1] == stringKeyDown then
@@ -168,50 +182,9 @@ local loadInit, menuBack, menu, input, netboot =
 				state = not state
 			end
 		end
-	end,
-	function(url)	
-		local runReason, data, handle, result, reason =
-			function(text)
-				status(NIL, stringsBootFromURL, "Internet boot failed: " .. text, 1)
-			end,
-			"",
-			componentProxy(internetAddress).request(url)
-		
-		if handle then
-			status(NIL, stringsBootFromURL, "Downloading script...")	
-			while 1 do
-				result, reason = handle.read(mathHuge)	
-				if result then
-					data = data .. result
-				else
-					handle:close()
-					
-					if reason then
-						runReason(reason)
-					else
-						result, reason = load(data)
-						if result then
-							eepromSetData("#" .. url)
-							result, reason = pcall(result)
-							if result then
-								return
-							else
-								runReason(reason)
-							end
-						else
-							runReason(reason)
-						end
-					end
-
-					break
-				end
-			end
-		else
-			runReason("invalid URL-address")
-		end
 	end
 
-status(NIL, stringsMain, "Hold Alt to show boot options menu")
+status(stringsMain, "Hold Alt to show boot options")
 
 local deadline, eventData = uptime() + 1
 while uptime() < deadline do
@@ -219,51 +192,72 @@ while uptime() < deadline do
 	if eventData[1] == stringKeyDown and eventData[4] == 56 then
 		local utilities = {
 			menuElement("Disk management", function()
-				local filesystems, bootAddress = {menuBack()}, eepromGetData()
-				
-				for address in componentList(stringsFilesystem) do
-					local proxy = componentProxy(address)
-					local label, isReadOnly = proxy.getLabel() or "Unnamed", proxy.isReadOnly()
-					
-					tableInsert(filesystems, 1,
-						menuElement(
-							(address == bootAddress and "> " or "  ") ..
-							restrict(label, 10) ..
-							restrict(proxy.spaceTotal() > 1048576 and "HDD" or proxy.spaceTotal() > 65536 and "FDD" or "SYS", 3) ..
-							restrict(isReadOnly and "R" or "R/W", 3) ..
-							address:sub(1, 8) .. "  " ..
-							restrict(string.format("%.2f", proxy.spaceUsed() / proxy.spaceTotal() * 100) .. "%", 6, 1),
+				local restrict, filesystems, filesystemOptions =
+					function(text, limit)
+						if #text < limit then
+							text = text .. string.rep(" ", limit - #text)
+						else
+							text = text:sub(1, limit)
+						end
 
-							function()
-								local filesystemOptions = {menuBack()}
+						return text .. "  "
+					end,
+					{menuBack()}
 
-								if not isReadOnly then
-									tableInsert(filesystemOptions, 1, menuElement(stringsChangeLabel, function()
-										proxy.setLabel(input(status(NIL, stringsChangeLabel) + 2, "Enter new name: "))
-									end, 1))
+				local function updateFilesystems()
+					for i = 2, #filesystems do
+						table.remove(filesystems, 1)
+					end
 
-									tableInsert(filesystemOptions, 2, menuElement("Format", function()
-										status(NIL, stringsMain, "Formatting filesystem " .. address)
-										for _, file in ipairs(proxy.list("/")) do
-											proxy.remove(file)
-										end
-										status(NIL, stringsMain, "Formatting finished", 1)
-									end, 1))
+					for address in componentList(stringsFilesystem) do
+						local proxy = componentProxy(address)
+						local label, isReadOnly, filesystemOptions =
+							proxy.getLabel() or "Unnamed",
+							proxy.isReadOnly(),
+							{
+								menuElement("Set as bootable", function()
+									eepromSetData(address)
+									updateFilesystems()
+								end, 1)
+							}
+
+						if not isReadOnly then
+							tableInsert(filesystemOptions, menuElement(stringsChangeLabel, function()
+								proxy.setLabel(input(title(2, stringsChangeLabel), "Enter new name: "))
+								updateFilesystems()
+							end, 1))
+
+							tableInsert(filesystemOptions, menuElement("Format", function()
+								status(stringsMain, "Formatting filesystem " .. address)
+								
+								for _, file in ipairs(proxy.list("/")) do
+									proxy.remove(file)
 								end
 
-								if proxy.exists(stringsInit) then
-									tableInsert(filesystemOptions, 1, menuElement("Set as startup", function()
-										eepromSetData(address)
-									end, 1))
-								end
+								updateFilesystems()
+							end, 1))
+						end
 
-								menu(label .. " (" .. address .. ")", filesystemOptions)
-							end
-						, 1)
-					)
+						tableInsert(filesystemOptions, menuBack())
+
+						tableInsert(filesystems, 1,
+							menuElement(
+								(address == eepromGetData() and "> " or "  ") ..
+								restrict(label, 12) ..
+								restrict(proxy.spaceTotal() > 1048576 and "HDD" or proxy.spaceTotal() > 65536 and "FDD" or "SYS", 3) ..
+								restrict(isReadOnly and "R" or "R/W", 3) ..
+								restrict(string.format("%.1f", proxy.spaceUsed() / proxy.spaceTotal() * 100) .. "%", 6) ..
+								address:sub(1, 7) .. "…",
+								function()
+									menu(label .. " (" .. address .. ")", filesystemOptions)
+								end
+							)
+						)
+					end
 				end
 
-				menu("Select filesystem to show options", filesystems)
+				updateFilesystems()
+				menu("Select filesystem", filesystems)
 			end),
 			
 			menuElement("Shutdown", function()
@@ -274,8 +268,32 @@ while uptime() < deadline do
 		}
 
 		if internetAddress then	
-			tableInsert(utilities, 2, menuElement(stringsBootFromURL, function()
-				netboot(input(status(NIL, stringsBootFromURL) + 2, "Enter URL: "))
+			tableInsert(utilities, 2, menuElement("Internet recovery", function()
+				local handle, data, result, reason = componentProxy(internetAddress).request("https://raw.githubusercontent.com/IgorTimofeev/MineOS/master/Installer/Main.lua"), ""
+
+				if handle then
+					status(stringsMain, "Downloading recovery script")
+
+					while 1 do
+						result, reason = handle.read(mathHuge)	
+						
+						if result then
+							data = data .. result
+						else
+							handle.close()
+							
+							if reason then
+								status(stringsMain, reason, 1)
+							else
+								executeString(data, "=string")
+							end
+
+							break
+						end
+					end
+				else
+					status(stringsMain, "invalid URL-address", 1)
+				end
 			end))
 		end
 
@@ -283,48 +301,21 @@ while uptime() < deadline do
 	end
 end
 
-local data, proxy = eepromGetData()
-if data:sub(1, 1) == "#" then
-	netboot(data:sub(2, -1))
-else
-	proxy = componentProxy(data)
-	if proxy and proxy.exists(stringsInit) then
-		loadInit(proxy)
-	else
-		for address in componentList(stringsFilesystem) do
-			proxy = componentProxy(address)
-			if proxy.exists(stringsInit) then
-				eepromSetData(address)
-				loadInit(proxy)
-				break
-			else
-				proxy = nil
-			end
-		end
+local proxy = componentProxy(eepromGetData())
+if not (proxy and boot(proxy)) then
+	for address in componentList(stringsFilesystem) do
+		proxy = componentProxy(address)
 
-		if not proxy then
-			status(NIL, stringsMain, "No bootable mediums found", 1)
+		if boot(proxy) then
+			break
+		else
+			proxy = nil
 		end
+	end
+
+	if not proxy then
+		status(stringsMain, "No bootable mediums found", 1)
 	end
 end
 
 shutdown()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

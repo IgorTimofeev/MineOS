@@ -1,0 +1,24 @@
+{	
+	moduleDisk = "Discos",
+	moduleRAM = "RAM",
+	moduleEvent = "Eventos",
+	moduleLua = "Interprete Lua",
+
+	diskLabel = "Nombre del Disco",
+	bootable = "Arrancable",
+	of = "de",
+	free = "Libre",
+	options = "Opciones",
+	arguments = "Argumentos",
+	format = "Formatear",
+	execute = "Ejecutar",
+	waitingEvents = "Esperando eventos...",
+	processingEnabled = "Event processing enabled",
+	luaInfo = {
+		{color = 0x880000, text = _G._VERSION .. " Copyright (C) 1994-2017 Lua.org, PUC-Rio"},
+		"Escribe una declaracion y pulsa Enter para evaluarlo",
+		"Prefije una expresión con \"=\" para mostrar su valor",
+		" "
+	},
+	luaType = "Pon una declaracion aqui"
+}

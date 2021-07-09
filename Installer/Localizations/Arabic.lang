@@ -1,0 +1,23 @@
+{
+	username = "اسم المستخدم",
+	password = "كلمة المرور",
+	submitPassword = "إرسال كلمة المرور",
+	passwordsArentEqual = "كلمات المرور ليست متطابقة. حاول مرة أخرى",
+	usernameInvalid = "اسم مستخدم غير صالح",
+	withoutPassword = "لا تستخدم كلمة مرور:",
+	wallpapers = "خلفيات:",
+	screensavers = "شاشات التوقف:",
+	applications = "تطبيقات الطرف الثالث:",
+	languages = "حزم اللغات:",
+	accept = "أوافق:",
+	select = "حدد قرصًا للتثبيت",
+	erase = "Erase",
+	used = "used",
+	setup = "إعداد ملف التعريف الخاص بك",
+	customize = "تخصيص التنزيلات",
+	flashing = "وميض EEPROM ...",
+	creating = "إنشاء ملف تعريف المستخدم ...",
+	installing = "التثبيت",
+	installed = "تم استخدام MineOS المثبتة. استمتع",
+	reboot = "أعد تشغيل الكمبيوتر"
+}

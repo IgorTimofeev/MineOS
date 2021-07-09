@@ -1,0 +1,24 @@
+{	
+	moduleDisk = "磁盘",
+	moduleRAM = "内存",
+	moduleEvent = "事件",
+	moduleLua = "Lua interpreter",
+
+	diskLabel = "磁盘标签",
+	bootable = "可以启动",
+	of = " / ",
+	free = "空闲",
+	options = "选项",
+	arguments = "参数",
+	format = "抹掉",
+	execute = "执行",
+	waitingEvents = "等待事件",
+	processingEnabled = "已开启事件处理",
+	luaInfo = {
+		{color = 0x880000, text = _G._VERSION .. " Copyright (C) 1994-2021 Lua.org, PUC-Rio"},
+		"Type a statement and hit Enter to evaluate it",
+		"Prefix an expression with \"=\" to show its value",
+		" "
+	},
+	luaType = "在这里输入表达式"
+}

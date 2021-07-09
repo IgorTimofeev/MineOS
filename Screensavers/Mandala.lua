@@ -1,5 +1,5 @@
-local gpu, r, xr, ti = require("component").gpu, math.random, bit32.bxor, table.insert
-local event = require("event")
+local gpu, r, xr, ti = require("Screen").getGPUProxy(), math.random, bit32.bxor, table.insert
+local event = require("Event")
 
 local tbl, tbl1, S, gsF, gsB, w, h, n, c, Fc, Bc, C, D, i, j, m, k, q, p, a, b = {}, {x = {}, y = {}}, "▄", gpu.setForeground, gpu.setBackground, gpu.getResolution()
 

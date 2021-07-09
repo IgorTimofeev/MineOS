@@ -1,0 +1,18 @@
+{
+	activeEffects = "Current effects",
+	sent = "Sent",
+	received = "Received",
+	nothingFound = "No effects found",
+	instructionTitle = "Instruction",
+	instructionData = "On the left side of the screen there are switches that tell nanites to activate biocontacts. Each person has a unique configuration of biocontacts, allowing nanites to impose various buffs / debuffs. Activating 2 contacts is safe for life, a larger number will cause serious injuries. You can activate up to 4 contacts at a time. Experiment, look for the desired effects and add them to your favorites for later use. The button \"save configuration\" is useful for transferring to your other configuration of nanites (for this you need to have an created instance in the inventory)",
+	syncWelcome = "Welcome",
+	syncInfo = "Before using the program, create and drink a packet of nanites. Then approach the system unit or server rack with the wireless modem installed for synchronization",
+	syncProgress = "There is a synchronization with nanites, do not leave the computer until the process is completed:",
+	syncContacts = "biocontact update %d of %d",
+	favourites = "Selected effects",
+	saveConfiguration = "Save configuration",
+	saveFailed = "Saving failed: in the inventory there are no unconfigured nanites",
+	notSynced = "There was an out-of-sync with nanites. It is recommended to close the program and start again.",
+	notWireless = "The computer has a modem, but nanites perceive commands exclusively over the wireless network. Insert the wireless modem and try again",
+	noModem = "The computer does not have a wireless modem to send and receive nanite commands over a network",
+}
