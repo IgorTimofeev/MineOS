@@ -1412,7 +1412,6 @@ local function sliderEventHandler(workspace, object, e1, e2, e3, e4, e5, ...)
 		if object.onValueChanged then
 			object.onValueChanged(workspace, object, e1, e2, e3, e4, e5, ...)
 		end
-
 	elseif e1 == "scroll" then
 		object.value = object.value + (object.maximumValue - object.minimumValue) * object.scrollSensivity * e5
 
