@@ -2921,6 +2921,12 @@ local function inputEventHandler(workspace, input, e1, e2, e3, e4, e5, e6, ...)
 		-- Delete
 		elseif e4 == 211 then
 			input.text = unicode.sub(input.text, 1, input.cursorPosition - 1) .. unicode.sub(input.text, input.cursorPosition + 1, -1)
+		-- Home
+		elseif e4 == 199 then
+			input:setCursorPosition(1)
+		-- End
+		elseif e4 == 207 then 
+			input:setCursorPosition(unicode.len(input.text) + 1)			
 		else
 			local char = unicode.char(e3)
 			if not keyboard.isControl(e3) then
