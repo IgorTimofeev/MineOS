@@ -1,4 +1,3 @@
-
 local keyboard = require("Keyboard")
 local filesystem = require("Filesystem")
 local event = require("Event")
@@ -1396,7 +1395,7 @@ local function sliderDraw(object)
 	return object
 end
 
-local function sliderEventHandler(workspace, object, e1, e2, e3, ...)
+local function sliderEventHandler(workspace, object, e1, e2, e3, e4, e5, ...)
 	if e1 == "touch" or e1 == "drag" then
 		local clickPosition = e3 - object.x
 
@@ -1411,7 +1410,21 @@ local function sliderEventHandler(workspace, object, e1, e2, e3, ...)
 		workspace:draw()
 
 		if object.onValueChanged then
-			object.onValueChanged(workspace, object, e1, e2, e3, ...)
+			object.onValueChanged(workspace, object, e1, e2, e3, e4, e5, ...)
+		end
+	elseif e1 == "scroll" then
+		object.value = object.value + (object.maximumValue - object.minimumValue) * object.scrollSensivity * e5
+
+		if object.value > object.maximumValue then
+			object.value = object.maximumValue 
+		elseif object.value < object.minimumValue then
+			object.value = object.minimumValue
+		end
+
+		workspace:draw()
+
+		if object.onValueChanged then
+			object.onValueChanged(workspace, object, e1, e2, e3, e4, e5, ...)
 		end
 	end
 end
@@ -1425,6 +1438,7 @@ function GUI.slider(x, y, width, activeColor, passiveColor, pipeColor, valueColo
 	object.minimumValue = minimumValue
 	object.maximumValue = maximumValue
 	object.value = value
+	object.scrollSensivity = 0.05
 	object.showMaximumAndMinimumValues = showMaximumAndMinimumValues
 	object.currentValuePrefix = currentValuePrefix
 	object.currentValuePostfix = currentValuePostfix
@@ -4254,14 +4268,17 @@ end
 local function windowEventHandler(workspace, window, e1, e2, e3, e4, ...)
 	if window.movingEnabled then
 		if e1 == "touch" then
-			GUI.focusedObject = window
-
 			if not windowCheck(window, e3, e4) then
 				window.lastTouchX, window.lastTouchY = e3, e4
 			end
 
 			if window ~= window.parent.children[#window.parent.children] then
-				window:focus()
+				window:moveToFront()
+				
+				if window.onFocus then
+					window.onFocus(workspace, window, e1, e2, e3, e4, ...)
+				end
+
 				workspace:draw()
 			end
 		elseif e1 == "drag" and window.lastTouchX and not windowCheck(window, e3, e4) then
@@ -4332,22 +4349,11 @@ function GUI.windowMinimize(window)
 	window.hidden = not window.hidden
 end
 
-function GUI.windowFocus(window)
-	GUI.focusedObject = window
-	window.hidden = false
-	window:moveToFront()
-	
-	if window.onFocus then
-		window.onFocus()
-	end
-end
-
 function GUI.window(x, y, width, height)
 	local window = GUI.container(x, y, width, height)
 	
 	window.passScreenEvents = false
 
-	window.focus = GUI.windowFocus
 	window.resize = windowResize
 	window.maximize = GUI.windowMaximize
 	window.minimize = GUI.windowMinimize
