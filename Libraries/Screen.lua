@@ -167,18 +167,106 @@ local function set(x, y, background, foreground, symbol)
 	end
 end
 
-local function drawRectangle(x, y, width, height, background, foreground, symbol, transparency) 
+local function drawRectangle(x, y, width, height, background, foreground, symbol, transparency)
+	local temp
+
+	-- Clipping left
+	if x < drawLimitX1 then
+		width = width - drawLimitX1 + x
+		x = drawLimitX1
+	end
+
+	-- Right
+	temp = x + width - 1
+	if temp > drawLimitX2 then
+		width = width - temp + drawLimitX2
+	end
+
+	-- Top
+	if y < drawLimitY1 then
+		height = height - drawLimitY1 + y
+		y = drawLimitY1
+	end
+
+	-- Bottom
+	temp = y + height - 1
+	if temp > drawLimitY2 then
+		height = height - temp + drawLimitY2
+	end
+
+	temp = bufferWidth * (y - 1) + x
+	local indexStepOnEveryLine = bufferWidth - width
+
+	for j = 1, height do
+		for i = 1, width do
+			if transparency then
+				newFrameBackgrounds[temp], newFrameForegrounds[temp] =
+					colorBlend(newFrameBackgrounds[temp], background, transparency),
+					colorBlend(newFrameForegrounds[temp], background, transparency)
+			else
+				newFrameBackgrounds[temp],
+				newFrameForegrounds[temp],
+				newFrameSymbols[temp] = background, foreground, symbol
+			end
+
+			temp = temp + 1
+		end
+
+		temp = temp + indexStepOnEveryLine
+	end
+end
+
+local function blur(x, y, width, height, radius, color, transparency)
+	local temp
+
+	-- Clipping left
+	if x < drawLimitX1 then
+		width = width - drawLimitX1 + x
+		x = drawLimitX1
+	end
+
+	-- Right
+	temp = x + width - 1
+	if temp > drawLimitX2 then
+		width = width - temp + drawLimitX2
+	end
+
+	-- Top
+	if y < drawLimitY1 then
+		height = height - drawLimitY1 + y
+		y = drawLimitY1
+	end
+
+	-- Bottom
+	temp = y + height - 1
+	if temp > drawLimitY2 then
+		height = height - temp + drawLimitY2
+	end
+
 	local index, indexStepOnReachOfSquareWidth = bufferWidth * (y - 1) + x, bufferWidth - width
-	for j = y, y + height - 1 do
+
+	for j = y, y + height - 1, radius do
 		if j >= drawLimitY1 and j <= drawLimitY2 then
 			for i = x, x + width - 1 do
 				if i >= drawLimitX1 and i <= drawLimitX2 then
-					if transparency then
-						newFrameBackgrounds[index], newFrameForegrounds[index] =
-							colorBlend(newFrameBackgrounds[index], background, transparency),
-							colorBlend(newFrameForegrounds[index], background, transparency)
-					else
-						newFrameBackgrounds[index], newFrameForegrounds[index], newFrameSymbols[index] = background, foreground, symbol
+
+					local centerIndex = getIndex(i, j)
+					local centerBackground, centerForeground = newFrameBackgrounds[centerIndex], newFrameForegrounds[centerIndex]
+
+					for jr = j - radius, j + radius do
+						if jr ~= j and jr >= drawLimitY1 and jr <= drawLimitY2 then
+							for ir = i - radius, i + radius do
+								if ir ~= i and ir >= drawLimitX1 and ir <= drawLimitX2 then
+									local blendStrength = math.sqrt((ir - i) ^ 2 + (jr - j) ^ 2) / radius
+									
+									if blendStrength < 1 then
+										local blurIndex = getIndex(ir, jr)
+										newFrameBackgrounds[blurIndex] = colorBlend(newFrameBackgrounds[blurIndex], centerBackground, blendStrength)
+										newFrameForegrounds[blurIndex] = colorBlend(newFrameForegrounds[blurIndex], centerForeground, blendStrength)
+									end
+								end
+							end
+						end
 					end
 				end
 
@@ -337,43 +425,70 @@ local function drawText(x, y, textColor, data, transparency)
 	end
 end
 
-local function drawImage(startX, startY, picture, blendForeground)
-	local bufferIndex, pictureIndex, imageWidth, background, foreground, alpha, symbol = bufferWidth * (startY - 1) + startX, 3, picture[1]
-	local bufferIndexStepOnReachOfImageWidth = bufferWidth - imageWidth
+local function drawImage(x, y, picture, blendForeground)
+	local imageWidth, imageHeight, pictureIndex, temp = picture[1], picture[2], 3
+	local clippedImageWidth, clippedImageHeight = imageWidth, imageHeight
 
-	for y = startY, startY + picture[2] - 1 do
-		if y >= drawLimitY1 and y <= drawLimitY2 then
-			for x = startX, startX + imageWidth - 1 do
-				if x >= drawLimitX1 and x <= drawLimitX2 then
-					alpha, symbol = picture[pictureIndex + 2], picture[pictureIndex + 3]
-					
-					-- If it's fully transparent pixel
-					if alpha == 0 then
-						newFrameBackgrounds[bufferIndex], newFrameForegrounds[bufferIndex] = picture[pictureIndex], picture[pictureIndex + 1]
-					-- If it has some transparency
-					elseif alpha > 0 and alpha < 1 then
-						newFrameBackgrounds[bufferIndex] = colorBlend(newFrameBackgrounds[bufferIndex], picture[pictureIndex], alpha)
-						
-						if blendForeground then
-							newFrameForegrounds[bufferIndex] = colorBlend(newFrameForegrounds[bufferIndex], picture[pictureIndex + 1], alpha)
-						else
-							newFrameForegrounds[bufferIndex] = picture[pictureIndex + 1]
-						end
-					-- If it's not transparent with whitespace
-					elseif symbol ~= " " then
-						newFrameForegrounds[bufferIndex] = picture[pictureIndex + 1]
-					end
+	-- Clipping left
+	if x < drawLimitX1 then
+		temp = drawLimitX1 - x
+		clippedImageWidth, x, pictureIndex = clippedImageWidth - temp, drawLimitX1, pictureIndex + temp * 4
+	end
 
-					newFrameSymbols[bufferIndex] = symbol
+	-- Right
+	temp = x + clippedImageWidth - 1
+	if temp > drawLimitX2 then
+		clippedImageWidth = clippedImageWidth - temp + drawLimitX2
+	end
+
+	-- Top
+	if y < drawLimitY1 then
+		temp = drawLimitY1 - y
+		clippedImageHeight, y, pictureIndex = clippedImageHeight - temp, drawLimitY1, pictureIndex + temp * imageWidth * 4
+	end
+
+	-- Bottom
+	temp = y + clippedImageHeight - 1
+	if temp > drawLimitY2 then
+		clippedImageHeight = clippedImageHeight - temp + drawLimitY2
+	end
+
+	local
+		bufferIndex,
+		bufferIndexStep,
+		pictureIndexStep,
+		background,
+		foreground,
+		alpha,
+		symbol = bufferWidth * (y - 1) + x, bufferWidth - clippedImageWidth, (imageWidth - clippedImageWidth) * 4
+
+	for j = 1, clippedImageHeight do
+		for i = 1, clippedImageWidth do
+			alpha, symbol = picture[pictureIndex + 2], picture[pictureIndex + 3]
+			
+			-- If it's fully transparent pixel
+			if alpha == 0 then
+				newFrameBackgrounds[bufferIndex], newFrameForegrounds[bufferIndex] = picture[pictureIndex], picture[pictureIndex + 1]
+			-- If it has some transparency
+			elseif alpha > 0 and alpha < 1 then
+				newFrameBackgrounds[bufferIndex] = colorBlend(newFrameBackgrounds[bufferIndex], picture[pictureIndex], alpha)
+				
+				if blendForeground then
+					newFrameForegrounds[bufferIndex] = colorBlend(newFrameForegrounds[bufferIndex], picture[pictureIndex + 1], alpha)
+				else
+					newFrameForegrounds[bufferIndex] = picture[pictureIndex + 1]
 				end
-
-				bufferIndex, pictureIndex = bufferIndex + 1, pictureIndex + 4
+			-- If it's not transparent with whitespace
+			elseif symbol ~= " " then
+				newFrameForegrounds[bufferIndex] = picture[pictureIndex + 1]
 			end
 
-			bufferIndex = bufferIndex + bufferIndexStepOnReachOfImageWidth
-		else
-			bufferIndex, pictureIndex = bufferIndex + bufferWidth, pictureIndex + imageWidth * 4
+			newFrameSymbols[bufferIndex] = symbol
+
+			bufferIndex, pictureIndex = bufferIndex + 1, pictureIndex + 4
 		end
+
+		bufferIndex, pictureIndex = bufferIndex + bufferIndexStep, pictureIndex + pictureIndexStep
 	end
 end
 
@@ -638,6 +753,7 @@ return {
 	drawText = drawText,
 	drawImage = drawImage,
 	drawFrame = drawFrame,
+	blur = blur,
 
 	drawSemiPixelRectangle = drawSemiPixelRectangle,
 	drawSemiPixelLine = drawSemiPixelLine,
