@@ -807,8 +807,27 @@ function GUI.panel(x, y, width, height, color, transparency)
 		background = color,
 		transparency = transparency
 	}
+
 	object.draw = drawPanel
 	
+	return object
+end
+
+--------------------------------------------------------------------------------
+
+local function blurredPanelDraw(object)
+	screen.blur(object.x, object.y, object.width, object.height, object.radius, object.color, object.transparency)
+end
+
+function GUI.blurredPanel(x, y, width, height, radius, color, transparency)
+	local object = GUI.object(x, y, width, height)
+
+	object.radius = radius or 3
+	object.color = color
+	object.transparency = transparency
+
+	object.draw = blurredPanelDraw
+
 	return object
 end
 
@@ -2926,7 +2945,7 @@ local function inputEventHandler(workspace, input, e1, e2, e3, e4, e5, e6, ...)
 			input:setCursorPosition(1)
 		-- End
 		elseif e4 == 207 then 
-			input:setCursorPosition(unicode.len(input.text) + 1)			
+			input:setCursorPosition(unicode.len(input.text) + 1)
 		else
 			local char = unicode.char(e3)
 			if not keyboard.isControl(e3) then
