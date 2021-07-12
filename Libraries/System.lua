@@ -142,8 +142,10 @@ end
 
 function system.getCurrentScript()
 	local info
+
 	for runLevel = 0, math.huge do
 		info = debug.getinfo(runLevel)
+
 		if info then
 			if info.what == "main" then
 				return info.source:sub(2, -1)
@@ -166,6 +168,7 @@ function system.getLocalization(pathToLocalizationFolder)
 	-- Otherwise returning first available localization
 	else
 		local list = filesystem.list(pathToLocalizationFolder)
+
 		if #list > 0 then
 			return filesystem.readTable(pathToLocalizationFolder .. list[1])
 		else
@@ -2887,13 +2890,16 @@ end
 
 --------------------------------------------------------------------------------
 
--- Optaining temporary file's last modified UNIX timestamp as boot timestamp
-local temporaryPath = system.getTemporaryPath()
-filesystem.write(temporaryPath, "")
-bootRealTime = math.floor(filesystem.lastModified(temporaryPath) / 1000)
-filesystem.remove(temporaryPath)
+-- Keeping temporary file's last modified timestamp as boot timestamp
+do
+	local proxy, path = component.proxy(computer.tmpAddress()), "timestamp"
+	
+	proxy.close(proxy.open(path, "wb"))
+	bootRealTime = math.floor(proxy.lastModified(path) / 1000)
+	proxy.remove(path)
+end
 
--- Meow
+-- Global print() function for debugging
 _G.print = function(...)
 	if not system.consoleWindow then
 		local result, data = loadfile(paths.system.applicationConsole)

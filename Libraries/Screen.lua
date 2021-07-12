@@ -284,31 +284,29 @@ local function blur(x, y, width, height, radius, color, transparency)
 	end
 
 	-- Blurring
-	local count, rSum, gSum, bSum, r, g, b
+	local rSum, gSum, bSum, count, r, g, b
 
 	for j = 1, height do
 		for i = 1, width do
-			temp = screenIndex
-
-			local rSum, gSum, bSum, count = 0, 0, 0, 0
+			rSum, gSum, bSum, count = 0, 0, 0, 0
 
 			for jr = mathMax(1, j - radius), mathMin(j + radius, height) do
 				for ir = mathMax(1, i - radius), mathMin(i + radius, width) do
-					bufferIndex = width * (jr - 1) + ir
-
-					r, g, b = colorIntegerToRGB(buffer[bufferIndex])
+					r, g, b = colorIntegerToRGB(buffer[width * (jr - 1) + ir])
 					rSum, gSum, bSum, count = rSum + r, gSum + g, bSum + b, count + 1
 				end
 			end
 
+			-- Calculatin average channels value
 			r, g, b = rSum / count, gSum / count, bSum / count
+			-- Faster than math.floor
 			r, g, b = r - r % 1, g - g % 1, b - b % 1
 
 			newFrameBackgrounds[screenIndex] = colorRGBToInteger(r, g, b)
 			newFrameForegrounds[screenIndex] = 0x0
 			newFrameSymbols[screenIndex] = " "
 
-			screenIndex = temp + 1
+			screenIndex = screenIndex + 1
 		end
 
 		screenIndex = screenIndex + indexStepOnEveryLine
