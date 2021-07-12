@@ -9,7 +9,7 @@ local currentFrameBackgrounds, currentFrameForegrounds, currentFrameSymbols, new
 local drawLimitX1, drawLimitX2, drawLimitY1, drawLimitY2
 local GPUProxy, GPUProxyGetResolution, GPUProxySetResolution, GPUProxyGetBackground, GPUProxyGetForeground, GPUProxySetBackground, GPUProxySetForeground, GPUProxyGet, GPUProxySet, GPUProxyFill
 
-local mathCeil, mathFloor, mathModf, mathAbs = math.ceil, math.floor, math.modf, math.abs
+local mathCeil, mathFloor, mathModf, mathAbs, mathMin, mathMax = math.ceil, math.floor, math.modf, math.abs, math.min, math.max
 local tableInsert, tableConcat = table.insert, table.concat
 local colorBlend, colorRGBToInteger, colorIntegerToRGB = color.blend, color.RGBToInteger, color.integerToRGB
 local unicodeLen, unicodeSub = unicode.len, unicode.sub
@@ -132,7 +132,7 @@ local function getScaledResolution(scale)
 	local maxWidth, maxHeight = GPUProxy.maxResolution()
 	local proportion = 2 * (16 * aspectWidth - 4.5) / (16 * aspectHeight - 4.5)
 	 
-	local height = scale * math.min(
+	local height = scale * mathMin(
 		maxWidth / proportion,
 		maxWidth,
 		math.sqrt(maxWidth * maxHeight / proportion)
@@ -292,8 +292,8 @@ local function blur(x, y, width, height, radius, color, transparency)
 
 			local rSum, gSum, bSum, count = 0, 0, 0, 0
 
-			for jr = math.max(1, j - radius), math.min(j + radius, height) do
-				for ir = math.max(1, i - radius), math.min(i + radius, width) do
+			for jr = mathMax(1, j - radius), mathMin(j + radius, height) do
+				for ir = mathMax(1, i - radius), mathMin(i + radius, width) do
 					bufferIndex = width * (jr - 1) + ir
 
 					r, g, b = colorIntegerToRGB(buffer[bufferIndex])
