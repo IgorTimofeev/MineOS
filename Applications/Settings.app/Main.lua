@@ -18,8 +18,9 @@ local scrollSpeed = 2
 
 local workspace, window = system.addWindow(GUI.filledWindow(1, 1, 100, 29, 0xF0F0F0))
 
-local leftPanel = window:addChild(GUI.panel(1, 1, 1, 1, 0x2D2D2D))
-window.actionButtons.localY = 2
+local leftPanel = system.addBlurredOrDefaultPanel(window, 1, 1, 1, 1)
+
+window.actionButtons.localX, window.actionButtons.localY = 3, 2
 window.actionButtons:moveToFront()
 
 local modulesLayout = window:addChild(GUI.layout(1, 3, 1, 1, 1, 1))

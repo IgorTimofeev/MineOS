@@ -37,6 +37,7 @@
 	appearanceDesktopBackground = "Фон рабочего стола",
 	appearanceDock = "Цвет Dock",
 	appearanceMenu = "Цвет меню",
+	appearanceBlurEnabled = "Размытие интерфейса",
 	appearanceTransparencyEnabled = "Прозрачность интерфейса",
 	appearanceTransparencyInfo = "Отключение последних двух опций существенно снизит количество прямых обращений к CPU/GPU и увеличит производительность",
 	appearanceDropDownDefaultBackground = "Фон контекстного меню",

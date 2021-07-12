@@ -98,6 +98,9 @@ function system.getDefaultUserSettings()
 		interfaceTransparencyDock = 0.4,
 		interfaceTransparencyMenu = 0.2,
 		interfaceTransparencyContextMenu = 0.2,
+		interfaceBlurEnabled = false,
+		interfaceBlurRadius = 3,
+		interfaceBlurTransparency = 0.6,
 
 		interfaceColorDesktopBackground = 0x1E1E1E,
 		interfaceColorDock = 0xE1E1E1,
@@ -2886,6 +2889,10 @@ end
 
 function system.getDockContainer()
 	return dockContainer
+end
+
+function system.addBlurredOrDefaultPanel(container, x, y, width, height)
+	return container:addChild(userSettings.interfaceBlurEnabled and GUI.blurredPanel(x, y, width, height, userSettings.interfaceBlurRadius, 0x0, userSettings.interfaceBlurTransparency) or GUI.panel(x, y, width, height, 0x2D2D2D))
 end
 
 --------------------------------------------------------------------------------

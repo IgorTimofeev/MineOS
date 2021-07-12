@@ -543,6 +543,7 @@ local function pressableDraw(pressable)
 	if background then
 		screen.drawRectangle(pressable.x, pressable.y, pressable.width, pressable.height, background, text, " ")
 	end
+	
 	screen.drawText(math.floor(pressable.x + pressable.width / 2 - unicode.len(pressable.text) / 2), math.floor(pressable.y + pressable.height / 2), text, pressable.text)
 end
 
@@ -3574,6 +3575,7 @@ end
 
 local function listUpdate(list)
 	local step, child = false
+
 	for i = 1, #list.children do
 		child = list.children[i]
 		-- Жмяканье пизды
@@ -3585,6 +3587,7 @@ local function listUpdate(list)
 		else
 			child.colors.default = list.colors.default
 		end
+
 		child.colors.pressed, step = list.colors.selected, not step
 		
 		-- Размеры хуйни
@@ -3673,7 +3676,10 @@ local function listCount(list)
 end
 
 local function listDraw(list)
-	screen.drawRectangle(list.x, list.y, list.width, list.height, list.colors.default.background, list.colors.default.text, " ")
+	if list.colors.default.background then
+		screen.drawRectangle(list.x, list.y, list.width, list.height, list.colors.default.background, list.colors.default.text, " ")
+	end
+
 	layoutDraw(list)
 end
 
