@@ -4304,12 +4304,8 @@ local function windowEventHandler(workspace, window, e1, e2, e3, e4, ...)
 			end
 
 			if window ~= window.parent.children[#window.parent.children] then
-				window:moveToFront()
+				window:focus()
 				
-				if window.onFocus then
-					window.onFocus(workspace, window, e1, e2, e3, e4, ...)
-				end
-
 				workspace:draw()
 			end
 		elseif e1 == "drag" and window.lastTouchX and not windowCheck(window, e3, e4) then
@@ -4380,17 +4376,29 @@ function GUI.windowMinimize(window)
 	window.hidden = not window.hidden
 end
 
+function GUI.windowFocus(window)
+	GUI.focusedObject = window
+	window.hidden = false
+	window:moveToFront()
+
+	if window.onFocus then
+		window.onFocus()
+	end
+end
+
 function GUI.window(x, y, width, height)
 	local window = GUI.container(x, y, width, height)
 	
 	window.passScreenEvents = false
+	window.movingEnabled = true
 
 	window.resize = windowResize
 	window.maximize = GUI.windowMaximize
 	window.minimize = GUI.windowMinimize
+	window.focus = GUI.windowFocus
+
 	window.eventHandler = windowEventHandler
 	window.draw = windowDraw
-	window.movingEnabled = true
 
 	return window
 end
