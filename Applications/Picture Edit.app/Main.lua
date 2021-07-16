@@ -134,7 +134,6 @@ window.sidebarLayout.eventHandler = function(workspace, object, e1, e2, e3, e4, 
 		end
 
 		window.sidebarLayout:setMargin(1, 1, h, v)
-		workspace:draw()
 	end
 end
 
@@ -146,7 +145,6 @@ for i = 1, #config.recentColors do
 	local button = recentColorsContainer:addChild(GUI.button(x, y, 2, 1, 0x0, 0x0, 0x0, 0x0, " "))
 	button.onTouch = function()
 		window.primaryColorSelector.color = config.recentColors[i]
-		workspace:draw()
 	end
 
 	x = x + 2
@@ -199,7 +197,6 @@ local function onToolTouch(index)
 		aboutToolTextBox.height = #aboutToolTextBox.lines
 	end
 
-	workspace:draw()
 end
 
 local tools = filesystem.list(toolsPath)
@@ -277,7 +274,6 @@ end
 
 local function swapColors()
 	window.primaryColorSelector.color, window.secondaryColorSelector.color = window.secondaryColorSelector.color, window.primaryColorSelector.color
-	workspace:draw()
 end
 
 local function colorSelectorDraw(object)
@@ -292,7 +288,7 @@ window.secondaryColorSelector = window:addChild(GUI.colorSelector(3, 1, 5, 2, 0x
 window.primaryColorSelector = window:addChild(GUI.colorSelector(2, 1, 5, 2, 0x000000, " "))
 window.secondaryColorSelector.draw, window.primaryColorSelector.draw = colorSelectorDraw, colorSelectorDraw
 
-window.swapColorsButton = window:addChild(GUI.button(1, 1, window.toolsList.width, 1, nil, 0x696969, nil, 0xA5A5A5, ">"))
+window.swapColorsButton = window:addChild(GUI.button(1, 1, window.toolsList.width, 1, nil, 0x696969, nil, 0xA5A5A5, " ←→"))
 window.swapColorsButton.onTouch = swapColors
 
 local function setSavePath(path)
@@ -346,7 +342,6 @@ local function saveAs()
 
 	filesystemDialog.onSubmit = function(path)
 		save(path)
-		workspace:draw()
 	end
 end
 
@@ -365,6 +360,7 @@ end
 
 local function new()
 	local container = GUI.addBackgroundContainer(workspace, true, true, locale.newPicture)
+	container.panel.eventHandler = nil
 
 	local layout = container.layout:addChild(GUI.layout(1, 1, 36, 3, 1, 1))
 	layout:setDirection(1, 1, GUI.DIRECTION_HORIZONTAL)
@@ -378,23 +374,23 @@ local function new()
 	layout:addChild(GUI.text(1, 1, 0x696969, " x "))
 	local heightInput = addInput("", locale.height)
 	widthInput.width, heightInput.width = 16, 17
-
-	container.panel.eventHandler = function(workspace, panel, e1)
-		if e1 == "touch" then
-			if
-				widthInput.text:match("%d+") and
-				heightInput.text:match("%d+")
-			then
-				newNoGUI(tonumber(widthInput.text), tonumber(heightInput.text), nil)
-				window.image.reposition()
-			end
-
-			container:remove()
-			workspace:draw()
+	
+	container.layout:addChild(GUI.button(1, 1, 30, 3, 0xFFFFFF, 0x555555, 0x880000, 0xFFFFFF, locale.ok)).onTouch = function()
+		if
+			widthInput.text:match("%d+") and
+			heightInput.text:match("%d+")
+		then
+			newNoGUI(tonumber(widthInput.text), tonumber(heightInput.text), nil)
+			window.image.reposition()
 		end
+
+		container:remove()
+	end
+	
+	container.layout:addChild(GUI.button(1, 1, 30, 3, 0xFFFFFF, 0x555555, 0x880000, 0xFFFFFF, locale.cancel)).onTouch = function()
+		container:remove()
 	end
 
-	workspace:draw()
 end
 
 local function open()
@@ -409,7 +405,6 @@ local function open()
 		loadImage(path)
 
 		window.image.reposition()
-		workspace:draw()
 	end
 end
 
@@ -484,9 +479,7 @@ fileItem:addItem(locale.new, false, "^N").onTouch = new
 
 fileItem:addSeparator()
 
-fileItem:addItem(locale.open, false, "^O").onTouch = function()
-	open()
-end
+fileItem:addItem(locale.open, false, "^O").onTouch = open
 
 local fileItemSubMenu = fileItem:addSubMenuItem(locale.openRecent, #config.recentFiles == 0)
 for i = 1, #config.recentFiles do
@@ -494,17 +487,23 @@ for i = 1, #config.recentFiles do
 		loadImage(config.recentFiles[i])
 
 		window.image.reposition()
-		workspace:draw()
 	end
 end
 
 fileItem:addItem(locale.openFromURL).onTouch = function()
 	local container = GUI.addBackgroundContainer(workspace, true, true, locale.openFromURL)
+	container.panel.eventHandler = nil
 
 	local input = container.layout:addChild(GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x696969, 0x969696, 0xE1E1E1, 0x2D2D2D, "", "http://example.com/test.pic"))
-	input.onInputFinished = function()
+	local okBut = container.layout:addChild(GUI.button(1, 1, 30, 3, 0xFFFFFF, 0x555555, 0x880000, 0xFFFFFF, locale.ok))
+	local cancelBut = container.layout:addChild(GUI.button(1, 1, 30, 3, 0xFFFFFF, 0x555555, 0x880000, 0xFFFFFF, locale.cancel))
+	
+	okBut.onTouch = function()
 		if #input.text > 0 then
 			input:remove()
+			okBut:remove()
+			cancelBut:remove()
+			
 			container.layout:addChild(GUI.label(1, 1, container.width, 1, 0x969696, locale.downloading):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP))
 			workspace:draw()
 
@@ -523,11 +522,14 @@ fileItem:addItem(locale.openFromURL).onTouch = function()
 				GUI.alert(reason)
 			end
 
-			workspace:draw()
+		else
+			container:remove()
 		end
 	end
-
-	workspace:draw()
+	
+	cancelBut.onTouch = function()
+		container:remove()
+	end
 end
 
 fileItem:addSeparator()
@@ -541,28 +543,163 @@ fileItem:addItem(locale.saveAs, false, "^⇧S").onTouch = saveAs
 
 menu:addItem(locale.view).onTouch = function()
 	local container = GUI.addBackgroundContainer(workspace, true, true, locale.view)
+	container.panel.eventHandler = nil
 
 	local colorSelector1 = container.layout:addChild(GUI.colorSelector(1, 1, 36, 3, config.transparencyBackground, locale.transBack))
 	local colorSelector2 = container.layout:addChild(GUI.colorSelector(1, 1, 36, 3, config.transparencyForeground, locale.transFor))
-
-	container.panel.eventHandler = function(workspace, object, e1)
-		if e1 == "touch" then
-			config.transparencyBackground, config.transparencyForeground = colorSelector1.color, colorSelector2.color
+	
+	container.layout:addChild(GUI.button(1, 1, 30, 3, 0xFFFFFF, 0x555555, 0x880000, 0xFFFFFF, locale.ok)).onTouch = function()
+		config.transparencyBackground, config.transparencyForeground = colorSelector1.color, colorSelector2.color
 			
-			container:remove()
-			workspace:draw()
-			saveConfig()
-		end
+		container:remove()
+		saveConfig()
 	end
+	
+	container.layout:addChild(GUI.button(1, 1, 30, 3, 0xFFFFFF, 0x555555, 0x880000, 0xFFFFFF, locale.cancel)).onTouch = function()
+		container:remove()
+	end
+end
 
-	workspace:draw()
+local imageItem = menu:addContextMenuItem(locale.image)
+
+imageItem:addItem(locale.flipVertical).onTouch = function()
+	window.image.data = image.flipVertically(window.image.data)
+end
+
+imageItem:addItem(locale.flipHorizontal).onTouch = function()
+	window.image.data = image.flipHorizontally(window.image.data)
+end
+
+imageItem:addSeparator()
+
+imageItem:addItem(locale.rotate90).onTouch = function()
+	window.image.data = image.rotate(window.image.data, 90)
+	window.image.width = window.image.data[1]
+	window.image.height = window.image.data[2]
+	window.image.reposition()
+end
+
+imageItem:addItem(locale.rotate180).onTouch = function()
+	window.image.data = image.rotate(window.image.data, 180)
+	window.image.width = window.image.data[1]
+	window.image.height = window.image.data[2]
+	window.image.reposition()
+end
+
+imageItem:addItem(locale.rotate270).onTouch = function()
+	window.image.data = image.rotate(window.image.data, 270)
+	window.image.width = window.image.data[1]
+	window.image.height = window.image.data[2]
+	window.image.reposition()
+end
+
+local editItem = menu:addContextMenuItem(locale.edit)
+
+editItem:addItem(locale.hueSaturation).onTouch = function()
+	local container = GUI.addBackgroundContainer(workspace, true, true, locale.hueSaturation)
+	container.layout:setSpacing(1, 1, 2)
+	container.panel.eventHandler = nil
+
+	local hue = container.layout:addChild(GUI.slider(1, 1, 50, 0x66DB80, 0x0, 0xFFFFFF, 0xAAAAAA, -360, 360, 0, true, locale.hue))
+	local satur = container.layout:addChild(GUI.slider(1, 1, 50, 0x66DB80, 0x0, 0xFFFFFF, 0xAAAAAA, -100, 100, 0, true, locale.saturation))
+	local bright = container.layout:addChild(GUI.slider(1, 1, 50, 0x66DB80, 0x0, 0xFFFFFF, 0xAAAAAA, -100, 100, 0, true, locale.brightness))
+	hue.roundValues = true
+	satur.roundValues = true
+	bright.roundValues = true
+	
+	local buttonsLay = container.layout:addChild(GUI.layout(1, 1, 30, 7, 1, 1))
+	
+	buttonsLay:addChild(GUI.button(1, 1, 30, 3, 0xFFFFFF, 0x555555, 0x880000, 0xFFFFFF, locale.ok)).onTouch = function()
+		window.image.data = image.hueSaturationBrightness(window.image.data, hue.value, satur.value/100, bright.value/100)
+		container:remove()
+	end
+	
+	buttonsLay:addChild(GUI.button(1, 1, 30, 3, 0xFFFFFF, 0x555555, 0x880000, 0xFFFFFF, locale.cancel)).onTouch = function()
+		container:remove()
+	end
+end
+
+editItem:addItem(locale.colorBalance).onTouch = function()
+	local container = GUI.addBackgroundContainer(workspace, true, true, locale.colorBalance)
+	container.layout:setSpacing(1, 1, 2)
+	container.panel.eventHandler = nil
+
+	local r = container.layout:addChild(GUI.slider(1, 1, 50, 0x66DB80, 0x0, 0xFF0000, 0xAAAAAA, -255, 255, 0, true, "R: "))
+	local g = container.layout:addChild(GUI.slider(1, 1, 50, 0x66DB80, 0x0, 0x00FF00, 0xAAAAAA, -255, 255, 0, true, "G: "))
+	local b = container.layout:addChild(GUI.slider(1, 1, 50, 0x66DB80, 0x0, 0x0000FF, 0xAAAAAA, -255, 255, 0, true, "B: "))
+	r.roundValues = true
+	g.roundValues = true
+	b.roundValues = true
+	
+	local buttonsLay = container.layout:addChild(GUI.layout(1, 1, 30, 7, 1, 1))
+	
+	buttonsLay:addChild(GUI.button(1, 1, 30, 3, 0xFFFFFF, 0x555555, 0x880000, 0xFFFFFF, locale.ok)).onTouch = function()
+		window.image.data = image.colorBalance(window.image.data, math.floor(r.value), math.floor(g.value), math.floor(b.value))
+		container:remove()
+	end
+	
+	buttonsLay:addChild(GUI.button(1, 1, 30, 3, 0xFFFFFF, 0x555555, 0x880000, 0xFFFFFF, locale.cancel)).onTouch = function()
+		container:remove()
+	end
+end
+
+editItem:addItem(locale.photoFilter).onTouch = function()
+	local container = GUI.addBackgroundContainer(workspace, true, true, locale.photoFilter)
+	container.layout:setSpacing(1, 1, 2)
+	container.panel.eventHandler = nil
+
+	local filterColor = container.layout:addChild(GUI.colorSelector(1, 1, 30, 3, 0x333333, locale.filterColor))
+	local transparency = container.layout:addChild(GUI.slider(1, 1, 50, 0x66DB80, 0x0, 0xFFFFFF, 0xAAAAAA, 0, 1, 0.5, true, locale.transparency))
+	
+	local buttonsLay = container.layout:addChild(GUI.layout(1, 1, 30, 7, 1, 1))
+	
+	buttonsLay:addChild(GUI.button(1, 1, 30, 3, 0xFFFFFF, 0x555555, 0x880000, 0xFFFFFF, locale.ok)).onTouch = function()
+		window.image.data = image.photoFilter(window.image.data, filterColor.color, transparency.value)
+		container:remove()
+	end
+	
+	buttonsLay:addChild(GUI.button(1, 1, 30, 3, 0xFFFFFF, 0x555555, 0x880000, 0xFFFFFF, locale.cancel)).onTouch = function()
+		container:remove()
+	end
+end
+
+editItem:addSeparator()
+
+editItem:addItem(locale.invertColors).onTouch = function()
+	window.image.data = image.invert(window.image.data)
+end
+
+editItem:addItem(locale.blackWhite).onTouch = function()
+	window.image.data = image.blackAndWhite(window.image.data)
+end
+
+editItem:addSeparator()
+
+editItem:addItem(locale.gaussianBlur).onTouch = function()
+	local container = GUI.addBackgroundContainer(workspace, true, true, locale.gaussianBlur)
+	container.layout:setSpacing(1, 1, 2)
+	container.panel.eventHandler = nil
+
+	local radius = container.layout:addChild(GUI.slider(1, 1, 50, 0x66DB80, 0x0, 0xFFFFFF, 0xAAAAAA, 0, 5, 2.5, true, locale.radius))
+	local force = container.layout:addChild(GUI.slider(1, 1, 50, 0x66DB80, 0x0, 0xFFFFFF, 0xAAAAAA, 0, 1, 0.5, true, locale.force))
+	radius.roundValues = true
+	
+	local buttonsLay = container.layout:addChild(GUI.layout(1, 1, 30, 7, 1, 1))
+	
+	buttonsLay:addChild(GUI.button(1, 1, 30, 3, 0xFFFFFF, 0x555555, 0x880000, 0xFFFFFF, locale.ok)).onTouch = function()
+		window.image.data = image.gaussianBlur(window.image.data, math.floor(radius.value), force.value)
+		container:remove()
+	end
+	
+	buttonsLay:addChild(GUI.button(1, 1, 30, 3, 0xFFFFFF, 0x555555, 0x880000, 0xFFFFFF, locale.cancel)).onTouch = function()
+		container:remove()
+	end
 end
 
 menu:addItem(locale.hotkeys).onTouch = function()
 	local container = GUI.addBackgroundContainer(workspace, true, true, locale.hotkeys)
 
 	container.layout:addChild(GUI.textBox(1, 1, 36, 1, nil, 0x969696, locale.hotkeysText, 1, 0, 0, true, true)).eventHandler = nil
-	workspace:draw()
 end
 
 window.currentToolOverlay = window:addChild(GUI.container(1, 1, 1, 1))
