@@ -62,10 +62,8 @@ local modeList = window:addChild(GUI.list(FTPButton.localX + FTPButton.width + 2
 modeList:setDirection(GUI.DIRECTION_HORIZONTAL)
 
 local sidebarContainer = window:addChild(GUI.container(1, 4, config.sidebarWidth, 1))
-local sidebarPanel = sidebarContainer:addChild(GUI.object(1, 1, 1, 1, 0xFFFFFF))
-sidebarPanel.draw = function(object)
-	screen.drawRectangle(object.x, object.y, object.width, object.height, 0x2D2D2D, sidebarItemColor, " ")
-end
+
+local sidebarPanel = system.addBlurredOrDefaultPanel(sidebarContainer, 1, 1, 1, 1)
 
 local itemsLayout = sidebarContainer:addChild(GUI.layout(1, 1, 1, 1, 1, 1))
 itemsLayout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_LEFT, GUI.ALIGNMENT_VERTICAL_TOP)

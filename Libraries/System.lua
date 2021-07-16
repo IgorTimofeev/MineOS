@@ -98,6 +98,9 @@ function system.getDefaultUserSettings()
 		interfaceTransparencyDock = 0.4,
 		interfaceTransparencyMenu = 0.2,
 		interfaceTransparencyContextMenu = 0.2,
+		interfaceBlurEnabled = false,
+		interfaceBlurRadius = 3,
+		interfaceBlurTransparency = 0.6,
 
 		interfaceColorDesktopBackground = 0x1E1E1E,
 		interfaceColorDock = 0xE1E1E1,
@@ -142,8 +145,10 @@ end
 
 function system.getCurrentScript()
 	local info
+
 	for runLevel = 0, math.huge do
 		info = debug.getinfo(runLevel)
+
 		if info then
 			if info.what == "main" then
 				return info.source:sub(2, -1)
@@ -166,6 +171,7 @@ function system.getLocalization(pathToLocalizationFolder)
 	-- Otherwise returning first available localization
 	else
 		local list = filesystem.list(pathToLocalizationFolder)
+
 		if #list > 0 then
 			return filesystem.readTable(pathToLocalizationFolder .. list[1])
 		else
@@ -1623,8 +1629,8 @@ end
 --------------------------------------------------------------------------------
 
 local function updateMenu()
-	local focusedWindow = desktopWindowsContainer.children[#desktopWindowsContainer.children]
-	desktopMenu.children = focusedWindow and focusedWindow.menu.children or system.menuInitialChildren
+	local topmostWindow = desktopWindowsContainer.children[#desktopWindowsContainer.children]
+	desktopMenu.children = topmostWindow and topmostWindow.menu.children or system.menuInitialChildren
 end
 
 local function setWorkspaceHidden(state)
@@ -1663,7 +1669,7 @@ local function windowRemove(window)
 		window.dockIcon.windowCount = window.dockIcon.windowCount - 1
 
 		-- Если в докиконке еще остались окна
-		if not next(window.dockIcon.windows) then
+		if window.dockIcon.windowCount < 1 then
 			window.dockIcon.windows = nil
 			window.dockIcon.windowCount = nil
 
@@ -1690,6 +1696,7 @@ function system.addWindow(window, dontAddToDock, preserveCoordinates)
 	end
 	
 	-- Ебурим окно к окнам
+	GUI.focusedObject = window
 	desktopWindowsContainer:addChild(window)
 	
 	if not dontAddToDock then
@@ -2101,6 +2108,7 @@ function system.updateWallpaper()
 			end
 		elseif extension == ".lua" then
 			local result, reason = loadfile(userSettings.interfaceWallpaperPath)
+
 			if result then
 				result, functionOrReason = xpcall(result, debug.traceback)
 				if result then
@@ -2249,10 +2257,15 @@ function system.updateDesktop()
 
 		icon.onLeftClick = function(icon, ...)
 			if icon.windows then
-				for window in pairs(icon.windows) do
-					window.hidden = false
-					window:moveToFront()
+				local topmostWindow
+
+				-- Unhide all windows
+				for w in pairs(icon.windows) do
+					topmostWindow = w
+					topmostWindow.hidden = false
 				end
+
+				topmostWindow:focus()
 
 				updateMenu()
 				event.sleep(0.2)
@@ -2587,6 +2600,7 @@ function system.updateDesktop()
 	end
 
 	system.menuInitialChildren = desktopMenu.children
+	system.consoleWindow = nil
 
 	system.updateColorScheme()
 	system.updateResolution()
@@ -2877,13 +2891,50 @@ function system.getDockContainer()
 	return dockContainer
 end
 
+function system.addBlurredOrDefaultPanel(container, x, y, width, height)
+	return container:addChild(userSettings.interfaceBlurEnabled and GUI.blurredPanel(x, y, width, height, userSettings.interfaceBlurRadius, 0x0, userSettings.interfaceBlurTransparency) or GUI.panel(x, y, width, height, 0x2D2D2D))
+end
+
 --------------------------------------------------------------------------------
 
--- Optaining temporary file's last modified UNIX timestamp as boot timestamp
-local temporaryPath = system.getTemporaryPath()
-filesystem.write(temporaryPath, "")
-bootRealTime = math.floor(filesystem.lastModified(temporaryPath) / 1000)
-filesystem.remove(temporaryPath)
+-- Keeping temporary file's last modified timestamp as boot timestamp
+do
+	local proxy, path = component.proxy(computer.tmpAddress()), "timestamp"
+	
+	proxy.close(proxy.open(path, "wb"))
+	bootRealTime = math.floor(proxy.lastModified(path) / 1000)
+	proxy.remove(path)
+end
+
+-- Global print() function for debugging
+_G.print = function(...)
+	if not system.consoleWindow then
+		local result, data = loadfile(paths.system.applicationConsole)
+			
+		if result then
+			result, data = xpcall(result, debug.traceback)
+			
+			if not result then
+				GUI.alert(data)
+				return
+			end
+		else
+			GUI.alert(data)
+			return
+		end
+	end
+
+	local args = {...}
+
+	for i = 1, #args do
+		args[i] = tostring(args[i])
+	end
+
+	args = table.concat(args, " ")
+	
+	system.consoleWindow.addLine(args)
+	system.consoleWindow:focus()
+end
 
 --------------------------------------------------------------------------------
 

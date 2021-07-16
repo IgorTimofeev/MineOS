@@ -1,4 +1,3 @@
-
 local keyboard = require("Keyboard")
 local filesystem = require("Filesystem")
 local event = require("Event")
@@ -544,6 +543,7 @@ local function pressableDraw(pressable)
 	if background then
 		screen.drawRectangle(pressable.x, pressable.y, pressable.width, pressable.height, background, text, " ")
 	end
+	
 	screen.drawText(math.floor(pressable.x + pressable.width / 2 - unicode.len(pressable.text) / 2), math.floor(pressable.y + pressable.height / 2), text, pressable.text)
 end
 
@@ -808,8 +808,27 @@ function GUI.panel(x, y, width, height, color, transparency)
 		background = color,
 		transparency = transparency
 	}
+
 	object.draw = drawPanel
 	
+	return object
+end
+
+--------------------------------------------------------------------------------
+
+local function blurredPanelDraw(object)
+	screen.blur(object.x, object.y, object.width, object.height, object.radius, object.color, object.transparency)
+end
+
+function GUI.blurredPanel(x, y, width, height, radius, color, transparency)
+	local object = GUI.object(x, y, width, height)
+
+	object.radius = radius or 3
+	object.color = color
+	object.transparency = transparency
+
+	object.draw = blurredPanelDraw
+
 	return object
 end
 
@@ -1396,7 +1415,7 @@ local function sliderDraw(object)
 	return object
 end
 
-local function sliderEventHandler(workspace, object, e1, e2, e3, ...)
+local function sliderEventHandler(workspace, object, e1, e2, e3, e4, e5, ...)
 	if e1 == "touch" or e1 == "drag" then
 		local clickPosition = e3 - object.x
 
@@ -1411,7 +1430,21 @@ local function sliderEventHandler(workspace, object, e1, e2, e3, ...)
 		workspace:draw()
 
 		if object.onValueChanged then
-			object.onValueChanged(workspace, object, e1, e2, e3, ...)
+			object.onValueChanged(workspace, object, e1, e2, e3, e4, e5, ...)
+		end
+	elseif e1 == "scroll" then
+		object.value = object.value + (object.maximumValue - object.minimumValue) * object.scrollSensivity * e5
+
+		if object.value > object.maximumValue then
+			object.value = object.maximumValue 
+		elseif object.value < object.minimumValue then
+			object.value = object.minimumValue
+		end
+
+		workspace:draw()
+
+		if object.onValueChanged then
+			object.onValueChanged(workspace, object, e1, e2, e3, e4, e5, ...)
 		end
 	end
 end
@@ -1425,6 +1458,7 @@ function GUI.slider(x, y, width, activeColor, passiveColor, pipeColor, valueColo
 	object.minimumValue = minimumValue
 	object.maximumValue = maximumValue
 	object.value = value
+	object.scrollSensivity = 0.05
 	object.showMaximumAndMinimumValues = showMaximumAndMinimumValues
 	object.currentValuePrefix = currentValuePrefix
 	object.currentValuePostfix = currentValuePostfix
@@ -2907,6 +2941,12 @@ local function inputEventHandler(workspace, input, e1, e2, e3, e4, e5, e6, ...)
 		-- Delete
 		elseif e4 == 211 then
 			input.text = unicode.sub(input.text, 1, input.cursorPosition - 1) .. unicode.sub(input.text, input.cursorPosition + 1, -1)
+		-- Home
+		elseif e4 == 199 then
+			input:setCursorPosition(1)
+		-- End
+		elseif e4 == 207 then 
+			input:setCursorPosition(unicode.len(input.text) + 1)
 		else
 			local char = unicode.char(e3)
 			if not keyboard.isControl(e3) then
@@ -3535,6 +3575,7 @@ end
 
 local function listUpdate(list)
 	local step, child = false
+
 	for i = 1, #list.children do
 		child = list.children[i]
 		-- Жмяканье пизды
@@ -3546,6 +3587,7 @@ local function listUpdate(list)
 		else
 			child.colors.default = list.colors.default
 		end
+
 		child.colors.pressed, step = list.colors.selected, not step
 		
 		-- Размеры хуйни
@@ -3634,7 +3676,10 @@ local function listCount(list)
 end
 
 local function listDraw(list)
-	screen.drawRectangle(list.x, list.y, list.width, list.height, list.colors.default.background, list.colors.default.text, " ")
+	if list.colors.default.background then
+		screen.drawRectangle(list.x, list.y, list.width, list.height, list.colors.default.background, list.colors.default.text, " ")
+	end
+
 	layoutDraw(list)
 end
 
@@ -4259,12 +4304,8 @@ local function windowEventHandler(workspace, window, e1, e2, e3, e4, ...)
 			end
 
 			if window ~= window.parent.children[#window.parent.children] then
-				window:moveToFront()
+				window:focus()
 				
-				if window.onFocus then
-					window.onFocus(workspace, window, e1, e2, e3, e4, ...)
-				end
-
 				workspace:draw()
 			end
 		elseif e1 == "drag" and window.lastTouchX and not windowCheck(window, e3, e4) then
@@ -4335,17 +4376,29 @@ function GUI.windowMinimize(window)
 	window.hidden = not window.hidden
 end
 
+function GUI.windowFocus(window)
+	GUI.focusedObject = window
+	window.hidden = false
+	window:moveToFront()
+
+	if window.onFocus then
+		window.onFocus()
+	end
+end
+
 function GUI.window(x, y, width, height)
 	local window = GUI.container(x, y, width, height)
 	
 	window.passScreenEvents = false
+	window.movingEnabled = true
 
 	window.resize = windowResize
 	window.maximize = GUI.windowMaximize
 	window.minimize = GUI.windowMinimize
+	window.focus = GUI.windowFocus
+
 	window.eventHandler = windowEventHandler
 	window.draw = windowDraw
-	window.movingEnabled = true
 
 	return window
 end
