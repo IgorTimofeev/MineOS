@@ -601,7 +601,7 @@ function image.getGaussianBlurKernel(radius, weight)
     return kernel;
 end
 
-function image.convolve(picture, kernel, affectsForeground)
+function image.convolve(picture, kernel)
 	-- Processing
 	local
 		pictureWidth,
