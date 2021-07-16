@@ -566,6 +566,93 @@ function image.invert(picture)
 	return picture 
 end
 
+function image.getGaussianBlurKernel(radius)
+	-- Todo
+end
+
+function image.convolve(picture, kernel)
+	-- Copying
+	local newPicture = {}
+
+	for i = 1, #picture do
+		newPicture[i] = picture[i]
+	end
+
+	-- Processing
+	local
+		pictureWidth,
+		pictureHeight,
+		kernelSize,
+		pictureIndex,
+		kernelIndex,
+		rAcc,
+		gAcc,
+		bAcc,
+		accCount,
+		r,
+		g,
+		b,
+		cx,
+		cy = picture[1], picture[2], kernel[1], 3
+
+	local kernelRadius = math.floor(kernelSize / 2)
+
+	for y = 1, pictureHeight do
+		for x = 1, pictureWidth do
+			rAcc, gAcc, bAcc, kernelIndex, pictureIndex = 0, 0, 0, 2, pictureIndex + 1 
+
+			-- Summing
+			for ky = -kernelRadius, kernelRadius do
+				cy = y + ky
+
+				if cy >= 1 and cy <= pictureHeight then
+					for kx = -kernelRadius, kernelRadius do
+						cx = y + ky
+						kernelIndex = kernelIndex + 1
+
+						if cx >= 1 and cx <= pictureWidth then
+							r, g, b = color.integerToRGB(picture[pictureIndex])
+							rAcc, gAcc, bAcc = rAcc + r, gAcc + g, bAcc + b
+						end
+					end
+				else
+					kernelIndex = kernelIndex + kernelSize
+				end
+			end
+
+			-- Cropping & rounding
+			if rAcc > 255 then
+				rAcc = 255
+			elseif rAcc < 0 then
+				rAcc = 0
+			else
+				rAcc = rAcc - rAcc % 1
+			end
+
+			if gAcc > 255 then
+				gAcc = 255
+			elseif gAcc < 0 then
+				gAcc = 0
+			else
+				gAcc = gAcc - gAcc % 1
+			end
+
+			if bAcc > 255 then
+				bAcc = 255
+			elseif bAcc < 0 then
+				bAcc = 0
+			else
+				bAcc = bAcc - bAcc % 1
+			end
+
+			-- Setting new pixel
+			newPicture[pictureIndex] = color.RGBToInteger(rAcc, gAcc, bAcc)
+		end
+	end
+
+	return newPicture
+end
+
 --------------------------------------------------------------------------------
 
 return image
