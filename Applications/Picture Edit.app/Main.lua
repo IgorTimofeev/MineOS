@@ -298,7 +298,7 @@ end
 local function loadImage(path)
 	local result, reason
 	
-	if filesystem.extension(path) == ".rpic" then
+	if filesystem.extension(path) == ".txt" then
 		result = image.fromString(filesystem.read(path))
 	else
 		result, reason = image.load(path)
@@ -335,7 +335,7 @@ local function saveAs()
 	local filesystemDialog = GUI.addFilesystemDialog(workspace, true, 50, math.floor(window.height * 0.8), locale.save, locale.cancel, locale.fileName, "/")
 	filesystemDialog:setMode(GUI.IO_MODE_SAVE, GUI.IO_MODE_FILE)
 	filesystemDialog:addExtensionFilter(".pic")
-	filesystemDialog:addExtensionFilter(".rpic")
+	filesystemDialog:addExtensionFilter(".txt")
 	filesystemDialog:expandPath(paths.user.desktop)
 	filesystemDialog.filesystemTree.selectedItem = paths.user.desktop
 	filesystemDialog:show()
@@ -397,7 +397,7 @@ local function open()
 	local filesystemDialog = GUI.addFilesystemDialog(workspace, true, 50, math.floor(window.height * 0.8), locale.open, locale.cancel, locale.fileName, "/")
 	filesystemDialog:setMode(GUI.IO_MODE_OPEN, GUI.IO_MODE_FILE)
 	filesystemDialog:addExtensionFilter(".pic")
-	filesystemDialog:addExtensionFilter(".rpic")
+	filesystemDialog:addExtensionFilter(".txt")
 	filesystemDialog:expandPath(paths.user.desktop)
 	filesystemDialog:show()
 
