@@ -677,21 +677,21 @@ editItem:addSeparator()
 
 editItem:addItem(locale.gaussianBlur).onTouch = function()
 	local container = GUI.addBackgroundContainer(workspace, true, true, locale.gaussianBlur)
-	container.layout:setSpacing(1, 1, 2)
 	container.panel.eventHandler = nil
 
-	local radius = container.layout:addChild(GUI.slider(1, 1, 50, 0x66DB80, 0x0, 0xFFFFFF, 0xAAAAAA, 0, 5, 2.5, true, locale.radius))
-	local force = container.layout:addChild(GUI.slider(1, 1, 50, 0x66DB80, 0x0, 0xFFFFFF, 0xAAAAAA, 0, 1, 0.5, true, locale.force))
+	local radius = container.layout:addChild(GUI.slider(1, 1, 50, 0x66DB80, 0x0, 0xFFFFFF, 0xAAAAAA, 1, 10, 2, true, locale.radius))
+	radius.height = 2
 	radius.roundValues = true
+
+	local force = container.layout:addChild(GUI.slider(1, 1, 50, 0x66DB80, 0x0, 0xFFFFFF, 0xAAAAAA, 0, 1, 0.5, true, locale.force))
+	force.height = 2
 	
-	local buttonsLay = container.layout:addChild(GUI.layout(1, 1, 30, 7, 1, 1))
-	
-	buttonsLay:addChild(GUI.button(1, 1, 30, 3, 0xFFFFFF, 0x555555, 0x880000, 0xFFFFFF, locale.ok)).onTouch = function()
+	container.layout:addChild(GUI.button(1, 1, 30, 3, 0xFFFFFF, 0x555555, 0x880000, 0xFFFFFF, locale.ok)).onTouch = function()
 		window.image.data = image.convolve(window.image.data, image.getGaussianBlurKernel(math.floor(radius.value), force.value))
 		container:remove()
 	end
 	
-	buttonsLay:addChild(GUI.button(1, 1, 30, 3, 0xFFFFFF, 0x555555, 0x880000, 0xFFFFFF, locale.cancel)).onTouch = function()
+	container.layout:addChild(GUI.button(1, 1, 30, 3, 0xFFFFFF, 0x555555, 0x880000, 0xFFFFFF, locale.cancel)).onTouch = function()
 		container:remove()
 	end
 end

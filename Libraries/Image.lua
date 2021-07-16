@@ -566,18 +566,42 @@ function image.invert(picture)
 	return picture 
 end
 
-function image.getGaussianBlurKernel(radius)
-	-- Todo
-end
+function image.getGaussianBlurKernel(radius, weight)
+	local size, index, sum, weightSquared2, value =
+		radius * 2 + 1,
+		2,
+		0,
+		2 * weight * weight
 
-function image.convolve(picture, kernel)
-	-- Copying
-	local newPicture = {}
+	local kernel, constant =
+		{size},
+		1 / (math.pi * weightSquared2)
+	
+	-- Filling convolution matrix
+	for y = -radius, radius do
+		for x = -radius, radius do
+			value = constant * math.exp(-((y * y) + (x * x)) / weightSquared2);
+			kernel[index] = value
+			sum = sum + value;
 
-	for i = 1, #picture do
-		newPicture[i] = picture[i]
+			index = index + 1
+		end
 	end
 
+	index = 2
+
+	for y = 1, size do
+		for x = 1, size do
+			kernel[index] = kernel[index] * 1 / sum;
+
+			index = index + 1
+		end
+	end
+
+    return kernel;
+end
+
+function image.convolve(picture, kernel, affectsForeground)
 	-- Processing
 	local
 		pictureWidth,
@@ -585,21 +609,23 @@ function image.convolve(picture, kernel)
 		kernelSize,
 		pictureIndex,
 		kernelIndex,
-		rAcc,
-		gAcc,
-		bAcc,
-		accCount,
+		kernelValue,
+		rAccB,
+		gAccB,
+		bAccB,
 		r,
 		g,
 		b,
 		cx,
 		cy = picture[1], picture[2], kernel[1], 3
 
-	local kernelRadius = math.floor(kernelSize / 2)
+	local newPicture, kernelRadius =
+		{ pictureWidth, pictureHeight },
+		math.floor(kernelSize / 2)
 
 	for y = 1, pictureHeight do
 		for x = 1, pictureWidth do
-			rAcc, gAcc, bAcc, kernelIndex, pictureIndex = 0, 0, 0, 2, pictureIndex + 1 
+			rAccB, gAccB, bAccB, kernelIndex = 0, 0, 0, 2
 
 			-- Summing
 			for ky = -kernelRadius, kernelRadius do
@@ -607,13 +633,16 @@ function image.convolve(picture, kernel)
 
 				if cy >= 1 and cy <= pictureHeight then
 					for kx = -kernelRadius, kernelRadius do
-						cx = y + ky
-						kernelIndex = kernelIndex + 1
+						cx = x + kx
 
 						if cx >= 1 and cx <= pictureWidth then
-							r, g, b = color.integerToRGB(picture[pictureIndex])
-							rAcc, gAcc, bAcc = rAcc + r, gAcc + g, bAcc + b
+							kernelValue = kernel[kernelIndex]
+
+							r, g, b = color.integerToRGB(picture[4 * (pictureWidth * (cy - 1) + cx) - 1])
+							rAccB, gAccB, bAccB = rAccB + r * kernelValue, gAccB + g * kernelValue, bAccB + b * kernelValue
 						end
+
+						kernelIndex = kernelIndex + 1
 					end
 				else
 					kernelIndex = kernelIndex + kernelSize
@@ -621,32 +650,42 @@ function image.convolve(picture, kernel)
 			end
 
 			-- Cropping & rounding
-			if rAcc > 255 then
-				rAcc = 255
-			elseif rAcc < 0 then
-				rAcc = 0
+			if rAccB > 255 then
+				rAccB = 255
+			elseif rAccB < 0 then
+				rAccB = 0
 			else
-				rAcc = rAcc - rAcc % 1
+				rAccB = rAccB - rAccB % 1
 			end
 
-			if gAcc > 255 then
-				gAcc = 255
-			elseif gAcc < 0 then
-				gAcc = 0
+			if gAccB > 255 then
+				gAccB = 255
+			elseif gAccB < 0 then
+				gAccB = 0
 			else
-				gAcc = gAcc - gAcc % 1
+				gAccB = gAccB - gAccB % 1
 			end
 
-			if bAcc > 255 then
-				bAcc = 255
-			elseif bAcc < 0 then
-				bAcc = 0
+			if bAccB > 255 then
+				bAccB = 255
+			elseif bAccB < 0 then
+				bAccB = 0
 			else
-				bAcc = bAcc - bAcc % 1
+				bAccB = bAccB - bAccB % 1
 			end
 
 			-- Setting new pixel
-			newPicture[pictureIndex] = color.RGBToInteger(rAcc, gAcc, bAcc)
+			newPicture[pictureIndex] = color.RGBToInteger(rAccB, gAccB, bAccB)
+			pictureIndex = pictureIndex + 1
+
+			newPicture[pictureIndex] = 0x0
+			pictureIndex = pictureIndex + 1
+
+			newPicture[pictureIndex] = picture[pictureIndex]
+			pictureIndex = pictureIndex + 1
+
+			newPicture[pictureIndex] = " "
+			pictureIndex = pictureIndex + 1
 		end
 	end
 

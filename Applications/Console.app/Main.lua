@@ -3,6 +3,7 @@ local GUI = require("GUI")
 local system = require("System")
 local keyboard = require("Keyboard")
 local screen = require("Screen")
+local text = require("Text")
 
 ---------------------------------------------------------------------------------
 
@@ -26,11 +27,15 @@ disp.draw = function(disp)
 	screen.drawText(x + unicode.len(text), y, 0x00A8FF, "┃")
 end
 
-window.addLine = function(line)
-	table.insert(lines, line)
+window.addLine = function(value)
+	local value = text.wrap(value, disp.width)
 
-	if #lines - lineFrom + 1 > disp.height - 1 then
-		lineFrom = lineFrom + 1
+	for i = 1, #value do
+		table.insert(lines, value[i])
+
+		if #lines - lineFrom + 1 > disp.height - 1 then
+			lineFrom = lineFrom + 1
+		end
 	end
 end
 

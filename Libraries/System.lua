@@ -2924,10 +2924,18 @@ _G.print = function(...)
 		end
 	end
 
-	local args = {...}
+	local args, arg = {...}
 
 	for i = 1, #args do
-		args[i] = tostring(args[i])
+		arg = args[i]
+
+		if type(arg) == "table" then
+			arg = text.serialize(arg, true, "  ", 3)
+		else
+			arg = tostring(arg)
+		end
+
+		args[i] = arg
 	end
 
 	args = table.concat(args, " ")
