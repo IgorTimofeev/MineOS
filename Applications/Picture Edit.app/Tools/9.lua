@@ -7,7 +7,7 @@ local text = require("Text")
 
 local workspace, window, menu = select(1, ...), select(2, ...), select(3, ...)
 local tool = {}
-locale = select(4, ...)
+local locale = select(4, ...)
 
 tool.shortcut = "Bra"
 tool.keyCode = 33
