@@ -466,95 +466,53 @@ function image.rotate(picture, angle)
 
 	if angle == 90 then
 		local newPicture = {picture[2], picture[1]}
+		
 		for i = 1, picture[2] do
 			for j = picture[1], 1, -1 do
-				local index = image.getIndex(i, j, picture[2])
-				copyPixel(newPicture, picture, index)
+				copyPixel(newPicture, picture, image.getIndex(i, j, picture[2]))
 			end
 		end
+
 		return newPicture
 	elseif angle == 180 then
 		local newPicture = {picture[1], picture[2]}
+		
 		for j = picture[1], 1, -1 do
 			for i = picture[2], 1, -1 do
-				local index = image.getIndex(i, j, picture[2])
-				copyPixel(newPicture, picture, index)
+				copyPixel(newPicture, picture, image.getIndex(i, j, picture[2]))
 			end
 		end
+
 		return newPicture
 	elseif angle == 270 then
 		local newPicture = {picture[2], picture[1]}
+		
 		for i = picture[2], 1, -1 do
 			for j = 1, picture[1] do
-				local index = image.getIndex(i, j, picture[2])
-				copyPixel(newPicture, picture, index)
+				copyPixel(newPicture, picture, image.getIndex(i, j, picture[2]))
 			end
 		end
+
 		return newPicture
 	else
 		error("Can't rotate image: angle must be 90, 180 or 270 degrees.")
 	end
 end
 
-function image.gaussianBlur(picture, radius, force)
-	local function createConvolutionMatrix(maximumValue, matrixSize)
-		local delta = maximumValue / matrixSize
-		local matrix = {}
-		for y = 1, matrixSize do
-			for x = 1, matrixSize do
-				local value = ((x - 1) * delta + (y - 1) * delta) / 2
-				matrix[y] = matrix[y] or {}
-				matrix[y][x] = value
-			end
-		end
-		return matrix
-	end
-
-	local function spreadPixelToSpecifiedCoordinates(picture, xCoordinate, yCoordinate, matrixValue, startBackground, startForeground, startAlpha, startSymbol)
-		local matrixBackground, matrixForeground, matrixAlpha, matrixSymbol = image.get(picture, xCoordinate, yCoordinate)
-
-		if matrixBackground and matrixForeground then
-			local newBackground = color.blend(startBackground, matrixBackground, matrixValue)
-			local newForeground = matrixSymbol == " " and newBackground or color.blend(startForeground, matrixForeground, matrixValue)
-
-			image.set(picture, xCoordinate, yCoordinate, newBackground, newForeground, 0x00, matrixSymbol)
-		end
-	end
-
-	local function spreadColorToOtherPixels(picture, xStart, yStart, matrix)
-		local startBackground, startForeground, startAlpha, startSymbol = image.get(picture, xStart, yStart)
-		local xCoordinate, yCoordinate
-		for yMatrix = 2, #matrix do
-			for xMatrix = 2, #matrix[yMatrix] do
-				xCoordinate, yCoordinate = xStart - xMatrix + 1, yStart - yMatrix + 1
-				spreadPixelToSpecifiedCoordinates(picture, xCoordinate, yCoordinate, matrix[yMatrix][xMatrix], startBackground, startForeground, startAlpha, startSymbol)
-				xCoordinate, yCoordinate = xStart + xMatrix - 1, yStart + yMatrix - 1
-				spreadPixelToSpecifiedCoordinates(picture, xCoordinate, yCoordinate, matrix[yMatrix][xMatrix], startBackground, startForeground, startAlpha, startSymbol)
-			end
-		end
-	end
-
-	local matrix = createConvolutionMatrix(force or 0x55, radius)
-	for y = 1, picture[2] do
-		for x = 1, picture[1] do
-			spreadColorToOtherPixels(picture, x, y, matrix)
-		end
-	end
-	return picture
-end
-
 function image.hueSaturationBrightness(picture, hue, saturation, brightness)
-	local function calculateBrightnessChanges(colr)
-		local h, s, b = color.integerToHSB(colr)
+	local function calculate(c)
+		local h, s, b = color.integerToHSB(c)
+		
 		b = b + brightness; if b < 0 then b = 0 elseif b > 1 then b = 1 end
 		s = s + saturation; if s < 0 then s = 0 elseif s > 1 then s = 1 end
 		h = h + hue; if h < 0 then h = 0 elseif h > 360 then h = 360 end
+
 		return color.HSBToInteger(h, s, b)
 	end
 
 	for i = 3, #picture, 4 do
-		picture[i] = calculateBrightnessChanges(picture[i])
-		picture[i + 1] = calculateBrightnessChanges(picture[i + 1])
+		picture[i] = calculate(picture[i])
+		picture[i + 1] = calculate(picture[i + 1])
 	end
 
 	return picture
@@ -577,18 +535,23 @@ function image.blackAndWhite(picture)
 end
 
 function image.colorBalance(picture, r, g, b)
-	local function calculateRGBChanges(colr)
-		local rr, gg, bb = color.integerToRGB(colr)
-		rr = rr + r; gg = gg + g; bb = bb + b
+	local function calculate(c)
+		local rr, gg, bb = color.integerToRGB(c)
+
+		rr = rr + r
+		gg = gg + g
+		bb = bb + b
+		
 		if rr < 0 then rr = 0 elseif rr > 255 then rr = 255 end
 		if gg < 0 then gg = 0 elseif gg > 255 then gg = 255 end
 		if bb < 0 then bb = 0 elseif bb > 255 then bb = 255 end
+
 		return color.RGBToInteger(rr, gg, bb)
 	end
 
 	for i = 3, #picture, 4 do
-		picture[i] = calculateRGBChanges(picture[i])
-		picture[i + 1] = calculateRGBChanges(picture[i + 1])
+		picture[i] = calculate(picture[i])
+		picture[i + 1] = calculate(picture[i + 1])
 	end
 
 	return picture
@@ -599,16 +562,8 @@ function image.invert(picture)
 		picture[i] = 0xffffff - picture[i]
 		picture[i + 1] = 0xffffff - picture[i + 1]
 	end
-	return picture 
-end
 
-function image.photoFilter(picture, colr, transparency)
-	if transparency < 0 then transparency = 0 elseif transparency > 1 then transparency = 1 end
-	for i = 3, #picture, 4 do
-		picture[i] = color.blend(picture[i], colr, transparency)
-		picture[i + 1] = color.blend(picture[i + 1], colr, transparency)
-	end
-	return picture
+	return picture 
 end
 
 --------------------------------------------------------------------------------

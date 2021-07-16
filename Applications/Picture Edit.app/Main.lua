@@ -654,7 +654,7 @@ editItem:addItem(locale.photoFilter).onTouch = function()
 	local buttonsLay = container.layout:addChild(GUI.layout(1, 1, 30, 7, 1, 1))
 	
 	buttonsLay:addChild(GUI.button(1, 1, 30, 3, 0xFFFFFF, 0x555555, 0x880000, 0xFFFFFF, locale.ok)).onTouch = function()
-		window.image.data = image.photoFilter(window.image.data, filterColor.color, transparency.value)
+		window.image.data = image.blend(window.image.data, filterColor.color, transparency.value)
 		container:remove()
 	end
 	
@@ -687,7 +687,7 @@ editItem:addItem(locale.gaussianBlur).onTouch = function()
 	local buttonsLay = container.layout:addChild(GUI.layout(1, 1, 30, 7, 1, 1))
 	
 	buttonsLay:addChild(GUI.button(1, 1, 30, 3, 0xFFFFFF, 0x555555, 0x880000, 0xFFFFFF, locale.ok)).onTouch = function()
-		window.image.data = image.gaussianBlur(window.image.data, math.floor(radius.value), force.value)
+		window.image.data = image.convolve(window.image.data, image.getGaussianBlurKernel(math.floor(radius.value), force.value))
 		container:remove()
 	end
 	
