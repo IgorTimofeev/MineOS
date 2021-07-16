@@ -397,7 +397,7 @@ local function open()
 	local filesystemDialog = GUI.addFilesystemDialog(workspace, true, 50, math.floor(window.height * 0.8), locale.open, locale.cancel, locale.fileName, "/")
 	filesystemDialog:setMode(GUI.IO_MODE_OPEN, GUI.IO_MODE_FILE)
 	filesystemDialog:addExtensionFilter(".pic")
-	filesystemDialog:addExtensionFilter(".rawpic")
+	filesystemDialog:addExtensionFilter(".rpic")
 	filesystemDialog:expandPath(paths.user.desktop)
 	filesystemDialog:show()
 
