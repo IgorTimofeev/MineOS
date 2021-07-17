@@ -610,36 +610,36 @@ function image.convolve(picture, kernel)
 		pictureIndex,
 		kernelIndex,
 		kernelValue,
-		rAccB,
-		gAccB,
-		bAccB,
+		rAcc,
+		gAcc,
+		bAcc,
 		r,
 		g,
 		b,
-		cx,
-		cy = picture[1], picture[2], kernel[1], 3
+		x,
+		y = picture[1], picture[2], kernel[1], 3
 
 	local newPicture, kernelRadius =
 		{ pictureWidth, pictureHeight },
 		math.floor(kernelSize / 2)
 
-	for y = 1, pictureHeight do
-		for x = 1, pictureWidth do
-			rAccB, gAccB, bAccB, kernelIndex = 0, 0, 0, 2
+	for pictureY = 1, pictureHeight do
+		for pictureX = 1, pictureWidth do
+			rAcc, gAcc, bAcc, kernelIndex = 0, 0, 0, 2
 
 			-- Summing
-			for ky = -kernelRadius, kernelRadius do
-				cy = y + ky
+			for kernelY = -kernelRadius, kernelRadius do
+				y = pictureY + kernelY
 
-				if cy >= 1 and cy <= pictureHeight then
-					for kx = -kernelRadius, kernelRadius do
-						cx = x + kx
+				if y >= 1 and y <= pictureHeight then
+					for kernelX = -kernelRadius, kernelRadius do
+						x = pictureX + kernelX
 
-						if cx >= 1 and cx <= pictureWidth then
+						if x >= 1 and x <= pictureWidth then
 							kernelValue = kernel[kernelIndex]
+							r, g, b = color.integerToRGB(picture[4 * (pictureWidth * (y - 1) + x) - 1])
 
-							r, g, b = color.integerToRGB(picture[4 * (pictureWidth * (cy - 1) + cx) - 1])
-							rAccB, gAccB, bAccB = rAccB + r * kernelValue, gAccB + g * kernelValue, bAccB + b * kernelValue
+							rAcc, gAcc, bAcc = rAcc + r * kernelValue, gAcc + g * kernelValue, bAcc + b * kernelValue
 						end
 
 						kernelIndex = kernelIndex + 1
@@ -649,33 +649,32 @@ function image.convolve(picture, kernel)
 				end
 			end
 
-			-- Cropping & rounding
-			if rAccB > 255 then
-				rAccB = 255
-			elseif rAccB < 0 then
-				rAccB = 0
+			-- Setting pixel values on new picture
+			if rAcc > 255 then
+				rAcc =  255
+			elseif rAcc < 0 then
+				rAcc = 0
 			else
-				rAccB = rAccB - rAccB % 1
+				rAcc = rAcc - rAcc % 1
 			end
 
-			if gAccB > 255 then
-				gAccB = 255
-			elseif gAccB < 0 then
-				gAccB = 0
+			if gAcc > 255 then
+				gAcc =  255
+			elseif gAcc < 0 then
+				gAcc = 0
 			else
-				gAccB = gAccB - gAccB % 1
+				gAcc = gAcc - gAcc % 1
 			end
 
-			if bAccB > 255 then
-				bAccB = 255
-			elseif bAccB < 0 then
-				bAccB = 0
+			if bAcc > 255 then
+				bAcc =  255
+			elseif bAcc < 0 then
+				bAcc = 0
 			else
-				bAccB = bAccB - bAccB % 1
+				bAcc = bAcc - bAcc % 1
 			end
 
-			-- Setting new pixel
-			newPicture[pictureIndex] = color.RGBToInteger(rAccB, gAccB, bAccB)
+			newPicture[pictureIndex] = color.RGBToInteger(rAcc, gAcc, bAcc)
 			pictureIndex = pictureIndex + 1
 
 			newPicture[pictureIndex] = 0x0
