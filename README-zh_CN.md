@@ -36,7 +36,7 @@ MineOS是一个基于GUI的Minecraft Opencomputers模组的操作系统. 它有�
 如果由于某种原因Github方法对你不可用(例如, 它在游戏服务器上被列入黑名单, 或者被互联网提供商屏蔽), 
 使用替代命令直接从镜像页面下载安装程序:
 
-	wget -f https://mirror.opencomputers.ml:1337/MineOS/IgorTimofeev/MineOS/master/Installer/BIOS.lua /tmp/bios.lua && flash -q /tmp/bios.lua && reboot
+	wget -f https://mirror.opencomputers.ml:7331/MineOS/IgorTimofeev/MineOS/master/Installer/BIOS.lua /tmp/bios.lua && flash -q /tmp/bios.lua && reboot
 
 过一会儿, 一个很好的系统安装程序将显示. 
 安装程序将提示您选择首选语言, 选择并格式化引导卷, 创建用户配置文件并自定义一些设置. 
