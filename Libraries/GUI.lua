@@ -1242,19 +1242,19 @@ end
 
 --------------------------------------------------------------------------------
 
-local function getAxisValue(number, postfix, roundValues)
+local function getAxisValue(num, postfix, roundValues)
 	if roundValues then
-		return math.floor(number) .. postfix
+		return math.floor(num) .. postfix
 	else
-		local integer, fractional = math.modf(number)
+		local integer, fractional = math.modf(num)
 		local firstPart, secondPart = "", ""
 		if math.abs(integer) >= 1000 then
 			return number.shorten(integer, 2) .. postfix
 		else
 			if math.abs(fractional) > 0 then
-				return string.format("%.2f", number) .. postfix
+				return string.format("%.2f", num) .. postfix
 			else
-				return number .. postfix
+				return num .. postfix
 			end
 		end
 	end
