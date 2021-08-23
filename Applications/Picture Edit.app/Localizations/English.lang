@@ -87,5 +87,5 @@
 	transparency = "Transparency: ",
 	force = "Force",
 	rasterizePolygon = "Rasterize polygon",
-	polygonEdges = "number of polygon edges:"
+	polygonEdges = "Number of polygon edges:"
 }
