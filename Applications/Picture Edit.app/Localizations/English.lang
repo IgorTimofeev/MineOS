@@ -85,5 +85,7 @@
 	brightness = "Brightness: ",
 	filterColor = "Filter color",
 	transparency = "Transparency: ",
-	force = "Force"
+	force = "Force",
+	rasterizePolygon = "Rasterize polygon",
+	polygonEdges = "number of polygon edges:"
 }
