@@ -426,6 +426,38 @@ local function rasterizeEllipse(centerX, centerY, radiusX, radiusY, method)
 	end
 end
 
+local function rasterizePolygon(centerX, centerY, startX, startY, countOfEdges, method)
+	local degreeStep = 360 / countOfEdges
+
+	local deltaX, deltaY = startX - centerX, startY - centerY
+	local radius = math.sqrt(deltaX ^ 2 + deltaY ^ 2)
+	local halfRadius = radius / 2
+	local startDegree = math.deg(math.asin(deltaX / radius))
+
+	local function round(num) 
+		if num >= 0 then
+			return math.floor(num + 0.5) 
+		else
+			return math.ceil(num - 0.5)
+		end
+	end
+
+	local function calculatePosition(degree)
+		local radDegree = math.rad(degree)
+		local deltaX2 = math.sin(radDegree) * radius
+		local deltaY2 = math.cos(radDegree) * radius
+		return round(centerX + deltaX2), round(centerY + (deltaY >= 0 and deltaY2 or -deltaY2))
+	end
+
+	local xOld, yOld, xNew, yNew = calculatePosition(startDegree)
+
+	for degree = (startDegree + degreeStep - 1), (startDegree + 360), degreeStep do
+		xNew, yNew = calculatePosition(degree)
+		rasterizeLine(xOld, yOld, xNew, yNew, method)
+		xOld, yOld = xNew, yNew
+	end
+end
+
 local function drawLine(x1, y1, x2, y2, background, foreground, symbol)
 	rasterizeLine(x1, y1, x2, y2, function(x, y)
 		set(x, y, background, foreground, symbol)
@@ -434,6 +466,12 @@ end
 
 local function drawEllipse(centerX, centerY, radiusX, radiusY, background, foreground, symbol)
 	rasterizeEllipse(centerX, centerY, radiusX, radiusY, function(x, y)
+		set(x, y, background, foreground, symbol)
+	end)
+end
+
+local function drawPolygon(centerX, centerY, radiusX, radiusY, background, foreground, countOfEdges, symbol)
+	rasterizePolygon(centerX, centerY, radiusX, radiusY, countOfEdges, function(x, y)
 		set(x, y, background, foreground, symbol)
 	end)
 end
@@ -776,6 +814,7 @@ return {
 	paste = paste,
 	rasterizeLine = rasterizeLine,
 	rasterizeEllipse = rasterizeEllipse,
+	rasterizePolygon = rasterizePolygon,
 	semiPixelRawSet = semiPixelRawSet,
 	semiPixelSet = semiPixelSet,
 	update = update,
@@ -783,6 +822,7 @@ return {
 	drawRectangle = drawRectangle,
 	drawLine = drawLine,
 	drawEllipse = drawEllipse,
+	drawPolygon = drawPolygon,
 	drawText = drawText,
 	drawImage = drawImage,
 	drawFrame = drawFrame,
