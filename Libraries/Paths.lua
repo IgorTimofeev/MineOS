@@ -23,6 +23,7 @@ paths.system.applicationPictureEdit = paths.system.applications .. "Picture Edit
 paths.system.applicationSettings = paths.system.applications .. "Settings.app/Main.lua"
 paths.system.applicationPrint3D = paths.system.applications .. "3D Print.app/Main.lua"
 paths.system.applicationConsole = paths.system.applications .. "Console.app/Main.lua"
+paths.system.applicationViewer = paths.system.applications .. "Viewer.app/Main.lua"
 
 --------------------------------------------------------------------------------
 
