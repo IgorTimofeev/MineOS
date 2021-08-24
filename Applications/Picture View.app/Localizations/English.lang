@@ -3,8 +3,6 @@
 	slideShow = "Slideshow",
 	delay = "Delay: ",
 	seconds = " seconds",
-	hidePanel = "Hide panel",
-	shpwPanel = "Show panel",
 	fullScreen = "Full screen",
 	setWallpaper = "Do you want to set this picture as wallpaper?",
 	yes = "Yes",

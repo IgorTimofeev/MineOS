@@ -3524,20 +3524,23 @@ end
 
 local function textUpdate(object)
 	object.width = unicode.len(object.text)
+	
 	return object
 end
 
 local function textDraw(object)
 	object:update()
-	screen.drawText(object.x, object.y, object.color, object.text)
+	screen.drawText(object.x, object.y, object.color, object.text, object.transparency)
+
 	return object
 end
 
-function GUI.text(x, y, color, text)
+function GUI.text(x, y, color, text, transparency)
 	local object = GUI.object(x, y, 1, 1)
 
 	object.text = text
 	object.color = color
+	object.transparency = transparency
 	object.update = textUpdate
 	object.draw = textDraw
 	object:update()
