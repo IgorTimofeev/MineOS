@@ -11,14 +11,14 @@ local currentNum = 1
 
 local workspace, window, menu = system.addWindow(GUI.titledWindow(1, 1, 70, 30, 'Viewer', true))
 
-local locale = system.getCurrentScriptLocalization()
+local localization = system.getCurrentScriptLocalization()
 
 local iconsPath = fs.path(system.getCurrentScript())..'Icons/'
 
-local arrowLeftPic = image.load(iconsPath .. "arrowLeft.pic")
-local arrowRightPic = image.load(iconsPath .. "arrowRight.pic")
-local playPic = image.load(iconsPath .. "play.pic")
-local setWallpaperPic = image.load(iconsPath.."setWallpaper.pic")
+local arrowLeftPic = image.load(iconsPath .. "ArrowLeft.pic")
+local arrowRightPic = image.load(iconsPath .. "ArrowRight.pic")
+local playPic = image.load(iconsPath .. "Play.pic")
+local setWallpaperPic = image.load(iconsPath.."SetWallpaper.pic")
 
 local layout = window:addChild(GUI.layout(1, 2, window.width, window.height, 1, 1))
 
@@ -36,11 +36,20 @@ local function scanDir()
 end
 
 local function loadImg()
-	if imageObj then imageObj:remove() end
+	if imageObj then
+		imageObj:remove()
+	end
+	
 	local newImg, ifErr = image.load(dirFiles[currentNum])
-	if not newImg then GUI.alert(ifErr) window:remove() return end
+	
+	if not newImg then
+		GUI.alert(ifErr)
+		window:remove()
+		return
+	end
+
 	imageObj = layout:addChild(GUI.image(1, 1, newImg))
-	window.titleLabel.text = 'Viewer - '..text.limit(dirFiles[currentNum], 30, "center")
+	window.titleLabel.text = 'Viewer - ' .. text.limit(dirFiles[currentNum], 30, "center")
 	workspace:draw()
 end
 
@@ -55,18 +64,18 @@ end
 local play = panelLay:addChild(GUI.image(2, 1, playPic))
 play.eventHandler = function(_, _, typ)
 	if typ == 'touch' then
-		local container = GUI.addBackgroundContainer(workspace, true, true, locale.slideShow)
+		local container = GUI.addBackgroundContainer(workspace, true, true, localization.slideShow)
 		container.panel.eventHandler = nil
 		container.layout:setSpacing(1, 1, 2)
 		
-		local delay = container.layout:addChild(GUI.slider(1, 1, 50, 0x66DB80, 0x0, 0xFFFFFF, 0xFFFFFF, 3, 30, 0, true, locale.delay, locale.seconds))
+		local delay = container.layout:addChild(GUI.slider(1, 1, 50, 0x66DB80, 0x0, 0xFFFFFF, 0xFFFFFF, 3, 30, 0, true, localization.delay, localization.seconds))
 		delay.roundValues = true
 		
-		local onFull = container.layout:addChild(GUI.switchAndLabel(1, 1, 27, 8, 0x66DB80, 0x1D1D1D, 0xEEEEEE, 0xFFFFFF, locale.fullScreen..":", false))
+		local onFull = container.layout:addChild(GUI.switchAndLabel(1, 1, 27, 8, 0x66DB80, 0x1D1D1D, 0xEEEEEE, 0xFFFFFF, localization.fullScreen..":", false))
 		
 		local buttonsLay = container.layout:addChild(GUI.layout(1, 1, 30, 7, 1, 1))
 		
-		buttonsLay:addChild(GUI.button(1, 1, 30, 3, 0xFFFFFF, 0x555555, 0x880000, 0xFFFFFF, locale.start)).onTouch = function()
+		buttonsLay:addChild(GUI.button(1, 1, 30, 3, 0xFFFFFF, 0x555555, 0x880000, 0xFFFFFF, localization.start)).onTouch = function()
 			local slDelay = delay.value
 			if onFull.switch.state then
 				local w, h = screen.getResolution()
@@ -90,7 +99,9 @@ play.eventHandler = function(_, _, typ)
 			else
 				panel.hidden = true
 				panelLay.hidden = true
+				
 				local strTim = system.getTime()
+
 				layout.eventHandler = function(_, _, typ)
 					if typ == 'touch' or typ == 'key_down' then 
 						layout.eventHandler = nil
@@ -107,30 +118,36 @@ play.eventHandler = function(_, _, typ)
 			container:remove()
 		end
 		
-		buttonsLay:addChild(GUI.button(1, 1, 30, 3, 0xFFFFFF, 0x555555, 0x880000, 0xFFFFFF, locale.cancel)).onTouch = function()
+		buttonsLay:addChild(GUI.button(1, 1, 30, 3, 0xFFFFFF, 0x555555, 0x880000, 0xFFFFFF, localization.cancel)).onTouch = function()
 			container:remove()
 		end
 	end
 end
+
 panelLay:setPosition(2, 1, play)
 
+-- Arrow right
 local arrowRight = panelLay:addChild(GUI.image(1, 1, arrowRightPic))
+
 arrowRight.eventHandler = function(_, _, typ)
 	if typ == 'touch' then
 		currentNum = currentNum == #dirFiles and 1 or currentNum+1
 		loadImg()
 	end
 end
+
 panelLay:setPosition(3, 1, arrowRight)
 
+-- Set wallpaper
 local setWallpaper = panelLay:addChild(GUI.image(1, 1, setWallpaperPic))
+
 setWallpaper.eventHandler = function(_, _, typ)
 	if typ == 'touch' then
-		local container = GUI.addBackgroundContainer(workspace, true, true, locale.setWallpaper)
+		local container = GUI.addBackgroundContainer(workspace, true, true, localization.setWallpaper)
 		container.panel.eventHandler = nil
 		local buttLay = container.layout:addChild(GUI.layout(1, 1, 24, 6, 2, 1))
 		
-		buttLay:addChild(GUI.button(1, 1, 10, 3, 0xFFFFFF, 0x555555, 0x880000, 0xFFFFFF, locale.yes)).onTouch = function()
+		buttLay:addChild(GUI.button(1, 1, 10, 3, 0xFFFFFF, 0x555555, 0x880000, 0xFFFFFF, localization.yes)).onTouch = function()
 			local sets = system.getUserSettings()
 			sets.interfaceWallpaperPath = dirFiles[currentNum]
 			system.saveUserSettings()
@@ -139,24 +156,24 @@ setWallpaper.eventHandler = function(_, _, typ)
 			container:remove()
 		end
 	
-		local cancel = buttLay:addChild(GUI.button(1, 1, 10, 3, 0xFFFFFF, 0x555555, 0x880000, 0xFFFFFF, locale.no))
+		local cancel = buttLay:addChild(GUI.button(1, 1, 10, 3, 0xFFFFFF, 0x555555, 0x880000, 0xFFFFFF, localization.no))
 		cancel.onTouch = function()
 			container:remove()
 		end
 		buttLay:setPosition(2, 1, cancel)
 	end
 end
+
 panelLay:setPosition(4, 1, setWallpaper)
 
-local hsPanel = menu:addItem(locale.hidePanel)
+local hsPanel = menu:addItem(localization.hidePanel)
 hsPanel.onTouch = function()
-	hsPanel.text = panel.hidden and locale.hidePanel or locale.showPanel
+	hsPanel.text = panel.hidden and localization.hidePanel or localization.showPanel
 	panel.hidden = not panel.hidden
 	panelLay.hidden = not panelLay.hidden
 end
 
-local flScreen = menu:addItem(locale.fullScreen)
-flScreen.onTouch = function()
+menu:addItem(localization.fullScreen).onTouch = function()
 	local w, h = screen.getResolution()
 	local flScr = workspace:addChild(GUI.window(1, 1, w, h))
 	flScr:addChild(GUI.panel(1, 1, w, h, 0xFFFFFF))
@@ -179,14 +196,17 @@ end
 
 if (options.o or options.open) and args[1] then
 	currentDir = fs.path(args[1])
+	
 	scanDir()
+
 	for i=1, #dirFiles do
 		if dirFiles[i] == args[1] then currentNum = i loadImg() break end
 	end
 else
 	scanDir()
+
 	if #dirFiles == 0 then
-		layout:addChild(GUI.text(1, 1, 0x4B4B4B, locale.noPictures))
+		layout:addChild(GUI.text(1, 1, 0x4B4B4B, localization.noPictures))
 		panel.hidden = true
 		panelLay.hidden = true
 		hsPanel.disabled = true
