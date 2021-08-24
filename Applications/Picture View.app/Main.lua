@@ -83,7 +83,8 @@ play.eventHandler = function(_, _, typ)
 				flScr:addChild(GUI.panel(1, 1, w, h, 0xFFFFFF))
 				local flLay = flScr:addChild(GUI.layout(1, 1, w, h, 1, 1))
 				local img = flLay:addChild(GUI.image(1, 1, imageObj.image))
-				
+
+				local strTim = system.getTime()
 	
 				flScr.eventHandler = function(_, _, typ)
 					if typ == 'touch' or typ == 'key_down' then flScr:remove() loadImg()
