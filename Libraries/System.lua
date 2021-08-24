@@ -131,7 +131,7 @@ function system.getDefaultUserSettings()
 			[".cfg"] = filesystem.path(paths.system.applicationMineCodeIDE),
 			[".txt"] = filesystem.path(paths.system.applicationMineCodeIDE),
 			[".lang"] = filesystem.path(paths.system.applicationMineCodeIDE),
-			[".pic"] = filesystem.path(paths.system.applicationPictureEdit),
+			[".pic"] = filesystem.path(paths.system.applicationViewer),
 			[".3dm"] = paths.system.applications .. "3D Print.app/"
 		},
 	}
