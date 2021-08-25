@@ -12,7 +12,7 @@ local args, options = system.parseArguments(...)
 local iconsPath = fs.path(system.getCurrentScript()) .. "Icons/"
 local currentDir, files = ((options.o or options.open) and args[1] and fs.exists(args[1])) and fs.path(args[1]) or paths.system.pictures
 local fileIndex = 1
-local loadedImage
+local loadedImage, title
 
 --------------------------------------------------------------------------------
 
@@ -21,45 +21,56 @@ local workspace, window, menu = system.addWindow(GUI.filledWindow(1, 1, 80, 25, 
 local imageObject = window:addChild(GUI.object(1, 1, 1, 1))
 
 imageObject.draw = function()
+	local halfX, halfY = imageObject.x + imageObject.width / 2, imageObject.y + imageObject.height / 2
+
 	if loadedImage then
 		screen.drawImage(
-			math.floor(window.x + window.width / 2 - loadedImage[1] / 2),
-			math.floor(window.y + window.height / 2 - loadedImage[2] / 2),
+			math.floor(halfX - loadedImage[1] / 2),
+			math.floor(halfY - loadedImage[2] / 2),
 			loadedImage
 		)
-	end	
+
+		if title then
+			screen.drawText(math.floor(halfX - unicode.len(title) / 2), imageObject.y + 1, 0xFFFFFF, title, 0.5)
+		end
+	elseif #files == 0 then
+		screen.drawText(math.floor(halfX - unicode.len(localization.noPictures) / 2), math.floor(halfY), 0x5A5A5A, localization.noPictures)
+	end
 end
 
 window.actionButtons:moveToFront()
 
-local title = window:addChild(GUI.text(1, 2, 0xFFFFFF, " ", 0.5))
 local panel = window:addChild(GUI.panel(1, 1, 1, 6, 0x000000, 0.5))
 local panelContainer = window:addChild(GUI.container(1, 1, 1, panel.height))
 local slideShowDelay, slideShowDeadline
+
+local function updateTitle()
+	if panel.hidden then
+		title = nil
+	else
+		title = fs.name(files[fileIndex])
+	end
+end
 
 local function setUIHidden(state)
 	panel.hidden = state
 	panelContainer.hidden = state
 	window.actionButtons.hidden = state
-	title.hidden = state
+
+	updateTitle()
 end
 
 local function updateSlideshowDeadline()
 	slideShowDeadline = computer.uptime() + slideShowDelay
 end
 
-local function updateTitlePosition()
-	title.localX = math.floor(window.width / 2 - unicode.len(title.text) / 2)
-end
-
 local function loadImage()	
 	local result, reason = image.load(files[fileIndex])
 	
 	if result then
-		title.text = fs.name(files[fileIndex])
-		updateTitlePosition()
-
 		loadedImage = result
+
+		updateTitle()
 	else
 		GUI.alert(reason)
 		window:remove()
@@ -166,8 +177,6 @@ window.onResize = function(newWidth, newHeight)
 	imageObject.width, imageObject.height = newWidth, newHeight
 	panel.width, panel.localY = newWidth, newHeight - 5
 	panelContainer.localX, panelContainer.localY = math.floor(newWidth / 2 - panelContainer.width / 2), panel.localY
-
-	updateTitlePosition()
 end
 
 local overrideWindowEventHandler = window.eventHandler
@@ -200,32 +209,28 @@ window.onResize(window.width, window.height)
 
 files = fs.list(currentDir)
 
-if #files == 0 then
-	layout:addChild(GUI.text(1, 1, 0x4B4B4B, localization.noPictures))
-	panel.hidden = true
-	panelContainer.hidden = true
-	hsPanel.disabled = true
-	flScreen.disabled = true
-else
-	local i, extension = 1
-	while i <= #files do
-		extension = fs.extension(files[i])
+local i, extension = 1
+while i <= #files do
+	extension = fs.extension(files[i])
 
-		if extension and extension:lower() == ".pic" then
-			files[i] = currentDir .. files[i]
+	if extension and extension:lower() == ".pic" then
+		files[i] = currentDir .. files[i]
 
-			if args and args[1] == files[i] then
-				fileIndex = i
-			end
-
-			i = i + 1
-		else
-			table.remove(files, i)
+		if args and args[1] == files[i] then
+			fileIndex = i
 		end
-	end
 
-	loadImage()
+		i = i + 1
+	else
+		table.remove(files, i)
+	end
 end
 
+if #files == 0 then
+	panel.hidden = true
+	panelContainer.hidden = true
+else
+	loadImage()
+end
 
 workspace:draw()
