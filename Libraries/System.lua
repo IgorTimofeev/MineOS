@@ -1361,10 +1361,11 @@ local function iconFieldBackgroundClick(iconField, e1, e2, e3, e4, e5, ...)
 			if e1 == "touch" then	
 				if #container.input.text > 0 then
 					local path = iconField.path .. container.input.text .. ".app/"
+					
 					if checkFileToExists(container, path) then
-						system.copy({ paths.system.applicationSample }, iconField.path)
-						filesystem.rename(iconField.path .. filesystem.name(paths.system.applicationSample), path)
-
+						system.copy({ paths.system.applicationSample }, paths.system.temporary)
+						filesystem.rename(paths.system.temporary .. filesystem.name(paths.system.applicationSample), path)
+						
 						container:remove()
 						iconFieldSaveIconPosition(iconField, container.input.text .. ".app/", e3, e4)
 						computer.pushSignal("system", "updateFileList")
