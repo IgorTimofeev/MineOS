@@ -3,21 +3,32 @@ local system = require("System")
 local bigLetters = require("BigLetters")
 local screen = require("Screen")
 local image = require("Image")
+local paths = require("paths")
 local fs = require("Filesystem")
 
+---------------------------------------------------------------------------------------
 
-local workspace, window, menu = system.addWindow(GUI.filledWindow(1, 1, 42, 24, 0xFFFFFF))
-window.actionButtons.localY = 1
+local currentScriptPath = fs.path(system.getCurrentScript())
+local localization = system.getLocalization(currentScriptPath .. "Localizations/") 
 
-local localization = system.getCurrentScriptLocalization()
-local iconsPath = fs.path(system.getCurrentScript()) .. "Icons/"
-local isWeekAlt = false
+local arrowLeftIcon = image.load(currentScriptPath .. "Icons/ArrowLeft.pic")
+local arrowRightIcon = image.load(currentScriptPath .. "Icons/ArrowRight.pic")
+
+local configPath = paths.user.applicationData .. "Calendar/Config.cfg"
+local config = fs.exists(configPath) and fs.readTable(configPath) or {
+	isWeekAlt = false
+}
 
 local countOfDays = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31}
 local monthDateMove = {3, 2, 3, 2, 3, 2, 3, 3, 2, 3, 2, 3}
 local lastCountedYear = 0
 local comMonthMem
 local curYearList
+
+---------------------------------------------------------------------------------------
+
+local workspace, window, menu = system.addWindow(GUI.filledWindow(1, 1, 42, 24, 0xFFFFFF))
+window.actionButtons.localY = 1
 
 local function isLeap(year)
 	if year % 4 == 0 or year % 400 == 0 then return true else return false end
@@ -80,13 +91,15 @@ local function fstJanPos(year)
 	return day
 end
 
-local function makeIconButton(x, y, parentObj, icon, onTouch)
-	local obj = GUI.image(x, y, image.load(iconsPath .. icon .. ".pic"))
+local function makeIconButton(x, y, parentObj, right, onTouch)
+	local obj = GUI.image(x, y, right and arrowRightIcon or arrowLeftIcon)
+	
 	parentObj:addChild(obj).eventHandler = function(_, _, event)
 		if event == "touch" then
 			onTouch()
 		end
 	end
+
 	return obj
 end
 
@@ -108,25 +121,31 @@ end
 
 local function renderMonth(xCoord, yCoord, width, monthPos)
 	local text = localization.months[monthPos]
-	local weekText = isWeekAlt and localization.weekLineAlt or localization.weekLine
+	local weekText = config.isWeekAlt and localization.weekLineAlt or localization.weekLine
 	local xStart = math.floor(xCoord + width / 2 - unicode.len(weekText) / 2)
+	
 	screen.drawText(math.floor(xCoord + width / 2 - unicode.len(text) / 2), yCoord, 0xFF0000, text)
 	screen.drawText(xStart, yCoord + 2, 0x888888, weekText)
+	
 	if not curYearList or selectedYear ~= lastCountedYear then
 		curYearList = calculateYear(selectedYear, fstJanPos(selectedYear))
 	end
 	
 	local counter, line = curYearList[monthPos].fstDayPos - 1, 4
-	if isWeekAlt then
+	
+	if config.isWeekAlt then
 		counter = counter + 1 == 7 and 0 or counter + 1
 	end
+	
 	for i=1, curYearList[monthPos].countOfDays do
-		local numColor = (isWeekAlt and (counter == 0 or counter == 6) and 0xFF0000) or (not isWeekAlt and counter > 4 and 0xFF0000) or 0x262626 
+		local numColor = (config.isWeekAlt and (counter == 0 or counter == 6) and 0xFF0000) or (not config.isWeekAlt and counter > 4 and 0xFF0000) or 0x262626 
+		
 		if selectedYear == currentYear and monthPos == currentMonth and i == currentDay then
-			screen.drawText(xStart + (counter * 4) - 1, yCoord + line - 1, 0xC3C3C3, '⢀▄▄⡀')
-			screen.drawRectangle(xStart + (counter * 4) - 1, yCoord + line, 4, 1, 0xC3C3C3, 0x000000, ' ')
-			screen.drawText(xStart + (counter * 4) - 1, yCoord + line + 1, 0xC3C3C3, '⠈▀▀⠁')
+			screen.drawText(xStart + (counter * 4) - 1, yCoord + line - 1, 0xD2D2D2, '⢀▄▄⡀')
+			screen.drawRectangle(xStart + (counter * 4) - 1, yCoord + line, 4, 1, 0xD2D2D2, 0x000000, ' ')
+			screen.drawText(xStart + (counter * 4) - 1, yCoord + line + 1, 0xD2D2D2, '⠈▀▀⠁')
 		end
+		
 		screen.drawText(xStart + (counter * 4), yCoord + line, numColor, (i < 10 and ' ' or '')..tostring(i))
 		counter = counter == 6 and 0 or counter + 1
 		if counter == 0 then line = line + 2 end
@@ -149,35 +168,49 @@ local function nextYear()
 	workspace:draw()
 end
 
-local arrowLeftBlack = makeIconButton(3, 4, window, "ArrowLeftBlack", prevYear)
-
-local arrowRightBlack = makeIconButton(39, 4, window, "ArrowRightBlack", nextYear)
-
+local arrowLeftBlack = makeIconButton(3, 4, window, false, prevYear)
+local arrowRightBlack = makeIconButton(39, 4, window, true, nextYear)
 
 local function prevMonth()
 	selectedMonth = selectedMonth - 1
-	if selectedMonth < 1 then if selectedYear - 1 ~= -1 then selectedMonth = 12 prevYear() else selectedMonth = 1 end
-	else workspace:draw() end
+
+	if selectedMonth < 1 then
+		if selectedYear - 1 ~= -1 then
+			selectedMonth = 12
+			prevYear()
+		else
+			selectedMonth = 1
+		end
+	else
+		workspace:draw()
+	end
 end
 
 local function nextMonth()
 	selectedMonth = selectedMonth + 1
-	if selectedMonth > 12 then if selectedYear + 1 ~= 10000 then selectedMonth = 1 nextYear() else selectedMonth = 12 end
-	else workspace:draw() end
+
+	if selectedMonth > 12 then
+		if selectedYear + 1 ~= 10000 then
+			selectedMonth = 1
+			nextYear()
+		else
+			selectedMonth = 12
+		end
+	else
+		workspace:draw()
+	end
 end
 
-
-local arrowLeft = makeIconButton(3, 15, window, "ArrowLeft", prevMonth)
-
-local arrowRight = makeIconButton(39, 15, window, "ArrowRight", nextMonth)
-
+local arrowLeft = makeIconButton(3, 15, window, false, prevMonth)
+local arrowRight = makeIconButton(39, 15, window, true, nextMonth)
 
 local weekType = menu:addItem(localization.startWeek..localization.sunday)
 weekType.onTouch = function()
-	isWeekAlt = not isWeekAlt
-	weekType.text = isWeekAlt and localization.startWeek..localization.monday or localization.startWeek..localization.sunday
-end
+	config.isWeekAlt = not config.isWeekAlt
+	weekType.text = config.isWeekAlt and localization.startWeek..localization.monday or localization.startWeek..localization.sunday
 
+	fs.writeTable(configPath, config)
+end
 
 window.actionButtons.maximize.onTouch = function()
 	if not window.maximized then
@@ -187,13 +220,18 @@ window.actionButtons.maximize.onTouch = function()
 		month.localX, month.localY = 3, 2
 		comMonthMem = selectedMonth
 		selectedMonth = 1
+		
 		local mx, my = 35, 2
+
 		for i=2, 12 do
 			local newMonth = window:addChild(GUI.object(mx, my, 26, 15))
+			
 			newMonth.draw = function(object)
 				renderMonth(object.x, object.y, object.width, i)
 			end
+			
 			mx = mx + 32 == 131 and 3 or mx + 32
+			
 			if mx == 3 then my = my + 16 end
 		end
 	else
@@ -204,7 +242,9 @@ window.actionButtons.maximize.onTouch = function()
 		selectedMonth = comMonthMem
 		window:removeChildren(9)
 	end
+
 	window:maximize()
+	
 	arrowLeft.hidden = not arrowLeft.hidden
 	arrowRight.hidden = not arrowRight.hidden
 end
