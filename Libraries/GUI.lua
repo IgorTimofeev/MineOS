@@ -4289,6 +4289,7 @@ local function windowCheck(window, x, y)
 				return true
 			elseif child.children then
 				local result = windowCheck(child, x, y)
+				
 				if result == true then
 					return true
 				elseif result == false then
@@ -4313,6 +4314,7 @@ local function windowEventHandler(workspace, window, e1, e2, e3, e4, ...)
 			end
 		elseif e1 == "drag" and window.lastTouchX and not windowCheck(window, e3, e4) then
 			local xOffset, yOffset = e3 - window.lastTouchX, e4 - window.lastTouchY
+			
 			if xOffset ~= 0 or yOffset ~= 0 then
 				window.localX, window.localY = window.localX + xOffset, window.localY + yOffset
 				window.lastTouchX, window.lastTouchY = e3, e4
@@ -4344,10 +4346,22 @@ function GUI.windowMaximize(window, animationDisabled)
 	
 	if window.maximized then
 		toX, toY, toWidth, toHeight = window.oldGeometryX, window.oldGeometryY, window.oldGeometryWidth, window.oldGeometryHeight
+
 		window.oldGeometryX, window.oldGeometryY, window.oldGeometryWidth, window.oldGeometryHeight = nil, nil, nil, nil
 		window.maximized = nil
 	else
-		toX, toY, toWidth, toHeight = 1, 1, window.parent.width, window.parent.height
+		toWidth, toHeight = window.parent.width, window.parent.height
+		
+		if window.maxWidth then
+			toWidth = math.min(toWidth, window.maxWidth)
+		end
+		
+		if window.maxHeight then
+			toHeight = math.min(toHeight, window.maxHeight)
+		end
+
+		toX, toY = math.floor(1 + window.parent.width / 2 - toWidth / 2), math.floor(1 + window.parent.height / 2 - toHeight / 2)
+
 		window.oldGeometryX, window.oldGeometryY, window.oldGeometryWidth, window.oldGeometryHeight = window.localX, window.localY, window.width, window.height
 		window.maximized = true
 	end

@@ -78,32 +78,32 @@ encodingMethodsLoad[5] = function(file, picture)
 	end
 end
 
-local function loadOCIF67(file, picture, mode)
-	picture[1] = file:readBytes(1)
-	picture[2] = file:readBytes(1)
+local function loadOCIF678(file, picture, is7, is8)
+	picture[1] = file:readBytes(1) + is8
+	picture[2] = file:readBytes(1) + is8
 
 	local currentAlpha, currentSymbol, currentBackground, currentForeground, currentY
 
-	for alpha = 1, file:readBytes(1) + mode do
+	for alpha = 1, file:readBytes(1) + is7 do
 		currentAlpha = file:readBytes(1) / 255
 		
-		for symbol = 1, file:readBytes(2) + mode do
+		for symbol = 1, file:readBytes(2) + is7 do
 			currentSymbol = file:readUnicodeChar()
 			
-			for background = 1, file:readBytes(1) + mode do
+			for background = 1, file:readBytes(1) + is7 do
 				currentBackground = color.to24Bit(file:readBytes(1))
 				
-				for foreground = 1, file:readBytes(1) + mode do
+				for foreground = 1, file:readBytes(1) + is7 do
 					currentForeground = color.to24Bit(file:readBytes(1))
 					
-					for y = 1, file:readBytes(1) + mode do
+					for y = 1, file:readBytes(1) + is7 do
 						currentY = file:readBytes(1)
 						
-						for x = 1, file:readBytes(1) + mode do
+						for x = 1, file:readBytes(1) + is7 do
 							image.set(
 								picture,
-								file:readBytes(1),
-								currentY,
+								file:readBytes(1) + is8,
+								currentY + is8,
 								currentBackground,
 								currentForeground,
 								currentAlpha,
@@ -117,9 +117,9 @@ local function loadOCIF67(file, picture, mode)
 	end
 end
 
-local function saveOCIF67(file, picture, mode)
+local function saveOCIF678(file, picture, is7, is8)
 	local function getGroupSize(t)
-		local size = mode == 1 and -1 or 0
+		local size = -is7
 		
 		for key in pairs(t) do
 			size = size + 1
@@ -133,8 +133,8 @@ local function saveOCIF67(file, picture, mode)
 
 	-- Writing 1 byte per image width and height
 	file:writeBytes(
-		picture[1],
-		picture[2]
+		picture[1] - is8,
+		picture[2] - is8
 	)
 
 	-- Writing 1 byte for alphas array size
@@ -178,13 +178,14 @@ local function saveOCIF67(file, picture, mode)
 					for y in pairs(groupedPicture[alpha][symbol][background][foreground]) do
 						file:writeBytes(
 							-- Writing 1 byte for current y value
-							y,
+							y - is8,
 							-- Writing 1 byte for x array size
-							#groupedPicture[alpha][symbol][background][foreground][y] - mode
+							#groupedPicture[alpha][symbol][background][foreground][y] - is7
 						)
 
 						for x = 1, #groupedPicture[alpha][symbol][background][foreground][y] do
-							file:writeBytes(groupedPicture[alpha][symbol][background][foreground][y][x])
+							-- Wrting 1 byte for current x value
+							file:writeBytes(groupedPicture[alpha][symbol][background][foreground][y][x] - is8)
 						end
 					end
 				end
@@ -194,19 +195,27 @@ local function saveOCIF67(file, picture, mode)
 end
 
 encodingMethodsSave[6] = function(file, picture)
-	saveOCIF67(file, picture, 0)
+	saveOCIF678(file, picture, 0, 0)
 end
 
 encodingMethodsLoad[6] = function(file, picture)
-	loadOCIF67(file, picture, 0)
+	loadOCIF678(file, picture, 0, 0)
 end
 
 encodingMethodsSave[7] = function(file, picture)
-	saveOCIF67(file, picture, 1)
+	saveOCIF678(file, picture, 1, 0)
 end
 
 encodingMethodsLoad[7] = function(file, picture)
-	loadOCIF67(file, picture, 1)
+	loadOCIF678(file, picture, 1, 0)
+end
+
+encodingMethodsSave[8] = function(file, picture)
+	saveOCIF678(file, picture, 1, 1)
+end
+
+encodingMethodsLoad[8] = function(file, picture)
+	loadOCIF678(file, picture, 1, 1)
 end
 
 --------------------------------------------------------------------------------

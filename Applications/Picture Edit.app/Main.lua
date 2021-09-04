@@ -315,7 +315,7 @@ end
 
 local function save(path)
 	if filesystem.extension(path) == ".pic" then
-		local result, reason = image.save(path, window.image.data, 7)
+		local result, reason = image.save(path, window.image.data, 8)
 		
 		if result then
 			setSavePath(path)
