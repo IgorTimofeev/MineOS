@@ -533,8 +533,10 @@ end
 
 local function openFile(path)
 	local file, reason = filesystem.open(path, "r")
+
 	if file then
 		newFile()
+
 		leftTreeView.selectedItem = path
 		codeView.hidden = true
 
@@ -548,11 +550,12 @@ local function openFile(path)
 
 		local counter, currentSize, totalSize = 1, 0, filesystem.size(path)
 		for line in file:lines() do
+			counter, currentSize = counter + 1, currentSize + #line + 1
+
 			line = optimizeString(line)
 			table.insert(lines, line)
 			codeView.maximumLineLength = math.max(codeView.maximumLineLength, unicode.len(line))
 			
-			counter, currentSize = counter + 1, currentSize + #line
 			if counter % config.linesToShowOpenProgress == 0 then
 				progressBar.value = math.floor(currentSize / totalSize * 100)
 				computer.pullSignal(0)
@@ -562,13 +565,13 @@ local function openFile(path)
 
 		file:close()
 
-		if #lines > 1 then
-			table.remove(lines, 1)
-		end
-
 		if counter > config.linesToShowOpenProgress then
 			progressBar.value = 100
 			workspace:draw()
+		end
+
+		if #lines > 1 then
+			table.remove(lines, 1)
 		end
 
 		codeView.hidden = false
