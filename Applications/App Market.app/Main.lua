@@ -241,7 +241,7 @@ local function checkImage(url, mneTolkoSprosit)
 					if data:sub(1, 4) == "OCIF" then
 						local encodingMethod = string.byte(data:sub(5, 5))
 
-						if encodingMethod == 6 or encodingMethod == 7 then
+						if encodingMethod >= 6 or encodingMethod <= 8 then
 							if string.byte(data:sub(6, 6)) == 8 and string.byte(data:sub(7, 7)) == 4 then
 								if mneTolkoSprosit then
 									handle:close()

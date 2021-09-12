@@ -85,5 +85,7 @@
 	brightness = "Яркость: ",
 	filterColor = "Цвет фильтра",
 	transparency = "Прозрачность: ",
-	force = "Сила: "
+	force = "Сила: ",
+	rasterizePolygon = "Растеризировать полигон",
+	polygonEdges = "Количество граней полигона:"
 }

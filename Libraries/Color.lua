@@ -23,6 +23,7 @@ if computer.getArchitecture and computer.getArchitecture() == "Lua 5.3" then
 
 			function(color1, color2, transparency)
 				local invertedTransparency = 1 - transparency
+				
 				return
 					((color2 >> 16) * invertedTransparency + (color1 >> 16) * transparency) // 1 << 16 |
 					((color2 >> 8 & 0xFF) * invertedTransparency + (color1 >> 8 & 0xFF) * transparency) // 1 << 8 |
@@ -31,6 +32,7 @@ if computer.getArchitecture and computer.getArchitecture() == "Lua 5.3" then
 
 			function(color1, color2, position)
 				local r1, g1, b1 = color1 >> 16, color1 >> 8 & 0xFF, color1 & 0xFF
+				
 				return
 					(r1 + ((color2 >> 16) - r1) * position) // 1 << 16 |
 					(g1 + ((color2 >> 8 & 0xFF) - g1) * position) // 1 << 8 |
@@ -49,6 +51,7 @@ if computer.getArchitecture and computer.getArchitecture() == "Lua 5.3" then
 						paletteR, paletteG, paletteB = paletteColor >> 16, paletteColor >> 8 & 0xFF, paletteColor & 0xFF
 
 						delta = (paletteR - r) ^ 2 + (paletteG - g) ^ 2 + (paletteB - b) ^ 2
+						
 						if delta < closestDelta then
 							closestDelta, closestIndex = delta, i
 						end
@@ -66,6 +69,7 @@ else
 			function(integerColor)
 				local r = integerColor / 65536
 				r = r - r % 1
+				
 				local g = (integerColor - r * 65536) / 256
 				g = g - g % 1
 
@@ -81,11 +85,13 @@ else
 				
 				local r1 = color1 / 65536
 				r1 = r1 - r1 % 1
+				
 				local g1 = (color1 - r1 * 65536) / 256
 				g1 = g1 - g1 % 1
 
 				local r2 = color2 / 65536
 				r2 = r2 - r2 % 1
+				
 				local g2 = (color2 - r2 * 65536) / 256
 				g2 = g2 - g2 % 1
 
@@ -103,12 +109,15 @@ else
 			function(color1, color2, position)
 				local r1 = color1 / 65536
 				r1 = r1 - r1 % 1
+				
 				local g1 = (color1 - r1 * 65536) / 256
 				g1 = g1 - g1 % 1
+				
 				local b1 = color1 - r1 * 65536 - g1 * 256
 
 				local r2 = color2 / 65536
 				r2 = r2 - r2 % 1
+				
 				local g2 = (color2 - r2 * 65536) / 256
 				g2 = g2 - g2 % 1
 
@@ -128,12 +137,15 @@ else
 
 				local r = color24Bit / 65536
 				r = r - r % 1
+				
 				local g = (color24Bit - r * 65536) / 256
 				g = g - g % 1
+				
 				local b = color24Bit - r * 65536 - g * 256
 
 				for index = 1, #palette do
 					paletteColor = palette[index]
+					
 					if color24Bit == paletteColor then
 						return index - 1
 					else
@@ -144,6 +156,7 @@ else
 						paletteB = paletteColor - paletteR * 65536 - paletteG * 256
 
 						delta = (paletteR - r) ^ 2 + (paletteG - g) ^ 2 + (paletteB - b) ^ 2
+						
 						if delta < closestDelta then
 							closestDelta, closestIndex = delta, index
 						end

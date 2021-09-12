@@ -1242,19 +1242,19 @@ end
 
 --------------------------------------------------------------------------------
 
-local function getAxisValue(number, postfix, roundValues)
+local function getAxisValue(num, postfix, roundValues)
 	if roundValues then
-		return math.floor(number) .. postfix
+		return math.floor(num) .. postfix
 	else
-		local integer, fractional = math.modf(number)
+		local integer, fractional = math.modf(num)
 		local firstPart, secondPart = "", ""
 		if math.abs(integer) >= 1000 then
 			return number.shorten(integer, 2) .. postfix
 		else
 			if math.abs(fractional) > 0 then
-				return string.format("%.2f", number) .. postfix
+				return string.format("%.2f", num) .. postfix
 			else
-				return number .. postfix
+				return num .. postfix
 			end
 		end
 	end
@@ -3524,20 +3524,23 @@ end
 
 local function textUpdate(object)
 	object.width = unicode.len(object.text)
+	
 	return object
 end
 
 local function textDraw(object)
 	object:update()
-	screen.drawText(object.x, object.y, object.color, object.text)
+	screen.drawText(object.x, object.y, object.color, object.text, object.transparency)
+
 	return object
 end
 
-function GUI.text(x, y, color, text)
+function GUI.text(x, y, color, text, transparency)
 	local object = GUI.object(x, y, 1, 1)
 
 	object.text = text
 	object.color = color
+	object.transparency = transparency
 	object.update = textUpdate
 	object.draw = textDraw
 	object:update()
@@ -4286,6 +4289,7 @@ local function windowCheck(window, x, y)
 				return true
 			elseif child.children then
 				local result = windowCheck(child, x, y)
+				
 				if result == true then
 					return true
 				elseif result == false then
@@ -4310,6 +4314,7 @@ local function windowEventHandler(workspace, window, e1, e2, e3, e4, ...)
 			end
 		elseif e1 == "drag" and window.lastTouchX and not windowCheck(window, e3, e4) then
 			local xOffset, yOffset = e3 - window.lastTouchX, e4 - window.lastTouchY
+			
 			if xOffset ~= 0 or yOffset ~= 0 then
 				window.localX, window.localY = window.localX + xOffset, window.localY + yOffset
 				window.lastTouchX, window.lastTouchY = e3, e4
@@ -4341,10 +4346,22 @@ function GUI.windowMaximize(window, animationDisabled)
 	
 	if window.maximized then
 		toX, toY, toWidth, toHeight = window.oldGeometryX, window.oldGeometryY, window.oldGeometryWidth, window.oldGeometryHeight
+
 		window.oldGeometryX, window.oldGeometryY, window.oldGeometryWidth, window.oldGeometryHeight = nil, nil, nil, nil
 		window.maximized = nil
 	else
-		toX, toY, toWidth, toHeight = 1, 1, window.parent.width, window.parent.height
+		toWidth, toHeight = window.parent.width, window.parent.height
+		
+		if window.maxWidth then
+			toWidth = math.min(toWidth, window.maxWidth)
+		end
+		
+		if window.maxHeight then
+			toHeight = math.min(toHeight, window.maxHeight)
+		end
+
+		toX, toY = math.floor(1 + window.parent.width / 2 - toWidth / 2), math.floor(1 + window.parent.height / 2 - toHeight / 2)
+
 		window.oldGeometryX, window.oldGeometryY, window.oldGeometryWidth, window.oldGeometryHeight = window.localX, window.localY, window.width, window.height
 		window.maximized = true
 	end

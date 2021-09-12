@@ -19,6 +19,7 @@ local fillButton = window.newButton1(locale.fill)
 local outlineButton = window.newButton1(locale.outline)
 local rasterizeLineButton = window.newButton1(locale.rasterizeLine)
 local rasterizeEllipseButton = window.newButton1(locale.rasterizeEllipse)
+local rasterizePolygonButton = window.newButton1(locale.rasterizePolygon)
 local clearButton = window.newButton2(locale.clear)
 local cropButton = window.newButton2(locale.crop)
 
@@ -98,6 +99,39 @@ tool.onSelection = function()
 				image.set(window.image.data, x, y, window.primaryColorSelector.color, 0x0, 0, " ")
 			end
 		)
+
+		workspace:draw()
+	end
+	
+	window.currentToolLayout:addChild(rasterizePolygonButton).onTouch = function()
+		local container = GUI.addBackgroundContainer(workspace, true, true, locale.polygonEdges)
+		container.panel.eventHandler = nil
+
+		local edgesSelector = container.layout:addChild(GUI.comboBox(1, 1, 30, 3, 0xEEEEEE, 0x2D2D2D, 0xCCCCCC, 0x888888))
+		for i = 3, 10 do
+			edgesSelector:addItem(i)
+		end
+
+		container.layout:addChild(GUI.button(1, 1, 30, 3, 0xFFFFFF, 0x555555, 0x880000, 0xFFFFFF, locale.ok)).onTouch = function()
+			screen.rasterizePolygon(
+				touchX - window.image.x + 1,
+				touchY - window.image.y + 1,
+				dragX - window.image.x + 1,
+				dragY - window.image.y + 1,
+				edgesSelector.selectedItem + 2,
+				function(x, y)
+					if x <= window.image.data[1] and y <= window.image.data[2] and x > 0 and y > 0 then
+						image.set(window.image.data, x, y, window.primaryColorSelector.color, 0x0, 0, " ")
+					end
+				end
+			)
+			
+			container:remove()
+		end
+
+		container.layout:addChild(GUI.button(1, 1, 30, 3, 0xFFFFFF, 0x555555, 0x880000, 0xFFFFFF, locale.cancel)).onTouch = function()
+			container:remove()
+		end
 
 		workspace:draw()
 	end

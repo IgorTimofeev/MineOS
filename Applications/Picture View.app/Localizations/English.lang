@@ -1,0 +1,12 @@
+{
+	noPictures = "There is no pictures.",
+	slideShow = "Slideshow",
+	delay = "Delay: ",
+	seconds = " seconds",
+	fullScreen = "Full screen",
+	setWallpaper = "Do you want to set this picture as wallpaper?",
+	yes = "Yes",
+	no = "No",
+	start = "Start",
+	cancel = "Cancel"
+}
