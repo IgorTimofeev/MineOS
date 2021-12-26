@@ -31,7 +31,7 @@
 	newName = "Новае імя",
 	folderName = "Імя тэчкі",
 	fileName = "Імя файла",
-	applicationName = "Імя прыкладання",
+	applicationName = "Назва дадатка",
 	file = "Файл",
 	notExists = "не існуе",
 	alreadyExists = "ужо існуе",
