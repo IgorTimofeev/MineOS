@@ -7,10 +7,13 @@ local bootFilesystemProxy = component.proxy(component.proxy(component.list("eepr
 -- Executes file from boot HDD during OS initialization (will be overriden in filesystem library later)
 function dofile(path)
 	local stream, reason = bootFilesystemProxy.open(path, "r")
+	
 	if stream then
 		local data, chunk = ""
+		
 		while true do
 			chunk = bootFilesystemProxy.read(stream, math.huge)
+			
 			if chunk then
 				data = data .. chunk
 			else
@@ -21,6 +24,7 @@ function dofile(path)
 		bootFilesystemProxy.close(stream)
 
 		local result, reason = load(data, "=" .. path)
+		
 		if result then
 			return result()
 		else
@@ -41,9 +45,7 @@ package = {
 }
 
 -- Checks existense of specified path. It will be overriden after filesystem library initialization
-local function requireExists(path)
-	return bootFilesystemProxy.exists(path)
-end
+local requireExists = bootFilesystemProxy.exists
 
 -- Works the similar way as native Lua require() function
 function require(module)
@@ -133,10 +135,8 @@ local filesystem = UIRequire("Filesystem")
 -- Setting main filesystem proxy to what are we booting from
 filesystem.setProxy(bootFilesystemProxy)
 
--- Redeclaring requireExists function after filesystem library initialization
-requireExists = function(variant)
-	return filesystem.exists(variant)
-end
+-- Replacing requireExists function after filesystem library initialization
+requireExists = filesystem.exists
 
 -- Loading other libraries
 UIRequire("Component")
@@ -202,6 +202,7 @@ event.addHandler(
 			else
 				if not GPUProxy.getScreen() then
 					local address = component.list("screen")()
+					
 					if address then
 						bindScreen(address)
 					end
@@ -217,6 +218,7 @@ system.authorize()
 -- Main loop with UI regeneration after errors 
 while true do
 	local success, path, line, traceback = system.call(workspace.start, workspace, 0)
+	
 	if success then
 		break
 	else
