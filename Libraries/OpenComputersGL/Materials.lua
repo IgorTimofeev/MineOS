@@ -11,22 +11,12 @@ materials.types = {
 
 function materials.newDebugTexture(width, height, h)
 	local texture = {width = width, height = height}
-		
-	local bStep = 1 / height
-	local sStep = 1 / width
-
-	local s, b = 0, 0
-	local blackSquare = false
+	
 	for y = 1, height do
 		texture[y] = {}
 		for x = 1, width do
-			texture[y][x] = blackSquare == true and 0x0 or color.HSBToInteger(h, s, b)
-			blackSquare = not blackSquare
-			b = b + bStep
+			texture[y][x] = not (x+y)%2 and 0x0 or color.HSBToInteger(h, y/height, x/width)
 		end
-		b = 0
-		s = s + sStep
-		blackSquare = not blackSquare
 	end
 	return texture
 end
