@@ -8,6 +8,8 @@
 	username = "E-mail или номер телефона",
 	password = "Пароль",
 	login = "Войти",
+	twoFactorEnabled = "Использовать 2FA",
+	twoFactor = "Код 2FA",
 	saveLogin = "Сохранять данные входа:",
 
 	loadCountConversations = "Число загружаемых диалогов",
