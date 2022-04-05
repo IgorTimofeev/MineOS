@@ -347,7 +347,7 @@ local function uploadToPastebin(path)
 				workspace:draw()
 
 				local internet = require("Internet")
-				result, reason = internet.request("http://pastebin.com/api/api_post.php", internet.serialize({
+				result, reason = internet.request("https://pastebin.com/api/api_post.php", internet.serialize({
 					api_option = "paste",
 					api_dev_key = "fd92bd40a84c127eeb6804b146793c97",
 					api_paste_expire_date = "N",

@@ -25,18 +25,18 @@ if computer.getArchitecture and computer.getArchitecture() == "Lua 5.3" then
 				local invertedTransparency = 1 - transparency
 				
 				return
-					((color2 >> 16) * invertedTransparency + (color1 >> 16) * transparency) // 1 << 16 |
-					((color2 >> 8 & 0xFF) * invertedTransparency + (color1 >> 8 & 0xFF) * transparency) // 1 << 8 |
-					((color2 & 0xFF) * invertedTransparency + (color1 & 0xFF) * transparency) // 1
+					((color2 >> 16) * invertedTransparency + (color1 >> 16) * transparency) // 1.0 << 16 |
+					((color2 >> 8 & 0xFF) * invertedTransparency + (color1 >> 8 & 0xFF) * transparency) // 1.0 << 8 |
+					((color2 & 0xFF) * invertedTransparency + (color1 & 0xFF) * transparency) // 1.0
 			end,
 
 			function(color1, color2, position)
 				local r1, g1, b1 = color1 >> 16, color1 >> 8 & 0xFF, color1 & 0xFF
 				
 				return
-					(r1 + ((color2 >> 16) - r1) * position) // 1 << 16 |
-					(g1 + ((color2 >> 8 & 0xFF) - g1) * position) // 1 << 8 |
-					(b1 + ((color2 & 0xFF) - b1) * position) // 1
+					(r1 + ((color2 >> 16) - r1) * position) // 1.0 << 16 |
+					(g1 + ((color2 >> 8 & 0xFF) - g1) * position) // 1.0 << 8 |
+					(b1 + ((color2 & 0xFF) - b1) * position) // 1.0
 			end,
 
 			function(color24Bit)
