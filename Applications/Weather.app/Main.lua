@@ -35,7 +35,6 @@ local config = {
 	lastCityName = "Санкт-Петербург"
 }
 
-local locale = system.getCurrentScriptLocalization()
 --------------------------------------------------------------------------------------------------------
 
 local function newWeather(x, y, day)
@@ -61,10 +60,20 @@ local function newWeather(x, y, day)
 	end
 
 	local temp = number.round(day.temp.min) .. " / " .. number.round(day.temp.max) .. " °C"
-	local pressure = number.round(day.pressure / 1.33322387415) .. locale.mmHg
+	local pressure = number.round(day.pressure / 1.33322387415) .. " mm Hg"
 	local humidity = number.round(day.humidity) .. "%"
-	local winds = locale.winds
-	local wind = day.speed .. locale.speed .. (winds[number.round(day.deg / 45)] or "N/A")
+	local winds = {
+		[0] = "N",
+		[1] = "NE",
+		[2] = "E",
+		[3] = "SE",
+		[4] = "S",
+		[5] = "SW",
+		[6] = "W",
+		[7] = "NW",
+		[8] = "N",
+	}
+	local wind = day.speed .. " m/s, " .. (winds[number.round(day.deg / 45)] or "N/A")
 
 	local function centerText(y, color, text)
 		screen.drawText(math.floor(object.x + object.width / 2 - unicode.len(text) / 2), y, color, text)
@@ -96,12 +105,12 @@ local function updateForecast()
 			object.draw = function()
 				bigLetters.drawText(object.x, object.y, 0xFFFFFF, number.round((currentDay.temp.max + currentDay.temp.min) / 2) .. "°")
 				screen.drawText(object.x, object.y + 6, 0xFFFFFF, result.city.name .. ", " .. result.city.country)
-				screen.drawText(object.x, object.y + 7, 0xFFFFFF, locale.population .. number.shorten(result.city.population, 2))
+				screen.drawText(object.x, object.y + 7, 0xFFFFFF, "Population: " .. number.shorten(result.city.population, 2))
 			end
 
 			y = y + object.height + 1
 
-			local input = weatherContainer:addChild(GUI.input(x + 2, y, 25, 1, 0xE1E1E1, 0x696969, 0x878787, 0xE1E1E1, 0x2D2D2D, "", locale.city))
+			local input = weatherContainer:addChild(GUI.input(x + 2, y, 25, 1, 0xE1E1E1, 0x696969, 0x878787, 0xE1E1E1, 0x2D2D2D, "", "Type city name here"))
 			input.onInputFinished = function()
 				config.lastCityName = input.text
 				updateForecast()
@@ -143,3 +152,14 @@ if fs.exists(configPath) then
 end
 
 updateForecast()
+
+
+
+
+
+
+
+
+
+
+
