@@ -1,0 +1,18 @@
+{
+	winds = {
+		[0] = "N",
+		[1] = "NE",
+		[2] = "E",
+		[3] = "GD",
+		[4] = "S",
+		[5] = "GB",
+		[6] = "W",
+		[7] = "KB",
+		[8] = "N",
+	},
+	mmHg = "mm Hg",
+	speed = "Hanım,",
+	population = "Nüfus:",
+	city = "Buraya şehir adını yazın",
+	cityError = "Yanlış sonuç. ",
+}

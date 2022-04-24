@@ -1,0 +1,18 @@
+{
+	winds = {
+		[0] = "norte",
+		[1] = "nordeste",
+		[2] = "mi",
+		[3] = "SE",
+		[4] = "S",
+		[5] = "SUDOESTE",
+		[6] = "W",
+		[7] = "noroeste",
+		[8] = "norte",
+	},
+	mmHg = "milímetro hectogramo",
+	speed = "milisegundo,",
+	population = "Población:",
+	city = "Escriba aquí el nombre de la ciudad",
+	cityError = "Resultado incorrecto. ",
+}

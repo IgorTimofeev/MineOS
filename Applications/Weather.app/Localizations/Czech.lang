@@ -1,0 +1,18 @@
+{
+	winds = {
+		[0] = "N",
+		[1] = "NE",
+		[2] = "E",
+		[3] = "SE",
+		[4] = "S",
+		[5] = "SW",
+		[6] = "W",
+		[7] = "SZ",
+		[8] = "N",
+	},
+	mmHg = "mm Hg",
+	speed = "slečna,",
+	population = "Populace:",
+	city = "Zde zadejte název města",
+	cityError = "Špatný výsledek. ",
+}
