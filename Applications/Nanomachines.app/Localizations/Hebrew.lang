@@ -1,0 +1,18 @@
+{
+	activeEffects = "אפקטים נוכחיים",
+	favourites = "אפקטים נבחרים",
+	instructionData = "בצד שמאל של המסך יש מתגים שאומרים לנניטים להפעיל ביו-מגעים. ",
+	instructionTitle = "הוראה",
+	noModem = "למחשב אין מודם אלחוטי לשליחה וקבלה של פקודות נאניטיות ברשת",
+	notSynced = "היה חוסר סנכרון עם nanites. ",
+	notWireless = "למחשב יש מודם, אך בני אדם קולטים פקודות אך ורק דרך הרשת האלחוטית. ",
+	nothingFound = "לא נמצאו אפקטים",
+	received = "קיבלו",
+	saveConfiguration = "שמור את התצורה",
+	saveFailed = "השמירה נכשלה: במלאי אין ננייטים לא מוגדרים",
+	sent = "נשלח",
+	syncContacts = "עדכון biocontact %d מתוך %d",
+	syncInfo = "לפני השימוש בתוכנית, צור ושתה חבילה של nanites. ",
+	syncProgress = "יש סנכרון עם nanites, אל תעזוב את המחשב עד להשלמת התהליך:",
+	syncWelcome = "ברוך הבא",
+}

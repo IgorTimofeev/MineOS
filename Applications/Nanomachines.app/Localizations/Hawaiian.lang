@@ -1,0 +1,18 @@
+{
+	activeEffects = "Nā hopena o kēia manawa",
+	favourites = "Nā hopena i koho ʻia",
+	instructionData = "Ma ka ʻaoʻao hema o ka pale aia nā hoʻololi e haʻi i nā nanites e hoʻāla i nā biocontacts. ",
+	instructionTitle = "Aʻo",
+	noModem = "ʻAʻole i loaʻa i ke kamepiula kahi modem uea e hoʻouna a loaʻa i nā kauoha nanite ma luna o kahi pūnaewele",
+	notSynced = "Aia kahi out-of-sync me nā nanites. ",
+	notWireless = "He modem ko ka lolouila, akā ʻike nā nanites i nā kauoha ma luna o ka pūnaewele uwea. ",
+	nothingFound = "ʻAʻohe hopena i loaʻa",
+	received = "Loaʻa",
+	saveConfiguration = "E mālama i ka hoʻonohonoho",
+	saveFailed = "ʻAʻole hiki ke mālama ʻia: ʻaʻohe nanites i hoʻonohonoho ʻole ʻia ma ka waihona",
+	sent = "Hoʻouna ʻia",
+	syncContacts = "hōʻano hou i ka biocontact %d o %d",
+	syncInfo = "Ma mua o ka hoʻohana ʻana i ka papahana, hana a inu i kahi ʻeke nanites. ",
+	syncProgress = "Aia kahi synchronization me nanites, mai haʻalele i ke kamepiula a pau ke kaʻina hana:",
+	syncWelcome = "Welina",
+}

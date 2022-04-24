@@ -1,0 +1,18 @@
+{
+	activeEffects = "Aktuell Effekter",
+	favourites = "Ausgewielten Effekter",
+	instructionData = "Op der lénker Säit vum Écran ginn et Schalter déi Naniten soen fir Biokontakten ze aktivéieren. ",
+	instructionTitle = "Uweisunge",
+	noModem = "De Computer huet keen drahtlosen Modem fir nanite Kommandoen iwwer e Netzwierk ze schécken an ze kréien",
+	notSynced = "Et war en Out-of-Sync mat Naniten. ",
+	notWireless = "De Computer huet e Modem, awer d'Nanite gesinn Kommandoen exklusiv iwwer de drahtlose Netzwierk. ",
+	nothingFound = "Keng Effekter fonnt",
+	received = "Empfang",
+	saveConfiguration = "Retten Configuratioun",
+	saveFailed = "Spueren gescheitert: am Inventar ginn et keng onkonfiguréiert Naniten",
+	sent = "Geschéckt",
+	syncContacts = "biocontact update %d vun %d",
+	syncInfo = "Ier Dir de Programm benotzt, erstellt a drénkt e Paket Naniten. ",
+	syncProgress = "Et gëtt eng Synchroniséierung mat Naniten, loosst de Computer net bis de Prozess ofgeschloss ass:",
+	syncWelcome = "Wëllkomm",
+}

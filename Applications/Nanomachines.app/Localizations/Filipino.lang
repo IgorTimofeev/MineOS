@@ -1,0 +1,18 @@
+{
+	activeEffects = "Mga kasalukuyang epekto",
+	favourites = "Mga napiling epekto",
+	instructionData = "Sa kaliwang bahagi ng screen ay may mga switch na nagsasabi sa mga nanite na i-activate ang mga biocontact. ",
+	instructionTitle = "Pagtuturo",
+	noModem = "Ang computer ay walang wireless modem para magpadala at tumanggap ng mga nanite command sa isang network",
+	notSynced = "Nagkaroon ng out-of-sync sa nanites. ",
+	notWireless = "Ang computer ay may modem, ngunit ang mga nanite ay nakikita ang mga utos ng eksklusibo sa wireless network. ",
+	nothingFound = "Walang nakitang mga epekto",
+	received = "Natanggap",
+	saveConfiguration = "I-save ang configuration",
+	saveFailed = "Nabigo ang pag-save: sa imbentaryo ay walang mga hindi naka-configure na nanite",
+	sent = "Ipinadala",
+	syncContacts = "biocontact update %d ng %d",
+	syncInfo = "Bago gamitin ang programa, lumikha at uminom ng isang pakete ng nanites. ",
+	syncProgress = "Mayroong isang pag-synchronize sa nanites, huwag iwanan ang computer hanggang sa makumpleto ang proseso:",
+	syncWelcome = "Maligayang pagdating",
+}

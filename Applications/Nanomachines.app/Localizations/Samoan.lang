@@ -1,0 +1,18 @@
+{
+	activeEffects = "Aafiaga i le taimi nei",
+	favourites = "Aafiaga filifilia",
+	instructionData = "I le itu tauagavale o le lau o loʻo i ai ki e taʻu atu ai nanites e faʻagaoioia biocontacts. ",
+	instructionTitle = "Faatonuga",
+	noModem = "O le komepiuta e leai se modem uaealesi e lafo ma maua ai poloaiga nanite i luga o se fesootaiga",
+	notSynced = "Sa i ai se faaletonu ma nanites. ",
+	notWireless = "O le komipiuta e iai le modem, ae o nanites latou te iloa fa'atonuga na'o luga ole feso'ota'iga uaealesi. ",
+	nothingFound = "Leai ni a'afiaga na maua",
+	received = "Mauaina",
+	saveConfiguration = "Fa'asaoina le fa'atulagaina",
+	saveFailed = "Le manuia le teuina: i totonu o le suʻesuʻega e leai ni nanites e leʻi faʻatulagaina",
+	sent = "Auina atu",
+	syncContacts = "fa'afouga fa'akomupiuta %d o %d",
+	syncInfo = "A'o le'i fa'aogaina le polokalame, fai ma inu se pepa nanites. ",
+	syncProgress = "O loʻo i ai se fesoʻotaʻiga ma nanites, aua le tuʻua le komepiuta seia maeʻa le faagasologa:",
+	syncWelcome = "Afio mai",
+}

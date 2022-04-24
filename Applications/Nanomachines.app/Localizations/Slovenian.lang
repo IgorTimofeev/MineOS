@@ -1,0 +1,18 @@
+{
+	activeEffects = "Trenutni učinki",
+	favourites = "Izbrani učinki",
+	instructionData = "Na levi strani zaslona so stikala, ki nanitom povedo, naj aktivirajo biokontakte. ",
+	instructionTitle = "Navodilo",
+	noModem = "Računalnik nima brezžičnega modema za pošiljanje in prejemanje nanite ukazov prek omrežja",
+	notSynced = "Prišlo je do neusklajenosti z naniti. ",
+	notWireless = "Računalnik ima modem, vendar naniti zaznavajo ukaze izključno prek brezžičnega omrežja. ",
+	nothingFound = "Učinki niso bili najdeni",
+	received = "Prejeto",
+	saveConfiguration = "Shrani konfiguracijo",
+	saveFailed = "Shranjevanje ni uspelo: v inventarju ni nekonfiguriranih nanitov",
+	sent = "Poslano",
+	syncContacts = "posodobitev biokontakta %d od %d",
+	syncInfo = "Pred uporabo programa ustvarite in popijte paket nanitov. ",
+	syncProgress = "Obstaja sinhronizacija z naniti, ne zapuščajte računalnika, dokler postopek ni končan:",
+	syncWelcome = "Dobrodošli",
+}

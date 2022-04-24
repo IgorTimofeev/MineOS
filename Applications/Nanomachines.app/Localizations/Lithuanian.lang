@@ -1,0 +1,18 @@
+{
+	activeEffects = "Dabartiniai efektai",
+	favourites = "Pasirinkti efektai",
+	instructionData = "Kairėje ekrano pusėje yra jungikliai, kurie nurodo nanitams suaktyvinti biokontaktus. ",
+	instructionTitle = "Instrukcija",
+	noModem = "Kompiuteris neturi belaidžio modemo, kad būtų galima siųsti ir gauti nanite komandas tinkle",
+	notSynced = "Buvo nesinchronizavimas su nanitais. ",
+	notWireless = "Kompiuteris turi modemą, tačiau nanitai komandas suvokia tik per belaidį tinklą. ",
+	nothingFound = "Jokių efektų nerasta",
+	received = "Gauta",
+	saveConfiguration = "Išsaugoti konfigūraciją",
+	saveFailed = "Įrašyti nepavyko: inventoriuje nėra nesukonfigūruotų nanitų",
+	sent = "Išsiųsta",
+	syncContacts = "biokontaktų atnaujinimas %d iš %d",
+	syncInfo = "Prieš naudodami programą, sukurkite ir išgerkite nanitų pakelį. ",
+	syncProgress = "Yra sinchronizavimas su nanitais, nepalikite kompiuterio, kol procesas nebus baigtas:",
+	syncWelcome = "Sveiki",
+}

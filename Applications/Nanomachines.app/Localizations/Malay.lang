@@ -1,0 +1,18 @@
+{
+	activeEffects = "Kesan semasa",
+	favourites = "Kesan terpilih",
+	instructionData = "Di sebelah kiri skrin terdapat suis yang memberitahu nanites untuk mengaktifkan biokontak. ",
+	instructionTitle = "Arahan",
+	noModem = "Komputer tidak mempunyai modem wayarles untuk menghantar dan menerima arahan nanite melalui rangkaian",
+	notSynced = "Terdapat ketidakselarasan dengan nanites. ",
+	notWireless = "Komputer mempunyai modem, tetapi nanites melihat arahan secara eksklusif melalui rangkaian wayarles. ",
+	nothingFound = "Tiada kesan ditemui",
+	received = "Menerima",
+	saveConfiguration = "Simpan konfigurasi",
+	saveFailed = "Gagal menyimpan: dalam inventori tiada nanit yang tidak dikonfigurasikan",
+	sent = "Dihantar",
+	syncContacts = "kemas kini biokontak %d daripada %d",
+	syncInfo = "Sebelum menggunakan program ini, buat dan minum sebungkus nanites. ",
+	syncProgress = "Terdapat penyegerakan dengan nanites, jangan tinggalkan komputer sehingga proses selesai:",
+	syncWelcome = "selamat datang",
+}

@@ -1,0 +1,18 @@
+{
+	activeEffects = "Efek saat ini",
+	favourites = "Efek yang dipilih",
+	instructionData = "Di sisi kiri layar terdapat tombol yang memberi tahu nanites untuk mengaktifkan biokontak. ",
+	instructionTitle = "Petunjuk",
+	noModem = "Komputer tidak memiliki modem nirkabel untuk mengirim dan menerima perintah nanite melalui jaringan",
+	notSynced = "Ada ketidaksinkronan dengan nanites. ",
+	notWireless = "Komputer memiliki modem, tetapi nanites menerima perintah secara eksklusif melalui jaringan nirkabel. ",
+	nothingFound = "Tidak ada efek yang ditemukan",
+	received = "Diterima",
+	saveConfiguration = "Simpan konfigurasi",
+	saveFailed = "Penyimpanan gagal: dalam inventaris tidak ada nanites yang tidak dikonfigurasi",
+	sent = "Terkirim",
+	syncContacts = "pembaruan biokontak %d dari %d",
+	syncInfo = "Sebelum menggunakan program ini, buat dan minum sebungkus nanites. ",
+	syncProgress = "Ada sinkronisasi dengan nanites, jangan tinggalkan komputer sampai proses selesai:",
+	syncWelcome = "Selamat datang",
+}

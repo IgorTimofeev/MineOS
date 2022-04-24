@@ -1,0 +1,18 @@
+{
+	activeEffects = "Huidige effekte",
+	favourites = "Geselekteerde effekte",
+	instructionData = "Aan die linkerkant van die skerm is daar skakelaars wat naniete sê om biokontakte te aktiveer. ",
+	instructionTitle = "Instruksie",
+	noModem = "Die rekenaar het nie 'n draadlose modem om naniet-opdragte oor 'n netwerk te stuur en te ontvang nie",
+	notSynced = "Daar was 'n uit-sinchronisasie met naniete. ",
+	notWireless = "Die rekenaar het 'n modem, maar naniete neem opdragte uitsluitlik oor die draadlose netwerk waar. ",
+	nothingFound = "Geen effekte gevind nie",
+	received = "Ontvang",
+	saveConfiguration = "Stoor konfigurasie",
+	saveFailed = "Kon nie stoor nie: in die voorraad is daar geen ongekonfigureerde naniete nie",
+	sent = "Gestuur",
+	syncContacts = "biokontakopdatering %d van %d",
+	syncInfo = "Voordat jy die program gebruik, skep en drink 'n pakkie naniete. ",
+	syncProgress = "Daar is 'n sinchronisasie met nanites, moenie die rekenaar verlaat voordat die proses voltooi is nie:",
+	syncWelcome = "Welkom",
+}

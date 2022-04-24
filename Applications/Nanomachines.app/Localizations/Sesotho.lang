@@ -1,0 +1,18 @@
+{
+	activeEffects = "Liphello tsa hona joale",
+	favourites = "Liphello tse khethiloeng",
+	instructionData = "Ka lehlakoreng le letšehali la skrine ho na le li-switch tse bolellang li-nanite ho kenya li-biocontacts. ",
+	instructionTitle = "Taelo",
+	noModem = "Khomphuta ha e na modem ea waelese ho romella le ho amohela litaelo tsa nanite ka marang-rang",
+	notSynced = "Ho ne ho e-na le ho se lumellane le li-nanite. ",
+	notWireless = "Khomphuta e na le modem, empa li-nanite li lemoha litaelo ka marang-rang a se nang mohala. ",
+	nothingFound = "Ha ho liphetho tse fumanoeng",
+	received = "E amohetse",
+	saveConfiguration = "Boloka tlhophiso",
+	saveFailed = "Ho boloka ho hlolehile: lethathamong la thepa ha ho na li-nanite tse sa hlophisoang",
+	sent = "E rometsoe",
+	syncContacts = "ntlafatso ea biocontact %d ea %d",
+	syncInfo = "Pele o sebelisa lenaneo, theha le ho noa pakete ea li-nanite. ",
+	syncProgress = "Ho na le khokahano le li-nanites, u se ke oa tlohela komporo ho fihlela ts'ebetso e phetheloa:",
+	syncWelcome = "Rea u amohela",
+}

@@ -1,0 +1,18 @@
+{
+	activeEffects = "Effetti attuali",
+	favourites = "Effetti selezionati",
+	instructionData = "Sul lato sinistro dello schermo ci sono interruttori che dicono ai naniti di attivare i biocontatti. ",
+	instructionTitle = "Istruzione",
+	noModem = "Il computer non dispone di un modem wireless per inviare e ricevere comandi nanite su una rete",
+	notSynced = "Si è verificato un errore di sincronizzazione con i naniti. ",
+	notWireless = "Il computer ha un modem, ma i naniti percepiscono i comandi esclusivamente tramite la rete wireless. ",
+	nothingFound = "Nessun effetto trovato",
+	received = "Ricevuto",
+	saveConfiguration = "Salva configurazione",
+	saveFailed = "Salvataggio fallito: nell'inventario non sono presenti naniti non configurati",
+	sent = "Spedito",
+	syncContacts = "aggiornamento biocontatto %d di %d",
+	syncInfo = "Prima di utilizzare il programma, crea e bevi un pacchetto di naniti. ",
+	syncProgress = "C'è una sincronizzazione con i naniti, non lasciare il computer fino al completamento del processo:",
+	syncWelcome = "Benvenuto",
+}

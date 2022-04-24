@@ -1,0 +1,18 @@
+{
+	activeEffects = "Imiphumela yamanje",
+	favourites = "Imiphumela ekhethiwe",
+	instructionData = "Ngakwesokunxele kwesikrini kukhona amaswishi atshela ama-nanite ukuthi avule ama-biocontacts. ",
+	instructionTitle = "Isiyalezo",
+	noModem = "Ikhompyutha ayinayo imodemu engenantambo yokuthumela nokwamukela imiyalo ye-nanite ngenethiwekhi",
+	notSynced = "Kube khona ukungavumelaniswa kwama-nanite. ",
+	notWireless = "Ikhompyutha inemodemu, kodwa ama-nanites abona imiyalo ngokukhethekile kunethiwekhi engenantambo. ",
+	nothingFound = "Ayikho imiphumela etholiwe",
+	received = "Kwamukelwe",
+	saveConfiguration = "Londoloza ukumisa",
+	saveFailed = "Ukulondoloza kuhlulekile: ohlwini lwamagama awekho ama-nanite angalungisiwe",
+	sent = "Ithunyelwe",
+	syncContacts = "isibuyekezo se-biocontact %d kokungu-%d",
+	syncInfo = "Ngaphambi kokusebenzisa uhlelo, dala futhi uphuze iphakethe lama-nanites. ",
+	syncProgress = "Kukhona ukuvumelanisa nama-nanites, ungayishiyi ikhompuyutha kuze kuqedwe inqubo:",
+	syncWelcome = "Siyakwamukela",
+}

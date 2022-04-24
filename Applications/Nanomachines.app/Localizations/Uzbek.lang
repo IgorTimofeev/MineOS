@@ -1,0 +1,18 @@
+{
+	activeEffects = "Joriy effektlar",
+	favourites = "Tanlangan effektlar",
+	instructionData = "Ekranning chap tomonida nanitlarga biokontaktlarni faollashtirishni bildiruvchi kalitlar mavjud. ",
+	instructionTitle = "Ko'rsatma",
+	noModem = "Kompyuterda tarmoq orqali nanit buyruqlarini yuborish va qabul qilish uchun simsiz modem mavjud emas",
+	notSynced = "Nanitlar bilan sinxronlashtirilmagan. ",
+	notWireless = "Kompyuterda modem bor, lekin nanitlar buyruqlarni faqat simsiz tarmoq orqali qabul qiladi. ",
+	nothingFound = "Hech qanday effekt topilmadi",
+	received = "Qabul qildi",
+	saveConfiguration = "Konfiguratsiyani saqlang",
+	saveFailed = "Saqlash muvaffaqiyatsiz tugadi: inventarda sozlanmagan nanitlar yo'q",
+	sent = "Yuborildi",
+	syncContacts = "biokontakt yangilanishi %d / %d",
+	syncInfo = "Dasturni ishlatishdan oldin nanitlar paketini yarating va iching. ",
+	syncProgress = "Nanitlar bilan sinxronizatsiya mavjud, jarayon tugaguncha kompyuterni tark etmang:",
+	syncWelcome = "Xush kelibsiz",
+}

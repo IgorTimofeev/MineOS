@@ -1,0 +1,18 @@
+{
+	activeEffects = "Nunaj efikoj",
+	favourites = "Elektitaj efikoj",
+	instructionData = "Sur la maldekstra flanko de la ekrano estas ŝaltiloj, kiuj diras al nanitoj aktivigi biokontaktojn. ",
+	instructionTitle = "Instrukcio",
+	noModem = "La komputilo ne havas sendratan modemon por sendi kaj ricevi nanitajn komandojn tra reto",
+	notSynced = "Estis malsinkronigita kun nanitoj. ",
+	notWireless = "La komputilo havas modemon, sed nanitoj perceptas komandojn ekskluzive tra la sendrata reto. ",
+	nothingFound = "Neniuj efikoj trovitaj",
+	received = "Ricevite",
+	saveConfiguration = "Konservu agordon",
+	saveFailed = "Konservado malsukcesis: en la inventaro ne estas nekonfiguritaj nanitoj",
+	sent = "Sendita",
+	syncContacts = "biokontakta ĝisdatigo %d de %d",
+	syncInfo = "Antaŭ ol uzi la programon, kreu kaj trinku paketon da nanitoj. ",
+	syncProgress = "Estas sinkronigo kun nanitoj, ne forlasu la komputilon ĝis la procezo finiĝos:",
+	syncWelcome = "Bonvenon",
+}

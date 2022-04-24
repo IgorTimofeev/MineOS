@@ -1,0 +1,18 @@
+{
+	activeEffects = "Aktuális hatások",
+	favourites = "Válogatott effektusok",
+	instructionData = "A képernyő bal oldalán olyan kapcsolók találhatók, amelyek azt mondják a nanitáknak, hogy aktiválják a biokontaktusokat. ",
+	instructionTitle = "Utasítás",
+	noModem = "A számítógép nem rendelkezik vezeték nélküli modemmel nanite parancsok hálózaton keresztüli küldésére és fogadására",
+	notSynced = "Nem volt szinkronban a nanites. ",
+	notWireless = "A számítógép rendelkezik modemmel, de a nanites a parancsokat kizárólag a vezeték nélküli hálózaton keresztül érzékeli. ",
+	nothingFound = "Nem található hatás",
+	received = "Megkapta",
+	saveConfiguration = "Konfiguráció mentése",
+	saveFailed = "A mentés nem sikerült: a leltárban nincsenek konfigurálatlan nanitok",
+	sent = "Küldött",
+	syncContacts = "biocontact frissítés %d/%d",
+	syncInfo = "A program használata előtt készítsen és igyon meg egy csomag nanitot. ",
+	syncProgress = "Van szinkronizálás a nanitesekkel, ne hagyja el a számítógépet, amíg a folyamat be nem fejeződik:",
+	syncWelcome = "Üdvözöljük",
+}

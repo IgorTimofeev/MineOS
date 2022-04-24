@@ -1,0 +1,18 @@
+{
+	activeEffects = "Buaidhean gnàthach",
+	favourites = "Buaidhean taghte",
+	instructionData = "Air taobh clì na sgrìn tha suidsichean a tha ag iarraidh air naites biocontacts a chuir an gnìomh. ",
+	instructionTitle = "Teagasg",
+	noModem = "Chan eil modem gun uèir aig a’ choimpiutair gus òrdughan nanite a chuir agus fhaighinn thairis air lìonra",
+	notSynced = "Bha eas-aonta ann le nanites. ",
+	notWireless = "Tha modem aig a’ choimpiutair, ach bidh nanianaich a’ faicinn òrdughan a-mhàin thairis air an lìonra gun uèir. ",
+	nothingFound = "Cha deach buaidhean a lorg",
+	received = "Fhuaireadh",
+	saveConfiguration = "Sàbhail rèiteachadh",
+	saveFailed = "Dh'fhàillig sàbhaladh: chan eil nanites neo-eagraichte anns a' chlàr",
+	sent = "Chuireadh",
+	syncContacts = "ùrachadh biocontact %d à %d",
+	syncInfo = "Mus cleachd thu am prògram, cruthaich agus òl pasgan de nanites. ",
+	syncProgress = "Tha sioncronadh ann le nanites, na fàg an coimpiutair gus am bi am pròiseas deiseil:",
+	syncWelcome = "Fàilte",
+}

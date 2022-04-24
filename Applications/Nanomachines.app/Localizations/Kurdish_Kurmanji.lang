@@ -1,0 +1,18 @@
+{
+	activeEffects = "Bandorên heyî",
+	favourites = "bandorên Hilbijartî",
+	instructionData = "Li milê çepê yê ekranê guhêrbar hene ku ji nanites re dibêjin ku biyokontaktan çalak bikin. ",
+	instructionTitle = "Ders",
+	noModem = "Komputer ne xwediyê modemek bêtê ye ku li ser torê fermanên nanite bişîne û bistîne",
+	notSynced = "Bi nanîtîyan re hevdengiyek derneketiye. ",
+	notWireless = "Komputer xwedan modemek e, lê nanites fermanan bi taybetî li ser tora bêtêl fam dikin. ",
+	nothingFound = "Ti bandor nehat dîtin",
+	received = "Wergirtin",
+	saveConfiguration = "Save veavakirina",
+	saveFailed = "Sazkirin bi ser neket: di envanterê de nanîtên nevesazkirî tune",
+	sent = "şandin",
+	syncContacts = "nûvekirina biyocontact %d ji %d",
+	syncInfo = "Berî ku bernameyê bikar bînin, pakêtek nanites çêbikin û vexwin. ",
+	syncProgress = "Bi nanites re hevdengiyek heye, heya ku pêvajo neqede ji komputerê dernekevin:",
+	syncWelcome = "Bi xêr hatî",
+}

@@ -1,0 +1,18 @@
+{
+	activeEffects = "Iziphumo zangoku",
+	favourites = "Iziphumo ezikhethiweyo",
+	instructionData = "Kwicala lasekhohlo lesikrini kukho iiswitshi ezixelela i-nanites ukuba ivule ii-biocontacts. ",
+	instructionTitle = "Umyalelo",
+	noModem = "Ikhompyuter ayinayo imodem engenazingcingo yokuthumela kwaye ifumane imiyalelo ye-nanite kwinethiwekhi",
+	notSynced = "Bekukho ukudityaniswa kwe-nanites. ",
+	notWireless = "Ikhompyuter inemodem, kodwa i-nanites ibona imiyalelo ngokukodwa kwinethiwekhi engenazingcingo. ",
+	nothingFound = "Akukho ziphumo zifunyenweyo",
+	received = "Yamkelwe",
+	saveConfiguration = "Gcina ubumbeko",
+	saveFailed = "Ukugcina kusilele: kuluhlu akukho nanites ezingaqwalaselwanga",
+	sent = "Ithunyelwe",
+	syncContacts = "uhlaziyo loqhagamshelwano lwendalo ephilayo %d ye %d",
+	syncInfo = "Ngaphambi kokusebenzisa inkqubo, yenza kwaye usele ipakethe yee-nanites. ",
+	syncProgress = "Kukho ungqamaniso kunye nama-nanites, musa ukuyishiya ikhompyuter ide inkqubo igqitywe:",
+	syncWelcome = "Wamkelekile",
+}

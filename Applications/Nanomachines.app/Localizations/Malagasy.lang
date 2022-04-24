@@ -1,0 +1,18 @@
+{
+	activeEffects = "Vokatra ankehitriny",
+	favourites = "Vokatra voafantina",
+	instructionData = "Eo amin'ny ilany havia amin'ny efijery dia misy switch izay milaza ny nanites hampavitrika biocontacts. ",
+	instructionTitle = "fampianarana",
+	noModem = "Ny solosaina dia tsy manana modem Wireless handefasana sy handraisana baiko nanite amin'ny tambajotra",
+	notSynced = "Nisy tsy mifanaraka amin'ny nanites. ",
+	notWireless = "Ny ordinatera dia manana modem, fa ny nanites dia mahita baiko manokana amin'ny tambajotra tsy misy tariby. ",
+	nothingFound = "Tsy misy vokany hita",
+	received = "nahazo",
+	saveConfiguration = "Save configuration",
+	saveFailed = "Tsy nahomby ny fitahirizana: tsy misy nanites tsy voarindra ao amin'ny lisitra",
+	sent = "Nalefa",
+	syncContacts = "fanavaozana biocontact %d amin'ny %d",
+	syncInfo = "Alohan'ny fampiasana ny fandaharana, mamorona sy misotro fonosana nanites. ",
+	syncProgress = "Misy ny synchronization amin'ny nanites, aza miala amin'ny solosaina mandra-pahavitan'ny dingana:",
+	syncWelcome = "tonga soa",
+}

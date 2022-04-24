@@ -1,0 +1,18 @@
+{
+	activeEffects = "Saamaynta hadda",
+	favourites = "Saamaynta la doortay",
+	instructionData = "Dhinaca bidix ee shaashadda waxa ku yaal furayaal u sheegaya nanites in ay dhaqaajiyaan biocontacts. ",
+	instructionTitle = "Tilmaanta",
+	noModem = "Kumbuyuutarku malaha modem-ka bilaa-waayirka ah si uu u diro loogana helo amarrada nanite ee shabakada",
+	notSynced = "Waxaa jiray wax aan la socon karin oo lala yeeshay nanites. ",
+	notWireless = "Kumbuyuutarku wuxuu leeyahay modem, laakiin nanites waxay u arkaan amarrada si gaar ah shabakadda wireless-ka. ",
+	nothingFound = "Wax saameyn ah lama helin",
+	received = "helay",
+	saveConfiguration = "Keydi qaabeynta",
+	saveFailed = "Badbaadintu way guuldarraysatay: liiska ma jiraan nanites aan habayn",
+	sent = "Diray",
+	syncContacts = "cusbooneysiinta biocontact %d ee %d",
+	syncInfo = "Kahor intaadan isticmaalin barnaamijka, samee oo cab baakidh nanites ah. ",
+	syncProgress = "Waxaa jira isku-dubbarid la leh nanites, ha ka tagin kumbuyuutarka ilaa habka la dhammeeyo:",
+	syncWelcome = "Soo dhawoow",
+}

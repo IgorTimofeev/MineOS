@@ -1,0 +1,18 @@
+{
+	activeEffects = "Efectes actuals",
+	favourites = "Efectes seleccionats",
+	instructionData = "A la part esquerra de la pantalla hi ha interruptors que indiquen als nanites que activin els biocontactes. ",
+	instructionTitle = "Instrucció",
+	noModem = "L'ordinador no té un mòdem sense fil per enviar i rebre ordres nanite a través d'una xarxa",
+	notSynced = "Hi va haver una dessincronització amb nanites. ",
+	notWireless = "L'ordinador té un mòdem, però els nanites perceben les ordres exclusivament a través de la xarxa sense fil. ",
+	nothingFound = "No s'han trobat efectes",
+	received = "Rebut",
+	saveConfiguration = "Desa la configuració",
+	saveFailed = "S'ha produït un error en desar: a l'inventari no hi ha nanits sense configurar",
+	sent = "Enviat",
+	syncContacts = "actualització de biocontacte %d de %d",
+	syncInfo = "Abans d'utilitzar el programa, creeu i beveu un paquet de nanits. ",
+	syncProgress = "Hi ha una sincronització amb nanites, no sortiu de l'ordinador fins que s'hagi completat el procés:",
+	syncWelcome = "Benvingut",
+}

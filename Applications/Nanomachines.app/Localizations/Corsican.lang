@@ -1,0 +1,18 @@
+{
+	activeEffects = "Effetti attuali",
+	favourites = "Effetti selezziunati",
+	instructionData = "À u latu manca di u screnu ci sò switches chì dicenu à i naniti per attivà i biocontacts. ",
+	instructionTitle = "Istruzzioni",
+	noModem = "L'urdinatore ùn hà micca un modem wireless per mandà è riceve cumandamenti nanite nantu à una reta",
+	notSynced = "Ci era un out-of-sync cù nanites. ",
+	notWireless = "L'urdinatore hà un modem, ma i naniti percepiscenu i cumandamenti solu nantu à a rete wireless. ",
+	nothingFound = "Nisun effetti trovu",
+	received = "Ricevutu",
+	saveConfiguration = "Salvà a cunfigurazione",
+	saveFailed = "A salvezza hà fiascatu: in l'inventariu ùn ci sò micca nanite senza cunfigurazione",
+	sent = "Mandatu",
+	syncContacts = "aghjurnamentu biocontattu %d di %d",
+	syncInfo = "Prima di utilizà u prugramma, crea è beie un pacchettu di naniti. ",
+	syncProgress = "Ci hè una sincronizazione cù nanites, ùn lasciate micca l'urdinatore finu à chì u prucessu hè cumpletu:",
+	syncWelcome = "Benvenuti",
+}

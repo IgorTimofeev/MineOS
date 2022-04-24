@@ -1,0 +1,18 @@
+{
+	activeEffects = "Efektet aktuale",
+	favourites = "Efektet e zgjedhura",
+	instructionData = "Në anën e majtë të ekranit ka çelësa që u thonë naniteve të aktivizojnë biokontaktet. ",
+	instructionTitle = "Udhëzim",
+	noModem = "Kompjuteri nuk ka një modem me valë për të dërguar dhe marrë komanda nanite përmes një rrjeti",
+	notSynced = "Kishte një mossinkronizim me nanitet. ",
+	notWireless = "Kompjuteri ka një modem, por nanitët i perceptojnë komandat ekskluzivisht përmes rrjetit pa tel. ",
+	nothingFound = "Nuk u gjetën efekte",
+	received = "Marrë",
+	saveConfiguration = "Ruaj konfigurimin",
+	saveFailed = "Ruajtja dështoi: në inventar nuk ka nanite të pakonfiguruara",
+	sent = "Dërguar",
+	syncContacts = "Përditësimi i biokontaktit %d nga %d",
+	syncInfo = "Përpara se të përdorni programin, krijoni dhe pini një pako nanite. ",
+	syncProgress = "Ekziston një sinkronizim me nanitet, mos e lini kompjuterin derisa të përfundojë procesi:",
+	syncWelcome = "Mirë se vini",
+}

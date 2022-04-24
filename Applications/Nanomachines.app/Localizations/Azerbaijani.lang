@@ -1,0 +1,18 @@
+{
+	activeEffects = "Cari effektlər",
+	favourites = "Seçilmiş effektlər",
+	instructionData = "Ekranın sol tərəfində nanitlərə biokontaktları aktivləşdirməyi bildirən açarlar var. ",
+	instructionTitle = "Təlimat",
+	noModem = "Şəbəkə üzərindən nanit əmrləri göndərmək və qəbul etmək üçün kompüterdə simsiz modem yoxdur",
+	notSynced = "Nanitlərlə sinxron pozğunluq var idi. ",
+	notWireless = "Kompüterdə modem var, lakin nanitlər əmrləri yalnız simsiz şəbəkə üzərindən qəbul edirlər. ",
+	nothingFound = "Heç bir effekt tapılmadı",
+	received = "Qəbul edildi",
+	saveConfiguration = "Konfiqurasiyanı yadda saxla",
+	saveFailed = "Saxlama uğursuz oldu: inventarda konfiqurasiya edilməmiş nanit yoxdur",
+	sent = "Göndərildi",
+	syncContacts = "biokontakt yeniləməsi %d of %d",
+	syncInfo = "Proqramı istifadə etməzdən əvvəl bir paket nanit yaradın və için. ",
+	syncProgress = "Nanitlərlə sinxronizasiya var, proses başa çatana qədər kompüteri tərk etməyin:",
+	syncWelcome = "Xoş gəldiniz",
+}

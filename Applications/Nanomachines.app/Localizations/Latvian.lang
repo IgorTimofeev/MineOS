@@ -1,0 +1,18 @@
+{
+	activeEffects = "Pašreizējie efekti",
+	favourites = "Izvēlētie efekti",
+	instructionData = "Ekrāna kreisajā pusē ir slēdži, kas liek nanītiem aktivizēt biokontaktus. ",
+	instructionTitle = "Instrukcija",
+	noModem = "Datoram nav bezvadu modema, lai sūtītu un saņemtu nanite komandas tīklā",
+	notSynced = "Bija nesinhronizācija ar nanitiem. ",
+	notWireless = "Datoram ir modems, bet nanites uztver komandas tikai bezvadu tīklā. ",
+	nothingFound = "Nav atrasts neviens efekts",
+	received = "Saņemts",
+	saveConfiguration = "Saglabāt konfigurāciju",
+	saveFailed = "Saglabāšana neizdevās: krājumos nav nekonfigurētu nanītu",
+	sent = "Nosūtīts",
+	syncContacts = "biokontaktu atjauninājums %d no %d",
+	syncInfo = "Pirms programmas lietošanas izveidojiet un izdzeriet nanītu paciņu. ",
+	syncProgress = "Notiek sinhronizācija ar nanītiem, neatstājiet datoru, kamēr process nav pabeigts:",
+	syncWelcome = "Laipni lūdzam",
+}

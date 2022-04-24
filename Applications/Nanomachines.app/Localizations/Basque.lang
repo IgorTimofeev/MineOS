@@ -1,0 +1,18 @@
+{
+	activeEffects = "Egungo ondorioak",
+	favourites = "Hautatutako efektuak",
+	instructionData = "Pantailaren ezkerreko aldean nanitei biokontaktuak aktibatzeko esaten dieten etengailuak daude. ",
+	instructionTitle = "Instrukzioa",
+	noModem = "Ordenagailuak ez du haririk gabeko modemrik sare baten bidez nanite komandoak bidaltzeko eta jasotzeko",
+	notSynced = "Sinkronizatu gabeko bat zegoen naniteekin. ",
+	notWireless = "Ordenagailuak modem bat dauka, baina nanitek hari gabeko sarearen bidez soilik hautematen dituzte komandoak. ",
+	nothingFound = "Ez da efekturik aurkitu",
+	received = "Jaso",
+	saveConfiguration = "Gorde konfigurazioa",
+	saveFailed = "Ezin izan da gorde: inbentarioan ez dago konfiguratu gabeko naniterik",
+	sent = "Bidali",
+	syncContacts = "biokontaktuen eguneratzea %d-tik %d",
+	syncInfo = "Programa erabili aurretik, sortu eta edan nanite pakete bat. ",
+	syncProgress = "Sinkronizazio bat dago naniteekin, ez utzi ordenagailua prozesua amaitu arte:",
+	syncWelcome = "Ongi etorri",
+}

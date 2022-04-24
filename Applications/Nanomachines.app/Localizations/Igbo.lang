@@ -1,0 +1,18 @@
+{
+	activeEffects = "Mmetụta dị ugbu a",
+	favourites = "Mmetụta ahọpụtara",
+	instructionData = "N'akụkụ aka ekpe nke ihuenyo e nwere switches na-agwa nanites ka ọ rụọ ọrụ biocontacts. ",
+	instructionTitle = "Ntuziaka",
+	noModem = "Kọmputa ahụ enweghị modem ikuku izipu ma nata iwu nanite na netwọkụ",
+	notSynced = "Enweghị mmekọrịta ya na ndị nanites. ",
+	notWireless = "Kọmputa ahụ nwere modem, mana nanites na-aghọta iwu naanị na netwọk ikuku. ",
+	nothingFound = "Enweghị mmetụta ahụrụ",
+	received = "natara",
+	saveConfiguration = "Chekwa nhazi",
+	saveFailed = "Ịchekwa akụghị: n'ime ngwa ahịa, enweghị nanites na-ahazighị",
+	sent = "E zigara ya",
+	syncContacts = "nwelite biocontact %d nke %d",
+	syncInfo = "Tupu iji mmemme ahụ, mepụta ma ṅụọ otu ngwugwu nanites. ",
+	syncProgress = "Enwere mmekọrịta na nanites, ahapụla kọmpụta ahụ ruo mgbe emechara usoro a:",
+	syncWelcome = "Nnọọ",
+}

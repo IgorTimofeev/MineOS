@@ -1,0 +1,18 @@
+{
+	activeEffects = "Éifeachtaí reatha",
+	favourites = "Éifeachtaí roghnaithe",
+	instructionData = "Ar thaobh na láimhe clé den scáileán tá lasca a insíonn do nainítí biththeagmhálacha a ghníomhachtú. ",
+	instructionTitle = "Teagasc",
+	noModem = "Níl móideim gan sreang ag an ríomhaire chun orduithe nanite a sheoladh agus a fháil thar líonra",
+	notSynced = "Bhí seach-sync le nainítí. ",
+	notWireless = "Tá móideim ag an ríomhaire, ach is thar an líonra gan sreang amháin a bhraitheann naní orduithe. ",
+	nothingFound = "Níor aimsíodh aon éifeachtaí",
+	received = "Faighte",
+	saveConfiguration = "Sábháil cumraíocht",
+	saveFailed = "Theip ar shábháil: níl aon nanítí neamhchumraithe san fhardal",
+	sent = "Seolta",
+	syncContacts = "nuashonrú bioteagmhála %d de %d",
+	syncInfo = "Sula n-úsáideann tú an clár, cruthaigh agus ól paicéad nanites. ",
+	syncProgress = "Tá sioncrónú le nainítí ann, ná fág an ríomhaire go dtí go mbeidh an próiseas críochnaithe:",
+	syncWelcome = "Fáilte",
+}

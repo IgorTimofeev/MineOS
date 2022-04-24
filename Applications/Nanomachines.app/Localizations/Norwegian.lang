@@ -1,0 +1,18 @@
+{
+	activeEffects = "Aktuelle effekter",
+	favourites = "Utvalgte effekter",
+	instructionData = "På venstre side av skjermen er det brytere som forteller nanitter å aktivere biokontakter. ",
+	instructionTitle = "Instruksjon",
+	noModem = "Datamaskinen har ikke et trådløst modem for å sende og motta nanite-kommandoer over et nettverk",
+	notSynced = "Det var en usynkronisering med nanitter. ",
+	notWireless = "Datamaskinen har et modem, men nanitter oppfatter kommandoer utelukkende over det trådløse nettverket. ",
+	nothingFound = "Ingen effekter funnet",
+	received = "Mottatt",
+	saveConfiguration = "Lagre konfigurasjonen",
+	saveFailed = "Lagring mislyktes: i inventaret er det ingen ukonfigurerte nanitter",
+	sent = "Sendt",
+	syncContacts = "biokontaktoppdatering %d av %d",
+	syncInfo = "Før du bruker programmet, lag og drikk en pakke nanitter. ",
+	syncProgress = "Det er en synkronisering med nanitter, ikke forlat datamaskinen før prosessen er fullført:",
+	syncWelcome = "Velkommen",
+}

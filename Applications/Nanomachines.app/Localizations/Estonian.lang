@@ -1,0 +1,18 @@
+{
+	activeEffects = "Praegused mõjud",
+	favourites = "Valitud efektid",
+	instructionData = "Ekraani vasakus servas on lülitid, mis käsivad naniitidel biokontakte aktiveerida. ",
+	instructionTitle = "Juhend",
+	noModem = "Arvutil ei ole traadita modemit nanite käskude saatmiseks ja vastuvõtmiseks võrgu kaudu",
+	notSynced = "Naniitidega oli sünkroonist väljas. ",
+	notWireless = "Arvutil on modem, kuid nanites tajuvad käske eranditult traadita võrgu kaudu. ",
+	nothingFound = "Mõju ei leitud",
+	received = "Vastu võetud",
+	saveConfiguration = "Salvesta konfiguratsioon",
+	saveFailed = "Salvestamine ebaõnnestus: laos pole konfigureerimata naniite",
+	sent = "Saadetud",
+	syncContacts = "biokontakti värskendus %d/%d",
+	syncInfo = "Enne programmi kasutamist looge ja jooge pakk nanite. ",
+	syncProgress = "Toimub sünkroonimine naniitidega, ärge lahkuge arvutist enne, kui protsess on lõpule viidud:",
+	syncWelcome = "Tere tulemast",
+}

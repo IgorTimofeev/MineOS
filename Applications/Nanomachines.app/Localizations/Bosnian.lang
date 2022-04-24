@@ -1,0 +1,18 @@
+{
+	activeEffects = "Trenutni efekti",
+	favourites = "Odabrani efekti",
+	instructionData = "Na lijevoj strani ekrana nalaze se prekidači koji govore nanitima da aktiviraju biokontakte. ",
+	instructionTitle = "Uputstvo",
+	noModem = "Računar nema bežični modem za slanje i primanje nanite komandi preko mreže",
+	notSynced = "Došlo je do nesinhronizacije sa nanitima. ",
+	notWireless = "Računar ima modem, ali naniti percipiraju komande isključivo preko bežične mreže. ",
+	nothingFound = "Nisu pronađeni efekti",
+	received = "Primljeno",
+	saveConfiguration = "Sačuvaj konfiguraciju",
+	saveFailed = "Pohranjivanje nije uspjelo: u inventaru nema nekonfiguriranih nanita",
+	sent = "Poslano",
+	syncContacts = "ažuriranje biokontakta %d od %d",
+	syncInfo = "Prije korištenja programa napravite i popijte paketić nanita. ",
+	syncProgress = "Postoji sinhronizacija sa nanitima, ne napuštajte računar dok se proces ne završi:",
+	syncWelcome = "Dobrodošli",
+}

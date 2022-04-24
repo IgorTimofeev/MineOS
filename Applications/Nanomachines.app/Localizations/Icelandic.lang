@@ -1,0 +1,18 @@
+{
+	activeEffects = "Núverandi áhrif",
+	favourites = "Valin áhrif",
+	instructionData = "Vinstra megin á skjánum eru rofar sem segja nanítum að virkja líftengiliði. ",
+	instructionTitle = "Kennsla",
+	noModem = "Tölvan er ekki með þráðlaust mótald til að senda og taka á móti nanite skipunum yfir netkerfi",
+	notSynced = "Það var ósamstilltur með nanítum. ",
+	notWireless = "Tölvan er með mótald, en nanítar skynja skipanir eingöngu yfir þráðlausa netið. ",
+	nothingFound = "Engin áhrif fundust",
+	received = "Tekið á móti",
+	saveConfiguration = "Vista stillingar",
+	saveFailed = "Vistun mistókst: í birgðum eru engir óstilltir nanítar",
+	sent = "Sent",
+	syncContacts = "líftengiuppfærsla %d af %d",
+	syncInfo = "Áður en þú notar forritið skaltu búa til og drekka pakka af nanítum. ",
+	syncProgress = "Það er samstilling við nanites, ekki yfirgefa tölvuna fyrr en ferlinu er lokið:",
+	syncWelcome = "Velkominn",
+}

@@ -1,0 +1,18 @@
+{
+	activeEffects = "Aktuella effekter",
+	favourites = "Utvalda effekter",
+	instructionData = "På vänster sida av skärmen finns strömbrytare som säger åt nanites att aktivera biokontakter. ",
+	instructionTitle = "Instruktion",
+	noModem = "Datorn har inget trådlöst modem för att skicka och ta emot nanite-kommandon över ett nätverk",
+	notSynced = "Det var en out-of-sync med nanites. ",
+	notWireless = "Datorn har ett modem, men naniter uppfattar kommandon uteslutande över det trådlösa nätverket. ",
+	nothingFound = "Inga effekter hittades",
+	received = "Mottagen",
+	saveConfiguration = "Spara konfiguration",
+	saveFailed = "Det gick inte att spara: i inventeringen finns inga okonfigurerade naniter",
+	sent = "Skickat",
+	syncContacts = "biokontaktuppdatering %d av %d",
+	syncInfo = "Innan du använder programmet, skapa och drick ett paket naniter. ",
+	syncProgress = "Det finns en synkronisering med nanites, lämna inte datorn förrän processen är klar:",
+	syncWelcome = "Välkommen",
+}

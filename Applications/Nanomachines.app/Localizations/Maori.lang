@@ -1,0 +1,18 @@
+{
+	activeEffects = "Nga paanga o naianei",
+	favourites = "Nga paanga kua tohua",
+	instructionData = "Kei te taha maui o te mata he huringa e kii ana ki nga nanite ki te whakahohe i nga hononga koiora. ",
+	instructionTitle = "Tohutohu",
+	noModem = "Karekau he pouwhanga ahokore o te rorohiko hei tuku me te tango i nga whakahau nanite i runga whatunga",
+	notSynced = "He kore-tukutahi me nga nanite. ",
+	notWireless = "He pouwhanga to te rorohiko, engari ka kite nga nanite i nga whakahau ma te whatunga ahokore anake. ",
+	nothingFound = "Karekau he paanga i kitea",
+	received = "Kua riro",
+	saveConfiguration = "Tiaki whirihoranga",
+	saveFailed = "I rahua te tiaki: i roto i te rarangi karekau he nanite kaore ano kia whirihorahia",
+	sent = "Tukuna",
+	syncContacts = "whakahōunga whakapā koiora %d o %d",
+	syncInfo = "I mua i te whakamahi i te hotaka, hanga me te inu i tetahi paati nanites. ",
+	syncProgress = "He tukutahi me nga nanites, kaua e waiho te rorohiko kia oti ra ano te mahi:",
+	syncWelcome = "Nau mai haere mai",
+}

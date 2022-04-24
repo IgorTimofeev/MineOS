@@ -1,0 +1,18 @@
+{
+	activeEffects = "Efecte curente",
+	favourites = "Efecte selectate",
+	instructionData = "În partea stângă a ecranului există comutatoare care le spun nanitelor să activeze biocontactele. ",
+	instructionTitle = "Instruire",
+	noModem = "Computerul nu are un modem fără fir pentru a trimite și a primi comenzi nanite printr-o rețea",
+	notSynced = "A existat o nesincronizare cu naniții. ",
+	notWireless = "Computerul are un modem, dar nanitii percep comenzile exclusiv prin intermediul rețelei wireless. ",
+	nothingFound = "Nu s-au găsit efecte",
+	received = "Primit",
+	saveConfiguration = "Salvați configurația",
+	saveFailed = "Salvarea eșuată: în inventar nu există naniți neconfigurați",
+	sent = "Trimis",
+	syncContacts = "actualizare biocontact %d din %d",
+	syncInfo = "Înainte de a utiliza programul, creați și beți un pachet de naniți. ",
+	syncProgress = "Există o sincronizare cu naniți, nu părăsiți computerul până la finalizarea procesului:",
+	syncWelcome = "Bine ati venit",
+}

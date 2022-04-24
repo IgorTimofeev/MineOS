@@ -1,0 +1,18 @@
+{
+	activeEffects = "Zotsatira zapano",
+	favourites = "Zotsatira zosankhidwa",
+	instructionData = "Kumanzere kwa zenera pali masiwichi omwe amauza nanites kuti ayambitse ma biocontacts. ",
+	instructionTitle = "Malangizo",
+	noModem = "Kompyuta ilibe modemu opanda zingwe kutumiza ndi kulandira malamulo a nanite pa netiweki",
+	notSynced = "Panali kusagwirizana ndi ma nanites. ",
+	notWireless = "Kompyutayo ili ndi modemu, koma ma nanites amawona kulamula kokha pamaneti opanda zingwe. ",
+	nothingFound = "Palibe zotsatira zomwe zapezeka",
+	received = "Adalandira",
+	saveConfiguration = "Sungani kasinthidwe",
+	saveFailed = "Kusunga kwalephera: muzolembazo mulibe ma nanites osasinthidwa",
+	sent = "Kutumizidwa",
+	syncContacts = "zosintha zamoyo %d za %d",
+	syncInfo = "Musanagwiritse ntchito pulogalamuyi, pangani ndikumwa paketi ya nanites. ",
+	syncProgress = "Pali kalunzanitsidwe ndi nanites, musasiye kompyuta mpaka ndondomeko anamaliza:",
+	syncWelcome = "Takulandirani",
+}

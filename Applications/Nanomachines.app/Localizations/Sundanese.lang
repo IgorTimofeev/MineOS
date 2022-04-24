@@ -1,0 +1,18 @@
+{
+	activeEffects = "Pangaruh ayeuna",
+	favourites = "épék dipilih",
+	instructionData = "Di sisi kénca layar aya saklar nu ngabejaan nanites pikeun ngaktipkeun biocontacts. ",
+	instructionTitle = "parentah",
+	noModem = "Komputer teu gaduh modem nirkabel pikeun ngirim sareng nampi paréntah nanite dina jaringan",
+	notSynced = "Aya hiji kaluar-of-sinkronisasi jeung nanites. ",
+	notWireless = "Komputer ngabogaan modem a, tapi nanites ngarasa paréntah éksklusif ngaliwatan jaringan nirkabel. ",
+	nothingFound = "Taya épék kapanggih",
+	received = "Ditampi",
+	saveConfiguration = "Simpen konfigurasi",
+	saveFailed = "Nyimpen gagal: dina inventory teu aya nanites unconfigured",
+	sent = "Dikirim",
+	syncContacts = "apdet biokontak %d tina %d",
+	syncInfo = "Sateuacan nganggo program, jieun sareng nginum sabungkus nanites. ",
+	syncProgress = "Aya singkronisasi sareng nanites, ulah tinggalkeun komputer dugi ka prosésna réngsé:",
+	syncWelcome = "Wilujeng sumping",
+}

@@ -1,0 +1,18 @@
+{
+	activeEffects = "Efek saiki",
+	favourites = "Efek sing dipilih",
+	instructionData = "Ing sisih kiwa layar ana ngalih sing ngandhani nanites kanggo ngaktifake biocontacts. ",
+	instructionTitle = "instruksi",
+	noModem = "Komputer ora duwe modem nirkabel kanggo ngirim lan nampa printah nanite liwat jaringan",
+	notSynced = "Ana sing ora sinkron karo nanites. ",
+	notWireless = "Komputer duwe modem, nanging nanites ndeleng printah istimewa liwat jaringan nirkabel. ",
+	nothingFound = "Ora ana efek sing ditemokake",
+	received = "Ditampa",
+	saveConfiguration = "Simpen konfigurasi",
+	saveFailed = "Gagal nyimpen: ing inventaris ora ana nanites sing ora dikonfigurasi",
+	sent = "Dikirim",
+	syncContacts = "nganyari biokontak %d saka %d",
+	syncInfo = "Sadurunge nggunakake program, nggawe lan ngombe paket nanites. ",
+	syncProgress = "Ana sinkronisasi karo nanites, aja ninggalake komputer nganti proses rampung:",
+	syncWelcome = "Sugeng rawuh",
+}

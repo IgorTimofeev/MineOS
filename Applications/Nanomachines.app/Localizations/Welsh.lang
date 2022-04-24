@@ -1,0 +1,18 @@
+{
+	activeEffects = "Effeithiau cyfredol",
+	favourites = "Effeithiau dethol",
+	instructionData = "Ar ochr chwith y sgrin mae switshis sy'n dweud wrth naitiaid i actifadu biogysylltiadau. ",
+	instructionTitle = "Cyfarwyddiad",
+	noModem = "Nid oes gan y cyfrifiadur fodem diwifr i anfon a derbyn gorchmynion nait dros rwydwaith",
+	notSynced = "Nid oedd cydamseriad gyda nanites. ",
+	notWireless = "Mae gan y cyfrifiadur fodem, ond mae nani yn gweld gorchmynion dros y rhwydwaith diwifr yn unig. ",
+	nothingFound = "Ni chanfuwyd unrhyw effeithiau",
+	received = "Derbyniwyd",
+	saveConfiguration = "Cadw cyfluniad",
+	saveFailed = "Methodd cadw: yn y rhestr nid oes naites heb eu ffurfweddu",
+	sent = "Anfonwyd",
+	syncContacts = "diweddariad biocontact %d o %d",
+	syncInfo = "Cyn defnyddio'r rhaglen, crëwch ac yfwch becyn o nanites. ",
+	syncProgress = "Mae yna gydamseriad â nanites, peidiwch â gadael y cyfrifiadur nes bod y broses wedi'i chwblhau:",
+	syncWelcome = "Croeso",
+}

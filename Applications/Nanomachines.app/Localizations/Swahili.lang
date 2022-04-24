@@ -1,0 +1,18 @@
+{
+	activeEffects = "Madhara ya sasa",
+	favourites = "Athari zilizochaguliwa",
+	instructionData = "Upande wa kushoto wa skrini kuna swichi zinazowaambia nanites kuamilisha mawasiliano ya kibaolojia. ",
+	instructionTitle = "Maagizo",
+	noModem = "Kompyuta haina modemu isiyotumia waya ya kutuma na kupokea amri za nanite kupitia mtandao",
+	notSynced = "Kulikuwa na nje ya usawazishaji na nanites. ",
+	notWireless = "Kompyuta ina modemu, lakini nanites huona amri pekee kwenye mtandao wa wireless. ",
+	nothingFound = "Hakuna athari zilizopatikana",
+	received = "Imepokelewa",
+	saveConfiguration = "Hifadhi usanidi",
+	saveFailed = "Imeshindwa kuhifadhi: katika hesabu hakuna nanites ambazo hazijasanidiwa",
+	sent = "Imetumwa",
+	syncContacts = "sasisho la mawasiliano ya kibayolojia %d kati ya %d",
+	syncInfo = "Kabla ya kutumia programu, tengeneza na kunywa pakiti ya nanites. ",
+	syncProgress = "Kuna maingiliano na nanites, usiondoke kwenye kompyuta hadi mchakato ukamilike:",
+	syncWelcome = "Karibu",
+}

@@ -1,0 +1,18 @@
+{
+	activeEffects = "Awọn ipa lọwọlọwọ",
+	favourites = "Awọn ipa ti a yan",
+	instructionData = "Ni apa osi ti iboju awọn iyipada wa ti o sọ fun nanites lati mu awọn olubasọrọ bicontact ṣiṣẹ. ",
+	instructionTitle = "Ilana",
+	noModem = "Kọmputa naa ko ni modẹmu alailowaya lati firanṣẹ ati gba awọn aṣẹ nanite lori nẹtiwọki kan",
+	notSynced = "Aisi-ṣiṣẹpọ wa pẹlu awọn nanites. ",
+	notWireless = "Kọmputa naa ni modẹmu kan, ṣugbọn nanites woye awọn aṣẹ ni iyasọtọ lori nẹtiwọki alailowaya. ",
+	nothingFound = "Ko si awọn ipa ti a rii",
+	received = "ti gba",
+	saveConfiguration = "Fi iṣeto ni",
+	saveFailed = "Fifipamọ kuna: ninu akojo oja ko si awọn nanites ti a ko tunto",
+	sent = "Ti firanṣẹ",
+	syncContacts = "imudojuiwọn biocontact %d ti %d",
+	syncInfo = "Ṣaaju lilo eto naa, ṣẹda ati mu apo kan ti nanites. ",
+	syncProgress = "Amuṣiṣẹpọ wa pẹlu awọn nanites, maṣe lọ kuro ni kọnputa titi ilana yoo fi pari:",
+	syncWelcome = "Kaabo",
+}

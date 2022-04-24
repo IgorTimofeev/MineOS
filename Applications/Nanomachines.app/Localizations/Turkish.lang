@@ -1,0 +1,18 @@
+{
+	activeEffects = "Mevcut efektler",
+	favourites = "Seçilen efektler",
+	instructionData = "Ekranın sol tarafında nanitlere biyokontakları etkinleştirmelerini söyleyen anahtarlar var. ",
+	instructionTitle = "Talimat",
+	noModem = "Bilgisayarın ağ üzerinden nanite komutları göndermek ve almak için kablosuz modemi yok",
+	notSynced = "Nanite'larla bir uyumsuzluk vardı. ",
+	notWireless = "Bilgisayarın bir modemi var, ancak nanitler komutları yalnızca kablosuz ağ üzerinden algılıyor. ",
+	nothingFound = "Efekt bulunamadı",
+	received = "Alınan",
+	saveConfiguration = "Yapılandırmayı kaydet",
+	saveFailed = "Kaydetme başarısız oldu: Envanterde yapılandırılmamış nanite yok",
+	sent = "Gönderilmiş",
+	syncContacts = "biyokontak güncelleme %d / %d",
+	syncInfo = "Programı kullanmadan önce bir paket nanit oluşturup için. ",
+	syncProgress = "Nanites ile bir senkronizasyon var, işlem tamamlanana kadar bilgisayarı terk etmeyin:",
+	syncWelcome = "Hoş geldin",
+}

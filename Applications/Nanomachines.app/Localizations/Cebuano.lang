@@ -1,0 +1,18 @@
+{
+	activeEffects = "Mga epekto karon",
+	favourites = "Pinili nga mga epekto",
+	instructionData = "Sa wala nga bahin sa screen adunay mga switch nga nagsulti sa nanites sa pagpaaktibo sa mga biocontact. ",
+	instructionTitle = "Instruksyon",
+	noModem = "Ang kompyuter walay wireless modem nga magpadala ug makadawat ug nanite nga mga sugo sa usa ka network",
+	notSynced = "Naay out-of-sync sa nanites. ",
+	notWireless = "Ang kompyuter adunay modem, apan ang mga nanite nakasabut sa mga sugo nga eksklusibo sa wireless network. ",
+	nothingFound = "Walay epekto nga nakit-an",
+	received = "Nakadawat",
+	saveConfiguration = "I-save ang configuration",
+	saveFailed = "Napakyas ang pag-save: sa imbentaryo walay wala ma-configure nga nanites",
+	sent = "Gipadala",
+	syncContacts = "biocontact update %d sa %d",
+	syncInfo = "Sa dili pa gamiton ang programa, paghimo ug pag-inom og usa ka pakete sa nanites. ",
+	syncProgress = "Adunay usa ka pag-synchronize sa nanites, ayaw biyai ang kompyuter hangtod mahuman ang proseso:",
+	syncWelcome = "Welcome",
+}

@@ -1,0 +1,18 @@
+{
+	activeEffects = "Hiệu ứng hiện tại",
+	favourites = "Các hiệu ứng được chọn",
+	instructionData = "Ở phía bên trái của màn hình có các công tắc cho biết nanites kích hoạt các liên hệ sinh học. ",
+	instructionTitle = "Hướng dẫn",
+	noModem = "Máy tính không có modem không dây để gửi và nhận các lệnh nanite qua mạng",
+	notSynced = "Có sự không đồng bộ với nanites. ",
+	notWireless = "Máy tính có một modem, nhưng các nanit nhận các lệnh độc quyền qua mạng không dây. ",
+	nothingFound = "Không tìm thấy hiệu ứng",
+	received = "Nhận",
+	saveConfiguration = "Lưu cấu hình",
+	saveFailed = "Lưu không thành công: trong khoảng không quảng cáo không có nanites chưa được định cấu hình",
+	sent = "Đã gửi",
+	syncContacts = "cập nhật liên hệ sinh học% d /% d",
+	syncInfo = "Trước khi sử dụng chương trình, hãy tạo và uống một gói nanites. ",
+	syncProgress = "Có đồng bộ hóa với nanites, không rời khỏi máy tính cho đến khi quá trình hoàn tất:",
+	syncWelcome = "Chào mừng",
+}

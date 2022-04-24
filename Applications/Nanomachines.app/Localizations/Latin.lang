@@ -1,0 +1,18 @@
+{
+	activeEffects = "Current effectus",
+	favourites = "Electus effectus",
+	instructionData = "In latere sinistro screen permutationes sunt quae nuntiant nanitas ad biocontacta excitandos. ",
+	instructionTitle = "Disciplinam",
+	noModem = "Computatorium wireless modem non habet ut mandata nanitica mittat et recipiat in retis",
+	notSynced = "Out-sync cum nanitis erat. ",
+	notWireless = "Computatorium modem habet, sed nanitae solum mandata percipiunt in retiaculis aereis. ",
+	nothingFound = "Nullus effectus invenitur",
+	received = "accepistis",
+	saveConfiguration = "Salvum configuratione",
+	saveFailed = "Excepto defecit: in inventario non sunt nanitae informes",
+	sent = "Sent",
+	syncContacts = "biocontact update%d of%d",
+	syncInfo = "Antequam programmata utere, fasciculum nanitarum crea et bibe. ",
+	syncProgress = "Synchronisatio cum nanitis est, ne computatorium relinquat donec processus compleatur;",
+	syncWelcome = "Grata",
+}

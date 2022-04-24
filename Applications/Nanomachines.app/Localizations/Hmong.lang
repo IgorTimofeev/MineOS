@@ -1,0 +1,18 @@
+{
+	activeEffects = "Cov teebmeem tam sim no",
+	favourites = "Xaiv cov teebmeem",
+	instructionData = "Nyob rau sab laug ntawm lub vijtsam muaj cov keyboards uas qhia nanites kom qhib biocontacts. ",
+	instructionTitle = "Kev qhia",
+	noModem = "Lub khoos phis tawj tsis muaj wireless modem xa thiab tau txais nanite cov lus txib hauv lub network",
+	notSynced = "Muaj ib qho tawm ntawm-sync nrog nanites. ",
+	notWireless = "Lub khoos phis tawj muaj lub modem, tab sis nanites pom cov lus txib tshwj xeeb tshaj ntawm wireless network. ",
+	nothingFound = "Tsis pom muaj teebmeem",
+	received = "Tau txais",
+	saveConfiguration = "Txuag configuration",
+	saveFailed = "Txuag tsis tau: hauv cov khoom muag tsis muaj cov nanites uas tsis tau teeb tsa",
+	sent = "Xa",
+	syncContacts = "biocontact hloov tshiab %d ntawm %d",
+	syncInfo = "Ua ntej siv qhov program, tsim thiab haus ib pob ntawv ntawm nanites. ",
+	syncProgress = "Muaj ib qho synchronization nrog nanites, tsis txhob tawm hauv lub computer kom txog thaum cov txheej txheem tiav:",
+	syncWelcome = "Zoo siab txais tos",
+}

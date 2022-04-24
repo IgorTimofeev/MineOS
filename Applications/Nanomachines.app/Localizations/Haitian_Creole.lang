@@ -1,0 +1,18 @@
+{
+	activeEffects = "Efè aktyèl yo",
+	favourites = "Efè chwazi",
+	instructionData = "Sou bò gòch ekran an gen switch ki di nanite yo aktive byokontak. ",
+	instructionTitle = "Enstriksyon",
+	noModem = "Òdinatè a pa gen yon modèm san fil pou voye ak resevwa kòmandman nanite sou yon rezo",
+	notSynced = "Te gen yon out-of-sync ak nanites. ",
+	notWireless = "Òdinatè a gen yon modèm, men nanite yo wè kòmandman sèlman sou rezo san fil la. ",
+	nothingFound = "Pa gen efè jwenn",
+	received = "Resevwa",
+	saveConfiguration = "Sove konfigirasyon",
+	saveFailed = "Ekonomize echwe: nan envantè a pa gen okenn nanite ki pa konfigirasyon",
+	sent = "Voye",
+	syncContacts = "aktyalizasyon byokontak %d nan %d",
+	syncInfo = "Anvan w itilize pwogram nan, kreye epi bwè yon pake nanit. ",
+	syncProgress = "Gen yon senkronizasyon ak nanites, pa kite òdinatè a jiskaske pwosesis la fini:",
+	syncWelcome = "Byenvini",
+}

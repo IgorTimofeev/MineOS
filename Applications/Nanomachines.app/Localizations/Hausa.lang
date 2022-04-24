@@ -1,0 +1,18 @@
+{
+	activeEffects = "Tasirin halin yanzu",
+	favourites = "Tasirin da aka zaɓa",
+	instructionData = "A gefen hagu na allon akwai maɓalli waɗanda ke gaya wa nanites don kunna biocontacts. ",
+	instructionTitle = "Umarni",
+	noModem = "Kwamfuta ba ta da modem mara waya don aikawa da karɓar umarnin nanite akan hanyar sadarwa",
+	notSynced = "An yi rashin daidaituwa tare da nanites. ",
+	notWireless = "Kwamfuta tana da modem, amma nanites suna fahimtar umarni kawai akan hanyar sadarwar mara waya. ",
+	nothingFound = "Ba a sami tasiri ba",
+	received = "An karɓa",
+	saveConfiguration = "Ajiye tsari",
+	saveFailed = "Ajiye ya kasa: a cikin kayan ƙirƙira babu wasu nanites marasa tsari",
+	sent = "An aika",
+	syncContacts = "sabunta biocontact %d na %d",
+	syncInfo = "Kafin amfani da shirin, ƙirƙira da sha fakitin nanites. ",
+	syncProgress = "Akwai aiki tare da nanites, kar a bar kwamfutar har sai an kammala aikin:",
+	syncWelcome = "Barka da zuwa",
+}

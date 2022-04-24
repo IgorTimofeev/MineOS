@@ -1,0 +1,18 @@
+{
+	activeEffects = "Aktuele effekten",
+	favourites = "Selektearre effekten",
+	instructionData = "Oan 'e linkerkant fan it skerm binne d'r skeakels dy't nanites fertelle om biokontakten te aktivearjen. ",
+	instructionTitle = "Ynstruksje",
+	noModem = "De kompjûter hat gjin draadloze modem om nanite-kommando's oer in netwurk te ferstjoeren en te ûntfangen",
+	notSynced = "Der wie in out-of-sync mei nanites. ",
+	notWireless = "De kompjûter hat in modem, mar nanites waarnimme kommando's eksklusyf oer it draadloze netwurk. ",
+	nothingFound = "Gjin effekten fûn",
+	received = "Untfongen",
+	saveConfiguration = "Bewarje konfiguraasje",
+	saveFailed = "Opslaan mislearre: yn 'e ynventaris binne d'r gjin net-konfigureare naniten",
+	sent = "Ferstjoerd",
+	syncContacts = "biocontact update %d fan %d",
+	syncInfo = "Foardat jo it programma brûke, meitsje en drink in pakket nanites. ",
+	syncProgress = "D'r is in syngronisaasje mei nanites, lit de kompjûter net litte oant it proses foltôge is:",
+	syncWelcome = "Wolkom",
+}

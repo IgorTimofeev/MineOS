@@ -1,0 +1,18 @@
+{
+	activeEffects = "Effetti kurrenti",
+	favourites = "Effetti magħżula",
+	instructionData = "Fuq in-naħa tax-xellug tal-iskrin hemm swiċċijiet li jgħidu lin-naniti biex jattivaw il-bijokuntatti. ",
+	instructionTitle = "Istruzzjoni",
+	noModem = "Il-kompjuter m'għandux modem mingħajr fili biex jibgħat u jirċievi kmandi nanite fuq netwerk",
+	notSynced = "Kien hemm out-of-sinkronizzazzjoni ma nanites. ",
+	notWireless = "Il-kompjuter għandu modem, iżda nanites jipperċepixxu kmandi esklussivament fuq in-netwerk bla fili. ",
+	nothingFound = "Ma nstab l-ebda effett",
+	received = "Riċevuti",
+	saveConfiguration = "Issejvja l-konfigurazzjoni",
+	saveFailed = "L-iffrankar falla: fl-inventarju m'hemm l-ebda nanites mhux konfigurat",
+	sent = "Mibgħuta",
+	syncContacts = "aġġornament tal-bijokuntatt %d minn %d",
+	syncInfo = "Qabel ma tuża l-programm, oħloq u tixrob pakkett ta 'naniti. ",
+	syncProgress = "Hemm sinkronizzazzjoni man-naniti, tħallix il-kompjuter sakemm jitlesta l-proċess:",
+	syncWelcome = "Merħba",
+}

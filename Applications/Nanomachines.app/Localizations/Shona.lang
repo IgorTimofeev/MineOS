@@ -1,0 +1,18 @@
+{
+	activeEffects = "Current effects",
+	favourites = "Zvakasarudzwa",
+	instructionData = "Kurutivi rwekuruboshwe rwechidzitiro kune maswichi anoudza nanites kuti avhure biocontacts. ",
+	instructionTitle = "Instruction",
+	noModem = "Iyo komputa haina waya isina modem yekutumira uye kugamuchira nanite mirairo panetiweki",
+	notSynced = "Paive nekusawirirana nemanites. ",
+	notWireless = "Kombiyuta ine modem, asi nanites anoona mirairo chete pane isina waya network. ",
+	nothingFound = "Hapana zvawanikwa",
+	received = "Received",
+	saveConfiguration = "Sevha gadziriro",
+	saveFailed = "Kuchengetedza kwakundikana: mune hesera hapana nanites asina kugadziridzwa",
+	sent = "Sent",
+	syncContacts = "biocontact update %d ye %d",
+	syncInfo = "Usati washandisa chirongwa, gadzira uye unwe pakiti yemanites. ",
+	syncProgress = "Pane kuwiriranisa nenanites, usasiye komputa kusvika maitiro apera:",
+	syncWelcome = "Mauya",
+}
