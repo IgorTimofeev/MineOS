@@ -1,0 +1,12 @@
+{
+	cancel = "Batal",
+	delay = "kelewatan:",
+	fullScreen = "Skrin penuh",
+	no = "Tidak",
+	noPictures = "tak ada gambar.",
+	seconds = "detik",
+	setWallpaper = "Adakah anda mahu menetapkan gambar ini sebagai kertas dinding?",
+	slideShow = "Tayangan slaid",
+	start = "Mulakan",
+	yes = "ya",
+}

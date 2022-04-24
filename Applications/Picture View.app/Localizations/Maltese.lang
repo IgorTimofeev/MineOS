@@ -1,0 +1,12 @@
+{
+	cancel = "Ikkanċella",
+	delay = "Dewmien:",
+	fullScreen = "Skrin sħiħ",
+	no = "Nru",
+	noPictures = "M'hemm l-ebda stampi.",
+	seconds = "sekondi",
+	setWallpaper = "Trid issettja din l-istampa bħala wallpaper?",
+	slideShow = "Wirja",
+	start = "Ibda",
+	yes = "Iva",
+}

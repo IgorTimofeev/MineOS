@@ -1,0 +1,12 @@
+{
+	cancel = "hanafoana",
+	delay = "Fahatarana:",
+	fullScreen = "Mameno efijery",
+	no = "tsy misy",
+	noPictures = "Tsy misy sary.",
+	seconds = "segondra",
+	setWallpaper = "Te-hametraka ity sary ity ho wallpaper ve ianao?",
+	slideShow = "-tsary",
+	start = "fanombohana",
+	yes = "ENY",
+}

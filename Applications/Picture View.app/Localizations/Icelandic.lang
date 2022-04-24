@@ -1,0 +1,12 @@
+{
+	cancel = "Hætta við",
+	delay = "Seinkun:",
+	fullScreen = "Fullur skjár",
+	no = "Nei",
+	noPictures = "Það eru engar myndir.",
+	seconds = "sekúndur",
+	setWallpaper = "Viltu setja þessa mynd sem veggfóður?",
+	slideShow = "Skyggnusýning",
+	start = "Byrjaðu",
+	yes = "Já",
+}

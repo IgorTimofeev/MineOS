@@ -1,0 +1,12 @@
+{
+	cancel = "Avbryt",
+	delay = "Forsinkelse:",
+	fullScreen = "Full skjerm",
+	no = "Nei",
+	noPictures = "Det er ingen bilder.",
+	seconds = "sekunder",
+	setWallpaper = "Vil du angi dette bildet som bakgrunn?",
+	slideShow = "Lysbildefremvisning",
+	start = "Start",
+	yes = "Ja",
+}

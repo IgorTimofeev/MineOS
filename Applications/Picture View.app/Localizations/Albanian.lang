@@ -1,0 +1,12 @@
+{
+	cancel = "Anulo",
+	delay = "Vonesa:",
+	fullScreen = "Ekran i plotë",
+	no = "Nr",
+	noPictures = "Nuk ka foto.",
+	seconds = "sekonda",
+	setWallpaper = "Dëshiron ta vendosësh këtë fotografi si sfond?",
+	slideShow = "Slideshow",
+	start = "Filloni",
+	yes = "po",
+}

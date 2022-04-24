@@ -1,0 +1,12 @@
+{
+	cancel = "Nuligi",
+	delay = "Prokrasto:",
+	fullScreen = "Plenekrane",
+	no = "Ne",
+	noPictures = "Ne estas bildoj.",
+	seconds = "sekundoj",
+	setWallpaper = "Ĉu vi volas agordi ĉi tiun bildon kiel tapeton?",
+	slideShow = "Bildaprezento",
+	start = "Komencu",
+	yes = "Jes",
+}

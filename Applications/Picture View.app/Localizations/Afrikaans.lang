@@ -1,0 +1,12 @@
+{
+	cancel = "Kanselleer",
+	delay = "Vertraging:",
+	fullScreen = "Volskerm",
+	no = "Geen",
+	noPictures = "Daar is geen foto's nie.",
+	seconds = "sekondes",
+	setWallpaper = "Wil jy hierdie prentjie as muurpapier stel?",
+	slideShow = "Skyfievertoning",
+	start = "Begin",
+	yes = "Ja",
+}

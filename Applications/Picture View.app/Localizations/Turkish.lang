@@ -1,0 +1,12 @@
+{
+	cancel = "İptal etmek",
+	delay = "Gecikme:",
+	fullScreen = "Tam ekran",
+	no = "Numara",
+	noPictures = "Resim yok.",
+	seconds = "saniye",
+	setWallpaper = "Bu resmi duvar kağıdı olarak ayarlamak istiyor musunuz?",
+	slideShow = "slayt gösterisi",
+	start = "Başlangıç",
+	yes = "Evet",
+}

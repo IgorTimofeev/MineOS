@@ -1,0 +1,12 @@
+{
+	cancel = "ሰርዝ",
+	delay = "መዘግየት፡-",
+	fullScreen = "ሙሉ ማያ",
+	no = "አይ",
+	noPictures = "ምንም ስዕሎች የሉም.",
+	seconds = "ሰከንዶች",
+	setWallpaper = "ይህን ምስል እንደ ልጣፍ ማዘጋጀት ይፈልጋሉ?",
+	slideShow = "የስላይድ ትዕይንት",
+	start = "ጀምር",
+	yes = "አዎ",
+}

@@ -1,0 +1,12 @@
+{
+	cancel = "Fa'aleaogaina",
+	delay = "Fa'atuai:",
+	fullScreen = "Ata atoa",
+	no = "leai",
+	noPictures = "E leai ni ata.",
+	seconds = "sekone",
+	setWallpaper = "E te mana'o e fa'atūina lenei ata e fai ma pepa puipui?",
+	slideShow = "Fa'aali ata",
+	start = "Amata",
+	yes = "ioe",
+}

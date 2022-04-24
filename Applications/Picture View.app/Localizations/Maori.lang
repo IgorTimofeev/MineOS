@@ -1,0 +1,12 @@
+{
+	cancel = "Whakakore",
+	delay = "Whakaroa:",
+	fullScreen = "Mata katoa",
+	no = "Kao",
+	noPictures = "Karekau he pikitia.",
+	seconds = "hēkona",
+	setWallpaper = "Kei te hiahia koe ki te whakarite i tenei pikitia hei pepapātū?",
+	slideShow = "Whakaatakiriata",
+	start = "Tīmata",
+	yes = "Ae",
+}

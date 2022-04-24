@@ -1,0 +1,12 @@
+{
+	cancel = "Utzi",
+	delay = "Atzerapena:",
+	fullScreen = "Pantaila osoa",
+	no = "Ez",
+	noPictures = "Ez dago argazkirik.",
+	seconds = "segundoak",
+	setWallpaper = "Argazki hau horma-paper gisa ezarri nahi duzu?",
+	slideShow = "Aurkezpena",
+	start = "Hasi",
+	yes = "Bai",
+}

@@ -1,0 +1,12 @@
+{
+	cancel = "לְבַטֵל",
+	delay = "לְעַכֵּב:",
+	fullScreen = "מסך מלא",
+	no = "לא",
+	noPictures = "אין תמונות.",
+	seconds = "שניות",
+	setWallpaper = "האם אתה רוצה להגדיר תמונה זו כטפט?",
+	slideShow = "מצגת",
+	start = "הַתחָלָה",
+	yes = "כן",
+}

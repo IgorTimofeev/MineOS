@@ -1,0 +1,12 @@
+{
+	cancel = "Letsani",
+	delay = "Kuchedwa:",
+	fullScreen = "Kudzaza zenera lonse",
+	no = "Ayi",
+	noPictures = "Palibe zithunzi.",
+	seconds = "masekondi",
+	setWallpaper = "Mukufuna kusintha chithunzichi ngati wallpaper?",
+	slideShow = "Chiwonetsero chazithunzi",
+	start = "Yambani",
+	yes = "Inde",
+}

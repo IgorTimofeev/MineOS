@@ -1,0 +1,12 @@
+{
+	cancel = "Ofbriechen",
+	delay = "Verzögerung:",
+	fullScreen = "Vollbildschierm",
+	no = "Nee",
+	noPictures = "Et gi keng Biller.",
+	seconds = "Sekonnen",
+	setWallpaper = "Wëllt Dir dëst Bild als Wallpaper setzen?",
+	slideShow = "Diashow",
+	start = "Start",
+	yes = "Jo",
+}

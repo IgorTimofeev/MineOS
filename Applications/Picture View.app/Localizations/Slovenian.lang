@@ -1,0 +1,12 @@
+{
+	cancel = "Prekliči",
+	delay = "zamuda:",
+	fullScreen = "Celozaslonski način",
+	no = "št",
+	noPictures = "Ni slik.",
+	seconds = "sekundah",
+	setWallpaper = "Ali želite to sliko nastaviti kot ozadje?",
+	slideShow = "Diaprojekcija",
+	start = "Začni",
+	yes = "da",
+}

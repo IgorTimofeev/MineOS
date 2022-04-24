@@ -1,0 +1,12 @@
+{
+	cancel = "Otkazati",
+	delay = "Odgoditi:",
+	fullScreen = "Puni zaslon",
+	no = "Ne",
+	noPictures = "Nema slika.",
+	seconds = "sekundi",
+	setWallpaper = "Želite li ovu sliku postaviti kao pozadinu?",
+	slideShow = "Slideshow",
+	start = "Početak",
+	yes = "Da",
+}

@@ -1,0 +1,12 @@
+{
+	cancel = "Atšaukti",
+	delay = "Delsimas:",
+	fullScreen = "Per visą ekraną",
+	no = "Nr",
+	noPictures = "Paveikslėlių nėra.",
+	seconds = "sekundžių",
+	setWallpaper = "Ar norite nustatyti šį paveikslėlį kaip ekrano užsklandą?",
+	slideShow = "Skaidrių demonstravimas",
+	start = "Pradėti",
+	yes = "Taip",
+}

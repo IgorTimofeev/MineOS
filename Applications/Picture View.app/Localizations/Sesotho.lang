@@ -1,0 +1,12 @@
+{
+	cancel = "Hlakola",
+	delay = "tieho:",
+	fullScreen = "Skrine se felletseng",
+	no = "Che",
+	noPictures = "Haho litšoantšo.",
+	seconds = "metsotsoana",
+	setWallpaper = "Na u batla ho etsa setšoantšo see joalo ka Wallpaper?",
+	slideShow = "Setšoantšo sa li-slideshow",
+	start = "Qala",
+	yes = "Ee",
+}

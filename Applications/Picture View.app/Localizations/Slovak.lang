@@ -1,0 +1,12 @@
+{
+	cancel = "Zrušiť",
+	delay = "Oneskorenie:",
+	fullScreen = "Celá obrazovka",
+	no = "nie",
+	noPictures = "Nie sú tam žiadne obrázky.",
+	seconds = "sekúnd",
+	setWallpaper = "Chcete nastaviť tento obrázok ako tapetu?",
+	slideShow = "Prezentácia",
+	start = "Štart",
+	yes = "Áno",
+}

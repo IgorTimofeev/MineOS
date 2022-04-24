@@ -1,0 +1,12 @@
+{
+	cancel = "Ofbrekke",
+	delay = "Fertraging:",
+	fullScreen = "Folslein skerm",
+	no = "Nee",
+	noPictures = "Der binne gjin plaatsjes.",
+	seconds = "sekonden",
+	setWallpaper = "Wolle jo dizze foto as wallpaper ynstelle?",
+	slideShow = "Diashow",
+	start = "Start",
+	yes = "Ja",
+}

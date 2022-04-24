@@ -1,0 +1,12 @@
+{
+	cancel = "Annuleren",
+	delay = "Vertraging:",
+	fullScreen = "Volledig scherm",
+	no = "Nee",
+	noPictures = "Er zijn geen foto's.",
+	seconds = "seconden",
+	setWallpaper = "Wil je deze foto als achtergrond instellen?",
+	slideShow = "Diavoorstelling",
+	start = "Begin",
+	yes = "Ja",
+}

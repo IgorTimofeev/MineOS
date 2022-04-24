@@ -1,0 +1,12 @@
+{
+	cancel = "Sguir dheth",
+	delay = "Dàil:",
+	fullScreen = "Làn-sgrìn",
+	no = "Chan eil",
+	noPictures = "Chan eil dealbhan ann.",
+	seconds = "diogan",
+	setWallpaper = "A bheil thu airson an dealbh seo a shuidheachadh mar phàipear-balla?",
+	slideShow = "Taisbeanadh-shleamhnagan",
+	start = "Tòisich",
+	yes = "Tha",
+}

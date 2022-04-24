@@ -1,0 +1,12 @@
+{
+	cancel = "Anulować",
+	delay = "Opóźnienie:",
+	fullScreen = "Pełny ekran",
+	no = "Nie",
+	noPictures = "Brak zdjęć.",
+	seconds = "sekundy",
+	setWallpaper = "Czy chcesz ustawić to zdjęcie jako tapetę?",
+	slideShow = "Pokaz slajdów",
+	start = "Początek",
+	yes = "tak",
+}

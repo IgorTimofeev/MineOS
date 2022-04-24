@@ -1,0 +1,12 @@
+{
+	cancel = "Cancelar",
+	delay = "Atraso:",
+	fullScreen = "Pantalla completa",
+	no = "Non",
+	noPictures = "Non hai imaxes.",
+	seconds = "segundos",
+	setWallpaper = "Queres configurar esta imaxe como fondo de pantalla?",
+	slideShow = "Presentación de diapositivas",
+	start = "Comeza",
+	yes = "Si",
+}

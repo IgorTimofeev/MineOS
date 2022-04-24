@@ -1,0 +1,12 @@
+{
+	cancel = "Pagkanselar",
+	delay = "Paglangan:",
+	fullScreen = "Bug-os nga screen",
+	no = "Dili",
+	noPictures = "Walay mga hulagway.",
+	seconds = "segundos",
+	setWallpaper = "Gusto ba nimong ibutang kini nga litrato isip wallpaper?",
+	slideShow = "Slideshow",
+	start = "Pagsugod",
+	yes = "Oo",
+}

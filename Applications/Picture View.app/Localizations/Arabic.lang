@@ -1,0 +1,12 @@
+{
+	cancel = "يلغي",
+	delay = "تأخير:",
+	fullScreen = "كامل الشاشة",
+	no = "لا",
+	noPictures = "لا توجد صور.",
+	seconds = "ثواني",
+	setWallpaper = "هل تريد تعيين هذه الصورة كخلفية؟",
+	slideShow = "عرض الشرائح",
+	start = "يبدأ",
+	yes = "نعم",
+}

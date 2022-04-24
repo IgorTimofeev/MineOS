@@ -1,0 +1,12 @@
+{
+	cancel = "Anulare",
+	delay = "Întârziere:",
+	fullScreen = "Ecran complet",
+	no = "Nu",
+	noPictures = "Nu există poze.",
+	seconds = "secunde",
+	setWallpaper = "Doriți să setați această imagine ca tapet?",
+	slideShow = "Prezentare de diapozitive",
+	start = "start",
+	yes = "da",
+}

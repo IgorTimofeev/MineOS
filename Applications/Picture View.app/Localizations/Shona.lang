@@ -1,0 +1,12 @@
+{
+	cancel = "Kanzura",
+	delay = "Kunonoka:",
+	fullScreen = "Chidzitiro chakazara",
+	no = "Aihwa",
+	noPictures = "Hapana mifananidzo.",
+	seconds = "seconds",
+	setWallpaper = "Iwe unoda kuseta uyu mufananidzo se Wallpaper?",
+	slideShow = "Slideshow",
+	start = "Tanga",
+	yes = "Ehe",
+}

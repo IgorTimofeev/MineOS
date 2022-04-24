@@ -1,0 +1,12 @@
+{
+	cancel = "Ləğv et",
+	delay = "Gecikmə:",
+	fullScreen = "Tam ekran",
+	no = "Yox",
+	noPictures = "Şəkillər yoxdur.",
+	seconds = "saniyə",
+	setWallpaper = "Bu şəkli divar kağızı kimi təyin etmək istəyirsiniz?",
+	slideShow = "Slayd şousu",
+	start = "Başlamaq",
+	yes = "Bəli",
+}

@@ -1,0 +1,12 @@
+{
+	cancel = "Afbestille",
+	delay = "Forsinke:",
+	fullScreen = "Fuld skærm",
+	no = "Ingen",
+	noPictures = "Der er ingen billeder.",
+	seconds = "sekunder",
+	setWallpaper = "Vil du indstille dette billede som tapet?",
+	slideShow = "Slideshow",
+	start = "Start",
+	yes = "Ja",
+}

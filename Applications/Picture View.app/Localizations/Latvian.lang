@@ -1,0 +1,12 @@
+{
+	cancel = "Atcelt",
+	delay = "Kavēšanās:",
+	fullScreen = "Pilnekrāna režīms",
+	no = "Nē",
+	noPictures = "Bildes nav.",
+	seconds = "sekundes",
+	setWallpaper = "Vai vēlaties iestatīt šo attēlu kā fonu?",
+	slideShow = "Slaidrāde",
+	start = "Sākt",
+	yes = "Jā",
+}

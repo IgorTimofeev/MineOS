@@ -1,0 +1,12 @@
+{
+	cancel = "Cancel",
+	delay = "Mora:",
+	fullScreen = "Plena screen",
+	no = "No",
+	noPictures = "Nullae imagines.",
+	seconds = "seconds",
+	setWallpaper = "Visne hanc picturam in wallpaper ponere?",
+	slideShow = "Slideshow",
+	start = "Satus",
+	yes = "Ita",
+}

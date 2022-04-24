@@ -1,0 +1,12 @@
+{
+	cancel = "Cealaigh",
+	delay = "Moill:",
+	fullScreen = "Scáileán iomlán",
+	no = "Níl",
+	noPictures = "Níl aon pictiúir ann.",
+	seconds = "soicind",
+	setWallpaper = "Ar mhaith leat an pictiúr seo a shocrú mar pháipéar balla?",
+	slideShow = "Taispeántas sleamhnán",
+	start = "Tosaigh",
+	yes = "Tá",
+}

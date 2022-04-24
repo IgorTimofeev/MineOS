@@ -1,0 +1,12 @@
+{
+	cancel = "Membatalkan",
+	delay = "Menunda:",
+	fullScreen = "Layar penuh",
+	no = "Tidak",
+	noPictures = "Tidak ada gambar.",
+	seconds = "detik",
+	setWallpaper = "Apakah Anda ingin mengatur gambar ini sebagai wallpaper?",
+	slideShow = "Tampilan slide",
+	start = "Awal",
+	yes = "Ya",
+}

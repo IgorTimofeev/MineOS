@@ -1,0 +1,12 @@
+{
+	cancel = "Kanselahin",
+	delay = "Pagkaantala:",
+	fullScreen = "Buong screen",
+	no = "Hindi",
+	noPictures = "Walang pictures.",
+	seconds = "segundo",
+	setWallpaper = "Gusto mo bang itakda ang larawang ito bilang wallpaper?",
+	slideShow = "Slideshow",
+	start = "Magsimula",
+	yes = "Oo",
+}

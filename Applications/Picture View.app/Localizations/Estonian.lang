@@ -1,0 +1,12 @@
+{
+	cancel = "Tühista",
+	delay = "Viivitus:",
+	fullScreen = "Täisekraan",
+	no = "Ei",
+	noPictures = "Pilte pole.",
+	seconds = "sekundit",
+	setWallpaper = "Kas soovite selle pildi taustapildiks määrata?",
+	slideShow = "Slaidiesitlus",
+	start = "Alusta",
+	yes = "Jah",
+}

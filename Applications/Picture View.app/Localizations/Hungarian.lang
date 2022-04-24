@@ -1,0 +1,12 @@
+{
+	cancel = "Megszünteti",
+	delay = "Késleltetés:",
+	fullScreen = "Teljes képernyő",
+	no = "Nem",
+	noPictures = "Nincsenek képek.",
+	seconds = "másodpercig",
+	setWallpaper = "Háttérképként szeretné beállítani ezt a képet?",
+	slideShow = "Diavetítés",
+	start = "Rajt",
+	yes = "Igen",
+}

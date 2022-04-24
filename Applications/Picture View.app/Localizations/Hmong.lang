@@ -1,0 +1,12 @@
+{
+	cancel = "Tso tseg",
+	delay = "ncua:",
+	fullScreen = "puv npo",
+	no = "Tsis muaj",
+	noPictures = "Tsis muaj duab.",
+	seconds = "vib nas this",
+	setWallpaper = "Koj puas xav muab daim duab no ua wallpaper?",
+	slideShow = "Slideshow",
+	start = "Pib",
+	yes = "Yog lawm",
+}

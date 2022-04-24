@@ -1,0 +1,12 @@
+{
+	cancel = "لغوه کړئ",
+	delay = "ځنډ:",
+	fullScreen = "مکمله صفحه",
+	no = "نه",
+	noPictures = "هیڅ عکس نشته.",
+	seconds = "ثانیې",
+	setWallpaper = "ایا تاسو غواړئ دا انځور د وال پیپر په توګه تنظیم کړئ؟",
+	slideShow = "سلایډ شو",
+	start = "پیل",
+	yes = "هو",
+}
