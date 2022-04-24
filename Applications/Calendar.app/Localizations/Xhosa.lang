@@ -1,0 +1,21 @@
+{
+	weekLine = "NgoLwesibini ngo Fr Sa Su",
+	weekLineAlt = "NgoLwesibini ngo Fr Sa",
+	months = {
+		"EyoMqungu",
+		"EyoMdumba",
+		"EyoKwindla",
+		"UTshazimpuzi",
+		"UCanzibe",
+		"Isilimela",
+		"EyeKhala",
+		"EyeThupha",
+		"EyoMsintsi",
+		"EyeDwarha",
+		"EyeNkanga",
+		"EtiMnga",
+	},
+	startWeek = "Qala iveki ukusuka",
+	monday = "uMvulo",
+	sunday = "iCawe",
+}

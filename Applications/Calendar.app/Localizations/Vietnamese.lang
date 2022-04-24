@@ -1,0 +1,21 @@
+{
+	weekLine = "Mo Tu We Th Fr Sa Su",
+	weekLineAlt = "Su Mo Tu We Th Fr Sa",
+	months = {
+		"tháng Giêng",
+		"tháng 2",
+		"Bước đều",
+		"Tháng tư",
+		"Có thể",
+		"Tháng sáu",
+		"Tháng bảy",
+		"Tháng tám",
+		"Tháng 9",
+		"Tháng Mười",
+		"Tháng mười một",
+		"Tháng 12",
+	},
+	startWeek = "Bắt đầu tuần từ",
+	monday = "Thứ hai",
+	sunday = "Chủ nhật",
+}

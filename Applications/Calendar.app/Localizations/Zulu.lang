@@ -1,0 +1,21 @@
+{
+	weekLine = "NgoLwesine Th Fr Sa Su",
+	weekLineAlt = "NgeSonto NgoLwesithathu uFr Sa",
+	months = {
+		"January",
+		"February",
+		"Mashi",
+		"April",
+		"Meyi",
+		"Juni",
+		"July",
+		"Agasti",
+		"September",
+		"Okthoba",
+		"Novemba",
+		"Disemba",
+	},
+	startWeek = "Qala iviki kusukela",
+	monday = "UMsombuluko",
+	sunday = "NgeSonto",
+}

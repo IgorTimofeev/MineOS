@@ -1,0 +1,21 @@
+{
+	weekLine = "Mo Tu We Th Fr Sa Su",
+	weekLineAlt = "Su Mo Tu We Th Fr Sa",
+	months = {
+		"Oṣu Kini",
+		"Kínní",
+		"Oṣu Kẹta",
+		"Oṣu Kẹrin",
+		"May",
+		"Oṣu Kẹfa",
+		"Oṣu Keje",
+		"Oṣu Kẹjọ",
+		"Oṣu Kẹsan",
+		"Oṣu Kẹwa",
+		"Oṣu kọkanla",
+		"Oṣu kejila",
+	},
+	startWeek = "Bẹrẹ ọsẹ lati",
+	monday = "Monday",
+	sunday = "Sunday",
+}
