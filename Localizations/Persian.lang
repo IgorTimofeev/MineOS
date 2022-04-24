@@ -1,0 +1,124 @@
+{
+	CPUArchitecture = "معماری CPU",
+	RAMControl = "کنترل رم",
+	aboutSystem = "درباره سیستم",
+	addToDock = "به داک اضافه کنید",
+	addToFavourites = "اضافه کردن به علاقه مندی ها",
+	additionalInfo = "اطلاعات تکمیلی",
+	alreadyExists = "درحال حاضر وجود دارد",
+	applicationName = "نام نرم افزار",
+	applyToAll = "برای همه اعمال شود",
+	archive = "به آرشیو اضافه کنید",
+	areYouSure = "مطمئنی؟",
+	calculatingSize = "در حال محاسبه…",
+	cancel = "لغو کنید",
+	closeAllWindows = "همه پنجره ها را ببندید",
+	closeWindow = "نزدیک",
+	copy = "کپی 🀄",
+	copying = "کپی برداری",
+	create = "جدید",
+	createShortcut = "ایجاد میانبر",
+	cut = "قطع کردن",
+	date = "تاریخ",
+	delete = "حذف",
+	dontShowAnymore = "دیگر نشان نده",
+	downloading = "دانلود در حال انجام است",
+	edit = "ویرایش کنید",
+	editInPhotoshop = "ویرایش در فتوشاپ",
+	editShortcut = "ویرایش میانبر",
+	emptyTrash = "زباله ها را خالی کنید",
+	errorWhileRunningProgram = "خطا هنگام اجرا",
+	favourite = "مورد علاقه",
+	faylaBlyad = "فایل",
+	file = "فایل",
+	fileName = "نام فایل",
+	flashEEPROM = "فلش به EEPROM",
+	flashingEEPROM = "چشمک زدن در حال انجام است. ",
+	folder = "پوشه",
+	folderName = "نام پوشه",
+	inCurrentDirectory = "در پوشه فعلی",
+	inDirectory = "در پوشه",
+	keepInDock = "در حوض نگه دارید",
+	launch = "راه اندازی",
+	launchWithArguments = "با استدلال راه اندازی کنید",
+	logout = "خروج",
+	mounts = "سوار می شود",
+	moveLeft = "حرکت به سمت چپ",
+	moveRight = "برو راست",
+
+	name = "نام",
+	needReplace = "جایگزینش کن؟",
+	network = "شبکه",
+	networkAccessDenied = "دسترسی به سیستم فایل کامپیوتر راه دور ممنوع است. ",
+	networkAllowReadAndWrite = "دسترسی به سیستم فایل",
+	networkComputers = "گزینه های رایانه های شخصی شبکه",
+	networkFTPAddress = "آدرس سرور",
+	networkFTPConnections = "اتصالات FTP",
+	networkFTPNewConnection = "اتصال FTP",
+	networkFTPPassword = "کلمه عبور",
+
+	networkFTPPort = "پورت سرور",
+	networkFTPUser = "کاربر",
+	networkModemNotAvailable = "مودم را برای استفاده از توابع شبکه وصل کنید",
+	networkName = "نام این کامپیوتر",
+	networkSearchRadius = "شعاع جستجو",
+	networkState = "حالت شبکه را فعال کنید",
+	networkTimeout = "رایانه راه دور پاسخ نمی دهد",
+	newApplication = "اپلیکیشن MineOS",
+	newFile = "فایل",
+	newFileFromURL = "فایل از URL",
+	newFolder = "پوشه",
+	newFolderFromChosen = "پوشه جدید از انتخاب شده",
+	newImage = "تصویر",
+	newName = "نام جدید",
+	newWindow = "پنجره جدید",
+	no = "خیر",
+	notExists = "وجود ندارد",
+	onDesktop = "روی دسکتاپ",
+	open = "باز کن",
+	openWith = "بازکردن با",
+	packageUnloading = "تخلیه خودکار",
+	paste = "چسباندن",
+	pasteName = "چسباندن نام",
+	path = "مسیر",
+	print3D = "مدل چاپ",
+	properties = "خواص",
+	reboot = "راه اندازی مجدد",
+	removeFromDock = "حذف از داک",
+	removeFromFavourites = "حذف از موارد دلخواه",
+	rename = "تغییر نام دهید",
+
+	search = "جستجو کردن",
+	select = "انتخاب برنامه…",
+	sendFeedback = "ارسال بازخورد",
+	sendedFeedback = "بازخورد ارسال شد",
+
+	setAsWallpaper = "به عنوان تصویر زمینه تنظیم کنید",
+	shortcutIsCorrupted = "میانبر به فایلی که وجود ندارد پیوند داده شده است",
+	showContainingFolder = "نمایش پوشه حاوی",
+	showPackageContent = "نمایش محتوای بسته",
+	shutdown = "خاموش شدن",
+	size = "اندازه",
+
+	sortAutomatically = "تراز کردن به شبکه",
+	sortBy = "مرتب سازی",
+	sortByDate = "بر اساس تاریخ",
+	sortByName = "بر اساس اسم",
+
+	sortByType = "بر حسب نوع",
+	stackTraceback = "پشته ردیابی",
+	toDirectory = "به پوشه",
+	type = "تایپ کنید",
+	unknown = "ناشناس",
+	update = "تازه کردن",
+
+	updates = "به روز رسانی ها",
+	updatingFileList = "در حال به روز رسانی لیست فایل...",
+	uploadToPastebin = "در Pastebin آپلود کنید",
+
+	uploading = "بارگذاری در حال انجام است...",
+	uploadingFailure = "بارگذاری انجام نشد:",
+	uploadingSuccess = "آپلود شده به",
+	yes = "آره",
+	yourContacts = "مخاطبین شما",
+}
