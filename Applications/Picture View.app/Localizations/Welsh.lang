@@ -1,0 +1,12 @@
+{
+	cancel = "Canslo",
+	delay = "Oedi:",
+	fullScreen = "Sgrin llawn",
+	no = "Nac ydw",
+	noPictures = "Does dim lluniau.",
+	seconds = "eiliadau",
+	setWallpaper = "Ydych chi am osod y llun hwn fel papur wal?",
+	slideShow = "Sioe sleidiau",
+	start = "Dechrau",
+	yes = "Oes",
+}

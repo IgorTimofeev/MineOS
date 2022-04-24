@@ -1,0 +1,12 @@
+{
+	cancel = "Rhoxisa",
+	delay = "Ukulibazisa:",
+	fullScreen = "Isikrini esiphelele",
+	no = "Hayi",
+	noPictures = "Akukho mifanekiso.",
+	seconds = "imizuzwana",
+	setWallpaper = "Ngaba uyafuna ukuseta lo mfanekiso njengephepha lodonga?",
+	slideShow = "Umboniso wesilayidi",
+	start = "Qala",
+	yes = "Ewe",
+}

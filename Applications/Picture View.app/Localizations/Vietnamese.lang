@@ -1,0 +1,12 @@
+{
+	cancel = "Hủy bỏ",
+	delay = "Trì hoãn:",
+	fullScreen = "Toàn màn hình",
+	no = "Không",
+	noPictures = "Không có hình ảnh.",
+	seconds = "giây",
+	setWallpaper = "Bạn có muốn đặt ảnh này làm hình nền không?",
+	slideShow = "trình chiếu",
+	start = "Khởi đầu",
+	yes = "Đúng",
+}

@@ -1,0 +1,12 @@
+{
+	cancel = "Bekor qilish",
+	delay = "Kechikish:",
+	fullScreen = "To'liq ekran",
+	no = "Yo'q",
+	noPictures = "Rasmlar yo'q.",
+	seconds = "soniya",
+	setWallpaper = "Ushbu rasmni fon rasmi sifatida o'rnatmoqchimisiz?",
+	slideShow = "Slayd-shou",
+	start = "Boshlash",
+	yes = "Ha",
+}

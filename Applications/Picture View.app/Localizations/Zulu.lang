@@ -1,0 +1,12 @@
+{
+	cancel = "Khansela",
+	delay = "Ukubambezeleka:",
+	fullScreen = "Iskrini esigcwele",
+	no = "Cha",
+	noPictures = "Azikho izithombe.",
+	seconds = "imizuzwana",
+	setWallpaper = "Uyafuna ukusetha lesi sithombe njengephephadonga?",
+	slideShow = "Umbukiso wesilayidi",
+	start = "Qala",
+	yes = "Yebo",
+}
