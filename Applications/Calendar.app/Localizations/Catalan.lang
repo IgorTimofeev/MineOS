@@ -1,0 +1,21 @@
+{
+	weekLine = "Dl Ma Dt Dv Dv",
+	weekLineAlt = "Dl Llu Dt Dl Dv Dv Dj",
+	months = {
+		"gener",
+		"febrer",
+		"març",
+		"Abril",
+		"maig",
+		"juny",
+		"juliol",
+		"Agost",
+		"setembre",
+		"Octubre",
+		"de novembre",
+		"desembre",
+	},
+	startWeek = "Comença la setmana a partir de",
+	monday = "dilluns",
+	sunday = "diumenge",
+}

@@ -1,0 +1,21 @@
+{
+	weekLine = "P T V T P S",
+	weekLineAlt = "Š P T V T P. Š",
+	months = {
+		"sausio mėn",
+		"vasario mėn",
+		"Kovas",
+		"Balandis",
+		"Gegužė",
+		"birželis",
+		"liepos mėn",
+		"Rugpjūtis",
+		"rugsėjis",
+		"Spalio mėn",
+		"lapkritis",
+		"gruodį",
+	},
+	startWeek = "Pradėkite savaitę nuo",
+	monday = "Pirmadienis",
+	sunday = "sekmadienis",
+}

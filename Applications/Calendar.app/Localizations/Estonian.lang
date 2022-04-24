@@ -1,0 +1,21 @@
+{
+	weekLine = "E T K L L L",
+	weekLineAlt = "S E T K L L",
+	months = {
+		"jaanuaril",
+		"veebruaril",
+		"märtsil",
+		"aprill",
+		"mai",
+		"juunini",
+		"juulil",
+		"august",
+		"septembril",
+		"oktoober",
+		"novembril",
+		"detsember",
+	},
+	startWeek = "Nädala algus alates",
+	monday = "esmaspäev",
+	sunday = "pühapäev",
+}

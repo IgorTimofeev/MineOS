@@ -1,0 +1,21 @@
+{
+	weekLine = "Mo Tu We Th P P S",
+	weekLineAlt = "Su Mo Tu We Th Fr Sa",
+	months = {
+		"janvārī",
+		"februāris",
+		"marts",
+		"aprīlis",
+		"maijā",
+		"jūnijs",
+		"jūlijā",
+		"augusts",
+		"septembris",
+		"oktobris",
+		"novembris",
+		"decembris",
+	},
+	startWeek = "Sāciet nedēļu no plkst",
+	monday = "pirmdiena",
+	sunday = "svētdiena",
+}

@@ -1,0 +1,21 @@
+{
+	weekLine = "Ma Di Ons Do Vr Sa So",
+	weekLineAlt = "So Ma Di Wo Do Vr Sa",
+	months = {
+		"Januarie",
+		"Februarie",
+		"Maart",
+		"April",
+		"Mei",
+		"Junie",
+		"Julie",
+		"Augustus",
+		"September",
+		"Oktober",
+		"November",
+		"Desember",
+	},
+	startWeek = "Begin week vanaf",
+	monday = "Maandag",
+	sunday = "Sondag",
+}

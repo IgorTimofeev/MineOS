@@ -1,0 +1,21 @@
+{
+	weekLine = "H K Cs Cs P S",
+	weekLineAlt = "Su Mo K We Cs Fr Sa",
+	months = {
+		"január",
+		"február",
+		"március",
+		"április",
+		"Lehet",
+		"június",
+		"július",
+		"augusztus",
+		"szeptember",
+		"október",
+		"november",
+		"december",
+	},
+	startWeek = "Kezdje a hetet órától",
+	monday = "hétfő",
+	sunday = "vasárnap",
+}

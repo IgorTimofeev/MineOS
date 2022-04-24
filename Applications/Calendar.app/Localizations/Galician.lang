@@ -1,0 +1,21 @@
+{
+	weekLine = "Lu Ma Me X V Sa Do",
+	weekLineAlt = "Su Mo Ma Me X V Sá",
+	months = {
+		"xaneiro",
+		"febreiro",
+		"marzo",
+		"abril",
+		"maio",
+		"xuño",
+		"xullo",
+		"agosto",
+		"setembro",
+		"Outubro",
+		"novembro",
+		"decembro",
+	},
+	startWeek = "Comeza a semana dende",
+	monday = "luns",
+	sunday = "domingo",
+}

@@ -1,0 +1,21 @@
+{
+	weekLine = "Mo Tu We Th Fr Sa Su",
+	weekLineAlt = "Soa Mo Tu We Th Fr Sa",
+	months = {
+		"Janoary",
+		"février",
+		"ny diabe",
+		"Aprily",
+		"MEY",
+		"Jona",
+		"Jolay",
+		"Aogositra",
+		"septembre",
+		"Oktobra",
+		"Novambra",
+		"Desambra",
+	},
+	startWeek = "Manomboka herinandro manomboka",
+	monday = "alatsinainy",
+	sunday = "ALAHADY",
+}

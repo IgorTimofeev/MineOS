@@ -1,0 +1,21 @@
+{
+	weekLine = "Mo Di Wo Do Vr Sa So",
+	weekLineAlt = "So Mo Di Wo Do Vr Sa",
+	months = {
+		"jannewaris",
+		"febrewaris",
+		"maart",
+		"april",
+		"Meie",
+		"juny",
+		"july",
+		"augustus",
+		"spetimber",
+		"oktober",
+		"novimber",
+		"desimber",
+	},
+	startWeek = "Begjin wike fan",
+	monday = "moandei",
+	sunday = "snein",
+}

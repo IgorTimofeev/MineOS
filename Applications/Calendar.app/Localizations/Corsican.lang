@@ -1,0 +1,21 @@
+{
+	weekLine = "Lu Ma Me Je Fr Sa Su",
+	weekLineAlt = "Su Mo Tu We Th Fr Sa",
+	months = {
+		"Ghjinnaghju",
+		"Febbraiu",
+		"Marzu",
+		"Aprile",
+		"Maghju",
+		"Ghjugnu",
+		"Lugliu",
+		"Aostu",
+		"Sittembre",
+		"Ottobre",
+		"Nuvembre",
+		"Dicembre",
+	},
+	startWeek = "Cumincià a settimana da",
+	monday = "Luni",
+	sunday = "Dumenica",
+}

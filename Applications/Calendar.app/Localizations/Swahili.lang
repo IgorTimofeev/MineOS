@@ -1,0 +1,21 @@
+{
+	weekLine = "Mo Tu We Th Fr Sa Su",
+	weekLineAlt = "Su Mo Tu We Th Fr Sa",
+	months = {
+		"Januari",
+		"Februari",
+		"Machi",
+		"Aprili",
+		"Mei",
+		"Juni",
+		"Julai",
+		"Agosti",
+		"Septemba",
+		"Oktoba",
+		"Novemba",
+		"Desemba",
+	},
+	startWeek = "Anza wiki kutoka",
+	monday = "Jumatatu",
+	sunday = "Jumapili",
+}

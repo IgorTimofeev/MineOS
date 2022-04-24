@@ -1,0 +1,21 @@
+{
+	weekLine = "Lu Ma Mi Jo V Sa Su",
+	weekLineAlt = "Su Lu Tu Mi Jo Pr Sa",
+	months = {
+		"ianuarie",
+		"februarie",
+		"Martie",
+		"Aprilie",
+		"Mai",
+		"iunie",
+		"iulie",
+		"August",
+		"Septembrie",
+		"octombrie",
+		"noiembrie",
+		"decembrie",
+	},
+	startWeek = "Începe săptămâna de la",
+	monday = "luni",
+	sunday = "duminică",
+}

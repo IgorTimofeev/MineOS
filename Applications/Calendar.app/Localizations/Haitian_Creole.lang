@@ -1,0 +1,21 @@
+{
+	weekLine = "Mo Tu We Th Fr Sa Su",
+	weekLineAlt = "Su Mo Tu We Th Fr Sa",
+	months = {
+		"Janvye",
+		"fevriye",
+		"Mas",
+		"Avril",
+		"Me",
+		"jen",
+		"Jiyè",
+		"Out",
+		"Septanm",
+		"Oktòb",
+		"Novanm",
+		"Desanm",
+	},
+	startWeek = "Kòmanse semèn nan",
+	monday = "Lendi",
+	sunday = "Dimanch",
+}

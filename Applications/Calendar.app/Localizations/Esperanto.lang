@@ -1,0 +1,21 @@
+{
+	weekLine = "Lu Tu Mi Je Je Fr Sa Su",
+	weekLineAlt = "Su Mo Tu We Th Fr Sa",
+	months = {
+		"januaro",
+		"februaro",
+		"Marto",
+		"Aprilo",
+		"majo",
+		"junio",
+		"julio",
+		"Aŭgusto",
+		"septembro",
+		"oktobro",
+		"novembro",
+		"decembro",
+	},
+	startWeek = "Komencu semajnon de",
+	monday = "lundo",
+	sunday = "dimanĉo",
+}

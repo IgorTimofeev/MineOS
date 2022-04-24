@@ -1,0 +1,21 @@
+{
+	weekLine = "Mo Tu We Th Fr Sa Su",
+	weekLineAlt = "Su Mo Tu We Th Fr Sa",
+	months = {
+		"Janaayo",
+		"Febraayo",
+		"Maarso",
+		"Abriil",
+		"Laga yaabaa",
+		"Juun",
+		"Julaay",
+		"Ogosto",
+		"Sebtembar",
+		"Oktoobar",
+		"Nofeembar",
+		"December",
+	},
+	startWeek = "Ka bilow usbuuca laga bilaabo",
+	monday = "Isniin",
+	sunday = "Axad",
+}

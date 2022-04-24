@@ -1,0 +1,21 @@
+{
+	weekLine = "Mo Tu We Th Fr Sa Su",
+	weekLineAlt = "Su Mo Tu We Th Fr Sa",
+	months = {
+		"Lub Ib Hlis",
+		"Lub Ob Hlis",
+		"Lub Peb Hlis",
+		"Plaub Hlis",
+		"Tsib",
+		"Lub Rau Hli",
+		"Lub Xya Hli",
+		"Lub yim hli ntuj",
+		"Cuaj hlis",
+		"Kaum Hli",
+		"Kaum ib hlis",
+		"Kaum Ob Hlis",
+	},
+	startWeek = "Pib lub lim tiam los ntawm",
+	monday = "Hnub Monday",
+	sunday = "Hnub Sunday",
+}

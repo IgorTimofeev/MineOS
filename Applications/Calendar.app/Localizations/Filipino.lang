@@ -1,0 +1,21 @@
+{
+	weekLine = "Mo Tu We Th Fr Sa Su",
+	weekLineAlt = "Su Mo Tu We Th Fr Sa",
+	months = {
+		"Enero",
+		"Pebrero",
+		"Marso",
+		"Abril",
+		"May",
+		"Hunyo",
+		"Hulyo",
+		"Agosto",
+		"Setyembre",
+		"Oktubre",
+		"Nobyembre",
+		"Disyembre",
+	},
+	startWeek = "Simula ng linggo mula sa",
+	monday = "Lunes",
+	sunday = "Linggo",
+}

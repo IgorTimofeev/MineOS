@@ -1,0 +1,21 @@
+{
+	weekLine = "må ti vi to fr la sö",
+	weekLineAlt = "sö må ti ons to fr lör lör",
+	months = {
+		"januari",
+		"februari",
+		"Mars",
+		"april",
+		"Maj",
+		"juni",
+		"juli",
+		"augusti",
+		"september",
+		"oktober",
+		"november",
+		"december",
+	},
+	startWeek = "Start vecka från kl",
+	monday = "måndag",
+	sunday = "söndag",
+}

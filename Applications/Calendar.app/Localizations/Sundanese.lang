@@ -1,0 +1,21 @@
+{
+	weekLine = "Mo Tu Urang Th Fr Sa Su",
+	weekLineAlt = "Su Mo Tu Urang Th Fr Sa",
+	months = {
+		"Januari",
+		"Pébruari",
+		"Maret",
+		"April",
+		"Méi",
+		"Juni",
+		"Juli",
+		"Agustusan",
+		"Séptémber",
+		"Oktober",
+		"Nopémber",
+		"Désémber",
+	},
+	startWeek = "Mimitian minggu ti",
+	monday = "Senén",
+	sunday = "Minggu",
+}

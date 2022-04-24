@@ -1,0 +1,21 @@
+{
+	weekLine = "Mo Tu We Th Fr Sa Su",
+	weekLineAlt = "Su Mo Tu We Th Fr Sa",
+	months = {
+		"Ianuali",
+		"Pepeluali",
+		"Malaki",
+		"ʻApelila",
+		"Mei",
+		"Iune",
+		"Iulai",
+		"ʻAukake",
+		"Kepakemapa",
+		"ʻOkakopa",
+		"Nowemapa",
+		"Kekemapa",
+	},
+	startWeek = "Hoʻomaka pule mai",
+	monday = "PōʻakahiEnglish",
+	sunday = "Lāpule",
+}

@@ -1,0 +1,21 @@
+{
+	weekLine = "Mo Tu nos Th Fr",
+	weekLineAlt = "Su Mo Tu We Th Fr",
+	months = {
+		"Ianuarii",
+		"Februarius",
+		"Martii",
+		"Aprilis",
+		"May",
+		"mensis Iunii",
+		"Iulii",
+		"Aug",
+		"Septembris",
+		"Octobris",
+		"Novembris",
+		"Decembris",
+	},
+	startWeek = "Satus octo e",
+	monday = "dies Lunae",
+	sunday = "Solis",
+}

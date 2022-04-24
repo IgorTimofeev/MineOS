@@ -1,0 +1,21 @@
+{
+	weekLine = "Po Ut Sr Če Pe Su Ne",
+	weekLineAlt = "Su Mo Ut Sr Če Pe Su",
+	months = {
+		"siječnja",
+		"veljača",
+		"ožujak",
+		"travanj",
+		"svibanj",
+		"lipanj",
+		"srpanj",
+		"kolovoz",
+		"rujan",
+		"listopad",
+		"studeni",
+		"prosinac",
+	},
+	startWeek = "Početak tjedna od",
+	monday = "ponedjeljak",
+	sunday = "nedjelja",
+}

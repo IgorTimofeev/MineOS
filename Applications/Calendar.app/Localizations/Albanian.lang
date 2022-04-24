@@ -1,0 +1,21 @@
+{
+	weekLine = "Mo Tu We Th Fr Sa Su",
+	weekLineAlt = "Su Mo Tu We Th Fr Sa",
+	months = {
+		"janar",
+		"shkurt",
+		"marsh",
+		"prill",
+		"Mund",
+		"qershor",
+		"korrik",
+		"gusht",
+		"shtator",
+		"tetor",
+		"Nëntor",
+		"dhjetor",
+	},
+	startWeek = "Filloni javën nga",
+	monday = "e hënë",
+	sunday = "të dielën",
+}

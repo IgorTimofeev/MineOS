@@ -1,0 +1,21 @@
+{
+	weekLine = "Mo Tu We Th Fr Sa Su",
+	weekLineAlt = "Su Mo Tu We Th Fr Sa",
+	months = {
+		"Am Faoilleach",
+		"An Gearran",
+		"Am Màrt",
+		"A’ Ghiblean",
+		"A’ Chèitean",
+		"An t-Ògmhios",
+		"An t-Iuchar",
+		"An Lùnastal",
+		"An t-Sultain",
+		"An Dàmhair",
+		"An t-Samhain",
+		"An Dùbhlachd",
+	},
+	startWeek = "Tòisich seachdain bho",
+	monday = "Diluain",
+	sunday = "Didòmhnaich",
+}

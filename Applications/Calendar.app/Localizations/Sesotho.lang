@@ -1,0 +1,21 @@
+{
+	weekLine = "Ke Rom Ro Ro Khoe Ho Fr Sa Su",
+	weekLineAlt = "Ke Rom Ro Ro Khoe H Fr Sa",
+	months = {
+		"Pherekhong",
+		"Hlakola",
+		"Tlhakubele",
+		"Mmesa",
+		"Mots'eanong",
+		"Phuptjane",
+		"Phupu",
+		"Phato",
+		"Loetse",
+		"Mphalane",
+		"Pulungoana",
+		"Tshitwe",
+	},
+	startWeek = "Qala beke ho tloha",
+	monday = "Mantaha",
+	sunday = "Sontaha",
+}

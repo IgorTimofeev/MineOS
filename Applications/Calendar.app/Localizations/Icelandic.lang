@@ -1,0 +1,21 @@
+{
+	weekLine = "mán þri mi fi fi la su",
+	weekLineAlt = "su mán þri mi fi fi lau",
+	months = {
+		"janúar",
+		"febrúar",
+		"mars",
+		"apríl",
+		"maí",
+		"júní",
+		"júlí",
+		"ágúst",
+		"september",
+		"október",
+		"nóvember",
+		"desember",
+	},
+	startWeek = "Byrja viku frá kl",
+	monday = "Mánudagur",
+	sunday = "sunnudag",
+}

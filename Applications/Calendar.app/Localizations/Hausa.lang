@@ -1,0 +1,21 @@
+{
+	weekLine = "Mo Tu We Th Fr Sa Su",
+	weekLineAlt = "Su Mo Tu We Th Fr Sa",
+	months = {
+		"Janairu",
+		"Fabrairu",
+		"Maris",
+		"Afrilu",
+		"Mayu",
+		"Yuni",
+		"Yuli",
+		"Agusta",
+		"Satumba",
+		"Oktoba",
+		"Nuwamba",
+		"Disamba",
+	},
+	startWeek = "Fara mako daga",
+	monday = "Litinin",
+	sunday = "Lahadi",
+}

@@ -1,0 +1,21 @@
+{
+	weekLine = "Mo Tu Biz Cum Sa Su",
+	weekLineAlt = "Su Mo Tu Biz Cum Sa",
+	months = {
+		"Ocak",
+		"Şubat",
+		"Mart",
+		"Nisan",
+		"Mayıs",
+		"Haziran",
+		"Temmuz",
+		"Ağustos",
+		"Eylül",
+		"Ekim",
+		"Kasım",
+		"Aralık",
+	},
+	startWeek = "Haftaya başla",
+	monday = "Pazartesi",
+	sunday = "Pazar",
+}
