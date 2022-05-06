@@ -3,6 +3,7 @@ local event, handlers, interruptingKeysDown, lastInterrupt = {
   interruptingEnabled = true,
   interruptingDelay = 1,
   interruptingFunction = error,
+  defaultInterruptingFunction = error,
   interruptingKeyCodes = {
     [29] = true,
     [46] = true,
@@ -105,7 +106,7 @@ function event.pull(preferredTimeout)
       
       if shouldInterrupt and uptime - lastInterrupt > event.interruptingDelay then
         lastInterrupt = uptime
-        interruptingFunction("interrupted", 0)
+        event.interruptingFunction("interrupted", 0)
       end
     end
     
