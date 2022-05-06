@@ -452,14 +452,21 @@ local function updateIconField()
 	iconField.eventHandler = function(workspace, self, e1, e2, e3, e4, e5)
 		if e1 == "scroll" then
 			if config.gridMode then
-				local rows = math.ceil((#iconField.children - 1) / iconField.iconCount.horizontal)
+				local iconsCount = #iconField.children
+
+				if iconsCount < 2 then
+					return
+				end
+
+				local rows = math.ceil((iconsCount - 1) / iconField.iconCount.horizontal)
 				local minimumOffset = (rows - 1) * (userSettings.iconHeight + userSettings.iconVerticalSpace) - userSettings.iconVerticalSpace
 				
 				iconField.yOffset = math.max(-minimumOffset + 1, math.min(iconField.yOffsetInitial, iconField.yOffset + e5 * 2))
 
 				-- Moving icons upper or lower
 				local delta, child = iconField.yOffset - iconField.children[2].localY
-				for i = 1, #iconField.children do
+
+				for i = 1, iconsCount do
 					child = iconField.children[i]
 
 					if child ~= iconField.backgroundObject then

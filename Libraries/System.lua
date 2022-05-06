@@ -1029,13 +1029,15 @@ end
 
 local function gridIconFieldCheckSelection(iconField)
 	local selection = iconField.selection
+	
 	if selection and selection.x2 then
-		local child
+		local child, xCenter, yCenter
 
-		for i = 1, #iconField.children do
+		for i = 2, #iconField.children do
 			child = iconField.children[i]
 
-			local xCenter, yCenter = child.x + userSettings.iconWidth / 2, child.y + userSettings.iconHeight / 2
+			xCenter, yCenter = child.x + userSettings.iconWidth / 2, child.y + userSettings.iconHeight / 2
+			
 			child.selected = 
 				xCenter >= selection.x1 and
 				xCenter <= selection.x2 and
