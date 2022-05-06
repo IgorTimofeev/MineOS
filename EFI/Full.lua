@@ -187,8 +187,10 @@ local boot, menuBack, menu, input =
 status(stringsMain, "Hold Alt to show boot options")
 
 local deadline, eventData = uptime() + 1
+
 while uptime() < deadline do
 	eventData = {pullSignal(deadline - uptime())}
+
 	if eventData[1] == stringKeyDown and eventData[4] == 56 then
 		local utilities = {
 			menuElement("Disk management", function()
@@ -229,11 +231,7 @@ while uptime() < deadline do
 
 							tableInsert(filesystemOptions, menuElement("Format", function()
 								status(stringsMain, "Formatting filesystem " .. address)
-								
-								for _, file in ipairs(proxy.list("/")) do
-									proxy.remove(file)
-								end
-
+								proxy.remove("")
 								updateFilesystems()
 							end, 1))
 						end
