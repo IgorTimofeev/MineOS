@@ -242,7 +242,7 @@ local function checkImage(url, mneTolkoSprosit)
 						local encodingMethod = string.byte(data:sub(5, 5))
 
 						if encodingMethod >= 6 or encodingMethod <= 8 then
-							if string.byte(data:sub(6, 6)) == 8 and string.byte(data:sub(7, 7)) == 4 then
+							if string.byte(data:sub(6, 6)) <= 8 and string.byte(data:sub(7, 7)) <= 4 then
 								if mneTolkoSprosit then
 									handle:close()
 
@@ -583,6 +583,8 @@ local function getPublicationIcon(publication)
 
 				return loadImage(path)
 			else
+				GUI.alert(reason)
+
 				return fileNotExistsIcon
 			end
 		end
