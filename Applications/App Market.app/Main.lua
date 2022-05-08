@@ -583,8 +583,6 @@ local function getPublicationIcon(publication)
 
 				return loadImage(path)
 			else
-				GUI.alert(reason)
-
 				return fileNotExistsIcon
 			end
 		end
