@@ -2898,6 +2898,22 @@ function system.addBlurredOrDefaultPanel(container, x, y, width, height)
 	return container:addChild(userSettings.interfaceBlurEnabled and GUI.blurredPanel(x, y, width, height, userSettings.interfaceBlurRadius, 0x0, userSettings.interfaceBlurTransparency) or GUI.panel(x, y, width, height, 0x2D2D2D))
 end
 
+function system.addConsoleWindow()
+	local result, data = loadfile(paths.system.applicationConsole)
+			
+	if result then
+		result, data = xpcall(result, debug.traceback)
+		
+		if not result then
+			GUI.alert(data)
+		end
+
+		return data
+	else
+		GUI.alert(data)
+	end
+end
+
 --------------------------------------------------------------------------------
 
 -- Keeping temporary file's last modified timestamp as boot timestamp
@@ -2912,19 +2928,16 @@ end
 -- Global print() function for debugging
 _G.print = function(...)
 	if not system.consoleWindow then
-		local result, data = loadfile(paths.system.applicationConsole)
-			
-		if result then
-			result, data = xpcall(result, debug.traceback)
-			
-			if not result then
-				GUI.alert(data)
-				return
-			end
-		else
-			GUI.alert(data)
-			return
+		system.consoleWindow = system.addConsoleWindow()
+
+		local overrideWindowRemove = system.consoleWindow.remove
+		system.consoleWindow.remove = function(...)
+			system.consoleWindow = nil
+
+			overrideWindowRemove(...)
 		end
+
+		workspace:draw()
 	end
 
 	local args, arg = {...}
@@ -2943,7 +2956,7 @@ _G.print = function(...)
 
 	args = table.concat(args, " ")
 	
-	system.consoleWindow.addLine(args)
+	system.consoleWindow:addLine(args)
 	system.consoleWindow:focus()
 end
 
