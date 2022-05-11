@@ -14,7 +14,6 @@ local event = require("Event")
 --------------------------------------------------------------------------------
 
 local host = "http://mineos.modder.pw/MineOSAPI/2.04/"
-local iconCheckReponseTime = 2
 
 local overviewIconsCount = 14
 local overviewAnimationDelay = 0.05
@@ -206,7 +205,7 @@ end
 local function checkContentLength(url)
 	local handle = component.get("internet").request(url)
 	if handle then
-		local deadline, _, _, responseData = computer.uptime() + iconCheckReponseTime
+		local deadline, _, _, responseData = computer.uptime() + 1
 		repeat
 			_, _, responseData = handle:response()
 		until responseData or computer.uptime() >= deadline

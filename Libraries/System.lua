@@ -2046,7 +2046,7 @@ function system.execute(path, ...)
 		GUI.alert("File \"" .. tostring(path) .. "\" doesn't exists")
 	end
 
-	component.proxy(screen.getGPUProxy().getScreen()).setPrecise(false)
+	component.invoke(screen.getScreenAddress(), "setPrecise", false)
 	screen.setResolution(oldScreenWidth, oldScreenHeight)
 
 	if not success then
@@ -2134,7 +2134,7 @@ function system.updateResolution()
 	if userSettings.interfaceScreenWidth then
 		screen.setResolution(userSettings.interfaceScreenWidth, userSettings.interfaceScreenHeight)
 	else
-		screen.setResolution(screen.getGPUProxy().maxResolution())
+		screen.setResolution(screen.getMaxResolution())
 	end
 
 	workspace.width, workspace.height = screen.getResolution()

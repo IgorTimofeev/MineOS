@@ -94,8 +94,8 @@ function require(module)
 	end
 end
 
-local GPUProxy = component.proxy(component.list("gpu")())
-local screenWidth, screenHeight = GPUProxy.getResolution()
+local GPUAddress = component.list("gpu")()
+local screenWidth, screenHeight = component.invoke(GPUAddress, "getResolution")
 
 -- Displays title and currently required library when booting OS
 local UIRequireTotal, UIRequireCounter = 14, 1
@@ -110,21 +110,22 @@ local function UIRequire(module)
 	UIRequireCounter = UIRequireCounter + 1
 	
 	-- Title
-	GPUProxy.setForeground(0x2D2D2D)
-	GPUProxy.set(centrize(#title), y, title)
+	component.invoke(GPUAddress, "setForeground", 0x2D2D2D)
+	component.invoke(GPUAddress, "set", centrize(#title), y, title)
 
 	-- Progressbar
-	GPUProxy.setForeground(0x878787)
-	GPUProxy.set(x, y + 2, string.rep("─", part))
-	GPUProxy.setForeground(0xC3C3C3)
-	GPUProxy.set(x + part, y + 2, string.rep("─", width - part))
+	component.invoke(GPUAddress, "setForeground", 0x878787)
+	component.invoke(GPUAddress, "set", x, y + 2, string.rep("─", part))
+
+	component.invoke(GPUAddress, "setForeground", 0xC3C3C3)
+	component.invoke(GPUAddress, "set", x + part, y + 2, string.rep("─", width - part))
 
 	return require(module)
 end
 
 -- Preparing screen for loading libraries
-GPUProxy.setBackground(0xE1E1E1)
-GPUProxy.fill(1, 1, screenWidth, screenHeight, " ")
+component.invoke(GPUAddress, "setBackground", 0xE1E1E1)
+component.invoke(GPUAddress, "fill", 1, 1, screenWidth, screenHeight, " ")
 
 -- Loading libraries
 bit32 = bit32 or UIRequire("Bit32")
@@ -148,7 +149,7 @@ local image = UIRequire("Image")
 local screen = UIRequire("Screen")
 
 -- Setting currently chosen GPU component as screen buffer main one
-screen.setGPUProxy(GPUProxy)
+screen.setGPUAddress(GPUAddress)
 
 local GUI = UIRequire("GUI")
 local system = UIRequire("System")
@@ -187,20 +188,21 @@ event.addHandler(
 event.addHandler(
 	function(signalType, componentAddress, componentType)
 		if (signalType == "component_added" or signalType == "component_removed") and componentType == "screen" then
-			local GPUProxy = screen.getGPUProxy()
+			local GPUAddress = screen.getGPUAddress()
 
 			local function bindScreen(address)
-				screen.bind(address, false)
-				GPUProxy.setDepth(GPUProxy.maxDepth())
+				screen.setScreenAddress(address, false)
+				screen.setDepth(screen.getMaxDepth())
+
 				workspace:draw()
 			end
 
 			if signalType == "component_added" then
-				if not GPUProxy.getScreen() then
+				if not component.invoke(GPUAddress, "getScreen") then
 					bindScreen(componentAddress)
 				end
 			else
-				if not GPUProxy.getScreen() then
+				if not component.invoke(GPUAddress, "getScreen") then
 					local address = component.list("screen")()
 					
 					if address then

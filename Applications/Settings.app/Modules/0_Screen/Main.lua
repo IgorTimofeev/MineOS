@@ -23,7 +23,7 @@ module.onTouch = function()
 			screen.clear(0x0)
 			screen.update()
 
-			screen.bind(address, false)
+			screen.setScreenAddress(address, false)
 			
 			system.updateResolution()
 			system.updateWallpaper()
@@ -63,7 +63,7 @@ module.onTouch = function()
 	layout:addChild(GUI.text(1, 1, 0x2D2D2D, "x"))
 	local heightInput = layout:addChild(GUI.input(1, 1, 17, 3, 0xE1E1E1, 0x696969, 0xA5A5A5, 0xE1E1E1, 0x2D2D2D, "", localization.screenHeight))
 
-	local maxWidth, maxHeight = screen.getGPUProxy().maxResolution()
+	local maxWidth, maxHeight = screen.getMaxResolution()
 	local limit = maxWidth * maxHeight
 	local lowerLimit = 30
 	local cykaTextBox = window.contentLayout:addChild(GUI.textBox(1, 1, 36, 1, nil, 0x880000, {string.format(localization.screenInvalidResolution, lowerLimit, limit)}, 1, 0, 0, true, true))
@@ -81,7 +81,14 @@ module.onTouch = function()
 
 	local function updateCykaTextBox()
 		local width, height = tonumber(widthInput.text), tonumber(heightInput.text)
-		cykaTextBox.hidden = width and height and width * height <= limit and width > lowerLimit and height > lowerLimit
+		
+		cykaTextBox.hidden =
+			width
+			and height
+			and width * height <= limit
+			and width > lowerLimit
+			and height > lowerLimit
+		
 		return width, height
 	end
 
@@ -96,6 +103,7 @@ module.onTouch = function()
 
 	widthInput.onInputFinished = function()
 		local width, height = updateCykaTextBox()
+		
 		if cykaTextBox.hidden then
 			setResolution(width, height)
 		else

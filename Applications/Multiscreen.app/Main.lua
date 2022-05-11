@@ -13,7 +13,7 @@ local configPath = paths.user.applicationData .. "MultiScreen/Config.cfg"
 local elementWidth = 48
 local baseResolutionWidth = 146
 local baseResolutionHeight = 54
-local GPUProxy = screen.getGPUProxy()
+local GPUProxy = component.proxy(screen.getGPUAddress())
 local mainScreenAddress = GPUProxy.getScreen()
 
 local config = {
@@ -148,7 +148,7 @@ local function mainMenu(force)
 							monitorCornerImageX = (xMonitor - 1) * baseResolutionWidth
 
 							-- Биндим гпуху к выбранному монику
-							screen.bind(config.map[yMonitor][xMonitor], false)
+							screen.setScreenAddress(config.map[yMonitor][xMonitor], false)
 							-- Чистим вилочкой буфер
 							screen.clear(config.backgroundColor)
 
@@ -209,7 +209,7 @@ local function mainMenu(force)
 
 					file:close()
 					
-					screen.bind(mainScreenAddress, false)
+					screen.setScreenAddress(mainScreenAddress, false)
 					screen.setResolution(oldWidth, oldHeight)
 				else
 					file:close()
