@@ -34,6 +34,7 @@ local desktopWindowsContainer
 local dockContainer
 local desktopMenu
 local desktopMenuLayout
+local desktopMenuMineOSItem
 local desktopIconField
 local desktopBackground
 local desktopBackgroundColor = 0x1E1E1E
@@ -1009,6 +1010,7 @@ end
 
 local function iconFieldLoadIconConfig(iconField)
 	local configPath = iconField.path .. ".icons"
+
 	if filesystem.exists(configPath) then
 		iconField.iconConfig = filesystem.readTable(configPath)
 	else
@@ -1033,7 +1035,7 @@ local function gridIconFieldCheckSelection(iconField)
 	if selection and selection.x2 then
 		local child, xCenter, yCenter
 
-		for i = 2, #iconField.children do
+		for i = 1, #iconField.children do
 			child = iconField.children[i]
 
 			xCenter, yCenter = child.x + userSettings.iconWidth / 2, child.y + userSettings.iconHeight / 2
@@ -1633,6 +1635,7 @@ end
 
 local function updateMenu()
 	local topmostWindow = desktopWindowsContainer.children[#desktopWindowsContainer.children]
+
 	desktopMenu.children = topmostWindow and topmostWindow.menu.children or system.menuInitialChildren
 end
 
@@ -1731,6 +1734,7 @@ function system.addWindow(window, dontAddToDock, preserveCoordinates)
 					-- Взалупливаем иконке индивидуальную менюху. По дефолту тут всякая хуйня и прочее
 					window.menu = GUI.menu(1, 1, 1)
 					window.menu.colors = desktopMenu.colors
+
 					local name = filesystem.hideExtension(filesystem.name(dockPath))
 					local contextMenu = window.menu:addContextMenuItem(name, 0x0)
 
@@ -2426,8 +2430,9 @@ function system.updateDesktop()
 
 	desktopMenu = workspace:addChild(GUI.menu(1, 1, workspace.width, 0x0, 0x696969, 0x3366CC, 0xFFFFFF))
 	
-	local MineOSContextMenu = desktopMenu:addContextMenuItem("MineOS", 0x000000)
-	MineOSContextMenu:addItem(localization.aboutSystem).onTouch = function()
+	desktopMenuMineOSItem = desktopMenu:addContextMenuItem("MineOS", 0x000000)
+	
+	desktopMenuMineOSItem:addItem(localization.aboutSystem).onTouch = function()
 		local container = GUI.addBackgroundContainer(workspace, true, true, localization.aboutSystem)
 		container.layout:removeChildren()
 		
@@ -2471,22 +2476,22 @@ function system.updateDesktop()
 		workspace:draw()
 	end
 
-	MineOSContextMenu:addItem(localization.updates).onTouch = function()
+	desktopMenuMineOSItem:addItem(localization.updates).onTouch = function()
 		system.execute(paths.system.applicationAppMarket, "updates")
 	end
 
-	MineOSContextMenu:addSeparator()
+	desktopMenuMineOSItem:addSeparator()
 
-	MineOSContextMenu:addItem(localization.logout).onTouch = function()
+	desktopMenuMineOSItem:addItem(localization.logout).onTouch = function()
 		system.authorize()
 	end
 
-	MineOSContextMenu:addItem(localization.reboot).onTouch = function()
+	desktopMenuMineOSItem:addItem(localization.reboot).onTouch = function()
 		require("Network").broadcastComputerState(false)
 		computer.shutdown(true)
 	end
 
-	MineOSContextMenu:addItem(localization.shutdown).onTouch = function()
+	desktopMenuMineOSItem:addItem(localization.shutdown).onTouch = function()
 		require("Network").broadcastComputerState(false)
 		computer.shutdown()
 	end
@@ -2538,9 +2543,11 @@ function system.updateDesktop()
 		dateWidget.width = unicode.len(dateWidgetText)
 
 		batteryWidgetPercent = computer.energy() / computer.maxEnergy()
+		
 		if batteryWidgetPercent == math.huge then
 			batteryWidgetPercent = 1
 		end
+		
 		batteryWidgetText = math.ceil(batteryWidgetPercent * 100) .. "% "
 		batteryWidget.width = #batteryWidgetText + 4
 
@@ -2562,8 +2569,10 @@ function system.updateDesktop()
 					workspace:draw()
 				end
 			end
+		
 		elseif lastWindowHandled and e1 == "key_up" and (e4 == 17 or e4 == 35) then
 			lastWindowHandled = false
+		
 		elseif e1 == "system" then
 			if e2 == "updateFileList" then
 				desktopIconField:updateFileList()
@@ -2571,6 +2580,7 @@ function system.updateDesktop()
 				dockContainer.updateIcons()
 				workspace:draw()
 			end
+		
 		elseif e1 == "network" then
 			if e2 == "accessDenied" then
 				GUI.alert(localization.networkAccessDenied)
@@ -2621,11 +2631,14 @@ function system.updateColorScheme()
 
 	-- Windows
 	GUI.WINDOW_SHADOW_TRANSPARENCY = userSettings.interfaceTransparencyEnabled and 0.6
+	
 	-- Background containers
 	GUI.BACKGROUND_CONTAINER_PANEL_COLOR = userSettings.interfaceTransparencyEnabled and 0x0 or userSettings.interfaceColorDesktopBackground
 	GUI.BACKGROUND_CONTAINER_PANEL_TRANSPARENCY = userSettings.interfaceTransparencyEnabled and 0.3
+	
 	-- Top menu
 	desktopMenu.colors.default.background = userSettings.interfaceColorMenu
+	
 	-- Desktop background
 	desktopBackgroundColor = userSettings.interfaceColorDesktopBackground
 end
