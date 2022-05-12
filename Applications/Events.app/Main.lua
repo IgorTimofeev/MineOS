@@ -6,7 +6,7 @@ local text = require("Text")
 
 ---------------------------------------------------------------------------------
 
-local workspace, window, menu = system.addWindow(GUI.filledWindow(1, 1, 82, 28, 0x000000))
+local workspace, window, menu = system.addWindow(GUI.filledWindow(1, 1, 82, 28, 0x000000, 0.3))
 
 local display = window:addChild(GUI.object(2, 4, 1, 1))
 local lines = {}

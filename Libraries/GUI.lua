@@ -4420,10 +4420,10 @@ function GUI.window(x, y, width, height)
 	return window
 end
 
-function GUI.filledWindow(x, y, width, height, backgroundColor)
+function GUI.filledWindow(x, y, width, height, backgroundColor, transparency)
 	local window = GUI.window(x, y, width, height)
 
-	window.backgroundPanel = window:addChild(GUI.panel(1, 1, width, height, backgroundColor))
+	window.backgroundPanel = window:addChild(GUI.panel(1, 1, width, height, backgroundColor, transparency))
 	window.actionButtons = window:addChild(GUI.actionButtons(2, 2, true))
 
 	return window
