@@ -137,7 +137,7 @@ local function mainMenu(force)
 					saveConfig()
 
 					-- Биндим гпуху к первому монику. Фишка в том, что смена резолюшна не должна затрагивать главный моник
-					screen.bind(config.map[1][1], false)
+					screen.setScreenAddress(config.map[1][1], false)
 					-- Сеттим разрешение разово. Все равно оно сохраняется даже при бинде
 					screen.setResolution(baseResolutionWidth, baseResolutionHeight)
 
