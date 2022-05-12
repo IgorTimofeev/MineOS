@@ -135,15 +135,15 @@ local function setResolution(width, height)
 	flush(width, height)
 end
 
-local function getDepth()
+local function getColorDepth()
 	return componentInvoke(GPUAddress, "getDepth")
 end
 
-local function setDepth(...)
+local function setColorDepth(...)
 	return componentInvoke(GPUAddress, "setDepth", ...)
 end
 
-local function getMaxDepth(...)
+local function getMaxColorDepth(...)
 	return componentInvoke(GPUAddress, "maxDepth")
 end
 
@@ -854,14 +854,14 @@ return {
 	setResolution = setResolution,
 	getMaxResolution = getMaxResolution,
 
-	setScreenAddress = setScreenAddress,
-	
-	getDepth = getDepth,
-	setDepth = setDepth,
-	getMaxDepth = getMaxDepth,
-
 	setGPUAddress = setGPUAddress,
 	getGPUAddress = getGPUAddress,
+	setScreenAddress = setScreenAddress,
+	
+	getColorDepth = getColorDepth,
+	setColorDepth = setColorDepth,
+	getMaxColorDepth = getMaxColorDepth,
+
 	getScaledResolution = getScaledResolution,
 	getResolution = getResolution,
 	getWidth = getWidth,
