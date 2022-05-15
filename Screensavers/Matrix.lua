@@ -1,6 +1,6 @@
 
 local event = require("Event")
-local gpu = require("Screen").getGPUProxy()
+local gpu = component.proxy(require("Screen").getGPUAddress())
 
 --------------------------------------------------------------------------------------------------------------------
 

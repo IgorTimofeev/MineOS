@@ -3496,7 +3496,7 @@ function GUI.palette(x, y, startColor)
 	bigImage.eventHandler = function(workspace, object, e1, e2, e3, e4)
 		if e1 == "touch" or e1 == "drag" then
 			bigCrest.localX, bigCrest.localY = e3 - palette.x - 1, e4 - palette.y
-			paletteSwitchColorFromHex(select(3, screen.getGPUProxy().get(e3, e4)))
+			paletteSwitchColorFromHex(select(3, component.invoke(screen.getGPUAddress(), "get", e3, e4)))
 			workspace:draw()
 		end
 	end

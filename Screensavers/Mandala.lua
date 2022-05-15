@@ -1,4 +1,4 @@
-local gpu, r, xr, ti = require("Screen").getGPUProxy(), math.random, bit32.bxor, table.insert
+local gpu, r, xr, ti = component.proxy(require("Screen").getGPUAddress()), math.random, bit32.bxor, table.insert
 local event = require("Event")
 
 local tbl, tbl1, S, gsF, gsB, w, h, n, c, Fc, Bc, C, D, i, j, m, k, q, p, a, b = {}, {x = {}, y = {}}, "▄", gpu.setForeground, gpu.setBackground, gpu.getResolution()
