@@ -18,7 +18,9 @@ local container, char, step = layout:addChild(GUI.container(1, 1, 8, 8)), " ", f
 for y = 1, 8, 2 do
 	for x = 1, 8, 4 do
 		local button = container:addChild(GUI.button(x, y, 4, 2, step and 0xFFFFFF or 0xD2D2D2, 0x0, step and 0x0 or 0x1E1E1E, 0x0, " "))
+		
 		button.switchMode = true
+		
 		button.onTouch = function()
 			local data = {}
 			for i = 1, #container.children do
@@ -43,7 +45,7 @@ end
 
 tool.eventHandler = function(workspace, object, e1, e2, e3, e4)
 	if e1 == "touch" or e1 == "drag" then
-		local x, y = e3 - window.image.x + 1, e4 - window.image.y + 1
+		local x, y = math.ceil(e3) - window.image.x + 1, math.ceil(e4) - window.image.y + 1
 		local background, foreground, alpha, symbol = image.get(window.image.data, x, y)
 		
 		image.set(window.image.data, x, y,

@@ -570,7 +570,7 @@ local function iconDeselectAndSelect(icon)
 end
 
 local function iconOnRightClick(selectedIcons, icon, e1, e2, e3, e4)
-	local contextMenu = GUI.addContextMenu(workspace, e3, e4)
+	local contextMenu = GUI.addContextMenu(workspace, math.ceil(e3), math.ceil(e4))
 
 	if #selectedIcons > 1 then
 		contextMenu:addItem(localization.newFolderFromChosen .. " (" .. #selectedIcons .. ")").onTouch = function()
@@ -1235,7 +1235,7 @@ local function listIconFieldUpdateFileList(iconField)
 end
 
 local function iconFieldBackgroundClick(iconField, e1, e2, e3, e4, e5, ...)
-	local contextMenu = GUI.addContextMenu(workspace, e3, e4)
+	local contextMenu = GUI.addContextMenu(workspace, math.ceil(e3), math.ceil(e4))
 
 	local subMenu = contextMenu:addSubMenuItem(localization.create)
 
@@ -1468,11 +1468,19 @@ local function gridIconFieldBackgroundObjectEventHandler(workspace, object, e1, 
 	elseif e1 == "drag" then
 		if iconField.selection then
 			local selection = iconField.selection
+
 			selection.x2Raw, selection.y2Raw = e3, e4
 
 			-- Creating ordered representation of selection
-			selection.x1, selection.y1, selection.x2, selection.y2 =
-				selection.x1Raw, selection.y1Raw, selection.x2Raw, selection.y2Raw
+			selection.x1,
+			selection.y1,
+			selection.x2,
+			selection.y2 =
+			
+			math.ceil(selection.x1Raw),
+			math.ceil(selection.y1Raw),
+			math.ceil(selection.x2Raw),
+			math.ceil(selection.y2Raw)
 
 			if selection.x2 < selection.x1 then
 				selection.x1, selection.x2 = selection.x2, selection.x1
@@ -1976,9 +1984,11 @@ function system.error(path, line, traceback)
 	
 	-- Obtain from- and to- lines that need to be shown
 	codeView.fromLine = line - math.floor((window.height - 3) / 2) + 1
+	
 	if codeView.fromLine <= 0 then
 		codeView.fromLine = 1
 	end
+
 	local toLine, lineCounter = codeView.fromLine + codeView.height - 1, 1
 
 	-- Read part of file to display error line
@@ -2050,7 +2060,6 @@ function system.execute(path, ...)
 		GUI.alert("File \"" .. tostring(path) .. "\" doesn't exists")
 	end
 
-	component.invoke(screen.getScreenAddress(), "setPrecise", false)
 	screen.setResolution(oldScreenWidth, oldScreenHeight)
 
 	if not success then
@@ -2286,7 +2295,7 @@ function system.updateDesktop()
 
 		icon.onRightClick = function(icon, e1, e2, e3, e4, ...)
 			local indexOf = icon:indexOf()
-			local contextMenu = GUI.addContextMenu(workspace, e3, e4)
+			local contextMenu = GUI.addContextMenu(workspace, math.ceil(e3), math.ceil(e4))
 			
 			contextMenu.onMenuClosed = function()
 				icon.selected = false
@@ -2373,7 +2382,7 @@ function system.updateDesktop()
 	end
 
 	icon.onRightClick = function(icon, e1, e2, e3, e4)
-		local contextMenu = GUI.addContextMenu(workspace, e3, e4)
+		local contextMenu = GUI.addContextMenu(workspace, math.ceil(e3), math.ceil(e4))
 		
 		contextMenu.onMenuClosed = function()
 			icon.selected = false

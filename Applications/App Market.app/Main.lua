@@ -788,11 +788,13 @@ local function overview()
 			iconsContainer.eventHandler = function(workspace, object, e1, e2, e3, e4)
 				if e1 == "touch" or e1 == "drag" then
 					local child, deltaX, deltaY, vectorLength
+					
 					for i = 1, #iconsContainer.children do
 						child = iconsContainer.children[i]
 						
-						deltaX, deltaY = e3 - child.x, e4 - child.y
+						deltaX, deltaY = math.ceil(e3) - child.x, math.ceil(e4) - child.y
 						vectorLength = math.sqrt(deltaX ^ 2 + deltaY ^ 2)
+						
 						if vectorLength > 0 then
 							child.forceX = deltaX / vectorLength * math.random(overviewMaximumTouchAcceleration)
 							child.forceY = deltaY / vectorLength * math.random(overviewMaximumTouchAcceleration)
@@ -1251,7 +1253,7 @@ newPublicationInfo = function(file_id)
 						local cyka = pizda:addChild(newRatingWidget(eblo.width + 1, 1, 4))
 						cyka.eventHandler = function(workspace, object, e1, e2, e3)
 							if e1 == "touch" then
-								cyka.rating = number.round((e3 - object.x + 1) / object.width * 5)
+								cyka.rating = number.round((math.ceil(e3) - object.x + 1) / object.width * 5)
 								workspace:draw()
 							end
 						end

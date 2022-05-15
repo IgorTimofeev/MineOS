@@ -1363,7 +1363,13 @@ end
 
 local uptime = computer.uptime()
 codeView.eventHandler = function(workspace, object, e1, e2, e3, e4, e5)
-	if e1 == "touch" and checkScrollbar(e4) then
+	if e1 == "touch" then
+		e3, e4 = math.ceil(e3), math.ceil(e4)
+
+		if not checkScrollbar(e4) then
+			return
+		end
+
 		if e5 == 1 then
 			createEditOrRightClickMenu(GUI.addContextMenu(workspace, e3, e4))
 		else
@@ -1371,10 +1377,18 @@ codeView.eventHandler = function(workspace, object, e1, e2, e3, e4, e5)
 		end
 
 		tick(true)
+	
 	elseif e1 == "double_touch" then
 		selectWord()
 		tick(true)
-	elseif e1 == "drag" and checkScrollbar(e4) then
+	
+	elseif e1 == "drag" then
+		e3, e4 = math.ceil(e3), math.ceil(e4)
+
+		if not checkScrollbar(e4) then
+			return
+		end
+
 		codeView.selections[1] = codeView.selections[1] or {from = {}, to = {}}
 		codeView.selections[1].from.symbol, codeView.selections[1].from.line = cursorPositionSymbol, cursorPositionLine
 		codeView.selections[1].to.symbol, codeView.selections[1].to.line = fixCursorPosition(convertScreenCoordinatesToTextPosition(e3, e4))
@@ -1382,6 +1396,7 @@ codeView.eventHandler = function(workspace, object, e1, e2, e3, e4, e5)
 		if codeView.selections[1].from.line > codeView.selections[1].to.line then
 			codeView.selections[1].from.line, codeView.selections[1].to.line = codeView.selections[1].to.line, codeView.selections[1].from.line
 			codeView.selections[1].from.symbol, codeView.selections[1].to.symbol = codeView.selections[1].to.symbol, codeView.selections[1].from.symbol
+		
 		elseif codeView.selections[1].from.line == codeView.selections[1].to.line then
 			if codeView.selections[1].from.symbol > codeView.selections[1].to.symbol then
 				codeView.selections[1].from.symbol, codeView.selections[1].to.symbol = codeView.selections[1].to.symbol, codeView.selections[1].from.symbol
@@ -1389,6 +1404,7 @@ codeView.eventHandler = function(workspace, object, e1, e2, e3, e4, e5)
 		end
 
 		tick(true)
+
 	elseif e1 == "key_down" and GUI.focusedObject == window then
 		-- Ctrl or CMD
 		if keyboard.isControlDown() or keyboard.isCommandDown() then
@@ -1561,14 +1577,17 @@ codeView.eventHandler = function(workspace, object, e1, e2, e3, e4, e5)
 		end
 
 		tick(true)
+	
 	elseif e1 == "scroll" then
 		scroll(e5, config.scrollSpeed)
 		tick(cursorBlinkState)
+	
 	elseif e1 == "clipboard" then
 		local lines = splitStringIntoLines(e3)
 		paste(lines)
 		
 		tick(cursorBlinkState)
+	
 	elseif not e1 and cursorUptime + config.cursorBlinkDelay < computer.uptime() then
 		tick(not cursorBlinkState)
 	end

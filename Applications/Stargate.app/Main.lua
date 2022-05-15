@@ -240,12 +240,14 @@ workspace.addContactButton.onTouch = function()
 		if e1 == "touch" then
 			if input1.text and input2.text then
 				local exists = false
+				
 				for i = 1, #contacts do
 					if contacts[i].address == input2.text then
 						exists = true
 						break
 					end
 				end
+				
 				if not exists then
 					table.insert(contacts, {name = input1.text, address = input2.text})
 					updateContacts()

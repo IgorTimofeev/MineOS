@@ -158,9 +158,12 @@ end
 
 tool.eventHandler = function(workspace, object, e1, e2, e3, e4)
 	if e1 == "touch" then
+		e3, e4 = math.ceil(e3), math.ceil(e4)
 		touchX, touchY, dragX, dragY = e3, e4, e3, e4
 		repositionSelector()
+	
 	elseif e1 == "drag" then
+		e3, e4 = math.ceil(e3), math.ceil(e4)
 		dragX, dragY = e3, e4
 		repositionSelector()
 	end

@@ -145,7 +145,7 @@ end
 
 local function sidebarItemEventHandler(workspace, object, e1, e2, e3, ...)
 	if e1 == "touch" then
-		if object.onRemove and e3 == object.x + object.width - 2 then
+		if object.onRemove and math.ceil(e3) == object.x + object.width - 2 then
 			object.onRemove()
 		elseif object.onTouch then
 			object.onTouch(e1, e2, e3, ...)

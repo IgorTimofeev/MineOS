@@ -184,6 +184,7 @@ window.eventHandler = function(workspace, window, e1, ...)
 	if e1 == "double_touch" then
 		setUIHidden(not panel.hidden)
 		workspace:draw()
+	
 	elseif e1 == "touch" or e1 == "key_down" then
 		if slideShowDeadline then
 			setUIHidden(false)
@@ -191,6 +192,7 @@ window.eventHandler = function(workspace, window, e1, ...)
 
 			workspace:draw()
 		end
+	
 	else
 		if slideShowDelay and computer.uptime() > slideShowDeadline then
 			loadIncremented(1)

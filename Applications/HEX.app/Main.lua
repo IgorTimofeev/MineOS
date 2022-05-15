@@ -105,7 +105,7 @@ end
 local function byteFieldEventHandler(workspace, object, e1, e2, e3, e4, e5)
 	if e1 == "touch" or e1 == "drag" then
 		if e5 == 1 then
-			local menu = GUI.addContextMenu(workspace, e3, e4)
+			local menu = GUI.addContextMenu(workspace, math.ceil(e3), math.ceil(e4))
 			
 			menu:addItem("Select all").onTouch = function()
 				selection.from = 1

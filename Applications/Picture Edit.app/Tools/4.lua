@@ -22,8 +22,9 @@ end
 
 tool.eventHandler = function(workspace, object, e1, e2, e3, e4)
 	if e1 == "touch" or e1 == "drag" then
-		local x, y = e3 - window.image.x + 1, e4 - window.image.y + 1
+		e3, e4 = math.ceil(e3), math.ceil(e4)
 		
+		local x, y = e3 - window.image.x + 1, e4 - window.image.y + 1
 		local background, foreground = image.get(window.image.data, x, y)
 
 		if pickBackgroundSwitch.switch.state then

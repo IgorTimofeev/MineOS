@@ -1,5 +1,6 @@
 
 local image = require("Image")
+local number = require("Number")
 
 ------------------------------------------------------
 
@@ -14,15 +15,20 @@ tool.about = locale.tool2
 local xOld, yOld
 tool.eventHandler = function(workspace, object, e1, e2, e3, e4)
 	if e1 == "touch" then
-		xOld, yOld = e3, e4
+		xOld, yOld = math.ceil(e3), math.ceil(e4)
+	
 	elseif e1 == "drag" and xOld and yOld then
+		e3, e4 = math.ceil(e3), math.ceil(e4)
+
 		window.image.setPosition(
-			window.image.localX + (e3 - xOld),
-			window.image.localY + (e4 - yOld)
+			window.image.localX + e3 - xOld),
+			window.image.localY + e4 - yOld)
 		)
+		
 		xOld, yOld = e3, e4
 		
 		workspace:draw()
+	
 	elseif e1 == "drop" then
 		xOld, yOld = nil, nil
 	end
