@@ -72,9 +72,18 @@ local languages = {
 
 filesystem.makeDirectory(iconCachePath)
 
-local luaIcon = image.load(currentScriptDirectory .. "Icons/Lua.pic")
-local fileNotExistsIcon = image.load(currentScriptDirectory .. "Icons/FileNotExists.pic")
-local scriptIcon = image.load(currentScriptDirectory .. "Icons/Script.pic")
+local iconsCache = {}
+
+local function loadIcon(name)
+	local icon = iconsCache[name]
+
+	if not icon then
+		icon = image.load(currentScriptDirectory .. "Icons/" .. name .. ".pic")
+		iconsCache[name] = icon
+	end
+
+	return icon
+end
 
 local search = ""
 local appWidth, appHeight, appHSpacing, appVSpacing, currentPage, appsPerPage, appsPerWidth, appsPerHeight = 32, 6, 2, 1, 0
@@ -139,6 +148,7 @@ local function loadConfig()
 			orderBy = 4,
 			orderDirection = 1,
 			singleSession = false,
+			hideApplicationIcons = false
 		}
 	end
 
@@ -558,37 +568,41 @@ local function loadImage(path)
 	if picture then
 		return picture
 	else
-		return fileNotExistsIcon
+		return loadIcon("FileNotExists")
 	end
 end
 
 local function getPublicationIcon(publication)
 	if publication.icon_url then
-		local path = iconCachePath .. publication.file_id .. "@" .. publication.version .. ".pic"
-
-		if filesystem.exists(path) then
-			return loadImage(path)
+		if config.hideApplicationIcons then
+			return loadIcon("Application")
 		else
-			progressIndicator.active = true
-			workspace:draw()
+			local path = iconCachePath .. publication.file_id .. "@" .. publication.version .. ".pic"
 
-			local data, reason = checkImage(publication.icon_url)
-
-			progressIndicator.active = false
-			workspace:draw()
-
-			if data then
-				filesystem.write(path, data)
-
+			if filesystem.exists(path) then
 				return loadImage(path)
 			else
-				return fileNotExistsIcon
+				progressIndicator.active = true
+				workspace:draw()
+
+				local data, reason = checkImage(publication.icon_url)
+
+				progressIndicator.active = false
+				workspace:draw()
+
+				if data then
+					filesystem.write(path, data)
+
+					return loadImage(path)
+				else
+					return loadIcon("FileNotExists")
+				end
 			end
 		end
 	elseif publication.category_id == 2 then
-		return luaIcon
+		return loadIcon("Lua")
 	else
-		return scriptIcon
+		return loadIcon("Script")
 	end
 end
 
@@ -601,9 +615,11 @@ local function addApplicationInfo(container, publication, limit)
 
 	local updateState = getUpdateState(publication.file_id, publication.version)
 	container.downloadButton = container:addChild(GUI.adaptiveRoundedButton(13, 5, 1, 0, 0xC3C3C3, 0xFFFFFF, 0x969696, 0xFFFFFF, updateState == 4 and localization.installed or updateState == 3 and localization.update or localization.install))
+	
 	container.downloadButton.onTouch = function()
 		download(publication)
 	end
+
 	container.downloadButton.colors.disabled.background = 0xE1E1E1
 	container.downloadButton.colors.disabled.text = 0xFFFFFF
 	container.downloadButton.disabled = updateState == 4
@@ -788,13 +804,11 @@ local function overview()
 			iconsContainer.eventHandler = function(workspace, object, e1, e2, e3, e4)
 				if e1 == "touch" or e1 == "drag" then
 					local child, deltaX, deltaY, vectorLength
-					
 					for i = 1, #iconsContainer.children do
 						child = iconsContainer.children[i]
 						
-						deltaX, deltaY = math.ceil(e3) - child.x, math.ceil(e4) - child.y
+						deltaX, deltaY = e3 - child.x, e4 - child.y
 						vectorLength = math.sqrt(deltaX ^ 2 + deltaY ^ 2)
-						
 						if vectorLength > 0 then
 							child.forceX = deltaX / vectorLength * math.random(overviewMaximumTouchAcceleration)
 							child.forceY = deltaY / vectorLength * math.random(overviewMaximumTouchAcceleration)
@@ -931,6 +945,13 @@ local function settings()
 			textLayout:addChild(GUI.keyAndValue(1, 1, 0x696969, 0x969696, "E-Mail", ": " .. user.email))
 			textLayout:addChild(GUI.keyAndValue(1, 1, 0x696969, 0x969696, localization.registrationDate, ": " .. os.date("%d.%m.%Y", user.timestamp)))
 			textLayout.height = #textLayout.children * 2 - 1
+
+			local hideApplicationIconsSwitch = layout:addChild(GUI.switchAndLabel(1, 1, 36, 6, 0x66DB80, 0xC3C3C3, 0xFFFFFF, 0x696969, localization.hideApplicationIcons .. ":", config.hideApplicationIcons))
+
+			hideApplicationIconsSwitch.switch.onStateChanged = function()
+				config.hideApplicationIcons = hideApplicationIconsSwitch.switch.state
+				saveConfig()
+			end
 
 			local buttonsLayout = layout:addChild(newButtonsLayout(1, 1, layout.width, 2))
 			
@@ -1253,7 +1274,7 @@ newPublicationInfo = function(file_id)
 						local cyka = pizda:addChild(newRatingWidget(eblo.width + 1, 1, 4))
 						cyka.eventHandler = function(workspace, object, e1, e2, e3)
 							if e1 == "touch" then
-								cyka.rating = number.round((math.ceil(e3) - object.x + 1) / object.width * 5)
+								cyka.rating = number.round((e3 - object.x + 1) / object.width * 5)
 								workspace:draw()
 							end
 						end

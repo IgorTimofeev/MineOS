@@ -13,6 +13,7 @@
 	typeUserName = "Введіть ім'я користувача",
 	yourText = "Ви:",
 	hereBeYourDialogs = "Тут будуть відображені ваші діалоги",
+	hideApplicationIcons = "Hide application icons",
 	
 	categoryOverview = "Головна",
 	categoryApplications = "Додатки",
