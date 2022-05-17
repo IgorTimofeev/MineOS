@@ -21,7 +21,23 @@ local
 	colorsBackground,
 	colorsText,
 	colorsSelectionBackground,
-	colorsSelectionText =
+	colorsSelectionText,
+
+	OSList,
+	bindGPUToScreen,
+	drawRectangle,
+	drawText,
+	newMenuElement,
+	runLoop,
+	drawCentrizedText,
+	drawTitle,
+	status,
+	executeString,
+	boot,
+	newMenuBackElement,
+	menu,
+	input,
+	internetExecute =
 
 	"MineOS EFI",
 	"Change label",
@@ -58,7 +74,6 @@ local
 local
 	gpuSet,
 	gpuSetBackground,
-	gpuSetForeground,
 	gpuFill,
 	eepromSetData,
 	eepromGetData,
@@ -67,73 +82,84 @@ local
 
 	gpu.set,
 	gpu.setBackground,
-	gpu.setForeground,
 	gpu.fill,
 	eeprom.setData,
 	eeprom.getData,
 	gpu.getResolution()
 
-local
-	OSList,
-	bindGPUToScreen,
-	rectangle,
-	centrizedText,
-	menuElement,
-	runLoop =
+OSList,
+bindGPUToScreen,
+drawRectangle,
+drawText,
+newMenuElement,
+runLoop,
+drawCentrizedText,
+drawTitle,
+status,
+executeString,
+boot,
+newMenuBackElement,
+menu,
+input,
+internetExecute =
 
+{
 	{
-		{
-			"/OS.lua"
-		},
-		{
-			"/init.lua",
-			function()
-				computer.getBootAddress, computer.setBootAddress = eepromGetData, eepromSetData
-			end
-		}
+		"/OS.lua"
 	},
-
-	function()
-		local screenAddress = componentList("screen")()
-		
-		if screenAddress then
-			gpu.bind(screenAddress, true)
+	{
+		"/init.lua",
+		function()
+			computer.getBootAddress, computer.setBootAddress = eepromGetData, eepromSetData
 		end
-	end,
+	}
+},
 
-	function(x, y, width, height, color)
-		gpuSetBackground(color)
-		gpuFill(x, y, width, height, " ")
-	end,
-
-	function(y, foreground, text)
-		gpuSetForeground(foreground)
-		gpuSet(mathFloor(screenWidth / 2 - #text / 2), y, text)
-	end,
-
-	function(text, callback, breakLoop)
-		return {
-			s = text,
-			c = callback,
-			b = breakLoop
-		}
-	end,
-
-	function(func, ...)
-		while func({ pullSignal(...) }) == nil do
-
-		end
+function()
+	local screenAddress = componentList("screen")()
+	
+	if screenAddress then
+		gpu.bind(screenAddress, true)
 	end
+end,
 
-local function drawTitle(y, title)
+function(x, y, width, height, color)
+	gpuSetBackground(color)
+	gpuFill(x, y, width, height, " ")
+end,
+
+function(x, y, foreground, text)
+	gpu.setForeground(foreground)
+	gpuSet(x, y, text)
+end,
+
+function(text, callback, breakLoop)
+	return {
+		s = text,
+		c = callback,
+		b = breakLoop
+	}
+end,
+
+function(func, ...)
+	while func({ pullSignal(...) }) == nil do
+
+	end
+end,
+
+function(y, foreground, text)
+	drawText(mathFloor(screenWidth / 2 - #text / 2), y, foreground, text)
+end,
+
+function(y, title)
 	y = mathFloor(screenHeight / 2 - y / 2)
-	rectangle(1, 1, screenWidth, screenHeight, colorsBackground)
-	centrizedText(y, colorsTitle, title)
+	drawRectangle(1, 1, screenWidth, screenHeight, colorsBackground)
+	drawCentrizedText(y, colorsTitle, title)
 
 	return y + 2
-end
+end,
 
-local function status(statusText, needWait)
+function(statusText, needWait)
 	local lines = {}
 
 	for line in statusText:gmatch("[^\r\n]+") do
@@ -143,7 +169,7 @@ local function status(statusText, needWait)
 	local y = drawTitle(#lines, stringsMineOSEFI)
 	
 	for i = 1, #lines do
-		centrizedText(y, colorsText, lines[i])
+		drawCentrizedText(y, colorsText, lines[i])
 		y = y + 1
 	end
 
@@ -152,9 +178,9 @@ local function status(statusText, needWait)
 
 		end
 	end
-end
+end,
 
-local function executeString(...)
+function(...)
 	local result, reason = load(...)
 
 	if result then
@@ -166,212 +192,207 @@ local function executeString(...)
 	end
 
 	status(reason, 1)
-end
+end,
 
-local
-	boot,
-	menuBack,
-	menu,
-	input,
-	internetExecute =
+function(proxy)
+	local OS
 
-	function(proxy)
-		local OS
+	for i = 1, #OSList do
+		OS = OSList[i]
 
-		for i = 1, #OSList do
-			OS = OSList[i]
+		if proxy.exists(OS[1]) then
+			status("Booting from " .. (proxy.getLabel() or proxy.address))
 
-			if proxy.exists(OS[1]) then
-				status("Booting from " .. (proxy.getLabel() or proxy.address))
-
-				-- Updating current EEPROM boot address if it's differs from given proxy address
-				if eepromGetData() ~= proxy.address then
-					eepromSetData(proxy.address)
-				end
-
-				-- Running OS pre-boot function
-				if OS[2] then
-					OS[2]()
-				end
-
-				-- Reading boot file
-				local handle, data, chunk, success, reason = proxy.open(OS[1], "rb"), ""
-
-				repeat
-					chunk = proxy.read(handle, mathHuge)
-					data = data .. (chunk or "")
-				until not chunk
-
-				proxy.close(handle)
-
-				-- Running boot file
-				executeString(data, "=" .. OS[1])
-
-				return 1
-			end
-		end
-	end,
-
-	function(f)
-		return menuElement("Back", f, 1)
-	end,
-	
-	function(title, elements)
-		local selectedElement, maxLength = 1, 0
-
-		for i = 1, #elements do
-			maxLength = math.max(maxLength, #elements[i].s)
-		end
-
-		runLoop(function(e)
-			local y, x = drawTitle(#elements + 2, title)
-			
-			for i = 1, #elements do
-				x = mathFloor(screenWidth / 2 - #elements[i].s / 2)
-				
-				if i == selectedElement then
-					rectangle(mathFloor(screenWidth / 2 - maxLength / 2) - 2, y, maxLength + 4, 1, colorsSelectionBackground)
-					gpuSetForeground(colorsSelectionText)
-					gpuSet(x, y, elements[i].s)
-					gpuSetBackground(colorsBackground)
-				else
-					gpuSetForeground(colorsText)
-					gpuSet(x, y, elements[i].s)
-				end
-				
-				y = y + 1
+			-- Updating current EEPROM boot address if it's differs from given proxy address
+			if eepromGetData() ~= proxy.address then
+				eepromSetData(proxy.address)
 			end
 
-			if e[1] == stringsKeyDown then
-				if e[4] == 200 and selectedElement > 1 then
-					selectedElement = selectedElement - 1
-				
-				elseif e[4] == 208 and selectedElement < #elements then
-					selectedElement = selectedElement + 1
-				
-				elseif e[4] == 28 then
-					if elements[selectedElement].c then
-						elements[selectedElement].c()
-					end
-
-					if elements[selectedElement].b then
-						return 1
-					end
-				end
-
-			elseif e[1] == stringsComponentAdded and e[3] == "screen" then
-				bindGPUToScreen()
+			-- Running OS pre-boot function
+			if OS[2] then
+				OS[2]()
 			end
-		end)
-	end,
 
-	function(title, prefix)
-		local
-			y,
-			text,
-			state,
-			eblo,
-			char =
+			-- Reading boot file
+			local handle, data, chunk, success, reason = proxy.open(OS[1], "rb"), ""
 
-			drawTitle(2, title),
-			"",
-			true
+			repeat
+				chunk = proxy.read(handle, mathHuge)
+				data = data .. (chunk or "")
+			until not chunk
 
-		local function draw()
-			eblo = prefix .. text
+			proxy.close(handle)
 
-			gpuFill(1, y, screenWidth, 1, " ")
-			gpuSetForeground(colorsText)
-			gpuSet(mathFloor(screenWidth / 2 - #eblo / 2), y, eblo .. (state and "█" or ""))
-		end
+			-- Running boot file
+			executeString(data, "=" .. OS[1])
 
-		draw()
-
-		runLoop(
-			function(e)
-				if e[1] == stringsKeyDown then
-					if e[4] == 28 then
-						return 1
-
-					elseif e[4] == 14 then
-						text = text:sub(1, -2)
-					
-					else
-						char = unicode.char(e[3])
-
-						if char:match("^[%w%d%p%s]+") then
-							text = text .. char
-						end
-					end
-
-					state = true
-				
-				elseif e[1] == "clipboard" then
-					text = text .. e[3]
-				
-				elseif not e[1] then
-					state = not state
-				end
-
-				draw()
-			end,
-			0.5
-		)
-	end,
-
-	function(url)
-		local
-			connection,
-			data,
-			result,
-			reason =
-
-			componentProxy(internetAddress).request(url),
-			""
-
-		if connection then
-			status("Downloading script")
-
-			while 1 do
-				result, reason = connection.read(mathHuge)	
-				
-				if result then
-					data = data .. result
-				else
-					connection.close()
-					
-					if reason then
-						status(reason, 1)
-					else
-						executeString(data, "=url")
-					end
-
-					break
-				end
-			end
-		else
-			status("Invalid URL", 1)
+			return 1
 		end
 	end
+end,
 
+function(f)
+	return newMenuElement("Back", f, 1)
+end,
+
+function(title, elements)
+	local selectedElement, maxLength = 1, 0
+
+	for i = 1, #elements do
+		maxLength = math.max(maxLength, #elements[i].s)
+	end
+
+	runLoop(function(e)
+		local y, x, text = drawTitle(#elements + 2, title)
+		
+		for i = 1, #elements do
+			text = "  " .. elements[i].s .. "  "
+			x = mathFloor(screenWidth / 2 - #text / 2)
+			
+			if i == selectedElement then
+				gpuSetBackground(colorsSelectionBackground)
+				drawText(x, y, colorsSelectionText, text)
+				gpuSetBackground(colorsBackground)
+			else
+				drawText(x, y, colorsText, text)
+			end
+			
+			y = y + 1
+		end
+
+		if e[1] == stringsKeyDown then
+			if e[4] == 200 and selectedElement > 1 then
+				selectedElement = selectedElement - 1
+			
+			elseif e[4] == 208 and selectedElement < #elements then
+				selectedElement = selectedElement + 1
+			
+			elseif e[4] == 28 then
+				if elements[selectedElement].c then
+					elements[selectedElement].c()
+				end
+
+				if elements[selectedElement].b then
+					return 1
+				end
+			end
+
+		elseif e[1] == stringsComponentAdded and e[3] == "screen" then
+			bindGPUToScreen()
+		end
+	end)
+end,
+
+function(title, prefix)
+	local
+		y,
+		text,
+		state,
+		eblo,
+		char =
+
+		drawTitle(2, title),
+		"",
+		1
+
+	local function draw()
+		eblo = prefix .. text
+
+		gpuFill(1, y, screenWidth, 1, " ")
+		drawCentrizedText(y, colorsText, eblo .. (state and "_" or ""))
+	end
+
+	draw()
+
+	runLoop(
+		function(e)
+			if e[1] == stringsKeyDown then
+				if e[4] == 28 then
+					return 1
+
+				elseif e[4] == 14 then
+					text = text:sub(1, -2)
+				
+				else
+					char = unicode.char(e[3])
+
+					if char:match("^[%w%d%p%s]+") then
+						text = text .. char
+					end
+				end
+
+				state = 1
+			
+			elseif e[1] == "clipboard" then
+				text = text .. e[3]
+			
+			elseif not e[1] then
+				state = not state
+			end
+
+			draw()
+		end,
+		0.5
+	)
+
+	return text
+end,
+
+function(url)
+	local
+		connection,
+		data,
+		result,
+		reason =
+
+		componentProxy(internetAddress).request(url),
+		""
+
+	if connection then
+		status("Downloading script")
+
+		while 1 do
+			result, reason = connection.read(mathHuge)	
+			
+			if result then
+				data = data .. result
+			else
+				connection.close()
+				
+				if reason then
+					status(reason, 1)
+				else
+					executeString(data, "=url")
+				end
+
+				break
+			end
+		end
+	else
+		status("Invalid URL", 1)
+	end
+end
 
 bindGPUToScreen()
 status("Hold Alt to show boot options")
 
 -- Waiting 1 sec for user to press Alt key
-local deadline, e = uptime() + 1
+local deadline, eventData = uptime() + 1
 
 while uptime() < deadline do
-	e = { pullSignal(deadline - uptime()) }
+	eventData = { pullSignal(deadline - uptime()) }
 
-	if e[1] == stringsKeyDown and e[4] == 56 then
+	if eventData[1] == stringsKeyDown and eventData[4] == 56 then
 		local utilities = {
-			menuElement("Disk utility", function()
-				local restrict, filesystems, filesystemOptions =
+			newMenuElement("Disk utility", function()
+				local
+					restrict,
+					filesystems =
+					
 					function(text, limit)
 						return (#text < limit and text .. string.rep(" ", limit - #text) or text:sub(1, limit)) .. "   "
 					end,
-					{ menuBack() }
+					{ newMenuBackElement() }
 
 				local function updateFilesystems()
 					for i = 2, #filesystems do
@@ -383,35 +404,13 @@ while uptime() < deadline do
 
 						local
 							label,
-							isReadOnly,
-							filesystemOptions =
+							isReadOnly =
 
 							proxy.getLabel() or "Unnamed",
-							proxy.isReadOnly(),
-							{
-								menuElement("Set as bootable", function()
-									eepromSetData(address)
-									updateFilesystems()
-								end, 1)
-							}
-
-						if not isReadOnly then
-							tableInsert(filesystemOptions, menuElement(stringsChangeLabel, function()
-								proxy.setLabel(input(stringsChangeLabel, "New value: "))
-								updateFilesystems()
-							end, 1))
-
-							tableInsert(filesystemOptions, menuElement("Erase", function()
-								status("Erasing " .. address)
-								proxy.remove("")
-								updateFilesystems()
-							end, 1))
-						end
-
-						tableInsert(filesystemOptions, menuBack())
+							proxy.isReadOnly()
 
 						tableInsert(filesystems, 1,
-							menuElement(
+							newMenuElement(
 								(address == eepromGetData() and "> " or "  ") ..
 								restrict(label, 10) ..
 								restrict(proxy.spaceTotal() > 1048575 and "HDD" or proxy.spaceTotal() > 65535 and "FDD" or "SYS", 3) ..
@@ -420,7 +419,41 @@ while uptime() < deadline do
 								address:sub(1, 8) .. "…",
 								
 								function()
-									menu(label .. " (" .. address .. ")", filesystemOptions)
+									local elements = {
+										newMenuElement(
+											"Set as bootable",
+											function()
+												eepromSetData(address)
+												updateFilesystems()
+											end,
+											1
+										),
+
+										newMenuBackElement()
+									}
+
+									if not isReadOnly then
+										tableInsert(elements, 2, newMenuElement(
+											stringsChangeLabel,
+											function()
+												pcall(proxy.setLabel, input(stringsChangeLabel, "New value: "))
+												updateFilesystems()
+											end,
+											1
+										))
+
+										tableInsert(elements, 3, newMenuElement(
+											"Erase",
+											function()
+												status("Erasing " .. address)
+												proxy.remove("")
+												updateFilesystems()
+											end,
+											1
+										))
+									end
+
+									menu(label .. " (" .. address .. ")", elements)
 								end
 							)
 						)
@@ -431,15 +464,15 @@ while uptime() < deadline do
 				menu("Select filesystem", filesystems)
 			end),
 
-			menuBack()
+			newMenuBackElement()
 		}
 
 		if internetAddress then	
-			tableInsert(utilities, 2, menuElement("System recovery", function()
+			tableInsert(utilities, 2, newMenuElement("System recovery", function()
 				internetExecute("https://tinyurl.com/29urhz7z")
 			end))
 			
-			tableInsert(utilities, 3, menuElement(stringsURLBoot, function()
+			tableInsert(utilities, 3, newMenuElement(stringsURLBoot, function()
 				internetExecute(input(stringsURLBoot, "Address: "))
 			end))
 		end
@@ -470,6 +503,7 @@ if not (bootProxy and boot(bootProxy)) then
 
 	tryBootFromAny()
 
+	-- Waiting for any fs component available
 	runLoop(function(e)
 		if e[1] == stringsComponentAdded then
 			tryBootFromAny()
