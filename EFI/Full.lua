@@ -28,7 +28,6 @@ local
 	drawRectangle,
 	drawText,
 	newMenuElement,
-	runLoop,
 	drawCentrizedText,
 	drawTitle,
 	status,
@@ -92,7 +91,6 @@ bindGPUToScreen,
 drawRectangle,
 drawText,
 newMenuElement,
-runLoop,
 drawCentrizedText,
 drawTitle,
 status,
@@ -139,12 +137,6 @@ function(text, callback, breakLoop)
 		c = callback,
 		b = breakLoop
 	}
-end,
-
-function(func, ...)
-	while func({ pullSignal(...) }) == nil do
-
-	end
 end,
 
 function(y, foreground, text)
@@ -235,21 +227,17 @@ function(f)
 	return newMenuElement("Back", f, 1)
 end,
 
-function(title, elements)
-	local selectedElement, maxLength = 1, 0
+function(title, items)
+	local selectedIndex = 1
 
-	for i = 1, #elements do
-		maxLength = math.max(maxLength, #elements[i].s)
-	end
-
-	runLoop(function(e)
-		local y, x, text = drawTitle(#elements + 2, title)
+	while 1 do
+		local y, x, text, e = drawTitle(#items + 2, title)
 		
-		for i = 1, #elements do
-			text = "  " .. elements[i].s .. "  "
+		for i = 1, #items do
+			text = "  " .. items[i].s .. "  "
 			x = mathFloor(screenWidth / 2 - #text / 2)
 			
-			if i == selectedElement then
+			if i == selectedIndex then
 				gpuSetBackground(colorsSelectionBackground)
 				drawText(x, y, colorsSelectionText, text)
 				gpuSetBackground(colorsBackground)
@@ -260,27 +248,28 @@ function(title, elements)
 			y = y + 1
 		end
 
+		e = { pullSignal() }
+
 		if e[1] == stringsKeyDown then
-			if e[4] == 200 and selectedElement > 1 then
-				selectedElement = selectedElement - 1
+			if e[4] == 200 and selectedIndex > 1 then
+				selectedIndex = selectedIndex - 1
 			
-			elseif e[4] == 208 and selectedElement < #elements then
-				selectedElement = selectedElement + 1
+			elseif e[4] == 208 and selectedIndex < #items then
+				selectedIndex = selectedIndex + 1
 			
 			elseif e[4] == 28 then
-				if elements[selectedElement].c then
-					elements[selectedElement].c()
+				if items[selectedIndex].c then
+					items[selectedIndex].c()
 				end
-
-				if elements[selectedElement].b then
-					return 1
+				
+				if items[selectedIndex].b then
+					break
 				end
 			end
-
 		elseif e[1] == stringsComponentAdded and e[3] == "screen" then
 			bindGPUToScreen()
 		end
-	end)
+	end
 end,
 
 function(title, prefix)
@@ -288,54 +277,46 @@ function(title, prefix)
 		y,
 		text,
 		state,
-		eblo,
-		char =
+		prefixedText,
+		char,
+		e =
 
 		drawTitle(2, title),
 		"",
 		1
 
-	local function draw()
-		eblo = prefix .. text
+	while 1 do
+		prefixedText = prefix .. text
 
 		gpuFill(1, y, screenWidth, 1, " ")
-		drawCentrizedText(y, colorsText, eblo .. (state and "_" or ""))
-	end
+		drawCentrizedText(y, colorsText, prefixedText .. (state and "_" or ""))
 
-	draw()
+		e = { pullSignal(0.5) }
 
-	runLoop(
-		function(e)
-			if e[1] == stringsKeyDown then
-				if e[4] == 28 then
-					return 1
+		if e[1] == stringsKeyDown then
+			if e[4] == 28 then
+				return text
 
-				elseif e[4] == 14 then
-					text = text:sub(1, -2)
-				
-				else
-					char = unicode.char(e[3])
+			elseif e[4] == 14 then
+				text = text:sub(1, -2)
+			
+			else
+				char = unicode.char(e[3])
 
-					if char:match("^[%w%d%p%s]+") then
-						text = text .. char
-					end
+				if char:match("^[%w%d%p%s]+") then
+					text = text .. char
 				end
-
-				state = 1
-			
-			elseif e[1] == "clipboard" then
-				text = text .. e[3]
-			
-			elseif not e[1] then
-				state = not state
 			end
 
-			draw()
-		end,
-		0.5
-	)
-
-	return text
+			state = 1
+		
+		elseif e[1] == "clipboard" then
+			text = text .. e[3]
+		
+		elseif not e[1] then
+			state = not state
+		end
+	end
 end,
 
 function(url)
@@ -504,9 +485,9 @@ if not (bootProxy and boot(bootProxy)) then
 	tryBootFromAny()
 
 	-- Waiting for any fs component available
-	runLoop(function(e)
-		if e[1] == stringsComponentAdded then
+	while 1 do
+		if pullSignal() == stringsComponentAdded then
 			tryBootFromAny()
 		end
-	end)
+	end
 end
