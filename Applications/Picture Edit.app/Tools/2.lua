@@ -21,8 +21,8 @@ tool.eventHandler = function(workspace, object, e1, e2, e3, e4)
 		e3, e4 = math.ceil(e3), math.ceil(e4)
 
 		window.image.setPosition(
-			window.image.localX + e3 - xOld),
-			window.image.localY + e4 - yOld)
+			window.image.localX + e3 - xOld,
+			window.image.localY + e4 - yOld
 		)
 		
 		xOld, yOld = e3, e4
