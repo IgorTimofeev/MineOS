@@ -120,7 +120,8 @@ local function request(url, postData, headers)
 
 		return data
 	else
-		GUI.alert("Failed to perform internet request: " .. tostring(reason))
+		--GUI.alert("Failed to perform internet request: " .. tostring(reason))
+		return nil, reason
 	end
 end
 
@@ -1668,6 +1669,9 @@ local function login()
 	logo.height = logo.height + 1
 	local usernameInput = layout:addChild(GUI.input(1, 1, 36, 3, style.UIInputBackground, style.UIInputForeground, style.UIInputPlaceholder, style.UIInputBackground, style.UIInputFocusedForeground, config.username or "", localization.username))
 	local passwordInput = layout:addChild(GUI.input(1, 1, 36, 3, style.UIInputBackground, style.UIInputForeground, style.UIInputPlaceholder, style.UIInputBackground, style.UIInputFocusedForeground, config.password or "", localization.password, true, "•"))
+	local twoFactorSwitch = layout:addChild(GUI.switchAndLabel(1, 1, 36, 6, style.UISwitchActive, style.UISwitchPassive, style.UISwitchPipe, style.UIText, localization.twoFactorEnabled, false))
+	local twoFactorInput = layout:addChild(GUI.input(1, 1, 36, 3, style.UIInputBackground, style.UIInputForeground, style.UIInputPlaceholder, style.UIInputBackground, style.UIInputFocusedForeground, config.twoFactor or "", localization.twoFactor))
+	twoFactorInput.hidden = true
 	local loginButton = layout:addChild(GUI.button(1, 1, 36, 3, style.UIButtonDefaultBackground, style.UIButtonDefaultForeground, style.UIButtonPressedBackground, style.UIButtonPressedForeground, localization.login))
 	loginButton.colors.disabled = {
 		background = style.UIButtonDisabledBackground,
@@ -1678,13 +1682,19 @@ local function login()
 	loginusernameInput.hidden = true
 
 	usernameInput.onInputFinished = function()
-		loginButton.disabled = #usernameInput.text == 0 or #passwordInput.text == 0
+		loginButton.disabled = #usernameInput.text == 0 or #passwordInput.text == 0 or twoFactorSwitch.switch.state and #twoFactorInput.text == 0
 		workspace:draw()
 	end
 	passwordInput.onInputFinished = usernameInput.onInputFinished
+	twoFactorInput.onInputFinished = usernameInput.onInputFinished
+
+	twoFactorSwitch.switch.onStateChanged  = function()
+		twoFactorInput.hidden = not twoFactorSwitch.switch.state
+		usernameInput.onInputFinished()
+	end
 
 	loginButton.onTouch = function()
-		local result, reason = request("https://oauth.vk.com/token?grant_type=password&client_id=3697615&client_secret=AlVXZFMUqyrnABp8ncuU&username=" .. internet.encode(usernameInput.text) .. "&password=" .. internet.encode(passwordInput.text) .. "&v=" .. VKAPIVersion)
+		local result, reason = request("https://oauth.vk.com/token?grant_type=password&client_id=2274003&client_secret=hHbZxrka2uZ6jB1inYsH&2fa_supported=1&username=" .. internet.encode(usernameInput.text) .. "&password=" .. internet.encode(passwordInput.text) .. "&code=" .. twoFactorInput.text .. "&v=" .. VKAPIVersion)
 		if result then
 			if result.access_token then
 				currentAccessToken = result.access_token
@@ -1701,6 +1711,8 @@ local function login()
 			end
 
 			saveConfig()
+		else
+			GUI.alert("An error occurred while logging in: " .. reason)
 		end
 	end
 

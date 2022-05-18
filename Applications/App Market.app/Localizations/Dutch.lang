@@ -13,7 +13,8 @@
 	typeUserName = "Schrijf gebruikersnaam",
 	yourText = "Jij:",
 	hereBeYourDialogs = "Hier zullen uw gesprekken zijn",
-
+	hideApplicationIcons = "Hide application icons",
+	
 	categoryOverview = "Overzicht",
 	categoryApplications = "Applicaties",
 	categoryLibraries = "Bibliotheken",

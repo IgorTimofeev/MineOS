@@ -1,12 +1,17 @@
 
 local text = require("Text")
-local number = require("Number")
 local filesystem = require("Filesystem")
 local GUI = require("GUI")
 local screen = require("Screen")
 local system = require("System")
+local paths = require("Paths")
 
 ------------------------------------------------------------------------------------------------------------------
+
+local configPath = paths.user.applicationData .. "HEX Editor/Config.cfg"
+local config = filesystem.exists(configPath) and filesystem.readTable(configPath) or {
+	recentPath = "/OS.lua"
+}
 
 local colors = {
 	background = 0xF0F0F0,
@@ -39,8 +44,13 @@ local scrollBar, titleTextBox
 
 local workspace, window = system.addWindow(GUI.filledWindow(1, 1, 98, 25, colors.background))
 
+window.maxWidth = window.width
+window.showDesktopOnMaximize = true
+
 window.backgroundPanel.localX, window.backgroundPanel.localY = 11, 5
-window.backgroundPanel.width, window.backgroundPanel.height = window.width - 10, window.height - 4
+window.backgroundPanel.width = window.width - 10
+
+window.actionButtons.localY = 2
 
 local function byteArrayToNumber(b)
 	local n = 0
@@ -95,7 +105,7 @@ end
 local function byteFieldEventHandler(workspace, object, e1, e2, e3, e4, e5)
 	if e1 == "touch" or e1 == "drag" then
 		if e5 == 1 then
-			local menu = GUI.addContextMenu(workspace, e3, e4)
+			local menu = GUI.addContextMenu(workspace, math.ceil(e3), math.ceil(e4))
 			
 			menu:addItem("Select all").onTouch = function()
 				selection.from = 1
@@ -204,8 +214,8 @@ local function byteFieldEventHandler(workspace, object, e1, e2, e3, e4, e5)
 	end
 end
 
-local function newByteField(x, y, width, height, elementWidth, elementHeight, asChar)
-	local object = GUI.object(x, y, width, height)
+local function newByteField(x, y, width, elementWidth, elementHeight, asChar)
+	local object = GUI.object(x, y, width, 1)
 	
 	object.elementWidth = elementWidth
 	object.elementHeight = elementHeight
@@ -221,20 +231,19 @@ end
 
 window:addChild(GUI.panel(1, 1, window.width, 3, 0x3C3C3C)):moveToBack()
 
-local byteField = window:addChild(newByteField(13, 6, 64, 20, 4, 2, false))
-local charField = window:addChild(newByteField(byteField.localX + byteField.width + 3, 6, 16, 20, 1, 2, true))
-local separator = window:addChild(GUI.object(byteField.localX + byteField.width, 5, 1, 21))
+local byteField = window:addChild(newByteField(13, 6, 64, 4, 2, false))
+local charField = window:addChild(newByteField(byteField.localX + byteField.width + 3, 6, 16, 1, 2, true))
+local separator = window:addChild(GUI.object(byteField.localX + byteField.width, 5, 1, 1))
 separator.draw = function(object)
 	for i = object.y, object.y + object.height - 1 do
 		screen.drawText(object.x, i, colors.separator, "│")
 	end
 end
 
-
 window:addChild(GUI.panel(11, 4, window.width - 10, 1, colors.panel))
 
 -- Vertical
-local verticalCounter = window:addChild(GUI.object(1, 4, 10, window.height - 3))
+local verticalCounter = window:addChild(GUI.object(1, 4, 10, 1))
 verticalCounter.draw = function(object)
 	screen.drawRectangle(object.x, object.y, object.width, object.height, colors.panel, colors.panelText, " ")
 
@@ -277,12 +286,11 @@ window:addChild(GUI.object(13, 4, 62, 1)).draw = function(object)
 	end
 end
 
-scrollBar = window:addChild(GUI.scrollBar(window.width, 5, 1, window.height - 4, 0xC3C3C3, 0x393939, 0, 1, 1, 160, 1, true))
+scrollBar = window:addChild(GUI.scrollBar(window.width, 5, 1, 1, 0xC3C3C3, 0x393939, 0, 1, 1, 160, 1, true))
 scrollBar.eventHandler = nil
 
 titleTextBox = window:addChild(
-	GUI.textBox(
-		1, 1, math.floor(window.width * 0.35), 3,
+	GUI.textBox(1, 1, math.floor(window.width * 0.35), 3,
 		colors.titleBackground,
 		colors.titleText,
 		{
@@ -293,6 +301,7 @@ titleTextBox = window:addChild(
 		1, 1, 0
 	)
 )
+
 titleTextBox.localX = math.floor(window.width / 2 - titleTextBox.width / 2)
 titleTextBox:setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
 titleTextBox.eventHandler = nil
@@ -307,6 +316,7 @@ local function load(path)
 	
 	if file then
 		bytes = {}
+		
 		local byte
 		while true do
 			byte = file:readBytes(1)
@@ -318,9 +328,11 @@ local function load(path)
 		end
 
 		file:close()
+		
 		offset = 0
 		selection.from, selection.to = 1, 1
 		scrollBar.value, scrollBar.maximumValue = 0, #bytes
+		
 		status()
 	else
 		GUI.alert("Failed to open file for reading: " .. tostring(reason))
@@ -329,18 +341,26 @@ end
 
 openFileButton.onTouch = function()
 	local filesystemDialog = GUI.addFilesystemDialog(workspace, true, 50, math.floor(workspace.height * 0.8), "Open", "Cancel", "File name", "/")
+	
 	filesystemDialog:setMode(GUI.IO_MODE_OPEN, GUI.IO_MODE_FILE)
 	filesystemDialog:show()
+	
 	filesystemDialog.onSubmit = function(path)
 		load(path)
+
+		config.recentPath = path
+		filesystem.writeTable(configPath, config)
+
 		workspace:draw()
 	end
 end
 
 saveFileButton.onTouch = function()
 	local filesystemDialog = GUI.addFilesystemDialog(workspace, true, 50, math.floor(workspace.height * 0.8), "Save", "Cancel", "File name", "/")
+	
 	filesystemDialog:setMode(GUI.IO_MODE_SAVE, GUI.IO_MODE_FILE)
 	filesystemDialog:show()
+	
 	filesystemDialog.onSubmit = function(path)
 		local file = filesystem.open(path, "wb")
 		if file then
@@ -354,31 +374,21 @@ saveFileButton.onTouch = function()
 	end
 end
 
-window.actionButtons.localY = 2
-window.actionButtons.maximize.onTouch = function()
-	window.height = window.parent.height
-	byteField.height = window.height - 6
+window.onResize = function(width, height)
+	byteField.height = height - 6
 	charField.height = byteField.height
 	scrollBar.height = byteField.height
-	window.backgroundPanel.height = window.height - 4
+	window.backgroundPanel.height = height - 4
 	verticalCounter.height = window.backgroundPanel.height + 1
 	separator.height = byteField.height + 2
-
-	window.localY = 1
-
-	workspace:draw()
 end
 
 ------------------------------------------------------------------------------------------------------------------
 
-load("/OS.lua")
+window.onResize(window.width, window.height)
+
+local args, options = system.parseArguments(...)
+
+load(((options.o or options.open) and args[1] and filesystem.exists(args[1])) and args[1] or config.recentPath)
+
 workspace:draw()
-
-
-
-
-
-
-
-
-

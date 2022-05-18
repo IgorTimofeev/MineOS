@@ -37,6 +37,7 @@
 	appearanceDesktopBackground = "Fondo de Escritorio",
 	appearanceDock = "Fondo del Dock",
 	appearanceMenu = "Fondo del Menu",
+	appearanceBlurEnabled = "Interface blurring",
 	appearanceTransparencyEnabled = "Transparecia de la Interfaz",
 	appearanceTransparencyInfo = "Desactivar las Ultimas dos opciones va a reducir significativamenteel numero de llamadas directas a la CPU/GPU y incrementara el rendimiento",
 	appearanceDropDownDefaultBackground = "Fondo del menú desplegable",

@@ -37,6 +37,7 @@
 	appearanceDesktopBackground = "Bureaubladachtergrond",
 	appearanceDock = "Taakbalk achtergrond",
 	appearanceMenu = "Menu achtergrond",
+	appearanceBlurEnabled = "Interface blurring",
 	appearanceTransparencyEnabled = "Interface transparantie",
 	appearanceTransparencyInfo = "Het uitschakelen van de laatste twee opties zal het aantal directe oproepen naar de CPU / GPU aanzienlijk verminderen en de prestaties verbeteren",
 	appearanceDropDownDefaultBackground = "Vervolgkeuzemenu-achtergrond",

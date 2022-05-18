@@ -7,17 +7,20 @@ local text = require("Text")
 
 local workspace, window, menu = select(1, ...), select(2, ...), select(3, ...)
 local tool = {}
+local locale = select(4, ...)
 
 tool.shortcut = "Bra"
 tool.keyCode = 33
-tool.about = "Braille tool allows you to draw pixels with Braille symbols on your image. Select preferred mini-pixels via menu above, configure transparency affecting and \"Let's go fellas!\""
+tool.about = locale.tool9
 
 local layout = GUI.layout(1, 1, 1, 8, 1, 1)
 local container, char, step = layout:addChild(GUI.container(1, 1, 8, 8)), " ", false
 for y = 1, 8, 2 do
 	for x = 1, 8, 4 do
 		local button = container:addChild(GUI.button(x, y, 4, 2, step and 0xFFFFFF or 0xD2D2D2, 0x0, step and 0x0 or 0x1E1E1E, 0x0, " "))
+		
 		button.switchMode = true
+		
 		button.onTouch = function()
 			local data = {}
 			for i = 1, #container.children do
@@ -33,7 +36,7 @@ for y = 1, 8, 2 do
 	step = not step
 end
 
-local backgroundSwitch = window.newSwitch("Draw background:", false)
+local backgroundSwitch = window.newSwitch(locale.drawBack, false)
 
 tool.onSelection = function()
 	window.currentToolLayout:addChild(layout)
@@ -42,7 +45,7 @@ end
 
 tool.eventHandler = function(workspace, object, e1, e2, e3, e4)
 	if e1 == "touch" or e1 == "drag" then
-		local x, y = e3 - window.image.x + 1, e4 - window.image.y + 1
+		local x, y = math.ceil(e3) - window.image.x + 1, math.ceil(e4) - window.image.y + 1
 		local background, foreground, alpha, symbol = image.get(window.image.data, x, y)
 		
 		image.set(window.image.data, x, y,

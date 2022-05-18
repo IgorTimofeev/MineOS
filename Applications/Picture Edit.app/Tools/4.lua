@@ -6,13 +6,14 @@ local GUI = require("GUI")
 
 local workspace, window, menu = select(1, ...), select(2, ...), select(3, ...)
 local tool = {}
+local locale = select(4, ...)
 
 tool.shortcut = "Pck"
 tool.keyCode = 56
-tool.about = "Picker tool allows to select interested data from image as primary or secondary color. You can configure of what colors to pick."
+tool.about = locale.tool4
 
-local pickBackgroundSwitch = window.newSwitch("Pick background:", true)
-local pickForegroundSwitch = window.newSwitch("Pick foreground:", true)
+local pickBackgroundSwitch = window.newSwitch(locale.pickBack, true)
+local pickForegroundSwitch = window.newSwitch(locale.pickFor, true)
 
 tool.onSelection = function()
 	window.currentToolLayout:addChild(pickBackgroundSwitch)
@@ -21,8 +22,9 @@ end
 
 tool.eventHandler = function(workspace, object, e1, e2, e3, e4)
 	if e1 == "touch" or e1 == "drag" then
-		local x, y = e3 - window.image.x + 1, e4 - window.image.y + 1
+		e3, e4 = math.ceil(e3), math.ceil(e4)
 		
+		local x, y = e3 - window.image.x + 1, e4 - window.image.y + 1
 		local background, foreground = image.get(window.image.data, x, y)
 
 		if pickBackgroundSwitch.switch.state then

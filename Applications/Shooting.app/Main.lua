@@ -75,6 +75,8 @@ end
 
 circle.eventHandler = function(workspace, circle, e1, e2, e3, e4, e5, e6)
 	if e1 == "touch" then
+		e3, e4 = math.ceil(e3), math.ceil(e4)
+		
 		lastPlayer = e6
 		players[lastPlayer] = players[lastPlayer] or {
 			color = color.HSBToInteger(math.random(360), 1, 1),

@@ -4,18 +4,14 @@ local function getComponentAddress(name)
 	return component.list(name)() or error("Required " .. name .. " component is missing")
 end
 
-local function getComponentProxy(name)
-	return component.proxy(getComponentAddress(name))
-end
-
-local EEPROMProxy, internetProxy, GPUProxy = 
-	getComponentProxy("eeprom"),
-	getComponentProxy("internet"),
-	getComponentProxy("gpu")
+local EEPROMAddress, internetAddress, GPUAddress = 
+	getComponentAddress("eeprom"),
+	getComponentAddress("internet"),
+	getComponentAddress("gpu")
 
 -- Binding GPU to screen in case it's not done yet
-GPUProxy.bind(getComponentAddress("screen"))
-local screenWidth, screenHeight = GPUProxy.getResolution()
+component.invoke(GPUAddress, "bind", getComponentAddress("screen"))
+local screenWidth, screenHeight = component.invoke(GPUAddress, "getResolution")
 
 local repositoryURL = "https://raw.githubusercontent.com/IgorTimofeev/MineOS/master/"
 local installerURL = "Installer/"
@@ -35,9 +31,9 @@ local function centrize(width)
 end
 
 local function centrizedText(y, color, text)
-	GPUProxy.fill(1, y, screenWidth, 1, " ")
-	GPUProxy.setForeground(color)
-	GPUProxy.set(centrize(#text), y, text)
+	component.invoke(GPUAddress, "fill", 1, y, screenWidth, 1, " ")
+	component.invoke(GPUAddress, "setForeground", color)
+	component.invoke(GPUAddress, "set", centrize(#text), y, text)
 end
 
 local function title()
@@ -61,10 +57,10 @@ local function progress(value)
 	local width = 26
 	local x, y, part = centrize(width), title(), math.ceil(width * value)
 	
-	GPUProxy.setForeground(0x878787)
-	GPUProxy.set(x, y, string.rep("─", part))
-	GPUProxy.setForeground(0xC3C3C3)
-	GPUProxy.set(x + part, y, string.rep("─", width - part))
+	component.invoke(GPUAddress, "setForeground", 0x878787)
+	component.invoke(GPUAddress, "set", x, y, string.rep("─", part))
+	component.invoke(GPUAddress, "setForeground", 0xC3C3C3)
+	component.invoke(GPUAddress, "set", x + part, y, string.rep("─", width - part))
 end
 
 local function filesystemPath(path)
@@ -80,7 +76,7 @@ local function filesystemHideExtension(path)
 end
 
 local function rawRequest(url, chunkHandler)
-	local internetHandle, reason = internetProxy.request(repositoryURL .. url:gsub("([^%w%-%_%.%~])", function(char)
+	local internetHandle, reason = component.invoke(internetAddress, "request", repositoryURL .. url:gsub("([^%w%-%_%.%~])", function(char)
 		return string.format("%%%02X", string.byte(char))
 	end))
 
@@ -141,8 +137,8 @@ local function deserialize(text)
 end
 
 -- Clearing screen
-GPUProxy.setBackground(0xE1E1E1)
-GPUProxy.fill(1, 1, screenWidth, screenHeight, " ")
+component.invoke(GPUAddress, "setBackground", 0xE1E1E1)
+component.invoke(GPUAddress, "fill", 1, 1, screenWidth, screenHeight, " ")
 
 -- Searching for appropriate temporary filesystem for storing libraries, images, etc
 for address in component.list("filesystem") do
@@ -216,7 +212,7 @@ local text = require("Text")
 local number = require("Number")
 
 local screen = require("Screen")
-screen.setGPUProxy(GPUProxy)
+screen.setGPUAddress(GPUAddress)
 
 local GUI = require("GUI")
 local system = require("System")
@@ -569,9 +565,9 @@ addStage(function()
 	addTitle(0x969696, localization.flashing)
 	workspace:draw()
 	
-	EEPROMProxy.set(request(EFIURL))
-	EEPROMProxy.setLabel("MineOS EFI")
-	EEPROMProxy.setData(selectedFilesystemProxy.address)
+	component.invoke(EEPROMAddress, "set", request(EFIURL))
+	component.invoke(EEPROMAddress, "setLabel", "MineOS EFI")
+	component.invoke(EEPROMAddress, "setData", selectedFilesystemProxy.address)
 
 	-- Downloading files
 	layout:removeChildren()

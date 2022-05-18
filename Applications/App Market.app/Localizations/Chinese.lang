@@ -13,7 +13,8 @@
 	typeUserName = "用户名",
 	yourText = "你:",
 	hereBeYourDialogs = "这是你们的谈话内容",
-
+	hideApplicationIcons = "Hide application icons",
+	
 	categoryOverview = "预览",
 	categoryApplications = "软件",
 	categoryLibraries = "库",

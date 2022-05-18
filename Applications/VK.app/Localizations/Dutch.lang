@@ -8,6 +8,8 @@
 	username = "E-mail of telefoon nummer",
 	password = "Wachtwoord",
 	login = "Log in",
+	twoFactorEnabled = "2FA enthalten",
+	twoFactor = "2FA code",
 	saveLogin = "Sla login informatie op:",
 
 	loadCountConversations = "Het aantal geladen dialogen",

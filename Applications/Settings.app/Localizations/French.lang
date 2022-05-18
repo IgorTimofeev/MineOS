@@ -37,6 +37,7 @@
 	appearanceDesktopBackground = "Fond d'écran",
 	appearanceDock = "Dock de couleur",
 	appearanceMenu = "Couleur du menu",
+	appearanceBlurEnabled = "Interface blurring",
 	appearanceTransparencyEnabled = "Transparence de l'interface",
 	appearanceTransparencyInfo = "La désactivation des deux dernières options réduira considérablement le nombre d'appels directs au processeur / processeur graphique et augmentera les performances.",
 	appearanceDropDownDefaultBackground = "Menu déroulant arrière-plan",

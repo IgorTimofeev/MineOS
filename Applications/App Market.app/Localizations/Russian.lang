@@ -13,7 +13,8 @@
 	typeUserName = "Введите имя пользователя",
 	yourText = "Вы:",
 	hereBeYourDialogs = "Здесь будут отображены ваши диалоги",
-
+	hideApplicationIcons = "Скрыть иконки приложений",
+	
 	categoryOverview = "Главная",
 	categoryApplications = "Приложения",
 	categoryLibraries = "Библиотеки",

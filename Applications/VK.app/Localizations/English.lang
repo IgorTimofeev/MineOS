@@ -8,6 +8,8 @@
 	username = "E-mail or phone number",
 	password = "Password",
 	login = "Enter",
+	twoFactorEnabled = "Use 2FA",
+	twoFactor = "2FA code",
 	saveLogin = "Save login information:",
 
 	loadCountConversations = "The number of loaded dialogues",

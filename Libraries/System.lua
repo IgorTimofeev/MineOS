@@ -34,6 +34,7 @@ local desktopWindowsContainer
 local dockContainer
 local desktopMenu
 local desktopMenuLayout
+local desktopMenuMineOSItem
 local desktopIconField
 local desktopBackground
 local desktopBackgroundColor = 0x1E1E1E
@@ -98,6 +99,9 @@ function system.getDefaultUserSettings()
 		interfaceTransparencyDock = 0.4,
 		interfaceTransparencyMenu = 0.2,
 		interfaceTransparencyContextMenu = 0.2,
+		interfaceBlurEnabled = false,
+		interfaceBlurRadius = 3,
+		interfaceBlurTransparency = 0.6,
 
 		interfaceColorDesktopBackground = 0x1E1E1E,
 		interfaceColorDock = 0xE1E1E1,
@@ -128,7 +132,7 @@ function system.getDefaultUserSettings()
 			[".cfg"] = filesystem.path(paths.system.applicationMineCodeIDE),
 			[".txt"] = filesystem.path(paths.system.applicationMineCodeIDE),
 			[".lang"] = filesystem.path(paths.system.applicationMineCodeIDE),
-			[".pic"] = filesystem.path(paths.system.applicationPictureEdit),
+			[".pic"] = filesystem.path(paths.system.applicationPictureView),
 			[".3dm"] = paths.system.applications .. "3D Print.app/"
 		},
 	}
@@ -142,8 +146,10 @@ end
 
 function system.getCurrentScript()
 	local info
+
 	for runLevel = 0, math.huge do
 		info = debug.getinfo(runLevel)
+
 		if info then
 			if info.what == "main" then
 				return info.source:sub(2, -1)
@@ -166,6 +172,7 @@ function system.getLocalization(pathToLocalizationFolder)
 	-- Otherwise returning first available localization
 	else
 		local list = filesystem.list(pathToLocalizationFolder)
+
 		if #list > 0 then
 			return filesystem.readTable(pathToLocalizationFolder .. list[1])
 		else
@@ -341,7 +348,7 @@ local function uploadToPastebin(path)
 				workspace:draw()
 
 				local internet = require("Internet")
-				result, reason = internet.request("http://pastebin.com/api/api_post.php", internet.serialize({
+				result, reason = internet.request("https://pastebin.com/api/api_post.php", internet.serialize({
 					api_option = "paste",
 					api_dev_key = "fd92bd40a84c127eeb6804b146793c97",
 					api_paste_expire_date = "N",
@@ -563,7 +570,7 @@ local function iconDeselectAndSelect(icon)
 end
 
 local function iconOnRightClick(selectedIcons, icon, e1, e2, e3, e4)
-	local contextMenu = GUI.addContextMenu(workspace, e3, e4)
+	local contextMenu = GUI.addContextMenu(workspace, math.ceil(e3), math.ceil(e4))
 
 	if #selectedIcons > 1 then
 		contextMenu:addItem(localization.newFolderFromChosen .. " (" .. #selectedIcons .. ")").onTouch = function()
@@ -1003,6 +1010,7 @@ end
 
 local function iconFieldLoadIconConfig(iconField)
 	local configPath = iconField.path .. ".icons"
+
 	if filesystem.exists(configPath) then
 		iconField.iconConfig = filesystem.readTable(configPath)
 	else
@@ -1023,13 +1031,15 @@ end
 
 local function gridIconFieldCheckSelection(iconField)
 	local selection = iconField.selection
+	
 	if selection and selection.x2 then
-		local child
+		local child, xCenter, yCenter
 
 		for i = 1, #iconField.children do
 			child = iconField.children[i]
 
-			local xCenter, yCenter = child.x + userSettings.iconWidth / 2, child.y + userSettings.iconHeight / 2
+			xCenter, yCenter = child.x + userSettings.iconWidth / 2, child.y + userSettings.iconHeight / 2
+			
 			child.selected = 
 				xCenter >= selection.x1 and
 				xCenter <= selection.x2 and
@@ -1225,7 +1235,7 @@ local function listIconFieldUpdateFileList(iconField)
 end
 
 local function iconFieldBackgroundClick(iconField, e1, e2, e3, e4, e5, ...)
-	local contextMenu = GUI.addContextMenu(workspace, e3, e4)
+	local contextMenu = GUI.addContextMenu(workspace, math.ceil(e3), math.ceil(e4))
 
 	local subMenu = contextMenu:addSubMenuItem(localization.create)
 
@@ -1355,10 +1365,11 @@ local function iconFieldBackgroundClick(iconField, e1, e2, e3, e4, e5, ...)
 			if e1 == "touch" then	
 				if #container.input.text > 0 then
 					local path = iconField.path .. container.input.text .. ".app/"
+					
 					if checkFileToExists(container, path) then
-						system.copy({ paths.system.applicationSample }, iconField.path)
-						filesystem.rename(iconField.path .. filesystem.name(paths.system.applicationSample), path)
-
+						system.copy({ paths.system.applicationSample }, paths.system.temporary)
+						filesystem.rename(paths.system.temporary .. filesystem.name(paths.system.applicationSample), path)
+						
 						container:remove()
 						iconFieldSaveIconPosition(iconField, container.input.text .. ".app/", e3, e4)
 						computer.pushSignal("system", "updateFileList")
@@ -1457,11 +1468,19 @@ local function gridIconFieldBackgroundObjectEventHandler(workspace, object, e1, 
 	elseif e1 == "drag" then
 		if iconField.selection then
 			local selection = iconField.selection
+
 			selection.x2Raw, selection.y2Raw = e3, e4
 
 			-- Creating ordered representation of selection
-			selection.x1, selection.y1, selection.x2, selection.y2 =
-				selection.x1Raw, selection.y1Raw, selection.x2Raw, selection.y2Raw
+			selection.x1,
+			selection.y1,
+			selection.x2,
+			selection.y2 =
+			
+			math.ceil(selection.x1Raw),
+			math.ceil(selection.y1Raw),
+			math.ceil(selection.x2Raw),
+			math.ceil(selection.y2Raw)
 
 			if selection.x2 < selection.x1 then
 				selection.x1, selection.x2 = selection.x2, selection.x1
@@ -1624,6 +1643,7 @@ end
 
 local function updateMenu()
 	local topmostWindow = desktopWindowsContainer.children[#desktopWindowsContainer.children]
+
 	desktopMenu.children = topmostWindow and topmostWindow.menu.children or system.menuInitialChildren
 end
 
@@ -1722,6 +1742,7 @@ function system.addWindow(window, dontAddToDock, preserveCoordinates)
 					-- Взалупливаем иконке индивидуальную менюху. По дефолту тут всякая хуйня и прочее
 					window.menu = GUI.menu(1, 1, 1)
 					window.menu.colors = desktopMenu.colors
+
 					local name = filesystem.hideExtension(filesystem.name(dockPath))
 					local contextMenu = window.menu:addContextMenuItem(name, 0x0)
 
@@ -1963,9 +1984,11 @@ function system.error(path, line, traceback)
 	
 	-- Obtain from- and to- lines that need to be shown
 	codeView.fromLine = line - math.floor((window.height - 3) / 2) + 1
+	
 	if codeView.fromLine <= 0 then
 		codeView.fromLine = 1
 	end
+
 	local toLine, lineCounter = codeView.fromLine + codeView.height - 1, 1
 
 	-- Read part of file to display error line
@@ -2037,7 +2060,6 @@ function system.execute(path, ...)
 		GUI.alert("File \"" .. tostring(path) .. "\" doesn't exists")
 	end
 
-	component.proxy(screen.getGPUProxy().getScreen()).setPrecise(false)
 	screen.setResolution(oldScreenWidth, oldScreenHeight)
 
 	if not success then
@@ -2125,7 +2147,7 @@ function system.updateResolution()
 	if userSettings.interfaceScreenWidth then
 		screen.setResolution(userSettings.interfaceScreenWidth, userSettings.interfaceScreenHeight)
 	else
-		screen.setResolution(screen.getGPUProxy().maxResolution())
+		screen.setResolution(screen.getMaxResolution())
 	end
 
 	workspace.width, workspace.height = screen.getResolution()
@@ -2273,7 +2295,7 @@ function system.updateDesktop()
 
 		icon.onRightClick = function(icon, e1, e2, e3, e4, ...)
 			local indexOf = icon:indexOf()
-			local contextMenu = GUI.addContextMenu(workspace, e3, e4)
+			local contextMenu = GUI.addContextMenu(workspace, math.ceil(e3), math.ceil(e4))
 			
 			contextMenu.onMenuClosed = function()
 				icon.selected = false
@@ -2360,7 +2382,7 @@ function system.updateDesktop()
 	end
 
 	icon.onRightClick = function(icon, e1, e2, e3, e4)
-		local contextMenu = GUI.addContextMenu(workspace, e3, e4)
+		local contextMenu = GUI.addContextMenu(workspace, math.ceil(e3), math.ceil(e4))
 		
 		contextMenu.onMenuClosed = function()
 			icon.selected = false
@@ -2417,8 +2439,9 @@ function system.updateDesktop()
 
 	desktopMenu = workspace:addChild(GUI.menu(1, 1, workspace.width, 0x0, 0x696969, 0x3366CC, 0xFFFFFF))
 	
-	local MineOSContextMenu = desktopMenu:addContextMenuItem("MineOS", 0x000000)
-	MineOSContextMenu:addItem(localization.aboutSystem).onTouch = function()
+	desktopMenuMineOSItem = desktopMenu:addContextMenuItem("MineOS", 0x000000)
+	
+	desktopMenuMineOSItem:addItem(localization.aboutSystem).onTouch = function()
 		local container = GUI.addBackgroundContainer(workspace, true, true, localization.aboutSystem)
 		container.layout:removeChildren()
 		
@@ -2462,22 +2485,22 @@ function system.updateDesktop()
 		workspace:draw()
 	end
 
-	MineOSContextMenu:addItem(localization.updates).onTouch = function()
+	desktopMenuMineOSItem:addItem(localization.updates).onTouch = function()
 		system.execute(paths.system.applicationAppMarket, "updates")
 	end
 
-	MineOSContextMenu:addSeparator()
+	desktopMenuMineOSItem:addSeparator()
 
-	MineOSContextMenu:addItem(localization.logout).onTouch = function()
+	desktopMenuMineOSItem:addItem(localization.logout).onTouch = function()
 		system.authorize()
 	end
 
-	MineOSContextMenu:addItem(localization.reboot).onTouch = function()
+	desktopMenuMineOSItem:addItem(localization.reboot).onTouch = function()
 		require("Network").broadcastComputerState(false)
 		computer.shutdown(true)
 	end
 
-	MineOSContextMenu:addItem(localization.shutdown).onTouch = function()
+	desktopMenuMineOSItem:addItem(localization.shutdown).onTouch = function()
 		require("Network").broadcastComputerState(false)
 		computer.shutdown()
 	end
@@ -2529,9 +2552,11 @@ function system.updateDesktop()
 		dateWidget.width = unicode.len(dateWidgetText)
 
 		batteryWidgetPercent = computer.energy() / computer.maxEnergy()
+		
 		if batteryWidgetPercent == math.huge then
 			batteryWidgetPercent = 1
 		end
+		
 		batteryWidgetText = math.ceil(batteryWidgetPercent * 100) .. "% "
 		batteryWidget.width = #batteryWidgetText + 4
 
@@ -2553,8 +2578,10 @@ function system.updateDesktop()
 					workspace:draw()
 				end
 			end
+		
 		elseif lastWindowHandled and e1 == "key_up" and (e4 == 17 or e4 == 35) then
 			lastWindowHandled = false
+		
 		elseif e1 == "system" then
 			if e2 == "updateFileList" then
 				desktopIconField:updateFileList()
@@ -2562,6 +2589,7 @@ function system.updateDesktop()
 				dockContainer.updateIcons()
 				workspace:draw()
 			end
+		
 		elseif e1 == "network" then
 			if e2 == "accessDenied" then
 				GUI.alert(localization.networkAccessDenied)
@@ -2612,11 +2640,14 @@ function system.updateColorScheme()
 
 	-- Windows
 	GUI.WINDOW_SHADOW_TRANSPARENCY = userSettings.interfaceTransparencyEnabled and 0.6
+	
 	-- Background containers
 	GUI.BACKGROUND_CONTAINER_PANEL_COLOR = userSettings.interfaceTransparencyEnabled and 0x0 or userSettings.interfaceColorDesktopBackground
 	GUI.BACKGROUND_CONTAINER_PANEL_TRANSPARENCY = userSettings.interfaceTransparencyEnabled and 0.3
+	
 	-- Top menu
 	desktopMenu.colors.default.background = userSettings.interfaceColorMenu
+	
 	-- Desktop background
 	desktopBackgroundColor = userSettings.interfaceColorDesktopBackground
 end
@@ -2885,41 +2916,69 @@ function system.getDockContainer()
 	return dockContainer
 end
 
+function system.addBlurredOrDefaultPanel(container, x, y, width, height)
+	return container:addChild(userSettings.interfaceBlurEnabled and GUI.blurredPanel(x, y, width, height, userSettings.interfaceBlurRadius, 0x0, userSettings.interfaceBlurTransparency) or GUI.panel(x, y, width, height, 0x2D2D2D))
+end
+
+function system.addConsoleWindow()
+	local result, data = loadfile(paths.system.applicationConsole)
+			
+	if result then
+		result, data = xpcall(result, debug.traceback)
+		
+		if not result then
+			GUI.alert(data)
+		end
+
+		return data
+	else
+		GUI.alert(data)
+	end
+end
+
 --------------------------------------------------------------------------------
 
--- Optaining temporary file's last modified UNIX timestamp as boot timestamp
-local temporaryPath = system.getTemporaryPath()
-filesystem.write(temporaryPath, "")
-bootRealTime = math.floor(filesystem.lastModified(temporaryPath) / 1000)
-filesystem.remove(temporaryPath)
+-- Keeping temporary file's last modified timestamp as boot timestamp
+do
+	local proxy, path = component.proxy(computer.tmpAddress()), "timestamp"
+	
+	proxy.close(proxy.open(path, "wb"))
+	bootRealTime = math.floor(proxy.lastModified(path) / 1000)
+	proxy.remove(path)
+end
 
--- Meow
+-- Global print() function for debugging
 _G.print = function(...)
 	if not system.consoleWindow then
-		local result, data = loadfile(paths.system.applicationConsole)
-			
-		if result then
-			result, data = xpcall(result, debug.traceback)
-			
-			if not result then
-				GUI.alert(data)
-				return
-			end
-		else
-			GUI.alert(data)
-			return
+		system.consoleWindow = system.addConsoleWindow()
+
+		local overrideWindowRemove = system.consoleWindow.remove
+		system.consoleWindow.remove = function(...)
+			system.consoleWindow = nil
+
+			overrideWindowRemove(...)
 		end
+
+		workspace:draw()
 	end
 
-	local args = {...}
+	local args, arg = {...}
 
 	for i = 1, #args do
-		args[i] = tostring(args[i])
+		arg = args[i]
+
+		if type(arg) == "table" then
+			arg = text.serialize(arg, true, "  ", 3)
+		else
+			arg = tostring(arg)
+		end
+
+		args[i] = arg
 	end
 
 	args = table.concat(args, " ")
 	
-	system.consoleWindow.addLine(args)
+	system.consoleWindow:addLine(args)
 	system.consoleWindow:focus()
 end
 

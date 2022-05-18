@@ -13,7 +13,7 @@ local configPath = paths.user.applicationData .. "MultiScreen/Config.cfg"
 local elementWidth = 48
 local baseResolutionWidth = 146
 local baseResolutionHeight = 54
-local GPUProxy = screen.getGPUProxy()
+local GPUProxy = component.proxy(screen.getGPUAddress())
 local mainScreenAddress = GPUProxy.getScreen()
 
 local config = {
@@ -137,7 +137,7 @@ local function mainMenu(force)
 					saveConfig()
 
 					-- Биндим гпуху к первому монику. Фишка в том, что смена резолюшна не должна затрагивать главный моник
-					screen.bind(config.map[1][1], false)
+					screen.setScreenAddress(config.map[1][1], false)
 					-- Сеттим разрешение разово. Все равно оно сохраняется даже при бинде
 					screen.setResolution(baseResolutionWidth, baseResolutionHeight)
 
@@ -148,7 +148,7 @@ local function mainMenu(force)
 							monitorCornerImageX = (xMonitor - 1) * baseResolutionWidth
 
 							-- Биндим гпуху к выбранному монику
-							screen.bind(config.map[yMonitor][xMonitor], false)
+							screen.setScreenAddress(config.map[yMonitor][xMonitor], false)
 							-- Чистим вилочкой буфер
 							screen.clear(config.backgroundColor)
 
@@ -209,7 +209,7 @@ local function mainMenu(force)
 
 					file:close()
 					
-					screen.bind(mainScreenAddress, false)
+					screen.setScreenAddress(mainScreenAddress, false)
 					screen.setResolution(oldWidth, oldHeight)
 				else
 					file:close()
@@ -293,7 +293,7 @@ local function mainMenu(force)
 						if e1 == "touch" then
 							if e2 ~= mainScreenAddress then
 								GPUProxy.bind(e2, false)
-								GPUProxy.setDepth(8)
+								GPUProxy.setColorDepth(8)
 								GPUProxy.setResolution(baseResolutionWidth, baseResolutionHeight)
 								GPUProxy.setBackground(color.HSBToInteger(hue, 1, 1))
 								GPUProxy.setForeground(0x0)

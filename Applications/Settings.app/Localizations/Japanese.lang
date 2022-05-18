@@ -37,6 +37,7 @@
 	appearanceDesktopBackground = "デスクトップの背景",
 	appearanceDock = "Dockの背景",
 	appearanceMenu = "Menuの背景",
+	appearanceBlurEnabled = "Interface blurring",
 	appearanceTransparencyEnabled = "インターフェースの透明度",
 	appearanceTransparencyInfo = "最後の2つのオプションを無効にすると、CPU / GPUへのアクセス数が大幅に減り、パフォーマンスが向上します。",
 	appearanceDropDownDefaultBackground = "ドロップダウンメニューの背景",
