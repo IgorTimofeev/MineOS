@@ -462,12 +462,34 @@ local function moveCursor(symbolOffset, lineOffset, ignoreHidden)
 	end
 end
 
+local function swapLinesAndMoveCursor (lineOffset)
+	if not autocomplete.hidden then 
+		return 
+	end
+	
+	-- Проверяем, не заходит ли свап за рамки файла
+	if cursorPositionLine + lineOffset > #lines or cursorPositionLine + lineOffset < 1 then 
+		return 
+	end
+
+	-- Ебитесь сами со своим выделением, хехе
+	if codeView.selections[1] then
+		clearSelection ()
+	end
+
+	-- Свапаем строки
+	lines[cursorPositionLine], lines[cursorPositionLine + lineOffset] = lines[cursorPositionLine + lineOffset], lines[cursorPositionLine]
+
+	-- Ставим курсор на новую позицию
+	moveCursor (0, lineOffset, false)
+end
+
 local function setCursorPositionToHome()
-	setCursorPositionAndClearSelection(1, 1)
+	setCursorPositionAndClearSelection(1, cursorPositionLine)
 end
 
 local function setCursorPositionToEnd()
-	setCursorPositionAndClearSelection(unicode.len(lines[#lines]) + 1, #lines)
+	setCursorPositionAndClearSelection(unicode.len(lines[cursorPositionLine]) + 1, cursorPositionLine)
 end
 
 local function scroll(direction, speed)
@@ -1475,7 +1497,7 @@ codeView.eventHandler = function(workspace, object, e1, e2, e3, e4, e5)
 			elseif e4 == 14 then
 				deleteLine(cursorPositionLine)
 			-- Delete
-			elseif e4 == 211 then
+			elseif e4 == 211 then				
 				deleteLine(cursorPositionLine)
 			-- F5
 			elseif e4 == 63 then
@@ -1483,9 +1505,21 @@ codeView.eventHandler = function(workspace, object, e1, e2, e3, e4, e5)
 			end
 		-- Arrows up, down, left, right
 		elseif e4 == 200 then
-			moveCursor(0, -1)
+			-- Alt
+			if keyboard.isKeyDown (56) then
+				-- Swap current line or selection with upper
+				swapLinesAndMoveCursor (-1)
+			else
+				moveCursor(0, -1)
+			end
 		elseif e4 == 208 then
-			moveCursor(0, 1)
+			-- Alt
+			if keyboard.isKeyDown (56) then
+				-- Swap current line or selection with lower
+				swapLinesAndMoveCursor (1)
+			else
+				moveCursor(0, 1)
+			end
 		elseif e4 == 203 then
 			moveCursor(-1, 0, true)
 		elseif e4 == 205 then
@@ -1571,7 +1605,12 @@ codeView.eventHandler = function(workspace, object, e1, e2, e3, e4, e5)
 			pageDown()
 		-- Delete
 		elseif e4 == 211 then
-			delete()
+			-- Shift
+			if keyboard.isKeyDown (42) then
+				deleteLine (cursorPositionLine)
+			else
+				delete()
+			end
 		else
 			pasteAutoBrackets(e3)
 		end
