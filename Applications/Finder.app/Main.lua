@@ -62,10 +62,8 @@ local modeList = window:addChild(GUI.list(FTPButton.localX + FTPButton.width + 2
 modeList:setDirection(GUI.DIRECTION_HORIZONTAL)
 
 local sidebarContainer = window:addChild(GUI.container(1, 4, config.sidebarWidth, 1))
-local sidebarPanel = sidebarContainer:addChild(GUI.object(1, 1, 1, 1, 0xFFFFFF))
-sidebarPanel.draw = function(object)
-	screen.drawRectangle(object.x, object.y, object.width, object.height, 0x2D2D2D, sidebarItemColor, " ")
-end
+
+local sidebarPanel = system.addBlurredOrDefaultPanel(sidebarContainer, 1, 1, 1, 1)
 
 local itemsLayout = sidebarContainer:addChild(GUI.layout(1, 1, 1, 1, 1, 1))
 itemsLayout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_LEFT, GUI.ALIGNMENT_VERTICAL_TOP)
@@ -147,7 +145,7 @@ end
 
 local function sidebarItemEventHandler(workspace, object, e1, e2, e3, ...)
 	if e1 == "touch" then
-		if object.onRemove and e3 == object.x + object.width - 2 then
+		if object.onRemove and math.ceil(e3) == object.x + object.width - 2 then
 			object.onRemove()
 		elseif object.onTouch then
 			object.onTouch(e1, e2, e3, ...)
@@ -454,14 +452,21 @@ local function updateIconField()
 	iconField.eventHandler = function(workspace, self, e1, e2, e3, e4, e5)
 		if e1 == "scroll" then
 			if config.gridMode then
-				local rows = math.ceil((#iconField.children - 1) / iconField.iconCount.horizontal)
+				local iconsCount = #iconField.children
+
+				if iconsCount < 2 then
+					return
+				end
+
+				local rows = math.ceil((iconsCount - 1) / iconField.iconCount.horizontal)
 				local minimumOffset = (rows - 1) * (userSettings.iconHeight + userSettings.iconVerticalSpace) - userSettings.iconVerticalSpace
 				
 				iconField.yOffset = math.max(-minimumOffset + 1, math.min(iconField.yOffsetInitial, iconField.yOffset + e5 * 2))
 
 				-- Moving icons upper or lower
 				local delta, child = iconField.yOffset - iconField.children[2].localY
-				for i = 1, #iconField.children do
+
+				for i = 1, iconsCount do
 					child = iconField.children[i]
 
 					if child ~= iconField.backgroundObject then

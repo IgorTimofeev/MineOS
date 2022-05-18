@@ -14,7 +14,6 @@ local event = require("Event")
 --------------------------------------------------------------------------------
 
 local host = "http://mineos.modder.pw/MineOSAPI/2.04/"
-local iconCheckReponseTime = 2
 
 local overviewIconsCount = 14
 local overviewAnimationDelay = 0.05
@@ -73,9 +72,18 @@ local languages = {
 
 filesystem.makeDirectory(iconCachePath)
 
-local luaIcon = image.load(currentScriptDirectory .. "Icons/Lua.pic")
-local fileNotExistsIcon = image.load(currentScriptDirectory .. "Icons/FileNotExists.pic")
-local scriptIcon = image.load(currentScriptDirectory .. "Icons/Script.pic")
+local iconsCache = {}
+
+local function loadIcon(name)
+	local icon = iconsCache[name]
+
+	if not icon then
+		icon = image.load(currentScriptDirectory .. "Icons/" .. name .. ".pic")
+		iconsCache[name] = icon
+	end
+
+	return icon
+end
 
 local search = ""
 local appWidth, appHeight, appHSpacing, appVSpacing, currentPage, appsPerPage, appsPerWidth, appsPerHeight = 32, 6, 2, 1, 0
@@ -86,8 +94,9 @@ local updateFileList, editPublication, messagesItem
 
 local workspace, window = system.addWindow(GUI.filledWindow(1, 1, 127, 33, 0xF0F0F0))
 
-local leftListPanel = window:addChild(GUI.panel(1, 1, 23, 3, 0x2D2D2D))
-local leftList = window:addChild(GUI.list(1, 4, leftListPanel.width, 1, 3, 0, 0x2D2D2D, 0x787878, 0x2D2D2D, 0x787878, 0xF0F0F0, 0x2D2D2D, false))
+local leftListPanel = system.addBlurredOrDefaultPanel(window, 1, 1, 23, 1)
+
+local leftList = window:addChild(GUI.list(1, 4, leftListPanel.width, 1, 3, 0, nil, 0x787878, nil, 0x787878, 0xF0F0F0, 0x2D2D2D, false))
 
 local contentContainer = window:addChild(GUI.container(1, 1, 1, 1))
 
@@ -139,6 +148,7 @@ local function loadConfig()
 			orderBy = 4,
 			orderDirection = 1,
 			singleSession = false,
+			hideApplicationIcons = false
 		}
 	end
 
@@ -205,7 +215,7 @@ end
 local function checkContentLength(url)
 	local handle = component.get("internet").request(url)
 	if handle then
-		local deadline, _, _, responseData = computer.uptime() + iconCheckReponseTime
+		local deadline, _, _, responseData = computer.uptime() + 1
 		repeat
 			_, _, responseData = handle:response()
 		until responseData or computer.uptime() >= deadline
@@ -240,8 +250,8 @@ local function checkImage(url, mneTolkoSprosit)
 					if data:sub(1, 4) == "OCIF" then
 						local encodingMethod = string.byte(data:sub(5, 5))
 
-						if encodingMethod == 6 or encodingMethod == 7 then
-							if string.byte(data:sub(6, 6)) == 8 and string.byte(data:sub(7, 7)) == 4 then
+						if encodingMethod >= 6 or encodingMethod <= 8 then
+							if string.byte(data:sub(6, 6)) <= 8 and string.byte(data:sub(7, 7)) <= 4 then
 								if mneTolkoSprosit then
 									handle:close()
 
@@ -558,37 +568,41 @@ local function loadImage(path)
 	if picture then
 		return picture
 	else
-		return fileNotExistsIcon
+		return loadIcon("FileNotExists")
 	end
 end
 
 local function getPublicationIcon(publication)
 	if publication.icon_url then
-		local path = iconCachePath .. publication.file_id .. "@" .. publication.version .. ".pic"
-
-		if filesystem.exists(path) then
-			return loadImage(path)
+		if config.hideApplicationIcons then
+			return loadIcon("Application")
 		else
-			progressIndicator.active = true
-			workspace:draw()
+			local path = iconCachePath .. publication.file_id .. "@" .. publication.version .. ".pic"
 
-			local data, reason = checkImage(publication.icon_url)
-
-			progressIndicator.active = false
-			workspace:draw()
-
-			if data then
-				filesystem.write(path, data)
-
+			if filesystem.exists(path) then
 				return loadImage(path)
 			else
-				return fileNotExistsIcon
+				progressIndicator.active = true
+				workspace:draw()
+
+				local data, reason = checkImage(publication.icon_url)
+
+				progressIndicator.active = false
+				workspace:draw()
+
+				if data then
+					filesystem.write(path, data)
+
+					return loadImage(path)
+				else
+					return loadIcon("FileNotExists")
+				end
 			end
 		end
 	elseif publication.category_id == 2 then
-		return luaIcon
+		return loadIcon("Lua")
 	else
-		return scriptIcon
+		return loadIcon("Script")
 	end
 end
 
@@ -601,9 +615,11 @@ local function addApplicationInfo(container, publication, limit)
 
 	local updateState = getUpdateState(publication.file_id, publication.version)
 	container.downloadButton = container:addChild(GUI.adaptiveRoundedButton(13, 5, 1, 0, 0xC3C3C3, 0xFFFFFF, 0x969696, 0xFFFFFF, updateState == 4 and localization.installed or updateState == 3 and localization.update or localization.install))
+	
 	container.downloadButton.onTouch = function()
 		download(publication)
 	end
+
 	container.downloadButton.colors.disabled.background = 0xE1E1E1
 	container.downloadButton.colors.disabled.text = 0xFFFFFF
 	container.downloadButton.disabled = updateState == 4
@@ -929,6 +945,13 @@ local function settings()
 			textLayout:addChild(GUI.keyAndValue(1, 1, 0x696969, 0x969696, "E-Mail", ": " .. user.email))
 			textLayout:addChild(GUI.keyAndValue(1, 1, 0x696969, 0x969696, localization.registrationDate, ": " .. os.date("%d.%m.%Y", user.timestamp)))
 			textLayout.height = #textLayout.children * 2 - 1
+
+			local hideApplicationIconsSwitch = layout:addChild(GUI.switchAndLabel(1, 1, 36, 6, 0x66DB80, 0xC3C3C3, 0xFFFFFF, 0x696969, localization.hideApplicationIcons .. ":", config.hideApplicationIcons))
+
+			hideApplicationIconsSwitch.switch.onStateChanged = function()
+				config.hideApplicationIcons = hideApplicationIconsSwitch.switch.state
+				saveConfig()
+			end
 
 			local buttonsLayout = layout:addChild(newButtonsLayout(1, 1, layout.width, 2))
 			
@@ -1925,7 +1948,8 @@ messagesItem.onTouch = dialogs
 leftList:addItem(localization.settings).onTouch = settings
 
 window.onResize = function(width, height)
-	leftList.height = height - leftListPanel.height
+	leftListPanel.height = height
+	leftList.height = height - 3
 
 	window.backgroundPanel.localX = leftList.width + 1
 	window.backgroundPanel.width = width - leftList.width

@@ -363,85 +363,90 @@ end
 --------------------------------------------------------------------------------
 
 local function workspaceStart(workspace, eventPullTimeout)
-	local animation, animationIndex, animationOnFinishMethodsIndex, animationOnFinishMethods, e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12, e13, e14, e15, e16, e17, e18, e19, e20, e21, e22, e23, e24, e25, e26, e27, e28, e29, e30, e31, e32
+	local animation, animationIndex, animationOnFinishMethodsIndex, animationOnFinishMethods, roundedX, roundedY, e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12, e13, e14, e15, e16, e17, e18, e19, e20, e21, e22, e23, e24, e25, e26, e27, e28, e29, e30, e31, e32
 	
-	local function handle(isScreenEvent, currentContainer, intersectionX1, intersectionY1, intersectionX2, intersectionY2)
-		if
-			not isScreenEvent or
-			intersectionX1 and
-			e3 >= intersectionX1 and
-			e3 <= intersectionX2 and
-			e4 >= intersectionY1 and
-			e4 <= intersectionY2
-		then
-			local currentContainerPassed, child, newIntersectionX1, newIntersectionY1, newIntersectionX2, newIntersectionY2
+	local function handleContainer(isScreenEvent, currentContainer, intersectionX1, intersectionY1, intersectionX2, intersectionY2)
+		local currentContainerPassed, child, newIntersectionX1, newIntersectionY1, newIntersectionX2, newIntersectionY2
+		
+		if isScreenEvent then
+			roundedX, roundedY = math.ceil(e3), math.ceil(e4)
 
-			if isScreenEvent then
-				if currentContainer.eventHandler and not currentContainer.disabled then
-					currentContainer.eventHandler(workspace, currentContainer, e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12, e13, e14, e15, e16, e17, e18, e19, e20, e21, e22, e23, e24, e25, e26, e27, e28, e29, e30, e31, e32)
-				end
+			if
+				roundedX < intersectionX1
+				or roundedX > intersectionX2
+				or roundedY < intersectionY1
+				or roundedY > intersectionY2
+			then
+				return
+			end
 
-				currentContainerPassed = not currentContainer.passScreenEvents
-			elseif currentContainer.eventHandler then
+			if currentContainer.eventHandler and not currentContainer.disabled then
 				currentContainer.eventHandler(workspace, currentContainer, e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12, e13, e14, e15, e16, e17, e18, e19, e20, e21, e22, e23, e24, e25, e26, e27, e28, e29, e30, e31, e32)
 			end
 
-			for i = #currentContainer.children, 1, -1 do
-				child = currentContainer.children[i]
+			currentContainerPassed = not currentContainer.passScreenEvents
+		
+		elseif currentContainer.eventHandler then
+			currentContainer.eventHandler(workspace, currentContainer, e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12, e13, e14, e15, e16, e17, e18, e19, e20, e21, e22, e23, e24, e25, e26, e27, e28, e29, e30, e31, e32)
+		end
 
-				if not child.hidden then
-					if child.children then
-						newIntersectionX1, newIntersectionY1, newIntersectionX2, newIntersectionY2 = getRectangleIntersection(
-							intersectionX1,
-							intersectionY1,
-							intersectionX2,
-							intersectionY2,
-							child.x,
-							child.y,
-							child.x + child.width - 1,
-							child.y + child.height - 1
+		for i = #currentContainer.children, 1, -1 do
+			child = currentContainer.children[i]
+
+			if not child.hidden then
+				if child.children then
+					newIntersectionX1, newIntersectionY1, newIntersectionX2, newIntersectionY2 = getRectangleIntersection(
+						intersectionX1,
+						intersectionY1,
+						intersectionX2,
+						intersectionY2,
+						child.x,
+						child.y,
+						child.x + child.width - 1,
+						child.y + child.height - 1
+					)
+
+					if 
+						newIntersectionX1
+						and handleContainer(
+							isScreenEvent,
+							child,
+							newIntersectionX1,
+							newIntersectionY1,
+							newIntersectionX2,
+							newIntersectionY2,
+							e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12, e13, e14, e15, e16, e17, e18, e19, e20, e21, e22, e23, e24, e25, e26, e27, e28, e29, e30, e31, e32
 						)
+					then
+						return true
+					end
+				else
+					if workspace.needConsume then
+						workspace.needConsume = nil
 
-						if 
-							newIntersectionX1 and
-							handle(
-								isScreenEvent,
-								child,
-								newIntersectionX1,
-								newIntersectionY1,
-								newIntersectionX2,
-								newIntersectionY2,
-								e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12, e13, e14, e15, e16, e17, e18, e19, e20, e21, e22, e23, e24, e25, e26, e27, e28, e29, e30, e31, e32
-							)
-						then
-							return true
-						end
-					else
-						if workspace.needConsume then
-							workspace.needConsume = nil
-							return true
-						end
+						return true
+					end
 
-						if isScreenEvent then
-							if child:isPointInside(e3, e4) then
-								if child.eventHandler and not child.disabled then
-									child.eventHandler(workspace, child, e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12, e13, e14, e15, e16, e17, e18, e19, e20, e21, e22, e23, e24, e25, e26, e27, e28, e29, e30, e31, e32)
-								end
-
-								if not child.passScreenEvents then
-									return true
-								end
+					if isScreenEvent then
+						if child:isPointInside(roundedX, roundedY) then
+							if child.eventHandler and not child.disabled then
+								child.eventHandler(workspace, child, e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12, e13, e14, e15, e16, e17, e18, e19, e20, e21, e22, e23, e24, e25, e26, e27, e28, e29, e30, e31, e32)
 							end
-						elseif child.eventHandler then
-							child.eventHandler(workspace, child, e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12, e13, e14, e15, e16, e17, e18, e19, e20, e21, e22, e23, e24, e25, e26, e27, e28, e29, e30, e31, e32)
+
+							if not child.passScreenEvents then
+								return true
+							end
 						end
+
+					elseif child.eventHandler then
+						child.eventHandler(workspace, child, e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12, e13, e14, e15, e16, e17, e18, e19, e20, e21, e22, e23, e24, e25, e26, e27, e28, e29, e30, e31, e32)
 					end
 				end
 			end
+		end
 
-			if currentContainerPassed then
-				return true
-			end
+		if currentContainerPassed then
+			return true
 		end
 	end
 
@@ -450,7 +455,7 @@ local function workspaceStart(workspace, eventPullTimeout)
 	repeat
 		e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12, e13, e14, e15, e16, e17, e18, e19, e20, e21, e22, e23, e24, e25, e26, e27, e28, e29, e30, e31, e32 = event.pull(workspace.animations and 0 or workspace.eventPullTimeout)
 		
-		handle(
+		handleContainer(
 			e1 == "touch" or
 			e1 == "drag" or
 			e1 == "drop" or
@@ -474,6 +479,7 @@ local function workspaceStart(workspace, eventPullTimeout)
 
 					if #workspace.animations == 0 then
 						workspace.animations = nil
+						
 						break
 					end
 				else
@@ -543,6 +549,7 @@ local function pressableDraw(pressable)
 	if background then
 		screen.drawRectangle(pressable.x, pressable.y, pressable.width, pressable.height, background, text, " ")
 	end
+	
 	screen.drawText(math.floor(pressable.x + pressable.width / 2 - unicode.len(pressable.text) / 2), math.floor(pressable.y + pressable.height / 2), text, pressable.text)
 end
 
@@ -807,8 +814,27 @@ function GUI.panel(x, y, width, height, color, transparency)
 		background = color,
 		transparency = transparency
 	}
+
 	object.draw = drawPanel
 	
+	return object
+end
+
+--------------------------------------------------------------------------------
+
+local function blurredPanelDraw(object)
+	screen.blur(object.x, object.y, object.width, object.height, object.radius, object.color, object.transparency)
+end
+
+function GUI.blurredPanel(x, y, width, height, radius, color, transparency)
+	local object = GUI.object(x, y, width, height)
+
+	object.radius = radius or 3
+	object.color = color
+	object.transparency = transparency
+
+	object.draw = blurredPanelDraw
+
 	return object
 end
 
@@ -1222,19 +1248,19 @@ end
 
 --------------------------------------------------------------------------------
 
-local function getAxisValue(number, postfix, roundValues)
+local function getAxisValue(num, postfix, roundValues)
 	if roundValues then
-		return math.floor(number) .. postfix
+		return math.floor(num) .. postfix
 	else
-		local integer, fractional = math.modf(number)
+		local integer, fractional = math.modf(num)
 		local firstPart, secondPart = "", ""
 		if math.abs(integer) >= 1000 then
 			return number.shorten(integer, 2) .. postfix
 		else
 			if math.abs(fractional) > 0 then
-				return string.format("%.2f", number) .. postfix
+				return string.format("%.2f", num) .. postfix
 			else
-				return number .. postfix
+				return num .. postfix
 			end
 		end
 	end
@@ -1250,23 +1276,31 @@ local function drawChart(object)
 
 	-- Max, min, deltas
 	local xMin, xMax, yMin, yMax = valuesCopy[1][1], valuesCopy[#valuesCopy][1], valuesCopy[1][2], valuesCopy[1][2]
-	for i = 1, #valuesCopy do yMin, yMax = math.min(yMin, valuesCopy[i][2]), math.max(yMax, valuesCopy[i][2]) end
+	
+	for i = 1, #valuesCopy do
+		yMin, yMax = math.min(yMin, valuesCopy[i][2]), math.max(yMax, valuesCopy[i][2])
+	end
+	
 	local dx, dy = xMax - xMin, yMax - yMin
 
 	-- y axis values and helpers
 	local value, chartHeight, yAxisValueMaxWidth, yAxisValues = yMin, object.height - 1 - (object.showXAxisValues and 1 or 0), 0, {}
+	
 	for y = object.y + object.height - 3, object.y + 1, -chartHeight * object.yAxisValueInterval do
 		local stringValue = getAxisValue(value, object.yAxisPostfix, object.roundValues)
+		
 		yAxisValueMaxWidth = math.max(yAxisValueMaxWidth, unicode.len(stringValue))
 		table.insert(yAxisValues, {y = math.ceil(y), value = stringValue})
 		value = value + dy * object.yAxisValueInterval
 	end
+	
 	local stringValue = getAxisValue(yMax, object.yAxisPostfix, object.roundValues)
 	table.insert(yAxisValues, {y = object.y, value = stringValue})
 	yAxisValueMaxWidth = math.max(yAxisValueMaxWidth, unicode.len(stringValue))
 
 	local chartWidth = object.width - (object.showYAxisValues and yAxisValueMaxWidth + 2 or 0) 
 	local chartX = object.x + object.width - chartWidth
+	
 	for i = 1, #yAxisValues do
 		if object.showYAxisValues then
 			screen.drawText(chartX - unicode.len(yAxisValues[i].value) - 2, yAxisValues[i].y, object.colors.axisValue, yAxisValues[i].value)
@@ -1399,9 +1433,9 @@ local function sliderEventHandler(workspace, object, e1, e2, e3, e4, e5, ...)
 	if e1 == "touch" or e1 == "drag" then
 		local clickPosition = e3 - object.x
 
-		if clickPosition == 0 then
+		if clickPosition <= 0 then
 			object.value = object.minimumValue
-		elseif clickPosition == object.width - 1 then
+		elseif clickPosition >= object.width - 1 then
 			object.value = object.maximumValue
 		else
 			object.value = object.minimumValue + (clickPosition / object.width * (object.maximumValue - object.minimumValue))
@@ -1476,6 +1510,7 @@ local function switchEventHandler(workspace, switch, e1, ...)
 		local eventData = {...}
 
 		switch.state = not switch.state
+		
 		switch:addAnimation(
 			function(animation)
 				if switch.state then
@@ -1484,6 +1519,7 @@ local function switchEventHandler(workspace, switch, e1, ...)
 					switch.pipePosition = number.round(1 + (1 - animation.position) * (switch.width - 2))
 				end
 			end,
+			
 			function(animation)
 				animation:remove()
 				if switch.onStateChanged then
@@ -2183,15 +2219,19 @@ end
 
 local function resizerEventHandler(workspace, object, e1, e2, e3, e4)
 	if e1 == "touch" then
-		object.lastTouchX, object.lastTouchY = e3, e4
+		object.lastTouchX, object.lastTouchY = math.ceil(e3), math.ceil(e4)
 		workspace:draw()
-	elseif e1 == "drag" and object.lastTouchX then		
+	
+	elseif e1 == "drag" and object.lastTouchX then
+		e3, e4 = math.ceil(e3), math.ceil(e4)
+
 		if object.onResize then
 			object.onResize(e3 - object.lastTouchX, e4 - object.lastTouchY)
 		end
 		
 		object.lastTouchX, object.lastTouchY = e3, e4
 		workspace:draw()
+	
 	elseif e1 == "drop" then
 		if object.onResizeFinished then
 			object.onResizeFinished()
@@ -2284,6 +2324,8 @@ local function scrollBarEventHandler(workspace, object, e1, e2, e3, e4, e5, ...)
 	local newValue = object.value
 
 	if e1 == "touch" or e1 == "drag" then
+		e3, e4 = math.ceil(e3), math.ceil(e4)
+
 		if object.height > object.width then
 			if e4 == object.y + object.height - 1 then
 				newValue = object.maximumValue
@@ -2297,6 +2339,7 @@ local function scrollBarEventHandler(workspace, object, e1, e2, e3, e4, e5, ...)
 				newValue = object.minimumValue + (e3 - object.x) / object.width * (object.maximumValue - object.minimumValue)
 			end
 		end
+	
 	elseif e1 == "scroll" then
 		if e5 == 1 then
 			if object.value >= object.minimumValue + object.onScrollValueIncrement then
@@ -2315,6 +2358,7 @@ local function scrollBarEventHandler(workspace, object, e1, e2, e3, e4, e5, ...)
 
 	if e1 == "touch" or e1 == "drag" or e1 == "scroll" then
 		object.value = newValue
+
 		if object.onTouch then
 			object.onTouch(workspace, object, e1, e2, e3, e4, e5, ...)
 		end
@@ -2400,7 +2444,10 @@ end
 
 local function treeEventHandler(workspace, tree, e1, e2, e3, e4, e5, ...)
 	if e1 == "touch" then
+		e3, e4 = math.ceil(e3), math.ceil(e4)
+
 		local i = e4 - tree.y + tree.fromItem
+		
 		if tree.items[i] then
 			if
 				tree.items[i].expandable and
@@ -2436,6 +2483,7 @@ local function treeEventHandler(workspace, tree, e1, e2, e3, e4, e5, ...)
 
 			workspace:draw()
 		end
+	
 	elseif e1 == "scroll" then
 		if e5 == 1 then
 			if tree.fromItem > 1 then
@@ -2848,13 +2896,14 @@ end
 
 local function inputEventHandler(workspace, input, e1, e2, e3, e4, e5, e6, ...)
 	if e1 == "touch" or e1 == "drag" then
-		input:setCursorPosition(input.textCutFrom + e3 - input.x - input.textOffset)
+		input:setCursorPosition(input.textCutFrom + math.ceil(e3) - input.x - input.textOffset)
 
 		if input.focused then
 			inputCursorBlink(workspace, input, true)
 		else
 			input:startInput()
 		end
+	
 	elseif e1 == "key_down" and input.focused then
 		workspace:consumeEvent()
 
@@ -2880,6 +2929,7 @@ local function inputEventHandler(workspace, input, e1, e2, e3, e4, e5, e6, ...)
 			end
 
 			return
+		
 		-- Arrows up/down/left/right
 		elseif e4 == 200 then
 			if input.historyEnabled and #input.history > 0 then
@@ -2898,6 +2948,7 @@ local function inputEventHandler(workspace, input, e1, e2, e3, e4, e5, e6, ...)
 				input.text = input.history[input.historyIndex]
 				input:setCursorPosition(unicode.len(input.text) + 1)
 			end
+		
 		elseif e4 == 208 then
 			if input.historyEnabled and #input.history > 0 then
 				input.historyIndex = input.historyIndex + 1
@@ -2910,25 +2961,33 @@ local function inputEventHandler(workspace, input, e1, e2, e3, e4, e5, e6, ...)
 				input.text = input.history[input.historyIndex]
 				input:setCursorPosition(unicode.len(input.text) + 1)
 			end
+		
 		elseif e4 == 203 then
 			input:setCursorPosition(input.cursorPosition - 1)
+		
 		elseif e4 == 205 then	
 			input:setCursorPosition(input.cursorPosition + 1)
+		
 		-- Backspace
 		elseif e4 == 14 then
 			input.text = unicode.sub(unicode.sub(input.text, 1, input.cursorPosition - 1), 1, -2) .. unicode.sub(input.text, input.cursorPosition, -1)
 			input:setCursorPosition(input.cursorPosition - 1)
+		
 		-- Delete
 		elseif e4 == 211 then
 			input.text = unicode.sub(input.text, 1, input.cursorPosition - 1) .. unicode.sub(input.text, input.cursorPosition + 1, -1)
+		
 		-- Home
 		elseif e4 == 199 then
 			input:setCursorPosition(1)
+		
 		-- End
 		elseif e4 == 207 then 
-			input:setCursorPosition(unicode.len(input.text) + 1)			
+			input:setCursorPosition(unicode.len(input.text) + 1)
+		
 		else
 			local char = unicode.char(e3)
+			
 			if not keyboard.isControl(e3) then
 				input.text = unicode.sub(input.text, 1, input.cursorPosition - 1) .. char .. unicode.sub(input.text, input.cursorPosition, -1)
 				input:setCursorPosition(input.cursorPosition + 1)
@@ -2940,12 +2999,14 @@ local function inputEventHandler(workspace, input, e1, e2, e3, e4, e5, e6, ...)
 		end
 
 		inputCursorBlink(workspace, input, true)
+	
 	elseif e1 == "clipboard" and input.focused then
 		input.text = unicode.sub(input.text, 1, input.cursorPosition - 1) .. e3 .. unicode.sub(input.text, input.cursorPosition, -1)
 		input:setCursorPosition(input.cursorPosition + unicode.len(e3))
 		
 		inputCursorBlink(workspace, input, true)
 		workspace:consumeEvent()
+	
 	elseif not e1 and input.focused and computer.uptime() - input.cursorBlinkUptime > input.cursorBlinkDelay then
 		inputCursorBlink(workspace, input, not input.cursorBlinkState)
 	end
@@ -2989,7 +3050,7 @@ function GUI.input(x, y, width, height, backgroundColor, textColor, placeholderT
 	input.stopInputObject = GUI.object(1, 1, 1, 1)
 	input.stopInputObject.eventHandler = function(workspace, object, e1, e2, e3, e4, ...)
 		if e1 == "touch" or e1 == "drop" then
-			if input:isPointInside(e3, e4) then
+			if input:isPointInside(math.ceil(e3), math.ceil(e4)) then
 				input.eventHandler(workspace, input, e1, e2, e3, e4, ...)
 			else
 				inputStopInput(workspace, input)
@@ -3023,6 +3084,7 @@ local function autoCompleteDraw(object)
 		screen.drawText(object.x + object.matchTextLength + 1, y, textColor, unicode.sub(object.items[i], object.matchTextLength + 1, object.matchTextLength + object.width - object.matchTextLength - 2))
 
 		y = y + 1
+		
 		if y > yEnd then
 			break
 		end
@@ -3053,21 +3115,24 @@ end
 
 local function autoCompleteEventHandler(workspace, object, e1, e2, e3, e4, e5, ...)
 	if e1 == "touch" then
-		object.selectedItem = e4 - object.y + object.fromItem
+		object.selectedItem = math.ceil(e4) - object.y + object.fromItem
 		workspace:draw()
 
 		if object.onItemSelected then
 			event.sleep(0.2)
 			object.onItemSelected(workspace, object, e1, e2, e3, e4, e5, ...)
 		end
+	
 	elseif e1 == "scroll" then
 		autoCompleteScroll(workspace, object, -e5)
 		workspace:draw()
+	
 	elseif e1 == "key_down" then
 		if e4 == 28 then
 			if object.onItemSelected then
 				object.onItemSelected(workspace, object, e1, e2, e3, e4, e5, ...)
 			end
+		
 		elseif e4 == 200 then
 			object.selectedItem = object.selectedItem - 1
 			if object.selectedItem < 1 then
@@ -3079,6 +3144,7 @@ local function autoCompleteEventHandler(workspace, object, e1, e2, e3, e4, e5, .
 			end
 
 			workspace:draw()
+		
 		elseif e4 == 208 then
 			object.selectedItem = object.selectedItem + 1
 			if object.selectedItem > object.itemCount then
@@ -3293,11 +3359,13 @@ function GUI.palette(x, y, startColor)
 		paletteDrawBigCrestPixel(object.x + 2, object.y, "│")
 		paletteDrawBigCrestPixel(object.x + 2, object.y + 2, "│")
 	end
+	
 	bigCrest.passScreenEvents = true
 	
 	local miniImage = palette:addChild(GUI.image(53, 1, image.create(3, 25)))
 	
 	local miniCrest = palette:addChild(GUI.object(52, 1, 5, 1))
+	
 	miniCrest.draw = function(object)
 		screen.drawText(object.x, object.y, 0x0, ">")
 		screen.drawText(object.x + 4, object.y, 0x0, "<")
@@ -3309,21 +3377,25 @@ function GUI.palette(x, y, startColor)
 
 	local function paletteRefreshBigImage()
 		local saturationStep, brightnessStep, saturation, brightness = 1 / bigImage.width, 1 / bigImage.height, 0, 1
+		
 		for j = 1, bigImage.height do
 			for i = 1, bigImage.width do
 				image.set(bigImage.image, i, j, color.optimize(color.HSBToInteger(palette.color.hsb.hue, saturation, brightness)), 0x0, 0x0, " ")
 				saturation = saturation + saturationStep
 			end
+			
 			saturation, brightness = 0, brightness - brightnessStep
 		end
 	end
 
 	local function paletteRefreshMiniImage()
 		local hueStep, hue = 360 / miniImage.height, 0
+		
 		for j = 1, miniImage.height do
 			for i = 1, miniImage.width do
 				image.set(miniImage.image, i, j, color.optimize(color.HSBToInteger(hue, 1, 1)), 0x0, 0, " ")
 			end
+			
 			hue = hue + hueStep
 		end
 	end
@@ -3475,17 +3547,23 @@ function GUI.palette(x, y, startColor)
 
 	bigImage.eventHandler = function(workspace, object, e1, e2, e3, e4)
 		if e1 == "touch" or e1 == "drag" then
+			e3, e4 = math.ceil(e3), math.ceil(e4)
+
 			bigCrest.localX, bigCrest.localY = e3 - palette.x - 1, e4 - palette.y
-			paletteSwitchColorFromHex(select(3, screen.getGPUProxy().get(e3, e4)))
+			paletteSwitchColorFromHex(select(3, component.invoke(screen.getGPUAddress(), "get", e3, e4)))
+			
 			workspace:draw()
 		end
 	end
 	
 	miniImage.eventHandler = function(workspace, object, e1, e2, e3, e4)
 		if e1 == "touch" or e1 == "drag" then
+			e4 = math.ceil(e4)
+
 			miniCrest.localY = e4 - palette.y + 1
 			paletteSwitchColorFromHsb((e4 - miniImage.y) * 360 / miniImage.height, palette.color.hsb.saturation, palette.color.hsb.brightness)
 			paletteRefreshBigImage()
+			
 			workspace:draw()
 		end
 	end
@@ -3504,20 +3582,23 @@ end
 
 local function textUpdate(object)
 	object.width = unicode.len(object.text)
+	
 	return object
 end
 
 local function textDraw(object)
 	object:update()
-	screen.drawText(object.x, object.y, object.color, object.text)
+	screen.drawText(object.x, object.y, object.color, object.text, object.transparency)
+
 	return object
 end
 
-function GUI.text(x, y, color, text)
+function GUI.text(x, y, color, text, transparency)
 	local object = GUI.object(x, y, 1, 1)
 
 	object.text = text
 	object.color = color
+	object.transparency = transparency
 	object.update = textUpdate
 	object.draw = textDraw
 	object:update()
@@ -3555,6 +3636,7 @@ end
 
 local function listUpdate(list)
 	local step, child = false
+
 	for i = 1, #list.children do
 		child = list.children[i]
 		-- Жмяканье пизды
@@ -3566,6 +3648,7 @@ local function listUpdate(list)
 		else
 			child.colors.default = list.colors.default
 		end
+
 		child.colors.pressed, step = list.colors.selected, not step
 		
 		-- Размеры хуйни
@@ -3654,7 +3737,10 @@ local function listCount(list)
 end
 
 local function listDraw(list)
-	screen.drawRectangle(list.x, list.y, list.width, list.height, list.colors.default.background, list.colors.default.text, " ")
+	if list.colors.default.background then
+		screen.drawRectangle(list.x, list.y, list.width, list.height, list.colors.default.background, list.colors.default.text, " ")
+	end
+
 	layoutDraw(list)
 end
 
@@ -4248,7 +4334,8 @@ local function windowDraw(window)
 end
 
 local function windowCheck(window, x, y)
-	local child
+	local child, result
+
 	for i = #window.children, 1, -1 do
 		child = window.children[i]
 		
@@ -4259,10 +4346,14 @@ local function windowCheck(window, x, y)
 		then
 			if not child.passScreenEvents and child.eventHandler then
 				return true
+
 			elseif child.children then
-				local result = windowCheck(child, x, y)
+				result = windowCheck(child, x, y)
+				
+				-- Nil causes next child processing
 				if result == true then
 					return true
+				
 				elseif result == false then
 					return false
 				end
@@ -4274,27 +4365,30 @@ end
 local function windowEventHandler(workspace, window, e1, e2, e3, e4, ...)
 	if window.movingEnabled then
 		if e1 == "touch" then
+			e3, e4 = math.ceil(e3), math.ceil(e4)
+
 			if not windowCheck(window, e3, e4) then
 				window.lastTouchX, window.lastTouchY = e3, e4
 			end
 
 			if window ~= window.parent.children[#window.parent.children] then
-				window:moveToFront()
+				window:focus()
 				
-				if window.onFocus then
-					window.onFocus(workspace, window, e1, e2, e3, e4, ...)
-				end
+				workspace:draw()
+			end
+		
+		elseif e1 == "drag" and window.lastTouchX then
+			e3, e4 = math.ceil(e3), math.ceil(e4)
 
-				workspace:draw()
+			if windowCheck(window, e3, e4) then
+				return
 			end
-		elseif e1 == "drag" and window.lastTouchX and not windowCheck(window, e3, e4) then
-			local xOffset, yOffset = e3 - window.lastTouchX, e4 - window.lastTouchY
-			if xOffset ~= 0 or yOffset ~= 0 then
-				window.localX, window.localY = window.localX + xOffset, window.localY + yOffset
-				window.lastTouchX, window.lastTouchY = e3, e4
-				
-				workspace:draw()
-			end
+
+			window.localX, window.localY = window.localX + e3 - window.lastTouchX, window.localY + e4 - window.lastTouchY
+			window.lastTouchX, window.lastTouchY = e3, e4
+			
+			workspace:draw()
+		
 		elseif e1 == "drop" then
 			window.lastTouchX, window.lastTouchY = nil, nil
 		end
@@ -4320,10 +4414,22 @@ function GUI.windowMaximize(window, animationDisabled)
 	
 	if window.maximized then
 		toX, toY, toWidth, toHeight = window.oldGeometryX, window.oldGeometryY, window.oldGeometryWidth, window.oldGeometryHeight
+
 		window.oldGeometryX, window.oldGeometryY, window.oldGeometryWidth, window.oldGeometryHeight = nil, nil, nil, nil
 		window.maximized = nil
 	else
-		toX, toY, toWidth, toHeight = 1, 1, window.parent.width, window.parent.height
+		toWidth, toHeight = window.parent.width, window.parent.height
+		
+		if window.maxWidth then
+			toWidth = math.min(toWidth, window.maxWidth)
+		end
+		
+		if window.maxHeight then
+			toHeight = math.min(toHeight, window.maxHeight)
+		end
+
+		toX, toY = math.floor(1 + window.parent.width / 2 - toWidth / 2), math.floor(1 + window.parent.height / 2 - toHeight / 2)
+
 		window.oldGeometryX, window.oldGeometryY, window.oldGeometryWidth, window.oldGeometryHeight = window.localX, window.localY, window.width, window.height
 		window.maximized = true
 	end
@@ -4355,25 +4461,37 @@ function GUI.windowMinimize(window)
 	window.hidden = not window.hidden
 end
 
+function GUI.windowFocus(window)
+	GUI.focusedObject = window
+	window.hidden = false
+	window:moveToFront()
+
+	if window.onFocus then
+		window.onFocus()
+	end
+end
+
 function GUI.window(x, y, width, height)
 	local window = GUI.container(x, y, width, height)
 	
 	window.passScreenEvents = false
+	window.movingEnabled = true
 
 	window.resize = windowResize
 	window.maximize = GUI.windowMaximize
 	window.minimize = GUI.windowMinimize
+	window.focus = GUI.windowFocus
+
 	window.eventHandler = windowEventHandler
 	window.draw = windowDraw
-	window.movingEnabled = true
 
 	return window
 end
 
-function GUI.filledWindow(x, y, width, height, backgroundColor)
+function GUI.filledWindow(x, y, width, height, backgroundColor, transparency)
 	local window = GUI.window(x, y, width, height)
 
-	window.backgroundPanel = window:addChild(GUI.panel(1, 1, width, height, backgroundColor))
+	window.backgroundPanel = window:addChild(GUI.panel(1, 1, width, height, backgroundColor, transparency))
 	window.actionButtons = window:addChild(GUI.actionButtons(2, 2, true))
 
 	return window
@@ -4680,8 +4798,9 @@ end
 function GUI.tableEventHandler(workspace, self, e1, e2, e3, e4, e5, ...)
 	if e1 == "touch" then
 		local itemTouched = false
+
 		for i = 1, #self.children do
-			if self.children[i]:isPointInside(e3, e4) then
+			if self.children[i]:isPointInside(math.ceil(e3), math.ceil(e4)) then
 				itemTouched = true
 				break
 			end

@@ -13,7 +13,8 @@
 	typeUserName = "Tipo Nome Utente",
 	yourText = "Si:",
 	hereBeYourDialogs = "Ecco le vostre conversazioni",
-
+	hideApplicationIcons = "Hide application icons",
+	
 	categoryOverview = "Panoramica",
 	categoryApplications = "Applicazione",
 	categoryLibraries = "Biblioteca",

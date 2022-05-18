@@ -13,7 +13,8 @@
 	typeUserName = "Pon nombre de usuario",
 	yourText = "Tu:",
 	hereBeYourDialogs = "Aqui estaran tus conversaciones",
-
+	hideApplicationIcons = "Hide application icons",
+	
 	categoryOverview = "Vision General",
 	categoryApplications = "Aplicaciones",
 	categoryLibraries = "Librerias",

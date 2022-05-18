@@ -2,6 +2,9 @@
 local event, handlers, interruptingKeysDown, lastInterrupt = {
 	interruptingEnabled = true,
 	interruptingDelay = 1,
+	defaultInterruptingFunction = function()
+		error("interrupted", 0)
+	end,
 	interruptingKeyCodes = {
 		[29] = true,
 		[46] = true,
@@ -9,6 +12,8 @@ local event, handlers, interruptingKeysDown, lastInterrupt = {
 	},
 	push = computer.pushSignal
 }, {}, {}, 0
+
+event.interruptingFunction = event.defaultInterruptingDFunction
 
 local computerPullSignal, computerUptime, mathHuge, mathMin, skipSignalType = computer.pullSignal, computer.uptime, math.huge, math.min
 
@@ -51,7 +56,7 @@ function event.skip(signalType)
 	skipSignalType = signalType
 end
 
-function event.pull(preferredTimeout)	
+function event.pull(preferredTimeout)  
 	local uptime, signalData = computerUptime()
 	local deadline = uptime + (preferredTimeout or mathHuge)
 	
@@ -104,7 +109,8 @@ function event.pull(preferredTimeout)
 			
 			if shouldInterrupt and uptime - lastInterrupt > event.interruptingDelay then
 				lastInterrupt = uptime
-				error("interrupted", 0)
+
+				event.interruptingFunction()
 			end
 		end
 		

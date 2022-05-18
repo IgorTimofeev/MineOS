@@ -4,15 +4,61 @@ local image = require("Image")
 
 --------------------------------------------------------------------------------
 
-local bufferWidth, bufferHeight
-local currentFrameBackgrounds, currentFrameForegrounds, currentFrameSymbols, newFrameBackgrounds, newFrameForegrounds, newFrameSymbols
-local drawLimitX1, drawLimitX2, drawLimitY1, drawLimitY2
-local GPUProxy, GPUProxyGetResolution, GPUProxySetResolution, GPUProxyGetBackground, GPUProxyGetForeground, GPUProxySetBackground, GPUProxySetForeground, GPUProxyGet, GPUProxySet, GPUProxyFill
+local
+	componentInvoke,
 
-local mathCeil, mathFloor, mathModf, mathAbs = math.ceil, math.floor, math.modf, math.abs
-local tableInsert, tableConcat = table.insert, table.concat
-local colorBlend = color.blend
-local unicodeLen, unicodeSub = unicode.len, unicode.sub
+	mathCeil,
+	mathFloor,
+	mathModf,
+	mathAbs,
+	mathMin,
+	mathMax,
+
+	tableInsert,
+	tableConcat,
+
+	colorBlend,
+	colorRGBToInteger,
+	colorIntegerToRGB,
+
+	unicodeLen,
+	unicodeSub,
+
+	bufferWidth,
+	bufferHeight,
+
+	currentFrameBackgrounds,
+	currentFrameForegrounds,
+	currentFrameSymbols,
+	newFrameBackgrounds,
+	newFrameForegrounds,
+	newFrameSymbols,
+
+	drawLimitX1,
+	drawLimitX2,
+	drawLimitY1,
+	drawLimitY2,
+
+	GPUAddress =
+
+	component.invoke,
+
+	math.ceil,
+	math.floor,
+	math.modf,
+	math.abs,
+	math.min,
+	math.max,
+
+	table.insert,
+	table.concat,
+
+	color.blend,
+	color.RGBToInteger,
+	color.integerToRGB,
+
+	unicode.len,
+	unicode.sub;
 
 --------------------------------------------------------------------------------
 
@@ -46,7 +92,7 @@ end
 
 local function flush(width, height)
 	if not width or not height then
-		width, height = GPUProxyGetResolution()
+		width, height = componentInvoke(GPUAddress, "getResolution")
 	end
 
 	currentFrameBackgrounds, currentFrameForegrounds, currentFrameSymbols, newFrameBackgrounds, newFrameForegrounds, newFrameSymbols = {}, {}, {}, {}, {}, {}
@@ -67,9 +113,42 @@ local function flush(width, height)
 	end
 end
 
+local function getGPUAddress()
+	return GPUAddress
+end
+
+local function setGPUAddress(address)
+	GPUAddress = address
+	flush()
+end
+
+local function getScreenAddress()
+	return componentInvoke(GPUAddress, "getScreen")
+end
+
+local function getMaxResolution()
+	return componentInvoke(GPUAddress, "maxResolution")
+end
+
 local function setResolution(width, height)
-	GPUProxySetResolution(width, height)
+	componentInvoke(GPUAddress, "setResolution", width, height)
 	flush(width, height)
+end
+
+local function getColorDepth()
+	return componentInvoke(GPUAddress, "getDepth")
+end
+
+local function setColorDepth(...)
+	return componentInvoke(GPUAddress, "setDepth", ...)
+end
+
+local function getMaxColorDepth(...)
+	return componentInvoke(GPUAddress, "maxDepth")
+end
+
+local function getScreenAspectRatio()
+	return componentInvoke(getScreenAddress(), "getAspectRatio")
 end
 
 local function getResolution()
@@ -84,41 +163,18 @@ local function getHeight()
 	return bufferHeight
 end
 
-local function bind(address, reset)
-	local success, reason = GPUProxy.bind(address, reset)
+local function setScreenAddress(address, reset)
+	local success, reason = componentInvoke(GPUAddress, "bind", address, reset)
+
 	if success then
 		if reset then
-			setResolution(GPUProxy.maxResolution())
+			setResolution(getMaxResolution())
 		else
 			setResolution(bufferWidth, bufferHeight)
 		end
 	else
 		return success, reason
 	end
-end
-
-local function getGPUProxy()
-	return GPUProxy
-end
-
-local function updateGPUProxyMethods()
-	GPUProxyGet = GPUProxy.get
-	GPUProxyGetResolution = GPUProxy.getResolution
-	GPUProxyGetBackground = GPUProxy.getBackground
-	GPUProxyGetForeground = GPUProxy.getForeground
-
-	GPUProxySet = GPUProxy.set
-	GPUProxySetResolution = GPUProxy.setResolution
-	GPUProxySetBackground = GPUProxy.setBackground
-	GPUProxySetForeground = GPUProxy.setForeground
-
-	GPUProxyFill = GPUProxy.fill
-end
-
-local function setGPUProxy(proxy)
-	GPUProxy = proxy
-	updateGPUProxyMethods()
-	flush()
 end
 
 local function getScaledResolution(scale)
@@ -128,11 +184,11 @@ local function getScaledResolution(scale)
 		scale = 0.1
 	end
 
-	local aspectWidth, aspectHeight = component.proxy(GPUProxy.getScreen()).getAspectRatio()
-	local maxWidth, maxHeight = GPUProxy.maxResolution()
+	local aspectWidth, aspectHeight = getScreenAspectRatio()
+	local maxWidth, maxHeight = getMaxResolution()
 	local proportion = 2 * (16 * aspectWidth - 4.5) / (16 * aspectHeight - 4.5)
 	 
-	local height = scale * math.min(
+	local height = scale * mathMin(
 		maxWidth / proportion,
 		maxWidth,
 		math.sqrt(maxWidth * maxHeight / proportion)
@@ -197,22 +253,31 @@ local function drawRectangle(x, y, width, height, background, foreground, symbol
 	temp = bufferWidth * (y - 1) + x
 	local indexStepOnEveryLine = bufferWidth - width
 
-	for j = 1, height do
-		for i = 1, width do
-			if transparency then
-				newFrameBackgrounds[temp], newFrameForegrounds[temp] =
+	if transparency then
+		for j = 1, height do
+			for i = 1, width do
+				newFrameBackgrounds[temp],
+				newFrameForegrounds[temp] =
 					colorBlend(newFrameBackgrounds[temp], background, transparency),
 					colorBlend(newFrameForegrounds[temp], background, transparency)
-			else
+
+				temp = temp + 1
+			end
+
+			temp = temp + indexStepOnEveryLine
+		end
+	else
+		for j = 1, height do
+			for i = 1, width do
 				newFrameBackgrounds[temp],
 				newFrameForegrounds[temp],
 				newFrameSymbols[temp] = background, foreground, symbol
+
+				temp = temp + 1
 			end
 
-			temp = temp + 1
+			temp = temp + indexStepOnEveryLine
 		end
-
-		temp = temp + indexStepOnEveryLine
 	end
 end
 
@@ -243,40 +308,64 @@ local function blur(x, y, width, height, radius, color, transparency)
 		height = height - temp + drawLimitY2
 	end
 
-	local index, indexStepOnReachOfSquareWidth = bufferWidth * (y - 1) + x, bufferWidth - width
+	local screenIndex, indexStepOnEveryLine, buffer, bufferIndex, rSum, gSum, bSum, rSumFg, gSumFg, bSumFg, r, g, b =
+		bufferWidth * (y - 1) + x,
+		bufferWidth - width,
+		{},
+		1
 
-	for j = y, y + height - 1, radius do
-		if j >= drawLimitY1 and j <= drawLimitY2 then
-			for i = x, x + width - 1 do
-				if i >= drawLimitX1 and i <= drawLimitX2 then
+	-- Copying
+	temp = screenIndex
 
-					local centerIndex = getIndex(i, j)
-					local centerBackground, centerForeground = newFrameBackgrounds[centerIndex], newFrameForegrounds[centerIndex]
+	if color then
+		for j = 1, height do
+			for i = 1, width do
+				buffer[bufferIndex] = colorBlend(newFrameBackgrounds[temp], color, transparency)
 
-					for jr = j - radius, j + radius do
-						if jr ~= j and jr >= drawLimitY1 and jr <= drawLimitY2 then
-							for ir = i - radius, i + radius do
-								if ir ~= i and ir >= drawLimitX1 and ir <= drawLimitX2 then
-									local blendStrength = math.sqrt((ir - i) ^ 2 + (jr - j) ^ 2) / radius
-									
-									if blendStrength < 1 then
-										local blurIndex = getIndex(ir, jr)
-										newFrameBackgrounds[blurIndex] = colorBlend(newFrameBackgrounds[blurIndex], centerBackground, blendStrength)
-										newFrameForegrounds[blurIndex] = colorBlend(newFrameForegrounds[blurIndex], centerForeground, blendStrength)
-									end
-								end
-							end
-						end
-					end
-				end
-
-				index = index + 1
+				temp, bufferIndex = temp + 1, bufferIndex + 1
 			end
 
-			index = index + indexStepOnReachOfSquareWidth
-		else
-			index = index + bufferWidth
+			temp = temp + indexStepOnEveryLine
 		end
+	else
+		for j = 1, height do
+			for i = 1, width do
+				buffer[bufferIndex] = newFrameBackgrounds[temp]
+
+				temp, bufferIndex = temp + 1, bufferIndex + 1
+			end
+
+			temp = temp + indexStepOnEveryLine
+		end
+	end
+
+	-- Blurring
+	local rSum, gSum, bSum, count, r, g, b
+
+	for j = 1, height do
+		for i = 1, width do
+			rSum, gSum, bSum, count = 0, 0, 0, 0
+
+			for jr = mathMax(1, j - radius), mathMin(j + radius, height) do
+				for ir = mathMax(1, i - radius), mathMin(i + radius, width) do
+					r, g, b = colorIntegerToRGB(buffer[width * (jr - 1) + ir])
+					rSum, gSum, bSum, count = rSum + r, gSum + g, bSum + b, count + 1
+				end
+			end
+
+			-- Calculatin average channels value
+			r, g, b = rSum / count, gSum / count, bSum / count
+			-- Faster than math.floor
+			r, g, b = r - r % 1, g - g % 1, b - b % 1
+
+			newFrameBackgrounds[screenIndex] = colorRGBToInteger(r, g, b)
+			newFrameForegrounds[screenIndex] = 0x0
+			newFrameSymbols[screenIndex] = " "
+
+			screenIndex = screenIndex + 1
+		end
+
+		screenIndex = screenIndex + indexStepOnEveryLine
 	end
 end
 
@@ -307,23 +396,23 @@ end
 
 local function paste(startX, startY, picture)
 	local imageWidth = picture[1]
-	local bufferIndex, pictureIndex, bufferIndexStepOnReachOfImageWidth = bufferWidth * (startY - 1) + startX, 3, bufferWidth - imageWidth
+	local screenIndex, pictureIndex, screenIndexStepOnReachOfImageWidth = bufferWidth * (startY - 1) + startX, 3, bufferWidth - imageWidth
 
 	for y = startY, startY + picture[2] - 1 do
 		if y >= drawLimitY1 and y <= drawLimitY2 then
 			for x = startX, startX + imageWidth - 1 do
 				if x >= drawLimitX1 and x <= drawLimitX2 then
-					newFrameBackgrounds[bufferIndex] = picture[pictureIndex]
-					newFrameForegrounds[bufferIndex] = picture[pictureIndex + 1]
-					newFrameSymbols[bufferIndex] = picture[pictureIndex + 2]
+					newFrameBackgrounds[screenIndex] = picture[pictureIndex]
+					newFrameForegrounds[screenIndex] = picture[pictureIndex + 1]
+					newFrameSymbols[screenIndex] = picture[pictureIndex + 2]
 				end
 
-				bufferIndex, pictureIndex = bufferIndex + 1, pictureIndex + 3
+				screenIndex, pictureIndex = screenIndex + 1, pictureIndex + 3
 			end
 
-			bufferIndex = bufferIndex + bufferIndexStepOnReachOfImageWidth
+			screenIndex = screenIndex + screenIndexStepOnReachOfImageWidth
 		else
-			bufferIndex, pictureIndex = bufferIndex + bufferWidth, pictureIndex + imageWidth * 3
+			screenIndex, pictureIndex = screenIndex + bufferWidth, pictureIndex + imageWidth * 3
 		end
 	end
 end
@@ -393,6 +482,38 @@ local function rasterizeEllipse(centerX, centerY, radiusX, radiusY, method)
 	end
 end
 
+local function rasterizePolygon(centerX, centerY, startX, startY, countOfEdges, method)
+	local degreeStep = 360 / countOfEdges
+
+	local deltaX, deltaY = startX - centerX, startY - centerY
+	local radius = math.sqrt(deltaX ^ 2 + deltaY ^ 2)
+	local halfRadius = radius / 2
+	local startDegree = math.deg(math.asin(deltaX / radius))
+
+	local function round(num) 
+		if num >= 0 then
+			return math.floor(num + 0.5) 
+		else
+			return math.ceil(num - 0.5)
+		end
+	end
+
+	local function calculatePosition(degree)
+		local radDegree = math.rad(degree)
+		local deltaX2 = math.sin(radDegree) * radius
+		local deltaY2 = math.cos(radDegree) * radius
+		return round(centerX + deltaX2), round(centerY + (deltaY >= 0 and deltaY2 or -deltaY2))
+	end
+
+	local xOld, yOld, xNew, yNew = calculatePosition(startDegree)
+
+	for degree = (startDegree + degreeStep - 1), (startDegree + 360), degreeStep do
+		xNew, yNew = calculatePosition(degree)
+		rasterizeLine(xOld, yOld, xNew, yNew, method)
+		xOld, yOld = xNew, yNew
+	end
+end
+
 local function drawLine(x1, y1, x2, y2, background, foreground, symbol)
 	rasterizeLine(x1, y1, x2, y2, function(x, y)
 		set(x, y, background, foreground, symbol)
@@ -405,22 +526,28 @@ local function drawEllipse(centerX, centerY, radiusX, radiusY, background, foreg
 	end)
 end
 
+local function drawPolygon(centerX, centerY, radiusX, radiusY, background, foreground, countOfEdges, symbol)
+	rasterizePolygon(centerX, centerY, radiusX, radiusY, countOfEdges, function(x, y)
+		set(x, y, background, foreground, symbol)
+	end)
+end
+
 local function drawText(x, y, textColor, data, transparency)
 	if y >= drawLimitY1 and y <= drawLimitY2 then
-		local charIndex, bufferIndex = 1, bufferWidth * (y - 1) + x
+		local charIndex, screenIndex = 1, bufferWidth * (y - 1) + x
 		
 		for charIndex = 1, unicodeLen(data) do
 			if x >= drawLimitX1 and x <= drawLimitX2 then
 				if transparency then
-					newFrameForegrounds[bufferIndex] = colorBlend(newFrameBackgrounds[bufferIndex], textColor, transparency)
+					newFrameForegrounds[screenIndex] = colorBlend(newFrameBackgrounds[screenIndex], textColor, transparency)
 				else
-					newFrameForegrounds[bufferIndex] = textColor
+					newFrameForegrounds[screenIndex] = textColor
 				end
 
-				newFrameSymbols[bufferIndex] = unicodeSub(data, charIndex, charIndex)
+				newFrameSymbols[screenIndex] = unicodeSub(data, charIndex, charIndex)
 			end
 
-			x, bufferIndex = x + 1, bufferIndex + 1
+			x, screenIndex = x + 1, screenIndex + 1
 		end
 	end
 end
@@ -454,8 +581,8 @@ local function drawImage(x, y, picture, blendForeground)
 	end
 
 	local
-		bufferIndex,
-		bufferIndexStep,
+		screenIndex,
+		screenIndexStep,
 		pictureIndexStep,
 		background,
 		foreground,
@@ -468,27 +595,27 @@ local function drawImage(x, y, picture, blendForeground)
 			
 			-- If it's fully transparent pixel
 			if alpha == 0 then
-				newFrameBackgrounds[bufferIndex], newFrameForegrounds[bufferIndex] = picture[pictureIndex], picture[pictureIndex + 1]
+				newFrameBackgrounds[screenIndex], newFrameForegrounds[screenIndex] = picture[pictureIndex], picture[pictureIndex + 1]
 			-- If it has some transparency
 			elseif alpha > 0 and alpha < 1 then
-				newFrameBackgrounds[bufferIndex] = colorBlend(newFrameBackgrounds[bufferIndex], picture[pictureIndex], alpha)
+				newFrameBackgrounds[screenIndex] = colorBlend(newFrameBackgrounds[screenIndex], picture[pictureIndex], alpha)
 				
 				if blendForeground then
-					newFrameForegrounds[bufferIndex] = colorBlend(newFrameForegrounds[bufferIndex], picture[pictureIndex + 1], alpha)
+					newFrameForegrounds[screenIndex] = colorBlend(newFrameForegrounds[screenIndex], picture[pictureIndex + 1], alpha)
 				else
-					newFrameForegrounds[bufferIndex] = picture[pictureIndex + 1]
+					newFrameForegrounds[screenIndex] = picture[pictureIndex + 1]
 				end
 			-- If it's not transparent with whitespace
 			elseif symbol ~= " " then
-				newFrameForegrounds[bufferIndex] = picture[pictureIndex + 1]
+				newFrameForegrounds[screenIndex] = picture[pictureIndex + 1]
 			end
 
-			newFrameSymbols[bufferIndex] = symbol
+			newFrameSymbols[screenIndex] = symbol
 
-			bufferIndex, pictureIndex = bufferIndex + 1, pictureIndex + 4
+			screenIndex, pictureIndex = screenIndex + 1, pictureIndex + 4
 		end
 
-		bufferIndex, pictureIndex = bufferIndex + bufferIndexStep, pictureIndex + pictureIndexStep
+		screenIndex, pictureIndex = screenIndex + screenIndexStep, pictureIndex + pictureIndexStep
 	end
 end
 
@@ -629,7 +756,7 @@ end
 
 --------------------------------------------------------------------------------
 
-local function update(force)	
+local function update(force)
 	local index, indexStepOnEveryLine, changes = bufferWidth * (drawLimitY1 - 1) + drawLimitX1, (bufferWidth - drawLimitX2 + drawLimitX1 - 1), {}
 	local x, equalChars, equalCharsIndex, charX, charIndex, currentForeground
 	local currentFrameBackground, currentFrameForeground, currentFrameSymbol, changesCurrentFrameBackground, changesCurrentFrameBackgroundCurrentFrameForeground
@@ -698,16 +825,16 @@ local function update(force)
 	
 	-- Draw grouped pixels on screen
 	for background, foregrounds in pairs(changes) do
-		GPUProxySetBackground(background)
+		componentInvoke(GPUAddress, "setBackground", background)
 
 		for foreground, pixels in pairs(foregrounds) do
 			if currentForeground ~= foreground then
-				GPUProxySetForeground(foreground)
+				componentInvoke(GPUAddress, "setForeground", foreground)
 				currentForeground = foreground
 			end
 
 			for i = 1, #pixels, 3 do
-				GPUProxySet(pixels[i], pixels[i + 1], pixels[i + 2])
+				componentInvoke(GPUAddress, "set", pixels[i], pixels[i + 1], pixels[i + 2])
 			end
 		end
 	end
@@ -723,16 +850,27 @@ return {
 	resetDrawLimit = resetDrawLimit,
 	getDrawLimit = getDrawLimit,
 	flush = flush,
+	
 	setResolution = setResolution,
-	bind = bind,
-	setGPUProxy = setGPUProxy,
-	getGPUProxy = getGPUProxy,
+	getMaxResolution = getMaxResolution,
+
+	setGPUAddress = setGPUAddress,
+	getGPUAddress = getGPUAddress,
+	setScreenAddress = setScreenAddress,
+	
+	getColorDepth = getColorDepth,
+	setColorDepth = setColorDepth,
+	getMaxColorDepth = getMaxColorDepth,
+
 	getScaledResolution = getScaledResolution,
 	getResolution = getResolution,
 	getWidth = getWidth,
 	getHeight = getHeight,
 	getCurrentFrameTables = getCurrentFrameTables,
 	getNewFrameTables = getNewFrameTables,
+
+	getScreenAspectRatio = getScreenAspectRatio,
+	getScreenAddress = getScreenAddress,
 
 	rawSet = rawSet,
 	rawGet = rawGet,
@@ -743,6 +881,7 @@ return {
 	paste = paste,
 	rasterizeLine = rasterizeLine,
 	rasterizeEllipse = rasterizeEllipse,
+	rasterizePolygon = rasterizePolygon,
 	semiPixelRawSet = semiPixelRawSet,
 	semiPixelSet = semiPixelSet,
 	update = update,
@@ -750,6 +889,7 @@ return {
 	drawRectangle = drawRectangle,
 	drawLine = drawLine,
 	drawEllipse = drawEllipse,
+	drawPolygon = drawPolygon,
 	drawText = drawText,
 	drawImage = drawImage,
 	drawFrame = drawFrame,

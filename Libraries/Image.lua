@@ -78,32 +78,32 @@ encodingMethodsLoad[5] = function(file, picture)
 	end
 end
 
-local function loadOCIF67(file, picture, mode)
-	picture[1] = file:readBytes(1)
-	picture[2] = file:readBytes(1)
+local function loadOCIF678(file, picture, is7, is8)
+	picture[1] = file:readBytes(1) + is8
+	picture[2] = file:readBytes(1) + is8
 
 	local currentAlpha, currentSymbol, currentBackground, currentForeground, currentY
 
-	for alpha = 1, file:readBytes(1) + mode do
+	for alpha = 1, file:readBytes(1) + is7 do
 		currentAlpha = file:readBytes(1) / 255
 		
-		for symbol = 1, file:readBytes(2) + mode do
+		for symbol = 1, file:readBytes(2) + is7 do
 			currentSymbol = file:readUnicodeChar()
 			
-			for background = 1, file:readBytes(1) + mode do
+			for background = 1, file:readBytes(1) + is7 do
 				currentBackground = color.to24Bit(file:readBytes(1))
 				
-				for foreground = 1, file:readBytes(1) + mode do
+				for foreground = 1, file:readBytes(1) + is7 do
 					currentForeground = color.to24Bit(file:readBytes(1))
 					
-					for y = 1, file:readBytes(1) + mode do
+					for y = 1, file:readBytes(1) + is7 do
 						currentY = file:readBytes(1)
 						
-						for x = 1, file:readBytes(1) + mode do
+						for x = 1, file:readBytes(1) + is7 do
 							image.set(
 								picture,
-								file:readBytes(1),
-								currentY,
+								file:readBytes(1) + is8,
+								currentY + is8,
 								currentBackground,
 								currentForeground,
 								currentAlpha,
@@ -117,9 +117,9 @@ local function loadOCIF67(file, picture, mode)
 	end
 end
 
-local function saveOCIF67(file, picture, mode)
+local function saveOCIF678(file, picture, is7, is8)
 	local function getGroupSize(t)
-		local size = mode == 1 and -1 or 0
+		local size = -is7
 		
 		for key in pairs(t) do
 			size = size + 1
@@ -133,8 +133,8 @@ local function saveOCIF67(file, picture, mode)
 
 	-- Writing 1 byte per image width and height
 	file:writeBytes(
-		picture[1],
-		picture[2]
+		picture[1] - is8,
+		picture[2] - is8
 	)
 
 	-- Writing 1 byte for alphas array size
@@ -178,13 +178,14 @@ local function saveOCIF67(file, picture, mode)
 					for y in pairs(groupedPicture[alpha][symbol][background][foreground]) do
 						file:writeBytes(
 							-- Writing 1 byte for current y value
-							y,
+							y - is8,
 							-- Writing 1 byte for x array size
-							#groupedPicture[alpha][symbol][background][foreground][y] - mode
+							#groupedPicture[alpha][symbol][background][foreground][y] - is7
 						)
 
 						for x = 1, #groupedPicture[alpha][symbol][background][foreground][y] do
-							file:writeBytes(groupedPicture[alpha][symbol][background][foreground][y][x])
+							-- Wrting 1 byte for current x value
+							file:writeBytes(groupedPicture[alpha][symbol][background][foreground][y][x] - is8)
 						end
 					end
 				end
@@ -194,19 +195,27 @@ local function saveOCIF67(file, picture, mode)
 end
 
 encodingMethodsSave[6] = function(file, picture)
-	saveOCIF67(file, picture, 0)
+	saveOCIF678(file, picture, 0, 0)
 end
 
 encodingMethodsLoad[6] = function(file, picture)
-	loadOCIF67(file, picture, 0)
+	loadOCIF678(file, picture, 0, 0)
 end
 
 encodingMethodsSave[7] = function(file, picture)
-	saveOCIF67(file, picture, 1)
+	saveOCIF678(file, picture, 1, 0)
 end
 
 encodingMethodsLoad[7] = function(file, picture)
-	loadOCIF67(file, picture, 1)
+	loadOCIF678(file, picture, 1, 0)
+end
+
+encodingMethodsSave[8] = function(file, picture)
+	saveOCIF678(file, picture, 1, 1)
+end
+
+encodingMethodsLoad[8] = function(file, picture)
+	loadOCIF678(file, picture, 1, 1)
 end
 
 --------------------------------------------------------------------------------
@@ -451,6 +460,241 @@ function image.blend(picture, blendColor, transparency)
 		table.insert(newPicture, color.blend(picture[i + 1], blendColor, transparency))
 		table.insert(newPicture, picture[i + 2])
 		table.insert(newPicture, picture[i + 3])
+	end
+
+	return newPicture
+end
+
+function image.rotate(picture, angle)
+	local function copyPixel(newPic, oldPic, index)
+		table.insert(newPic, oldPic[index])
+		table.insert(newPic, oldPic[index + 1])
+		table.insert(newPic, oldPic[index + 2])
+		table.insert(newPic, oldPic[index + 3])
+	end
+
+	if angle == 90 then
+		local newPicture = {picture[2], picture[1]}
+		
+		for i = 1, picture[2] do
+			for j = picture[1], 1, -1 do
+				copyPixel(newPicture, picture, image.getIndex(i, j, picture[2]))
+			end
+		end
+
+		return newPicture
+	elseif angle == 180 then
+		local newPicture = {picture[1], picture[2]}
+		
+		for j = picture[1], 1, -1 do
+			for i = picture[2], 1, -1 do
+				copyPixel(newPicture, picture, image.getIndex(i, j, picture[2]))
+			end
+		end
+
+		return newPicture
+	elseif angle == 270 then
+		local newPicture = {picture[2], picture[1]}
+		
+		for i = picture[2], 1, -1 do
+			for j = 1, picture[1] do
+				copyPixel(newPicture, picture, image.getIndex(i, j, picture[2]))
+			end
+		end
+
+		return newPicture
+	else
+		error("Can't rotate image: angle must be 90, 180 or 270 degrees.")
+	end
+end
+
+function image.hueSaturationBrightness(picture, hue, saturation, brightness)
+	local function calculate(c)
+		local h, s, b = color.integerToHSB(c)
+		
+		b = b + brightness; if b < 0 then b = 0 elseif b > 1 then b = 1 end
+		s = s + saturation; if s < 0 then s = 0 elseif s > 1 then s = 1 end
+		h = h + hue; if h < 0 then h = 0 elseif h > 360 then h = 360 end
+
+		return color.HSBToInteger(h, s, b)
+	end
+
+	for i = 3, #picture, 4 do
+		picture[i] = calculate(picture[i])
+		picture[i + 1] = calculate(picture[i + 1])
+	end
+
+	return picture
+end
+
+function image.hue(picture, hue)
+	return image.hueSaturationBrightness(picture, hue, 0, 0)
+end
+
+function image.saturation(picture, saturation)
+	return image.hueSaturationBrightness(picture, 0, saturation, 0)
+end
+
+function image.brightness(picture, brightness)
+	return image.hueSaturationBrightness(picture, 0, 0, brightness)
+end
+
+function image.blackAndWhite(picture)
+	return image.hueSaturationBrightness(picture, 0, -1, 0)
+end
+
+function image.colorBalance(picture, r, g, b)
+	local function calculate(c)
+		local rr, gg, bb = color.integerToRGB(c)
+
+		rr = rr + r
+		gg = gg + g
+		bb = bb + b
+		
+		if rr < 0 then rr = 0 elseif rr > 255 then rr = 255 end
+		if gg < 0 then gg = 0 elseif gg > 255 then gg = 255 end
+		if bb < 0 then bb = 0 elseif bb > 255 then bb = 255 end
+
+		return color.RGBToInteger(rr, gg, bb)
+	end
+
+	for i = 3, #picture, 4 do
+		picture[i] = calculate(picture[i])
+		picture[i + 1] = calculate(picture[i + 1])
+	end
+
+	return picture
+end
+
+function image.invert(picture)
+	for i = 3, #picture, 4 do
+		picture[i] = 0xffffff - picture[i]
+		picture[i + 1] = 0xffffff - picture[i + 1]
+	end
+
+	return picture 
+end
+
+function image.getGaussianBlurKernel(radius, weight)
+	local size, index, sum, weightSquared2, value =
+		radius * 2 + 1,
+		2,
+		0,
+		2 * weight * weight
+
+	local kernel, constant =
+		{size},
+		1 / (math.pi * weightSquared2)
+	
+	-- Filling convolution matrix
+	for y = -radius, radius do
+		for x = -radius, radius do
+			value = constant * math.exp(-((y * y) + (x * x)) / weightSquared2);
+			kernel[index] = value
+			sum = sum + value;
+
+			index = index + 1
+		end
+	end
+
+	index = 2
+
+	for y = 1, size do
+		for x = 1, size do
+			kernel[index] = kernel[index] * 1 / sum;
+
+			index = index + 1
+		end
+	end
+
+    return kernel;
+end
+
+function image.convolve(picture, kernel)
+	-- Processing
+	local
+		pictureWidth,
+		pictureHeight,
+		kernelSize,
+		pictureIndex,
+		kernelIndex,
+		kernelValue,
+		rAcc,
+		gAcc,
+		bAcc,
+		r,
+		g,
+		b,
+		x,
+		y = picture[1], picture[2], kernel[1], 3
+
+	local newPicture, kernelRadius =
+		{ pictureWidth, pictureHeight },
+		math.floor(kernelSize / 2)
+
+	for pictureY = 1, pictureHeight do
+		for pictureX = 1, pictureWidth do
+			rAcc, gAcc, bAcc, kernelIndex = 0, 0, 0, 2
+
+			-- Summing
+			for kernelY = -kernelRadius, kernelRadius do
+				y = pictureY + kernelY
+
+				if y >= 1 and y <= pictureHeight then
+					for kernelX = -kernelRadius, kernelRadius do
+						x = pictureX + kernelX
+
+						if x >= 1 and x <= pictureWidth then
+							kernelValue = kernel[kernelIndex]
+							r, g, b = color.integerToRGB(picture[4 * (pictureWidth * (y - 1) + x) - 1])
+
+							rAcc, gAcc, bAcc = rAcc + r * kernelValue, gAcc + g * kernelValue, bAcc + b * kernelValue
+						end
+
+						kernelIndex = kernelIndex + 1
+					end
+				else
+					kernelIndex = kernelIndex + kernelSize
+				end
+			end
+
+			-- Setting pixel values on new picture
+			if rAcc > 255 then
+				rAcc =  255
+			elseif rAcc < 0 then
+				rAcc = 0
+			else
+				rAcc = rAcc - rAcc % 1
+			end
+
+			if gAcc > 255 then
+				gAcc =  255
+			elseif gAcc < 0 then
+				gAcc = 0
+			else
+				gAcc = gAcc - gAcc % 1
+			end
+
+			if bAcc > 255 then
+				bAcc =  255
+			elseif bAcc < 0 then
+				bAcc = 0
+			else
+				bAcc = bAcc - bAcc % 1
+			end
+
+			newPicture[pictureIndex] = color.RGBToInteger(rAcc, gAcc, bAcc)
+			pictureIndex = pictureIndex + 1
+
+			newPicture[pictureIndex] = 0x0
+			pictureIndex = pictureIndex + 1
+
+			newPicture[pictureIndex] = picture[pictureIndex]
+			pictureIndex = pictureIndex + 1
+
+			newPicture[pictureIndex] = " "
+			pictureIndex = pictureIndex + 1
+		end
 	end
 
 	return newPicture

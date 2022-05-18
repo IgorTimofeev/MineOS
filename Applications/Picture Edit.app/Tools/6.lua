@@ -6,16 +6,17 @@ local image = require("Image")
 
 local workspace, window, menu = select(1, ...), select(2, ...), select(3, ...)
 local tool = {}
+local locale = select(4, ...)
 
 tool.shortcut = "Ers"
 tool.keyCode = 18
-tool.about = "Eraser tool will cleanup pixels just like brush tool. You can configure of what data is need to be erased"
+tool.about = locale.tool6
 
-local backgroundSwitch = window.newSwitch("Erase background:", true)
-local foregroundSwitch = window.newSwitch("Erase foreground:", true)
-local alphaSwitch = window.newSwitch("Erase alpha:", true)
-local symbolSwitch = window.newSwitch("Erase symbol:", true)
-local radiusSlider = window.newSlider(1, 8, 1, false, "Radius: ", " px")
+local backgroundSwitch = window.newSwitch(locale.eraseBack, true)
+local foregroundSwitch = window.newSwitch(locale.eraseFor, true)
+local alphaSwitch = window.newSwitch(locale.eraseAlpha, true)
+local symbolSwitch = window.newSwitch(locale.eraseSym, true)
+local radiusSlider = window.newSlider(1, 8, 1, false, locale.radius, " px")
 radiusSlider.height = 2
 
 tool.onSelection = function()
@@ -28,7 +29,7 @@ end
 
 tool.eventHandler = function(workspace, object, e1, e2, e3, e4)
 	if e1 == "touch" or e1 == "drag" then
-		local x, y = e3 - window.image.x + 1, e4 - window.image.y + 1
+		local x, y = math.ceil(e3) - window.image.x + 1, math.ceil(e4) - window.image.y + 1
 		local meow = math.floor(radiusSlider.value)
 
 		for j = y - meow + 1, y + meow - 1 do

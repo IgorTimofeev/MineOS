@@ -37,6 +37,7 @@
 	appearanceDesktopBackground = "桌面背景",
 	appearanceDock = "Dock背景",
 	appearanceMenu = "目录背景",
+	appearanceBlurEnabled = "Interface blurring",
 	appearanceTransparencyEnabled = "界面透明度",
 	appearanceTransparencyInfo = "禁用最后两个选项将显著减少对CPU/GPU的直接调用次数并提高性能.",
 	appearanceDropDownDefaultBackground = "下拉菜单背景",

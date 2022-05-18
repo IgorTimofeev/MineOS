@@ -13,6 +13,7 @@
 	typeUserName = "Type user name",
 	yourText = "You:",
 	hereBeYourDialogs = "Here will be your conversations",
+	hideApplicationIcons = "Hide application icons",
 
 	categoryOverview = "Overview",
 	categoryApplications = "Applications",
