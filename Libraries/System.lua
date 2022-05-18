@@ -1505,9 +1505,10 @@ local function gridIconFieldBackgroundObjectEventHandler(workspace, object, e1, 
 		if e4 == 28 then
 			-- Если при нажатии энтера была выделенна ровно одна иконка, она попытается открыться
 			local selectedIcon
+			
 			for i = 2, #iconField.children do
 				if object.parent.children[i].selected then
-					if selectedIcon ~= nil then
+					if not selectedIcon then
 						-- Больше одной иконки выбрано
 						return
 					end
@@ -1517,8 +1518,8 @@ local function gridIconFieldBackgroundObjectEventHandler(workspace, object, e1, 
 			end
 
 			if selectedIcon then
-				selectedIcon:launch ()
-				workspace:draw ()
+				selectedIcon:launch()
+				workspace:draw()
 			end
 		end
 	end
