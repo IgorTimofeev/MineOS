@@ -462,12 +462,34 @@ local function moveCursor(symbolOffset, lineOffset, ignoreHidden)
 	end
 end
 
+local function swapLinesAndMoveCursor (lineOffset)
+	if not autocomplete.hidden then 
+		return 
+	end
+	
+	-- Проверяем, не заходит ли свап за рамки файла
+	if cursorPositionLine + lineOffset > #lines or cursorPositionLine + lineOffset < 1 then 
+		return 
+	end
+
+	-- Ебитесь сами со своим выделением, хехе
+	if codeView.selections[1] then
+		clearSelection ()
+	end
+
+	-- Свапаем строки
+	lines[cursorPositionLine], lines[cursorPositionLine + lineOffset] = lines[cursorPositionLine + lineOffset], lines[cursorPositionLine]
+
+	-- Ставим курсор на новую позицию
+	moveCursor (0, lineOffset, false)
+end
+
 local function setCursorPositionToHome()
-	setCursorPositionAndClearSelection(1, 1)
+	setCursorPositionAndClearSelection(1, cursorPositionLine)
 end
 
 local function setCursorPositionToEnd()
-	setCursorPositionAndClearSelection(unicode.len(lines[#lines]) + 1, #lines)
+	setCursorPositionAndClearSelection(unicode.len(lines[cursorPositionLine]) + 1, cursorPositionLine)
 end
 
 local function scroll(direction, speed)
@@ -533,8 +555,10 @@ end
 
 local function openFile(path)
 	local file, reason = filesystem.open(path, "r")
+
 	if file then
 		newFile()
+
 		leftTreeView.selectedItem = path
 		codeView.hidden = true
 
@@ -548,11 +572,12 @@ local function openFile(path)
 
 		local counter, currentSize, totalSize = 1, 0, filesystem.size(path)
 		for line in file:lines() do
+			counter, currentSize = counter + 1, currentSize + #line + 1
+
 			line = optimizeString(line)
 			table.insert(lines, line)
 			codeView.maximumLineLength = math.max(codeView.maximumLineLength, unicode.len(line))
 			
-			counter, currentSize = counter + 1, currentSize + #line
 			if counter % config.linesToShowOpenProgress == 0 then
 				progressBar.value = math.floor(currentSize / totalSize * 100)
 				computer.pullSignal(0)
@@ -562,13 +587,13 @@ local function openFile(path)
 
 		file:close()
 
-		if #lines > 1 then
-			table.remove(lines, 1)
-		end
-
 		if counter > config.linesToShowOpenProgress then
 			progressBar.value = 100
 			workspace:draw()
+		end
+
+		if #lines > 1 then
+			table.remove(lines, 1)
 		end
 
 		codeView.hidden = false
@@ -1360,7 +1385,13 @@ end
 
 local uptime = computer.uptime()
 codeView.eventHandler = function(workspace, object, e1, e2, e3, e4, e5)
-	if e1 == "touch" and checkScrollbar(e4) then
+	if e1 == "touch" then
+		e3, e4 = math.ceil(e3), math.ceil(e4)
+
+		if not checkScrollbar(e4) then
+			return
+		end
+
 		if e5 == 1 then
 			createEditOrRightClickMenu(GUI.addContextMenu(workspace, e3, e4))
 		else
@@ -1368,10 +1399,18 @@ codeView.eventHandler = function(workspace, object, e1, e2, e3, e4, e5)
 		end
 
 		tick(true)
+	
 	elseif e1 == "double_touch" then
 		selectWord()
 		tick(true)
-	elseif e1 == "drag" and checkScrollbar(e4) then
+	
+	elseif e1 == "drag" then
+		e3, e4 = math.ceil(e3), math.ceil(e4)
+
+		if not checkScrollbar(e4) then
+			return
+		end
+
 		codeView.selections[1] = codeView.selections[1] or {from = {}, to = {}}
 		codeView.selections[1].from.symbol, codeView.selections[1].from.line = cursorPositionSymbol, cursorPositionLine
 		codeView.selections[1].to.symbol, codeView.selections[1].to.line = fixCursorPosition(convertScreenCoordinatesToTextPosition(e3, e4))
@@ -1379,6 +1418,7 @@ codeView.eventHandler = function(workspace, object, e1, e2, e3, e4, e5)
 		if codeView.selections[1].from.line > codeView.selections[1].to.line then
 			codeView.selections[1].from.line, codeView.selections[1].to.line = codeView.selections[1].to.line, codeView.selections[1].from.line
 			codeView.selections[1].from.symbol, codeView.selections[1].to.symbol = codeView.selections[1].to.symbol, codeView.selections[1].from.symbol
+		
 		elseif codeView.selections[1].from.line == codeView.selections[1].to.line then
 			if codeView.selections[1].from.symbol > codeView.selections[1].to.symbol then
 				codeView.selections[1].from.symbol, codeView.selections[1].to.symbol = codeView.selections[1].to.symbol, codeView.selections[1].from.symbol
@@ -1386,6 +1426,7 @@ codeView.eventHandler = function(workspace, object, e1, e2, e3, e4, e5)
 		end
 
 		tick(true)
+
 	elseif e1 == "key_down" and GUI.focusedObject == window then
 		-- Ctrl or CMD
 		if keyboard.isControlDown() or keyboard.isCommandDown() then
@@ -1456,7 +1497,7 @@ codeView.eventHandler = function(workspace, object, e1, e2, e3, e4, e5)
 			elseif e4 == 14 then
 				deleteLine(cursorPositionLine)
 			-- Delete
-			elseif e4 == 211 then
+			elseif e4 == 211 then				
 				deleteLine(cursorPositionLine)
 			-- F5
 			elseif e4 == 63 then
@@ -1464,9 +1505,21 @@ codeView.eventHandler = function(workspace, object, e1, e2, e3, e4, e5)
 			end
 		-- Arrows up, down, left, right
 		elseif e4 == 200 then
-			moveCursor(0, -1)
+			-- Alt
+			if keyboard.isKeyDown (56) then
+				-- Swap current line or selection with upper
+				swapLinesAndMoveCursor (-1)
+			else
+				moveCursor(0, -1)
+			end
 		elseif e4 == 208 then
-			moveCursor(0, 1)
+			-- Alt
+			if keyboard.isKeyDown (56) then
+				-- Swap current line or selection with lower
+				swapLinesAndMoveCursor (1)
+			else
+				moveCursor(0, 1)
+			end
 		elseif e4 == 203 then
 			moveCursor(-1, 0, true)
 		elseif e4 == 205 then
@@ -1552,20 +1605,28 @@ codeView.eventHandler = function(workspace, object, e1, e2, e3, e4, e5)
 			pageDown()
 		-- Delete
 		elseif e4 == 211 then
-			delete()
+			-- Shift
+			if keyboard.isKeyDown (42) then
+				deleteLine (cursorPositionLine)
+			else
+				delete()
+			end
 		else
 			pasteAutoBrackets(e3)
 		end
 
 		tick(true)
+	
 	elseif e1 == "scroll" then
 		scroll(e5, config.scrollSpeed)
 		tick(cursorBlinkState)
+	
 	elseif e1 == "clipboard" then
 		local lines = splitStringIntoLines(e3)
 		paste(lines)
 		
 		tick(cursorBlinkState)
+	
 	elseif not e1 and cursorUptime + config.cursorBlinkDelay < computer.uptime() then
 		tick(not cursorBlinkState)
 	end
