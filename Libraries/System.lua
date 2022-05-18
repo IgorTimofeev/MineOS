@@ -1,4 +1,3 @@
-
 local screen = require("Screen")
 local filesystem = require("Filesystem")
 local image = require("Image")
@@ -1501,6 +1500,28 @@ local function gridIconFieldBackgroundObjectEventHandler(workspace, object, e1, 
 		object:moveToBack()
 
 		workspace:draw()
+	elseif e1 == "key_down" then
+		-- Enter
+		if e4 == 28 then
+			-- Если при нажатии энтера была выделенна ровно одна иконка, она попытается открыться
+			local selectedIcon
+			
+			for i = 2, #iconField.children do
+				if object.parent.children[i].selected then
+					if not selectedIcon then
+						-- Больше одной иконки выбрано
+						return
+					end
+
+					selectedIcon = iconField.children[i]
+				end
+			end
+
+			if selectedIcon then
+				selectedIcon:launch()
+				workspace:draw()
+			end
+		end
 	end
 end
 
