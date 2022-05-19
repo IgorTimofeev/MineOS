@@ -579,6 +579,26 @@ local function iconDeselectAndSelect(icon)
 	workspace:draw()
 end
 
+local function moveSelectedIconsToTrash (selectedIcons)
+	for i = 1, #selectedIcons do
+		if filesystem.path (selectedIcons[i].path) == paths.user.trash then
+			filesystem.remove (selectedIcons[i].path)
+		else
+			local newName = paths.user.trash .. selectedIcons[i].name
+			local clearName = filesystem.hideExtension(selectedIcons[i].name)
+			local repeats = 1
+			while filesystem.exists(newName) do
+				newName, repeats = paths.user.trash .. clearName .. string.rep("-copy", repeats) .. (selectedIcons[i].extension or ""), repeats + 1
+			end
+			filesystem.rename(selectedIcons[i].path, newName)
+		end
+		
+		selectedIcons[i].selected = false
+	end
+
+	computer.pushSignal("system", "updateFileList")
+end
+
 local function iconOnRightClick(selectedIcons, icon, e1, e2, e3, e4)
 	local contextMenu = GUI.addContextMenu(workspace, math.ceil(e3), math.ceil(e4))
 
@@ -835,21 +855,7 @@ local function iconOnRightClick(selectedIcons, icon, e1, e2, e3, e4)
 	end
 
 	contextMenu:addItem(localization.delete).onTouch = function()
-		for i = 1, #selectedIcons do
-			if filesystem.path(selectedIcons[i].path) == paths.user.trash then
-				filesystem.remove(selectedIcons[i].path)
-			else
-				local newName = paths.user.trash .. selectedIcons[i].name
-				local clearName = filesystem.hideExtension(selectedIcons[i].name)
-				local repeats = 1
-				while filesystem.exists(newName) do
-					newName, repeats = paths.user.trash .. clearName .. string.rep("-copy", repeats) .. (selectedIcons[i].extension or ""), repeats + 1
-				end
-				filesystem.rename(selectedIcons[i].path, newName)
-			end
-		end
-
-		computer.pushSignal("system", "updateFileList")
+		moveSelectedIconsToTrash (selectedIcons)
 	end
 
 	contextMenu:addSeparator()
@@ -864,7 +870,6 @@ local function iconOnRightClick(selectedIcons, icon, e1, e2, e3, e4)
 end
 
 local function iconOnDoubleClick(icon)
-	icon.selected = false
 	icon:launch()
 	workspace:draw()
 end
@@ -1459,6 +1464,8 @@ local function gridIconFieldBackgroundObjectEventHandler(workspace, object, e1, 
 	local iconField = object.parent
 
 	if e1 == "touch" then
+		GUI.focusedObject = iconField
+
 		if e5 == 0 then
 			iconField:clearSelection()
 			iconField.selection = {
@@ -1508,6 +1515,11 @@ local function gridIconFieldBackgroundObjectEventHandler(workspace, object, e1, 
 
 		workspace:draw()
 	elseif e1 == "key_down" then
+		-- Шобы иконгрид не стилил клавиши у окошек, а то залупные вещи творятся
+		if GUI.focusedObject ~= iconField then
+			return
+		end
+
 		-- Enter
 		if e4 == 28 then
 			-- Если при нажатии энтера была выделенна ровно одна иконка, она попытается открыться
@@ -1524,7 +1536,6 @@ local function gridIconFieldBackgroundObjectEventHandler(workspace, object, e1, 
 			end
 
 			if selectedIcon then
-				selectedIcon.selected = false
 				selectedIcon:launch ()
 				workspace:draw ()
 			end
@@ -1551,9 +1562,6 @@ local function gridIconFieldBackgroundObjectEventHandler(workspace, object, e1, 
 						if not result then
 							GUI.alert (localization.fileDeletingFailure .. "'" .. selectedIcons[i].path .. "': " .. reason)
 						end
-
-						-- Отвыделяем иконку, шобы она случайно не открылась
-						selectedIcons[i].selected = false
 					end
 
 					computer.pushSignal ("system", "updateFileList")
@@ -1571,8 +1579,10 @@ local function gridIconFieldBackgroundObjectEventHandler(workspace, object, e1, 
 
 				container.eventHandler = function (workspace, object, e1, e2, e3, e4, e5, ...)
 					if e1 == "key_down" then
+						-- Enter
 						if e4 == 28 then
 							buttonYes.onTouch ()
+						-- Tab
 						elseif e4 == 15 then
 							buttonNo.onTouch ()
 						end
@@ -1583,23 +1593,7 @@ local function gridIconFieldBackgroundObjectEventHandler(workspace, object, e1, 
 			
 			else
 				-- Шифт никто не нажал, кидаем в корзинку
-				for i = 1, #selectedIcons do
-					if filesystem.path (selectedIcons[i].path) == paths.user.trash then
-						filesystem.remove (selectedIcons[i].path)
-					else
-						local newName = paths.user.trash .. selectedIcons[i].name
-						local clearName = filesystem.hideExtension(selectedIcons[i].name)
-						local repeats = 1
-						while filesystem.exists(newName) do
-							newName, repeats = paths.user.trash .. clearName .. string.rep("-copy", repeats) .. (selectedIcons[i].extension or ""), repeats + 1
-						end
-						filesystem.rename(selectedIcons[i].path, newName)
-					end
-					
-					selectedIcons[i].selected = false
-				end
-		
-				computer.pushSignal("system", "updateFileList")		
+				moveSelectedIconsToTrash (selectedIcons)
 			end
 		end
 	end
@@ -1858,7 +1852,10 @@ function system.addWindow(window, dontAddToDock, preserveCoordinates)
 					end
 
 					-- Когда окно фокусицца, то главная ОСевая менюха заполницца ДЕТИШЕЧКАМИ оконной менюхи
-					window.onFocus = updateMenu
+					window.onFocus = function ()
+						GUI.focusedObject = window
+						updateMenu ()
+					end
 
 					-- Заполняем главную менюху текущим окном
 					updateMenu()
@@ -2804,6 +2801,7 @@ end
 local function userObjectEventHandler(workspace, userObject, e1)
 	if e1 == "touch" then
 		userObject.selected = true
+
 		workspace:draw()
 		
 		event.sleep(0.2)
