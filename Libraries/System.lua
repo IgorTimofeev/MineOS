@@ -864,6 +864,7 @@ local function iconOnRightClick(selectedIcons, icon, e1, e2, e3, e4)
 end
 
 local function iconOnDoubleClick(icon)
+	icon.selected = false
 	icon:launch()
 	workspace:draw()
 end
@@ -1523,6 +1524,7 @@ local function gridIconFieldBackgroundObjectEventHandler(workspace, object, e1, 
 			end
 
 			if selectedIcon then
+				selectedIcon.selected = false
 				selectedIcon:launch ()
 				workspace:draw ()
 			end
