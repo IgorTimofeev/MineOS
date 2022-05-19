@@ -62,6 +62,8 @@
 	folder = "Папка",
 	unknown = "Неизвестно",
 	calculatingSize = "изчисляване…",
+	filesWillBeRemovedPermanently = "file(s) will be removed permanently",
+	fileDeletingFailure = "Failed to delete file",
 
 	properties = "Свойства",
 	newFolderFromChosen = "Нова папка от избраните",

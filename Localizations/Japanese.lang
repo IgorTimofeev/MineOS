@@ -56,6 +56,8 @@
 	folder = "フォルダー",
 	unknown = "不明",
 	calculatingSize = "計算中…",
+	filesWillBeRemovedPermanently = "file(s) will be removed permanently",
+	fileDeletingFailure = "Failed to delete file",
 
 	properties = "プロパティ",
 	newFolderFromChosen = "選択したフォルダから新しいフォルダを作成",

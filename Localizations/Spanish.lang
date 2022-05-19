@@ -56,6 +56,8 @@
 	folder = "Carpeta",
 	unknown = "Desconocido",
 	calculatingSize = "calculando…",
+	filesWillBeRemovedPermanently = "file(s) will be removed permanently",
+	fileDeletingFailure = "Failed to delete file",
 
 	properties = "Propiedades",
 	newFolderFromChosen = "Nueva carpeta desde Directorio",

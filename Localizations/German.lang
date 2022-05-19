@@ -56,6 +56,8 @@
 	folder = "Ordner",
 	unknown = "Unbekannt",
 	calculatingSize = "Berechne Größe...",
+	filesWillBeRemovedPermanently = "file(s) will be removed permanently",
+	fileDeletingFailure = "Failed to delete file",
 
 	properties = "Eigenschaften",
 	newFolderFromChosen = "Neuen Ordner wählen.",

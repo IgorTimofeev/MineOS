@@ -54,6 +54,8 @@
 	folder = "ফোল্ডার",
 	unknown = "অজানা",
 	calculatingSize = "গণনা করা হচ্ছে ...",
+	filesWillBeRemovedPermanently = "file(s) will be removed permanently",
+	fileDeletingFailure = "Failed to delete file",
 	properties = "বৈশিষ্ট্য",
 	newFolderFromChosen = "নির্বাচিত",
 	create = "নতুন",

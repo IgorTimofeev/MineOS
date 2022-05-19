@@ -469,6 +469,17 @@ function system.updateIconProperties()
 	computer.pushSignal("system", "updateFileList")
 end
 
+local function getSelectedIcons (iconField)
+	local selectedIcons = {}
+	for i = 2, #iconField.children do
+		if iconField.children[i].selected then
+			table.insert(selectedIcons, iconField.children[i])
+		end
+	end
+
+	return selectedIcons
+end
+
 local function drawSelection(x, y, width, height, color, transparency)
 	screen.drawText(x, y, color, string.rep("▄", width), transparency)
 	screen.drawText(x, y + height - 1, color, string.rep("▀", width), transparency)
@@ -566,6 +577,26 @@ local function iconDeselectAndSelect(icon)
 	icon.selected = true
 
 	workspace:draw()
+end
+
+local function moveSelectedIconsToTrash (selectedIcons)
+	for i = 1, #selectedIcons do
+		if filesystem.path (selectedIcons[i].path) == paths.user.trash then
+			filesystem.remove (selectedIcons[i].path)
+		else
+			local newName = paths.user.trash .. selectedIcons[i].name
+			local clearName = filesystem.hideExtension(selectedIcons[i].name)
+			local repeats = 1
+			while filesystem.exists(newName) do
+				newName, repeats = paths.user.trash .. clearName .. string.rep("-copy", repeats) .. (selectedIcons[i].extension or ""), repeats + 1
+			end
+			filesystem.rename(selectedIcons[i].path, newName)
+		end
+		
+		selectedIcons[i].selected = false
+	end
+
+	computer.pushSignal("system", "updateFileList")
 end
 
 local function iconOnRightClick(selectedIcons, icon, e1, e2, e3, e4)
@@ -824,21 +855,7 @@ local function iconOnRightClick(selectedIcons, icon, e1, e2, e3, e4)
 	end
 
 	contextMenu:addItem(localization.delete).onTouch = function()
-		for i = 1, #selectedIcons do
-			if filesystem.path(selectedIcons[i].path) == paths.user.trash then
-				filesystem.remove(selectedIcons[i].path)
-			else
-				local newName = paths.user.trash .. selectedIcons[i].name
-				local clearName = filesystem.hideExtension(selectedIcons[i].name)
-				local repeats = 1
-				while filesystem.exists(newName) do
-					newName, repeats = paths.user.trash .. clearName .. string.rep("-copy", repeats) .. (selectedIcons[i].extension or ""), repeats + 1
-				end
-				filesystem.rename(selectedIcons[i].path, newName)
-			end
-		end
-
-		computer.pushSignal("system", "updateFileList")
+		moveSelectedIconsToTrash (selectedIcons)
 	end
 
 	contextMenu:addSeparator()
@@ -866,12 +883,7 @@ local function gridIconFieldIconEventHandler(workspace, object, e1, e2, e3, e4, 
 		if e5 == 0 then
 			iconDeselectAndSelect(object)
 		else
-			local selectedIcons = {}
-			for i = 2, #object.parent.children do
-				if object.parent.children[i].selected then
-					table.insert(selectedIcons, object.parent.children[i])
-				end
-			end
+			local selectedIcons = getSelectedIcons (object.parent)
 
 			-- Right click on multiple selected icons	
 			if not object.selected then
@@ -1452,6 +1464,8 @@ local function gridIconFieldBackgroundObjectEventHandler(workspace, object, e1, 
 	local iconField = object.parent
 
 	if e1 == "touch" then
+		GUI.focusedObject = iconField
+
 		if e5 == 0 then
 			iconField:clearSelection()
 			iconField.selection = {
@@ -1501,14 +1515,18 @@ local function gridIconFieldBackgroundObjectEventHandler(workspace, object, e1, 
 
 		workspace:draw()
 	elseif e1 == "key_down" then
+		-- Шобы иконгрид не стилил клавиши у окошек, а то залупные вещи творятся
+		if GUI.focusedObject ~= iconField then
+			return
+		end
+
 		-- Enter
 		if e4 == 28 then
 			-- Если при нажатии энтера была выделенна ровно одна иконка, она попытается открыться
 			local selectedIcon
-			
 			for i = 2, #iconField.children do
-				if object.parent.children[i].selected then
-					if not selectedIcon then
+				if iconField.children[i].selected then
+					if selectedIcon ~= nil then
 						-- Больше одной иконки выбрано
 						return
 					end
@@ -1518,8 +1536,64 @@ local function gridIconFieldBackgroundObjectEventHandler(workspace, object, e1, 
 			end
 
 			if selectedIcon then
-				selectedIcon:launch()
-				workspace:draw()
+				selectedIcon:launch ()
+				workspace:draw ()
+			end
+		end
+
+		-- Delete
+		if e4 == 211 then
+			-- При нажатии делита, выделенные иконки кидаются в корзину
+
+			selectedIcons = getSelectedIcons (iconField)
+			if #selectedIcons < 1 then
+				return
+			end
+
+			-- Если шифт нажат, удаляем перманентно, спросив пидора о его уверенности
+			if keyboard.isKeyDown (42) then
+				local container = GUI.addBackgroundContainer (workspace, true, true, localization.areYouSure .. " " .. tostring (#selectedIcons) .. " " .. localization.filesWillBeRemovedPermanently)
+				local buttonYes = container.layout:addChild (GUI.button (1, 1, 30, 1, 0xE1E1E1, 0x2D2D2D, 0xA5A5A5, 0x2D2D2D, localization.yes))
+				local buttonNo  = container.layout:addChild (GUI.button (1, 3, 30, 1, 0xE1E1E1, 0x2D2D2D, 0xA5A5A5, 0x2D2D2D, localization.no ))
+
+				buttonYes.onTouch = function ()
+					for i = 1, #selectedIcons do
+						result, reason = filesystem.remove (selectedIcons[i].path)
+						if not result then
+							GUI.alert (localization.fileDeletingFailure .. "'" .. selectedIcons[i].path .. "': " .. reason)
+						end
+					end
+
+					computer.pushSignal ("system", "updateFileList")
+					
+					container:remove ()
+					workspace:draw ()
+				end
+				
+				buttonNo.onTouch = function ()
+					container:remove ()
+					workspace:draw ()					
+				end
+	
+				container.panel.onTouch = buttonNo.onTouch
+
+				container.eventHandler = function (workspace, object, e1, e2, e3, e4, e5, ...)
+					if e1 == "key_down" then
+						-- Enter
+						if e4 == 28 then
+							buttonYes.onTouch ()
+						-- Tab
+						elseif e4 == 15 then
+							buttonNo.onTouch ()
+						end
+					end
+				end
+				
+				workspace:draw ()
+			
+			else
+				-- Шифт никто не нажал, кидаем в корзинку
+				moveSelectedIconsToTrash (selectedIcons)
 			end
 		end
 	end
@@ -1637,14 +1711,7 @@ function system.listIconField(x, y, width, height, path, ...)
 
 		if e1 == "touch" then
 			if e5 == 1 then
-				local selectedIcons = {}
-				for i = 1, #cell.parent.children - 1, columnCount do
-					if cell.parent.children[i].selected then
-						table.insert(selectedIcons, cell.parent.children[i])
-					end
-				end
-
-				iconOnRightClick(selectedIcons, icon, e1, e2, e3, e4, e5, ...)
+				iconOnRightClick(getSelectedIcons (cell.parent), icon, e1, e2, e3, e4, e5, ...)
 			end
 		elseif e1 == "double_touch" then
 			iconOnDoubleClick(icon)
@@ -1785,7 +1852,10 @@ function system.addWindow(window, dontAddToDock, preserveCoordinates)
 					end
 
 					-- Когда окно фокусицца, то главная ОСевая менюха заполницца ДЕТИШЕЧКАМИ оконной менюхи
-					window.onFocus = updateMenu
+					window.onFocus = function ()
+						GUI.focusedObject = window
+						updateMenu ()
+					end
 
 					-- Заполняем главную менюху текущим окном
 					updateMenu()
@@ -2731,6 +2801,7 @@ end
 local function userObjectEventHandler(workspace, userObject, e1)
 	if e1 == "touch" then
 		userObject.selected = true
+
 		workspace:draw()
 		
 		event.sleep(0.2)
