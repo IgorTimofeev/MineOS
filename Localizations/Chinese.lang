@@ -56,6 +56,7 @@
 	folder = "文件夹",
 	unknown = "未知",
 	calculatingSize = "计算中...",
+	filesWillBeRemovedPermanently = "file(s) will be removed permanently",
 
 	properties = "属性",
 	newFolderFromChosen = "在所选文件夹里新建一个文件夹",

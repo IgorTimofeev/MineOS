@@ -55,6 +55,7 @@
 	folder = "المجلد",
 	unknown = "غير معروف",
 	calculatingSize = "الحساب ... ",
+	filesWillBeRemovedPermanently = "file(s) will be removed permanently",
 	properties = "الخصائص",
 	newFolderFromChosen = "مجلد جديد من اختيار",
 	create = "جديد",

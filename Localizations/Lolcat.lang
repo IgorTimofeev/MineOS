@@ -55,6 +55,7 @@
 	folder = "foldr",
 	unknown = "Unknown",
 	calculatingSize = "calculating…",
+	filesWillBeRemovedPermanently = "file(s) will be removed permanently",
 	properties = "propertiez",
 	newFolderFromChosen = "nu foldr frum chosen",
 	create = "nu",

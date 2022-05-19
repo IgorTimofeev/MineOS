@@ -56,6 +56,7 @@
 	folder = "Папка",
 	unknown = "Неизвестно",
 	calculatingSize = "идет подсчет…",
+	filesWillBeRemovedPermanently = "файл(ов) будет удалено безвозвратно",
 	
 	properties = "Свойства",
 	newFolderFromChosen = "Новая папка из выбранного",

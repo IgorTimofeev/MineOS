@@ -55,6 +55,7 @@
 	folder = "Pasta",
 	unknown = "Desconhecido",
 	calculatingSize = "calculando…",
+	filesWillBeRemovedPermanently = "file(s) will be removed permanently",
 	properties = "Propriedades",
 	newFolderFromChosen = "Nova pasta escolhida",
 	create = "Novo",
