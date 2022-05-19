@@ -57,6 +57,7 @@
 	unknown = "Невядома",
 	calculatingSize = "ідзе падлік…",
 	filesWillBeRemovedPermanently = "file(s) will be removed permanently",
+	fileDeletingFailure = "Failed to delete file",
 
 	properties = "Уласцівасці",
 	newFolderFromChosen = "Новая тэчка з вылучанага",

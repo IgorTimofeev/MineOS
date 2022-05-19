@@ -57,6 +57,7 @@
 	unknown = "Невідомо",
 	calculatingSize = "йде підрахунок…",
 	filesWillBeRemovedPermanently = "file(s) will be removed permanently",
+	fileDeletingFailure = "Failed to delete file",
 
 	properties = "Властивості",
 	newFolderFromChosen = "Нова папка з обраного",

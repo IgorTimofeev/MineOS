@@ -57,6 +57,7 @@
 	unknown = "Inconnu",
 	calculatingSize = "calcule en cours ...",
 	filesWillBeRemovedPermanently = "file(s) will be removed permanently",
+	fileDeletingFailure = "Failed to delete file",
 
 	properties = "Propriétés",
 	newFolderFromChosen = "Nouveau dossier choisi",

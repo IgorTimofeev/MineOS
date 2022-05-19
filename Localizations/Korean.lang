@@ -57,6 +57,7 @@
 	unknown = "알 수 없음",
 	calculatingSize = "계산중…",
 	filesWillBeRemovedPermanently = "file(s) will be removed permanently",
+	fileDeletingFailure = "Failed to delete file",
 
 	properties = "속성",
 	newFolderFromChosen = "선택된 파일이 포함된 새 폴더 만들기",

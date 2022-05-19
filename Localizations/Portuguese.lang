@@ -56,6 +56,7 @@
 	unknown = "Desconhecido",
 	calculatingSize = "calculando…",
 	filesWillBeRemovedPermanently = "file(s) will be removed permanently",
+	fileDeletingFailure = "Failed to delete file",
 	properties = "Propriedades",
 	newFolderFromChosen = "Nova pasta escolhida",
 	create = "Novo",

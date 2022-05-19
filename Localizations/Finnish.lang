@@ -57,6 +57,7 @@
 	unknown = "Tuntematon",
 	calculatingSize = "lasketaan…",
 	filesWillBeRemovedPermanently = "file(s) will be removed permanently",
+	fileDeletingFailure = "Failed to delete file",
 
 	properties = "Ominaisuudet",
 	newFolderFromChosen = "Uusi kansio valinnasta",

@@ -57,6 +57,7 @@
 	unknown = "Neznáme",
 	calculatingSize = "počítanie…",
 	filesWillBeRemovedPermanently = "file(s) will be removed permanently",
+	fileDeletingFailure = "Failed to delete file",
 
 	properties = "Vlastnosti",
 	newFolderFromChosen = "Nový priečinok z vybraného",

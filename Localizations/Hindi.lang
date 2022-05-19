@@ -56,6 +56,7 @@
 	unknown = "अज्ञात",
 	calculatingSize = "गणना…",
 	filesWillBeRemovedPermanently = "file(s) will be removed permanently",
+	fileDeletingFailure = "Failed to delete file",
 	properties = "गुण",
 	newFolderFromChosen = "से नया फ़ोल्डर",
 	create = "नया",
