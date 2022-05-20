@@ -1,0 +1,18 @@
+{
+	winds = {
+		[0] = "N",
+		[1] = "NE",
+		[2] = "E",
+		[3] = "SE",
+		[4] = "S",
+		[5] = "SO",
+		[6] = "C",
+		[7] = "NO",
+		[8] = "N",
+	},
+	mmHg = "mm Hg",
+	speed = "EM,",
+	population = "População:",
+	city = "Digite o nome da cidade aqui",
+	cityError = "Resultado errado. ",
+}
