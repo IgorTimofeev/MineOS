@@ -1,0 +1,12 @@
+{
+	noPictures = "Kuvia ei ole.",
+	slideShow = "Diaesitys",
+	delay = "Viive:",
+	seconds = "sekuntia",
+	fullScreen = "Koko näyttö",
+	setWallpaper = "Haluatko asettaa tämän kuvan taustakuvaksi?",
+	yes = "Joo",
+	no = "Ei",
+	start = "alkaa",
+	cancel = "Peruuttaa",
+}
