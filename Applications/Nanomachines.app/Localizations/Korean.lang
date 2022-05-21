@@ -1,0 +1,18 @@
+{
+	activeEffects = "현재 효과",
+	sent = "전송된",
+	received = "받았다",
+	nothingFound = "효과를 찾을 수 없음",
+	instructionTitle = "지침",
+	instructionData = "화면 왼쪽에는 나노나이트에 생체 접촉을 활성화하도록 지시하는 스위치가 있습니다. ",
+	syncWelcome = "어서 오십시오",
+	syncInfo = "프로그램을 사용하기 전에 나노나이트 패킷을 만들어 마십니다. ",
+	syncProgress = "nanites와의 동기화가 있습니다. 프로세스가 완료될 때까지 컴퓨터를 떠나지 마십시오.",
+	syncContacts = "생체 접촉 업데이트 %d/%d",
+	favourites = "선택한 효과",
+	saveConfiguration = "구성 저장",
+	saveFailed = "저장 실패: 인벤토리에 구성되지 않은 나노나이트가 없습니다.",
+	notSynced = "나노와 동기화되지 않았습니다. ",
+	notWireless = "컴퓨터에는 모뎀이 있지만 나노는 무선 네트워크를 통해서만 명령을 인식합니다. ",
+	noModem = "컴퓨터에 네트워크를 통해 nanite 명령을 보내고 받는 무선 모뎀이 없습니다.",
+}

@@ -1,0 +1,21 @@
+{
+	weekLine = "ma ti ke to pe la su",
+	weekLineAlt = "Su Ma Ti Ke To pe Sa",
+	months = {
+		"tammikuu",
+		"helmikuu",
+		"maaliskuuta",
+		"huhtikuu",
+		"saattaa",
+		"kesäkuuta",
+		"heinäkuu",
+		"elokuu",
+		"syyskuu",
+		"lokakuu",
+		"marraskuu",
+		"joulukuu",
+	},
+	startWeek = "Aloita viikko alkaen",
+	monday = "maanantai",
+	sunday = "sunnuntai",
+}

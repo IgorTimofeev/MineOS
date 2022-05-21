@@ -1,0 +1,21 @@
+{
+	weekLine = "Lu Ma Me Je Ve Sa Di",
+	weekLineAlt = "Di Lu Ma Me Je Ve Sa",
+	months = {
+		"Janvier",
+		"Février",
+		"Mars",
+		"Avril",
+		"Mai",
+		"Juin",
+		"Juillet",
+		"Août",
+		"Septembre",
+		"Octobre",
+		"Novembre",
+		"Décembre",
+	},
+	startWeek = "Commencer la semaine à partir de",
+	monday = "Lundi",
+	sunday = "Dimanche",
+}

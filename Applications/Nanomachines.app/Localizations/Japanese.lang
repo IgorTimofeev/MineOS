@@ -1,0 +1,18 @@
+{
+	activeEffects = "現在の影響",
+	sent = "送信済",
+	received = "受け取った",
+	nothingFound = "効果は見つかりませんでした",
+	instructionTitle = "命令",
+	instructionData = "画面の左側には、ナナイトにバイオコンタクトをアクティブにするように指示するスイッチがあります。",
+	syncWelcome = "いらっしゃいませ",
+	syncInfo = "プログラムを使用する前に、ナナイトのパケットを作成して飲んでください。",
+	syncProgress = "nanitesとの同期があります。プロセスが完了するまで、コンピューターを離れないでください。",
+	syncContacts = "％dのバイオコンタクト更新％d",
+	favourites = "選択した効果",
+	saveConfiguration = "構成を保存",
+	saveFailed = "保存に失敗しました：インベントリに未構成のナナイトはありません",
+	notSynced = "ナナイトとの同期がずれていました。",
+	notWireless = "コンピューターにはモデムがありますが、nanitesはワイヤレスネットワーク上でのみコマンドを認識します。",
+	noModem = "コンピューターには、ネットワークを介してnaniteコマンドを送受信するためのワイヤレスモデムがありません",
+}

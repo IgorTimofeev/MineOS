@@ -1,0 +1,12 @@
+{
+	noPictures = "写真はありません。",
+	slideShow = "スライドショー",
+	delay = "遅れ：",
+	seconds = "秒",
+	fullScreen = "全画面表示",
+	setWallpaper = "この画像を壁紙として設定しますか？",
+	yes = "はい",
+	no = "いいえ",
+	start = "始める",
+	cancel = "キャンセル",
+}

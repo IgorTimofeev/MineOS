@@ -1,0 +1,12 @@
+{
+	noPictures = "Não há fotos.",
+	slideShow = "Apresentação de slides",
+	delay = "Atraso:",
+	seconds = "segundos",
+	fullScreen = "Tela cheia",
+	setWallpaper = "Deseja definir esta imagem como papel de parede?",
+	yes = "Sim",
+	no = "Não",
+	start = "Começar",
+	cancel = "Cancelar",
+}

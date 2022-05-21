@@ -1,0 +1,18 @@
+{
+	activeEffects = "Aktualne efekty",
+	sent = "Wysłano",
+	received = "Otrzymane",
+	nothingFound = "Nie znaleziono efektów",
+	instructionTitle = "Instrukcja",
+	instructionData = "Po lewej stronie ekranu znajdują się przełączniki, które każą nanitom aktywować biokontakty. ",
+	syncWelcome = "Powitanie",
+	syncInfo = "Przed użyciem programu utwórz i wypij paczkę nanitów. ",
+	syncProgress = "Istnieje synchronizacja z nanitami, nie wychodź z komputera, dopóki proces się nie zakończy:",
+	syncContacts = "aktualizacja biokontaktu %d z %d",
+	favourites = "Wybrane efekty",
+	saveConfiguration = "Zapisz konfigurację",
+	saveFailed = "Zapisywanie nie powiodło się: w ekwipunku nie ma nieskonfigurowanych nanitów",
+	notSynced = "Wystąpił brak synchronizacji z nanitami. ",
+	notWireless = "Komputer ma modem, ale nanity odbierają polecenia wyłącznie przez sieć bezprzewodową. ",
+	noModem = "Komputer nie ma modemu bezprzewodowego do wysyłania i odbierania poleceń nanitów przez sieć",
+}

@@ -1,0 +1,12 @@
+{
+	noPictures = "没有图片。",
+	slideShow = "幻灯片",
+	delay = "延迟：",
+	seconds = "秒",
+	fullScreen = "全屏",
+	setWallpaper = "您想将此图片设置为壁纸吗？",
+	yes = "是的",
+	no = "不",
+	start = "开始",
+	cancel = "取消",
+}

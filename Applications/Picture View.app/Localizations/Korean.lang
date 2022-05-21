@@ -1,0 +1,12 @@
+{
+	noPictures = "사진이 없습니다.",
+	slideShow = "슬라이드쇼",
+	delay = "지연:",
+	seconds = "초",
+	fullScreen = "전체 화면",
+	setWallpaper = "이 사진을 배경화면으로 설정하시겠습니까?",
+	yes = "예",
+	no = "아니요",
+	start = "시작",
+	cancel = "취소",
+}

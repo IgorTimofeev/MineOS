@@ -1,0 +1,18 @@
+{
+	activeEffects = "Efeitos atuais",
+	sent = "Enviei",
+	received = "Recebido",
+	nothingFound = "Nenhum efeito encontrado",
+	instructionTitle = "Instrução",
+	instructionData = "No lado esquerdo da tela há interruptores que dizem aos nanites para ativar os biocontatos. ",
+	syncWelcome = "Receber",
+	syncInfo = "Antes de usar o programa, crie e beba um pacote de nanites. ",
+	syncProgress = "Há uma sincronização com nanites, não saia do computador até que o processo seja concluído:",
+	syncContacts = "atualização de biocontato %d de %d",
+	favourites = "Efeitos selecionados",
+	saveConfiguration = "Salvar configuração",
+	saveFailed = "Falha ao salvar: no inventário não há nanites não configurados",
+	notSynced = "Houve uma falta de sincronia com os nanites. ",
+	notWireless = "O computador possui um modem, mas os nanites percebem comandos exclusivamente pela rede sem fio. ",
+	noModem = "O computador não possui um modem sem fio para enviar e receber comandos nanite em uma rede",
+}

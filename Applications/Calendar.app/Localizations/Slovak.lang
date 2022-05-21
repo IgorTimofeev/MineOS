@@ -1,0 +1,21 @@
+{
+	weekLine = "Po Ut St Št Pá So Ne",
+	weekLineAlt = "Ne Po Ut St Št Pá So",
+	months = {
+		"januára",
+		"februára",
+		"marca",
+		"apríla",
+		"Smieť",
+		"júna",
+		"júla",
+		"augusta",
+		"septembra",
+		"októbra",
+		"novembra",
+		"December",
+	},
+	startWeek = "Začiatok týždňa od",
+	monday = "pondelok",
+	sunday = "nedeľa",
+}
