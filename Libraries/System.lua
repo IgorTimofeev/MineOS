@@ -85,6 +85,7 @@ function system.getDefaultUserSettings()
 		networkSignalStrength = 512,
 		networkFTPConnections = {},
 		
+		interfaceScreenAddress = nil,
 		interfaceWallpaperEnabled = false,
 		interfaceWallpaperPath = paths.system.pictures .. "Space.pic",
 		interfaceWallpaperMode = 1,
@@ -271,6 +272,7 @@ function system.call(method, ...)
 	end
 	
 	local xpcallSuccess, xpcallReason = xpcall(launchMethod, tracebackMethod)
+	
 	if type(xpcallReason) == "string" or type(xpcallReason) == "nil" then
 		xpcallReason = {
 			path = paths.system.libraries .. "System.lua",
@@ -450,6 +452,7 @@ local iconLaunchers = {
 
 	archive = function(icon)
 		local success, reason = require("Compressor").unpack(icon.path, filesystem.path(icon.path))
+		
 		if success then
 			computer.pushSignal("system", "updateFileList")
 		else
@@ -469,8 +472,9 @@ function system.updateIconProperties()
 	computer.pushSignal("system", "updateFileList")
 end
 
-local function getSelectedIcons (iconField)
+local function iconFieldGetSelectedIcons(iconField)
 	local selectedIcons = {}
+
 	for i = 2, #iconField.children do
 		if iconField.children[i].selected then
 			table.insert(selectedIcons, iconField.children[i])
@@ -486,11 +490,11 @@ local function drawSelection(x, y, width, height, color, transparency)
 	screen.drawRectangle(x, y + 1, width, height - 2, color, 0x0, " ", transparency)
 end
 
-local function gridIconDraw(icon)
+local function iconDraw(icon)
 	local selectionTransparency = userSettings.interfaceTransparencyEnabled and icon.colors.selectionTransparency
 	local xCenter, yText = icon.x + iconHalfWidth, icon.y + iconImageHeight + 1
 
-	local function gridIconDrawNameLine(y, line)
+	local function iconDrawNameLine(y, line)
 		local lineLength = unicode.len(line)
 		local x = math.floor(xCenter - lineLength / 2)
 
@@ -508,10 +512,10 @@ local function gridIconDraw(icon)
 	local charIndex = 1
 	for lineIndex = 1, iconTextHeight do
 		if lineIndex < iconTextHeight then
-			gridIconDrawNameLine(yText, unicode.sub(icon.name, charIndex, charIndex + icon.width - 1))
+			iconDrawNameLine(yText, unicode.sub(icon.name, charIndex, charIndex + icon.width - 1))
 			charIndex, yText = charIndex + icon.width, yText + 1
 		else
-			gridIconDrawNameLine(yText, text.limit(unicode.sub(icon.name, charIndex, -1), icon.width, "center"))
+			iconDrawNameLine(yText, text.limit(unicode.sub(icon.name, charIndex, -1), icon.width, "center"))
 		end
 	end
 
@@ -579,21 +583,28 @@ local function iconDeselectAndSelect(icon)
 	workspace:draw()
 end
 
-local function moveSelectedIconsToTrash (selectedIcons)
+local function moveSelectedIconsToTrash(selectedIcons)
+	local icon
+
 	for i = 1, #selectedIcons do
-		if filesystem.path (selectedIcons[i].path) == paths.user.trash then
-			filesystem.remove (selectedIcons[i].path)
+		icon = selectedIcons[i]
+
+		if filesystem.path(icon.path) == paths.user.trash then
+			filesystem.remove(icon.path)
 		else
-			local newName = paths.user.trash .. selectedIcons[i].name
-			local clearName = filesystem.hideExtension(selectedIcons[i].name)
+			local name = filesystem.name(icon.path)
+			local clearName = filesystem.hideExtension(name)
+			local newPath = paths.user.trash .. name
 			local repeats = 1
-			while filesystem.exists(newName) do
-				newName, repeats = paths.user.trash .. clearName .. string.rep("-copy", repeats) .. (selectedIcons[i].extension or ""), repeats + 1
+
+			while filesystem.exists(newPath) do
+				newPath, repeats = paths.user.trash .. clearName .. string.rep("-copy", repeats) .. (icon.extension or ""), repeats + 1
 			end
-			filesystem.rename(selectedIcons[i].path, newName)
+
+			filesystem.rename(icon.path, newPath)
 		end
 		
-		selectedIcons[i].selected = false
+		icon.selected = false
 	end
 
 	computer.pushSignal("system", "updateFileList")
@@ -855,7 +866,7 @@ local function iconOnRightClick(selectedIcons, icon, e1, e2, e3, e4)
 	end
 
 	contextMenu:addItem(localization.delete).onTouch = function()
-		moveSelectedIconsToTrash (selectedIcons)
+		moveSelectedIconsToTrash(selectedIcons)
 	end
 
 	contextMenu:addSeparator()
@@ -874,44 +885,52 @@ local function iconOnDoubleClick(icon)
 	workspace:draw()
 end
 
-local function gridIconFieldIconEventHandler(workspace, object, e1, e2, e3, e4, e5, ...)
-	if e1 == "touch" and object:isPointInside(e3, e4) then
-		object.lastTouchPosition = object.lastTouchPosition or {}
-		object.lastTouchPosition.x, object.lastTouchPosition.y = e3, e4
-		object:moveToFront()
+local function iconFieldIconEventHandler(workspace, icon, e1, e2, e3, e4, e5, ...)
+	if e1 == "touch" and icon:isPointInside(e3, e4) then
+		local iconField = icon.parent
+		
+		GUI.focusedObject = iconField
+
+		icon.lastTouchPosition = icon.lastTouchPosition or {}
+		icon.lastTouchPosition.x, icon.lastTouchPosition.y = e3, e4
+
+		icon:moveToFront()
 
 		if e5 == 0 then
-			iconDeselectAndSelect(object)
+			iconDeselectAndSelect(icon)
 		else
-			local selectedIcons = getSelectedIcons (object.parent)
+			local selectedIcons = iconField:getSelectedIcons()
 
 			-- Right click on multiple selected icons	
-			if not object.selected then
-				iconDeselectAndSelect(object)
-				selectedIcons = {object}
+			if not icon.selected then
+				iconDeselectAndSelect(icon)
+				selectedIcons = {icon}
 			end
 
-			iconOnRightClick(selectedIcons, object, e1, e2, e3, e4, e5, ...)
+			iconOnRightClick(selectedIcons, icon, e1, e2, e3, e4, e5, ...)
 		end
-	elseif e1 == "double_touch" and object:isPointInside(e3, e4) and e5 == 0 then
-		iconOnDoubleClick(object, e1, e2, e3, e4, e5, ...)
-	elseif e1 == "drag" and object.parent.iconConfigEnabled and object.lastTouchPosition then
+	
+	elseif e1 == "double_touch" and icon:isPointInside(e3, e4) and e5 == 0 then
+		iconOnDoubleClick(icon, e1, e2, e3, e4, e5, ...)
+	
+	elseif e1 == "drag" and icon.parent.iconConfigEnabled and icon.lastTouchPosition then
 		-- Ебучие авторы мода, ну на кой хуй было делать drop-ивент без наличия drag? ПИДОРЫ
-		object.dragStarted = true
-		object.localX = object.localX + e3 - object.lastTouchPosition.x
-		object.localY = object.localY + e4 - object.lastTouchPosition.y
-		object.lastTouchPosition.x, object.lastTouchPosition.y = e3, e4
+		icon.dragStarted = true
+		icon.localX = icon.localX + e3 - icon.lastTouchPosition.x
+		icon.localY = icon.localY + e4 - icon.lastTouchPosition.y
+		icon.lastTouchPosition.x, icon.lastTouchPosition.y = e3, e4
 
 		workspace:draw()
-	elseif e1 == "drop" and object.dragStarted then
-		object.dragStarted = nil
-		object.lastTouchPosition = nil
+	
+	elseif e1 == "drop" and icon.dragStarted then
+		icon.dragStarted = nil
+		icon.lastTouchPosition = nil
 
 		iconFieldSaveIconPosition(
-			object.parent,
-			object.name .. (object.isDirectory and "/" or ""),
-			object.localX,
-			object.localY
+			icon.parent,
+			icon.name .. (icon.isDirectory and "/" or ""),
+			icon.localX,
+			icon.localY
 		)
 	end
 end
@@ -983,7 +1002,7 @@ local function anyIconAnalyseExtension(icon, launchers)
 	return icon
 end
 
-local function gridIconIsPointInside(icon, x, y)
+local function iconIsPointInside(icon, x, y)
 	return
 		x >= icon.x + iconImageHorizontalOffset and
 		y >= icon.y and
@@ -1007,14 +1026,14 @@ local function anyIconAddInfo(icon, path)
 	icon.analyseExtension = anyIconAnalyseExtension
 end
 
-function system.gridIcon(x, y, path, colors)
+function system.icon(x, y, path, colors)
 	local icon = GUI.object(x, y, userSettings.iconWidth, userSettings.iconHeight)
 	
 	anyIconAddInfo(icon, path)
 
 	icon.colors = colors
-	icon.isPointInside = gridIconIsPointInside
-	icon.draw = gridIconDraw
+	icon.isPointInside = iconIsPointInside
+	icon.draw = iconDraw
 
 	return icon
 end
@@ -1040,7 +1059,7 @@ end
 
 ---------------------------------------- Icon field ----------------------------------------
 
-local function gridIconFieldCheckSelection(iconField)
+local function iconFieldCheckSelection(iconField)
 	local selection = iconField.selection
 	
 	if selection and selection.x2 then
@@ -1105,10 +1124,10 @@ local function anyIconFieldUpdateFileList(iconField, func)
 	return iconField
 end
 
-local function gridIconFieldUpdateFileList(iconField)
+local function iconFieldUpdateFileList(iconField)
 	anyIconFieldUpdateFileList(iconField, function(list)
 		local function addGridIcon(x, y, path)
-			local icon = system.gridIcon(
+			local icon = system.icon(
 					x,
 					y,
 					iconField.path .. path,
@@ -1116,7 +1135,7 @@ local function gridIconFieldUpdateFileList(iconField)
 				)
 
 			anyIconFieldAddIcon(iconField, icon)
-			icon.eventHandler = gridIconFieldIconEventHandler
+			icon.eventHandler = iconFieldIconEventHandler
 
 			iconField:addChild(icon)
 		end
@@ -1236,7 +1255,7 @@ local function listIconFieldUpdateFileList(iconField)
 					icon,
 					GUI.tableTextCell(iconField.cell2Colors, os.date(userSettings.timeFormat, math.floor(filesystem.lastModified(file) / 1000))),
 					GUI.tableTextCell(iconField.cell2Colors, icon.isDirectory and "-" or number.roundToDecimalPlaces(filesystem.size(file) / 1024, 2) .. " KB"),
-					GUI.tableTextCell(iconField.cell2Colors, icon.isDirectory and localization.folder or (icon.extension and icon.extension:sub(2, 2):upper() .. icon.extension:sub(3, -1) or "-"))
+					GUI.tableTextCell(iconField.cell2Colors, icon.isDirectory and localization.folder or(icon.extension and icon.extension:sub(2, 2):upper() .. icon.extension:sub(3, -1) or "-"))
 				)
 			else
 				break
@@ -1460,10 +1479,10 @@ local function iconFieldBackgroundClick(iconField, e1, e2, e3, e4, e5, ...)
 	workspace:draw()
 end
 
-local function gridIconFieldBackgroundObjectEventHandler(workspace, object, e1, e2, e3, e4, e5, ...)
-	local iconField = object.parent
-
+local function iconFieldBackgroundObjectEventHandler(workspace, object, e1, e2, e3, e4, e5, ...)
 	if e1 == "touch" then
+		local iconField = object.parent
+
 		GUI.focusedObject = iconField
 
 		if e5 == 0 then
@@ -1472,50 +1491,59 @@ local function gridIconFieldBackgroundObjectEventHandler(workspace, object, e1, 
 				x1Raw = e3,
 				y1Raw = e4
 			}
-			gridIconFieldCheckSelection(iconField)
+			iconFieldCheckSelection(iconField)
 
 			workspace:draw()
 		else
 			iconFieldBackgroundClick(iconField, e1, e2, e3, e4, e5, ...)
 		end
+	
 	elseif e1 == "drag" then
-		if iconField.selection then
-			local selection = iconField.selection
+		local iconField = object.parent
+		local selection = iconField.selection
 
-			selection.x2Raw, selection.y2Raw = e3, e4
-
-			-- Creating ordered representation of selection
-			selection.x1,
-			selection.y1,
-			selection.x2,
-			selection.y2 =
-			
-			math.ceil(selection.x1Raw),
-			math.ceil(selection.y1Raw),
-			math.ceil(selection.x2Raw),
-			math.ceil(selection.y2Raw)
-
-			if selection.x2 < selection.x1 then
-				selection.x1, selection.x2 = selection.x2, selection.x1
-			end
-
-			if selection.y2 < selection.y1 then
-				selection.y1, selection.y2 = selection.y2, selection.y1
-			end
-
-			gridIconFieldCheckSelection(iconField)
-			object:moveToFront()
-
-			workspace:draw()
+		if not selection then
+			return
 		end
+
+		selection.x2Raw, selection.y2Raw = e3, e4
+
+		-- Creating ordered representation of selection
+		selection.x1,
+		selection.y1,
+		selection.x2,
+		selection.y2 =
+		
+		math.ceil(selection.x1Raw),
+		math.ceil(selection.y1Raw),
+		math.ceil(selection.x2Raw),
+		math.ceil(selection.y2Raw)
+
+		if selection.x2 < selection.x1 then
+			selection.x1, selection.x2 = selection.x2, selection.x1
+		end
+
+		if selection.y2 < selection.y1 then
+			selection.y1, selection.y2 = selection.y2, selection.y1
+		end
+
+		iconFieldCheckSelection(iconField)
+		object:moveToFront()
+
+		workspace:draw()
+	
 	elseif e1 == "drop" then
+		local iconField = object.parent
+
 		iconField.selection = nil
-		gridIconFieldCheckSelection(iconField)
+		iconFieldCheckSelection(iconField)
 		object:moveToBack()
 
 		workspace:draw()
+	
 	elseif e1 == "key_down" then
-		-- Шобы иконгрид не стилил клавиши у окошек, а то залупные вещи творятся
+		local iconField = object.parent
+
 		if GUI.focusedObject ~= iconField then
 			return
 		end
@@ -1523,77 +1551,78 @@ local function gridIconFieldBackgroundObjectEventHandler(workspace, object, e1, 
 		-- Enter
 		if e4 == 28 then
 			-- Если при нажатии энтера была выделенна ровно одна иконка, она попытается открыться
-			local selectedIcon
+			local icon, selectedIcon
+			
 			for i = 2, #iconField.children do
-				if iconField.children[i].selected then
+				icon = iconField.children[i]
+
+				if icon.selected then
+					-- Больше одной иконки выбрано
 					if selectedIcon ~= nil then
-						-- Больше одной иконки выбрано
 						return
 					end
 
-					selectedIcon = iconField.children[i]
+					selectedIcon = icon
 				end
 			end
 
 			if selectedIcon then
-				selectedIcon:launch ()
-				workspace:draw ()
+				selectedIcon:launch()
+				workspace:draw()
 			end
-		end
 
 		-- Delete
-		if e4 == 211 then
+		elseif e4 == 211 then
 			-- При нажатии делита, выделенные иконки кидаются в корзину
+			local selectedIcons = iconField:getSelectedIcons()
 
-			selectedIcons = getSelectedIcons (iconField)
-			if #selectedIcons < 1 then
+			if #selectedIcons == 0 then
 				return
 			end
 
 			-- Если шифт нажат, удаляем перманентно, спросив пидора о его уверенности
-			if keyboard.isKeyDown (42) then
-				local container = GUI.addBackgroundContainer (workspace, true, true, localization.areYouSure .. " " .. tostring (#selectedIcons) .. " " .. localization.filesWillBeRemovedPermanently)
-				local buttonYes = container.layout:addChild (GUI.button (1, 1, 30, 1, 0xE1E1E1, 0x2D2D2D, 0xA5A5A5, 0x2D2D2D, localization.yes))
-				local buttonNo  = container.layout:addChild (GUI.button (1, 3, 30, 1, 0xE1E1E1, 0x2D2D2D, 0xA5A5A5, 0x2D2D2D, localization.no ))
+			if keyboard.isKeyDown(42) then
+				local container = GUI.addBackgroundContainer(workspace, true, true, localization.areYouSure .. " " .. tostring(#selectedIcons) .. " " .. localization.filesWillBeRemovedPermanently)
+				local buttonYes = container.layout:addChild(GUI.button(1, 1, 30, 1, 0xE1E1E1, 0x2D2D2D, 0xA5A5A5, 0x2D2D2D, localization.yes))
 
-				buttonYes.onTouch = function ()
+				buttonYes.onTouch = function()
 					for i = 1, #selectedIcons do
-						result, reason = filesystem.remove (selectedIcons[i].path)
+						local result, reason = filesystem.remove(selectedIcons[i].path)
+						
 						if not result then
-							GUI.alert (localization.fileDeletingFailure .. "'" .. selectedIcons[i].path .. "': " .. reason)
+							GUI.alert(localization.fileDeletingFailure .. "'" .. selectedIcons[i].path .. "': " .. reason)
 						end
 					end
 
-					computer.pushSignal ("system", "updateFileList")
-					
-					container:remove ()
-					workspace:draw ()
-				end
-				
-				buttonNo.onTouch = function ()
-					container:remove ()
-					workspace:draw ()					
-				end
-	
-				container.panel.onTouch = buttonNo.onTouch
+					container:remove()
 
-				container.eventHandler = function (workspace, object, e1, e2, e3, e4, e5, ...)
+					computer.pushSignal("system", "updateFileList")
+				end
+
+				local function close()
+					container:remove()
+					workspace:draw()
+				end
+
+				container.panel.eventHandler = function(workspace, panel, e1, e2, e3, e4, e5, ...)
 					if e1 == "key_down" then
 						-- Enter
 						if e4 == 28 then
-							buttonYes.onTouch ()
+							buttonYes.onTouch()
 						-- Tab
 						elseif e4 == 15 then
-							buttonNo.onTouch ()
+							close()
 						end
+					elseif e1 == "touch" then
+						close()
 					end
 				end
 				
-				workspace:draw ()
+				workspace:draw()
 			
 			else
 				-- Шифт никто не нажал, кидаем в корзинку
-				moveSelectedIconsToTrash (selectedIcons)
+				moveSelectedIconsToTrash(selectedIcons)
 			end
 		end
 	end
@@ -1601,8 +1630,10 @@ end
 
 local function iconFieldBackgroundObjectDraw(object)
 	local selection = object.parent.selection
+	
 	if selection and object.parent.selection.x2 then
 		local y1, y2
+		
 		if selection.y1Raw < selection.y2Raw then
 			y1, y2 = selection.y1 + object.parent.yOffset - object.parent.yOffsetInitial, selection.y2
 		else
@@ -1617,7 +1648,7 @@ local function iconFieldBackgroundObjectDraw(object)
 	end
 end
 
-local function gridIconFieldClearSelection(self)
+local function iconFieldClearSelection(self)
 	for i = 1, #self.children do
 		self.children[i].selected = nil
 	end
@@ -1662,14 +1693,15 @@ function system.gridIconField(x, y, width, height, xOffset, yOffset, path, defau
 	iconField.iconConfig = {}
 
 	iconField.backgroundObject = iconField:addChild(GUI.object(1, 1, width, height))
-	iconField.backgroundObject.eventHandler = gridIconFieldBackgroundObjectEventHandler
+	iconField.backgroundObject.eventHandler = iconFieldBackgroundObjectEventHandler
 	iconField.backgroundObject.draw = iconFieldBackgroundObjectDraw
 
-	iconField.clearSelection = gridIconFieldClearSelection
+	iconField.clearSelection = iconFieldClearSelection
 	iconField.loadIconConfig = iconFieldLoadIconConfig
 	iconField.saveIconConfig = iconFieldSaveIconConfig
 	iconField.deleteIconConfig = iconFieldDeleteIconConfig
-	iconField.updateFileList = gridIconFieldUpdateFileList
+	iconField.updateFileList = iconFieldUpdateFileList
+	iconField.getSelectedIcons = iconFieldGetSelectedIcons
 
 	anyIconFieldAddInfo(iconField, path)
 
@@ -1711,7 +1743,7 @@ function system.listIconField(x, y, width, height, path, ...)
 
 		if e1 == "touch" then
 			if e5 == 1 then
-				iconOnRightClick(getSelectedIcons (cell.parent), icon, e1, e2, e3, e4, e5, ...)
+				iconOnRightClick(cell.parent:getSelectedIcons(), icon, e1, e2, e3, e4, e5, ...)
 			end
 		elseif e1 == "double_touch" then
 			iconOnDoubleClick(icon)
@@ -1798,14 +1830,17 @@ function system.addWindow(window, dontAddToDock, preserveCoordinates)
 	end
 	
 	-- Ебурим окно к окнам
-	GUI.focusedObject = window
 	desktopWindowsContainer:addChild(window)
+	
+	GUI.focusedObject = window
 	
 	if not dontAddToDock then
 		-- Получаем путь залупы
 		local info
+		
 		for i = 0, math.huge do
 			info = debug.getinfo(i)
+			
 			if info then
 				if info.source and info.what == "main" and info.source:sub(-13, -1) == ".app/Main.lua" then
 					local dockPath = filesystem.removeSlashes(info.source:sub(2, -9))
@@ -1852,10 +1887,7 @@ function system.addWindow(window, dontAddToDock, preserveCoordinates)
 					end
 
 					-- Когда окно фокусицца, то главная ОСевая менюха заполницца ДЕТИШЕЧКАМИ оконной менюхи
-					window.onFocus = function ()
-						GUI.focusedObject = window
-						updateMenu ()
-					end
+					window.onFocus = updateMenu
 
 					-- Заполняем главную менюху текущим окном
 					updateMenu()
@@ -1908,7 +1940,7 @@ function system.addPropertiesWindow(x, y, width, icon)
 		return object
 	end
 
-	addKeyAndValue(localization.type, icon.extension or (icon.isDirectory and localization.folder or localization.unknown))
+	addKeyAndValue(localization.type, icon.extension or(icon.isDirectory and localization.folder or localization.unknown))
 	local sizeKeyAndValue = addKeyAndValue(localization.size, icon.isDirectory and "-" or string.format("%.2f", filesystem.size(icon.path) / 1024) .. " KB")
 	addKeyAndValue(localization.date, os.date("%d.%m.%y, %H:%M", math.floor(filesystem.lastModified(icon.path) / 1000)))
 	addKeyAndValue(localization.path, " ")
@@ -2234,6 +2266,12 @@ function system.updateWallpaper()
 	end
 end
 
+function system.updateScreen()
+	if userSettings.interfaceScreenAddress and userSettings.interfaceScreenAddress ~= screen.getScreenAddress() then
+		screen.setScreenAddress(GPUAddress, false)
+	end
+end
+
 function system.updateResolution()
 	if userSettings.interfaceScreenWidth then
 		screen.setResolution(userSettings.interfaceScreenWidth, userSettings.interfaceScreenHeight)
@@ -2356,7 +2394,7 @@ function system.updateDesktop()
 	}
 
 	dockContainer.addIcon = function(path)
-		local icon = dockContainer:addChild(system.gridIcon(1, 2, path, dockColors))
+		local icon = dockContainer:addChild(system.icon(1, 2, path, dockColors))
 		icon:analyseExtension(iconLaunchers)
 		icon:moveBackward()
 
@@ -2369,12 +2407,10 @@ function system.updateDesktop()
 				-- Unhide all windows
 				for w in pairs(icon.windows) do
 					topmostWindow = w
-					topmostWindow.hidden = false
 				end
 
 				topmostWindow:focus()
 
-				updateMenu()
 				event.sleep(0.2)
 			else
 				icon:launch()
@@ -2467,7 +2503,6 @@ function system.updateDesktop()
 
 	icon.onLeftClick = function(...)
 		icon:launch()
-		
 		icon.selected = false
 		workspace:draw()
 	end
@@ -2485,10 +2520,13 @@ function system.updateDesktop()
 
 			container.layout:addChild(GUI.button(1, 1, 30, 1, 0xE1E1E1, 0x2D2D2D, 0xA5A5A5, 0x2D2D2D, "OK")).onTouch = function()
 				local list = filesystem.list(paths.user.trash)
+				
 				for i = 1, #list do
 					filesystem.remove(paths.user.trash .. list[i])
 				end
+				
 				container:remove()
+
 				computer.pushSignal("system", "updateFileList")
 			end
 
@@ -2660,7 +2698,7 @@ function system.updateDesktop()
 		if e1 == "key_down" then
 			local windowCount = #desktopWindowsContainer.children
 			-- Ctrl or CMD
-			if windowCount > 0 and not lastWindowHandled and (keyboard.isKeyDown(29) or keyboard.isKeyDown(219)) then
+			if windowCount > 0 and not lastWindowHandled and(keyboard.isKeyDown(29) or keyboard.isKeyDown(219)) then
 				-- W
 				if e4 == 17 then
 					desktopWindowsContainer.children[windowCount]:remove()
@@ -2670,7 +2708,7 @@ function system.updateDesktop()
 				end
 			end
 		
-		elseif lastWindowHandled and e1 == "key_up" and (e4 == 17 or e4 == 35) then
+		elseif lastWindowHandled and e1 == "key_up" and(e4 == 17 or e4 == 35) then
 			lastWindowHandled = false
 		
 		elseif e1 == "system" then
@@ -2716,6 +2754,7 @@ function system.updateDesktop()
 	system.consoleWindow = nil
 
 	system.updateColorScheme()
+	system.updateScreen()
 	system.updateResolution()
 	system.updateWallpaper()
 	system.updateMenuWidgets()
@@ -2902,7 +2941,7 @@ function system.authorize()
 	if #userList > 1 or loadUserSettingsAndCheckProtection(userList[1]) then
 		local container = workspace:addChild(GUI.container(1, 1, workspace.width, workspace.height))
 
-		-- If we've loaded wallpaper (from user logout or above) then add a panel to make it darker
+		-- If we've loaded wallpaper(from user logout or above) then add a panel to make it darker
 		if desktopBackground.draw ~= desktopBackgroundAmbientDraw then
 			container:addChild(GUI.panel(1, 1, container.width, container.height, 0x0, 0.5))
 		end

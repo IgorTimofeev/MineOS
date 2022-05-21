@@ -2796,6 +2796,7 @@ end
 
 local function inputDraw(input)
 	local background, foreground, transparency, text
+	
 	if input.focused then
 		background, transparency = input.colors.focused.background, input.colors.focused.transparency
 		if input.text == "" then
@@ -4206,14 +4207,26 @@ end
 --------------------------------------------------------------------------------
 
 local function comboBoxDraw(object)
-	screen.drawRectangle(object.x, object.y, object.width, object.height, object.colors.default.background, object.colors.default.text, " ")
+	local arrowSize = object.height * 2 - 1
+	local width = object.width - arrowSize
+
+	-- Background
+	screen.drawRectangle(object.x, object.y, width, object.height, object.colors.default.background, object.colors.default.text, " ")
+	
+	-- Item
 	if object.dropDownMenu.itemsContainer.children[object.selectedItem] then
-		screen.drawText(object.x + 1, math.floor(object.y + object.height / 2), object.colors.default.text, text.limit(object.dropDownMenu.itemsContainer.children[object.selectedItem].text, object.width - object.height - 2, "right"))
+		screen.drawText(
+			object.x + 1,
+			math.floor(object.y + object.height / 2),
+			object.colors.default.text,
+			text.limit(object.dropDownMenu.itemsContainer.children[object.selectedItem].text, object.width - object.height - 2, "right")
+		)
 	end
 
-	local width = object.height * 2 - 1
-	screen.drawRectangle(object.x + object.width - object.height * 2 + 1, object.y, width, object.height, object.colors.arrow.background, object.colors.arrow.text, " ")
-	screen.drawText(math.floor(object.x + object.width - width / 2), math.floor(object.y + object.height / 2), object.colors.arrow.text, object.pressed and "▲" or "▼")
+	-- Arrow
+	width = object.x + width
+	screen.drawRectangle(width, object.y, arrowSize, object.height, object.colors.arrow.background, object.colors.arrow.text, " ")
+	screen.drawText(math.floor(width + arrowSize / 2), math.floor(object.y + object.height / 2), object.colors.arrow.text, object.pressed and "▲" or "▼")
 
 	return object
 end
@@ -4223,6 +4236,7 @@ local function comboBoxGetItem(object, what)
 		return object.dropDownMenu.itemsContainer.children[what]
 	else
 		local children = object.dropDownMenu.itemsContainer.children
+		
 		for i = 1, #children do
 			if children[i].text == what then
 				return children[i], i
@@ -4457,11 +4471,7 @@ function GUI.windowMaximize(window, animationDisabled)
 	end
 end
 
-function GUI.windowMinimize(window)
-	window.hidden = not window.hidden
-end
-
-function GUI.windowFocus(window)
+local function windowFocus(window)
 	GUI.focusedObject = window
 	window.hidden = false
 	window:moveToFront()
@@ -4469,6 +4479,10 @@ function GUI.windowFocus(window)
 	if window.onFocus then
 		window.onFocus()
 	end
+end
+
+function GUI.windowMinimize(window)
+	window.hidden = not window.hidden
 end
 
 function GUI.window(x, y, width, height)
@@ -4480,10 +4494,10 @@ function GUI.window(x, y, width, height)
 	window.resize = windowResize
 	window.maximize = GUI.windowMaximize
 	window.minimize = GUI.windowMinimize
-	window.focus = GUI.windowFocus
 
 	window.eventHandler = windowEventHandler
 	window.draw = windowDraw
+	window.focus = windowFocus
 
 	return window
 end
