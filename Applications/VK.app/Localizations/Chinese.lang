@@ -28,7 +28,7 @@
 	userSubscribedToYou = "订阅了你",
 	userIsYourFriend = "你有朋友",
 	
-	profileCounters = {
+	profileCounters = [
 		{
 			field = "追随者",
 			description = "追随者",
@@ -48,8 +48,8 @@
 		{
 			field = "音频",
 			description = "声音的",
-		},
-	},
+		}
+	],
 	profileShowAdditional = "显示详细资料",
 	profileHideAdditional = "隐藏详细信息",
 	profileTitleMainInformation = "基本信息",
@@ -83,7 +83,7 @@
 		alcohol = "OTN。",
 		smoking = "OTN。",
 	},
-	months = {
+	months = [
 		"一月",
 		"二月",
 		"行进",
@@ -95,10 +95,10 @@
 		"九月",
 		"十月",
 		"十一月",
-		"十二月",
-	},
-	relationStatuses = {
-		{
+		"十二月"
+	],
+	relationStatuses = [
+		[
 			"未婚",
 			"有一个女朋友",
 			"已订婚的",
@@ -107,9 +107,9 @@
 			"在主动搜索中",
 			"情人",
 			"在民事婚姻中",
-			[0] = "未指定$$$$",
-		},
-		{
+			[0] = "未指定"
+		],
+		[
 			"未婚",
 			"有一个朋友",
 			"已订婚的",
@@ -118,10 +118,10 @@
 			"在主动搜索中",
 			"情人",
 			"在民事婚姻中",
-			[0] = "未指定$$$$",
-		},
-	},
-	personalPoliticalTypes = {
+			[0] = "未指定"
+		]
+	],
+	personalPoliticalTypes = [
 		"共产",
 		"社会主义者",
 		"缓和",
@@ -130,17 +130,17 @@
 		"君主制",
 		"超保守的",
 		"冷漠",
-		"自由主义者",
-	},
-	personalPeopleMainTypes = {
+		"自由主义者"
+	],
+	personalPeopleMainTypes = [
 		"智力和创造力",
 		"善良和诚实",
 		"美容与健康",
 		"权力与财富",
 		"勇气和毅力",
-		"幽默和对生活的热爱",
-	},
-	personalLifeMainTypes = {
+		"幽默和对生活的热爱"
+	],
+	personalLifeMainTypes = [
 		"家庭和孩子",
 		"事业和金钱",
 		"娱乐休闲",
@@ -148,15 +148,15 @@
 		"改善世界",
 		"自我发展",
 		"美与艺术",
-		"名声和影响力",
-	},
-	personalBlyadTypes = {
+		"名声和影响力"
+	],
+	personalBlyadTypes = [
 		"急剧消极",
 		"消极的",
 		"妥协",
 		"中性的",
-		"积极的",
-	},
+		"积极的"
+	],
 	
 	friends = "朋友们",
 	friendsOnline = "在线好友",

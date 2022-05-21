@@ -28,7 +28,7 @@
 	userSubscribedToYou = "Dich abonniert",
 	userIsYourFriend = "Du hast Freunde",
 	
-	profileCounters = {
+	profileCounters = [
 		{
 			field = "Anhänger",
 			description = "Anhänger",
@@ -48,8 +48,8 @@
 		{
 			field = "Audios",
 			description = "Audio-",
-		},
-	},
+		}
+	],
 	profileShowAdditional = "Zeige Details",
 	profileHideAdditional = "Detaillierte Informationen ausblenden",
 	profileTitleMainInformation = "Grundinformation",
@@ -83,7 +83,7 @@
 		alcohol = "OTN. ",
 		smoking = "OTN. ",
 	},
-	months = {
+	months = [
 		"Januar",
 		"Februar",
 		"März",
@@ -95,10 +95,10 @@
 		"September",
 		"Oktober",
 		"November",
-		"Dezember",
-	},
-	relationStatuses = {
-		{
+		"Dezember"
+	],
+	relationStatuses = [
+		[
 			"nicht verheiratet",
 			"eine Freundin haben",
 			"beschäftigt, verlobt",
@@ -107,9 +107,9 @@
 			"bei aktiver Suche",
 			"Liebhaber",
 			"bei der standesamtlichen Trauung",
-			[0] = "nicht angegeben$$$$",
-		},
-		{
+			[0] = "nicht angegeben"
+		],
+		[
 			"nicht verheiratet",
 			"habe einen Freund",
 			"beschäftigt, verlobt",
@@ -118,10 +118,10 @@
 			"bei aktiver Suche",
 			"Liebhaber",
 			"bei der standesamtlichen Trauung",
-			[0] = "nicht angegeben$$$$",
-		},
-	},
-	personalPoliticalTypes = {
+			[0] = "nicht angegeben"
+		]
+	],
+	personalPoliticalTypes = [
 		"Kommunist",
 		"Sozialist",
 		"Mäßig",
@@ -130,17 +130,17 @@
 		"Monarchisch",
 		"Ultra Konservativ",
 		"Gleichgültig",
-		"Libertär",
-	},
-	personalPeopleMainTypes = {
+		"Libertär"
+	],
+	personalPeopleMainTypes = [
 		"Intelligenz und Kreativität",
 		"Freundlichkeit und Ehrlichkeit",
 		"Schönheit und Gesundheit",
 		"Macht und Reichtum",
 		"Mut und Ausdauer",
-		"Humor und Lebensfreude",
-	},
-	personalLifeMainTypes = {
+		"Humor und Lebensfreude"
+	],
+	personalLifeMainTypes = [
 		"Familie und Kinder",
 		"Karriere und Geld",
 		"Unterhaltung und Erholung",
@@ -148,15 +148,15 @@
 		"Die Welt verbessern",
 		"Selbstentwicklung",
 		"Schönheit und Kunst",
-		"Ruhm und Einfluss",
-	},
-	personalBlyadTypes = {
+		"Ruhm und Einfluss"
+	],
+	personalBlyadTypes = [
 		"Scharf negativ",
 		"Negativ",
 		"Kompromiss",
 		"Neutral",
-		"Positiv",
-	},
+		"Positiv"
+	],
 	
 	friends = "Freunde",
 	friendsOnline = "Online Freunde",

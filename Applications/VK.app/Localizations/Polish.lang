@@ -28,7 +28,7 @@
 	userSubscribedToYou = "Subskrybowany do Ciebie",
 	userIsYourFriend = "Masz przyjaciół",
 	
-	profileCounters = {
+	profileCounters = [
 		{
 			field = "Obserwujący",
 			description = "Obserwujący",
@@ -48,8 +48,8 @@
 		{
 			field = "audio",
 			description = "audio",
-		},
-	},
+		}
+	],
 	profileShowAdditional = "Pokaż szczegóły",
 	profileHideAdditional = "Ukryj szczegółowe informacje",
 	profileTitleMainInformation = "Podstawowe informacje",
@@ -83,7 +83,7 @@
 		alcohol = "OTN. ",
 		smoking = "OTN. ",
 	},
-	months = {
+	months = [
 		"styczeń",
 		"luty",
 		"Marsz",
@@ -95,10 +95,10 @@
 		"wrzesień",
 		"październik",
 		"listopad",
-		"grudzień",
-	},
-	relationStatuses = {
-		{
+		"grudzień"
+	],
+	relationStatuses = [
+		[
 			"niezamężny",
 			"mieć dziewczynę",
 			"zaręczony",
@@ -107,9 +107,9 @@
 			"w aktywnym wyszukiwaniu",
 			"kochanek",
 			"w małżeństwie cywilnym",
-			[0] = "nieokreślony$$$$",
-		},
-		{
+			[0] = "nieokreślony"
+		],
+		[
 			"niezamężny",
 			"mieć przyjaciela",
 			"zaręczony",
@@ -118,10 +118,10 @@
 			"w aktywnym wyszukiwaniu",
 			"kochanek",
 			"w małżeństwie cywilnym",
-			[0] = "nieokreślony$$$$",
-		},
-	},
-	personalPoliticalTypes = {
+			[0] = "nieokreślony"
+		]
+	],
+	personalPoliticalTypes = [
 		"komunistyczny",
 		"Socjalista",
 		"Umiarkowany",
@@ -130,17 +130,17 @@
 		"Monarchiczny",
 		"Ultra konserwatywny",
 		"Obojętny",
-		"libertarianin",
-	},
-	personalPeopleMainTypes = {
+		"libertarianin"
+	],
+	personalPeopleMainTypes = [
 		"Inteligencja i kreatywność",
 		"Dobroć i uczciwość",
 		"Piękno i zdrowie",
 		"Władza i bogactwo",
 		"Odwaga i wytrwałość",
-		"Humor i miłość do życia",
-	},
-	personalLifeMainTypes = {
+		"Humor i miłość do życia"
+	],
+	personalLifeMainTypes = [
 		"Rodzina i dzieci",
 		"Kariera i pieniądze",
 		"Rozrywka i rekreacja",
@@ -148,15 +148,15 @@
 		"Ulepszanie świata",
 		"Samorozwój",
 		"Piękno i sztuka",
-		"Sława i wpływy",
-	},
-	personalBlyadTypes = {
+		"Sława i wpływy"
+	],
+	personalBlyadTypes = [
 		"Zdecydowanie negatywny",
 		"Negatywny",
 		"Kompromis",
 		"Neutralny",
-		"Pozytywny",
-	},
+		"Pozytywny"
+	],
 	
 	friends = "Przyjaciele",
 	friendsOnline = "Internetowi znajomi",

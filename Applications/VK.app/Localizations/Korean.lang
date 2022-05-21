@@ -28,7 +28,7 @@
 	userSubscribedToYou = "당신에게 구독",
 	userIsYourFriend = "당신은 친구가있다",
 	
-	profileCounters = {
+	profileCounters = [
 		{
 			field = "추종자",
 			description = "추종자",
@@ -48,8 +48,8 @@
 		{
 			field = "오디오",
 			description = "오디오",
-		},
-	},
+		}
+	],
 	profileShowAdditional = "세부정보 표시",
 	profileHideAdditional = "자세한 정보 숨기기",
 	profileTitleMainInformation = "기본 정보",
@@ -83,7 +83,7 @@
 		alcohol = "OTN. ",
 		smoking = "OTN. ",
 	},
-	months = {
+	months = [
 		"1월",
 		"2월",
 		"3월",
@@ -95,10 +95,10 @@
 		"구월",
 		"십월",
 		"십일월",
-		"12월",
-	},
-	relationStatuses = {
-		{
+		"12월"
+	],
+	relationStatuses = [
+		[
 			"결혼하지",
 			"여자 친구가있다",
 			"약속 된",
@@ -107,9 +107,9 @@
 			"활성 검색에서",
 			"애인",
 			"시민 결혼",
-			[0] = "지정되지 않음$$$$",
-		},
-		{
+			[0] = "지정되지 않음"
+		],
+		[
 			"결혼하지",
 			"친구가 있다",
 			"약속 된",
@@ -117,11 +117,11 @@
 			"복잡하다",
 			"활성 검색에서",
 			"애인",
-			"시민 결혼에서",
-			[0] = "지정되지 않음$$$$",
-		},
-	},
-	personalPoliticalTypes = {
+			"시민 결혼",
+			[0] = "지정되지 않음"
+		]
+	],
+	personalPoliticalTypes = [
 		"공산주의자",
 		"사회주의자",
 		"보통의",
@@ -130,17 +130,17 @@
 		"군주제",
 		"극단적 보수주의",
 		"무관심한",
-		"자유주의자",
-	},
-	personalPeopleMainTypes = {
+		"자유주의자"
+	],
+	personalPeopleMainTypes = [
 		"지능과 창의성",
 		"친절과 정직",
 		"미용과 건강",
 		"권력과 부",
 		"용기와 인내",
-		"유머와 삶의 사랑",
-	},
-	personalLifeMainTypes = {
+		"유머와 삶의 사랑"
+	],
+	personalLifeMainTypes = [
 		"가족과 아이들",
 		"경력과 돈",
 		"엔터테인먼트 및 레크리에이션",
@@ -148,15 +148,15 @@
 		"세상을 개선하다",
 		"자기계발",
 		"아름다움과 예술",
-		"명성과 영향력",
-	},
-	personalBlyadTypes = {
+		"명성과 영향력"
+	],
+	personalBlyadTypes = [
 		"급격하게 부정적인",
 		"부정적인",
 		"타협",
 		"중립적",
-		"긍정적인",
-	},
+		"긍정적인"
+	],
 	
 	friends = "친구",
 	friendsOnline = "온라인 친구",

@@ -28,7 +28,7 @@
 	userSubscribedToYou = "Abonné à vous",
 	userIsYourFriend = "Tu as des amis",
 	
-	profileCounters = {
+	profileCounters = [
 		{
 			field = "suiveurs",
 			description = "suiveurs",
@@ -48,8 +48,8 @@
 		{
 			field = "audios",
 			description = "l'audio",
-		},
-	},
+		}
+	],
 	profileShowAdditional = "Afficher les détails",
 	profileHideAdditional = "Masquer les informations détaillées",
 	profileTitleMainInformation = "Informations de base",
@@ -83,7 +83,7 @@
 		alcohol = "OTN. ",
 		smoking = "OTN. ",
 	},
-	months = {
+	months = [
 		"janvier",
 		"février",
 		"Mars",
@@ -95,10 +95,10 @@
 		"septembre",
 		"octobre",
 		"novembre",
-		"décembre",
-	},
-	relationStatuses = {
-		{
+		"décembre"
+	],
+	relationStatuses = [
+		[
 			"pas marié",
 			"avoir une copine",
 			"engagé",
@@ -107,9 +107,9 @@
 			"en recherche active",
 			"amoureux",
 			"dans le mariage civil",
-			[0] = "non spécifié$$$$",
-		},
-		{
+			[0] = "non spécifié"
+		],
+		[
 			"pas marié",
 			"avoir un ami",
 			"engagé",
@@ -118,10 +118,10 @@
 			"en recherche active",
 			"amoureux",
 			"dans le mariage civil",
-			[0] = "non spécifié$$$$",
-		},
-	},
-	personalPoliticalTypes = {
+			[0] = "non spécifié"
+		]
+	],
+	personalPoliticalTypes = [
 		"communiste",
 		"Socialiste",
 		"Modéré",
@@ -130,17 +130,17 @@
 		"Monarchique",
 		"Ultra conservateur",
 		"Indifférent",
-		"Libertaire",
-	},
-	personalPeopleMainTypes = {
+		"Libertaire"
+	],
+	personalPeopleMainTypes = [
 		"Intelligence et créativité",
 		"Gentillesse et honnêteté",
 		"Beauté et santé",
 		"Pouvoir et richesse",
 		"Courage et persévérance",
-		"Humour et amour de la vie",
-	},
-	personalLifeMainTypes = {
+		"Humour et amour de la vie"
+	],
+	personalLifeMainTypes = [
 		"Famille et enfants",
 		"Carrière et argent",
 		"Divertissement et loisirs",
@@ -148,15 +148,15 @@
 		"Améliorer le monde",
 		"Développement personnel",
 		"Beauté et art",
-		"Renommée et influence",
-	},
-	personalBlyadTypes = {
+		"Renommée et influence"
+	],
+	personalBlyadTypes = [
 		"Nettement négatif",
 		"Négatif",
 		"Faire des compromis",
 		"Neutre",
-		"Positif",
-	},
+		"Positif"
+	],
 	
 	friends = "Amis",
 	friendsOnline = "Amis en ligne",

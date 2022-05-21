@@ -28,7 +28,7 @@
 	userSubscribedToYou = "Iscritto a te",
 	userIsYourFriend = "Hai amici",
 	
-	profileCounters = {
+	profileCounters = [
 		{
 			field = "seguaci",
 			description = "seguaci",
@@ -48,8 +48,8 @@
 		{
 			field = "audio",
 			description = "Audio",
-		},
-	},
+		}
+	],
 	profileShowAdditional = "Mostra dettagli",
 	profileHideAdditional = "Nascondi informazioni dettagliate",
 	profileTitleMainInformation = "Informazioni di base",
@@ -83,7 +83,7 @@
 		alcohol = "OTN. ",
 		smoking = "OTN. ",
 	},
-	months = {
+	months = [
 		"gennaio",
 		"febbraio",
 		"marzo",
@@ -95,10 +95,10 @@
 		"settembre",
 		"ottobre",
 		"novembre",
-		"dicembre",
-	},
-	relationStatuses = {
-		{
+		"dicembre"
+	],
+	relationStatuses = [
+		[
 			"non sposato",
 			"avere una fidanzata",
 			"impegnato",
@@ -107,9 +107,9 @@
 			"nella ricerca attiva",
 			"amante",
 			"nel matrimonio civile",
-			[0] = "non specificato$$$$",
-		},
-		{
+			[0] = "non specificato"
+		],
+		[
 			"non sposato",
 			"avere un amico",
 			"impegnato",
@@ -118,10 +118,10 @@
 			"nella ricerca attiva",
 			"amante",
 			"nel matrimonio civile",
-			[0] = "non specificato$$$$",
-		},
-	},
-	personalPoliticalTypes = {
+			[0] = "non specificato"
+		]
+	],
+	personalPoliticalTypes = [
 		"comunista",
 		"Socialista",
 		"Moderare",
@@ -130,17 +130,17 @@
 		"Monarchico",
 		"Ultra conservatore",
 		"Indifferente",
-		"Libertario",
-	},
-	personalPeopleMainTypes = {
+		"Libertario"
+	],
+	personalPeopleMainTypes = [
 		"Intelligenza e creatività",
 		"Gentilezza e onestà",
 		"Bellezza e salute",
 		"Potere e ricchezza",
 		"Coraggio e perseveranza",
-		"Umorismo e amore per la vita",
-	},
-	personalLifeMainTypes = {
+		"Umorismo e amore per la vita"
+	],
+	personalLifeMainTypes = [
 		"Famiglia e bambini",
 		"Carriera e soldi",
 		"Intrattenimento e svago",
@@ -148,15 +148,15 @@
 		"Migliorare il mondo",
 		"Autosviluppo",
 		"Bellezza e arte",
-		"Fama e influenza",
-	},
-	personalBlyadTypes = {
+		"Fama e influenza"
+	],
+	personalBlyadTypes = [
 		"Bruscamente negativo",
 		"Negativo",
 		"Compromesso",
 		"Neutro",
-		"Positivo",
-	},
+		"Positivo"
+	],
 	
 	friends = "Amici",
 	friendsOnline = "Amici online",

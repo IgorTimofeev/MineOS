@@ -28,7 +28,7 @@
 	userSubscribedToYou = "Prihlásené na odber",
 	userIsYourFriend = "Máš priateľov",
 	
-	profileCounters = {
+	profileCounters = [
 		{
 			field = "nasledovníkov",
 			description = "nasledovníkov",
@@ -48,8 +48,8 @@
 		{
 			field = "audio",
 			description = "audio",
-		},
-	},
+		}
+	],
 	profileShowAdditional = "Zobraziť podrobnosti",
 	profileHideAdditional = "Skryť podrobné informácie",
 	profileTitleMainInformation = "Základné informácie",
@@ -83,7 +83,7 @@
 		alcohol = "OTN. ",
 		smoking = "OTN. ",
 	},
-	months = {
+	months = [
 		"januára",
 		"február",
 		"pochod",
@@ -95,10 +95,10 @@
 		"september",
 		"október",
 		"november",
-		"December",
-	},
-	relationStatuses = {
-		{
+		"December"
+	],
+	relationStatuses = [
+		[
 			"nie je vydatá",
 			"mať priateľku",
 			"zasnúbený",
@@ -107,9 +107,9 @@
 			"v aktívnom vyhľadávaní",
 			"milenec",
 			"v civilnom sobáši",
-			[0] = "nešpecifikované $$$$",
-		},
-		{
+			[0] = "nešpecifikované "
+		],
+		[
 			"nie je vydatá",
 			"mať priateľa",
 			"zasnúbený",
@@ -118,10 +118,10 @@
 			"v aktívnom vyhľadávaní",
 			"milenec",
 			"v civilnom sobáši",
-			[0] = "nešpecifikované $$$$",
-		},
-	},
-	personalPoliticalTypes = {
+			[0] = "nešpecifikované "
+		]
+	],
+	personalPoliticalTypes = [
 		"Komunistický",
 		"socialistický",
 		"Mierne",
@@ -130,17 +130,17 @@
 		"Monarchický",
 		"Ultrakonzervatívne",
 		"Ľahostajný",
-		"Libertariánsky",
-	},
-	personalPeopleMainTypes = {
+		"Libertariánsky"
+	],
+	personalPeopleMainTypes = [
 		"Inteligencia a kreativita",
 		"Láskavosť a čestnosť",
 		"Krása a zdravie",
 		"Moc a bohatstvo",
 		"Odvaha a vytrvalosť",
-		"Humor a láska k životu",
-	},
-	personalLifeMainTypes = {
+		"Humor a láska k životu"
+	],
+	personalLifeMainTypes = [
 		"Rodina a deti",
 		"Kariéra a peniaze",
 		"Zábava a rekreácia",
@@ -148,15 +148,15 @@
 		"Zlepšenie sveta",
 		"Sebarozvoj",
 		"Krása a umenie",
-		"Sláva a vplyv",
-	},
-	personalBlyadTypes = {
+		"Sláva a vplyv"
+	],
+	personalBlyadTypes = [
 		"Ostro negatívne",
 		"Negatívne",
 		"Kompromis",
 		"Neutrálne",
-		"Pozitívny",
-	},
+		"Pozitívny"
+	],
 	
 	friends = "Priatelia",
 	friendsOnline = "Online priatelia",
