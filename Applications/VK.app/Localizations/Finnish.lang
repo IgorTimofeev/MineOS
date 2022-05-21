@@ -28,7 +28,7 @@
 	userSubscribedToYou = "Tilattu sinulle",
 	userIsYourFriend = "Sinulla on ystäviä",
 	
-	profileCounters = [
+	profileCounters = {
 		{
 			field = "seuraajia",
 			description = "seuraajia",
@@ -48,8 +48,8 @@
 		{
 			field = "audiot",
 			description = "audio-",
-		}
-	],
+		},
+	},
 	profileShowAdditional = "Näytä yksityiskohdat",
 	profileHideAdditional = "Piilota yksityiskohtaiset tiedot",
 	profileTitleMainInformation = "Perustiedot",
@@ -83,7 +83,7 @@
 		alcohol = "OTN. ",
 		smoking = "OTN. ",
 	},
-	months = [
+	months = {
 		"tammikuu",
 		"helmikuu",
 		"maaliskuuta",
@@ -95,10 +95,10 @@
 		"syyskuu",
 		"lokakuu",
 		"marraskuu",
-		"joulukuu"
-	],
-	relationStatuses = [
-		[
+		"joulukuu",
+	},
+	relationStatuses = {
+		{
 			"ei naimisissa",
 			"on tyttöystävä",
 			"kihloissa",
@@ -107,9 +107,9 @@
 			"aktiivisessa haussa",
 			"rakastaja",
 			"siviiliavioliitossa",
-			[0] = "määrittelemätön"
-		],
-		[
+			[0] = "määrittelemätön",
+		},
+		{
 			"ei naimisissa",
 			"on ystävä",
 			"kihloissa",
@@ -118,10 +118,10 @@
 			"aktiivisessa haussa",
 			"rakastaja",
 			"siviiliavioliitossa",
-			[0] = "määrittelemätön"
-		]
-	],
-	personalPoliticalTypes = [
+			[0] = "määrittelemätön",
+		},
+	},
+	personalPoliticalTypes = {
 		"kommunisti",
 		"sosialisti",
 		"Kohtalainen",
@@ -130,17 +130,17 @@
 		"Monarkkinen",
 		"Ultrakonservatiivinen",
 		"Välinpitämätön",
-		"Libertaaristinen"
-	],
-	personalPeopleMainTypes = [
+		"Libertaaristinen",
+	},
+	personalPeopleMainTypes = {
 		"Älykkyyttä ja luovuutta",
 		"Ystävällisyys ja rehellisyys",
 		"Kauneutta ja terveyttä",
 		"Valta ja rikkaus",
 		"Rohkeutta ja sinnikkyyttä",
-		"Huumoria ja rakkautta elämään"
-	],
-	personalLifeMainTypes = [
+		"Huumoria ja rakkautta elämään",
+	},
+	personalLifeMainTypes = {
 		"Perhe ja lapset",
 		"Ura ja raha",
 		"Viihdettä ja virkistystä",
@@ -148,15 +148,15 @@
 		"Maailman parantaminen",
 		"Itsensä kehittäminen",
 		"Kauneus ja taide",
-		"Maine ja vaikutusvalta"
-	],
-	personalBlyadTypes = [
+		"Maine ja vaikutusvalta",
+	},
+	personalBlyadTypes = {
 		"Jyrkästi negatiivinen",
 		"Negatiivinen",
 		"Vaarantaa",
 		"Neutraali",
-		"Positiivista"
-	],
+		"Positiivista",
+	},
 	
 	friends = "Ystävät",
 	friendsOnline = "Online ystävät",

@@ -28,7 +28,7 @@
 	userSubscribedToYou = "あなたを購読しました",
 	userIsYourFriend = "あなたには友達がいます",
 	
-	profileCounters = [
+	profileCounters = {
 		{
 			field = "フォロワー",
 			description = "フォロワー",
@@ -48,8 +48,8 @@
 		{
 			field = "オーディオ",
 			description = "オーディオ",
-		}
-	],
+		},
+	},
 	profileShowAdditional = "詳細を表示",
 	profileHideAdditional = "詳細情報を非表示にする",
 	profileTitleMainInformation = "基本情報",
@@ -83,7 +83,7 @@
 		alcohol = "OTN。",
 		smoking = "OTN。",
 	},
-	months = [
+	months = {
 		"一月",
 		"2月",
 		"行進",
@@ -95,10 +95,10 @@
 		"9月",
 		"10月",
 		"11月",
-		"12月"
-	],
-	relationStatuses = [
-		[
+		"12月",
+	},
+	relationStatuses = {
+		{
 			"結婚していない",
 			"彼女がいる",
 			"従事している",
@@ -107,9 +107,9 @@
 			"アクティブな検索で",
 			"愛人",
 			"民事婚",
-			[0] = "不特定"
-		],
-		[
+			[0] = "不特定",
+		},
+		{
 			"結婚していない",
 			"友達がいる",
 			"従事している",
@@ -118,10 +118,10 @@
 			"アクティブな検索で",
 			"愛人",
 			"民事婚",
-			[0] = "不特定"
-		]
-	],
-	personalPoliticalTypes = [
+			[0] = "不特定",
+		},
+	},
+	personalPoliticalTypes = {
 		"共産主義者",
 		"社会主義者",
 		"適度",
@@ -130,17 +130,17 @@
 		"君主制",
 		"超保守的",
 		"無関心",
-		"自由主義者"
-	],
-	personalPeopleMainTypes = [
+		"自由主義者",
+	},
+	personalPeopleMainTypes = {
 		"インテリジェンスと創造性",
 		"優しさと誠実さ",
 		"美と健康",
 		"権力と富",
 		"勇気と忍耐力",
-		"ユーモアと人生への愛"
-	],
-	personalLifeMainTypes = [
+		"ユーモアと人生への愛",
+	},
+	personalLifeMainTypes = {
 		"家族と子供たち",
 		"キャリアとお金",
 		"エンターテインメントとレクリエーション",
@@ -148,15 +148,15 @@
 		"世界を改善する",
 		"自己啓発",
 		"美と芸術",
-		"名声と影響力"
-	],
-	personalBlyadTypes = [
+		"名声と影響力",
+	},
+	personalBlyadTypes = {
 		"シャープネガティブ",
 		"ネガティブ",
 		"妥協",
 		"中性",
-		"ポジティブ"
-	],
+		"ポジティブ",
+	},
 	
 	friends = "友達",
 	friendsOnline = "オンライン友達",
