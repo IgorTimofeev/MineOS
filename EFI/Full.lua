@@ -83,8 +83,7 @@ local
 	gpu.setBackground,
 	gpu.fill,
 	eeprom.setData,
-	eeprom.getData,
-	gpu.getResolution()
+	eeprom.getData
 
 OSList,
 bindGPUToScreen,
@@ -118,6 +117,7 @@ function()
 	
 	if screenAddress then
 		gpu.bind(screenAddress, true)
+		screenWidth, screenHeight = gpu.getResolution()
 	end
 end,
 
