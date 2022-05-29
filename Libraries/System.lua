@@ -1761,10 +1761,12 @@ end
 
 --------------------------------------------------------------------------------
 
-local function updateMenu()
+local function updateDesktopMenuAndGetTopmostWindow()
 	local topmostWindow = desktopWindowsContainer.children[#desktopWindowsContainer.children]
 
 	desktopMenu.children = topmostWindow and topmostWindow.menu.children or system.menuInitialChildren
+
+	return topmostWindow
 end
 
 local function setWorkspaceHidden(state)
@@ -1816,7 +1818,7 @@ local function windowRemove(window)
 
 	-- Удаляем само окошко
 	table.remove(window.parent.children, window:indexOf())
-	updateMenu()
+	GUI.focusedObject = updateDesktopMenuAndGetTopmostWindow()
 end
 
 function system.addWindow(window, dontAddToDock, preserveCoordinates)
@@ -1887,10 +1889,10 @@ function system.addWindow(window, dontAddToDock, preserveCoordinates)
 					end
 
 					-- Когда окно фокусицца, то главная ОСевая менюха заполницца ДЕТИШЕЧКАМИ оконной менюхи
-					window.onFocus = updateMenu
+					window.onFocus = updateDesktopMenuAndGetTopmostWindow
 
 					-- Заполняем главную менюху текущим окном
-					updateMenu()
+					updateDesktopMenuAndGetTopmostWindow()
 
 					break
 				end

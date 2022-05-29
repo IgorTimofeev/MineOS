@@ -1380,7 +1380,7 @@ local function createEditOrRightClickMenu(menu)
 end
 
 local function checkScrollbar(y)
-	return codeView.horizontalScrollBar.hidden or y < codeView.y + codeView.height - 1
+	return not codeView.horizontalScrollBar.hidden or y >= codeView.y + codeView.height - 1
 end
 
 local uptime = computer.uptime()
@@ -1388,9 +1388,11 @@ codeView.eventHandler = function(workspace, object, e1, e2, e3, e4, e5)
 	if e1 == "touch" then
 		e3, e4 = math.ceil(e3), math.ceil(e4)
 
-		if not checkScrollbar(e4) then
+		if checkScrollbar(e4) then
 			return
 		end
+
+		GUI.alert("aefaf")
 
 		if e5 == 1 then
 			createEditOrRightClickMenu(GUI.addContextMenu(workspace, e3, e4))
@@ -1407,7 +1409,7 @@ codeView.eventHandler = function(workspace, object, e1, e2, e3, e4, e5)
 	elseif e1 == "drag" then
 		e3, e4 = math.ceil(e3), math.ceil(e4)
 
-		if not checkScrollbar(e4) then
+		if checkScrollbar(e4) then
 			return
 		end
 

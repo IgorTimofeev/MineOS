@@ -13,7 +13,7 @@ local event, handlers, interruptingKeysDown, lastInterrupt = {
 	push = computer.pushSignal
 }, {}, {}, 0
 
-event.interruptingFunction = event.defaultInterruptingDFunction
+event.interruptingFunction = event.defaultInterruptingFunction
 
 local computerPullSignal, computerUptime, mathHuge, mathMin, skipSignalType = computer.pullSignal, computer.uptime, math.huge, math.min
 
