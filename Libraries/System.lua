@@ -1734,7 +1734,8 @@ function system.listIconField(x, y, width, height, path, ...)
 	iconField:addColumn(localization.type, GUI.SIZE_POLICY_ABSOLUTE, 10)
 
 	iconField.updateFileList = listIconFieldUpdateFileList
-
+	iconField.getSelectedIcons = iconFieldGetSelectedIcons
+	
 	anyIconFieldAddInfo(iconField, path)
 
 	iconField.onCellTouch = function(workspace, cell, e1, e2, e3, e4, e5, ...)
