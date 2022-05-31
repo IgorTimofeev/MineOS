@@ -10,6 +10,7 @@
 	screenPreferredMonitor = "감시 장치",
 	screenScaleInfo = "이 옵션을 사용하면 \"검은색 사각형\" 효과를 제거하기 위해 최적의 화면 해상도를 선택할 수 있습니다.",
 	screenInvalidResolution = "입력 필드의 텍스트는 숫자로 구성되어야 하고 %d보다 커야 하며 최대 해상도는 %d자를 초과하지 않아야 합니다.",
+	screenPreciseMode = "Precise mode",
 	
 	wallpaper = "벽지",
 	wallpaperWallpaper = "벽지",

@@ -10,7 +10,8 @@
 	screenPreferredMonitor = "监视器",
 	screenScaleInfo = "使用此选项将允许您选择最佳屏幕分辨率以消除\"黑矩形\"效果",
 	screenInvalidResolution = "输入字段中的文本应由数字组成, 应大于%d, 并且最大分辨率不应超过%d个字符",
-
+	screenPreciseMode = "Precise mode",
+	
 	wallpaper = "壁纸",
 	wallpaperWallpaper = "壁纸",
 	wallpaperScreensaver = "屏幕保护程序",

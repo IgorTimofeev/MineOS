@@ -10,7 +10,8 @@
 	screenPreferredMonitor = "Monitor",
 	screenScaleInfo = "Usar Esta Opcion te permitira usar la resolucion mas optima para quitar las \"Barras Negras\"",
 	screenInvalidResolution = "El texto en los input fields deben de consistir de digitos, tiene que ser mayor que %d, y la resolucion maxima no deberia exceder los %d caracteres",
-
+	screenPreciseMode = "Precise mode",
+	
 	wallpaper = "Fondo",
 	wallpaperWallpaper = "Fondo de Pantalla",
 	wallpaperScreensaver = "Salvapantallas",

@@ -10,6 +10,7 @@
 	screenPreferredMonitor = "Monitor",
 	screenScaleInfo = "Usar esta opção permitirá que você selecione a resolução de tela ideal para se livrar do efeito \"retângulos pretos\"",
 	screenInvalidResolution = "O texto nos campos de entrada deve consistir em dígitos, deve ser maior que %d e a resolução máxima não deve exceder %d caracteres",
+	screenPreciseMode = "Precise mode",
 	
 	wallpaper = "Papel de parede",
 	wallpaperWallpaper = "Papel de parede",

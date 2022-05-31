@@ -10,6 +10,7 @@
 	screenPreferredMonitor = "Surveiller",
 	screenScaleInfo = "L'utilisation de cette option vous permettra de sélectionner la résolution d'écran optimale pour éliminer l'effet des \"barres noires\"",
 	screenInvalidResolution = "Le texte dans les champs d'entrée doit être composé de chiffres, doit être supérieur à %d, et la résolution maximale ne doit pas dépasser %d caractères",
+	screenPreciseMode = "Precise mode",
 	
 	wallpaper = "Fonds et économiseur",
 	wallpaperWallpaper = "Fonds d'écran",

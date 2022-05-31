@@ -10,7 +10,8 @@
 	screenPreferredMonitor = "Монітор",
 	screenScaleInfo = "Використання цієї опції дозволить підібрати оптимальне розширенння екрану, щоб позбутися від ефекту \"чорних смуг \"",
 	screenInvalidResolution = "Текст в полях введення повинен складатися з цифр, повинен бути більше %d, а максимальна роздільна здатність не повинна перевищувати %d символів",
-
+	screenPreciseMode = "Precise mode",
+	
 	wallpaper = "Фон та заставка",
 	wallpaperWallpaper = "Шпалери",
 	wallpaperScreensaver = "Заставка",

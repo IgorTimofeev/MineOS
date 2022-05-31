@@ -10,7 +10,8 @@
 	screenPreferredMonitor = "Monitor",
 	screenScaleInfo = "Met deze optie kunt u de optimale schermresolutie selecteren om het \"zwarte hoeken\" effect weg te halen",
 	screenInvalidResolution = "De tekst in de invoervelden moet uit cijfers bestaan, moet groter zijn dan %d en de maximale resolutie mag niet meer zijn dan %d tekens",
-
+	screenPreciseMode = "Precise mode",
+	
 	wallpaper = "Achtergrond",
 	wallpaperWallpaper = "Achtergrond",
 	wallpaperScreensaver = "Screensaver",

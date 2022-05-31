@@ -10,7 +10,8 @@
 	screenPreferredMonitor = "Monitor",
 	screenScaleInfo = "Utilizzando questa opzione vi permetterà di selezionare la risoluzione ottimale dello schermo per sbarazzarsi dell'effetto \" rettangoli neri\"",
 	screenInvalidResolution = "Il testo nei campi di input dovrebbe essere composto da cifre, dovrebbe essere superiore a %d, e la risoluzione massima non dovrebbe superare %d caratteri",
-
+	screenPreciseMode = "Precise mode",
+	
 	wallpaper = "Wallpaper",
 	wallpaperWallpaper = "Wallpaper",
 	wallpaperScreensaver = "Screensaver",

@@ -10,7 +10,8 @@
 	screenPreferredMonitor = "モニター",
 	screenScaleInfo = "このオプションを使用すると、「黒い四角形」を取り除くための最適な画面解像度を選択できます。",
 	screenInvalidResolution = "解像度は数字で記入します。 ％d より大きくなければならず、最大解像度は ％d を超えてはいけません",
-
+	screenPreciseMode = "Precise mode",
+	
 	wallpaper = "壁紙",
 	wallpaperWallpaper = "壁紙",
 	wallpaperScreensaver = "スクリーンセーバー",

@@ -10,7 +10,8 @@
 	screenPreferredMonitor = "Монитор",
 	screenScaleInfo = "Использование этой опции позволит подобрать оптимальное разрешение экрана, чтобы избавиться от эффекта \"черных полос\"",
 	screenInvalidResolution = "Текст в полях ввода должен состоять из цифр, по значению быть не менее %d, а максимальное разрешение не должно превышать %d пикселей",
-
+	screenPreciseMode = "Precise mode",
+	
 	wallpaper = "Обои и заставка",
 	wallpaperWallpaper = "Обои",
 	wallpaperScreensaver = "Заставка",
