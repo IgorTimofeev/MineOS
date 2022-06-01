@@ -10,7 +10,7 @@
 	screenPreferredMonitor = "Monitori",
 	screenScaleInfo = "Tämän vaihtoehdon avulla voit valita optimaalisen näytön resoluution päästäksesi eroon \"mustista suorakulmioista\".",
 	screenInvalidResolution = "Syötekenttien tekstin tulee koostua numeroista, sen tulee olla suurempi kuin %d ja enimmäisresoluutio ei saa ylittää %d merkkiä",
-	screenPreciseMode = "Precise mode",
+	screenPreciseMode = "Tarkka tila",
 	
 	wallpaper = "Taustakuva",
 	wallpaperWallpaper = "Taustakuva",

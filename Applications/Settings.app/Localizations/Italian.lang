@@ -1,7 +1,7 @@
 {
 	open = "Aprire",
 	cancel = "Annullare",
-
+	
 	screen = "Schermo",
 	screenResolution = "Risoluzione",
 	screenAutoScale = "Rilevamento automatico",
@@ -10,7 +10,7 @@
 	screenPreferredMonitor = "Monitor",
 	screenScaleInfo = "Utilizzando questa opzione vi permetterà di selezionare la risoluzione ottimale dello schermo per sbarazzarsi dell'effetto \" rettangoli neri\"",
 	screenInvalidResolution = "Il testo nei campi di input dovrebbe essere composto da cifre, dovrebbe essere superiore a %d, e la risoluzione massima non dovrebbe superare %d caratteri",
-	screenPreciseMode = "Precise mode",
+	screenPreciseMode = "Modalità precisa",
 	
 	wallpaper = "Wallpaper",
 	wallpaperWallpaper = "Wallpaper",
@@ -24,7 +24,7 @@
 	wallpaperStretch = "Tratto",
 	wallpaperCenter = "Centro",
 	wallpaperInfo = "Disabilitare questa opzione ridurrà significativamente il consumo di RAM e aumenterà le prestazioni",
-
+	
 	appearance = "Aspetto",
 	appearanceExtensions = "File con estensione",
 	appearanceHidden = "File nascosti",
@@ -92,8 +92,7 @@
 	systemRAM = "Gestione della memoria",
 	systemUnload = "Carica libreria",
 	systemInfo = "Questa opzione consente di salvare la memoria scaricando le librerie inutilizzate usando il metodo \"Link debole\". Disabilita se si riscontrano rancori o anomalie nel comportamento di sistemi interdipendenti complessi",
-
-	users = "Internauti",
+	
 	usersList = "Gestione degli utenti",
 	usersEditIcon = "Modifica icona",
 	usersChangeName = "Cambia nome",

@@ -10,7 +10,7 @@
 	screenPreferredMonitor = "निगरानी करना",
 	screenScaleInfo = "इस विकल्प का उपयोग करने से आप \"काले आयत\" प्रभाव से छुटकारा पाने के लिए इष्टतम स्क्रीन रिज़ॉल्यूशन का चयन कर सकेंगे",
 	screenInvalidResolution = "इनपुट फ़ील्ड के टेक्स्ट में अंक होने चाहिए, %d से अधिक होना चाहिए, और अधिकतम रिज़ॉल्यूशन %d वर्णों से अधिक नहीं होना चाहिए",
-	screenPreciseMode = "Precise mode",
+	screenPreciseMode = "सटीक मोड",
 	
 	wallpaper = "वॉलपेपर",
 	wallpaperWallpaper = "वॉलपेपर",
