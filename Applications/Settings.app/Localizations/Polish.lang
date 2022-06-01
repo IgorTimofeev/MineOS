@@ -10,7 +10,7 @@
 	screenPreferredMonitor = "Monitor",
 	screenScaleInfo = "Użycie tej opcji pozwoli Ci wybrać optymalną rozdzielczość ekranu, aby pozbyć się efektu „czarnych prostokątów”",
 	screenInvalidResolution = "Tekst w polach wejściowych powinien składać się z cyfr, powinien być większy niż %d, a maksymalna rozdzielczość nie powinna przekraczać %d znaków",
-	screenPreciseMode = "Precise mode",
+	screenPreciseMode = "Tryb precyzyjny",
 	
 	wallpaper = "Tapeta",
 	wallpaperWallpaper = "Tapeta",

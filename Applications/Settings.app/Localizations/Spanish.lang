@@ -1,7 +1,7 @@
 {
 	open = "Abrir",
 	cancel = "Cancelar",
-
+	
 	screen = "Pantalla",
 	screenResolution = "Resolucion",
 	screenAutoScale = "Autoescalado",
@@ -10,7 +10,7 @@
 	screenPreferredMonitor = "Monitor",
 	screenScaleInfo = "Usar Esta Opcion te permitira usar la resolucion mas optima para quitar las \"Barras Negras\"",
 	screenInvalidResolution = "El texto en los input fields deben de consistir de digitos, tiene que ser mayor que %d, y la resolucion maxima no deberia exceder los %d caracteres",
-	screenPreciseMode = "Precise mode",
+	screenPreciseMode = "Modo preciso",
 	
 	wallpaper = "Fondo",
 	wallpaperWallpaper = "Fondo de Pantalla",
@@ -24,7 +24,7 @@
 	wallpaperStretch = "Estirar",
 	wallpaperCenter = "Centrar",
 	wallpaperInfo = "Desactivar esta opcion va a reducir la RAM consumida significativamente y incrementara el rendimiento",
-
+	
 	appearance = "Apariencia",
 	appearanceExtensions = "Extensiones de archivo",
 	appearanceHidden = "Archivos Ocultos",
@@ -92,8 +92,7 @@
 	systemRAM = "Administracion de la memoria",
 	systemUnload = "Subir libreria",
 	systemInfo = "Esta opcion guarda memoria descargando librerias sin usar usando el metodo de \" Link Debil \". Desactivala si encuantras glitches en el comportamiento de sistemas complejos",
-
-	users = "Usuarios",
+	
 	usersList = "Administracion de usuarios",
 	usersEditIcon = "Editar icono",
 	usersChangeName = "Cambiar nombre",

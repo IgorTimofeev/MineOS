@@ -1,7 +1,7 @@
 {
 	open = "開く",
 	cancel = "キャンセル",
-
+	
 	screen = "画面",
 	screenResolution = "解像度",
 	screenAutoScale = "自動調整",
@@ -10,7 +10,7 @@
 	screenPreferredMonitor = "モニター",
 	screenScaleInfo = "このオプションを使用すると、「黒い四角形」を取り除くための最適な画面解像度を選択できます。",
 	screenInvalidResolution = "解像度は数字で記入します。 ％d より大きくなければならず、最大解像度は ％d を超えてはいけません",
-	screenPreciseMode = "Precise mode",
+	screenPreciseMode = "精密モード",
 	
 	wallpaper = "壁紙",
 	wallpaperWallpaper = "壁紙",
@@ -24,7 +24,7 @@
 	wallpaperStretch = "Stretch",
 	wallpaperCenter = "中央",
 	wallpaperInfo = "このオプションを無効にすると、RAMの消費量が大幅に削減され、パフォーマンスが向上します。",
-
+	
 	appearance = "外観",
 	appearanceExtensions = "ファイル拡張子",
 	appearanceHidden = "ファイルを隠す",
@@ -92,8 +92,7 @@
 	systemRAM = "メモリ管理",
 	systemUnload = "ライブラリをアップロード",
 	systemInfo = "このオプションは \"Weak Link\"メソッドを使って未使用のライブラリをアンロードすることでメモリを節約します。 複雑な相互依存システムの動作に問題があったり、不具合が発生した場合は、無効にしてください。",
-
-	users = "ユーザー",
+	
 	usersList = "ユーザー管理",
 	usersEditIcon = "アイコンを編集",
 	usersChangeName = "名前を変更",
