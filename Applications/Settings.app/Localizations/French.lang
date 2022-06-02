@@ -10,7 +10,7 @@
 	screenPreferredMonitor = "Surveiller",
 	screenScaleInfo = "L'utilisation de cette option vous permettra de sélectionner la résolution d'écran optimale pour éliminer l'effet des \"barres noires\"",
 	screenInvalidResolution = "Le texte dans les champs d'entrée doit être composé de chiffres, doit être supérieur à %d, et la résolution maximale ne doit pas dépasser %d caractères",
-	screenPreciseMode = "Precise mode",
+	screenPreciseMode = "Mode précis",
 	
 	wallpaper = "Fonds et économiseur",
 	wallpaperWallpaper = "Fonds d'écran",
@@ -45,7 +45,7 @@
 	appearanceDropDownDefaultText = "Menu déroulant texte",
 	appearanceDropDownSeparator = "Menu déroulant séparateur",
 	
-	users = "Liste des membres",
+	users = "Utilisateur",
 	
 	localizations = "Langue",
 	localizationsInfo = "Voulez-vous plus de packs de langue? Envoyer une requête pull au dépôt MineOS sur GitHub",
@@ -92,8 +92,7 @@
 	systemRAM = "Gestion de la mémoire",
 	systemUnload = "Télécharger la bibliothèque",
 	systemInfo = "Cette option économise de la mémoire en déchargeant les bibliothèques inutilisées en utilisant la méthode \"Weak Link\". Désactivez-le si vous rencontrez des bizarreries ou des problèmes dans le comportement de systèmes interdépendants complexes",
-
-	users = "Utilisateur",
+	
 	usersList = "Gestion des utilisateurs",
 	usersEditIcon = "Icône de modification",
 	usersChangeName = "Le changement de nom",

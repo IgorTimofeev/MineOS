@@ -10,7 +10,7 @@
 	screenPreferredMonitor = "شاشة",
 	screenScaleInfo = "يتيح لك استخدام هذا الخيار تحديد دقة الشاشة المثلى للتخلص من تأثير \"المستطيلات السوداء\"",
 	screenInvalidResolution = "يجب أن يتكون النص في حقول الإدخال من أرقام ، ويجب أن يكون أكبر من٪ d ، ويجب ألا يتجاوز الحد الأقصى للدقة٪ d حرفًا",
-	screenPreciseMode = "Precise mode",
+	screenPreciseMode = "الوضع الدقيق",
 	
 	wallpaper = "ورق الجدران",
 	wallpaperWallpaper = "ورق الجدران",

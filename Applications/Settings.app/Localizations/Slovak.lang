@@ -10,7 +10,7 @@
 	screenPreferredMonitor = "Monitor",
 	screenScaleInfo = "Použitie tejto možnosti vám umožní vybrať optimálne rozlíšenie obrazovky, aby ste sa zbavili efektu „čiernych obdĺžnikov“.",
 	screenInvalidResolution = "Text vo vstupných poliach by mal pozostávať z číslic, mal by byť väčší ako %d a maximálne rozlíšenie by nemalo presiahnuť %d znakov",
-	screenPreciseMode = "Precise mode",
+	screenPreciseMode = "Presný režim",
 	
 	wallpaper = "Tapeta",
 	wallpaperWallpaper = "Tapeta",

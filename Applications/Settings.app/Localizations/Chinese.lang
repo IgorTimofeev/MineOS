@@ -1,7 +1,7 @@
 {
 	open = "打开",
 	cancel = "取消",
-
+	
 	screen = "屏幕",
 	screenResolution = "分辨率",
 	screenAutoScale = "自动缩放",
@@ -10,7 +10,7 @@
 	screenPreferredMonitor = "监视器",
 	screenScaleInfo = "使用此选项将允许您选择最佳屏幕分辨率以消除\"黑矩形\"效果",
 	screenInvalidResolution = "输入字段中的文本应由数字组成, 应大于%d, 并且最大分辨率不应超过%d个字符",
-	screenPreciseMode = "Precise mode",
+	screenPreciseMode = "精確模式",
 	
 	wallpaper = "壁纸",
 	wallpaperWallpaper = "壁纸",
@@ -24,7 +24,7 @@
 	wallpaperStretch = "填充",
 	wallpaperCenter = "居中",
 	wallpaperInfo = "禁用此选项将显著减少RAM的消耗并提高性能.",
-
+	
 	appearance = "外观",
 	appearanceExtensions = "显示文件扩展名",
 	appearanceHidden = "显示隐藏文件",
@@ -92,8 +92,7 @@
 	systemRAM = "内存管理",
 	systemUnload = "上传库",
 	systemInfo = "此选项通过使用\"弱链接\"方法卸载未使用的库来节省内存. 如果在复杂的相互依赖系统的行为中遇到任何故障, 请禁用它.",
-
-	users = "用户",
+	
 	usersList = "用户管理",
 	usersEditIcon = "编辑头像",
 	usersChangeName = "更改用户名",

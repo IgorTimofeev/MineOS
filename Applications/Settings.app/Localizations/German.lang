@@ -1,7 +1,7 @@
 {
 	open = "Öffnen",
 	cancel = "Stornieren",
-
+	
 	screen = "Bildschirm",
 	screenResolution = "Auflösung",
 	screenAutoScale = "Automatische Skalierung",
@@ -10,7 +10,7 @@
 	screenPreferredMonitor = "Überwachung",
 	screenScaleInfo = "Mit dieser option können Sie die optimale Bildschirmauflösung auswählen, um den \"schwarze Rechtecke\" - Effekt loszuwerden",
 	screenInvalidResolution = "Der text in den Eingabefeldern sollte aus Ziffern bestehen, sollte größer als %d sein und die maximale Auflösung sollte %d Zeichen nicht überschreiten",
-	screenPreciseMode = "Precise mode",
+	screenPreciseMode = "Präziser Modus",
 	
 	wallpaper = "Wallpaper",
 	wallpaperWallpaper = "Wallpaper",
@@ -24,7 +24,7 @@
 	wallpaperStretch = "Strecken",
 	wallpaperCenter = "Center",
 	wallpaperInfo = "Wenn Sie diese option deaktivieren, wird der RAM-Verbrauch erheblich reduziert und die Leistung erhöht",
-
+	
 	appearance = "Aussehen",
 	appearanceExtensions = "Dateierweiterung",
 	appearanceHidden = "Versteckte Dateien",
@@ -92,8 +92,7 @@
 	systemRAM = "Speichermanagement",
 	systemUnload = "Bibliothek hochladen",
 	systemInfo = "Diese option speichert Speicher, indem unbenutzte Bibliotheken mit der Methode \"Weak Link\" entladen werden. Deaktivieren Sie es, wenn Sie irgendwelche Groll oder Pannen im Verhalten von komplexen voneinander abhängigen Systemen auftreten",
-
-	users = "Internetnutzer",
+	
 	usersList = "Benutzerverwaltung",
 	usersEditIcon = "Symbol Bearbeiten",
 	usersChangeName = "Name ändern",
