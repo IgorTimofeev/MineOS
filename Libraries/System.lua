@@ -472,12 +472,14 @@ function system.updateIconProperties()
 	computer.pushSignal("system", "updateFileList")
 end
 
-local function iconFieldGetSelectedIcons(iconField)
-	local selectedIcons = {}
+local function gridIconFieldGetSelectedIcons(iconField)
+	local selectedIcons, icon = {}
 
 	for i = 2, #iconField.children do
-		if iconField.children[i].selected then
-			table.insert(selectedIcons, iconField.children[i])
+		icon = iconField.children[i]
+
+		if icon.selected then
+			table.insert(selectedIcons, icon)
 		end
 	end
 
@@ -770,31 +772,32 @@ local function iconOnRightClick(selectedIcons, icon, e1, e2, e3, e4)
 	if not icon.isShortcut or #selectedIcons > 1 then
 		local subMenu = contextMenu:addSubMenuItem(localization.createShortcut)
 		
-		subMenu:addItem(localization.inCurrentDirectory).onTouch = function()
-			for i = 1, #selectedIcons do
-				if not selectedIcons[i].isShortcut then
-					system.createShortcut(
-						filesystem.path(selectedIcons[i].path) .. filesystem.hideExtension(selectedIcons[i].name),
-						selectedIcons[i].path
-					)
+		local function addShortcutItem(name, pathGetter)
+			subMenu:addItem(name).onTouch = function()
+				local selectedIcon
+
+				for i = 1, #selectedIcons do
+					selectedIcon = selectedIcons[i]
+
+					if not selectedIcon.isShortcut then
+						system.createShortcut(
+							pathGetter(selectedIcon) .. filesystem.hideExtension(selectedIcon.name),
+							selectedIcon.path
+						)
+					end
 				end
+				
+				computer.pushSignal("system", "updateFileList")
 			end
-			
-			computer.pushSignal("system", "updateFileList")
 		end
 
-		subMenu:addItem(localization.onDesktop).onTouch = function()
-			for i = 1, #selectedIcons do
-				if not selectedIcons[i].isShortcut then
-					system.createShortcut(
-						paths.user.desktop ..  filesystem.hideExtension(selectedIcons[i].name),
-						selectedIcons[i].path
-					)
-				end
-			end
-			
-			computer.pushSignal("system", "updateFileList")
-		end
+		addShortcutItem(localization.inCurrentDirectory, function(selectedIcon)
+			return filesystem.path(selectedIcon.path)
+		end)
+
+		addShortcutItem(localization.onDesktop, function(selectedIcon)
+			return paths.user.desktop
+		end)
 	end
 
 	local subMenu = contextMenu:addSubMenuItem(localization.archive .. (#selectedIcons > 1 and " (" .. #selectedIcons .. ")" or ""))
@@ -899,15 +902,14 @@ local function iconFieldIconEventHandler(workspace, icon, e1, e2, e3, e4, e5, ..
 		if e5 == 0 then
 			iconDeselectAndSelect(icon)
 		else
-			local selectedIcons = iconField:getSelectedIcons()
-
-			-- Right click on multiple selected icons	
-			if not icon.selected then
+			-- Если иконка выбрана - похуй, все ок
+			if icon.selected then
+				iconOnRightClick(iconField:getSelectedIcons(), icon, e1, e2, e3, e4, e5, ...)
+			-- Если не - тогда сначала выбираем ее, а потом обрабатываем
+			else
 				iconDeselectAndSelect(icon)
-				selectedIcons = {icon}
+				iconOnRightClick({icon}, icon, e1, e2, e3, e4, e5, ...)
 			end
-
-			iconOnRightClick(selectedIcons, icon, e1, e2, e3, e4, e5, ...)
 		end
 	
 	elseif e1 == "double_touch" and icon:isPointInside(e3, e4) and e5 == 0 then
@@ -1128,11 +1130,11 @@ local function iconFieldUpdateFileList(iconField)
 	anyIconFieldUpdateFileList(iconField, function(list)
 		local function addGridIcon(x, y, path)
 			local icon = system.icon(
-					x,
-					y,
-					iconField.path .. path,
-					iconField.colors
-				)
+				x,
+				y,
+				iconField.path .. path,
+				iconField.colors
+			)
 
 			anyIconFieldAddIcon(iconField, icon)
 			icon.eventHandler = iconFieldIconEventHandler
@@ -1701,11 +1703,25 @@ function system.gridIconField(x, y, width, height, xOffset, yOffset, path, defau
 	iconField.saveIconConfig = iconFieldSaveIconConfig
 	iconField.deleteIconConfig = iconFieldDeleteIconConfig
 	iconField.updateFileList = iconFieldUpdateFileList
-	iconField.getSelectedIcons = iconFieldGetSelectedIcons
+	iconField.getSelectedIcons = gridIconFieldGetSelectedIcons
 
 	anyIconFieldAddInfo(iconField, path)
 
 	return iconField
+end
+
+local function listIconFieldGetSelectedIcons(iconField)
+	local selectedIcons, icon = {}
+
+	for i = 1, #iconField.children do
+		icon = iconField.children[i]
+
+		if icon.selected and icon.path then
+			table.insert(selectedIcons, icon)
+		end
+	end
+
+	return selectedIcons
 end
 
 function system.listIconField(x, y, width, height, path, ...)
@@ -1734,7 +1750,7 @@ function system.listIconField(x, y, width, height, path, ...)
 	iconField:addColumn(localization.type, GUI.SIZE_POLICY_ABSOLUTE, 10)
 
 	iconField.updateFileList = listIconFieldUpdateFileList
-	iconField.getSelectedIcons = iconFieldGetSelectedIcons
+	iconField.getSelectedIcons = listIconFieldGetSelectedIcons
 	
 	anyIconFieldAddInfo(iconField, path)
 
