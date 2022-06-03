@@ -8,7 +8,7 @@
 	networkFTPAddress = "Indirizzo Server",
 	networkFTPPort = "Porta Server",
 	networkFTPUser = "Utente",
-	networkFTPPassword = "Password",
+	networkFTPPassword = "Parola d'ordine",
 	updatingFileList = "Aggiornamento elenco file...",
 	network = "Rete",
 	networkTimeout = "Il computer remoto non risponde",
@@ -45,7 +45,7 @@
 	toDirectory = "alla directory",
 	copying = "Copia",
 	faylaBlyad = "file",
-
+	
 	areYouSure = "Sei sicuro?",
 	emptyTrash = "Cestino vuoto",
 	type = "Tipo",
@@ -56,9 +56,9 @@
 	folder = "Cartella",
 	unknown = "Sconosciuto",
 	calculatingSize = "calcolo…",
-	filesWillBeRemovedPermanently = "file(s) will be removed permanently",
-	fileDeletingFailure = "Failed to delete file",
-
+	filesWillBeRemovedPermanently = "i file verranno rimossi in modo permanente",
+	fileDeletingFailure = "Impossibile eliminare il file",
+	
 	properties = "Proprieta",
 	newFolderFromChosen = "Nuova cartella selezionata",
 	create = "Nuovo",
@@ -89,35 +89,35 @@
 	flashEEPROM = "Flash EEPROM",
 	flashingEEPROM = "Sta lampeggiando. Non spegnere il computer...",
 	print3D = "Stampa modello",
-
+	
 	sortBy = "Genere",
 	sortByType = "Per tipo",
 	sortByName = "Per nome",
 	sortByDate = "Per data",
-
+	
 	aboutSystem = "Informazioni sul sistema",
 	updates = "Aggiornati",
 	update = "Aggiornato",
 	shutdown = "Spegni",
 	logout = "Esci",
 	reboot = "Riavvia",
-
+	
 	shortcutIsCorrupted = "La scorciatoia è collegata a un file inesistente",
 	sortAutomatically = "Allinea alla griglia",
 	onDesktop = "Sul desktop",
 	inCurrentDirectory = "Nella directory corrente",
-
+	
 	errorWhileRunningProgram = "Errore durante l'esecuzione ",
 	sendedFeedback = "È stato inviato un Feedback",
 	sendFeedback = "Invia commenti",
 	yourContacts = "I propri contatti",
 	additionalInfo = "Informazioni supplementari",
 	stackTraceback = "Traceback in pila",
-
+	
 	favourite = "Preferito",
 	search = "Ricerca",
-	mounts = "Mounts",
-
+	mounts = "Monti",
+	
 	uploadToPastebin = "Carica su Pastebin",
 	pasteName = "Incolla nome",
 	uploading = "Caricamento in corso...",

@@ -6,7 +6,7 @@
 	networkFTPNewConnection = "Nieuwe FTP-Verbinding",
 	networkFTPConnections = "FTP-Verbindingen",
 	networkFTPAddress = "Server adres",
-	networkFTPPort = "Server port",
+	networkFTPPort = "Server poort",
 	networkFTPUser = "Gebruiker",
 	networkFTPPassword = "Wachtwoord",
 	updatingFileList = "Bestandenlijst updaten...",
@@ -45,7 +45,7 @@
 	toDirectory = "naar map",
 	copying = "kopiëren",
 	faylaBlyad = "Bestand",
-
+	
 	areYouSure = "Weet je het zeker?",
 	emptyTrash = "Leeg prullenbak",
 	type = "Type",
@@ -56,9 +56,9 @@
 	folder = "Map",
 	unknown = "Onbekent",
 	calculatingSize = "Berekenen…",
-	filesWillBeRemovedPermanently = "file(s) will be removed permanently",
-	fileDeletingFailure = "Failed to delete file",
-
+	filesWillBeRemovedPermanently = "bestand(en) worden permanent verwijderd",
+	fileDeletingFailure = "Kan bestand niet verwijderen",
+	
 	properties = "Instellingen",
 	newFolderFromChosen = "Nieuwe map van gekozen",
 	create = "Nieuw",
@@ -88,36 +88,36 @@
 	showContainingFolder = "Toon bevattende map",
 	flashEEPROM = "Flashen naar EEPROM",
 	flashingEEPROM = "Bezig met flashen. Sluit de computer niet af...",
-	print3D = "Print model",
-
+	print3D = "Afdrukmodel",
+	
 	sortBy = "Sorteer",
 	sortByType = "Op type",
 	sortByName = "Op naam",
 	sortByDate = "Op datum",
-
+	
 	aboutSystem = "Over systeem",
 	updates = "Updates",
 	update = "Vernieuwen",
 	shutdown = "Sluit af",
 	logout = "Log uit",
 	reboot = "Herstart",
-
+	
 	shortcutIsCorrupted = "Snelkoppeling bestaat niet meer",
 	sortAutomatically = "Uitlijnen op raster",
 	onDesktop = "Op bureaublad",
 	inCurrentDirectory = "In huidige map",
-
+	
 	errorWhileRunningProgram = "Fout tijdens ",
 	sendedFeedback = "Feedback is verstuurd",
 	sendFeedback = "Verstuurd feedback",
 	yourContacts = "Jou contacten",
 	additionalInfo = "Extra informatie",
 	stackTraceback = "Stack herleiden",
-
+	
 	favourite = "Favoriete",
 	search = "Zoeken",
 	mounts = "Gekoppelde apparaten",
-
+	
 	uploadToPastebin = "Uploaden naar Pastebin",
 	pasteName = "Plak naam",
 	uploading = "Bezig met uploaden...",

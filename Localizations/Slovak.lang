@@ -1,7 +1,7 @@
 {
 	downloading = "Prebieha sťahovanie",
 	CPUArchitecture = "CPU architectúra",
-	RAMControl = "RAM control",
+	RAMControl = "Ovládanie RAM",
 	packageUnloading = "Automatické odčítavanie",
 	networkFTPNewConnection = "FTP-pripojenie",
 	networkFTPConnections = "FTP-pripojenia",
@@ -45,7 +45,7 @@
 	toDirectory = "do priečinka",
 	copying = "Kopírovanie",
 	faylaBlyad = "súbor",
-
+	
 	areYouSure = "Ste si istý?",
 	emptyTrash = "Vyprázdniť kôš",
 	type = "Typ",
@@ -56,9 +56,9 @@
 	folder = "Priečinok",
 	unknown = "Neznáme",
 	calculatingSize = "počítanie…",
-	filesWillBeRemovedPermanently = "file(s) will be removed permanently",
-	fileDeletingFailure = "Failed to delete file",
-
+	filesWillBeRemovedPermanently = "súbory budú natrvalo odstránené",
+	fileDeletingFailure = "Súbor sa nepodarilo odstrániť",
+	
 	properties = "Vlastnosti",
 	newFolderFromChosen = "Nový priečinok z vybraného",
 	create = "Nový",
@@ -89,35 +89,35 @@
 	flashEEPROM = "Flashnúť na EEPROM",
 	flashingEEPROM = "Flashovanie prebieha. Nevypínajte počítač...",
 	print3D = "Vytlačiť model",
-
+	
 	sortBy = "Zoradiť",
 	sortByType = "Podľa typu",
 	sortByName = "Podľa názvu",
 	sortByDate = "Podľa dátumu",
-
+	
 	aboutSystem = "O systéme",
 	updates = "Aktualizácie",
 	update = "Obnoviť",
 	shutdown = "Vypnúť",
 	logout = "Odhlásiť",
 	reboot = "Reštartovať",
-
+	
 	shortcutIsCorrupted = "Odkaz je priradený na neexistujúci súbor",
 	sortAutomatically = "Zarovnať na mriežku",
 	onDesktop = "Na ploche",
 	inCurrentDirectory = "V tomto priečinku",
-
+	
 	errorWhileRunningProgram = "Chyba pri behu programu ",
 	sendedFeedback = "Odozva bola odoslaná",
 	sendFeedback = "Odoslať odozvu",
 	yourContacts = "Vaše kontakty",
 	additionalInfo = "Ďaľšie informácie",
-	stackTraceback = "Stack traceback",
-
+	stackTraceback = "Spätné sledovanie zásobníka",
+	
 	favourite = "Obľúbené",
 	search = "Vyhľadávať",
 	mounts = "Disky",
-
+	
 	uploadToPastebin = "Nahrať na Pastebin",
 	pasteName = "Meno pastu",
 	uploading = "Nahrávanie prebieha..",

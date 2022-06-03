@@ -1,9 +1,3 @@
--- Bulgarian Language Pack
--- Contributed by m4trixglitch (AKA Pitaya4) on 18/06/19
--- Български език за MineOS
-
--- Revision: 17 May 2022
-
 {
 	downloading = "В процес на изтегляне...",
 	CPUArchitecture = "Процесорна архитектура",
@@ -24,7 +18,6 @@
 	networkState = "Включване на мрежови режим",
 	networkComputers = "Настройки на мрежови компютри",
 	networkName = "Име на този компютър",
-	networkSearchRadius = "Searching radius",
 	networkSearchRadius = "Радиус на търсене",
 	openWith = "Отваряне със",
 	select = "Изберете програма…",
@@ -51,8 +44,8 @@
 	applyToAll = "Прилагане към всички",
 	toDirectory = "към папка",
 	copying = "Копиране",
-	faylaBlyad = "файл", -- nice key name :D
 	areYouSure = "Сигурен ли сте?",
+	
 	emptyTrash = "Изчистване на кошчето",
 	type = "Вид",
 	size = "Размер",
@@ -62,10 +55,10 @@
 	folder = "Папка",
 	unknown = "Неизвестно",
 	calculatingSize = "изчисляване…",
-	filesWillBeRemovedPermanently = "file(s) will be removed permanently",
-	fileDeletingFailure = "Failed to delete file",
-
+	filesWillBeRemovedPermanently = "файл(и) ще бъдат премахнати за постоянно",
+	fileDeletingFailure = "Изтриването на файл не бе успешно",
 	properties = "Свойства",
+	
 	newFolderFromChosen = "Нова папка от избраните",
 	create = "Създаване на",
 	newFolder = "Папка",
@@ -95,36 +88,36 @@
 	flashEEPROM = "Запиши в EEPROM",
 	flashingEEPROM = "В момента се записва. Не изключвайте компютъра...",
 	print3D = "Принтиране на модел",
-
 	sortBy = "Сортиране",
+	
 	sortByType = "По вид",
 	sortByName = "По име",
 	sortByDate = "По дата",
-
 	aboutSystem = "Относно системата",
+	
 	updates = "Актуализации",
 	update = "Обновяване",
 	shutdown = "Изключване",
 	logout = "Изход",
 	reboot = "Рестартиране",
-
 	shortcutIsCorrupted = "Прекият път води до несъществуващ файл",
+	
 	sortAutomatically = "Подреждане в мрежа",
 	onDesktop = "На декстопа",
 	inCurrentDirectory = "В текущата папка",
-
 	errorWhileRunningProgram = "Възникна грешка при изпълняване на ",
+	
 	sendedFeedback = "Обратната връзка бе изпратена",
 	sendFeedback = "Изпращане на обратна връзка",
 	yourContacts = "Вашите контакти",
 	additionalInfo = "Допълнителна информация",
 	stackTraceback = "Стак на повикванията",
-
 	favourite = "Любими",
+	
 	search = "Търсене",
 	mounts = "Монтирани",
-
 	uploadToPastebin = "Качване в Pastebin",
+	
 	pasteName = "Име",
 	uploading = "В процес на качване...",
 	uploadingSuccess = "Качено на ",

@@ -45,7 +45,7 @@
 	toDirectory = "do folderu",
 	copying = "Kopiuj",
 	faylaBlyad = "plik",
-
+	
 	areYouSure = "Na pewno?",
 	emptyTrash = "Opróżnij kosz",
 	type = "Typ",
@@ -53,16 +53,16 @@
 	date = "Data",
 	name = "Nazwa",
 	path = "Ścieżka",
-	folder = "Folder",
+	folder = "Teczka",
 	unknown = "Nieznany",
 	calculatingSize = "obliczanie…",
-	filesWillBeRemovedPermanently = "file(s) will be removed permanently",
-	fileDeletingFailure = "Failed to delete file",
-
+	filesWillBeRemovedPermanently = "plik(i) zostaną trwale usunięte",
+	fileDeletingFailure = "Nie udało się usunąć pliku",
+	
 	properties = "Ustawienia",
 	newFolderFromChosen = "Wybierz Nowy Folder z",
 	create = "Nowy",
-	newFolder = "Folder",
+	newFolder = "Teczka",
 	newFile = "Plik",
 	newFileFromURL = "Plik z adresu URL",
 	newImage = "Grafika",
@@ -89,38 +89,38 @@
 	flashEEPROM = "Wgraj na EEPROM",
 	flashingEEPROM = "Trwa wgrywanie. Nie wyłączaj komputera...",
 	print3D = "Wydrukuj model 3D",
-
+	
 	sortBy = "Sortuj",
 	sortByType = "Wg typu",
 	sortByName = "Wg nazwy",
 	sortByDate = "Wg daty",
-
+	
 	aboutSystem = "O systemie",
 	updates = "Aktualizacja",
 	update = "Odśwież",
 	shutdown = "Wyłącz",
 	logout = "Wyloguj",
 	reboot = "Uruchom ponownie",
-
+	
 	shortcutIsCorrupted = "Skrót jest podpięty do nieistniejącego pliku",
 	sortAutomatically = "Wyrównaj do siatki",
 	onDesktop = "Na pulpit",
 	inCurrentDirectory = "W obecnym folderze",
-
+	
 	errorWhileRunningProgram = "Błąd podczas uruchamiania ",
 	sendedFeedback = "Wysłano opinię",
 	sendFeedback = "Wyślij opinię",
 	yourContacts = "Twoje kontakty",
 	additionalInfo = "Dodatkowe informacje",
 	stackTraceback = "Identyfikator",
-
+	
 	favourite = "Ulubione",
 	search = "Szukaj",
 	mounts = "Zamontuj",
-
+	
 	uploadToPastebin = "Wyślij do Pastebin",
 	pasteName = "Nazwa Paste",
 	uploading = "Trwa wysyłanie...",
 	uploadingSuccess = "Wysłano do ",
-	uploadingFailure = "Błąd wysyłania: "
+	uploadingFailure = "Błąd wysyłania: ",
 }

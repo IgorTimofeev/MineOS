@@ -45,6 +45,7 @@
 	toDirectory = "على المجلد",
 	copying = "نسخ",
 	faylaBlyad = "ملف ",
+	
 	areYouSure = "هل أنت متأكد؟",
 	emptyTrash = "إفراغ سلة المهملات",
 	type = "النوع",
@@ -55,15 +56,16 @@
 	folder = "المجلد",
 	unknown = "غير معروف",
 	calculatingSize = "الحساب ... ",
-	filesWillBeRemovedPermanently = "file(s) will be removed permanently",
-	fileDeletingFailure = "Failed to delete file",
+	filesWillBeRemovedPermanently = "ستتم إزالة الملف (الملفات) بشكل دائم",
+	fileDeletingFailure = "فشل حذف الملف",
+	
 	properties = "الخصائص",
 	newFolderFromChosen = "مجلد جديد من اختيار",
 	create = "جديد",
 	newFolder = "المجلد",
 	newFile = "ملف",
 	newFileFromURL = "ملف من URL",
-	newImage = "Image",
+	newImage = "صورة",
 	newApplication = "تطبيق MineOS",
 	paste = "لصق",
 	copy = "نسخ",
@@ -87,32 +89,38 @@
 	flashEEPROM = "فلاش إلى EEPROM",
 	flashingEEPROM = "الوميض قيد التقدم. لا تقم بإيقاف تشغيل الكمبيوتر ...",
 	print3D = "نموذج الطباعة ",
+	
 	sortBy = "الفرز",
 	sortByType = "حسب النوع",
 	sortByName = "بالاسم",
 	sortByDate = "حسب التاريخ",
+	
 	aboutSystem = "حول النظام",
 	updates = "التحديثات",
 	update = "التحديث",
 	shutdown = "إيقاف التشغيل",
 	logout = "تسجيل الخروج",
 	reboot = "إعادة التشغيل ",
+	
 	shortcutIsCorrupted = "الاختصار مرتبط بملف غير موجود",
 	sortAutomatically = "محاذاة للشبكة",
 	onDesktop = "على سطح المكتب",
 	inCurrentDirectory = "في المجلد الحالي",
+	
 	errorWhileRunningProgram = "خطأ أثناء تشغيل ",
 	sendedFeedback = "ملاحظات تم إرساله",
 	sendFeedback = "إرسال ملاحظات",
 	yourContacts = "جهات الاتصال الخاصة بك",
 	additionalInfo = "معلومات إضافية",
 	stackTraceback = "Stack traceback ",
+	
 	favourite = "المفضلة",
 	search = "بحث",
-	mounts = "Mounts",
+	mounts = "يتصاعد",
+	
 	uploadToPastebin = "تحميل إلى Pastebin",
 	pasteName = "لصق الاسم",
 	uploading = "جاري التحميل...",
 	uploadingSuccess = "تم الرفع إلى ",
-	uploadingFailure = "فشل التحميل: "
+	uploadingFailure = "فشل التحميل: ",
 }
