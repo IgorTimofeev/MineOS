@@ -15,7 +15,7 @@
 	gotoLine = "Ir a linea",
 	lineNumber = "Linea",
 	selectAndPasteColor = "Seleccionar y pegar color",
-	url = "http://ejemplo.com/algo.lua",
+	url = "http://example.com/something.lua",
 	getFromWeb = "Abrir desde URL",
 	downloading = "Descargando archivo...",
 	debugging = "Depurador en linea ",

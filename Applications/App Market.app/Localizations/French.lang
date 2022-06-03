@@ -1,6 +1,6 @@
 {
 	statistics = "Statistiques",
-	messages = "messages",
+	messages = "Messages",
 	account = "Compte",
 	settings = "Paramètres",
 	newMessage = "Nouveau message",
