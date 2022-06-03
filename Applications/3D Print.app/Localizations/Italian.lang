@@ -1,4 +1,4 @@
-{	
+{
 	help = "Aiuto",
 	helpInfo = {
 		"• Ogni modello è costituito da forme. Il loro conteggio dipende dalle proprietà del server, ma per impostazione predefinita è 24 per un modello",
@@ -30,7 +30,7 @@
 	collidable = "Collisione",
 	buttonMode = "Modalità pulsanti",
 	label = "Etichetta",
-	tooltip = "Tooltip",
+	tooltip = "Descrizione comando",
 	tintEnabled = "Usa la tinta",
 	tintColor = "Colore tinta",
 	texture = "Struttura",

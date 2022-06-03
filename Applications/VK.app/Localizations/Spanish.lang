@@ -1,37 +1,52 @@
 {
-	leftBarOffset = 5,
-
+	leftBarOffset = "5",
+	
 	settingsStyle = "Esquema de color",
 	settingsAdditional = "Propiedades adicionales",
-
+	
 	invalidPassword = "Clave o usuario inválido",
 	username = "Correo electrónico o número de teléfono",
 	password = "Contraseña",
 	login = "Entrar",
 	saveLogin = "Guardar informacion de sesion:",
-
 	loadCountConversations = "El número de diálogos cargados",
 	loadCountMessages = "Número de mensajes para descargar",
+	
 	loadCountNews = "Número de noticias descargadas",
 	scrollSpeed = "La velocidad de desplazamiento",
 	loadCountWall = "Número de publicaciones para descargar",
 	loadCountFriends = "Numero de amigos para descargar",
 	loadCountDocs = "Número de documentos para descargar",
-
 	profile = "Perfil",
 	message = "Mensaje",
+	
 	sendMessage = "Enviar mensaje",
 	addToFriends = "Añadir como amigo",
 	friendRequestSent = "La solicitud ha sido enviada",
 	userSubscribedToYou = "Suscrito a ti",
 	userIsYourFriend = "Es tu amigo",
-
 	profileCounters = {
-		{ field = "seguidores", description = " seguidores" },
-		{ field = "amigos", description = " amigos" },
-		{ field = "fotos", description = " fotos" },
-		{ field = "videos", description = " videos" },
-		{ field = "audios", description = " audio" },
+		{
+			
+			field = "seguidores",
+			description = " seguidores",
+		},
+		{
+			field = "amigos",
+			description = " amigos",
+		},
+		{
+			field = "fotos",
+			description = " fotos",
+		},
+		{
+			field = "videos",
+			description = " videos",
+		},
+		{
+			field = "audios",
+			description = " audio",
+		},
 	},
 	profileShowAdditional = "Mostrar informacion detallada",
 	profileHideAdditional = "Ocultar información detallada",
@@ -41,30 +56,30 @@
 	profileTitleContacts = "Contactos",
 	profileKeys = {
 		education = "Educación",
-        inspiredBy = "Inspirado",
-        relación = "Relaciones",
-        birthday = "Cumpleaños",
-        city = "Ciudad",
-        homeCity = "Ciudad natal",
-        languages = "Idiomas",
-        ocupación = "Lugar de trabajo",
-        mobilePhone = "Móvil",
-        homePhone = "Teléfono alternativo",
-        site = "Sitio web",
-        actividades = "Actividad",
-        intereses = "Intereses",
-        music = "Música favorita",
-        movies = "Película favorita",
-        books = "Libro favorito",
-        tv = "Programa favorito",
-        games = "Juego favorito",
-        quotes = "Cita favorita",
-        religion = "Punto de vista",
-        politico = "Convicción politica",
-        peopleMain = "Personas más importantes",
-        lifeMain = "Proposito de vida",
-        alcohol = "OTN. para alcohol",
-        fumar = "OTN. hacia fumar",
+		inspiredBy = "Inspirado",
+		relación = "Relaciones",
+		birthday = "Cumpleaños",
+		city = "Ciudad",
+		homeCity = "Ciudad natal",
+		languages = "Idiomas",
+		ocupación = "Lugar de trabajo",
+		mobilePhone = "Móvil",
+		homePhone = "Teléfono alternativo",
+		site = "Sitio web",
+		actividades = "Actividad",
+		intereses = "Intereses",
+		music = "Música favorita",
+		movies = "Película favorita",
+		books = "Libro favorito",
+		tv = "Programa favorito",
+		games = "Juego favorito",
+		quotes = "Cita favorita",
+		religion = "Punto de vista",
+		politico = "Convicción politica",
+		peopleMain = "Personas más importantes",
+		lifeMain = "Proposito de vida",
+		alcohol = "OTN. para alcohol",
+		fumar = "OTN. hacia fumar",
 	},
 	months = {
 		"enero",
@@ -102,7 +117,7 @@
 			"amante",
 			"en matrimonio civil",
 			[0] = "inespecificado",
-		}
+		},
 	},
 	personalPoliticalTypes = {
 		"Comunista",
@@ -140,15 +155,15 @@
 		"Neutral",
 		"Positivo",
 	},
-
 	friends = "Amigos",
 	friendsOnline = "Amigos online",
+	
 	friendsMutual = "Amigos mutuos",
-
 	news = "Noticias",
-
 	send = "Enviar",
+	
 	conversations = "Conversaciones",
+	
 	you = "Tu: ",
 	typeMessageHere = "Escribe un mensaje...",
 	fwdMessages = "Informacion: ",
@@ -168,12 +183,12 @@
 		audio_message = "audio",
 	},
 	sentFromMineOS = " (Enviado desde el Cliente VK de MineOS)",
-	
 	documents = "Documentos",
 	documentsCount = "Documentos totales",
+	
 	documentsAdd = "Subir Documento",
-
 	settings = "Ajustes",
+	exit = "Cerrar sesion"
 
-	exit = "Cerrar sesion",
+,
 }

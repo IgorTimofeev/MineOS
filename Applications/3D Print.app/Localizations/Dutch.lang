@@ -1,4 +1,4 @@
-{	
+{
 	help = "Hulp",
 	helpInfo = {
 		"• Elk model bestaat uit vormen. De aantallen hangen af van de server instellingen, normaal gesproken zijn het er 24 per model.",

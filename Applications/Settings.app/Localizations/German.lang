@@ -12,8 +12,8 @@
 	screenInvalidResolution = "Der text in den Eingabefeldern sollte aus Ziffern bestehen, sollte größer als %d sein und die maximale Auflösung sollte %d Zeichen nicht überschreiten",
 	screenPreciseMode = "Präziser Modus",
 	
-	wallpaper = "Wallpaper",
-	wallpaperWallpaper = "Wallpaper",
+	wallpaper = "Hintergrund",
+	wallpaperWallpaper = "Hintergrund",
 	wallpaperScreensaver = "Bildschirmschoner",
 	wallpaperScreensaverPath = "Screensaver Schrift-Pfad",
 	wallpaperScreensaverEnabled = "Bildschirmschoner aktiviert",
@@ -38,7 +38,7 @@
 	appearanceDesktopBackground = "Desktophintergrund",
 	appearanceDock = "Dock Farbe",
 	appearanceMenu = "Menü",
-	appearanceBlurEnabled = "Interface blurring",
+	appearanceBlurEnabled = "Unschärfe der Benutzeroberfläche",
 	appearanceTransparencyEnabled = "Interface Transparenz",
 	appearanceTransparencyInfo = "Das deaktivieren der letzten beiden Optionen reduziert die Anzahl der direkten Aufrufe an die CPU / GPU erheblich und erhöht die Leistung",
 	appearanceDropDownDefaultBackground = "Dropdown-Menü hintergrund",
@@ -65,7 +65,7 @@
 	networkThis = "Dieser PC-Einstellungen",
 	networkNoModem = "Schließen Sie das modem an, um Netzwerkfunktionen zu verwenden",
 	
-	tasks = "Autostart",
+	tasks = "Auto-Start",
 	tasksInfo = "Sie können so viele Skripts hinzufügen, wie Sie Sie automatisch zur angegebenen Zeit ausführen möchten",
 	tasksBefore = "Vor dem ausführen des Betriebssystems ausführen",
 	tasksAfter = "Nach dem Start des Betriebssystems ausführen",

@@ -38,7 +38,7 @@
 	appearanceDesktopBackground = "Фон робочого столу",
 	appearanceDock = "Колір Dock",
 	appearanceMenu = "Колір меню",
-	appearanceBlurEnabled = "Interface blurring",
+	appearanceBlurEnabled = "Розмивання інтерфейсу",
 	appearanceTransparencyEnabled = "Прозорість інтерфейсу",
 	appearanceTransparencyInfo = "Відключення останніх двох опцій істотно знизить кількість прямих звернень до CPU / GPU і збільшить продуктивність",
 	appearanceDropDownDefaultBackground = "Фон випадаючого меню",

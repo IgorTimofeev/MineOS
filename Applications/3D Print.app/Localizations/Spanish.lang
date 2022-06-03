@@ -1,4 +1,4 @@
-{	
+{
 	help = "Ayuda",
 	helpInfo = {
 		"• Cada modelo consiste en formas. Su Recuento depende de las propiedades del servidor, pero por defecto son 24 por cada modelo",
@@ -19,12 +19,12 @@
 	rotate = "Rotar",
 	flip = "Dar la Vuelta",
 	color = "C",
-	offset = "Offset",
+	offset = "Compensar",
 	scale = "Escala",
 	projectorEnabled = "Habilitado",
-	xAxis = "X-axis",
-	yAxis = "Y-axis",
-	zAxis = "Z-axis",
+	xAxis = "eje x",
+	yAxis = "eje Y",
+	zAxis = "Eje Z",
 	lightLevel = "Nivel de Luz",
 	emitRedstone = "Emite Redstone",
 	collidable = "Colision",

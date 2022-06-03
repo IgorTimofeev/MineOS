@@ -1,4 +1,4 @@
-{	
+{
 	help = "Pomoc",
 	helpInfo = {
 		"• Každý model pozostáva z tvarov. Ich počet závisí na vlastnostiach servera, ale pôvodne je to 24 na každý model",

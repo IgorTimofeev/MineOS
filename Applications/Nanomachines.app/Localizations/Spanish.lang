@@ -3,7 +3,7 @@
 	sent = "Enviado",
 	received = "Recivido",
 	nothingFound = "Ningun efecto encontrado",
-	instructionTitle = "Instruction",
+	instructionTitle = "Instrucción",
 	instructionData = "En el lado izquierdo de la pantalla hay interruptores que le dicen a los nanitos que activen los biocontactos. Cada persona tiene una configuración única de biocontactos, lo que permite que los nanitos impongan varias ventajas / desventajas. Activar 2 contactos es seguro de por vida, un número mayor provocará lesiones graves. Puede activar hasta 4 contactos a la vez. Experimente, busque los efectos deseados y agréguelos a sus favoritos para su uso posterior. El botón \"Guardar Configuración\" es útil para transferir a su otra configuración de los nanites (para esto, necesita tener una instancia creada en el inventario)",
 	syncWelcome = "Bienvenido",
 	syncInfo = "Antes de usar el programa, cree y beba un paquete de nanitos. Luego, acérquese a la unidad del sistema o al bastidor del servidor con el módem inalámbrico instalado para la sincronización",

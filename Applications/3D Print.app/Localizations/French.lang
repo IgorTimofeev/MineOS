@@ -1,4 +1,4 @@
-{	
+{
 	help = "Aidez-moi",
 	helpInfo = {
 		"• Chaque modèle est composé de formes. Leur nombre dépend des propriétés du serveur, mais par défaut, il s'agit de 24 pour un modèle.",
@@ -17,7 +17,7 @@
 	add = "Ajouter",
 	remove = "Retirer",
 	rotate = "Tourner",
-	flip = "Flip",
+	flip = "Retourner",
 	color = "C",
 	offset = "Décalage",
 	scale = "Échelle",
