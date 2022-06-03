@@ -7,6 +7,6 @@
 	setWallpaper = "Möchten Sie dieses Bild als Hintergrundbild festlegen?",
 	yes = "Ja",
 	no = "Nein",
-	start = "Start",
-	cancel = "Absagen",
+	start = "Anfang",
+	cancel = "Absagen"
 }

@@ -38,7 +38,7 @@
 	appearanceDesktopBackground = "桌面背景",
 	appearanceDock = "Dock背景",
 	appearanceMenu = "目录背景",
-	appearanceBlurEnabled = "Interface blurring",
+	appearanceBlurEnabled = "界面模糊",
 	appearanceTransparencyEnabled = "界面透明度",
 	appearanceTransparencyInfo = "禁用最后两个选项将显著减少对CPU/GPU的直接调用次数并提高性能.",
 	appearanceDropDownDefaultBackground = "下拉菜单背景",
@@ -104,5 +104,5 @@
 	usersPasswordsArentEqual = "输入的密码与原密码不相等",
 	usersClaim = "认领电脑",
 	usersClaimInfo = "此外, 你可以为那名玩家创建私有访问权限到你的电脑. 要这样做,那名玩家必须在线",
-	usersClaimPlaceholder = "输入在线玩家名",
+	usersClaimPlaceholder = "输入在线玩家名"
 }

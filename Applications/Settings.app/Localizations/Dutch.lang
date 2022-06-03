@@ -38,7 +38,7 @@
 	appearanceDesktopBackground = "Bureaubladachtergrond",
 	appearanceDock = "Taakbalk achtergrond",
 	appearanceMenu = "Menu achtergrond",
-	appearanceBlurEnabled = "Interface blurring",
+	appearanceBlurEnabled = "Interface vervagen",
 	appearanceTransparencyEnabled = "Interface transparantie",
 	appearanceTransparencyInfo = "Het uitschakelen van de laatste twee opties zal het aantal directe oproepen naar de CPU / GPU aanzienlijk verminderen en de prestaties verbeteren",
 	appearanceDropDownDefaultBackground = "Vervolgkeuzemenu-achtergrond",
@@ -104,5 +104,5 @@
 	usersPasswordsArentEqual = "Wachtwoorden komen niet overeen",
 	usersClaim = "Claim computerblok",
 	usersClaimInfo = "U kunt privétoegang tot uw computerblok creëren voor de speler met de opgegeven naam. Om dit te doen, moet de speler online zijn",
-	usersClaimPlaceholder = "Voer online speler naam in",
+	usersClaimPlaceholder = "Voer online speler naam in"
 }

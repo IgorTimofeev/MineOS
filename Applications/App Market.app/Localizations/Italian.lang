@@ -13,14 +13,14 @@
 	typeUserName = "Tipo Nome Utente",
 	yourText = "Si:",
 	hereBeYourDialogs = "Ecco le vostre conversazioni",
-	hideApplicationIcons = "Hide application icons",
+	hideApplicationIcons = "Nascondi le icone delle applicazioni",
 	
 	categoryOverview = "Panoramica",
 	categoryApplications = "Applicazione",
 	categoryLibraries = "Biblioteca",
 	categoryScripts = "Script",
 	categoryUpdates = "Aggiornare",
-
+	
 	statisticsNewUser = "Nuovo utente",
 	statisticsMostPopularUser = "Più attivo",
 	statisticsUsersCount = "Gli utenti contano",
@@ -28,7 +28,7 @@
 	statisticsReviewsCount = "Conta recensioni",
 	statisticsPopularPublication = "(pubblicazione popolare)",
 	statisticsMessagesCount = "Conta messaggi",
-
+	
 	whatsNew = "Cosa c'è di nuovo",
 	whatsNewInVersion = "Cosa c'è di nuovo in versione",
 	areYouSure = "Eliminare veramente la pubblicazione?",
@@ -56,7 +56,7 @@
 	login = "Login",
 	profile = "Profilo",
 	nickname = "Nomignolo",
-	password = "Password",
+	password = "Parola d'ordine",
 	nicknameOrEmail = "E-Mail o soprannome",
 	registrationDate = "Data di registrazione",
 	edit = "Modifica pubblicazione",
@@ -73,7 +73,7 @@
 	notRegistered = "Non sei ancora registrato?",
 	createAccount = "Crea account",
 	registrationSuccessfull = "Controlla la tua cartella e-mail e spam per verificare il tuo account",
-
+	
 	search = "Ricerca",
 	byPopularity = "Di popolarità",
 	byRating = "Per valutazione",
@@ -88,7 +88,7 @@
 	page = "Pagina",
 	updateAll = "Aggiorna tutti",
 	noUpdates = "Non avete aggiornamenti",
-
+	
 	changeReview = "Modifica revisione",
 	developer = "Sviluppatore",
 	version = "Versione",
@@ -108,5 +108,5 @@
 	no = "Non",
 	of = "di",
 	usersLoveReview = "gli utenti hanno trovato utile questa recensione",
-	thanksForVote = "Grazie per la tua opinione.",
+	thanksForVote = "Grazie per la tua opinione."
 }
