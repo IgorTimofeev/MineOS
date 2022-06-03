@@ -13,14 +13,14 @@
 	typeUserName = "Schrijf gebruikersnaam",
 	yourText = "Jij:",
 	hereBeYourDialogs = "Hier zullen uw gesprekken zijn",
-	hideApplicationIcons = "Hide application icons",
+	hideApplicationIcons = "Applicatiepictogrammen verbergen",
 	
 	categoryOverview = "Overzicht",
 	categoryApplications = "Applicaties",
 	categoryLibraries = "Bibliotheken",
 	categoryScripts = "Scripts",
 	categoryUpdates = "Updates",
-
+	
 	statisticsNewUser = "Nieuwe gebruiker",
 	statisticsMostPopularUser = "Meest actief",
 	statisticsUsersCount = "Aantal gebruikers",
@@ -28,7 +28,7 @@
 	statisticsReviewsCount = "Aantal beoordelingen",
 	statisticsPopularPublication = "(populaire publicatie)",
 	statisticsMessagesCount = "Aantal berichten",
-
+	
 	whatsNew = "Wat is er nieuw",
 	whatsNewInVersion = "Wat is er nieuw in de versie",
 	areYouSure = "Weet je zeker dat je de publicatie wilt verwijderen?",
@@ -43,7 +43,7 @@
 	save = "Opslaan",
 	cancel = "Annuleer",
 	fileName = "Bestandsnaam",
-	download = "Download",
+	download = "Downloaden",
 	downloading = "Bezig met downloaden",
 	tree = "Lijst van de bestanden die gedownload worden",
 	addDependency = "Voeg afhankelijkheid toe",
@@ -73,7 +73,7 @@
 	notRegistered = "Nog niet geregistreerd?",
 	createAccount = "Maak account",
 	registrationSuccessfull = "Bevestig uw account via de link in de e-mail (controleer uw spam map)",
-
+	
 	search = "Zoeken",
 	byPopularity = "Op populariteit",
 	byRating = "Op beoordeling",
@@ -88,7 +88,7 @@
 	page = "Pagina",
 	updateAll = "Update alles",
 	noUpdates = "Je hebt momenteel geen updates",
-
+	
 	changeReview = "Verander beoordeling",
 	developer = "Ontwikkelaar",
 	version = "Versie",
@@ -108,5 +108,5 @@
 	no = "Nee",
 	of = "van",
 	usersLoveReview = "Gebruikers vonden deze beoordeling behulpzaam",
-	thanksForVote = "Bedankt voor uw mening.",
+	thanksForVote = "Bedankt voor uw mening."
 }

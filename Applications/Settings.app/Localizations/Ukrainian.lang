@@ -38,7 +38,7 @@
 	appearanceDesktopBackground = "Фон робочого столу",
 	appearanceDock = "Колір Dock",
 	appearanceMenu = "Колір меню",
-	appearanceBlurEnabled = "Interface blurring",
+	appearanceBlurEnabled = "Розмивання інтерфейсу",
 	appearanceTransparencyEnabled = "Прозорість інтерфейсу",
 	appearanceTransparencyInfo = "Відключення останніх двох опцій істотно знизить кількість прямих звернень до CPU / GPU і збільшить продуктивність",
 	appearanceDropDownDefaultBackground = "Фон випадаючого меню",
@@ -104,5 +104,5 @@
 	usersPasswordsArentEqual = "Паролі різняться",
 	usersClaim = "Приват блоку комп'ютера",
 	usersClaimInfo = "Крім того, ви можете створити приватний доступ до блоку вашого комп'ютера для гравця із зазначеним ім'ям. Для цього гравець повинен бути онлайн",
-	usersClaimPlaceholder = "Введіть ім'я гравця",
+	usersClaimPlaceholder = "Введіть ім'я гравця"
 }

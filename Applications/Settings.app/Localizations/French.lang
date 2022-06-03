@@ -38,7 +38,7 @@
 	appearanceDesktopBackground = "Fond d'écran",
 	appearanceDock = "Dock de couleur",
 	appearanceMenu = "Couleur du menu",
-	appearanceBlurEnabled = "Interface blurring",
+	appearanceBlurEnabled = "Flou de l'interface",
 	appearanceTransparencyEnabled = "Transparence de l'interface",
 	appearanceTransparencyInfo = "La désactivation des deux dernières options réduira considérablement le nombre d'appels directs au processeur / processeur graphique et augmentera les performances.",
 	appearanceDropDownDefaultBackground = "Menu déroulant arrière-plan",
@@ -104,5 +104,5 @@
 	usersPasswordsArentEqual = "Les mots de passe ne sont pas égaux",
 	usersClaim = "Bloc de demande d'indemnisation",
 	usersClaimInfo = "En outre, vous pouvez créer un accès privé à votre bloc d'ordinateur pour le Joueur avec le prénom. Pour le faire, le joueur doit être en ligne",
-	usersClaimPlaceholder = "Type Nom du lecteur en ligne",
+	usersClaimPlaceholder = "Type Nom du lecteur en ligne"
 }

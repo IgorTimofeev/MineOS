@@ -45,6 +45,7 @@
 	toDirectory = "पर लागू करें फ़ोल्डर में",
 	copying = "प्रतिलिपि बनाई जा रही",
 	faylaBlyad = "फाइल कॉपी करना",
+	
 	areYouSure = "क्या आप सुनिश्चित हैं?",
 	emptyTrash = "खाली कचरा",
 	type = "टाइप करें",
@@ -55,8 +56,9 @@
 	folder = "फोल्डर",
 	unknown = "अज्ञात",
 	calculatingSize = "गणना…",
-	filesWillBeRemovedPermanently = "file(s) will be removed permanently",
-	fileDeletingFailure = "Failed to delete file",
+	filesWillBeRemovedPermanently = "फ़ाइल(ओं) को स्थायी रूप से हटा दिया जाएगा",
+	fileDeletingFailure = "फ़ाइल हटाने में विफल",
+	
 	properties = "गुण",
 	newFolderFromChosen = "से नया फ़ोल्डर",
 	create = "नया",
@@ -87,29 +89,35 @@
 	flashEEPROM = "फ्लैश से EEPROM",
 	flashingEEPROM = "प्रगति में चमकती। कंप्यूटर बंद न करें ...",
 	print3D = "प्रिंट मॉडल",
+	
 	sortBy = "सॉर्ट",
 	sortByType = "टाइप करके",
 	sortByName = "नाम से",
 	sortByDate = "आज तक",
+	
 	aboutSystem = "सिस्टम के बारे में",
 	updates = "अपडेट",
 	update = "ताज़ा करें",
 	shutdown = "शटडाउन",
 	logout = "लॉगआउट",
 	reboot = "रिबूट",
+	
 	shortcutIsCorrupted = "शॉर्टकट न के बराबर फाइल से जुड़ा है",
 	sortAutomatically = "ग्रिड पर",
 	onDesktop = "डेस्कटॉप पर",
 	inCurrentDirectory = "चालू फ़ोल्डर में",
+	
 	errorWhileRunningProgram = "दौड़ते समय त्रुटि ",
 	sendedFeedback = "प्रतिक्रिया भेजी गई",
 	sendFeedback = "फीडबैक",
 	yourContacts = "अपने संपर्क",
 	additionalInfo = "अतिरिक्त जानकारी",
 	stackTraceback = "ढेर ट्रेसबैक",
+	
 	favourite = "पसंदीदा",
 	search = "खोज",
-	mounts = "Mounts",
+	mounts = "माउंट",
+	
 	uploadToPastebin = "Pastebin पर अपलोड करें",
 	pasteName = "चिपकाएँ नाम",
 	uploading = "अपलोड हो रहा है ...",
