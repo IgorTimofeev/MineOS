@@ -32,13 +32,13 @@
 	appearanceHorizontal = "Horizontalmente",
 	appearanceVertical = "Verticalmente",
 	appearanceSize = "Tamaño de los iconos",
-	appearanceSpace = "Space between icons",
+	appearanceSpace = "Espacio entre iconos",
 	appearanceColorScheme = "Esquema de color",
 	appearanceFiles = "Propiedades de archivos",
 	appearanceDesktopBackground = "Fondo de Escritorio",
 	appearanceDock = "Fondo del Dock",
 	appearanceMenu = "Fondo del Menu",
-	appearanceBlurEnabled = "Interface blurring",
+	appearanceBlurEnabled = "Desenfoque de interfaz",
 	appearanceTransparencyEnabled = "Transparecia de la Interfaz",
 	appearanceTransparencyInfo = "Desactivar las Ultimas dos opciones va a reducir significativamenteel numero de llamadas directas a la CPU/GPU y incrementara el rendimiento",
 	appearanceDropDownDefaultBackground = "Fondo del menú desplegable",
@@ -104,5 +104,5 @@
 	usersPasswordsArentEqual = "Las contraseñas no coinciden",
 	usersClaim = "Reclamar bloque de ordenador",
 	usersClaimInfo = "Adiccionalmente, puedes crear acceso privado al bloque de ordenador para el jugador con el nombre puesto. Para hacerlo, el jugador debe de estar online",
-	usersClaimPlaceholder = "Pon el nombre de un jugador online",
+	usersClaimPlaceholder = "Pon el nombre de un jugador online"
 }

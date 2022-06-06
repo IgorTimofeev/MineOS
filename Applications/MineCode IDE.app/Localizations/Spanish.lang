@@ -7,7 +7,7 @@
 	convertCase = "Convertir mayusculas",
 	openingFile = "Abriendo",
 	arguments = "Separar argumentos mediante comas",
-	launchWithArguments = "Ejecutar con argumentos",	
+	launchWithArguments = "Ejecutar con argumentos",
 	addBreakpoint = "Añadir punto de interrupcion",
 	clearBreakpoints = "Eliminar puntos de interrupcion",
 	finishDebug = "Detener",
@@ -64,5 +64,5 @@
 	indent = "Sangrado de texto",
 	unindent = "Desangrado de texto",
 	flashEEPROM = "Flashear to EEPROM",
-	flashingEEPROM = "Flasheo en progreso. No apages el ordenador...",
+	flashingEEPROM = "Flasheo en progreso. No apages el ordenador..."
 }
