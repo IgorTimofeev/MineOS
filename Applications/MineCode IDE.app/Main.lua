@@ -1392,8 +1392,6 @@ codeView.eventHandler = function(workspace, object, e1, e2, e3, e4, e5)
 			return
 		end
 
-		GUI.alert("aefaf")
-
 		if e5 == 1 then
 			createEditOrRightClickMenu(GUI.addContextMenu(workspace, e3, e4))
 		else

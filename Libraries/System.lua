@@ -245,35 +245,26 @@ end
 
 function system.call(method, ...)
 	local args = {...}
+
 	local function launchMethod()
 		method(table.unpack(args))
 	end
 
 	local function tracebackMethod(xpcallTraceback)
-		local traceback, info, firstMatch = tostring(xpcallTraceback) .. "\n" .. debug.traceback()
-		for runLevel = 0, math.huge do
-			info = debug.getinfo(runLevel)
-			if info then
-				if (info.what == "main" or info.what == "Lua") and info.source ~= "=machine" then
-					if firstMatch then
-						return {
-							path = info.source:sub(2, -1),
-							line = info.currentline,
-							traceback = traceback
-						}
-					else
-						firstMatch = true
-					end
-				end
-			else
-				error("Failed to get debug info for runlevel " .. runLevel)
-			end
-		end
+		local debugTraceback = debug.traceback()
+		local _, tailCallsEnd = debugTraceback:find("%.%.%.tail calls%.%.%.%)")
+		local path, line = (tailCallsEnd and debugTraceback:sub(tailCallsEnd + 2) or debugTraceback):match("\t+([^:]+%.lua):(%d+):")
+
+		return {
+			path = path,
+			line = tonumber(line),
+			traceback = tostring(xpcallTraceback) .. "\n" .. debugTraceback
+		}
 	end
 	
 	local xpcallSuccess, xpcallReason = xpcall(launchMethod, tracebackMethod)
 	
-	if type(xpcallReason) == "string" or type(xpcallReason) == "nil" then
+	if type(xpcallReason) == "string" or xpcallReason == nil then
 		xpcallReason = {
 			path = paths.system.libraries .. "System.lua",
 			line = 1,
@@ -2134,6 +2125,8 @@ function system.error(path, line, traceback)
 	local toLine, lineCounter = codeView.fromLine + codeView.height - 1, 1
 
 	-- Read part of file to display error line
+	-- GUI.alert("SYS", path)
+
 	for line in filesystem.lines(path) do
 		if lineCounter >= codeView.fromLine and lineCounter <= toLine then
 			codeView.lines[lineCounter] = line:gsub("\t", "  ")
