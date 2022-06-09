@@ -252,8 +252,19 @@ function system.call(method, ...)
 
 	local function tracebackMethod(xpcallTraceback)
 		local debugTraceback = debug.traceback()
-		local _, tailCallsEnd = debugTraceback:find("%.%.%.tail calls%.%.%.%)")
-		local path, line = (tailCallsEnd and debugTraceback:sub(tailCallsEnd + 2) or debugTraceback):match("\t+([^:]+%.lua):(%d+):")
+		local path, line, tailCallsStart = debugTraceback
+		
+		while true do
+			tailCallsStart = path:find("%.%.%.tail calls%.%.%.%)")
+
+			if tailCallsStart then
+				path = path:sub(tailCallsStart + 17)
+			else
+				break
+			end
+		end
+
+		path, line = path:match("\t+([^:]+%.lua):(%d+):")
 
 		return {
 			path = path,
