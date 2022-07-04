@@ -47,12 +47,16 @@ end
 
 --------------------------------------- Mounted filesystem support -----------------------------------------
 
-function filesystem.mount(cyka, path)	
+function filesystem.mount(cyka, path)
 	if type(cyka) == "table" then
+		local mountedProxy
+
 		for i = 1, #mountedProxies do
-			if mountedProxies[i].path == path then
+			mountedProxy = mountedProxies[i]
+
+			if mountedProxy.path == path then
 				return false, "mount path has been taken by other mounted filesystem"
-			elseif mountedProxies[i].proxy == cyka then
+			elseif mountedProxy.proxy == cyka then
 				return false, "proxy is already mounted"
 			end
 		end
@@ -61,6 +65,8 @@ function filesystem.mount(cyka, path)
 			path = path,
 			proxy = cyka
 		})
+
+		table.sort(mountedProxies, function(a, b) return #b.path < #a.path end)
 
 		return true
 	else
