@@ -10,8 +10,15 @@ local shutdown, gpuSet, gpuSetBackground, gpuSetForeground, gpuFill, eepromSetDa
 local OSList, rectangle, centrizedText, menuElement =
 	{
 		{
+			"/boot/kernel/pipes",
+			function()
+				computer.getBootAddress, computer.setBootAddress = eepromGetData, eepromSetData
+			end
+		},
+		{
 			"/OS.lua",
 			function()
+				computer.getBootAddress, computer.setBootAddress = eepromGetData, eepromSetData
 			end
 		},
 		{
