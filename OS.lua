@@ -2,7 +2,7 @@
 ---------------------------------------- System initialization ----------------------------------------
 
 -- Obtaining boot filesystem component proxy
-local bootFilesystemProxy = component.proxy(computer.getBootAddress and computer.getBootAddress() or component.invoke(component.list("eeprom")(), "getData"))
+local bootFilesystemProxy = component.proxy(computer.getBootAddress())
 
 -- Executes file from boot HDD during OS initialization (will be overriden in filesystem library later)
 function dofile(path)
