@@ -7,8 +7,9 @@ local filesystem = require("Filesystem")
 local image = {}
 
 local OCIFSignature = "OCIF"
-local encodingMethodsLoad = {}
-local encodingMethodsSave = {}
+local encodingMethodsRead = {}
+local encodingMethodsReadMetadata = {}
+local encodingMethodsWrite = {}
 
 --------------------------------------------------------------------------------
 
@@ -44,7 +45,8 @@ local function group(picture, compressColors)
 	return groupedPicture
 end
 
-encodingMethodsSave[5] = function(file, picture)
+-- 5
+encodingMethodsWrite[5] = function(file, picture)
 	file:writeBytes(
 		bit32.rshift(picture[1], 8),
 		bit32.band(picture[1], 0xFF)
@@ -66,11 +68,17 @@ encodingMethodsSave[5] = function(file, picture)
 	end
 end
 
-encodingMethodsLoad[5] = function(file, picture)
-	picture[1] = file:readBytes(2)
-	picture[2] = file:readBytes(2)
+encodingMethodsReadMetadata[5] = function(file)
+	return
+		file:readBytes(2),
+		file:readBytes(2)
+end
 
-	for i = 1, image.getWidth(picture) * image.getHeight(picture) do
+encodingMethodsRead[5] = function(file, picture, width, height)
+	picture[1] = width
+	picture[2] = height
+
+	for i = 1, width * height do
 		table.insert(picture, color.to24Bit(file:readBytes(1)))
 		table.insert(picture, color.to24Bit(file:readBytes(1)))
 		table.insert(picture, file:readBytes(1) / 255)
@@ -78,9 +86,15 @@ encodingMethodsLoad[5] = function(file, picture)
 	end
 end
 
-local function loadOCIF678(file, picture, is7, is8)
-	picture[1] = file:readBytes(1) + is8
-	picture[2] = file:readBytes(1) + is8
+local function readMetadata678(file, is7, is8)
+	return
+		file:readBytes(1) + is8,
+		file:readBytes(1) + is8
+end
+
+local function read678(file, picture, width, height, is7, is8)
+	picture[1] = width
+	picture[2] = height
 
 	local currentAlpha, currentSymbol, currentBackground, currentForeground, currentY
 
@@ -194,28 +208,43 @@ local function saveOCIF678(file, picture, is7, is8)
 	end
 end
 
-encodingMethodsSave[6] = function(file, picture)
+-- 6
+encodingMethodsReadMetadata[6] = function(file)
+	return readMetadata678(file, 0, 0)
+end
+
+encodingMethodsRead[6] = function(file, picture, width, height)
+	read678(file, picture, width, height, 0, 0)
+end
+
+encodingMethodsWrite[6] = function(file, picture)
 	saveOCIF678(file, picture, 0, 0)
 end
 
-encodingMethodsLoad[6] = function(file, picture)
-	loadOCIF678(file, picture, 0, 0)
+-- 7
+encodingMethodsReadMetadata[7] = function(file)
+	return readMetadata678(file, 1, 0)
 end
 
-encodingMethodsSave[7] = function(file, picture)
+encodingMethodsRead[7] = function(file, picture, width, height)
+	read678(file, picture, width, height, 1, 0)
+end
+
+encodingMethodsWrite[7] = function(file, picture)
 	saveOCIF678(file, picture, 1, 0)
 end
 
-encodingMethodsLoad[7] = function(file, picture)
-	loadOCIF678(file, picture, 1, 0)
+-- 8
+encodingMethodsReadMetadata[8] = function(file)
+	return readMetadata678(file, 1, 1)
 end
 
-encodingMethodsSave[8] = function(file, picture)
+encodingMethodsRead[8] = function(file, picture, width, height)
+	read678(file, picture, width, height, 1, 1)
+end
+
+encodingMethodsWrite[8] = function(file, picture)
 	saveOCIF678(file, picture, 1, 1)
-end
-
-encodingMethodsLoad[8] = function(file, picture)
-	loadOCIF678(file, picture, 1, 1)
 end
 
 --------------------------------------------------------------------------------
@@ -251,11 +280,12 @@ function image.save(path, picture, encodingMethod)
 	encodingMethod = encodingMethod or 6
 	
 	local file, reason = filesystem.open(path, "wb")
+	
 	if file then	
-		if encodingMethodsSave[encodingMethod] then
+		if encodingMethodsWrite[encodingMethod] then
 			file:write(OCIFSignature, string.char(encodingMethod))
 
-			local result, reason = xpcall(encodingMethodsSave[encodingMethod], debug.traceback, file, picture)
+			local result, reason = xpcall(encodingMethodsWrite[encodingMethod], debug.traceback, file, picture)
 			
 			file:close()
 
@@ -266,6 +296,7 @@ function image.save(path, picture, encodingMethod)
 			end
 		else
 			file:close()
+			
 			return false, "Failed to save OCIF image: encoding method \"" .. tostring(encodingMethod) .. "\" is not supported"
 		end
 	else
@@ -273,30 +304,56 @@ function image.save(path, picture, encodingMethod)
 	end
 end
 
-function image.load(path)
-	local file, reason = filesystem.open(path, "rb")
-	if file then
-		local readedSignature = file:readString(#OCIFSignature)
-		if readedSignature == OCIFSignature then
-			local encodingMethod = file:readBytes(1)
-			if encodingMethodsLoad[encodingMethod] then
-				local picture = {}
-				local result, reason = xpcall(encodingMethodsLoad[encodingMethod], debug.traceback, file, picture)
-				
-				file:close()
-
-				if result then
-					return picture
-				else
-					return false, "Failed to load OCIF image: " .. tostring(reason)
-				end
+function image.readMetadata(file)
+	local signature = file:readString(#OCIFSignature)
+		
+	if signature == OCIFSignature then
+		local encodingMethod = file:readBytes(1)
+		
+		if encodingMethodsReadMetadata[encodingMethod] then
+			local result, widthOrReason, height = xpcall(encodingMethodsReadMetadata[encodingMethod], debug.traceback, file, picture)
+			
+			if result then
+				return signature, encodingMethod, widthOrReason, height
 			else
 				file:close()
-				return false, "Failed to load OCIF image: encoding method \"" .. tostring(encodingMethod) .. "\" is not supported"
+
+				return false, "Failed to read OCIF metadata: " .. tostring(widthOrReason)
 			end
 		else
 			file:close()
-			return false, "Failed to load OCIF image: binary signature \"" .. tostring(readedSignature) .. "\" is not valid"
+		
+			return false, "Failed to read OCIF metadata: encoding method \"" .. tostring(encodingMethod) .. "\" is not supported"
+		end
+	else
+		file:close()
+		
+		return false, "Failed to read OCIF metadata: binary signature \"" .. tostring(signature) .. "\" is not valid"
+	end
+end
+
+function image.readPixelData(file, encodingMethod, width, height)
+	local picture = {}
+	local result, reason = xpcall(encodingMethodsRead[encodingMethod], debug.traceback, file, picture, width, height)
+	file:close()
+
+	if result then
+		return picture
+	else
+		return false, "Failed to read OCIF pixel data: " .. tostring(reason)
+	end
+end
+
+function image.load(path)
+	local file, reason = filesystem.open(path, "rb")
+	
+	if file then
+		local signature, encodingMethod, width, height = image.readMetadata(file)
+
+		if signature then
+			return image.readPixelData(file, encodingMethod, width, height)
+		else
+			return false, encodingMethod
 		end
 	else
 		return false, "Failed to open file \"" .. tostring(path) .. "\" for reading: " .. tostring(reason)

@@ -974,29 +974,57 @@ local function anyIconAnalyseExtension(icon, launchers)
 			icon.image = shortcutIcon.image
 			icon.shortcutLaunch = shortcutIcon.launch
 			icon.launch = launchers.shortcut
+		
 		elseif icon.extension == ".pkg" then
 			icon.image = iconCache.archive
 			icon.launch = launchers.archive
+		
 		elseif userSettings.extensions[icon.extension] then
-			if iconCache[icon.extension] then
-				icon.image = iconCache[icon.extension]
+			icon.launch = launchers.extension
+
+			local picture
+
+			if icon.extension == ".pic" then
+				local file = filesystem.open(icon.path, "rb")
+
+				if file then
+					local signature, encodingMethod, width, height = image.readMetadata(file)
+
+					if signature and width <= 8 and height <= 4 then
+						picture = image.readPixelData(file, encodingMethod, width, height)
+
+						if picture then
+							icon.image = picture
+
+							return icon
+						end
+					end
+				end
 			else
-				local picture =
-					image.load(userSettings.extensions[icon.extension] .. "Extensions/" .. icon.extension .. "/Icon.pic") or
-					image.load(userSettings.extensions[icon.extension] .. "Icon.pic")
-				
+				picture = iconCache[icon.extension]
+
 				if picture then
-					iconCache[icon.extension] = picture
 					icon.image = picture
-				else
-					icon.image = iconCache.fileNotExists
+
+					return icon
 				end
 			end
 
-			icon.launch = launchers.extension
+			picture =
+				image.load(userSettings.extensions[icon.extension] .. "Extensions/" .. icon.extension .. "/Icon.pic") or
+				image.load(userSettings.extensions[icon.extension] .. "Icon.pic")
+			
+			if picture then
+				iconCache[icon.extension] = picture
+				icon.image = picture
+			else
+				icon.image = iconCache.fileNotExists
+			end
+
 		elseif not filesystem.exists(icon.path) then
 			icon.image = iconCache.fileNotExists
 			icon.launch = launchers.corrupted
+		
 		else
 			icon.image = iconCache.script
 			icon.launch = launchers.script
