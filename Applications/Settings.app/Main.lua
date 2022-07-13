@@ -18,6 +18,10 @@ local scrollSpeed = 2
 
 local workspace, window = system.addWindow(GUI.filledWindow(1, 1, 100, 29, 0xF0F0F0))
 
+local userSettings = system.getUserSettings()
+if userSettings.interfaceBlurEnabled then
+	window.showDesktopOnMaximize = true
+end
 local leftPanel = system.addBlurredOrDefaultPanel(window, 1, 1, 1, 1)
 
 window.actionButtons.localX, window.actionButtons.localY = 3, 2

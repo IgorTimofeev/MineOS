@@ -15,7 +15,14 @@ local paths = require("Paths")
 --------------------------------------------------------------------------------------------------------
 
 local workspace, window = system.addWindow(GUI.filledWindow(1, 1, 130, 30, 0))
-window.backgroundPanel.colors.transparency = 0.2
+
+local userSettings = system.getUserSettings()
+if userSettings.interfaceTransparencyEnabled then
+	window.showDesktopOnMaximize = true
+	window.backgroundPanel.colors.transparency = 0.2
+else
+	window.backgroundPanel.colors.transparency = 0
+end
 
 local weatherContainer = window:addChild(GUI.container(1, 1, 1, 23))
 

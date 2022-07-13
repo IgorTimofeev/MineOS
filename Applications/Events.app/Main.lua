@@ -6,7 +6,15 @@ local text = require("Text")
 
 ---------------------------------------------------------------------------------
 
-local workspace, window, menu = system.addWindow(GUI.filledWindow(1, 1, 82, 28, 0x000000, 0.3))
+local userSettings = system.getUserSettings()
+local workspace, window, menu
+
+if userSettings.interfaceTransparencyEnabled then
+	workspace, window, menu = system.addWindow(GUI.filledWindow(1, 1, 82, 28, 0x000000, 0.3))
+	window.showDesktopOnMaximize = true
+else
+	workspace, window, menu = system.addWindow(GUI.filledWindow(1, 1, 82, 28, 0x000000))
+end
 
 local display = window:addChild(GUI.object(2, 4, 1, 1))
 local lines = {}

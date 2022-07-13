@@ -63,6 +63,9 @@ modeList:setDirection(GUI.DIRECTION_HORIZONTAL)
 
 local sidebarContainer = window:addChild(GUI.container(1, 4, config.sidebarWidth, 1))
 
+if userSettings.interfaceBlurEnabled then
+	window.showDesktopOnMaximize = true
+end
 local sidebarPanel = system.addBlurredOrDefaultPanel(sidebarContainer, 1, 1, 1, 1)
 
 local itemsLayout = sidebarContainer:addChild(GUI.layout(1, 1, 1, 1, 1, 1))

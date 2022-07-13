@@ -94,6 +94,10 @@ local updateFileList, editPublication, messagesItem
 
 local workspace, window = system.addWindow(GUI.filledWindow(1, 1, 127, 33, 0xF0F0F0))
 
+local userSettings = system.getUserSettings()
+if userSettings.interfaceBlurEnabled then
+	window.showDesktopOnMaximize = true
+end
 local leftListPanel = system.addBlurredOrDefaultPanel(window, 1, 1, 23, 1)
 
 local leftList = window:addChild(GUI.list(1, 4, leftListPanel.width, 1, 3, 0, nil, 0x787878, nil, 0x787878, 0xF0F0F0, 0x2D2D2D, false))
