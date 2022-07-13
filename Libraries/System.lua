@@ -1818,8 +1818,10 @@ end
 
 local function setWorkspaceHidden(state)
 	local child
+	
 	for i = 1, #workspace.children do
 		child = workspace.children[i]
+		
 		if child ~= desktopWindowsContainer and child ~= desktopMenu and child ~= desktopMenuLayout then
 			child.hidden = state
 		end
@@ -1829,11 +1831,14 @@ end
 local function windowMaximize(window, ...)
 	window.movingEnabled = window.maximized
 	
-	if window.maximized then
-		setWorkspaceHidden(false)
-	else
-		setWorkspaceHidden(not window.showDesktopOnMaximize)
-	end
+	setWorkspaceHidden(
+		not (
+			window.maximized
+			or userSettings.interfaceTransparencyEnabled
+			or userSettings.interfaceBlurEnabled
+			or window.showDesktopOnMaximize
+		)
+	)
 
 	GUI.windowMaximize(window, ...)
 end
