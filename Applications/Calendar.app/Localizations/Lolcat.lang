@@ -1,0 +1,21 @@
+{
+	weekLine = "Mo  Tu  We  Th  Fr  Sa  Su",
+	weekLineAlt = "Su  Mo  Tu  We  Th  Fr  Sa",
+	months = {
+		"Januawee",
+		"Februawee",
+		"March",
+		"April",
+		"cud",
+		"Juen",
+		"July",
+		"August",
+		"Septembah",
+		"octobr",
+		"novembr",
+		"decembr"
+	},
+	startWeek = "Start week frum ",
+	monday = "mondai",
+	sunday = "Sunday"
+}
