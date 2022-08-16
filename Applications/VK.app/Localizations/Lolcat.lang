@@ -1,0 +1,196 @@
+{
+	leftBarOffset = 5,
+	
+	settingsStyle = "Color scheem",
+	settingsAdditional = "Additional propertiez",
+	
+	invalidPassword = "Invalid login or password",
+	username = "E-mail or foen numbr",
+	password = "Password",
+	login = "entr",
+	twoFactorEnabled = "Ues 2AF",
+	twoFactor = "2AF coed",
+	saveLogin = "Saev login informashun:",
+	
+	loadCountConversations = "teh numbr ov loadd dialogues",
+	loadCountMessages = "numbr ov mesagez 2 download",
+	loadCountNews = "numbr ov downloaded newz",
+	scrollSpeed = "teh scroll sped",
+	loadCountWall = "numbr ov postz 2 download",
+	loadCountFriends = "numbr ov frenz 2 download",
+	loadCountDocs = "numbr ov documents 2 download",
+	
+	profile = "Profiel",
+	message = "mesaeg",
+	sendMessage = "Send mesaeg",
+	addToFriends = "Add as frend",
+	friendRequestSent = "Request has been sent",
+	userSubscribedToYou = "Subscribed 2 u",
+	userIsYourFriend = "u haz frenz",
+	
+	profileCounters = {
+		{
+			field = "followers",
+			description = " followers"
+		},
+		{
+			field = "frenz",
+			description = " frenz"
+		},
+		{
+			field = "fotos",
+			description = " fotos"
+		},
+		{
+			field = "videoz",
+			description = " videoz"
+		},
+		{
+			field = "audios",
+			description = " audio"
+		}
+	},
+	profileShowAdditional = "Show detailz",
+	profileHideAdditional = "Hied detaild informashun",
+	profileTitleMainInformation = "Basic informashun",
+	profileTitlePersonal = "Lief posishun",
+	profileTitleAdditions = "Personal informashun",
+	profileTitleContacts = "Contacts",
+	profileKeys = {
+		education = "edumacashun",
+		inspiredBy = "Inspier",
+		relation = "relashuns",
+		birthday = "birfdai",
+		city = "City",
+		homeCity = "Hometown",
+		languages = "Languages",
+		occupation = "Plaec ov werk",
+		mobilePhone = "Mobiel",
+		homePhone = "Alt. foen",
+		site = "websiet",
+		activities = "Activity",
+		interests = "Interests",
+		music = "Favoriet music",
+		movies = "Favoriet movai",
+		books = "Favoriet book",
+		tv = "Favoriet show",
+		games = "Favoriet gaem",
+		quotes = "Favoriet quoet",
+		religion = "Outlook",
+		political = "Polit. conviction",
+		peopleMain = "ppl most important",
+		lifeMain = "Lief most important",
+		alcohol = "OTN. 4 alcohol",
+		smoking = "OTN. towardz smoking"
+	},
+	months = {
+		"januawee",
+		"februawee",
+		"march",
+		"april",
+		"cud",
+		"juen",
+		"july",
+		"august",
+		"septembah",
+		"octobr",
+		"novembr",
+		"decembr"
+	},
+	relationStatuses = {
+		{
+			"not married",
+			"haz  girlfriend",
+			"engaged",
+			"married",
+			"iz complicatd",
+			"in actiev search",
+			"lovah",
+			"in civil marriaeg",
+			[0] = "unspecified"
+		},
+		{
+			"not married",
+			"haz  frend",
+			"engaged",
+			"married",
+			"iz complicatd",
+			"in actiev search",
+			"lovah",
+			"in civil marriaeg",
+			[0] = "unspecified"
+		}
+	},
+	personalPoliticalTypes = {
+		"Communist",
+		"Socialist",
+		"Moderaet",
+		"Liberal",
+		"Conservatiev",
+		"Monarchical",
+		"Ultraconservatiev",
+		"Indifferent",
+		"Libertarian"
+	},
+	personalPeopleMainTypes = {
+		"Intelligenec an creativity",
+		"Kindness an honesty",
+		"Beauty an health",
+		"powr an wealth",
+		"Couraeg an perseveranec",
+		"Humor an luv ov lief"
+	},
+	personalLifeMainTypes = {
+		"Family an children",
+		"Careah an money",
+		"Entertanement an recreation",
+		"Scienec an research",
+		"Improving teh wurld",
+		"Self-development",
+		"Beauty an art",
+		"Faem an influenec"
+	},
+	personalBlyadTypes = {
+		"Sharply negatiev",
+		"Negatiev",
+		"compromiez",
+		"Neutral",
+		"positiv"
+	},
+	
+	friends = "frenz",
+	friendsOnline = "Onlien frenz",
+	friendsMutual = "Mutual frenz",
+	
+	news = "Newsfeed",
+	
+	send = "Send",
+	conversations = "Conversations",
+	you = "u: ",
+	typeMessageHere = "riet  mesaeg...",
+	fwdMessages = "informashun: ",
+	attachments = "Investments: ",
+	attachmentsTypes = {
+		photo = "foot",
+		video = "video",
+		audio = "audio",
+		doc = "document",
+		link = "link",
+		market = "goods",
+		market_album = "product catalog",
+		wall = "record",
+		wall_reply = "repost",
+		sticker = "stickah",
+		gift = "gift",
+		audio_message = "audio"
+	},
+	sentFromMineOS = " (Sent via MineOS VK Client)",
+	
+	documents = "Documents",
+	documentsCount = "Total documents",
+	documentsAdd = "Upload document",
+	
+	settings = "settingz",
+	
+	exit = "Logout"
+}

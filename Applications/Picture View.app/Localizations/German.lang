@@ -1,0 +1,12 @@
+{
+	noPictures = "Es gibt keine Bilder.",
+	slideShow = "Diashow",
+	delay = "Verzögern:",
+	seconds = "Sekunden",
+	fullScreen = "Ganzer Bildschirm",
+	setWallpaper = "Möchten Sie dieses Bild als Hintergrundbild festlegen?",
+	yes = "Ja",
+	no = "Nein",
+	start = "Anfang",
+	cancel = "Absagen"
+}

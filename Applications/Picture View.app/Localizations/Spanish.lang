@@ -1,0 +1,12 @@
+{
+	noPictures = "No hay fotos.",
+	slideShow = "Diapositivas",
+	delay = "Demora:",
+	seconds = "segundos",
+	fullScreen = "Pantalla completa",
+	setWallpaper = "¿Quieres poner esta imagen como fondo de pantalla?",
+	yes = "Sí",
+	no = "No",
+	start = "Comienzo",
+	cancel = "Cancelar",
+}

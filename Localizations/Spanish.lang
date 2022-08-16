@@ -45,7 +45,7 @@
 	toDirectory = "a carpeta",
 	copying = "Copiando",
 	faylaBlyad = "archivo",
-
+	
 	areYouSure = "Estas Seguro?",
 	emptyTrash = "Papelera Vacia",
 	type = "Tipo",
@@ -56,7 +56,9 @@
 	folder = "Carpeta",
 	unknown = "Desconocido",
 	calculatingSize = "calculando…",
-
+	filesWillBeRemovedPermanently = "los archivos se eliminarán de forma permanente",
+	fileDeletingFailure = "No se pudo eliminar el archivo",
+	
 	properties = "Propiedades",
 	newFolderFromChosen = "Nueva carpeta desde Directorio",
 	create = "Nuevo",
@@ -87,38 +89,38 @@
 	flashEEPROM = "Flashear a la EEPROM",
 	flashingEEPROM = "Flasheo en progreso, no apage el ordenador...",
 	print3D = "Imprimir Modelo",
-
+	
 	sortBy = "Ordenar",
 	sortByType = "Por Tipo",
 	sortByName = "Por Nombre",
 	sortByDate = "Por Fecha",
-
+	
 	aboutSystem = "Sobre el Sistema",
 	updates = "Actualizaciones",
 	update = "Actualizar",
 	shutdown = "Apagar",
 	logout = "Cerrar Sesion",
 	reboot = "Reiniciar",
-
+	
 	shortcutIsCorrupted = "El Acceso Directo esta linkeado a un archivo que no existe",
 	sortAutomatically = "Alinear a la Cuadricula",
 	onDesktop = "En el Escritorio",
 	inCurrentDirectory = "En la Carpeta Actual",
-
+	
 	errorWhileRunningProgram = "Error al ejecutar ",
 	sendedFeedback = "La Opinion ha sido Enviada",
 	sendFeedback = "Enviar Opinion",
 	yourContacts = "Tus Contactos",
 	additionalInfo = "Informacion Adicional",
 	stackTraceback = "Seguimiento de pila",
-
+	
 	favourite = "Favoritos",
 	search = "Buscar",
-	mounts = "Mounts",
-
+	mounts = "monturas",
+	
 	uploadToPastebin = "Subir a Pastebin",
-	pasteName = "Paste name",
+	pasteName = "Pegar nombre",
 	uploading = "Subiendo...",
 	uploadingSuccess = "Subido a ",
-	uploadingFailure = "Subida Fallida: ",
+	uploadingFailure = "Subida Fallida: "
 }

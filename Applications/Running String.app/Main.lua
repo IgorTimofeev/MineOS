@@ -21,8 +21,7 @@ spacingSlider.height = 2
 
 container.layout:addChild(GUI.button(1, 1, 36, 3, 0x444444, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, "OK")).onTouch = function()
 	local text = textInput.text .. string.rep(" ", number.round(spacingSlider.value))
-	local gpu = screen.getGPUProxy()
-	
+	local gpu = component.proxy(screen.getGPUAddress())
 
 	local oldWidth, oldHeight = screen.getResolution()
 	local width, height = screen.getScaledResolution(scaleSlider.value / 1000)

@@ -1,19 +1,20 @@
 {
 	open = "Aprire",
 	cancel = "Annullare",
-
+	
 	screen = "Schermo",
 	screenResolution = "Risoluzione",
 	screenAutoScale = "Rilevamento automatico",
 	screenWidth = "Larghezza",
 	screenHeight = "Altezza",
-	screenPreferredMonitor = "Monitor",
+	screenPreferredMonitor = "Tenere sotto controllo",
 	screenScaleInfo = "Utilizzando questa opzione vi permetterà di selezionare la risoluzione ottimale dello schermo per sbarazzarsi dell'effetto \" rettangoli neri\"",
 	screenInvalidResolution = "Il testo nei campi di input dovrebbe essere composto da cifre, dovrebbe essere superiore a %d, e la risoluzione massima non dovrebbe superare %d caratteri",
-
-	wallpaper = "Wallpaper",
-	wallpaperWallpaper = "Wallpaper",
-	wallpaperScreensaver = "Screensaver",
+	screenPreciseMode = "Modalità precisa",
+	
+	wallpaper = "Sfondo",
+	wallpaperWallpaper = "Sfondo",
+	wallpaperScreensaver = "Salvaschermo",
 	wallpaperScreensaverPath = "Percorso script Screensaver",
 	wallpaperScreensaverEnabled = "Screensaver abilitato",
 	wallpaperScreensaverDelay = "Ritardo",
@@ -23,7 +24,7 @@
 	wallpaperStretch = "Tratto",
 	wallpaperCenter = "Centro",
 	wallpaperInfo = "Disabilitare questa opzione ridurrà significativamente il consumo di RAM e aumenterà le prestazioni",
-
+	
 	appearance = "Aspetto",
 	appearanceExtensions = "File con estensione",
 	appearanceHidden = "File nascosti",
@@ -37,7 +38,7 @@
 	appearanceDesktopBackground = "Sfondo Desktop",
 	appearanceDock = "Colore aggancio",
 	appearanceMenu = "Menu",
-	appearanceBlurEnabled = "Interface blurring",
+	appearanceBlurEnabled = "Sfocatura dell'interfaccia",
 	appearanceTransparencyEnabled = "Trasparenza interfaccia",
 	appearanceTransparencyInfo = "Disabilitare le ultime due opzioni ridurrà significativamente il numero di chiamate dirette alla CPU / GPU e aumenterà le prestazioni",
 	appearanceDropDownDefaultBackground = "Sfondo menu a discesa",
@@ -91,8 +92,7 @@
 	systemRAM = "Gestione della memoria",
 	systemUnload = "Carica libreria",
 	systemInfo = "Questa opzione consente di salvare la memoria scaricando le librerie inutilizzate usando il metodo \"Link debole\". Disabilita se si riscontrano rancori o anomalie nel comportamento di sistemi interdipendenti complessi",
-
-	users = "Internauti",
+	
 	usersList = "Gestione degli utenti",
 	usersEditIcon = "Modifica icona",
 	usersChangeName = "Cambia nome",
@@ -104,5 +104,5 @@
 	usersPasswordsArentEqual = "Le password non sono uguali.",
 	usersClaim = "Blocco del computer di reclamo",
 	usersClaimInfo = "Inoltre, è possibile creare un accesso privato al blocco del computer per il giocatore con nome dato. Per farlo, il Giocatore deve essere online",
-	usersClaimPlaceholder = "Digita il nome del giocatore in linea",
+	usersClaimPlaceholder = "Digita il nome del giocatore in linea"
 }

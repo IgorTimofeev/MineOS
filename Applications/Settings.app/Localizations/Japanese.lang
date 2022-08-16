@@ -1,7 +1,7 @@
 {
 	open = "開く",
 	cancel = "キャンセル",
-
+	
 	screen = "画面",
 	screenResolution = "解像度",
 	screenAutoScale = "自動調整",
@@ -10,7 +10,8 @@
 	screenPreferredMonitor = "モニター",
 	screenScaleInfo = "このオプションを使用すると、「黒い四角形」を取り除くための最適な画面解像度を選択できます。",
 	screenInvalidResolution = "解像度は数字で記入します。 ％d より大きくなければならず、最大解像度は ％d を超えてはいけません",
-
+	screenPreciseMode = "精密モード",
+	
 	wallpaper = "壁紙",
 	wallpaperWallpaper = "壁紙",
 	wallpaperScreensaver = "スクリーンセーバー",
@@ -20,10 +21,10 @@
 	wallpaperPath = "壁紙の画像パス",
 	wallpaperEnabled = "壁紙を有効にする",
 	wallpaperBrightness = "壁紙の明るさ",
-	wallpaperStretch = "Stretch",
+	wallpaperStretch = "ストレッチ",
 	wallpaperCenter = "中央",
 	wallpaperInfo = "このオプションを無効にすると、RAMの消費量が大幅に削減され、パフォーマンスが向上します。",
-
+	
 	appearance = "外観",
 	appearanceExtensions = "ファイル拡張子",
 	appearanceHidden = "ファイルを隠す",
@@ -31,18 +32,18 @@
 	appearanceHorizontal = "水平",
 	appearanceVertical = "垂直",
 	appearanceSize = "再婚サイズ",
-	appearanceSpace = "Space between icons",
+	appearanceSpace = "アイコン間のスペース",
 	appearanceColorScheme = "配色",
 	appearanceFiles = "ファイルプロパティ",
 	appearanceDesktopBackground = "デスクトップの背景",
 	appearanceDock = "Dockの背景",
 	appearanceMenu = "Menuの背景",
-	appearanceBlurEnabled = "Interface blurring",
+	appearanceBlurEnabled = "インターフェースのぼかし",
 	appearanceTransparencyEnabled = "インターフェースの透明度",
 	appearanceTransparencyInfo = "最後の2つのオプションを無効にすると、CPU / GPUへのアクセス数が大幅に減り、パフォーマンスが向上します。",
 	appearanceDropDownDefaultBackground = "ドロップダウンメニューの背景",
 	appearanceDropDownDefaultText = "ドロップダウンメニューのテキスト",
-	appearanceDropDownSeparator = "Drop down menu separator",
+	appearanceDropDownSeparator = "ドロップダウンメニューセパレータ",
 	
 	users = "ユーザー",
 	
@@ -91,8 +92,7 @@
 	systemRAM = "メモリ管理",
 	systemUnload = "ライブラリをアップロード",
 	systemInfo = "このオプションは \"Weak Link\"メソッドを使って未使用のライブラリをアンロードすることでメモリを節約します。 複雑な相互依存システムの動作に問題があったり、不具合が発生した場合は、無効にしてください。",
-
-	users = "ユーザー",
+	
 	usersList = "ユーザー管理",
 	usersEditIcon = "アイコンを編集",
 	usersChangeName = "名前を変更",
@@ -102,7 +102,7 @@
 	usersAddPasswordPlaceholder1 = "パスワードを記入",
 	usersAddPasswordPlaceholder2 = "付与されたパスワードを送信",
 	usersPasswordsArentEqual = "パスワードが違います",
-	usersClaim = "Claim computer block",
+	usersClaim = "コンピューターブロックを要求する",
 	usersClaimInfo = "あなたはとあるプレイヤーのためにコンピュータブロックへの私的アクセスを作成することができます。 その場合は、プレーヤーはオンラインでなければなりません",
-	usersClaimPlaceholder = "オンラインのユーザー名を記入",
+	usersClaimPlaceholder = "オンラインのユーザー名を記入"
 }

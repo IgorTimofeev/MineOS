@@ -2,7 +2,7 @@
 	downloading = "ダウンロード中です",
 	CPUArchitecture = "CPUアーキテクチャ",
 	RAMControl = "RAMコントロール",
-	packageUnloading = "Automatic unloading",
+	packageUnloading = "自動アンロード",
 	networkFTPNewConnection = "新規FTP接続",
 	networkFTPConnections = "FTP接続",
 	networkFTPAddress = "サーバーアドレス",
@@ -28,24 +28,24 @@
 	launch = "起動",
 	launchWithArguments = "引数で起動する",
 	dontShowAnymore = "二度と表示しない",
-	newName = "New name",
+	newName = "新しい名前",
 	folderName = "フォルダー名",
 	fileName = "ファイル名",
 	applicationName = "アプリ名",
 	file = "ファイル",
 	notExists = "存在しません",
 	alreadyExists = "既に存在しています",
-	inDirectory = "in folder",
+	inDirectory = "フォルダ内",
 	needReplace = "置き換えますか?",
 	yes = "はい",
 	no = "いいえ",
 	cancel = "キャンセル",
 	open = "開く",
 	applyToAll = "全てに適用",
-	toDirectory = "to folder",
+	toDirectory = "フォルダに",
 	copying = "コピー中",
 	faylaBlyad = "ファイル",
-
+	
 	areYouSure = "本当に実行しますか?",
 	emptyTrash = "ゴミ箱を空にする",
 	type = "種類",
@@ -56,7 +56,9 @@
 	folder = "フォルダー",
 	unknown = "不明",
 	calculatingSize = "計算中…",
-
+	filesWillBeRemovedPermanently = "ファイルは完全に削除されます",
+	fileDeletingFailure = "ファイルの削除に失敗しました",
+	
 	properties = "プロパティ",
 	newFolderFromChosen = "選択したフォルダから新しいフォルダを作成",
 	create = "新規",
@@ -87,38 +89,38 @@
 	flashEEPROM = "EEPROMに焼く",
 	flashingEEPROM = "EEPROMにコピー中です。電源を切らないでください...",
 	print3D = "プリントモデル",
-
+	
 	sortBy = "順序",
 	sortByType = "ファイルタイプ",
 	sortByName = "名前",
 	sortByDate = "日付",
-
+	
 	aboutSystem = "システムについて",
 	updates = "更新",
 	update = "リフレッシュ",
 	shutdown = "シャットダウン",
 	logout = "ログアウト",
 	reboot = "再起動",
-
+	
 	shortcutIsCorrupted = "ショートカットが存在しないファイルにリンクされています",
 	sortAutomatically = "グリッドに合わせて調整",
 	onDesktop = "デスクトップ上",
 	inCurrentDirectory = "現在のフォルダ内",
-
+	
 	errorWhileRunningProgram = "実行中のエラー ",
 	sendedFeedback = "フィードバックが送信されました",
 	sendFeedback = "フィードバックを送る",
 	yourContacts = "あなたの問い合わせ先",
 	additionalInfo = "追加情報",
-	stackTraceback = "Stack traceback",
-
+	stackTraceback = "スタックトレースバック",
+	
 	favourite = "お気に入り",
 	search = "検索",
-	mounts = "Mounts",
-
+	mounts = "マウント",
+	
 	uploadToPastebin = "Pastebinにアップロード",
-	pasteName = "Paste name",
+	pasteName = "名前を貼り付け",
 	uploading = "アップロード中です...",
-	uploadingSuccess = "Uploaded to ",
-	uploadingFailure = "アップロード失敗: ",
+	uploadingSuccess = "にアップロード ",
+	uploadingFailure = "アップロード失敗: "
 }

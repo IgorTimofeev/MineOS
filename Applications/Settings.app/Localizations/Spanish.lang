@@ -1,7 +1,7 @@
 {
 	open = "Abrir",
 	cancel = "Cancelar",
-
+	
 	screen = "Pantalla",
 	screenResolution = "Resolucion",
 	screenAutoScale = "Autoescalado",
@@ -10,7 +10,8 @@
 	screenPreferredMonitor = "Monitor",
 	screenScaleInfo = "Usar Esta Opcion te permitira usar la resolucion mas optima para quitar las \"Barras Negras\"",
 	screenInvalidResolution = "El texto en los input fields deben de consistir de digitos, tiene que ser mayor que %d, y la resolucion maxima no deberia exceder los %d caracteres",
-
+	screenPreciseMode = "Modo preciso",
+	
 	wallpaper = "Fondo",
 	wallpaperWallpaper = "Fondo de Pantalla",
 	wallpaperScreensaver = "Salvapantallas",
@@ -23,7 +24,7 @@
 	wallpaperStretch = "Estirar",
 	wallpaperCenter = "Centrar",
 	wallpaperInfo = "Desactivar esta opcion va a reducir la RAM consumida significativamente y incrementara el rendimiento",
-
+	
 	appearance = "Apariencia",
 	appearanceExtensions = "Extensiones de archivo",
 	appearanceHidden = "Archivos Ocultos",
@@ -31,13 +32,13 @@
 	appearanceHorizontal = "Horizontalmente",
 	appearanceVertical = "Verticalmente",
 	appearanceSize = "Tamaño de los iconos",
-	appearanceSpace = "Space between icons",
+	appearanceSpace = "Espacio entre iconos",
 	appearanceColorScheme = "Esquema de color",
 	appearanceFiles = "Propiedades de archivos",
 	appearanceDesktopBackground = "Fondo de Escritorio",
 	appearanceDock = "Fondo del Dock",
 	appearanceMenu = "Fondo del Menu",
-	appearanceBlurEnabled = "Interface blurring",
+	appearanceBlurEnabled = "Desenfoque de interfaz",
 	appearanceTransparencyEnabled = "Transparecia de la Interfaz",
 	appearanceTransparencyInfo = "Desactivar las Ultimas dos opciones va a reducir significativamenteel numero de llamadas directas a la CPU/GPU y incrementara el rendimiento",
 	appearanceDropDownDefaultBackground = "Fondo del menú desplegable",
@@ -91,8 +92,7 @@
 	systemRAM = "Administracion de la memoria",
 	systemUnload = "Subir libreria",
 	systemInfo = "Esta opcion guarda memoria descargando librerias sin usar usando el metodo de \" Link Debil \". Desactivala si encuantras glitches en el comportamiento de sistemas complejos",
-
-	users = "Usuarios",
+	
 	usersList = "Administracion de usuarios",
 	usersEditIcon = "Editar icono",
 	usersChangeName = "Cambiar nombre",
@@ -104,5 +104,5 @@
 	usersPasswordsArentEqual = "Las contraseñas no coinciden",
 	usersClaim = "Reclamar bloque de ordenador",
 	usersClaimInfo = "Adiccionalmente, puedes crear acceso privado al bloque de ordenador para el jugador con el nombre puesto. Para hacerlo, el jugador debe de estar online",
-	usersClaimPlaceholder = "Pon el nombre de un jugador online",
+	usersClaimPlaceholder = "Pon el nombre de un jugador online"
 }

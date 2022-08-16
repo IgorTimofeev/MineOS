@@ -1,0 +1,18 @@
+{
+	activeEffects = "Aktuálne efekty",
+	sent = "Odoslané",
+	received = "Prijaté",
+	nothingFound = "Nenašli sa žiadne účinky",
+	instructionTitle = "Poučenie",
+	instructionData = "Na ľavej strane obrazovky sú prepínače, ktoré hovoria nanitom, aby aktivovali biokontakty. ",
+	syncWelcome = "Vitajte",
+	syncInfo = "Pred použitím programu vytvorte a vypite balíček nanitov. ",
+	syncProgress = "Existuje synchronizácia s nanitmi, neopúšťajte počítač, kým sa proces nedokončí:",
+	syncContacts = "aktualizácia biokontaktu %d z %d",
+	favourites = "Vybrané efekty",
+	saveConfiguration = "Uložiť konfiguráciu",
+	saveFailed = "Ukladanie zlyhalo: v inventári nie sú žiadne nenakonfigurované nanity",
+	notSynced = "Došlo k nesynchronizácii s nanitmi. ",
+	notWireless = "Počítač má modem, ale naniti vnímajú príkazy výlučne cez bezdrôtovú sieť. ",
+	noModem = "Počítač nemá bezdrôtový modem na odosielanie a prijímanie príkazov nanite cez sieť",
+}

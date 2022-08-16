@@ -1,0 +1,18 @@
+{
+	activeEffects = "Current effectz",
+	sent = "Sent",
+	received = "receivd",
+	nothingFound = "No effectz findz",
+	instructionTitle = "instrucshun",
+	instructionData = "On teh left sied ov teh screen thar r switchez dat tell nanites 2 activaet biocontacts. Each person has  unique configurashun ov biocontacts, allowin nanites 2 impoes various buffs / debuffs. Activating 2 contacts iz saef 4 lief,  largr numbr will caues serious injuries. u can activaet up 2 4 contacts at  tiem. Experiment, look 4 teh desired effectz an add dem 2 ur favorites 4 latr ues. teh button \"saev configurashun\" iz useful 4 transferring 2 ur ofr configurashun ov nanites (4 dis u ned 2 haz an creatd instanec in teh inventowee)",
+	syncWelcome = "welcom",
+	syncInfo = "b4 usin teh program, creaet an drink  packet ov nanites. Then approach teh sistem unit or servr rack wif teh wireless modem installd 4 synchronization",
+	syncProgress = "thar iz  synchronization wif nanites, doez not leef teh computr til teh proces iz completd:",
+	syncContacts = "biocontact updaet %d ov %d",
+	favourites = "selectd effectz",
+	saveConfiguration = "Saev configurashun",
+	saveFailed = "savin faild: in teh inventowee thar r no unconfigured nanites",
+	notSynced = "Thar wuz an out-ov-sync wif nanites. It iz recommendd 2 cloes teh program an start agaen.",
+	notWireless = "teh computr has  modem, but nanites perceiev commandz exclusively ovar teh wireless netwerk. Insert teh wireless modem an twee agaen",
+	noModem = "teh computr doez not haz  wireless modem 2 send an receiev naniet commandz ovar  netwerk"
+}

@@ -1,0 +1,21 @@
+{
+	weekLine = "Mo Di Mi Do Fr Sa So",
+	weekLineAlt = "So Mo Di Mi Do Fr Sa",
+	months = {
+		"Januar",
+		"Februar",
+		"Marsch",
+		"April",
+		"Kann",
+		"Juni",
+		"Juli",
+		"August",
+		"September",
+		"Oktober",
+		"November",
+		"Dezember",
+	},
+	startWeek = "Startwoche ab",
+	monday = "Montag",
+	sunday = "Sonntag",
+}

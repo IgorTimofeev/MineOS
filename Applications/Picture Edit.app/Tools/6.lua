@@ -29,7 +29,7 @@ end
 
 tool.eventHandler = function(workspace, object, e1, e2, e3, e4)
 	if e1 == "touch" or e1 == "drag" then
-		local x, y = e3 - window.image.x + 1, e4 - window.image.y + 1
+		local x, y = math.ceil(e3) - window.image.x + 1, math.ceil(e4) - window.image.y + 1
 		local meow = math.floor(radiusSlider.value)
 
 		for j = y - meow + 1, y + meow - 1 do

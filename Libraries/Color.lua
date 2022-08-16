@@ -60,7 +60,7 @@ if computer.getArchitecture and computer.getArchitecture() == "Lua 5.3" then
 
 				return closestIndex - 1
 			end
-	]])(palette)
+	]], "=lua53colorfunctions")(palette)
 else
 	integerToRGB, RGBToInteger, blend, transition, to8Bit = load([[
 		local mathHuge, palette = math.huge, select(1, ...)
@@ -165,7 +165,7 @@ else
 
 				return closestIndex - 1
 			end
-	]])(palette)
+	]], "=lua52colorfunctions")(palette)
 end
 
 --------------------------------------------------------------------------------

@@ -13,13 +13,14 @@
 	typeUserName = "Pon nombre de usuario",
 	yourText = "Tu:",
 	hereBeYourDialogs = "Aqui estaran tus conversaciones",
-
+	hideApplicationIcons = "Ocultar iconos de aplicaciones",
+	
 	categoryOverview = "Vision General",
 	categoryApplications = "Aplicaciones",
 	categoryLibraries = "Librerias",
-	categoryScripts = "Scripts",
+	categoryScripts = "Guiones",
 	categoryUpdates = "Actualizaciones",
-
+	
 	statisticsNewUser = "Nuevo usuario",
 	statisticsMostPopularUser = "Mas Activo",
 	statisticsUsersCount = "Recuento de usuarios",
@@ -27,7 +28,7 @@
 	statisticsReviewsCount = "Recuento de valoraciones",
 	statisticsPopularPublication = "(publicacion popular)",
 	statisticsMessagesCount = "Recuento de mensajes",
-
+	
 	whatsNew = "Que hay nuevo",
 	whatsNewInVersion = "Que hay nuevo en la version",
 	areYouSure = "Estas seguro que quieres eliminar la publicacion?",
@@ -63,7 +64,7 @@
 	open = "Abrir",
 	clearCache = "Borrar cache",
 	exit = "Cerrar sesion",
-	changePassword = "Change password",
+	changePassword = "Cambia la contraseña",
 	newPassword = "Nueva contraseña",
 	singleSession = "No es mi ordenador",
 	currentPassword = "Contraseña actual",
@@ -72,7 +73,7 @@
 	notRegistered = "No registrado todavia?",
 	createAccount = "Crear Cuenta",
 	registrationSuccessfull = "Checkea tu email y carpeta de spam para verificar tu cuenta",
-
+	
 	search = "Buscar",
 	byPopularity = "Por Popularidad",
 	byRating = "Por Clasificacion",
@@ -87,10 +88,10 @@
 	page = "Pagina",
 	updateAll = "Actualizar Todo",
 	noUpdates = "No tienes actualizaciones",
-
+	
 	changeReview = "Cambiar valoracion",
 	developer = "Desarrollador",
-	version = "Version",
+	version = "Versión",
 	license = "Licencia",
 	category = "Categoria",
 	updated = "Actualizado",
@@ -107,5 +108,5 @@
 	no = "No",
 	of = "de",
 	usersLoveReview = "Usuarios encontraron esta valoracion util",
-	thanksForVote = "Gracias por tu opinion.",
+	thanksForVote = "Gracias por tu opinion."
 }

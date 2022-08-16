@@ -1,0 +1,18 @@
+{
+	activeEffects = "Aktuelle Auswirkungen",
+	sent = "Geschickt",
+	received = "Empfangen",
+	nothingFound = "Keine Effekte gefunden",
+	instructionTitle = "Anweisung",
+	instructionData = "Auf der linken Seite des Bildschirms befinden sich Schalter, die den Naniten sagen, dass sie Biokontakte aktivieren sollen. ",
+	syncWelcome = "Herzlich willkommen",
+	syncInfo = "Erstellen und trinken Sie vor der Verwendung des Programms eine Packung Naniten. ",
+	syncProgress = "Es gibt eine Synchronisierung mit Naniten, verlassen Sie den Computer nicht, bis der Vorgang abgeschlossen ist:",
+	syncContacts = "Biokontakt-Update %d von %d",
+	favourites = "Ausgewählte Effekte",
+	saveConfiguration = "Konfiguration speichern",
+	saveFailed = "Speichern fehlgeschlagen: Im Inventar gibt es keine unkonfigurierten Naniten",
+	notSynced = "Es gab eine Synchronisationsstörung mit Naniten. ",
+	notWireless = "Der Computer hat ein Modem, aber Naniten nehmen Befehle ausschließlich über das drahtlose Netzwerk wahr. ",
+	noModem = "Der Computer verfügt nicht über ein drahtloses Modem zum Senden und Empfangen von Nanitenbefehlen über ein Netzwerk",
+}

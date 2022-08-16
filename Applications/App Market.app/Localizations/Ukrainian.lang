@@ -13,13 +13,14 @@
 	typeUserName = "Введіть ім'я користувача",
 	yourText = "Ви:",
 	hereBeYourDialogs = "Тут будуть відображені ваші діалоги",
+	hideApplicationIcons = "Приховати значки програм",
 	
 	categoryOverview = "Головна",
 	categoryApplications = "Додатки",
 	categoryLibraries = "Бібліотеки",
 	categoryScripts = "Скрипти",
 	categoryUpdates = "Оновлення",
-
+	
 	statisticsNewUser = "Новий користувач",
 	statisticsMostPopularUser = "Найбільш активний",
 	statisticsUsersCount = "Число користувачів",
@@ -51,7 +52,7 @@
 	add = "Додати",
 	relativePath = "Відносний шлях",
 	localizationDependency = "Файл локалізації",
-
+	
 	login = "Авторизація",
 	profile = "Профіль",
 	nickname = "Нікнейм",
@@ -72,7 +73,7 @@
 	notRegistered = "Ще не зареєстровані?",
 	createAccount = "Створити акаунт",
 	registrationSuccessfull = "Перевірте свою пошту і папку спаму, щоб підтвердити аккаунт",
-
+	
 	search = "Пошук",
 	byPopularity = "За популярністю",
 	byRating = "За рейтингом",
@@ -87,7 +88,7 @@
 	page = "Сторінка",
 	updateAll = "Оновити всі",
 	noUpdates = "У вас найновіше ПЗ",
-
+	
 	changeReview = "Змінити відгук",
 	developer = "Розробник",
 	version = "Версія",
@@ -107,5 +108,5 @@
 	no = "Ні",
 	of = "з",
 	usersLoveReview = "користувачів вважають цей відгук корисним",
-	thanksForVote = "Дякую за вашу думку",
+	thanksForVote = "Дякую за вашу думку"
 }

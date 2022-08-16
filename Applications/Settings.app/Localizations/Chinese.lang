@@ -1,7 +1,7 @@
 {
 	open = "打开",
 	cancel = "取消",
-
+	
 	screen = "屏幕",
 	screenResolution = "分辨率",
 	screenAutoScale = "自动缩放",
@@ -10,7 +10,8 @@
 	screenPreferredMonitor = "监视器",
 	screenScaleInfo = "使用此选项将允许您选择最佳屏幕分辨率以消除\"黑矩形\"效果",
 	screenInvalidResolution = "输入字段中的文本应由数字组成, 应大于%d, 并且最大分辨率不应超过%d个字符",
-
+	screenPreciseMode = "精確模式",
+	
 	wallpaper = "壁纸",
 	wallpaperWallpaper = "壁纸",
 	wallpaperScreensaver = "屏幕保护程序",
@@ -23,7 +24,7 @@
 	wallpaperStretch = "填充",
 	wallpaperCenter = "居中",
 	wallpaperInfo = "禁用此选项将显著减少RAM的消耗并提高性能.",
-
+	
 	appearance = "外观",
 	appearanceExtensions = "显示文件扩展名",
 	appearanceHidden = "显示隐藏文件",
@@ -37,7 +38,7 @@
 	appearanceDesktopBackground = "桌面背景",
 	appearanceDock = "Dock背景",
 	appearanceMenu = "目录背景",
-	appearanceBlurEnabled = "Interface blurring",
+	appearanceBlurEnabled = "界面模糊",
 	appearanceTransparencyEnabled = "界面透明度",
 	appearanceTransparencyInfo = "禁用最后两个选项将显著减少对CPU/GPU的直接调用次数并提高性能.",
 	appearanceDropDownDefaultBackground = "下拉菜单背景",
@@ -91,8 +92,7 @@
 	systemRAM = "内存管理",
 	systemUnload = "上传库",
 	systemInfo = "此选项通过使用\"弱链接\"方法卸载未使用的库来节省内存. 如果在复杂的相互依赖系统的行为中遇到任何故障, 请禁用它.",
-
-	users = "用户",
+	
 	usersList = "用户管理",
 	usersEditIcon = "编辑头像",
 	usersChangeName = "更改用户名",
@@ -104,5 +104,5 @@
 	usersPasswordsArentEqual = "输入的密码与原密码不相等",
 	usersClaim = "认领电脑",
 	usersClaimInfo = "此外, 你可以为那名玩家创建私有访问权限到你的电脑. 要这样做,那名玩家必须在线",
-	usersClaimPlaceholder = "输入在线玩家名",
+	usersClaimPlaceholder = "输入在线玩家名"
 }

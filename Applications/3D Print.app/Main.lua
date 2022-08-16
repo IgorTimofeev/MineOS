@@ -533,10 +533,14 @@ toolLayout.eventHandler = function(workspace, toolLayout, e1, e2, e3, e4, e5)
 end
 
 local shapeX, shapeY, shapeZ
+
 view.eventHandler = function(workspace, view, e1, e2, e3, e4, e5)
 	if e1 == "touch" or e1 == "drag" then
+		e3, e4 = math.ceil(e3), math.ceil(e4)
+
 		if e5 == 0 then
 			local selectedShape = getSelectedShapeIndex()
+			
 			if selectedShape then
 				local shape = model.shapes[selectedShape]
 				local x = math.floor((e3 - view.x) / view.width * 16)
@@ -546,6 +550,7 @@ view.eventHandler = function(workspace, view, e1, e2, e3, e4, e5)
 					shapeX, shapeY, shapeZ = x, y, currentLayer
 					shape[1], shape[2], shape[3] = x, y, currentLayer
 					shape[4], shape[5], shape[6] = x + 1, y + 1, currentLayer + 1
+				
 				elseif shapeX then
 					shape[1], shape[2], shape[3] = shapeX, shapeY, shapeZ
 					shape[4], shape[5], shape[6] = x, y, currentLayer
@@ -562,6 +567,7 @@ view.eventHandler = function(workspace, view, e1, e2, e3, e4, e5)
 				shape = model.shapes[i]
 
 				local focused, x, y, width, height = getShapeDrawingData(shape)
+				
 				if focused and e3 >= x and e3 <= x + width - 1 and e4 >= y and e4 <= y + height - 1 then
 					for j = 1, shapesComboBox:count() do
 						if shapesComboBox:getItem(j).shapeIndex == i then

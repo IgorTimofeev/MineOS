@@ -4,15 +4,61 @@ local image = require("Image")
 
 --------------------------------------------------------------------------------
 
-local bufferWidth, bufferHeight
-local currentFrameBackgrounds, currentFrameForegrounds, currentFrameSymbols, newFrameBackgrounds, newFrameForegrounds, newFrameSymbols
-local drawLimitX1, drawLimitX2, drawLimitY1, drawLimitY2
-local GPUProxy, GPUProxyGetResolution, GPUProxySetResolution, GPUProxyGetBackground, GPUProxyGetForeground, GPUProxySetBackground, GPUProxySetForeground, GPUProxyGet, GPUProxySet, GPUProxyFill
+local
+	componentInvoke,
 
-local mathCeil, mathFloor, mathModf, mathAbs, mathMin, mathMax = math.ceil, math.floor, math.modf, math.abs, math.min, math.max
-local tableInsert, tableConcat = table.insert, table.concat
-local colorBlend, colorRGBToInteger, colorIntegerToRGB = color.blend, color.RGBToInteger, color.integerToRGB
-local unicodeLen, unicodeSub = unicode.len, unicode.sub
+	mathCeil,
+	mathFloor,
+	mathModf,
+	mathAbs,
+	mathMin,
+	mathMax,
+
+	tableInsert,
+	tableConcat,
+
+	colorBlend,
+	colorRGBToInteger,
+	colorIntegerToRGB,
+
+	unicodeLen,
+	unicodeSub,
+
+	bufferWidth,
+	bufferHeight,
+
+	currentFrameBackgrounds,
+	currentFrameForegrounds,
+	currentFrameSymbols,
+	newFrameBackgrounds,
+	newFrameForegrounds,
+	newFrameSymbols,
+
+	drawLimitX1,
+	drawLimitX2,
+	drawLimitY1,
+	drawLimitY2,
+
+	GPUAddress =
+
+	component.invoke,
+
+	math.ceil,
+	math.floor,
+	math.modf,
+	math.abs,
+	math.min,
+	math.max,
+
+	table.insert,
+	table.concat,
+
+	color.blend,
+	color.RGBToInteger,
+	color.integerToRGB,
+
+	unicode.len,
+	unicode.sub;
 
 --------------------------------------------------------------------------------
 
@@ -46,7 +92,7 @@ end
 
 local function flush(width, height)
 	if not width or not height then
-		width, height = GPUProxyGetResolution()
+		width, height = componentInvoke(GPUAddress, "getResolution")
 	end
 
 	currentFrameBackgrounds, currentFrameForegrounds, currentFrameSymbols, newFrameBackgrounds, newFrameForegrounds, newFrameSymbols = {}, {}, {}, {}, {}, {}
@@ -67,9 +113,42 @@ local function flush(width, height)
 	end
 end
 
+local function getGPUAddress()
+	return GPUAddress
+end
+
+local function setGPUAddress(address)
+	GPUAddress = address
+	flush()
+end
+
+local function getScreenAddress()
+	return componentInvoke(GPUAddress, "getScreen")
+end
+
+local function getMaxResolution()
+	return componentInvoke(GPUAddress, "maxResolution")
+end
+
 local function setResolution(width, height)
-	GPUProxySetResolution(width, height)
+	componentInvoke(GPUAddress, "setResolution", width, height)
 	flush(width, height)
+end
+
+local function getColorDepth()
+	return componentInvoke(GPUAddress, "getDepth")
+end
+
+local function setColorDepth(...)
+	return componentInvoke(GPUAddress, "setDepth", ...)
+end
+
+local function getMaxColorDepth(...)
+	return componentInvoke(GPUAddress, "maxDepth")
+end
+
+local function getScreenAspectRatio()
+	return componentInvoke(getScreenAddress(), "getAspectRatio")
 end
 
 local function getResolution()
@@ -84,41 +163,18 @@ local function getHeight()
 	return bufferHeight
 end
 
-local function bind(address, reset)
-	local success, reason = GPUProxy.bind(address, reset)
+local function setScreenAddress(address, reset)
+	local success, reason = componentInvoke(GPUAddress, "bind", address, reset)
+
 	if success then
 		if reset then
-			setResolution(GPUProxy.maxResolution())
+			setResolution(getMaxResolution())
 		else
 			setResolution(bufferWidth, bufferHeight)
 		end
 	else
 		return success, reason
 	end
-end
-
-local function getGPUProxy()
-	return GPUProxy
-end
-
-local function updateGPUProxyMethods()
-	GPUProxyGet = GPUProxy.get
-	GPUProxyGetResolution = GPUProxy.getResolution
-	GPUProxyGetBackground = GPUProxy.getBackground
-	GPUProxyGetForeground = GPUProxy.getForeground
-
-	GPUProxySet = GPUProxy.set
-	GPUProxySetResolution = GPUProxy.setResolution
-	GPUProxySetBackground = GPUProxy.setBackground
-	GPUProxySetForeground = GPUProxy.setForeground
-
-	GPUProxyFill = GPUProxy.fill
-end
-
-local function setGPUProxy(proxy)
-	GPUProxy = proxy
-	updateGPUProxyMethods()
-	flush()
 end
 
 local function getScaledResolution(scale)
@@ -128,8 +184,8 @@ local function getScaledResolution(scale)
 		scale = 0.1
 	end
 
-	local aspectWidth, aspectHeight = component.proxy(GPUProxy.getScreen()).getAspectRatio()
-	local maxWidth, maxHeight = GPUProxy.maxResolution()
+	local aspectWidth, aspectHeight = getScreenAspectRatio()
+	local maxWidth, maxHeight = getMaxResolution()
 	local proportion = 2 * (16 * aspectWidth - 4.5) / (16 * aspectHeight - 4.5)
 	 
 	local height = scale * mathMin(
@@ -700,7 +756,7 @@ end
 
 --------------------------------------------------------------------------------
 
-local function update(force)	
+local function update(force)
 	local index, indexStepOnEveryLine, changes = bufferWidth * (drawLimitY1 - 1) + drawLimitX1, (bufferWidth - drawLimitX2 + drawLimitX1 - 1), {}
 	local x, equalChars, equalCharsIndex, charX, charIndex, currentForeground
 	local currentFrameBackground, currentFrameForeground, currentFrameSymbol, changesCurrentFrameBackground, changesCurrentFrameBackgroundCurrentFrameForeground
@@ -769,16 +825,16 @@ local function update(force)
 	
 	-- Draw grouped pixels on screen
 	for background, foregrounds in pairs(changes) do
-		GPUProxySetBackground(background)
+		componentInvoke(GPUAddress, "setBackground", background)
 
 		for foreground, pixels in pairs(foregrounds) do
 			if currentForeground ~= foreground then
-				GPUProxySetForeground(foreground)
+				componentInvoke(GPUAddress, "setForeground", foreground)
 				currentForeground = foreground
 			end
 
 			for i = 1, #pixels, 3 do
-				GPUProxySet(pixels[i], pixels[i + 1], pixels[i + 2])
+				componentInvoke(GPUAddress, "set", pixels[i], pixels[i + 1], pixels[i + 2])
 			end
 		end
 	end
@@ -794,16 +850,27 @@ return {
 	resetDrawLimit = resetDrawLimit,
 	getDrawLimit = getDrawLimit,
 	flush = flush,
+	
 	setResolution = setResolution,
-	bind = bind,
-	setGPUProxy = setGPUProxy,
-	getGPUProxy = getGPUProxy,
+	getMaxResolution = getMaxResolution,
+
+	setGPUAddress = setGPUAddress,
+	getGPUAddress = getGPUAddress,
+	setScreenAddress = setScreenAddress,
+	
+	getColorDepth = getColorDepth,
+	setColorDepth = setColorDepth,
+	getMaxColorDepth = getMaxColorDepth,
+
 	getScaledResolution = getScaledResolution,
 	getResolution = getResolution,
 	getWidth = getWidth,
 	getHeight = getHeight,
 	getCurrentFrameTables = getCurrentFrameTables,
 	getNewFrameTables = getNewFrameTables,
+
+	getScreenAspectRatio = getScreenAspectRatio,
+	getScreenAddress = getScreenAddress,
 
 	rawSet = rawSet,
 	rawGet = rawGet,

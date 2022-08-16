@@ -1,0 +1,21 @@
+{
+	weekLine = "Mo Tu We Th Fr Sa Su",
+	weekLineAlt = "Su Mo Tu We Th Fr Sa",
+	months = {
+		"一月",
+		"二月",
+		"行进",
+		"四月",
+		"可能",
+		"六月",
+		"七月",
+		"八月",
+		"九月",
+		"十月",
+		"十一月",
+		"十二月",
+	},
+	startWeek = "开始周从",
+	monday = "周一",
+	sunday = "星期日",
+}

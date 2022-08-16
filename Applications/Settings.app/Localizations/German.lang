@@ -1,7 +1,7 @@
 {
 	open = "Öffnen",
 	cancel = "Stornieren",
-
+	
 	screen = "Bildschirm",
 	screenResolution = "Auflösung",
 	screenAutoScale = "Automatische Skalierung",
@@ -10,9 +10,10 @@
 	screenPreferredMonitor = "Überwachung",
 	screenScaleInfo = "Mit dieser option können Sie die optimale Bildschirmauflösung auswählen, um den \"schwarze Rechtecke\" - Effekt loszuwerden",
 	screenInvalidResolution = "Der text in den Eingabefeldern sollte aus Ziffern bestehen, sollte größer als %d sein und die maximale Auflösung sollte %d Zeichen nicht überschreiten",
-
-	wallpaper = "Wallpaper",
-	wallpaperWallpaper = "Wallpaper",
+	screenPreciseMode = "Präziser Modus",
+	
+	wallpaper = "Hintergrund",
+	wallpaperWallpaper = "Hintergrund",
 	wallpaperScreensaver = "Bildschirmschoner",
 	wallpaperScreensaverPath = "Screensaver Schrift-Pfad",
 	wallpaperScreensaverEnabled = "Bildschirmschoner aktiviert",
@@ -23,7 +24,7 @@
 	wallpaperStretch = "Strecken",
 	wallpaperCenter = "Center",
 	wallpaperInfo = "Wenn Sie diese option deaktivieren, wird der RAM-Verbrauch erheblich reduziert und die Leistung erhöht",
-
+	
 	appearance = "Aussehen",
 	appearanceExtensions = "Dateierweiterung",
 	appearanceHidden = "Versteckte Dateien",
@@ -37,7 +38,7 @@
 	appearanceDesktopBackground = "Desktophintergrund",
 	appearanceDock = "Dock Farbe",
 	appearanceMenu = "Menü",
-	appearanceBlurEnabled = "Interface blurring",
+	appearanceBlurEnabled = "Unschärfe der Benutzeroberfläche",
 	appearanceTransparencyEnabled = "Interface Transparenz",
 	appearanceTransparencyInfo = "Das deaktivieren der letzten beiden Optionen reduziert die Anzahl der direkten Aufrufe an die CPU / GPU erheblich und erhöht die Leistung",
 	appearanceDropDownDefaultBackground = "Dropdown-Menü hintergrund",
@@ -64,7 +65,7 @@
 	networkThis = "Dieser PC-Einstellungen",
 	networkNoModem = "Schließen Sie das modem an, um Netzwerkfunktionen zu verwenden",
 	
-	tasks = "Autostart",
+	tasks = "Auto-Start",
 	tasksInfo = "Sie können so viele Skripts hinzufügen, wie Sie Sie automatisch zur angegebenen Zeit ausführen möchten",
 	tasksBefore = "Vor dem ausführen des Betriebssystems ausführen",
 	tasksAfter = "Nach dem Start des Betriebssystems ausführen",
@@ -91,8 +92,7 @@
 	systemRAM = "Speichermanagement",
 	systemUnload = "Bibliothek hochladen",
 	systemInfo = "Diese option speichert Speicher, indem unbenutzte Bibliotheken mit der Methode \"Weak Link\" entladen werden. Deaktivieren Sie es, wenn Sie irgendwelche Groll oder Pannen im Verhalten von komplexen voneinander abhängigen Systemen auftreten",
-
-	users = "Internetnutzer",
+	
 	usersList = "Benutzerverwaltung",
 	usersEditIcon = "Symbol Bearbeiten",
 	usersChangeName = "Name ändern",
@@ -104,5 +104,5 @@
 	usersPasswordsArentEqual = "Passwörter sind nicht gleich",
 	usersClaim = "Computer blockieren",
 	usersClaimInfo = "Zusätzlich können Sie privaten Zugang zu Ihrem computerblock für Spieler mit gegebenem Namen verursachen. Um es zu tun, Spieler muss online sein",
-	usersClaimPlaceholder = "Geben Sie den Namen des online-Spielers ein",
+	usersClaimPlaceholder = "Geben Sie den Namen des online-Spielers ein"
 }

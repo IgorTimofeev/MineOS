@@ -1,0 +1,18 @@
+{
+	activeEffects = "Nykyiset vaikutukset",
+	sent = "Lähetetty",
+	received = "Sai",
+	nothingFound = "Vaikutuksia ei löytynyt",
+	instructionTitle = "Ohje",
+	instructionData = "Näytön vasemmalla puolella on kytkimet, jotka käskevät naniiteja aktivoimaan biokontakteja. ",
+	syncWelcome = "Tervetuloa",
+	syncInfo = "Ennen kuin käytät ohjelmaa, luo ja juo naniittipaketti. ",
+	syncProgress = "Synkronointi nanitien kanssa, älä poistu tietokoneesta ennen kuin prosessi on valmis:",
+	syncContacts = "biokontaktien päivitys %d/%d",
+	favourites = "Valitut tehosteet",
+	saveConfiguration = "Tallenna määritykset",
+	saveFailed = "Tallennus epäonnistui: luettelossa ei ole määrittämättömiä naniiteja",
+	notSynced = "Naniitien kanssa tapahtui synkronointi. ",
+	notWireless = "Tietokoneessa on modeemi, mutta nanitit havaitsevat komennot yksinomaan langattoman verkon kautta. ",
+	noModem = "Tietokoneessa ei ole langatonta modeemia nanite-komentojen lähettämiseen ja vastaanottamiseen verkon kautta",
+}

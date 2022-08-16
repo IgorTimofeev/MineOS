@@ -45,18 +45,20 @@
 	toDirectory = "kansiosta",
 	copying = "Kopioidaan",
 	faylaBlyad = "tiedosto",
-
+	
 	areYouSure = "Oletko varma?",
 	emptyTrash = "Tyhjää roskakori",
 	type = "Tyyppi",
 	size = "Koko",
-	date = "Date",
+	date = "Päivämäärä",
 	name = "Nimi",
 	path = "Polku",
 	folder = "Kansio",
 	unknown = "Tuntematon",
 	calculatingSize = "lasketaan…",
-
+	filesWillBeRemovedPermanently = "tiedosto(t) poistetaan pysyvästi",
+	fileDeletingFailure = "Tiedoston poistaminen epäonnistui",
+	
 	properties = "Ominaisuudet",
 	newFolderFromChosen = "Uusi kansio valinnasta",
 	create = "Uusi",
@@ -87,38 +89,38 @@
 	flashEEPROM = "Polta EEPROMiin",
 	flashingEEPROM = "Poltto käynnissä, älä sammuta tietokonetta...",
 	print3D = "Tulosta malli",
-
+	
 	sortBy = "Lajittele",
 	sortByType = "Tyypin mukaan",
 	sortByName = "Nimen mukaan",
 	sortByDate = "Päivämärän mukaan",
-
+	
 	aboutSystem = "Tietoja...",
 	updates = "Päivitykset",
 	update = "Päivitä",
 	shutdown = "Sammuta tietokone",
 	logout = "Kirjaudu ulos",
 	reboot = "Käynnistä uudelleen",
-
+	
 	shortcutIsCorrupted = "Lähdetiedosto puuttuu",
 	sortAutomatically = "Ruudukoi",
 	onDesktop = "Työpöydällä",
 	inCurrentDirectory = "Tämänhetkisessä tiedostossa",
-
+	
 	errorWhileRunningProgram = "Virhe suorittaessa ",
 	sendedFeedback = "Palaute lähetetty",
 	sendFeedback = "Lähetä palautetta",
 	yourContacts = "Yhteystietosi",
 	additionalInfo = "Lisätiedot",
 	stackTraceback = "Pinon jäljitys",
-
+	
 	favourite = "Suosikki",
 	search = "Haku",
 	mounts = "Asemat",
-
+	
 	uploadToPastebin = "Lataa Pastebiniin",
 	pasteName = "Paste-nimi",
 	uploading = "Lataus käynnissä...",
 	uploadingSuccess = "Ladattu ",
-	uploadingFailure = "Lataus epäonnistui: ",
+	uploadingFailure = "Lataus epäonnistui: "
 }

@@ -1,0 +1,21 @@
+{
+	weekLine = "Mo Tu We Th Fr Sa Su",
+	weekLineAlt = "Su Mo Tu We Th Fr Sa",
+	months = {
+		"1월",
+		"2월",
+		"3월",
+		"4월",
+		"5월",
+		"6월",
+		"칠월",
+		"팔월",
+		"구월",
+		"십월",
+		"십일월",
+		"12월",
+	},
+	startWeek = "다음 주부터 시작",
+	monday = "월요일",
+	sunday = "일요일",
+}
