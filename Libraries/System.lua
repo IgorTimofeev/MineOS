@@ -2420,7 +2420,7 @@ function system.updateDesktop()
 			if dockContainer.children[i].keepInDock then
 				-- RU чекаем новое прикрепление к dock, если ярлык, то ищем оригинальный файл и прикрепляем его
 				-- EN check the new attachment to the dock, if it's a shortcut, then look for the original file and attach it
-				while dockContainer.children[i].path:sub(-#ending) == ".lnk" do
+				while dockContainer.children[i].path:sub(-4) == ".lnk" do
 					dockContainer.children[i].path = system.readShortcut(dockContainer.children[i].path)
 				end
 				table.insert(userSettings.dockShortcuts, dockContainer.children[i].path)
