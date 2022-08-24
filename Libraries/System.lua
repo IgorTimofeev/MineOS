@@ -2450,6 +2450,11 @@ function system.updateDesktop()
 	}
 
 	dockContainer.addIcon = function(path)
+		-- RU чекаем новое прикрепление к dock, если ярлык, то ищем оригинальный файл и прикрепляем его
+		-- EN check the new attachment to the dock, if it's a shortcut, then look for the original file and attach it
+		while path:sub(-4) == ".lnk" do
+			path = system.readShortcut(path)
+		end
 		local icon = dockContainer:addChild(system.icon(1, 2, path, dockColors))
 		icon:analyseExtension(iconLaunchers)
 		icon:moveBackward()
