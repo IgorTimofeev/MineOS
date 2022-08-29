@@ -3923,6 +3923,15 @@ end
 local function dropDownMenuItemEventHandler(workspace, object, e1, ...)
 	if e1 == "touch" then
 		if object.type == 1 and not object.pressed then
+
+			dropDownMenuReleaseItems(object.parent.parent)
+			if #object.parent.parent.subMenus then
+				for i, subMenu in ipairs(object.parent.parent.subMenus) do
+			 		subMenu:remove()
+			 		table.remove(object.parent.parent.subMenus, i)
+			 	end
+			end
+
 			object.pressed = true
 			workspace:draw()
 
@@ -3934,7 +3943,7 @@ local function dropDownMenuItemEventHandler(workspace, object, e1, ...)
 					object.subMenu.localX = object.parent.parent.localX - object.subMenu.width
 					object.parent.parent:moveToFront()
 				end
-
+				table.insert(object.parent.parent.subMenus, object.subMenu)
 				workspace:draw()
 			else
 				event.sleep(0.2)
@@ -4133,6 +4142,7 @@ function GUI.dropDownMenu(x, y, width, maximumHeight, itemHeight, backgroundColo
 	menu.eventHandler = dropDownMenuEventHandler
 	menu.update = dropDownMenuUpdate
 
+	menu.subMenus = {}	
 	return menu
 end
 
