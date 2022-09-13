@@ -886,10 +886,10 @@ end
 --------------------------------------------------------------------------------
 
 function GUI.actionButtons(x, y, fatSymbol)
-	local symbol = fatSymbol or "●"
+	local symbol = fatSymbol and "●"
 
 	if _G._OCVERSION <= 175 then
-		local symbol = fatSymbol and "⬤" or "●"
+		symbol = fatSymbol and "⬤" or "●"
 	end
 
 	local container = GUI.container(x, y, 5, 1)
