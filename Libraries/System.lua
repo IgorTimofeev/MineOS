@@ -3174,7 +3174,6 @@ _G.print = function(...)
 	system.consoleWindow:focus()
 end
 
-_G._OCVERSION = tonumber(tostring(filesystem.read("/lib/core/boot.lua"):match("OpenOS %d+.%d+.%d+"):match("%d+.%d+.%d+"):gsub("%.", "")))
 --------------------------------------------------------------------------------
 
 return system
