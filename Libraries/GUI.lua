@@ -886,7 +886,7 @@ end
 --------------------------------------------------------------------------------
 
 function GUI.actionButtons(x, y, fatSymbol)
-	local symbol = fatSymbol and "⬤" or "●"
+	local symbol = "●"
 	
 	local container = GUI.container(x, y, 5, 1)
 	container.close = container:addChild(GUI.button(1, 1, 1, 1, nil, 0xFF4940, nil, 0x992400, symbol))
