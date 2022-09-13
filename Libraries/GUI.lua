@@ -886,8 +886,12 @@ end
 --------------------------------------------------------------------------------
 
 function GUI.actionButtons(x, y, fatSymbol)
-	local symbol = fatSymbol and "⬤" or "●"
-	
+	local symbol = fatSymbol and "●"
+
+	if _G._OCVERSION <= 175 then
+		symbol = fatSymbol and "⬤" or "●"
+	end
+
 	local container = GUI.container(x, y, 5, 1)
 	container.close = container:addChild(GUI.button(1, 1, 1, 1, nil, 0xFF4940, nil, 0x992400, symbol))
 	container.minimize = container:addChild(GUI.button(3, 1, 1, 1, nil, 0xFFB640, nil, 0x996D00, symbol))
