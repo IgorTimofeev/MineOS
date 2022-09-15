@@ -2171,19 +2171,21 @@ function system.error(path, line, traceback)
 	-- Read part of file to display error line
 	-- GUI.alert("SYS", path)
 
-	for line in filesystem.lines(path) do
-		if lineCounter >= codeView.fromLine and lineCounter <= toLine then
-			codeView.lines[lineCounter] = line:gsub("\t", "  ")
-		elseif lineCounter < codeView.fromLine then
-			codeView.lines[lineCounter] = " "
-		elseif lineCounter > toLine then
-			break
-		end
-		
-		lineCounter = lineCounter + 1
-		
-		if lineCounter % 200 == 0 then
-			computer.pullSignal(0)
+	if filesystem.exists(path) then
+		for line in filesystem.lines(path) do
+			if lineCounter >= codeView.fromLine and lineCounter <= toLine then
+				codeView.lines[lineCounter] = line:gsub("\t", "  ")
+			elseif lineCounter < codeView.fromLine then
+				codeView.lines[lineCounter] = " "
+			elseif lineCounter > toLine then
+				break
+			end
+			
+			lineCounter = lineCounter + 1
+			
+			if lineCounter % 200 == 0 then
+				computer.pullSignal(0)
+			end
 		end
 	end
 
@@ -2218,7 +2220,7 @@ function system.error(path, line, traceback)
 	workspace:draw()
 
 	for i = 1, 3 do
-		component.get("computer").beep(1500, 0.08)
+		computer.beep(1500, 0.08)
 	end
 end
 
@@ -2646,6 +2648,7 @@ function system.updateDesktop()
 			"Yakov Verevkin, vk.com/id60991376",
 			"Alexey Smirnov, vk.com/id23897419",
 			"Timofey Shestakov, vk.com/id113499693",
+			"Fedor Cheremisenov, vk.com/id402150900",
 			" ",
 			"UX-advisers:",
 			" ",
