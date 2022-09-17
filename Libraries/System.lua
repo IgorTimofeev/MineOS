@@ -2648,6 +2648,7 @@ function system.updateDesktop()
 			"Yakov Verevkin, vk.com/id60991376",
 			"Alexey Smirnov, vk.com/id23897419",
 			"Timofey Shestakov, vk.com/id113499693",
+			"Alexander Fursenko, vk.com/fredber525",
 			"Fedor Cheremisenov, vk.com/id402150900",
 			" ",
 			"UX-advisers:",
