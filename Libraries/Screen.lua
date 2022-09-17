@@ -251,6 +251,7 @@ local function drawRectangle(x, y, width, height, background, foreground, symbol
 	end
 
 	temp = bufferWidth * (y - 1) + x
+
 	local indexStepOnEveryLine = bufferWidth - width
 
 	if transparency then
@@ -430,6 +431,7 @@ local function rasterizeLine(x1, y1, x2, y2, method)
 
 	local outLoopValue, outLoopValueCounter, outLoopValueTriggerIncrement = outLoopValueFrom, 1, inLoopValueDelta / outLoopValueDelta
 	local outLoopValueTrigger = outLoopValueTriggerIncrement
+	
 	for inLoopValue = inLoopValueFrom, inLoopValueTo, inLoopValueFrom < inLoopValueTo and 1 or -1 do
 		if isReversed then
 			method(outLoopValue, inLoopValue)
@@ -502,6 +504,7 @@ local function rasterizePolygon(centerX, centerY, startX, startY, countOfEdges, 
 		local radDegree = math.rad(degree)
 		local deltaX2 = math.sin(radDegree) * radius
 		local deltaY2 = math.cos(radDegree) * radius
+		
 		return round(centerX + deltaX2), round(centerY + (deltaY >= 0 and deltaY2 or -deltaY2))
 	end
 
@@ -564,6 +567,7 @@ local function drawImage(x, y, picture, blendForeground)
 
 	-- Right
 	temp = x + clippedImageWidth - 1
+	
 	if temp > drawLimitX2 then
 		clippedImageWidth = clippedImageWidth - temp + drawLimitX2
 	end
@@ -576,6 +580,7 @@ local function drawImage(x, y, picture, blendForeground)
 
 	-- Bottom
 	temp = y + clippedImageHeight - 1
+	
 	if temp > drawLimitY2 then
 		clippedImageHeight = clippedImageHeight - temp + drawLimitY2
 	end
@@ -729,9 +734,11 @@ end
 
 local function getConnectionPoints(points, time)
 	local connectionPoints = {}
+	
 	for point = 1, #points - 1 do
 		tableInsert(connectionPoints, getPointTimedPosition(points[point], points[point + 1], time))
 	end
+
 	return connectionPoints
 end
 
@@ -745,6 +752,7 @@ end
 
 local function drawSemiPixelCurve(points, color, precision)
 	local linePoints = {}
+	
 	for time = 0, 1, precision or 0.01 do
 		tableInsert(linePoints, getMainPointPosition(points, time))
 	end
@@ -760,12 +768,12 @@ local function update(force)
 	local index, indexStepOnEveryLine, changes = bufferWidth * (drawLimitY1 - 1) + drawLimitX1, (bufferWidth - drawLimitX2 + drawLimitX1 - 1), {}
 	local x, equalChars, equalCharsIndex, charX, charIndex, currentForeground
 	local currentFrameBackground, currentFrameForeground, currentFrameSymbol, changesCurrentFrameBackground, changesCurrentFrameBackgroundCurrentFrameForeground
-
 	local changesCurrentFrameBackgroundCurrentFrameForegroundIndex
 
 	for y = drawLimitY1, drawLimitY2 do
 		x = drawLimitX1
-		while x <= drawLimitX2 do			
+
+		while x <= drawLimitX2 do
 			-- Determine if some pixel data was changed (or if <force> argument was passed)
 			if
 				currentFrameBackgrounds[index] ~= newFrameBackgrounds[index] or
@@ -781,6 +789,7 @@ local function update(force)
 
 				-- Look for pixels with equal chars from right of current pixel
 				equalChars, equalCharsIndex, charX, charIndex = {currentFrameSymbol}, 2, x + 1, index + 1
+				
 				while charX <= drawLimitX2 do
 					-- Pixels becomes equal only if they have same background and (whitespace char or same foreground)
 					if	
