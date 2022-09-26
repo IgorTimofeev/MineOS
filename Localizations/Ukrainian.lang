@@ -2,7 +2,7 @@
 	downloading = "Виконується завантаження",
 	CPUArchitecture = "Архітектура процесора",
 	RAMControl = "Контроль оперативної пам'яті ",
-	packageUnloading = "Автоматичне розвантаження",
+	packageUnloading = "Автоматичне вивантаження",
 	networkFTPNewConnection = "FTP-з'єднання",
 	networkFTPConnections = "FTP-підключення",
 	networkFTPAddress = "Адреса сервера",
