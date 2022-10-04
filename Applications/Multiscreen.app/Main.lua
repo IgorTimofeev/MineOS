@@ -293,7 +293,7 @@ local function mainMenu(force)
 						if e1 == "touch" then
 							if e2 ~= mainScreenAddress then
 								GPUProxy.bind(e2, false)
-								GPUProxy.setColorDepth(8)
+								GPUProxy.setDepth(8)
 								GPUProxy.setResolution(baseResolutionWidth, baseResolutionHeight)
 								GPUProxy.setBackground(color.HSBToInteger(hue, 1, 1))
 								GPUProxy.setForeground(0x0)
