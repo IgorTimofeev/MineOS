@@ -1285,7 +1285,7 @@ local function listIconFieldUpdateFileList(iconField)
 				
 				iconField:addRow(
 					icon,
-					GUI.tableTextCell(iconField.cell2Colors, os.date(userSettings.timeFormat, math.floor(filesystem.lastModified(file) / 1000))),
+					GUI.tableTextCell(iconField.cell2Colors, os.date(userSettings.timeFormat, math.floor(filesystem.lastModified(file) / 1000 + userSettings.timeTimezone))),
 					GUI.tableTextCell(iconField.cell2Colors, icon.isDirectory and "-" or number.roundToDecimalPlaces(filesystem.size(file) / 1024, 2) .. " KB"),
 					GUI.tableTextCell(iconField.cell2Colors, icon.isDirectory and localization.folder or(icon.extension and icon.extension:sub(2, 2):upper() .. icon.extension:sub(3, -1) or "-"))
 				)
@@ -1811,7 +1811,7 @@ end
 local function updateDesktopMenuAndGetTopmostWindow()
 	local topmostWindow = desktopWindowsContainer.children[#desktopWindowsContainer.children]
 
-	desktopMenu.children = topmostWindow and topmostWindow.menu.children or system.menuInitialChildren
+	desktopMenu.children = topmostWindow and topmostWindow.menu and topmostWindow.menu.children or system.menuInitialChildren
 
 	return topmostWindow
 end
@@ -1982,7 +1982,7 @@ end
 function system.addPropertiesWindow(x, y, width, icon)
 	local workspace, window = system.addWindow(GUI.titledWindow(x, y, width, 1, localization.properties), true, true)
 
-	window.backgroundPanel.colors.transparency = 0.2
+	window.backgroundPanel.colors.transparency = userSettings.interfaceTransparencyEnabled and 0.2
 	window:addChild(GUI.image(2, 3, icon.image))
 
 	local x, y = 11, 3
@@ -1996,7 +1996,7 @@ function system.addPropertiesWindow(x, y, width, icon)
 
 	addKeyAndValue(localization.type, icon.extension or(icon.isDirectory and localization.folder or localization.unknown))
 	local sizeKeyAndValue = addKeyAndValue(localization.size, icon.isDirectory and "-" or string.format("%.2f", filesystem.size(icon.path) / 1024) .. " KB")
-	addKeyAndValue(localization.date, os.date("%d.%m.%y, %H:%M", math.floor(filesystem.lastModified(icon.path) / 1000)))
+	addKeyAndValue(localization.date, os.date("%d.%m.%y, %H:%M", math.floor(filesystem.lastModified(icon.path) / 1000 + userSettings.timeTimezone)))
 	addKeyAndValue(localization.path, " ")
 
 	local textBox = window:addChild(GUI.textBox(17, y - 1, window.width - 18, 1, nil, 0x555555, {icon.path}, 1, 0, 0, true, true))
