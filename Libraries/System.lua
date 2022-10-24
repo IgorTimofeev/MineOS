@@ -878,7 +878,7 @@ local function iconOnRightClick(selectedIcons, icon, e1, e2, e3, e4)
 
 	contextMenu:addItem(localization.properties).onTouch = function()
 		for i = 1, #selectedIcons do
-			system.addPropertiesWindow(e3, e4, 46, selectedIcons[i])
+			system.addPropertiesWindow(math.ceil(e3), math.ceil(e4), 46, selectedIcons[i])
 		end
 	end
 
@@ -2648,8 +2648,8 @@ function system.updateDesktop()
 			"Yakov Verevkin, vk.com/id60991376",
 			"Alexey Smirnov, vk.com/id23897419",
 			"Timofey Shestakov, vk.com/id113499693",
+			"Alexander Fursenko, vk.com/fredber525",
 			"Fedor Cheremisenov, vk.com/id402150900",
-			"Alexander Fursenko, vk.com/id354154139",
 			" ",
 			"UX-advisers:",
 			" ",
