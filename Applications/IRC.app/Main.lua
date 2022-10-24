@@ -1,4 +1,3 @@
-
 local screen = require("Screen")
 local GUI = require("GUI")
 local color = require("Color")
@@ -146,12 +145,47 @@ local loginPortInput = loginServerLayout:addChild(GUI.input(1, 1, loginServerLay
 
 local loginUsernameInput = GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x787878, 0xB4B4B4, 0xE1E1E1, 0x2D2D2D, config.username or "", "Username")
 local loginPasswordInput = GUI.input(1, 1, 36, 3, 0xE1E1E1, 0x787878, 0xB4B4B4, 0xE1E1E1, 0x2D2D2D, config.password or "", "Password")
-local loginPasswordSwitchAndLabel = GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0xE1E1E1, 0xFFFFFF, 0xB4B4B4, "Log into NickServ:", true)
+local loginPasswordSwitchAndLabel = GUI.switchAndLabel(1, 1, 36, 8, 0x66DB80, 0xE1E1E1, 0xFFFFFF, 0xB4B4B4, "Log into NickServ:", false)
 local loginSubmitButton = GUI.button(1, 1, 36, 3, 0xC3C3C3, 0xFFFFFF, 0x969696, 0xFFFFFF, "Connect")
 local loginStatusText = GUI.text(1, 1, 0xA5A5A5, "")
 
 window.actionButtons.localX = 3
 window.actionButtons:moveToFront()
+
+local function stringHash(string)
+	local hash = 0
+	for i = 1, string.len (string) do
+		hash = hash + string.byte (string:sub (i, i))
+	end
+
+	return hash
+end
+
+local function generateUniqueColor(string)
+	local safeColors = {
+		0x9900FF,
+		0x990040,
+		0xCC0000,
+		0xFF6D00,
+		0x33DB00,
+		0x33DB80,
+		0x99B6B6,
+		0x006D80,
+		0x0092FF,
+		0x6692BF,
+		0x002440,
+		0x3349FF,
+		0x666DBF,
+		0x6624FF,
+		0x3399BF,
+		0xCC24FF,
+		0x660080,
+		0xCC0080
+	}
+
+	math.randomseed (stringHash (tostring (string)))
+	return safeColors[math.random (9999999) % #safeColors + 1]
+end
 
 local function getProperList(name)
 	return systemNames[name] and systemList or name:sub(1, 1) == "#" and channelsList or usersList
@@ -296,7 +330,8 @@ local function addChatMessage(conversationName, text, sender)
 	local message = {
 		text = text,
 		time = os.date("%H:%M", system.getTime()),
-		sender = sender
+		sender = sender,
+		color = generateUniqueColor(sender)
 	}
 
 	table.insert(history[conversationName], message)
@@ -355,10 +390,17 @@ chat.draw = function()
 					senderColor, textColor = colorScheme.actionMessageSender, colorScheme.actionMessageText
 				elseif messages[i].channelAction then
 					senderColor, textColor = colorScheme.channelDataMessageSender, colorScheme.channelDataMessageText
-				elseif messages[i].sender == config.username then
-					senderColor, textColor = colorScheme.myMessageSender, colorScheme.myMessageText
 				else
-					senderColor, textColor = colorScheme.otherMessageSender, colorScheme.otherMessageText
+					if not messages[i].color then -- В исходной версии приложухи, в History.cfg цвет не прописан
+						messages[i].color = generateUniqueColor (messages[i].sender)
+					end
+					senderColor = messages[i].color
+
+					if messages[i].sender == config.username then
+						textColor = colorScheme.myMessageText
+					else
+						textColor = colorScheme.otherMessageText
+					end
 				end
 
 				for j = #wrappedLines, 1, -1 do
