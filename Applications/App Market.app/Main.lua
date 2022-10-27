@@ -1533,6 +1533,7 @@ editPublication = function(initialPublication, initialCategoryID)
 	local iconHint = addText(localization.iconURL .. ":")
 	local pathHint = addText(localization.mainFileName .. ":")
 	addText(localization.description .. ":")
+	addText(localization.open .. ":")
 	local whatsNewHint = addText(localization.whatsNew .. ":")
 	addText(localization.dependenciesAndResources .. ":")
 
@@ -1554,7 +1555,20 @@ editPublication = function(initialPublication, initialCategoryID)
 	local mainUrlInput = addInput(initialPublication and initialPublication.source_url or "", "http://example.com/Main.lua")
 	local iconUrlInput = addInput(initialPublication and initialPublication.icon_url or "", "http://example.com/Icon.pic")
 	local mainPathInput = addInput(initialPublication and initialPublication.path or "", "MyScript.lua")
-	local descriptionInput = addInput(initialPublication and initialPublication.initial_description or "", "This's my favourite script", true)
+	local descriptionInput = addInput(initialPublication and initialPublication.initial_description or "", "This's my favourite script", false)
+	------By Bumer 32
+	layout:addChild(GUI.adaptiveRoundedButton(1, 1, 2, 0, 0x696969, 0xFFFFFF, 0x2D2D2D, 0xFFFFFF, localization.description)).onTouch = function()
+		local DescFileDialog = GUI.addFilesystemDialog(workspace, false, 50, math.floor(workspace.height * 0.8), localization.open, localization.cancel, localization.fileName .. " .txt", "/")
+		DescFileDialog:setMode(GUI.IO_MODE_OPEN, GUI.IO_MODE_FILE)
+		DescFileDialog:addExtensionFilter(".txt")
+		DescFileDialog:show()
+
+		DescFileDialog.onSubmit = function(path)
+			descriptionInput.text = filesystem.read(path)
+		end
+	end
+	------By Bumer 32
+	
 	local whatsNewInput = addInput("", "Added some cool features...")
 	local dependenciesLayout = layout:addChild(newPlusMinusCyka(36, 0))
 
