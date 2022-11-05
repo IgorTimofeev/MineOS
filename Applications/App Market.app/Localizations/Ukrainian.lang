@@ -57,7 +57,7 @@
 	profile = "Профіль",
 	nickname = "Нікнейм",
 	password = "Пароль",
-	nicknameOrEmail = "нікнейм або ел. скринька",
+	nicknameOrEmail = "Нікнейм або ел. скринька",
 	registrationDate = "Дата реєстрації",
 	edit = "Редагувати",
 	remove = "Видалити",
