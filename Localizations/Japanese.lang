@@ -75,6 +75,7 @@
 	rename = "名前を変更　",
 	editShortcut = "ショートカットを編集",
 	createShortcut = "ショートカットを作成",
+	deleteWithSource = "ソースで削除",
 	addToDock = "Dockに追加",
 	removeFromDock = "Dockから削除",
 	moveRight = "右に移動",

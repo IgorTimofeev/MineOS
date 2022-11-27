@@ -75,6 +75,7 @@
 	rename = "重命名",
 	editShortcut = "编辑快捷方式",
 	createShortcut = "创建快捷方式",
+	deleteWithSource = "刪除源",
 	addToDock = "添加到Dock",
 	removeFromDock = "从Dock中删除",
 	moveRight = "向右移动",

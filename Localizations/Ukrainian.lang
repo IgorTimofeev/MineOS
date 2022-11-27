@@ -75,6 +75,7 @@
 	rename = "Перейменувати",
 	editShortcut = "Змінити ярлик",
 	createShortcut = "Створити ярлик",
+	deleteWithSource = "Видалити з джерелом",
 	addToDock = "Додати в док",
 	removeFromDock = "Видалити з док",
 	moveRight = "Перемістити вправо",

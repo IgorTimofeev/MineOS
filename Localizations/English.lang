@@ -75,6 +75,7 @@
 	rename = "Rename",
 	editShortcut = "Edit shortcut",
 	createShortcut = "Create shortcut",
+	deleteWithSource = "Delete with source",
 	addToDock = "Add to Dock",
 	removeFromDock = "Remove from Dock",
 	moveRight = "Move right",

@@ -75,6 +75,7 @@
 	rename = "Premenovať",
 	editShortcut = "Upraviť odkaz",
 	createShortcut = "Vytvoriť odkaz",
+	deleteWithSource = "Odstrániť so zdrojom",
 	addToDock = "Pridať do lišty",
 	removeFromDock = "Odstrániť z lišty",
 	moveRight = "Posunúť doprava",

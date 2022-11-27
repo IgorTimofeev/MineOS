@@ -75,6 +75,7 @@
 	rename = "Rinomina",
 	editShortcut = "Modifica scorciatoia",
 	createShortcut = "Crea scorciatoia",
+	deleteWithSource = "Elimina con fonte",
 	addToDock = "Aggiungi alla bacheca",
 	removeFromDock = "Rimuovi Dalla bacheca",
 	moveRight = "Sposta a destra",
