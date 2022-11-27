@@ -75,6 +75,7 @@
 	rename = "Umbenennen",
 	editShortcut = "Verknüpfung bearbeiten",
 	createShortcut = "Verknüpfung erstellen",
+	deleteWithSource = "Mit Quelle löschen",
 	addToDock = "Zum Dock hinzufügen",
 	removeFromDock = "Aus Dock entfernen",
 	moveRight = "Nach rechts bewegen",
