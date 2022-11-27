@@ -593,7 +593,7 @@ local function moveSelectedIconsToTrash(selectedIcons)
 	for i = 1, #selectedIcons do
 		icon = selectedIcons[i]
 
-		if filesystem.path(icon.path) == paths.user.trash then
+		if filesystem.path(icon.path) == paths.user.trash or icon.isShortcut then
 			filesystem.remove(icon.path)
 		else
 			local name = filesystem.name(icon.path)
