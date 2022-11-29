@@ -160,25 +160,39 @@ function system.getCurrentScript()
 	end
 end
 
+
 function system.getLocalization(pathToLocalizationFolder)
 	local required, english = pathToLocalizationFolder .. userSettings.localizationLanguage .. ".lang", pathToLocalizationFolder .. "English.lang"
-	
-	-- First trying to return required localization
-	if filesystem.exists(required) then
-		return filesystem.readTable(required)
-	-- Otherwise maybe english localization exists?
-	elseif filesystem.exists(english) then
-		return filesystem.readTable(english)
-	-- Otherwise returning first available localization
+	local readyLocalization
+	local firstAvailable
+
+	-- Best localization preparement
+	if filesystem.exists(english) then
+		firstAvailable = filesystem.readTable(english)
 	else
 		local list = filesystem.list(pathToLocalizationFolder)
-
 		if #list > 0 then
-			return filesystem.readTable(pathToLocalizationFolder .. list[1])
+			firstAvailable = filesystem.readTable(pathToLocalizationFolder .. list[1])
 		else
-			error("Failed to get localization: directory is empty")
+			firstAvailable = {}  -- WORST case
 		end
 	end
+
+	-- Final choose
+	if filesystem.exists(required) then
+		local reql = filesystem.readTable(required)
+		for k,v in pairs(firstAvailable) do
+			if not reql[k] then reql[k] = v end
+		end
+		readyLocalization = reql
+	else
+		readyLocalization = firstAvailable
+	end
+
+	-- For unknown localization name cases
+	setmetatable(readyLocalization, {__index=(function(t,k) return "$"..k end)})
+
+	return readyLocalization
 end
 
 function system.getCurrentScriptLocalization()
