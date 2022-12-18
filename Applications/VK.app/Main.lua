@@ -1712,7 +1712,7 @@ local function login()
 
 			saveConfig()
 		else
-			GUI.alert("An error occurred while logging in: " .. reason)
+			GUI.alert("An error occurred while logging in. Exact reason is hidden, because fuck off")
 		end
 	end
 
