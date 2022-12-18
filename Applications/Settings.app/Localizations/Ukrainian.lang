@@ -1,30 +1,30 @@
 {
 	open = "Відкрити",
 	cancel = "Відмінити",
-	
+
 	screen = "Екран",
-	screenResolution = "Розширення",
+	screenResolution = "Роздільна здатність",
 	screenAutoScale = "Автомасштабування",
 	screenWidth = "Ширина",
 	screenHeight = "Висота",
 	screenPreferredMonitor = "Монітор",
-	screenScaleInfo = "Використання цієї опції дозволить підібрати оптимальне розширенння екрану, щоб позбутися від ефекту \"чорних смуг \"",
+	screenScaleInfo = "Використання цієї опції дозволить підібрати оптимальне розширенння екрану, щоб позбутися від \"чорних смуг \"",
 	screenInvalidResolution = "Текст в полях введення повинен складатися з цифр, повинен бути більше %d, а максимальна роздільна здатність не повинна перевищувати %d символів",
 	screenPreciseMode = "Точний режим",
-	
+
 	wallpaper = "Фон та заставка",
 	wallpaperWallpaper = "Шпалери",
 	wallpaperScreensaver = "Заставка",
 	wallpaperScreensaverPath = "Шлях до скрипту заставки",
 	wallpaperScreensaverEnabled = "Використовувати заставку",
 	wallpaperScreensaverDelay = "Затримка",
-	wallpaperPath = "Шлях до зображення шпалер",
+	wallpaperPath = "Шлях до шпалер",
 	wallpaperEnabled = "Використовувати шпалери",
 	wallpaperBrightness = "Яскравість шпалер",
 	wallpaperStretch = "Розтягнути",
 	wallpaperCenter = "По центру",
-	wallpaperInfo = "Відключення цієї опції істотно знизить витрати оперативної пам'яті і збільшить продуктивність",
-	
+	wallpaperInfo = "Вимкнення цієї опції істотно знизить витрати оперативної пам'яті і збільшить продуктивність",
+
 	appearance = "Зовнішній вигляд",
 	appearanceExtensions = "Розширення файлів",
 	appearanceHidden = "Приховані файли",
@@ -36,26 +36,26 @@
 	appearanceColorScheme = "Схема кольорів",
 	appearanceFiles = "Параметри файлів",
 	appearanceDesktopBackground = "Фон робочого столу",
-	appearanceDock = "Колір Dock",
+	appearanceDock = "Колір доку",
 	appearanceMenu = "Колір меню",
-	appearanceBlurEnabled = "Розмивання інтерфейсу",
+	appearanceBlurEnabled = "Розмиття інтерфейсу",
 	appearanceTransparencyEnabled = "Прозорість інтерфейсу",
-	appearanceTransparencyInfo = "Відключення останніх двох опцій істотно знизить кількість прямих звернень до CPU / GPU і збільшить продуктивність",
+	appearanceTransparencyInfo = "Вимкнення останніх двох опцій значно знизить кількість прямих звернень до CPU/GPU і збільшить продуктивність",
 	appearanceDropDownDefaultBackground = "Фон випадаючого меню",
 	appearanceDropDownDefaultText = "Текст випадаюче меню",
-	appearanceDropDownSeparator = "Роздільник спадного меню",
-	
-	users = "Користувач",
-	
+	appearanceDropDownSeparator = "Роздільник випадаючого меню",
+
+	users = "Користувачі",
+
 	localizations = "Мова",
 	localizationsInfo = "Бажаєте більше мовних пакетів? Надсилайте pull request в репозиторій MineOS на GitHub",
-	
+
 	time = "Дата та час",
 	timeFormat = "Формат дати",
-	timeUseRealTimestamp = "Реальний час",
-	timeInfo = "Відключення цієї опції дозволить використовувати ігровий час замість реального. Це корисно, якщо особливості хоста не дозволяють отримати тимчасову мітку пізніше 1970 року",
+	timeUseRealTimestamp = "Справжній час",
+	timeInfo = "Вимкнення цієї опції дозволить використовувати ігровий час замість дійсного. Це корисно, якщо особливості хоста не дозволяють отримати тимчасову мітку пізніше 1970 року (UNIX Epoch)",
 	timeZone = "Часовий пояс",
-	
+
 	network = "Мережа",
 	networkName = "Ім'я для оточуючих",
 	networkEnabled = "Видимість в мережі",
@@ -64,14 +64,14 @@
 	networkRemote = "Параметри віддалених ПК",
 	networkThis = "Параметри даного ПК",
 	networkNoModem = "Підключіть модем для використання мережевих функцій",
-	
+
 	tasks = "Автозапуск",
 	tasksInfo = "Ви можете додати скільки завгодно скриптів для їх автоматичного виконання по порядку в зазначений момент часу",
 	tasksBefore = "Виконати до запуску ОС",
 	tasksAfter = "Виконати після запуску ОС",
 	tasksPath = "Шлях до скрипту",
 	tasksEnabled = "Виконання ввімкнено",
-	
+
 	disks = "Диски",
 	disksFormat = "Форматувати",
 	disksBootable = "Зробити завантажувальним",
@@ -85,14 +85,14 @@
 	disksSpaceUsed = "Використано",
 	disksSpaceFree = "Вільно",
 	disksInfo = "Форматування призведе до видалення всіх даних з обраного диска без можливості відновлення як в грі, так і на хості",
-	
+
 	system = "Система",
 	systemArchitecture = "Архітектура CPU",
 	systemUnloading = "Автоматична вивантаження",
-	systemRAM = "Управління пам'яттю",
+	systemRAM = "Управління ОЗП",
 	systemUnload = "Вивантажити бібліотеку",
 	systemInfo = "Дана опція дозволяє економити пам'ять, вивантажуючи невикористовувані бібліотеки методом \"Weak Link \". Вимкніть її, якщо зіткнетеся з якими-небудь дивацтвами або глюками в поведінці складних взаємозалежних систем",
-	
+
 	usersList = "Управління користувачами",
 	usersEditIcon = "Змінити значок",
 	usersChangeName = "Змінити ім'я",
@@ -101,7 +101,7 @@
 	usersAddPassword = "Додати пароль",
 	usersAddPasswordPlaceholder1 = "Введіть пароль",
 	usersAddPasswordPlaceholder2 = "Надіслати пароль",
-	usersPasswordsArentEqual = "Паролі різняться",
+	usersPasswordsArentEqual = "Паролі відрізняються",
 	usersClaim = "Приват блоку комп'ютера",
 	usersClaimInfo = "Крім того, ви можете створити приватний доступ до блоку вашого комп'ютера для гравця із зазначеним ім'ям. Для цього гравець повинен бути онлайн",
 	usersClaimPlaceholder = "Введіть ім'я гравця"

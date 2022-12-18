@@ -75,6 +75,7 @@
 	rename = "Renommer",
 	editShortcut = "Modifier le raccourci",
 	createShortcut = "Créer un raccourci",
+	deleteWithSource = "Supprimer avec la source",
 	addToDock = "Ajouter à la barre des tâches",
 	removeFromDock = "Retirer de la barre des tâches",
 	moveRight = "Déplacer vers la droite",

@@ -45,7 +45,7 @@
 	toDirectory = "в каталозі",
 	copying = "Копіювання",
 	faylaBlyad = "файла",
-	
+
 	areYouSure = "Ви впевнені?",
 	emptyTrash = "Очистити кошик",
 	type = "Тип",
@@ -58,7 +58,7 @@
 	calculatingSize = "йде підрахунок…",
 	filesWillBeRemovedPermanently = "файл(и) буде видалено назавжди",
 	fileDeletingFailure = "Не вдалося видалити файл",
-	
+
 	properties = "Властивості",
 	newFolderFromChosen = "Нова папка з обраного",
 	create = "Створити",
@@ -66,7 +66,7 @@
 	newFile = "Файл",
 	newFileFromURL = "Файл з URL",
 	newImage = "Зображення",
-	newApplication = "Додаток MineOS ",
+	newApplication = "Додаток MineOS",
 	paste = "Вставити",
 	copy = "Копіювати",
 	cut = "Вирізати",
@@ -75,6 +75,7 @@
 	rename = "Перейменувати",
 	editShortcut = "Змінити ярлик",
 	createShortcut = "Створити ярлик",
+	deleteWithSource = "Видалити з джерелом",
 	addToDock = "Додати в док",
 	removeFromDock = "Видалити з док",
 	moveRight = "Перемістити вправо",
@@ -89,35 +90,35 @@
 	flashEEPROM = "Записати на EEPROM",
 	flashingEEPROM = "Запис в процесі. Не вимикайте комп'ютер...",
 	print3D = "Роздрукувати модель",
-	
+
 	sortBy = "Сортувати",
 	sortByType = "По типу",
 	sortByName = "По імені",
 	sortByDate = "По даті",
-	
+
 	aboutSystem = "Про систему",
 	updates = "Оновлення",
 	update = "Оновити",
 	shutdown = "Вимкнути",
 	logout = "Вихід із системи",
 	reboot = "Перезавантажити",
-	
+
 	shortcutIsCorrupted = "Ярлик пов'язаний з неіснуючим файлом",
 	sortAutomatically = "Вирівняти по сітці",
 	onDesktop = "На робочому столі",
 	inCurrentDirectory = "В поточному каталозі",
-	
+
 	errorWhileRunningProgram = "Помилка під час роботи ",
 	sendedFeedback = "Звіт відправлений",
 	sendFeedback = "Відправити звіт",
 	yourContacts = "Ваші контакти",
 	additionalInfo = "Додаткова інформація",
 	stackTraceback = "Стек помилки",
-	
-	favourite = "Вибране",
+
+	favourite = "Обране",
 	search = "Пошук",
 	mounts = "Пристрої",
-	
+
 	uploadToPastebin = "Завантажити на Pastebin",
 	pasteName = "Вставити ім'я",
 	uploading = "Йде завантаження...",

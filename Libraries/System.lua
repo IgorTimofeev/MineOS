@@ -160,25 +160,39 @@ function system.getCurrentScript()
 	end
 end
 
+
 function system.getLocalization(pathToLocalizationFolder)
 	local required, english = pathToLocalizationFolder .. userSettings.localizationLanguage .. ".lang", pathToLocalizationFolder .. "English.lang"
-	
-	-- First trying to return required localization
-	if filesystem.exists(required) then
-		return filesystem.readTable(required)
-	-- Otherwise maybe english localization exists?
-	elseif filesystem.exists(english) then
-		return filesystem.readTable(english)
-	-- Otherwise returning first available localization
+	local readyLocalization
+	local firstAvailable
+
+	-- Best localization preparement
+	if filesystem.exists(english) then
+		firstAvailable = filesystem.readTable(english)
 	else
 		local list = filesystem.list(pathToLocalizationFolder)
-
 		if #list > 0 then
-			return filesystem.readTable(pathToLocalizationFolder .. list[1])
+			firstAvailable = filesystem.readTable(pathToLocalizationFolder .. list[1])
 		else
-			error("Failed to get localization: directory is empty")
+			firstAvailable = {}  -- WORST case
 		end
 	end
+
+	-- Final choose
+	if filesystem.exists(required) then
+		local reql = filesystem.readTable(required)
+		for k,v in pairs(firstAvailable) do
+			if not reql[k] then reql[k] = v end
+		end
+		readyLocalization = reql
+	else
+		readyLocalization = firstAvailable
+	end
+
+	-- For unknown localization name cases
+	setmetatable(readyLocalization, {__index=(function(t,k) return "$"..k end)})
+
+	return readyLocalization
 end
 
 function system.getCurrentScriptLocalization()
@@ -587,31 +601,35 @@ local function iconDeselectAndSelect(icon)
 	workspace:draw()
 end
 
+local function moveToTrash(path)
+	local ext = filesystem.extension(path)
+	local name = filesystem.name(path)
+	local dir = filesystem.path(path)
+	if dir == paths.user.trash or ext == ".lnk" then
+			filesystem.remove(path)
+	else
+		local name = filesystem.name(path)
+		local clearName = filesystem.hideExtension(name)
+		local newPath = paths.user.trash .. name
+		local repeats = 1
+
+		while filesystem.exists(newPath) do
+			newPath, repeats = paths.user.trash .. clearName .. string.rep("-copy", repeats) .. (ext or ""), repeats + 1
+		end
+
+		filesystem.rename(path, newPath)
+	end
+	computer.pushSignal("system", "updateFileList")
+end
+
 local function moveSelectedIconsToTrash(selectedIcons)
 	local icon
 
 	for i = 1, #selectedIcons do
 		icon = selectedIcons[i]
-
-		if filesystem.path(icon.path) == paths.user.trash then
-			filesystem.remove(icon.path)
-		else
-			local name = filesystem.name(icon.path)
-			local clearName = filesystem.hideExtension(name)
-			local newPath = paths.user.trash .. name
-			local repeats = 1
-
-			while filesystem.exists(newPath) do
-				newPath, repeats = paths.user.trash .. clearName .. string.rep("-copy", repeats) .. (icon.extension or ""), repeats + 1
-			end
-
-			filesystem.rename(icon.path, newPath)
-		end
-		
+		moveToTrash(icon.path)
 		icon.selected = false
 	end
-
-	computer.pushSignal("system", "updateFileList")
 end
 
 local function iconOnRightClick(selectedIcons, icon, e1, e2, e3, e4)
@@ -872,6 +890,13 @@ local function iconOnRightClick(selectedIcons, icon, e1, e2, e3, e4)
 
 	contextMenu:addItem(localization.delete).onTouch = function()
 		moveSelectedIconsToTrash(selectedIcons)
+	end
+
+	if icon.isShortcut then
+		contextMenu:addItem(localization.deleteWithSource).onTouch = function()
+			moveToTrash(icon.shortcutPath)
+			moveToTrash(icon.path)
+		end
 	end
 
 	contextMenu:addSeparator()
@@ -2648,8 +2673,8 @@ function system.updateDesktop()
 			"Yakov Verevkin, vk.com/id60991376",
 			"Alexey Smirnov, vk.com/id23897419",
 			"Timofey Shestakov, vk.com/id113499693",
-			"Alexander Fursenko, vk.com/fredber525",
 			"Fedor Cheremisenov, vk.com/id402150900",
+			"Alexander Fursenko, vk.com/id354154139",
 			" ",
 			"UX-advisers:",
 			" ",

@@ -1,11 +1,11 @@
 {
 	statistics = "Статистика",
 	messages = "Повідомлення",
-	account = "Аккаунт",
+	account = "Акаунт",
 	settings = "Налаштування",
-	newMessage = "Написати повідомлення",
+	newMessage = "Нове повідомлення",
 	newMessagePersonal = "Особисте повідомлення",
-	newMessageToDeveloper = "Написати повідомлення",
+	newMessageToDeveloper = "Написати повідомлення розробнику",
 	dialogWith = "Діалог з ",
 	send = "Відправити",
 	toWho = "Кому:",
@@ -14,13 +14,13 @@
 	yourText = "Ви:",
 	hereBeYourDialogs = "Тут будуть відображені ваші діалоги",
 	hideApplicationIcons = "Приховати значки програм",
-	
+
 	categoryOverview = "Головна",
 	categoryApplications = "Додатки",
 	categoryLibraries = "Бібліотеки",
 	categoryScripts = "Скрипти",
 	categoryUpdates = "Оновлення",
-	
+
 	statisticsNewUser = "Новий користувач",
 	statisticsMostPopularUser = "Найбільш активний",
 	statisticsUsersCount = "Число користувачів",
@@ -28,7 +28,7 @@
 	statisticsReviewsCount = "Число відгуків",
 	statisticsPopularPublication = "(Популярна публікація)",
 	statisticsMessagesCount = "Число повідомлень",
-	
+
 	whatsNew = "Що нового",
 	whatsNewInVersion = "Що нового у версії",
 	areYouSure = "Ви впевнені, що хочете видалити публікацію?",
@@ -39,7 +39,7 @@
 	mainFileName = "Ім'я головного файлу",
 	iconURL = "URL іконки",
 	description = "Опис",
-	dependenciesAndResources = "Залежності і ресурси",
+	dependenciesAndResources = "Залежності та ресурси",
 	save = "Зберегти",
 	cancel = "Відміна",
 	fileName = "Ім'я файлу",
@@ -52,12 +52,12 @@
 	add = "Додати",
 	relativePath = "Відносний шлях",
 	localizationDependency = "Файл локалізації",
-	
+
 	login = "Авторизація",
 	profile = "Профіль",
 	nickname = "Нікнейм",
 	password = "Пароль",
-	nicknameOrEmail = "E-Mail або нікнейм",
+	nicknameOrEmail = "Нікнейм або ел. скринька",
 	registrationDate = "Дата реєстрації",
 	edit = "Редагувати",
 	remove = "Видалити",
@@ -66,14 +66,14 @@
 	exit = "Вихід",
 	changePassword = "Змінити пароль",
 	newPassword = "Новий пароль",
-	singleSession = "Це не мій комп'ютер",
+	singleSession = "Не запам'ятовувати мою сесію",
 	currentPassword = "Поточний пароль",
 	language = "Мова описів",
 	publications = "Публікації",
 	notRegistered = "Ще не зареєстровані?",
 	createAccount = "Створити акаунт",
-	registrationSuccessfull = "Перевірте свою пошту і папку спаму, щоб підтвердити аккаунт",
-	
+	registrationSuccessfull = "Перевірте свою пошту (і папку спаму), щоб підтвердити аккаунт",
+
 	search = "Пошук",
 	byPopularity = "За популярністю",
 	byRating = "За рейтингом",
@@ -86,9 +86,9 @@
 	installed = "Встановлено",
 	update = "Оновити",
 	page = "Сторінка",
-	updateAll = "Оновити всі",
+	updateAll = "Оновити все",
 	noUpdates = "У вас найновіше ПЗ",
-	
+
 	changeReview = "Змінити відгук",
 	developer = "Розробник",
 	version = "Версія",

@@ -75,6 +75,7 @@
 	rename = "Переименовать",
 	editShortcut = "Редактировать ярлык",
 	createShortcut = "Создать ярлык",
+	deleteWithSource = "Удалить с источником",
 	addToDock = "Добавить в Dock",
 	removeFromDock = "Удалить из Dock",
 	moveRight = "Передвинуть правее",
