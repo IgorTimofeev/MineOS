@@ -98,18 +98,23 @@ local function flush(width, height)
 	currentFrameBackgrounds, currentFrameForegrounds, currentFrameSymbols, newFrameBackgrounds, newFrameForegrounds, newFrameSymbols = {}, {}, {}, {}, {}, {}
 	bufferWidth = width
 	bufferHeight = height
+
 	resetDrawLimit()
 
-	for y = 1, bufferHeight do
-		for x = 1, bufferWidth do
-			tableInsert(currentFrameBackgrounds, 0x010101)
-			tableInsert(currentFrameForegrounds, 0xFEFEFE)
-			tableInsert(currentFrameSymbols, " ")
+	local index
 
-			tableInsert(newFrameBackgrounds, 0x010101)
-			tableInsert(newFrameForegrounds, 0xFEFEFE)
-			tableInsert(newFrameSymbols, " ")
-		end
+	for i = 1, bufferWidth * bufferHeight do
+		index = i
+		currentFrameBackgrounds[index] = 0x010101
+		newFrameBackgrounds[index] = 0x010101
+
+		index = index + 1
+		currentFrameForegrounds[index] = 0xFEFEFE
+		newFrameForegrounds[index] = 0xFEFEFE
+
+		index = index + 1
+		currentFrameSymbols[index] = " "
+		newFrameSymbols[index] = " "
 	end
 end
 
@@ -119,6 +124,7 @@ end
 
 local function setGPUAddress(address)
 	GPUAddress = address
+
 	flush()
 end
 
@@ -132,6 +138,7 @@ end
 
 local function setResolution(width, height)
 	componentInvoke(GPUAddress, "setResolution", width, height)
+	
 	flush(width, height)
 end
 
@@ -183,7 +190,7 @@ local function getScaledResolution(scale)
 	elseif scale < 0.1 then
 		scale = 0.1
 	end
-
+	
 	local aspectWidth, aspectHeight = getScreenAspectRatio()
 	local maxWidth, maxHeight = getMaxResolution()
 	local proportion = 2 * (16 * aspectWidth - 4.5) / (16 * aspectHeight - 4.5)
