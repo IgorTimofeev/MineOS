@@ -563,6 +563,7 @@ local function iconDraw(icon)
 	end
 
 	local xShortcut = xImage + iconImageWidth
+	
 	if icon.isShortcut then
 		screen.set(xShortcut - 1, icon.y + iconImageHeight - 1, 0xFFFFFF, 0x0, "<")
 	end
@@ -587,7 +588,11 @@ end
 
 local function iconFieldSaveIconPosition(iconField, filename, x, y)
 	if iconField.iconConfigEnabled then
-		iconField.iconConfig[filename] = { x = x, y = y }
+		iconField.iconConfig[filename] = {
+			x = x,
+			y = y
+		}
+
 		iconField:saveIconConfig()
 	end
 end
@@ -619,6 +624,7 @@ local function moveToTrash(path)
 
 		filesystem.rename(path, newPath)
 	end
+
 	computer.pushSignal("system", "updateFileList")
 end
 
@@ -641,6 +647,7 @@ local function iconOnRightClick(selectedIcons, icon, e1, e2, e3, e4)
 
 			container.input.onInputFinished = function()
 				local path = filesystem.path(selectedIcons[1].path) .. container.input.text .. "/"
+				
 				if checkFileToExists(container, path) then
 					filesystem.makeDirectory(path)
 					
@@ -648,7 +655,8 @@ local function iconOnRightClick(selectedIcons, icon, e1, e2, e3, e4)
 						filesystem.rename(selectedIcons[i].path, path .. selectedIcons[i].name)
 					end
 
-					iconFieldSaveIconPosition(icon.parent, container.input.text, e3, e4)
+					iconFieldSaveIconPosition(icon.parent, container.input.text, math.ceil(e3), math.ceil(e4))
+
 					computer.pushSignal("system", "updateFileList")
 				end
 			end
@@ -1331,10 +1339,11 @@ local function iconFieldBackgroundClick(iconField, e1, e2, e3, e4, e5, ...)
 
 		container.input.onInputFinished = function()
 			local path = iconField.path .. container.input.text
+
 			if checkFileToExists(container, path) then
 				filesystem.write(path, "")
 
-				iconFieldSaveIconPosition(iconField, container.input.text, e3, e4)
+				iconFieldSaveIconPosition(iconField, container.input.text, math.ceil(e3), math.ceil(e4))
 				system.execute(paths.system.applicationMineCodeIDE, path)
 				computer.pushSignal("system", "updateFileList")
 			end
@@ -1348,9 +1357,10 @@ local function iconFieldBackgroundClick(iconField, e1, e2, e3, e4, e5, ...)
 
 		container.input.onInputFinished = function()
 			local path = iconField.path .. container.input.text
+
 			if checkFileToExists(container, path) then
 				filesystem.makeDirectory(path)
-				iconFieldSaveIconPosition(iconField, container.input.text .. "/", e4, e4)
+				iconFieldSaveIconPosition(iconField, container.input.text .. "/", math.ceil(e3), math.ceil(e4))
 				computer.pushSignal("system", "updateFileList")
 			end
 		end
@@ -1390,7 +1400,7 @@ local function iconFieldBackgroundClick(iconField, e1, e2, e3, e4, e5, ...)
 							" "
 						))
 
-						iconFieldSaveIconPosition(iconField, imageName, e3, e4)
+						iconFieldSaveIconPosition(iconField, imageName, math.ceil(e3), math.ceil(e4))
 						computer.pushSignal("system", "updateFileList")
 					end
 				end
@@ -1426,7 +1436,7 @@ local function iconFieldBackgroundClick(iconField, e1, e2, e3, e4, e5, ...)
 						container:remove()
 
 						if success then
-							iconFieldSaveIconPosition(iconField, container.input.text, e3, e4)
+							iconFieldSaveIconPosition(iconField, container.input.text, math.ceil(e3), math.ceil(e4))
 							computer.pushSignal("system", "updateFileList")
 						else
 							GUI.alert(reason)
@@ -1458,7 +1468,7 @@ local function iconFieldBackgroundClick(iconField, e1, e2, e3, e4, e5, ...)
 						filesystem.rename(paths.system.temporary .. filesystem.name(paths.system.applicationSample), path)
 						
 						container:remove()
-						iconFieldSaveIconPosition(iconField, container.input.text .. ".app/", e3, e4)
+						iconFieldSaveIconPosition(iconField, container.input.text .. ".app/", math.ceil(e3), math.ceil(e4))
 						computer.pushSignal("system", "updateFileList")
 					end
 				else
