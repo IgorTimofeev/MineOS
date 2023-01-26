@@ -4,7 +4,7 @@ English | [中文(简体)](https://github.com/IgorTimofeev/MineOS/blob/master/RE
 
 ## About
 
-MineOS is a GUI based operating system for the OpenComputers Minecraft mod. It has extensive customisation abilities as well as an app market to publish your creations among the OS community. For developers there is wonderful [illustrated wiki](https://github.com/IgorTimofeev/MineOS/wiki) with lots of code examples. List of main features:
+LikeOS is a GUI based operating system for the OpenComputers Minecraft mod. It has extensive customisation abilities as well as an app market to publish your creations among the OS community. For developers there is wonderful [illustrated wiki](https://github.com/IgorTimofeev/MineOS/wiki) with lots of code examples. List of main features:
 
 -   Multitasking
 -   Double buffered graphical user interface
@@ -14,14 +14,14 @@ MineOS is a GUI based operating system for the OpenComputers Minecraft mod. It h
 -   File sharing over the local network via modems
 -   Client connections to real FTP servers
 -   An internal IDE with syntax highlighting and debugger
--   Integrated application and library App Market with the ability to publish your own scripts and programs for every MineOS user
+-   Integrated application and library App Market with the ability to publish your own scripts and programs for every LikeOS user
 -   Error reporting system with the possibility to send information to developers
 -   Animations, wallpapers, screensavers, color schemes and huge customization possibilities
 -   Open source system API and detailed documentation
 
 ## How to install?
 
-The easiest way is to use default **wget** script. Insert an OpenOS floppy disk and an Internet Card into the computer, turn it on and type the following command to console to install MineOS:
+The easiest way is to use default **wget** script. Insert an OpenOS floppy disk and an Internet Card into the computer, turn it on and type the following command to console to install LikeOS:
 
 	wget -f https://raw.githubusercontent.com/IgorTimofeev/MineOS/master/Installer/BIOS.lua /tmp/bios.lua && flash -q /tmp/bios.lua && reboot
 
