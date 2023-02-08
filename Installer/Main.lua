@@ -151,7 +151,7 @@ end
 
 -- If there's no suitable HDDs found - then meow
 if not temporaryFilesystemProxy then
-	status("No appropriate filesystem found", true)
+	status("No storage larger than 2 megabytes found", true)
 	return
 end
 
