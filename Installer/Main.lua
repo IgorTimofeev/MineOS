@@ -151,7 +151,7 @@ end
 
 -- If there's no suitable HDDs found - then meow
 if not temporaryFilesystemProxy then
-	status("No storage larger than 2 megabytes found", true)
+	status("Insert at least Tier 2 HDD", true)
 	return
 end
 
