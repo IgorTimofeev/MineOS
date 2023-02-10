@@ -943,7 +943,7 @@ local function settings()
 			
 			textLayout:addChild(GUI.keyAndValue(1, 1, 0x696969, 0x969696, localization.nickname, ": " .. user.name))
 			textLayout:addChild(GUI.keyAndValue(1, 1, 0x696969, 0x969696, "E-Mail", ": " .. user.email))
-			textLayout:addChild(GUI.keyAndValue(1, 1, 0x696969, 0x969696, localization.registrationDate, ": " .. os.date("%d.%m.%Y", user.timestamp)))
+			textLayout:addChild(GUI.keyAndValue(1, 1, 0x696969, 0x969696, localization.registrationDate, ": " .. os.date("%d.%m.%Y", user.timestamp + system.getUserSettings().timeTimezone)))
 			textLayout.height = #textLayout.children * 2 - 1
 
 			local hideApplicationIconsSwitch = layout:addChild(GUI.switchAndLabel(1, 1, 36, 6, 0x66DB80, 0xC3C3C3, 0xFFFFFF, 0x696969, localization.hideApplicationIcons .. ":", config.hideApplicationIcons))
@@ -1084,7 +1084,7 @@ local function dialogGUI(to_user_name)
 		screen.drawText(object.x, object.y - 1, backgroundColor, "⢀" .. string.rep("⣀", object.width - 2) .. "⡀")
 		screen.drawText(object.x, object.y + object.height, backgroundColor, "⠈" .. string.rep("⠉", object.width - 2) .. "⠁")
 
-		local date = os.date("%d.%m.%Y, %H:%M", object.timestamp)
+		local date = os.date("%d.%m.%Y, %H:%M", object.timestamp + system.getUserSettings().timeTimezone)
 		if object.me then
 			screen.drawText(object.x - #date - 1, object.y, 0xC3C3C3, date)
 			screen.drawText(object.x + object.width, object.y + object.height - 1, backgroundColor, "◤")
@@ -1151,7 +1151,7 @@ local function dialogs()
 				local dialogContainer = dialogsContainer:addChild(GUI.container(3, y, dialogsContainer.width - 4, 4))
 				addPanel(dialogContainer,backgroundColor)
 				
-				dialogContainer:addChild(GUI.keyAndValue(3, 2, nicknameColor, timestampColor, dialogs[i].dialog_user_name, os.date(" (%d.%m.%Y, %H:%M)", dialogs[i].timestamp)))
+				dialogContainer:addChild(GUI.keyAndValue(3, 2, nicknameColor, timestampColor, dialogs[i].dialog_user_name, os.date(" (%d.%m.%Y, %H:%M)", dialogs[i].timestamp + system.getUserSettings().timeTimezone)))
 				dialogContainer:addChild(GUI.text(3, 3, textColor, text.limit((dialogs[i].last_message_user_name == user.name and localization.yourText .. " " or "") .. dialogs[i].text, dialogContainer.width - 4, "right")))
 
 				dialogContainer.eventHandler = function(workspace, object, e1)
@@ -1210,7 +1210,7 @@ newPublicationInfo = function(file_id)
 			ratingsContainer:addChild(GUI.keyAndValue(2, y, 0x2D2D2D, 0x878787, localization.license, ": " .. licenses[publication.license_id])); y = y + 1
 			ratingsContainer:addChild(GUI.keyAndValue(2, y, 0x2D2D2D, 0x878787, localization.category, ": " .. categories[publication.category_id])); y = y + 1
 			ratingsContainer:addChild(GUI.keyAndValue(2, y, 0x2D2D2D, 0x878787, localization.version, ": " .. publication.version)); y = y + 1
-			ratingsContainer:addChild(GUI.keyAndValue(2, y, 0x2D2D2D, 0x878787, localization.updated, ": " .. os.date("%d.%m.%Y", publication.timestamp))); y = y + 1
+			ratingsContainer:addChild(GUI.keyAndValue(2, y, 0x2D2D2D, 0x878787, localization.updated, ": " .. os.date("%d.%m.%Y", publication.timestamp + system.getUserSettings().timeTimezone))); y = y + 1
 			
 			-- Добавляем инфу с общими рейтингами
 			if #reviews > 0 then
@@ -1402,7 +1402,7 @@ newPublicationInfo = function(file_id)
 
 					local y = 2
 					local nameLabel = reviewContainer:addChild(GUI.text(3, y, 0x2D2D2D, reviews[i].user_name))
-					reviewContainer:addChild(GUI.text(nameLabel.localX + nameLabel.width + 1, y, 0xC3C3C3, "(" .. os.date("%d.%m.%Y", reviews[i].timestamp) .. ")"))
+					reviewContainer:addChild(GUI.text(nameLabel.localX + nameLabel.width + 1, y, 0xC3C3C3, "(" .. os.date("%d.%m.%Y", reviews[i].timestamp + system.getUserSettings().timeTimezone) .. ")"))
 					y = y + 1
 
 					reviewContainer:addChild(newRatingWidget(3, y, reviews[i].rating))
