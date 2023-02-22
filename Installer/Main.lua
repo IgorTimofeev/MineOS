@@ -559,16 +559,6 @@ addStage(function()
 		)
 	end)
 
-	-- Flashing EEPROM
-	layout:removeChildren()
-	addImage(1, 1, "EEPROM")
-	addTitle(0x969696, localization.flashing)
-	workspace:draw()
-	
-	component.invoke(EEPROMAddress, "set", request(EFIURL))
-	component.invoke(EEPROMAddress, "setLabel", "MineOS EFI")
-	component.invoke(EEPROMAddress, "setData", selectedFilesystemProxy.address)
-
 	-- Downloading files
 	layout:removeChildren()
 	addImage(3, 2, "Downloading")
@@ -653,6 +643,17 @@ addStage(function()
 		progressBar.value = math.floor(i / #downloadList * 100)
 		workspace:draw()
 	end
+
+	-- Flashing EEPROM
+	layout:removeChildren()
+	addImage(1, 1, "EEPROM")
+	addTitle(0x969696, localization.flashing)
+	workspace:draw()
+	
+	component.invoke(EEPROMAddress, "set", request(EFIURL))
+	component.invoke(EEPROMAddress, "setLabel", "MineOS EFI")
+	component.invoke(EEPROMAddress, "setData", selectedFilesystemProxy.address)
+
 
 	-- Saving system versions
 	switchProxy(function()
