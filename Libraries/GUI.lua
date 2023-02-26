@@ -3958,7 +3958,7 @@ local function dropDownMenuItemEventHandler(workspace, object, e1, ...)
 				end
 
 				if object.onTouch then
-					object.onTouch()
+					object.onTouch(workspace, object, e1, ...)
 				end
 
 				workspace:draw()
