@@ -122,5 +122,5 @@
 	pasteName = "Nazwa Paste",
 	uploading = "Trwa wysyłanie...",
 	uploadingSuccess = "Wysłano do ",
-	uploadingFailure = "Błąd wysyłania: "
+	uploadingFailure = "Błąd wysyłania: ",
 }
