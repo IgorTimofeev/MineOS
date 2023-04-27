@@ -8,6 +8,8 @@ local GUI = require("GUI")
 local event = require("Event")
 local filesystem = require("Filesystem")
 
+---------------------------------------------------- Управление -----------------------------------------------------------------
+
 local inputX = 0
 local inputY = 0
 local inputYaw = 0
@@ -192,6 +194,7 @@ function rayEngine.rotate(angle)
 	rayEngine.player.rotation = constrainAngle(rayEngine.player.rotation + angle)
 end
 
+----------------- Начинаем поворачиааться ------------------------
 function rayEngine.turnRight()
 	inputYaw = 1
 	--rayEngine.rotate(rayEngine.player.rotationSpeed)
@@ -202,19 +205,7 @@ function rayEngine.turnLeft()
 	--rayEngine.rotate(-rayEngine.player.rotationSpeed)
 end
 
-function rayEngine.stopY()
-	inputY = 0	
-end
-
-function rayEngine.stopX()
-	inputX = 0	
-end
-
-
-function rayEngine.stopYaw()
-	inputYaw = 0	
-end
-
+----------------------- Начинаем идти -------------------------
 function rayEngine.moveForward()
 	inputY = 1
 	--rayEngine.move(rayEngine.player.moveSpeed, 0)
@@ -233,6 +224,21 @@ end
 function rayEngine.moveRight()
 	inputX = 1
 	--rayEngine.move(0, rayEngine.player.moveSpeed)
+end
+
+--------------- Стоп --------------------------------------
+
+
+function rayEngine.stopYaw()
+	inputYaw = 0	
+end
+
+function rayEngine.stopY()
+	inputY = 0	
+end
+
+function rayEngine.stopX()
+	inputX = 0	
 end
 
 function rayEngine.jump()
