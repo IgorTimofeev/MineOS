@@ -13,7 +13,6 @@ local filesystem = require("Filesystem")
 local inputX = 0
 local inputY = 0
 local inputYaw = 0
-
 ---------------------------------------------------- Константы ------------------------------------------------------------------
 
 local rayEngine = {}
@@ -479,7 +478,12 @@ function rayEngine.toggleWatch()
 end
 
 function rayEngine.drawWeapon()
-	if rayEngine.currentWeapon.needToFire then screen.drawImage(rayEngine.currentWeapon.xFire, rayEngine.currentWeapon.yFire, rayEngine.currentWeapon.fireTexture); rayEngine.currentWeapon.needToFire = false end
+--Пока рисуем, вычитаем время стрельбы
+	if rayEngine.currentWeapon.needToFire then 
+		screen.drawImage(rayEngine.currentWeapon.xFire, rayEngine.currentWeapon.yFire, rayEngine.currentWeapon.fireTexture); 
+		rayEngine.currentWeapon.needToFire =  rayEngine.currentWeapon.needToFire - 1
+	end
+--Рисуем картинку оружия поверх вспышки, а затем и прицел
 	screen.drawImage(rayEngine.currentWeapon.xWeapon, rayEngine.currentWeapon.yWeapon, rayEngine.currentWeapon.weaponTexture)
 	screen.drawImage(rayEngine.currentWeapon.xCrosshair, rayEngine.currentWeapon.yCrosshair, rayEngine.currentWeapon.crosshairTexture)
 end
@@ -585,10 +589,26 @@ function rayEngine.changeResolution(width, height)
 end
 
 function rayEngine.fire()
-	rayEngine.currentWeapon.needToFire = true
-	rayEngine.update()
-	event.sleep(0.1)
-	rayEngine.update()
+--Если мы уже стреляем, то, естественно, выходим из функции
+	if rayEngine.currentWeapon.needToFire then return end
+--Иначе стреляем
+	rayEngine.currentWeapon.needToFire = rayEngine.currentWeapon.fireTime
+	stopYaw() --Останавливаю игрока, т.к. события touch и key_up - злейшие враги всего OpenComputers
+	if inputY > 0 then
+		stopY() --Должно спасти жизнь игроку 	
+	end
+end
+
+function rayEngine.fireAuto()
+--Если мы уже стреляем, то, естественно, выходим из функции
+	if rayEngine.currentWeapon.needToFire then return end
+--Тоже самое, если оружие - пистолет/полуавто винтовка
+	if not rayEngine.currentWeapon.isAuto then return end
+--Иначе стреляем
+	rayEngine.currentWeapon.needToFire = rayEngine.currentWeapon.fireTime
+	stopYaw() --Останавливаю игрока, т.к. события touch и key_up - злейшие враги всего OpenComputers
+	stopX()
+	stopY()
 end
 
 ----------------------------------------------------------------------------------------------------------------------------------
