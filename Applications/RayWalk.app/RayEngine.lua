@@ -13,6 +13,14 @@ local inputX = 0
 local inputY = 0
 local inputYaw = 0
 local holdingFire = 0
+
+---------------------------------------------------- Переменные ------------------------------------------------------------------
+local startRenderClock = os.clock()
+local endRenderClock = os.clock()
+local frameCount = 0
+local fps = 0
+local lastFPSCheck = os.clock()
+
 ---------------------------------------------------- Константы ------------------------------------------------------------------
 
 local rayEngine = {}
@@ -558,8 +566,8 @@ function rayEngine.drawWorld()
 end
 
 function rayEngine.update()
-	local frameRenderClock = os.clock()
 	
+	local frameRenderClock = os.clock()
 	rayEngine.rotate(rayEngine.player.rotationSpeed * inputYaw)
 	rayEngine.move(rayEngine.player.moveSpeed * inputY, rayEngine.player.moveSpeed * inputX)
 	
@@ -577,13 +585,23 @@ function rayEngine.update()
 
 	if rayEngine.debugInformationEnabled then
 		rayEngine.drawDebugInformation(3, 2 + (rayEngine.minimapEnabled and 12 or 0), 24, 0.6, 
-			"renderTime: " .. string.format("%.2f", (os.clock() - frameRenderClock) * 1000) .. " ms",
+			"renderTime: " .. string.format("%.2f", ((os.clock() - frameRenderClock) + (endRenderClock-startRenderClock)) * 1000) .. " ms",
+			"FPS: " .. string.format("%.2f",fps),
 			"freeRAM: " .. string.format("%.2f", computer.freeMemory() / 1024) .. " KB",
 			"pos: " .. string.format("%.2f", rayEngine.player.position.x) .. " x " .. string.format("%.2f", rayEngine.player.position.y)
 		)
 	end
+	startRenderClock = os.clock()
 
 	screen.update()
+	frameCount = frameCount + 1
+	
+	if (os.clock() - lastFPSCheck) > 1 then
+		fps = frameCount
+		frameCount = 0
+		lastFPSCheck = os.clock()
+	end
+	endRenderClock = os.clock()
 end
 
 ----------------------------------------------------------------------------------------------------------------------------------
