@@ -188,6 +188,8 @@ while true do
 		else
 			if rayEngine.currentWeapon then rayEngine.fire() else rayEngine.destroy(3) end
 		end
+	elseif e[1] == "drop" then
+		rayEngine.unfire()
 	elseif e[1] == "key_down" then
 		if e[4] > 1 and e[4] < 10 then
 			rayEngine.changeWeapon(e[4] - 2)
