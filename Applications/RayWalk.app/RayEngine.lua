@@ -8,6 +8,12 @@ local GUI = require("GUI")
 local event = require("Event")
 local filesystem = require("Filesystem")
 
+---------------------------------------------------- Управление -----------------------------------------------------------------
+
+local inputX = 0
+local inputY = 0
+local inputYaw = 0
+
 ---------------------------------------------------- Константы ------------------------------------------------------------------
 
 local rayEngine = {}
@@ -188,28 +194,51 @@ function rayEngine.rotate(angle)
 	rayEngine.player.rotation = constrainAngle(rayEngine.player.rotation + angle)
 end
 
+----------------- Начинаем поворачиааться ------------------------
 function rayEngine.turnRight()
-	rayEngine.rotate(rayEngine.player.rotationSpeed)
+	inputYaw = 1
+	--rayEngine.rotate(rayEngine.player.rotationSpeed)
 end
 
 function rayEngine.turnLeft()
-	rayEngine.rotate(-rayEngine.player.rotationSpeed)
+	inputYaw = -1
+	--rayEngine.rotate(-rayEngine.player.rotationSpeed)
 end
 
+----------------------- Начинаем идти -------------------------
 function rayEngine.moveForward()
-	rayEngine.move(rayEngine.player.moveSpeed, 0)
+	inputY = 1
+	--rayEngine.move(rayEngine.player.moveSpeed, 0)
 end
 
 function rayEngine.moveBackward()
-	rayEngine.move(-rayEngine.player.moveSpeed, 0)
+	inputY = -1
+	--rayEngine.move(-rayEngine.player.moveSpeed, 0)
 end
 
 function rayEngine.moveLeft()
-	rayEngine.move(0, -rayEngine.player.moveSpeed)
+	inputX = -1
+	--rayEngine.move(0, -rayEngine.player.moveSpeed)
 end
 
 function rayEngine.moveRight()
-	rayEngine.move(0, rayEngine.player.moveSpeed)
+	inputX = 1
+	--rayEngine.move(0, rayEngine.player.moveSpeed)
+end
+
+--------------- Стоп --------------------------------------
+
+
+function rayEngine.stopYaw()
+	inputYaw = 0	
+end
+
+function rayEngine.stopY()
+	inputY = 0	
+end
+
+function rayEngine.stopX()
+	inputX = 0	
 end
 
 function rayEngine.jump()
@@ -523,6 +552,9 @@ end
 
 function rayEngine.update()
 	local frameRenderClock = os.clock()
+	
+	rayEngine.rotate(rayEngine.player.rotationSpeed * inputYaw)
+	rayEngine.move(rayEngine.player.moveSpeed * inputY, rayEngine.player.moveSpeed * inputX)
 	
 	rayEngine.drawWorld()
 	if rayEngine.currentWeapon then rayEngine.drawWeapon() end

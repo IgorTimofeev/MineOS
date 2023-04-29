@@ -161,6 +161,12 @@ local controls = {
 	},
 	["key_up"] = {
 		[29] = rayEngine.crouch, --ctrl
+		[16] = rayEngine.stopYaw, --q
+		[18] = rayEngine.stopYaw, --e
+		[30] = rayEngine.stopX, --a
+		[32] = rayEngine.stopX, --d
+		[17] = rayEngine.stopY, --w
+		[31] = rayEngine.stopY, --s
 	},
 }
 
@@ -175,7 +181,7 @@ menu()
 rayEngine.update()
 
 while true do
-	local e = { event.pull(1) }
+	local e = { event.pull(1/60) }
 	if e[1] == "touch" then
 		if e[5] == 1 then 
 			if not rayEngine.currentWeapon then rayEngine.place(3, 0x3) end
