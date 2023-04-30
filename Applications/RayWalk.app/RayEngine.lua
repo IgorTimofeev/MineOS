@@ -1,4 +1,3 @@
-
 local text = require("Text")
 local number = require("Number")
 local color = require("Color")
@@ -13,6 +12,14 @@ local filesystem = require("Filesystem")
 local inputX = 0
 local inputY = 0
 local inputYaw = 0
+local holdingFire = 0
+
+---------------------------------------------------- Переменные ------------------------------------------------------------------
+local startRenderClock = os.clock()
+local endRenderClock = os.clock()
+local frameCount = 0
+local fps = 0
+local lastFPSCheck = os.clock()
 
 ---------------------------------------------------- Константы ------------------------------------------------------------------
 
@@ -170,7 +177,10 @@ function rayEngine.changeWeapon(weaponID)
 			damage = rayEngine.weapons[weaponID].damage,
 			weaponTexture = image.load(rayEngine.weaponsFolder .. rayEngine.weapons[weaponID].weaponTexture),
 			fireTexture = image.load(rayEngine.weaponsFolder .. rayEngine.weapons[weaponID].fireTexture),
-			crosshairTexture = image.load(rayEngine.weaponsFolder .. rayEngine.weapons[weaponID].crosshairTexture)
+			crosshairTexture = image.load(rayEngine.weaponsFolder .. rayEngine.weapons[weaponID].crosshairTexture),
+			fireTime = rayEngine.weapons[weaponID].fireTime,
+			isAuto = rayEngine.weapons[weaponID].isAuto,
+			needToFire = 0
 		}
 		rayEngine.calculateWeaponPosition()
 	else
@@ -479,7 +489,12 @@ function rayEngine.toggleWatch()
 end
 
 function rayEngine.drawWeapon()
-	if rayEngine.currentWeapon.needToFire then screen.drawImage(rayEngine.currentWeapon.xFire, rayEngine.currentWeapon.yFire, rayEngine.currentWeapon.fireTexture); rayEngine.currentWeapon.needToFire = false end
+--Пока рисуем, вычитаем время стрельбы
+	if rayEngine.currentWeapon.needToFire > 1 then 
+		screen.drawImage(rayEngine.currentWeapon.xFire, rayEngine.currentWeapon.yFire, rayEngine.currentWeapon.fireTexture)
+	end
+rayEngine.currentWeapon.needToFire =  rayEngine.currentWeapon.needToFire - 1
+--Рисуем картинку оружия поверх вспышки, а затем и прицел
 	screen.drawImage(rayEngine.currentWeapon.xWeapon, rayEngine.currentWeapon.yWeapon, rayEngine.currentWeapon.weaponTexture)
 	screen.drawImage(rayEngine.currentWeapon.xCrosshair, rayEngine.currentWeapon.yCrosshair, rayEngine.currentWeapon.crosshairTexture)
 end
@@ -551,10 +566,12 @@ function rayEngine.drawWorld()
 end
 
 function rayEngine.update()
-	local frameRenderClock = os.clock()
 	
+	local frameRenderClock = os.clock()
 	rayEngine.rotate(rayEngine.player.rotationSpeed * inputYaw)
 	rayEngine.move(rayEngine.player.moveSpeed * inputY, rayEngine.player.moveSpeed * inputX)
+	
+	if holdingFire == 1 then rayEngine.fireAuto() end
 	
 	rayEngine.drawWorld()
 	if rayEngine.currentWeapon then rayEngine.drawWeapon() end
@@ -568,13 +585,23 @@ function rayEngine.update()
 
 	if rayEngine.debugInformationEnabled then
 		rayEngine.drawDebugInformation(3, 2 + (rayEngine.minimapEnabled and 12 or 0), 24, 0.6, 
-			"renderTime: " .. string.format("%.2f", (os.clock() - frameRenderClock) * 1000) .. " ms",
+			"renderTime: " .. string.format("%.2f", ((os.clock() - frameRenderClock) + (endRenderClock-startRenderClock)) * 1000) .. " ms",
+			"FPS: " .. string.format("%.2f",fps),
 			"freeRAM: " .. string.format("%.2f", computer.freeMemory() / 1024) .. " KB",
 			"pos: " .. string.format("%.2f", rayEngine.player.position.x) .. " x " .. string.format("%.2f", rayEngine.player.position.y)
 		)
 	end
+	startRenderClock = os.clock()
 
 	screen.update()
+	frameCount = frameCount + 1
+	
+	if (os.clock() - lastFPSCheck) > 1 then
+		fps = frameCount
+		frameCount = 0
+		lastFPSCheck = os.clock()
+	end
+	endRenderClock = os.clock()
 end
 
 ----------------------------------------------------------------------------------------------------------------------------------
@@ -585,10 +612,28 @@ function rayEngine.changeResolution(width, height)
 end
 
 function rayEngine.fire()
-	rayEngine.currentWeapon.needToFire = true
-	rayEngine.update()
-	event.sleep(0.1)
-	rayEngine.update()
+--Если мы уже стреляем, то, естественно, выходим из функции
+	if rayEngine.currentWeapon.needToFire > 0 then return end
+--Иначе стреляем
+	holdingFire = 1
+	rayEngine.currentWeapon.needToFire = rayEngine.currentWeapon.fireTime
+	rayEngine.stopYaw() --Останавливаю игрока, т.к. события touch и key_up - злейшие враги всего OpenComputers
+
+end
+
+function rayEngine.unfire()
+	holdingFire = 0
+end
+
+function rayEngine.fireAuto()
+--Если мы уже стреляем, то, естественно, выходим из функции
+	if rayEngine.currentWeapon.needToFire > 0 then return end 
+--Тоже самое, если оружие - пистолет/полуавто винтовка
+	if rayEngine.currentWeapon.isAuto == 0 then return end
+--Иначе стреляем
+	rayEngine.currentWeapon.needToFire = rayEngine.currentWeapon.fireTime
+	rayEngine.stopYaw() --Останавливаю игрока, т.к. события touch и key_up - злейшие враги всего OpenComputers
+
 end
 
 ----------------------------------------------------------------------------------------------------------------------------------
