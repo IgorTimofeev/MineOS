@@ -20,7 +20,6 @@ local endRenderClock = os.clock()
 local frameCount = 0
 local fps = 0
 local lastFPSCheck = os.clock()
-
 ---------------------------------------------------- Константы ------------------------------------------------------------------
 
 local rayEngine = {}
@@ -32,7 +31,7 @@ rayEngine.watchEnabled = false
 rayEngine.drawFieldOfViewOnMinimap = false
 rayEngine.chatShowTime = 4
 rayEngine.chatHistory = {}
-
+rayEngine.sprites = {}
 ---------------------------------------------- Расчетные функции ------------------------------------------------------------------
 
 -- Позиция горизонта, относительно которой рисуется мир
@@ -149,9 +148,34 @@ function rayEngine.loadWorld(pathToWorldFolder)
 	rayEngine.map = filesystem.readTable(pathToWorldFolder .. "/Map.cfg")
 	rayEngine.player = filesystem.readTable(pathToWorldFolder .. "/Player.cfg")
 	rayEngine.blocks = filesystem.readTable(pathToWorldFolder .. "/Blocks.cfg")
+	rayEngine.entities = filesystem.readTable(pathToWorldFolder .. "/Entities.cfg")
 	-- Дополняем карту ее размерами
 	rayEngine.map.width = #rayEngine.map[1]
 	rayEngine.map.height = #rayEngine.map
+	-- Создаём карту блоков для коллизий
+	rayEngine.hitBlocks = {}
+	for i = 1,rayEngine.map.width do
+		line={}
+		rayEngine.hitBlocks[i] = {}
+		for j =1,rayEngine.map.height do
+			rayEngine.hitBlocks[i][j] = {}
+		end
+	end
+	
+	for i =1,#rayEngine.entities do
+		for dx = -1,1 do
+		for dy = -1,1 do
+		mapX = math.floor((rayEngine.entities[i].x + rayEngine.entities[i].w * dx) / rayEngine.properties.tileWidth)
+		mapY = math.floor((rayEngine.entities[i].y+rayEngine.entities[i].w * dy) / rayEngine.properties.tileWidth)
+		
+			if rayEngine.hitBlocks[mapX] and rayEngine.hitBlocks[mapX][mapY] then
+				cellCount = #rayEngine.hitBlocks[mapX][mapY]
+		
+				rayEngine.hitBlocks[mapX][mapY][cellCount + 1] = i
+			end
+		end
+		end
+	end
 	-- Ебашим правильную позицию игрока, основанную на этой ХУЙНЕ, которую ГЛЕБ так ЛЮБИТ
 	rayEngine.player.position.x = rayEngine.properties.tileWidth * rayEngine.player.position.x - rayEngine.properties.tileWidth / 2
 	rayEngine.player.position.y = rayEngine.properties.tileWidth * rayEngine.player.position.y - rayEngine.properties.tileWidth / 2
@@ -185,6 +209,14 @@ function rayEngine.changeWeapon(weaponID)
 		rayEngine.calculateWeaponPosition()
 	else
 		rayEngine.currentWeapon = nil
+	end
+end
+
+function rayEngine.loadSprites(pathToSprites)
+	fileList = filesystem.readTable(pathToSprites .. "Sprites.cfg")	
+	for i = 1,#fileList do
+		rayEngine.sprites[i] = image.load(pathToSprites .. fileList[i])
+		
 	end
 end
 
@@ -310,6 +342,15 @@ function rayEngine.drawMap(x, y, width, height, transparency)
 		for j = xMap + xHalf + 1, xMap - xHalf + 2, -1 do
 			if rayEngine.map[i] and rayEngine.map[i][j] then
 				screen.semiPixelSet(xPos, yPos, rayEngine.blocks[rayEngine.map[i][j]].color)
+			end
+			
+			if rayEngine.hitBlocks[i + 1] and rayEngine.hitBlocks[i+1][j+1] then
+				entities = rayEngine.hitBlocks[i + 1][j + 1]
+				for entityID= 1,#entities do
+					entity = rayEngine.entities[entityID]
+					scale = rayEngine.properties.tileWidth
+					screen.semiPixelSet(entity.x//scale - xMap + x, entity.y*2//scale - yMap + y, 0x00FFFF)
+				end
 			end
 			xPos = xPos + 1
 		end
@@ -510,12 +551,38 @@ end
 
 ---------------------------------------------------- Функции отрисовки мира ------------------------------------------------------------------
 
-local function raycast(angle)
+rayEngine.caughtEntities = {}
+
+--Свистнул функцию с StackOverflow. Заменяет оператор in из питона
+local function has_value (tab, val)
+    for index, value in ipairs(tab) do
+        if value == val then
+            return true
+        end
+    end
+
+    return false
+end
+
+
+function rayEngine.getEntitiesAt(x,y)
+	mapX = math.floor(x / rayEngine.properties.tileWidth)
+	mapY = math.floor(y / rayEngine.properties.tileWidth)
+	if rayEngine.hitBlocks[mapX] and rayEngine.hitBlocks[mapX][mapY] then
+		return rayEngine.hitBlocks[mapX][mapY]
+	else
+		return {}
+	end
+end
+
+local function raycast(angle,maxRange)
+	rayEngine.caughtEntities = {}
 	angle = math.rad(angle)
+	local raySteps = 0
 	local angleSinDistance, angleCosDistance, currentDistance, xWorld, yWorld, xMap, yMap, tile = math.sin(angle) * rayEngine.properties.raycastQuality, math.cos(angle) * rayEngine.properties.raycastQuality, 0, rayEngine.player.position.x, rayEngine.player.position.y
 
 	while true do
-		if currentDistance <= rayEngine.properties.drawDistance then
+		if currentDistance <= maxRange then
 			xMap, yMap = math.floor(xWorld / rayEngine.properties.tileWidth), math.floor(yWorld / rayEngine.properties.tileWidth)
 			if rayEngine.map[yMap] and rayEngine.map[yMap][xMap] then
 				return currentDistance, rayEngine.map[yMap][xMap]
@@ -523,10 +590,76 @@ local function raycast(angle)
 
 			xWorld, yWorld = xWorld + angleSinDistance, yWorld + angleCosDistance
 			currentDistance = currentDistance + rayEngine.properties.raycastQuality
+			raySteps = raySteps + 1
+			if raySteps % 1 == 0 then
+				local entityList = rayEngine.getEntitiesAt(xWorld,yWorld)
+				
+				if entityList then
+					for i = 1,#entityList do
+						if not has_value(rayEngine.caughtEntities,entityList[i]) then
+							table.insert(rayEngine.caughtEntities, entityList[i])
+						end
+					end
+				end
+			end
 		else
 			return nil
 		end
 	end
+end
+
+function calcDistance(x1,y1,x2,y2)
+	relativeX = (x2-x1)
+	relativeY = (y2-y1)
+	distance = math.sqrt(relativeX*relativeX + relativeY*relativeY)
+	return distance
+end
+
+function rayEngine.drawSpriteColumn(x,y,rayAngle,scrX,sprName)
+	
+	sprImage = rayEngine.sprites[sprName]
+	relativeX = (rayEngine.player.position.x - x)
+	relativeY = (rayEngine.player.position.y - y)
+	distance = math.sqrt(relativeX*relativeX + relativeY*relativeY)
+	
+	
+	iwidth,iheight = image.getSize(sprImage)
+	
+	--Повернуть на 90 градусов
+	horizontalX = -relativeY/distance*iwidth/2
+	horizontalY = relativeX/distance*iwidth/2
+	
+	angleTheta = math.deg(math.atan(-relativeX, -relativeY))
+	angleDelta = angleTheta - rayEngine.player.rotation 
+	
+	angleDelta = angleDelta 
+	
+	centerX = angleDelta / rayEngine.raycastStep + screen.getWidth() / 2
+	wingShift = iwidth / distance * rayEngine.distanceToProjectionPlane
+	startX = centerX - wingShift / 2
+	endX = centerX + wingShift / 2
+	
+	
+	height = iheight / distance * rayEngine.distanceToProjectionPlane
+	startY = rayEngine.horizonPosition - height / 2 + 1
+	
+	picX = math.floor((scrX - endX) / wingShift * iwidth)
+	--Продолжи эту хуйню потом, ОК?	
+	if scrX >= startX and scrX <= endX then
+		for iterY = 0, height do
+			coordY = math.floor(startY + iterY)
+			picY = math.floor(iterY/height * iheight)+1
+			--picY = 4
+			b,f,a,s = image.get(sprImage,picX,picY)
+			if b and f and (a == 0) then
+				--print(centerX,wingShift,startX,endX,picX,endX,f, b, 0xFFFFFF)
+				--print(rayEngine.player.rotation,angleTheta,angleDelta," ", startX,f, b, 0xFFFFFF)
+				screen.drawRectangle(scrX,coordY,1,1,b,f,s)
+				--screen.set(scrX,coordY,)
+			end
+		end
+	end
+	
 end
 
 function rayEngine.drawWorld()
@@ -537,7 +670,10 @@ function rayEngine.drawWorld()
 	--Сцена
 	local startAngle, endAngle, startX, distanceToTile, tileID, height, startY, tileColor = rayEngine.player.rotation - rayEngine.player.fieldOfView / 2, rayEngine.player.rotation + rayEngine.player.fieldOfView / 2, 1
 	for angle = startAngle, endAngle, rayEngine.raycastStep do
-		distanceToTile, tileID = raycast(angle)
+		distanceToTile, tileID = raycast(angle,rayEngine.properties.drawDistance)
+		
+		
+		
 		if distanceToTile then
 			-- Получаем цвет стенки
 			tileColor = getTileColor(rayEngine.blocks[tileID].color, distanceToTile)
@@ -560,12 +696,25 @@ function rayEngine.drawWorld()
 			-- 	column = image.transform(column, 1, height)
 			-- 	screen.drawImage(math.floor(startX), math.floor(startY), column)
 			-- end
+			
+			--Поверх рисуем спрайты
+			if rayEngine.caughtEntities then
+				for i = #rayEngine.caughtEntities,1,-1 do
+					local entityID = rayEngine.caughtEntities[i]
+					local entity = rayEngine.entities[entityID]
+					rayEngine.drawSpriteColumn(entity.x,entity.y,angle,startX,entity.sprite.image)
+				end
+			end
+			
+			
 		end
 		startX = startX + 1
 	end
 end
 
 function rayEngine.update()
+	
+	
 	
 	local frameRenderClock = os.clock()
 	rayEngine.rotate(rayEngine.player.rotationSpeed * inputYaw)
@@ -583,12 +732,18 @@ function rayEngine.update()
 	if rayEngine.chatEnabled then rayEngine.chat() end
 	doDayNightCycle()
 
+	raycast(rayEngine.player.rotation,rayEngine.properties.drawDistance)		
+
 	if rayEngine.debugInformationEnabled then
 		rayEngine.drawDebugInformation(3, 2 + (rayEngine.minimapEnabled and 12 or 0), 24, 0.6, 
 			"renderTime: " .. string.format("%.2f", ((os.clock() - frameRenderClock) + (endRenderClock-startRenderClock)) * 1000) .. " ms",
 			"FPS: " .. string.format("%.2f",fps),
 			"freeRAM: " .. string.format("%.2f", computer.freeMemory() / 1024) .. " KB",
-			"pos: " .. string.format("%.2f", rayEngine.player.position.x) .. " x " .. string.format("%.2f", rayEngine.player.position.y)
+			"pos: " .. string.format("%.2f", rayEngine.player.position.x) .. " x " .. string.format("%.2f", rayEngine.player.position.y),
+			"blocks: " .. string.format("%i", #rayEngine.hitBlocks) .. "x" .. string.format("%i", #rayEngine.hitBlocks[1]),
+			"entities: " .. string.format("%i", #rayEngine.entities) .. ", " .. string.format("%i", rayEngine.entities[1].x),
+			"entities at: " .. string.format("%i", #rayEngine.caughtEntities),
+			"sprites: " .. string.format("%i", #rayEngine.sprites)
 		)
 	end
 	startRenderClock = os.clock()
@@ -639,3 +794,4 @@ end
 ----------------------------------------------------------------------------------------------------------------------------------
 
 return rayEngine
+
