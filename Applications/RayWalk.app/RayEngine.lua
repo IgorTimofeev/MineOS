@@ -740,8 +740,8 @@ function rayEngine.update()
 			"FPS: " .. string.format("%.2f",fps),
 			"freeRAM: " .. string.format("%.2f", computer.freeMemory() / 1024) .. " KB",
 			"pos: " .. string.format("%.2f", rayEngine.player.position.x) .. " x " .. string.format("%.2f", rayEngine.player.position.y),
-			"blocks: " .. string.format("%i", #rayEngine.hitBlocks) .. "x" .. string.format("%i", #rayEngine.hitBlocks[1]),
-			"entities: " .. string.format("%i", #rayEngine.entities) .. ", " .. string.format("%i", rayEngine.entities[1].x),
+			"collision check blocks: " .. string.format("%i", #rayEngine.hitBlocks) .. "x" .. string.format("%i", #rayEngine.hitBlocks[1]),
+			"entities: " .. string.format("%i", #rayEngine.entities),
 			"entities at: " .. string.format("%i", #rayEngine.caughtEntities),
 			"sprites: " .. string.format("%i", #rayEngine.sprites)
 		)
