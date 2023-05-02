@@ -625,10 +625,6 @@ function rayEngine.drawSpriteColumn(x,y,rayAngle,scrX,sprName)
 	
 	iwidth,iheight = image.getSize(sprImage)
 	
-	--Повернуть на 90 градусов
-	horizontalX = -relativeY/distance*iwidth/2
-	horizontalY = relativeX/distance*iwidth/2
-	
 	angleTheta = math.deg(math.atan(-relativeX, -relativeY))
 	angleDelta = angleTheta - rayEngine.player.rotation 
 	
@@ -644,18 +640,15 @@ function rayEngine.drawSpriteColumn(x,y,rayAngle,scrX,sprName)
 	startY = rayEngine.horizonPosition - height / 2 + 1
 	
 	picX = math.floor((scrX - endX) / wingShift * iwidth)
-	--Продолжи эту хуйню потом, ОК?	
 	if scrX >= startX and scrX <= endX then
 		for iterY = 0, height do
 			coordY = math.floor(startY + iterY)
 			picY = math.floor(iterY/height * iheight)+1
-			--picY = 4
 			b,f,a,s = image.get(sprImage,picX,picY)
 			if b and f and (a == 0) then
-				--print(centerX,wingShift,startX,endX,picX,endX,f, b, 0xFFFFFF)
-				--print(rayEngine.player.rotation,angleTheta,angleDelta," ", startX,f, b, 0xFFFFFF)
+				--print(centerX,wingShift,startX,endX,picX,endX,f, b) --раскомментируй на случай дебага
+				--print(rayEngine.player.rotation,angleTheta,angleDelta," ", startX)
 				screen.drawRectangle(scrX,coordY,1,1,b,f,s)
-				--screen.set(scrX,coordY,)
 			end
 		end
 	end
