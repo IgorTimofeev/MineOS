@@ -107,8 +107,6 @@
 	inCurrentDirectory = "বর্তমান ফোল্ডারে",
 	errorWhileRunningProgram = "চলার সময় ত্রুটি ",
 	
-	sendedFeedback = "প্রতিক্রিয়া পাঠানো হয়েছিল",
-	sendFeedback = "প্রতিক্রিয়া পাঠান",
 	yourContacts = "আপনার পরিচিতিগুলি",
 	additionalInfo = "অতিরিক্ত তথ্য",
 	stackTraceback = "স্ট্যাক ট্রেসব্যাক",

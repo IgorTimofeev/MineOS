@@ -108,8 +108,6 @@
 	inCurrentDirectory = "In huidige map",
 	
 	errorWhileRunningProgram = "Fout tijdens ",
-	sendedFeedback = "Feedback is verstuurd",
-	sendFeedback = "Verstuurd feedback",
 	yourContacts = "Jou contacten",
 	additionalInfo = "Extra informatie",
 	stackTraceback = "Stack herleiden",

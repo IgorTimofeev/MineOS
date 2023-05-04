@@ -108,8 +108,6 @@
 	inCurrentDirectory = "Tämänhetkisessä tiedostossa",
 	
 	errorWhileRunningProgram = "Virhe suorittaessa ",
-	sendedFeedback = "Palaute lähetetty",
-	sendFeedback = "Lähetä palautetta",
 	yourContacts = "Yhteystietosi",
 	additionalInfo = "Lisätiedot",
 	stackTraceback = "Pinon jäljitys",

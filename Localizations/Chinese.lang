@@ -109,8 +109,6 @@
 	inCurrentDirectory = "在当前文件夹中",
 	
 	errorWhileRunningProgram = "发生错误，无法执行",
-	sendedFeedback = "反馈已发送",
-	sendFeedback = "发送反馈",
 	yourContacts = "联系方式",
 	additionalInfo = "额外信息",
 	stackTraceback = "堆栈跟踪",

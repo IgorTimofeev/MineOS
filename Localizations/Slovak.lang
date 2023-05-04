@@ -109,8 +109,6 @@
 	inCurrentDirectory = "V tomto priečinku",
 	
 	errorWhileRunningProgram = "Chyba pri behu programu ",
-	sendedFeedback = "Odozva bola odoslaná",
-	sendFeedback = "Odoslať odozvu",
 	yourContacts = "Vaše kontakty",
 	additionalInfo = "Ďaľšie informácie",
 	stackTraceback = "Spätné sledovanie zásobníka",

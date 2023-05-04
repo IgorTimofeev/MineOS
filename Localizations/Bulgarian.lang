@@ -108,8 +108,6 @@
 	inCurrentDirectory = "В текущата папка",
 	errorWhileRunningProgram = "Възникна грешка при изпълняване на ",
 	
-	sendedFeedback = "Обратната връзка бе изпратена",
-	sendFeedback = "Изпращане на обратна връзка",
 	yourContacts = "Вашите контакти",
 	additionalInfo = "Допълнителна информация",
 	stackTraceback = "Стак на повикванията",

@@ -101,20 +101,15 @@ local function flush(width, height)
 
 	resetDrawLimit()
 
-	local index
-
 	for i = 1, bufferWidth * bufferHeight do
-		index = i
-		currentFrameBackgrounds[index] = 0x010101
-		newFrameBackgrounds[index] = 0x010101
+		currentFrameBackgrounds[i] = 0x010101
+		newFrameBackgrounds[i] = 0x010101
 
-		index = index + 1
-		currentFrameForegrounds[index] = 0xFEFEFE
-		newFrameForegrounds[index] = 0xFEFEFE
+		currentFrameForegrounds[i] = 0xFEFEFE
+		newFrameForegrounds[i] = 0xFEFEFE
 
-		index = index + 1
-		currentFrameSymbols[index] = " "
-		newFrameSymbols[index] = " "
+		currentFrameSymbols[i] = " "
+		newFrameSymbols[i] = " "
 	end
 end
 

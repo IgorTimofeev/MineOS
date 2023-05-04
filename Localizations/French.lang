@@ -109,8 +109,6 @@
 	inCurrentDirectory = "Dans le répertoire actuel",
 	
 	errorWhileRunningProgram = "Erreur lors de l'exécution ",
-	sendedFeedback = "Votre commantaire a bien été envoyé",
-	sendFeedback = "Envoyer un commantaire",
 	yourContacts = "Vos contacts",
 	additionalInfo = "Informations additionnelles",
 	stackTraceback = "Trace d'appels",

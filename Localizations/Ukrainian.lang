@@ -109,8 +109,6 @@
 	inCurrentDirectory = "В поточному каталозі",
 
 	errorWhileRunningProgram = "Помилка під час роботи ",
-	sendedFeedback = "Звіт відправлений",
-	sendFeedback = "Відправити звіт",
 	yourContacts = "Ваші контакти",
 	additionalInfo = "Додаткова інформація",
 	stackTraceback = "Стек помилки",

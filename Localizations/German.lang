@@ -109,8 +109,6 @@
 	inCurrentDirectory = "Im aktuellen Verzeichnis",
 	
 	errorWhileRunningProgram = "Fehler beim Ausführen",
-	sendedFeedback = "Fehlerbericht wurde gesendet",
-	sendFeedback = "Fehlerbericht senden",
 	yourContacts = "Meine Kontakte",
 	additionalInfo = "Zusätzliche Informationen",
 	stackTraceback = "Stacktrace",

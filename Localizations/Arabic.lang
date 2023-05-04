@@ -108,8 +108,6 @@
 	inCurrentDirectory = "في المجلد الحالي",
 	
 	errorWhileRunningProgram = "خطأ أثناء تشغيل ",
-	sendedFeedback = "ملاحظات تم إرساله",
-	sendFeedback = "إرسال ملاحظات",
 	yourContacts = "جهات الاتصال الخاصة بك",
 	additionalInfo = "معلومات إضافية",
 	stackTraceback = "Stack traceback ",
