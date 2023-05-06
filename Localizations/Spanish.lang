@@ -108,8 +108,6 @@
 	inCurrentDirectory = "En la Carpeta Actual",
 	
 	errorWhileRunningProgram = "Error al ejecutar ",
-	sendedFeedback = "La Opinion ha sido Enviada",
-	sendFeedback = "Enviar Opinion",
 	yourContacts = "Tus Contactos",
 	additionalInfo = "Informacion Adicional",
 	stackTraceback = "Seguimiento de pila",

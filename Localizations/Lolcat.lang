@@ -108,8 +108,6 @@
 	inCurrentDirectory = "In current foldr",
 	
 	errorWhileRunningProgram = "Error whiel runnin ",
-	sendedFeedback = "Feedback wuz sent",
-	sendFeedback = "Send feedback",
 	yourContacts = "ur contacts",
 	additionalInfo = "Additional informashun",
 	stackTraceback = "Stack traceback",

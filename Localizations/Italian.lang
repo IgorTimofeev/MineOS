@@ -109,8 +109,6 @@
 	inCurrentDirectory = "Nella directory corrente",
 	
 	errorWhileRunningProgram = "Errore durante l'esecuzione ",
-	sendedFeedback = "È stato inviato un Feedback",
-	sendFeedback = "Invia commenti",
 	yourContacts = "I propri contatti",
 	additionalInfo = "Informazioni supplementari",
 	stackTraceback = "Traceback in pila",

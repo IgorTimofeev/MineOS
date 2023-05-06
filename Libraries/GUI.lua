@@ -952,6 +952,7 @@ end
 
 function GUI.alert(...)
 	local args = {...}
+	
 	for i = 1, #args do
 		if type(args[i]) == "table" then
 			args[i] = text.serialize(args[i], true)
@@ -959,7 +960,10 @@ function GUI.alert(...)
 			args[i] = tostring(args[i])
 		end
 	end
-	if #args == 0 then args[1] = "nil" end
+
+	if #args == 0 then
+		args[1] = "nil"
+	end
 
 	local sign = image.fromString([[06030000FF 0000FF 00F7FF▟00F7FF▙0000FF 0000FF 0000FF 00F7FF▟F7FF00 F7FF00 00F7FF▙0000FF 00F7FF▟F7FF00CF7FF00yF7FF00kF7FF00a00F7FF▙]])
 	local offset = 2
@@ -970,6 +974,7 @@ function GUI.alert(...)
 
 	lines = text.wrap(lines, textWidth)
 	local height = image.getHeight(sign)
+	
 	if #lines + 2 > height then
 		height = #lines + 2
 	end
@@ -981,6 +986,7 @@ function GUI.alert(...)
 	workspace:addChild(GUI.panel(1, 1, workspace.width, workspace.height, 0x1D1D1D))
 	workspace:addChild(GUI.image(x, y, sign))
 	workspace:addChild(GUI.textBox(x + image.getWidth(sign) + 2, y, textWidth, #lines, 0x1D1D1D, 0xE1E1E1, lines, 1, 0, 0)).eventHandler = nil
+	
 	local buttonWidth = 10
 	local button = workspace:addChild(GUI.roundedButton(x + image.getWidth(sign) + textWidth - buttonWidth + 2, workspace.height - offset, buttonWidth, 1, 0x3366CC, 0xE1E1E1, 0xE1E1E1, 0x3366CC, "OK"))
 	

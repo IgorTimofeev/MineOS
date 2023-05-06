@@ -280,6 +280,13 @@ function system.call(method, ...)
 
 		path, line = path:match("\t+([^:]+%.lua):(%d+):")
 
+		-- Weird case on some server machines, unable to reproduce,
+		-- seems like traceback parsing error
+		-- TODO: replace this when appropriate error reason will be found
+		if not path then
+			return nil
+		end
+
 		return {
 			path = path,
 			line = tonumber(line),
@@ -289,6 +296,7 @@ function system.call(method, ...)
 	
 	local xpcallSuccess, xpcallReason = xpcall(launchMethod, tracebackMethod)
 	
+	-- This shouldn't happen normally, but if so - placeholder error message will be returned
 	if type(xpcallReason) == "string" or xpcallReason == nil then
 		xpcallReason = {
 			path = paths.system.libraries .. "System.lua",
@@ -420,7 +428,7 @@ function system.launchWithArguments(path)
 	workspace:draw()
 end
 
-local iconLaunchers = {
+local defaultIconLaunchers = {
 	application = function(icon)
 		system.execute(icon.path .. "Main.lua")
 	end,
@@ -837,6 +845,7 @@ local function iconOnRightClick(selectedIcons, icon, e1, e2, e3, e4)
 		end
 
 		local success, reason = require("Compressor").pack(where .. "/Archive.pkg", itemsToArchive)
+		
 		if not success then
 			GUI.alert(reason)
 		end
@@ -1180,7 +1189,6 @@ local function anyIconFieldUpdateFileList(iconField, func)
 			end
 		end
 
-		-- 
 		func(list)
 	else
 		GUI.alert("Failed to update file list: " .. tostring(reason))
@@ -1634,6 +1642,7 @@ local function iconFieldBackgroundObjectEventHandler(workspace, object, e1, e2, 
 			end
 
 			if selectedIcon then
+				selectedIcon.selected = nil
 				selectedIcon:launch()
 				workspace:draw()
 			end
@@ -1737,7 +1746,8 @@ local function anyIconFieldAddInfo(iconField, path)
 
 	-- Duplicate icon launchers for overriding possibility
 	iconField.launchers = {}
-	for key, value in pairs(iconLaunchers) do
+
+	for key, value in pairs(defaultIconLaunchers) do
 		iconField.launchers[key] = value
 	end
 end
@@ -2190,7 +2200,6 @@ function system.error(path, line, traceback)
 	window:addChild(GUI.panel(1, 1, window.width, 3, 0x3C3C3C))
 	window:addChild(GUI.label(1, 2, window.width, 1, 0xE1E1E1, localization.errorWhileRunningProgram .. "\"" .. filesystem.name(path) .. "\"")):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
 	local actionButtons = window:addChild(GUI.actionButtons(2, 2, true))
-	local sendToDeveloperButton = window:addChild(GUI.adaptiveButton(9, 1, 2, 1, 0x4B4B4B, 0xD2D2D2, 0x2D2D2D, 0xFFFFFF, localization.sendFeedback))
 	
 	local codeView = window:addChild(GUI.codeView(1, 4, math.floor(window.width * 0.62), window.height - 3, 1, 1, 100, {}, {[line] = 0xFF4444}, GUI.LUA_SYNTAX_PATTERNS, GUI.LUA_SYNTAX_COLOR_SCHEME, true, {}))
 	
@@ -2239,23 +2248,10 @@ function system.error(path, line, traceback)
 		end
 	end
 
-	sendToDeveloperButton.onTouch = function()
-		if component.isAvailable("internet") then
-			local internet = require("Internet")
-			internet.request("https://api.mcmodder.ru/ECS/report.php?path=" .. internet.encode(path) .. "&errorMessage=" .. internet.encode(traceback))
-
-			sendToDeveloperButton.text = localization.sendedFeedback
-			workspace:draw()
-			event.sleep(1)
-		end
-
-		actionButtons.close.onTouch()
-	end
-
 	workspace:draw()
 
-	for i = 1, 3 do
-		computer.beep(1500, 0.08)
+	for i = 1, 2 do
+		computer.beep(1900, 0.05)
 	end
 end
 
@@ -2475,7 +2471,7 @@ function system.updateDesktop()
 
 	dockContainer.updateIcons = function()
 		for i = 1, #dockContainer.children - 1 do
-			dockContainer.children[i]:analyseExtension(iconLaunchers)
+			dockContainer.children[i]:analyseExtension(defaultIconLaunchers)
 		end
 	end
 
@@ -2493,7 +2489,7 @@ function system.updateDesktop()
 			path = system.readShortcut(path)
 		end
 		local icon = dockContainer:addChild(system.icon(1, 2, path, dockColors))
-		icon:analyseExtension(iconLaunchers)
+		icon:analyseExtension(defaultIconLaunchers)
 		icon:moveBackward()
 
 		icon.eventHandler = dockIconEventHandler

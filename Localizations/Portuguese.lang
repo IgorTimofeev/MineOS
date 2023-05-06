@@ -108,8 +108,6 @@
 	inCurrentDirectory = "Na pasta atua",
 	
 	errorWhileRunningProgram = "Erro ao executar ",
-	sendedFeedback = "Feedback foi enviado",
-	sendFeedback = "Enviar feedback",
 	yourContacts = "Seus contatos",
 	additionalInfo = "Informações adicionais",
 	stackTraceback = "Rastreamento de pilha",

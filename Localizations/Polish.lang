@@ -108,8 +108,6 @@
 	inCurrentDirectory = "W obecnym folderze",
 	
 	errorWhileRunningProgram = "Błąd podczas uruchamiania ",
-	sendedFeedback = "Wysłano opinię",
-	sendFeedback = "Wyślij opinię",
 	yourContacts = "Twoje kontakty",
 	additionalInfo = "Dodatkowe informacje",
 	stackTraceback = "Identyfikator",

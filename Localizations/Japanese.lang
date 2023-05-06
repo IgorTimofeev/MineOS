@@ -109,8 +109,6 @@
 	inCurrentDirectory = "現在のフォルダ内",
 	
 	errorWhileRunningProgram = "実行中のエラー ",
-	sendedFeedback = "フィードバックが送信されました",
-	sendFeedback = "フィードバックを送る",
 	yourContacts = "あなたの問い合わせ先",
 	additionalInfo = "追加情報",
 	stackTraceback = "スタックトレースバック",

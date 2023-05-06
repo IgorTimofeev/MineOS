@@ -108,8 +108,6 @@
 	inCurrentDirectory = "चालू फ़ोल्डर में",
 	
 	errorWhileRunningProgram = "दौड़ते समय त्रुटि ",
-	sendedFeedback = "प्रतिक्रिया भेजी गई",
-	sendFeedback = "फीडबैक",
 	yourContacts = "अपने संपर्क",
 	additionalInfo = "अतिरिक्त जानकारी",
 	stackTraceback = "ढेर ट्रेसबैक",

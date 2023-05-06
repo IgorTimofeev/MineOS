@@ -109,8 +109,6 @@
 	inCurrentDirectory = "В текущей директории",
 
 	errorWhileRunningProgram = "Ошибка при выполнении ",
-	sendedFeedback = "Отчет отправлен",
-	sendFeedback = "Отправить отчет",
 	yourContacts = "Ваши контакты",
 	additionalInfo = "Дополнительная информация",
 	stackTraceback = "Стек ошибки",

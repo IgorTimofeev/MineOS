@@ -108,8 +108,6 @@
 	inCurrentDirectory = "현재 폴더에",
 	
 	errorWhileRunningProgram = "다음을 실행중 문제가 생겼습니다 : ",
-	sendedFeedback = "피드백을 보냈습니다.",
-	sendFeedback = "피드백 보내기",
 	yourContacts = "귀하의 연락처",
 	additionalInfo = "추가 정보",
 	stackTraceback = "문제 정보",

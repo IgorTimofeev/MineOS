@@ -108,8 +108,6 @@
 	inCurrentDirectory = "У дзеючай дырэкторыі",
 	
 	errorWhileRunningProgram = "Памылка пры выкананні ",
-	sendedFeedback = "Справаздача адпраўлена",
-	sendFeedback = "Адправіць справаздачу",
 	yourContacts = "Вашы кантакты",
 	additionalInfo = "Дадатковая інфармацыя",
 	stackTraceback = "Стэк памылкі",
