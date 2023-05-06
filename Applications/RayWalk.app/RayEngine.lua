@@ -77,11 +77,13 @@ end
 ---------------------------------------------- Вспомогательные функции ------------------------------------------------------------------
 
 local function constrainAngle(value)
-	if ( value < 0 ) then
-		value = value + 360
-	elseif ( value > 360 )  then
-		value = value - 360
-	end
+	value = value % 360
+	return value
+end
+
+
+local function constrain180(value)
+	value = (value + 180) % 360 - 180
 	return value
 end
 
@@ -628,7 +630,7 @@ function rayEngine.drawSpriteColumn(x,y,rayAngle,scrX,sprName)
 	angleTheta = math.deg(math.atan(-relativeX, -relativeY))
 	angleDelta = angleTheta - rayEngine.player.rotation 
 	
-	angleDelta = angleDelta 
+	angleDelta = constrain180(angleDelta) 
 	
 	centerX = angleDelta / rayEngine.raycastStep + screen.getWidth() / 2
 	wingShift = iwidth / distance * rayEngine.distanceToProjectionPlane
