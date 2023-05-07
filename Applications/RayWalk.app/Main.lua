@@ -174,6 +174,7 @@ local controls = {
 
 rayEngine.loadEngineProperties(applicationResourcesDirectory .. "RayEngine.cfg")
 rayEngine.loadWeapons(applicationResourcesDirectory .. "Weapons/")
+rayEngine.loadSprites(applicationResourcesDirectory .. "Sprites/")
 rayEngine.loadWorld(worldsPath .. "ExampleWorld")
 rayEngine.changeResolution(rayEngine.properties.screenResolution.width, rayEngine.properties.screenResolution.height)
 -- rayEngine.intro()
