@@ -220,8 +220,10 @@ local function checkContentLength(url)
 			_, _, responseData = handle:response()
 		until responseData or computer.uptime() >= deadline
 
-		if responseData and responseData["Content-Length"] and responseData["Content-Length"][1] then
-			if tonumber(responseData["Content-Length"][1]) <= 10240 then
+		if responseData and responseData["Content-Length"] then
+			local contentLength = tonumber(responseData["Content-Length"][1])
+
+			if contentLength and contentLength <= 10240 then
 				return handle
 			else
 				handle:close()
