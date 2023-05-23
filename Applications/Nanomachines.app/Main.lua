@@ -1,13 +1,13 @@
 
 local GUI = require("GUI")
 local screen = require("Screen")
-local fs = require("Filesystem")
 local color = require("Color")
 local image = require("Image")
 local system = require("System")
 local paths = require("Paths")
 local system = require("System")
 local text = require("Text")
+local filesystem = require("Filesystem")
 
 --------------------------------------------------------------------------------
 
@@ -30,7 +30,8 @@ local config = {
 }
 
 local configPath = paths.user.applicationData .. "Nanomachines/Config.cfg"
-if fs.exists(configPath) then
+
+if filesystem.exists(configPath) then
 	config = filesystem.readTable(configPath)
 end
 
