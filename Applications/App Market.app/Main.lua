@@ -613,7 +613,7 @@ local function getPublicationIcon(publication)
 
 					return loadImage(path)
 				else
-					return loadIcon("FileNotExists")
+					return loadIcon("Application")
 				end
 			end
 		end
