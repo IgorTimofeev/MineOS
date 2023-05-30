@@ -165,14 +165,18 @@ local function RawAPIRequest(script, postData, notUnserialize)
 	local success, reason = internet.rawRequest(
 		host .. script .. ".php",
 		postData and internet.serialize(postData) or nil,
-		{["User-Agent"] = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.119 Safari/537.36"},
+		{
+			["User-Agent"] = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.119 Safari/537.36",
+			["Content-Type"] = "application/x-www-form-urlencoded"
+		},
 		function(chunk)
 			data = data .. chunk
 			
 			progressIndicator:roll()
 			workspace:draw()
 		end,
-		math.huge
+		math.huge,
+		"POST"
 	)
 
 	progressIndicator.active = false
@@ -214,14 +218,23 @@ end
 
 local function checkContentLength(url)
 	local handle = component.get("internet").request(url)
+	
 	if handle then
-		local deadline, _, _, responseData = computer.uptime() + 1
+		local deadline, code, message, headers = computer.uptime() + 1
+		
 		repeat
-			_, _, responseData = handle:response()
-		until responseData or computer.uptime() >= deadline
+			code, message, headers = handle:response()
+		until headers or computer.uptime() >= deadline
 
-		if responseData and responseData["Content-Length"] then
-			local contentLength = tonumber(responseData["Content-Length"][1])
+		if headers and headers["Content-Length"] then
+			local contentLength = tonumber(headers["Content-Length"][1])
+
+			-- !!! ACHTUNG !!! RETARD CODE ALERT
+			-- Remove this when this shit will be fixed
+			-- Broken since OC 1.8.0
+			if not contentLength and headers["Content-Length"][1] and headers["Content-Length"][1][1] then
+				contentLength = tonumber(headers["Content-Length"][1][1]:sub(17))
+			end
 
 			if contentLength and contentLength <= 10240 then
 				return handle
@@ -239,10 +252,13 @@ end
 
 local function checkImage(url, mneTolkoSprosit)
 	local handle, reason = checkContentLength(url)
+	
 	if handle then
 		local needCheck, data, chunk, reason = true, ""
+		
 		while true do
 			chunk, reason = handle.read(math.huge)
+			
 			if chunk then
 				data = data .. chunk
 				progressIndicator:roll()
