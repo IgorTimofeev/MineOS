@@ -9,7 +9,6 @@ local
 
 	mathCeil,
 	mathFloor,
-	mathModf,
 	mathAbs,
 	mathMin,
 	mathMax,
@@ -45,7 +44,6 @@ local
 
 	math.ceil,
 	math.floor,
-	math.modf,
 	math.abs,
 	math.min,
 	math.max,

@@ -90,7 +90,7 @@
 	systemArchitecture = "CPU architecture",
 	systemUnloading = "Automatic unloading",
 	systemRAM = "Memory management",
-	systemUnload = "Upload library",
+	systemUnload = "Unload library",
 	systemInfo = "This option saves memory by unloading unused libraries using the \"Weak Link\" method. Disable it if you encounter any rancors or glitches in the behavior of complex interdependent systems",
 
 	users = "Users",

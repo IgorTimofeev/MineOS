@@ -8,7 +8,7 @@ local color = {}
 --------------------------------------------------------------------------------
 
 -- Optimized Lua 5.3 bitwise support
-if computer.getArchitecture and computer.getArchitecture() == "Lua 5.3" then
+if computer.getArchitecture and computer.getArchitecture() ~= "Lua 5.2" then
 	integerToRGB, RGBToInteger, blend, transition, to8Bit = load([[
 		local mathHuge, palette = math.huge, select(1, ...)
 
