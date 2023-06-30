@@ -70,6 +70,11 @@ local languages = {
 
 --------------------------------------------------------------------------------
 
+if not component.isAvailable("internet") then
+	GUI.alert("AppMarket requires internet card to work")
+	return
+end
+
 filesystem.makeDirectory(iconCachePath)
 
 local iconsCache = {}
