@@ -13,7 +13,7 @@ local event = require("Event")
 
 --------------------------------------------------------------------------------
 
-local host = "http://mineos.modder.pw/MineOSAPI/2.04/"
+local host = "http://mineos.buttex.ru/MineOSAPI/2.04/"
 
 local overviewIconsCount = 14
 local overviewAnimationDelay = 0.05
