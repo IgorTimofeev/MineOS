@@ -1,4 +1,3 @@
-
 local internet = require("Internet")
 local GUI = require("GUI")
 local screen = require("Screen")
@@ -105,7 +104,7 @@ local leftList = window:addChild(GUI.list(1, 4, leftListPanel.width, 1, 3, 0, ni
 
 local contentContainer = window:addChild(GUI.container(1, 1, 1, 1))
 
-local sponsoredLabel = window:addChild(GUI.text(2, 1, 0x3C3C3C, "Sponsored by McModder"))
+local sponsoredLabel = window:addChild(GUI.text(2, 1, 0x3C3C3C, "Sponsored by Smok1e"))
 
 local progressIndicator = window:addChild(GUI.progressIndicator(math.floor(leftListPanel.width / 2 - 1), 1, 0x3C3C3C, 0x00B640, 0x99FF80))
 
@@ -186,7 +185,6 @@ local function RawAPIRequest(script, postData, notUnserialize)
 
 	progressIndicator.active = false
 	workspace:draw()
-
 
 	if success then
 		if not notUnserialize then
@@ -412,6 +410,27 @@ local function deletePublication(publication)
 	buttonsLayout:addChild(GUI.adaptiveRoundedButton(1, 1, 2, 0, 0xA5A5A5, 0x2D2D2D, 0x0, 0xE1E1E1, localization.no)).onTouch = function()
 		container:remove()
 		workspace:draw()
+	end
+end
+
+local function checkForUnreadMessages()
+	if not user.token then
+		return
+	end
+
+	local dialogs =	fieldAPIRequest("result", "dialogs", {
+		token = user.token
+	})
+
+	if dialogs then
+		messagesItem.has_unread_messages = false
+
+		for _, dialog in pairs(dialogs) do
+			if dialog.last_message_user_id ~= user.id and dialog.last_message_is_read == 0 then
+				messagesItem.has_unread_messages = true
+				break
+			end
+		end
 	end
 end
 
@@ -682,6 +701,29 @@ local function containerScrollEventHandler(workspace, object, e1, e2, e3, e4, e5
 			end
 		end
 	end
+end
+
+local function messagesButtonDraw(pressable)
+	local backgroundColor = pressable.pressed and pressable.colors.pressed.background or pressable.disabled and pressable.colors.disabled.background or pressable.colors.default.background
+	local textColor = pressable.pressed and pressable.colors.pressed.text or pressable.disabled and pressable.colors.disabled.text or pressable.colors.default.text
+
+	if backgroundColor then
+		screen.drawRectangle(pressable.x, pressable.y, pressable.width, pressable.height, backgroundColor, textColor, " ")
+	end
+
+	-- Рисуем синюю писечку, просящую прочитать сообщения
+	if pressable.has_unread_messages then
+		local x = math.floor(pressable.x + 2)
+		local y = math.floor(pressable.y + pressable.height / 2)
+		local backgroundColor, _, _ = screen.get(x, y)
+
+		screen.set(x, y, backgroundColor, 0x005EFF, "●")
+	end	
+
+	screen.drawText(
+		math.floor(pressable.x + pressable.width / 2 - unicode.len(pressable.text) / 2), 
+		math.floor(pressable.y + pressable.height / 2), textColor, pressable.text
+	)
 end
 
 local newApplicationPreview, newPublicationInfo
@@ -1049,7 +1091,10 @@ local function dialogGUI(to_user_name)
 		if result then
 			messages = result
 		end
+
+		checkForUnreadMessages()
 	end
+
 	messages = messages or {}
 
 	contentContainer:removeChildren()
@@ -1147,7 +1192,7 @@ end
 
 local function dialogs()
 	local dialogs = fieldAPIRequest("result", "dialogs", {
-		token = user.token,
+		token = user.token
 	})
 
 	if dialogs then
@@ -1162,10 +1207,15 @@ local function dialogs()
 			dialogGUI()
 		end
 
+		messagesItem.has_unread_messages = false
 		if #dialogs > 0 then
 			local y = sendMessageButton.localY + 2
 
 			for i = 1, #dialogs do
+				if not messagesItem.has_unread_messages then
+					messagesItem.has_unread_messages = dialogs[i].last_message_is_read == 0 and dialogs[i].last_message_user_id ~= user.id
+				end
+
 				local backgroundColor, nicknameColor, timestampColor, textColor = 0xFFFFFF, 0x0, 0xD2D2D2, 0x969696
 				if dialogs[i].last_message_is_read == 0 and dialogs[i].last_message_user_name ~= user.name then
 					backgroundColor, nicknameColor, timestampColor, textColor = 0xCCDBFF, 0x0, 0xB4B4B4, 0x878787
@@ -1967,6 +2017,7 @@ end
 
 messagesItem = leftList:addItem(localization.messages)
 messagesItem.onTouch = dialogs
+messagesItem.draw = messagesButtonDraw
 
 leftList:addItem(localization.settings).onTouch = settings
 
@@ -1999,6 +2050,9 @@ end
 --------------------------------------------------------------------------------
 
 loadConfig()
+
+-- Рисуем синюю писечку если надо
+checkForUnreadMessages()
 
 lastMethod = loadCategory
 
