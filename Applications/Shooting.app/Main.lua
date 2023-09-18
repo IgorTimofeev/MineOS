@@ -62,7 +62,7 @@ circle.draw = function()
 	end
 
 	for i = 1, #points do
-		screen.drawText(circle.x + points[i][1], circle.y + points[i][2], getColor(), "⬤")
+		screen.drawText(circle.x + points[i][1], circle.y + points[i][2], getColor(), "●")
 	end
 end
 
