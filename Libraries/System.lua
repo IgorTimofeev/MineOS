@@ -974,7 +974,7 @@ local function iconFieldIconEventHandler(workspace, icon, e1, e2, e3, e4, e5, ..
 
 		iconFieldSaveIconPosition(
 			icon.parent,
-			icon.name .. (icon.isDirectory and "/" or ""),
+			icon.filename .. (icon.isDirectory and "/" or ""),
 			icon.localX,
 			icon.localY
 		)
@@ -1095,6 +1095,7 @@ local function anyIconAddInfo(icon, path)
 	icon.isDirectory = path:sub(-1) == "/"
 
 	local name = icon.isDirectory and filesystem.name(path):sub(1, -2) or filesystem.name(path)
+	icon.filename = name
 	icon.name = userSettings.filesShowExtension and name or filesystem.hideExtension(name)
 
 	icon.analyseExtension = anyIconAnalyseExtension
@@ -1230,16 +1231,16 @@ local function iconFieldUpdateFileList(iconField)
 			iconField:loadIconConfig()
 		end
 		
-		--
-		local i, configList, notConfigList = 1, {}, {}
-		while i <= #list do
-			if iconField.iconConfigEnabled and iconField.iconConfig[list[i]] then
-				table.insert(configList, list[i])
+		-- Хех, прочитал))0
+		local configList, notConfigList = {}, {}
+		while #list > 0 do
+			if iconField.iconConfigEnabled and iconField.iconConfig[list[1]] then
+				table.insert(configList, list[1])
 			else
-				table.insert(notConfigList, list[i])
+				table.insert(notConfigList, list[1])
 			end
 
-			table.remove(list, i)
+			table.remove(list, 1)
 		end
 
 		-- Filling icons container
