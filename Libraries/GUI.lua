@@ -1389,7 +1389,7 @@ end
 
 local function switchAndLabelDraw(switchAndLabel)
 	switchAndLabel.label.width = switchAndLabel.width
-	switchAndLabel.switch.localX = switchAndLabel.width - switchAndLabel.switch.width
+	switchAndLabel.switch.localX = switchAndLabel.width - switchAndLabel.switch.width + 1
 
 	switchAndLabel.label.x, switchAndLabel.label.y = switchAndLabel.x + switchAndLabel.label.localX - 1, switchAndLabel.y + switchAndLabel.label.localY - 1
 	switchAndLabel.switch.x, switchAndLabel.switch.y = switchAndLabel.x + switchAndLabel.switch.localX - 1, switchAndLabel.y + switchAndLabel.switch.localY - 1
@@ -1490,23 +1490,46 @@ end
 --------------------------------------------------------------------------------
 
 local function switchDraw(switch)
-	screen.drawText(switch.x - 1, switch.y, switch.colors.passive, "⠰")
-	screen.drawRectangle(switch.x, switch.y, switch.width, 1, switch.colors.passive, 0x0, " ")
-	screen.drawText(switch.x + switch.width, switch.y, switch.colors.passive, "⠆")
+	-- ◖◗
+	-- ⠆⠰
 
-	screen.drawText(switch.x - 1, switch.y, switch.colors.active, "⠰")
-	screen.drawRectangle(switch.x, switch.y, switch.pipePosition - 1, 1, switch.colors.active, 0x0, " ")
+	-- Sides
+	if switch.pipePosition > 1 then
+		screen.drawText(switch.x, switch.y, switch.colors.active, "◖")
+	end
 
-	screen.drawText(switch.x + switch.pipePosition - 2, switch.y, switch.colors.pipe, "⠰")
-	screen.drawRectangle(switch.x + switch.pipePosition - 1, switch.y, 2, 1, switch.colors.pipe, 0x0, " ")
-	screen.drawText(switch.x + switch.pipePosition + 1, switch.y, switch.colors.pipe, "⠆")
+	if switch.pipePosition < switch.width - 1 then
+		screen.drawText(switch.x + switch.width - 1, switch.y, switch.colors.passive, "◗")
+	end
+
+	-- Background
+	if switch.width > 2 then
+		-- Active
+		local width = switch.pipePosition - 1
+
+		if width > 0 then
+			screen.drawRectangle(switch.x + 1, switch.y, width, 1, switch.colors.active, 0x0, " ")
+		end
+
+		-- Passive
+		width = switch.width - switch.pipePosition - 1
+
+		if width > 0 then
+			screen.drawRectangle(switch.x + switch.pipePosition, switch.y, width, 1, switch.colors.passive, 0x0, " ")
+		end
+	end
+
+	-- Pipe
+	screen.drawText(switch.x + switch.pipePosition - 1, switch.y, switch.colors.pipe, "◖")
+	screen.set(switch.x + switch.pipePosition, switch.y, switch.colors.pipe, switch.colors.pipe, " ")
+	screen.drawText(switch.x + switch.pipePosition + 1, switch.y, switch.colors.pipe, "◗")
 	
 	return switch
 end
 
 local function switchSetState(switch, state)
 	switch.state = state
-	switch.pipePosition = switch.state and switch.width - 1 or 1
+	switch.pipePosition = switch.state and switch.width - 2 or 1
 
 	return switch
 end
@@ -1520,9 +1543,9 @@ local function switchEventHandler(workspace, switch, e1, ...)
 		switch:addAnimation(
 			function(animation)
 				if switch.state then
-					switch.pipePosition = number.round(1 + animation.position * (switch.width - 2))
+					switch.pipePosition = number.round(1 + animation.position * (switch.width - 3))
 				else	
-					switch.pipePosition = number.round(1 + (1 - animation.position) * (switch.width - 2))
+					switch.pipePosition = number.round(1 + (1 - animation.position) * (switch.width - 3))
 				end
 			end,
 			
