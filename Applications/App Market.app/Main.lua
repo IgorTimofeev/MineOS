@@ -96,7 +96,15 @@ local updateFileList, editPublication, messagesItem
 
 --------------------------------------------------------------------------------
 
-local workspace, window = system.addWindow(GUI.filledWindow(1, 1, 127, 33, 0xF0F0F0))
+local windowsContainer = system.getWindowsContainer()
+
+local workspace, window, menu = system.addWindow(GUI.filledWindow(
+	1,
+	1,
+	math.min(127, windowsContainer.width),
+	math.min(33, windowsContainer.height),
+	0xF0F0F0
+))
 
 local leftListPanel = system.addBlurredOrDefaultPanel(window, 1, 1, 23, 1)
 
@@ -428,7 +436,9 @@ local function checkForUnreadMessages()
 		for _, dialog in pairs(dialogs) do
 			if dialog.last_message_user_id ~= user.id and dialog.last_message_is_read == 0 then
 				messagesItem.has_unread_messages = true
-				break
+				workspace:draw()
+
+				return
 			end
 		end
 	end
@@ -1082,6 +1092,7 @@ end
 
 local function dialogGUI(to_user_name)
 	local messages
+
 	if to_user_name then
 		local result = fieldAPIRequest("result", "messages", {
 			token = user.token,
@@ -2051,9 +2062,6 @@ end
 
 loadConfig()
 
--- Рисуем синюю писечку если надо
-checkForUnreadMessages()
-
 lastMethod = loadCategory
 
 if select(1, ...) == "updates" then
@@ -2065,3 +2073,6 @@ else
 end
 
 window:resize(window.width, window.height)
+
+-- Рисуем синюю писечку если надо
+checkForUnreadMessages()

@@ -43,7 +43,15 @@ local pathHistoryCurrent = 0
 
 --------------------------------------------------------------------------------
 
-local workspace, window, menu = system.addWindow(GUI.filledWindow(1, 1, 100, 26, 0xF0F0F0))
+local windowsContainer = system.getWindowsContainer()
+
+local workspace, window, menu = system.addWindow(GUI.filledWindow(
+	1,
+	1,
+	math.min(100, windowsContainer.width),
+	math.min(26, windowsContainer.height),
+	0xF0F0F0
+))
 
 local titlePanel = window:addChild(GUI.panel(1, 1, 1, 3, 0x3C3C3C))
 

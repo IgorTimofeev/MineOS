@@ -2467,7 +2467,7 @@ function system.updateDesktop()
 		end
 
 		dockContainer.width = #dockContainer.children * (userSettings.iconWidth + userSettings.iconHorizontalSpace) - userSettings.iconHorizontalSpace + 6
-		dockContainer.localX = math.floor(workspace.width / 2 - dockContainer.width / 2)
+		dockContainer.localX = math.floor(workspace.width / 2 - dockContainer.width / 2 + 0.5)
 	end
 
 	dockContainer.updateIcons = function()

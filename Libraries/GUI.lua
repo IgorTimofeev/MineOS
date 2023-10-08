@@ -4156,8 +4156,11 @@ function GUI.dropDownMenu(x, y, width, maximumHeight, itemHeight, backgroundColo
 	menu.scrollSpeed = 1
 
 	menu.itemsContainer = menu:addChild(GUI.container(1, 1, menu.width, menu.height))
-	menu.prevButton = menu:addChild(GUI.button(1, 1, menu.width, 1, backgroundColor, textColor, backgroundPressedColor, textPressedColor, "▲"))
-	menu.nextButton = menu:addChild(GUI.button(1, 1, menu.width, 1, backgroundColor, textColor, backgroundPressedColor, textPressedColor, "▼"))
+
+	-- RIP ▲▼
+	-- ⬆⬇
+	menu.prevButton = menu:addChild(GUI.button(1, 1, menu.width, 1, backgroundColor, textColor, backgroundPressedColor, textPressedColor, "⬆"))
+	menu.nextButton = menu:addChild(GUI.button(1, 1, menu.width, 1, backgroundColor, textColor, backgroundPressedColor, textPressedColor, "⬇"))
 	menu.prevButton.colors.transparency, menu.nextButton.colors.transparency = backgroundTransparency, backgroundTransparency
 	menu.prevButton.onTouch = dropDownMenuPrevButtonOnTouch
 	menu.nextButton.onTouch = dropDownMenuNextButtonOnTouch
