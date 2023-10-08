@@ -13,7 +13,7 @@ MineOS is a GUI based operating system for the OpenComputers Minecraft mod. It h
 -   Own EEPROM firmware with boot volume choose/format/rename features and recover system through Internet
 -   File sharing over the local network via modems
 -   Client connections to real FTP servers
--   An internal IDE with syntax highlighting and debugger
+-   An internal IDE with syntax highlighting and debugger 
 -   Integrated application and library App Market with the ability to publish your own scripts and programs for every MineOS user
 -   Error reporting system with the possibility to send information to developers
 -   Animations, wallpapers, screensavers, color schemes and huge customization possibilities
