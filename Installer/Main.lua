@@ -43,16 +43,6 @@ local function title()
 	return y + 2
 end
 
-local function status(text, needWait)
-	centrizedText(title(), 0x878787, text)
-
-	if needWait then
-		repeat
-			needWait = computer.pullSignal()
-		until needWait == "key_down" or needWait == "touch"
-	end
-end
-
 local function progress(value)
 	local width = 26
 	local x, y, part = centrize(width), title(), math.ceil(width * value)
@@ -140,19 +130,40 @@ end
 component.invoke(GPUAddress, "setBackground", 0xE1E1E1)
 component.invoke(GPUAddress, "fill", 1, 1, screenWidth, screenHeight, " ")
 
--- Searching for appropriate temporary filesystem for storing libraries, images, etc
-for address in component.list("filesystem") do
-	local proxy = component.proxy(address)
-	if proxy.spaceTotal() >= 2 * 1024 * 1024 then
-		temporaryFilesystemProxy, selectedFilesystemProxy = proxy, proxy
-		break
-	end
-end
+-- Checking minimum system requirements
+do
+	local function warning(text)
+		centrizedText(title(), 0x878787, text)
 
--- If there's no suitable HDDs found - then meow
-if not temporaryFilesystemProxy then
-	status("Insert at least Tier 2 HDD", true)
-	return
+		local signal
+		repeat
+			signal = computer.pullSignal()
+		until signal == "key_down" or signal == "touch"
+
+		computer.shutdown()
+	end
+
+	if component.invoke(GPUAddress, "getDepth") ~= 8 then
+		warning("Tier 3 GPU and screen are required")
+	end
+
+	if computer.totalMemory() < 1024 * 1024 * 2 then
+		warning("At least 2x Tier 3.5 RAM modules are required")
+	end
+
+	-- Searching for appropriate temporary filesystem for storing libraries, images, etc
+	for address in component.list("filesystem") do
+		local proxy = component.proxy(address)
+		if proxy.spaceTotal() >= 2 * 1024 * 1024 then
+			temporaryFilesystemProxy, selectedFilesystemProxy = proxy, proxy
+			break
+		end
+	end
+
+	-- If there's no suitable HDDs found - then meow
+	if not temporaryFilesystemProxy then
+		warning("At least Tier 2 HDD is required")
+	end
 end
 
 -- First, we need a big ass file list with localizations, applications, wallpapers
@@ -232,13 +243,17 @@ window:addChild(GUI.panel(1, 1, window.width, window.height, 0xE1E1E1))
 -- Top menu
 local menu = workspace:addChild(GUI.menu(1, 1, workspace.width, 0xF0F0F0, 0x787878, 0x3366CC, 0xE1E1E1))
 local installerMenu = menu:addContextMenuItem("MineOS", 0x2D2D2D)
+
 installerMenu:addItem("Shutdown").onTouch = function()
 	computer.shutdown()
 end
+
 installerMenu:addItem("Reboot").onTouch = function()
 	computer.shutdown(true)
 end
+
 installerMenu:addSeparator()
+
 installerMenu:addItem("Exit").onTouch = function()
 	workspace:stop()
 end
@@ -254,8 +269,8 @@ local function loadImage(name)
 	return image.load(installerPicturesPath .. name .. ".pic")
 end
 
-local function newInput(...)
-	return GUI.input(1, 1, 26, 1, 0xF0F0F0, 0x787878, 0xC3C3C3, 0xF0F0F0, 0x878787, "", ...)
+local function newInput(width, ...)
+	return GUI.input(1, 1, width, 1, 0xF0F0F0, 0x787878, 0xC3C3C3, 0xF0F0F0, 0x878787, "", ...)
 end
 
 local function newSwitchAndLabel(width, color, text, state)
@@ -292,11 +307,11 @@ local localization
 local stage = 1
 local stages = {}
 
-local usernameInput = newInput("")
-local passwordInput = newInput("", false, "•")
-local passwordSubmitInput = newInput("", false, "•")
+local usernameInput = newInput(30, "")
+local passwordInput = newInput(30, "", false, "•")
+local passwordSubmitInput = newInput(30, "", false, "•")
 local usernamePasswordText = GUI.text(1, 1, 0xCC0040, "")
-local passwordSwitchAndLabel = newSwitchAndLabel(26, 0x66DB80, "", false)
+local withoutPasswordSwitchAndLabel = newSwitchAndLabel(30, 0x66DB80, "", false)
 
 local wallpapersSwitchAndLabel = newSwitchAndLabel(30, 0xFF4980, "", true)
 local screensaversSwitchAndLabel = newSwitchAndLabel(30, 0xFFB600, "", true)
@@ -305,7 +320,7 @@ local localizationsSwitchAndLabel = newSwitchAndLabel(30, 0x33B6FF, "", true)
 
 local acceptSwitchAndLabel = newSwitchAndLabel(30, 0x9949FF, "", false)
 
-local localizationComboBox = GUI.comboBox(1, 1, 22, 1, 0xF0F0F0, 0x969696, 0xD2D2D2, 0xB4B4B4)
+local localizationComboBox = GUI.comboBox(1, 1, 26, 1, 0xF0F0F0, 0x969696, 0xD2D2D2, 0xB4B4B4)
 for i = 1, #files.localizations do
 	localizationComboBox:addItem(filesystemHideExtension(filesystemName(files.localizations[i]))).onTouch = function()
 		-- Obtaining localization table
@@ -315,7 +330,7 @@ for i = 1, #files.localizations do
 		usernameInput.placeholderText = localization.username
 		passwordInput.placeholderText = localization.password
 		passwordSubmitInput.placeholderText = localization.submitPassword
-		passwordSwitchAndLabel.label.text = localization.withoutPassword
+		withoutPasswordSwitchAndLabel.label.text = localization.withoutPassword
 		wallpapersSwitchAndLabel.label.text = localization.wallpapers
 		screensaversSwitchAndLabel.label.text = localization.screensavers
 		applicationsSwitchAndLabel.label.text = localization.applications
@@ -345,7 +360,7 @@ end
 local function checkUserInputs()
 	local nameEmpty = #usernameInput.text == 0
 	local nameVaild = usernameInput.text:match("^%w[%w%s_]+$")
-	local passValid = passwordSwitchAndLabel.switch.state or #passwordInput.text == 0 or #passwordSubmitInput.text == 0 or passwordInput.text == passwordSubmitInput.text
+	local passValid = withoutPasswordSwitchAndLabel.switch.state or #passwordInput.text == 0 or #passwordSubmitInput.text == 0 or passwordInput.text == passwordSubmitInput.text
 
 	if (nameEmpty or nameVaild) and passValid then
 		usernamePasswordText.hidden = true
@@ -381,9 +396,9 @@ acceptSwitchAndLabel.switch.onStateChanged = function()
 	workspace:draw()
 end
 
-passwordSwitchAndLabel.switch.onStateChanged = function()
-	passwordInput.hidden = passwordSwitchAndLabel.switch.state
-	passwordSubmitInput.hidden = passwordSwitchAndLabel.switch.state
+withoutPasswordSwitchAndLabel.switch.onStateChanged = function()
+	passwordInput.hidden = withoutPasswordSwitchAndLabel.switch.state
+	passwordSubmitInput.hidden = withoutPasswordSwitchAndLabel.switch.state
 	checkUserInputs()
 
 	workspace:draw()
@@ -499,7 +514,7 @@ addStage(function()
 	layout:addChild(passwordInput)
 	layout:addChild(passwordSubmitInput)
 	layout:addChild(usernamePasswordText)
-	layout:addChild(passwordSwitchAndLabel)
+	layout:addChild(withoutPasswordSwitchAndLabel)
 end)
 
 -- Downloads customization stage
@@ -553,7 +568,7 @@ addStage(function()
 		userSettings, userPaths = system.createUser(
 			usernameInput.text,
 			localizationComboBox:getItem(localizationComboBox.selectedItem).text,
-			not passwordSwitchAndLabel.switch.state and passwordInput.text,
+			not withoutPasswordSwitchAndLabel.switch.state and passwordInput.text or nil,
 			wallpapersSwitchAndLabel.switch.state,
 			screensaversSwitchAndLabel.switch.state
 		)
