@@ -550,7 +550,7 @@ local function pressableDraw(pressable)
 		screen.drawRectangle(pressable.x, pressable.y, pressable.width, pressable.height, background, text, " ")
 	end
 	
-	screen.drawText(math.floor(pressable.x + pressable.width / 2 - unicode.len(pressable.text) / 2), math.floor(pressable.y + pressable.height / 2), text, pressable.text)
+	screen.drawText(math.floor(pressable.x + pressable.width / 2 - unicode.wlen(pressable.text) / 2), math.floor(pressable.y + pressable.height / 2), text, pressable.text)
 end
 
 local function pressableHandlePress(workspace, pressable, ...)
@@ -672,7 +672,7 @@ local function buttonGetColors(button)
 end
 
 local function buttonDrawText(button, textColor)
-	screen.drawText(math.floor(button.x + button.width / 2 - unicode.len(button.text) / 2), math.floor(button.y + button.height / 2), textColor, button.text)
+	screen.drawText(math.floor(button.x + button.width / 2 - unicode.wlen(button.text) / 2), math.floor(button.y + button.height / 2), textColor, button.text)
 end
 
 local function buttonDraw(button)
@@ -741,7 +741,7 @@ local function buttonCreate(x, y, width, height, backgroundColor, textColor, bac
 end
 
 local function adaptiveButtonCreate(x, y, xOffset, yOffset, backgroundColor, textColor, backgroundPressedColor, textPressedColor, text)
-	return buttonCreate(x, y, unicode.len(text) + xOffset * 2, yOffset * 2 + 1, backgroundColor, textColor, backgroundPressedColor, textPressedColor, text)
+	return buttonCreate(x, y, unicode.wlen(text) + xOffset * 2, yOffset * 2 + 1, backgroundColor, textColor, backgroundPressedColor, textPressedColor, text)
 end
 
 function GUI.button(...)
@@ -848,7 +848,7 @@ local function drawLabel(object)
 		object.height,
 		object.horizontalAlignment,
 		object.verticalAlignment,
-		unicode.len(object.text),
+		unicode.wlen(object.text),
 		1
 	)
 	screen.drawText(math.floor(xText), math.floor(yText), object.colors.text, object.text)
@@ -910,7 +910,7 @@ local function drawProgressBar(object)
 
 	if object.showValue then
 		local stringValue = (object.valuePrefix or "") .. object.value .. (object.valuePostfix or "")
-		screen.drawText(math.floor(object.x + object.width / 2 - unicode.len(stringValue) / 2), object.y + 1, object.colors.value, stringValue)
+		screen.drawText(math.floor(object.x + object.width / 2 - unicode.wlen(stringValue) / 2), object.y + 1, object.colors.value, stringValue)
 	end
 
 	return object
@@ -1013,7 +1013,7 @@ local function codeViewDraw(codeView)
 	local y, toLine, colorScheme, patterns = codeView.y, codeView.fromLine + codeView.height - 1, codeView.syntaxColorScheme, codeView.syntaxPatterns
 	
 	-- Line numbers bar and code area
-	codeView.lineNumbersWidth = unicode.len(tostring(toLine)) + 2
+	codeView.lineNumbersWidth = unicode.wlen(tostring(toLine)) + 2
 	codeView.codeAreaPosition = codeView.x + codeView.lineNumbersWidth
 	codeView.codeAreaWidth = codeView.width - codeView.lineNumbersWidth
 	
@@ -1033,7 +1033,7 @@ local function codeViewDraw(codeView)
 				screen.drawRectangle(codeView.codeAreaPosition, y, codeView.codeAreaWidth, 1, codeView.highlights[line], colorScheme.text, " ")
 			end
 
-			screen.drawText(codeView.codeAreaPosition - unicode.len(text) - 1, y, colorScheme.lineNumbersText, text)
+			screen.drawText(codeView.codeAreaPosition - unicode.wlen(text) - 1, y, colorScheme.lineNumbersText, text)
 			
 			y = y + 1
 		else
@@ -1295,21 +1295,21 @@ local function drawChart(object)
 	for y = object.y + object.height - 3, object.y + 1, -chartHeight * object.yAxisValueInterval do
 		local stringValue = getAxisValue(value, object.yAxisPostfix, object.roundValues)
 		
-		yAxisValueMaxWidth = math.max(yAxisValueMaxWidth, unicode.len(stringValue))
+		yAxisValueMaxWidth = math.max(yAxisValueMaxWidth, unicode.wlen(stringValue))
 		table.insert(yAxisValues, {y = math.ceil(y), value = stringValue})
 		value = value + dy * object.yAxisValueInterval
 	end
 	
 	local stringValue = getAxisValue(yMax, object.yAxisPostfix, object.roundValues)
 	table.insert(yAxisValues, {y = object.y, value = stringValue})
-	yAxisValueMaxWidth = math.max(yAxisValueMaxWidth, unicode.len(stringValue))
+	yAxisValueMaxWidth = math.max(yAxisValueMaxWidth, unicode.wlen(stringValue))
 
 	local chartWidth = object.width - (object.showYAxisValues and yAxisValueMaxWidth + 2 or 0) 
 	local chartX = object.x + object.width - chartWidth
 	
 	for i = 1, #yAxisValues do
 		if object.showYAxisValues then
-			screen.drawText(chartX - unicode.len(yAxisValues[i].value) - 2, yAxisValues[i].y, object.colors.axisValue, yAxisValues[i].value)
+			screen.drawText(chartX - unicode.wlen(yAxisValues[i].value) - 2, yAxisValues[i].y, object.colors.axisValue, yAxisValues[i].value)
 		end
 		screen.drawText(chartX, yAxisValues[i].y, object.colors.helpers, string.rep("─", chartWidth))
 	end
@@ -1319,11 +1319,11 @@ local function drawChart(object)
 		value = xMin
 		for x = chartX, chartX + chartWidth - 2, chartWidth * object.xAxisValueInterval do
 			local stringValue = getAxisValue(value, object.xAxisPostfix, object.roundValues)
-			screen.drawText(math.floor(x - unicode.len(stringValue) / 2), object.y + object.height - 1, object.colors.axisValue, stringValue)
+			screen.drawText(math.floor(x - unicode.wlen(stringValue) / 2), object.y + object.height - 1, object.colors.axisValue, stringValue)
 			value = value + dx * object.xAxisValueInterval
 		end
 		local value = getAxisValue(xMax, object.xAxisPostfix, object.roundValues)
-		screen.drawText(object.x + object.width - unicode.len(value), object.y + object.height - 1, object.colors.axisValue, value)
+		screen.drawText(object.x + object.width - unicode.wlen(value), object.y + object.height - 1, object.colors.axisValue, value)
 	end
 
 	-- Axis lines
@@ -1418,13 +1418,13 @@ local function sliderDraw(object)
 	
 	if object.showMaximumAndMinimumValues then
 		local stringMaximumValue, stringMinimumValue = tostring(object.roundValues and math.floor(object.maximumValue) or number.roundToDecimalPlaces(object.maximumValue, 2)), tostring(object.roundValues and math.floor(object.minimumValue) or number.roundToDecimalPlaces(object.minimumValue, 2))
-		screen.drawText(object.x - unicode.len(stringMinimumValue) - 1, object.y, object.colors.value, stringMinimumValue)
+		screen.drawText(object.x - unicode.wlen(stringMinimumValue) - 1, object.y, object.colors.value, stringMinimumValue)
 		screen.drawText(object.x + object.width + 1, object.y, object.colors.value, stringMaximumValue)
 	end
 
 	if object.currentValuePrefix or object.currentValuePostfix then
 		local stringCurrentValue = (object.currentValuePrefix or "") .. (object.roundValues and math.floor(object.value) or number.roundToDecimalPlaces(object.value, 2)) .. (object.currentValuePostfix or "")
-		screen.drawText(math.floor(object.x + object.width / 2 - unicode.len(stringCurrentValue) / 2), object.y + 1, object.colors.value, stringCurrentValue)
+		screen.drawText(math.floor(object.x + object.width / 2 - unicode.wlen(stringCurrentValue) / 2), object.y + 1, object.colors.value, stringCurrentValue)
 	end
 
 	local activeWidth = number.round((object.value - object.minimumValue) / (object.maximumValue - object.minimumValue) * object.width)
@@ -2029,7 +2029,7 @@ end
 
 local function filesystemDialogAddExtensionFilter(filesystemDialog, extension)
 	filesystemDialog.extensionComboBox:addItem(extension)
-	filesystemDialog.extensionComboBox.width = math.max(filesystemDialog.extensionComboBox.width, unicode.len(extension) + 3)
+	filesystemDialog.extensionComboBox.width = math.max(filesystemDialog.extensionComboBox.width, unicode.wlen(extension) + 3)
 	filesystemDialog.extensionComboBox.localX = filesystemDialog.cancelButton.localX - filesystemDialog.extensionComboBox.width - 2
 	filesystemDialog.filesystemTree:addExtensionFilter(extension)
 
@@ -2704,7 +2704,7 @@ local function textBoxDraw(object)
 				1,
 				object.horizontalAlignment,
 				object.verticalAlignment,
-				unicode.len(line),
+				unicode.wlen(line),
 				1
 			)
 
@@ -3611,7 +3611,7 @@ end
 --------------------------------------------------------------------------------
 
 local function textUpdate(object)
-	object.width = unicode.len(object.text)
+	object.width = unicode.wlen(object.text)
 	
 	return object
 end
@@ -3684,7 +3684,7 @@ local function listUpdate(list)
 		-- Размеры хуйни
 		if list.cells[1][1].direction == GUI.DIRECTION_HORIZONTAL then
 			if list.offsetMode then
-				child.width, child.height = list.itemSize * 2 + unicode.len(child.text), list.height
+				child.width, child.height = list.itemSize * 2 + unicode.wlen(child.text), list.height
 			else
 				child.width, child.height = list.itemSize, list.height
 			end
@@ -3819,7 +3819,7 @@ end
 ---------------------------------------------------------------------------------------------------
 
 local function keyAndValueUpdate(object)
-	object.keyLength, object.valueLength = unicode.len(object.key), unicode.len(object.value)
+	object.keyLength, object.valueLength = unicode.wlen(object.key), unicode.wlen(object.value)
 	object.width = object.keyLength + object.valueLength
 end
 
@@ -3931,8 +3931,9 @@ local function dropDownMenuItemDraw(item)
 		end
 
 		screen.drawText(item.x + 1, yText, textColor, item.text)
+
 		if item.shortcut then
-			screen.drawText(item.x + item.width - unicode.len(item.shortcut) - 1, yText, textColor, item.shortcut)
+			screen.drawText(item.x + item.width - unicode.wlen(item.shortcut) - 1, yText, textColor, item.shortcut)
 		end
 	else
 		screen.drawText(item.x, yText, item.parent.parent.colors.separator, string.rep("─", item.width))
@@ -4182,9 +4183,10 @@ local function contextMenuUpdate(menu)
 		local widestItem, widestShortcut = 0, 0
 		for i = 1, #menu.itemsContainer.children do
 			if menu.itemsContainer.children[i].type == 1 then
-				widestItem = math.max(widestItem, unicode.len(menu.itemsContainer.children[i].text))
+				widestItem = math.max(widestItem, unicode.wlen(menu.itemsContainer.children[i].text))
+				
 				if menu.itemsContainer.children[i].shortcut then
-					widestShortcut = math.max(widestShortcut, unicode.len(menu.itemsContainer.children[i].shortcut))
+					widestShortcut = math.max(widestShortcut, unicode.wlen(menu.itemsContainer.children[i].shortcut))
 				end
 			end
 		end
@@ -4596,7 +4598,7 @@ local function menuDraw(menu)
 end
 
 local function menuAddItem(menu, text, textColor)
-	local item = menu:addChild(pressable(1, 1, unicode.len(text) + 2, 1, nil, textColor or menu.colors.default.text, menu.colors.selected.background, menu.colors.selected.text, 0x0, 0x0, text))
+	local item = menu:addChild(pressable(1, 1, unicode.wlen(text) + 2, 1, nil, textColor or menu.colors.default.text, menu.colors.selected.background, menu.colors.selected.text, 0x0, 0x0, text))
 	item.eventHandler = pressableEventHandler
 
 	return item

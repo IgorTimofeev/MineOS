@@ -131,7 +131,7 @@ for i = 1, #modules do
 			object.draw = moduleDraw
 			object.eventHandler = moduleEventHandler
 
-			leftPanel.width = math.max(leftPanel.width, unicode.len(result.name) + 14)
+			leftPanel.width = math.max(leftPanel.width, unicode.wlen(result.name) + 14)
 		else
 			error("Failed to execute module " .. modules[i] .. ": " .. tostring(result))
 		end

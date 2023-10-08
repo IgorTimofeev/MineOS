@@ -22,16 +22,18 @@ local
 
 	unicodeLen,
 	unicodeSub,
+	unicodeWlen,
+	unicodeWlenCache,
 
 	bufferWidth,
 	bufferHeight,
 
 	currentFrameBackgrounds,
 	currentFrameForegrounds,
-	currentFrameSymbols,
+	currentFrameChars,
 	newFrameBackgrounds,
 	newFrameForegrounds,
-	newFrameSymbols,
+	newFrameChars,
 
 	drawLimitX1,
 	drawLimitX2,
@@ -56,7 +58,9 @@ local
 	color.integerToRGB,
 
 	unicode.len,
-	unicode.sub;
+	unicode.sub,
+	unicode.wlen,
+	{};
 
 --------------------------------------------------------------------------------
 
@@ -65,11 +69,11 @@ local function getIndex(x, y)
 end
 
 local function getCurrentFrameTables()
-	return currentFrameBackgrounds, currentFrameForegrounds, currentFrameSymbols
+	return currentFrameBackgrounds, currentFrameForegrounds, currentFrameChars
 end
 
 local function getNewFrameTables()
-	return newFrameBackgrounds, newFrameForegrounds, newFrameSymbols
+	return newFrameBackgrounds, newFrameForegrounds, newFrameChars
 end
 
 --------------------------------------------------------------------------------
@@ -93,7 +97,7 @@ local function flush(width, height)
 		width, height = componentInvoke(GPUAddress, "getResolution")
 	end
 
-	currentFrameBackgrounds, currentFrameForegrounds, currentFrameSymbols, newFrameBackgrounds, newFrameForegrounds, newFrameSymbols = {}, {}, {}, {}, {}, {}
+	currentFrameBackgrounds, currentFrameForegrounds, currentFrameChars, newFrameBackgrounds, newFrameForegrounds, newFrameChars = {}, {}, {}, {}, {}, {}
 	bufferWidth = width
 	bufferHeight = height
 
@@ -106,8 +110,8 @@ local function flush(width, height)
 		currentFrameForegrounds[i] = 0xFEFEFE
 		newFrameForegrounds[i] = 0xFEFEFE
 
-		currentFrameSymbols[i] = " "
-		newFrameSymbols[i] = " "
+		currentFrameChars[i] = " "
+		newFrameChars[i] = " "
 	end
 end
 
@@ -199,31 +203,62 @@ end
 
 --------------------------------------------------------------------------------
 
-local function rawSet(index, background, foreground, symbol)
-	newFrameBackgrounds[index], newFrameForegrounds[index], newFrameSymbols[index] = background, foreground, symbol
+local function rawSet(index, background, foreground, char)
+	newFrameBackgrounds[index], newFrameForegrounds[index], newFrameChars[index] = background, foreground, char
 end
 
 local function rawGet(index)
-	return newFrameBackgrounds[index], newFrameForegrounds[index], newFrameSymbols[index]
+	return newFrameBackgrounds[index], newFrameForegrounds[index], newFrameChars[index]
 end
 
 local function get(x, y)
 	if x >= 1 and y >= 1 and x <= bufferWidth and y <= bufferHeight then
 		local index = bufferWidth * (y - 1) + x
-		return newFrameBackgrounds[index], newFrameForegrounds[index], newFrameSymbols[index]
+		
+		return newFrameBackgrounds[index], newFrameForegrounds[index], newFrameChars[index]
 	else
 		return 0x000000, 0x000000, " "
 	end
 end
 
-local function set(x, y, background, foreground, symbol)
-	if x >= drawLimitX1 and y >= drawLimitY1 and x <= drawLimitX2 and y <= drawLimitY2 then
-		local index = bufferWidth * (y - 1) + x
-		newFrameBackgrounds[index], newFrameForegrounds[index], newFrameSymbols[index] = background, foreground, symbol
+local function set(x, y, background, foreground, char)
+	if x < drawLimitX1 or y < drawLimitY1 or x > drawLimitX2 or y > drawLimitY2 then
+		return
+	end
+
+	local
+		index,
+		charWlen =
+			bufferWidth * (y - 1) + x,
+			unicodeWlenCache[char]
+				
+	if not charWlen then
+		charWlen = unicodeWlen(char)
+		unicodeWlenCache[char] = charWlen
+	end
+
+	newFrameBackgrounds[index],
+	newFrameForegrounds[index],
+	newFrameChars[index] =
+		background,
+		foreground,
+		char
+
+	index = index + 1
+
+	for i = 2, charWlen do
+		newFrameBackgrounds[index],
+		newFrameForegrounds[index],
+		newFrameChars[index] =
+			background,
+			foreground,
+			" "
+
+		index = index + 1
 	end
 end
 
-local function drawRectangle(x, y, width, height, background, foreground, symbol, transparency)
+local function drawRectangle(x, y, width, height, background, foreground, char, transparency)
 	local temp
 
 	-- Clipping left
@@ -272,7 +307,7 @@ local function drawRectangle(x, y, width, height, background, foreground, symbol
 			for i = 1, width do
 				newFrameBackgrounds[temp],
 				newFrameForegrounds[temp],
-				newFrameSymbols[temp] = background, foreground, symbol
+				newFrameChars[temp] = background, foreground, char
 
 				temp = temp + 1
 			end
@@ -361,7 +396,7 @@ local function blur(x, y, width, height, radius, color, transparency)
 
 			newFrameBackgrounds[screenIndex] = colorRGBToInteger(r, g, b)
 			newFrameForegrounds[screenIndex] = 0x0
-			newFrameSymbols[screenIndex] = " "
+			newFrameChars[screenIndex] = " "
 
 			screenIndex = screenIndex + 1
 		end
@@ -383,7 +418,7 @@ local function copy(x, y, width, height)
 				index = bufferWidth * (j - 1) + i
 				tableInsert(copyArray, newFrameBackgrounds[index])
 				tableInsert(copyArray, newFrameForegrounds[index])
-				tableInsert(copyArray, newFrameSymbols[index])
+				tableInsert(copyArray, newFrameChars[index])
 			else
 				tableInsert(copyArray, 0x0)
 				tableInsert(copyArray, 0x0)
@@ -405,7 +440,7 @@ local function paste(startX, startY, picture)
 				if x >= drawLimitX1 and x <= drawLimitX2 then
 					newFrameBackgrounds[screenIndex] = picture[pictureIndex]
 					newFrameForegrounds[screenIndex] = picture[pictureIndex + 1]
-					newFrameSymbols[screenIndex] = picture[pictureIndex + 2]
+					newFrameChars[screenIndex] = picture[pictureIndex + 2]
 				end
 
 				screenIndex, pictureIndex = screenIndex + 1, pictureIndex + 3
@@ -517,37 +552,56 @@ local function rasterizePolygon(centerX, centerY, startX, startY, countOfEdges, 
 	end
 end
 
-local function drawLine(x1, y1, x2, y2, background, foreground, symbol)
+local function drawLine(x1, y1, x2, y2, background, foreground, char)
 	rasterizeLine(x1, y1, x2, y2, function(x, y)
-		set(x, y, background, foreground, symbol)
+		set(x, y, background, foreground, char)
 	end)
 end
 
-local function drawEllipse(centerX, centerY, radiusX, radiusY, background, foreground, symbol)
+local function drawEllipse(centerX, centerY, radiusX, radiusY, background, foreground, char)
 	rasterizeEllipse(centerX, centerY, radiusX, radiusY, function(x, y)
-		set(x, y, background, foreground, symbol)
+		set(x, y, background, foreground, char)
 	end)
 end
 
-local function drawPolygon(centerX, centerY, radiusX, radiusY, background, foreground, countOfEdges, symbol)
+local function drawPolygon(centerX, centerY, radiusX, radiusY, background, foreground, countOfEdges, char)
 	rasterizePolygon(centerX, centerY, radiusX, radiusY, countOfEdges, function(x, y)
-		set(x, y, background, foreground, symbol)
+		set(x, y, background, foreground, char)
 	end)
 end
 
-local function drawText(x, y, textColor, data, transparency)
-	if y >= drawLimitY1 and y <= drawLimitY2 then
-		local charIndex, screenIndex = 1, bufferWidth * (y - 1) + x
-		
-		for charIndex = 1, unicodeLen(data) do
-			if x >= drawLimitX1 and x <= drawLimitX2 then
+local function drawText(x, y, textColor, text, transparency)
+	if y < drawLimitY1 or y > drawLimitY2 then
+		return
+	end
+
+	local
+		charIndex,
+		screenIndex,
+
+		char,
+		charWlen =
+			1,
+			bufferWidth * (y - 1) + x
+	
+	for charIndex = 1, unicodeLen(text) do
+		char = unicodeSub(text, charIndex, charIndex)
+		charWlen = unicodeWlenCache[char]
+				
+		if not charWlen then
+			charWlen = unicodeWlen(char)
+			unicodeWlenCache[char] = charWlen
+		end
+
+		for i = 1, charWlen do
+			if x >= drawLimitX1 and x + charWlen - 1 <= drawLimitX2 then
 				if transparency then
 					newFrameForegrounds[screenIndex] = colorBlend(newFrameBackgrounds[screenIndex], textColor, transparency)
 				else
 					newFrameForegrounds[screenIndex] = textColor
 				end
 
-				newFrameSymbols[screenIndex] = unicodeSub(data, charIndex, charIndex)
+				newFrameChars[screenIndex] = i == 1 and char or " "
 			end
 
 			x, screenIndex = x + 1, screenIndex + 1
@@ -592,11 +646,11 @@ local function drawImage(x, y, picture, blendForeground)
 		background,
 		foreground,
 		alpha,
-		symbol = bufferWidth * (y - 1) + x, bufferWidth - clippedImageWidth, (imageWidth - clippedImageWidth) * 4
+		char = bufferWidth * (y - 1) + x, bufferWidth - clippedImageWidth, (imageWidth - clippedImageWidth) * 4
 
 	for j = 1, clippedImageHeight do
 		for i = 1, clippedImageWidth do
-			alpha, symbol = picture[pictureIndex + 2], picture[pictureIndex + 3]
+			alpha, char = picture[pictureIndex + 2], picture[pictureIndex + 3]
 			
 			-- If it's fully transparent pixel
 			if alpha == 0 then
@@ -611,11 +665,11 @@ local function drawImage(x, y, picture, blendForeground)
 					newFrameForegrounds[screenIndex] = picture[pictureIndex + 1]
 				end
 			-- If it's not transparent with whitespace
-			elseif symbol ~= " " then
+			elseif char ~= " " then
 				newFrameForegrounds[screenIndex] = picture[pictureIndex + 1]
 			end
 
-			newFrameSymbols[screenIndex] = symbol
+			newFrameChars[screenIndex] = char
 
 			screenIndex, pictureIndex = screenIndex + 1, pictureIndex + 4
 		end
@@ -640,35 +694,35 @@ end
 
 local function semiPixelRawSet(index, color, yPercentTwoEqualsZero)
 	local upperPixel, lowerPixel, bothPixel = "▀", "▄", " "
-	local background, foreground, symbol = newFrameBackgrounds[index], newFrameForegrounds[index], newFrameSymbols[index]
+	local background, foreground, char = newFrameBackgrounds[index], newFrameForegrounds[index], newFrameChars[index]
 
 	if yPercentTwoEqualsZero then
-		if symbol == upperPixel then
+		if char == upperPixel then
 			if color == foreground then
-				newFrameBackgrounds[index], newFrameForegrounds[index], newFrameSymbols[index] = color, foreground, bothPixel
+				newFrameBackgrounds[index], newFrameForegrounds[index], newFrameChars[index] = color, foreground, bothPixel
 			else
-				newFrameBackgrounds[index], newFrameForegrounds[index], newFrameSymbols[index] = color, foreground, symbol
+				newFrameBackgrounds[index], newFrameForegrounds[index], newFrameChars[index] = color, foreground, char
 			end
-		elseif symbol == bothPixel then
+		elseif char == bothPixel then
 			if color ~= background then
-				newFrameBackgrounds[index], newFrameForegrounds[index], newFrameSymbols[index] = background, color, lowerPixel
+				newFrameBackgrounds[index], newFrameForegrounds[index], newFrameChars[index] = background, color, lowerPixel
 			end
 		else
-			newFrameBackgrounds[index], newFrameForegrounds[index], newFrameSymbols[index] = background, color, lowerPixel
+			newFrameBackgrounds[index], newFrameForegrounds[index], newFrameChars[index] = background, color, lowerPixel
 		end
 	else
-		if symbol == lowerPixel then
+		if char == lowerPixel then
 			if color == foreground then
-				newFrameBackgrounds[index], newFrameForegrounds[index], newFrameSymbols[index] = color, foreground, bothPixel
+				newFrameBackgrounds[index], newFrameForegrounds[index], newFrameChars[index] = color, foreground, bothPixel
 			else
-				newFrameBackgrounds[index], newFrameForegrounds[index], newFrameSymbols[index] = color, foreground, symbol
+				newFrameBackgrounds[index], newFrameForegrounds[index], newFrameChars[index] = color, foreground, char
 			end
-		elseif symbol == bothPixel then
+		elseif char == bothPixel then
 			if color ~= background then
-				newFrameBackgrounds[index], newFrameForegrounds[index], newFrameSymbols[index] = background, color, upperPixel
+				newFrameBackgrounds[index], newFrameForegrounds[index], newFrameChars[index] = background, color, upperPixel
 			end
 		else
-			newFrameBackgrounds[index], newFrameForegrounds[index], newFrameSymbols[index] = background, color, upperPixel
+			newFrameBackgrounds[index], newFrameForegrounds[index], newFrameChars[index] = background, color, upperPixel
 		end
 	end
 end
@@ -765,51 +819,168 @@ end
 --------------------------------------------------------------------------------
 
 local function update(force)
-	local index, indexStepOnEveryLine, changes = bufferWidth * (drawLimitY1 - 1) + drawLimitX1, (bufferWidth - drawLimitX2 + drawLimitX1 - 1), {}
-	local x, equalChars, equalCharsIndex, charX, charIndex, currentForeground
-	local currentFrameBackground, currentFrameForeground, currentFrameSymbol, changesCurrentFrameBackground, changesCurrentFrameBackgroundCurrentFrameForeground
-	local changesCurrentFrameBackgroundCurrentFrameForegroundIndex
+	local
+		index,
+		indexStepOnEveryLine,
+		changes,
+
+		x,
+
+		charX,
+		charIndex,
+		charWlen,
+		
+		equalChars,
+		equalCharsIndex,
+
+		currentFrameBackground,
+		currentFrameForeground,
+		currentFrameChar,
+		newFrameChar,
+		newFrameForeground,
+		newFrameBackground,
+
+		changesCurrentFrameBackground,
+		changesCurrentFrameBackgroundCurrentFrameForeground,
+		changesCurrentFrameBackgroundCurrentFrameForegroundIndex,
+
+		currentForeground =
+			bufferWidth * (drawLimitY1 - 1) + drawLimitX1,
+			(bufferWidth - drawLimitX2 + drawLimitX1 - 1),
+			{}
 
 	for y = drawLimitY1, drawLimitY2 do
 		x = drawLimitX1
 
 		while x <= drawLimitX2 do
 			-- Determine if some pixel data was changed (or if <force> argument was passed)
+			currentFrameBackground,
+			currentFrameForeground,
+			currentFrameChar =
+				currentFrameBackgrounds[index],
+				currentFrameForegrounds[index],
+				currentFrameChars[index]
+			
+			newFrameBackground,
+			newFrameForeground,
+			newFrameChar =
+				newFrameBackgrounds[index],
+				newFrameForegrounds[index],
+				newFrameChars[index]
+
 			if
-				currentFrameBackgrounds[index] ~= newFrameBackgrounds[index] or
-				currentFrameForegrounds[index] ~= newFrameForegrounds[index] or
-				currentFrameSymbols[index] ~= newFrameSymbols[index] or
+				currentFrameBackground ~= newFrameBackground or
+				currentFrameForeground ~= newFrameForeground or
+				currentFrameChar ~= newFrameChar or
 				force
 			then
 				-- Make pixel at both frames equal
-				currentFrameBackground, currentFrameForeground, currentFrameSymbol = newFrameBackgrounds[index], newFrameForegrounds[index], newFrameSymbols[index]
-				currentFrameBackgrounds[index] = currentFrameBackground
-				currentFrameForegrounds[index] = currentFrameForeground
-				currentFrameSymbols[index] = currentFrameSymbol
+				currentFrameBackgrounds[index],
+				currentFrameForegrounds[index],
+				currentFrameChars[index],
+
+				currentFrameBackground,
+				currentFrameForeground,
+				currentFrameChar =
+					newFrameBackground,
+					newFrameForeground,
+					newFrameChar,
+
+					newFrameBackground,
+					newFrameForeground,
+					newFrameChar
 
 				-- Look for pixels with equal chars from right of current pixel
-				equalChars, equalCharsIndex, charX, charIndex = {currentFrameSymbol}, 2, x + 1, index + 1
+				charWlen = unicodeWlenCache[currentFrameChar]
+				
+				if not charWlen then
+					charWlen = unicodeWlen(currentFrameChar)
+					unicodeWlenCache[currentFrameChar] = charWlen
+				end
+
+				charX,
+				charIndex,
+				equalChars,
+				equalCharsIndex =
+					x + 1,
+					index + 1,
+					{ currentFrameChar },
+					2
+
+				for i = 2, charWlen do
+					currentFrameBackgrounds[charIndex],
+					currentFrameForegrounds[charIndex],
+					currentFrameChars[charIndex],
+
+					charX,
+					charIndex =
+						newFrameBackground,
+						newFrameForeground,
+						" ",
+
+						charX + 1,
+						charIndex + 1
+				end
 				
 				while charX <= drawLimitX2 do
+					newFrameBackground,
+					newFrameForeground,
+					newFrameChar =
+						newFrameBackgrounds[charIndex],
+						newFrameForegrounds[charIndex],
+						newFrameChars[charIndex]
+
 					-- Pixels becomes equal only if they have same background and (whitespace char or same foreground)
 					if	
-						currentFrameBackground == newFrameBackgrounds[charIndex] and
-						(
-							newFrameSymbols[charIndex] == " " or
-							currentFrameForeground == newFrameForegrounds[charIndex]
+						newFrameBackground == currentFrameBackground
+						and (
+							newFrameForeground == currentFrameForeground
+							or newFrameChar == " "
 						)
 					then
-						-- Make pixel at both frames equal
-					 	currentFrameBackgrounds[charIndex] = newFrameBackgrounds[charIndex]
-					 	currentFrameForegrounds[charIndex] = newFrameForegrounds[charIndex]
-					 	currentFrameSymbols[charIndex] = newFrameSymbols[charIndex]
+						charWlen = unicodeWlenCache[newFrameChar]
+						
+						if not charWlen then
+							charWlen = unicodeWlen(newFrameChar)
+							unicodeWlenCache[newFrameChar] = charWlen
+						end
 
-					 	equalChars[equalCharsIndex], equalCharsIndex = currentFrameSymbols[charIndex], equalCharsIndex + 1
+						currentFrameBackgrounds[charIndex],
+						currentFrameForegrounds[charIndex],
+						currentFrameChars[charIndex],
+
+						charX,
+						charIndex,
+
+						equalChars[equalCharsIndex],
+						equalCharsIndex =
+							newFrameBackground,
+							newFrameForeground,
+							newFrameChar,
+
+							charX + 1,
+							charIndex + 1,
+
+							newFrameChar,
+							equalCharsIndex + 1
+
+						for i = 2, charWlen do
+							currentFrameBackgrounds[charIndex],
+							currentFrameForegrounds[charIndex],
+							currentFrameChars[charIndex],
+
+							charX,
+							charIndex =
+								newFrameBackground,
+								newFrameForeground,
+								" ",
+								
+								charX + 1,
+								charIndex + 1
+						end
 					else
 						break
 					end
-
-					charX, charIndex = charX + 1, charIndex + 1
 				end
 
 				-- Group pixels that need to be drawn by background and foreground
