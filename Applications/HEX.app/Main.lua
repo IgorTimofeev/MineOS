@@ -83,7 +83,12 @@ local function byteFieldDraw(object)
 					textColor = colors.selectionBetweenText
 				end
 
-				screen.drawText(x, y, textColor, object.asChar and string.char(bytes[index]) or string.format("%02X", bytes[index]))
+				if object.asChar then
+					local char = string.char(bytes[index])
+					screen.drawText(x, y, textColor, unicode.isWide(char) and "-" or char)
+				else
+					screen.drawText(x, y, textColor, string.format("%02X", bytes[index]))
+				end
 			else
 				return object
 			end
