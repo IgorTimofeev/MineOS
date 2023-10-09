@@ -55,19 +55,19 @@ local workspace, window, menu = system.addWindow(GUI.filledWindow(
 
 local titlePanel = window:addChild(GUI.panel(1, 1, 1, 3, 0x3C3C3C))
 
-local prevButton = window:addChild(GUI.adaptiveRoundedButton(9, 2, 1, 0, 0x5A5A5A, 0xC3C3C3, 0xE1E1E1, 0x3C3C3C, "<"))
+local prevButton = window:addChild(GUI.adaptiveButton(9, 2, 1, 0, 0x5A5A5A, 0xC3C3C3, 0xE1E1E1, 0x3C3C3C, "<"))
 prevButton.colors.disabled.background = 0x4B4B4B
 prevButton.colors.disabled.text = 0xA5A5A5
 
-local nextButton = window:addChild(GUI.adaptiveRoundedButton(14, 2, 1, 0, 0x5A5A5A, 0xC3C3C3, 0xE1E1E1, 0x3C3C3C, ">"))
+local nextButton = window:addChild(GUI.adaptiveButton(prevButton.localX  + prevButton.width + 1, 2, 1, 0, 0x4B4B4B, 0xC3C3C3, 0xE1E1E1, 0x3C3C3C, ">"))
 nextButton.colors.disabled = prevButton.colors.disabled
 
-local FTPButton = window:addChild(GUI.adaptiveRoundedButton(nextButton.localX + nextButton.width + 2, 2, 1, 0, 0x5A5A5A, 0xC3C3C3, 0xE1E1E1, 0x3C3C3C, "FTP"))
+local modeList = window:addChild(GUI.list(nextButton.localX + nextButton.width + 2, 2, 10, 1, 2, 0, 0x4B4B4B, 0xE1E1E1, 0x4B4B4B, 0xE1E1E1, 0xE1E1E1, 0x4B4B4B, true))
+modeList:setDirection(GUI.DIRECTION_HORIZONTAL)
+
+local FTPButton = window:addChild(GUI.adaptiveButton(modeList.localX + modeList.width + 2, 2, 1, 0, 0x4B4B4B, 0xC3C3C3, 0xE1E1E1, 0x3C3C3C, "FTP"))
 FTPButton.colors.disabled = prevButton.colors.disabled
 FTPButton.disabled = not network.internetProxy
-
-local modeList = window:addChild(GUI.list(FTPButton.localX + FTPButton.width + 2, 2, 10, 1, 2, 0, 0x4B4B4B, 0xE1E1E1, 0x4B4B4B, 0xE1E1E1, 0xE1E1E1, 0x4B4B4B, true))
-modeList:setDirection(GUI.DIRECTION_HORIZONTAL)
 
 local sidebarContainer = window:addChild(GUI.container(1, 4, config.sidebarWidth, 1))
 
@@ -82,7 +82,7 @@ local searchInput = window:addChild(GUI.input(1, 2, 16, 1, 0x4B4B4B, 0xC3C3C3, 0
 
 local iconField 
 
-local statusContainer = window:addChild(GUI.container(modeList.localX + modeList.width + 1, 2, 1, 1))
+local statusContainer = window:addChild(GUI.container(FTPButton.localX + FTPButton.width + 2, 2, 1, 1))
 local statusPanel = statusContainer:addChild(GUI.panel(1, 1, 1, 1, 0x4B4B4B))
 
 local gotoButton = window:addChild(GUI.button(1, 2, 3, 1, 0x5A5A5A, 0xC3C3C3, 0xE1E1E1, 0x3C3C3C, "→"))
@@ -403,9 +403,9 @@ local function calculateSizes()
 	window.backgroundPanel.localY = 4
 
 	titlePanel.width = window.width
-	searchInput.localX = window.width - searchInput.width
+	searchInput.localX = window.width - searchInput.width - 1
 
-	statusContainer.width = window.width - searchInput.width - FTPButton.width - modeList.width - 26
+	statusContainer.width = window.width - statusContainer.localX - searchInput.width - 6
 	statusPanel.width = statusContainer.width
 
 	gotoButton.localX = statusContainer.localX + statusContainer.width
@@ -510,7 +510,7 @@ local function updateIconField()
 		local x, path = 2, "/"
 
 		local function addNode(text, path)
-			statusContainer:addChild(GUI.adaptiveButton(x, 1, 0, 0, nil, 0xB4B4B4, nil, 0xFFFFFF, text)).onTouch = function()
+			statusContainer:addChild(GUI.adaptiveButton(x, 1, 0, 0, nil, 0xC3C3C3, nil, 0xFFFFFF, text)).onTouch = function()
 				addpath(path)
 				updateFileListAndDraw()
 			end

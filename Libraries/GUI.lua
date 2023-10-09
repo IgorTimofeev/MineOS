@@ -698,6 +698,7 @@ local function roundedButtonDraw(button)
 
 	if backgroundColor then
 		local x2, y2 = button.x + button.width - 1, button.y + button.height - 1
+		
 		if button.height > 1 then
 			screen.drawText(button.x + 1, button.y, backgroundColor, string.rep("▄", button.width - 2))
 			screen.drawText(button.x, button.y, backgroundColor, "⣠")
@@ -709,8 +710,8 @@ local function roundedButtonDraw(button)
 			screen.drawText(button.x, y2, backgroundColor, "⠙")
 			screen.drawText(x2, y2, backgroundColor, "⠋")
 		else
-			screen.drawRectangle(button.x, button.y, button.width, button.height, backgroundColor, textColor, " ")
-			GUI.roundedCorners(button.x, button.y, button.width, button.height, backgroundColor)
+			screen.drawRectangle(button.x + 1, button.y, button.width - 2, button.height, backgroundColor, textColor, " ")
+			GUI.drawRoundedCorners(button.x, button.y, button.width, button.height, backgroundColor)
 		end
 	end
 
@@ -943,9 +944,9 @@ function GUI.drawShadow(x, y, width, height, transparency, thin)
 	end
 end
 
-function GUI.roundedCorners(x, y, width, height, color, transparency)
-	screen.drawText(x - 1, y, color, "⠰", transparency)
-	screen.drawText(x + width, y, color, "⠆", transparency)
+function GUI.drawRoundedCorners(x, y, width, height, color, transparency)
+	screen.drawText(x, y, color, "◖", transparency)
+	screen.drawText(x + width - 1, y, color, "◗", transparency)
 end
 
 --------------------------------------------------------------------------------
@@ -4270,7 +4271,7 @@ local function comboBoxDraw(object)
 	-- Arrow
 	width = object.x + width
 	screen.drawRectangle(width, object.y, arrowSize, object.height, object.colors.arrow.background, object.colors.arrow.text, " ")
-	screen.drawText(math.floor(width + arrowSize / 2), math.floor(object.y + object.height / 2), object.colors.arrow.text, object.pressed and "▲" or "▼")
+	screen.drawText(math.floor(width + arrowSize / 2), math.floor(object.y + object.height / 2), object.colors.arrow.text, object.pressed and "⬆" or "⬇")
 
 	return object
 end

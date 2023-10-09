@@ -134,6 +134,7 @@ window.sidebarLayout.eventHandler = function(workspace, object, e1, e2, e3, e4, 
 		end
 
 		window.sidebarLayout:setMargin(1, 1, h, v)
+		workspace:draw()
 	end
 end
 
@@ -180,7 +181,9 @@ local function onToolTouch(index)
 		local result, reason = pcall(tool.onSelection)
 		if result then
 			window.currentToolLayout:update()
+			
 			local lastChild = window.currentToolLayout.children[#window.currentToolLayout.children]
+			
 			if lastChild then
 				window.currentToolLayout.height = lastChild.localY + lastChild.height - 1
 			end
@@ -197,6 +200,7 @@ local function onToolTouch(index)
 		aboutToolTextBox.height = #aboutToolTextBox.lines
 	end
 
+	workspace:draw()
 end
 
 local tools = filesystem.list(toolsPath)
@@ -207,7 +211,9 @@ for i = 1, #tools do
 			result, reason = pcall(result, workspace, window, menu, locale)
 			if result then
 				local item = window.toolsList:addItem(reason.shortcut)
+				
 				item.tool = reason
+
 				item.onTouch = function()
 					onToolTouch(i)
 				end
