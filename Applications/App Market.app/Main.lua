@@ -377,7 +377,7 @@ end
 local function ratingWidgetDraw(object)
 	local x = 0
 	for i = 1, 5 do
-		screen.drawText(object.x + x, object.y, object.rating >= i and object.colors.first or object.colors.second, "*")
+		screen.drawText(object.x + x, object.y, object.rating >= i and object.colors.first or object.colors.second, "★")
 		x = x + object.spacing
 	end
 
